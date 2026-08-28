@@ -8,4 +8,5 @@ public class EnemyData : ScriptableObject
     public float moveSpeed;
     public int goldReward;
     public bool isBoss;
+    public GameObject prefab;
 }

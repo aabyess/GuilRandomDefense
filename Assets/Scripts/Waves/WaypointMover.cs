@@ -12,6 +12,11 @@ public class WaypointMover : MonoBehaviour
 
     private int currentIndex;
 
+    public void SetPath(WaypointPath newPath)
+    {
+        path = newPath;
+    }
+
     private void Start()
     {
         if (path == null || path.PointCount == 0) return;
