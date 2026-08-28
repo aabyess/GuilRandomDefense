@@ -13,21 +13,20 @@ public class UnitAttacker : MonoBehaviour
         attackTimer -= Time.deltaTime;
         if (attackTimer > 0f) return;
 
+        attackTimer = attackInterval;
+
         EnemyDummy target = FindClosestEnemyInRange();
         if (target == null) return;
 
         target.TakeDamage(attackDamage);
-        attackTimer = attackInterval;
     }
 
     EnemyDummy FindClosestEnemyInRange()
     {
-        EnemyDummy[] enemies = FindObjectsByType<EnemyDummy>(FindObjectsSortMode.None);
-
         EnemyDummy closest = null;
         float closestSqrDistance = attackRange * attackRange;
 
-        foreach (EnemyDummy enemy in enemies)
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
         {
             float sqrDistance = (enemy.transform.position - transform.position).sqrMagnitude;
             if (sqrDistance > closestSqrDistance) continue;
