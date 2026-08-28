@@ -18,6 +18,11 @@ public class RoundManager : MonoBehaviour
     float deathCountTimer;
     bool isGameOver;
 
+    public int CurrentRound => currentRound;
+    public float RoundTimeLeft => roundTimer;
+    public int DeathCount => deathCount;
+    public bool IsGameOver => isGameOver;
+
     void Start()
     {
         deathCount = startingDeathCount;
