@@ -7,6 +7,11 @@ public class EnemyDummy : MonoBehaviour
 
     public static readonly List<EnemyDummy> Active = new List<EnemyDummy>();
 
+    public void Initialize(float maxHp)
+    {
+        hp = maxHp;
+    }
+
     void OnEnable()
     {
         Active.Add(this);

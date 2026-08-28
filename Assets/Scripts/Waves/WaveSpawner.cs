@@ -32,7 +32,14 @@ public class WaveSpawner : MonoBehaviour
     void SpawnEnemy(EnemyData enemyData)
     {
         GameObject instance = Instantiate(enemyData.prefab);
+
         if (instance.TryGetComponent(out WaypointMover mover))
+        {
             mover.SetPath(path);
+            mover.SetMoveSpeed(enemyData.moveSpeed);
+        }
+
+        if (instance.TryGetComponent(out EnemyDummy dummy))
+            dummy.Initialize(enemyData.hp);
     }
 }

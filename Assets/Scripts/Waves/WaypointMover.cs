@@ -17,6 +17,11 @@ public class WaypointMover : MonoBehaviour
         path = newPath;
     }
 
+    public void SetMoveSpeed(float speed)
+    {
+        moveSpeed = speed;
+    }
+
     private void Start()
     {
         if (path == null || path.PointCount == 0) return;
