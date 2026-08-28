@@ -9,16 +9,19 @@ public class UnitMover : MonoBehaviour
 
     NavMeshAgent agent;
     Camera cam;
+    OwnedByPlayer owner;
 
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
         cam = Camera.main;
+        owner = GetComponent<OwnedByPlayer>();
     }
 
     void Update()
     {
         if (Mouse.current == null || cam == null) return;
+        if (owner != null && owner.OwnerId != LocalPlayer.LocalPlayerId) return;
         if (Mouse.current.rightButton.wasPressedThisFrame)
         {
             TryMoveToCursor();

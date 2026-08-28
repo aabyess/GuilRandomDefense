@@ -60,7 +60,7 @@ public class SelectionManager : MonoBehaviour
             hit.collider.TryGetComponent(out hitSelectable);
 
         ClearSelection();
-        if (hitSelectable != null)
+        if (hitSelectable != null && IsSelectableByLocalPlayer(hitSelectable))
             AddToSelection(hitSelectable);
     }
 
@@ -71,11 +71,20 @@ public class SelectionManager : MonoBehaviour
         ClearSelection();
         foreach (Selectable candidate in Selectable.All)
         {
+            if (!IsSelectableByLocalPlayer(candidate)) continue;
+
             Vector3 screenPos = cam.WorldToScreenPoint(candidate.transform.position);
             if (screenPos.z < 0f) continue;
             if (box.Contains(new Vector2(screenPos.x, screenPos.y)))
                 AddToSelection(candidate);
         }
+    }
+
+    // OwnedByPlayer가 없는 오브젝트는 소유권 미지정(중립/디버그용)으로 간주해 선택 가능하게 둔다.
+    static bool IsSelectableByLocalPlayer(Selectable candidate)
+    {
+        if (!candidate.TryGetComponent(out OwnedByPlayer owner)) return true;
+        return owner.OwnerId == LocalPlayer.LocalPlayerId;
     }
 
     void AddToSelection(Selectable s)
