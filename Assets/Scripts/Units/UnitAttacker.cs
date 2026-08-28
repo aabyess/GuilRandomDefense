@@ -8,6 +8,14 @@ public class UnitAttacker : MonoBehaviour
 
     float attackTimer;
 
+    public void ApplyStats(float damage, float range, float attacksPerSecond)
+    {
+        attackDamage = damage;
+        attackRange = range;
+        if (attacksPerSecond > 0f)
+            attackInterval = 1f / attacksPerSecond;
+    }
+
     void Update()
     {
         attackTimer -= Time.deltaTime;
