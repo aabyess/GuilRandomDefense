@@ -8,14 +8,21 @@ public class RoundManager : MonoBehaviour
     [SerializeField] float roundDuration = 28f;
     [SerializeField] int totalRounds = 25;
     [SerializeField] int bossRoundInterval = 10;
-    [SerializeField] int maxFieldEnemies = 25;
+    [SerializeField] int enemyCountThreshold = 25;
+    [SerializeField] int startingDeathCount = 10;
+    [SerializeField] float deathCountTickInterval = 1f;
 
     int currentRound;
     float roundTimer;
+    int deathCount;
+    float deathCountTimer;
     bool isGameOver;
 
     void Start()
     {
+        deathCount = startingDeathCount;
+        deathCountTimer = deathCountTickInterval;
+
         currentRound = 1;
         StartRound(currentRound);
     }
@@ -24,17 +31,35 @@ public class RoundManager : MonoBehaviour
     {
         if (isGameOver) return;
 
-        if (EnemyDummy.Active.Count > maxFieldEnemies)
-        {
-            Debug.Log("패배!");
-            isGameOver = true;
-            return;
-        }
+        UpdateDeathCount();
+        if (isGameOver) return;
 
         roundTimer -= Time.deltaTime;
         if (roundTimer <= 0f)
         {
             AdvanceRound();
+        }
+    }
+
+    void UpdateDeathCount()
+    {
+        if (EnemyDummy.Active.Count <= enemyCountThreshold)
+        {
+            deathCountTimer = deathCountTickInterval;
+            return;
+        }
+
+        deathCountTimer -= Time.deltaTime;
+        if (deathCountTimer > 0f) return;
+
+        deathCountTimer = deathCountTickInterval;
+        deathCount--;
+        Debug.Log($"데스카운트: {deathCount}");
+
+        if (deathCount <= 0)
+        {
+            Debug.Log("패배!");
+            isGameOver = true;
         }
     }
 

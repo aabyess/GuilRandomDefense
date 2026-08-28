@@ -8,11 +8,14 @@ public class CombineSystem : MonoBehaviour
     [SerializeField] UnitInventory inventory;
     [SerializeField] GachaTable gachaTable;
 
+    UnitInventory Inventory => inventory != null ? inventory : PlayerContext.Local != null ? PlayerContext.Local.UnitInventory : null;
+
     public bool TryCombine(UnitData unit)
     {
-        if (inventory == null)
+        UnitInventory targetInventory = Inventory;
+        if (targetInventory == null)
         {
-            Debug.LogError("CombineSystem: inventory 참조가 비어있습니다.", this);
+            Debug.LogError("CombineSystem: inventory 참조가 비어있습니다 (인스펙터 미할당, PlayerContext.Local도 없음).", this);
             return false;
         }
 
@@ -24,7 +27,7 @@ public class CombineSystem : MonoBehaviour
             return false;
         }
 
-        if (CountOf(unit) < RequiredCount) return false;
+        if (CountOf(targetInventory, unit) < RequiredCount) return false;
 
         UnitGrade nextGrade = unit.grade + 1;
         UnitData result = gachaTable != null ? gachaTable.RollFromGrade(nextGrade) : null;
@@ -37,10 +40,10 @@ public class CombineSystem : MonoBehaviour
 
         for (int i = 0; i < RequiredCount; i++)
         {
-            inventory.Remove(unit);
+            targetInventory.Remove(unit);
         }
 
-        inventory.Add(result);
+        targetInventory.Add(result);
         return true;
     }
 
@@ -48,20 +51,21 @@ public class CombineSystem : MonoBehaviour
     {
         List<UnitData> combinable = new List<UnitData>();
 
-        if (inventory == null)
+        UnitInventory targetInventory = Inventory;
+        if (targetInventory == null)
         {
-            Debug.LogError("CombineSystem: inventory 참조가 비어있습니다.", this);
+            Debug.LogError("CombineSystem: inventory 참조가 비어있습니다 (인스펙터 미할당, PlayerContext.Local도 없음).", this);
             return combinable;
         }
 
         HashSet<UnitData> seen = new HashSet<UnitData>();
 
-        foreach (UnitData unit in inventory.Units)
+        foreach (UnitData unit in targetInventory.Units)
         {
             if (unit == null || seen.Contains(unit)) continue;
             seen.Add(unit);
 
-            if (CountOf(unit) >= RequiredCount)
+            if (CountOf(targetInventory, unit) >= RequiredCount)
             {
                 combinable.Add(unit);
             }
@@ -70,10 +74,10 @@ public class CombineSystem : MonoBehaviour
         return combinable;
     }
 
-    int CountOf(UnitData unit)
+    int CountOf(UnitInventory targetInventory, UnitData unit)
     {
         int count = 0;
-        foreach (UnitData u in inventory.Units)
+        foreach (UnitData u in targetInventory.Units)
         {
             if (u == unit) count++;
         }

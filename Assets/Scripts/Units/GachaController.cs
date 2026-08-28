@@ -6,9 +6,12 @@ public class GachaController : MonoBehaviour
     [SerializeField] GoldWallet goldWallet;
     [SerializeField] int rollCost = 60;
 
+    GoldWallet Wallet => goldWallet != null ? goldWallet : PlayerContext.Local != null ? PlayerContext.Local.GoldWallet : null;
+
     public UnitData TryRoll()
     {
-        if (gachaTable == null || goldWallet == null) return null;
+        GoldWallet wallet = Wallet;
+        if (gachaTable == null || wallet == null) return null;
 
         UnitData result = gachaTable.Roll();
         if (result == null)
@@ -17,7 +20,7 @@ public class GachaController : MonoBehaviour
             return null;
         }
 
-        if (!goldWallet.TrySpend(rollCost))
+        if (!wallet.TrySpend(rollCost))
         {
             Debug.Log("골드가 부족합니다.");
             return null;
