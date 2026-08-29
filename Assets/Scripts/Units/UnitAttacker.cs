@@ -7,6 +7,7 @@ public class UnitAttacker : MonoBehaviour
     [SerializeField] float attackInterval = 1f;
 
     float attackTimer;
+    OwnedByPlayer owner;
 
     public void ApplyStats(float damage, float range, float attacksPerSecond)
     {
@@ -14,6 +15,11 @@ public class UnitAttacker : MonoBehaviour
         attackRange = range;
         if (attacksPerSecond > 0f)
             attackInterval = 1f / attacksPerSecond;
+    }
+
+    void Awake()
+    {
+        owner = GetComponent<OwnedByPlayer>();
     }
 
     void Update()
@@ -26,7 +32,7 @@ public class UnitAttacker : MonoBehaviour
         EnemyDummy target = FindClosestEnemyInRange();
         if (target == null) return;
 
-        target.TakeDamage(attackDamage);
+        target.TakeDamage(attackDamage, owner != null ? owner.OwnerId : -1);
     }
 
     EnemyDummy FindClosestEnemyInRange()

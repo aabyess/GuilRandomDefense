@@ -40,6 +40,6 @@ public class WaveSpawner : MonoBehaviour
         }
 
         if (instance.TryGetComponent(out EnemyDummy dummy))
-            dummy.Initialize(enemyData.hp);
+            dummy.Initialize(enemyData);
     }
 }

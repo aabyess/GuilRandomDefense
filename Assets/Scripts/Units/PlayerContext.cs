@@ -8,7 +8,9 @@ public class PlayerContext : MonoBehaviour
     [SerializeField] UnitInventory unitInventory;
     [SerializeField] ResourceWallet resourceWallet;
 
-    static readonly List<PlayerContext> All = new List<PlayerContext>();
+    static readonly List<PlayerContext> registry = new List<PlayerContext>();
+
+    public static IReadOnlyList<PlayerContext> All => registry;
 
     public static PlayerContext Local
     {
@@ -31,17 +33,17 @@ public class PlayerContext : MonoBehaviour
 
     void OnEnable()
     {
-        All.Add(this);
+        registry.Add(this);
     }
 
     void OnDisable()
     {
-        All.Remove(this);
+        registry.Remove(this);
     }
 
     public static PlayerContext Get(int playerId)
     {
-        foreach (PlayerContext context in All)
+        foreach (PlayerContext context in registry)
         {
             if (context.playerId == playerId) return context;
         }
