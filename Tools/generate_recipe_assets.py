@@ -9,12 +9,14 @@ ITEMDATA_GUID   = "287e5f1f1efa421eab118d0dda3fdd4c"
 RECIPE_GUID     = "d9e360a1ab0e48608e0b08ef0e946ccf"
 
 GRADE = {"Common":0,"Uncommon":1,"Special":2,"Rare":3,"Hidden":4,"Legendary":5,
-         "Limited":6,"Transcendent":7,"Immortal":8,"Eternal":9,"RandomUnit":10,"OtherWorld":11}
+         "Limited":6,"Transcendent":7,"Immortal":8,"Eternal":9,"RandomUnit":10,"OtherWorld":11,
+         "Superior":12}   # Superior(특수함)는 기존 에셋 값 보존을 위해 enum 맨 끝에 추가됨
 DMG = {"":0,"AD":1,"AP":2,"AD+AP":3}
 RES = {"Wood":0,"Token":1,"LuckyToken":2}
 # UnitGradeExtensions.Tier()와 동일. 동급은 같은 값, RandomUnit은 조합 라인 밖(-1).
-TIER = {"Common":0,"Uncommon":1,"Special":2,"Rare":3,"Hidden":3,"Legendary":4,
-        "Limited":5,"Transcendent":6,"Immortal":6,"Eternal":6,"RandomUnit":-1,"OtherWorld":6}
+# 강함 순서는 enum 순서가 아니라 이 표가 결정한다 (특수함이 희귀함과 전설적인 사이에 들어감).
+TIER = {"Common":0,"Uncommon":1,"Special":2,"Rare":3,"Hidden":3,"Superior":4,"Legendary":5,
+        "Limited":6,"Transcendent":7,"Immortal":7,"Eternal":7,"RandomUnit":-1,"OtherWorld":7}
 
 def new_guid(): return uuid.uuid4().hex
 def safe(name):
@@ -87,7 +89,7 @@ unit_guid = {}       # asset_name -> guid
 unit_asset = {}      # key -> asset_name
 
 GRADE_KR = {"Transcendent":"초월","Hidden":"히든","Immortal":"불멸","Eternal":"영원",
-            "Limited":"제한","RandomUnit":"랜덤","OtherWorld":"다른세계"}
+            "Limited":"제한","RandomUnit":"랜덤","OtherWorld":"다른세계","Superior":"특수함"}
 
 for (name, grade, suffix), dmg in results.items():
     base = f"{GRADE_KR[grade]}_{name}"
