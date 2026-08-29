@@ -39,6 +39,7 @@ public class CombineSystem : MonoBehaviour
 
     public bool TryCombine(CombineRecipe recipe)
     {
+        if (!GameAuthority.IsServer) return false;
         if (recipe == null) return false;
 
         if (!CanAfford(recipe, out List<UnitData> unitsToRemove, out List<ItemData> itemsToRemove))

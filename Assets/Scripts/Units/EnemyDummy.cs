@@ -42,6 +42,8 @@ public class EnemyDummy : MonoBehaviour
         hp -= amount;
         if (hp <= 0f)
         {
+            if (!GameAuthority.IsServer) return;
+
             // Destroy는 프레임 끝에야 실제로 처리되므로, 같은 프레임에 다른 유닛이 또 때려서
             // 보상이 중복 지급되지 않도록 죽음 확정 시점에 바로 플래그를 세우고 등록도 해제한다.
             isDead = true;

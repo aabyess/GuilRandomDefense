@@ -34,6 +34,7 @@ public class RoundManager : MonoBehaviour
 
     void Update()
     {
+        if (!GameAuthority.IsServer) return;
         if (isGameOver) return;
 
         UpdateDeathCount();

@@ -11,6 +11,7 @@ public class WaveSpawner : MonoBehaviour
 
     public void SpawnRound(WaveData wave)
     {
+        if (!GameAuthority.IsServer) return;
         if (wave == null || wave.spawnList == null) return;
         StartCoroutine(SpawnRoutine(wave));
     }

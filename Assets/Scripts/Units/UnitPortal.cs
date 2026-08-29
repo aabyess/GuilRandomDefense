@@ -14,6 +14,7 @@ public class UnitPortal : MonoBehaviour
     // TODO(멀티): 포탈 진입 판정·지급은 서버 권위로 이동해야 함 — 지금은 클라이언트가 직접 처리.
     void OnTriggerEnter(Collider other)
     {
+        if (!GameAuthority.IsServer) return;
         if (!other.TryGetComponent(out Wisp wisp)) return;
         if (wisp.IsConsumed) return;
         if (wisp.Data == null || wisp.Data.targetGrade != acceptedGrade) return;

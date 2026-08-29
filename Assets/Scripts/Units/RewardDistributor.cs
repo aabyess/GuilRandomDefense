@@ -23,6 +23,7 @@ public class RewardDistributor : MonoBehaviour
 
     public void GrantKillReward(EnemyData data, int killerPlayerId)
     {
+        if (!GameAuthority.IsServer) return;
         if (data == null) return;
 
         if (data.rewardsAllPlayers)
@@ -61,6 +62,7 @@ public class RewardDistributor : MonoBehaviour
     // 보스 최다 데미지·도전과제 보상은 기여도 추적 시스템이 없어 아직 만들지 않았다(별도 작업).
     public void GrantStoryReward(StoryRewardData storyReward)
     {
+        if (!GameAuthority.IsServer) return;
         if (storyReward == null) return;
 
         foreach (PlayerContext context in PlayerContext.All)
