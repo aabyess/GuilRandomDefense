@@ -162,6 +162,13 @@ GameObject:
   - component: {fileID: 185428491}
   - component: {fileID: 185428493}
   - component: {fileID: 185428494}
+  - component: {fileID: 185428496}
+  - component: {fileID: 185428495}
+  - component: {fileID: 185428501}
+  - component: {fileID: 185428500}
+  - component: {fileID: 185428499}
+  - component: {fileID: 185428498}
+  - component: {fileID: 185428497}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -232,7 +239,107 @@ MonoBehaviour:
   roundDuration: 28
   totalRounds: 25
   bossRoundInterval: 10
-  maxFieldEnemies: 25
+  enemyCountThreshold: 25
+  startingDeathCount: 10
+  deathCountTickInterval: 1
+--- !u!114 &185428495
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 185428490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfe4a925503ee43de9530a33ede6cb07, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &185428496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 185428490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59d20765135304657bae2fbeb5e7d779, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startingGold: 400
+--- !u!114 &185428497
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 185428490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 056769d8b42254a4dbc3ddae77ec149d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  goldWallet: {fileID: 185428496}
+  unitInventory: {fileID: 185428495}
+  combineSystem: {fileID: 185428499}
+  roundManager: {fileID: 185428494}
+--- !u!114 &185428498
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 185428490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b00b12cf1c33f45ce8c6092ac224ebff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gachaController: {fileID: 185428500}
+--- !u!114 &185428499
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 185428490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7996319de27ab4e1d94747d1c42aa1ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inventory: {fileID: 185428495}
+  gachaTable: {fileID: 11400000, guid: bf714f3b57df4f1f866fd2a56339b8dc, type: 2}
+--- !u!114 &185428500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 185428490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccee449022f1d490688770b0fbb94959, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gachaTable: {fileID: 11400000, guid: bf714f3b57df4f1f866fd2a56339b8dc, type: 2}
+  goldWallet: {fileID: 185428496}
+  rollCost: 60
+  unitSpawner: {fileID: 185428501}
+  spawnPoint: {fileID: 0}
+  unitInventory: {fileID: 185428495}
+--- !u!114 &185428501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 185428490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e83a27bc5af6541f89ded0e3cff1d8e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
