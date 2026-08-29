@@ -17,7 +17,7 @@ public class DebugHud : MonoBehaviour
 
     void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame)
+        if (Keyboard.current != null && Keyboard.current.vKey.wasPressedThisFrame)
         {
             TryCombineFirst();
         }
@@ -67,7 +67,7 @@ public class DebugHud : MonoBehaviour
         }
 
         GUILayout.Space(10);
-        GUILayout.Label("조합 가능한 레시피 (C키: 첫 번째 조합)");
+        GUILayout.Label("조합 가능한 레시피 (V키: 첫 번째 조합)");
 
         if (combineSystem != null)
         {

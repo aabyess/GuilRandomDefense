@@ -95,7 +95,7 @@ public class SelectionManager : MonoBehaviour
         selected.Add(s);
     }
 
-    void ClearSelection()
+    public void ClearSelection()
     {
         foreach (Selectable s in selected)
             if (s != null)

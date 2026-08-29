@@ -22,5 +22,8 @@ public class WarehouseController : MonoBehaviour
             if (selectable == null) continue;
             target.Store(selectable.gameObject);
         }
+
+        // 보관 성공 여부와 무관하게 선택 해제 — 안 그러면 비활성화된 유닛이 계속 "선택된" 상태로 남는다.
+        selectionManager.ClearSelection();
     }
 }
