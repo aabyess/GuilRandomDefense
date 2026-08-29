@@ -32,7 +32,7 @@ public class UnitMover : MonoBehaviour
     {
         Ray ray = cam.ScreenPointToRay(Mouse.current.position.ReadValue());
         if (!Physics.Raycast(ray, out RaycastHit hit, 200f)) return;
-        if (!NavMesh.SamplePosition(hit.point, out NavMeshHit navHit, destinationSampleRadius, NavMesh.AllAreas)) return;
+        if (!NavMesh.SamplePosition(hit.point, out NavMeshHit navHit, destinationSampleRadius, agent.areaMask)) return;
 
         agent.SetDestination(navHit.position);
     }

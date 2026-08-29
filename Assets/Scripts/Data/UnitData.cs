@@ -49,12 +49,22 @@ public enum DamageType
     AP = 2,
 }
 
+[System.Flags]
+public enum MovementAbility
+{
+    Ground = 0,        // 기본: 육지만
+    Flying = 1,        // 비행 — 바다 통과 가능
+    WaterWalk = 2,     // 수상보행 — 바다 통과 가능
+    Teleport = 4,      // 텔레포트(경로 무시) — 필드만, 로직은 나중에 구현
+}
+
 [CreateAssetMenu(fileName = "NewUnitData", menuName = "GuilRandomDefense/Unit Data")]
 public class UnitData : ScriptableObject
 {
     public string unitName;
     public UnitGrade grade;
     public DamageType damageType;
+    public MovementAbility movementAbility;
     public float hp;
     public float attackPower;
     public float attackRange;

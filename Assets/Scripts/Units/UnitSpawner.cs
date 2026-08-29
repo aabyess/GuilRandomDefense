@@ -3,6 +3,8 @@ using UnityEngine.AI;
 
 public class UnitSpawner : MonoBehaviour
 {
+    const string SeaAreaName = "Sea";
+
     // TODO(멀티): 이 메서드 내부를 서버 권위 호출로 교체하면 됨 — MULTIPLAYER_MIGRATION.md "전환 순서" 4번 참고.
     public GameObject Spawn(UnitData data, Vector3 position, int ownerId)
     {
@@ -22,8 +24,26 @@ public class UnitSpawner : MonoBehaviour
             attacker.ApplyStats(data.attackPower, data.attackRange, data.attackSpeed);
 
         if (instance.TryGetComponent(out NavMeshAgent agent))
+        {
             agent.speed = data.moveSpeed;
+            agent.areaMask = ComputeAreaMask(data.movementAbility);
+        }
 
         return instance;
+    }
+
+    static int ComputeAreaMask(MovementAbility ability)
+    {
+        int seaArea = NavMesh.GetAreaFromName(SeaAreaName);
+        if (seaArea < 0)
+        {
+            Debug.LogWarning($"UnitSpawner: NavMesh Area \"{SeaAreaName}\"를 찾을 수 없어 전체 영역을 허용합니다. Navigation 창에서 Area를 추가해주세요.");
+            return NavMesh.AllAreas;
+        }
+
+        bool canCrossSea = (ability & (MovementAbility.Flying | MovementAbility.WaterWalk)) != 0;
+        if (canCrossSea) return NavMesh.AllAreas;
+
+        return NavMesh.AllAreas & ~(1 << seaArea);
     }
 }
