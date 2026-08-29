@@ -4,8 +4,10 @@ using UnityEngine;
 public class CombineSystem : MonoBehaviour
 {
     [SerializeField] UnitInventory inventory;
+    [SerializeField] ItemInventory itemInventory;
     [SerializeField] GoldWallet goldWallet;
     [SerializeField] ResourceWallet resourceWallet;
+    [SerializeField] RoundManager roundManager;
     [SerializeField] List<CombineRecipe> recipes;
 
     UnitInventory Inventory => inventory != null ? inventory : PlayerContext.Local != null ? PlayerContext.Local.UnitInventory : null;
@@ -20,7 +22,7 @@ public class CombineSystem : MonoBehaviour
 
         foreach (CombineRecipe recipe in recipes)
         {
-            if (recipe != null && CanAfford(recipe))
+            if (recipe != null && CanAfford(recipe, out _, out _))
             {
                 available.Add(recipe);
             }
@@ -33,18 +35,26 @@ public class CombineSystem : MonoBehaviour
     {
         if (recipe == null) return false;
 
-        if (!CanAfford(recipe)) return false;
+        if (!CanAfford(recipe, out List<UnitData> unitsToRemove, out List<ItemData> itemsToRemove))
+        {
+            return false;
+        }
 
         // 전부 검사를 통과한 뒤에만 소모한다 (중간 실패로 재료만 날아가는 것 방지).
         UnitInventory targetInventory = Inventory;
         GoldWallet wallet = Wallet;
         ResourceWallet resources = Resources;
 
-        foreach (KeyValuePair<UnitData, int> pair in AggregateIngredients(recipe))
+        foreach (UnitData unit in unitsToRemove)
         {
-            for (int i = 0; i < pair.Value; i++)
+            targetInventory.Remove(unit);
+        }
+
+        if (itemInventory != null)
+        {
+            foreach (ItemData item in itemsToRemove)
             {
-                targetInventory.Remove(pair.Key);
+                itemInventory.Remove(item);
             }
         }
 
@@ -67,8 +77,13 @@ public class CombineSystem : MonoBehaviour
         return true;
     }
 
-    bool CanAfford(CombineRecipe recipe)
+    bool CanAfford(CombineRecipe recipe, out List<UnitData> unitsToRemove, out List<ItemData> itemsToRemove)
     {
+        unitsToRemove = null;
+        itemsToRemove = null;
+
+        if (!RoundConditionMet(recipe)) return false;
+
         UnitInventory targetInventory = Inventory;
         if (targetInventory == null)
         {
@@ -76,10 +91,8 @@ public class CombineSystem : MonoBehaviour
             return false;
         }
 
-        foreach (KeyValuePair<UnitData, int> pair in AggregateIngredients(recipe))
-        {
-            if (CountOf(targetInventory, pair.Key) < pair.Value) return false;
-        }
+        if (!TryPlanUnits(recipe, targetInventory, out unitsToRemove)) return false;
+        if (!TryPlanItems(recipe, out itemsToRemove)) return false;
 
         if (recipe.goldCost > 0)
         {
@@ -103,30 +116,123 @@ public class CombineSystem : MonoBehaviour
         return true;
     }
 
-    Dictionary<UnitData, int> AggregateIngredients(CombineRecipe recipe)
+    bool RoundConditionMet(CombineRecipe recipe)
     {
-        Dictionary<UnitData, int> aggregated = new Dictionary<UnitData, int>();
+        if (recipe.minRound <= 0 && recipe.maxRound <= 0) return true;
 
-        if (recipe.ingredients == null) return aggregated;
+        if (roundManager == null)
+        {
+            Debug.LogWarning($"CombineSystem: {recipe.commandId} 라운드 조건이 있지만 roundManager가 비어있어 조합을 허용하지 않습니다.");
+            return false;
+        }
+
+        int currentRound = roundManager.CurrentRound;
+        if (recipe.minRound > 0 && currentRound < recipe.minRound) return false;
+        if (recipe.maxRound > 0 && currentRound > recipe.maxRound) return false;
+        return true;
+    }
+
+    // 특정 유닛(SpecificUnit) 요구를 먼저 채우고, 남은 재고에서 등급 와일드카드(UnitGradeWildcard)를 채운다.
+    // 이 순서를 지켜야 와일드카드가 다른 슬롯에 필요한 유닛을 가로채지 않는다.
+    bool TryPlanUnits(CombineRecipe recipe, UnitInventory targetInventory, out List<UnitData> unitsToRemove)
+    {
+        unitsToRemove = new List<UnitData>();
+
+        if (recipe.ingredients == null) return true;
+
+        List<UnitData> pool = new List<UnitData>(targetInventory.Units);
 
         foreach (RecipeIngredient ingredient in recipe.ingredients)
         {
-            if (ingredient == null || ingredient.unit == null) continue;
+            if (ingredient == null || ingredient.kind != IngredientKind.SpecificUnit || ingredient.unit == null) continue;
 
-            aggregated.TryGetValue(ingredient.unit, out int existing);
-            aggregated[ingredient.unit] = existing + Mathf.Max(1, ingredient.count);
+            if (!TryTake(pool, ingredient.unit, Mathf.Max(1, ingredient.count), unitsToRemove))
+            {
+                return false;
+            }
         }
 
-        return aggregated;
+        foreach (RecipeIngredient ingredient in recipe.ingredients)
+        {
+            if (ingredient == null || ingredient.kind != IngredientKind.UnitGradeWildcard) continue;
+
+            if (!TryTakeByGrade(pool, ingredient.wildcardGrade, Mathf.Max(1, ingredient.count), unitsToRemove))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    int CountOf(UnitInventory targetInventory, UnitData unit)
+    bool TryPlanItems(CombineRecipe recipe, out List<ItemData> itemsToRemove)
     {
-        int count = 0;
-        foreach (UnitData u in targetInventory.Units)
+        itemsToRemove = new List<ItemData>();
+
+        if (recipe.ingredients == null) return true;
+
+        bool hasItemIngredient = false;
+        foreach (RecipeIngredient ingredient in recipe.ingredients)
         {
-            if (u == unit) count++;
+            if (ingredient != null && ingredient.kind == IngredientKind.SpecificItem)
+            {
+                hasItemIngredient = true;
+                break;
+            }
         }
-        return count;
+
+        if (!hasItemIngredient) return true;
+
+        if (itemInventory == null)
+        {
+            Debug.LogWarning($"CombineSystem: {recipe.commandId}에 아이템 재료가 필요하지만 itemInventory가 비어있습니다.");
+            return false;
+        }
+
+        List<ItemData> pool = new List<ItemData>(itemInventory.Items);
+
+        foreach (RecipeIngredient ingredient in recipe.ingredients)
+        {
+            if (ingredient == null || ingredient.kind != IngredientKind.SpecificItem || ingredient.item == null) continue;
+
+            if (!TryTake(pool, ingredient.item, Mathf.Max(1, ingredient.count), itemsToRemove))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    static bool TryTake<T>(List<T> pool, T target, int count, List<T> takenOut) where T : Object
+    {
+        int taken = 0;
+        for (int i = pool.Count - 1; i >= 0 && taken < count; i--)
+        {
+            if (pool[i] == target)
+            {
+                takenOut.Add(pool[i]);
+                pool.RemoveAt(i);
+                taken++;
+            }
+        }
+
+        return taken >= count;
+    }
+
+    static bool TryTakeByGrade(List<UnitData> pool, UnitGrade grade, int count, List<UnitData> takenOut)
+    {
+        int taken = 0;
+        for (int i = pool.Count - 1; i >= 0 && taken < count; i--)
+        {
+            if (pool[i] != null && pool[i].grade == grade)
+            {
+                takenOut.Add(pool[i]);
+                pool.RemoveAt(i);
+                taken++;
+            }
+        }
+
+        return taken >= count;
     }
 }
