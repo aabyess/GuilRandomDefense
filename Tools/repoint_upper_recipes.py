@@ -26,6 +26,13 @@ for f in glob.glob(f"{UNITS}/*.asset"):
     g = re.search(r'guid: (\w+)', open(f + ".meta", encoding="utf-8").read()).group(1)
     guid_info[g] = (grade, name)
     by_name.setdefault(name, {})[grade] = g
+    # 별칭으로도 찾을 수 있게 한다 — 상위 레시피가 재료를 별칭으로 적는 경우가 있다
+    # (예: 히든 황정기의 재료 '윤식파의두뇌' = 희귀함 최상호).
+    m2 = re.search(r'^  unitName: (.+)$', open(f, encoding="utf-8").read(), re.M)
+    if m2:
+        alias = m2.group(1).strip()
+        if alias and alias != name:
+            by_name.setdefault(alias, {})[grade] = g
 
 changed_files, report, unresolved = 0, [], []
 
