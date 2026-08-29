@@ -25,10 +25,10 @@ public class DebugHud : MonoBehaviour
     {
         if (combineSystem == null) return;
 
-        List<UnitData> combinable = combineSystem.GetCombinableUnits();
-        if (combinable.Count == 0) return;
+        List<CombineRecipe> available = combineSystem.GetAvailableRecipes();
+        if (available.Count == 0) return;
 
-        combineSystem.TryCombine(combinable[0]);
+        combineSystem.TryCombine(available[0]);
     }
 
     void OnGUI()
@@ -49,22 +49,27 @@ public class DebugHud : MonoBehaviour
         GUILayout.Label($"필드 몹 수: {EnemyDummy.Active.Count}");
 
         GUILayout.Space(10);
-        GUILayout.Label("인벤토리 (C키: 조합 가능한 유닛 중 첫 번째 조합)");
+        GUILayout.Label("인벤토리");
 
-        if (inventory != null && combineSystem != null)
+        if (inventory != null)
         {
-            List<UnitData> combinable = combineSystem.GetCombinableUnits();
             Dictionary<UnitData, int> counts = CountByUnit(inventory.Units);
 
             foreach (KeyValuePair<UnitData, int> entry in counts)
             {
-                string label = $"{entry.Key.unitName} x{entry.Value}";
-                if (combinable.Contains(entry.Key))
-                {
-                    label += "  [조합가능]";
-                }
+                GUILayout.Label($"{entry.Key.unitName} x{entry.Value}");
+            }
+        }
 
-                GUILayout.Label(label);
+        GUILayout.Space(10);
+        GUILayout.Label("조합 가능한 레시피 (C키: 첫 번째 조합)");
+
+        if (combineSystem != null)
+        {
+            foreach (CombineRecipe recipe in combineSystem.GetAvailableRecipes())
+            {
+                string resultName = recipe.result != null ? recipe.result.unitName : "?";
+                GUILayout.Label($"[{recipe.commandId}] → {resultName}");
             }
         }
 

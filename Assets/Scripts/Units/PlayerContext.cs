@@ -6,6 +6,7 @@ public class PlayerContext : MonoBehaviour
     [SerializeField] int playerId;
     [SerializeField] GoldWallet goldWallet;
     [SerializeField] UnitInventory unitInventory;
+    [SerializeField] ResourceWallet resourceWallet;
 
     static readonly List<PlayerContext> All = new List<PlayerContext>();
 
@@ -26,6 +27,7 @@ public class PlayerContext : MonoBehaviour
     public int PlayerId => playerId;
     public GoldWallet GoldWallet => goldWallet;
     public UnitInventory UnitInventory => unitInventory;
+    public ResourceWallet ResourceWallet => resourceWallet;
 
     void OnEnable()
     {
