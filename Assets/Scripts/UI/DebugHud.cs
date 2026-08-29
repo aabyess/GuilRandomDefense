@@ -9,9 +9,11 @@ public class DebugHud : MonoBehaviour
     [SerializeField] UnitInventory unitInventory;
     [SerializeField] CombineSystem combineSystem;
     [SerializeField] RoundManager roundManager;
+    [SerializeField] Warehouse warehouse;
 
     GoldWallet Wallet => goldWallet != null ? goldWallet : PlayerContext.Local != null ? PlayerContext.Local.GoldWallet : null;
     UnitInventory Inventory => unitInventory != null ? unitInventory : PlayerContext.Local != null ? PlayerContext.Local.UnitInventory : null;
+    Warehouse Warehouse => warehouse != null ? warehouse : PlayerContext.Local != null ? PlayerContext.Local.Warehouse : null;
 
     void Update()
     {
@@ -47,6 +49,9 @@ public class DebugHud : MonoBehaviour
         }
 
         GUILayout.Label($"필드 몹 수: {EnemyDummy.Active.Count}");
+
+        Warehouse warehouseRef = Warehouse;
+        GUILayout.Label($"창고: {(warehouseRef != null ? warehouseRef.Stored.Count.ToString() : "-")}개");
 
         GUILayout.Space(10);
         GUILayout.Label("인벤토리");

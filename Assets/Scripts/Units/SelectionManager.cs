@@ -11,6 +11,8 @@ public class SelectionManager : MonoBehaviour
     Camera cam;
     readonly List<Selectable> selected = new List<Selectable>();
 
+    public IReadOnlyList<Selectable> Selected => selected;
+
     Vector2 dragStart;
     bool isDragging;
     bool leftButtonHeld;
