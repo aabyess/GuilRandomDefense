@@ -14,6 +14,12 @@ public class CombineSystem : MonoBehaviour
     GoldWallet Wallet => goldWallet != null ? goldWallet : PlayerContext.Local != null ? PlayerContext.Local.GoldWallet : null;
     ResourceWallet Resources => resourceWallet != null ? resourceWallet : PlayerContext.Local != null ? PlayerContext.Local.ResourceWallet : null;
 
+    // GetAvailableRecipes()가 OnGUI(프레임당 최소 2회) 경로에서 매번 불리므로,
+    // 설정 누락 경고는 매 호출마다 찍지 않고 대상별로 한 번만 남긴다.
+    bool loggedInventoryMissing;
+    readonly HashSet<CombineRecipe> loggedRoundManagerMissingFor = new HashSet<CombineRecipe>();
+    readonly HashSet<CombineRecipe> loggedItemInventoryMissingFor = new HashSet<CombineRecipe>();
+
     public List<CombineRecipe> GetAvailableRecipes()
     {
         List<CombineRecipe> available = new List<CombineRecipe>();
@@ -87,7 +93,11 @@ public class CombineSystem : MonoBehaviour
         UnitInventory targetInventory = Inventory;
         if (targetInventory == null)
         {
-            Debug.LogError("CombineSystem: inventory 참조가 비어있습니다 (인스펙터 미할당, PlayerContext.Local도 없음).", this);
+            if (!loggedInventoryMissing)
+            {
+                loggedInventoryMissing = true;
+                Debug.LogError("CombineSystem: inventory 참조가 비어있습니다 (인스펙터 미할당, PlayerContext.Local도 없음).", this);
+            }
             return false;
         }
 
@@ -122,7 +132,10 @@ public class CombineSystem : MonoBehaviour
 
         if (roundManager == null)
         {
-            Debug.LogWarning($"CombineSystem: {recipe.commandId} 라운드 조건이 있지만 roundManager가 비어있어 조합을 허용하지 않습니다.");
+            if (loggedRoundManagerMissingFor.Add(recipe))
+            {
+                Debug.LogWarning($"CombineSystem: {recipe.commandId} 라운드 조건이 있지만 roundManager가 비어있어 조합을 허용하지 않습니다.");
+            }
             return false;
         }
 
@@ -185,7 +198,10 @@ public class CombineSystem : MonoBehaviour
 
         if (itemInventory == null)
         {
-            Debug.LogWarning($"CombineSystem: {recipe.commandId}에 아이템 재료가 필요하지만 itemInventory가 비어있습니다.");
+            if (loggedItemInventoryMissingFor.Add(recipe))
+            {
+                Debug.LogWarning($"CombineSystem: {recipe.commandId}에 아이템 재료가 필요하지만 itemInventory가 비어있습니다.");
+            }
             return false;
         }
 
