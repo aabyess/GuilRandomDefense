@@ -73,7 +73,35 @@ public class DebugHud : MonoBehaviour
             }
         }
 
+        GUILayout.Space(10);
+        GUILayout.Label("보유 위습 (G키: 테스트용 위습 1개 지급)");
+
+        foreach (KeyValuePair<string, int> entry in CountOwnedWisps())
+        {
+            GUILayout.Label($"{entry.Key} x{entry.Value}");
+        }
+
         GUILayout.EndArea();
+    }
+
+    // 위습은 인벤토리가 아니라 필드에 존재하는 유닛이라, 씬에서 내 소유 위습을 직접 세어 표시한다.
+    // 임시 디버그 표시라 FindObjectsByType을 쓰지만, 위습 수는 소수(개당 1~수 마리)라 부담이 크지 않다.
+    Dictionary<string, int> CountOwnedWisps()
+    {
+        Dictionary<string, int> counts = new Dictionary<string, int>();
+        int localPlayerId = LocalPlayer.LocalPlayerId;
+
+        foreach (Wisp wisp in FindObjectsByType<Wisp>(FindObjectsSortMode.None))
+        {
+            if (wisp.Data == null) continue;
+            if (wisp.TryGetComponent(out OwnedByPlayer owner) && owner.OwnerId != localPlayerId) continue;
+
+            string name = wisp.Data.wispName;
+            counts.TryGetValue(name, out int count);
+            counts[name] = count + 1;
+        }
+
+        return counts;
     }
 
     Dictionary<UnitData, int> CountByUnit(IReadOnlyList<UnitData> units)
