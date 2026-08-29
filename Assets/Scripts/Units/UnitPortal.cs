@@ -15,6 +15,7 @@ public class UnitPortal : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         if (!other.TryGetComponent(out Wisp wisp)) return;
+        if (wisp.IsConsumed) return;
         if (wisp.Data == null || wisp.Data.targetGrade != acceptedGrade) return;
 
         UnitData reward = specificUnit != null
@@ -29,6 +30,7 @@ public class UnitPortal : MonoBehaviour
 
         int ownerId = wisp.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
 
+        wisp.MarkConsumed();
         Destroy(wisp.gameObject);
 
         PlayerContext.Get(ownerId)?.UnitInventory?.Add(reward);
