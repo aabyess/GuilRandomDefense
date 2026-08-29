@@ -14,6 +14,7 @@ public enum UnitGrade
     Eternal,
     RandomUnit,
     OtherWorld,
+    Superior,   // 특수함 — 희귀함과 전설적인 사이. enum 순서가 아니라 Tier()가 강함을 결정한다.
 }
 
 public static class UnitGradeExtensions
@@ -29,12 +30,13 @@ public static class UnitGradeExtensions
             case UnitGrade.Special: return 2;
             case UnitGrade.Rare:
             case UnitGrade.Hidden: return 3;
-            case UnitGrade.Legendary: return 4;
-            case UnitGrade.Limited: return 5;
+            case UnitGrade.Superior: return 4;
+            case UnitGrade.Legendary: return 5;
+            case UnitGrade.Limited: return 6;
             case UnitGrade.Transcendent:
             case UnitGrade.Immortal:
             case UnitGrade.Eternal:
-            case UnitGrade.OtherWorld: return 6;
+            case UnitGrade.OtherWorld: return 7;
             case UnitGrade.RandomUnit: return -1;
             default: return -1;
         }
