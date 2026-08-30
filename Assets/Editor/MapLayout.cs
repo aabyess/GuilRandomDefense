@@ -65,6 +65,7 @@ public static class MapLayout
         new Island("GachaIsland",      -52f, -50f, 74f, 90f, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
         new Island("CombineTable",      48f, -48f, 116f, 80f, "combine"),
+        new Island("ResourceIsland",   -38f, -128f, 60f, 34f, "seal"),
     };
 
     // 조합식 표에 노출하는 등급 6종 — 표 위의 세로 칸 하나씩.
