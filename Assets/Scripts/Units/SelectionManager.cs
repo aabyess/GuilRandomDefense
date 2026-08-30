@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 public class SelectionManager : MonoBehaviour
 {
     [SerializeField] float dragThreshold = 4f;
+    [SerializeField] int maxSelection = 12;   // 원작·워크3와 동일. 하단 카드 칸 수와 맞춘다.
     [SerializeField] Color boxColor = new Color(0.2f, 0.8f, 0.2f, 0.25f);
     [SerializeField] Color boxBorderColor = new Color(0.2f, 0.8f, 0.2f, 0.9f);
 
@@ -114,6 +115,8 @@ public class SelectionManager : MonoBehaviour
 
     void AddToSelection(Selectable s)
     {
+        if (maxSelection > 0 && selected.Count >= maxSelection) return;
+
         s.SetSelected(true);
         selected.Add(s);
     }

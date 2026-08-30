@@ -31,6 +31,9 @@ public class UnitSpawner : MonoBehaviour
         {
             agent.speed = data.moveSpeed;
             agent.areaMask = ComputeAreaMask(data.movementAbility);
+            // 아군끼리는 서로 통과한다(원작과 같음). 회피를 켜두면 유닛이 많아질수록
+            // 서로 밀어내느라 목적지에 못 가고, 회피 계산 자체도 유닛 수의 제곱으로 늘어난다.
+            agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
         }
 
         return instance;

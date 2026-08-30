@@ -12,6 +12,7 @@ public class MinimapCamera : MonoBehaviour, IPointerClickHandler
     [SerializeField] float mapExtent = 220f;
     [SerializeField] float cameraHeight = 300f;
     [SerializeField] int textureSize = 256;
+    [SerializeField] float refreshesPerSecond = 12f;
     [SerializeField] RtsCameraController mainCameraController;
 
     Camera minimapCam;
@@ -33,6 +34,8 @@ public class MinimapCamera : MonoBehaviour, IPointerClickHandler
         minimapCam.orthographic = true;
         minimapCam.orthographicSize = mapExtent;
         minimapCam.targetTexture = renderTexture;
+        // 켜 두면 매 프레임 맵 전체가 한 번 더 렌더링된다. 미니맵은 초당 몇 번이면 충분하다.
+        minimapCam.enabled = false;
         minimapCam.clearFlags = CameraClearFlags.SolidColor;
         minimapCam.backgroundColor = Color.black;
 
@@ -44,6 +47,16 @@ public class MinimapCamera : MonoBehaviour, IPointerClickHandler
 
         if (mainCameraController == null)
             mainCameraController = FindFirstObjectByType<RtsCameraController>();
+    }
+
+    float nextRefreshTime;
+
+    void Update()
+    {
+        if (minimapCam == null || Time.unscaledTime < nextRefreshTime) return;
+
+        nextRefreshTime = Time.unscaledTime + 1f / Mathf.Max(1f, refreshesPerSecond);
+        minimapCam.Render();
     }
 
     void OnDestroy()

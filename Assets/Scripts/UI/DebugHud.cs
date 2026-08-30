@@ -162,10 +162,20 @@ public class DebugHud : MonoBehaviour
     }
 
     // 위습은 인벤토리가 아니라 필드에 존재하는 유닛이라, 씬에서 내 소유 위습을 직접 세어 표시한다.
-    // 임시 디버그 표시라 FindObjectsByType을 쓰지만, 위습 수는 소수(개당 1~수 마리)라 부담이 크지 않다.
+    // OnGUI는 한 프레임에 두 번(Layout/Repaint) 불리므로, 여기서 씬 전체를 훑으면 프레임당 2회 전수 조사가 된다.
+    // 디버그 표시라 초당 4회면 충분하다.
+    const float WispCountInterval = 0.25f;
+
+    readonly Dictionary<string, int> wispCounts = new Dictionary<string, int>();
+    float nextWispCountTime;
+
     Dictionary<string, int> CountOwnedWisps()
     {
-        Dictionary<string, int> counts = new Dictionary<string, int>();
+        if (Time.unscaledTime < nextWispCountTime) return wispCounts;
+        nextWispCountTime = Time.unscaledTime + WispCountInterval;
+
+        Dictionary<string, int> counts = wispCounts;
+        counts.Clear();
         int localPlayerId = LocalPlayer.LocalPlayerId;
 
         foreach (Wisp wisp in FindObjectsByType<Wisp>(FindObjectsSortMode.None))

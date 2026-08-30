@@ -32,7 +32,6 @@ public class HealthBarLayer : MonoBehaviour
     {
         cam = Camera.main;
         BuildCanvas();
-        BuildPool();
     }
 
     void BuildCanvas()
@@ -49,12 +48,14 @@ public class HealthBarLayer : MonoBehaviour
         canvasRect = (RectTransform)canvasObject.transform;
     }
 
-    void BuildPool()
+    // 미리 64개를 만들면 플레이 진입 순간에 GameObject 192개가 한꺼번에 생겨 끊긴다.
+    // 화면에 실제로 보이는 만큼만, 필요해질 때 만든다.
+    Bar GetOrCreateBar(int index)
     {
-        for (int i = 0; i < maxBars; i++)
-        {
+        while (pool.Count <= index)
             pool.Add(CreateBar());
-        }
+
+        return pool[index];
     }
 
     Bar CreateBar()
@@ -113,7 +114,7 @@ public class HealthBarLayer : MonoBehaviour
         foreach (EnemyDummy enemy in EnemyDummy.Active)
         {
             if (enemy == null) continue;
-            if (used >= pool.Count) break;
+            if (used >= maxBars) break;
 
             Vector3 worldPos = enemy.transform.position + Vector3.up * barHeightOffset;
             Vector3 screenPos = cam.WorldToScreenPoint(worldPos);
@@ -122,7 +123,7 @@ public class HealthBarLayer : MonoBehaviour
             if (screenPos.z <= 0f) continue;
             if (screenPos.x < 0f || screenPos.x > Screen.width || screenPos.y < 0f || screenPos.y > Screen.height) continue;
 
-            Bar bar = pool[used];
+            Bar bar = GetOrCreateBar(used);
             if (!bar.root.gameObject.activeSelf)
             {
                 bar.root.gameObject.SetActive(true);
