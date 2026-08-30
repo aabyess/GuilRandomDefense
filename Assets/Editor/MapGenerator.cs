@@ -478,9 +478,17 @@ public static class MapGenerator
             displayZ -= (Mathf.CeilToInt(units.Count / (float)perRow) + 1) * SlotSpacing;
         }
 
-        // 전시가 끝난 아래쪽은 비어 있다. 거기에 자원 칸을 넣는다.
-        string resourceReport = BuildResourceCells(parent,
-            displayLeft - 2f, left + island.size.x - 2f, displayZ - SlotSpacing, bandBottom);
+        float displayRight = left + island.size.x - 2f;
+
+        // 자원 칸은 동서남북 포탈을 두려면 정사각형에 가까워야 한다.
+        // 열 아래쪽에서 폭만큼 떼어 쓰고, 남는 위쪽 전부를 전시 칸으로 준다.
+        float hubHeight = displayRight - (displayLeft - 2f);
+        float hubTop = bandBottom + hubHeight;
+
+        BuildCellWalls(parent, "전시칸", displayLeft - 2f, displayRight, bandTop, hubTop, false);
+
+        string resourceReport = BuildResourceHub(parent,
+            displayLeft - 2f, displayRight, hubTop - GateThickness, bandBottom);
 
         float displayDepth = bandTop - displayZ;
         float available = bandTop - bandBottom;
@@ -496,54 +504,45 @@ public static class MapGenerator
                $"전시 {displayed}종 (깊이 {displayDepth:F0}/{available:F0}, {fit})." + pending + resourceReport;
     }
 
-    // 자원 포탈. 뽑기 섬 오른쪽 아래의 안 쓰는 공간에 칸으로 넣는다.
-    // 별도 섬을 띄우는 것보다, 이미 있는 섬의 빈 곳을 쓰는 편이 동선이 짧다.
-    static string BuildResourceCells(Transform parent, float xLeft, float xRight, float zTop, float zBottom)
+    // 자원 포탈 칸. 원작의 자원 섬을 한 칸으로 옮긴 것 —
+    // 가운데에서 위습이 생기고, 플레이어가 동서남북 네 포탈 중 하나로 끌고 간다.
+    // 넷으로 칸을 쪼개면 위습이 어느 칸에 생기느냐가 선택을 대신해버려서 고를 여지가 없어진다.
+    static string BuildResourceHub(Transform parent, float xLeft, float xRight, float zTop, float zBottom)
     {
         GachaTable table = AssetDatabase.LoadAssetAtPath<GachaTable>("Assets/Data/MainGachaTable.asset");
         UnitSpawner spawner = Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
 
-        // 유닛랜덤 · 금화랜덤 · 목재랜덤 · 도움소마나
-        const int cellCount = 4;
-        float cellHeight = (zTop - zBottom) / cellCount;
+        BuildCellWalls(parent, "자원칸", xLeft, xRight, zTop, zBottom, false);
+
         float centerX = (xLeft + xRight) * 0.5f;
-        int pending = 0;
+        float centerZ = (zTop + zBottom) * 0.5f;
+        float armX = (xRight - xLeft) * 0.5f - PortalDiameter * 0.5f - 2f;
+        float armZ = (zTop - zBottom) * 0.5f - PortalDiameter * 0.5f - 2f;
+        float y = MapLayout.IslandTop + 0.25f;
 
-        for (int i = 0; i < cellCount; i++)
-        {
-            float cellTop = zTop - cellHeight * i;
-            float cellBottom = zTop - cellHeight * (i + 1);
-            float z = cellTop - PortalInset;
+        // 북: 유닛 랜덤 — 등급 무관 랜덤이라 UnitPortal 쪽이다.
+        GameObject unitRandom = CreatePortalObject(parent, "Portal_유닛랜덤",
+            new Vector3(centerX, y, centerZ + armZ), PortalDiameter);
+        ConfigurePortal(unitRandom, UnitGrade.RandomUnit, null, table, spawner);
 
-            string label = new[] { "유닛랜덤", "금화랜덤", "목재랜덤", "도움소마나" }[i];
-            BuildCellWalls(parent, $"자원칸_{label}", xLeft, xRight, cellTop, cellBottom, i == 0);
+        // 동: 금화 랜덤 — 원작은 "15 + 라운드×12~35". 라운드 비례 부분만 옮겼다.
+        BuildResourcePortal(parent, "Portal_금화랜덤", new Vector3(centerX + armX, 0f, centerZ),
+            ResourcePortal.Payout.Gold, ResourceType.Wood, 15, 20, 100f);
 
-            switch (i)
-            {
-                case 0:
-                    GameObject unitRandom = CreatePortalObject(parent, "Portal_유닛랜덤",
-                        new Vector3(centerX, MapLayout.IslandTop + 0.25f, z), PortalDiameter);
-                    ConfigurePortal(unitRandom, UnitGrade.RandomUnit, null, table, spawner);
-                    break;
-                case 1:
-                    // 원작은 "15 + 라운드×12~35". 라운드 비례 부분만 옮겼다.
-                    BuildResourcePortal(parent, "Portal_금화랜덤", new Vector3(centerX, 0f, z),
-                        ResourcePortal.Payout.Gold, ResourceType.Wood, 15, 20, 100f);
-                    break;
-                case 2:
-                    BuildResourcePortal(parent, "Portal_목재랜덤", new Vector3(centerX, 0f, z),
-                        ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f);
-                    break;
-                default:
-                    // 마나 자원이 아직 없다. 동작 안 하는 포탈 대신 자리만 세운다.
-                    PlaceUnitMarker(parent, "미구현_도움소마나", new Vector3(centerX, 0f, z), UnitGrade.RandomUnit);
-                    pending++;
-                    break;
-            }
-        }
+        // 서: 목재 랜덤 — 원작은 66% 확률로 목재 1개.
+        BuildResourcePortal(parent, "Portal_목재랜덤", new Vector3(centerX - armX, 0f, centerZ),
+            ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f);
 
-        return $"\n자원 칸: 유닛랜덤·금화랜덤·목재랜덤 포탈 3개" +
-               (pending > 0 ? $", 미구현 {pending}칸(도움소 마나 — 마나 자원 없음)." : ".");
+        // 남: 도움소 마나 — 마나 자원이 아직 없어 자리만 세운다.
+        PlaceUnitMarker(parent, "미구현_도움소마나", new Vector3(centerX, 0f, centerZ - armZ), UnitGrade.RandomUnit);
+
+        // 가운데에서 위습이 생긴다. 여기서 어느 포탈로 갈지는 플레이어가 정한다.
+        GameObject cell = new GameObject("위습칸_자원");
+        cell.transform.SetParent(parent, false);
+        cell.transform.position = new Vector3(centerX, MapLayout.IslandTop, centerZ);
+        cell.AddComponent<WispCell>().SetGrade(UnitGrade.RandomUnit);
+
+        return "\n자원 칸: 가운데 위습 → 동서남북 포탈 4개 (유닛·금화·목재 동작, 도움소 마나는 미구현).";
     }
 
     static void BuildResourcePortal(Transform parent, string name, Vector3 ground,
