@@ -59,8 +59,8 @@ public static class MapLayout
     {
         // 이벤트 존이 위, 그 아래 불멸·초월 전시가 가로로 나란히.
         new Island("PunkHazard",        30f,  56f, 56f, 40f, "event"),
-        new Island("ImmortalDisplay",  172f, -30f, 40f, 36f, "display"),
-        new Island("TranscendDisplay", 128f, -30f, 40f, 36f, "display"),
+        new Island("ImmortalDisplay",   98f,  46f, 60f, 30f, "display"),
+        new Island("TranscendDisplay",  98f,  12f, 60f, 24f, "display"),
         new Island("StoryZone",       -138f, -46f, 54f, 54f, "story"),
         new Island("GachaIsland",      -52f, -46f, 74f, 66f, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
