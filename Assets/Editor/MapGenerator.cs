@@ -195,7 +195,7 @@ public static class MapGenerator
     // 조합식 표: 등급별 세로 칸에 그 등급 유닛을 늘어놓는다.
     // 원작처럼 표 위에 유닛이 서 있고 플레이어가 그걸 보고 조합을 익히는 구조라,
     // 지금은 스킨 대신 자리 표시 기둥을 세운다. 표가 얼마나 커야 하는지도 이걸로 드러난다.
-    const float SlotSpacing = 4f;
+    const float SlotSpacing = 4.5f;
     const float SlotSize = 2.2f;
     const float SlotHeight = 2.6f;
 
@@ -302,6 +302,11 @@ public static class MapGenerator
     const float PortalDiameter = 6f;
     const float ChoicePortalDiameter = 4.2f;
 
+    // 흔함 선택 칸은 원작처럼 칸마다 벽을 둘러 부스로 만든다.
+    const float BoothDepth = 9f;        // 포탈 앞부터 뒷벽까지
+    const float BoothWallHeight = 3.2f;
+    const float BoothWallThickness = 0.6f;
+
     static string BuildGachaPortals(GameObject gachaIsland)
     {
         if (gachaIsland == null) return "";
@@ -317,7 +322,8 @@ public static class MapGenerator
 
         // --- 위쪽 가로줄: 흔함 유닛을 하나씩 고르는 칸 ---
         List<UnitData> commons = LoadUnitsOfGrade(UnitGrade.Common);
-        float rowZ = top - 7f;
+        // 부스 뒷벽까지 섬 안에 들어와야 한다 — 포탈은 뒷벽에서 부스 깊이만큼 앞에 놓는다.
+        float rowZ = top - BoothDepth - 2f;
         float step = island.size.x / (commons.Count + 1);
 
         for (int i = 0; i < commons.Count; i++)
@@ -330,7 +336,8 @@ public static class MapGenerator
             ConfigurePortal(stand, UnitGrade.Common, unit, table, spawner);
 
             PlaceUnitMarker(parent, $"흔함선택_{unit.unitName}_표식",
-                new Vector3(x, 0f, rowZ + 4.5f), UnitGrade.Common);
+                new Vector3(x, 0f, rowZ + BoothDepth * 0.5f), UnitGrade.Common);
+            BuildBooth(parent, unit.unitName, x, rowZ, step);
         }
 
         // --- 왼쪽 세로줄: 등급 내 랜덤 포탈 ---
@@ -380,6 +387,38 @@ public static class MapGenerator
 
         return $"\n뽑기 섬: 흔함 선택 {commons.Count}칸, 등급 랜덤 {randomGrades.Length}칸, " +
                $"전시 {displayed}종 (깊이 {displayDepth:F0}/{available:F0}, {fit}).";
+    }
+
+    // 칸마다 좌우 벽과 뒷벽을 세워 원작의 부스 모양을 만든다. 앞쪽(포탈 방향)은 열어 둔다.
+    static void BuildBooth(Transform parent, string unitName, float centerX, float portalZ, float boothWidth)
+    {
+        float backZ = portalZ + BoothDepth;
+        float midZ = portalZ + BoothDepth * 0.5f;
+        float halfWidth = boothWidth * 0.5f;
+        float y = MapLayout.IslandTop + BoothWallHeight * 0.5f;
+
+        BuildWall(parent, $"부스_{unitName}_뒷벽",
+            new Vector3(centerX, y, backZ),
+            new Vector3(boothWidth, BoothWallHeight, BoothWallThickness));
+
+        BuildWall(parent, $"부스_{unitName}_좌벽",
+            new Vector3(centerX - halfWidth, y, midZ),
+            new Vector3(BoothWallThickness, BoothWallHeight, BoothDepth));
+
+        BuildWall(parent, $"부스_{unitName}_우벽",
+            new Vector3(centerX + halfWidth, y, midZ),
+            new Vector3(BoothWallThickness, BoothWallHeight, BoothDepth));
+    }
+
+    static void BuildWall(Transform parent, string name, Vector3 position, Vector3 scale)
+    {
+        GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        wall.name = name;
+        wall.transform.SetParent(parent, false);
+        wall.transform.position = position;
+        wall.transform.localScale = scale;
+        Paint(wall, "rock", scale.x, scale.z);
+        // 콜라이더는 남긴다 — 실제로 막히는 벽이라야 유닛이 부스 사이로 새지 않는다.
     }
 
     // 조합식 표와 같은 자리 표시 기둥. 나중에 스킨으로 교체한다.
