@@ -9,53 +9,65 @@ using UnityEngine.InputSystem;
 public class RtsCameraController : MonoBehaviour
 {
     [Header("이동")]
-    [SerializeField] float moveSpeed = 60f;
-    [SerializeField] float edgeThickness = 12f;      // 화면 가장자리에서 몇 픽셀 안쪽까지를 밀기 영역으로 볼지
+    [SerializeField] float moveSpeed = 70f;
+    [SerializeField] float edgeThickness = 16f;      // 화면 가장자리에서 몇 픽셀 안쪽까지를 밀기 영역으로 볼지
     [SerializeField] bool edgeScrollEnabled = true;
+    [SerializeField] float inputSmoothing = 12f;     // 클수록 즉각적. 0이면 감속 없음
 
     [Header("확대·축소")]
-    [SerializeField] float zoomSpeed = 40f;
-    [SerializeField] float minHeight = 20f;
+    [SerializeField] float zoomStep = 8f;            // 휠 한 칸당 높이 변화
+    [SerializeField] float zoomSmoothing = 10f;
+    [SerializeField] float minHeight = 12f;
     [SerializeField] float maxHeight = 220f;
 
     [Header("이동 범위")]
     [SerializeField] Vector2 boundsMin = new Vector2(-220f, -220f);
     [SerializeField] Vector2 boundsMax = new Vector2(220f, 220f);
 
-    [Header("감속")]
-    [SerializeField, Range(0f, 1f)] float smoothing = 0.15f;
+    // 이동 속도의 기준 높이. 이보다 높으면 빠르게, 낮으면 천천히 움직여
+    // 화면에서 체감하는 이동량을 비슷하게 유지한다.
+    const float SpeedReferenceHeight = 60f;
 
-    Vector3 velocity;
+    Vector2 smoothedInput;
+    float targetHeight;
+
+    void Start()
+    {
+        targetHeight = transform.position.y;
+    }
 
     void Update()
     {
-        Vector3 target = transform.position
-                       + PlanarMove() * (moveSpeed * HeightScale() * Time.deltaTime)
-                       + Vector3.up * (ZoomDelta() * zoomSpeed);
+        float delta = Time.unscaledDeltaTime;   // 일시정지·배속과 무관하게 카메라는 움직여야 한다
 
-        target.x = Mathf.Clamp(target.x, boundsMin.x, boundsMax.x);
-        target.z = Mathf.Clamp(target.z, boundsMin.y, boundsMax.y);
-        target.y = Mathf.Clamp(target.y, minHeight, maxHeight);
+        Vector2 rawInput = Vector2.ClampMagnitude(KeyboardInput() + EdgeInput(), 1f);
+        smoothedInput = inputSmoothing > 0f
+            ? Vector2.Lerp(smoothedInput, rawInput, 1f - Mathf.Exp(-inputSmoothing * delta))
+            : rawInput;
 
-        transform.position = smoothing > 0f
-            ? Vector3.SmoothDamp(transform.position, target, ref velocity, smoothing)
-            : target;
+        targetHeight = Mathf.Clamp(targetHeight - ZoomInput() * zoomStep, minHeight, maxHeight);
+
+        Vector3 position = transform.position;
+        position += PlanarDirection(smoothedInput) * (moveSpeed * HeightScale() * delta);
+        position.y = Mathf.Lerp(position.y, targetHeight, 1f - Mathf.Exp(-zoomSmoothing * delta));
+
+        position.x = Mathf.Clamp(position.x, boundsMin.x, boundsMax.x);
+        position.z = Mathf.Clamp(position.z, boundsMin.y, boundsMax.y);
+        transform.position = position;
     }
 
-    // 높이 있을수록 화면에 담기는 범위가 넓으니, 같은 조작에도 더 많이 움직여야 속도가 일정하게 느껴진다.
-    float HeightScale() => Mathf.Clamp(transform.position.y / minHeight, 1f, 4f);
+    float HeightScale() => Mathf.Clamp(transform.position.y / SpeedReferenceHeight, 0.35f, 3f);
 
-    Vector3 PlanarMove()
+    // 카메라가 기울어져 있어도 이동은 수평면 기준이라, forward의 y 성분을 버린 방향을 쓴다.
+    Vector3 PlanarDirection(Vector2 input)
     {
-        Vector2 input = KeyboardInput() + EdgeInput();
         if (input.sqrMagnitude < 0.0001f) return Vector3.zero;
 
-        // 카메라가 기울어져 있어도 이동은 수평면 기준이라, forward의 y 성분을 버린 방향을 쓴다.
         Vector3 forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
         if (forward.sqrMagnitude < 0.0001f) forward = Vector3.forward;
         Vector3 right = Vector3.Cross(Vector3.up, forward);
 
-        return Vector3.ClampMagnitude(right * input.x + forward * input.y, 1f);
+        return right * input.x + forward * input.y;
     }
 
     static Vector2 KeyboardInput()
@@ -90,10 +102,13 @@ public class RtsCameraController : MonoBehaviour
         return input;
     }
 
-    static float ZoomDelta()
+    // 휠 한 칸의 크기가 플랫폼·장치마다 달라서 방향만 취한다.
+    static float ZoomInput()
     {
         if (Mouse.current == null) return 0f;
-        // 휠 한 칸이 플랫폼마다 크기가 달라, 방향만 취하고 속도는 zoomSpeed로 정한다.
-        return -Mathf.Sign(Mouse.current.scroll.ReadValue().y) * Mathf.Min(Mathf.Abs(Mouse.current.scroll.ReadValue().y), 1f);
+
+        float scroll = Mouse.current.scroll.ReadValue().y;
+        if (Mathf.Abs(scroll) < 0.01f) return 0f;
+        return Mathf.Sign(scroll);
     }
 }

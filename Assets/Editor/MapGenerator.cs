@@ -277,9 +277,13 @@ public static class MapGenerator
         if (camera.GetComponent<RtsCameraController>() == null)
             camera.gameObject.AddComponent<RtsCameraController>();
 
-        MapLayout.Island lane = MapLayout.Lanes[2];   // 메인 방어 필드 아래쪽 — 여기서 시작하면 레인 4개가 다 보인다
-        camera.transform.position = new Vector3(lane.center.x + 32f, 120f, lane.center.y - 60f);
-        camera.transform.rotation = Quaternion.Euler(52f, 0f, 0f);
+        // 시작 시점은 내 레인(1번) 하나가 화면에 차는 정도. 전체 조망은 휠로 빼면 된다.
+        MapLayout.Island lane = MapLayout.Lanes[0];
+        const float pitch = 50f;
+        const float height = 52f;
+        float backOff = height / Mathf.Tan(pitch * Mathf.Deg2Rad);
+        camera.transform.position = new Vector3(lane.center.x, height, lane.center.y - backOff);
+        camera.transform.rotation = Quaternion.Euler(pitch, 0f, 0f);
         camera.farClipPlane = Mathf.Max(camera.farClipPlane, 1000f);
 
         return "\n카메라에 RTS 조작(가장자리 밀기·WASD·휠 확대)을 붙이고 메인 필드 위로 옮겼습니다.";
