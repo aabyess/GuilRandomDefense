@@ -40,32 +40,79 @@ public class RtsCameraController : MonoBehaviour
     /// <summary>내 레인이 화면 중앙에 오도록 맞춘다. 레인 표식이 없으면 씬에 놓인 위치를 그대로 쓴다.</summary>
     public void FocusOnLocalLane()
     {
-        LaneMarker lane = LaneMarker.Get(LocalPlayer.LocalPlayerId);
+        int laneIndex = LocalPlayer.LocalPlayerId;
+
+        Vector3 center;
+        float extent;
+        string source;
+
+        LaneMarker lane = LaneMarker.Get(laneIndex);
         if (lane != null)
         {
-            MoveTo(lane.transform.position);
+            center = lane.transform.position;
+            // 섬은 스케일된 큐브라 lossyScale이 곧 크기다.
+            extent = Mathf.Max(lane.transform.lossyScale.x, lane.transform.lossyScale.z);
+            source = "LaneMarker";
+        }
+        else if (TryGetLaneBoundsFromPath(laneIndex, out center, out extent))
+        {
+            source = "순찰 경로";
+        }
+        else
+        {
+            Debug.LogWarning($"[카메라] {laneIndex}번 레인을 찾지 못해 시작 위치를 그대로 둡니다.", this);
             return;
         }
 
-        // 표식이 없는 씬(맵을 다시 생성하기 전)에서도 동작하도록, 그 레인의 순찰 경로 중심을 쓴다.
-        if (TryGetLanePathCenter(LocalPlayer.LocalPlayerId, out Vector3 center))
-            MoveTo(center);
+        // 레인이 화면에 차도록 높이를 맞춘다. 기울기와 시야각에서 지면 세로 커버리지를 역산한다.
+        targetHeight = Mathf.Clamp(HeightToCover(extent * 1.4f), minHeight, maxHeight);
+        Vector3 position = transform.position;
+        position.y = targetHeight;
+        transform.position = position;
+
+        MoveTo(center);
+
+        Debug.Log($"[카메라] {laneIndex}번 레인({source}) 중심 {center}, 크기 {extent:F0} " +
+                  $"→ 높이 {targetHeight:F0}, 카메라 위치 {transform.position}, 회전 {transform.eulerAngles}");
     }
 
-    static bool TryGetLanePathCenter(int laneIndex, out Vector3 center)
+    /// <summary>지면에서 세로로 span만큼 담기려면 필요한 카메라 높이.</summary>
+    float HeightToCover(float span)
+    {
+        Camera cam = GetComponent<Camera>();
+        float halfFov = (cam != null ? cam.fieldOfView : 60f) * 0.5f;
+        float pitch = transform.eulerAngles.x;
+
+        float near = Mathf.Tan((pitch + halfFov) * Mathf.Deg2Rad);
+        float far = Mathf.Tan((pitch - halfFov) * Mathf.Deg2Rad);
+
+        // 시야 위쪽이 지평선을 넘어가면(각도 0 이하) 커버리지가 무한이 된다 — 그땐 높이를 못 구한다.
+        if (far <= 0.01f || near <= 0.01f) return transform.position.y;
+
+        float coveragePerUnitHeight = 1f / far - 1f / near;
+        return coveragePerUnitHeight > 0.01f ? span / coveragePerUnitHeight : transform.position.y;
+    }
+
+    static bool TryGetLaneBoundsFromPath(int laneIndex, out Vector3 center, out float extent)
     {
         center = Vector3.zero;
+        extent = 0f;
 
         string expected = $"Lane{laneIndex + 1}_Path";
         foreach (WaypointPath path in FindObjectsByType<WaypointPath>(FindObjectsSortMode.None))
         {
             if (path.name != expected || path.PointCount == 0) continue;
 
-            Vector3 sum = Vector3.zero;
-            for (int i = 0; i < path.PointCount; i++)
-                sum += path.GetPoint(i);
+            Vector3 min = path.GetPoint(0);
+            Vector3 max = min;
+            for (int i = 1; i < path.PointCount; i++)
+            {
+                min = Vector3.Min(min, path.GetPoint(i));
+                max = Vector3.Max(max, path.GetPoint(i));
+            }
 
-            center = sum / path.PointCount;
+            center = (min + max) * 0.5f;
+            extent = Mathf.Max(max.x - min.x, max.z - min.z);
             return true;
         }
 
