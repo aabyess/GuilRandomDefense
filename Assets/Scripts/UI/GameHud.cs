@@ -182,7 +182,10 @@ public class GameHud : MonoBehaviour
 
         // 시야 표시는 RawImage와 별개의 CanvasRenderer가 필요해 자식 오브젝트로 둔다.
         // 같은 크기로 꽉 채워야 MinimapCamera.WorldToMinimapLocal이 계산하는 로컬 좌표계와 일치한다.
-        GameObject indicatorObj = new GameObject("ViewportIndicator", typeof(RectTransform), typeof(MinimapViewportIndicator));
+        // new GameObject(name, types)는 [RequireComponent]를 채워주지 않는다.
+        // Graphic 계열은 CanvasRenderer 없이는 Awake에서 바로 예외가 난다.
+        GameObject indicatorObj = new GameObject("ViewportIndicator",
+            typeof(RectTransform), typeof(CanvasRenderer), typeof(MinimapViewportIndicator));
         indicatorObj.transform.SetParent(obj.transform, false);
 
         RectTransform indicatorRect = (RectTransform)indicatorObj.transform;

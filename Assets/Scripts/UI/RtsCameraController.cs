@@ -41,9 +41,35 @@ public class RtsCameraController : MonoBehaviour
     public void FocusOnLocalLane()
     {
         LaneMarker lane = LaneMarker.Get(LocalPlayer.LocalPlayerId);
-        if (lane == null) return;
+        if (lane != null)
+        {
+            MoveTo(lane.transform.position);
+            return;
+        }
 
-        MoveTo(lane.transform.position);
+        // 표식이 없는 씬(맵을 다시 생성하기 전)에서도 동작하도록, 그 레인의 순찰 경로 중심을 쓴다.
+        if (TryGetLanePathCenter(LocalPlayer.LocalPlayerId, out Vector3 center))
+            MoveTo(center);
+    }
+
+    static bool TryGetLanePathCenter(int laneIndex, out Vector3 center)
+    {
+        center = Vector3.zero;
+
+        string expected = $"Lane{laneIndex + 1}_Path";
+        foreach (WaypointPath path in FindObjectsByType<WaypointPath>(FindObjectsSortMode.None))
+        {
+            if (path.name != expected || path.PointCount == 0) continue;
+
+            Vector3 sum = Vector3.zero;
+            for (int i = 0; i < path.PointCount; i++)
+                sum += path.GetPoint(i);
+
+            center = sum / path.PointCount;
+            return true;
+        }
+
+        return false;
     }
 
     // 미니맵 클릭 등 외부에서 카메라를 특정 지점으로 즉시 옮길 때 쓴다. 높이(줌)는 유지한다.

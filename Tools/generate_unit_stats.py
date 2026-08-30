@@ -19,7 +19,7 @@ def stats(tier):
         'attackPower':  round(5 * 2.2 ** tier, 1),
         'attackRange':  round(6 + 0.5 * tier, 1),
         'attackSpeed':  round(1.0 + 0.08 * tier, 2),
-        'moveSpeed':    3.5,
+        'moveSpeed':    8.0,   # 맵이 420 규모라 3.5로는 한 섬 건너는 데만 한참 걸린다
         'damageType':   1,   # AD — 실제 타입은 콘텐츠 확정 후 교체
     }
 
