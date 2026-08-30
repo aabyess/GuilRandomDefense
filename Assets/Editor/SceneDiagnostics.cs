@@ -50,7 +50,7 @@ public static class SceneDiagnostics
                 for (int i = 0; i < components.Length; i++)
                 {
                     if (components[i] != null) continue;
-                    report.AppendLine($"  ❌ {Path(t)} 의 {i}번 컴포넌트");
+                    report.AppendLine($"  ❌ {HierarchyPath(t)} 의 {i}번 컴포넌트");
                     missing++;
                 }
             }
@@ -86,7 +86,7 @@ public static class SceneDiagnostics
         EditorUtility.DisplayDialog("씬 배선 덤프", $"{OutputPath} 에 저장했습니다.", "확인");
     }
 
-    static string Path(Transform t)
+    static string HierarchyPath(Transform t)
     {
         string path = t.name;
         while (t.parent != null)
