@@ -9,6 +9,22 @@ public class UnitAttacker : MonoBehaviour
     float attackTimer;
     OwnedByPlayer owner;
 
+    // 디버그 표시용 — 스탯이 실제로 적용됐는지 화면에서 확인하기 위해 노출한다.
+    public float AttackDamage => attackDamage;
+    public float AttackRange => attackRange;
+    public float AttackInterval => attackInterval;
+
+    public float DistanceToClosestEnemy()
+    {
+        float best = float.PositiveInfinity;
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+        {
+            float distance = Vector3.Distance(enemy.transform.position, transform.position);
+            if (distance < best) best = distance;
+        }
+        return best;
+    }
+
     public void ApplyStats(float damage, float range, float attacksPerSecond)
     {
         attackDamage = damage;

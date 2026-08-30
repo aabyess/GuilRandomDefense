@@ -10,6 +10,11 @@ public class DebugHud : MonoBehaviour
     [SerializeField] CombineSystem combineSystem;
     [SerializeField] RoundManager roundManager;
     [SerializeField] Warehouse warehouse;
+    [SerializeField] SelectionManager selectionManager;
+
+    SelectionManager Selection => selectionManager != null
+        ? selectionManager
+        : selectionManager = FindFirstObjectByType<SelectionManager>();
 
     GoldWallet Wallet => goldWallet != null ? goldWallet : PlayerContext.Local != null ? PlayerContext.Local.GoldWallet : null;
     UnitInventory Inventory => unitInventory != null ? unitInventory : PlayerContext.Local != null ? PlayerContext.Local.UnitInventory : null;
@@ -84,6 +89,53 @@ public class DebugHud : MonoBehaviour
         foreach (KeyValuePair<string, int> entry in CountOwnedWisps())
         {
             GUILayout.Label($"{entry.Key} x{entry.Value}");
+        }
+
+        GUILayout.EndArea();
+
+        DrawSelectionPanel();
+    }
+
+    // 선택한 대상의 실제 런타임 스탯을 보여준다. 스탯이 붙지 않았거나 사거리가 모자라서
+    // 적이 안 죽는 경우를 화면에서 바로 구분하기 위한 임시 패널이다.
+    void DrawSelectionPanel()
+    {
+        GUILayout.BeginArea(new Rect(Screen.width - 330, 10, 320, 300));
+
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count == 0)
+        {
+            GUILayout.Label("선택된 대상 없음 (좌클릭으로 선택)");
+        }
+        else
+        {
+            Selectable first = selection.Selected[0];
+            GUILayout.Label($"선택: {first.name}  (총 {selection.Selected.Count}개)");
+
+            if (first.TryGetComponent(out UnitAttacker attacker))
+            {
+                float distance = attacker.DistanceToClosestEnemy();
+                GUILayout.Label($"공격력 {attacker.AttackDamage}  사거리 {attacker.AttackRange}  간격 {attacker.AttackInterval:F2}s");
+                GUILayout.Label(float.IsPositiveInfinity(distance)
+                    ? "가장 가까운 적: 없음"
+                    : $"가장 가까운 적: {distance:F1}m  →  {(distance <= attacker.AttackRange ? "사거리 안 (때리는 중)" : "사거리 밖")}");
+
+                if (attacker.AttackDamage <= 0f)
+                    GUILayout.Label("⚠️ 공격력이 0이라 절대 죽지 않습니다");
+            }
+            else
+            {
+                GUILayout.Label("⚠️ UnitAttacker가 없습니다 — 위습이거나 공격 못 하는 오브젝트");
+            }
+        }
+
+        GUILayout.Space(10);
+        GUILayout.Label("필드 몹 체력 (최대 8마리)");
+        int shown = 0;
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+        {
+            if (shown++ >= 8) break;
+            GUILayout.Label($"  hp {enemy.Hp:F1}");
         }
 
         GUILayout.EndArea();
