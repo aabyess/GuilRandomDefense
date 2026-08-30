@@ -382,9 +382,11 @@ public static class MapGenerator
         // 흔함 구역 아래를 막는다. 안 막으면 부스 앞 공간이 첫 등급 칸과 이어져,
         // 흔함 위습이 안흔함 칸으로 내려가고 안흔함 위습도 올라온다.
         float commonFloorZ = rowZ - CommonAreaDepth;
+        // 섬 끝까지 물리지 않으면 양 끝에 틈이 남는다. 위습 지름이 0.56이라
+        // 1짜리 틈으로도 빠져나가고, 그러면 칸 옆 좁은 길을 따라 아래로 내려간다.
         BuildWall(parent, "흔함구역_아래벽",
             new Vector3(island.center.x, MapLayout.IslandTop + WallHeight * 0.5f, commonFloorZ),
-            new Vector3(island.size.x - 2f, WallHeight, GateThickness));
+            new Vector3(island.size.x + GateThickness, WallHeight, GateThickness));
 
         // 흔함 선택 위습은 부스 줄 앞, 막힌 구역 안에서 생긴다 — 어느 부스로 갈지는 플레이어가 고른다.
         GameObject commonCell = new GameObject("위습칸_흔함선택");
@@ -742,13 +744,22 @@ public static class MapGenerator
 
         BuildWall(parent, "부스_뒷벽",
             new Vector3((xLeft + xRight) * 0.5f, y, backZ),
-            new Vector3(xRight - xLeft - BoothWallThickness, BoothWallHeight, BoothWallThickness));
+            new Vector3(xRight - xLeft + BoothWallThickness, BoothWallHeight, BoothWallThickness));
 
         // 칸막이는 부스 사이마다 한 장씩, 양 끝까지 포함해 count + 1장.
         for (int i = 0; i <= count; i++)
             BuildWall(parent, $"부스_칸막이{i}",
                 new Vector3(xLeft + step * (i + 0.5f), y, midZ),
                 new Vector3(BoothWallThickness, BoothWallHeight, BoothDepth + BoothWallThickness));
+
+        // 맨 바깥 칸막이와 섬 가장자리 사이에도 틈이 남는다. 그 두 곳을 막는다.
+        float edgeDepth = BoothDepth + BoothWallThickness;
+        BuildWall(parent, "부스_왼끝벽",
+            new Vector3((xLeft + (xLeft + step * 0.5f)) * 0.5f, y, midZ),
+            new Vector3(step * 0.5f, BoothWallHeight, edgeDepth));
+        BuildWall(parent, "부스_오른끝벽",
+            new Vector3(((xLeft + step * (count + 0.5f)) + xRight) * 0.5f, y, midZ),
+            new Vector3(xRight - (xLeft + step * (count + 0.5f)), BoothWallHeight, edgeDepth));
     }
 
     static void BuildWall(Transform parent, string name, Vector3 position, Vector3 scale)
