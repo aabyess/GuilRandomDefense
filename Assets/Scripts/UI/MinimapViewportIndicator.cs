@@ -84,6 +84,10 @@ public class MinimapViewportIndicator : MaskableGraphic
         for (int i = 0; i < 4; i++)
             localCorners[i] = minimap.WorldToMinimapLocal(groundCorners[i]);
 
+        // 실제 시야는 카메라가 기울어져 사다리꼴이지만, 원작 미니맵처럼 평면으로 읽히도록
+        // 네 점을 감싸는 축 정렬 사각형으로 바꿔 그린다. 덮는 범위는 그대로다.
+        MakeAxisAlignedBox(localCorners);
+
         if (!loggedFailure)
         {
             loggedFailure = true;
@@ -93,6 +97,25 @@ public class MinimapViewportIndicator : MaskableGraphic
 
         for (int i = 0; i < 4; i++)
             AddLineSegment(vh, localCorners[i], localCorners[(i + 1) % 4]);
+    }
+
+    static void MakeAxisAlignedBox(Vector2[] corners)
+    {
+        float xMin = corners[0].x, xMax = corners[0].x;
+        float yMin = corners[0].y, yMax = corners[0].y;
+
+        for (int i = 1; i < corners.Length; i++)
+        {
+            xMin = Mathf.Min(xMin, corners[i].x);
+            xMax = Mathf.Max(xMax, corners[i].x);
+            yMin = Mathf.Min(yMin, corners[i].y);
+            yMax = Mathf.Max(yMax, corners[i].y);
+        }
+
+        corners[0] = new Vector2(xMin, yMin);
+        corners[1] = new Vector2(xMax, yMin);
+        corners[2] = new Vector2(xMax, yMax);
+        corners[3] = new Vector2(xMin, yMax);
     }
 
     void Warn(string message)
