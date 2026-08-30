@@ -16,6 +16,8 @@ public static class WaveWiring
     [MenuItem("Tools/웨이브/라운드 에셋 연결")]
     static void WireRounds()
     {
+        if (!EditorGuards.RequireEditMode(Title)) return;
+
         RoundManager manager = Object.FindFirstObjectByType<RoundManager>(FindObjectsInactive.Include);
         if (manager == null)
         {

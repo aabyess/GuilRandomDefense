@@ -13,6 +13,8 @@ public static class HudWiring
     [MenuItem("Tools/HUD/씬에 적 체력바 추가")]
     static void AddHealthBars()
     {
+        if (!EditorGuards.RequireEditMode(Title)) return;
+
         HealthBarLayer existing = Object.FindFirstObjectByType<HealthBarLayer>(FindObjectsInactive.Include);
         if (existing != null)
         {
@@ -33,6 +35,8 @@ public static class HudWiring
     [MenuItem("Tools/HUD/씬에 하단 HUD 추가")]
     static void AddHud()
     {
+        if (!EditorGuards.RequireEditMode(Title)) return;
+
         GameHud existing = Object.FindFirstObjectByType<GameHud>(FindObjectsInactive.Include);
         if (existing != null)
         {

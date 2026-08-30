@@ -17,18 +17,24 @@ public static class CombineRecipeWiring
     [MenuItem("Tools/조합 레시피/테스트용만 연결 (흔함→안흔함 13개)")]
     static void WireTestRecipes()
     {
+        if (!EditorGuards.RequireEditMode(Title)) return;
+
         Wire(path => System.IO.Path.GetFileName(path).StartsWith("안흔함_"), "테스트용(안흔함)");
     }
 
     [MenuItem("Tools/조합 레시피/전체 연결")]
     static void WireAllRecipes()
     {
+        if (!EditorGuards.RequireEditMode(Title)) return;
+
         Wire(_ => true, "전체");
     }
 
     [MenuItem("Tools/조합 레시피/연결 해제")]
     static void ClearRecipes()
     {
+        if (!EditorGuards.RequireEditMode(Title)) return;
+
         Wire(_ => false, "없음");
     }
 

@@ -33,6 +33,8 @@ public static class MapGenerator
     [MenuItem("Tools/맵/원랜디 맵 생성")]
     static void Generate()
     {
+        if (!EditorGuards.RequireEditMode(Title)) return;
+
         GameObject existing = GameObject.Find(RootName);
         if (existing != null &&
             !EditorUtility.DisplayDialog(Title,

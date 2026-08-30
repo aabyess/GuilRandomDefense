@@ -143,6 +143,8 @@ public static class SceneDiagnostics
     [MenuItem("Tools/진단/씬을 텍스트로 다시 저장")]
     static void ForceTextReserialize()
     {
+        if (!EditorGuards.RequireEditMode("재직렬화")) return;
+
         if (EditorSettings.serializationMode != SerializationMode.ForceText)
         {
             EditorUtility.DisplayDialog("재직렬화",
