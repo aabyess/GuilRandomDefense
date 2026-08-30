@@ -374,8 +374,10 @@ public static class MapGenerator
 
             PlaceUnitMarker(parent, $"흔함선택_{unit.unitName}_표식",
                 new Vector3(x, 0f, rowZ + BoothDepth * 0.5f), UnitGrade.Common);
-            BuildBooth(parent, unit.unitName, x, rowZ, step);
         }
+
+        // 부스를 하나씩 두르면 이웃끼리 옆벽이 겹친다. 뒷벽 한 장 + 칸막이 한 줄로 세운다.
+        BuildBoothRow(parent, left, left + island.size.x, rowZ, step, commons.Count);
 
         // 흔함 구역 아래를 막는다. 안 막으면 부스 앞 공간이 첫 등급 칸과 이어져,
         // 흔함 위습이 안흔함 칸으로 내려가고 안흔함 위습도 올라온다.
@@ -401,6 +403,12 @@ public static class MapGenerator
 
         int specialPending = 0;
 
+        // 칸 경계는 칸 수보다 하나 적다. 열 테두리는 아래에서 한 번에 세운다.
+        List<float> bandDividers = new List<float>();
+        for (int i = 1; i < GachaBands.Length; i++)
+            bandDividers.Add(bandTop - bandHeight * i);
+        BuildCellColumn(parent, "뽑기칸", columnLeft, columnRight, bandTop, bandBottom, bandDividers);
+
         for (int b = 0; b < GachaBands.Length; b++)
         {
             GachaBand band = GachaBands[b];
@@ -411,9 +419,6 @@ public static class MapGenerator
 
             // 칸을 사방으로 막고 오른쪽 가운데만 입구로 연다.
             // 안 막으면 위습이 한 칸에 들어갔다가 옆 칸 포탈로 흘러가 엉뚱한 등급이 나온다.
-            BuildCellWalls(parent, $"뽑기칸_{band.label}", columnLeft, columnRight,
-                           bandTop - bandHeight * b, bandTop - bandHeight * (b + 1), false);
-
             // 이 칸에서 생길 위습의 등급을 표시한다. 특수 칸은 위습이 따로 없다.
             if (band.specialSlots == null)
             {
@@ -464,7 +469,8 @@ public static class MapGenerator
 
         // --- 오른쪽 세로줄: 조합식 없이 캐릭터만 전시하는 등급 ---
         // 이 등급들은 조합식 표에 올리지 않기로 확정돼 있어서, 여기가 유일하게 눈으로 보는 곳이다.
-        float displayLeft = island.center.x + 8f;
+        float rightColumnLeft = island.center.x + 2f;   // 등급 칸 열의 오른벽과 같은 자리
+        float displayLeft = rightColumnLeft + 4f;
         float displayWidth = left + island.size.x - 2f - displayLeft;
         int perRow = Mathf.Max(1, Mathf.FloorToInt(displayWidth / SlotSpacing));
         float displayZ = bandTop;
@@ -491,13 +497,15 @@ public static class MapGenerator
 
         // 자원 칸은 동서남북 포탈을 두려면 정사각형에 가까워야 한다.
         // 열 아래쪽에서 폭만큼 떼어 쓰고, 남는 위쪽 전부를 전시 칸으로 준다.
-        float hubHeight = displayRight - (displayLeft - 2f);
+        float hubHeight = displayRight - rightColumnLeft;
         float hubTop = bandBottom + hubHeight;
 
-        BuildCellWalls(parent, "전시칸", displayLeft - 2f, displayRight, bandTop, hubTop, false);
+        // 전시와 자원은 위아래로 붙은 한 열이다. 칸막이 한 장으로 나눈다.
+        BuildCellColumn(parent, "오른열", rightColumnLeft, displayRight, bandTop, bandBottom,
+                        new List<float> { hubTop }, skipLeftWall: true);
 
         string resourceReport = BuildResourceHub(parent,
-            displayLeft - 2f, displayRight, hubTop - GateThickness, bandBottom);
+            rightColumnLeft, displayRight, hubTop, bandBottom);
 
         float displayDepth = bandTop - displayZ;
         float available = bandTop - bandBottom;
@@ -520,8 +528,6 @@ public static class MapGenerator
     {
         GachaTable table = AssetDatabase.LoadAssetAtPath<GachaTable>("Assets/Data/MainGachaTable.asset");
         UnitSpawner spawner = Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
-
-        BuildCellWalls(parent, "자원칸", xLeft, xRight, zTop, zBottom, false);
 
         float centerX = (xLeft + xRight) * 0.5f;
         float centerZ = (zTop + zBottom) * 0.5f;
@@ -726,25 +732,23 @@ public static class MapGenerator
         obj.GetComponent<Renderer>().sharedMaterial = material;
     }
 
-    // 칸마다 좌우 벽과 뒷벽을 세워 원작의 부스 모양을 만든다. 앞쪽(포탈 방향)은 열어 둔다.
-    static void BuildBooth(Transform parent, string unitName, float centerX, float portalZ, float boothWidth)
+    // 부스 줄. 앞쪽(포탈 방향)은 열어 두고 뒤와 칸막이만 세운다.
+    static void BuildBoothRow(Transform parent, float xLeft, float xRight,
+                              float portalZ, float step, int count)
     {
+        float y = MapLayout.IslandTop + BoothWallHeight * 0.5f;
         float backZ = portalZ + BoothDepth;
         float midZ = portalZ + BoothDepth * 0.5f;
-        float halfWidth = boothWidth * 0.5f;
-        float y = MapLayout.IslandTop + BoothWallHeight * 0.5f;
 
-        BuildWall(parent, $"부스_{unitName}_뒷벽",
-            new Vector3(centerX, y, backZ),
-            new Vector3(boothWidth, BoothWallHeight, BoothWallThickness));
+        BuildWall(parent, "부스_뒷벽",
+            new Vector3((xLeft + xRight) * 0.5f, y, backZ),
+            new Vector3(xRight - xLeft - BoothWallThickness, BoothWallHeight, BoothWallThickness));
 
-        BuildWall(parent, $"부스_{unitName}_좌벽",
-            new Vector3(centerX - halfWidth, y, midZ),
-            new Vector3(BoothWallThickness, BoothWallHeight, BoothDepth));
-
-        BuildWall(parent, $"부스_{unitName}_우벽",
-            new Vector3(centerX + halfWidth, y, midZ),
-            new Vector3(BoothWallThickness, BoothWallHeight, BoothDepth));
+        // 칸막이는 부스 사이마다 한 장씩, 양 끝까지 포함해 count + 1장.
+        for (int i = 0; i <= count; i++)
+            BuildWall(parent, $"부스_칸막이{i}",
+                new Vector3(xLeft + step * (i + 0.5f), y, midZ),
+                new Vector3(BoothWallThickness, BoothWallHeight, BoothDepth + BoothWallThickness));
     }
 
     static void BuildWall(Transform parent, string name, Vector3 position, Vector3 scale)
@@ -771,31 +775,42 @@ public static class MapGenerator
         Object.DestroyImmediate(marker.GetComponent<Collider>());
     }
 
-    // 위습이 칸 안에서 생기므로 드나들 입구가 필요 없다. 사방을 완전히 막아
-    // 다른 등급 칸으로 새는 경우를 아예 없앤다.
-    static void BuildCellWalls(Transform parent, string label,
-                               float xLeft, float xRight, float zTop, float zBottom, bool skipTop)
+    // 칸을 하나씩 벽으로 두르면 인접한 칸 사이에 벽이 두 장씩 겹친다.
+    // 열 전체를 한 번에 세우고, 칸 경계마다 칸막이를 한 장씩만 둔다.
+    //
+    // 모서리 규칙: 세로벽이 모서리를 덮고, 가로벽은 그 안쪽만 채운다.
+    // 이렇게 해야 어디서도 두 벽이 같은 자리를 차지하지 않는다.
+    static void BuildCellColumn(Transform parent, string label,
+                                float xLeft, float xRight, float zTop, float zBottom,
+                                IReadOnlyList<float> dividerZ, bool skipLeftWall = false)
     {
         float y = MapLayout.IslandTop + WallHeight * 0.5f;
-        float width = xRight - xLeft + GateThickness;   // 모서리가 벌어지지 않게 겹쳐 세운다
-        float depth = zTop - zBottom + GateThickness;
+        float centerX = (xLeft + xRight) * 0.5f;
+        float innerWidth = xRight - xLeft - GateThickness;
+        float outerDepth = zTop - zBottom + GateThickness;
 
-        if (!skipTop)   // 맨 위 칸은 흔함 부스 줄이 이미 막고 있다
-            BuildWall(parent, $"{label}_위벽",
-                new Vector3((xLeft + xRight) * 0.5f, y, zTop),
-                new Vector3(width, WallHeight, GateThickness));
-
-        BuildWall(parent, $"{label}_아래벽",
-            new Vector3((xLeft + xRight) * 0.5f, y, zBottom),
-            new Vector3(width, WallHeight, GateThickness));
-
-        BuildWall(parent, $"{label}_왼벽",
-            new Vector3(xLeft, y, (zTop + zBottom) * 0.5f),
-            new Vector3(GateThickness, WallHeight, depth));
+        // 옆 열과 맞닿는 쪽은 그 열의 벽을 함께 쓴다 — 두 장이 겹쳐 서지 않게.
+        if (!skipLeftWall)
+            BuildWall(parent, $"{label}_왼벽",
+                new Vector3(xLeft, y, (zTop + zBottom) * 0.5f),
+                new Vector3(GateThickness, WallHeight, outerDepth));
 
         BuildWall(parent, $"{label}_오른벽",
             new Vector3(xRight, y, (zTop + zBottom) * 0.5f),
-            new Vector3(GateThickness, WallHeight, depth));
+            new Vector3(GateThickness, WallHeight, outerDepth));
+
+        BuildWall(parent, $"{label}_위벽",
+            new Vector3(centerX, y, zTop), new Vector3(innerWidth, WallHeight, GateThickness));
+
+        BuildWall(parent, $"{label}_아래벽",
+            new Vector3(centerX, y, zBottom), new Vector3(innerWidth, WallHeight, GateThickness));
+
+        if (dividerZ == null) return;
+
+        for (int i = 0; i < dividerZ.Count; i++)
+            BuildWall(parent, $"{label}_칸막이{i + 1}",
+                new Vector3(centerX, y, dividerZ[i]),
+                new Vector3(innerWidth, WallHeight, GateThickness));
     }
 
     static void ApplyBonusGrade(GameObject portal, UnitGrade bonusGrade, float chance)
