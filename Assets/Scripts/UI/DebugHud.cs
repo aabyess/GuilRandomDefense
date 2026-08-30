@@ -20,9 +20,17 @@ public class DebugHud : MonoBehaviour
     UnitInventory Inventory => unitInventory != null ? unitInventory : PlayerContext.Local != null ? PlayerContext.Local.UnitInventory : null;
     Warehouse Warehouse => warehouse != null ? warehouse : PlayerContext.Local != null ? PlayerContext.Local.Warehouse : null;
 
+    bool visible = true;
+
     void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.vKey.wasPressedThisFrame)
+        if (Keyboard.current == null) return;
+
+        // 정식 HUD가 골드·라운드·적 수를 이미 보여준다. 화면을 덮는 게 거슬릴 때 F1로 접는다.
+        if (Keyboard.current.f1Key.wasPressedThisFrame)
+            visible = !visible;
+
+        if (Keyboard.current.vKey.wasPressedThisFrame)
         {
             TryCombineFirst();
         }
@@ -40,6 +48,12 @@ public class DebugHud : MonoBehaviour
 
     void OnGUI()
     {
+        if (!visible)
+        {
+            GUI.Label(new Rect(10, 10, 200, 20), "F1: 디버그 정보");
+            return;
+        }
+
         GoldWallet wallet = Wallet;
         UnitInventory inventory = Inventory;
 
