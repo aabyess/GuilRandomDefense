@@ -35,7 +35,17 @@ public static class WaveWiring
         string duplicates = string.Join(", ", waves.GroupBy(w => w.roundNumber)
             .Where(g => g.Count() > 1).Select(g => g.Key.ToString()));
 
-        Fill(new SerializedObject(manager), "rounds", waves);
+        SerializedObject managerSo = new SerializedObject(manager);
+        Fill(managerSo, "rounds", waves);
+
+        // 라운드 수는 웨이브 에셋 개수가 정답이다. 손으로 맞춰두면 라운드를 추가할 때마다 어긋난다.
+        SerializedProperty total = managerSo.FindProperty("totalRounds");
+        int previousTotal = total != null ? total.intValue : 0;
+        if (total != null && waves.Count > 0)
+        {
+            total.intValue = waves.Count;
+            managerSo.ApplyModifiedProperties();
+        }
 
         WaveSpawner spawner = Object.FindFirstObjectByType<WaveSpawner>(FindObjectsInactive.Include);
         if (spawner != null)
@@ -43,8 +53,8 @@ public static class WaveWiring
 
         EditorSceneManager.MarkSceneDirty(manager.gameObject.scene);
 
-        string message = $"라운드 {waves.Count}개를 연결했습니다 " +
-                         $"(라운드 {string.Join(", ", waves.Select(w => w.roundNumber))}).\n\n" +
+        string message = $"라운드 {waves.Count}개를 연결했습니다.\n" +
+                         $"총 라운드 수: {previousTotal} → {waves.Count}\n\n" +
                          (duplicates.Length > 0 ? $"⚠️ roundNumber 중복: {duplicates}\n\n" : "") +
                          "Cmd+S 로 씬을 저장하세요.";
         Debug.Log("[웨이브] " + message);
