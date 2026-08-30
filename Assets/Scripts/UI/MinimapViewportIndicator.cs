@@ -24,6 +24,7 @@ public class MinimapViewportIndicator : MaskableGraphic
     Vector3 lastCameraPosition;
     Quaternion lastCameraRotation;
     bool hasDrawnOnce;
+    bool loggedFailure;
 
     protected override void Awake()
     {
@@ -56,14 +57,38 @@ public class MinimapViewportIndicator : MaskableGraphic
     {
         vh.Clear();
 
-        if (minimapCamera == null || mainCamera == null) return;
-        if (!TryGetGroundCorners()) return; // 지면과 안 만나면(카메라가 수평/위를 보면) 그리지 않는다.
+        // 안 그려지는 이유가 여러 가지라, 첫 실패 한 번만 원인을 남긴다.
+        if (minimapCamera == null || mainCamera == null)
+        {
+            Warn($"참조 없음 — minimapCamera={(minimapCamera != null)}, mainCamera={(mainCamera != null)}");
+            return;
+        }
+
+        if (!TryGetGroundCorners())
+        {
+            Warn("카메라 시야가 지면 평면과 만나지 않습니다 (수평이거나 위를 봄).");
+            return;
+        }
 
         for (int i = 0; i < 4; i++)
             localCorners[i] = minimapCamera.WorldToMinimapLocal(groundCorners[i]);
 
+        if (!loggedFailure)
+        {
+            loggedFailure = true;
+            Debug.Log($"[미니맵 시야] 지면 네 귀퉁이 {groundCorners[0]} / {groundCorners[2]}  →  " +
+                      $"미니맵 좌표 {localCorners[0]} / {localCorners[2]}  (rect {((RectTransform)transform).rect})");
+        }
+
         for (int i = 0; i < 4; i++)
             AddLineSegment(vh, localCorners[i], localCorners[(i + 1) % 4]);
+    }
+
+    void Warn(string message)
+    {
+        if (loggedFailure) return;
+        loggedFailure = true;
+        Debug.LogWarning("[미니맵 시야] 그리지 못했습니다: " + message, this);
     }
 
     bool TryGetGroundCorners()

@@ -29,7 +29,15 @@ public static class SceneDiagnostics
 
         report.AppendLine("== 루트 오브젝트 ==");
         foreach (GameObject root in scene.GetRootGameObjects())
-            report.AppendLine($"  {(root.activeSelf ? "●" : "○")} {root.name}  (자식 {root.transform.childCount})");
+            report.AppendLine($"  {(root.activeSelf ? "●" : "○")} {root.name}  (자식 {root.transform.childCount})" +
+                              $"  pos={root.transform.position}  rot={root.transform.eulerAngles}");
+        report.AppendLine();
+
+        report.AppendLine("== 카메라 ==");
+        foreach (Camera cam in Object.FindObjectsByType<Camera>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            report.AppendLine($"  {cam.name}: pos={cam.transform.position} rot={cam.transform.eulerAngles} " +
+                              $"ortho={cam.orthographic} size={cam.orthographicSize} fov={cam.fieldOfView} " +
+                              $"target={(cam.targetTexture != null ? cam.targetTexture.name : "화면")}");
         report.AppendLine();
 
         report.AppendLine("== 주요 컴포넌트 배선 ==");
