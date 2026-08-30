@@ -57,12 +57,14 @@ public static class MapLayout
 
     public static readonly Island[] Zones =
     {
-        new Island("PunkHazard",       112f,  36f, 44f, 32f, "event"),
-        new Island("ImmortalDisplay",  112f,  -8f, 40f, 36f, "display"),
-        new Island("TranscendDisplay", 112f, -52f, 40f, 26f, "display"),
+        // 이벤트 존이 위, 그 아래 불멸·초월 전시가 가로로 나란히.
+        new Island("PunkHazard",       150f,  20f, 84f, 36f, "event"),
+        new Island("ImmortalDisplay",  128f, -30f, 40f, 36f, "display"),
+        new Island("TranscendDisplay", 172f, -30f, 40f, 36f, "display"),
         new Island("StoryZone",       -120f, -46f, 54f, 54f, "story"),
         new Island("GachaIsland",      -42f, -46f, 46f, 66f, "gacha"),
-        new Island("CombineTable",      52f, -62f, 132f, 74f, "combine"),
+        // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
+        new Island("CombineTable",      40f, -62f, 112f, 74f, "combine"),
     };
 
     // 조합식 표에 노출하는 등급 6종 — 표 위의 세로 칸 하나씩.

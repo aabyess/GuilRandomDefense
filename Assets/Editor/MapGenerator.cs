@@ -65,6 +65,7 @@ public static class MapGenerator
         BuildCombineColumns(combineIsland);
         int portalCount = BuildGachaPortals(gachaIsland, lanePaths.Count > 0 ? lanePaths[0] : null);
 
+        string overlaps = CheckOverlaps();
         string rewire = RewireScene(lanePaths);
         string navResult = BuildNavMesh(root);
         string oldGround = DisableOldGround();
@@ -75,7 +76,7 @@ public static class MapGenerator
         string message =
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
             $"레인 경로 {lanePaths.Count}개, 뽑기 포탈 {portalCount}개를 만들었습니다.\n\n" +
-            navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
+            overlaps + navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
         Debug.Log("[맵] " + message);
         EditorUtility.DisplayDialog(Title, message, "확인");
     }
@@ -225,6 +226,35 @@ public static class MapGenerator
         }
 
         return grades.Length;
+    }
+
+    // 좌표를 손으로 옮기다 보면 섬이 서로 올라타는 일이 생긴다(초월 전시가 조합식 표를 덮은 적 있음).
+    // 눈으로는 위에서 봐야만 보이므로 생성할 때마다 검사한다.
+    static string CheckOverlaps()
+    {
+        List<MapLayout.Island> all = new List<MapLayout.Island>();
+        all.AddRange(MapLayout.Lanes);
+        all.AddRange(MapLayout.Warehouses);
+        all.AddRange(MapLayout.SealIslands);
+        all.AddRange(MapLayout.Zones);
+
+        List<string> hits = new List<string>();
+        for (int i = 0; i < all.Count; i++)
+        {
+            for (int j = i + 1; j < all.Count; j++)
+            {
+                if (Overlaps(all[i], all[j]))
+                    hits.Add($"{all[i].name} ↔ {all[j].name}");
+            }
+        }
+
+        return hits.Count == 0 ? "" : "\n⚠️ 섬이 겹칩니다: " + string.Join(", ", hits);
+    }
+
+    static bool Overlaps(MapLayout.Island a, MapLayout.Island b)
+    {
+        return Mathf.Abs(a.center.x - b.center.x) * 2f < a.size.x + b.size.x
+            && Mathf.Abs(a.center.y - b.center.y) * 2f < a.size.y + b.size.y;
     }
 
     // 기존 씬은 전부 원점 근처를 전제로 배치돼 있었다. 새 맵에서 원점은 바다 한가운데라,
