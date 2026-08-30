@@ -28,6 +28,9 @@ public class RtsCameraController : MonoBehaviour
     // 화면에서 체감하는 이동량을 비슷하게 유지한다.
     const float SpeedReferenceHeight = 60f;
 
+    // 한 프레임에 반영할 최대 시간(초). 30fps 한 프레임분.
+    const float MaxFrameDelta = 1f / 30f;
+
     Vector2 smoothedInput;
     float targetHeight;
 
@@ -148,7 +151,10 @@ public class RtsCameraController : MonoBehaviour
     void Update()
     {
         // 일시정지·배속과 무관하게 카메라는 움직여야 한다.
-        float delta = Time.unscaledDeltaTime;
+        // 다만 상한을 둔다: 플레이 진입·컴파일 직후 첫 프레임의 deltaTime은 초 단위로 튄다.
+        // 그때 마우스가 화면 가장자리에 있으면 가장자리 밀기가 한 번에 수십 유닛을 이동시켜,
+        // Start()에서 맞춰 놓은 시작 구도가 즉시 날아간다.
+        float delta = Mathf.Min(Time.unscaledDeltaTime, MaxFrameDelta);
 
         // 내 레인으로 돌아오기. RTS의 '본진 보기'에 해당하고,
         // 시작 시점 자동 이동이 어떤 이유로 안 걸렸을 때도 직접 확인할 수 있다.
