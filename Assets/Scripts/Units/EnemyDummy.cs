@@ -12,6 +12,24 @@ public class EnemyDummy : MonoBehaviour
 
     public float Hp => hp;
 
+    // 어느 레인에 스폰됐는지. 팀 현황판이 플레이어별 적 수를 세는 데 쓴다.
+    // -1은 레인에 속하지 않는 적(물범 등).
+    public int LaneIndex { get; private set; } = -1;
+
+    public void SetLane(int laneIndex)
+    {
+        LaneIndex = laneIndex;
+    }
+
+    public static int CountInLane(int laneIndex)
+    {
+        int count = 0;
+        foreach (EnemyDummy enemy in Active)
+            if (enemy.LaneIndex == laneIndex)
+                count++;
+        return count;
+    }
+
     public void Initialize(float maxHp)
     {
         hp = maxHp;
