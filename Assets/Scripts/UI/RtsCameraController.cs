@@ -147,7 +147,12 @@ public class RtsCameraController : MonoBehaviour
 
     void Update()
     {
-        float delta = Time.unscaledDeltaTime;   // 일시정지·배속과 무관하게 카메라는 움직여야 한다
+        float delta = Time.unscaledDeltaTime;
+
+        // 내 레인으로 돌아오기. RTS의 '본진 보기'에 해당하고,
+        // 시작 시점 자동 이동이 어떤 이유로 안 걸렸을 때도 직접 확인할 수 있다.
+        if (Keyboard.current != null && Keyboard.current.homeKey.wasPressedThisFrame)
+            FocusOnLocalLane();   // 일시정지·배속과 무관하게 카메라는 움직여야 한다
 
         Vector2 rawInput = Vector2.ClampMagnitude(KeyboardInput() + EdgeInput(), 1f);
         smoothedInput = inputSmoothing > 0f

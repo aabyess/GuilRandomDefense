@@ -40,6 +40,24 @@ public static class SceneDiagnostics
                               $"target={(cam.targetTexture != null ? cam.targetTexture.name : "화면")}");
         report.AppendLine();
 
+        report.AppendLine("== 스크립트가 빠진 컴포넌트 ==");
+        int missing = 0;
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
+            foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+            {
+                Component[] components = t.GetComponents<Component>();
+                for (int i = 0; i < components.Length; i++)
+                {
+                    if (components[i] != null) continue;
+                    report.AppendLine($"  ❌ {Path(t)} 의 {i}번 컴포넌트");
+                    missing++;
+                }
+            }
+        }
+        report.AppendLine(missing == 0 ? "  없음" : $"  총 {missing}건");
+        report.AppendLine();
+
         report.AppendLine("== 주요 컴포넌트 배선 ==");
         foreach (MonoBehaviour behaviour in Object.FindObjectsByType<MonoBehaviour>(
                      FindObjectsInactive.Include, FindObjectsSortMode.None)
@@ -66,6 +84,17 @@ public static class SceneDiagnostics
 
         Debug.Log($"[진단] 씬 배선을 {OutputPath}에 썼습니다.");
         EditorUtility.DisplayDialog("씬 배선 덤프", $"{OutputPath} 에 저장했습니다.", "확인");
+    }
+
+    static string Path(Transform t)
+    {
+        string path = t.name;
+        while (t.parent != null)
+        {
+            t = t.parent;
+            path = t.name + "/" + path;
+        }
+        return path;
     }
 
     static string Describe(SerializedProperty property)
