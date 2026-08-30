@@ -12,7 +12,7 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
     [SerializeField] UnitData specificUnit; // 선택형 포탈(흔함 등)이면 지정, 비어있으면 등급 내 랜덤 지급
     [SerializeField] GachaTable gachaTable;
     [SerializeField] UnitSpawner unitSpawner;
-    [SerializeField] Transform spawnPoint;
+    [SerializeField] Transform spawnPoint;   // 비워두면 위습 주인의 레인 한가운데에 소환한다
 
     // 마이그레이션 전용 필드 — acceptedGrade(단일 등급) → acceptedGrades(리스트) 전환 전에 씬에 저장된
     // 값을 흡수하기 위해 이름·타입을 그대로 남겨뒀다. 새로 만드는 포탈은 이 필드를 쓰지 말고
@@ -43,6 +43,19 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
     bool Accepts(UnitGrade grade)
     {
         return acceptedGrades == null || acceptedGrades.Count == 0 || acceptedGrades.Contains(grade);
+    }
+
+    // 뽑기 섬에서 소환하면 지상 유닛은 바다에 막혀 레인까지 갈 수 없다.
+    // 위습을 가져온 플레이어의 레인 한가운데에 내보낸다.
+    Vector3 ResolveSpawnPosition(int ownerId)
+    {
+        if (spawnPoint != null) return spawnPoint.position;
+
+        LaneMarker lane = LaneMarker.Get(ownerId);
+        if (lane != null) return lane.transform.position;
+
+        Debug.LogWarning($"UnitPortal: 플레이어 {ownerId}의 레인을 찾지 못해 포탈 자리에 소환합니다.", this);
+        return transform.position;
     }
 
     // TODO(멀티): 포탈 진입 판정·지급은 서버 권위로 이동해야 함 — 지금은 클라이언트가 직접 처리.
@@ -84,8 +97,7 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
 
         if (unitSpawner != null)
         {
-            Vector3 position = spawnPoint != null ? spawnPoint.position : transform.position;
-            unitSpawner.Spawn(reward, position, ownerId);
+            unitSpawner.Spawn(reward, ResolveSpawnPosition(ownerId), ownerId);
         }
         else
         {

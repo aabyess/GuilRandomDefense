@@ -93,7 +93,7 @@ public static class MapGenerator
 
         List<WaypointPath> lanePaths = BuildLanePaths(root.transform);
         string tableReport = BuildCombineColumns(combineIsland);
-        int portalCount = BuildGachaPortals(gachaIsland, lanePaths.Count > 0 ? lanePaths[0] : null);
+        string portalReport = BuildGachaPortals(gachaIsland);
 
         string overlaps = CheckOverlaps();
         string rewire = RewireScene(lanePaths);
@@ -105,7 +105,7 @@ public static class MapGenerator
 
         string message =
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
-            $"레인 경로 {lanePaths.Count}개, 뽑기 포탈 {portalCount}개를 만들었습니다.\n\n" +
+            $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + "\n\n" +
             tableReport + overlaps + navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
         Debug.Log("[맵] " + message);
         EditorUtility.DisplayDialog(Title, message, "확인");
@@ -297,60 +297,91 @@ public static class MapGenerator
         obj.GetComponent<Renderer>().sharedMaterial = material;
     }
 
-    static int BuildGachaPortals(GameObject gachaIsland, WaypointPath firstLanePath)
+    // 뽑기 섬. 원작처럼 위쪽에 흔함 유닛을 가로로 늘어놓고, 그 아래에 등급별 랜덤 포탈을 둔다.
+    // 흔함 위습은 "선택"이라 원하는 유닛 칸에 넣고, 그 위 등급은 칸 하나에서 등급 내 랜덤이 나온다.
+    const float PortalDiameter = 6f;
+    const float ChoicePortalDiameter = 4.2f;
+
+    static string BuildGachaPortals(GameObject gachaIsland)
     {
-        if (gachaIsland == null) return 0;
+        if (gachaIsland == null) return "";
 
         GachaTable table = AssetDatabase.LoadAssetAtPath<GachaTable>("Assets/Data/MainGachaTable.asset");
         UnitSpawner spawner = Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
-
-        // 지상 유닛은 바다를 못 건넌다. 뽑기 섬에서 소환하면 레인까지 갈 방법이 없으므로
-        // 소환 위치를 플레이어 레인으로 잡는다.
-        Transform spawnPoint = null;
-        if (firstLanePath != null && firstLanePath.PointCount > 0)
-        {
-            GameObject marker = new GameObject("UnitSpawnPoint");
-            marker.transform.SetParent(firstLanePath.transform.parent, false);
-            marker.transform.position = MapLayout.Lanes[0].center.x * Vector3.right
-                                      + MapLayout.IslandTop * Vector3.up
-                                      + MapLayout.Lanes[0].center.y * Vector3.forward;
-            spawnPoint = marker.transform;
-        }
-
         MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "GachaIsland");
-        UnitGrade[] grades = MapLayout.GachaPortalGrades;
-        float step = island.size.y / (grades.Length + 1);
+        Transform parent = gachaIsland.transform.parent;
 
-        for (int i = 0; i < grades.Length; i++)
+        // 위쪽 가로줄: 흔함 유닛을 하나씩 고르는 칸
+        List<UnitData> commons = LoadUnitsOfGrade(UnitGrade.Common);
+        float rowZ = island.center.y + island.size.y * 0.5f - 6f;
+        float step = island.size.x / (commons.Count + 1);
+
+        for (int i = 0; i < commons.Count; i++)
         {
-            UnitGrade grade = grades[i];
-            GameObject portal = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            portal.name = $"Portal_{grade.KoreanName()}";
-            portal.transform.SetParent(gachaIsland.transform.parent, false);
-            // 위쪽(+Z)이 낮은 등급 — 사용자 설명 기준 "제일 위에 흔함"
-            portal.transform.position = new Vector3(
-                island.center.x,
-                MapLayout.IslandTop + 0.25f,
-                island.center.y + island.size.y * 0.5f - step * (i + 1));
-            portal.transform.localScale = new Vector3(7f, 0.5f, 7f);
-            Paint(portal, "portal");
+            UnitData unit = commons[i];
+            float x = island.center.x - island.size.x * 0.5f + step * (i + 1);
 
-            portal.GetComponent<Collider>().isTrigger = true;
+            GameObject stand = CreatePortalObject(parent, $"흔함선택_{unit.unitName}",
+                new Vector3(x, MapLayout.IslandTop + 0.25f, rowZ), ChoicePortalDiameter);
+            ConfigurePortal(stand, UnitGrade.Common, unit, table, spawner);
 
-            UnitPortal unitPortal = portal.AddComponent<UnitPortal>();
-            SerializedObject so = new SerializedObject(unitPortal);
-            SerializedProperty accepted = so.FindProperty("acceptedGrades");
-            accepted.ClearArray();
-            accepted.InsertArrayElementAtIndex(0);
-            accepted.GetArrayElementAtIndex(0).enumValueIndex = (int)grade;
-            so.FindProperty("legacyGradeMigrated").boolValue = true;
-            so.FindProperty("gachaTable").objectReferenceValue = table;
-            so.FindProperty("unitSpawner").objectReferenceValue = spawner;
-            so.FindProperty("spawnPoint").objectReferenceValue = spawnPoint;
-            so.ApplyModifiedProperties();
+            // 어떤 유닛 칸인지 보이도록 뒤에 등급 색 기둥을 세운다(나중에 스킨으로 교체).
+            GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            marker.name = $"흔함선택_{unit.unitName}_표식";
+            marker.transform.SetParent(parent, false);
+            marker.transform.position = new Vector3(x, MapLayout.IslandTop + SlotHeight * 0.5f, rowZ + 4f);
+            marker.transform.localScale = new Vector3(SlotSize, SlotHeight, SlotSize);
+            PaintSolid(marker, GradeColor(UnitGrade.Common));
+            Object.DestroyImmediate(marker.GetComponent<Collider>());
         }
 
-        return grades.Length;
+        // 아래쪽 세로줄: 등급별 랜덤 포탈 (흔함은 위 가로줄이 대신한다)
+        UnitGrade[] randomGrades = MapLayout.GachaPortalGrades
+            .Where(g => g != UnitGrade.Common).ToArray();
+        float topZ = rowZ - 10f;
+        float bottomZ = island.center.y - island.size.y * 0.5f + 6f;
+        float gap = (topZ - bottomZ) / Mathf.Max(1, randomGrades.Length - 1);
+
+        for (int i = 0; i < randomGrades.Length; i++)
+        {
+            GameObject portal = CreatePortalObject(parent, $"Portal_{randomGrades[i].KoreanName()}",
+                new Vector3(island.center.x, MapLayout.IslandTop + 0.25f, topZ - gap * i), PortalDiameter);
+            ConfigurePortal(portal, randomGrades[i], null, table, spawner);
+        }
+
+        return $"\n뽑기 섬: 흔함 선택 {commons.Count}칸 + 등급 랜덤 {randomGrades.Length}칸.";
+    }
+
+    static GameObject CreatePortalObject(Transform parent, string name, Vector3 position, float diameter)
+    {
+        GameObject portal = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        portal.name = name;
+        portal.transform.SetParent(parent, false);
+        portal.transform.position = position;
+        portal.transform.localScale = new Vector3(diameter, 0.5f, diameter);
+        Paint(portal, "portal");
+        portal.GetComponent<Collider>().isTrigger = true;
+        return portal;
+    }
+
+    static void ConfigurePortal(GameObject portal, UnitGrade grade, UnitData specificUnit,
+                                GachaTable table, UnitSpawner spawner)
+    {
+        UnitPortal unitPortal = portal.AddComponent<UnitPortal>();
+        SerializedObject so = new SerializedObject(unitPortal);
+
+        SerializedProperty accepted = so.FindProperty("acceptedGrades");
+        accepted.ClearArray();
+        accepted.InsertArrayElementAtIndex(0);
+        accepted.GetArrayElementAtIndex(0).enumValueIndex = (int)grade;
+
+        so.FindProperty("legacyGradeMigrated").boolValue = true;
+        so.FindProperty("specificUnit").objectReferenceValue = specificUnit;
+        so.FindProperty("gachaTable").objectReferenceValue = table;
+        so.FindProperty("unitSpawner").objectReferenceValue = spawner;
+        // 비워두면 위습 주인의 레인 한가운데로 나간다.
+        so.FindProperty("spawnPoint").objectReferenceValue = null;
+        so.ApplyModifiedProperties();
     }
 
     // 좌표를 손으로 옮기다 보면 섬이 서로 올라타는 일이 생긴다(초월 전시가 조합식 표를 덮은 적 있음).
