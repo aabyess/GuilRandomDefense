@@ -1,0 +1,77 @@
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+
+// 맵을 위에서 내려다보는 미니맵 전용 카메라. 이 컴포넌트가 붙은 RawImage와 같은 GameObject에서
+// 스스로 캡처용 Camera를 만들어 RenderTexture에 그리고, RawImage 클릭을 받아 메인 카메라를 이동시킨다.
+[RequireComponent(typeof(RawImage))]
+public class MinimapCamera : MonoBehaviour, IPointerClickHandler
+{
+    // Map 오브젝트가 원점에 생성된다는 가정. 아니면 인스펙터에서 맞춰야 한다.
+    [SerializeField] Vector3 mapCenter = Vector3.zero;
+    [SerializeField] float mapExtent = 220f;
+    [SerializeField] float cameraHeight = 300f;
+    [SerializeField] int textureSize = 256;
+    [SerializeField] RtsCameraController mainCameraController;
+
+    Camera minimapCam;
+    RenderTexture renderTexture;
+    RawImage rawImage;
+
+    void Awake()
+    {
+        rawImage = GetComponent<RawImage>();
+
+        renderTexture = new RenderTexture(textureSize, textureSize, 16) { name = "MinimapRenderTexture" };
+
+        // UI 계층에 붙이면 Canvas의 스케일·위치 변화를 그대로 따라간다. 월드에 독립으로 둔다.
+        GameObject camObj = new GameObject("MinimapCaptureCamera");
+        camObj.transform.position = new Vector3(mapCenter.x, mapCenter.y + cameraHeight, mapCenter.z);
+        camObj.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+
+        minimapCam = camObj.AddComponent<Camera>();
+        minimapCam.orthographic = true;
+        minimapCam.orthographicSize = mapExtent;
+        minimapCam.targetTexture = renderTexture;
+        minimapCam.clearFlags = CameraClearFlags.SolidColor;
+        minimapCam.backgroundColor = Color.black;
+
+        // UI를 다시 찍으면 미니맵 안에 HUD가 또 그려지므로 UI 레이어만 뺀다.
+        int uiLayer = LayerMask.NameToLayer("UI");
+        minimapCam.cullingMask = uiLayer >= 0 ? ~(1 << uiLayer) : ~0;
+
+        rawImage.texture = renderTexture;
+
+        if (mainCameraController == null)
+            mainCameraController = FindFirstObjectByType<RtsCameraController>();
+    }
+
+    void OnDestroy()
+    {
+        if (minimapCam != null)
+        {
+            minimapCam.targetTexture = null;
+            Destroy(minimapCam.gameObject);   // 더 이상 부모를 따라 사라지지 않으므로 직접 정리한다
+        }
+
+        if (renderTexture != null) renderTexture.Release();
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (mainCameraController == null) return;
+
+        RectTransform rect = (RectTransform)transform;
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, eventData.position, eventData.pressEventCamera, out Vector2 localPoint))
+            return;
+
+        Rect r = rect.rect;
+        float normalizedX = Mathf.InverseLerp(r.xMin, r.xMax, localPoint.x);
+        float normalizedY = Mathf.InverseLerp(r.yMin, r.yMax, localPoint.y);
+
+        float worldX = mapCenter.x + (normalizedX - 0.5f) * 2f * mapExtent;
+        float worldZ = mapCenter.z + (normalizedY - 0.5f) * 2f * mapExtent;
+
+        mainCameraController.MoveTo(new Vector3(worldX, mainCameraController.transform.position.y, worldZ));
+    }
+}

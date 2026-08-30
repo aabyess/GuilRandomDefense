@@ -36,6 +36,32 @@ public class RtsCameraController : MonoBehaviour
         targetHeight = transform.position.y;
     }
 
+    // 미니맵 클릭 등 외부에서 카메라를 특정 지점으로 즉시 옮길 때 쓴다. 높이(줌)는 유지한다.
+    /// <summary>지정한 지면 좌표가 화면 중앙에 오도록 옮긴다(미니맵 클릭 등).</summary>
+    public void MoveTo(Vector3 groundPosition)
+    {
+        // 카메라는 기울어져 있어서 자기 위치보다 앞쪽 지면을 본다.
+        // 클릭한 지점에 카메라를 갖다 놓으면 실제로는 그 너머를 보게 되므로 기울기만큼 물러선다.
+        Vector3 offset = FocusOffset();
+
+        Vector3 position = transform.position;
+        position.x = Mathf.Clamp(groundPosition.x - offset.x, boundsMin.x, boundsMax.x);
+        position.z = Mathf.Clamp(groundPosition.z - offset.z, boundsMin.y, boundsMax.y);
+        transform.position = position;
+    }
+
+    /// <summary>현재 높이·기울기에서 카메라 위치와 화면 중앙 지면 사이의 수평 거리.</summary>
+    Vector3 FocusOffset()
+    {
+        Vector3 forward = transform.forward;
+        if (forward.y >= -0.01f) return Vector3.zero;   // 수평이거나 위를 보면 지면 교차점이 없다
+
+        float distance = transform.position.y / -forward.y;
+        Vector3 offset = forward * distance;
+        offset.y = 0f;
+        return offset;
+    }
+
     void Update()
     {
         float delta = Time.unscaledDeltaTime;   // 일시정지·배속과 무관하게 카메라는 움직여야 한다

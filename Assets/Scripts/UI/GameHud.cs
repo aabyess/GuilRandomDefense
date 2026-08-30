@@ -93,7 +93,7 @@ public class GameHud : MonoBehaviour
 
         RectTransform minimapPanel = CreatePanel(bar, "MinimapPanel", new Color(1f, 1f, 1f, 0.08f));
         SetAnchors(minimapPanel, new Vector2(0.01f, 0.05f), new Vector2(0.19f, 0.95f));
-        CreateLabel(minimapPanel, "MinimapLabel", "MINIMAP").fontSize = 26;
+        BuildMinimap(minimapPanel);
 
         RectTransform infoPanel = CreatePanel(bar, "UnitInfoPanel", new Color(1f, 1f, 1f, 0.05f));
         SetAnchors(infoPanel, new Vector2(0.21f, 0.05f), new Vector2(0.59f, 0.95f));
@@ -167,6 +167,18 @@ public class GameHud : MonoBehaviour
         teamPanelText.lineSpacing = 1.1f;
         teamPanelText.horizontalOverflow = HorizontalWrapMode.Overflow;
         teamPanelText.verticalOverflow = VerticalWrapMode.Overflow;
+    }
+
+    static void BuildMinimap(RectTransform parent)
+    {
+        GameObject obj = new GameObject("Minimap", typeof(RectTransform), typeof(RawImage), typeof(MinimapCamera));
+        obj.transform.SetParent(parent, false);
+
+        RectTransform rect = obj.GetComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
     }
 
     static void BuildCommandGrid(RectTransform parent)
