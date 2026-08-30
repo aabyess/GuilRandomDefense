@@ -6,6 +6,12 @@ using UnityEngine.UI;
 public class MinimapViewportIndicator : MaskableGraphic
 {
     [SerializeField] MinimapCamera minimapCamera;
+
+    // Awake 시점에는 아직 부모가 없다 — new GameObject(...)는 SetParent보다 먼저 Awake를 돌린다.
+    // 그래서 부모 탐색은 실제로 쓰는 시점으로 미룬다.
+    MinimapCamera Minimap => minimapCamera != null
+        ? minimapCamera
+        : minimapCamera = GetComponentInParent<MinimapCamera>();
     [SerializeField] Camera mainCamera;
     [SerializeField] float lineThickness = 2f;
     [SerializeField] float groundHeight = 1f; // 섬 윗면 높이(y = 1 평면)와 교차시킨다.
@@ -32,8 +38,12 @@ public class MinimapViewportIndicator : MaskableGraphic
         raycastTarget = false; // 미니맵 클릭 이동을 가리면 안 된다.
         color = new Color(1f, 1f, 1f, 0.8f);
 
-        if (minimapCamera == null) minimapCamera = GetComponentInParent<MinimapCamera>();
         if (mainCamera == null) mainCamera = Camera.main;
+    }
+
+    public void SetMinimap(MinimapCamera camera)
+    {
+        minimapCamera = camera;
     }
 
     void Update()
@@ -58,9 +68,10 @@ public class MinimapViewportIndicator : MaskableGraphic
         vh.Clear();
 
         // 안 그려지는 이유가 여러 가지라, 첫 실패 한 번만 원인을 남긴다.
-        if (minimapCamera == null || mainCamera == null)
+        MinimapCamera minimap = Minimap;
+        if (minimap == null || mainCamera == null)
         {
-            Warn($"참조 없음 — minimapCamera={(minimapCamera != null)}, mainCamera={(mainCamera != null)}");
+            Warn($"참조 없음 — minimapCamera={(minimap != null)}, mainCamera={(mainCamera != null)}");
             return;
         }
 
@@ -71,7 +82,7 @@ public class MinimapViewportIndicator : MaskableGraphic
         }
 
         for (int i = 0; i < 4; i++)
-            localCorners[i] = minimapCamera.WorldToMinimapLocal(groundCorners[i]);
+            localCorners[i] = minimap.WorldToMinimapLocal(groundCorners[i]);
 
         if (!loggedFailure)
         {

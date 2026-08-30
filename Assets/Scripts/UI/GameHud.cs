@@ -193,6 +193,10 @@ public class GameHud : MonoBehaviour
         indicatorRect.anchorMax = Vector2.one;
         indicatorRect.offsetMin = Vector2.zero;
         indicatorRect.offsetMax = Vector2.zero;
+
+        // 부모가 붙은 뒤에 물려준다. Awake는 SetParent보다 먼저 돌아서 스스로는 못 찾는다.
+        indicatorObj.GetComponent<MinimapViewportIndicator>()
+            .SetMinimap(obj.GetComponent<MinimapCamera>());
     }
 
     static void BuildCommandGrid(RectTransform parent)
