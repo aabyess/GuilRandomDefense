@@ -315,7 +315,19 @@ public static class MapGenerator
 
         for (int playerId = 1; playerId < MapLayout.Lanes.Length; playerId++)
         {
-            if (System.Array.Exists(existing, c => c.PlayerId == playerId)) continue;
+            // 이미 있는 슬롯도 비어 있는 상태로 되돌린다. 맵 생성은 초기화 동작이고,
+            // 처음 만들 때만 비워두면 두 번째 실행부터 예전 상태가 그대로 남는다.
+            PlayerContext already = System.Array.Find(existing, c => c.PlayerId == playerId);
+            if (already != null)
+            {
+                if (already.IsOccupied)
+                {
+                    SerializedObject reset = new SerializedObject(already);
+                    reset.FindProperty("occupied").boolValue = false;
+                    reset.ApplyModifiedProperties();
+                }
+                continue;
+            }
 
             MapLayout.Island lane = MapLayout.Lanes[playerId];
             GameObject player = new GameObject($"Player{playerId + 1}");
@@ -350,9 +362,8 @@ public static class MapGenerator
             so.ApplyModifiedProperties();
         }
 
-        return created > 0
-            ? $"\n플레이어 {created}명분(2~4번) 구조를 만들었습니다 — 자리는 비어 있어 그 레인엔 적이 안 나옵니다."
-            : "";
+        return "\n플레이어 2~4번 자리는 비워뒀습니다 — 그 레인엔 적이 안 나옵니다."
+             + (created > 0 ? $" (새로 만든 슬롯 {created}개)" : "");
     }
 
     // WaveSpawner가 레인 목록을 받도록 바뀌면 여기서 채운다.

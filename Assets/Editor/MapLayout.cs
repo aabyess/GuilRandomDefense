@@ -82,7 +82,11 @@ public static class MapLayout
         UnitGrade.Rare, UnitGrade.Legendary, UnitGrade.RandomUnit,
     };
 
-    /// <summary>레인 둘레를 도는 순환 경로. 적은 이 경로를 계속 돈다(도착 지점이 없다).</summary>
+    /// <summary>
+    /// 레인 둘레를 도는 순환 경로. 적은 이 경로를 계속 돈다(도착 지점이 없다).
+    /// 왼쪽 위에서 출발해 아래로 내려간 뒤 반시계 방향으로 돈다.
+    /// 화면 기준 위쪽이 +Z이므로 왼쪽 위 = (-x, +z).
+    /// </summary>
     public static Vector3[] LaneLoop(Island lane, float inset = 8f)
     {
         float halfX = lane.size.x * 0.5f - inset;
@@ -92,10 +96,10 @@ public static class MapLayout
 
         return new[]
         {
-            new Vector3(x - halfX, IslandTop, z - halfZ),
-            new Vector3(x + halfX, IslandTop, z - halfZ),
-            new Vector3(x + halfX, IslandTop, z + halfZ),
-            new Vector3(x - halfX, IslandTop, z + halfZ),
+            new Vector3(x - halfX, IslandTop, z + halfZ),   // 왼쪽 위 — 출발
+            new Vector3(x - halfX, IslandTop, z - halfZ),   // 왼쪽 아래
+            new Vector3(x + halfX, IslandTop, z - halfZ),   // 오른쪽 아래
+            new Vector3(x + halfX, IslandTop, z + halfZ),   // 오른쪽 위
         };
     }
 }
