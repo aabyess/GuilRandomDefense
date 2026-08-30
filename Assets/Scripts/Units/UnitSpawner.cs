@@ -20,6 +20,10 @@ public class UnitSpawner : MonoBehaviour
             owner = instance.AddComponent<OwnedByPlayer>();
         owner.SetOwner(ownerId);
 
+        if (!instance.TryGetComponent(out UnitIdentity identity))
+            identity = instance.AddComponent<UnitIdentity>();
+        identity.SetData(data);
+
         if (instance.TryGetComponent(out UnitAttacker attacker))
             attacker.ApplyStats(data.attackPower, data.attackRange, data.attackSpeed);
 

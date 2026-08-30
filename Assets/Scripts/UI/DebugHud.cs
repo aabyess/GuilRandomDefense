@@ -110,6 +110,12 @@ public class DebugHud : MonoBehaviour
         else
         {
             Selectable first = selection.Selected[0];
+            if (first == null)
+            {
+                GUILayout.Label("선택 대상이 사라졌습니다");
+                GUILayout.EndArea();
+                return;
+            }
             GUILayout.Label($"선택: {first.name}  (총 {selection.Selected.Count}개)");
 
             if (first.TryGetComponent(out UnitAttacker attacker))

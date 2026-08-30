@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class SelectionManager : MonoBehaviour
@@ -16,6 +17,7 @@ public class SelectionManager : MonoBehaviour
     Vector2 dragStart;
     bool isDragging;
     bool leftButtonHeld;
+    bool ignoreCurrentPress;
     Texture2D boxTexture;
 
     void Awake()
@@ -26,13 +28,21 @@ public class SelectionManager : MonoBehaviour
 
     void Update()
     {
+        PruneDestroyed();
+
         if (Mouse.current == null || cam == null) return;
 
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
-            dragStart = Mouse.current.position.ReadValue();
-            isDragging = false;
-            leftButtonHeld = true;
+            // 하단 HUD 등 uGUI 위에서 누른 클릭은 월드 선택으로 취급하지 않는다.
+            ignoreCurrentPress = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+
+            if (!ignoreCurrentPress)
+            {
+                dragStart = Mouse.current.position.ReadValue();
+                isDragging = false;
+            }
+            leftButtonHeld = !ignoreCurrentPress;
         }
 
         if (leftButtonHeld && !isDragging)
@@ -44,14 +54,27 @@ public class SelectionManager : MonoBehaviour
 
         if (Mouse.current.leftButton.wasReleasedThisFrame)
         {
-            if (isDragging)
-                SelectInBox(dragStart, Mouse.current.position.ReadValue());
-            else
-                TrySelectAtCursor();
+            if (!ignoreCurrentPress)
+            {
+                if (isDragging)
+                    SelectInBox(dragStart, Mouse.current.position.ReadValue());
+                else
+                    TrySelectAtCursor();
+            }
 
             isDragging = false;
             leftButtonHeld = false;
+            ignoreCurrentPress = false;
         }
+    }
+
+    // 선택된 채로 파괴되는 대상이 있다(포탈에 들어간 위습, 죽은 유닛). 목록에 남겨두면
+    // 이 목록을 읽는 쪽이 파괴된 오브젝트에 접근해 MissingReferenceException을 낸다.
+    void PruneDestroyed()
+    {
+        for (int i = selected.Count - 1; i >= 0; i--)
+            if (selected[i] == null)
+                selected.RemoveAt(i);
     }
 
     void TrySelectAtCursor()
