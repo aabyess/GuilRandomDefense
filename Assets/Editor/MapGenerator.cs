@@ -94,6 +94,7 @@ public static class MapGenerator
         List<WaypointPath> lanePaths = BuildLanePaths(root.transform);
         string tableReport = BuildCombineColumns(combineIsland);
         string displayReport = BuildGradeDisplays(root.transform);
+        string gateReport = BuildPunkHazardGate(root.transform);
         string portalReport = BuildGachaPortals(gachaIsland);
 
         string overlaps = CheckOverlaps();
@@ -107,7 +108,7 @@ public static class MapGenerator
         string message =
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
             $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + "\n\n" +
-            tableReport + displayReport + overlaps + navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
+            tableReport + displayReport + gateReport + overlaps + navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
         Debug.Log("[맵] " + message);
         EditorUtility.DisplayDialog(Title, message, "확인");
     }
@@ -388,6 +389,47 @@ public static class MapGenerator
 
         return $"\n뽑기 섬: 흔함 선택 {commons.Count}칸, 등급 랜덤 {randomGrades.Length}칸, " +
                $"전시 {displayed}종 (깊이 {displayDepth:F0}/{available:F0}, {fit}).";
+    }
+
+    // 펑크해저드 한가운데를 가로지르는 정의문. 부수기 전에는 섬이 둘로 나뉜다.
+    const float GateWidth = 14f;
+    const float GateHeight = 5f;
+    const float WallHeight = 4f;
+    const float GateThickness = 1.4f;
+
+    static string BuildPunkHazardGate(Transform parent)
+    {
+        MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "PunkHazard");
+
+        float z = island.center.y;
+        float left = island.center.x - island.size.x * 0.5f;
+        float right = island.center.x + island.size.x * 0.5f;
+        float gateLeft = island.center.x - GateWidth * 0.5f;
+        float gateRight = island.center.x + GateWidth * 0.5f;
+
+        // 문 양옆은 고정 벽 — 여기가 뚫려 있으면 문을 부술 이유가 없다.
+        BuildWall(parent, "펑크해저드_좌측벽",
+            new Vector3((left + gateLeft) * 0.5f, MapLayout.IslandTop + WallHeight * 0.5f, z),
+            new Vector3(gateLeft - left, WallHeight, GateThickness));
+        BuildWall(parent, "펑크해저드_우측벽",
+            new Vector3((gateRight + right) * 0.5f, MapLayout.IslandTop + WallHeight * 0.5f, z),
+            new Vector3(right - gateRight, WallHeight, GateThickness));
+
+        // 문기둥
+        foreach (float pillarX in new[] { gateLeft, gateRight })
+            BuildWall(parent, "펑크해저드_문기둥",
+                new Vector3(pillarX, MapLayout.IslandTop + GateHeight * 0.5f, z),
+                new Vector3(GateThickness * 1.6f, GateHeight, GateThickness * 1.6f));
+
+        GameObject gate = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        gate.name = "정의문";
+        gate.transform.SetParent(parent, false);
+        gate.transform.position = new Vector3(island.center.x, MapLayout.IslandTop + GateHeight * 0.5f, z);
+        gate.transform.localScale = new Vector3(GateWidth - GateThickness, GateHeight, GateThickness);
+        PaintGlow(gate, new Color(0.85f, 0.72f, 0.30f));   // 부술 대상이라 눈에 띄어야 한다
+        gate.AddComponent<DestructibleGate>();
+
+        return "\n펑크해저드에 정의문을 세웠습니다 (부수면 길이 열립니다).";
     }
 
     // 초월·불멸은 조합식 표에 올리지 않고 전시만 한다(사용자 확정).

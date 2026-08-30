@@ -46,9 +46,39 @@ public class UnitAttacker : MonoBehaviour
         attackTimer = attackInterval;
 
         EnemyDummy target = FindClosestEnemyInRange();
-        if (target == null) return;
+        if (target != null)
+        {
+            target.TakeDamage(attackDamage, owner != null ? owner.OwnerId : -1);
+            return;
+        }
 
-        target.TakeDamage(attackDamage, owner != null ? owner.OwnerId : -1);
+        // 적이 없을 때만 문을 친다. 문이 우선이면 적이 몰려와도 문만 때리고 있게 된다.
+        DestructibleGate gate = FindClosestGateInRange();
+        if (gate != null) gate.TakeDamage(attackDamage);
+    }
+
+    DestructibleGate FindClosestGateInRange()
+    {
+        DestructibleGate closest = null;
+        float closestSqrDistance = attackRange * attackRange;
+
+        foreach (DestructibleGate gate in DestructibleGate.Active)
+        {
+            if (gate == null || gate.IsBroken) continue;
+
+            // 문은 폭이 넓어서 중심까지의 거리로 재면 붙어 있어도 사거리 밖으로 나온다.
+            Vector3 point = gate.GetComponent<Collider>() != null
+                ? gate.GetComponent<Collider>().ClosestPoint(transform.position)
+                : gate.transform.position;
+
+            float sqrDistance = (point - transform.position).sqrMagnitude;
+            if (sqrDistance > closestSqrDistance) continue;
+
+            closestSqrDistance = sqrDistance;
+            closest = gate;
+        }
+
+        return closest;
     }
 
     EnemyDummy FindClosestEnemyInRange()
