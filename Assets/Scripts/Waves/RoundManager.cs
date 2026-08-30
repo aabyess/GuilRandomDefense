@@ -8,7 +8,8 @@ public class RoundManager : MonoBehaviour
     [SerializeField] float roundDuration = 28f;
     [SerializeField] int totalRounds = 25;
     [SerializeField] int bossRoundInterval = 10;
-    [SerializeField] int enemyCountThreshold = 25;
+    [SerializeField] int enemyCountThreshold = 25;   // 레인 하나 기준. 전체 합이 아니다.
+    [SerializeField] bool deathCountEnabled = true;  // 구조를 볼 땐 꺼두고 테스트한다.
     [SerializeField] int startingDeathCount = 10;
     [SerializeField] float deathCountTickInterval = 1f;
 
@@ -49,7 +50,9 @@ public class RoundManager : MonoBehaviour
 
     void UpdateDeathCount()
     {
-        if (EnemyDummy.Active.Count <= enemyCountThreshold)
+        if (!deathCountEnabled) return;
+
+        if (MaxLaneEnemyCount() <= enemyCountThreshold)
         {
             deathCountTimer = deathCountTickInterval;
             return;
@@ -67,6 +70,37 @@ public class RoundManager : MonoBehaviour
             Debug.Log("패배!");
             isGameOver = true;
         }
+    }
+
+    // 원작의 패배 조건은 "라인 카운트"다 — 전체 합이 아니라 한 레인에 쌓인 수.
+    // 레인이 4개가 된 뒤로 전체 합을 쓰면 같은 압박에도 4배로 세어져 즉시 패배한다.
+    const int MaxTrackedLanes = 8;
+    static readonly int[] laneCounts = new int[MaxTrackedLanes];
+
+    static int MaxLaneEnemyCount()
+    {
+        System.Array.Clear(laneCounts, 0, laneCounts.Length);
+        int unassigned = 0;
+
+        // 매 프레임 도는 경로라 한 번만 훑는다.
+        // 레인별로 세고 최댓값을 취하면 O(적 수)로 끝난다.
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+        {
+            int lane = enemy.LaneIndex;
+            if (lane < 0 || lane >= MaxTrackedLanes)
+            {
+                unassigned++;
+                continue;
+            }
+
+            laneCounts[lane]++;
+        }
+
+        int max = unassigned;
+        for (int i = 0; i < laneCounts.Length; i++)
+            if (laneCounts[i] > max) max = laneCounts[i];
+
+        return max;
     }
 
     void AdvanceRound()
