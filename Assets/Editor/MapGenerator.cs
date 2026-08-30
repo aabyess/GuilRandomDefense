@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Unity.AI.Navigation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -91,7 +92,7 @@ public static class MapGenerator
         }
 
         List<WaypointPath> lanePaths = BuildLanePaths(root.transform);
-        BuildCombineColumns(combineIsland);
+        string tableReport = BuildCombineColumns(combineIsland);
         int portalCount = BuildGachaPortals(gachaIsland, lanePaths.Count > 0 ? lanePaths[0] : null);
 
         string overlaps = CheckOverlaps();
@@ -105,7 +106,7 @@ public static class MapGenerator
         string message =
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
             $"레인 경로 {lanePaths.Count}개, 뽑기 포탈 {portalCount}개를 만들었습니다.\n\n" +
-            overlaps + navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
+            tableReport + overlaps + navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
         Debug.Log("[맵] " + message);
         EditorUtility.DisplayDialog(Title, message, "확인");
     }
@@ -191,28 +192,109 @@ public static class MapGenerator
         return paths;
     }
 
-    // 조합식 표 위의 등급별 세로 칸. 지금은 자리 표시이고, 실제 레시피 표시는 UI 작업이다.
-    static void BuildCombineColumns(GameObject table)
+    // 조합식 표: 등급별 세로 칸에 그 등급 유닛을 늘어놓는다.
+    // 원작처럼 표 위에 유닛이 서 있고 플레이어가 그걸 보고 조합을 익히는 구조라,
+    // 지금은 스킨 대신 자리 표시 기둥을 세운다. 표가 얼마나 커야 하는지도 이걸로 드러난다.
+    const float SlotSpacing = 4f;
+    const float SlotSize = 2.2f;
+    const float SlotHeight = 2.6f;
+
+    static string BuildCombineColumns(GameObject table)
     {
-        if (table == null) return;
+        if (table == null) return "";
 
         MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "CombineTable");
-        int count = MapLayout.CombineTableGrades.Length;
-        float columnWidth = island.size.x / (count + 1);
+        UnitGrade[] grades = MapLayout.CombineTableGrades;
+        float columnWidth = island.size.x / grades.Length;
 
-        for (int i = 0; i < count; i++)
+        int placed = 0;
+        float deepestUsed = 0f;
+
+        for (int c = 0; c < grades.Length; c++)
         {
-            UnitGrade grade = MapLayout.CombineTableGrades[i];
-            GameObject column = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            column.name = $"Column_{grade.KoreanName()}";
-            column.transform.SetParent(table.transform.parent, false);
-            column.transform.position = new Vector3(
-                island.center.x - island.size.x * 0.5f + columnWidth * (i + 1),
-                MapLayout.IslandTop + 0.5f,
-                island.center.y);
-            column.transform.localScale = new Vector3(columnWidth * 0.7f, 1f, island.size.y * 0.8f);
-            Paint(column, "combine", columnWidth, island.size.y);
+            UnitGrade grade = grades[c];
+            List<UnitData> units = LoadUnitsOfGrade(grade);
+            float columnCenterX = island.center.x - island.size.x * 0.5f + columnWidth * (c + 0.5f);
+
+            // 칸 바닥 — 등급 구분이 눈에 보이게 옅은 판을 깐다.
+            GameObject strip = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            strip.name = $"Column_{grade.KoreanName()}";
+            strip.transform.SetParent(table.transform.parent, false);
+            strip.transform.position = new Vector3(columnCenterX, MapLayout.IslandTop + 0.06f, island.center.y);
+            strip.transform.localScale = new Vector3(columnWidth - 1.5f, 0.12f, island.size.y - 2f);
+            Paint(strip, "combine", columnWidth, island.size.y);
+            Object.DestroyImmediate(strip.GetComponent<Collider>());
+
+            int perRow = Mathf.Max(1, Mathf.FloorToInt((columnWidth - SlotSpacing) / SlotSpacing));
+            float startX = columnCenterX - (perRow - 1) * SlotSpacing * 0.5f;
+            float startZ = island.center.y + island.size.y * 0.5f - SlotSpacing;
+
+            for (int i = 0; i < units.Count; i++)
+            {
+                float z = startZ - (i / perRow) * SlotSpacing;
+
+                GameObject slot = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                slot.name = $"{grade.KoreanName()}_{units[i].unitName}";
+                slot.transform.SetParent(table.transform.parent, false);
+                slot.transform.position = new Vector3(
+                    startX + (i % perRow) * SlotSpacing, MapLayout.IslandTop + SlotHeight * 0.5f, z);
+                slot.transform.localScale = new Vector3(SlotSize, SlotHeight, SlotSize);
+                PaintSolid(slot, GradeColor(grade));
+                // 표 위를 걸어다녀야 하므로 기둥은 통과시킨다.
+                Object.DestroyImmediate(slot.GetComponent<Collider>());
+
+                deepestUsed = Mathf.Max(deepestUsed, startZ - z + SlotSpacing);
+                placed++;
+            }
         }
+
+        float available = island.size.y;
+        string verdict = deepestUsed <= available
+            ? $"여유 {available - deepestUsed:F0}"
+            : $"⚠️ {deepestUsed - available:F0} 모자람 — CombineTable 세로를 {Mathf.CeilToInt(deepestUsed) + 6}으로 늘리세요";
+
+        return $"\n조합식 표에 {placed}종 배치 (필요 깊이 {deepestUsed:F0} / 확보 {available:F0}, {verdict}).";
+    }
+
+    static List<UnitData> LoadUnitsOfGrade(UnitGrade grade)
+    {
+        return AssetDatabase.FindAssets("t:UnitData", new[] { "Assets/Data/Units/Roster" })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .Select(AssetDatabase.LoadAssetAtPath<UnitData>)
+            .Where(unit => unit != null && unit.grade == grade)
+            .OrderBy(unit => unit.unitName, System.StringComparer.Ordinal)
+            .ToList();
+    }
+
+    // 사용자가 정한 등급 색. 하단 HUD의 유닛 카드와 같은 규칙을 쓴다.
+    static Color GradeColor(UnitGrade grade)
+    {
+        switch (grade)
+        {
+            case UnitGrade.Legendary: return new Color(0.82f, 0.24f, 0.24f);
+            case UnitGrade.Rare:      return new Color(0.60f, 0.36f, 0.78f);
+            case UnitGrade.Special:   return new Color(0.88f, 0.78f, 0.28f);
+            case UnitGrade.Hidden:    return new Color(0.30f, 0.52f, 0.86f);
+            case UnitGrade.Common:
+            case UnitGrade.Uncommon:  return new Color(0.36f, 0.70f, 0.40f);
+            default:                  return new Color(0.62f, 0.62f, 0.62f);
+        }
+    }
+
+    static void PaintSolid(GameObject obj, Color color)
+    {
+        string path = $"{MaterialFolder}/slot_{ColorUtility.ToHtmlStringRGB(color)}.mat";
+        Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (material == null)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            material = new Material(shader);
+            material.SetColor("_BaseColor", color);
+            material.SetFloat("_Smoothness", 0.2f);
+            AssetDatabase.CreateAsset(material, path);
+        }
+
+        obj.GetComponent<Renderer>().sharedMaterial = material;
     }
 
     static int BuildGachaPortals(GameObject gachaIsland, WaypointPath firstLanePath)
