@@ -1,0 +1,317 @@
+using System.Collections.Generic;
+using Unity.AI.Navigation;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+
+/// <summary>
+/// MapLayout의 수치대로 원랜디 맵을 씬에 생성한다.
+/// 섬이 19개에 포탈·경로까지 있어 손배치는 현실적이지 않아 메뉴로 만든다.
+/// 생성물은 전부 "Map" 루트 아래에 들어가므로, 다시 실행하면 통째로 갈아끼운다.
+/// </summary>
+public static class MapGenerator
+{
+    const string RootName = "Map";
+    const string MaterialFolder = "Assets/Materials/Map";
+    const string Title = "맵 생성";
+
+    static readonly Dictionary<string, Color> Tints = new Dictionary<string, Color>
+    {
+        { "sea",       new Color(0.18f, 0.42f, 0.62f) },
+        { "lane",      new Color(0.55f, 0.60f, 0.44f) },
+        { "warehouse", new Color(0.62f, 0.55f, 0.38f) },
+        { "seal",      new Color(0.48f, 0.62f, 0.58f) },
+        { "event",     new Color(0.66f, 0.38f, 0.34f) },
+        { "display",   new Color(0.45f, 0.40f, 0.58f) },
+        { "story",     new Color(0.58f, 0.50f, 0.62f) },
+        { "gacha",     new Color(0.60f, 0.58f, 0.42f) },
+        { "combine",   new Color(0.52f, 0.52f, 0.50f) },
+        { "portal",    new Color(0.30f, 0.70f, 0.85f) },
+    };
+
+    [MenuItem("Tools/맵/원랜디 맵 생성")]
+    static void Generate()
+    {
+        GameObject existing = GameObject.Find(RootName);
+        if (existing != null &&
+            !EditorUtility.DisplayDialog(Title,
+                "이미 Map이 있습니다. 지우고 다시 만들까요?\n(Map 아래 직접 수정한 것은 사라집니다)",
+                "다시 만들기", "취소"))
+            return;
+
+        if (existing != null) Object.DestroyImmediate(existing);
+
+        GameObject root = new GameObject(RootName);
+        BuildSea(root.transform);
+
+        List<GameObject> laneObjects = new List<GameObject>();
+        foreach (MapLayout.Island lane in MapLayout.Lanes)
+            laneObjects.Add(BuildIsland(root.transform, lane));
+
+        foreach (MapLayout.Island island in MapLayout.Warehouses) BuildIsland(root.transform, island);
+        foreach (MapLayout.Island island in MapLayout.SealIslands) BuildIsland(root.transform, island);
+
+        GameObject gachaIsland = null;
+        GameObject combineIsland = null;
+        foreach (MapLayout.Island island in MapLayout.Zones)
+        {
+            GameObject created = BuildIsland(root.transform, island);
+            if (island.name == "GachaIsland") gachaIsland = created;
+            if (island.name == "CombineTable") combineIsland = created;
+        }
+
+        List<WaypointPath> lanePaths = BuildLanePaths(root.transform);
+        BuildCombineColumns(combineIsland);
+        int portalCount = BuildGachaPortals(gachaIsland, lanePaths.Count > 0 ? lanePaths[0] : null);
+
+        string rewire = RewireScene(lanePaths);
+        string navResult = BuildNavMesh(root);
+        string oldGround = DisableOldGround();
+
+        Selection.activeGameObject = root;
+        EditorSceneManager.MarkSceneDirty(root.scene);
+
+        string message =
+            $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
+            $"레인 경로 {lanePaths.Count}개, 뽑기 포탈 {portalCount}개를 만들었습니다.\n\n" +
+            navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
+        Debug.Log("[맵] " + message);
+        EditorUtility.DisplayDialog(Title, message, "확인");
+    }
+
+    static void BuildSea(Transform parent)
+    {
+        GameObject sea = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        sea.name = "Sea";
+        sea.transform.SetParent(parent, false);
+        sea.transform.localPosition = new Vector3(0f, -MapLayout.IslandThickness * 0.5f, 0f);
+        sea.transform.localScale = new Vector3(MapLayout.SeaSize, MapLayout.IslandThickness, MapLayout.SeaSize);
+        Paint(sea, "sea");
+
+        // 바다도 NavMesh에 굽되 Sea 영역으로 표시한다. 지상 유닛은 UnitSpawner가 areaMask에서
+        // 이 영역을 빼기 때문에 못 지나가고, 비행·수상보행 유닛만 지나간다.
+        NavMeshModifier modifier = sea.AddComponent<NavMeshModifier>();
+        modifier.overrideArea = true;
+        modifier.area = MapLayout.SeaAreaIndex;
+    }
+
+    static GameObject BuildIsland(Transform parent, MapLayout.Island island)
+    {
+        GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        obj.name = island.name;
+        obj.transform.SetParent(parent, false);
+        obj.transform.localPosition = new Vector3(
+            island.center.x,
+            MapLayout.IslandTop - MapLayout.IslandThickness * 0.5f,
+            island.center.y);
+        obj.transform.localScale = new Vector3(island.size.x, MapLayout.IslandThickness, island.size.y);
+        Paint(obj, island.tint);
+        return obj;
+    }
+
+    static List<WaypointPath> BuildLanePaths(Transform parent)
+    {
+        List<WaypointPath> paths = new List<WaypointPath>();
+
+        for (int i = 0; i < MapLayout.Lanes.Length; i++)
+        {
+            MapLayout.Island lane = MapLayout.Lanes[i];
+            GameObject pathObj = new GameObject($"{lane.name}_Path", typeof(WaypointPath));
+            pathObj.transform.SetParent(parent, false);
+
+            Vector3[] corners = MapLayout.LaneLoop(lane);
+            Transform[] points = new Transform[corners.Length];
+            for (int c = 0; c < corners.Length; c++)
+            {
+                GameObject point = new GameObject($"P{c}");
+                point.transform.SetParent(pathObj.transform, false);
+                point.transform.position = corners[c];
+                points[c] = point.transform;
+            }
+
+            WaypointPath path = pathObj.GetComponent<WaypointPath>();
+            SerializedObject so = new SerializedObject(path);
+            SerializedProperty list = so.FindProperty("points");
+            list.ClearArray();
+            for (int c = 0; c < points.Length; c++)
+            {
+                list.InsertArrayElementAtIndex(c);
+                list.GetArrayElementAtIndex(c).objectReferenceValue = points[c];
+            }
+            so.ApplyModifiedProperties();
+
+            paths.Add(path);
+        }
+
+        return paths;
+    }
+
+    // 조합식 표 위의 등급별 세로 칸. 지금은 자리 표시이고, 실제 레시피 표시는 UI 작업이다.
+    static void BuildCombineColumns(GameObject table)
+    {
+        if (table == null) return;
+
+        MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "CombineTable");
+        int count = MapLayout.CombineTableGrades.Length;
+        float columnWidth = island.size.x / (count + 1);
+
+        for (int i = 0; i < count; i++)
+        {
+            UnitGrade grade = MapLayout.CombineTableGrades[i];
+            GameObject column = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            column.name = $"Column_{grade.KoreanName()}";
+            column.transform.SetParent(table.transform.parent, false);
+            column.transform.position = new Vector3(
+                island.center.x - island.size.x * 0.5f + columnWidth * (i + 1),
+                MapLayout.IslandTop + 0.5f,
+                island.center.y);
+            column.transform.localScale = new Vector3(columnWidth * 0.7f, 1f, island.size.y * 0.8f);
+            Paint(column, "combine");
+        }
+    }
+
+    static int BuildGachaPortals(GameObject gachaIsland, WaypointPath firstLanePath)
+    {
+        if (gachaIsland == null) return 0;
+
+        GachaTable table = AssetDatabase.LoadAssetAtPath<GachaTable>("Assets/Data/MainGachaTable.asset");
+        UnitSpawner spawner = Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
+
+        // 지상 유닛은 바다를 못 건넌다. 뽑기 섬에서 소환하면 레인까지 갈 방법이 없으므로
+        // 소환 위치를 플레이어 레인으로 잡는다.
+        Transform spawnPoint = null;
+        if (firstLanePath != null && firstLanePath.PointCount > 0)
+        {
+            GameObject marker = new GameObject("UnitSpawnPoint");
+            marker.transform.SetParent(firstLanePath.transform.parent, false);
+            marker.transform.position = MapLayout.Lanes[0].center.x * Vector3.right
+                                      + MapLayout.IslandTop * Vector3.up
+                                      + MapLayout.Lanes[0].center.y * Vector3.forward;
+            spawnPoint = marker.transform;
+        }
+
+        MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "GachaIsland");
+        UnitGrade[] grades = MapLayout.GachaPortalGrades;
+        float step = island.size.y / (grades.Length + 1);
+
+        for (int i = 0; i < grades.Length; i++)
+        {
+            UnitGrade grade = grades[i];
+            GameObject portal = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            portal.name = $"Portal_{grade.KoreanName()}";
+            portal.transform.SetParent(gachaIsland.transform.parent, false);
+            // 위쪽(+Z)이 낮은 등급 — 사용자 설명 기준 "제일 위에 흔함"
+            portal.transform.position = new Vector3(
+                island.center.x,
+                MapLayout.IslandTop + 0.25f,
+                island.center.y + island.size.y * 0.5f - step * (i + 1));
+            portal.transform.localScale = new Vector3(7f, 0.5f, 7f);
+            Paint(portal, "portal");
+
+            portal.GetComponent<Collider>().isTrigger = true;
+
+            UnitPortal unitPortal = portal.AddComponent<UnitPortal>();
+            SerializedObject so = new SerializedObject(unitPortal);
+            SerializedProperty accepted = so.FindProperty("acceptedGrades");
+            accepted.ClearArray();
+            accepted.InsertArrayElementAtIndex(0);
+            accepted.GetArrayElementAtIndex(0).enumValueIndex = (int)grade;
+            so.FindProperty("legacyGradeMigrated").boolValue = true;
+            so.FindProperty("gachaTable").objectReferenceValue = table;
+            so.FindProperty("unitSpawner").objectReferenceValue = spawner;
+            so.FindProperty("spawnPoint").objectReferenceValue = spawnPoint;
+            so.ApplyModifiedProperties();
+        }
+
+        return grades.Length;
+    }
+
+    // 기존 씬은 전부 원점 근처를 전제로 배치돼 있었다. 새 맵에서 원점은 바다 한가운데라,
+    // 그대로 두면 적은 물 위를 걷고 위습은 닿을 수 없는 곳에 생긴다.
+    static string RewireScene(List<WaypointPath> lanePaths)
+    {
+        string report = "";
+
+        WaveSpawner spawner = Object.FindFirstObjectByType<WaveSpawner>(FindObjectsInactive.Include);
+        if (spawner != null && lanePaths.Count > 0)
+        {
+            SerializedObject so = new SerializedObject(spawner);
+            so.FindProperty("path").objectReferenceValue = lanePaths[0];
+            so.ApplyModifiedProperties();
+            report += "\n적 경로를 Lane1_Path로 옮겼습니다.";
+        }
+
+        GameObject oldLane = GameObject.Find("Lane");
+        if (oldLane != null)
+        {
+            oldLane.SetActive(false);
+            report += "\n기존 Lane 경로는 비활성화했습니다.";
+        }
+
+        // 위습은 RewardDistributor가 PlayerContext의 위치에 생성한다.
+        MapLayout.Island gacha = System.Array.Find(MapLayout.Zones, z => z.name == "GachaIsland");
+        PlayerContext[] contexts = Object.FindObjectsByType<PlayerContext>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (PlayerContext context in contexts)
+        {
+            context.transform.position = new Vector3(
+                gacha.center.x,
+                MapLayout.IslandTop,
+                gacha.center.y + gacha.size.y * 0.5f - 6f);
+        }
+        if (contexts.Length > 0)
+            report += $"\n위습이 생기는 위치(PlayerContext {contexts.Length}개)를 뽑기 섬으로 옮겼습니다.";
+
+        return report;
+    }
+
+    static string BuildNavMesh(GameObject root)
+    {
+        NavMeshSurface surface = root.AddComponent<NavMeshSurface>();
+        surface.collectObjects = CollectObjects.Children;
+        surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
+
+        try
+        {
+            surface.BuildNavMesh();
+            return "NavMesh를 구웠습니다 (바다 = Sea 영역).";
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[맵] NavMesh 굽기 실패: {e.Message}");
+            return "⚠️ NavMesh 굽기에 실패했습니다. Map 오브젝트의 NavMeshSurface에서 Bake를 눌러주세요.";
+        }
+    }
+
+    static string DisableOldGround()
+    {
+        GameObject ground = GameObject.Find("Ground");
+        if (ground == null) return "";
+
+        ground.SetActive(false);
+        return "\n기존 Ground는 새 맵과 겹쳐서 비활성화했습니다.";
+    }
+
+    static void Paint(GameObject obj, string tint)
+    {
+        if (!Tints.TryGetValue(tint, out Color color)) return;
+
+        string path = $"{MaterialFolder}/{tint}.mat";
+        Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (material == null)
+        {
+            if (!AssetDatabase.IsValidFolder(MaterialFolder))
+            {
+                if (!AssetDatabase.IsValidFolder("Assets/Materials"))
+                    AssetDatabase.CreateFolder("Assets", "Materials");
+                AssetDatabase.CreateFolder("Assets/Materials", "Map");
+            }
+
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            material = new Material(shader) { color = color };
+            AssetDatabase.CreateAsset(material, path);
+        }
+
+        obj.GetComponent<Renderer>().sharedMaterial = material;
+    }
+}
