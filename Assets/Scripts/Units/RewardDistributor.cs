@@ -103,9 +103,19 @@ public class RewardDistributor : MonoBehaviour
             return;
         }
 
+        // 위습은 자기 등급 칸 안에서 생긴다. 칸은 막혀 있어 다른 등급 포탈로 새지 않는다.
+        // 칸이 아직 없는 등급이면 플레이어 위치에 떨어뜨린다.
+        WispCell cell = WispCell.Get(wispData.targetGrade);
+        Vector3 origin = cell != null ? cell.transform.position : context.transform.position;
+
         for (int i = 0; i < count; i++)
         {
-            GameObject instance = Instantiate(wispData.prefab, context.transform.position, Quaternion.identity);
+            // 여러 개를 같은 점에 겹쳐 놓으면 서로 밀어내느라 흩어진다. 살짝 벌려 놓는다.
+            Vector3 offset = count > 1
+                ? Quaternion.Euler(0f, 360f / count * i, 0f) * Vector3.forward * 1.6f
+                : Vector3.zero;
+
+            GameObject instance = Instantiate(wispData.prefab, origin + offset, Quaternion.identity);
 
             if (!instance.TryGetComponent(out Wisp wisp))
             {

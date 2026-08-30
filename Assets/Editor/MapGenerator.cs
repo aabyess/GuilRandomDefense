@@ -95,7 +95,7 @@ public static class MapGenerator
         string tableReport = BuildCombineColumns(combineIsland);
         string displayReport = BuildGradeDisplays(root.transform);
         string gateReport = BuildPunkHazardGate(root.transform);
-        string resourceReport = BuildResourceIsland(root.transform);
+
         string portalReport = BuildGachaPortals(gachaIsland);
 
         string overlaps = CheckOverlaps();
@@ -109,7 +109,7 @@ public static class MapGenerator
         string message =
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
             $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + "\n\n" +
-            tableReport + displayReport + gateReport + resourceReport + overlaps + navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
+            tableReport + displayReport + gateReport + overlaps + navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
         Debug.Log("[맵] " + message);
         EditorUtility.DisplayDialog(Title, message, "확인");
     }
@@ -337,6 +337,8 @@ public static class MapGenerator
     const float ChoicePortalDiameter = 4.2f;
 
     // 흔함 선택 칸은 원작처럼 칸마다 벽을 둘러 부스로 만든다.
+    const float PortalInset = 6f;       // 칸 위벽에서 포탈까지
+    const float WispSpawnGap = 7f;      // 포탈에서 위습 생성 지점까지
     const float BoothDepth = 9f;        // 포탈 앞부터 뒷벽까지
     const float BoothWallHeight = 3.2f;
     const float BoothWallThickness = 0.6f;
@@ -374,25 +376,44 @@ public static class MapGenerator
             BuildBooth(parent, unit.unitName, x, rowZ, step);
         }
 
+        // 흔함 선택 위습은 부스 줄 앞에 생긴다 — 어느 부스로 갈지는 플레이어가 고른다.
+        GameObject commonCell = new GameObject("위습칸_흔함선택");
+        commonCell.transform.SetParent(parent, false);
+        commonCell.transform.position = new Vector3(island.center.x, MapLayout.IslandTop, rowZ - 6f);
+        commonCell.AddComponent<WispCell>().SetGrade(UnitGrade.Common);
+
         // --- 왼쪽: 벽으로 나뉜 칸 5줄 ---
         // 원작 구조. 위에서 아래로 등급이 올라가고, 중간에 특수 지급 칸이 하나 낀다.
         float bandTop = rowZ - 4f;
         float bandBottom = bottom + 4f;
         float bandHeight = (bandTop - bandBottom) / GachaBands.Length;
         float columnLeft = left + 2f;
-        float columnRight = island.center.x - 6f;   // 입구 바깥 통로 폭을 확보
+        float columnRight = island.center.x + 2f;   // 입구가 없어져 통로를 뺄 수 있다
 
         int specialPending = 0;
 
         for (int b = 0; b < GachaBands.Length; b++)
         {
             GachaBand band = GachaBands[b];
-            float bandCenterZ = bandTop - bandHeight * (b + 0.5f);
+            float cellTop = bandTop - bandHeight * b;
+            // 원작처럼 포탈은 칸 위쪽에 붙이고, 위습은 그 아래에서 생겨 포탈로 올라간다.
+            float portalZ = cellTop - PortalInset;
+            float bandCenterZ = portalZ;
 
             // 칸을 사방으로 막고 오른쪽 가운데만 입구로 연다.
             // 안 막으면 위습이 한 칸에 들어갔다가 옆 칸 포탈로 흘러가 엉뚱한 등급이 나온다.
-            BuildBandWalls(parent, band.label, columnLeft, columnRight,
+            BuildCellWalls(parent, $"뽑기칸_{band.label}", columnLeft, columnRight,
                            bandTop - bandHeight * b, bandTop - bandHeight * (b + 1), b == 0);
+
+            // 이 칸에서 생길 위습의 등급을 표시한다. 특수 칸은 위습이 따로 없다.
+            if (band.specialSlots == null)
+            {
+                GameObject cell = new GameObject($"위습칸_{band.label}");
+                cell.transform.SetParent(parent, false);
+                cell.transform.position = new Vector3((columnLeft + columnRight) * 0.5f,
+                                                      MapLayout.IslandTop, portalZ - WispSpawnGap);
+                cell.AddComponent<WispCell>().SetGrade(band.grade);
+            }
 
             if (band.specialSlots == null)
             {
@@ -434,7 +455,7 @@ public static class MapGenerator
 
         // --- 오른쪽 세로줄: 조합식 없이 캐릭터만 전시하는 등급 ---
         // 이 등급들은 조합식 표에 올리지 않기로 확정돼 있어서, 여기가 유일하게 눈으로 보는 곳이다.
-        float displayLeft = island.center.x + 4f;
+        float displayLeft = island.center.x + 8f;
         float displayWidth = left + island.size.x - 2f - displayLeft;
         int perRow = Mathf.Max(1, Mathf.FloorToInt(displayWidth / SlotSpacing));
         float displayZ = bandTop;
@@ -457,6 +478,10 @@ public static class MapGenerator
             displayZ -= (Mathf.CeilToInt(units.Count / (float)perRow) + 1) * SlotSpacing;
         }
 
+        // 전시가 끝난 아래쪽은 비어 있다. 거기에 자원 칸을 넣는다.
+        string resourceReport = BuildResourceCells(parent,
+            displayLeft - 2f, left + island.size.x - 2f, displayZ - SlotSpacing, bandBottom);
+
         float displayDepth = bandTop - displayZ;
         float available = bandTop - bandBottom;
         string fit = displayDepth <= available
@@ -468,41 +493,57 @@ public static class MapGenerator
             : "";
 
         return $"\n뽑기 섬: 흔함 선택 {commons.Count}칸, 등급 칸 {GachaBands.Length}줄, " +
-               $"전시 {displayed}종 (깊이 {displayDepth:F0}/{available:F0}, {fit})." + pending;
+               $"전시 {displayed}종 (깊이 {displayDepth:F0}/{available:F0}, {fit})." + pending + resourceReport;
     }
 
-    // 자원 포탈 섬. 위습을 넣으면 유닛 대신 금화·목재가 나온다.
-    // 뽑기 섬과 기능이 달라 섬을 분리했다(원작도 별도 섬).
-    static string BuildResourceIsland(Transform parent)
+    // 자원 포탈. 뽑기 섬 오른쪽 아래의 안 쓰는 공간에 칸으로 넣는다.
+    // 별도 섬을 띄우는 것보다, 이미 있는 섬의 빈 곳을 쓰는 편이 동선이 짧다.
+    static string BuildResourceCells(Transform parent, float xLeft, float xRight, float zTop, float zBottom)
     {
-        MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "ResourceIsland");
         GachaTable table = AssetDatabase.LoadAssetAtPath<GachaTable>("Assets/Data/MainGachaTable.asset");
         UnitSpawner spawner = Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
 
-        float step = island.size.x / 5f;
-        float left = island.center.x - island.size.x * 0.5f;
-        float z = island.center.y;
+        // 유닛랜덤 · 금화랜덤 · 목재랜덤 · 도움소마나
+        const int cellCount = 4;
+        float cellHeight = (zTop - zBottom) / cellCount;
+        float centerX = (xLeft + xRight) * 0.5f;
         int pending = 0;
 
-        // 1) 유닛 랜덤 — 등급 무관 랜덤이라 UnitPortal 쪽이다.
-        GameObject unitRandom = CreatePortalObject(parent, "Portal_유닛랜덤",
-            new Vector3(left + step, MapLayout.IslandTop + 0.25f, z), PortalDiameter);
-        ConfigurePortal(unitRandom, UnitGrade.RandomUnit, null, table, spawner);
+        for (int i = 0; i < cellCount; i++)
+        {
+            float cellTop = zTop - cellHeight * i;
+            float cellBottom = zTop - cellHeight * (i + 1);
+            float z = cellTop - PortalInset;
 
-        // 2) 금화 랜덤 — 원작은 "15 + 라운드×12~35". 라운드 비례 부분만 옮겼다.
-        BuildResourcePortal(parent, "Portal_금화랜덤", new Vector3(left + step * 2, 0f, z),
-            ResourcePortal.Payout.Gold, ResourceType.Wood, 15, 20, 100f);
+            string label = new[] { "유닛랜덤", "금화랜덤", "목재랜덤", "도움소마나" }[i];
+            BuildCellWalls(parent, $"자원칸_{label}", xLeft, xRight, cellTop, cellBottom, i == 0);
 
-        // 3) 목재 랜덤 — 원작은 66% 확률로 목재 1개.
-        BuildResourcePortal(parent, "Portal_목재랜덤", new Vector3(left + step * 3, 0f, z),
-            ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f);
+            switch (i)
+            {
+                case 0:
+                    GameObject unitRandom = CreatePortalObject(parent, "Portal_유닛랜덤",
+                        new Vector3(centerX, MapLayout.IslandTop + 0.25f, z), PortalDiameter);
+                    ConfigurePortal(unitRandom, UnitGrade.RandomUnit, null, table, spawner);
+                    break;
+                case 1:
+                    // 원작은 "15 + 라운드×12~35". 라운드 비례 부분만 옮겼다.
+                    BuildResourcePortal(parent, "Portal_금화랜덤", new Vector3(centerX, 0f, z),
+                        ResourcePortal.Payout.Gold, ResourceType.Wood, 15, 20, 100f);
+                    break;
+                case 2:
+                    BuildResourcePortal(parent, "Portal_목재랜덤", new Vector3(centerX, 0f, z),
+                        ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f);
+                    break;
+                default:
+                    // 마나 자원이 아직 없다. 동작 안 하는 포탈 대신 자리만 세운다.
+                    PlaceUnitMarker(parent, "미구현_도움소마나", new Vector3(centerX, 0f, z), UnitGrade.RandomUnit);
+                    pending++;
+                    break;
+            }
+        }
 
-        // 4) 도움소 마나 — 마나 개념이 아직 없어 자리만 세운다.
-        PlaceUnitMarker(parent, "미구현_도움소마나", new Vector3(left + step * 4, 0f, z), UnitGrade.RandomUnit);
-        pending++;
-
-        return $"\n자원 섬: 유닛랜덤·금화랜덤·목재랜덤 포탈 3개" +
-               (pending > 0 ? $", 미구현 {pending}칸(도움소 마나 — 마나 자원이 아직 없음)." : ".");
+        return $"\n자원 칸: 유닛랜덤·금화랜덤·목재랜덤 포탈 3개" +
+               (pending > 0 ? $", 미구현 {pending}칸(도움소 마나 — 마나 자원 없음)." : ".");
     }
 
     static void BuildResourcePortal(Transform parent, string name, Vector3 ground,
@@ -720,39 +761,31 @@ public static class MapGenerator
         Object.DestroyImmediate(marker.GetComponent<Collider>());
     }
 
-    const float BandEntranceWidth = 7f;
-
-    static void BuildBandWalls(Transform parent, string label,
+    // 위습이 칸 안에서 생기므로 드나들 입구가 필요 없다. 사방을 완전히 막아
+    // 다른 등급 칸으로 새는 경우를 아예 없앤다.
+    static void BuildCellWalls(Transform parent, string label,
                                float xLeft, float xRight, float zTop, float zBottom, bool skipTop)
     {
         float y = MapLayout.IslandTop + WallHeight * 0.5f;
-        float width = xRight - xLeft;
-        float depth = zTop - zBottom;
+        float width = xRight - xLeft + GateThickness;   // 모서리가 벌어지지 않게 겹쳐 세운다
+        float depth = zTop - zBottom + GateThickness;
 
         if (!skipTop)   // 맨 위 칸은 흔함 부스 줄이 이미 막고 있다
-            BuildWall(parent, $"뽑기칸_{label}_위벽",
+            BuildWall(parent, $"{label}_위벽",
                 new Vector3((xLeft + xRight) * 0.5f, y, zTop),
                 new Vector3(width, WallHeight, GateThickness));
 
-        BuildWall(parent, $"뽑기칸_{label}_아래벽",
+        BuildWall(parent, $"{label}_아래벽",
             new Vector3((xLeft + xRight) * 0.5f, y, zBottom),
             new Vector3(width, WallHeight, GateThickness));
 
-        BuildWall(parent, $"뽑기칸_{label}_왼벽",
+        BuildWall(parent, $"{label}_왼벽",
             new Vector3(xLeft, y, (zTop + zBottom) * 0.5f),
             new Vector3(GateThickness, WallHeight, depth));
 
-        // 오른쪽은 가운데를 비워 입구로 쓴다 — 위아래 두 토막으로 세운다.
-        float segment = (depth - BandEntranceWidth) * 0.5f;
-        if (segment > 0.5f)
-        {
-            BuildWall(parent, $"뽑기칸_{label}_오른벽위",
-                new Vector3(xRight, y, zTop - segment * 0.5f),
-                new Vector3(GateThickness, WallHeight, segment));
-            BuildWall(parent, $"뽑기칸_{label}_오른벽아래",
-                new Vector3(xRight, y, zBottom + segment * 0.5f),
-                new Vector3(GateThickness, WallHeight, segment));
-        }
+        BuildWall(parent, $"{label}_오른벽",
+            new Vector3(xRight, y, (zTop + zBottom) * 0.5f),
+            new Vector3(GateThickness, WallHeight, depth));
     }
 
     static void ApplyBonusGrade(GameObject portal, UnitGrade bonusGrade, float chance)

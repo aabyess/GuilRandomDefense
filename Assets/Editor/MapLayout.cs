@@ -49,10 +49,10 @@ public static class MapLayout
     // 물범 섬 — 4개. 물범을 잡으면 전체 플레이어에게 목재 1개씩.
     public static readonly Island[] SealIslands =
     {
-        new Island("SealIsland1", -166f, -108f, 18f, 18f, "seal"),
-        new Island("SealIsland2", -140f, -108f, 18f, 18f, "seal"),
-        new Island("SealIsland3", -114f, -108f, 18f, 18f, "seal"),
-        new Island("SealIsland4",  -88f, -108f, 18f, 18f, "seal"),
+        new Island("SealIsland1", -180f, -122f, 18f, 18f, "seal"),
+        new Island("SealIsland2", -158f, -122f, 18f, 18f, "seal"),
+        new Island("SealIsland3", -136f, -122f, 18f, 18f, "seal"),
+        new Island("SealIsland4", -114f, -122f, 18f, 18f, "seal"),
     };
 
     public static readonly Island[] Zones =
@@ -62,10 +62,9 @@ public static class MapLayout
         new Island("ImmortalDisplay",   98f,  46f, 60f, 30f, "display"),
         new Island("TranscendDisplay",  98f,  12f, 60f, 24f, "display"),
         new Island("StoryZone",       -138f, -46f, 54f, 54f, "story"),
-        new Island("GachaIsland",      -52f, -50f, 74f, 90f, "gacha"),
+        new Island("GachaIsland",      -52f, -50f, 74f, 130f, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
         new Island("CombineTable",      48f, -48f, 116f, 80f, "combine"),
-        new Island("ResourceIsland",   -38f, -128f, 60f, 34f, "seal"),
     };
 
     // 조합식 표에 노출하는 등급 6종 — 표 위의 세로 칸 하나씩.
