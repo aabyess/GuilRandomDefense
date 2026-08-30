@@ -533,8 +533,10 @@ public static class MapGenerator
         BuildResourcePortal(parent, "Portal_목재랜덤", new Vector3(centerX - armX, 0f, centerZ),
             ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f);
 
-        // 남: 도움소 마나 — 마나 자원이 아직 없어 자리만 세운다.
-        PlaceUnitMarker(parent, "미구현_도움소마나", new Vector3(centerX, 0f, centerZ - armZ), UnitGrade.RandomUnit);
+        // 남: 도움소 마나 — 원작은 "20 + 라운드×1.5 회복".
+        // 마나를 쓰는 도움소 건물은 아직 없지만, 자원은 지금부터 쌓아둔다.
+        BuildResourcePortal(parent, "Portal_도움소마나", new Vector3(centerX, 0f, centerZ - armZ),
+            ResourcePortal.Payout.Resource, ResourceType.Mana, 20, 2, 100f);
 
         // 가운데에서 위습이 생긴다. 여기서 어느 포탈로 갈지는 플레이어가 정한다.
         GameObject cell = new GameObject("위습칸_자원");
@@ -542,7 +544,7 @@ public static class MapGenerator
         cell.transform.position = new Vector3(centerX, MapLayout.IslandTop, centerZ);
         cell.AddComponent<WispCell>().SetGrade(UnitGrade.RandomUnit);
 
-        return "\n자원 칸: 가운데 위습 → 동서남북 포탈 4개 (유닛·금화·목재 동작, 도움소 마나는 미구현).";
+        return "\n자원 칸: 가운데 위습 → 북 유닛랜덤 · 동 금화 · 서 목재 · 남 마나.";
     }
 
     static void BuildResourcePortal(Transform parent, string name, Vector3 ground,
