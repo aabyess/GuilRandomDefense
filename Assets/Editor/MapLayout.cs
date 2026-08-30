@@ -62,7 +62,7 @@ public static class MapLayout
         new Island("ImmortalDisplay",  128f, -30f, 40f, 36f, "display"),
         new Island("TranscendDisplay", 172f, -30f, 40f, 36f, "display"),
         new Island("StoryZone",       -120f, -46f, 54f, 54f, "story"),
-        new Island("GachaIsland",      -42f, -46f, 46f, 66f, "gacha"),
+        new Island("GachaIsland",      -46f, -46f, 56f, 66f, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
         new Island("CombineTable",      40f, -62f, 112f, 74f, "combine"),
     };
@@ -75,11 +75,19 @@ public static class MapLayout
         UnitGrade.Rare, UnitGrade.Legendary, UnitGrade.Limited,
     };
 
-    // 뽑기 섬의 포탈 — 위쪽이 낮은 등급. 사용자 설명 기준("제일 위에 흔함").
-    public static readonly UnitGrade[] GachaPortalGrades =
+    // 뽑기 섬 왼쪽 열: 등급 내 랜덤으로 지급하는 포탈.
+    // 흔함은 "선택"이라 섬 위쪽 가로줄이 따로 담당하므로 여기 없다.
+    public static readonly UnitGrade[] GachaRandomGrades =
     {
-        UnitGrade.Common, UnitGrade.Uncommon, UnitGrade.Special,
-        UnitGrade.Rare, UnitGrade.Legendary, UnitGrade.RandomUnit,
+        UnitGrade.Uncommon, UnitGrade.Special, UnitGrade.Rare,
+        UnitGrade.Legendary, UnitGrade.RandomUnit,
+    };
+
+    // 뽑기 섬 오른쪽 열: 조합식 없이 캐릭터만 전시하는 등급.
+    // 조합식 표(하단 우측)에는 올리지 않기로 확정된 등급들이다.
+    public static readonly UnitGrade[] GachaDisplayGrades =
+    {
+        UnitGrade.RandomUnit, UnitGrade.OtherWorld,
     };
 
     /// <summary>

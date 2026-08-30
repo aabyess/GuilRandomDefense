@@ -311,45 +311,88 @@ public static class MapGenerator
         MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "GachaIsland");
         Transform parent = gachaIsland.transform.parent;
 
-        // 위쪽 가로줄: 흔함 유닛을 하나씩 고르는 칸
+        float left = island.center.x - island.size.x * 0.5f;
+        float top = island.center.y + island.size.y * 0.5f;
+        float bottom = island.center.y - island.size.y * 0.5f;
+
+        // --- 위쪽 가로줄: 흔함 유닛을 하나씩 고르는 칸 ---
         List<UnitData> commons = LoadUnitsOfGrade(UnitGrade.Common);
-        float rowZ = island.center.y + island.size.y * 0.5f - 6f;
+        float rowZ = top - 7f;
         float step = island.size.x / (commons.Count + 1);
 
         for (int i = 0; i < commons.Count; i++)
         {
             UnitData unit = commons[i];
-            float x = island.center.x - island.size.x * 0.5f + step * (i + 1);
+            float x = left + step * (i + 1);
 
             GameObject stand = CreatePortalObject(parent, $"흔함선택_{unit.unitName}",
                 new Vector3(x, MapLayout.IslandTop + 0.25f, rowZ), ChoicePortalDiameter);
             ConfigurePortal(stand, UnitGrade.Common, unit, table, spawner);
 
-            // 어떤 유닛 칸인지 보이도록 뒤에 등급 색 기둥을 세운다(나중에 스킨으로 교체).
-            GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            marker.name = $"흔함선택_{unit.unitName}_표식";
-            marker.transform.SetParent(parent, false);
-            marker.transform.position = new Vector3(x, MapLayout.IslandTop + SlotHeight * 0.5f, rowZ + 4f);
-            marker.transform.localScale = new Vector3(SlotSize, SlotHeight, SlotSize);
-            PaintSolid(marker, GradeColor(UnitGrade.Common));
-            Object.DestroyImmediate(marker.GetComponent<Collider>());
+            PlaceUnitMarker(parent, $"흔함선택_{unit.unitName}_표식",
+                new Vector3(x, 0f, rowZ + 4.5f), UnitGrade.Common);
         }
 
-        // 아래쪽 세로줄: 등급별 랜덤 포탈 (흔함은 위 가로줄이 대신한다)
-        UnitGrade[] randomGrades = MapLayout.GachaPortalGrades
-            .Where(g => g != UnitGrade.Common).ToArray();
-        float topZ = rowZ - 10f;
-        float bottomZ = island.center.y - island.size.y * 0.5f + 6f;
-        float gap = (topZ - bottomZ) / Mathf.Max(1, randomGrades.Length - 1);
+        // --- 왼쪽 세로줄: 등급 내 랜덤 포탈 ---
+        UnitGrade[] randomGrades = MapLayout.GachaRandomGrades;
+        float columnZTop = rowZ - 11f;
+        float columnZBottom = bottom + 6f;
+        float gap = (columnZTop - columnZBottom) / Mathf.Max(1, randomGrades.Length - 1);
+        float portalX = left + island.size.x * 0.25f;
 
         for (int i = 0; i < randomGrades.Length; i++)
         {
             GameObject portal = CreatePortalObject(parent, $"Portal_{randomGrades[i].KoreanName()}",
-                new Vector3(island.center.x, MapLayout.IslandTop + 0.25f, topZ - gap * i), PortalDiameter);
+                new Vector3(portalX, MapLayout.IslandTop + 0.25f, columnZTop - gap * i), PortalDiameter);
             ConfigurePortal(portal, randomGrades[i], null, table, spawner);
         }
 
-        return $"\n뽑기 섬: 흔함 선택 {commons.Count}칸 + 등급 랜덤 {randomGrades.Length}칸.";
+        // --- 오른쪽 세로줄: 조합식 없이 캐릭터만 전시하는 등급 ---
+        // 이 등급들은 조합식 표에 올리지 않기로 확정돼 있어서, 여기가 유일하게 눈으로 보는 곳이다.
+        float displayLeft = island.center.x + 2f;
+        float displayWidth = left + island.size.x - 2f - displayLeft;
+        int perRow = Mathf.Max(1, Mathf.FloorToInt(displayWidth / SlotSpacing));
+        float displayZ = columnZTop;
+        int displayed = 0;
+
+        foreach (UnitGrade grade in MapLayout.GachaDisplayGrades)
+        {
+            List<UnitData> units = LoadUnitsOfGrade(grade);
+
+            for (int i = 0; i < units.Count; i++)
+            {
+                float x = displayLeft + (i % perRow) * SlotSpacing + SlotSpacing * 0.5f;
+                float z = displayZ - (i / perRow) * SlotSpacing;
+                PlaceUnitMarker(parent, $"{grade.KoreanName()}_{units[i].unitName}",
+                    new Vector3(x, 0f, z), grade);
+                displayed++;
+            }
+
+            // 다음 등급은 한 줄 띄고 이어서 — 등급 경계가 보이게 한다.
+            displayZ -= (Mathf.CeilToInt(units.Count / (float)perRow) + 1) * SlotSpacing;
+        }
+
+        float displayDepth = columnZTop - displayZ;
+        float available = columnZTop - columnZBottom;
+        string fit = displayDepth <= available
+            ? $"여유 {available - displayDepth:F0}"
+            : $"⚠️ {displayDepth - available:F0} 모자람";
+
+        return $"\n뽑기 섬: 흔함 선택 {commons.Count}칸, 등급 랜덤 {randomGrades.Length}칸, " +
+               $"전시 {displayed}종 (깊이 {displayDepth:F0}/{available:F0}, {fit}).";
+    }
+
+    // 조합식 표와 같은 자리 표시 기둥. 나중에 스킨으로 교체한다.
+    static void PlaceUnitMarker(Transform parent, string name, Vector3 groundPosition, UnitGrade grade)
+    {
+        GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        marker.name = name;
+        marker.transform.SetParent(parent, false);
+        marker.transform.position = new Vector3(
+            groundPosition.x, MapLayout.IslandTop + SlotHeight * 0.5f, groundPosition.z);
+        marker.transform.localScale = new Vector3(SlotSize, SlotHeight, SlotSize);
+        PaintSolid(marker, GradeColor(grade));
+        Object.DestroyImmediate(marker.GetComponent<Collider>());
     }
 
     static GameObject CreatePortalObject(Transform parent, string name, Vector3 position, float diameter)
