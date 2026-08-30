@@ -171,7 +171,7 @@ public class GameHud : MonoBehaviour
 
     static void BuildMinimap(RectTransform parent)
     {
-        GameObject obj = new GameObject("Minimap", typeof(RectTransform), typeof(RawImage), typeof(MinimapCamera));
+        GameObject obj = new GameObject("Minimap", typeof(RectTransform), typeof(RawImage), typeof(MinimapCamera), typeof(RectMask2D));
         obj.transform.SetParent(parent, false);
 
         RectTransform rect = obj.GetComponent<RectTransform>();
@@ -179,6 +179,17 @@ public class GameHud : MonoBehaviour
         rect.anchorMax = Vector2.one;
         rect.offsetMin = Vector2.zero;
         rect.offsetMax = Vector2.zero;
+
+        // 시야 표시는 RawImage와 별개의 CanvasRenderer가 필요해 자식 오브젝트로 둔다.
+        // 같은 크기로 꽉 채워야 MinimapCamera.WorldToMinimapLocal이 계산하는 로컬 좌표계와 일치한다.
+        GameObject indicatorObj = new GameObject("ViewportIndicator", typeof(RectTransform), typeof(MinimapViewportIndicator));
+        indicatorObj.transform.SetParent(obj.transform, false);
+
+        RectTransform indicatorRect = (RectTransform)indicatorObj.transform;
+        indicatorRect.anchorMin = Vector2.zero;
+        indicatorRect.anchorMax = Vector2.one;
+        indicatorRect.offsetMin = Vector2.zero;
+        indicatorRect.offsetMax = Vector2.zero;
     }
 
     static void BuildCommandGrid(RectTransform parent)

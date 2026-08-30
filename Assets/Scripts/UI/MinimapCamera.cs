@@ -65,13 +65,31 @@ public class MinimapCamera : MonoBehaviour, IPointerClickHandler
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, eventData.position, eventData.pressEventCamera, out Vector2 localPoint))
             return;
 
-        Rect r = rect.rect;
+        mainCameraController.MoveTo(MinimapLocalToWorld(localPoint));
+    }
+
+    // 좌표 변환 규칙이 이 두 메서드에만 있도록 정리했다 — 미니맵을 쓰는 다른 코드(시야 표시 등)는
+    // 이걸로만 변환하면 되고, 이 클래스 밖에서 mapCenter/mapExtent를 직접 계산하지 않는다.
+    public Vector3 MinimapLocalToWorld(Vector2 localPoint)
+    {
+        Rect r = ((RectTransform)transform).rect;
         float normalizedX = Mathf.InverseLerp(r.xMin, r.xMax, localPoint.x);
-        float normalizedY = Mathf.InverseLerp(r.yMin, r.yMax, localPoint.y);
+        float normalizedZ = Mathf.InverseLerp(r.yMin, r.yMax, localPoint.y);
 
         float worldX = mapCenter.x + (normalizedX - 0.5f) * 2f * mapExtent;
-        float worldZ = mapCenter.z + (normalizedY - 0.5f) * 2f * mapExtent;
+        float worldZ = mapCenter.z + (normalizedZ - 0.5f) * 2f * mapExtent;
+        return new Vector3(worldX, mapCenter.y, worldZ);
+    }
 
-        mainCameraController.MoveTo(new Vector3(worldX, mainCameraController.transform.position.y, worldZ));
+    public Vector2 WorldToMinimapLocal(Vector3 worldPosition)
+    {
+        Rect r = ((RectTransform)transform).rect;
+
+        float normalizedX = 0.5f + (worldPosition.x - mapCenter.x) / (2f * mapExtent);
+        float normalizedZ = 0.5f + (worldPosition.z - mapCenter.z) / (2f * mapExtent);
+
+        float localX = Mathf.LerpUnclamped(r.xMin, r.xMax, normalizedX);
+        float localY = Mathf.LerpUnclamped(r.yMin, r.yMax, normalizedZ);
+        return new Vector2(localX, localY);
     }
 }
