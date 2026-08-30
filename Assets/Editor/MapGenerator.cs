@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Unity.AI.Navigation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEngine.AI;
 using UnityEngine;
 
 /// <summary>
