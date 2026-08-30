@@ -237,9 +237,13 @@ public static class MapGenerator
         if (spawner != null && lanePaths.Count > 0)
         {
             SerializedObject so = new SerializedObject(spawner);
-            so.FindProperty("path").objectReferenceValue = lanePaths[0];
-            so.ApplyModifiedProperties();
-            report += "\n적 경로를 Lane1_Path로 옮겼습니다.";
+            SerializedProperty single = so.FindProperty("path");
+            if (single != null)
+            {
+                single.objectReferenceValue = lanePaths[0];
+                so.ApplyModifiedProperties();
+                report += "\n적 경로를 Lane1_Path로 옮겼습니다.";
+            }
         }
 
         GameObject oldLane = GameObject.Find("Lane");
@@ -264,8 +268,69 @@ public static class MapGenerator
             report += $"\n위습이 생기는 위치(PlayerContext {contexts.Length}개)를 뽑기 섬으로 옮겼습니다.";
 
         report += SetUpCamera();
+        report += EnsureFourPlayers();
+        report += WireLanePaths(lanePaths);
 
         return report;
+    }
+
+    // 협동 4인 구조라 PlayerContext도 4개 있어야 팀 현황판이 채워진다.
+    // 0번은 기존 GameManager가 갖고 있으므로 1~3번만 만든다.
+    static string EnsureFourPlayers()
+    {
+        int created = 0;
+
+        PlayerContext[] existing = Object.FindObjectsByType<PlayerContext>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        for (int playerId = 1; playerId < MapLayout.Lanes.Length; playerId++)
+        {
+            if (System.Array.Exists(existing, c => c.PlayerId == playerId)) continue;
+
+            MapLayout.Island lane = MapLayout.Lanes[playerId];
+            GameObject player = new GameObject($"Player{playerId + 1}");
+            player.transform.position = new Vector3(lane.center.x, MapLayout.IslandTop, lane.center.y);
+
+            GoldWallet gold = player.AddComponent<GoldWallet>();
+            ResourceWallet resources = player.AddComponent<ResourceWallet>();
+            UnitInventory units = player.AddComponent<UnitInventory>();
+            Warehouse warehouse = player.AddComponent<Warehouse>();
+            PlayerContext context = player.AddComponent<PlayerContext>();
+
+            SerializedObject so = new SerializedObject(context);
+            so.FindProperty("playerId").intValue = playerId;
+            so.FindProperty("goldWallet").objectReferenceValue = gold;
+            so.FindProperty("resourceWallet").objectReferenceValue = resources;
+            so.FindProperty("unitInventory").objectReferenceValue = units;
+            so.FindProperty("warehouse").objectReferenceValue = warehouse;
+            so.ApplyModifiedProperties();
+
+            created++;
+        }
+
+        return created > 0 ? $"\n플레이어 {created}명분(2~4번) 구조를 만들었습니다." : "";
+    }
+
+    // WaveSpawner가 레인 목록을 받도록 바뀌면 여기서 채운다.
+    // 아직 단일 path만 있는 버전이면 조용히 넘어간다.
+    static string WireLanePaths(List<WaypointPath> lanePaths)
+    {
+        WaveSpawner spawner = Object.FindFirstObjectByType<WaveSpawner>(FindObjectsInactive.Include);
+        if (spawner == null) return "";
+
+        SerializedObject so = new SerializedObject(spawner);
+        SerializedProperty list = so.FindProperty("lanePaths");
+        if (list == null) return "";
+
+        list.ClearArray();
+        for (int i = 0; i < lanePaths.Count; i++)
+        {
+            list.InsertArrayElementAtIndex(i);
+            list.GetArrayElementAtIndex(i).objectReferenceValue = lanePaths[i];
+        }
+        so.ApplyModifiedProperties();
+
+        return $"\n레인 경로 {lanePaths.Count}개를 WaveSpawner에 연결했습니다.";
     }
 
     // 맵이 420×420이라 기존 카메라 위치(원점 근처, 높이 35)에서는 아무것도 안 보인다.
