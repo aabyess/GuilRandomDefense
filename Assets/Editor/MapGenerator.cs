@@ -263,7 +263,26 @@ public static class MapGenerator
         if (contexts.Length > 0)
             report += $"\n위습이 생기는 위치(PlayerContext {contexts.Length}개)를 뽑기 섬으로 옮겼습니다.";
 
+        report += SetUpCamera();
+
         return report;
+    }
+
+    // 맵이 420×420이라 기존 카메라 위치(원점 근처, 높이 35)에서는 아무것도 안 보인다.
+    static string SetUpCamera()
+    {
+        Camera camera = Camera.main;
+        if (camera == null) return "";
+
+        if (camera.GetComponent<RtsCameraController>() == null)
+            camera.gameObject.AddComponent<RtsCameraController>();
+
+        MapLayout.Island lane = MapLayout.Lanes[2];   // 메인 방어 필드 아래쪽 — 여기서 시작하면 레인 4개가 다 보인다
+        camera.transform.position = new Vector3(lane.center.x + 32f, 120f, lane.center.y - 60f);
+        camera.transform.rotation = Quaternion.Euler(52f, 0f, 0f);
+        camera.farClipPlane = Mathf.Max(camera.farClipPlane, 1000f);
+
+        return "\n카메라에 RTS 조작(가장자리 밀기·WASD·휠 확대)을 붙이고 메인 필드 위로 옮겼습니다.";
     }
 
     static string BuildNavMesh(GameObject root)
