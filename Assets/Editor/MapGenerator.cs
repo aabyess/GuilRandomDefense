@@ -46,8 +46,12 @@ public static class MapGenerator
         BuildSea(root.transform);
 
         List<GameObject> laneObjects = new List<GameObject>();
-        foreach (MapLayout.Island lane in MapLayout.Lanes)
-            laneObjects.Add(BuildIsland(root.transform, lane));
+        for (int i = 0; i < MapLayout.Lanes.Length; i++)
+        {
+            GameObject laneObject = BuildIsland(root.transform, MapLayout.Lanes[i]);
+            laneObject.AddComponent<LaneMarker>().SetLaneIndex(i);
+            laneObjects.Add(laneObject);
+        }
 
         foreach (MapLayout.Island island in MapLayout.Warehouses) BuildIsland(root.transform, island);
         foreach (MapLayout.Island island in MapLayout.SealIslands) BuildIsland(root.transform, island);

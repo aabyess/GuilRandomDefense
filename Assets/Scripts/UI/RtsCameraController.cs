@@ -34,6 +34,16 @@ public class RtsCameraController : MonoBehaviour
     void Start()
     {
         targetHeight = transform.position.y;
+        FocusOnLocalLane();
+    }
+
+    /// <summary>내 레인이 화면 중앙에 오도록 맞춘다. 레인 표식이 없으면 씬에 놓인 위치를 그대로 쓴다.</summary>
+    public void FocusOnLocalLane()
+    {
+        LaneMarker lane = LaneMarker.Get(LocalPlayer.LocalPlayerId);
+        if (lane == null) return;
+
+        MoveTo(lane.transform.position);
     }
 
     // 미니맵 클릭 등 외부에서 카메라를 특정 지점으로 즉시 옮길 때 쓴다. 높이(줌)는 유지한다.
