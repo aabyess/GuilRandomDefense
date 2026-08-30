@@ -71,6 +71,8 @@ public class RoundManager : MonoBehaviour
 
     void AdvanceRound()
     {
+        GrantRoundClearWisps(currentRound);
+
         currentRound++;
         if (currentRound > totalRounds)
         {
@@ -80,6 +82,27 @@ public class RoundManager : MonoBehaviour
         }
 
         StartRound(currentRound);
+    }
+
+    // 방금 끝난 라운드(roundNumber)의 위습 보상을 전체 플레이어에게 지급한다.
+    // AdvanceRound()는 Update() 안에서만 호출되고, Update()는 최상단에서 GameAuthority.IsServer를 확인하므로
+    // 이 메서드도 자연히 서버에서만 실행된다.
+    void GrantRoundClearWisps(int roundNumber)
+    {
+        WaveData waveData = GetWaveData(roundNumber);
+        if (waveData == null || waveData.wispRewards == null || waveData.wispRewards.Count == 0) return;
+
+        RewardDistributor distributor = RewardDistributor.Instance;
+        if (distributor == null)
+        {
+            Debug.LogWarning($"RoundManager: RewardDistributor.Instance가 없어 {roundNumber}라운드 클리어 위습을 지급하지 못했습니다.");
+            return;
+        }
+
+        foreach (PlayerContext context in PlayerContext.All)
+        {
+            distributor.GrantWisps(context, waveData.wispRewards);
+        }
     }
 
     void StartRound(int roundNumber)

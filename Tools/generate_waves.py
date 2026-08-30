@@ -15,6 +15,7 @@ ENEMY_SCRIPT = 'a91828e7d70cc420499707cd4f2912a5'
 WAVE_SCRIPT  = '1ec64fc963a894c26aeb41f20fc037bc'
 MOB_PREFAB_GUID   = '85f952ec56b9f4258b079a5873623d2b'
 MOB_PREFAB_FILEID = '3685248672397471059'
+WISP_COMMON_GUID  = '637456e2263b4fc495bc3cd869efd84f'   # Wisp_흔함선택
 
 HEAD = """%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
@@ -56,6 +57,8 @@ for rnd in range(1, 11):
     gold  = 5 + rnd * 2 + (50 if boss else 0)
     count = 1 if boss else 15 + 2 * (rnd - 1)
     interval = 0.0 if boss else round(24.0 / count, 2)
+    # 라운드 클리어 위습. 안흔함 이상은 해당 등급 포탈이 씬에 생긴 뒤에 넣는다.
+    wisps = 5 if boss else (2 if rnd <= 4 else 3)
 
     ename = f'Enemy_R{rnd:02d}' + ('_Boss' if boss else '')
     eguid = guid_for(ename)
@@ -72,7 +75,10 @@ for rnd in range(1, 11):
           head(WAVE_SCRIPT, wname) +
           f"  roundNumber: {rnd}\n  spawnList:\n"
           f"  - enemyData: {{fileID: 11400000, guid: {eguid}, type: 2}}\n"
-          f"    count: {count}\n    spawnInterval: {interval}\n",
+          f"    count: {count}\n    spawnInterval: {interval}\n"
+          f"  wispRewards:\n"
+          f"  - wisp: {{fileID: 11400000, guid: {WISP_COMMON_GUID}, type: 2}}\n"
+          f"    count: {wisps}\n",
           guid_for(wname))
 
     rows.append((rnd, count, hp, gold, boss))
