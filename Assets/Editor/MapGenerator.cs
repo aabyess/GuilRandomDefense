@@ -337,6 +337,7 @@ public static class MapGenerator
     const float ChoicePortalDiameter = 4.2f;
 
     // 흔함 선택 칸은 원작처럼 칸마다 벽을 둘러 부스로 만든다.
+    const float CommonAreaDepth = 12f;  // 흔함 포탈 줄에서 아래벽까지 — 위습이 생길 자리
     const float PortalInset = 6f;       // 칸 위벽에서 포탈까지
     const float WispSpawnGap = 7f;      // 포탈에서 위습 생성 지점까지
     const float BoothDepth = 9f;        // 포탈 앞부터 뒷벽까지
@@ -376,15 +377,23 @@ public static class MapGenerator
             BuildBooth(parent, unit.unitName, x, rowZ, step);
         }
 
-        // 흔함 선택 위습은 부스 줄 앞에 생긴다 — 어느 부스로 갈지는 플레이어가 고른다.
+        // 흔함 구역 아래를 막는다. 안 막으면 부스 앞 공간이 첫 등급 칸과 이어져,
+        // 흔함 위습이 안흔함 칸으로 내려가고 안흔함 위습도 올라온다.
+        float commonFloorZ = rowZ - CommonAreaDepth;
+        BuildWall(parent, "흔함구역_아래벽",
+            new Vector3(island.center.x, MapLayout.IslandTop + WallHeight * 0.5f, commonFloorZ),
+            new Vector3(island.size.x - 2f, WallHeight, GateThickness));
+
+        // 흔함 선택 위습은 부스 줄 앞, 막힌 구역 안에서 생긴다 — 어느 부스로 갈지는 플레이어가 고른다.
         GameObject commonCell = new GameObject("위습칸_흔함선택");
         commonCell.transform.SetParent(parent, false);
-        commonCell.transform.position = new Vector3(island.center.x, MapLayout.IslandTop, rowZ - 6f);
+        commonCell.transform.position = new Vector3(
+            island.center.x, MapLayout.IslandTop, (rowZ + commonFloorZ) * 0.5f);
         commonCell.AddComponent<WispCell>().SetGrade(UnitGrade.Common);
 
         // --- 왼쪽: 벽으로 나뉜 칸 5줄 ---
         // 원작 구조. 위에서 아래로 등급이 올라가고, 중간에 특수 지급 칸이 하나 낀다.
-        float bandTop = rowZ - 4f;
+        float bandTop = commonFloorZ - GateThickness;
         float bandBottom = bottom + 4f;
         float bandHeight = (bandTop - bandBottom) / GachaBands.Length;
         float columnLeft = left + 2f;
@@ -403,7 +412,7 @@ public static class MapGenerator
             // 칸을 사방으로 막고 오른쪽 가운데만 입구로 연다.
             // 안 막으면 위습이 한 칸에 들어갔다가 옆 칸 포탈로 흘러가 엉뚱한 등급이 나온다.
             BuildCellWalls(parent, $"뽑기칸_{band.label}", columnLeft, columnRight,
-                           bandTop - bandHeight * b, bandTop - bandHeight * (b + 1), b == 0);
+                           bandTop - bandHeight * b, bandTop - bandHeight * (b + 1), false);
 
             // 이 칸에서 생길 위습의 등급을 표시한다. 특수 칸은 위습이 따로 없다.
             if (band.specialSlots == null)
