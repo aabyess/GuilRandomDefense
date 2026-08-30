@@ -31,9 +31,12 @@ public class UnitSpawner : MonoBehaviour
         {
             agent.speed = data.moveSpeed;
             agent.areaMask = ComputeAreaMask(data.movementAbility);
-            // 아군끼리는 서로 통과한다(원작과 같음). 회피를 켜두면 유닛이 많아질수록
-            // 서로 밀어내느라 목적지에 못 가고, 회피 계산 자체도 유닛 수의 제곱으로 늘어난다.
-            agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+            // 아군끼리 완전히 겹치면 몇 마리인지 안 보이고, 제대로 밀어내면 뭉치질 못한다.
+            // 반경을 작게(0.28) 두고 회피는 가장 싼 단계만 켜서 '살짝 비켜주는' 정도로 맞춘다.
+            // 회피 비용은 주변 에이전트 수에 비례하므로 한 레인에 수십 마리가 모이는 이 게임에서
+            // 높은 품질을 쓰면 그 자체가 부담이 된다.
+            agent.obstacleAvoidanceType = ObstacleAvoidanceType.LowQualityObstacleAvoidance;
+            agent.radius = 0.28f;
         }
 
         return instance;
