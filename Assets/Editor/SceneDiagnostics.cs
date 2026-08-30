@@ -68,9 +68,7 @@ public static class SceneDiagnostics
             for (int i = 0; i < Mathf.Min(property.arraySize, 4); i++)
             {
                 SerializedProperty element = property.GetArrayElementAtIndex(i);
-                items.Add(element.propertyType == SerializedPropertyType.ObjectReference
-                    ? Name(element.objectReferenceValue)
-                    : element.ToString());
+                items.Add(Describe(element).Replace(element.name + ": ", ""));
             }
 
             string more = property.arraySize > 4 ? $" 외 {property.arraySize - 4}개" : "";

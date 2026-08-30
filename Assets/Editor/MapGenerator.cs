@@ -301,11 +301,31 @@ public static class MapGenerator
         if (contexts.Length > 0)
             report += $"\n위습이 생기는 위치(PlayerContext {contexts.Length}개)를 뽑기 섬으로 옮겼습니다.";
 
+        report += WireCombineWallet();
         report += SetUpCamera();
         report += EnsureFourPlayers();
         report += WireLanePaths(lanePaths);
 
         return report;
+    }
+
+    // 상위 등급 레시피 18개는 골드를 요구한다(최대 20000). 지갑이 안 붙어 있으면 그때 가서 조합이 막힌다.
+    static string WireCombineWallet()
+    {
+        CombineSystem combine = Object.FindFirstObjectByType<CombineSystem>(FindObjectsInactive.Include);
+        if (combine == null) return "";
+
+        SerializedObject so = new SerializedObject(combine);
+        SerializedProperty wallet = so.FindProperty("goldWallet");
+        if (wallet == null || wallet.objectReferenceValue != null) return "";
+
+        GoldWallet local = PlayerContext.Local != null ? PlayerContext.Local.GoldWallet : null;
+        if (local == null) local = combine.GetComponent<GoldWallet>();
+        if (local == null) return "";
+
+        wallet.objectReferenceValue = local;
+        so.ApplyModifiedProperties();
+        return "\nCombineSystem에 골드 지갑을 연결했습니다.";
     }
 
     // 협동 4인 구조라 PlayerContext도 4개 있어야 팀 현황판이 채워진다.
@@ -342,6 +362,11 @@ public static class MapGenerator
             UnitInventory units = player.AddComponent<UnitInventory>();
             Warehouse warehouse = player.AddComponent<Warehouse>();
             PlayerContext context = player.AddComponent<PlayerContext>();
+
+            // 창고는 소유자가 맞아야 보관을 받아준다. 기본값 0이면 전부 1번 플레이어 창고가 된다.
+            SerializedObject warehouseSo = new SerializedObject(warehouse);
+            warehouseSo.FindProperty("ownerPlayerId").intValue = playerId;
+            warehouseSo.ApplyModifiedProperties();
 
             SerializedObject so = new SerializedObject(context);
             so.FindProperty("playerId").intValue = playerId;
@@ -398,8 +423,18 @@ public static class MapGenerator
         Camera camera = Camera.main;
         if (camera == null) return "";
 
-        if (camera.GetComponent<RtsCameraController>() == null)
-            camera.gameObject.AddComponent<RtsCameraController>();
+        RtsCameraController controller = camera.GetComponent<RtsCameraController>();
+        if (controller == null)
+            controller = camera.gameObject.AddComponent<RtsCameraController>();
+
+        // 스크립트의 기본값을 바꿔도 이미 씬에 저장된 값은 그대로 남는다.
+        // 맵 생성은 초기화 동작이므로 조작 관련 수치를 현재 기준값으로 덮어쓴다.
+        SerializedObject cameraSo = new SerializedObject(controller);
+        cameraSo.FindProperty("moveSpeed").floatValue = 70f;
+        cameraSo.FindProperty("edgeThickness").floatValue = 16f;
+        cameraSo.FindProperty("minHeight").floatValue = 12f;
+        cameraSo.FindProperty("maxHeight").floatValue = 220f;
+        cameraSo.ApplyModifiedProperties();
 
         // 시작 시점은 내 레인(1번) 하나가 화면에 차는 정도. 전체 조망은 휠로 빼면 된다.
         MapLayout.Island lane = MapLayout.Lanes[0];
