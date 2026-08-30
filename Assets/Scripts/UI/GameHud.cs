@@ -280,7 +280,7 @@ public class GameHud : MonoBehaviour
 
         for (int i = 0; i < TeamSlotCount; i++)
         {
-            PlayerContext context = PlayerContext.Get(i);
+            PlayerContext context = PlayerContext.GetOccupied(i);
             slotHas[i] = context != null;
             slotEnemy[i] = context != null ? EnemyDummy.CountInLane(context.PlayerId) : 0;
             slotGold[i] = context != null && context.GoldWallet != null ? context.GoldWallet.Gold : 0;
@@ -325,7 +325,7 @@ public class GameHud : MonoBehaviour
             }
             else
             {
-                teamPanelBuilder.Append(" | -");
+                teamPanelBuilder.Append(" | 비어있음");
             }
 
             if (isLocal) teamPanelBuilder.Append("</color></b>");

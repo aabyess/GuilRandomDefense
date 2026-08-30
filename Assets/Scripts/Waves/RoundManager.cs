@@ -135,6 +135,8 @@ public class RoundManager : MonoBehaviour
 
         foreach (PlayerContext context in PlayerContext.All)
         {
+            // 위습은 인벤토리가 아니라 필드에 실물로 생긴다. 빈 슬롯에 주면 아무도 안 쓰는 채로 쌓인다.
+            if (!context.IsOccupied) continue;
             distributor.GrantWisps(context, waveData.wispRewards);
         }
     }

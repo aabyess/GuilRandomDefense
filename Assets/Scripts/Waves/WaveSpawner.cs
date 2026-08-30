@@ -34,6 +34,10 @@ public class WaveSpawner : MonoBehaviour
                 continue;
             }
 
+            // 레인 N = 플레이어 N. 아무도 없는 레인에 적을 뿌리면 막을 사람이 없어
+            // 그 레인만 쌓이다가 패배 판정(가장 붐비는 레인 기준)을 건드린다.
+            if (PlayerContext.GetOccupied(laneIndex) == null) continue;
+
             activeSpawnCoroutines.Add(StartCoroutine(SpawnRoutine(wave, laneIndex, lanePath)));
         }
     }

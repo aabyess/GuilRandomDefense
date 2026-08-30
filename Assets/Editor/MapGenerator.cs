@@ -329,6 +329,9 @@ public static class MapGenerator
 
             SerializedObject so = new SerializedObject(context);
             so.FindProperty("playerId").intValue = playerId;
+            // 구조만 만들어 두고 자리는 비워 둔다. 멀티플레이가 붙기 전까지는
+            // 이 레인에 적이 안 나오고 보상도 안 나간다. 테스트할 땐 인스펙터에서 체크.
+            so.FindProperty("occupied").boolValue = false;
             so.FindProperty("goldWallet").objectReferenceValue = gold;
             so.FindProperty("resourceWallet").objectReferenceValue = resources;
             so.FindProperty("unitInventory").objectReferenceValue = units;
@@ -338,7 +341,18 @@ public static class MapGenerator
             created++;
         }
 
-        return created > 0 ? $"\n플레이어 {created}명분(2~4번) 구조를 만들었습니다." : "";
+        // 0번(로컬)은 반드시 앉아 있어야 한다. 이 값이 꺼져 있으면 내 레인에도 적이 안 나온다.
+        PlayerContext local = System.Array.Find(existing, c => c.PlayerId == 0);
+        if (local != null && !local.IsOccupied)
+        {
+            SerializedObject so = new SerializedObject(local);
+            so.FindProperty("occupied").boolValue = true;
+            so.ApplyModifiedProperties();
+        }
+
+        return created > 0
+            ? $"\n플레이어 {created}명분(2~4번) 구조를 만들었습니다 — 자리는 비어 있어 그 레인엔 적이 안 나옵니다."
+            : "";
     }
 
     // WaveSpawner가 레인 목록을 받도록 바뀌면 여기서 채운다.
