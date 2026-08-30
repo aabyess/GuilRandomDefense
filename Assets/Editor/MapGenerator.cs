@@ -14,20 +14,43 @@ public static class MapGenerator
 {
     const string RootName = "Map";
     const string MaterialFolder = "Assets/Materials/Map";
+    const string TextureFolder = "Assets/Textures/Map";
     const string Title = "맵 생성";
+    const float GrassThickness = 0.35f;   // 잔디 윗면 두께
+    const float CliffHeight = 1.6f;       // 바위 치마 높이 (바다 아래까지 내려간다)
+    const float CliffOverhang = 2.4f;     // 잔디보다 얼마나 넓게 나올지
 
-    static readonly Dictionary<string, Color> Tints = new Dictionary<string, Color>
+    // 구역을 색으로만 구분하면 원랜디 느낌이 안 난다. 잔디/물/바위 텍스처를 깔고
+    // 구역 구분은 잔디에 옅은 색조를 얹는 정도로만 한다.
+    struct Surface
     {
-        { "sea",       new Color(0.18f, 0.42f, 0.62f) },
-        { "lane",      new Color(0.55f, 0.60f, 0.44f) },
-        { "warehouse", new Color(0.62f, 0.55f, 0.38f) },
-        { "seal",      new Color(0.48f, 0.62f, 0.58f) },
-        { "event",     new Color(0.66f, 0.38f, 0.34f) },
-        { "display",   new Color(0.45f, 0.40f, 0.58f) },
-        { "story",     new Color(0.58f, 0.50f, 0.62f) },
-        { "gacha",     new Color(0.60f, 0.58f, 0.42f) },
-        { "combine",   new Color(0.52f, 0.52f, 0.50f) },
-        { "portal",    new Color(0.30f, 0.70f, 0.85f) },
+        public string texture;      // Assets/Textures/Map/<이름>.png
+        public Color tint;
+        public float tilesPerUnit;  // 섬 크기에 비례해 반복시켜 늘어나 보이지 않게 한다
+        public float smoothness;
+
+        public Surface(string texture, Color tint, float tilesPerUnit, float smoothness)
+        {
+            this.texture = texture;
+            this.tint = tint;
+            this.tilesPerUnit = tilesPerUnit;
+            this.smoothness = smoothness;
+        }
+    }
+
+    static readonly Dictionary<string, Surface> Surfaces = new Dictionary<string, Surface>
+    {
+        { "sea",       new Surface("water", new Color(0.72f, 0.86f, 1.00f), 0.020f, 0.85f) },
+        { "rock",      new Surface("rock",  Color.white,                    0.140f, 0.10f) },
+        { "lane",      new Surface("grass", Color.white,                    0.120f, 0.05f) },
+        { "warehouse", new Surface("grass", new Color(1.00f, 0.94f, 0.78f), 0.120f, 0.05f) },
+        { "seal",      new Surface("grass", new Color(0.82f, 1.00f, 0.94f), 0.160f, 0.05f) },
+        { "event",     new Surface("grass", new Color(1.00f, 0.76f, 0.70f), 0.120f, 0.05f) },
+        { "display",   new Surface("grass", new Color(0.86f, 0.80f, 1.00f), 0.120f, 0.05f) },
+        { "story",     new Surface("grass", new Color(0.92f, 0.84f, 1.00f), 0.120f, 0.05f) },
+        { "gacha",     new Surface("grass", new Color(1.00f, 0.98f, 0.82f), 0.120f, 0.05f) },
+        { "combine",   new Surface("grass", new Color(0.90f, 0.90f, 0.88f), 0.120f, 0.05f) },
+        { "portal",    new Surface(null,    new Color(0.30f, 0.70f, 0.85f), 0f,     0.60f) },
     };
 
     [MenuItem("Tools/맵/원랜디 맵 생성")]
@@ -94,7 +117,8 @@ public static class MapGenerator
         sea.transform.SetParent(parent, false);
         sea.transform.localPosition = new Vector3(0f, -MapLayout.IslandThickness * 0.5f, 0f);
         sea.transform.localScale = new Vector3(MapLayout.SeaSize, MapLayout.IslandThickness, MapLayout.SeaSize);
-        Paint(sea, "sea");
+        Paint(sea, "sea", MapLayout.SeaSize, MapLayout.SeaSize);
+        sea.AddComponent<SeaScroll>();
 
         // 바다도 NavMesh에 굽되 Sea 영역으로 표시한다. 지상 유닛은 UnitSpawner가 areaMask에서
         // 이 영역을 빼기 때문에 못 지나가고, 비행·수상보행 유닛만 지나간다.
@@ -105,15 +129,28 @@ public static class MapGenerator
 
     static GameObject BuildIsland(Transform parent, MapLayout.Island island)
     {
+        // 섬을 판 하나로 두면 옆면이 잔디로 칠해져 절벽처럼 안 보인다.
+        // 조금 더 넓고 낮은 바위 덩어리를 아래에 깔아 가장자리를 만든다.
+        GameObject skirt = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        skirt.name = island.name + "_Cliff";
+        skirt.transform.SetParent(parent, false);
+        skirt.transform.localPosition = new Vector3(
+            island.center.x, MapLayout.IslandTop - CliffHeight * 0.5f - GrassThickness, island.center.y);
+        skirt.transform.localScale = new Vector3(
+            island.size.x + CliffOverhang, CliffHeight, island.size.y + CliffOverhang);
+        Paint(skirt, "rock", island.size.x, island.size.y);
+
+        // 순수 장식이다. 콜라이더를 남기면 NavMesh가 잔디보다 한 단 낮은 이 턱까지
+        // 걸을 수 있는 곳으로 구워서, 유닛이 섬 가장자리 밖으로 내려선다.
+        Object.DestroyImmediate(skirt.GetComponent<Collider>());
+
         GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
         obj.name = island.name;
         obj.transform.SetParent(parent, false);
         obj.transform.localPosition = new Vector3(
-            island.center.x,
-            MapLayout.IslandTop - MapLayout.IslandThickness * 0.5f,
-            island.center.y);
-        obj.transform.localScale = new Vector3(island.size.x, MapLayout.IslandThickness, island.size.y);
-        Paint(obj, island.tint);
+            island.center.x, MapLayout.IslandTop - GrassThickness * 0.5f, island.center.y);
+        obj.transform.localScale = new Vector3(island.size.x, GrassThickness, island.size.y);
+        Paint(obj, island.tint, island.size.x, island.size.y);
         return obj;
     }
 
@@ -174,7 +211,7 @@ public static class MapGenerator
                 MapLayout.IslandTop + 0.5f,
                 island.center.y);
             column.transform.localScale = new Vector3(columnWidth * 0.7f, 1f, island.size.y * 0.8f);
-            Paint(column, "combine");
+            Paint(column, "combine", columnWidth, island.size.y);
         }
     }
 
@@ -477,26 +514,60 @@ public static class MapGenerator
         return "\n기존 Ground는 새 맵과 겹쳐서 비활성화했습니다.";
     }
 
-    static void Paint(GameObject obj, string tint)
+    static void Paint(GameObject obj, string key, float sizeX = 1f, float sizeZ = 1f)
     {
-        if (!Tints.TryGetValue(tint, out Color color)) return;
+        if (!Surfaces.TryGetValue(key, out Surface surface)) return;
 
-        string path = $"{MaterialFolder}/{tint}.mat";
-        Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
-        if (material == null)
+        Renderer renderer = obj.GetComponent<Renderer>();
+        renderer.sharedMaterial = GetOrCreateMaterial(key, surface);
+
+        if (surface.texture == null || surface.tilesPerUnit <= 0f) return;
+
+        // 섬마다 크기가 달라 타일 횟수도 달라야 하는데, 머티리얼은 공유한다.
+        // 머티리얼을 복제하면 배칭이 깨지므로 렌더러별 프로퍼티 블록으로 타일링만 덮어쓴다.
+        MaterialPropertyBlock block = new MaterialPropertyBlock();
+        renderer.GetPropertyBlock(block);
+        Vector4 tiling = new Vector4(
+            Mathf.Max(1f, sizeX * surface.tilesPerUnit),
+            Mathf.Max(1f, sizeZ * surface.tilesPerUnit), 0f, 0f);
+        block.SetVector("_BaseMap_ST", tiling);
+        block.SetVector("_BumpMap_ST", tiling);
+        renderer.SetPropertyBlock(block);
+    }
+
+    static Material GetOrCreateMaterial(string key, Surface surface)
+    {
+        string path = $"{MaterialFolder}/{key}.mat";
+        Material existing = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (existing != null) return existing;
+
+        if (!AssetDatabase.IsValidFolder(MaterialFolder))
         {
-            if (!AssetDatabase.IsValidFolder(MaterialFolder))
-            {
-                if (!AssetDatabase.IsValidFolder("Assets/Materials"))
-                    AssetDatabase.CreateFolder("Assets", "Materials");
-                AssetDatabase.CreateFolder("Assets/Materials", "Map");
-            }
-
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            material = new Material(shader) { color = color };
-            AssetDatabase.CreateAsset(material, path);
+            if (!AssetDatabase.IsValidFolder("Assets/Materials"))
+                AssetDatabase.CreateFolder("Assets", "Materials");
+            AssetDatabase.CreateFolder("Assets/Materials", "Map");
         }
 
-        obj.GetComponent<Renderer>().sharedMaterial = material;
+        Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+        Material material = new Material(shader);
+        material.SetColor("_BaseColor", surface.tint);
+        material.SetFloat("_Smoothness", surface.smoothness);
+
+        if (surface.texture != null)
+        {
+            material.SetTexture("_BaseMap",
+                AssetDatabase.LoadAssetAtPath<Texture2D>($"{TextureFolder}/{surface.texture}.png"));
+
+            Texture2D normal = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                $"{TextureFolder}/{surface.texture}_normal.png");
+            if (normal != null)
+            {
+                material.SetTexture("_BumpMap", normal);
+                material.EnableKeyword("_NORMALMAP");   // 켜지 않으면 노멀맵이 무시된다
+            }
+        }
+
+        AssetDatabase.CreateAsset(material, path);
+        return material;
     }
 }
