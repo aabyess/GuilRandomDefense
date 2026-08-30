@@ -93,6 +93,7 @@ public static class MapGenerator
 
         List<WaypointPath> lanePaths = BuildLanePaths(root.transform);
         string tableReport = BuildCombineColumns(combineIsland);
+        string displayReport = BuildGradeDisplays(root.transform);
         string portalReport = BuildGachaPortals(gachaIsland);
 
         string overlaps = CheckOverlaps();
@@ -106,7 +107,7 @@ public static class MapGenerator
         string message =
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
             $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + "\n\n" +
-            tableReport + overlaps + navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
+            tableReport + displayReport + overlaps + navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
         Debug.Log("[맵] " + message);
         EditorUtility.DisplayDialog(Title, message, "확인");
     }
@@ -387,6 +388,117 @@ public static class MapGenerator
 
         return $"\n뽑기 섬: 흔함 선택 {commons.Count}칸, 등급 랜덤 {randomGrades.Length}칸, " +
                $"전시 {displayed}종 (깊이 {displayDepth:F0}/{available:F0}, {fit}).";
+    }
+
+    // 초월·불멸은 조합식 표에 올리지 않고 전시만 한다(사용자 확정).
+    // 초월은 석판 위에 가로줄로 세우고, 불멸은 가운데 화로를 둘러싸는 원형으로 놓는다.
+    static string BuildGradeDisplays(Transform parent)
+    {
+        int transcend = BuildTranscendDisplay(parent);
+        int immortal = BuildImmortalDisplay(parent);
+        return $"\n전시: 초월 {transcend}종(가로줄), 불멸 {immortal}종(화로 원형).";
+    }
+
+    static int BuildTranscendDisplay(Transform parent)
+    {
+        MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "TranscendDisplay");
+        List<UnitData> units = LoadUnitsOfGrade(UnitGrade.Transcendent);
+
+        BuildStoneFloor(parent, "초월전시_바닥", island);
+
+        int perRow = Mathf.Max(1, Mathf.FloorToInt((island.size.x - SlotSpacing) / SlotSpacing));
+        float startX = island.center.x - (perRow - 1) * SlotSpacing * 0.5f;
+        float startZ = island.center.y + island.size.y * 0.5f - SlotSpacing;
+
+        for (int i = 0; i < units.Count; i++)
+        {
+            PlaceUnitMarker(parent, $"초월_{units[i].unitName}",
+                new Vector3(startX + (i % perRow) * SlotSpacing, 0f, startZ - (i / perRow) * SlotSpacing),
+                UnitGrade.Transcendent);
+        }
+
+        return units.Count;
+    }
+
+    static int BuildImmortalDisplay(Transform parent)
+    {
+        MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "ImmortalDisplay");
+        List<UnitData> units = LoadUnitsOfGrade(UnitGrade.Immortal);
+
+        BuildStoneFloor(parent, "불멸전시_바닥", island);
+        BuildBrazier(parent, new Vector3(island.center.x, MapLayout.IslandTop, island.center.y));
+
+        // 화로에서 떨어져 둘러앉는 반지름 — 섬 밖으로 나가지 않는 선에서 가장 넓게 잡는다.
+        float radius = Mathf.Min(island.size.x, island.size.y) * 0.5f - SlotSize * 2f;
+
+        for (int i = 0; i < units.Count; i++)
+        {
+            float angle = i / (float)Mathf.Max(1, units.Count) * Mathf.PI * 2f;
+            PlaceUnitMarker(parent, $"불멸_{units[i].unitName}",
+                new Vector3(island.center.x + Mathf.Cos(angle) * radius, 0f,
+                            island.center.y + Mathf.Sin(angle) * radius),
+                UnitGrade.Immortal);
+        }
+
+        return units.Count;
+    }
+
+    static void BuildStoneFloor(Transform parent, string name, MapLayout.Island island)
+    {
+        GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        floor.name = name;
+        floor.transform.SetParent(parent, false);
+        floor.transform.position = new Vector3(island.center.x, MapLayout.IslandTop + 0.06f, island.center.y);
+        floor.transform.localScale = new Vector3(island.size.x - 2f, 0.12f, island.size.y - 2f);
+        Paint(floor, "rock", island.size.x, island.size.y);
+        Object.DestroyImmediate(floor.GetComponent<Collider>());
+    }
+
+    static void BuildBrazier(Transform parent, Vector3 ground)
+    {
+        GameObject bowl = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        bowl.name = "불멸전시_화로";
+        bowl.transform.SetParent(parent, false);
+        bowl.transform.position = ground + Vector3.up * 0.9f;
+        bowl.transform.localScale = new Vector3(4.5f, 0.9f, 4.5f);
+        Paint(bowl, "rock", 4.5f, 4.5f);
+        Object.DestroyImmediate(bowl.GetComponent<Collider>());
+
+        GameObject flame = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        flame.name = "불멸전시_불";
+        flame.transform.SetParent(parent, false);
+        flame.transform.position = ground + Vector3.up * 2.6f;
+        flame.transform.localScale = new Vector3(2.6f, 1.0f, 2.6f);
+        PaintGlow(flame, new Color(1f, 0.55f, 0.18f));
+        Object.DestroyImmediate(flame.GetComponent<Collider>());
+
+        // 불빛이 주위 유닛에 닿아야 캠프파이어로 읽힌다.
+        GameObject lightObject = new GameObject("불멸전시_불빛");
+        lightObject.transform.SetParent(parent, false);
+        lightObject.transform.position = ground + Vector3.up * 3.5f;
+        Light light = lightObject.AddComponent<Light>();
+        light.type = LightType.Point;
+        light.color = new Color(1f, 0.6f, 0.25f);
+        light.range = 26f;
+        light.intensity = 3.5f;
+    }
+
+    static void PaintGlow(GameObject obj, Color color)
+    {
+        string path = $"{MaterialFolder}/glow_{ColorUtility.ToHtmlStringRGB(color)}.mat";
+        Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (material == null)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            material = new Material(shader);
+            material.SetColor("_BaseColor", color);
+            material.SetColor("_EmissionColor", color * 3f);
+            material.EnableKeyword("_EMISSION");
+            material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            AssetDatabase.CreateAsset(material, path);
+        }
+
+        obj.GetComponent<Renderer>().sharedMaterial = material;
     }
 
     // 칸마다 좌우 벽과 뒷벽을 세워 원작의 부스 모양을 만든다. 앞쪽(포탈 방향)은 열어 둔다.
