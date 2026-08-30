@@ -21,6 +21,28 @@ public static class UnitGradeExtensions
 {
     // 동급 등급은 같은 Tier를 반환한다 (Docs/reference/COMBINE_SYSTEM.md 1장 참고).
     // RandomUnit은 조합 라인 밖(확률로만 획득)이라 -1.
+    // 화면 표기용 한글 등급명. 로스터 에셋 이름의 접두사와 같은 표기를 쓴다.
+    public static string KoreanName(this UnitGrade grade)
+    {
+        switch (grade)
+        {
+            case UnitGrade.Common: return "흔함";
+            case UnitGrade.Uncommon: return "안흔함";
+            case UnitGrade.Special: return "특별함";
+            case UnitGrade.Rare: return "희귀함";
+            case UnitGrade.Hidden: return "히든";
+            case UnitGrade.Superior: return "특수함";
+            case UnitGrade.Legendary: return "전설적인";
+            case UnitGrade.Limited: return "제한됨";
+            case UnitGrade.Transcendent: return "초월함";
+            case UnitGrade.Immortal: return "불멸";
+            case UnitGrade.Eternal: return "영원함";
+            case UnitGrade.OtherWorld: return "다른세계";
+            case UnitGrade.RandomUnit: return "랜덤유닛";
+            default: return grade.ToString();
+        }
+    }
+
     public static int Tier(this UnitGrade grade)
     {
         switch (grade)

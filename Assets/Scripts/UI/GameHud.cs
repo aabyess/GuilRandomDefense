@@ -57,12 +57,14 @@ public class GameHud : MonoBehaviour
 
         RectTransform minimapPanel = CreatePanel(bar, "MinimapPanel", new Color(1f, 1f, 1f, 0.08f));
         SetAnchors(minimapPanel, new Vector2(0.01f, 0.05f), new Vector2(0.19f, 0.95f));
-        CreateLabel(minimapPanel, "MinimapLabel", "MINIMAP");
+        CreateLabel(minimapPanel, "MinimapLabel", "MINIMAP").fontSize = 26;
 
         RectTransform infoPanel = CreatePanel(bar, "UnitInfoPanel", new Color(1f, 1f, 1f, 0.05f));
         SetAnchors(infoPanel, new Vector2(0.21f, 0.05f), new Vector2(0.59f, 0.95f));
         unitInfoText = CreateLabel(infoPanel, "UnitInfoText", "선택된 유닛 없음");
         unitInfoText.alignment = TextAnchor.UpperLeft;
+        unitInfoText.fontSize = 30;
+        unitInfoText.lineSpacing = 1.15f;
         unitInfoText.horizontalOverflow = HorizontalWrapMode.Wrap;
 
         RectTransform commandPanel = CreatePanel(bar, "CommandGridPanel", new Color(1f, 1f, 1f, 0.05f));
@@ -112,7 +114,7 @@ public class GameHud : MonoBehaviour
         first.TryGetComponent(out UnitAttacker attacker);
 
         string unitName = identity != null && identity.Data != null ? identity.Data.unitName : first.name;
-        string grade = identity != null && identity.Data != null ? identity.Data.grade.ToString() : "-";
+        string grade = identity != null && identity.Data != null ? identity.Data.grade.KoreanName() : "-";
         // 플레이어 유닛에 아직 별도 체력 컴포넌트가 없어, UnitData의 기준 hp를 표시한다(실시간 값 아님).
         string hp = identity != null && identity.Data != null ? identity.Data.hp.ToString("F0") : "-";
         string attackPower = attacker != null ? attacker.AttackDamage.ToString("F0") : "-";
@@ -148,7 +150,7 @@ public class GameHud : MonoBehaviour
         Text text = obj.GetComponent<Text>();
         text.text = content;
         text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        text.fontSize = 18;
+        text.fontSize = 22;
         text.color = Color.white;
         text.alignment = TextAnchor.MiddleCenter;
         return text;
