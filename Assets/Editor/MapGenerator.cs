@@ -299,6 +299,37 @@ public static class MapGenerator
         obj.GetComponent<Renderer>().sharedMaterial = material;
     }
 
+    struct GachaBand
+    {
+        public string label;
+        public UnitGrade grade;
+        public UnitGrade bonusGrade;
+        public float bonusChance;
+        public string[] specialSlots;    // 로스터 에셋 이름. null 항목은 아직 못 만드는 자리
+        public string[] specialLabels;
+
+        public static GachaBand Random(string label, UnitGrade grade) =>
+            new GachaBand { label = label, grade = grade };
+
+        public static GachaBand RandomWithBonus(string label, UnitGrade grade, UnitGrade bonus, float chance) =>
+            new GachaBand { label = label, grade = grade, bonusGrade = bonus, bonusChance = chance };
+
+        public static GachaBand Special(string label, string[] slots, string[] labels) =>
+            new GachaBand { label = label, specialSlots = slots, specialLabels = labels };
+    }
+
+    // 원작 배치 순서 그대로. 특수 칸은 목재·쿠마위습(박은석)·레일리(이승우)·배(상붕카).
+    static readonly GachaBand[] GachaBands =
+    {
+        GachaBand.Random("안흔함", UnitGrade.Uncommon),
+        GachaBand.Random("특별함", UnitGrade.Special),
+        GachaBand.RandomWithBonus("희귀함·특수함", UnitGrade.Rare, UnitGrade.Superior, 3f),
+        GachaBand.Special("특수지급",
+            new[] { null, null, "희귀함_이승우", "안흔함_상붕카" },
+            new[] { "목재", "박은석위습", "이승우", "상붕카" }),
+        GachaBand.Random("전설·히든", UnitGrade.Legendary),
+    };
+
     // 뽑기 섬. 원작처럼 위쪽에 흔함 유닛을 가로로 늘어놓고, 그 아래에 등급별 랜덤 포탈을 둔다.
     // 흔함 위습은 "선택"이라 원하는 유닛 칸에 넣고, 그 위 등급은 칸 하나에서 등급 내 랜덤이 나온다.
     const float PortalDiameter = 6f;
@@ -342,18 +373,65 @@ public static class MapGenerator
             BuildBooth(parent, unit.unitName, x, rowZ, step);
         }
 
-        // --- 왼쪽 세로줄: 등급 내 랜덤 포탈 ---
-        UnitGrade[] randomGrades = MapLayout.GachaRandomGrades;
-        float columnZTop = rowZ - 11f;
-        float columnZBottom = bottom + 6f;
-        float gap = (columnZTop - columnZBottom) / Mathf.Max(1, randomGrades.Length - 1);
-        float portalX = left + island.size.x * 0.25f;
+        // --- 왼쪽: 벽으로 나뉜 칸 5줄 ---
+        // 원작 구조. 위에서 아래로 등급이 올라가고, 중간에 특수 지급 칸이 하나 낀다.
+        float bandTop = rowZ - 4f;
+        float bandBottom = bottom + 4f;
+        float bandHeight = (bandTop - bandBottom) / GachaBands.Length;
+        float columnLeft = left + 2f;
+        float columnRight = island.center.x - 2f;
 
-        for (int i = 0; i < randomGrades.Length; i++)
+        int specialPending = 0;
+
+        for (int b = 0; b < GachaBands.Length; b++)
         {
-            GameObject portal = CreatePortalObject(parent, $"Portal_{randomGrades[i].KoreanName()}",
-                new Vector3(portalX, MapLayout.IslandTop + 0.25f, columnZTop - gap * i), PortalDiameter);
-            ConfigurePortal(portal, randomGrades[i], null, table, spawner);
+            GachaBand band = GachaBands[b];
+            float bandCenterZ = bandTop - bandHeight * (b + 0.5f);
+
+            // 칸 사이 가로벽 — 맨 위는 흔함 부스가 이미 막고 있다.
+            if (b > 0)
+                BuildWall(parent, $"뽑기칸_{band.label}_구분벽",
+                    new Vector3((columnLeft + columnRight) * 0.5f,
+                                MapLayout.IslandTop + WallHeight * 0.5f,
+                                bandTop - bandHeight * b),
+                    new Vector3(columnRight - columnLeft, WallHeight, GateThickness));
+
+            if (band.specialSlots == null)
+            {
+                GameObject portal = CreatePortalObject(parent, $"Portal_{band.label}",
+                    new Vector3((columnLeft + columnRight) * 0.5f, MapLayout.IslandTop + 0.25f, bandCenterZ),
+                    PortalDiameter);
+                ConfigurePortal(portal, band.grade, null, table, spawner);
+
+                if (band.bonusChance > 0f) ApplyBonusGrade(portal, band.bonusGrade, band.bonusChance);
+                continue;
+            }
+
+            // 특수 칸: 지정 유닛·자원을 주는 자리를 가로로 늘어놓는다.
+            float slotStep = (columnRight - columnLeft) / (band.specialSlots.Length + 1);
+            for (int i = 0; i < band.specialSlots.Length; i++)
+            {
+                string assetName = band.specialSlots[i];
+                Vector3 at = new Vector3(columnLeft + slotStep * (i + 1),
+                                         MapLayout.IslandTop + 0.25f, bandCenterZ);
+                UnitData unit = assetName == null
+                    ? null
+                    : AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{assetName}.asset");
+
+                if (unit != null)
+                {
+                    GameObject portal = CreatePortalObject(parent, $"Portal_{unit.unitName}", at, ChoicePortalDiameter);
+                    ConfigurePortal(portal, unit.grade, unit, table, spawner);
+                }
+                else
+                {
+                    // 목재·초월(박은석) 위습은 유닛이 아니라 자원/위습을 준다. 그런 포탈이 아직 없어
+                    // 자리만 세워두고 보고에 남긴다.
+                    PlaceUnitMarker(parent, $"미구현_{band.specialLabels[i]}", new Vector3(at.x, 0f, at.z),
+                        UnitGrade.RandomUnit);
+                    specialPending++;
+                }
+            }
         }
 
         // --- 오른쪽 세로줄: 조합식 없이 캐릭터만 전시하는 등급 ---
@@ -361,7 +439,7 @@ public static class MapGenerator
         float displayLeft = island.center.x + 2f;
         float displayWidth = left + island.size.x - 2f - displayLeft;
         int perRow = Mathf.Max(1, Mathf.FloorToInt(displayWidth / SlotSpacing));
-        float displayZ = columnZTop;
+        float displayZ = bandTop;
         int displayed = 0;
 
         foreach (UnitGrade grade in MapLayout.GachaDisplayGrades)
@@ -381,14 +459,18 @@ public static class MapGenerator
             displayZ -= (Mathf.CeilToInt(units.Count / (float)perRow) + 1) * SlotSpacing;
         }
 
-        float displayDepth = columnZTop - displayZ;
-        float available = columnZTop - columnZBottom;
+        float displayDepth = bandTop - displayZ;
+        float available = bandTop - bandBottom;
         string fit = displayDepth <= available
             ? $"여유 {available - displayDepth:F0}"
             : $"⚠️ {displayDepth - available:F0} 모자람";
 
-        return $"\n뽑기 섬: 흔함 선택 {commons.Count}칸, 등급 랜덤 {randomGrades.Length}칸, " +
-               $"전시 {displayed}종 (깊이 {displayDepth:F0}/{available:F0}, {fit}).";
+        string pending = specialPending > 0
+            ? $"\n  ⚠️ 목재·박은석위습 {specialPending}칸은 자원/위습 지급 포탈이 없어 자리만 표시했습니다."
+            : "";
+
+        return $"\n뽑기 섬: 흔함 선택 {commons.Count}칸, 등급 칸 {GachaBands.Length}줄, " +
+               $"전시 {displayed}종 (깊이 {displayDepth:F0}/{available:F0}, {fit})." + pending;
     }
 
     // 펑크해저드 한가운데를 가로지르는 정의문. 부수기 전에는 섬이 둘로 나뉜다.
@@ -586,6 +668,14 @@ public static class MapGenerator
         marker.transform.localScale = new Vector3(SlotSize, SlotHeight, SlotSize);
         PaintSolid(marker, GradeColor(grade));
         Object.DestroyImmediate(marker.GetComponent<Collider>());
+    }
+
+    static void ApplyBonusGrade(GameObject portal, UnitGrade bonusGrade, float chance)
+    {
+        SerializedObject so = new SerializedObject(portal.GetComponent<UnitPortal>());
+        so.FindProperty("bonusGrade").enumValueIndex = (int)bonusGrade;
+        so.FindProperty("bonusChancePercent").floatValue = chance;
+        so.ApplyModifiedProperties();
     }
 
     static GameObject CreatePortalObject(Transform parent, string name, Vector3 position, float diameter)

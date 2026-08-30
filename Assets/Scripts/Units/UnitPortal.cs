@@ -10,6 +10,11 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
     [SerializeField] List<UnitGrade> acceptedGrades = new List<UnitGrade>();
 
     [SerializeField] UnitData specificUnit; // 선택형 포탈(흔함 등)이면 지정, 비어있으면 등급 내 랜덤 지급
+    // 원작의 "희귀함, 특수함(3%확률) 등급유닛 전체 랜덤" 같은 칸을 위한 것.
+    // 낮은 확률로 지정한 등급에서 대신 뽑는다. 0이면 쓰지 않는다.
+    [SerializeField] UnitGrade bonusGrade;
+    [SerializeField, Range(0f, 100f)] float bonusChancePercent;
+
     [SerializeField] GachaTable gachaTable;
     [SerializeField] UnitSpawner unitSpawner;
     [SerializeField] Transform spawnPoint;   // 비워두면 위습 주인의 레인 한가운데에 소환한다
@@ -45,6 +50,20 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
         return acceptedGrades == null || acceptedGrades.Count == 0 || acceptedGrades.Contains(grade);
     }
 
+    UnitData RollReward(UnitGrade grade)
+    {
+        if (gachaTable == null) return null;
+
+        if (bonusChancePercent > 0f && Random.Range(0f, 100f) < bonusChancePercent)
+        {
+            UnitData bonus = gachaTable.RollFromGrade(bonusGrade);
+            // 보너스 등급 풀이 비어 있어도 뽑기 자체가 실패하면 안 된다 — 원래 등급으로 넘어간다.
+            if (bonus != null) return bonus;
+        }
+
+        return gachaTable.RollFromGrade(grade);
+    }
+
     // 뽑기 섬에서 소환하면 지상 유닛은 바다에 막혀 레인까지 갈 수 없다.
     // 위습을 가져온 플레이어의 레인 한가운데에 내보낸다.
     Vector3 ResolveSpawnPosition(int ownerId)
@@ -78,9 +97,7 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
             return;
         }
 
-        UnitData reward = specificUnit != null
-            ? specificUnit
-            : gachaTable != null ? gachaTable.RollFromGrade(grade) : null;
+        UnitData reward = specificUnit != null ? specificUnit : RollReward(grade);
 
         if (reward == null)
         {
