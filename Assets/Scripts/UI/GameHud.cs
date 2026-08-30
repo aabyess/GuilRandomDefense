@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -12,6 +13,8 @@ public class GameHud : MonoBehaviour
     const int CommandSlotCount = 12;
     const int CommandColumns = 3;
     const int TeamSlotCount = 4;
+    const int MaxSelectionCards = 12;
+    const int SelectionCardColumns = 6;
 
     [SerializeField] SelectionManager selectionManager;
 
@@ -19,6 +22,15 @@ public class GameHud : MonoBehaviour
     Text goldWoodText;
     Text roundTimeText;
     Text teamPanelText;
+
+    GameObject unitCardsPanel;
+    readonly GameObject[] cardRoots = new GameObject[MaxSelectionCards];
+    readonly Image[] cardBackgrounds = new Image[MaxSelectionCards];
+    readonly Text[] cardNames = new Text[MaxSelectionCards];
+    readonly Text[] cardOverflowTexts = new Text[MaxSelectionCards];
+    readonly Selectable[] lastCardTargets = new Selectable[MaxSelectionCards];
+    int lastCardShownCount = -1;
+    int lastOverflow = -1;
 
     readonly StringBuilder teamPanelBuilder = new StringBuilder(256);
 
@@ -61,7 +73,7 @@ public class GameHud : MonoBehaviour
 
     void Update()
     {
-        RefreshUnitInfo();
+        RefreshSelectionPanel();
         RefreshTopBar();
         RefreshTeamPanel();
     }
@@ -102,6 +114,8 @@ public class GameHud : MonoBehaviour
         unitInfoText.fontSize = 30;
         unitInfoText.lineSpacing = 1.15f;
         unitInfoText.horizontalOverflow = HorizontalWrapMode.Wrap;
+
+        BuildSelectionCards(infoPanel);
 
         RectTransform commandPanel = CreatePanel(bar, "CommandGridPanel", new Color(1f, 1f, 1f, 0.05f));
         SetAnchors(commandPanel, new Vector2(0.61f, 0.05f), new Vector2(0.99f, 0.95f));
@@ -199,6 +213,111 @@ public class GameHud : MonoBehaviour
             .SetMinimap(obj.GetComponent<MinimapCamera>());
     }
 
+    // 카드 12개를 미리 만들어두고 선택이 바뀔 때만 켜고 끈다 — 매 프레임 새로 만들지 않는다.
+    void BuildSelectionCards(RectTransform parent)
+    {
+        unitCardsPanel = new GameObject("SelectionCardsPanel", typeof(RectTransform));
+        unitCardsPanel.transform.SetParent(parent, false);
+
+        RectTransform cardsRect = (RectTransform)unitCardsPanel.transform;
+        cardsRect.anchorMin = Vector2.zero;
+        cardsRect.anchorMax = Vector2.one;
+        cardsRect.offsetMin = Vector2.zero;
+        cardsRect.offsetMax = Vector2.zero;
+
+        GridLayoutGroup grid = unitCardsPanel.AddComponent<GridLayoutGroup>();
+        grid.cellSize = new Vector2(58f, 58f);
+        grid.spacing = new Vector2(4f, 4f);
+        grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+        grid.constraintCount = SelectionCardColumns;
+        grid.childAlignment = TextAnchor.MiddleCenter;
+
+        for (int i = 0; i < MaxSelectionCards; i++)
+            BuildCard(i, unitCardsPanel.transform);
+
+        unitCardsPanel.SetActive(false);
+    }
+
+    void BuildCard(int index, Transform parent)
+    {
+        GameObject card = new GameObject($"Card{index}", typeof(RectTransform), typeof(Image), typeof(Button));
+        card.transform.SetParent(parent, false);
+
+        Image background = card.GetComponent<Image>();
+        background.raycastTarget = true;
+
+        int capturedIndex = index;
+        card.GetComponent<Button>().onClick.AddListener(() => OnCardClicked(capturedIndex));
+
+        GameObject portraitObj = new GameObject("Portrait", typeof(RectTransform), typeof(Image));
+        portraitObj.transform.SetParent(card.transform, false);
+        RectTransform portraitRect = portraitObj.GetComponent<RectTransform>();
+        portraitRect.anchorMin = new Vector2(0.1f, 0.35f);
+        portraitRect.anchorMax = new Vector2(0.9f, 0.95f);
+        portraitRect.offsetMin = Vector2.zero;
+        portraitRect.offsetMax = Vector2.zero;
+
+        Image portrait = portraitObj.GetComponent<Image>();
+        portrait.sprite = null; // 초상화는 나중에 아트가 들어오면 꽂는다.
+        portrait.color = new Color(1f, 1f, 1f, 0.3f);
+        portrait.raycastTarget = false;
+
+        Text nameText = CreateLabel(card.transform, "Name", "");
+        nameText.raycastTarget = false;
+        nameText.fontSize = 11;
+        nameText.alignment = TextAnchor.UpperCenter;
+        RectTransform nameRect = nameText.rectTransform;
+        nameRect.anchorMin = new Vector2(0f, 0f);
+        nameRect.anchorMax = new Vector2(1f, 0.35f);
+        nameRect.offsetMin = Vector2.zero;
+        nameRect.offsetMax = Vector2.zero;
+
+        Text overflowText = CreateLabel(card.transform, "Overflow", "");
+        overflowText.raycastTarget = false;
+        overflowText.fontSize = 14;
+        overflowText.fontStyle = FontStyle.Bold;
+        overflowText.color = Color.white;
+        RectTransform overflowRect = overflowText.rectTransform;
+        overflowRect.anchorMin = new Vector2(0.55f, 0.7f);
+        overflowRect.anchorMax = new Vector2(1f, 1f);
+        overflowRect.offsetMin = Vector2.zero;
+        overflowRect.offsetMax = Vector2.zero;
+        overflowText.gameObject.SetActive(false);
+
+        cardRoots[index] = card;
+        cardBackgrounds[index] = background;
+        cardNames[index] = nameText;
+        cardOverflowTexts[index] = overflowText;
+    }
+
+    void OnCardClicked(int index)
+    {
+        if (index < 0 || index >= lastCardTargets.Length) return;
+
+        Selectable target = lastCardTargets[index];
+        if (target == null) return;
+
+        Selection?.SelectOnly(target);
+    }
+
+    // UnitIdentity가 없는 대상(위습 등) 카드 배경색.
+    static readonly Color UnidentifiedCardColor = new Color(0.4f, 0.4f, 0.4f, 0.9f);
+
+    // 전설적인=빨강, 희귀함=보라, 특별함=노랑, 히든=파랑, 흔함·안흔함=초록, 나머지=회색.
+    static Color GetGradeColor(UnitGrade grade)
+    {
+        switch (grade)
+        {
+            case UnitGrade.Legendary: return new Color(0.85f, 0.2f, 0.2f, 0.9f);
+            case UnitGrade.Rare: return new Color(0.6f, 0.3f, 0.85f, 0.9f);
+            case UnitGrade.Special: return new Color(0.9f, 0.85f, 0.2f, 0.9f);
+            case UnitGrade.Hidden: return new Color(0.25f, 0.45f, 0.9f, 0.9f);
+            case UnitGrade.Common:
+            case UnitGrade.Uncommon: return new Color(0.3f, 0.7f, 0.35f, 0.9f);
+            default: return new Color(0.4f, 0.4f, 0.4f, 0.9f);
+        }
+    }
+
     static void BuildCommandGrid(RectTransform parent)
     {
         GridLayoutGroup grid = parent.gameObject.AddComponent<GridLayoutGroup>();
@@ -217,12 +336,25 @@ public class GameHud : MonoBehaviour
         }
     }
 
-    void RefreshUnitInfo()
+    void RefreshSelectionPanel()
     {
-        if (unitInfoText == null) return;
+        if (unitInfoText == null || unitCardsPanel == null) return;
 
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count == 0)
+        int count = selection != null ? selection.Selected.Count : 0;
+
+        if (count <= 1)
+            ShowSingleInfo(selection, count);
+        else
+            ShowCardGrid(selection);
+    }
+
+    void ShowSingleInfo(SelectionManager selection, int count)
+    {
+        unitCardsPanel.SetActive(false);
+        unitInfoText.gameObject.SetActive(true);
+
+        if (count == 0)
         {
             unitInfoText.text = "선택된 유닛 없음";
             return;
@@ -234,8 +366,6 @@ public class GameHud : MonoBehaviour
             unitInfoText.text = "선택된 유닛 없음";
             return;
         }
-
-        int extra = selection.Selected.Count - 1;
 
         first.TryGetComponent(out UnitIdentity identity);
         first.TryGetComponent(out UnitAttacker attacker);
@@ -250,9 +380,60 @@ public class GameHud : MonoBehaviour
             ? (1f / attacker.AttackInterval).ToString("F2")
             : "-";
 
-        string suffix = extra > 0 ? $" (외 {extra}개)" : "";
         unitInfoText.text =
-            $"{unitName}{suffix}\n등급: {grade}\n체력: {hp}\n공격력: {attackPower}\n사거리: {attackRange}\n공격속도: {attackSpeed}/s";
+            $"{unitName}\n등급: {grade}\n체력: {hp}\n공격력: {attackPower}\n사거리: {attackRange}\n공격속도: {attackSpeed}/s";
+    }
+
+    // 다중 선택. 카드 자체는 BuildSelectionCards에서 미리 만들어뒀고, 여기서는 내용과
+    // 활성 상태만 바꾼다. 이전 프레임과 같은 대상 구성이면 아무것도 다시 안 그린다.
+    void ShowCardGrid(SelectionManager selection)
+    {
+        unitInfoText.gameObject.SetActive(false);
+        unitCardsPanel.SetActive(true);
+
+        IReadOnlyList<Selectable> selected = selection.Selected;
+        int shownCount = Mathf.Min(selected.Count, MaxSelectionCards);
+        int overflow = Mathf.Max(0, selected.Count - MaxSelectionCards);
+
+        if (!CardSelectionChanged(selected, shownCount, overflow)) return;
+
+        lastCardShownCount = shownCount;
+        lastOverflow = overflow;
+
+        for (int i = 0; i < MaxSelectionCards; i++)
+        {
+            Selectable target = i < shownCount ? selected[i] : null;
+            lastCardTargets[i] = target;
+
+            if (target == null)
+            {
+                cardRoots[i].SetActive(false);
+                continue;
+            }
+
+            cardRoots[i].SetActive(true);
+
+            target.TryGetComponent(out UnitIdentity identity);
+            UnitData data = identity != null ? identity.Data : null;
+
+            cardBackgrounds[i].color = data != null ? GetGradeColor(data.grade) : UnidentifiedCardColor;
+            cardNames[i].text = data != null ? data.unitName : target.name;
+
+            bool showOverflow = overflow > 0 && i == MaxSelectionCards - 1;
+            cardOverflowTexts[i].text = showOverflow ? $"+{overflow}" : "";
+            cardOverflowTexts[i].gameObject.SetActive(showOverflow);
+        }
+    }
+
+    bool CardSelectionChanged(IReadOnlyList<Selectable> selected, int shownCount, int overflow)
+    {
+        if (shownCount != lastCardShownCount || overflow != lastOverflow) return true;
+
+        for (int i = 0; i < shownCount; i++)
+            if (selected[i] != lastCardTargets[i])
+                return true;
+
+        return false;
     }
 
     void RefreshTopBar()

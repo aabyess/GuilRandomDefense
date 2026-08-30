@@ -126,6 +126,14 @@ public class SelectionManager : MonoBehaviour
         selected.Clear();
     }
 
+    // 다중 선택 카드 그리드에서 카드 하나를 클릭했을 때, 그 유닛만 선택 상태로 바꾼다.
+    public void SelectOnly(Selectable target)
+    {
+        ClearSelection();
+        if (target != null && IsSelectableByLocalPlayer(target))
+            AddToSelection(target);
+    }
+
     static Rect GetScreenRect(Vector2 a, Vector2 b)
     {
         float xMin = Mathf.Min(a.x, b.x);

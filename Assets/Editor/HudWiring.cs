@@ -10,6 +10,26 @@ public static class HudWiring
 {
     const string Title = "하단 HUD";
 
+    [MenuItem("Tools/HUD/씬에 적 체력바 추가")]
+    static void AddHealthBars()
+    {
+        HealthBarLayer existing = Object.FindFirstObjectByType<HealthBarLayer>(FindObjectsInactive.Include);
+        if (existing != null)
+        {
+            Selection.activeGameObject = existing.gameObject;
+            EditorUtility.DisplayDialog(Title, $"이미 씬에 있습니다: {existing.gameObject.name}", "확인");
+            return;
+        }
+
+        GameObject layer = new GameObject("HealthBarLayer", typeof(HealthBarLayer));
+        Undo.RegisterCreatedObjectUndo(layer, "Add HealthBarLayer");
+        Selection.activeGameObject = layer;
+
+        EditorSceneManager.MarkSceneDirty(layer.scene);
+        EditorUtility.DisplayDialog(Title,
+            "적 체력바를 씬에 추가했습니다.\nCanvas와 바는 실행 시 자동 생성됩니다.\n\nCmd+S 로 저장하세요.", "확인");
+    }
+
     [MenuItem("Tools/HUD/씬에 하단 HUD 추가")]
     static void AddHud()
     {

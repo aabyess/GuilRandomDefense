@@ -11,6 +11,8 @@ public class EnemyDummy : MonoBehaviour
     public static readonly List<EnemyDummy> Active = new List<EnemyDummy>();
 
     public float Hp => hp;
+    public float MaxHp { get; private set; }
+    public float HpRatio => MaxHp > 0f ? Mathf.Clamp01(hp / MaxHp) : 0f;
 
     // 어느 레인에 스폰됐는지. 팀 현황판이 플레이어별 적 수를 세는 데 쓴다.
     // -1은 레인에 속하지 않는 적(물범 등).
@@ -33,6 +35,7 @@ public class EnemyDummy : MonoBehaviour
     public void Initialize(float maxHp)
     {
         hp = maxHp;
+        MaxHp = maxHp;
     }
 
     // WaveSpawner가 EnemyData 전체를 넘겨줄 수 있게 되면 이 오버로드로 전환 — 보상 지급에 필요한 데이터를 함께 보관한다.
@@ -42,6 +45,17 @@ public class EnemyDummy : MonoBehaviour
         if (enemyData != null)
         {
             hp = enemyData.hp;
+            MaxHp = enemyData.hp;
+        }
+    }
+
+    void Awake()
+    {
+        // Initialize()를 거치지 않고 인스펙터 기본값(hp)만으로 씬에 배치된 경우를 위한 폴백 —
+        // 이게 없으면 MaxHp가 0으로 남아 체력바가 항상 빈 채로 표시된다.
+        if (MaxHp <= 0f)
+        {
+            MaxHp = hp;
         }
     }
 
