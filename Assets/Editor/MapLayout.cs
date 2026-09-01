@@ -23,6 +23,9 @@ public static class MapLayout
         public Vector2 size;     // (x, z)
         public string tint;      // MapGenerator의 머티리얼 키
 
+        /// <summary>섬 윗면 한가운데의 월드 좌표.</summary>
+        public Vector3 Center3 => new Vector3(center.x, IslandTop, center.y);
+
         public Island(string name, float x, float z, float sizeX, float sizeZ, string tint)
         {
             this.name = name;

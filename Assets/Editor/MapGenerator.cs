@@ -1761,6 +1761,7 @@ public static class MapGenerator
         GameObject root = PrefabUtility.LoadPrefabContents(WispPrefabPath);
 
         root.transform.localScale = Vector3.one * WispScale;
+        LiftWispBody(root);
 
         // NavMeshAgent의 반지름·높이는 트랜스폼 스케일을 그대로 따라간다. 프리팹을 10배로 키우면
         // 발자국도 10배가 되어, 굽힌 NavMesh(반지름 0.5 기준)보다 훨씬 커진다. 그러면 벽 근처와
@@ -1773,11 +1774,12 @@ public static class MapGenerator
             // 위습도 같은 규칙이어야 한 칸에 여러 개를 모아둘 수 있다.
             agent.radius = 0.28f / WispScale;
             agent.height = 2f / WispScale;
-            agent.baseOffset = 0.5f / WispScale;   // 바닥 띄움도 스케일을 타서 공중에 뜬다
+            // 띄우는 건 baseOffset이 아니라 몸(자식)을 올려서 한다 — 아래 LiftWispBody 참고.
+            agent.baseOffset = 0f;
         }
 
         // 영혼답게 — 스스로 빛나고 반쯤 비친다. 단단한 공이면 그냥 구슬로 보인다.
-        Renderer renderer = root.GetComponentInChildren<Renderer>();
+        Renderer renderer = root.GetComponentInChildren<Renderer>(true);
         if (renderer != null) renderer.sharedMaterial = WispSoulMaterial();
 
         // 빛무리. 발광 머티리얼만으로는 어두운 데서 티가 안 난다.
@@ -1798,6 +1800,37 @@ public static class MapGenerator
         PrefabUtility.UnloadPrefabContents(root);
 
         return $"\n위습: 크기 {WispScale:F0}, 영혼 형태(발광·반투명)로 맞췄습니다.";
+    }
+
+    // 위습 몸은 구인데 메시가 루트에 붙어 있어서, 트랜스폼(=구의 한가운데)을 바닥에 두면
+    // 아래 절반이 땅에 묻힌다. baseOffset으로 올리면 스케일을 타는지가 불확실해서,
+    // 몸을 자식으로 떼어내 확실하게 올린다. 루트에는 콜라이더·에이전트·스크립트만 남는다.
+    const float WispFloatHeight = 0.85f;   // 로컬 기준. 반지름 0.5보다 조금 위 — 영혼이니 떠 있게.
+
+    static void LiftWispBody(GameObject root)
+    {
+        Transform body = root.transform.Find("몸");
+        if (body == null)
+        {
+            MeshFilter filter = root.GetComponent<MeshFilter>();
+            MeshRenderer renderer = root.GetComponent<MeshRenderer>();
+            if (filter == null || renderer == null) return;   // 이미 옮겨둔 프리팹
+
+            GameObject visual = new GameObject("몸", typeof(MeshFilter), typeof(MeshRenderer));
+            visual.transform.SetParent(root.transform, false);
+            visual.GetComponent<MeshFilter>().sharedMesh = filter.sharedMesh;
+            visual.GetComponent<MeshRenderer>().sharedMaterial = renderer.sharedMaterial;
+
+            Object.DestroyImmediate(renderer);
+            Object.DestroyImmediate(filter);
+            body = visual.transform;
+        }
+
+        body.localPosition = new Vector3(0f, WispFloatHeight, 0f);
+
+        // 클릭 판정도 눈에 보이는 몸을 따라가야 한다.
+        if (root.TryGetComponent(out SphereCollider sphere))
+            sphere.center = new Vector3(0f, WispFloatHeight, 0f);
     }
 
     static readonly Color WispSoulColor = new Color(0.55f, 0.85f, 1f);
@@ -2184,6 +2217,33 @@ public static class MapGenerator
         foreach (MapLayout.Island island in MapLayout.Zones) yield return island;
     }
 
+    // 유닛·위습이 실제로 서게 될 자리에 길이 깔렸는지 확인한다.
+    // 길이 없으면 에이전트가 NavMesh에 안 붙고, 그 유닛은 선택은 되는데 명령을 조용히 무시한다 —
+    // 화면에는 "클릭이 안 먹는다"로만 보여서 원인을 찾는 데 오래 걸린다.
+    static string CheckNavMeshCoverage()
+    {
+        List<string> missing = new List<string>();
+
+        foreach (WispCell cell in Object.FindObjectsByType<WispCell>(
+                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (!NavMesh.SamplePosition(cell.transform.position, out _, 6f, NavMesh.AllAreas))
+                missing.Add(cell.name);
+        }
+
+        for (int i = 0; i < MapLayout.Lanes.Length; i++)
+        {
+            Vector3 pen = MapLayout.LaneUnitPenRow(MapLayout.Lanes[i]).Center3;
+            if (!NavMesh.SamplePosition(pen, out _, 6f, NavMesh.AllAreas))
+                missing.Add($"{MapLayout.Lanes[i].name} 유닛우리");
+        }
+
+        return missing.Count == 0
+            ? ""
+            : $"\n  ⚠️ 길이 안 깔린 자리 {missing.Count}곳 — 여기 생기는 유닛은 안 움직입니다:\n     " +
+              string.Join(", ", missing);
+    }
+
     static string BuildNavMesh(GameObject root)
     {
         NavMeshSurface surface = root.AddComponent<NavMeshSurface>();
@@ -2193,7 +2253,7 @@ public static class MapGenerator
         try
         {
             surface.BuildNavMesh();
-            return "NavMesh를 구웠습니다 (바다 = Sea 영역).";
+            return "NavMesh를 구웠습니다 (바다 = Sea 영역)." + CheckNavMeshCoverage();
         }
         catch (System.Exception e)
         {
