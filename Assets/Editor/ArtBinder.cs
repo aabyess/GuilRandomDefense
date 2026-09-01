@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 
 /// <summary>
@@ -17,6 +18,13 @@ public static class ArtBinder
     const string MonsterFolder = "Assets/Art/Monsters";
     const string CharacterFolder = "Assets/Art/Characters";
     const string MobTemplate = "Assets/Prefabs/MobPrefab.prefab";
+    const string ControllerPath = GeneratedFolder + "/Character.controller";
+
+    // 클립 이름에서 찾을 낱말. Mixamo가 붙이는 영어 이름과, 직접 붙일 수 있는 한국어를 같이 본다.
+    static readonly string[] IdleWords   = { "idle", "breathing", "대기" };
+    static readonly string[] WalkWords   = { "walk", "run", "move", "이동", "걷" };
+    static readonly string[] AttackWords = { "attack", "punch", "slash", "swing", "kick", "공격" };
+    static readonly string[] DeathWords  = { "death", "dying", "die", "사망", "죽" };
     const string UnitTemplate = "Assets/Prefabs/UnitPrefab.prefab";
 
     [MenuItem("Tools/아트/모델 배선")]
@@ -36,7 +44,7 @@ public static class ArtBinder
 
         EnsureFolder(GeneratedFolder);
 
-        string report = "";
+        string report = BuildController();
         if (monsters.Count > 0) report += BindEnemies(monsters);
         if (characters.Count > 0) report += BindUnits(characters);
 
@@ -110,6 +118,118 @@ public static class ArtBinder
                                     "파츠·색을 바꿔 변형을 늘리는 건 다음 단계입니다." : "");
     }
 
+    // ── 애니메이터 컨트롤러 ────────────────────────────────────────────
+
+    // 클립을 찾아 대기/이동/공격/사망 넷을 엮은 컨트롤러를 하나 만든다.
+    // Humanoid 리그라면 모델이 달라도 같은 컨트롤러가 붙으므로, 234종이 이 하나를 공유한다.
+    static string BuildController()
+    {
+        AnimationClip idle = FindClip(IdleWords);
+        AnimationClip walk = FindClip(WalkWords);
+        AnimationClip attack = FindClip(AttackWords);
+        AnimationClip death = FindClip(DeathWords);
+
+        if (idle == null && walk == null)
+            return "\n애니메이션 클립을 못 찾아 컨트롤러는 만들지 않았습니다 — 모델은 T포즈로 서 있습니다." +
+                   "\n  Mixamo에서 대기·이동·공격·사망을 받아 Assets/Art 아래에 넣고 다시 실행하세요.";
+
+        AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
+        if (controller == null) controller = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
+
+        // 다시 돌릴 때 상태가 쌓이지 않도록 매번 새로 짠다.
+        AnimatorStateMachine machine = controller.layers[0].stateMachine;
+        foreach (ChildAnimatorState state in machine.states.ToArray()) machine.RemoveState(state.state);
+        foreach (AnimatorControllerParameter parameter in controller.parameters.ToArray())
+            controller.RemoveParameter(parameter);
+
+        controller.AddParameter(CharacterAnimator.SpeedParam, AnimatorControllerParameterType.Float);
+        controller.AddParameter(CharacterAnimator.AttackParam, AnimatorControllerParameterType.Trigger);
+        controller.AddParameter(CharacterAnimator.DieParam, AnimatorControllerParameterType.Trigger);
+
+        // 대기↔이동은 속도 하나로 갈린다. 문턱을 하나로 두면 그 값 근처에서 깜빡이므로 위아래를 벌린다.
+        AnimatorState idleState = machine.AddState("Idle");
+        idleState.motion = idle != null ? idle : walk;
+        machine.defaultState = idleState;
+
+        AnimatorState walkState = machine.AddState("Move");
+        walkState.motion = walk != null ? walk : idle;
+
+        AnimatorStateTransition toMove = idleState.AddTransition(walkState);
+        toMove.hasExitTime = false;
+        toMove.duration = 0.1f;
+        toMove.AddCondition(AnimatorConditionMode.Greater, 0.15f, CharacterAnimator.SpeedParam);
+
+        AnimatorStateTransition toIdle = walkState.AddTransition(idleState);
+        toIdle.hasExitTime = false;
+        toIdle.duration = 0.1f;
+        toIdle.AddCondition(AnimatorConditionMode.Less, 0.05f, CharacterAnimator.SpeedParam);
+
+        int made = 2;
+
+        if (attack != null)
+        {
+            AnimatorState attackState = machine.AddState("Attack");
+            attackState.motion = attack;
+
+            AnimatorStateTransition enter = machine.AddAnyStateTransition(attackState);
+            enter.hasExitTime = false;
+            enter.duration = 0.05f;
+            enter.canTransitionToSelf = false;
+            enter.AddCondition(AnimatorConditionMode.If, 0f, CharacterAnimator.AttackParam);
+
+            // 공격은 한 번 재생하고 돌아온다 — 안 돌려보내면 그 자세로 굳는다.
+            AnimatorStateTransition exit = attackState.AddTransition(idleState);
+            exit.hasExitTime = true;
+            exit.exitTime = 0.9f;
+            exit.duration = 0.1f;
+            made++;
+        }
+
+        if (death != null)
+        {
+            AnimatorState deathState = machine.AddState("Death");
+            deathState.motion = death;
+
+            AnimatorStateTransition enter = machine.AddAnyStateTransition(deathState);
+            enter.hasExitTime = false;
+            enter.duration = 0.05f;
+            enter.canTransitionToSelf = false;
+            enter.AddCondition(AnimatorConditionMode.If, 0f, CharacterAnimator.DieParam);
+            made++;
+        }
+
+        EditorUtility.SetDirty(controller);
+
+        string missing = "";
+        if (idle == null) missing += " 대기";
+        if (walk == null) missing += " 이동";
+        if (attack == null) missing += " 공격";
+        if (death == null) missing += " 사망";
+
+        return $"\n애니메이터: 상태 {made}개를 엮었습니다 ({ControllerPath})." +
+               (missing.Length > 0 ? $"\n  ⚠️ 못 찾은 클립:{missing} — 있는 것으로 대신합니다." : "");
+    }
+
+    // 이름에 낱말이 들어간 첫 클립. Mixamo FBX는 클립을 파일 안에 품고 있어서 서브에셋으로 찾는다.
+    static AnimationClip FindClip(string[] words)
+    {
+        foreach (string guid in AssetDatabase.FindAssets("t:AnimationClip", new[] { "Assets/Art" }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+
+            foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(path))
+            {
+                if (!(asset is AnimationClip clip)) continue;
+                if (clip.name.StartsWith("__preview__")) continue;
+
+                string haystack = (path + "/" + clip.name).ToLowerInvariant();
+                if (words.Any(word => haystack.Contains(word))) return clip;
+            }
+        }
+
+        return null;
+    }
+
     // ── 프리팹 만들기 ──────────────────────────────────────────────────
 
     static GameObject GetOrCreate(Dictionary<GameObject, GameObject> cache, GameObject template,
@@ -138,6 +258,7 @@ public static class ArtBinder
         visual.transform.localPosition = Vector3.zero;
         visual.transform.localRotation = Quaternion.identity;
         FitToCollider(instance, visual);
+        AttachAnimator(instance, visual);
 
         GameObject saved = PrefabUtility.SaveAsPrefabAsset(instance, path);
         Object.DestroyImmediate(instance);
@@ -145,6 +266,18 @@ public static class ArtBinder
         made++;
         cache[model] = saved;
         return saved;
+    }
+
+    // 모델에 Animator가 있으면 컨트롤러를 물리고, 게임 상태를 읽어 돌릴 컴포넌트를 붙인다.
+    static void AttachAnimator(GameObject root, GameObject visual)
+    {
+        Animator animator = visual.GetComponentInChildren<Animator>();
+        if (animator == null) return;
+
+        AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
+        if (controller != null) animator.runtimeAnimatorController = controller;
+
+        if (root.GetComponent<CharacterAnimator>() == null) root.AddComponent<CharacterAnimator>();
     }
 
     // 모델마다 원본 크기가 제각각이라(1미터짜리도, 100미터짜리도 있다) 그대로 붙이면

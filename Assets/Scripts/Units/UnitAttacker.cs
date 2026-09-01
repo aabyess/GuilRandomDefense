@@ -7,6 +7,23 @@ public class UnitAttacker : MonoBehaviour
     [SerializeField] float attackInterval = 1f;
 
     float attackTimer;
+
+    // 모델이 붙기 전엔 없다. 있으면 공격할 때 모션을 돌린다.
+    CharacterAnimator anim;
+    bool animResolved;
+
+    CharacterAnimator Anim
+    {
+        get
+        {
+            if (!animResolved)
+            {
+                anim = GetComponent<CharacterAnimator>();
+                animResolved = true;
+            }
+            return anim;
+        }
+    }
     OwnedByPlayer owner;
     UnitCombat combat;
 
@@ -50,13 +67,18 @@ public class UnitAttacker : MonoBehaviour
         EnemyDummy target = ResolveTarget();
         if (target != null)
         {
+            Anim?.PlayAttack();
             target.TakeDamage(attackDamage, owner != null ? owner.OwnerId : -1);
             return;
         }
 
         // 적이 없을 때만 문을 친다. 문이 우선이면 적이 몰려와도 문만 때리고 있게 된다.
         DestructibleGate gate = FindClosestGateInRange();
-        if (gate != null) gate.TakeDamage(attackDamage);
+        if (gate != null)
+        {
+            Anim?.PlayAttack();
+            gate.TakeDamage(attackDamage);
+        }
     }
 
     // UnitCombat이 있으면 그쪽이 이미 골라둔 목표(사거리 안에 있을 때만 넘겨줌)를 그대로 쓴다 —

@@ -141,6 +141,10 @@ public class EnemyDummy : MonoBehaviour
             isDead = true;
             Active.Remove(this);
 
+            // 파괴보다 먼저 부른다 — Destroy가 걸린 뒤엔 재생될 틈이 없다.
+            // (지금은 즉시 파괴라 사실상 안 보이지만, 사망 연출을 넣을 자리를 여기로 정해둔다.)
+            GetComponent<CharacterAnimator>()?.PlayDeath();
+
             if (data != null && RewardDistributor.Instance != null)
             {
                 RewardDistributor.Instance.GrantKillReward(data, killerPlayerId);
