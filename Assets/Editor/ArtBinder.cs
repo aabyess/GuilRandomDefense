@@ -35,6 +35,13 @@ public static class ArtBinder
     // 여기 하나만 고치면 유닛·적 전부가 따라온다.
     const float CharacterHeight = 20f;
 
+    // 특정 모델을 특정 유닛에 붙인다. 여기 없는 모델은 남은 유닛에 돌려가며 나눠준다.
+    // 모델 이름은 확장자를 뺀 파일명, 유닛 이름은 로스터 에셋 이름이다.
+    static readonly (string model, string unit)[] ModelOverrides =
+    {
+        ("idle", "흔함_최상호"),   // 나루토 — Mixamo에서 With Skin으로 받은 파일이라 이름이 idle이다
+    };
+
     /// <summary>
     /// 모델의 머티리얼에 텍스처를 붙인다.
     ///
@@ -235,14 +242,32 @@ public static class ArtBinder
         int made = 0;
         Dictionary<GameObject, GameObject> cache = new Dictionary<GameObject, GameObject>();
 
-        for (int i = 0; i < units.Count; i++)
+        // 지정된 유닛부터 먼저 채운다. 나머지는 남은 모델을 돌려가며 나눠 쓴다.
+        HashSet<UnitData> assigned = new HashSet<UnitData>();
+        List<string> overrideReport = new List<string>();
+
+        foreach ((string modelName, string unitName) in ModelOverrides)
+        {
+            GameObject model = models.FirstOrDefault(m => m.name == modelName);
+            UnitData unit = units.FirstOrDefault(u => u.name == unitName);
+            if (model == null || unit == null) continue;
+
+            unit.prefab = GetOrCreate(cache, template, model, "Unit", ref made);
+            EditorUtility.SetDirty(unit);
+            assigned.Add(unit);
+            overrideReport.Add($"{modelName} → {unit.unitName}");
+        }
+
+        List<UnitData> rest = units.Where(u => !assigned.Contains(u)).ToList();
+        for (int i = 0; i < rest.Count; i++)
         {
             GameObject model = models[i % models.Count];
-            units[i].prefab = GetOrCreate(cache, template, model, "Unit", ref made);
-            EditorUtility.SetDirty(units[i]);
+            rest[i].prefab = GetOrCreate(cache, template, model, "Unit", ref made);
+            EditorUtility.SetDirty(rest[i]);
         }
 
         return $"\n유닛: 모델 {models.Count}종 → 프리팹 {made}개, {units.Count}종에 연결했습니다." +
+               (overrideReport.Count > 0 ? $"\n  지정 연결: {string.Join(", ", overrideReport)}" : "") +
                (models.Count < 20 ? $"\n  ⚠️ 모델 {models.Count}종을 {units.Count}종이 나눠 씁니다 — " +
                                     "파츠·색을 바꿔 변형을 늘리는 건 다음 단계입니다." : "");
     }

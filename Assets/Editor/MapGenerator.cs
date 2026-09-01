@@ -647,14 +647,14 @@ public static class MapGenerator
                 for (int n = 0; n < Mathf.Max(1, ingredient.count); n++)
                 {
                     PlaceRecipeSlot(parent, x, z, IngredientName(ingredient), IngredientColor(ingredient),
-                                    $"재료_{label}");
+                                    $"재료_{label}", ingredient.unit);
                     x += RecipeSlot + RecipeGap;
                 }
             }
         }
 
         Color resultColor = recipe.result != null ? GradeColor(recipe.result.grade) : Color.gray;
-        PlaceRecipeSlot(parent, resultX, z, label, resultColor, $"결과_{label}");
+        PlaceRecipeSlot(parent, resultX, z, label, resultColor, $"결과_{label}", recipe.result);
     }
 
     // 팝업에 찍을 한 줄 요약. "초록 + 초록 = 노랑"처럼 색이 바뀌는지 눈으로 확인하는 용도다.
@@ -758,8 +758,15 @@ public static class MapGenerator
         Object.DestroyImmediate(wall.GetComponent<Collider>());
     }
 
-    static void PlaceRecipeSlot(Transform parent, float x, float z, string label, Color color, string prefix)
+    // 모델이 붙은 유닛은 조합표에도 그 모습으로 세운다 — 색 큐브만 있으면 무엇이 재료인지
+    // 이름표를 눌러봐야 안다. 모델이 없는 유닛은 예전처럼 등급 색 큐브다.
+    static void PlaceRecipeSlot(Transform parent, float x, float z, string label, Color color, string prefix,
+                                UnitData unit = null)
     {
+        Vector3 ground = new Vector3(x, MapLayout.IslandTop, z);
+
+        if (TryPlaceUnitModel(parent, $"{prefix}_{label}", ground, unit, RecipeRowHeight * 0.9f)) return;
+
         GameObject slot = GameObject.CreatePrimitive(PrimitiveType.Cube);
         slot.name = $"{prefix}_{label}";
         slot.transform.SetParent(parent, false);
@@ -768,6 +775,51 @@ public static class MapGenerator
         PaintSolid(slot, color);
         // 표 위를 걸어다녀야 하므로 통과시킨다.
         Object.DestroyImmediate(slot.GetComponent<Collider>());
+    }
+
+    // 유닛 프리팹에서 보이는 부분만 떼어 세운다. 프리팹을 통째로 놓으면 조합표 위에
+    // 진짜 유닛이 살아 움직이게 된다 — 이건 보여주기용 인형이라 부품을 전부 걷어낸다.
+    static bool TryPlaceUnitModel(Transform parent, string name, Vector3 ground, UnitData unit, float height)
+    {
+        if (unit == null || unit.prefab == null) return false;
+
+        GameObject figure = Object.Instantiate(unit.prefab, parent);
+        figure.name = name;
+
+        foreach (Component component in figure.GetComponentsInChildren<Component>(true))
+        {
+            if (component == null) continue;
+            if (component is Transform || component is Renderer || component is MeshFilter) continue;
+            Object.DestroyImmediate(component);
+        }
+
+        Renderer[] renderers = figure.GetComponentsInChildren<Renderer>(true);
+        if (renderers.Length == 0)
+        {
+            Object.DestroyImmediate(figure);
+            return false;
+        }
+
+        figure.transform.position = ground;
+
+        Bounds bounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+        if (bounds.size.y < 0.001f)
+        {
+            Object.DestroyImmediate(figure);
+            return false;
+        }
+
+        figure.transform.localScale *= height / bounds.size.y;
+
+        // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발을 바닥에 붙인다.
+        bounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+        figure.transform.position += Vector3.up * (ground.y - bounds.min.y);
+
+        // 표를 보는 방향(위에서 남쪽을 향해)에서 얼굴이 보이게 돌린다.
+        figure.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+        return true;
     }
 
     static string IngredientName(RecipeIngredient ingredient)
