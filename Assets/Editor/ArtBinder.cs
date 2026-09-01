@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
+using UnityEngine.AI;
 
 /// <summary>
 /// Assets/Art/ 에 넣은 모델을 프리팹으로 만들고 EnemyData·UnitData에 연결한다.
@@ -28,6 +29,11 @@ public static class ArtBinder
     const string UnitTemplate = "Assets/Prefabs/UnitPrefab.prefab";
 
     const string MaterialFolder = "Assets/Art/Materials";
+
+    // 캐릭터가 화면에서 가져야 할 키. 맵이 크다 — 레인 한 변이 110, 순찰 흙길 폭이 12,
+    // 상점 건물이 9×3이다. 프리팹의 캡슐은 2라서 그대로 쓰면 점처럼 보인다.
+    // 여기 하나만 고치면 유닛·적 전부가 따라온다.
+    const float CharacterHeight = 20f;
 
     /// <summary>
     /// 모델의 머티리얼에 텍스처를 붙인다.
@@ -414,7 +420,7 @@ public static class ArtBinder
         GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(model, instance.transform);
         visual.transform.localPosition = Vector3.zero;
         visual.transform.localRotation = Quaternion.identity;
-        FitToCollider(instance, visual);
+        FitToHeight(instance, visual);
         AttachAnimator(instance, visual);
 
         GameObject saved = PrefabUtility.SaveAsPrefabAsset(instance, path);
@@ -443,28 +449,51 @@ public static class ArtBinder
     }
 
     // 모델마다 원본 크기가 제각각이라(1미터짜리도, 100미터짜리도 있다) 그대로 붙이면
-    // 어떤 적은 점처럼, 어떤 적은 맵을 덮을 만큼 나온다. 콜라이더 높이에 맞춰 재운다.
-    static void FitToCollider(GameObject root, GameObject visual)
+    // 어떤 적은 점처럼, 어떤 적은 맵을 덮을 만큼 나온다. 정해진 키에 맞춰 재운다.
+    //
+    // 보이는 모델만 키우면 안 된다 — 콜라이더가 발치에 남아 클릭이 발끝에서만 먹고
+    // 체력바도 발밑에 뜬다. NavMeshAgent의 반지름·높이도 스케일을 안 따라가므로 같이 맞춘다.
+    static void FitToHeight(GameObject root, GameObject visual)
     {
-        Collider collider = root.GetComponent<Collider>();
-        if (collider == null) return;
+        Bounds bounds = MeasureRenderers(visual);
+        if (bounds.size.y > 0.001f)
+        {
+            visual.transform.localScale *= CharacterHeight / bounds.size.y;
 
+            // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발이 바닥에 닿게 내린다.
+            bounds = MeasureRenderers(visual);
+            visual.transform.position += Vector3.up * (root.transform.position.y - bounds.min.y);
+        }
+
+        float radius = CharacterHeight * 0.18f;   // 사람 비율 어림 — 키의 약 1/5
+
+        if (root.TryGetComponent(out CapsuleCollider capsule))
+        {
+            capsule.height = CharacterHeight;
+            capsule.radius = radius;
+            capsule.center = new Vector3(0f, CharacterHeight * 0.5f, 0f);
+        }
+        else if (root.TryGetComponent(out BoxCollider box))
+        {
+            box.size = new Vector3(radius * 2f, CharacterHeight, radius * 2f);
+            box.center = new Vector3(0f, CharacterHeight * 0.5f, 0f);
+        }
+
+        if (root.TryGetComponent(out NavMeshAgent agent))
+        {
+            agent.height = CharacterHeight;
+            agent.radius = radius;
+        }
+    }
+
+    static Bounds MeasureRenderers(GameObject visual)
+    {
         Renderer[] renderers = visual.GetComponentsInChildren<Renderer>();
-        if (renderers.Length == 0) return;
+        if (renderers.Length == 0) return new Bounds(visual.transform.position, Vector3.zero);
 
         Bounds bounds = renderers[0].bounds;
         for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
-        if (bounds.size.y < 0.001f) return;
-
-        float target = collider.bounds.size.y;
-        if (target < 0.001f) return;
-
-        visual.transform.localScale *= target / bounds.size.y;
-
-        // 스케일을 바꾸면 경계도 바뀐다. 발이 바닥에 닿도록 다시 잰 뒤 내린다.
-        bounds = renderers[0].bounds;
-        for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
-        visual.transform.position += Vector3.up * (collider.bounds.min.y - bounds.min.y);
+        return bounds;
     }
 
     // ── 도우미 ─────────────────────────────────────────────────────────
