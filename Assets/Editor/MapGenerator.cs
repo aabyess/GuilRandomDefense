@@ -43,6 +43,8 @@ public static class MapGenerator
     {
         { "sea",       new Surface("water", new Color(0.78f, 0.90f, 1.00f), 0.080f, 0.92f) },
         { "rock",      new Surface("rock",  Color.white,                    0.140f, 0.10f) },
+        { "dirt",      new Surface("dirt",  Color.white,                    0.180f, 0.05f) },
+        { "pond",      new Surface("water", new Color(0.70f, 0.88f, 1.00f), 0.260f, 0.95f) },
         { "lane",      new Surface("grass", Color.white,                    0.120f, 0.05f) },
         { "warehouse", new Surface("grass", new Color(1.00f, 0.94f, 0.78f), 0.120f, 0.05f) },
         { "seal",      new Surface("grass", new Color(0.82f, 1.00f, 0.94f), 0.160f, 0.05f) },
@@ -76,6 +78,7 @@ public static class MapGenerator
         {
             GameObject laneObject = BuildIsland(root.transform, MapLayout.Lanes[i]);
             laneObject.AddComponent<LaneMarker>().SetLaneIndex(i);
+            DecorateLane(root.transform, MapLayout.Lanes[i], i);
             laneObjects.Add(laneObject);
         }
 
@@ -166,6 +169,74 @@ public static class MapGenerator
         obj.transform.localScale = new Vector3(island.size.x, GrassThickness, island.size.y);
         Paint(obj, island.tint, island.size.x, island.size.y);
         return obj;
+    }
+
+    // 레인 지형. 원작은 바깥을 도는 흙길, 안쪽 잔디, 낮은 언덕, 물웅덩이로 되어 있다.
+    // 전부 장식이라 콜라이더를 붙이지 않는다 — 붙이면 NavMesh가 울퉁불퉁해져
+    // 적이 순찰 경로를 못 따라가거나 유닛이 언덕에 걸린다.
+    const float TrackWidth = 7f;        // 흙길 폭
+    const float TrackInset = 8f;        // 섬 가장자리에서 흙길 중심까지 (순찰 경로와 같은 값)
+
+    static void DecorateLane(Transform parent, MapLayout.Island lane, int index)
+    {
+        float halfX = lane.size.x * 0.5f - TrackInset;
+        float halfZ = lane.size.y * 0.5f - TrackInset;
+        float x = lane.center.x;
+        float z = lane.center.y;
+        float y = MapLayout.IslandTop + 0.04f;   // 잔디 위에 살짝 얹어 z-fighting을 피한다
+
+        // 순찰 경로를 따라 도는 흙길 — 적이 실제로 지나는 자리다.
+        BuildDecor(parent, $"{lane.name}_흙길_위", new Vector3(x, y, z + halfZ),
+                   new Vector3(halfX * 2f + TrackWidth, 0.08f, TrackWidth), "dirt");
+        BuildDecor(parent, $"{lane.name}_흙길_아래", new Vector3(x, y, z - halfZ),
+                   new Vector3(halfX * 2f + TrackWidth, 0.08f, TrackWidth), "dirt");
+        BuildDecor(parent, $"{lane.name}_흙길_왼", new Vector3(x - halfX, y, z),
+                   new Vector3(TrackWidth, 0.08f, halfZ * 2f - TrackWidth), "dirt");
+        BuildDecor(parent, $"{lane.name}_흙길_오른", new Vector3(x + halfX, y, z),
+                   new Vector3(TrackWidth, 0.08f, halfZ * 2f - TrackWidth), "dirt");
+
+        // 언덕과 웅덩이는 흙길 안쪽에만 놓는다. 경로 위에 겹치면 적이 파묻힌 것처럼 보인다.
+        float innerX = halfX - TrackWidth * 0.5f - 3f;
+        float innerZ = halfZ - TrackWidth * 0.5f - 3f;
+
+        // 레인마다 같은 자리에 놓이면 네 레인이 똑같아 보인다. 레인 번호로 배치를 흔든다.
+        System.Random rng = new System.Random(1000 + index);
+
+        for (int i = 0; i < 3; i++)
+        {
+            Vector3 at = new Vector3(
+                x + (float)(rng.NextDouble() * 2 - 1) * innerX,
+                MapLayout.IslandTop, 
+                z + (float)(rng.NextDouble() * 2 - 1) * innerZ);
+
+            float size = 8f + (float)rng.NextDouble() * 7f;
+            BuildDecor(parent, $"{lane.name}_언덕{i}", at + Vector3.up * 0.35f,
+                       new Vector3(size, 0.7f, size), "lane", PrimitiveType.Cylinder);
+        }
+
+        for (int i = 0; i < 2; i++)
+        {
+            Vector3 at = new Vector3(
+                x + (float)(rng.NextDouble() * 2 - 1) * innerX,
+                MapLayout.IslandTop + 0.05f,
+                z + (float)(rng.NextDouble() * 2 - 1) * innerZ);
+
+            float size = 5f + (float)rng.NextDouble() * 5f;
+            BuildDecor(parent, $"{lane.name}_웅덩이{i}", at,
+                       new Vector3(size, 0.1f, size), "pond", PrimitiveType.Cylinder);
+        }
+    }
+
+    static void BuildDecor(Transform parent, string name, Vector3 position, Vector3 scale,
+                           string surface, PrimitiveType shape = PrimitiveType.Cube)
+    {
+        GameObject obj = GameObject.CreatePrimitive(shape);
+        obj.name = name;
+        obj.transform.SetParent(parent, false);
+        obj.transform.position = position;
+        obj.transform.localScale = scale;
+        Paint(obj, surface, scale.x, scale.z);
+        Object.DestroyImmediate(obj.GetComponent<Collider>());
     }
 
     static List<WaypointPath> BuildLanePaths(Transform parent)

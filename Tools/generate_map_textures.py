@@ -136,6 +136,22 @@ def build_rock():
     write('rock', pixels)
 
 
+def build_dirt():
+    """레인 바깥을 도는 흙길. 적이 지나다니는 자리라 잔디와 확실히 구분돼야 한다."""
+    n = fbm(SIZE, 5, 5, seed=137)
+    patch = fbm(SIZE, 2, 3, seed=211)
+    speck = random.Random(4242)
+    dark, light, clay = (74, 58, 42), (146, 122, 92), (128, 96, 64)
+    pixels = []
+    for y in range(SIZE):
+        for x in range(SIZE):
+            c = lerp3(dark, light, n[y][x])
+            c = lerp3(c, clay, max(0.0, patch[y][x] - 0.5) * 1.2)
+            j = speck.randint(-12, 12)
+            pixels.append(tuple(max(0, min(255, c[i] + j)) for i in range(3)))
+    write('dirt', pixels)
+
+
 def build_normal(source_name, target_name, strength=2.5):
     """높이차에서 노멀맵을 만든다. 평평한 판이 빛을 받아 굴곡져 보이게 한다."""
     src = Image.open(f'{OUT}/{source_name}.png').convert('L')
@@ -165,6 +181,8 @@ print("맵 텍스처 생성:")
 build_grass()
 build_water()
 build_rock()
+build_dirt()
 build_normal('water', 'water_normal', strength=5.0)
 build_normal('grass', 'grass_normal', strength=1.5)
 build_normal('rock', 'rock_normal', strength=3.5)
+build_normal('dirt', 'dirt_normal', strength=2.0)
