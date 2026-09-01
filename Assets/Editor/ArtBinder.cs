@@ -35,7 +35,11 @@ public static class ArtBinder
     // 여기 하나만 고치면 유닛·적 전부가 따라온다.
     const float CharacterHeight = 20f;
 
-    // 특정 모델을 특정 유닛에 붙인다. 여기 없는 모델은 남은 유닛에 돌려가며 나눠준다.
+    // 지정하지 않은 유닛에도 모델을 돌려가며 나눠줄지. 모델이 몇 개 없을 때 켜두면
+    // 234종이 전부 같은 얼굴이 된다 — 팩을 통째로 넣어 종류가 충분할 때만 켠다.
+    const bool FillUnassignedUnits = false;
+
+    // 특정 모델을 특정 유닛에 붙인다.
     // 모델 이름은 확장자를 뺀 파일명, 유닛 이름은 로스터 에셋 이름이다.
     static readonly (string model, string unit)[] ModelOverrides =
     {
@@ -262,17 +266,37 @@ public static class ArtBinder
         }
 
         List<UnitData> rest = units.Where(u => !assigned.Contains(u)).ToList();
-        for (int i = 0; i < rest.Count; i++)
+
+        if (FillUnassignedUnits)
         {
-            GameObject model = models[i % models.Count];
-            rest[i].prefab = GetOrCreate(cache, template, model, "Unit", ref made);
-            EditorUtility.SetDirty(rest[i]);
+            for (int i = 0; i < rest.Count; i++)
+            {
+                GameObject model = models[i % models.Count];
+                rest[i].prefab = GetOrCreate(cache, template, model, "Unit", ref made);
+                EditorUtility.SetDirty(rest[i]);
+            }
+        }
+        else
+        {
+            // 지정 안 된 유닛은 자리표시용 프리팹 그대로 둔다. 모델이 하나뿐인데 다 나눠주면
+            // 234종이 전부 같은 얼굴이 되어, 누가 누구인지 구분이 안 된다.
+            foreach (UnitData unit in rest)
+            {
+                if (unit.prefab == template) continue;
+                unit.prefab = template;
+                EditorUtility.SetDirty(unit);
+            }
         }
 
-        return $"\n유닛: 모델 {models.Count}종 → 프리팹 {made}개, {units.Count}종에 연결했습니다." +
+        return $"\n유닛: 모델 {models.Count}종 → 프리팹 {made}개, " +
+               (FillUnassignedUnits
+                   ? $"{units.Count}종 전부에 연결했습니다."
+                   : $"지정한 {assigned.Count}종에만 연결했습니다(나머지 {rest.Count}종은 자리표시 그대로).") +
                (overrideReport.Count > 0 ? $"\n  지정 연결: {string.Join(", ", overrideReport)}" : "") +
-               (models.Count < 20 ? $"\n  ⚠️ 모델 {models.Count}종을 {units.Count}종이 나눠 씁니다 — " +
-                                    "파츠·색을 바꿔 변형을 늘리는 건 다음 단계입니다." : "");
+               (FillUnassignedUnits && models.Count < 20
+                   ? $"\n  ⚠️ 모델 {models.Count}종을 {units.Count}종이 나눠 씁니다 — " +
+                     "파츠·색을 바꿔 변형을 늘리는 건 다음 단계입니다."
+                   : "");
     }
 
     // ── 리그 ───────────────────────────────────────────────────────────
