@@ -53,7 +53,6 @@ public static class MapGenerator
         { "gacha",     new Surface("grass", new Color(1.00f, 0.98f, 0.82f), 0.120f, 0.05f) },
         { "combine",   new Surface("grass", new Color(0.90f, 0.90f, 0.88f), 0.120f, 0.05f) },
         { "portal",    new Surface(null,    new Color(0.30f, 0.70f, 0.85f), 0f,     0.60f) },
-        { "gambling",  new Surface("grass", new Color(0.85f, 0.75f, 0.55f), 0.120f, 0.05f) },
     };
 
     [MenuItem("Tools/맵/원랜디 맵 생성")]
@@ -96,13 +95,11 @@ public static class MapGenerator
 
         GameObject gachaIsland = null;
         GameObject combineIsland = null;
-        GameObject gamblingIsland = null;
         foreach (MapLayout.Island island in MapLayout.Zones)
         {
             GameObject created = BuildIsland(root.transform, island);
             if (island.name == "GachaIsland") gachaIsland = created;
             if (island.name == "CombineTable") combineIsland = created;
-            if (island.name == "GamblingIsland") gamblingIsland = created;
         }
 
         List<WaypointPath> lanePaths = BuildLanePaths(root.transform);
@@ -113,7 +110,6 @@ public static class MapGenerator
         string sealReport = BuildSealSpawners(root.transform);
 
         string portalReport = BuildGachaPortals(gachaIsland);
-        string gamblingReport = BuildGamblingIsland(gamblingIsland);
 
         string overlaps = CheckOverlaps();
         string rewire = RewireScene(lanePaths);
@@ -125,7 +121,7 @@ public static class MapGenerator
 
         string message =
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
-            $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + gamblingReport + "\n\n" +
+            $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + "\n\n" +
             tableReport + displayReport + gateReport + storyReport + sealReport + overlaps + navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
         Debug.Log("[맵] " + message);
         EditorUtility.DisplayDialog(Title, message, "확인");
@@ -1109,40 +1105,8 @@ public static class MapGenerator
         new GamblingTier("다른세계 도박", 5, 17f, UnitGrade.OtherWorld, null, true),
     };
 
-    const float GamblingPortalDiameter = 12f;
-
-    static string BuildGamblingIsland(GameObject gamblingIsland)
-    {
-        if (gamblingIsland == null) return "";
-
-        GachaTable table = AssetDatabase.LoadAssetAtPath<GachaTable>("Assets/Data/MainGachaTable.asset");
-        UnitSpawner spawner = Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
-        MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "GamblingIsland");
-        Transform parent = gamblingIsland.transform.parent;
-
-        float left = island.center.x - island.size.x * 0.5f;
-        float step = island.size.x / (GamblingTiers.Length + 1);
-        float z = island.center.y;
-
-        for (int i = 0; i < GamblingTiers.Length; i++)
-        {
-            GamblingTier tier = GamblingTiers[i];
-            float x = left + step * (i + 1);
-
-            GameObject portal = CreatePortalObject(parent, $"Portal_{tier.label}",
-                new Vector3(x, MapLayout.IslandTop + 0.25f, z), GamblingPortalDiameter);
-            ConfigureGamblingPortal(portal, tier, table, spawner);
-
-            // 성공 시 나오는(주) 등급을 색으로 미리 보여준다 — 정확한 확률·비용은 GAMBLING.md/HUD 참고.
-            PlaceUnitMarker(parent, $"{tier.label}_표식",
-                new Vector3(x, 0f, z + GamblingPortalDiameter), tier.primaryGrade);
-        }
-
-        return table == null
-            ? "\n  ⚠️ MainGachaTable을 찾지 못해 도박소 성공 지급이 비어있습니다."
-            : $"\n도박소: {GamblingTiers.Length}개 포탈(하급/중급/고급/다른세계) 배치.";
-    }
-
+    // 도박소는 섬이 아니라 레인 안 상점 건물이 된다(사장님 확정, 2026-09-01).
+    // 등급표와 이 배선 함수는 그 건물이 그대로 재사용한다.
     static void ConfigureGamblingPortal(GameObject portal, GamblingTier tier, GachaTable table, UnitSpawner spawner)
     {
         GamblingPortal component = portal.AddComponent<GamblingPortal>();
