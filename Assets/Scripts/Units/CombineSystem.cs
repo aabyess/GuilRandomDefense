@@ -209,7 +209,7 @@ public class CombineSystem : MonoBehaviour
     Vector3 ResolveResultPosition(List<UnitIdentity> materials, UnitData result, int ownerId)
     {
         LaneMarker lane = LaneMarker.Get(ownerId);
-        Vector3 fallback = lane != null ? lane.transform.position : transform.position;
+        Vector3 fallback = lane != null ? lane.SpawnPosition : transform.position;
 
         Warehouse warehouse = OwnerWarehouse;
         Vector3 sum = Vector3.zero;

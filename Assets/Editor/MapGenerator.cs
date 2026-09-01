@@ -79,6 +79,7 @@ public static class MapGenerator
             laneObject.AddComponent<LaneMarker>().SetLaneIndex(i);
             DecorateLane(root.transform, MapLayout.Lanes[i]);
             BuildLaneShopStrip(root.transform, MapLayout.Lanes[i]);
+            WireUnitPen(laneObject, BuildUnitPen(root.transform, MapLayout.Lanes[i], i));
             BuildSupportShop(root.transform, MapLayout.Lanes[i], i);
             BuildGamblingShop(root.transform, MapLayout.Lanes[i], i);
             laneObjects.Add(laneObject);
@@ -214,6 +215,40 @@ public static class MapGenerator
     const float LaneShopSize = 9f;
 
     // 상점 줄은 필드와 벽 하나로 갈린다 — 적이 도는 곳과 내가 쓰는 곳이 눈으로 구분돼야 한다.
+    // 새 유닛이 처음 서는 우리. 상점 줄 바로 위, 벽으로 둘러싸여 있고 위쪽만 트여 있다 —
+    // 레인 한가운데에 소환하면 적 한복판에 나오고, 플레이어가 손쓸 새도 없이 맞는다.
+    const float UnitPenWidth = 34f;
+    const float UnitPenDepth = 16f;
+
+    static Transform BuildUnitPen(Transform parent, MapLayout.Island lane, int laneIndex)
+    {
+        MapLayout.Island strip = MapLayout.LaneShopStrip(lane);
+        float centerZ = strip.center.y + strip.size.y * 0.5f + UnitPenDepth * 0.5f + GateThickness;
+        float centerX = lane.center.x;
+        float halfX = UnitPenWidth * 0.5f;
+        float halfZ = UnitPenDepth * 0.5f;
+
+        BuildDecor(parent, $"{lane.name}_유닛우리_바닥",
+            new Vector3(centerX, MapLayout.IslandTop + 0.05f, centerZ),
+            new Vector3(UnitPenWidth, 0.1f, UnitPenDepth), "dirt");
+
+        // 좌·우·아래만 막는다. 위가 열려 있어야 플레이어가 유닛을 필드로 꺼낸다.
+        BuildWall(parent, $"{lane.name}_유닛우리_왼벽",
+            new Vector3(centerX - halfX, MapLayout.IslandTop + WallHeight * 0.5f, centerZ),
+            new Vector3(GateThickness, WallHeight, UnitPenDepth + GateThickness));
+        BuildWall(parent, $"{lane.name}_유닛우리_오른벽",
+            new Vector3(centerX + halfX, MapLayout.IslandTop + WallHeight * 0.5f, centerZ),
+            new Vector3(GateThickness, WallHeight, UnitPenDepth + GateThickness));
+        BuildWall(parent, $"{lane.name}_유닛우리_아래벽",
+            new Vector3(centerX, MapLayout.IslandTop + WallHeight * 0.5f, centerZ - halfZ),
+            new Vector3(UnitPenWidth, WallHeight, GateThickness));
+
+        GameObject anchor = new GameObject($"{lane.name}_유닛우리");
+        anchor.transform.SetParent(parent, false);
+        anchor.transform.position = new Vector3(centerX, MapLayout.IslandTop, centerZ);
+        return anchor.transform;
+    }
+
     static void BuildLaneShopStrip(Transform parent, MapLayout.Island lane)
     {
         MapLayout.Island strip = MapLayout.LaneShopStrip(lane);
@@ -226,6 +261,19 @@ public static class MapGenerator
             new Vector3(strip.center.x, MapLayout.IslandTop + WallHeight * 0.5f,
                         strip.center.y + strip.size.y * 0.5f),
             new Vector3(strip.size.x, WallHeight, GateThickness), "rock");
+    }
+
+    // 레인 섬에 붙은 LaneMarker에 우리를 물려준다 — 포탈·도박소·조합이 전부 여기로 소환한다.
+    static void WireUnitPen(GameObject laneObject, Transform pen)
+    {
+        if (laneObject == null || pen == null) return;
+
+        LaneMarker marker = laneObject.GetComponent<LaneMarker>();
+        if (marker == null) return;
+
+        SerializedObject so = new SerializedObject(marker);
+        so.FindProperty("unitPen").objectReferenceValue = pen;
+        so.ApplyModifiedProperties();
     }
 
     static Vector3 LaneShopSlot(MapLayout.Island lane, int slot)

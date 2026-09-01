@@ -71,7 +71,7 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
         if (spawnPoint != null) return spawnPoint.position;
 
         LaneMarker lane = LaneMarker.Get(ownerId);
-        if (lane != null) return lane.transform.position;
+        if (lane != null) return lane.SpawnPosition;
 
         Debug.LogWarning($"UnitPortal: 플레이어 {ownerId}의 레인을 찾지 못해 포탈 자리에 소환합니다.", this);
         return transform.position;
