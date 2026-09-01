@@ -26,7 +26,7 @@ WISPS = {
 BASE_COUNT, COUNT_STEP, MAX_COUNT = 15, 3, 35   # 3라운드마다 +1, 원작 상한 35
 BASE_HP, HP_GROWTH = 10.0, 1.09                 # 라운드마다 9%
 BOSS_HP_MULTIPLIER = 15.0
-MOB_SPEED, BOSS_SPEED = 5.0, 3.5
+MOB_SPEED, BOSS_SPEED = 10.0, 7.0   # 두 배 (사장님 확정 2026-09-01) — 라운드가 너무 늘어져서
 SPAWN_WINDOW = 24.0                             # 28초 라운드 중 스폰에 쓰는 시간
 
 HEAD = """%YAML 1.1
