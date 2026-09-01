@@ -65,8 +65,11 @@ public static class MapLayout
     {
         // 이벤트 존이 위, 그 아래 불멸·초월 전시가 가로로 나란히.
         new Island("PunkHazard",         0f, 130f, 90f, 60f, "event"),
-        new Island("ImmortalDisplay",  150f, 120f, 90f, 50f, "display"),
-        new Island("TranscendDisplay", 150f,  55f, 90f, 50f, "display"),
+        // 초월은 25종이 가로 14칸씩 두 줄로 서므로 세로가 그만큼만 있으면 된다.
+        // 불멸은 화로를 둘러싼 원형이라 지름이 필요해서 50을 유지한다.
+        // 둘 다 조합식 표 바로 위로 내려, 사이에 비던 자리를 없앴다.
+        new Island("ImmortalDisplay",  150f,  52f, 90f, 50f, "display"),
+        new Island("TranscendDisplay", 150f,   8f, 90f, 26f, "display"),
         new Island("StoryZone",       -250f, -80f, 120f, 100f, "story"),
         // 오른쪽 전시 칸이 다른세계 조합식 한 줄(재료 6칸 + 비용 3칸)을 담아야 해서 폭을 넓혔다.
         new Island("GachaIsland",      -82f, -80f, 136f, 190f, "gacha"),
