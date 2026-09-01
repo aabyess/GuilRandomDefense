@@ -432,6 +432,11 @@ public static class ArtBinder
         AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
         if (controller != null) animator.runtimeAnimatorController = controller;
 
+        // 이동은 NavMeshAgent·WaypointMover가 시킨다. 애니메이션에 담긴 이동까지 살리면
+        // 둘이 겹쳐서 유닛이 두 배로 나아가거나 목적지를 지나쳐 미끄러진다.
+        // (Mixamo에서 In Place로 받으면 애초에 안 담기지만, 안 켜고 받았을 때를 막아둔다.)
+        animator.applyRootMotion = false;
+
         if (root.GetComponent<CharacterAnimator>() == null) root.AddComponent<CharacterAnimator>();
     }
 
