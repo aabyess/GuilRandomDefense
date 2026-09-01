@@ -10,6 +10,12 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
     [SerializeField] List<UnitGrade> acceptedGrades = new List<UnitGrade>();
 
     [SerializeField] UnitData specificUnit; // 선택형 포탈(흔함 등)이면 지정, 비어있으면 등급 내 랜덤 지급
+
+    // 받는 위습의 등급과 지급하는 유닛의 등급이 다른 포탈이 있다 —
+    // 자원 칸 북쪽은 "랜덤유닛 위습"을 받아 "흔함 유닛"을 준다.
+    // 끄면 예전처럼 위습 등급 그대로 뽑는다.
+    [SerializeField] bool overrideRewardGrade;
+    [SerializeField] UnitGrade rewardGrade;
     // 원작의 "희귀함, 특수함(3%확률) 등급유닛 전체 랜덤" 같은 칸을 위한 것.
     // 낮은 확률로 지정한 등급에서 대신 뽑는다. 0이면 쓰지 않는다.
     [SerializeField] UnitGrade bonusGrade;
@@ -99,7 +105,9 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
             return;
         }
 
-        UnitData reward = specificUnit != null ? specificUnit : RollReward(grade);
+        UnitData reward = specificUnit != null
+            ? specificUnit
+            : RollReward(overrideRewardGrade ? rewardGrade : grade);
 
         if (reward == null)
         {

@@ -35,13 +35,13 @@ public static class MapLayout
     // 메인 방어 필드 — 2×2로 붙은 레인 4개 = 플레이어 4명
     public static readonly Island[] Lanes =
     {
-        // 세로 156 = 싸우는 필드 110 + 유닛 우리 줄 20 + 상점 줄 26.
-        // 필드 크기는 처음 그대로고, 아래에 두 줄을 덧댔다. 우리를 필드 안에 두면
-        // 순찰 흙길과 겹쳐서 새 유닛이 적이 지나는 자리에 나온다.
-        new Island("Lane1", -236f, 279f, 110f, 156f, "lane"),
-        new Island("Lane2", -120f, 279f, 110f, 156f, "lane"),
-        new Island("Lane3", -236f, 117f, 110f, 156f, "lane"),
-        new Island("Lane4", -120f, 117f, 110f, 156f, "lane"),
+        // 필드를 1.5배(110→165)로 키웠다. 아래 두 줄(유닛 우리 20 + 상점 26)은 그대로다 —
+        // 건물과 우리는 커질 이유가 없고, 커지면 오히려 필드에서 멀어진다.
+        // 넓힌 만큼 왼쪽으로 펼쳤다. 오른쪽은 펑크해저드·창고가 있어 못 넓힌다.
+        new Island("Lane1", -318f, 362f, 165f, 211f, "lane"),
+        new Island("Lane2", -148f, 362f, 165f, 211f, "lane"),
+        new Island("Lane3", -318f, 144f, 165f, 211f, "lane"),
+        new Island("Lane4", -148f, 144f, 165f, 211f, "lane"),
     };
 
     // 창고 — 플레이어별 개인 섬 (C키로 유닛을 보냄)

@@ -1244,7 +1244,10 @@ public static class MapGenerator
         // 1%로 상붕카(배) — 등급이 아니라 특정 유닛이라 bonusUnit 쪽을 쓴다.
         GameObject unitRandom = CreatePortalObject(parent, "Portal_유닛랜덤",
             new Vector3(centerX, y, centerZ + armZ), PortalDiameter);
-        ConfigurePortal(unitRandom, UnitGrade.Common, null, table, spawner);
+        // 받는 건 랜덤유닛 위습(시작에 5개 받는 그것), 주는 건 흔함 유닛이다.
+        // 둘을 같은 값으로 두면 위습이 거부당하거나 랜덤유닛 등급에서 뽑힌다.
+        ConfigurePortal(unitRandom, UnitGrade.RandomUnit, null, table, spawner,
+                        rewardGrade: UnitGrade.Common);
         ApplyBonusUnit(unitRandom, "안흔함_상붕카", 1f);
 
         // 동: 금화 랜덤 — 원작은 "15 + 라운드×12~35". 라운드 비례 부분만 옮겼다.
@@ -1672,8 +1675,10 @@ public static class MapGenerator
         so.ApplyModifiedProperties();
     }
 
+    // rewardGrade를 주면 "이 등급 위습을 받아 저 등급 유닛을 준다"가 된다.
+    // 안 주면 받은 위습의 등급 그대로 뽑는다(대부분의 포탈이 그렇다).
     static void ConfigurePortal(GameObject portal, UnitGrade grade, UnitData specificUnit,
-                                GachaTable table, UnitSpawner spawner)
+                                GachaTable table, UnitSpawner spawner, UnitGrade? rewardGrade = null)
     {
         UnitPortal unitPortal = portal.AddComponent<UnitPortal>();
         SerializedObject so = new SerializedObject(unitPortal);
@@ -1684,6 +1689,8 @@ public static class MapGenerator
         accepted.GetArrayElementAtIndex(0).enumValueIndex = (int)grade;
 
         so.FindProperty("legacyGradeMigrated").boolValue = true;
+        so.FindProperty("overrideRewardGrade").boolValue = rewardGrade.HasValue;
+        so.FindProperty("rewardGrade").enumValueIndex = (int)(rewardGrade ?? grade);
         so.FindProperty("specificUnit").objectReferenceValue = specificUnit;
         so.FindProperty("gachaTable").objectReferenceValue = table;
         so.FindProperty("unitSpawner").objectReferenceValue = spawner;
@@ -1732,6 +1739,70 @@ public static class MapGenerator
     // 시작 위습: 랜덤 위습 5개(사장님 확정 2026-09-01). 이걸 자원 칸 북쪽 포탈에 넣으면
     // 흔함 유닛이 하나씩 나온다. 씬에 이미 직렬화된 값이 있어도 여기서 덮어쓴다.
     const int StartingWispCount = 5;
+
+    // 위습을 영혼처럼 보이게 하고 맵 크기에 맞춰 키운다.
+    // 프리팹 기본 크기가 0.6이라 유닛(키 20) 옆에 두면 먼지처럼 보인다.
+    const float WispScale = 6f;
+    const string WispPrefabPath = "Assets/Prefabs/WispPrefab.prefab";
+
+    static string ShapeWispPrefab()
+    {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(WispPrefabPath);
+        if (prefab == null) return $"\n⚠️ 위습 프리팹을 못 찾았습니다: {WispPrefabPath}";
+
+        GameObject root = PrefabUtility.LoadPrefabContents(WispPrefabPath);
+
+        root.transform.localScale = Vector3.one * WispScale;
+
+        // 영혼답게 — 스스로 빛나고 반쯤 비친다. 단단한 공이면 그냥 구슬로 보인다.
+        Renderer renderer = root.GetComponentInChildren<Renderer>();
+        if (renderer != null) renderer.sharedMaterial = WispSoulMaterial();
+
+        // 빛무리. 발광 머티리얼만으로는 어두운 데서 티가 안 난다.
+        Transform glow = root.transform.Find("영혼빛");
+        if (glow == null)
+        {
+            GameObject lightObject = new GameObject("영혼빛");
+            lightObject.transform.SetParent(root.transform, false);
+            glow = lightObject.transform;
+        }
+        Light light = glow.GetComponent<Light>() ?? glow.gameObject.AddComponent<Light>();
+        light.type = LightType.Point;
+        light.color = WispSoulColor;
+        light.range = WispScale * 4f;
+        light.intensity = 3f;
+
+        PrefabUtility.SaveAsPrefabAsset(root, WispPrefabPath);
+        PrefabUtility.UnloadPrefabContents(root);
+
+        return $"\n위습: 크기 {WispScale:F0}, 영혼 형태(발광·반투명)로 맞췄습니다.";
+    }
+
+    static readonly Color WispSoulColor = new Color(0.55f, 0.85f, 1f);
+
+    // 반투명 발광. URP/Lit의 Surface Type을 Transparent로 돌려야 알파가 먹는다.
+    static Material WispSoulMaterial()
+    {
+        const string path = MaterialFolder + "/wisp_soul.mat";
+        Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (material != null) return material;
+
+        Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+        material = new Material(shader);
+        material.SetColor("_BaseColor", new Color(WispSoulColor.r, WispSoulColor.g, WispSoulColor.b, 0.55f));
+        material.SetColor("_EmissionColor", WispSoulColor * 4f);
+        material.EnableKeyword("_EMISSION");
+        material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+
+        material.SetFloat("_Surface", 1f);            // 0 불투명 / 1 투명
+        material.SetFloat("_Blend", 0f);              // Alpha
+        material.SetFloat("_ZWrite", 0f);
+        material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+
+        AssetDatabase.CreateAsset(material, path);
+        return material;
+    }
 
     static string WireStartingWisps()
     {
@@ -1817,6 +1888,7 @@ public static class MapGenerator
             report += $"\n위습이 생기는 위치(PlayerContext {contexts.Length}개)를 뽑기 섬으로 옮겼습니다.";
 
         report += SetStartingResources(contexts);
+        report += ShapeWispPrefab();
         report += WireStartingWisps();
         report += WireCombineWallet();
         report += FitMinimapToIslands();
