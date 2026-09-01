@@ -9,7 +9,7 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 {
     // 하단 그리드는 가로 3칸 — 원작 화면처럼 윗줄(돈 도박)과 아랫줄(유닛 도박)이 줄로 갈리게,
     // 9칸 중 인덱스 6 다음 두 칸(7,8)은 항상 빈 칸으로 둔다.
-    //   [0 1 2] 중급도박(돈)/고급도박(돈)/빈칸 — 사장님 확정: 초급도박은 없다
+    //   [0 1 2] 10엔 도박/500엔 도박/빈칸 — 사장님 확정: 초급도박은 없다
     //   [3 4 5] 하급/중급/고급 유닛 도박
     //   [6 _ _] 다른세계 유닛 도박
     [SerializeField] List<GamblingOptionData> moneyOptions = new List<GamblingOptionData>();
@@ -38,6 +38,38 @@ public class GamblingShop : MonoBehaviour, ILaneShop
     void Awake()
     {
         owner = GetComponent<OwnedByPlayer>();
+    }
+
+    void OnEnable()
+    {
+        EnemyDummy.OnBossKilled += HandleBossKilled;
+    }
+
+    void OnDisable()
+    {
+        EnemyDummy.OnBossKilled -= HandleBossKilled;
+    }
+
+    // 어느 레인의 보스든(누구 것이든) 죽으면 그 라운드에 도달했다는 팀 전체의 진행이므로,
+    // 이 상점의 주인만 해금한다 — "내 레인 보스를 잡아야만"이 아니다. 4인 플레이면 보스가
+    // 레인마다 하나씩(최대 4마리) 죽어 이 핸들러가 여러 번 불릴 수 있는데, GamblingProgress.Unlock은
+    // HashSet.Add라 몇 번을 불러도 무해하다.
+    void HandleBossKilled(int roundNumber)
+    {
+        GamblingProgress progress = OwnerContext?.GamblingProgress;
+        if (progress == null) return;
+
+        UnlockMatching(moneyOptions, roundNumber, progress);
+        UnlockMatching(unitOptions, roundNumber, progress);
+    }
+
+    static void UnlockMatching(List<GamblingOptionData> options, int roundNumber, GamblingProgress progress)
+    {
+        foreach (GamblingOptionData option in options)
+        {
+            if (option != null && option.requiresUnlock && option.unlockRound == roundNumber)
+                progress.Unlock(option);
+        }
     }
 
     // ---- ILaneShop ----

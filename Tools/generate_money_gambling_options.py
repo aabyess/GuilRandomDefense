@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""도박소 돈 도박 2종(중급도박(돈)/고급도박(돈))의 GamblingOptionData 에셋을 만든다.
+"""도박소 돈 도박 2종(10엔 도박/500엔 도박)의 GamblingOptionData 에셋을 만든다.
 
 사장님 확정 사양(2026-09-01) 그대로 옮긴 것뿐이라 여기 다시 적지 않는다.
-초급도박은 없다 — 사장님이 두 개만 주셨다. 재실행해도 guid는 이름 기반 md5라 안 바뀐다.
+초급도박은 없다 — 사장님이 두 개만 주셨다. 재실행해도 guid는 안 바뀐다.
 
-이름에 "(돈)"을 붙인 이유: 유닛 도박에도 같은 이름(중급도박/고급도박)이 있어서
-하단에 이름이 겹친다. PM이 사장님께 정리를 여쭐 때까지의 임시 구분이다.
+이름은 원래 "중급도박(돈)"/"고급도박(돈)"이었다가 유닛 도박과 이름이 겹쳐서
+사장님이 "10엔도박"/"500엔도박"으로 다시 정했다(2026-09-01). 파일은 git mv로
+옮기고 guid는 그대로 보존했다 — 'id'가 그 원래 식별자다. 이름이 또 바뀌어도
+'id'는 고정해서 guid가 안 흔들리게 한다. 'name'만 표시용으로 바뀐다.
 """
 import os, hashlib
 
@@ -16,14 +18,14 @@ MONEY = 0  # GamblingCategory enum 순서 그대로.
 WOOD = 0   # ResourceType enum 순서 그대로 — Money 카테고리는 이 필드를 안 쓰지만 기본값을 채워둔다.
 
 OPTIONS = [
-    dict(name='중급도박(돈)',
+    dict(id='중급도박(돈)', name='10엔 도박',
          desc='10엔을 걸고 0~100엔을 받는다. 평생 10번만 돌릴 수 있다.',
          cost=10, goldMin=0, goldMax=100,
-         maxUses=10, requiresUnlock=0, unlockHint=''),
-    dict(name='고급도박(돈)',
+         maxUses=10, requiresUnlock=0, unlockHint='', unlockRound=0),
+    dict(id='고급도박(돈)', name='500엔 도박',
          desc='500엔을 걸고 0~4500엔을 받는다. 10라운드 보스를 처치해야 열린다.',
          cost=500, goldMin=0, goldMax=4500,
-         maxUses=0, requiresUnlock=1, unlockHint='10라운드 보스 처치 후 해금'),
+         maxUses=0, requiresUnlock=1, unlockHint='10라운드 보스 처치 후 해금', unlockRound=10),
 ]
 
 HEAD = """%YAML 1.1
@@ -59,8 +61,8 @@ os.makedirs('Assets/Data/Gambling', exist_ok=True)
 
 rows = []
 for o in OPTIONS:
-    ename = f"Gambling_{o['name']}"
-    eguid = guid_for(ename)
+    ename = f"Gambling_{o['name']}"              # 지금 표시 이름 = 파일명
+    eguid = guid_for(f"Gambling_{o['id']}")       # guid는 원래 id로 고정 — 이름이 또 바뀌어도 안 변한다
 
     body = (HEAD.replace("__SCRIPT__", OPTION_SCRIPT).replace("__NAME__", ename) +
             f"  optionName: {o['name']}\n"
@@ -79,7 +81,8 @@ for o in OPTIONS:
             f"  failureWood: 0\n"
             f"  maxUses: {o['maxUses']}\n"
             f"  requiresUnlock: {o['requiresUnlock']}\n"
-            f"  unlockHint: {o['unlockHint']}\n")
+            f"  unlockHint: {o['unlockHint']}\n"
+            f"  unlockRound: {o['unlockRound']}\n")
 
     write(f'Assets/Data/Gambling/{ename}.asset', body, eguid)
     rows.append((o['name'], o['cost'], o['goldMin'], o['goldMax'], o['maxUses'], o['requiresUnlock']))

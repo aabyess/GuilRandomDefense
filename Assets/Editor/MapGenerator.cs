@@ -260,7 +260,7 @@ public static class MapGenerator
         SerializedObject so = new SerializedObject(gambling);
 
         // 슬롯 인덱스가 곧 하단 칸 자리다 — 순서가 화면 배치를 정한다.
-        FillAssetList(so.FindProperty("moneyOptions"), "중급도박(돈)", "고급도박(돈)");
+        FillAssetList(so.FindProperty("moneyOptions"), "10엔 도박", "500엔 도박");
         FillAssetList(so.FindProperty("unitOptions"), "하급도박", "중급도박", "고급도박", "다른세계 도박");
 
         so.FindProperty("gachaTable").objectReferenceValue =

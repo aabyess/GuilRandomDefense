@@ -47,4 +47,7 @@ public class GamblingOptionData : ScriptableObject
     public bool requiresUnlock;
     [Tooltip("잠겨 있을 때 툴팁에 보여줄 이유 (예: \"10라운드 보스 처치 후 해금\")")]
     public string unlockHint;
+    [Tooltip("이 라운드의 보스(EnemyData.isBoss)가 죽으면 해금된다. 0이면 보스 해금 대상이 아니다 " +
+             "(다른 방식으로 해금하려면 requiresUnlock만 켜고 이건 0으로 둔 채 Unlock을 직접 부른다)")]
+    public int unlockRound;
 }

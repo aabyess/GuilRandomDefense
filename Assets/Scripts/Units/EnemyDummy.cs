@@ -10,6 +10,19 @@ public class EnemyDummy : MonoBehaviour
 
     public static readonly List<EnemyDummy> Active = new List<EnemyDummy>();
 
+    // 라운드 보스(EnemyData.isBoss)가 죽으면 몇 라운드였는지를 실어 알린다. 보스가 여러
+    // 라운드에 걸쳐 여럿이라(현재 9종 예정) "보스가 죽었다"만으로는 부족해서 라운드 번호를 싣는다.
+    // TakeDamage의 사망 처리 흐름 안에서는 이 신호만 보내고, 실제 처리(도박소 해금 등)는
+    // 구독하는 쪽이 한다 — 사망 처리는 가벼워야 한다.
+    public static event System.Action<int> OnBossKilled;
+
+    static RoundManager roundManagerCache;
+    static RoundManager RoundManagerRef => roundManagerCache != null
+        ? roundManagerCache
+        : roundManagerCache = FindFirstObjectByType<RoundManager>();
+
+    public int SpawnRound { get; private set; }
+
     public float Hp => hp;
     public float MaxHp { get; private set; }
     public float HpRatio => MaxHp > 0f ? Mathf.Clamp01(hp / MaxHp) : 0f;
@@ -78,6 +91,11 @@ public class EnemyDummy : MonoBehaviour
             hp = enemyData.hp;
             MaxHp = enemyData.hp;
         }
+
+        // Instantiate는 동기 호출이라(Awake가 그 안에서 바로 돈다) Update가 끼어들 틈이 없다 —
+        // 지금 CurrentRound가 곧 이 적을 내보낸 웨이브의 라운드다. WaveSpawner를 거치지 않고
+        // 이렇게 읽어서, 라운드 번호를 실어 나르려고 그 파일을 고칠 필요가 없다.
+        SpawnRound = RoundManagerRef != null ? RoundManagerRef.CurrentRound : 0;
     }
 
     void Awake()
@@ -126,6 +144,12 @@ public class EnemyDummy : MonoBehaviour
             if (data != null && RewardDistributor.Instance != null)
             {
                 RewardDistributor.Instance.GrantKillReward(data, killerPlayerId);
+            }
+
+            // 신호만 보낸다 — 실제 처리(도박소 해금 등)는 구독하는 쪽 몫이다.
+            if (data != null && data.isBoss)
+            {
+                OnBossKilled?.Invoke(SpawnRound);
             }
 
             Destroy(gameObject);
