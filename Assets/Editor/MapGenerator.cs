@@ -1014,6 +1014,7 @@ public static class MapGenerator
 
         report += WireCombineWallet();
         report += MoveWarehousesToIslands();
+        report += WireAllRecipes();
         report += SetUpCamera();
         report += EnsureFourPlayers();
         report += WireLanePaths(lanePaths);
@@ -1038,6 +1039,36 @@ public static class MapGenerator
         wallet.objectReferenceValue = local;
         so.ApplyModifiedProperties();
         return "\nCombineSystem에 골드 지갑을 연결했습니다.";
+    }
+
+    // 레시피는 199개다. 테스트용 13개만 붙어 있으면 안흔함까지밖에 못 만든다.
+    // 맵 생성은 초기화 동작이니 여기서 전부 걸어준다.
+    static string WireAllRecipes()
+    {
+        CombineSystem combine = Object.FindFirstObjectByType<CombineSystem>(FindObjectsInactive.Include);
+        if (combine == null) return "";
+
+        List<CombineRecipe> recipes = AssetDatabase
+            .FindAssets("t:CombineRecipe", new[] { "Assets/Data/Recipes" })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .OrderBy(path => path, System.StringComparer.Ordinal)
+            .Select(AssetDatabase.LoadAssetAtPath<CombineRecipe>)
+            .Where(recipe => recipe != null)
+            .ToList();
+
+        SerializedObject so = new SerializedObject(combine);
+        SerializedProperty list = so.FindProperty("recipes");
+        int before = list.arraySize;
+
+        list.ClearArray();
+        for (int i = 0; i < recipes.Count; i++)
+        {
+            list.InsertArrayElementAtIndex(i);
+            list.GetArrayElementAtIndex(i).objectReferenceValue = recipes[i];
+        }
+        so.ApplyModifiedProperties();
+
+        return $"\n조합 레시피 {before}개 → {recipes.Count}개로 연결했습니다.";
     }
 
     // 창고는 이제 섬 위에 있다. 플레이어 오브젝트에 남아 있던 옛 창고를 지운다 —
