@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
@@ -72,6 +73,14 @@ public class GameHud : MonoBehaviour
     int unitCommandSlotCount;
     float nextUnitCommandDimRefreshTime;
 
+    // 도움소 선택 시 같은 12칸을 스킬 표시로 돌려쓴다. currentShop이 non-null이면
+    // RefreshUnitCommandCards가 조합 로직 대신 이 경로로 빠진다.
+    static readonly Color SupportSkillColor = new Color(0.25f, 0.55f, 0.9f, 0.9f);
+    readonly SupportSkillData[] unitCommandSkills = new SupportSkillData[CommandSlotCount];
+    SupportShop currentShop;
+    SupportSkillData pendingSkill;   // 커서로 대상을 찍기를 기다리는 스킬 (null이면 대기 아님)
+    int targetingStartFrame;        // 스킬을 고른 바로 그 클릭이 대상 클릭으로 다시 잡히지 않게
+
     // 값이 안 바뀌면 문자열을 새로 만들지 않기 위한 마지막 표시값 캐시.
     int lastGold = int.MinValue;
     int lastWood = int.MinValue;
@@ -126,6 +135,7 @@ public class GameHud : MonoBehaviour
         RefreshStoryPanel();
         RefreshUnitCommandCards();
         RefreshInventoryPanel();
+        RefreshSupportSkillTargeting();
     }
 
     void OnDestroy()
@@ -634,6 +644,12 @@ public class GameHud : MonoBehaviour
 
     void OnUnitCommandSlotClicked(int index)
     {
+        if (currentShop != null)
+        {
+            OnSupportSkillSlotClicked(index);
+            return;
+        }
+
         if (index < 0 || index >= unitCommandRecipes.Length) return;
 
         CombineRecipe recipe = unitCommandRecipes[index];
@@ -649,6 +665,67 @@ public class GameHud : MonoBehaviour
             nextUnitCommandDimRefreshTime = Time.time + RecipeRefreshInterval;
             HideCombineTooltip();
         }
+    }
+
+    // 스킬 칸 클릭. 마나포션(ManaRestore)은 위치·대상이 필요 없어 그 자리에서 바로 시전하고,
+    // 나머지는 커서로 지점/유닛을 찍을 때까지 기다린다(RefreshSupportSkillTargeting).
+    void OnSupportSkillSlotClicked(int index)
+    {
+        if (index < 0 || index >= unitCommandSkills.Length) return;
+
+        SupportSkillData skill = unitCommandSkills[index];
+        if (skill == null || currentShop == null || !currentShop.CanCast(skill)) return;
+
+        if (skill.effect == SupportSkillEffect.ManaRestore)
+        {
+            currentShop.TryCastSelf(skill);
+            RefreshSupportSkillAffordability();
+            return;
+        }
+
+        pendingSkill = skill;
+        targetingStartFrame = Time.frameCount;
+    }
+
+    // 스킬을 고른 뒤 다음 클릭을 기다린다. 우클릭이면 취소. uGUI 위 클릭(다른 버튼 등)은
+    // SelectionManager와 같은 이유로 무시한다 — 스킬 버튼 클릭 그 자체가 targetingStartFrame
+    // 이전 프레임이라 같은 클릭이 대상 지정으로 다시 잡히는 일은 없다.
+    void RefreshSupportSkillTargeting()
+    {
+        if (pendingSkill == null || currentShop == null) return;
+        if (Mouse.current == null) { pendingSkill = null; return; }
+
+        if (Mouse.current.rightButton.wasPressedThisFrame)
+        {
+            pendingSkill = null;
+            return;
+        }
+
+        if (!Mouse.current.leftButton.wasPressedThisFrame) return;
+        if (Time.frameCount <= targetingStartFrame) return;
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
+
+        Camera cam = Camera.main;
+        if (cam == null) return;
+
+        Ray ray = cam.ScreenPointToRay(Mouse.current.position.ReadValue());
+        SupportSkillData skill = pendingSkill;
+        SupportShop shop = currentShop;
+        pendingSkill = null;
+
+        if (!Physics.Raycast(ray, out RaycastHit hit, 500f)) return;
+
+        if (skill.targetKind == SupportSkillTargetKind.Unit)
+        {
+            if (hit.collider.TryGetComponent(out Selectable selectable))
+                shop.TryCastOnUnit(skill, selectable.gameObject);
+        }
+        else
+        {
+            shop.TryCastOnGround(skill, hit.point);
+        }
+
+        RefreshSupportSkillAffordability();
     }
 
     void OnUnitCommandSlotHoverEnter(int index)
@@ -668,12 +745,46 @@ public class GameHud : MonoBehaviour
         SelectionManager selection = Selection;
         int count = selection != null ? selection.Selected.Count : 0;
 
+        SupportShop shop = null;
         UnitData selectedData = null;
+
         if (count == 1)
         {
             Selectable single = selection.Selected[0];
-            if (single != null && single.TryGetComponent(out UnitIdentity identity))
-                selectedData = identity.Data;
+            if (single != null)
+            {
+                if (single.TryGetComponent(out SupportShop shopComponent))
+                    shop = shopComponent;
+                else if (single.TryGetComponent(out UnitIdentity identity))
+                    selectedData = identity.Data;
+            }
+        }
+
+        // 도움소가 선택된 동안은 조합 카드 로직(조합 레시피 캐시·흐림 처리)을 아예 건드리지 않는다 —
+        // 12칸의 내용·클릭 의미만 스킬로 바뀐다.
+        if (shop != currentShop)
+        {
+            currentShop = shop;
+            pendingSkill = null;
+            RebuildSupportSkillSlots(shop);
+
+            if (shop == null)
+            {
+                // 도움소 모드에서 빠져나온 직후 — 직전과 같은 유닛을 다시 선택해도
+                // 조합 카드 쪽이 강제로 다시 그려지도록 캐시를 무효화한다.
+                lastCommandUnitData = null;
+                unitCommandSlotCount = 0;
+            }
+        }
+
+        if (shop != null)
+        {
+            if (Time.time >= nextUnitCommandDimRefreshTime)
+            {
+                nextUnitCommandDimRefreshTime = Time.time + RecipeRefreshInterval;
+                RefreshSupportSkillAffordability();
+            }
+            return;
         }
 
         if (selectedData != lastCommandUnitData)
@@ -687,6 +798,55 @@ public class GameHud : MonoBehaviour
 
         nextUnitCommandDimRefreshTime = Time.time + RecipeRefreshInterval;
         RefreshUnitCommandAffordability();
+    }
+
+    // 스킬도 조합 결과와 같은 9칸 순서(UnitCommandResultSlotOrder)를 그대로 재사용한다 —
+    // 0~2번(공격/정지/모으기)은 도움소에서 의미가 없지만 굳이 숨기지 않고 그대로 둔다.
+    void RebuildSupportSkillSlots(SupportShop shop)
+    {
+        for (int i = 0; i < UnitCommandResultSlotOrder.Length; i++)
+        {
+            int slot = UnitCommandResultSlotOrder[i];
+            unitCommandSkills[slot] = null;
+            unitCommandSlotNames[slot].text = "";
+            unitCommandSlotBackgrounds[slot].color = Color.clear;
+        }
+
+        if (shop == null) return;
+
+        IReadOnlyList<SupportSkillData> skills = shop.Skills;
+        int shown = Mathf.Min(skills.Count, UnitCommandResultSlotOrder.Length);
+
+        for (int i = 0; i < shown; i++)
+        {
+            SupportSkillData skill = skills[i];
+            if (skill == null) continue;
+
+            int slot = UnitCommandResultSlotOrder[i];
+            unitCommandSkills[slot] = skill;
+            unitCommandSlotNames[slot].text = skill.skillName;
+            unitCommandSlotBackgrounds[slot].color = SupportSkillColor;
+        }
+
+        RefreshSupportSkillAffordability();
+    }
+
+    // 마나/골드/쿨다운 중 하나라도 부족하면 알파만 낮춘다 — 조합 카드의 흐림 처리와 같은 패턴.
+    void RefreshSupportSkillAffordability()
+    {
+        if (currentShop == null) return;
+
+        for (int i = 0; i < UnitCommandResultSlotOrder.Length; i++)
+        {
+            int slot = UnitCommandResultSlotOrder[i];
+            SupportSkillData skill = unitCommandSkills[slot];
+            if (skill == null) continue;
+
+            bool canCast = currentShop.CanCast(skill);
+            Color color = SupportSkillColor;
+            color.a = canCast ? color.a : 0.35f;
+            unitCommandSlotBackgrounds[slot].color = color;
+        }
     }
 
     void RebuildUnitCommandSlots(UnitData selectedData)

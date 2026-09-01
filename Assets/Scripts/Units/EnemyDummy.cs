@@ -21,6 +21,29 @@ public class EnemyDummy : MonoBehaviour
     // 스토리 건물은 변신 전까지 죽지 않는다. 피해는 그대로 쌓이고, 변신할 때 남은 체력이 보스 체력이 된다.
     bool invulnerable;
 
+    // 스턴·구속을 거는 쪽이 각자 "원래 켜져 있었나"를 기억했다가 되돌리면, 효과가 겹쳤을 때
+    // 나중에 끝나는 쪽이 "꺼져 있었다"를 복원해 적이 영영 멈춘다. 겹침 수만 세고,
+    // 0이 될 때만 다시 움직이게 한다.
+    int freezeCount;
+    WaypointMover mover;
+
+    public void AddFreeze()
+    {
+        freezeCount++;
+        ApplyFreeze();
+    }
+
+    public void RemoveFreeze()
+    {
+        freezeCount = Mathf.Max(0, freezeCount - 1);
+        ApplyFreeze();
+    }
+
+    void ApplyFreeze()
+    {
+        if (mover != null) mover.enabled = freezeCount == 0;
+    }
+
     public void SetInvulnerable(bool value)
     {
         invulnerable = value;
@@ -59,6 +82,8 @@ public class EnemyDummy : MonoBehaviour
 
     void Awake()
     {
+        mover = GetComponent<WaypointMover>();
+
         // Initialize()를 거치지 않고 인스펙터 기본값(hp)만으로 씬에 배치된 경우를 위한 폴백 —
         // 이게 없으면 MaxHp가 0으로 남아 체력바가 항상 빈 채로 표시된다.
         if (MaxHp <= 0f)
