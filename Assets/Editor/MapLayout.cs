@@ -61,7 +61,7 @@ public static class MapLayout
         new Island("PunkHazard",        30f,  56f, 56f, 40f, "event"),
         new Island("ImmortalDisplay",   98f,  46f, 60f, 30f, "display"),
         new Island("TranscendDisplay",  98f,  12f, 60f, 24f, "display"),
-        new Island("StoryZone",       -138f, -46f, 54f, 54f, "story"),
+        new Island("StoryZone",       -147f, -46f, 84f, 70f, "story"),
         new Island("GachaIsland",      -52f, -50f, 74f, 130f, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
         new Island("CombineTable",      48f, -48f, 116f, 80f, "combine"),

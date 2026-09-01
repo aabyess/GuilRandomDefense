@@ -601,8 +601,10 @@ public static class MapGenerator
         platform.name = "스토리_단상";
         platform.transform.SetParent(parent, false);
         platform.transform.position = new Vector3(island.center.x, MapLayout.IslandTop + 0.15f, island.center.y);
-        platform.transform.localScale = new Vector3(16f, 0.3f, 16f);
-        Paint(platform, "rock", 16f, 16f);
+        // 단상은 섬 크기에 비례하게 — 섬을 키울 때마다 따로 고치지 않아도 되게.
+        float platformSize = Mathf.Min(island.size.x, island.size.y) * 0.35f;
+        platform.transform.localScale = new Vector3(platformSize, 0.3f, platformSize);
+        Paint(platform, "rock", platformSize, platformSize);
         Object.DestroyImmediate(platform.GetComponent<Collider>());
 
         GameObject spawn = new GameObject("스토리_등장지점");
