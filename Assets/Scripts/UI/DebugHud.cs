@@ -20,7 +20,10 @@ public class DebugHud : MonoBehaviour
     UnitInventory Inventory => unitInventory != null ? unitInventory : PlayerContext.Local != null ? PlayerContext.Local.UnitInventory : null;
     Warehouse Warehouse => warehouse != null ? warehouse : PlayerContext.Local != null ? PlayerContext.Local.Warehouse : null;
 
-    bool visible = true;
+    // 정식 HUD가 골드·라운드·적 수·인벤토리를 모두 보여주므로 기본은 접어둔다.
+    // 지우지 않고 남기는 이유: 유닛 스탯이 적용됐는지, 사거리 안인지 같은 건
+    // 화면만 봐서는 알 수 없고, 실제로 이 패널로 여러 번 원인을 찾았다.
+    bool visible = false;
 
     void Update()
     {

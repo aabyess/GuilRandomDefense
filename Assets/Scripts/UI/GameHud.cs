@@ -52,14 +52,6 @@ public class GameHud : MonoBehaviour
     const float RecipeRefreshInterval = 0.4f;
     static readonly List<CombineRecipe> EmptyRecipes = new List<CombineRecipe>();
 
-    readonly GameObject[] combineCardRoots = new GameObject[CommandSlotCount];
-    readonly Image[] combineCardBackgrounds = new Image[CommandSlotCount];
-    readonly Text[] combineCardNames = new Text[CommandSlotCount];
-    readonly Text[] combineCardOverflowTexts = new Text[CommandSlotCount];
-    readonly CombineRecipe[] combineCardRecipes = new CombineRecipe[CommandSlotCount];
-    readonly List<CombineRecipe> lastAvailableRecipes = new List<CombineRecipe>();
-    float nextRecipeRefreshTime;
-
     // 조합 카드 위에 뜨는 조합식 툴팁 — 카드마다 만들지 않고 하나를 공유해서 위치·내용만 바꾼다.
     readonly StringBuilder tooltipBuilder = new StringBuilder(256);
     GameObject combineTooltipObject;
@@ -132,7 +124,6 @@ public class GameHud : MonoBehaviour
         RefreshTopBar();
         RefreshTeamPanel();
         RefreshStoryPanel();
-        RefreshCombineCards();
         RefreshUnitCommandCards();
         RefreshInventoryPanel();
     }
@@ -175,12 +166,8 @@ public class GameHud : MonoBehaviour
         SetAnchors(minimapPanel, new Vector2(0.01f, 0.05f), new Vector2(0.15f, 0.95f));
         BuildMinimap(minimapPanel);
 
-        RectTransform combineCardPanel = CreatePanel(bar, "CombineCardPanel", new Color(1f, 1f, 1f, 0.05f));
-        SetAnchors(combineCardPanel, new Vector2(0.16f, 0.05f), new Vector2(0.42f, 0.95f));
-        BuildCombineCardGrid(combineCardPanel);
-
         RectTransform infoPanel = CreatePanel(bar, "UnitInfoPanel", new Color(1f, 1f, 1f, 0.05f));
-        SetAnchors(infoPanel, new Vector2(0.43f, 0.05f), new Vector2(0.65f, 0.95f));
+        SetAnchors(infoPanel, new Vector2(0.16f, 0.05f), new Vector2(0.65f, 0.95f));
         unitInfoText = CreateLabel(infoPanel, "UnitInfoText", "선택된 유닛 없음");
         unitInfoText.alignment = TextAnchor.UpperLeft;
         unitInfoText.fontSize = 30;
@@ -445,62 +432,7 @@ public class GameHud : MonoBehaviour
         }
     }
 
-    // 조합 카드 = 지금 조합 가능한 레시피. 12칸을 미리 만들어두고(BuildCombineCard) 이후로는
-    // RefreshCombineCards가 내용·활성 상태만 바꾼다 — 유닛 카드와 같은 패턴.
-    void BuildCombineCardGrid(RectTransform parent)
-    {
-        GridLayoutGroup grid = parent.gameObject.AddComponent<GridLayoutGroup>();
-        grid.cellSize = new Vector2(70f, 70f);
-        grid.spacing = new Vector2(6f, 6f);
-        grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-        grid.constraintCount = CommandColumns;
-        grid.childAlignment = TextAnchor.MiddleCenter;
 
-        for (int i = 0; i < CommandSlotCount; i++)
-            BuildCombineCard(i, parent);
-    }
-
-    void BuildCombineCard(int index, Transform parent)
-    {
-        GameObject card = new GameObject($"CombineSlot{index}", typeof(RectTransform), typeof(Image), typeof(Button));
-        card.transform.SetParent(parent, false);
-
-        Image background = card.GetComponent<Image>();
-        background.raycastTarget = true;
-        background.color = new Color(1f, 1f, 1f, 0.12f);
-
-        int capturedIndex = index;
-        card.GetComponent<Button>().onClick.AddListener(() => OnCombineCardClicked(capturedIndex));
-
-        EventTrigger trigger = card.AddComponent<EventTrigger>();
-        AddTriggerEntry(trigger, EventTriggerType.PointerEnter, _ => OnCombineCardHoverEnter(capturedIndex));
-        AddTriggerEntry(trigger, EventTriggerType.PointerExit, _ => OnCombineCardHoverExit());
-
-        Text nameText = CreateLabel(card.transform, "Name", "");
-        nameText.raycastTarget = false;
-        nameText.fontSize = 11;
-        nameText.horizontalOverflow = HorizontalWrapMode.Wrap;
-
-        Text overflowText = CreateLabel(card.transform, "Overflow", "");
-        overflowText.raycastTarget = false;
-        overflowText.fontSize = 14;
-        overflowText.fontStyle = FontStyle.Bold;
-        overflowText.color = Color.white;
-        RectTransform overflowRect = overflowText.rectTransform;
-        overflowRect.anchorMin = new Vector2(0.55f, 0.7f);
-        overflowRect.anchorMax = new Vector2(1f, 1f);
-        overflowRect.offsetMin = Vector2.zero;
-        overflowRect.offsetMax = Vector2.zero;
-        overflowText.gameObject.SetActive(false);
-
-        // 조합 가능한 게 없다고 가정하고 시작 — 첫 RefreshCombineCards가 실제 내용으로 채운다.
-        card.SetActive(false);
-
-        combineCardRoots[index] = card;
-        combineCardBackgrounds[index] = background;
-        combineCardNames[index] = nameText;
-        combineCardOverflowTexts[index] = overflowText;
-    }
 
     static void AddTriggerEntry(EventTrigger trigger, EventTriggerType type, UnityEngine.Events.UnityAction<BaseEventData> callback)
     {
@@ -509,96 +441,14 @@ public class GameHud : MonoBehaviour
         trigger.triggers.Add(entry);
     }
 
-    void OnCombineCardClicked(int index)
-    {
-        if (index < 0 || index >= combineCardRecipes.Length) return;
 
-        CombineRecipe recipe = combineCardRecipes[index];
-        if (recipe == null) return;
-
-        CombineSystem system = CombineSystemRef;
-        if (system == null) return;
-
-        if (system.TryCombine(recipe))
-        {
-            // 인벤토리가 바뀌어 목록이 달라졌을 것 — 다음 정기 갱신(최대 0.4초)까지 기다리지 않고 즉시 반영.
-            nextRecipeRefreshTime = 0f;
-            RefreshCombineCards();
-            HideCombineTooltip(); // 방금 조합에 쓴 재료 기준 조합식이라 그대로 두면 정보가 낡는다.
-        }
-    }
-
-    void OnCombineCardHoverEnter(int index)
-    {
-        if (index < 0 || index >= combineCardRecipes.Length) return;
-
-        CombineRecipe recipe = combineCardRecipes[index];
-        if (recipe == null) return;
-
-        ShowCombineTooltip(recipe, (RectTransform)combineCardRoots[index].transform);
-    }
 
     void OnCombineCardHoverExit()
     {
         HideCombineTooltip();
     }
 
-    // 0.3~0.5초에 한 번만 CombineSystem.GetAvailableRecipes()를 부른다 — 레시피 199개를
-    // 매 프레임 전부 검사하면 안 된다. 목록이 이전과 같으면(개수·순서 동일) 카드도 안 다시 그린다.
-    void RefreshCombineCards()
-    {
-        if (Time.time < nextRecipeRefreshTime) return;
-        nextRecipeRefreshTime = Time.time + RecipeRefreshInterval;
 
-        CombineSystem system = CombineSystemRef;
-        List<CombineRecipe> available = system != null ? system.GetAvailableRecipes() : EmptyRecipes;
-
-        if (!AvailableRecipesChanged(available)) return;
-
-        lastAvailableRecipes.Clear();
-        lastAvailableRecipes.AddRange(available);
-
-        int shownCount = Mathf.Min(available.Count, CommandSlotCount);
-        int overflow = Mathf.Max(0, available.Count - CommandSlotCount);
-
-        for (int i = 0; i < CommandSlotCount; i++)
-        {
-            CombineRecipe recipe = i < shownCount ? available[i] : null;
-
-            if (recipe != null && recipe.result == null)
-            {
-                Debug.LogWarning($"GameHud: {recipe.commandId} 레시피의 result가 비어있어 카드를 건너뜁니다.");
-                recipe = null;
-            }
-
-            combineCardRecipes[i] = recipe;
-
-            if (recipe == null)
-            {
-                combineCardRoots[i].SetActive(false);
-                continue;
-            }
-
-            combineCardRoots[i].SetActive(true);
-            combineCardBackgrounds[i].color = GetGradeColor(recipe.result.grade);
-            combineCardNames[i].text = recipe.result.unitName;
-
-            bool showOverflow = overflow > 0 && i == CommandSlotCount - 1;
-            combineCardOverflowTexts[i].text = showOverflow ? $"+{overflow}" : "";
-            combineCardOverflowTexts[i].gameObject.SetActive(showOverflow);
-        }
-    }
-
-    bool AvailableRecipesChanged(List<CombineRecipe> available)
-    {
-        if (available.Count != lastAvailableRecipes.Count) return true;
-
-        for (int i = 0; i < available.Count; i++)
-            if (available[i] != lastAvailableRecipes[i])
-                return true;
-
-        return false;
-    }
 
     // 하단 바 안에 그리면 그 좁은 영역 안에서 잘리므로, 카드 위쪽에 절대 좌표로 띄운다.
     // ScreenSpaceOverlay 캔버스라 RectTransform.position이 곧 화면 픽셀 좌표라 이렇게 계산할 수 있다.
