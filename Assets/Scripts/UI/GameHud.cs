@@ -746,6 +746,11 @@ public class GameHud : MonoBehaviour
                 unitCommandSlotNames[i].text = placeholderLabels[i];
                 unitCommandSlotButtons[i].interactable = false; // 스킬 시스템 없어 동작 없는 칸 — 절대 안 채워짐
             }
+            else
+            {
+                // 조합 결과가 들어올 칸. 채워지기 전까지는 보이지 않게 둔다.
+                unitCommandSlotBackgrounds[i].color = Color.clear;
+            }
         }
     }
 
@@ -840,8 +845,10 @@ public class GameHud : MonoBehaviour
         {
             int slot = UnitCommandResultSlotOrder[i];
             unitCommandRecipes[slot] = null;
-            unitCommandSlotBackgrounds[slot].color = UnitCommandDefaultColor;
             unitCommandSlotNames[slot].text = "";
+            // 빈 칸은 투명하게 둔다. GridLayoutGroup은 비활성 자식을 건너뛰기 때문에
+            // SetActive(false)로 숨기면 뒤 칸이 앞으로 당겨져 슬롯 번호와 실제 자리가 어긋난다.
+            unitCommandSlotBackgrounds[slot].color = Color.clear;
         }
 
         unitCommandSlotCount = 0;
