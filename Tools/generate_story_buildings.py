@@ -52,6 +52,7 @@ MOB_PREFAB_FILEID = '3685248672397471059'
 BASE_HP, HP_GROWTH = 10.0, 1.09
 BASE_COUNT, COUNT_STEP, MAX_COUNT = 15, 3, 35
 BOSS_HP_MULTIPLIER = 15.0
+MIN_HP_GROWTH = 1.15   # 뒤 스토리는 앞 스토리보다 최소 이만큼 세야 한다
 ROUND_SECONDS = 28.0
 TOTAL_ROUNDS = 75
 STORY_COUNT = 13
@@ -136,13 +137,23 @@ rounds = transform_rounds(len(stories))
 
 rows = []
 prev_round = 0
+prev_building_hp = 0.0
 for (order, name, path), rnd in zip(stories, rounds):
     window = rnd - prev_round
     prev_round = rnd
 
     boss_hp = mob_hp(rnd) * BOSS_HP_MULTIPLIER
     pre_damage = team_dps(rnd) * STORY_DPS_SHARE * window * ROUND_SECONDS
-    building_hp = round(pre_damage + boss_hp, 1)
+    building_hp = pre_damage + boss_hp
+
+    # 스토리 간격이 5라운드일 때와 10라운드일 때 누적 피해가 달라서, 간격이 넓은 앞 스토리가
+    # 뒤 스토리보다 세지는 역전이 생긴다(4번>5번, 10번>11번). 뒤로 갈수록 세지는 게
+    # 플레이어가 기대하는 순서라, 앞 스토리보다 낮아지지 않게 올려 맞춘다.
+    if building_hp < prev_building_hp * MIN_HP_GROWTH:
+        building_hp = prev_building_hp * MIN_HP_GROWTH
+
+    prev_building_hp = building_hp
+    building_hp = round(building_hp, 1)
 
     safe = name.replace(' ', '_').replace('(', '').replace(')', '')
     ename = f"Enemy_Story{order:02d}_{safe}"
