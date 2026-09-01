@@ -177,6 +177,9 @@ public static class ArtBinder
             return;
         }
 
+        // 매번 새로 만든다. 남아 있던 프리팹을 지우지 않으면 이름이 겹치지 않는 옛 프리팹이
+        // 계속 데이터에 물려 있게 된다(모델을 지웠는데 그 모습이 계속 나오는 경우).
+        if (AssetDatabase.IsValidFolder(GeneratedFolder)) AssetDatabase.DeleteAsset(GeneratedFolder);
         EnsureFolder(GeneratedFolder);
 
         string report = MakeHumanoid();
@@ -425,13 +428,10 @@ public static class ArtBinder
     {
         if (cache.TryGetValue(model, out GameObject cached)) return cached;
 
+        // 이미 있어도 다시 만든다. 재사용하면 크기·애니메이터 설정을 바꿔도 옛 프리팹이 그대로
+        // 쓰여서, 손으로 폴더를 지워야만 반영된다 — 안 지우면 조용히 옛것이 도는 함정이 된다.
+        // 한 번 실행 안에서는 cache가 중복 생성을 막는다.
         string path = $"{GeneratedFolder}/{prefix}_{model.name}.prefab";
-        GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-        if (existing != null)
-        {
-            cache[model] = existing;
-            return existing;
-        }
 
         GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(template);
         PrefabUtility.UnpackPrefabInstance(instance, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
