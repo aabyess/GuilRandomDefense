@@ -27,6 +27,48 @@ public class CombineSystem : MonoBehaviour
     readonly List<UnitData> planUnits = new List<UnitData>();
     readonly List<ItemData> planItems = new List<ItemData>();
 
+    readonly List<CombineRecipe> startsWithBuffer = new List<CombineRecipe>();
+
+    /// <summary>
+    /// 이 유닛이 <b>첫 번째 재료</b>인 레시피들. 조합식 표에서 맨 왼쪽에 서는 유닛이 기준이다.
+    /// 재료가 갖춰졌는지는 보지 않는다 — 뭘 만들 수 있는지 보여주는 용도라, 지금 못 만들어도 알려줘야 한다.
+    /// <b>돌려주는 리스트는 재사용된다.</b>
+    /// </summary>
+    public List<CombineRecipe> GetRecipesStartingWith(UnitData unit)
+    {
+        startsWithBuffer.Clear();
+        if (unit == null || recipes == null) return startsWithBuffer;
+
+        foreach (CombineRecipe recipe in recipes)
+        {
+            if (recipe == null || recipe.result == null) continue;
+            if (FirstUnitIngredient(recipe) != unit) continue;
+
+            startsWithBuffer.Add(recipe);
+        }
+
+        return startsWithBuffer;
+    }
+
+    static UnitData FirstUnitIngredient(CombineRecipe recipe)
+    {
+        if (recipe.ingredients == null) return null;
+
+        foreach (RecipeIngredient ingredient in recipe.ingredients)
+        {
+            if (ingredient == null || ingredient.kind != IngredientKind.SpecificUnit) continue;
+            return ingredient.unit;
+        }
+
+        return null;
+    }
+
+    /// <summary>재료가 갖춰져 지금 바로 만들 수 있는지.</summary>
+    public bool CanCombineNow(CombineRecipe recipe)
+    {
+        return recipe != null && CanAfford(recipe, out _, out _);
+    }
+
     /// <summary>
     /// 지금 만들 수 있는 레시피. <b>돌려주는 리스트는 재사용된다</b> —
     /// 다음 호출에서 내용이 바뀌므로, 보관하려면 복사해야 한다.
