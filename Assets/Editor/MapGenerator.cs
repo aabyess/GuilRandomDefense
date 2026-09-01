@@ -260,7 +260,7 @@ public static class MapGenerator
     const float RecipeSlot = 4.5f;      // 유닛 한 칸
     const float RecipeGap = 1.4f;       // 재료 사이 간격
     const float RecipeArrowGap = 4.0f;  // 재료 묶음과 결과 사이
-    const float RecipeRowHeight = 6.0f;
+    const float RecipeRowHeight = 7.0f;
     const float RecipeSlotHeight = 3.2f;
 
     // 조합 비용(코인·목재·행운토큰)을 줄 왼쪽에 세우는 아이콘.
@@ -269,6 +269,8 @@ public static class MapGenerator
     const float CostGap = 1.2f;
     const float CostBlockGap = 2.0f;   // 비용 묶음과 첫 재료 사이
     const float ColumnPad = 2.0f;      // 열 바닥판 좌우 여백
+    // 줄과 줄 사이 칸막이. 유닛 칸과 같은 높이로 세워야 "한 줄이 한 조합식"으로 끊겨 읽힌다.
+    const float RowDividerThickness = 0.7f;
 
     static string BuildCombineColumns(GameObject table)
     {
@@ -379,13 +381,18 @@ public static class MapGenerator
                 Paint(strip, "combine", columnWidth, blockDepth);
                 Object.DestroyImmediate(strip.GetComponent<Collider>());
 
-                foreach (CombineRecipe recipe in chunk)
+                for (int r = 0; r < chunk.Count; r++)
                 {
-                    PlaceRecipeRow(parent, recipe, columnLeft + ColumnPad + RecipeSlot * 0.5f, rowZ);
+                    // 줄 사이에만 세운다. 블록 위아래 끝은 바닥판 가장자리가 이미 경계다.
+                    if (r > 0)
+                        BuildRowDivider(parent, $"조합표_줄칸막이_{grade.KoreanName()}",
+                            columnLeft + columnWidth * 0.5f, rowZ + RecipeRowHeight * 0.5f, columnWidth);
+
+                    PlaceRecipeRow(parent, chunk[r], columnLeft + ColumnPad + RecipeSlot * 0.5f, rowZ);
                     rowZ -= RecipeRowHeight;
                     placed++;
 
-                    if (sample == null) sample = DescribeRecipe(recipe);
+                    if (sample == null) sample = DescribeRecipe(chunk[r]);
                 }
             }
 
@@ -559,6 +566,19 @@ public static class MapGenerator
         else PaintSolid(icon, color);
 
         Object.DestroyImmediate(icon.GetComponent<Collider>());
+    }
+
+    static void BuildRowDivider(Transform parent, string name, float centerX, float z, float width)
+    {
+        GameObject divider = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        divider.name = name;
+        divider.transform.SetParent(parent, false);
+        divider.transform.position = new Vector3(centerX, MapLayout.IslandTop + RecipeSlotHeight * 0.5f, z);
+        divider.transform.localScale = new Vector3(width, RecipeSlotHeight, RowDividerThickness);
+        Paint(divider, "rock", width, RowDividerThickness);
+        // 등급을 가르는 벽과 달리 이건 눈으로 보는 경계다. 149줄이 전부 막히면
+        // 표 위를 걸을 수 없고 NavMesh가 줄 사이마다 끊긴다.
+        Object.DestroyImmediate(divider.GetComponent<Collider>());
     }
 
     static void PlaceRecipeSlot(Transform parent, float x, float z, string label, Color color, string prefix)
@@ -855,9 +875,13 @@ public static class MapGenerator
                 Paint(strip, "combine", blockWidth, blockDepth);
                 Object.DestroyImmediate(strip.GetComponent<Collider>());
 
-                foreach (CombineRecipe recipe in recipes)
+                for (int r = 0; r < recipes.Count; r++)
                 {
-                    PlaceRecipeRow(parent, recipe, displayLeft + ColumnPad + CostSlot * 0.5f, displayZ,
+                    if (r > 0)
+                        BuildRowDivider(parent, $"뽑기섬_줄칸막이_{grade.KoreanName()}",
+                            displayLeft + blockWidth * 0.5f, displayZ + RecipeRowHeight * 0.5f, blockWidth);
+
+                    PlaceRecipeRow(parent, recipes[r], displayLeft + ColumnPad + CostSlot * 0.5f, displayZ,
                                    showCosts: true);
                     displayZ -= RecipeRowHeight;
                     recipeRows++;
