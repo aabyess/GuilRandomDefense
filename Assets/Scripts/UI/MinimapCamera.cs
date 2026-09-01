@@ -9,8 +9,8 @@ public class MinimapCamera : MonoBehaviour, IPointerClickHandler
 {
     // Map 오브젝트가 원점에 생성된다는 가정. 아니면 인스펙터에서 맞춰야 한다.
     [SerializeField] Vector3 mapCenter = Vector3.zero;
-    [SerializeField] float mapExtent = 220f;
-    [SerializeField] float cameraHeight = 300f;
+    [SerializeField] float mapExtent = 370f;
+    [SerializeField] float cameraHeight = 500f;
     [SerializeField] int textureSize = 256;
     [SerializeField] float refreshesPerSecond = 12f;
     [SerializeField] RtsCameraController mainCameraController;

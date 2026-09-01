@@ -7,7 +7,7 @@ using UnityEngine;
 /// </summary>
 public static class MapLayout
 {
-    public const float SeaSize = 420f;
+    public const float SeaSize = 720f;
     public const float IslandTop = 1f;      // 섬 윗면 높이 — 바다보다 한 단 높아 지상 유닛이 넘어가지 못한다
     public const float IslandThickness = 1f;
     public const int SeaAreaIndex = 3;      // ProjectSettings/NavMeshAreas.asset 3번 = Sea
@@ -31,40 +31,40 @@ public static class MapLayout
     // 메인 방어 필드 — 2×2로 붙은 레인 4개 = 플레이어 4명
     public static readonly Island[] Lanes =
     {
-        new Island("Lane1", -120f, 122f, 60f, 60f, "lane"),
-        new Island("Lane2",  -56f, 122f, 60f, 60f, "lane"),
-        new Island("Lane3", -120f,  58f, 60f, 60f, "lane"),
-        new Island("Lane4",  -56f,  58f, 60f, 60f, "lane"),
+        new Island("Lane1", -236f, 236f, 110f, 110f, "lane"),
+        new Island("Lane2", -120f, 236f, 110f, 110f, "lane"),
+        new Island("Lane3", -236f, 120f, 110f, 110f, "lane"),
+        new Island("Lane4", -120f, 120f, 110f, 110f, "lane"),
     };
 
     // 창고 — 플레이어별 개인 섬 (C키로 유닛을 보냄)
     public static readonly Island[] Warehouses =
     {
-        new Island("Warehouse1",  80f, 122f, 28f, 28f, "warehouse"),
-        new Island("Warehouse2", 116f, 122f, 28f, 28f, "warehouse"),
-        new Island("Warehouse3",  80f,  86f, 28f, 28f, "warehouse"),
-        new Island("Warehouse4", 116f,  86f, 28f, 28f, "warehouse"),
+        new Island("Warehouse1",  94f, 266f, 44f, 44f, "warehouse"),
+        new Island("Warehouse2", 146f, 266f, 44f, 44f, "warehouse"),
+        new Island("Warehouse3",  94f, 214f, 44f, 44f, "warehouse"),
+        new Island("Warehouse4", 146f, 214f, 44f, 44f, "warehouse"),
     };
 
     // 물범 섬 — 4개. 물범을 잡으면 전체 플레이어에게 목재 1개씩.
     public static readonly Island[] SealIslands =
     {
-        new Island("SealIsland1", -180f, -122f, 18f, 18f, "seal"),
-        new Island("SealIsland2", -158f, -122f, 18f, 18f, "seal"),
-        new Island("SealIsland3", -136f, -122f, 18f, 18f, "seal"),
-        new Island("SealIsland4", -114f, -122f, 18f, 18f, "seal"),
+        new Island("SealIsland1", -280f, -180f, 26f, 26f, "seal"),
+        new Island("SealIsland2", -246f, -180f, 26f, 26f, "seal"),
+        new Island("SealIsland3", -212f, -180f, 26f, 26f, "seal"),
+        new Island("SealIsland4", -178f, -180f, 26f, 26f, "seal"),
     };
 
     public static readonly Island[] Zones =
     {
         // 이벤트 존이 위, 그 아래 불멸·초월 전시가 가로로 나란히.
-        new Island("PunkHazard",        30f,  56f, 56f, 40f, "event"),
-        new Island("ImmortalDisplay",   98f,  46f, 60f, 30f, "display"),
-        new Island("TranscendDisplay",  98f,  12f, 60f, 24f, "display"),
-        new Island("StoryZone",       -147f, -46f, 84f, 70f, "story"),
-        new Island("GachaIsland",      -52f, -50f, 74f, 130f, "gacha"),
+        new Island("PunkHazard",         0f, 130f, 90f, 60f, "event"),
+        new Island("ImmortalDisplay",  150f, 120f, 90f, 50f, "display"),
+        new Island("TranscendDisplay", 150f,  55f, 90f, 50f, "display"),
+        new Island("StoryZone",       -250f, -80f, 120f, 100f, "story"),
+        new Island("GachaIsland",      -90f, -80f, 110f, 190f, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
-        new Island("CombineTable",      65f, -105f, 150f, 200f, "combine"),
+        new Island("CombineTable",     110f, -120f, 220f, 260f, "combine"),
     };
 
     // 조합식 표에 노출하는 등급 6종 — 표 위의 세로 칸 하나씩.
@@ -96,7 +96,7 @@ public static class MapLayout
     /// 왼쪽 위에서 출발해 아래로 내려간 뒤 반시계 방향으로 돈다.
     /// 화면 기준 위쪽이 +Z이므로 왼쪽 위 = (-x, +z).
     /// </summary>
-    public static Vector3[] LaneLoop(Island lane, float inset = 8f)
+    public static Vector3[] LaneLoop(Island lane, float inset = 14f)
     {
         float halfX = lane.size.x * 0.5f - inset;
         float halfZ = lane.size.y * 0.5f - inset;

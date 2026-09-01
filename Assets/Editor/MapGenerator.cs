@@ -18,8 +18,8 @@ public static class MapGenerator
     const string TextureFolder = "Assets/Textures/Map";
     const string Title = "맵 생성";
     const float GrassThickness = 0.35f;   // 잔디 윗면 두께
-    const float CliffHeight = 1.6f;       // 바위 치마 높이 (바다 아래까지 내려간다)
-    const float CliffOverhang = 2.4f;     // 잔디보다 얼마나 넓게 나올지
+    const float CliffHeight = 2.2f;       // 바위 치마 높이 (바다 아래까지 내려간다)
+    const float CliffOverhang = 3.5f;     // 잔디보다 얼마나 넓게 나올지
 
     // 구역을 색으로만 구분하면 원랜디 느낌이 안 난다. 잔디/물/바위 텍스처를 깔고
     // 구역 구분은 잔디에 옅은 색조를 얹는 정도로만 한다.
@@ -175,8 +175,8 @@ public static class MapGenerator
     // 높낮이는 실제 지형(메시)이 있어야 나오지, 판을 얹어서 될 일이 아니다.
     // 장식이라 콜라이더는 붙이지 않는다. 붙이면 NavMesh가 울퉁불퉁해져
     // 적이 순찰 경로를 못 따라가거나 유닛이 걸린다.
-    const float TrackWidth = 7f;        // 흙길 폭
-    const float TrackInset = 8f;        // 섬 가장자리에서 흙길 중심까지 (순찰 경로와 같은 값)
+    const float TrackWidth = 12f;        // 흙길 폭
+    const float TrackInset = 14f;        // 섬 가장자리에서 흙길 중심까지 (순찰 경로와 같은 값)
 
     static void DecorateLane(Transform parent, MapLayout.Island lane)
     {
@@ -251,15 +251,15 @@ public static class MapGenerator
     // 등급별로 유닛만 모아두면 "무엇으로 만드는지"를 알 수 없어서 표의 역할을 못 한다.
     // 전시용 자리 표시 기둥 (뽑기 섬 전시, 초월·불멸 전시에서 쓴다).
     // 조합식 표를 갈아엎을 때 같이 지워져서 컴파일이 깨졌었다 — 쓰는 곳이 여러 군데다.
-    const float SlotSpacing = 4.5f;
-    const float SlotSize = 2.2f;
-    const float SlotHeight = 2.6f;
+    const float SlotSpacing = 6f;
+    const float SlotSize = 3f;
+    const float SlotHeight = 3.4f;
 
-    const float RecipeSlot = 3.2f;      // 유닛 한 칸
-    const float RecipeGap = 1.0f;       // 재료 사이 간격
-    const float RecipeArrowGap = 3.0f;  // 재료 묶음과 결과 사이
-    const float RecipeRowHeight = 4.5f;
-    const float RecipeSlotHeight = 2.4f;
+    const float RecipeSlot = 4.5f;      // 유닛 한 칸
+    const float RecipeGap = 1.4f;       // 재료 사이 간격
+    const float RecipeArrowGap = 4.0f;  // 재료 묶음과 결과 사이
+    const float RecipeRowHeight = 6.0f;
+    const float RecipeSlotHeight = 3.2f;
 
     static string BuildCombineColumns(GameObject table)
     {
@@ -483,15 +483,15 @@ public static class MapGenerator
 
     // 뽑기 섬. 원작처럼 위쪽에 흔함 유닛을 가로로 늘어놓고, 그 아래에 등급별 랜덤 포탈을 둔다.
     // 흔함 위습은 "선택"이라 원하는 유닛 칸에 넣고, 그 위 등급은 칸 하나에서 등급 내 랜덤이 나온다.
-    const float PortalDiameter = 6f;
-    const float ChoicePortalDiameter = 4.2f;
+    const float PortalDiameter = 9f;
+    const float ChoicePortalDiameter = 6.5f;
 
     // 흔함 선택 칸은 원작처럼 칸마다 벽을 둘러 부스로 만든다.
-    const float CommonAreaDepth = 12f;  // 흔함 포탈 줄에서 아래벽까지 — 위습이 생길 자리
-    const float PortalInset = 6f;       // 칸 위벽에서 포탈까지
-    const float WispSpawnGap = 7f;      // 포탈에서 위습 생성 지점까지
-    const float BoothDepth = 9f;        // 포탈 앞부터 뒷벽까지
-    const float BoothWallHeight = 3.2f;
+    const float CommonAreaDepth = 18f;  // 흔함 포탈 줄에서 아래벽까지 — 위습이 생길 자리
+    const float PortalInset = 9f;       // 칸 위벽에서 포탈까지
+    const float WispSpawnGap = 11f;      // 포탈에서 위습 생성 지점까지
+    const float BoothDepth = 14f;        // 포탈 앞부터 뒷벽까지
+    const float BoothWallHeight = 4.5f;
     const float BoothWallThickness = 0.6f;
 
     static string BuildGachaPortals(GameObject gachaIsland)
@@ -805,9 +805,9 @@ public static class MapGenerator
     }
 
     // 펑크해저드 한가운데를 가로지르는 정의문. 부수기 전에는 섬이 둘로 나뉜다.
-    const float GateWidth = 14f;
-    const float GateHeight = 5f;
-    const float WallHeight = 4f;
+    const float GateWidth = 22f;
+    const float GateHeight = 7f;
+    const float WallHeight = 5.5f;
     const float GateThickness = 1.4f;
 
     static string BuildPunkHazardGate(Transform parent)
@@ -1350,10 +1350,10 @@ public static class MapGenerator
         // 스크립트의 기본값을 바꿔도 이미 씬에 저장된 값은 그대로 남는다.
         // 맵 생성은 초기화 동작이므로 조작 관련 수치를 현재 기준값으로 덮어쓴다.
         SerializedObject cameraSo = new SerializedObject(controller);
-        cameraSo.FindProperty("moveSpeed").floatValue = 70f;
+        cameraSo.FindProperty("moveSpeed").floatValue = 110f;
         cameraSo.FindProperty("edgeThickness").floatValue = 16f;
-        cameraSo.FindProperty("minHeight").floatValue = 12f;
-        cameraSo.FindProperty("maxHeight").floatValue = 220f;
+        cameraSo.FindProperty("minHeight").floatValue = 20f;
+        cameraSo.FindProperty("maxHeight").floatValue = 420f;
         cameraSo.ApplyModifiedProperties();
 
         // 시작 시점은 내 레인(1번) 하나가 화면에 차는 정도. 전체 조망은 휠로 빼면 된다.

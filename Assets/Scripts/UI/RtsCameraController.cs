@@ -9,7 +9,7 @@ using UnityEngine.InputSystem;
 public class RtsCameraController : MonoBehaviour
 {
     [Header("이동")]
-    [SerializeField] float moveSpeed = 70f;
+    [SerializeField] float moveSpeed = 110f;
     [SerializeField] float edgeThickness = 16f;      // 화면 가장자리에서 몇 픽셀 안쪽까지를 밀기 영역으로 볼지
     [SerializeField] bool edgeScrollEnabled = true;
     [SerializeField] float inputSmoothing = 12f;     // 클수록 즉각적. 0이면 감속 없음
@@ -18,15 +18,15 @@ public class RtsCameraController : MonoBehaviour
     [SerializeField] float zoomStep = 8f;            // 휠 한 칸당 높이 변화
     [SerializeField] float zoomSmoothing = 10f;
     [SerializeField] float minHeight = 12f;
-    [SerializeField] float maxHeight = 220f;
+    [SerializeField] float maxHeight = 420f;
 
     [Header("이동 범위")]
-    [SerializeField] Vector2 boundsMin = new Vector2(-220f, -220f);
-    [SerializeField] Vector2 boundsMax = new Vector2(220f, 220f);
+    [SerializeField] Vector2 boundsMin = new Vector2(-370f, -370f);
+    [SerializeField] Vector2 boundsMax = new Vector2(370f, 370f);
 
     // 이동 속도의 기준 높이. 이보다 높으면 빠르게, 낮으면 천천히 움직여
     // 화면에서 체감하는 이동량을 비슷하게 유지한다.
-    const float SpeedReferenceHeight = 60f;
+    const float SpeedReferenceHeight = 100f;
 
     // 한 프레임에 반영할 최대 시간(초). 30fps 한 프레임분.
     const float MaxFrameDelta = 1f / 30f;
