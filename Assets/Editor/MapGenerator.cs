@@ -1745,6 +1745,14 @@ public static class MapGenerator
     const float WispScale = 6f;
     const string WispPrefabPath = "Assets/Prefabs/WispPrefab.prefab";
 
+    [MenuItem("Tools/맵/위습 모양 맞추기")]
+    public static void ShapeWispPrefabMenu()
+    {
+        string report = ShapeWispPrefab();
+        Debug.Log("[맵] " + report);
+        EditorUtility.DisplayDialog(Title, report.TrimStart('\n'), "확인");
+    }
+
     static string ShapeWispPrefab()
     {
         GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(WispPrefabPath);
@@ -1763,6 +1771,7 @@ public static class MapGenerator
         {
             agent.radius = 0.45f / WispScale;
             agent.height = 2f / WispScale;
+            agent.baseOffset = 0.5f / WispScale;   // 바닥 띄움도 스케일을 타서 공중에 뜬다
         }
 
         // 영혼답게 — 스스로 빛나고 반쯤 비친다. 단단한 공이면 그냥 구슬로 보인다.
