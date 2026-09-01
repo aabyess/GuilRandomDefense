@@ -2222,26 +2222,48 @@ public static class MapGenerator
     // 화면에는 "클릭이 안 먹는다"로만 보여서 원인을 찾는 데 오래 걸린다.
     static string CheckNavMeshCoverage()
     {
-        List<string> missing = new List<string>();
+        List<(string name, Vector3 at)> points = new List<(string, Vector3)>();
 
         foreach (WispCell cell in Object.FindObjectsByType<WispCell>(
                      FindObjectsInactive.Include, FindObjectsSortMode.None))
-        {
-            if (!NavMesh.SamplePosition(cell.transform.position, out _, 6f, NavMesh.AllAreas))
-                missing.Add(cell.name);
-        }
+            points.Add((cell.name, cell.transform.position));
 
         for (int i = 0; i < MapLayout.Lanes.Length; i++)
+            points.Add(($"{MapLayout.Lanes[i].name} 유닛우리",
+                        MapLayout.LaneUnitPenRow(MapLayout.Lanes[i]).Center3));
+
+        List<string> missing = new List<string>();
+
+        foreach ((string name, Vector3 at) in points)
         {
-            Vector3 pen = MapLayout.LaneUnitPenRow(MapLayout.Lanes[i]).Center3;
-            if (!NavMesh.SamplePosition(pen, out _, 6f, NavMesh.AllAreas))
-                missing.Add($"{MapLayout.Lanes[i].name} 유닛우리");
+            if (NavMesh.SamplePosition(at, out _, 6f, NavMesh.AllAreas)) continue;
+
+            missing.Add(name);
+
+            // 왜 없는지까지 남긴다. 대개 그 자리를 덮은 콜라이더가 길을 깎아낸 것이다.
+            string blockers = DescribeBlockers(at, 6f);
+            Debug.LogWarning($"[맵] '{name}' {at} 에 길이 없습니다. 여기 생기는 유닛은 안 움직입니다.\n" +
+                             $"     그 자리를 덮은 콜라이더: {blockers}");
         }
 
-        return missing.Count == 0
-            ? ""
-            : $"\n  ⚠️ 길이 안 깔린 자리 {missing.Count}곳 — 여기 생기는 유닛은 안 움직입니다:\n     " +
-              string.Join(", ", missing);
+        if (missing.Count == 0) return "";
+
+        return $"\n  ⚠️ 길이 안 깔린 자리 {missing.Count}곳 — 콘솔에 원인을 적었습니다:\n     " +
+               string.Join(", ", missing);
+    }
+
+    // 그 지점을 감싸는 콜라이더를 훑는다. 트리거인지도 같이 적는다 —
+    // NavMesh를 PhysicsColliders로 구우면 트리거도 장애물로 잡혀서 길을 통째로 지우는 수가 있다.
+    static string DescribeBlockers(Vector3 at, float radius)
+    {
+        Collider[] found = Physics.OverlapSphere(at, radius);
+        if (found.Length == 0) return "없음 — 바닥 콜라이더 자체가 없다는 뜻입니다.";
+
+        List<string> names = new List<string>();
+        foreach (Collider collider in found)
+            names.Add($"{collider.name}{(collider.isTrigger ? "(트리거)" : "")}");
+
+        return string.Join(", ", names);
     }
 
     static string BuildNavMesh(GameObject root)
@@ -2249,6 +2271,16 @@ public static class MapGenerator
         NavMeshSurface surface = root.AddComponent<NavMeshSurface>();
         surface.collectObjects = CollectObjects.Children;
         surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
+
+        // 바다가 1600×1600이라 굽는 범위가 그만큼 넓다. 기본 복셀 크기(에이전트 반지름/3 ≈ 0.17)로는
+        // 한 변이 만 칸 가까이 나와서, 굽기가 조용히 부분 실패하고 길이 군데군데 비게 된다.
+        // 유닛 반지름이 0.28이라 이 정도로 거칠게 잡아도 통행에는 지장이 없다.
+        surface.overrideVoxelSize = true;
+        surface.voxelSize = 0.5f;
+
+        // 섬 윗면만 걸으면 되므로 바다 아래까지 훑을 이유가 없다.
+        surface.overrideTileSize = true;
+        surface.tileSize = 256;
 
         try
         {
