@@ -279,25 +279,35 @@ public static class MapGenerator
             new List<(UnitGrade, List<CombineRecipe>)>();
         float usedDepth = 0f;
 
+        bool columnLocked = false;   // 쪼개진 등급이 쓰는 열에는 다른 등급을 들이지 않는다
+
         foreach (UnitGrade grade in MapLayout.CombineTableGrades)
         {
             List<CombineRecipe> recipes = LoadRecipesProducing(grade);
+            bool splits = recipes.Count > MaxRecipeRows;
 
             for (int i = 0; i < recipes.Count; i += MaxRecipeRows)
             {
                 List<CombineRecipe> chunk = recipes.GetRange(i, Mathf.Min(MaxRecipeRows, recipes.Count - i));
-                float needed = chunk.Count * RecipeRowHeight + (current.Count > 0 ? GradeWallGap : 0f);
+                float body = chunk.Count * RecipeRowHeight;
 
-                if (current.Count > 0 && usedDepth + needed > island.size.y)
+                // 25행을 넘겨 쪼개진 등급은 "끊어서 옆 열로 잇는다"는 규칙 그대로 항상 새 열에서 시작한다.
+                // 같은 등급을 한 열에 위아래로 쌓으면 끊은 의미가 없고, 사이에 서는 벽이
+                // 등급이 바뀐 것처럼 보인다. 열을 나눠 쓰는 건 통째로 들어가는 짧은 등급끼리뿐이다.
+                bool stack = current.Count > 0 && !splits && !columnLocked
+                             && usedDepth + GradeWallGap + body <= island.size.y;
+
+                if (!stack && current.Count > 0)
                 {
                     columns.Add(current);
                     current = new List<(UnitGrade, List<CombineRecipe>)>();
                     usedDepth = 0f;
-                    needed = chunk.Count * RecipeRowHeight;
+                    columnLocked = false;
                 }
 
                 current.Add((grade, chunk));
-                usedDepth += needed;
+                usedDepth += body + (current.Count > 1 ? GradeWallGap : 0f);
+                columnLocked |= splits;
             }
         }
 
@@ -322,8 +332,8 @@ public static class MapGenerator
             {
                 (UnitGrade grade, List<CombineRecipe> chunk) = columns[c][b];
 
-                // 같은 열에서 등급이 바뀌는 자리에 벽을 세운다.
-                if (b > 0)
+                // 같은 열에서 등급이 바뀌는 자리에만 벽을 세운다.
+                if (b > 0 && columns[c][b - 1].grade != grade)
                 {
                     float wallZ = rowZ + RecipeRowHeight * 0.5f - GradeWallGap * 0.5f;
                     BuildWall(parent, $"조합표_구분벽_{grade.KoreanName()}",
