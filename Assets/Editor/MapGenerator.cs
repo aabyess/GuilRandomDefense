@@ -266,6 +266,7 @@ public static class MapGenerator
         float columnWidth = island.size.x / grades.Length;
         int placed = 0;
         float deepest = 0f;
+        string sample = null;
 
         for (int c = 0; c < grades.Length; c++)
         {
@@ -290,6 +291,8 @@ public static class MapGenerator
                 PlaceRecipeRow(parent, recipe, columnLeft + 2f, rowZ);
                 rowZ -= RecipeRowHeight;
                 placed++;
+
+                if (sample == null) sample = DescribeRecipe(recipe);
             }
 
             deepest = Mathf.Max(deepest, island.center.y + island.size.y * 0.5f - rowZ);
@@ -300,7 +303,9 @@ public static class MapGenerator
             ? $"여유 {available - deepest:F0}"
             : $"⚠️ {deepest - available:F0} 모자람 — CombineTable 세로를 {Mathf.CeilToInt(deepest) + 8}으로";
 
-        return $"\n조합식 표: {placed}개 조합식 (필요 깊이 {deepest:F0}/{available:F0}, {verdict}).";
+        // 팝업만 보고도 옛 배치인지 새 배치인지 구분되게, 실제로 만든 첫 행을 적어 준다.
+        return $"\n조합식 표: {placed}개 조합식 (필요 깊이 {deepest:F0}/{available:F0}, {verdict})." +
+               (sample != null ? $"\n  예시: {sample}" : "");
     }
 
     // 한 줄: 재료를 왼쪽부터 늘어놓고, 사이를 띄운 뒤 결과를 놓는다.
@@ -328,6 +333,28 @@ public static class MapGenerator
         x += RecipeArrowGap;
         Color resultColor = recipe.result != null ? GradeColor(recipe.result.grade) : Color.gray;
         PlaceRecipeSlot(parent, x, z, label, resultColor, $"결과_{label}");
+    }
+
+    // 팝업에 찍을 한 줄 요약. "초록 + 초록 = 노랑"처럼 색이 바뀌는지 눈으로 확인하는 용도다.
+    static string DescribeRecipe(CombineRecipe recipe)
+    {
+        List<string> parts = new List<string>();
+
+        if (recipe.ingredients != null)
+        {
+            foreach (RecipeIngredient ingredient in recipe.ingredients)
+            {
+                if (ingredient == null) continue;
+                for (int n = 0; n < Mathf.Max(1, ingredient.count); n++)
+                    parts.Add(IngredientName(ingredient));
+            }
+        }
+
+        string result = recipe.result != null
+            ? $"{recipe.result.grade.KoreanName()} {recipe.result.unitName}"
+            : "?";
+
+        return string.Join(" + ", parts) + " = " + result;
     }
 
     static void PlaceRecipeSlot(Transform parent, float x, float z, string label, Color color, string prefix)
