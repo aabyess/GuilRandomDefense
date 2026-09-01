@@ -36,3 +36,19 @@
 - **PM**: Fable 5 (`claude-fable-5`)
 - **리서치담당 / 구현담당1 / 구현담당2**: Sonnet 5 (`claude-sonnet-5`) 기본값
 - 새 세션은 `.claude/team/start.sh <역할>`로 띄우면 자동으로 Sonnet 5가 적용된다.
+
+
+## 커밋 전 점검 (PM)
+
+새 스크립트나 에셋을 만든 뒤에는 **푸시 전에 반드시** 실행한다:
+
+```
+python3 Tools/check_meta.py
+```
+
+`.meta`에는 GUID가 들어 있고 씬은 컴포넌트를 그 GUID로 참조한다.
+`.meta` 없이 커밋하면 다른 컴퓨터에서 클론했을 때 Unity가 새 GUID를 발급하고,
+그 스크립트를 쓰는 씬 참조가 전부 Missing Script가 된다.
+
+Unity가 `.meta`를 만드는 시점이 스크립트를 만든 직후가 아니라 **에디터가 임포트할 때**라,
+`git add`를 먼저 하면 매번 놓친다. 실제로 세 번 놓쳤다.
