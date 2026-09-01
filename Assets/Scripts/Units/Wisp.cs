@@ -16,8 +16,14 @@ public class Wisp : MonoBehaviour
         data = wispData;
     }
 
+    // 위습이 포탈에 소모될 때 알린다. 소모하는 쪽(UnitPortal/ResourcePortal)이 서로를 몰라도
+    // 되게 하려고 여기서 한 곳으로 모은다 — 예: 백수생활 특수 칸 3개가 서로 참조 없이
+    // "같은 위습 종류가 소모됐다"만 각자 구독해서 안다(InterludeGate 참고).
+    public static event System.Action<Wisp> OnConsumed;
+
     public void MarkConsumed()
     {
         IsConsumed = true;
+        OnConsumed?.Invoke(this);
     }
 }

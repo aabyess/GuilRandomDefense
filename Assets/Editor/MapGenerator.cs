@@ -942,15 +942,15 @@ public static class MapGenerator
 
             // 칸을 사방으로 막고 오른쪽 가운데만 입구로 연다.
             // 안 막으면 위습이 한 칸에 들어갔다가 옆 칸 포탈로 흘러가 엉뚱한 등급이 나온다.
-            // 이 칸에서 생길 위습의 등급을 표시한다. 특수 칸은 위습이 따로 없다.
-            if (band.specialSlots == null)
-            {
-                GameObject cell = new GameObject($"위습칸_{band.label}");
-                cell.transform.SetParent(parent, false);
-                cell.transform.position = new Vector3((columnLeft + columnRight) * 0.5f,
-                                                      MapLayout.IslandTop, portalZ - WispSpawnGap);
-                cell.AddComponent<WispCell>().SetGrade(band.grade);
-            }
+            // 이 칸에서 생길 위습의 등급을 표시한다.
+            // 특수 칸은 등급 랜덤이 아니라 《백수생활》에 한 번 주는 선택 위습을 받는다 —
+            // 그 위습이 여기 생겨야 플레이어가 셋 중 하나로 끌고 갈 수 있다.
+            GameObject cell = new GameObject($"위습칸_{band.label}");
+            cell.transform.SetParent(parent, false);
+            cell.transform.position = new Vector3((columnLeft + columnRight) * 0.5f,
+                                                  MapLayout.IslandTop, portalZ - WispSpawnGap);
+            cell.AddComponent<WispCell>().SetGrade(
+                band.specialSlots == null ? band.grade : InterludeChoiceGrade);
 
             if (band.specialSlots == null)
             {
@@ -1527,9 +1527,28 @@ public static class MapGenerator
 
     // 특수 지급 줄은 스토리 8을 깬 뒤 《백수생활》 5분 동안만 열린다.
     // 게이트는 콜라이더만 알면 되므로 UnitPortal이든 ResourcePortal이든 같은 컴포넌트로 덮인다.
+    // 《백수생활》 선택 위습. 실제 등급 의미는 없고 WispCell 라우팅 키로만 쓴다 —
+    // 픽업 위습들이 안 쓰는 값이라야 엉뚱한 칸으로 흘러가지 않는다.
+    const UnitGrade InterludeChoiceGrade = UnitGrade.Transcendent;
+    const string InterludeChoiceWispPath = "Assets/Data/Wisps/Wisp_백수생활선택.asset";
+
     static void GateToInterlude(GameObject portal)
     {
-        if (portal != null) portal.AddComponent<InterludeGate>();
+        if (portal == null) return;
+
+        InterludeGate gate = portal.AddComponent<InterludeGate>();
+        WispData choiceWisp = AssetDatabase.LoadAssetAtPath<WispData>(InterludeChoiceWispPath);
+
+        if (choiceWisp == null)
+        {
+            Debug.LogWarning($"[맵] 선택 위습 에셋을 못 찾았습니다: {InterludeChoiceWispPath}");
+            return;
+        }
+
+        // 특수 칸 포탈 전부가 같은 위습을 구독한다. 하나에서 소모되면 나머지도 "이미 골랐다"로 바뀐다.
+        SerializedObject so = new SerializedObject(gate);
+        so.FindProperty("choiceTrackedWispData").objectReferenceValue = choiceWisp;
+        so.ApplyModifiedProperties();
     }
 
     static void ConfigurePortal(GameObject portal, UnitGrade grade, UnitData specificUnit,
