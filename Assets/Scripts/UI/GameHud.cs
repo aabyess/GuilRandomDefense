@@ -22,6 +22,7 @@ public class GameHud : MonoBehaviour
     Text goldWoodText;
     Text roundTimeText;
     Text teamPanelText;
+    Text storyText;
 
     GameObject unitCardsPanel;
     readonly GameObject[] cardRoots = new GameObject[MaxSelectionCards];
@@ -48,6 +49,12 @@ public class GameHud : MonoBehaviour
     int lastWood = int.MinValue;
     int lastRound = int.MinValue;
     int lastTimeTenths = int.MinValue;
+
+    // StoryManager.Instance는 씬에 없을 수도, 나중에 생길 수도 있어 캐시하지 않고 매번 읽는다.
+    bool lastStoryVisible;
+    bool lastStoryRunning;
+    string lastStoryLabel;
+    int lastStorySeconds = int.MinValue;
 
     bool teamPanelInitialized;
     int lastTotalEnemyCount = int.MinValue;
@@ -76,6 +83,7 @@ public class GameHud : MonoBehaviour
         RefreshSelectionPanel();
         RefreshTopBar();
         RefreshTeamPanel();
+        RefreshStoryPanel();
     }
 
     static void EnsureEventSystem()
@@ -122,7 +130,21 @@ public class GameHud : MonoBehaviour
         BuildCommandGrid(commandPanel);
 
         BuildTopBar();
+        BuildStoryPanel();
         BuildTeamPanel();
+    }
+
+    // 상단 바가 이미 골드·목재·라운드·타이머로 차 있어 그 아래 별도 줄로 뺀다.
+    // 팀 현황판(우측 상단)과 겹치지 않게 좌측 절반만 쓴다.
+    void BuildStoryPanel()
+    {
+        RectTransform storyPanel = CreatePanel(transform, "StoryPanel", Color.clear);
+        SetAnchors(storyPanel, new Vector2(0.01f, 0.90f), new Vector2(0.5f, 0.95f));
+
+        storyText = CreateLabel(storyPanel, "StoryText", "");
+        storyText.alignment = TextAnchor.MiddleLeft;
+        storyText.fontSize = 20;
+        storyText.gameObject.SetActive(false);
     }
 
     void BuildTopBar()
@@ -531,6 +553,44 @@ public class GameHud : MonoBehaviour
         }
 
         teamPanelText.text = teamPanelBuilder.ToString();
+    }
+
+    // StoryManager.Instance는 씬에 없을 수 있고(그러면 줄을 숨긴다) 나중에 생길 수도 있어 매번 다시 읽는다.
+    // SecondsUntilNext는 매 프레임 바뀌는 float라, 초 단위(Mathf.CeilToInt)로 잘라 비교해야
+    // 실제로 표시되는 숫자가 바뀔 때만 텍스트를 다시 만든다.
+    void RefreshStoryPanel()
+    {
+        if (storyText == null) return;
+
+        StoryManager story = StoryManager.Instance;
+
+        bool hasStory = story != null;
+        bool running = hasStory && story.Running != null;
+        bool waiting = hasStory && !running && story.IsWaiting;
+        string label = hasStory ? story.StatusLabel : null;
+        int seconds = waiting ? Mathf.CeilToInt(story.SecondsUntilNext) : 0;
+        bool visible = running || waiting;
+
+        bool changed = visible != lastStoryVisible
+            || running != lastStoryRunning
+            || label != lastStoryLabel
+            || (waiting && seconds != lastStorySeconds);
+
+        if (!changed) return;
+
+        lastStoryVisible = visible;
+        lastStoryRunning = running;
+        lastStoryLabel = label;
+        lastStorySeconds = seconds;
+
+        if (storyText.gameObject.activeSelf != visible)
+            storyText.gameObject.SetActive(visible);
+
+        if (!visible) return;
+
+        storyText.text = running
+            ? $"스토리: {label}"
+            : $"{label} {seconds / 60:00}:{seconds % 60:00}";
     }
 
     static RectTransform CreatePanel(Transform parent, string name, Color color)
