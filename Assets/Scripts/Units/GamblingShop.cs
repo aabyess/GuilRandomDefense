@@ -7,9 +7,9 @@ using UnityEngine;
 [RequireComponent(typeof(Selectable), typeof(OwnedByPlayer))]
 public class GamblingShop : MonoBehaviour, ILaneShop
 {
-    // 하단 그리드는 가로 3칸 — 원작 화면처럼 윗줄(돈 도박 3칸)과 아랫줄(유닛 도박 4칸)이
-    // 줄로 갈리게, 9칸 중 인덱스 6 다음 두 칸(7,8)은 항상 빈 칸으로 둔다.
-    //   [0 1 2] 초급/중급/고급 돈 도박
+    // 하단 그리드는 가로 3칸 — 원작 화면처럼 윗줄(돈 도박)과 아랫줄(유닛 도박)이 줄로 갈리게,
+    // 9칸 중 인덱스 6 다음 두 칸(7,8)은 항상 빈 칸으로 둔다.
+    //   [0 1 2] 중급도박(돈)/고급도박(돈)/빈칸 — 사장님 확정: 초급도박은 없다
     //   [3 4 5] 하급/중급/고급 유닛 도박
     //   [6 _ _] 다른세계 유닛 도박
     [SerializeField] List<GamblingOptionData> moneyOptions = new List<GamblingOptionData>();
@@ -108,10 +108,28 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 
     string BuildMoneyTooltip(GamblingOptionData option)
     {
-        return $"{option.optionName}\n{option.description}\n"
-             + $"비용: 골드 {option.cost}\n성공 확률: {option.successChancePercent:F0}%\n"
-             + $"성공 시: 골드 {option.successGoldMin}~{option.successGoldMax}\n"
-             + $"실패 시: 골드 {option.failureGoldMin}~{option.failureGoldMax} 반환";
+        string tooltip = $"{option.optionName}\n{option.description}\n"
+            + $"비용: {option.cost}엔\n"
+            + $"결과: {option.successGoldMin}~{option.successGoldMax}엔 (0엔이 나올 수도 있습니다)";
+
+        string reason = MoneyUnavailableReason(option);
+        if (reason != null) tooltip += $"\n⚠️ {reason}";
+
+        return tooltip;
+    }
+
+    // 잠긴 칸도 보여야 하니(available=false), 왜 못 쓰는지 이유를 데이터에서 그대로 읽어 붙인다.
+    string MoneyUnavailableReason(GamblingOptionData option)
+    {
+        GamblingProgress progress = OwnerContext?.GamblingProgress;
+
+        if (option.requiresUnlock && (progress == null || !progress.IsUnlocked(option)))
+            return string.IsNullOrEmpty(option.unlockHint) ? "아직 해금되지 않음" : option.unlockHint;
+
+        if (option.maxUses > 0 && progress != null && progress.UsesSoFar(option) >= option.maxUses)
+            return $"{option.maxUses}회 모두 사용함";
+
+        return null;
     }
 
     string BuildUnitTooltip(GamblingOptionData option)
@@ -165,12 +183,15 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         PlayerContext context = OwnerContext;
         if (context == null) return false;
 
-        if (option.category == GamblingCategory.Money
-            && context.GamblingProgress != null && context.GamblingProgress.IsMoneyGamblingGraduated)
-            return false;
-
         if (option.category == GamblingCategory.Money)
+        {
+            GamblingProgress progress = context.GamblingProgress;
+            if (progress == null) return false;
+            if (option.requiresUnlock && !progress.IsUnlocked(option)) return false;
+            if (option.maxUses > 0 && progress.UsesSoFar(option) >= option.maxUses) return false;
+
             return context.GoldWallet != null && context.GoldWallet.Gold >= option.cost;
+        }
 
         return context.ResourceWallet != null && context.ResourceWallet.Get(option.costResourceType) >= option.cost;
     }
@@ -187,20 +208,15 @@ public class GamblingShop : MonoBehaviour, ILaneShop
             : TryRollUnit(option, context);
     }
 
+    // 성공/실패 구분이 없다 — 걸고 나면 항상 결과 범위(0 포함) 안에서 얼마를 받는다.
     bool TryRollMoney(GamblingOptionData option, PlayerContext context)
     {
         if (context.GoldWallet == null || !context.GoldWallet.TrySpend(option.cost)) return false;
 
-        bool success = Random.Range(0f, 100f) < option.successChancePercent;
-        int amount = success
-            ? Random.Range(option.successGoldMin, option.successGoldMax + 1)
-            : Random.Range(option.failureGoldMin, option.failureGoldMax + 1);
+        int amount = Random.Range(option.successGoldMin, option.successGoldMax + 1);
+        if (amount > 0) context.GoldWallet.Add(amount);
 
-        if (amount > 0)
-        {
-            context.GoldWallet.Add(amount);
-            if (success) context.GamblingProgress?.AddMoneyGamblingWinnings(amount);
-        }
+        context.GamblingProgress?.RecordUse(option);
 
         return true;
     }

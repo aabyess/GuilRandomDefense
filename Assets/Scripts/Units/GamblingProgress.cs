@@ -1,18 +1,36 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-// 돈 도박 누적 성공 골드. GoldWallet/ResourceWallet/UnitInventory와 같은 결로
-// PlayerContext에 나란히 붙인다. GAMBLING.md: 초급·중급·고급 통틀어 35,000골드
-// 획득 시 "졸업"(더 이상 돈 도박을 못 함).
+// 돈 도박 진행 상태. 옵션마다 제약이 다르다(예: 중급도박은 평생 10회, 고급도박은 보스 처치로
+// 해금) — SupportShop의 쿨다운 딕셔너리와 같은 결로 옵션 에셋을 키로 삼는다. 옵션이 늘어나도
+// 필드를 안 늘린다. GoldWallet/ResourceWallet/UnitInventory와 나란히 PlayerContext에 붙는다.
 public class GamblingProgress : MonoBehaviour
 {
-    [SerializeField] int moneyGamblingGraduationCap = 35000;
+    readonly Dictionary<GamblingOptionData, int> usesSoFar = new Dictionary<GamblingOptionData, int>();
+    readonly HashSet<GamblingOptionData> unlockedOptions = new HashSet<GamblingOptionData>();
 
-    public int MoneyGamblingWon { get; private set; }
-    public bool IsMoneyGamblingGraduated => MoneyGamblingWon >= moneyGamblingGraduationCap;
-
-    public void AddMoneyGamblingWinnings(int amount)
+    public int UsesSoFar(GamblingOptionData option)
     {
-        if (amount <= 0) return;
-        MoneyGamblingWon += amount;
+        return option != null && usesSoFar.TryGetValue(option, out int count) ? count : 0;
+    }
+
+    public void RecordUse(GamblingOptionData option)
+    {
+        if (option == null) return;
+
+        usesSoFar.TryGetValue(option, out int count);
+        usesSoFar[option] = count + 1;
+    }
+
+    public bool IsUnlocked(GamblingOptionData option)
+    {
+        return option != null && unlockedOptions.Contains(option);
+    }
+
+    // 해금 조건(예: 10라운드 보스 처치)이 성립했을 때 그 시스템이 이걸 부른다.
+    // 그 시스템이 아직 없어 지금은 아무도 안 부른다 — requiresUnlock인 옵션은 계속 잠겨 있다.
+    public void Unlock(GamblingOptionData option)
+    {
+        if (option != null) unlockedOptions.Add(option);
     }
 }
