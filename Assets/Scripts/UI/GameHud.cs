@@ -53,10 +53,17 @@ public class GameHud : MonoBehaviour
     const float RecipeRefreshInterval = 0.4f;
     static readonly List<CombineRecipe> EmptyRecipes = new List<CombineRecipe>();
 
-    // 조합 카드 위에 뜨는 조합식 툴팁 — 카드마다 만들지 않고 하나를 공유해서 위치·내용만 바꾼다.
+    // 조합 카드/도움소 스킬 칸 위에 뜨는 툴팁 — 종류가 둘이어도 오브젝트는 하나만 공유해서
+    // 위치·내용만 바꾼다(두 번째를 만들면 캔버스 리빌드가 늘어난다).
     readonly StringBuilder tooltipBuilder = new StringBuilder(256);
     GameObject combineTooltipObject;
     Text combineTooltipText;
+
+    // 호버 중인 칸의 툴팁은 마우스가 그 위에 머무는 동안 주기적으로 다시 그린다 —
+    // 도움소 스킬의 "재사용까지 N초"처럼 시간이 지나면 바뀌는 값이 있어서다.
+    const float TooltipRefreshInterval = 0.2f;
+    int hoveredCommandSlotIndex = -1;
+    float nextTooltipRefreshTime;
 
     // 유닛 명령 그리드(12칸). 0~2번은 공격/정지/모으기 고정 placeholder라 절대 안 건드림.
     // 나머지 칸 중 맨 아랫줄부터 왼쪽→오른쪽, 넘치면 그 윗줄로 이어지는 순서로 "선택한 유닛이
@@ -136,6 +143,7 @@ public class GameHud : MonoBehaviour
         RefreshUnitCommandCards();
         RefreshInventoryPanel();
         RefreshSupportSkillTargeting();
+        RefreshHoveredTooltip();
     }
 
     void OnDestroy()
@@ -455,19 +463,20 @@ public class GameHud : MonoBehaviour
 
     void OnCombineCardHoverExit()
     {
+        hoveredCommandSlotIndex = -1;
         HideCombineTooltip();
     }
 
-
-
     // 하단 바 안에 그리면 그 좁은 영역 안에서 잘리므로, 카드 위쪽에 절대 좌표로 띄운다.
     // ScreenSpaceOverlay 캔버스라 RectTransform.position이 곧 화면 픽셀 좌표라 이렇게 계산할 수 있다.
-    // 왼쪽 조합 카드·오른쪽 유닛 명령 슬롯 양쪽에서 공유해서 쓴다.
-    void ShowCombineTooltip(CombineRecipe recipe, RectTransform cardRect)
+    // 조합 카드·도움소 스킬 칸 양쪽에서 공유해서 쓴다 — 종류별로 만들지 않는다.
+    void ShowTooltip(string text, RectTransform cardRect)
     {
-        if (combineTooltipObject == null || recipe == null || cardRect == null) return;
+        if (combineTooltipObject == null || string.IsNullOrEmpty(text) || cardRect == null) return;
 
-        combineTooltipText.text = BuildRecipeTooltipText(recipe);
+        // 0.2초마다 다시 불리는데, 대개 내용은 그대로다(쿨다운이 도는 스킬만 바뀐다).
+        // Text.text에 같은 값을 다시 넣어도 캔버스는 통째로 다시 그려지므로, 바뀔 때만 넣는다.
+        if (combineTooltipText.text != text) combineTooltipText.text = text;
 
         RectTransform tooltipRect = (RectTransform)combineTooltipObject.transform;
         float halfHeight = cardRect.rect.height * cardRect.lossyScale.y * 0.5f;
@@ -481,13 +490,42 @@ public class GameHud : MonoBehaviour
         if (combineTooltipObject != null) combineTooltipObject.SetActive(false);
     }
 
-    // 마우스가 카드 위에 올라간 순간에만 호출된다(호버 이벤트) — 매 프레임 만들지 않는다.
+    // 마우스가 카드에 올라간 순간과, 그 뒤로는 TooltipRefreshInterval마다 다시 불린다
+    // (RefreshHoveredTooltip) — 매 프레임 문자열을 새로 만들지 않는다.
+    void ShowHoveredTooltipNow(int index)
+    {
+        if (index < 0 || index >= unitCommandSlotRoots.Length || unitCommandSlotRoots[index] == null) return;
+
+        RectTransform cardRect = (RectTransform)unitCommandSlotRoots[index].transform;
+
+        if (currentShop != null)
+        {
+            SupportSkillData skill = index < unitCommandSkills.Length ? unitCommandSkills[index] : null;
+            if (skill == null) { HideCombineTooltip(); return; }
+            ShowTooltip(BuildSupportSkillTooltipText(skill), cardRect);
+        }
+        else
+        {
+            CombineRecipe recipe = index < unitCommandRecipes.Length ? unitCommandRecipes[index] : null;
+            if (recipe == null) { HideCombineTooltip(); return; }
+            ShowTooltip(BuildRecipeTooltipText(recipe), cardRect);
+        }
+    }
+
+    void RefreshHoveredTooltip()
+    {
+        if (hoveredCommandSlotIndex < 0) return;
+        if (Time.time < nextTooltipRefreshTime) return;
+
+        nextTooltipRefreshTime = Time.time + TooltipRefreshInterval;
+        ShowHoveredTooltipNow(hoveredCommandSlotIndex);
+    }
+
+    // 원작 조합표와 같은 순서: 재료 + 재료 + 재료 = 결과. 골드·자원 비용은 재료와 헷갈리지
+    // 않게 괄호로 묶어 다음 줄에 둔다.
     string BuildRecipeTooltipText(CombineRecipe recipe)
     {
         tooltipBuilder.Clear();
-
-        string resultName = recipe.result != null ? recipe.result.unitName : "?";
-        tooltipBuilder.Append(resultName).Append(" : ");
 
         bool first = true;
 
@@ -510,11 +548,15 @@ public class GameHud : MonoBehaviour
             }
         }
 
+        string resultName = recipe.result != null ? recipe.result.unitName : "?";
+        tooltipBuilder.Append(" = ").Append(resultName);
+
+        bool firstCost = true;
+
         if (recipe.goldCost > 0)
         {
-            if (!first) tooltipBuilder.Append(" + ");
-            tooltipBuilder.Append("골드 ").Append(recipe.goldCost);
-            first = false;
+            tooltipBuilder.Append(firstCost ? "\n(" : ", ").Append("골드 ").Append(recipe.goldCost);
+            firstCost = false;
         }
 
         if (recipe.resourceCosts != null)
@@ -523,11 +565,65 @@ public class GameHud : MonoBehaviour
             {
                 if (cost == null || cost.amount <= 0) continue;
 
-                if (!first) tooltipBuilder.Append(" + ");
-                tooltipBuilder.Append(ResourceLabel(cost.type)).Append(' ').Append(cost.amount);
-                first = false;
+                tooltipBuilder.Append(firstCost ? "\n(" : ", ").Append(ResourceLabel(cost.type)).Append(' ').Append(cost.amount);
+                firstCost = false;
             }
         }
+
+        if (!firstCost) tooltipBuilder.Append(')');
+
+        return tooltipBuilder.ToString();
+    }
+
+    // 스킬 이름·효과 서술(SupportSkillData.description)은 그대로 옮기고, 비용/쿨다운/피해량/범위/
+    // 지속시간처럼 수치인 부분만 코드가 채운다 — 스킬마다 분기 없이 필드값으로만 조립된다.
+    string BuildSupportSkillTooltipText(SupportSkillData skill)
+    {
+        tooltipBuilder.Clear();
+        tooltipBuilder.Append(skill.skillName);
+
+        if (!string.IsNullOrEmpty(skill.description))
+            tooltipBuilder.Append('\n').Append(skill.description);
+
+        tooltipBuilder.Append("\n비용: ");
+        bool hasCost = false;
+
+        if (skill.manaCost > 0)
+        {
+            tooltipBuilder.Append("마나 ").Append(skill.manaCost);
+            hasCost = true;
+        }
+
+        if (skill.goldCost > 0)
+        {
+            if (hasCost) tooltipBuilder.Append(" + ");
+            tooltipBuilder.Append("골드 ").Append(skill.goldCost);
+            hasCost = true;
+        }
+
+        if (!hasCost) tooltipBuilder.Append("없음");
+
+        tooltipBuilder.Append("\n쿨다운: ").Append(skill.cooldownSeconds.ToString("0.#")).Append('s');
+
+        float remaining = currentShop != null ? currentShop.GetCooldownRemaining(skill) : 0f;
+        if (remaining > 0f)
+            tooltipBuilder.Append(" (재사용까지 ").Append(remaining.ToString("F1")).Append("s)");
+
+        if (skill.damageBase > 0f || skill.damagePerRound > 0f)
+        {
+            RoundManager rm = RoundManagerRef;
+            int round = rm != null ? rm.CurrentRound : 1;
+            tooltipBuilder.Append("\n피해량: ").Append(skill.ComputeDamage(round).ToString("F0"))
+                .Append(" (").Append(round).Append("라운드 기준)");
+        }
+
+        if (skill.targetKind == SupportSkillTargetKind.Ground)
+        {
+            tooltipBuilder.Append("\n범위: ").Append(skill.mapWide ? "맵 전체" : $"반경 {skill.radius:0.#}");
+        }
+
+        if (skill.duration > 0f)
+            tooltipBuilder.Append("\n지속시간: ").Append(skill.duration.ToString("0.#")).Append('s');
 
         return tooltipBuilder.ToString();
     }
@@ -730,12 +826,9 @@ public class GameHud : MonoBehaviour
 
     void OnUnitCommandSlotHoverEnter(int index)
     {
-        if (index < 0 || index >= unitCommandRecipes.Length) return;
-
-        CombineRecipe recipe = unitCommandRecipes[index];
-        if (recipe == null) return;
-
-        ShowCombineTooltip(recipe, (RectTransform)unitCommandSlotRoots[index].transform);
+        hoveredCommandSlotIndex = index;
+        nextTooltipRefreshTime = Time.time + TooltipRefreshInterval;
+        ShowHoveredTooltipNow(index);
     }
 
     // 선택이 바뀔 때만(매 프레임·주기 아님) GetRecipesStartingWith를 부른다.

@@ -19,39 +19,40 @@ GRADE = {
 }
 
 SKILLS = [
-    dict(name='폭우', target=GROUND, effect=DAMAGE,
+    dict(name='폭우', desc='좁은 범위에 비를 퍼부어 피해를 준다.', target=GROUND, effect=DAMAGE,
          mana=15, gold=0, cooldown=8, radius=10, mapWide=0,
          dmgBase=15, dmgPerRound=3, duration=0,
          refundPerHit=0, refundCap=0, restoreAmount=0, buffMult=1),
-    dict(name='흡수', target=GROUND, effect=DAMAGE,
+    dict(name='흡수', desc='적을 태워 피해를 주고, 맞힌 수만큼 마나를 되돌려받는다.', target=GROUND, effect=DAMAGE,
          mana=30, gold=0, cooldown=15, radius=10, mapWide=0,
          dmgBase=20, dmgPerRound=4, duration=0,
          refundPerHit=5, refundCap=30, restoreAmount=0, buffMult=1),
-    dict(name='해루석', target=GROUND, effect=ROOT,
+    dict(name='해루석', desc='적을 묶어두고 그동안 지속 마법피해를 준다.', target=GROUND, effect=ROOT,
          mana=120, gold=0, cooldown=50, radius=12, mapWide=0,
          dmgBase=35, dmgPerRound=6, duration=4,
          refundPerHit=0, refundCap=0, restoreAmount=0, buffMult=1),
-    dict(name='지진', target=GROUND, effect=DAMAGE,
+    dict(name='지진', desc='넓은 땅을 흔들어 광역 피해를 준다.', target=GROUND, effect=DAMAGE,
          mana=150, gold=0, cooldown=40, radius=15, mapWide=0,
          dmgBase=60, dmgPerRound=10, duration=0,
          refundPerHit=0, refundCap=0, restoreAmount=0, buffMult=1),
-    dict(name='해적선충돌', target=GROUND, effect=DAMAGE,
+    dict(name='해적선충돌', desc='해적선을 떨어뜨려 큰 피해를 주고 잠시 묶어둔다.', target=GROUND, effect=DAMAGE,
          mana=75, gold=0, cooldown=45, radius=14, mapWide=0,
          dmgBase=90, dmgPerRound=16, duration=2,
          refundPerHit=0, refundCap=0, restoreAmount=0, buffMult=1),
-    dict(name='출항이다', target=GROUND, effect=BUFF,
+    dict(name='출항이다', desc='전군의 사기를 올려 한동안 공격 속도를 높인다.', target=GROUND, effect=BUFF,
          mana=100, gold=0, cooldown=60, radius=15, mapWide=1,
          dmgBase=0, dmgPerRound=0, duration=10,
          refundPerHit=0, refundCap=0, restoreAmount=0, buffMult=1.3),
-    dict(name='버스터콜', target=GROUND, effect=DAMAGE,
+    dict(name='버스터콜', desc='압도적인 화력으로 넓은 지역을 초토화한다.', target=GROUND, effect=DAMAGE,
          mana=800, gold=0, cooldown=90, radius=25, mapWide=0,
          dmgBase=150, dmgPerRound=30, duration=0,
          refundPerHit=0, refundCap=0, restoreAmount=0, buffMult=1),
-    dict(name='마나포션', target=GROUND, effect=MANA_RESTORE,
+    dict(name='마나포션', desc='마나를 즉시 채운다.', target=GROUND, effect=MANA_RESTORE,
          mana=0, gold=3500, cooldown=120, radius=0, mapWide=0,
          dmgBase=0, dmgPerRound=0, duration=0,
          refundPerHit=0, refundCap=0, restoreAmount=150, buffMult=1),
-    dict(name='연금술', target=UNIT, effect=UNIT_DISMANTLE,
+    dict(name='연금술', desc='낮은 등급 유닛을 분해해 마나로 되돌린다 (등가교환 — 자격 미달이면 분해 없이 마나만 돌려받는다).',
+         target=UNIT, effect=UNIT_DISMANTLE,
          mana=20, gold=0, cooldown=20, radius=0, mapWide=0,
          dmgBase=0, dmgPerRound=0, duration=0,
          refundPerHit=0, refundCap=0, restoreAmount=0, buffMult=1,
@@ -105,6 +106,7 @@ for s in SKILLS:
 
     body = (HEAD.replace("__SCRIPT__", SKILL_SCRIPT).replace("__NAME__", ename) +
             f"  skillName: {s['name']}\n"
+            f"  description: {s['desc']}\n"
             f"  targetKind: {s['target']}\n"
             f"  effect: {s['effect']}\n"
             f"  manaCost: {s['mana']}\n"

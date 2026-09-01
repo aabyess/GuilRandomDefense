@@ -28,6 +28,11 @@ public class GradeManaRefund
 public class SupportSkillData : ScriptableObject
 {
     public string skillName;
+
+    // 툴팁용 한 줄 효과 서술. 마나·쿨다운·피해량·범위·지속시간 같은 수치는 코드가 이 필드와
+    // 별개로 다른 필드에서 직접 채운다 — 여기엔 "무엇을 하는 스킬인가"만 적는다.
+    [TextArea] public string description;
+
     public SupportSkillTargetKind targetKind = SupportSkillTargetKind.Ground;
     public SupportSkillEffect effect = SupportSkillEffect.Damage;
 

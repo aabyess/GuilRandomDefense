@@ -70,6 +70,12 @@ public class SupportShop : MonoBehaviour
         return cooldownUntil.TryGetValue(skill, out float until) ? until : 0f;
     }
 
+    // 툴팁에 "재사용까지 N초" 표시용.
+    public float GetCooldownRemaining(SupportSkillData skill)
+    {
+        return Mathf.Max(0f, GetCooldownUntil(skill) - Time.time);
+    }
+
     void StartCooldown(SupportSkillData skill)
     {
         cooldownUntil[skill] = Time.time + skill.cooldownSeconds;
