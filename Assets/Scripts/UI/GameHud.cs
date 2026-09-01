@@ -65,6 +65,21 @@ public class GameHud : MonoBehaviour
     GameObject combineTooltipObject;
     Text combineTooltipText;
 
+    // 유닛 명령 그리드(12칸). 0~2번은 공격/정지/모으기 고정 placeholder라 절대 안 건드림.
+    // 나머지 칸 중 맨 아랫줄부터 왼쪽→오른쪽, 넘치면 그 윗줄로 이어지는 순서로 "선택한 유닛이
+    // 무엇이 되는가"(조합 결과)를 채운다. 한 유닛이 최대 4개 레시피의 첫 재료라 이 정도면 충분하다.
+    static readonly int[] UnitCommandResultSlotOrder = { 9, 10, 11, 6, 7, 8, 3, 4, 5 };
+
+    readonly GameObject[] unitCommandSlotRoots = new GameObject[CommandSlotCount];
+    readonly Image[] unitCommandSlotBackgrounds = new Image[CommandSlotCount];
+    readonly Text[] unitCommandSlotNames = new Text[CommandSlotCount];
+    readonly Button[] unitCommandSlotButtons = new Button[CommandSlotCount];
+    readonly CombineRecipe[] unitCommandRecipes = new CombineRecipe[CommandSlotCount];
+
+    UnitData lastCommandUnitData;
+    int unitCommandSlotCount;
+    float nextUnitCommandDimRefreshTime;
+
     // 값이 안 바뀌면 문자열을 새로 만들지 않기 위한 마지막 표시값 캐시.
     int lastGold = int.MinValue;
     int lastWood = int.MinValue;
@@ -118,6 +133,7 @@ public class GameHud : MonoBehaviour
         RefreshTeamPanel();
         RefreshStoryPanel();
         RefreshCombineCards();
+        RefreshUnitCommandCards();
         RefreshInventoryPanel();
     }
 
@@ -514,7 +530,12 @@ public class GameHud : MonoBehaviour
 
     void OnCombineCardHoverEnter(int index)
     {
-        ShowCombineTooltip(index);
+        if (index < 0 || index >= combineCardRecipes.Length) return;
+
+        CombineRecipe recipe = combineCardRecipes[index];
+        if (recipe == null) return;
+
+        ShowCombineTooltip(recipe, (RectTransform)combineCardRoots[index].transform);
     }
 
     void OnCombineCardHoverExit()
@@ -581,19 +602,14 @@ public class GameHud : MonoBehaviour
 
     // 하단 바 안에 그리면 그 좁은 영역 안에서 잘리므로, 카드 위쪽에 절대 좌표로 띄운다.
     // ScreenSpaceOverlay 캔버스라 RectTransform.position이 곧 화면 픽셀 좌표라 이렇게 계산할 수 있다.
-    void ShowCombineTooltip(int index)
+    // 왼쪽 조합 카드·오른쪽 유닛 명령 슬롯 양쪽에서 공유해서 쓴다.
+    void ShowCombineTooltip(CombineRecipe recipe, RectTransform cardRect)
     {
-        if (combineTooltipObject == null) return;
-        if (index < 0 || index >= combineCardRecipes.Length) return;
-
-        CombineRecipe recipe = combineCardRecipes[index];
-        if (recipe == null) return;
+        if (combineTooltipObject == null || recipe == null || cardRect == null) return;
 
         combineTooltipText.text = BuildRecipeTooltipText(recipe);
 
-        RectTransform cardRect = (RectTransform)combineCardRoots[index].transform;
         RectTransform tooltipRect = (RectTransform)combineTooltipObject.transform;
-
         float halfHeight = cardRect.rect.height * cardRect.lossyScale.y * 0.5f;
         tooltipRect.position = cardRect.position + new Vector3(0f, halfHeight + 12f, 0f);
 
@@ -706,9 +722,11 @@ public class GameHud : MonoBehaviour
         combineTooltipObject.SetActive(false);
     }
 
-    // 유닛 명령 자리(공격/정지/모으기/스킬). 스킬 시스템이 아직 없어 지금은 동작 없는 칸이다 —
-    // 첫 세 칸에 이름만 넣어서 용도를 보여준다.
-    static void BuildUnitCommandGrid(RectTransform parent)
+    // 유닛 명령 자리(공격/정지/모으기/스킬 + 맨 아랫줄은 조합 결과). 0~2번은 공격/정지/모으기
+    // 고정 placeholder로 인터랙션을 꺼둔다. 나머지는 RefreshUnitCommandCards가 채운다.
+    static readonly Color UnitCommandDefaultColor = new Color(1f, 1f, 1f, 0.12f);
+
+    void BuildUnitCommandGrid(RectTransform parent)
     {
         GridLayoutGroup grid = parent.gameObject.AddComponent<GridLayoutGroup>();
         grid.cellSize = new Vector2(90f, 50f);
@@ -721,16 +739,151 @@ public class GameHud : MonoBehaviour
 
         for (int i = 0; i < CommandSlotCount; i++)
         {
-            GameObject slot = new GameObject($"UnitCommandSlot{i}", typeof(RectTransform), typeof(Image));
-            slot.transform.SetParent(parent, false);
-            slot.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.12f);
+            BuildUnitCommandSlot(i, parent);
 
             if (i < placeholderLabels.Length)
             {
-                Text label = CreateLabel(slot.transform, "Label", placeholderLabels[i]);
-                label.fontSize = 16;
+                unitCommandSlotNames[i].text = placeholderLabels[i];
+                unitCommandSlotButtons[i].interactable = false; // 스킬 시스템 없어 동작 없는 칸 — 절대 안 채워짐
             }
-            // 나머지 칸(스킬 등)은 동작 없음 — 스킬 데이터가 아직 없어 껍데기만 배치한다.
+        }
+    }
+
+    void BuildUnitCommandSlot(int index, Transform parent)
+    {
+        GameObject card = new GameObject($"UnitCommandSlot{index}", typeof(RectTransform), typeof(Image), typeof(Button));
+        card.transform.SetParent(parent, false);
+
+        Image background = card.GetComponent<Image>();
+        background.raycastTarget = true;
+        background.color = UnitCommandDefaultColor;
+
+        int capturedIndex = index;
+        Button button = card.GetComponent<Button>();
+        button.onClick.AddListener(() => OnUnitCommandSlotClicked(capturedIndex));
+
+        EventTrigger trigger = card.AddComponent<EventTrigger>();
+        AddTriggerEntry(trigger, EventTriggerType.PointerEnter, _ => OnUnitCommandSlotHoverEnter(capturedIndex));
+        AddTriggerEntry(trigger, EventTriggerType.PointerExit, _ => OnCombineCardHoverExit());
+
+        Text nameText = CreateLabel(card.transform, "Name", "");
+        nameText.raycastTarget = false;
+        nameText.fontSize = 12;
+        nameText.horizontalOverflow = HorizontalWrapMode.Wrap;
+
+        unitCommandSlotRoots[index] = card;
+        unitCommandSlotBackgrounds[index] = background;
+        unitCommandSlotNames[index] = nameText;
+        unitCommandSlotButtons[index] = button;
+    }
+
+    void OnUnitCommandSlotClicked(int index)
+    {
+        if (index < 0 || index >= unitCommandRecipes.Length) return;
+
+        CombineRecipe recipe = unitCommandRecipes[index];
+        if (recipe == null) return;
+
+        CombineSystem system = CombineSystemRef;
+        if (system == null || !system.CanCombineNow(recipe)) return; // 흐린 상태면 눌러도 아무 일 없음
+
+        if (system.TryCombine(recipe))
+        {
+            // 인벤토리가 바뀌어 흐림 상태가 달라졌을 것 — 다음 정기 갱신까지 안 기다리고 바로 반영.
+            RefreshUnitCommandAffordability();
+            nextUnitCommandDimRefreshTime = Time.time + RecipeRefreshInterval;
+            HideCombineTooltip();
+        }
+    }
+
+    void OnUnitCommandSlotHoverEnter(int index)
+    {
+        if (index < 0 || index >= unitCommandRecipes.Length) return;
+
+        CombineRecipe recipe = unitCommandRecipes[index];
+        if (recipe == null) return;
+
+        ShowCombineTooltip(recipe, (RectTransform)unitCommandSlotRoots[index].transform);
+    }
+
+    // 선택이 바뀔 때만(매 프레임·주기 아님) GetRecipesStartingWith를 부른다.
+    // 재료 충족 여부(CanCombineNow)만 0.4초 주기로 다시 확인해서 흐림 상태만 갱신한다.
+    void RefreshUnitCommandCards()
+    {
+        SelectionManager selection = Selection;
+        int count = selection != null ? selection.Selected.Count : 0;
+
+        UnitData selectedData = null;
+        if (count == 1)
+        {
+            Selectable single = selection.Selected[0];
+            if (single != null && single.TryGetComponent(out UnitIdentity identity))
+                selectedData = identity.Data;
+        }
+
+        if (selectedData != lastCommandUnitData)
+        {
+            lastCommandUnitData = selectedData;
+            RebuildUnitCommandSlots(selectedData);
+        }
+
+        if (unitCommandSlotCount == 0) return;
+        if (Time.time < nextUnitCommandDimRefreshTime) return;
+
+        nextUnitCommandDimRefreshTime = Time.time + RecipeRefreshInterval;
+        RefreshUnitCommandAffordability();
+    }
+
+    void RebuildUnitCommandSlots(UnitData selectedData)
+    {
+        for (int i = 0; i < unitCommandSlotCount; i++)
+        {
+            int slot = UnitCommandResultSlotOrder[i];
+            unitCommandRecipes[slot] = null;
+            unitCommandSlotBackgrounds[slot].color = UnitCommandDefaultColor;
+            unitCommandSlotNames[slot].text = "";
+        }
+
+        unitCommandSlotCount = 0;
+
+        if (selectedData == null) return;
+
+        CombineSystem system = CombineSystemRef;
+        if (system == null) return;
+
+        // 반환 버퍼는 재사용된다 — 즉시 소비만 하고 보관하지 않는다.
+        List<CombineRecipe> startingWith = system.GetRecipesStartingWith(selectedData);
+        int shown = Mathf.Min(startingWith.Count, UnitCommandResultSlotOrder.Length);
+
+        for (int i = 0; i < shown; i++)
+        {
+            CombineRecipe recipe = startingWith[i];
+            if (recipe == null || recipe.result == null) continue;
+
+            int slot = UnitCommandResultSlotOrder[i];
+            unitCommandRecipes[slot] = recipe;
+            unitCommandSlotNames[slot].text = recipe.result.unitName;
+        }
+
+        unitCommandSlotCount = shown;
+        RefreshUnitCommandAffordability();
+    }
+
+    // 재료가 부족하면 등급 색은 유지한 채 알파만 낮춘다 — 회색으로 칠하면 무슨 등급이 될지 안 보인다.
+    void RefreshUnitCommandAffordability()
+    {
+        CombineSystem system = CombineSystemRef;
+
+        for (int i = 0; i < unitCommandSlotCount; i++)
+        {
+            int slot = UnitCommandResultSlotOrder[i];
+            CombineRecipe recipe = unitCommandRecipes[slot];
+            if (recipe == null || recipe.result == null) continue;
+
+            bool canCombine = system != null && system.CanCombineNow(recipe);
+            Color color = GetGradeColor(recipe.result.grade);
+            color.a = canCombine ? color.a : 0.4f;
+            unitCommandSlotBackgrounds[slot].color = color;
         }
     }
 
