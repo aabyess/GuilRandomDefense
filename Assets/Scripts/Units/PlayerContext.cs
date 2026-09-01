@@ -18,6 +18,31 @@ public class PlayerContext : MonoBehaviour
 
     public static IReadOnlyList<PlayerContext> All => registry;
 
+    /// <summary>
+    /// 실제로 사람이 앉아 있는 슬롯만. 자원·위습을 나눠줄 땐 거의 항상 이쪽이다 —
+    /// 빈 자리에 주면 아무도 안 쓰는 채로 쌓이고, 위습은 필드에 실물로 나와
+    /// 내 것과 섞여 어느 게 내 것인지 알 수 없게 된다.
+    /// </summary>
+    public static IEnumerable<PlayerContext> Occupied
+    {
+        get
+        {
+            foreach (PlayerContext context in registry)
+                if (context != null && context.occupied) yield return context;
+        }
+    }
+
+    public static int OccupiedCount
+    {
+        get
+        {
+            int count = 0;
+            foreach (PlayerContext context in registry)
+                if (context != null && context.occupied) count++;
+            return count;
+        }
+    }
+
     public static PlayerContext Local
     {
         get

@@ -34,7 +34,7 @@ public class RewardDistributor : MonoBehaviour
         if (!GameAuthority.IsServer) return;
         if (startingWisp == null || startingWispCount <= 0) return;
 
-        foreach (PlayerContext context in PlayerContext.All)
+        foreach (PlayerContext context in PlayerContext.Occupied)
         {
             SpawnWisp(context, startingWisp, startingWispCount);
         }
@@ -55,7 +55,8 @@ public class RewardDistributor : MonoBehaviour
 
         if (data.rewardsAllPlayers)
         {
-            foreach (PlayerContext context in PlayerContext.All)
+            // 빈 슬롯은 건너뛴다 — 스토리·라운드 보상이 이미 같은 규칙이다.
+            foreach (PlayerContext context in PlayerContext.Occupied)
             {
                 GrantTo(context, data);
             }
@@ -144,7 +145,7 @@ public class RewardDistributor : MonoBehaviour
         // 위습 칸은 플레이어 넷이 함께 쓴다. 넷이 같은 점에 쏟아지면 스무 개가 겹쳐서,
         // 어느 것이 내 것인지 알 수 없고 남의 위습을 아무리 눌러도 안 움직인다.
         // 주인마다 칸 안의 다른 자리를 쓰고, 그 안에서 다시 원을 그린다.
-        int players = Mathf.Max(1, PlayerContext.All.Count);
+        int players = Mathf.Max(1, PlayerContext.OccupiedCount);
         float ownerAngle = 360f / players * context.PlayerId;
         Vector3 ownerSpot = players > 1
             ? Quaternion.Euler(0f, ownerAngle, 0f) * Vector3.forward * OwnerSpread
