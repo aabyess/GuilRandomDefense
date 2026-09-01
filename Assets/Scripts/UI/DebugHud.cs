@@ -69,6 +69,12 @@ public class DebugHud : MonoBehaviour
         combineSystem.TryCombine(available[0]);
     }
 
+    RtsCameraController cameraRef;
+
+    RtsCameraController CameraRef => cameraRef != null
+        ? cameraRef
+        : cameraRef = FindFirstObjectByType<RtsCameraController>();
+
     void OnGUI()
     {
         if (!visible)
@@ -91,6 +97,15 @@ public class DebugHud : MonoBehaviour
         }
 
         GUILayout.Label($"필드 몹 수: {EnemyDummy.Active.Count}");
+
+        // 방향키와 가장자리 밀기가 정말 같은 속도인지 확인용. 둘 다 같은 CurrentSpeed로 이어져야 한다.
+        if (CameraRef != null)
+        {
+            GUILayout.Label($"카메라 높이 {CameraRef.transform.position.y:F0} " +
+                            $"(높이 배율 {CameraRef.CurrentSpeed / Mathf.Max(0.01f, CameraRef.KeyboardAxis.magnitude + CameraRef.EdgeAxis.magnitude):F0} 기준)");
+            GUILayout.Label($"카메라 입력  방향키 {CameraRef.KeyboardAxis}  가장자리 {CameraRef.EdgeAxis}");
+            GUILayout.Label($"카메라 속도  {CameraRef.CurrentSpeed:F0}/초");
+        }
 
         Warehouse warehouseRef = Warehouse;
         GUILayout.Label($"창고: {(warehouseRef != null ? warehouseRef.Stored.Count.ToString() : "-")}개");

@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 /// <summary>
 /// 워크래프트·스타·롤 방식의 전략 게임 카메라.
 /// 화면 가장자리로 마우스를 밀거나 WASD/방향키로 이동하고, 휠로 확대·축소한다.
+/// 스페이스(또는 Home)를 누르면 자기 레인 가운데로 돌아온다.
 /// 카메라는 기울기를 유지한 채 수평으로만 움직인다(회전 없음).
 /// </summary>
 public class RtsCameraController : MonoBehaviour
@@ -33,6 +34,12 @@ public class RtsCameraController : MonoBehaviour
 
     Vector2 smoothedInput;
     float targetHeight;
+
+    // 방향키와 가장자리 밀기가 같은 속도인지 눈으로 확인하려고 둔 값 — 디버그 HUD(F1)가 읽는다.
+    public Vector2 KeyboardAxis { get; private set; }
+    public Vector2 EdgeAxis { get; private set; }
+    /// <summary>지금 실제로 나가는 초당 이동 거리. 어느 입력이든 같은 값을 써야 정상이다.</summary>
+    public float CurrentSpeed => smoothedInput.magnitude * moveSpeed * HeightScale();
 
     void Start()
     {
@@ -156,12 +163,18 @@ public class RtsCameraController : MonoBehaviour
         // Start()에서 맞춰 놓은 시작 구도가 즉시 날아간다.
         float delta = Mathf.Min(Time.unscaledDeltaTime, MaxFrameDelta);
 
-        // 내 레인으로 돌아오기. RTS의 '본진 보기'에 해당하고,
-        // 시작 시점 자동 이동이 어떤 이유로 안 걸렸을 때도 직접 확인할 수 있다.
-        if (Keyboard.current != null && Keyboard.current.homeKey.wasPressedThisFrame)
+        // 내 레인으로 돌아오기. RTS의 '본진 보기'다.
+        // 스페이스가 주 키이고, Home도 남겨둔다 — 에디터에서는 스페이스가 Game 뷰 최대화와
+        // 겹쳐서 카메라만 확인하고 싶을 때 Home이 필요하다(빌드에서는 겹치지 않는다).
+        if (Keyboard.current != null &&
+            (Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.homeKey.wasPressedThisFrame))
             FocusOnLocalLane();
 
-        Vector2 rawInput = Vector2.ClampMagnitude(KeyboardInput() + EdgeInput(), 1f);
+        // 두 입력은 같은 축 값으로 합쳐져 같은 moveSpeed·같은 감쇠를 지난다 —
+        // 방향키가 느리게 느껴진다면 속도가 아니라 다른 데(에디터 포커스, 카메라 높이)에 원인이 있다.
+        KeyboardAxis = KeyboardInput();
+        EdgeAxis = EdgeInput();
+        Vector2 rawInput = Vector2.ClampMagnitude(KeyboardAxis + EdgeAxis, 1f);
         smoothedInput = inputSmoothing > 0f
             ? Vector2.Lerp(smoothedInput, rawInput, 1f - Mathf.Exp(-inputSmoothing * delta))
             : rawInput;
