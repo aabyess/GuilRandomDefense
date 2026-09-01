@@ -44,7 +44,6 @@ public static class MapGenerator
         { "sea",       new Surface("water", new Color(0.78f, 0.90f, 1.00f), 0.080f, 0.92f) },
         { "rock",      new Surface("rock",  Color.white,                    0.140f, 0.10f) },
         { "dirt",      new Surface("dirt",  Color.white,                    0.180f, 0.05f) },
-        { "pond",      new Surface("water", new Color(0.70f, 0.88f, 1.00f), 0.260f, 0.95f) },
         { "lane",      new Surface("grass", Color.white,                    0.120f, 0.05f) },
         { "warehouse", new Surface("grass", new Color(1.00f, 0.94f, 0.78f), 0.120f, 0.05f) },
         { "seal",      new Surface("grass", new Color(0.82f, 1.00f, 0.94f), 0.160f, 0.05f) },
@@ -78,7 +77,7 @@ public static class MapGenerator
         {
             GameObject laneObject = BuildIsland(root.transform, MapLayout.Lanes[i]);
             laneObject.AddComponent<LaneMarker>().SetLaneIndex(i);
-            DecorateLane(root.transform, MapLayout.Lanes[i], i);
+            DecorateLane(root.transform, MapLayout.Lanes[i]);
             laneObjects.Add(laneObject);
         }
 
@@ -171,13 +170,15 @@ public static class MapGenerator
         return obj;
     }
 
-    // 레인 지형. 원작은 바깥을 도는 흙길, 안쪽 잔디, 낮은 언덕, 물웅덩이로 되어 있다.
-    // 전부 장식이라 콜라이더를 붙이지 않는다 — 붙이면 NavMesh가 울퉁불퉁해져
-    // 적이 순찰 경로를 못 따라가거나 유닛이 언덕에 걸린다.
+    // 레인 지형. 적이 도는 자리에 흙길을 깐다.
+    // 언덕·웅덩이도 넣어봤는데 납작한 원판으로만 보여서 뺐다 —
+    // 높낮이는 실제 지형(메시)이 있어야 나오지, 판을 얹어서 될 일이 아니다.
+    // 장식이라 콜라이더는 붙이지 않는다. 붙이면 NavMesh가 울퉁불퉁해져
+    // 적이 순찰 경로를 못 따라가거나 유닛이 걸린다.
     const float TrackWidth = 7f;        // 흙길 폭
     const float TrackInset = 8f;        // 섬 가장자리에서 흙길 중심까지 (순찰 경로와 같은 값)
 
-    static void DecorateLane(Transform parent, MapLayout.Island lane, int index)
+    static void DecorateLane(Transform parent, MapLayout.Island lane)
     {
         float halfX = lane.size.x * 0.5f - TrackInset;
         float halfZ = lane.size.y * 0.5f - TrackInset;
@@ -195,36 +196,6 @@ public static class MapGenerator
         BuildDecor(parent, $"{lane.name}_흙길_오른", new Vector3(x + halfX, y, z),
                    new Vector3(TrackWidth, 0.08f, halfZ * 2f - TrackWidth), "dirt");
 
-        // 언덕과 웅덩이는 흙길 안쪽에만 놓는다. 경로 위에 겹치면 적이 파묻힌 것처럼 보인다.
-        float innerX = halfX - TrackWidth * 0.5f - 3f;
-        float innerZ = halfZ - TrackWidth * 0.5f - 3f;
-
-        // 레인마다 같은 자리에 놓이면 네 레인이 똑같아 보인다. 레인 번호로 배치를 흔든다.
-        System.Random rng = new System.Random(1000 + index);
-
-        for (int i = 0; i < 3; i++)
-        {
-            Vector3 at = new Vector3(
-                x + (float)(rng.NextDouble() * 2 - 1) * innerX,
-                MapLayout.IslandTop, 
-                z + (float)(rng.NextDouble() * 2 - 1) * innerZ);
-
-            float size = 8f + (float)rng.NextDouble() * 7f;
-            BuildDecor(parent, $"{lane.name}_언덕{i}", at + Vector3.up * 0.35f,
-                       new Vector3(size, 0.7f, size), "lane", PrimitiveType.Cylinder);
-        }
-
-        for (int i = 0; i < 2; i++)
-        {
-            Vector3 at = new Vector3(
-                x + (float)(rng.NextDouble() * 2 - 1) * innerX,
-                MapLayout.IslandTop + 0.05f,
-                z + (float)(rng.NextDouble() * 2 - 1) * innerZ);
-
-            float size = 5f + (float)rng.NextDouble() * 5f;
-            BuildDecor(parent, $"{lane.name}_웅덩이{i}", at,
-                       new Vector3(size, 0.1f, size), "pond", PrimitiveType.Cylinder);
-        }
     }
 
     static void BuildDecor(Transform parent, string name, Vector3 position, Vector3 scale,
@@ -276,12 +247,13 @@ public static class MapGenerator
         return paths;
     }
 
-    // 조합식 표: 등급별 세로 칸에 그 등급 유닛을 늘어놓는다.
-    // 원작처럼 표 위에 유닛이 서 있고 플레이어가 그걸 보고 조합을 익히는 구조라,
-    // 지금은 스킨 대신 자리 표시 기둥을 세운다. 표가 얼마나 커야 하는지도 이걸로 드러난다.
-    const float SlotSpacing = 4.5f;
-    const float SlotSize = 2.2f;
-    const float SlotHeight = 2.6f;
+    // 조합식 표. 원작처럼 한 줄이 조합식 하나다: 재료들 → 결과.
+    // 등급별로 유닛만 모아두면 "무엇으로 만드는지"를 알 수 없어서 표의 역할을 못 한다.
+    const float RecipeSlot = 3.2f;      // 유닛 한 칸
+    const float RecipeGap = 1.0f;       // 재료 사이 간격
+    const float RecipeArrowGap = 3.0f;  // 재료 묶음과 결과 사이
+    const float RecipeRowHeight = 4.5f;
+    const float RecipeSlotHeight = 2.4f;
 
     static string BuildCombineColumns(GameObject table)
     {
@@ -289,55 +261,119 @@ public static class MapGenerator
 
         MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "CombineTable");
         UnitGrade[] grades = MapLayout.CombineTableGrades;
-        float columnWidth = island.size.x / grades.Length;
+        Transform parent = table.transform.parent;
 
+        float columnWidth = island.size.x / grades.Length;
         int placed = 0;
-        float deepestUsed = 0f;
+        float deepest = 0f;
 
         for (int c = 0; c < grades.Length; c++)
         {
             UnitGrade grade = grades[c];
-            List<UnitData> units = LoadUnitsOfGrade(grade);
-            float columnCenterX = island.center.x - island.size.x * 0.5f + columnWidth * (c + 0.5f);
+            List<CombineRecipe> recipes = LoadRecipesProducing(grade);
+            float columnLeft = island.center.x - island.size.x * 0.5f + columnWidth * c;
 
-            // 칸 바닥 — 등급 구분이 눈에 보이게 옅은 판을 깐다.
+            // 등급 구분용 바닥판
             GameObject strip = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            strip.name = $"Column_{grade.KoreanName()}";
-            strip.transform.SetParent(table.transform.parent, false);
-            strip.transform.position = new Vector3(columnCenterX, MapLayout.IslandTop + 0.06f, island.center.y);
+            strip.name = $"조합표_{grade.KoreanName()}";
+            strip.transform.SetParent(parent, false);
+            strip.transform.position = new Vector3(columnLeft + columnWidth * 0.5f,
+                                                   MapLayout.IslandTop + 0.06f, island.center.y);
             strip.transform.localScale = new Vector3(columnWidth - 1.5f, 0.12f, island.size.y - 2f);
             Paint(strip, "combine", columnWidth, island.size.y);
             Object.DestroyImmediate(strip.GetComponent<Collider>());
 
-            int perRow = Mathf.Max(1, Mathf.FloorToInt((columnWidth - SlotSpacing) / SlotSpacing));
-            float startX = columnCenterX - (perRow - 1) * SlotSpacing * 0.5f;
-            float startZ = island.center.y + island.size.y * 0.5f - SlotSpacing;
+            float rowZ = island.center.y + island.size.y * 0.5f - RecipeRowHeight;
 
-            for (int i = 0; i < units.Count; i++)
+            foreach (CombineRecipe recipe in recipes)
             {
-                float z = startZ - (i / perRow) * SlotSpacing;
-
-                GameObject slot = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                slot.name = $"{grade.KoreanName()}_{units[i].unitName}";
-                slot.transform.SetParent(table.transform.parent, false);
-                slot.transform.position = new Vector3(
-                    startX + (i % perRow) * SlotSpacing, MapLayout.IslandTop + SlotHeight * 0.5f, z);
-                slot.transform.localScale = new Vector3(SlotSize, SlotHeight, SlotSize);
-                PaintSolid(slot, GradeColor(grade));
-                // 표 위를 걸어다녀야 하므로 기둥은 통과시킨다.
-                Object.DestroyImmediate(slot.GetComponent<Collider>());
-
-                deepestUsed = Mathf.Max(deepestUsed, startZ - z + SlotSpacing);
+                PlaceRecipeRow(parent, recipe, columnLeft + 2f, rowZ);
+                rowZ -= RecipeRowHeight;
                 placed++;
             }
+
+            deepest = Mathf.Max(deepest, island.center.y + island.size.y * 0.5f - rowZ);
         }
 
         float available = island.size.y;
-        string verdict = deepestUsed <= available
-            ? $"여유 {available - deepestUsed:F0}"
-            : $"⚠️ {deepestUsed - available:F0} 모자람 — CombineTable 세로를 {Mathf.CeilToInt(deepestUsed) + 6}으로 늘리세요";
+        string verdict = deepest <= available
+            ? $"여유 {available - deepest:F0}"
+            : $"⚠️ {deepest - available:F0} 모자람 — CombineTable 세로를 {Mathf.CeilToInt(deepest) + 8}으로";
 
-        return $"\n조합식 표에 {placed}종 배치 (필요 깊이 {deepestUsed:F0} / 확보 {available:F0}, {verdict}).";
+        return $"\n조합식 표: {placed}개 조합식 (필요 깊이 {deepest:F0}/{available:F0}, {verdict}).";
+    }
+
+    // 한 줄: 재료를 왼쪽부터 늘어놓고, 사이를 띄운 뒤 결과를 놓는다.
+    static void PlaceRecipeRow(Transform parent, CombineRecipe recipe, float leftX, float z)
+    {
+        float x = leftX;
+        string label = recipe.result != null ? recipe.result.unitName : "?";
+
+        if (recipe.ingredients != null)
+        {
+            foreach (RecipeIngredient ingredient in recipe.ingredients)
+            {
+                if (ingredient == null) continue;
+
+                // count가 3이면 같은 칸을 세 번 놓는다 — 원작 표가 그렇게 늘어놓는다.
+                for (int n = 0; n < Mathf.Max(1, ingredient.count); n++)
+                {
+                    PlaceRecipeSlot(parent, x, z, IngredientName(ingredient), IngredientColor(ingredient),
+                                    $"재료_{label}");
+                    x += RecipeSlot + RecipeGap;
+                }
+            }
+        }
+
+        x += RecipeArrowGap;
+        Color resultColor = recipe.result != null ? GradeColor(recipe.result.grade) : Color.gray;
+        PlaceRecipeSlot(parent, x, z, label, resultColor, $"결과_{label}");
+    }
+
+    static void PlaceRecipeSlot(Transform parent, float x, float z, string label, Color color, string prefix)
+    {
+        GameObject slot = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        slot.name = $"{prefix}_{label}";
+        slot.transform.SetParent(parent, false);
+        slot.transform.position = new Vector3(x, MapLayout.IslandTop + RecipeSlotHeight * 0.5f, z);
+        slot.transform.localScale = new Vector3(RecipeSlot, RecipeSlotHeight, RecipeSlot);
+        PaintSolid(slot, color);
+        // 표 위를 걸어다녀야 하므로 통과시킨다.
+        Object.DestroyImmediate(slot.GetComponent<Collider>());
+    }
+
+    static string IngredientName(RecipeIngredient ingredient)
+    {
+        switch (ingredient.kind)
+        {
+            case IngredientKind.SpecificUnit:
+                return ingredient.unit != null ? ingredient.unit.unitName : "?";
+            case IngredientKind.SpecificItem:
+                return ingredient.item != null ? ingredient.item.name : "?";
+            default:
+                return $"{ingredient.wildcardGrade.KoreanName()}아무거나";
+        }
+    }
+
+    static Color IngredientColor(RecipeIngredient ingredient)
+    {
+        if (ingredient.kind == IngredientKind.SpecificUnit && ingredient.unit != null)
+            return GradeColor(ingredient.unit.grade);
+
+        if (ingredient.kind == IngredientKind.UnitGradeWildcard)
+            return GradeColor(ingredient.wildcardGrade) * 0.7f;   // 지정 유닛과 구분되게 어둡게
+
+        return new Color(0.55f, 0.45f, 0.35f);   // 아이템
+    }
+
+    static List<CombineRecipe> LoadRecipesProducing(UnitGrade grade)
+    {
+        return AssetDatabase.FindAssets("t:CombineRecipe", new[] { "Assets/Data/Recipes" })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .Select(AssetDatabase.LoadAssetAtPath<CombineRecipe>)
+            .Where(recipe => recipe != null && recipe.result != null && recipe.result.grade == grade)
+            .OrderBy(recipe => recipe.result.unitName, System.StringComparer.Ordinal)
+            .ToList();
     }
 
     static List<UnitData> LoadUnitsOfGrade(UnitGrade grade)

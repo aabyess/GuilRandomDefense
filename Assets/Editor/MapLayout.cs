@@ -64,14 +64,15 @@ public static class MapLayout
         new Island("StoryZone",       -147f, -46f, 84f, 70f, "story"),
         new Island("GachaIsland",      -52f, -50f, 74f, 130f, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
-        new Island("CombineTable",      48f, -48f, 116f, 80f, "combine"),
+        new Island("CombineTable",      65f, -105f, 150f, 200f, "combine"),
     };
 
     // 조합식 표에 노출하는 등급 6종 — 표 위의 세로 칸 하나씩.
     // 히든·영원·초월·불멸·다른세계는 의도적으로 표시하지 않는다(외부 조합표를 보고 조합).
+    // 흔함은 조합으로 만들어지지 않는 기초 등급이라 표에 열이 없다.
     public static readonly UnitGrade[] CombineTableGrades =
     {
-        UnitGrade.Common, UnitGrade.Uncommon, UnitGrade.Special,
+        UnitGrade.Uncommon, UnitGrade.Special,
         UnitGrade.Rare, UnitGrade.Legendary, UnitGrade.Limited,
     };
 
