@@ -9,7 +9,9 @@ public static class MapLayout
 {
     // 섬 전체는 X -310~320, Z -193~291 (630×484). 바다는 그보다 훨씬 커야 한다 —
     // 카메라를 가장자리까지 밀었을 때 바다 밖 회색이 보이면 맵이 끊긴 것처럼 읽힌다.
-    public const float SeaSize = 1000f;
+    // 최대 높이(420)에서 경계 끝까지 밀면 가로로 약 680이 보인다.
+    // 카메라 경계(±380)에 그 절반을 더한 720까지 바다가 있어야 밖이 안 보인다.
+    public const float SeaSize = 1600f;
     public const float IslandTop = 1f;      // 섬 윗면 높이 — 바다보다 한 단 높아 지상 유닛이 넘어가지 못한다
     public const float IslandThickness = 1f;
     public const int SeaAreaIndex = 3;      // ProjectSettings/NavMeshAreas.asset 3번 = Sea
