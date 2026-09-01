@@ -156,8 +156,10 @@ public static class ArtBinder
         if (monsters.Count == 0 && characters.Count == 0)
         {
             EditorUtility.DisplayDialog(Title,
-                $"모델을 찾지 못했습니다.\n\n{MonsterFolder} 또는 {CharacterFolder} 에 " +
-                "FBX·OBJ·glTF 파일을 넣고 다시 실행하세요.\n\n" +
+                $"몸이 있는 모델을 찾지 못했습니다.\n\n{MonsterFolder} 또는 {CharacterFolder} 에 " +
+                "FBX·OBJ 파일을 넣고 다시 실행하세요.\n\n" +
+                "Mixamo에서 받으셨다면 하나는 반드시 With Skin이어야 합니다 — " +
+                "Without Skin은 동작만 들어 있어 몸이 없습니다.\n\n" +
                 "받을 곳은 Docs/reference/CHARACTER_ASSETS.md 에 정리돼 있습니다.", "확인");
             return;
         }
@@ -476,8 +478,24 @@ public static class ArtBinder
             .Where(path => !path.EndsWith(".prefab"))   // 모델 파일만. 이미 만든 프리팹은 제외
             .OrderBy(path => path, System.StringComparer.Ordinal)
             .Select(AssetDatabase.LoadAssetAtPath<GameObject>)
-            .Where(model => model != null)
+            .Where(HasVisibleMesh)
             .ToList();
+    }
+
+    // Mixamo에서 Without Skin으로 받은 FBX는 뼈대와 동작만 있고 몸이 없다. 그것까지 모델로 세면
+    // 유닛 절반이 투명해지고, 화면에 아무것도 없는데 어디가 잘못됐는지 알 길이 없다.
+    // 실제로 그릴 메시가 있는 것만 모델로 친다.
+    static bool HasVisibleMesh(GameObject model)
+    {
+        if (model == null) return false;
+
+        foreach (SkinnedMeshRenderer skinned in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            if (skinned.sharedMesh != null) return true;
+
+        foreach (MeshFilter filter in model.GetComponentsInChildren<MeshFilter>(true))
+            if (filter.sharedMesh != null) return true;
+
+        return false;
     }
 
     static List<T> LoadAll<T>(string folder) where T : Object
