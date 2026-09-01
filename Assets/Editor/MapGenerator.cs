@@ -255,6 +255,7 @@ public static class MapGenerator
     const float SlotSize = 3f;
     const float SlotHeight = 3.4f;
 
+    const int MaxRecipeRows = 25;      // 한 열에 넣을 최대 조합식 수. 넘으면 옆 열로 이어간다
     const float RecipeSlot = 4.5f;      // 유닛 한 칸
     const float RecipeGap = 1.4f;       // 재료 사이 간격
     const float RecipeArrowGap = 4.0f;  // 재료 묶음과 결과 사이
@@ -266,33 +267,55 @@ public static class MapGenerator
         if (table == null) return "";
 
         MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "CombineTable");
-        UnitGrade[] grades = MapLayout.CombineTableGrades;
         Transform parent = table.transform.parent;
 
-        float columnWidth = island.size.x / grades.Length;
+        // 한 등급이 42행까지 가면 세로로 너무 길어 읽히지 않는다.
+        // 25행에서 끊고 옆 열로 이어간다 — 등급마다 필요한 열 수가 달라진다.
+        List<(UnitGrade grade, List<CombineRecipe> chunk)> columns =
+            new List<(UnitGrade, List<CombineRecipe>)>();
+
+        foreach (UnitGrade grade in MapLayout.CombineTableGrades)
+        {
+            List<CombineRecipe> recipes = LoadRecipesProducing(grade);
+            for (int i = 0; i < recipes.Count; i += MaxRecipeRows)
+                columns.Add((grade, recipes.GetRange(i, Mathf.Min(MaxRecipeRows, recipes.Count - i))));
+        }
+
+        if (columns.Count == 0) return "";
+
+        float columnWidth = island.size.x / columns.Count;
+        float tableLeft = island.center.x - island.size.x * 0.5f;
+        float tableTop = island.center.y + island.size.y * 0.5f;
+
         int placed = 0;
         float deepest = 0f;
         string sample = null;
 
-        for (int c = 0; c < grades.Length; c++)
+        for (int c = 0; c < columns.Count; c++)
         {
-            UnitGrade grade = grades[c];
-            List<CombineRecipe> recipes = LoadRecipesProducing(grade);
-            float columnLeft = island.center.x - island.size.x * 0.5f + columnWidth * c;
+            (UnitGrade grade, List<CombineRecipe> chunk) = columns[c];
+            float columnLeft = tableLeft + columnWidth * c;
 
-            // 등급 구분용 바닥판
-            GameObject strip = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            strip.name = $"조합표_{grade.KoreanName()}";
-            strip.transform.SetParent(parent, false);
-            strip.transform.position = new Vector3(columnLeft + columnWidth * 0.5f,
-                                                   MapLayout.IslandTop + 0.06f, island.center.y);
-            strip.transform.localScale = new Vector3(columnWidth - 1.5f, 0.12f, island.size.y - 2f);
-            Paint(strip, "combine", columnWidth, island.size.y);
-            Object.DestroyImmediate(strip.GetComponent<Collider>());
+            // 같은 등급이 여러 열에 걸치면 바닥판을 하나로 이어 그린다 — 그래야 등급 경계가 보인다.
+            bool startsGrade = c == 0 || columns[c - 1].grade != grade;
+            if (startsGrade)
+            {
+                int span = 1;
+                while (c + span < columns.Count && columns[c + span].grade == grade) span++;
 
-            float rowZ = island.center.y + island.size.y * 0.5f - RecipeRowHeight;
+                GameObject strip = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                strip.name = $"조합표_{grade.KoreanName()}";
+                strip.transform.SetParent(parent, false);
+                strip.transform.position = new Vector3(columnLeft + columnWidth * span * 0.5f,
+                                                       MapLayout.IslandTop + 0.06f, island.center.y);
+                strip.transform.localScale = new Vector3(columnWidth * span - 2f, 0.12f, island.size.y - 2f);
+                Paint(strip, "combine", columnWidth * span, island.size.y);
+                Object.DestroyImmediate(strip.GetComponent<Collider>());
+            }
 
-            foreach (CombineRecipe recipe in recipes)
+            float rowZ = tableTop - RecipeRowHeight;
+
+            foreach (CombineRecipe recipe in chunk)
             {
                 PlaceRecipeRow(parent, recipe, columnLeft + 2f, rowZ);
                 rowZ -= RecipeRowHeight;
@@ -301,7 +324,7 @@ public static class MapGenerator
                 if (sample == null) sample = DescribeRecipe(recipe);
             }
 
-            deepest = Mathf.Max(deepest, island.center.y + island.size.y * 0.5f - rowZ);
+            deepest = Mathf.Max(deepest, tableTop - rowZ);
         }
 
         float available = island.size.y;
@@ -309,9 +332,36 @@ public static class MapGenerator
             ? $"여유 {available - deepest:F0}"
             : $"⚠️ {deepest - available:F0} 모자람 — CombineTable 세로를 {Mathf.CeilToInt(deepest) + 8}으로";
 
-        // 팝업만 보고도 옛 배치인지 새 배치인지 구분되게, 실제로 만든 첫 행을 적어 준다.
-        return $"\n조합식 표: {placed}개 조합식 (필요 깊이 {deepest:F0}/{available:F0}, {verdict})." +
-               (sample != null ? $"\n  예시: {sample}" : "");
+        float widest = MaxRecipeRowWidth();
+        string fit = widest <= columnWidth
+            ? ""
+            : $"\n  ⚠️ 가장 긴 조합식({widest:F0})이 열 폭({columnWidth:F0})을 넘습니다 — 표 가로를 늘리세요";
+
+        return $"\n조합식 표: {placed}개 조합식, {columns.Count}열 (한 열 최대 {MaxRecipeRows}행)." +
+               $"\n  깊이 {deepest:F0}/{available:F0} {verdict}" +
+               (sample != null ? $"\n  예시: {sample}" : "") + fit;
+    }
+
+    // 재료가 가장 많은 조합식이 열 폭에 들어가는지 확인하는 데 쓴다.
+    static float MaxRecipeRowWidth()
+    {
+        int maxSlots = 0;
+
+        foreach (UnitGrade grade in MapLayout.CombineTableGrades)
+        {
+            foreach (CombineRecipe recipe in LoadRecipesProducing(grade))
+            {
+                if (recipe.ingredients == null) continue;
+
+                int slots = 0;
+                foreach (RecipeIngredient ingredient in recipe.ingredients)
+                    if (ingredient != null) slots += Mathf.Max(1, ingredient.count);
+
+                maxSlots = Mathf.Max(maxSlots, slots);
+            }
+        }
+
+        return maxSlots * (RecipeSlot + RecipeGap) + RecipeArrowGap + RecipeSlot + 4f;
     }
 
     // 한 줄: 재료를 왼쪽부터 늘어놓고, 사이를 띄운 뒤 결과를 놓는다.
