@@ -79,6 +79,7 @@ public static class MapGenerator
             laneObject.AddComponent<LaneMarker>().SetLaneIndex(i);
             DecorateLane(root.transform, MapLayout.Lanes[i]);
             BuildSupportShop(root.transform, MapLayout.Lanes[i], i);
+            BuildGamblingShop(root.transform, MapLayout.Lanes[i], i);
             laneObjects.Add(laneObject);
         }
 
@@ -204,18 +205,75 @@ public static class MapGenerator
     // 도움소 — 레인 안, 순찰 경로(inset 14)보다 안쪽인 섬 중앙에 둔다. 파괴 불가라 Collider만
     // 있으면 되고(TakeDamage가 아예 없다), EnemyDummy.Active/DestructibleGate.Active 어디에도
     // 등록되지 않으니 적 타겟팅 후보에도 자연히 들어가지 않는다.
-    static void BuildSupportShop(Transform parent, MapLayout.Island lane, int laneIndex)
+    // 레인 안 상점 건물들. 순찰 흙길(TrackInset 14)보다 안쪽, 레인 가운데에 가로로 늘어선다.
+    // 앞으로 강화소 셋이 더 붙으므로 자리를 인덱스로 잡는다.
+    const int LaneShopCount = 5;
+    const float LaneShopSpacing = 10f;
+    const float LaneShopSize = 4f;
+
+    static Vector3 LaneShopSlot(MapLayout.Island lane, int slot)
+    {
+        float left = lane.center.x - LaneShopSpacing * (LaneShopCount - 1) * 0.5f;
+        return new Vector3(left + LaneShopSpacing * slot, MapLayout.IslandTop + 1.5f, lane.center.y);
+    }
+
+    static GameObject BuildLaneShopBody(Transform parent, string name, Vector3 at, int laneIndex, string surface)
     {
         GameObject shop = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        shop.name = $"{lane.name}_도움소";
+        shop.name = name;
         shop.transform.SetParent(parent, false);
-        shop.transform.position = new Vector3(lane.center.x, MapLayout.IslandTop + 1.5f, lane.center.y);
-        shop.transform.localScale = new Vector3(4f, 3f, 4f);
-        Paint(shop, "warehouse", 4f, 4f);   // 임시 — 전용 모델 없어 창고와 같은 텍스처만 재사용
+        shop.transform.position = at;
+        shop.transform.localScale = new Vector3(LaneShopSize, 3f, LaneShopSize);
+        Paint(shop, surface, LaneShopSize, LaneShopSize);   // 임시 — 전용 모델이 없어 기존 텍스처를 쓴다
 
         shop.AddComponent<Selectable>();
         shop.AddComponent<OwnedByPlayer>().SetOwner(laneIndex);
+        return shop;
+    }
 
+    // 도박소는 0번 자리다(사장님이 준 원작 순서: 도박소·유닛강화소·다른세계 강화소·영원함 강화소·도움소).
+    static void BuildGamblingShop(Transform parent, MapLayout.Island lane, int laneIndex)
+    {
+        GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_도박소",
+            LaneShopSlot(lane, 0), laneIndex, "event");
+
+        GamblingShop gambling = shop.AddComponent<GamblingShop>();
+        SerializedObject so = new SerializedObject(gambling);
+
+        // 슬롯 인덱스가 곧 하단 칸 자리다 — 순서가 화면 배치를 정한다.
+        FillAssetList(so.FindProperty("moneyOptions"), "중급도박(돈)", "고급도박(돈)");
+        FillAssetList(so.FindProperty("unitOptions"), "하급도박", "중급도박", "고급도박", "다른세계 도박");
+
+        so.FindProperty("gachaTable").objectReferenceValue =
+            AssetDatabase.LoadAssetAtPath<GachaTable>("Assets/Data/MainGachaTable.asset");
+        so.FindProperty("unitSpawner").objectReferenceValue =
+            Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
+        so.ApplyModifiedProperties();
+    }
+
+    static void FillAssetList(SerializedProperty list, params string[] optionNames)
+    {
+        list.ClearArray();
+
+        for (int i = 0; i < optionNames.Length; i++)
+        {
+            GamblingOptionData option = AssetDatabase.LoadAssetAtPath<GamblingOptionData>(
+                $"{GamblingFolder}/Gambling_{optionNames[i]}.asset");
+
+            list.InsertArrayElementAtIndex(i);
+            list.GetArrayElementAtIndex(i).objectReferenceValue = option;
+
+            if (option == null)
+                Debug.LogWarning($"[맵] 도박 옵션 에셋을 찾지 못했습니다: Gambling_{optionNames[i]}");
+        }
+    }
+
+    const string GamblingFolder = "Assets/Data/Gambling";
+
+    static void BuildSupportShop(Transform parent, MapLayout.Island lane, int laneIndex)
+    {
+        GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_도움소",
+            LaneShopSlot(lane, 4), laneIndex, "warehouse");
         SupportShop supportShop = shop.AddComponent<SupportShop>();
         SerializedObject so = new SerializedObject(supportShop);
         SerializedProperty skillsProp = so.FindProperty("skills");
@@ -896,13 +954,16 @@ public static class MapGenerator
 
                 if (slot.givesResources)
                 {
+                    // 이 줄은 《백수생활》에만 열린다. 게이트가 콜라이더를 끄고 색을 어둡게 한다.
                     // 한 자리에서 골드와 목재를 함께 준다. 포탈 하나가 두 자원을 못 주므로
                     // 같은 자리에 겹쳐 세운다 — 위습이 들어오면 둘 다 지급된다.
                     // 목재는 자원 칸 서쪽 포탈과 같은 조건이다(WISP_SYSTEM.md: 66% 확률로 목재 1개).
-                    BuildResourcePortal(parent, $"Portal_{slot.label}_골드", new Vector3(at.x, 0f, at.z),
-                        ResourcePortal.Payout.Gold, ResourceType.Wood, 15, 20, 100f, ChoicePortalDiameter);
-                    BuildResourcePortal(parent, $"Portal_{slot.label}_목재", new Vector3(at.x, 0f, at.z),
-                        ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f, ChoicePortalDiameter);
+                    GateToInterlude(BuildResourcePortal(parent, $"Portal_{slot.label}_엔",
+                        new Vector3(at.x, 0f, at.z),
+                        ResourcePortal.Payout.Gold, ResourceType.Wood, 15, 20, 100f, ChoicePortalDiameter));
+                    GateToInterlude(BuildResourcePortal(parent, $"Portal_{slot.label}_목재",
+                        new Vector3(at.x, 0f, at.z),
+                        ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f, ChoicePortalDiameter));
                     continue;
                 }
 
@@ -933,6 +994,7 @@ public static class MapGenerator
                     GameObject portal = CreatePortalObject(parent, $"Portal_{unit.unitName}",
                         new Vector3(first + spread * u, at.y, at.z), ChoicePortalDiameter);
                     ConfigurePortal(portal, unit.grade, unit, table, spawner);
+                    GateToInterlude(portal);
                 }
             }
         }
@@ -1091,7 +1153,7 @@ public static class MapGenerator
     // 여기 있던 GamblingTier 표는 그쪽으로 옮겨갔다. 건물 배치는 에셋이 준비되면 붙인다.
 
     // diameter는 자원 칸(넓은 포탈)과 뽑기 섬 특수지급 칸(좁은 선택 포탈)이 서로 다른 크기를 쓴다.
-    static void BuildResourcePortal(Transform parent, string name, Vector3 ground,
+    static GameObject BuildResourcePortal(Transform parent, string name, Vector3 ground,
                                     ResourcePortal.Payout payout, ResourceType resource,
                                     int baseAmount, int perRound, float chance,
                                     float diameter = PortalDiameter)
@@ -1108,6 +1170,7 @@ public static class MapGenerator
         so.FindProperty("successChancePercent").floatValue = chance;
         // acceptedGrades를 비워두면 어떤 위습이든 받는다 — 자원 칸은 등급을 가리지 않는다.
         so.ApplyModifiedProperties();
+        return portal;
     }
 
     // 스토리존. 가운데 단상에서 스토리 적이 나오고, 플레이어는 자기 레인에서 유닛을 보내 잡는다.
@@ -1441,6 +1504,13 @@ public static class MapGenerator
         Paint(portal, "portal");
         portal.GetComponent<Collider>().isTrigger = true;
         return portal;
+    }
+
+    // 특수 지급 줄은 스토리 8을 깬 뒤 《백수생활》 5분 동안만 열린다.
+    // 게이트는 콜라이더만 알면 되므로 UnitPortal이든 ResourcePortal이든 같은 컴포넌트로 덮인다.
+    static void GateToInterlude(GameObject portal)
+    {
+        if (portal != null) portal.AddComponent<InterludeGate>();
     }
 
     static void ConfigurePortal(GameObject portal, UnitGrade grade, UnitData specificUnit,
