@@ -53,6 +53,7 @@ public static class MapGenerator
         { "gacha",     new Surface("grass", new Color(1.00f, 0.98f, 0.82f), 0.120f, 0.05f) },
         { "combine",   new Surface("grass", new Color(0.90f, 0.90f, 0.88f), 0.120f, 0.05f) },
         { "portal",    new Surface(null,    new Color(0.30f, 0.70f, 0.85f), 0f,     0.60f) },
+        { "gambling",  new Surface("grass", new Color(0.85f, 0.75f, 0.55f), 0.120f, 0.05f) },
     };
 
     [MenuItem("Tools/맵/원랜디 맵 생성")]
@@ -94,11 +95,13 @@ public static class MapGenerator
 
         GameObject gachaIsland = null;
         GameObject combineIsland = null;
+        GameObject gamblingIsland = null;
         foreach (MapLayout.Island island in MapLayout.Zones)
         {
             GameObject created = BuildIsland(root.transform, island);
             if (island.name == "GachaIsland") gachaIsland = created;
             if (island.name == "CombineTable") combineIsland = created;
+            if (island.name == "GamblingIsland") gamblingIsland = created;
         }
 
         List<WaypointPath> lanePaths = BuildLanePaths(root.transform);
@@ -109,6 +112,7 @@ public static class MapGenerator
         string sealReport = BuildSealSpawners(root.transform);
 
         string portalReport = BuildGachaPortals(gachaIsland);
+        string gamblingReport = BuildGamblingIsland(gamblingIsland);
 
         string overlaps = CheckOverlaps();
         string rewire = RewireScene(lanePaths);
@@ -120,7 +124,7 @@ public static class MapGenerator
 
         string message =
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
-            $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + "\n\n" +
+            $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + gamblingReport + "\n\n" +
             tableReport + displayReport + gateReport + storyReport + sealReport + overlaps + navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
         Debug.Log("[맵] " + message);
         EditorUtility.DisplayDialog(Title, message, "확인");
@@ -979,6 +983,93 @@ public static class MapGenerator
         cell.AddComponent<WispCell>().SetGrade(UnitGrade.RandomUnit);
 
         return "\n자원 칸: 가운데 위습 → 북 유닛랜덤 · 동 금화 · 서 목재 · 남 마나.";
+    }
+
+    // 도박소. 뽑기 섬과 달리 위습을 안 쓴다 — 도박은 목재만 있으면 반복해서 돌리는 행위라
+    // 위습 스폰→드래그 조작을 넣으면 판당 마찰이 너무 크다(GAMBLING.md). 포탈을 직접 클릭한다.
+    struct GamblingTier
+    {
+        public string label;
+        public int woodCost;
+        public float successChance;
+        public UnitGrade primaryGrade;
+        public UnitGrade? secondaryGrade;
+        public bool grantFailureReward;
+
+        public GamblingTier(string label, int woodCost, float successChance, UnitGrade primaryGrade,
+                            UnitGrade? secondaryGrade, bool grantFailureReward)
+        {
+            this.label = label;
+            this.woodCost = woodCost;
+            this.successChance = successChance;
+            this.primaryGrade = primaryGrade;
+            this.secondaryGrade = secondaryGrade;
+            this.grantFailureReward = grantFailureReward;
+        }
+    }
+
+    // 성공 등급·확률·비용은 Docs/reference/GAMBLING.md 그대로.
+    // 하급(흔함~안흔함)·고급(희귀함+특별함)처럼 등급이 둘인 곳은 GachaTable weight로 가중 추첨한다
+    // (문서에 정확한 배분이 없어 새 확률을 지어내는 대신 이미 설정된 값을 재사용 — PM 승인).
+    // 실패 보상(행운토큰2+목재1)은 고급·다른세계 도박만 — "고급 도박과 다른 세계 도박이 실패했을 때"라고
+    // 원작 인용이 콕 집어 말한 두 곳뿐이다.
+    static readonly GamblingTier[] GamblingTiers =
+    {
+        new GamblingTier("하급도박", 1, 85f, UnitGrade.Common, UnitGrade.Uncommon, false),
+        new GamblingTier("중급도박", 1, 70f, UnitGrade.Special, null, false),
+        new GamblingTier("고급도박", 4, 70f, UnitGrade.Rare, UnitGrade.Special, true),
+        new GamblingTier("다른세계 도박", 5, 17f, UnitGrade.OtherWorld, null, true),
+    };
+
+    const float GamblingPortalDiameter = 12f;
+
+    static string BuildGamblingIsland(GameObject gamblingIsland)
+    {
+        if (gamblingIsland == null) return "";
+
+        GachaTable table = AssetDatabase.LoadAssetAtPath<GachaTable>("Assets/Data/MainGachaTable.asset");
+        UnitSpawner spawner = Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
+        MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "GamblingIsland");
+        Transform parent = gamblingIsland.transform.parent;
+
+        float left = island.center.x - island.size.x * 0.5f;
+        float step = island.size.x / (GamblingTiers.Length + 1);
+        float z = island.center.y;
+
+        for (int i = 0; i < GamblingTiers.Length; i++)
+        {
+            GamblingTier tier = GamblingTiers[i];
+            float x = left + step * (i + 1);
+
+            GameObject portal = CreatePortalObject(parent, $"Portal_{tier.label}",
+                new Vector3(x, MapLayout.IslandTop + 0.25f, z), GamblingPortalDiameter);
+            ConfigureGamblingPortal(portal, tier, table, spawner);
+
+            // 성공 시 나오는(주) 등급을 색으로 미리 보여준다 — 정확한 확률·비용은 GAMBLING.md/HUD 참고.
+            PlaceUnitMarker(parent, $"{tier.label}_표식",
+                new Vector3(x, 0f, z + GamblingPortalDiameter), tier.primaryGrade);
+        }
+
+        return table == null
+            ? "\n  ⚠️ MainGachaTable을 찾지 못해 도박소 성공 지급이 비어있습니다."
+            : $"\n도박소: {GamblingTiers.Length}개 포탈(하급/중급/고급/다른세계) 배치.";
+    }
+
+    static void ConfigureGamblingPortal(GameObject portal, GamblingTier tier, GachaTable table, UnitSpawner spawner)
+    {
+        GamblingPortal component = portal.AddComponent<GamblingPortal>();
+        SerializedObject so = new SerializedObject(component);
+
+        so.FindProperty("woodCost").intValue = tier.woodCost;
+        so.FindProperty("successChancePercent").floatValue = tier.successChance;
+        so.FindProperty("primaryResultGrade").enumValueIndex = (int)tier.primaryGrade;
+        so.FindProperty("useSecondaryGrade").boolValue = tier.secondaryGrade.HasValue;
+        so.FindProperty("secondaryResultGrade").enumValueIndex = (int)(tier.secondaryGrade ?? tier.primaryGrade);
+        so.FindProperty("grantFailureReward").boolValue = tier.grantFailureReward;
+        so.FindProperty("gachaTable").objectReferenceValue = table;
+        so.FindProperty("unitSpawner").objectReferenceValue = spawner;
+
+        so.ApplyModifiedProperties();
     }
 
     static void BuildResourcePortal(Transform parent, string name, Vector3 ground,
