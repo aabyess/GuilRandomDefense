@@ -1754,6 +1754,17 @@ public static class MapGenerator
 
         root.transform.localScale = Vector3.one * WispScale;
 
+        // NavMeshAgent의 반지름·높이는 트랜스폼 스케일을 그대로 따라간다. 프리팹을 10배로 키우면
+        // 발자국도 10배가 되어, 굽힌 NavMesh(반지름 0.5 기준)보다 훨씬 커진다. 그러면 벽 근처와
+        // 벽으로 두른 칸 안에서 설 자리를 못 찾아 아예 안 움직인다.
+        // 보이는 크기만 키우고 실제 발자국은 굽힌 값보다 살짝 작게 되돌린다.
+        NavMeshAgent agent = root.GetComponent<NavMeshAgent>();
+        if (agent != null)
+        {
+            agent.radius = 0.45f / WispScale;
+            agent.height = 2f / WispScale;
+        }
+
         // 영혼답게 — 스스로 빛나고 반쯤 비친다. 단단한 공이면 그냥 구슬로 보인다.
         Renderer renderer = root.GetComponentInChildren<Renderer>();
         if (renderer != null) renderer.sharedMaterial = WispSoulMaterial();

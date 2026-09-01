@@ -19,8 +19,41 @@ public class MinimapCamera : MonoBehaviour, IPointerClickHandler
     RenderTexture renderTexture;
     RawImage rawImage;
 
+    // 맵이 커지거나 섬이 옮겨질 때마다 값을 손으로 맞추면 언젠가 어긋난다 —
+    // 실제로 레인을 1.5배로 키웠을 때 미니맵 왼쪽 위가 잘렸다.
+    // 씬에 놓인 맵을 직접 재서 맞춘다. 맵을 못 찾으면 인스펙터 값을 그대로 쓴다.
+    void FitToMap()
+    {
+        GameObject map = GameObject.Find("Map");
+        if (map == null) return;
+
+        Renderer[] renderers = map.GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0) return;
+
+        // 바다는 섬보다 훨씬 넓다. 바다까지 담으면 섬이 미니맵 한가운데 점으로 뭉친다.
+        Bounds bounds = new Bounds();
+        bool started = false;
+
+        foreach (Renderer renderer in renderers)
+        {
+            if (renderer.name == "Sea") continue;
+
+            if (!started) { bounds = renderer.bounds; started = true; }
+            else bounds.Encapsulate(renderer.bounds);
+        }
+
+        if (!started) return;
+
+        mapCenter = new Vector3(bounds.center.x, 0f, bounds.center.z);
+        mapExtent = Mathf.Max(bounds.extents.x, bounds.extents.z) + MapMargin;
+    }
+
+    const float MapMargin = 30f;
+
     void Awake()
     {
+        FitToMap();
+
         rawImage = GetComponent<RawImage>();
 
         renderTexture = new RenderTexture(textureSize, textureSize, 16) { name = "MinimapRenderTexture" };
