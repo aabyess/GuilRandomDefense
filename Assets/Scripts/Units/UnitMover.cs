@@ -37,8 +37,7 @@ public class UnitMover : MonoBehaviour
 
     void TryMoveToCursor()
     {
-        Ray ray = cam.ScreenPointToRay(Mouse.current.position.ReadValue());
-        if (!Physics.Raycast(ray, out RaycastHit hit, 200f)) return;
+        if (!WorldPick.TryHit(cam, Mouse.current.position.ReadValue(), out RaycastHit hit)) return;
         if (!NavMesh.SamplePosition(hit.point, out NavMeshHit navHit, destinationSampleRadius, agent.areaMask)) return;
 
         // UnitCombat이 있으면 그쪽에 명령을 넘겨서, 도착할 때까지 자동 추적이 끼어들지 않게 한다.

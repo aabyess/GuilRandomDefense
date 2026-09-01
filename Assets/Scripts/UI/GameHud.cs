@@ -804,12 +804,11 @@ public class GameHud : MonoBehaviour
         Camera cam = Camera.main;
         if (cam == null) return;
 
-        Ray ray = cam.ScreenPointToRay(Mouse.current.position.ReadValue());
         SupportSkillData skill = pendingSkill;
         SupportShop shop = currentShop;
         pendingSkill = null;
 
-        if (!Physics.Raycast(ray, out RaycastHit hit, 500f)) return;
+        if (!WorldPick.TryHit(cam, Mouse.current.position.ReadValue(), out RaycastHit hit)) return;
 
         if (skill.targetKind == SupportSkillTargetKind.Unit)
         {

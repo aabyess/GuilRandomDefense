@@ -80,9 +80,8 @@ public class SelectionManager : MonoBehaviour
 
     void TrySelectAtCursor()
     {
-        Ray ray = cam.ScreenPointToRay(Mouse.current.position.ReadValue());
         Selectable hitSelectable = null;
-        if (Physics.Raycast(ray, out RaycastHit hit, 200f))
+        if (WorldPick.TryHit(cam, Mouse.current.position.ReadValue(), out RaycastHit hit))
             hit.collider.TryGetComponent(out hitSelectable);
 
         ClearSelection();
