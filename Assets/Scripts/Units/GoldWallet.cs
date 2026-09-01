@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class GoldWallet : MonoBehaviour
 {
-    [SerializeField] int startingGold = 400;
+    [SerializeField] int startingGold = 30;   // 화폐는 엔. 맵 생성기가 씬 값도 같이 덮어쓴다
 
     public int Gold { get; private set; }
 

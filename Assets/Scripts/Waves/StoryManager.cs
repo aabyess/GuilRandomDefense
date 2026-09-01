@@ -29,6 +29,15 @@ public class StoryManager : MonoBehaviour
     public float SecondsUntilNext => Mathf.Max(0f, pendingTime - Time.time);
     public int FinishedCount => finished;
 
+    /// <summary>
+    /// 지금 대기 중인 구간의 이름이 이것과 같은가(예: "백수생활"). 스토리가 진행 중이거나
+    /// 아예 대기 중이 아니면 false — 특정 구간에만 열리는 포탈이 이걸로 자기 상태를 묻는다.
+    /// </summary>
+    public bool IsInterlude(string interludeName)
+    {
+        return IsWaiting && pending.interludeName == interludeName;
+    }
+
     /// <summary>대기 중이면 그 구간 이름(백수생활 등), 진행 중이면 스토리 이름.</summary>
     public string StatusLabel
     {

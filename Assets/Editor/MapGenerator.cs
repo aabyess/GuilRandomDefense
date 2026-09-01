@@ -1494,6 +1494,41 @@ public static class MapGenerator
 
     // 기존 씬은 전부 원점 근처를 전제로 배치돼 있었다. 새 맵에서 원점은 바다 한가운데라,
     // 그대로 두면 적은 물 위를 걷고 위습은 닿을 수 없는 곳에 생긴다.
+    // 시작 자원 (사장님 확정 2026-09-01): 30엔 + 목재 1개.
+    // [SerializeField] 기본값을 바꿔봐야 씬에 이미 직렬화된 컴포넌트는 옛 값을 그대로 쓴다.
+    // 여기서 명시적으로 덮어써야 실제로 반영된다.
+    const int StartingYen = 30;
+    const int StartingWood = 1;
+
+    static string SetStartingResources(PlayerContext[] contexts)
+    {
+        int walletsSet = 0;
+
+        foreach (PlayerContext context in contexts)
+        {
+            if (context.GoldWallet != null)
+            {
+                SerializedObject so = new SerializedObject(context.GoldWallet);
+                so.FindProperty("startingGold").intValue = StartingYen;
+                so.ApplyModifiedProperties();
+                walletsSet++;
+            }
+
+            if (context.ResourceWallet == null) continue;
+
+            SerializedObject resources = new SerializedObject(context.ResourceWallet);
+            SerializedProperty starting = resources.FindProperty("startingAmounts");
+            starting.ClearArray();
+            starting.InsertArrayElementAtIndex(0);
+            SerializedProperty wood = starting.GetArrayElementAtIndex(0);
+            wood.FindPropertyRelative("type").enumValueIndex = (int)ResourceType.Wood;
+            wood.FindPropertyRelative("amount").intValue = StartingWood;
+            resources.ApplyModifiedProperties();
+        }
+
+        return walletsSet == 0 ? "" : $"\n시작 자원을 {StartingYen}엔 + 목재 {StartingWood}개로 맞췄습니다({walletsSet}명).";
+    }
+
     static string RewireScene(List<WaypointPath> lanePaths)
     {
         string report = "";
@@ -1532,6 +1567,7 @@ public static class MapGenerator
         if (contexts.Length > 0)
             report += $"\n위습이 생기는 위치(PlayerContext {contexts.Length}개)를 뽑기 섬으로 옮겼습니다.";
 
+        report += SetStartingResources(contexts);
         report += WireCombineWallet();
         report += FitMinimapToIslands();
         report += MoveWarehousesToIslands();
