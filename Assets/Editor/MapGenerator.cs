@@ -1187,10 +1187,12 @@ public static class MapGenerator
         float armZ = (zTop - zBottom) * 0.5f - PortalDiameter * 0.5f - 2f;
         float y = MapLayout.IslandTop + 0.25f;
 
-        // 북: 유닛 랜덤 — 등급 무관 랜덤이라 UnitPortal 쪽이다.
+        // 북: 랜덤 위습을 넣으면 흔함 유닛이 하나 나온다. 게임 시작 위습 5개가 여기로 들어간다.
+        // 1%로 상붕카(배) — 등급이 아니라 특정 유닛이라 bonusUnit 쪽을 쓴다.
         GameObject unitRandom = CreatePortalObject(parent, "Portal_유닛랜덤",
             new Vector3(centerX, y, centerZ + armZ), PortalDiameter);
-        ConfigurePortal(unitRandom, UnitGrade.RandomUnit, null, table, spawner);
+        ConfigurePortal(unitRandom, UnitGrade.Common, null, table, spawner);
+        ApplyBonusUnit(unitRandom, "안흔함_상붕카", 1f);
 
         // 동: 금화 랜덤 — 원작은 "15 + 라운드×12~35". 라운드 비례 부분만 옮겼다.
         BuildResourcePortal(parent, "Portal_금화랜덤", new Vector3(centerX + armX, 0f, centerZ),
@@ -1211,7 +1213,7 @@ public static class MapGenerator
         cell.transform.position = new Vector3(centerX, MapLayout.IslandTop, centerZ);
         cell.AddComponent<WispCell>().SetGrade(UnitGrade.RandomUnit);
 
-        return "\n자원 칸: 가운데 위습 → 북 유닛랜덤 · 동 금화 · 서 목재 · 남 마나.";
+        return "\n자원 칸: 가운데 위습 → 북 흔함 유닛(1% 상붕카) · 동 금화 · 서 목재 · 남 마나.";
     }
 
     // 도박소. 뽑기 섬과 달리 위습을 안 쓴다 — 도박은 목재만 있으면 반복해서 돌리는 행위라
@@ -1553,6 +1555,24 @@ public static class MapGenerator
                 new Vector3(innerWidth, WallHeight, GateThickness));
     }
 
+    // 보너스가 등급이 아니라 특정 유닛인 경우.
+    static void ApplyBonusUnit(GameObject portal, string unitAsset, float chance)
+    {
+        UnitData unit = AssetDatabase.LoadAssetAtPath<UnitData>(
+            $"Assets/Data/Units/Roster/{unitAsset}.asset");
+
+        if (unit == null)
+        {
+            Debug.LogWarning($"[맵] 보너스 유닛 에셋을 못 찾았습니다: {unitAsset}");
+            return;
+        }
+
+        SerializedObject so = new SerializedObject(portal.GetComponent<UnitPortal>());
+        so.FindProperty("bonusUnit").objectReferenceValue = unit;
+        so.FindProperty("bonusChancePercent").floatValue = chance;
+        so.ApplyModifiedProperties();
+    }
+
     static void ApplyBonusGrade(GameObject portal, UnitGrade bonusGrade, float chance)
     {
         SerializedObject so = new SerializedObject(portal.GetComponent<UnitPortal>());
@@ -1656,6 +1676,26 @@ public static class MapGenerator
     const int StartingYen = 30;
     const int StartingWood = 1;
 
+    // 시작 위습: 랜덤 위습 5개(사장님 확정 2026-09-01). 이걸 자원 칸 북쪽 포탈에 넣으면
+    // 흔함 유닛이 하나씩 나온다. 씬에 이미 직렬화된 값이 있어도 여기서 덮어쓴다.
+    const int StartingWispCount = 5;
+
+    static string WireStartingWisps()
+    {
+        RewardDistributor distributor = Object.FindFirstObjectByType<RewardDistributor>(FindObjectsInactive.Include);
+        if (distributor == null) return "";
+
+        WispData wisp = AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_랜덤유닛.asset");
+        if (wisp == null) return "\n⚠️ 시작 위습 에셋(Wisp_랜덤유닛)을 못 찾았습니다.";
+
+        SerializedObject so = new SerializedObject(distributor);
+        so.FindProperty("startingWisp").objectReferenceValue = wisp;
+        so.FindProperty("startingWispCount").intValue = StartingWispCount;
+        so.ApplyModifiedProperties();
+
+        return $"\n시작 위습을 {wisp.wispName} {StartingWispCount}개로 맞췄습니다.";
+    }
+
     static string SetStartingResources(PlayerContext[] contexts)
     {
         int walletsSet = 0;
@@ -1724,6 +1764,7 @@ public static class MapGenerator
             report += $"\n위습이 생기는 위치(PlayerContext {contexts.Length}개)를 뽑기 섬으로 옮겼습니다.";
 
         report += SetStartingResources(contexts);
+        report += WireStartingWisps();
         report += WireCombineWallet();
         report += FitMinimapToIslands();
         report += MoveWarehousesToIslands();

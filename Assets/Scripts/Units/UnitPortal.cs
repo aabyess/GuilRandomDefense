@@ -13,6 +13,8 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
     // 원작의 "희귀함, 특수함(3%확률) 등급유닛 전체 랜덤" 같은 칸을 위한 것.
     // 낮은 확률로 지정한 등급에서 대신 뽑는다. 0이면 쓰지 않는다.
     [SerializeField] UnitGrade bonusGrade;
+    // 보너스가 특정 유닛일 때 쓴다(랜덤 포탈의 1% 상붕카). 비어 있으면 bonusGrade에서 뽑는다.
+    [SerializeField] UnitData bonusUnit;
     [SerializeField, Range(0f, 100f)] float bonusChancePercent;
 
     [SerializeField] GachaTable gachaTable;
@@ -56,7 +58,7 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
 
         if (bonusChancePercent > 0f && Random.Range(0f, 100f) < bonusChancePercent)
         {
-            UnitData bonus = gachaTable.RollFromGrade(bonusGrade);
+            UnitData bonus = bonusUnit != null ? bonusUnit : gachaTable.RollFromGrade(bonusGrade);
             // 보너스 등급 풀이 비어 있어도 뽑기 자체가 실패하면 안 된다 — 원래 등급으로 넘어간다.
             if (bonus != null) return bonus;
         }

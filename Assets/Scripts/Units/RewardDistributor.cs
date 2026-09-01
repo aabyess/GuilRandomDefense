@@ -8,9 +8,32 @@ public class RewardDistributor : MonoBehaviour
 {
     public static RewardDistributor Instance { get; private set; }
 
+    // 게임 시작에 모든 플레이어가 받는 위습. 원작처럼 랜덤 위습 다섯 개로 시작한다 —
+    // 이걸 자원 칸 북쪽 포탈에 넣으면 흔함 유닛이 하나씩 나온다(1% 상붕카).
+    [SerializeField] WispData startingWisp;
+    [SerializeField] int startingWispCount = 5;
+
     void OnEnable()
     {
         Instance = this;
+    }
+
+    void Start()
+    {
+        GrantStartingWisps();
+    }
+
+    // OnEnable이 아니라 Start인 이유: 위습은 WispCell 위치에 생기는데, 맵이 만들어지고
+    // 셀들이 OnEnable로 등록을 끝낸 뒤여야 자기 칸을 찾는다.
+    void GrantStartingWisps()
+    {
+        if (!GameAuthority.IsServer) return;
+        if (startingWisp == null || startingWispCount <= 0) return;
+
+        foreach (PlayerContext context in PlayerContext.All)
+        {
+            SpawnWisp(context, startingWisp, startingWispCount);
+        }
     }
 
     void OnDisable()
