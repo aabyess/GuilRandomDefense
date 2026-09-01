@@ -15,6 +15,14 @@ public enum UnitGrade
     RandomUnit,
     OtherWorld,
     Superior,   // 특수함 — 희귀함과 전설적인 사이. enum 순서가 아니라 Tier()가 강함을 결정한다.
+
+    // 초월 조합 재료 전용(원작의 "쿠마 초월함 위습"). 유닛처럼 필드에 서 있지만 싸우지 않고,
+    // 초월 24종의 마지막 재료로만 쓰인다. 일반 유닛 박은석과는 별개다(RECIPES_LOW.md "박은석 = 초월 위습").
+    //
+    // 기존 등급을 재활용하지 않고 값을 새로 붙인 이유: 등급 하나를 공유하는 순간 그 등급의
+    // 뽑기 풀·전시 칸·조합식 표에 같이 끌려 들어간다. 어느 목록에도 안 걸리는 값이 필요하다.
+    // 반드시 맨 뒤에 둘 것 — 중간에 끼우면 이미 직렬화된 등급 값이 전부 한 칸씩 밀린다.
+    TranscendentWisp,
 }
 
 public static class UnitGradeExtensions
@@ -39,6 +47,7 @@ public static class UnitGradeExtensions
             case UnitGrade.Eternal: return "영원함";
             case UnitGrade.OtherWorld: return "다른세계";
             case UnitGrade.RandomUnit: return "랜덤유닛";
+            case UnitGrade.TranscendentWisp: return "초월위습";
             default: return grade.ToString();
         }
     }
@@ -58,7 +67,11 @@ public static class UnitGradeExtensions
             case UnitGrade.Transcendent:
             case UnitGrade.Immortal:
             case UnitGrade.Eternal:
-            case UnitGrade.OtherWorld: return 7;
+            case UnitGrade.OtherWorld:
+            // 초월 재료라 초월과 같은 티어로 둔다. RandomUnit처럼 -1로 두면 연금술의
+            // "maxDismantleGrade(희귀함, Tier 3) 이하만 분해" 검사를 통과해버려서,
+            // 스토리로만 나오는 재료를 마나 몇 점에 분해할 수 있게 된다.
+            case UnitGrade.TranscendentWisp: return 7;
             case UnitGrade.RandomUnit: return -1;
             default: return -1;
         }

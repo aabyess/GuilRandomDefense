@@ -10,13 +10,23 @@ RECIPE_GUID     = "d9e360a1ab0e48608e0b08ef0e946ccf"
 
 GRADE = {"Common":0,"Uncommon":1,"Special":2,"Rare":3,"Hidden":4,"Legendary":5,
          "Limited":6,"Transcendent":7,"Immortal":8,"Eternal":9,"RandomUnit":10,"OtherWorld":11,
-         "Superior":12}   # Superior(특수함)는 기존 에셋 값 보존을 위해 enum 맨 끝에 추가됨
+         "Superior":12,
+         # 초월 조합 전용 재료. 기존 등급을 쓰면 그 등급의 뽑기 풀·전시 칸·조합식 표에
+         # 같이 끌려 들어가서, 어느 목록에도 안 걸리는 값을 맨 뒤에 새로 붙였다.
+         "TranscendentWisp":13}   # Superior(특수함)는 기존 에셋 값 보존을 위해 enum 맨 끝에 추가됨
 DMG = {"":0,"AD":1,"AP":2,"AD+AP":3}
 RES = {"Wood":0,"Token":1,"LuckyToken":2}
 # UnitGradeExtensions.Tier()와 동일. 동급은 같은 값, RandomUnit은 조합 라인 밖(-1).
 # 강함 순서는 enum 순서가 아니라 이 표가 결정한다 (특수함이 희귀함과 전설적인 사이에 들어감).
 TIER = {"Common":0,"Uncommon":1,"Special":2,"Rare":3,"Hidden":3,"Superior":4,"Legendary":5,
-        "Limited":6,"Transcendent":7,"Immortal":7,"Eternal":7,"RandomUnit":-1,"OtherWorld":7}
+        "Limited":6,"Transcendent":7,"Immortal":7,"Eternal":7,"RandomUnit":-1,"OtherWorld":7,
+        # 초월과 같은 티어. -1로 두면 연금술의 "희귀함(3) 이하만 분해" 검사를 통과해버린다.
+        "TranscendentWisp":7}
+
+# 초월 24종의 마지막 재료(recipes_data.TRANSCENDENT가 쓰는 토큰) → 전용 로스터 에셋.
+# 일반 유닛 박은석과 이름이 겹쳐서 unit_ref()가 전설적인_박은석으로 이어버리던 것을 끊는다.
+WISP_MATERIAL = "박은석초월위습"   # unitName도 이 이름을 쓴다 — 일반 박은석과 HUD에서 구분돼야 한다
+WISP_ASSET = "초월위습_박은석"      # 에셋 이름은 다른 로스터와 같은 "등급_캐릭터" 꼴로 맞춘다
 
 def new_guid(): return uuid.uuid4().hex
 def safe(name):
@@ -60,7 +70,12 @@ def add_result(name, grade, dmg, suffix=""):
 def add_mats(lst):
     for m in lst:
         if m.startswith("아이템["): continue
+        # 위습은 아래에서 전용 등급의 결과 유닛으로 따로 등록한다.
+        # 여기 넣으면 등급 미확정 재료로 취급돼 기본_박은석초월위습이 생긴다.
+        if m == WISP_MATERIAL: continue
         materials.add(m)
+
+add_result(WISP_MATERIAL, "TranscendentWisp", "")
 
 for r in D.TRANSCENDENT:
     add_result(r[0], "Transcendent", r[1], r[1]); add_mats(r[2])
@@ -89,10 +104,13 @@ unit_guid = {}       # asset_name -> guid
 unit_asset = {}      # key -> asset_name
 
 GRADE_KR = {"Transcendent":"초월","Hidden":"히든","Immortal":"불멸","Eternal":"영원",
-            "Limited":"제한","RandomUnit":"랜덤","OtherWorld":"다른세계","Superior":"특수함"}
+            "Limited":"제한","RandomUnit":"랜덤","OtherWorld":"다른세계","Superior":"특수함",
+            "TranscendentWisp":"초월위습"}
 
 for (name, grade, suffix), dmg in results.items():
     base = f"{GRADE_KR[grade]}_{name}"
+    # 위습은 재료 토큰이 곧 unitName이라 그대로 쓰면 "초월위습_박은석초월위습"이 된다.
+    if name == WISP_MATERIAL: base = WISP_ASSET
     if suffix: base += f"_{suffix.replace('+','')}"
     an = safe(base)
     unit_asset[(name, grade, suffix)] = an

@@ -27,6 +27,9 @@ changed = 0
 for path in sorted(glob.glob('Assets/Data/Units/Roster/*.asset')):
     text = open(path, encoding='utf-8').read()
     grade = int(re.search(r'^  grade: (\d+)', text, re.M).group(1))
+    # 초월위습(13)은 싸우는 유닛이 아니라 조합 재료다. 전투 곡선을 씌우면 초월급 스탯의
+    # 유닛이 되어버린다 — 손으로 정한 값(체력 1, 공격 없음, 이동만)을 그대로 둔다.
+    if grade == 13: continue
     values = stats(TIER[grade])
     for key, value in values.items():
         text = re.sub(rf'^  {key}: .*$', f'  {key}: {value}', text, count=1, flags=re.M)
