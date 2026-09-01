@@ -725,14 +725,14 @@ public static class MapGenerator
     struct SpecialSlot
     {
         public string label;
-        public string unitAsset;   // 로스터 에셋 이름. 유닛을 주는 자리에서만 채운다
-        public bool givesWood;
+        public string[] unitAssets;   // 로스터 에셋 이름. 한 자리가 여러 유닛을 함께 줄 수 있다
+        public bool givesResources;   // 골드 + 목재를 함께
 
-        public static SpecialSlot Unit(string label, string unitAsset) =>
-            new SpecialSlot { label = label, unitAsset = unitAsset };
+        public static SpecialSlot Units(string label, params string[] unitAssets) =>
+            new SpecialSlot { label = label, unitAssets = unitAssets };
 
-        public static SpecialSlot Wood(string label) =>
-            new SpecialSlot { label = label, givesWood = true };
+        public static SpecialSlot Resources(string label) =>
+            new SpecialSlot { label = label, givesResources = true };
 
         // 지급물의 형태가 아직 안 정해진 자리. 표식만 세우고 생성 보고에 남긴다.
         public static SpecialSlot Pending(string label) =>
@@ -757,17 +757,19 @@ public static class MapGenerator
             new GachaBand { label = label, specialSlots = slots };
     }
 
-    // 원작 배치 순서 그대로. 특수 칸은 목재·쿠마위습(박은석)·레일리(이승우)·배(상붕카).
+    // 특수 칸은 원작처럼 세 자리다(사장님 확정 2026-09-01): 돈+목재 / 박은석 초월위습 / 레일리+배.
+    // 박은석이 가운데다 — 원작 쿠마 초월함 위습에 해당하는 자리라 눈에 먼저 들어와야 한다.
+    // 레일리(이승우)와 배(상붕카)는 원작에서 한 자리에서 같이 나오므로 한 칸에 묶었다.
+    // 이 줄은 스토리 8 이후 《백수생활》 5분 동안만 열린다 — 그 개폐는 아직 안 붙였다.
     static readonly GachaBand[] GachaBands =
     {
         GachaBand.Random("안흔함", UnitGrade.Uncommon),
         GachaBand.Random("특별함", UnitGrade.Special),
         GachaBand.RandomWithBonus("희귀함·특수함", UnitGrade.Rare, UnitGrade.Superior, 3f),
         GachaBand.Special("특수지급",
-            SpecialSlot.Wood("목재"),
-            SpecialSlot.Pending("박은석위습"),
-            SpecialSlot.Unit("이승우", "희귀함_이승우"),
-            SpecialSlot.Unit("상붕카", "안흔함_상붕카")),
+            SpecialSlot.Resources("돈+목재"),
+            SpecialSlot.Pending("박은석 초월위습"),
+            SpecialSlot.Units("레일리+배", "희귀함_이승우", "안흔함_상붕카")),
         GachaBand.Random("전설·히든", UnitGrade.Legendary),
     };
 
@@ -892,31 +894,45 @@ public static class MapGenerator
                 Vector3 at = new Vector3(columnLeft + slotStep * (i + 1),
                                          MapLayout.IslandTop + 0.25f, bandCenterZ);
 
-                if (slot.givesWood)
+                if (slot.givesResources)
                 {
-                    // 자원 칸 서쪽 목재 포탈과 같은 지급이다(WISP_SYSTEM.md: 66% 확률로 목재 1개).
-                    // 등급을 안 가리는 것도 그쪽과 같다 — BuildResourcePortal이 acceptedGrades를 비워둔다.
-                    BuildResourcePortal(parent, $"Portal_{slot.label}", new Vector3(at.x, 0f, at.z),
-                        ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f,
-                        ChoicePortalDiameter);
+                    // 한 자리에서 골드와 목재를 함께 준다. 포탈 하나가 두 자원을 못 주므로
+                    // 같은 자리에 겹쳐 세운다 — 위습이 들어오면 둘 다 지급된다.
+                    // 목재는 자원 칸 서쪽 포탈과 같은 조건이다(WISP_SYSTEM.md: 66% 확률로 목재 1개).
+                    BuildResourcePortal(parent, $"Portal_{slot.label}_골드", new Vector3(at.x, 0f, at.z),
+                        ResourcePortal.Payout.Gold, ResourceType.Wood, 15, 20, 100f, ChoicePortalDiameter);
+                    BuildResourcePortal(parent, $"Portal_{slot.label}_목재", new Vector3(at.x, 0f, at.z),
+                        ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f, ChoicePortalDiameter);
                     continue;
                 }
 
-                UnitData unit = slot.unitAsset == null
-                    ? null
-                    : AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{slot.unitAsset}.asset");
-
-                if (unit != null)
+                if (slot.unitAssets == null || slot.unitAssets.Length == 0)
                 {
-                    GameObject portal = CreatePortalObject(parent, $"Portal_{unit.unitName}", at, ChoicePortalDiameter);
-                    ConfigurePortal(portal, unit.grade, unit, table, spawner);
-                }
-                else
-                {
-                    // 지급물의 형태가 아직 안 정해진 자리(초월 재료 박은석). 자리만 세워두고 보고에 남긴다.
+                    // 지급물의 형태가 아직 안 정해진 자리(박은석 초월위습). 자리만 세우고 보고에 남긴다.
                     PlaceUnitMarker(parent, $"미구현_{slot.label}", new Vector3(at.x, 0f, at.z),
                         UnitGrade.RandomUnit);
                     specialPending.Add(slot.label);
+                    continue;
+                }
+
+                // 한 자리가 여러 유닛을 줄 수 있다(레일리+배). 포탈을 나란히 겹쳐 세우지 않고
+                // 자리 안에서 살짝 벌려, 어느 유닛이 나오는지 눈으로 구분되게 한다.
+                float spread = ChoicePortalDiameter * 0.55f;
+                float first = at.x - spread * (slot.unitAssets.Length - 1) * 0.5f;
+
+                for (int u = 0; u < slot.unitAssets.Length; u++)
+                {
+                    UnitData unit = AssetDatabase.LoadAssetAtPath<UnitData>(
+                        $"Assets/Data/Units/Roster/{slot.unitAssets[u]}.asset");
+                    if (unit == null)
+                    {
+                        specialPending.Add($"{slot.label}({slot.unitAssets[u]} 없음)");
+                        continue;
+                    }
+
+                    GameObject portal = CreatePortalObject(parent, $"Portal_{unit.unitName}",
+                        new Vector3(first + spread * u, at.y, at.z), ChoicePortalDiameter);
+                    ConfigurePortal(portal, unit.grade, unit, table, spawner);
                 }
             }
         }
@@ -1071,58 +1087,8 @@ public static class MapGenerator
 
     // 도박소. 뽑기 섬과 달리 위습을 안 쓴다 — 도박은 목재만 있으면 반복해서 돌리는 행위라
     // 위습 스폰→드래그 조작을 넣으면 판당 마찰이 너무 크다(GAMBLING.md). 포탈을 직접 클릭한다.
-    struct GamblingTier
-    {
-        public string label;
-        public int woodCost;
-        public float successChance;
-        public UnitGrade primaryGrade;
-        public UnitGrade? secondaryGrade;
-        public bool grantFailureReward;
-
-        public GamblingTier(string label, int woodCost, float successChance, UnitGrade primaryGrade,
-                            UnitGrade? secondaryGrade, bool grantFailureReward)
-        {
-            this.label = label;
-            this.woodCost = woodCost;
-            this.successChance = successChance;
-            this.primaryGrade = primaryGrade;
-            this.secondaryGrade = secondaryGrade;
-            this.grantFailureReward = grantFailureReward;
-        }
-    }
-
-    // 성공 등급·확률·비용은 Docs/reference/GAMBLING.md 그대로.
-    // 하급(흔함~안흔함)·고급(희귀함+특별함)처럼 등급이 둘인 곳은 GachaTable weight로 가중 추첨한다
-    // (문서에 정확한 배분이 없어 새 확률을 지어내는 대신 이미 설정된 값을 재사용 — PM 승인).
-    // 실패 보상(행운토큰2+목재1)은 고급·다른세계 도박만 — "고급 도박과 다른 세계 도박이 실패했을 때"라고
-    // 원작 인용이 콕 집어 말한 두 곳뿐이다.
-    static readonly GamblingTier[] GamblingTiers =
-    {
-        new GamblingTier("하급도박", 1, 85f, UnitGrade.Common, UnitGrade.Uncommon, false),
-        new GamblingTier("중급도박", 1, 70f, UnitGrade.Special, null, false),
-        new GamblingTier("고급도박", 4, 70f, UnitGrade.Rare, UnitGrade.Special, true),
-        new GamblingTier("다른세계 도박", 5, 17f, UnitGrade.OtherWorld, null, true),
-    };
-
-    // 도박소는 섬이 아니라 레인 안 상점 건물이 된다(사장님 확정, 2026-09-01).
-    // 등급표와 이 배선 함수는 그 건물이 그대로 재사용한다.
-    static void ConfigureGamblingPortal(GameObject portal, GamblingTier tier, GachaTable table, UnitSpawner spawner)
-    {
-        GamblingPortal component = portal.AddComponent<GamblingPortal>();
-        SerializedObject so = new SerializedObject(component);
-
-        so.FindProperty("woodCost").intValue = tier.woodCost;
-        so.FindProperty("successChancePercent").floatValue = tier.successChance;
-        so.FindProperty("primaryResultGrade").enumValueIndex = (int)tier.primaryGrade;
-        so.FindProperty("useSecondaryGrade").boolValue = tier.secondaryGrade.HasValue;
-        so.FindProperty("secondaryResultGrade").enumValueIndex = (int)(tier.secondaryGrade ?? tier.primaryGrade);
-        so.FindProperty("grantFailureReward").boolValue = tier.grantFailureReward;
-        so.FindProperty("gachaTable").objectReferenceValue = table;
-        so.FindProperty("unitSpawner").objectReferenceValue = spawner;
-
-        so.ApplyModifiedProperties();
-    }
+    // 도박소 수치는 이제 Assets/Data/Gambling/의 GamblingOptionData 에셋에 있다 —
+    // 여기 있던 GamblingTier 표는 그쪽으로 옮겨갔다. 건물 배치는 에셋이 준비되면 붙인다.
 
     // diameter는 자원 칸(넓은 포탈)과 뽑기 섬 특수지급 칸(좁은 선택 포탈)이 서로 다른 크기를 쓴다.
     static void BuildResourcePortal(Transform parent, string name, Vector3 ground,
