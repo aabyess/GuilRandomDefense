@@ -68,16 +68,18 @@ public static class MapLayout
         new Island("StoryZone",       -250f, -80f, 120f, 100f, "story"),
         new Island("GachaIsland",      -90f, -80f, 110f, 190f, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
-        new Island("CombineTable",     150f,  -90f, 340f, 170f, "combine"),
+        new Island("CombineTable",     150f, -110f, 340f, 210f, "combine"),
     };
 
     // 조합식 표에 노출하는 등급 6종 — 표 위의 세로 칸 하나씩.
     // 히든·영원·초월·불멸·다른세계는 의도적으로 표시하지 않는다(외부 조합표를 보고 조합).
     // 흔함은 조합으로 만들어지지 않는 기초 등급이라 표에 열이 없다.
+    // 히든은 원래 "맵에 표시하지 않는 등급"이었으나 피드백을 받아 표에 넣기로 했다(2026-09-01).
     public static readonly UnitGrade[] CombineTableGrades =
     {
         UnitGrade.Uncommon, UnitGrade.Special,
         UnitGrade.Rare, UnitGrade.Legendary, UnitGrade.Limited,
+        UnitGrade.Hidden,
     };
 
     // 뽑기 섬 왼쪽 열: 등급 내 랜덤으로 지급하는 포탈.
