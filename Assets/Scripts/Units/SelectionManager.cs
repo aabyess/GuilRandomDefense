@@ -85,8 +85,24 @@ public class SelectionManager : MonoBehaviour
             hit.collider.TryGetComponent(out hitSelectable);
 
         ClearSelection();
-        if (hitSelectable != null && IsSelectableByLocalPlayer(hitSelectable))
-            AddToSelection(hitSelectable);
+
+        if (hitSelectable == null)
+        {
+            if (hit.collider != null)
+                Debug.Log($"[선택] {hit.collider.name} 을(를) 눌렀지만 선택할 수 있는 대상이 아닙니다.");
+            return;
+        }
+
+        // 남의 유닛을 눌렀을 때 아무 반응이 없으면 클릭이 안 먹은 것처럼 보인다. 이유를 남긴다.
+        if (!IsSelectableByLocalPlayer(hitSelectable))
+        {
+            int ownerId = hitSelectable.TryGetComponent(out OwnedByPlayer other) ? other.OwnerId : -1;
+            Debug.Log($"[선택] {hitSelectable.name} 은(는) 플레이어 {ownerId}의 것이라 고를 수 없습니다 " +
+                      $"(나는 플레이어 {LocalPlayer.LocalPlayerId}).");
+            return;
+        }
+
+        AddToSelection(hitSelectable);
     }
 
     void SelectInBox(Vector2 screenStart, Vector2 screenEnd)

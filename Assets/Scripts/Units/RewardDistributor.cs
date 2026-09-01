@@ -13,6 +13,10 @@ public class RewardDistributor : MonoBehaviour
     [SerializeField] WispData startingWisp;
     [SerializeField] int startingWispCount = 5;
 
+    // 위습 지름이 6이라 예전 값(1.6)으로는 그대로 겹친다.
+    const float WispSpread = 8f;     // 한 주인의 위습들끼리 벌리는 반지름
+    const float OwnerSpread = 20f;   // 주인끼리 벌리는 반지름
+
     void OnEnable()
     {
         Instance = this;
@@ -137,12 +141,21 @@ public class RewardDistributor : MonoBehaviour
         WispCell cell = WispCell.Get(wispData.targetGrade);
         Vector3 origin = cell != null ? cell.transform.position : context.transform.position;
 
+        // 위습 칸은 플레이어 넷이 함께 쓴다. 넷이 같은 점에 쏟아지면 스무 개가 겹쳐서,
+        // 어느 것이 내 것인지 알 수 없고 남의 위습을 아무리 눌러도 안 움직인다.
+        // 주인마다 칸 안의 다른 자리를 쓰고, 그 안에서 다시 원을 그린다.
+        int players = Mathf.Max(1, PlayerContext.All.Count);
+        float ownerAngle = 360f / players * context.PlayerId;
+        Vector3 ownerSpot = players > 1
+            ? Quaternion.Euler(0f, ownerAngle, 0f) * Vector3.forward * OwnerSpread
+            : Vector3.zero;
+
         for (int i = 0; i < count; i++)
         {
-            // 여러 개를 같은 점에 겹쳐 놓으면 서로 밀어내느라 흩어진다. 살짝 벌려 놓는다.
-            Vector3 offset = count > 1
-                ? Quaternion.Euler(0f, 360f / count * i, 0f) * Vector3.forward * 1.6f
-                : Vector3.zero;
+            // 같은 점에 겹쳐 놓으면 서로 밀어내느라 흩어진다. 위습 굵기만큼 벌려 놓는다.
+            Vector3 offset = ownerSpot + (count > 1
+                ? Quaternion.Euler(0f, 360f / count * i, 0f) * Vector3.forward * WispSpread
+                : Vector3.zero);
 
             GameObject instance = Instantiate(wispData.prefab, origin + offset, Quaternion.identity);
 
