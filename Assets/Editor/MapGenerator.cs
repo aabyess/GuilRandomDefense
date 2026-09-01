@@ -249,6 +249,12 @@ public static class MapGenerator
 
     // 조합식 표. 원작처럼 한 줄이 조합식 하나다: 재료들 → 결과.
     // 등급별로 유닛만 모아두면 "무엇으로 만드는지"를 알 수 없어서 표의 역할을 못 한다.
+    // 전시용 자리 표시 기둥 (뽑기 섬 전시, 초월·불멸 전시에서 쓴다).
+    // 조합식 표를 갈아엎을 때 같이 지워져서 컴파일이 깨졌었다 — 쓰는 곳이 여러 군데다.
+    const float SlotSpacing = 4.5f;
+    const float SlotSize = 2.2f;
+    const float SlotHeight = 2.6f;
+
     const float RecipeSlot = 3.2f;      // 유닛 한 칸
     const float RecipeGap = 1.0f;       // 재료 사이 간격
     const float RecipeArrowGap = 3.0f;  // 재료 묶음과 결과 사이
