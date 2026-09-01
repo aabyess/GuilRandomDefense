@@ -278,6 +278,14 @@ public class GameHud : MonoBehaviour
         GameObject obj = new GameObject("Minimap", typeof(RectTransform), typeof(RawImage), typeof(MinimapCamera), typeof(RectMask2D));
         obj.transform.SetParent(parent, false);
 
+        // 미니맵 점은 초당 10회 다시 그려야 한다. 같은 캔버스에 있으면 그때마다 HUD 전체가
+        // 다시 빌드돼서, 나머지 패널을 "값이 바뀔 때만 갱신"하도록 맞춰둔 게 의미가 없어진다.
+        // 중첩 캔버스로 떼어내면 리빌드가 이 안에서 끝난다.
+        Canvas nested = obj.AddComponent<Canvas>();
+        nested.overrideSorting = true;
+        nested.sortingOrder = 1;
+        obj.AddComponent<GraphicRaycaster>();   // 중첩 캔버스는 자기 레이캐스터가 있어야 클릭이 먹는다
+
         RectTransform rect = obj.GetComponent<RectTransform>();
         rect.anchorMin = Vector2.zero;
         rect.anchorMax = Vector2.one;
@@ -301,6 +309,19 @@ public class GameHud : MonoBehaviour
         // 부모가 붙은 뒤에 물려준다. Awake는 SetParent보다 먼저 돌아서 스스로는 못 찾는다.
         indicatorObj.GetComponent<MinimapViewportIndicator>()
             .SetMinimap(obj.GetComponent<MinimapCamera>());
+
+        // 유닛·위습·적 점 표시. 시야 표시(흰 사각형)보다 나중에 만들어서 형제 순서상 그 위에 그려지게 한다.
+        GameObject blipsObj = new GameObject("MinimapBlips",
+            typeof(RectTransform), typeof(CanvasRenderer), typeof(MinimapBlips));
+        blipsObj.transform.SetParent(obj.transform, false);
+
+        RectTransform blipsRect = (RectTransform)blipsObj.transform;
+        blipsRect.anchorMin = Vector2.zero;
+        blipsRect.anchorMax = Vector2.one;
+        blipsRect.offsetMin = Vector2.zero;
+        blipsRect.offsetMax = Vector2.zero;
+
+        blipsObj.GetComponent<MinimapBlips>().SetMinimap(obj.GetComponent<MinimapCamera>());
     }
 
     // 카드 12개를 미리 만들어두고 선택이 바뀔 때만 켜고 끈다 — 매 프레임 새로 만들지 않는다.
