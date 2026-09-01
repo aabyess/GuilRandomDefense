@@ -44,9 +44,11 @@ public class MinimapBlips : MaskableGraphic
         {
             if (selectable == null) continue;
 
-            Color color = MineColor;
-            if (selectable.TryGetComponent(out OwnedByPlayer owner) && owner.OwnerId != LocalPlayer.LocalPlayerId)
-                color = AllyColor;
+            // 주인 색 그대로. 예전엔 "내 것 / 남의 것" 둘로만 갈랐는데,
+            // 넷이 붙으면 남 셋이 한 색이 되어 미니맵으로 전황을 못 읽는다.
+            Color color = selectable.TryGetComponent(out OwnedByPlayer owner)
+                ? PlayerColors.Get(owner.OwnerId)
+                : MineColor;
 
             AddBlip(vh, selectable.transform.position, color);
         }

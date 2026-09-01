@@ -1769,7 +1769,9 @@ public static class MapGenerator
         NavMeshAgent agent = root.GetComponent<NavMeshAgent>();
         if (agent != null)
         {
-            agent.radius = 0.45f / WispScale;
+            // 유닛과 같은 값(0.28). 아군끼리는 살짝 비켜주기만 하고 서로 통과하듯 겹친다 —
+            // 위습도 같은 규칙이어야 한 칸에 여러 개를 모아둘 수 있다.
+            agent.radius = 0.28f / WispScale;
             agent.height = 2f / WispScale;
             agent.baseOffset = 0.5f / WispScale;   // 바닥 띄움도 스케일을 타서 공중에 뜬다
         }

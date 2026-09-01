@@ -36,7 +36,7 @@ public class Selectable : MonoBehaviour
         if (selectedIndicator != null)
             selectedIndicator.SetActive(selected);
         else if (indicator != null)
-            indicator.gameObject.SetActive(selected);
+            indicator.SetSelected(selected);
     }
 
     SelectionIndicator CreateIndicator()
@@ -44,7 +44,12 @@ public class Selectable : MonoBehaviour
         GameObject obj = new GameObject("SelectionIndicator", typeof(LineRenderer), typeof(SelectionIndicator));
         obj.transform.SetParent(transform, false);
 
-        float radius = TryGetComponent(out UnityEngine.AI.NavMeshAgent agent) ? agent.radius : 0.5f;
+        // 에이전트 반지름은 길찾기용이라 몸집과 무관하다(유닛은 0.28인데 키는 20이다).
+        // 발밑 고리는 눈에 보이는 몸에 맞아야 하므로 콜라이더를 잰다.
+        float radius = TryGetComponent(out Collider body)
+            ? Mathf.Max(body.bounds.extents.x, body.bounds.extents.z)
+            : 0.5f;
+        if (radius < 0.05f) radius = 0.5f;
         int ownerId = TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
 
         SelectionIndicator selectionIndicator = obj.GetComponent<SelectionIndicator>();
