@@ -18,6 +18,14 @@ public class EnemyDummy : MonoBehaviour
     // -1은 레인에 속하지 않는 적(물범 등).
     public int LaneIndex { get; private set; } = -1;
 
+    // 스토리 건물은 변신 전까지 죽지 않는다. 피해는 그대로 쌓이고, 변신할 때 남은 체력이 보스 체력이 된다.
+    bool invulnerable;
+
+    public void SetInvulnerable(bool value)
+    {
+        invulnerable = value;
+    }
+
     public void SetLane(int laneIndex)
     {
         LaneIndex = laneIndex;
@@ -74,6 +82,13 @@ public class EnemyDummy : MonoBehaviour
         if (isDead) return;
 
         hp -= amount;
+
+        if (invulnerable)
+        {
+            hp = Mathf.Max(1f, hp);   // 다 깎여도 남겨둔다 — 변신할 때 최소 1로 시작
+            return;
+        }
+
         if (hp <= 0f)
         {
             if (!GameAuthority.IsServer) return;

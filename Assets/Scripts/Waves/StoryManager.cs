@@ -10,14 +10,19 @@ public class StoryManager : MonoBehaviour
     [SerializeField] List<StoryData> stories = new List<StoryData>();
     [SerializeField] Transform spawnPoint;          // 스토리존 한가운데. 비면 이 오브젝트 위치
     [SerializeField] float firstStoryDelay = 10f;   // 게임 시작 후 첫 스토리까지
+    [SerializeField] int transformRoundStep = 5;    // 끝자리가 이 배수인 라운드에 건물이 보스로 변신
 
     public static StoryManager Instance { get; private set; }
 
     StoryData running;      // 지금 필드에 나와 있는 스토리
     StoryData pending;      // 다음에 나올 스토리
     EnemyDummy activeEnemy;
+    bool transformed;       // 건물이 보스로 바뀌었는가
+    int spawnedAtRound;
     float pendingTime;
     int finished;
+
+    RoundManager rounds;
 
     public StoryData Running => running;
     public bool IsWaiting => running == null && pending != null;
@@ -29,7 +34,7 @@ public class StoryManager : MonoBehaviour
     {
         get
         {
-            if (running != null) return running.storyName;
+            if (running != null) return transformed ? $"{running.storyName} (보스)" : running.storyName;
             if (pending == null) return "";
             return string.IsNullOrEmpty(pending.interludeName) ? pending.storyName : pending.interludeName;
         }
@@ -42,8 +47,11 @@ public class StoryManager : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
+    public bool IsTransformed => transformed;
+
     void Start()
     {
+        rounds = FindFirstObjectByType<RoundManager>();
         Queue(0, firstStoryDelay);
     }
 
@@ -54,7 +62,11 @@ public class StoryManager : MonoBehaviour
         if (running != null)
         {
             // EnemyDummy는 죽을 때 GameObject를 파괴한다. 파괴된 참조는 == null 로 판정된다.
-            if (activeEnemy != null) return;
+            if (activeEnemy != null)
+            {
+                if (!transformed && ShouldTransform()) TransformIntoBoss();
+                return;
+            }
 
             Finish(running);
             return;
@@ -64,11 +76,38 @@ public class StoryManager : MonoBehaviour
             Spawn(pending);
     }
 
+    // 끝자리가 0 또는 5인 라운드에 변신한다. 나온 그 라운드에 바로 변신하지는 않는다 —
+    // 때릴 틈도 없이 보스가 되면 "미리 깎아둔다"는 구조가 성립하지 않는다.
+    bool ShouldTransform()
+    {
+        if (rounds == null) return false;
+        if (rounds.CurrentRound <= spawnedAtRound) return false;
+
+        return rounds.CurrentRound % transformRoundStep == 0;
+    }
+
+    void TransformIntoBoss()
+    {
+        transformed = true;
+        activeEnemy.SetInvulnerable(false);
+
+        // 체력은 건드리지 않는다 — 지금까지 깎아둔 만큼이 그대로 보스 체력이 된다.
+        EnemyData bossData = running.BossOrBuilding;
+        if (bossData != running.building)
+        {
+            activeEnemy.name = $"스토리보스_{running.storyName}";
+            activeEnemy.transform.localScale *= 1.4f;
+        }
+
+        Debug.Log($"스토리 변신: {running.storyName} — 남은 체력 {activeEnemy.Hp:F0} / {activeEnemy.MaxHp:F0}");
+    }
+
     void Finish(StoryData story)
     {
         Debug.Log($"스토리 클리어: {story.storyName}");
         running = null;
         activeEnemy = null;
+        transformed = false;
         finished++;
 
         if (RewardDistributor.Instance != null)
@@ -98,8 +137,8 @@ public class StoryManager : MonoBehaviour
         int index = stories.IndexOf(story);
         pending = null;
 
-        // 적이 안 정해진 스토리를 조용히 클리어 처리하면, 뒤 스토리 보상까지 한꺼번에 나가버린다.
-        if (!story.IsPlayable || story.enemy.prefab == null)
+        // 건물이 안 정해진 스토리를 조용히 클리어 처리하면, 뒤 스토리 보상까지 한꺼번에 나가버린다.
+        if (!story.IsPlayable || story.building.prefab == null)
         {
             Debug.LogWarning($"StoryManager: '{story.storyName}'에 적이 없어 건너뜁니다.", this);
             Queue(index + 1);
@@ -107,24 +146,29 @@ public class StoryManager : MonoBehaviour
         }
 
         Vector3 at = spawnPoint != null ? spawnPoint.position : transform.position;
-        GameObject instance = Instantiate(story.enemy.prefab, at, Quaternion.identity);
+        GameObject instance = Instantiate(story.building.prefab, at, Quaternion.identity);
 
         if (!instance.TryGetComponent(out EnemyDummy dummy))
         {
-            Debug.LogWarning($"StoryManager: {story.enemy.name} 프리팹에 EnemyDummy가 없습니다.", this);
+            Debug.LogWarning($"StoryManager: {story.building.name} 프리팹에 EnemyDummy가 없습니다.", this);
             Destroy(instance);
             Queue(index + 1);
             return;
         }
 
-        dummy.Initialize(story.enemy);
-        dummy.SetLane(-1);   // 레인 몹이 아니다. 패배 판정(가장 붐비는 레인)에 섞이면 안 된다.
+        dummy.Initialize(story.building);
+        dummy.SetLane(-1);          // 레인 몹이 아니다. 패배 판정(가장 붐비는 레인)에 섞이면 안 된다.
+        dummy.SetInvulnerable(true); // 변신 전까지는 죽지 않는다. 피해만 쌓인다.
 
-        // 스토리 적은 제자리를 지킨다 — 레인 몹처럼 경로를 돌지 않는다.
+        // 건물은 제자리를 지킨다 — 레인 몹처럼 경로를 돌지 않는다.
         if (instance.TryGetComponent(out WaypointMover mover)) mover.enabled = false;
 
         running = story;
         activeEnemy = dummy;
-        Debug.Log($"스토리 등장: {story.storyName}");
+        transformed = false;
+        spawnedAtRound = rounds != null ? rounds.CurrentRound : 0;
+
+        Debug.Log($"스토리 건물 등장: {story.storyName} (체력 {dummy.MaxHp:F0}) — " +
+                  $"끝자리 {transformRoundStep} 라운드에 보스로 변신");
     }
 }
