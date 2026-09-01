@@ -382,11 +382,13 @@ public static class MapGenerator
     }
 
     // 재료가 가장 많은 조합식이 열 폭에 들어가는지 확인하는 데 쓴다.
-    static float MaxRecipeRowWidth()
+    static float MaxRecipeRowWidth() => MaxRecipeRowWidth(MapLayout.CombineTableGrades);
+
+    static float MaxRecipeRowWidth(UnitGrade[] grades)
     {
         int maxSlots = 0;
 
-        foreach (UnitGrade grade in MapLayout.CombineTableGrades)
+        foreach (UnitGrade grade in grades)
         {
             foreach (CombineRecipe recipe in LoadRecipesProducing(grade))
             {
@@ -718,8 +720,38 @@ public static class MapGenerator
         float displayZ = bandTop - SlotSpacing;
         int displayed = 0;
 
+        int recipeRows = 0;
+
         foreach (UnitGrade grade in MapLayout.GachaDisplayGrades)
         {
+            // 다른세계는 조합으로만 나오는 등급인데 조합식 표에는 안 올리기로 했다.
+            // 캐릭터만 세워두면 만드는 법을 볼 데가 없어서, 이 칸에서 한 줄씩 보여준다.
+            if (System.Array.IndexOf(MapLayout.GachaRecipeGrades, grade) >= 0)
+            {
+                List<CombineRecipe> recipes = LoadRecipesProducing(grade);
+                if (recipes.Count == 0) continue;
+
+                float blockDepth = recipes.Count * RecipeRowHeight;
+                GameObject strip = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                strip.name = $"뽑기섬_조합식_{grade.KoreanName()}";
+                strip.transform.SetParent(parent, false);
+                strip.transform.position = new Vector3(displayLeft + displayWidth * 0.5f,
+                    MapLayout.IslandTop + 0.06f, displayZ + RecipeRowHeight * 0.5f - blockDepth * 0.5f);
+                strip.transform.localScale = new Vector3(displayWidth, 0.12f, blockDepth);
+                Paint(strip, "combine", displayWidth, blockDepth);
+                Object.DestroyImmediate(strip.GetComponent<Collider>());
+
+                foreach (CombineRecipe recipe in recipes)
+                {
+                    PlaceRecipeRow(parent, recipe, displayLeft + 1f, displayZ);
+                    displayZ -= RecipeRowHeight;
+                    recipeRows++;
+                }
+
+                displayZ -= SlotSpacing;
+                continue;
+            }
+
             List<UnitData> units = LoadUnitsOfGrade(grade);
 
             for (int i = 0; i < units.Count; i++)
@@ -759,8 +791,14 @@ public static class MapGenerator
             ? $"\n  ⚠️ 목재·박은석위습 {specialPending}칸은 자원/위습 지급 포탈이 없어 자리만 표시했습니다."
             : "";
 
+        float widestRecipe = MaxRecipeRowWidth(MapLayout.GachaRecipeGrades);
+        string recipeFit = recipeRows == 0 || widestRecipe <= displayWidth
+            ? ""
+            : $"\n  ⚠️ 다른세계 조합식({widestRecipe:F0})이 칸 폭({displayWidth:F0})을 넘습니다";
+
         return $"\n뽑기 섬: 흔함 선택 {commons.Count}칸, 등급 칸 {GachaBands.Length}줄, " +
-               $"전시 {displayed}종 (깊이 {displayDepth:F0}/{available:F0}, {fit})." + pending + resourceReport;
+               $"전시 {displayed}종 + 조합식 {recipeRows}줄 (깊이 {displayDepth:F0}/{available:F0}, {fit})." +
+               pending + recipeFit + resourceReport;
     }
 
     // 자원 포탈 칸. 원작의 자원 섬을 한 칸으로 옮긴 것 —

@@ -66,7 +66,8 @@ public static class MapLayout
         new Island("ImmortalDisplay",  150f, 120f, 90f, 50f, "display"),
         new Island("TranscendDisplay", 150f,  55f, 90f, 50f, "display"),
         new Island("StoryZone",       -250f, -80f, 120f, 100f, "story"),
-        new Island("GachaIsland",      -90f, -80f, 110f, 190f, "gacha"),
+        // 오른쪽 전시 칸이 다른세계 조합식(6칸짜리도 있다) 한 줄을 담아야 해서 폭을 넓혔다.
+        new Island("GachaIsland",      -90f, -80f, 120f, 190f, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
         new Island("CombineTable",     180f, -110f, 400f, 210f, "combine"),
     };
@@ -95,6 +96,15 @@ public static class MapLayout
     public static readonly UnitGrade[] GachaDisplayGrades =
     {
         UnitGrade.RandomUnit, UnitGrade.OtherWorld,
+    };
+
+    /// <summary>
+    /// 뽑기 섬 전시 칸에서 캐릭터 대신 조합식 줄로 보여줄 등급.
+    /// 조합으로만 나오는데 조합식 표에는 없는 등급이라, 여기가 만드는 법을 보는 유일한 자리다.
+    /// </summary>
+    public static readonly UnitGrade[] GachaRecipeGrades =
+    {
+        UnitGrade.OtherWorld,
     };
 
     /// <summary>
