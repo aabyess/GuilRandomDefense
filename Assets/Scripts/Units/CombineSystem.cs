@@ -20,21 +20,31 @@ public class CombineSystem : MonoBehaviour
     readonly HashSet<CombineRecipe> loggedRoundManagerMissingFor = new HashSet<CombineRecipe>();
     readonly HashSet<CombineRecipe> loggedItemInventoryMissingFor = new HashSet<CombineRecipe>();
 
+    // 조합 UI가 초당 몇 번씩 부르는 경로다. 레시피 199개마다 리스트를 새로 만들면
+    // 초당 수천 건이 할당된다. 버퍼를 재사용하고 결과 리스트도 돌려 쓴다.
+    readonly List<CombineRecipe> availableBuffer = new List<CombineRecipe>();
+    readonly List<UnitData> planPool = new List<UnitData>();
+    readonly List<UnitData> planUnits = new List<UnitData>();
+    readonly List<ItemData> planItems = new List<ItemData>();
+
+    /// <summary>
+    /// 지금 만들 수 있는 레시피. <b>돌려주는 리스트는 재사용된다</b> —
+    /// 다음 호출에서 내용이 바뀌므로, 보관하려면 복사해야 한다.
+    /// </summary>
     public List<CombineRecipe> GetAvailableRecipes()
     {
-        List<CombineRecipe> available = new List<CombineRecipe>();
-
-        if (recipes == null) return available;
+        availableBuffer.Clear();
+        if (recipes == null) return availableBuffer;
 
         foreach (CombineRecipe recipe in recipes)
         {
             if (recipe != null && CanAfford(recipe, out _, out _))
             {
-                available.Add(recipe);
+                availableBuffer.Add(recipe);
             }
         }
 
-        return available;
+        return availableBuffer;
     }
 
     public bool TryCombine(CombineRecipe recipe)
@@ -150,11 +160,16 @@ public class CombineSystem : MonoBehaviour
     // 이 순서를 지켜야 와일드카드가 다른 슬롯에 필요한 유닛을 가로채지 않는다.
     bool TryPlanUnits(CombineRecipe recipe, UnitInventory targetInventory, out List<UnitData> unitsToRemove)
     {
-        unitsToRemove = new List<UnitData>();
+        planUnits.Clear();
+        unitsToRemove = planUnits;
 
         if (recipe.ingredients == null) return true;
 
-        List<UnitData> pool = new List<UnitData>(targetInventory.Units);
+        // 인벤토리를 그대로 쓰면 재료를 빼는 과정에서 실제 인벤토리가 망가진다.
+        // 복사본이 필요하되, 매번 새로 만들지 않고 버퍼를 비워서 채운다.
+        List<UnitData> pool = planPool;
+        pool.Clear();
+        pool.AddRange(targetInventory.Units);
 
         foreach (RecipeIngredient ingredient in recipe.ingredients)
         {
@@ -181,7 +196,8 @@ public class CombineSystem : MonoBehaviour
 
     bool TryPlanItems(CombineRecipe recipe, out List<ItemData> itemsToRemove)
     {
-        itemsToRemove = new List<ItemData>();
+        planItems.Clear();
+        itemsToRemove = planItems;
 
         if (recipe.ingredients == null) return true;
 

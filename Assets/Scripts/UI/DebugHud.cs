@@ -36,11 +36,31 @@ public class DebugHud : MonoBehaviour
         }
     }
 
+    // OnGUI는 한 프레임에 두 번(Layout/Repaint) 불리고 그 안에서 두 곳이 이 목록을 쓴다.
+    // 그대로 두면 프레임당 4번, 레시피 199개를 매번 훑는다.
+    const float RecipeCacheInterval = 0.4f;
+
+    readonly List<CombineRecipe> cachedRecipes = new List<CombineRecipe>();
+    float nextRecipeCacheTime;
+
+    List<CombineRecipe> CachedRecipes()
+    {
+        if (combineSystem == null) return cachedRecipes;
+        if (Time.unscaledTime < nextRecipeCacheTime) return cachedRecipes;
+
+        nextRecipeCacheTime = Time.unscaledTime + RecipeCacheInterval;
+
+        // GetAvailableRecipes는 재사용 버퍼를 돌려준다 — 들고 있으려면 복사해야 한다.
+        cachedRecipes.Clear();
+        cachedRecipes.AddRange(combineSystem.GetAvailableRecipes());
+        return cachedRecipes;
+    }
+
     void TryCombineFirst()
     {
         if (combineSystem == null) return;
 
-        List<CombineRecipe> available = combineSystem.GetAvailableRecipes();
+        List<CombineRecipe> available = CachedRecipes();
         if (available.Count == 0) return;
 
         combineSystem.TryCombine(available[0]);
@@ -90,7 +110,7 @@ public class DebugHud : MonoBehaviour
 
         if (combineSystem != null)
         {
-            foreach (CombineRecipe recipe in combineSystem.GetAvailableRecipes())
+            foreach (CombineRecipe recipe in CachedRecipes())
             {
                 string resultName = recipe.result != null ? recipe.result.unitName : "?";
                 GUILayout.Label($"[{recipe.commandId}] → {resultName}");

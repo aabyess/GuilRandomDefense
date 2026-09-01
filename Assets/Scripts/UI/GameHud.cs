@@ -15,6 +15,7 @@ public class GameHud : MonoBehaviour
     const int TeamSlotCount = 4;
     const int MaxSelectionCards = 12;
     const int SelectionCardColumns = 6;
+    const int MaxInventoryEntries = 16;
 
     [SerializeField] SelectionManager selectionManager;
 
@@ -23,6 +24,8 @@ public class GameHud : MonoBehaviour
     Text roundTimeText;
     Text teamPanelText;
     Text storyText;
+    Text inventoryText;
+    GameObject inventoryPanelObject;
 
     GameObject unitCardsPanel;
     readonly GameObject[] cardRoots = new GameObject[MaxSelectionCards];
@@ -43,6 +46,19 @@ public class GameHud : MonoBehaviour
     readonly bool[] slotHas = new bool[TeamSlotCount];
 
     RoundManager roundManager;
+    CombineSystem combineSystem;
+
+    // 명령 카드(조합 레시피) 12칸. 유닛 카드와 같은 패턴 — 미리 만들어두고 내용만 바꾼다.
+    const float RecipeRefreshInterval = 0.4f;
+    static readonly List<CombineRecipe> EmptyRecipes = new List<CombineRecipe>();
+
+    readonly GameObject[] commandCardRoots = new GameObject[CommandSlotCount];
+    readonly Image[] commandCardBackgrounds = new Image[CommandSlotCount];
+    readonly Text[] commandCardNames = new Text[CommandSlotCount];
+    readonly Text[] commandCardOverflowTexts = new Text[CommandSlotCount];
+    readonly CombineRecipe[] commandCardRecipes = new CombineRecipe[CommandSlotCount];
+    readonly List<CombineRecipe> lastAvailableRecipes = new List<CombineRecipe>();
+    float nextRecipeRefreshTime;
 
     // 값이 안 바뀌면 문자열을 새로 만들지 않기 위한 마지막 표시값 캐시.
     int lastGold = int.MinValue;
@@ -55,6 +71,14 @@ public class GameHud : MonoBehaviour
     bool lastStoryRunning;
     string lastStoryLabel;
     int lastStorySeconds = int.MinValue;
+
+    // 인벤토리는 자주 안 바뀌므로 UnitInventory.OnInventoryChanged를 구독해서 실제로 바뀔 때만
+    // dirty 플래그를 세운다 — 매 프레임 목록을 비교하지 않는다. 집계·정렬용 컬렉션은 재사용한다.
+    readonly StringBuilder inventoryBuilder = new StringBuilder(512);
+    readonly Dictionary<UnitData, int> inventoryCounts = new Dictionary<UnitData, int>();
+    readonly List<UnitData> inventoryKeys = new List<UnitData>();
+    UnitInventory subscribedInventory;
+    bool inventoryDirty = true;
 
     bool teamPanelInitialized;
     int lastTotalEnemyCount = int.MinValue;
@@ -72,6 +96,10 @@ public class GameHud : MonoBehaviour
         ? roundManager
         : roundManager = FindFirstObjectByType<RoundManager>();
 
+    CombineSystem CombineSystemRef => combineSystem != null
+        ? combineSystem
+        : combineSystem = FindFirstObjectByType<CombineSystem>();
+
     void Awake()
     {
         EnsureEventSystem();
@@ -84,6 +112,16 @@ public class GameHud : MonoBehaviour
         RefreshTopBar();
         RefreshTeamPanel();
         RefreshStoryPanel();
+        RefreshCommandCards();
+        RefreshInventoryPanel();
+    }
+
+    void OnDestroy()
+    {
+        if (subscribedInventory != null)
+        {
+            subscribedInventory.OnInventoryChanged -= OnLocalInventoryChanged;
+        }
     }
 
     static void EnsureEventSystem()
@@ -132,6 +170,23 @@ public class GameHud : MonoBehaviour
         BuildTopBar();
         BuildStoryPanel();
         BuildTeamPanel();
+        BuildInventoryPanel();
+    }
+
+    // 좌측 세로 패널. 하단 HUD(y 0~0.22)·상단 바(0.95~1)·스토리 줄(0.90~0.95)을 피해서
+    // 그 사이 여유 공간에 둔다. 명령 카드 그리드(우측)와는 별개.
+    void BuildInventoryPanel()
+    {
+        RectTransform panel = CreatePanel(transform, "InventoryPanel", new Color(0f, 0f, 0f, 0.6f));
+        SetAnchors(panel, new Vector2(0.01f, 0.30f), new Vector2(0.16f, 0.88f));
+        inventoryPanelObject = panel.gameObject;
+
+        inventoryText = CreateLabel(panel, "InventoryText", "");
+        inventoryText.alignment = TextAnchor.UpperLeft;
+        inventoryText.fontSize = 18;
+        inventoryText.lineSpacing = 1.1f;
+        inventoryText.horizontalOverflow = HorizontalWrapMode.Wrap;
+        inventoryText.verticalOverflow = VerticalWrapMode.Overflow;
     }
 
     // 상단 바가 이미 골드·목재·라운드·타이머로 차 있어 그 아래 별도 줄로 뺀다.
@@ -340,7 +395,9 @@ public class GameHud : MonoBehaviour
         }
     }
 
-    static void BuildCommandGrid(RectTransform parent)
+    // 명령 카드 = 지금 조합 가능한 레시피. 12칸을 미리 만들어두고(BuildCommandCard) 이후로는
+    // RefreshCommandCards가 내용·활성 상태만 바꾼다 — 유닛 카드와 같은 패턴.
+    void BuildCommandGrid(RectTransform parent)
     {
         GridLayoutGroup grid = parent.gameObject.AddComponent<GridLayoutGroup>();
         grid.cellSize = new Vector2(90f, 50f);
@@ -350,12 +407,120 @@ public class GameHud : MonoBehaviour
         grid.childAlignment = TextAnchor.MiddleCenter;
 
         for (int i = 0; i < CommandSlotCount; i++)
+            BuildCommandCard(i, parent);
+    }
+
+    void BuildCommandCard(int index, Transform parent)
+    {
+        GameObject card = new GameObject($"CommandSlot{index}", typeof(RectTransform), typeof(Image), typeof(Button));
+        card.transform.SetParent(parent, false);
+
+        Image background = card.GetComponent<Image>();
+        background.raycastTarget = true;
+        background.color = new Color(1f, 1f, 1f, 0.12f);
+
+        int capturedIndex = index;
+        card.GetComponent<Button>().onClick.AddListener(() => OnCommandCardClicked(capturedIndex));
+
+        Text nameText = CreateLabel(card.transform, "Name", "");
+        nameText.raycastTarget = false;
+        nameText.fontSize = 11;
+        nameText.horizontalOverflow = HorizontalWrapMode.Wrap;
+
+        Text overflowText = CreateLabel(card.transform, "Overflow", "");
+        overflowText.raycastTarget = false;
+        overflowText.fontSize = 14;
+        overflowText.fontStyle = FontStyle.Bold;
+        overflowText.color = Color.white;
+        RectTransform overflowRect = overflowText.rectTransform;
+        overflowRect.anchorMin = new Vector2(0.55f, 0.7f);
+        overflowRect.anchorMax = new Vector2(1f, 1f);
+        overflowRect.offsetMin = Vector2.zero;
+        overflowRect.offsetMax = Vector2.zero;
+        overflowText.gameObject.SetActive(false);
+
+        // 조합 가능한 게 없다고 가정하고 시작 — 첫 RefreshCommandCards가 실제 내용으로 채운다.
+        card.SetActive(false);
+
+        commandCardRoots[index] = card;
+        commandCardBackgrounds[index] = background;
+        commandCardNames[index] = nameText;
+        commandCardOverflowTexts[index] = overflowText;
+    }
+
+    void OnCommandCardClicked(int index)
+    {
+        if (index < 0 || index >= commandCardRecipes.Length) return;
+
+        CombineRecipe recipe = commandCardRecipes[index];
+        if (recipe == null) return;
+
+        CombineSystem system = CombineSystemRef;
+        if (system == null) return;
+
+        if (system.TryCombine(recipe))
         {
-            GameObject slot = new GameObject($"CommandSlot{i}", typeof(RectTransform), typeof(Image), typeof(Button));
-            slot.transform.SetParent(parent, false);
-            slot.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.12f);
-            // 동작 없음 — 스킬/명령 데이터가 아직 없어 껍데기만 배치한다.
+            // 인벤토리가 바뀌어 목록이 달라졌을 것 — 다음 정기 갱신(최대 0.4초)까지 기다리지 않고 즉시 반영.
+            nextRecipeRefreshTime = 0f;
+            RefreshCommandCards();
         }
+    }
+
+    // 0.3~0.5초에 한 번만 CombineSystem.GetAvailableRecipes()를 부른다 — 레시피 199개를
+    // 매 프레임 전부 검사하면 안 된다. 목록이 이전과 같으면(개수·순서 동일) 카드도 안 다시 그린다.
+    void RefreshCommandCards()
+    {
+        if (Time.time < nextRecipeRefreshTime) return;
+        nextRecipeRefreshTime = Time.time + RecipeRefreshInterval;
+
+        CombineSystem system = CombineSystemRef;
+        List<CombineRecipe> available = system != null ? system.GetAvailableRecipes() : EmptyRecipes;
+
+        if (!AvailableRecipesChanged(available)) return;
+
+        lastAvailableRecipes.Clear();
+        lastAvailableRecipes.AddRange(available);
+
+        int shownCount = Mathf.Min(available.Count, CommandSlotCount);
+        int overflow = Mathf.Max(0, available.Count - CommandSlotCount);
+
+        for (int i = 0; i < CommandSlotCount; i++)
+        {
+            CombineRecipe recipe = i < shownCount ? available[i] : null;
+
+            if (recipe != null && recipe.result == null)
+            {
+                Debug.LogWarning($"GameHud: {recipe.commandId} 레시피의 result가 비어있어 카드를 건너뜁니다.");
+                recipe = null;
+            }
+
+            commandCardRecipes[i] = recipe;
+
+            if (recipe == null)
+            {
+                commandCardRoots[i].SetActive(false);
+                continue;
+            }
+
+            commandCardRoots[i].SetActive(true);
+            commandCardBackgrounds[i].color = GetGradeColor(recipe.result.grade);
+            commandCardNames[i].text = recipe.result.unitName;
+
+            bool showOverflow = overflow > 0 && i == CommandSlotCount - 1;
+            commandCardOverflowTexts[i].text = showOverflow ? $"+{overflow}" : "";
+            commandCardOverflowTexts[i].gameObject.SetActive(showOverflow);
+        }
+    }
+
+    bool AvailableRecipesChanged(List<CombineRecipe> available)
+    {
+        if (available.Count != lastAvailableRecipes.Count) return true;
+
+        for (int i = 0; i < available.Count; i++)
+            if (available[i] != lastAvailableRecipes[i])
+                return true;
+
+        return false;
     }
 
     void RefreshSelectionPanel()
@@ -591,6 +756,102 @@ public class GameHud : MonoBehaviour
         storyText.text = running
             ? $"스토리: {label}"
             : $"{label} {seconds / 60:00}:{seconds % 60:00}";
+    }
+
+    // PlayerContext.Local이 없으면(씬에 없거나 로컬 ID 불일치) 패널 자체를 숨긴다.
+    // UnitInventory가 바뀌면(OnInventoryChanged) dirty만 세우고, 실제 재구성은 여기서 한 번에 한다 —
+    // 로컬 인벤토리 참조가 바뀔 수도 있어(씬 전환 등) 매 프레임 같은 인스턴스인지 확인해 구독을 갱신한다.
+    void RefreshInventoryPanel()
+    {
+        if (inventoryText == null) return;
+
+        PlayerContext local = PlayerContext.Local;
+        UnitInventory inventory = local != null ? local.UnitInventory : null;
+
+        if (inventory != subscribedInventory)
+        {
+            if (subscribedInventory != null)
+            {
+                subscribedInventory.OnInventoryChanged -= OnLocalInventoryChanged;
+            }
+
+            subscribedInventory = inventory;
+
+            if (subscribedInventory != null)
+            {
+                subscribedInventory.OnInventoryChanged += OnLocalInventoryChanged;
+            }
+
+            inventoryDirty = true;
+        }
+
+        bool visible = inventory != null;
+        if (inventoryPanelObject.activeSelf != visible)
+        {
+            inventoryPanelObject.SetActive(visible);
+        }
+
+        if (!visible || !inventoryDirty) return;
+
+        inventoryDirty = false;
+        RebuildInventoryText(inventory);
+    }
+
+    void OnLocalInventoryChanged()
+    {
+        inventoryDirty = true;
+    }
+
+    // 등급별 색 점(■) + "이름 xN" 목록. 등급(Tier) 오름차순 → 이름순 정렬.
+    // 스크롤 없이 상위 MaxInventoryEntries개만 보여주고 나머지는 "외 N종"으로 뭉갠다.
+    void RebuildInventoryText(UnitInventory inventory)
+    {
+        inventoryCounts.Clear();
+
+        foreach (UnitData unit in inventory.Units)
+        {
+            if (unit == null) continue;
+
+            inventoryCounts.TryGetValue(unit, out int count);
+            inventoryCounts[unit] = count + 1;
+        }
+
+        inventoryKeys.Clear();
+        foreach (UnitData unit in inventoryCounts.Keys)
+        {
+            inventoryKeys.Add(unit);
+        }
+
+        inventoryKeys.Sort(CompareUnitByGradeThenName);
+
+        inventoryBuilder.Clear();
+
+        int shown = Mathf.Min(inventoryKeys.Count, MaxInventoryEntries);
+        for (int i = 0; i < shown; i++)
+        {
+            if (i > 0) inventoryBuilder.Append('\n');
+
+            UnitData unit = inventoryKeys[i];
+            string colorHex = ColorUtility.ToHtmlStringRGB(GetGradeColor(unit.grade));
+
+            inventoryBuilder.Append("<color=#").Append(colorHex).Append(">■</color> ")
+                .Append(unit.unitName).Append(" x").Append(inventoryCounts[unit]);
+        }
+
+        int remaining = inventoryKeys.Count - shown;
+        if (remaining > 0)
+        {
+            if (shown > 0) inventoryBuilder.Append('\n');
+            inventoryBuilder.Append("외 ").Append(remaining).Append("종");
+        }
+
+        inventoryText.text = inventoryBuilder.ToString();
+    }
+
+    static int CompareUnitByGradeThenName(UnitData a, UnitData b)
+    {
+        int tierCompare = a.grade.Tier().CompareTo(b.grade.Tier());
+        return tierCompare != 0 ? tierCompare : string.CompareOrdinal(a.unitName, b.unitName);
     }
 
     static RectTransform CreatePanel(Transform parent, string name, Color color)
