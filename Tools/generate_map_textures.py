@@ -92,15 +92,34 @@ def build_grass():
 
 
 def build_water():
-    n = fbm(SIZE, 5, 4, seed=23)
-    deep, shallow, foam = (18, 58, 96), (46, 118, 158), (150, 200, 215)
+    """방향성 있는 잔물결. 얼룩 노이즈만으로는 흐릿한 판으로만 보인다.
+
+    서로 다른 각도·주기의 파를 겹치고 노이즈로 위상을 흔들면 물결처럼 읽힌다.
+    주기는 타일 크기(SIZE)의 정수배로 잡아야 이어 붙였을 때 이음매가 안 생긴다.
+    """
+    warp = fbm(SIZE, 4, 4, seed=23)
+    swell = fbm(SIZE, 2, 2, seed=71)
+
+    deep, shallow, foam = (16, 52, 88), (52, 126, 166), (196, 228, 238)
     pixels = []
+
     for y in range(SIZE):
         for x in range(SIZE):
-            v = n[y][x]
-            c = lerp3(deep, shallow, v)
-            # 물마루에만 옅은 흰기 — 스크롤할 때 물결처럼 읽힌다
-            pixels.append(lerp3(c, foam, max(0.0, v - 0.66) * 2.2))
+            u = x / SIZE
+            v = y / SIZE
+            phase = (warp[y][x] - 0.5) * 2.2
+
+            # 세 방향의 파를 겹친다 — 주기는 전부 정수라 타일 경계에서 맞아떨어진다
+            wave = (math.sin((u * 6 + v * 2) * math.pi * 2 + phase) * 0.5
+                    + math.sin((u * 2 - v * 5) * math.pi * 2 + phase * 1.7) * 0.3
+                    + math.sin((u * 11 + v * 9) * math.pi * 2 + phase * 0.6) * 0.2)
+            wave = wave * 0.5 + 0.5
+
+            depth = wave * 0.72 + swell[y][x] * 0.28
+            c = lerp3(deep, shallow, depth)
+            # 마루 끝에만 흰기를 얹는다. 넓게 깔면 안개처럼 보인다.
+            pixels.append(lerp3(c, foam, max(0.0, wave - 0.82) * 3.2))
+
     write('water', pixels)
 
 
@@ -146,6 +165,6 @@ print("맵 텍스처 생성:")
 build_grass()
 build_water()
 build_rock()
-build_normal('water', 'water_normal', strength=3.0)
+build_normal('water', 'water_normal', strength=5.0)
 build_normal('grass', 'grass_normal', strength=1.5)
 build_normal('rock', 'rock_normal', strength=3.5)

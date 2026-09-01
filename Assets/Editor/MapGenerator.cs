@@ -41,7 +41,7 @@ public static class MapGenerator
 
     static readonly Dictionary<string, Surface> Surfaces = new Dictionary<string, Surface>
     {
-        { "sea",       new Surface("water", new Color(0.72f, 0.86f, 1.00f), 0.020f, 0.85f) },
+        { "sea",       new Surface("water", new Color(0.78f, 0.90f, 1.00f), 0.080f, 0.92f) },
         { "rock",      new Surface("rock",  Color.white,                    0.140f, 0.10f) },
         { "lane",      new Surface("grass", Color.white,                    0.120f, 0.05f) },
         { "warehouse", new Surface("grass", new Color(1.00f, 0.94f, 0.78f), 0.120f, 0.05f) },

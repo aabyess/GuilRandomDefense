@@ -8,8 +8,8 @@ using UnityEngine;
 [RequireComponent(typeof(Renderer))]
 public class SeaScroll : MonoBehaviour
 {
-    [SerializeField] Vector2 baseSpeed = new Vector2(0.012f, 0.008f);
-    [SerializeField] Vector2 normalSpeed = new Vector2(-0.018f, 0.014f);
+    [SerializeField] Vector2 baseSpeed = new Vector2(0.020f, 0.013f);
+    [SerializeField] Vector2 normalSpeed = new Vector2(-0.031f, 0.023f);
 
     static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
     static readonly int BumpMapId = Shader.PropertyToID("_BumpMap");
