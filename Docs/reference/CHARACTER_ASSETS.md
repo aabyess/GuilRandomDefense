@@ -169,5 +169,65 @@ MMD·Sketchfab·VRoid Hub 모델 대부분이 "재배포 금지"를 명시한다
 - 서드파티 URP MToon 포트들의 정확한 라이선스·유지보수 상태
 - Quaternius 몬스터 팩들의 URP 호환 명시 여부 (FBX 원본이라 될 것으로 추정만)
 - (IP 경로 추가조사분) 원펀맨 등 일부 IP의 모델 존재 여부, MMD 리그의 Unity Humanoid 자동매핑 여부, VRoid Hub/Sketchfab 무료 모델의 정확한 라이선스 문구, 개별 유닛명 234종에 대응하는 IP 모델 존재 여부 — 상세는 "## 4. IP 캐릭터 경로" 하단 참고
+
+---
+
+## 받을 목록 (2026-09-01 추가 — 직접 링크)
+
+> 사용자가 CC-BY(저작자 표시)까지 허용하기로 확정 — 게임 시작 전 크레딧 화면에 저작자를 표기한다. **못 쓰는 건 (1) 불법 재배포 사이트, (2) 유료를 안 사고 가져오는 것뿐.**
+> 표기: **[확인]** = 해당 페이지를 WebFetch로 직접 열어 검증함 / **[검색]** = WebSearch 결과 스니펫 기준(페이지 직접 열람은 안 함, 링크 자체는 실재하는 검색 결과) / **[미확인]** = 못 찾음
+> **링크는 전부 검색·열람으로 실재를 확인한 것만 실었다. 지어낸 링크는 없다.**
+
+### 1. 잡몹·보스 (최우선)
+
+| 항목 | 링크 | 라이선스 | 포맷 | 애니메이션 | 용도 | 태그 |
+|---|---|---|---|---|---|---|
+| Quaternius Ultimate Monsters Pack | https://quaternius.com/packs/ultimatemonsters.html | CC0 (저작자 표시 불필요) | FBX, OBJ, Blend, glTF | **있음** — "50 fully animated monsters" | 잡몹 50종 | [확인] |
+| Monster Boss (x.A-Studio.x) | https://assetstore.unity.com/packages/3d/characters/creatures/monster-boss-295453 | Standard Unity EULA | 미확인(Unity 패키지) | 있음("Animated" 태그) | 보스 단품 1종, $45 | [확인 — 기존 조사 재확인, 이번엔 재열람 안 함] |
+
+**보스 9종 전체는 위 Ultimate Monsters Pack 안에서 덩치 크거나 개성 있는 종을 크기/색으로 승격시키는 걸 권장** — 팩 내 개별 몬스터 목록/썸네일은 페이지에서 직접 확인 가능(다운로드 페이지 자체에 미리보기가 있음).
+
+### 2. 툰 셰이더
+
+| 항목 | 링크 | 라이선스 | Unity/URP 호환 | 용도 | 태그 |
+|---|---|---|---|---|---|
+| Anime Cel Shader URP (Neko Legends) | https://assetstore.unity.com/packages/vfx/shaders/anime-cel-shader-urp-259864 | Standard Unity EULA, **무료** | URP 호환 명시, 2025-09-24 최종 업데이트, 원본 Unity 6000.2.5 | 아군/몬스터 공용 셀셰이딩 | [확인] |
+| URP Toon Shader (Delt06) | https://github.com/Delt06/urp-toon-shader | **MIT 라이선스** (완전 자유, 저작자 표시도 법적 의무 아님) | Unity 2021.3.0f1 LTS + URP 12.1.6 기준 개발, 2020.3도 지원. **유지보수는 중단 상태(개발자가 후속 프로젝트 "Toon RP"로 이동)** — Unity 6 공식 검증은 안 됨 | 대안/백업용 | [확인] |
+| OToon | (정확한 다운로드 페이지를 찾지 못함) | — | — | — | **[미확인]** — 여러 리소스 사이트(gameassetdeals.com 등)에서 언급되나 공식 배포처(Asset Store/GitHub/itch.io)를 직접 확인 못함. **`unityassetcollection.com`에도 유사 이름의 셰이더가 걸려있는데 이건 이전에 불법 재배포로 경고한 사이트라 절대 쓰지 말 것.** |
+
+→ **1순위 추천: Anime Cel Shader URP.** 무료+URP 명시+최근 업데이트(2025-09)로 셋 다 만족하는 유일한 후보. OToon은 신뢰할 수 있는 링크를 못 찾아 목록에서 제외한다.
+
+### 3. 아군 유닛 베이스 (Quaternius 3종 세트)
+
+| 항목 | 링크 | 라이선스 | 포맷 | 구성 | 태그 |
+|---|---|---|---|---|---|
+| Universal Base Characters | https://quaternius.itch.io/universal-base-characters (다운로드 버튼: `/purchase` 경로로 연결) | CC0 | FBX/OBJ/Blend(표준), 소스판(600MB)엔 Blender/UE/Unity/Godot 프로젝트 별도 포함 | 베이스 6종(남/녀 × Superhero/Regular/Teen 체형), 헤어스타일 20종, 피부·눈 색 커스터마이즈 | [확인] |
+| Modular Character Outfits – Fantasy | https://quaternius.com/packs/modularcharacteroutfitsfantasy.html | CC0 | FBX, OBJ, Blend, glTF | 의상 12종/파츠 62개, 의상마다 색 텍스처 3종. **Universal Base Character 헤드와 호환 명시**, Humanoid 리그라 다른 베이스에도 재타게팅 가능 | [확인] |
+| Ultimate Animated Character Pack | https://quaternius.com/packs/ultimatedanimatedcharacter.html | CC0 | FBX, OBJ, Blend | 캐릭터 52종 + "many animations"(구체 목록은 페이지에 없음 — 다운로드해서 확인 필요) | [확인] |
+
+3종 다 CC0라 저작자 표시 자체가 불필요하다(표시해도 무방하지만 의무 아님). **Universal Base Characters + Modular Outfits는 호환성이 페이지에 명시**돼 있어 조합 리스크가 낮다. Ultimate Animated Pack의 애니메이션이 이 베이스와 같은 리그를 쓰는지는 페이지에 명시가 없어 **다운로드 후 직접 확인이 필요하다** [미확인].
+
+### 4. IP 캐릭터 (사장님이 직접 고르시도록 후보 다수)
+
+> 전부 팬메이드/2차창작 모델이다. 라이선스가 명시 안 된 것도 많다 — 그런 경우 "저작자 표시 필수로 간주하고 크레딧에 넣는" 게 안전하다 [판단]. **T포즈만 있고 애니메이션이 없는 경우가 대부분** — Mixamo 리타게팅 전제로 봐야 한다.
+
+| 유닛명 | 원작 | 후보 링크 | 라이선스 | 포맷 | 태그 |
+|---|---|---|---|---|---|
+| 무면허 라이더 | 원펀맨 — **멈맨 라이더(Mumen Rider)의 한국어 번역명**, 캐릭터명 자체가 "무면허(라이선스 없는) 라이더" | 게임용 리그드 모델을 못 찾음 — 검색된 건 전부 **3D프린트용 피규어(STL)**: https://cults3d.com/en/3d-model/art/mumen-rider-ciclista-sin-licencia-one-punch-man , CGTrader 유료 프린트 모델 다수 | 프린트 모델마다 다름 | STL(게임용 아님) | **[검색, 게임 임포트 부적합]** — 리그·애니메이션 없는 조각상용 모델뿐. 이 캐릭터는 IP 경로보다 오리지널/Quaternius 베이스+커스텀이 현실적 |
+| 브로리 | 드래곤볼 슈퍼 (극장판) | https://sketchfab.com/3d-models/broly-super-saiyan-9c482f44944348acb9e048da00f7db27 (CC-BY로 검색됨) / https://sketchfab.com/3d-models/broly-dragon-ball-z-sagas-bced4ed9e8c44c07aa6575ad6e668a49 (CC-BY, GameCube 게임 추출 모델) | **CC-BY** (검색 결과에 명시) — 저작자명은 각 페이지에서 재확인 필요 | Sketchfab 표준(다운로드 시 FBX/glTF 선택 가능) | [검색] — 직접 열람으로 저작자명 재확인 필요 |
+| 고죠 사토루 | 주술회전 | https://sketchfab.com/3d-models/satoru-gojo-1cf90882c2e64074ab62d766ad77d6c4 | **CC-BY 4.0** (직접 열람 확인) — **저작자: Godfrey (SteamySenpai / godfreywilliams)** | .blend/.fbx/.obj/.mtl | **[확인]** — 리그 포함(T포즈, Blender pose mode로 조정 가능). "재업로드·재배포 금지" 별도 명시 있음(우리끼리 게임에 넣는 것과는 무관하다고 판단되나 회색지대) |
+| 나나미 치아키 | 주술회전 (켄토 나나미) | https://sketchfab.com/3d-models/nanami-jujutsu-kaisen-rigged-sculptrun-da1c5b019e9c420b880de1cfd26b757f (제목에 "Rigged" 명시) | 미확인(페이지 직접 열람 안 함) | 미확인 | [검색] — 리그 있다는 것만 제목으로 확인, 라이선스는 재확인 필요 |
+| 모리야 스와코 | 동방 프로젝트 | https://sketchfab.com/3d-models/suwako-moriya-9182554555534b06a3b257d754744511 | 미확인 | 미확인 | [검색] — 동방은 원래 2D 게임이라 3D 모델은 전부 2차창작. 상대적으로 후보가 적음(모자 소품, 피규어 등 부분 모델이 더 많이 나옴) |
+| 한마 유지로 | 그래플러 바키 | https://sketchfab.com/3d-models/yujiro-hanma-v10-6739950ee3e94a42ad1252bc4f5a049b | **CC-BY로 추정, 단 "비상업적 용도만" 명시** — 크레딧: **Omega Slender**, "격투의 북두의 권 레전드 리바이브 게임 모델을 수정한 것"이라는 서술 | 미확인 | [검색] — 정적 모델로 보임(리그/애니메이션 여부 미확인) |
+| 호시노 루비 | 최애의 아이 | https://hub.vroid.com/en/characters/4094744293042894568/models/1052211098702716463 (VRoid Hub) / https://sketchfab.com/3d-models/oshi-no-ko-ruby-hoshino-3d-model-fv-dl-9d9c913ad2bd4cf692aa064167865494 (Sketchfab, "XPS/PMX/FBX/Blender/VRChat 포맷 다양하게 제공"이라는 서술) | 미확인(개별 재확인 필요) | VRM(Hub) 또는 FBX 등 다수(Sketchfab) | [검색] — 최근작이지만 팬층이 두터워 후보가 예상보다 많음. VRM 경로는 기존 조사(UniVRM+Compatibility Mode)와 연결됨 |
+| 김건부 | **애니메이션 캐릭터가 아니다** — League of Legends 프로게이머(정글러 "캐니언", 본명 김건부)의 실명 | 없음 | — | — | **⚠️ [확인] 3D 모델 소스 자체가 존재하지 않는다** — 이건 실존 인물이라 애니풍 3D 모델을 찾는 게 원천적으로 잘못된 방향이다. **PM/사용자에게 확인 필요**: 이 유닛명이 의도한 게 맞는지, 아니면 다른 캐릭터를 의도했는데 이름이 잘못 들어간 건지 |
+| 올마이트 | 마이 히어로 아카데미아 | https://sketchfab.com/3d-models/all-might-the-number-one-hero-ab3d819d719745a0a0bde8b9de05daa0 / https://sketchfab.com/3d-models/all-might-hero-bb66cb7daf0f4d4dbc2442dae1e43289 | 미확인 | Sketchfab 표준 | [검색] — 후보 다수, MMD판(DeviantArt, SAB64 제작)도 있음: https://www.deviantart.com/sab64/art/MMD-Model-All-Might-Download-787247965 |
+
+### 받을 목록 관련 주의
+
+1. **위 `[검색]` 태그 항목은 링크 자체는 실재하지만, 라이선스·정확한 저작자명·포맷 상세는 다운로드 직전에 해당 페이지를 직접 열어 재확인해야 한다.** 특히 CC-BY 표기를 크레딧 화면에 넣으려면 정확한 저작자명이 필요하다.
+2. **김건부는 3D 모델을 찾을 수 있는 대상이 아니다** — 실존 인물이다. 사용자 확인 필요.
+3. **무면허 라이더는 게임용 리그드 모델이 없다** — 3D프린트 피규어뿐이다. Quaternius 베이스로 자체 제작하는 게 현실적이다.
+4. Sketchfab에서 "Download Free"라고 표시돼도 실제로는 모델별로 라이선스가 CC0부터 CC-BY, 심지어 비상업 한정까지 갈리므로, **다운로드 페이지의 라이선스 섹션을 반드시 확인**해야 한다.
 - 진짜 cel-shaded 애니풍 무료 몬스터 팩 존재 여부 (못 찾음 — 로우폴리+툰셰이더가 현재로선 유일한 대안)
 - Unity Asset Store 표준 EULA 원문 전체 대조 (재판매 금지 외 세부 조항은 구매 전 재확인 권장, `ART_ASSETS.md`와 동일한 주의사항)

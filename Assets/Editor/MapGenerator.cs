@@ -217,28 +217,29 @@ public static class MapGenerator
     // 상점 줄은 필드와 벽 하나로 갈린다 — 적이 도는 곳과 내가 쓰는 곳이 눈으로 구분돼야 한다.
     // 새 유닛이 처음 서는 우리. 상점 줄 바로 위, 벽으로 둘러싸여 있고 위쪽만 트여 있다 —
     // 레인 한가운데에 소환하면 적 한복판에 나오고, 플레이어가 손쓸 새도 없이 맞는다.
-    const float UnitPenWidth = 34f;
-    const float UnitPenDepth = 16f;
+    const float UnitPenWidth = 40f;
+    const float UnitPenInset = 3f;    // 우리 줄 안에서 위아래로 남기는 여유
 
     static Transform BuildUnitPen(Transform parent, MapLayout.Island lane, int laneIndex)
     {
-        MapLayout.Island strip = MapLayout.LaneShopStrip(lane);
-        float centerZ = strip.center.y + strip.size.y * 0.5f + UnitPenDepth * 0.5f + GateThickness;
+        MapLayout.Island row = MapLayout.LaneUnitPenRow(lane);
+        float penDepth = row.size.y - UnitPenInset * 2f;
+        float centerZ = row.center.y;
         float centerX = lane.center.x;
         float halfX = UnitPenWidth * 0.5f;
-        float halfZ = UnitPenDepth * 0.5f;
+        float halfZ = penDepth * 0.5f;
 
         BuildDecor(parent, $"{lane.name}_유닛우리_바닥",
             new Vector3(centerX, MapLayout.IslandTop + 0.05f, centerZ),
-            new Vector3(UnitPenWidth, 0.1f, UnitPenDepth), "dirt");
+            new Vector3(UnitPenWidth, 0.1f, penDepth), "dirt");
 
         // 좌·우·아래만 막는다. 위가 열려 있어야 플레이어가 유닛을 필드로 꺼낸다.
         BuildWall(parent, $"{lane.name}_유닛우리_왼벽",
             new Vector3(centerX - halfX, MapLayout.IslandTop + WallHeight * 0.5f, centerZ),
-            new Vector3(GateThickness, WallHeight, UnitPenDepth + GateThickness));
+            new Vector3(GateThickness, WallHeight, penDepth + GateThickness));
         BuildWall(parent, $"{lane.name}_유닛우리_오른벽",
             new Vector3(centerX + halfX, MapLayout.IslandTop + WallHeight * 0.5f, centerZ),
-            new Vector3(GateThickness, WallHeight, UnitPenDepth + GateThickness));
+            new Vector3(GateThickness, WallHeight, penDepth + GateThickness));
         BuildWall(parent, $"{lane.name}_유닛우리_아래벽",
             new Vector3(centerX, MapLayout.IslandTop + WallHeight * 0.5f, centerZ - halfZ),
             new Vector3(UnitPenWidth, WallHeight, GateThickness));

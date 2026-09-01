@@ -35,12 +35,13 @@ public static class MapLayout
     // 메인 방어 필드 — 2×2로 붙은 레인 4개 = 플레이어 4명
     public static readonly Island[] Lanes =
     {
-        // 세로 136 = 싸우는 필드 110 + 아래 상점 줄 26. 필드 크기는 예전 그대로다 —
-        // 상점이 들어설 자리만 아래에 덧댔고, 그만큼 Lane1·2를 위로 밀어 간격을 지켰다.
-        new Island("Lane1", -236f, 249f, 110f, 136f, "lane"),
-        new Island("Lane2", -120f, 249f, 110f, 136f, "lane"),
-        new Island("Lane3", -236f, 107f, 110f, 136f, "lane"),
-        new Island("Lane4", -120f, 107f, 110f, 136f, "lane"),
+        // 세로 156 = 싸우는 필드 110 + 유닛 우리 줄 20 + 상점 줄 26.
+        // 필드 크기는 처음 그대로고, 아래에 두 줄을 덧댔다. 우리를 필드 안에 두면
+        // 순찰 흙길과 겹쳐서 새 유닛이 적이 지나는 자리에 나온다.
+        new Island("Lane1", -236f, 279f, 110f, 156f, "lane"),
+        new Island("Lane2", -120f, 279f, 110f, 156f, "lane"),
+        new Island("Lane3", -236f, 117f, 110f, 156f, "lane"),
+        new Island("Lane4", -120f, 117f, 110f, 156f, "lane"),
     };
 
     // 창고 — 플레이어별 개인 섬 (C키로 유닛을 보냄)
@@ -124,12 +125,27 @@ public static class MapLayout
     /// </summary>
     public const float ShopStripDepth = 26f;
 
-    /// <summary>적이 도는 필드. 섬에서 아래 상점 줄을 뺀 나머지다.</summary>
+    /// <summary>상점 줄 바로 위, 새 유닛이 처음 서는 우리가 놓이는 줄.</summary>
+    public const float UnitPenDepth = 20f;
+
+    /// <summary>필드가 아닌 아래 두 줄(우리 + 상점)의 합.</summary>
+    public const float LaneApronDepth = ShopStripDepth + UnitPenDepth;
+
+    /// <summary>적이 도는 필드. 섬에서 아래 두 줄을 뺀 나머지다.</summary>
     public static Island LaneField(Island lane)
     {
         return new Island(lane.name,
-            lane.center.x, lane.center.y + ShopStripDepth * 0.5f,
-            lane.size.x, lane.size.y - ShopStripDepth, lane.tint);
+            lane.center.x, lane.center.y + LaneApronDepth * 0.5f,
+            lane.size.x, lane.size.y - LaneApronDepth, lane.tint);
+    }
+
+    /// <summary>유닛 우리가 놓이는 줄. 상점 줄과 필드 사이다.</summary>
+    public static Island LaneUnitPenRow(Island lane)
+    {
+        float bottom = lane.center.y - lane.size.y * 0.5f;
+        return new Island(lane.name,
+            lane.center.x, bottom + ShopStripDepth + UnitPenDepth * 0.5f,
+            lane.size.x, UnitPenDepth, lane.tint);
     }
 
     /// <summary>상점이 서는 아래 줄.</summary>
