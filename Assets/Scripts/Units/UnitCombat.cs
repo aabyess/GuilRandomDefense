@@ -76,7 +76,10 @@ public class UnitCombat : MonoBehaviour
                 break;
 
             case CombatState.Returning:
-                if (HasArrived()) state = CombatState.Idle;
+                // 복귀 중에도 계속 찾는다. 안 그러면 목표가 죽을 때마다 원위치까지 갔다가
+                // 다시 나오기를 반복해서, 적이 줄줄이 오는 레인에서 유닛이 왕복만 한다.
+                TryScan();
+                if (state == CombatState.Returning && HasArrived()) state = CombatState.Idle;
                 break;
         }
     }
