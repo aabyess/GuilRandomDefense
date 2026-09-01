@@ -1206,6 +1206,7 @@ public static class MapGenerator
             report += $"\n위습이 생기는 위치(PlayerContext {contexts.Length}개)를 뽑기 섬으로 옮겼습니다.";
 
         report += WireCombineWallet();
+        report += FitMinimapToIslands();
         report += MoveWarehousesToIslands();
         report += WireAllRecipes();
         report += SetUpCamera();
@@ -1399,7 +1400,14 @@ public static class MapGenerator
 
         // 스크립트의 기본값을 바꿔도 이미 씬에 저장된 값은 그대로 남는다.
         // 맵 생성은 초기화 동작이므로 조작 관련 수치를 현재 기준값으로 덮어쓴다.
+        // 섬 배치가 바뀔 때마다 손으로 맞추면 어긋난다. 실제 범위를 재서 넣는다.
+        IslandBounds bounds = MeasureIslands();
+
         SerializedObject cameraSo = new SerializedObject(controller);
+        cameraSo.FindProperty("boundsMin").vector2Value =
+            new Vector2(bounds.minX - CameraMargin, bounds.minZ - CameraMargin);
+        cameraSo.FindProperty("boundsMax").vector2Value =
+            new Vector2(bounds.maxX + CameraMargin, bounds.maxZ + CameraMargin);
         cameraSo.FindProperty("moveSpeed").floatValue = 110f;
         cameraSo.FindProperty("edgeThickness").floatValue = 16f;
         cameraSo.FindProperty("minHeight").floatValue = 20f;
@@ -1416,6 +1424,57 @@ public static class MapGenerator
         camera.farClipPlane = Mathf.Max(camera.farClipPlane, 1000f);
 
         return "\n카메라에 RTS 조작(가장자리 밀기·WASD·휠 확대)을 붙이고 메인 필드 위로 옮겼습니다.";
+    }
+
+    // 미니맵은 바다 전체가 아니라 섬이 있는 범위를 담아야 섬이 크게 보인다.
+    static string FitMinimapToIslands()
+    {
+        MinimapCamera minimap = Object.FindFirstObjectByType<MinimapCamera>(FindObjectsInactive.Include);
+        if (minimap == null) return "";   // 미니맵은 실행 중에 만들어진다 — 편집 모드엔 없을 수 있다
+
+        IslandBounds bounds = MeasureIslands();
+        SerializedObject so = new SerializedObject(minimap);
+        so.FindProperty("mapCenter").vector3Value = bounds.Center;
+        so.FindProperty("mapExtent").floatValue = bounds.Extent + 30f;
+        so.ApplyModifiedProperties();
+
+        return "\n미니맵 범위를 섬 전체에 맞췄습니다.";
+    }
+
+    const float CameraMargin = 60f;   // 섬 끝을 화면 가운데 두고도 주변이 보이도록
+
+    struct IslandBounds
+    {
+        public float minX, maxX, minZ, maxZ;
+        public Vector3 Center => new Vector3((minX + maxX) * 0.5f, MapLayout.IslandTop, (minZ + maxZ) * 0.5f);
+        public float Extent => Mathf.Max(maxX - minX, maxZ - minZ) * 0.5f;
+    }
+
+    static IslandBounds MeasureIslands()
+    {
+        IslandBounds bounds = new IslandBounds
+        {
+            minX = float.MaxValue, maxX = float.MinValue,
+            minZ = float.MaxValue, maxZ = float.MinValue,
+        };
+
+        foreach (MapLayout.Island island in AllIslands())
+        {
+            bounds.minX = Mathf.Min(bounds.minX, island.center.x - island.size.x * 0.5f);
+            bounds.maxX = Mathf.Max(bounds.maxX, island.center.x + island.size.x * 0.5f);
+            bounds.minZ = Mathf.Min(bounds.minZ, island.center.y - island.size.y * 0.5f);
+            bounds.maxZ = Mathf.Max(bounds.maxZ, island.center.y + island.size.y * 0.5f);
+        }
+
+        return bounds;
+    }
+
+    static IEnumerable<MapLayout.Island> AllIslands()
+    {
+        foreach (MapLayout.Island island in MapLayout.Lanes) yield return island;
+        foreach (MapLayout.Island island in MapLayout.Warehouses) yield return island;
+        foreach (MapLayout.Island island in MapLayout.SealIslands) yield return island;
+        foreach (MapLayout.Island island in MapLayout.Zones) yield return island;
     }
 
     static string BuildNavMesh(GameObject root)

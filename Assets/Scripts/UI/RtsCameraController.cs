@@ -21,8 +21,8 @@ public class RtsCameraController : MonoBehaviour
     [SerializeField] float maxHeight = 420f;
 
     [Header("이동 범위")]
-    [SerializeField] Vector2 boundsMin = new Vector2(-370f, -370f);
-    [SerializeField] Vector2 boundsMax = new Vector2(370f, 370f);
+    [SerializeField] Vector2 boundsMin = new Vector2(-400f, -300f);
+    [SerializeField] Vector2 boundsMax = new Vector2(410f, 380f);
 
     // 이동 속도의 기준 높이. 이보다 높으면 빠르게, 낮으면 천천히 움직여
     // 화면에서 체감하는 이동량을 비슷하게 유지한다.
