@@ -37,6 +37,11 @@ public class UnitSpawner : MonoBehaviour
             // 높은 품질을 쓰면 그 자체가 부담이 된다.
             agent.obstacleAvoidanceType = ObstacleAvoidanceType.LowQualityObstacleAvoidance;
             agent.radius = 0.28f;
+
+            // areaMask를 정한 뒤에 올려야 한다 — 지상 유닛을 바다 위에 붙여놓으면 안 된다.
+            // 좌표만 주고 놓으면 NavMesh에서 살짝 벗어났을 때 에이전트가 안 붙고,
+            // 그 유닛은 선택은 되는데 이동 명령이 조용히 무시된다.
+            NavPlacement.Place(agent, position);
         }
 
         // 인벤토리는 UnitData 목록이 아니라 필드 인스턴스의 등록부다(UnitInventory 참고).

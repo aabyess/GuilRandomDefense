@@ -160,6 +160,10 @@ public class RewardDistributor : MonoBehaviour
 
             GameObject instance = Instantiate(wispData.prefab, origin + offset, Quaternion.identity);
 
+            // 좌표만 주고 놓으면 NavMesh에서 살짝 벗어났을 때 에이전트가 안 붙고,
+            // 그 위습은 선택은 되는데 이동 명령이 조용히 무시된다.
+            NavPlacement.PlaceObject(instance, origin + offset);
+
             if (!instance.TryGetComponent(out Wisp wisp))
             {
                 wisp = instance.AddComponent<Wisp>();
