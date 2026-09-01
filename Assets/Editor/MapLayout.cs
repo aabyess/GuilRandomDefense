@@ -35,10 +35,12 @@ public static class MapLayout
     // 메인 방어 필드 — 2×2로 붙은 레인 4개 = 플레이어 4명
     public static readonly Island[] Lanes =
     {
-        new Island("Lane1", -236f, 236f, 110f, 110f, "lane"),
-        new Island("Lane2", -120f, 236f, 110f, 110f, "lane"),
-        new Island("Lane3", -236f, 120f, 110f, 110f, "lane"),
-        new Island("Lane4", -120f, 120f, 110f, 110f, "lane"),
+        // 세로 136 = 싸우는 필드 110 + 아래 상점 줄 26. 필드 크기는 예전 그대로다 —
+        // 상점이 들어설 자리만 아래에 덧댔고, 그만큼 Lane1·2를 위로 밀어 간격을 지켰다.
+        new Island("Lane1", -236f, 249f, 110f, 136f, "lane"),
+        new Island("Lane2", -120f, 249f, 110f, 136f, "lane"),
+        new Island("Lane3", -236f, 107f, 110f, 136f, "lane"),
+        new Island("Lane4", -120f, 107f, 110f, 136f, "lane"),
     };
 
     // 창고 — 플레이어별 개인 섬 (C키로 유닛을 보냄)
@@ -113,12 +115,35 @@ public static class MapLayout
     /// 왼쪽 위에서 출발해 아래로 내려간 뒤 반시계 방향으로 돈다.
     /// 화면 기준 위쪽이 +Z이므로 왼쪽 위 = (-x, +z).
     /// </summary>
+    /// <summary>
+    /// 레인 아래에 덧댄 상점 줄의 깊이. 도박소·강화소 셋·도움소가 여기 가로로 늘어선다.
+    /// 적은 여기로 안 내려온다 — 순찰 경로도 흙길도 이 줄을 뺀 필드에서만 잡는다.
+    /// </summary>
+    public const float ShopStripDepth = 26f;
+
+    /// <summary>적이 도는 필드. 섬에서 아래 상점 줄을 뺀 나머지다.</summary>
+    public static Island LaneField(Island lane)
+    {
+        return new Island(lane.name,
+            lane.center.x, lane.center.y + ShopStripDepth * 0.5f,
+            lane.size.x, lane.size.y - ShopStripDepth, lane.tint);
+    }
+
+    /// <summary>상점이 서는 아래 줄.</summary>
+    public static Island LaneShopStrip(Island lane)
+    {
+        return new Island(lane.name,
+            lane.center.x, lane.center.y - (lane.size.y - ShopStripDepth) * 0.5f,
+            lane.size.x, ShopStripDepth, lane.tint);
+    }
+
     public static Vector3[] LaneLoop(Island lane, float inset = 14f)
     {
-        float halfX = lane.size.x * 0.5f - inset;
-        float halfZ = lane.size.y * 0.5f - inset;
-        float x = lane.center.x;
-        float z = lane.center.y;
+        Island field = LaneField(lane);
+        float halfX = field.size.x * 0.5f - inset;
+        float halfZ = field.size.y * 0.5f - inset;
+        float x = field.center.x;
+        float z = field.center.y;
 
         return new[]
         {

@@ -78,6 +78,7 @@ public static class MapGenerator
             GameObject laneObject = BuildIsland(root.transform, MapLayout.Lanes[i]);
             laneObject.AddComponent<LaneMarker>().SetLaneIndex(i);
             DecorateLane(root.transform, MapLayout.Lanes[i]);
+            BuildLaneShopStrip(root.transform, MapLayout.Lanes[i]);
             BuildSupportShop(root.transform, MapLayout.Lanes[i], i);
             BuildGamblingShop(root.transform, MapLayout.Lanes[i], i);
             laneObjects.Add(laneObject);
@@ -182,10 +183,12 @@ public static class MapGenerator
 
     static void DecorateLane(Transform parent, MapLayout.Island lane)
     {
-        float halfX = lane.size.x * 0.5f - TrackInset;
-        float halfZ = lane.size.y * 0.5f - TrackInset;
-        float x = lane.center.x;
-        float z = lane.center.y;
+        // 흙길은 적이 실제로 도는 자리다 — 상점 줄을 뺀 필드에서만 잡는다.
+        MapLayout.Island field = MapLayout.LaneField(lane);
+        float halfX = field.size.x * 0.5f - TrackInset;
+        float halfZ = field.size.y * 0.5f - TrackInset;
+        float x = field.center.x;
+        float z = field.center.y;
         float y = MapLayout.IslandTop + 0.04f;   // 잔디 위에 살짝 얹어 z-fighting을 피한다
 
         // 순찰 경로를 따라 도는 흙길 — 적이 실제로 지나는 자리다.
@@ -208,13 +211,29 @@ public static class MapGenerator
     // 레인 안 상점 건물들. 순찰 흙길(TrackInset 14)보다 안쪽, 레인 가운데에 가로로 늘어선다.
     // 앞으로 강화소 셋이 더 붙으므로 자리를 인덱스로 잡는다.
     const int LaneShopCount = 5;
-    const float LaneShopSpacing = 10f;
-    const float LaneShopSize = 4f;
+    const float LaneShopSize = 9f;
+
+    // 상점 줄은 필드와 벽 하나로 갈린다 — 적이 도는 곳과 내가 쓰는 곳이 눈으로 구분돼야 한다.
+    static void BuildLaneShopStrip(Transform parent, MapLayout.Island lane)
+    {
+        MapLayout.Island strip = MapLayout.LaneShopStrip(lane);
+
+        BuildDecor(parent, $"{lane.name}_상점바닥",
+            new Vector3(strip.center.x, MapLayout.IslandTop + 0.05f, strip.center.y),
+            new Vector3(strip.size.x - 2f, 0.1f, strip.size.y - 2f), "rock");
+
+        BuildDecor(parent, $"{lane.name}_상점벽",
+            new Vector3(strip.center.x, MapLayout.IslandTop + WallHeight * 0.5f,
+                        strip.center.y + strip.size.y * 0.5f),
+            new Vector3(strip.size.x, WallHeight, GateThickness), "rock");
+    }
 
     static Vector3 LaneShopSlot(MapLayout.Island lane, int slot)
     {
-        float left = lane.center.x - LaneShopSpacing * (LaneShopCount - 1) * 0.5f;
-        return new Vector3(left + LaneShopSpacing * slot, MapLayout.IslandTop + 1.5f, lane.center.y);
+        MapLayout.Island strip = MapLayout.LaneShopStrip(lane);
+        float step = strip.size.x / (LaneShopCount + 1);
+        return new Vector3(strip.center.x - strip.size.x * 0.5f + step * (slot + 1),
+                           MapLayout.IslandTop + 1.5f, strip.center.y);
     }
 
     static GameObject BuildLaneShopBody(Transform parent, string name, Vector3 at, int laneIndex, string surface)
@@ -223,8 +242,8 @@ public static class MapGenerator
         shop.name = name;
         shop.transform.SetParent(parent, false);
         shop.transform.position = at;
-        shop.transform.localScale = new Vector3(LaneShopSize, 3f, LaneShopSize);
-        Paint(shop, surface, LaneShopSize, LaneShopSize);   // 임시 — 전용 모델이 없어 기존 텍스처를 쓴다
+        shop.transform.localScale = new Vector3(LaneShopSize, 3f, LaneShopSize * 0.7f);
+        Paint(shop, surface, LaneShopSize, LaneShopSize * 0.7f);   // 임시 — 전용 모델이 없어 기존 텍스처를 쓴다
 
         shop.AddComponent<Selectable>();
         shop.AddComponent<OwnedByPlayer>().SetOwner(laneIndex);
