@@ -485,7 +485,8 @@ public static class MapGenerator
         float displayLeft = rightColumnLeft + 4f;
         float displayWidth = left + island.size.x - 2f - displayLeft;
         int perRow = Mathf.Max(1, Mathf.FloorToInt(displayWidth / SlotSpacing));
-        float displayZ = bandTop;
+        // bandTop은 열 위벽이 서는 자리다. 거기서 바로 시작하면 첫 줄이 벽에 끼인다.
+        float displayZ = bandTop - SlotSpacing;
         int displayed = 0;
 
         foreach (UnitGrade grade in MapLayout.GachaDisplayGrades)
