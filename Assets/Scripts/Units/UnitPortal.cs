@@ -105,20 +105,27 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
             return;
         }
 
+        // 소환할 수 있는지까지 확인한 뒤에 위습을 소모한다.
+        // 예전엔 소환에 실패해도 인벤토리에는 들어가서 완전한 손실은 아니었는데, 인벤토리가
+        // 필드 인스턴스의 등록부가 된 뒤로는 소환이 곧 지급이다 — 여기서 빠지면 위습만 사라진다.
+        if (unitSpawner == null)
+        {
+            Debug.LogWarning("UnitPortal: unitSpawner가 비어있어 소환하지 못했습니다 — 위습을 소모하지 않았습니다.", this);
+            return;
+        }
+
+        if (reward.prefab == null)
+        {
+            Debug.LogWarning($"UnitPortal: {reward.unitName}에 prefab이 없어 소환하지 못했습니다 — 위습을 소모하지 않았습니다.", this);
+            return;
+        }
+
         int ownerId = wisp.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
 
         wisp.MarkConsumed();
         Destroy(wisp.gameObject);
 
-        PlayerContext.Get(ownerId)?.UnitInventory?.Add(reward);
-
-        if (unitSpawner != null)
-        {
-            unitSpawner.Spawn(reward, ResolveSpawnPosition(ownerId), ownerId);
-        }
-        else
-        {
-            Debug.LogWarning("UnitPortal: unitSpawner가 비어있어 필드에 소환하지 못했습니다.");
-        }
+        // Spawn이 인벤토리 등록까지 한다 — 여기서 따로 Add하면 필드에 없는 유닛이 인벤토리에 생긴다.
+        unitSpawner.Spawn(reward, ResolveSpawnPosition(ownerId), ownerId);
     }
 }

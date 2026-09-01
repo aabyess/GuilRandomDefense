@@ -22,13 +22,39 @@ public class Warehouse : MonoBehaviour
     readonly List<GameObject> stored = new List<GameObject>();
 
     public int OwnerPlayerId => ownerPlayerId;
-    public IReadOnlyList<GameObject> Stored => stored;
 
-    public bool Contains(GameObject unit) => stored.Contains(unit);
+    public IReadOnlyList<GameObject> Stored
+    {
+        get
+        {
+            PruneDestroyed();
+            return stored;
+        }
+    }
+
+    /// <summary>이 개체를 창고가 들고 있는지. 조합이 "필드 유닛보다 창고 유닛을 먼저 소모"하려고 물어본다.</summary>
+    public bool Contains(GameObject unit)
+    {
+        // 파괴된 Object끼리는 Unity의 비교에서 서로 같아진다 — 목록에 파괴된 참조가 남아 있으면
+        // 파괴된 유닛으로 물어봤을 때 엉뚱하게 true가 나온다. 매 프레임 도는 경로가 아니라 그냥 정리하고 답한다.
+        PruneDestroyed();
+        return stored.Contains(unit);
+    }
+
+    // 창고에 있던 유닛이 조합·연금술로 소모되면 목록에 파괴된 참조가 남는다. 창고는 그 파괴를
+    // 알 방법이 없으니(구독을 걸면 결합만 는다) 읽고 쓰는 지점에서 걷어낸다 —
+    // SelectionManager.PruneDestroyed와 같은 방식이다.
+    void PruneDestroyed()
+    {
+        for (int i = stored.Count - 1; i >= 0; i--)
+            if (stored[i] == null) stored.RemoveAt(i);
+    }
 
     /// <summary>유닛을 창고 섬으로 보낸다.</summary>
     public bool Store(GameObject unit)
     {
+        PruneDestroyed();
+
         if (unit == null || stored.Contains(unit)) return false;
 
         if (!unit.TryGetComponent(out OwnedByPlayer owner) || owner.OwnerId != ownerPlayerId)
@@ -51,6 +77,8 @@ public class Warehouse : MonoBehaviour
     /// <summary>창고에 있던 유닛을 지정한 곳으로 되돌린다.</summary>
     public bool Retrieve(GameObject unit, Vector3 position)
     {
+        PruneDestroyed();
+
         if (unit == null || !stored.Remove(unit)) return false;
 
         Teleport(unit, position);

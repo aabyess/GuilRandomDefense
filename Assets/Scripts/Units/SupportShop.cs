@@ -172,9 +172,11 @@ public class SupportShop : MonoBehaviour
             return false;
         }
 
-        context.UnitInventory?.Remove(identity.Data);
         context.ResourceWallet?.Add(ResourceType.Mana, FindDismantleRefund(skill, identity.Data.grade));
-        Destroy(targetUnit);
+
+        // 인벤토리는 UnitData 목록이 아니라 필드 인스턴스의 등록부다. Consume이 등록 해제와 파괴를
+        // 한 번에 한다 — 따로 부르면 Destroy가 프레임 끝에야 처리되는 사이 인벤토리에 유령이 남는다.
+        identity.Consume();
 
         StartCooldown(skill);
         return true;

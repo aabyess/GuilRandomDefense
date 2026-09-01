@@ -39,10 +39,23 @@ public class UnitSpawner : MonoBehaviour
             agent.radius = 0.28f;
         }
 
+        // 인벤토리는 UnitData 목록이 아니라 필드 인스턴스의 등록부다(UnitInventory 참고).
+        // 플레이어 유닛을 만드는 곳이 여기뿐이라, 여기가 유일한 등록 지점이다.
+        UnitInventory inventory = PlayerContext.Get(ownerId)?.UnitInventory;
+        if (inventory == null)
+        {
+            // 조용히 넘어가면 필드엔 있는데 인벤토리엔 없는 유닛이 생긴다 —
+            // 바로 그 어긋남을 없애려고 등록부로 바꾼 것이라, 배선이 빠졌으면 드러나야 한다.
+            Debug.LogWarning($"UnitSpawner: 플레이어 {ownerId}의 UnitInventory를 찾지 못해 {data.unitName}을(를) 등록하지 못했습니다.", this);
+        }
+        identity.RegisterTo(inventory);
+
         return instance;
     }
 
-    static int ComputeAreaMask(MovementAbility ability)
+    // 조합 결과를 어디에 내보낼지 고를 때 CombineSystem도 같은 마스크로 NavMesh를 검사해야 한다 —
+    // 지상 유닛의 자리를 바다 위에서 찾으면 안 된다.
+    public static int ComputeAreaMask(MovementAbility ability)
     {
         int seaArea = NavMesh.GetAreaFromName(SeaAreaName);
         if (seaArea < 0)
