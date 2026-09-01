@@ -79,7 +79,15 @@ public static class MapGenerator
             laneObjects.Add(laneObject);
         }
 
-        foreach (MapLayout.Island island in MapLayout.Warehouses) BuildIsland(root.transform, island);
+        for (int i = 0; i < MapLayout.Warehouses.Length; i++)
+        {
+            GameObject warehouseIsland = BuildIsland(root.transform, MapLayout.Warehouses[i]);
+            // 창고는 섬 위에 붙는다 — 자기 위치가 곧 유닛을 보낼 곳이다.
+            Warehouse warehouse = warehouseIsland.AddComponent<Warehouse>();
+            SerializedObject so = new SerializedObject(warehouse);
+            so.FindProperty("ownerPlayerId").intValue = i;
+            so.ApplyModifiedProperties();
+        }
         foreach (MapLayout.Island island in MapLayout.SealIslands) BuildIsland(root.transform, island);
 
         GameObject gachaIsland = null;
@@ -1005,6 +1013,7 @@ public static class MapGenerator
             report += $"\n위습이 생기는 위치(PlayerContext {contexts.Length}개)를 뽑기 섬으로 옮겼습니다.";
 
         report += WireCombineWallet();
+        report += MoveWarehousesToIslands();
         report += SetUpCamera();
         report += EnsureFourPlayers();
         report += WireLanePaths(lanePaths);
@@ -1029,6 +1038,44 @@ public static class MapGenerator
         wallet.objectReferenceValue = local;
         so.ApplyModifiedProperties();
         return "\nCombineSystem에 골드 지갑을 연결했습니다.";
+    }
+
+    // 창고는 이제 섬 위에 있다. 플레이어 오브젝트에 남아 있던 옛 창고를 지운다 —
+    // 같은 ownerPlayerId를 가진 창고가 둘이면 FindWarehouse가 어느 쪽을 잡을지 정해지지 않는다.
+    static string MoveWarehousesToIslands()
+    {
+        int removed = 0;
+
+        foreach (PlayerContext context in Object.FindObjectsByType<PlayerContext>(
+                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            foreach (Warehouse stale in context.GetComponents<Warehouse>())
+            {
+                Object.DestroyImmediate(stale);
+                removed++;
+            }
+        }
+
+        // 컨트롤러가 옛 창고를 직접 가리키고 있으면 PlayerContext를 거치지 않는다. 비워서 다시 찾게 한다.
+        WarehouseController controller = Object.FindFirstObjectByType<WarehouseController>(FindObjectsInactive.Include);
+        if (controller != null)
+        {
+            SerializedObject so = new SerializedObject(controller);
+            so.FindProperty("warehouse").objectReferenceValue = null;
+            so.ApplyModifiedProperties();
+        }
+
+        return removed > 0 ? $"\n플레이어에 남아 있던 옛 창고 {removed}개를 지우고 섬 창고로 옮겼습니다." : "";
+    }
+
+    static Warehouse FindWarehouse(int playerId)
+    {
+        foreach (Warehouse warehouse in Object.FindObjectsByType<Warehouse>(
+                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (warehouse.OwnerPlayerId == playerId)
+                return warehouse;
+
+        return null;
     }
 
     // 협동 4인 구조라 PlayerContext도 4개 있어야 팀 현황판이 채워진다.
@@ -1063,13 +1110,7 @@ public static class MapGenerator
             GoldWallet gold = player.AddComponent<GoldWallet>();
             ResourceWallet resources = player.AddComponent<ResourceWallet>();
             UnitInventory units = player.AddComponent<UnitInventory>();
-            Warehouse warehouse = player.AddComponent<Warehouse>();
             PlayerContext context = player.AddComponent<PlayerContext>();
-
-            // 창고는 소유자가 맞아야 보관을 받아준다. 기본값 0이면 전부 1번 플레이어 창고가 된다.
-            SerializedObject warehouseSo = new SerializedObject(warehouse);
-            warehouseSo.FindProperty("ownerPlayerId").intValue = playerId;
-            warehouseSo.ApplyModifiedProperties();
 
             SerializedObject so = new SerializedObject(context);
             so.FindProperty("playerId").intValue = playerId;
@@ -1079,18 +1120,20 @@ public static class MapGenerator
             so.FindProperty("goldWallet").objectReferenceValue = gold;
             so.FindProperty("resourceWallet").objectReferenceValue = resources;
             so.FindProperty("unitInventory").objectReferenceValue = units;
-            so.FindProperty("warehouse").objectReferenceValue = warehouse;
+            so.FindProperty("warehouse").objectReferenceValue = FindWarehouse(playerId);
             so.ApplyModifiedProperties();
 
             created++;
         }
 
         // 0번(로컬)은 반드시 앉아 있어야 한다. 이 값이 꺼져 있으면 내 레인에도 적이 안 나온다.
+        // 창고 참조도 섬 쪽으로 다시 걸어준다 — 예전엔 GameManager에 붙어 있었다.
         PlayerContext local = System.Array.Find(existing, c => c.PlayerId == 0);
-        if (local != null && !local.IsOccupied)
+        if (local != null)
         {
             SerializedObject so = new SerializedObject(local);
             so.FindProperty("occupied").boolValue = true;
+            so.FindProperty("warehouse").objectReferenceValue = FindWarehouse(0);
             so.ApplyModifiedProperties();
         }
 
