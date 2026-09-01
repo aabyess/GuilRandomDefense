@@ -27,6 +27,126 @@ public static class ArtBinder
     static readonly string[] DeathWords  = { "death", "dying", "die", "사망", "죽" };
     const string UnitTemplate = "Assets/Prefabs/UnitPrefab.prefab";
 
+    const string MaterialFolder = "Assets/Art/Materials";
+
+    /// <summary>
+    /// 모델의 머티리얼에 텍스처를 붙인다.
+    ///
+    /// Mixamo는 OBJ를 리깅해서 FBX로 뱉을 때 텍스처를 안 실어준다 — 뼈대만 온다.
+    /// 그래서 임포트하면 새하얗게 나온다. 텍스처 파일은 원래 다운로드에 같이 들어 있으니,
+    /// 머티리얼 이름과 파일 이름을 맞춰 다시 이어준다.
+    /// </summary>
+    [MenuItem("Tools/아트/텍스처 연결")]
+    public static void LinkTextures()
+    {
+        List<Texture2D> textures = AssetDatabase.FindAssets("t:Texture2D", new[] { "Assets/Art" })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .Select(AssetDatabase.LoadAssetAtPath<Texture2D>)
+            .Where(t => t != null)
+            .ToList();
+
+        if (textures.Count == 0)
+        {
+            EditorUtility.DisplayDialog(Title,
+                "Assets/Art 아래에서 텍스처를 찾지 못했습니다.\n\n" +
+                "모델을 받은 폴더의 PNG·JPG를 모델과 같은 곳에 넣어주세요.", "확인");
+            return;
+        }
+
+        EnsureFolder(MaterialFolder);
+
+        Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+        int linked = 0, missed = 0;
+        List<string> unmatched = new List<string>();
+
+        foreach (string modelPath in ModelPaths())
+        {
+            ModelImporter importer = AssetImporter.GetAtPath(modelPath) as ModelImporter;
+            if (importer == null) continue;
+
+            // 모델 안에 박힌 머티리얼은 못 고친다. 밖으로 빼서 우리가 만든 것으로 갈아 끼운다.
+            List<AssetImporter.SourceAssetIdentifier> slots =
+                AssetDatabase.LoadAllAssetsAtPath(modelPath)
+                    .OfType<Material>()
+                    .Select(m => new AssetImporter.SourceAssetIdentifier(m))
+                    .ToList();
+
+            // 임포터가 이미 리맵해둔 슬롯도 다시 훑어야 한다 — 두 번째 실행에서 원본이 안 잡힌다.
+            foreach (KeyValuePair<AssetImporter.SourceAssetIdentifier, Object> pair in importer.GetExternalObjectMap())
+                if (pair.Key.type == typeof(Material) && !slots.Any(s => s.name == pair.Key.name))
+                    slots.Add(pair.Key);
+
+            foreach (AssetImporter.SourceAssetIdentifier slot in slots)
+            {
+                Texture2D texture = MatchTexture(slot.name, textures);
+                if (texture == null)
+                {
+                    unmatched.Add($"{System.IO.Path.GetFileName(modelPath)} / {slot.name}");
+                    missed++;
+                    continue;
+                }
+
+                string materialPath = $"{MaterialFolder}/{slot.name}.mat";
+                Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+                if (material == null)
+                {
+                    material = new Material(shader);
+                    AssetDatabase.CreateAsset(material, materialPath);
+                }
+
+                material.shader = shader;
+                material.SetTexture("_BaseMap", texture);
+                material.SetTexture("_MainTex", texture);   // Standard 폴백
+                EditorUtility.SetDirty(material);
+
+                importer.AddRemap(slot, material);
+                linked++;
+            }
+
+            importer.SaveAndReimport();
+        }
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+
+        string report = $"텍스처 {textures.Count}장을 찾아 머티리얼 {linked}개에 연결했습니다.";
+        if (missed > 0)
+            report += $"\n\n짝을 못 찾은 머티리얼 {missed}개 — 이름이 텍스처 파일명과 달라서입니다:\n  " +
+                      string.Join("\n  ", unmatched.Take(10)) +
+                      $"\n\n{MaterialFolder} 에서 직접 텍스처를 끌어다 넣으면 됩니다.";
+
+        Debug.Log("[아트] " + report);
+        EditorUtility.DisplayDialog(Title, report, "확인");
+    }
+
+    // 머티리얼 이름과 텍스처 파일명을 맞춘다. 완전히 같은 것부터 보고, 없으면 한쪽이 다른 쪽을
+    // 품고 있는지 본다(Mixamo가 이름에 접미사를 붙이는 경우가 있다).
+    // 텍스처가 딱 하나뿐이면 그걸 쓴다 — 머티리얼도 하나일 가능성이 높다.
+    static Texture2D MatchTexture(string materialName, List<Texture2D> textures)
+    {
+        string target = materialName.ToLowerInvariant();
+
+        Texture2D exact = textures.FirstOrDefault(t => t.name.ToLowerInvariant() == target);
+        if (exact != null) return exact;
+
+        Texture2D partial = textures.FirstOrDefault(t =>
+        {
+            string name = t.name.ToLowerInvariant();
+            return target.Contains(name) || name.Contains(target);
+        });
+        if (partial != null) return partial;
+
+        return textures.Count == 1 ? textures[0] : null;
+    }
+
+    static IEnumerable<string> ModelPaths()
+    {
+        return AssetDatabase.FindAssets("t:GameObject", new[] { "Assets/Art" })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .Where(path => !path.EndsWith(".prefab"))
+            .Distinct();
+    }
+
     [MenuItem("Tools/아트/모델 배선")]
     public static void Bind()
     {
