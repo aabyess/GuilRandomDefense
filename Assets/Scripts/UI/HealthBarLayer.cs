@@ -17,6 +17,7 @@ public class HealthBarLayer : MonoBehaviour
     [SerializeField] Color highHpColor = Color.green;
     [SerializeField] Color midHpColor = Color.yellow;
     [SerializeField] Color lowHpColor = Color.red;
+    [SerializeField] bool logCounts;   // 켜면 바 개수와 적 수를 초당 한 번 찍는다
 
     class Bar
     {
@@ -109,6 +110,15 @@ public class HealthBarLayer : MonoBehaviour
             if (cam == null) return;
         }
 
+        // 먼저 전부 끄고 필요한 것만 켠다.
+        // "남는 것만 나중에 끄는" 방식은 중간에 하나라도 어긋나면 바가 화면에 남고,
+        // 그게 어디서 어긋났는지 추적하기 어렵다. 64개 SetActive는 그 위험을 감수할 만큼 비싸지 않다.
+        for (int i = 0; i < pool.Count; i++)
+        {
+            if (pool[i].root.gameObject.activeSelf)
+                pool[i].root.gameObject.SetActive(false);
+        }
+
         int used = 0;
 
         foreach (EnemyDummy enemy in EnemyDummy.Active)
@@ -124,10 +134,7 @@ public class HealthBarLayer : MonoBehaviour
             if (screenPos.x < 0f || screenPos.x > Screen.width || screenPos.y < 0f || screenPos.y > Screen.height) continue;
 
             Bar bar = GetOrCreateBar(used);
-            if (!bar.root.gameObject.activeSelf)
-            {
-                bar.root.gameObject.SetActive(true);
-            }
+            bar.root.gameObject.SetActive(true);
             // WorldToScreenPoint의 z는 카메라까지의 거리다. Overlay 캔버스에서는 화면 좌표만 쓰므로
             // 그대로 넣으면 바가 캔버스 평면 밖으로 나간다.
             bar.root.position = new Vector3(screenPos.x, screenPos.y, 0f);
@@ -139,14 +146,14 @@ public class HealthBarLayer : MonoBehaviour
             used++;
         }
 
-        for (int i = used; i < pool.Count; i++)
+        if (logCounts && Time.unscaledTime >= nextLogTime)
         {
-            if (pool[i].root.gameObject.activeSelf)
-            {
-                pool[i].root.gameObject.SetActive(false);
-            }
+            nextLogTime = Time.unscaledTime + 1f;
+            Debug.Log($"[체력바] 적 {EnemyDummy.Active.Count}마리 중 화면 안 {used}개, 풀 {pool.Count}개");
         }
     }
+
+    float nextLogTime;
 
     Color ColorForRatio(float ratio)
     {
