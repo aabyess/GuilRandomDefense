@@ -164,7 +164,8 @@ public static class ArtBinder
 
         EnsureFolder(GeneratedFolder);
 
-        string report = BuildController();
+        string report = MakeHumanoid();
+        report += BuildController();
         if (monsters.Count > 0) report += BindEnemies(monsters);
         if (characters.Count > 0) report += BindUnits(characters);
 
@@ -236,6 +237,40 @@ public static class ArtBinder
         return $"\n유닛: 모델 {models.Count}종 → 프리팹 {made}개, {units.Count}종에 연결했습니다." +
                (models.Count < 20 ? $"\n  ⚠️ 모델 {models.Count}종을 {units.Count}종이 나눠 씁니다 — " +
                                     "파츠·색을 바꿔 변형을 늘리는 건 다음 단계입니다." : "");
+    }
+
+    // ── 리그 ───────────────────────────────────────────────────────────
+
+    // 모델을 Humanoid로 임포트한다. 이게 이 파이프라인의 핵심이다 —
+    // Humanoid끼리는 뼈대 이름이 달라도 애니메이션이 통하므로, 클립 한 세트를 234종이 같이 쓴다.
+    // Generic으로 들어오면 그 모델 전용 클립만 재생돼서, 캐릭터마다 애니메이션을 따로 받아야 한다.
+    static string MakeHumanoid()
+    {
+        int converted = 0;
+        List<string> failed = new List<string>();
+
+        foreach (string path in ModelPaths())
+        {
+            ModelImporter importer = AssetImporter.GetAtPath(path) as ModelImporter;
+            if (importer == null || importer.animationType == ModelImporterAnimationType.Human) continue;
+
+            importer.animationType = ModelImporterAnimationType.Human;
+            importer.SaveAndReimport();
+
+            // 뼈대가 사람 형태가 아니면 Unity가 매핑에 실패하고 조용히 되돌린다.
+            ModelImporter after = AssetImporter.GetAtPath(path) as ModelImporter;
+            if (after != null && after.animationType == ModelImporterAnimationType.Human) converted++;
+            else failed.Add(System.IO.Path.GetFileName(path));
+        }
+
+        if (converted == 0 && failed.Count == 0) return "";
+
+        string report = $"\n리그: 모델 {converted}개를 Humanoid로 맞췄습니다.";
+        if (failed.Count > 0)
+            report += $"\n  ⚠️ Humanoid로 못 바꾼 모델 {failed.Count}개 — 뼈대가 없거나 사람 형태가 아닙니다:\n     " +
+                      string.Join(", ", failed.Take(5));
+
+        return report;
     }
 
     // ── 애니메이터 컨트롤러 ────────────────────────────────────────────
