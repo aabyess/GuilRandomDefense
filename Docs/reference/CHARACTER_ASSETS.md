@@ -183,6 +183,7 @@ MMD·Sketchfab·VRoid Hub 모델 대부분이 "재배포 금지"를 명시한다
 | 항목 | 링크 | 라이선스 | 포맷 | 애니메이션 | 용도 | 태그 |
 |---|---|---|---|---|---|---|
 | Quaternius Ultimate Monsters Pack | https://quaternius.com/packs/ultimatemonsters.html | CC0 (저작자 표시 불필요) | FBX, OBJ, Blend, glTF | **있음** — "50 fully animated monsters" | 잡몹 50종 | [확인] |
+| Quaternius LowPoly Animated Monsters | https://quaternius.itch.io/lowpoly-animated-monsters | CC0 | OBJ, FBX, Blend | **있음** — "punch, attack, jump, flying, walk" | 잡몹 보조 세트 | [확인] |
 | Monster Boss (x.A-Studio.x) | https://assetstore.unity.com/packages/3d/characters/creatures/monster-boss-295453 | Standard Unity EULA | 미확인(Unity 패키지) | 있음("Animated" 태그) | 보스 단품 1종, $45 | [확인 — 기존 조사 재확인, 이번엔 재열람 안 함] |
 
 **보스 9종 전체는 위 Ultimate Monsters Pack 안에서 덩치 크거나 개성 있는 종을 크기/색으로 승격시키는 걸 권장** — 팩 내 개별 몬스터 목록/썸네일은 페이지에서 직접 확인 가능(다운로드 페이지 자체에 미리보기가 있음).
@@ -191,11 +192,12 @@ MMD·Sketchfab·VRoid Hub 모델 대부분이 "재배포 금지"를 명시한다
 
 | 항목 | 링크 | 라이선스 | Unity/URP 호환 | 용도 | 태그 |
 |---|---|---|---|---|---|
-| Anime Cel Shader URP (Neko Legends) | https://assetstore.unity.com/packages/vfx/shaders/anime-cel-shader-urp-259864 | Standard Unity EULA, **무료** | URP 호환 명시, 2025-09-24 최종 업데이트, 원본 Unity 6000.2.5 | 아군/몬스터 공용 셀셰이딩 | [확인] |
-| URP Toon Shader (Delt06) | https://github.com/Delt06/urp-toon-shader | **MIT 라이선스** (완전 자유, 저작자 표시도 법적 의무 아님) | Unity 2021.3.0f1 LTS + URP 12.1.6 기준 개발, 2020.3도 지원. **유지보수는 중단 상태(개발자가 후속 프로젝트 "Toon RP"로 이동)** — Unity 6 공식 검증은 안 됨 | 대안/백업용 | [확인] |
-| OToon | (정확한 다운로드 페이지를 찾지 못함) | — | — | — | **[미확인]** — 여러 리소스 사이트(gameassetdeals.com 등)에서 언급되나 공식 배포처(Asset Store/GitHub/itch.io)를 직접 확인 못함. **`unityassetcollection.com`에도 유사 이름의 셰이더가 걸려있는데 이건 이전에 불법 재배포로 경고한 사이트라 절대 쓰지 말 것.** |
+| Anime Cel Shader URP (Neko Legends) | https://assetstore.unity.com/packages/vfx/shaders/anime-cel-shader-urp-259864 | Standard Unity EULA, **무료** | URP 호환 명시, 2025-09-24 최종 업데이트, 원본 Unity 6000.2.5 | 아군/몬스터 공용 셀셰이딩 | [확인] — **1순위 추천** |
+| OToon - URP Toon Shading | https://assetstore.unity.com/packages/package/id/216102 | Standard EULA, 원가 $39.99 | ⚠️ **Deprecated — 페이지 직접 열람으로 확인함.** "no longer available for purchase, no longer supported by the publisher" | — | [확인] — **정정: 이전 조사에서 "무료 툰 셰이더"로 잘못 기록됐다. 실제로는 지금 신규 획득이 불가능한 죽은 상품이다. 쓰지 말 것.** |
+| Toon Shader Free (백업 후보) | https://assetstore.unity.com/packages/vfx/shaders/toon-shader-free-21288 | Standard EULA, 무료 | 정상 존재하나 원본이 Unity 4.5.3(2019년) 기준 — URP 명시 없음, Unity 6 호환 미확인 | 백업, URP 동작은 실제 임포트 후 확인 필요 | [확인, 존재만 — 호환은 미확인] |
+| URP Toon Shader (Delt06, GitHub) | https://github.com/Delt06/urp-toon-shader | **MIT 라이선스** (완전 자유, 저작자 표시도 법적 의무 아님) | Unity 2021.3.0f1 LTS + URP 12.1.6 기준 개발. **유지보수는 중단 상태**(개발자가 후속 프로젝트 "Toon RP"로 이동) — Unity 6 공식 검증은 안 됨 | 대안/백업용 | [확인] |
 
-→ **1순위 추천: Anime Cel Shader URP.** 무료+URP 명시+최근 업데이트(2025-09)로 셋 다 만족하는 유일한 후보. OToon은 신뢰할 수 있는 링크를 못 찾아 목록에서 제외한다.
+→ **1순위 추천: Anime Cel Shader URP.** 무료+URP 명시+최근 업데이트(2025-09)로 조건을 다 만족하는 유일한 후보. **OToon은 목록에서 빼는 게 아니라 "확인 결과 죽은 상품"이라고 명시한다** — 링크 자체는 실재하고 직접 열람으로 deprecated 상태를 검증했다.
 
 ### 3. 아군 유닛 베이스 (Quaternius 3종 세트)
 
@@ -229,5 +231,5 @@ MMD·Sketchfab·VRoid Hub 모델 대부분이 "재배포 금지"를 명시한다
 2. **김건부는 3D 모델을 찾을 수 있는 대상이 아니다** — 실존 인물이다. 사용자 확인 필요.
 3. **무면허 라이더는 게임용 리그드 모델이 없다** — 3D프린트 피규어뿐이다. Quaternius 베이스로 자체 제작하는 게 현실적이다.
 4. Sketchfab에서 "Download Free"라고 표시돼도 실제로는 모델별로 라이선스가 CC0부터 CC-BY, 심지어 비상업 한정까지 갈리므로, **다운로드 페이지의 라이선스 섹션을 반드시 확인**해야 한다.
-- 진짜 cel-shaded 애니풍 무료 몬스터 팩 존재 여부 (못 찾음 — 로우폴리+툰셰이더가 현재로선 유일한 대안)
-- Unity Asset Store 표준 EULA 원문 전체 대조 (재판매 금지 외 세부 조항은 구매 전 재확인 권장, `ART_ASSETS.md`와 동일한 주의사항)
+5. (기존 조사 재확인) 진짜 cel-shaded 애니풍 무료 몬스터 팩은 여전히 못 찾았다 — 로우폴리(Quaternius)+툰셰이더 조합이 현재로선 유일한 대안이다.
+6. Unity Asset Store 표준 EULA 원문 전체 대조는 이번에도 안 했다 — 재판매 금지 외 세부 조항은 구매 전 재확인 권장(`ART_ASSETS.md`와 동일한 주의사항).
