@@ -79,6 +79,7 @@ public static class MapGenerator
             GameObject laneObject = BuildIsland(root.transform, MapLayout.Lanes[i]);
             laneObject.AddComponent<LaneMarker>().SetLaneIndex(i);
             DecorateLane(root.transform, MapLayout.Lanes[i]);
+            BuildSupportShop(root.transform, MapLayout.Lanes[i], i);
             laneObjects.Add(laneObject);
         }
 
@@ -202,6 +203,45 @@ public static class MapGenerator
 
     }
 
+    const string SupportSkillFolder = "Assets/Data/SupportSkills";
+
+    // 도움소 — 레인 안, 순찰 경로(inset 14)보다 안쪽인 섬 중앙에 둔다. 파괴 불가라 Collider만
+    // 있으면 되고(TakeDamage가 아예 없다), EnemyDummy.Active/DestructibleGate.Active 어디에도
+    // 등록되지 않으니 적 타겟팅 후보에도 자연히 들어가지 않는다.
+    static void BuildSupportShop(Transform parent, MapLayout.Island lane, int laneIndex)
+    {
+        GameObject shop = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        shop.name = $"{lane.name}_도움소";
+        shop.transform.SetParent(parent, false);
+        shop.transform.position = new Vector3(lane.center.x, MapLayout.IslandTop + 1.5f, lane.center.y);
+        shop.transform.localScale = new Vector3(4f, 3f, 4f);
+        Paint(shop, "warehouse", 4f, 4f);   // 임시 — 전용 모델 없어 창고와 같은 텍스처만 재사용
+
+        shop.AddComponent<Selectable>();
+        shop.AddComponent<OwnedByPlayer>().SetOwner(laneIndex);
+
+        SupportShop supportShop = shop.AddComponent<SupportShop>();
+        SerializedObject so = new SerializedObject(supportShop);
+        SerializedProperty skillsProp = so.FindProperty("skills");
+
+        List<SupportSkillData> skills = AssetDatabase
+            .FindAssets("t:SupportSkillData", new[] { SupportSkillFolder })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .OrderBy(path => path, System.StringComparer.Ordinal)
+            .Select(AssetDatabase.LoadAssetAtPath<SupportSkillData>)
+            .Where(skill => skill != null)
+            .ToList();
+
+        skillsProp.ClearArray();
+        for (int i = 0; i < skills.Count; i++)
+        {
+            skillsProp.InsertArrayElementAtIndex(i);
+            skillsProp.GetArrayElementAtIndex(i).objectReferenceValue = skills[i];
+        }
+
+        so.ApplyModifiedProperties();
+    }
+
     static void BuildDecor(Transform parent, string name, Vector3 position, Vector3 scale,
                            string surface, PrimitiveType shape = PrimitiveType.Cube)
     {
@@ -264,7 +304,7 @@ public static class MapGenerator
     const float RecipeSlot = 4.5f;      // 유닛 한 칸
     const float RecipeGap = 1.4f;       // 재료 사이 간격
     const float RecipeArrowGap = 4.0f;  // 재료 묶음과 결과 사이
-    const float RecipeRowHeight = 7.0f;
+    const float RecipeRowHeight = 6.0f;
     const float RecipeSlotHeight = 3.2f;
 
     // 조합 비용(코인·목재·행운토큰)을 줄 왼쪽에 세우는 아이콘.
@@ -272,9 +312,7 @@ public static class MapGenerator
     const float CostSlot = 3.2f;
     const float CostGap = 1.2f;
     const float CostBlockGap = 2.0f;   // 비용 묶음과 첫 재료 사이
-    const float ColumnPad = 2.0f;      // 열 바닥판 좌우 여백
-    // 줄과 줄 사이 칸막이. 유닛 칸과 같은 높이로 세워야 "한 줄이 한 조합식"으로 끊겨 읽힌다.
-    const float RowDividerThickness = 0.7f;
+    const float ColumnPad = 2.0f;      // 열 바닥판 좌우 여백 — 열 사이 벽이 이 안에 선다
 
     static string BuildCombineColumns(GameObject table)
     {
@@ -332,16 +370,17 @@ public static class MapGenerator
         // 같은 폭을 받아 한쪽은 텅 비고 한쪽은 바닥판 밖으로 삐져나온다.
         // 열마다 그 안에서 가장 긴 줄에 맞춰 폭을 따로 잡고, 왼쪽부터 이어 붙인다.
         float[] columnWidths = new float[columns.Count];
+        int[] columnMaxSlots = new int[columns.Count];
         float totalWidth = 0f;
 
         for (int c = 0; c < columns.Count; c++)
         {
-            float widest = 0f;
             foreach ((UnitGrade _, List<CombineRecipe> chunk) in columns[c])
                 foreach (CombineRecipe recipe in chunk)
-                    widest = Mathf.Max(widest, RecipeRowWidth(recipe));
+                    columnMaxSlots[c] = Mathf.Max(columnMaxSlots[c], RecipeSlotCount(recipe));
 
-            columnWidths[c] = widest + ColumnPad * 2f;
+            columnWidths[c] = columnMaxSlots[c] * (RecipeSlot + RecipeGap) + RecipeArrowGap + RecipeSlot
+                              + ColumnPad * 2f;
             totalWidth += columnWidths[c];
         }
 
@@ -359,6 +398,13 @@ public static class MapGenerator
             float columnLeft = cursorX;
             cursorX += columnWidth;
             float rowZ = tableTop - RecipeRowHeight;
+            float rowLeftX = columnLeft + ColumnPad + RecipeSlot * 0.5f;
+            float resultX = rowLeftX + columnMaxSlots[c] * (RecipeSlot + RecipeGap) + RecipeArrowGap;
+
+            // 첫 열 왼쪽부터 마지막 열 오른쪽까지, 칸 경계마다 한 장씩.
+            BuildColumnWall(parent, $"조합표_칸벽_{c}", columnLeft, island.center.y, island.size.y);
+            if (c == columns.Count - 1)
+                BuildColumnWall(parent, "조합표_칸벽_끝", cursorX, island.center.y, island.size.y);
 
             for (int b = 0; b < columns[c].Count; b++)
             {
@@ -368,10 +414,10 @@ public static class MapGenerator
                 if (b > 0 && columns[c][b - 1].grade != grade)
                 {
                     float wallZ = rowZ + RecipeRowHeight * 0.5f - GradeWallGap * 0.5f;
-                    BuildWall(parent, $"조합표_구분벽_{grade.KoreanName()}",
+                    BuildDecor(parent, $"조합표_구분벽_{grade.KoreanName()}",
                         new Vector3(columnLeft + columnWidth * 0.5f,
                                     MapLayout.IslandTop + WallHeight * 0.5f, wallZ),
-                        new Vector3(columnWidth, WallHeight, GateThickness));
+                        new Vector3(columnWidth, WallHeight, GateThickness), "rock");
                     rowZ -= GradeWallGap;
                 }
 
@@ -387,12 +433,7 @@ public static class MapGenerator
 
                 for (int r = 0; r < chunk.Count; r++)
                 {
-                    // 줄 사이에만 세운다. 블록 위아래 끝은 바닥판 가장자리가 이미 경계다.
-                    if (r > 0)
-                        BuildRowDivider(parent, $"조합표_줄칸막이_{grade.KoreanName()}",
-                            columnLeft + columnWidth * 0.5f, rowZ + RecipeRowHeight * 0.5f, columnWidth);
-
-                    PlaceRecipeRow(parent, chunk[r], columnLeft + ColumnPad + RecipeSlot * 0.5f, rowZ);
+                    PlaceRecipeRow(parent, chunk[r], rowLeftX, rowZ, resultX);
                     rowZ -= RecipeRowHeight;
                     placed++;
 
@@ -418,8 +459,8 @@ public static class MapGenerator
     }
 
     // 재료가 가장 많은 조합식이 열 폭에 들어가는지 확인하는 데 쓴다.
-    // 줄 하나가 차지하는 가로 — 첫 재료 칸의 왼쪽 끝부터 결과 칸의 오른쪽 끝까지.
-    static float RecipeRowWidth(CombineRecipe recipe, bool withCosts = false)
+    // count가 3이면 칸 세 개를 차지한다 — 원작 표가 그렇게 늘어놓는다.
+    static int RecipeSlotCount(CombineRecipe recipe)
     {
         int slots = 0;
 
@@ -427,6 +468,13 @@ public static class MapGenerator
             foreach (RecipeIngredient ingredient in recipe.ingredients)
                 if (ingredient != null) slots += Mathf.Max(1, ingredient.count);
 
+        return slots;
+    }
+
+    // 줄 하나가 차지하는 가로 — 첫 재료 칸의 왼쪽 끝부터 결과 칸의 오른쪽 끝까지.
+    static float RecipeRowWidth(CombineRecipe recipe, bool withCosts = false)
+    {
+        int slots = RecipeSlotCount(recipe);
         float width = slots * (RecipeSlot + RecipeGap) + RecipeArrowGap + RecipeSlot;
         if (withCosts) width += CountCostIcons(recipe) * (CostSlot + CostGap) + CostBlockGap;
         return width;
@@ -455,7 +503,9 @@ public static class MapGenerator
     }
 
     // 한 줄: 재료를 왼쪽부터 늘어놓고, 사이를 띄운 뒤 결과를 놓는다.
-    static void PlaceRecipeRow(Transform parent, CombineRecipe recipe, float leftX, float z,
+    // resultX를 열마다 하나로 고정하면, 재료가 2개든 5개든 결과 칸이 세로로 나란히 선다 —
+    // 재료 개수만큼 결과가 오른쪽으로 밀리면 칸 안에서 대각선으로 흩어져 읽기 어렵다.
+    static void PlaceRecipeRow(Transform parent, CombineRecipe recipe, float leftX, float z, float resultX,
                                bool showCosts = false)
     {
         float x = leftX;
@@ -481,9 +531,8 @@ public static class MapGenerator
             }
         }
 
-        x += RecipeArrowGap;
         Color resultColor = recipe.result != null ? GradeColor(recipe.result.grade) : Color.gray;
-        PlaceRecipeSlot(parent, x, z, label, resultColor, $"결과_{label}");
+        PlaceRecipeSlot(parent, resultX, z, label, resultColor, $"결과_{label}");
     }
 
     // 팝업에 찍을 한 줄 요약. "초록 + 초록 = 노랑"처럼 색이 바뀌는지 눈으로 확인하는 용도다.
@@ -572,17 +621,19 @@ public static class MapGenerator
         Object.DestroyImmediate(icon.GetComponent<Collider>());
     }
 
-    static void BuildRowDivider(Transform parent, string name, float centerX, float z, float width)
+    // 등급 칸과 칸 사이에 세로로 서는 벽 — 표를 "흔함|안흔함|특별함|…"으로 끊어 읽게 한다.
+    // 열 경계 위에 걸터앉되 두께가 양쪽 여백(ColumnPad) 안에 들어가므로 열 폭을 더 먹지 않는다.
+    static void BuildColumnWall(Transform parent, string name, float x, float centerZ, float depth)
     {
-        GameObject divider = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        divider.name = name;
-        divider.transform.SetParent(parent, false);
-        divider.transform.position = new Vector3(centerX, MapLayout.IslandTop + RecipeSlotHeight * 0.5f, z);
-        divider.transform.localScale = new Vector3(width, RecipeSlotHeight, RowDividerThickness);
-        Paint(divider, "rock", width, RowDividerThickness);
-        // 등급을 가르는 벽과 달리 이건 눈으로 보는 경계다. 149줄이 전부 막히면
-        // 표 위를 걸을 수 없고 NavMesh가 줄 사이마다 끊긴다.
-        Object.DestroyImmediate(divider.GetComponent<Collider>());
+        GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        wall.name = name;
+        wall.transform.SetParent(parent, false);
+        wall.transform.position = new Vector3(x, MapLayout.IslandTop + WallHeight * 0.5f, centerZ);
+        wall.transform.localScale = new Vector3(GateThickness, WallHeight, depth);
+        Paint(wall, "rock", GateThickness, depth);
+        // 콜라이더는 뺀다. 표를 가로지르는 벽 8장이 실제로 막히면 NavMesh가 세로로 조각나고
+        // 표 위를 걸어 지나갈 수 없게 된다. 여긴 싸우는 곳이 아니라 보는 곳이다.
+        Object.DestroyImmediate(wall.GetComponent<Collider>());
     }
 
     static void PlaceRecipeSlot(Transform parent, float x, float z, string label, Color color, string prefix)
@@ -672,14 +723,33 @@ public static class MapGenerator
         obj.GetComponent<Renderer>().sharedMaterial = material;
     }
 
+    // 특수지급 칸의 한 자리. 대부분은 지정 유닛을 주지만, 목재 자리처럼 유닛이 아닌 걸 주는 자리가 섞여 있다.
+    // 이름 배열 두 개를 나란히 두면 자리마다 "무엇을 주는지"를 null 여부로만 구분하게 되어,
+    // 유닛이 아닌 지급물이 늘어날수록 구분이 불가능해진다. 자리 하나를 한 값으로 묶는다.
+    struct SpecialSlot
+    {
+        public string label;
+        public string unitAsset;   // 로스터 에셋 이름. 유닛을 주는 자리에서만 채운다
+        public bool givesWood;
+
+        public static SpecialSlot Unit(string label, string unitAsset) =>
+            new SpecialSlot { label = label, unitAsset = unitAsset };
+
+        public static SpecialSlot Wood(string label) =>
+            new SpecialSlot { label = label, givesWood = true };
+
+        // 지급물의 형태가 아직 안 정해진 자리. 표식만 세우고 생성 보고에 남긴다.
+        public static SpecialSlot Pending(string label) =>
+            new SpecialSlot { label = label };
+    }
+
     struct GachaBand
     {
         public string label;
         public UnitGrade grade;
         public UnitGrade bonusGrade;
         public float bonusChance;
-        public string[] specialSlots;    // 로스터 에셋 이름. null 항목은 아직 못 만드는 자리
-        public string[] specialLabels;
+        public SpecialSlot[] specialSlots;   // null이면 등급 랜덤 칸
 
         public static GachaBand Random(string label, UnitGrade grade) =>
             new GachaBand { label = label, grade = grade };
@@ -687,8 +757,8 @@ public static class MapGenerator
         public static GachaBand RandomWithBonus(string label, UnitGrade grade, UnitGrade bonus, float chance) =>
             new GachaBand { label = label, grade = grade, bonusGrade = bonus, bonusChance = chance };
 
-        public static GachaBand Special(string label, string[] slots, string[] labels) =>
-            new GachaBand { label = label, specialSlots = slots, specialLabels = labels };
+        public static GachaBand Special(string label, params SpecialSlot[] slots) =>
+            new GachaBand { label = label, specialSlots = slots };
     }
 
     // 원작 배치 순서 그대로. 특수 칸은 목재·쿠마위습(박은석)·레일리(이승우)·배(상붕카).
@@ -698,8 +768,10 @@ public static class MapGenerator
         GachaBand.Random("특별함", UnitGrade.Special),
         GachaBand.RandomWithBonus("희귀함·특수함", UnitGrade.Rare, UnitGrade.Superior, 3f),
         GachaBand.Special("특수지급",
-            new[] { null, null, "희귀함_이승우", "안흔함_상붕카" },
-            new[] { "목재", "박은석위습", "이승우", "상붕카" }),
+            SpecialSlot.Wood("목재"),
+            SpecialSlot.Pending("박은석위습"),
+            SpecialSlot.Unit("이승우", "희귀함_이승우"),
+            SpecialSlot.Unit("상붕카", "안흔함_상붕카")),
         GachaBand.Random("전설·히든", UnitGrade.Legendary),
     };
 
@@ -777,7 +849,7 @@ public static class MapGenerator
         // 통째로 담아야 해서 섬 가운데보다 왼쪽에 둔다(왼쪽 열 폭은 예전 그대로다).
         float columnRight = island.center.x - 4f;
 
-        int specialPending = 0;
+        List<string> specialPending = new List<string>();
 
         // 칸 경계는 칸 수보다 하나 적다. 열 테두리는 아래에서 한 번에 세운다.
         List<float> bandDividers = new List<float>();
@@ -820,12 +892,23 @@ public static class MapGenerator
             float slotStep = (columnRight - columnLeft) / (band.specialSlots.Length + 1);
             for (int i = 0; i < band.specialSlots.Length; i++)
             {
-                string assetName = band.specialSlots[i];
+                SpecialSlot slot = band.specialSlots[i];
                 Vector3 at = new Vector3(columnLeft + slotStep * (i + 1),
                                          MapLayout.IslandTop + 0.25f, bandCenterZ);
-                UnitData unit = assetName == null
+
+                if (slot.givesWood)
+                {
+                    // 자원 칸 서쪽 목재 포탈과 같은 지급이다(WISP_SYSTEM.md: 66% 확률로 목재 1개).
+                    // 등급을 안 가리는 것도 그쪽과 같다 — BuildResourcePortal이 acceptedGrades를 비워둔다.
+                    BuildResourcePortal(parent, $"Portal_{slot.label}", new Vector3(at.x, 0f, at.z),
+                        ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f,
+                        ChoicePortalDiameter);
+                    continue;
+                }
+
+                UnitData unit = slot.unitAsset == null
                     ? null
-                    : AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{assetName}.asset");
+                    : AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{slot.unitAsset}.asset");
 
                 if (unit != null)
                 {
@@ -834,11 +917,10 @@ public static class MapGenerator
                 }
                 else
                 {
-                    // 목재·초월(박은석) 위습은 유닛이 아니라 자원/위습을 준다. 그런 포탈이 아직 없어
-                    // 자리만 세워두고 보고에 남긴다.
-                    PlaceUnitMarker(parent, $"미구현_{band.specialLabels[i]}", new Vector3(at.x, 0f, at.z),
+                    // 지급물의 형태가 아직 안 정해진 자리(초월 재료 박은석). 자리만 세워두고 보고에 남긴다.
+                    PlaceUnitMarker(parent, $"미구현_{slot.label}", new Vector3(at.x, 0f, at.z),
                         UnitGrade.RandomUnit);
-                    specialPending++;
+                    specialPending.Add(slot.label);
                 }
             }
         }
@@ -865,10 +947,20 @@ public static class MapGenerator
                 if (recipes.Count == 0) continue;
 
                 float blockDepth = recipes.Count * RecipeRowHeight;
-                float blockWidth = 0f;
+                int blockMaxSlots = 0;
+                int blockMaxCostIcons = 0;
                 foreach (CombineRecipe recipe in recipes)
-                    blockWidth = Mathf.Max(blockWidth, RecipeRowWidth(recipe, withCosts: true));
-                blockWidth = Mathf.Min(blockWidth + ColumnPad * 2f, displayWidth);
+                {
+                    blockMaxSlots = Mathf.Max(blockMaxSlots, RecipeSlotCount(recipe));
+                    blockMaxCostIcons = Mathf.Max(blockMaxCostIcons, CountCostIcons(recipe));
+                }
+
+                float rowLeftX = displayLeft + ColumnPad + CostSlot * 0.5f;
+                float costWidth = blockMaxCostIcons * (CostSlot + CostGap) + CostBlockGap;
+                float blockResultX = rowLeftX + costWidth
+                                     + blockMaxSlots * (RecipeSlot + RecipeGap) + RecipeArrowGap;
+                float blockWidth = Mathf.Min(
+                    blockResultX + RecipeSlot * 0.5f + ColumnPad - displayLeft, displayWidth);
 
                 GameObject strip = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 strip.name = $"뽑기섬_조합식_{grade.KoreanName()}";
@@ -879,14 +971,9 @@ public static class MapGenerator
                 Paint(strip, "combine", blockWidth, blockDepth);
                 Object.DestroyImmediate(strip.GetComponent<Collider>());
 
-                for (int r = 0; r < recipes.Count; r++)
+                foreach (CombineRecipe recipe in recipes)
                 {
-                    if (r > 0)
-                        BuildRowDivider(parent, $"뽑기섬_줄칸막이_{grade.KoreanName()}",
-                            displayLeft + blockWidth * 0.5f, displayZ + RecipeRowHeight * 0.5f, blockWidth);
-
-                    PlaceRecipeRow(parent, recipes[r], displayLeft + ColumnPad + CostSlot * 0.5f, displayZ,
-                                   showCosts: true);
+                    PlaceRecipeRow(parent, recipe, rowLeftX, displayZ, blockResultX, showCosts: true);
                     displayZ -= RecipeRowHeight;
                     recipeRows++;
                 }
@@ -930,8 +1017,9 @@ public static class MapGenerator
             ? $"여유 {available - displayDepth:F0}"
             : $"⚠️ {displayDepth - available:F0} 모자람";
 
-        string pending = specialPending > 0
-            ? $"\n  ⚠️ 목재·박은석위습 {specialPending}칸은 자원/위습 지급 포탈이 없어 자리만 표시했습니다."
+        string pending = specialPending.Count > 0
+            ? $"\n  ⚠️ 특수지급 {specialPending.Count}칸({string.Join(", ", specialPending)})은 " +
+              "지급물의 형태가 정해지지 않아 자리만 표시했습니다."
             : "";
 
         float widestRecipe = MaxRecipeRowWidth(MapLayout.GachaRecipeGrades, true);
@@ -1072,12 +1160,14 @@ public static class MapGenerator
         so.ApplyModifiedProperties();
     }
 
+    // diameter는 자원 칸(넓은 포탈)과 뽑기 섬 특수지급 칸(좁은 선택 포탈)이 서로 다른 크기를 쓴다.
     static void BuildResourcePortal(Transform parent, string name, Vector3 ground,
                                     ResourcePortal.Payout payout, ResourceType resource,
-                                    int baseAmount, int perRound, float chance)
+                                    int baseAmount, int perRound, float chance,
+                                    float diameter = PortalDiameter)
     {
         GameObject portal = CreatePortalObject(parent, name,
-            new Vector3(ground.x, MapLayout.IslandTop + 0.25f, ground.z), PortalDiameter);
+            new Vector3(ground.x, MapLayout.IslandTop + 0.25f, ground.z), diameter);
 
         ResourcePortal component = portal.AddComponent<ResourcePortal>();
         SerializedObject so = new SerializedObject(component);
