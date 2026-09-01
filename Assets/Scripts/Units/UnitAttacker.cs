@@ -8,6 +8,7 @@ public class UnitAttacker : MonoBehaviour
 
     float attackTimer;
     OwnedByPlayer owner;
+    UnitCombat combat;
 
     // 디버그 표시용 — 스탯이 실제로 적용됐는지 화면에서 확인하기 위해 노출한다.
     public float AttackDamage => attackDamage;
@@ -36,6 +37,7 @@ public class UnitAttacker : MonoBehaviour
     void Awake()
     {
         owner = GetComponent<OwnedByPlayer>();
+        combat = GetComponent<UnitCombat>();
     }
 
     void Update()
@@ -45,7 +47,7 @@ public class UnitAttacker : MonoBehaviour
 
         attackTimer = attackInterval;
 
-        EnemyDummy target = FindClosestEnemyInRange();
+        EnemyDummy target = ResolveTarget();
         if (target != null)
         {
             target.TakeDamage(attackDamage, owner != null ? owner.OwnerId : -1);
@@ -55,6 +57,16 @@ public class UnitAttacker : MonoBehaviour
         // 적이 없을 때만 문을 친다. 문이 우선이면 적이 몰려와도 문만 때리고 있게 된다.
         DestructibleGate gate = FindClosestGateInRange();
         if (gate != null) gate.TakeDamage(attackDamage);
+    }
+
+    // UnitCombat이 있으면 그쪽이 이미 골라둔 목표(사거리 안에 있을 때만 넘겨줌)를 그대로 쓴다 —
+    // 둘 다 EnemyDummy.Active를 훑으면 유닛 수만큼 중복 탐색이 된다. UnitCombat이 없는
+    // 오브젝트(구버전 프리팹 등)를 위해 예전처럼 스스로 찾는 경로도 남겨둔다.
+    EnemyDummy ResolveTarget()
+    {
+        if (combat != null) return combat.CurrentTarget;
+
+        return FindClosestEnemyInRange();
     }
 
     DestructibleGate FindClosestGateInRange()

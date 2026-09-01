@@ -45,6 +45,9 @@ public class RewardDistributor : MonoBehaviour
 
     void GrantTo(PlayerContext context, EnemyData data)
     {
+        // 비어 있는 플레이어 슬롯에도 물범 목재 등이 쌓이는 걸 막는다 (rewardsAllPlayers 전체 지급 경로).
+        if (context == null || !context.IsOccupied) return;
+
         if (data.goldReward > 0 && context.GoldWallet != null)
         {
             context.GoldWallet.Add(data.goldReward);
@@ -60,13 +63,16 @@ public class RewardDistributor : MonoBehaviour
 
     // 스토리 클리어 보상: 전체 플레이어에게 골드 + 자원 + 위습 지급.
     // 보스 최다 데미지·도전과제 보상은 기여도 추적 시스템이 없어 아직 만들지 않았다(별도 작업).
-    public void GrantStoryReward(StoryRewardData storyReward)
+    public void GrantStoryReward(StoryData storyReward)
     {
         if (!GameAuthority.IsServer) return;
         if (storyReward == null) return;
 
         foreach (PlayerContext context in PlayerContext.All)
         {
+            // 처치 보상과 같은 이유로 빈 슬롯은 건너뛴다 — 아무도 없는 자리에 자원이 쌓인다.
+            if (context == null || !context.IsOccupied) continue;
+
             if (storyReward.goldReward > 0 && context.GoldWallet != null)
             {
                 context.GoldWallet.Add(storyReward.goldReward);

@@ -11,6 +11,7 @@ public class UnitMover : MonoBehaviour
     Camera cam;
     OwnedByPlayer owner;
     Selectable selectable;
+    UnitCombat combat;
 
     void Awake()
     {
@@ -18,6 +19,7 @@ public class UnitMover : MonoBehaviour
         cam = Camera.main;
         owner = GetComponent<OwnedByPlayer>();
         selectable = GetComponent<Selectable>();
+        combat = GetComponent<UnitCombat>();
     }
 
     void Update()
@@ -39,6 +41,10 @@ public class UnitMover : MonoBehaviour
         if (!Physics.Raycast(ray, out RaycastHit hit, 200f)) return;
         if (!NavMesh.SamplePosition(hit.point, out NavMeshHit navHit, destinationSampleRadius, agent.areaMask)) return;
 
-        agent.SetDestination(navHit.position);
+        // UnitCombat이 있으면 그쪽에 명령을 넘겨서, 도착할 때까지 자동 추적이 끼어들지 않게 한다.
+        if (combat != null)
+            combat.IssueMoveCommand(navHit.position);
+        else
+            agent.SetDestination(navHit.position);
     }
 }

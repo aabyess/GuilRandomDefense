@@ -95,6 +95,8 @@ public static class MapGenerator
         string tableReport = BuildCombineColumns(combineIsland);
         string displayReport = BuildGradeDisplays(root.transform);
         string gateReport = BuildPunkHazardGate(root.transform);
+        string storyReport = BuildStoryZone(root.transform);
+        string sealReport = BuildSealSpawners(root.transform);
 
         string portalReport = BuildGachaPortals(gachaIsland);
 
@@ -109,7 +111,7 @@ public static class MapGenerator
         string message =
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
             $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + "\n\n" +
-            tableReport + displayReport + gateReport + overlaps + navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
+            tableReport + displayReport + gateReport + storyReport + sealReport + overlaps + navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
         Debug.Log("[맵] " + message);
         EditorUtility.DisplayDialog(Title, message, "확인");
     }
@@ -580,6 +582,75 @@ public static class MapGenerator
         so.FindProperty("successChancePercent").floatValue = chance;
         // acceptedGrades를 비워두면 어떤 위습이든 받는다 — 자원 칸은 등급을 가리지 않는다.
         so.ApplyModifiedProperties();
+    }
+
+    // 스토리존. 가운데 단상에서 스토리 적이 나오고, 플레이어는 자기 레인에서 유닛을 보내 잡는다.
+    static string BuildStoryZone(Transform parent)
+    {
+        MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
+
+        GameObject platform = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        platform.name = "스토리_단상";
+        platform.transform.SetParent(parent, false);
+        platform.transform.position = new Vector3(island.center.x, MapLayout.IslandTop + 0.15f, island.center.y);
+        platform.transform.localScale = new Vector3(16f, 0.3f, 16f);
+        Paint(platform, "rock", 16f, 16f);
+        Object.DestroyImmediate(platform.GetComponent<Collider>());
+
+        GameObject spawn = new GameObject("스토리_등장지점");
+        spawn.transform.SetParent(parent, false);
+        spawn.transform.position = new Vector3(island.center.x, MapLayout.IslandTop, island.center.y);
+
+        StoryManager manager = Object.FindFirstObjectByType<StoryManager>(FindObjectsInactive.Include);
+        if (manager == null)
+        {
+            GameObject managerObject = new GameObject("StoryManager");
+            manager = managerObject.AddComponent<StoryManager>();
+        }
+
+        List<StoryData> ordered = AssetDatabase.FindAssets("t:StoryData", new[] { "Assets/Data/Stories" })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .Select(AssetDatabase.LoadAssetAtPath<StoryData>)
+            .Where(story => story != null)
+            .OrderBy(story => story.order)
+            .ToList();
+
+        SerializedObject so = new SerializedObject(manager);
+        SerializedProperty list = so.FindProperty("stories");
+        list.ClearArray();
+        for (int i = 0; i < ordered.Count; i++)
+        {
+            list.InsertArrayElementAtIndex(i);
+            list.GetArrayElementAtIndex(i).objectReferenceValue = ordered[i];
+        }
+        so.FindProperty("spawnPoint").objectReferenceValue = spawn.transform;
+        so.ApplyModifiedProperties();
+
+        int playable = ordered.Count(story => story.IsPlayable);
+        return $"\n스토리존: 스토리 {ordered.Count}개 연결 (적이 정해진 것 {playable}개)." +
+               (playable == 0 ? "\n  ⚠️ 적이 정해진 스토리가 없어 아무것도 등장하지 않습니다." : "");
+    }
+
+    // 물범섬 4곳. 물범을 잡으면 전체 플레이어에게 목재 1개씩.
+    static string BuildSealSpawners(Transform parent)
+    {
+        EnemyData seal = AssetDatabase.LoadAssetAtPath<EnemyData>("Assets/Data/Enemies/Enemy_Seal.asset");
+
+        foreach (MapLayout.Island island in MapLayout.SealIslands)
+        {
+            GameObject spawner = new GameObject($"{island.name}_물범");
+            spawner.transform.SetParent(parent, false);
+            spawner.transform.position = new Vector3(island.center.x, MapLayout.IslandTop, island.center.y);
+
+            SealSpawner component = spawner.AddComponent<SealSpawner>();
+            SerializedObject so = new SerializedObject(component);
+            so.FindProperty("sealData").objectReferenceValue = seal;
+            so.ApplyModifiedProperties();
+        }
+
+        return seal != null
+            ? $"\n물범: {MapLayout.SealIslands.Length}곳에 배치."
+            : "\n  ⚠️ Enemy_Seal 에셋을 찾지 못해 물범이 안 나옵니다.";
     }
 
     // 펑크해저드 한가운데를 가로지르는 정의문. 부수기 전에는 섬이 둘로 나뉜다.
