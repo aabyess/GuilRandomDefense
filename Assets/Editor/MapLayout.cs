@@ -66,10 +66,10 @@ public static class MapLayout
         new Island("ImmortalDisplay",  150f, 120f, 90f, 50f, "display"),
         new Island("TranscendDisplay", 150f,  55f, 90f, 50f, "display"),
         new Island("StoryZone",       -250f, -80f, 120f, 100f, "story"),
-        // 오른쪽 전시 칸이 다른세계 조합식(6칸짜리도 있다) 한 줄을 담아야 해서 폭을 넓혔다.
-        new Island("GachaIsland",      -90f, -80f, 120f, 190f, "gacha"),
+        // 오른쪽 전시 칸이 다른세계 조합식 한 줄(재료 6칸 + 비용 3칸)을 담아야 해서 폭을 넓혔다.
+        new Island("GachaIsland",      -82f, -80f, 136f, 190f, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
-        new Island("CombineTable",     180f, -110f, 400f, 210f, "combine"),
+        new Island("CombineTable",     200f, -110f, 400f, 210f, "combine"),
     };
 
     // 조합식 표에 노출하는 등급 6종 — 표 위의 세로 칸 하나씩.

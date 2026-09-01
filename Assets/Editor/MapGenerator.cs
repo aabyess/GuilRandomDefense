@@ -263,6 +263,12 @@ public static class MapGenerator
     const float RecipeRowHeight = 6.0f;
     const float RecipeSlotHeight = 3.2f;
 
+    // 조합 비용(코인·목재·행운토큰)을 줄 왼쪽에 세우는 아이콘.
+    // 재료 칸보다 작게 둬야 "이건 유닛이 아니라 자원"으로 읽힌다.
+    const float CostSlot = 3.2f;
+    const float CostGap = 1.2f;
+    const float CostBlockGap = 2.0f;   // 비용 묶음과 첫 재료 사이
+
     static string BuildCombineColumns(GameObject table)
     {
         if (table == null) return "";
@@ -382,11 +388,11 @@ public static class MapGenerator
     }
 
     // 재료가 가장 많은 조합식이 열 폭에 들어가는지 확인하는 데 쓴다.
-    static float MaxRecipeRowWidth() => MaxRecipeRowWidth(MapLayout.CombineTableGrades);
+    static float MaxRecipeRowWidth() => MaxRecipeRowWidth(MapLayout.CombineTableGrades, false);
 
-    static float MaxRecipeRowWidth(UnitGrade[] grades)
+    static float MaxRecipeRowWidth(UnitGrade[] grades, bool withCosts)
     {
-        int maxSlots = 0;
+        float widest = 0f;
 
         foreach (UnitGrade grade in grades)
         {
@@ -398,18 +404,37 @@ public static class MapGenerator
                 foreach (RecipeIngredient ingredient in recipe.ingredients)
                     if (ingredient != null) slots += Mathf.Max(1, ingredient.count);
 
-                maxSlots = Mathf.Max(maxSlots, slots);
+                float row = slots * (RecipeSlot + RecipeGap) + RecipeArrowGap + RecipeSlot + 4f;
+                if (withCosts) row += CountCostIcons(recipe) * (CostSlot + CostGap) + CostBlockGap;
+
+                widest = Mathf.Max(widest, row);
             }
         }
 
-        return maxSlots * (RecipeSlot + RecipeGap) + RecipeArrowGap + RecipeSlot + 4f;
+        return widest;
+    }
+
+    static int CountCostIcons(CombineRecipe recipe)
+    {
+        int icons = recipe.goldCost > 0 ? 1 : 0;
+
+        if (recipe.resourceCosts != null)
+            foreach (RecipeResourceCost cost in recipe.resourceCosts)
+                if (cost != null && cost.amount > 0) icons++;
+
+        return icons;
     }
 
     // 한 줄: 재료를 왼쪽부터 늘어놓고, 사이를 띄운 뒤 결과를 놓는다.
-    static void PlaceRecipeRow(Transform parent, CombineRecipe recipe, float leftX, float z)
+    static void PlaceRecipeRow(Transform parent, CombineRecipe recipe, float leftX, float z,
+                               bool showCosts = false)
     {
         float x = leftX;
         string label = recipe.result != null ? recipe.result.unitName : "?";
+
+        // 비용은 재료보다 앞에 세운다. 재료 개수가 줄마다 달라서 뒤에 붙이면 들쭉날쭉해지는데,
+        // 앞에 두면 줄이 달라도 세로로 나란히 서서 "여긴 다 토큰이 든다"가 한눈에 보인다.
+        if (showCosts) x += PlaceCostIcons(parent, recipe, x, z, label);
 
         if (recipe.ingredients != null)
         {
@@ -452,6 +477,70 @@ public static class MapGenerator
             : "?";
 
         return string.Join(" + ", parts) + " = " + result;
+    }
+
+    // 코인·목재·행운토큰을 세우고, 재료가 시작할 자리까지의 폭을 돌려준다.
+    // 개수(코인 10000, 목재 7)는 3D로 못 적는다 — 오브젝트 이름에만 남기고,
+    // 정확한 수치는 하단 HUD의 조합 카드 툴팁이 보여준다.
+    static float PlaceCostIcons(Transform parent, CombineRecipe recipe, float leftX, float z, string label)
+    {
+        int placed = 0;
+        float x = leftX;
+
+        if (recipe.goldCost > 0)
+        {
+            BuildCostIcon(parent, $"비용_{label}_코인_{recipe.goldCost}", x, z,
+                          new Color(1.00f, 0.82f, 0.25f), CostIconShape.Coin, glow: false);
+            x += CostSlot + CostGap;
+            placed++;
+        }
+
+        if (recipe.resourceCosts != null)
+        {
+            foreach (RecipeResourceCost cost in recipe.resourceCosts)
+            {
+                if (cost == null || cost.amount <= 0) continue;
+
+                bool wood = cost.type == ResourceType.Wood;
+                BuildCostIcon(parent, $"비용_{label}_{cost.type}_{cost.amount}", x, z,
+                              wood ? new Color(0.45f, 0.30f, 0.16f) : new Color(0.35f, 0.95f, 0.75f),
+                              wood ? CostIconShape.Log : CostIconShape.Coin,
+                              glow: cost.type == ResourceType.LuckyToken);
+                x += CostSlot + CostGap;
+                placed++;
+            }
+        }
+
+        return placed == 0 ? 0f : x - leftX + CostBlockGap;
+    }
+
+    enum CostIconShape { Coin, Log }
+
+    static void BuildCostIcon(Transform parent, string name, float x, float z, Color color,
+                              CostIconShape shape, bool glow)
+    {
+        GameObject icon = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        icon.name = name;
+        icon.transform.SetParent(parent, false);
+
+        if (shape == CostIconShape.Coin)
+        {
+            // 위에서 내려다보는 카메라라 눕힌 원판이 동전으로 읽힌다.
+            icon.transform.position = new Vector3(x, MapLayout.IslandTop + 0.4f, z);
+            icon.transform.localScale = new Vector3(CostSlot, 0.4f, CostSlot);
+        }
+        else
+        {
+            // 통나무 — 원기둥을 눕혀서 줄 방향과 직각으로 놓는다.
+            icon.transform.position = new Vector3(x, MapLayout.IslandTop + 0.8f, z);
+            icon.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            icon.transform.localScale = new Vector3(CostSlot * 0.5f, CostSlot * 0.5f, CostSlot * 0.5f);
+        }
+
+        if (glow) PaintGlow(icon, color);
+        else PaintSolid(icon, color);
+
+        Object.DestroyImmediate(icon.GetComponent<Collider>());
     }
 
     static void PlaceRecipeSlot(Transform parent, float x, float z, string label, Color color, string prefix)
@@ -642,7 +731,9 @@ public static class MapGenerator
         float bandBottom = bottom + 4f;
         float bandHeight = (bandTop - bandBottom) / GachaBands.Length;
         float columnLeft = left + 2f;
-        float columnRight = island.center.x + 2f;   // 입구가 없어져 통로를 뺄 수 있다
+        // 왼쪽 등급 칸 열과 오른쪽 전시 칸의 경계. 전시 칸이 다른세계 조합식 한 줄을
+        // 통째로 담아야 해서 섬 가운데보다 왼쪽에 둔다(왼쪽 열 폭은 예전 그대로다).
+        float columnRight = island.center.x - 4f;
 
         int specialPending = 0;
 
@@ -712,7 +803,7 @@ public static class MapGenerator
 
         // --- 오른쪽 세로줄: 조합식 없이 캐릭터만 전시하는 등급 ---
         // 이 등급들은 조합식 표에 올리지 않기로 확정돼 있어서, 여기가 유일하게 눈으로 보는 곳이다.
-        float rightColumnLeft = island.center.x + 2f;   // 등급 칸 열의 오른벽과 같은 자리
+        float rightColumnLeft = island.center.x - 4f;   // 등급 칸 열의 오른벽과 같은 자리
         float displayLeft = rightColumnLeft + 4f;
         float displayWidth = left + island.size.x - 2f - displayLeft;
         int perRow = Mathf.Max(1, Mathf.FloorToInt(displayWidth / SlotSpacing));
@@ -743,7 +834,7 @@ public static class MapGenerator
 
                 foreach (CombineRecipe recipe in recipes)
                 {
-                    PlaceRecipeRow(parent, recipe, displayLeft + 1f, displayZ);
+                    PlaceRecipeRow(parent, recipe, displayLeft + 1f, displayZ, showCosts: true);
                     displayZ -= RecipeRowHeight;
                     recipeRows++;
                 }
@@ -791,7 +882,7 @@ public static class MapGenerator
             ? $"\n  ⚠️ 목재·박은석위습 {specialPending}칸은 자원/위습 지급 포탈이 없어 자리만 표시했습니다."
             : "";
 
-        float widestRecipe = MaxRecipeRowWidth(MapLayout.GachaRecipeGrades);
+        float widestRecipe = MaxRecipeRowWidth(MapLayout.GachaRecipeGrades, true);
         string recipeFit = recipeRows == 0 || widestRecipe <= displayWidth
             ? ""
             : $"\n  ⚠️ 다른세계 조합식({widestRecipe:F0})이 칸 폭({displayWidth:F0})을 넘습니다";
