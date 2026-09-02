@@ -122,10 +122,17 @@ public static class MapGenerator
         Selection.activeGameObject = root;
         EditorSceneManager.MarkSceneDirty(root.scene);
 
+        // 여기서 바로 저장한다. 생성기는 씬을 통째로 갈아엎고 NavMesh 에셋까지 새로 쓰는데,
+        // 저장을 사람 손에 맡기면 한 번 빠뜨렸을 때 "구웠는데 아무도 안 움직인다"가 된다.
+        // 실제로 그것 때문에 오래 헤맸다.
+        string saveNote = EditorSceneManager.SaveScene(root.scene)
+            ? "\n\n씬을 저장했습니다."
+            : "\n\n⚠️ 씬 저장에 실패했습니다 — Cmd+S를 직접 눌러주세요.";
+
         string message =
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
             $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + "\n\n" +
-            tableReport + displayReport + gateReport + storyReport + sealReport + overlaps + navResult + oldGround + rewire + "\n\nCmd+S 로 저장하세요.";
+            tableReport + displayReport + gateReport + storyReport + sealReport + overlaps + navResult + oldGround + rewire + saveNote;
         Debug.Log("[맵] " + message);
         EditorUtility.DisplayDialog(Title, message, "확인");
     }
