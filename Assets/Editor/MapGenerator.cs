@@ -245,6 +245,11 @@ public static class MapGenerator
     const float UnitPenEdgeMargin = 4f;   // 좌우 벽이 레인 가장자리에 딱 붙지 않게 남기는 여유
     const float UnitPenInset = 3f;    // 우리 줄 안에서 위아래로 남기는 여유
 
+    // 칸막이 전용 두께. GateThickness(1.4)를 그대로 썼더니 칸 11개로는 유닛이 좁아 보인다고
+    // 하셔서(2026-09-02) 얇게 뺐다 — GateThickness는 부스·문 등 다른 22곳이 같이 쓰는 공용
+    // 값이라 여기서 낮추면 그쪽 전부가 얇아진다. 우리 칸막이만 따로 둔다.
+    const float UnitPenPartitionThickness = 0.8f;
+
     static float ResolveUnitPenWidth(MapLayout.Island lane)
     {
         return MapLayout.LaneUnitPenRow(lane).size.x - UnitPenEdgeMargin * 2f;
@@ -286,7 +291,7 @@ public static class MapGenerator
     // 원작처럼 우리 안을 기둥으로 칸칸이 나눈다. 칸 하나에 자리(LaneMarker.TakeNextSpawnPosition)
     // 하나가 정확히 가운데 오도록, 자리 간격(LaneMarker.ResolveSlotSpacing)의 배수 자리에만 세운다 —
     // 어긋나면 유닛이 기둥에 박히거나 기둥을 뚫고 서 있게 된다(PM 지시).
-    // 칸 수는 LaneMarker.CompartmentCount(9)로 고정이고 양 끝은 EndMarginCompartments만큼
+    // 칸 수는 LaneMarker.CompartmentCount로 고정이고 양 끝은 EndMarginCompartments만큼
     // 비워둔다(사장님 지시) — LaneMarker가 런타임에 쓰는 것과 같은 상수·계산식을 그대로 쓴다.
     // 이 둘이 갈라지면 자리와 칸이 어긋난다.
     static void BuildUnitPenPartitions(Transform parent, MapLayout.Island lane,
@@ -300,7 +305,7 @@ public static class MapGenerator
 
             BuildWall(parent, $"{lane.name}_유닛우리_칸막이{column}",
                 new Vector3(centerX + boundaryX, MapLayout.IslandTop + WallHeight * 0.5f, centerZ),
-                new Vector3(GateThickness, WallHeight, penDepth + GateThickness));
+                new Vector3(UnitPenPartitionThickness, WallHeight, penDepth + UnitPenPartitionThickness));
         }
     }
 
