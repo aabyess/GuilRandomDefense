@@ -53,6 +53,87 @@ public static class ArtBinder
     /// 그래서 임포트하면 새하얗게 나온다. 텍스처 파일은 원래 다운로드에 같이 들어 있으니,
     /// 머티리얼 이름과 파일 이름을 맞춰 다시 이어준다.
     /// </summary>
+    /// <summary>
+    /// 모델이 아직 없는 자리표시 프리팹(큐브·캡슐)을 캐릭터 키에 맞춘다.
+    ///
+    /// 레인 한 변이 165인 맵에서 캡슐 2, 큐브 1짜리는 점으로 보인다. 모델이 붙은 유닛만
+    /// 20이고 나머지가 그대로면 크기가 뒤죽박죽이 된다.
+    /// </summary>
+    [MenuItem("Tools/아트/자리표시 크기 맞추기")]
+    public static void ScalePlaceholders()
+    {
+        string report = "";
+        foreach (string path in new[] { "Assets/Prefabs/UnitPrefab.prefab", "Assets/Prefabs/MobPrefab.prefab" })
+            report += ScalePlaceholder(path);
+
+        AssetDatabase.SaveAssets();
+        Debug.Log("[아트] " + report);
+        EditorUtility.DisplayDialog(Title, report.TrimStart('\n'), "확인");
+    }
+
+    static string ScalePlaceholder(string path)
+    {
+        GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        if (asset == null) return $"\n⚠️ 못 찾음: {path}";
+
+        GameObject root = PrefabUtility.LoadPrefabContents(path);
+
+        // 메시가 루트에 있으면 키우려면 루트를 키워야 하는데, 그러면 NavMeshAgent의
+        // 발자국까지 같이 커져서 굽힌 NavMesh보다 넓어지고 유닛이 설 자리를 잃는다.
+        // 몸을 자식으로 떼어내 그것만 키운다(위습과 같은 방식).
+        Transform body = root.transform.Find("몸");
+        if (body == null)
+        {
+            MeshFilter filter = root.GetComponent<MeshFilter>();
+            MeshRenderer renderer = root.GetComponent<MeshRenderer>();
+            if (filter == null || renderer == null)
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+                return $"\n{System.IO.Path.GetFileNameWithoutExtension(path)}: 이미 옮겨져 있습니다.";
+            }
+
+            GameObject visual = new GameObject("몸", typeof(MeshFilter), typeof(MeshRenderer));
+            visual.transform.SetParent(root.transform, false);
+            visual.GetComponent<MeshFilter>().sharedMesh = filter.sharedMesh;
+            visual.GetComponent<MeshRenderer>().sharedMaterial = renderer.sharedMaterial;
+
+            Object.DestroyImmediate(renderer);
+            Object.DestroyImmediate(filter);
+            body = visual.transform;
+        }
+
+        // 원본 메시 높이(캡슐 2, 큐브 1)에 맞춰 키를 낸다.
+        Renderer bodyRenderer = body.GetComponent<Renderer>();
+        float rawHeight = bodyRenderer != null ? bodyRenderer.bounds.size.y : 1f;
+        if (rawHeight < 0.001f) rawHeight = 1f;
+
+        float scale = CharacterHeight / rawHeight;
+        body.localScale = Vector3.one * scale;
+        body.localPosition = new Vector3(0f, CharacterHeight * 0.5f, 0f);   // 발을 바닥에
+
+        float radius = CharacterHeight * 0.18f;
+
+        if (root.TryGetComponent(out CapsuleCollider capsule))
+        {
+            capsule.height = CharacterHeight;
+            capsule.radius = radius;
+            capsule.center = new Vector3(0f, CharacterHeight * 0.5f, 0f);
+        }
+        else if (root.TryGetComponent(out BoxCollider box))
+        {
+            box.size = new Vector3(radius * 2f, CharacterHeight, radius * 2f);
+            box.center = new Vector3(0f, CharacterHeight * 0.5f, 0f);
+        }
+
+        // 에이전트는 건드리지 않는다 — 발자국은 굽힌 값(0.5)보다 작게 유지해야 한다.
+        if (root.TryGetComponent(out NavMeshAgent agent)) agent.height = CharacterHeight;
+
+        PrefabUtility.SaveAsPrefabAsset(root, path);
+        PrefabUtility.UnloadPrefabContents(root);
+
+        return $"\n{System.IO.Path.GetFileNameWithoutExtension(path)}: 키 {CharacterHeight:F0}으로 맞췄습니다.";
+    }
+
     [MenuItem("Tools/아트/텍스처 연결")]
     public static void LinkTextures()
     {
