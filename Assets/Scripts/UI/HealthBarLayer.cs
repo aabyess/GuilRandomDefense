@@ -12,7 +12,7 @@ public class HealthBarLayer : MonoBehaviour
 
     [SerializeField] int maxBars = 64;
     [SerializeField] Vector2 barSize = new Vector2(40f, 5f);
-    [SerializeField] float barHeightOffset = 1.5f;
+    [SerializeField] float barHeightMargin = 3f;   // 머리 위로 띄우는 여유
     [SerializeField] Color backgroundColor = new Color(0f, 0f, 0f, 0.6f);
     [SerializeField] Color highHpColor = Color.green;
     [SerializeField] Color midHpColor = Color.yellow;
@@ -126,7 +126,9 @@ public class HealthBarLayer : MonoBehaviour
             if (enemy == null) continue;
             if (used >= maxBars) break;
 
-            Vector3 worldPos = enemy.transform.position + Vector3.up * barHeightOffset;
+            // 머리 위에 띄운다. 고정값을 쓰면 캐릭터 키를 바꿀 때마다 바가 발목이나 허공에 남는다 —
+            // 실제로 키를 20으로 키운 뒤 바가 발목에 붙어 있었다.
+            Vector3 worldPos = enemy.transform.position + Vector3.up * (HeadHeight(enemy) + barHeightMargin);
             Vector3 screenPos = cam.WorldToScreenPoint(worldPos);
 
             // z <= 0: 카메라 뒤. 화면 범위 밖: 어차피 안 보이니 자리를 낭비하지 않는다.
@@ -154,6 +156,19 @@ public class HealthBarLayer : MonoBehaviour
     }
 
     float nextLogTime;
+
+    // 콜라이더가 있으면 그 윗면을, 없으면 렌더러 경계를 쓴다. 둘 다 없을 때만 어림값으로 떨어진다.
+    static float HeadHeight(EnemyDummy enemy)
+    {
+        if (enemy.TryGetComponent(out Collider body))
+            return body.bounds.max.y - enemy.transform.position.y;
+
+        Renderer renderer = enemy.GetComponentInChildren<Renderer>();
+        if (renderer != null)
+            return renderer.bounds.max.y - enemy.transform.position.y;
+
+        return 2f;
+    }
 
     Color ColorForRatio(float ratio)
     {
