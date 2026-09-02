@@ -1662,6 +1662,8 @@ public static class MapGenerator
         so.ApplyModifiedProperties();
     }
 
+    const float PortalTriggerHeight = 24f;   // 캐릭터 키 20 + 위습이 떠 있는 높이까지 덮는다
+
     static GameObject CreatePortalObject(Transform parent, string name, Vector3 position, float diameter)
     {
         GameObject portal = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
@@ -1670,7 +1672,20 @@ public static class MapGenerator
         portal.transform.position = position;
         portal.transform.localScale = new Vector3(diameter, 0.5f, diameter);
         Paint(portal, "portal");
-        portal.GetComponent<Collider>().isTrigger = true;
+
+        Collider collider = portal.GetComponent<Collider>();
+        collider.isTrigger = true;
+
+        // 보이는 건 바닥에 깔린 납작한 원판이지만, 판정은 위아래로 높아야 한다.
+        // 원판 두께(1)만 판정하면 몸이 떠 있는 위습이나 키 20짜리 유닛의 콜라이더가
+        // 그 위를 지나가면서도 한 번도 닿지 않아, 포탈에 들어가도 아무 일이 없다.
+        if (collider is CapsuleCollider capsule)
+        {
+            // 로컬 높이 × y스케일(0.5) = 월드 높이. 24면 바닥 아래위로 12씩 덮는다.
+            capsule.height = PortalTriggerHeight / portal.transform.localScale.y;
+            capsule.center = Vector3.zero;
+        }
+
         return portal;
     }
 
@@ -1768,6 +1783,7 @@ public static class MapGenerator
     // 위습을 영혼처럼 보이게 하고 맵 크기에 맞춰 키운다.
     // 프리팹 기본 크기가 0.6이라 유닛(키 20) 옆에 두면 먼지처럼 보인다.
     const float WispScale = 6f;
+    const float WispSpeed = 25f;
     const string WispPrefabPath = "Assets/Prefabs/WispPrefab.prefab";
 
     [MenuItem("Tools/맵/위습 모양 맞추기")]
@@ -1795,6 +1811,10 @@ public static class MapGenerator
         NavMeshAgent agent = root.GetComponent<NavMeshAgent>();
         if (agent != null)
         {
+            // 우물 한 변이 70이다. 8로는 건너는 데 9초가 걸려서 조작이 답답하다.
+            agent.speed = WispSpeed;
+            agent.acceleration = WispSpeed * 5f;
+
             // 유닛과 같은 값(0.28). 아군끼리는 살짝 비켜주기만 하고 서로 통과하듯 겹친다 —
             // 위습도 같은 규칙이어야 한 칸에 여러 개를 모아둘 수 있다.
             agent.radius = 0.28f / WispScale;
