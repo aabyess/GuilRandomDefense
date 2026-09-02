@@ -2268,30 +2268,77 @@ public static class MapGenerator
 
     static string BuildNavMesh(GameObject root)
     {
-        NavMeshSurface surface = root.AddComponent<NavMeshSurface>();
+        // 있으면 그걸 쓴다. AddComponent를 매번 부르면 표면이 여러 장 쌓이고,
+        // 그중 빈 것이 섞이면 어느 쪽이 쓰이는지 알 수 없게 된다.
+        NavMeshSurface surface = root.GetComponent<NavMeshSurface>();
+        if (surface == null) surface = root.AddComponent<NavMeshSurface>();
+
         surface.collectObjects = CollectObjects.Children;
         surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
 
         // 바다가 1600×1600이라 굽는 범위가 그만큼 넓다. 기본 복셀 크기(에이전트 반지름/3 ≈ 0.17)로는
-        // 한 변이 만 칸 가까이 나와서, 굽기가 조용히 부분 실패하고 길이 군데군데 비게 된다.
-        // 유닛 반지름이 0.28이라 이 정도로 거칠게 잡아도 통행에는 지장이 없다.
+        // 한 변이 만 칸 가까이 나와서 굽기가 무거워진다. 유닛 반지름이 0.28이라 이 정도로 거칠게
+        // 잡아도 통행에는 지장이 없다.
         surface.overrideVoxelSize = true;
         surface.voxelSize = 0.5f;
-
-        // 섬 윗면만 걸으면 되므로 바다 아래까지 훑을 이유가 없다.
         surface.overrideTileSize = true;
         surface.tileSize = 256;
 
         try
         {
             surface.BuildNavMesh();
-            return "NavMesh를 구웠습니다 (바다 = Sea 영역)." + CheckNavMeshCoverage();
         }
         catch (System.Exception e)
         {
             Debug.LogWarning($"[맵] NavMesh 굽기 실패: {e.Message}");
             return "⚠️ NavMesh 굽기에 실패했습니다. Map 오브젝트의 NavMeshSurface에서 Bake를 눌러주세요.";
         }
+
+        return SaveNavMeshAsset(surface) + CheckNavMeshCoverage();
+    }
+
+    // 스크립트로 BuildNavMesh()를 부르면 결과가 메모리에만 남는다 — 인스펙터의 Bake 버튼은
+    // 그걸 에셋으로 저장까지 해주지만 스크립트 호출은 안 한다. 저장을 안 하면 씬을 저장하거나
+    // 다시 컴파일하는 순간 통째로 사라지고, 씬에는 m_NavMeshData: {fileID: 0}만 남는다.
+    // 그 상태에서 유닛을 스폰하면 "no valid NavMesh"가 뜨고 아무도 안 움직인다.
+    static string SaveNavMeshAsset(NavMeshSurface surface)
+    {
+        NavMeshData data = surface.navMeshData;
+        if (data == null)
+            return "⚠️ NavMesh가 비어 있습니다 — 걸을 수 있는 바닥을 못 찾았습니다.";
+
+        // 씬과 같은 이름의 폴더에 둔다. 유니티가 씬별 굽기 결과를 두는 자리와 같다.
+        string scenePath = surface.gameObject.scene.path;
+        if (string.IsNullOrEmpty(scenePath))
+            return "\n⚠️ 씬이 저장된 적 없어 NavMesh를 파일로 남기지 못했습니다.";
+
+        string folder = System.IO.Path.ChangeExtension(scenePath, null);
+        if (!AssetDatabase.IsValidFolder(folder))
+        {
+            AssetDatabase.CreateFolder(System.IO.Path.GetDirectoryName(scenePath).Replace('\\', '/'),
+                                       System.IO.Path.GetFileNameWithoutExtension(scenePath));
+        }
+
+        string assetPath = $"{folder}/NavMesh-{surface.gameObject.name}.asset";
+
+        if (AssetDatabase.GetAssetPath(data) != assetPath)
+        {
+            AssetDatabase.DeleteAsset(assetPath);
+            AssetDatabase.CreateAsset(data, assetPath);
+        }
+        else
+        {
+            EditorUtility.SetDirty(data);
+        }
+
+        AssetDatabase.SaveAssets();
+
+        // 씬이 이 에셋을 가리키게 다시 물려준다.
+        SerializedObject so = new SerializedObject(surface);
+        so.FindProperty("m_NavMeshData").objectReferenceValue = data;
+        so.ApplyModifiedProperties();
+
+        return $"NavMesh를 구워 {assetPath} 에 저장했습니다 (바다 = Sea 영역).";
     }
 
     static string DisableOldGround()
