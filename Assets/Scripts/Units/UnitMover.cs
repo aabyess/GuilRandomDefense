@@ -38,7 +38,8 @@ public class UnitMover : MonoBehaviour
     void TryMoveToCursor()
     {
         // 이동 명령이 조용히 실패하면 "클릭이 안 먹는다"로만 보인다. 막힌 지점을 말하게 한다.
-        if (!WorldPick.TryHit(cam, Mouse.current.position.ReadValue(), out RaycastHit hit))
+        // 땅만 본다. 사이에 낀 아군을 클릭 대상으로 삼으면 그 몸통 위가 목적지가 된다.
+        if (!WorldPick.TryHitGround(cam, Mouse.current.position.ReadValue(), out RaycastHit hit))
         {
             Debug.Log($"[이동] {name}: 커서 아래에 아무것도 없습니다(콜라이더 없음).", this);
             return;
