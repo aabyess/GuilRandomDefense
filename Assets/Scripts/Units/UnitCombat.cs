@@ -79,11 +79,19 @@ public class UnitCombat : MonoBehaviour
     /// <summary>모으기(V). 걸어오지 않고 그 자리로 옮겨 세운다 — 원작이 그렇게 동작한다.</summary>
     public void SnapTo(Vector3 position)
     {
-        if (agent.isActiveAndEnabled && agent.isOnNavMesh) agent.Warp(position);
-        else transform.position = position;
+        // NavMesh 위로 끌어다 놓는다. 좌표를 그대로 믿고 Warp하면, 그 자리에 길이 안 깔려
+        // 있을 때 에이전트가 NavMesh에서 떨어져 나가고 그 뒤로는 이동 명령이 조용히 무시된다.
+        // 모으기(V)·정렬(C)이 우리 뒷줄처럼 가장자리 자리를 지목할 수 있어 실제로 닿는 위험이다.
+        if (!NavPlacement.Place(agent, position))
+        {
+            // 못 올렸으면 옮기지 않는다. 억지로 옮기면 움직일 수 없는 유닛이 되는데,
+            // 그건 제자리에 남는 것보다 나쁘다 — 선택은 되는데 명령만 안 먹는다.
+            Debug.Log($"[명령] {name}: {position} 근처에 설 자리가 없어 옮기지 않았습니다.", this);
+            return;
+        }
 
         // 옮겨놓기만 하면 복귀 지점이 예전 자리로 남아, 적을 쫓고 나서 다시 흩어진다.
-        commandedPosition = position;
+        commandedPosition = agent.transform.position;
         currentTarget = null;
         state = CombatState.Idle;
         hasDestination = false;
