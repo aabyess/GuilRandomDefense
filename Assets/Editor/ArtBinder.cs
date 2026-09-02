@@ -61,7 +61,9 @@ public static class ArtBinder
     // 원본이 애초에 눕혀 저장돼 있으면 그대로 눕는다. 모델 파일을 고치는 대신 여기서 돌린다.
     static readonly (string model, Vector3 euler)[] ModelRotations =
     {
-        ("안흔함_상붕카", new Vector3(-90f, 0f, 0f)),   // 자전거 — 세워져 들어와서 눕힌다
+        // 자전거는 바퀴로 선 채로 들어오는데 앞을 보고 있다. 옆모습이 보이게 Y로만 돌린다.
+        // X로 돌리면 바닥에 눕는다 — 한 번 그렇게 했다.
+        ("안흔함_상붕카", new Vector3(0f, 90f, 0f)),
     };
 
     static Quaternion RotationFor(string modelName)
