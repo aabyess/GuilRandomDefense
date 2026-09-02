@@ -17,15 +17,26 @@ public class LaneMarker : MonoBehaviour
     // 예전 UnitPenWidth 기본값(40)으로 동작해서, 배선이 안 바뀐 씬에서도 예외 없이 돈다.
     [SerializeField] float unitRowWidth = 40f;
 
-    // 캐릭터 지름(현재 7.2)보다 칸막이 두께(MapGenerator.GateThickness, 1.4) + 양옆 여유(0.7씩)만큼
-    // 커야 한다 — 이 값이 칸막이 두께를 빼고 남는 통행 폭이라, 캐릭터보다 좁으면 몸통이 칸막이를
-    // 뚫고 나온다(2026-09-02에 실제로 8이었다가 이렇게 걸렸다). 유닛 키·굵기를 바꾸는 쪽(현재는
-    // 프리팹 스케일뿐, 코드로 된 지름 상수는 아직 없다)을 손보면 여기도 같이 확인할 것.
-    // MapGenerator가 칸막이 간격을 이 값의 배수로 맞추려고 그대로 참조한다 — 여기서만 바꾸면 같이 따라간다.
-    public const float SlotSpacing = 10f;
-    // 한 줄이 꽉 차면 이만큼 더 앞(우리가 열려 있는 쪽, +Z)으로 다음 줄을 놓는다 —
-    // 조용히 사라지는 대신 뒷줄로 눈에 보이게 넘긴다.
-    const float RowDepth = 8f;
+    // 한 줄의 칸 수는 이제 폭이 정하지 않는다 — 흔함이 9종이라 9개로 고정한다(사장님 지시,
+    // 2026-09-02). 폭이 나중에 또 바뀌어도 칸 수는 그대로고, 칸 하나하나가 넓어지거나 좁아질 뿐이다.
+    public const int CompartmentCount = 9;
+
+    // 양 끝은 벽에 붙이지 않고 칸 두 개 너비만큼 비워둔다(사장님 지시) — 그만큼을 나누는 값에
+    // 얹어서 간격을 계산하면, 칸 폭은 그대로 넓어지고 양 끝에만 빈 공간이 남는다.
+    public const int EndMarginCompartments = 2;
+
+    /// <summary>
+    /// 실제 칸 하나의 폭(=자리 간격). 폭을 고정 칸 수 + 양 끝 여유로 나눠서 구한다 —
+    /// 칸 수를 먼저 정하고 간격을 거기서 유도하는 쪽으로 뒤집었다(예전엔 간격이 상수였고
+    /// 칸 수가 폭에서 나왔다). 칸막이 두께를 뺀 통행 폭이 캐릭터 지름(현재 7.2)보다 좁아지면
+    /// 몸통이 칸막이를 뚫고 나온다(2026-09-02에 SlotSpacing=8일 때 실제로 이렇게 걸렸다) —
+    /// 유닛 굵기를 바꾸는 쪽(현재는 프리팹 스케일뿐, 코드로 된 지름 상수는 아직 없다)을
+    /// 손보면 이 값도 다시 확인할 것.
+    /// </summary>
+    public static float ResolveSlotSpacing(float rowWidth)
+    {
+        return rowWidth / (CompartmentCount + EndMarginCompartments * 2);
+    }
 
     // 다음에 내줄 자리 번호. 유닛이 떠나도 줄어들지 않는다(빈 자리 재사용은 안 함) —
     // 지금은 필드에서 유닛이 사라지는 경로(연금술 분해 등)가 이 카운터를 모르기 때문에,
@@ -54,30 +65,33 @@ public class LaneMarker : MonoBehaviour
     /// 자리 계산만 하고 카운터는 안 건드리는 순수 버전. TakeNextSpawnPosition은 이걸 감싸서
     /// nextSlotIndex를 하나 태울 뿐이다 — 자리를 소모하지 않고 미리 봐야 하는 곳
     /// (맵 생성기의 NavMesh 커버리지 확인 등)은 이쪽을 쓴다.
+    ///
+    /// 한 줄은 CompartmentCount(9) 칸 고정이다 — 9마리를 넘기면(같은 유닛을 여러 마리 뽑을 수
+    /// 있어서 실제로 넘친다) 조용히 사라지는 대신 한 칸 폭만큼 더 앞(+Z, 우리가 열린 쪽)으로
+    /// 다음 줄을 놓는다. 뒷줄은 필드 쪽으로 넘어가는 열린 공간이라 칸막이가 없다.
     /// </summary>
     public static Vector3 SlotPosition(Transform unitPen, float rowWidth, int slot)
     {
-        int slotsPerRow = Mathf.Max(1, Mathf.FloorToInt(rowWidth / SlotSpacing));
+        float spacing = ResolveSlotSpacing(rowWidth);
 
-        int column = slot % slotsPerRow;
-        int row = slot / slotsPerRow;
+        int column = slot % CompartmentCount;
+        int row = slot / CompartmentCount;
 
-        float x = (column - (slotsPerRow - 1) * 0.5f) * SlotSpacing;
-        float z = row * RowDepth;
+        float x = (column - (CompartmentCount - 1) * 0.5f) * spacing;
+        float z = row * spacing;
 
         return unitPen.position + unitPen.right * x + unitPen.forward * z;
     }
 
     /// <summary>
-    /// 벽으로 막힌 첫 줄(넘치기 전, 칸막이가 실제로 세워진 구간)의 자리들. 소모하지 않는다 —
+    /// 벽으로 막힌 첫 줄(칸막이가 실제로 세워진 CompartmentCount칸)의 자리들. 소모하지 않는다 —
     /// NavMesh가 실제로 이 칸들에 깔렸는지 확인할 때만 쓴다.
     /// </summary>
     public IEnumerable<Vector3> FirstRowSlotPositions()
     {
         if (unitPen == null) yield break;
 
-        int slotsPerRow = Mathf.Max(1, Mathf.FloorToInt(unitRowWidth / SlotSpacing));
-        for (int slot = 0; slot < slotsPerRow; slot++)
+        for (int slot = 0; slot < CompartmentCount; slot++)
             yield return SlotPosition(unitPen, unitRowWidth, slot);
     }
 

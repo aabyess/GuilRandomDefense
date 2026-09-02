@@ -284,18 +284,19 @@ public static class MapGenerator
     }
 
     // 원작처럼 우리 안을 기둥으로 칸칸이 나눈다. 칸 하나에 자리(LaneMarker.TakeNextSpawnPosition)
-    // 하나가 정확히 가운데 오도록, 자리 간격(LaneMarker.SlotSpacing)의 배수 자리에만 세운다 —
+    // 하나가 정확히 가운데 오도록, 자리 간격(LaneMarker.ResolveSlotSpacing)의 배수 자리에만 세운다 —
     // 어긋나면 유닛이 기둥에 박히거나 기둥을 뚫고 서 있게 된다(PM 지시).
-    // LaneMarker가 런타임에 쓰는 것과 같은 slotsPerRow 계산식을 여기서도 그대로 쓴다 —
+    // 칸 수는 LaneMarker.CompartmentCount(9)로 고정이고 양 끝은 EndMarginCompartments만큼
+    // 비워둔다(사장님 지시) — LaneMarker가 런타임에 쓰는 것과 같은 상수·계산식을 그대로 쓴다.
     // 이 둘이 갈라지면 자리와 칸이 어긋난다.
     static void BuildUnitPenPartitions(Transform parent, MapLayout.Island lane,
         float unitPenWidth, float penDepth, float centerX, float centerZ)
     {
-        int slotsPerRow = Mathf.Max(1, Mathf.FloorToInt(unitPenWidth / LaneMarker.SlotSpacing));
+        float spacing = LaneMarker.ResolveSlotSpacing(unitPenWidth);
 
-        for (int column = 0; column < slotsPerRow - 1; column++)
+        for (int column = 0; column < LaneMarker.CompartmentCount - 1; column++)
         {
-            float boundaryX = (column - (slotsPerRow - 1) * 0.5f + 0.5f) * LaneMarker.SlotSpacing;
+            float boundaryX = (column - (LaneMarker.CompartmentCount - 1) * 0.5f + 0.5f) * spacing;
 
             BuildWall(parent, $"{lane.name}_유닛우리_칸막이{column}",
                 new Vector3(centerX + boundaryX, MapLayout.IslandTop + WallHeight * 0.5f, centerZ),
