@@ -291,33 +291,25 @@ public static class MapGenerator
     // 원작처럼 우리 안을 기둥으로 칸칸이 나눈다. 칸 하나에 자리(LaneMarker.TakeSpawnPosition)
     // 하나가 정확히 가운데 오도록, 자리 간격(LaneMarker.ResolveSlotSpacing)의 배수 자리에만 세운다 —
     // 어긋나면 유닛이 기둥에 박히거나 기둥을 뚫고 서 있게 된다(PM 지시).
-    // 칸 수는 LaneMarker.CompartmentCount로 고정이고 양 끝은 EndMarginCompartments만큼
-    // 비워둔다(사장님 지시) — LaneMarker가 런타임에 쓰는 것과 같은 상수·계산식을 그대로 쓴다.
-    // 이 둘이 갈라지면 자리와 칸이 어긋난다.
+    // 칸 수는 LaneMarker.CompartmentCount로 고정이고, EndMarginCompartments는 이제 0이다 —
+    // 우리 벽 자체가 1번·11번 칸의 바깥 경계 노릇을 하므로 칸막이는 칸 사이(CompartmentCount-1개)
+    // 만 세운다(2026-09-03). 한때 바깥 경계까지 세운 적이 있었는데, 그때는 EndMarginCompartments가
+    // 1이라 우리 벽이 그만큼 떨어져 있어서 양 끝 칸이 두 배로 넓어지는 문제가 났었다 — 지금은
+    // 여백이 0이라 우리 벽이 정확히 그 자리에 있으므로 따로 세우면 오히려 겹친다.
+    // LaneMarker가 런타임에 쓰는 것과 같은 상수·계산식을 그대로 쓴다 — 이 둘이 갈라지면 자리와
+    // 칸이 어긋난다.
     static void BuildUnitPenPartitions(Transform parent, MapLayout.Island lane,
         float unitPenWidth, float penDepth, float centerX, float centerZ)
     {
         float spacing = LaneMarker.ResolveSlotSpacing(unitPenWidth);
 
-        // 칸 CompartmentCount개를 온전히 나누려면 경계가 칸 사이(CompartmentCount-1개)만으로는
-        // 모자란다 — 양 끝 칸의 바깥쪽은 우리 벽까지 그대로 뚫려서, 우리 벽이 EndMarginCompartments
-        // 만큼 떨어진 자리에 있는 만큼 그 칸만 넓어진다(2026-09-03, 사장님이 "간격 안 맞다"고 지적).
-        // 바깥 경계까지 포함해 CompartmentCount+1개를 세워야 11칸이 전부 같은 폭이 된다.
-        int firstBoundary = -1;
-        int lastBoundary = LaneMarker.CompartmentCount - 1;
-
-        for (int column = firstBoundary; column <= lastBoundary; column++)
+        for (int column = 0; column < LaneMarker.CompartmentCount - 1; column++)
         {
             float boundaryX = (column - (LaneMarker.CompartmentCount - 1) * 0.5f + 0.5f) * spacing;
 
-            BuildWall(parent, $"{lane.name}_유닛우리_칸막이{column - firstBoundary}",
+            BuildWall(parent, $"{lane.name}_유닛우리_칸막이{column}",
                 new Vector3(centerX + boundaryX, MapLayout.IslandTop + WallHeight * 0.5f, centerZ),
                 new Vector3(UnitPenPartitionThickness, WallHeight, penDepth + UnitPenPartitionThickness));
-
-            if (column == firstBoundary || column == lastBoundary)
-                Debug.Log($"[맵] {lane.name} 유닛우리 바깥 칸막이 x={centerX + boundaryX:0.00} " +
-                          $"(우리 벽 x={centerX - unitPenWidth * 0.5f:0.00} / {centerX + unitPenWidth * 0.5f:0.00}, " +
-                          $"간격 {Mathf.Abs(unitPenWidth * 0.5f - Mathf.Abs(boundaryX)):0.00} — 겹치면 0 이하)");
         }
     }
 
