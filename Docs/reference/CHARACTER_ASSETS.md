@@ -233,3 +233,54 @@ MMD·Sketchfab·VRoid Hub 모델 대부분이 "재배포 금지"를 명시한다
 4. Sketchfab에서 "Download Free"라고 표시돼도 실제로는 모델별로 라이선스가 CC0부터 CC-BY, 심지어 비상업 한정까지 갈리므로, **다운로드 페이지의 라이선스 섹션을 반드시 확인**해야 한다.
 5. (기존 조사 재확인) 진짜 cel-shaded 애니풍 무료 몬스터 팩은 여전히 못 찾았다 — 로우폴리(Quaternius)+툰셰이더 조합이 현재로선 유일한 대안이다.
 6. Unity Asset Store 표준 EULA 원문 전체 대조는 이번에도 안 했다 — 재판매 금지 외 세부 조항은 구매 전 재확인 권장(`ART_ASSETS.md`와 동일한 주의사항).
+
+---
+
+## 5. 2차 조사 (2026-09-02) — 리깅 팩 확장 / 툰 셰이더 실동작 검증 / VRM 실전 문제
+
+> 나루토 1종을 Sketchfab → Mixamo(대기·이동·공격 3클립, Humanoid 공유) → Unity로 넣는 데 성공한 뒤의 후속 조사. 3개 fork(리깅 팩 / 툰 셰이더 실동작 / VRM 실전 문제)를 종합.
+
+### 5-1. 리깅된 캐릭터 모델 팩 — Quaternius가 기존 파악보다 훨씬 풍부하다
+
+기존에 확인한 Quaternius 3종(Universal Base Characters 6종 / Modular Outfits-Fantasy / Ultimate Animated Character Pack 52종) 외에 **5개 팩을 추가로 발견**했다 — 전부 CC0, quaternius.com:
+
+| 팩 | 개수 | Humanoid 리그 | 링크 | 태그 |
+|---|---|---|---|---|
+| Ultimate Modular Men Pack | 11종×4교체파츠, 애니 24개 | 명시 없음 | https://quaternius.com/packs/ultimatemodularcharacters.html | [확인] |
+| Ultimate Modular Women Pack | 10종×4교체파츠, 애니 24개 | **있음(명시)** | https://quaternius.com/packs/ultimatemodularwomen.html | [확인] |
+| RPG Character Pack | 6종 | 명시 없음 | https://quaternius.com/packs/rpgcharacters.html | [확인] |
+| Animated Men Pack | 4종 | 명시 없음 | https://quaternius.com/packs/animatedmen.html | [확인] |
+| Animated Women Pack | 4종 | 명시 없음 | https://quaternius.com/packs/animatedwomen.html | [확인] |
+
+**순수 모델 수 합산(중복 제외) 약 93종+** — 여기에 Modular Men/Women의 파츠 교체 조합까지 고려하면 **234종에 상당히 근접**한다 [추정, 파츠 교차 호환은 직접 확인 필요]. Quaternius가 별도로 "Universal Animation Library"(120+ 애니메이션, 공용 Humanoid 리그, Unity 호환)를 제공한다는 것도 확인했다 [확인, 검색 요약 — 페이지 직접 열람은 안 함: https://quaternius.itch.io/universal-animation-library] — PM이 이미 구축한 Mixamo 클립 공유 구조와 같은 원리라 호환 가능성이 높다 [추정].
+
+**리스크**: 새로 찾은 5팩 중 Ultimate Modular Women Pack만 Humanoid 리그가 페이지에 명시돼 있다. 나머지 4팩은 리그 종류가 안 적혀 있어 **다운로드 후 직접 확인이 필요**하다.
+
+Mixamo 기본 캐릭터(X/Y Bot, 정확한 총 개수 미확인), Kenney(Character Assets 번들이 페이지에 "currently unavailable" — 다운로드 가능 여부 불확실), Unity Asset Store 무료 팩(Creative Characters FREE, Character Pack Free Sample — Humanoid+URP 확인되나 종수가 4~11개뿐)은 전부 종수가 너무 적어 **보조 수단일 뿐**이다.
+
+### 5-2. 애니풍 툰 셰이더 — Unity 6 실동작 근거 재검증
+
+| 후보 | 가격 | Unity 6 실동작 근거 | 아웃라인 | 태그 |
+|---|---|---|---|---|
+| **Anime Cel Shader URP** (Neko Legends) | 무료 | **강함** — 페이지 호환성 표에 "Unity 6000.2.5f1 / URP Compatible" 명시, 최신 릴리스 2025-09(v3.1.3) | 자체 지원, 색상·두께·거리감쇠까지 커스터마이즈 | [확인] — **1순위 유지** |
+| Sketchy Toon Shader URP (Funflower) | $4.99 | **강함** — "Unity 6000.0.32f1 / URP Compatible" 명시, 업데이트가 3개 중 가장 최근(2025-12) | 손그림풍 아웃라인 지원 | [확인] — 2순위 백업 |
+| Toon Shaders Pro (danielilett) | 유료(가격 미확인) | 약함 — "Unity 2022.3 이상"이라고만, Unity 6 특정 버전 명시 없음 | 가장 유연 — 4가지 아웃라인 알고리즘(인버티드 헐 포함) | [확인] — 근거 약해 후순위 |
+
+**⚠️ 새로 발견한 함정**: Anime Cel Shader URP v3는 **Unity 6에서 Project Settings > Graphics > URP의 "Compatibility Mode"(Render Graph 비활성화)가 필요할 수 있다**는 서술이 검색에서 일관되게 나온다 [추정 — 페이지 원문 직접 재확인은 못함]. 이건 VRM/UniVRM(아래 5-3)에서도 나온 것과 **같은 종류의 Unity 6 RenderGraph 함정**이다 — 셰이더를 적용하기 전에 이 설정부터 확인해야 한다.
+
+**234종 일괄 적용**은 구조적으로 문제없다 — 셰이더 1개 + 머티리얼 인스턴스 다수(색만 다르게)로 쓰는 게 URP 표준 워크플로다 [추정, URP 일반 원리 기반 — 특정 셰이더 문서로 100% 확인한 건 아님].
+
+`unityassetcollection.com`이 "Anime Cel Shader URP 무료 다운로드"로 이번에도 검색에 걸렸다 — **여전히 불법 재배포 사이트다, 쓰지 말 것** (Anime Cel Shader URP 자체가 이미 무료라 이 사이트를 거칠 이유도 없다).
+
+### 5-3. VRoid/VRM 경로 — "임포트는 더 쉽지만 셰이더 계통이 갈린다"
+
+- MToon10 아웃라인 버그(#2527)는 **이미 고쳐졌다**(PR #2584) [확인]. 하지만 **"Unity 6 이후 URP에 맞춰 MToon을 근본적으로 재설계"하는 이슈(#2713)는 2025-08-21에 열려 지금도 진행 중**이다 [확인] — 즉 개별 버그는 고쳐져도 구조적 불안정은 남아있다.
+- **새로 발견한 구체 사례**: UniVRM 0.131.0 + Unity 6.4에서 "머티리얼/텍스처 추출" 버튼이 에셋 임포트 제약과 충돌해 깨진 사례가 실제로 있었다(#2783, 이후 패치됨) [확인]. **Unity 6.x 마이너 버전이 올라갈 때마다 UniVRM이 한 박자 늦게 따라잡는 패턴**이 확인된다. 우리 프로젝트는 6000.0.82f1이라 이 특정 버전엔 해당 안 되지만, 패턴 자체가 리스크다.
+- 임포트 절차 자체는 VRM이 **오히려 더 쉽다** — .vrm을 드래그하면 UniVRM이 자동으로 Humanoid 리그로 변환해준다(FBX는 수동 설정 필요).
+- **결정적 문제**: VRM은 MToon이라는 **별도 셰이더 계통**이 자동으로 붙는다. 우리는 이미 Anime Cel Shader URP로 234종을 통일하기로 방향을 잡았는데, MToon을 URP에서 안정적으로 쓰려면 프로젝트 전역 Compatibility Mode를 켜거나(다른 렌더링에 영향), MToon을 걷어내고 우리 셰이더로 재적용해야 한다(사실상 FBX 경로와 같은 작업량).
+
+**판단**: 나루토 경로(FBX+Mixamo+커스텀 툰셰이더) 대비 **VRM 경로는 지금은 권장하지 않는다.** FBX/glTF로도 구할 수 있는 캐릭터는 그쪽을 우선하고, **VRM으로만 존재하는 캐릭터에 한해서만** 예외적으로 쓰되 MToon은 걷어내고 Anime Cel Shader URP로 재적용하는 걸 권장한다.
+
+### 리서치담당의 추천 (PM 요청)
+
+**234종을 채우는 가장 현실적인 경로: Quaternius CC0 팩 8종(93종+, 파츠 조합 포함시 234종에 근접) + Anime Cel Shader URP(무료) + Mixamo 3클립 공유(이미 검증됨).** 리그가 불명확한 4팩(Modular Men/RPG/Animated Men/Animated Women)만 받아서 Humanoid 여부를 먼저 확인하고, 안 되는 것만 나루토처럼 개별 Mixamo 리타게팅으로 보완하면 된다. VRM/VRoid는 주력이 아니라 "그 캐릭터가 VRM으로만 존재할 때"의 예외 경로로 남겨둔다.
