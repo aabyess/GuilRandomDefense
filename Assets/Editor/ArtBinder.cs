@@ -56,22 +56,33 @@ public static class ArtBinder
     //   2) 파일명이 유닛 표시 이름과 같다     — "상붕카.fbx"
     //      (단 그 이름을 쓰는 유닛이 하나뿐일 때만. "최상호"는 넷이라 안 걸린다)
     //
-    // 모델이 누워 있거나 옆을 보고 서 있을 때 바로잡는다. 파일명 → 오일러 각도.
+    // 모델별로 방향과 크기를 바로잡는다. 파일명 → (오일러 각도, 키 배수).
+    //
     // Sketchfab·Blender에서 나온 모델은 축 방향이 제각각이라, 임포터가 Y-up으로 맞춰줘도
-    // 원본이 애초에 눕혀 저장돼 있으면 그대로 눕는다. 모델 파일을 고치는 대신 여기서 돌린다.
-    static readonly (string model, Vector3 euler)[] ModelRotations =
+    // 원본이 눕혀 저장돼 있으면 그대로 눕는다. 크기도 마찬가지다 — 사람 기준 키 20에
+    // 맞추면 탈것이나 짐승은 어색해진다. 모델 파일을 고치는 대신 여기서 조정한다.
+    static readonly (string model, Vector3 euler, float heightScale)[] ModelAdjustments =
     {
         // 자전거는 바퀴로 선 채로 들어오는데 앞을 보고 있다. 옆모습이 보이게 Y로만 돌린다.
         // X로 돌리면 바닥에 눕는다 — 한 번 그렇게 했다.
-        ("안흔함_상붕카", new Vector3(0f, 90f, 0f)),
+        // 키는 절반. 사람 키 20에 맞추면 자전거가 사람만큼 커진다.
+        ("안흔함_상붕카", new Vector3(0f, 90f, 0f), 0.5f),
     };
 
     static Quaternion RotationFor(string modelName)
     {
-        foreach ((string name, Vector3 euler) in ModelRotations)
+        foreach ((string name, Vector3 euler, float _) in ModelAdjustments)
             if (name == modelName) return Quaternion.Euler(euler);
 
         return Quaternion.identity;
+    }
+
+    static float HeightScaleFor(string modelName)
+    {
+        foreach ((string name, Vector3 _, float scale) in ModelAdjustments)
+            if (name == modelName) return scale;
+
+        return 1f;
     }
 
     // 특정 모델을 특정 유닛에 붙인다.
@@ -625,7 +636,7 @@ public static class ArtBinder
         // 크기를 재기 **전에** 돌린다. 돌리면 경계 상자가 바뀌므로, 나중에 돌리면
         // 엉뚱한 축 길이에 키를 맞춰 납작하거나 길쭉해진다.
         visual.transform.localRotation = RotationFor(model.name);
-        FitToHeight(instance, visual);
+        FitToHeight(instance, visual, HeightScaleFor(model.name));
         AttachAnimator(instance, visual);
 
         GameObject saved = PrefabUtility.SaveAsPrefabAsset(instance, path);
@@ -658,9 +669,11 @@ public static class ArtBinder
     //
     // 보이는 모델만 키우면 안 된다 — 콜라이더가 발치에 남아 클릭이 발끝에서만 먹고
     // 체력바도 발밑에 뜬다. NavMeshAgent의 반지름·높이도 스케일을 안 따라가므로 같이 맞춘다.
-    static void FitToHeight(GameObject root, GameObject visual)
+    static void FitToHeight(GameObject root, GameObject visual, float heightScale = 1f)
     {
-        float height = HeightFor(root);
+        // 콜라이더·에이전트도 같은 키를 쓴다. 보이는 것만 줄이면 클릭 판정과 체력바가
+        // 원래 크기 자리에 남아서, 작아진 모델 위 허공을 눌러야 선택된다.
+        float height = HeightFor(root) * heightScale;
 
         Bounds bounds = MeasureRenderers(visual);
         if (bounds.size.y > 0.001f)
