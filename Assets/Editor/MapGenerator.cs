@@ -115,7 +115,20 @@ public static class MapGenerator
         string portalReport = BuildGachaPortals(gachaIsland);
 
         string overlaps = CheckOverlaps();
-        string rewire = RewireScene(lanePaths);
+
+        // 배선 중 예외가 나도 NavMesh는 굽는다. 여기서 통째로 죽으면 길이 안 깔린 맵이 남는데,
+        // 화면에는 멀쩡한 맵으로 보이고 유닛만 안 움직여서 원인을 찾기가 매우 어렵다.
+        string rewire;
+        try
+        {
+            rewire = RewireScene(lanePaths);
+        }
+        catch (System.Exception e)
+        {
+            rewire = $"\n⚠️ 씬 배선 중 오류가 나서 일부만 적용됐습니다: {e.Message}";
+            Debug.LogException(e);
+        }
+
         string navResult = BuildNavMesh(root);
         string oldGround = DisableOldGround();
 
@@ -792,6 +805,11 @@ public static class MapGenerator
 
         GameObject figure = Object.Instantiate(unit.prefab, parent);
         figure.name = name;
+
+        // 스크립트를 먼저 지운다. NavMeshAgent를 먼저 지우려 하면 UnitMover가 그것을 요구하고
+        // 있어서 거부당하고, 결과적으로 조합표 위에 살아 있는 에이전트가 남는다.
+        foreach (MonoBehaviour script in figure.GetComponentsInChildren<MonoBehaviour>(true))
+            if (script != null) Object.DestroyImmediate(script);
 
         foreach (Component component in figure.GetComponentsInChildren<Component>(true))
         {
@@ -1797,7 +1815,12 @@ public static class MapGenerator
             lightObject.transform.SetParent(root.transform, false);
             glow = lightObject.transform;
         }
-        Light light = glow.GetComponent<Light>() ?? glow.gameObject.AddComponent<Light>();
+        // ??를 쓰면 안 된다. 유니티는 ==를 오버로드해서 "없는 컴포넌트"를 진짜 null이 아닌
+        // 가짜 null로 돌려주는데, ??는 그 오버로드를 안 거치므로 가짜 null을 그대로 통과시킨다.
+        // 그러면 AddComponent가 안 불리고 다음 줄에서 MissingComponentException이 난다.
+        // 그 예외가 Generate()를 통째로 중단시켜서 NavMesh 굽기까지 못 갔다.
+        Light light = glow.GetComponent<Light>();
+        if (light == null) light = glow.gameObject.AddComponent<Light>();
         light.type = LightType.Point;
         light.color = WispSoulColor;
         light.range = WispScale * 4f;
