@@ -79,7 +79,7 @@ public static class MapGenerator
             laneObject.AddComponent<LaneMarker>().SetLaneIndex(i);
             DecorateLane(root.transform, MapLayout.Lanes[i]);
             BuildLaneShopStrip(root.transform, MapLayout.Lanes[i]);
-            WireUnitPen(laneObject, BuildUnitPen(root.transform, MapLayout.Lanes[i], i));
+            WireUnitPen(laneObject, BuildUnitPen(root.transform, MapLayout.Lanes[i], i), MapLayout.Lanes[i]);
             BuildSupportShop(root.transform, MapLayout.Lanes[i], i);
             BuildGamblingShop(root.transform, MapLayout.Lanes[i], i);
             BuildUnitUpgradeShop(root.transform, MapLayout.Lanes[i], i);
@@ -240,21 +240,29 @@ public static class MapGenerator
     // 상점 줄은 필드와 벽 하나로 갈린다 — 적이 도는 곳과 내가 쓰는 곳이 눈으로 구분돼야 한다.
     // 새 유닛이 처음 서는 우리. 상점 줄 바로 위, 벽으로 둘러싸여 있고 위쪽만 트여 있다 —
     // 레인 한가운데에 소환하면 적 한복판에 나오고, 플레이어가 손쓸 새도 없이 맞는다.
-    const float UnitPenWidth = 40f;
+    // 폭은 상수로 안 박는다 — LaneUnitPenRow가 주는 실제 줄 폭에서 계산한다. 레인 크기가
+    // 나중에 또 바뀌어도(2026-09-02에 이미 한 번 1.5배 됐다) 하드코딩한 값만 어긋나는 걸 막는다.
+    const float UnitPenEdgeMargin = 4f;   // 좌우 벽이 레인 가장자리에 딱 붙지 않게 남기는 여유
     const float UnitPenInset = 3f;    // 우리 줄 안에서 위아래로 남기는 여유
+
+    static float ResolveUnitPenWidth(MapLayout.Island lane)
+    {
+        return MapLayout.LaneUnitPenRow(lane).size.x - UnitPenEdgeMargin * 2f;
+    }
 
     static Transform BuildUnitPen(Transform parent, MapLayout.Island lane, int laneIndex)
     {
         MapLayout.Island row = MapLayout.LaneUnitPenRow(lane);
+        float unitPenWidth = ResolveUnitPenWidth(lane);
         float penDepth = row.size.y - UnitPenInset * 2f;
         float centerZ = row.center.y;
         float centerX = lane.center.x;
-        float halfX = UnitPenWidth * 0.5f;
+        float halfX = unitPenWidth * 0.5f;
         float halfZ = penDepth * 0.5f;
 
         BuildDecor(parent, $"{lane.name}_유닛우리_바닥",
             new Vector3(centerX, MapLayout.IslandTop + 0.05f, centerZ),
-            new Vector3(UnitPenWidth, 0.1f, penDepth), "dirt");
+            new Vector3(unitPenWidth, 0.1f, penDepth), "dirt");
 
         // 좌·우·아래만 막는다. 위가 열려 있어야 플레이어가 유닛을 필드로 꺼낸다.
         BuildWall(parent, $"{lane.name}_유닛우리_왼벽",
@@ -265,12 +273,34 @@ public static class MapGenerator
             new Vector3(GateThickness, WallHeight, penDepth + GateThickness));
         BuildWall(parent, $"{lane.name}_유닛우리_아래벽",
             new Vector3(centerX, MapLayout.IslandTop + WallHeight * 0.5f, centerZ - halfZ),
-            new Vector3(UnitPenWidth, WallHeight, GateThickness));
+            new Vector3(unitPenWidth, WallHeight, GateThickness));
+
+        BuildUnitPenPartitions(parent, lane, unitPenWidth, penDepth, centerX, centerZ);
 
         GameObject anchor = new GameObject($"{lane.name}_유닛우리");
         anchor.transform.SetParent(parent, false);
         anchor.transform.position = new Vector3(centerX, MapLayout.IslandTop, centerZ);
         return anchor.transform;
+    }
+
+    // 원작처럼 우리 안을 기둥으로 칸칸이 나눈다. 칸 하나에 자리(LaneMarker.TakeNextSpawnPosition)
+    // 하나가 정확히 가운데 오도록, 자리 간격(LaneMarker.SlotSpacing)의 배수 자리에만 세운다 —
+    // 어긋나면 유닛이 기둥에 박히거나 기둥을 뚫고 서 있게 된다(PM 지시).
+    // LaneMarker가 런타임에 쓰는 것과 같은 slotsPerRow 계산식을 여기서도 그대로 쓴다 —
+    // 이 둘이 갈라지면 자리와 칸이 어긋난다.
+    static void BuildUnitPenPartitions(Transform parent, MapLayout.Island lane,
+        float unitPenWidth, float penDepth, float centerX, float centerZ)
+    {
+        int slotsPerRow = Mathf.Max(1, Mathf.FloorToInt(unitPenWidth / LaneMarker.SlotSpacing));
+
+        for (int column = 0; column < slotsPerRow - 1; column++)
+        {
+            float boundaryX = (column - (slotsPerRow - 1) * 0.5f + 0.5f) * LaneMarker.SlotSpacing;
+
+            BuildWall(parent, $"{lane.name}_유닛우리_칸막이{column}",
+                new Vector3(centerX + boundaryX, MapLayout.IslandTop + WallHeight * 0.5f, centerZ),
+                new Vector3(GateThickness, WallHeight, penDepth + GateThickness));
+        }
     }
 
     static void BuildLaneShopStrip(Transform parent, MapLayout.Island lane)
@@ -288,7 +318,7 @@ public static class MapGenerator
     }
 
     // 레인 섬에 붙은 LaneMarker에 우리를 물려준다 — 포탈·도박소·조합이 전부 여기로 소환한다.
-    static void WireUnitPen(GameObject laneObject, Transform pen)
+    static void WireUnitPen(GameObject laneObject, Transform pen, MapLayout.Island lane)
     {
         if (laneObject == null || pen == null) return;
 
@@ -298,6 +328,8 @@ public static class MapGenerator
         SerializedObject so = new SerializedObject(marker);
         so.FindProperty("unitPen").objectReferenceValue = pen;
         so.ApplyModifiedProperties();
+
+        marker.SetUnitRowWidth(ResolveUnitPenWidth(lane));
     }
 
     static Vector3 LaneShopSlot(MapLayout.Island lane, int slot)
@@ -2429,10 +2461,55 @@ public static class MapGenerator
                              $"     그 자리를 덮은 콜라이더: {blockers}");
         }
 
-        if (missing.Count == 0) return "";
+        string report = missing.Count == 0 ? "" :
+            $"\n  ⚠️ 길이 안 깔린 자리 {missing.Count}곳 — 콘솔에 원인을 적었습니다:\n     " +
+            string.Join(", ", missing);
 
-        return $"\n  ⚠️ 길이 안 깔린 자리 {missing.Count}곳 — 콘솔에 원인을 적었습니다:\n     " +
-               string.Join(", ", missing);
+        return report + CheckUnitPenSlotCoverage();
+    }
+
+    // 칸막이(BuildUnitPenPartitions)를 세운 뒤에는 우리 안 자리 하나하나에 길이 남아있는지
+    // 따로 세서 보고한다 — 칸막이가 촘촘하면 자리는 있어도 그 위에 길이 안 깔릴 수 있다.
+    // 위 CheckNavMeshCoverage는 우리 한가운데 한 점만 보므로 이 문제를 못 잡는다.
+    static string CheckUnitPenSlotCoverage()
+    {
+        System.Text.StringBuilder lines = new System.Text.StringBuilder();
+        int totalSlots = 0, totalCovered = 0;
+        bool anyMissing = false;
+
+        for (int i = 0; i < MapLayout.Lanes.Length; i++)
+        {
+            LaneMarker marker = LaneMarker.Get(i);
+            if (marker == null) continue;
+
+            int slotCount = 0, covered = 0;
+            foreach (Vector3 at in marker.FirstRowSlotPositions())
+            {
+                slotCount++;
+                if (NavMesh.SamplePosition(at, out _, 6f, NavMesh.AllAreas))
+                {
+                    covered++;
+                    continue;
+                }
+
+                anyMissing = true;
+                string blockers = DescribeBlockers(at, 6f);
+                Debug.LogWarning($"[맵] '{MapLayout.Lanes[i].name} 유닛 자리' {at} 에 길이 없습니다 " +
+                                 $"(칸막이 간격을 넓히거나 얇게 해야 합니다).\n     그 자리를 덮은 콜라이더: {blockers}");
+            }
+
+            totalSlots += slotCount;
+            totalCovered += covered;
+            lines.Append($"\n     {MapLayout.Lanes[i].name} {covered}/{slotCount}");
+        }
+
+        if (totalSlots == 0) return "";
+
+        string header = anyMissing
+            ? $"\n  ⚠️ 유닛 우리 자리 NavMesh: 합계 {totalCovered}/{totalSlots} (콘솔에 원인을 적었습니다)"
+            : $"\n  유닛 우리 자리 NavMesh: 합계 {totalCovered}/{totalSlots} (전부 정상)";
+
+        return header + lines;
     }
 
     // 그 지점을 감싸는 콜라이더를 훑는다. 트리거인지도 같이 적는다 —

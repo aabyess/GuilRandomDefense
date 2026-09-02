@@ -33,9 +33,9 @@ public class DebugHud : MonoBehaviour
         if (Keyboard.current.f1Key.wasPressedThisFrame)
             visible = !visible;
 
-        // V는 이제 게임 명령(모으기)이다. 디버그 조합은 이 창이 떠 있을 때만 받는다 —
-        // 안 그러면 유닛을 모으려다 조합이 같이 돌아간다.
-        if (visible && Keyboard.current.vKey.wasPressedThisFrame)
+        // V는 게임 명령(모으기)이라 겹친다 — F1 옆인 F2로 옮겼다. 디버그 조합은 이 창이
+        // 떠 있을 때만 받는다 — 안 그러면 유닛을 모으려다 조합이 같이 돌아간다.
+        if (visible && Keyboard.current.f2Key.wasPressedThisFrame)
         {
             TryCombineFirst();
         }

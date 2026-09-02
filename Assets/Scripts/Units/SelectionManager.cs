@@ -88,6 +88,12 @@ public class SelectionManager : MonoBehaviour
             int held = UnitCommands.ToggleHold(selected);
             if (held > 0) Debug.Log($"[명령] 홀드 — 유닛 {held}기의 홀드를 전환했습니다.");
         }
+
+        if (Keyboard.current.cKey.wasPressedThisFrame)
+        {
+            int sent = UnitCommands.SendToPen(selected);
+            if (sent > 0) Debug.Log($"[명령] 정렬 — 유닛 {sent}기를 우리로 보냈습니다.");
+        }
     }
 
     // 선택된 채로 파괴되는 대상이 있다(포탈에 들어간 위습, 죽은 유닛). 목록에 남겨두면

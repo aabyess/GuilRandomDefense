@@ -11,7 +11,9 @@ using UnityEngine.UI;
 // (에디터 없이 만든 프리팹이 손으로 짠 UI 계층 때문에 깨지는 걸 피하기 위한 구조).
 public class GameHud : MonoBehaviour
 {
-    const int CommandSlotCount = 12;
+    // 12칸(공격/정지/모으기 + 조합·상점 9칸) 뒤에 정렬(C) 한 칸을 더 붙여 13칸.
+    // 조합·상점 9칸(UnitCommandResultSlotOrder)은 도박소가 정확히 9칸을 쓰므로 하나도 못 줄인다.
+    const int CommandSlotCount = 13;
     const int CommandColumns = 3;
     const int TeamSlotCount = 4;
     const int MaxSelectionCards = 12;
@@ -65,8 +67,8 @@ public class GameHud : MonoBehaviour
     int hoveredCommandSlotIndex = -1;
     float nextTooltipRefreshTime;
 
-    // 유닛 명령 그리드(12칸). 0~2번은 공격/정지/모으기 고정 placeholder라 절대 안 건드림.
-    // 나머지 칸 중 맨 아랫줄부터 왼쪽→오른쪽, 넘치면 그 윗줄로 이어지는 순서로 "선택한 유닛이
+    // 유닛 명령 그리드(13칸). 0~2번은 공격/정지/모으기, 12번은 정렬(C) 고정 placeholder라 절대 안 건드림.
+    // 나머지 칸(3~11) 중 맨 아랫줄부터 왼쪽→오른쪽, 넘치면 그 윗줄로 이어지는 순서로 "선택한 유닛이
     // 무엇이 되는가"(조합 결과)를 채운다. 한 유닛이 최대 4개 레시피의 첫 재료라 이 정도면 충분하다.
     static readonly int[] UnitCommandResultSlotOrder = { 9, 10, 11, 6, 7, 8, 3, 4, 5 };
 
@@ -624,14 +626,16 @@ public class GameHud : MonoBehaviour
         combineTooltipObject.SetActive(false);
     }
 
-    // 유닛 명령 자리(공격/정지/모으기/스킬 + 맨 아랫줄은 조합 결과). 0~2번은 공격/정지/모으기
-    // 고정 placeholder로 인터랙션을 꺼둔다. 나머지는 RefreshUnitCommandCards가 채운다.
+    // 유닛 명령 자리(공격/정지/모으기/정렬 + 맨 아랫줄은 조합 결과). 0~2번·12번은 고정
+    // placeholder로 인터랙션을 꺼둔다(정지/모으기/정렬만 켜짐). 나머지는 RefreshUnitCommandCards가 채운다.
     static readonly Color UnitCommandDefaultColor = new Color(1f, 1f, 1f, 0.12f);
 
     void BuildUnitCommandGrid(RectTransform parent)
     {
         GridLayoutGroup grid = parent.gameObject.AddComponent<GridLayoutGroup>();
-        grid.cellSize = new Vector2(90f, 50f);
+        // 4행(50) 높이 그대로 5행에 나눠 담느라 칸 높이를 줄인다: (50*4 + 6*3) / 5 - 6 = 38.8.
+        // 패널 크기는 그대로 두면서 정렬(C) 칸 하나를 더 넣기 위한 계산이라 임의로 줄인 값이 아니다.
+        grid.cellSize = new Vector2(90f, 38.8f);
         grid.spacing = new Vector2(6f, 6f);
         grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         grid.constraintCount = CommandColumns;
@@ -647,6 +651,11 @@ public class GameHud : MonoBehaviour
                 // 정지·모으기는 동작이 붙었다. 공격은 아직 없어서 눌리지 않게 둔다.
                 unitCommandSlotButtons[i].interactable = i == HoldCommandSlot || i == GatherCommandSlot;
             }
+            else if (i == AlignCommandSlot)
+            {
+                unitCommandSlotNames[i].text = AlignCommandLabel;
+                unitCommandSlotButtons[i].interactable = true;
+            }
             else
             {
                 // 조합 결과가 들어올 칸. 채워지기 전까지는 보이지 않게 둔다.
@@ -655,7 +664,7 @@ public class GameHud : MonoBehaviour
         }
     }
 
-    // 공격·정지·모으기 세 칸. 유닛에게만 의미가 있어서 건물을 고르면 통째로 감춘다.
+    // 공격·정지·모으기·정렬 네 칸. 유닛에게만 의미가 있어서 건물을 고르면 통째로 감춘다.
     void SetUnitOnlyCommandsVisible(bool visible)
     {
         for (int i = 0; i < UnitOnlyCommandLabels.Length; i++)
@@ -665,6 +674,10 @@ public class GameHud : MonoBehaviour
             unitCommandSlotButtons[i].interactable =
                 visible && (i == HoldCommandSlot || i == GatherCommandSlot);
         }
+
+        unitCommandSlotNames[AlignCommandSlot].text = visible ? AlignCommandLabel : "";
+        unitCommandSlotBackgrounds[AlignCommandSlot].color = visible ? UnitCommandDefaultColor : Color.clear;
+        unitCommandSlotButtons[AlignCommandSlot].interactable = visible;
     }
 
     void BuildUnitCommandSlot(int index, Transform parent)
@@ -701,16 +714,22 @@ public class GameHud : MonoBehaviour
     const int HoldCommandSlot = 1;
     const int GatherCommandSlot = 2;
 
+    // 조합·상점 9칸(3~11) 뒤에 새로 붙은 13번째 칸(인덱스 12) — 정렬(C).
+    // 0~2번처럼 앞자리에 끼워 넣으면 UnitCommandResultSlotOrder가 이미 3~11을 전부 쓰고 있어 겹친다.
+    const int AlignCommandSlot = 12;
+    const string AlignCommandLabel = "정렬 (C)";
+
     void OnUnitCommandSlotClicked(int index)
     {
         // 단축키와 같은 함수를 부른다 — 두 곳에 따로 구현하면 한쪽만 고쳐진다.
-        if (index == HoldCommandSlot || index == GatherCommandSlot)
+        if (index == HoldCommandSlot || index == GatherCommandSlot || index == AlignCommandSlot)
         {
             SelectionManager selection = Selection;
             if (selection == null || selection.Selected.Count == 0) return;
 
             if (index == HoldCommandSlot) UnitCommands.ToggleHold(selection.Selected);
-            else UnitCommands.Gather(selection.Selected);
+            else if (index == GatherCommandSlot) UnitCommands.Gather(selection.Selected);
+            else UnitCommands.SendToPen(selection.Selected);
             return;
         }
 
@@ -886,6 +905,14 @@ public class GameHud : MonoBehaviour
             unitCommandSlotNames[slot].text = "";
             unitCommandSlotBackgrounds[slot].color = Color.clear;
         }
+
+        // 0~2·12번(공격/정지/모으기/정렬)은 상점 칸이 아니다 — 기본값 0이 "논리 슬롯 0"으로
+        // 읽히지 않게 여기서도 -1로 씻어둔다. 안 씻으면 그 칸에 마우스를 올렸을 때
+        // 상점의 0번 슬롯 툴팁이 엉뚱하게 뜬다.
+        shopLogicalSlotIndex[0] = -1;
+        shopLogicalSlotIndex[HoldCommandSlot] = -1;
+        shopLogicalSlotIndex[GatherCommandSlot] = -1;
+        shopLogicalSlotIndex[AlignCommandSlot] = -1;
 
         SetUnitOnlyCommandsVisible(shop == null);
 

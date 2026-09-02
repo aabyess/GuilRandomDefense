@@ -336,7 +336,7 @@ public class GamblingShop : MonoBehaviour, ILaneShop
     Vector3 ResolveSpawnPosition()
     {
         LaneMarker lane = LaneMarker.Get(owner.OwnerId);
-        if (lane != null) return lane.SpawnPosition;
+        if (lane != null) return lane.TakeNextSpawnPosition();
 
         Debug.LogWarning($"{name}: 플레이어 {owner.OwnerId}의 레인을 찾지 못해 상점 자리에 소환합니다.", this);
         return transform.position;

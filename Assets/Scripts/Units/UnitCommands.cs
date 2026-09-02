@@ -63,6 +63,34 @@ public static class UnitCommands
         else unit.transform.position = spot;
     }
 
+    /// <summary>
+    /// C 키. 선택한 유닛들을 각자 주인 레인의 유닛 우리(새로 뽑힌 유닛이 서는 벽쪽 가로 줄)로
+    /// 보낸다. LaneMarker.TakeNextSpawnPosition을 그대로 써서 갓 나온 유닛과 같은 줄에 이어 세운다 —
+    /// 자리 계산을 따로 두지 않는다.
+    /// </summary>
+    public static int SendToPen(IReadOnlyList<Selectable> selection)
+    {
+        int moved = 0;
+
+        foreach (Selectable selected in selection)
+        {
+            if (selected == null) continue;
+            if (!selected.TryGetComponent(out UnitCombat combat)) continue;
+
+            int owner = selected.TryGetComponent(out OwnedByPlayer ownedBy)
+                ? ownedBy.OwnerId
+                : LocalPlayer.LocalPlayerId;
+
+            LaneMarker lane = LaneMarker.Get(owner);
+            if (lane == null) continue;
+
+            combat.SnapTo(lane.TakeNextSpawnPosition());
+            moved++;
+        }
+
+        return moved;
+    }
+
     /// <summary>H 키. 선택한 유닛들을 그 자리에 못박거나, 이미 박혀 있으면 푼다.</summary>
     public static int ToggleHold(IReadOnlyList<Selectable> selection)
     {
