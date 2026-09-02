@@ -66,6 +66,11 @@ public class LaneMarker : MonoBehaviour
 
     public int LaneIndex => laneIndex;
 
+    // LaneMarker는 레인 섬 오브젝트 자신에 붙어 있다(MapGenerator.Generate) — 그래서 이 자리
+    // 자체가 곧 레인 기하학적 한가운데다. MapLayout.Lanes[i].center와 같은 값이지만, MapLayout은
+    // 에디터 전용이라 런타임 스크립트가 못 읽는다 — 여기서 다시 노출해야 하는 이유다.
+    public Vector3 LaneCenter => transform.position;
+
     /// <summary>
     /// 이 레인 소유 유닛이 새로 생겨날 자리. 우리가 없으면 레인 한가운데.
     ///

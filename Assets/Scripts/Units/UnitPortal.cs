@@ -58,28 +58,34 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
         return acceptedGrades == null || acceptedGrades.Count == 0 || acceptedGrades.Contains(grade);
     }
 
-    UnitData RollReward(UnitGrade grade)
+    // isBonus: 이 결과가 bonusChancePercent 확률(1% 상붕카 등)에서 나왔는지. 이름으로
+    // "상붕카인지" 판단하지 않고(사장님이 유닛 이름을 자주 바꾼다) 어느 뽑기 경로를 탔는지로
+    // 직접 표시한다 — 호출부가 이 값으로 자리(우리 vs 레인 한가운데)를 정한다.
+    UnitData RollReward(UnitGrade grade, out bool isBonus)
     {
+        isBonus = false;
         if (gachaTable == null) return null;
 
         if (bonusChancePercent > 0f && Random.Range(0f, 100f) < bonusChancePercent)
         {
             UnitData bonus = bonusUnit != null ? bonusUnit : gachaTable.RollFromGrade(bonusGrade);
             // 보너스 등급 풀이 비어 있어도 뽑기 자체가 실패하면 안 된다 — 원래 등급으로 넘어간다.
-            if (bonus != null) return bonus;
+            if (bonus != null) { isBonus = true; return bonus; }
         }
 
         return gachaTable.RollFromGrade(grade);
     }
 
     // 뽑기 섬에서 소환하면 지상 유닛은 바다에 막혀 레인까지 갈 수 없다.
-    // 위습을 가져온 플레이어의 레인 한가운데에 내보낸다.
-    Vector3 ResolveSpawnPosition(int ownerId, UnitData reward)
+    // 위습을 가져온 플레이어의 레인에 내보낸다 — 보통은 유닛 우리(칸 배정), 단 보너스로 나온
+    // 유닛(1% 상붕카 등)은 우리 칸에 끼워 넣지 않고 레인 한가운데에 세운다(사장님 지시,
+    // 2026-09-03) — 흔치 않은 만큼 눈에 띄어야 한다는 의도로 읽었다.
+    Vector3 ResolveSpawnPosition(int ownerId, UnitData reward, bool isBonus)
     {
         if (spawnPoint != null) return spawnPoint.position;
 
         LaneMarker lane = LaneMarker.Get(ownerId);
-        if (lane != null) return lane.TakeSpawnPosition(reward);
+        if (lane != null) return isBonus ? lane.LaneCenter : lane.TakeSpawnPosition(reward);
 
         Debug.LogWarning($"UnitPortal: 플레이어 {ownerId}의 레인을 찾지 못해 포탈 자리에 소환합니다.", this);
         return transform.position;
@@ -105,9 +111,10 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
             return;
         }
 
+        bool isBonusReward = false;
         UnitData reward = specificUnit != null
             ? specificUnit
-            : RollReward(overrideRewardGrade ? rewardGrade : grade);
+            : RollReward(overrideRewardGrade ? rewardGrade : grade, out isBonusReward);
 
         if (reward == null)
         {
@@ -136,6 +143,6 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
         Destroy(wisp.gameObject);
 
         // Spawn이 인벤토리 등록까지 한다 — 여기서 따로 Add하면 필드에 없는 유닛이 인벤토리에 생긴다.
-        unitSpawner.Spawn(reward, ResolveSpawnPosition(ownerId, reward), ownerId);
+        unitSpawner.Spawn(reward, ResolveSpawnPosition(ownerId, reward, isBonusReward), ownerId);
     }
 }
