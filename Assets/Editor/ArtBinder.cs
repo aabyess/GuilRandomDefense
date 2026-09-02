@@ -56,6 +56,22 @@ public static class ArtBinder
     //   2) 파일명이 유닛 표시 이름과 같다     — "상붕카.fbx"
     //      (단 그 이름을 쓰는 유닛이 하나뿐일 때만. "최상호"는 넷이라 안 걸린다)
     //
+    // 모델이 누워 있거나 옆을 보고 서 있을 때 바로잡는다. 파일명 → 오일러 각도.
+    // Sketchfab·Blender에서 나온 모델은 축 방향이 제각각이라, 임포터가 Y-up으로 맞춰줘도
+    // 원본이 애초에 눕혀 저장돼 있으면 그대로 눕는다. 모델 파일을 고치는 대신 여기서 돌린다.
+    static readonly (string model, Vector3 euler)[] ModelRotations =
+    {
+        ("안흔함_상붕카", new Vector3(-90f, 0f, 0f)),   // 자전거 — 세워져 들어와서 눕힌다
+    };
+
+    static Quaternion RotationFor(string modelName)
+    {
+        foreach ((string name, Vector3 euler) in ModelRotations)
+            if (name == modelName) return Quaternion.Euler(euler);
+
+        return Quaternion.identity;
+    }
+
     // 특정 모델을 특정 유닛에 붙인다.
     // 모델 이름은 확장자를 뺀 파일명, 유닛 이름은 로스터 에셋 이름이다.
     static readonly (string model, string unit)[] ModelOverrides =
@@ -604,7 +620,9 @@ public static class ArtBinder
 
         GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(model, instance.transform);
         visual.transform.localPosition = Vector3.zero;
-        visual.transform.localRotation = Quaternion.identity;
+        // 크기를 재기 **전에** 돌린다. 돌리면 경계 상자가 바뀌므로, 나중에 돌리면
+        // 엉뚱한 축 길이에 키를 맞춰 납작하거나 길쭉해진다.
+        visual.transform.localRotation = RotationFor(model.name);
         FitToHeight(instance, visual);
         AttachAnimator(instance, visual);
 
