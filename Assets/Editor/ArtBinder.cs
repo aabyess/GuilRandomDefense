@@ -65,8 +65,8 @@ public static class ArtBinder
     {
         // 자전거는 바퀴로 선 채로 들어오는데 앞을 보고 있다. 옆모습이 보이게 Y로만 돌린다.
         // X로 돌리면 바닥에 눕는다 — 한 번 그렇게 했다.
-        // 키는 절반. 사람 키 20에 맞추면 자전거가 사람만큼 커진다.
-        ("안흔함_상붕카", new Vector3(0f, 90f, 0f), 0.5f),
+        // 키는 사람의 1/6. 절반(10)으로도 아직 커서 다시 3분의 1로 줄였다.
+        ("안흔함_상붕카", new Vector3(0f, 90f, 0f), 1f / 6f),
     };
 
     static Quaternion RotationFor(string modelName)
