@@ -16,6 +16,10 @@ public enum UnitGrade
     OtherWorld,
     Superior,   // 특수함 — 희귀함과 전설적인 사이. enum 순서가 아니라 Tier()가 강함을 결정한다.
 
+    // ⚠️ 이것은 **등급이 아니다**(사장님 확정 2026-09-02). 등급 목록·등급표·강함 순서
+    // 어디에도 올리지 말 것 — 조합 재료 한 종류일 뿐이다. enum 값을 쓰는 건 순전히
+    // 라우팅·분해 검사 때문이고, 그래서 등급 자리에 앉아 있을 뿐이다.
+    //
     // 초월 조합 재료 전용(원작의 "쿠마 초월함 위습"). 유닛처럼 필드에 서 있지만 싸우지 않고,
     // 초월 24종의 마지막 재료로만 쓰인다. 일반 유닛 박은석과는 별개다(RECIPES_LOW.md "박은석 = 초월 위습").
     //
@@ -120,22 +124,25 @@ public static class UnitGradeExtensions
             case UnitGrade.Hidden:
             case UnitGrade.Superior: return 4;
 
-            case UnitGrade.Legendary: return 5;
+            // 변화됨은 전설·희귀함에 목재 10을 얹어 만든 것이라 전설과 같은 급에 둔다
+            // (사장님 확정 2026-09-02: "변화됨은 전설쪽에 배치").
+            case UnitGrade.Legendary:
+            case UnitGrade.Transformed: return 5;
 
             // 사장님 순서에서 전설과 제한됨 사이다. 예전에는 -1이었는데, 그 값이면
             // 연금술의 "희귀함(3) 이하만 분해" 검사를 통과해서 분해할 수 있었다.
             // 이제 전설보다 위라 분해되지 않는다 — 의도된 변화다.
             case UnitGrade.RandomUnit: return 6;
 
-            // 변화됨은 전설·희귀함에 목재 10을 얹어 올라온 것이라 제한됨과 같은 자리에 둔다.
-            // ⚠️ 사장님 순서 목록에 없어서 우리가 정한 자리다.
-            case UnitGrade.Limited:
-            case UnitGrade.Transformed: return 7;
+            case UnitGrade.Limited: return 7;
 
             // 초월 ≤ 불멸 ≤ 다른세계 — 같은 급으로 묶는다.
-            // ⚠️ 영원함과 초월위습은 사장님 순서 목록에 없어서 우리가 여기에 뒀다.
-            //    초월위습은 반드시 높아야 한다 — 낮으면 초월 조합 24개가 요구하는 재료를
-            //    연금술로 마나 몇 점에 녹일 수 있게 된다.
+            // ⚠️ 영원함은 사장님 순서 목록에 없어서 우리가 여기에 뒀다.
+            //
+            // 초월위습은 **등급이 아니다**(사장님 확정 2026-09-02) — 등급 목록·표·순서
+            // 어디에도 올리지 않는다. 그런데도 여기 값이 필요한 이유는 연금술 하나뿐이다:
+            // 분해 검사가 Tier()로 비교하는데, 값이 낮으면 초월 조합 24개가 요구하는
+            // 그 재료를 마나 몇 점에 녹일 수 있게 되고 다시 구할 방법이 없다.
             case UnitGrade.Transcendent:
             case UnitGrade.Immortal:
             case UnitGrade.OtherWorld:
