@@ -32,8 +32,18 @@ public static class ArtBinder
 
     // 캐릭터가 화면에서 가져야 할 키. 맵이 크다 — 레인 한 변이 110, 순찰 흙길 폭이 12,
     // 상점 건물이 9×3이다. 프리팹의 캡슐은 2라서 그대로 쓰면 점처럼 보인다.
-    // 여기 하나만 고치면 유닛·적 전부가 따라온다.
-    const float CharacterHeight = 20f;
+    const float UnitHeight = 20f;
+
+    // 적은 흙길 위를 줄지어 걷는다. 아군과 같은 키 20으로 두면 지름이 7.2가 되어
+    // 폭 12짜리 길에 한 마리 반밖에 안 들어가고, 사람이 길보다 커 보인다.
+    // 길 폭과 같은 12로 두면 두세 마리가 나란히 지나간다.
+    const float EnemyHeight = 12f;
+
+    // 프리팹 이름이 아니라 붙어 있는 컴포넌트로 가른다 — 이름 규칙이 바뀌어도 안 깨진다.
+    static float HeightFor(GameObject root)
+    {
+        return root.GetComponent<EnemyDummy>() != null ? EnemyHeight : UnitHeight;
+    }
 
     // 지정하지 않은 유닛에도 모델을 돌려가며 나눠줄지. 모델이 몇 개 없을 때 켜두면
     // 234종이 전부 같은 얼굴이 된다 — 팩을 통째로 넣어 종류가 충분할 때만 켠다.
@@ -107,31 +117,32 @@ public static class ArtBinder
         float rawHeight = bodyRenderer != null ? bodyRenderer.bounds.size.y : 1f;
         if (rawHeight < 0.001f) rawHeight = 1f;
 
-        float scale = CharacterHeight / rawHeight;
+        float height = HeightFor(root);
+        float scale = height / rawHeight;
         body.localScale = Vector3.one * scale;
-        body.localPosition = new Vector3(0f, CharacterHeight * 0.5f, 0f);   // 발을 바닥에
+        body.localPosition = new Vector3(0f, height * 0.5f, 0f);   // 발을 바닥에
 
-        float radius = CharacterHeight * 0.18f;
+        float radius = height * 0.18f;
 
         if (root.TryGetComponent(out CapsuleCollider capsule))
         {
-            capsule.height = CharacterHeight;
+            capsule.height = height;
             capsule.radius = radius;
-            capsule.center = new Vector3(0f, CharacterHeight * 0.5f, 0f);
+            capsule.center = new Vector3(0f, height * 0.5f, 0f);
         }
         else if (root.TryGetComponent(out BoxCollider box))
         {
-            box.size = new Vector3(radius * 2f, CharacterHeight, radius * 2f);
-            box.center = new Vector3(0f, CharacterHeight * 0.5f, 0f);
+            box.size = new Vector3(radius * 2f, height, radius * 2f);
+            box.center = new Vector3(0f, height * 0.5f, 0f);
         }
 
         // 에이전트는 건드리지 않는다 — 발자국은 굽힌 값(0.5)보다 작게 유지해야 한다.
-        if (root.TryGetComponent(out NavMeshAgent agent)) agent.height = CharacterHeight;
+        if (root.TryGetComponent(out NavMeshAgent agent)) agent.height = height;
 
         PrefabUtility.SaveAsPrefabAsset(root, path);
         PrefabUtility.UnloadPrefabContents(root);
 
-        return $"\n{System.IO.Path.GetFileNameWithoutExtension(path)}: 키 {CharacterHeight:F0}으로 맞췄습니다.";
+        return $"\n{System.IO.Path.GetFileNameWithoutExtension(path)}: 키 {height:F0}으로 맞췄습니다.";
     }
 
     [MenuItem("Tools/아트/텍스처 연결")]
@@ -585,35 +596,37 @@ public static class ArtBinder
     // 체력바도 발밑에 뜬다. NavMeshAgent의 반지름·높이도 스케일을 안 따라가므로 같이 맞춘다.
     static void FitToHeight(GameObject root, GameObject visual)
     {
+        float height = HeightFor(root);
+
         Bounds bounds = MeasureRenderers(visual);
         if (bounds.size.y > 0.001f)
         {
-            visual.transform.localScale *= CharacterHeight / bounds.size.y;
+            visual.transform.localScale *= height / bounds.size.y;
 
             // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발이 바닥에 닿게 내린다.
             bounds = MeasureRenderers(visual);
             visual.transform.position += Vector3.up * (root.transform.position.y - bounds.min.y);
         }
 
-        float radius = CharacterHeight * 0.18f;   // 사람 비율 어림 — 키의 약 1/5
+        float radius = height * 0.18f;   // 사람 비율 어림 — 키의 약 1/5
 
         if (root.TryGetComponent(out CapsuleCollider capsule))
         {
-            capsule.height = CharacterHeight;
+            capsule.height = height;
             capsule.radius = radius;
-            capsule.center = new Vector3(0f, CharacterHeight * 0.5f, 0f);
+            capsule.center = new Vector3(0f, height * 0.5f, 0f);
         }
         else if (root.TryGetComponent(out BoxCollider box))
         {
-            box.size = new Vector3(radius * 2f, CharacterHeight, radius * 2f);
-            box.center = new Vector3(0f, CharacterHeight * 0.5f, 0f);
+            box.size = new Vector3(radius * 2f, height, radius * 2f);
+            box.center = new Vector3(0f, height * 0.5f, 0f);
         }
 
-        if (root.TryGetComponent(out NavMeshAgent agent))
-        {
-            agent.height = CharacterHeight;
-            agent.radius = radius;
-        }
+        // 높이만 맞추고 **반지름은 건드리지 않는다.** NavMesh는 반지름 0.5로 굽혀 있어서
+        // 여기서 3.6(키의 0.18)을 넣으면 에이전트가 굽힌 통로보다 넓어져 설 자리를 잃는다.
+        // SetDestination이 조용히 아무것도 안 하는 그 증상이 정확히 이것이었다.
+        // 반지름이 작으면 유닛끼리 겹치는데, 원작처럼 겹치는 게 우리가 원하는 동작이다.
+        if (root.TryGetComponent(out NavMeshAgent agent)) agent.height = height;
     }
 
     static Bounds MeasureRenderers(GameObject visual)
