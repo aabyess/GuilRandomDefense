@@ -154,7 +154,7 @@ public class UnitCombat : MonoBehaviour
         }
 
         float sqrDistance = (currentTarget.transform.position - transform.position).sqrMagnitude;
-        if (sqrDistance > aggroRange * aggroRange)
+        if (sqrDistance > SearchRange() * SearchRange())
         {
             currentTarget = null;
             BeginReturning();
@@ -177,6 +177,14 @@ public class UnitCombat : MonoBehaviour
         return range * range;
     }
 
+    // 적을 찾고 쫓는 범위. 사거리보다 좁으면 안 된다 — 좁으면 쏠 수 있는 거리의 적을
+    // 아예 못 보고, 이미 잡은 표적도 "멀어졌다"며 버리고 제자리로 돌아간다.
+    // 사거리는 유닛마다 다르고(흔함 30 ~ 초월 47.5) 강화로 더 늘어나므로 고정값을 쓸 수 없다.
+    float SearchRange()
+    {
+        return attacker != null ? Mathf.Max(aggroRange, attacker.AttackRange) : aggroRange;
+    }
+
     bool HasArrived()
     {
         if (agent.pathPending) return false;
@@ -196,7 +204,8 @@ public class UnitCombat : MonoBehaviour
     EnemyDummy FindClosestEnemyInAggro()
     {
         EnemyDummy closest = null;
-        float closestSqrDistance = aggroRange * aggroRange;
+        float search = SearchRange();
+        float closestSqrDistance = search * search;
 
         foreach (EnemyDummy enemy in EnemyDummy.Active)
         {
