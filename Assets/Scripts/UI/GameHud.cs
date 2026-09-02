@@ -439,18 +439,12 @@ public class GameHud : MonoBehaviour
     static readonly Color UnidentifiedCardColor = new Color(0.4f, 0.4f, 0.4f, 0.9f);
 
     // 전설적인=빨강, 희귀함=보라, 특별함=노랑, 히든=파랑, 흔함·안흔함=초록, 나머지=회색.
+    // 조합표와 같은 색을 쓴다. 여기서 따로 정의하면 같은 등급이 화면마다 달라 보인다.
     static Color GetGradeColor(UnitGrade grade)
     {
-        switch (grade)
-        {
-            case UnitGrade.Legendary: return new Color(0.85f, 0.2f, 0.2f, 0.9f);
-            case UnitGrade.Rare: return new Color(0.6f, 0.3f, 0.85f, 0.9f);
-            case UnitGrade.Special: return new Color(0.9f, 0.85f, 0.2f, 0.9f);
-            case UnitGrade.Hidden: return new Color(0.25f, 0.45f, 0.9f, 0.9f);
-            case UnitGrade.Common:
-            case UnitGrade.Uncommon: return new Color(0.3f, 0.7f, 0.35f, 0.9f);
-            default: return new Color(0.4f, 0.4f, 0.4f, 0.9f);
-        }
+        Color color = grade.Color();
+        color.a = 0.9f;
+        return color;
     }
 
 
@@ -501,7 +495,8 @@ public class GameHud : MonoBehaviour
 
         RectTransform cardRect = (RectTransform)unitCommandSlotRoots[index].transform;
 
-        if (currentShop != null)
+        // 인터페이스 변수라 != null이 유니티 == 오버로드를 안 거친다 — as Object로 진짜 파괴 여부를 본다.
+        if (currentShop as Object != null)
         {
             int logicalIndex = index < shopLogicalSlotIndex.Length ? shopLogicalSlotIndex[index] : -1;
             string tooltip = logicalIndex >= 0 ? currentShop.GetSlotTooltip(logicalIndex) : null;
@@ -707,7 +702,7 @@ public class GameHud : MonoBehaviour
             return;
         }
 
-        if (currentShop != null)
+        if (currentShop as Object != null)
         {
             OnShopSlotClicked(index);
             return;
@@ -736,7 +731,7 @@ public class GameHud : MonoBehaviour
     // GameHud는 어떤 상점·어떤 칸인지 몰라도 된다.
     void OnShopSlotClicked(int visualIndex)
     {
-        if (currentShop == null) return;
+        if (currentShop as Object == null) return;
 
         int logicalIndex = visualIndex >= 0 && visualIndex < shopLogicalSlotIndex.Length
             ? shopLogicalSlotIndex[visualIndex] : -1;
@@ -896,7 +891,7 @@ public class GameHud : MonoBehaviour
     // label이 null/빈 문자열이면 이 칸은 빈 칸이다(도박소가 줄 맞추려고 끼워 넣는 Empty 등).
     void RefreshShopAffordability()
     {
-        if (currentShop == null) return;
+        if (currentShop as Object == null) return;
 
         for (int i = 0; i < UnitCommandResultSlotOrder.Length; i++)
         {

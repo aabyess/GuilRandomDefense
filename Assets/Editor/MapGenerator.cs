@@ -950,19 +950,8 @@ public static class MapGenerator
     }
 
     // 사용자가 정한 등급 색. 하단 HUD의 유닛 카드와 같은 규칙을 쓴다.
-    static Color GradeColor(UnitGrade grade)
-    {
-        switch (grade)
-        {
-            case UnitGrade.Legendary: return new Color(0.82f, 0.24f, 0.24f);
-            case UnitGrade.Rare:      return new Color(0.60f, 0.36f, 0.78f);
-            case UnitGrade.Special:   return new Color(0.88f, 0.78f, 0.28f);
-            case UnitGrade.Hidden:    return new Color(0.30f, 0.52f, 0.86f);
-            case UnitGrade.Common:
-            case UnitGrade.Uncommon:  return new Color(0.36f, 0.70f, 0.40f);
-            default:                  return new Color(0.62f, 0.62f, 0.62f);
-        }
-    }
+    // 색 정의는 UnitGradeExtensions 한 곳에만 있다 — 하단 명령 그리드도 같은 것을 쓴다.
+    static Color GradeColor(UnitGrade grade) => grade.Color();
 
     static void PaintSolid(GameObject obj, Color color)
     {

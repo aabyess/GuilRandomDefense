@@ -29,9 +29,12 @@ public class UnitAttacker : MonoBehaviour
     UnitCombat combat;
     UnitIdentity identity;
 
-    // 유닛강화소가 등급 전체에 거는 영구 배율. attackDamage(원본)는 그대로 두고 여기서만 곱한다 —
-    // 도움소의 임시 버프(ApplyStats로 원본값을 기억했다 되돌리는 방식)와 순서 상관없이 겹쳐도
-    // 안 깨지게 하려는 설계다(PM 지시). 레벨이 바뀔 때만 다시 계산하도록 이벤트로 무효화한다.
+    // 특성강화(딜증가)가 이 유닛 종에 거는 영구 배율. attackDamage(원본)는 그대로 두고 여기서만
+    // 곱한다 — 도움소의 임시 버프(ApplyStats로 원본값을 기억했다 되돌리는 방식)와 순서 상관없이
+    // 겹쳐도 안 깨지게 하려는 설계다(PM 지시). 언락 상태가 바뀔 때만 다시 계산하도록 이벤트로
+    // 무효화한다. 특성강화 11개 유형(UnitTraitData.cs 참고) 중 지금 반영되는 건 딜증가뿐이다 —
+    // 이감·방깎은 EnemyDummy 쪽 인프라가 없어서 2차로 미뤘고, 소환·메커니즘변경 등은 유닛 전용
+    // 코드(Tier B)가 필요하다.
     UnitUpgrades upgrades;
     bool upgradesResolveAttempted;
     bool upgradeMultiplierDirty = true;
@@ -74,8 +77,11 @@ public class UnitAttacker : MonoBehaviour
             if (upgradeMultiplierDirty)
             {
                 UnitUpgrades source = ResolveUpgrades();
-                UnitGrade grade = identity != null && identity.Data != null ? identity.Data.grade : default;
-                cachedUpgradeMultiplier = source != null ? source.MultiplierFor(grade) : 1f;
+                UnitData unitData = identity != null ? identity.Data : null;
+                float damageBonusPercent = source != null && unitData != null
+                    ? source.EffectSum(unitData, TraitEffectKind.DamageIncrease)
+                    : 0f;
+                cachedUpgradeMultiplier = 1f + damageBonusPercent;
                 upgradeMultiplierDirty = false;
             }
             return cachedUpgradeMultiplier;

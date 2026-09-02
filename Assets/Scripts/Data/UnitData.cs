@@ -30,6 +30,42 @@ public static class UnitGradeExtensions
     // 동급 등급은 같은 Tier를 반환한다 (Docs/reference/COMBINE_SYSTEM.md 1장 참고).
     // RandomUnit은 조합 라인 밖(확률로만 획득)이라 -1.
     // 화면 표기용 한글 등급명. 로스터 에셋 이름의 접두사와 같은 표기를 쓴다.
+    /// <summary>
+    /// 등급을 나타내는 색. 조합표의 칸·벽과 하단 명령 그리드가 <b>같은 곳에서</b> 가져간다 —
+    /// 두 군데가 각자 정의하면 같은 등급이 화면마다 다른 색으로 보이고, 색으로 등급을 읽는
+    /// 조합표에서는 그게 곧 오독이 된다.
+    ///
+    /// 아래 여섯(전설적인·특별함·희귀함·흔함·안흔함·히든)은 원본 조합표 이미지의 글자색을
+    /// 실측해서 맞춘 값이다(`Docs/reference/RECIPE_AUDIT.md`). 나머지는 근거가 없다 —
+    /// 상위 등급은 이미지에서 <b>결과로만 나오고 재료 글자로는 안 나와서</b> 잰 적이 없다.
+    /// 그래서 그쪽은 "서로 구분되고 위로 갈수록 뜨거워 보인다"는 기준으로 우리가 정했다.
+    /// </summary>
+    public static Color Color(this UnitGrade grade)
+    {
+        switch (grade)
+        {
+            // 실측값
+            case UnitGrade.Common:
+            case UnitGrade.Uncommon:        return new Color(0.36f, 0.70f, 0.40f);   // 초록
+            case UnitGrade.Special:         return new Color(0.88f, 0.78f, 0.28f);   // 금
+            case UnitGrade.Rare:            return new Color(0.60f, 0.36f, 0.78f);   // 짙은 보라
+            case UnitGrade.Hidden:          return new Color(0.30f, 0.52f, 0.86f);   // 하늘
+            case UnitGrade.Legendary:       return new Color(0.82f, 0.24f, 0.24f);   // 빨강
+
+            // 우리가 정한 값
+            case UnitGrade.Limited:         return new Color(0.92f, 0.52f, 0.18f);   // 주황
+            case UnitGrade.Transcendent:    return new Color(0.20f, 0.80f, 0.76f);   // 청록
+            case UnitGrade.Immortal:        return new Color(0.95f, 0.93f, 0.80f);   // 상아
+            case UnitGrade.Eternal:         return new Color(0.22f, 0.28f, 0.72f);   // 남색
+            case UnitGrade.OtherWorld:      return new Color(0.85f, 0.35f, 0.62f);   // 자홍
+            case UnitGrade.Superior:        return new Color(0.55f, 0.85f, 0.30f);   // 연두
+            case UnitGrade.RandomUnit:      return new Color(0.55f, 0.60f, 0.68f);   // 청회색
+            case UnitGrade.TranscendentWisp: return new Color(0.45f, 0.80f, 0.95f);  // 밝은 하늘
+
+            default:                        return new Color(0.62f, 0.62f, 0.62f);
+        }
+    }
+
     public static string KoreanName(this UnitGrade grade)
     {
         switch (grade)

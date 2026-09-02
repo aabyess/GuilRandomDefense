@@ -5,7 +5,25 @@
 > 새로 판단한 것 / **[확인 필요]** = 사장님·PM 확정이 있어야 코드로 들어갈 수 있는 것 / **[원작]** =
 > `Docs/reference/UPGRADE_SHOP.md`·`GAMBLING.md`·`PUNK_HAZARD.md` 조사에서 이미 확인된 사실.
 
-## 요약
+## 업데이트 (2026-09-02, PM 승인 + 3차 조사 반영)
+
+리서치담당 3차 조사(`UPGRADE_SHOP.md` "3차 조사")가 표본을 22종으로 늘렸다. 결정적 발견: **유닛 1개 = 효과 유형 1개가 아니다.** 조로는 딜증가+방깎+이감을 한 특성강화로 동시에 받는다 — 아래 1번 항목이 전제했던 "유닛당 하나"를 **"유닛당 {효과유형, 수치} 리스트(보통 1~3개)"로 넓혔다.** PM이 이 구조로 승인했고, 아래 순서로 이미 구현했다:
+
+1. `TraitEffectKind`(enum, 11개 + 확장 여지) — `Assets/Scripts/Data/UnitTraitData.cs`
+2. `UnitTraitData`(SO, `targetUnit` + `List<TraitEffect>` + `specialEffectId`) — 같은 파일
+3. `UnitUpgrades` 재설계(특성포인트 보유량 + 언락 `HashSet<UnitTraitData>`) — `Assets/Scripts/Units/UnitUpgrades.cs`
+4. `UnitAttacker` 반영 — **`DamageIncrease`만.** 나머지 10개 유형은 아래 표 그대로 미반영.
+5. 235개 스캐폴딩(`Tools/generate_unit_traits.py`, `Assets/Data/Traits/`) — 전부 효과 없음, `costTraitPoints=4`
+
+**이감·방깎을 미루는 게 "나중에 여유될 때"가 아니라는 걸 숫자로 남긴다.** 3차 조사 표본 22종 중 이감을 쓰는 게 4종(브룩·아오키지·빅맘 + 조로), 방깎이 2종(조로·킹) — 겹치는 조로를 빼면 **5종/22종(약 23%)이 이감이나 방깎 중 하나 이상을 쓴다.** 효과 인스턴스 단위로는 34건 중 6건(약 18%). **"2차로 미룬다"는 이 5종(조로·브룩·아오키지·빅맘·킹)의 특성강화가 지금은 절반도 못 채워진 채로 들어간다는 뜻이다** — `EnemyDummy`에 방어력 필드·%감속 인프라가 생기기 전까진 이 유닛들의 트레잇 에셋에 `SlowOnHit`/`ArmorShred` 항목을 넣어도 전투에 반영되지 않는다.
+
+**획득처는 사장님 결정 대기 중이라 배선하지 않았다.** "35,000골드 누적 졸업"은 이번 세션에서 한 번 명시적으로 제거된 개념과 이름이 같다는 걸 PM이 확인해줬다(`GamblingProgress` 재설계 때, 사장님이 도박 규칙을 직접 정하며 제거) — 다시 넣을지 다른 획득처를 쓸지는 사장님 몫이다. `UnitUpgrades.AddTraitPoints(int)`는 저장소·이벤트 자리만 만들어뒀고 아직 아무도 안 부른다.
+
+**UI(등급 탭 → 유닛 목록)는 이번 라운드에서 빠졌다** — 구현담당2의 `ILaneShop`/`GameHud` 리팩터와 맞물려 있어 승인 후 별도로 진행한다. 구 등급강화 상점(`UnitUpgradeShop.cs`, `UnitUpgradeTrackData.cs`, `Assets/Data/UnitUpgrades/*.asset` 10개)은 그대로 살아있다 — `UnitUpgrades.cs`에 구 등급강화용 `Level`/`LevelUp(UnitUpgradeTrackData)` 메서드를 "레거시" 블록으로 남겨뒀다(그 상점이 아직 이걸 참조해서 컴파일이 깨지지 않게). 특성강화 UI가 그 자리를 대체하면 이 블록과 구 에셋 전부 한 번에 지운다.
+
+---
+
+## 요약 (최초 작성분, 아래는 원문 유지)
 
 | 항목 | 결론 |
 |---|---|
