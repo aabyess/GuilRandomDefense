@@ -63,10 +63,10 @@ public static class ArtBinder
     // 맞추면 탈것이나 짐승은 어색해진다. 모델 파일을 고치는 대신 여기서 조정한다.
     static readonly (string model, Vector3 euler, float heightScale)[] ModelAdjustments =
     {
-        // 자전거는 바퀴로 선 채로 들어오는데 앞을 보고 있다. 옆모습이 보이게 Y로만 돌린다.
-        // X로 돌리면 바닥에 눕는다 — 한 번 그렇게 했다.
-        // 키 10 — 기준 20의 절반. 4까지 줄였다 32까지 키웠다 여기로 왔다.
-        ("안흔함_상붕카", new Vector3(0f, 90f, 0f), 0.5f),
+        // 자전거가 끝으로 선 채(앞바퀴가 하늘) 들어온다. X로 눕혀 바퀴 둘을 바닥에 놓고,
+        // Y로 돌려 옆모습이 보이게 한다. 바퀴가 위로 가면 X를 +90으로 뒤집으면 된다.
+        // 키 10 — 기준 20의 절반.
+        ("안흔함_상붕카", new Vector3(-90f, 90f, 0f), 0.5f),
     };
 
     static Quaternion RotationFor(string modelName)
