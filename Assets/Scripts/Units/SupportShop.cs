@@ -1,15 +1,23 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 // 도움소: 플레이어마다 하나, 파괴 불가(TakeDamage 자체가 없다), 적 타겟에서 자동으로 제외된다 —
 // UnitAttacker/UnitCombat은 EnemyDummy.Active만, 문 공격 폴백은 DestructibleGate.Active만 훑기
 // 때문에 SupportShop은 애초에 그 두 레지스트리에 등록되지 않아 후보에 들어갈 수가 없다.
+//
+// ILaneShop 이전: 슬롯 인덱스는 skills 리스트 인덱스와 그대로 같다. Docs/design/LANE_SHOP.md 참고.
 [RequireComponent(typeof(Selectable), typeof(OwnedByPlayer))]
-public class SupportShop : MonoBehaviour
+public class SupportShop : MonoBehaviour, ILaneShop
 {
+    static readonly Color SkillColor = new Color(0.25f, 0.55f, 0.9f, 0.9f);
+
     [SerializeField] List<SupportSkillData> skills = new List<SupportSkillData>();
     [SerializeField] RoundManager roundManager;
+
+    // GetSlotTooltip에서만 쓴다 — 호버할 때만 불려서 여기서 조립 비용이 들어도 된다.
+    readonly StringBuilder tooltipBuilder = new StringBuilder(256);
 
     readonly Dictionary<SupportSkillData, float> cooldownUntil = new Dictionary<SupportSkillData, float>();
 
@@ -42,6 +50,102 @@ public class SupportShop : MonoBehaviour
         : roundManager = FindFirstObjectByType<RoundManager>();
 
     PlayerContext OwnerContext => PlayerContext.Get(owner.OwnerId);
+
+    // ---- ILaneShop ----
+    // 슬롯 인덱스 = skills 리스트 인덱스. 마나포션은 위치·대상이 필요 없어 targetKind를 None으로
+    // 답한다 — 예전엔 GameHud가 "effect == ManaRestore"를 직접 검사했는데, 그 판단이 여기로 옮겨왔다.
+
+    public int SlotCount => skills.Count;
+
+    public LaneShopSlotView GetSlotView(int index)
+    {
+        if (index < 0 || index >= skills.Count) return LaneShopSlotView.Empty;
+
+        SupportSkillData skill = skills[index];
+        if (skill == null) return LaneShopSlotView.Empty;
+
+        return new LaneShopSlotView(skill.skillName, SkillColor, CanCast(skill), TargetKindOf(skill));
+    }
+
+    static LaneShopTargetKind TargetKindOf(SupportSkillData skill)
+    {
+        if (skill.effect == SupportSkillEffect.ManaRestore) return LaneShopTargetKind.None;
+        return skill.targetKind == SupportSkillTargetKind.Unit ? LaneShopTargetKind.Unit : LaneShopTargetKind.Ground;
+    }
+
+    // 호버할 때만 불린다 — 문자열 조립은 여기서만 한다(GetSlotView는 매번 문자열을 만들지 않는다).
+    public string GetSlotTooltip(int index)
+    {
+        if (index < 0 || index >= skills.Count) return null;
+
+        SupportSkillData skill = skills[index];
+        return skill != null ? BuildTooltipText(skill) : null;
+    }
+
+    public bool TryUse(int index, LaneShopTarget target)
+    {
+        if (index < 0 || index >= skills.Count) return false;
+
+        SupportSkillData skill = skills[index];
+        if (skill == null) return false;
+
+        if (skill.effect == SupportSkillEffect.ManaRestore) return TryCastSelf(skill);
+        if (skill.targetKind == SupportSkillTargetKind.Unit) return TryCastOnUnit(skill, target.unit);
+        return TryCastOnGround(skill, target.point);
+    }
+
+    // 스킬 이름·효과 서술(SupportSkillData.description)은 그대로 옮기고, 비용/쿨다운/피해량/범위/
+    // 지속시간처럼 수치인 부분만 코드가 채운다 — 스킬마다 분기 없이 필드값으로만 조립된다.
+    // (GameHud.BuildSupportSkillTooltipText에서 그대로 옮겨왔다 — 내용 변경 없음.)
+    string BuildTooltipText(SupportSkillData skill)
+    {
+        tooltipBuilder.Clear();
+        tooltipBuilder.Append(skill.skillName);
+
+        if (!string.IsNullOrEmpty(skill.description))
+            tooltipBuilder.Append('\n').Append(skill.description);
+
+        tooltipBuilder.Append("\n비용: ");
+        bool hasCost = false;
+
+        if (skill.manaCost > 0)
+        {
+            tooltipBuilder.Append("마나 ").Append(skill.manaCost);
+            hasCost = true;
+        }
+
+        if (skill.goldCost > 0)
+        {
+            if (hasCost) tooltipBuilder.Append(" + ");
+            tooltipBuilder.Append("골드 ").Append(skill.goldCost);
+            hasCost = true;
+        }
+
+        if (!hasCost) tooltipBuilder.Append("없음");
+
+        tooltipBuilder.Append("\n쿨다운: ").Append(skill.cooldownSeconds.ToString("0.#")).Append('s');
+
+        float remaining = GetCooldownRemaining(skill);
+        if (remaining > 0f)
+            tooltipBuilder.Append(" (재사용까지 ").Append(remaining.ToString("F1")).Append("s)");
+
+        if (skill.damageBase > 0f || skill.damagePerRound > 0f)
+        {
+            int round = RoundManagerRef != null ? RoundManagerRef.CurrentRound : 1;
+            tooltipBuilder.Append("\n피해량: ").Append(skill.ComputeDamage(round).ToString("F0"))
+                .Append(" (").Append(round).Append("라운드 기준)");
+        }
+
+        if (skill.targetKind == SupportSkillTargetKind.Ground)
+        {
+            tooltipBuilder.Append("\n범위: ").Append(skill.mapWide ? "맵 전체" : $"반경 {skill.radius:0.#}");
+        }
+
+        if (skill.duration > 0f)
+            tooltipBuilder.Append("\n지속시간: ").Append(skill.duration.ToString("0.#")).Append('s');
+
+        return tooltipBuilder.ToString();
+    }
 
     void Awake()
     {
