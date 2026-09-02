@@ -55,6 +55,25 @@ public class LaneMarker : MonoBehaviour
     // 이름 하나당 한 번만 남긴다. 로스터가 낡았다는 뜻이라 지우면 안 되는 경고다.
     static readonly HashSet<string> warnedMissingRosterNames = new HashSet<string>();
 
+    // 로스터 칸 안에서 같은 이름을 고리로 벌릴 때(2026-09-03, 사장님 지시: "V로 모으는 것처럼")
+    // 쓰는 값들. UnitCommands.Gather의 GatherSpacing(5)은 그대로 못 쓴다 — 거기는 열린 필드라
+    // 고리가 몇 겹이든 상관없지만, 여기는 벽으로 막힌 칸 하나 안에 갇혀야 한다.
+    //
+    // 우리 벽 두께(현재 1.4, MapGenerator.GateThickness)와 캐릭터 지름(현재 7.2)은 실제 값과
+    // 같아야 한다 — 둘 다 에디터 전용/프리팹 쪽 값이라 여기서 직접 못 읽는다. 둘 중 하나가
+    // 바뀌면 이 값도 같이 볼 것.
+    const float AssumedPenWallThickness = 1.4f;
+    const float AssumedCharacterDiameter = 7.2f;
+
+    // 고리 하나(가운데 1 + 첫 겹 6) 안에서만 벌린다 — 두 번째 겹부터는 반지름이 더 커져서
+    // 칸막이를 뚫을 수 있다. 그 이상은 조용히 겹치는 대신 같은 칸의 다음 줄로 넘긴다(기존
+    // SlotPosition의 행 계산을 그대로 재사용 — TakeFreeSlot이 남는 자리에서 하는 것과 같은 방식).
+    const int RingCapacity = 7;
+
+    // 몇 번째로 이 로스터 칸에 서는지 세는 카운터. 로스터 칸마다 따로 잰다 — 다른 이름끼리는
+    // 서로 간섭하지 않는다. FindRosterSlot(순수 조회)는 이 배열을 안 건드린다.
+    readonly int[] rosterOccupancy = new int[CommonUnitRoster.Length];
+
     // 다음에 내줄 "남는 자리" 번호(로스터 밖 — 비흔함, 혹은 로스터에 없는 흔함). 유닛이
     // 떠나도 줄어들지 않는다(빈 자리 재사용은 안 함) — 지금은 필드에서 유닛이 사라지는 경로
     // (연금술 분해 등)가 이 카운터를 모르기 때문에, 안전한 쪽(자리가 늘 새것)으로 단순하게 갔다.
@@ -74,8 +93,9 @@ public class LaneMarker : MonoBehaviour
     /// <summary>
     /// 이 레인 소유 유닛이 새로 생겨날 자리. 우리가 없으면 레인 한가운데.
     ///
-    /// 흔함 등급이고 이름이 배정표에 있으면 그 이름의 고정 칸(같은 이름은 항상 같은 좌표 —
-    /// 여러 마리 뽑아도 겹쳐 선다, 그 칸을 보면 몇 마리인지 안다는 게 사장님 의도다).
+    /// 흔함 등급이고 이름이 배정표에 있으면 그 이름의 고정 칸 — 여러 마리 뽑으면 V의 모으기와
+    /// 같은 육각 고리로 그 칸 안에서 벌어져 선다(그 칸을 보면 몇 마리인지 한눈에 안다는 게
+    /// 사장님 의도, 겹쳐 서지 않아 하나씩 선택도 된다).
     /// 그 외(비흔함, 또는 흔함인데 배정표에 없는 이름 — 로스터가 낡았을 때)는 남는 자리
     /// (10·11번칸부터, 넘치면 다음 줄)로 간다.
     /// </summary>
@@ -86,7 +106,7 @@ public class LaneMarker : MonoBehaviour
         if (unit != null && unit.grade == UnitGrade.Common)
         {
             int rosterSlot = FindRosterSlot(unit.unitName);
-            if (rosterSlot >= 0) return SlotPosition(unitPen, unitRowWidth, rosterSlot);
+            if (rosterSlot >= 0) return TakeRosterRingSlot(rosterSlot);
 
             if (warnedMissingRosterNames.Add(unit.unitName))
                 Debug.LogWarning($"LaneMarker: 흔함 유닛 '{unit.unitName}'이 자리 배정표(CommonUnitRoster)에 없습니다 — " +
@@ -100,6 +120,31 @@ public class LaneMarker : MonoBehaviour
     static int FindRosterSlot(string unitName)
     {
         return System.Array.IndexOf(CommonUnitRoster, unitName);
+    }
+
+    /// <summary>
+    /// 로스터 칸 안에서 몇 번째로 서는지 세고(카운터를 하나 태운다 — 여기서만 태운다) 고리
+    /// 위치를 계산한다. 고리 하나(RingCapacity=7)를 넘기면 같은 칸의 다음 줄로 넘어간다 —
+    /// SlotPosition의 행 계산에 (칸 수만큼 밀린 가짜 slot 번호)를 넣어서 그대로 재사용한다.
+    /// </summary>
+    Vector3 TakeRosterRingSlot(int rosterSlot)
+    {
+        int occurrence = rosterOccupancy[rosterSlot]++;
+        int extraRow = occurrence / RingCapacity;
+        int withinRing = occurrence % RingCapacity;
+
+        Vector3 compartmentCenter = SlotPosition(unitPen, unitRowWidth, rosterSlot + extraRow * CompartmentCount);
+        if (withinRing == 0) return compartmentCenter;
+
+        // 칸 내부 폭의 절반(간격의 절반에서 우리 벽 두께 절반을 뺀 값 — 칸막이(0.8)만 닿는
+        // 가운데 칸은 이보다 여유롭지만, 우리 벽(1.4)에 붙은 끝 칸 기준으로 잡아야 모든 칸에서
+        // 안전하다)에서 캐릭터 반지름을 뺀 만큼만 고리를 벌린다 — 첫 겹이 칸막이를 안 뚫는다.
+        float spacing = ResolveSlotSpacing(unitRowWidth);
+        float halfInterior = spacing * 0.5f - AssumedPenWallThickness * 0.5f;
+        float ringRadius = Mathf.Max(0f, halfInterior - AssumedCharacterDiameter * 0.5f);
+
+        float angle = 360f / 6f * (withinRing - 1);
+        return compartmentCenter + Quaternion.Euler(0f, angle, 0f) * unitPen.forward * ringRadius;
     }
 
     /// <summary>로스터 밖 유닛에게 내줄 다음 남는 자리. 카운터를 하나 태운다 — 여기서만 태운다.</summary>
