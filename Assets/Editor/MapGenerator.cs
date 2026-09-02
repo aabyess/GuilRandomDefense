@@ -2266,6 +2266,44 @@ public static class MapGenerator
         return string.Join(", ", names);
     }
 
+    // 지금 씬의 NavMesh가 어떤 상태인지 한 번에 본다. "구웠는데 왜 안 움직이지"를
+    // 추측으로 좁히지 않으려고 둔다 — 표면이 있는지, 데이터가 있는지, 파일로 남았는지가 다 다르다.
+    [MenuItem("Tools/맵/NavMesh 상태 확인")]
+    public static void InspectNavMesh()
+    {
+        System.Text.StringBuilder report = new System.Text.StringBuilder();
+
+        NavMeshSurface[] surfaces = Object.FindObjectsByType<NavMeshSurface>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        report.AppendLine($"NavMeshSurface {surfaces.Length}개");
+
+        foreach (NavMeshSurface surface in surfaces)
+        {
+            NavMeshData data = surface.navMeshData;
+            string assetPath = data != null ? AssetDatabase.GetAssetPath(data) : "";
+
+            report.AppendLine($"  · {surface.gameObject.name}");
+            report.AppendLine($"      데이터: {(data == null ? "❌ 없음 (안 구워졌거나 저장 안 됨)" : "있음")}");
+            if (data != null)
+                report.AppendLine($"      파일: {(string.IsNullOrEmpty(assetPath) ? "❌ 메모리에만 — 씬을 저장하면 사라집니다" : assetPath)}");
+        }
+
+        // 실제로 걸을 수 있는 면이 있는지. 위 둘이 다 멀쩡해도 이게 비면 아무도 안 움직인다.
+        NavMeshTriangulation mesh = NavMesh.CalculateTriangulation();
+        report.AppendLine();
+        report.AppendLine($"지금 로드된 NavMesh 삼각형 {mesh.indices.Length / 3}개");
+
+        if (mesh.indices.Length == 0)
+            report.AppendLine("  ❌ 걸을 수 있는 면이 하나도 없습니다 — 유닛이 전부 안 움직입니다.");
+        else
+            report.Append(CheckNavMeshCoverage());
+
+        string text = report.ToString();
+        Debug.Log("[맵] " + text);
+        EditorUtility.DisplayDialog(Title, text, "확인");
+    }
+
     static string BuildNavMesh(GameObject root)
     {
         // 있으면 그걸 쓴다. AddComponent를 매번 부르면 표면이 여러 장 쌓이고,
