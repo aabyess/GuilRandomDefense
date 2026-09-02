@@ -23,6 +23,13 @@ public enum UnitGrade
     // 뽑기 풀·전시 칸·조합식 표에 같이 끌려 들어간다. 어느 목록에도 안 걸리는 값이 필요하다.
     // 반드시 맨 뒤에 둘 것 — 중간에 끼우면 이미 직렬화된 등급 값이 전부 한 칸씩 밀린다.
     TranscendentWisp,
+
+    // 변화됨 — 뽑기로 나오는 등급이 아니라 **업그레이드 결과**다(사장님 확정 2026-09-02):
+    // "변화됨은 박은석 전설로 목재 10개주고 변화됨으로 업그레이드할거임".
+    // 전설적인 유닛 + 목재 10 → 변화됨. 그래서 GachaTable 풀에는 넣지 않는다 —
+    // 뽑기로 나오면 목재 10을 우회하게 된다.
+    // TranscendentWisp와 같은 이유로 맨 뒤에 붙인다.
+    Transformed,
 }
 
 public static class UnitGradeExtensions
@@ -51,6 +58,7 @@ public static class UnitGradeExtensions
             case UnitGrade.Rare:            return new Color(0.60f, 0.36f, 0.78f);   // 짙은 보라
             case UnitGrade.Hidden:          return new Color(0.30f, 0.52f, 0.86f);   // 하늘
             case UnitGrade.Legendary:       return new Color(0.82f, 0.24f, 0.24f);   // 빨강
+            case UnitGrade.Transformed:     return new Color(0.80f, 0.55f, 0.79f);   // 밝은 핑크 (204,141,201)
 
             // 우리가 정한 값
             case UnitGrade.Limited:         return new Color(0.92f, 0.52f, 0.18f);   // 주황
@@ -84,6 +92,7 @@ public static class UnitGradeExtensions
             case UnitGrade.OtherWorld: return "다른세계";
             case UnitGrade.RandomUnit: return "랜덤유닛";
             case UnitGrade.TranscendentWisp: return "초월위습";
+            case UnitGrade.Transformed: return "변화됨";
             default: return grade.ToString();
         }
     }
@@ -99,6 +108,10 @@ public static class UnitGradeExtensions
             case UnitGrade.Hidden: return 3;
             case UnitGrade.Superior: return 4;
             case UnitGrade.Legendary: return 5;
+            // 전설(5)에서 목재를 얹어 올라온 것이라 그 위다. 제한됨과 같은 자리에 둔다.
+            // default(-1)로 떨어뜨리면 연금술의 "희귀함(3) 이하만 분해" 검사를 통과해버려서,
+            // 목재 10을 들여 만든 유닛을 마나 몇 점에 녹일 수 있게 된다 — 반드시 명시해야 한다.
+            case UnitGrade.Transformed:
             case UnitGrade.Limited: return 6;
             case UnitGrade.Transcendent:
             case UnitGrade.Immortal:
