@@ -39,6 +39,17 @@ public class Selectable : MonoBehaviour
             indicator.SetSelected(selected);
     }
 
+    // 등급이 나중에 들어오는 경로가 있다(UnitSpawner는 Instantiate 뒤에 SetData를 부른다).
+    // 고리를 다시 만들지 않고 색만 갈아끼운다.
+    public void RefreshIndicatorColor()
+    {
+        if (indicator == null) return;
+
+        UnitData data = TryGetComponent(out UnitIdentity identity) ? identity.Data : null;
+        int ownerId = TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
+        indicator.SetColor(data != null ? data.grade.Color() : PlayerColors.Get(ownerId));
+    }
+
     SelectionIndicator CreateIndicator()
     {
         GameObject obj = new GameObject("SelectionIndicator", typeof(LineRenderer), typeof(SelectionIndicator));
@@ -51,9 +62,11 @@ public class Selectable : MonoBehaviour
             : 0.5f;
         if (radius < 0.05f) radius = 0.5f;
         int ownerId = TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
+        // 고리 색은 등급에서 온다. UnitIdentity가 없는 것(위습·건물)은 등급이 없으므로 null이 간다.
+        UnitData data = TryGetComponent(out UnitIdentity identity) ? identity.Data : null;
 
         SelectionIndicator selectionIndicator = obj.GetComponent<SelectionIndicator>();
-        selectionIndicator.Configure(radius, ownerId);
+        selectionIndicator.Configure(radius, ownerId, data);
         return selectionIndicator;
     }
 }

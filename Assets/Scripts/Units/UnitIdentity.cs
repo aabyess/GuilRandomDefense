@@ -14,6 +14,11 @@ public class UnitIdentity : MonoBehaviour
     public void SetData(UnitData unitData)
     {
         data = unitData;
+
+        // 발밑 고리는 등급 색으로 그려지는데, Selectable은 Awake에서 고리를 만든다 —
+        // 그때는 아직 이 메서드가 안 불려서 등급을 모른다. 여기서 다시 칠하게 한다.
+        // 이걸 빠뜨리면 모든 유닛이 조용히 "등급 없음" 색으로 나온다.
+        if (TryGetComponent(out Selectable selectable)) selectable.RefreshIndicatorColor();
     }
 
     /// <summary>
