@@ -97,6 +97,15 @@ public static class UnitGradeExtensions
         }
     }
 
+    /// <summary>
+    /// 등급의 강함. **enum 선언 순서가 아니라 이 값이 강함을 결정한다** —
+    /// 특수함은 선언이 맨 뒤(12)지만 실제로는 희귀함 바로 위다.
+    ///
+    /// 사장님 확정 순서 (2026-09-02):
+    /// <code>흔함 &lt; 안흔함 &lt; 특별함 &lt; 희귀함 &lt; 히든 ≤ 전설 &lt; 랜덤유닛 &lt; 제한됨 &lt; 초월 ≤ 불멸 ≤ 다른세계</code>
+    /// 여기에 "특수함은 희귀함 윗단계"가 더해진다. 엄밀한 전투력 서열이 아니라
+    /// 대략의 급을 나타내는 값이라고 하셨다.
+    /// </summary>
     public static int Tier(this UnitGrade grade)
     {
         switch (grade)
@@ -104,24 +113,37 @@ public static class UnitGradeExtensions
             case UnitGrade.Common: return 0;
             case UnitGrade.Uncommon: return 1;
             case UnitGrade.Special: return 2;
-            case UnitGrade.Rare:
-            case UnitGrade.Hidden: return 3;
+            case UnitGrade.Rare: return 3;
+
+            // 둘 다 희귀함 바로 윗단계다. 특수함은 조합식이 없고 뽑기 보너스로만 나오는
+            // 특이 케이스라 사장님이 순서 목록에서 빼셨지만, 급은 여기가 맞다고 하셨다.
+            case UnitGrade.Hidden:
             case UnitGrade.Superior: return 4;
+
             case UnitGrade.Legendary: return 5;
-            // 전설(5)에서 목재를 얹어 올라온 것이라 그 위다. 제한됨과 같은 자리에 둔다.
-            // default(-1)로 떨어뜨리면 연금술의 "희귀함(3) 이하만 분해" 검사를 통과해버려서,
-            // 목재 10을 들여 만든 유닛을 마나 몇 점에 녹일 수 있게 된다 — 반드시 명시해야 한다.
-            case UnitGrade.Transformed:
-            case UnitGrade.Limited: return 6;
+
+            // 사장님 순서에서 전설과 제한됨 사이다. 예전에는 -1이었는데, 그 값이면
+            // 연금술의 "희귀함(3) 이하만 분해" 검사를 통과해서 분해할 수 있었다.
+            // 이제 전설보다 위라 분해되지 않는다 — 의도된 변화다.
+            case UnitGrade.RandomUnit: return 6;
+
+            // 변화됨은 전설·희귀함에 목재 10을 얹어 올라온 것이라 제한됨과 같은 자리에 둔다.
+            // ⚠️ 사장님 순서 목록에 없어서 우리가 정한 자리다.
+            case UnitGrade.Limited:
+            case UnitGrade.Transformed: return 7;
+
+            // 초월 ≤ 불멸 ≤ 다른세계 — 같은 급으로 묶는다.
+            // ⚠️ 영원함과 초월위습은 사장님 순서 목록에 없어서 우리가 여기에 뒀다.
+            //    초월위습은 반드시 높아야 한다 — 낮으면 초월 조합 24개가 요구하는 재료를
+            //    연금술로 마나 몇 점에 녹일 수 있게 된다.
             case UnitGrade.Transcendent:
             case UnitGrade.Immortal:
-            case UnitGrade.Eternal:
             case UnitGrade.OtherWorld:
-            // 초월 재료라 초월과 같은 티어로 둔다. RandomUnit처럼 -1로 두면 연금술의
-            // "maxDismantleGrade(희귀함, Tier 3) 이하만 분해" 검사를 통과해버려서,
-            // 스토리로만 나오는 재료를 마나 몇 점에 분해할 수 있게 된다.
-            case UnitGrade.TranscendentWisp: return 7;
-            case UnitGrade.RandomUnit: return -1;
+            case UnitGrade.Eternal:
+            case UnitGrade.TranscendentWisp: return 8;
+
+            // 새 등급을 더하고 여기에 case를 안 넣으면 -1로 떨어져서 연금술에 분해된다.
+            // 등급을 추가할 때는 반드시 여기도 같이 손볼 것.
             default: return -1;
         }
     }
