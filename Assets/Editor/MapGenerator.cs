@@ -2039,18 +2039,35 @@ public static class MapGenerator
         if (contexts.Length > 0)
             report += $"\n위습이 생기는 위치(PlayerContext {contexts.Length}개)를 뽑기 섬으로 옮겼습니다.";
 
-        report += SetStartingResources(contexts);
-        report += ShapeWispPrefab();
-        report += WireStartingWisps();
-        report += WireCombineWallet();
-        report += FitMinimapToIslands();
-        report += MoveWarehousesToIslands();
-        report += WireAllRecipes();
-        report += SetUpCamera();
-        report += EnsureFourPlayers();
-        report += WireLanePaths(lanePaths);
+        // 배선 단계는 서로 독립이다. 한 줄로 이어놓으면 앞에서 예외가 하나 나는 순간
+        // 뒤가 통째로 안 돈다 — 실제로 ShapeWispPrefab이 터져서 그 뒤의 조합식 등록이
+        // 몇 주 동안 조용히 건너뛰어졌고, 맵은 멀쩡해 보이는데 조합만 안 되는 상태였다.
+        // 하나가 죽어도 나머지는 돌게 두고, 죽은 것은 이름을 대며 보고한다.
+        report += Step("시작 자원", () => SetStartingResources(contexts));
+        report += Step("위습 프리팹", ShapeWispPrefab);
+        report += Step("시작 위습", WireStartingWisps);
+        report += Step("조합 지갑", WireCombineWallet);
+        report += Step("미니맵", FitMinimapToIslands);
+        report += Step("창고", MoveWarehousesToIslands);
+        report += Step("조합식", WireAllRecipes);
+        report += Step("카메라", SetUpCamera);
+        report += Step("플레이어", EnsureFourPlayers);
+        report += Step("레인 경로", () => WireLanePaths(lanePaths));
 
         return report;
+    }
+
+    static string Step(string name, System.Func<string> action)
+    {
+        try
+        {
+            return action();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogException(e);
+            return $"\n⚠️ '{name}' 배선이 실패했습니다: {e.Message}";
+        }
     }
 
     // 상위 등급 레시피 18개는 골드를 요구한다(최대 20000). 지갑이 안 붙어 있으면 그때 가서 조합이 막힌다.
