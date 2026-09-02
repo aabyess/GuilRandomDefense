@@ -123,9 +123,49 @@ def name_line(im, x0, x1, top, bottom):
 
 
 def is_separator_ink(px):
-    """구분자 '/'와 "+ 나무 5개" 같은 검정 글자."""
+    """무채색 잉크. 구분자 '/', "+ 나무 5개", 그리고 **검정으로 쓰인 재료 이름**이 전부 여기 걸린다."""
     r, g, b = px
     return max(r, g, b) - min(r, g, b) < 45 and (r + g + b) / 3 < 140
+
+
+# 검정으로 쓰인 재료가 실제로 있다(초월_양재모의 최상호, 초월_신문철의 임장혁).
+# 순수 검정이라 is_colored를 통과하지 못해 예전엔 덩어리 자체가 안 잡혔고, 그 줄을 재료 5개로 읽었다.
+# 구분자와 가르는 기준은 **폭**이다 — '/'는 4~6px, 두 음절 이름도 24px는 넘는다.
+BLACK_NAME_MIN_WIDTH = 24
+BLACK_NAME_GAP = 5          # 한글은 음절 사이가 벌어진다. 그만큼은 이어붙인다.
+
+
+def black_name_runs(im, x0, x1, ytop, ybot):
+    """유채색이 전혀 없는 무채색 글자 덩어리 = 검정으로 쓰인 재료 이름."""
+    cols = []
+    for x in range(x0, x1):
+        chromatic = black = False
+        for y in range(ytop, ybot + 1):
+            px = im.getpixel((x, y))
+            if is_colored(px):
+                chromatic = True
+            elif is_separator_ink(px):
+                black = True
+        cols.append(black and not chromatic)
+
+    runs, start, miss = [], None, 0
+    for i, on in enumerate(cols):
+        if on:
+            if start is None:
+                start = i
+            miss = 0
+        elif start is not None:
+            miss += 1
+            if miss > BLACK_NAME_GAP:
+                end = i - miss
+                if end - start + 1 >= BLACK_NAME_MIN_WIDTH:
+                    runs.append((x0 + start, x0 + end + 1))
+                start, miss = None, 0
+    if start is not None:
+        end = len(cols) - miss - 1
+        if end - start + 1 >= BLACK_NAME_MIN_WIDTH:
+            runs.append((x0 + start, x0 + end + 1))
+    return runs
 
 
 def segments(im, x0, x1, ytop, ybot, min_colored=8, min_sep=3):
@@ -214,7 +254,23 @@ def read_image(name):
         ytop, ybot = band
         segs = [(core_color(im, a, b, ytop, ybot), (a, b))
                 for a, b in segments(im, x0, x1, ytop, ybot)]
-        rows.append((idx, (ytop, ybot), [s for s in segs if s[0]]))
+        segs = [s for s in segs if s[0]]
+
+        # 검정 재료는 유채색 판정을 통과하지 못하므로 따로 찾아 끼워 넣는다. 걸러야 할 것이 셋 있다:
+        #  · 유채색 재료가 하나도 없는 줄 — 표 머리글이나 조합식 없는 줄(히든 개 3종)의 설명글이다
+        #  · 맨 뒤 "+ 나무 N개" — 마지막 재료보다 오른쪽에 있다
+        #  · 유채색 덩어리와 겹치는 구간 — 좁은 구분자들이 이어붙어 생긴 가짜다
+        if segs:
+            right = segs[-1][1][1]
+            for a, b in black_name_runs(im, x0, x1, ytop, ybot):
+                if b > right:
+                    continue
+                if any(a < cb and ca < b for _, (ca, cb) in segs):
+                    continue
+                segs.append(((0, 0, 0), (a, b)))
+            segs.sort(key=lambda s: s[1][0])
+
+        rows.append((idx, (ytop, ybot), segs))
 
     out = []
     for block, start, end in cfg["blocks"]:
