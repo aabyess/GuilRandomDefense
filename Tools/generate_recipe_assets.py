@@ -26,15 +26,31 @@ TIER = {"Common":0,"Uncommon":1,"Special":2,"Rare":3,"Hidden":3,"Superior":4,"Le
         # 전설(5)에서 목재를 얹어 올라온 것이라 제한됨과 같은 자리.
         "Transformed":6}
 
-# 초월 24종의 마지막 재료(recipes_data.TRANSCENDENT가 쓰는 토큰) → 전용 로스터 에셋.
-# 일반 유닛 박은석과 이름이 겹쳐서 unit_ref()가 전설적인_박은석으로 이어버리던 것을 끊는다.
-WISP_MATERIAL = "박은석초월위습"   # unitName도 이 이름을 쓴다 — 일반 박은석과 HUD에서 구분돼야 한다
-WISP_ASSET = "초월위습_박은석"      # 에셋 이름은 다른 로스터와 같은 "등급_캐릭터" 꼴로 맞춘다
+# 이름이 같고 등급만 다른 재료는 recipes_data에서 전용 토큰으로 구분한다.
+# 안 그러면 unit_ref()가 이름만 보고 엉뚱한 등급으로 이어버린다 —
+# 초월 24종이 전부 일반 유닛 박은석을 가리키고 있던 게 그래서였다.
+#
+# 토큰 → 이미 존재하는 로스터 에셋 이름.
+# ⚠️ **여기 있는 에셋은 이 생성기가 만들지 않는다.** 손으로 만들었거나(초월위습·변화됨)
+#    다른 생성기가 만든 것이라(흔함_최상호는 generate_low_grade.py), 결과 유닛으로 등록해
+#    파일을 다시 쓰면 **스탯이 0으로 날아가고 GUID도 새로 잡혀 참조가 끊긴다.**
+#    그래서 참조만 잇고, GUID는 디스크의 .meta에서 그대로 읽는다.
+SPECIAL_MATERIALS = {
+    "박은석초월위습": "초월위습_박은석",
+    "박은석변화됨":   "변화됨_박은석",
+    "최상호변화됨":   "변화됨_최상호",
+    "최상호초월AD":   "초월_최상호_AD",
+    "최상호흔함":     "흔함_최상호",
+    "임장혁흔함":     "흔함_임장혁",
+}
 
-# 변화됨은 뽑기 등급이 아니라 업그레이드 결과다(전설 + 목재 10). 이름이 일반 박은석과 겹쳐서
-# unit_ref()가 전설적인_박은석으로 이어버리는 걸 막으려고 전용 토큰을 쓴다 — 초월위습과 같은 이유.
-TRANSFORMED_MATERIAL = "박은석변화됨"
-TRANSFORMED_ASSET = "변화됨_박은석"
+
+def existing_guid(asset_name):
+    """이미 있는 로스터 에셋의 GUID. 없으면 None — 호출부가 소리내어 실패한다."""
+    path = os.path.join(ROOT, "Assets/Data/Units/Roster", asset_name + ".asset.meta")
+    if not os.path.exists(path):
+        return None
+    return re.search(r"guid: (\w+)", open(path, encoding="utf-8").read()).group(1)
 
 def new_guid(): return uuid.uuid4().hex
 def safe(name):
@@ -80,11 +96,8 @@ def add_mats(lst):
         if m.startswith("아이템["): continue
         # 위습은 아래에서 전용 등급의 결과 유닛으로 따로 등록한다.
         # 여기 넣으면 등급 미확정 재료로 취급돼 기본_박은석초월위습이 생긴다.
-        if m in (WISP_MATERIAL, TRANSFORMED_MATERIAL): continue
+        if m in SPECIAL_MATERIALS: continue
         materials.add(m)
-
-add_result(WISP_MATERIAL, "TranscendentWisp", "")
-add_result(TRANSFORMED_MATERIAL, "Transformed", "")
 
 for r in D.TRANSCENDENT:
     add_result(r[0], "Transcendent", r[1], r[1]); add_mats(r[2])
@@ -119,8 +132,6 @@ GRADE_KR = {"Transcendent":"초월","Hidden":"히든","Immortal":"불멸","Etern
 for (name, grade, suffix), dmg in results.items():
     base = f"{GRADE_KR[grade]}_{name}"
     # 위습은 재료 토큰이 곧 unitName이라 그대로 쓰면 "초월위습_박은석초월위습"이 된다.
-    if name == WISP_MATERIAL: base = WISP_ASSET
-    if name == TRANSFORMED_MATERIAL: base = TRANSFORMED_ASSET
     if suffix: base += f"_{suffix.replace('+','')}"
     an = safe(base)
     unit_asset[(name, grade, suffix)] = an
@@ -192,6 +203,15 @@ def unit_ref(material_name, recipe_tier):
     같은 티어 이상이면 기본(하위) 유닛을 가리킨다 — 자기 자신을 재료로 삼는 순환 방지.
     예) 초월 최상호의 재료 '최상호'는 기본_최상호.
     """
+    # 등급 전용 토큰은 이름 추론을 건너뛰고 지정된 에셋으로 바로 간다.
+    if material_name in SPECIAL_MATERIALS:
+        an = SPECIAL_MATERIALS[material_name]
+        g = unit_guid.get(an) or existing_guid(an)
+        if g is None:
+            print(f"  ⚠️ {an}.asset.meta 가 없어 {material_name}을(를) 잇지 못했습니다")
+            return None
+        return f"{{fileID: 11400000, guid: {g}, type: 2}}"
+
     lower = [k for k in unit_asset
              if k[0] == material_name and TIER[k[1]] < recipe_tier]
     if lower:
