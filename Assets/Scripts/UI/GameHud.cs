@@ -637,16 +637,13 @@ public class GameHud : MonoBehaviour
         grid.constraintCount = CommandColumns;
         grid.childAlignment = TextAnchor.MiddleCenter;
 
-        // 0 공격은 아직 없다. 1 정지 = 홀드(H), 2 모으기 = 같은 이름 불러모으기(V).
-        string[] placeholderLabels = { "공격", "정지 (H)", "모으기 (V)" };
-
         for (int i = 0; i < CommandSlotCount; i++)
         {
             BuildUnitCommandSlot(i, parent);
 
-            if (i < placeholderLabels.Length)
+            if (i < UnitOnlyCommandLabels.Length)
             {
-                unitCommandSlotNames[i].text = placeholderLabels[i];
+                unitCommandSlotNames[i].text = UnitOnlyCommandLabels[i];
                 // 정지·모으기는 동작이 붙었다. 공격은 아직 없어서 눌리지 않게 둔다.
                 unitCommandSlotButtons[i].interactable = i == HoldCommandSlot || i == GatherCommandSlot;
             }
@@ -655,6 +652,18 @@ public class GameHud : MonoBehaviour
                 // 조합 결과가 들어올 칸. 채워지기 전까지는 보이지 않게 둔다.
                 unitCommandSlotBackgrounds[i].color = Color.clear;
             }
+        }
+    }
+
+    // 공격·정지·모으기 세 칸. 유닛에게만 의미가 있어서 건물을 고르면 통째로 감춘다.
+    void SetUnitOnlyCommandsVisible(bool visible)
+    {
+        for (int i = 0; i < UnitOnlyCommandLabels.Length; i++)
+        {
+            unitCommandSlotNames[i].text = visible ? UnitOnlyCommandLabels[i] : "";
+            unitCommandSlotBackgrounds[i].color = visible ? UnitCommandDefaultColor : Color.clear;
+            unitCommandSlotButtons[i].interactable =
+                visible && (i == HoldCommandSlot || i == GatherCommandSlot);
         }
     }
 
@@ -685,6 +694,9 @@ public class GameHud : MonoBehaviour
         unitCommandSlotNames[index] = nameText;
         unitCommandSlotButtons[index] = button;
     }
+
+    // 0 공격은 아직 없다. 1 정지 = 홀드(H), 2 모으기 = 같은 이름 불러모으기(V).
+    static readonly string[] UnitOnlyCommandLabels = { "공격", "정지 (H)", "모으기 (V)" };
 
     const int HoldCommandSlot = 1;
     const int GatherCommandSlot = 2;
@@ -860,8 +872,9 @@ public class GameHud : MonoBehaviour
         RefreshUnitCommandAffordability();
     }
 
-    // 상점 칸도 조합 결과와 같은 9칸 순서(UnitCommandResultSlotOrder)를 그대로 재사용한다 —
-    // 0~2번(공격/정지/모으기)은 상점에서 의미가 없지만 굳이 숨기지 않고 그대로 둔다.
+    // 상점 칸도 조합 결과와 같은 9칸 순서(UnitCommandResultSlotOrder)를 그대로 재사용한다.
+    // 0~2번(공격/정지/모으기)은 건물에 쓸 수 없는 명령이라 상점을 고르면 감춘다 —
+    // 도박소를 눌렀는데 "모으기"가 떠 있으면 누를 수 있는 것처럼 보인다.
     // 논리 인덱스(상점 쪽 슬롯 번호)만 기억해두고, 이름·색은 RefreshShopAffordability가 채운다 —
     // GetSlotView가 이미 값을 캐시해서 돌려주므로(Docs/design/LANE_SHOP.md) 여기서 또 캐시할 필요가 없다.
     void RebuildShopSlots(ILaneShop shop)
@@ -873,6 +886,8 @@ public class GameHud : MonoBehaviour
             unitCommandSlotNames[slot].text = "";
             unitCommandSlotBackgrounds[slot].color = Color.clear;
         }
+
+        SetUnitOnlyCommandsVisible(shop == null);
 
         if (shop == null) return;
 

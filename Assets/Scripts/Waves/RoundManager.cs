@@ -13,6 +13,10 @@ public class RoundManager : MonoBehaviour
     [SerializeField] int startingDeathCount = 10;
     [SerializeField] float deathCountTickInterval = 1f;
 
+    [Header("라운드 클리어 보상 — 사장님 지시: 라운드 하나 지날 때마다 랜덤위습 N개")]
+    [SerializeField] WispData roundRewardWisp;
+    [SerializeField] int roundRewardCount = 2;
+
     int currentRound;
     float roundTimer;
     int deathCount;
@@ -115,7 +119,34 @@ public class RoundManager : MonoBehaviour
             return;
         }
 
+        // 다음 라운드가 실제로 시작될 때만 준다 — 마지막 라운드를 넘기지 못하고 위에서
+        // 게임이 끝나는 경로로 빠지면 여기까지 안 온다. 1라운드 시작(Start())에서는 이 메서드
+        // 자체가 안 불리므로 시작 위습(RewardDistributor.GrantStartingWisps)과도 안 겹친다.
+        GrantFlatRoundReward();
+
         StartRound(currentRound);
+    }
+
+    // "라운드 하나 지날 때마다" 랜덤위습 N개(사장님 지시, 기본 2개) — RewardDistributor의
+    // 기존 GrantWisps 경로를 그대로 쓴다(새 지급 경로를 만들지 않는다).
+    void GrantFlatRoundReward()
+    {
+        if (!GameAuthority.IsServer) return;
+        if (roundRewardWisp == null || roundRewardCount <= 0) return;
+
+        RewardDistributor distributor = RewardDistributor.Instance;
+        if (distributor == null)
+        {
+            Debug.LogWarning("RoundManager: RewardDistributor.Instance가 없어 라운드 클리어 위습을 지급하지 못했습니다.");
+            return;
+        }
+
+        List<WispReward> rewards = new List<WispReward> { new WispReward { wisp = roundRewardWisp, count = roundRewardCount } };
+
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            distributor.GrantWisps(context, rewards);
+        }
     }
 
     // 방금 끝난 라운드(roundNumber)의 위습 보상을 전체 플레이어에게 지급한다.

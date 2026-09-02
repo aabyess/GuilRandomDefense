@@ -1827,6 +1827,10 @@ public static class MapGenerator
     // 흔함 유닛이 하나씩 나온다. 씬에 이미 직렬화된 값이 있어도 여기서 덮어쓴다.
     const int StartingWispCount = 5;
 
+    // 라운드 클리어 보상: 라운드 하나 지날 때마다 랜덤위습 2개(사장님 지시). 시작 위습과
+    // 같은 에셋(Wisp_랜덤유닛)을 재사용한다 — "랜덤위습"이 곧 이 등급(랜덤유닛)의 위습이다.
+    const int RoundRewardWispCount = 2;
+
     // 위습을 영혼처럼 보이게 하고 맵 크기에 맞춰 키운다.
     // 프리팹 기본 크기가 0.6이라 유닛(키 20) 옆에 두면 먼지처럼 보인다.
     const float WispScale = 6f;
@@ -1972,6 +1976,22 @@ public static class MapGenerator
         return $"\n시작 위습을 {wisp.wispName} {StartingWispCount}개로 맞췄습니다.";
     }
 
+    static string WireRoundRewardWisp()
+    {
+        RoundManager roundManager = Object.FindFirstObjectByType<RoundManager>(FindObjectsInactive.Include);
+        if (roundManager == null) return "";
+
+        WispData wisp = AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_랜덤유닛.asset");
+        if (wisp == null) return "\n⚠️ 라운드 보상 위습 에셋(Wisp_랜덤유닛)을 못 찾았습니다.";
+
+        SerializedObject so = new SerializedObject(roundManager);
+        so.FindProperty("roundRewardWisp").objectReferenceValue = wisp;
+        so.FindProperty("roundRewardCount").intValue = RoundRewardWispCount;
+        so.ApplyModifiedProperties();
+
+        return $"\n라운드 클리어 보상을 {wisp.wispName} {RoundRewardWispCount}개로 맞췄습니다.";
+    }
+
     static string SetStartingResources(PlayerContext[] contexts)
     {
         int walletsSet = 0;
@@ -2046,6 +2066,7 @@ public static class MapGenerator
         report += Step("시작 자원", () => SetStartingResources(contexts));
         report += Step("위습 프리팹", ShapeWispPrefab);
         report += Step("시작 위습", WireStartingWisps);
+        report += Step("라운드 보상 위습", WireRoundRewardWisp);
         report += Step("조합 지갑", WireCombineWallet);
         report += Step("미니맵", FitMinimapToIslands);
         report += Step("창고", MoveWarehousesToIslands);
@@ -2189,6 +2210,7 @@ public static class MapGenerator
             GoldWallet gold = player.AddComponent<GoldWallet>();
             ResourceWallet resources = player.AddComponent<ResourceWallet>();
             UnitInventory units = player.AddComponent<UnitInventory>();
+            GamblingProgress gambling = player.AddComponent<GamblingProgress>();
             PlayerContext context = player.AddComponent<PlayerContext>();
 
             SerializedObject so = new SerializedObject(context);
@@ -2199,6 +2221,7 @@ public static class MapGenerator
             so.FindProperty("goldWallet").objectReferenceValue = gold;
             so.FindProperty("resourceWallet").objectReferenceValue = resources;
             so.FindProperty("unitInventory").objectReferenceValue = units;
+            so.FindProperty("gamblingProgress").objectReferenceValue = gambling;
             so.FindProperty("warehouse").objectReferenceValue = FindWarehouse(playerId);
             so.ApplyModifiedProperties();
 
@@ -2216,8 +2239,54 @@ public static class MapGenerator
             so.ApplyModifiedProperties();
         }
 
+        // 이미 있던 플레이어에도 빠진 조각을 채운다. 위의 생성 블록은 **새로 만드는 슬롯**에만
+        // 도니, 필드가 나중에 추가되면 기존 플레이어는 영영 빈 채로 남는다.
+        // GamblingProgress가 실제로 그랬다 — 없으면 GamblingShop.CanRoll이 돈 도박을
+        // 무조건 false로 돌려서, 10엔 도박 칸이 눌러도 아무 반응이 없었다.
+        int repaired = RepairPlayerParts();
+
         return "\n플레이어 2~4번 자리는 비워뒀습니다 — 그 레인엔 적이 안 나옵니다."
-             + (created > 0 ? $" (새로 만든 슬롯 {created}개)" : "");
+             + (created > 0 ? $" (새로 만든 슬롯 {created}개)" : "")
+             + (repaired > 0 ? $"\n기존 플레이어 {repaired}명에게 빠져 있던 조각을 채웠습니다." : "");
+    }
+
+    static int RepairPlayerParts()
+    {
+        int repaired = 0;
+
+        foreach (PlayerContext context in Object.FindObjectsByType<PlayerContext>(
+                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            SerializedObject so = new SerializedObject(context);
+            bool changed = false;
+
+            changed |= EnsurePart<GoldWallet>(context, so, "goldWallet");
+            changed |= EnsurePart<ResourceWallet>(context, so, "resourceWallet");
+            changed |= EnsurePart<UnitInventory>(context, so, "unitInventory");
+            changed |= EnsurePart<GamblingProgress>(context, so, "gamblingProgress");
+
+            if (!changed) continue;
+
+            so.ApplyModifiedProperties();
+            repaired++;
+        }
+
+        return repaired;
+    }
+
+    // 컴포넌트가 없으면 붙이고, 참조가 비어 있으면 걸어준다. 둘은 따로 어긋날 수 있다 —
+    // 컴포넌트만 있고 참조가 빈 경우가 실제로 있었다.
+    static bool EnsurePart<T>(PlayerContext context, SerializedObject so, string field) where T : Component
+    {
+        SerializedProperty property = so.FindProperty(field);
+        if (property == null) return false;
+        if (property.objectReferenceValue != null) return false;
+
+        T part = context.GetComponent<T>();
+        if (part == null) part = context.gameObject.AddComponent<T>();
+
+        property.objectReferenceValue = part;
+        return true;
     }
 
     // WaveSpawner가 레인 목록을 받도록 바뀌면 여기서 채운다.

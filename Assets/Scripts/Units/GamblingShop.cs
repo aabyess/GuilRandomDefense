@@ -250,6 +250,13 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 
         context.GamblingProgress?.RecordUse(option);
 
+        // 결과를 말해주지 않으면 눌러도 아무 일도 안 일어난 것처럼 보인다 — 0엔이 나오는
+        // 판이 있어서 더 그렇다. 남은 횟수까지 같이 알려준다.
+        int used = context.GamblingProgress != null ? context.GamblingProgress.UsesSoFar(option) : 0;
+        string left = option.maxUses > 0 ? $", 남은 횟수 {option.maxUses - used}" : "";
+        Debug.Log($"[도박] {option.optionName}: {option.cost}엔 걸어 {amount}엔 " +
+                  $"({(amount >= option.cost ? "이득" : "손해")}). 보유 {context.GoldWallet.Gold}엔{left}");
+
         return true;
     }
 
