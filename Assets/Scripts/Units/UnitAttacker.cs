@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class UnitAttacker : MonoBehaviour
@@ -26,11 +27,76 @@ public class UnitAttacker : MonoBehaviour
     }
     OwnedByPlayer owner;
     UnitCombat combat;
+    UnitIdentity identity;
+
+    // 유닛강화소가 등급 전체에 거는 영구 배율. attackDamage(원본)는 그대로 두고 여기서만 곱한다 —
+    // 도움소의 임시 버프(ApplyStats로 원본값을 기억했다 되돌리는 방식)와 순서 상관없이 겹쳐도
+    // 안 깨지게 하려는 설계다(PM 지시). 레벨이 바뀔 때만 다시 계산하도록 이벤트로 무효화한다.
+    UnitUpgrades upgrades;
+    bool upgradesResolveAttempted;
+    bool upgradeMultiplierDirty = true;
+    float cachedUpgradeMultiplier = 1f;
 
     // 디버그 표시용 — 스탯이 실제로 적용됐는지 화면에서 확인하기 위해 노출한다.
-    public float AttackDamage => attackDamage;
+    public float AttackDamage => attackDamage * UpgradeMultiplier;
     public float AttackRange => attackRange;
-    public float AttackInterval => attackInterval;
+    public float AttackInterval => attackInterval / AttackSpeedMultiplier;
+
+    // 도움소의 임시 공격속도 버프. 값을 덮어썼다 되돌리는 대신 여기에 쌓는다 —
+    // 되돌리는 쪽이 "원래값"을 기억하면, 그 사이에 영구 강화를 사거나 버프가 겹칠 때
+    // 기억해둔 옛 값으로 되돌아가면서 산 것이 조용히 사라진다.
+    readonly List<float> attackSpeedBuffs = new List<float>();
+
+    float AttackSpeedMultiplier
+    {
+        get
+        {
+            float product = 1f;
+            foreach (float buff in attackSpeedBuffs) product *= buff;
+            return product > 0f ? product : 1f;
+        }
+    }
+
+    public void AddAttackSpeedBuff(float multiplier)
+    {
+        if (multiplier > 0f) attackSpeedBuffs.Add(multiplier);
+    }
+
+    public void RemoveAttackSpeedBuff(float multiplier)
+    {
+        attackSpeedBuffs.Remove(multiplier);
+    }
+
+    float UpgradeMultiplier
+    {
+        get
+        {
+            if (upgradeMultiplierDirty)
+            {
+                UnitUpgrades source = ResolveUpgrades();
+                UnitGrade grade = identity != null && identity.Data != null ? identity.Data.grade : default;
+                cachedUpgradeMultiplier = source != null ? source.MultiplierFor(grade) : 1f;
+                upgradeMultiplierDirty = false;
+            }
+            return cachedUpgradeMultiplier;
+        }
+    }
+
+    // Awake 시점엔 OwnedByPlayer.OwnerId가 아직 안 잡혀 있을 수 있어(스폰 직후 동기 설정 순서 —
+    // EnemyDummy.SpawnRound와 같은 이유) 실제로 필요해지는 첫 조회 시점까지 미룬다.
+    UnitUpgrades ResolveUpgrades()
+    {
+        if (upgradesResolveAttempted) return upgrades;
+        if (owner == null) return null;
+
+        upgradesResolveAttempted = true;
+        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        upgrades = context != null ? context.UnitUpgrades : null;
+        if (upgrades != null) upgrades.OnLevelChanged += HandleUpgradesChanged;
+        return upgrades;
+    }
+
+    void HandleUpgradesChanged() => upgradeMultiplierDirty = true;
 
     public float DistanceToClosestEnemy()
     {
@@ -43,6 +109,15 @@ public class UnitAttacker : MonoBehaviour
         return best;
     }
 
+    // damage는 "지금 적용하고 싶은 유효(강화 반영 후) 데미지"로 받는다 — 도움소 임시 버프가
+    // AttackDamage(유효값)를 읽었다가 그대로 돌려놓는 방식으로 쓴다. 여기서 강화 배율을 미리
+    // 나눠 원본에 저장해야, 곱한 뒤 결과가 호출자가 넘긴 값과 정확히 같아진다 — 안 그러면
+    // 버프가 시작/종료될 때마다 강화 배율이 한 번씩 더 곱해져 버린다.
+    /// <summary>
+    /// 이 유닛의 <b>기준</b> 스탯을 정한다(UnitData의 값). 강화 배율은 여기 안 섞는다 —
+    /// 여기에 배율을 반영하면, 이 함수를 부르는 쪽마다 "기준값을 주는 건지 지금 값을 주는 건지"가
+    /// 달라져서 어느 한쪽은 반드시 틀리게 된다.
+    /// </summary>
     public void ApplyStats(float damage, float range, float attacksPerSecond)
     {
         attackDamage = damage;
@@ -55,6 +130,12 @@ public class UnitAttacker : MonoBehaviour
     {
         owner = GetComponent<OwnedByPlayer>();
         combat = GetComponent<UnitCombat>();
+        identity = GetComponent<UnitIdentity>();
+    }
+
+    void OnDestroy()
+    {
+        if (upgrades != null) upgrades.OnLevelChanged -= HandleUpgradesChanged;
     }
 
     void Update()
@@ -62,13 +143,13 @@ public class UnitAttacker : MonoBehaviour
         attackTimer -= Time.deltaTime;
         if (attackTimer > 0f) return;
 
-        attackTimer = attackInterval;
+        attackTimer = AttackInterval;
 
         EnemyDummy target = ResolveTarget();
         if (target != null)
         {
             Anim?.PlayAttack();
-            target.TakeDamage(attackDamage, owner != null ? owner.OwnerId : -1);
+            target.TakeDamage(AttackDamage, owner != null ? owner.OwnerId : -1);
             return;
         }
 
@@ -77,7 +158,7 @@ public class UnitAttacker : MonoBehaviour
         if (gate != null)
         {
             Anim?.PlayAttack();
-            gate.TakeDamage(attackDamage);
+            gate.TakeDamage(AttackDamage);
         }
     }
 

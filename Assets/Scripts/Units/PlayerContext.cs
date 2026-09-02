@@ -13,6 +13,7 @@ public class PlayerContext : MonoBehaviour
     [SerializeField] ResourceWallet resourceWallet;
     [SerializeField] Warehouse warehouse;
     [SerializeField] GamblingProgress gamblingProgress;
+    [SerializeField] UnitUpgrades unitUpgrades;
 
     static readonly List<PlayerContext> registry = new List<PlayerContext>();
 
@@ -76,6 +77,7 @@ public class PlayerContext : MonoBehaviour
     public ResourceWallet ResourceWallet => resourceWallet;
     public Warehouse Warehouse => warehouse;
     public GamblingProgress GamblingProgress => gamblingProgress;
+    public UnitUpgrades UnitUpgrades => unitUpgrades;
 
     void OnEnable()
     {

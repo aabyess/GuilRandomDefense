@@ -82,6 +82,9 @@ public static class MapGenerator
             WireUnitPen(laneObject, BuildUnitPen(root.transform, MapLayout.Lanes[i], i));
             BuildSupportShop(root.transform, MapLayout.Lanes[i], i);
             BuildGamblingShop(root.transform, MapLayout.Lanes[i], i);
+            BuildUnitUpgradeShop(root.transform, MapLayout.Lanes[i], i);
+            BuildOtherWorldUpgradeShop(root.transform, MapLayout.Lanes[i], i);
+            BuildEternalUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             laneObjects.Add(laneObject);
         }
 
@@ -357,6 +360,61 @@ public static class MapGenerator
     }
 
     const string GamblingFolder = "Assets/Data/Gambling";
+
+    // 유닛강화소는 1번 자리다(사장님이 준 원작 순서: 도박소·유닛강화소·다른세계 강화소·영원함 강화소·도움소).
+    // 슬롯 순서가 화면 배치를 정하므로, 폴더 전체를 훑어 이름순 정렬하지 않고(한글 정렬은 의도한
+    // 등급 순서와 안 맞는다) 여기서 순서를 명시한다.
+    static readonly string[] UnitUpgradeTrackNames =
+    {
+        "흔함·안흔함 강화", "특별함 강화", "희귀함 강화", "전설적인 강화",
+        "제한됨 강화", "초월 강화", "불멸 강화", "랜덤유닛 강화",
+    };
+
+    const string UnitUpgradeFolder = "Assets/Data/UnitUpgrades";
+
+    static void BuildUnitUpgradeShop(Transform parent, MapLayout.Island lane, int laneIndex)
+    {
+        BuildUpgradeShop(parent, lane, laneIndex, "유닛강화소", 1, "display", UnitUpgradeTrackNames);
+    }
+
+    // 다른세계·영원함도 같은 상점이다 — 트랙이 하나뿐인 것만 다르다.
+    static void BuildOtherWorldUpgradeShop(Transform parent, MapLayout.Island lane, int laneIndex)
+    {
+        BuildUpgradeShop(parent, lane, laneIndex, "다른세계강화소", 2, "gacha",
+                         new[] { "다른세계 강화" });
+    }
+
+    static void BuildEternalUpgradeShop(Transform parent, MapLayout.Island lane, int laneIndex)
+    {
+        BuildUpgradeShop(parent, lane, laneIndex, "영원함강화소", 3, "combine",
+                         new[] { "영원함 강화" });
+    }
+
+    static void BuildUpgradeShop(Transform parent, MapLayout.Island lane, int laneIndex,
+                                 string name, int slot, string tint, string[] trackNames)
+    {
+        GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_{name}",
+            LaneShopSlot(lane, slot), laneIndex, tint);
+
+        UnitUpgradeShop upgradeShop = shop.AddComponent<UnitUpgradeShop>();
+        SerializedObject so = new SerializedObject(upgradeShop);
+        SerializedProperty tracksProp = so.FindProperty("tracks");
+
+        tracksProp.ClearArray();
+        for (int i = 0; i < trackNames.Length; i++)
+        {
+            UnitUpgradeTrackData track = AssetDatabase.LoadAssetAtPath<UnitUpgradeTrackData>(
+                $"{UnitUpgradeFolder}/UnitUpgrade_{trackNames[i]}.asset");
+
+            tracksProp.InsertArrayElementAtIndex(i);
+            tracksProp.GetArrayElementAtIndex(i).objectReferenceValue = track;
+
+            if (track == null)
+                Debug.LogWarning($"[맵] 강화 트랙 에셋을 찾지 못했습니다: UnitUpgrade_{trackNames[i]}");
+        }
+
+        so.ApplyModifiedProperties();
+    }
 
     static void BuildSupportShop(Transform parent, MapLayout.Island lane, int laneIndex)
     {

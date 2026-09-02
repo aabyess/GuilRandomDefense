@@ -278,16 +278,12 @@ public class SupportShop : MonoBehaviour
 
     IEnumerator BuffRoutine(UnitAttacker attacker, float multiplier, float duration)
     {
-        float originalDamage = attacker.AttackDamage;
-        float originalRange = attacker.AttackRange;
-        float originalInterval = attacker.AttackInterval;
-        float originalSpeed = originalInterval > 0f ? 1f / originalInterval : 1f;
-
-        attacker.ApplyStats(originalDamage, originalRange, originalSpeed * multiplier);
+        // 이 버프는 공격속도만 건드린다. 예전엔 공격력·사거리까지 읽어서 되돌려놨는데,
+        // 그러면 그 사이에 영구 강화를 산 만큼이 복원할 때 지워졌다.
+        attacker.AddAttackSpeedBuff(multiplier);
 
         yield return new WaitForSeconds(duration);
 
-        if (attacker != null)
-            attacker.ApplyStats(originalDamage, originalRange, originalSpeed);
+        if (attacker != null) attacker.RemoveAttackSpeedBuff(multiplier);
     }
 }
