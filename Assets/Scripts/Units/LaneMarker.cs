@@ -43,10 +43,23 @@ public class LaneMarker : MonoBehaviour
         return rowWidth / (CompartmentCount + EndMarginCompartments * 2);
     }
 
-    // 다음에 내줄 자리 번호. 유닛이 떠나도 줄어들지 않는다(빈 자리 재사용은 안 함) —
-    // 지금은 필드에서 유닛이 사라지는 경로(연금술 분해 등)가 이 카운터를 모르기 때문에,
-    // 안전한 쪽(자리가 늘 새것)으로 단순하게 갔다.
-    int nextSlotIndex;
+    // 흔함 유닛 자리 배정표(2026-09-02, 사장님 지시) — 왼쪽부터 1번. 이름 문자열은 이 배열
+    // 하나에만 두고 다른 곳에는 안 흩뿌린다 — 순서가 바뀌면 여기만 고치면 되게.
+    static readonly string[] CommonUnitRoster =
+    {
+        "최상호", "노태현", "양재모", "강주혁", "강재규", "박민석", "문필환", "박민수", "임장혁",
+    };
+
+    // 흔함인데 로스터에 없는 이름을 경고할 때, 스폰마다 다시 찍으면 진짜 경고가 묻힌다 —
+    // 이름 하나당 한 번만 남긴다. 로스터가 낡았다는 뜻이라 지우면 안 되는 경고다.
+    static readonly HashSet<string> warnedMissingRosterNames = new HashSet<string>();
+
+    // 다음에 내줄 "남는 자리" 번호(로스터 밖 — 비흔함, 혹은 로스터에 없는 흔함). 유닛이
+    // 떠나도 줄어들지 않는다(빈 자리 재사용은 안 함) — 지금은 필드에서 유닛이 사라지는 경로
+    // (연금술 분해 등)가 이 카운터를 모르기 때문에, 안전한 쪽(자리가 늘 새것)으로 단순하게 갔다.
+    // 로스터 조회(FindRosterSlot)는 이 카운터를 절대 건드리지 않는다 — 건드리면 흔함을 몇 번
+    // 뽑았느냐에 따라 남는자리 배정이 밀리는, 한참 지나야 드러나는 버그가 된다(PM 지시).
+    int nextFreeSlot;
 
     static readonly List<LaneMarker> registry = new List<LaneMarker>();
 
@@ -55,25 +68,49 @@ public class LaneMarker : MonoBehaviour
     /// <summary>
     /// 이 레인 소유 유닛이 새로 생겨날 자리. 우리가 없으면 레인 한가운데.
     ///
-    /// 부를 때마다 가로 줄의 다음 빈 자리를 하나 내주고 넘어간다 — 그래서 프로퍼티가 아니라
-    /// 메서드다. 상태를 바꾸는 프로퍼티는 로그 한 줄, 디버거로 값 한 번 들여다보는 것만으로도
-    /// 자리가 하나씩 새는데 아무 흔적도 안 남는다(PM 지시).
+    /// 흔함 등급이고 이름이 배정표에 있으면 그 이름의 고정 칸(같은 이름은 항상 같은 좌표 —
+    /// 여러 마리 뽑아도 겹쳐 선다, 그 칸을 보면 몇 마리인지 안다는 게 사장님 의도다).
+    /// 그 외(비흔함, 또는 흔함인데 배정표에 없는 이름 — 로스터가 낡았을 때)는 남는 자리
+    /// (10·11번칸부터, 넘치면 다음 줄)로 간다.
     /// </summary>
-    public Vector3 TakeNextSpawnPosition()
+    public Vector3 TakeSpawnPosition(UnitData unit)
     {
         if (unitPen == null) return transform.position;
 
-        return SlotPosition(unitPen, unitRowWidth, nextSlotIndex++);
+        if (unit != null && unit.grade == UnitGrade.Common)
+        {
+            int rosterSlot = FindRosterSlot(unit.unitName);
+            if (rosterSlot >= 0) return SlotPosition(unitPen, unitRowWidth, rosterSlot);
+
+            if (warnedMissingRosterNames.Add(unit.unitName))
+                Debug.LogWarning($"LaneMarker: 흔함 유닛 '{unit.unitName}'이 자리 배정표(CommonUnitRoster)에 없습니다 — " +
+                                 "남는 자리로 보냅니다. 배정표를 갱신하세요.");
+        }
+
+        return TakeFreeSlot();
+    }
+
+    /// <summary>배정표에서 이 이름의 고정 칸 번호를 찾는다. 순수 조회 — 카운터를 안 건드린다.</summary>
+    static int FindRosterSlot(string unitName)
+    {
+        return System.Array.IndexOf(CommonUnitRoster, unitName);
+    }
+
+    /// <summary>로스터 밖 유닛에게 내줄 다음 남는 자리. 카운터를 하나 태운다 — 여기서만 태운다.</summary>
+    Vector3 TakeFreeSlot()
+    {
+        return SlotPosition(unitPen, unitRowWidth, CommonUnitRoster.Length + nextFreeSlot++);
     }
 
     /// <summary>
-    /// 자리 계산만 하고 카운터는 안 건드리는 순수 버전. TakeNextSpawnPosition은 이걸 감싸서
-    /// nextSlotIndex를 하나 태울 뿐이다 — 자리를 소모하지 않고 미리 봐야 하는 곳
-    /// (맵 생성기의 NavMesh 커버리지 확인 등)은 이쪽을 쓴다.
+    /// 자리 계산만 하고 카운터는 안 건드리는 순수 버전. TakeSpawnPosition/TakeFreeSlot이 이걸
+    /// 감싸서 쓴다 — 자리를 소모하지 않고 미리 봐야 하는 곳(맵 생성기의 NavMesh 커버리지 확인
+    /// 등)은 이쪽을 바로 쓴다.
     ///
-    /// 한 줄은 CompartmentCount(9) 칸 고정이다 — 9마리를 넘기면(같은 유닛을 여러 마리 뽑을 수
-    /// 있어서 실제로 넘친다) 조용히 사라지는 대신 한 칸 폭만큼 더 앞(+Z, 우리가 열린 쪽)으로
-    /// 다음 줄을 놓는다. 뒷줄은 필드 쪽으로 넘어가는 열린 공간이라 칸막이가 없다.
+    /// 한 줄은 CompartmentCount 칸 고정이다 — 넘치면(로스터 밖 자리가 남는 칸 수를 넘거나,
+    /// 같은 로스터 칸에 여러 마리가 몰리는 게 아니라 남는 자리 쪽에서 실제로 넘칠 때) 조용히
+    /// 사라지는 대신 한 칸 폭만큼 더 앞(+Z, 우리가 열린 쪽)으로 다음 줄을 놓는다. 뒷줄은 필드
+    /// 쪽으로 넘어가는 열린 공간이라 칸막이가 없다.
     /// </summary>
     public static Vector3 SlotPosition(Transform unitPen, float rowWidth, int slot)
     {

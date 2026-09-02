@@ -288,7 +288,7 @@ public static class MapGenerator
         return anchor.transform;
     }
 
-    // 원작처럼 우리 안을 기둥으로 칸칸이 나눈다. 칸 하나에 자리(LaneMarker.TakeNextSpawnPosition)
+    // 원작처럼 우리 안을 기둥으로 칸칸이 나눈다. 칸 하나에 자리(LaneMarker.TakeSpawnPosition)
     // 하나가 정확히 가운데 오도록, 자리 간격(LaneMarker.ResolveSlotSpacing)의 배수 자리에만 세운다 —
     // 어긋나면 유닛이 기둥에 박히거나 기둥을 뚫고 서 있게 된다(PM 지시).
     // 칸 수는 LaneMarker.CompartmentCount로 고정이고 양 끝은 EndMarginCompartments만큼

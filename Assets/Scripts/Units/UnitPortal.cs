@@ -74,12 +74,12 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
 
     // 뽑기 섬에서 소환하면 지상 유닛은 바다에 막혀 레인까지 갈 수 없다.
     // 위습을 가져온 플레이어의 레인 한가운데에 내보낸다.
-    Vector3 ResolveSpawnPosition(int ownerId)
+    Vector3 ResolveSpawnPosition(int ownerId, UnitData reward)
     {
         if (spawnPoint != null) return spawnPoint.position;
 
         LaneMarker lane = LaneMarker.Get(ownerId);
-        if (lane != null) return lane.TakeNextSpawnPosition();
+        if (lane != null) return lane.TakeSpawnPosition(reward);
 
         Debug.LogWarning($"UnitPortal: 플레이어 {ownerId}의 레인을 찾지 못해 포탈 자리에 소환합니다.", this);
         return transform.position;
@@ -136,6 +136,6 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
         Destroy(wisp.gameObject);
 
         // Spawn이 인벤토리 등록까지 한다 — 여기서 따로 Add하면 필드에 없는 유닛이 인벤토리에 생긴다.
-        unitSpawner.Spawn(reward, ResolveSpawnPosition(ownerId), ownerId);
+        unitSpawner.Spawn(reward, ResolveSpawnPosition(ownerId, reward), ownerId);
     }
 }

@@ -65,8 +65,8 @@ public static class UnitCommands
 
     /// <summary>
     /// C 키. 선택한 유닛들을 각자 주인 레인의 유닛 우리(새로 뽑힌 유닛이 서는 벽쪽 가로 줄)로
-    /// 보낸다. LaneMarker.TakeNextSpawnPosition을 그대로 써서 갓 나온 유닛과 같은 줄에 이어 세운다 —
-    /// 자리 계산을 따로 두지 않는다.
+    /// 보낸다. LaneMarker.TakeSpawnPosition을 그대로 써서 갓 나온 유닛과 같은 계산을 탄다 —
+    /// 흔함이면 이름이 지정한 고정 칸으로, 아니면 남는 자리로 간다. 자리 계산을 따로 두지 않는다.
     /// </summary>
     public static int SendToPen(IReadOnlyList<Selectable> selection)
     {
@@ -84,7 +84,9 @@ public static class UnitCommands
             LaneMarker lane = LaneMarker.Get(owner);
             if (lane == null) continue;
 
-            combat.SnapTo(lane.TakeNextSpawnPosition());
+            UnitData unitData = selected.TryGetComponent(out UnitIdentity identity) ? identity.Data : null;
+
+            combat.SnapTo(lane.TakeSpawnPosition(unitData));
             moved++;
         }
 

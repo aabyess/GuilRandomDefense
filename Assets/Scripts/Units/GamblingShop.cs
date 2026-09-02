@@ -287,7 +287,7 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         if (success)
         {
             UnitData reward = gachaTable.RollFromGrade(resultGrade);
-            unitSpawner.Spawn(reward, ResolveSpawnPosition(), owner.OwnerId);
+            unitSpawner.Spawn(reward, ResolveSpawnPosition(reward), owner.OwnerId);
         }
         else if (option.grantFailureReward)
         {
@@ -333,10 +333,10 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         return 0f;
     }
 
-    Vector3 ResolveSpawnPosition()
+    Vector3 ResolveSpawnPosition(UnitData reward)
     {
         LaneMarker lane = LaneMarker.Get(owner.OwnerId);
-        if (lane != null) return lane.TakeNextSpawnPosition();
+        if (lane != null) return lane.TakeSpawnPosition(reward);
 
         Debug.LogWarning($"{name}: 플레이어 {owner.OwnerId}의 레인을 찾지 못해 상점 자리에 소환합니다.", this);
         return transform.position;
