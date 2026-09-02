@@ -201,7 +201,8 @@ public class GameHud : MonoBehaviour
         BuildTopBar();
         BuildStoryPanel();
         BuildTeamPanel();
-        BuildInventoryPanel();
+        // 왼쪽 유닛 목록은 만들지 않는다. 화면 절반을 덮는데, 무엇을 들고 있는지는
+        // 아래 명령 카드 그리드가 이미 보여준다. (F1 디버그 HUD에도 같은 목록이 있다.)
 
         // 툴팁은 맨 마지막에 만들어야 형제 순서상 가장 나중에 그려져서(항상 위) 다른 패널에 안 가려진다.
         BuildCombineTooltip();
@@ -691,7 +692,8 @@ public class GameHud : MonoBehaviour
         grid.constraintCount = CommandColumns;
         grid.childAlignment = TextAnchor.MiddleCenter;
 
-        string[] placeholderLabels = { "공격", "정지", "모으기" };
+        // 0 공격은 아직 없다. 1 정지 = 홀드(H), 2 모으기 = 같은 이름 불러모으기(V).
+        string[] placeholderLabels = { "공격", "정지 (H)", "모으기 (V)" };
 
         for (int i = 0; i < CommandSlotCount; i++)
         {
@@ -700,7 +702,8 @@ public class GameHud : MonoBehaviour
             if (i < placeholderLabels.Length)
             {
                 unitCommandSlotNames[i].text = placeholderLabels[i];
-                unitCommandSlotButtons[i].interactable = false; // 스킬 시스템 없어 동작 없는 칸 — 절대 안 채워짐
+                // 정지·모으기는 동작이 붙었다. 공격은 아직 없어서 눌리지 않게 둔다.
+                unitCommandSlotButtons[i].interactable = i == HoldCommandSlot || i == GatherCommandSlot;
             }
             else
             {
@@ -738,8 +741,22 @@ public class GameHud : MonoBehaviour
         unitCommandSlotButtons[index] = button;
     }
 
+    const int HoldCommandSlot = 1;
+    const int GatherCommandSlot = 2;
+
     void OnUnitCommandSlotClicked(int index)
     {
+        // 단축키와 같은 함수를 부른다 — 두 곳에 따로 구현하면 한쪽만 고쳐진다.
+        if (index == HoldCommandSlot || index == GatherCommandSlot)
+        {
+            SelectionManager selection = Selection;
+            if (selection == null || selection.Selected.Count == 0) return;
+
+            if (index == HoldCommandSlot) UnitCommands.ToggleHold(selection.Selected);
+            else UnitCommands.Gather(selection.Selected);
+            return;
+        }
+
         if (currentShop != null)
         {
             OnSupportSkillSlotClicked(index);
@@ -1226,8 +1243,10 @@ public class GameHud : MonoBehaviour
 
         if (!visible) return;
 
+        // 진행 중인 스토리 이름은 안 띄운다 — 상단 바가 이미 붐빈다.
+        // 남은 시간은 대기 시간이라 필요하다.
         storyText.text = running
-            ? $"스토리: {label}"
+            ? ""
             : $"{label} {seconds / 60:00}:{seconds % 60:00}";
     }
 

@@ -8,7 +8,9 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public class UnitCombat : MonoBehaviour
 {
-    enum CombatState { Idle, Chasing, Returning, PlayerMoving }
+    // Holding은 플레이어가 H로 걸어두는 상태다. 적이 눈앞에 와도 자리를 뜨지 않는다 —
+    // 문 앞이나 길목을 지켜야 할 때 유닛이 적을 쫓아 흩어지는 걸 막는 용도다.
+    enum CombatState { Idle, Chasing, Returning, PlayerMoving, Holding }
 
     [SerializeField] float aggroRange = 18f;
     [SerializeField] float scanInterval = 0.25f;
@@ -50,6 +52,43 @@ public class UnitCombat : MonoBehaviour
         nextScanTime = Time.time + Random.Range(0f, scanInterval);
     }
 
+    public bool IsHolding => state == CombatState.Holding;
+
+    /// <summary>H 키. 켜면 그 자리에 못박히고, 끄면 원래대로 적을 쫓는다.</summary>
+    public void SetHold(bool hold)
+    {
+        if (hold)
+        {
+            currentTarget = null;
+            commandedPosition = transform.position;
+            state = CombatState.Holding;
+
+            // 가던 길을 즉시 끊는다. ResetPath만 부르면 남은 속도로 미끄러진다.
+            if (agent.isActiveAndEnabled && agent.isOnNavMesh)
+            {
+                agent.ResetPath();
+                agent.velocity = Vector3.zero;
+            }
+            hasDestination = false;
+            return;
+        }
+
+        if (state == CombatState.Holding) state = CombatState.Idle;
+    }
+
+    /// <summary>모으기(V). 걸어오지 않고 그 자리로 옮겨 세운다 — 원작이 그렇게 동작한다.</summary>
+    public void SnapTo(Vector3 position)
+    {
+        if (agent.isActiveAndEnabled && agent.isOnNavMesh) agent.Warp(position);
+        else transform.position = position;
+
+        // 옮겨놓기만 하면 복귀 지점이 예전 자리로 남아, 적을 쫓고 나서 다시 흩어진다.
+        commandedPosition = position;
+        currentTarget = null;
+        state = CombatState.Idle;
+        hasDestination = false;
+    }
+
     // UnitMover가 우클릭 이동 명령을 받으면 이걸 부른다. 도착할 때까지 자동 추적을 멈춘다.
     public void IssueMoveCommand(Vector3 destination)
     {
@@ -63,6 +102,9 @@ public class UnitCombat : MonoBehaviour
     {
         switch (state)
         {
+            case CombatState.Holding:
+                break;   // 아무것도 안 한다 — 그게 홀딩이다
+
             case CombatState.PlayerMoving:
                 if (HasArrived()) state = CombatState.Idle;
                 break;

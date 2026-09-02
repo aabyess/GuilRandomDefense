@@ -33,7 +33,9 @@ public class DebugHud : MonoBehaviour
         if (Keyboard.current.f1Key.wasPressedThisFrame)
             visible = !visible;
 
-        if (Keyboard.current.vKey.wasPressedThisFrame)
+        // V는 이제 게임 명령(모으기)이다. 디버그 조합은 이 창이 떠 있을 때만 받는다 —
+        // 안 그러면 유닛을 모으려다 조합이 같이 돌아간다.
+        if (visible && Keyboard.current.vKey.wasPressedThisFrame)
         {
             TryCombineFirst();
         }
@@ -124,7 +126,7 @@ public class DebugHud : MonoBehaviour
         }
 
         GUILayout.Space(10);
-        GUILayout.Label("조합 가능한 레시피 (V키: 첫 번째 조합)");
+        GUILayout.Label("조합 가능한 레시피 (F1 켠 상태에서 V: 첫 번째 조합)");
 
         if (combineSystem != null)
         {

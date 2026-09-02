@@ -31,6 +31,8 @@ public class SelectionManager : MonoBehaviour
     {
         PruneDestroyed();
 
+        HandleCommandKeys();
+
         if (Mouse.current == null || cam == null) return;
 
         if (Mouse.current.leftButton.wasPressedThisFrame)
@@ -66,6 +68,25 @@ public class SelectionManager : MonoBehaviour
             isDragging = false;
             leftButtonHeld = false;
             ignoreCurrentPress = false;
+        }
+    }
+
+    // 명령 단축키. 선택 목록을 들고 있는 쪽에서 받는 게 자연스럽다 —
+    // 우하단 명령 카드도 같은 UnitCommands를 부른다.
+    void HandleCommandKeys()
+    {
+        if (Keyboard.current == null || selected.Count == 0) return;
+
+        if (Keyboard.current.vKey.wasPressedThisFrame)
+        {
+            int moved = UnitCommands.Gather(selected);
+            if (moved > 0) Debug.Log($"[명령] 모으기 — 유닛 {moved}기를 불러 모았습니다.");
+        }
+
+        if (Keyboard.current.hKey.wasPressedThisFrame)
+        {
+            int held = UnitCommands.ToggleHold(selected);
+            if (held > 0) Debug.Log($"[명령] 홀드 — 유닛 {held}기의 홀드를 전환했습니다.");
         }
     }
 
