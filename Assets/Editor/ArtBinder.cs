@@ -49,6 +49,13 @@ public static class ArtBinder
     // 234종이 전부 같은 얼굴이 된다 — 팩을 통째로 넣어 종류가 충분할 때만 켠다.
     const bool FillUnassignedUnits = false;
 
+    // 파일명이 유닛과 같으면 자동으로 붙는다. 아래 표는 **이름이 다를 때만** 쓴다.
+    //
+    // 자동 연결 규칙(ResolveUnitForModel):
+    //   1) 파일명이 로스터 에셋 이름과 같다   — "안흔함_상붕카.fbx"
+    //   2) 파일명이 유닛 표시 이름과 같다     — "상붕카.fbx"
+    //      (단 그 이름을 쓰는 유닛이 하나뿐일 때만. "최상호"는 넷이라 안 걸린다)
+    //
     // 특정 모델을 특정 유닛에 붙인다.
     // 모델 이름은 확장자를 뺀 파일명, 유닛 이름은 로스터 에셋 이름이다.
     static readonly (string model, string unit)[] ModelOverrides =
@@ -357,6 +364,21 @@ public static class ArtBinder
             overrideReport.Add($"{modelName} → {unit.unitName}");
         }
 
+        // 이름이 같으면 표에 안 적어도 붙는다. 모델을 하나 넣을 때마다 코드를 고쳐야 하면
+        // 스킨이 늘어날수록 그 표가 병목이 된다 — 파일명을 규칙으로 삼는다.
+        foreach (GameObject model in models)
+        {
+            if (cache.ContainsKey(model)) continue;   // 위 표에서 이미 붙은 모델
+
+            UnitData unit = ResolveUnitForModel(model.name, units);
+            if (unit == null || assigned.Contains(unit)) continue;
+
+            unit.prefab = GetOrCreate(cache, template, model, "Unit", ref made);
+            EditorUtility.SetDirty(unit);
+            assigned.Add(unit);
+            overrideReport.Add($"{model.name} → {unit.unitName} (이름 일치)");
+        }
+
         List<UnitData> rest = units.Where(u => !assigned.Contains(u)).ToList();
 
         if (FillUnassignedUnits)
@@ -389,6 +411,28 @@ public static class ArtBinder
                    ? $"\n  ⚠️ 모델 {models.Count}종을 {units.Count}종이 나눠 씁니다 — " +
                      "파츠·색을 바꿔 변형을 늘리는 건 다음 단계입니다."
                    : "");
+    }
+
+    /// <summary>
+    /// 모델 파일명으로 유닛을 찾는다. 에셋 이름이 먼저고, 그 다음이 표시 이름이다.
+    /// 표시 이름은 겹치는 유닛이 16쌍 있어서(최상호가 넷) <b>하나뿐일 때만</b> 인정한다 —
+    /// 아무거나 골라 붙이면 엉뚱한 등급에 얼굴이 들어가고, 아무도 왜인지 모른다.
+    /// </summary>
+    static UnitData ResolveUnitForModel(string modelName, List<UnitData> units)
+    {
+        UnitData byAssetName = units.FirstOrDefault(u => u.name == modelName);
+        if (byAssetName != null) return byAssetName;
+
+        List<UnitData> byDisplayName = units.Where(u => u.unitName == modelName).ToList();
+        if (byDisplayName.Count == 1) return byDisplayName[0];
+
+        if (byDisplayName.Count > 1)
+            Debug.LogWarning($"[아트] 모델 '{modelName}'과 이름이 같은 유닛이 {byDisplayName.Count}종입니다 " +
+                             $"({string.Join(", ", byDisplayName.Select(u => u.name))}) — " +
+                             "어느 것인지 알 수 없어 연결하지 않았습니다. 파일명을 에셋 이름으로 바꾸거나 " +
+                             "ArtBinder의 ModelOverrides에 적어주세요.");
+
+        return null;
     }
 
     // ── 리그 ───────────────────────────────────────────────────────────
