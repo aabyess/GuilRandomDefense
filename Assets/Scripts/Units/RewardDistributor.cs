@@ -13,8 +13,10 @@ public class RewardDistributor : MonoBehaviour
     [SerializeField] WispData startingWisp;
     [SerializeField] int startingWispCount = 5;
 
-    // 위습 지름이 6이라 예전 값(1.6)으로는 그대로 겹친다.
-    const float WispSpread = 8f;     // 한 주인의 위습들끼리 벌리는 반지름
+    // 우물 한가운데 뭉쳐 있게 둔다. 8로 벌리면 별 모양으로 흩어져서 다섯 덩어리로 보이는데,
+    // 이건 한 사람 몫의 시작 자원이라 한 무더기로 읽혀야 한다.
+    // 위습끼리는 서로 통과하듯 겹치므로(회피 반지름 0.28) 이 정도면 자연스럽게 뭉친다.
+    const float WispSpread = 2f;     // 한 주인의 위습들끼리 벌리는 반지름
     const float OwnerSpread = 20f;   // 주인끼리 벌리는 반지름
 
     void OnEnable()
