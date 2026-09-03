@@ -156,6 +156,10 @@ public static class UnitGradeExtensions
     }
 }
 
+// AD = 물리공격 / AP = 마법공격 (사장님 확정 2026-09-03).
+// 지금은 이 값을 읽는 코드가 하나도 없다 — 적(EnemyDummy)에게 방어력 필드 자체가 없어서
+// 데미지가 hp에 그대로 들어간다. 이 값을 채워도 아직 게임이 안 바뀐다. 다음에 이걸 붙일
+// 사람은 적 쪽에 방어력(물리방어/마법방어 등) 시스템부터 만들어야 한다.
 [System.Flags]
 public enum DamageType
 {

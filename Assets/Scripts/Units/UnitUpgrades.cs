@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 
 // 플레이어별 강화 상태. 특성강화(유닛 1종당 {효과, 수치} 리스트, 특성포인트 소모)로 쓴다 —
-// GamblingProgress와 같은 결로 상태만 들고, 비용 확인·소비는 상점(아직 없음, PM 지시로 이번
-// 라운드엔 안 만든다)이 한다.
+// GamblingProgress와 같은 결로 상태만 들고, 비용 확인·소비는 상점이 한다.
 //
-// 획득처(폐문 보스 처치·도박 누적 졸업 등)는 사장님 결정 대기 중이라 AddTraitPoints를 아직
-// 아무도 안 부른다 — 저장소·이벤트 자리만 미리 만들어둔다(PM 지시).
+// 획득처는 사장님 확정(2026-09-03): 게임 시작 1개 + 15,000엔 구매 1개 + 스토리 클리어 1개,
+// 한 판에 최대 3개. 셋 다 플레이어별로 딱 한 번씩만 — GamblingProgress처럼 임의 개수의 옵션을
+// HashSet으로 추적하는 대신, 출처가 정확히 3개로 고정돼 있어 이름 붙은 bool 세 개로 더 명확하게
+// 표현했다. 각 출처의 실제 호출은: RewardDistributor(시작·스토리 클리어), GamblingShop(구매).
 public class UnitUpgrades : UnityEngine.MonoBehaviour
 {
     // ---- 특성강화(신규) ----
@@ -19,6 +20,43 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
         if (amount <= 0) return;
         TraitPoints += amount;
         OnTraitPointsChanged?.Invoke();
+    }
+
+    bool startingPointGranted;
+    bool purchasedPointGranted;
+    bool storyPointGranted;
+
+    public bool HasStartingPoint => startingPointGranted;
+    public bool HasPurchasedPoint => purchasedPointGranted;
+    public bool HasStoryPoint => storyPointGranted;
+
+    // 게임 시작 시 1개. RewardDistributor.GrantStartingTraitPoints가 부른다.
+    public void GrantStartingPoint()
+    {
+        if (startingPointGranted) return;
+        startingPointGranted = true;
+        AddTraitPoints(1);
+    }
+
+    // 15,000엔으로 1개(1회 한정). 골드 차감까지 여기서 같이 한다 — TryUnlock류와 같은 원자적 형태
+    // (차감과 지급 사이에 실패가 끼어들 여지를 없앤다). GamblingShop이 부른다.
+    public bool TryPurchasePoint(GoldWallet wallet, int cost)
+    {
+        if (purchasedPointGranted || wallet == null) return false;
+        if (!wallet.TrySpend(cost)) return false;
+
+        purchasedPointGranted = true;
+        AddTraitPoints(1);
+        return true;
+    }
+
+    // 스토리 클리어(첫 스토리 1회 한정 — 사장님이 "어느 스토리"는 안 정하셔서 PM 지시로 잠정
+    // 이렇게 둔다) 1개. RewardDistributor.GrantStoryReward가 부른다.
+    public void GrantStoryPoint()
+    {
+        if (storyPointGranted) return;
+        storyPointGranted = true;
+        AddTraitPoints(1);
     }
 
     readonly HashSet<UnitTraitData> unlockedTraits = new HashSet<UnitTraitData>();

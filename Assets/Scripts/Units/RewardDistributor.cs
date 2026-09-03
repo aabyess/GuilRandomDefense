@@ -27,6 +27,7 @@ public class RewardDistributor : MonoBehaviour
     void Start()
     {
         GrantStartingWisps();
+        GrantStartingTraitPoints();
     }
 
     // OnEnable이 아니라 Start인 이유: 위습은 WispCell 위치에 생기는데, 맵이 만들어지고
@@ -39,6 +40,17 @@ public class RewardDistributor : MonoBehaviour
         foreach (PlayerContext context in PlayerContext.Occupied)
         {
             SpawnWisp(context, startingWisp, startingWispCount);
+        }
+    }
+
+    // 특성포인트 3갈래 중 첫 번째 — 게임 시작 시 1개(사장님 확정 2026-09-03, 플레이어별).
+    void GrantStartingTraitPoints()
+    {
+        if (!GameAuthority.IsServer) return;
+
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            context.UnitUpgrades?.GrantStartingPoint();
         }
     }
 
@@ -117,6 +129,14 @@ public class RewardDistributor : MonoBehaviour
             }
 
             GrantWisps(context, storyReward.wispRewards);
+
+            // 특성포인트 3갈래 중 세 번째 — 스토리 클리어 1개(사장님 확정 2026-09-03).
+            // "어느 스토리를 깨야 하는지"는 사장님이 안 정하셔서, PM 지시로 잠정 "첫 스토리
+            // (order==1) 클리어 시 1회"로 둔다 — 확정되면 이 조건만 바꾸면 된다.
+            if (storyReward.order == 1)
+            {
+                context.UnitUpgrades?.GrantStoryPoint();
+            }
         }
     }
 

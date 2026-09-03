@@ -9,13 +9,20 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 {
     // 하단 그리드는 가로 3칸 — 원작 화면처럼 윗줄(돈 도박)과 아랫줄(유닛 도박)이 줄로 갈리게,
     // 9칸 중 인덱스 6 다음 두 칸(7,8)은 항상 빈 칸으로 둔다.
-    //   [0 1 2] 10엔 도박/500엔 도박/빈칸 — 사장님 확정: 초급도박은 없다
+    //   [0 1 2] 10엔 도박/500엔 도박/특성포인트 구매 — 사장님 확정: 초급도박은 없다
     //   [3 4 5] 하급/중급/고급 유닛 도박
     //   [6 _ _] 다른세계 유닛 도박
     [SerializeField] List<GamblingOptionData> moneyOptions = new List<GamblingOptionData>();
     [SerializeField] List<GamblingOptionData> unitOptions = new List<GamblingOptionData>();
     [SerializeField] GachaTable gachaTable;
     [SerializeField] UnitSpawner unitSpawner;
+
+    // 특성포인트 구매(인덱스 2) — 사장님 확정(2026-09-03): 15,000엔으로 1회만.
+    // 원작은 "돈 도박 졸업 후 구매"라 이 상점의 돈 도박 줄에 자리를 잡았다(구현담당1 판단).
+    // GamblingOptionData로 안 만든 이유: 그 데이터는 "확률로 얼마를 돌려받는가"를 표현하는
+    // 모델이라, "100% 확정으로 골드가 아닌 걸 준다, 딱 1회"인 이 구매와 모양이 안 맞는다.
+    [SerializeField] int traitPointPurchaseCost = 15000;
+    const int TraitPointSlotIndex = 2;
 
     static readonly Color MoneyColor = new Color(1f, 0.82f, 0.25f); // 금색 — MapGenerator 코인 아이콘과 같은 색
 
@@ -81,6 +88,10 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         if (!slotCacheBuilt) BuildSlotCache();
         if (index < 0 || index >= SlotCountValue) return LaneShopSlotView.Empty;
 
+        if (index == TraitPointSlotIndex)
+            return new LaneShopSlotView(slotCache[index].label, slotCache[index].color,
+                CanPurchaseTraitPoint(), LaneShopTargetKind.None);
+
         SlotCache cache = slotCache[index];
         if (!cache.hasOption) return LaneShopSlotView.Empty;
 
@@ -91,6 +102,8 @@ public class GamblingShop : MonoBehaviour, ILaneShop
     // 호버할 때만 불린다 — 문자열 조립은 여기서만 한다(GetSlotView는 캐시된 값만 돌려준다).
     public string GetSlotTooltip(int index)
     {
+        if (index == TraitPointSlotIndex) return BuildTraitPointTooltip();
+
         GamblingOptionData option = OptionAt(index);
         if (option == null) return null;
 
@@ -99,6 +112,8 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 
     public bool TryUse(int index, LaneShopTarget target)
     {
+        if (index == TraitPointSlotIndex) return TryPurchaseTraitPoint();
+
         GamblingOptionData option = OptionAt(index);
         return option != null && TryRoll(option);
     }
@@ -126,6 +141,12 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 
         for (int i = 0; i < SlotCountValue; i++)
         {
+            if (i == TraitPointSlotIndex)
+            {
+                slotCache[i] = new SlotCache { hasOption = true, label = "특성포인트 구매", color = MoneyColor };
+                continue;
+            }
+
             GamblingOptionData option = OptionAt(i);
             slotCache[i] = option == null
                 ? new SlotCache { hasOption = false }
@@ -136,6 +157,37 @@ public class GamblingShop : MonoBehaviour, ILaneShop
                     color = option.category == GamblingCategory.Money ? MoneyColor : GradeColor(option.primaryResultGrade),
                 };
         }
+    }
+
+    string BuildTraitPointTooltip()
+    {
+        UnitUpgrades upgrades = OwnerContext?.UnitUpgrades;
+
+        if (upgrades != null && upgrades.HasPurchasedPoint)
+            return $"특성포인트 구매\n이미 구매함 (1회 한정)";
+
+        return $"특성포인트 구매\n비용: {traitPointPurchaseCost}엔\n특성포인트 1개를 즉시 받습니다 (1회 한정)";
+    }
+
+    bool CanPurchaseTraitPoint()
+    {
+        PlayerContext context = OwnerContext;
+        if (context == null || context.UnitUpgrades == null || context.GoldWallet == null) return false;
+        if (context.UnitUpgrades.HasPurchasedPoint) return false;
+
+        return context.GoldWallet.Gold >= traitPointPurchaseCost;
+    }
+
+    bool TryPurchaseTraitPoint()
+    {
+        PlayerContext context = OwnerContext;
+        if (context == null || context.UnitUpgrades == null || context.GoldWallet == null) return false;
+
+        bool bought = context.UnitUpgrades.TryPurchasePoint(context.GoldWallet, traitPointPurchaseCost);
+        if (bought)
+            Debug.Log($"[도박] 특성포인트 구매: {traitPointPurchaseCost}엔 → 특성포인트 1개. 보유 {context.UnitUpgrades.TraitPoints}개.");
+
+        return bought;
     }
 
     string BuildMoneyTooltip(GamblingOptionData option)
