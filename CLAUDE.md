@@ -19,4 +19,4 @@ Unity 6 URP 프로젝트 (6000.0.82f1).
 게임 정체·환경·확정 방향·진행 순서·작업 규칙은 `.claude/PROJECT_BRIEF.md`를 따른다. 작업 전 반드시 읽을 것.
 
 핵심 요약: 원랜디 스타일 3D 랜덤 디펜스 / Input System 패키지 사용(구 Input Manager 금지) / NavMesh(ai.navigation 설치됨) /
-코드는 `Assets/Scripts/{Units,Waves,Data,UI}/` / push는 사용자 요청 시에만 / 씬 수정 전 커밋.
+코드는 `Assets/Scripts/{Units,Waves,Data,UI}/` / **push는 PM이 판단해서 (아래)** / 씬 수정 전 커밋.
