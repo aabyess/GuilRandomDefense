@@ -1472,8 +1472,11 @@ public static class MapGenerator
     }
 
     // 원작처럼 레인 순찰 경로 오른쪽 위 모서리에 스토리존 포탈을 둔다(사장님 지시, 2026-09-03).
-    // 흙길 폭이 12뿐이라 작게(PortalDiameter 9보다 작은 5) 잡는다.
-    const float StoryPortalDiameter = 5f;
+    // 처음엔 5로 뒀다가 실제로 밟기 어렵다고 하셔서 2배(10)로 키웠다(2026-09-03) — 흙길 폭이
+    // 12라 거의 다 덮지만, 적은 WaypointMover가 transform.position을 그대로 옮길 뿐 물리/
+    // NavMesh를 전혀 안 봐서(콜라이더가 있든 없든) 순찰이 막히지 않는다. 플레이어 유닛의
+    // NavMesh는 NavMeshModifier.ignoreFromBuild로 이미 굽기에서 뺐으니 크기와 무관하게 안전하다.
+    const float StoryPortalDiameter = 10f;
 
     static void BuildStoryZonePortal(Transform parent, MapLayout.Island lane, int laneIndex)
     {

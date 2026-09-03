@@ -57,12 +57,16 @@ public static class MapLayout
     };
 
     // 물범 섬 — 4개. 물범을 잡으면 전체 플레이어에게 목재 1개씩.
+    // 중심 간격을 34→40으로 넓혔다(사장님 지시, 2026-09-03: "너무 따닥 붙어있음") — 빈틈이
+    // 8이던 게 14(섬 크기 26의 절반쯤)가 된다. StoryZone 중심(-250)에 맞춰 다시 배치했다 —
+    // 예전 배치(중심 -229)를 그대로 넓히면 스토리존 오른쪽 경계(-160, 1.5배 키운 뒤 폭
+    // 180 기준)를 넘어간다. 이 배치는 양옆 다 17만큼 여유를 두고 안에 들어간다.
     public static readonly Island[] SealIslands =
     {
-        new Island("SealIsland1", -280f, -180f, 26f, 26f, "seal"),
-        new Island("SealIsland2", -246f, -180f, 26f, 26f, "seal"),
-        new Island("SealIsland3", -212f, -180f, 26f, 26f, "seal"),
-        new Island("SealIsland4", -178f, -180f, 26f, 26f, "seal"),
+        new Island("SealIsland1", -310f, -180f, 26f, 26f, "seal"),
+        new Island("SealIsland2", -270f, -180f, 26f, 26f, "seal"),
+        new Island("SealIsland3", -230f, -180f, 26f, 26f, "seal"),
+        new Island("SealIsland4", -190f, -180f, 26f, 26f, "seal"),
     };
 
     public static readonly Island[] Zones =
