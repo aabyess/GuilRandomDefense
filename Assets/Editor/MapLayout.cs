@@ -74,7 +74,9 @@ public static class MapLayout
         // 둘 다 조합식 표 바로 위로 내려, 사이에 비던 자리를 없앴다.
         new Island("ImmortalDisplay",  150f,  52f, 90f, 50f, "display"),
         new Island("TranscendDisplay", 150f,   8f, 90f, 26f, "display"),
-        new Island("StoryZone",       -250f, -80f, 120f, 100f, "story"),
+        // 1.5배로 키운 값(원래 120x100). 여유가 빠듯하다 — 봉인섬과 z로 12,
+        // 뽑기섬과 x로 10밖에 안 남으니 더 키우려면 이웃을 먼저 옮겨야 한다.
+        new Island("StoryZone",       -250f, -80f, 180f, 150f, "story"),
         // 오른쪽 전시 칸이 다른세계 조합식 한 줄(재료 6칸 + 비용 3칸)을 담아야 해서 폭을 넓혔다.
         new Island("GachaIsland",      -82f, -80f, 136f, 190f, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
