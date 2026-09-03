@@ -88,6 +88,7 @@ public static class MapGenerator
             BuildStoryZonePortal(root.transform, MapLayout.Lanes[i], i);
             laneObjects.Add(laneObject);
         }
+        BuildInterLaneWalls(root.transform);
 
         for (int i = 0; i < MapLayout.Warehouses.Length; i++)
         {
@@ -259,6 +260,53 @@ public static class MapGenerator
     static float ResolveUnitPenWidth(MapLayout.Island lane)
     {
         return MapLayout.LaneUnitPenRow(lane).size.x - UnitPenEdgeMargin * 2f;
+    }
+
+    // 레인끼리 좁은 바다 틈(현재 세로 5, 가로 7)으로 넘나드는 걸 막는다(사장님 지시, 2026-09-03).
+    // 지상 유닛은 이미 그 틈(Sea 영역)을 못 건너지만, MovementAbility.Flying/WaterWalk는
+    // UnitSpawner.ComputeAreaMask가 전체 영역을 허용해서 건널 수 있다 — 그걸 막는 게 목적이다.
+    //
+    // 세로 벽 하나(Lane1|Lane2, Lane3|Lane4 틈을 동시에), 가로 벽 하나(Lane1|Lane3, Lane2|Lane4
+    // 틈을 동시에)로 십자 모양을 이룬다 — 왼쪽 열(Lane1/3)과 오른쪽 열(Lane2/4)의 x, 위쪽 행
+    // (Lane1/2)과 아래쪽 행(Lane3/4)의 z가 각각 같아서 레인 4개 다 한 쌍의 벽으로 끝난다.
+    // 두 벽이 가운데서 겹치는 것도 의도다 — 각자 자기 몫만 딱 맞게 지으면 네 레인이 만나는
+    // 가운데 교차점에 아주 작은 빈틈이 남는다.
+    //
+    // 콜라이더는 평범한 솔리드 큐브(BuildWall)다 — 트리거가 아니라 실제 NavMesh 장애물이 되므로
+    // areaMask와 무관하게 전부(지상·비행·수상보행) 막힌다. 순찰 경로(TrackInset 14, 라인 안쪽)
+    // 와는 안 겹친다 — 벽은 레인 가장자리에서 겨우 0.5(margin 1의 절반)만 파고든다. 유닛 우리
+    // 벽(가장자리에서 4 들어간 자리)·상점 칸(27.5 들어간 자리)에도 한참 못 미친다. 레인 사이에
+    // 다리·통로는 없다(코드 전체에 그런 걸 찾지 못함) — 그래서 변 전체를 막아도 된다.
+    const float InterLaneWallMargin = 1f;
+
+    static void BuildInterLaneWalls(Transform parent)
+    {
+        MapLayout.Island topLeft = MapLayout.Lanes[0];
+        MapLayout.Island topRight = MapLayout.Lanes[1];
+        MapLayout.Island bottomLeft = MapLayout.Lanes[2];
+
+        float leftColRightEdge = topLeft.center.x + topLeft.size.x * 0.5f;
+        float rightColLeftEdge = topRight.center.x - topRight.size.x * 0.5f;
+        float vWallX = (leftColRightEdge + rightColLeftEdge) * 0.5f;
+        float vGap = rightColLeftEdge - leftColRightEdge;
+
+        float topRowBottomEdge = topLeft.center.y - topLeft.size.y * 0.5f;
+        float bottomRowTopEdge = bottomLeft.center.y + bottomLeft.size.y * 0.5f;
+        float hWallZ = (topRowBottomEdge + bottomRowTopEdge) * 0.5f;
+        float hGap = topRowBottomEdge - bottomRowTopEdge;
+
+        float overallMinX = topLeft.center.x - topLeft.size.x * 0.5f;
+        float overallMaxX = topRight.center.x + topRight.size.x * 0.5f;
+        float overallMinZ = bottomLeft.center.y - bottomLeft.size.y * 0.5f;
+        float overallMaxZ = topLeft.center.y + topLeft.size.y * 0.5f;
+
+        BuildWall(parent, "레인간_세로벽",
+            new Vector3(vWallX, MapLayout.IslandTop + WallHeight * 0.5f, (overallMinZ + overallMaxZ) * 0.5f),
+            new Vector3(vGap + InterLaneWallMargin, WallHeight, overallMaxZ - overallMinZ));
+
+        BuildWall(parent, "레인간_가로벽",
+            new Vector3((overallMinX + overallMaxX) * 0.5f, MapLayout.IslandTop + WallHeight * 0.5f, hWallZ),
+            new Vector3(overallMaxX - overallMinX, WallHeight, hGap + InterLaneWallMargin));
     }
 
     static Transform BuildUnitPen(Transform parent, MapLayout.Island lane, int laneIndex)
