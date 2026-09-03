@@ -130,10 +130,13 @@ public class RewardDistributor : MonoBehaviour
 
             GrantWisps(context, storyReward.wispRewards);
 
-            // 특성포인트 3갈래 중 세 번째 — 스토리 클리어 1개(사장님 확정 2026-09-03).
-            // "어느 스토리를 깨야 하는지"는 사장님이 안 정하셔서, PM 지시로 잠정 "첫 스토리
-            // (order==1) 클리어 시 1회"로 둔다 — 확정되면 이 조건만 바꾸면 된다.
-            if (storyReward.order == 1)
+            // 특성포인트 3갈래 중 세 번째 — 스토리 8(사이버넷) 클리어 1개.
+            // 사장님 확정(2026-09-03) 원문은 "8라운드"였으나, 질문 자체가 "스토리 깨면"이었고
+            // 우리 스토리 8이 사이버넷이라 문맥상 스토리 8로 해석했다(라운드 8이 아니다) — PM 지시.
+            // 진짜 라운드 8을 뜻한 것이면 이 조건을 RoundManager 쪽으로 옮겨야 한다.
+            // 이 자리가 의미가 있다: 스토리 8 클리어 직후가 바로 《백수생활》 5분 대기 구간이라,
+            // 포인트를 받자마자 초월위습 3택1이 열리는 분기점이 된다.
+            if (storyReward.order == 8)
             {
                 context.UnitUpgrades?.GrantStoryPoint();
             }
