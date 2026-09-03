@@ -63,10 +63,10 @@ public static class MapLayout
     // 180 기준)를 넘어간다. 이 배치는 양옆 다 17만큼 여유를 두고 안에 들어간다.
     public static readonly Island[] SealIslands =
     {
-        new Island("SealIsland1", -310f, -180f, 26f, 26f, "seal"),
-        new Island("SealIsland2", -270f, -180f, 26f, 26f, "seal"),
-        new Island("SealIsland3", -230f, -180f, 26f, 26f, "seal"),
-        new Island("SealIsland4", -190f, -180f, 26f, 26f, "seal"),
+        new Island("SealIsland1", -362f, -180f, 26f, 26f, "seal"),
+        new Island("SealIsland2", -314f, -180f, 26f, 26f, "seal"),
+        new Island("SealIsland3", -266f, -180f, 26f, 26f, "seal"),
+        new Island("SealIsland4", -218f, -180f, 26f, 26f, "seal"),
     };
 
     public static readonly Island[] Zones =
@@ -80,7 +80,7 @@ public static class MapLayout
         new Island("TranscendDisplay", 150f,   8f, 90f, 26f, "display"),
         // 1.5배로 키운 값(원래 120x100). 여유가 빠듯하다 — 봉인섬과 z로 12,
         // 뽑기섬과 x로 10밖에 안 남으니 더 키우려면 이웃을 먼저 옮겨야 한다.
-        new Island("StoryZone",       -250f, -80f, 180f, 150f, "story"),
+        new Island("StoryZone",       -290f, -80f, 180f, 150f, "story"),
         // 오른쪽 전시 칸이 다른세계 조합식 한 줄(재료 6칸 + 비용 3칸)을 담아야 해서 폭을 넓혔다.
         new Island("GachaIsland",      -82f, -80f, 136f, 190f, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
