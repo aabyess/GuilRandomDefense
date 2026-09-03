@@ -4,11 +4,10 @@ using UnityEngine;
 // 리서치담당 3차 조사(Docs/reference/UPGRADE_SHOP.md "3차 조사") 표본 22종에서 뽑은 11개 유형.
 // 표본이 로스터의 9%뿐이라 여기서 끝났다고 보지 말 것 — 새 유형이 나오면 여기 추가한다.
 //
-// 지금 실제로 전투에 반영되는 건 DamageIncrease뿐이다(UnitAttacker 참고). 나머지는 데이터
-// 자리만 있고 아직 아무 시스템도 안 읽는다 — SlowOnHit/ArmorShred는 EnemyDummy에 받아줄 필드
-// 자체가 없고(표본 22종 중 5종, 약 4분의 1이 이 두 효과를 쓴다 — "나중에 여유될 때"가 아니라
-// "이거 없으면 표본 특성강화의 4분의 1이 지금 게임에 못 들어간다"는 뜻이다), Summon/
-// MechanismChange/UtilityBuff/CastMethodChange는 유닛 전용 코드(Tier B)가 필요하다.
+// 지금 전투에 반영되는 건 DamageIncrease와 ArmorShred 둘이다(UnitAttacker 참고).
+// ArmorShred는 2026-09-03 방어력 시스템이 들어오면서 살아났다 — EnemyDummy.AddArmorShred로 쌓인다.
+// 나머지는 데이터 자리만 있고 아직 아무 시스템도 안 읽는다 — SlowOnHit는 EnemyDummy에 %감속
+// 인프라가 없고, Summon/MechanismChange/UtilityBuff/CastMethodChange는 유닛 전용 코드(Tier B)가 필요하다.
 public enum TraitEffectKind
 {
     DamageIncrease,        // 딜증가 — 표본에서 가장 흔함(22종 중 10). 유일하게 지금 반영됨.
@@ -16,7 +15,7 @@ public enum TraitEffectKind
     Summon,                 // 소환(서브유닛) — Tier B 전용
     MovementAbilityGrant,   // 이동능력부여(공중이동 등)
     StatusAilment,          // 상태이상(스턴 등)
-    ArmorShred,             // 방깎 — EnemyDummy에 방어력 필드 없음(2차)
+    ArmorShred,             // 방깎 — EnemyDummy.EffectiveArmor를 깎는다. 하한 -20
     DamageTypeChange,       // 판정변경(물뎀→마뎀, 고정뎀 전환 등)
     MechanismChange,        // 메커니즘변경(소환수 제한 변경 등) — Tier B
     UtilityBuff,            // 버프(공속·자원회복 등, 대개 조건부 트리거) — Tier B

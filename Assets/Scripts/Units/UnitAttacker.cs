@@ -70,6 +70,28 @@ public class UnitAttacker : MonoBehaviour
         attackSpeedBuffs.Remove(multiplier);
     }
 
+    // 방깎 특성(TraitEffectKind.ArmorShred)을 때린 대상에 건다.
+    // 한 번 걸면 그 개체가 죽을 때까지 남는다 — 원작의 방깎은 지속시간이 있을 수 있으나
+    // 그 수치가 [미기재]라, 지금은 누적만 하고 감쇠는 넣지 않는다.
+    // 같은 대상을 계속 때려도 무한히 쌓이지 않게, 이 유닛 몫은 한 번만 건다.
+    readonly HashSet<EnemyDummy> shredApplied = new HashSet<EnemyDummy>();
+
+    void ApplyArmorShred(EnemyDummy target)
+    {
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null || !shredApplied.Add(target)) return;
+
+        UnitUpgrades source = ResolveUpgrades();
+        float shred = source != null ? source.EffectSum(unitData, TraitEffectKind.ArmorShred) : 0f;
+        if (shred > 0f) target.AddArmorShred(shred);
+    }
+
+    // 이 유닛의 데미지 판정. UnitData가 없으면(씬에 손으로 놓은 더미 등) 물리로 둔다 —
+    // 여기서 None을 넘기면 EnemyDummy가 어차피 물리로 취급하므로 결과는 같지만, 뜻을 분명히 한다.
+    DamageType DamageTypeOf => identity != null && identity.Data != null
+        ? identity.Data.damageType
+        : DamageType.AD;
+
     float UpgradeMultiplier
     {
         get
@@ -155,7 +177,8 @@ public class UnitAttacker : MonoBehaviour
         if (target != null)
         {
             Anim?.PlayAttack();
-            target.TakeDamage(AttackDamage, owner != null ? owner.OwnerId : -1);
+            ApplyArmorShred(target);
+            target.TakeDamage(AttackDamage, DamageTypeOf, owner != null ? owner.OwnerId : -1);
             return;
         }
 

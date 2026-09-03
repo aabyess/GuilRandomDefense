@@ -120,11 +120,73 @@ public class EnemyDummy : MonoBehaviour
         Active.Remove(this);
     }
 
-    public void TakeDamage(float amount, int killerPlayerId)
+    // 원작이 "방어력 -20이면 71% 추가 피해, 그 이상은 불필요"라고 못박아 뒀다.
+    // 하한이 없으면 방깎 유닛을 쌓을수록 무한히 세져서 밸런싱이 무너진다.
+    [SerializeField] DamageTable damageTable;
+
+    public const float ArmorFloor = -20f;
+
+    // 이 개체에 걸린 방깎 누적. UnitTraitData의 ArmorShred와 조합표의 `방깍(45)` 능력이 여기 쌓인다.
+    float armorShred;
+
+    /// <summary>방깎을 적용한 실효 방어력. 하한 -20.</summary>
+    public float EffectiveArmor =>
+        Mathf.Max(ArmorFloor, (data != null ? data.armor : 0f) - armorShred);
+
+    public ArmorType ArmorType => data != null ? data.armorType : ArmorType.Normal;
+
+    /// <summary>방깎을 건다. 음수를 넣으면 되돌린다(지속시간 있는 방깎이 생기면 그렇게 쓴다).</summary>
+    public void AddArmorShred(float amount) => armorShred += amount;
+
+    /// <summary>
+    /// 워크래프트3 방어력 공식. 원작이 워크3 시스템을 그대로 쓴다 —
+    /// "방어력 -20이면 71% 추가 피해"가 2 - 0.94^20 = 1.7099와 정확히 맞는다
+    /// (`Docs/reference/UNIT_STATS_RESEARCH.md` 검산).
+    /// </summary>
+    /// <summary>
+    /// 최종 피해. 순서: 방깎 → 방어력 감폭 → 배율표.
+    /// AP는 방어력을 무시한다(원작: "마법 데미지는 적의 방어력에 영향을 받지 않는다").
+    /// </summary>
+    float MitigatedDamage(float amount, DamageType type, bool ignoresArmor)
+    {
+        // 방어력 수치를 건너뛰는 건 **순수 마법(AP)과 방무뎀뿐**이다.
+        // AD+AP는 확정 전까지 AD와 동일하게 감폭시킨다 — "겸한다"는 것만 알고 어떻게 겸하는지
+        // 모르는 상태에서 감폭을 빼면, 물리·마법 겸용이 순수 마법보다 유리해진다
+        // (`ARMOR_SYSTEM_DESIGN.md` §7 질문 3).
+        bool armorApplies = !ignoresArmor && type != DamageType.AP;
+        if (armorApplies)
+        {
+            amount *= ArmorMultiplier(EffectiveArmor);
+        }
+
+        // 배율표가 없으면 1.0으로 둔다 — 배선이 빠졌다고 피해가 0이 되면 안 된다.
+        if (damageTable != null)
+        {
+            amount *= damageTable.Multiplier(type, ArmorType);
+        }
+
+        return amount;
+    }
+
+    public static float ArmorMultiplier(float armor) =>
+        armor >= 0f
+            ? 1f - (0.06f * armor) / (1f + 0.06f * armor)
+            : 2f - Mathf.Pow(0.94f, -armor);
+
+    /// <summary>
+    /// 피해를 받는다. <b>감폭은 여기서 한다 — 때리는 쪽이 아니다.</b>
+    /// 피해원이 여럿이라(평타·도움소 범위·지속딜) 공격자 쪽에 두면 새 피해원이 생길 때마다
+    /// 다시 구현해야 하고, 언젠가 하나가 빠진다. 방어력은 적이 가진 것이니 적이 적용한다.
+    ///
+    /// <paramref name="type"/>에 기본값을 두지 않은 것도 같은 이유다 —
+    /// 기본 AD로 두면 새 피해원이 조용히 물리로 들어가고 나중에 원인을 못 찾는다.
+    /// </summary>
+    /// <param name="ignoresArmor">방무뎀. 방어력 <b>수치</b>는 건너뛰되 배율표는 그대로 적용한다.</param>
+    public void TakeDamage(float amount, DamageType type, int killerPlayerId, bool ignoresArmor = false)
     {
         if (isDead) return;
 
-        hp -= amount;
+        hp -= MitigatedDamage(amount, type, ignoresArmor);
 
         if (invulnerable)
         {
