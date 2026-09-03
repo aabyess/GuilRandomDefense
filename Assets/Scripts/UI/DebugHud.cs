@@ -95,7 +95,16 @@ public class DebugHud : MonoBehaviour
         if (roundManager != null)
         {
             GUILayout.Label($"라운드: {roundManager.CurrentRound}  남은시간: {roundManager.RoundTimeLeft:F1}s");
-            GUILayout.Label($"데스카운트: {roundManager.DeathCount}{(roundManager.IsGameOver ? " (게임 종료)" : "")}");
+
+            // 데스카운트가 레인(플레이어)마다 따로 돌아서(2026-09-03) 전역 숫자 하나가 없다 —
+            // 로컬 플레이어 것만 보여준다.
+            PlayerContext local = PlayerContext.Local;
+            string deathLabel = local != null && local.IsDead
+                ? "사망"
+                : local != null
+                    ? roundManager.DeathCountFor(local.PlayerId).ToString()
+                    : "-";
+            GUILayout.Label($"내 데스카운트: {deathLabel}{(roundManager.IsGameOver ? " (게임 종료)" : "")}");
         }
 
         GUILayout.Label($"필드 몹 수: {EnemyDummy.Active.Count}");

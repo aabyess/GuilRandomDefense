@@ -2065,6 +2065,12 @@ public static class MapGenerator
         return $"\n시작 위습을 {wisp.wispName} {StartingWispCount}개로 맞췄습니다.";
     }
 
+    // 레인 하나에 이만큼 쌓이면 카운트다운이 돈다(사장님 지시, 2026-09-03: 25→100).
+    // RoundManager는 "Map" 루트 밖의 독립 오브젝트라(MapGenerator가 새로 안 만들고 찾기만
+    // 한다) 맵을 다시 만들어도 이 값이 안 사라진다 — 씬 파일을 직접 안 건드리고 여기서만
+    // 관리한다.
+    const int EnemyCountThreshold = 100;
+
     static string WireRoundRewardWisp()
     {
         RoundManager roundManager = Object.FindFirstObjectByType<RoundManager>(FindObjectsInactive.Include);
@@ -2076,9 +2082,11 @@ public static class MapGenerator
         SerializedObject so = new SerializedObject(roundManager);
         so.FindProperty("roundRewardWisp").objectReferenceValue = wisp;
         so.FindProperty("roundRewardCount").intValue = RoundRewardWispCount;
+        so.FindProperty("enemyCountThreshold").intValue = EnemyCountThreshold;
         so.ApplyModifiedProperties();
 
-        return $"\n라운드 클리어 보상을 {wisp.wispName} {RoundRewardWispCount}개로 맞췄습니다.";
+        return $"\n라운드 클리어 보상을 {wisp.wispName} {RoundRewardWispCount}개로, " +
+               $"패배 임계치를 레인당 {EnemyCountThreshold}마리로 맞췄습니다.";
     }
 
     static string SetStartingResources(PlayerContext[] contexts)

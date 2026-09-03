@@ -47,6 +47,7 @@ public class GameHud : MonoBehaviour
     readonly int[] slotGold = new int[TeamSlotCount];
     readonly int[] slotWood = new int[TeamSlotCount];
     readonly bool[] slotHas = new bool[TeamSlotCount];
+    readonly bool[] slotDead = new bool[TeamSlotCount];
 
     RoundManager roundManager;
     CombineSystem combineSystem;
@@ -114,11 +115,11 @@ public class GameHud : MonoBehaviour
 
     bool teamPanelInitialized;
     int lastTotalEnemyCount = int.MinValue;
-    int lastDeathCount = int.MinValue;
     readonly int[] lastSlotEnemyCount = new int[TeamSlotCount];
     readonly int[] lastSlotGold = new int[TeamSlotCount];
     readonly int[] lastSlotWood = new int[TeamSlotCount];
     readonly bool[] lastSlotHasContext = new bool[TeamSlotCount];
+    readonly bool[] lastSlotDead = new bool[TeamSlotCount];
 
     SelectionManager Selection => selectionManager != null
         ? selectionManager
@@ -1148,21 +1149,24 @@ public class GameHud : MonoBehaviour
     {
         if (teamPanelText == null) return;
 
-        RoundManager rm = RoundManagerRef;
         int totalEnemies = EnemyDummy.Active.Count;
-        int deathCount = rm != null ? rm.DeathCount : 0;
 
-        bool changed = !teamPanelInitialized || totalEnemies != lastTotalEnemyCount || deathCount != lastDeathCount;
+        // 데스카운트는 이제 레인마다 따로 돌아서 대표할 수 있는 전역 숫자가 하나가 아니다
+        // (2026-09-03) — 그 값을 헤더에서 뺐다. 그대로 두면 레인 하나의 값만 보이는데
+        // 다른 레인 것처럼 읽혀서, 안 보여주는 것보다 더 나쁜 잘못된 정보가 된다.
+        bool changed = !teamPanelInitialized || totalEnemies != lastTotalEnemyCount;
 
         for (int i = 0; i < TeamSlotCount; i++)
         {
             PlayerContext context = PlayerContext.GetOccupied(i);
             slotHas[i] = context != null;
+            slotDead[i] = context != null && context.IsDead;
             slotEnemy[i] = context != null ? EnemyDummy.CountInLane(context.PlayerId) : 0;
             slotGold[i] = context != null && context.GoldWallet != null ? context.GoldWallet.Gold : 0;
             slotWood[i] = context != null && context.ResourceWallet != null ? context.ResourceWallet.Get(ResourceType.Wood) : 0;
 
             if (slotHas[i] != lastSlotHasContext[i]
+                || slotDead[i] != lastSlotDead[i]
                 || slotEnemy[i] != lastSlotEnemyCount[i]
                 || slotGold[i] != lastSlotGold[i]
                 || slotWood[i] != lastSlotWood[i])
@@ -1175,14 +1179,14 @@ public class GameHud : MonoBehaviour
 
         teamPanelInitialized = true;
         lastTotalEnemyCount = totalEnemies;
-        lastDeathCount = deathCount;
 
         teamPanelBuilder.Clear();
-        teamPanelBuilder.Append("유닛 카운트 ").Append(totalEnemies).Append(" / 데스카운트 ").Append(deathCount);
+        teamPanelBuilder.Append("유닛 카운트 ").Append(totalEnemies);
 
         for (int i = 0; i < TeamSlotCount; i++)
         {
             lastSlotHasContext[i] = slotHas[i];
+            lastSlotDead[i] = slotDead[i];
             lastSlotEnemyCount[i] = slotEnemy[i];
             lastSlotGold[i] = slotGold[i];
             lastSlotWood[i] = slotWood[i];
@@ -1193,7 +1197,11 @@ public class GameHud : MonoBehaviour
             if (isLocal) teamPanelBuilder.Append("<b><color=#FFD54A>");
 
             teamPanelBuilder.Append("플레이어 ").Append(i + 1);
-            if (slotHas[i])
+            if (slotDead[i])
+            {
+                teamPanelBuilder.Append(" | 사망");
+            }
+            else if (slotHas[i])
             {
                 teamPanelBuilder.Append(" | 적 ").Append(slotEnemy[i])
                     .Append(" | 골드 ").Append(slotGold[i])

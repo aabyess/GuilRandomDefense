@@ -8,6 +8,10 @@ public class PlayerContext : MonoBehaviour
     // 슬롯 구조는 4명분 다 만들어 두되, 실제로 사람이 앉아 있는지는 따로 본다.
     // 비어 있는 슬롯의 레인에는 적을 스폰하지 않고 보상도 지급하지 않는다.
     [SerializeField] bool occupied = true;
+
+    // 레인 하나에 적이 100마리 넘게 쌓여 카운트다운이 0이 되면 죽는다(RoundManager 지시,
+    // 2026-09-03). 한 방향이다 — 되돌리는 메서드가 없다. 부활은 아직 없는 개념이라 만들지 않았다.
+    bool isDead;
     [SerializeField] GoldWallet goldWallet;
     [SerializeField] UnitInventory unitInventory;
     [SerializeField] ResourceWallet resourceWallet;
@@ -60,10 +64,16 @@ public class PlayerContext : MonoBehaviour
 
     public int PlayerId => playerId;
     public bool IsOccupied => occupied;
+    public bool IsDead => isDead;
 
     public void SetOccupied(bool value)
     {
         occupied = value;
+    }
+
+    public void MarkDead()
+    {
+        isDead = true;
     }
 
     /// <summary>해당 슬롯에 실제 플레이어가 있으면 그 컨텍스트를, 비어 있으면 null.</summary>
