@@ -10,13 +10,22 @@ public class Selectable : MonoBehaviour
     public bool IsSelected { get; private set; }
 
     SelectionIndicator indicator;
+    AttackRangeIndicator rangeIndicator;
 
     void Awake()
     {
         // 인스펙터에 수동으로 붙여둔 표시가 있으면 그걸 우선한다. 없으면 코드로 만든다 —
         // 프리팹마다 손으로 붙이면 새 유닛이 늘어날 때 빠뜨리기 쉽다.
-        if (selectedIndicator == null)
+        //
+        // 다만 **싸우는 것에만** 붙인다. 상점 건물과 위습도 Selectable이라 예전엔 고리가
+        // 같이 생겼는데, 등급이 없어서 주인 색(파랑)으로 떨어졌고 화면에서는 정체 모를
+        // 파란 원으로만 보였다(사장님: "이거 왜 있는거지"). 고리는 "무슨 등급인가"를
+        // 말하는 표시라, 등급이 없는 것에는 뜻이 없다.
+        if (selectedIndicator == null && GetComponent<UnitAttacker>() != null)
+        {
             indicator = CreateIndicator();
+            rangeIndicator = CreateRangeIndicator();
+        }
     }
 
     void OnEnable()
@@ -37,6 +46,9 @@ public class Selectable : MonoBehaviour
             selectedIndicator.SetActive(selected);
         else if (indicator != null)
             indicator.SetSelected(selected);
+
+        // 사거리 원은 선택했을 때만. 항상 켜두면 레인이 원으로 덮인다.
+        if (rangeIndicator != null) rangeIndicator.SetVisible(selected);
     }
 
     // 등급이 나중에 들어오는 경로가 있다(UnitSpawner는 Instantiate 뒤에 SetData를 부른다).
@@ -48,6 +60,14 @@ public class Selectable : MonoBehaviour
         UnitData data = TryGetComponent(out UnitIdentity identity) ? identity.Data : null;
         int ownerId = TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
         indicator.SetColor(data != null ? data.grade.Color() : PlayerColors.Get(ownerId));
+    }
+
+    AttackRangeIndicator CreateRangeIndicator()
+    {
+        GameObject obj = new GameObject("AttackRangeIndicator",
+                                        typeof(LineRenderer), typeof(AttackRangeIndicator));
+        obj.transform.SetParent(transform, false);
+        return obj.GetComponent<AttackRangeIndicator>();
     }
 
     SelectionIndicator CreateIndicator()
