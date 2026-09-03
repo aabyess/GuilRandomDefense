@@ -1485,13 +1485,22 @@ public static class MapGenerator
     // 세로줄(_흙길_오른)에서는 벗어난다. 즉 "오른쪽 세로 줄에서 위쪽 가로 줄 쪽으로 들어간 자리".
     const float StoryPortalInwardShift = 20f;
 
+    // "아래로 내려봐"(사장님, 2026-09-03) — 순찰 경로 오른쪽 위 꼭짓점에서 오른쪽 아래
+    // 꼭짓점 쪽으로 이 비율만큼 내려간다(0=위 꼭짓점 그대로, 1=아래 꼭짓점). 자전거 크기처럼
+    // 몇 번 왔다 갔다 할 값이라 상수 하나로 뺐다 — 조정은 이 줄 하나만 고치면 된다.
+    // 한계: 1.0을 넘기면 순찰 경로의 세로 구간(오른쪽 줄) 자체를 벗어나 필드 아래쪽 가장자리
+    // 쪽으로 다가가기 시작한다 — 그 너머엔 유닛 우리·상점 줄이 있으니 1.0을 넘기지 말 것.
+    const float StoryPortalDownwardFraction = 0.25f;
+
     static void BuildStoryZonePortal(Transform parent, MapLayout.Island lane, int laneIndex)
     {
         // 순찰 경로(LaneLoop)와 같은 계산식을 그대로 쓴다 — 따로 좌표를 잡으면 나중에
         // 레인 크기가 또 바뀔 때 순찰 경로와 포탈 자리가 어긋난다.
         Vector3[] loop = MapLayout.LaneLoop(lane, TrackInset);
         Vector3 corner = loop[3]; // 오른쪽 위
-        Vector3 ground = new Vector3(corner.x - StoryPortalInwardShift, corner.y, corner.z);
+        Vector3 lowerCorner = loop[2]; // 오른쪽 아래 — 내려가는 방향의 목표점
+        float z = corner.z - StoryPortalDownwardFraction * (corner.z - lowerCorner.z);
+        Vector3 ground = new Vector3(corner.x - StoryPortalInwardShift, corner.y, z);
 
         GameObject portal = CreatePortalObject(parent, $"{lane.name}_스토리포탈",
             new Vector3(ground.x, MapLayout.IslandTop + 0.25f, ground.z), StoryPortalDiameter);
