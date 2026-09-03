@@ -1490,7 +1490,7 @@ public static class MapGenerator
     // 몇 번 왔다 갔다 할 값이라 상수 하나로 뺐다 — 조정은 이 줄 하나만 고치면 된다.
     // 한계: 1.0을 넘기면 순찰 경로의 세로 구간(오른쪽 줄) 자체를 벗어나 필드 아래쪽 가장자리
     // 쪽으로 다가가기 시작한다 — 그 너머엔 유닛 우리·상점 줄이 있으니 1.0을 넘기지 말 것.
-    const float StoryPortalDownwardFraction = 0.25f;
+    const float StoryPortalDownwardFraction = 0.08f;
 
     static void BuildStoryZonePortal(Transform parent, MapLayout.Island lane, int laneIndex)
     {
