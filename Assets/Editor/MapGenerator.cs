@@ -85,6 +85,7 @@ public static class MapGenerator
             BuildUnitUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildOtherWorldUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildEternalUpgradeShop(root.transform, MapLayout.Lanes[i], i);
+            BuildStoryZonePortal(root.transform, MapLayout.Lanes[i], i);
             laneObjects.Add(laneObject);
         }
 
@@ -1466,6 +1467,43 @@ public static class MapGenerator
                (playable == 0 ? "\n  ⚠️ 적이 정해진 스토리가 없어 아무것도 등장하지 않습니다." : "");
     }
 
+    // 원작처럼 레인 순찰 경로 오른쪽 위 모서리에 스토리존 포탈을 둔다(사장님 지시, 2026-09-03).
+    // 흙길 폭이 12뿐이라 작게(PortalDiameter 9보다 작은 5) 잡는다.
+    const float StoryPortalDiameter = 5f;
+
+    static void BuildStoryZonePortal(Transform parent, MapLayout.Island lane, int laneIndex)
+    {
+        // 순찰 경로(LaneLoop)와 같은 계산식을 그대로 쓴다 — 따로 좌표를 잡으면 나중에
+        // 레인 크기가 또 바뀔 때 순찰 경로와 포탈 자리가 어긋난다.
+        Vector3[] loop = MapLayout.LaneLoop(lane, TrackInset);
+        Vector3 ground = loop[3]; // 오른쪽 위
+
+        GameObject portal = CreatePortalObject(parent, $"{lane.name}_스토리포탈",
+            new Vector3(ground.x, MapLayout.IslandTop + 0.25f, ground.z), StoryPortalDiameter);
+
+        // 트리거만으로는 부족하다 — PhysicsColliders로 굽는 NavMesh는 트리거도 장애물로
+        // 잡는다(CheckNavMeshCoverage 근처 DescribeBlockers 주석 참고, 실제로 겪은 문제).
+        // 굽기에서 아예 빼서 흙길이 안 끊기게 한다.
+        NavMeshModifier modifier = portal.AddComponent<NavMeshModifier>();
+        modifier.ignoreFromBuild = true;
+
+        StoryZonePortal component = portal.AddComponent<StoryZonePortal>();
+        component.SetDestination(StoryZoneLandingPoint(laneIndex));
+    }
+
+    // 스토리존 한가운데 한 점에 네 레인이 전부 쏟아지면 겹친다(사장님이 지적한 흔함 칸
+    // 겹침·개별 선택 문제와 같은 종류) — 레인마다 존 안의 네 귀퉁이로 살짝 나눠 보낸다.
+    // 존이 180×150(2026-09-03에 1.5배)이라 25%만 떨어뜨려도 넉넉히 안 겹친다.
+    static Vector3 StoryZoneLandingPoint(int laneIndex)
+    {
+        MapLayout.Island zone = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
+
+        float offsetX = (laneIndex % 2 == 0 ? -1f : 1f) * zone.size.x * 0.25f;
+        float offsetZ = (laneIndex < 2 ? 1f : -1f) * zone.size.y * 0.25f;
+
+        return new Vector3(zone.center.x + offsetX, MapLayout.IslandTop, zone.center.y + offsetZ);
+    }
+
     // 물범섬 4곳. 물범을 잡으면 전체 플레이어에게 목재 1개씩.
     static string BuildSealSpawners(Transform parent)
     {
@@ -2461,6 +2499,10 @@ public static class MapGenerator
         for (int i = 0; i < MapLayout.Lanes.Length; i++)
             points.Add(($"{MapLayout.Lanes[i].name} 유닛우리",
                         MapLayout.LaneUnitPenRow(MapLayout.Lanes[i]).Center3));
+
+        // 스토리존 도착 지점 — 지금까지 아무도 서본 적 없는 자리라 안 구워졌을 수 있다.
+        for (int i = 0; i < MapLayout.Lanes.Length; i++)
+            points.Add(($"{MapLayout.Lanes[i].name} 스토리존 도착지점", StoryZoneLandingPoint(i)));
 
         List<string> missing = new List<string>();
 
