@@ -1478,12 +1478,20 @@ public static class MapGenerator
     // NavMesh는 NavMeshModifier.ignoreFromBuild로 이미 굽기에서 뺐으니 크기와 무관하게 안전하다.
     const float StoryPortalDiameter = 10f;
 
+    // 사장님이 스크린샷으로 고르신 자리(후보 B, 2026-09-03) — 순찰 경로 오른쪽 위 꼭짓점에서
+    // 높이(z)는 그대로 두고 필드 안쪽(x)으로만 이만큼 들어간다. 검증: 흙길 "위" 줄(DecorateLane의
+    // _흙길_위, 중심 (필드중심.x, 꼭짓점.z), 반폭 halfX+TrackWidth/2)의 x범위 안에 여전히
+    // 들어와서(레인1 기준 중심에서 48.5, 한도 74.5) 잔디가 아니라 흙길 위다 — 다만 오른쪽
+    // 세로줄(_흙길_오른)에서는 벗어난다. 즉 "오른쪽 세로 줄에서 위쪽 가로 줄 쪽으로 들어간 자리".
+    const float StoryPortalInwardShift = 20f;
+
     static void BuildStoryZonePortal(Transform parent, MapLayout.Island lane, int laneIndex)
     {
         // 순찰 경로(LaneLoop)와 같은 계산식을 그대로 쓴다 — 따로 좌표를 잡으면 나중에
         // 레인 크기가 또 바뀔 때 순찰 경로와 포탈 자리가 어긋난다.
         Vector3[] loop = MapLayout.LaneLoop(lane, TrackInset);
-        Vector3 ground = loop[3]; // 오른쪽 위
+        Vector3 corner = loop[3]; // 오른쪽 위
+        Vector3 ground = new Vector3(corner.x - StoryPortalInwardShift, corner.y, corner.z);
 
         GameObject portal = CreatePortalObject(parent, $"{lane.name}_스토리포탈",
             new Vector3(ground.x, MapLayout.IslandTop + 0.25f, ground.z), StoryPortalDiameter);
