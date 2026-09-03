@@ -1058,7 +1058,7 @@ public static class MapGenerator
     // 특수 칸은 원작처럼 세 자리다(사장님 확정 2026-09-01): 돈+목재 / 박은석 초월위습 / 레일리+배.
     // 박은석이 가운데다 — 원작 쿠마 초월함 위습에 해당하는 자리라 눈에 먼저 들어와야 한다.
     // 레일리(이승우)와 배(상붕카)는 원작에서 한 자리에서 같이 나오므로 한 칸에 묶었다.
-    // 이 줄은 스토리 8 이후 《백수생활》 5분 동안만 열린다 — 그 개폐는 아직 안 붙였다.
+    // 이 줄은 스토리 8 이후 《백수생활》 5분 동안만 열린다 — GateToInterlude()가 이미 그 개폐를 붙인다.
     static readonly GachaBand[] GachaBands =
     {
         GachaBand.Random("안흔함", UnitGrade.Uncommon),
@@ -1066,7 +1066,7 @@ public static class MapGenerator
         GachaBand.RandomWithBonus("희귀함·특수함", UnitGrade.Rare, UnitGrade.Superior, 3f),
         GachaBand.Special("특수지급",
             SpecialSlot.Resources("돈+목재"),
-            SpecialSlot.Pending("박은석 초월위습"),
+            SpecialSlot.Units("박은석 초월위습", "초월위습_박은석"),
             SpecialSlot.Units("레일리+배", "희귀함_이승우", "안흔함_상붕카")),
         GachaBand.Random("전설·히든", UnitGrade.Legendary),
     };
@@ -1233,7 +1233,11 @@ public static class MapGenerator
 
                     GameObject portal = CreatePortalObject(parent, $"Portal_{unit.unitName}",
                         new Vector3(first + spread * u, at.y, at.z), ChoicePortalDiameter);
-                    ConfigurePortal(portal, unit.grade, unit, table, spawner);
+                    // acceptedGrades는 "이 포탈이 받는 위습의 등급"이지 지급할 유닛의 등급이 아니다 —
+                    // 이 줄에 들어오는 위습은 전부 백수생활 선택위습(InterludeChoiceGrade)이다.
+                    // unit.grade를 넘기면(레일리=희귀함, 상붕카=안흔함) 그 등급으로 필터링돼
+                    // 선택위습(초월함)을 영원히 거부한다 — 겉보기엔 배선됐지만 실제로는 안 열리는 상태였다.
+                    ConfigurePortal(portal, InterludeChoiceGrade, unit, table, spawner);
                     GateToInterlude(portal);
                 }
             }
