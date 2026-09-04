@@ -85,7 +85,7 @@ public class RewardDistributor : MonoBehaviour
     // round는 EnemyDummy.SpawnRound를 그대로 받는다 — RewardDistributor가 RoundManager를
     // 직접 찾지 않아도 되고, 죽는 순간 라운드가 막 넘어가도 "이 적이 태어난 라운드" 기준으로
     // 정확하다(GrantRoundClearWisps·OnBossKilled와 같은 이유).
-    public void GrantKillReward(EnemyData data, int laneIndex, int round)
+    public void GrantKillReward(EnemyData data, int laneIndex, int round, int killerPlayerId = -1)
     {
         if (!GameAuthority.IsServer) return;
         if (data == null) return;
@@ -100,6 +100,15 @@ public class RewardDistributor : MonoBehaviour
             return;
         }
 
+        // 레인에 안 속한 적(크립·퀘스트 미니보스)은 레인 주인을 찾을 수 없다 —
+        // LaneIndex가 −1이라 아래 PlayerContext.Get(-1)이 null이 되고 보상이 사라진다.
+        // 원작도 이런 적은 처치자 기준이라 그쪽으로 보낸다(EnemyData.rewardsKillerOnly 주석 참고).
+        if (data.rewardsKillerOnly)
+        {
+            GrantToKiller(data, killerPlayerId, round);
+            return;
+        }
+
         // 레인 소유자에게만 간다 — 누가 마지막 타격을 넣었는지는 안 본다(원작 그대로).
         PlayerContext owner = PlayerContext.Get(laneIndex);
         if (owner == null || !owner.IsOccupied) return;
@@ -108,6 +117,23 @@ public class RewardDistributor : MonoBehaviour
         GrantResources(owner, data);
 
         if (data.isBoss) GrantBossReward(owner, round);
+    }
+
+    // rewardsKillerOnly 전용 — 마지막 타격을 넣은 플레이어에게만.
+    void GrantToKiller(EnemyData data, int killerPlayerId, int round)
+    {
+        PlayerContext killer = PlayerContext.Get(killerPlayerId);
+        if (killer == null || !killer.IsOccupied)
+        {
+            // 조용히 넘기면 "왜 크립을 잡았는데 아무것도 안 나오지"가 된다.
+            Debug.LogWarning($"RewardDistributor: {data.enemyName}의 처치자(플레이어 {killerPlayerId})를 " +
+                             "찾지 못해 보상을 지급하지 못했습니다.", this);
+            return;
+        }
+
+        if (data.goldReward > 0) killer.GoldWallet?.Add(data.goldReward);
+        GrantResources(killer, data);
+        if (data.isBoss) GrantBossReward(killer, round);
     }
 
     // rewardsAllPlayers 전용(물범류) — 확정 지급, 원작 별개 축이라 그대로 둔다.

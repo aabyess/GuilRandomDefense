@@ -279,11 +279,12 @@ public class EnemyDummy : MonoBehaviour
             // (지금은 즉시 파괴라 사실상 안 보이지만, 사망 연출을 넣을 자리를 여기로 정해둔다.)
             GetComponent<CharacterAnimator>()?.PlayDeath();
 
-            // 처치 골드는 킬러가 아니라 이 적이 걷던 레인의 주인에게 간다(원작 그대로,
-            // RewardDistributor.GrantKillReward 주석 참고) — killerPlayerId는 여기서 안 쓴다.
+            // 처치 골드는 보통 킬러가 아니라 이 적이 걷던 레인의 주인에게 간다(원작 그대로).
+            // 예외는 레인에 안 속한 적(크립·퀘스트 미니보스)뿐이고, 그 판단은 분배기가 한다
+            // (EnemyData.rewardsKillerOnly) — 그래서 killerPlayerId를 여기서 넘겨준다.
             if (data != null && RewardDistributor.Instance != null)
             {
-                RewardDistributor.Instance.GrantKillReward(data, LaneIndex, SpawnRound);
+                RewardDistributor.Instance.GrantKillReward(data, LaneIndex, SpawnRound, killerPlayerId);
             }
 
             // 신호만 보낸다 — 실제 처리(도박소 해금 등)는 구독하는 쪽 몫이다.

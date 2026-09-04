@@ -61,6 +61,19 @@ public class EnemyData : ScriptableObject
     // true면 처치자 1명이 아니라 전체 플레이어에게 각자 보상 지급 (예: 물범 → 목재 1개씩).
     public bool rewardsAllPlayers;
 
+    // true면 보상이 **마지막 타격을 넣은 플레이어**에게 간다.
+    //
+    // 기본 규칙은 「이 적이 걷던 레인의 주인에게 간다」이고 그게 원작 그대로다
+    // (`RewardDistributor.GrantKillReward`). 그런데 **레인에 속하지 않는 적**이 있다 —
+    // 크립(물범 섬)·퀘스트 미니보스는 `LaneIndex`가 −1이라 레인 주인을 찾을 수 없고,
+    // 그대로 두면 `PlayerContext.Get(-1)`이 null이라 **아무에게도 안 간다.**
+    //
+    // 원작도 이 둘만 처치자 기준이다(크립 2·3단계는 처치자 한 명에게만 준다).
+    // 즉 예외를 만드는 게 아니라 **원작의 두 규칙을 둘 다 옮기는 것**이다.
+    //
+    // `rewardsAllPlayers`가 켜져 있으면 그쪽이 이긴다(크립 1단계가 그렇다).
+    public bool rewardsKillerOnly;
+
     public bool isBoss;
 
     // 물리(AD) 피해만 감폭한다. 마법(AP)은 방어력을 무시한다 — 원작 서술 그대로.

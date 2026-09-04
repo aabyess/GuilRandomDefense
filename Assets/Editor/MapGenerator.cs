@@ -1579,10 +1579,15 @@ public static class MapGenerator
         return new Vector3(zone.center.x + offsetX, MapLayout.IslandTop, zone.center.y + offsetZ);
     }
 
-    // 물범섬 4곳. 물범을 잡으면 전체 플레이어에게 목재 1개씩.
+    // 크립섬 4곳. **원작은 3단계 순차 체인**이다(물범 → 노루 → 양) — SealSpawner 주석 참고.
     static string BuildSealSpawners(Transform parent)
     {
         EnemyData seal = AssetDatabase.LoadAssetAtPath<EnemyData>("Assets/Data/Enemies/Enemy_Seal.asset");
+        EnemyData[] later =
+        {
+            AssetDatabase.LoadAssetAtPath<EnemyData>("Assets/Data/Enemies/Enemy_Creep2_노루.asset"),
+            AssetDatabase.LoadAssetAtPath<EnemyData>("Assets/Data/Enemies/Enemy_Creep3_양.asset"),
+        };
 
         foreach (MapLayout.Island island in MapLayout.SealIslands)
         {
@@ -1593,6 +1598,12 @@ public static class MapGenerator
             SealSpawner component = spawner.AddComponent<SealSpawner>();
             SerializedObject so = new SerializedObject(component);
             so.FindProperty("sealData").objectReferenceValue = seal;
+
+            SerializedProperty stages = so.FindProperty("laterStages");
+            stages.arraySize = later.Length;
+            for (int i = 0; i < later.Length; i++)
+                stages.GetArrayElementAtIndex(i).objectReferenceValue = later[i];
+
             so.ApplyModifiedProperties();
         }
 
