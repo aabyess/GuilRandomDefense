@@ -13,20 +13,23 @@ MonoBehaviour:
   m_Name: SupportSkill_흡수
   m_EditorClassIdentifier: 
   skillName: 흡수
-  description: 적을 태워 피해를 주고, 맞힌 수만큼 마나를 되돌려받는다.
-  targetKind: 0
-  effect: 0
+  description: 지정한 적 유닛 하나를 즉시 제거한다(보스·스토리 유닛에는 안 통한다).
+  targetKind: 1
+  effect: 5
   manaCost: 100
   goldCost: 0
   cooldownSeconds: 4
-  radius: 10
+  radius: 0
   mapWide: 0
-  damageBase: 20
-  damagePerRound: 4
+  damageBase: 0
+  damagePerRound: 0
+  waveCount: 1
   duration: 0
-  manaRefundPerHit: 5
-  manaRefundCap: 30
+  manaRefundPerHit: 0
+  manaRefundCap: 0
   manaRestoreAmount: 0
+  buffAttackPowerMultiplier: 1
   buffAttackSpeedMultiplier: 1
+  firstHitMaxHpPercent: 0
   maxDismantleGrade: 3
   dismantleRefunds: []

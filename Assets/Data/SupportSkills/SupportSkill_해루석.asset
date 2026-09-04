@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SupportSkill_해루석
   m_EditorClassIdentifier: 
   skillName: 해루석
-  description: 적을 묶어두고 그동안 지속 마법피해를 준다.
+  description: 첫 타격에 대상 최대 체력의 7%만큼 추가 피해를 준 뒤, 묶어두고 지속 마법피해를 준다.
   targetKind: 0
   effect: 1
   manaCost: 700
@@ -23,10 +23,13 @@ MonoBehaviour:
   mapWide: 0
   damageBase: 35
   damagePerRound: 6
+  waveCount: 1
   duration: 5
   manaRefundPerHit: 0
   manaRefundCap: 0
   manaRestoreAmount: 0
+  buffAttackPowerMultiplier: 1
   buffAttackSpeedMultiplier: 1
+  firstHitMaxHpPercent: 0.07
   maxDismantleGrade: 3
   dismantleRefunds: []
