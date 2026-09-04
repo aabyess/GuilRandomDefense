@@ -22,6 +22,12 @@ public enum TraitEffectKind
     AreaDamage,             // 범위피해
     AccuracyIncrease,       // 명중률/집탄율상승 — 명중 시스템 자체가 없음
     CastMethodChange,       // 시전방식변경(캐스트→즉발 등) — Tier B
+
+    // 마방깍 — EnemyDummy.EffectiveMagicMultiplier를 올린다(마법 피해를 더 받게 한다).
+    // ⚠️ **맨 뒤에 붙일 것.** 중간에 끼우면 이미 직렬화된 kind 값이 전부 한 칸씩 밀려
+    // 다른 효과로 읽힌다. (2026-09-04에 실제로 ArmorShred 뒤에 끼웠다가 되돌렸다 —
+    // 마침 effects가 전부 비어 있어 피해는 없었지만, 값이 있었으면 조용히 틀렸을 것이다.)
+    MagicArmorShred,
 }
 
 [System.Serializable]

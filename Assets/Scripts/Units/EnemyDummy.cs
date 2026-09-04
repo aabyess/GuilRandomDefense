@@ -135,6 +135,16 @@ public class EnemyDummy : MonoBehaviour
 
     public ArmorType ArmorType => data != null ? data.armorType : ArmorType.Normal;
 
+    // 마방깍 누적. 마법 방어는 배율이라, 깎으면 배율이 **올라간다**(피해를 더 받는다).
+    float magicArmorShred;
+
+    /// <summary>마법(AP) 피해에 곱할 배율. 1.0이 감소 없음, 1.0 초과면 더 받는다.</summary>
+    public float EffectiveMagicMultiplier =>
+        Mathf.Max(0f, (data != null ? data.magicArmorMultiplier : 1f) + magicArmorShred);
+
+    /// <summary>마방깍을 건다. 조합표의 `마방깍오라(9%)`가 0.09로 들어온다.</summary>
+    public void AddMagicArmorShred(float amount) => magicArmorShred += amount;
+
     /// <summary>방깎을 건다. 음수를 넣으면 되돌린다(지속시간 있는 방깎이 생기면 그렇게 쓴다).</summary>
     public void AddArmorShred(float amount) => armorShred += amount;
 
@@ -153,12 +163,21 @@ public class EnemyDummy : MonoBehaviour
         // AD+AP는 확정 전까지 AD와 동일하게 감폭시킨다 — "겸한다"는 것만 알고 어떻게 겸하는지
         // 모르는 상태에서 감폭을 빼면, 물리·마법 겸용이 순수 마법보다 유리해진다
         // (`ARMOR_SYSTEM_DESIGN.md` §7 질문 3).
-        if (type != DamageType.AP)
+        if (type == DamageType.AP)
+        {
+            // 마딜은 **물리 방어력을 무시하되 마법 방어력의 영향은 받는다** — 별개 축이다.
+            // 원작이 적에게 거는 "마법 방어력"(워크3 `Aegr`)이 이 자리다.
+            amount *= EffectiveMagicMultiplier;
+        }
+        else
         {
             // 방무뎀은 전부/전무가 아니라 비율이다. 피해를 둘로 갈라 한쪽만 감폭시킨다.
             float ignored = Mathf.Clamp01(armorIgnoreRatio);
             amount = amount * (1f - ignored) * ArmorMultiplier(EffectiveArmor)
                    + amount * ignored;
+
+            // AD+AP에는 마법 배율을 안 건다. 지금은 AD와 똑같이 취급하는데(§7 질문 3),
+            // 여기서만 마법 배율을 더하면 물리 감폭과 마법 배율을 **둘 다** 맞아 이중으로 불리해진다.
         }
 
         // 배율표가 없으면 1.0으로 둔다 — 배선이 빠졌다고 피해가 0이 되면 안 된다.

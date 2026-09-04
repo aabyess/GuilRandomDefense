@@ -70,7 +70,7 @@ public class UnitAttacker : MonoBehaviour
         attackSpeedBuffs.Remove(multiplier);
     }
 
-    // 방깎 특성(TraitEffectKind.ArmorShred)을 때릴 때마다 대상에 쌓는다.
+    // 방깎·마방깍 특성을 때릴 때마다 대상에 쌓는다.
     //
     // 처음엔 "이 유닛 몫은 한 번만"으로 막아뒀는데, 그건 무한 누적이 걱정돼서 우리가 정한 것이지
     // 근거가 없었다. 원작 맵(`war3map.w3a`)을 뜯어보니 **방깎은 전역에서 흔하게 중첩되고**
@@ -85,8 +85,14 @@ public class UnitAttacker : MonoBehaviour
         if (unitData == null) return;
 
         UnitUpgrades source = ResolveUpgrades();
-        float shred = source != null ? source.EffectSum(unitData, TraitEffectKind.ArmorShred) : 0f;
+        if (source == null) return;
+
+        float shred = source.EffectSum(unitData, TraitEffectKind.ArmorShred);
         if (shred > 0f) target.AddArmorShred(shred);
+
+        // 마방깍은 마법 방어 배율을 올린다(= 마법 피해를 더 받게 한다). 방깎과 별개 축이다.
+        float magicShred = source.EffectSum(unitData, TraitEffectKind.MagicArmorShred);
+        if (magicShred > 0f) target.AddMagicArmorShred(magicShred);
     }
 
     // 이 유닛의 데미지 판정. UnitData가 없으면(씬에 손으로 놓은 더미 등) 물리로 둔다 —
