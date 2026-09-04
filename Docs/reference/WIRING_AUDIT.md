@@ -247,3 +247,102 @@ UnitAttacker.ApplyArmorShred
 
 **즉 「없는 걸 가리키는 주석」은 드물고, 위험한 건 「있는 걸 가리키지만 그 길이 끊긴」 주석이다.**
 기계로는 후자를 못 잡는다 — ②는 지목한 메서드가 **전부 실재한다.** 끊긴 건 그 사이다.
+
+---
+
+# 손으로 따라간 계통 ① 조합 · ② 도박 (2026-09-04)
+
+기계 검사가 못 잡는 것을 찾는다 — **지목한 심볼은 전부 실재하는데 그 사이가 끊긴 경우.**
+경로를 끝에서 끝까지 손으로 따라갔다. **고치지 않았다.**
+
+## ✅ 멀쩡함 — 끝까지 이어진다
+
+### 조합 결과 유닛에 데이터가 붙는다
+
+PM이 지목한 자리(*"예전에 `Selectable`이 `Instantiate` 뒤에 데이터를 받아서 색이 안 나온 적이 있다"*)는 **막혀 있다.**
+
+```
+UnitSpawner.Spawn(data, …)
+  → Instantiate(data.prefab)
+  → identity.SetData(data)
+       └→ Selectable.RefreshIndicatorColor()      ← 그 사고를 막는 자리. 실제로 불린다
+  → attacker.ApplyStats(공격력·사거리·공속)
+  → agent.areaMask = ComputeAreaMask(이동능력)     ← 지상 유닛을 바다에 안 놓는다
+  → identity.RegisterTo(inventory)                 ← 필드/인벤토리 어긋남 방지
+```
+
+`UnitData.prefab`도 **239종 전부 채워져 있다**(`UnitPrefab` 237 · `Unit_안흔함_상붕카` 1 · `Unit_idle` 1).
+비어 있으면 `Spawn`이 경고만 찍고 `null`을 돌려주는데, 그런 유닛은 없다.
+
+### 조합식 204개가 씬에 다 걸려 있다
+
+`CombineSystem.recipes`에 **204개** — `Assets/Data/Recipes`의 204개와 일치한다.
+
+### 도박 비용이 양쪽에 다 걸린다
+
+PM이 지목한 `goldCost`가 **`CanRoll`과 `TryRollUnit` 양쪽에 다 있다.**
+
+| | |
+|---|---|
+| `CanRoll` (`GamblingShop.cs:284`) | 골드와 자원을 **둘 다** 본다 |
+| `TryRollUnit` (`:349`) | **골드를 먼저** 뺀다 — 자원부터 빼면 골드가 모자랄 때 자원만 날아간다 |
+| 실패 시 | 이미 뺀 골드를 **되돌린다**(`:359`) |
+
+에셋에도 값이 있다 — 하급 250 · 중급 1,500 · 고급 2,500 · 다른세계 3,500엔.
+씬의 도박소 4개 전부 `gachaTable`·`unitSpawner`·옵션 목록이 **채워져 있다.**
+
+### 위습이 갈 곳 없이 남지 않는다
+
+`WispData` 7종의 `targetGrade`를 씬의 `UnitPortal` 17개가 받는 등급과 대조했다:
+
+| 위습 | 등급 | 받는 포탈 |
+|---|---|---|
+| 흔함 선택 | 0 | **9개** |
+| 안흔함 | 1 | 1 |
+| 특별함 | 2 | 1 |
+| 희귀함 | 3 | 1 |
+| 전설·히든 | 5 | 1 |
+| 백수생활 선택 | 7 | 3 |
+| 랜덤유닛 | 10 | 1 |
+
+**갈 곳 없는 위습은 없다.** (PM이 말한 *"레일리+배가 영원히 거절되던"* 종류의 사고는 지금 없다.)
+
+`MainGachaTable`도 등급 0~12 전부 풀이 차 있다(9~43종). `UnitPortal`은 `reward == null`을 막고,
+`GamblingShop`은 `HasPool`로 미리 막는다 — **빈 풀에 자원만 날아가지 않는다.**
+
+## 🟡 위험 — 2건
+
+### ① 자원 포탈 5개가 **모든 위습을 받는다**
+
+```csharp
+// ResourcePortal.Accepts
+return acceptedGrades == null || acceptedGrades.Count == 0 || acceptedGrades.Contains(grade);
+```
+
+씬의 `ResourcePortal` **5개 전부 `acceptedGrades`가 비어 있다** → **무엇이든 받는다.**
+
+그리고 `OnTriggerEnter`는 **확률 판정보다 먼저 위습을 소모한다**(원작의 "66% 확률로 목재 1"이 그런
+구조라 의도된 것이다). 그래서 **초월위습이나 랜덤유닛 위습을 목재 칸에 잘못 넣으면 목재 1과 맞바꾼다.**
+
+거절 로그도 안 뜬다 — 받아버리니까. **원작이 그런지 확인이 필요하다.**
+
+### ② 조합·아이템·지갑이 **0번 플레이어에만 묶여 있다**
+
+씬의 `CombineSystem`은 하나뿐이고, `inventory`·`itemInventory`·`goldWallet`·`resourceWallet`이
+**0번 플레이어의 컴포넌트로 직접 배선**돼 있다. 폴백도 `PlayerContext.Local` 하나다.
+
+지금은 0번만 `occupied: 1`이라 안 문다. **멀티로 레인을 켜면 2·3·4번의 조합이 0번 지갑을 쓴다.**
+`WIRING_AUDIT §4`(창고 3개 미연결)와 **같은 뿌리**다 — 1인 기준으로 배선돼 있다.
+
+> `unitSpawner`는 `{fileID: 0}`인데 **폴백이 있다**(`FindFirstObjectByType`). 문제 아니다.
+
+## ⚪ 확인 못 한 것
+
+`ItemInventory`는 씬에 **1개**뿐이다(0번 소유). `ItemData` 에셋은 2개고 조합식이 참조한다.
+아이템이 실제로 **들어오는 경로**(획득처)가 있는지는 이번에 안 봤다 — 조합 재료로 쓰이기만 하고
+아무도 안 넣어주면 그 조합식들은 영원히 안 된다. **다음에 볼 것.**
+
+## 범위
+
+**조합·도박 두 계통만 봤다. 웨이브·스토리는 안 봤다.**
+그리고 이 방식은 **경로를 아는 만큼만 잡는다** — 내가 안 떠올린 경로는 여기에도 안 나온다.
