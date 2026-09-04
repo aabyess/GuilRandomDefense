@@ -69,9 +69,14 @@ public class SupportShop : MonoBehaviour, ILaneShop
 
     static LaneShopTargetKind TargetKindOf(SupportSkillData skill)
     {
-        if (skill.effect == SupportSkillEffect.ManaRestore) return LaneShopTargetKind.None;
+        if (IsSelfCast(skill.effect)) return LaneShopTargetKind.None;
         return skill.targetKind == SupportSkillTargetKind.Unit ? LaneShopTargetKind.Unit : LaneShopTargetKind.Ground;
     }
+
+    // 대상 지정 없이 자기 자신에게 바로 발동하는 이펙트들 — 마나포션(마나 회복),
+    // 선택위습제조(원작에서도 targetKind가 "none"이었다, 2026-09-04 확인).
+    static bool IsSelfCast(SupportSkillEffect effect) =>
+        effect == SupportSkillEffect.ManaRestore || effect == SupportSkillEffect.CraftChosenWisp;
 
     // 호버할 때만 불린다 — 문자열 조립은 여기서만 한다(GetSlotView는 매번 문자열을 만들지 않는다).
     public string GetSlotTooltip(int index)
@@ -89,7 +94,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
         SupportSkillData skill = skills[index];
         if (skill == null) return false;
 
-        if (skill.effect == SupportSkillEffect.ManaRestore) return TryCastSelf(skill);
+        if (IsSelfCast(skill.effect)) return TryCastSelf(skill);
         if (skill.targetKind == SupportSkillTargetKind.Unit) return TryCastOnUnit(skill, target.unit);
         return TryCastOnGround(skill, target.point);
     }
@@ -156,6 +161,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
     {
         if (skill == null) return false;
         if (Time.time < GetCooldownUntil(skill)) return false;
+        if (skill.maxUses > 0 && UsesSoFar(skill) >= skill.maxUses) return false;
 
         PlayerContext context = OwnerContext;
         if (context == null) return false;
@@ -180,9 +186,21 @@ public class SupportShop : MonoBehaviour, ILaneShop
         return Mathf.Max(0f, GetCooldownUntil(skill) - Time.time);
     }
 
+    // GamblingProgress와 같은 결 — 옵션(스킬) 에셋을 키로 쓴다. 세이브/로드가 없는 한 판짜리
+    // 게임이라 "이번 판 누적"이 곧 원작이 말하는 "평생 N회"다.
+    readonly Dictionary<SupportSkillData, int> usesSoFar = new Dictionary<SupportSkillData, int>();
+
+    public int UsesSoFar(SupportSkillData skill)
+    {
+        return skill != null && usesSoFar.TryGetValue(skill, out int count) ? count : 0;
+    }
+
     void StartCooldown(SupportSkillData skill)
     {
         cooldownUntil[skill] = Time.time + skill.cooldownSeconds;
+
+        if (skill.maxUses > 0)
+            usesSoFar[skill] = UsesSoFar(skill) + 1;
     }
 
     bool TrySpendCost(SupportSkillData skill, PlayerContext context)
@@ -201,10 +219,17 @@ public class SupportShop : MonoBehaviour, ILaneShop
         return true;
     }
 
-    // 마나포션: 위치·대상 없이 즉시 자기 자신에게.
+    // 위치·대상 없이 즉시 자기 자신에게 — 마나포션(마나 회복) / 선택위습제조(위습 제조).
     public bool TryCastSelf(SupportSkillData skill)
     {
-        if (skill == null || skill.effect != SupportSkillEffect.ManaRestore) return false;
+        if (skill == null) return false;
+        if (skill.effect == SupportSkillEffect.ManaRestore) return TryManaRestore(skill);
+        if (skill.effect == SupportSkillEffect.CraftChosenWisp) return TryCraftChosenWisp(skill);
+        return false;
+    }
+
+    bool TryManaRestore(SupportSkillData skill)
+    {
         if (!CanCast(skill)) return false;
 
         PlayerContext context = OwnerContext;
@@ -215,7 +240,28 @@ public class SupportShop : MonoBehaviour, ILaneShop
         return true;
     }
 
-    // 폭우/지진/버스터콜/해적선충돌/흡수/해루석/출항이다 — 커서로 찍은 지점에 발동.
+    // 선택위습제조: 흔함 선택위습 1기를 필드에 만들어낸다(원작 "최대 3번까지" — maxUses로 표현).
+    // 위습 지급은 RewardDistributor.GrantWisps를 그대로 재사용한다 — 새 지급 경로를 안 만든다
+    // (RoundManager.GrantFlatRoundReward와 같은 이유).
+    bool TryCraftChosenWisp(SupportSkillData skill)
+    {
+        if (skill.craftedWisp == null) return false;
+        if (!CanCast(skill)) return false;
+
+        PlayerContext context = OwnerContext;
+        if (!TrySpendCost(skill, context)) return false;
+
+        if (RewardDistributor.Instance != null)
+        {
+            List<WispReward> reward = new List<WispReward> { new WispReward { wisp = skill.craftedWisp, count = 1 } };
+            RewardDistributor.Instance.GrantWisps(context, reward);
+        }
+
+        StartCooldown(skill);
+        return true;
+    }
+
+    // 폭우/지진/버스터콜/불비/해루석/출항이다 — 커서로 찍은 지점에 발동.
     public bool TryCastOnGround(SupportSkillData skill, Vector3 point)
     {
         if (skill == null || skill.targetKind != SupportSkillTargetKind.Ground) return false;
@@ -245,12 +291,62 @@ public class SupportShop : MonoBehaviour, ILaneShop
         return true;
     }
 
-    // 연금술: 유닛을 직접 지정.
+    // 유닛을 직접 지정하는 스킬. 대상이 내 유닛인지(연금술) 적인지(흡수·낙뢰)는 이펙트별로 갈린다.
     public bool TryCastOnUnit(SupportSkillData skill, GameObject targetUnit)
     {
         if (skill == null || skill.targetKind != SupportSkillTargetKind.Unit) return false;
-        if (skill.effect != SupportSkillEffect.UnitDismantle) return false;
         if (targetUnit == null) return false;
+
+        if (skill.effect == SupportSkillEffect.InstantKill) return TryInstantKillUnit(skill, targetUnit);
+        if (skill.effect == SupportSkillEffect.SingleTargetDamage) return TrySingleTargetDamageUnit(skill, targetUnit);
+        return TryDismantleUnit(skill, targetUnit);
+    }
+
+    // 흡수: 지정한 적 유닛 하나를 즉시 제거한다(원작 확인, 2026-09-04: RemoveUnit 방식).
+    // 보스·스토리 유닛(라인에 안 속한 유닛 포함)은 안 통한다 — 원작 "보스, 스토리 적용X".
+    // 단일 지정형이라 광역 스킬과 달리 CollectInRadius를 안 쓴다 — 원작 능력 데이터에
+    // 범위(aare) 필드 자체가 없다(즉, 원작도 대상 하나만 잡는다).
+    bool TryInstantKillUnit(SupportSkillData skill, GameObject targetUnit)
+    {
+        if (!targetUnit.TryGetComponent(out EnemyDummy enemy)) return false;
+        if (enemy.IsBoss || enemy.LaneIndex < 0) return false;
+        if (!CanCast(skill)) return false;
+
+        PlayerContext context = OwnerContext;
+        if (!TrySpendCost(skill, context)) return false;
+
+        // TakeDamage를 안 거친다 — 원작 RemoveUnit은 방어력/저항과 무관하게 무조건 없애고,
+        // 킬 보상도 안 나간다(WC3의 RemoveUnit 자체가 그렇다). "즉사기가 킬 보상까지 주면
+        // 사실상 무료 학살기가 된다"는 판단도 같이 깔려 있다 — PM 확인 예정.
+        enemy.RemoveInstantly();
+
+        StartCooldown(skill);
+        return true;
+    }
+
+    // 낙뢰: 지정한 적 유닛 하나에 즉발 피해(+duration>0이면 스턴). 흡수와 달리 보스·스토리
+    // 제외가 없다 — 원작 툴팁에 그런 제한 서술이 없었다.
+    bool TrySingleTargetDamageUnit(SupportSkillData skill, GameObject targetUnit)
+    {
+        if (!targetUnit.TryGetComponent(out EnemyDummy enemy)) return false;
+        if (!CanCast(skill)) return false;
+
+        PlayerContext context = OwnerContext;
+        if (!TrySpendCost(skill, context)) return false;
+
+        int round = RoundManagerRef != null ? RoundManagerRef.CurrentRound : 1;
+        enemy.TakeDamage(skill.ComputeDamage(round), DamageType.AP, AttackType.Unassigned, owner.OwnerId);
+
+        if (skill.duration > 0f) StartCoroutine(StunRoutine(enemy, skill.duration));
+
+        StartCooldown(skill);
+        return true;
+    }
+
+    // 연금술: 유닛을 직접 지정(자기 유닛만).
+    bool TryDismantleUnit(SupportSkillData skill, GameObject targetUnit)
+    {
+        if (skill.effect != SupportSkillEffect.UnitDismantle) return false;
         if (!CanCast(skill)) return false;
 
         if (!targetUnit.TryGetComponent(out OwnedByPlayer targetOwner) || targetOwner.OwnerId != owner.OwnerId)
@@ -296,7 +392,32 @@ public class SupportShop : MonoBehaviour, ILaneShop
         return 0;
     }
 
+    // waveCount<=1이면 예전과 완전히 같은 즉발 1회(지진·폭우·버스터콜 전부 이 경로다).
+    // waveCount>1이면 지속시간에 걸쳐 나눠 때린다(불비 — 원작 "1웨이브당 5만뎀, 총 4웨이브").
+    // 원작의 "맞으면 초당 2.8만뎀 6초 화상"은 이번엔 생략했다 — 알려진 단순화(SUPPORT_SHOP.md 참고).
     void ApplyAreaDamage(SupportSkillData skill, Vector3 point, int round, PlayerContext context)
+    {
+        if (skill.waveCount > 1)
+        {
+            StartCoroutine(MultiWaveDamageRoutine(skill, point, round, context));
+            return;
+        }
+
+        ApplyOneWaveDamage(skill, point, round, context);
+    }
+
+    IEnumerator MultiWaveDamageRoutine(SupportSkillData skill, Vector3 point, int round, PlayerContext context)
+    {
+        float interval = skill.duration > 0f ? skill.duration / skill.waveCount : 1f;
+
+        for (int wave = 0; wave < skill.waveCount; wave++)
+        {
+            ApplyOneWaveDamage(skill, point, round, context);
+            if (wave < skill.waveCount - 1) yield return new WaitForSeconds(interval);
+        }
+    }
+
+    void ApplyOneWaveDamage(SupportSkillData skill, Vector3 point, int round, PlayerContext context)
     {
         float damage = skill.ComputeDamage(round);
         int hits = 0;
@@ -309,7 +430,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
             EnemyDummy enemy = targets[i];
             if (enemy == null) continue;
 
-            if (skill.duration > 0f) StartCoroutine(StunRoutine(enemy, skill.duration));
+            if (skill.duration > 0f && skill.waveCount <= 1) StartCoroutine(StunRoutine(enemy, skill.duration));
 
             // 도움소 스킬은 마법 피해로 둔다 — 원작이 "마뎀은 방어력 무시, 스킬딜로 처리"라고
             // 서술한다(`UNIT_STATS_RESEARCH.md`). 스킬 피해가 방어력에 감폭되면 후반에 도움소가
@@ -325,6 +446,8 @@ public class SupportShop : MonoBehaviour, ILaneShop
         }
     }
 
+    // 해루석: 첫 타격에 대상 최대 체력 비례 피해(원작 "전체 체력의 7%")를 한 번 더 얹은 뒤
+    // 구속+DoT를 건다.
     void ApplyRoot(SupportSkillData skill, Vector3 point, int round)
     {
         int ticks = Mathf.Max(1, Mathf.RoundToInt(skill.duration));
@@ -333,8 +456,15 @@ public class SupportShop : MonoBehaviour, ILaneShop
         List<EnemyDummy> targets = CollectInRadius(point, skill.radius);
 
         for (int i = 0; i < targets.Count; i++)
-            if (targets[i] != null)
-                StartCoroutine(RootAndDotRoutine(targets[i], tickDamage, ticks));
+        {
+            EnemyDummy enemy = targets[i];
+            if (enemy == null) continue;
+
+            if (skill.firstHitMaxHpPercent > 0f)
+                enemy.TakeDamage(enemy.MaxHp * skill.firstHitMaxHpPercent, DamageType.AP, AttackType.Unassigned, owner.OwnerId);
+
+            StartCoroutine(RootAndDotRoutine(enemy, tickDamage, ticks));
+        }
     }
 
     IEnumerator RootAndDotRoutine(EnemyDummy enemy, float tickDamage, int ticks)
@@ -379,18 +509,19 @@ public class SupportShop : MonoBehaviour, ILaneShop
 
             if (!selectable.TryGetComponent(out UnitAttacker attacker)) continue;
 
-            StartCoroutine(BuffRoutine(attacker, skill.buffAttackSpeedMultiplier, skill.duration));
+            StartCoroutine(BuffRoutine(attacker, skill.buffAttackPowerMultiplier, skill.duration));
         }
     }
 
     IEnumerator BuffRoutine(UnitAttacker attacker, float multiplier, float duration)
     {
-        // 이 버프는 공격속도만 건드린다. 예전엔 공격력·사거리까지 읽어서 되돌려놨는데,
-        // 그러면 그 사이에 영구 강화를 산 만큼이 복원할 때 지워졌다.
-        attacker.AddAttackSpeedBuff(multiplier);
+        // 이 버프는 공격력만 건드린다(원작 확인, 2026-09-04 — 예전엔 공격속도로 잘못 만들었었다).
+        // 예전 공격속도 버전처럼 값을 덮어쓰는 대신 누적 리스트에 쌓는다 — 되돌릴 때 "원래값"을
+        // 기억하는 방식이면 그 사이에 영구 강화를 산 만큼이 복원할 때 지워진다.
+        attacker.AddAttackPowerBuff(multiplier);
 
         yield return new WaitForSeconds(duration);
 
-        if (attacker != null) attacker.RemoveAttackSpeedBuff(multiplier);
+        if (attacker != null) attacker.RemoveAttackPowerBuff(multiplier);
     }
 }

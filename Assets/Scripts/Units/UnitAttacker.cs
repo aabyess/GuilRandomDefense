@@ -41,7 +41,7 @@ public class UnitAttacker : MonoBehaviour
     float cachedUpgradeMultiplier = 1f;
 
     // 디버그 표시용 — 스탯이 실제로 적용됐는지 화면에서 확인하기 위해 노출한다.
-    public float AttackDamage => attackDamage * UpgradeMultiplier;
+    public float AttackDamage => attackDamage * UpgradeMultiplier * AttackPowerMultiplier;
     public float AttackRange => attackRange;
     public float AttackInterval => attackInterval / AttackSpeedMultiplier;
 
@@ -50,12 +50,25 @@ public class UnitAttacker : MonoBehaviour
     // 기억해둔 옛 값으로 되돌아가면서 산 것이 조용히 사라진다.
     readonly List<float> attackSpeedBuffs = new List<float>();
 
+    // 출항이다(원작 확인, 2026-09-04: 공격속도가 아니라 공격력 버프다)용 — 같은 누적 방식.
+    readonly List<float> attackPowerBuffs = new List<float>();
+
     float AttackSpeedMultiplier
     {
         get
         {
             float product = 1f;
             foreach (float buff in attackSpeedBuffs) product *= buff;
+            return product > 0f ? product : 1f;
+        }
+    }
+
+    float AttackPowerMultiplier
+    {
+        get
+        {
+            float product = 1f;
+            foreach (float buff in attackPowerBuffs) product *= buff;
             return product > 0f ? product : 1f;
         }
     }
@@ -68,6 +81,16 @@ public class UnitAttacker : MonoBehaviour
     public void RemoveAttackSpeedBuff(float multiplier)
     {
         attackSpeedBuffs.Remove(multiplier);
+    }
+
+    public void AddAttackPowerBuff(float multiplier)
+    {
+        if (multiplier > 0f) attackPowerBuffs.Add(multiplier);
+    }
+
+    public void RemoveAttackPowerBuff(float multiplier)
+    {
+        attackPowerBuffs.Remove(multiplier);
     }
 
     // 방깎·마방깍 특성을 때릴 때마다 대상에 쌓는다.

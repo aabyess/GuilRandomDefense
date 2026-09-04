@@ -27,8 +27,13 @@ public class EnemyDummy : MonoBehaviour
     public float MaxHp { get; private set; }
     public float HpRatio => MaxHp > 0f ? Mathf.Clamp01(hp / MaxHp) : 0f;
 
+    // 라운드 보스 여부(OnBossKilled와 같은 판단 기준). 도움소 흡수(즉사기)가 보스를 못 잡게
+    // 거르는 데도 쓴다 — 원작 "보스, 스토리 적용X".
+    public bool IsBoss => data != null && data.isBoss;
+
     // 어느 레인에 스폰됐는지. 팀 현황판이 플레이어별 적 수를 세는 데 쓴다.
-    // -1은 레인에 속하지 않는 적(물범 등).
+    // -1은 레인에 속하지 않는 적(물범·스토리 건물 등) — 도움소 흡수가 "스토리 적용X"를
+    // 넓게 해석해 이 값도 같이 거른다.
     public int LaneIndex { get; private set; } = -1;
 
     // 스토리 건물은 변신 전까지 죽지 않는다. 피해는 그대로 쌓이고, 변신할 때 남은 체력이 보스 체력이 된다.
@@ -251,5 +256,20 @@ public class EnemyDummy : MonoBehaviour
 
             Destroy(gameObject);
         }
+    }
+
+    /// <summary>
+    /// 도움소 흡수(즉사기) 전용 — 원작의 RemoveUnit과 같다. TakeDamage를 안 거쳐서
+    /// 방어력·저항·무적 플래그와 무관하게 무조건 사라지고, 킬 보상(GrantKillReward)도
+    /// 안 나간다·OnBossKilled도 안 뜬다(원작이 그렇다 — 애초에 이 메서드는 IsBoss==false인
+    /// 대상에만 불려야 한다, 호출부가 걸러야 할 몫이다).
+    /// </summary>
+    public void RemoveInstantly()
+    {
+        if (isDead) return;
+
+        isDead = true;
+        Active.Remove(this);
+        Destroy(gameObject);
     }
 }

@@ -816,9 +816,22 @@ public class GameHud : MonoBehaviour
 
         if (!WorldPick.TryHit(cam, Mouse.current.position.ReadValue(), out RaycastHit hit)) return;
 
-        bool used = kind == LaneShopTargetKind.Unit
-            ? hit.collider.TryGetComponent(out Selectable selectable) && shop.TryUse(index, LaneShopTarget.OnUnit(selectable.gameObject))
-            : shop.TryUse(index, LaneShopTarget.AtPoint(hit.point));
+        bool used;
+        if (kind == LaneShopTargetKind.Unit)
+        {
+            // 연금술(자기 유닛)은 Selectable로 잡히지만, 흡수(적 유닛)의 대상인 EnemyDummy는
+            // Selectable이 없다(적한테 그걸 붙이면 드래그 선택·명령키에 같이 걸린다) — 그래서
+            // Selectable을 먼저 보고, 없으면 EnemyDummy로 한 번 더 본다.
+            GameObject targetObject = null;
+            if (hit.collider.TryGetComponent(out Selectable selectable)) targetObject = selectable.gameObject;
+            else if (hit.collider.TryGetComponent(out EnemyDummy enemyTarget)) targetObject = enemyTarget.gameObject;
+
+            used = targetObject != null && shop.TryUse(index, LaneShopTarget.OnUnit(targetObject));
+        }
+        else
+        {
+            used = shop.TryUse(index, LaneShopTarget.AtPoint(hit.point));
+        }
 
         if (used) RefreshShopAffordability();
     }
