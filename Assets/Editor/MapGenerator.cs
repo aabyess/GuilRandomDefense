@@ -72,6 +72,8 @@ public static class MapGenerator
         GameObject root = new GameObject(RootName);
         BuildSea(root.transform);
 
+        List<PirateQuestData> pirateQuests = LoadPirateQuests();
+
         List<GameObject> laneObjects = new List<GameObject>();
         for (int i = 0; i < MapLayout.Lanes.Length; i++)
         {
@@ -85,6 +87,7 @@ public static class MapGenerator
             BuildUnitUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildOtherWorldUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildEternalUpgradeShop(root.transform, MapLayout.Lanes[i], i);
+            BuildUnitSellPortal(root.transform, MapLayout.Lanes[i], i, pirateQuests);
             BuildStoryZonePortal(root.transform, MapLayout.Lanes[i], i);
             laneObjects.Add(laneObject);
         }
@@ -116,6 +119,7 @@ public static class MapGenerator
         string gateReport = BuildPunkHazardGate(root.transform);
         string storyReport = BuildStoryZone(root.transform);
         string sealReport = BuildSealSpawners(root.transform);
+        string questReport = BuildPirateQuestManager(pirateQuests);
 
         string portalReport = BuildGachaPortals(gachaIsland);
 
@@ -150,7 +154,7 @@ public static class MapGenerator
         string message =
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
             $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + "\n\n" +
-            tableReport + displayReport + gateReport + storyReport + sealReport + overlaps + navResult + oldGround + rewire + saveNote;
+            tableReport + displayReport + gateReport + storyReport + sealReport + questReport + overlaps + navResult + oldGround + rewire + saveNote;
         Debug.Log("[맵] " + message);
         EditorUtility.DisplayDialog(Title, message, "확인");
     }
@@ -240,8 +244,10 @@ public static class MapGenerator
     // 있으면 되고(TakeDamage가 아예 없다), EnemyDummy.Active/DestructibleGate.Active 어디에도
     // 등록되지 않으니 적 타겟팅 후보에도 자연히 들어가지 않는다.
     // 레인 안 상점 건물들. 순찰 흙길(TrackInset 14)보다 안쪽, 레인 가운데에 가로로 늘어선다.
-    // 앞으로 강화소 셋이 더 붙으므로 자리를 인덱스로 잡는다.
-    const int LaneShopCount = 5;
+    // 자리는 인덱스로 잡는다 — 0 도박소, 1 유닛강화소, 2 다른세계강화소, 3 영원함강화소,
+    // 4 도움소, 5 해적단 판매 포탈. 슬롯을 늘려도 LaneShopSlot의 간격 계산이 strip 폭을
+    // 그대로 다시 나누므로 자리를 손으로 다시 잡을 필요가 없다.
+    const int LaneShopCount = 6;
     const float LaneShopSize = 9f;
 
     // 상점 줄은 필드와 벽 하나로 갈린다 — 적이 도는 곳과 내가 쓰는 곳이 눈으로 구분돼야 한다.
@@ -536,6 +542,77 @@ public static class MapGenerator
         }
 
         so.ApplyModifiedProperties();
+    }
+
+    const string PirateQuestFolder = "Assets/Data/PirateQuests";
+
+    // 퀘스트 목록을 한 번만 훑어서 매니저(startingQuests)와 레인마다의 포탈(quests)에
+    // 똑같이 나눠준다 — 둘이 다른 순서/부분집합을 들면 포탈이 못 여는 토큰이 무상 지급되는
+    // 사고가 난다.
+    static List<PirateQuestData> LoadPirateQuests()
+    {
+        return AssetDatabase.FindAssets("t:PirateQuestData", new[] { PirateQuestFolder })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .OrderBy(path => path, System.StringComparer.Ordinal)
+            .Select(AssetDatabase.LoadAssetAtPath<PirateQuestData>)
+            .Where(quest => quest != null)
+            .ToList();
+    }
+
+    // 판매 포탈 — 레인당 하나. UnitPortal(위습이 걸어 들어가 유닛을 받는다)과 짝인 구조라
+    // 같은 트리거 방식(CreatePortalObject)을 그대로 쓴다 — BuildLaneShopBody의 클릭형 상점과
+    // 달리 이건 유닛이 몸으로 들어와야 발동한다. 들어온 유닛의 sellUnit으로 어느 해적단
+    // 퀘스트인지는 포탈 스스로 고르므로(UnitSellPortal.FindQuestFor), 여기서는 전체 퀘스트
+    // 목록을 그대로 물려주기만 하면 된다 — 퀘스트마다 포탈을 따로 세우지 않는다.
+    static void BuildUnitSellPortal(Transform parent, MapLayout.Island lane, int laneIndex,
+                                    List<PirateQuestData> quests)
+    {
+        GameObject portal = CreatePortalObject(parent, $"{lane.name}_해적단포탈",
+            LaneShopSlot(lane, 5), PortalDiameter);
+
+        UnitSellPortal sellPortal = portal.AddComponent<UnitSellPortal>();
+        SerializedObject so = new SerializedObject(sellPortal);
+        SerializedProperty list = so.FindProperty("quests");
+
+        list.ClearArray();
+        for (int i = 0; i < quests.Count; i++)
+        {
+            list.InsertArrayElementAtIndex(i);
+            list.GetArrayElementAtIndex(i).objectReferenceValue = quests[i];
+        }
+
+        so.ApplyModifiedProperties();
+    }
+
+    // 해적단류 퀘스트 매니저 — 씬 전체에 하나. startingQuests에 전부(와포루·스모커·해적단·
+    // 바제스·거프·모리아·피카) 채운다: 원작의 "상점 재고 등록" 대신 게임 시작 무상 지급으로
+    // 단순화했으므로(PirateQuestManager.GrantStartingTokens 주석 참고), 여기 없는 퀘스트는
+    // 토큰 자체가 안 나와 영영 못 연다.
+    static string BuildPirateQuestManager(List<PirateQuestData> quests)
+    {
+        PirateQuestManager manager = Object.FindFirstObjectByType<PirateQuestManager>(FindObjectsInactive.Include);
+        if (manager == null)
+        {
+            GameObject managerObject = new GameObject("PirateQuestManager");
+            manager = managerObject.AddComponent<PirateQuestManager>();
+        }
+
+        SerializedObject so = new SerializedObject(manager);
+        SerializedProperty list = so.FindProperty("startingQuests");
+
+        list.ClearArray();
+        for (int i = 0; i < quests.Count; i++)
+        {
+            list.InsertArrayElementAtIndex(i);
+            list.GetArrayElementAtIndex(i).objectReferenceValue = quests[i];
+        }
+
+        so.FindProperty("unitSpawner").objectReferenceValue =
+            Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
+        so.ApplyModifiedProperties();
+
+        return $"\n해적단 퀘스트: {quests.Count}개 연결(포탈은 레인당 1개, 토큰은 게임 시작 시 전원에게 무상 지급)." +
+               (quests.Count == 0 ? $"\n  ⚠️ {PirateQuestFolder}에서 PirateQuestData를 하나도 못 찾았습니다." : "");
     }
 
     static void BuildDecor(Transform parent, string name, Vector3 position, Vector3 scale,
