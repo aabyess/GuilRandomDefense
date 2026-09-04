@@ -1,17 +1,17 @@
 using UnityEngine;
 
 /// <summary>
-/// 공격 타입 × 방어 타입 배율표.
+/// 공격 타입 × 방어 타입 배율표. <b>원작 `war3mapMisc.txt`의 값을 그대로 옮긴 것이다</b>
+/// (`Docs/reference/UNIT_STATS_RESEARCH.md`에 추출·검증 기록).
 ///
-/// <b>여섯 칸이 전부 1.0으로 시작한다. 일부러 그렇다.</b> 원작의 배율은 어디에도 문서화돼 있지 않고
-/// (`Docs/reference/ARMOR_SYSTEM_DESIGN.md`), 지금 숫자를 지어 넣으면 그게 곧 밸런스가 되어
-/// 나중에 원작 수치가 나와도 되돌리기 어렵다. <b>축만 만들어두고 값은 근거가 생길 때 채운다.</b>
+/// 세 타입이 가위바위보를 이룬다 — normal은 normal에 강하고 fort에 약하며,
+/// siege는 fort에 강하고 large에 약하며, pierce는 large에 강하고 normal에 약하다.
+/// hero는 전 방어에 1.05 고정, chaos는 전부 1.00으로 상성 밖이다.
 ///
-/// 밸런싱할 때 코드를 고치지 않아도 되도록 ScriptableObject로 뺐다.
+/// <b>물리 피해에만 적용된다.</b> 마법(AP)은 이 표가 아니라 적의 마법 방어 배율을 탄다.
 ///
-/// <b>⚠️ 값을 1.0에서 바꾸기 전에 먼저 적 프리팹의 <c>EnemyDummy.damageTable</c>에 이 에셋을 연결해야 한다.</b>
-/// 연결 안 된 상태에서는 <c>EnemyDummy</c>가 배율을 1.0으로 두므로 <b>표를 고쳐도 아무 일도 안 일어난다.</b>
-/// 지금은 여섯 칸이 전부 1.0이라 연결 여부가 결과에 영향을 주지 않는다 — 값을 바꾸는 순간부터 문제가 된다.
+/// <b>⚠️ 값을 바꾸기 전에 적 프리팹의 <c>EnemyDummy.damageTable</c>에 이 에셋을 연결해야 한다.</b>
+/// 연결 안 된 상태에서는 <c>EnemyDummy</c>가 배율을 1.0으로 두므로 표를 고쳐도 아무 일도 안 일어난다.
 /// </summary>
 [CreateAssetMenu(fileName = "DamageTable", menuName = "GuilRandomDefense/Damage Table")]
 public class DamageTable : ScriptableObject
@@ -19,24 +19,43 @@ public class DamageTable : ScriptableObject
     [System.Serializable]
     public class Row
     {
+        public float vsLarge = 1f;
+        public float vsFort = 1f;
         public float vsNormal = 1f;
-        public float vsBoss = 1f;
+        public float vsHero = 1f;
     }
 
-    [Header("공격 타입별 배율 (방어 타입 Normal / Boss)")]
-    public Row ad = new Row();
-    public Row ap = new Row();
+    [Header("공격 타입별 배율 (방어 Large / Fort / Normal / Hero)")]
+    public Row normal = new Row();
+    public Row pierce = new Row();
+    public Row siege = new Row();
+    public Row hero = new Row();
+    public Row chaos = new Row();
 
-    [Tooltip("AD와 AP를 겸하는 유닛. 원작에 실제로 있는 범주지만 '어떻게' 겸하는지는 미기재 — " +
-             "확정되면 여기가 아니라 피해원마다 타입을 붙이는 구조로 갈 수도 있다.")]
-    public Row adap = new Row();
-
-    public float Multiplier(DamageType attack, ArmorType armor)
+    /// <summary>
+    /// 한쪽이라도 <c>Unassigned</c>면 1.0이다. 분류하지 않은 유닛·적이 조용히
+    /// 어느 칸에 떨어져 밸런스가 바뀌는 것을 막는다 — 분류는 명시적으로 해야 한다.
+    /// </summary>
+    public float Multiplier(AttackType attack, ArmorType armor)
     {
-        Row row = attack == (DamageType.AD | DamageType.AP) ? adap
-                : attack == DamageType.AP ? ap
-                : ad;   // None도 물리로 취급한다 — 값이 안 붙은 피해가 조용히 사라지는 것보다 낫다
+        if (attack == AttackType.Unassigned || armor == ArmorType.Unassigned) return 1f;
 
-        return armor == ArmorType.Boss ? row.vsBoss : row.vsNormal;
+        Row row;
+        switch (attack)
+        {
+            case AttackType.Pierce: row = pierce; break;
+            case AttackType.Siege:  row = siege;  break;
+            case AttackType.Hero:   row = hero;   break;
+            case AttackType.Chaos:  row = chaos;  break;
+            default:                row = normal; break;
+        }
+
+        switch (armor)
+        {
+            case ArmorType.Large: return row.vsLarge;
+            case ArmorType.Fort:  return row.vsFort;
+            case ArmorType.Hero:  return row.vsHero;
+            default:              return row.vsNormal;
+        }
     }
 }

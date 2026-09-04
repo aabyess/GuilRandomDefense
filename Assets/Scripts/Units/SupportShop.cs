@@ -314,7 +314,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
             // 도움소 스킬은 마법 피해로 둔다 — 원작이 "마뎀은 방어력 무시, 스킬딜로 처리"라고
             // 서술한다(`UNIT_STATS_RESEARCH.md`). 스킬 피해가 방어력에 감폭되면 후반에 도움소가
             // 통째로 무의미해진다. ⚠️ 사장님 확인은 못 받은 판단이다.
-            enemy.TakeDamage(damage, DamageType.AP, owner.OwnerId);
+            enemy.TakeDamage(damage, DamageType.AP, AttackType.Unassigned, owner.OwnerId);
             hits++;
         }
 
@@ -345,7 +345,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
         {
             yield return new WaitForSeconds(1f);
             if (enemy == null) yield break;   // 죽었으면 풀어줄 대상 자체가 없다
-            enemy.TakeDamage(tickDamage, DamageType.AP, owner.OwnerId);   // 위와 같은 이유
+            enemy.TakeDamage(tickDamage, DamageType.AP, AttackType.Unassigned, owner.OwnerId);   // 위와 같은 이유
         }
 
         if (enemy != null) enemy.RemoveFreeze();

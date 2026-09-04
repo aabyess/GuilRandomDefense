@@ -157,7 +157,7 @@ public class EnemyDummy : MonoBehaviour
     /// 최종 피해. 순서: 방깎 → 방어력 감폭 → 배율표.
     /// AP는 방어력을 무시한다(원작: "마법 데미지는 적의 방어력에 영향을 받지 않는다").
     /// </summary>
-    float MitigatedDamage(float amount, DamageType type, float armorIgnoreRatio)
+    float MitigatedDamage(float amount, DamageType type, AttackType attackType, float armorIgnoreRatio)
     {
         // 순수 마법(AP)은 방어력 자체를 안 탄다 — 비율과 무관하게 전부 통과한다.
         // AD+AP는 확정 전까지 AD와 동일하게 감폭시킨다 — "겸한다"는 것만 알고 어떻게 겸하는지
@@ -178,12 +178,12 @@ public class EnemyDummy : MonoBehaviour
 
             // AD+AP에는 마법 배율을 안 건다. 지금은 AD와 똑같이 취급하는데(§7 질문 3),
             // 여기서만 마법 배율을 더하면 물리 감폭과 마법 배율을 **둘 다** 맞아 이중으로 불리해진다.
-        }
 
-        // 배율표가 없으면 1.0으로 둔다 — 배선이 빠졌다고 피해가 0이 되면 안 된다.
-        if (damageTable != null)
-        {
-            amount *= damageTable.Multiplier(type, ArmorType);
+            // 상성표는 물리에만 건다. 마법은 위에서 마법 방어 배율을 이미 탔다.
+            if (damageTable != null)
+            {
+                amount *= damageTable.Multiplier(attackType, ArmorType);
+            }
         }
 
         return amount;
@@ -208,11 +208,16 @@ public class EnemyDummy : MonoBehaviour
     /// <b>피해의 30%가 감폭을 건너뛴다</b>는 뜻이다. 배율표는 건너뛴 몫에도 그대로 적용된다.
     /// 기본 0은 "방무뎀 없음"이라 안전하다 — <paramref name="type"/>과 달리 조용히 틀릴 여지가 없다.
     /// </param>
-    public void TakeDamage(float amount, DamageType type, int killerPlayerId, float armorIgnoreRatio = 0f)
+    /// <param name="attackType">
+    /// 평타의 공격 타입(원작 normal/pierce/siege/hero/chaos). <b>물리 피해에만 쓰인다.</b>
+    /// <paramref name="type"/>과 직교한다 — 이쪽은 "물리가 어느 종류냐"다.
+    /// </param>
+    public void TakeDamage(float amount, DamageType type, AttackType attackType,
+                           int killerPlayerId, float armorIgnoreRatio = 0f)
     {
         if (isDead) return;
 
-        hp -= MitigatedDamage(amount, type, armorIgnoreRatio);
+        hp -= MitigatedDamage(amount, type, attackType, armorIgnoreRatio);
 
         if (invulnerable)
         {

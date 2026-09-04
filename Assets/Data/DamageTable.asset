@@ -12,12 +12,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93a504c5463a845b8a0b15c7ec118382, type: 3}
   m_Name: DamageTable
   m_EditorClassIdentifier: 
-  ad:
+  normal:
+    vsLarge: 1
+    vsFort: 0.75
+    vsNormal: 1.25
+    vsHero: 0.9
+  pierce:
+    vsLarge: 1.25
+    vsFort: 1
+    vsNormal: 0.75
+    vsHero: 0.9
+  siege:
+    vsLarge: 0.75
+    vsFort: 1.25
     vsNormal: 1
-    vsBoss: 1
-  ap:
+    vsHero: 0.8
+  hero:
+    vsLarge: 1.05
+    vsFort: 1.05
+    vsNormal: 1.05
+    vsHero: 1.05
+  chaos:
+    vsLarge: 1
+    vsFort: 1
     vsNormal: 1
-    vsBoss: 1
-  adap:
-    vsNormal: 1
-    vsBoss: 1
+    vsHero: 1

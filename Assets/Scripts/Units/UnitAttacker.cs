@@ -103,6 +103,11 @@ public class UnitAttacker : MonoBehaviour
         ? identity.Data.damageType
         : DamageType.AD;
 
+    // 이 유닛의 평타 공격 타입. 아직 239종 어디에도 안 붙어서 전부 Unassigned다(배율 1.0).
+    AttackType AttackTypeOf => identity != null && identity.Data != null
+        ? identity.Data.attackType
+        : AttackType.Unassigned;
+
     float UpgradeMultiplier
     {
         get
@@ -189,7 +194,7 @@ public class UnitAttacker : MonoBehaviour
         {
             Anim?.PlayAttack();
             ApplyArmorShred(target);
-            target.TakeDamage(AttackDamage, DamageTypeOf, owner != null ? owner.OwnerId : -1);
+            target.TakeDamage(AttackDamage, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1);
             return;
         }
 

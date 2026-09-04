@@ -8,14 +8,32 @@ public class EnemyResourceReward
     public int amount;
 }
 
-// 방어 타입. **일반/보스 둘로 시작한다** — 원작의 방어 타입은 어디에도 문서화돼 있지 않고
-// (`Docs/reference/ARMOR_SYSTEM_DESIGN.md` §0), 우리 데이터가 실제로 가진 구분축은 isBoss뿐이다.
-// 워크3 표준 7종을 베끼면 배율표가 21칸이 되는데 그중 20칸은 채울 근거가 없다.
-// 늘릴 때는 **맨 뒤에** 붙일 것 — 중간에 끼우면 직렬화된 값이 밀린다.
+// 방어 타입. **원작 그대로다** — `war3map.w3u`에서 실제로 쓰이는 네 종류다
+// (`UNIT_STATS_RESEARCH.md`). 「보스」라는 타입은 원작에 없어서 뺐다.
+//
+// `Unassigned`가 0인 이유: 우리 적 89종이 아직 아무도 타입을 안 정했다. 0을 `Normal`로 두면
+// 분류하지 않은 적이 전부 「normal 갑옷」이 되어, 우리 유닛(전부 물리)과 만나 배율 1.25가 붙는다 —
+// **아무것도 안 했는데 피해가 25% 오른다.** `Unassigned`는 배율 1.0이라 분류 전까지 동작이 그대로다.
+// 이건 원작에 없는 우리 것이다(원작은 명시 안 하면 베이스 유닛 값을 상속한다).
 public enum ArmorType
 {
+    Unassigned,
     Normal,
-    Boss,
+    Large,
+    Fort,
+    Hero,
+}
+
+// 평타의 공격 타입. 원작에서 이 다섯은 **전부 물리**이고, 마법은 별개 축이다
+// (그래서 DamageType은 그대로 둔다 — 층위가 다른 게 아니라 물리 축이 더 잘게 나뉜 것이다).
+public enum AttackType
+{
+    Unassigned,
+    Normal,
+    Pierce,
+    Siege,
+    Hero,
+    Chaos,
 }
 
 [CreateAssetMenu(fileName = "NewEnemyData", menuName = "GuilRandomDefense/Enemy Data")]
@@ -48,7 +66,7 @@ public class EnemyData : ScriptableObject
 
     // isBoss에서 유도하지 않고 따로 둔다. `돌아온 김만경`·`간보는김용태`처럼
     // **보스가 아닌데 보스에서 파생된 적**이 있고, 그들이 보스 몸을 쓰는지 아직 모른다.
-    public ArmorType armorType = ArmorType.Normal;
+    public ArmorType armorType = ArmorType.Unassigned;
 
     public GameObject prefab;
 }

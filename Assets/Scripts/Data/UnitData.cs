@@ -183,6 +183,11 @@ public class UnitData : ScriptableObject
     public string unitName;
     public UnitGrade grade;
     public DamageType damageType;
+
+    // 평타의 공격 타입(원작의 normal/pierce/siege/hero/chaos). damageType과 **직교한다** —
+    // damageType은 물리냐 마법이냐, attackType은 그 물리가 어느 종류냐다.
+    // 아직 239종 어디에도 안 붙어서 전부 Unassigned이고, 그동안 배율은 1.0이다.
+    public AttackType attackType = AttackType.Unassigned;
     public MovementAbility movementAbility;
     public float hp;
     public float attackPower;
