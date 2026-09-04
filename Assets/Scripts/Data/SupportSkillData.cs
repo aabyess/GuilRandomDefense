@@ -73,6 +73,13 @@ public class SupportSkillData : ScriptableObject
     [Header("다단 히트(Damage 전용) — 1(기본)이면 즉발 1회, 그 이상이면 duration에 걸쳐 나눠 친다")]
     public int waveCount = 1;
 
+    // 독약 전용 — 원작 "방어력감소 20". EnemyDummy.AddArmorShred를 그대로 재사용한다(구현담당3
+    // 확정, 2026-09-04: 원작 방깎은 지속시간 없이 영구 누적 — war3map.w3h 버프 311개 전부에
+    // 지속시간 필드가 없다). waveCount가 몇이든 캐스트당 딱 한 번만 걸린다(첫 웨이브에서만).
+    // 0(기본값)이면 기존 스킬은 전혀 영향 없다.
+    [Header("방어력 감소(Damage 전용, 영구 누적) — 0이면 없음")]
+    public float armorShredOnHit;
+
     [Header("지속시간 — Root(구속+DoT 지속), Buff(지속), Damage(duration>0이면 스턴 지속)")]
     public float duration;
 

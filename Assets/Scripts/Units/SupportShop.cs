@@ -335,7 +335,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
         if (!TrySpendCost(skill, context)) return false;
 
         int round = RoundManagerRef != null ? RoundManagerRef.CurrentRound : 1;
-        enemy.TakeDamage(skill.ComputeDamage(round), DamageType.AP, AttackType.Unassigned, owner.OwnerId);
+        enemy.TakeDamage(skill.ComputeDamage(round), DamageType.AP, AttackType.Spells, owner.OwnerId);
 
         if (skill.duration > 0f) StartCoroutine(StunRoutine(enemy, skill.duration));
 
@@ -403,7 +403,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
             return;
         }
 
-        ApplyOneWaveDamage(skill, point, round, context);
+        ApplyOneWaveDamage(skill, point, round, context, isFirstWave: true);
     }
 
     IEnumerator MultiWaveDamageRoutine(SupportSkillData skill, Vector3 point, int round, PlayerContext context)
@@ -412,12 +412,14 @@ public class SupportShop : MonoBehaviour, ILaneShop
 
         for (int wave = 0; wave < skill.waveCount; wave++)
         {
-            ApplyOneWaveDamage(skill, point, round, context);
+            ApplyOneWaveDamage(skill, point, round, context, isFirstWave: wave == 0);
             if (wave < skill.waveCount - 1) yield return new WaitForSeconds(interval);
         }
     }
 
-    void ApplyOneWaveDamage(SupportSkillData skill, Vector3 point, int round, PlayerContext context)
+    // isFirstWave: 방어력 감소(독약)는 캐스트당 딱 한 번만 걸려야 한다 — waveCount가 몇이든
+    // 여기서 매 웨이브 걸면 웨이브 수만큼 누적돼 원작 수치(20)보다 훨씬 세진다.
+    void ApplyOneWaveDamage(SupportSkillData skill, Vector3 point, int round, PlayerContext context, bool isFirstWave)
     {
         float damage = skill.ComputeDamage(round);
         int hits = 0;
@@ -431,11 +433,12 @@ public class SupportShop : MonoBehaviour, ILaneShop
             if (enemy == null) continue;
 
             if (skill.duration > 0f && skill.waveCount <= 1) StartCoroutine(StunRoutine(enemy, skill.duration));
+            if (isFirstWave && skill.armorShredOnHit > 0f) enemy.AddArmorShred(skill.armorShredOnHit);
 
             // 도움소 스킬은 마법 피해로 둔다 — 원작이 "마뎀은 방어력 무시, 스킬딜로 처리"라고
             // 서술한다(`UNIT_STATS_RESEARCH.md`). 스킬 피해가 방어력에 감폭되면 후반에 도움소가
             // 통째로 무의미해진다. ⚠️ 사장님 확인은 못 받은 판단이다.
-            enemy.TakeDamage(damage, DamageType.AP, AttackType.Unassigned, owner.OwnerId);
+            enemy.TakeDamage(damage, DamageType.AP, AttackType.Spells, owner.OwnerId);
             hits++;
         }
 
@@ -461,7 +464,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
             if (enemy == null) continue;
 
             if (skill.firstHitMaxHpPercent > 0f)
-                enemy.TakeDamage(enemy.MaxHp * skill.firstHitMaxHpPercent, DamageType.AP, AttackType.Unassigned, owner.OwnerId);
+                enemy.TakeDamage(enemy.MaxHp * skill.firstHitMaxHpPercent, DamageType.AP, AttackType.Spells, owner.OwnerId);
 
             StartCoroutine(RootAndDotRoutine(enemy, tickDamage, ticks));
         }
@@ -475,7 +478,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
         {
             yield return new WaitForSeconds(1f);
             if (enemy == null) yield break;   // 죽었으면 풀어줄 대상 자체가 없다
-            enemy.TakeDamage(tickDamage, DamageType.AP, AttackType.Unassigned, owner.OwnerId);   // 위와 같은 이유
+            enemy.TakeDamage(tickDamage, DamageType.AP, AttackType.Spells, owner.OwnerId);   // 위와 같은 이유
         }
 
         if (enemy != null) enemy.RemoveFreeze();
