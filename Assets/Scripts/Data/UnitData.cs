@@ -157,9 +157,11 @@ public static class UnitGradeExtensions
 }
 
 // AD = 물리공격 / AP = 마법공격 (사장님 확정 2026-09-03).
-// 지금은 이 값을 읽는 코드가 하나도 없다 — 적(EnemyDummy)에게 방어력 필드 자체가 없어서
-// 데미지가 hp에 그대로 들어간다. 이 값을 채워도 아직 게임이 안 바뀐다. 다음에 이걸 붙일
-// 사람은 적 쪽에 방어력(물리방어/마법방어 등) 시스템부터 만들어야 한다.
+// ⚠️ 읽는 코드가 있다(2026-09-05 확인) — 위 주석은 방어력 시스템이 생기기 전에 적힌 것으로
+// 지금은 낡았다. 실제 경로: UnitAttacker.DamageTypeOf가 이 필드를 그대로 돌려주고,
+// UnitAttacker.Update()/ApplyCritIfTriggered가 target.TakeDamage(..., DamageTypeOf, ...)로
+// 넘기면 EnemyDummy.TakeDamage → EnemyDummy.MitigatedDamage가 방어력 감폭·상성표 계산에
+// 실제로 쓴다(AP는 방어력을 무시하는 등). 239종 전부 값이 채워져 있고 전부 도달한다.
 [System.Flags]
 public enum DamageType
 {
@@ -189,6 +191,13 @@ public class UnitData : ScriptableObject
     // 아직 239종 어디에도 안 붙어서 전부 Unassigned이고, 그동안 배율은 1.0이다.
     public AttackType attackType = AttackType.Unassigned;
     public MovementAbility movementAbility;
+
+    // 읽는 코드가 없는 게 정상이다(2026-09-05 확인) — 원작도 아군 유닛 체력은 사실상 의미가
+    // 없다(전부 10, UNIT_STATS_RESEARCH.md:569). 원작은 "아군이 한 대도 안 맞는다"는 전제로
+    // 짜인 밸런스라 유닛이 반격당해 죽는 개념 자체가 없다(ORIGINAL_VALUES.md). 우리도 마찬가지로
+    // UnitIdentity에 체력 필드가 없고, HealthBarLayer도 EnemyDummy만 돈다 — 플레이어 유닛
+    // 체력바를 만들려는 사람은 이 필드부터 채우는 게 아니라 "정말 필요한가"를 먼저 사장님께
+    // 물어야 한다. 239종에 값은 다 채워져 있다(100~6,122) — 죽은 배선이 아니라 안 쓰는 배선이다.
     public float hp;
     public float attackPower;
     public float attackRange;
