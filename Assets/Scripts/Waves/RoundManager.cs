@@ -34,6 +34,11 @@ public class RoundManager : MonoBehaviour
     [SerializeField] WispData roundRewardWisp;
     [SerializeField] int roundRewardCount = 2;
 
+    // 해적단 퀘스트 실패 페널티("다음 2라운드동안 랜덤위습을 받지 못합니다", war3map.j
+    // 원문 그대로) — 플레이어별로 몇 라운드 더 막을지 센다. GrantFlatRoundReward가 매
+    // 라운드 넘어갈 때 이 값을 보고 건너뛴 뒤 하나씩 줄인다.
+    readonly int[] wispBlockRoundsRemaining = new int[MaxTrackedLanes];
+
     int currentRound;
     float roundTimer;
     bool isGameOver;
@@ -243,8 +248,29 @@ public class RoundManager : MonoBehaviour
 
         foreach (PlayerContext context in PlayerContext.Occupied)
         {
+            int playerId = context.PlayerId;
+            if (playerId >= 0 && playerId < MaxTrackedLanes && wispBlockRoundsRemaining[playerId] > 0)
+            {
+                wispBlockRoundsRemaining[playerId]--;
+                Debug.Log($"플레이어 {playerId + 1}: 해적단 퀘스트 실패 페널티로 이번 라운드 위습을 받지 못했습니다 " +
+                          $"(남은 차단 {wispBlockRoundsRemaining[playerId]}라운드).");
+                continue;
+            }
+
             distributor.GrantWisps(context, rewards);
         }
+    }
+
+    /// <summary>
+    /// 해적단 퀘스트 실패 페널티. 다음 <paramref name="rounds"/>라운드 동안 그 플레이어는
+    /// 라운드 클리어 위습(GrantFlatRoundReward)을 못 받는다. 이미 남아있는 차단과는
+    /// 더하지 않고 더 큰 쪽을 취한다 — 같은 퀘스트를 연속으로 실패해도 무한히 안 쌓인다.
+    /// </summary>
+    public void BlockRoundRewardWisp(int playerId, int rounds)
+    {
+        if (playerId < 0 || playerId >= MaxTrackedLanes || rounds <= 0) return;
+
+        wispBlockRoundsRemaining[playerId] = Mathf.Max(wispBlockRoundsRemaining[playerId], rounds);
     }
 
     // 방금 끝난 라운드(roundNumber)의 위습 보상을 전체 플레이어에게 지급한다.
