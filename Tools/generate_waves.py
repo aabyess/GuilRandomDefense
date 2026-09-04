@@ -26,7 +26,16 @@ WISPS = {
 BASE_COUNT, COUNT_STEP, MAX_COUNT = 15, 3, 35   # 3라운드마다 +1, 원작 상한 35
 BASE_HP, HP_GROWTH = 135.0, 1.1712273519960352  # 원작 몹 HP 그대로(R1 135 → R75 16,210,000).
                                                  # growth = (16210000/135)**(1/74). 2026-09-04.
-BOSS_HP_MULTIPLIER = 15.0  # 원작 보스 HP 곡선은 미확보 — 우리 자체 배수 그대로 유지
+# 원작 보스 HP는 라인몹처럼 공식으로 안 나온다 — 원작자가 라운드마다 손으로 적어넣은 값이고,
+# 후반으로 갈수록 오히려 라인몹보다 얇아진다(R75가 직전 라인몹의 0.84배). 상수 배수로는
+# 이 무너지는 곡선을 못 따라가서(2026-09-04, `Docs/reference/UNIT_STATS_RESEARCH.md` §⑦)
+# 9개 값을 그대로 하드코딩한다. `Trig_Enemy_Boss_create`가 `Round_UnitType[udg_Level+50]`을
+# 읽는 구조라 R65/70/75는 배열 65/70/75번(라인몹)이 아니라 95/100/105번이 진짜 보스 값이다 —
+# 처음 나온 R75=14,080,000은 그 혼동에서 나온 오독이었다.
+BOSS_HP = {
+    10: 14500, 20: 85000, 30: 750000, 40: 2900000, 50: 10600000,
+    60: 21800000, 65: 12297000, 70: 12750000, 75: 13595000,
+}
 MOB_SPEED, BOSS_SPEED = 10.0, 7.0   # 두 배 (사장님 확정 2026-09-01) — 라운드가 너무 늘어져서
 SPAWN_WINDOW = 24.0                             # 28초 라운드 중 스폰에 쓰는 시간
 
@@ -80,7 +89,7 @@ for rnd in range(1, TOTAL_ROUNDS + 1):
     name = BOSSES[rnd][0] if boss else ENEMIES[rnd]
     stage = BOSSES[rnd][1] if boss else ''
 
-    hp = round(BASE_HP * HP_GROWTH ** (rnd - 1) * (BOSS_HP_MULTIPLIER if boss else 1), 1)
+    hp = float(BOSS_HP[rnd]) if boss else round(BASE_HP * HP_GROWTH ** (rnd - 1), 1)
     speed = BOSS_SPEED if boss else MOB_SPEED
     gold = 100 + rnd * 5 if boss else 5 + rnd
     count = 1 if boss else min(MAX_COUNT, BASE_COUNT + (rnd - 1) // COUNT_STEP)
