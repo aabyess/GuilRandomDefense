@@ -5,7 +5,11 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(NavMeshAgent))]
 public class UnitMover : MonoBehaviour
 {
-    [SerializeField] float destinationSampleRadius = 2f;
+    // 클릭 지점에서 이만큼 안에 걸어갈 자리를 찾는다. 2는 너무 빡빡했다 —
+    // NavMeshAgent 반지름 때문에 걸을 수 있는 면이 섬 물리 경계보다 이미 안쪽으로
+    // 들어와 있어서, 눈으로 "섬 안"인 곳을 찍어도 실패하는 띠가 가장자리에 생긴다.
+    // 너무 키우면 바다를 찍었는데 유닛이 근처 육지로 가버려 의도와 어긋나므로 8에서 멈춘다.
+    [SerializeField] float destinationSampleRadius = 8f;
 
     NavMeshAgent agent;
     Camera cam;
