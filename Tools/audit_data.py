@@ -75,8 +75,32 @@ def collect_classes(cs_texts):
     return classes
 
 
+def strip_nested_classes(body):
+    """중첩 클래스(예: DamageTable 안의 Row)의 몸통을 지워서, 그 안의 필드가 바깥 클래스
+    자신의 필드로 잘못 섞이지 않게 한다 — 실제로 이 문제로 DamageTable.vsLarge 같은 Row의
+    필드가 DamageTable 자신의 필드처럼 나온 적이 있다."""
+    out = []
+    i = 0
+    for m in re.finditer(r'class\s+\w+\s*(?::\s*[\w.]+)?\s*\{', body):
+        if m.start() < i:
+            continue  # 이미 지운 범위 안에 있는 중첩의 중첩
+        out.append(body[i:m.start()])
+        depth = 1
+        j = m.end()
+        while j < len(body) and depth > 0:
+            if body[j] == '{':
+                depth += 1
+            elif body[j] == '}':
+                depth -= 1
+            j += 1
+        i = j
+    out.append(body[i:])
+    return "".join(out)
+
+
 def extract_fields(body):
     """(type, name) pairs for public fields or [SerializeField] fields, skipping properties/consts/statics."""
+    body = strip_nested_classes(body)
     lines = body.split("\n")
     fields = []
     pending_serialize = False
@@ -130,12 +154,22 @@ def get_guid(cs_path):
     return m.group(1) if m else None
 
 
-def code_reads_field(fieldname, cs_texts, exclude_path):
+def code_reads_field(fieldname, cs_texts, own_class_body=None):
+    """`.fieldname` 형태(다른 변수를 거친 접근)는 전 파일에서 찾는다 — **선언 파일도 포함한다.**
+    처음엔 선언 파일을 빼고 찾았는데, 그러면 같은 파일 안에서 자기 필드를 다른 메서드가 읽는
+    경우(예: DamageTable.Multiplier()가 DamageTable 자신의 Row 필드를 읽는 것)를 전부
+    놓친다 — 실제로 이 버그로 DamageTable 전체가 "미사용"으로 잘못 나온 적이 있다.
+
+    `own_class_body`를 주면, **점 없이 자기 필드를 바로 쓰는 경우**(`pierce`처럼 `this.` 없이
+    쓰는 것)도 그 클래스 자신의 메서드 본문 안에서만 단어 경계로 찾는다 — 파일 전체에서
+    점 없는 단어를 찾으면 오탐이 너무 많아서, 범위를 그 클래스 자신으로 좁혔다."""
     pattern = re.compile(rf'\.{re.escape(fieldname)}\b')
-    for path, text in cs_texts.items():
-        if path == exclude_path:
-            continue
+    for text in cs_texts.values():
         if pattern.search(text):
+            return True
+    if own_class_body:
+        bare_pattern = re.compile(rf'(?<![.\w]){re.escape(fieldname)}\b')
+        if bare_pattern.search(own_class_body):
             return True
     return False
 
@@ -236,7 +270,7 @@ def audit_class(cname, classes, enum_names, cs_texts):
 
     for ftype, fname in fields:
         is_list, elem = classify_field(ftype, enum_names, classes)
-        reads = code_reads_field(fname, cs_texts, info["path"])
+        reads = code_reads_field(fname, cs_texts, own_class_body=info["body"])
 
         if not is_list:
             present = 0
@@ -258,7 +292,7 @@ def audit_class(cname, classes, enum_names, cs_texts):
                 verdict = "미사용" if not reads else ("읽힘" if nonempty > 0 else "누락(전부 빈 리스트)")
                 print(f"  {fname:28s} [List<{elem}>] {verdict:6s}  길이분포={dict(Counter(lengths))}")
                 for sub_ftype, sub_fname in extract_fields(elem_class["body"]):
-                    sub_reads = code_reads_field(sub_fname, cs_texts, elem_class["path"])
+                    sub_reads = code_reads_field(sub_fname, cs_texts, own_class_body=elem_class["body"])
                     sub_present, sub_total_items = 0, 0
                     for _, body in instances:
                         for item in list_item_blocks(body, fname):
