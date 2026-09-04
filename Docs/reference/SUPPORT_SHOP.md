@@ -222,3 +222,38 @@ A0IE(독약) A0ID(해루석) A0IC(출항) A0IB(불비) A0B1(폭우) A0IA(선택�
 
 `출항이다`는 `mapWide=1`이라 `radius`가 애초에 안 쓰이고, `흡수`는 단일 대상 지정형이라
 범위 자체가 없다(둘 다 표에서 제외).
+
+# 이미 있는 필드와 코드 — 새로 만들지 말 것 (2026-09-05, 구현담당2)
+
+`SupportSkillData`/`SupportShop.cs`를 필드 단위로 전수 대조하다 나온 것. 아래 세 필드는
+**그 값을 쓰는 코드가 이미 있는데, 지금 그 코드를 부를 스킬이 하나도 없다** — 죽은
+배선이 아니라 **부를 스킬이 삭제된(마나포션·연금술) 자리다.** 나중에 비슷한 스킬을
+새로 만들 때 "이런 필드가 없네" 하고 새로 짓지 말고 이걸 재사용할 것:
+
+| 필드 | 읽는 코드 | 대응하는 effect | 지금 상태 |
+|---|---|---|---|
+| `manaRestoreAmount` | `SupportShop.TryManaRestore` | `SupportSkillEffect.ManaRestore` | 마나포션이 2026-09-04에 삭제돼 이 effect를 쓰는 스킬이 없다 |
+| `maxDismantleGrade` | `SupportShop.TryDismantleUnit` | `SupportSkillEffect.UnitDismantle` | 연금술이 2026-09-04에 삭제돼 이 effect를 쓰는 스킬이 없다 |
+| `dismantleRefunds` | `SupportShop.FindDismantleRefund` | `SupportSkillEffect.UnitDismantle` | 위와 같음 |
+
+마나 회복형이나 유닛 분해형 스킬을 다시 넣을 일이 생기면, 새 필드·새 코드를 짜기 전에
+**이 셋과 위 두 `SupportSkillEffect` 값이 이미 있다는 것부터 확인할 것.**
+
+## 필드 주석이 코드와 어긋나 있던 것 — 2026-09-05에 바로잡음
+
+같은 대조 중 `SupportSkillData.cs`의 주석 두 개가 실제 코드와 반대로 적혀 있는 걸 발견해
+고쳤다(동작 변경 없음, 주석·표시 문구만):
+
+- `manaRefundPerHit`/`manaRefundCap` — 주석은 "(미사용)"이라고 적혀 있었는데 **코드는 실제로
+  읽는다**(`SupportShop.ApplyOneWaveDamage` 445~448줄). 10종 전부 값이 0이라 지금 발동하지
+  않을 뿐, 배선이 없는 게 아니다. "주석이 없는 코드를 설명하는" 것보다 위험한 "살아 있는
+  코드를 죽었다고 말하는" 사례라 바로잡았다.
+- `buffAttackSpeedMultiplier` — 주석은 원래도 "미사용"이라고 정확히 적혀 있었지만,
+  10종 전부 값(1)이 채워져 있어서 값을 보고 "쓰이겠지"로 오해하기 쉬웠다. **읽는 코드가
+  없다 — 값을 바꿔도 아무 일도 일어나지 않는다**는 걸 못 박았다. 필드는 안 지웠다(원작에
+  공속/이속 계열 버프가 따로 있어 나중에 쓸 자리) — 다만 **지금 이 필드를 실제로 읽게
+  만들지는 말 것**. 원작 도움소 10종 중 공속을 올리는 스킬은 없다(PM 확인).
+
+선택위습제조 툴팁의 "범위: 반경 0.0" 표시(자기시전인데 `targetKind`가 에셋에 Ground로
+저장돼 있어서 생긴 문구)도 `SupportShop.cs`에서 같이 고쳤다 — `radius<=0 && !mapWide`면
+범위 줄 자체를 안 그린다. 에셋의 `targetKind` 값은 안 건드렸다.

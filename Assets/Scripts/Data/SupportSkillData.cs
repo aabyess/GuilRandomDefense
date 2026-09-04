@@ -83,9 +83,12 @@ public class SupportSkillData : ScriptableObject
     [Header("지속시간 — Root(구속+DoT 지속), Buff(지속), Damage(duration>0이면 스턴 지속)")]
     public float duration;
 
-    // 이 이름의 스킬을 쓰던 예전 "흡수"(피해+마나환급)는 InstantKill로 바뀌면서 더 안 쓴다 —
-    // 지우진 않았다, 나중에 비슷한 결의 스킬(맞은 수만큼 환급)이 생기면 재사용할 수 있어서.
-    [Header("(미사용) 맞은 적 1기당 마나 환급, 상한 있음")]
+    // ⚠️ 이름과 달리 죽은 필드가 아니다 — SupportShop.ApplyOneWaveDamage가 실제로 읽는다
+    // (manaRefundPerHit>0이면 맞은 수만큼 마나를 돌려주고 manaRefundCap으로 상한을 건다).
+    // 지금 10종 전부 값이 0이라 발동하지 않을 뿐이지, 배선이 없는 게 아니다. 이 이름의 스킬을
+    // 쓰던 예전 "흡수"(피해+마나환급)는 InstantKill로 바뀌면서 값을 0으로 비웠는데, 코드는
+    // 그대로 남겨뒀다 — 나중에 비슷한 결의 스킬(맞은 수만큼 환급)이 생기면 값만 채우면 된다.
+    [Header("맞은 적 1기당 마나 환급, 상한 있음 — 코드는 읽는다. 지금은 전 스킬 값이 0이라 미발동")]
     public int manaRefundPerHit;
     public int manaRefundCap;
 
@@ -97,7 +100,12 @@ public class SupportSkillData : ScriptableObject
 
     [Header("출항이다 전용 — 원작은 공격력 버프다(우리가 예전에 공격속도로 잘못 만들었었다)")]
     public float buffAttackPowerMultiplier = 1f;
-    // (미사용, 위와 같은 이유로 보존) 예전엔 이 스킬이 공격속도를 올리는 걸로 잘못 구현돼 있었다.
+    // ⚠️ 읽는 코드가 없다 — 값을 바꿔도 아무 일도 일어나지 않는다(SupportShop.cs 전수 확인,
+    // 2026-09-05). 10종 전부 이 값이 1로 채워져 있어서 "값이 있으니 쓰이겠지"로 오해하기
+    // 쉽다. 지우지 않고 남겨둔 이유: 예전엔 출항이다가 공격속도를 올리는 걸로 잘못
+    // 구현돼 있었고, 원작에도 공속/이속 계열 버프가 따로 있어 나중에 실제로 배선할 자리로
+    // 남긴다 — 지금 당장 이 필드를 읽게 만들지는 말 것(원작 도움소 10종 중 공속을 올리는
+    // 스킬은 없다, PM 확인 2026-09-05).
     public float buffAttackSpeedMultiplier = 1f;
 
     [Header("해루석 전용 — 첫 타격이 대상 최대 체력의 이 비율만큼 추가 피해(0~1). 원작 \"전체 체력의 7%\"")]

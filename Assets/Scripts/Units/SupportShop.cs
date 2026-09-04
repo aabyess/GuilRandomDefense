@@ -141,7 +141,10 @@ public class SupportShop : MonoBehaviour, ILaneShop
                 .Append(" (").Append(round).Append("라운드 기준)");
         }
 
-        if (skill.targetKind == SupportSkillTargetKind.Ground)
+        // radius<=0 && !mapWide면 범위 자체가 없는 스킬(예: 선택위습제조 — 자기시전인데
+        // targetKind가 에셋에 Ground로 저장돼 있다)이라 줄을 안 그린다. "범위: 반경 0.0"처럼
+        // 없는 범위를 있는 것처럼 보여주지 않기 위함 — 에셋의 targetKind는 안 건드렸다.
+        if (skill.targetKind == SupportSkillTargetKind.Ground && (skill.mapWide || skill.radius > 0f))
         {
             tooltipBuilder.Append("\n범위: ").Append(skill.mapWide ? "맵 전체" : $"반경 {skill.radius:0.#}");
         }
