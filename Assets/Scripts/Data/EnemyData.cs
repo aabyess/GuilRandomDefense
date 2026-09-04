@@ -24,8 +24,19 @@ public enum ArmorType
     Hero,
 }
 
-// 평타의 공격 타입. 원작에서 이 다섯은 **전부 물리**이고, 마법은 별개 축이다
-// (그래서 DamageType은 그대로 둔다 — 층위가 다른 게 아니라 물리 축이 더 잘게 나뉜 것이다).
+// 배율표에서 **이 피해가 어느 행을 타는가**. 원작 `war3mapMisc.txt`의 일곱 행 그대로다.
+//
+// 앞의 다섯은 평타의 물리 공격 타입이고, 뒤의 둘은 마법이다 — 원작은 마법도 두 행으로 가른다:
+//   `Magic`  = 평타가 마법인 유닛           (large 1.00 / fort 1.00 / normal 1.00 / hero 0.80)
+//   `Spells` = 능력·스킬이 주는 피해        (large 0.85 / fort 0.90 / normal 1.00 / hero 0.80)
+//
+// **DamageType(물리냐 마법이냐)과는 여전히 직교한다.** DamageType은 방어력을 타느냐
+// 마법방어 배율을 타느냐를 정하고, 여기는 그 위에 곱할 상성 행을 고른다.
+//
+// ⚠️ 둘은 **짝이 맞아야 한다** — AP 피해에 물리 행을 넘기면 *마법이 물리 상성을 타던 옛 버그*가
+// 그대로 돌아온다. `DamageTable.RowMatches`가 그 짝을 검사한다.
+//
+// ⚠️ enum은 **맨 뒤에만** 추가한다. 중간에 끼우면 직렬화된 값이 통째로 밀린다.
 public enum AttackType
 {
     Unassigned,
@@ -34,6 +45,8 @@ public enum AttackType
     Siege,
     Hero,
     Chaos,
+    Magic,
+    Spells,
 }
 
 [CreateAssetMenu(fileName = "NewEnemyData", menuName = "GuilRandomDefense/Enemy Data")]

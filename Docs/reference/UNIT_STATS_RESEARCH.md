@@ -774,13 +774,17 @@ normal 127 · siege 89 · hero 28 · pierce 25 · unknown 1 · chaos 1     ← m
 | 고레벨 3종 (Hero) | 3 | 0.80 | 20% 약해진다 |
 | 미분류 (Unassigned) | 3 | 1.00 | 변화 없음 |
 
-**⏸ 다음 세션으로 미룬다** (2026-09-04, PM 지시). 동작이 바뀌는 변경이고, 구현담당2의
-도움소 작업이 진행 중이다. **조사만 여기 남기고 코드는 안 건드렸다.**
+### ✅ 구현 완료 (2026-09-04) — 자세한 건 `ARMOR_SYSTEM_DESIGN.md`
 
-#### 다음 사람이 할 것
+세 주의사항을 이렇게 풀었다:
 
-1. **`Multiplier(attackType, armorType)`를 마법에 그대로 부르면 안 된다** — 물리 5행을
-   마법에 적용하던 그 버그가 돌아온다. **`SpellMultiplier(ArmorType)` 같은 별도 조회 경로**를 둘 것.
-2. `Magic`(평타)과 `Spells`(능력)를 가르려면 **피해원마다 어느 행인지 넘겨야 한다.**
-   지금 `TakeDamage`가 받는 `AttackType`은 물리용이다 — 마법 쪽 축이 하나 더 필요하다.
-3. 계산 순서는 `magicArmorMultiplier` **다음**이다. 원작도 마법 방어력(`Aegr`)과 이 표를 둘 다 탄다.
+1. **별도 메서드 대신 `AttackType`에 `Magic`·`Spells`를 맨 뒤에 붙였다.** 원작 표가 애초에
+   **7행 한 장**이고 그 일곱이 다 「공격 타입」이다 — 마법용 조회를 따로 파면 원작에 없는
+   구분을 하나 더 만드는 셈이 된다. 대신 **`DamageTable.RowMatches(DamageType, AttackType)`**로
+   짝을 검사한다. AP에 물리 행이 들어오면 **상성표를 건너뛰고 경고를 한 번 찍는다** —
+   조용히 틀리지 않는다.
+2. 피해원이 행을 넘긴다 — `SupportShop` 4곳은 `AttackType.Spells` 고정, 유닛 평타는
+   `UnitData.attackType` 그대로.
+3. 계산 순서는 `magicArmorMultiplier` 다음이 맞다. 그대로 넣었다.
+
+**7행 전수를 `war3mapMisc.txt`와 기계 대조했다 — 불일치 0.**

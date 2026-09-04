@@ -5,50 +5,99 @@
 ## 지금 이렇게 되어 있다
 
 ```
-DamageType   None / AD / AP        물리냐 마법이냐 (AD|AP = 겸용)
-AttackType   Unassigned / Normal / Pierce / Siege / Hero / Chaos    평타가 어느 물리냐
-ArmorType    Unassigned / Normal / Large / Fort / Hero              적의 갑옷
+DamageType   None / AD / AP                                무엇으로 감폭하느냐 (AD|AP = 겸용)
+AttackType   Unassigned / Normal / Pierce / Siege / Hero / Chaos / Magic / Spells
+                                                           배율표의 어느 행을 타느냐
+ArmorType    Unassigned / Normal / Large / Fort / Hero      적의 갑옷
 ```
 
-**`DamageType`과 `AttackType`은 직교한다.** 원작에서 `normal/pierce/siege/hero/chaos`는 **전부 물리**이고
-마법은 별개 축이다 — 그래서 `DamageType`을 5종으로 늘리지 않고 축을 하나 더 뒀다.
-`AD+AP`는 여전히 물리로 취급한다(어떻게 겸하는지 미확인).
+**`DamageType`과 `AttackType`은 직교한다.** `DamageType`은 *방어력을 타느냐 마법방어 배율을 타느냐*를
+정하고, `AttackType`은 그 위에 곱할 *상성 행*을 고른다. 원작 `war3mapMisc.txt`의 **일곱 행 그대로**다 —
+앞의 다섯은 물리, 뒤의 둘은 마법이다. `AD+AP`는 여전히 물리로 취급한다(어떻게 겸하는지 미확인).
 
-### 배율표 (원작 `war3mapMisc.txt` 그대로)
+### 배율표 (원작 `war3mapMisc.txt` 그대로 — 7행 전수 대조 완료)
 
-| 공격 \ 방어 | Large | Fort | Normal | Hero |
-|---|---|---|---|---|
-| Normal | 1.00 | **0.75** | **1.25** | 0.90 |
-| Pierce | **1.25** | 1.00 | **0.75** | 0.90 |
-| Siege | **0.75** | **1.25** | 1.00 | 0.80 |
-| Hero | 1.05 | 1.05 | 1.05 | 1.05 |
-| Chaos | 1.00 | 1.00 | 1.00 | 1.00 |
+| 공격 \ 방어 | Large | Fort | Normal | Hero | |
+|---|---|---|---|---|---|
+| Normal | 1.00 | **0.75** | **1.25** | 0.90 | 물리 |
+| Pierce | **1.25** | 1.00 | **0.75** | 0.90 | 물리 |
+| Siege | **0.75** | **1.25** | 1.00 | 0.80 | 물리 |
+| Hero | 1.05 | 1.05 | 1.05 | 1.05 | 물리 |
+| Chaos | 1.00 | 1.00 | 1.00 | 1.00 | 물리 |
+| **Magic** | 1.00 | 1.00 | 1.00 | **0.80** | 마법 — 평타가 마법인 유닛 |
+| **Spells** | **0.85** | **0.90** | 1.00 | **0.80** | 마법 — 능력·스킬 피해 |
 
-**가위바위보다.** Normal→Normal, Siege→Fort, Pierce→Large가 각각 1.25이고 서로 물린다.
-**물리 피해에만 건다** — 마법은 적의 `magicArmorMultiplier`를 탄다.
+앞 셋이 **가위바위보다.** Normal→Normal, Siege→Fort, Pierce→Large가 각각 1.25이고 서로 물린다.
+
+**마법도 이 표를 탄다.** 원작은 마법 방어력(워크3 `Aegr`)과 이 표를 **둘 다** 적용한다.
+`Magic`은 방어 타입에 거의 무관하고(hero만 0.80), **`Spells`만 large·fort를 깎는다** —
+원작이 평타 마법과 스킬 마법을 다르게 취급한다.
+
+> ⚠️ **옛 버그와 헷갈리지 말 것.** 예전엔 마법이 **물리 행**(normal/pierce/siege…)을 탔다.
+> 그건 마법 방어 배율과 물리 상성을 둘 다 맞는 것이라 틀렸다. 지금은 **마법 행**을 탄다.
+> `DamageTable.RowMatches(DamageType, AttackType)`가 그 짝을 검사하고,
+> 안 맞으면 **상성표를 건너뛰고 경고를 한 번 찍는다.**
 
 ### 계산 순서 (`EnemyDummy.TakeDamage`)
 
 ```
 AP     : 원본 × 마법방어배율
 그 외  : 원본 × (1−방무뎀비율) × 방어력감폭 + 원본 × 방무뎀비율
-         그 결과 × 상성표[AttackType][ArmorType]
+공통   : 그 결과 × 상성표[AttackType][ArmorType]      ← 짝이 맞을 때만
 방어력감폭 = 워크3 공식, 방깎 하한 −20
 ```
 
+### 어느 피해원이 어느 행인가
+
+| 피해원 | 코드 | 행 |
+|---|---|---|
+| 유닛 평타 | `UnitAttacker.cs` — `UnitData.attackType` 그대로 | 유닛이 정한 행 |
+| 도움소 스킬 | `SupportShop.cs` 4곳 — `AttackType.Spells` 고정 | **`Spells`** |
+
+**유닛 239종은 전부 `Unassigned`**라 평타는 아직 어느 행도 안 탄다(배율 1.0).
+평타가 마법인 유닛을 채울 땐 `damageType = AP` **와** `attackType = Magic`을 **짝으로** 넣어야 한다.
+
+### 적 89종의 방어 타입 — **86종 채웠다** (원작 분류 그대로)
+
+| | 수 | 근거 |
+|---|---|---|
+| `Normal` | 58 | 원작 라인몹 레벨 1~63 55/55 + 크립 |
+| `Large` | 9 | 원작 [보스] 11/11 |
+| `Fort` | 16 | 원작 스토리 섬 13/13 + 레벨 64·67·72 |
+| `Hero` | 3 | 원작 레벨 68·69·74 |
+| `Unassigned` | 3 | R66·R71·R73 — **원작이 안 적었다.** 추측으로 안 메운다 |
+
 ### 왜 `Unassigned`가 기본인가
 
-우리 적 89종·유닛 239종이 **아직 아무도 타입을 안 정했다.** 기본을 `Normal`로 두면
-분류 안 한 적이 전부 「normal 갑옷」이 되고, 우리 유닛은 전부 물리라 **배율 1.25가 붙는다** —
-아무것도 안 했는데 피해가 25% 오른다. `Unassigned`는 배율 1.0이라 **분류 전까지 동작이 그대로다.**
+기본을 `Normal`로 뒀으면 분류 안 한 적이 전부 「normal 갑옷」이 되고, 우리 유닛은 전부 물리라
+**배율 1.25가 붙는다** — 아무것도 안 했는데 피해가 25% 오른다. `Unassigned`는 배율 1.0이라
+**분류 전까지 동작이 그대로다.**
 
 `Unassigned`는 **우리 것이지 원작에 있는 게 아니다.** 원작은 명시 안 하면 베이스 유닛 값을 상속한다
 (1,559종 중 119종만 명시). 분류를 마치면 없애도 된다.
 
 ### 「보스」 방어 타입은 없앴다
 
-원작에 그런 타입이 없다. 보스도 `normal`/`fort`/`hero` 중 하나를 쓴다.
+원작에 그런 타입이 없다. **원작 보스는 11종 전부 `large`를 쓴다** — 「보스」는 방어 타입이 아니라
+베이스 유닛(`otbk` vs 라인몹 `ogru`)으로 갈린다. `hero` 방어를 쓰는 건 보스가 아니라
+**고레벨 라인몹 5종**이다.
+
 **적 에셋 89개 중 아무도 `armorType`을 저장하지 않아서** 값을 지워도 밀릴 데이터가 없었다(확인함).
+
+### 배율표는 이제 **살아 있다**
+
+`Assets/Prefabs/MobPrefab.prefab`의 `EnemyDummy.damageTable`에 `DamageTable.asset`을 연결했다.
+그전까지는 `null`이라 표를 고쳐도 아무 일도 안 일어났다.
+
+→ **지금 실제로 바뀌는 것은 도움소 스킬뿐이다.** 유닛 평타는 전부 `Unassigned`라 여전히 1.0이다.
+
+| 적 | 수 | `Spells` 배율 |
+|---|---|---|
+| 라인몹 (Normal) | 58 | 1.00 — 변화 없음 |
+| **보스 (Large)** | **9** | **0.85** — 도움소가 보스에게 **15% 약해진다** |
+| 스토리·요새 (Fort) | 16 | 0.90 |
+| 고레벨 (Hero) | 3 | 0.80 |
+| 미분류 | 3 | 1.00 |
 
 ---
 
