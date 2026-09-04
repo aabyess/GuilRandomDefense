@@ -6,9 +6,21 @@ using UnityEngine;
 // 적 타겟에서 자동 제외된다(EnemyDummy.Active/DestructibleGate.Active 어디에도 등록 안 됨).
 //
 // 상점은 자원만 쓰고 UnitUpgrades에 레벨만 올린다 — 필드에 있는 유닛에 값을 직접 곱하거나
-// 되돌리지 않는다. 실제 배율 적용은 UnitAttacker가 공격 시점에 UnitUpgrades.MultiplierFor(grade)를
-// 읽어서 하므로(PM 지시 — 도움소 임시 버프와 겹쳐도 안 깨지는 설계), 여기서 살아있는 유닛을
-// 순회할 필요가 없다. 사는 순간 전부 반영되고, 새로 스폰되는 유닛도 처음부터 맞는 값이다.
+// 되돌리지 않는다. 사는 순간 전부 반영되고 새로 스폰되는 유닛도 맞는 값이라는 것이 이 설계의
+// 의도였다(PM 지시 — 도움소 임시 버프와 겹쳐도 안 깨진다).
+//
+// 🚨 **그런데 그 배율을 읽는 쪽이 없다. 이 상점은 지금 골드만 먹는다.**
+//
+// 여기 원래 "실제 배율 적용은 UnitAttacker가 UnitUpgrades.MultiplierFor(grade)를 읽어서 한다"고
+// 적혀 있었는데, **`MultiplierFor`라는 메서드는 존재한 적이 없다.** UnitAttacker가 보는 것은
+// UnitUpgrades.EffectSum(unitData, DamageIncrease) 하나뿐이고, 그건 특성(UnitTraitData)을 훑지
+// 이 상점이 올리는 legacyGradeLevels를 안 본다.
+//
+// 그래서 TryUse는 GoldWallet.TrySpend로 돈을 받고 아무도 안 읽는 딕셔너리에 +1을 한다.
+// 툴팁은 "다음 레벨: x1.20"이라고 약속한다. **지금 안 눌리는 이유는 PlayerContext.unitUpgrades가
+// 씬에서 null이기 때문뿐이다** — 그 배선을 고치면 속이기 시작한다(`Docs/reference/WIRING_AUDIT.md`).
+//
+// 고치는 순서와 「레거시 등급강화를 살릴지 지울지」는 사장님 판단 대기다. 그전까지 배선하지 마라.
 [RequireComponent(typeof(Selectable), typeof(OwnedByPlayer))]
 public class UnitUpgradeShop : MonoBehaviour, ILaneShop
 {
