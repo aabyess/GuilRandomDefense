@@ -101,6 +101,7 @@ GameObject:
   - component: {fileID: 7662654735551921291}
   - component: {fileID: 143806459806242567}
   - component: {fileID: 5373792607524117274}
+  - component: {fileID: 9000000000000000001}
   m_Layer: 0
   m_Name: Unit_idle
   m_TagString: Untagged
@@ -226,6 +227,21 @@ MonoBehaviour:
   animator: {fileID: 0}
   runSpeed: 6
   speedSmoothing: 10
+--- !u!114 &9000000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6953751113404308783}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 229c7374dafc645f7a9e2acf5da21946, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  aggroRange: 18
+  scanInterval: 0.25
+  arrivalThreshold: 0.3
 --- !u!1001 &486963978796877162
 PrefabInstance:
   m_ObjectHideFlags: 0
