@@ -202,6 +202,13 @@ public class PirateQuestManager : MonoBehaviour
                 new List<WispReward> { new WispReward { wisp = quest.successWisp, count = quest.successWispCount } });
         }
 
+        // 와포루류: 처치 성공 시 스토리 건물/보스에 직접 마법데미지를 얹는다(원작 그대로).
+        // storyDamage가 0인 퀘스트(스모커 등)는 그냥 지나간다.
+        if (quest.storyDamage > 0f && StoryManager.Instance != null)
+        {
+            StoryManager.Instance.ApplyQuestDamage(quest.storyDamage, playerId);
+        }
+
         Debug.Log($"[해적단] {quest.questName} 성공! 플레이어 {playerId + 1} 보상 지급.");
     }
 

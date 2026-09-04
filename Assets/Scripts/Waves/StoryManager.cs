@@ -58,6 +58,21 @@ public class StoryManager : MonoBehaviour
 
     public bool IsTransformed => transformed;
 
+    /// <summary>
+    /// 해적단류 퀘스트(와포루 등)가 성공 시 스토리에 얹는 보너스 피해. 원작 툴팁 그대로
+    /// "마법데미지"라 방어력을 무시하고(DamageType.AP) 스킬 배율표 행을 탄다(AttackType.Spells —
+    /// 평타 행인 Magic과는 다른 행이다, EnemyDummy.MitigatedDamage 참고). 방어력을 받는 기존
+    /// 경로(EnemyDummy.TakeDamage)를 그대로 재사용한다 — 무적 상태(변신 전)면 1까지만 깎이고
+    /// 살아남는 것도 레인 몹과 같은 규칙이다.
+    /// </summary>
+    public void ApplyQuestDamage(float amount, int killerPlayerId)
+    {
+        if (!GameAuthority.IsServer) return;
+        if (amount <= 0f || activeEnemy == null) return;
+
+        activeEnemy.TakeDamage(amount, DamageType.AP, AttackType.Spells, killerPlayerId);
+    }
+
     void Start()
     {
         rounds = FindFirstObjectByType<RoundManager>();

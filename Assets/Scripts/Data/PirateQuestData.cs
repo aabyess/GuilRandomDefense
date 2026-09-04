@@ -31,6 +31,12 @@ public class PirateQuestData : ScriptableObject
     public WispData successWisp;
     public int successWispCount;
 
+    // 처치 성공 시 스토리 건물/보스에 추가로 주는 보너스 피해(원작 와포루: "스토리에 450만의
+    // 마법데미지를 줍니다"). 방어력을 무시하는 마법(Spells 행)으로 들어간다 — StoryManager가
+    // EnemyDummy.TakeDamage(DamageType.AP, AttackType.Spells)로 적용한다. 0이면 이 축이 없는 퀘스트.
+    [Header("성공 시 스토리 보너스 피해 (원작에만 있는 퀘스트에서만 사용)")]
+    public float storyDamage;
+
     [Header("실패 페널티 — 시간 안에 못 죽이면")]
     public int failWispBlockRounds = 2;
 }
