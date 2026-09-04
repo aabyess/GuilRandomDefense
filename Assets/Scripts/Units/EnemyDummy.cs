@@ -148,6 +148,20 @@ public class EnemyDummy : MonoBehaviour
         }
     }
 
+    // 자연회복(EnemyData.hpRegenPerSecond). 기본 0이라 대부분의 적은 아무 일도 안 한다.
+    // isDead를 먼저 거른다 — TakeDamage의 사망 확정과 같은 프레임에 순서가 겹치면
+    // "죽었는데 되살아나는" 꼴이 나기 때문이다(사망 프레임엔 이미 Destroy가 걸려 있어
+    // 다음 Update가 안 도는 게 보통이지만, 그 보장에 기대지 않고 명시적으로 막는다).
+    // invulnerable(스토리 건물)도 막는다 — 그쪽은 변신 전까지 hp를 최소 1로만 눌러두고
+    // 누적 피해를 그대로 보존해야 하는데, 회복이 끼면 그 누적이 깎여나간다.
+    void Update()
+    {
+        if (isDead || invulnerable) return;
+        if (data == null || data.hpRegenPerSecond <= 0f) return;
+
+        hp = Mathf.Min(MaxHp, hp + data.hpRegenPerSecond * Time.deltaTime);
+    }
+
     void OnEnable()
     {
         Active.Add(this);

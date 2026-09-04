@@ -95,4 +95,9 @@ public class EnemyData : ScriptableObject
     public ArmorType armorType = ArmorType.Unassigned;
 
     public GameObject prefab;
+
+    // 초당 자연회복. 기본 0이라 기존 적은 전부 무영향이다. 원작 바제스(퀘스트 미니보스)
+    // `uhpr = 9,900,000`처럼 "체력회복력이 매우 높다"는 게 정체성 자체인 적을 위한 자리 —
+    // 값은 원작 그대로 넣는다(환산 안 함, 우리 몹 HP 커브가 원작과 이미 같아졌다).
+    public float hpRegenPerSecond;
 }
