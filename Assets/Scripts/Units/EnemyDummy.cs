@@ -125,11 +125,22 @@ public class EnemyDummy : MonoBehaviour
         Active.Remove(this);
     }
 
-    // 원작이 "방어력 -20이면 71% 추가 피해, 그 이상은 불필요"라고 못박아 뒀다.
-    // 하한이 없으면 방깎 유닛을 쌓을수록 무한히 세져서 밸런싱이 무너진다.
     [SerializeField] DamageTable damageTable;
 
+    // 방깎이 방어력을 여기까지만 밀 수 있다. 하한이 없으면 방깎 유닛을 쌓을수록 무한히
+    // 세져서 밸런싱이 무너지므로 하한 자체는 필요하다.
+    //
+    // ⚠️ **−20이라는 값의 근거는 미확정이다.** 처음엔 "방어력 −20이면 71% 추가 피해,
+    // 그 이상은 불필요"라는 서술을 근거로 삼았는데, 그 71%는 `2 − 0.94^20 = 1.71` —
+    // **감폭 상수가 0.06일 때만 나오는 수**다. 원작 맵은 0.02이고(아래 DefenseArmor),
+    // 그 값으로는 −20이 **+33%**다. 즉 그 서술은 원랜디가 아니라 일반 워크3 이야기로 보인다.
+    // 값은 그대로 두되(근거가 약해진 것과 값이 틀린 것은 다르다) 원작 근거를 다시 찾아야 한다.
     public const float ArmorFloor = -20f;
+
+    // 방어력 1당 감폭량. **원작 `war3mapMisc.txt` 24행 `DefenseArmor=0.02`** 그대로다.
+    // 워크3 기본값은 0.06인데 **원작 맵이 3분의 1로 낮춰놨다** — 그만큼 방어력이 덜 아프다.
+    // (2026-09-04 원본 확인. 그전까지 0.06을 써서 후반 피해가 2.2~2.8배 낮게 나왔다.)
+    public const float DefenseArmor = 0.02f;
 
     // 이 개체에 걸린 방깎 누적. UnitTraitData의 ArmorShred와 조합표의 `방깍(45)` 능력이 여기 쌓인다.
     float armorShred;
@@ -210,8 +221,8 @@ public class EnemyDummy : MonoBehaviour
 
     public static float ArmorMultiplier(float armor) =>
         armor >= 0f
-            ? 1f - (0.06f * armor) / (1f + 0.06f * armor)
-            : 2f - Mathf.Pow(0.94f, -armor);
+            ? 1f - (DefenseArmor * armor) / (1f + DefenseArmor * armor)
+            : 2f - Mathf.Pow(1f - DefenseArmor, -armor);
 
     /// <summary>
     /// 피해를 받는다. <b>감폭은 여기서 한다 — 때리는 쪽이 아니다.</b>
