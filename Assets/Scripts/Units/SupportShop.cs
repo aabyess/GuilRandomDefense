@@ -361,6 +361,16 @@ public class SupportShop : MonoBehaviour, ILaneShop
         if (!targetUnit.TryGetComponent(out UnitIdentity identity) || identity.Data == null)
             return false;
 
+        // 해적단 퀘스트 토큰 등 시스템 유닛은 grade가 있어도(대개 흔함) 진짜 등급 유닛이
+        // 아니다 — grade.Tier()만 보면 거의 모든 분해 스킬의 대상에 걸려서, 정상적인 연금술
+        // 조작만으로 토큰을 영구히 잃을 수 있다(WIRING_AUDIT.md §⑧). 비용을 쓰기 전에 걸러서
+        // 마나도 안 나가고 쿨다운도 안 돈다 — 애초에 대상이 아니었던 것처럼 취급한다.
+        if (identity.Data.isSystemUnit)
+        {
+            Debug.Log($"{skill.skillName}: {identity.Data.unitName}은(는) 분해할 수 있는 유닛이 아닙니다.");
+            return false;
+        }
+
         PlayerContext context = OwnerContext;
         if (!TrySpendCost(skill, context)) return false;
 

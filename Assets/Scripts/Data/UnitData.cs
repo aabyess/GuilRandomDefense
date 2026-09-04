@@ -221,4 +221,17 @@ public class UnitData : ScriptableObject
     public float critDamageMultiplier = 1f; // 배수. chance=0이면 안 쓰이지만 안전하게 1로 둔다.
     public float critBonusDamage;           // 고정 추가피해. 기본 0.
     public float critStunDuration;          // 발동 시 대상 기절 시간(초). 기본 0 = 기절 없음.
+
+    // 실제 등급이 있는 플레이어 유닛이 아니다(해적단 퀘스트 토큰 등) — grade는 배치 로직
+    // (LaneMarker의 흔함 로스터 칸 배정) 때문에 여전히 값이 있지만, "등급으로서" 취급하면
+    // 안 되는 자리에서는 이 플래그로 걸러야 한다.
+    //
+    // ⚠️ grade 자체를 바꾸는 대신 이 플래그를 새로 둔 이유(2026-09-05, WIRING_AUDIT.md §⑧):
+    // grade를 다른 값으로 옮기면 그 값의 분해·조합 와일드카드 시스템으로 같은 문제가 그대로
+    // 옮겨갈 뿐이다. UnitGrade에 새 값을 추가하는 것도 검토했으나, Tier()에 case를 안 넣으면
+    // -1로 떨어져 연금술 분해 방지 검사(Rare 이하만 분해)를 우회하게 되고(지금 막으려는 바로
+    // 그 사고가 다른 문으로 들어온다), 등급표·뽑기 풀·조합 와일드카드 등 등급을 순회하는
+    // 모든 곳을 새로 확인해야 해서 위험 대비 이득이 안 맞는다는 PM 판단. 기본값 false — 기존
+    // 239종은 전부 무영향이다.
+    public bool isSystemUnit;
 }

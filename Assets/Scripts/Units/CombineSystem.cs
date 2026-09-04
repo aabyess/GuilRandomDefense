@@ -455,7 +455,11 @@ public class CombineSystem : MonoBehaviour
         int taken = 0;
         for (int i = 0; i < pool.Count && taken < count; )
         {
-            if (pool[i] != null && pool[i].Data != null && pool[i].Data.grade == grade)
+            // 시스템 유닛(해적단 퀘스트 토큰 등)은 grade가 흔함이어도 진짜 등급 재료가
+            // 아니다 — 이름을 안 가리는 와일드카드 재료라서 걸러두지 않으면 인벤토리에
+            // 섞여 있는 토큰이 조합 재료로 조용히 사라진다(WIRING_AUDIT.md §⑧).
+            if (pool[i] != null && pool[i].Data != null && pool[i].Data.grade == grade
+                && !pool[i].Data.isSystemUnit)
             {
                 takenOut.Add(pool[i]);
                 pool.RemoveAt(i);

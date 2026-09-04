@@ -103,7 +103,10 @@ public class LaneMarker : MonoBehaviour
     {
         if (unitPen == null) return transform.position;
 
-        if (unit != null && unit.grade == UnitGrade.Common)
+        // 시스템 유닛(해적단 퀘스트 토큰 등)은 grade가 흔함이어도 로스터 배정표에 있을 리
+        // 없다 — 걸러두지 않으면 매번 "로스터가 낡았다"는 진짜 경고와 구분 안 되는 가짜
+        // 경고가 찍힌다(WIRING_AUDIT.md §⑧). 남는 자리로 보내는 동작 자체는 그대로 맞다.
+        if (unit != null && unit.grade == UnitGrade.Common && !unit.isSystemUnit)
         {
             int rosterSlot = FindRosterSlot(unit.unitName);
             if (rosterSlot >= 0) return TakeRosterRingSlot(rosterSlot);
