@@ -29,20 +29,27 @@ public class UnitSellPortal : MonoBehaviour
         bool inRange = (quest.minRound <= 0 || round >= quest.minRound)
                      && (quest.maxRound <= 0 || round <= quest.maxRound);
 
-        int ownerId = other.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
-
-        // 판매(소모)는 발동 가능 여부와 무관하게 확정한다 — 이 유닛이 어느 퀘스트의 토큰인지는
-        // 위에서 이미 확인됐다. 원작도 "판매"라는 행위 자체는 트리거 조건과 무관하다(아이템을
-        // 팔면 인벤토리에서 즉시 사라지고, 트리거는 그 뒤에 조건을 따로 검사한다) — 라운드가
-        // 안 맞아 퀘스트가 안 열려도 토큰은 사라져야 그 재현이 맞다.
-        identity.Consume();
-
+        // 원작은 "재고 자체가 라운드로 잠긴다"(예: 와포루 토큰은 31라운드에 상점 재고에서
+        // 제거된다) — 그래서 판매(소모)가 조건과 무관해도 안전하다, 창 밖에서 애초에 못 들고
+        // 있으니까. 우리는 그 재고 게이트를 없애고 게임 시작에 7종 전부를 무상 지급하는 쪽으로
+        // 단순화했다(PirateQuestManager.GrantStartingTokens) — 그러면 모든 플레이어가 1라운드부터
+        // 항상 "창 밖에 토큰을 들고 있는" 상태가 되고, 라운드 검사가 유일한 방어선이 된다.
+        // 그 방어선을 파괴적으로(소모하며) 만들면, 처음 해보는 플레이어가 라운드를 모르고
+        // 한 번 넣어봤다가 그 퀘스트를 영영 잃는다 — 되돌릴 방법도, 콘솔 로그 말고는 알려주는
+        // 것도 없다. 그래서 라운드가 안 맞으면 소모하지 않고 그냥 돌려보낸다.
         if (!inRange)
         {
             Debug.Log($"[해적단] {quest.questName}: 지금은 발동 가능 라운드({quest.minRound}~{quest.maxRound})가 " +
-                      $"아니라({round}라운드) 열리지 않았습니다. 토큰은 소모됐습니다.", this);
+                      $"아니라({round}라운드) 열리지 않습니다. 토큰은 소모되지 않았습니다.", this);
             return;
         }
+
+        int ownerId = other.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
+
+        // 여기서부터는 발동 조건을 다 통과했다 — 매니저가 없어 못 여는 것은 플레이어의 선택이
+        // 아니라 우리 배선 오류이므로, 그 경우는 계속 소모한다(원작처럼 "판 것은 사라진다"만
+        // 지킨다). 라운드 게이트와 성격이 다르다.
+        identity.Consume();
 
         if (Manager == null)
         {
