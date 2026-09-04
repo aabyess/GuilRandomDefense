@@ -19,6 +19,15 @@ public class PirateQuestData : ScriptableObject
     // 올라간다). 레벨별 실제 HP 증가폭을 이번 조사로 못 구해서, 시도마다 배율을 곱하는 근사치로
     // 대신한다. ⚠️ 배율 자체가 창작이다 — 원작 수치가 아니다(해적단의 `Ilif`는 부호가 툴팁과
     // 반대로 나와 리서치담당이 무리하게 숫자로 바꾸지 않기로 하고 스모커와 같은 근사치를 그대로 썼다).
+    //
+    // 🔴 미도달(2026-09-05, 전 구간 손 추적으로 발견). 토큰이 시작에 1회만 지급되고 재획득
+    // 경로가 어디에도 없다(전수 grep — sellUnit을 참조하는 곳은 GrantStartingTokens 하나뿐).
+    // 그래서 PirateQuestManager.NextAttempt는 모든 플레이어에게 항상 1을 돌려주고, 이 배율은
+    // 실전에서 `1 + (1-1)*hpIncreasePerAttempt = 1.0`으로 고정돼 절대 안 움직인다. 원작은
+    // 상점 재고가 시간이 지나면 보충되는 구조(`AddUnitToStockBJ`)라 재도전이 설계의 일부다 —
+    // 스모커 툴팁 "도전 횟수가 증가할수록 체력이 증가합니다"가 그 증거. **필드는 지우지 않는다
+    // — 죽은 게 아니라 살릴 예정인 기능이다.** 재고 보충 간격이 확인되면(리서치담당 조사 중)
+    // 토큰 재획득 경로부터 만들 것 — 그전엔 이 배율을 만질 이유가 없다.
     public bool scalesWithAttempts;
     public float hpIncreasePerAttempt = 0.5f;
 

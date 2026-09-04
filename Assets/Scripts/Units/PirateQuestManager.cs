@@ -56,6 +56,10 @@ public class PirateQuestManager : MonoBehaviour
         GrantStartingTokens();
     }
 
+    // ⚠️ 이 "게임 시작 1회 무상 지급"이 원작의 "상점 재고 구매(재입고됨)"를 단순화한 자리다
+    // (클래스 상단 주석 참고). 그 단순화의 대가: 토큰을 다시 얻을 방법이 어디에도 없어서,
+    // PirateQuestData.scalesWithAttempts(재도전 시 강해짐)가 구조적으로 미도달이 됐다
+    // (2026-09-05, 전 구간 손 추적). 재고 보충 구조를 만들 때 여기부터 손댈 것.
     void GrantStartingTokens()
     {
         if (Spawner == null)
@@ -179,6 +183,11 @@ public class PirateQuestManager : MonoBehaviour
         return count;
     }
 
+    // ⚠️ PlayerContext.Get은 occupied만 보고 IsDead는 안 본다 — 그래서 퀘스트 진행 중에
+    // 그 플레이어가 전멸해도(RoundManager.HandlePlayerDefeated) 이 성공 판정이 뒤늦게 나면
+    // 죽은 플레이어에게 보상이 그대로 들어간다. 의도적으로 그대로 둔다(PM 판단, 2026-09-05) —
+    // 쓸 사람이 없을 뿐 해가 없고, 막으려면 코루틴에 사망 판정을 새로 넣어야 해서 얻는 것보다
+    // 비용이 크다.
     void HandleSuccess(PirateQuestData quest, int playerId)
     {
         PlayerContext context = PlayerContext.Get(playerId);
