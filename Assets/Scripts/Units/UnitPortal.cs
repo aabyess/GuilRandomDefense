@@ -25,7 +25,15 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
 
     [SerializeField] GachaTable gachaTable;
     [SerializeField] UnitSpawner unitSpawner;
-    [SerializeField] Transform spawnPoint;   // 비워두면 위습 주인의 레인 한가운데에 소환한다
+
+    // 비워두면 위습 주인의 레인 한가운데에 소환한다.
+    // ⚠️ 지금 구조에서는 채워도 쓸 수 없다 — MapGenerator.ConfigurePortal이 맵을 재생성할
+    // 때마다 이 필드에 무조건 null을 쓴다(인스펙터에서 손으로 채워도 다음 재생성에 지워진다).
+    // 게다가 채워지면 isBonus와 무관하게 항상 이 지점으로 보내서, 2026-09-03에 들어온
+    // "보너스는 레인 중앙 / 일반은 유닛 우리" 라우팅 분기(ResolveSpawnPosition)를 통째로
+    // 우회한다. 살리려면 그 라우팅과 어떻게 공존할지부터 정해야 한다 — 그전까지는 지우지
+    // 말고 이 상태로 둔다(PM 결정, 2026-09-05).
+    [SerializeField] Transform spawnPoint;
 
     // 마이그레이션 전용 필드 — acceptedGrade(단일 등급) → acceptedGrades(리스트) 전환 전에 씬에 저장된
     // 값을 흡수하기 위해 이름·타입을 그대로 남겨뒀다. 새로 만드는 포탈은 이 필드를 쓰지 말고
