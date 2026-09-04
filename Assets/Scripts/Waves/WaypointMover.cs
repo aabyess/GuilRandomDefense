@@ -26,11 +26,15 @@ public class WaypointMover : MonoBehaviour
         moveSpeed = speed;
     }
 
-    /// <summary>이감 배수를 반영한다. EnemyDummy.MinSlowMultiplier(0.01)와 같은 하한으로
-    /// 0 이하(완전 정지)로는 떨어지지 않게 막는다 — 정지는 AddFreeze/RemoveFreeze의 몫이다.</summary>
+    // 이감 배수 하한. 0 이하(완전 정지)로는 떨어지지 않게 막는다 — 정지는
+    // EnemyDummy.AddFreeze/RemoveFreeze의 몫이다. EnemyDummy.AddSlow도 이 값으로
+    // 클램프한다 — 정의는 여기 한 곳뿐이다.
+    public const float MinSlowMultiplier = 0.01f;
+
+    /// <summary>이감 배수를 반영한다.</summary>
     public void SetSlowMultiplier(float multiplier)
     {
-        slowMultiplier = Mathf.Clamp(multiplier, 0.01f, 1f);
+        slowMultiplier = Mathf.Clamp(multiplier, MinSlowMultiplier, 1f);
     }
 
     private void Start()

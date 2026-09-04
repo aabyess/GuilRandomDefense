@@ -66,10 +66,8 @@ public class EnemyDummy : MonoBehaviour
     // 세기가 달라 개수만으론 부족해서 실제 배수를 목록으로 들고 있는다.
     readonly List<float> slowMultipliers = new List<float>();
 
-    // 원작 최대 감속 -0.99(Oae1의 최댓값, §6)에 맞춘 하한 — 99%까지 느려질 수 있고
-    // 0 이하(완전 정지)로는 안 떨어진다. 정지는 AddFreeze/RemoveFreeze의 몫이다.
-    public const float MinSlowMultiplier = 0.01f;
-
+    // 하한(0.01, 99% 감속 — 원작 최대 -0.99 Oae1과 일치)은 WaypointMover.MinSlowMultiplier에
+    // 정의돼 있다 — 정의는 한 곳만 두고 여기서는 그 값을 그대로 참조한다.
     /// <summary>
     /// 이감을 건다. 배수는 <b>1보다 작은 값</b>(예: 0.5 = 이속 50%)이다.
     /// 여러 개가 겹치면 <b>가장 강한 것 하나만</b> 적용한다(최솟값) — 곱으로 쌓으면 약한 감속
@@ -78,14 +76,14 @@ public class EnemyDummy : MonoBehaviour
     /// </summary>
     public void AddSlow(float multiplier)
     {
-        slowMultipliers.Add(Mathf.Clamp(multiplier, MinSlowMultiplier, 1f));
+        slowMultipliers.Add(Mathf.Clamp(multiplier, WaypointMover.MinSlowMultiplier, 1f));
         ApplySlow();
     }
 
     /// <summary>이감을 되돌린다. AddSlow에 넣은 것과 같은 값을 넣어야 그 인스턴스가 빠진다.</summary>
     public void RemoveSlow(float multiplier)
     {
-        slowMultipliers.Remove(Mathf.Clamp(multiplier, MinSlowMultiplier, 1f));
+        slowMultipliers.Remove(Mathf.Clamp(multiplier, WaypointMover.MinSlowMultiplier, 1f));
         ApplySlow();
     }
 
