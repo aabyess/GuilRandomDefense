@@ -196,4 +196,14 @@ public class UnitData : ScriptableObject
     public float moveSpeed;
     public SkillData skill;
     public GameObject prefab;
+
+    // 평타 강화(원작 Bash, war3map.w3a ACbh 기반 469개 중 실효 137개). 평타가 적중할 때마다
+    // 별개의 추가 피해 인스턴스가 확률로 한 번 더 들어간다 — 평타를 대체하지 않고 얹힌다.
+    // UnitAttacker.Update()가 읽는다. chance가 0(기본값)이면 완전히 비활성 — 239종을 전부
+    // 안 채운 채로 커밋해도 게임 동작이 그대로다(Docs/reference/AUTO_ATTACK_CRIT_DESIGN.md).
+    [Header("평타 강화(원작 Bash) — chance가 0이면 완전히 비활성")]
+    public float critChance;                // 0~1. 기본 0.
+    public float critDamageMultiplier = 1f; // 배수. chance=0이면 안 쓰이지만 안전하게 1로 둔다.
+    public float critBonusDamage;           // 고정 추가피해. 기본 0.
+    public float critStunDuration;          // 발동 시 대상 기절 시간(초). 기본 0 = 기절 없음.
 }

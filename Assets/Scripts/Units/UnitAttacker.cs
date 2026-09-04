@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -120,6 +121,31 @@ public class UnitAttacker : MonoBehaviour
         if (magicShred > 0f) target.AddMagicArmorShred(magicShred);
     }
 
+    // 평타 강화(원작 Bash) — 방금 들어간 평타에 이어 확률로 별도 피해 인스턴스를 한 번 더
+    // 먹인다. 평타와 같은 DamageType/AttackType을 써서 방어력 감폭·상성표를 평타와
+    // 똑같이 통과시킨다(Docs/reference/AUTO_ATTACK_CRIT_DESIGN.md §3). critChance가
+    // 0(기본값)인 유닛은 Random.value < 0f가 항상 거짓이라 완전히 비활성이다.
+    void ApplyCritIfTriggered(EnemyDummy target)
+    {
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null || unitData.critChance <= 0f) return;
+        if (Random.value >= unitData.critChance) return;
+
+        float bonus = AttackDamage * unitData.critDamageMultiplier + unitData.critBonusDamage;
+        target.TakeDamage(bonus, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1);
+
+        if (unitData.critStunDuration > 0f) StartCoroutine(CritStunRoutine(target, unitData.critStunDuration));
+    }
+
+    // SupportShop.StunRoutine과 같은 패턴 — AddFreeze/RemoveFreeze는 겹침 횟수를 세므로
+    // 다른 스턴원과 동시에 걸려도 서로를 밀어내지 않는다.
+    IEnumerator CritStunRoutine(EnemyDummy target, float duration)
+    {
+        target.AddFreeze();
+        yield return new WaitForSeconds(duration);
+        if (target != null) target.RemoveFreeze();
+    }
+
     // 이 유닛의 데미지 판정. UnitData가 없으면(씬에 손으로 놓은 더미 등) 물리로 둔다 —
     // 여기서 None을 넘기면 EnemyDummy가 어차피 물리로 취급하므로 결과는 같지만, 뜻을 분명히 한다.
     DamageType DamageTypeOf => identity != null && identity.Data != null
@@ -218,6 +244,7 @@ public class UnitAttacker : MonoBehaviour
             Anim?.PlayAttack();
             ApplyArmorShred(target);
             target.TakeDamage(AttackDamage, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1);
+            ApplyCritIfTriggered(target);
             return;
         }
 
