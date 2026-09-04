@@ -400,3 +400,98 @@ public void Add(ItemData item) { … }   // 호출부 0
 
 > ⚠️ **2번은 원인을 아직 모른다** — `OwnerPlayerId`가 안 맞아서인지 `EnsureFourPlayers`가
 > 창고보다 먼저 돌아서인지 씬을 열어봐야 안다. **원인을 모르는 채로 고치면 다른 게 깨진다.**
+
+---
+
+# 시스템 단위 갱신 (2026-09-05, 구현담당1)
+
+PM이 기억으로 적은 09-04→09-05 변경 표를 그대로 베끼지 말라고 지시해서, **전부 코드를 직접 열어
+다시 확인했다.** 아래 태그는 PM이 제안한 넷을 쓴다:
+
+```
+도달        — 값이 실제로 쓰이거나 곱해지는 지점까지 손으로 따라갔고, 끊긴 데가 없다
+반쪽        — 경로 일부만 있다. 무엇이 없는지 명시한다
+미도달      — 코드·데이터는 있는데 연결이 없어 절대 안 닿는다
+자리만 있음 — 아직 안 만든 시스템을 위해 미리 파둔 필드. 죽은 게 아니라 "다음 축을 위한 훅"이다
+```
+
+**범위**: 이번 세션이 오늘 만든/만진 시스템의 **씬 배선**만 봤다. 도움소(`SupportSkillData`)·
+`EnemyData`·`WaveData` 필드 전수는 구현담당2·3이 지금 따로 돌리고 있어서 손대지 않았다 —
+아래 폭우·마나환급 항목은 그쪽 보고를 인용만 하고 재검증하지 않았다(표시함).
+
+## ① 해적단 퀘스트 — **도달** (PM의 「반쪽」 표는 낡았다 — 사장님이 그 사이 맵을 다시 돌렸다)
+
+`75c8255`·`1aea9be` 커밋 시점엔 씬에 안 붙어 있어서 「배선 완료, 씬 미반영」이 맞았다.
+**지금은 다르다** — `git log`로 그 사이 커밋을 확인하고 씬 파일을 직접 열어 재확인했다:
+
+```
+1. PirateQuestManager 스크립트 GUID(bb70fa8f…)로 씬 grep → 1개 존재
+   startingQuests: 7개 GUID 전부 있음(거프·모리아·바제스·스모커·와포루·피카·해적단)
+   unitSpawner: {fileID: 185428501} — 비어있지 않음
+2. UnitSellPortal 스크립트 GUID(e580b954…)로 씬 grep → 4개(레인당 1개) 존재
+   4개 전부 quests 리스트에 같은 7개 GUID를 동일한 순서로 들고 있음(어긋난 부분집합 없음)
+3. 포탈의 CapsuleCollider를 직접 열어 m_IsTrigger: 1 확인
+   (BuildLaneShopBody를 썼으면 여기가 0이라 OnTriggerEnter가 영영 안 불렸을 자리)
+```
+
+**셋 다 확인했으니 도달이다.** 손으로 따라간 것: 씬 YAML의 `PirateQuestManager`·`UnitSellPortal`
+컴포넌트 블록 5개(매니저 1 + 포탈 4) 전체와 그 콜라이더 컴포넌트.
+
+## ② 적 이감(슬로우) — **반쪽** (받는 쪽만 있다, PM 표와 일치)
+
+```
+EnemyDummy.AddSlow/RemoveSlow → slowMultipliers 리스트 → ApplySlow()
+  → WaypointMover.SetSlowMultiplier()                        ← 여기까지는 이어진다
+```
+
+`grep -rn "\.AddSlow(\|\.RemoveSlow("`로 **호출부를 전부** 찾아봤는데 **0건**이다 — 정의부와
+주석만 있다. 아무도 이 메서드를 부르지 않으니 적이 절대 느려지지 않는다. `AddFreeze`와 구조가
+같아서 "겹친 만큼 세는" 뼈대는 멀쩡하다 — **누가 걸어주기만 하면 된다.** 걸 주체(도움소 스킬이든
+특성이든)가 아직 없다.
+
+## ③ 적 자연회복 — **도달** (구조), **값은 바제스만**
+
+```
+EnemyDummy.Update() → hpRegenPerSecond > 0 확인 → hp += rate*deltaTime, MaxHp로 클램프
+  → isDead/invulnerable이면 통째로 건너뜀 (Update() 첫 줄에서 리턴)
+```
+
+`Update()`가 매 프레임 도는 코드이고 조건문·클램프까지 손으로 확인했다 — **구조는 완전히
+도달한다.** 다만 `hpRegenPerSecond`가 0이 아닌 에셋은 **`Miniboss_바제스` 하나뿐**이다(전수
+`grep`로 확인). 다른 적 88종은 필드가 있어도 값이 0이라 사실상 무영향 — 이건 미도달이 아니라
+**설계대로 대부분 0**이다(주석이 그렇게 밝혀 둠).
+
+## ④ 특성포인트(피카) — **자리만 있음**
+
+```csharp
+public int successTraitPoints;   // PirateQuestData.cs:46 — 선언만, 읽는 곳 0건(grep 확인)
+```
+
+`PirateQuestManager.HandleSuccess`가 이 필드를 안 읽는다 — **의도적으로 안 읽는다**(주석에
+이유를 남겨 뒀다). 그리고 설령 읽어서 `UnitUpgrades.GrantXxx()`를 부르게 고쳐도 **씬의
+`UnitUpgrades` 컴포넌트가 여전히 0개**이고 `PlayerContext.unitUpgrades`가 4개 전부
+`{fileID: 0}`이다(오늘도 재확인 — 09-04 §1과 **똑같은 상태, 그 사이 안 바뀌었다**). 즉 이 필드는
+**"죽은 코드"가 아니라 "다음에 §1이 풀리면 그때 한 줄 이어붙일 자리"** — 지우면 안 된다.
+
+## ⑤ `StoryRewardData` → `WispReward` 개명 — **도달**
+
+`grep -rln "StoryRewardData" Assets/` → 0건. `Assets/Scripts/Data/WispReward.cs`에
+`class WispReward`로 존재. 옛 이름을 참조하는 곳이 하나도 안 남아 깨끗하다.
+
+## ⑥ 도움소 — 인용만, 재검증 안 함
+
+PM이 보고한 **「폭우 `waveCount` 누락」·「마나 환급 주석이 '미사용'이라 했는데 실은 읽히고
+있었다」** 둘은 `SupportSkillData.cs`/`SupportShop.cs` 소관이고 **구현담당2가 지금 그 파일들을
+만지고 있어서 이번엔 손 안 대고 코드도 다시 안 열었다.** 사실 여부는 그쪽 보고를 봐야 한다 —
+여기 적는 건 "이런 종류의 문제가 오늘도 나왔다"는 사례 표시일 뿐, 내가 확인한 사실이 아니다.
+
+## 요약 표
+
+| 시스템 | 상태 | 무엇이 끊겼나 |
+|---|---|---|
+| 해적단 퀘스트(매니저+포탈 7종) | **도달** | 없음 — 씬까지 확인됨 |
+| 적 이감(AddSlow) | **반쪽** | 거는 쪽이 0건 |
+| 적 자연회복 구조 | **도달** | 없음. 값은 바제스만 |
+| 피카 특성포인트 | **자리만 있음** | `UnitUpgrades` 배선 자체가 여전히 없음(09-04와 동일) |
+| `StoryRewardData`→`WispReward` | **도달** | 없음 |
+| 도움소 폭우/마나환급 | **미검증** | 구현담당2 소관, 이번엔 안 봄 |
