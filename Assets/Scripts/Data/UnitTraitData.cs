@@ -49,7 +49,9 @@ public class UnitTraitData : ScriptableObject
     public string traitName;
     [TextArea] public string description;
 
-    public int costTraitPoints = 4;   // 원작 사례 대부분 4개 [원작]
+    // 원작 맵(war3map.w3a) 직접 확인 결과 1~3개, 최빈값 2개다(2026-09-04, UPGRADE_SHOP.md 5차
+    // 조사) — "대부분 4개"였던 이전 조사는 정정됐다.
+    public int costTraitPoints = 2;
 
     public List<TraitEffect> effects = new List<TraitEffect>();
 

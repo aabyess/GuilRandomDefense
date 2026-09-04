@@ -3,8 +3,10 @@
 """로스터 전 유닛(235종)에 빈 UnitTraitData 에셋을 하나씩 만든다.
 
 PM 승인된 5단계 설계(Docs/design/TRAIT_UPGRADE.md) 중 5번 — "235개 스캐폴딩, 전부 효과 없음".
-전부 costTraitPoints=4(원작 사례 대부분 4개 [원작]), effects=[](효과 없음), specialEffectId=""로
-시작한다 — 나중에 사장님이 실제 수치를 주시는 유닛부터 이 에셋 하나씩만 갈아끼우면 된다.
+전부 costTraitPoints=2(원작 맵 war3map.w3a 직접 확인 결과 1~3개·최빈값 2개, 2026-09-04 —
+UPGRADE_SHOP.md 5차 조사. "대부분 4개"였던 이전 조사는 정정됐다), effects=[](효과 없음),
+specialEffectId=""로 시작한다 — 나중에 사장님이 실제 수치를 주시는 유닛부터 이 에셋 하나씩만
+갈아끼우면 된다.
 
 재실행해도 guid는 안 바뀐다(로스터 파일명 기준으로 고정). 로스터에 유닛이 추가/제거되면
 다시 돌리면 된다 — 이미 있는 파일은 덮어쓰되 guid는 그대로 유지된다(파일명이 같으면).
@@ -63,11 +65,11 @@ for roster_path in roster_paths:
             f'  targetUnit: {{fileID: 11400000, guid: {roster_guid}, type: 2}}\n'
             f'  traitName: {base} 특성강화\n'
             f'  description: \n'
-            f'  costTraitPoints: 4\n'
+            f'  costTraitPoints: 2\n'
             f'  effects: []\n'
             f'  specialEffectId: \n')
 
     write(f'{OUT_DIR}/{ename}.asset', body, eguid)
     made += 1
 
-print(f"{made}개 특성강화 스캐폴딩 에셋 생성 완료 ({OUT_DIR}/) — 전부 효과 없음, costTraitPoints=4")
+print(f"{made}개 특성강화 스캐폴딩 에셋 생성 완료 ({OUT_DIR}/) — 전부 효과 없음, costTraitPoints=2")
