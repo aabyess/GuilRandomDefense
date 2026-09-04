@@ -16,7 +16,9 @@ public class ResourcePortal : MonoBehaviour
 
     [Header("지급량 — 라운드가 오를수록 늘어난다")]
     [SerializeField] int baseAmount = 1;
-    [SerializeField] int perRound;
+    // 원작 도움소 마나 회복 공식(20 + 라운드×1.5)이 정수배가 아니라 float로 뒀다 —
+    // 최종 지급량은 아래서 반올림한다.
+    [SerializeField] float perRound;
     [SerializeField, Range(0f, 100f)] float successChancePercent = 100f;
 
     RoundManager roundManager;
@@ -65,7 +67,7 @@ public class ResourcePortal : MonoBehaviour
         }
 
         int round = roundManager != null ? roundManager.CurrentRound : 1;
-        int amount = Mathf.Max(0, baseAmount + perRound * round);
+        int amount = Mathf.Max(0, Mathf.RoundToInt(baseAmount + perRound * round));
         if (amount == 0) return;
 
         if (payout == Payout.Gold)

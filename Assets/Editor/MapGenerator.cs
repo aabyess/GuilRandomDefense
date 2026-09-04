@@ -1432,8 +1432,9 @@ public static class MapGenerator
 
         // 남: 도움소 마나 — 원작은 "20 + 라운드×1.5 회복".
         // 마나를 쓰는 도움소 건물은 아직 없지만, 자원은 지금부터 쌓아둔다.
+        // 원작 확정 공식(2026-09-04, ORD11.089.w3x Trig_Random_Mana 직접 확인): 20 + 라운드×1.5.
         BuildResourcePortal(parent, "Portal_도움소마나", new Vector3(centerX, 0f, centerZ - armZ),
-            ResourcePortal.Payout.Resource, ResourceType.Mana, 20, 2, 100f);
+            ResourcePortal.Payout.Resource, ResourceType.Mana, 20, 1.5f, 100f);
 
         // 가운데에서 위습이 생긴다. 여기서 어느 포탈로 갈지는 플레이어가 정한다.
         GameObject cell = new GameObject("위습칸_자원");
@@ -1452,7 +1453,7 @@ public static class MapGenerator
     // diameter는 자원 칸(넓은 포탈)과 뽑기 섬 특수지급 칸(좁은 선택 포탈)이 서로 다른 크기를 쓴다.
     static GameObject BuildResourcePortal(Transform parent, string name, Vector3 ground,
                                     ResourcePortal.Payout payout, ResourceType resource,
-                                    int baseAmount, int perRound, float chance,
+                                    int baseAmount, float perRound, float chance,
                                     float diameter = PortalDiameter)
     {
         GameObject portal = CreatePortalObject(parent, name,
@@ -1463,7 +1464,7 @@ public static class MapGenerator
         so.FindProperty("payout").enumValueIndex = (int)payout;
         so.FindProperty("resourceType").enumValueIndex = (int)resource;
         so.FindProperty("baseAmount").intValue = baseAmount;
-        so.FindProperty("perRound").intValue = perRound;
+        so.FindProperty("perRound").floatValue = perRound;
         so.FindProperty("successChancePercent").floatValue = chance;
         // acceptedGrades를 비워두면 어떤 위습이든 받는다 — 자원 칸은 등급을 가리지 않는다.
         so.ApplyModifiedProperties();
