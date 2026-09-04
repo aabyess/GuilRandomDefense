@@ -188,7 +188,10 @@ public class UnitData : ScriptableObject
 
     // 평타의 공격 타입(원작의 normal/pierce/siege/hero/chaos). damageType과 **직교한다** —
     // damageType은 물리냐 마법이냐, attackType은 그 물리가 어느 종류냐다.
-    // 아직 239종 어디에도 안 붙어서 전부 Unassigned이고, 그동안 배율은 1.0이다.
+    // ⚠️ "239종 어디에도 안 붙어서 전부 Unassigned"는 낡은 서술이다(2026-09-05 확인) —
+    // damageType=AP인 40종엔 이미 Magic이 붙어 있다(668ed8c). 물리(AD, 나머지 199종)의
+    // 세부 타입(normal/pierce/siege/hero/chaos) 배정만 아직 안 됐다 — 등급이 아니라
+    // damageType으로 갈리는 진행 상태다.
     public AttackType attackType = AttackType.Unassigned;
     public MovementAbility movementAbility;
 
@@ -212,6 +215,9 @@ public class UnitData : ScriptableObject
     // 안 채운 채로 커밋해도 게임 동작이 그대로다(Docs/reference/AUTO_ATTACK_CRIT_DESIGN.md).
     [Header("평타 강화(원작 Bash) — chance가 0이면 완전히 비활성")]
     public float critChance;                // 0~1. 기본 0.
+    // 항상 1이다(PM 확정, 2026-09-05, AUTO_ATTACK_CRIT_DESIGN.md §6.2 "후자") — 원작 배수
+    // (Hbh2)분은 이미 critBonusDamage에 "평타 대비 비율"로 흡수돼 있다. 여기에 값을 넣으면
+    // (AttackDamage*multiplier + critBonusDamage에서) 배수 효과가 두 번 곱해진다. 채우지 말 것.
     public float critDamageMultiplier = 1f; // 배수. chance=0이면 안 쓰이지만 안전하게 1로 둔다.
     public float critBonusDamage;           // 고정 추가피해. 기본 0.
     public float critStunDuration;          // 발동 시 대상 기절 시간(초). 기본 0 = 기절 없음.
