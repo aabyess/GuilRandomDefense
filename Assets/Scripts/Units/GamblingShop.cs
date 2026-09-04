@@ -277,7 +277,12 @@ public class GamblingShop : MonoBehaviour, ILaneShop
             return context.GoldWallet != null && context.GoldWallet.Gold >= option.cost;
         }
 
-        return context.ResourceWallet != null && context.ResourceWallet.Get(option.costResourceType) >= option.cost;
+        if (context.ResourceWallet == null) return false;
+        if (context.ResourceWallet.Get(option.costResourceType) < option.cost) return false;
+
+        // 원작 유닛 도박은 골드와 자원을 같이 받는다. 둘 중 하나만 모자라도 못 돌린다.
+        return option.goldCost <= 0
+               || (context.GoldWallet != null && context.GoldWallet.Gold >= option.goldCost);
     }
 
     public bool TryRoll(GamblingOptionData option)
@@ -297,7 +302,13 @@ public class GamblingShop : MonoBehaviour, ILaneShop
     {
         if (context.GoldWallet == null || !context.GoldWallet.TrySpend(option.cost)) return false;
 
-        int amount = Random.Range(option.successGoldMin, option.successGoldMax + 1);
+        // 성공률이 0이면 옛 에셋(성공/실패 구분 없이 항상 지급)으로 보고 성공 취급한다.
+        bool success = option.successChancePercent <= 0f
+                       || Random.Range(0f, 100f) < option.successChancePercent;
+
+        int amount = success
+            ? Random.Range(option.successGoldMin, option.successGoldMax + 1)
+            : Random.Range(option.failureGoldMin, option.failureGoldMax + 1);
         if (amount > 0) context.GoldWallet.Add(amount);
 
         context.GamblingProgress?.RecordUse(option);
@@ -333,8 +344,21 @@ public class GamblingShop : MonoBehaviour, ILaneShop
             }
         }
 
+        // 골드를 먼저 뺀다. 자원을 먼저 빼고 골드가 모자라면 자원만 날아간다 —
+        // CanRoll이 둘 다 봤어도 그 사이에 다른 경로로 골드가 줄 수 있다.
+        if (option.goldCost > 0)
+        {
+            if (context.GoldWallet == null || !context.GoldWallet.TrySpend(option.goldCost))
+                return false;
+        }
+
         if (context.ResourceWallet == null || !context.ResourceWallet.TrySpend(option.costResourceType, option.cost))
+        {
+            // 자원 차감이 실패하면 이미 빠진 골드를 되돌린다.
+            if (option.goldCost > 0 && context.GoldWallet != null)
+                context.GoldWallet.Add(option.goldCost);
             return false;
+        }
 
         if (success)
         {

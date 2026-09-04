@@ -22,6 +22,11 @@ public class GamblingOptionData : ScriptableObject
     public ResourceType costResourceType = ResourceType.Wood;
     public int cost;
 
+    // 유닛 도박은 원작에서 **골드와 목재를 같이** 받는다(하급 250골드+목재1, 중급 1500+2,
+    // 고급 2500+4, 다른세계 3500+5). 목재만 받으면 사실상 공짜라 도박이 선택이 아니게 된다.
+    // 0이면 자원만 받는다 — 돈 도박(Money)은 위 cost가 곧 엔이므로 이 칸을 쓰지 않는다.
+    public int goldCost;
+
     [Header("성공 확률 — Unit 카테고리 전용 (Money는 성공/실패 구분 없이 항상 결과 범위에서 나온다)")]
     [Range(0f, 100f)] public float successChancePercent;
 
@@ -33,6 +38,11 @@ public class GamblingOptionData : ScriptableObject
     [Header("결과 — Money 카테고리 (예: 0~100엔). 0이 나올 수도 있다")]
     public int successGoldMin;
     public int successGoldMax;
+
+    // 돈 도박도 원작은 성공/실패가 갈린다(10엔 64%, 500엔 59%). 실패해도 판돈 일부를
+    // 돌려줘서 완전한 0이 나오지는 않는다 — 10엔 도박은 3~5엔을 돌려받는다.
+    public int failureGoldMin;
+    public int failureGoldMax;
 
     [Header("실패 시 — Unit 카테고리. 고급·다른세계 도박만 켠다 (GAMBLING.md)")]
     public bool grantFailureReward;

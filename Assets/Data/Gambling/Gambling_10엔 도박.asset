@@ -13,16 +13,16 @@ MonoBehaviour:
   m_Name: Gambling_10엔 도박
   m_EditorClassIdentifier:
   optionName: 10엔 도박
-  description: 10엔을 걸고 0~100엔을 받는다. 평생 10번만 돌릴 수 있다.
+  description: 10엔을 걸고 64% 확률로 7~50엔을 받는다. 실패해도 3~5엔은 돌려받는다. 평생 10번만 돌릴 수 있다.
   category: 0
   costResourceType: 0
   cost: 10
-  successChancePercent: 100
+  successChancePercent: 64
   primaryResultGrade: 0
   useSecondaryGrade: 0
   secondaryResultGrade: 0
-  successGoldMin: 0
-  successGoldMax: 100
+  successGoldMin: 7
+  successGoldMax: 50
   grantFailureReward: 0
   failureLuckyTokens: 0
   failureWood: 0
@@ -30,3 +30,5 @@ MonoBehaviour:
   requiresUnlock: 0
   unlockHint:
   unlockRound: 0
+  failureGoldMin: 3
+  failureGoldMax: 5
