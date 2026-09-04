@@ -8,6 +8,12 @@ public class GachaTable : ScriptableObject
     public class GradeEntry
     {
         public UnitGrade grade;
+
+        // 지금 이 값을 읽는 Roll()을 부르는 곳이 코드에 0건이다(2026-09-05 감사) — 실제
+        // 지급 경로(UnitPortal.RollReward)는 RollFromGrade로 등급을 직접 지정해서 weight를
+        // 아예 안 본다. MainGachaTable.asset은 grade 4(히든) 이상 전부 weight=0으로 저장돼
+        // 있다 — 지금은 죽은 값이라 문제 없지만, Roll()을 실제로 쓰기 시작하면 그 순간
+        // 고등급이 하나도 안 나온다. 쓰기 전에 채울 것 — 확률은 사장님 콘텐츠라 값은 안 건드림.
         public float weight;
         public List<UnitData> pool;
     }
