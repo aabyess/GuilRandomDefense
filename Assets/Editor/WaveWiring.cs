@@ -49,6 +49,17 @@ public static class WaveWiring
             managerSo.ApplyModifiedProperties();
         }
 
+        // 라운드 길이도 여기서 못 박는다. 씬에 옛 값(28초)이 직렬화돼 있으면 코드 기본값을
+        // 고쳐도 안 먹는다 — 유니티는 씬에 저장된 값을 이깁니다. 2026-09-04에 원작값
+        // (일반 40.65 / 보스 75.4 / 신세계 38.67)으로 옮기면서 실제로 그 함정을 밟았다.
+        // 옛 씬 값만 덮어쓰고, 사람이 일부러 바꾼 값은 건드리지 않는다.
+        SerializedProperty duration = managerSo.FindProperty("roundDuration");
+        if (duration != null && Mathf.Approximately(duration.floatValue, 28f))
+        {
+            duration.floatValue = 40.65f;
+            managerSo.ApplyModifiedProperties();
+        }
+
         WaveSpawner spawner = Object.FindFirstObjectByType<WaveSpawner>(FindObjectsInactive.Include);
         if (spawner != null)
             Fill(new SerializedObject(spawner), "waves", waves);
