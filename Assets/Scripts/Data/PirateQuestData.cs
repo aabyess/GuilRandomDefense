@@ -15,12 +15,18 @@ public class PirateQuestData : ScriptableObject
     public EnemyData miniboss;
     public float timerSeconds = 60f;
 
-    // 도전 횟수가 늘수록 미니보스가 세진다(스모커). 원작은 능력 레벨(`A0NR`)로 올리는데
-    // 그 레벨별 실제 HP 증가폭을 이번 조사로 못 구해서, 시도마다 배율을 곱하는 근사치로 대신한다.
-    // ⚠️ 배율 자체가 창작이다 — 원작 수치가 아니다.
+    // 도전 횟수가 늘수록 미니보스가 세진다(스모커·해적단, 둘 다 원작 능력 `A0NR`/`Ilif` 계열로
+    // 올라간다). 레벨별 실제 HP 증가폭을 이번 조사로 못 구해서, 시도마다 배율을 곱하는 근사치로
+    // 대신한다. ⚠️ 배율 자체가 창작이다 — 원작 수치가 아니다(해적단의 `Ilif`는 부호가 툴팁과
+    // 반대로 나와 리서치담당이 무리하게 숫자로 바꾸지 않기로 하고 스모커와 같은 근사치를 그대로 썼다).
     public bool scalesWithAttempts;
     public float hpIncreasePerAttempt = 0.5f;
 
+    // ⚠️ 원작 판매 가능 라운드는 툴팁이 아니라 상점 재고 등록/제거 트리거로 정해진다 — 둘이
+    // 어긋난다. 와포루 툴팁은 "21~30라운드까지만"이라 적지만 토큰은 게임 시작부터 재고에 있고
+    // 31라운드에만 제거된다(리서치담당, 2026-09-05) — 실제로는 1~30. 바제스도 같은 모양으로
+    // Level==40에 제거되어 1~39다. 트리거를 못 찾은 나머지(해적단·거프·모리아·피카)는 0(무제한)
+    // 으로 비워 둔다 — 확인 전까지 툴팁 숫자를 옮겨넣지 말 것.
     [Header("발동 가능 라운드 — 0이면 제한 없음")]
     public int minRound;
     public int maxRound;
@@ -30,6 +36,14 @@ public class PirateQuestData : ScriptableObject
     public List<EnemyResourceReward> successResources;
     public WispData successWisp;
     public int successWispCount;
+
+    // 특성포인트 보상(피카: 목재1 + 특성포인트1). ⚠️ 지급 코드가 없다 — 일부러다.
+    // UnitUpgrades 배선이 3중으로 끊겨 있어(`MISSING_PLAYER_POWER.md` §3: UnitData에 필드 없음 /
+    // Unlock을 부르는 코드 없음 / Trait 에셋 effects 전부 빔) 지금 지급 코드를 넣어도 미도달이다.
+    // 필드만 두고 PirateQuestManager.HandleSuccess는 이 값을 읽지 않는다 — 그 3중 배선이
+    // 살아나면 그때 GrantTraitPoints 호출을 추가할 것.
+    [Header("성공 시 특성포인트 (⚠️ 미배선 — 위 주석 참고)")]
+    public int successTraitPoints;
 
     // 처치 성공 시 스토리 건물/보스에 추가로 주는 보너스 피해. 방어력을 무시하는 마법(Spells 행)으로
     // 들어간다 — StoryManager가 EnemyDummy.TakeDamage(DamageType.AP, AttackType.Spells)로 적용한다.
