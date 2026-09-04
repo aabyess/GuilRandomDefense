@@ -6,8 +6,9 @@ public class RoundManager : MonoBehaviour
     [SerializeField] WaveSpawner waveSpawner;
     [SerializeField] List<WaveData> rounds;
     [SerializeField] float roundDuration = 28f;
-    [SerializeField] int totalRounds = 25;
-    [SerializeField] int bossRoundInterval = 10;
+    // 씬에는 75가 들어 있다. 기본값이 25로 남아 있으면 새로 만든 씬이 조용히
+    // 25라운드짜리가 된다 — 웨이브 에셋은 Wave_Round01~75로 다 있다.
+    [SerializeField] int totalRounds = 75;
     // 레인 하나 기준. 전체 합이 아니다. 씬의 실제 값은 MapGenerator.WireRoundRewardWisp가
     // 맵 생성 때마다 100으로 맞춘다(사장님 지시, 2026-09-03: 25→100) — 여기 기본값도
     // 새로 만들어지는 인스턴스가 헷갈리지 않게 같이 맞춰둔다.
@@ -225,12 +226,13 @@ public class RoundManager : MonoBehaviour
     {
         roundTimer = roundDuration;
 
-        if (roundNumber % bossRoundInterval == 0)
+        WaveData waveData = GetWaveData(roundNumber);
+
+        if (waveData != null && waveData.IsBossRound)
         {
-            Debug.Log("보스 라운드!");
+            Debug.Log($"보스 라운드! (라운드 {roundNumber})");
         }
 
-        WaveData waveData = GetWaveData(roundNumber);
         if (waveSpawner != null && waveData != null)
         {
             waveSpawner.SpawnRound(waveData);
