@@ -2142,6 +2142,13 @@ public static class MapGenerator
     // 관리한다.
     const int EnemyCountThreshold = 100;
 
+    // 라운드 길이도 여기서 맞춘다 — 원작값(war3map.j 확인, 2026-09-04):
+    // 일반 40.65초 / 보스 75.4초 / 신세계(61+) 38.67초. 우리는 셋 다 28초였다.
+    // 씬에 옛 값이 직렬화돼 있으면 코드 기본값을 고쳐도 안 먹는다(유니티는 씬을 이긴다).
+    // WaveWiring에도 같은 보정을 넣어뒀는데 그건 별도 메뉴라 맵 생성 때 안 돌아서,
+    // 2026-09-05 맵 재생성 뒤에도 28이 그대로 남아 있었다.
+    const float NormalRoundDuration = 40.65f;
+
     static string WireRoundRewardWisp()
     {
         RoundManager roundManager = Object.FindFirstObjectByType<RoundManager>(FindObjectsInactive.Include);
@@ -2154,10 +2161,17 @@ public static class MapGenerator
         so.FindProperty("roundRewardWisp").objectReferenceValue = wisp;
         so.FindProperty("roundRewardCount").intValue = RoundRewardWispCount;
         so.FindProperty("enemyCountThreshold").intValue = EnemyCountThreshold;
+
+        // 28(옛 값)일 때만 덮어쓴다 — 사람이 일부러 바꿔둔 값은 건드리지 않는다.
+        SerializedProperty duration = so.FindProperty("roundDuration");
+        bool durationFixed = duration != null && Mathf.Approximately(duration.floatValue, 28f);
+        if (durationFixed) duration.floatValue = NormalRoundDuration;
+
         so.ApplyModifiedProperties();
 
         return $"\n라운드 클리어 보상을 {wisp.wispName} {RoundRewardWispCount}개로, " +
-               $"패배 임계치를 레인당 {EnemyCountThreshold}마리로 맞췄습니다.";
+               $"패배 임계치를 레인당 {EnemyCountThreshold}마리로 맞췄습니다." +
+               (durationFixed ? $"\n라운드 길이를 원작값 {NormalRoundDuration}초로 고쳤습니다(옛 값 28초)." : "");
     }
 
     static string SetStartingResources(PlayerContext[] contexts)
