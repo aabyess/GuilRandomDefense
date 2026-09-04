@@ -2464,12 +2464,29 @@ public static class MapGenerator
             PlayerContext already = System.Array.Find(existing, c => c.PlayerId == playerId);
             if (already != null)
             {
+                // Player2~4 GameObject는 "Map" 루트 밖(씬 최상위)에 있어 재생성 때 안 지워진다.
+                // 반면 창고 섬은 "Map" 아래라 매번 통째로 새로 지어진다 — 옛 Warehouse는
+                // 사라지고 새 인스턴스가 생기는데, 여기서 재조회를 안 하면 이 PlayerContext는
+                // 죽은(파괴된) 창고를 계속 가리킨다. 0번(로컬)은 아래서 매번 무조건 다시 찾아
+                // 거는데 1~3번은 "이미 있으니 넘어간다"에 걸려 그 갱신을 영영 못 받았다 —
+                // 구현담당2의 씬 감사(2026-09-05)가 찾은 실제 끊김이 이거다.
+                SerializedObject reset = new SerializedObject(already);
+                bool changed = false;
+
                 if (already.IsOccupied)
                 {
-                    SerializedObject reset = new SerializedObject(already);
                     reset.FindProperty("occupied").boolValue = false;
-                    reset.ApplyModifiedProperties();
+                    changed = true;
                 }
+
+                Warehouse warehouse = FindWarehouse(playerId);
+                if (reset.FindProperty("warehouse").objectReferenceValue != warehouse)
+                {
+                    reset.FindProperty("warehouse").objectReferenceValue = warehouse;
+                    changed = true;
+                }
+
+                if (changed) reset.ApplyModifiedProperties();
                 continue;
             }
 
