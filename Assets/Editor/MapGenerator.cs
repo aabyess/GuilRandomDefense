@@ -1422,9 +1422,10 @@ public static class MapGenerator
                         rewardGrade: UnitGrade.Common);
         ApplyBonusUnit(unitRandom, "안흔함_상붕카", RandomPortalBonusChance);
 
-        // 동: 금화 랜덤 — 원작은 "15 + 라운드×12~35". 라운드 비례 부분만 옮겼다.
+        // 동: 금화 랜덤 — 원작 그대로 "15 + 라운드×12~35"(2026-09-04, ORD11.089.w3x 확인).
+        // 예전엔 범위를 20 하나로 뭉개뒀는데, 그 폭이 원작 골드포탈의 도박성 그 자체다.
         BuildResourcePortal(parent, "Portal_금화랜덤", new Vector3(centerX + armX, 0f, centerZ),
-            ResourcePortal.Payout.Gold, ResourceType.Wood, 15, 20, 100f);
+            ResourcePortal.Payout.Gold, ResourceType.Wood, 15, 12, 100f, perRoundMax: 35);
 
         // 서: 목재 랜덤 — 원작은 66% 확률로 목재 1개.
         BuildResourcePortal(parent, "Portal_목재랜덤", new Vector3(centerX - armX, 0f, centerZ),
@@ -1454,7 +1455,7 @@ public static class MapGenerator
     static GameObject BuildResourcePortal(Transform parent, string name, Vector3 ground,
                                     ResourcePortal.Payout payout, ResourceType resource,
                                     int baseAmount, float perRound, float chance,
-                                    float diameter = PortalDiameter)
+                                    float diameter = PortalDiameter, float perRoundMax = 0f)
     {
         GameObject portal = CreatePortalObject(parent, name,
             new Vector3(ground.x, MapLayout.IslandTop + 0.25f, ground.z), diameter);
@@ -1465,6 +1466,7 @@ public static class MapGenerator
         so.FindProperty("resourceType").enumValueIndex = (int)resource;
         so.FindProperty("baseAmount").intValue = baseAmount;
         so.FindProperty("perRound").floatValue = perRound;
+        so.FindProperty("perRoundMax").floatValue = perRoundMax;
         so.FindProperty("successChancePercent").floatValue = chance;
         // acceptedGrades를 비워두면 어떤 위습이든 받는다 — 자원 칸은 등급을 가리지 않는다.
         so.ApplyModifiedProperties();

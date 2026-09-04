@@ -19,6 +19,11 @@ public class ResourcePortal : MonoBehaviour
     // 원작 도움소 마나 회복 공식(20 + 라운드×1.5)이 정수배가 아니라 float로 뒀다 —
     // 최종 지급량은 아래서 반올림한다.
     [SerializeField] float perRound;
+    // 원작 금화 포탈은 고정값이 아니라 **범위**다 — 15 + 라운드×12~35. 골드포탈은 원작
+    // 최대 수입원이라(75라운드 누적 상한 13.6만 > 스토리 6.9만 > 처치 3.3만) 그 폭이
+    // 곧 판의 기복이다. 고정값으로 뭉개면 원작의 "위습을 골드로 돌릴까" 도박성이 사라진다.
+    // perRound 이하면 범위가 없는 것으로 보고 perRound 하나만 쓴다(목재·마나 포탈이 그렇다).
+    [SerializeField] float perRoundMax;
     [SerializeField, Range(0f, 100f)] float successChancePercent = 100f;
 
     RoundManager roundManager;
@@ -67,7 +72,8 @@ public class ResourcePortal : MonoBehaviour
         }
 
         int round = roundManager != null ? roundManager.CurrentRound : 1;
-        int amount = Mathf.Max(0, Mathf.RoundToInt(baseAmount + perRound * round));
+        float scale = perRoundMax > perRound ? Random.Range(perRound, perRoundMax) : perRound;
+        int amount = Mathf.Max(0, Mathf.RoundToInt(baseAmount + scale * round));
         if (amount == 0) return;
 
         if (payout == Payout.Gold)
