@@ -70,16 +70,19 @@ public class UnitAttacker : MonoBehaviour
         attackSpeedBuffs.Remove(multiplier);
     }
 
-    // 방깎 특성(TraitEffectKind.ArmorShred)을 때린 대상에 건다.
-    // 한 번 걸면 그 개체가 죽을 때까지 남는다 — 원작의 방깎은 지속시간이 있을 수 있으나
-    // 그 수치가 [미기재]라, 지금은 누적만 하고 감쇠는 넣지 않는다.
-    // 같은 대상을 계속 때려도 무한히 쌓이지 않게, 이 유닛 몫은 한 번만 건다.
-    readonly HashSet<EnemyDummy> shredApplied = new HashSet<EnemyDummy>();
-
+    // 방깎 특성(TraitEffectKind.ArmorShred)을 때릴 때마다 대상에 쌓는다.
+    //
+    // 처음엔 "이 유닛 몫은 한 번만"으로 막아뒀는데, 그건 무한 누적이 걱정돼서 우리가 정한 것이지
+    // 근거가 없었다. 원작 맵(`war3map.w3a`)을 뜯어보니 **방깎은 전역에서 흔하게 중첩되고**
+    // 능력마다 상한이 따로 있다(총 -75/-80, 또는 7·9·10회 등). 지속시간 서술은 24건 어디에도
+    // 없어서 영구 누적으로 보인다 (`Docs/reference/ABILITIES_RESEARCH.md`, 구현담당1 조사).
+    // → 제한을 걷어냈다. 무한히 쌓여도 EffectiveArmor가 -20에서 잘리므로 효과는 유계다.
+    //
+    // ⚠️ 능력별 상한은 아직 못 넣는다 — TraitEffect에 상한을 담을 자리가 없다.
     void ApplyArmorShred(EnemyDummy target)
     {
         UnitData unitData = identity != null ? identity.Data : null;
-        if (unitData == null || !shredApplied.Add(target)) return;
+        if (unitData == null) return;
 
         UnitUpgrades source = ResolveUpgrades();
         float shred = source != null ? source.EffectSum(unitData, TraitEffectKind.ArmorShred) : 0f;
