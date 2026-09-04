@@ -13,7 +13,7 @@
 ```python
 import sys; sys.path.insert(0, 'Tools/w3x')
 from mpqread import Archive
-import w3u, w3q
+import w3u, w3q, w3a, wts
 
 # 1) 앞 512바이트를 잘라 MPQ만 남긴다
 src = open('/경로/ORD11.089.w3x','rb').read()
@@ -22,9 +22,15 @@ open('/tmp/ord.mpq','wb').write(src[512:])
 # 2) 원하는 파일을 꺼낸다
 a = Archive('/tmp/ord.mpq')
 open('/tmp/war3map.w3u','wb').write(a.read('war3map.w3u'))
+open('/tmp/war3map.w3a','wb').write(a.read('war3map.w3a'))
+open('/tmp/war3map.wts','wb').write(a.read('war3map.wts'))
 
 # 3) 판다
 units = w3u.parse('/tmp/war3map.w3u')
+abilities = w3a.parse('/tmp/war3map.w3a')       # 능력 — w3q.py와 같은 포맷(레벨별 값)
+strings = wts.parse('/tmp/war3map.wts')          # TRIGSTR_숫자 → 실제 텍스트
+# 능력 이름은 anam 필드에 직접 텍스트로 들어있는 경우가 많다(TRIGSTR 아님) — wts.resolve()는
+# TRIGSTR_로 시작할 때만 치환하고 아니면 그대로 돌려주므로 항상 걸어도 안전하다.
 ```
 
 ## 맵 안에 든 것
@@ -56,3 +62,7 @@ units = w3u.parse('/tmp/war3map.w3u')
 - 공격 타입 × 방어 타입 배율표는 `war3mapMisc.txt`에 있고, **실제로 쓰이는 방어 타입 2종의
   배율이 전부 1.0이라 상성이 작동하지 않는다**
 - 난이도는 적 체력을 직접 바꾸지 않고 **업그레이드(`R00A` 등)를 적 플레이어에 걸어서** 올린다
+- 능력(`war3map.w3a`, 1,628개)은 **115종 기반 템플릿에서 파생**됐다. 방무뎀(방어무시 데미지)은
+  고정 30%가 아니라 능력마다 다른 %(`nca1` 필드), 방깎(아머 브레이크)은 유닛당 1회가 아니라
+  **원작 전역에서 흔하게 중첩되고 능력마다 다른 상한**(-75/-80/7중첩/9중첩 등)이 있다. 상세는
+  `Docs/reference/ABILITIES_RESEARCH.md` 참고.
