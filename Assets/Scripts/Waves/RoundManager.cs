@@ -5,7 +5,20 @@ public class RoundManager : MonoBehaviour
 {
     [SerializeField] WaveSpawner waveSpawner;
     [SerializeField] List<WaveData> rounds;
-    [SerializeField] float roundDuration = 28f;
+    // 원작 40.65초(리서치담당 확인, 2026-09-04). 씬에 이미 굳어 있는 값은 별도로 맞춰야
+    // 한다 — 이 기본값은 새로 만들어지는 인스턴스용이다.
+    [SerializeField] float roundDuration = 40.65f;
+    // 원작은 보스 라운드가 훨씬 길다("제한시간내에 처치하세요" 메시지까지 뜬다) — 일반
+    // 라운드의 2.7배가 아니라 보스 자체가 75.4초짜리다. WaveData.IsBossRound로 가른다.
+    [SerializeField] float bossRoundDuration = 75.4f;
+    // 신세계(61라운드+)는 원작에서 `Mode_TimerReal +2`로 오히려 짧아진다 — 후반이 빨라지는
+    // 게 원작 설계다. 보스 여부와 무관하게 이 값 하나로 통일된다(원작이 그렇다).
+    [SerializeField] float newWorldRoundDuration = 38.67f;
+    [SerializeField] int newWorldStartRound = 61;
+    // 원작 준비 시간 — 1라운드 시작 전 21초(첫 조합할 시간), 60라운드(신세계 진입) 전 40초.
+    // 0으로 두면 예전처럼 대기 없이 바로 시작한다.
+    [SerializeField] float firstRoundDelay = 21f;
+    [SerializeField] float round60Delay = 40f;
     // 씬에는 75가 들어 있다. 기본값이 25로 남아 있으면 새로 만든 씬이 조용히
     // 25라운드짜리가 된다 — 웨이브 에셋은 Wave_Round01~75로 다 있다.
     [SerializeField] int totalRounds = 75;
@@ -25,9 +38,17 @@ public class RoundManager : MonoBehaviour
     float roundTimer;
     bool isGameOver;
 
+    // 라운드 시작 전 대기(1라운드 전 21초, 60라운드 전 40초). 대기 중엔 웨이브를 안 내보내고
+    // roundTimer도 안 돈다 — 새 라운드가 아니라 "아직 안 시작함" 상태라서다.
+    bool waitingForNextRound;
+    int pendingRoundNumber;
+    float preRoundTimer;
+
     public int CurrentRound => currentRound;
     public float RoundTimeLeft => roundTimer;
     public bool IsGameOver => isGameOver;
+    public bool IsWaitingForNextRound => waitingForNextRound;
+    public float PreRoundTimeLeft => preRoundTimer;
 
     // 원작의 패배 조건은 "라인 카운트"다 — 전체 합이 아니라 한 레인에 쌓인 수.
     // 레인이 4개가 된 뒤로 전체 합을 쓰면 같은 압박에도 4배로 세어져 즉시 패배한다.
@@ -54,7 +75,7 @@ public class RoundManager : MonoBehaviour
         }
 
         currentRound = 1;
-        StartRound(currentRound);
+        BeginPreRoundWait(1, firstRoundDelay);
     }
 
     void Update()
@@ -65,11 +86,37 @@ public class RoundManager : MonoBehaviour
         UpdateDeathCount();
         if (isGameOver) return;
 
+        if (waitingForNextRound)
+        {
+            preRoundTimer -= Time.deltaTime;
+            if (preRoundTimer <= 0f)
+            {
+                waitingForNextRound = false;
+                StartRound(pendingRoundNumber);
+            }
+            return;
+        }
+
         roundTimer -= Time.deltaTime;
         if (roundTimer <= 0f)
         {
             AdvanceRound();
         }
+    }
+
+    // delay가 0 이하면 대기 없이 바로 시작한다 — 준비 시간을 끄고 싶을 때 인스펙터에서 0으로만
+    // 두면 된다(기존 즉시-시작 동작으로 되돌아간다).
+    void BeginPreRoundWait(int roundNumber, float delay)
+    {
+        if (delay <= 0f)
+        {
+            StartRound(roundNumber);
+            return;
+        }
+
+        pendingRoundNumber = roundNumber;
+        preRoundTimer = delay;
+        waitingForNextRound = true;
     }
 
     void UpdateDeathCount()
@@ -174,7 +221,8 @@ public class RoundManager : MonoBehaviour
         // 자체가 안 불리므로 시작 위습(RewardDistributor.GrantStartingWisps)과도 안 겹친다.
         GrantFlatRoundReward();
 
-        StartRound(currentRound);
+        // 60라운드(신세계 진입) 전에만 원작대로 대기시간을 둔다. 나머지는 예전처럼 바로 이어진다.
+        BeginPreRoundWait(currentRound, currentRound == 60 ? round60Delay : 0f);
     }
 
     // "라운드 하나 지날 때마다" 랜덤위습 N개(사장님 지시, 기본 2개) — RewardDistributor의
@@ -224,9 +272,16 @@ public class RoundManager : MonoBehaviour
 
     void StartRound(int roundNumber)
     {
-        roundTimer = roundDuration;
-
         WaveData waveData = GetWaveData(roundNumber);
+
+        // 신세계가 최우선이다 — 원작은 보스 여부와 무관하게 61라운드부터 이 길이 하나로
+        // 통일한다(Mode_TimerReal +2로 오히려 짧아짐). 그 아래에서만 보스/일반을 가른다.
+        if (roundNumber >= newWorldStartRound)
+            roundTimer = newWorldRoundDuration;
+        else if (waveData != null && waveData.IsBossRound)
+            roundTimer = bossRoundDuration;
+        else
+            roundTimer = roundDuration;
 
         if (waveData != null && waveData.IsBossRound)
         {
