@@ -147,16 +147,18 @@ public class EnemyDummy : MonoBehaviour
     /// 최종 피해. 순서: 방깎 → 방어력 감폭 → 배율표.
     /// AP는 방어력을 무시한다(원작: "마법 데미지는 적의 방어력에 영향을 받지 않는다").
     /// </summary>
-    float MitigatedDamage(float amount, DamageType type, bool ignoresArmor)
+    float MitigatedDamage(float amount, DamageType type, float armorIgnoreRatio)
     {
-        // 방어력 수치를 건너뛰는 건 **순수 마법(AP)과 방무뎀뿐**이다.
+        // 순수 마법(AP)은 방어력 자체를 안 탄다 — 비율과 무관하게 전부 통과한다.
         // AD+AP는 확정 전까지 AD와 동일하게 감폭시킨다 — "겸한다"는 것만 알고 어떻게 겸하는지
         // 모르는 상태에서 감폭을 빼면, 물리·마법 겸용이 순수 마법보다 유리해진다
         // (`ARMOR_SYSTEM_DESIGN.md` §7 질문 3).
-        bool armorApplies = !ignoresArmor && type != DamageType.AP;
-        if (armorApplies)
+        if (type != DamageType.AP)
         {
-            amount *= ArmorMultiplier(EffectiveArmor);
+            // 방무뎀은 전부/전무가 아니라 비율이다. 피해를 둘로 갈라 한쪽만 감폭시킨다.
+            float ignored = Mathf.Clamp01(armorIgnoreRatio);
+            amount = amount * (1f - ignored) * ArmorMultiplier(EffectiveArmor)
+                   + amount * ignored;
         }
 
         // 배율표가 없으면 1.0으로 둔다 — 배선이 빠졌다고 피해가 0이 되면 안 된다.
@@ -181,12 +183,17 @@ public class EnemyDummy : MonoBehaviour
     /// <paramref name="type"/>에 기본값을 두지 않은 것도 같은 이유다 —
     /// 기본 AD로 두면 새 피해원이 조용히 물리로 들어가고 나중에 원인을 못 찾는다.
     /// </summary>
-    /// <param name="ignoresArmor">방무뎀. 방어력 <b>수치</b>는 건너뛰되 배율표는 그대로 적용한다.</param>
-    public void TakeDamage(float amount, DamageType type, int killerPlayerId, bool ignoresArmor = false)
+    /// <param name="armorIgnoreRatio">
+    /// 방무뎀. <b>0~1 비율</b>이다 — 원작 용어집이 "평타가 방어를 무시하는 %"라고 정의한다
+    /// (`UNIT_STATS_RESEARCH.md`). 즉 `방무뎀(30%)`은 "방어력을 30% 무시"가 아니라
+    /// <b>피해의 30%가 감폭을 건너뛴다</b>는 뜻이다. 배율표는 건너뛴 몫에도 그대로 적용된다.
+    /// 기본 0은 "방무뎀 없음"이라 안전하다 — <paramref name="type"/>과 달리 조용히 틀릴 여지가 없다.
+    /// </param>
+    public void TakeDamage(float amount, DamageType type, int killerPlayerId, float armorIgnoreRatio = 0f)
     {
         if (isDead) return;
 
-        hp -= MitigatedDamage(amount, type, ignoresArmor);
+        hp -= MitigatedDamage(amount, type, armorIgnoreRatio);
 
         if (invulnerable)
         {
