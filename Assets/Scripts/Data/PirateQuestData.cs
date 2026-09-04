@@ -31,10 +31,16 @@ public class PirateQuestData : ScriptableObject
     public WispData successWisp;
     public int successWispCount;
 
-    // 처치 성공 시 스토리 건물/보스에 추가로 주는 보너스 피해(원작 와포루: "스토리에 450만의
-    // 마법데미지를 줍니다"). 방어력을 무시하는 마법(Spells 행)으로 들어간다 — StoryManager가
-    // EnemyDummy.TakeDamage(DamageType.AP, AttackType.Spells)로 적용한다. 0이면 이 축이 없는 퀘스트.
-    [Header("성공 시 스토리 보너스 피해 (원작에만 있는 퀘스트에서만 사용)")]
+    // 처치 성공 시 스토리 건물/보스에 추가로 주는 보너스 피해. 방어력을 무시하는 마법(Spells 행)으로
+    // 들어간다 — StoryManager가 EnemyDummy.TakeDamage(DamageType.AP, AttackType.Spells)로 적용한다.
+    //
+    // ⚠️ 와포루 툴팁은 "스토리에 450만의 마법데미지를 줍니다"라고 약속하지만, `war3map.j`의
+    // `Trig_Quest_waporu_Actions` 성공 분기(Stage=1)를 끝까지 읽어도 피해 호출이 없다(리서치담당,
+    // 2026-09-05). 450만이라는 상수 자체는 다른 스킬 트리거 5곳에 있으나 이 콜백과 안 이어져 있다 —
+    // **원작이 툴팁으로만 약속하고 실제로는 배선하지 않은 것**이다. 그래서 0이 원작과 같은 상태다.
+    // 이 필드가 죽은 게 아니라 원작 재현이 정확히 0이라는 뜻 — 값을 채우기 전에 반드시 그 퀘스트의
+    // 원작 트리거에서 실제 피해 호출을 확인할 것. 지어내지 말 것.
+    [Header("성공 시 스토리 보너스 피해 (원작 트리거에 실제로 있을 때만 채운다)")]
     public float storyDamage;
 
     [Header("실패 페널티 — 시간 안에 못 죽이면")]

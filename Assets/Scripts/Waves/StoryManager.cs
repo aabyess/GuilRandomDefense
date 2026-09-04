@@ -59,9 +59,10 @@ public class StoryManager : MonoBehaviour
     public bool IsTransformed => transformed;
 
     /// <summary>
-    /// 해적단류 퀘스트(와포루 등)가 성공 시 스토리에 얹는 보너스 피해. 원작 툴팁 그대로
-    /// "마법데미지"라 방어력을 무시하고(DamageType.AP) 스킬 배율표 행을 탄다(AttackType.Spells —
-    /// 평타 행인 Magic과는 다른 행이다, EnemyDummy.MitigatedDamage 참고). 방어력을 받는 기존
+    /// 해적단류 퀘스트가 성공 시 스토리에 얹는 보너스 피해(데이터 구동 — PirateQuestData.storyDamage가
+    /// 0이면 아무 일도 안 한다. 와포루는 원작 트리거에 실제 배선이 없어 지금 0이다, 해당 필드 주석
+    /// 참고). "마법데미지"라 방어력을 무시하고(DamageType.AP) 스킬 배율표 행을 탄다(AttackType.Spells
+    /// — 평타 행인 Magic과는 다른 행이다, EnemyDummy.MitigatedDamage 참고). 방어력을 받는 기존
     /// 경로(EnemyDummy.TakeDamage)를 그대로 재사용한다 — 무적 상태(변신 전)면 1까지만 깎이고
     /// 살아남는 것도 레인 몹과 같은 규칙이다.
     /// </summary>
