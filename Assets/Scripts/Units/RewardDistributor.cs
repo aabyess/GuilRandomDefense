@@ -62,7 +62,30 @@ public class RewardDistributor : MonoBehaviour
         }
     }
 
-    public void GrantKillReward(EnemyData data, int killerPlayerId)
+    // 처치 골드 — 원작은 확정 지급이 아니라 25% 확률 지급이다(`war3map.j`의 `Trig_EnemyDeath2_Actions`
+    // 직접 확인, 2026-09-04). "자기 라인 킬만"도 원작 그대로다 — 원작은 스폰 시점에
+    // SetUnitUserData로 라인 번호를 박아두고 죽을 때 그 번호의 주인에게 준다(킬러를 안 본다).
+    // 우리는 EnemyDummy.LaneIndex가 그 자리다.
+    const float KillGoldChance = 0.25f;
+
+    // 라운드 10~60에 유닛종별로 걸려 있던 보스 전용 고정 보너스. `Trig_BossReward_Actions` +
+    // 조건 함수 6개를 전수 확인하고, 각 조건이 검사하는 유닛타입ID를 war3map.w3u 이름과
+    // 대조해 라운드로 확정했다(R10=아론600+목1 … R60=센고쿠4000+목3). R65/70/75(신세계)는
+    // 원작에도 이 보너스가 없다 — `Trig_BossReward_Func001C`가 `udg_Level<62`로 직접 게이트한다.
+    static readonly Dictionary<int, (int gold, int wood)> BossRewardByRound = new Dictionary<int, (int, int)>
+    {
+        { 10, (600, 1) },
+        { 20, (1500, 2) },
+        { 30, (2500, 2) },
+        { 40, (3000, 3) },
+        { 50, (3000, 4) },
+        { 60, (4000, 3) },
+    };
+
+    // round는 EnemyDummy.SpawnRound를 그대로 받는다 — RewardDistributor가 RoundManager를
+    // 직접 찾지 않아도 되고, 죽는 순간 라운드가 막 넘어가도 "이 적이 태어난 라운드" 기준으로
+    // 정확하다(GrantRoundClearWisps·OnBossKilled와 같은 이유).
+    public void GrantKillReward(EnemyData data, int laneIndex, int round)
     {
         if (!GameAuthority.IsServer) return;
         if (data == null) return;
@@ -74,17 +97,20 @@ public class RewardDistributor : MonoBehaviour
             {
                 GrantTo(context, data);
             }
+            return;
         }
-        else
-        {
-            PlayerContext context = PlayerContext.Get(killerPlayerId);
-            if (context != null)
-            {
-                GrantTo(context, data);
-            }
-        }
+
+        // 레인 소유자에게만 간다 — 누가 마지막 타격을 넣었는지는 안 본다(원작 그대로).
+        PlayerContext owner = PlayerContext.Get(laneIndex);
+        if (owner == null || !owner.IsOccupied) return;
+
+        GrantKillGold(owner, round);
+        GrantResources(owner, data);
+
+        if (data.isBoss) GrantBossReward(owner, round);
     }
 
+    // rewardsAllPlayers 전용(물범류) — 확정 지급, 원작 별개 축이라 그대로 둔다.
     void GrantTo(PlayerContext context, EnemyData data)
     {
         // 비어 있는 플레이어 슬롯에도 물범 목재 등이 쌓이는 걸 막는다 (rewardsAllPlayers 전체 지급 경로).
@@ -95,12 +121,38 @@ public class RewardDistributor : MonoBehaviour
             context.GoldWallet.Add(data.goldReward);
         }
 
+        GrantResources(context, data);
+    }
+
+    void GrantResources(PlayerContext context, EnemyData data)
+    {
         if (data.resourceRewards == null || context.ResourceWallet == null) return;
 
         foreach (EnemyResourceReward reward in data.resourceRewards)
         {
             context.ResourceWallet.Add(reward.type, reward.amount);
         }
+    }
+
+    // Gold_Math(L) = 1 + 2⌊L/5⌋ + 3⌊L/6⌋ − ⌊L/10⌋ (정수 나눗셈) — war3map.j 원문 그대로.
+    static int ComputeGoldMath(int round) => 1 + 2 * (round / 5) + 3 * (round / 6) - (round / 10);
+
+    void GrantKillGold(PlayerContext context, int round)
+    {
+        if (context.GoldWallet == null) return;
+        if (Random.value >= KillGoldChance) return;
+
+        int goldMath = ComputeGoldMath(round);
+        int goldPlus = context.GoldWallet.GoldPlus;
+        context.GoldWallet.Add(goldMath * (2 + goldPlus));
+    }
+
+    void GrantBossReward(PlayerContext context, int round)
+    {
+        if (!BossRewardByRound.TryGetValue(round, out (int gold, int wood) reward)) return;
+
+        context.GoldWallet?.Add(reward.gold);
+        context.ResourceWallet?.Add(ResourceType.Wood, reward.wood);
     }
 
     // 스토리 클리어 보상: 전체 플레이어에게 골드 + 자원 + 위습 지급.

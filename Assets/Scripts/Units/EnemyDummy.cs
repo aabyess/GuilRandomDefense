@@ -183,16 +183,30 @@ public class EnemyDummy : MonoBehaviour
 
             // AD+AP에는 마법 배율을 안 건다. 지금은 AD와 똑같이 취급하는데(§7 질문 3),
             // 여기서만 마법 배율을 더하면 물리 감폭과 마법 배율을 **둘 다** 맞아 이중으로 불리해진다.
+        }
 
-            // 상성표는 물리에만 건다. 마법은 위에서 마법 방어 배율을 이미 탔다.
-            if (damageTable != null)
-            {
-                amount *= damageTable.Multiplier(attackType, ArmorType);
-            }
+        // 상성표는 **물리·마법 양쪽에 다 건다** — 원작이 그렇다(물리 5행 + magic·spells 2행).
+        // 마법이 마법 방어 배율과 이 표를 둘 다 타는 것도 원작 동작이다.
+        //
+        // 단, **행 종류가 피해 종류와 맞을 때만** 건다. 옛 버그는 "마법이 표를 탄 것"이 아니라
+        // **마법에 물리 행을 먹인 것**이었다 — RowMatches가 그 짝을 지킨다.
+        if (damageTable != null && DamageTable.RowMatches(type, attackType))
+        {
+            amount *= damageTable.Multiplier(attackType, ArmorType);
+        }
+        else if (damageTable != null && !loggedRowMismatch)
+        {
+            // 데이터가 틀린 것이라 조용히 넘기면 원인을 못 찾는다. 매 타격 찍으면 도배되니 한 번만.
+            loggedRowMismatch = true;
+            Debug.LogWarning($"{name}: {type} 피해에 {attackType} 행이 들어와 상성표를 건너뛴다. " +
+                             "AP는 Magic/Spells, 물리는 Normal/Pierce/Siege/Hero/Chaos여야 한다.", this);
         }
 
         return amount;
     }
+
+    // 짝이 안 맞는 조합을 처음 봤을 때만 경고한다(타격마다 찍으면 콘솔이 도배된다).
+    static bool loggedRowMismatch;
 
     public static float ArmorMultiplier(float armor) =>
         armor >= 0f
@@ -214,8 +228,10 @@ public class EnemyDummy : MonoBehaviour
     /// 기본 0은 "방무뎀 없음"이라 안전하다 — <paramref name="type"/>과 달리 조용히 틀릴 여지가 없다.
     /// </param>
     /// <param name="attackType">
-    /// 평타의 공격 타입(원작 normal/pierce/siege/hero/chaos). <b>물리 피해에만 쓰인다.</b>
-    /// <paramref name="type"/>과 직교한다 — 이쪽은 "물리가 어느 종류냐"다.
+    /// 배율표에서 <b>어느 행을 탈지</b>. 물리면 normal/pierce/siege/hero/chaos,
+    /// 마법이면 magic(평타가 마법)이나 spells(능력 피해)다.
+    /// <paramref name="type"/>과 직교한다 — 저쪽은 "무엇으로 감폭하느냐", 이쪽은 "어느 행이냐"다.
+    /// <b>둘의 짝이 안 맞으면 상성표를 건너뛰고 경고한다</b>(<c>DamageTable.RowMatches</c>).
     /// </param>
     public void TakeDamage(float amount, DamageType type, AttackType attackType,
                            int killerPlayerId, float armorIgnoreRatio = 0f)
@@ -243,9 +259,11 @@ public class EnemyDummy : MonoBehaviour
             // (지금은 즉시 파괴라 사실상 안 보이지만, 사망 연출을 넣을 자리를 여기로 정해둔다.)
             GetComponent<CharacterAnimator>()?.PlayDeath();
 
+            // 처치 골드는 킬러가 아니라 이 적이 걷던 레인의 주인에게 간다(원작 그대로,
+            // RewardDistributor.GrantKillReward 주석 참고) — killerPlayerId는 여기서 안 쓴다.
             if (data != null && RewardDistributor.Instance != null)
             {
-                RewardDistributor.Instance.GrantKillReward(data, killerPlayerId);
+                RewardDistributor.Instance.GrantKillReward(data, LaneIndex, SpawnRound);
             }
 
             // 신호만 보낸다 — 실제 처리(도박소 해금 등)는 구독하는 쪽 몫이다.
