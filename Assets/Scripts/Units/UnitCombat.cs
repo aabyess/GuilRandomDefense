@@ -12,6 +12,11 @@ public class UnitCombat : MonoBehaviour
     // 문 앞이나 길목을 지켜야 할 때 유닛이 적을 쫓아 흩어지는 걸 막는 용도다.
     enum CombatState { Idle, Chasing, Returning, PlayerMoving, Holding }
 
+    // ⚠️ 지금은 사실상 안 쓰인다(2026-09-05 확인). SearchRange()가 max(aggroRange, attackRange)를
+    // 쓰는데, 전투 유닛 최소 사거리가 30(로스터 239종 실측, 0인 건 초월위습 재료 1종뿐 — 안 싸움)
+    // 이라 이 값이 이긴 적이 없다. 18을 40으로 올려도 아무 일도 안 일어난다 — 사거리보다 넓은
+    // 감지 범위가 필요해지면(예: 사거리 짧은 유닛도 멀리서 미리 알아채게) 30보다 큰 값을 넣어야
+    // 그때부터 의미가 생긴다. 지우지 말 것 — 다음에 그 자리로 쓸 수 있다.
     [SerializeField] float aggroRange = 18f;
     [SerializeField] float scanInterval = 0.25f;
     [SerializeField] float arrivalThreshold = 0.3f;
