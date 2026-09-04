@@ -20,8 +20,15 @@ def stats(tier):
         'attackRange':  round(6 + 0.5 * tier, 1),
         'attackSpeed':  round(1.0 + 0.08 * tier, 2),
         'moveSpeed':    8.0,   # 맵이 420 규모라 3.5로는 한 섬 건너는 데만 한참 걸린다
-        'damageType':   1,   # AD — 실제 타입은 콘텐츠 확정 후 교체
     }
+
+# ⚠️ `damageType`은 **여기서 안 건드린다.** 예전엔 이 표에 `'damageType': 1`이 있어서
+# 로스터를 생성할 때마다 239종이 전부 AD로 덮였다. 조합표가 `(AP)`라고 적어둔 유닛
+# 40종과 `(AD+AP)` 9종까지 물리로 되돌아갔고, **파일명이 `_AP`인데 값은 AD**인 모순이
+# 남았다(그 모순 덕에 뒤늦게 찾았다).
+#
+# damageType의 출처는 등급 곡선이 아니라 **조합표**다 — `Tools/fill_unit_damage_type.py`가
+# `RECIPES.md`의 「타입」 열과 파일명 접미사에서 채운다. 이 생성기가 그걸 이기면 안 된다.
 
 changed = 0
 for path in sorted(glob.glob('Assets/Data/Units/Roster/*.asset')):
