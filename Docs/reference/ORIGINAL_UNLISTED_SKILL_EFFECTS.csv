@@ -15,20 +15,20 @@
 초월함,H08W,CP.Zero,Luchi_Skill_2_ZiGun,2,(500000.00*(1+((0.001)*(I2R(udg_Load_PlayCount[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables__get_unit,[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),1/6,세이브 횟수,축밖
 초월함,H08W,CP.Zero,Luchi_Skill_2_ZiGun,3,(500000.00*(1+((0.001)*(I2R(udg_Load_PlayCount[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables__get_unit,[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),1/6,세이브 횟수,축밖
 초월함,H08W,CP.Zero,Luchi_Skill_3_6kinggun,1,"(1000000.00*(0.20+(0.05*I2R(GetUnitAbilityLevelSwapped('A11S',GetEnumUnit())))))",능력레벨계수,,,Enemies,400.00,범위확정,GetEnumUnit(),1,Chaos,AP(방어무시),Real<=5.25,"식 안의 상수: 1000000.00, 0.20, 0.05",미확인
-초월함,H08W,CP.Zero,Luchi_Skill_3_6kinggun,2,2000000.00,Flat,,2e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),Real<=5.25,,확정
+초월함,H08W,CP.Zero,Luchi_Skill_3_6kinggun,2,2000000.00,Flat,,2000000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),Real<=5.25,,확정
 초월함,H08W,CP.Zero,Luchi_Skill_3_6kinggun,3,"(GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.40)",대상현재체력,0.4,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),Real<=5.25,,확정
-초월함,H08X,해군 대장 '성난 보라호랑이',Huji01,1,((GetEventDamage()*2.50)+250000.00),[축밖],,,Enemies,450.00,범위확정,GetEnumUnit(),1,Chaos,AD,MANA게이지140.00,실제 평타피해 비례,축밖
-초월함,H08X,해군 대장 '성난 보라호랑이',Huji01,2,GetEventDamage(),[축밖],,,Enemies,450.00,범위확정,GetEnumUnit(),1,Chaos,AD,MANA게이지140.00,실제 평타피해 비례,축밖
+초월함,H08X,해군 대장 '성난 보라호랑이',Huji01,1,((GetEventDamage()*2.50)+250000.00),[축밖],,,Enemies,485.00,범위확정,GetEnumUnit(),1,Chaos,AD,MANA게이지140.00,실제 평타피해 비례,축밖
+초월함,H08X,해군 대장 '성난 보라호랑이',Huji01,2,GetEventDamage(),[축밖],,,Enemies,485.00,범위확정,GetEnumUnit(),1,Chaos,AD,MANA게이지140.00,실제 평타피해 비례,축밖
 초월함,H08X,해군 대장 '성난 보라호랑이',Huji01,3,350000.00,Flat,,350000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Magic,AP(방어무시),MANA게이지140.00,,확정
-초월함,H08X,해군 대장 '성난 보라호랑이',Huji_03,1,6250000.00,Flat,,6.25e+06,Enemies,700.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지140.00,,확정
-초월함,H08Y,무적의 아이언 파이러츠,Franky_Skill_Mana1,1,4000000.00,Flat,,4e+06,Enemies,425.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지100.00,,확정
+초월함,H08X,해군 대장 '성난 보라호랑이',Huji_03,1,6250000.00,Flat,,6250000,Enemies,700.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지140.00,,확정
+초월함,H08Y,무적의 아이언 파이러츠,Franky_Skill_Mana1,1,4000000.00,Flat,,4000000,Enemies,425.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지100.00,,확정
 초월함,H08Y,무적의 아이언 파이러츠,Franky_misiile_re,1,180000.00,Flat,,180000,Enemies,400.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/14,,확정
-초월함,H090,지진과 어둠의 검은수염,Tichi_skill_1,1,4000000.00,Flat,,4e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),LIFE게이지85.00 AND 1/5,,확정
-초월함,H090,지진과 어둠의 검은수염,Tichi_skill_1,2,1000000.00,Flat,,1e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),LIFE게이지85.00 AND 1/5,,확정
-초월함,H090,지진과 어둠의 검은수염,Tichi_skill_1,3,2000000.00,Flat,,2e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),LIFE게이지85.00 AND 1/5,,확정
+초월함,H090,지진과 어둠의 검은수염,Tichi_skill_1,1,4000000.00,Flat,,4000000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),LIFE게이지85.00 AND 1/5,,확정
+초월함,H090,지진과 어둠의 검은수염,Tichi_skill_1,2,1000000.00,Flat,,1000000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),LIFE게이지85.00 AND 1/5,,확정
+초월함,H090,지진과 어둠의 검은수염,Tichi_skill_1,3,2000000.00,Flat,,2000000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),LIFE게이지85.00 AND 1/5,,확정
 초월함,H090,지진과 어둠의 검은수염,Tichi_skill_2_tr,1,"(385000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,s__TrigVariables__get_unitA(GlobalTV),false))*2000.00))",영웅능력치,,,Enemies,415.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),LIFE게이지85.00 AND 1/25,"식 안의 상수: 385000.00, 2000.00",미확인
 초월함,H090,지진과 어둠의 검은수염,Tichi_skill_2_tr,2,"(385000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,s__TrigVariables__get_unitA(GlobalTV),false))*2000.00))",영웅능력치,,,Enemies,415.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),LIFE게이지85.00 AND 1/25,"식 안의 상수: 385000.00, 2000.00",미확인
-초월함,H092,혁명군 참모총장,Sabo_Mana,1,3750000.00,Flat,,3.75e+06,Enemies,500.00,범위확정,GetEnumUnit(),1,Hero,AD,MANA게이지125.00,,확정
+초월함,H092,혁명군 참모총장,Sabo_Mana,1,3750000.00,Flat,,3750000,Enemies,500.00,범위확정,GetEnumUnit(),1,Hero,AD,MANA게이지125.00,,확정
 초월함,H092,혁명군 참모총장,Sabo_Mana,2,"(0.02*GetUnitStateSwap(UNIT_STATE_LIFE,GetEnumUnit()))",대상현재체력,0.02,0,Enemies,500.00,범위확정,GetEnumUnit(),1,Hero,AD,MANA게이지125.00,,확정
 초월함,H094,운명을 점치는 마술사,Hokins_Skill_3,1,(187500.00+(15000.00*s__TrigVariables__get_realB(GlobalTV))),[축밖],,,Enemies,500.00,범위확정,GetEnumUnit(),1,Chaos,AD,LIFE게이지40.00 AND 1/7,realD(앞단계 중간값),축밖
 초월함,H094,운명을 점치는 마술사,Hokins_Skill_4,1,(162500.00+(13000.00*s__TrigVariables__get_realB(GlobalTV))),[축밖],,,Enemies,500.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),LIFE게이지40.00 AND 1/14,realD(앞단계 중간값),축밖
@@ -36,8 +36,8 @@
 초월함,H095,신 해군원수 ,Akainu_02,1,(7250000.00+(s__TrigVariables__get_realD(GlobalTV)*10.00)),[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),MANA게이지135.00 AND 버프B06B==true,realD(앞단계 중간값),축밖
 초월함,H095,신 해군원수 ,Akainu_02,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.12)",대상최대체력,0.12,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),MANA게이지135.00 AND 버프B06B==true,,확정
 초월함,H096,로키포트 사건의 주모자,Law_skill_5,1,"(300000.00+(GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*(0.01*1.25)))",대상현재체력,,,Enemies,575.00,범위확정,GetEnumUnit(),1,Chaos,AP(방어무시),버프B03Z==true AND 1/20,"식 안의 상수: 300000.00, 0.01, 1.25",미확인
-초월함,H098,오하라의 마지막 생존자,Robine_skill_2,1,400000.00,Flat,,400000,Enemies,700.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),LIFE게이지40.00 AND 1/10,,확정
-초월함,H098,오하라의 마지막 생존자,Robine_skill_3,1,600000.00,Flat,,600000,Enemies,700.00,범위확정,GetEnumUnit(),1,Chaos,AD,LIFE게이지40.00 AND 1/20,,확정
+초월함,H098,오하라의 마지막 생존자,Robine_skill_2,1,400000.00,Flat,,400000,Enemies,525.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),LIFE게이지40.00 AND 1/10,,확정
+초월함,H098,오하라의 마지막 생존자,Robine_skill_3,1,600000.00,Flat,,600000,Enemies,350.00,범위확정,GetEnumUnit(),1,Chaos,AD,LIFE게이지40.00 AND 1/20,,확정
 초월함,H099,명왕 레일리의 제자,Ruffy_AttackDamage,1,((GetEventDamage()*2.50)+32500.00),[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),(게이트 없음),실제 평타피해 비례,축밖
 초월함,H099,명왕 레일리의 제자,Ruffy_Mana,1,"((1750000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit())*0.03))*(1+((0.025)*I2R(GetPlayerTechCountSim",대상최대체력,,,Enemies,625.00,범위확정,GetEnumUnit(),1,Hero,AD,MANA게이지160.00,"식 안의 상수: 1750000.00, 0.03, 0.025",미확인
 초월함,H099,명왕 레일리의 제자,Ruffy_Mana,2,"((1750000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.03))*(1.50+((0.025",대상최대체력,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,MANA게이지160.00,"식 안의 상수: 1750000.00, 0.03, 1.50, 0.025",미확인
@@ -51,36 +51,36 @@
 초월함,H09B,G.O.D,Usop_Skill_2,4,(1050000.00/I2R(GetUnitPointValue(s__TrigVariables__get_unitB(GlobalTV)))),[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Pierce,AP(방어무시),1/5,대상 포인트값,축밖
 초월함,H09B,G.O.D,Usop_Skill_2,5,350000.00,Flat,,350000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Pierce,AP(방어무시),1/5,,확정
 초월함,H09B,G.O.D,Usop_Skill_Mana,1,"(1000000.00+(GetUnitStateSwap(UNIT_STATE_LIFE,GetEnumUnit())*0.02))",대상현재체력,0.02,1000000,Enemies,600.00,범위확정,GetEnumUnit(),1,Hero,AD,MANA게이지140.00,,확정
-초월함,H09D,"""어둠의 조커""드레스로자의 악몽",DP_AttackDamagegaksung,1,((GetEventDamage()*0.85)+85000.00),[축밖],,,Enemies,275.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),실제 평타피해 비례,축밖
+초월함,H09D,"""어둠의 조커""드레스로자의 악몽",DP_AttackDamagegaksung,1,((GetEventDamage()*0.85)+85000.00),[축밖],,,Enemies,350.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),실제 평타피해 비례,축밖
 초월함,H09D,"""어둠의 조커""드레스로자의 악몽",DP_Skill_2,1,200000.00,Flat,,200000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/10,,확정
 초월함,H09D,"""어둠의 조커""드레스로자의 악몽",DP_Skill_2,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.25)*(0.20+(0.05*I2R(GetUnitAbility",대상현재체력,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AD,1/10,"식 안의 상수: 0.25, 0.20, 0.05",미확인
 초월함,H09D,"""어둠의 조커""드레스로자의 악몽",DP_Skill_3,1,"(750000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,udg_Hero_DP[0],true))*10000.00))",영웅능력치,,,Enemies,525.00,범위확정,GetEnumUnit(),1,Pierce,AD,1/8,"식 안의 상수: 750000.00, 10000.00",미확인
 초월함,H09E,"""어둠의 조커""드레스로자의 악몽",DP_AttackDamage,1,((GetEventDamage()*0.50)+50000.00),[축밖],,,Enemies,275.00,범위확정,GetEnumUnit(),1,Pierce,AD,(게이트 없음),실제 평타피해 비례,축밖
 초월함,H09F,수라의 검사,Zoro_Samchun2,1,(1500000.00+s__TrigVariables__get_realD(GlobalTV)),[축밖],,,Enemies,600.00,범위확정,GetEnumUnit(),1,Chaos,AD,MANA게이지145.00,realD(앞단계 중간값),축밖
-초월함,H09F,수라의 검사,Zoro_Samchun2,2,2500000.00,Flat,,2.5e+06,Enemies,600.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지145.00,,확정
+초월함,H09F,수라의 검사,Zoro_Samchun2,2,2500000.00,Flat,,2500000,Enemies,600.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지145.00,,확정
 초월함,H09F,수라의 검사,Zoro_raven,1,(350000.00+s__TrigVariables__get_realD(GlobalTV)),[축밖],,,Enemies,500.00,범위확정,GetEnumUnit(),1,Chaos,AD,1/15,realD(앞단계 중간값),축밖
 초월함,H09F,수라의 검사,Zoro_raven,2,350000.00,Flat,,350000,Enemies,500.00,범위확정,GetEnumUnit(),2,Chaos,AD,1/15,,확정
 초월함,H09F,수라의 검사,Zoro_raven,3,350000.00,Flat,,350000,Enemies,500.00,범위확정,GetEnumUnit(),2,Chaos,AD,1/15,,확정
-초월함,H09F,수라의 검사,Zoro_samchun1,1,2500000.00,Flat,,2.5e+06,Enemies,525.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지145.00,,확정
+초월함,H09F,수라의 검사,Zoro_samchun1,1,2500000.00,Flat,,2500000,Enemies,525.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지145.00,,확정
 초월함,H09F,수라의 검사,Zoro_saza1,1,(602500.00+s__TrigVariables__get_realD(GlobalTV)),[축밖],,,Enemies,405.00,범위확정,GetEnumUnit(),1,Chaos,AD,1/6,realD(앞단계 중간값),축밖
 초월함,H09F,수라의 검사,Zoro_saza1,2,(903750.00+(s__TrigVariables__get_realD(GlobalTV)*10.00)),[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AD,1/6,realD(앞단계 중간값),축밖
 초월함,H09G,정열의 요리사,Sandi_skill_1,1,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.10)*(0.20+(0.05*I2R(GetUnitAbility",대상현재체력,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Siege,AP(방어무시),(게이트 없음),"식 안의 상수: 0.10, 0.20, 0.05",미확인
 초월함,H09G,정열의 요리사,Sandi_skill_1,2,450000.00,Flat,,450000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Magic,AP(방어무시),(게이트 없음),,확정
-초월함,H09G,정열의 요리사,Sandi_skill_Mana2,1,3330000.00,Flat,,3.33e+06,Enemies,600.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지115.00,,확정
+초월함,H09G,정열의 요리사,Sandi_skill_Mana2,1,3330000.00,Flat,,3330000,Enemies,600.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지115.00,,확정
 초월함,H09G,정열의 요리사,Sandi_skill_Mana2,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.10)*(0.20+(0.05*I2R(GetUnitAbility",대상현재체력,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Siege,AP(방어무시),MANA게이지115.00,"식 안의 상수: 0.10, 0.20, 0.05",미확인
-초월함,H09G,정열의 요리사,Sandi_skill_Mana2,3,2075000.00,Flat,,2.075e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),MANA게이지115.00,,확정
+초월함,H09G,정열의 요리사,Sandi_skill_Mana2,3,2075000.00,Flat,,2075000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),MANA게이지115.00,,확정
 초월함,H09I,소울 킹,Brook_Skill_1,1,350000.00,Flat,,350000,Enemies,360.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),1/7,,확정
 초월함,H09I,소울 킹,Brook_Skill_1,2,350000.00,Flat,,350000,Enemies,360.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),1/7,,확정
 초월함,H0B2,다섯번째 황제,Snake_2,1,(350000.00*(1+(0.01*(GetUnitMoveSpeed(GetEnumUnit())*0.40)))),[축밖],,,Enemies,475.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),1/12,대상 이동속도,축밖
 초월함,H0B2,다섯번째 황제,Snake_2,2,350000.00,Flat,,350000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Magic,AP(방어무시),1/12,,확정
 초월함,H0B2,다섯번째 황제,Snake_3_Kingkobra,1,(3500000.00*(1+(0.01*(GetUnitMoveSpeed(GetEnumUnit())*0.10)))),[축밖],,,Enemies,550.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),MANA게이지75.00,대상 이동속도,축밖
-초월함,H0B2,다섯번째 황제,Snake_3_Kingkobra,2,1875000.00,Flat,,1.875e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Magic,AP(방어무시),MANA게이지75.00,,확정
+초월함,H0B2,다섯번째 황제,Snake_3_Kingkobra,2,1875000.00,Flat,,1875000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Magic,AP(방어무시),MANA게이지75.00,,확정
 초월함,H0B4,유스타스'캡틴',Kid_Skill_3,1,(300000.00*(1+(s__TrigVariables__get_realD(GlobalTV)*0.01))),[축밖],,,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),2,Spells,AP(방어무시),LIFE게이지50.00 AND 1/10,realD(앞단계 중간값),축밖
 초월함,H0B4,유스타스'캡틴',Kid_Skill_3,2,(300000.00*(1+(s__TrigVariables__get_realD(GlobalTV)*0.01))),[축밖],,,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),2,Spells,AP(방어무시),LIFE게이지50.00 AND 1/10,realD(앞단계 중간값),축밖
 초월함,H0B4,유스타스'캡틴',Kid_Skill_3_item,1,(450000.00*(1+(s__TrigVariables__get_realD(GlobalTV)*0.01))),[축밖],,,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Spells,AP(방어무시),LIFE게이지50.00 AND 1/10,realD(앞단계 중간값),축밖
 초월함,H0B5,해군대장-보르살리노,Kizaru_01,1,s__TrigVariables__get_realD(GlobalTV),[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/12,realD(앞단계 중간값),축밖
 초월함,H0B5,해군대장-보르살리노,Kizaru_01_shoot,1,200000.00,Flat,,200000,Enemies,385.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),1/17,,확정
-초월함,H0BD,오니히메,Yamato_Dash,1,((udg_Yamato_Damage[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV)))]*1.15)+215000,[축밖],,,Enemies,425.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),(게이트 없음),캐릭터 전용 누적변수,축밖
+초월함,H0BD,오니히메,Yamato_Dash,1,((udg_Yamato_Damage[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV)))]*1.15)+215000,[축밖],,,Enemies,450.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),(게이트 없음),캐릭터 전용 누적변수,축밖
 초월함,H0BD,오니히메,Yamato_Dash,2,((udg_Yamato_Damage[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV)))]*1.15)+215000,[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),(게이트 없음),캐릭터 전용 누적변수,축밖
 초월함,H0BE,오니히메 인수화,Yamato_Attack_Damage2,1,((GetEventDamage()*0.75)+15000.00),[축밖],,,Enemies,425.00,범위확정,GetEnumUnit(),2,Chaos,AD,(게이트 없음),실제 평타피해 비례,축밖
 초월함,H0BE,오니히메 인수화,Yamato_Attack_Damage2,2,((GetEventDamage()*0.20)+15000.00),[축밖],,,Enemies,425.00,범위확정,GetEnumUnit(),1,Chaos,AP(방어무시),(게이트 없음),실제 평타피해 비례,축밖
@@ -93,7 +93,7 @@
 초월함,H0BT,염왕,Zoro_enfor_3dragon,2,532500.00,Flat,,532500,Enemies,425.00,범위확정,GetEnumUnit(),1,Chaos,AD,1/15,,확정
 초월함,H0BT,염왕,Zoro_enfor_flying_draong,1,(672500.00+s__TrigVariables__get_realD(GlobalTV)),[축밖],,,Enemies,425.00,범위확정,GetEnumUnit(),1,Chaos,AD,1/6,realD(앞단계 중간값),축밖
 초월함,H0BT,염왕,Zoro_enfor_flying_draong,2,(903750.00+(s__TrigVariables__get_realD(GlobalTV)*10.00)),[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AD,1/6,realD(앞단계 중간값),축밖
-랜덤전용,h08I,쿠치키 뱌쿠야 - 랜덤전용[제한됨],Byakuya_R,1,5000000.00,Flat,,5e+06,Enemies,700.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),(게이트 없음),,확정
+랜덤전용,h08I,쿠치키 뱌쿠야 - 랜덤전용[제한됨],Byakuya_R,1,5000000.00,Flat,,5000000,Enemies,700.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),(게이트 없음),,확정
 랜덤전용,h08I,쿠치키 뱌쿠야 - 랜덤전용[제한됨],byakuya_Chan,1,"(425000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*(0.0175)))",대상최대체력,0.0175,425000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),(게이트 없음),,확정
 랜덤전용,h08I,쿠치키 뱌쿠야 - 랜덤전용[제한됨],byakuya_Chan,2,500000.00,Flat,,500000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),(게이트 없음),,확정
 랜덤전용,h08I,쿠치키 뱌쿠야 - 랜덤전용[제한됨],byakuya_Q,1,850000.00,Flat,,850000,Enemies,525.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/10,,확정
@@ -102,53 +102,53 @@
 랜덤전용,h09L,이치의 율자 - 랜덤전용,Bronya_Skill_1,2,300000.00,Flat,,300000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/7,,확정
 랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_E,1,(625000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(GlobalTV)))),[축밖],,,Enemies,415.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/5,realD(앞단계 중간값),축밖
 랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_E,2,"(3125000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.02))",대상최대체력,0.02,3125000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/5,,확정
-랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_R,1,1000000.00,Flat,,1e+06,Enemies,500.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지150.00,,확정
-랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_R,2,2500000.00,Flat,,2.5e+06,Enemies,500.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지150.00,,확정
+랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_R,1,1000000.00,Flat,,1000000,Enemies,500.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지150.00,,확정
+랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_R,2,2500000.00,Flat,,2500000,Enemies,500.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지150.00,,확정
 랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_R,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.06)",대상최대체력,0.06,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),MANA게이지150.00,,확정
 랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,1,(250000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(GlobalTV)))),[축밖],,,Enemies,400.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),1/7,realD(앞단계 중간값),축밖
 랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,2,(225000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(GlobalTV)))),[축밖],,,Enemies,400.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),1/7,realD(앞단계 중간값),축밖
 랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,3,(250000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(GlobalTV)))),[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),1/7,realD(앞단계 중간값),축밖
 랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.06)",대상최대체력,0.06,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/7,,확정
 랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,5,(225000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(GlobalTV)))),[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),1/7,realD(앞단계 중간값),축밖
-랜덤전용,h09R,쿠죠 죠타로 - 랜덤전용[제한됨],Jotaro_R,1,2500000.00,Flat,,2.5e+06,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Hero,AD,MANA게이지150.00,,확정
+랜덤전용,h09R,쿠죠 죠타로 - 랜덤전용[제한됨],Jotaro_R,1,2500000.00,Flat,,2500000,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Hero,AD,MANA게이지150.00,,확정
 랜덤전용,h09R,쿠죠 죠타로 - 랜덤전용[제한됨],Jotaro_R,2,"(4250000.00+((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit())-GetUnitStateSwap(UNIT_STATE_LIFE,GetEnumUnit",대상최대체력,,,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Hero,AD,MANA게이지150.00,"식 안의 상수: 4250000.00, 0.02",미확인
 랜덤전용,h09W,나미카제 미나토 - 랜덤전용[제한됨],Minato_E,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.15)",대상최대체력,0.15,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/24,,확정
 랜덤전용,h09W,나미카제 미나토 - 랜덤전용[제한됨],Minato_E,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.01)",대상최대체력,0.01,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/24,,확정
 랜덤전용,h09W,나미카제 미나토 - 랜덤전용[제한됨],Minato_Mana,1,775000.00,Flat,,775000,Enemies,500.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지100.00,,확정
 랜덤전용,h09W,나미카제 미나토 - 랜덤전용[제한됨],Minato_Q2,1,600000.00,Flat,,600000,Enemies,500.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/6,,확정
-랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_2,1,1150000.00,Flat,,1.15e+06,Enemies,425.00,범위확정,GetEnumUnit(),1,Spells,AD,1/4 AND 1/16,,확정
+랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_2,1,1150000.00,Flat,,1150000,Enemies,425.00,범위확정,GetEnumUnit(),1,Spells,AD,1/4 AND 1/16,,확정
 랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_2,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.30)",대상최대체력,0.3,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4 AND 1/16,,확정
 랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_2,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.03)",대상최대체력,0.03,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4 AND 1/16,,확정
-랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_2,4,8150000.00,Flat,,8.15e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4 AND 1/16,,확정
-랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_2,5,1440000.00,Flat,,1.44e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AP(방어무시),1/4 AND 1/16,,확정
-랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_R2,1,5000000.00,Flat,,5e+06,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Hero,AP(방어무시),MANA게이지115.00,,확정
+랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_2,4,8150000.00,Flat,,8150000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4 AND 1/16,,확정
+랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_2,5,1440000.00,Flat,,1440000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AP(방어무시),1/4 AND 1/16,,확정
+랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_R2,1,5000000.00,Flat,,5000000,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Hero,AP(방어무시),MANA게이지115.00,,확정
 랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_R2,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.45)",대상최대체력,0.45,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,MANA게이지115.00,,확정
 랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_R2,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.03)",대상최대체력,0.03,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,MANA게이지115.00,,확정
-랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_R2,4,1440000.00,Flat,,1.44e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AP(방어무시),MANA게이지115.00,,확정
-랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3,1,1440000.00,Flat,,1.44e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AP(방어무시),1/4,,확정
-랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3,2,4000000.00,Flat,,4e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4,,확정
+랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_R2,4,1440000.00,Flat,,1440000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AP(방어무시),MANA게이지115.00,,확정
+랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3,1,1440000.00,Flat,,1440000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AP(방어무시),1/4,,확정
+랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3,2,4000000.00,Flat,,4000000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4,,확정
 랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.15)",대상최대체력,0.15,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4,,확정
 랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.01)",대상최대체력,0.01,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4,,확정
-랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_double,1,1440000.00,Flat,,1.44e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AP(방어무시),1/4,,확정
-랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_double,2,4000000.00,Flat,,4e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4,,확정
+랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_double,1,1440000.00,Flat,,1440000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AP(방어무시),1/4,,확정
+랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_double,2,4000000.00,Flat,,4000000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4,,확정
 랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_double,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.15)",대상최대체력,0.15,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4,,확정
 랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_double,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.01)",대상최대체력,0.01,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4,,확정
-랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_triple,1,1440000.00,Flat,,1.44e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AP(방어무시),1/4,,확정
-랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_triple,2,3200000.00,Flat,,3.2e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4,,확정
+랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_triple,1,1440000.00,Flat,,1440000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AP(방어무시),1/4,,확정
+랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_triple,2,3200000.00,Flat,,3200000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4,,확정
 랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_triple,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.12)",대상최대체력,0.12,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4,,확정
 랜덤전용,h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_triple,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.01)",대상최대체력,0.01,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/4,,확정
-랜덤전용,h0A6,야쿠모 유카리 - 랜덤전용[제한됨],Yukari_D2,1,2000000.00,Flat,,2e+06,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지145.00,,확정
-랜덤전용,h0A6,야쿠모 유카리 - 랜덤전용[제한됨],Yukari_D2,2,3000000.00,Flat,,3e+06,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지145.00,,확정
+랜덤전용,h0A6,야쿠모 유카리 - 랜덤전용[제한됨],Yukari_D2,1,2000000.00,Flat,,2000000,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지145.00,,확정
+랜덤전용,h0A6,야쿠모 유카리 - 랜덤전용[제한됨],Yukari_D2,2,3000000.00,Flat,,3000000,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지145.00,,확정
 랜덤전용,h0A6,야쿠모 유카리 - 랜덤전용[제한됨],Yukari_R2,1,300000.00,Flat,,300000,Enemies,395.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/20,,확정
-랜덤전용,h0A6,야쿠모 유카리 - 랜덤전용[제한됨],Yukari_W,1,3200000.00,Flat,,3.2e+06,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Spells,AP(방어무시),1/10,,확정
+랜덤전용,h0A6,야쿠모 유카리 - 랜덤전용[제한됨],Yukari_W,1,3200000.00,Flat,,3200000,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Spells,AP(방어무시),1/10,,확정
 랜덤전용,h0AC,마운틴.D.히그마 - 랜덤전용[제한됨],Higma_Q,1,100000.00,Flat,,100000,Enemies,375.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),LIFE게이지85.00 AND 1/20,,확정
 랜덤전용,h0AC,마운틴.D.히그마 - 랜덤전용[제한됨],Higma_Q,2,100000.00,Flat,,100000,Enemies,375.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),LIFE게이지85.00 AND 1/20,,확정
 랜덤전용,h0AC,마운틴.D.히그마 - 랜덤전용[제한됨],Higma_W,1,175000.00,Flat,,175000,Enemies,400.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),LIFE게이지85.00 AND 버프B05N==true,,확정
-랜덤전용,h0BC,타츠마키 - 랜덤전용[제한됨],Tatsumaki_T_Explosion_by_AZ_Attack,1,4000000.00,Flat,,4e+06,Enemies,600.00,범위확정,GetEnumUnit(),1,Chaos,AD,MANA게이지85.00,,확정
-랜덤전용,h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_hp,1,1500000.00,Flat,,1.5e+06,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),2,Hero,AD,LIFE게이지50.00 AND 버프B06B==true,,확정
-랜덤전용,h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_hp,2,1500000.00,Flat,,1.5e+06,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),2,Spells,AP(방어무시),LIFE게이지50.00 AND 버프B06B==true,,확정
+랜덤전용,h0BC,타츠마키 - 랜덤전용[제한됨],Tatsumaki_T_Explosion_by_AZ_Attack,1,4000000.00,Flat,,4000000,Enemies,600.00,범위확정,GetEnumUnit(),1,Chaos,AD,MANA게이지85.00,,확정
+랜덤전용,h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_hp,1,1500000.00,Flat,,1500000,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),2,Hero,AD,LIFE게이지50.00 AND 버프B06B==true,,확정
+랜덤전용,h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_hp,2,1500000.00,Flat,,1500000,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),2,Spells,AP(방어무시),LIFE게이지50.00 AND 버프B06B==true,,확정
 랜덤전용,h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_hp,3,"(GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.40)",대상현재체력,0.4,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),LIFE게이지50.00 AND 버프B06B==true,,확정
-랜덤전용,h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_hp,4,1000000.00,Flat,,1e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),LIFE게이지50.00 AND 버프B06B==true,,확정
+랜덤전용,h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_hp,4,1000000.00,Flat,,1000000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),LIFE게이지50.00 AND 버프B06B==true,,확정
 랜덤전용,h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_mana,1,300000.00,Flat,,300000,Enemies,525.00,범위확정,GetEnumUnit(),1,Chaos,AD,LIFE게이지50.00 AND MANA게이지85.00,,확정
 랜덤전용,h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_mana,2,100000.00,Flat,,100000,Enemies,525.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),LIFE게이지50.00 AND MANA게이지85.00,,확정
 랜덤전용,h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_skill_1,1,350000.00,Flat,,350000,Enemies,375.00,범위확정,GetEnumUnit(),2,Chaos,AD,LIFE게이지50.00 AND 1/6,,확정
@@ -161,7 +161,7 @@
 불멸의,h04A,에드워드 뉴게이트 한시대를 주름잡던 대해적 - ,Ed_Skill_1,2,"((1750000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.03))*(1.50+((0.025",대상최대체력,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,LIFE게이지115.00 AND 1/22,"식 안의 상수: 1750000.00, 0.03, 1.50, 0.025",미확인
 불멸의,h04A,에드워드 뉴게이트 한시대를 주름잡던 대해적 - ,Ed_Skill_1_Item,1,"((1750000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit())*0.03))*(1+((0.025)*I2R(GetPlayerTechCountSim",대상최대체력,,,Enemies,625.00,범위확정,GetEnumUnit(),1,Hero,AD,LIFE게이지115.00 AND 1/22,"식 안의 상수: 1750000.00, 0.03, 0.025",미확인
 불멸의,h04A,에드워드 뉴게이트 한시대를 주름잡던 대해적 - ,Ed_Skill_1_Item,2,"((1750000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.03))*(1.50+((0.025",대상최대체력,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,LIFE게이지115.00 AND 1/22,"식 안의 상수: 1750000.00, 0.03, 1.50, 0.025",미확인
-불멸의,h04B,금사자 시키 천신 - 불멸의,Shiki_Lion,1,3250000.00,Flat,,3.25e+06,Enemies,700.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지125.00,,확정
+불멸의,h04B,금사자 시키 천신 - 불멸의,Shiki_Lion,1,3250000.00,Flat,,3250000,Enemies,700.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지125.00,,확정
 불멸의,h04B,금사자 시키 천신 - 불멸의,Shiki_SKill_item,1,250000.00,Flat,,250000,Enemies,450.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/10 AND 1/33 AND 1/16 AND 1/2,,확정
 불멸의,h04B,금사자 시키 천신 - 불멸의,Shiki_champa2,1,400000.00,Flat,,400000,Enemies,450.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),1/10 AND 1/16,,확정
 불멸의,h04C,몽키.D.거프 해군영웅 주먹의 거프 - 불멸의,Garp_AttackDamage,1,(GetEventDamage()*(1.10+s__TrigVariables__get_realD(GlobalTV))),[축밖],,,Enemies,360.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),realD(앞단계 중간값) / 실제 평타피해 비례,축밖
@@ -172,37 +172,37 @@
 불멸의,h04C,몽키.D.거프 해군영웅 주먹의 거프 - 불멸의,Garp_AttackDamage,6,"((0.05*GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV)))*(1+(0.12*s__TrigVariables__get",[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,(게이트 없음),realD(앞단계 중간값),축밖
 불멸의,h04C,몽키.D.거프 해군영웅 주먹의 거프 - 불멸의,Garp_AttackDamage,7,"(((0.005)*GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV)))*(1+(0.12*s__TrigVariables__",[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,(게이트 없음),realD(앞단계 중간값),축밖
 불멸의,h04E,"센고쿠 해군원수 ""부처님"" - 불멸의",Sengoku_Skill_Item,1,300000.00,Flat,,300000,Enemies,450.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),LIFE게이지75.00 AND 1/12,,확정
-불멸의,h04F,스코퍼 가반 로져 해적단의 검호 - 불멸의,Gaban_Skill_1,1,8750000.00,Flat,,8.75e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/24,,확정
+불멸의,h04F,스코퍼 가반 로져 해적단의 검호 - 불멸의,Gaban_Skill_1,1,8750000.00,Flat,,8750000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Hero,AD,1/24,,확정
 불멸의,h04F,스코퍼 가반 로져 해적단의 검호 - 불멸의,Gaban_Skill_1,2,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.20)*1.00)",대상최대체력,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Pierce,AD,1/24,"식 안의 상수: 0.20, 1.00",미확인
 불멸의,h04F,스코퍼 가반 로져 해적단의 검호 - 불멸의,Gaban_Skill_mana,1,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Gaban[3])*0.50)*1.00)",대상최대체력,,,SingleTarget,0,단일확정,udg_Hero_Gaban[3],1,Chaos,AP(방어무시),MANA게이지45.00,"식 안의 상수: 0.50, 1.00",미확인
 불멸의,h04F,스코퍼 가반 로져 해적단의 검호 - 불멸의,Gaban_Skill_mana,2,"(0.10*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Gaban[3]))",대상최대체력,0.1,0,SingleTarget,0,단일확정,udg_Hero_Gaban[3],1,Hero,AP(방어무시),MANA게이지45.00,,확정
 불멸의,h04F,스코퍼 가반 로져 해적단의 검호 - 불멸의,Gaban_Skill_mana,3,"(0.03*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Gaban[3]))",대상최대체력,0.03,0,SingleTarget,0,단일확정,udg_Hero_Gaban[3],1,Hero,AP(방어무시),MANA게이지45.00,,확정
 불멸의,h04G,"제트 해군 스승 ""Z"" - 불멸의",Z_Skill_Mana,1,"(4850000.00+((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit())-GetUnitStateSwap(UNIT_STATE_LIFE,GetEnumUnit",대상최대체력,,,Enemies,725.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지160.00,"식 안의 상수: 4850000.00, 0.08",미확인
-불멸의,h04G,"제트 해군 스승 ""Z"" - 불멸의",Z_skill_3,1,1000000.00,Flat,,1e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/16,,확정
-불멸의,h04J,골.D.로져 해적왕 - 불멸의,roger_Mana,1,7250000.00,Flat,,7.25e+06,Enemies,500.00,범위확정,GetEnumUnit(),1,Hero,AD,MANA게이지150.00,,확정
-불멸의,h04J,골.D.로져 해적왕 - 불멸의,roger_Skill_2,1,1450000.00,Flat,,1.45e+06,Enemies,850.00,범위확정,GetEnumUnit(),1,Hero,AD,1/22,,확정
+불멸의,h04G,"제트 해군 스승 ""Z"" - 불멸의",Z_skill_3,1,1000000.00,Flat,,1000000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/16,,확정
+불멸의,h04J,골.D.로져 해적왕 - 불멸의,roger_Mana,1,7250000.00,Flat,,7250000,Enemies,500.00,범위확정,GetEnumUnit(),1,Hero,AD,MANA게이지150.00,,확정
+불멸의,h04J,골.D.로져 해적왕 - 불멸의,roger_Skill_2,1,1450000.00,Flat,,1450000,Enemies,850.00,범위확정,GetEnumUnit(),1,Hero,AD,1/22,,확정
 불멸의,h04Q,빅 맘 강철 풍선 - 불멸의,Bigmam_Eat,1,(1750000.00*(1+(0.01*I2R(GetItemCharges(udg_Item_Bigmom[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables_,[축밖],,,Enemies,600.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),(게이트 없음),아이템 충전수,축밖
 불멸의,h04Q,빅 맘 강철 풍선 - 불멸의,Bigmam_Eat,2,(4500000.00*(1+(0.01*I2R(GetItemCharges(udg_Item_Bigmom[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables_,[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),(게이트 없음),아이템 충전수,축밖
 불멸의,h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_buster,1,s__TrigVariables__get_realD(GlobalTV),[축밖],,,Enemies,575.00,범위확정,GetEnumUnit(),2,Chaos,AD,LIFE게이지100.00,realD(앞단계 중간값),축밖
 불멸의,h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_buster,2,s__TrigVariables__get_realD(GlobalTV),[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Chaos,AP(방어무시),LIFE게이지100.00,realD(앞단계 중간값),축밖
-불멸의,h0AD,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_Skill_2,1,s__TrigVariables__get_realD(GlobalTV),[축밖],,,Enemies,500.00,범위확정,GetEnumUnit(),2,Chaos,AD,LIFE게이지100.00,realD(앞단계 중간값),축밖
-불멸의,h0AD,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_Skill_2,2,s__TrigVariables__get_realD(GlobalTV),[축밖],,,Enemies,500.00,범위확정,GetEnumUnit(),2,Chaos,AD,LIFE게이지100.00,realD(앞단계 중간값),축밖
+불멸의,h0AD,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_Skill_2,1,s__TrigVariables__get_realD(GlobalTV),[축밖],,,Enemies,515.00,범위확정,GetEnumUnit(),2,Chaos,AD,LIFE게이지100.00,realD(앞단계 중간값),축밖
+불멸의,h0AD,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_Skill_2,2,s__TrigVariables__get_realD(GlobalTV),[축밖],,,Enemies,515.00,범위확정,GetEnumUnit(),2,Chaos,AD,LIFE게이지100.00,realD(앞단계 중간값),축밖
 불멸의,h0AD,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_melee_1,1,(s__TrigVariables__get_realD(GlobalTV)*0.56),[축밖],,,Enemies,500.00,범위확정,GetEnumUnit(),1,Chaos,AD,LIFE게이지100.00,realD(앞단계 중간값),축밖
 불멸의,h0AD,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_melee_1,2,(s__TrigVariables__get_realD(GlobalTV)*0.35),[축밖],,,Enemies,500.00,범위확정,GetEnumUnit(),1,Chaos,AD,LIFE게이지100.00,realD(앞단계 중간값),축밖
 제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_1,1,320000.00,Flat,,320000,Enemies,475.00,범위확정,GetEnumUnit(),2,Magic,AP(방어무시),1/6,,확정
 제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_1,2,320000.00,Flat,,320000,Enemies,475.00,범위확정,GetEnumUnit(),2,Magic,AP(방어무시),1/6,,확정
-제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_1,3,3500000.00,Flat,,3.5e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/6,,확정
+제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_1,3,3500000.00,Flat,,3500000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/6,,확정
 제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_1,4,350000.00,Flat,,350000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Magic,AP(방어무시),1/6,,확정
 제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_1,5,350000.00,Flat,,350000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Magic,AP(방어무시),1/6,,확정
-제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,1,240000.00,Flat,,240000,Enemies,475.00,범위확정,GetEnumUnit(),3,Magic,AP(방어무시),1/21,,확정
-제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,2,240000.00,Flat,,240000,Enemies,475.00,범위확정,GetEnumUnit(),3,Magic,AP(방어무시),1/21,,확정
-제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,3,240000.00,Flat,,240000,Enemies,475.00,범위확정,GetEnumUnit(),3,Magic,AP(방어무시),1/21,,확정
-제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,4,3500000.00,Flat,,3.5e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/21,,확정
+제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,1,240000.00,Flat,,240000,Enemies,500.00,범위확정,GetEnumUnit(),3,Magic,AP(방어무시),1/21,,확정
+제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,2,240000.00,Flat,,240000,Enemies,500.00,범위확정,GetEnumUnit(),3,Magic,AP(방어무시),1/21,,확정
+제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,3,240000.00,Flat,,240000,Enemies,500.00,범위확정,GetEnumUnit(),3,Magic,AP(방어무시),1/21,,확정
+제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,4,3500000.00,Flat,,3500000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/21,,확정
 제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,5,350000.00,Flat,,350000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,3,Magic,AP(방어무시),1/21,,확정
 제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,6,350000.00,Flat,,350000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,3,Magic,AP(방어무시),1/21,,확정
 제한됨,h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,7,350000.00,Flat,,350000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,3,Magic,AP(방어무시),1/21,,확정
 제한됨,h05E,에넬 G.O.D - 제한됨,Enel_skill_2,1,"(182500.00+(I2R(GetPlayerTechCountSimple('R01L',GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV))))*12500",연구,,,Enemies,500.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/10,"식 안의 상수: 182500.00, 12500.00",미확인
-제한됨,h05F,크로커다일 사막의 악어 - 제한됨,cro_skill_2,1,1000000.00,Flat,,1e+06,Enemies,550.00,범위확정,GetEnumUnit(),1,Chaos,AD,1/20,,확정
+제한됨,h05F,크로커다일 사막의 악어 - 제한됨,cro_skill_2,1,1000000.00,Flat,,1000000,Enemies,550.00,범위확정,GetEnumUnit(),1,Chaos,AD,1/20,,확정
 제한됨,h05G,패트릭 레드필드 붉은백작 - 제한됨,Red_skill_1,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit())*(0.01*0.80))",대상최대체력,,,Enemies,900.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/22,"식 안의 상수: 0.01, 0.80",미확인
 제한됨,h05G,패트릭 레드필드 붉은백작 - 제한됨,Red_skill_1,2,700000.00,Flat,,700000,Enemies,900.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/22,,확정
 제한됨,h05I,레베카 콜로세움 전설의  후예 - 제한됨,Rebeca_Skill_1,1,"(600000.00+(25000.00*I2R(GetUnitAbilityLevelSwapped('A0QW',udg_Hero_Rebeca[0]))))",능력레벨계수,,,Enemies,450.00,범위확정,GetEnumUnit(),1,Normal,AD,1/5,"식 안의 상수: 600000.00, 25000.00",미확인
@@ -211,7 +211,7 @@
 제한됨,h07I,샬롯 카타쿠리 장성 밀가루 대신 - 제한됨,Kata_03,1,((GetEventDamage()*0.75)+100000.00),[축밖],,,Enemies,415.00,범위확정,GetEnumUnit(),1,Chaos,AD,1/7 AND 버프B045==true,실제 평타피해 비례,축밖
 제한됨,h07I,샬롯 카타쿠리 장성 밀가루 대신 - 제한됨,katakuri_Skill_2,1,375000.00,Flat,,375000,Enemies,500.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/7,,확정
 제한됨,h084,시노부 뇌쇄 쿠노이치 - 제한됨,Sinobu_Skill_4,1,400000.00,Flat,,400000,Enemies,475.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),LIFE게이지50.00 AND 1/10,,확정
-제한됨,h084,시노부 뇌쇄 쿠노이치 - 제한됨,Sinobu_Skill_hp2,1,2250000.00,Flat,,2.25e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),LIFE게이지50.00 AND 버프B06B==true,,확정
+제한됨,h084,시노부 뇌쇄 쿠노이치 - 제한됨,Sinobu_Skill_hp2,1,2250000.00,Flat,,2250000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),LIFE게이지50.00 AND 버프B06B==true,,확정
 제한됨,h084,시노부 뇌쇄 쿠노이치 - 제한됨,Sinobu_Skill_hp2,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.06)",대상최대체력,0.06,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),LIFE게이지50.00 AND 버프B06B==true,,확정
 제한됨,h084,시노부 뇌쇄 쿠노이치 - 제한됨,Sinobu_Skill_hp2,3,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.28)*(0.20+(0.05*I2R(GetUnitAbi",대상최대체력,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Normal,AP(방어무시),LIFE게이지50.00 AND 버프B06B==true,"식 안의 상수: 0.28, 0.20, 0.05",미확인
 제한됨,h08O,마르코 흰수염 유산의 수호자 - 제한됨,Marco_S1,1,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.20)*(0.20+(0.05*I2R(GetUnitAbility",대상현재체력,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),1/7 AND 1/10,"식 안의 상수: 0.20, 0.05",미확인
@@ -219,22 +219,22 @@
 제한됨,h08O,마르코 흰수염 유산의 수호자 - 제한됨,Marco_S2,1,750000.00,Flat,,750000,Enemies,475.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/7,,확정
 제한됨,h08O,마르코 흰수염 유산의 수호자 - 제한됨,Marco_S2,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.30)*(0.20+(0.05*I2R(GetUnitAbility",대상현재체력,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),1/7,"식 안의 상수: 0.30, 0.20, 0.05",미확인
 제한됨,h08O,마르코 흰수염 유산의 수호자 - 제한됨,Marco_S2,3,112500.00,Flat,,112500,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/7,,확정
-제한됨,h09Q,불사조 흰수염 유산의 수호자 - 제한됨,Marco_Feather2,1,(500000.00+(3.00*s__TrigVariables__get_realD(GlobalTV))),[축밖],,,Enemies,285.00,범위확정,GetEnumUnit(),1,Chaos,AD,1/5,realD(앞단계 중간값),축밖
+제한됨,h09Q,불사조 흰수염 유산의 수호자 - 제한됨,Marco_Feather2,1,(500000.00+(3.00*s__TrigVariables__get_realD(GlobalTV))),[축밖],,,Enemies,525.00,범위확정,GetEnumUnit(),1,Chaos,AD,1/5,realD(앞단계 중간값),축밖
 제한됨,h09Q,불사조 흰수염 유산의 수호자 - 제한됨,Marco_Feather2,2,(750000.00+(4.50*s__TrigVariables__get_realD(GlobalTV))),[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),1/5,realD(앞단계 중간값),축밖
 제한됨,h0AI,킹 삼재해:화재 - 제한됨,King_skill_2,1,850000.00,Flat,,850000,Enemies,475.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),,확정
-제한됨,h0AI,킹 삼재해:화재 - 제한됨,King_skill_2_tr,1,1275000.00,Flat,,1.275e+06,Enemies,475.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),,확정
-제한됨,h0AI,킹 삼재해:화재 - 제한됨,King_skill_2_tr,2,10000000.00,Flat,,1e+07,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),(게이트 없음),,확정
+제한됨,h0AI,킹 삼재해:화재 - 제한됨,King_skill_2_tr,1,1275000.00,Flat,,1275000,Enemies,475.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),,확정
+제한됨,h0AI,킹 삼재해:화재 - 제한됨,King_skill_2_tr,2,10000000.00,Flat,,10000000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),(게이트 없음),,확정
 제한됨,h0AI,킹 삼재해:화재 - 제한됨,King_skill_2_tr,3,100000.00,Flat,,100000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),(게이트 없음),,확정
 전설적인,h02N,겟코 모리아 쉐도우 아스가르드 - 전설적인,Legend34Moria_Skill,1,250000.00,Flat,,250000,Enemies,400.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),(게이트 없음),,확정
 전설적인,h02N,겟코 모리아 쉐도우 아스가르드 - 전설적인,Legend34Moria_Skill,2,800000.00,Flat,,800000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),(게이트 없음),,확정
 전설적인,h02S,롤로노아 조로 죽음의경지'사자의노래' - 전설적,Legend13_2,1,120000.00,Flat,,120000,Enemies,450.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/7,,확정
 전설적인,h02S,롤로노아 조로 죽음의경지'사자의노래' - 전설적,Legend13_2,2,750000.00,Flat,,750000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/7,,확정
 전설적인,h02S,롤로노아 조로 죽음의경지'사자의노래' - 전설적,Legend13_2,3,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.12)*(0.20+(0.05*I2R(GetUnitAbi",대상최대체력,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Pierce,AP(방어무시),1/7,"식 안의 상수: 0.12, 0.20, 0.05",미확인
-전설적인,h02S,롤로노아 조로 죽음의경지'사자의노래' - 전설적,Legend13_2,4,1500000.00,Flat,,1.5e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/7,,확정
-전설적인,h02T,마르코 환수종'불사조' - 전설적인,Legend17_MacroLifeSkill,1,(500000.00+(5.00*s__TrigVariables__get_realD(GlobalTV))),[축밖],,,Enemies,285.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),realD(앞단계 중간값),축밖
+전설적인,h02S,롤로노아 조로 죽음의경지'사자의노래' - 전설적,Legend13_2,4,1500000.00,Flat,,1500000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/7,,확정
+전설적인,h02T,마르코 환수종'불사조' - 전설적인,Legend17_MacroLifeSkill,1,(500000.00+(5.00*s__TrigVariables__get_realD(GlobalTV))),[축밖],,,Enemies,525.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),realD(앞단계 중간값),축밖
 전설적인,h02T,마르코 환수종'불사조' - 전설적인,Legend17_MacroLifeSkill,2,(400000.00+(2.00*s__TrigVariables__get_realD(GlobalTV))),[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),(게이트 없음),realD(앞단계 중간값),축밖
 전설적인,h02T,마르코 환수종'불사조' - 전설적인,Legend17_Marcodamage,1,(12500.00+(0.85*GetEventDamage())),[축밖],,,Enemies,285.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),실제 평타피해 비례,축밖
-전설적인,h02U,"마샬.D.티치 검은수염 해적단 선장 ""검은수염""",Legend26_tichi_crows,1,4000000.00,Flat,,4e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),LIFE게이지40.00 AND 1/7,,확정
+전설적인,h02U,"마샬.D.티치 검은수염 해적단 선장 ""검은수염""",Legend26_tichi_crows,1,4000000.00,Flat,,4000000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),LIFE게이지40.00 AND 1/7,,확정
 전설적인,h02U,"마샬.D.티치 검은수염 해적단 선장 ""검은수염""",Legend26_tichi_crows,2,300000.00,Flat,,300000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),LIFE게이지40.00 AND 1/7,,확정
 전설적인,h02U,"마샬.D.티치 검은수염 해적단 선장 ""검은수염""",Legend26_tichi_crows,3,300000.00,Flat,,300000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),LIFE게이지40.00 AND 1/7,,확정
 전설적인,h032,보아 핸콕 쿠사 해적단 선장 - 전설적인,Legend_han_1,1,150000.00,Flat,,150000,Enemies,345.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),버프B00D==true AND 1/10,,확정
@@ -265,21 +265,21 @@
 영원한,h057,|CFFFFFA78알라바스타의 왕녀-ver파이러,vivi_Skill_4_Mana,3,"((300000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitD(GlobalTV))*0.10))*(1+s__TrigVari",[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitD(Gl,1,Chaos,AP(방어무시),MANA게이지150.00,realD(앞단계 중간값),축밖
 영원한,h057,|CFFFFFA78알라바스타의 왕녀-ver파이러,vivi_Skill_4_Mana,4,500000.00,Flat,,500000,SingleTarget,0,단일확정,s__TrigVariables__get_unitD(Gl,2,Hero,AP(방어무시),MANA게이지150.00,,확정
 영원한,h057,|CFFFFFA78알라바스타의 왕녀-ver파이러,vivi_skill_2,1,400000.00,Flat,,400000,Enemies,450.00,범위확정,GetEnumUnit(),1,Chaos,AD,1/10,,확정
-영원한,h059,|CFFFFFA78'화권의' 포트거스.D.에이스,ace_skill_3,1,1000000.00,Flat,,1e+06,Enemies,650.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),1/35,,확정
+영원한,h059,|CFFFFFA78'화권의' 포트거스.D.에이스,ace_skill_3,1,1000000.00,Flat,,1000000,Enemies,650.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),1/35,,확정
 영원한,h059,|CFFFFFA78'화권의' 포트거스.D.에이스,ace_skill_5,1,s__TrigVariables__get_realD(GlobalTV),[축밖],,,Enemies,850.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),MANA게이지185.00,realD(앞단계 중간값),축밖
 영원한,h05B,|CFFFFFA78해적왕자-롬멜의 카마이타치 카,Cavendish_skill_Mana,1,"(2200000.00+(I2R(GetPlayerTechCountSimple('R01M',GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV))))*4500",연구,,,Enemies,900.00,범위확정,GetEnumUnit(),2,Chaos,AD,MANA게이지100.00,"식 안의 상수: 2200000.00, 45000.00",미확인
 영원한,h05B,|CFFFFFA78해적왕자-롬멜의 카마이타치 카,Cavendish_skill_Mana,2,"(2200000.00+(I2R(GetPlayerTechCountSimple('R01M',GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV))))*4500",연구,,,Enemies,900.00,범위확정,GetEnumUnit(),2,Chaos,AD,MANA게이지100.00,"식 안의 상수: 2200000.00, 45000.00",미확인
-영원한,h05B,|CFFFFFA78해적왕자-롬멜의 카마이타치 카,Cavendish_skill_Mana,3,1000000.00,Flat,,1e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),MANA게이지100.00,,확정
+영원한,h05B,|CFFFFFA78해적왕자-롬멜의 카마이타치 카,Cavendish_skill_Mana,3,1000000.00,Flat,,1000000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),MANA게이지100.00,,확정
 영원한,h05C,|CFFFFFA78'아마존릴리의 여제'  보아 ,arrow_h2,1,250000.00,Flat,,250000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),MANA게이지175.00 AND 버프B03M==true,,확정
-영원한,h05C,|CFFFFFA78'아마존릴리의 여제'  보아 ,hancock_skill_10,1,1000000.00,Flat,,1e+06,Enemies,600.00,범위확정,GetEnumUnit(),1,Hero,AD,1/14,,확정
+영원한,h05C,|CFFFFFA78'아마존릴리의 여제'  보아 ,hancock_skill_10,1,1000000.00,Flat,,1000000,Enemies,600.00,범위확정,GetEnumUnit(),1,Hero,AD,1/14,,확정
 영원한,h05C,|CFFFFFA78'아마존릴리의 여제'  보아 ,hancock_skill_9,1,850000.00,Flat,,850000,Enemies,450.00,범위확정,GetEnumUnit(),1,Hero,AD,MANA게이지175.00 AND 1/15,,확정
 영원한,h067,|CFFFFFA78세계의 가희 우타 - |CFF,Uta_ArmyS,1,(I2R(s__TrigVariables__get_integerA(GlobalTV))*200000.00),[미확인],,,Enemies,350.00,범위확정,GetEnumUnit(),1,Hero,AP(방어무시),1/4,식 안의 상수: 200000.00,미확인
 영원한,h067,|CFFFFFA78세계의 가희 우타 - |CFF,Uta_ArmyS,2,"(250000.00+((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.03)*I2R(s__TrigVariable",대상현재체력,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Normal,AP(방어무시),1/4,"식 안의 상수: 250000.00, 0.03",미확인
 영원한,h067,|CFFFFFA78세계의 가희 우타 - |CFF,Uta_ArmyS,3,500000.00,Flat,,500000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Normal,AP(방어무시),1/4,,확정
-영원한,h067,|CFFFFFA78세계의 가희 우타 - |CFF,Uta_skill_3_mana,1,2500000.00,Flat,,2.5e+06,Enemies,800.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/10 AND 1/33 AND MANA게이지100.00,,확정
-영원한,h088,|CFFFFFA78토트 무지카 봉인된 악보의 괴,tots_R,1,4500000.00,Flat,,4.5e+06,Enemies,415.00,범위확정,GetEnumUnit(),1,Hero,AP(방어무시),(게이트 없음),,확정
-영원한,h08R,|CFFFFFA78참된 호걸 코즈키 오뎅 - |,Odeng_Skill,1,1150000.00,Flat,,1.15e+06,Enemies,600.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/20,,확정
-영원한,h08R,|CFFFFFA78참된 호걸 코즈키 오뎅 - |,Odeng_Skill_mana,1,4000000.00,Flat,,4e+06,Enemies,600.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지145.00,,확정
+영원한,h067,|CFFFFFA78세계의 가희 우타 - |CFF,Uta_skill_3_mana,1,2500000.00,Flat,,2500000,Enemies,800.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/10 AND 1/33 AND MANA게이지100.00,,확정
+영원한,h088,|CFFFFFA78토트 무지카 봉인된 악보의 괴,tots_R,1,4500000.00,Flat,,4500000,Enemies,415.00,범위확정,GetEnumUnit(),1,Hero,AP(방어무시),(게이트 없음),,확정
+영원한,h08R,|CFFFFFA78참된 호걸 코즈키 오뎅 - |,Odeng_Skill,1,1150000.00,Flat,,1150000,Enemies,600.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/20,,확정
+영원한,h08R,|CFFFFFA78참된 호걸 코즈키 오뎅 - |,Odeng_Skill_mana,1,4000000.00,Flat,,4000000,Enemies,600.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지145.00,,확정
 히든,h03J,[히든조합]시류비의 시류,siru_R,1,(1500000.00+(s__TrigVariables__get_realE(GlobalTV)*80000.00)),[축밖],,,Enemies,450.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지100.00,realD(앞단계 중간값),축밖
 히든,h03R,[히든조합]반 더 데켄어인섬 절반면적의 노아를 ,deken_Mana,1,"(2200000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit())*0.02))",대상최대체력,0.02,2200000,Enemies,800.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지115.00,,확정
 히든,h03R,[히든조합]반 더 데켄어인섬 절반면적의 노아를 ,deken_skill_1,1,120000.00,Flat,,120000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/16,,확정
@@ -289,15 +289,15 @@
 히든,h03V,[히든조합]코알라혁명군-어인공수도대리사범,koalla_skill_Mana,2,"(500000.00+(40000.00*I2R(GetPlayerTechCountSimple('R01O',GetOwningPlayer(s__TrigVariables__get_unitC(GlobalTV)",연구,,,Enemies,625.00,범위확정,GetEnumUnit(),2,Chaos,AD,MANA게이지135.00,"식 안의 상수: 500000.00, 40000.00",미확인
 히든,h03V,[히든조합]코알라혁명군-어인공수도대리사범,koalla_skill_Mana,3,"(850000.00+(40000.00*I2R(GetPlayerTechCountSimple('R01O',GetOwningPlayer(s__TrigVariables__get_unitC(GlobalTV)",연구,,,Enemies,625.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지135.00,"식 안의 상수: 850000.00, 40000.00",미확인
 히든,h03Z,[히든조합]아카이누흰수염을죽인 붉은개,Akainu_02_hidden,1,300000.00,Flat,,300000,Enemies,525.00,범위확정,GetEnumUnit(),1,Chaos,AP(방어무시),버프B06B==true,,확정
-히든,h03Z,[히든조합]아카이누흰수염을죽인 붉은개,Akainu_02_hidden,2,1000000.00,Flat,,1e+06,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),버프B06B==true,,확정
+히든,h03Z,[히든조합]아카이누흰수염을죽인 붉은개,Akainu_02_hidden,2,1000000.00,Flat,,1000000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),버프B06B==true,,확정
 히든,h03Z,[히든조합]아카이누흰수염을죽인 붉은개,Akainu_02_hidden,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.12)",대상최대체력,0.12,0,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),버프B06B==true,,확정
 히든,h048,[히든조합]페로나고스트 프린세스,Hidden14_perona_use2,1,(125000.00+(125000.00*s__TrigVariables__get_realC(GlobalTV))),[축밖],,,Enemies,360.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/8,realD(앞단계 중간값),축밖
 히든,h048,[히든조합]페로나고스트 프린세스,perona_Mana,1,(2250000.00+(s__TrigVariables__get_realE(GlobalTV)*150000.00)),[축밖],,,Enemies,500.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지100.00,realD(앞단계 중간값),축밖
 변화된,h05S,돈키호테 도플라밍고 하늘귀신 - 변화된,Transpom_dp,1,200000.00,Flat,,200000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/10,,확정
 변화된,h05S,돈키호테 도플라밍고 하늘귀신 - 변화된,Transpom_dp,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.20)*(0.20+(0.05*I2R(GetUnitAbility",대상현재체력,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Pierce,AP(방어무시),1/10,"식 안의 상수: 0.20, 0.05",미확인
-변화된,h05V,포트거스.D.에이스 스페이드 해적단 선장 - 변,Transpom_AceMana,1,1850000.00,Flat,,1.85e+06,Enemies,575.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),MANA게이지125.00,,확정
+변화된,h05V,포트거스.D.에이스 스페이드 해적단 선장 - 변,Transpom_AceMana,1,1850000.00,Flat,,1850000,Enemies,575.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),MANA게이지125.00,,확정
 변화된,h05V,포트거스.D.에이스 스페이드 해적단 선장 - 변,Transpom_Ace_bulRemake,1,350000.00,Flat,,350000,Enemies,400.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/10,,확정
-변화된,h077,간부 파견 해군 - 변화된,Bugi_SommonDamage2,1,GetEventDamage(),[축밖],,,Enemies,450.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),실제 평타피해 비례,축밖
+변화된,h077,간부 파견 해군 - 변화된,Bugi_SommonDamage2,1,GetEventDamage(),[축밖],,,Enemies,325.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),실제 평타피해 비례,축밖
 변화된,h07J,캐럿 스론 달의 사자 - 변화된,carrot_skill_2,1,325000.00,Flat,,325000,Enemies,425.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),1/9,,확정
 희귀함,h021,마샬.D.티치 흰수염해적단의 배신자 - 희귀함,Tich1_danil,1,15000.00,Flat,,15000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),1/8,,확정
 희귀함,h021,마샬.D.티치 흰수염해적단의 배신자 - 희귀함,Tich1_danil,2,15000.00,Flat,,15000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),1/8,,확정
