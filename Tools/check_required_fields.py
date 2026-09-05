@@ -404,6 +404,34 @@ results.append((
     dangerous_range_assets,
 ))
 
+# ── 15. SkillData: OnHitCount인데 gaugeKind가 파일에 없음 — 경고(오류 아님) ─
+# ⚠️ SkillGaugeKind 기본값은 Mana(0)다(SkillData.cs) — 지금까지 있는 OnHitCount 자산
+# 전부 원래 마나 게이지라 이 기본값이 우연히 맞았다(2026-09-05 밤 발견). 그런데
+# **어느 자산도 gaugeKind를 명시적으로 직렬화한 적이 없다** — "체력(Life) 게이지를 쓰는
+# 스킬이라 gaugeKind=1을 채웠다"와 "그냥 기본값을 안 건드렸다"가 파일만 봐서는 구분이
+# 안 된다. 구현담당1이 지금 유닛당 2~6개 스킬을 배정하면서 체력 게이지 자산이 곧
+# 생기는데, 실수로 그 필드를 안 채우면 조용히 Mana로 읽혀 원작과 다른 게이지를
+# 공유하게 된다(예: 원래 체력 게이지 스킬이 마나 게이지 스킬과 카운터를 섞어 씀).
+# → 값을 강제할 방법이 없어(0이 "명시적 Mana"인지 "미기재"인지 텍스트로는 구분되는데,
+# "미기재가 항상 틀렸다"고 단정할 근거는 없다 — 실제로 마나 게이지인 스킬은 안 채워도
+# 맞다) **오류(❌)가 아니라 경고**로만 남긴다(#10과 같은 급).
+def onhitcount_missing_gaugekind(text):
+    if not re.search(r"^  triggerType: 3\b", text, re.MULTILINE):
+        return False  # OnHitCount가 아니면 해당 없음.
+
+    for level_body in re.split(r"\n  - cooldown: ", text)[1:]:
+        effects_match = re.search(r"    effects:(.*?)(?=\n  - cooldown: |\Z)", level_body, re.S)
+        effects_body = effects_match.group(1) if effects_match else ""
+        if not re.search(r"^\s*- kind:", effects_body, re.MULTILINE):
+            continue  # 효과가 비어 있으면 아직 안 도는 스킬이라 무해하다(#8/#9와 같은 게이트).
+
+        if not re.search(r"\n {4}gaugeKind: \d+", level_body):
+            return True
+    return False
+
+
+onhitcount_missing_gaugekind_warnings = [p for p in skill_assets if onhitcount_missing_gaugekind(read(p))]
+
 # ── 리포트 ───────────────────────────────────────────────────────────────
 any_problem = False
 for label, fields, danger, total, missing in results:
@@ -421,6 +449,15 @@ if onhitcount_cooldown_warnings:
           f"{len(onhitcount_cooldown_warnings)}개)")
     print("  ⚠️  절대쿨은 지금 OnHitChance 경로에서만 읽는다 — OnHitCount는 이 값을 무시한다.")
     for path in onhitcount_cooldown_warnings:
+        print("  ⚠️ ", path.relative_to(ROOT))
+    print()
+
+if onhitcount_missing_gaugekind_warnings:
+    print(f"[경고] SkillData: OnHitCount인데 gaugeKind가 파일에 없는 레벨이 있음 (오류 아님, "
+          f"{len(onhitcount_missing_gaugekind_warnings)}개)")
+    print("  ⚠️  기본값 Mana(0)로 읽힌다 — 마나 게이지 스킬이면 무해하지만, 체력(Life) 게이지 "
+          "스킬인데 gaugeKind=1을 안 채웠다면 다른 게이지 스킬과 카운터가 섞인다. 배정할 때 확인할 것.")
+    for path in onhitcount_missing_gaugekind_warnings:
         print("  ⚠️ ", path.relative_to(ROOT))
     print()
 
