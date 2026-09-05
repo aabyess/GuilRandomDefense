@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: SkillData_절대쿨_불멸_정윤식
   m_EditorClassIdentifier:
   skillName: 레일리 — 5절대쿨(Kick_1)
-  description: 5절대쿨 계열(ORIGINAL_GATED_SKILLS_14.csv, 우리표커버=미수록) 신규 배정 — 원작 h049 실버즈 레일리(Kick_1), 버프 B070 미보유 + 4.75초 절대쿨. 3효과: Flat 1,750,000(Enemies range 400) + 대상현재체력×0.15(SingleTarget) + Flat 787,500(SingleTarget). 전부 CHAOS/NORMAL→AD 그대로. B070은 스킬 자기잠금 버프 — SkillLevel.cooldown=4.75가 이미 그 잠금을 표현하므로 forbiddenBuffId는 따로 안 썼다(PM 지시 2026-09-06, 379cfec). ⚠️ 표에 완전히 같은 값이 "GetRandomInt(1,50)==1" 추가게이트로도 한 번 더 나오는데(중복인지 진짜 1/50 보너스인지 불확실) 화력이 2배가 될 위험이 있어 이번엔 "(절대쿨만)" 세트만 넣었다 — PM 확인(레일리 1/50 중복은 확정 전엔 보류 유지가 맞다고 재확인, 2026-09-06). skill을 skills[0]으로 옮기고(06번① Had1, ArmorBreak) 이 스킬을 추가했다.
+  description: 5절대쿨 계열(ORIGINAL_GATED_SKILLS_14.csv, 우리표커버=미수록) 신규 배정 — 원작 h049 실버즈 레일리(Kick_1), 버프 B070. ⚠️ 2026-09-06 PM 재정정: 트리거·피해세트는 하나인데 호출자가 둘이고 elseif라 배타다. B070 미보유일 때 대상이 ANCIENT면 100%(우리에 대응 개념 없음, 못 옮김), 아니면 「1/50」이 일반 대상의 유일한 진입로다 — 그래서 「(절대쿨만)」 세트만 triggerChance=1.0으로 넣었던 첫 시도는 일반 대상 기준 50배 과다였다. triggerChance=0.02(1/50)로 정정. 주대상 피해도 4갈래 배타(반경400 전원 무조건 / B06B 보유 시 최대체력×0.15 / B06B 없음+포인트값<200 즉사+h056 1기 지급 / B06B 없음+포인트값>=200 787,500)였는데 3효과를 동시에 더하던 첫 시도도 틀렸다. 지금은 2효과만: ①Flat 1,750,000(Enemies range 400, 무조건 AoE) ②대상현재체력×1.0(SingleTarget) — 「포인트값<200 즉사」의 근사다. 즉사 자체를 표현하는 축은 없어(꼬리표로만 남김) 100%현재체력 피해로 대신했는데, EnemyData.takesPercentDamage가 이미 「포인트값>=200(보스급)」에 해당하는 대상에서 %체력 피해를 런타임에 막아주므로 자연히 즉사 근사가 그 대상엔 안 걸린다. ③Flat 787,500(SingleTarget, 무조건) — takesPercentDamage 면역 대상(포인트값>=200 갈래)에 실질적으로 이 값만 적용되고, 면역 아닌 대상은 ②로 이미 죽어 있어 덧셈이 무해하다. B06B 보유 분기(최대체력×0.15)는 버프 보유 여부를 읽을 축이 없어 뺐다(description에만 기록, 실제보다 드물게 발동). h056 유닛 지급(즉사 보상)도 축 밖. ⚠️ 배율 rand(1.0~1.5)는 아직 안 넣었다 — SkillEffect.randMin/randMax 필드가 서면(구현담당3 작업 중) MULTIPLIER_CORRECTIONS.csv와 함께 채운다(PM 지시, 새 배율 축 없이 새 값 채우지 않기). B070은 스킬 자기잠금 버프 — SkillLevel.cooldown=4.75가 이미 그 잠금을 표현하므로 forbiddenBuffId는 안 썼다(379cfec). skill을 skills[0]으로 옮기고(06번① Had1, ArmorBreak) 이 스킬을 추가했다.
   triggerType: 0
   levels:
   - cooldown: 4.75
-    triggerChance: 1.0
+    triggerChance: 0.02
     range: 400
     hitCountThreshold: 0
     resetTo: 0
@@ -39,7 +39,7 @@ MonoBehaviour:
       target: 3
       damageType: 1
       attackType: 5
-      multiplier: 0.15
+      multiplier: 1.0
       bonus: 0.0
       chance: 1
       hitCount: 1
