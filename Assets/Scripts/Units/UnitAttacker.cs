@@ -101,6 +101,14 @@ public class UnitAttacker : MonoBehaviour
     // 예전 동작과 같다 — 회귀 없음.
     int CountResearchLevel() => 0;
 
+    // SkillEffect.casterBuffCountFactor(원작 realD = 0.03×버프개수) 전용 자리.
+    // ⚠️ 2026-09-05 PM 지시: attackSpeedBuffs/attackPowerBuffs로 근사하지 않는다 — 원작은
+    // 시전자의 워크3 버프 전부를 센다(자기 스킬이 건 것·오라·적이 건 디버프까지 포함일 수
+    // 있다). 우리에 그 개념이 없어 0으로 둔다 — 버프 레지스트리가 생기면 이 한 줄만 이으면
+    // 된다. 구현담당2가 지금 밸런스를 측정 중이라, 출처를 추적할 수 없는 반쪽 근사를 섞으면
+    // 숫자가 왜 움직였는지 아무도 못 푼다.
+    int CountCasterBuffs() => 0;
+
     public void RemoveAttackPowerBuff(float multiplier)
     {
         attackPowerBuffs.Remove(multiplier);
@@ -429,6 +437,11 @@ public class UnitAttacker : MonoBehaviour
             // 360,000에서 안 늘어남). CountResearchLevel()이 자리만 만들고 지금 0을 돌려주므로
             // 당장은 결과가 이전과 같다(0×multiplier+bonus=bonus) — 회귀 없음.
             case SkillEffectBasis.ResearchLevel: return CountResearchLevel() * effect.multiplier + effect.bonus;
+            // ⚠️ 읽는 코드 없음(SkillEffectBasis.ReceivedDamage 주석 참고) — EnemyDummy에
+            // "방금 받은 피해량"을 밖으로 주는 훅이 없어 지어낼 수 없다. 0을 돌려주는 건
+            // "계산 결과가 0"이 아니라 "이 축이 아직 안 이어졌다"는 뜻이다 — 이 basis를 쓰는
+            // 효과는 지금 DealSkillDamage의 amount<=0 가드에 걸려 조용히 아무 일도 안 한다.
+            case SkillEffectBasis.ReceivedDamage: return 0f;
             default: return 0f;
         }
     }
@@ -505,6 +518,11 @@ public class UnitAttacker : MonoBehaviour
         // basis를 안 가리고 스킬 피해 전반에 곱한다. %체력 분기 자체를 타는지는 별개 축
         // (target.TakesPercentDamage, ResolveSkillEffectValue에서 이미 갈랐다)이다.
         float amount = ResolveSkillEffectValue(effect, target) * target.PercentDamageTakenMultiplier;
+        // 원작 realD = 0.03×버프개수(SkillEffect.casterBuffCountFactor 주석 참고). 기존
+        // 227개 효과는 이 필드가 직렬화에 없어 C# 기본값 0f로 읽힌다 — (1+0×count)=1이라
+        // 배율이 완전히 무효, 회귀 없음. CountCasterBuffs()가 지금 항상 0을 돌려주므로
+        // factor가 채워진 스킬도 당장은 배율 1로 남는다(위 CountCasterBuffs 주석 참고).
+        amount *= 1f + effect.casterBuffCountFactor * CountCasterBuffs();
         if (amount <= 0f) return;
 
         // ⚠️ 평타(DamageTypeOf/AttackTypeOf)가 아니라 이 효과 자신의 damageType/attackType을

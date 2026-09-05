@@ -62,6 +62,15 @@ public enum SkillEffectBasis
     CasterAttackPower,       // 시전자 평타 공격력 × multiplier + bonus (원작 예: atk×2.5+32500)
     ResearchLevel,           // 연구소 단계 × multiplier + bonus. 연구소(05번, 구현담당1)가
                              // 서면 그 값을 여기 잇는다 — 지금은 자리만이다.
+
+    // ⚠️ 맨 뒤에 추가 — 직렬화 순서를 지킨다.
+    // 원작 GetEventDamage() 비례(715건 중 13건) — "이 유닛이 방금 받은 피해"에 비례해
+    // 되돌려준다. ⚠️ 읽는 코드 없음(2026-09-05) — EnemyDummy.TakeDamage는 사망 신호만
+    // 보내고 "방금 받은 피해량" 자체를 밖으로 주는 훅이 없다. 지어낼 수 없어 데이터 자리만
+    // 만든다 — UnitAttacker.ResolveSkillEffectValue가 이 케이스에 0을 돌려주는 건 "계산한
+    // 값이 0"이 아니라 "이 축을 읽는 코드가 아직 없다"는 뜻이다. 이 basis를 쓰는 효과는
+    // 지금 아무 것도 안 낸다 — 훅을 만들 때 이 자리만 채우면 된다.
+    ReceivedDamage,
 }
 
 // 무엇을 하는 효과인가.
@@ -125,6 +134,26 @@ public class SkillEffect
     // 때린다(간격 = duration/hitCount) — 원작 예: 보스 A153의 "22만 데미지 × 3".
     public int hitCount = 1;
     public float duration;
+
+    // ⚠️ 맨 뒤에 추가 — 직렬화 순서를 지킨다.
+    // 원작 realD = 0.03 × 시전자가 가진 버프 개수(715건 중 29건, 원작 예: 거프·사보·
+    // 카이도) — 최종 피해에 (1 + 이 값×버프개수)를 곱하는 배율이다. **basis가 아니라 이
+    // 필드로 뗀 이유**: 다른 basis는 전부 "피해량 자체를 정하는 근거"인데 이건 "다른 basis가
+    // 정한 값에 사후에 곱해지는 배율"이라 성격이 다르다(PM 지시 2026-09-05) — basis 자리에
+    // 넣으면 "이 값이 곧 피해량"으로 읽혀 실제 계산(원작 (6,000,000+maxHP×0.05)×(1+0.03×
+    // 버프개수)의 뒤쪽 절반)과 안 맞는다.
+    //
+    // 기본 0 = 무효(배율 1.0로 계산되어 곱해도 결과가 그대로다) — 필드 자체가 빠진 기존
+    // 227개 효과도 C# 기본값 0f로 읽혀 똑같이 무효, 회귀 없다.
+    //
+    // ⚠️ 2026-09-05 PM 지시: UnitAttacker.DealSkillDamage가 곱하는 "버프 개수"는 지금
+    // UnitAttacker.CountCasterBuffs()가 **항상 0을 돌려주는 자리만 만든 자리**다 —
+    // attackSpeedBuffs/attackPowerBuffs(SupportShop 버프)로 근사하지 않는다. 원작은
+    // 시전자의 워크3 버프 전부(자기 스킬이 건 것·오라·적이 건 디버프까지)를 세는데,
+    // 우리 엔진엔 그 개념 자체가 없어 지어낼 수 없다 — 반쪽 근사를 섞으면 구현담당2가
+    // 측정 중인 밸런스 숫자가 왜 움직였는지 추적이 안 된다. 버프 레지스트리가 생기면
+    // CountCasterBuffs() 한 줄만 이으면 된다.
+    public float casterBuffCountFactor;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
