@@ -265,6 +265,16 @@ public class SupportShop : MonoBehaviour, ILaneShop
     }
 
     // 폭우/지진/버스터콜/불비/해루석/출항이다 — 커서로 찍은 지점에 발동.
+    //
+    // ⚠️ 비용은 명중 여부와 무관하게 캐스트 시점에 나간다 — 순서를 바꾸지 않았다(PM 지시
+    // 2026-09-05로 재검토). war3map.j를 직접 뒤져봤다: 이 스킬들은 udg_Manso(플레이어별
+    // "도움소 마나" 더미 유닛, Trig_Random_Mana_Actions가 SetUnitManaBJ로 관리)에 건
+    // 워크3 능력으로 시전된다 — 워크3 엔진은 마나 비용이 있는 능력을 "시전 성공"(주문 발동)
+    // 시점에 즉시 깎는다, 명중 여부와 완전히 무관하게(이건 트리거가 아니라 엔진 규칙이다).
+    // 이 코드베이스에 이미 있는 유일한 반례(TryDismantleUnit의 "등급 안 맞으면 마나 환불")가
+    // 오히려 이 결론을 뒷받침한다 — 기본이 환불이었다면 그 한 스킬만 따로 환불 코드를 짤
+    // 이유가 없다. 그래서 순서는 그대로 두고, **맞은 대상이 0이면 알림만 띄운다**
+    // (자원을 먹고 아무 표시도 없이 끝나는 게 문제였지, 자원을 먹는 것 자체는 원작대로다).
     public bool TryCastOnGround(SupportSkillData skill, Vector3 point)
     {
         if (skill == null || skill.targetKind != SupportSkillTargetKind.Ground) return false;
@@ -274,23 +284,28 @@ public class SupportShop : MonoBehaviour, ILaneShop
         if (!TrySpendCost(skill, context)) return false;
 
         int round = RoundManagerRef != null ? RoundManagerRef.CurrentRound : 1;
+        int affected = 0;
 
         switch (skill.effect)
         {
             case SupportSkillEffect.Damage:
-                ApplyAreaDamage(skill, point, round, context);
+                affected = ApplyAreaDamage(skill, point, round, context);
                 break;
             case SupportSkillEffect.Root:
-                ApplyRoot(skill, point, round);
+                affected = ApplyRoot(skill, point, round);
                 break;
             case SupportSkillEffect.Buff:
-                ApplyBuff(skill, point);
+                affected = ApplyBuff(skill, point);
                 break;
             default:
                 break;
         }
 
         StartCooldown(skill);
+
+        if (affected == 0)
+            PlayerNotification.Show(owner.OwnerId, $"{skill.skillName}: 맞은 대상이 없습니다.");
+
         return true;
     }
 
@@ -312,7 +327,15 @@ public class SupportShop : MonoBehaviour, ILaneShop
     bool TryInstantKillUnit(SupportSkillData skill, GameObject targetUnit)
     {
         if (!targetUnit.TryGetComponent(out EnemyDummy enemy)) return false;
-        if (enemy.IsBoss || enemy.LaneIndex < 0) return false;
+
+        if (enemy.IsBoss || enemy.LaneIndex < 0)
+        {
+            // 원작 "보스, 스토리 적용X"(위 클래스 주석 참고) — 조준까지 했는데 왜 안 통하는지
+            // 몰라서 조용히 끝났던 자리(PM 지시 2026-09-05).
+            PlayerNotification.Show(owner.OwnerId, $"{skill.skillName}: 보스·스토리 유닛에게는 쓸 수 없습니다.");
+            return false;
+        }
+
         if (!CanCast(skill)) return false;
 
         PlayerContext context = OwnerContext;
@@ -331,7 +354,14 @@ public class SupportShop : MonoBehaviour, ILaneShop
     // 제외가 없다 — 원작 툴팁에 그런 제한 서술이 없었다.
     bool TrySingleTargetDamageUnit(SupportSkillData skill, GameObject targetUnit)
     {
-        if (!targetUnit.TryGetComponent(out EnemyDummy enemy)) return false;
+        if (!targetUnit.TryGetComponent(out EnemyDummy enemy))
+        {
+            // 조준까지 했는데(자기 유닛 등 적이 아닌 대상) 왜 안 통하는지 몰라서 조용히
+            // 끝났던 자리(PM 지시 2026-09-05).
+            PlayerNotification.Show(owner.OwnerId, $"{skill.skillName}: 적 유닛에게만 쓸 수 있습니다.");
+            return false;
+        }
+
         if (!CanCast(skill)) return false;
 
         PlayerContext context = OwnerContext;
@@ -354,7 +384,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
 
         if (!targetUnit.TryGetComponent(out OwnedByPlayer targetOwner) || targetOwner.OwnerId != owner.OwnerId)
         {
-            Debug.Log($"{skill.skillName}: 자기 유닛만 분해할 수 있습니다.");
+            PlayerNotification.Show(owner.OwnerId, $"{skill.skillName}: 자기 유닛만 분해할 수 있습니다.");
             return false;
         }
 
@@ -367,7 +397,8 @@ public class SupportShop : MonoBehaviour, ILaneShop
         // 마나도 안 나가고 쿨다운도 안 돈다 — 애초에 대상이 아니었던 것처럼 취급한다.
         if (identity.Data.isSystemUnit)
         {
-            Debug.Log($"{skill.skillName}: {identity.Data.unitName}은(는) 분해할 수 있는 유닛이 아닙니다.");
+            // 원작 문구 그대로(PM 전달, 2026-09-05).
+            PlayerNotification.Show(owner.OwnerId, "보스,스토리, 특수유닛에게는 사용불가합니다!");
             return false;
         }
 
@@ -380,7 +411,8 @@ public class SupportShop : MonoBehaviour, ILaneShop
         {
             // 잘못된 대상 — "등가교환" 실패. 분해하지 않고 마나만 그대로 돌려준다.
             context.ResourceWallet?.Add(ResourceType.Mana, skill.manaCost);
-            Debug.Log($"{skill.skillName}: {identity.Data.unitName}은(는) 분해할 수 없는 등급이라 마나를 돌려받았습니다.");
+            PlayerNotification.Show(owner.OwnerId,
+                $"{skill.skillName}: {identity.Data.unitName}은(는) 분해할 수 없는 등급이라 마나를 돌려받았습니다.");
             StartCooldown(skill);
             return false;
         }
@@ -408,15 +440,20 @@ public class SupportShop : MonoBehaviour, ILaneShop
     // waveCount<=1이면 예전과 완전히 같은 즉발 1회(지진·폭우·버스터콜 전부 이 경로다).
     // waveCount>1이면 지속시간에 걸쳐 나눠 때린다(불비 — 원작 "1웨이브당 5만뎀, 총 4웨이브").
     // 원작의 "맞으면 초당 2.8만뎀 6초 화상"은 이번엔 생략했다 — 알려진 단순화(SUPPORT_SHOP.md 참고).
-    void ApplyAreaDamage(SupportSkillData skill, Vector3 point, int round, PlayerContext context)
+    // 반환값은 "맞은 대상 수"(TryCastOnGround의 빈손 알림용)다. waveCount>1(불비)은 실제
+    // 피해가 코루틴에서 나중에 나가서 지금 당장은 셀 수 없다 — 대신 캐스트 시점에 반경 안에
+    // 몇 마리가 있었는지만 미리 세서 돌려준다(그 뒤 몇 초 사이에 들어오거나 나가는 것까지
+    // 맞추려는 게 아니라, "찍은 순간 거기 아무도 없었다"만 알려주면 충분하다).
+    int ApplyAreaDamage(SupportSkillData skill, Vector3 point, int round, PlayerContext context)
     {
         if (skill.waveCount > 1)
         {
+            int peek = CollectInRadius(point, skill.radius).Count;
             StartCoroutine(MultiWaveDamageRoutine(skill, point, round, context));
-            return;
+            return peek;
         }
 
-        ApplyOneWaveDamage(skill, point, round, context, isFirstWave: true);
+        return ApplyOneWaveDamage(skill, point, round, context, isFirstWave: true);
     }
 
     IEnumerator MultiWaveDamageRoutine(SupportSkillData skill, Vector3 point, int round, PlayerContext context)
@@ -432,7 +469,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
 
     // isFirstWave: 방어력 감소(독약)는 캐스트당 딱 한 번만 걸려야 한다 — waveCount가 몇이든
     // 여기서 매 웨이브 걸면 웨이브 수만큼 누적돼 원작 수치(20)보다 훨씬 세진다.
-    void ApplyOneWaveDamage(SupportSkillData skill, Vector3 point, int round, PlayerContext context, bool isFirstWave)
+    int ApplyOneWaveDamage(SupportSkillData skill, Vector3 point, int round, PlayerContext context, bool isFirstWave)
     {
         float damage = skill.ComputeDamage(round);
         int hits = 0;
@@ -460,16 +497,19 @@ public class SupportShop : MonoBehaviour, ILaneShop
             int refund = Mathf.Min(skill.manaRefundCap, skill.manaRefundPerHit * hits);
             if (refund > 0) context.ResourceWallet.Add(ResourceType.Mana, refund);
         }
+
+        return hits;
     }
 
     // 해루석: 첫 타격에 대상 최대 체력 비례 피해(원작 "전체 체력의 7%")를 한 번 더 얹은 뒤
     // 구속+DoT를 건다.
-    void ApplyRoot(SupportSkillData skill, Vector3 point, int round)
+    int ApplyRoot(SupportSkillData skill, Vector3 point, int round)
     {
         int ticks = Mathf.Max(1, Mathf.RoundToInt(skill.duration));
         float tickDamage = skill.ComputeDamage(round) / ticks;
 
         List<EnemyDummy> targets = CollectInRadius(point, skill.radius);
+        int hit = 0;
 
         for (int i = 0; i < targets.Count; i++)
         {
@@ -480,7 +520,10 @@ public class SupportShop : MonoBehaviour, ILaneShop
                 enemy.TakeDamage(enemy.MaxHp * skill.firstHitMaxHpPercent, DamageType.AP, AttackType.Spells, owner.OwnerId);
 
             StartCoroutine(RootAndDotRoutine(enemy, tickDamage, ticks));
+            hit++;
         }
+
+        return hit;
     }
 
     IEnumerator RootAndDotRoutine(EnemyDummy enemy, float tickDamage, int ticks)
@@ -507,10 +550,11 @@ public class SupportShop : MonoBehaviour, ILaneShop
     }
 
     // 출항이다: mapWide면 자기 유닛 전체, 아니면 클릭 지점 반경 안의 자기 유닛만.
-    void ApplyBuff(SupportSkillData skill, Vector3 point)
+    int ApplyBuff(SupportSkillData skill, Vector3 point)
     {
         int ownerId = owner.OwnerId;
         float radiusSqr = skill.radius * skill.radius;
+        int buffed = 0;
 
         foreach (Selectable selectable in Selectable.All)
         {
@@ -526,7 +570,10 @@ public class SupportShop : MonoBehaviour, ILaneShop
             if (!selectable.TryGetComponent(out UnitAttacker attacker)) continue;
 
             StartCoroutine(BuffRoutine(attacker, skill.buffAttackPowerMultiplier, skill.duration));
+            buffed++;
         }
+
+        return buffed;
     }
 
     IEnumerator BuffRoutine(UnitAttacker attacker, float multiplier, float duration)
