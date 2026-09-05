@@ -95,6 +95,15 @@ public enum SkillEffectKind
     // 초당 체력회복 가산치(원작 A11T Uau2=350000.0, Unholy Aura류). 적용:
     // EnemyDummy.AddRegenBonus(multiplier) — data.hpRegenPerSecond와 별개로 더해진다.
     HealOverTime,
+
+    // ⚠️ 맨 뒤에 추가 — 직렬화 순서를 지킨다.
+    // 버프 레지스트리(UnitAttacker.AddBuff, 2026-09-06)에 SkillEffect.buffId를 건다 —
+    // requiredBuffId/forbiddenBuffId 게이트가 실제로 조회할 대상을 만드는 자리다(PM 지시:
+    // "버프를 실제로 걸 때만 게이트로 쓰라" — 안 그러면 requiredBuffId를 채운 스킬이
+    // 영영 안 나간다). target(Self/Allies)에 따라 UnitAttacker.AddBuff를 부른다.
+    // duration(위 필드)이 그대로 버프 지속시간이다 — 0이면 영구(RemoveBuff로만 없어짐,
+    // ArmorBreak 등 기존 kind들과 같은 관례).
+    ApplyBuff,
 }
 
 // 효과 하나. 레벨 하나가 이걸 여러 개 가질 수 있다 — "레벨2에 효과가 하나 더 생긴다"(원작
@@ -172,6 +181,12 @@ public class SkillEffect
     // (1+factor×count)"로 정확히 분해되는지를 매번 확인해야 한다 — 이름이 같다고
     // (realD=버프개수) 무조건 이 필드에 넣으면 또 뿌리 ⑨를 밟는다.
     public float casterBuffCountFactor;
+
+    // ⚠️ 맨 뒤에 추가 — 직렬화 순서를 지킨다.
+    // SkillEffectKind.ApplyBuff 전용 — 부여할 버프의 id. 원작 버프 ID를 문자열로 그대로
+    // 적는다(예: "B00J"). 다른 스킬의 SkillLevel.requiredBuffId/forbiddenBuffId가 이
+    // 문자열로 조회한다 — 철자를 맞추는 건 데이터 작성자 책임이다(코드가 뜻을 검증 안 함).
+    public string buffId = "";
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에

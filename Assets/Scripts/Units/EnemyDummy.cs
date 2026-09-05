@@ -265,6 +265,55 @@ public class EnemyDummy : MonoBehaviour
         }
     }
 
+    // ---- 버프 레지스트리(2026-09-06, PM 지시) — UnitAttacker.activeBuffs와 같은 모양이다
+    // (원작 디버프, 예: 핸콕 석화가 대상 Aegr를 올리는 것 같은 게 이 자리를 쓸 것이다).
+    // ⚠️ 지금은 "걸 수 있는 그릇"까지다 — 이 값을 읽어서 실제로 뭔가를 바꾸는 코드(예:
+    // MitigatedDamage가 특정 디버프를 보고 배율을 바꾸는 것)는 아직 없다. UnitAttacker
+    // 쪽과 클래스를 공유하지 않은 이유: 두 타입이 상속 관계가 아니라 각자 독립된
+    // MonoBehaviour라 공통 베이스를 새로 만드는 것보다 지금은 이 정도 중복이 싸다.
+    class ActiveBuff
+    {
+        public string id;
+        public float expiresAt; // Time.time 기준. <=0이면 영구(RemoveBuff로만 없어진다).
+    }
+
+    readonly List<ActiveBuff> activeBuffs = new List<ActiveBuff>();
+
+    public void AddBuff(string id, float duration)
+    {
+        if (string.IsNullOrEmpty(id)) return;
+        activeBuffs.Add(new ActiveBuff { id = id, expiresAt = duration > 0f ? Time.time + duration : -1f });
+    }
+
+    public void RemoveBuff(string id)
+    {
+        for (int i = 0; i < activeBuffs.Count; i++)
+        {
+            if (activeBuffs[i].id == id) { activeBuffs.RemoveAt(i); return; }
+        }
+    }
+
+    public bool HasBuff(string id) => !string.IsNullOrEmpty(id) && ActiveBuffCount(id) > 0;
+    public bool LacksBuff(string id) => !HasBuff(id);
+
+    int ActiveBuffCount(string id)
+    {
+        PruneExpiredBuffs();
+        int count = 0;
+        foreach (ActiveBuff b in activeBuffs)
+            if (b.id == id) count++;
+        return count;
+    }
+
+    void PruneExpiredBuffs()
+    {
+        for (int i = activeBuffs.Count - 1; i >= 0; i--)
+        {
+            if (activeBuffs[i].expiresAt > 0f && Time.time >= activeBuffs[i].expiresAt)
+                activeBuffs.RemoveAt(i);
+        }
+    }
+
     void OnEnable()
     {
         Active.Add(this);

@@ -552,9 +552,20 @@ public class UnitAttacker : MonoBehaviour
     // ArmorBonus/HealOverTime은 EnemyDummy 전용이다(EnemyDummy.ApplyAllyAuraEffect 참고) —
     // 플레이어 유닛은 armor·hpRegenPerSecond 개념 자체가 없어서(HP·방어력이 EnemyData에만
     // 있다) 적용할 필드가 없다. Damage/Stun/ArmorBreak/ExtraProjectile도 아군에게 뜻이
-    // 통하는 게 없다. 그래서 대상은 모이지만(Self/Allies) 지금은 여전히 아무 것도 안 한다.
+    // 통하는 게 없다.
+    //
+    // ApplyBuff(2026-09-06)가 **아군에게 뜻이 통하는 첫 효과다** — Self(자기 자신,
+    // ApplySkillEffect가 identity를 그대로 넘긴다)와 Allies 둘 다 여기로 온다. ally의
+    // UnitAttacker를 찾아 그쪽 버프 레지스트리에 건다(캐스터인 this가 아니라 대상인
+    // ally에게 걸리는 게 맞다 — "자기 자신에게 버프"도 ally==identity==this인 경우다).
     void ApplyToAlly(SkillEffect effect, UnitIdentity ally)
     {
+        if (effect.kind != SkillEffectKind.ApplyBuff) return;
+
+        UnitAttacker allyAttacker = ally != null ? ally.GetComponent<UnitAttacker>() : null;
+        if (allyAttacker == null) return;
+
+        allyAttacker.AddBuff(effect.buffId, effect.duration);
     }
 
     float ResolveSkillEffectValue(SkillEffect effect, EnemyDummy target)
@@ -636,6 +647,14 @@ public class UnitAttacker : MonoBehaviour
             case SkillEffectKind.HealOverTime:
                 target.ApplyAllyAuraEffect(effect);
                 if (effect.duration > 0f) StartCoroutine(RevertAllyAuraEffectRoutine(target, effect, effect.duration));
+                break;
+
+            // 버프 부여(2026-09-06, PM 지시 — "버프를 실제로 걸 때만 게이트로 쓰라") — 원작
+            // 디버프(핸콕 석화가 대상 Aegr를 올리는 것 등)가 이 자리를 쓸 것이다.
+            // EnemyDummy.AddBuff가 duration을 스스로 추적해 만료시키므로(위 ArmorBonus·
+            // HealOverTime과 달리) 되돌리는 코루틴이 따로 필요 없다.
+            case SkillEffectKind.ApplyBuff:
+                target.AddBuff(effect.buffId, effect.duration);
                 break;
 
             // ExtraProjectile은 아직 값 의미가 없다(이번 작업 범위 밖) — 조용히 무시.
