@@ -1412,12 +1412,17 @@ public static class MapGenerator
                     // 한 자리에서 골드와 목재를 함께 준다. 포탈 하나가 두 자원을 못 주므로
                     // 같은 자리에 겹쳐 세운다 — 위습이 들어오면 둘 다 지급된다.
                     // 목재는 자원 칸 서쪽 포탈과 같은 조건이다(WISP_SYSTEM.md: 66% 확률로 목재 1개).
+                    // ⚠️ 여긴 아래 "자원 칸"(RandomUnit)과 다른 위습이다 — 《백수생활선택》
+                    // 위습(InterludeChoiceGrade=Transcendent, 실제 등급 의미 없는 라우팅 키)만
+                    // 받는다. 여기도 RandomUnit을 넣으면 그 위습이 갈 곳이 아예 없어진다.
                     GateToInterlude(BuildResourcePortal(parent, $"Portal_{slot.label}_엔",
                         new Vector3(at.x, 0f, at.z),
-                        ResourcePortal.Payout.Gold, ResourceType.Wood, 15, 20, 100f, ChoicePortalDiameter));
+                        ResourcePortal.Payout.Gold, ResourceType.Wood, 15, 20, 100f,
+                        InterludeChoiceGrade, ChoicePortalDiameter));
                     GateToInterlude(BuildResourcePortal(parent, $"Portal_{slot.label}_목재",
                         new Vector3(at.x, 0f, at.z),
-                        ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f, ChoicePortalDiameter));
+                        ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f,
+                        InterludeChoiceGrade, ChoicePortalDiameter));
                     continue;
                 }
 
@@ -1590,18 +1595,19 @@ public static class MapGenerator
 
         // 동: 금화 랜덤 — 원작 그대로 "15 + 라운드×12~35"(2026-09-04, ORD11.089.w3x 확인).
         // 예전엔 범위를 20 하나로 뭉개뒀는데, 그 폭이 원작 골드포탈의 도박성 그 자체다.
+        // 이 셋(금화·목재·마나)은 위 "위습칸_자원"이 뿌리는 RandomUnit 등급 위습만 받는다.
         BuildResourcePortal(parent, "Portal_금화랜덤", new Vector3(centerX + armX, 0f, centerZ),
-            ResourcePortal.Payout.Gold, ResourceType.Wood, 15, 12, 100f, perRoundMax: 35);
+            ResourcePortal.Payout.Gold, ResourceType.Wood, 15, 12, 100f, UnitGrade.RandomUnit, perRoundMax: 35);
 
         // 서: 목재 랜덤 — 원작은 66% 확률로 목재 1개.
         BuildResourcePortal(parent, "Portal_목재랜덤", new Vector3(centerX - armX, 0f, centerZ),
-            ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f);
+            ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f, UnitGrade.RandomUnit);
 
         // 남: 도움소 마나 — 원작은 "20 + 라운드×1.5 회복".
         // 마나를 쓰는 도움소 건물은 아직 없지만, 자원은 지금부터 쌓아둔다.
         // 원작 확정 공식(2026-09-04, ORD11.089.w3x Trig_Random_Mana 직접 확인): 20 + 라운드×1.5.
         BuildResourcePortal(parent, "Portal_도움소마나", new Vector3(centerX, 0f, centerZ - armZ),
-            ResourcePortal.Payout.Resource, ResourceType.Mana, 20, 1.5f, 100f);
+            ResourcePortal.Payout.Resource, ResourceType.Mana, 20, 1.5f, 100f, UnitGrade.RandomUnit);
 
         // 가운데에서 위습이 생긴다. 여기서 어느 포탈로 갈지는 플레이어가 정한다.
         GameObject cell = new GameObject("위습칸_자원");
@@ -1618,9 +1624,15 @@ public static class MapGenerator
     // 여기 있던 GamblingTier 표는 그쪽으로 옮겨갔다. 건물 배치는 에셋이 준비되면 붙인다.
 
     // diameter는 자원 칸(넓은 포탈)과 뽑기 섬 특수지급 칸(좁은 선택 포탈)이 서로 다른 크기를 쓴다.
+    // ⚠️ 2026-09-05 정정(사장님이 게임을 돌려서 발견): acceptedGrades를 안 채우면
+    // ResourcePortal.Accepts가 "비어 있으면 전부 허용"이라 초월함위습도 목재 포탈에서
+    // 받아버렸다(PM 재조사) — Accepts 자체의 그 기본값은 다른 포탈이 기대고 있을 수 있어
+    // 안 건드리고, 여기서 값을 채우는 쪽으로 고쳤다. 그래서 acceptedGrade를 필수 인자로
+    // 뺐다 — 앞으로 새 자원 포탈을 추가할 때 등급을 빠뜨리면 컴파일 단계에서 걸린다.
     static GameObject BuildResourcePortal(Transform parent, string name, Vector3 ground,
                                     ResourcePortal.Payout payout, ResourceType resource,
                                     int baseAmount, float perRound, float chance,
+                                    UnitGrade acceptedGrade,
                                     float diameter = PortalDiameter, float perRoundMax = 0f)
     {
         GameObject portal = CreatePortalObject(parent, name,
@@ -1634,7 +1646,12 @@ public static class MapGenerator
         so.FindProperty("perRound").floatValue = perRound;
         so.FindProperty("perRoundMax").floatValue = perRoundMax;
         so.FindProperty("successChancePercent").floatValue = chance;
-        // acceptedGrades를 비워두면 어떤 위습이든 받는다 — 자원 칸은 등급을 가리지 않는다.
+
+        SerializedProperty accepted = so.FindProperty("acceptedGrades");
+        accepted.ClearArray();
+        accepted.InsertArrayElementAtIndex(0);
+        accepted.GetArrayElementAtIndex(0).enumValueIndex = (int)acceptedGrade;
+
         so.ApplyModifiedProperties();
         return portal;
     }
