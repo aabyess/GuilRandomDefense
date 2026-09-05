@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_회수_불멸_이승우_355f5d39
+  m_EditorClassIdentifier:
+  skillName: 몽키.D.거프 해군영웅 주먹의 거프 - 불멸의 — (게이트 없음)
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 몽키.D.거프 해군영웅 주먹의 거프 - 불멸의(h04C)의 게이트 "(게이트 없음)" 능력 2개를 이 SkillData 하나로 묶었다.   · Garp_AttackDamage#1: 계산식 (GetEventDamage()*(1.10+s__TrigVariables__get_realD(GlobalTV   · Garp_AttackDamage#3: 계산식 (GetEventDamage()*(1+s__TrigVariables__get_realD(GlobalTV)))  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Garp_AttackDamage#1] ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0.  [Garp_AttackDamage#3] ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0.
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 1.0
+    range: 360.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    effects:
+    - kind: 0
+      basis: 5
+      target: 2
+      damageType: 1
+      attackType: 5
+      multiplier: 1.1
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 5
+      target: 2
+      damageType: 1
+      attackType: 5
+      multiplier: 1.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0

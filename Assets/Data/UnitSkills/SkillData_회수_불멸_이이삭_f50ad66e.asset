@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_회수_불멸_이이삭_f50ad66e
+  m_EditorClassIdentifier:
+  skillName: 센고쿠 해군원수 "부처님" - 불멸의 — LIFE게이지75.00 AND 1/12
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 센고쿠 해군원수 "부처님" - 불멸의(h04E)의 게이트 "LIFE게이지75.00 AND 1/12" 능력 1개를 이 SkillData 하나로 묶었다.   · Sengoku_Skill_Item#1: 계산식 300000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  triggerType: 3
+  levels:
+  - cooldown: 0
+    triggerChance: 0.083333
+    range: 450.0
+    hitCountThreshold: 75
+    resetTo: 1
+    gaugeKind: 1
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 300000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
