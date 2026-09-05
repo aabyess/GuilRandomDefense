@@ -42,4 +42,15 @@ public class GoldWallet : MonoBehaviour
         Gold += amount;
         OnGoldChanged?.Invoke(Gold);
     }
+
+    // 원작 SetPlayerStateBJ(플레이어, GOLD, 0) 대응 — 보스 라운드 진입("보스 전에 다
+    // 써라"는 설계, Trig_Enemy_Boss_create/sinsekai)과 플레이어 탈락(udg_PlayerDeath[i]=1)
+    // 때 골드를 몰수한다. 호출부는 RewardDistributor(2026-09-06 PM 지시).
+    public void ZeroOut()
+    {
+        if (Gold == 0) return;
+
+        Gold = 0;
+        OnGoldChanged?.Invoke(Gold);
+    }
 }

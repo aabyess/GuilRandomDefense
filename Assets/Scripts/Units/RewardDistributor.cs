@@ -192,6 +192,37 @@ public class RewardDistributor : MonoBehaviour
         context.GoldWallet.Add(Mathf.FloorToInt(goldMath * (2f + goldPlus)));
     }
 
+    // 원작 Trig_Enemy_Boss_create/Trig_Enemy_Boss_sinsekai: 보스 라운드 진입 시
+    // 전원 SetPlayerStateBJ(플레이어, GOLD, 0) — "보스 전에 다 써라"는 설계다(2026-09-06
+    // PM 확인). 원작엔 없는 R65/70/75(신세계 보스)도 우리가 만든 보스 라운드이므로
+    // 같은 규칙을 그대로 적용한다(PM 지시) — 특정 라운드 번호를 하드코딩하지 않고
+    // 호출부(RoundManager.StartRound)가 이미 갖고 있는 WaveData.IsBossRound 판정을
+    // 그대로 받는다.
+    // ⚠️ 호출부 미배선: RoundManager.cs가 이 세션의 담당 파일이 아니라(PM이 GoldWallet·
+    // RewardDistributor 둘만 지정) StartRound()에 이 메서드를 부르는 한 줄을 아직 못
+    // 넣었다 — PM/구현담당3이 이어서 넣어야 한다.
+    public void ConfiscateGoldOnBossRoundStart()
+    {
+        if (!GameAuthority.IsServer) return;
+
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            context.GoldWallet?.ZeroOut();
+        }
+    }
+
+    // 원작 udg_PlayerDeath[i]=1 분기의 같은 SetPlayerStateBJ(플레이어, GOLD, 0) —
+    // 탈락한 플레이어의 골드도 몰수한다(2026-09-06 PM 확인).
+    // ⚠️ 호출부 미배선: RoundManager.HandlePlayerDefeated가 이 세션 담당 파일 밖이라
+    // 여기서 직접 못 붙였다 — PM/구현담당3이 그 메서드에서 이걸 불러야 한다.
+    public void ConfiscateGoldOnPlayerDefeated(PlayerContext context)
+    {
+        if (!GameAuthority.IsServer) return;
+        if (context == null) return;
+
+        context.GoldWallet?.ZeroOut();
+    }
+
     void GrantBossReward(PlayerContext context, int round)
     {
         if (!BossRewardByRound.TryGetValue(round, out (int gold, int wood) reward)) return;
