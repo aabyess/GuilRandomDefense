@@ -13,15 +13,35 @@ MonoBehaviour:
   m_Name: SkillData_원작024_h04D
   m_EditorClassIdentifier:
   skillName: A0FS !용오름-드불
-  description: 06번① 순위배정 — 원작 #024 h04D 몽키.D.드래곤 혁명군의 수장, upro: 해당없음(영웅 유닛 아님 — 등급이 unam 끝 「-불멸의/영원한」 표기에 있음), 능력 A0FS(!용오름-드불). 스킬승급형: 레벨1→2로 '!용오름-드불'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). 2026-09-05 정정: 확률형이 아니라 게이지형(OnHitCount)이었다 — 확정(A08V=A0FS 본체 확인됨, ORIGINAL_TRAIT_GATE_MAPPING.csv — Dragon_Skill_Mana 160타) 2026-09-05 정정(TRAIT_GATE_BLOCKED4.md): 트리거를 최상위 if 블록 단위로 다시 잘라보니 A0FS의 게이트는 게이지가 아니라 「버프 B00J 미보유」였다 — OnHitCount로 채웠던 값(더미 A08V, 250,000)은 「GetRandomInt(1,10)==6」 블록의 별개 스킬(A08V 불멸 드래곤스턴2)이었다. 되돌린다. 실제 A0FS 값(레벨1: Dragon_Skill_1 = 1,000,000 × 2회 [NORMAL/UNIVERSAL], 레벨2: Dragon_Skill_1_T = 1,250,000 + 최대체력×1.50 + 최대체력×0.02)은 버프 보유 여부를 읽을 축이 우리에 없어 옮기지 못한다 — 새 축을 지어내지 않고 여기 기록만 남긴다.
+  description: 06번① 순위배정 — 원작 #024 h04D 몽키.D.드래곤 혁명군의 수장, upro: 해당없음(영웅 유닛 아님 — 등급이 unam 끝 「-불멸의/영원한」 표기에 있음), 능력 A0FS(!용오름-드불). 스킬승급형: 레벨1→2로 '!용오름-드불'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). 2026-09-05 정정: 확률형이 아니라 게이지형(OnHitCount)이었다 — 확정(A08V=A0FS 본체 확인됨, ORIGINAL_TRAIT_GATE_MAPPING.csv — Dragon_Skill_Mana 160타) 2026-09-05 정정(TRAIT_GATE_BLOCKED4.md): 트리거를 최상위 if 블록 단위로 다시 잘라보니 A0FS의 게이트는 게이지가 아니라 「버프 B00J 미보유」였다 — OnHitCount로 채웠던 값(더미 A08V, 250,000)은 「GetRandomInt(1,10)==6」 블록의 별개 스킬(A08V 불멸 드래곤스턴2)이었다. 되돌린다. 실제 A0FS 값(레벨1: Dragon_Skill_1 = 1,000,000 × 2회 [NORMAL/UNIVERSAL], 레벨2: Dragon_Skill_1_T = 1,250,000 + 최대체력×1.50 + 최대체력×0.02)은 버프 보유 여부를 읽을 축이 우리에 없어 옮기지 못한다 — 새 축을 지어내지 않고 여기 기록만 남긴다. 2026-09-05 재정정(PM, .j/.w3a 직접 대조): 「버프 B00J 미보유」는 확률 게이트가 아니라 쿨다운이었다 — B00J=A08S(5절대쿨 드래곤, frostarmor 기반 Ufa1=8.5초)의 자기 잠금 버프. OnHitChance에 cooldown=8.5를 얹는 특이 케이스(구현담당3이 OnHitChance용 잠금 코드 작업 중 — 그 전까지는 triggerChance=1.0이라 매 타 발동한다). Dragon_Skill_1의 「×2회」는 다단히트가 아니라 RRD(SingleTarget 1회) + ForGroup(range 475, Enemies 1회) — 같은 대상이면 둘 다 맞는다. levels[1](Dragon_Skill_1_T, 1,250,000+최대체력×1.50+최대체력×0.02)은 각 항의 단일/범위 구분이 아직 안 나와 비워둔다.
   triggerType: 0
   levels:
-  - cooldown: 0
-    triggerChance: 1
-    range: 0
-    hitCountThreshold: 160
+  - cooldown: 8.5
+    triggerChance: 1.0
+    range: 475
+    hitCountThreshold: 0
     resetTo: 0
-    effects: []
+    effects:
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 1
+      multiplier: 1000000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 1
+      attackType: 1
+      multiplier: 1000000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
   - cooldown: 0
     triggerChance: 1
     range: 0

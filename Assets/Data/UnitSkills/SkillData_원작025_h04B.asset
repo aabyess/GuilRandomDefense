@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: SkillData_원작025_h04B
   m_EditorClassIdentifier:
   skillName: A0T4 !함대
-  description: 06번① 순위배정 — 원작 #025 h04B 금사자 시키 천신, upro: 해당없음(영웅 유닛 아님 — 등급이 unam 끝 「-불멸의/영원한」 표기에 있음), 능력교체형: (구 능력 불명) 제거 후 A0T4(!함대) 부여. 배율/레벨 개념 아님 — 통째로 이 스킬로 바뀐다. 수치 미상 — effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). 2026-09-05 정정(TRAIT_GATE_BLOCKED4.md): 트리거를 최상위 if 블록 단위로 다시 잘라보니 A0T4(!함대)의 게이트는 확률이 아니라 「능력 A0T4 레벨==1(보유 자체)」다 — 더미 h07R ×2가 본체이지만 리서치담당 조사에도 수치가 없어 값 자체가 없다. 게이트·구조만 남기고 못 채운다.
+  description: 06번① 순위배정 — 원작 #025 h04B 금사자 시키 천신, upro: 해당없음(영웅 유닛 아님 — 등급이 unam 끝 「-불멸의/영원한」 표기에 있음), 능력교체형: (구 능력 불명) 제거 후 A0T4(!함대) 부여. 배율/레벨 개념 아님 — 통째로 이 스킬로 바뀐다. 수치 미상 — effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). 2026-09-05 정정(TRAIT_GATE_BLOCKED4.md): 트리거를 최상위 if 블록 단위로 다시 잘라보니 A0T4(!함대)의 게이트는 확률이 아니라 「능력 A0T4 레벨==1(보유 자체)」다 — 더미 h07R ×2가 본체이지만 리서치담당 조사에도 수치가 없어 값 자체가 없다. 게이트·구조만 남기고 못 채운다. 2026-09-05 재정정(PM, .j 18919행 직접 대조): 1차 조사가 바깥 게이트(능력 보유)만 보고 안쪽 GetRandomInt(1,33)==3을 놓쳤다 — 진짜 게이트는 확률 1/33(triggerChance=0.0303)이다. effects는 여전히 비워둔다 — 더미 h07R 2기(2.25초, attack 명령) 소환이라 소환 축이 없고, 피해값(Shiki_ship2 트리거)은 리서치담당 조사 중.
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1
+    triggerChance: 0.0303
     range: 0
     effects: []
