@@ -199,6 +199,42 @@ results.append((
     dangerous_cooldown_assets,
 ))
 
+# ── 9. SkillData: OnHitCount인데 hitCountThreshold가 0 — 매 타 발동 ─────────
+# ⚠️ 8번과 같은 종류의 함정, 다른 발동방식(OnHitCount, 2026-09-05 신설 — 원작 특성
+# 24건이 "확률"이 아니라 "정확히 N타째"라 OnHitChance로 근사하지 않고 따로 뗐다).
+# UnitAttacker.TryCastOnHitSkill이 카운터를 먼저 올리고(`onHitCountCounter++`) 그
+# 다음 임계값과 비교한다(`< hitCountThreshold`면 return) — 임계값이 0(필드 없을 때
+# 기본값과 동일)이면 카운터가 1로 오른 순간 항상 "안 작다"가 되어 "N타째마다 1회"가
+# 아니라 매 타 발동한다. 8번과 마찬가지로 effects가 비어 있는 동안은 그 가드가 먼저
+# 걸려 무해하다 — 채우는 순간 위험해진다.
+def onhitcount_danger(text):
+    if not re.search(r"^  triggerType: 3\b", text, re.MULTILINE):
+        return False  # OnHitCount가 아니면 이 카운터 경로를 안 탄다.
+
+    for level_body in re.split(r"\n  - cooldown: ", text)[1:]:
+        threshold_match = re.search(r"\n {4}hitCountThreshold: (-?\d+)", level_body)
+        threshold = int(threshold_match.group(1)) if threshold_match else 0
+        if threshold != 0:
+            continue
+        effects_match = re.search(r"    effects:(.*?)(?=\n  - cooldown: |\Z)", level_body, re.S)
+        effects_body = effects_match.group(1) if effects_match else ""
+        if re.search(r"^\s*- kind:", effects_body, re.MULTILINE):
+            return True
+    return False
+
+
+dangerous_onhitcount_assets = [p for p in skill_assets if onhitcount_danger(read(p))]
+
+results.append((
+    "SkillData: OnHitCount인데 hitCountThreshold=0 (매 타 발동)",
+    ["hitCountThreshold"],
+    "값 0 — OnHitCount인 레벨의 hitCountThreshold가 0(필드 없을 때 기본값과 동일)이면 "
+    "UnitAttacker의 카운터 비교(증가 후 `< threshold`)가 항상 거짓이 되어 '정확히 N타째'가 "
+    "아니라 매 타 발동한다. effects가 비어 있는 동안은 무해하지만 채우는 순간 위험해진다.",
+    len(skill_assets),
+    dangerous_onhitcount_assets,
+))
+
 # ── 리포트 ───────────────────────────────────────────────────────────────
 any_problem = False
 for label, fields, danger, total, missing in results:

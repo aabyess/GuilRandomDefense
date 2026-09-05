@@ -163,6 +163,10 @@ public class UnitAttacker : MonoBehaviour
     // 배정하기 전까지는 실질적으로 죽어 있다.
     float skillCooldownTimer;
 
+    // OnHitCount 전용 카운터 — 유닛 인스턴스별이다(SkillData는 공유 에셋이라 거기 두면
+    // 같은 스킬을 가진 유닛끼리 카운터를 나눠 쓴다). skillCooldownTimer와 같은 자리.
+    int onHitCountCounter;
+
     // 06번① 능력교체형 트레잇(UnitTraitData.replacementSkill)이 걸려 있으면 원래
     // UnitData.skill 대신 그걸 통째로 쓴다 — 원작이 레벨을 올리는 게 아니라 능력 자체를
     // 갈아끼우는 26분기 중 8개라(UnitRemoveAbilityBJ+UnitAddAbilityBJ), 레벨 인덱스로는
@@ -226,11 +230,25 @@ public class UnitAttacker : MonoBehaviour
     void TryCastOnHitSkill(EnemyDummy attackedTarget)
     {
         SkillData skill = Skill;
-        if (skill == null || skill.triggerType != SkillTriggerType.OnHitChance) return;
+        if (skill == null) return;
+        if (skill.triggerType != SkillTriggerType.OnHitChance && skill.triggerType != SkillTriggerType.OnHitCount)
+            return;
 
         SkillLevel level = CurrentSkillLevel(skill);
         if (level == null || level.effects == null || level.effects.Count == 0) return;
-        if (Random.value >= level.triggerChance) return;
+
+        if (skill.triggerType == SkillTriggerType.OnHitChance)
+        {
+            if (Random.value >= level.triggerChance) return;
+        }
+        else
+        {
+            // OnHitCount: 확률이 아니라 "정확히 N타째" — 원작 특성 24건이 이렇다(SkillData.cs
+            // SkillTriggerType.OnHitCount 주석 참고). 카운터는 이 유닛 인스턴스가 들고 있다.
+            onHitCountCounter++;
+            if (onHitCountCounter < level.hitCountThreshold) return;
+            onHitCountCounter = level.resetTo;
+        }
 
         CastSkillLevel(level, level.range, attackedTarget);
     }

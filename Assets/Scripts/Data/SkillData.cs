@@ -15,6 +15,14 @@ public enum SkillTriggerType
     OnHitChance,
     CooldownAutoCast,
     Aura,
+
+    // ⚠️ 맨 뒤에 추가 — 직렬화 순서를 지킨다.
+    // 확률이 아니라 "정확히 N타째" 발동(원작 특성 26종 발동 게이트 78건 중 24건이 이
+    // 방식이었다, ORIGINAL_TRAIT_PROC_CHANCE.csv — PM 지시 2026-09-05). 원작 예: 마나를
+    // 카운터로 써서 평타마다 +1, 특정 값(샹크스 35·키드 50·센고쿠 75·시라호시 120·루피 160·
+    // 핸콕 175)에 닿으면 그때만 발동하고 되돌린다. OnHitChance(1/N)로 근사하면 기댓값은
+    // 같아도 "정확히 주기적"이라는 원작 감각이 사라져서 별도 타입으로 뗐다.
+    OnHitCount,
 }
 
 // 효과가 누구에게 가는지. 한 스킬(레벨)이 "적에게 피해 + 아군 회복"을 동시에 할 수 있어서
@@ -115,6 +123,18 @@ public class SkillLevel
     [Range(0f, 1f)] public float triggerChance = 1f;
     // 시전·오라 반경.
     public float range;
+
+    // ⚠️ 맨 뒤에 추가 — 직렬화 순서를 지킨다.
+    // OnHitCount 전용 — 카운터(UnitAttacker 인스턴스별, SkillData가 아니다)가 이 값에
+    // 닿으면 발동한다. 다른 발동방식이면 0(안 씀). 0으로 두면 "닿을 수 없다"가 아니라
+    // 정반대로 매 타 발동한다(카운터가 1로 증가한 순간 1>=0이 항상 참) — Tools/
+    // check_required_fields.py가 OnHitCount인데 이 값이 0인 경우를 잡는다.
+    public int hitCountThreshold;
+
+    // OnHitCount 전용 — 발동한 뒤 카운터를 되돌릴 값. 원작이 정확히 0으로 돌리는지 다른
+    // 값으로 돌리는지 리서치담당이 아직 일부(샹크스·쵸파 등)만 확인했다 — 지금은 0
+    // 기본값으로 두고 필드로 빼둔다. 확인되면 이 값만 바꾸면 된다(코드는 안 건드림).
+    public int resetTo;
 
     // 레벨마다 독립된 리스트다 — 통째로 갈아끼운다는 뜻이다. "레벨업 = 값이 커진다"로만
     // 설계했다면 레벨2에서 효과가 하나 더 늘어나는 원작 사례(중력장: Lv2에 25% 확률
