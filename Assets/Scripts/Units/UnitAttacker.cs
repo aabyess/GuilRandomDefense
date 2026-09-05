@@ -109,7 +109,12 @@ public class UnitAttacker : MonoBehaviour
     // **영구 누적이 확정이다** (`UNIT_STATS_RESEARCH.md`).
     // → 제한을 걷어냈다. 무한히 쌓여도 EffectiveArmor가 -20에서 잘리므로 효과는 유계다.
     //
-    // ⚠️ 능력별 상한은 아직 못 넣는다 — TraitEffect에 상한을 담을 자리가 없다.
+    // ⚠️ 2026-09-05 정정(04③): "능력별 상한을 TraitEffect에 담을 자리가 없다"던 게 더 이상
+    // 문제가 아니다 — 방깎은 값을 직접 빼는 게 아니라 EnemyDummy가 들고 있는 원작 표
+    // (A0TK/A0VI/A0VJ)의 레벨을 1 올리는 것으로 바뀌었다(사장님 정정, war3map.w3a 전수
+    // 확인). 상한은 그 표의 길이가 자동으로 정한다 — 여기서는 "방깎이 있는지"만 보고
+    // EffectSum의 크기(옛 "45" 같은 값)는 이제 안 쓴다. Trait 에셋 239개가 전부 effects가
+    // 비어 있어서(2026-09-05 확인) 이 의미 변경으로 깨지는 기존 데이터가 없다.
     void ApplyArmorShred(EnemyDummy target)
     {
         UnitData unitData = identity != null ? identity.Data : null;
@@ -119,9 +124,10 @@ public class UnitAttacker : MonoBehaviour
         if (source == null) return;
 
         float shred = source.EffectSum(unitData, TraitEffectKind.ArmorShred);
-        if (shred > 0f) target.AddArmorShred(shred);
+        if (shred > 0f) target.AddArmorShredStack();
 
-        // 마방깍은 마법 방어 배율을 올린다(= 마법 피해를 더 받게 한다). 방깎과 별개 축이다.
+        // 마방깍은 마법 방어 배율을 올린다(= 마법 피해를 더 받게 한다). 방깎과 별개 축이라
+        // 표 구조가 아니다 — 이번 정정 대상이 아니다.
         float magicShred = source.EffectSum(unitData, TraitEffectKind.MagicArmorShred);
         if (magicShred > 0f) target.AddMagicArmorShred(magicShred);
     }

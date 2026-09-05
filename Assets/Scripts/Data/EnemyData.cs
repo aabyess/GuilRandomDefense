@@ -76,7 +76,9 @@ public class EnemyData : ScriptableObject
 
     public bool isBoss;
 
-    // 물리(AD) 피해만 감폭한다. 마법(AP)은 방어력을 무시한다 — 원작 서술 그대로.
+    // ⚠️ 2026-09-05까지는 "AP는 방어력을 무시한다"고 적혀 있었는데, 사장님 확정(02번)으로
+    // 뒤집혔다 — 스킬 피해(AttackType.Spells)만 이 방어력을 무시하고, 유닛 평타는 AD든
+    // AP든 똑같이 감폭을 탄다. 자세한 분기는 EnemyDummy.MitigatedDamage 참고.
     // 음수도 유효하다: 방깎이 0 아래로 밀어넣으면 피해가 오히려 늘어난다.
     public float armor;
 
@@ -95,6 +97,15 @@ public class EnemyData : ScriptableObject
     public ArmorType armorType = ArmorType.Unassigned;
 
     public GameObject prefab;
+
+    // 방깎 스택이 A0TK 표 하나만 타는지(true), 아니면 A0TK+A0VI+A0VJ 셋 다 타는지(false).
+    // 원작 실측(PM, war3map.w3a 전수, 2026-09-05): "걸어다니는 적(일반 몹+라운드 보스)은
+    // 셋 다, 건물·신세계 4종·해적함대·거대해왕류(19기)는 A0TK만" — 스토리 건물 13개가
+    // 그 19기 중 우리 쪽에 실제로 있는 유일한 카테고리라 여기서는 스토리 건물에만 true를
+    // 준다. 신세계 4종·해적함대·거대해왕류는 우리 데이터에 대응하는 별도 카테고리가 없어서
+    // (이름 매핑 불가 원칙 — Docs 참고) 이번엔 "그 외"(false, 셋 다 적용) 쪽에 그대로 둔다 —
+    // 정확한 경계가 필요해지면 그때 다시 나눌 것. 계산은 EnemyDummy.TableStackedArmorShred 참고.
+    public bool armorShredBuildingOnly;
 
     // 초당 자연회복. 기본 0이라 기존 적은 전부 무영향이다. 원작 바제스(퀘스트 미니보스)
     // `uhpr = 9,900,000`처럼 "체력회복력이 매우 높다"는 게 정체성 자체인 적을 위한 자리 —

@@ -265,12 +265,50 @@ public class EnemyDummy : MonoBehaviour
     // (2026-09-04 원본 확인. 그전까지 0.06을 써서 후반 피해가 2.2~2.8배 낮게 나왔다.)
     public const float DefenseArmor = 0.02f;
 
-    // 이 개체에 걸린 방깎 누적. UnitTraitData의 ArmorShred와 조합표의 `방깍(45)` 능력이 여기 쌓인다.
+    // 도움소·보스 오라 등 "임의의 값을 걸었다 되돌리는" 방깎 — ApplyAllyAuraEffect/
+    // RemoveAllyAuraEffect(위)가 이걸 쓴다. 우리 유닛의 방깎 트레잇은 이제 이 필드를 안 쓴다
+    // (아래 armorShredStacks 참고) — 원작이 "값을 뺀다"가 아니라 "능력 레벨을 올린다"는
+    // 구조였다는 게 밝혀졌기 때문이다(사장님 정정, 2026-09-05, 04③). 둘은 별개 축으로
+    // 공존한다 — EffectiveArmor에서 둘 다 뺀다.
     float armorShred;
+
+    // ⚠️ 2026-09-05 정정: 우리 유닛의 방깎은 "값을 직접 뺀다"가 아니라 "적에게 이미 붙어
+    // 있는 원작 방어력감소 능력(A0TK/A0VI/A0VJ)의 레벨을 1 올린다"였다(사장님, war3map.w3a
+    // 전수 확인). 세 표 다 레벨1(스택0)은 0(효과없음)에서 시작해 스택마다 정해진 만큼
+    // 깎인다 — A0TK만 첫 스택이 유난히 크다(-70, 그 뒤로는 -5씩). 등간격으로 보간하면
+    // 안 되는 이유가 그거다. 스택은 하나로 합쳐 센다 — 어느 트리거가 어느 표를 개별로
+    // 올리는지는 조사 범위 밖(리서치 미완)이라, 방깎이 걸릴 때마다 적용 대상 표 전부를
+    // 같은 스택 수만큼 같이 읽는다.
+    static readonly float[] ArmorShredLevelsA0TK = { 0f, -70f, -75f, -80f, -85f, -90f, -95f, -100f, -105f, -110f, -115f };
+    static readonly float[] ArmorShredLevelsA0VI = { 0f, -3f, -6f, -9f, -12f, -15f, -18f, -21f, -24f, -27f, -30f };
+    static readonly float[] ArmorShredLevelsA0VJ = { 0f, -5f, -10f, -15f, -20f, -25f, -30f, -35f, -40f };
+
+    int armorShredStacks;
+
+    /// <summary>우리 유닛의 방깎 트레잇이 적중할 때마다 부른다 — 값이 아니라 스택 하나를
+    /// 쌓는다. 영구 누적이고(원작 확인, 위 옛 주석 참고) 되돌리는 짝이 없다 — 표 길이에서
+    /// 자동으로 멈추므로 상한을 넘겨도 안전하다.</summary>
+    public void AddArmorShredStack() => armorShredStacks++;
+
+    /// <summary>스택 수를 표 인덱스로 읽어 이 개체에 적용되는 표들의 방어력감소 합을 낸다
+    /// (전부 0 이하 — 그대로 armor에 더하면 깎인다). data.armorShredBuildingOnly면 A0TK만,
+    /// 아니면 셋 다.</summary>
+    float TableStackedArmorShred()
+    {
+        float total = ArmorShredLevelsA0TK[Mathf.Clamp(armorShredStacks, 0, ArmorShredLevelsA0TK.Length - 1)];
+
+        if (data == null || !data.armorShredBuildingOnly)
+        {
+            total += ArmorShredLevelsA0VI[Mathf.Clamp(armorShredStacks, 0, ArmorShredLevelsA0VI.Length - 1)];
+            total += ArmorShredLevelsA0VJ[Mathf.Clamp(armorShredStacks, 0, ArmorShredLevelsA0VJ.Length - 1)];
+        }
+
+        return total;
+    }
 
     /// <summary>방깎을 적용한 실효 방어력. 하한 -20.</summary>
     public float EffectiveArmor =>
-        Mathf.Max(ArmorFloor, (data != null ? data.armor : 0f) - armorShred);
+        Mathf.Max(ArmorFloor, (data != null ? data.armor : 0f) - armorShred + TableStackedArmorShred());
 
     public ArmorType ArmorType => data != null ? data.armorType : ArmorType.Normal;
 
