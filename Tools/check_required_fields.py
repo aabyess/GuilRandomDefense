@@ -161,6 +161,44 @@ check(
     transform_branch_assets,
 )
 
+# ── 8. SkillData: CooldownAutoCast인데 cooldown이 0 — 값 자체가 위험한 기본값 ─
+# ⚠️ 앞의 7개는 "필드가 없다"였지만 이건 "필드는 있는데 값이 0"이다 — cooldown 미기재
+# 시의 C# 기본값(0f)과 값을 0으로 채운 경우가 구분이 안 돼서 같은 위험을 공유한다.
+# UnitAttacker.cs의 `Mathf.Max(0.01f, level.cooldown)`이 cooldown=0을 0.01초로
+# 클램프해 사실상 무제한(초당 최대 100회) 발동이 된다(2026-09-05 구현담당3 발견 —
+# effects가 비어 있는 동안은 TryCastOnHitSkill의 "effects 비면 return" 가드에 막혀
+# 잠들어 있다가, levels[i].effects를 채우는 순간 이 게이트가 풀린다. 실제로 이번
+# 06번① 6종 배정에서 하마터면 그대로 커밋될 뻔했다). 클램프 값(0.01) 자체는 안
+# 건드린다 — 의도적으로 짧게 쓰는 스킬까지 늦춰진다, 검사로 막는 게 맞다(PM 지시).
+def cooldown_danger(text):
+    if not re.search(r"^  triggerType: 1\b", text, re.MULTILINE):
+        return False  # CooldownAutoCast가 아니면 이 클램프 경로를 안 탄다.
+
+    for level_body in re.split(r"\n  - cooldown: ", text)[1:]:
+        cooldown_match = re.match(r"([\d.]+)", level_body)
+        cooldown = float(cooldown_match.group(1)) if cooldown_match else 0.0
+        if cooldown != 0.0:
+            continue
+        effects_match = re.search(r"    effects:(.*?)(?=\n  - cooldown: |\Z)", level_body, re.S)
+        effects_body = effects_match.group(1) if effects_match else ""
+        if re.search(r"^\s*- kind:", effects_body, re.MULTILINE):
+            return True
+    return False
+
+
+skill_assets = glob("Assets/Data/UnitSkills/*.asset") + glob("Assets/Data/EnemySkills/*.asset")
+dangerous_cooldown_assets = [p for p in skill_assets if cooldown_danger(read(p))]
+
+results.append((
+    "SkillData: CooldownAutoCast인데 cooldown=0 (초당 최대 100회)",
+    ["cooldown"],
+    "값 0 — CooldownAutoCast인 레벨의 cooldown이 0(필드 없을 때 기본값과 동일)이면 "
+    "UnitAttacker.Mathf.Max(0.01f, cooldown) 클램프에 걸려 사실상 무제한(초당 최대 100회) "
+    "발동한다. effects가 비어 있는 동안은 무해하지만 채우는 순간 위험해진다.",
+    len(skill_assets),
+    dangerous_cooldown_assets,
+))
+
 # ── 리포트 ───────────────────────────────────────────────────────────────
 any_problem = False
 for label, fields, danger, total, missing in results:
