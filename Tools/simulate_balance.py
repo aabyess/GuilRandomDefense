@@ -20,6 +20,7 @@ import re
 import glob
 import os
 import sys
+import math
 import statistics
 from collections import defaultdict, Counter
 
@@ -490,6 +491,9 @@ def load_skill_assets():
         tc_m = re.search(r"triggerChance: ([\d.]+)", level0)
         trigger_chance = float(tc_m.group(1)) if tc_m else 0.0
 
+        cd_m = re.search(r"-\s*cooldown: ([\d.]+)", level0)
+        cooldown = float(cd_m.group(1)) if cd_m else 0.0
+
         effects = []
         for em in re.finditer(
                 r"- kind: (\d+)\s*\n\s*basis: (\d+)\s*\n\s*target: \d+\s*\n\s*damageType: \d+\s*\n"
@@ -505,6 +509,7 @@ def load_skill_assets():
         skills[guid_m.group(1)] = {
             "trigger_type_idx": trigger_type_idx,
             "trigger_chance": trigger_chance,
+            "cooldown": cooldown,
             "effects": effects,
         }
     return skills
@@ -513,25 +518,50 @@ def load_skill_assets():
 SKILLS = load_skill_assets()
 
 
+def skill_proc_rate(trigger_chance, attack_speed, cooldown):
+    """§19(2026-09-05, PM 지시): OnHitChance 스킬이 발동하면 `cooldown`초 동안
+    "절대쿨" 잠금이 걸린다 — 그 사이엔 평타가 맞아도 발동확률 자체를 안 굴린다
+    (구현담당3이 UnitAttacker에 넣는 중인 것과 같은 규칙).
+
+    타격 간격 Δ=1/공격속도, 발동확률 p, 잠금 L일 때:
+      잠금 동안 흘려보내는 타수 = ceil(L/Δ)  (그동안은 확률을 안 굴린다)
+      발동 1회당 평균 주기 = ceil(L/Δ)·Δ + Δ/p   (뒤 항은 잠금이 풀린 뒤 "몇 번째
+      타격에서 성공하는가"의 기하분포 기댓값)
+      초당 발동 = 1 / 위 주기
+    L=0이면 ceil(0/Δ)=0이라 주기가 Δ/p로 줄어 **기존 식(p×공격속도)과 정확히
+    같다** — 회귀 없음(2026-09-05 확인, 현재 자산 184개 전부 cooldown=0이라
+    이 함수가 실제로 옛 값과 다른 값을 낸 사례는 아직 없다).
+    """
+    if attack_speed <= 0 or trigger_chance <= 0:
+        return 0.0
+    if cooldown <= 0:
+        return trigger_chance * attack_speed
+
+    delta = 1.0 / attack_speed
+    locked_ticks = math.ceil(cooldown / delta)
+    avg_period = locked_ticks * delta + delta / trigger_chance
+    return 1.0 / avg_period if avg_period > 0 else 0.0
+
+
 def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
     """이 유닛의 스킬이 기대 화력에 얼마를 더하는지 — §17(1차, CasterAttackPower만)에
-    §18(2차, Flat·%체력)을 더했다.
+    §18(2차, Flat·%체력), §19(절대쿨 발동주기)를 더했다.
 
     ⚠️ %체력(TargetMaxHpPercent/TargetCurrentHpPercent)은 "적 HP에 비례"해서 고정
     dps 스칼라로 못 접는다 — 이번 라운드 적 HP를 알아야 값이 나온다. 그래서 두
     성분을 분리해서 돌려준다:
-      flat_dps    = 발동확률 × Σ(효과확률×(공격력×배수+추가피해 또는 배수))/공격간격 —
-                    Flat·CasterAttackPower 성분. 기존 kills_capacity 식(÷hp)에 그대로
-                    들어간다.
-      percent_rate = 발동확률 × Σ(효과확률×배수) × 공격속도 — **hp에 안 곱한 채로
-                    반환한다.** 단위가 "초당 죽이는 대상의 비율"이라 hp로 나눌 필요가
-                    없다(대상 hp가 크든 작든 배수만큼의 "비율"을 깎으므로) — 호출부가
-                    그 라운드의 실제 hp를 곱해서 flat_dps와 합친 뒤 기존 공식에 넣는다
+      flat_dps    = 초당발동(skill_proc_rate) × Σ(효과확률×(공격력×배수+추가피해
+                    또는 배수)) — Flat·CasterAttackPower 성분. 기존 kills_capacity
+                    식(÷hp)에 그대로 들어간다.
+      percent_rate = 초당발동 × Σ(효과확률×배수) — **hp에 안 곱한 채로 반환한다.**
+                    단위가 "초당 죽이는 대상의 비율"이라 hp로 나눌 필요가 없다(대상
+                    hp가 크든 작든 배수만큼의 "비율"을 깎으므로) — 호출부가 그
+                    라운드의 실제 hp를 곱해서 flat_dps와 합친 뒤 기존 공식에 넣는다
                     (build_median_by_armor/run_backlog_dt 참고). UnitAttacker.
                     ResolveSkillEffectValue의 %체력 두 case가 bonus를 안 쓰는 것과
                     똑같이 여기서도 bonus는 무시한다.
-    OnHitChance가 아니면(쿨다운형·오라형, 2차에도 일부 섞여 있다 — 아직 cooldown 값이
-    0인 미완성 상태로 보여 이번엔 제외했다, §19에서 재확인) 전부 0을 준다.
+    OnHitChance가 아니면(쿨다운형·오라형·OnHitCount, PM 지시로 OnHitCount는 이번에도
+    적용 대상 아님 — 원작 동시 사례 미확인) 전부 0을 준다.
     반환: (flat_dps, percent_rate, 대표 attack_type_idx 또는 None).
     """
     skill = SKILLS.get(skill_guid) if skill_guid else None
@@ -554,9 +584,9 @@ def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
             percent_per_hit += eff["chance"] * eff["multiplier"]
             attack_type_idx = eff["attack_type_idx"]
 
-    trigger_chance = skill["trigger_chance"]
-    return (trigger_chance * flat_per_hit * attack_speed,
-            trigger_chance * percent_per_hit * attack_speed,
+    rate = skill_proc_rate(skill["trigger_chance"], attack_speed, skill["cooldown"])
+    return (rate * flat_per_hit,
+            rate * percent_per_hit,
             attack_type_idx)
 
 
