@@ -129,4 +129,13 @@ public class EnemyData : ScriptableObject
     // 루트는 그대로 둔다(콜라이더까지 커지면 유닛이 밀려나 사거리 밖으로 나갈 수 있다).
     // 1.0(기본)이면 기존 적은 전부 무영향.
     public float visualScale = 1f;
+
+    // ⚠️ 맨 뒤에 추가 — 직렬화된 값이 밀린다.
+    // %현재체력/%최대체력 비례 스킬 피해에만 곱하는 대상별 감수성 계수(원작 A11S, 리서치담당
+    // 원작 보스전 조사, 2026-09-05). 일반 피해(Flat·CasterAttackPower 등)엔 곱하지 않는다 —
+    // UnitAttacker.ResolveSkillEffectValue가 그 분기를 잡는다.
+    // 원작 공식: 피해 = 대상 현재체력 × 0.10 × (0.20 + 0.05 × A11S레벨). 원작 값 그대로:
+    // 보스 레벨16→1.00(=기본값, 아래서 안 건드림), 일반 적 레벨14→0.90.
+    // 광폭화 소환체 전용 레벨1→0.25는 그 유닛 자체가 우리에 없어서 안 옮긴다.
+    public float percentDamageTaken = 1f;
 }

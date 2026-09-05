@@ -370,6 +370,12 @@ public class EnemyDummy : MonoBehaviour
 
     public ArmorType ArmorType => data != null ? data.armorType : ArmorType.Normal;
 
+    /// <summary>%비례 스킬 피해(TargetMaxHpPercent/TargetCurrentHpPercent)에만 곱하는
+    /// 대상별 감수성 계수(원작 A11S) — 일반 피해엔 안 쓴다. UnitAttacker.
+    /// ResolveSkillEffectValue의 %비례 두 case가 이 값을 곱한다. EnemyData.percentDamageTaken
+    /// 참고.</summary>
+    public float PercentDamageTakenMultiplier => data != null ? data.percentDamageTaken : 1f;
+
     // 마방깍 누적. 마법 방어는 배율이라, 깎으면 배율이 **올라간다**(피해를 더 받는다).
     float magicArmorShred;
 

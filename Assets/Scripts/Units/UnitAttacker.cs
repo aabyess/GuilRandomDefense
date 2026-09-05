@@ -257,13 +257,13 @@ public class UnitAttacker : MonoBehaviour
                 {
                     if (enemy == null) continue;
                     if (range > 0f && Vector3.Distance(enemy.transform.position, transform.position) > range) continue;
-                    DealSkillDamage(effect, enemy);
+                    ApplyToEnemy(effect, enemy);
                 }
                 break;
 
             case SkillTargetKind.SingleTarget:
                 EnemyDummy target = primaryTarget != null ? primaryTarget : FindClosestEnemyWithin(range);
-                if (target != null) DealSkillDamage(effect, target);
+                if (target != null) ApplyToEnemy(effect, target);
                 break;
 
             case SkillTargetKind.Self:
@@ -294,8 +294,13 @@ public class UnitAttacker : MonoBehaviour
         switch (effect.basis)
         {
             case SkillEffectBasis.Flat: return effect.multiplier;
-            case SkillEffectBasis.TargetMaxHpPercent: return target.MaxHp * effect.multiplier;
-            case SkillEffectBasis.TargetCurrentHpPercent: return target.Hp * effect.multiplier;
+            // %비례 피해에만 PercentDamageTakenMultiplier(원작 A11S, 대상별 감수성 계수)를
+            // 곱한다 — 일반 피해(Flat/CasterAttackPower 등)엔 곱하지 않는다(PM 지시,
+            // 2026-09-05, 리서치담당 원작 보스전 조사). EnemyData.percentDamageTaken 참고.
+            case SkillEffectBasis.TargetMaxHpPercent:
+                return target.MaxHp * effect.multiplier * target.PercentDamageTakenMultiplier;
+            case SkillEffectBasis.TargetCurrentHpPercent:
+                return target.Hp * effect.multiplier * target.PercentDamageTakenMultiplier;
             case SkillEffectBasis.CasterAttackPower: return AttackDamage * effect.multiplier + effect.bonus;
             // 연구소(05번, 구현담당1)가 서면 실제 단계값을 여기서 곱한다 — 지금은 자리만이라
             // bonus만 돌려준다(대개 0이라 사실상 무효).
@@ -304,11 +309,37 @@ public class UnitAttacker : MonoBehaviour
         }
     }
 
+    // 적 하나에게 효과 하나를 적용한다 — kind별로 갈린다. ApplySkillEffect의 Enemies/
+    // SingleTarget 갈래가 여길 거친다(Self/Allies는 ApplyToAlly, 아직 아무 것도 안 한다).
+    void ApplyToEnemy(SkillEffect effect, EnemyDummy target)
+    {
+        switch (effect.kind)
+        {
+            case SkillEffectKind.Damage:
+                DealSkillDamage(effect, target);
+                break;
+
+            // 일반 행동정지 스턴만이다 — 원작의 "게이지를 미는 스턴"(신세계 사이드보스
+            // 전용, 우리에 그 시스템 자체가 없다)은 안 만든다. SupportShop.StunRoutine·
+            // UnitAttacker.CritStunRoutine과 같은 패턴: AddFreeze/RemoveFreeze는 겹침
+            // 횟수를 세므로 다른 스턴원과 동시에 걸려도 서로를 밀어내지 않는다.
+            case SkillEffectKind.Stun:
+                if (effect.duration > 0f) StartCoroutine(SkillStunRoutine(target, effect.duration));
+                break;
+
+            // ArmorBreak/ExtraProjectile은 아직 값 의미가 없다(이번 작업 범위 밖) — 조용히 무시.
+        }
+    }
+
+    IEnumerator SkillStunRoutine(EnemyDummy target, float duration)
+    {
+        target.AddFreeze();
+        yield return new WaitForSeconds(duration);
+        if (target != null) target.RemoveFreeze();
+    }
+
     void DealSkillDamage(SkillEffect effect, EnemyDummy target)
     {
-        // Stun·ArmorBreak·ExtraProjectile은 아직 값 의미가 없다 — Damage만 실제로 때린다.
-        if (effect.kind != SkillEffectKind.Damage) return;
-
         float amount = ResolveSkillEffectValue(effect, target);
         if (amount <= 0f) return;
 
