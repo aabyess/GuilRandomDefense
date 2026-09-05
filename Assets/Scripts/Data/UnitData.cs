@@ -241,6 +241,13 @@ public class UnitData : ScriptableObject
     public float attackSpeed;   // 초당 공격 횟수 (1.2 = 1초에 1.2번). UnitAttacker에서 1/attackSpeed로 간격 환산
     public float moveSpeed;
     public SkillData skill;
+
+    // 이 유닛을 대상으로 하는 특성강화(06번). UnitTraitData.targetUnit의 역참조다 — 골드/조합
+    // 재료처럼 "이 유닛이 곧 그 자체로 대상"이라 별도 레지스트리를 두지 않고 skill과 같은
+    // 방식(유닛→에셋 직접 참조)으로 둔다. 원작 26분기만 채워져 있고(06번①) 나머지 213종은
+    // null이다 — GameHud의 특성강화 버튼이 null이면 버튼 자체를 숨긴다.
+    public UnitTraitData trait;
+
     public GameObject prefab;
 
     // 평타 강화(원작 Bash, war3map.w3a ACbh 기반 469개 중 실효 137개). 평타가 적중할 때마다

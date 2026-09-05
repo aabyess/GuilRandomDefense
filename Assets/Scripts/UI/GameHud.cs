@@ -52,6 +52,16 @@ public class GameHud : MonoBehaviour
     RoundManager roundManager;
     CombineSystem combineSystem;
 
+    // 특성강화(06번) 버튼 — 단일 선택 + UnitData.trait가 있을 때만 뜬다. 원작은 상점이 아니라
+    // "그 유닛을 선택한 채로 버튼 하나"라(Trig_T_Ability_hero_Conditions), 명령 카드 그리드
+    // (조합·상점 전용, 이미 13칸 다 참)와는 별개 자리에 둔다.
+    GameObject traitButtonPanel;
+    Text traitButtonText;
+    Button traitButtonComponent;
+    UnitTraitData lastTraitButtonTrait;
+    bool lastTraitButtonUnlocked;
+    int lastTraitButtonPoints = int.MinValue;
+
     // 조합 카드(레시피) 12칸. 유닛 카드와 같은 패턴 — 미리 만들어두고 내용만 바꾼다.
     const float RecipeRefreshInterval = 0.4f;
     static readonly List<CombineRecipe> EmptyRecipes = new List<CombineRecipe>();
@@ -149,6 +159,7 @@ public class GameHud : MonoBehaviour
         RefreshInventoryPanel();
         RefreshShopTargeting();
         RefreshHoveredTooltip();
+        RefreshTraitButton();
     }
 
     void OnDestroy()
@@ -206,6 +217,7 @@ public class GameHud : MonoBehaviour
         BuildTopBar();
         BuildStoryPanel();
         BuildTeamPanel();
+        BuildTraitButton();
         // 왼쪽 유닛 목록은 만들지 않는다. 화면 절반을 덮는데, 무엇을 들고 있는지는
         // 아래 명령 카드 그리드가 이미 보여준다. (F1 디버그 HUD에도 같은 목록이 있다.)
 
@@ -284,6 +296,115 @@ public class GameHud : MonoBehaviour
 
         Text text = CreateLabel(obj.transform, name + "Label", label);
         text.fontSize = 18;
+    }
+
+    // StoryPanel(0.01~0.5)과 TeamPanel(0.71~0.99) 사이, 같은 높이띠에 낀다 — 기존 앵커를
+    // 하나도 안 건드리고 빈 자리에 끼워 넣는 자리다.
+    void BuildTraitButton()
+    {
+        RectTransform panel = CreatePanel(transform, "TraitButtonPanel", new Color(1f, 1f, 1f, 0.15f));
+        SetAnchors(panel, new Vector2(0.51f, 0.90f), new Vector2(0.70f, 0.95f));
+
+        Button button = panel.gameObject.AddComponent<Button>();
+        button.onClick.AddListener(OnTraitButtonClicked);
+
+        traitButtonText = CreateLabel(panel, "TraitButtonText", "");
+        traitButtonText.fontSize = 16;
+        traitButtonText.raycastTarget = false;
+
+        traitButtonPanel = panel.gameObject;
+        traitButtonComponent = button;
+        traitButtonPanel.SetActive(false);
+    }
+
+    // 단일 선택 + UnitData.trait가 있을 때만 보인다. 06번 26분기 외 213종은 trait가 null이라
+    // 버튼 자체가 안 뜬다 — "능력이 없는 유닛"과 "특성강화가 아직 없는 유닛"을 구분하지 않는다
+    // (원작도 능력강화가 없는 유닛은 그 조건 함수 자체가 없다).
+    void RefreshTraitButton()
+    {
+        if (traitButtonPanel == null) return;
+
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1) { HideTraitButton(); return; }
+
+        Selectable single = selection.Selected[0];
+        if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null)
+        { HideTraitButton(); return; }
+
+        UnitTraitData trait = identity.Data.trait;
+        if (trait == null) { HideTraitButton(); return; }
+
+        // 소유자가 없는 유닛(중립·디버그)은 특성포인트를 낼 플레이어가 없다 — 버튼을 안 보인다.
+        if (!single.TryGetComponent(out OwnedByPlayer owner)) { HideTraitButton(); return; }
+
+        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        UnitUpgrades upgrades = context != null ? context.UnitUpgrades : null;
+        if (upgrades == null) { HideTraitButton(); return; }
+
+        bool unlocked = upgrades.IsUnlocked(trait);
+        int points = upgrades.TraitPoints;
+
+        traitButtonPanel.SetActive(true);
+
+        // 다른 Refresh들과 같은 관례 — 값이 안 바뀌었으면 텍스트를 다시 안 만든다.
+        if (trait == lastTraitButtonTrait && unlocked == lastTraitButtonUnlocked && points == lastTraitButtonPoints)
+            return;
+
+        lastTraitButtonTrait = trait;
+        lastTraitButtonUnlocked = unlocked;
+        lastTraitButtonPoints = points;
+
+        if (unlocked)
+        {
+            traitButtonText.text = $"{trait.traitName}\n습득 완료";
+            traitButtonComponent.interactable = false;
+        }
+        else
+        {
+            traitButtonText.text = $"특성강화\n({trait.costTraitPoints}pt, 보유 {points}pt)";
+            traitButtonComponent.interactable = points >= trait.costTraitPoints;
+        }
+    }
+
+    void HideTraitButton()
+    {
+        if (traitButtonPanel != null && traitButtonPanel.activeSelf) traitButtonPanel.SetActive(false);
+        lastTraitButtonTrait = null;
+        lastTraitButtonPoints = int.MinValue;
+    }
+
+    // 원작 순서(Trig_T_Ability_hero_Conditions) 그대로: 이미 샀는가 → 포인트가 충분한가
+    // (모자라면 아무것도 안 바뀌고 리턴 — 실패 경로가 포인트를 먹으면 안 된다) → 차감 → Unlock.
+    // TrySpendTraitPoints가 확인+차감을 한 호출로 묶어서 그 사이 다른 소비가 못 끼어든다.
+    void OnTraitButtonClicked()
+    {
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1) return;
+
+        Selectable single = selection.Selected[0];
+        if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null) return;
+
+        UnitTraitData trait = identity.Data.trait;
+        if (trait == null) return;
+
+        if (!single.TryGetComponent(out OwnedByPlayer owner)) return;
+
+        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        UnitUpgrades upgrades = context != null ? context.UnitUpgrades : null;
+        if (upgrades == null) return;
+
+        if (upgrades.IsUnlocked(trait)) return;
+
+        if (!upgrades.TrySpendTraitPoints(trait.costTraitPoints))
+        {
+            Debug.Log("특성 포인트가 부족합니다!");
+            return;
+        }
+
+        upgrades.Unlock(trait);
+
+        // 다음 정기 갱신을 안 기다리고 바로 라벨을 다시 그린다.
+        lastTraitButtonPoints = int.MinValue;
     }
 
     void BuildTeamPanel()
@@ -578,6 +699,13 @@ public class GameHud : MonoBehaviour
         // 실패하면(카드만 흐려짐) 버그로 보인다(PM 지시 2026-09-05).
         if (recipe.requiredSaveCount > 0)
             tooltipBuilder.Append("\n(클리어 ").Append(recipe.requiredSaveCount).Append("회 필요)");
+
+        // maxRound도 같은 이유로 표시한다 — 지금은 제한됨_강보명 1개뿐이지만 minRound는
+        // 전부 0이라 아직 아무 데도 안 뜬다(값이 생기면 그때 저절로 뜬다).
+        if (recipe.minRound > 0)
+            tooltipBuilder.Append("\n(R").Append(recipe.minRound).Append("부터)");
+        if (recipe.maxRound > 0)
+            tooltipBuilder.Append("\n(R").Append(recipe.maxRound).Append("까지만)");
 
         return tooltipBuilder.ToString();
     }

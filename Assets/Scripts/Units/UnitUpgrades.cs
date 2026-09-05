@@ -31,6 +31,18 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
         OnTraitPointsChanged?.Invoke();
     }
 
+    /// <summary>특성강화 구매 진입점(06번, GameHud "특성강화" 버튼)이 부른다. 원작 순서 그대로
+    /// "확인 다 하고 나서 차감" — 모자라면 false를 돌려주고 아무것도 안 바뀐다. 이 메서드
+    /// 자체가 확인+차감을 한 호출로 묶어서, 호출부가 "확인하고 나중에 따로 차감"하다 그 사이
+    /// 다른 소비가 끼어드는 경우를 원천적으로 막는다.</summary>
+    public bool TrySpendTraitPoints(int amount)
+    {
+        if (amount <= 0 || TraitPoints < amount) return false;
+        TraitPoints -= amount;
+        OnTraitPointsChanged?.Invoke();
+        return true;
+    }
+
     bool startingPointGranted;
     bool purchasedPointGranted;
     bool storyPointGranted;
