@@ -87,26 +87,24 @@ public class UnitTraitData : ScriptableObject
     // 갖는 사례가 없다.
     public SkillData replacementSkill;
 
-    // ⚠️ 06번③(변신, 26분기 중 2개) 전용 그릇 — 아직 아무도 안 읽는다. 원작은 `RemoveUnit`
-    // 후 새 유닛을 `CreateNUnitsAtLoc`으로 만들고 경험치·STR/AGI/INT를 이월한다(우리는 그
-    // 개념이 없어 이월할 것도 없다 — 유닛 교체 자체만 하면 된다). 이 트레잇을 언락하면
-    // targetUnit의 살아있는 개체를 이 필드로 바꿔야 하는데, 그 메커니즘은 아직 안 짰다 —
-    // CombineSystem.TryCombine이 쓰는 "재료 UnitIdentity.Consume() 후 UnitSpawner로 결과
-    // 생성" 패턴을 재료 여러 개가 아니라 자기 자신 하나만 소모하는 형태로 재사용하면 될
-    // 것으로 보이나(PM 지시, 2026-09-05), 새 CombineRecipe를 만드는 것도 아니고 트레잇
-    // 언락 시점에 실행할 새 진입점이 필요해서 06번③ 실제 착수 때 따로 설계한다.
+    // 06번③(변신, 26분기 중 2개) 대상 유닛. 실행 메커니즘은 GameHud.ExecuteTransform이다
+    // (2026-09-05 완성 — CombineSystem.TryCombine의 "재료 Consume() 후 UnitSpawner로 결과
+    // 생성" 패턴을 자기 자신 하나만 소모하는 형태로 재사용했다, 그 주석에 무엇을 잇고
+    // 무엇을 버리는지 적어뒀다).
     //
-    // 원작 변신 목적지(H0B1·H097→H0B1, H091→H093)가 우리 로스터의 어떤 유닛이 될지는
+    // 원작 변신 목적지(H097→H0B1 아오키지, H091→H093 쵸파)가 우리 로스터의 어떤 유닛이 될지는
     // 아직 안 정했다(사장님 배정 대기) — 이 필드를 null로 비워두고 원작 유닛ID만
-    // description에 적어 억지로 짝짓지 않는다.
+    // description에 적어 억지로 짝짓지 않는다. **null인 동안은 메커니즘이 있어도 절대 안
+    // 불린다** — GameHud가 구매 자체를 막는다(아래 isTransformType 코멘트 참고).
     public UnitData transformIntoUnit;
 
     // ⚠️ transformIntoUnit==null만으로는 "변신형인데 목적지가 아직 없다"와 "애초에 변신형이
-    // 아니다"를 못 가른다 — 그래서 따로 뒀다. GameHud의 특성강화 버튼이 이걸로 구매 자체를
-    // 막는다(06번, PM 지시 2026-09-05): 언락은 HashSet.Add라 되돌릴 수 없는데, 변신형은
-    // 실행 메커니즘(위 코멘트)이 아직 없어서 포인트만 나가고 아무 일도 안 일어난다 — 다른
-    // 23개(effects가 비어도 구조는 다 이어져 값이 오면 바로 동작)와 이 둘만 다르다.
-    // 06번③이 실제로 만들어지면 GameHud.RefreshTraitButton/OnTraitButtonClicked의
-    // "trait.isTransformType" 검사 두 줄을 지우면 풀린다.
+    // 아니다"를 못 가른다 — 그래서 따로 뒀다. GameHud의 특성강화 버튼이 `isTransformType &&
+    // transformIntoUnit == null`이면 "변신 대상 미정"으로 구매 자체를 막는다(2026-09-05
+    // 사장님 지시로 조건이 바뀌었다 — 예전엔 "메커니즘이 없어서" 막았지만 이제 메커니즘은
+    // 있고 "대상이 없어서" 막힌 것이다). 언락은 HashSet.Add라 되돌릴 수 없어서, 대상이
+    // 정해지기 전엔 포인트를 아예 못 쓰게 막는 게 맞다 — 다른 23개(effects가 비어도 구조는
+    // 다 이어져 값이 오면 바로 동작)와 이 둘만 다르다. transformIntoUnit이 채워지면 이
+    // 필드는 그대로 두고 그 값만 넣으면 된다 — 코드를 더 지울 것 없다.
     public bool isTransformType;
 }

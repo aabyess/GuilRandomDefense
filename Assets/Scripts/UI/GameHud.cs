@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
@@ -51,6 +52,7 @@ public class GameHud : MonoBehaviour
 
     RoundManager roundManager;
     CombineSystem combineSystem;
+    UnitSpawner unitSpawner;
 
     // 특성강화(06번) 버튼 — 단일 선택 + UnitData.trait가 있을 때만 뜬다. 원작은 상점이 아니라
     // "그 유닛을 선택한 채로 버튼 하나"라(Trig_T_Ability_hero_Conditions), 명령 카드 그리드
@@ -142,6 +144,11 @@ public class GameHud : MonoBehaviour
     CombineSystem CombineSystemRef => combineSystem != null
         ? combineSystem
         : combineSystem = FindFirstObjectByType<CombineSystem>();
+
+    // 06번③ 변신 실행(ExecuteTransform)이 쓴다 — CombineSystem.Spawner와 같은 지연 조회 관례.
+    UnitSpawner Spawner => unitSpawner != null
+        ? unitSpawner
+        : unitSpawner = FindFirstObjectByType<UnitSpawner>();
 
     void Awake()
     {
@@ -334,23 +341,6 @@ public class GameHud : MonoBehaviour
         UnitTraitData trait = identity.Data.trait;
         if (trait == null) { HideTraitButton(); return; }
 
-        // ⚠️ 변신형(트레잇 3종 중 2개)은 언락 자체는 되지만(HashSet.Add라 되돌릴 수 없다)
-        // 실제로 유닛을 바꾸는 실행 메커니즘이 아직 없다(06번③ 미착수, UnitTraitData.
-        // isTransformType 코멘트 참고) — 그대로 두면 포인트만 나가고 아무 일도 안 일어나는
-        // 게 버그와 구분이 안 된다(PM 지시, 2026-09-05). 숨기지 않고 사유를 보여준다 —
-        // 숨기면 "이 유닛엔 특성이 없다"로 읽힌다. 06번③이 생기면 이 if 블록만 지우면 풀린다.
-        if (trait.isTransformType)
-        {
-            traitButtonPanel.SetActive(true);
-            if (trait != lastTraitButtonTrait)
-            {
-                lastTraitButtonTrait = trait;
-                traitButtonText.text = $"{trait.traitName}\n변신은 준비 중입니다";
-                traitButtonComponent.interactable = false;
-            }
-            return;
-        }
-
         // 소유자가 없는 유닛(중립·디버그)은 특성포인트를 낼 플레이어가 없다 — 버튼을 안 보인다.
         if (!single.TryGetComponent(out OwnedByPlayer owner)) { HideTraitButton(); return; }
 
@@ -374,6 +364,15 @@ public class GameHud : MonoBehaviour
         if (unlocked)
         {
             traitButtonText.text = $"{trait.traitName}\n습득 완료";
+            traitButtonComponent.interactable = false;
+        }
+        // ⚠️ 06번③(변신) — 메커니즘(ExecuteTransform)은 있지만 목적지(transformIntoUnit)가
+        // 아직 사장님 배정 전이라 null이다. 예전엔 "메커니즘이 없어서" 막혀 있었지만, 이제는
+        // "대상이 없어서" 막힌 것이다(PM 지시 2026-09-05) — transformIntoUnit이 채워지는
+        // 순간 이 else if 없이 바로 아래 else(구매) 분기로 자연히 넘어간다.
+        else if (trait.isTransformType && trait.transformIntoUnit == null)
+        {
+            traitButtonText.text = $"{trait.traitName}\n변신 대상 미정";
             traitButtonComponent.interactable = false;
         }
         else
@@ -405,8 +404,8 @@ public class GameHud : MonoBehaviour
         if (trait == null) return;
 
         // 방어적 재확인 — 버튼이 non-interactable이라 정상 경로로는 여기까지 안 온다.
-        // 06번③이 생기면 이 줄만 지우면 풀린다(RefreshTraitButton의 같은 검사와 짝).
-        if (trait.isTransformType) return;
+        // RefreshTraitButton의 같은 검사와 짝(transformIntoUnit이 채워지기 전엔 여기서 막힌다).
+        if (trait.isTransformType && trait.transformIntoUnit == null) return;
 
         if (!single.TryGetComponent(out OwnedByPlayer owner)) return;
 
@@ -424,9 +423,72 @@ public class GameHud : MonoBehaviour
 
         upgrades.Unlock(trait);
 
+        // Unlock 이후에 실행한다 — 실행이 실패해도(스포너 못 찾음 등) 언락 자체는 이미
+        // 되돌릴 수 없으니(HashSet.Add) 순서를 바꿔봤자 의미가 없고, 오히려 언락 전에
+        // 유닛을 먼저 없애면 실패 시 포인트도 나가고 유닛도 사라지는 최악의 경우가 된다.
+        if (trait.isTransformType)
+        {
+            ExecuteTransform(identity, trait, owner.OwnerId);
+        }
+
         // 다음 정기 갱신을 안 기다리고 바로 라벨을 다시 그린다.
         lastTraitButtonPoints = int.MinValue;
     }
+
+    // 06번③ 변신 실행. CombineSystem.TryCombine의 뼈대(재료 UnitIdentity.Consume() → 결과
+    // UnitSpawner.Spawn())를 "재료 여러 개"에서 "자기 자신 하나"로 좁혀 재사용한다(PM 지시
+    // 2026-09-05) — CombineSystem 자체는 만지지 않는다(레시피 목록 기반이라 이 경로와 모양이
+    // 안 맞고, 그 파일은 구현담당1 소유일 수 있다).
+    //
+    // 원작(Trig_T_Ability_hero_Actions, #011 H097→H0B1 아오키지·#016 H091→H093 쵸파)은
+    // RemoveUnit 후 CreateNUnitsAtLoc으로 새 유닛을 만들고 GetHeroXP/GetHeroStatBJ로 뽑은
+    // 경험치·STR/AGI/INT를 새 유닛에 되돌린다. **우리는 그 축(레벨·능력치) 자체가 없어서
+    // 이어받을 게 없다** — 대신 우리 쪽에서 실제로 이어져야 하는 건:
+    //   · 소유자(ownerId)  — Consume()이 옛 것을 지우고, Spawn(..., ownerId)이 새 것을 같은
+    //     플레이어 소유로 만든다.
+    //   · 위치            — 옛 유닛이 서 있던 자리 근처(NavMesh 샘플링, CombineSystem.
+    //     ResolveResultPosition과 같은 이유 — 새 유닛의 이동 능력이 옛 유닛과 다를 수 있어
+    //     areaMask를 새로 잰다)에 새 유닛을 놓는다.
+    //   · 인벤토리 등록    — Consume()이 옛 것을 UnitInventory에서 빼고, Spawn()이 새 것을
+    //     넣는다(둘 다 기존 경로 그대로, 새 코드 없음).
+    //   · 선택 상태        — 옛 유닛이 선택돼 있었으니 새 유닛도 선택해 넘긴다. 안 하면
+    //     변신하자마자 선택이 풀려 방금 바뀐 유닛의 상태(체력바 등)를 못 본다.
+    // 버리는 것: 전투 상태(UnitCombat의 추적 대상·이동 명령·홀딩)는 새 유닛이 항상 Idle로
+    // 시작한다 — 원작도 경험치·능력치 말고는 아무것도 안 옮긴다.
+    //
+    // transformIntoUnit은 사장님 배정 전까지 null이라(H0B1·H097→H0B1, H091→H093이 우리
+    // 로스터의 어떤 유닛이 될지 미정) 이 메서드는 지금 절대 안 불린다 — 호출부(위)가
+    // transformIntoUnit==null이면 구매 자체를 막는다.
+    void ExecuteTransform(UnitIdentity oldIdentity, UnitTraitData trait, int ownerId)
+    {
+        UnitSpawner spawner = Spawner;
+        if (spawner == null)
+        {
+            // 포인트는 이미 나갔다(Unlock 이전 순서 주석 참고) — 되돌리지 않는다. 조합·
+            // 뽑기 등 다른 소비 경로도 스포너가 없으면 이 이상은 실패로 남긴다.
+            Debug.LogWarning("GameHud: UnitSpawner를 찾지 못해 변신을 실행하지 못했습니다 " +
+                              "(특성 포인트는 이미 차감됐습니다).", this);
+            return;
+        }
+
+        Vector3 oldPosition = oldIdentity.transform.position;
+        int areaMask = UnitSpawner.ComputeAreaMask(trait.transformIntoUnit.movementAbility);
+        Vector3 spawnPosition = NavMesh.SamplePosition(oldPosition, out NavMeshHit hit, TransformSampleRadius, areaMask)
+            ? hit.position
+            : oldPosition;
+
+        oldIdentity.Consume();
+
+        GameObject newUnit = spawner.Spawn(trait.transformIntoUnit, spawnPosition, ownerId);
+        if (newUnit != null && newUnit.TryGetComponent(out Selectable newSelectable))
+        {
+            Selection?.SelectOnly(newSelectable);
+        }
+    }
+
+    // CombineSystem.ResultSampleRadius와 같은 값·같은 이유 — 자리가 NavMesh 경계에 살짝
+    // 걸쳐 있어도 실제로 밟을 수 있는 땅 근처로 붙인다.
+    const float TransformSampleRadius = 4f;
 
     void BuildTeamPanel()
     {
