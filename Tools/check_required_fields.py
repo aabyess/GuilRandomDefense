@@ -432,6 +432,63 @@ def onhitcount_missing_gaugekind(text):
 
 onhitcount_missing_gaugekind_warnings = [p for p in skill_assets if onhitcount_missing_gaugekind(read(p))]
 
+# ── 16. SkillEffect: randMin > randMax — 난수 범위가 뒤집힘 ─────────────────
+# ⚠️ 2026-09-06 신설(원작 RRD 난수 배율 연결, PM 지시) — 원작 RRD(c, min, max, …)의
+# "실제 피해 = c × GetRandomReal(min, max)"에서 min/max를 그대로 옮기다 순서가 뒤집히면
+# UnitAttacker.RandomDamageMultiplier의 Random.Range(min, max)가 이상한 범위를 굴린다.
+# 필드 자체가 없으면 C# 기본값 1f/1f라(SkillData.cs) 이 검사에 안 걸린다 — 회귀 없음.
+def rand_min_gt_max(text):
+    for level_body in re.split(r"\n  - cooldown: ", text)[1:]:
+        effects_match = re.search(r"    effects:(.*?)(?=\n  - cooldown: |\Z)", level_body, re.S)
+        effects_body = effects_match.group(1) if effects_match else ""
+
+        for effect_body in re.split(r"\n    - kind: ", effects_body)[1:]:
+            min_m = re.search(r"\n {6}randMin: (-?[\d.]+)", effect_body)
+            max_m = re.search(r"\n {6}randMax: (-?[\d.]+)", effect_body)
+            if min_m is None or max_m is None:
+                continue  # 둘 다(혹은 한쪽) 없으면 기본값 1이라 뒤집힐 수가 없다.
+            if float(min_m.group(1)) > float(max_m.group(1)):
+                return True
+    return False
+
+
+rand_min_gt_max_assets = [p for p in skill_assets if rand_min_gt_max(read(p))]
+
+results.append((
+    "SkillEffect: randMin > randMax (난수 범위가 뒤집힘)",
+    ["randMin", "randMax"],
+    "UnitAttacker.RandomDamageMultiplier가 Random.Range(randMin, randMax)를 그대로 돌린다 "
+    "— min>max로 뒤집히면 원작 RRD의 min/max 순서를 잘못 옮긴 것이다.",
+    len(skill_assets),
+    rand_min_gt_max_assets,
+))
+
+# ── 17. SkillEffect: randMin < 0 — 음수 난수 배율 하한 ──────────────────────
+# ⚠️ 리서치담당 RRD 649건 전수에서 음수 배율은 0건이었다 — 있으면 데이터 오타일 가능성이
+# 높다(원작 그대로 옮겼다면 절대 안 나올 값).
+def rand_min_negative(text):
+    for level_body in re.split(r"\n  - cooldown: ", text)[1:]:
+        effects_match = re.search(r"    effects:(.*?)(?=\n  - cooldown: |\Z)", level_body, re.S)
+        effects_body = effects_match.group(1) if effects_match else ""
+
+        for effect_body in re.split(r"\n    - kind: ", effects_body)[1:]:
+            min_m = re.search(r"\n {6}randMin: (-?[\d.]+)", effect_body)
+            if min_m is not None and float(min_m.group(1)) < 0:
+                return True
+    return False
+
+
+rand_min_negative_assets = [p for p in skill_assets if rand_min_negative(read(p))]
+
+results.append((
+    "SkillEffect: randMin < 0 (음수 난수 배율)",
+    ["randMin"],
+    "난수 배율 하한이 음수면 피해 부호가 뒤집힐 수 있다 — 리서치담당 RRD 649건 전수에 "
+    "음수 사례가 0건이라, 있으면 원작을 잘못 옮긴 데이터일 가능성이 높다.",
+    len(skill_assets),
+    rand_min_negative_assets,
+))
+
 # ── 리포트 ───────────────────────────────────────────────────────────────
 any_problem = False
 for label, fields, danger, total, missing in results:

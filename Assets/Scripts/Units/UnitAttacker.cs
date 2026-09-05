@@ -580,7 +580,33 @@ public class UnitAttacker : MonoBehaviour
     // recentAttackDamage: SkillEffectBasis.ReceivedDamage 전용 — 이 효과를 일으킨 평타의
     // 피해량(원작 GetEventDamage(), 2026-09-06 PM 지시로 연결). CooldownAutoCast/Aura
     // 경로에선 그런 문맥이 없어 0이 들어온다(CastSkillLevel 주석 참고).
+    //
+    // ⚠️ 2026-09-06 추가(리서치담당 전수, PM 지시): 원작 RRD(시전자, 대상, c, min, max,
+    // 공격타입, 피해타입)의 "실제 피해 = c × GetRandomReal(min, max)"에서 지금까지 c만
+    // 옮기고 4·5번째 인자(난수 배율)를 통째로 무시해왔다(RRD 649건 중 152건=23.4%가
+    // 배율≠1). basis가 무엇이든 c 전체를 감싸는 배율이라 — basis별 switch 안쪽이 아니라
+    // **여기 최종 결과 하나에만 곱한다**(RandomDamageMultiplier 참고).
     float ResolveSkillEffectValue(SkillEffect effect, EnemyDummy target, float recentAttackDamage)
+    {
+        return ResolveBaseSkillEffectValue(effect, target, recentAttackDamage) * RandomDamageMultiplier(effect);
+    }
+
+    // 원작 RRD의 GetRandomReal(min, max) 부분. 원작이 매 시전마다 새로 굴리므로 여기서도
+    // 캐싱 없이 그렇게 한다.
+    //
+    // ⚠️ min==0 && max==0이면 필드가 비어있던 것으로 보고 1.0(배율 없음)으로 읽는다 —
+    // 필드 기본값 자체도 1f로 선언해뒀지만(SkillData.cs randMin/randMax), 어떤 경로로든
+    // 0,0이 들어와도 기존 302개 효과의 피해가 조용히 전멸하지 않게 여기서 한 번 더
+    // 막는다(PM 지시 — acceptedGrades·range 0·casterBuffCountFactor와 같은 사고 꼴).
+    // 실제로 원작이 0..X 배율을 쓰는 행이 있다면 min을 0이 아닌 아주 작은 값으로 잡을
+    // 것 — "정확히 0,0"만 이 안전장치에 걸린다.
+    float RandomDamageMultiplier(SkillEffect effect)
+    {
+        if (effect.randMin == 0f && effect.randMax == 0f) return 1f;
+        return Random.Range(effect.randMin, effect.randMax);
+    }
+
+    float ResolveBaseSkillEffectValue(SkillEffect effect, EnemyDummy target, float recentAttackDamage)
     {
         switch (effect.basis)
         {
