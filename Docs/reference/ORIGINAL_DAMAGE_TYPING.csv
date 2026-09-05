@@ -1,0 +1,695 @@
+유닛ID,유닛이름,스킬트리거,함수,호출,RRD순번,계산식앞,공격타입,피해타입,방어무시,주의
+,,Absolb1,Trig_Absolb1_Func005Func003A,RRD,1,7000000.00,CHAOS,UNIVERSAL,O,
+,,Absolb1,Trig_Absolb1_Func006Func003A,RRD,2,1000000.00,CHAOS,UNIVERSAL,O,
+,,Absolb1,Trig_Absolb1_Func006Func005Func004A,RRD,3,1000000.00,CHAOS,UNIVERSAL,O,
+,,Absolb1,Trig_Absolb1_Actions,UnitDamageTargetBJ,4,"(0.07*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetSpellTargetUni",CHAOS,UNIVERSAL,O,
+,,Bustercall_Etc4,Trig_Bustercall_Etc4_Func004Func004A,RRD,1,315000.00,CHAOS,NORMAL,X,
+h00P,나미 크리마 텍트 - 특별함,Speical1,Trig_Speical1_Func006A,RRD,1,800.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h019,챠카 알라바스타의 수호신 - 특별함,Speical4,Trig_Speical4_Actions,RRD,1,3500.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h012,스쿼드 흰수염산하 소용돌이 거미 - 특별함,Speical10,Trig_Speical10_Func004Func006A,UnitDamageTargetBJ,1,3000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h012,스쿼드 흰수염산하 소용돌이 거미 - 특별함,Speical10,Trig_Speical10_Actions,UnitDamageTargetBJ,2,5000.00,CHAOS,UNIVERSAL,O,
+h00W,롤로노아 조로 귀기 - 특별함,Speical12,Trig_Speical12_Func009A,RRD,1,1000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Pirates_docking_1,Trig_Pirates_docking_1_Actions,UnitDamageTargetBJ,1,"(0.15*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetSpellTargetUni",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02I,상디 디아블 잠브 - 희귀함,Unique1,Trig_Unique1_Actions,RRD,1,5000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02J,킨에몬 와노쿠니의 사무라이 - 희귀함,Unique5,Trig_Unique5_Func006A,RRD,1,6000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02L,트라팔가 로우 죽음의 외과의사 - 희귀함,Unique6,Trig_Unique6_Func010A,RRD,1,6000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04H,쥬라클 미호크 칠무해 - 희귀함,Unique8,Trig_Unique8_Actions,RRD,1,12500.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h01L,돈키호테 도플라밍고 칠무해 - 희귀함,Unique12,Trig_Unique12_Func006A,RRD,1,6000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02H,크로커 다일 Mr.0 Sir - 희귀함,Unique17,Trig_Unique17_Actions,RRD,1,17500.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h026,시류 전 임펠다운 간수장 - 희귀함,Unique19,Trig_Unique19_Actions,RRD,1,"((GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit())*0.10)*(",MELEE,UNIVERSAL,O,⚠MELEE=원작 Normal행
+h026,시류 전 임펠다운 간수장 - 희귀함,Unique19,Trig_Unique19_Actions,RRD,2,12500.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h01M,보아 핸콕 칠무해 - 희귀함,Unique20,Trig_Unique20_Func007A,RRD,1,6000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h01M,보아 핸콕 칠무해 - 희귀함,Unique20,Trig_Unique20_Actions,RRD,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit())*0.10)*(",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h01S,벤 베크만 붉은머리 해적단 부선장 - 희귀함,Unique21,Trig_Unique21_Actions,RRD,1,10000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h01S,벤 베크만 붉은머리 해적단 부선장 - 희귀함,Unique21,Trig_Unique21_Actions,RRD,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit())*0.01)+2",CHAOS,UNIVERSAL,O,
+h025,검호 류마 용의 목을 벤 사나이 - 희귀함,Unique22,Trig_Unique22_Func007A,RRD,1,4500.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h025,검호 류마 용의 목을 벤 사나이 - 희귀함,Unique22,Trig_Unique22_Actions,RRD,2,2000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h025,검호 류마 용의 목을 벤 사나이 - 희귀함,Unique22,Trig_Unique22_Actions,RRD,3,"((GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit())*0.10)*(",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h01W,바르토로메오 밀짚모자 해적단 광신도 - 희귀,Unique26,Trig_Unique26_Func006A,RRD,1,6000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h021,마샬.D.티치 흰수염해적단의 배신자 - 희귀,Tich1_danil,Trig_Tich1_danil_Actions,RRD,1,15000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h021,마샬.D.티치 흰수염해적단의 배신자 - 희귀,Tich1_danil,Trig_Tich1_danil_Actions,RRD,2,15000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02M,베이비 5 팔보수군 - 희귀함,Unique29,Trig_Unique29_Func004Func004A,RRD,1,6000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02M,베이비 5 팔보수군 - 희귀함,Unique29,Trig_Unique29_Actions,RRD,2,15000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h01Q,거프 해군 영웅 - 희귀함,Unique30,Trig_Unique30_Func043A,RRD,1,52500.00,SIEGE,NORMAL,X,
+h01Q,거프 해군 영웅 - 희귀함,Unique30,Trig_Unique30_Actions,RRD,2,40000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02K,토니토니 쵸파 혼 포인트 - 희귀함,Unique31,Trig_Unique31_Func006A,RRD,1,35000.00,SIEGE,NORMAL,X,
+h02K,토니토니 쵸파 혼 포인트 - 희귀함,Unique31,Trig_Unique31_Actions,RRD,2,17500.00,SIEGE,NORMAL,X,
+h01X,몽키.D.루피 기어서드 초신성 - 희귀함,Unique32,Trig_Unique32_Func006Func009A,RRD,1,22500.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02F,조로 '현상금 사냥꾼' 초신성 - 희귀함,Unique33,Trig_Unique33_Func006Func008A,UnitDamageTargetBJ,1,10000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02F,조로 '현상금 사냥꾼' 초신성 - 희귀함,Unique33,Trig_Unique33_Func008Func010A,UnitDamageTargetBJ,2,16000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02E,죠즈 흰수염 3번대 대장 다이아몬드 - 희귀,Unique34,Trig_Unique34_Actions,RRD,1,70000.00,SIEGE,UNKNOWN,?,⚠피해타입 UNKNOWN
+h02E,죠즈 흰수염 3번대 대장 다이아몬드 - 희귀,Unique34,Trig_Unique34_Actions,RRD,2,35000.00,SIEGE,UNKNOWN,?,⚠피해타입 UNKNOWN
+h01Y,모몬가 G1 지부의 수장 - 희귀함,Unique35,Trig_Unique35_Func031A,RRD,1,7000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h01Y,모몬가 G1 지부의 수장 - 희귀함,Unique35,Trig_Unique35_Actions,RRD,2,I2R(s__TrigVariables__get_integerC(GlobalTV)),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03M,[히든조합]사보 - 용조권,Hidden1,Trig_Hidden1_Func007A,RRD,1,450000.00,CHAOS,UNIVERSAL,O,
+h03M,[히든조합]사보 - 용조권,Hidden1,Trig_Hidden1_Actions,RRD,2,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.0",HERO,NORMAL,X,
+h03M,[히든조합]사보 - 용조권,Hidden1,Trig_Hidden1_Actions,RRD,3,300000.00,HERO,UNIVERSAL,O,
+h03M,[히든조합]사보 - 용조권,Hidden1,Trig_Hidden1_Actions,RRD,4,5000000.00,CHAOS,UNIVERSAL,O,
+h076,[히든조합]엠포리오 이완코브임펠다운 5.5층,Hidden3buggi,Trig_Hidden3buggi_Func008A,RRD,1,100000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h047,[히든조합]피셔 타이거마리조아 노예시장 파괴,Hidden4,Trig_Hidden4_Actions,RRD,1,177777.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h047,[히든조합]피셔 타이거마리조아 노예시장 파괴,Hidden4,Trig_Hidden4_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit())*(0.025))",HERO,UNIVERSAL,O,
+h03Z,[히든조합]아카이누흰수염을죽인 붉은개,Hidden5,Trig_Hidden5_Func007A,RRD,1,100000.00,MAGIC,UNIVERSAL,O,
+h03Z,[히든조합]아카이누흰수염을죽인 붉은개,Hidden5,Trig_Hidden5_Actions,RRD,2,305000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03Z,[히든조합]아카이누흰수염을죽인 붉은개,Hidden5,Trig_Hidden5_Actions,RRD,3,765000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03Z,[히든조합]아카이누흰수염을죽인 붉은개,Hidden5,Trig_Hidden5_Actions,RRD,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*(0.1",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03Z,[히든조합]아카이누흰수염을죽인 붉은개,Akainu_02_hidden,Trig_Akainu_02_hidden_Func023A,RRD,1,300000.00,CHAOS,UNIVERSAL,O,
+h03Z,[히든조합]아카이누흰수염을죽인 붉은개,Akainu_02_hidden,Trig_Akainu_02_hidden_Actions,RRD,2,1000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03Z,[히든조합]아카이누흰수염을죽인 붉은개,Akainu_02_hidden,Trig_Akainu_02_hidden_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h041,[히든조합]쿠잔푸른 꿩,Hidden6,Trig_Hidden6_Actions,RRD,1,330000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h044,[히든조합]검호 류마흑도 슈스이의 주인,Hidden8,Trig_Hidden8_Func010A,RRD,1,80000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h044,[히든조합]검호 류마흑도 슈스이의 주인,Hidden8,Trig_Hidden8_Actions,RRD,2,10000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h044,[히든조합]검호 류마흑도 슈스이의 주인,Hidden8,Trig_Hidden8_Actions,RRD,3,"((GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit())*0.19)*(",PIERCE,UNIVERSAL,O,
+h044,[히든조합]검호 류마흑도 슈스이의 주인,Hidden8,Trig_Hidden8_Actions,RRD,4,150000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03X,[히든조합]갓 에넬방주 맥심,Hidden9,Trig_Hidden9_Func009A,RRD,1,2150000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03X,[히든조합]갓 에넬방주 맥심,Hidden9,Trig_Hidden9_Func017A,RRD,2,150000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03L,[히든조합]사우전드 써니호밀짚모자해적단,Hidden11,Trig_Hidden11_Actions,RRD,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*(0.3",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03U,[히든조합]레드포스 호사황 샹크스의 붉은용,Hidden12,Trig_Hidden12_Actions,RRD,1,275000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03U,[히든조합]레드포스 호사황 샹크스의 붉은용,Hidden12,Trig_Hidden12_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.01",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03U,[히든조합]레드포스 호사황 샹크스의 붉은용,Hidden12,Trig_Hidden12_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*(0.0",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03R,[히든조합]반 더 데켄어인섬 절반면적의 노아,deken_skill_1,Trig_deken_skill_1_Actions,RRD,1,120000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03R,[히든조합]반 더 데켄어인섬 절반면적의 노아,deken_Mana,Trig_deken_Mana_Func004Func006A,RRD,1,"(2200000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUni",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h048,[히든조합]페로나고스트 프린세스,Hidden14,Trig_Hidden14_Actions,UnitDamageTargetBJ,1,1200000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h048,[히든조합]페로나고스트 프린세스,Hidden14_perona_use2,Trig_Hidden14_perona_use2_Func005Func005A,RRD,1,(125000.00+(125000.00*s__TrigVariables__get_realC(GlobalTV)),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Hidden14_perona_missile,Trig_Hidden14_perona_missile_Func004Func004A,RRD,1,8050000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h048,[히든조합]페로나고스트 프린세스,perona_Mana,Trig_perona_Mana_Func004Func006A,RRD,1,(2250000.00+(s__TrigVariables__get_realE(GlobalTV)*150000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03V,[히든조합]코알라혁명군-어인공수도대리사범,koalla_skill_Mana,Trig_koalla_skill_Mana_Func004Func010A,RRD,1,"(500000.00+(40000.00*I2R(GetPlayerTechCountSimple('R01O',Get",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03V,[히든조합]코알라혁명군-어인공수도대리사범,koalla_skill_Mana,Trig_koalla_skill_Mana_Func005Func003A,RRD,2,"(500000.00+(40000.00*I2R(GetPlayerTechCountSimple('R01O',Get",CHAOS,NORMAL,X,
+h03V,[히든조합]코알라혁명군-어인공수도대리사범,koalla_skill_Mana,Trig_koalla_skill_Mana_Func006Func004A,RRD,3,"(850000.00+(40000.00*I2R(GetPlayerTechCountSimple('R01O',Get",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03V,[히든조합]코알라혁명군-어인공수도대리사범,koalla_skill_1,Trig_koalla_skill_1_Func004Func009A,RRD,1,"(525000.00+(52500.00*I2R(GetPlayerTechCountSimple('R01O',Get",CHAOS,NORMAL,X,
+h03V,[히든조합]코알라혁명군-어인공수도대리사범,koalla_skill_1,Trig_koalla_skill_1_Actions,RRD,2,525000.00,MAGIC,UNIVERSAL,O,
+h03J,[히든조합]시류비의 시류,Hidden15,Trig_Hidden15_Actions,RRD,1,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.0",PIERCE,UNIVERSAL,O,
+h03J,[히든조합]시류비의 시류,Hidden15,Trig_Hidden15_Actions,UnitDamageTargetBJ,2,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03J,[히든조합]시류비의 시류,siru_R,Trig_siru_R_Func012A,RRD,1,(1500000.00+(s__TrigVariables__get_realE(GlobalTV)*80000.00),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h045,[히든조합]킬러초신성 - 살육무사,Hidden16,Trig_Hidden16_Actions,RRD,1,85000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h045,[히든조합]킬러초신성 - 살육무사,Hidden16,Trig_Hidden16_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit())*(0.008))",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h045,[히든조합]킬러초신성 - 살육무사,Hidden16,Trig_Hidden16_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*(0.0",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h046,[히든조합]킨에몬여우불의 사무라이,Hidden17,Trig_Hidden17_Func007A,RRD,1,200000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h046,[히든조합]킨에몬여우불의 사무라이,Hidden17,Trig_Hidden17_Actions,RRD,2,100000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03W,[히든조합]귀죽의 베르고해군 중장,Hidden19,Trig_Hidden19_Func008A,RRD,1,240000.00,SIEGE,NORMAL,X,
+h03W,[히든조합]귀죽의 베르고해군 중장,Hidden19,Trig_Hidden19_Func018A,RRD,2,240000.00,SIEGE,NORMAL,X,
+h03W,[히든조합]귀죽의 베르고해군 중장,Hidden19,Trig_Hidden19_Actions,RRD,3,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h043,[히든조합]쥬라클 미호크매의 눈,Hidden20,Trig_Hidden20_Actions,RRD,1,252500.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h07L,[히든조합]캐럿밍크족 토끼,Hidden21,Trig_Hidden21_Func005A,RRD,1,350000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03N,[히든조합]료쿠규'신'해군대장,Hidden23_rokugu,Trig_Hidden23_rokugu_Func010A,RRD,1,1500000.00,CHAOS,NORMAL,X,
+h03N,[히든조합]료쿠규'신'해군대장,Hidden23_rokugu,Trig_Hidden23_rokugu_Func026A,RRD,2,400000.00,CHAOS,NORMAL,X,
+h03N,[히든조합]료쿠규'신'해군대장,Hidden23_rokugu,Trig_Hidden23_rokugu_Actions,RRD,3,3375000.00,CHAOS,UNIVERSAL,O,
+h02X,몽키.D.루피 '기어 2' Jet 개틀링 -,Legend0,Trig_Legend0_Func008A,RRD,1,47500.00,SIEGE,NORMAL,X,
+h034,상디 검은다리 '슈트 코스' - 전설적인,Legend1sc,Trig_Legend1sc_Func004,RRD,1,100000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h034,상디 검은다리 '슈트 코스' - 전설적인,Legend1sc,Trig_Legend1sc_Actions,RRD,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit())*0.18)*(",SIEGE,UNIVERSAL,O,
+h034,상디 검은다리 '슈트 코스' - 전설적인,Legend1sc,Trig_Legend1sc_Actions,RRD,3,280000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03G,징베 전 칠무해 어인족 수장 - 전설적인,Legend2,Trig_Legend2_Actions,RRD,1,1000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Legend4sc_Filterfunc001,Legend4sc_Filterfunc001,RRD,1,105000.00,CHAOS,NORMAL,X,
+h03B,에드워드 뉴게이트 '사황' 흰수염 해적단의 ,Legend51,Trig_Legend51_Func032A,RRD,1,"((1250000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUn",HERO,NORMAL,X,
+h03B,에드워드 뉴게이트 '사황' 흰수염 해적단의 ,Legend51,Trig_Legend51_Actions,RRD,2,"((1250000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVa",HERO,NORMAL,X,
+h030,바솔로뮤 쿠마 폭군 - 전설적인,Legend6,Trig_Legend6_Func003Func012A,RRD,1,"(2450000.00+((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUn",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03A,실버즈 레일리 로저해적단 부선장 - 전설적인,Legend7,Trig_Legend7_Func008A,RRD,1,1200000.00,CHAOS,NORMAL,X,
+h036,센고쿠 전 해군 원수 - 전설적인,Legend8,Trig_Legend8_Actions,RRD,1,465000.00,HERO,NORMAL,X,
+h02V,스모커 집념의 해군 중장 - 전설적인,Legend9,Trig_Legend9_Func013A,RRD,1,450000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02V,스모커 집념의 해군 중장 - 전설적인,Legend9,Trig_Legend9_Func023A,RRD,2,200000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02V,스모커 집념의 해군 중장 - 전설적인,Legend9,Trig_Legend9_Actions,RRD,3,450000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Legend10_shanks_pegi1,Trig_Legend10_shanks_pegi1_Actions,RRD,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.03",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Legend10_shanks_pegi2,Trig_Legend10_shanks_pegi2_Actions,RRD,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.03",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Legend10_shanks_pegi3,Trig_Legend10_shanks_pegi3_Actions,RRD,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.03",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Legend10_shanks_pegi4,Trig_Legend10_shanks_pegi4_Actions,RRD,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.03",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h031,후지토라 잇쇼우 '신'해군대장 - 전설적인,Legend11,Trig_Legend11_Actions,RRD,1,577500.00,CHAOS,NORMAL,X,
+h02Q,라분 레드라인을 넘으려는 향유고래 - 전설적,Legend12,Trig_Legend12_Func017A,RRD,1,GetEventDamage(),CHAOS,NORMAL,X,
+h02Q,라분 레드라인을 넘으려는 향유고래 - 전설적,Legend12,Trig_Legend12_Func023A,RRD,2,175000.00,MAGIC,UNIVERSAL,O,
+h02Q,라분 레드라인을 넘으려는 향유고래 - 전설적,Legend12,Trig_Legend12_Func033A,RRD,3,175000.00,MAGIC,UNIVERSAL,O,
+h02Q,라분 레드라인을 넘으려는 향유고래 - 전설적,Legend12,Trig_Legend12_Actions,RRD,4,(15000.00+(3000.00*I2R(GetUnitPointValue(s__TrigVariables__g,SIEGE,UNIVERSAL,O,
+h02Q,라분 레드라인을 넘으려는 향유고래 - 전설적,Legend12,Trig_Legend12_Actions,RRD,5,(15000.00+(3000.00*I2R(GetUnitPointValue(s__TrigVariables__g,SIEGE,UNIVERSAL,O,
+h02S,롤로노아 조로 죽음의경지'사자의노래' - 전,Legend13_2,Trig_Legend13_2_Func017A,RRD,1,120000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02S,롤로노아 조로 죽음의경지'사자의노래' - 전,Legend13_2,Trig_Legend13_2_Actions,RRD,2,750000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02S,롤로노아 조로 죽음의경지'사자의노래' - 전,Legend13_2,Trig_Legend13_2_Actions,RRD,3,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get",PIERCE,UNIVERSAL,O,
+h02S,롤로노아 조로 죽음의경지'사자의노래' - 전,Legend13_2,Trig_Legend13_2_Actions,RRD,4,1500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h032,보아 핸콕 쿠사 해적단 선장 - 전설적인,Legend_han_1,Trig_Legend_han_1_Func018A,RRD,1,150000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h032,보아 핸콕 쿠사 해적단 선장 - 전설적인,Legend_han_1,Trig_Legend_han_1_Actions,RRD,2,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get",CHAOS,UNIVERSAL,O,
+h032,보아 핸콕 쿠사 해적단 선장 - 전설적인,Legend_han_1,Trig_Legend_han_1_Actions,RRD,3,112500.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Legend_han_kiss_damagesc,Trig_Legend_han_kiss_damagesc_Func004,RRD,1,((GetEventDamage()*1.25)+80000.00),CHAOS,UNIVERSAL,O,
+,,Legend_han_kiss_damagesc,Trig_Legend_han_kiss_damagesc_Actions,RRD,2,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get",CHAOS,UNIVERSAL,O,
+,,Legend_han_kiss_damagesc,Trig_Legend_han_kiss_damagesc_Actions,RRD,3,150000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02Z,바르토로메오 신예 초신성- 식인 - 전설적인,Legend15,Trig_Legend15_Func008A,RRD,1,(150000.00+(1500.00*I2R(GetUnitPointValue(GetEnumUnit())))),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Legend16sc_Filterfunc002,Legend16sc_Filterfunc002,RRD,1,"((275000.00+(GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit",CHAOS,UNIVERSAL,O,
+,,Legend16sc_Filterfunc001,Legend16sc_Filterfunc001,RRD,1,"((182500.00+(GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit",CHAOS,UNIVERSAL,O,
+h03C,트라팔가 로우 하트 해적단 선장 - 전설적인,Legend16sc,Trig_Legend16sc_Actions,RRD,1,"(10000.00+(GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit()",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02T,마르코 환수종'불사조' - 전설적인,Legend17_Marcodamage,Trig_Legend17_Marcodamage_Func017A,RRD,1,(12500.00+(0.85*GetEventDamage())),CHAOS,NORMAL,X,
+h02T,마르코 환수종'불사조' - 전설적인,Legend17_MacroLifeSkill,Trig_Legend17_MacroLifeSkill_Func025A,RRD,1,(500000.00+(5.00*s__TrigVariables__get_realD(GlobalTV))),CHAOS,NORMAL,X,
+h02T,마르코 환수종'불사조' - 전설적인,Legend17_MacroLifeSkill,Trig_Legend17_MacroLifeSkill_Actions,RRD,2,(400000.00+(2.00*s__TrigVariables__get_realD(GlobalTV))),CHAOS,UNIVERSAL,O,
+h02O,골.D.에이스 해적왕의 아들 - 전설적인,Legend18,Trig_Legend18_Func022A,RRD,1,200000.00,MAGIC,UNIVERSAL,O,
+h02O,골.D.에이스 해적왕의 아들 - 전설적인,Legend18,Trig_Legend18_Actions,RRD,2,400000.00,MAGIC,UNIVERSAL,O,
+h033,빈스모크 레이쥬 포이즌 핑크 - 전설적인,Legend19_0,Trig_Legend19_0_Func023A,RRD,1,100000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h033,빈스모크 레이쥬 포이즌 핑크 - 전설적인,Legend19_0,Trig_Legend19_0_Actions,RRD,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni",PIERCE,UNIVERSAL,O,
+h033,빈스모크 레이쥬 포이즌 핑크 - 전설적인,Legend19_0,Trig_Legend19_0_Actions,RRD,3,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni",PIERCE,UNIVERSAL,O,
+h033,빈스모크 레이쥬 포이즌 핑크 - 전설적인,Legend19_1,Trig_Legend19_1_Actions,RRD,1,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni",PIERCE,UNIVERSAL,O,
+h033,빈스모크 레이쥬 포이즌 핑크 - 전설적인,Legend19_1,Trig_Legend19_1_Actions,RRD,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni",PIERCE,UNIVERSAL,O,
+h033,빈스모크 레이쥬 포이즌 핑크 - 전설적인,Legend19_1,Trig_Legend19_1_Actions,RRD,3,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni",PIERCE,UNIVERSAL,O,
+h03H,샬롯 크래커 빅맘 3장성 - 전설적인,Legend20,Trig_Legend20_Func008A,RRD,1,250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03H,샬롯 크래커 빅맘 3장성 - 전설적인,Legend20,Trig_Legend20_Actions,RRD,2,20000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02R,로브 루치 생명귀환 지회무신 - 전설적인,Legend21sc,Trig_Legend21sc_Func004,RRD,1,100000.00,MAGIC,UNIVERSAL,O,
+h02R,로브 루치 생명귀환 지회무신 - 전설적인,Legend21sc,Trig_Legend21sc_Actions,RRD,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit())*0.3)*(0",SIEGE,UNIVERSAL,O,
+h02R,로브 루치 생명귀환 지회무신 - 전설적인,Legend21sc,Trig_Legend21sc_Actions,RRD,3,345000.00,CHAOS,UNIVERSAL,O,
+h02Y,몽키.D.루피 나이트메어 - 전설적인,Legend22,Trig_Legend22_Func016Func004A,RRD,1,s__TrigVariables__get_realC(GlobalTV),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02Y,몽키.D.루피 나이트메어 - 전설적인,Legend22,Trig_Legend22_Func021A,RRD,2,s__TrigVariables__get_realC(GlobalTV),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02Y,몽키.D.루피 나이트메어 - 전설적인,Legend22,Trig_Legend22_Func024Func005A,RRD,3,s__TrigVariables__get_realC(GlobalTV),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02Y,몽키.D.루피 나이트메어 - 전설적인,Legend22,Trig_Legend22_Actions,RRD,4,500000.00,CHAOS,UNIVERSAL,O,
+h02Y,몽키.D.루피 나이트메어 - 전설적인,Legend22,Trig_Legend22_Actions,RRD,5,3000000.00,CHAOS,UNIVERSAL,O,
+h02Y,몽키.D.루피 나이트메어 - 전설적인,Legend22,Trig_Legend22_Actions,RRD,6,400000.00,CHAOS,UNIVERSAL,O,
+h03I,제파 전 해군 대장 '흑완' - 전설적인,Legend23,Trig_Legend23_Actions,RRD,1,"(GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit())*(0.01))",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03I,제파 전 해군 대장 '흑완' - 전설적인,Legend23,Trig_Legend23_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*(0.0",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02P,나미 도둑 고양이 - 전설적인,Legend25,Trig_Legend25_Func007A,RRD,1,325000.00,MAGIC,UNIVERSAL,O,
+h02U,"마샬.D.티치 검은수염 해적단 선장 ""검은수",Legend26,Trig_Legend26_Func008A,RRD,1,"(500000.00+(GetUnitStateSwap(UNIT_STATE_LIFE,GetEnumUnit())*",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02U,"마샬.D.티치 검은수염 해적단 선장 ""검은수",Legend26_tichi_crows,Trig_Legend26_tichi_crows_Actions,RRD,1,4000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02U,"마샬.D.티치 검은수염 해적단 선장 ""검은수",Legend26_tichi_crows,Trig_Legend26_tichi_crows_Actions,RRD,2,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02U,"마샬.D.티치 검은수염 해적단 선장 ""검은수",Legend26_tichi_crows,Trig_Legend26_tichi_crows_Actions,RRD,3,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03E,코비 세계의 운명을 바꾼 해군루키 - 전설적,Legend28koby,Trig_Legend28koby_Actions,RRD,1,"((GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit())*0.27)*(",MELEE,UNIVERSAL,O,⚠MELEE=원작 Normal행
+h03E,코비 세계의 운명을 바꾼 해군루키 - 전설적,Legend28koby,Trig_Legend28koby_Actions,RRD,2,100000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03K,Dr.히루루크 나라를 치료한 의사 - 전설적,Legend29,Trig_Legend29_Func002Func001Func006A,RRD,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit())*0.50)",HERO,UNIVERSAL,O,
+h042,시노부 쿠노이치 - 전설적인,Legend30,Trig_Legend30_Actions,RRD,1,400000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h042,시노부 쿠노이치 - 전설적인,Legend30,Trig_Legend30_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*(0.0",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h042,시노부 쿠노이치 - 전설적인,Legend30,Trig_Legend30_Actions,RRD,3,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.0",MELEE,UNIVERSAL,O,⚠MELEE=원작 Normal행
+h085,시노부 쿠노이치 - 전설적인-소환됨,Legend30mirror,Trig_Legend30mirror_Actions,RRD,1,200000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h085,시노부 쿠노이치 - 전설적인-소환됨,Legend30mirror,Trig_Legend30mirror_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*(0.0",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h085,시노부 쿠노이치 - 전설적인-소환됨,Legend30mirror,Trig_Legend30mirror_Actions,RRD,3,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.0",MELEE,UNIVERSAL,O,⚠MELEE=원작 Normal행
+h087,아마츠키 토키 시간 여행자 - 전설적인,Legend31_toki,Trig_Legend31_toki_Func033A,RRD,1,125000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h087,아마츠키 토키 시간 여행자 - 전설적인,Legend31_toki,Trig_Legend31_toki_Func037A,RRD,2,125000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h087,아마츠키 토키 시간 여행자 - 전설적인,Legend31_toki,Trig_Legend31_toki_Actions,RRD,3,250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09Z,네코마무시 밤의 왕 - 전설적인,Legend32,Trig_Legend32_Func007A,RRD,1,"(222500.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit",CHAOS,UNIVERSAL,O,
+h09Z,네코마무시 밤의 왕 - 전설적인,Legend32,Trig_Legend32_Actions,RRD,2,20000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09Z,네코마무시 밤의 왕 - 전설적인,Legend32,Trig_Legend32_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*(0.0",CHAOS,UNIVERSAL,O,
+h09Z,네코마무시 밤의 왕 - 전설적인,Legend32_neko1,Trig_Legend32_neko1_Func046A,RRD,1,"(500000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit",CHAOS,UNIVERSAL,O,
+h09Z,네코마무시 밤의 왕 - 전설적인,Legend32_neko1,Trig_Legend32_neko1_Actions,RRD,2,"(2000000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVar",CHAOS,UNIVERSAL,O,
+h02N,겟코 모리아 쉐도우 아스가르드 - 전설적인,Legend34Moria_Skill,Trig_Legend34Moria_Skill_Func034A,RRD,1,250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h02N,겟코 모리아 쉐도우 아스가르드 - 전설적인,Legend34Moria_Skill,Trig_Legend34Moria_Skill_Actions,RRD,2,800000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h03S,울티 토비롯포 - 전설적인,Legend35ulti_trg3,Trig_Legend35ulti_trg3_Func017A,RRD,1,(((GetEventDamage()*1.70)+230000.00)*(0.01*I2R(GetUnitPointV,CHAOS,UNIVERSAL,O,
+h03S,울티 토비롯포 - 전설적인,Legend35ulti_trg,Trig_Legend35ulti_trg_Func019A,RRD,1,((GetEventDamage()*0.85)+115000.00),CHAOS,NORMAL,X,
+h05W,비비 알라바스타의 왕녀 - 변화된,Transpom1,Trig_Transpom1_Func007A,RRD,1,100000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h05W,비비 알라바스타의 왕녀 - 변화된,Transpom1,Trig_Transpom1_Func007A,RRD,2,180000.00,MELEE,NORMAL,X,⚠MELEE=원작 Normal행
+h05W,비비 알라바스타의 왕녀 - 변화된,Transpom1,Trig_Transpom1_Actions,RRD,3,250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h05S,돈키호테 도플라밍고 하늘귀신 - 변화된,Transpom2,Trig_Transpom2_Func011A,RRD,1,100000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h05S,돈키호테 도플라밍고 하늘귀신 - 변화된,Transpom_dp,Trig_Transpom_dp_Actions,RRD,1,200000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h05S,돈키호테 도플라밍고 하늘귀신 - 변화된,Transpom_dp,Trig_Transpom_dp_Actions,RRD,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni",PIERCE,UNIVERSAL,O,
+h05V,포트거스.D.에이스 스페이드 해적단 선장 -,Transpom_AceMana,Trig_Transpom_AceMana_Func018A,RRD,1,1850000.00,MAGIC,UNIVERSAL,O,
+h05V,포트거스.D.에이스 스페이드 해적단 선장 -,Transpom_Ace_bulRemake,Trig_Transpom_Ace_bulRemake_Func029A,RRD,1,350000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h07N,베이비 5 초토화 모드 - 변화된,Transpom6,Trig_Transpom6_Func006A,RRD,1,145000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h07N,베이비 5 초토화 모드 - 변화된,Transpom6,Trig_Transpom6_Actions,RRD,2,101500.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h07N,베이비 5 초토화 모드 - 변화된,Transpom6,Trig_Transpom6_Actions,RRD,3,"((GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit())*0.01)+0",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h07N,베이비 5 초토화 모드 - 변화된,Transpom6,Trig_Transpom6_Actions,RRD,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*(0.0",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h05F,크로커다일 사막의 악어 - 제한됨,croTrans,Trig_croTrans_Actions,RRD,1,800000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h05F,크로커다일 사막의 악어 - 제한됨,cro_skill_2,Trig_cro_skill_2_Func015A,RRD,1,1000000.00,CHAOS,NORMAL,X,
+h05E,에넬 G.O.D - 제한됨,Enel_Mana,Trig_Enel_Mana_Func004Func009A,UnitDamageTargetBJ,1,"(0.02*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables_",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h05E,에넬 G.O.D - 제한됨,Enel_skill_2,Trig_Enel_skill_2_Func018A,RRD,1,"(182500.00+(I2R(GetPlayerTechCountSimple('R01L',GetOwningPla",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder1,Trig_enel_thunder1_Func001Func002Func005A,RRD,1,425000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder1,Trig_enel_thunder1_Func001Func002Func010Func005A,RRD,2,425000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder1,Trig_enel_thunder1_Actions,RRD,3,8500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder1,Trig_enel_thunder1_Actions,RRD,4,4250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder2,Trig_enel_thunder2_Func001Func002Func005A,RRD,1,425000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder2,Trig_enel_thunder2_Func001Func002Func010Func005A,RRD,2,425000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder2,Trig_enel_thunder2_Actions,RRD,3,8500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder2,Trig_enel_thunder2_Actions,RRD,4,4250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder3,Trig_enel_thunder3_Func001Func002Func005A,RRD,1,425000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder3,Trig_enel_thunder3_Func001Func002Func010Func005A,RRD,2,425000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder3,Trig_enel_thunder3_Actions,RRD,3,8500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder3,Trig_enel_thunder3_Actions,RRD,4,4250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder4,Trig_enel_thunder4_Func001Func002Func005A,RRD,1,425000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder4,Trig_enel_thunder4_Func001Func002Func010Func005A,RRD,2,425000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder4,Trig_enel_thunder4_Actions,RRD,3,8500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,enel_thunder4,Trig_enel_thunder4_Actions,RRD,4,4250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h05I,레베카 콜로세움 전설의  후예 - 제한됨,Rebeca_Skill_1,Trig_Rebeca_Skill_1_Func009A,RRD,1,"(600000.00+(25000.00*I2R(GetUnitAbilityLevelSwapped('A0QW',u",MELEE,NORMAL,X,⚠MELEE=원작 Normal행
+h05I,레베카 콜로세움 전설의  후예 - 제한됨,Rebeca_Skill_1,Trig_Rebeca_Skill_1_Actions,RRD,2,"(2100000.00+(87500.00*I2R(GetUnitAbilityLevelSwapped('A0QW',",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h05I,레베카 콜로세움 전설의  후예 - 제한됨,Rebeca_Skill_3,Trig_Rebeca_Skill_3_Func018A,RRD,1,"(800000.00+(30000.00*I2R(GetUnitAbilityLevelSwapped('A0QW',s",MELEE,NORMAL,X,⚠MELEE=원작 Normal행
+h05G,패트릭 레드필드 붉은백작 - 제한됨,RedAttack,Trig_RedAttack_Actions,RRD,1,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*(0.",CHAOS,UNIVERSAL,O,
+h05G,패트릭 레드필드 붉은백작 - 제한됨,RedAttack,Trig_RedAttack_Actions,RRD,2,162500.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h05G,패트릭 레드필드 붉은백작 - 제한됨,Red_skill_1,Trig_Red_skill_1_Func006A,RRD,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit())*(0.01*0",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h05G,패트릭 레드필드 붉은백작 - 제한됨,Red_skill_1,Trig_Red_skill_1_Func006A,RRD,2,700000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h07I,샬롯 카타쿠리 장성 밀가루 대신 - 제한됨,katakuri_Skill_2,Trig_katakuri_Skill_2_Func019A,RRD,1,375000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h07I,샬롯 카타쿠리 장성 밀가루 대신 - 제한됨,Kata_03,Trig_Kata_03_Func020A,RRD,1,((GetEventDamage()*0.75)+100000.00),CHAOS,NORMAL,X,
+,,kata_04_pegi1,Trig_kata_04_pegi1_Func004Func010A,RRD,1,500000.00,MAGIC,UNIVERSAL,O,
+,,kata_04_pegi1,Trig_kata_04_pegi1_Actions,RRD,2,4500000.00,MAGIC,UNIVERSAL,O,
+,,kata_04_pegi2,Trig_kata_04_pegi2_Func004Func010A,RRD,1,500000.00,MAGIC,UNIVERSAL,O,
+,,kata_04_pegi2,Trig_kata_04_pegi2_Actions,RRD,2,4500000.00,MAGIC,UNIVERSAL,O,
+,,kata_04_pegi3,Trig_kata_04_pegi3_Func004Func010A,RRD,1,500000.00,MAGIC,UNIVERSAL,O,
+,,kata_04_pegi3,Trig_kata_04_pegi3_Actions,RRD,2,4500000.00,MAGIC,UNIVERSAL,O,
+,,kata_04_pegi4,Trig_kata_04_pegi4_Func004Func010A,RRD,1,500000.00,MAGIC,UNIVERSAL,O,
+,,kata_04_pegi4,Trig_kata_04_pegi4_Actions,RRD,2,4500000.00,MAGIC,UNIVERSAL,O,
+h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_1,Trig_Ain_Skill_1_Func018Func007A,RRD,1,320000.00,MAGIC,UNIVERSAL,O,
+h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_1,Trig_Ain_Skill_1_Func027A,RRD,2,320000.00,MAGIC,UNIVERSAL,O,
+h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_1,Trig_Ain_Skill_1_Actions,RRD,3,3500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_1,Trig_Ain_Skill_1_Actions,RRD,4,350000.00,MAGIC,UNIVERSAL,O,
+h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_1,Trig_Ain_Skill_1_Actions,RRD,5,350000.00,MAGIC,UNIVERSAL,O,
+h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,Trig_Ain_Skill_2_Func003Func007A,RRD,1,240000.00,MAGIC,UNIVERSAL,O,
+h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,Trig_Ain_Skill_2_Func004Func007A,RRD,2,240000.00,MAGIC,UNIVERSAL,O,
+h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,Trig_Ain_Skill_2_Func005Func007A,RRD,3,240000.00,MAGIC,UNIVERSAL,O,
+h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,Trig_Ain_Skill_2_Actions,RRD,4,3500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,Trig_Ain_Skill_2_Actions,RRD,5,350000.00,MAGIC,UNIVERSAL,O,
+h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,Trig_Ain_Skill_2_Actions,RRD,6,350000.00,MAGIC,UNIVERSAL,O,
+h040,아인 네오 해군 장교 - 제한됨,Ain_Skill_2,Trig_Ain_Skill_2_Actions,RRD,7,350000.00,MAGIC,UNIVERSAL,O,
+h07J,캐럿 스론 달의 사자 - 변화된,carrotattack,Trig_carrotattack_Func009A,RRD,1,(100000.00*(0.20+(0.05*I2R(GetUnitAbilityLevelSwapped('A11S',CHAOS,UNIVERSAL,O,
+h07J,캐럿 스론 달의 사자 - 변화된,carrot_skill_2,Trig_carrot_skill_2_Func022A,RRD,1,325000.00,MAGIC,UNIVERSAL,O,
+h084,시노부 뇌쇄 쿠노이치 - 제한됨,Sinobu_Attack,Trig_Sinobu_Attack_Actions,RRD,1,600000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h084,시노부 뇌쇄 쿠노이치 - 제한됨,Sinobu_Attack,Trig_Sinobu_Attack_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.02",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h084,시노부 뇌쇄 쿠노이치 - 제한됨,Sinobu_Attack,Trig_Sinobu_Attack_Actions,RRD,3,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.0",MELEE,UNIVERSAL,O,⚠MELEE=원작 Normal행
+h084,시노부 뇌쇄 쿠노이치 - 제한됨,Sinobu_Skill_hp2,Trig_Sinobu_Skill_hp2_Actions,RRD,1,2250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h084,시노부 뇌쇄 쿠노이치 - 제한됨,Sinobu_Skill_hp2,Trig_Sinobu_Skill_hp2_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h084,시노부 뇌쇄 쿠노이치 - 제한됨,Sinobu_Skill_hp2,Trig_Sinobu_Skill_hp2_Actions,RRD,3,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get",MELEE,UNIVERSAL,O,⚠MELEE=원작 Normal행
+h086,시노부 뇌쇄 쿠노이치 - 제한됨-소환됨,Sinobu_Skill_5_mirror,Trig_Sinobu_Skill_5_mirror_Actions,RRD,1,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h086,시노부 뇌쇄 쿠노이치 - 제한됨-소환됨,Sinobu_Skill_5_mirror,Trig_Sinobu_Skill_5_mirror_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.01",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h086,시노부 뇌쇄 쿠노이치 - 제한됨-소환됨,Sinobu_Skill_5_mirror,Trig_Sinobu_Skill_5_mirror_Actions,RRD,3,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.0",MELEE,UNIVERSAL,O,⚠MELEE=원작 Normal행
+h084,시노부 뇌쇄 쿠노이치 - 제한됨,Sinobu_Skill_4,Trig_Sinobu_Skill_4_Func044A,RRD,1,400000.00,MAGIC,UNIVERSAL,O,
+h0AI,킹 삼재해:화재 - 제한됨,King_skill_2_tr,Trig_King_skill_2_tr_Func002Func011A,RRD,1,1275000.00,CHAOS,NORMAL,X,
+h0AI,킹 삼재해:화재 - 제한됨,King_skill_2_tr,Trig_King_skill_2_tr_Actions,RRD,2,10000000.00,CHAOS,UNIVERSAL,O,
+h0AI,킹 삼재해:화재 - 제한됨,King_skill_2_tr,Trig_King_skill_2_tr_Actions,RRD,3,100000.00,CHAOS,UNIVERSAL,O,
+h0AI,킹 삼재해:화재 - 제한됨,King_skill_2,Trig_King_skill_2_Func002Func011A,RRD,1,850000.00,CHAOS,NORMAL,X,
+h09Q,불사조 흰수염 유산의 수호자 - 제한됨,Marco_Feather2,Trig_Marco_Feather2_Func025A,RRD,1,(500000.00+(3.00*s__TrigVariables__get_realD(GlobalTV))),CHAOS,NORMAL,X,
+h09Q,불사조 흰수염 유산의 수호자 - 제한됨,Marco_Feather2,Trig_Marco_Feather2_Actions,RRD,2,(750000.00+(4.50*s__TrigVariables__get_realD(GlobalTV))),CHAOS,UNIVERSAL,O,
+h08O,마르코 흰수염 유산의 수호자 - 제한됨,Marco_S1,Trig_Marco_S1_Actions,RRD,1,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni",CHAOS,UNIVERSAL,O,
+h08O,마르코 흰수염 유산의 수호자 - 제한됨,Marco_S1,Trig_Marco_S1_Actions,RRD,2,150000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h08O,마르코 흰수염 유산의 수호자 - 제한됨,Marco_S2,Trig_Marco_S2_Func036A,RRD,1,750000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h08O,마르코 흰수염 유산의 수호자 - 제한됨,Marco_S2,Trig_Marco_S2_Actions,RRD,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni",CHAOS,UNIVERSAL,O,
+h08O,마르코 흰수염 유산의 수호자 - 제한됨,Marco_S2,Trig_Marco_S2_Actions,RRD,3,112500.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08W,CP.Zero,Luchi_Skill_1_Kick2,Trig_Luchi_Skill_1_Kick2_Func019A,RRD,1,400000.00,MAGIC,UNIVERSAL,O,
+H08W,CP.Zero,Luchi_Skill_1_Kick2,Trig_Luchi_Skill_1_Kick2_Func025Func016Func002A,RRD,2,400000.00,MAGIC,UNIVERSAL,O,
+H08W,CP.Zero,Luchi_Skill_1_Kick2,Trig_Luchi_Skill_1_Kick2_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",CHAOS,UNIVERSAL,O,
+H08W,CP.Zero,Luchi_Skill_2_ZiGun,Trig_Luchi_Skill_2_ZiGun_Actions,RRD,1,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni",CHAOS,UNIVERSAL,O,
+H08W,CP.Zero,Luchi_Skill_2_ZiGun,Trig_Luchi_Skill_2_ZiGun_Actions,RRD,2,(500000.00*(1+((0.001)*(I2R(udg_Load_PlayCount[GetConvertedP,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08W,CP.Zero,Luchi_Skill_2_ZiGun,Trig_Luchi_Skill_2_ZiGun_Actions,RRD,3,(500000.00*(1+((0.001)*(I2R(udg_Load_PlayCount[GetConvertedP,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08W,CP.Zero,Luchi_Skill_3_6kinggun,Trig_Luchi_Skill_3_6kinggun_Func020A,RRD,1,(1000000.00*(0.20+(0.05*I2R(GetUnitAbilityLevelSwapped('A11S,CHAOS,UNIVERSAL,O,
+H08W,CP.Zero,Luchi_Skill_3_6kinggun,Trig_Luchi_Skill_3_6kinggun_Actions,RRD,2,2000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08W,CP.Zero,Luchi_Skill_3_6kinggun,Trig_Luchi_Skill_3_6kinggun_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unit",CHAOS,UNIVERSAL,O,
+H099,명왕 레일리의 제자,Ruffy_AttackDamage,Trig_Ruffy_AttackDamage_Actions,RRD,1,((GetEventDamage()*2.50)+32500.00),CHAOS,UNIVERSAL,O,
+H099,명왕 레일리의 제자,Ruffy_Mana,Trig_Ruffy_Mana_Func028A,RRD,1,"((1750000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUn",HERO,NORMAL,X,
+H099,명왕 레일리의 제자,Ruffy_Mana,Trig_Ruffy_Mana_Actions,RRD,2,"((1750000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVa",HERO,NORMAL,X,
+,,Shanks_ET_pegi1,Trig_Shanks_ET_pegi1_Func001Func001Func002Func008A,RRD,1,250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi1,Trig_Shanks_ET_pegi1_Func001Func009A,RRD,2,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi1,Trig_Shanks_ET_pegi1_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.12",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi1,Trig_Shanks_ET_pegi1_Actions,RRD,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.06",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi1,Trig_Shanks_ET_pegi1_Actions,RRD,5,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.03",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi1,Trig_Shanks_ET_pegi1_Actions,RRD,6,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.06",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi2,Trig_Shanks_ET_pegi2_Func001Func001Func002Func008A,RRD,1,250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi2,Trig_Shanks_ET_pegi2_Func001Func009A,RRD,2,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi2,Trig_Shanks_ET_pegi2_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.12",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi2,Trig_Shanks_ET_pegi2_Actions,RRD,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.06",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi2,Trig_Shanks_ET_pegi2_Actions,RRD,5,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.03",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi2,Trig_Shanks_ET_pegi2_Actions,RRD,6,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.06",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi3,Trig_Shanks_ET_pegi3_Func001Func001Func002Func008A,RRD,1,250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi3,Trig_Shanks_ET_pegi3_Func001Func009A,RRD,2,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi3,Trig_Shanks_ET_pegi3_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.12",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi3,Trig_Shanks_ET_pegi3_Actions,RRD,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.06",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi3,Trig_Shanks_ET_pegi3_Actions,RRD,5,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.03",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi3,Trig_Shanks_ET_pegi3_Actions,RRD,6,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.06",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi4,Trig_Shanks_ET_pegi4_Func001Func001Func002Func008A,RRD,1,250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi4,Trig_Shanks_ET_pegi4_Func001Func009A,RRD,2,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi4,Trig_Shanks_ET_pegi4_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.12",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi4,Trig_Shanks_ET_pegi4_Actions,RRD,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.06",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi4,Trig_Shanks_ET_pegi4_Actions,RRD,5,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.03",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Shanks_ET_pegi4,Trig_Shanks_ET_pegi4_Actions,RRD,6,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.06",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H096,로키포트 사건의 주모자,Law_Attack,Trig_Law_Attack_Func011A,RRD,1,2500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H096,로키포트 사건의 주모자,Law_Skill_2,Trig_Law_Skill_2_Actions,RRD,1,"(GetUnitStateSwap(UNIT_STATE_LIFE,udg_Hero[1])*(0.2))",CHAOS,UNIVERSAL,O,
+H096,로키포트 사건의 주모자,Law_Skill_2_reinforce,Trig_Law_Skill_2_reinforce_Actions,RRD,1,"(GetUnitStateSwap(UNIT_STATE_LIFE,udg_Hero[1])*(0.2))",CHAOS,UNIVERSAL,O,
+H096,로키포트 사건의 주모자,Law_skill_5,Trig_Law_skill_5_Func006Func005A,RRD,1,"(300000.00+(GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariable",CHAOS,UNIVERSAL,O,
+H09G,정열의 요리사,SandiAttack_Upgrade,Trig_SandiAttack_Upgrade_Actions,RRD,1,"((GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit())*0.10)*(",SIEGE,UNIVERSAL,O,
+H09G,정열의 요리사,SandiAttack_Upgrade,Trig_SandiAttack_Upgrade_Actions,RRD,2,450000.00,MAGIC,UNIVERSAL,O,
+H09H,뉴카마섬의 생존자,SandiAttack,Trig_SandiAttack_Actions,RRD,1,"((GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit())*0.10)*(",SIEGE,UNIVERSAL,O,
+H09H,뉴카마섬의 생존자,SandiAttack,Trig_SandiAttack_Actions,RRD,2,450000.00,MAGIC,UNIVERSAL,O,
+H09H,뉴카마섬의 생존자,Sandi_skill_1,Trig_Sandi_skill_1_Actions,RRD,1,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni",SIEGE,UNIVERSAL,O,
+H09H,뉴카마섬의 생존자,Sandi_skill_1,Trig_Sandi_skill_1_Actions,RRD,2,450000.00,MAGIC,UNIVERSAL,O,
+H09H,뉴카마섬의 생존자,Sandi_skill_Mana2,Trig_Sandi_skill_Mana2_Func003Func005A,RRD,1,3330000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H09H,뉴카마섬의 생존자,Sandi_skill_Mana2,Trig_Sandi_skill_Mana2_Actions,RRD,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni",SIEGE,UNIVERSAL,O,
+H09H,뉴카마섬의 생존자,Sandi_skill_Mana2,Trig_Sandi_skill_Mana2_Actions,RRD,3,2075000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H095,신 해군원수 ,Akainu_02,Trig_Akainu_02_Actions,RRD,1,(7250000.00+(s__TrigVariables__get_realD(GlobalTV)*10.00)),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H095,신 해군원수 ,Akainu_02,Trig_Akainu_02_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H092,혁명군 참모총장,Sabo_Mana,Trig_Sabo_Mana_Func018A,RRD,1,3750000.00,HERO,NORMAL,X,
+H092,혁명군 참모총장,Sabo_Mana,Trig_Sabo_Mana_Func018A,RRD,2,"(0.02*GetUnitStateSwap(UNIT_STATE_LIFE,GetEnumUnit()))",HERO,NORMAL,X,
+H092,혁명군 참모총장,Sabo_Skill_1,Trig_Sabo_Skill_1_Func049A,RRD,1,3250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H092,혁명군 참모총장,Sabo_Skill_1,Trig_Sabo_Skill_1_Func049A,RRD,2,((1000000.00+s__TrigVariables__get_realD(GlobalTV))*I2R(Unit,HERO,NORMAL,X,
+H092,혁명군 참모총장,Sabo_Skill_1,Trig_Sabo_Skill_1_Actions,RRD,3,(2500000.00+(500000.00*I2R(UnitCountBuffsExBJ(bj_BUFF_POLARI,CHAOS,UNIVERSAL,O,
+H092,혁명군 참모총장,Sabo_Skill_3,Trig_Sabo_Skill_3_Func007A,RRD,1,1150000.00,CHAOS,NORMAL,X,
+H092,혁명군 참모총장,Sabo_Skill_4,Trig_Sabo_Skill_4_Func009A,RRD,1,500000.00,CHAOS,NORMAL,X,
+H092,혁명군 참모총장,Sabo_Skill_4,Trig_Sabo_Skill_4_Actions,RRD,2,(500000.00+(50000.00*I2R(UnitCountBuffsExBJ(bj_BUFF_POLARITY,CHAOS,UNIVERSAL,O,
+H092,혁명군 참모총장,Sabo_Skill_4,Trig_Sabo_Skill_4_Actions,RRD,3,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Sabo[3])*0.0",HERO,NORMAL,X,
+H092,혁명군 참모총장,Sabo_Skill_4,Trig_Sabo_Skill_4_Actions,RRD,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Sabo[3])*0.01",HERO,NORMAL,X,
+H098,오하라의 마지막 생존자,Robine_skill_1,Trig_Robine_skill_1_Func023A,RRD,1,"(1850000.00+(GetUnitStateSwap(UNIT_STATE_LIFE,GetEnumUnit())",CHAOS,NORMAL,X,
+H098,오하라의 마지막 생존자,Robine_skill_1,Trig_Robine_skill_1_Actions,RRD,2,200000.00,MAGIC,UNIVERSAL,O,
+H098,오하라의 마지막 생존자,Robine_skill_2,Trig_Robine_skill_2_Func006A,RRD,1,400000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H098,오하라의 마지막 생존자,Robine_skill_3,Trig_Robine_skill_3_Func019A,RRD,1,600000.00,CHAOS,NORMAL,X,
+H093,슈퍼 탱크,Chopatank,Trig_Chopatank_Func013A,RRD,1,GetEventDamage(),CHAOS,NORMAL,X,
+H093,슈퍼 탱크,Chopatank,Trig_Chopatank_Actions,RRD,2,250000.00,MAGIC,UNIVERSAL,O,
+H08U,'포세이돈' 인어공주,Sirahoshi_skill_Mana,Trig_Sirahoshi_skill_Mana_Func003Func007A,RRD,1,"(3350000.00+((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUn",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H05N,해군의 홍일점,tahsigi,Trig_tahsigi_Func002Func001Func004A,RRD,1,"((400000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,s__TrigVariab",MAGIC,UNIVERSAL,O,
+H05N,해군의 홍일점,tahsigi,Trig_tahsigi_Func004Func006Func010A,UnitDamageTargetBJ,2,"(400000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_AGI,s__TrigVariabl",CHAOS,UNIVERSAL,O,
+H05N,해군의 홍일점,tahsigi,Trig_tahsigi_Func004Func006Func010A,RRD,3,"((350000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,s__TrigVariab",MAGIC,UNIVERSAL,O,
+H05N,해군의 홍일점,tahsigi,Trig_tahsigi_Actions,RRD,4,500000.00,MAGIC,UNIVERSAL,O,
+H05N,해군의 홍일점,tahsigi,Trig_tahsigi_Actions,RRD,5,500000.00,MAGIC,UNIVERSAL,O,
+H05N,해군의 홍일점,Tasigi_02,Trig_Tasigi_02_Func006Func001Func002Func011A,UnitDamageTargetBJ,1,((GetEventDamage()*9.00)+(850000.00+(I2R(GetHeroStatBJ(bj_HE,MAGIC,UNIVERSAL,O,
+H05N,해군의 홍일점,Tasigi_02,Trig_Tasigi_02_Actions,RRD,2,500000.00,MAGIC,UNIVERSAL,O,
+H05N,해군의 홍일점,Tasigi_03,Trig_Tasigi_03_Func002Func023A,UnitDamageTargetBJ,1,"(400000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_AGI,s__TrigVariabl",CHAOS,UNIVERSAL,O,
+H05N,해군의 홍일점,Tasigi_03,Trig_Tasigi_03_Func003Func001Func020A,UnitDamageTargetBJ,2,"(380000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,s__TrigVariabl",MAGIC,UNIVERSAL,O,
+H05N,해군의 홍일점,Tasigi_03,Trig_Tasigi_03_Func003Func001Func025Func019A,UnitDamageTargetBJ,3,"(360000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,s__TrigVariabl",MAGIC,UNIVERSAL,O,
+H05N,해군의 홍일점,Tasigi_03,Trig_Tasigi_03_Func004Func011A,UnitDamageTargetBJ,4,"(350000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_AGI,s__TrigVariabl",MAGIC,UNIVERSAL,O,
+H05N,해군의 홍일점,Tasigi_03,Trig_Tasigi_03_Actions,RRD,5,400000.00,MAGIC,UNIVERSAL,O,
+H05N,해군의 홍일점,Tasigi_03,Trig_Tasigi_03_Actions,RRD,6,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H05N,해군의 홍일점,Tasigi_03,Trig_Tasigi_03_Actions,RRD,7,400000.00,MAGIC,UNIVERSAL,O,
+H05N,해군의 홍일점,Tasigi_03,Trig_Tasigi_03_Actions,RRD,8,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H090,지진과 어둠의 검은수염,Tichi_skill_1,Trig_Tichi_skill_1_Actions,RRD,1,4000000.00,CHAOS,UNIVERSAL,O,
+H090,지진과 어둠의 검은수염,Tichi_skill_1,Trig_Tichi_skill_1_Actions,RRD,2,1000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H090,지진과 어둠의 검은수염,Tichi_skill_1,Trig_Tichi_skill_1_Actions,RRD,3,2000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H090,지진과 어둠의 검은수염,Tichi_skill_2_tr,Trig_Tichi_skill_2_tr_Func003Func007A,RRD,1,"(385000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,s__TrigVariabl",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H090,지진과 어둠의 검은수염,Tichi_skill_2_tr,Trig_Tichi_skill_2_tr_Func004Func003A,RRD,2,"(385000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,s__TrigVariabl",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H090,지진과 어둠의 검은수염,Tichi_skill_3,Trig_Tichi_skill_3_Func009A,RRD,1,"((1750000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,udg_Hero[0],",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08X,해군 대장 '성난 보라호랑이',Huji01,Trig_Huji01_Func038A,RRD,1,((GetEventDamage()*2.50)+250000.00),CHAOS,NORMAL,X,
+H08X,해군 대장 '성난 보라호랑이',Huji01,Trig_Huji01_Func051A,RRD,2,GetEventDamage(),CHAOS,NORMAL,X,
+H08X,해군 대장 '성난 보라호랑이',Huji01,Trig_Huji01_Actions,RRD,3,350000.00,MAGIC,UNIVERSAL,O,
+,,Huji02DM,Trig_Huji02DM_Func007A,RRD,1,((GetEventDamage()*5.00)+450000.00),CHAOS,NORMAL,X,
+H08X,해군 대장 '성난 보라호랑이',Huji_03,Trig_Huji_03_Func006Func007A,RRD,1,6250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08X,해군 대장 '성난 보라호랑이',Huji_meteor,Trig_Huji_meteor_Func003Func004A,RRD,1,315000.00,CHAOS,NORMAL,X,
+H08Y,무적의 아이언 파이러츠,Franky_Skill_Mana1,Trig_Franky_Skill_Mana1_Func033A,RRD,1,4000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08Y,무적의 아이언 파이러츠,Franky_Skill_1,Trig_Franky_Skill_1_Func007A,RRD,1,500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08Y,무적의 아이언 파이러츠,Franky_Skill_1,Trig_Franky_Skill_1_Func015A,RRD,2,400000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08Y,무적의 아이언 파이러츠,Franky_Skill_1,Trig_Franky_Skill_1_Actions,RRD,3,250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08Y,무적의 아이언 파이러츠,Franky_Skill_1,Trig_Franky_Skill_1_Actions,RRD,4,200000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08Y,무적의 아이언 파이러츠,Franky_misiile_re,Trig_Franky_misiile_re_Func026A,RRD,1,180000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H09E,"""어둠의 조커""드레스로자의 악몽",DP_AttackDamage,Trig_DP_AttackDamage_Func015A,RRD,1,((GetEventDamage()*0.50)+50000.00),PIERCE,NORMAL,X,
+H09D,"""어둠의 조커""드레스로자의 악몽",DP_Attack_gaksung,Trig_DP_Attack_gaksung_Func016A,RRD,1,"((GetUnitStateSwap(UNIT_STATE_LIFE,GetEnumUnit())*0.01)+1000",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H09D,"""어둠의 조커""드레스로자의 악몽",DP_Attack_gaksung,Trig_DP_Attack_gaksung_Func016A,RRD,2,400000.00,CHAOS,NORMAL,X,
+H09D,"""어둠의 조커""드레스로자의 악몽",DP_AttackDamagegaksung,Trig_DP_AttackDamagegaksung_Func015A,RRD,1,((GetEventDamage()*0.85)+85000.00),CHAOS,NORMAL,X,
+H09E,"""어둠의 조커""드레스로자의 악몽",DP_Skill_3,Trig_DP_Skill_3_Func007A,RRD,1,"(750000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,udg_Hero_DP[0]",PIERCE,NORMAL,X,
+H09E,"""어둠의 조커""드레스로자의 악몽",DP_Skill_2,Trig_DP_Skill_2_Actions,RRD,1,200000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H09E,"""어둠의 조커""드레스로자의 악몽",DP_Skill_2,Trig_DP_Skill_2_Actions,RRD,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni",CHAOS,NORMAL,X,
+H09B,G.O.D,Usop_Attack,Trig_Usop_Attack_Func015A,RRD,1,600000.00,PIERCE,NORMAL,X,
+H09B,G.O.D,Usop_Attack,Trig_Usop_Attack_Func032A,RRD,2,262500.00,PIERCE,NORMAL,X,
+H09B,G.O.D,Usop_Attack,Trig_Usop_Attack_Actions,RRD,3,(450000.00+(1500.00*I2R(GetUnitPointValue(GetTriggerUnit())),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H09B,G.O.D,Usop_Skill_2,Trig_Usop_Skill_2_Func012A,RRD,1,262500.00,PIERCE,NORMAL,X,
+H09B,G.O.D,Usop_Skill_2,Trig_Usop_Skill_2_Func027A,RRD,2,262500.00,PIERCE,NORMAL,X,
+H09B,G.O.D,Usop_Skill_2,Trig_Usop_Skill_2_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",PIERCE,UNIVERSAL,O,
+H09B,G.O.D,Usop_Skill_2,Trig_Usop_Skill_2_Actions,RRD,4,(1050000.00/I2R(GetUnitPointValue(s__TrigVariables__get_unit,PIERCE,UNIVERSAL,O,
+H09B,G.O.D,Usop_Skill_2,Trig_Usop_Skill_2_Actions,RRD,5,350000.00,PIERCE,UNIVERSAL,O,
+H09C,G.O.D,Usop_Skill_10Ton,Trig_Usop_Skill_10Ton_Actions,RRD,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*(0.0",PIERCE,NORMAL,X,
+H09B,G.O.D,Usop_Skill_Mana,Trig_Usop_Skill_Mana_Func021A,RRD,1,"(1000000.00+(GetUnitStateSwap(UNIT_STATE_LIFE,GetEnumUnit())",HERO,NORMAL,X,
+H0B5,해군대장-보르살리노,Kizaru_01_shoot,Trig_Kizaru_01_shoot_Func010A,RRD,1,200000.00,MAGIC,UNIVERSAL,O,
+H0B5,해군대장-보르살리노,Kizaru_01,Trig_Kizaru_01_Actions,RRD,1,s__TrigVariables__get_realD(GlobalTV),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H097,전 해군대장 아오키지 ,Aokigi_skill_3,Trig_Aokigi_skill_3_Func018A,UnitDamageTargetBJ,1,240000.00,MAGIC,UNIVERSAL,O,
+H09F,수라의 검사,Zoro_tiger,Trig_Zoro_tiger_Func004Func015A,UnitDamageTargetBJ,1,(2500000.00+s__TrigVariables__get_realD(GlobalTV)),CHAOS,NORMAL,X,
+H09F,수라의 검사,Zoro_saza1,Trig_Zoro_saza1_Func002Func040A,RRD,1,(602500.00+s__TrigVariables__get_realD(GlobalTV)),CHAOS,NORMAL,X,
+H09F,수라의 검사,Zoro_saza1,Trig_Zoro_saza1_Actions,RRD,2,(903750.00+(s__TrigVariables__get_realD(GlobalTV)*10.00)),CHAOS,NORMAL,X,
+H09F,수라의 검사,Zoro_raven,Trig_Zoro_raven_Func003Func020A,RRD,1,(350000.00+s__TrigVariables__get_realD(GlobalTV)),CHAOS,NORMAL,X,
+H09F,수라의 검사,Zoro_raven,Trig_Zoro_raven_Func004Func008A,RRD,2,350000.00,CHAOS,NORMAL,X,
+H09F,수라의 검사,Zoro_raven,Trig_Zoro_raven_Func005Func008A,RRD,3,350000.00,CHAOS,NORMAL,X,
+H09F,수라의 검사,Zoro_samchun1,Trig_Zoro_samchun1_Func002Func012A,RRD,1,2500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H09F,수라의 검사,Zoro_Samchun2,Trig_Zoro_Samchun2_Func003Func006A,RRD,1,(1500000.00+s__TrigVariables__get_realD(GlobalTV)),CHAOS,NORMAL,X,
+H09F,수라의 검사,Zoro_Samchun2,Trig_Zoro_Samchun2_Func004Func002A,RRD,2,2500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H0BT,염왕,Zoro_enfor_3dragon,Trig_Zoro_enfor_3dragon_Func002Func017A,RRD,1,(535000.00+s__TrigVariables__get_realD(GlobalTV)),CHAOS,NORMAL,X,
+H0BT,염왕,Zoro_enfor_3dragon,Trig_Zoro_enfor_3dragon_Func003Func005Func005A,RRD,2,532500.00,CHAOS,NORMAL,X,
+H0BT,염왕,Zoro_enfor_flying_draong,Trig_Zoro_enfor_flying_draong_Func002Func015A,RRD,1,(672500.00+s__TrigVariables__get_realD(GlobalTV)),CHAOS,NORMAL,X,
+H0BT,염왕,Zoro_enfor_flying_draong,Trig_Zoro_enfor_flying_draong_Actions,RRD,2,(903750.00+(s__TrigVariables__get_realD(GlobalTV)*10.00)),CHAOS,NORMAL,X,
+H08V,웨더리아의 항해사,Nami_Skill_1,Trig_Nami_Skill_1_Func022A,RRD,1,(300000.00+s__TrigVariables__get_realD(GlobalTV)),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08V,웨더리아의 항해사,Nami_Skill_1,Trig_Nami_Skill_1_Func035A,RRD,2,(450000.00+(s__TrigVariables__get_realD(GlobalTV)*1.50)),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08V,웨더리아의 항해사,Nami_Skill_2,Trig_Nami_Skill_2_Actions,RRD,1,800000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08V,웨더리아의 항해사,Nami_Skill_2,Trig_Nami_Skill_2_Actions,RRD,2,400000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08V,웨더리아의 항해사,Nami_Skill_2,Trig_Nami_Skill_2_Actions,RRD,3,400000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H08V,웨더리아의 항해사,Nami_Skill_4,Trig_Nami_Skill_4_Func018A,RRD,1,350000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H09I,소울 킹,BrookAttack,Trig_BrookAttack_Actions,RRD,1,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*(0.",PIERCE,UNIVERSAL,O,
+H09I,소울 킹,BrookAttack,Trig_BrookAttack_Actions,RRD,2,75000.00,HERO,UNIVERSAL,O,
+H09I,소울 킹,Brook_Skill_1,Trig_Brook_Skill_1_Func015A,RRD,1,350000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H09I,소울 킹,Brook_Skill_1,Trig_Brook_Skill_1_Func028A,RRD,2,350000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H094,운명을 점치는 마술사,Hokins_mana,Trig_Hokins_mana_Func004Func003A,RRD,1,(1350000.00+(190000.00*s__TrigVariables__get_realB(GlobalTV),CHAOS,NORMAL,X,
+H094,운명을 점치는 마술사,Hokins_Skill_3,Trig_Hokins_Skill_3_Func003Func004Func002A,RRD,1,(187500.00+(15000.00*s__TrigVariables__get_realB(GlobalTV))),CHAOS,NORMAL,X,
+H094,운명을 점치는 마술사,Hokins_Skill_4,Trig_Hokins_Skill_4_Func025A,RRD,1,(162500.00+(13000.00*s__TrigVariables__get_realB(GlobalTV))),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H094,운명을 점치는 마술사,Hokins,Trig_Hokins_Func002Func001Func004A,RRD,1,(250000.00+(20000.00*s__TrigVariables__get_realB(GlobalTV))),CHAOS,NORMAL,X,
+H09A,어인협객,jinbe_Attack,Trig_jinbe_Attack_Actions,RRD,1,"(1000000.00+(I2R(GetUnitAbilityLevelSwapped('AId1',GetTrigge",SIEGE,NORMAL,X,
+H09A,어인협객,Jimbe,Trig_Jimbe_Func002Func001Func001Func002Func004A,RRD,1,"(1750000.00+(I2R(GetUnitAbilityLevelSwapped('AId1',GetEnumUn",CHAOS,NORMAL,X,
+H09A,어인협객,Jimbe,Trig_Jimbe_Actions,RRD,2,"(4840000.00+(I2R(GetUnitAbilityLevelSwapped('AId1',s__TrigVa",CHAOS,UNIVERSAL,O,
+H09A,어인협객,Jimbe_jingak,Trig_Jimbe_jingak_Func002Func001Func012A,RRD,1,((1000000.00+s__TrigVariables__get_realD(GlobalTV))+(I2R(Get,CHAOS,NORMAL,X,
+H09A,어인협객,Jimbe_Mu,Trig_Jimbe_Mu_Func002Func001Func010A,RRD,1,"(4350000.00+(I2R(GetUnitAbilityLevelSwapped('AId1',GetEnumUn",CHAOS,NORMAL,X,
+H0B2,다섯번째 황제,Snake_Attack,Trig_Snake_Attack_Func022A,RRD,1,(75000.00*(1+(0.01*(GetUnitMoveSpeed(GetEnumUnit())*0.30)))),HERO,NORMAL,X,
+H0B3,다섯번째 황제,Snake_Attack_BlackMamba,Trig_Snake_Attack_BlackMamba_Func019A,RRD,1,(112500.00*(1+(0.01*(GetUnitMoveSpeed(GetEnumUnit())*0.30))),HERO,NORMAL,X,
+H0B3,다섯번째 황제,Snake_Attack_BlackMamba,Trig_Snake_Attack_BlackMamba_Func030A,RRD,2,(112500.00*(1+(0.01*(GetUnitMoveSpeed(GetEnumUnit())*0.30))),HERO,NORMAL,X,
+H0B2,다섯번째 황제,Snake_2,Trig_Snake_2_Func002Func002Func006A,RRD,1,(350000.00*(1+(0.01*(GetUnitMoveSpeed(GetEnumUnit())*0.40))),MAGIC,UNIVERSAL,O,
+H0B2,다섯번째 황제,Snake_2,Trig_Snake_2_Actions,RRD,2,350000.00,MAGIC,UNIVERSAL,O,
+H0B2,다섯번째 황제,Snake_3_Kingkobra,Trig_Snake_3_Kingkobra_Func012Func016A,RRD,1,(3500000.00*(1+(0.01*(GetUnitMoveSpeed(GetEnumUnit())*0.10)),MAGIC,UNIVERSAL,O,
+H0B2,다섯번째 황제,Snake_3_Kingkobra,Trig_Snake_3_Kingkobra_Actions,RRD,2,1875000.00,MAGIC,UNIVERSAL,O,
+H0B4,유스타스'캡틴',Kid_Skill_3_item,Trig_Kid_Skill_3_item_Func004Func007Func005A,RRD,1,(450000.00*(1+(s__TrigVariables__get_realD(GlobalTV)*0.01))),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H0B4,유스타스'캡틴',Kid_Skill_3,Trig_Kid_Skill_3_Func003Func006A,RRD,1,(300000.00*(1+(s__TrigVariables__get_realD(GlobalTV)*0.01))),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H0B4,유스타스'캡틴',Kid_Skill_3,Trig_Kid_Skill_3_Func004Func006A,RRD,2,(300000.00*(1+(s__TrigVariables__get_realD(GlobalTV)*0.01))),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H0B4,유스타스'캡틴',Kid_Skill_Mana,Trig_Kid_Skill_Mana_Func003Func008A,RRD,1,((1000000.00+s__TrigVariables__get_realD(GlobalTV))*(1+(s__T,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H0B4,유스타스'캡틴',Kid_Skill_Mana_Tr,Trig_Kid_Skill_Mana_Tr_Func024A,RRD,1,((400000.00+s__TrigVariables__get_realD(GlobalTV))*(1+(s__Tr,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H0B4,유스타스'캡틴',Kid_Skill_Mana_Tr,Trig_Kid_Skill_Mana_Tr_Func047A,RRD,2,((400000.00+s__TrigVariables__get_realD(GlobalTV))*(1+(s__Tr,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H0B4,유스타스'캡틴',Kid_Skill_Mana_Tr,Trig_Kid_Skill_Mana_Tr_Func060A,RRD,3,((400000.00+s__TrigVariables__get_realD(GlobalTV))*(1+(s__Tr,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H0B4,유스타스'캡틴',Kid_Skill_Life,Trig_Kid_Skill_Life_Func003Func006A,RRD,1,((600000.00+s__TrigVariables__get_realD(GlobalTV))*(1+(s__Tr,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H0B4,유스타스'캡틴',Kid_Skill_Life,Trig_Kid_Skill_Life_Actions,RRD,2,((150000.00+s__TrigVariables__get_realD(GlobalTV))*(1+(s__Tr,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H0B4,유스타스'캡틴',Kid_Skill_Life2,Trig_Kid_Skill_Life2_Func003Func006A,RRD,1,((500000.00+s__TrigVariables__get_realD(GlobalTV))*(1+(s__Tr,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H0B4,유스타스'캡틴',Kid_Skill_Life2,Trig_Kid_Skill_Life2_Actions,RRD,2,((125000.00+s__TrigVariables__get_realD(GlobalTV))*(1+(s__Tr,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H0BD,오니히메,Yamato_Attack_Damage,Trig_Yamato_Attack_Damage_Func026A,RRD,1,((GetEventDamage()*0.75)+15000.00),CHAOS,NORMAL,X,
+H0BD,오니히메,Yamato_Attack_Damage,Trig_Yamato_Attack_Damage_Func026A,RRD,2,((GetEventDamage()*0.20)+15000.00),CHAOS,UNIVERSAL,O,
+H0BD,오니히메,Yamato_Attack_Damage,Trig_Yamato_Attack_Damage_Func029A,RRD,3,((GetEventDamage()*0.75)+15000.00),CHAOS,NORMAL,X,
+H0BD,오니히메,Yamato_Attack_Damage,Trig_Yamato_Attack_Damage_Func038A,RRD,4,"(((GetEventDamage()*3.75)+375000.00)*(0.83+RMaxBJ(0.00,RMinB",CHAOS,UNIVERSAL,O,
+H0BE,오니히메 인수화,Yamato_Attack_Damage2,Trig_Yamato_Attack_Damage2_Func026A,RRD,1,((GetEventDamage()*0.75)+15000.00),CHAOS,NORMAL,X,
+H0BE,오니히메 인수화,Yamato_Attack_Damage2,Trig_Yamato_Attack_Damage2_Func026A,RRD,2,((GetEventDamage()*0.20)+15000.00),CHAOS,UNIVERSAL,O,
+H0BE,오니히메 인수화,Yamato_Attack_Damage2,Trig_Yamato_Attack_Damage2_Func029A,RRD,3,((GetEventDamage()*0.75)+15000.00),CHAOS,NORMAL,X,
+H0BE,오니히메 인수화,Yamato_Attack_Damage2,Trig_Yamato_Attack_Damage2_Func038A,RRD,4,"(((GetEventDamage()*3.75)+375000.00)*(0.83+RMaxBJ(0.00,RMinB",CHAOS,UNIVERSAL,O,
+H0BD,오니히메,Yamato_Life_skill,Trig_Yamato_Life_skill_Func005Func001Func006A,RRD,1,700000.00,CHAOS,NORMAL,X,
+H0BD,오니히메,Yamato_Dash,Trig_Yamato_Dash_Func025A,RRD,1,((udg_Yamato_Damage[GetConvertedPlayerId(GetOwningPlayer(s__,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H0BD,오니히메,Yamato_Dash,Trig_Yamato_Dash_Actions,RRD,2,((udg_Yamato_Damage[GetConvertedPlayerId(GetOwningPlayer(s__,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+H0BL,'신'해군대장-초록소,Rokugu_Attack,Trig_Rokugu_Attack_Func023A,RRD,1,(1000000.00+(I2R(GetItemCharges(udg_Item_Ryokugu[GetConverte,CHAOS,NORMAL,X,
+H0BO,금증숲숲-초록소,RokuguTree_Attack,Trig_RokuguTree_Attack_Func013A,RRD,1,(1250000.00+(I2R(GetItemCharges(udg_Item_Ryokugu[GetConverte,CHAOS,NORMAL,X,
+H0BO,금증숲숲-초록소,Rokugu_skill_1,Trig_Rokugu_skill_1_Func017A,RRD,1,700000.00,CHAOS,NORMAL,X,
+H0BL,'신'해군대장-초록소,Rokugu_Tree_S,Trig_Rokugu_Tree_S_Func022A,RRD,1,(2000000.00+(s__TrigVariables__get_realC(GlobalTV)+s__TrigVa,CHAOS,NORMAL,X,
+H0BL,'신'해군대장-초록소,Rokugu_Tree_S,Trig_Rokugu_Tree_S_Func031A,RRD,2,(2000000.00+(s__TrigVariables__get_realC(GlobalTV)+s__TrigVa,CHAOS,NORMAL,X,
+h06X,센토 이스즈 - 랜덤전용,isz,Trig_isz_Func001Func007A,RRD,1,1500000.00,CHAOS,NORMAL,X,
+,,EXPLOSION,Trig_EXPLOSION_Func004Func024Func004A,RRD,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit())*0.42)",CHAOS,NORMAL,X,
+,,EXPLOSION,Trig_EXPLOSION_Func004Func024Func006A,RRD,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit())*0.57)",CHAOS,NORMAL,X,
+h06T,뱀파이어 - 랜덤전용,vampire,Trig_vampire_Func001Func007A,RRD,1,1800000.00,CHAOS,UNIVERSAL,O,
+h06T,뱀파이어 - 랜덤전용,vampire,Trig_vampire_Func002Func006A,RRD,2,300000.00,CHAOS,UNIVERSAL,O,
+h073,야가미 라이토 - 랜덤전용,Light1,Trig_Light1_Func002Func004A,RRD,1,"(GetUnitStateSwap(UNIT_STATE_LIFE,GetEnumUnit())*0.01)",CHAOS,UNIVERSAL,O,
+h073,야가미 라이토 - 랜덤전용,Light1,Trig_Light1_Func002Func004A,RRD,2,350000.00,CHAOS,NORMAL,X,
+h073,야가미 라이토 - 랜덤전용,Light1,Trig_Light1_Actions,RRD,3,"((GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit())*0.30)*(",HERO,UNIVERSAL,O,
+h070,이사야마 요미 - 랜덤전용,yomi2,Trig_yomi2_Func001Func001Func006A,RRD,1,400000.00,CHAOS,NORMAL,X,
+h06U,k' - 랜덤전용,k1,Trig_k1_Func001Func011A,RRD,1,600000.00,CHAOS,NORMAL,X,
+h06U,k' - 랜덤전용,k1,Trig_k1_Func002Func005A,RRD,2,300000.00,CHAOS,NORMAL,X,
+h071,쿠로사키 이치고 - 랜덤전용,ichigo1,Trig_ichigo1_Func019A,RRD,1,200000.00,CHAOS,UNIVERSAL,O,
+h071,쿠로사키 이치고 - 랜덤전용,ichigo1,Trig_ichigo1_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*(0.0",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h071,쿠로사키 이치고 - 랜덤전용,ichigo1,Trig_ichigo1_Actions,RRD,3,100000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09K,옌 - 랜덤전용,En_nomal,Trig_En_nomal_Func002Func001Func001Func002A,RRD,1,400000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09R,쿠죠 죠타로 - 랜덤전용[제한됨],Jotaro_W,Trig_Jotaro_W_Func038A,UnitDamageTargetBJ,1,"(1850000.00*(1.00+(I2R(GetUnitAbilityLevelSwapped('AId1',Get",HERO,NORMAL,X,
+h09R,쿠죠 죠타로 - 랜덤전용[제한됨],Jotaro_W,Trig_Jotaro_W_Actions,UnitDamageTargetBJ,2,875000.00,CHAOS,UNIVERSAL,O,
+h09R,쿠죠 죠타로 - 랜덤전용[제한됨],Jotaro_E,Trig_Jotaro_E_Func060A,UnitDamageTargetBJ,1,"(850000.00*(1.00+(I2R(GetUnitAbilityLevelSwapped('AId1',GetE",HERO,NORMAL,X,
+h09R,쿠죠 죠타로 - 랜덤전용[제한됨],Jotaro_E,Trig_Jotaro_E_Actions,UnitDamageTargetBJ,2,1000000.00,CHAOS,UNIVERSAL,O,
+h09R,쿠죠 죠타로 - 랜덤전용[제한됨],Jotaro_R,Trig_Jotaro_R_Func072A,RRD,1,2500000.00,HERO,NORMAL,X,
+h09R,쿠죠 죠타로 - 랜덤전용[제한됨],Jotaro_R,Trig_Jotaro_R_Func075A,RRD,2,"(4250000.00+((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUn",HERO,NORMAL,X,
+h09R,쿠죠 죠타로 - 랜덤전용[제한됨],Jotaro_D2,Trig_Jotaro_D2_Func027A,UnitDamageTargetBJ,1,850000.00,HERO,NORMAL,X,
+h09R,쿠죠 죠타로 - 랜덤전용[제한됨],Jotaro_D2,Trig_Jotaro_D2_Actions,UnitDamageTargetBJ,2,425000.00,CHAOS,UNIVERSAL,O,
+h09W,나미카제 미나토 - 랜덤전용[제한됨],Minato_Q2,Trig_Minato_Q2_Func066A,RRD,1,600000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09W,나미카제 미나토 - 랜덤전용[제한됨],Minato_E,Trig_Minato_E_Actions,RRD,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09W,나미카제 미나토 - 랜덤전용[제한됨],Minato_E,Trig_Minato_E_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09W,나미카제 미나토 - 랜덤전용[제한됨],Minato_Mana,Trig_Minato_Mana_Func047A,RRD,1,775000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_2,Trig_Ryougi_Shiki_2_Func043A,RRD,1,1150000.00,NORMAL,NORMAL,X,⚠NORMAL=원작 Spells행
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_2,Trig_Ryougi_Shiki_2_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",HERO,NORMAL,X,
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_2,Trig_Ryougi_Shiki_2_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",HERO,NORMAL,X,
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_2,Trig_Ryougi_Shiki_2_Actions,RRD,4,8150000.00,HERO,NORMAL,X,
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_2,Trig_Ryougi_Shiki_2_Actions,RRD,5,1440000.00,HERO,UNIVERSAL,O,
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3,Trig_Ryougi_Skill_3_Actions,RRD,1,1440000.00,HERO,UNIVERSAL,O,
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3,Trig_Ryougi_Skill_3_Actions,RRD,2,4000000.00,HERO,NORMAL,X,
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3,Trig_Ryougi_Skill_3_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",HERO,NORMAL,X,
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3,Trig_Ryougi_Skill_3_Actions,RRD,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",HERO,NORMAL,X,
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_double,Trig_Ryougi_Skill_3_double_Actions,RRD,1,1440000.00,HERO,UNIVERSAL,O,
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_double,Trig_Ryougi_Skill_3_double_Actions,RRD,2,4000000.00,HERO,NORMAL,X,
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_double,Trig_Ryougi_Skill_3_double_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",HERO,NORMAL,X,
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Skill_3_double,Trig_Ryougi_Skill_3_double_Actions,RRD,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",HERO,NORMAL,X,
+,,Ryougi_Skill_3_triple,Trig_Ryougi_Skill_3_triple_Actions,RRD,1,1440000.00,HERO,UNIVERSAL,O,
+,,Ryougi_Skill_3_triple,Trig_Ryougi_Skill_3_triple_Actions,RRD,2,3200000.00,HERO,NORMAL,X,
+,,Ryougi_Skill_3_triple,Trig_Ryougi_Skill_3_triple_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",HERO,NORMAL,X,
+,,Ryougi_Skill_3_triple,Trig_Ryougi_Skill_3_triple_Actions,RRD,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",HERO,NORMAL,X,
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_R2,Trig_Ryougi_Shiki_R2_Func063A,RRD,1,5000000.00,HERO,UNIVERSAL,O,
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_R2,Trig_Ryougi_Shiki_R2_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",HERO,NORMAL,X,
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_R2,Trig_Ryougi_Shiki_R2_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",HERO,NORMAL,X,
+h0A2,료우기 시키 - 랜덤전용[제한됨],Ryougi_Shiki_R2,Trig_Ryougi_Shiki_R2_Actions,RRD,4,1440000.00,HERO,UNIVERSAL,O,
+h0A6,야쿠모 유카리 - 랜덤전용[제한됨],Yukari_Attack,Trig_Yukari_Attack_Actions,RRD,1,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h0A6,야쿠모 유카리 - 랜덤전용[제한됨],Yukari_D2,Trig_Yukari_D2_Func054A,RRD,1,2000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h0A6,야쿠모 유카리 - 랜덤전용[제한됨],Yukari_D2,Trig_Yukari_D2_Func075A,RRD,2,3000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h0A6,야쿠모 유카리 - 랜덤전용[제한됨],Yukari_W,Trig_Yukari_W_Func020A,RRD,1,3200000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h0A6,야쿠모 유카리 - 랜덤전용[제한됨],Yukari_R2,Trig_Yukari_R2_Func052Func007A,RRD,1,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_skill_1,Trig_kikoyou_skill_1_Func031A,RRD,1,350000.00,CHAOS,NORMAL,X,
+h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_skill_1,Trig_kikoyou_skill_1_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unit",CHAOS,UNIVERSAL,O,
+h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_skill_1,Trig_kikoyou_skill_1_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unit",CHAOS,UNIVERSAL,O,
+h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_skill_1,Trig_kikoyou_skill_1_Actions,RRD,4,350000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_skill_2,Trig_kikoyou_skill_2_Func035Func002Func001Func001Func005A,RRD,1,125000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_hp,Trig_kikoyou_hp_Func034A,RRD,1,1500000.00,HERO,NORMAL,X,
+h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_hp,Trig_kikoyou_hp_Func034A,RRD,2,1500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_hp,Trig_kikoyou_hp_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unit",CHAOS,UNIVERSAL,O,
+h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_hp,Trig_kikoyou_hp_Actions,RRD,4,1000000.00,CHAOS,UNIVERSAL,O,
+h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_mana,Trig_kikoyou_mana_Func057A,RRD,1,300000.00,CHAOS,NORMAL,X,
+h0BF,키쿄우 - 랜덤전용[제한됨],kikoyou_mana,Trig_kikoyou_mana_Func057A,RRD,2,100000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09L,이치의 율자 - 랜덤전용,Bronya_Skill_1,Trig_Bronya_Skill_1_Func019A,RRD,1,200000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09L,이치의 율자 - 랜덤전용,Bronya_Skill_1,Trig_Bronya_Skill_1_Actions,RRD,2,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,Trig_BronyaMotar_laser_Func041A,RRD,1,(250000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(Globa,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,Trig_BronyaMotar_laser_Func054A,RRD,2,(225000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(Globa,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,Trig_BronyaMotar_laser_Actions,RRD,3,(250000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(Globa,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,Trig_BronyaMotar_laser_Actions,RRD,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,Trig_BronyaMotar_laser_Actions,RRD,5,(225000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(Globa,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_R,Trig_BronyaMotar_R_Func041A,RRD,1,1000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_R,Trig_BronyaMotar_R_Func066A,RRD,2,2500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_R,Trig_BronyaMotar_R_Actions,RRD,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_E,Trig_BronyaMotar_E_Func044A,RRD,1,(625000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(Globa,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_E,Trig_BronyaMotar_E_Actions,RRD,2,"(3125000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVar",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h08I,쿠치키 뱌쿠야 - 랜덤전용[제한됨],byakuya_Chan,Trig_byakuya_Chan_Actions,RRD,1,"(425000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVari",CHAOS,UNIVERSAL,O,
+h08I,쿠치키 뱌쿠야 - 랜덤전용[제한됨],byakuya_Chan,Trig_byakuya_Chan_Actions,RRD,2,500000.00,CHAOS,UNIVERSAL,O,
+h08I,쿠치키 뱌쿠야 - 랜덤전용[제한됨],byakuya_Q,Trig_byakuya_Q_Func003Func004A,RRD,1,850000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h08I,쿠치키 뱌쿠야 - 랜덤전용[제한됨],Byakuya_E,Trig_Byakuya_E_Func050A,RRD,1,4500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h08I,쿠치키 뱌쿠야 - 랜덤전용[제한됨],Byakuya_R,Trig_Byakuya_R_Func030A,RRD,1,5000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h0BC,타츠마키 - 랜덤전용[제한됨],Tatsumaki_R_Attack,Trig_Tatsumaki_R_Attack_Func064A,RRD,1,3000000.00,CHAOS,NORMAL,X,
+h0BC,타츠마키 - 랜덤전용[제한됨],Tatsumaki_T_Explosion_by_AZ_Attack,Trig_Tatsumaki_T_Explosion_by_AZ_Attack_Func057A,RRD,1,4000000.00,CHAOS,NORMAL,X,
+h0AC,마운틴.D.히그마 - 랜덤전용[제한됨],Higma_Attack,Trig_Higma_Attack_Actions,RRD,1,5000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h0AC,마운틴.D.히그마 - 랜덤전용[제한됨],Higma_Q,Trig_Higma_Q_Func045A,RRD,1,100000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h0AC,마운틴.D.히그마 - 랜덤전용[제한됨],Higma_Q,Trig_Higma_Q_Func049A,RRD,2,100000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h0AC,마운틴.D.히그마 - 랜덤전용[제한됨],Higma_W,Trig_Higma_W_Func029A,RRD,1,175000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04Q,빅 맘 강철 풍선 - 불멸의,Bigmam_Attack,Trig_Bigmam_Attack_Actions,RRD,1,((GetEventDamage()*1.98)+999999.00),CHAOS,UNIVERSAL,O,
+h04Q,빅 맘 강철 풍선 - 불멸의,Bigmam_hp,Trig_Bigmam_hp_Func027A,RRD,1,s__TrigVariables__get_realD(GlobalTV),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04Q,빅 맘 강철 풍선 - 불멸의,Bigmam_Eat,Trig_Bigmam_Eat_Func005Func014A,RRD,1,(1750000.00*(1+(0.01*I2R(GetItemCharges(udg_Item_Bigmom[GetC,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04Q,빅 맘 강철 풍선 - 불멸의,Bigmam_Eat,Trig_Bigmam_Eat_Actions,RRD,2,(4500000.00*(1+(0.01*I2R(GetItemCharges(udg_Item_Bigmom[GetC,CHAOS,UNIVERSAL,O,
+h049,실버즈 레일리 명왕 - 불멸의,LaillySkill3,Trig_LaillySkill3_Func001Func016A,RRD,1,3250000.00,CHAOS,NORMAL,X,
+h049,실버즈 레일리 명왕 - 불멸의,LaillySkill3,Trig_LaillySkill3_Func001Func028A,RRD,2,2750000.00,CHAOS,NORMAL,X,
+h049,실버즈 레일리 명왕 - 불멸의,Kick_1,Trig_Kick_1_Func005Func002Func030A,RRD,1,1750000.00,CHAOS,NORMAL,X,
+h049,실버즈 레일리 명왕 - 불멸의,Kick_1,Trig_Kick_1_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",CHAOS,NORMAL,X,
+h049,실버즈 레일리 명왕 - 불멸의,Kick_1,Trig_Kick_1_Actions,RRD,3,787500.00,CHAOS,NORMAL,X,
+h049,실버즈 레일리 명왕 - 불멸의,LaillySkill1,Trig_LaillySkill1_Func015A,RRD,1,GetEventDamage(),CHAOS,NORMAL,X,
+h04B,금사자 시키 천신 - 불멸의,Shiki_Lion,Trig_Shiki_Lion_Func035A,RRD,1,3250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04B,금사자 시키 천신 - 불멸의,Shiki_SKill_item,Trig_Shiki_SKill_item_Func020A,RRD,1,250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04B,금사자 시키 천신 - 불멸의,Shiki_champa2,Trig_Shiki_champa2_Func002Func001Func004Func006A,RRD,1,400000.00,MAGIC,UNIVERSAL,O,
+h04E,"센고쿠 해군원수 ""부처님"" - 불멸의",Sengoku_Attack,Trig_Sengoku_Attack_Func022A,RRD,1,"(400000.00+(GetUnitStateSwap(UNIT_STATE_LIFE,GetEnumUnit())*",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04E,"센고쿠 해군원수 ""부처님"" - 불멸의",Sengoku_Attack,Trig_Sengoku_Attack_Func032A,RRD,2,"(300000.00+(GetUnitStateSwap(UNIT_STATE_LIFE,GetEnumUnit())*",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04E,"센고쿠 해군원수 ""부처님"" - 불멸의",Seongoku_Skill_4,Trig_Seongoku_Skill_4_Func003Func001Func007A,RRD,1,500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04E,"센고쿠 해군원수 ""부처님"" - 불멸의",Seongoku_Skill_4,Trig_Seongoku_Skill_4_Func004Func008A,RRD,2,2000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04E,"센고쿠 해군원수 ""부처님"" - 불멸의",Sengoku_Skill_Item,Trig_Sengoku_Skill_Item_Func021A,RRD,1,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04D,몽키.D.드래곤 혁명군의 수장 - 불멸의,Dragon_Skill_Mana,Trig_Dragon_Skill_Mana_Func025A,RRD,1,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04D,몽키.D.드래곤 혁명군의 수장 - 불멸의,Dragon_Skill_1,Trig_Dragon_Skill_1_Func014A,RRD,1,1000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04D,몽키.D.드래곤 혁명군의 수장 - 불멸의,Dragon_Skill_1,Trig_Dragon_Skill_1_Actions,RRD,2,1000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h08H,삭풍불멸의,Dragon_Skill_2dummy,Trig_Dragon_Skill_2dummy_Actions,RRD,1,"((25000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerU",MELEE,UNIVERSAL,O,⚠MELEE=원작 Normal행
+h08H,삭풍불멸의,Dragon_Skill_2dummy,Trig_Dragon_Skill_2dummy_Actions,RRD,2,"((15000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerU",MELEE,NORMAL,X,⚠MELEE=원작 Normal행
+h04D,몽키.D.드래곤 혁명군의 수장 - 불멸의,Dragon_Skill_1_T,Trig_Dragon_Skill_1_T_Func031A,RRD,1,1250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04D,몽키.D.드래곤 혁명군의 수장 - 불멸의,Dragon_Skill_1_T,Trig_Dragon_Skill_1_T_Actions,RRD,2,"(1.50*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables_",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04D,몽키.D.드래곤 혁명군의 수장 - 불멸의,Dragon_Skill_1_T,Trig_Dragon_Skill_1_T_Actions,RRD,3,"(0.02*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables_",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04C,몽키.D.거프 해군영웅 주먹의 거프 - 불멸,Garp_AttackDamage,Trig_Garp_AttackDamage_Func020A,RRD,1,(GetEventDamage()*(1.10+s__TrigVariables__get_realD(GlobalTV,CHAOS,NORMAL,X,
+h04C,몽키.D.거프 해군영웅 주먹의 거프 - 불멸,Garp_AttackDamage,Trig_Garp_AttackDamage_Func020A,RRD,2,(2500.00*s__TrigVariables__get_realG(GlobalTV)),CHAOS,UNIVERSAL,O,
+h04C,몽키.D.거프 해군영웅 주먹의 거프 - 불멸,Garp_AttackDamage,Trig_Garp_AttackDamage_Func029A,RRD,3,(GetEventDamage()*(1+s__TrigVariables__get_realD(GlobalTV))),CHAOS,NORMAL,X,
+h04C,몽키.D.거프 해군영웅 주먹의 거프 - 불멸,Garp_AttackDamage,Trig_Garp_AttackDamage_Func041A,RRD,4,((615000.00+(GetEventDamage()*(1.05+s__TrigVariables__get_re,CHAOS,NORMAL,X,
+h04C,몽키.D.거프 해군영웅 주먹의 거프 - 불멸,Garp_AttackDamage,Trig_Garp_AttackDamage_Actions,RRD,5,(250000.00*(1+(0.12*s__TrigVariables__get_realD(GlobalTV)))),HERO,UNIVERSAL,O,
+h04C,몽키.D.거프 해군영웅 주먹의 거프 - 불멸,Garp_AttackDamage,Trig_Garp_AttackDamage_Actions,RRD,6,"((0.05*GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__ge",HERO,NORMAL,X,
+h04C,몽키.D.거프 해군영웅 주먹의 거프 - 불멸,Garp_AttackDamage,Trig_Garp_AttackDamage_Actions,RRD,7,"(((0.005)*GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables_",HERO,NORMAL,X,
+h04C,몽키.D.거프 해군영웅 주먹의 거프 - 불멸,Garp_Mana2,Trig_Garp_Mana2_Func004Func006Func008A,RRD,1,"((6000000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUn",HERO,NORMAL,X,
+h04C,몽키.D.거프 해군영웅 주먹의 거프 - 불멸,Garp_Mana2,Trig_Garp_Mana2_Func005Func008A,RRD,2,"((6000000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUn",HERO,NORMAL,X,
+h04C,몽키.D.거프 해군영웅 주먹의 거프 - 불멸,Garp_Mana2,Trig_Garp_Mana2_Func006Func002Func011A,RRD,3,"((7250000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUn",HERO,NORMAL,X,
+h04G,"제트 해군 스승 ""Z"" - 불멸의",Z_Attack,Trig_Z_Attack_Actions,RRD,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*(0.0",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04G,"제트 해군 스승 ""Z"" - 불멸의",Z_Skill_Mana,Trig_Z_Skill_Mana_Func026A,RRD,1,"(4850000.00+((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUn",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04G,"제트 해군 스승 ""Z"" - 불멸의",Z_Skill_1,Trig_Z_Skill_1_Func021A,RRD,1,s__TrigVariables__get_realG(GlobalTV),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04G,"제트 해군 스승 ""Z"" - 불멸의",Z_Skill_1,Trig_Z_Skill_1_Actions,RRD,2,1250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04G,"제트 해군 스승 ""Z"" - 불멸의",Z_skill_3,Trig_Z_skill_3_Actions,RRD,1,1000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h04A,에드워드 뉴게이트 한시대를 주름잡던 대해적 ,Ed_Skill_Mana,Trig_Ed_Skill_Mana_Func021A,RRD,1,2750000.00,HERO,NORMAL,X,
+h04A,에드워드 뉴게이트 한시대를 주름잡던 대해적 ,Ed_Skill_1,Trig_Ed_Skill_1_Func035A,RRD,1,"((1750000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUn",HERO,NORMAL,X,
+h04A,에드워드 뉴게이트 한시대를 주름잡던 대해적 ,Ed_Skill_1,Trig_Ed_Skill_1_Actions,RRD,2,"((1750000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVa",HERO,NORMAL,X,
+h04A,에드워드 뉴게이트 한시대를 주름잡던 대해적 ,Ed_Skill_1_Item,Trig_Ed_Skill_1_Item_Func036A,RRD,1,"((1750000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUn",HERO,NORMAL,X,
+h04A,에드워드 뉴게이트 한시대를 주름잡던 대해적 ,Ed_Skill_1_Item,Trig_Ed_Skill_1_Item_Actions,RRD,2,"((1750000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVa",HERO,NORMAL,X,
+,,Ed_Skill_2sc_Filterfunc001,Ed_Skill_2sc_Filterfunc001,RRD,1,600000.00,HERO,NORMAL,X,
+h04J,골.D.로져 해적왕 - 불멸의,roger_Attack,Trig_roger_Attack_Func019A,RRD,1,800000.00,HERO,NORMAL,X,
+h04J,골.D.로져 해적왕 - 불멸의,roger_Attack,Trig_roger_Attack_Actions,RRD,2,1000000.00,HERO,NORMAL,X,
+h04J,골.D.로져 해적왕 - 불멸의,roger_Skill_2,Trig_roger_Skill_2_Func011A,RRD,1,1450000.00,HERO,NORMAL,X,
+h04J,골.D.로져 해적왕 - 불멸의,roger_Mana,Trig_roger_Mana_Func024A,RRD,1,7250000.00,HERO,NORMAL,X,
+h04F,스코퍼 가반 로져 해적단의 검호 - 불멸의,Gaban_Skill_1,Trig_Gaban_Skill_1_Actions,RRD,1,8750000.00,HERO,NORMAL,X,
+h04F,스코퍼 가반 로져 해적단의 검호 - 불멸의,Gaban_Skill_1,Trig_Gaban_Skill_1_Actions,RRD,2,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get",PIERCE,NORMAL,X,
+h04F,스코퍼 가반 로져 해적단의 검호 - 불멸의,Gaban_Skill_mana,Trig_Gaban_Skill_mana_Actions,RRD,1,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Gaban[3])*0.",CHAOS,UNIVERSAL,O,
+h04F,스코퍼 가반 로져 해적단의 검호 - 불멸의,Gaban_Skill_mana,Trig_Gaban_Skill_mana_Actions,RRD,2,"(0.10*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Gaban[3]",HERO,UNIVERSAL,O,
+h04F,스코퍼 가반 로져 해적단의 검호 - 불멸의,Gaban_Skill_mana,Trig_Gaban_Skill_mana_Actions,RRD,3,"(0.03*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Gaban[3]",HERO,UNIVERSAL,O,
+h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Attack,Trig_Kaido_Attack_Func011Func028A,RRD,1,((s__TrigVariables__get_realB(GlobalTV)*0.10)+150000.00),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Attack,Trig_Kaido_Attack_Func011Func028A,RRD,2,s__TrigVariables__get_realD(GlobalTV),CHAOS,NORMAL,X,
+h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Attack,Trig_Kaido_Attack_Func012Func016A,RRD,3,((s__TrigVariables__get_realB(GlobalTV)*0.10)+150000.00),NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Attack,Trig_Kaido_Attack_Func013Func024A,RRD,4,s__TrigVariables__get_realD(GlobalTV),CHAOS,UNIVERSAL,O,
+h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Attack,Trig_Kaido_Attack_Actions,RRD,5,500000.00,HERO,NORMAL,X,
+h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Skill_1_8,Trig_Kaido_Skill_1_8_Func047A,RRD,1,s__TrigVariables__get_realD(GlobalTV),CHAOS,NORMAL,X,
+h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Skill_1_8,Trig_Kaido_Skill_1_8_Actions,RRD,2,s__TrigVariables__get_realD(GlobalTV),CHAOS,UNIVERSAL,O,
+h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Mana,Trig_Kaido_Mana_Func004Func001Func006A,RRD,1,999999.00,HERO,NORMAL,X,
+h0AD,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_melee_1,Trig_Kaido_Dragon_melee_1_Func032A,RRD,1,(s__TrigVariables__get_realD(GlobalTV)*0.56),CHAOS,NORMAL,X,
+h0AD,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_melee_1,Trig_Kaido_Dragon_melee_1_Func039A,RRD,2,(s__TrigVariables__get_realD(GlobalTV)*0.35),CHAOS,NORMAL,X,
+h0AD,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_Skill_2,Trig_Kaido_Dragon_Skill_2_Func004Func001Func008A,RRD,1,s__TrigVariables__get_realD(GlobalTV),CHAOS,NORMAL,X,
+h0AD,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_Skill_2,Trig_Kaido_Dragon_Skill_2_Func004Func001Func025A,RRD,2,s__TrigVariables__get_realD(GlobalTV),CHAOS,NORMAL,X,
+h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_buster,Trig_Kaido_Dragon_buster_Func049A,RRD,1,s__TrigVariables__get_realD(GlobalTV),CHAOS,NORMAL,X,
+h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_buster,Trig_Kaido_Dragon_buster_Actions,RRD,2,s__TrigVariables__get_realD(GlobalTV),CHAOS,UNIVERSAL,O,
+H0BK,태양의신-니카,Nika_Attack,Trig_Nika_Attack_Func020A,RRD,1,8500000.00,HERO,NORMAL,X,
+H0BK,태양의신-니카,Nika_Attack,Trig_Nika_Attack_Func056A,RRD,2,750000.00,HERO,NORMAL,X,
+H0BK,태양의신-니카,Nika_Random_Punch,Trig_Nika_Random_Punch_Func018Func011A,RRD,1,(450000.00*(1+(0.01*(GetUnitMoveSpeed(GetEnumUnit())*0.30))),CHAOS,NORMAL,X,
+H0BK,태양의신-니카,Nika_Random_Punch,Trig_Nika_Random_Punch_Actions,RRD,2,(450000.00*(1+(0.01*(GetUnitMoveSpeed(s__TrigVariables__get_,CHAOS,UNIVERSAL,O,
+H0BK,태양의신-니카,Nika_AttackDamage,Trig_Nika_AttackDamage_Func018A,RRD,1,((GetEventDamage()*5.00)+1000000.00),CHAOS,NORMAL,X,
+H0BK,태양의신-니카,Nika_AttackDamage,Trig_Nika_AttackDamage_Func031A,RRD,2,((GetEventDamage()*2.00)+200000.00),CHAOS,NORMAL,X,
+H0BK,태양의신-니카,Nika_AttackDamage,Trig_Nika_AttackDamage_Actions,RRD,3,((GetEventDamage()*5.00)+500000.00),CHAOS,UNIVERSAL,O,
+H0BK,태양의신-니카,Nika_AttackDamage,Trig_Nika_AttackDamage_Actions,RRD,4,((GetEventDamage()*2.00)+200000.00),CHAOS,UNIVERSAL,O,
+h059,'화권의' 포트거스.D.에이스 - 영원한,Ace_Attack,Trig_Ace_Attack_Func025A,RRD,1,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h059,'화권의' 포트거스.D.에이스 - 영원한,Ace_Attack,Trig_Ace_Attack_Actions,RRD,2,1000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h059,'화권의' 포트거스.D.에이스 - 영원한,ace_skill_3,Trig_ace_skill_3_Func019A,RRD,1,1000000.00,MAGIC,UNIVERSAL,O,
+h059,'화권의' 포트거스.D.에이스 - 영원한,ace_skill_5,Trig_ace_skill_5_Func004Func005A,RRD,1,s__TrigVariables__get_realD(GlobalTV),MAGIC,UNIVERSAL,O,
+h05C,'아마존릴리의 여제'  보아 핸콕 - 영원한,arrow_h2,Trig_arrow_h2_Actions,RRD,1,250000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h05C,'아마존릴리의 여제'  보아 핸콕 - 영원한,hancock_skill_9,Trig_hancock_skill_9_Func003Func006A,RRD,1,850000.00,HERO,NORMAL,X,
+h05C,'아마존릴리의 여제'  보아 핸콕 - 영원한,hancock_skill_10,Trig_hancock_skill_10_Func008A,RRD,1,1000000.00,HERO,NORMAL,X,
+h05C,'아마존릴리의 여제'  보아 핸콕 - 영원한,hancock_skill_Mana,Trig_hancock_skill_Mana_Func005Func010A,RRD,1,"(360000.00+(I2R(GetPlayerTechCountSimple('R01T',GetOwningPla",CHAOS,NORMAL,X,
+h05C,'아마존릴리의 여제'  보아 핸콕 - 영원한,hancock_skill_Mana,Trig_hancock_skill_Mana_Actions,RRD,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h05C,'아마존릴리의 여제'  보아 핸콕 - 영원한,hancock_skill_Mana,Trig_hancock_skill_Mana_Actions,RRD,3,300000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,hancock_petrification,Trig_hancock_petrification_Actions,RRD,1,200000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Legend14han_petrification1,Trig_Legend14han_petrification1_Actions,RRD,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.03",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Legend14han_petrification2,Trig_Legend14han_petrification2_Actions,RRD,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.03",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Legend14han_petrification3,Trig_Legend14han_petrification3_Actions,RRD,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.03",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Legend14han_petrification4,Trig_Legend14han_petrification4_Actions,RRD,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetTriggerUnit())*0.03",NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h077,간부 파견 해군 - 변화된,Bugi_SommonDamage2,Trig_Bugi_SommonDamage2_Func016A,RRD,1,GetEventDamage(),CHAOS,NORMAL,X,
+h05B,해적왕자-롬멜의 카마이타치 카벤딧슈 - 영원,Cavendish_Attack,Trig_Cavendish_Attack_Func015A,RRD,1,500000.00,CHAOS,NORMAL,X,
+h05B,해적왕자-롬멜의 카마이타치 카벤딧슈 - 영원,Cavendish_Attack,Trig_Cavendish_Attack_Func023A,RRD,2,950000.00,CHAOS,NORMAL,X,
+h05B,해적왕자-롬멜의 카마이타치 카벤딧슈 - 영원,Cavendish_Attack,Trig_Cavendish_Attack_Actions,RRD,3,1625000.00,CHAOS,UNIVERSAL,O,
+h05B,해적왕자-롬멜의 카마이타치 카벤딧슈 - 영원,Cavendish_Attack,Trig_Cavendish_Attack_Actions,RRD,4,2775000.00,CHAOS,UNIVERSAL,O,
+h05B,해적왕자-롬멜의 카마이타치 카벤딧슈 - 영원,Cavendish_skill_Mana,Trig_Cavendish_skill_Mana_Func002Func008Func010A,RRD,1,"(2200000.00+(I2R(GetPlayerTechCountSimple('R01M',GetOwningPl",CHAOS,NORMAL,X,
+h05B,해적왕자-롬멜의 카마이타치 카벤딧슈 - 영원,Cavendish_skill_Mana,Trig_Cavendish_skill_Mana_Func002Func008Func010A,UnitDamageTargetBJ,2,"(0.01*GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get",CHAOS,NORMAL,X,
+h05B,해적왕자-롬멜의 카마이타치 카벤딧슈 - 영원,Cavendish_skill_Mana,Trig_Cavendish_skill_Mana_Func002Func008Func018A,RRD,3,"(2200000.00+(I2R(GetPlayerTechCountSimple('R01M',GetOwningPl",CHAOS,NORMAL,X,
+h05B,해적왕자-롬멜의 카마이타치 카벤딧슈 - 영원,Cavendish_skill_Mana,Trig_Cavendish_skill_Mana_Func002Func008Func018A,UnitDamageTargetBJ,4,"(0.01*GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get",CHAOS,NORMAL,X,
+h05B,해적왕자-롬멜의 카마이타치 카벤딧슈 - 영원,Cavendish_skill_Mana,Trig_Cavendish_skill_Mana_Actions,RRD,5,1000000.00,CHAOS,UNIVERSAL,O,
+h06H,해적왕자-롬멜의 카마이타치 하쿠바 - 영원한,Cavendish_skill_6,Trig_Cavendish_skill_6_Func012A,RRD,1,1500000.00,CHAOS,UNIVERSAL,O,
+h06H,해적왕자-롬멜의 카마이타치 하쿠바 - 영원한,Cavendish_skill_6,Trig_Cavendish_skill_6_Func012A,UnitDamageTargetBJ,2,"(0.02*GetUnitStateSwap(UNIT_STATE_LIFE,GetTriggerUnit()))",CHAOS,NORMAL,X,
+h06H,해적왕자-롬멜의 카마이타치 하쿠바 - 영원한,Cavendish_skill_6,Trig_Cavendish_skill_6_Actions,RRD,3,1000000.00,CHAOS,UNIVERSAL,O,
+h06H,해적왕자-롬멜의 카마이타치 하쿠바 - 영원한,Cavendish_skill_6,Trig_Cavendish_skill_6_Actions,RRD,4,350000.00,CHAOS,UNIVERSAL,O,
+h057,알라바스타의 왕녀-ver파이러츠 네펠타리 비,vivi_skill_2,Trig_vivi_skill_2_Func005A,RRD,1,400000.00,CHAOS,NORMAL,X,
+h057,알라바스타의 왕녀-ver파이러츠 네펠타리 비,vivi_skill_2,Trig_vivi_skill_2_Actions,UnitDamageTargetBJ,2,"((0.33*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_ViVi[3]",CHAOS,UNIVERSAL,O,
+h057,알라바스타의 왕녀-ver파이러츠 네펠타리 비,vivi_skill_2,Trig_vivi_skill_2_Actions,UnitDamageTargetBJ,3,1000000.00,CHAOS,UNIVERSAL,O,
+,,vivi_skill_Double2,Trig_vivi_skill_Double2_Actions,UnitDamageTargetBJ,1,"(((I2R(GetPlayerTechCountSimple('R018',GetOwningPlayer(GetTr",CHAOS,UNIVERSAL,O,
+,,vivi_skill_Double2,Trig_vivi_skill_Double2_Actions,UnitDamageTargetBJ,2,"(30000.00*I2R(GetPlayerTechCountSimple('R018',GetOwningPlaye",CHAOS,UNIVERSAL,O,
+h057,알라바스타의 왕녀-ver파이러츠 네펠타리 비,vivi_Skill_3_Triple,Trig_vivi_Skill_3_Triple_Actions,UnitDamageTargetBJ,1,s__TrigVariables__get_realD(GlobalTV),CHAOS,UNIVERSAL,O,
+h057,알라바스타의 왕녀-ver파이러츠 네펠타리 비,vivi_Skill_3_Triple,Trig_vivi_Skill_3_Triple_Actions,UnitDamageTargetBJ,2,s__TrigVariables__get_realD(GlobalTV),CHAOS,UNIVERSAL,O,
+h057,알라바스타의 왕녀-ver파이러츠 네펠타리 비,vivi_Skill_3_Triple,Trig_vivi_Skill_3_Triple_Actions,UnitDamageTargetBJ,3,s__TrigVariables__get_realD(GlobalTV),CHAOS,UNIVERSAL,O,
+h057,알라바스타의 왕녀-ver파이러츠 네펠타리 비,vivi_Skill_3_Triple,Trig_vivi_Skill_3_Triple_Actions,UnitDamageTargetBJ,4,s__TrigVariables__get_realD(GlobalTV),CHAOS,UNIVERSAL,O,
+h057,알라바스타의 왕녀-ver파이러츠 네펠타리 비,vivi_Skill_4_Mana,Trig_vivi_Skill_4_Mana_Actions,RRD,1,"((300000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVar",CHAOS,UNIVERSAL,O,
+h057,알라바스타의 왕녀-ver파이러츠 네펠타리 비,vivi_Skill_4_Mana,Trig_vivi_Skill_4_Mana_Actions,RRD,2,500000.00,HERO,UNIVERSAL,O,
+h057,알라바스타의 왕녀-ver파이러츠 네펠타리 비,vivi_Skill_4_Mana,Trig_vivi_Skill_4_Mana_Actions,RRD,3,"((300000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVar",CHAOS,UNIVERSAL,O,
+h057,알라바스타의 왕녀-ver파이러츠 네펠타리 비,vivi_Skill_4_Mana,Trig_vivi_Skill_4_Mana_Actions,RRD,4,500000.00,HERO,UNIVERSAL,O,
+,,vivi_Skill_5_buff,Trig_vivi_Skill_5_buff_Actions,RRD,1,"((250000.00+(GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariabl",CHAOS,UNIVERSAL,O,
+,,vivi_Skill_5_buff,Trig_vivi_Skill_5_buff_Actions,RRD,2,400000.00,CHAOS,UNIVERSAL,O,
+,,vivi_Skill_5_buff,Trig_vivi_Skill_5_buff_Actions,RRD,3,"((250000.00+(GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariabl",CHAOS,UNIVERSAL,O,
+,,vivi_Skill_5_buff,Trig_vivi_Skill_5_buff_Actions,RRD,4,400000.00,CHAOS,UNIVERSAL,O,
+h058,세계 최강의 대검호 쥬라클 미호크 - 영원한,MIhawk_Mana,Trig_MIhawk_Mana_Func031A,UnitDamageTargetBJ,1,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit())*0.05)+",CHAOS,UNIVERSAL,O,
+h058,세계 최강의 대검호 쥬라클 미호크 - 영원한,Mihawk_2,Trig_Mihawk_2_Func006Func013A,UnitDamageTargetBJ,1,300000.00,MAGIC,UNIVERSAL,O,
+h058,세계 최강의 대검호 쥬라클 미호크 - 영원한,Mihawk_2,Trig_Mihawk_2_Func007Func005A,UnitDamageTargetBJ,2,300000.00,MAGIC,UNIVERSAL,O,
+h058,세계 최강의 대검호 쥬라클 미호크 - 영원한,Mihawk_2,Trig_Mihawk_2_Func012Func005A,UnitDamageTargetBJ,3,500000.00,MAGIC,UNIVERSAL,O,
+h058,세계 최강의 대검호 쥬라클 미호크 - 영원한,Mihawk_2,Trig_Mihawk_2_Actions,UnitDamageTargetBJ,4,250000.00,MAGIC,UNIVERSAL,O,
+h058,세계 최강의 대검호 쥬라클 미호크 - 영원한,Mihawk_4,Trig_Mihawk_4_Func003Func007Func007A,UnitDamageTargetBJ,1,450000.00,MAGIC,UNIVERSAL,O,
+h08R,참된 호걸 코즈키 오뎅 - 영원한,Odeng_Attack,Trig_Odeng_Attack_Func023A,RRD,1,1500000.00,HERO,NORMAL,X,
+h08R,참된 호걸 코즈키 오뎅 - 영원한,Odeng_Attack,Trig_Odeng_Attack_Actions,RRD,2,1150000.00,HERO,NORMAL,X,
+h08R,참된 호걸 코즈키 오뎅 - 영원한,Odeng_Skill_mana,Trig_Odeng_Skill_mana_Func004Func002A,RRD,1,4000000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h08R,참된 호걸 코즈키 오뎅 - 영원한,Odeng_Skill,Trig_Odeng_Skill_Func002Func001Func003Func002A,RRD,1,1150000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Odeng_dibuff,Trig_Odeng_dibuff_Func006A,RRD,1,175000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,Odeng_dibuff,Trig_Odeng_dibuff_Actions,RRD,2,175000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h067,세계의 가희 우타 - 영원한,Uta_ArmyS,Trig_Uta_ArmyS_Func004Func002A,RRD,1,(I2R(s__TrigVariables__get_integerA(GlobalTV))*200000.00),HERO,UNIVERSAL,O,
+h067,세계의 가희 우타 - 영원한,Uta_ArmyS,Trig_Uta_ArmyS_Actions,RRD,2,"(250000.00+((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariabl",MELEE,UNIVERSAL,O,⚠MELEE=원작 Normal행
+h067,세계의 가희 우타 - 영원한,Uta_ArmyS,Trig_Uta_ArmyS_Actions,RRD,3,500000.00,MELEE,UNIVERSAL,O,⚠MELEE=원작 Normal행
+h088,"토트 무지카 봉인된 악보의 괴물 - 영원한",Uta_Tots,Trig_Uta_Tots_Func014A,RRD,1,500000.00,HERO,UNIVERSAL,O,
+h088,"토트 무지카 봉인된 악보의 괴물 - 영원한",tots_R,Trig_tots_R_Func053A,RRD,1,4500000.00,HERO,UNIVERSAL,O,
+,,Uta_WorldLive,Trig_Uta_WorldLive_Func007A,RRD,1,1500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h067,세계의 가희 우타 - 영원한,Uta_skill_1,Trig_Uta_skill_1_Actions,RRD,1,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get",MELEE,UNIVERSAL,O,⚠MELEE=원작 Normal행
+h067,세계의 가희 우타 - 영원한,Uta_skill_1,Trig_Uta_skill_1_Actions,RRD,2,500000.00,MELEE,UNIVERSAL,O,⚠MELEE=원작 Normal행
+h067,세계의 가희 우타 - 영원한,Uta_skill_1_double,Trig_Uta_skill_1_double_Func018Func009A,RRD,1,350000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h067,세계의 가희 우타 - 영원한,Uta_skill_1_double,Trig_Uta_skill_1_double_Actions,RRD,2,"(250000.00+((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVar",MELEE,UNIVERSAL,O,⚠MELEE=원작 Normal행
+h067,세계의 가희 우타 - 영원한,Uta_skill_1_double,Trig_Uta_skill_1_double_Actions,RRD,3,500000.00,MELEE,UNIVERSAL,O,⚠MELEE=원작 Normal행
+h067,세계의 가희 우타 - 영원한,Uta_skill_2,Trig_Uta_skill_2_Func004Func001Func022A,RRD,1,750000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+h067,세계의 가희 우타 - 영원한,Uta_skill_3_mana,Trig_Uta_skill_3_mana_Func008A,RRD,1,2500000.00,NORMAL,UNIVERSAL,O,⚠NORMAL=원작 Spells행
+,,I0ILFO,I0ILFO,UnitDamageTarget,1,1000000000.,CHAOS,UNIVERSAL,O,
+,,I0ILLO,I0ILLO,UnitDamageTarget,1,FIOF0[$B4+I00FFO],HERO,ENHANCED,?,⚠피해타입 UNKNOWN
+,,I0ILLO,I0ILLO,UnitDamageTarget,2,FIOF0[$8C+I00FFO],HERO,ENHANCED,?,⚠피해타입 UNKNOWN
+,,ILFFIO,ILFFIO,UnitDamageTarget,1,FIOF0[$A0+I00FFO],HERO,ENHANCED,?,⚠피해타입 UNKNOWN
+,,ILFFIO,ILFFIO,UnitDamageTarget,2,FIOF0[$8C+I00FFO],HERO,ENHANCED,?,⚠피해타입 UNKNOWN
