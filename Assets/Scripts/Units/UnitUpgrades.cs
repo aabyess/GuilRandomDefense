@@ -11,6 +11,12 @@ using System.Collections.Generic;
 // HashSet으로 추적하는 대신, 출처가 정확히 4개로 고정돼 있어 이름 붙은 bool 네 개로 더 명확하게
 // 표현했다. 각 출처의 실제 호출은: RewardDistributor(시작·스토리 클리어), GamblingShop(구매),
 // PirateQuestManager(피카).
+//
+// ⚠️ 11번(영속 저장, 2026-09-05)으로 다섯 번째 이후 출처가 추가됐다 — PersistentSave.
+// ApplyLoadThresholdRewards가 누적 세이브 포인트 300/600/900을 넘을 때마다 AddTraitPoints(1)을
+// 직접 부른다(원작 Trig_SaveReward_1 그대로). 이건 "플레이어별 한 번"이 아니라 "불러올 때마다,
+// 그 시점 누적치가 문턱을 넘으면" 주는 반복 가능한 개시 보너스라 위 bool 네 개와는 다른 축이다
+// — 그래서 이름 붙은 플래그로 안 만들고 AddTraitPoints를 직접 썼다.
 public class UnitUpgrades : UnityEngine.MonoBehaviour
 {
     // ---- 특성강화(신규) ----

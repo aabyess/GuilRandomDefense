@@ -18,6 +18,7 @@ public class PlayerContext : MonoBehaviour
     [SerializeField] Warehouse warehouse;
     [SerializeField] GamblingProgress gamblingProgress;
     [SerializeField] UnitUpgrades unitUpgrades;
+    [SerializeField] PersistentSave persistentSave;
 
     static readonly List<PlayerContext> registry = new List<PlayerContext>();
 
@@ -88,6 +89,7 @@ public class PlayerContext : MonoBehaviour
     public Warehouse Warehouse => warehouse;
     public GamblingProgress GamblingProgress => gamblingProgress;
     public UnitUpgrades UnitUpgrades => unitUpgrades;
+    public PersistentSave PersistentSave => persistentSave;
 
     void OnEnable()
     {
