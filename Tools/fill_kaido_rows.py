@@ -12,16 +12,14 @@ h07M(카이도, 인간형 트리거)이 이미 2채널 재배정(③-b)으로 �
 ## 게이트 3종
 - LIFE게이지100.00(h0AD, Kaido_Dragon_Skill_2 + Kaido_Dragon_melee_1) — 파싱 가능한
   유일한 게이트. OnHitCount(Life, threshold=100, resetTo=1)로 정확히 담는다.
-- Kaido_Skill_int>=10(용형 평타, h07M Kaido_Dragon_buster) — "용형 상태에서 평타
-  카운터 10 이상"이라는 캐릭터 상태 변수. 우리에 폼(형태) 축이 없어 못 읽는다 —
-  OnHitChance triggerChance=1.0으로 근사(실제보다 자주 발동 가능, description에 명시).
-- Kaido_Skill_1_8의 OR-of-two-paths(경로A: Kaido_Skill_int>=11(인간형) / 경로B:
-  LIFE100아님 AND Kaido_Skill_int<10 AND B05Q없음 AND 1/7(용형)) — 표에 새로 추가된
-  행이라 원문 그대로 실었지만 두 경로 다 상태변수·버프보유여부가 섞여 있어 우리
-  축으로 못 읽는다. OnHitChance triggerChance=1.0으로 근사(과다 계상 위험을
-  description에 명시 — 경로B의 1/7만 반영하면 경로A를 놓치고, 무조건 켜면 경로B가
-  과다해진다. "과소보다 과다가 위험하다"는 걸 알고도 자를 축이 없어 무조건 켬 —
-  값 자체가 다른 항(Kaido_Skill_1_8)들보다도 큰 mult/bonus라 이 근사의 영향이 크다).
+- Kaido_Skill_int>=10(용형 평타, h07M Kaido_Dragon_buster) 및 Kaido_Skill_1_8의
+  두 경로(경로A: Kaido_Skill_int>=11 / 경로B: LIFE100아님 AND Kaido_Skill_int<10
+  AND B05Q없음 AND 1/7) — Kaido_Skill_int는 "폼"이 아니라 카이도 평타에서만 오르는
+  카운터다(PM 확인, 2026-09-06). 배타인 두 경로는 카운터<10이면 경로B(1/7), >=11이면
+  영구히 경로A(무조건)로 넘어간다 — 유닛이 한 판에 수백 번 때리므로 초반 10타만
+  지나면 상시 발동이 정상 상태다. 그래서 두 게이트 다 OnHitChance triggerChance=1.0이
+  "실제보다 자주 발동"이 아니라 장기적으로 정확한 근사다(카운터==10인 원작의 한
+  틱짜리 빈틈은 무시).
 
 ## 레인지 병합
 Kaido_Dragon_Skill_2(range 515) + Kaido_Dragon_melee_1(range 500)이 같은 LIFE100
@@ -163,8 +161,10 @@ def main():
         '카이도 — 용형 평타(Kaido_Dragon_buster)',
         '원작 h07M 카이도(용형 평타), 게이트="Kaido_Skill_int>=10 (용형 평타)"(리서치담당 '
         '확정, 2026-09-06 985150d — udg_Kaido_Damage=ReceivedDamage). Kaido_Skill_int는 '
-        '캐릭터 상태 카운터라 우리 축에 없다 — OnHitChance triggerChance=1.0으로 근사'
-        '(실제보다 자주 발동할 수 있음, "폼/카운터" 축이 서면 재검토). 2효과: '
+        '카이도 평타에서만 오르는 카운터라 우리 축에 없지만, 10을 넘으면 그 뒤로 영구히 '
+        '조건을 만족한다(단조 증가) — 한 판에 수백 번 때리는 유닛 특성상 초반 10타만 '
+        '지나면 사실상 상시 발동이라 OnHitChance triggerChance=1.0이 장기적으로 정확한 '
+        '근사다(PM 확인, 2026-09-06). 2효과: '
         'ReceivedDamage×2.1875+1,125,000(Enemies range575, NORMAL→AD, rand1) / '
         '같은 식(SingleTarget, UNIVERSAL→AP, rand2.58 고정).',
         cooldown=0, trigger_type=0, trigger_chance=1.0, range_value=575,
@@ -181,15 +181,15 @@ def main():
         'SkillData_카이도_불멸_신지우_skill18',
         '카이도 — Kaido_Skill_1_8(신규 확정행)',
         '원작 h07M/h0AD 카이도, 표에 없던 행(2026-09-06 리서치담당 신규 추가). 게이트가 '
-        '경로A(Kaido_Skill_int>=11, 인간형) 또는 경로B(LIFE100아님 AND '
-        'Kaido_Skill_int<10 AND B05Q없음 AND 1/7, 용형) 중 하나 — 둘 다 상태카운터·'
-        '버프보유여부가 섞여 있어 우리 축으로 못 읽는다. OnHitChance triggerChance='
-        '1.0으로 근사했다 — ⚠️ 경로B만 있는 1/7을 반영하면 경로A(사실상 무조건)를 '
-        '놓치므로, 무조건 켜는 쪽이 그나마 원작에 더 가깝다고 판단했다(경로A가 조건 '
-        '자체가 관대해 상시에 가까움) — 다만 그만큼 경로B 조건(카운터<10, 용형)에서는 '
-        '실제보다 7배 과다 계상될 수 있다. 값 자체가 카이도 항 중 가장 커서(mult '
-        '5.9375, bonus 2,250,000) 이 근사의 영향이 가장 크다 — "폼/카운터" 축이 서면 '
-        '최우선으로 재검토. 2효과: ReceivedDamage×5.9375+2,250,000(Enemies range575, '
+        '경로A(Kaido_Skill_int>=11) 또는 경로B(LIFE100아님 AND Kaido_Skill_int<10 AND '
+        'B05Q없음 AND 1/7) 중 하나 — "폼"이 아니라 카운터로 갈리는 배타 경로이고, '
+        'Kaido_Skill_int는 카이도 평타에서만 오른다(PM 확인, 2026-09-06). 카운터가 '
+        '10 미만인 초반 평타 10타 구간만 경로B(1/7)고, 11 이상이 되면 영구히 경로A'
+        '(무조건)로 넘어간다 — 유닛이 한 판에 수백 번 때리므로 정상 상태는 "무조건" '
+        '쪽이고 초반 구간은 전체에서 무시할 만한 비중이다. 그래서 OnHitChance '
+        'triggerChance=1.0이 장기적으로 정확한 근사다(7배 과다 계상이 아니다) — '
+        '카운터가 정확히 10일 때 어느 경로도 안 맞는 원작의 한 틱짜리 빈틈은 무시했다. '
+        '2효과: ReceivedDamage×5.9375+2,250,000(Enemies range575, '
         'NORMAL→AD, rand1, A0VI 1중첩 동반은 축 밖) / 같은 식(SingleTarget, '
         'UNIVERSAL→AP, rand2.58 고정).',
         cooldown=0, trigger_type=0, trigger_chance=1.0, range_value=575,
