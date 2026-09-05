@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: SkillData_게이트_랜덤_호시노_아이_3a13fd3d
   m_EditorClassIdentifier:
   skillName: 부릉냐 - 랜덤전용[제한됨] — 1/7
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 부릉냐 - 랜덤전용[제한됨](h09N)의 게이트 "1/7" 능력 1개를 이 SkillData 하나로 묶었다.   · BronyaMotar_laser#4: 계산식 (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 부릉냐 - 랜덤전용[제한됨](h09N)의 게이트 "1/7" 능력 1개를 이 SkillData 하나로 묶었다.   · BronyaMotar_laser#4: 계산식 (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. [BronyaMotar_laser#1/#2/#3/#5] 회수(2026-09-06, SkillEffectBasis.CasterGaugeValue 추가, a8835c8/OUT_OF_AXIS_CLASSIFY.md②): 원작 "상수×(1+0.005×시전자마나)"(상수 250000/225000/250000/225000)를 전개해 시전자마나×1250+250000, 시전자마나×1125+225000(#2·#5는 같은 상수 225000)으로 담았다. ⚠️ 원작 마나는 평타 +1 AND E 스킬 +5 두 경로인데 우리엔 E가 없어 게이지가 천천히 오른다 → 배율 상한(×1.745)에 덜 도달하는 알려진 과소다. E를 구현하면 그때 +5를 이 게이지에 이을 것.
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.142857
-    range: 0.0
+    range: 400.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
@@ -32,5 +32,49 @@ MonoBehaviour:
       bonus: 0.0
       chance: 1
       hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 7
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 1250.0
+      bonus: 250000.0
+      chance: 1
+      hitCount: 2
+      duration: 0
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 7
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 1125.0
+      bonus: 225000.0
+      chance: 1
+      hitCount: 2
+      duration: 0
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 7
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 1250.0
+      bonus: 250000.0
+      chance: 1
+      hitCount: 2
+      duration: 0
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 7
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 1125.0
+      bonus: 225000.0
+      chance: 1
+      hitCount: 2
       duration: 0
       casterBuffCountFactor: 0
