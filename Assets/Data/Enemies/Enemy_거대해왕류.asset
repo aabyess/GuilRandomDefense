@@ -25,3 +25,10 @@ MonoBehaviour:
   armorShredBuildingOnly: 1
   hpRegenPerSecond: 0
   takesPercentDamage: 0
+# ⚠️ 관통 방어 미구현 (PM 지시, 2026-09-05 — 근거 없이 필드부터 만들지 않는다):
+# 원작 A0P9 "해왕류 관통 방어" — 스톡 Aegr 기반, Def1=0.85 · Def5=0.90.
+# 이 값이 "0.85배로 만든다"인지 "85%를 깎는다"인지 미확인 — 스톡 Aegr 정의를
+# 못 봐서 확정 못 함(리서치담당 [미확인]). 관통 공격에 강한 것은 확실하다
+# (툴팁·데이터 일치). 나중에 스톡 정의를 확인하면 그때 EnemyData에 스칼라
+# 필드(예: pierceResistanceMultiplier, magicArmorMultiplier와 같은 패턴)를
+# 추가할 것 — 지금은 해왕류 한 종뿐이라 이르다.
