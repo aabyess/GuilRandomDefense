@@ -161,7 +161,13 @@ public static class UnitGradeExtensions
 // 지금은 낡았다. 실제 경로: UnitAttacker.DamageTypeOf가 이 필드를 그대로 돌려주고,
 // UnitAttacker.Update()/ApplyCritIfTriggered가 target.TakeDamage(..., DamageTypeOf, ...)로
 // 넘기면 EnemyDummy.TakeDamage → EnemyDummy.MitigatedDamage가 방어력 감폭·상성표 계산에
-// 실제로 쓴다(AP는 방어력을 무시하는 등). 239종 전부 값이 채워져 있고 전부 도달한다.
+// 실제로 쓴다. 239종 전부 값이 채워져 있고 전부 도달한다.
+//
+// ⚠️ 2026-09-05 사장님 확정으로 정정: **AP가 물리 방어력을 무시하는 건 유닛 평타가 아니라
+// 스킬 피해(도움소 등, AttackType.Spells)뿐이다.** 유닛 평타의 AP는 이제 AD와 똑같이
+// 방어력 감폭을 탄다 — "AP는 방어력을 무시한다"였던 옛 규칙은 우리가 만든 것이었지 원작이
+// 아니었다(원작 플레이어 유닛에 마법 공격타입 자체가 없다). 자세한 분기는
+// EnemyDummy.MitigatedDamage 참고.
 [System.Flags]
 public enum DamageType
 {

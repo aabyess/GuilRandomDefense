@@ -227,29 +227,37 @@ public class EnemyDummy : MonoBehaviour
     /// </summary>
     /// <summary>
     /// 최종 피해. 순서: 방깎 → 방어력 감폭 → 배율표.
-    /// AP는 방어력을 무시한다(원작: "마법 데미지는 적의 방어력에 영향을 받지 않는다").
+    ///
+    /// ⚠️ 2026-09-05, 사장님 확정(02번)으로 뒤집힘: **"AP는 방어력을 무시한다"는 우리 규칙이었지
+    /// 원작이 아니었다** — 원작 플레이어 유닛 중 마법 공격타입은 하나도 없고, 워크3에서
+    /// 방어력을 무시하는 건 유닛 평타가 아니라 **능력(스킬) 피해뿐**이다. 그래서 지금은
+    /// <b>유닛 평타의 AP만</b> AD와 같은 물리 방어력 감폭을 타게 됐다 — <paramref name="attackType"/>가
+    /// <see cref="AttackType.Spells"/>(도움소 스킬 전용 행)면 그대로 방어력을 무시한다. 이 둘을
+    /// 가르는 게 이 메서드가 존재하는 이유다: <see cref="AttackType.Magic"/>(평타가 마법인 유닛)과
+    /// <see cref="AttackType.Spells"/>(스킬 피해)는 <b>같은 DamageType.AP를 쓰지만 물리 방어력
+    /// 취급이 다르다.</b>
     /// </summary>
     float MitigatedDamage(float amount, DamageType type, AttackType attackType, float armorIgnoreRatio)
     {
-        // 순수 마법(AP)은 방어력 자체를 안 탄다 — 비율과 무관하게 전부 통과한다.
-        // AD+AP는 확정 전까지 AD와 동일하게 감폭시킨다 — "겸한다"는 것만 알고 어떻게 겸하는지
-        // 모르는 상태에서 감폭을 빼면, 물리·마법 겸용이 순수 마법보다 유리해진다
-        // (`ARMOR_SYSTEM_DESIGN.md` §7 질문 3).
+        // 스킬 피해(Spells 행)만 물리 방어력을 완전히 무시한다 — 그 외(평타의 AP 포함, AD,
+        // AD+AP)는 전부 아래 감폭을 탄다.
+        bool bypassPhysicalArmor = type == DamageType.AP && attackType == AttackType.Spells;
+
         if (type == DamageType.AP)
         {
-            // 마딜은 **물리 방어력을 무시하되 마법 방어력의 영향은 받는다** — 별개 축이다.
+            // 마딜은 **물리 방어력과는 별개로 마법 방어력의 영향을 받는다** — 스킬이든 평타든
+            // 마찬가지다(이 축은 이번 정정과 무관하게 그대로 둔다, 사장님 지시).
             // 원작이 적에게 거는 "마법 방어력"(워크3 `Aegr`)이 이 자리다.
             amount *= EffectiveMagicMultiplier;
         }
-        else
+
+        if (!bypassPhysicalArmor)
         {
             // 방무뎀은 전부/전무가 아니라 비율이다. 피해를 둘로 갈라 한쪽만 감폭시킨다.
+            // 유닛 평타의 AP도 이제 여기로 들어온다 — AD와 완전히 같은 식이다.
             float ignored = Mathf.Clamp01(armorIgnoreRatio);
             amount = amount * (1f - ignored) * ArmorMultiplier(EffectiveArmor)
                    + amount * ignored;
-
-            // AD+AP에는 마법 배율을 안 건다. 지금은 AD와 똑같이 취급하는데(§7 질문 3),
-            // 여기서만 마법 배율을 더하면 물리 감폭과 마법 배율을 **둘 다** 맞아 이중으로 불리해진다.
         }
 
         // 상성표는 **물리·마법 양쪽에 다 건다** — 원작이 그렇다(물리 5행 + magic·spells 2행).
