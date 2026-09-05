@@ -23,9 +23,6 @@ B034,6.0,5절대쿨 비비,Trig_ViVi_Attack,더미:e0D3,"A121(^비비영원 3연
 B05Q,11.0,5절대쿨 카이도,Trig_Kaido_Dragon_Attack,Kaido_Skill_1_8,s__TrigVariables__get_realD(GlobalTV),CHAOS,NORMAL,#1:범위=575.00 ; #2:단일=0,,"LIFE게이지==100.00 AND GetRandomInt(1,7)==6",미수록
 B05Q,11.0,5절대쿨 카이도,Trig_Kaido_Dragon_Attack,Kaido_Skill_1_8,s__TrigVariables__get_realD(GlobalTV),CHAOS,UNIVERSAL,#1:범위=575.00 ; #2:단일=0,,"LIFE게이지==100.00 AND GetRandomInt(1,7)==6",미수록
 B05Q,11.0,5절대쿨 카이도,Trig_Kaido_Dragon_Attack,더미:e0MP,"A0ZX(!카이도-분노공증): acdn=30,ahdu=11,adur=11,Inf1=0.35 ; A0ZO(^카이도 버프): adur=11,ahdu=11,acdn=0.5,aran=99999",[미확인](스톡주문),[미확인],,,"LIFE게이지==100.00 AND GetRandomInt(1,7)==6",2채널
-B070,4.75,5절대쿨 레일리,Trig_LaillySkill,Kick_1,1750000.00,CHAOS,NORMAL,#1:범위=400.00 ; #2:단일=0 ; #3:단일=0,,(절대쿨만),미수록
-B070,4.75,5절대쿨 레일리,Trig_LaillySkill,Kick_1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.15)",CHAOS,NORMAL,#1:범위=400.00 ; #2:단일=0 ; #3:단일=0,MaxHp%,(절대쿨만),미수록
-B070,4.75,5절대쿨 레일리,Trig_LaillySkill,Kick_1,787500.00,CHAOS,NORMAL,#1:범위=400.00 ; #2:단일=0 ; #3:단일=0,,(절대쿨만),미수록
-B070,4.75,5절대쿨 레일리,Trig_LaillySkill,Kick_1,1750000.00,CHAOS,NORMAL,#1:범위=400.00 ; #2:단일=0 ; #3:단일=0,,"GetRandomInt(1,50)==1",미수록
-B070,4.75,5절대쿨 레일리,Trig_LaillySkill,Kick_1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.15)",CHAOS,NORMAL,#1:범위=400.00 ; #2:단일=0 ; #3:단일=0,MaxHp%,"GetRandomInt(1,50)==1",미수록
-B070,4.75,5절대쿨 레일리,Trig_LaillySkill,Kick_1,787500.00,CHAOS,NORMAL,#1:범위=400.00 ; #2:단일=0 ; #3:단일=0,,"GetRandomInt(1,50)==1",미수록
+B070,4.75,5절대쿨 레일리,Trig_LaillySkill,Kick_1,1750000.00,CHAOS,NORMAL,#1:범위=400.00 ; #2:단일=0 ; #3:단일=0,,대상ANCIENT면 100% / 아니면 1/50 (elseif라 배타·둘 다 안 나감),미수록
+B070,4.75,5절대쿨 레일리,Trig_LaillySkill,Kick_1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.15)",CHAOS,NORMAL,#1:범위=400.00 ; #2:단일=0 ; #3:단일=0,MaxHp%,대상ANCIENT면 100% / 아니면 1/50 (elseif라 배타·둘 다 안 나감),미수록
+B070,4.75,5절대쿨 레일리,Trig_LaillySkill,Kick_1,787500.00,CHAOS,NORMAL,#1:범위=400.00 ; #2:단일=0 ; #3:단일=0,,대상ANCIENT면 100% / 아니면 1/50 (elseif라 배타·둘 다 안 나감),미수록

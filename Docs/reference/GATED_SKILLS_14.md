@@ -2,7 +2,9 @@
 
 > **결론**: **미수록은 0이 아니다. 대상 16개 중 9개가 우리 어느 표에도 없다.**
 > 즉 **절대쿨 축은 드래곤 하나로 끝나지 않는다** — 「쿨다운형 스킬 채널」이 실제로 하나 더 있다.
-> 표: `Docs/reference/ORIGINAL_GATED_SKILLS_14.csv` (30행)
+> 표: `Docs/reference/ORIGINAL_GATED_SKILLS_14.csv` (27행)
+>
+> ⚠️ **2026-09-06 정정 2건** — 아래 「정정」 절 참고. `Kick_1` 3행이 중복이었고(30→27행), `Kaido_Skill_1_8`의 `realD`는 버프 개수가 **아니다**.
 
 | 커버 | 대상 수 | 행 수 |
 |---|---|---|
@@ -23,8 +25,8 @@
 | `B00N` | 12.5s | **`Sabo_Skill_4`** | 500,000 / `500,000+50,000×버프개수` / **`maxHP×0.04×(0.20+0.10×레벨)`** / `maxHP×0.01` | CHAOS·HERO | 415 |
 | `B011` | 8.0s | 더미 `e095` | (절대쿨 부여용 더미) | — | — |
 | `B012` | **3.5s** | **`Nami_Skill_4`** | **350,000** | NORMAL/UNIVERSAL | 500 |
-| `B05Q` | **11.0s** | **`Kaido_Skill_1_8`** | `realD`(앞단계 중간값) ×2 | CHAOS/NORMAL·UNIVERSAL | 575 |
-| `B070` | **4.75s** | **`Kick_1`** | **1,750,000 ×2 / `maxHP×0.1…` ×2 / 787,500 ×2** | CHAOS/NORMAL | 400 |
+| `B05Q` | **11.0s** | **`Kaido_Skill_1_8`** | 주대상 `realD×2.58` / 범위 `realD×1.00` — `realD` 정체는 아래 정정 참고 | CHAOS/UNIVERSAL·CHAOS/NORMAL | 575 |
+| `B070` | **4.75s** | **`Kick_1`** | **범위 1,750,000×rand(1.0~1.5) / 주대상 `maxHP×0.15` 또는 787,500×rand(1.0~1.5)** | CHAOS/NORMAL | 400 |
 
 **추가 게이트가 겹치는 것**(절대쿨 + 확률/게이지):
 
@@ -33,19 +35,21 @@
 | `Sabo_Skill_1` | 절대쿨 12.5s **AND** 마나 게이지 125 |
 | `Sabo_Skill_3`·`Sabo_Skill_4` | 절대쿨 12.5s **AND** 마나 게이지 125 **AND** `GetRandomInt(1,10)` |
 | 더미 `e095`(페로나) | 절대쿨 8.0s **AND** `GetRandomInt(1,10)==7` |
-| `Kaido_Skill_1_8` | 절대쿨 11.0s **AND** 체력 게이지 100 **AND** `GetRandomInt(1,7)` |
+| `Kaido_Skill_1_8` (경로A·인간형) | 체력 게이지 100 **아님**(else) **AND** `udg_Kaido_Skill_int >= 11`. **절대쿨 B05Q는 이 경로에 안 걸린다** |
+| `Kaido_Skill_1_8` (경로B·용형) | 체력 게이지 100 **아님** **AND** `udg_Kaido_Skill_int < 10` **AND** 절대쿨 `B05Q` 없음 **AND** `GetRandomInt(1,7)==6` |
+| `Kick_1` | 절대쿨 `B070` 없음 **AND** (대상이 `UNIT_TYPE_ANCIENT`면 100% / 아니면 `GetRandomInt(1,50)==1`) — **elseif라 배타** |
 | 더미 `e0D3`(비비) | 절대쿨 6.0s **AND** 마나 게이지 150 |
 | 나머지 | **절대쿨만** |
 
 ## 이게 뜻하는 것
 
 1. **「쿨다운형 스킬 채널」이 실재한다.** 뱌쿠야 14초·사보 12.5초·카이도 11초·레일리 4.75초·나미 3.5초짜리
-   **큰 한 방**들이 우리 표 어디에도 없다. 값이 작지 않다 — `Byakuya_E` 450만, `Sabo_Skill_1` 325만, `Kick_1` 175만×2다.
+   **큰 한 방**들이 우리 표 어디에도 없다. 값이 작지 않다 — `Byakuya_E` 450만, `Sabo_Skill_1` 325만, `Kick_1` 175만이다.
 2. **왜 빠졌나**: 208행 표는 **「능력 수치가 0인 유닛」의 평타 트리거 계열**만 훑었다.
    이 9건은 **평타 트리거가 「절대쿨 게이트 안에서 별도 트리거를 실행」**하는 형태라, 그 별도 트리거는 스캔 대상이 아니었다.
    **채널을 유닛의 능력 목록으로 잡으면 원리적으로 안 걸린다** — 「CSV가 못 보는 스킬」과 같은 뿌리다.
-3. **`realD`가 또 나온다.** 사보 `(1,000,000+realD)×버프개수`, 카이도 `realD` 직접 — **버프 개수 비례**가 이 채널의 공통 축이다.
-   거프에서 확인한 것과 같은 꼴이고, **우리 `SkillEffectBasis`엔 없다.**
+3. **`realD`가 또 나온다 — 다만 뜻은 계열마다 다르다.** 사보 `(1,000,000+realD)×버프개수`는 버프 개수 축이 맞지만,
+   **카이도 `Kaido_Skill_1_8`의 `realD`는 버프 개수가 아니다**(아래 정정 ②). 「`realD`니까 버프개수」로 묶으면 틀린다 — 뿌리 ⑪.
 4. **드래곤은 특성표로 커버된다**(이번에 `ORIGINAL_TRAIT_LEVEL2.csv`의 옛 값 `Dragon_Skill_Mana 300,000`도 정정해
    `Dragon_Skill_1_T`의 실값으로 바꿨다).
 
@@ -56,3 +60,86 @@
   `TriggerExecute`·`CreateNUnitsAtLoc`·`RRD` 중 아무것도 안 한다** — 조건만 있고 그 자리에선 다른 처리를 한다 `[미확인]`.
 - 더미 3건(`e0LR`·`e095`·`e0D8`류)은 **절대쿨을 거는 쪽 더미**라 피해가 없는 게 정상이다.
 - 커버리지 판정은 **트리거/더미 이름 문자열이 우리 CSV에 있는가**로 했다. 이름이 달라도 같은 스킬일 가능성은 남는다 `[미확인]`.
+
+---
+
+# 정정 (2026-09-06)
+
+## ① `Kick_1`의 1/50은 두 번째 경로가 아니다 — 표가 중복이었다 `[파일확인]`
+
+CSV에 같은 수치 세트(1,750,000 / `maxHP×0.15` / 787,500)가 **`(절대쿨만)`과 `GetRandomInt(1,50)==1` 두 게이트로 두 번** 적혀 있었다.
+원문에는 **트리거도 하나, 피해 세트도 하나**다. 두 번 나온 이유는 **호출자가 둘이었기 때문**이고, 그 둘은 `elseif`로 배타다:
+
+```jass
+Trig_LaillySkill_Actions:                       ← 레일리 h049 평타 트리거
+    if UnitHasBuffBJ(GetAttacker(),'B070')==false then
+        if IsUnitType(GetTriggerUnit(),UNIT_TYPE_ANCIENT)==true then
+            … ConditionalTriggerExecute(gg_trg_Kick_1)      ← 대상이 ANCIENT면 100%
+        elseif GetRandomInt(1,50)==1 then
+            … ConditionalTriggerExecute(gg_trg_Kick_1)      ← 아니면 1/50
+        endif
+    endif
+```
+
+**화력 2배가 아니다.** 다만 「`(절대쿨만)` 세트만 넣고 1/50을 뺀다」도 정확하진 않다 —
+**일반 대상에게는 1/50이 유일한 진입로**라, 게이트 없이 넣으면 반대로 50배 과하게 나간다.
+올바른 이식: **절대쿨 `B070`이 없을 때, 대상이 ANCIENT면 100% · 아니면 1/50.**
+
+`Kick_1` 안의 피해 분기(원문 그대로):
+
+| 순번 | 대상 | 조건 | 피해 |
+|---|---|---|---|
+| 1 | 반경 400 적 전원 | 없음 | `1,750,000 × rand(1.0~1.5)` · CHAOS/NORMAL |
+| 2 | 주대상 | 버프 `B06B` 보유 | `대상 최대체력 × 0.15 × 1.0` · CHAOS/NORMAL |
+| 3 | 주대상 | `B06B` 없음 **AND** `GetUnitPointValue < 200` | **즉사**(`KillUnit`) + `h056` 1기 지급 |
+| 4 | 주대상 | `B06B` 없음 **AND** `PointValue >= 200` | `787,500 × rand(1.0~1.5)` · CHAOS/NORMAL |
+
+2·3·4는 서로 배타다. `RRD(a,b,c,min,max,f,g)`의 실제 정의가 `피해 = c × GetRandomReal(min,max)`라
+**`min`·`max`가 같지 않으면 그 자체가 난수 배율**이다 — 1과 4는 1.0~1.5배로 흔들린다.
+
+### 절대쿨 `B070`이 어떻게 걸리는가
+
+`B070`은 트리거가 직접 거는 게 아니다. `Kick_1` 1단계가 더미 `e0Q0`(「#불멸 레일리흡수절대쿨1」)를 만들고
+그 더미가 `A14A`를 레일리 자신에게 시전한다(`IssueTargetOrderById(…,"frostarmor", 시전자)`).
+`A14A`의 `abuf`가 `B070`이고, 지속시간 표기는 `Ufa1 = 4.75` 하나뿐이다(`Adur`·`Ahdu`는 0).
+**즉 「스킬이 자기 자신에게 4.75초 잠금을 건다」** — 별도 쿨다운 관리가 필요 없는 구조다.
+(`A14H` 「반감」 `Ufa1=3.25`를 가진 `e0Q1`은 **맵 전체에서 참조 0건** — 죽은 데이터다.)
+
+## ② `Kaido_Skill_1_8`의 `realD`는 버프 개수가 아니다 — 「직전 평타 실피해」다 `[파일확인]`
+
+`Kaido_Skill_1_8` 계열 안에서 `realD`에 대입하는 지점을 전부 찾으면 **세 곳**이고, 셋 다 stage 2 안에서 순서대로 실행된다:
+
+```jass
+stage 0:  Setreal(GlobalTV,3, udg_Kaido_Damage[플레이어])
+stage 2:  Setreal(GlobalTV,3, (((realD*4.75)+1800000.00)*1.25))
+stage 2:  Setreal(GlobalTV,3, (realD*(1+GetRandomReal(0.01,0.05))))
+```
+
+→ **최종 피해값 = ((직전평타피해 × 4.75 + 1,800,000) × 1.25) × (1 + 0.01~0.05)**
+  = `직전평타피해 × 5.9375 + 2,250,000` 에 **1.01~1.05배 흔들림**.
+
+`udg_Kaido_Damage[플레이어]`의 정체:
+
+- `InitGlobals`에서 **12.00**으로 초기화된다(0이 아니다).
+- `Trig_Kaido_Attack` / `Trig_Kaido_Dragon_melee_1`이 **자기가 등록한 `EVENT_UNIT_DAMAGED`에서 `GetEventDamage()`를 읽어** 덮어쓴다.
+- 덮어쓰는 조건은 **`GetEventDamage() >= 10.00`** 하나뿐이다(잔피해 무시).
+
+→ 우리 축으로는 **`ReceivedDamage`가 아니라 「카이도가 직전에 실제로 입힌 평타 피해」**다.
+  가장 가까운 축은 `CasterAttackPower`이지만 **원작은 방어 적용 후 실피해**라 완전히 같지 않다 — 이식 시 명시할 것.
+
+같은 stage 2에서 피해는 **두 갈래로 나간다**:
+
+| 대상 | 호출 | 피해 |
+|---|---|---|
+| 주대상 `unitB` | `RRD(…, realD, 2.58, 2.58, CHAOS, UNIVERSAL)` | `realD × 2.58` (min=max라 난수 없음) |
+| 반경 575 적 전원 | `Func047A` → `RRD(…, realD, 1.00, 1.00, CHAOS, NORMAL)` | `realD × 1.00` + `A0VI` 1중첩 |
+
+**stage 2에서 한 번만** 나간다. 감싸는 조건은 `Stage<=4` → `Modulo(Stage,2)==0` → `Stage==2`라,
+「짝수 stage니까 2와 4에서 두 번」이 아니다 — 안쪽에 `Stage==2`가 한 겹 더 있다(뿌리 ⑧).
+
+## ③ 이중 게이지(체력+마나) 패턴 교차 확인 — 구현담당1과 결과 일치
+
+`ORIGINAL_UNLISTED_SKILL_EFFECTS.csv` 302행의 `gate` 열을 따로 세었다.
+**체력·마나 게이지가 함께 걸린 행은 `h0BF` 키쿄우의 `kikoyou_mana` 2행뿐**이고
+(`LIFE게이지50.00 AND MANA게이지85.00`), 같은 게이지가 두 번 걸린 행은 0건이다.
+구현담당1이 파서 버그를 잡고 센 결과와 같다 — **이 패턴은 닫혔다.**
