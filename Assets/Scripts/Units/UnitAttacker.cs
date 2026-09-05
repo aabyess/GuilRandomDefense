@@ -163,7 +163,23 @@ public class UnitAttacker : MonoBehaviour
     // 배정하기 전까지는 실질적으로 죽어 있다.
     float skillCooldownTimer;
 
-    SkillData Skill => identity != null && identity.Data != null ? identity.Data.skill : null;
+    // 06번① 능력교체형 트레잇(UnitTraitData.replacementSkill)이 걸려 있으면 원래
+    // UnitData.skill 대신 그걸 통째로 쓴다 — 원작이 레벨을 올리는 게 아니라 능력 자체를
+    // 갈아끼우는 26분기 중 8개라(UnitRemoveAbilityBJ+UnitAddAbilityBJ), 레벨 인덱스로는
+    // 못 담는다. 스킬승급형(레벨 인덱스)과 능력교체형(스킬 자체 교체)은 유닛 1종당 트레잇
+    // 1개뿐이라 겹칠 일이 없다.
+    SkillData Skill
+    {
+        get
+        {
+            UnitData unitData = identity != null ? identity.Data : null;
+            if (unitData == null) return null;
+
+            UnitUpgrades source = ResolveUpgrades();
+            SkillData replacement = source != null ? source.ReplacementSkillFor(unitData) : null;
+            return replacement != null ? replacement : unitData.skill;
+        }
+    }
 
     // 06번① 완료: 스킬승급형 트레잇(UnitTraitData.skillLevelUnlockIndex)이 UnitUpgrades에
     // 걸려 있으면 그 레벨을, 없으면 레벨1(index 0)을 쓴다. 원작이 "레벨2 = 레벨1 그대로 +

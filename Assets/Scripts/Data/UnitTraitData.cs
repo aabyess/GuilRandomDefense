@@ -60,19 +60,30 @@ public class UnitTraitData : ScriptableObject
     public string specialEffectId;
 
     // ⚠️ 2026-09-05(06번①): 위 effects(TraitEffectKind)는 "스탯을 얼마나 올리는가"고,
-    // 이건 완전히 다른 축이다 — 원작 특성강화 26종을 리서치담당이 원문에서 재확인한 결과,
-    // **전부 캐릭터 전용 스킬의 레벨을 1→2로 올리는 것**이었다(예: 후지토라 !중력장 A0GR —
-    // 레벨2는 레벨1 수치를 그대로 두고 "1/4 확률 운석낙하"라는 새 효과가 하나 늘어난다.
+    // 이건 완전히 다른 축이다 — 원작 특성강화는 흔함~초월함엔 하나도 없고 불멸·영원 등급
+    // 26종에만 있다(`Docs/reference/ORIGINAL_TRAIT_BRANCHES.md`, war3map.j 전수). 처음엔
+    // "26개 전부 스킬 레벨 1→2"로 알려졌었는데 **틀렸다** — 실제로는 26개가 네 종류로
+    // 갈린다: 스킬승급 15 · 능력교체 8(아래 replacementSkill) · 변신 2(아직 미착수) ·
+    // 순수스탯 1(아직 미착수). 이 필드는 그중 스킬승급 15개 전용이다(예: 후지토라
+    // !중력장 A0GR — 레벨2는 레벨1 수치 그대로 + "1/4 확률 운석낙하"가 새로 생긴다.
     // 배율 상승이 아니다). SkillLevel.effects가 레벨마다 독립 리스트인 이유가 정확히 이거다.
     //
-    // 0(기본)이면 스킬승급형이 아니다(이 유닛은 위 effects나 아무 효과도 안 쓴다는 뜻).
-    // 1 이상이면 targetUnit.skill(SkillData)의 levels[skillLevelUnlockIndex]를 쓰라는
-    // 뜻이고, UnitUpgrades.Unlock으로 이 트레잇이 풀리면 UnitAttacker.CurrentSkillLevel이
-    // 그 인덱스를 읽는다(UnitUpgrades.SkillLevelIndexFor 참고). targetUnit.skill이
-    // null이면 아무 효과도 없다 — 이 값만으론 스킬을 만들어내지 못한다.
+    // 0(기본)이면 스킬승급형이 아니다. 1 이상이면 targetUnit.skill(SkillData)의
+    // levels[skillLevelUnlockIndex]를 쓰라는 뜻이고, UnitUpgrades.Unlock으로 이 트레잇이
+    // 풀리면 UnitAttacker.CurrentSkillLevel이 그 인덱스를 읽는다
+    // (UnitUpgrades.SkillLevelIndexFor 참고). targetUnit.skill이 null이면 아무 효과도
+    // 없다 — 이 값만으론 스킬을 만들어내지 못한다.
     //
     // 원작 26명은 우리 로스터에 이름으로 없다(이름 매핑 불가 원칙) — 등급별 순위 배정으로
     // 우리 유닛에 옮긴다. 어느 원작 유닛 자리인지는 이 asset 파일명이나 위 description에
-    // 원작 유닛ID(예: `A0GR`, `H08X`)를 남길 것 — 사장님이 실제 콘텐츠를 배정할 때의 연결점이다.
+    // 원작 유닛ID·능력ID(예: `H08X`/`A0GR`)를 남길 것 — 사장님이 실제 콘텐츠를 배정할 때의 연결점이다.
     public int skillLevelUnlockIndex;
+
+    // 능력교체형(위 26분기 중 8개) 전용 — 레벨을 올리는 게 아니라 능력 자체를 통째로
+    // 갈아끼운다(원작: `UnitRemoveAbilityBJ`(구) + `UnitAddAbilityBJ`(신)). 이 값이 있으면
+    // 이 트레잇을 언락했을 때 UnitAttacker.Skill이 targetUnit.skill 대신 이 SkillData를
+    // 통째로 쓴다(UnitUpgrades.ReplacementSkillFor 참고). skillLevelUnlockIndex와는
+    // 한 트레잇에 동시에 안 쓴다 — 원작 26분기 중 한 유닛이 스킬승급과 능력교체를 같이
+    // 갖는 사례가 없다.
+    public SkillData replacementSkill;
 }

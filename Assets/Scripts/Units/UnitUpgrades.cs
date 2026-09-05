@@ -128,6 +128,22 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
         return 0;
     }
 
+    /// <summary>능력교체형 트레잇(06번①, UnitTraitData.replacementSkill) 전용. 언락된
+    /// 트레잇 중 targetUnit이 이 유닛이고 replacementSkill이 있는 걸 찾아 돌려준다 —
+    /// 없으면 null(UnitAttacker.Skill이 그때 원래 UnitData.skill을 쓴다).</summary>
+    public SkillData ReplacementSkillFor(UnitData unit)
+    {
+        if (unit == null) return null;
+
+        foreach (UnitTraitData trait in unlockedTraits)
+        {
+            if (trait != null && trait.targetUnit == unit && trait.replacementSkill != null)
+                return trait.replacementSkill;
+        }
+
+        return null;
+    }
+
     public event Action OnLevelChanged;
 
     // ---- 등급강화(연구소) ----
