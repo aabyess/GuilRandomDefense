@@ -162,14 +162,25 @@ def code_reads_field(fieldname, cs_texts, own_class_body=None):
 
     `own_class_body`를 주면, **점 없이 자기 필드를 바로 쓰는 경우**(`pierce`처럼 `this.` 없이
     쓰는 것)도 그 클래스 자신의 메서드 본문 안에서만 단어 경계로 찾는다 — 파일 전체에서
-    점 없는 단어를 찾으면 오탐이 너무 많아서, 범위를 그 클래스 자신으로 좁혔다."""
+    점 없는 단어를 찾으면 오탐이 너무 많아서, 범위를 그 클래스 자신으로 좁혔다.
+
+    ⚠️ **그 점 없는 검색이 필드 자신의 선언줄에도 걸린다** — `public float x = 1f;` 그 줄
+    자체에 `x`라는 이름이 있어서, 읽는 코드가 0건이어도 항상 "읽힘"으로 나왔다(2026-09-05
+    발견 — `SupportSkillData.buffAttackSpeedMultiplier`가 "읽는 코드 없음"이라는 자기
+    주석과 어긋난 결과를 내서 잡혔다). **선언줄을 먼저 지우고** 나머지에서 점 없는 단어를
+    찾는다."""
     pattern = re.compile(rf'\.{re.escape(fieldname)}\b')
     for text in cs_texts.values():
         if pattern.search(text):
             return True
     if own_class_body:
+        decl_pattern = re.compile(
+            rf'^\s*(?:\[SerializeField\]\s*)?(?:public|private|protected|internal|static|readonly|\s)*'
+            rf'[A-Za-z_][\w<>\[\],\s.]*?\s+{re.escape(fieldname)}\b\s*(?:=.*)?;.*$',
+            re.MULTILINE)
+        stripped_body = decl_pattern.sub('', own_class_body)
         bare_pattern = re.compile(rf'(?<![.\w]){re.escape(fieldname)}\b')
-        if bare_pattern.search(own_class_body):
+        if bare_pattern.search(stripped_body):
             return True
     return False
 
