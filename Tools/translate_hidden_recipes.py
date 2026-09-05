@@ -76,8 +76,31 @@ def load_roster():
     return roster
 
 
+MASTER_UID_MAP_CSV = 'Docs/reference/MASTER_UID_ROSTER_MAP.csv'
+
+
 def build_master_uid_map():
-    """PRIORITY: 06번① > 게이트/회수 > 1채널 > 2채널. returns uid -> roster_base."""
+    """뿌리 ⑱ 고정 — 라이브 스캔이 아니라 얼려둔 CSV를 읽는다(2026-09-06).
+
+    여러 세션이 동시에 커밋하는 중에 _scan_master_uid_map()을 재실행하면
+    결과가 흔들린다(실제 사고: h00R·h029 등이 중복/소실됐다 — 다른 세션의
+    커밋이 롤 사이에 끼어들어서였다, 되돌림). 이 함수는 그 스캔 로직 자체를
+    없앤 게 아니라 read-only로 감쌌을 뿐이다 — 대응이 실제로 바뀔 만한
+    커밋이 들어왔으면 사람이 판단해서 Tools/regenerate_master_uid_map.py를
+    손으로 돌리고 CSV만 diff 리뷰 후 커밋한다.
+    returns uid -> (roster_base, channel).
+    """
+    rows = csv.DictReader(open(MASTER_UID_MAP_CSV, encoding='utf-8-sig'))
+    return {r['유닛ID']: (r['로스터'], r['채널']) for r in rows}
+
+
+def _scan_master_uid_map():
+    """PRIORITY: 06번① > 게이트/회수 > 1채널 > 2채널. returns uid -> roster_base.
+
+    ⚠️ 이 함수를 직접 부르지 말 것 — build_master_uid_map()이 CSV를 읽는
+    쪽이고, 이건 그 CSV를 다시 만들 때만(Tools/regenerate_master_uid_map.py
+    경유) 쓴다.
+    """
     entries = defaultdict(list)
 
     roster_texts = {f: open(f, encoding='utf-8').read() for f in glob.glob(f'{ROSTER_DIR}/*.asset')}
