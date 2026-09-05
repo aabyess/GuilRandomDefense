@@ -126,10 +126,15 @@ def load_roster():
         cdm = g("critDamageMultiplier")
         cdm = 1.0 if cdm is None else cdm
         cbd = g("critBonusDamage") or 0.0
+        # attackType — 필드가 YAML에 없으면 Unity가 기본값(Unassigned=0)을 생략한 것이다,
+        # 값이 없다고 오류가 아니다(§12에서 이미 확인한 패턴).
+        at_idx = g("attackType")
+        attack_type = (ATTACK_TYPE_ENUM[int(at_idx)]
+                       if at_idx is not None and int(at_idx) < len(ATTACK_TYPE_ENUM) else "Unassigned")
         name_m = re.search(r'^  unitName: "?(.*?)"?$', text, re.MULTILINE)
         recs.append({
             "name": name_m.group(1) if name_m else "?",
-            "grade": gname, "tier": tier, "damagetype": dmgtype,
+            "grade": gname, "tier": tier, "damagetype": dmgtype, "attack_type": attack_type,
             "base_dps": ap * aspd,
             "bash_dps": cc * cbd * aspd,
         })
@@ -165,7 +170,11 @@ def load_enemies():
         hp = float(re.search(r"^  hp: ([\d.]+)", text, re.MULTILINE).group(1))
         armor = float(re.search(r"^  armor: ([\d.]+)", text, re.MULTILINE).group(1))
         is_boss = int(re.search(r"^  isBoss: (\d)", text, re.MULTILINE).group(1))
-        rounds[r] = {"hp": hp, "armor": armor, "is_boss": bool(is_boss)}
+        # armorType — 필드 생략 = Unassigned(0), load_roster의 attackType과 같은 이유.
+        at_m = re.search(r"^  armorType: (-?\d+)", text, re.MULTILINE)
+        armor_type = (ARMOR_TYPE_ENUM[int(at_m.group(1))]
+                      if at_m and int(at_m.group(1)) < len(ARMOR_TYPE_ENUM) else "Unassigned")
+        rounds[r] = {"hp": hp, "armor": armor, "is_boss": bool(is_boss), "armor_type": armor_type}
     return rounds
 
 
@@ -373,6 +382,169 @@ MODELS = {
 
 
 # ---------------------------------------------------------------------------
+# 7. DamageTable(상성표) — Assets/Data/DamageTable.asset에서 직접 파싱한다. 하드코딩 없음
+#    (PM 지시 2026-09-05, §13 — B안: 평타는 전부 물리, 마법은 스킬에만).
+#    §1~§12(위)는 이 절이 존재하기 전 코드 그대로다 — 손대지 않았다, 재현성 그대로.
+# ---------------------------------------------------------------------------
+
+def parse_damage_table():
+    """Assets/Data/DamageTable.asset(에셋 인스턴스, 클래스 스켈레톤이 아니라 실제 값)을
+    파싱한다. 파일 구조가 바뀌면 바로 죽는다 — TIER_OF와 같은 이유."""
+    text = read("Assets/Data/DamageTable.asset")
+    rows = {}
+    for row_name in ("normal", "pierce", "siege", "hero", "chaos", "magic", "spells"):
+        m = re.search(
+            rf"  {row_name}:\n    vsLarge: ([\d.]+)\n    vsFort: ([\d.]+)\n"
+            rf"    vsNormal: ([\d.]+)\n    vsHero: ([\d.]+)", text)
+        if not m:
+            sys.exit(f"FATAL: DamageTable.asset에서 '{row_name}' 행을 못 찾았다 — 파일 구조가 바뀐 것 같다.")
+        rows[row_name] = {"Large": float(m.group(1)), "Fort": float(m.group(2)),
+                           "Normal": float(m.group(3)), "Hero": float(m.group(4))}
+    return rows
+
+
+def parse_enum(text, enum_name):
+    m = re.search(rf"public enum {enum_name}\s*\{{(.*?)\n\}}", text, re.DOTALL)
+    if not m:
+        sys.exit(f"FATAL: EnemyData.cs에서 {enum_name} enum을 못 찾았다.")
+    names = re.findall(r"^\s*(\w+)\s*,?\s*(?://.*)?$", m.group(1), re.MULTILINE)
+    return [n for n in names if n]
+
+
+DAMAGE_TABLE = parse_damage_table()
+_ENEMY_DATA_CS = read("Assets/Scripts/Data/EnemyData.cs")
+ARMOR_TYPE_ENUM = parse_enum(_ENEMY_DATA_CS, "ArmorType")
+ATTACK_TYPE_ENUM = parse_enum(_ENEMY_DATA_CS, "AttackType")
+
+
+def dt_multiplier(attack_type_name, armor_type_name):
+    """DamageTable.Multiplier(AttackType, ArmorType)의 파이썬 재현(DamageTable.cs 원문
+    그대로) — 한쪽이라도 Unassigned면 1.0."""
+    if not attack_type_name or attack_type_name == "Unassigned":
+        return 1.0
+    if not armor_type_name or armor_type_name == "Unassigned":
+        return 1.0
+    row = DAMAGE_TABLE.get(attack_type_name.lower())
+    if row is None:
+        return 1.0
+    return row.get(armor_type_name, row.get("Normal", 1.0))
+
+
+def median_dps_by_tier_vs_armor(roster, armor_type_name):
+    """median_dps_by_tier와 같은 모양이지만, 유닛별 attack_type과 armor_type_name의
+    DamageTable 배율을 먼저 곱한 뒤 중앙값을 낸다."""
+    by_tier = defaultdict(list)
+    for r in roster:
+        by_tier[r["tier"]].append(r["base_dps"] * dt_multiplier(r["attack_type"], armor_type_name))
+    out = {}
+    for t in range(TIER_COUNT):
+        vals = by_tier.get(t)
+        out[t] = statistics.median(vals) if vals else None
+    return out
+
+
+ARMOR_TYPES_REAL = ("Normal", "Large", "Fort", "Hero")
+
+
+def build_median_by_armor(roster, all_median_fallback):
+    """4개 실제 방어타입 전부에 대해 Tier별 중앙값 표를 만든다. 표본이 없는 Tier는
+    (기존 ad_median/ap_median과 같은 관례로) 전체 중앙값으로 채운다. armorType이
+    Unassigned인 라운드는 dt_multiplier가 이미 1.0을 주므로 undifferentiated
+    중앙값과 같다 — 별도 표를 안 두고 그대로 all_median_fallback을 쓴다."""
+    tables = {}
+    for at in ARMOR_TYPES_REAL:
+        table = median_dps_by_tier_vs_armor(roster, at)
+        for t in range(TIER_COUNT):
+            if table[t] is None:
+                table[t] = all_median_fallback[t]
+        tables[at] = table
+    tables["Unassigned"] = dict(all_median_fallback)
+    return tables
+
+
+def fixed10_dps_fn_dt(median_by_armor):
+    return lambda r, armor_type: 10 * median_by_armor[armor_type][tier_for_round(r)]
+
+
+def no_combine_dps_fn_dt(median_by_armor):
+    owned = [tier_for_round(1)] * 5
+
+    def f(r, armor_type):
+        owned.append(tier_for_round(r))
+        owned.append(tier_for_round(r))
+        table = median_by_armor[armor_type]
+        return sum(table[t] for t in owned)
+    return f
+
+
+def greedy_combine_dps_fn_dt(median_by_armor):
+    counts = Counter({tier_for_round(1): 5})
+
+    def f(r, armor_type):
+        table = median_by_armor[armor_type]
+        counts[tier_for_round(r)] += 2
+        changed = True
+        while changed:
+            changed = False
+            for t in range(MAX_TIER):
+                while counts[t] >= 2:
+                    counts[t] -= 2
+                    counts[t + 1] += 1
+                    changed = True
+        return sum(table[t] * n for t, n in counts.items())
+    return f
+
+
+def local_optimal_dps_fn_dt(median_by_armor):
+    counts = Counter({tier_for_round(1): 5})
+
+    def f(r, armor_type):
+        table = median_by_armor[armor_type]
+        counts[tier_for_round(r)] += 2
+        changed = True
+        while changed:
+            changed = False
+            for t in range(MAX_TIER):
+                if counts[t] >= 2 and table.get(t + 1) and table[t + 1] >= table[t] * 2:
+                    counts[t] -= 2
+                    counts[t + 1] += 1
+                    changed = True
+        return sum(table[t] * n for t, n in counts.items())
+    return f
+
+
+MODELS_DT = {
+    "고정 10기/레인": fixed10_dps_fn_dt,
+    "안 조합": no_combine_dps_fn_dt,
+    "최대 조합(그리디)": greedy_combine_dps_fn_dt,
+    "국소최적 조합": local_optimal_dps_fn_dt,
+}
+
+
+def run_backlog_dt(enemies, wave_counts, round_length_fn, defense_armor,
+                    team_dps_fn, threshold, total_rounds=75):
+    """run_backlog과 같지만 매 라운드 적의 armor_type을 읽어 team_dps_fn(r, armor_type)로
+    넘긴다 — DamageTable을 반영한 §13 전용. use_armor 매개변수가 없다 — B안 이후 평타가
+    전부 물리라 방어력을 무시할 경로가 없다(EnemyDummy.MitigatedDamage 원문, §12-1/12-2
+    확인 그대로) — 숫자 방어력 감폭은 항상 켠다."""
+    backlog = 0.0
+    collapse = None
+    for r in range(1, total_rounds + 1):
+        e = enemies[r]
+        cnt = wave_counts[r]
+        mult = armor_mult(e["armor"], defense_armor)
+        dps = team_dps_fn(r, e["armor_type"])
+        rl = round_length_fn(r, e["is_boss"])
+        incoming = backlog + cnt
+        kills_capacity = dps * mult * rl / e["hp"]
+        killed = min(incoming, kills_capacity)
+        backlog = incoming - killed
+        if backlog >= threshold and collapse is None:
+            collapse = r
+    return collapse
+
+
+# ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
 
@@ -465,6 +637,55 @@ def main():
         base_s = f"R{base}" if base else "완주"
         sup_s = f"R{sup}" if sup else "완주"
         print(f"  {label}: 기본 {base_s} -> 도움소 {sup_s} (캐스트 {casts}회)")
+
+    # -----------------------------------------------------------------
+    # §13: DamageTable(상성표) 반영 — B안 이후 실제 배정. PM 지시 2026-09-05.
+    # 배정 전(=attackType 전부 Unassigned와 동치, all_median) → 후(실제 배정, 로스터
+    # attackType 그대로 읽음) 비교. AD/AP 팀 구분 없음 — B안 이후 평타가 전부 물리다.
+    # -----------------------------------------------------------------
+    print("\n=== §13: DamageTable(상성표) 반영 — 배정 전/후, 팀 구분 없음(전부 물리) ===")
+
+    before_by_armor = {at: dict(all_median) for at in ARMOR_TYPES_REAL + ("Unassigned",)}
+    after_by_armor = build_median_by_armor(roster, all_median)
+
+    print("--- ① 배정 전 → 후 붕괴 라운드 (방어력 항상 적용) ---")
+    print(f"{'모델':20s}{'배정 전':14s}{'배정 후':14s}")
+    for name, fn in MODELS_DT.items():
+        before_r = run_backlog_dt(enemies, wave_counts, round_length_fn, defense_armor,
+                                   fn(before_by_armor), threshold=rc["enemy_count_threshold"])
+        after_r = run_backlog_dt(enemies, wave_counts, round_length_fn, defense_armor,
+                                  fn(after_by_armor), threshold=rc["enemy_count_threshold"])
+        before_s = f"붕괴 R{before_r}" if before_r else "완주(75R)"
+        after_s = f"붕괴 R{after_r}" if after_r else "완주(75R)"
+        print(f"{name:20s}{before_s:14s}{after_s:14s}")
+
+    def weighted_pct_change(rounds_range):
+        total_w = acc_before = acc_after = 0.0
+        for r in rounds_range:
+            e = enemies[r]
+            w = wave_counts[r] * e["hp"]
+            t = tier_for_round(r)
+            total_w += w
+            acc_before += w * before_by_armor[e["armor_type"]][t]
+            acc_after += w * after_by_armor[e["armor_type"]][t]
+        return (acc_after - acc_before) / acc_before * 100 if acc_before else float("nan")
+
+    print("\n--- ② 구간별 실제 배정 화력 변화 (HP×마릿수 가중, tier_for_round 스케줄 기준) ---")
+    for label, rng in (("R1~R30", range(1, 31)), ("R31~R60", range(31, 61)), ("R61~R75", range(61, 76))):
+        print(f"{label}: {weighted_pct_change(rng):+.1f}%")
+
+    print("\n--- ③ 지금 배정(원작 등급별 분포) vs 전원 normal(이론상 최고 비교군) ---")
+    roster_all_normal = [dict(u, attack_type="Normal") for u in roster]
+    normal_by_armor = build_median_by_armor(roster_all_normal, all_median)
+    print(f"{'모델':20s}{'전원 normal':14s}{'지금 배정':14s}")
+    for name, fn in MODELS_DT.items():
+        normal_r = run_backlog_dt(enemies, wave_counts, round_length_fn, defense_armor,
+                                   fn(normal_by_armor), threshold=rc["enemy_count_threshold"])
+        current_r = run_backlog_dt(enemies, wave_counts, round_length_fn, defense_armor,
+                                    fn(after_by_armor), threshold=rc["enemy_count_threshold"])
+        normal_s = f"붕괴 R{normal_r}" if normal_r else "완주(75R)"
+        current_s = f"붕괴 R{current_r}" if current_r else "완주(75R)"
+        print(f"{name:20s}{normal_s:14s}{current_s:14s}")
 
 
 if __name__ == "__main__":
