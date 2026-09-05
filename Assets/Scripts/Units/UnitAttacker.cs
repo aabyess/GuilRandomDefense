@@ -428,7 +428,30 @@ public class UnitAttacker : MonoBehaviour
                 if (effect.duration > 0f) StartCoroutine(SkillStunRoutine(target, effect.duration));
                 break;
 
-            // ArmorBreak/ExtraProjectile은 아직 값 의미가 없다(이번 작업 범위 밖) — 조용히 무시.
+            // 방깎 — 부호 없는 감소값(effect.multiplier 그대로가 곧 깎는 양, ArmorBonus와
+            // 달리 뒤집지 않는다). 레일리(2026-09-05, 구현담당1)가 값을 채웠는데 여기가
+            // 안 읽어서 "값은 있는데 아무 일도 안 난다"였다(PM 지시로 정정). duration>0이면
+            // 그 시간 뒤에 되돌린다 — 0(기본)이면 SupportShop 독약과 같은 관례로 영구
+            // 누적한다(원작 방깎은 대개 지속시간이 없다, war3map.w3h 버프 311개 전수 확인).
+            case SkillEffectKind.ArmorBreak:
+                target.AddArmorShred(effect.multiplier);
+                if (effect.duration > 0f) StartCoroutine(RevertArmorShredRoutine(target, effect.multiplier, effect.duration));
+                break;
+
+            // ArmorBonus·HealOverTime — EnemyDummy.ApplyAllyAuraEffect/RemoveAllyAuraEffect가
+            // 04번(보스 오라)용으로 이미 만들어둔 add/remove 쌍을 그대로 쓴다("아직 아무도
+            // 안 부른다"던 자리 — 이제 여기가 두 번째 호출부다). 그 메서드가 kind별 부호
+            // 규칙(ArmorBonus는 양수=버프라 AddArmorShred(-multiplier)로 뒤집음, HealOverTime은
+            // 그대로)을 이미 갖고 있어 여기서 새로 안 만든다. duration>0이면 그 시간 뒤에
+            // RemoveAllyAuraEffect로 정확히 상쇄한다 — 0이면 영구(호출부가 그런 스킬을 만들
+            // 때까진 실질적으로 안 씀).
+            case SkillEffectKind.ArmorBonus:
+            case SkillEffectKind.HealOverTime:
+                target.ApplyAllyAuraEffect(effect);
+                if (effect.duration > 0f) StartCoroutine(RevertAllyAuraEffectRoutine(target, effect, effect.duration));
+                break;
+
+            // ExtraProjectile은 아직 값 의미가 없다(이번 작업 범위 밖) — 조용히 무시.
         }
     }
 
@@ -437,6 +460,18 @@ public class UnitAttacker : MonoBehaviour
         target.AddFreeze();
         yield return new WaitForSeconds(duration);
         if (target != null) target.RemoveFreeze();
+    }
+
+    IEnumerator RevertArmorShredRoutine(EnemyDummy target, float amount, float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        if (target != null) target.AddArmorShred(-amount);
+    }
+
+    IEnumerator RevertAllyAuraEffectRoutine(EnemyDummy target, SkillEffect effect, float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        if (target != null) target.RemoveAllyAuraEffect(effect);
     }
 
     void DealSkillDamage(SkillEffect effect, EnemyDummy target)

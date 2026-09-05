@@ -410,55 +410,60 @@ public class EnemyDummy : MonoBehaviour
     /// 공식이 0.06이라는 가정을 스스로 되풀이했을 뿐이다. 맵이 0.02라는 건 맵 파일이 말해준다.
     /// </summary>
     /// <summary>
-    /// 최종 피해. 순서: 방깎 → 방어력 감폭 → 배율표.
+    /// 최종 피해. 순서: 방깎 → (방어력+마법저항 감폭, AP면 둘 다 생략) → 배율표.
     ///
-    /// ⚠️ 2026-09-05, 사장님 확정(02번)으로 뒤집힘: **"AP는 방어력을 무시한다"는 우리 규칙이었지
-    /// 원작이 아니었다** — 원작 플레이어 유닛 중 마법 공격타입은 하나도 없고, 워크3에서
-    /// 방어력을 무시하는 건 유닛 평타가 아니라 **능력(스킬) 피해뿐**이다. 그래서 지금은
-    /// <b>유닛 평타의 AP만</b> AD와 같은 물리 방어력 감폭을 타게 됐다 — <paramref name="attackType"/>가
-    /// <see cref="AttackType.Spells"/>(도움소 스킬 전용 행)면 그대로 방어력을 무시한다. 이 둘을
-    /// 가르는 게 이 메서드가 존재하는 이유다: <see cref="AttackType.Magic"/>(평타가 마법인 유닛)과
-    /// <see cref="AttackType.Spells"/>(스킬 피해)는 <b>같은 DamageType.AP를 쓰지만 물리 방어력
-    /// 취급이 다르다.</b>
+    /// ⚠️ 2026-09-05, 원작 확정(ORIGINAL_DAMAGE_TYPING.csv 715건 전수, PM):
+    /// **공격타입(상성표 행)과 피해타입(방어 무시 여부)은 완전히 독립된 축이다.**
+    /// `CHAOS+UNIVERSAL` 96건·`MAGIC+UNIVERSAL` 62건·`HERO+UNIVERSAL` 19건처럼
+    /// "물리 상성 행을 타면서 방어는 무시"하는 조합이 실재한다 — 예전엔 "AP=마법=Spells행만
+    /// 방어 무시"로 좁게 봤는데 그 전제가 틀렸다. **우리 축에서 `DamageType.AP`가 곧 원작
+    /// `DAMAGE_TYPE_UNIVERSAL`이다** — 어느 attackType 행을 타든(물리·마법 상관없이)
+    /// `AP`면 방어를 무시한다.
     /// </summary>
     float MitigatedDamage(float amount, DamageType type, AttackType attackType, float armorIgnoreRatio)
     {
-        // 스킬 피해(Spells 행)만 물리 방어력을 완전히 무시한다 — 그 외(평타의 AP 포함, AD,
-        // AD+AP)는 전부 아래 감폭을 탄다.
-        bool bypassPhysicalArmor = type == DamageType.AP && attackType == AttackType.Spells;
-
-        if (type == DamageType.AP)
-        {
-            // 마딜은 **물리 방어력과는 별개로 마법 방어력의 영향을 받는다** — 스킬이든 평타든
-            // 마찬가지다(이 축은 이번 정정과 무관하게 그대로 둔다, 사장님 지시).
-            // 원작이 적에게 거는 "마법 방어력"(워크3 `Aegr`)이 이 자리다.
-            amount *= EffectiveMagicMultiplier;
-        }
+        // AP = 원작 UNIVERSAL — 물리 방어력과 마법저항을 둘 다 무시한다(엔진 규칙 확정,
+        // PM 2026-09-05). attackType은 안 본다 — 어느 상성표 행이든(물리·마법 모두)
+        // UNIVERSAL은 그 앞의 방어 축 자체를 건너뛴다. 상성표(아래)는 그래도 탄다 —
+        // "방어 무시"와 "상성표"는 별개 축이다(원작 엔진 문서 확정).
+        bool bypassPhysicalArmor = type == DamageType.AP;
 
         if (!bypassPhysicalArmor)
         {
+            // ⚠️ 2026-09-05 리서치담당 확인(DAMAGE_TYPING_AND_MAGIC_AXIS.md): 원작에
+            // DAMAGE_TYPE_MAGIC이 0건이다 — 적에게 붙는 Aegr는 "마법 저항"이 아니라
+            // 공격타입별 감쇄(파생 A0P9의 Def1=0.85·Def5=0.90)이고, 난이도+스킬 스택으로
+            // 레벨만 오르내리는 별개 축이다. **우리 EffectiveMagicMultiplier가 모델한
+            // "마법 저항"은 원작 대응이 없다** — 필드·코드는 안 지운다(사장님 지시).
+            // 되살릴 일이 있으면 이 자리가 아니라 Aegr 레벨(난이도+스킬 스택) 축으로 다시
+            // 설계할 것. 지금은 AP(=UNIVERSAL)일 때 이 배율도 같이 건너뛴다 — 우리 평타는
+            // 전부 AD라 결과적으로 이 배율이 아무 데도 안 걸리는데, 그게 원작과 일치하는
+            // 상태다.
+            amount *= EffectiveMagicMultiplier;
+
             // 방무뎀은 전부/전무가 아니라 비율이다. 피해를 둘로 갈라 한쪽만 감폭시킨다.
-            // 유닛 평타의 AP도 이제 여기로 들어온다 — AD와 완전히 같은 식이다.
             float ignored = Mathf.Clamp01(armorIgnoreRatio);
             amount = amount * (1f - ignored) * ArmorMultiplier(EffectiveArmor)
                    + amount * ignored;
         }
 
-        // 상성표는 **물리·마법 양쪽에 다 건다** — 원작이 그렇다(물리 5행 + magic·spells 2행).
-        // 마법이 마법 방어 배율과 이 표를 둘 다 타는 것도 원작 동작이다.
-        //
-        // 단, **행 종류가 피해 종류와 맞을 때만** 건다. 옛 버그는 "마법이 표를 탄 것"이 아니라
-        // **마법에 물리 행을 먹인 것**이었다 — RowMatches가 그 짝을 지킨다.
+        // 상성표는 **방어 무시 여부와 무관하게 항상 탄다** — 원작이 그렇다(공격타입과
+        // 피해타입이 독립 축이라, UNIVERSAL이어도 물리/마법 상성 행은 그대로 적용된다).
+        // ⚠️ 예전엔 RowMatches가 "AP엔 magic/spells 행만"으로 짝을 강제했는데, 그 전제
+        // (AP=마법)가 위 주석대로 깨졌다 — 물리 행 + 방어 무시 조합이 원작에 실재해서
+        // RowMatches는 이제 막지 않는다(DamageTable.cs 참고). Unassigned만 배율 1.0으로
+        // 빠진다(Multiplier 자체가 그렇게 처리한다).
         if (damageTable != null && DamageTable.RowMatches(type, attackType))
         {
             amount *= damageTable.Multiplier(attackType, ArmorType);
         }
         else if (damageTable != null && !loggedRowMismatch)
         {
-            // 데이터가 틀린 것이라 조용히 넘기면 원인을 못 찾는다. 매 타격 찍으면 도배되니 한 번만.
+            // RowMatches가 지금은 항상 true라 이 분기는 사실상 안 걸린다 — 그래도 지우지
+            // 않는다(PM 지시). 나중에 RowMatches가 다시 뭔가를 막게 되면 그 원인을 알려줄
+            // 자리로 남겨둔다.
             loggedRowMismatch = true;
-            Debug.LogWarning($"{name}: {type} 피해에 {attackType} 행이 들어와 상성표를 건너뛴다. " +
-                             "AP는 Magic/Spells, 물리는 Normal/Pierce/Siege/Hero/Chaos여야 한다.", this);
+            Debug.LogWarning($"{name}: {type} 피해에 {attackType} 행이 상성표 검사를 건너뛰었다.", this);
         }
 
         return amount;
