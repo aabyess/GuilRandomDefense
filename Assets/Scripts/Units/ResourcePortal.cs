@@ -96,13 +96,17 @@ public class ResourcePortal : MonoBehaviour
         int round = roundManager != null ? roundManager.CurrentRound : 1;
         float scale = perRoundMax > perRound ? Random.Range(perRound, perRoundMax) : perRound;
         int amount = Mathf.Max(0, Mathf.RoundToInt(baseAmount + scale * round));
-        if (amount == 0) return;
+        string payoutLabel = payout == Payout.Gold ? "골드" : resourceType.ToString();
 
         if (payout == Payout.Gold)
             context.GoldWallet?.Add(amount);
         else
             context.ResourceWallet?.Add(resourceType, amount);
 
-        Debug.Log($"{name}: 플레이어 {ownerId}에게 {(payout == Payout.Gold ? "골드" : resourceType.ToString())} {amount} 지급.");
+        // amount==0은 위습이 이미 소모된 뒤(81-82줄)라 알림 없이 return하면 자원(위습)만
+        // 사라진 것처럼 보인다 — 성공 지급도 실패 메시지(92줄)처럼 화면에 알려야 한다
+        // (PM 지시 2026-09-05). 0이든 아니든 같은 자리에서 처리하면 분기가 하나로 끝난다.
+        PlayerNotification.Show(ownerId, $"{payoutLabel} {amount} 획득!");
+        Debug.Log($"{name}: 플레이어 {ownerId}에게 {payoutLabel} {amount} 지급.");
     }
 }
