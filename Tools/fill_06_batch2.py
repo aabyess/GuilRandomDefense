@@ -116,7 +116,9 @@ def main():
     effects = (
         effect_yaml(0, 1250000.0, 0.0, target=2, attack_type=1)   # Flat, Enemies
         + effect_yaml(1, 1.50, 0.0, target=3, attack_type=1)      # TargetMaxHpPercent, SingleTarget
-        + effect_yaml(2, 0.02, 0.0, target=3, attack_type=1)      # TargetCurrentHpPercent, SingleTarget
+        + effect_yaml(1, 0.02, 0.0, target=3, attack_type=1)      # TargetMaxHpPercent, SingleTarget
+        # ⚠️ 둘 다 UNIT_STATE_MAX_LIFE 기준이다(PM 원문 대조) — basis=2(TargetCurrentHpPercent)로
+        # 잘못 넣었다가 PM 지적으로 정정했다(2026-09-05). 두 항 다 basis=1.
     )
     text = replace_level_effects(text, 1, effects)
     text = append_description(
@@ -124,7 +126,8 @@ def main():
         " 2026-09-05 재정정: levels[1](Dragon_Skill_1_T)은 원문 if/else 구조상 "
         "레벨1 효과(1,000,000×2회)를 대체한다(추가 아님) — Flat 1,250,000(Enemies "
         "range 425) + TargetMaxHpPercent×1.50(SingleTarget) + "
-        "TargetCurrentHpPercent×0.02(SingleTarget). cooldown 8.5는 레벨1과 동일. "
+        "TargetMaxHpPercent×0.02(SingleTarget) — 둘 다 UNIT_STATE_MAX_LIFE 기준이라 "
+        "basis가 같다. cooldown 8.5는 레벨1과 동일. "
         "%체력 효과는 EnemyData.takesPercentDamage 게이트가 보스에서 런타임에 막으므로 "
         "그대로 채운다."
     )
