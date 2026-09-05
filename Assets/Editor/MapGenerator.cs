@@ -2484,6 +2484,46 @@ public static class MapGenerator
                (durationFixed ? $"\n라운드 길이를 원작값 {NormalRoundDuration}초로 고쳤습니다(옛 값 28초)." : "");
     }
 
+    // 신세계 사이드보스(도플라밍고·빅맘·카이도, ORIGINAL_BOSS_COMBAT_SPEC.md) — RoundManager처럼
+    // "Map" 루트 밖의 독립 오브젝트로 둔다. 맵을 다시 만들어도 스턴게이지·정산 배율(플레이어별
+    // 배열) 상태가 안 사라진다. 없으면 여기서 새로 만들고, 있으면 참조만 다시 맞춘다.
+    static string WireSideBossManager()
+    {
+        SideBossManager manager = Object.FindFirstObjectByType<SideBossManager>(FindObjectsInactive.Include);
+        if (manager == null)
+        {
+            GameObject managerObject = new GameObject("SideBossManager");
+            manager = managerObject.AddComponent<SideBossManager>();
+        }
+
+        RoundManager roundManager = Object.FindFirstObjectByType<RoundManager>(FindObjectsInactive.Include);
+        WaveSpawner waveSpawner = Object.FindFirstObjectByType<WaveSpawner>(FindObjectsInactive.Include);
+
+        EnemyData boss62 = AssetDatabase.LoadAssetAtPath<EnemyData>(
+            "Assets/Data/Enemies/Enemy_SideBoss62_도플라밍고.asset");
+        EnemyData boss66 = AssetDatabase.LoadAssetAtPath<EnemyData>(
+            "Assets/Data/Enemies/Enemy_SideBoss66_빅맘.asset");
+        EnemyData boss71 = AssetDatabase.LoadAssetAtPath<EnemyData>(
+            "Assets/Data/Enemies/Enemy_SideBoss71_카이도.asset");
+
+        SerializedObject so = new SerializedObject(manager);
+        so.FindProperty("roundManager").objectReferenceValue = roundManager;
+        so.FindProperty("waveSpawner").objectReferenceValue = waveSpawner;
+        so.FindProperty("boss62").objectReferenceValue = boss62;
+        so.FindProperty("boss66").objectReferenceValue = boss66;
+        so.FindProperty("boss71").objectReferenceValue = boss71;
+        so.ApplyModifiedProperties();
+
+        string warnings = "";
+        if (roundManager == null) warnings += "\n  ⚠️ RoundManager를 못 찾았습니다.";
+        if (waveSpawner == null) warnings += "\n  ⚠️ WaveSpawner를 못 찾았습니다.";
+        if (boss62 == null) warnings += "\n  ⚠️ Enemy_SideBoss62_도플라밍고 에셋을 못 찾았습니다.";
+        if (boss66 == null) warnings += "\n  ⚠️ Enemy_SideBoss66_빅맘 에셋을 못 찾았습니다.";
+        if (boss71 == null) warnings += "\n  ⚠️ Enemy_SideBoss71_카이도 에셋을 못 찾았습니다.";
+
+        return "\n신세계 사이드보스 매니저(R62·66·71) 배선 완료." + warnings;
+    }
+
     static string SetStartingResources(PlayerContext[] contexts)
     {
         int walletsSet = 0;
@@ -2559,6 +2599,7 @@ public static class MapGenerator
         report += Step("위습 프리팹", ShapeWispPrefab);
         report += Step("시작 위습", WireStartingWisps);
         report += Step("라운드 보상 위습", WireRoundRewardWisp);
+        report += Step("사이드보스 매니저", WireSideBossManager);
         report += Step("조합 지갑", WireCombineWallet);
         report += Step("창고", MoveWarehousesToIslands);
         report += Step("조합식", WireAllRecipes);
