@@ -294,13 +294,16 @@ public class UnitAttacker : MonoBehaviour
         switch (effect.basis)
         {
             case SkillEffectBasis.Flat: return effect.multiplier;
-            // %비례 피해에만 PercentDamageTakenMultiplier(원작 A11S, 대상별 감수성 계수)를
-            // 곱한다 — 일반 피해(Flat/CasterAttackPower 등)엔 곱하지 않는다(PM 지시,
-            // 2026-09-05, 리서치담당 원작 보스전 조사). EnemyData.percentDamageTaken 참고.
+            // ⚠️ 2026-09-05 정정: %체력 분기는 "이 대상이 %체력기를 타는가" 게이트가 먼저다
+            // (원작 GetUnitPointValue(대상)<200 — 보스는 200 이상이라 이 분기 자체를 건너뛰고
+            // 별도 고정값 분기로 간다). 그 고정값 자체는 아직 없어서(사장님 콘텐츠 미상) 게이트가
+            // 막히면 0을 돌려준다 — "원작처럼 다른 값이 나간다"가 아니라 "지금은 안 나간다".
+            // EnemyData.takesPercentDamage 참고. 감수성 계수(PercentDamageTakenMultiplier)는
+            // 여기서 안 곱한다 — 아래 DealSkillDamage에서 스킬 피해 전반에 곱한다.
             case SkillEffectBasis.TargetMaxHpPercent:
-                return target.MaxHp * effect.multiplier * target.PercentDamageTakenMultiplier;
+                return target.TakesPercentDamage ? target.MaxHp * effect.multiplier : 0f;
             case SkillEffectBasis.TargetCurrentHpPercent:
-                return target.Hp * effect.multiplier * target.PercentDamageTakenMultiplier;
+                return target.TakesPercentDamage ? target.Hp * effect.multiplier : 0f;
             case SkillEffectBasis.CasterAttackPower: return AttackDamage * effect.multiplier + effect.bonus;
             // 연구소(05번, 구현담당1)가 서면 실제 단계값을 여기서 곱한다 — 지금은 자리만이라
             // bonus만 돌려준다(대개 0이라 사실상 무효).
@@ -340,7 +343,12 @@ public class UnitAttacker : MonoBehaviour
 
     void DealSkillDamage(SkillEffect effect, EnemyDummy target)
     {
-        float amount = ResolveSkillEffectValue(effect, target);
+        // ⚠️ 2026-09-05 정정: PercentDamageTakenMultiplier(원작 A11S)는 "%체력 피해 전용
+        // 감수성"이 아니라 "이 대상이 스킬 피해를 얼마나 받는가" 계수다 — 원작에 게이트 없이
+        // 고정 피해에도 같은 계수가 곱는 사례가 43곳 중 7곳 있다(리서치담당 재조사). 그래서
+        // basis를 안 가리고 스킬 피해 전반에 곱한다. %체력 분기 자체를 타는지는 별개 축
+        // (target.TakesPercentDamage, ResolveSkillEffectValue에서 이미 갈랐다)이다.
+        float amount = ResolveSkillEffectValue(effect, target) * target.PercentDamageTakenMultiplier;
         if (amount <= 0f) return;
 
         // ⚠️ 평타(DamageTypeOf/AttackTypeOf)가 아니라 이 효과 자신의 damageType/attackType을

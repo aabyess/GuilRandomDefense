@@ -370,11 +370,23 @@ public class EnemyDummy : MonoBehaviour
 
     public ArmorType ArmorType => data != null ? data.armorType : ArmorType.Normal;
 
-    /// <summary>%비례 스킬 피해(TargetMaxHpPercent/TargetCurrentHpPercent)에만 곱하는
-    /// 대상별 감수성 계수(원작 A11S) — 일반 피해엔 안 쓴다. UnitAttacker.
-    /// ResolveSkillEffectValue의 %비례 두 case가 이 값을 곱한다. EnemyData.percentDamageTaken
-    /// 참고.</summary>
+    /// <summary>스킬 피해 전반(%체력·고정값 basis 가리지 않음)에 곱하는 대상별 감수성 계수
+    /// (원작 A11S) — 평타(일반 피해)엔 안 쓴다. ⚠️ 2026-09-05 정정: 처음엔 "%비례 피해
+    /// 전용"으로 알았는데, A11S 사용처 43곳 중 게이트 없는 7곳이 고정 피해에도 같은 계수를
+    /// 곱혀서(리서치담당 재조사) 스킬 피해 전반으로 넓혔다 — UnitAttacker.DealSkillDamage가
+    /// basis를 안 가리고 곱한다. EnemyData.percentDamageTaken 참고.
+    ///
+    /// ⚠️ 나중에 여기가 올라갈 자리 — 원작 취약도 스택(맞을수록 계수가 오르는 디버프, 예:
+    /// Trig_Hidden9 +2/carrot_skill_2 +1/Uta_skill_3_mana +5). 지금은 안 만든다(PM 지시,
+    /// 2026-09-05) — magicArmorShred와 같은 패턴(런타임 누적 필드 + Add 메서드)으로 나중에
+    /// 이 프로퍼티에 더하면 된다.</summary>
     public float PercentDamageTakenMultiplier => data != null ? data.percentDamageTaken : 1f;
+
+    /// <summary>이 적이 %체력 비례 스킬 피해(TargetMaxHpPercent/TargetCurrentHpPercent)를
+    /// 받는가 — 원작 GetUnitPointValue(대상)&lt;200 게이트(리서치담당 재조사, 2026-09-05).
+    /// 보스(라운드보스·신세계사이드보스·거대해왕류, 원작 포인트값 200 이상)는 이 분기를
+    /// 아예 안 탄다. EnemyData.takesPercentDamage 참고.</summary>
+    public bool TakesPercentDamage => data == null || data.takesPercentDamage;
 
     // 마방깍 누적. 마법 방어는 배율이라, 깎으면 배율이 **올라간다**(피해를 더 받는다).
     float magicArmorShred;
