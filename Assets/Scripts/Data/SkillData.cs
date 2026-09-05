@@ -64,12 +64,16 @@ public enum SkillEffectBasis
                              // 서면 그 값을 여기 잇는다 — 지금은 자리만이다.
 
     // ⚠️ 맨 뒤에 추가 — 직렬화 순서를 지킨다.
-    // 원작 GetEventDamage() 비례(715건 중 13건) — "이 유닛이 방금 받은 피해"에 비례해
-    // 되돌려준다. ⚠️ 읽는 코드 없음(2026-09-05) — EnemyDummy.TakeDamage는 사망 신호만
-    // 보내고 "방금 받은 피해량" 자체를 밖으로 주는 훅이 없다. 지어낼 수 없어 데이터 자리만
-    // 만든다 — UnitAttacker.ResolveSkillEffectValue가 이 케이스에 0을 돌려주는 건 "계산한
-    // 값이 0"이 아니라 "이 축을 읽는 코드가 아직 없다"는 뜻이다. 이 basis를 쓰는 효과는
-    // 지금 아무 것도 안 낸다 — 훅을 만들 때 이 자리만 채우면 된다.
+    // 원작 GetEventDamage() 비례(715건 중 17건) — 처음엔 "이 유닛이 받은 피해에 비례해
+    // 되돌려준다"는 반응형 축으로 읽어서 "적 쪽 훅이 없어 못 담는다"고 봤었다.
+    //
+    // ⚠️ 2026-09-06 정정(PM 지시로 재확인): CSV의 17행 전부 게이트가 "(게이트 없음)" 아니면
+    // "MANA/LIFE게이지…" — **전부 OnHitChance/OnHitCount, 즉 "평타가 맞았을 때"만 도는
+    // 경로다.** GetEventDamage()는 적이 받은 피해가 아니라 **그 순간 방금 나간 그 평타
+    // 자신의 피해량**이었다 — 새 아키텍처가 필요한 반응형 축이 아니라
+    // UnitAttacker.TryCastOnHitSkill이 그 순간 이미 알고 있는 값(AttackDamage)이었다.
+    // UnitAttacker.ResolveSkillEffectValue가 recentAttackDamage 매개변수로 그 값을 그대로
+    // 받아 쓴다 — CastSkillLevel 체인을 타고 흘러온다.
     ReceivedDamage,
 }
 

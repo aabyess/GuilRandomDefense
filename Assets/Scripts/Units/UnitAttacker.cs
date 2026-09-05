@@ -373,7 +373,10 @@ public class UnitAttacker : MonoBehaviour
             // 오라는 쿨다운 개념이 없다("계속 켜져 있다") — 매 프레임 판정하면 값이 생겼을 때
             // 폭증하니 1초 주기로 재판정한다.
             state.cooldownTimer = skill.triggerType == SkillTriggerType.Aura ? 1f : Mathf.Max(0.01f, level.cooldown);
-            CastSkillLevel(level, level.range, null);
+            // recentAttackDamage: 0 — CooldownAutoCast·Aura는 "방금 맞은 평타"라는 문맥
+            // 자체가 없다(TryCastOnHitSkill 쪽만 있음, 아래 참고). ReceivedDamage basis를
+            // 쓰는 효과가 이 경로를 타면 0(적용 안 함)으로 안전하게 빠진다.
+            CastSkillLevel(level, level.range, null, 0f);
         }
     }
 
@@ -477,7 +480,11 @@ public class UnitAttacker : MonoBehaviour
                 if (Random.value >= level.triggerChance) continue;
             }
 
-            CastSkillLevel(level, level.range, attackedTarget);
+            // recentAttackDamage: 방금 이 평타로 실제로 나간 피해량(AttackDamage) — 원작
+            // GetEventDamage()에 대응한다. OnHitChance/OnHitCount는 "평타가 맞았을 때"만
+            // 도는 경로라 이 값이 항상 뜻이 통한다(아래 ResolveSkillEffectValue.
+            // ReceivedDamage 참고, 2026-09-06 PM 지시로 연결).
+            CastSkillLevel(level, level.range, attackedTarget, AttackDamage);
         }
 
         // 루프가 다 끝난 뒤에 한 번만 리셋한다 — 위 주석 참고.
@@ -486,15 +493,17 @@ public class UnitAttacker : MonoBehaviour
     }
 
     // primaryTarget: OnHitChance가 이미 골라둔 대상(SingleTarget 효과가 우선 이걸 쓴다).
-    // 없으면(쿨다운·오라) 사거리 안에서 새로 고른다.
-    void CastSkillLevel(SkillLevel level, float range, EnemyDummy primaryTarget)
+    // 없으면(쿨다운·오라) 사거리 안에서 새로 고른다. recentAttackDamage: 이 발동을 일으킨
+    // 평타의 피해량(SkillEffectBasis.ReceivedDamage 전용, 없으면 0 — UpdateSkillCooldown이
+    // 그렇게 부른다).
+    void CastSkillLevel(SkillLevel level, float range, EnemyDummy primaryTarget, float recentAttackDamage)
     {
         if (level.effects == null) return;
 
         foreach (SkillEffect effect in level.effects)
         {
             if (effect == null || Random.value >= effect.chance) continue;
-            ApplySkillEffect(effect, range, primaryTarget);
+            ApplySkillEffect(effect, range, primaryTarget, recentAttackDamage);
         }
     }
 
@@ -504,7 +513,7 @@ public class UnitAttacker : MonoBehaviour
     // (2026-09-05, PM 지시로 런타임에도 가드 추가). 콘솔이 도배되지 않게 한 번만 찍는다.
     static bool loggedUnboundedRange;
 
-    void ApplySkillEffect(SkillEffect effect, float range, EnemyDummy primaryTarget)
+    void ApplySkillEffect(SkillEffect effect, float range, EnemyDummy primaryTarget, float recentAttackDamage)
     {
         if (range <= 0f &&
             (effect.target == SkillTargetKind.Enemies || effect.target == SkillTargetKind.Allies))
@@ -525,13 +534,13 @@ public class UnitAttacker : MonoBehaviour
                 {
                     if (enemy == null) continue;
                     if (range > 0f && Vector3.Distance(enemy.transform.position, transform.position) > range) continue;
-                    ApplyToEnemy(effect, enemy);
+                    ApplyToEnemy(effect, enemy, recentAttackDamage);
                 }
                 break;
 
             case SkillTargetKind.SingleTarget:
                 EnemyDummy target = primaryTarget != null ? primaryTarget : FindClosestEnemyWithin(range);
-                if (target != null) ApplyToEnemy(effect, target);
+                if (target != null) ApplyToEnemy(effect, target, recentAttackDamage);
                 break;
 
             case SkillTargetKind.Self:
@@ -568,7 +577,10 @@ public class UnitAttacker : MonoBehaviour
         allyAttacker.AddBuff(effect.buffId, effect.duration);
     }
 
-    float ResolveSkillEffectValue(SkillEffect effect, EnemyDummy target)
+    // recentAttackDamage: SkillEffectBasis.ReceivedDamage 전용 — 이 효과를 일으킨 평타의
+    // 피해량(원작 GetEventDamage(), 2026-09-06 PM 지시로 연결). CooldownAutoCast/Aura
+    // 경로에선 그런 문맥이 없어 0이 들어온다(CastSkillLevel 주석 참고).
+    float ResolveSkillEffectValue(SkillEffect effect, EnemyDummy target, float recentAttackDamage)
     {
         switch (effect.basis)
         {
@@ -599,23 +611,27 @@ public class UnitAttacker : MonoBehaviour
             // 360,000에서 안 늘어남). CountResearchLevel()이 자리만 만들고 지금 0을 돌려주므로
             // 당장은 결과가 이전과 같다(0×multiplier+bonus=bonus) — 회귀 없음.
             case SkillEffectBasis.ResearchLevel: return CountResearchLevel() * effect.multiplier + effect.bonus;
-            // ⚠️ 읽는 코드 없음(SkillEffectBasis.ReceivedDamage 주석 참고) — EnemyDummy에
-            // "방금 받은 피해량"을 밖으로 주는 훅이 없어 지어낼 수 없다. 0을 돌려주는 건
-            // "계산 결과가 0"이 아니라 "이 축이 아직 안 이어졌다"는 뜻이다 — 이 basis를 쓰는
-            // 효과는 지금 DealSkillDamage의 amount<=0 가드에 걸려 조용히 아무 일도 안 한다.
-            case SkillEffectBasis.ReceivedDamage: return 0f;
+            // ⚠️ 2026-09-06 연결(PM 지시): 원작 CSV의 ReceivedDamage 17행 전부 게이트가
+            // "(게이트 없음)" 아니면 "MANA/LIFE게이지…"다 — 전부 OnHitChance/OnHitCount,
+            // 즉 "평타가 맞았을 때"만 도는 경로다. GetEventDamage()는 새 아키텍처(적이
+            // 피격에 반응)가 아니라 **그 순간 방금 나간 평타 자신의 피해량**이었다 —
+            // TryCastOnHitSkill이 그 값을 이미 알고 있어서(AttackDamage), CastSkillLevel부터
+            // 여기까지 recentAttackDamage로 그대로 흘려보내면 끝이었다. 새 훅이 필요 없었다.
+            case SkillEffectBasis.ReceivedDamage: return recentAttackDamage * effect.multiplier + effect.bonus;
             default: return 0f;
         }
     }
 
     // 적 하나에게 효과 하나를 적용한다 — kind별로 갈린다. ApplySkillEffect의 Enemies/
-    // SingleTarget 갈래가 여길 거친다(Self/Allies는 ApplyToAlly, 아직 아무 것도 안 한다).
-    void ApplyToEnemy(SkillEffect effect, EnemyDummy target)
+    // SingleTarget 갈래가 여길 거친다(Self/Allies는 ApplyToAlly). recentAttackDamage는
+    // SkillEffectBasis.ReceivedDamage 전용(위 ResolveSkillEffectValue 참고) — Damage가
+    // 아닌 kind는 그냥 무시한다.
+    void ApplyToEnemy(SkillEffect effect, EnemyDummy target, float recentAttackDamage)
     {
         switch (effect.kind)
         {
             case SkillEffectKind.Damage:
-                DealSkillDamage(effect, target);
+                DealSkillDamage(effect, target, recentAttackDamage);
                 break;
 
             // 일반 행동정지 스턴만이다 — 원작의 "게이지를 미는 스턴"(신세계 사이드보스
@@ -680,14 +696,14 @@ public class UnitAttacker : MonoBehaviour
         if (target != null) target.RemoveAllyAuraEffect(effect);
     }
 
-    void DealSkillDamage(SkillEffect effect, EnemyDummy target)
+    void DealSkillDamage(SkillEffect effect, EnemyDummy target, float recentAttackDamage)
     {
         // ⚠️ 2026-09-05 정정: PercentDamageTakenMultiplier(원작 A11S)는 "%체력 피해 전용
         // 감수성"이 아니라 "이 대상이 스킬 피해를 얼마나 받는가" 계수다 — 원작에 게이트 없이
         // 고정 피해에도 같은 계수가 곱는 사례가 43곳 중 7곳 있다(리서치담당 재조사). 그래서
         // basis를 안 가리고 스킬 피해 전반에 곱한다. %체력 분기 자체를 타는지는 별개 축
         // (target.TakesPercentDamage, ResolveSkillEffectValue에서 이미 갈랐다)이다.
-        float amount = ResolveSkillEffectValue(effect, target) * target.PercentDamageTakenMultiplier;
+        float amount = ResolveSkillEffectValue(effect, target, recentAttackDamage) * target.PercentDamageTakenMultiplier;
         // 원작 realD = 0.03×버프개수(SkillEffect.casterBuffCountFactor 주석 참고). 기존
         // 227개 효과는 이 필드가 직렬화에 없어 C# 기본값 0f로 읽힌다 — (1+0×count)=1이라
         // 배율이 완전히 무효, 회귀 없음. CountCasterBuffs()가 지금 항상 0을 돌려주므로
