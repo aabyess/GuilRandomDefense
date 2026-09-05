@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_게이트_초월_강재규_AP_fcba0856
+  m_EditorClassIdentifier:
+  skillName: 오하라의 마지막 생존자 — LIFE게이지40.00 AND 1/20
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 오하라의 마지막 생존자(H098)의 게이트 "LIFE게이지40.00 AND 1/20" 능력 1개를 이 SkillData 하나로 묶었다.   · Robine_skill_3#1: 계산식 600000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  triggerType: 3
+  levels:
+  - cooldown: 0
+    triggerChance: 0.05
+    range: 350.0
+    hitCountThreshold: 40
+    resetTo: 1
+    gaugeKind: 1
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 1
+      attackType: 5
+      multiplier: 600000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
