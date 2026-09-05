@@ -109,12 +109,13 @@ public class UnitAttacker : MonoBehaviour
     // **영구 누적이 확정이다** (`UNIT_STATS_RESEARCH.md`).
     // → 제한을 걷어냈다. 무한히 쌓여도 EffectiveArmor가 -20에서 잘리므로 효과는 유계다.
     //
-    // ⚠️ 2026-09-05 정정(04③): "능력별 상한을 TraitEffect에 담을 자리가 없다"던 게 더 이상
-    // 문제가 아니다 — 방깎은 값을 직접 빼는 게 아니라 EnemyDummy가 들고 있는 원작 표
-    // (A0TK/A0VI/A0VJ)의 레벨을 1 올리는 것으로 바뀌었다(사장님 정정, war3map.w3a 전수
-    // 확인). 상한은 그 표의 길이가 자동으로 정한다 — 여기서는 "방깎이 있는지"만 보고
-    // EffectSum의 크기(옛 "45" 같은 값)는 이제 안 쓴다. Trait 에셋 239개가 전부 effects가
-    // 비어 있어서(2026-09-05 확인) 이 의미 변경으로 깨지는 기존 데이터가 없다.
+    // ⚠️ 2026-09-05 정정(2차, 04③): 1차 정정("표 레벨을 올리는 것으로 바뀌었다")이
+    // 틀렸었다 — A0TK/A0VI/A0VJ는 범용 방깎 표가 아니라 **카이도·핸콕 전용 스킬**이
+    // 올리는 능력이었다(PM, 트리거 재조사). 우리 유닛의 일반 ArmorShred 트레잇은
+    // 원래대로 EnemyDummy.armorShred(float, 원작 `Iarp`류)를 직접 깎는다 — 이 값은
+    // ArmorFloor(-20)에서 잘리므로 무한 누적이어도 효과는 유계다. A0TK/A0VI/A0VJ 쪽은
+    // EnemyDummy.AddKaidoAttackStack 등 전용 메서드로만 올라간다(카이도·핸콕에 대응하는
+    // 유닛이 우리 로스터에 아직 없어 호출부는 없음 — 06번 이후).
     void ApplyArmorShred(EnemyDummy target)
     {
         UnitData unitData = identity != null ? identity.Data : null;
@@ -124,10 +125,9 @@ public class UnitAttacker : MonoBehaviour
         if (source == null) return;
 
         float shred = source.EffectSum(unitData, TraitEffectKind.ArmorShred);
-        if (shred > 0f) target.AddArmorShredStack();
+        if (shred > 0f) target.AddArmorShred(shred);
 
-        // 마방깍은 마법 방어 배율을 올린다(= 마법 피해를 더 받게 한다). 방깎과 별개 축이라
-        // 표 구조가 아니다 — 이번 정정 대상이 아니다.
+        // 마방깍은 마법 방어 배율을 올린다(= 마법 피해를 더 받게 한다). 방깎과 별개 축이다.
         float magicShred = source.EffectSum(unitData, TraitEffectKind.MagicArmorShred);
         if (magicShred > 0f) target.AddMagicArmorShred(magicShred);
     }

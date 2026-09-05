@@ -265,42 +265,67 @@ public class EnemyDummy : MonoBehaviour
     // (2026-09-04 원본 확인. 그전까지 0.06을 써서 후반 피해가 2.2~2.8배 낮게 나왔다.)
     public const float DefenseArmor = 0.02f;
 
-    // 도움소·보스 오라 등 "임의의 값을 걸었다 되돌리는" 방깎 — ApplyAllyAuraEffect/
-    // RemoveAllyAuraEffect(위)가 이걸 쓴다. 우리 유닛의 방깎 트레잇은 이제 이 필드를 안 쓴다
-    // (아래 armorShredStacks 참고) — 원작이 "값을 뺀다"가 아니라 "능력 레벨을 올린다"는
-    // 구조였다는 게 밝혀졌기 때문이다(사장님 정정, 2026-09-05, 04③). 둘은 별개 축으로
-    // 공존한다 — EffectiveArmor에서 둘 다 뺀다.
+    // 도움소·보스 오라 등 "임의의 값을 걸었다 되돌리는" 방깎(원작 `Iarp`류, 일반 플레이어
+    // 유닛 트레잇) — ApplyAllyAuraEffect/RemoveAllyAuraEffect(위)와 UnitAttacker의 일반
+    // ArmorShred 트레잇이 이걸 쓴다. 아래 A0TK/A0VI/A0VJ와는 완전히 다른 축이다 — 이건
+    // "누구나 걸 수 있는 값"이고, 아래는 "카이도·핸콕 전용 스킬이 올리는 특정 능력의
+    // 레벨"이다. EffectiveArmor에서 둘 다 뺀다.
     float armorShred;
 
-    // ⚠️ 2026-09-05 정정: 우리 유닛의 방깎은 "값을 직접 뺀다"가 아니라 "적에게 이미 붙어
-    // 있는 원작 방어력감소 능력(A0TK/A0VI/A0VJ)의 레벨을 1 올린다"였다(사장님, war3map.w3a
-    // 전수 확인). 세 표 다 레벨1(스택0)은 0(효과없음)에서 시작해 스택마다 정해진 만큼
-    // 깎인다 — A0TK만 첫 스택이 유난히 크다(-70, 그 뒤로는 -5씩). 등간격으로 보간하면
-    // 안 되는 이유가 그거다. 스택은 하나로 합쳐 센다 — 어느 트리거가 어느 표를 개별로
-    // 올리는지는 조사 범위 밖(리서치 미완)이라, 방깎이 걸릴 때마다 적용 대상 표 전부를
-    // 같은 스택 수만큼 같이 읽는다.
+    // ⚠️ 2026-09-05 정정(2차): 처음엔 이 셋을 "우리 유닛의 방깎 트레잇이 범용으로 올리는
+    // 표"로 오해했다(1차 정정, 04③ 최초 커밋). PM이 트리거를 다시 뒤져 **레벨을 올리는
+    // 곳이 캐릭터 딱 둘뿐**이라는 걸 확인했다 — 능력 이름 자체가 그렇게 말하고 있었다
+    // ("방어력감소-카이도", "방어력감소-핸콕"):
+    //   A0TK ← Trig_Kaido_Attack                              (카이도 평타)
+    //   A0VI ← Trig_Kaido_Attack, Trig_Kaido_Skill_1_8         (카이도 평타 + 전용 스킬)
+    //   A0VJ ← Trig_Legend14han_petrification1/2/3             (핸콕 석화)
+    // 그래서 **세 표를 하나의 스택으로 합쳐 읽으면 안 된다** — 카이도 평타 한 번에
+    // -70(A0TK)+-3(A0VI)+-5(A0VJ)=-78이 한꺼번에 걸리는 건 원작에 없는 일이다. 실제로는
+    // 트리거마다 자기 표(들)만 올라간다. 그래서 스택을 표별로 분리한다.
+    // 117기·98기·99기가 이 능력을 미리 갖고 있던 이유도 이걸로 설명된다 — 워크3는 대상에
+    // 능력이 이미 붙어 있어야 레벨을 세팅할 수 있어서 수신기로 미리 심어둔 것이다("범용
+    // 시스템"이 아니라 "수신기").
+    // 세 표 다 레벨1(스택0)은 0(효과없음)에서 시작한다 — A0TK만 첫 스택이 유난히 크다
+    // (-70, 그 뒤로는 -5씩). 등간격으로 보간하면 안 되는 이유가 그거다.
     static readonly float[] ArmorShredLevelsA0TK = { 0f, -70f, -75f, -80f, -85f, -90f, -95f, -100f, -105f, -110f, -115f };
     static readonly float[] ArmorShredLevelsA0VI = { 0f, -3f, -6f, -9f, -12f, -15f, -18f, -21f, -24f, -27f, -30f };
     static readonly float[] ArmorShredLevelsA0VJ = { 0f, -5f, -10f, -15f, -20f, -25f, -30f, -35f, -40f };
 
-    int armorShredStacks;
+    // 표별 독립 스택. 카이도 평타는 tk/vi를 같이 올리고(같은 트리거), 카이도의 전용 스킬은
+    // vi만, 핸콕의 석화는 vj만 올린다 — 그래서 세 카운터가 서로 따로 논다.
+    int kaidoAttackTkStacks;
+    int kaidoViStacks;
+    int hancockPetrificationVjStacks;
 
-    /// <summary>우리 유닛의 방깎 트레잇이 적중할 때마다 부른다 — 값이 아니라 스택 하나를
-    /// 쌓는다. 영구 누적이고(원작 확인, 위 옛 주석 참고) 되돌리는 짝이 없다 — 표 길이에서
-    /// 자동으로 멈추므로 상한을 넘겨도 안전하다.</summary>
-    public void AddArmorShredStack() => armorShredStacks++;
+    /// <summary>카이도 평타(Trig_Kaido_Attack)가 적중할 때 부른다 — A0TK와 A0VI를 함께
+    /// 올린다. 우리 로스터에 카이도에 해당하는 유닛이 아직 없어 지금은 호출부가 없다
+    /// (06번 특성 배선 이후, 사장님이 배정하면 연결). 영구 누적 — 표 길이에서 자동으로
+    /// 멈추므로 상한을 넘겨도 안전하다.</summary>
+    public void AddKaidoAttackStack()
+    {
+        kaidoAttackTkStacks++;
+        kaidoViStacks++;
+    }
 
-    /// <summary>스택 수를 표 인덱스로 읽어 이 개체에 적용되는 표들의 방어력감소 합을 낸다
-    /// (전부 0 이하 — 그대로 armor에 더하면 깎인다). data.armorShredBuildingOnly면 A0TK만,
-    /// 아니면 셋 다.</summary>
+    /// <summary>카이도의 전용 스킬(Trig_Kaido_Skill_1_8)이 적중할 때 부른다 — A0VI만 올린다.</summary>
+    public void AddKaidoSkillViStack() => kaidoViStacks++;
+
+    /// <summary>핸콕의 석화(Trig_Legend14han_petrification)가 적중할 때 부른다 — A0VJ만 올린다.</summary>
+    public void AddHancockPetrificationStack() => hancockPetrificationVjStacks++;
+
+    /// <summary>표별 스택을 각자의 표 인덱스로 읽어 이 개체에 적용되는 방어력감소 합을 낸다
+    /// (전부 0 이하 — 그대로 armor에 더하면 깎인다).
+    /// data.armorShredBuildingOnly(건물)면 카이도의 A0VI와 핸콕의 A0VJ는 안 통하고
+    /// A0TK(카이도 평타의 "큰 쪽")만 통한다 — 원작 실측(PM): "핸콕의 석화는 건물에 안
+    /// 통하고, 카이도도 건물엔 큰 쪽만 통한다".</summary>
     float TableStackedArmorShred()
     {
-        float total = ArmorShredLevelsA0TK[Mathf.Clamp(armorShredStacks, 0, ArmorShredLevelsA0TK.Length - 1)];
+        float total = ArmorShredLevelsA0TK[Mathf.Clamp(kaidoAttackTkStacks, 0, ArmorShredLevelsA0TK.Length - 1)];
 
         if (data == null || !data.armorShredBuildingOnly)
         {
-            total += ArmorShredLevelsA0VI[Mathf.Clamp(armorShredStacks, 0, ArmorShredLevelsA0VI.Length - 1)];
-            total += ArmorShredLevelsA0VJ[Mathf.Clamp(armorShredStacks, 0, ArmorShredLevelsA0VJ.Length - 1)];
+            total += ArmorShredLevelsA0VI[Mathf.Clamp(kaidoViStacks, 0, ArmorShredLevelsA0VI.Length - 1)];
+            total += ArmorShredLevelsA0VJ[Mathf.Clamp(hancockPetrificationVjStacks, 0, ArmorShredLevelsA0VJ.Length - 1)];
         }
 
         return total;
