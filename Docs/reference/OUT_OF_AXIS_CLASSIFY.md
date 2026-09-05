@@ -308,3 +308,63 @@ Trig_perona_Mana_Actions:
 3. `TargetMoveSpeed` 배선(판단 끝남, 5행).
 4. 영웅능력치 12행 — **`fb3d707` 정정대로**(✅ 2행 흡수 / ⚠️ 6행 꼬리표 / 🔴 4행 비움).
 5. `A0LZ` 레벨 증가 경로 확인 → 비비 2행 판정.
+
+---
+
+# 추가 — 부릉냐 마나 ↔ 우리 `manaGaugeCounter` 대조 (2026-09-06)
+
+**PM 판단용 확인 결과다. 여기서 결정하지 않는다.**
+
+## 증가 규칙은 **1:1이다**
+
+```jass
+Trig_BronyaMotar_Attack_Actions:              ← 부릉냐 평타 트리거
+    if GetUnitStateSwap(UNIT_STATE_MANA, 공격자) == 150.00 then
+        SetUnitManaBJ(공격자, 0.00)            ← 150에서 0으로 리셋 + BronyaMotar_R 발동
+    else
+        SetUnitManaBJ(공격자, 마나 + 1)        ← 평타마다 +1
+```
+
+```csharp
+// UnitAttacker.cs:458~462
+if (!manaGaugeInitialized) { manaGaugeCounter = level.resetTo; }
+if (!manaIncremented)      { manaGaugeCounter++; }        // 평타마다 +1
+if (manaGaugeCounter < level.hitCountThreshold) continue; // 임계 도달 시 발동
+manaShouldReset = true; manaResetValue = level.resetTo;   // 리셋
+```
+
+| 축 | 원작 | 우리 | |
+|---|---|---|---|
+| 증가 시점 | 평타 1회 | 평타 1회 | ✅ |
+| 증가량 | +1 | +1 | ✅ |
+| 임계 | 150 | `hitCountThreshold` | ✅ 같은 자리 |
+| 리셋 | 0 | `resetTo` | ✅ 같은 자리 |
+| 여러 스킬이 카운터 공유 | `UNIT_STATE_MANA` 하나 | `manaGaugeCounter` 하나 | ✅ |
+
+→ **`realM`(0~150)과 우리 `manaGaugeCounter`는 같은 값이다.**
+
+## ⚠️ 다만 단서 둘 — **PM 판단이 필요한 지점**
+
+1. **원작엔 평타 외 증가 경로가 하나 더 있다** `[파일확인]`
+   ```jass
+   Trig_BronyaMotar_E_Func053A:  SetUnitManaBJ(GetEnumUnit(), 마나 + 5.00)
+   ```
+   E 스킬이 마나를 **+5** 준다. **우리엔 이 경로가 없다.**
+   → 우리 카운터는 원작보다 **천천히 오른다.** 배율 상한(×1.745)에 덜 도달한다는 뜻이다.
+   얼마나 덜 오르는지는 E 스킬 발동 빈도에 달렸다 `[미확인]`.
+
+2. **시작 마나값을 못 구했다** — `h09N`은 `umpm=150`(최대)만 있고 `umpi`(시작 마나) 필드가 **없다**(템플릿 상속).
+   0에서 시작하는지 150에서 시작하는지 맵만으로는 못 정한다 `[미확인]`.
+   150에서 시작하면 **첫 평타에 바로 리셋**되므로 실질은 0에서 시작하는 것과 같아지지만, 그건 추론이다.
+
+## 그래서 무엇을 묻나
+
+**「구조는 1:1이지만 원작엔 +5 경로가 하나 더 있다」**는 상태다.
+`CasterGaugeValue` basis를 넣으면 **5행이 담기되, 배율 곡선이 원작보다 낮게 깔린다**(과소).
+
+- 넣는다 → 5행 회수. 과소는 「E 스킬 +5가 없어서」라는 **알려진 근사**가 된다.
+- 안 넣는다 → 5행이 계속 축밖. 지금은 **bonus만** 나가고 배율이 통째로 빠진다(더 큰 과소, ×1.00 고정).
+
+**둘 다 과소이고, 넣는 쪽이 원작에 더 가깝다.** 다만 「우리 게이지 = 원작 마나」로 이름을 붙이는 순간
+**나중에 E 스킬을 구현할 때 +5 경로를 잊기 쉽다** — 그 꼬리표를 같이 남길 수 있으면 넣는 쪽을 권한다.
+**결정은 PM.**
