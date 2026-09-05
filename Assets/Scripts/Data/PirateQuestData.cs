@@ -8,8 +8,24 @@ public class PirateQuestData : ScriptableObject
 {
     public string questName;
 
-    [Header("판매 대상 — 이 유닛을 UnitSellPortal에 넣으면 발동")]
-    public UnitData sellUnit;
+    // ⚠️ 2026-09-05 2차 정정: "판매 포탈에 토큰을 판다"는 우리가 지어낸 구조였다(사장님 발견,
+    // PM 재조사) — 원작은 `GetSoldUnit()`(퀘스트 상점 h07A "도전과제-퇴치"가 이 유닛을
+    // 플레이어에게 팔았다는 이벤트)로 조건을 건다. 상점에서 사는 순간 발동이지 별도 포탈이
+    // 없다. sellUnit(토큰 유닛)과 UnitSellPortal은 이 정정으로 전부 지웠다 — 아래
+    // PirateQuestShop이 goldCost를 직접 받고 그 자리에서 StartQuest를 부른다.
+
+    [Header("상점 판매 — 원작 h07A 도전과제-퇴치의 useu/재고(AddUnitToStockBJ) 그대로")]
+    // 전부 10엔(원작 실측). 우리 상점 한 칸이 이 값을 그대로 쓴다.
+    public int goldCost = 10;
+    // 원작 재고 상한은 7종 전부 1 — 한 번 사면 다시 살 수 없고, 아래 restockSeconds가 지나야
+    // 보충된다(WC3 AddUnitToStockBJ의 currentStock/maxStock/regenType=ALWAYS).
+    public int stockMax = 1;
+    // 게임 시작 시점 재고. 와포루만 `Trig_Start2_Actions`가 즉시 1을 채워줘서(1),
+    // 나머지 6종은 0으로 시작해 restockSeconds를 다 채워야 첫 재고가 뜬다.
+    public int stockStart;
+    // 재고 1개가 다시 차기까지 걸리는 시간(초). 7종이 전부 다르다 — 통일하지 말 것
+    // (해적단 360 · 스모커 510 · 바제스 1310 · 와포루·거프·피카·모리아 3600).
+    public float restockSeconds = 3600f;
 
     [Header("미니보스 — EnemyDummy를 그대로 재사용한다(SetLane(-1))")]
     public EnemyData miniboss;
@@ -20,14 +36,10 @@ public class PirateQuestData : ScriptableObject
     // 대신한다. ⚠️ 배율 자체가 창작이다 — 원작 수치가 아니다(해적단의 `Ilif`는 부호가 툴팁과
     // 반대로 나와 리서치담당이 무리하게 숫자로 바꾸지 않기로 하고 스모커와 같은 근사치를 그대로 썼다).
     //
-    // 🔴 미도달(2026-09-05, 전 구간 손 추적으로 발견). 토큰이 시작에 1회만 지급되고 재획득
-    // 경로가 어디에도 없다(전수 grep — sellUnit을 참조하는 곳은 GrantStartingTokens 하나뿐).
-    // 그래서 PirateQuestManager.NextAttempt는 모든 플레이어에게 항상 1을 돌려주고, 이 배율은
-    // 실전에서 `1 + (1-1)*hpIncreasePerAttempt = 1.0`으로 고정돼 절대 안 움직인다. 원작은
-    // 상점 재고가 시간이 지나면 보충되는 구조(`AddUnitToStockBJ`)라 재도전이 설계의 일부다 —
-    // 스모커 툴팁 "도전 횟수가 증가할수록 체력이 증가합니다"가 그 증거. **필드는 지우지 않는다
-    // — 죽은 게 아니라 살릴 예정인 기능이다.** 재고 보충 간격이 확인되면(리서치담당 조사 중)
-    // 토큰 재획득 경로부터 만들 것 — 그전엔 이 배율을 만질 이유가 없다.
+    // ✅ 2026-09-05 3차: 위 "🔴 미도달"이 해소됐다. 토큰-무상지급 구조를 버리고 원작 그대로
+    // 상점 재고(goldCost/stockMax/stockStart/restockSeconds)로 돌아가면서, restockSeconds가
+    // 지나면 다시 살 수 있다 — 그게 곧 재획득 경로다. PirateQuestManager.NextAttempt가 이제
+    // 실제로 1보다 큰 값을 돌려줄 수 있다.
     public bool scalesWithAttempts;
     public float hpIncreasePerAttempt = 0.5f;
 

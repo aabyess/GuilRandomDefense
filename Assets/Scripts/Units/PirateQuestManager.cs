@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-// 해적단류 퀘스트(와포루/스모커 등) 진행을 맡는다. UnitSellPortal이 트리거하면 미니보스를
-// EnemyDummy로 스폰하고, 제한시간 안에 죽으면 성공 보상을, 못 죽이면 실패 페널티를 준다.
+// 해적단류 퀘스트(와포루/스모커 등) 진행을 맡는다. PirateQuestShop이 구매 시점에 부르면
+// 미니보스를 EnemyDummy로 스폰하고, 제한시간 안에 죽으면 성공 보상을, 못 죽이면 실패
+// 페널티를 준다.
 //
 // 미니보스는 EnemyDummy를 그대로 재사용한다(SealSpawner와 같은 패턴) — UnitAttacker의 타겟
 // 탐색이 EnemyDummy.Active를 레인 구분 없이 거리로 훑어서, 별도 타겟팅 시스템 없이도
@@ -20,14 +21,6 @@ using UnityEngine.AI;
 public class PirateQuestManager : MonoBehaviour
 {
     public static PirateQuestManager Instance { get; private set; }
-
-    // 게임 시작 시 각 플레이어에게 무상으로 하나씩 지급하는 퀘스트 토큰 목록.
-    // 원작은 건물 "재고"(AddUnitToStockBJ)에 1개 등록하는 방식인데, 그 시스템 자체가
-    // 우리에 없어서(설계 승인, 2026-09-05 PM) 게임 시작 무상 지급으로 단순화했다.
-    [SerializeField] List<PirateQuestData> startingQuests = new List<PirateQuestData>();
-    [SerializeField] UnitSpawner unitSpawner;
-
-    UnitSpawner Spawner => unitSpawner != null ? unitSpawner : unitSpawner = FindFirstObjectByType<UnitSpawner>();
 
     RoundManager roundManager;
     RoundManager RoundManagerRef => roundManager != null ? roundManager : roundManager = FindFirstObjectByType<RoundManager>();
@@ -50,38 +43,11 @@ public class PirateQuestManager : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
-    void Start()
-    {
-        if (!GameAuthority.IsServer) return;
-        GrantStartingTokens();
-    }
+    /// <summary>PirateQuestShop.CanBuy가 "지금 진행 중인가"를 미리 걸러낼 때 쓴다 — 골드를
+    /// 쓰기 전에 막아야 하므로 이 HashSet을 밖에서 읽을 수 있어야 한다.</summary>
+    public bool IsActive(PirateQuestData quest, int playerId) => active.Contains((quest, playerId));
 
-    // ⚠️ 이 "게임 시작 1회 무상 지급"이 원작의 "상점 재고 구매(재입고됨)"를 단순화한 자리다
-    // (클래스 상단 주석 참고). 그 단순화의 대가: 토큰을 다시 얻을 방법이 어디에도 없어서,
-    // PirateQuestData.scalesWithAttempts(재도전 시 강해짐)가 구조적으로 미도달이 됐다
-    // (2026-09-05, 전 구간 손 추적). 재고 보충 구조를 만들 때 여기부터 손댈 것.
-    void GrantStartingTokens()
-    {
-        if (Spawner == null)
-        {
-            Debug.LogWarning("PirateQuestManager: UnitSpawner를 찾지 못해 시작 퀘스트 토큰을 지급하지 못했습니다.");
-            return;
-        }
-
-        foreach (PirateQuestData quest in startingQuests)
-        {
-            if (quest == null || quest.sellUnit == null) continue;
-
-            foreach (PlayerContext context in PlayerContext.Occupied)
-            {
-                LaneMarker lane = LaneMarker.Get(context.PlayerId);
-                Vector3 position = lane != null ? lane.TakeSpawnPosition(quest.sellUnit) : transform.position;
-                Spawner.Spawn(quest.sellUnit, position, context.PlayerId);
-            }
-        }
-    }
-
-    /// <summary>UnitSellPortal이 부른다. 이미 진행 중이면 시작하지 않는다.</summary>
+    /// <summary>PirateQuestShop이 구매 시점에 부른다. 이미 진행 중이면 시작하지 않는다.</summary>
     public bool StartQuest(PirateQuestData quest, int playerId)
     {
         if (quest == null || quest.miniboss == null || quest.miniboss.prefab == null)
