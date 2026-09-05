@@ -131,12 +131,24 @@ def load_roster():
         at_idx = g("attackType")
         attack_type = (ATTACK_TYPE_ENUM[int(at_idx)]
                        if at_idx is not None and int(at_idx) < len(ATTACK_TYPE_ENUM) else "Unassigned")
+
+        # §17(2026-09-05): 원작 능력 100종 배정(스킬 발동형 피해). skill_dps_for_unit이
+        # OnHitChance+Damage+CasterAttackPower가 아니면 0을 준다 — 대부분(37종)은 실제로
+        # 0이다(발동확률만 있고 피해 자체가 없는 원작 능력, PM 확인).
+        skill_m = re.search(r"^  skill: \{fileID: \d+, guid: ([0-9a-f]+)", text, re.MULTILINE)
+        skill_dps, skill_attack_type_idx = skill_dps_for_unit(
+            skill_m.group(1) if skill_m else None, ap, aspd)
+        skill_attack_type = (ATTACK_TYPE_ENUM[skill_attack_type_idx]
+                              if skill_attack_type_idx is not None
+                              and skill_attack_type_idx < len(ATTACK_TYPE_ENUM) else "Unassigned")
+
         name_m = re.search(r'^  unitName: "?(.*?)"?$', text, re.MULTILINE)
         recs.append({
             "name": name_m.group(1) if name_m else "?",
             "grade": gname, "tier": tier, "damagetype": dmgtype, "attack_type": attack_type,
             "base_dps": ap * aspd,
             "bash_dps": cc * cbd * aspd,
+            "skill_dps": skill_dps, "skill_attack_type": skill_attack_type,
         })
     return recs
 
@@ -146,7 +158,8 @@ def median_dps_by_tier(roster, damagetype_filter=None, with_bash=False):
     for r in roster:
         if damagetype_filter is not None and r["damagetype"] != damagetype_filter:
             continue
-        v = r["base_dps"] + (r["bash_dps"] if with_bash else 0.0)
+        # §17: 평타(base_dps) + 스킬 기대 DPS(skill_dps, §17 이전엔 전부 0이라 무영향).
+        v = r["base_dps"] + r["skill_dps"] + (r["bash_dps"] if with_bash else 0.0)
         by_tier[r["tier"]].append(v)
     out = {}
     for t in range(TIER_COUNT):
@@ -421,6 +434,100 @@ _ENEMY_DATA_CS = read("Assets/Scripts/Data/EnemyData.cs")
 ARMOR_TYPE_ENUM = parse_enum(_ENEMY_DATA_CS, "ArmorType")
 ATTACK_TYPE_ENUM = parse_enum(_ENEMY_DATA_CS, "AttackType")
 
+# ---------------------------------------------------------------------------
+# 8. 유닛 스킬(§17, 2026-09-05 — 원작 능력 100종 배정, `3cf3147`) — Assets/Data/UnitSkills/
+#    *.asset에서 직접 파싱한다. PM 지시: "사거리와 달리 공간 개념이 필요 없다, 기대 DPS에
+#    발동확률×(공격력×배수+추가피해)/공격간격을 더하면 된다 — dps 스칼라 안에서 끝난다."
+#    그 기대값을 load_roster()가 각 유닛의 skill_dps에 더한다.
+# ---------------------------------------------------------------------------
+
+_SKILL_DATA_CS = read("Assets/Scripts/Data/SkillData.cs")
+SKILL_TRIGGER_TYPE_ENUM = parse_enum(_SKILL_DATA_CS, "SkillTriggerType")
+SKILL_EFFECT_BASIS_ENUM = parse_enum(_SKILL_DATA_CS, "SkillEffectBasis")
+SKILL_EFFECT_KIND_ENUM = parse_enum(_SKILL_DATA_CS, "SkillEffectKind")
+ONHIT_CHANCE_IDX = SKILL_TRIGGER_TYPE_ENUM.index("OnHitChance")
+CASTER_ATTACK_POWER_IDX = SKILL_EFFECT_BASIS_ENUM.index("CasterAttackPower")
+DAMAGE_KIND_IDX = SKILL_EFFECT_KIND_ENUM.index("Damage")
+
+
+def load_skill_assets():
+    """guid → {trigger_type_idx, trigger_chance(레벨1), effects:[{basis_idx, kind_idx,
+    attack_type_idx, multiplier, bonus, chance}]}. 레벨1(levels의 첫 항목)만 본다 —
+    특성 승급 전 기본값이고, 대부분 레벨이 하나뿐이다(2026-09-05 확인, 108/123).
+    파일 구조가 바뀌면(필드 순서 등) 그 파일만 건너뛴다 — 스킬 100종 중 하나가 안
+    읽혀도 시뮬레이션 자체를 죽일 정도는 아니라고 판단했다(TIER_OF 등과 다른 판단,
+    이유: 스킬은 아직 값이 계속 채워지는 중이라 파일 하나의 형식 오차로 전체가 죽으면
+    작업에 방해가 된다)."""
+    skills = {}
+    for path in glob.glob(os.path.join(ROOT, "Assets/Data/UnitSkills/*.asset")):
+        meta_path = path + ".meta"
+        if not os.path.exists(meta_path):
+            continue
+        guid_m = re.search(r"guid: ([0-9a-f]+)", open(meta_path, encoding="utf-8").read())
+        if not guid_m:
+            continue
+
+        text = open(path, encoding="utf-8").read()
+        tt_m = re.search(r"^  triggerType: (\d+)", text, re.MULTILINE)
+        if not tt_m:
+            continue
+        trigger_type_idx = int(tt_m.group(1))
+
+        levels_m = re.search(r"levels:\n(.*)", text, re.DOTALL)
+        if not levels_m:
+            continue
+        level0_m = re.search(r"-\s*cooldown:.*?(?=\n\s*- cooldown:|\Z)", levels_m.group(1), re.DOTALL)
+        if not level0_m:
+            continue
+        level0 = level0_m.group(0)
+
+        tc_m = re.search(r"triggerChance: ([\d.]+)", level0)
+        trigger_chance = float(tc_m.group(1)) if tc_m else 0.0
+
+        effects = []
+        for em in re.finditer(
+                r"- kind: (\d+)\s*\n\s*basis: (\d+)\s*\n\s*target: \d+\s*\n\s*damageType: \d+\s*\n"
+                r"\s*attackType: (\d+)\s*\n\s*multiplier: (-?[\d.]+)\s*\n\s*bonus: (-?[\d.]+)\s*\n"
+                r"\s*chance: ([\d.]+)", level0):
+            kind_idx, basis_idx, attack_type_idx, multiplier, bonus, chance = em.groups()
+            effects.append({
+                "kind_idx": int(kind_idx), "basis_idx": int(basis_idx),
+                "attack_type_idx": int(attack_type_idx),
+                "multiplier": float(multiplier), "bonus": float(bonus), "chance": float(chance),
+            })
+
+        skills[guid_m.group(1)] = {
+            "trigger_type_idx": trigger_type_idx,
+            "trigger_chance": trigger_chance,
+            "effects": effects,
+        }
+    return skills
+
+
+SKILLS = load_skill_assets()
+
+
+def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
+    """이 유닛의 스킬이 기대 DPS에 얼마를 더하는지. PM 공식 그대로:
+    발동확률 × Σ(효과확률 × (공격력×배수 + 추가피해)) × 공격속도(공격간격의 역수).
+    OnHitChance가 아니거나(쿨다운형·오라형은 이번 배정 대상이 아니다, PM 확인)
+    Damage+CasterAttackPower가 아닌 효과는 0으로 친다 — 스턴 등은 화력이 아니다.
+    반환: (skill_dps, 대표 attack_type_idx 또는 None).
+    """
+    skill = SKILLS.get(skill_guid) if skill_guid else None
+    if skill is None or skill["trigger_type_idx"] != ONHIT_CHANCE_IDX:
+        return 0.0, None
+
+    per_hit = 0.0
+    attack_type_idx = None
+    for eff in skill["effects"]:
+        if eff["kind_idx"] != DAMAGE_KIND_IDX or eff["basis_idx"] != CASTER_ATTACK_POWER_IDX:
+            continue
+        per_hit += eff["chance"] * (attack_power * eff["multiplier"] + eff["bonus"])
+        attack_type_idx = eff["attack_type_idx"]
+
+    return skill["trigger_chance"] * per_hit * attack_speed, attack_type_idx
+
 
 def dt_multiplier(attack_type_name, armor_type_name):
     """DamageTable.Multiplier(AttackType, ArmorType)의 파이썬 재현(DamageTable.cs 원문
@@ -437,10 +544,16 @@ def dt_multiplier(attack_type_name, armor_type_name):
 
 def median_dps_by_tier_vs_armor(roster, armor_type_name):
     """median_dps_by_tier와 같은 모양이지만, 유닛별 attack_type과 armor_type_name의
-    DamageTable 배율을 먼저 곱한 뒤 중앙값을 낸다."""
+    DamageTable 배율을 먼저 곱한 뒤 중앙값을 낸다.
+
+    §17: 평타(attack_type)와 스킬(skill_attack_type)은 원작 데이터상 서로 다른 공격
+    타입을 쓸 수 있어서(스킬 쪽은 CSV에 마법 여부가 없어 평타 타입을 그대로 물려받았을
+    뿐 — 3cf3147 커밋 메시지 참고) 각자 자기 attack_type으로 배율을 따로 곱한다."""
     by_tier = defaultdict(list)
     for r in roster:
-        by_tier[r["tier"]].append(r["base_dps"] * dt_multiplier(r["attack_type"], armor_type_name))
+        v = (r["base_dps"] * dt_multiplier(r["attack_type"], armor_type_name)
+             + r["skill_dps"] * dt_multiplier(r["skill_attack_type"], armor_type_name))
+        by_tier[r["tier"]].append(v)
     out = {}
     for t in range(TIER_COUNT):
         vals = by_tier.get(t)
