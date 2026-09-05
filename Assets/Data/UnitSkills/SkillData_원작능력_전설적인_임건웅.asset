@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_전설적인_임건웅
   m_EditorClassIdentifier:
   skillName: A0GH !무장색의패기-제파
-  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 전설적인 제파 전 해군 대장 '흑완' - 전설적인(A0GH !무장색의패기-제파)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다.
+  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 전설적인 제파 전 해군 대장 '흑완' - 전설적인(A0GH !무장색의패기-제파)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. | 2차 배정(트리거·더미 채널): 원작 전설적인 센고쿠 전 해군 원수 - 전설적인(Trig_Legend8).
   triggerType: 0
   levels:
   - cooldown: 0
@@ -27,6 +27,16 @@ MonoBehaviour:
       attackType: 1
       multiplier: 0.0
       bonus: 150000.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 4
+      multiplier: 465000.0
+      bonus: 0.0
       chance: 1
       hitCount: 1
       duration: 0

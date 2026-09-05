@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_제한_임준성
   m_EditorClassIdentifier:
   skillName: A17K !불사조의 불꽃
-  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 제한됨 불사조 흰수염 유산의 수호자 - 제한됨(A17K !불사조의 불꽃)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다.
+  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 제한됨 불사조 흰수염 유산의 수호자 - 제한됨(A17K !불사조의 불꽃)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. | 2차 배정(트리거·더미 채널): 원작 제한됨 시노부 뇌쇄 쿠노이치 - 제한됨(Trig_Sinobu_Attack).
   triggerType: 0
   levels:
   - cooldown: 0
@@ -27,6 +27,16 @@ MonoBehaviour:
       attackType: 1
       multiplier: 4.25
       bonus: 150000.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 1
+      multiplier: 600000.0
+      bonus: 0.0
       chance: 1
       hitCount: 1
       duration: 0
