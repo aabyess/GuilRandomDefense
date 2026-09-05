@@ -324,6 +324,42 @@ results.append((
     pure_ap_roster,
 ))
 
+# ── 13. SkillEffect: basis=Flat인데 bonus≠0 — 상수항이 조용히 버려짐 ────────
+# ⚠️ 2026-09-05 버그 발견(구현담당1, PM 확인): UnitAttacker.ResolveSkillEffectValue의
+# `Flat` 케이스는 `effect.multiplier`만 돌려주고 `effect.bonus`는 안 본다 — SkillData.cs의
+# 필드 주석("비례식의 +상수항")과 다른 basis(CasterAttackPower 등)의 관례와 안 맞는다.
+# 코드를 안 고친 이유(PM 지시): "고정값 그 자체"인 Flat에 bonus를 더하면 basis 의미가
+# 흐려진다 — 대신 **basis=Flat인데 bonus가 채워진 데이터 자체를 오류로 잡는다.** 지금
+# 자산 전부 Flat+bonus=0이라 안전하지만, 누가 실수로 Flat 효과에 bonus를 채우면 그 값이
+# 조용히 사라진다(피해가 안 나가는 게 아니라 "일부만" 나가서 더 늦게 발견된다).
+def flat_with_bonus_danger(text):
+    for level_body in re.split(r"\n  - cooldown: ", text)[1:]:
+        effects_match = re.search(r"    effects:(.*?)(?=\n  - cooldown: |\Z)", level_body, re.S)
+        effects_body = effects_match.group(1) if effects_match else ""
+
+        for effect_body in re.split(r"\n    - kind: ", effects_body)[1:]:
+            basis_match = re.search(r"\n {6}basis: (\d+)", effect_body)
+            basis = basis_match.group(1) if basis_match else "0"  # 기본값 Flat(0)
+            if basis != "0":
+                continue
+            bonus_match = re.search(r"\n {6}bonus: (-?[\d.]+)", effect_body)
+            bonus = float(bonus_match.group(1)) if bonus_match else 0.0
+            if bonus != 0.0:
+                return True
+    return False
+
+
+flat_with_bonus_assets = [p for p in skill_assets if flat_with_bonus_danger(read(p))]
+
+results.append((
+    "SkillEffect: basis=Flat인데 bonus≠0 (상수항이 조용히 버려짐)",
+    ["basis", "bonus"],
+    "UnitAttacker.ResolveSkillEffectValue의 Flat 케이스는 multiplier만 돌려주고 bonus는 "
+    "안 본다(의도적 설계, PM 지시) — Flat 효과에 bonus를 채우면 그 값이 조용히 사라진다.",
+    len(skill_assets),
+    flat_with_bonus_assets,
+))
+
 # ── 리포트 ───────────────────────────────────────────────────────────────
 any_problem = False
 for label, fields, danger, total, missing in results:

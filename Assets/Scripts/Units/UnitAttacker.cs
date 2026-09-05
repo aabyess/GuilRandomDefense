@@ -94,6 +94,13 @@ public class UnitAttacker : MonoBehaviour
         if (multiplier > 0f) attackPowerBuffs.Add(multiplier);
     }
 
+    // SkillEffectBasis.ResearchLevel 전용 자리 — 연구소(05번, 구현담당1)가 서기 전까지는
+    // 항상 0을 돌려준다(2026-09-05). 원작 예: 핸콕 "연구횟수×30,000+360,000" — 연구소가
+    // 서면 이 메서드 한 줄만 실제 단계값으로 이으면 된다. 0인 동안은
+    // ResolveSkillEffectValue의 "단계×multiplier+bonus"가 "0×multiplier+bonus=bonus"로
+    // 예전 동작과 같다 — 회귀 없음.
+    int CountResearchLevel() => 0;
+
     public void RemoveAttackPowerBuff(float multiplier)
     {
         attackPowerBuffs.Remove(multiplier);
@@ -395,21 +402,33 @@ public class UnitAttacker : MonoBehaviour
     {
         switch (effect.basis)
         {
+            // ⚠️ 2026-09-05 버그 수정(구현담당1 발견, PM 확인): SkillData.cs:126의
+            // hitCountThreshold 위 필드 주석 "비례식의 +상수항"은 basis 전체에 적용되는
+            // 뜻인데, 아래 %체력 두 케이스가 bonus를 빼먹고 있었다 — 거프(h04C)의
+            // "(6,000,000 + maxHP×0.05)"에서 600만이 통째로 증발하는 실피해 버그였다.
+            //
+            // Flat은 여기서 안 고친다(PM 지시) — "고정값 그 자체"라는 정의상 bonus를 더하는
+            // 게 오히려 basis 의미를 흐린다. 관례상 Flat엔 bonus가 항상 0이라 지금은 안
+            // 터지는데, 누가 채우면 조용히 사라진다 — 코드가 아니라
+            // check_required_fields.py(#13, basis=Flat인데 bonus≠0)로 막는다.
             case SkillEffectBasis.Flat: return effect.multiplier;
-            // ⚠️ 2026-09-05 정정: %체력 분기는 "이 대상이 %체력기를 타는가" 게이트가 먼저다
-            // (원작 GetUnitPointValue(대상)<200 — 보스는 200 이상이라 이 분기 자체를 건너뛰고
-            // 별도 고정값 분기로 간다). 그 고정값 자체는 아직 없어서(사장님 콘텐츠 미상) 게이트가
-            // 막히면 0을 돌려준다 — "원작처럼 다른 값이 나간다"가 아니라 "지금은 안 나간다".
-            // EnemyData.takesPercentDamage 참고. 감수성 계수(PercentDamageTakenMultiplier)는
-            // 여기서 안 곱한다 — 아래 DealSkillDamage에서 스킬 피해 전반에 곱한다.
+            // %체력 분기는 "이 대상이 %체력기를 타는가" 게이트가 먼저다(원작
+            // GetUnitPointValue(대상)<200 — 보스는 200 이상이라 이 분기 자체를 건너뛰고 별도
+            // 고정값 분기로 간다). bonus는 **게이트 안쪽**이다 — 게이트에 막히면 상수항도 같이
+            // 0이어야 한다(상수항만 나가면 원작과 다르다). EnemyData.takesPercentDamage 참고.
+            // 감수성 계수(PercentDamageTakenMultiplier)는 여기서 안 곱한다 — 아래
+            // DealSkillDamage에서 스킬 피해 전반에 곱한다.
             case SkillEffectBasis.TargetMaxHpPercent:
-                return target.TakesPercentDamage ? target.MaxHp * effect.multiplier : 0f;
+                return target.TakesPercentDamage ? target.MaxHp * effect.multiplier + effect.bonus : 0f;
             case SkillEffectBasis.TargetCurrentHpPercent:
-                return target.TakesPercentDamage ? target.Hp * effect.multiplier : 0f;
+                return target.TakesPercentDamage ? target.Hp * effect.multiplier + effect.bonus : 0f;
             case SkillEffectBasis.CasterAttackPower: return AttackDamage * effect.multiplier + effect.bonus;
-            // 연구소(05번, 구현담당1)가 서면 실제 단계값을 여기서 곱한다 — 지금은 자리만이라
-            // bonus만 돌려준다(대개 0이라 사실상 무효).
-            case SkillEffectBasis.ResearchLevel: return effect.bonus;
+            // 연구단계 × multiplier + bonus 꼴을 명시적으로 쓴다(원작 예: 핸콕 "연구횟수×
+            // 30,000+360,000") — 예전엔 "연구단계 0"을 암묵적으로 가정해 bonus만 돌려줬는데,
+            // 연구소(05번, 구현담당1)가 서는 순간 조용히 틀렸을 것이다(연구단계가 안 곱해져
+            // 360,000에서 안 늘어남). CountResearchLevel()이 자리만 만들고 지금 0을 돌려주므로
+            // 당장은 결과가 이전과 같다(0×multiplier+bonus=bonus) — 회귀 없음.
+            case SkillEffectBasis.ResearchLevel: return CountResearchLevel() * effect.multiplier + effect.bonus;
             default: return 0f;
         }
     }
