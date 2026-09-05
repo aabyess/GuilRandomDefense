@@ -13,15 +13,15 @@ MonoBehaviour:
   m_Name: SkillData_게이트_랜덤_이즈미_신이치_61743e88
   m_EditorClassIdentifier:
   skillName: 키쿄우 - 랜덤전용[제한됨] — LIFE게이지50.00 AND MANA게이지85.00
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 키쿄우 - 랜덤전용[제한됨](h0BF)의 게이트 "LIFE게이지50.00 AND MANA게이지85.00" 능력 2개를 이 SkillData 하나로 묶었다.   · kikoyou_mana#1: 계산식 300000.00   · kikoyou_mana#2: 계산식 100000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 키쿄우 - 랜덤전용[제한됨](h0BF)의 게이트 "LIFE게이지50.00 AND MANA게이지85.00" 능력 2개를 이 SkillData 하나로 묶었다.   · kikoyou_mana#1: 계산식 300000.00   · kikoyou_mana#2: 계산식 100000.00  ⚠️ 조건(MANA게이지85.00)은 우리 축 밖(버프) 또는 축이 하나뿐(게이지 중복)이라 뺐다 — 실제보다 자주 발동할 수 있다.  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
   triggerType: 3
   levels:
   - cooldown: 0
     triggerChance: 1.0
     range: 525.0
-    hitCountThreshold: 85
-    resetTo: 0
-    gaugeKind: 0
+    hitCountThreshold: 50
+    resetTo: 1
+    gaugeKind: 1
     effects:
     - kind: 0
       basis: 0

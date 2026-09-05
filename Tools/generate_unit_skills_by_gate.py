@@ -137,7 +137,16 @@ def resolve_gate(gate_str):
         m_real = re.match(r'Real<=([\d.]+)$', p)
         m_buff = re.match(r'버프(\w+)==true$', p)
         if m_gauge:
-            gauge = (m_gauge.group(1), float(m_gauge.group(2)))
+            # ⚠️ 2026-09-06 수정: 게이지 조건이 두 개 이상(예: LIFE게이지50 AND
+            # MANA게이지85) 나오면 예전엔 마지막 것으로 덮어써서 앞의 게이지 조건이
+            # 경고도 없이 통째로 사라졌다(h0BF 키쿄우에서 실제로 터짐 — LIFE50이 없어져
+            # MANA85만 남아 원작보다 더 자주 발동하는 데이터가 나갔었다). 우리 스키마는
+            # 게이지 축이 하나뿐이라 여전히 다 담을 순 없지만, 최소한 처음 나온 걸
+            # 유지하고 나머지는 dropped에 남겨 description에서 보이게 한다.
+            if gauge is None:
+                gauge = (m_gauge.group(1), float(m_gauge.group(2)))
+            else:
+                dropped.append(p)
         elif m_frac:
             prob_factors.append(int(m_frac.group(1)) / int(m_frac.group(2)))
         elif m_real:
@@ -253,7 +262,8 @@ def build_skill_asset(name, gate_str, gate_resolved, dropped, rows, unit_name, u
     for r in rows:
         lines.append(f"  · {r['스킬트리거']}#{r['RRD순번']}: 계산식 {r['계산식'][:60]}")
     if dropped:
-        lines.append(f" ⚠️ 버프 조건({', '.join(dropped)})은 우리 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.")
+        lines.append(f" ⚠️ 조건({', '.join(dropped)})은 우리 축 밖(버프) 또는 축이 하나뿐(게이지 중복)이라 뺐다 — "
+                      "실제보다 자주 발동할 수 있다.")
     if range_note:
         lines.append(range_note)
     lines.append(
