@@ -41,17 +41,28 @@ public enum SkillEffectBasis
                              // 서면 그 값을 여기 잇는다 — 지금은 자리만이다.
 }
 
-// 무엇을 하는 효과인가. Damage 말고는 값의 의미도, 읽는 코드도 아직 없다 — 이름만 세워둔
-// 자리다. ⚠️ 값이 있으면 사람은 "쓰이는구나"로 읽는다(오늘 buffAttackSpeedMultiplier가
-// 그렇게 오해를 샀다) — Stun/ArmorBreak/ExtraProjectile은 값을 채워도 아무 코드도
-// 안 읽는다는 걸 여기 명시한다. 사장님이 실제 유닛 능력을 배정할 때 값의 의미를 정하고,
+// 무엇을 하는 효과인가.
+// ⚠️ 값이 있으면 사람은 "쓰이는구나"로 읽는다(오늘 buffAttackSpeedMultiplier가 그렇게
+// 오해를 샀다) — Stun/ArmorBreak/ExtraProjectile은 값을 채워도 아무 코드도 안 읽는다는 걸
+// 여기 명시한다(이름만 세워둔 자리). 사장님이 실제 유닛 능력을 배정할 때 값의 의미를 정하고,
 // 그때 읽는 코드를 짠다.
+//
+// Damage/ArmorBonus/HealOverTime 셋은 실제로 읽는 코드가 있다(EnemyDummy.ApplyAllyAuraEffect,
+// UnitAttacker.DealSkillDamage) — 04번(보스 오라, 원작 A153/A11T) 근거로 추가했다.
 public enum SkillEffectKind
 {
     Damage,
     Stun,
     ArmorBreak,
     ExtraProjectile,
+
+    // ⚠️ 아래 둘부터 맨 뒤에 추가한 값이다 — 직렬화 순서를 지킨다.
+    // 부호 있는 값(EnemyDummy.EffectiveArmor 증가량). 양수=버프, 음수=디버프도 같은 kind로
+    // 표현한다(원작 A153 Had1=+10.0). 적용: EnemyDummy.AddArmorShred(-multiplier).
+    ArmorBonus,
+    // 초당 체력회복 가산치(원작 A11T Uau2=350000.0, Unholy Aura류). 적용:
+    // EnemyDummy.AddRegenBonus(multiplier) — data.hpRegenPerSecond와 별개로 더해진다.
+    HealOverTime,
 }
 
 // 효과 하나. 레벨 하나가 이걸 여러 개 가질 수 있다 — "레벨2에 효과가 하나 더 생긴다"(원작
@@ -90,6 +101,10 @@ public class SkillLevel
     // 시전·오라 반경.
     public float range;
 
+    // 레벨마다 독립된 리스트다 — 통째로 갈아끼운다는 뜻이다. "레벨업 = 값이 커진다"로만
+    // 설계했다면 레벨2에서 효과가 하나 더 늘어나는 원작 사례(중력장: Lv2에 25% 확률
+    // 운석낙하가 새로 생김)를 못 담는다. 그래서 레벨2의 effects는 레벨1 effects를 고친 게
+    // 아니라 그 레벨이 갖는 전체 효과 목록을 처음부터 다시 적는 것이다.
     public List<SkillEffect> effects = new List<SkillEffect>();
 }
 

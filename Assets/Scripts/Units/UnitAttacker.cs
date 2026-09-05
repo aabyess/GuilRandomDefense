@@ -231,22 +231,20 @@ public class UnitAttacker : MonoBehaviour
                 break;
 
             case SkillTargetKind.Allies:
-                int selfOwnerId = owner != null ? owner.OwnerId : -1;
-                foreach (UnitIdentity ally in UnitIdentity.Active)
-                {
-                    if (ally == null || ally.OwnerId != selfOwnerId) continue;
-                    if (range > 0f && Vector3.Distance(ally.transform.position, transform.position) > range) continue;
+                // "같은 편"은 UnitIdentity.AlliesOf(소유자 기준)로 푼다 — 캐스터가 플레이어
+                // 유닛일 때의 정의다. 캐스터가 보스(EnemyDummy)면 EnemyDummy.AlliesOf를 쓴다
+                // (04번 오라가 그쪽이다) — UnitAttacker는 플레이어 유닛에만 붙으므로 여기선
+                // 이 갈래만 있으면 된다.
+                foreach (UnitIdentity ally in UnitIdentity.AlliesOf(identity, range))
                     ApplyToAlly(effect, ally);
-                }
                 break;
         }
     }
 
-    // 대상은 이제 모인다(UnitIdentity.Active, 소유자로 거름) — 다만 적용할 게 없다.
-    // Damage/Stun/ArmorBreak/ExtraProjectile 중 아군에게 뜻이 통하는 kind가 없다(원작
-    // A11T "아군 회복 350,000/tick" 같은 걸 담으려면 Heal류 kind가 새로 필요한데, 그건
-    // 실제로 막히는 사람(04번)이 나왔을 때 스키마를 늘린다 — 미리 만들지 않는다). 그래서
-    // Enemies/SingleTarget과 달리 여기는 대상 수집까지만 하고 아무 것도 안 한다.
+    // ArmorBonus/HealOverTime은 EnemyDummy 전용이다(EnemyDummy.ApplyAllyAuraEffect 참고) —
+    // 플레이어 유닛은 armor·hpRegenPerSecond 개념 자체가 없어서(HP·방어력이 EnemyData에만
+    // 있다) 적용할 필드가 없다. Damage/Stun/ArmorBreak/ExtraProjectile도 아군에게 뜻이
+    // 통하는 게 없다. 그래서 대상은 모이지만(Self/Allies) 지금은 여전히 아무 것도 안 한다.
     void ApplyToAlly(SkillEffect effect, UnitIdentity ally)
     {
     }

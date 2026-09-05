@@ -47,6 +47,29 @@ public class UnitIdentity : MonoBehaviour
         Active.Remove(this);
     }
 
+    /// <summary>
+    /// caster와 "같은 편"인 플레이어 유닛들 — 플레이어 유닛의 편은 소유자(OwnerId)다.
+    /// EnemyDummy.AlliesOf(같은 이름, 적 쪽 판정)와 짝을 이룬다 — 캐스터가 보스면 그쪽을,
+    /// 플레이어 유닛이면 이걸 쓴다. notself를 반영해 caster 자신은 뺀다. range&lt;=0이면
+    /// 거리 제한 없이 그 소유자의 유닛 전체를 반환한다.
+    /// </summary>
+    public static List<UnitIdentity> AlliesOf(UnitIdentity caster, float range)
+    {
+        List<UnitIdentity> result = new List<UnitIdentity>();
+        if (caster == null) return result;
+
+        int ownerId = caster.OwnerId;
+        float sqrRange = range * range;
+        foreach (UnitIdentity ally in Active)
+        {
+            if (ally == null || ally == caster) continue;
+            if (ally.OwnerId != ownerId) continue;
+            if (range > 0f && (ally.transform.position - caster.transform.position).sqrMagnitude > sqrRange) continue;
+            result.Add(ally);
+        }
+        return result;
+    }
+
     public void SetData(UnitData unitData)
     {
         data = unitData;

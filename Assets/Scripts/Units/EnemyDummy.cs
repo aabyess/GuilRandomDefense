@@ -114,6 +114,28 @@ public class EnemyDummy : MonoBehaviour
         return count;
     }
 
+    /// <summary>
+    /// caster와 "같은 편"인 적들 — 우리는 적끼리 진영을 안 가르니 caster를 뺀 Active 전체다.
+    /// 원작 오라의 atar가 "friend"(캐스터 편)를 뜻하지 플레이어 편을 뜻하지 않는다는 점이
+    /// 중요하다 — 보스가 캐스터인 오라는 이걸로, 플레이어 유닛이 캐스터면
+    /// <see cref="UnitIdentity.AlliesOf"/>(소유자 기준)로 모아야 한다. notself를 반영해
+    /// caster 자신은 뺀다. range&lt;=0이면 거리 제한 없이 전체를 반환한다.
+    /// </summary>
+    public static List<EnemyDummy> AlliesOf(EnemyDummy caster, float range)
+    {
+        List<EnemyDummy> result = new List<EnemyDummy>();
+        if (caster == null) return result;
+
+        float sqrRange = range * range;
+        foreach (EnemyDummy enemy in Active)
+        {
+            if (enemy == null || enemy == caster) continue;
+            if (range > 0f && (enemy.transform.position - caster.transform.position).sqrMagnitude > sqrRange) continue;
+            result.Add(enemy);
+        }
+        return result;
+    }
+
     public void Initialize(float maxHp)
     {
         hp = maxHp;
@@ -148,8 +170,18 @@ public class EnemyDummy : MonoBehaviour
         }
     }
 
-    // 자연회복(EnemyData.hpRegenPerSecond). 기본 0이라 대부분의 적은 아무 일도 안 한다.
-    // isDead를 먼저 거른다 — TakeDamage의 사망 확정과 같은 프레임에 순서가 겹치면
+    // 오라 등이 거는 추가 회복량(초당). data.hpRegenPerSecond(에셋 고정값)와 별개로 더해진다 —
+    // armorShred와 같은 누적 방식(더했다가 나중에 그대로 빼서 되돌린다).
+    float regenBonus;
+
+    /// <summary>초당 회복 보너스를 건다(원작 A11T 오라 Uau2=350000.0류). 음수를 넣으면 되돌린다.</summary>
+    public void AddRegenBonus(float amount) => regenBonus += amount;
+
+    /// <summary>AddRegenBonus로 건 것을 되돌린다 — 같은 값을 넣어야 정확히 상쇄된다.</summary>
+    public void RemoveRegenBonus(float amount) => regenBonus -= amount;
+
+    // 자연회복(EnemyData.hpRegenPerSecond + regenBonus). 기본 0이라 대부분의 적은 아무 일도
+    // 안 한다. isDead를 먼저 거른다 — TakeDamage의 사망 확정과 같은 프레임에 순서가 겹치면
     // "죽었는데 되살아나는" 꼴이 나기 때문이다(사망 프레임엔 이미 Destroy가 걸려 있어
     // 다음 Update가 안 도는 게 보통이지만, 그 보장에 기대지 않고 명시적으로 막는다).
     // invulnerable(스토리 건물)도 막는다 — 그쪽은 변신 전까지 hp를 최소 1로만 눌러두고
@@ -157,9 +189,47 @@ public class EnemyDummy : MonoBehaviour
     void Update()
     {
         if (isDead || invulnerable) return;
-        if (data == null || data.hpRegenPerSecond <= 0f) return;
 
-        hp = Mathf.Min(MaxHp, hp + data.hpRegenPerSecond * Time.deltaTime);
+        float regen = (data != null ? data.hpRegenPerSecond : 0f) + regenBonus;
+        if (regen <= 0f) return;
+
+        hp = Mathf.Min(MaxHp, hp + regen * Time.deltaTime);
+    }
+
+    // ---- 유닛 능력(스킬)의 아군 오라 효과를 받는 자리(04번, 원작 A153/A11T) — 아직 아무도
+    // 안 부른다. 실제 시전 루프(언제 걸고 언제 떼는지, 범위 밖으로 나가면 어떻게 하는지)는
+    // 보스 쪽 캐스터가 04번에서 만든다. 여기는 add/remove 한 쌍만 제공한다 — Damage 말고
+    // 아직 값 의미가 없는 kind(Stun 등)는 조용히 무시한다. ----
+
+    /// <summary>오라 효과 하나를 건다. 캐스터가 매 틱 새로 걸 때는 같은 값으로 반드시
+    /// RemoveAllyAuraEffect도 불러야 한다 — 안 그러면 armorShred/regenBonus가 무한히 쌓인다.</summary>
+    public void ApplyAllyAuraEffect(SkillEffect effect)
+    {
+        if (effect == null) return;
+        switch (effect.kind)
+        {
+            case SkillEffectKind.ArmorBonus:
+                AddArmorShred(-effect.multiplier);
+                break;
+            case SkillEffectKind.HealOverTime:
+                AddRegenBonus(effect.multiplier);
+                break;
+        }
+    }
+
+    /// <summary>ApplyAllyAuraEffect로 건 것을 정확히 상쇄한다 — 같은 effect(같은 multiplier)를 넣을 것.</summary>
+    public void RemoveAllyAuraEffect(SkillEffect effect)
+    {
+        if (effect == null) return;
+        switch (effect.kind)
+        {
+            case SkillEffectKind.ArmorBonus:
+                AddArmorShred(effect.multiplier);
+                break;
+            case SkillEffectKind.HealOverTime:
+                RemoveRegenBonus(effect.multiplier);
+                break;
+        }
     }
 
     void OnEnable()
