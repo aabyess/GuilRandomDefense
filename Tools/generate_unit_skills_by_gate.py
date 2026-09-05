@@ -65,18 +65,36 @@ DAMAGE_TYPE_MAP = {'AD': 1, 'AP(방어무시)': 2}
 # 스케일링·연구소 미연결·히어로 스탯 없음)이 곱해지는 형태다. 그 곱해지는 항을 버리고
 # 상수항(bonus)만 Flat으로 남긴다 — 실제보다 "덜 세게"는 될지언정 "더 세게"는 절대
 # 안 되는 쪽으로 근사한다(과다 계상보다 과소 계상이 안전하다는 이번 세션 전체의 원칙).
+# (basis정수, note_template 또는 None, a11s_scale 여부)
+# ⚠️ 2026-09-06 PM 정정 — "곱해지는 항을 버리면 과소 계상만 된다"는 계수가 항상 1
+# 이상일 때만 참이다. A11S식 계수(A+B×레벨)는 레벨1 기준으로도 0.25~0.40 등 1 미만인
+# 사례가 실제로 17건 있었다 — 버리면 그 반대(최대 4배 과다 계상)가 된다. 그래서
+# ×계수(A11S식) 세 종류는 "버리는" 대신 "레벨1 기준 계수를 곱해서 넣는다"(원작
+# 레벨1과 정확히 같음 — 레벨 축 자체가 없다는 것 말고는 근사가 아니다). 능력레벨계수·
+# 영웅능력치는 덧셈형(상수+비례항)이라 비례항이 0 이상이면 버려도 과소만 되므로 그대로
+# 상수항만 남긴다.
 BASIS_DISPATCH = {
-    'Flat': (0, None),
-    '대상최대체력': (1, None),
-    '대상현재체력': (2, None),
-    '연구': (4, None),  # ResearchLevel — 코드가 아직 bonus만 읽는다(연구소 미연결, 회귀 아님)
-    'ReceivedDamage': (5, ' ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0.'),
-    '대상최대체력×계수': (1, ' ⚠️ A11S식 레벨/연구 비례 계수({note})는 축이 없어 뺐다 — 기본값(계수 1.0 상당)으로 근사, 실제보다 약할 수 있다.'),
-    '대상현재체력×계수': (2, ' ⚠️ A11S식 레벨/연구 비례 계수({note})는 축이 없어 뺐다 — 기본값(계수 1.0 상당)으로 근사, 실제보다 약할 수 있다.'),
-    'Flat×계수': (0, ' ⚠️ A11S식 레벨/연구 비례 계수({note})는 축이 없어 뺐다 — 기본값(계수 1.0 상당)으로 근사, 실제보다 약할 수 있다.'),
-    '능력레벨계수': (0, ' ⚠️ 능력 레벨 비례항(multiplier={mult}×레벨)은 레벨 축이 없어 빼고 상수항(bonus)만 Flat으로 옮겼다 — 실제보다 약할 수 있다.'),
-    '영웅능력치': (0, ' ⚠️ 영웅 능력치 비례항(multiplier={mult}×스탯)은 우리에 히어로 스탯 개념이 없어 빼고 상수항(bonus)만 Flat으로 옮겼다 — 실제보다 약할 수 있다.'),
+    'Flat': (0, None, False),
+    '대상최대체력': (1, None, False),
+    '대상현재체력': (2, None, False),
+    '연구': (4, None, False),  # ResearchLevel — 코드가 아직 bonus만 읽는다(연구소 미연결, 회귀 아님)
+    'ReceivedDamage': (5, ' ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0.', False),
+    '대상최대체력×계수': (1, ' A11S식 계수({note})를 레벨1 기준으로 고정해 곱했다(원작 레벨1과 동일) — 레벨 축이 우리에 없다.', True),
+    '대상현재체력×계수': (2, ' A11S식 계수({note})를 레벨1 기준으로 고정해 곱했다(원작 레벨1과 동일) — 레벨 축이 우리에 없다.', True),
+    'Flat×계수': (0, ' A11S식 계수({note})를 레벨1 기준으로 고정해 곱했다(원작 레벨1과 동일) — 레벨 축이 우리에 없다.', True),
+    '능력레벨계수': (0, ' ⚠️ 능력 레벨 비례항(multiplier={mult}×레벨)은 레벨 축이 없어 빼고 상수항(bonus)만 Flat으로 옮겼다 — 실제보다 약할 수 있다.', False),
+    '영웅능력치': (0, ' ⚠️ 영웅 능력치 비례항(multiplier={mult}×스탯)은 우리에 히어로 스탯 개념이 없어 빼고 상수항(bonus)만 Flat으로 옮겼다 — 실제보다 약할 수 있다.', False),
 }
+
+
+A11S_MEMO_RE = re.compile(r'계수 ([\d.]+)\+([\d.]+)×레벨')
+
+
+def a11s_level1_baseline(memo):
+    m = A11S_MEMO_RE.match(memo.strip())
+    assert m, f"A11S 계수 메모 파싱 실패: {memo!r}"
+    a, b = float(m.group(1)), float(m.group(2))
+    return a + b * 1  # 레벨1 기준
 
 CLAIMED_BASES = {
     '불멸_이이삭', '불멸_이승우', '불멸_박은석', '불멸_정준영', '불멸_정윤식', '영원_조세민',
@@ -167,7 +185,7 @@ def render_effect(row):
     """returns (yaml_block, approximation_note_or_None)."""
     if row['basis'] not in BASIS_DISPATCH:
         raise ValueError(f"처리 못한 basis: {row['basis']!r} ({row['유닛ID']} {row['스킬트리거']}#{row['RRD순번']})")
-    basis, note_template = BASIS_DISPATCH[row['basis']]
+    basis, note_template, a11s_scale = BASIS_DISPATCH[row['basis']]
 
     target = TARGET_MAP[row['target']]
     attack_type = ATTACK_TYPE_MAP[row['attackType']]
@@ -180,6 +198,11 @@ def render_effect(row):
     else:
         multiplier = fnum(row['multiplier'])
         bonus = fnum(row['bonus'])
+
+    if a11s_scale:
+        scale = a11s_level1_baseline(row['축밖메모'])
+        multiplier *= scale
+        bonus *= scale
 
     note = None
     if note_template:
