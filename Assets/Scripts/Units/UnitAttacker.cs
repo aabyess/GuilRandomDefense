@@ -303,6 +303,22 @@ public class UnitAttacker : MonoBehaviour
         bool manaIncremented = false;
         bool lifeIncremented = false;
 
+        // ⚠️ 2026-09-05 버그 수정(PM 지적): 리셋을 그 자리에서 바로 하면(예전 코드)
+        // 사보처럼 스킬 4개가 마나 125 하나를 같이 보는 경우, 루프 앞쪽 스킬이 임계에
+        // 닿아 카운터를 0으로 되돌린 뒤 — **같은 타에 같이 발동해야 할 뒤쪽 스킬**이 그
+        // 리셋된(0인) 값을 자기 임계값과 비교해 "안 닿음"으로 읽고 건너뛴다. 즉 4개가
+        // 동시에 나가야 할 게 1개만 나가고 나머지 3개가 이번 주기를 통째로 놓친다.
+        // → 리셋을 루프 안에서 즉시 하지 않고, 이번 평타에서 실제로 발동(임계 도달)한
+        // 스킬이 있었는지만 기록해뒀다가 **루프가 끝난 뒤 한 번만** 적용한다 — 그래야
+        // 같은 게이지·같은 타를 보는 다른 스킬들도 리셋 전 값(임계 도달 상태)을 그대로
+        // 본다. 서로 다른 임계값을 같은 게이지에 섞어 쓰는 사례는 0건으로 확인됐다
+        // (리서치담당) — 있다면 이 근사(먼저 도달한 스킬의 resetTo로 전체를 되돌림)가
+        // 정확하진 않지만, 최소한 죽지는 않는다.
+        bool manaShouldReset = false;
+        int manaResetValue = 0;
+        bool lifeShouldReset = false;
+        int lifeResetValue = 0;
+
         for (int i = 0; i < count; i++)
         {
             SkillData skill = ResolveSkillAt(unitData, i);
@@ -337,19 +353,25 @@ public class UnitAttacker : MonoBehaviour
                     if (!manaGaugeInitialized) { manaGaugeCounter = level.resetTo; manaGaugeInitialized = true; }
                     if (!manaIncremented) { manaGaugeCounter++; manaIncremented = true; }
                     if (manaGaugeCounter < level.hitCountThreshold) continue;
-                    manaGaugeCounter = level.resetTo;
+                    manaShouldReset = true;
+                    manaResetValue = level.resetTo;
                 }
                 else
                 {
                     if (!lifeGaugeInitialized) { lifeGaugeCounter = level.resetTo; lifeGaugeInitialized = true; }
                     if (!lifeIncremented) { lifeGaugeCounter++; lifeIncremented = true; }
                     if (lifeGaugeCounter < level.hitCountThreshold) continue;
-                    lifeGaugeCounter = level.resetTo;
+                    lifeShouldReset = true;
+                    lifeResetValue = level.resetTo;
                 }
             }
 
             CastSkillLevel(level, level.range, attackedTarget);
         }
+
+        // 루프가 다 끝난 뒤에 한 번만 리셋한다 — 위 주석 참고.
+        if (manaShouldReset) manaGaugeCounter = manaResetValue;
+        if (lifeShouldReset) lifeGaugeCounter = lifeResetValue;
     }
 
     // primaryTarget: OnHitChance가 이미 골라둔 대상(SingleTarget 효과가 우선 이걸 쓴다).
