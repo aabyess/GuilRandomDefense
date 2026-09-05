@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 // 신세계 사이드보스 전투 상태기계(R62·66·71 전용) — Docs/reference/ORIGINAL_BOSS_COMBAT_SPEC.md
@@ -15,6 +16,11 @@ public class SideBossEncounter : MonoBehaviour
 {
     public enum Stage { Casting, Recharging, Done }
 
+    // ⚠️ UI(캐스팅바·스턴게이지바·무적 표시, PM 지시 2026-09-06)가 EnemyDummy.Active와 같은
+    // 방식으로 순회한다 — 동시에 최대 8마리(플레이어당 1)뿐이라 FindObjectsByType 대신
+    // 이 목록으로 충분하다.
+    public static readonly List<SideBossEncounter> Active = new List<SideBossEncounter>();
+
     EnemyDummy self;
     float castProgress;   // 0~100 (§④)
     float stunGauge;      // 0~100, 플레이어별 영속값을 이어받는다(§⑥)
@@ -27,6 +33,11 @@ public class SideBossEncounter : MonoBehaviour
     public Stage CurrentStage => stage;
     public float CastProgress => castProgress;
     public float StunGauge => stunGauge;
+    // §⑤ 완전 무적 표시용 — 꺼져 있는 동안(재충전 4초 딜 창)에만 체력바가 실제로 움직인다.
+    public bool IsInvulnerable => self != null && self.IsTrueInvulnerable;
+
+    void OnEnable() => Active.Add(this);
+    void OnDisable() => Active.Remove(this);
 
     /// <summary>스폰 직후 SideBossManager가 부른다.</summary>
     public void BeginEncounter(float startingStunGauge, System.Action<float> onFinishedCallback,

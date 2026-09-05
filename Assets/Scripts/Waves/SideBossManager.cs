@@ -24,8 +24,16 @@ public class SideBossManager : MonoBehaviour
     [SerializeField] RoundManager roundManager;
     [SerializeField] WaveSpawner waveSpawner;
 
-    [Header("사이드보스 3기 — 라운드별(§③). 콘텐츠 담당이 채운다 — 비어 있으면 그 라운드는" +
-            " 조용히 아무 일도 안 한다(사양 §⑪ 미확인 항목과 같은 관례, 지어내지 않는다).")]
+    // 사이드보스 3기 — 라운드별(§③). Assets/Editor/MapGenerator.cs의 WireSideBossManager가
+    // Assets/Data/Enemies/Enemy_SideBoss{62,66,71}_*.asset을 찾아 채운다(맵 재생성 필요).
+    // 비어 있으면 그 라운드는 조용히 아무 일도 안 한다(사양 §⑪ 미확인 항목과 같은 관례).
+    //
+    // ⚠️ moveSpeed=0·goldReward=0은 빠뜨린 값이 아니다 — 원작 확인 완료(리서치담당,
+    // 2026-09-06): 사이드보스는 템플릿(nfgo, 스토리 섬·해적 함대와 공유)에 이동 필드가
+    // 아예 없고 6×6 통행 차단이 붙어 제자리에 서 있으며, 이동·공격 명령이 0건(순수하게
+    // 시전 게이지를 채우는 존재), 처치 보상 트리거도 소유자/포인트값 조건에서 전부 안
+    // 걸린다(upoi=301이 모든 포인트값 게이트를 비켜간다) — 깎아서 얻는 건 §⑧ 정산
+    // (다음 보스 시작 체력 최대 −15%) 하나뿐이다. 채워야 할 값이 아니니 건드리지 말 것.
     [SerializeField] EnemyData boss62;
     [SerializeField] EnemyData boss66;
     [SerializeField] EnemyData boss71;
