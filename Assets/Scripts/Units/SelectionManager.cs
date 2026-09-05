@@ -31,6 +31,11 @@ public class SelectionManager : MonoBehaviour
     {
         PruneDestroyed();
 
+        // 채팅 입력 중엔 클릭·드래그·명령 단축키를 전부 죽인다 — Input System은 텍스트
+        // 필드 포커스와 무관하게 Keyboard.current를 그대로 읽어서, 안 막으면 채팅으로
+        // "v"를 치는 순간 유닛이 모인다(ChatInputGate.cs 참고, 사장님 지시 2026-09-05).
+        if (ChatInputGate.IsOpen) return;
+
         HandleCommandKeys();
 
         if (Mouse.current == null || cam == null) return;

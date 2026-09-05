@@ -7,8 +7,9 @@ using UnityEngine;
 // (PM 지시 2026-09-05: CombineSystem에 합치지 말고 판정 로직만 재사용, 진입점은 따로).
 //
 // "규칙 → 확인 → UI" 순서로 짰다 — TryUnlock(playerId, ChatUnlockData)가 UI와 무관한
-// 판정·지급 전부이고, OnGUI는 그 위에 얹은 입력창 하나뿐이다. 나중에 다른 UI(버튼 등)가
-// 필요해져도 TryUnlock을 그대로 부르면 된다.
+// 판정·지급 전부이고, 입력창은 GameChatBox 하나가 이 매니저와 HiddenCombineManager를 같이
+// 물고 있다(사장님 지시 2026-09-05: 채팅 코드와 히든 조합을 같은 입력창 하나로). 나중에
+// 다른 UI(버튼 등)가 필요해져도 TryUnlock을 그대로 부르면 된다.
 public class ChatUnlockManager : MonoBehaviour
 {
     [SerializeField] List<ChatUnlockData> unlocks = new List<ChatUnlockData>();
@@ -40,13 +41,22 @@ public class ChatUnlockManager : MonoBehaviour
     // "지금 열면 규칙이 깨지는가"다.
     public virtual bool HasNikaPrerequisite(int playerId) => false;
 
-    /// <summary>채팅 문구로 찾아 시도한다 — 실제 입력창(OnGUI)이 이걸 쓴다. 대소문자
-    /// 구분 없이, 영문·한글 문구 둘 다 받는다(원작 CSV가 항상 "영문 / 한글" 쌍이다).</summary>
-    public bool TryUnlockByPhrase(int playerId, string text)
+    /// <summary>채팅 문구로 찾아 시도한다 — GameChatBox(통합 입력창)가 이걸 쓴다. 대소문자
+    /// 구분 없이, 영문·한글 문구 둘 다 받는다(원작 CSV가 항상 "영문 / 한글" 쌍이다).
+    /// <paramref name="message"/>는 문구가 이 매니저 소관으로 인식됐을 때만 채워진다(성공이든
+    /// 실패든) — null이면 "이 매니저는 이 문구를 모른다"는 뜻이라, 호출부(GameChatBox)가
+    /// 다음 판정기(HiddenCombineManager)로 넘겨야 한다는 신호로 쓴다.</summary>
+    public bool TryUnlockByPhrase(int playerId, string text, out string message)
     {
         ChatUnlockData match = FindByPhrase(text);
-        return match != null && TryUnlock(playerId, match);
+        if (match == null) { message = null; return false; }
+
+        bool unlocked = TryUnlock(playerId, match);
+        message = lastResultMessage;
+        return unlocked;
     }
+
+    public string LastResultMessage => lastResultMessage;
 
     ChatUnlockData FindByPhrase(string text)
     {
@@ -161,31 +171,6 @@ public class ChatUnlockManager : MonoBehaviour
         unitSpawner.Spawn(data.result, position, context.PlayerId);
     }
 
-    // ---- 입력창(OnGUI) — DebugHud/SelectionManager와 같은 IMGUI 관례를 따른다. ----
-
-    string chatInput = "";
+    // 입력창은 GameChatBox(통합) 소관이다 — 여기는 판정·지급 결과 메시지만 들고 있는다.
     string lastResultMessage = "";
-
-    void OnGUI()
-    {
-        PlayerContext local = PlayerContext.Local;
-        if (local == null) return;
-
-        GUILayout.BeginArea(new Rect(10, Screen.height - 70, 320, 60));
-        GUILayout.BeginHorizontal();
-        GUILayout.Label("전설 유닛 코드:", GUILayout.Width(90));
-        chatInput = GUILayout.TextField(chatInput, GUILayout.Width(140));
-        if (GUILayout.Button("입력", GUILayout.Width(50)))
-        {
-            TryUnlockByPhrase(local.PlayerId, chatInput);
-            chatInput = "";
-        }
-        GUILayout.EndHorizontal();
-
-        if (!string.IsNullOrEmpty(lastResultMessage))
-        {
-            GUILayout.Label(lastResultMessage);
-        }
-        GUILayout.EndArea();
-    }
 }

@@ -157,6 +157,11 @@ public class RtsCameraController : MonoBehaviour
 
     void Update()
     {
+        // 채팅 입력 중엔 카메라가 안 움직여야 한다 — Input System은 텍스트 필드 포커스와
+        // 무관하게 Keyboard.current를 그대로 읽어서, 안 막으면 채팅으로 "w"를 치는 순간
+        // 카메라가 이동한다(ChatInputGate.cs 참고, 사장님 지시 2026-09-05).
+        if (ChatInputGate.IsOpen) return;
+
         // 일시정지·배속과 무관하게 카메라는 움직여야 한다.
         // 다만 상한을 둔다: 플레이 진입·컴파일 직후 첫 프레임의 deltaTime은 초 단위로 튄다.
         // 그때 마우스가 화면 가장자리에 있으면 가장자리 밀기가 한 번에 수십 유닛을 이동시켜,

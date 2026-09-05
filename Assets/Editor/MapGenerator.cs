@@ -122,6 +122,7 @@ public static class MapGenerator
         string questReport = BuildPirateQuestManager(pirateQuests);
         string chatUnlockReport = BuildChatUnlockManager();
         string hiddenCombineReport = BuildHiddenCombineManager();
+        string chatBoxReport = BuildGameChatBox();
 
         string portalReport = BuildGachaPortals(gachaIsland);
 
@@ -157,7 +158,7 @@ public static class MapGenerator
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
             $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + "\n\n" +
             tableReport + displayReport + gateReport + storyReport + sealReport + questReport +
-            chatUnlockReport + hiddenCombineReport + overlaps + navResult + oldGround + rewire + saveNote;
+            chatUnlockReport + hiddenCombineReport + chatBoxReport + overlaps + navResult + oldGround + rewire + saveNote;
         Debug.Log("[맵] " + message);
         EditorUtility.DisplayDialog(Title, message, "확인");
     }
@@ -694,6 +695,27 @@ public static class MapGenerator
 
         return $"\n히든 조합: {combines.Count}개 연결." +
                (combines.Count == 0 ? $"\n  ⚠️ {HiddenCombineFolder}에서 HiddenCombineData를 하나도 못 찾았습니다(사장님 콘텐츠 배정 전이면 정상)." : "");
+    }
+
+    // 채팅 코드·히든 조합 통합 입력창(사장님 지시 2026-09-05) — 반드시 위 두 매니저를 먼저
+    // 만든 뒤에 불러야 한다(참조를 그 결과에서 찾는다).
+    static string BuildGameChatBox()
+    {
+        GameChatBox chatBox = Object.FindFirstObjectByType<GameChatBox>(FindObjectsInactive.Include);
+        if (chatBox == null)
+        {
+            GameObject chatBoxObject = new GameObject("GameChatBox");
+            chatBox = chatBoxObject.AddComponent<GameChatBox>();
+        }
+
+        SerializedObject so = new SerializedObject(chatBox);
+        so.FindProperty("chatUnlockManager").objectReferenceValue =
+            Object.FindFirstObjectByType<ChatUnlockManager>(FindObjectsInactive.Include);
+        so.FindProperty("hiddenCombineManager").objectReferenceValue =
+            Object.FindFirstObjectByType<HiddenCombineManager>(FindObjectsInactive.Include);
+        so.ApplyModifiedProperties();
+
+        return "\n채팅 입력창(코드+히든 조합 통합)을 연결했습니다(엔터로 열기, Esc로 닫기).";
     }
 
     static void BuildDecor(Transform parent, string name, Vector3 position, Vector3 scale,

@@ -14,11 +14,20 @@ public class HiddenCombineManager : MonoBehaviour
     readonly List<UnitIdentity> pool = new List<UnitIdentity>();
     readonly List<UnitIdentity> toConsume = new List<UnitIdentity>();
 
-    public bool TryUnlockByPhrase(int playerId, string text)
+    /// <summary>GameChatBox(통합 입력창)가 이걸 쓴다. <paramref name="message"/>는 문구가
+    /// 이 매니저 소관으로 인식됐을 때만 채워진다(성공이든 실패든) — null이면 이 매니저는 이
+    /// 문구를 모른다는 뜻이라, 호출부가 다음 판정기(ChatUnlockManager)로 넘겨야 한다.</summary>
+    public bool TryUnlockByPhrase(int playerId, string text, out string message)
     {
         HiddenCombineData match = FindByPhrase(text);
-        return match != null && TryUnlock(playerId, match);
+        if (match == null) { message = null; return false; }
+
+        bool unlocked = TryUnlock(playerId, match);
+        message = lastResultMessage;
+        return unlocked;
     }
+
+    public string LastResultMessage => lastResultMessage;
 
     HiddenCombineData FindByPhrase(string text)
     {
@@ -107,32 +116,7 @@ public class HiddenCombineManager : MonoBehaviour
         return taken >= count;
     }
 
-    // ---- 입력창(OnGUI) — ChatUnlockManager와 별개 진입점이다(PM 지시: Hidden은 채팅이
-    // 확인 트리거일 뿐이라 Eternal/Forever/Immortal과는 다른 계열로 다룬다). ----
-
-    string chatInput = "";
+    // 입력창은 GameChatBox(통합) 소관이다(사장님 지시 2026-09-05: 채팅 코드와 히든 조합을
+    // 같은 입력창 하나로) — 여기는 판정 결과 메시지만 들고 있는다.
     string lastResultMessage = "";
-
-    void OnGUI()
-    {
-        PlayerContext local = PlayerContext.Local;
-        if (local == null) return;
-
-        GUILayout.BeginArea(new Rect(340, Screen.height - 70, 320, 60));
-        GUILayout.BeginHorizontal();
-        GUILayout.Label("히든 조합 코드:", GUILayout.Width(90));
-        chatInput = GUILayout.TextField(chatInput, GUILayout.Width(140));
-        if (GUILayout.Button("입력", GUILayout.Width(50)))
-        {
-            TryUnlockByPhrase(local.PlayerId, chatInput);
-            chatInput = "";
-        }
-        GUILayout.EndHorizontal();
-
-        if (!string.IsNullOrEmpty(lastResultMessage))
-        {
-            GUILayout.Label(lastResultMessage);
-        }
-        GUILayout.EndArea();
-    }
 }
