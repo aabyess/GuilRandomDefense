@@ -86,4 +86,18 @@ public class UnitTraitData : ScriptableObject
     // 한 트레잇에 동시에 안 쓴다 — 원작 26분기 중 한 유닛이 스킬승급과 능력교체를 같이
     // 갖는 사례가 없다.
     public SkillData replacementSkill;
+
+    // ⚠️ 06번③(변신, 26분기 중 2개) 전용 그릇 — 아직 아무도 안 읽는다. 원작은 `RemoveUnit`
+    // 후 새 유닛을 `CreateNUnitsAtLoc`으로 만들고 경험치·STR/AGI/INT를 이월한다(우리는 그
+    // 개념이 없어 이월할 것도 없다 — 유닛 교체 자체만 하면 된다). 이 트레잇을 언락하면
+    // targetUnit의 살아있는 개체를 이 필드로 바꿔야 하는데, 그 메커니즘은 아직 안 짰다 —
+    // CombineSystem.TryCombine이 쓰는 "재료 UnitIdentity.Consume() 후 UnitSpawner로 결과
+    // 생성" 패턴을 재료 여러 개가 아니라 자기 자신 하나만 소모하는 형태로 재사용하면 될
+    // 것으로 보이나(PM 지시, 2026-09-05), 새 CombineRecipe를 만드는 것도 아니고 트레잇
+    // 언락 시점에 실행할 새 진입점이 필요해서 06번③ 실제 착수 때 따로 설계한다.
+    //
+    // 원작 변신 목적지(H0B1·H097→H0B1, H091→H093)가 우리 로스터의 어떤 유닛이 될지는
+    // 아직 안 정했다(사장님 배정 대기) — 이 필드를 null로 비워두고 원작 유닛ID만
+    // description에 적어 억지로 짝짓지 않는다.
+    public UnitData transformIntoUnit;
 }
