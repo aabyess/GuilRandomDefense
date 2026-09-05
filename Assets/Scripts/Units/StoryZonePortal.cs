@@ -23,6 +23,12 @@ public class StoryZonePortal : MonoBehaviour
         if (!other.TryGetComponent(out OwnedByPlayer owner)) return; // 적 유닛에는 이게 없다
         if (!other.TryGetComponent(out UnitCombat combat)) return;
 
-        combat.SnapTo(destination);
+        // SnapTo는 NavMesh에 못 올리면 아무것도 안 바꾸고 조용히 false만 돌려준다
+        // (UnitCombat.SnapTo 주석 참고) — StoryReturnPortal과 같은 이유로 플레이어에게
+        // 알린다(PM 지시, 2026-09-05, 버그 #7).
+        if (!combat.SnapTo(destination))
+        {
+            PlayerNotification.Show(owner.OwnerId, "스토리존 근처에 설 자리가 없습니다.");
+        }
     }
 }

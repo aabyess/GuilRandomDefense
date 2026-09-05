@@ -65,6 +65,8 @@ public class Warehouse : MonoBehaviour
 
         if (capacity > 0 && stored.Count >= capacity)
         {
+            // 플레이어가 보고 다른 유닛을 고를 수 있는 실패라 화면에도 알린다(PM 지시, 2026-09-05).
+            PlayerNotification.Show(ownerPlayerId, $"창고가 가득 찼습니다 ({capacity}/{capacity}).");
             Debug.LogWarning($"Warehouse: 보관 한도({capacity})에 도달했습니다.");
             return false;
         }

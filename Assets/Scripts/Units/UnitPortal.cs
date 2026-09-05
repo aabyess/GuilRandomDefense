@@ -123,12 +123,15 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
 
         UnitGrade grade = wisp.Data.targetGrade;
 
+        // ⚠️ ResourcePortal의 같은 상황(안 받는 위습)은 이미 PlayerNotification으로 알린다 —
+        // 여기는 Debug.Log뿐이라 화면엔 "넣었는데 아무 일도 안 일어남"으로 보였다
+        // (PM 지시, 2026-09-05, 버그 #9).
         if (!Accepts(grade))
         {
             if (loggedRejectionFor.Add(wisp))
             {
-                string allowed = acceptedGrades.Count == 0 ? "모든" : string.Join(", ", acceptedGrades);
-                Debug.Log($"UnitPortal: 이 포탈은 {allowed} 등급만 받습니다 ({wisp.Data.wispName} 거부).");
+                int rejectedOwnerId = wisp.TryGetComponent(out OwnedByPlayer rejectedOwner) ? rejectedOwner.OwnerId : LocalPlayer.LocalPlayerId;
+                PlayerNotification.Show(rejectedOwnerId, $"{wisp.Data.wispName}은(는) 이 포탈에 쓸 수 없습니다.");
             }
             return;
         }

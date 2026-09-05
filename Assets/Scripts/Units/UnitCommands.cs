@@ -36,15 +36,23 @@ public static class UnitCommands
             crowd.Add(unit);
         }
 
+        int moved = 0;
         for (int i = 0; i < crowd.Count; i++)
-            Place(crowd[i], center, i, crowd.Count);
+            if (Place(crowd[i], center, i, crowd.Count)) moved++;
 
-        return crowd.Count;
+        // SnapTo가 NavMesh에 못 올리면 조용히 false만 돌려준다 — 예전엔 이 값을 안 봐서
+        // 일부가 못 옮겨져도 "전원 모음 성공"으로 보였다. 실제 성공 개수를 돌려줘야
+        // 호출부(SelectionManager)의 로그가 시도 개수가 아니라 진짜 결과를 말한다
+        // (PM 지시, 2026-09-05, 버그 #8).
+        if (moved < crowd.Count)
+            PlayerNotification.Show(owner, $"{crowd.Count - moved}기는 자리가 없어 모이지 못했습니다.");
+
+        return moved;
     }
 
     // 가운데부터 바깥으로 고리를 넓혀가며 세운다. 한 고리에 여섯씩 — 육각형으로 채우면
     // 같은 간격을 지키면서 가장 촘촘하다.
-    static void Place(UnitIdentity unit, Vector3 center, int index, int total)
+    static bool Place(UnitIdentity unit, Vector3 center, int index, int total)
     {
         Vector3 spot = center;
 
@@ -59,8 +67,10 @@ public static class UnitCommands
             spot = center + Quaternion.Euler(0f, angle, 0f) * Vector3.forward * (GatherSpacing * ring);
         }
 
-        if (unit.TryGetComponent(out UnitCombat combat)) combat.SnapTo(spot);
-        else unit.transform.position = spot;
+        if (unit.TryGetComponent(out UnitCombat combat)) return combat.SnapTo(spot);
+
+        unit.transform.position = spot;
+        return true;
     }
 
     /// <summary>
@@ -71,6 +81,8 @@ public static class UnitCommands
     public static int SendToPen(IReadOnlyList<Selectable> selection)
     {
         int moved = 0;
+        int attempted = 0;
+        int lastFailedOwner = -1;
 
         foreach (Selectable selected in selection)
         {
@@ -86,9 +98,15 @@ public static class UnitCommands
 
             UnitData unitData = selected.TryGetComponent(out UnitIdentity identity) ? identity.Data : null;
 
-            combat.SnapTo(lane.TakeSpawnPosition(unitData));
-            moved++;
+            attempted++;
+            // SnapTo가 NavMesh에 못 올리면 조용히 false만 돌려준다 — Gather와 같은 이유로
+            // 실제 성공 개수만 센다(PM 지시, 2026-09-05, 버그 #8).
+            if (combat.SnapTo(lane.TakeSpawnPosition(unitData))) moved++;
+            else lastFailedOwner = owner;
         }
+
+        if (moved < attempted)
+            PlayerNotification.Show(lastFailedOwner, $"{attempted - moved}기는 자리가 없어 우리로 보내지 못했습니다.");
 
         return moved;
     }

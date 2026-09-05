@@ -47,8 +47,15 @@ public class WarehouseController : MonoBehaviour
             }
         }
 
-        if (sent > 0 || returned > 0)
-            Debug.Log($"창고: {sent}기 보관, {returned}기 회수 (보관 중 {target.Stored.Count}기)");
+        // 아무것도 안 옮겨졌으면(선택이 비었거나, 창고 꽉 참·소유 아님으로 전부 실패)
+        // 선택을 풀지 않는다 — 실패 이유는 Warehouse.Store가 이미 알리므로, 여기서 선택까지
+        // 이유 없이 풀리면 "눌렀는데 아무 일도 안 일어나고 고른 것도 사라짐"이 된다(PM 지시,
+        // 2026-09-05, 버그 #6).
+        if (sent == 0 && returned == 0) return;
+
+        string summary = $"창고: {sent}기 보관, {returned}기 회수 (보관 중 {target.Stored.Count}기)";
+        Debug.Log(summary);
+        PlayerNotification.Show(target.OwnerPlayerId, summary); // 버그 #15: 성공도 화면에 뜨게
 
         // 순간이동 후에도 선택을 유지하면 화면 밖 유닛이 선택된 채로 남아 헷갈린다.
         selectionManager.ClearSelection();
