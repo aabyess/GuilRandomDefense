@@ -31,7 +31,7 @@
 | 캐릭터 | 조건 | 레벨 2에서 추가되는 것 |
 |---|---|---|
 | 후지토라 `A0GR` | `GetUnitAbilityLevelSwapped('A0GR',…)==2` | `Trig_Huji_meteor` 실행 → **315,000 [CHAOS/NORMAL]** |
-| 드래곤 `A0FS` | 같은 꼴 | `Trig_Dragon_Skill_Mana` → **300,000 [NORMAL/UNIVERSAL]** |
+| 드래곤 `A0FS` | `B00J` 버프 **미보유**일 때(확률 아님) | `Dragon_Skill_1` → **`Dragon_Skill_1_T`**: 1,000,000×2 → **1,250,000 + 최대체력×1.50 + 최대체력×0.02** |
 | 시라호시 `A0EQ` | 1/9 확률 안에서 `==2` | 더미 `e04V` 추가 생성 |
 | 센고쿠 `A0D8` | 1/20 확률 안에서 `==2` | 더미 `e0K6` 추가 생성 |
 
@@ -91,6 +91,18 @@ set udg_Tichi_TR_AddInt[플레이어]=3          ← 진짜 효과는 이쪽
 
 
 ---
+
+> ### 🚩 자체 정정 (2026-09-05) — 드래곤을 `Dragon_Skill_Mana`에 붙인 건 틀렸다
+> 처음엔 「레벨==2 → `Dragon_Skill_Mana` 300,000」이라고 적었는데, **트리거 원문을 열어보니 아니다.**
+> `Trig_Dragon_Attack_Actions`는 **독립된 세 블록**이고, `A0FS` 레벨 분기는 그 중 **`B00J` 버프 미보유 블록** 안에 있다:
+> ```jass
+> if UnitHasBuffBJ(GetAttacker(),'B00J')==false then
+>     if GetUnitAbilityLevelSwapped('A0FS',GetAttacker())==2 then → Dragon_Skill_1_T   ← 특성
+>     else                                                        → Dragon_Skill_1
+> ```
+> `Dragon_Skill_Mana`(300,000)는 **마나 160 게이지**로 도는 **별개 스킬**이고 `A0FS`와 무관하다.
+> 그리고 `1/10` 블록의 더미 `e02L`(`A08V` 「불멸 드래곤스턴2」)도 **또 다른 별개 효과**다 — `A0FS` 본체가 아니다.
+> **「같은 트리거 안에 있으니 같은 스킬」로 읽은 것이 원인이다.**
 
 ## ⑥ ④ 플래그 채널 6개의 값 — `ORIGINAL_TRAIT_FLAG_CHANNEL.csv`
 
