@@ -4,9 +4,11 @@ using UnityEngine;
 // 보스 오라(원작 A153 방어력 버프, A11T 회복)의 시전 루프.
 //
 // SkillData.triggerType이 Aura인 것만 다룬다 — OnHitChance/CooldownAutoCast는 보스 쪽에
-// 아직 배정된 게 없다(플레이어 유닛 쪽은 UnitAttacker가 이미 그 둘을 처리한다). 사장님이
-// 아직 어느 보스에 어느 SkillData를 배정할지 안 정하셔서(04번 원문: "유닛별 배정은 나중에
-// 내가 준다") 에셋은 없다 — 이건 그 배정이 왔을 때 붙일 캐스터 쪽 메커니즘이다.
+// 아직 배정된 게 없다(플레이어 유닛 쪽은 UnitAttacker가 이미 그 둘을 처리한다).
+//
+// 인스펙터에 미리 꽂아두는 게 아니라 EnemyDummy.Initialize(EnemyData)가
+// EnemyData.auraSkills를 보고 런타임에 AddComponent + Initialize(skill)로 붙인다 — 모든
+// 적이 프리팹 하나(MobPrefab)를 공유해서, 캐릭터별 컴포넌트를 프리팹에 미리 못 넣는다.
 //
 // ⚠️ 매 프레임 EnemyDummy.AlliesOf를 부르면 안 된다 — 그 메서드가 호출마다 새 List를
 // 할당해서, 몹이 100마리 넘게 몰리는 후반 라운드에서 프레임당 GC가 튄다. TickInterval마다만
@@ -23,6 +25,11 @@ public class EnemyAuraCaster : MonoBehaviour
 
     EnemyDummy self;
     float tickTimer;
+
+    /// <summary>EnemyDummy.Initialize(EnemyData)가 EnemyData.auraSkills를 읽어 동적으로
+    /// AddComponent한 직후 부른다 — 인스펙터에서 미리 꽂아두는 프리팹이 없기 때문이다
+    /// (모든 적이 MobPrefab 하나를 공유한다).</summary>
+    public void Initialize(SkillData skillData) => skill = skillData;
 
     // 지금 이 오라 효과를 받고 있는 대상들. 매 틱 AlliesOf(range) 결과와 비교해서, 새로
     // 들어온 대상엔 Apply를, range를 벗어났거나 죽은 대상엔 Remove를 정확히 한 번씩만 건다.

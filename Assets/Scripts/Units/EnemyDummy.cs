@@ -156,6 +156,18 @@ public class EnemyDummy : MonoBehaviour
         // 지금 CurrentRound가 곧 이 적을 내보낸 웨이브의 라운드다. WaveSpawner를 거치지 않고
         // 이렇게 읽어서, 라운드 번호를 실어 나르려고 그 파일을 고칠 필요가 없다.
         SpawnRound = RoundManagerRef != null ? RoundManagerRef.CurrentRound : 0;
+
+        // 보스 오라(04번) — 모든 적이 MobPrefab 하나를 공유해서 프리팹에 미리 못 붙여두므로
+        // 여기서 데이터를 보고 동적으로 붙인다. 대부분의 적은 auraSkills가 비어 있어 아무
+        // 일도 안 한다.
+        if (enemyData.auraSkills != null)
+        {
+            foreach (SkillData auraSkill in enemyData.auraSkills)
+            {
+                if (auraSkill == null) continue;
+                gameObject.AddComponent<EnemyAuraCaster>().Initialize(auraSkill);
+            }
+        }
     }
 
     void Awake()

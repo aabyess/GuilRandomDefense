@@ -114,4 +114,11 @@ public class EnemyData : ScriptableObject
     // `uhpr = 9,900,000`처럼 "체력회복력이 매우 높다"는 게 정체성 자체인 적을 위한 자리 —
     // 값은 원작 그대로 넣는다(환산 안 함, 우리 몹 HP 커브가 원작과 이미 같아졌다).
     public float hpRegenPerSecond;
+
+    // 이 적이 보스 오라 캐스터가 되는 스킬들(04번, 원작 A153/A11T). 전부 SkillTriggerType.Aura
+    // 여야 한다 — EnemyDummy.Initialize가 이 목록을 읽어 EnemyAuraCaster 컴포넌트를 그
+    // 개수만큼 동적으로 붙인다. 적은 전부 같은 프리팹(MobPrefab)을 쓰고 프리팹엔 캐릭터별
+    // 컴포넌트를 미리 못 붙여두므로(모든 적이 하나를 공유), 데이터가 프리팹을 구동하는
+    // 이 프로젝트 관례를 그대로 따른다. 기본 비어 있음 — 대부분의 적은 오라가 없다.
+    public List<SkillData> auraSkills;
 }

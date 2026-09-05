@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_보스주변방어력증가
+  m_EditorClassIdentifier:
+  skillName: 보스주변방어력증가
+  description: 원작 A153. 반경 850 안의 아군(적) 몹에게 방어력 +10을 건다 — 실제로 피해를
+    주지 않는다(툴팁의 "22만x3+85만 피해" 서술은 다른 능력 A0CJ의 오기로 확인됨, 04번 재정의).
+  triggerType: 2
+  levels:
+  - cooldown: 0
+    triggerChance: 1
+    range: 850
+    effects:
+    - kind: 4
+      basis: 0
+      target: 1
+      multiplier: 10
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
