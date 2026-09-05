@@ -1,70 +1,78 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""원작 스킬 196건(96개 원작 유닛 단위) 배정 — 설계·표 준비 단계, 아직 실행 금지.
+"""원작 스킬 173행(판정=확정, ORIGINAL_UNLISTED_SKILL_EFFECTS.csv d2c5093)을
+원작 유닛 단위로 통째로 배정한다.
 
-⚠️⚠️ 2026-09-05: PM 지시로 대기 중이다. 리서치담당이 (a) 상세 피해표의 열 순서,
-(b) ATTACK_TYPE_NORMAL이 실제로 Spells인지를 검증하는 중이고, 그 결과에 따라
-196건 전체의 attackType 값이 통째로 바뀐다. **결과가 오기 전엔 이 스크립트를
-돌리지 않는다** — main()은 지금 dry-run(배정 미리보기만, 파일 쓰기 없음)만 한다.
+PM 지시(2026-09-05) — 설계 원칙 둘:
+1. 원작 유닛 단위로 묶어서 통째로 준다(사보 스타일 게이트 공유가 낱개 배정으로
+   깨지지 않게) — 이 CSV 자체가 이미 유닛ID로 그룹 지을 수 있게 나온다.
+2. 등급 안 순위 대응 — 원작은 그 유닛의 총 화력(이 스크립트가 직접 계산) 내림차순,
+   우리는 로스터 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝짓는다.
 
-## 설계 원칙 (PM 지시, 사장님 확정 "모든 것 원작 따라간다")
+## 컬럼 → 스키마 대응
+`basis` 문자열은 "Flat"/"대상최대체력"/"대상현재체력" 셋뿐이다(이 173행 범위엔
+CasterAttackPower·ResearchLevel이 없다 — 그건 06번①/1차 채널 전용 basis다).
 
-1. **원작 유닛 단위로 묶어서 통째로 준다.** 사보의 스킬 4개가 마나 125 게이지를
-   공유하는 것처럼, 한 원작 유닛의 여러 스킬을 우리 유닛 여러 명에 낱개로 흩으면
-   그 공유 게이트가 깨진다 — Docs/reference/UNLISTED_SKILLS_BY_UNIT.csv(96행,
-   유닛당 미수록 스킬 전부를 이미 묶어놨다)의 한 행 = 우리 유닛 한 명.
-2. **등급 안 순위 대응** — 지금까지와 같은 방식: 원작은 그 유닛의 "화력"(Flat합계,
-   %MaxHp%·%CurHp%·buf 태그는 순위 정렬에선 무시하고 숫자만 본다) 내림차순, 우리는
-   로스터 유닛 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝짓는다.
-3. 06번①이 이미 skill을 채운 15종(스킬승급형)·8종(능력교체형 대상 유닛 자체는
-   포함하되 그 유닛의 UnitData.skill은 이미 pass1/2로 찼을 수 있다 — 아래 CLAIMED_BASES는
-   "스킬승급형 15종"만 배제한다, 능력교체형 8종은 이미 pass1/2로 base skill이 찼을
-   수도 안 찼을 수도 있어 일반 "has_pass1/has_other" 판정으로 자연히 걸러진다)는
-   제외 대상 그대로 유지한다.
-4. 이미 pass1/2 능력이 있는 유닛은 **효과를 추가**한다(SkillData.levels[0].effects에
-   append) — 덮지 않는다. 없는 유닛은 새 SkillData 생성.
+⚠️ Flat 행은 **값이 `bonus` 컬럼에 들어 있고 `multiplier`는 비어 있다**(리서치담당의
+표 관례 — "bonus=상수항 전체"). 하지만 우리 코드(`UnitAttacker.ResolveSkillEffectValue`)는
+`Flat` basis에서 **`multiplier`만 읽는다**(`bonus`는 의도적으로 안 읽는다, PM 지시
+2026-09-05 버그 수정 커밋 참고) — 그래서 Flat 행을 옮길 때는 **표의 bonus 값을 우리
+schema의 multiplier에** 넣는다(뒤바뀐 게 아니라 표와 코드의 "어느 컬럼이 상수인가"
+관례가 다른 것뿐이다). %체력 두 basis는 표의 multiplier/bonus를 그대로(계수/상수항)
+옮긴다 — 이제 코드가 그 bonus를 더한다(버그 수정 완료 확인).
 
-## 아직 못 채우는 이유 (표 준비 단계에서 멈추는 지점)
+`attackType`/`damageType`은 표에 이미 고친 이름으로 들어 있다(NORMAL→Spells 등 이미
+반영됨) — 그대로 우리 enum에 매핑만 한다.
 
-`UNLISTED_SKILLS_BY_UNIT.csv`는 **유닛 단위 집계**다 — 실제 배정에 필요한
-개별 스킬의 계산식·게이트·attackType은 없다(스킬목록 컬럼에 이름만 있다). 그
-상세표(예: `ORIGINAL_UNLISTED_SKILLS_DETAIL.csv` 같은 것 — 아직 안 옴)가 와야
-`extract_effects_for_skill()`을 실제로 채울 수 있다. 지금은 그 자리를
-NotImplementedError로 비워뒀다 — 상세표 형식을 보지 않고 추측으로 파서부터 짓지
-않는다(2026-09-05 06번① 작업에서 겪은 실패 패턴: 트리거 이름만 보고 다른 블록의
-효과를 잘못 붙인 사고가 여러 번 났다 — 이번엔 미리 막는다).
+## range 충돌
+한 원작 유닛이 여러 `Enemies` 대상 스킬을 갖는데 스킬마다 반경이 다른 경우가 11종
+있다(예: h04B 450/700, h05C 600/450) — `SkillLevel.range`는 레벨 하나에 하나뿐이라
+전부 담을 수 없다. **그 유닛의 Enemies 스킬 중 가장 작은 반경**을 그 유닛 전체에
+적용한다(더 넓게 잡으면 원작보다 많은 대상을 맞히는 쪽으로 사고가 나는데, 좁게
+잡으면 "덜 맞는" 쪽으로만 어긋나 상대적으로 안전하다) — description에 어느 스킬이
+원래 어떤 반경이었는지, 그리고 이 근사로 인해 반경이 줄어든 스킬이 어느 것인지
+전부 남긴다.
 
-## 실행 순서 (표가 오면)
+## hitCount
+표의 `hitCount`는 "같은 RRD 식이 몇 번 반복 등장하는가"이지 우리 스키마의 "시간에
+걸쳐 나눠 때리는 다단히트" 개념이 아니다(PM 지시로 표에 단서가 붙어 있음). 그래도
+총 피해량 관점에서는 "같은 값이 N번 들어간다"가 동등하므로 hitCount만 그대로
+옮기고 duration=0으로 둔다(우리 엔진은 duration=0이면 즉시 연속으로 N번 때린다 —
+"동시에 N번"에 가장 가까운 근사) — 원작의 실제 타이밍(스킬마다 다를 수 있음)과는
+다를 수 있다는 것을 description에 남긴다.
 
-1. `DETAIL_CSV` 상수에 경로를 채운다.
-2. `extract_effects_for_skill(skill_name, detail_rows)` 구현 — 06번①/2차 채널
-   스크립트(`generate_unit_skill_damage_effects.py`)의 파서를 재사용할 수 있으면
-   재사용한다(같은 basis축·basis대응 관례일 가능성이 높다).
-3. `ATTACK_TYPE_POLICY`를 리서치담당 결론에 맞춰 채운다(지금은 자리만).
-4. `main(dry_run=False)`로 실행.
+## 제외
+- `range_판정=범위확정(비수치)` 7행(그룹변수라 숫자가 아님) — 이번엔 건너뛰고 목록으로 보고.
+- `판정≠확정`(축밖 79·미확인 50) — 안 건드림.
+- 06번① 스킬승급형 15종(CLAIMED_BASES) — 이미 채운 유닛은 배정 풀에서 제외.
+
+재실행해도 STACK_MARKER로 중복 추가를 막는다(2차 채널 스크립트와 같은 관례).
 """
 import csv
 import glob
+import hashlib
 import re
 from collections import defaultdict
 
-CSV_PATH = 'Docs/reference/UNLISTED_SKILLS_BY_UNIT.csv'
+CSV_PATH = 'Docs/reference/ORIGINAL_UNLISTED_SKILL_EFFECTS.csv'
 ROSTER_DIR = 'Assets/Data/Units/Roster'
 SKILL_DIR = 'Assets/Data/UnitSkills'
+SKILL_SCRIPT_GUID = '9457f64cd84d34fd095791a069c0adc6'  # SkillData.cs
 
-# ⚠️ 리서치담당 검증 대기 — 결과 오면 채운다. 지금은 아무 매핑도 확정하지 않는다.
-DETAIL_CSV = None
-ATTACK_TYPE_POLICY = None  # 예: {'NORMAL': 1, ...} — Spells 여부 결론 나오면 채움
+STACK_MARKER = '96유닛 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv)'
+REFERENCE_HP = 1_000_000.0  # 정렬 전용 — 저장값엔 안 쓴다(2차 채널 스크립트와 같은 관례).
 
 GRADE_ENUM = {
     '흔함': 0, '특별함': 2, '희귀함': 3, '히든': 4, '전설적인': 5, '제한됨': 6,
     '초월함': 7, '불멸의': 8, '영원한': 9, '랜덤전용': 10, '특수함': 12, '변화된': 14,
 }
 
-# 06번①이 base skill을 직접 채운 스킬승급형 15종 — 이 유닛들의 UnitData.skill을
-# 건드리면 그 레벨 트랙(levels[0]/[1])이 끊긴다. 능력교체형 8종의 대상 유닛(신지우 등)은
-# 여기 없다 — 그쪽은 base skill이 pass1/2로 이미 찼을 수도 있어 has_pass1 판정으로
-# 자연히 걸러진다.
+BASIS_MAP = {'Flat': 0, '대상최대체력': 1, '대상현재체력': 2}
+TARGET_MAP = {'SingleTarget': 3, 'Enemies': 2}
+ATTACK_TYPE_MAP = {'Normal': 1, 'Pierce': 2, 'Siege': 3, 'Hero': 4, 'Chaos': 5, 'Magic': 6, 'Spells': 7}
+DAMAGE_TYPE_MAP = {'AD': 1, 'AP(방어무시)': 2}
+
+# 06번①이 base skill을 직접 채운 스킬승급형 15종 — 배정 풀에서 뺀다.
 CLAIMED_BASES = {
     '불멸_이이삭', '불멸_이승우', '불멸_박은석', '불멸_정준영', '불멸_정윤식', '영원_조세민',
     '초월_김만경_AD', '초월_박기찬_AD', '초월_유재헌_ADAP', '초월_임채민_AP', '초월_이태훈_AP',
@@ -72,29 +80,132 @@ CLAIMED_BASES = {
 }
 
 
-def flat_sort_key(flat_summary):
-    """'9,056,250+buf' 같은 문자열에서 정렬용 숫자만 뽑는다. +%MaxHp%·+buf 태그는 무시."""
-    m = re.match(r'([\d,]+)', flat_summary)
-    return int(m.group(1).replace(',', '')) if m else 0
+def fnum(s):
+    s = s.strip()
+    return float(s) if s else 0.0
 
 
-def load_unit_groups():
+def guid_for(name):
+    return hashlib.md5(('guilrd/unlistedskills/' + name).encode()).hexdigest()
+
+
+def write_meta(path, guid):
+    open(path + '.meta', 'w', encoding='utf-8').write(
+        "fileFormatVersion: 2\nguid: " + guid + "\nNativeFormatImporter:\n"
+        "  externalObjects: {}\n  mainObjectFileID: 11400000\n"
+        "  userData: \n  assetBundleName: \n  assetBundleVariant: \n")
+
+
+def load_confirmed_groups():
     with open(CSV_PATH, encoding='utf-8') as f:
         rows = list(csv.DictReader(f))
-    by_grade = defaultdict(list)
+
+    excluded_non_numeric = [
+        r for r in rows if r['판정'] == '확정' and r['range_판정'] == '범위확정(비수치)'
+    ]
+    confirmed = [
+        r for r in rows if r['판정'] == '확정' and r['range_판정'] != '범위확정(비수치)'
+    ]
+
+    by_unit = defaultdict(list)
+    for r in confirmed:
+        by_unit[r['유닛ID']].append(r)
+
+    return by_unit, excluded_non_numeric
+
+
+def unit_score(rows):
+    total = 0.0
     for r in rows:
-        by_grade[r['원작등급']].append(r)
-    for g in by_grade:
-        by_grade[g].sort(key=lambda r: flat_sort_key(r['Flat합계']), reverse=True)
-    return by_grade
+        basis = r['basis']
+        if basis == 'Flat':
+            total += fnum(r['bonus'])  # Flat 값은 표의 bonus 컬럼에 있다.
+        else:
+            total += fnum(r['multiplier']) * REFERENCE_HP + fnum(r['bonus'])
+    return total
+
+
+def resolve_range(rows):
+    enemy_rows = [r for r in rows if r['target'] == 'Enemies']
+    ranges = sorted({fnum(r['range']) for r in enemy_rows})
+    if len(ranges) <= 1:
+        return ranges[0] if ranges else 0.0, None
+    chosen = ranges[0]
+    note = (
+        f" ⚠️ 이 유닛의 Enemies 스킬 반경이 여럿({', '.join(str(int(x)) for x in ranges)})이라 "
+        f"가장 작은 {int(chosen)}로 통일했다(넓게 잡으면 원작보다 많이 맞는 쪽으로 어긋나서, "
+        f"좁게 잡는 쪽이 상대적으로 안전하다) — 반경이 원래 더 넓었던 스킬은 실제보다 "
+        f"좁게 적용된다."
+    )
+    return chosen, note
+
+
+def render_effect(row, range_note_applies):
+    basis = BASIS_MAP[row['basis']]
+    target = TARGET_MAP[row['target']]
+    attack_type = ATTACK_TYPE_MAP[row['attackType']]
+    damage_type = DAMAGE_TYPE_MAP[row['damageType']]
+    hit_count = int(float(row['hitCount'])) if row['hitCount'].strip() else 1
+
+    if basis == 0:  # Flat — 표의 bonus 컬럼이 값, 우리 schema는 multiplier에 넣는다.
+        multiplier = fnum(row['bonus'])
+        bonus = 0.0
+    else:
+        multiplier = fnum(row['multiplier'])
+        bonus = fnum(row['bonus'])
+
+    return (
+        "    - kind: 0\n"
+        f"      basis: {basis}\n"
+        f"      target: {target}\n"
+        f"      damageType: {damage_type}\n"
+        f"      attackType: {attack_type}\n"
+        f"      multiplier: {round(multiplier, 4)}\n"
+        f"      bonus: {round(bonus, 4)}\n"
+        "      chance: 1\n"
+        f"      hitCount: {hit_count}\n"
+        "      duration: 0\n"
+        "      casterBuffCountFactor: 0\n"
+    )
+
+
+def describe_unit(unit_id, unit_name, rows, range_note):
+    lines = [
+        f"{STACK_MARKER}: 원작 {unit_name}({unit_id})의 미수록 스킬 {len(rows)}개를 통째로 "
+        f"이 유닛에 배정했다(개별 대응 아님, 등급 안 DPS 순위 매칭)."
+    ]
+    for r in rows:
+        lines.append(
+            f"  · {r['스킬트리거']}#{r['RRD순번']}({r['gate'] or '게이트 없음'}): "
+            f"계산식 {r['계산식'][:60]}"
+        )
+    if range_note:
+        lines.append(range_note)
+    lines.append(
+        " hitCount>1인 항목은 \"같은 식이 원작에서 N번 반복\"이지 우리 스키마의 시간차 "
+        "다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다."
+    )
+    return ' '.join(lines)
+
+
+HEAD = """%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: __SCRIPT__, type: 3}
+  m_Name: __NAME__
+  m_EditorClassIdentifier:
+"""
 
 
 def load_roster():
-    pass1_names = set()
-    for p in glob.glob(f'{SKILL_DIR}/SkillData_원작능력_*.asset'):
-        base = p.split('/')[-1][len('SkillData_원작능력_'):-len('.asset')]
-        pass1_names.add(base)
-
     roster = []
     for path in sorted(glob.glob(f'{ROSTER_DIR}/*.asset')):
         text = open(path, encoding='utf-8').read()
@@ -103,63 +214,129 @@ def load_roster():
         aspd = float(re.search(r'^  attackSpeed: ([\d.]+)', text, re.M).group(1))
         base = path.split('/')[-1][:-len('.asset')]
         has_skill = not re.search(r'^  skill: \{fileID: 0\}', text, re.M)
-        has_pass1 = base in pass1_names
-        claimed = (has_skill and not has_pass1) or base in CLAIMED_BASES
-        roster.append(dict(path=path, base=base, grade=grade, dps=ap * aspd,
-                            has_pass1=has_pass1, claimed=claimed))
+        claimed = base in CLAIMED_BASES
+        roster.append(dict(path=path, text=text, base=base, grade=grade, dps=ap * aspd,
+                            has_skill=has_skill, claimed=claimed))
     return roster
 
 
-def extract_effects_for_skill(skill_name, detail_rows):
-    """⚠️ 상세표가 와야 구현 가능 — 지금은 자리만."""
-    raise NotImplementedError(
-        '상세 피해표(개별 스킬 계산식·게이트·attackType)가 아직 없다. '
-        'DETAIL_CSV를 채우고 이 함수를 구현할 것 — 06번①에서 겪은 실수'
-        '(트리거 이름만 보고 다른 블록 효과를 잘못 붙임)를 반복하지 않도록, '
-        '반드시 최상위 if 블록 단위로 개별 스킬 이름과 효과를 1:1 확인한 표를 쓸 것.'
+def skill_asset_path(unit_base):
+    name = f'SkillData_원작능력_{unit_base}'
+    return f'{SKILL_DIR}/{name}.asset', name
+
+
+def append_to_existing(path, effects_yaml, note):
+    text = open(path, encoding='utf-8').read()
+    if STACK_MARKER in text:
+        return False
+    text = text.rstrip('\n') + '\n' + effects_yaml
+    text = re.sub(r'^(  description: .*)$', lambda m: m.group(1) + ' ' + note, text, count=1, flags=re.M)
+    open(path, 'w', encoding='utf-8').write(text)
+    return True
+
+
+def build_new_asset(unit_base, effects_yaml, note, unit_name, range_value):
+    path, name = skill_asset_path(unit_base)
+    guid = guid_for(name)
+    body = (
+        HEAD.replace('__SCRIPT__', SKILL_SCRIPT_GUID).replace('__NAME__', name)
+        + f"  skillName: {unit_name} (미수록 스킬 묶음)\n"
+        + f"  description: {note}\n"
+        + "  triggerType: 0\n"
+        + "  levels:\n"
+        + "  - cooldown: 0\n"
+        + "    triggerChance: 1.0\n"
+        + f"    range: {range_value}\n"
+        + "    effects:\n"
+        + effects_yaml
     )
+    open(path, 'w', encoding='utf-8').write(body)
+    write_meta(path, guid)
+    return guid
 
 
-def preview_matching():
-    """읽기 전용 — 원작 유닛과 우리 유닛의 매칭만 미리 보여준다. 아무 것도 안 고침."""
-    by_grade = load_unit_groups()
+def main():
+    by_unit, excluded_non_numeric = load_confirmed_groups()
     roster = load_roster()
 
-    total_units_matched = 0
-    total_skills_matched = 0
+    grade_groups = defaultdict(list)
+    for uid, rows in by_unit.items():
+        grade_groups[rows[0]['등급']].append((uid, rows))
+    for g in grade_groups:
+        grade_groups[g].sort(key=lambda item: unit_score(item[1]), reverse=True)
+
+    created, stacked = 0, 0
+    skipped_grades = []
+    range_conflicts_with_existing = []
 
     for gname, genum in GRADE_ENUM.items():
-        originals = by_grade.get(gname, [])
+        originals = grade_groups.get(gname, [])
         eligible = sorted(
             [u for u in roster if u['grade'] == genum and not u['claimed']],
             key=lambda u: -u['dps'],
         )
         n = min(len(originals), len(eligible))
         if n == 0:
+            if originals:
+                skipped_grades.append((gname, len(originals), len(eligible)))
             continue
 
-        print(f"=== {gname} (원작 유닛 {len(originals)} / 가용 {len(eligible)} / 배정 {n}) ===")
         for i in range(n):
-            o, u = originals[i], eligible[i]
-            print(f"  {u['base']:32s} <- {o['유닛ID']} {o['유닛이름'][:24]:24s} "
-                  f"(스킬 {o['미수록스킬수']}개, {o['Flat합계']})")
-            total_units_matched += 1
-            total_skills_matched += int(o['미수록스킬수'])
-        print()
+            uid, rows = originals[i]
+            unit = eligible[i]
+            unit_name = rows[0]['유닛이름']
 
-    print(f"미리보기 합계: 원작 유닛 {total_units_matched}종 매칭, 스킬 {total_skills_matched}건 "
-          f"(전체 96종/196건 중)")
+            range_value, range_note = resolve_range(rows)
+            effects_yaml = ''
+            for r in rows:
+                effects_yaml += render_effect(r, range_note is not None)
 
+            note = describe_unit(uid, unit_name, rows, range_note)
 
-def main(dry_run=True):
-    if not dry_run:
-        if DETAIL_CSV is None or ATTACK_TYPE_POLICY is None:
-            print("DETAIL_CSV·ATTACK_TYPE_POLICY가 아직 없다 — 실행을 멈춘다. 아무것도 안 고침.")
-            return
-        raise NotImplementedError('실제 배정 로직은 상세표가 온 뒤에 작성한다.')
+            path, _ = skill_asset_path(unit['base'])
+            if unit['has_skill']:
+                # range를 기존 레벨에 맞출 수 없으면(다른 range가 이미 있으면) 새 값으로
+                # 덮지 않는다 — 기존 효과가 그 range로 의미가 있을 수 있어서다. 대신
+                # range가 필요한 Enemies 효과가 있는데 기존 range가 0(SingleTarget 전용
+                # 상태)이면 새 range로 채운다. 기존 range가 이미 있고 이번 값과 다르면
+                # 조용히 덮지 않고 목록으로 남긴다.
+                existing_text = open(path, encoding='utf-8').read()
+                existing_range = re.search(r'\n    range: ([\d.]+)\n', existing_text)
+                existing_val = float(existing_range.group(1)) if existing_range else 0.0
+                if existing_val == 0.0 and range_value > 0:
+                    existing_text = re.sub(
+                        r'(\n    range: )[\d.]+\n', rf'\g<1>{range_value}\n', existing_text, count=1,
+                    )
+                    open(path, 'w', encoding='utf-8').write(existing_text)
+                elif range_value > 0 and existing_val != range_value:
+                    range_conflicts_with_existing.append((unit['base'], existing_val, range_value))
+                if append_to_existing(path, effects_yaml, note):
+                    stacked += 1
+            else:
+                guid = build_new_asset(unit['base'], effects_yaml, note, unit_name, range_value)
+                new_roster_text = re.sub(
+                    r'^  skill: \{fileID: 0\}$',
+                    f'  skill: {{fileID: 11400000, guid: {guid}, type: 2}}',
+                    unit['text'], count=1, flags=re.M,
+                )
+                open(unit['path'], 'w', encoding='utf-8').write(new_roster_text)
+                created += 1
 
-    preview_matching()
+    total_skills = sum(len(rows) for units in grade_groups.values() for _, rows in units)
+    print(f"기존 스킬에 효과 추가 {stacked}종, 새 SkillData 생성 {created}종 "
+          f"(합계 {stacked + created}종, 원작 스킬 {total_skills}개 중 매칭분)")
+    print(f"\n제외(range 그룹변수, 비수치) {len(excluded_non_numeric)}행:")
+    for r in excluded_non_numeric:
+        print(f"  {r['유닛ID']} {r['스킬트리거']}#{r['RRD순번']} — {r['range']}")
+    if skipped_grades:
+        print("\n등급 불일치(원작은 있는데 가용 유닛 없음):")
+        for gname, no, ne in skipped_grades:
+            print(f"  {gname}: 원작 {no}종 / 가용 {ne}종")
+    if range_conflicts_with_existing:
+        print("\n⚠️ 기존 range와 충돌(안 덮음, 새 Enemies 효과가 기존 range를 씀):")
+        for base, existing_val, new_val in range_conflicts_with_existing:
+            print(f"  {base}: 기존 {existing_val} vs 이번 {new_val}")
 
 
 if __name__ == '__main__':
-    main(dry_run=True)
+    main()

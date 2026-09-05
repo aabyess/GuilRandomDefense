@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_제한_최영민
   m_EditorClassIdentifier:
   skillName: A0GK !단신 최강
-  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 제한됨 패트릭 레드필드 붉은백작 - 제한됨(A0GK !단신 최강)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. | 2차 배정(트리거·더미 채널): 원작 제한됨 크로커다일 사막의 악어 - 제한됨(Trig_croTrans). 2026-09-05 타입 정정(ORIGINAL_DAMAGE_TYPING.csv, 60b9797): 원작 ATTACK_TYPE_NORMAL은 이름과 달리 Spells 행이고 DAMAGE_TYPE_UNIVERSAL은 방어력을 뚫는다(우리 AP 대응) — generate_unit_skill_damage_effects.py의 배정을 재계산해 유닛ID+계산식으로 표와 대조, attackType/damageType을 정정했다.
+  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 제한됨 패트릭 레드필드 붉은백작 - 제한됨(A0GK !단신 최강)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. | 2차 배정(트리거·더미 채널): 원작 제한됨 크로커다일 사막의 악어 - 제한됨(Trig_croTrans). 2026-09-05 타입 정정(ORIGINAL_DAMAGE_TYPING.csv, 60b9797): 원작 ATTACK_TYPE_NORMAL은 이름과 달리 Spells 행이고 DAMAGE_TYPE_UNIVERSAL은 방어력을 뚫는다(우리 AP 대응) — generate_unit_skill_damage_effects.py의 배정을 재계산해 유닛ID+계산식으로 표와 대조, attackType/damageType을 정정했다. 96유닛 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv): 원작 킹 삼재해:화재 - 제한됨(h0AI)의 미수록 스킬 4개를 통째로 이 유닛에 배정했다(개별 대응 아님, 등급 안 DPS 순위 매칭).   · King_skill_2#1((게이트 없음)): 계산식 850000.00   · King_skill_2_tr#1((게이트 없음)): 계산식 1275000.00   · King_skill_2_tr#2((게이트 없음)): 계산식 10000000.00   · King_skill_2_tr#3((게이트 없음)): 계산식 100000.00  hitCount>1인 항목은 "같은 식이 원작에서 N번 반복"이지 우리 스키마의 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 1.0
-    range: 0
+    range: 475.0
     effects:
     - kind: 0
       basis: 3
@@ -40,3 +40,47 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 1
+      attackType: 5
+      multiplier: 850000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 1
+      attackType: 5
+      multiplier: 1275000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 5
+      multiplier: 10000000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 5
+      multiplier: 100000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
