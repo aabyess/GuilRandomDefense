@@ -216,10 +216,11 @@ public static class MapGenerator
     // 높낮이는 실제 지형(메시)이 있어야 나오지, 판을 얹어서 될 일이 아니다.
     // 장식이라 콜라이더는 붙이지 않는다. 붙이면 NavMesh가 울퉁불퉁해져
     // 적이 순찰 경로를 못 따라가거나 유닛이 걸린다.
-    // 랜덤 위습 포탈이 흔함 대신 상붕카를 줄 확률. 원작과 같은 1%다.
+    // 랜덤 위습 포탈이 흔함 대신 해적선을 줄 확률. 원작과 같은 0.24%다(2026-09-06
+    // 정정 — 예전 1%는 "안흔함_상붕카"라는 잘못된 자리표에 딸려온 근거 없는 값이었다).
     // 모델을 눈으로 확인할 일이 있으면 잠깐 100으로 올렸다가 반드시 되돌릴 것 —
     // 100인 동안에는 이 포탈에서 흔함 유닛이 하나도 안 나온다.
-    const float RandomPortalBonusChance = 1f;
+    const float RandomShipBonusChance = 0.24f;
 
     const float TrackWidth = 12f;        // 흙길 폭
     const float TrackInset = 14f;        // 섬 가장자리에서 흙길 중심까지 (순찰 경로와 같은 값)
@@ -1586,14 +1587,20 @@ public static class MapGenerator
         float y = MapLayout.IslandTop + 0.25f;
 
         // 북: 랜덤 위습을 넣으면 흔함 유닛이 하나 나온다. 게임 시작 위습 5개가 여기로 들어간다.
-        // 1%로 상붕카(배) — 등급이 아니라 특정 유닛이라 bonusUnit 쪽을 쓴다.
+        // 0.24%로 해적선(h060) — 등급이 아니라 특정 유닛이라 bonusUnit 쪽을 쓴다.
+        // ⚠️ 2026-09-06 정정(리서치담당 원문 확인, 3912c33·bedb45d): 이 포탈의 보너스
+        // 분기는 원작에 이것 하나뿐이다(GetRandomPercentageBJ()<=0.24 → h060, else → 흔함
+        // 9종). "안흔함_상붕카"는 커뮤니티 문서로 만든 자리표였고 실제로는 h060(HP10·
+        // 공격510·사거리600·비행·[히든])과 전혀 다른 스탯(HP180·공격90·안흔함)이었다 —
+        // 확률도 1%는 실제(0.24%)의 약 4배 과다였다. 안흔함 상붕카는 이 포탈에서 아예
+        // 나오지 않는 게 원작이라 교체(추가 아님)한다.
         GameObject unitRandom = CreatePortalObject(parent, "Portal_유닛랜덤",
             new Vector3(centerX, y, centerZ + armZ), PortalDiameter);
         // 받는 건 랜덤유닛 위습(시작에 5개 받는 그것), 주는 건 흔함 유닛이다.
         // 둘을 같은 값으로 두면 위습이 거부당하거나 랜덤유닛 등급에서 뽑힌다.
         ConfigurePortal(unitRandom, UnitGrade.RandomUnit, null, table, spawner,
                         rewardGrade: UnitGrade.Common);
-        ApplyBonusUnit(unitRandom, "안흔함_상붕카", RandomPortalBonusChance);
+        ApplyBonusUnit(unitRandom, "해적선", RandomShipBonusChance);
 
         // 동: 금화 랜덤 — 원작 그대로 "15 + 라운드×12~35"(2026-09-04, ORD11.089.w3x 확인).
         // 예전엔 범위를 20 하나로 뭉개뒀는데, 그 폭이 원작 골드포탈의 도박성 그 자체다.
