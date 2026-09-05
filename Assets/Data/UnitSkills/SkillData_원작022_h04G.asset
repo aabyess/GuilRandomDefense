@@ -13,14 +13,54 @@ MonoBehaviour:
   m_Name: SkillData_원작022_h04G
   m_EditorClassIdentifier:
   skillName: A09E !차지 버스터
-  description: 06번① 순위배정 — 원작 #022 h04G 제트 해군 스승 "Z", upro: 해당없음(영웅 유닛 아님 — 등급이 unam 끝 「-불멸의/영원한」 표기에 있음), 능력 A09E(!차지 버스터). 스킬승급형: 레벨1→2로 '!차지 버스터'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). 2026-09-05 정정(TRAIT_GATE_BLOCKED4.md): 트리거를 최상위 if 블록 단위로 다시 잘라보니 A09E(차지 버스터)의 게이트는 확률이 아니라 「버프 B00M 보유」다(대상 최대체력×0.025는 A09E가 아니라 「대상이 버프 B06B 보유」 게이트의 별개 스킬이었다 — 이전에 검토했던 값). A09E 실값: 레벨×100,000+200,000(레벨1=300,000, 레벨2=400,000) + 고정 1,250,000. 버프 보유 축이 우리에 없어 못 채운다.
+  description: 06번① 순위배정 — 원작 #022 h04G 제트 해군 스승 "Z", upro: 해당없음(영웅 유닛 아님 — 등급이 unam 끝 「-불멸의/영원한」 표기에 있음), 능력 A09E(!차지 버스터). 스킬승급형: 레벨1→2로 '!차지 버스터'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). 2026-09-05 정정(TRAIT_GATE_BLOCKED4.md): 트리거를 최상위 if 블록 단위로 다시 잘라보니 A09E(차지 버스터)의 게이트는 확률이 아니라 「버프 B00M 보유」다(대상 최대체력×0.025는 A09E가 아니라 「대상이 버프 B06B 보유」 게이트의 별개 스킬이었다 — 이전에 검토했던 값). A09E 실값: 레벨×100,000+200,000(레벨1=300,000, 레벨2=400,000) + 고정 1,250,000. 버프 보유 축이 우리에 없어 못 채운다. 2026-09-05 재정정(리서치담당 3e55dc5 + PM 원문 대조): A09E의 게이트는 확률이 아니라 「버프 B00M 보유(0.6초 창, 평타 1/10로 열림)」다 — 창을 연 그 타는 안 맞고 그 뒤 0.6초 안의 평타가 발동해서, 우리 유닛(박은석)의 타격 간격으로 유효확률을 근사했다: Δ=2.2502초 > 0.6초라 floor(0.6/Δ)=0 — 기대값 0.1×(0.6/Δ)=0.0267로 대체. levels[0]=Flat 300,000(Enemies range 475)+Flat 1,250,000(SingleTarget), levels[1]=Flat 400,000(Enemies range 475)+Flat 1,250,000(SingleTarget) — 레벨×100,000+200,000 공식 그대로.
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1
-    range: 0
-    effects: []
+    triggerChance: 0.0267
+    range: 475
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 1
+      attackType: 1
+      multiplier: 300000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 1
+      multiplier: 1250000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
   - cooldown: 0
-    triggerChance: 1
-    range: 0
-    effects: []
+    triggerChance: 0.0267
+    range: 475
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 1
+      attackType: 1
+      multiplier: 400000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 1
+      multiplier: 1250000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0

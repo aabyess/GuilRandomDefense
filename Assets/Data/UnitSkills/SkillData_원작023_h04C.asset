@@ -13,28 +13,48 @@ MonoBehaviour:
   m_Name: SkillData_원작023_h04C
   m_EditorClassIdentifier:
   skillName: A0GY !특제대포환
-  description: 06번① 순위배정 — 원작 #023 h04C 몽키.D.거프 해군영웅 주먹의 거프, upro: 해당없음(영웅 유닛 아님 — 등급이 unam 끝 「-불멸의/영원한」 표기에 있음), 능력 A0GY(!특제대포환). 스킬승급형: 레벨1→2로 '!특제대포환'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). 2026-09-05 정정: 확률형이 아니라 게이지형(OnHitCount)이었다 — 추정(A0GY를 읽는 트리거가 Garp_Mana2뿐 — ORIGINAL_TRAIT_GATE_MAPPING.csv)
+  description: 06번① 순위배정 — 원작 #023 h04C 몽키.D.거프 해군영웅 주먹의 거프, upro: 해당없음(영웅 유닛 아님 — 등급이 unam 끝 「-불멸의/영원한」 표기에 있음), 능력 A0GY(!특제대포환). 스킬승급형: 레벨1→2로 '!특제대포환'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). 2026-09-05 정정: 확률형이 아니라 게이지형(OnHitCount)이었다 — 추정(A0GY를 읽는 트리거가 Garp_Mana2뿐 — ORIGINAL_TRAIT_GATE_MAPPING.csv) 2026-09-05 재정정(PM 원문 대조): Blo1=0.45(더미 A08W, 7%→e02M 경로)는 Trig_Garp_Attack 최상위 3블록 중 별개 스킬이었다 — 되돌린다. 진짜 A0GY 본체는 GARP_MANA2_STRUCTURE.md 확정값(리서치담당 4e726fa): levels[0]=TargetMaxHpPercent×0.05+6,000,000(Enemies range 650, HERO/NORMAL→AD/Hero, 원작은 1.17초 지연 후 한 방 — 지연은 시뮬에 무의미해 description만), levels[1]=같은 항 + TargetMaxHpPercent×0.06+7,250,000(Enemies range 650, 0.05초 뒤 두 번째, 지연 역시 description만). 원작은 세 식 모두 ×(1+0.03×시전자 버프개수)가 곱해지는데 그 축이 우리에 없어 ×1.0(버프 0개 기준)으로 생략했다 — 지어내지 않고 명시.
   triggerType: 3
   levels:
   - cooldown: 0
     triggerChance: 1
-    range: 0
+    range: 650
     hitCountThreshold: 160
     resetTo: 0
     effects:
     - kind: 0
-      basis: 0
-      target: 3
+      basis: 1
+      target: 2
       damageType: 1
-      attackType: 3
-      multiplier: 0.45
-      bonus: 0.0
+      attackType: 4
+      multiplier: 0.05
+      bonus: 6000000.0
       chance: 1
       hitCount: 1
       duration: 0
   - cooldown: 0
     triggerChance: 1
-    range: 0
-    hitCountThreshold: 0
+    range: 650
+    hitCountThreshold: 160
     resetTo: 0
-    effects: []
+    effects:
+    - kind: 0
+      basis: 1
+      target: 2
+      damageType: 1
+      attackType: 4
+      multiplier: 0.05
+      bonus: 6000000.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 1
+      target: 2
+      damageType: 1
+      attackType: 4
+      multiplier: 0.06
+      bonus: 7250000.0
+      chance: 1
+      hitCount: 1
+      duration: 0
