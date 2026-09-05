@@ -280,7 +280,17 @@ def _has_gauge_conflict(roster_text, new_uses_gauge=False, new_gauge_kind=None, 
     return False
 
 
-def _append_ability_rows_to_existing_file(path, uid, rows, attack_type):
+REASON_DIRECT = (
+    '다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다'
+    '(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시).'
+)
+REASON_ABSORB = (
+    '등급 정원이 좁아 순위 배정 자리가 없어서, 게이지가 충돌하지 않는 같은 등급 '
+    '로스터에 1:다로 흡수시켰다(어제 시키 배정과 같은 원칙, 2026-09-06 PM 지시).'
+)
+
+
+def _append_ability_rows_to_existing_file(path, uid, rows, attack_type, reason):
     """대상 로스터에 SkillData_원작능력_{base}.asset이 이미 있다 — 다른 uid가 먼저
     거기 배정됐거나(같은 파일명 규칙을 쓰는 2채널 fresh 파일 포함) 이번 배치의
     앞선 uid가 이미 만들었을 수 있다. 파일명이 uid가 아니라 로스터 base라서
@@ -293,16 +303,31 @@ def _append_ability_rows_to_existing_file(path, uid, rows, attack_type):
     bullets = ''.join('\n' + _row_bullet(r) for r in rows)
     first = rows[0]
     addition = (
-        f" | 1채널 우선 배정(원작 {first['등급']} {first['유닛이름']}({uid})의 능력 "
-        f"{len(rows)}개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 "
-        f"그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 "
-        f"먼저, 2026-09-06 PM 지시)."
+        f" | 1채널 추가 배정(원작 {first['등급']} {first['유닛이름']}({uid})의 능력 "
+        f"{len(rows)}개): {reason}"
         f"{bullets}"
     )
     effects_text = ''.join(_effect_block(r, attack_type) for r in rows)
     text = text.rstrip('\n') + '\n' + effects_text
     text = re.sub(r'^(  description: .*)$', lambda m: m.group(1) + addition, text, count=1, flags=re.M)
     open(path, 'w', encoding='utf-8').write(text)
+    return True
+
+
+def _attach_uid_to_unit(unit, uid, rows, reason):
+    """uid의 능력 rows를 이 로스터 유닛에 붙인다 — 이미 SkillData_원작능력_{base}.asset이
+    있으면 이어붙이고(뿌리 ⑱ 형제 회피), 없으면 새로 만들어 skills에 추가한다.
+    반환: True(새로 반영됨) / False(이미 반영돼 있었음, 재실행 멱등성)."""
+    base = unit['path'].split('/')[-1][:-len('.asset')]
+    path = f'{OUT_DIR}/SkillData_원작능력_{base}.asset'
+    if os.path.exists(path):
+        return _append_ability_rows_to_existing_file(path, uid, rows, unit['attack_type'], reason)
+
+    name, guid, body = build_skill_asset(unit['path'], uid, rows, unit['attack_type'])
+    write_asset(path, body, guid)
+    new_text = gen_gate_mod.add_to_skills_list(unit['text'], guid)
+    unit['text'] = new_text
+    open(unit['path'], 'w', encoding='utf-8').write(new_text)
     return True
 
 
@@ -322,8 +347,8 @@ def main():
     direct = 0
     ranked = 0
     skipped_grades = []
-    all_dropped = []
     gauge_conflicts = []
+    dropped_with_rows = []  # [(gname, genum, uid, rows), ...] — 3단계(흡수) 입력
 
     for gname, genum in GRADE_ENUM.items():
         ability_rows = by_grade.get(gname, [])
@@ -342,19 +367,8 @@ def main():
                 gauge_conflicts.append((uid, base))
                 continue
 
-            path = f'{OUT_DIR}/SkillData_원작능력_{base}.asset'
-            if os.path.exists(path):
-                if _append_ability_rows_to_existing_file(path, uid, rows, unit['attack_type']):
-                    direct += 1
-                del uid_groups[uid]
-                continue
-
-            name, guid, body = build_skill_asset(unit['path'], uid, rows, unit['attack_type'])
-            write_asset(path, body, guid)
-            new_text = gen_gate_mod.add_to_skills_list(unit['text'], guid)
-            unit['text'] = new_text
-            open(unit['path'], 'w', encoding='utf-8').write(new_text)
-            direct += 1
+            if _attach_uid_to_unit(unit, uid, rows, REASON_DIRECT):
+                direct += 1
             del uid_groups[uid]
 
         # 2단계 — 남은(어디에도 없는) uid만 claimed 안 된 슬롯에 등급 안 순위 배정.
@@ -364,7 +378,6 @@ def main():
         )
         matched, dropped = oum.match_uid_groups_to_roster(
             uid_groups, eligible, lambda rows: sum(ability_score(r) for r in rows))
-        all_dropped.extend((gname, uid) for uid in dropped)
         if not matched and not uid_groups:
             skipped_grades.append(gname)
 
@@ -381,14 +394,40 @@ def main():
             unit['claimed'] = True
             ranked += 1
 
+        for uid in dropped:
+            dropped_with_rows.append((gname, genum, uid, uid_groups[uid]))
+
+    # 3단계(PM 지시, 2026-09-06) — "등급 정원을 늘릴 일이 아니다, 1:다로 흡수하라."
+    # 어제 시키(마나125 충돌 회피, 게이지 종류가 다른 고도현에 배정)와 같은 원칙:
+    # 슬롯이 없으면 같은 등급 안에서 게이지가 충돌하지 않는 로스터에 그대로 얹는다
+    # (한 로스터가 원작 유닛을 여럿 받을 수 있다 — claimed 여부와 무관, 이미 뭔가를
+    # 갖고 있어도 게이지만 안 겹치면 OK). 후보 여럿이면 등급 안 DPS 순위(높은 쪽
+    # 우선)로 — 1채널은 게이지를 안 쓰니 실제로는 사실상 전부 후보가 된다.
+    absorbed = 0
+    still_dropped = []
+    dropped_with_rows.sort(key=lambda t: -sum(ability_score(r) for r in t[3]))
+    for gname, genum, uid, rows in dropped_with_rows:
+        candidates = sorted([u for u in roster if u['grade'] == genum], key=lambda u: -u['dps'])
+        placed = False
+        for unit in candidates:
+            if _has_gauge_conflict(unit['text']):
+                continue
+            if _attach_uid_to_unit(unit, uid, rows, REASON_ABSORB):
+                absorbed += 1
+            placed = True
+            break
+        if not placed:
+            still_dropped.append((gname, uid))
+
     print(f"CSV 원본 필터 132행 -> 중복 {dup_count}건 제거 -> 고유 {uniq_count}행")
-    print(f"1단계(이미 배정된 uid, skills에 얹음): {direct}개 / 2단계(신규 순위 배정): {ranked}개")
+    print(f"1단계(이미 배정된 uid, skills에 얹음): {direct}개 / 2단계(신규 순위 배정): {ranked}개 / "
+          f"3단계(1:다 흡수): {absorbed}개")
     if skipped_grades:
         print(f"배정 0건 등급(가용 유닛 또는 능력 없음): {', '.join(skipped_grades)}")
     if gauge_conflicts:
         print(f"게이지 충돌로 1단계에서 건너뛴 uid {len(gauge_conflicts)}개: {gauge_conflicts}")
-    if all_dropped:
-        print(f"등급 슬롯 부족으로 못 넣은 uid {len(all_dropped)}개: {all_dropped}")
+    if still_dropped:
+        print(f"흡수도 못한 uid(로스터 등급 자체가 원작보다 좁음) {len(still_dropped)}개: {still_dropped}")
 
 
 if __name__ == '__main__':
