@@ -16,17 +16,26 @@ public class RoundManager : MonoBehaviour
     // 원작은 보스 라운드가 훨씬 길다("제한시간내에 처치하세요" 메시지까지 뜬다) — 일반
     // 라운드의 2.7배가 아니라 보스 자체가 75.4초짜리다. WaveData.IsBossRound로 가른다.
     [SerializeField] float bossRoundDuration = 75.4f;
-    // ⚠️ 2026-09-06 정정: 예전엔 "신세계(61+)에서만 38.67로 짧아진다"였는데 원작은 그보다
-    // 일찍, **R40**에서 `Mode_TimerReal=2.00`이 걸려 40.67−2=38.67이 된다(리서치담당) —
-    // "길이가 짧아지는 시점(40)"과 "신세계 시작(61)"은 서로 다른 축이다. 이 필드는
-    // R40~R60 구간의 고정값이자, 아래 R61+ 감소 공식의 시작값(base)이다. 값 자체(38.67)는
-    // 안 바뀌었으니 씬의 기존 38.67과 그대로 맞는다.
-    [SerializeField] float newWorldRoundDuration = 38.67f;
-    // R40부터 위 newWorldRoundDuration(38.67) 고정 구간이 시작된다 — 새 필드라 씬엔
-    // 없다.
+    // ⚠️ 2026-09-06 재정정(리서치담당이 자기 해석을 뒤집음): R40에서 `Mode_TimerReal=2.00`이
+    // 걸려 40.67−2=38.67이 되는 것까진 맞다. R40~R60 구간의 고정값 — 이 아래 R61+와는
+    // 다른 값이라 별도 필드로 뗐다(이전 커밋은 이 둘을 같은 필드로 묶었었다, 정정).
+    // ⚠️ 새 필드명 — 씬엔 아직 없다. 옛 이름(newWorldRoundDuration)이었다면 씬에 굳어있는
+    // 38.67이 새 기본값을 덮었을 텐데(이번 정정에서 R61+ 값이 38.67→36.67로 바뀌어서
+    // 이제 그 옛 필드를 R61+에 그대로 못 쓴다), 이름을 새로 지어서 그 문제를 피했다.
+    [SerializeField] float shortRoundDuration = 38.67f;
+    // R40부터 위 shortRoundDuration(38.67) 고정 구간이 시작된다 — 새 필드라 씬엔 없다.
     [SerializeField] int shortRoundStartRound = 40;
-    // R61부터는 여기서 더 짧아진다(아래 ResolveRoundDuration 참고) — "신세계 진입" 시점
-    // 자체는 그대로 61이라 필드명·값 안 건드림.
+    // ⚠️ 2026-09-06 재정정: `Mode_TimerReal += 2.00`은 **맵 전체에서 한 곳뿐**이고 그
+    // 블록의 진입 조건이 `Level == 61`이다 — **61라운드 진입 시 딱 한 번**만 실행된다
+    // (리서치담당, 처음엔 "라운드마다 누적"으로 잘못 읽었다가 정정). 즉 R61~R75(15개)는
+    // **전부 36.67로 동일** — 라운드가 갈수록 더 짧아지는 게 아니다. 예전 필드
+    // (newWorldRoundDuration, 38.67 고정)는 이 값이 R40~60과 같다고 잘못 가정했던
+    // 흔적이라 새 필드로 갈아치웠다 — **이름을 바꾼 이유**: 씬에 옛 필드명으로 38.67이
+    // 굳어 있는데, 이름을 그대로 두고 기본값만 36.67로 고치면 씬의 38.67이 코드 기본값을
+    // 덮어써서 R61+가 계속 38.67로 돈다. 새 이름을 쓰면 씬엔 아직 없는 필드라 이 기본값
+    // (36.67)이 그대로 반영된다 — 씬을 직접 못 고치는 제약 안에서 값을 바꾸는 유일한
+    // 방법이다. 옛 필드명은 씬에 무해하게 남는다(아무도 안 읽음).
+    [SerializeField] float finalRoundDuration = 36.67f;
     [SerializeField] int newWorldStartRound = 61;
     // 원작 준비 시간 — 1라운드 시작 전 21초(첫 조합할 시간), 60라운드(신세계 진입) 전 40초.
     // 0으로 두면 예전처럼 대기 없이 바로 시작한다.
@@ -349,31 +358,23 @@ public class RoundManager : MonoBehaviour
         }
     }
 
-    // 라운드 길이 — 원작 레지스터를 직접 읽어 구간을 나눴다(리서치담당, 2026-09-06):
+    // 라운드 길이 — 원작 레지스터를 직접 읽어 구간을 나눴다(리서치담당, 2026-09-06,
+    // 재정정 포함):
     //   R1        = roundDuration(40.65, 원작 하드코딩)
     //   R2~R39    = normalRoundDuration(40.67)
-    //   R40~R60   = newWorldRoundDuration(38.67, 고정) — Mode_TimerReal=2.00
-    //   R61+      = newWorldRoundDuration에서 라운드마다 2초씩 더 짧아진다(신세계 경로
-    //               에서 Mode_TimerReal이 계속 누적된다) — 아래 하한 참고.
+    //   R40~R60   = shortRoundDuration(38.67, 고정) — Mode_TimerReal=2.00
+    //   R61~R75   = finalRoundDuration(36.67, 고정) — Mode_TimerReal +=2가 61라운드
+    //               진입 시 딱 한 번만 걸린다(맵 전체에서 그 블록 하나뿐, Level==61
+    //               조건). 라운드마다 누적되는 게 아니라 15개 전부 같은 값이다 —
+    //               처음엔 "라운드마다 2초씩 감소"로 잘못 읽었다가 정정했다(이전 커밋
+    //               2bc6d51의 감소 공식·하한 clamp를 이 커밋이 제거한다).
     // 신세계(≥newWorldStartRound)가 최우선이다 — 원작은 보스 여부와 무관하게 그 구간을
     // 이 규칙 하나로 통일한다(예전부터 있던 설계, 안 바뀜). 그 아래에서만 보스 라운드가
     // 끼어든다(bossRoundDuration).
     float ResolveRoundDuration(int roundNumber, WaveData waveData)
     {
         if (roundNumber >= newWorldStartRound)
-        {
-            // ⚠️ 2026-09-06: 감소가 어디서 멈추는지 원작 미확인이다(리서치담당) — 계속
-            // 줄이면 결국 음수가 된다. **이 하한(MinimumSpawnDuration)은 원작
-            // 값이 아니라 우리가 정한 것이다** — 신세계 첫 라운드(newWorldStartRound,
-            // 항상 일반 스폰이라 보스 라운드의 count=1짜리 스폰과 안 섞인다)의 실제
-            // spawnList로 "35마리를 다 뿌리는 데 걸리는 최소 시간"을 구해서 쓴다. 상수로
-            // 안 박은 이유: Wave 에셋의 spawnInterval이 바뀌면 이 하한도 같이 따라가야
-            // 조용히 안 어긋난다.
-            int roundsIntoNewWorld = roundNumber - (newWorldStartRound - 1);
-            float shrunk = newWorldRoundDuration - 2f * roundsIntoNewWorld;
-            float floor = MinimumSpawnDuration(GetWaveData(newWorldStartRound));
-            return Mathf.Max(floor, shrunk);
-        }
+            return finalRoundDuration;
 
         if (waveData != null && waveData.IsBossRound)
             return bossRoundDuration;
@@ -382,24 +383,9 @@ public class RoundManager : MonoBehaviour
             return roundDuration;
 
         if (roundNumber >= shortRoundStartRound)
-            return newWorldRoundDuration;
+            return shortRoundDuration;
 
         return normalRoundDuration;
-    }
-
-    // 그 웨이브가 spawnList를 실제로 다 뿌리는 데 필요한 최소 시간 — WaveSpawner.SpawnRoutine과
-    // 같은 계산이다(마지막 스폰까지 걸리는 간격 합, count-1번의 대기).
-    float MinimumSpawnDuration(WaveData waveData)
-    {
-        if (waveData == null || waveData.spawnList == null) return 0f;
-
-        float longest = 0f;
-        foreach (WaveSpawnEntry entry in waveData.spawnList)
-        {
-            float duration = Mathf.Max(0, entry.count - 1) * entry.spawnInterval;
-            if (duration > longest) longest = duration;
-        }
-        return longest;
     }
 
     WaveData GetWaveData(int roundNumber)
