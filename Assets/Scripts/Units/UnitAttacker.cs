@@ -365,8 +365,26 @@ public class UnitAttacker : MonoBehaviour
         }
     }
 
+    // 데이터 사고 방지 — target이 Enemies/Allies인데 range<=0이면 거리 검사 자체가 빠져
+    // 맵 전체(EnemyDummy.Active/AlliesOf 전원)를 때린다(check_required_fields.py #14가 같은
+    // 위험을 데이터 단계에서 잡는다). 핸콕에서 실제로 760을 0으로 비워둔 채 커밋할 뻔했다
+    // (2026-09-05, PM 지시로 런타임에도 가드 추가). 콘솔이 도배되지 않게 한 번만 찍는다.
+    static bool loggedUnboundedRange;
+
     void ApplySkillEffect(SkillEffect effect, float range, EnemyDummy primaryTarget)
     {
+        if (range <= 0f &&
+            (effect.target == SkillTargetKind.Enemies || effect.target == SkillTargetKind.Allies))
+        {
+            if (!loggedUnboundedRange)
+            {
+                loggedUnboundedRange = true;
+                Debug.LogWarning($"{name}: {effect.target} 효과의 range가 {range}(<=0)라 시전을 " +
+                                 "건너뛴다 — 데이터 확인 필요(SkillLevel.range).", this);
+            }
+            return;
+        }
+
         switch (effect.target)
         {
             case SkillTargetKind.Enemies:

@@ -360,6 +360,50 @@ results.append((
     flat_with_bonus_assets,
 ))
 
+# ── 14. SkillEffect: target이 Enemies/Allies인데 range<=0 — 무제한 범위 사고 ─
+# ⚠️ range는 SkillLevel(스킬 레벨) 필드고 target은 그 안 SkillEffect(효과) 필드라 계층이
+# 다르다 — 레벨 하나의 range<=0인데 그 레벨의 어느 effect라도 target이 Enemies(2)/Allies(1)면
+# 위험하다. UnitAttacker.ApplySkillEffect가 Enemies 분기에서 `range > 0f`일 때만 거리를
+# 재고, range<=0이면 그 조건 자체가 거짓이 되어 **거리 검사를 건너뛰고 EnemyDummy.Active
+# 전체를 때린다**(맵 전체 범위) — Allies도 UnitIdentity.AlliesOf(identity, range)로 같은
+# 함정을 공유한다. 구현담당1이 핸콕에서 실제로 760을 0으로 비워둔 채 커밋할 뻔했다
+# (2026-09-05, PM). SingleTarget은 range<=0이면 FindClosestEnemyWithin이 그냥 "못 찾음"으로
+# 안전하게 실패하고(무제한이 아니라 무효), Self는 range를 아예 안 본다 — 그래서 이 둘은
+# 대상이 아니다(PM 지시).
+#
+# ⚠️ target 필드가 아예 없는 effect는 SkillEffect.target의 C# 기본값(Enemies)으로 읽힌다 —
+# 지금 실제 자산 164개 전부 target을 명시하지만(2026-09-05 확인), 이 검사는 미래의 누락도
+# 같은 위험(기본값이 Enemies)으로 잡는다.
+def unbounded_range_danger(text):
+    for level_body in re.split(r"\n  - cooldown: ", text)[1:]:
+        range_match = re.search(r"\n {4}range: (-?[\d.]+)", level_body)
+        level_range = float(range_match.group(1)) if range_match else 0.0
+        if level_range > 0.0:
+            continue
+
+        effects_match = re.search(r"    effects:(.*?)(?=\n  - cooldown: |\Z)", level_body, re.S)
+        effects_body = effects_match.group(1) if effects_match else ""
+
+        for effect_body in re.split(r"\n    - kind: ", effects_body)[1:]:
+            target_match = re.search(r"\n {6}target: (\d+)", effect_body)
+            target = target_match.group(1) if target_match else "2"  # 없으면 기본값 Enemies(2)
+            if target in ("1", "2"):  # Allies, Enemies
+                return True
+    return False
+
+
+dangerous_range_assets = [p for p in skill_assets if unbounded_range_danger(read(p))]
+
+results.append((
+    "SkillEffect: target=Enemies/Allies인데 range<=0 (맵 전체 무제한 범위)",
+    ["range", "target"],
+    "값 0(또는 미기재) — UnitAttacker.ApplySkillEffect가 Enemies/Allies 분기에서 range<=0이면 "
+    "거리 검사 자체를 건너뛰어 EnemyDummy.Active/AlliesOf 전체를 때린다. SingleTarget·Self는 "
+    "range<=0이어도 안전하게 실패할 뿐이라 대상이 아니다.",
+    len(skill_assets),
+    dangerous_range_assets,
+))
+
 # ── 리포트 ───────────────────────────────────────────────────────────────
 any_problem = False
 for label, fields, danger, total, missing in results:
