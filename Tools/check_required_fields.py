@@ -235,6 +235,27 @@ results.append((
     dangerous_onhitcount_assets,
 ))
 
+# ── 10. SkillData: OnHitCount인데 cooldown>0 — 경고(오류 아님) ─────────────
+# ⚠️ 절대쿨(SkillLevel.cooldown 주석 참고, 2026-09-05 신설)은 지금 OnHitChance
+# 경로에서만 읽는다 — UnitAttacker.TryCastOnHitSkill의 OnHitCount 분기는 이 값을
+# 아예 안 본다. 원작에 게이지(OnHitCount)+절대쿨이 동시에 걸린 사례가 있는지
+# 리서치담당이 아직 전수 확인 중이라(PM 지시), 지금 값이 있어도 조용히 무시될
+# 뿐 위험하게 켜지는 게 아니다 — 그래서 #8/#9처럼 오류(❌)로 잡지 않고 경고로만
+# 남긴다. 동시 사례가 확인되면 그때 실제 처리를 만들 것.
+def onhitcount_with_cooldown(text):
+    if not re.search(r"^  triggerType: 3\b", text, re.MULTILINE):
+        return False  # OnHitCount가 아니면 해당 없음.
+
+    for level_body in re.split(r"\n  - cooldown: ", text)[1:]:
+        cooldown_match = re.match(r"([\d.]+)", level_body)
+        cooldown = float(cooldown_match.group(1)) if cooldown_match else 0.0
+        if cooldown > 0.0:
+            return True
+    return False
+
+
+onhitcount_cooldown_warnings = [p for p in skill_assets if onhitcount_with_cooldown(read(p))]
+
 # ── 리포트 ───────────────────────────────────────────────────────────────
 any_problem = False
 for label, fields, danger, total, missing in results:
@@ -244,6 +265,15 @@ for label, fields, danger, total, missing in results:
     for path in missing:
         print("  ❌", path.relative_to(ROOT))
         any_problem = True
+    print()
+
+# 경고는 exit code에 안 반영한다 — 지금은 무해하다고 확정됐기 때문이다(위 주석 참고).
+if onhitcount_cooldown_warnings:
+    print(f"[경고] SkillData: OnHitCount인데 cooldown>0인 레벨이 있음 (오류 아님, "
+          f"{len(onhitcount_cooldown_warnings)}개)")
+    print("  ⚠️  절대쿨은 지금 OnHitChance 경로에서만 읽는다 — OnHitCount는 이 값을 무시한다.")
+    for path in onhitcount_cooldown_warnings:
+        print("  ⚠️ ", path.relative_to(ROOT))
     print()
 
 sys.exit(1 if any_problem else 0)

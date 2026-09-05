@@ -174,6 +174,13 @@ public class UnitAttacker : MonoBehaviour
     int onHitCountCounter;
     bool onHitCountInitialized;
 
+    // OnHitChance 절대쿨(SkillLevel.cooldown 주석 참고) 전용 — 시전에 성공한 시각 +
+    // cooldown을 저장해두고 그 시각이 지났는지만 비교한다. skillCooldownTimer(매 프레임
+    // Update에서 깎는 카운트다운)를 재사용하지 않는다 — TryCastOnHitSkill은 평타가 맞을
+    // 때만 불려서(매 프레임이 아니다) 카운트다운 방식을 못 쓰고, SupportShop.
+    // GetCooldownUntil/StartCooldown과 같은 절대시각 방식을 쓴다.
+    float onHitChanceLockedUntil;
+
     // 06번① 능력교체형 트레잇(UnitTraitData.replacementSkill)이 걸려 있으면 원래
     // UnitData.skill 대신 그걸 통째로 쓴다 — 원작이 레벨을 올리는 게 아니라 능력 자체를
     // 갈아끼우는 26분기 중 8개라(UnitRemoveAbilityBJ+UnitAddAbilityBJ), 레벨 인덱스로는
@@ -246,7 +253,14 @@ public class UnitAttacker : MonoBehaviour
 
         if (skill.triggerType == SkillTriggerType.OnHitChance)
         {
+            // 절대쿨(SkillLevel.cooldown 주석 참고, PM 지시 2026-09-05) — 원작은 버프 검사가
+            // 바깥 if라서, 잠긴 동안은 확률 판정까지 안 간다. cooldown<=0이면 이 줄이 항상
+            // 통과해 기존 동작과 완전히 같다(회귀 없음).
+            if (level.cooldown > 0f && Time.time < onHitChanceLockedUntil) return;
+
             if (Random.value >= level.triggerChance) return;
+
+            if (level.cooldown > 0f) onHitChanceLockedUntil = Time.time + level.cooldown;
         }
         else
         {

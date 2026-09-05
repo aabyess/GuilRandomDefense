@@ -117,7 +117,12 @@ public class SkillEffect
 [System.Serializable]
 public class SkillLevel
 {
-    // CooldownAutoCast 전용. 다른 발동방식이면 안 쓴다.
+    // CooldownAutoCast 전용. OnHitChance에선 절대쿨(발동 후 잠금 초) — 원작 AUfa 기반
+    // 「N절대쿨」 버프 21종(2026-09-05, 리서치담당)이 그 자리다: 평타가 맞을 때마다 시전을
+    // 시도하되(triggerChance는 그대로 굴러간다) 시전에 성공하면 이 값만큼 다시 못 쏜다.
+    // 0이면 잠금 없음(기존 OnHitChance 동작 그대로). OnHitCount에선 아직 쓰지 않는다
+    // (게이지+절대쿨 동시 사례가 있는지 리서치담당 확인 전 — check_required_fields.py #10
+    // 참고).
     public float cooldown;
     // OnHitChance 전용 발동확률(0~1). 다른 발동방식이면 안 쓴다.
     [Range(0f, 1f)] public float triggerChance = 1f;
