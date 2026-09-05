@@ -8,6 +8,9 @@ using UnityEngine;
 // "무엇을 담을 수 있는가"만 맞췄다 — 수치는 지어내지 않았다.
 public enum ChatUnlockCategory
 {
+    // ⚠️ 이름은 트리거 이름(Trig_Eternal_*)일 뿐, 실제 등급은 "초월함"이다(전설이 아니다 —
+    // upro에 "- 초월함"으로 적혀 있음, 사장님 지적 2026-09-05). "전설 유닛 코드" 같은 UI
+    // 문구를 여기서 다시 만들지 말 것 — 등급 이름을 UI에 직접 박으면 계열이 늘 때 또 틀린다.
     // 목재0, 47개가 공유하는 1회 게이트(ChatUnlockManager.HasClaimedShared)를 쓴다.
     Eternal,
     // 목재5 + 세이브 누적 조건(requiredSaveCount) + 같은 공유 게이트.
@@ -34,8 +37,9 @@ public class ChatUnlockData : ScriptableObject
     // Eternal=0, Forever=5, Immortal=10, Nika=5. 골드 비용은 세 계열 다 0(차감 호출 자체가 없음).
     public int woodCost;
 
-    // Forever 전용 — 원작 "게임 클리어 누적 횟수"(CombineRecipe.requiredSaveCount와 같은 개념·
-    // 같은 미구현 상태). 0이면 조건 없음.
+    // Forever 전용 — 원작 "게임 클리어 누적 횟수"(CombineRecipe.requiredSaveCount와 같은 개념,
+    // PersistentSave.Data.cumulativeClearCount로 검사한다 — ChatUnlockManager.CanUnlock 참고).
+    // 0이면 조건 없음.
     public UnitData result;
     public int requiredSaveCount;
 }
