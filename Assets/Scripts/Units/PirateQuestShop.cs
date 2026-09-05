@@ -115,20 +115,54 @@ public class PirateQuestShop : MonoBehaviour, ILaneShop
         return $"{quest.questName}\n품절 — {remain:F0}초 뒤 재입고";
     }
 
-    // 원작 순서 그대로: 확인을 다 마친 뒤에만 차감한다(CanBuy 통과 = 재고·라운드·골드·중복진행
-    // 전부 확인됨) — 실패 경로가 골드나 재고를 먹으면 안 된다.
+    // 원작 순서 그대로: 확인을 다 마친 뒤에만 차감한다 — 실패 경로가 골드나 재고를 먹으면
+    // 안 된다. ⚠️ 실패마다 왜 안 되는지 PlayerNotification으로 띄운다(PM 지시, 2026-09-05) —
+    // 예전엔 조용히 false만 돌려줘서 "눌렀는데 아무 일도 안 일어남"으로 보였다. 미니보스
+    // 데이터 결손만은 예외 — 플레이어가 봐도 고칠 수 없는 배선 오류라 알림 없이 막는다.
     public bool TryUse(int index, LaneShopTarget target)
     {
         if (index < 0 || index >= quests.Count) return false;
-        if (!CanBuy(index)) return false;
 
         PirateQuestData quest = quests[index];
-        PlayerContext context = OwnerContext;
+        if (quest == null) return false;
+        if (quest.miniboss == null || quest.miniboss.prefab == null) return false;
 
-        if (!context.GoldWallet.TrySpend(quest.goldCost)) return false; // CanBuy 이후 상태가 바뀌었을 수 있어 다시 확인
+        PirateQuestManager manager = PirateQuestManager.Instance;
+        if (manager == null) return false;
+
+        if (manager.IsActive(quest, owner.OwnerId))
+        {
+            PlayerNotification.Show(owner.OwnerId, $"{quest.questName}: 이미 진행 중입니다.");
+            return false;
+        }
+
+        int round = manager.CurrentRound;
+        bool inRange = (quest.minRound <= 0 || round >= quest.minRound)
+                     && (quest.maxRound <= 0 || round <= quest.maxRound);
+        if (!inRange)
+        {
+            PlayerNotification.Show(owner.OwnerId,
+                $"{quest.questName}: 지금은 열리지 않습니다 ({quest.minRound}~{quest.maxRound}라운드).");
+            return false;
+        }
+
+        if (slotState[index].stock <= 0)
+        {
+            PlayerNotification.Show(owner.OwnerId, $"{quest.questName}: 재고가 없습니다.");
+            return false;
+        }
+
+        PlayerContext context = OwnerContext;
+        if (context == null || context.GoldWallet == null) return false;
+
+        if (!context.GoldWallet.TrySpend(quest.goldCost))
+        {
+            PlayerNotification.Show(owner.OwnerId, "골드가 부족합니다!");
+            return false;
+        }
 
         slotState[index].stock--;
-        PirateQuestManager.Instance.StartQuest(quest, owner.OwnerId);
+        manager.StartQuest(quest, owner.OwnerId);
         return true;
     }
 

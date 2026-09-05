@@ -46,17 +46,22 @@ public class ResourcePortal : MonoBehaviour
         if (!other.TryGetComponent(out Wisp wisp)) return;
         if (wisp.IsConsumed || wisp.Data == null) return;
 
+        int ownerId = wisp.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
+
+        // ⚠️ 플레이어가 보고 행동을 바꿀 수 있는 실패(안 받는 위습·도박 실패)는
+        // PlayerNotification으로 띄운다 — 그전엔 Debug.Log뿐이라 콘솔에만 남고 화면엔
+        // "넣었는데 아무 일도 안 일어남"으로 보였다(PM 지시, 2026-09-05).
         if (!Accepts(wisp.Data.targetGrade))
         {
             if (loggedRejectionFor.Add(wisp))
-                Debug.Log($"{name}: 이 포탈이 받지 않는 위습입니다 ({wisp.Data.wispName}).");
+                PlayerNotification.Show(ownerId, $"{wisp.Data.wispName}은(는) 이 포탈에 쓸 수 없습니다.");
             return;
         }
 
-        int ownerId = wisp.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
         PlayerContext context = PlayerContext.Get(ownerId);
         if (context == null)
         {
+            // 플레이어를 못 찾는 건 배선 오류지 플레이어의 선택이 아니다 — Debug.Log에 남긴다.
             Debug.LogWarning($"{name}: 플레이어 {ownerId}를 찾지 못해 지급하지 못했습니다.", this);
             return;
         }
@@ -67,7 +72,13 @@ public class ResourcePortal : MonoBehaviour
 
         if (Random.Range(0f, 100f) >= successChancePercent)
         {
-            Debug.Log($"{name}: 지급에 실패했습니다 (확률 {successChancePercent}%).");
+            // 원작 문구 그대로("목재도박에 실패하였습니다") — 목재 도박(66%)만 실제로
+            // 이 분기를 탄다(골드·마나는 100%). 다른 자원이 나중에 확률부로 바뀌어도
+            // 말이 되게 일반형을 폴백으로 둔다.
+            string failMessage = payout == Payout.Resource && resourceType == ResourceType.Wood
+                ? "목재도박에 실패하였습니다."
+                : $"{(payout == Payout.Gold ? "골드" : resourceType.ToString())} 획득에 실패했습니다.";
+            PlayerNotification.Show(ownerId, failMessage);
             return;
         }
 

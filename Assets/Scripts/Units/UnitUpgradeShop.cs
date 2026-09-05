@@ -118,7 +118,13 @@ public class UnitUpgradeShop : MonoBehaviour, ILaneShop
         int level = context.UnitUpgrades.Level(track);
         if (track.maxLevel > 0 && level >= track.maxLevel) return false;
 
-        if (!context.GoldWallet.TrySpend(track.CostForLevel(level))) return false;
+        // ⚠️ 나머지 실패(연구소 준비 중·대응 없는 트랙·최대 레벨)는 GetSlotTooltip이 이미
+        // 문구로 설명한다 — 골드 부족만 툴팁 없이 조용히 막혀 있었다(PM 지시, 2026-09-05).
+        if (!context.GoldWallet.TrySpend(track.CostForLevel(level)))
+        {
+            PlayerNotification.Show(owner.OwnerId, "골드가 부족합니다!");
+            return false;
+        }
 
         context.UnitUpgrades.LevelUp(track);
         return true;
