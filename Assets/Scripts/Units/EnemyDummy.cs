@@ -64,6 +64,12 @@ public class EnemyDummy : MonoBehaviour
     int freezeCount;
     WaypointMover mover;
 
+    // ⚠️ 2026-09-06 추가(신세계 사이드보스 §⑥) — 스턴게이지를 미는 데 "지금 스턴이 걸려
+    // 있는가"를 밖에서 물어야 한다. 원작은 특정 버프(B07H) 하나를 보지만, 우리는 스턴
+    // 소스가 여럿이라도(AddFreeze/RemoveFreeze가 겹침 횟수로 이미 안전하게 합쳐준다)
+    // freezeCount>0이면 뜻이 같다 — "지금 이 유닛은 스턴 상태다."
+    public bool IsStunned => freezeCount > 0;
+
     public void AddFreeze()
     {
         freezeCount++;
