@@ -306,24 +306,27 @@ public class UnitAttacker : MonoBehaviour
         float amount = ResolveSkillEffectValue(effect, target);
         if (amount <= 0f) return;
 
+        // ⚠️ 평타(DamageTypeOf/AttackTypeOf)가 아니라 이 효과 자신의 damageType/attackType을
+        // 쓴다 — 평타는 항상 물리라 스킬만 마법을 낼 수 있다(SkillEffect 필드 주석 참고).
+        // 캐스터의 평타 속성을 그대로 물려주면 물리 유닛의 스킬이 전부 물리로만 나가버린다.
         int hits = Mathf.Max(1, effect.hitCount);
         if (hits <= 1)
         {
-            target.TakeDamage(amount, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1);
+            target.TakeDamage(amount, effect.damageType, effect.attackType, owner != null ? owner.OwnerId : -1);
             return;
         }
 
         // SupportSkillData.waveCount/duration과 같은 관례 — duration에 걸쳐 나눠 때린다.
-        StartCoroutine(SkillMultiHitRoutine(target, amount, hits, effect.duration));
+        StartCoroutine(SkillMultiHitRoutine(target, amount, effect.damageType, effect.attackType, hits, effect.duration));
     }
 
-    IEnumerator SkillMultiHitRoutine(EnemyDummy target, float amountPerHit, int hits, float duration)
+    IEnumerator SkillMultiHitRoutine(EnemyDummy target, float amountPerHit, DamageType damageType, AttackType attackType, int hits, float duration)
     {
         float interval = duration > 0f ? duration / hits : 0f;
         for (int i = 0; i < hits; i++)
         {
             if (target != null)
-                target.TakeDamage(amountPerHit, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1);
+                target.TakeDamage(amountPerHit, damageType, attackType, owner != null ? owner.OwnerId : -1);
             if (i < hits - 1 && interval > 0f) yield return new WaitForSeconds(interval);
         }
     }
@@ -352,7 +355,12 @@ public class UnitAttacker : MonoBehaviour
         ? identity.Data.damageType
         : DamageType.AD;
 
-    // 이 유닛의 평타 공격 타입. 아직 239종 어디에도 안 붙어서 전부 Unassigned다(배율 1.0).
+    // 이 유닛의 평타 공격 타입. ⚠️ "239종 어디에도 안 붙어서 전부 Unassigned"는 낡은
+    // 서술이다(2026-09-05 확인, UnitData.cs의 attackType 필드 주석과 같은 정정) —
+    // damageType=AP인 40종엔 이미 Magic이 붙어 있다. 물리(AD) 199종의 세부 타입
+    // (normal/pierce/siege/hero/chaos) 배정만 아직 안 된 것뿐이다. 원작 구조 확정
+    // (2026-09-05, B안)으로 **평타는 이제 항상 물리다** — damageType=AP인 40종의 Magic도
+    // 원작 근거가 없어서(원작 플레이어 유닛 평타는 마법 0건) 배정 단계에서 정리될 값이다.
     AttackType AttackTypeOf => identity != null && identity.Data != null
         ? identity.Data.attackType
         : AttackType.Unassigned;

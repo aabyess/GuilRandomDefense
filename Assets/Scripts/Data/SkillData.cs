@@ -74,6 +74,21 @@ public class SkillEffect
     public SkillEffectBasis basis = SkillEffectBasis.Flat;
     public SkillTargetKind target = SkillTargetKind.Enemies;
 
+    // 이 피해가 물리(AD)인지 마법(AP)인지 + 상성표 어느 행을 타는지. 원작 구조 확정(2026-09-05,
+    // PM/사장님 B안): **평타는 항상 물리다(원작 플레이어 유닛 431종 평타 공격타입 전수조사 —
+    // normal 127·siege 89·hero 28·pierce 25·chaos 1·magic 0). 마법은 오직 스킬(트리거) 피해에만
+    // 있다**(715건 중 62건, 9%). 즉 우리 유닛이 마법 피해를 낼 수 있는 유일한 자리가 여기다 —
+    // `UnitData.damageType`(평타용)은 이제 못 건드린다. 기본값은 AD/Unassigned — 스킬도 대개는
+    // 물리이고, 마법 스킬만 여기서 AP로 명시한다.
+    //
+    // ⚠️ `DamageTable.RowMatches(damageType, attackType)`가 둘의 짝을 검사한다(AP엔 Magic/Spells
+    // 행, 물리엔 Normal/Pierce/Siege/Hero/Chaos 행) — 짝이 안 맞으면 옛 버그(마법이 물리 상성을
+    // 타던 것)가 돌아온다. `UnitAttacker.DealSkillDamage`가 이 값을 그대로 `EnemyDummy.TakeDamage`에
+    // 넘겨서 그 검사를 자동으로 탄다(별도 검사 코드를 여기 새로 안 만들었다 — MitigatedDamage가
+    // 이미 하는 일을 중복할 이유가 없다).
+    public DamageType damageType = DamageType.AD;
+    public AttackType attackType = AttackType.Unassigned;
+
     // Flat이면 고정값 그 자체. 비례 basis면 배율(원작 "atk×2.5+32500"의 2.5).
     public float multiplier;
     // 비례식의 +상수항(위 예의 32500). Flat이거나 상수항이 없으면 0.
