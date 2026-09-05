@@ -94,3 +94,78 @@ PM이 막힌 지점(「한 부모 밑에 게이트가 다른 자식이 여럿」
   **주석이나 문자열 안의 키워드에 속을 수 있는 방식**이다. 확정 46행도 그 한계 위에 있다 `[미확인]`.
 - **안 본 것**: ④의 「Stage==N」 8행에 대한 **호출자 추적**. 시간이 없었다 — **다음 사람의 첫 작업으로 남긴다.**
 - **안 본 것**: 추정 6행의 소환 순서 판별.
+
+---
+
+# 추가 (2026-09-06, 리셋 후) — 「Stage == N」 6행 해소 + **어젯밤 표의 오염 1건 정정**
+
+## 🔴 먼저 — 어젯밤 내 도구가 조건 하나를 오염시켰다 (뿌리 ⑲ 자가적용)
+
+조건 스택을 쌓을 때 `if`/`then`을 **단어 경계 없이** 잘랐다.
+그래서 **`SetUnitL·if·eBJ` 안의 `if`가 `if`로 잡혔다.**
+
+```
+옛(오염): 시전자체력==75.00 AND eBJ(GetAttacker(),1.00) set udg_Hero_Sengoku[0]=... 
+새(정정): GetRandomInt(1,10)==6
+```
+
+원문으로 손 확인했다 — 센고쿠 `e02B` 더미는 **체력 75 블록과 무관한 별개 `if` 블록**에서 소환된다:
+
+```jass
+Trig_Sengoku_Attack_Actions:
+    if 시전자체력 == 75.00 then … ConditionalTriggerExecute(gg_trg_Seongoku_Skill_4) else … endif
+    if GetRandomInt(1,10)==6 then
+        CreateNUnitsAtLoc(1,'e02B', …)        ← 여기다
+```
+
+**52행 전수를 다시 돌려 대조했고 바뀐 행은 이 1행뿐이다.** 나머지 51행은 그대로다.
+`\bif\b`로 고쳤다. **조건 문자열에 `set `·`call `이 섞여 있으면 오염 신호**라는 자가검증도 넣었다.
+
+## ① 「Stage == N」의 정체 — **그 트리거가 곧 평타 트리거였다**
+
+호출자를 찾으니 **6개 중 5개가 `TriggerExecute` 호출자 0건**이었다. 뿌리 ⑫대로 「죽은 경로」로 볼 뻔했는데, **아니었다** — `InitTrig`를 보니 전부 이 꼴이다:
+
+```jass
+InitTrig_Unique34:
+    set gg_trg_Unique34 = CreateTrigger()
+    call s__TrigVariables_RegisterTimerPutsTriggerToSleep(gg_trg_Unique34)
+    call TriggerAddAction(gg_trg_Unique34, function Trig_Unique34_Actions)
+```
+
+**이벤트 등록이 없다.** 대신 `udg_HashAttack`에 **유닛ID로 등록**돼 있다:
+
+| 트리거 | 등록된 유닛 |
+|---|---|
+| `Trig_Unique34` | `h02E` 죠즈 |
+| `Trig_Unique33` | `h02F` 조로 |
+| `Trig_Unique29` | `h02M` 베이비 5 |
+| `Trig_Unique32` | `h01X` 루피 기어서드 |
+| `Trig_Legend11` | `h031` 후지토라 |
+| `Trig_Kaido_Attack` | `h07M` 카이도 |
+
+→ **이 트리거들 자체가 그 유닛의 평타 트리거**다. `TriggerExecute(LoadTriggerHandle(udg_HashAttack, GetUnitTypeId(GetAttacker()), 0))`로 **평타마다 실행**된다.
+**「호출자 0건 = 죽은 경로」가 아니었다** — 호출 방식이 해시테이블이라 이름으로 안 잡혔을 뿐이다.
+
+**따라서 진짜 게이트는 stage 0의 진입 조건과, 거기서 그 stage까지 가는 분기다.**
+
+## ② 6행의 진입 게이트
+
+| 더미 | 유닛 | 피해 | 진입 게이트 | 확신도 |
+|---|---|---|---|---|
+| `e090` | 죠즈 `h02E` | 10,000 | **1/10** — stage0 `integerA=GetRandomInt(1,10)`, `==1`이면 진입. 0→1→2→(>2,<8)→8 사슬은 무조건 | 확정 |
+| `e0BT` | 조로 `h02F` | 50,000 | **1/15** — stage0 `GetRandomInt(1,15)`, `integerA==3` 분기가 stage10으로 보낸다 | 확정 |
+| `e0EN` | 베이비 5 `h02M` | 1 | **1/6** — stage0 `GetRandomInt(1,6)`, `==5`면 진입 | 확정 |
+| `e0BR` | 루피 기어서드 `h01X` | 10,000 | **1/7** — stage0 `GetRandomInt(1,7)==5` → `SleepForStageAdd(+2)` → stage2 | 추정(stage1 경로는 별도 사슬, 미확인) |
+| `e00B` | 후지토라 `h031` | 192,500 | **1/7**(`Legend11`) 또는 `NOT(시전자마나==140)`(`Huji01`) | 추정(소환 지점 둘) |
+| `e0H5` | 카이도 `h07M` | 70,000 | **평타 1회(진입 게이트 없음)** — stage4까지의 분기는 미확인 | 추정 |
+
+**표에 `진입게이트`·`진입확신도` 두 칸을 새로 넣었다.** 나머지 46행은 소환 블록의 조건이 곧 진입 조건이라 그대로 옮겼다.
+
+**최종: 확정 47 · 추정 5 · 불가 0.**
+
+## ③ 여기서 배운 것 — 방법론 18
+
+> **「호출자 0건」을 죽은 경로로 읽기 전에 「이름 말고 다른 방식으로 불리는가」를 봐라.**
+> 이 맵은 트리거를 **해시테이블에 유닛ID로 넣고 꺼내 쓴다**(`SaveTriggerHandle` / `LoadTriggerHandle`).
+> `gg_trg_XXX`를 문자열로 찾으면 **등록 지점 하나만 걸리고 호출 지점은 안 걸린다.**
+> 뿌리 ⑫는 후보를 지우는 도구이지 존재하지 않음을 증명하는 도구가 아니다 — **이번이 그 실례다.**
