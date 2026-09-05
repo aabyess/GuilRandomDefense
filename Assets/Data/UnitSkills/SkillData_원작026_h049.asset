@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작026_h049
   m_EditorClassIdentifier:
   skillName: A0ES B명왕의 패기
-  description: 06번① 순위배정 — 원작 #026 h049 실버즈 레일리 명왕, upro: 해당없음(영웅 유닛 아님 — 등급이 unam 끝 「-불멸의/영원한」 표기에 있음), 능력 A0ES(B명왕의 패기). 스킬승급형: 레벨1→2로 'B명왕의 패기'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). 2026-09-05 정정: 확률형이 아니라 게이지형(OnHitCount)이었다 — 추정(A0ES를 읽는 트리거가 LaillySkill3뿐 — ORIGINAL_TRAIT_GATE_MAPPING.csv). 게이트만 채우고 효과는 비워둔다 — 더미 스톡필드 4개(Ucs1~4) 중 어느 게 피해량인지 여전히 확정 근거가 없다(지어내지 않는다).
+  description: 06번① 순위배정 — 원작 #026 h049 실버즈 레일리 명왕, upro: 해당없음(영웅 유닛 아님 — 등급이 unam 끝 「-불멸의/영원한」 표기에 있음), 능력 A0ES(B명왕의 패기). 스킬승급형: 레벨1→2로 'B명왕의 패기'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). 2026-09-05 정정: 확률형이 아니라 게이지형(OnHitCount)이었다 — 추정(A0ES를 읽는 트리거가 LaillySkill3뿐 — ORIGINAL_TRAIT_GATE_MAPPING.csv). 게이트만 채우고 효과는 비워둔다 — 더미 스톡필드 4개(Ucs1~4) 중 어느 게 피해량인지 여전히 확정 근거가 없다(지어내지 않는다). 2026-09-05 정정: Ucs1~4(더미 스톡필드 4개 중첩)와 별개로 Had1(방어력 감소류 스톡 필드) 값을 확보했다 — L1=-20, L2=-25(ORIGINAL_TRAIT_LEVEL2.csv). kind=ArmorBreak로 넣었다 — UnitAttacker.ApplyToEnemy 주석에 명시된 대로 지금은 읽는 코드가 없어 순수 데이터 자리다(값을 넣어도 게임 동작은 안 바뀐다). attackType은 원본 표기가 없어 이 유닛 자신의 평타 타입으로 근사. Ucs1~4는 필드뜻이 여전히 미확인이라 별개로 비워둔다.
   triggerType: 3
   levels:
   - cooldown: 0
@@ -21,10 +21,30 @@ MonoBehaviour:
     range: 0
     hitCountThreshold: 115
     resetTo: 0
-    effects: []
+    effects:
+    - kind: 2
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 4
+      multiplier: 20.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
   - cooldown: 0
     triggerChance: 1
     range: 0
-    hitCountThreshold: 0
+    hitCountThreshold: 115
     resetTo: 0
-    effects: []
+    effects:
+    - kind: 2
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 4
+      multiplier: 25.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
