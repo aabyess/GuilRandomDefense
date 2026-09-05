@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_절대쿨_불멸_정윤식
+  m_EditorClassIdentifier:
+  skillName: 레일리 — 5절대쿨(Kick_1)
+  description: 5절대쿨 계열(ORIGINAL_GATED_SKILLS_14.csv, 우리표커버=미수록) 신규 배정 — 원작 h049 실버즈 레일리(Kick_1), 버프 B070 미보유 + 4.75초 절대쿨. 3효과: Flat 1,750,000(Enemies range 400) + 대상현재체력×0.15(SingleTarget) + Flat 787,500(SingleTarget). 전부 CHAOS/NORMAL→AD 그대로. ⚠️ 표에 완전히 같은 값이 "GetRandomInt(1,50)==1" 추가게이트로도 한 번 더 나오는데(중복인지 진짜 1/50 보너스인지 불확실) 화력이 2배가 될 위험이 있어 이번엔 "(절대쿨만)" 세트만 넣었다 — PM 확인 대기. skill을 skills[0]으로 옮기고(06번① Had1, ArmorBreak) 이 스킬을 추가했다.
+  triggerType: 0
+  levels:
+  - cooldown: 4.75
+    triggerChance: 1.0
+    range: 400
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 1
+      attackType: 5
+      multiplier: 1750000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 2
+      target: 3
+      damageType: 1
+      attackType: 5
+      multiplier: 0.15
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 5
+      multiplier: 787500.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
