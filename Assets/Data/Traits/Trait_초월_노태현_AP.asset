@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   targetUnit: {fileID: 11400000, guid: 75c9efeeb23f488d828f49cea3fc5775, type: 2}
   traitName: 초월_노태현_AP 특성강화
-  description: 06번② 순위배정(2차, 초월함 등급 정정) — 원작 #012 H05N 해군의 홍일점, upro 미상 / 순수스탯 1pt. 원작 원문: 경험치+5000, STR/AGI/INT 각 +3. 우리 게임엔 경험치·능력치 개념이 없어 그대로 못 옮긴다 — 환산이 아니라 대체로, 기존 TraitEffectKind.DamageIncrease 한 칸을 대신 쓴다(수치 미상, value=0 placeholder). Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고.
+  description: 06번② 순위배정(2차, 초월함 등급 정정) — 원작 #012 H05N 해군의 홍일점, upro(실제 이름): 대령 타시기 / 순수스탯 1pt. 원작 원문: 경험치+5000, STR/AGI/INT 각 +3. 우리 게임엔 경험치·능력치 개념이 없어 그대로 못 옮긴다 — ⚠️ 값이 아니라 축 자체가 다르다(원작은 경험치·능력치 축, 우리는 그 축이 아예 없어 공격력(DamageIncrease)으로 대체함, 환산이 아님). 나중에 사장님이 「원작대로 맞춰라」 하시면 이 축 차이부터 다시 봐야 한다. 기존 TraitEffectKind.DamageIncrease 한 칸을 대신 쓴다(수치 미상, value=0 placeholder). Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고.
   costTraitPoints: 1
   effects:
   - kind: 0
