@@ -255,10 +255,15 @@ def load_support_skill(name):
 def load_mana_portal_params():
     """MapGenerator.cs의 ResourcePortal(..., ResourceType.Mana, ...) 호출 하나를 정규식으로
     찾는다. 라인 자체가 바뀌면(리팩터 등) 이 함수가 실패해서 스크립트가 죽는다 — 낡은 값을
-    조용히 쓰지 않기 위함이다. 지금은 Assets/Editor/MapGenerator.cs:1515 근방이 원본이다."""
+    조용히 쓰지 않기 위함이다. 지금은 Assets/Editor/MapGenerator.cs:1612 근방이 원본이다.
+
+    ⚠️ 2026-09-05: 다른 세션이 이 호출에 넷째 인자(UnitGrade.RandomUnit — 해왕류 퀘스트
+    관련으로 보인다)를 추가하면서 예전 정규식(세 번째 숫자 뒤 바로 `)`를 기대)이 깨졌다.
+    셋째 숫자 뒤에 무엇이 더 있어도 상관없게 고쳤다 — base_amount/per_round/success_pct
+    세 값만 본다, 넷째 인자의 의미는 이 스크립트가 몰라도 된다."""
     mg = read("Assets/Editor/MapGenerator.cs")
     m = re.search(
-        r"ResourcePortal\.Payout\.Resource,\s*ResourceType\.Mana,\s*(-?[\d.]+),\s*(-?[\d.]+)f?,\s*(-?[\d.]+)f?\)",
+        r"ResourcePortal\.Payout\.Resource,\s*ResourceType\.Mana,\s*(-?[\d.]+),\s*(-?[\d.]+)f?,\s*(-?[\d.]+)f?[,)]",
         mg)
     if not m:
         sys.exit("FATAL: MapGenerator.cs에서 마나 포탈 파라미터를 못 찾았다 — 시그니처가 바뀐 것 같다.")
