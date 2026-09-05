@@ -191,8 +191,6 @@ public class CombineSystem : MonoBehaviour
             }
         }
 
-        // TODO: requiredSaveCount(영원 등급, 게임 클리어 누적 횟수) — 세이브 시스템 없어 아직 검사하지 않음.
-
         // 결과도 필드에 나와야 한다. Spawn이 인벤토리 등록까지 하므로 따로 Add하지 않는다.
         spawner.Spawn(recipe.result, resultPosition, ownerId);
         return true;
@@ -275,9 +273,19 @@ public class CombineSystem : MonoBehaviour
             }
         }
 
-        // TODO: requiredSaveCount(영원 등급) 검사는 세이브 시스템 구현 후 추가.
+        if (!SaveCountConditionMet(recipe)) return false;
 
         return true;
+    }
+
+    // 영원 등급 전용(CombineRecipe.requiredSaveCount 참고). PersistentSave가 없으면(씬 배선
+    // 누락 등) 잠가둔다 — 조건을 못 재는 상태에서 통과시키면 조건 자체가 없는 것과 같아진다.
+    bool SaveCountConditionMet(CombineRecipe recipe)
+    {
+        if (recipe.requiredSaveCount <= 0) return true;
+
+        PersistentSave save = OwnerContext?.PersistentSave;
+        return save != null && save.Data.cumulativeClearCount >= recipe.requiredSaveCount;
     }
 
     bool RoundConditionMet(CombineRecipe recipe)

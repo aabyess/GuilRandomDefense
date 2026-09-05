@@ -574,6 +574,11 @@ public class GameHud : MonoBehaviour
 
         if (!firstCost) tooltipBuilder.Append(')');
 
+        // 영원 등급 등 requiredSaveCount 조합식은 왜 안 되는지 알 수 있어야 한다 — 조용히
+        // 실패하면(카드만 흐려짐) 버그로 보인다(PM 지시 2026-09-05).
+        if (recipe.requiredSaveCount > 0)
+            tooltipBuilder.Append("\n(클리어 ").Append(recipe.requiredSaveCount).Append("회 필요)");
+
         return tooltipBuilder.ToString();
     }
 

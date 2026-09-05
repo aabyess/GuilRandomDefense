@@ -123,11 +123,21 @@ public class ChatUnlockManager : MonoBehaviour
             }
         }
 
-        // TODO: requiredSaveCount(Forever 전용, 원작 "게임 클리어 누적 횟수") — 세이브
-        // 시스템이 없어 검사하지 않는다. CombineSystem.cs:194,278의 requiredSaveCount와
-        // 같은 이유·같은 미구현 상태(MISSING_SYSTEMS.md 참고).
-
         PlayerContext context = PlayerContext.Get(playerId);
+
+        // Forever 전용(원작 "게임 클리어 누적 횟수"). 2026-09-05 11번(PersistentSave) 이후
+        // CombineRecipe.requiredSaveCount와 같은 소스로 검사한다(CombineSystem.SaveCountConditionMet
+        // 참고) — 세이브 시스템이 없다는 전제는 이제 깨졌다.
+        if (data.requiredSaveCount > 0)
+        {
+            PersistentSave save = context?.PersistentSave;
+            if (save == null || save.Data.cumulativeClearCount < data.requiredSaveCount)
+            {
+                reason = $"클리어 {data.requiredSaveCount}회 필요";
+                return false;
+            }
+        }
+
         if (data.woodCost > 0 && (context?.ResourceWallet == null || context.ResourceWallet.Get(ResourceType.Wood) < data.woodCost))
         {
             reason = "목재 부족";

@@ -40,7 +40,9 @@ public class CombineRecipe : ScriptableObject
     public int minRound;
     public int maxRound;
 
-    // 영원 등급 전용. Save = 게임 클리어 누적 횟수 (세이브 기능 미구현).
-    // TODO: 세이브 시스템 추가되면 CombineSystem에서 이 값을 검사하도록 연결할 것. 지금은 구조만 반영.
+    // 영원 등급 전용. Save = 게임 클리어 누적 횟수. 원작 udg_Load_PlayCount 게이트(5·10·15·
+    // 20·25·30·35)와 한 칸 어긋난 같은 사다리다(우리는 0부터 시작). 2026-09-05 11번
+    // (PersistentSave) 이후 PersistentSave.Data.cumulativeClearCount로 검사한다
+    // (CombineSystem.CanAfford 참고). 0이면 제한 없음.
     public int requiredSaveCount;
 }
