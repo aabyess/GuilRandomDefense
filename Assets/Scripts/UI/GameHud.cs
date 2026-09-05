@@ -1002,11 +1002,11 @@ public class GameHud : MonoBehaviour
         if (view.targetKind == LaneShopTargetKind.None)
         {
             // ⚠️ 2026-09-05: TryUse가 false여도 예전엔 그냥 끝났다 — 눌렀는데 아무 일도
-            // 안 일어난 것처럼 보였다("조용한 실패" #10). ILaneShop.TryUse는 실패 사유를
-            // 안 돌려주므로(bool 하나뿐, 4개 상점 구현을 다 건드려야 해서 이번엔 인터페이스는
-            // 안 바꿨다) 여기서 알 수 있는 건 "지금은 못 쓴다"까지다 — 그래도 무반응보다는 낫다.
-            if (currentShop.TryUse(logicalIndex, default)) RefreshShopAffordability();
-            else PlayerNotification.Show(LocalPlayer.LocalPlayerId, "지금은 사용할 수 없습니다.");
+            // 안 일어난 것처럼 보였다("조용한 실패" #10). ILaneShop.TryUse가 이제 실패
+            // 사유를 out으로 돌려준다(상점 4곳이 이미 알고 있던 사유를 그대로 올려보낸다) —
+            // 사유가 없으면(배선 오류 등, 플레이어가 봐도 못 고침) 일반 문구로 대신한다.
+            if (currentShop.TryUse(logicalIndex, default, out string reason)) RefreshShopAffordability();
+            else PlayerNotification.Show(LocalPlayer.LocalPlayerId, reason ?? "지금은 사용할 수 없습니다.");
             return;
         }
 
@@ -1057,6 +1057,7 @@ public class GameHud : MonoBehaviour
         }
 
         bool used;
+        string reason;
         if (kind == LaneShopTargetKind.Unit)
         {
             // 연금술(자기 유닛)은 Selectable로 잡히지만, 흡수(적 유닛)의 대상인 EnemyDummy는
@@ -1072,15 +1073,15 @@ public class GameHud : MonoBehaviour
                 return;
             }
 
-            used = shop.TryUse(index, LaneShopTarget.OnUnit(targetObject));
+            used = shop.TryUse(index, LaneShopTarget.OnUnit(targetObject), out reason);
         }
         else
         {
-            used = shop.TryUse(index, LaneShopTarget.AtPoint(hit.point));
+            used = shop.TryUse(index, LaneShopTarget.AtPoint(hit.point), out reason);
         }
 
         if (used) RefreshShopAffordability();
-        else PlayerNotification.Show(LocalPlayer.LocalPlayerId, "지금은 사용할 수 없습니다.");
+        else PlayerNotification.Show(LocalPlayer.LocalPlayerId, reason ?? "지금은 사용할 수 없습니다.");
     }
 
     void OnUnitCommandSlotHoverEnter(int index)

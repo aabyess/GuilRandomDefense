@@ -62,5 +62,12 @@ public interface ILaneShop
     // targetKind == None인 칸은 target을 무시해도 된다(default가 넘어온다).
     // 호출 시점과 실제 실행 사이에 자원 상태가 바뀌어 실패할 수 있다 — 실패하면 false만
     // 반환하면 된다(예외 금지). 호출한 쪽(GameHud)이 대기 상태를 정리할 책임을 진다.
-    bool TryUse(int index, LaneShopTarget target);
+    //
+    // failReason: false일 때 화면에 띄울 문구. 상점이 "왜 안 되는지" 이미 알고 있는 경우
+    // (골드 부족·재고 없음·조건 미달 등)만 채우고, 그 자리에서 직접 PlayerNotification을
+    // 부르지 않는다 — 표시는 호출부(GameHud) 몫으로 한 곳에 모아둔다(안 그러면 상점이
+    // 알림을 띄우고 GameHud가 또 일반 문구를 띄워 두 번 뜬다). null이면 "플레이어가 봐도
+    // 고칠 수 없는 사유"(배선 오류 등)라는 뜻 — 호출부가 일반 문구로 대신한다.
+    // true일 때는 무시된다.
+    bool TryUse(int index, LaneShopTarget target, out string failReason);
 }

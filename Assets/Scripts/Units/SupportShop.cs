@@ -87,16 +87,36 @@ public class SupportShop : MonoBehaviour, ILaneShop
         return skill != null ? BuildTooltipText(skill) : null;
     }
 
-    public bool TryUse(int index, LaneShopTarget target)
+    public bool TryUse(int index, LaneShopTarget target, out string failReason)
     {
+        failReason = null;
         if (index < 0 || index >= skills.Count) return false;
 
         SupportSkillData skill = skills[index];
         if (skill == null) return false;
 
-        if (IsSelfCast(skill.effect)) return TryCastSelf(skill);
-        if (skill.targetKind == SupportSkillTargetKind.Unit) return TryCastOnUnit(skill, target.unit);
-        return TryCastOnGround(skill, target.point);
+        if (IsSelfCast(skill.effect)) return TryCastSelf(skill, out failReason);
+        if (skill.targetKind == SupportSkillTargetKind.Unit) return TryCastOnUnit(skill, target.unit, out failReason);
+        return TryCastOnGround(skill, target.point, out failReason);
+    }
+
+    // CanCast와 같은 조건을 그대로 따라가며 "어디서 막혔는지"만 문구로 뽑는다(GamblingShop.
+    // UnavailableReason과 같은 이유 — GetSlotView가 0.4초마다 CanCast만 부르는 자리라
+    // 문자열 조립은 클릭이 실제로 실패했을 때만 한다).
+    string CastUnavailableReason(SupportSkillData skill, PlayerContext context)
+    {
+        if (Time.time < GetCooldownUntil(skill)) return "재사용 대기 중입니다.";
+        if (skill.maxUses > 0 && UsesSoFar(skill) >= skill.maxUses) return $"{skill.maxUses}회 모두 사용했습니다.";
+
+        if (context == null) return null;
+
+        if (skill.manaCost > 0 && (context.ResourceWallet == null || context.ResourceWallet.Get(ResourceType.Mana) < skill.manaCost))
+            return "마나가 부족합니다.";
+
+        if (skill.goldCost > 0 && (context.GoldWallet == null || context.GoldWallet.Gold < skill.goldCost))
+            return "골드가 부족합니다.";
+
+        return null;
     }
 
     // 스킬 이름·효과 서술(SupportSkillData.description)은 그대로 옮기고, 비용/쿨다운/피해량/범위/
@@ -223,20 +243,21 @@ public class SupportShop : MonoBehaviour, ILaneShop
     }
 
     // 위치·대상 없이 즉시 자기 자신에게 — 마나포션(마나 회복) / 선택위습제조(위습 제조).
-    public bool TryCastSelf(SupportSkillData skill)
+    public bool TryCastSelf(SupportSkillData skill, out string failReason)
     {
+        failReason = null;
         if (skill == null) return false;
-        if (skill.effect == SupportSkillEffect.ManaRestore) return TryManaRestore(skill);
-        if (skill.effect == SupportSkillEffect.CraftChosenWisp) return TryCraftChosenWisp(skill);
+        if (skill.effect == SupportSkillEffect.ManaRestore) return TryManaRestore(skill, out failReason);
+        if (skill.effect == SupportSkillEffect.CraftChosenWisp) return TryCraftChosenWisp(skill, out failReason);
         return false;
     }
 
-    bool TryManaRestore(SupportSkillData skill)
+    bool TryManaRestore(SupportSkillData skill, out string failReason)
     {
-        if (!CanCast(skill)) return false;
-
+        failReason = null;
         PlayerContext context = OwnerContext;
-        if (!TrySpendCost(skill, context)) return false;
+        if (!CanCast(skill)) { failReason = CastUnavailableReason(skill, context); return false; }
+        if (!TrySpendCost(skill, context)) { failReason = CastUnavailableReason(skill, context); return false; }
 
         context.ResourceWallet?.Add(ResourceType.Mana, skill.manaRestoreAmount);
         StartCooldown(skill);
@@ -246,13 +267,14 @@ public class SupportShop : MonoBehaviour, ILaneShop
     // 선택위습제조: 흔함 선택위습 1기를 필드에 만들어낸다(원작 "최대 3번까지" — maxUses로 표현).
     // 위습 지급은 RewardDistributor.GrantWisps를 그대로 재사용한다 — 새 지급 경로를 안 만든다
     // (RoundManager.GrantFlatRoundReward와 같은 이유).
-    bool TryCraftChosenWisp(SupportSkillData skill)
+    bool TryCraftChosenWisp(SupportSkillData skill, out string failReason)
     {
-        if (skill.craftedWisp == null) return false;
-        if (!CanCast(skill)) return false;
+        failReason = null;
+        if (skill.craftedWisp == null) return false;   // 콘텐츠 결손(사장님 배정 전), reason 없음
 
         PlayerContext context = OwnerContext;
-        if (!TrySpendCost(skill, context)) return false;
+        if (!CanCast(skill)) { failReason = CastUnavailableReason(skill, context); return false; }
+        if (!TrySpendCost(skill, context)) { failReason = CastUnavailableReason(skill, context); return false; }
 
         if (RewardDistributor.Instance != null)
         {
@@ -281,13 +303,14 @@ public class SupportShop : MonoBehaviour, ILaneShop
     // 알림만 띄운다**(자원을 먹고 아무 표시도 없이 끝나는 게 문제였지, 자원을 먹는 것
     // 자체는 원작이라고 추정한 것이지 확정한 게 아니다) — 원작 실측 자료가 나오면 이
     // 추론부터 다시 검증할 것.
-    public bool TryCastOnGround(SupportSkillData skill, Vector3 point)
+    public bool TryCastOnGround(SupportSkillData skill, Vector3 point, out string failReason)
     {
+        failReason = null;
         if (skill == null || skill.targetKind != SupportSkillTargetKind.Ground) return false;
-        if (!CanCast(skill)) return false;
 
         PlayerContext context = OwnerContext;
-        if (!TrySpendCost(skill, context)) return false;
+        if (!CanCast(skill)) { failReason = CastUnavailableReason(skill, context); return false; }
+        if (!TrySpendCost(skill, context)) { failReason = CastUnavailableReason(skill, context); return false; }
 
         int round = RoundManagerRef != null ? RoundManagerRef.CurrentRound : 1;
         int affected = 0;
@@ -316,37 +339,37 @@ public class SupportShop : MonoBehaviour, ILaneShop
     }
 
     // 유닛을 직접 지정하는 스킬. 대상이 내 유닛인지(연금술) 적인지(흡수·낙뢰)는 이펙트별로 갈린다.
-    public bool TryCastOnUnit(SupportSkillData skill, GameObject targetUnit)
+    public bool TryCastOnUnit(SupportSkillData skill, GameObject targetUnit, out string failReason)
     {
+        failReason = null;
         if (skill == null || skill.targetKind != SupportSkillTargetKind.Unit) return false;
         if (targetUnit == null) return false;
 
-        if (skill.effect == SupportSkillEffect.InstantKill) return TryInstantKillUnit(skill, targetUnit);
-        if (skill.effect == SupportSkillEffect.SingleTargetDamage) return TrySingleTargetDamageUnit(skill, targetUnit);
-        return TryDismantleUnit(skill, targetUnit);
+        if (skill.effect == SupportSkillEffect.InstantKill) return TryInstantKillUnit(skill, targetUnit, out failReason);
+        if (skill.effect == SupportSkillEffect.SingleTargetDamage) return TrySingleTargetDamageUnit(skill, targetUnit, out failReason);
+        return TryDismantleUnit(skill, targetUnit, out failReason);
     }
 
     // 흡수: 지정한 적 유닛 하나를 즉시 제거한다(원작 확인, 2026-09-04: RemoveUnit 방식).
     // 보스·스토리 유닛(라인에 안 속한 유닛 포함)은 안 통한다 — 원작 "보스, 스토리 적용X".
     // 단일 지정형이라 광역 스킬과 달리 CollectInRadius를 안 쓴다 — 원작 능력 데이터에
     // 범위(aare) 필드 자체가 없다(즉, 원작도 대상 하나만 잡는다).
-    bool TryInstantKillUnit(SupportSkillData skill, GameObject targetUnit)
+    bool TryInstantKillUnit(SupportSkillData skill, GameObject targetUnit, out string failReason)
     {
+        failReason = null;
         if (!targetUnit.TryGetComponent(out EnemyDummy enemy)) return false;
 
         if (enemy.IsBoss || enemy.LaneIndex < 0)
         {
             // 원작 문구 그대로 — war3map.j Trig_Absolb1_Actions("Absolb"=흡수) 안에 있는
-            // 문자열이다(PM 확인, 2026-09-05). 조준까지 했는데 왜 안 통하는지 몰라서
-            // 조용히 끝났던 자리였다.
-            PlayerNotification.Show(owner.OwnerId, "보스,스토리, 특수유닛에게는 사용불가합니다!");
+            // 문자열이다(PM 확인, 2026-09-05).
+            failReason = "보스,스토리, 특수유닛에게는 사용불가합니다!";
             return false;
         }
 
-        if (!CanCast(skill)) return false;
-
         PlayerContext context = OwnerContext;
-        if (!TrySpendCost(skill, context)) return false;
+        if (!CanCast(skill)) { failReason = CastUnavailableReason(skill, context); return false; }
+        if (!TrySpendCost(skill, context)) { failReason = CastUnavailableReason(skill, context); return false; }
 
         // TakeDamage를 안 거친다 — 원작 RemoveUnit은 방어력/저항과 무관하게 무조건 없애고,
         // 킬 보상도 안 나간다(WC3의 RemoveUnit 자체가 그렇다). "즉사기가 킬 보상까지 주면
@@ -359,20 +382,18 @@ public class SupportShop : MonoBehaviour, ILaneShop
 
     // 낙뢰: 지정한 적 유닛 하나에 즉발 피해(+duration>0이면 스턴). 흡수와 달리 보스·스토리
     // 제외가 없다 — 원작 툴팁에 그런 제한 서술이 없었다.
-    bool TrySingleTargetDamageUnit(SupportSkillData skill, GameObject targetUnit)
+    bool TrySingleTargetDamageUnit(SupportSkillData skill, GameObject targetUnit, out string failReason)
     {
+        failReason = null;
         if (!targetUnit.TryGetComponent(out EnemyDummy enemy))
         {
-            // 조준까지 했는데(자기 유닛 등 적이 아닌 대상) 왜 안 통하는지 몰라서 조용히
-            // 끝났던 자리(PM 지시 2026-09-05).
-            PlayerNotification.Show(owner.OwnerId, $"{skill.skillName}: 적 유닛에게만 쓸 수 있습니다.");
+            failReason = $"{skill.skillName}: 적 유닛에게만 쓸 수 있습니다.";
             return false;
         }
 
-        if (!CanCast(skill)) return false;
-
         PlayerContext context = OwnerContext;
-        if (!TrySpendCost(skill, context)) return false;
+        if (!CanCast(skill)) { failReason = CastUnavailableReason(skill, context); return false; }
+        if (!TrySpendCost(skill, context)) { failReason = CastUnavailableReason(skill, context); return false; }
 
         int round = RoundManagerRef != null ? RoundManagerRef.CurrentRound : 1;
         enemy.TakeDamage(skill.ComputeDamage(round), DamageType.AP, AttackType.Spells, owner.OwnerId);
@@ -384,14 +405,17 @@ public class SupportShop : MonoBehaviour, ILaneShop
     }
 
     // 연금술: 유닛을 직접 지정(자기 유닛만).
-    bool TryDismantleUnit(SupportSkillData skill, GameObject targetUnit)
+    bool TryDismantleUnit(SupportSkillData skill, GameObject targetUnit, out string failReason)
     {
+        failReason = null;
         if (skill.effect != SupportSkillEffect.UnitDismantle) return false;
-        if (!CanCast(skill)) return false;
+
+        PlayerContext context = OwnerContext;
+        if (!CanCast(skill)) { failReason = CastUnavailableReason(skill, context); return false; }
 
         if (!targetUnit.TryGetComponent(out OwnedByPlayer targetOwner) || targetOwner.OwnerId != owner.OwnerId)
         {
-            PlayerNotification.Show(owner.OwnerId, $"{skill.skillName}: 자기 유닛만 분해할 수 있습니다.");
+            failReason = $"{skill.skillName}: 자기 유닛만 분해할 수 있습니다.";
             return false;
         }
 
@@ -407,12 +431,11 @@ public class SupportShop : MonoBehaviour, ILaneShop
             // ⚠️ 원작 문구 없음 — 그 문구("보스,스토리, 특수유닛에게는 사용불가합니다!")는
             // war3map.j Trig_Absolb1_Actions(흡수) 소속이었다(PM 재확인, 2026-09-05).
             // 연금술 쪽 원작 거부 문구는 못 찾아서 우리 문구를 쓴다.
-            PlayerNotification.Show(owner.OwnerId, $"{skill.skillName}: {identity.Data.unitName}은(는) 분해할 수 있는 유닛이 아닙니다.");
+            failReason = $"{skill.skillName}: {identity.Data.unitName}은(는) 분해할 수 있는 유닛이 아닙니다.";
             return false;
         }
 
-        PlayerContext context = OwnerContext;
-        if (!TrySpendCost(skill, context)) return false;
+        if (!TrySpendCost(skill, context)) { failReason = CastUnavailableReason(skill, context); return false; }
 
         bool eligible = identity.Data.grade.Tier() <= skill.maxDismantleGrade.Tier();
 
@@ -420,8 +443,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
         {
             // 잘못된 대상 — "등가교환" 실패. 분해하지 않고 마나만 그대로 돌려준다.
             context.ResourceWallet?.Add(ResourceType.Mana, skill.manaCost);
-            PlayerNotification.Show(owner.OwnerId,
-                $"{skill.skillName}: {identity.Data.unitName}은(는) 분해할 수 없는 등급이라 마나를 돌려받았습니다.");
+            failReason = $"{skill.skillName}: {identity.Data.unitName}은(는) 분해할 수 없는 등급이라 마나를 돌려받았습니다.";
             StartCooldown(skill);
             return false;
         }

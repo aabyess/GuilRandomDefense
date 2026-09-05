@@ -116,11 +116,13 @@ public class PirateQuestShop : MonoBehaviour, ILaneShop
     }
 
     // 원작 순서 그대로: 확인을 다 마친 뒤에만 차감한다 — 실패 경로가 골드나 재고를 먹으면
-    // 안 된다. ⚠️ 실패마다 왜 안 되는지 PlayerNotification으로 띄운다(PM 지시, 2026-09-05) —
-    // 예전엔 조용히 false만 돌려줘서 "눌렀는데 아무 일도 안 일어남"으로 보였다. 미니보스
-    // 데이터 결손만은 예외 — 플레이어가 봐도 고칠 수 없는 배선 오류라 알림 없이 막는다.
-    public bool TryUse(int index, LaneShopTarget target)
+    // 안 된다. 실패마다 왜 안 되는지 failReason으로 알린다(ILaneShop 참고, 표시는 GameHud
+    // 몫이라 여기서 PlayerNotification을 직접 안 부른다 — 2026-09-05 인터페이스 개편).
+    // 미니보스 데이터 결손만은 예외 — 플레이어가 봐도 고칠 수 없는 배선 오류라 reason 없이 막는다.
+    public bool TryUse(int index, LaneShopTarget target, out string failReason)
     {
+        failReason = null;
+
         if (index < 0 || index >= quests.Count) return false;
 
         PirateQuestData quest = quests[index];
@@ -132,7 +134,7 @@ public class PirateQuestShop : MonoBehaviour, ILaneShop
 
         if (manager.IsActive(quest, owner.OwnerId))
         {
-            PlayerNotification.Show(owner.OwnerId, $"{quest.questName}: 이미 진행 중입니다.");
+            failReason = $"{quest.questName}: 이미 진행 중입니다.";
             return false;
         }
 
@@ -141,14 +143,13 @@ public class PirateQuestShop : MonoBehaviour, ILaneShop
                      && (quest.maxRound <= 0 || round <= quest.maxRound);
         if (!inRange)
         {
-            PlayerNotification.Show(owner.OwnerId,
-                $"{quest.questName}: 지금은 열리지 않습니다 ({quest.minRound}~{quest.maxRound}라운드).");
+            failReason = $"{quest.questName}: 지금은 열리지 않습니다 ({quest.minRound}~{quest.maxRound}라운드).";
             return false;
         }
 
         if (slotState[index].stock <= 0)
         {
-            PlayerNotification.Show(owner.OwnerId, $"{quest.questName}: 재고가 없습니다.");
+            failReason = $"{quest.questName}: 재고가 없습니다.";
             return false;
         }
 
@@ -157,7 +158,7 @@ public class PirateQuestShop : MonoBehaviour, ILaneShop
 
         if (!context.GoldWallet.TrySpend(quest.goldCost))
         {
-            PlayerNotification.Show(owner.OwnerId, "골드가 부족합니다!");
+            failReason = "골드가 부족합니다!";
             return false;
         }
 

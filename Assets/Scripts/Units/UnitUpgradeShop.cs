@@ -104,25 +104,35 @@ public class UnitUpgradeShop : MonoBehaviour, ILaneShop
              + $"다음 레벨: x{nextMultiplier:F2} — 비용 {cost}엔";
     }
 
-    public bool TryUse(int index, LaneShopTarget target)
+    public bool TryUse(int index, LaneShopTarget target, out string failReason)
     {
+        failReason = null;
+
         if (!ResearchLabImplemented) return false;   // 골드를 쓰기 전에 막는다 — 위 클래스 주석 참고
         if (index < 0 || index >= tracks.Count) return false;
 
         UnitUpgradeTrackData track = tracks[index];
-        if (track == null || !track.hasOriginalResearch) return false;   // 원작에 대응 없는 트랙은 계속 잠김
+        if (track == null) return false;
+
+        if (!track.hasOriginalResearch)
+        {
+            failReason = "원작에 대응하는 연구소가 없는 등급입니다.";
+            return false;
+        }
 
         PlayerContext context = OwnerContext;
         if (context == null || context.UnitUpgrades == null || context.GoldWallet == null) return false;
 
         int level = context.UnitUpgrades.Level(track);
-        if (track.maxLevel > 0 && level >= track.maxLevel) return false;
+        if (track.maxLevel > 0 && level >= track.maxLevel)
+        {
+            failReason = "이미 최대 레벨입니다.";
+            return false;
+        }
 
-        // ⚠️ 나머지 실패(연구소 준비 중·대응 없는 트랙·최대 레벨)는 GetSlotTooltip이 이미
-        // 문구로 설명한다 — 골드 부족만 툴팁 없이 조용히 막혀 있었다(PM 지시, 2026-09-05).
         if (!context.GoldWallet.TrySpend(track.CostForLevel(level)))
         {
-            PlayerNotification.Show(owner.OwnerId, "골드가 부족합니다!");
+            failReason = "골드가 부족합니다!";
             return false;
         }
 

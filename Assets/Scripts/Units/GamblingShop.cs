@@ -110,12 +110,13 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         return option.category == GamblingCategory.Money ? BuildMoneyTooltip(option) : BuildUnitTooltip(option);
     }
 
-    public bool TryUse(int index, LaneShopTarget target)
+    public bool TryUse(int index, LaneShopTarget target, out string failReason)
     {
-        if (index == TraitPointSlotIndex) return TryPurchaseTraitPoint();
+        if (index == TraitPointSlotIndex) return TryPurchaseTraitPoint(out failReason);
 
+        failReason = null;
         GamblingOptionData option = OptionAt(index);
-        return option != null && TryRoll(option);
+        return option != null && TryRoll(option, out failReason);
     }
 
     GamblingOptionData OptionAt(int index)
@@ -178,14 +179,27 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         return context.GoldWallet.Gold >= traitPointPurchaseCost;
     }
 
-    bool TryPurchaseTraitPoint()
+    bool TryPurchaseTraitPoint(out string failReason)
     {
+        failReason = null;
         PlayerContext context = OwnerContext;
         if (context == null || context.UnitUpgrades == null || context.GoldWallet == null) return false;
 
+        if (context.UnitUpgrades.HasPurchasedPoint)
+        {
+            failReason = "이미 구매했습니다 (1회 한정).";
+            return false;
+        }
+
         bool bought = context.UnitUpgrades.TryPurchasePoint(context.GoldWallet, traitPointPurchaseCost);
         if (bought)
+        {
             Debug.Log($"[도박] 특성포인트 구매: {traitPointPurchaseCost}엔 → 특성포인트 1개. 보유 {context.UnitUpgrades.TraitPoints}개.");
+        }
+        else
+        {
+            failReason = "골드가 부족합니다.";
+        }
 
         return bought;
     }
@@ -285,22 +299,56 @@ public class GamblingShop : MonoBehaviour, ILaneShop
                || (context.GoldWallet != null && context.GoldWallet.Gold >= option.goldCost);
     }
 
-    public bool TryRoll(GamblingOptionData option)
+    public bool TryRoll(GamblingOptionData option, out string failReason)
     {
-        if (!CanRoll(option)) return false;
+        if (!CanRoll(option))
+        {
+            failReason = UnavailableReason(option);
+            return false;
+        }
 
         PlayerContext context = OwnerContext;
-        if (context == null) return false;
+        if (context == null) { failReason = null; return false; }
 
         return option.category == GamblingCategory.Money
-            ? TryRollMoney(option, context)
-            : TryRollUnit(option, context);
+            ? TryRollMoney(option, context, out failReason)
+            : TryRollUnit(option, context, out failReason);
+    }
+
+    // CanRoll과 같은 조건을 그대로 따라가며 "어디서 막혔는지"만 문구로 뽑는다 — 판정 로직을
+    // 두 번 쓰기 싫지만(CanRoll이 이미 있다), 그쪽은 bool 하나만 돌려주게 놔뒀다(GetSlotView가
+    // 0.4초마다 부르는 자리라 문자열까지 매번 만들면 낭비다) — 그래서 실패했을 때만, 클릭
+    // 시점에 한 번만 여기서 다시 짚는다.
+    string UnavailableReason(GamblingOptionData option)
+    {
+        if (option == null) return null;
+        if (option.category == GamblingCategory.Unit && (unitSpawner == null || gachaTable == null))
+            return null;   // 배선 오류 — 플레이어가 봐도 못 고친다.
+
+        PlayerContext context = OwnerContext;
+        if (context == null) return null;
+
+        if (option.category == GamblingCategory.Money)
+            return MoneyUnavailableReason(option);
+
+        if (context.ResourceWallet == null) return null;
+        if (context.ResourceWallet.Get(option.costResourceType) < option.cost)
+            return $"{ResourceLabel(option.costResourceType)}이(가) 부족합니다.";
+        if (option.goldCost > 0 && (context.GoldWallet == null || context.GoldWallet.Gold < option.goldCost))
+            return "골드가 부족합니다.";
+
+        return null;
     }
 
     // 성공/실패 구분이 없다 — 걸고 나면 항상 결과 범위(0 포함) 안에서 얼마를 받는다.
-    bool TryRollMoney(GamblingOptionData option, PlayerContext context)
+    bool TryRollMoney(GamblingOptionData option, PlayerContext context, out string failReason)
     {
-        if (context.GoldWallet == null || !context.GoldWallet.TrySpend(option.cost)) return false;
+        failReason = null;
+        if (context.GoldWallet == null || !context.GoldWallet.TrySpend(option.cost))
+        {
+            failReason = "골드가 부족합니다.";
+            return false;
+        }
 
         // 성공률이 0이면 옛 에셋(성공/실패 구분 없이 항상 지급)으로 보고 성공 취급한다.
         bool success = option.successChancePercent <= 0f
@@ -327,9 +375,10 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         return true;
     }
 
-    bool TryRollUnit(GamblingOptionData option, PlayerContext context)
+    bool TryRollUnit(GamblingOptionData option, PlayerContext context, out string failReason)
     {
-        if (unitSpawner == null || gachaTable == null) return false;
+        failReason = null;
+        if (unitSpawner == null || gachaTable == null) return false;   // 배선 오류, reason 없음
 
         bool success = Random.Range(0f, 100f) < option.successChancePercent;
 
@@ -343,7 +392,10 @@ public class GamblingShop : MonoBehaviour, ILaneShop
             resultGrade = PickResultGrade(option);
             if (!HasPool(resultGrade))
             {
+                // 콘텐츠 결손(사장님 배정 전)이라 콘솔에도 남기고, 화면에도 알린다 — 이건
+                // 감사 때 놓쳤던 자리다(원래 로그만 있었다).
                 Debug.LogWarning($"{name}: {option.optionName}의 {resultGrade} 풀이 비어있어 도박을 진행하지 않았습니다.");
+                failReason = $"{resultGrade.KoreanName()} 등급 재고가 없습니다.";
                 return false;
             }
         }
@@ -356,7 +408,7 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         {
             if (context.GoldWallet == null || !context.GoldWallet.TrySpend(option.goldCost))
             {
-                PlayerNotification.Show(context.PlayerId, "골드가 부족합니다.");
+                failReason = "골드가 부족합니다.";
                 return false;
             }
         }
@@ -366,7 +418,7 @@ public class GamblingShop : MonoBehaviour, ILaneShop
             // 자원 차감이 실패하면 이미 빠진 골드를 되돌린다.
             if (option.goldCost > 0 && context.GoldWallet != null)
                 context.GoldWallet.Add(option.goldCost);
-            PlayerNotification.Show(context.PlayerId, "자원이 부족합니다.");
+            failReason = "자원이 부족합니다.";
             return false;
         }
 
