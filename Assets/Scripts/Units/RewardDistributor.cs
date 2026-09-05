@@ -184,9 +184,12 @@ public class RewardDistributor : MonoBehaviour
         if (context.GoldWallet == null) return;
         if (Random.value >= KillGoldChance) return;
 
+        // 원작: R2I( Gold_Math × (2 + Gold_Plus) ) — 곱한 결과를 한 번만 버린다.
+        // Gold_Plus가 소수라 곱셈 전에 버리면(예전엔 (int)로 암묵 변환) 소수점 이하가
+        // 사라져 최종 배수가 과소해진다. Gold_Math 자체는 원작에서도 정수 나눗셈이 맞다.
         int goldMath = ComputeGoldMath(round);
-        int goldPlus = context.GoldWallet.GoldPlus;
-        context.GoldWallet.Add(goldMath * (2 + goldPlus));
+        float goldPlus = context.GoldWallet.GoldPlus;
+        context.GoldWallet.Add(Mathf.FloorToInt(goldMath * (2f + goldPlus)));
     }
 
     void GrantBossReward(PlayerContext context, int round)
