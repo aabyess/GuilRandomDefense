@@ -1,0 +1,31 @@
+버프,초,절대쿨이름,부모트리거,대상,피해값,공격타입,피해타입,범위,퍼센트체력,추가게이트,우리표커버
+B00J,8.5,5절대쿨 드래곤,Trig_Dragon_Attack,Dragon_Skill_1_T,1250000.00,NORMAL,UNIVERSAL,475.00,,(절대쿨만),특성표
+B00J,8.5,5절대쿨 드래곤,Trig_Dragon_Attack,Dragon_Skill_1_T,"(1.50*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitC(GlobalTV)))",NORMAL,UNIVERSAL,475.00,MaxHp%,(절대쿨만),특성표
+B00J,8.5,5절대쿨 드래곤,Trig_Dragon_Attack,Dragon_Skill_1_T,"(0.02*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitC(GlobalTV)))",NORMAL,UNIVERSAL,475.00,MaxHp%,(절대쿨만),특성표
+B00J,8.5,5절대쿨 드래곤,Trig_Dragon_Attack,Dragon_Skill_1,1000000.00,NORMAL,UNIVERSAL,475.00,,(절대쿨만),특성표
+B00J,8.5,5절대쿨 드래곤,Trig_Dragon_Attack,Dragon_Skill_1,1000000.00,NORMAL,UNIVERSAL,475.00,,(절대쿨만),특성표
+B00K,14.0,5절대쿨 뱌쿠야,Trig_byakuya_Attack,Byakuya_E,4500000.00,NORMAL,UNIVERSAL,925.00,,(절대쿨만),미수록
+B00K,14.0,5절대쿨 뱌쿠야,Trig_byakuya_Attack,더미:e0LR,"A08Y(5절대쿨 뱌쿠야): Ufa1=14,aran=99999",[미확인](스톡주문),[미확인],,,(절대쿨만),미수록
+B00N,12.5,5절대쿨 사보,Trig_Sabo_Attack,Sabo_Skill_1,3250000.00,NORMAL,UNIVERSAL,475.00,,MANA게이지==125.00,미수록
+B00N,12.5,5절대쿨 사보,Trig_Sabo_Attack,Sabo_Skill_1,((1000000.00+s__TrigVariables__get_realD(GlobalTV))*I2R(UnitCountBuffsExBJ(bj_BUFF_POLARIT,HERO,NORMAL,475.00,,MANA게이지==125.00,미수록
+B00N,12.5,5절대쿨 사보,Trig_Sabo_Attack,Sabo_Skill_1,"(2500000.00+(500000.00*I2R(UnitCountBuffsExBJ(bj_BUFF_POLARITY_EITHER,bj_BUFF_RESIST_EITHE",CHAOS,UNIVERSAL,475.00,,MANA게이지==125.00,미수록
+B00N,12.5,5절대쿨 사보,Trig_Sabo_Attack,Sabo_Skill_3,1150000.00,CHAOS,NORMAL,415.00,,"MANA게이지==125.00 AND GetRandomInt(1,10)==5",미수록
+B00N,12.5,5절대쿨 사보,Trig_Sabo_Attack,Sabo_Skill_4,500000.00,CHAOS,NORMAL,415.00,,"MANA게이지==125.00 AND GetRandomInt(1,10)==5 AND GetRandomInt(1,6)==4",미수록
+B00N,12.5,5절대쿨 사보,Trig_Sabo_Attack,Sabo_Skill_4,"(500000.00+(50000.00*I2R(UnitCountBuffsExBJ(bj_BUFF_POLARITY_EITHER,bj_BUFF_RESIST_EITHER,",CHAOS,UNIVERSAL,415.00,,"MANA게이지==125.00 AND GetRandomInt(1,10)==5 AND GetRandomInt(1,6)==4",미수록
+B00N,12.5,5절대쿨 사보,Trig_Sabo_Attack,Sabo_Skill_4,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Sabo[3])*0.04)*(0.20+(0.10*I2R(GetUnitAbil",HERO,NORMAL,415.00,MaxHp%,"MANA게이지==125.00 AND GetRandomInt(1,10)==5 AND GetRandomInt(1,6)==4",미수록
+B00N,12.5,5절대쿨 사보,Trig_Sabo_Attack,Sabo_Skill_4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Sabo[3])*0.01)",HERO,NORMAL,415.00,MaxHp%,"MANA게이지==125.00 AND GetRandomInt(1,10)==5 AND GetRandomInt(1,6)==4",미수록
+B011,8.0,5절대쿨 페로나,Trig_Hidden14,더미:e095,"A091(5절대쿨 페로나): Ufa1=8,aran=99999",[미확인](스톡주문),[미확인],,,"GetRandomInt(1,10)==7",미수록
+B012,3.5,5절대쿨 나미,Trig_Nami_Attack,Nami_Skill_4,350000.00,NORMAL,UNIVERSAL,500.00,,(절대쿨만),미수록
+B017,4.25,5절대쿨 에이스영원,Trig_Ace_Attack,더미:e0D8,"A14K(C파이어볼트-대염계): aran=2500,ahdu=3.5,amsp=4500,adur=3.5 ; A0CB(5절대쿨 에이스영원): Ufa1=4.25,aran=99999",[미확인](스톡주문),[미확인],,,(절대쿨만),2채널
+B017,4.25,5절대쿨 에이스영원,Trig_Ace_Attack,더미:e0AB,"A0BL(0장풍 에이스 불주먹-5영원): aran=1700,amsp=3500,aare=210,Ucs3=950 ; A0CB(5절대쿨 에이스영원): Ufa1=4.25,aran=99999",[미확인](스톡주문),[미확인],,,(절대쿨만),2채널
+B017,4.25,5절대쿨 에이스영원,Trig_Ace_Attack,더미:e0AI,"A0OH(5범위 영원함-에이스 화권): adur=0.2,ahdu=0.2,Eim1=120000,aare=360",[미확인](스톡주문),[미확인],,,(절대쿨만),2채널
+B034,6.0,5절대쿨 비비,Trig_ViVi_Attack,더미:e0D3,"A121(^비비영원 3연사공속버프): adur=0.2,ahdu=0.2,aran=99999,acdn=2 ; A0LY(5절대쿨 비비): Ufa1=6,aran=99999",[미확인](스톡주문),[미확인],,,MANA게이지==150.00,2채널
+B05Q,11.0,5절대쿨 카이도,Trig_Kaido_Dragon_Attack,Kaido_Skill_1_8,s__TrigVariables__get_realD(GlobalTV),CHAOS,NORMAL,575.00,,"LIFE게이지==100.00 AND GetRandomInt(1,7)==6",미수록
+B05Q,11.0,5절대쿨 카이도,Trig_Kaido_Dragon_Attack,Kaido_Skill_1_8,s__TrigVariables__get_realD(GlobalTV),CHAOS,UNIVERSAL,575.00,,"LIFE게이지==100.00 AND GetRandomInt(1,7)==6",미수록
+B05Q,11.0,5절대쿨 카이도,Trig_Kaido_Dragon_Attack,더미:e0MP,"A0ZX(!카이도-분노공증): acdn=30,ahdu=11,adur=11,Inf1=0.35 ; A0ZO(^카이도 버프): adur=11,ahdu=11,acdn=0.5,aran=99999",[미확인](스톡주문),[미확인],,,"LIFE게이지==100.00 AND GetRandomInt(1,7)==6",2채널
+B070,4.75,5절대쿨 레일리,Trig_LaillySkill,Kick_1,1750000.00,CHAOS,NORMAL,400.00,,(절대쿨만),미수록
+B070,4.75,5절대쿨 레일리,Trig_LaillySkill,Kick_1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.15)",CHAOS,NORMAL,400.00,MaxHp%,(절대쿨만),미수록
+B070,4.75,5절대쿨 레일리,Trig_LaillySkill,Kick_1,787500.00,CHAOS,NORMAL,400.00,,(절대쿨만),미수록
+B070,4.75,5절대쿨 레일리,Trig_LaillySkill,Kick_1,1750000.00,CHAOS,NORMAL,400.00,,"GetRandomInt(1,50)==1",미수록
+B070,4.75,5절대쿨 레일리,Trig_LaillySkill,Kick_1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.15)",CHAOS,NORMAL,400.00,MaxHp%,"GetRandomInt(1,50)==1",미수록
+B070,4.75,5절대쿨 레일리,Trig_LaillySkill,Kick_1,787500.00,CHAOS,NORMAL,400.00,,"GetRandomInt(1,50)==1",미수록
