@@ -110,6 +110,24 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
         return sum;
     }
 
+    /// <summary>이 유닛의 스킬이 몇 레벨(SkillData.levels의 인덱스)인지 — 06번① 스킬승급형
+    /// 트레잇 전용. 언락된 트레잇 중 targetUnit이 이 유닛이고 skillLevelUnlockIndex>0인
+    /// 것을 찾아 그 인덱스를 돌려준다("유닛 1종 = 트레잇 1개" 설계라 여러 개가 걸릴 일은
+    /// 없다). 아직 안 샀거나 스킬승급형이 아니면 0(레벨1) — UnitAttacker.CurrentSkillLevel이
+    /// 이 값으로 SkillLevel을 고른다.</summary>
+    public int SkillLevelIndexFor(UnitData unit)
+    {
+        if (unit == null) return 0;
+
+        foreach (UnitTraitData trait in unlockedTraits)
+        {
+            if (trait != null && trait.targetUnit == unit && trait.skillLevelUnlockIndex > 0)
+                return trait.skillLevelUnlockIndex;
+        }
+
+        return 0;
+    }
+
     public event Action OnLevelChanged;
 
     // ---- 등급강화(연구소) ----

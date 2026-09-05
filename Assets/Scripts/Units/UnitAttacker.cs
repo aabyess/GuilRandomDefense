@@ -165,9 +165,21 @@ public class UnitAttacker : MonoBehaviour
 
     SkillData Skill => identity != null && identity.Data != null ? identity.Data.skill : null;
 
-    // 06번(특성 배선)이 여기를 UnitUpgrades 조회로 바꾼다 — 지금은 항상 레벨1(index 0)이다.
-    static SkillLevel CurrentSkillLevel(SkillData skill) =>
-        skill.levels != null && skill.levels.Count > 0 ? skill.levels[0] : null;
+    // 06번① 완료: 스킬승급형 트레잇(UnitTraitData.skillLevelUnlockIndex)이 UnitUpgrades에
+    // 걸려 있으면 그 레벨을, 없으면 레벨1(index 0)을 쓴다. 원작이 "레벨2 = 레벨1 그대로 +
+    // 새 효과"로 만들어서(수치 배율이 아니다) 인덱스만 바꾸는 것으로 충분하다 — 레벨1/2
+    // 각각의 SkillLevel.effects 자체를 SkillData 에셋 쪽에서 이미 완결된 목록으로 담아둔다.
+    SkillLevel CurrentSkillLevel(SkillData skill)
+    {
+        if (skill.levels == null || skill.levels.Count == 0) return null;
+
+        int index = 0;
+        UnitData unitData = identity != null ? identity.Data : null;
+        UnitUpgrades source = ResolveUpgrades();
+        if (unitData != null && source != null) index = source.SkillLevelIndexFor(unitData);
+
+        return skill.levels[Mathf.Clamp(index, 0, skill.levels.Count - 1)];
+    }
 
     // CooldownAutoCast·Aura 전용 — OnHitChance는 평타가 실제로 맞았을 때만 판정해야 해서
     // Update()의 공격 성공 분기에서 TryCastOnHitSkill로 따로 부른다.

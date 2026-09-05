@@ -58,4 +58,21 @@ public class UnitTraitData : ScriptableObject
     // Tier B — 범용 표로 못 담는 유닛 전용 로직(키자루 분신 개수, 브룩 9타 트리거 등).
     // 비어있으면 없음. 그 유닛이 실제로 콘텐츠에 들어갈 때 이 키를 보고 코드를 짠다.
     public string specialEffectId;
+
+    // ⚠️ 2026-09-05(06번①): 위 effects(TraitEffectKind)는 "스탯을 얼마나 올리는가"고,
+    // 이건 완전히 다른 축이다 — 원작 특성강화 26종을 리서치담당이 원문에서 재확인한 결과,
+    // **전부 캐릭터 전용 스킬의 레벨을 1→2로 올리는 것**이었다(예: 후지토라 !중력장 A0GR —
+    // 레벨2는 레벨1 수치를 그대로 두고 "1/4 확률 운석낙하"라는 새 효과가 하나 늘어난다.
+    // 배율 상승이 아니다). SkillLevel.effects가 레벨마다 독립 리스트인 이유가 정확히 이거다.
+    //
+    // 0(기본)이면 스킬승급형이 아니다(이 유닛은 위 effects나 아무 효과도 안 쓴다는 뜻).
+    // 1 이상이면 targetUnit.skill(SkillData)의 levels[skillLevelUnlockIndex]를 쓰라는
+    // 뜻이고, UnitUpgrades.Unlock으로 이 트레잇이 풀리면 UnitAttacker.CurrentSkillLevel이
+    // 그 인덱스를 읽는다(UnitUpgrades.SkillLevelIndexFor 참고). targetUnit.skill이
+    // null이면 아무 효과도 없다 — 이 값만으론 스킬을 만들어내지 못한다.
+    //
+    // 원작 26명은 우리 로스터에 이름으로 없다(이름 매핑 불가 원칙) — 등급별 순위 배정으로
+    // 우리 유닛에 옮긴다. 어느 원작 유닛 자리인지는 이 asset 파일명이나 위 description에
+    // 원작 유닛ID(예: `A0GR`, `H08X`)를 남길 것 — 사장님이 실제 콘텐츠를 배정할 때의 연결점이다.
+    public int skillLevelUnlockIndex;
 }
