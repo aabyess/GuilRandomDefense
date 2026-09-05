@@ -208,6 +208,12 @@ public class UnitAttacker : MonoBehaviour
         SkillLevel level = CurrentSkillLevel(skill);
         if (level == null) return;
 
+        // 06번① 순위배정으로 13기의 UnitData.skill이 null이 아니게 됐지만 levels의
+        // effects는 전부 빈 배열이다(수치 미상, 자리만 있음) — 여기서 걸러서 쿨다운
+        // 타이머 자체가 돌지 않게 한다. 안 그러면 "숫자만 없다"가 아니라 "빈 채로 계속
+        // 돌고 있다"가 된다(PM 지시, 2026-09-05).
+        if (level.effects == null || level.effects.Count == 0) return;
+
         skillCooldownTimer -= Time.deltaTime;
         if (skillCooldownTimer > 0f) return;
 
@@ -223,7 +229,7 @@ public class UnitAttacker : MonoBehaviour
         if (skill == null || skill.triggerType != SkillTriggerType.OnHitChance) return;
 
         SkillLevel level = CurrentSkillLevel(skill);
-        if (level == null) return;
+        if (level == null || level.effects == null || level.effects.Count == 0) return;
         if (Random.value >= level.triggerChance) return;
 
         CastSkillLevel(level, level.range, attackedTarget);
