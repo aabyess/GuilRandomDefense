@@ -364,6 +364,15 @@ public class UnitAttacker : MonoBehaviour
                     lifeShouldReset = true;
                     lifeResetValue = level.resetTo;
                 }
+
+                // ⚠️ 2026-09-06 추가(구현담당1 요청, PM 지시): 원작은 「게이지 AND 확률」
+                // 조합이 있다 — 임계에 닿아도 그걸로 끝이 아니라 SkillLevel.triggerChance로
+                // 2차 확률 판정을 한 번 더 한다. 기존 자산은 전부 triggerChance=1f(기본값)라
+                // 이 줄이 항상 통과해 회귀가 없다. ⚠️ 게이지 리셋은 확률과 별개 블록이다
+                // (원작도 그렇다) — 위에서 이미 manaShouldReset/lifeShouldReset을 세팅한
+                // *뒤에* 이 판정을 하므로, 확률에 실패해 여기서 continue해도 리셋 예약은
+                // 그대로 살아서 루프 끝에 적용된다. 발동(CastSkillLevel)만 건너뛴다.
+                if (Random.value >= level.triggerChance) continue;
             }
 
             CastSkillLevel(level, level.range, attackedTarget);

@@ -175,7 +175,12 @@ public class SkillLevel
     // (게이지+절대쿨 동시 사례가 있는지 리서치담당 확인 전 — check_required_fields.py #10
     // 참고).
     public float cooldown;
-    // OnHitChance 전용 발동확률(0~1). 다른 발동방식이면 안 쓴다.
+    // 발동확률(0~1), 기본 1f(=항상 발동). OnHitChance에선 평타 적중마다의 1차(유일) 판정.
+    // ⚠️ 2026-09-06부터 OnHitCount에서도 쓴다 — 원작에 「게이지 AND 확률」 조합이 있다
+    // (구현담당1 발견, PM 지시): 게이지가 임계에 닿아도 그걸로 끝이 아니라 이 값으로 2차
+    // 확률 판정을 한 번 더 한다. UnitAttacker.TryCastOnHitSkill 참고 — 게이지 리셋은 이
+    // 확률 판정과 별개 블록이라(원작도 그렇다) 확률에 실패해도 게이지는 리셋된다. 기존
+    // OnHitCount 자산은 전부 기본값 1f라 이 판정이 항상 통과해 회귀가 없다.
     [Range(0f, 1f)] public float triggerChance = 1f;
     // 시전·오라 반경.
     public float range;
