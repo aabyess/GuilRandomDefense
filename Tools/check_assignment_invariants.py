@@ -164,6 +164,25 @@ def main():
     # ── 불변식 ② — 같은 SkillData를 두 로스터 유닛이 참조 ──────────────────
     cross_roster_dup = {g: rs for g, rs in guid_to_rosters.items() if len(rs) > 1}
 
+    # ── 불변식 ④ — 로스터 skill/skills에도, 트레잇의 replacementSkill에도 안 걸린
+    # 스킬 에셋(PM 지시, 2026-09-06 — H0BL 사고: 만들어졌는데 아무도 안 쓰는 자산이
+    # "데이터는 있는데 아무 일도 안 일어나는" 자리다). 트레잇(06번③ 능력교체형)은
+    # 로스터가 아니라 트레잇 에셋을 통해 배선되므로 별도로 스캔해야 한다.
+    trait_guids = set()
+    for tp in glob("Assets/Data/Traits/*.asset"):
+        m = re.search(r"^  replacementSkill: \{fileID: \d+(?:, guid: ([0-9a-f]+))?", read(tp), re.MULTILINE)
+        if m and m.group(1):
+            trait_guids.add(m.group(1))
+
+    orphaned_skills = []
+    for sp in skill_assets:
+        guid = path_to_guid.get(str(sp))
+        if guid is None:
+            continue
+        if guid in guid_to_rosters or guid in trait_guids:
+            continue
+        orphaned_skills.append(sp)
+
     # ── 불변식 ① — 원작 유닛 하나의 스킬이 두 로스터 유닛에 걸침 ────────────
     key_to_skill_paths = {}
     unparsed_desc = []
@@ -237,6 +256,13 @@ def main():
     for rp, g in dup_within_roster:
         any_problem = True
         print(f"  ❌ {rp.relative_to(ROOT)} — guid {g} 중복")
+    print()
+
+    print(f"[④ 고아 스킬 에셋] 스킬 에셋 {len(skill_assets)}개 중 로스터 skill/skills에도 "
+          f"트레잇 replacementSkill에도 안 걸린 것 {len(orphaned_skills)}개")
+    for sp in orphaned_skills:
+        any_problem = True
+        print(f"  ❌ {sp.relative_to(ROOT)} — 아무 데도 안 걸림(만들어졌는데 아무도 안 씀)")
     print()
 
     print(f"[⑤ 정보] {csv_path.name}(판정=확정/부분확정) 원작 유닛 {len(csv_names)}개 중 로스터 "
