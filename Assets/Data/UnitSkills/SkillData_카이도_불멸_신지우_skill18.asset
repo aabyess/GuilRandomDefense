@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_카이도_불멸_신지우_skill18
+  m_EditorClassIdentifier:
+  skillName: 카이도 — Kaido_Skill_1_8(신규 확정행)
+  description: 원작 h07M/h0AD 카이도, 표에 없던 행(2026-09-06 리서치담당 신규 추가). 게이트가 경로A(Kaido_Skill_int>=11, 인간형) 또는 경로B(LIFE100아님 AND Kaido_Skill_int<10 AND B05Q없음 AND 1/7, 용형) 중 하나 — 둘 다 상태카운터·버프보유여부가 섞여 있어 우리 축으로 못 읽는다. OnHitChance triggerChance=1.0으로 근사했다 — ⚠️ 경로B만 있는 1/7을 반영하면 경로A(사실상 무조건)를 놓치므로, 무조건 켜는 쪽이 그나마 원작에 더 가깝다고 판단했다(경로A가 조건 자체가 관대해 상시에 가까움) — 다만 그만큼 경로B 조건(카운터<10, 용형)에서는 실제보다 7배 과다 계상될 수 있다. 값 자체가 카이도 항 중 가장 커서(mult 5.9375, bonus 2,250,000) 이 근사의 영향이 가장 크다 — "폼/카운터" 축이 서면 최우선으로 재검토. 2효과: ReceivedDamage×5.9375+2,250,000(Enemies range575, NORMAL→AD, rand1, A0VI 1중첩 동반은 축 밖) / 같은 식(SingleTarget, UNIVERSAL→AP, rand2.58 고정).
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 1.0
+    range: 575
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    effects:
+    - kind: 0
+      basis: 5
+      target: 2
+      damageType: 1
+      attackType: 5
+      multiplier: 5.9375
+      bonus: 2250000
+      chance: 1
+      hitCount: 1
+      duration: 0
+      randMin: 1
+      randMax: 1
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 5
+      target: 3
+      damageType: 2
+      attackType: 5
+      multiplier: 5.9375
+      bonus: 2250000
+      chance: 1
+      hitCount: 1
+      duration: 0
+      randMin: 2.58
+      randMax: 2.58
+      casterBuffCountFactor: 0

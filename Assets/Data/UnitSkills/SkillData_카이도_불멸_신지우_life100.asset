@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_카이도_불멸_신지우_life100
+  m_EditorClassIdentifier:
+  skillName: 카이도 — 용형 체력100%(Kaido_Dragon_Skill_2·melee_1)
+  description: 원작 h0AD 카이도(용형), 게이트=LIFE게이지100.00(리서치담당 확정, 2026-09-06 985150d — udg_Kaido_Damage=우리 ReceivedDamage(recentAttackDamage)와 같은 자리). OnHitCount(Life, threshold=100, resetTo=1). 4효과: ReceivedDamage×0.5+600,000(Enemies)를 Kaido_Dragon_Skill_2#1/#2로 2회, ReceivedDamage×0.8736/×0.546(Enemies, 고정항 0)을 Kaido_Dragon_melee_1#1/#2로. 전부 CHAOS/NORMAL→AD. range는 두 트리거가 515/500으로 달라 작은 쪽(500)으로 통일했다(과다 범위보다 과소 범위가 안전). ⚠️ Kaido_Dragon_melee_1은 고정항이 0이라 100% 평타(recentAttackDamage) 비례다 — 방어 적용 전/후 오차가 최종 피해에 그대로 나간다(다른 카이도 항은 17~40% 고정항으로 오차가 희석되는데 이건 아니다) — 이 축을 정밀하게 갈 때 여기부터 볼 것.
+  triggerType: 3
+  levels:
+  - cooldown: 0
+    triggerChance: 1.0
+    range: 500
+    hitCountThreshold: 100
+    resetTo: 1
+    gaugeKind: 1
+    effects:
+    - kind: 0
+      basis: 5
+      target: 2
+      damageType: 1
+      attackType: 5
+      multiplier: 0.5
+      bonus: 600000
+      chance: 1
+      hitCount: 1
+      duration: 0
+      randMin: 1
+      randMax: 1
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 5
+      target: 2
+      damageType: 1
+      attackType: 5
+      multiplier: 0.5
+      bonus: 600000
+      chance: 1
+      hitCount: 1
+      duration: 0
+      randMin: 1
+      randMax: 1
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 5
+      target: 2
+      damageType: 1
+      attackType: 5
+      multiplier: 0.8736
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      randMin: 1
+      randMax: 1
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 5
+      target: 2
+      damageType: 1
+      attackType: 5
+      multiplier: 0.546
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      randMin: 1
+      randMax: 1
+      casterBuffCountFactor: 0
