@@ -87,7 +87,7 @@ public static class MapGenerator
             BuildUnitUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildOtherWorldUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildEternalUpgradeShop(root.transform, MapLayout.Lanes[i], i);
-            BuildUnitSellPortal(root.transform, MapLayout.Lanes[i], i, pirateQuests);
+            BuildPirateQuestShop(root.transform, MapLayout.Lanes[i], i, pirateQuests);
             BuildStoryZonePortal(root.transform, MapLayout.Lanes[i], i);
             laneObjects.Add(laneObject);
         }
@@ -119,7 +119,9 @@ public static class MapGenerator
         string gateReport = BuildPunkHazardGate(root.transform);
         string storyReport = BuildStoryZone(root.transform);
         string sealReport = BuildSealSpawners(root.transform);
-        string questReport = BuildPirateQuestManager(pirateQuests);
+        string questReport = BuildPirateQuestManager() +
+            $"\n해적단 퀘스트 상점: {pirateQuests.Count}개 연결(레인당 1개, 재고·보충은 상점이 스스로 관리)." +
+            (pirateQuests.Count == 0 ? $"\n  ⚠️ {PirateQuestFolder}에서 PirateQuestData를 하나도 못 찾았습니다." : "");
         string chatUnlockReport = BuildChatUnlockManager();
         string hiddenCombineReport = BuildHiddenCombineManager();
         string chatBoxReport = BuildGameChatBox();
@@ -552,9 +554,9 @@ public static class MapGenerator
 
     const string PirateQuestFolder = "Assets/Data/PirateQuests";
 
-    // 퀘스트 목록을 한 번만 훑어서 매니저(startingQuests)와 레인마다의 포탈(quests)에
-    // 똑같이 나눠준다 — 둘이 다른 순서/부분집합을 들면 포탈이 못 여는 토큰이 무상 지급되는
-    // 사고가 난다.
+    // 퀘스트 목록을 한 번만 훑어서 레인마다의 상점(quests)에 그대로 물려준다. 상점은
+    // 레인(=플레이어)별 독립 재고를 스스로 들고 있어서(PirateQuestShop.Awake) 여기서는
+    // 목록만 꽂으면 된다 — 매니저 쪽엔 더 이상 이 목록을 안 물린다(아래 참고).
     static List<PirateQuestData> LoadPirateQuests()
     {
         return AssetDatabase.FindAssets("t:PirateQuestData", new[] { PirateQuestFolder })
@@ -565,19 +567,20 @@ public static class MapGenerator
             .ToList();
     }
 
-    // 판매 포탈 — 레인당 하나. UnitPortal(위습이 걸어 들어가 유닛을 받는다)과 짝인 구조라
-    // 같은 트리거 방식(CreatePortalObject)을 그대로 쓴다 — BuildLaneShopBody의 클릭형 상점과
-    // 달리 이건 유닛이 몸으로 들어와야 발동한다. 들어온 유닛의 sellUnit으로 어느 해적단
-    // 퀘스트인지는 포탈 스스로 고르므로(UnitSellPortal.FindQuestFor), 여기서는 전체 퀘스트
-    // 목록을 그대로 물려주기만 하면 된다 — 퀘스트마다 포탈을 따로 세우지 않는다.
-    static void BuildUnitSellPortal(Transform parent, MapLayout.Island lane, int laneIndex,
-                                    List<PirateQuestData> quests)
+    // 해적단 퀘스트 상점 — 레인당 하나. 2026-09-05 2차 정정(사장님 발견 + PM 재조사)으로
+    // 트리거 포탈(CreatePortalObject)에서 클릭형 상점(BuildLaneShopBody)으로 바뀌었다 —
+    // 원작이 "유닛이 걸어 들어가 판다"가 아니라 "상점 h07A에서 사는 순간 발동"
+    // (`GetSoldUnit()`)이라, 이번엔 반대로 클릭형이 정답이다(다른 포탈들과 헷갈리지 말 것 —
+    // 저건 여전히 몸으로 들어가야 맞다). 슬롯 위치(5번)는 기존 포탈 자리를 그대로 쓴다 —
+    // 배치는 사장님 몫이라 이번 정정과 무관하게 안 바꿨다.
+    static void BuildPirateQuestShop(Transform parent, MapLayout.Island lane, int laneIndex,
+                                     List<PirateQuestData> quests)
     {
-        GameObject portal = CreatePortalObject(parent, $"{lane.name}_해적단포탈",
-            LaneShopSlot(lane, 5), PortalDiameter);
+        GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_해적단상점",
+            LaneShopSlot(lane, 5), laneIndex, "event");
 
-        UnitSellPortal sellPortal = portal.AddComponent<UnitSellPortal>();
-        SerializedObject so = new SerializedObject(sellPortal);
+        PirateQuestShop questShop = shop.AddComponent<PirateQuestShop>();
+        SerializedObject so = new SerializedObject(questShop);
         SerializedProperty list = so.FindProperty("quests");
 
         list.ClearArray();
@@ -590,11 +593,9 @@ public static class MapGenerator
         so.ApplyModifiedProperties();
     }
 
-    // 해적단류 퀘스트 매니저 — 씬 전체에 하나. startingQuests에 전부(와포루·스모커·해적단·
-    // 바제스·거프·모리아·피카) 채운다: 원작의 "상점 재고 등록" 대신 게임 시작 무상 지급으로
-    // 단순화했으므로(PirateQuestManager.GrantStartingTokens 주석 참고), 여기 없는 퀘스트는
-    // 토큰 자체가 안 나와 영영 못 연다.
-    static string BuildPirateQuestManager(List<PirateQuestData> quests)
+    // 해적단류 퀘스트 매니저 — 씬 전체에 하나, 퀘스트 목록은 안 들고 있다(그건 이제 상점
+    // 쪽 몫). 미니보스 소환·제한시간 판정·성공/실패 보상만 한다 — 빈 껍데기가 아니다.
+    static string BuildPirateQuestManager()
     {
         PirateQuestManager manager = Object.FindFirstObjectByType<PirateQuestManager>(FindObjectsInactive.Include);
         if (manager == null)
@@ -603,22 +604,7 @@ public static class MapGenerator
             manager = managerObject.AddComponent<PirateQuestManager>();
         }
 
-        SerializedObject so = new SerializedObject(manager);
-        SerializedProperty list = so.FindProperty("startingQuests");
-
-        list.ClearArray();
-        for (int i = 0; i < quests.Count; i++)
-        {
-            list.InsertArrayElementAtIndex(i);
-            list.GetArrayElementAtIndex(i).objectReferenceValue = quests[i];
-        }
-
-        so.FindProperty("unitSpawner").objectReferenceValue =
-            Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
-        so.ApplyModifiedProperties();
-
-        return $"\n해적단 퀘스트: {quests.Count}개 연결(포탈은 레인당 1개, 토큰은 게임 시작 시 전원에게 무상 지급)." +
-               (quests.Count == 0 ? $"\n  ⚠️ {PirateQuestFolder}에서 PirateQuestData를 하나도 못 찾았습니다." : "");
+        return "\n해적단 퀘스트 매니저 확인.";
     }
 
     const string ChatUnlockFolder = "Assets/Data/ChatUnlocks";
@@ -2077,10 +2063,11 @@ public static class MapGenerator
         // ⚠️ 2026-09-05 정정(사장님이 게임을 돌려서 발견): 유니티 OnTriggerEnter는 둘 중
         // 하나에 Rigidbody가 있어야 뜬다. UnitPrefab·WispPrefab은 자체 Rigidbody가 있어서
         // 우연히 됐지만, 스킨 프리팹(Unit_idle, Unit_안흔함_상붕카 등)은 둘 다 없어 이
-        // 다섯 포탈(StoryZonePortal·UnitSellPortal·ResourcePortal·InterludeGate·UnitPortal,
-        // 전부 이 함수를 거친다) 전부가 그 유닛들에게 통째로 안 통했다. 포탈 쪽에 한 번만
-        // 붙이면 앞으로 어떤 프리팹이 와도(자체 Rigidbody 유무와 무관하게) 작동한다 —
-        // 스킨마다 따로 고치는 게 아니라 여기 한 곳이 근본 수정이다.
+        // 함수를 거치는 트리거형 포탈(StoryZonePortal·ResourcePortal·InterludeGate·
+        // UnitPortal — 해적단은 그 뒤 클릭형 상점으로 바뀌어 더 이상 여기 안 걸린다)
+        // 전부가 그 유닛들에게 통째로 안 통했다. 포탈 쪽에 한 번만 붙이면 앞으로 어떤
+        // 프리팹이 와도(자체 Rigidbody 유무와 무관하게) 작동한다 — 스킨마다 따로 고치는
+        // 게 아니라 여기 한 곳이 근본 수정이다.
         Rigidbody rb = portal.AddComponent<Rigidbody>();
         rb.isKinematic = true;   // 없으면 포탈이 중력에 떨어진다
         rb.useGravity = false;
