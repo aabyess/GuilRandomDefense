@@ -11,6 +11,14 @@ public class WaveSpawner : MonoBehaviour
 
     readonly List<Coroutine> activeSpawnCoroutines = new List<Coroutine>();
 
+    // 2026-09-06 추가(신세계 사이드보스, ORIGINAL_BOSS_COMBAT_SPEC.md §②) — 원작은 사이드보스를
+    // "그 라운드 스폰 카운터가 15일 때" 표시·시작한다. WaveData.spawnList엔 없는 별도 개체라
+    // 이 이벤트 하나만 추가해서 SideBossManager가 밖에서 그 순간을 알 수 있게 한다 —
+    // 레인당 한 번(entry 하나에서 count번 도는) 스폰마다, 그 레인 안에서 몇 번째 스폰인지
+    // (0-based, 레인 안의 모든 entry를 통틀어 누적)를 같이 보낸다. 아무도 안 구독해도
+    // 기존 동작에 영향이 없다(이벤트 그대로, 안 쓰면 안 부르는 것과 같다).
+    public event System.Action<int, int> OnEnemySpawned;
+
     public void SpawnRound(WaveData wave)
     {
         if (!GameAuthority.IsServer) return;
@@ -58,6 +66,10 @@ public class WaveSpawner : MonoBehaviour
 
     IEnumerator SpawnRoutine(WaveData wave, int laneIndex, WaypointPath lanePath)
     {
+        // 레인 하나 안에서 이 라운드에 통틀어 몇 번째 스폰인지(0-based) — entry가 여러 개라도
+        // 안 끊긴다. OnEnemySpawned 전용, 그 외 로직엔 안 쓴다.
+        int spawnCounter = 0;
+
         foreach (WaveSpawnEntry entry in wave.spawnList)
         {
             if (entry.enemyData == null || entry.enemyData.prefab == null) continue;
@@ -65,12 +77,19 @@ public class WaveSpawner : MonoBehaviour
             for (int i = 0; i < entry.count; i++)
             {
                 SpawnEnemy(entry.enemyData, laneIndex, lanePath);
+                OnEnemySpawned?.Invoke(laneIndex, spawnCounter);
+                spawnCounter++;
                 yield return new WaitForSeconds(entry.spawnInterval);
             }
         }
     }
 
     void SpawnEnemy(EnemyData enemyData, int laneIndex, WaypointPath lanePath)
+    {
+        SpawnEnemyInternal(enemyData, laneIndex, lanePath);
+    }
+
+    GameObject SpawnEnemyInternal(EnemyData enemyData, int laneIndex, WaypointPath lanePath)
     {
         GameObject instance = Instantiate(enemyData.prefab);
 
@@ -85,5 +104,22 @@ public class WaveSpawner : MonoBehaviour
             dummy.Initialize(enemyData);
             dummy.SetLane(laneIndex);
         }
+
+        return instance;
+    }
+
+    // 레인의 WaypointPath를 밖에 노출한다 — SideBossManager가 사이드보스를 그 레인 경로
+    // 위에 직접 스폰할 때 쓴다(WaveData.spawnList를 안 거치는 별도 개체라, SpawnRound의
+    // 일반 스폰 루프 밖에서 필요하다).
+    public WaypointPath GetLanePath(int laneIndex) =>
+        lanePaths != null && laneIndex >= 0 && laneIndex < lanePaths.Count ? lanePaths[laneIndex] : null;
+
+    // 신세계 사이드보스(2026-09-06) 전용 — WaveData.spawnList에 없는 별도 개체라 일반
+    // SpawnRound 루프를 안 거치고 SideBossManager가 직접 부른다.
+    public GameObject SpawnSideBoss(EnemyData enemyData, int laneIndex)
+    {
+        WaypointPath lanePath = GetLanePath(laneIndex);
+        if (enemyData == null || enemyData.prefab == null || lanePath == null) return null;
+        return SpawnEnemyInternal(enemyData, laneIndex, lanePath);
     }
 }
