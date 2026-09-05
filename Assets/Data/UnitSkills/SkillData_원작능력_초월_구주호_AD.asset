@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작능력_초월_구주호_AD
+  m_EditorClassIdentifier:
+  skillName: A04D !소울 솔리드
+  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 초월함 브룩 소울 킹 - 초월함(A04D !소울 솔리드)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. ⚠️ 피해배수·추가피해가 둘 다 0 — 원작 능력 자체가 피해가 아니라 다른 효과(이동·구속 등)였을 수 있다 — 지어내지 않고 그대로 옮겼다.
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 0.175
+    range: 0
+    effects:
+    - kind: 0
+      basis: 3
+      target: 3
+      damageType: 1
+      attackType: 3
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
