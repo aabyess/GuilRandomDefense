@@ -42,9 +42,12 @@ public class UnitAttacker : MonoBehaviour
     bool upgradesResolveAttempted;
     bool upgradeMultiplierDirty = true;
     float cachedUpgradeMultiplier = 1f;
+    float cachedResearchBonus;
 
     // 디버그 표시용 — 스탯이 실제로 적용됐는지 화면에서 확인하기 위해 노출한다.
-    public float AttackDamage => attackDamage * UpgradeMultiplier * AttackPowerMultiplier;
+    // 연구소 가산치(ResearchBonus)는 배수(UpgradeMultiplier)·도움소 버프(AttackPowerMultiplier)
+    // 어느 쪽과도 안 곱한다 — 원작 공식 "기본공격력×배수 + 가산치" 그대로, 맨 위에 더하기만 한다.
+    public float AttackDamage => attackDamage * UpgradeMultiplier * AttackPowerMultiplier + ResearchBonus;
     public float AttackRange => attackRange;
     public float AttackInterval => attackInterval / AttackSpeedMultiplier;
 
@@ -326,28 +329,50 @@ public class UnitAttacker : MonoBehaviour
     {
         get
         {
-            if (upgradeMultiplierDirty)
-            {
-                UnitUpgrades source = ResolveUpgrades();
-                UnitData unitData = identity != null ? identity.Data : null;
-                float damageBonusPercent = source != null && unitData != null
-                    ? source.EffectSum(unitData, TraitEffectKind.DamageIncrease)
-                    : 0f;
-
-                // 연구소(등급 전체 강화, 05번, 2026-09-05) — 특성강화(딜증가)와 별개 축이라
-                // 곱으로 겹친다. 유닛 종의 등급이 담당 트랙에 없거나 그 트랙이 아직 레벨 0이면
-                // MultiplierForGrade가 1을 돌려줘서 무영향이다 — UnitUpgradeShop이
-                // ResearchLabImplemented로 잠겨 있는 동안은 레벨이 절대 안 올라가므로 여기도
-                // 항상 1이다.
-                float researchMultiplier = source != null && unitData != null
-                    ? source.MultiplierForGrade(unitData.grade)
-                    : 1f;
-
-                cachedUpgradeMultiplier = (1f + damageBonusPercent) * researchMultiplier;
-                upgradeMultiplierDirty = false;
-            }
+            RefreshUpgradeCacheIfDirty();
             return cachedUpgradeMultiplier;
         }
+    }
+
+    // 연구소 절대 가산치(gba2/gmo2, 2026-09-05 PM 승인 — 배수 계산과 완전히 별개 필드).
+    // 배수와 곱해지는 게 아니라 AttackDamage에서 그 위에 그대로 더해진다.
+    float ResearchBonus
+    {
+        get
+        {
+            RefreshUpgradeCacheIfDirty();
+            return cachedResearchBonus;
+        }
+    }
+
+    // 배수(특성강화 딜증가 × 연구소 등급배율)와 가산치(연구소 절대 가산)를 한 번에 갱신한다 —
+    // 둘 다 같은 UnitUpgrades.OnLevelChanged 이벤트로만 바뀌므로 dirty 플래그를 공유해도 된다.
+    void RefreshUpgradeCacheIfDirty()
+    {
+        if (!upgradeMultiplierDirty) return;
+
+        UnitUpgrades source = ResolveUpgrades();
+        UnitData unitData = identity != null ? identity.Data : null;
+        float damageBonusPercent = source != null && unitData != null
+            ? source.EffectSum(unitData, TraitEffectKind.DamageIncrease)
+            : 0f;
+
+        // 연구소(등급 전체 강화, 05번, 2026-09-05) — 특성강화(딜증가)와 별개 축이라
+        // 곱으로 겹친다. 유닛 종의 등급이 담당 트랙에 없거나 그 트랙이 아직 레벨 0이면
+        // MultiplierForGrade가 1을 돌려줘서 무영향이다.
+        float researchMultiplier = source != null && unitData != null
+            ? source.MultiplierForGrade(unitData.grade)
+            : 1f;
+
+        cachedUpgradeMultiplier = (1f + damageBonusPercent) * researchMultiplier;
+
+        // 절대 가산치 — 전설·히든·불멸·초월·제한됨 5개 트랙만 0이 아니다. 대응 트랙이 없거나
+        // 레벨 0이면 BonusForGrade가 0을 돌려준다.
+        cachedResearchBonus = source != null && unitData != null
+            ? source.BonusForGrade(unitData.grade)
+            : 0f;
+
+        upgradeMultiplierDirty = false;
     }
 
     // Awake 시점엔 OwnedByPlayer.OwnerId가 아직 안 잡혀 있을 수 있어(스폰 직후 동기 설정 순서 —

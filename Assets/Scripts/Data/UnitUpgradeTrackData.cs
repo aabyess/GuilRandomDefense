@@ -61,9 +61,25 @@ public class UnitUpgradeTrackData : ScriptableObject
     // `ResearchLabImplemented`가 true여도 계속 잠긴 채로 남는다 — UnitUpgradeShop 참고.
     public bool hasOriginalResearch = true;
 
+    // 절대 가산치(`gba2`/`gmo2`, 리서치담당 2026-09-05 확정) — 배수(statLevel1Multiplier 등)와
+    // **완전히 별개 필드**로 원작에 저장돼 있다. 전설적인·히든·불멸·초월함·제한됨 5개만 이 값이
+    // 있다(나머지 특별함·희귀함·랜덤전용은 0 — 필드 기본값 그대로 두면 된다). 최종 공격력은
+    // "기본공격력 × 배수 + 가산치"로, 배수와 곱해지는 게 아니라 그 위에 그대로 더해진다
+    // (UnitAttacker.AttackDamage 참고). 배율과 같은 선형식(레벨1값 + 레벨당증분×(레벨−1))이다 —
+    // 레벨 0은 가산 없음(0).
+    public float statLevel1Bonus;
+    public float statBonusGrowthPerLevel;
+
+    // ⚠️ 랜덤유닛의 statLevel1Multiplier도 근사치다 — 원작 필드값이 0으로 읽혔는데, 다른
+    // 트랙(특별함 등)에서 필드가 비면 엔진 스톡 기본값(1.0)을 상속하는 패턴이 확인돼서
+    // 0이 아니라 1.0으로 해석했다(리서치담당, 2026-09-05). 레벨당 증분(+0.14)만 확정값이다.
+
     public int CostForLevel(int level) =>
         level <= 0 ? Mathf.Max(0, costBase) : Mathf.Max(0, Mathf.RoundToInt(costGrowthPerLevel));
 
     public float MultiplierForLevel(int level) =>
         level <= 0 ? 1f : statLevel1Multiplier + statGrowthPerLevel * (level - 1);
+
+    public float BonusForLevel(int level) =>
+        level <= 0 ? 0f : statLevel1Bonus + statBonusGrowthPerLevel * (level - 1);
 }

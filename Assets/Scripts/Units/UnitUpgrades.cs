@@ -139,4 +139,17 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
         }
         return 1f;
     }
+
+    // MultiplierForGrade와 같은 방식, 가산치(gba2/gmo2)용. 배수와 곱해지는 게 아니라
+    // UnitAttacker.AttackDamage에서 그 위에 그대로 더해진다 — UnitUpgradeTrackData.BonusForLevel
+    // 참고. 대응하는 트랙이 없거나 아직 레벨 0이면 0(가산 없음)을 돌려준다.
+    public float BonusForGrade(UnitGrade grade)
+    {
+        foreach (KeyValuePair<UnitUpgradeTrackData, int> entry in legacyGradeLevels)
+        {
+            if (entry.Key != null && entry.Key.targetGrades != null && entry.Key.targetGrades.Contains(grade))
+                return entry.Key.BonusForLevel(entry.Value);
+        }
+        return 0f;
+    }
 }
