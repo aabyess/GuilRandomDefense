@@ -298,6 +298,32 @@ results.append((
     both_skill_fields,
 ))
 
+# ── 12. UnitData: 로스터 유닛의 damageType이 순수 AP(2) ─────────────────────
+# ⚠️ "필드 없음" 계열이 아니라 "값 자체가 원작에 없는 조합"이다 — damageType=AP는
+# EnemyDummy.MitigatedDamage에서 isAbilityDamage=true(스킬 효과 등)일 때 방어·마법저항을
+# 통째로 무시하는 신호다. 원작 플레이어 유닛 431종 평타 공격타입 전수조사 결과 magic이
+# 0건이다(UnitData.damageType 필드 주석 참고) — **원작에 평타가 UNIVERSAL(순수 AP)인 유닛이
+# 없다.** 순수 AP(damageType=2)가 로스터에 나타나면 그 자체가 데이터 오류다. AD+AP 혼합
+# (damageType=3, 9종)은 원작에도 있는 정상 값이라 대상이 아니다 — "화력이 스킬에서도
+# 나온다"는 표시일 뿐, 평타의 순수 방어 무시로 새지 않는다(EnemyDummy가 isAbilityDamage로
+# 평타 경로를 이미 막는다). 2026-09-05 PM 지적 — "지금 0종이라 안전"이 아니라 "0종이어야
+# 맞다"를 검사로 고정한다.
+def has_pure_ap_damage_type(text):
+    return re.search(r"^  damageType: 2\b", text, re.MULTILINE) is not None
+
+
+pure_ap_roster = [p for p in roster_assets if has_pure_ap_damage_type(read(p))]
+
+results.append((
+    "UnitData: 로스터 damageType이 순수 AP(2)",
+    ["damageType"],
+    "원작 플레이어 유닛 평타에 마법(UNIVERSAL)이 0건이다 — 순수 AP는 그 자체가 데이터 오류. "
+    "이 값이면 평타 경로는 isAbilityDamage=false라 안 새지만(EnemyDummy), 애초에 원작에 없는 "
+    "조합이라 조합표 반영 과정에서 실수로 들어간 값일 가능성이 높다. AD+AP 혼합(3)은 정상.",
+    len(roster_assets),
+    pure_ap_roster,
+))
+
 # ── 리포트 ───────────────────────────────────────────────────────────────
 any_problem = False
 for label, fields, danger, total, missing in results:

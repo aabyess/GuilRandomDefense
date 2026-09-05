@@ -143,7 +143,11 @@ public class UnitAttacker : MonoBehaviour
         if (Random.value >= unitData.critChance) return;
 
         float bonus = AttackDamage * unitData.critDamageMultiplier + unitData.critBonusDamage;
-        target.TakeDamage(bonus, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1);
+        // isAbilityDamage: false — Bash도 평타와 같은 DamageType/AttackType을 써서 방어력·
+        // 상성표를 평타와 똑같이 통과시키는 게 설계 의도다(위 메서드 주석). UNIVERSAL 무시도
+        // 평타와 동일하게 적용 안 한다.
+        target.TakeDamage(bonus, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
+                          armorIgnoreRatio: 0f, isAbilityDamage: false);
 
         if (unitData.critStunDuration > 0f) StartCoroutine(CritStunRoutine(target, unitData.critStunDuration));
     }
@@ -663,7 +667,10 @@ public class UnitAttacker : MonoBehaviour
         {
             Anim?.PlayAttack();
             ApplyArmorShred(target);
-            target.TakeDamage(AttackDamage, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1);
+            // isAbilityDamage: false — 평타는 원작에 UNIVERSAL이 없다(EnemyDummy.TakeDamage
+            // 문서 참고). 로스터 damageType이 AP인 유닛이라도 평타로 방어를 무시하면 안 된다.
+            target.TakeDamage(AttackDamage, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
+                              armorIgnoreRatio: 0f, isAbilityDamage: false);
             ApplyCritIfTriggered(target);
             TryCastOnHitSkill(target);
             return;

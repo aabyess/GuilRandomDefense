@@ -215,10 +215,12 @@ public class UnitData : ScriptableObject
     // **magic 0건**이다. 즉 **원작에서 평타는 항상 물리다.** 마법은 스킬(트리거) 피해에만
     // 있다(SkillEffect.damageType/attackType 참고, 715건 중 62건).
     //
-    // 지금 이 필드엔 AD 189 / AP 40 / AD+AP 9(damageType=3)가 들어 있는데, **AP 40 + AD+AP
-    // 9 = 49종의 "AP" 부분은 원작 근거가 없다** — 평타가 마법인 원작 플레이어 유닛이
-    // 0종이기 때문이다. 값은 여기서 안 고친다(구현담당2가 재는 기준선이 흔들린다) — 실제
-    // 정리는 배정 단계(구현담당1)에서 한다.
+    // ⚠️ 2026-09-05 갱신: 지금 이 필드는 AD 229 / AD+AP 9(damageType=3) / None 1이고
+    // **순수 AP(damageType=2)는 0종이다** — 원작 근거대로 정리가 이미 끝났다(위 comment의
+    // "AP 40" 서술은 낡았다). 순수 AP가 다시 생기면 데이터 오류다 — 원작 평타에 마법이
+    // 0종이기 때문이다(check_required_fields.py #12가 이걸 잡는다). AD+AP(9종)는 지금
+    // EnemyDummy.MitigatedDamage에서 AD와 동일 취급(순수 AP 판정이 거짓이라 방어 무시가
+    // 안 걸린다) — 이건 원작과도 맞다.
     public DamageType damageType;
 
     // 평타의 공격 타입(원작의 normal/pierce/siege/hero/chaos). damageType과 **직교한다** —

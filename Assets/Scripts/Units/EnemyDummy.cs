@@ -410,7 +410,7 @@ public class EnemyDummy : MonoBehaviour
     /// 공식이 0.06이라는 가정을 스스로 되풀이했을 뿐이다. 맵이 0.02라는 건 맵 파일이 말해준다.
     /// </summary>
     /// <summary>
-    /// 최종 피해. 순서: 방깎 → (방어력+마법저항 감폭, AP면 둘 다 생략) → 배율표.
+    /// 최종 피해. 순서: 방깎 → (방어력+마법저항 감폭, 능력 피해의 AP면 둘 다 생략) → 배율표.
     ///
     /// ⚠️ 2026-09-05, 원작 확정(ORIGINAL_DAMAGE_TYPING.csv 715건 전수, PM):
     /// **공격타입(상성표 행)과 피해타입(방어 무시 여부)은 완전히 독립된 축이다.**
@@ -419,14 +419,29 @@ public class EnemyDummy : MonoBehaviour
     /// 방어 무시"로 좁게 봤는데 그 전제가 틀렸다. **우리 축에서 `DamageType.AP`가 곧 원작
     /// `DAMAGE_TYPE_UNIVERSAL`이다** — 어느 attackType 행을 타든(물리·마법 상관없이)
     /// `AP`면 방어를 무시한다.
+    ///
+    /// ⚠️ 2026-09-05 정정(PM 지적): 이 무시는 <b>능력(스킬 효과·도움소·스토리 이벤트) 피해에만</b>
+    /// 유효하다 — <paramref name="isAbilityDamage"/>가 그 구분이다. **원작 유닛 평타에는
+    /// UNIVERSAL이 없다**(평타는 전부 자기 `ua1t` 공격타입 + 물리 피해). 우리 로스터
+    /// `UnitData.damageType`은 "화력이 스킬에서 나온다"는 조합표 표시일 뿐 원작 UNIVERSAL
+    /// 평타를 뜻하지 않는다 — `type`만 보고 방어를 무시하면, 훗날 조합표 반영 중 어느 유닛이
+    /// AP로 바뀌는 순간 그 유닛 평타가 방어를 통째로 무시하게 된다(지금 로스터는 순수 AP 0종이라
+    /// 우연히 안 터질 뿐, 데이터가 안전한 것이지 코드가 안전한 게 아니다). 그래서 평타 경로
+    /// (<c>UnitAttacker</c>의 일반 공격·Bash 크리티컬)는 <paramref name="isAbilityDamage"/>를
+    /// 명시적으로 <c>false</c>로 넘긴다.
     /// </summary>
-    float MitigatedDamage(float amount, DamageType type, AttackType attackType, float armorIgnoreRatio)
+    float MitigatedDamage(float amount, DamageType type, AttackType attackType, float armorIgnoreRatio,
+                          bool isAbilityDamage)
     {
         // AP = 원작 UNIVERSAL — 물리 방어력과 마법저항을 둘 다 무시한다(엔진 규칙 확정,
         // PM 2026-09-05). attackType은 안 본다 — 어느 상성표 행이든(물리·마법 모두)
         // UNIVERSAL은 그 앞의 방어 축 자체를 건너뛴다. 상성표(아래)는 그래도 탄다 —
         // "방어 무시"와 "상성표"는 별개 축이다(원작 엔진 문서 확정).
-        bool bypassPhysicalArmor = type == DamageType.AP;
+        //
+        // isAbilityDamage가 false(평타·Bash)면 type이 AP여도 무시하지 않는다 — 원작 평타엔
+        // UNIVERSAL이 없어서다(위 요약 참고). AD/AP 혼합(우리 로스터 9종)은 지금도 기존과
+        // 같이 이 조건이 거짓이라(type이 순수 AP가 아니므로) 안 샌다.
+        bool bypassPhysicalArmor = isAbilityDamage && type == DamageType.AP;
 
         if (!bypassPhysicalArmor)
         {
@@ -459,9 +474,10 @@ public class EnemyDummy : MonoBehaviour
         }
         else if (damageTable != null && !loggedRowMismatch)
         {
-            // RowMatches가 지금은 항상 true라 이 분기는 사실상 안 걸린다 — 그래도 지우지
-            // 않는다(PM 지시). 나중에 RowMatches가 다시 뭔가를 막게 되면 그 원인을 알려줄
-            // 자리로 남겨둔다.
+            // ⚠️ 확인: RowMatches가 지금 항상 true를 돌려주므로(DamageTable.cs) 이 분기는
+            // 현재 코드에서 도달 불가능한 죽은 코드다. 지우지 않고 남겨두는 것뿐이다 —
+            // "경고 배선을 유지했다"는 이 분기 자체가 지금 실행된다는 뜻이 아니라, RowMatches가
+            // 나중에 다시 무언가를 막게 될 때 이 자리만 고치면 되게 남겨뒀다는 뜻이다(PM 지시).
             loggedRowMismatch = true;
             Debug.LogWarning($"{name}: {type} 피해에 {attackType} 행이 상성표 검사를 건너뛰었다.", this);
         }
@@ -497,12 +513,19 @@ public class EnemyDummy : MonoBehaviour
     /// <paramref name="type"/>과 직교한다 — 저쪽은 "무엇으로 감폭하느냐", 이쪽은 "어느 행이냐"다.
     /// <b>둘의 짝이 안 맞으면 상성표를 건너뛰고 경고한다</b>(<c>DamageTable.RowMatches</c>).
     /// </param>
+    /// <param name="isAbilityDamage">
+    /// ⚠️ 2026-09-05 추가(PM 지적) — <c>type==DamageType.AP</c>의 방어·마법저항 무시가
+    /// 유효한 피해원인가. 기본 <c>true</c> — 스킬 효과·도움소·스토리 이벤트 등 "능력" 경로가
+    /// 대부분이라 그쪽을 안 건드리는 게 안전하다. <b>평타(및 Bash 크리티컬)만 명시적으로
+    /// <c>false</c>를 넘긴다</b> — 원작 유닛 평타엔 UNIVERSAL이 없어서, 로스터 표시상 AP인
+    /// 유닛이 평타로 방어를 통째로 무시하면 안 된다(위 <c>MitigatedDamage</c> 요약 참고).
+    /// </param>
     public void TakeDamage(float amount, DamageType type, AttackType attackType,
-                           int killerPlayerId, float armorIgnoreRatio = 0f)
+                           int killerPlayerId, float armorIgnoreRatio = 0f, bool isAbilityDamage = true)
     {
         if (isDead) return;
 
-        hp -= MitigatedDamage(amount, type, attackType, armorIgnoreRatio);
+        hp -= MitigatedDamage(amount, type, attackType, armorIgnoreRatio, isAbilityDamage);
 
         if (invulnerable)
         {
