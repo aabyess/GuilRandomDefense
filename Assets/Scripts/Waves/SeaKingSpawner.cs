@@ -2,14 +2,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 거대 해왕류(원작 [퀘스트] 카테고리, o02N) — 이동속도 0, 맵에 좌표 하나로 고정 배치되는
-// 표적이다. 웨이브가 아니라 게임 시작에 한 번만 세운다(PM 지시, 2026-09-05) — SealSpawner와
-// 비슷한 모양이지만 단계 전환이 없어서 더 단순하다.
+// 거대 해왕류(원작 [퀘스트] 카테고리, o02N, "하늘섬 퀘스트 3형제" 중 3번) — 이동속도 0,
+// 맵에 좌표 하나로 고정 배치되는 표적이다. 웨이브가 아니라 게임 시작에 한 번만 세운다
+// (PM 지시, 2026-09-05) — SealSpawner와 비슷한 모양이지만 단계 전환이 없어서 더 단순하다.
+//
+// ⚠️ 하늘섬 3형제(sky_1 파괴물 "황금 조각" 5만 · sky_2 파괴물 "등불" 650만 · sky_3 이 유닛
+// 3600만)는 체인이 아니라 각각 독립이다(리서치담당 확인) — 조건은 "플레이어 생존" 하나뿐이고
+// 순서를 정하는 건 이름이 아니라 체력이다. 1·2는 발동 조건이 없어서가 아니라 **이번 범위가
+// 3번뿐이라서** 안 만들었다(PM 지시) — 나중에 만들 때 이 클래스를 그대로 복제하면 된다.
 //
 // 처치 보상(전 플레이어: 골드 3,000 + 흔함선택위습 1기 + 세이브 플레이포인트 1)이 EnemyData로
 // 표현 못 하는 다단 지급이라, PirateQuestManager와 같은 이유로 RewardDistributor.
 // GrantKillReward 표준 파이프라인을 안 타고 이 스크립트가 직접 지급한다 — 그래서 EnemyData는
 // goldReward=0/resourceRewards 비움으로 둔다(PirateQuestManager 클래스 주석과 같은 관례).
+//
+// ⚠️ 원작 보상 중 둘은 안 옮겼다(PM 확인, 2026-09-05) — **1/6 확률 ItemGet**(아이템 계통이
+// 우리에 없다)과 **보유 유닛 전원에게 영웅경험치 325**(경험치 축 자체가 없다, UnitData.cs의
+// "아군 유닛엔 체력·경험치 개념이 없다" 주석과 같은 이유). 지어내지 않고 뺐다.
 public class SeaKingSpawner : MonoBehaviour
 {
     [SerializeField] EnemyData seaKingData;
@@ -21,8 +30,7 @@ public class SeaKingSpawner : MonoBehaviour
     const int RewardWispCount = 1;
 
     // war3map.j Trig_Quest_sky_3 — PersistentSave.AddSessionPoints 코멘트의 "Quest_sky_1/2/3
-    // +1씩(3곳)" 중 3번째. 하늘섬 퀘스트 1·2는 발동 조건을 아직 안 풀어서 안 만든다(PM 지시) —
-    // 이 메서드의 첫 실제 호출부다.
+    // +1씩(3곳)" 중 3번째 — 이 메서드의 첫 실제 호출부다.
     const int RewardSessionPoints = 1;
 
     GameObject current;
