@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_카이도_불멸_신지우_skill18
   m_EditorClassIdentifier:
   skillName: 카이도 — Kaido_Skill_1_8(신규 확정행)
-  description: 원작 h07M/h0AD 카이도, 표에 없던 행(2026-09-06 리서치담당 신규 추가). 게이트가 경로A(Kaido_Skill_int>=11) 또는 경로B(LIFE100아님 AND Kaido_Skill_int<10 AND B05Q없음 AND 1/7) 중 하나 — "폼"이 아니라 카운터로 갈리는 배타 경로이고, Kaido_Skill_int는 카이도 평타에서만 오른다(PM 확인, 2026-09-06). 카운터가 10 미만인 초반 평타 10타 구간만 경로B(1/7)고, 11 이상이 되면 영구히 경로A(무조건)로 넘어간다 — 유닛이 한 판에 수백 번 때리므로 정상 상태는 "무조건" 쪽이고 초반 구간은 전체에서 무시할 만한 비중이다. 그래서 OnHitChance triggerChance=1.0이 장기적으로 정확한 근사다(7배 과다 계상이 아니다) — 카운터가 정확히 10일 때 어느 경로도 안 맞는 원작의 한 틱짜리 빈틈은 무시했다. 2효과: ReceivedDamage×5.9375+2,250,000(Enemies range575, NORMAL→AD, rand1, A0VI 1중첩 동반은 축 밖) / 같은 식(SingleTarget, UNIVERSAL→AP, rand2.58 고정).
+  description: 원작 카이도(h07M/h0AD), 표에 없던 행(2026-09-06 리서치담당 신규 추가). 게이트가 경로A(Kaido_Skill_int>=11) 또는 경로B(LIFE100아님 AND Kaido_Skill_int<10 AND B05Q없음 AND 1/7) 중 하나 — "폼"이 아니라 카운터로 갈리는 배타 경로이고, Kaido_Skill_int는 카이도 평타에서만 오른다(PM 확인, 2026-09-06). 카운터가 10 미만인 초반 평타 10타 구간만 경로B(1/7)고, 11 이상이 되면 영구히 경로A(무조건)로 넘어간다 — 유닛이 한 판에 수백 번 때리므로 정상 상태는 "무조건" 쪽이고 초반 구간은 전체에서 무시할 만한 비중이다. 그래서 OnHitChance triggerChance=1.0이 장기적으로 정확한 근사다(7배 과다 계상이 아니다) — 카운터가 정확히 10일 때 어느 경로도 안 맞는 원작의 한 틱짜리 빈틈은 무시했다. 2효과: ReceivedDamage×5.9375+2,250,000(Enemies range575, NORMAL→AD, rand1, A0VI 1중첩 동반은 축 밖) / 같은 식(SingleTarget, UNIVERSAL→AP, rand2.58 고정).
   triggerType: 0
   levels:
   - cooldown: 0
