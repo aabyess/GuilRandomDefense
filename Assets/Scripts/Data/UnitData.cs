@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum UnitGrade
@@ -240,7 +241,27 @@ public class UnitData : ScriptableObject
     public float attackRange;
     public float attackSpeed;   // 초당 공격 횟수 (1.2 = 1초에 1.2번). UnitAttacker에서 1/attackSpeed로 간격 환산
     public float moveSpeed;
+
+    // ⚠️ 이 필드도 아래 skills도 직접 읽지 말 것 — SkillCount/SkillAt(index)로만 통한다
+    // (PM 지시 2026-09-05). 읽는 곳마다 "skills가 비면 skill로 폴백"을 각자 다시 짜면
+    // 그중 하나가 안 하는 게 사고 지점이 된다.
     public SkillData skill;
+
+    // 원작 스킬 채널이 유닛 하나당 최대 6개까지 나온다(MULTI_SKILL_IMPACT.md — 절대쿨
+    // 게이트 21건 + 게이지·확률 게이트 200건, 96종이 이미 1·2채널 스킬 위에 최대 5개를
+    // 더 받는다). 기존 238종 에셋의 skill 한 줄은 안 건드린다(하위호환) — 이 리스트가
+    // 비어 있으면 SkillCount/SkillAt이 skill 하나를 "길이 1짜리 목록"으로 흡수한다.
+    public List<SkillData> skills = new List<SkillData>();
+
+    /// <summary>이 유닛이 가진 스킬 개수 — skills가 채워져 있으면 그 길이, 비어 있으면
+    /// skill이 있을 때만 1(없으면 0). skill/skills를 직접 보지 말고 이거+SkillAt만 쓸 것.</summary>
+    public int SkillCount => (skills != null && skills.Count > 0) ? skills.Count : (skill != null ? 1 : 0);
+
+    /// <summary>index번째 스킬. skills가 비어 있으면 index는 항상 0이고 skill을 돌려준다
+    /// (호출부가 SkillCount로 범위를 이미 확인했다고 가정 — 여기선 인덱스를 다시 안 잠근다,
+    /// 매 프레임 불려서 새 리스트를 만들지 않으려는 것과 같은 이유로 방어 코드를 최소로
+    /// 뒀다).</summary>
+    public SkillData SkillAt(int index) => (skills != null && skills.Count > 0) ? skills[index] : skill;
 
     // 이 유닛을 대상으로 하는 특성강화(06번). UnitTraitData.targetUnit의 역참조다 — 골드/조합
     // 재료처럼 "이 유닛이 곧 그 자체로 대상"이라 별도 레지스트리를 두지 않고 skill과 같은

@@ -256,6 +256,48 @@ def onhitcount_with_cooldown(text):
 
 onhitcount_cooldown_warnings = [p for p in skill_assets if onhitcount_with_cooldown(read(p))]
 
+# ── 11. UnitData: skill과 skills가 둘 다 채워짐 — skill이 조용히 무시됨 ────
+# ⚠️ UnitData.SkillCount/SkillAt(2026-09-05 다중 스킬 확장, MULTI_SKILL_IMPACT.md)이
+# "skills가 하나라도 있으면 skill은 아예 안 본다"로 정했다(UnitData.cs의 SkillCount 주석
+# 참고) — 하위호환을 위해 옛 skill 필드를 안 지웠을 뿐이다. 그래서 두 필드가 동시에
+# 채워진 에셋은 skill 쪽 값이 통째로 죽은 배선이 된다 — "값은 있는데 아무도 안 읽는다"는
+# 오늘 하루 종일 잡아온 바로 그 패턴이다. skill만 있거나 skills만 있는 건 정상이라 대상이
+# 아니다(그래서 fields 목록엔 이름만 적고, 대상 자체는 "둘 다 있는 것"만 잡는다).
+def has_both_skill_fields(text):
+    skill_m = re.search(r"^  skill: \{fileID: (\d+)", text, re.MULTILINE)
+    has_skill = skill_m is not None and skill_m.group(1) != "0"
+    if not has_skill:
+        return False
+
+    # 리스트 필드 판독은 audit_data.py의 top_level_field_status와 같은 패턴을 쓴다 —
+    # "skills:"가 같은 줄에 "- "로 시작하거나("skills:  - {...}"), 다음 줄이 "  - "로
+    # 시작하면 항목이 있는 것이다("[]"거나 다음 줄이 다른 필드면 빈 리스트).
+    skills_m = re.search(r"^  skills:(.*)$", text, re.MULTILINE)
+    if skills_m is None:
+        return False
+    rest = skills_m.group(1).strip()
+    if rest == "[]":
+        return False
+    if rest.startswith("- "):
+        return True
+    if rest == "":
+        next_line_start = skills_m.end() + 1  # "\n" 다음
+        return text[next_line_start:next_line_start + 4] == "  - "
+    return False
+
+
+roster_assets = glob("Assets/Data/Units/Roster/*.asset")
+both_skill_fields = [p for p in roster_assets if has_both_skill_fields(read(p))]
+
+results.append((
+    "UnitData: skill과 skills가 둘 다 채워짐 (skill 쪽이 조용히 무시됨)",
+    ["skill", "skills"],
+    "skills가 하나라도 있으면 UnitData.SkillCount/SkillAt이 skill을 아예 안 본다 — 둘 다 "
+    "채우면 skill 쪽 스킬이 죽은 배선이 된다. skill만 있거나 skills만 있는 건 정상이다.",
+    len(roster_assets),
+    both_skill_fields,
+))
+
 # ── 리포트 ───────────────────────────────────────────────────────────────
 any_problem = False
 for label, fields, danger, total, missing in results:

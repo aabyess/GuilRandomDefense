@@ -158,51 +158,71 @@ public class UnitAttacker : MonoBehaviour
     }
 
     // ---- 유닛 능력(스킬) — 평타·Bash와 별개 축이다(PM 지시, 2026-09-05). 기존 attackTimer·
-    // ApplyCritIfTriggered는 위에서 안 건드렸다. UnitData.skill이 비어 있는 유닛(지금 전부)은
+    // ApplyCritIfTriggered는 위에서 안 건드렸다. UnitData.skill/skills가 비어 있는 유닛은
     // 여기서 전부 조용히 리턴하므로 동작이 그대로다 — 사장님이 유닛별로 SkillData를
     // 배정하기 전까지는 실질적으로 죽어 있다.
-    float skillCooldownTimer;
-
-    // OnHitCount 전용 카운터 — 유닛 인스턴스별이다(SkillData는 공유 에셋이라 거기 두면
-    // 같은 스킬을 가진 유닛끼리 카운터를 나눠 쓴다). skillCooldownTimer와 같은 자리.
     //
-    // ⚠️ 시작값은 C#의 암묵적 기본값 0이 아니라 resetTo여야 한다(PM 지시 2026-09-05,
-    // 리서치담당 확인 — 원작 체력형은 체력이 이미 1에서 출발해서 첫 주기도 이후 주기와
-    // 똑같이 "임계값-resetTo"타다). resetTo=0인 마나형은 결과가 그대로라 안 갈린다.
-    // 어느 SkillLevel을 쓰는지 Awake 시점엔 몰라서(Skill이 06번①·특성강화로 바뀔 수 있다)
-    // 첫 사용 시점에 그 레벨의 resetTo로 늦게 채운다.
-    int onHitCountCounter;
-    bool onHitCountInitialized;
-
-    // OnHitChance 절대쿨(SkillLevel.cooldown 주석 참고) 전용 — 시전에 성공한 시각 +
-    // cooldown을 저장해두고 그 시각이 지났는지만 비교한다. skillCooldownTimer(매 프레임
-    // Update에서 깎는 카운트다운)를 재사용하지 않는다 — TryCastOnHitSkill은 평타가 맞을
-    // 때만 불려서(매 프레임이 아니다) 카운트다운 방식을 못 쓰고, SupportShop.
-    // GetCooldownUntil/StartCooldown과 같은 절대시각 방식을 쓴다.
-    float onHitChanceLockedUntil;
-
-    // 06번① 능력교체형 트레잇(UnitTraitData.replacementSkill)이 걸려 있으면 원래
-    // UnitData.skill 대신 그걸 통째로 쓴다 — 원작이 레벨을 올리는 게 아니라 능력 자체를
-    // 갈아끼우는 26분기 중 8개라(UnitRemoveAbilityBJ+UnitAddAbilityBJ), 레벨 인덱스로는
-    // 못 담는다. 스킬승급형(레벨 인덱스)과 능력교체형(스킬 자체 교체)은 유닛 1종당 트레잇
-    // 1개뿐이라 겹칠 일이 없다.
-    SkillData Skill
+    // ⚠️ 2026-09-05 다중 스킬 확장(MULTI_SKILL_IMPACT.md) — 유닛 하나가 스킬을 최대 6개까지
+    // 가질 수 있다(96종이 기존 1·2채널 스킬 위에 게이지·확률·절대쿨 게이트 스킬을 최대 5개
+    // 더 받는다). "스킬 하나" 전제였던 것 셋을 갈랐다:
+    //   · cooldownTimer·onHitChanceLockedUntil → 스킬(버프 ID)마다 독립이라 그대로 스킬별.
+    //     Dictionary<SkillData, SkillRuntimeState>로 스킬 에셋을 키 삼는다.
+    //   · onHitCount 카운터만 예외 — 원작이 유닛의 마나·체력 하나를 여러 스킬이 공유해서
+    //     쓴다(사보 4개가 마나==125 하나를 같이 보는 실제 사례 확인, ⑤-B). 그래서 스킬별이
+    //     아니라 유닛당 게이지 종류별(마나 1개·체력 1개) 공유 카운터로 뺐다.
+    class SkillRuntimeState
     {
-        get
-        {
-            UnitData unitData = identity != null ? identity.Data : null;
-            if (unitData == null) return null;
+        public float cooldownTimer;          // CooldownAutoCast·Aura 전용
+        public float onHitChanceLockedUntil; // OnHitChance 절대쿨 전용
+    }
 
+    Dictionary<SkillData, SkillRuntimeState> skillRuntimeStates;
+
+    SkillRuntimeState GetRuntimeState(SkillData skill)
+    {
+        skillRuntimeStates ??= new Dictionary<SkillData, SkillRuntimeState>();
+        if (!skillRuntimeStates.TryGetValue(skill, out SkillRuntimeState state))
+        {
+            state = new SkillRuntimeState();
+            skillRuntimeStates[skill] = state;
+        }
+        return state;
+    }
+
+    // 유닛 공유 게이지(OnHitCount 전용, SkillGaugeKind 참고) — 스킬별이 아니라 게이지
+    // 종류당 하나씩이다. 시작값은 C# 기본값 0이 아니라 그 스킬의 resetTo여야 한다(원작
+    // 체력형은 체력이 이미 1에서 출발해서 첫 주기도 이후 주기와 같은 길이가 된다, PM 지시
+    // 2026-09-05·리서치담당 확인) — 첫 사용 시점에 늦게 채운다(Awake 시점엔 어느 스킬을
+    // 쓸지 모른다, 06번①·특성강화로 바뀔 수 있어서).
+    int manaGaugeCounter;
+    bool manaGaugeInitialized;
+    int lifeGaugeCounter;
+    bool lifeGaugeInitialized;
+
+    // unitData.SkillAt(정적 데이터, UnitData.cs 참고)이 주는 슬롯 위에 런타임 오버레이
+    // (06번① 능력교체형 트레잇)를 얹는다. ⚠️ 슬롯 0(첫 스킬)에만 적용한다 — 06번① 15종은
+    // 지금 전부 스킬이 하나뿐이라(레거시 skill 필드) 슬롯0=유일한 스킬이라 안 갈린다. 한
+    // 유닛이 06번①과 이번 다중스킬(96종)을 동시에 가지면(지금은 없음) 슬롯0만 교체된다는
+    // 한계가 남는다 — 실제로 겹치면 그때 다시 설계할 것.
+    SkillData ResolveSkillAt(UnitData unitData, int index)
+    {
+        if (index == 0)
+        {
             UnitUpgrades source = ResolveUpgrades();
             SkillData replacement = source != null ? source.ReplacementSkillFor(unitData) : null;
-            return replacement != null ? replacement : unitData.skill;
+            if (replacement != null) return replacement;
         }
+        return unitData.SkillAt(index);
     }
 
     // 06번① 완료: 스킬승급형 트레잇(UnitTraitData.skillLevelUnlockIndex)이 UnitUpgrades에
     // 걸려 있으면 그 레벨을, 없으면 레벨1(index 0)을 쓴다. 원작이 "레벨2 = 레벨1 그대로 +
     // 새 효과"로 만들어서(수치 배율이 아니다) 인덱스만 바꾸는 것으로 충분하다 — 레벨1/2
     // 각각의 SkillLevel.effects 자체를 SkillData 에셋 쪽에서 이미 완결된 목록으로 담아둔다.
+    // ⚠️ 이 인덱스는 스킬이 아니라 유닛 단위로 정해진다(SkillLevelIndexFor(unitData)) — 한
+    // 유닛이 스킬을 여러 개 가지면 전부 같은 인덱스를 쓴다. 06번①은 지금 스킬 1개뿐인
+    // 유닛만 써서 문제가 없다 — 다중 스킬 유닛이 스킬승급형 트레잇도 갖는 사례가 생기면
+    // 그때 "어느 스킬의 레벨을 올릴지"를 다시 설계해야 한다.
     SkillLevel CurrentSkillLevel(SkillData skill)
     {
         if (skill.levels == null || skill.levels.Count == 0) return null;
@@ -215,71 +235,102 @@ public class UnitAttacker : MonoBehaviour
         return skill.levels[Mathf.Clamp(index, 0, skill.levels.Count - 1)];
     }
 
-    // CooldownAutoCast·Aura 전용 — OnHitChance는 평타가 실제로 맞았을 때만 판정해야 해서
-    // Update()의 공격 성공 분기에서 TryCastOnHitSkill로 따로 부른다.
+    // CooldownAutoCast·Aura 전용 — OnHitChance·OnHitCount는 평타가 실제로 맞았을 때만
+    // 판정해야 해서 Update()의 공격 성공 분기에서 TryCastOnHitSkill로 따로 부른다.
     void UpdateSkillCooldown()
     {
-        SkillData skill = Skill;
-        if (skill == null) return;
-        if (skill.triggerType != SkillTriggerType.CooldownAutoCast && skill.triggerType != SkillTriggerType.Aura) return;
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null) return;
 
-        SkillLevel level = CurrentSkillLevel(skill);
-        if (level == null) return;
+        int count = unitData.SkillCount;
+        for (int i = 0; i < count; i++)
+        {
+            SkillData skill = ResolveSkillAt(unitData, i);
+            if (skill == null) continue;
+            if (skill.triggerType != SkillTriggerType.CooldownAutoCast && skill.triggerType != SkillTriggerType.Aura)
+                continue;
 
-        // 06번① 순위배정으로 13기의 UnitData.skill이 null이 아니게 됐지만 levels의
-        // effects는 전부 빈 배열이다(수치 미상, 자리만 있음) — 여기서 걸러서 쿨다운
-        // 타이머 자체가 돌지 않게 한다. 안 그러면 "숫자만 없다"가 아니라 "빈 채로 계속
-        // 돌고 있다"가 된다(PM 지시, 2026-09-05).
-        if (level.effects == null || level.effects.Count == 0) return;
+            SkillLevel level = CurrentSkillLevel(skill);
+            if (level == null) continue;
 
-        skillCooldownTimer -= Time.deltaTime;
-        if (skillCooldownTimer > 0f) return;
+            // 06번① 순위배정으로 13기의 UnitData.skill이 null이 아니게 됐지만 levels의
+            // effects는 전부 빈 배열이다(수치 미상, 자리만 있음) — 여기서 걸러서 쿨다운
+            // 타이머 자체가 돌지 않게 한다. 안 그러면 "숫자만 없다"가 아니라 "빈 채로 계속
+            // 돌고 있다"가 된다(PM 지시, 2026-09-05).
+            if (level.effects == null || level.effects.Count == 0) continue;
 
-        // 오라는 쿨다운 개념이 없다("계속 켜져 있다") — 매 프레임 판정하면 값이 생겼을 때
-        // 폭증하니 1초 주기로 재판정한다.
-        skillCooldownTimer = skill.triggerType == SkillTriggerType.Aura ? 1f : Mathf.Max(0.01f, level.cooldown);
-        CastSkillLevel(level, level.range, null);
+            SkillRuntimeState state = GetRuntimeState(skill);
+            state.cooldownTimer -= Time.deltaTime;
+            if (state.cooldownTimer > 0f) continue;
+
+            // 오라는 쿨다운 개념이 없다("계속 켜져 있다") — 매 프레임 판정하면 값이 생겼을 때
+            // 폭증하니 1초 주기로 재판정한다.
+            state.cooldownTimer = skill.triggerType == SkillTriggerType.Aura ? 1f : Mathf.Max(0.01f, level.cooldown);
+            CastSkillLevel(level, level.range, null);
+        }
     }
 
     void TryCastOnHitSkill(EnemyDummy attackedTarget)
     {
-        SkillData skill = Skill;
-        if (skill == null) return;
-        if (skill.triggerType != SkillTriggerType.OnHitChance && skill.triggerType != SkillTriggerType.OnHitCount)
-            return;
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null) return;
 
-        SkillLevel level = CurrentSkillLevel(skill);
-        if (level == null || level.effects == null || level.effects.Count == 0) return;
+        int count = unitData.SkillCount;
+        if (count == 0) return;
 
-        if (skill.triggerType == SkillTriggerType.OnHitChance)
+        // 공유 게이지(OnHitCount)는 이 평타 한 번에 게이지 종류당 최대 한 번만 올린다 —
+        // 스킬마다 올리면 스킬이 많은 유닛일수록 게이지가 그만큼 빨리 차서, 원작의 "유닛
+        // 마나 하나가 딱 1씩 오른다"가 깨진다(⑤-B 사보 예시 참고).
+        bool manaIncremented = false;
+        bool lifeIncremented = false;
+
+        for (int i = 0; i < count; i++)
         {
-            // 절대쿨(SkillLevel.cooldown 주석 참고, PM 지시 2026-09-05) — 원작은 버프 검사가
-            // 바깥 if라서, 잠긴 동안은 확률 판정까지 안 간다. cooldown<=0이면 이 줄이 항상
-            // 통과해 기존 동작과 완전히 같다(회귀 없음).
-            if (level.cooldown > 0f && Time.time < onHitChanceLockedUntil) return;
+            SkillData skill = ResolveSkillAt(unitData, i);
+            if (skill == null) continue;
+            if (skill.triggerType != SkillTriggerType.OnHitChance && skill.triggerType != SkillTriggerType.OnHitCount)
+                continue;
 
-            if (Random.value >= level.triggerChance) return;
+            SkillLevel level = CurrentSkillLevel(skill);
+            if (level == null || level.effects == null || level.effects.Count == 0) continue;
 
-            if (level.cooldown > 0f) onHitChanceLockedUntil = Time.time + level.cooldown;
-        }
-        else
-        {
-            // OnHitCount: 확률이 아니라 "정확히 N타째" — 원작 특성 24건이 이렇다(SkillData.cs
-            // SkillTriggerType.OnHitCount 주석 참고). 카운터는 이 유닛 인스턴스가 들고 있다.
-            // 첫 사용 시점에 resetTo로 시작값을 늦게 채운다(위 onHitCountCounter 주석 참고) —
-            // 그래야 첫 주기도 이후 주기와 같은 길이(임계값-resetTo타)가 된다.
-            if (!onHitCountInitialized)
+            if (skill.triggerType == SkillTriggerType.OnHitChance)
             {
-                onHitCountCounter = level.resetTo;
-                onHitCountInitialized = true;
+                // 절대쿨(SkillLevel.cooldown 주석 참고, PM 지시 2026-09-05) — 원작은 버프
+                // 검사가 바깥 if라서, 잠긴 동안은 확률 판정까지 안 간다. cooldown<=0이면 이
+                // 줄이 항상 통과해 기존 동작과 완전히 같다(회귀 없음).
+                SkillRuntimeState state = GetRuntimeState(skill);
+                if (level.cooldown > 0f && Time.time < state.onHitChanceLockedUntil) continue;
+
+                if (Random.value >= level.triggerChance) continue;
+
+                if (level.cooldown > 0f) state.onHitChanceLockedUntil = Time.time + level.cooldown;
+            }
+            else
+            {
+                // OnHitCount: 확률이 아니라 "정확히 N타째" — 원작 특성 24건이 이렇다
+                // (SkillTriggerType.OnHitCount 주석 참고). 카운터는 게이지 종류별로 이
+                // 유닛이 공유한다(위 manaGaugeCounter/lifeGaugeCounter 주석 참고) — 첫
+                // 사용 시점에 resetTo로 시작값을 늦게 채운다(그래야 첫 주기도 이후 주기와
+                // 같은 길이가 된다).
+                if (level.gaugeKind == SkillGaugeKind.Mana)
+                {
+                    if (!manaGaugeInitialized) { manaGaugeCounter = level.resetTo; manaGaugeInitialized = true; }
+                    if (!manaIncremented) { manaGaugeCounter++; manaIncremented = true; }
+                    if (manaGaugeCounter < level.hitCountThreshold) continue;
+                    manaGaugeCounter = level.resetTo;
+                }
+                else
+                {
+                    if (!lifeGaugeInitialized) { lifeGaugeCounter = level.resetTo; lifeGaugeInitialized = true; }
+                    if (!lifeIncremented) { lifeGaugeCounter++; lifeIncremented = true; }
+                    if (lifeGaugeCounter < level.hitCountThreshold) continue;
+                    lifeGaugeCounter = level.resetTo;
+                }
             }
 
-            onHitCountCounter++;
-            if (onHitCountCounter < level.hitCountThreshold) return;
-            onHitCountCounter = level.resetTo;
+            CastSkillLevel(level, level.range, attackedTarget);
         }
-
-        CastSkillLevel(level, level.range, attackedTarget);
     }
 
     // primaryTarget: OnHitChance가 이미 골라둔 대상(SingleTarget 효과가 우선 이걸 쓴다).
