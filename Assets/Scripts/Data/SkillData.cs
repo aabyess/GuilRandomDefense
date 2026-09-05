@@ -96,6 +96,20 @@ public enum SkillEffectBasis
     // ⚠️ 지금은 마나 게이지만 읽는다 — 원작의 이 꼴을 쓰는 5행이 전부 부릉냐(마나)라서다.
     // 체력 게이지 사례가 나오면 그때 level.gaugeKind를 여기까지 흘려보내야 한다.
     CasterGaugeValue,
+
+    // ⚠️ 맨 뒤에 추가 — 직렬화 순서를 지킨다. (2026-09-06, PM)
+    // 원작 `GetUnitAbilityLevelSwapped('AXXX', 시전자) x k` 꼴. 원작 능력 레벨은 1 또는 2이고
+    // 우리 SkillData.levels[0]/[1]과 1:1로 대응한다(UnitUpgrades.SkillLevelIndexFor +1).
+    //
+    // 이 축이 없어서 초월함 스킬의 「43,500 x 레벨」·「17,500 x 레벨」 같은 비례항을 통째로
+    // 버리고 상수항만 옮기고 있었다 — 값을 깎는 근사 6건 중 4건이 초월함에 몰려 있었고
+    // (Docs/reference/TRANSCENDENT_DAMAGE_INVESTIGATION_2026-09-06.md), 그게 「원작 초월함
+    // 스킬의 1/3」의 주된 원인이었다.
+    //
+    // ⚠️ 같은 조사에서 나온 나머지 절반인 「영웅 능력치(STR/AGI/INT) x k」는 여기 안 담긴다 —
+    // 그건 축이 없는 게 아니라 **우리 유닛에 영웅 스탯이라는 개념 자체가 없어서**다.
+    // 축 하나로 안 끝나고 시스템을 만들어야 한다(사장님 판단 대기).
+    CasterSkillLevel,
 }
 
 // 무엇을 하는 효과인가.

@@ -314,6 +314,16 @@ public class UnitAttacker : MonoBehaviour
     // 유닛이 스킬을 여러 개 가지면 전부 같은 인덱스를 쓴다. 06번①은 지금 스킬 1개뿐인
     // 유닛만 써서 문제가 없다 — 다중 스킬 유닛이 스킬승급형 트레잇도 갖는 사례가 생기면
     // 그때 "어느 스킬의 레벨을 올릴지"를 다시 설계해야 한다.
+    // 원작 능력 레벨(1-based). 우리 levels 인덱스는 0-based라 +1 한다 —
+    // SkillEffectBasis.CasterSkillLevel이 읽는다. 업그레이드가 아직 없으면 인덱스 0 = 레벨 1.
+    int CurrentSkillLevelNumber()
+    {
+        UnitData unitData = identity != null ? identity.Data : null;
+        UnitUpgrades source = ResolveUpgrades();
+        int index = (unitData != null && source != null) ? source.SkillLevelIndexFor(unitData) : 0;
+        return Mathf.Max(0, index) + 1;
+    }
+
     SkillLevel CurrentSkillLevel(SkillData skill)
     {
         if (skill.levels == null || skill.levels.Count == 0) return null;
@@ -655,6 +665,10 @@ public class UnitAttacker : MonoBehaviour
             // 그 경우 bonus만 남는다(원작의 "게이지 0" 상태와 같다).
             case SkillEffectBasis.CasterGaugeValue:
                 return manaGaugeCounter * effect.multiplier + effect.bonus;
+            // 원작 능력 레벨(1 또는 2) x multiplier + bonus. 우리 levels 인덱스 +1이 원작
+            // 레벨과 1:1이다(CurrentSkillLevel의 index 계산과 같은 자리를 쓴다).
+            case SkillEffectBasis.CasterSkillLevel:
+                return CurrentSkillLevelNumber() * effect.multiplier + effect.bonus;
             default: return 0f;
         }
     }
