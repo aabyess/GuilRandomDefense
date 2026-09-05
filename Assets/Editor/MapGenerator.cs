@@ -2506,6 +2506,10 @@ public static class MapGenerator
             // 연구소 완성 전까지 골드만 먹는 상점이 되는 걸 막기 위함) — 이 컴포넌트를
             // 붙인다고 그 상점이 같이 풀리지 않는다.
             UnitUpgrades upgrades = player.AddComponent<UnitUpgrades>();
+            // 11번(영속 저장) — GoldWallet 등과 같은 결로 PlayerContext를 되짚어 참조하지
+            // 않는다, 그래서 파일 키로 쓸 playerId를 자기 것으로 따로 들고 있다. 아래에서
+            // PlayerContext.playerId와 같은 값으로 맞춰 꽂는다.
+            PersistentSave save = player.AddComponent<PersistentSave>();
             PlayerContext context = player.AddComponent<PlayerContext>();
 
             SerializedObject so = new SerializedObject(context);
@@ -2518,8 +2522,11 @@ public static class MapGenerator
             so.FindProperty("unitInventory").objectReferenceValue = units;
             so.FindProperty("gamblingProgress").objectReferenceValue = gambling;
             so.FindProperty("unitUpgrades").objectReferenceValue = upgrades;
+            so.FindProperty("persistentSave").objectReferenceValue = save;
             so.FindProperty("warehouse").objectReferenceValue = FindWarehouse(playerId);
             so.ApplyModifiedProperties();
+
+            SetPersistentSavePlayerId(save, playerId);
 
             created++;
         }
@@ -2561,10 +2568,20 @@ public static class MapGenerator
             changed |= EnsurePart<UnitInventory>(context, so, "unitInventory");
             changed |= EnsurePart<GamblingProgress>(context, so, "gamblingProgress");
             changed |= EnsurePart<UnitUpgrades>(context, so, "unitUpgrades");
+            changed |= EnsurePart<PersistentSave>(context, so, "persistentSave");
+
+            if (changed) so.ApplyModifiedProperties();
+
+            // EnsurePart는 참조만 걸어준다 — PersistentSave 자신의 playerId 필드는 별도
+            // SerializedObject라 여기서 항상 맞춰준다(참조가 이미 있던 기존 플레이어도
+            // playerId가 어긋나 있을 수 있다, changed와 무관하게 매번 검사).
+            if (context.PersistentSave != null)
+            {
+                changed |= SetPersistentSavePlayerId(context.PersistentSave, context.PlayerId);
+            }
 
             if (!changed) continue;
 
-            so.ApplyModifiedProperties();
             repaired++;
         }
 
@@ -2583,6 +2600,20 @@ public static class MapGenerator
         if (part == null) part = context.gameObject.AddComponent<T>();
 
         property.objectReferenceValue = part;
+        return true;
+    }
+
+    // PersistentSave는 GoldWallet 등과 달리 PlayerContext를 되짚어 참조하지 않고 자기 own
+    // playerId를 들고 있다(11번, 영속 저장 — 파일 키로 쓴다) — EnsurePart<T>가 채우는 건
+    // PlayerContext 쪽 참조 필드뿐이라 이 값은 따로 맞춰줘야 한다.
+    static bool SetPersistentSavePlayerId(PersistentSave save, int playerId)
+    {
+        SerializedObject so = new SerializedObject(save);
+        SerializedProperty property = so.FindProperty("playerId");
+        if (property == null || property.intValue == playerId) return false;
+
+        property.intValue = playerId;
+        so.ApplyModifiedProperties();
         return true;
     }
 
