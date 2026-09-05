@@ -165,7 +165,14 @@ public class UnitAttacker : MonoBehaviour
 
     // OnHitCount 전용 카운터 — 유닛 인스턴스별이다(SkillData는 공유 에셋이라 거기 두면
     // 같은 스킬을 가진 유닛끼리 카운터를 나눠 쓴다). skillCooldownTimer와 같은 자리.
+    //
+    // ⚠️ 시작값은 C#의 암묵적 기본값 0이 아니라 resetTo여야 한다(PM 지시 2026-09-05,
+    // 리서치담당 확인 — 원작 체력형은 체력이 이미 1에서 출발해서 첫 주기도 이후 주기와
+    // 똑같이 "임계값-resetTo"타다). resetTo=0인 마나형은 결과가 그대로라 안 갈린다.
+    // 어느 SkillLevel을 쓰는지 Awake 시점엔 몰라서(Skill이 06번①·특성강화로 바뀔 수 있다)
+    // 첫 사용 시점에 그 레벨의 resetTo로 늦게 채운다.
     int onHitCountCounter;
+    bool onHitCountInitialized;
 
     // 06번① 능력교체형 트레잇(UnitTraitData.replacementSkill)이 걸려 있으면 원래
     // UnitData.skill 대신 그걸 통째로 쓴다 — 원작이 레벨을 올리는 게 아니라 능력 자체를
@@ -245,6 +252,14 @@ public class UnitAttacker : MonoBehaviour
         {
             // OnHitCount: 확률이 아니라 "정확히 N타째" — 원작 특성 24건이 이렇다(SkillData.cs
             // SkillTriggerType.OnHitCount 주석 참고). 카운터는 이 유닛 인스턴스가 들고 있다.
+            // 첫 사용 시점에 resetTo로 시작값을 늦게 채운다(위 onHitCountCounter 주석 참고) —
+            // 그래야 첫 주기도 이후 주기와 같은 길이(임계값-resetTo타)가 된다.
+            if (!onHitCountInitialized)
+            {
+                onHitCountCounter = level.resetTo;
+                onHitCountInitialized = true;
+            }
+
             onHitCountCounter++;
             if (onHitCountCounter < level.hitCountThreshold) return;
             onHitCountCounter = level.resetTo;
