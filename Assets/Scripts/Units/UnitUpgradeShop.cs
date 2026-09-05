@@ -9,21 +9,30 @@ using UnityEngine;
 // 되돌리지 않는다. 사는 순간 전부 반영되고 새로 스폰되는 유닛도 맞는 값이라는 것이 이 설계의
 // 의도였다(PM 지시 — 도움소 임시 버프와 겹쳐도 안 깨진다).
 //
-// 🚨 **그런데 그 배율을 읽는 쪽이 없다. 이 상점은 지금 골드만 먹는다.**
+// 🚨 **그런데 그 배율을 읽는 쪽이 없다. 지금 열면 골드만 먹는 상점이 된다.**
 //
 // 여기 원래 "실제 배율 적용은 UnitAttacker가 UnitUpgrades.MultiplierFor(grade)를 읽어서 한다"고
 // 적혀 있었는데, **`MultiplierFor`라는 메서드는 존재한 적이 없다.** UnitAttacker가 보는 것은
 // UnitUpgrades.EffectSum(unitData, DamageIncrease) 하나뿐이고, 그건 특성(UnitTraitData)을 훑지
 // 이 상점이 올리는 legacyGradeLevels를 안 본다.
 //
-// 그래서 TryUse는 GoldWallet.TrySpend로 돈을 받고 아무도 안 읽는 딕셔너리에 +1을 한다.
-// 툴팁은 "다음 레벨: x1.20"이라고 약속한다. **지금 안 눌리는 이유는 PlayerContext.unitUpgrades가
-// 씬에서 null이기 때문뿐이다** — 그 배선을 고치면 속이기 시작한다(`Docs/reference/WIRING_AUDIT.md`).
-//
-// 고치는 순서와 「레거시 등급강화를 살릴지 지울지」는 사장님 판단 대기다. 그전까지 배선하지 마라.
+// 2026-09-05까지는 "PlayerContext.unitUpgrades가 씬에서 null이라 안 눌린다"는 게 우연한
+// 안전장치였다(`Docs/reference/WIRING_AUDIT.md` §1). 오늘 사장님이 "원작 연구소로 만들어라"고
+// 확정하면서(05번) 그 null을 없애기로 했다 — `MapGenerator`가 이제 `UnitUpgrades`를 붙인다.
+// **그 우연한 안전장치가 사라지므로, 이 파일이 대신 잠근다.** `ResearchLabImplemented`
+// 하나가 그 스위치다 — 연구소(레벨을 읽어 실제 배율에 곱하는 코드)가 완성되면 그 값만
+// `true`로 바꾸면 된다. 그전까지 `TryUse`는 골드를 쓰기 전에 막고, 툴팁도 "다음 레벨: xN"을
+// 약속하지 않고 준비 중이라고만 말한다 — 지킬 수 없는 약속을 화면에 남겨두지 않기 위해서다.
 [RequireComponent(typeof(Selectable), typeof(OwnedByPlayer))]
 public class UnitUpgradeShop : MonoBehaviour, ILaneShop
 {
+    // 연구소(올린 레벨을 읽어 실제 공격력 배율에 곱하는 코드)가 완성되면 이 값 하나만
+    // true로 바꾼다 — 그 외에는 아무것도 안 건드려도 된다. false인 동안 TryUse는 골드를
+    // 쓰기 전에 막고, 툴팁도 "다음 레벨" 약속 대신 준비 중이라고만 말한다(사장님 결정
+    // 05번, 2026-09-05 — "원작 연구소로 만들어라"가 아직 안 끝난 상태에서 상점만 먼저 열지
+    // 않기 위함).
+    const bool ResearchLabImplemented = false;
+
     [SerializeField] List<UnitUpgradeTrackData> tracks = new List<UnitUpgradeTrackData>();
 
     struct SlotState
@@ -84,6 +93,9 @@ public class UnitUpgradeShop : MonoBehaviour, ILaneShop
         int level = LevelOf(track);
         float multiplier = track.MultiplierForLevel(level);
 
+        if (!ResearchLabImplemented)
+            return $"{track.trackName}\n{track.description}\n현재 Lv.{level} — 연구소 준비 중, 아직 강화할 수 없습니다";
+
         if (track.maxLevel > 0 && level >= track.maxLevel)
             return $"{track.trackName}\n{track.description}\n현재 Lv.{level} (공격력 x{multiplier:F2}) — 최대 레벨";
 
@@ -96,6 +108,7 @@ public class UnitUpgradeShop : MonoBehaviour, ILaneShop
 
     public bool TryUse(int index, LaneShopTarget target)
     {
+        if (!ResearchLabImplemented) return false;   // 골드를 쓰기 전에 막는다 — 위 클래스 주석 참고
         if (index < 0 || index >= tracks.Count) return false;
 
         UnitUpgradeTrackData track = tracks[index];
@@ -121,6 +134,7 @@ public class UnitUpgradeShop : MonoBehaviour, ILaneShop
 
     bool CanUpgrade(UnitUpgradeTrackData track, int level)
     {
+        if (!ResearchLabImplemented) return false;   // 슬롯이 눌러도 되는 것처럼 안 보이게
         if (track.maxLevel > 0 && level >= track.maxLevel) return false;
 
         PlayerContext context = OwnerContext;

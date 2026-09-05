@@ -2498,6 +2498,12 @@ public static class MapGenerator
             ResourceWallet resources = player.AddComponent<ResourceWallet>();
             UnitInventory units = player.AddComponent<UnitInventory>();
             GamblingProgress gambling = player.AddComponent<GamblingProgress>();
+            // 특성강화 상태(특성포인트 4갈래 + 방깎·마방깍) — 이걸 안 붙이면 그 넷이 전부
+            // null 리턴에서 안 벗어난다(WIRING_AUDIT.md §1). 유닛강화소는 이것과 별개로
+            // UnitUpgradeShop.ResearchLabImplemented가 계속 잠가둔다(사장님 결정 05번,
+            // 연구소 완성 전까지 골드만 먹는 상점이 되는 걸 막기 위함) — 이 컴포넌트를
+            // 붙인다고 그 상점이 같이 풀리지 않는다.
+            UnitUpgrades upgrades = player.AddComponent<UnitUpgrades>();
             PlayerContext context = player.AddComponent<PlayerContext>();
 
             SerializedObject so = new SerializedObject(context);
@@ -2509,6 +2515,7 @@ public static class MapGenerator
             so.FindProperty("resourceWallet").objectReferenceValue = resources;
             so.FindProperty("unitInventory").objectReferenceValue = units;
             so.FindProperty("gamblingProgress").objectReferenceValue = gambling;
+            so.FindProperty("unitUpgrades").objectReferenceValue = upgrades;
             so.FindProperty("warehouse").objectReferenceValue = FindWarehouse(playerId);
             so.ApplyModifiedProperties();
 
@@ -2551,6 +2558,7 @@ public static class MapGenerator
             changed |= EnsurePart<ResourceWallet>(context, so, "resourceWallet");
             changed |= EnsurePart<UnitInventory>(context, so, "unitInventory");
             changed |= EnsurePart<GamblingProgress>(context, so, "gamblingProgress");
+            changed |= EnsurePart<UnitUpgrades>(context, so, "unitUpgrades");
 
             if (!changed) continue;
 
