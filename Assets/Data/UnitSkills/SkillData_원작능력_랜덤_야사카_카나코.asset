@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_랜덤_야사카_카나코
   m_EditorClassIdentifier:
   skillName: Trig_ichigo1
-  description: 원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1).
+  description: 원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1). 2026-09-05 타입 정정(ORIGINAL_DAMAGE_TYPING.csv, 60b9797): 원작 ATTACK_TYPE_NORMAL은 이름과 달리 Spells 행이고 DAMAGE_TYPE_UNIVERSAL은 방어력을 뚫는다(우리 AP 대응) — generate_unit_skill_damage_effects.py의 배정을 재계산해 유닛ID+계산식으로 표와 대조, attackType/damageType을 정정했다.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -23,7 +23,7 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 3
-      damageType: 1
+      damageType: 2
       attackType: 5
       multiplier: 200000.0
       bonus: 0.0

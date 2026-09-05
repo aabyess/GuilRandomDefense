@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_변화됨_강재규
   m_EditorClassIdentifier:
   skillName: Trig_Transpom6
-  description: 원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 변화된 베이비 5 초토화 모드 - 변화된(Trig_Transpom6)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 변화된 베이비 5 초토화 모드 - 변화된(Trig_Transpom6).
+  description: 원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 변화된 베이비 5 초토화 모드 - 변화된(Trig_Transpom6)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 변화된 베이비 5 초토화 모드 - 변화된(Trig_Transpom6). 2026-09-05 타입 정정(ORIGINAL_DAMAGE_TYPING.csv, 60b9797): 원작 ATTACK_TYPE_NORMAL은 이름과 달리 Spells 행이고 DAMAGE_TYPE_UNIVERSAL은 방어력을 뚫는다(우리 AP 대응) — generate_unit_skill_damage_effects.py의 배정을 재계산해 유닛ID+계산식으로 표와 대조, attackType/damageType을 정정했다.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -23,8 +23,8 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 3
-      damageType: 1
-      attackType: 1
+      damageType: 2
+      attackType: 7
       multiplier: 101500.0
       bonus: 0.0
       chance: 1
