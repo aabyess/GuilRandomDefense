@@ -86,30 +86,52 @@ def extract_original_key_with_pos(description):
     return None, -1
 
 
+# ⚠️ 실행 중 두 번째 발견 — 위 4개 서문만 봐서 놓쳤다: ⑤-0의 1단계(직접배정)·
+# 3단계(흡수)가 만드는 SUFFIX("| 1채널 추가/우선 배정(...): ")는 파일 맨 앞이 아니라
+# 뒤에 붙는데, 그 뒤에 이어지는 "(uid)의 능력 N개" 자리가 checker의 첫 매치가 될 수
+# 있다(앞쪽 세그먼트의 닫는 괄호 뒤 문맥이 "의 "/","로 안 이어지면 스킵되기 때문—
+# 골.D.로져 건에서 실제로 이렇게 걸렸다: 1채널 서문 없이 시작하는 파일인데 실제
+# 매칭은 뒤쪽 1채널 SUFFIX였다). "서문이 파일 맨 앞에 있다"가 아니라 "매칭 위치
+# 바로 앞에 있는 가장 가까운 마커가 그 세그먼트의 소유자"로 정확히 잡아야 한다.
+SEGMENT_MARKERS = [
+    (CH1_PREAMBLE, '1채널'),
+    (CH2_PREAMBLE, '2채널'),
+    (CH96_PREAMBLE, '96번(미수록스킬)'),
+    (CH96G_PREAMBLE, '게이트별(미수록스킬)'),
+    ('1채널 추가 배정(', '1채널'),
+    ('1채널 우선 배정(', '1채널'),
+    ('2차 배정(트리거·더미 채널)', '2채널'),
+]
+
+
 def channel_of(path: Path, description: str, match_start: int) -> str:
     fname = path.name
     for pat, ch in FILENAME_CHANNEL:
         if pat.match(fname):
             return ch
     if fname.startswith('SkillData_원작능력_'):
-        prefix = description[:match_start]
-        markers = {
-            '1채널': CH1_PREAMBLE in prefix,
-            '2채널': CH2_PREAMBLE in prefix,
-            '96번(미수록스킬)': CH96_PREAMBLE in prefix,
-            '게이트별(미수록스킬)': CH96G_PREAMBLE in prefix,
-        }
-        hits = [ch for ch, ok in markers.items() if ok]
-        if len(hits) == 1:
-            return hits[0]
-        if not hits:
-            # revert()가 1채널 서문을 지운 stacked 2채널 remainder(⑤-0), 또는 1채널의
-            # REASON_DIRECT/REASON_ABSORB SUFFIX만 있는 파일 — 매치가 파일 맨 앞
-            # (알려진 서문 자체가 없는 자리)에서 바로 일어난 것이면 2채널의
-            # "원작 {등급} {이름}(...)." 그대로일 가능성이 가장 높다(⑤-0 revert()가
-            # 1채널 몫만 지우고 2채널 remainder를 앞으로 당겼다).
-            return '2채널(서문 제거된 remainder로 추정)'
-        return f'혼재({"+".join(hits)}, 육안 확인 필요)'
+        occurrences = []
+        for marker, ch in SEGMENT_MARKERS:
+            start = 0
+            while True:
+                idx = description.find(marker, start)
+                if idx == -1:
+                    break
+                occurrences.append((idx, ch))
+                start = idx + 1
+        occurrences.sort()
+        owner = None
+        for pos, ch in occurrences:
+            if pos <= match_start:
+                owner = ch
+            else:
+                break
+        if owner:
+            return owner
+        # 어떤 마커보다도 앞에서 매칭됐다 — revert()가 1채널 서문을 지운 stacked
+        # 2채널 remainder(파일 맨 앞이 "원작 {등급} {이름}(...)."로 바로 시작,
+        # ⑤-0에서 실제 파일 열어 STACK_MARKER로 확인된 패턴). 낮은 확신도 표시.
+        return '2채널(서문 제거된 remainder로 추정)'
     return f'미분류({fname})'
 
 
