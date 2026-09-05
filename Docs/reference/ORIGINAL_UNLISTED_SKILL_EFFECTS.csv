@@ -52,9 +52,9 @@
 초월함,H09B,G.O.D,Usop_Skill_2,5,350000.00,Flat,,350000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Pierce,AP(방어무시),1/5,,확정
 초월함,H09B,G.O.D,Usop_Skill_Mana,1,"(1000000.00+(GetUnitStateSwap(UNIT_STATE_LIFE,GetEnumUnit())*0.02))",대상현재체력,0.02,1000000,Enemies,600.00,범위확정,GetEnumUnit(),1,Hero,AD,MANA게이지140.00,,확정
 초월함,H09D,"""어둠의 조커""드레스로자의 악몽",DP_AttackDamagegaksung,1,((GetEventDamage()*0.85)+85000.00),[축밖],,,Enemies,350.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),실제 평타피해 비례,축밖
-초월함,H09D,"""어둠의 조커""드레스로자의 악몽",DP_Skill_2,1,200000.00,Flat,,200000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/10,,확정
-초월함,H09D,"""어둠의 조커""드레스로자의 악몽",DP_Skill_2,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.25)*(0.20+(0.05*I2R(GetUnitAbility",대상현재체력×계수,0.25,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AD,1/10,계수 0.20+0.05×레벨/연구,확정
-초월함,H09D,"""어둠의 조커""드레스로자의 악몽",DP_Skill_3,1,"(750000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,udg_Hero_DP[0],true))*10000.00))",영웅능력치,10000,750000,Enemies,525.00,범위확정,GetEnumUnit(),1,Pierce,AD,1/8,,확정
+초월함,H09D,"""어둠의 조커""드레스로자의 악몽",DP_Skill_2,1,200000.00,Flat,,200000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/9,,확정
+초월함,H09D,"""어둠의 조커""드레스로자의 악몽",DP_Skill_2,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.25)*(0.20+(0.05*I2R(GetUnitAbility",대상현재체력×계수,0.25,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AD,1/9,계수 0.20+0.05×레벨/연구,확정
+초월함,H09D,"""어둠의 조커""드레스로자의 악몽",DP_Skill_3,1,"(750000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,udg_Hero_DP[0],true))*10000.00))",영웅능력치,10000,750000,Enemies,525.00,범위확정,GetEnumUnit(),1,Pierce,AD,1/6,,확정
 초월함,H09E,"""어둠의 조커""드레스로자의 악몽",DP_AttackDamage,1,((GetEventDamage()*0.50)+50000.00),[축밖],,,Enemies,275.00,범위확정,GetEnumUnit(),1,Pierce,AD,(게이트 없음),실제 평타피해 비례,축밖
 초월함,H09F,수라의 검사,Zoro_Samchun2,1,(1500000.00+s__TrigVariables__get_realD(GlobalTV)),[축밖],,,Enemies,600.00,범위확정,GetEnumUnit(),1,Chaos,AD,MANA게이지145.00,realD(앞단계 중간값),축밖
 초월함,H09F,수라의 검사,Zoro_Samchun2,2,2500000.00,Flat,,2500000,Enemies,600.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지145.00,,확정
@@ -64,24 +64,24 @@
 초월함,H09F,수라의 검사,Zoro_samchun1,1,2500000.00,Flat,,2500000,Enemies,525.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지145.00,,확정
 초월함,H09F,수라의 검사,Zoro_saza1,1,(602500.00+s__TrigVariables__get_realD(GlobalTV)),[축밖],,,Enemies,405.00,범위확정,GetEnumUnit(),1,Chaos,AD,1/6,realD(앞단계 중간값),축밖
 초월함,H09F,수라의 검사,Zoro_saza1,2,(903750.00+(s__TrigVariables__get_realD(GlobalTV)*10.00)),[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AD,1/6,realD(앞단계 중간값),축밖
-초월함,H09G,정열의 요리사,Sandi_skill_1,1,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.10)*(0.20+(0.05*I2R(GetUnitAbility",대상현재체력×계수,0.1,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Siege,AP(방어무시),(게이트 없음),계수 0.20+0.05×레벨/연구,확정
-초월함,H09G,정열의 요리사,Sandi_skill_1,2,450000.00,Flat,,450000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Magic,AP(방어무시),(게이트 없음),,확정
+초월함,H09G,정열의 요리사,Sandi_skill_1,1,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.10)*(0.20+(0.05*I2R(GetUnitAbility",대상현재체력×계수,0.1,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Siege,AP(방어무시),1/6,계수 0.20+0.05×레벨/연구,확정
+초월함,H09G,정열의 요리사,Sandi_skill_1,2,450000.00,Flat,,450000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Magic,AP(방어무시),1/6,,확정
 초월함,H09G,정열의 요리사,Sandi_skill_Mana2,1,3330000.00,Flat,,3330000,Enemies,600.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지115.00,,확정
 초월함,H09G,정열의 요리사,Sandi_skill_Mana2,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.10)*(0.20+(0.05*I2R(GetUnitAbility",대상현재체력×계수,0.1,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Siege,AP(방어무시),MANA게이지115.00,계수 0.20+0.05×레벨/연구,확정
 초월함,H09G,정열의 요리사,Sandi_skill_Mana2,3,2075000.00,Flat,,2075000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),MANA게이지115.00,,확정
 초월함,H09I,소울 킹,Brook_Skill_1,1,350000.00,Flat,,350000,Enemies,360.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),1/7,,확정
 초월함,H09I,소울 킹,Brook_Skill_1,2,350000.00,Flat,,350000,Enemies,360.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),1/7,,확정
-초월함,H0B2,다섯번째 황제,Snake_2,1,(350000.00*(1+(0.01*(GetUnitMoveSpeed(GetEnumUnit())*0.40)))),[축밖],,,Enemies,475.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),1/12,대상 이동속도,축밖
-초월함,H0B2,다섯번째 황제,Snake_2,2,350000.00,Flat,,350000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Magic,AP(방어무시),1/12,,확정
-초월함,H0B2,다섯번째 황제,Snake_3_Kingkobra,1,(3500000.00*(1+(0.01*(GetUnitMoveSpeed(GetEnumUnit())*0.10)))),[축밖],,,Enemies,550.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),MANA게이지75.00,대상 이동속도,축밖
-초월함,H0B2,다섯번째 황제,Snake_3_Kingkobra,2,1875000.00,Flat,,1875000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Magic,AP(방어무시),MANA게이지75.00,,확정
+초월함,H0B2,다섯번째 황제,Snake_2,1,(350000.00*(1+(0.01*(GetUnitMoveSpeed(GetEnumUnit())*0.40)))),[축밖],,,Enemies,475.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),1/15,대상 이동속도,축밖
+초월함,H0B2,다섯번째 황제,Snake_2,2,350000.00,Flat,,350000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Magic,AP(방어무시),1/15,,확정
+초월함,H0B2,다섯번째 황제,Snake_3_Kingkobra,1,(3500000.00*(1+(0.01*(GetUnitMoveSpeed(GetEnumUnit())*0.10)))),[축밖],,,Enemies,550.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),MANA게이지85.00,대상 이동속도,축밖
+초월함,H0B2,다섯번째 황제,Snake_3_Kingkobra,2,1875000.00,Flat,,1875000,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Magic,AP(방어무시),MANA게이지85.00,,확정
 초월함,H0B4,유스타스'캡틴',Kid_Skill_3,1,(300000.00*(1+(s__TrigVariables__get_realD(GlobalTV)*0.01))),[축밖],,,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),2,Spells,AP(방어무시),LIFE게이지50.00 AND 1/10,realD(앞단계 중간값),축밖
 초월함,H0B4,유스타스'캡틴',Kid_Skill_3,2,(300000.00*(1+(s__TrigVariables__get_realD(GlobalTV)*0.01))),[축밖],,,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),2,Spells,AP(방어무시),LIFE게이지50.00 AND 1/10,realD(앞단계 중간값),축밖
 초월함,H0B4,유스타스'캡틴',Kid_Skill_3_item,1,(450000.00*(1+(s__TrigVariables__get_realD(GlobalTV)*0.01))),[축밖],,,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Spells,AP(방어무시),LIFE게이지50.00 AND 1/10,realD(앞단계 중간값),축밖
 초월함,H0B5,해군대장-보르살리노,Kizaru_01,1,s__TrigVariables__get_realD(GlobalTV),[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/12,realD(앞단계 중간값),축밖
 초월함,H0B5,해군대장-보르살리노,Kizaru_01_shoot,1,200000.00,Flat,,200000,Enemies,385.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),1/17,,확정
-초월함,H0BD,오니히메,Yamato_Dash,1,((udg_Yamato_Damage[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV)))]*1.15)+215000,[축밖],,,Enemies,450.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),(게이트 없음),캐릭터 전용 누적변수,축밖
-초월함,H0BD,오니히메,Yamato_Dash,2,((udg_Yamato_Damage[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV)))]*1.15)+215000,[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),(게이트 없음),캐릭터 전용 누적변수,축밖
+초월함,H0BD,오니히메,Yamato_Dash,1,((udg_Yamato_Damage[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV)))]*1.15)+215000,[축밖],,,Enemies,450.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),1/3,캐릭터 전용 누적변수,축밖
+초월함,H0BD,오니히메,Yamato_Dash,2,((udg_Yamato_Damage[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV)))]*1.15)+215000,[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),1/3,캐릭터 전용 누적변수,축밖
 초월함,H0BE,오니히메 인수화,Yamato_Attack_Damage2,1,((GetEventDamage()*0.75)+15000.00),[축밖],,,Enemies,425.00,범위확정,GetEnumUnit(),2,Chaos,AD,(게이트 없음),실제 평타피해 비례,축밖
 초월함,H0BE,오니히메 인수화,Yamato_Attack_Damage2,2,((GetEventDamage()*0.20)+15000.00),[축밖],,,Enemies,425.00,범위확정,GetEnumUnit(),1,Chaos,AP(방어무시),(게이트 없음),실제 평타피해 비례,축밖
 초월함,H0BE,오니히메 인수화,Yamato_Attack_Damage2,3,((GetEventDamage()*0.75)+15000.00),[축밖],,,Enemies,425.00,범위확정,GetEnumUnit(),2,Chaos,AD,(게이트 없음),실제 평타피해 비례,축밖
@@ -183,8 +183,8 @@
 불멸의,h04J,골.D.로져 해적왕 - 불멸의,roger_Skill_2,1,1450000.00,Flat,,1450000,Enemies,850.00,범위확정,GetEnumUnit(),1,Hero,AD,1/22,,확정
 불멸의,h04Q,빅 맘 강철 풍선 - 불멸의,Bigmam_Eat,1,(1750000.00*(1+(0.01*I2R(GetItemCharges(udg_Item_Bigmom[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables_,[축밖],,,Enemies,600.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),(게이트 없음),아이템 충전수,축밖
 불멸의,h04Q,빅 맘 강철 풍선 - 불멸의,Bigmam_Eat,2,(4500000.00*(1+(0.01*I2R(GetItemCharges(udg_Item_Bigmom[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables_,[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),(게이트 없음),아이템 충전수,축밖
-불멸의,h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_buster,1,s__TrigVariables__get_realD(GlobalTV),[축밖],,,Enemies,575.00,범위확정,GetEnumUnit(),2,Chaos,AD,LIFE게이지100.00,realD(앞단계 중간값),축밖
-불멸의,h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_buster,2,s__TrigVariables__get_realD(GlobalTV),[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Chaos,AP(방어무시),LIFE게이지100.00,realD(앞단계 중간값),축밖
+불멸의,h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_buster,1,s__TrigVariables__get_realD(GlobalTV),[축밖],,,Enemies,575.00,범위확정,GetEnumUnit(),2,Chaos,AD,(게이트 없음),realD(앞단계 중간값),축밖
+불멸의,h07M,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_buster,2,s__TrigVariables__get_realD(GlobalTV),[축밖],,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Chaos,AP(방어무시),(게이트 없음),realD(앞단계 중간값),축밖
 불멸의,h0AD,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_Skill_2,1,s__TrigVariables__get_realD(GlobalTV),[축밖],,,Enemies,515.00,범위확정,GetEnumUnit(),2,Chaos,AD,LIFE게이지100.00,realD(앞단계 중간값),축밖
 불멸의,h0AD,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_Skill_2,2,s__TrigVariables__get_realD(GlobalTV),[축밖],,,Enemies,515.00,범위확정,GetEnumUnit(),2,Chaos,AD,LIFE게이지100.00,realD(앞단계 중간값),축밖
 불멸의,h0AD,카이도 사황'백수의 왕' - 불멸의,Kaido_Dragon_melee_1,1,(s__TrigVariables__get_realD(GlobalTV)*0.56),[축밖],,,Enemies,500.00,범위확정,GetEnumUnit(),1,Chaos,AD,LIFE게이지100.00,realD(앞단계 중간값),축밖
