@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   targetUnit: {fileID: 11400000, guid: dc39f6fd4e564a0592d434a30212698f, type: 2}
   traitName: 초월_양재모_AD 특성강화
-  description: 06번③ 순위배정(2차, 초월함 등급 정정) — 원작 #011 H097 전 해군대장 아오키지, upro(실제 이름): 쿠잔 / 변신형 2pt. 언락 시 RemoveUnit 후 H0B1로 교체(경험치·STR/AGI/INT 이월, 우리는 그 개념이 없어 이월할 것도 없음). transformIntoUnit은 원작 H0B1에 대응하는 우리 유닛이 아직 없어 비워둠(사장님 배정 대기, 억지로 안 짝지음). 실제 교체 메커니즘도 미착수 (UnitTraitData.transformIntoUnit 주석 참고). Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고.
+  description: 06번③ 순위배정(2차, 초월함 등급 정정) — 원작 #011 H097 전 해군대장 아오키지, upro(실제 이름): 쿠잔 / 변신형 2pt. 언락 시 RemoveUnit 후 H0B1로 교체(경험치·STR/AGI/INT 이월, 우리는 그 개념이 없어 이월할 것도 없음). ⚠️ 교체 메커니즘은 GameHud.ExecuteTransform으로 2026-09-05 완성됨(4732041) — 남은 건 transformIntoUnit 데이터뿐. transformIntoUnit은 원작 H0B1에 대응하는 우리 유닛이 아직 없어 비워둠(사장님 배정 대기, 억지로 안 짝지음), 채워지면 바로 동작. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고.
   costTraitPoints: 2
   effects: []
   specialEffectId: 
