@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: SkillData_원작001_H090
   m_EditorClassIdentifier:
   skillName: A0D0 !흔들흔들 열매
-  description: 06번① 순위배정 — 원작 #001 H090 지진과 어둠의 검은수염, upro(실제 이름): 마샬.D.티치, 능력 A0D0(!흔들흔들 열매). 스킬승급형: 레벨1→2로 '!흔들흔들 열매'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것.
-  triggerType: 1
+  description: 06번① 순위배정 — 원작 #001 H090 지진과 어둠의 검은수염, upro(실제 이름): 마샬.D.티치, 능력 A0D0(!흔들흔들 열매). 스킬승급형: 레벨1→2로 '!흔들흔들 열매'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다).
+  triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 1

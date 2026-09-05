@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: SkillData_원작008_H08U
   m_EditorClassIdentifier:
   skillName: A0EQ !해류조정-시라호시
-  description: 06번① 순위배정 — 원작 #008 H08U "포세이돈" 인어공주(시라호시), upro(실제 이름): 시라호시, 능력 A0EQ(!해류조정-시라호시). 스킬승급형: 레벨1→2로 '!해류조정-시라호시'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것.
-  triggerType: 1
+  description: 06번① 순위배정 — 원작 #008 H08U "포세이돈" 인어공주(시라호시), upro(실제 이름): 시라호시, 능력 A0EQ(!해류조정-시라호시). 스킬승급형: 레벨1→2로 '!해류조정-시라호시'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다).
+  triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 1
