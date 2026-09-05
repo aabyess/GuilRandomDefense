@@ -133,15 +133,29 @@ def load_roster():
         attack_type = (ATTACK_TYPE_ENUM[int(at_idx)]
                        if at_idx is not None and int(at_idx) < len(ATTACK_TYPE_ENUM) else "Unassigned")
 
-        # §17~§21(2026-09-05/06): 원작 능력 배정(스킬 발동형 피해). skill_dps_for_unit이
+        # §17~§22(2026-09-05/06): 원작 능력 배정(스킬 발동형 피해). skill_dps_for_unit이
         # OnHitChance/OnHitCount가 아니거나 Damage 계열이 아니면 전부 0을 준다.
-        # ⚠️ §22 TODO: UnitData.SkillCount/SkillAt(다중 스킬)이 생겼는데 여기는 여전히
-        # 단일 skill: 필드만 읽는다 — 2026-09-06 현재 로스터에 skills: 리스트를 쓰는
-        # 유닛이 0종이라 지금은 무해하다(전수 확인, §20-6 참고). 다중 스킬이 배정되는
-        # 순간부터 그 유닛들의 두 번째 이후 스킬이 조용히 0이 된다 — 잊지 말 것.
-        skill_m = re.search(r"^  skill: \{fileID: \d+, guid: ([0-9a-f]+)", text, re.MULTILINE)
-        skill_components, skill_attack_type_idx = skill_dps_for_unit(
-            skill_m.group(1) if skill_m else None, ap, aspd)
+        #
+        # §22: UnitData.SkillCount/SkillAt와 같은 규칙 — skills: 리스트가 하나라도
+        # 있으면 그걸 전부 쓰고 skill: 단일 필드는 아예 안 본다(PM 지시, "폴백은
+        # skills가 비었을 때만"). 리스트 안 중복 guid(황준석 사고, 구현담당1 수정 중)는
+        # **그대로 두 번 센다** — 런타임(UnitAttacker)이 SkillAt(0)·SkillAt(1)을 각각
+        # 따로 판정해서 중복이면 실제로 두 번 발동하기 때문이다. 시뮬이 그걸 한 번으로
+        # 합치면 오히려 런타임과 갈린다.
+        skills_m = re.search(r"^  skills:\n((?:  - .*\n?)*)", text, re.MULTILINE)
+        skill_guids = re.findall(r"guid: ([0-9a-f]+)", skills_m.group(1)) if skills_m else []
+        if not skill_guids:
+            skill_m = re.search(r"^  skill: \{fileID: \d+, guid: ([0-9a-f]+)", text, re.MULTILINE)
+            if skill_m:
+                skill_guids = [skill_m.group(1)]
+
+        skill_components = zero_skill_components()
+        skill_attack_type_idx = None
+        for guid in skill_guids:
+            comp, at_idx = skill_dps_for_unit(guid, ap, aspd)
+            skill_components = add_skill_components(skill_components, comp)
+            if at_idx is not None:
+                skill_attack_type_idx = at_idx
         skill_attack_type = (ATTACK_TYPE_ENUM[skill_attack_type_idx]
                               if skill_attack_type_idx is not None
                               and skill_attack_type_idx < len(ATTACK_TYPE_ENUM) else "Unassigned")
@@ -153,6 +167,8 @@ def load_roster():
             "base_dps": ap * aspd,
             "bash_dps": cc * cbd * aspd,
             "skill": skill_components, "skill_attack_type": skill_attack_type,
+            "skill_guid_count": len(skill_guids),
+            "skill_guid_dupes": len(skill_guids) - len(set(skill_guids)),
         })
     return recs
 
@@ -235,11 +251,23 @@ def parse_int_field(text, field, default=None):
 
 
 def load_round_constants():
+    """§22-3(2026-09-06): 구현담당3의 라운드 길이 재정의(5f1a3f8, 2bc6d51)를 반영.
+    옛 필드(newWorldRoundDuration 하나로 R61+ 전체를 덮던 구조)가 4구간으로 갈렸다 —
+    RoundManager.ResolveRoundDuration 원문 그대로:
+      R1        = round_duration(40.65, 원작 하드코딩)
+      R2~R39    = normal_round_duration(40.67)
+      R40~R60   = short_round_duration(38.67 고정) — shortRoundStartRound부터
+      R61~R75   = final_round_duration(36.67 고정, 라운드마다 감소 아님) — new_world_start_round부터,
+                  보스 여부와 무관하게 최우선
+    그 아래에서만 보스 라운드가 bossRoundDuration으로 끼어든다."""
     rm = read("Assets/Scripts/Waves/RoundManager.cs")
     return {
         "round_duration": parse_float_field(rm, "roundDuration"),
+        "normal_round_duration": parse_float_field(rm, "normalRoundDuration"),
         "boss_round_duration": parse_float_field(rm, "bossRoundDuration"),
-        "new_world_round_duration": parse_float_field(rm, "newWorldRoundDuration"),
+        "short_round_duration": parse_float_field(rm, "shortRoundDuration"),
+        "short_round_start_round": parse_int_field(rm, "shortRoundStartRound"),
+        "final_round_duration": parse_float_field(rm, "finalRoundDuration"),
         "new_world_start_round": parse_int_field(rm, "newWorldStartRound"),
         "enemy_count_threshold": parse_int_field(rm, "enemyCountThreshold"),
     }
@@ -312,12 +340,17 @@ def armor_mult(armor, defense_armor):
 
 
 def make_round_length_fn(rc):
+    """RoundManager.ResolveRoundDuration과 같은 우선순위(§22-3)."""
     def f(r, is_boss):
         if r >= rc["new_world_start_round"]:
-            return rc["new_world_round_duration"]
+            return rc["final_round_duration"]
         if is_boss:
             return rc["boss_round_duration"]
-        return rc["round_duration"]
+        if r <= 1:
+            return rc["round_duration"]
+        if r >= rc["short_round_start_round"]:
+            return rc["short_round_duration"]
+        return rc["normal_round_duration"]
     return f
 
 
@@ -610,10 +643,30 @@ def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
     지금 항상 0이라(연구소 미착수) 실질값은 `bonus`뿐이다 — flat에 그대로 더한다
     (게이트 없음, %체력과 다른 축이다).
 
-    "초당발동(rate)"은 트리거 타입에 따라 갈린다(§19·§20 그대로):
+    "초당발동(rate)"은 트리거 타입에 따라 갈린다(§19·§20 그대로, §22-2에서 OnHitCount에
+    2차 확률을 추가):
       OnHitChance → skill_proc_rate(절대쿨 포함)
-      OnHitCount  → 1/((threshold-resetTo)×Δ), 절대쿨 안 얹음
+      OnHitCount  → 게이지가 임계에 닿는 주기(1/((threshold-resetTo)×Δ))에 triggerChance를
+                    곱한다 — 절대쿨은 안 얹음(§20 그대로).
     그 외(CooldownAutoCast·Aura)는 전부 0.
+
+    ⚠️ §22-2(2026-09-06, 구현담당1 추가): 원작에 "게이지 AND 확률" 조합이 있다
+    (`UnitAttacker.TryCastOnHitSkill` — 게이지가 임계에 닿아도 그걸로 끝이 아니라
+    `SkillLevel.triggerChance`로 2차 확률 판정을 한 번 더 한다). 리셋은 이 확률과
+    무관하게(별도 블록으로) 매 주기 일어나므로 — 판정에 실패해도 게이지 주기 자체는
+    그대로 돈다 — "주기당 발동 확률"이 단순 곱으로 들어간다(주기끼리 독립이라 평균
+    발동률 = 주기율×triggerChance, 실패가 다음 주기로 누적되지 않는다). 실제 자산
+    47종 중 13종이 triggerChance≠1(0.003~0.2)이라 이 항을 안 넣으면 그 13종의
+    발동률을 최대 300배까지 과대평가한다 — 나머지 34종은 기본값 1.0이라 이 곱이
+    항등이라 회귀 없음.
+
+    ⚠️ `gaugeKind`(Mana/Life) 자체는 시뮬이 안 읽는다 — 게이지가 유닛당 하나를
+    여러 스킬이 공유해도(같은 게이지를 쓰는 스킬들의 threshold·resetTo가 실제
+    데이터에서 전수 일치함, 2026-09-06 확인) 스킬 하나 입장에서 보는 "내 카운터가
+    한 타에 1씩 오른다"는 공유든 아니든 동일해서, 평균 dps 기준으로는 독립
+    카운터로 계산해도 공유 카운터와 수치가 같다(동시발동 자체는 dps 총합에 영향
+    없음). threshold·resetTo가 갈리는 실제 사례가 생기면 이 가정이 깨진다 —
+    그때 gaugeKind별 그룹핑이 필요하다.
 
     반환: (dict[SKILL_COMPONENT_KEYS], 대표 attack_type_idx 또는 None).
     """
@@ -626,7 +679,8 @@ def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
         rate = skill_proc_rate(skill["trigger_chance"], attack_speed, skill["cooldown"])
     else:
         period_hits = skill["hit_count_threshold"] - skill["reset_to"]
-        rate = (1.0 / (period_hits / attack_speed)) if period_hits > 0 and attack_speed > 0 else 0.0
+        rate = ((1.0 / (period_hits / attack_speed)) * skill["trigger_chance"]
+                 if period_hits > 0 and attack_speed > 0 else 0.0)
 
     out = zero_skill_components()
     attack_type_idx = None
