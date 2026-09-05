@@ -120,6 +120,8 @@ public static class MapGenerator
         string storyReport = BuildStoryZone(root.transform);
         string sealReport = BuildSealSpawners(root.transform);
         string questReport = BuildPirateQuestManager(pirateQuests);
+        string chatUnlockReport = BuildChatUnlockManager();
+        string hiddenCombineReport = BuildHiddenCombineManager();
 
         string portalReport = BuildGachaPortals(gachaIsland);
 
@@ -154,7 +156,8 @@ public static class MapGenerator
         string message =
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
             $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + "\n\n" +
-            tableReport + displayReport + gateReport + storyReport + sealReport + questReport + overlaps + navResult + oldGround + rewire + saveNote;
+            tableReport + displayReport + gateReport + storyReport + sealReport + questReport +
+            chatUnlockReport + hiddenCombineReport + overlaps + navResult + oldGround + rewire + saveNote;
         Debug.Log("[맵] " + message);
         EditorUtility.DisplayDialog(Title, message, "확인");
     }
@@ -615,6 +618,82 @@ public static class MapGenerator
 
         return $"\n해적단 퀘스트: {quests.Count}개 연결(포탈은 레인당 1개, 토큰은 게임 시작 시 전원에게 무상 지급)." +
                (quests.Count == 0 ? $"\n  ⚠️ {PirateQuestFolder}에서 PirateQuestData를 하나도 못 찾았습니다." : "");
+    }
+
+    const string ChatUnlockFolder = "Assets/Data/ChatUnlocks";
+    const string HiddenCombineFolder = "Assets/Data/HiddenCombines";
+
+    // 초월·불멸·영원·니카 채팅 코드 해금 — PirateQuestManager와 같은 모양(플레이어별이
+    // 아니라 씬 전체에 하나, playerId는 메서드 인자로만 받는다 — ChatUnlockManager.cs 참고).
+    // TryUnlock(playerId, data)이 판정·지급 전부이고 여기선 목록·스포너만 꽂는다.
+    static string BuildChatUnlockManager()
+    {
+        ChatUnlockManager manager = Object.FindFirstObjectByType<ChatUnlockManager>(FindObjectsInactive.Include);
+        if (manager == null)
+        {
+            GameObject managerObject = new GameObject("ChatUnlockManager");
+            manager = managerObject.AddComponent<ChatUnlockManager>();
+        }
+
+        List<ChatUnlockData> unlocks = AssetDatabase.FindAssets("t:ChatUnlockData", new[] { ChatUnlockFolder })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .OrderBy(path => path, System.StringComparer.Ordinal)
+            .Select(AssetDatabase.LoadAssetAtPath<ChatUnlockData>)
+            .Where(unlock => unlock != null)
+            .ToList();
+
+        SerializedObject so = new SerializedObject(manager);
+        SerializedProperty list = so.FindProperty("unlocks");
+
+        list.ClearArray();
+        for (int i = 0; i < unlocks.Count; i++)
+        {
+            list.InsertArrayElementAtIndex(i);
+            list.GetArrayElementAtIndex(i).objectReferenceValue = unlocks[i];
+        }
+
+        so.FindProperty("unitSpawner").objectReferenceValue =
+            Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
+        so.ApplyModifiedProperties();
+
+        return $"\n채팅 코드 해금(초월·불멸·영원·니카): {unlocks.Count}개 연결." +
+               (unlocks.Count == 0 ? $"\n  ⚠️ {ChatUnlockFolder}에서 ChatUnlockData를 하나도 못 찾았습니다(사장님 콘텐츠 배정 전이면 정상)." : "");
+    }
+
+    // 히든 등급 23종 재료 조합 — ChatUnlockManager와 별개 진입점(HiddenCombineManager.cs 참고,
+    // CombineSystem과도 별개). 마찬가지로 씬 전체에 하나다.
+    static string BuildHiddenCombineManager()
+    {
+        HiddenCombineManager manager = Object.FindFirstObjectByType<HiddenCombineManager>(FindObjectsInactive.Include);
+        if (manager == null)
+        {
+            GameObject managerObject = new GameObject("HiddenCombineManager");
+            manager = managerObject.AddComponent<HiddenCombineManager>();
+        }
+
+        List<HiddenCombineData> combines = AssetDatabase.FindAssets("t:HiddenCombineData", new[] { HiddenCombineFolder })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .OrderBy(path => path, System.StringComparer.Ordinal)
+            .Select(AssetDatabase.LoadAssetAtPath<HiddenCombineData>)
+            .Where(combine => combine != null)
+            .ToList();
+
+        SerializedObject so = new SerializedObject(manager);
+        SerializedProperty list = so.FindProperty("combines");
+
+        list.ClearArray();
+        for (int i = 0; i < combines.Count; i++)
+        {
+            list.InsertArrayElementAtIndex(i);
+            list.GetArrayElementAtIndex(i).objectReferenceValue = combines[i];
+        }
+
+        so.FindProperty("unitSpawner").objectReferenceValue =
+            Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
+        so.ApplyModifiedProperties();
+
+        return $"\n히든 조합: {combines.Count}개 연결." +
+               (combines.Count == 0 ? $"\n  ⚠️ {HiddenCombineFolder}에서 HiddenCombineData를 하나도 못 찾았습니다(사장님 콘텐츠 배정 전이면 정상)." : "");
     }
 
     static void BuildDecor(Transform parent, string name, Vector3 position, Vector3 scale,
