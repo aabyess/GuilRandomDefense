@@ -221,12 +221,29 @@ public class UnitAttacker : MonoBehaviour
                 if (target != null) DealSkillDamage(effect, target);
                 break;
 
-            case SkillTargetKind.Allies:
             case SkillTargetKind.Self:
-                // Damage 말고는 아직 값 의미도 읽는 코드도 없다(SkillEffectKind 주석 참고) —
-                // 아군 대상 효과를 실제로 적용할 곳이 없다. 자리만 비워둔다.
+                if (identity != null) ApplyToAlly(effect, identity);
+                break;
+
+            case SkillTargetKind.Allies:
+                int selfOwnerId = owner != null ? owner.OwnerId : -1;
+                foreach (UnitIdentity ally in UnitIdentity.Active)
+                {
+                    if (ally == null || ally.OwnerId != selfOwnerId) continue;
+                    if (range > 0f && Vector3.Distance(ally.transform.position, transform.position) > range) continue;
+                    ApplyToAlly(effect, ally);
+                }
                 break;
         }
+    }
+
+    // 대상은 이제 모인다(UnitIdentity.Active, 소유자로 거름) — 다만 적용할 게 없다.
+    // Damage/Stun/ArmorBreak/ExtraProjectile 중 아군에게 뜻이 통하는 kind가 없다(원작
+    // A11T "아군 회복 350,000/tick" 같은 걸 담으려면 Heal류 kind가 새로 필요한데, 그건
+    // 실제로 막히는 사람(04번)이 나왔을 때 스키마를 늘린다 — 미리 만들지 않는다). 그래서
+    // Enemies/SingleTarget과 달리 여기는 대상 수집까지만 하고 아무 것도 안 한다.
+    void ApplyToAlly(SkillEffect effect, UnitIdentity ally)
+    {
     }
 
     float ResolveSkillEffectValue(SkillEffect effect, EnemyDummy target)

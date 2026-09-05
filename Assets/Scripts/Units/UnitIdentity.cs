@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // 스폰된 인스턴스가 자신의 원본 UnitData를 들고 있게 한다. UI 등에서 이름/등급/기준 스탯 조회용.
@@ -9,7 +10,42 @@ public class UnitIdentity : MonoBehaviour
 
     UnitInventory inventory;
 
+    // 필드에 나와 있는 아군 유닛 등록부(EnemyDummy.Active와 같은 관례) — 유닛 스킬의
+    // Allies/Self 대상, 04번 보스 회복 오라, 이감처럼 "대상을 어떻게 모으나"가 필요한
+    // 곳들이 공통으로 쓴다. UnitSpawner.Spawn이 유일한 플레이어 유닛 생성 경로라(주석 참고)
+    // 전투 안 하는 유닛(퀘스트 판매 토큰 등)도 여기 UnitIdentity가 항상 붙어서 같이 걸린다 —
+    // 그래서 이 등록부를 UnitAttacker가 아니라 UnitIdentity에 뒀다(전투 컴포넌트가 없는
+    // 프리팹도 놓치지 않는다).
+    //
+    // ⚠️ OnEnable/OnDisable을 쓴다 — 인벤토리 등록(아래 RegisterTo/OnDestroy)과 훅이 다른
+    // 이유: 저건 "이 플레이어가 이 유닛을 소유하는가"(창고 워프 중에도 유지돼야 함)이고
+    // 이건 "지금 필드에서 대상이 될 수 있는가"(비활성화되면 대상에서 빠져야 함)라 관심사가
+    // 다르다. 헷갈리지 말 것.
+    public static readonly List<UnitIdentity> Active = new List<UnitIdentity>();
+
+    OwnedByPlayer owner;
+
     public UnitData Data => data;
+
+    /// <summary>이 유닛의 소유 플레이어 ID. 아직 OwnedByPlayer가 안 붙었으면(생성 직후 극히
+    /// 짧은 순간) -1 — UnitSpawner.Spawn이 Instantiate 직후 곧바로 붙이므로 실사용 시점엔
+    /// 항상 값이 있다.</summary>
+    public int OwnerId => owner != null ? owner.OwnerId : -1;
+
+    void Awake()
+    {
+        owner = GetComponent<OwnedByPlayer>();
+    }
+
+    void OnEnable()
+    {
+        Active.Add(this);
+    }
+
+    void OnDisable()
+    {
+        Active.Remove(this);
+    }
 
     public void SetData(UnitData unitData)
     {
