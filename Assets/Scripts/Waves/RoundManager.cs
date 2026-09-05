@@ -209,13 +209,12 @@ public class RoundManager : MonoBehaviour
         isGameOver = true;
         // 저장 안 함 — 여기 도달했다는 건 Occupied 전원이 IsDead라는 뜻이라(위 루프 조건),
         // 원작(SavePlayer: "패배한 상태에선 더이상 세이브가 불가능합니다")대로 저장할 대상이
-        // 애초에 없다. PersistentSave.FinishRun도 방어적으로 같은 검사를 한다.
+        // 애초에 없다.
     }
 
     // war3map.j Trig_Save_sido3(신세계 클리어) 대응 — 원작은 여기서 유닛카운트 보너스를
-    // 계산하고 SavePlayer를 직접 부른다. 죽은 플레이어는 여기서 걸러진다(PersistentSave가
-    // 방어적으로 다시 걸러도, 호출 자체를 안 보내는 게 맞다 — 원작도 죽은 사람 몫은
-    // 애초에 이 반복문에 안 들어간다는 전제다).
+    // 계산하고 SavePlayer를 직접 부른다. 죽은 플레이어는 여기서 걸러진다 — PersistentSave는
+    // 자기 컨텍스트를 안 들고 있어서(IsDead를 스스로 못 본다) 호출부가 반드시 걸러야 한다.
     void FinishPersistentSave(bool cleared)
     {
         foreach (PlayerContext context in PlayerContext.Occupied)

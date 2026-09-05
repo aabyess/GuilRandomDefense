@@ -11,7 +11,11 @@ using UnityEngine;
 // 옮기지 않는다 — 워크3 채팅창 길이 제약이 만든 우회로일 뿐, 실제 파일 저장에는 없는 제약이다.
 public class PersistentSave : MonoBehaviour
 {
-    [SerializeField] PlayerContext owner;
+    // GoldWallet·ResourceWallet·UnitUpgrades와 같은 결 — PlayerContext를 되짚어 참조하지
+    // 않는다(이 프로젝트의 지갑류는 전부 그렇다, PlayerContext가 거꾸로 이들을 들고 있다).
+    // 그래서 파일 키로 쓸 playerId를 직접 들고 있다 — MapGenerator가 PlayerContext.playerId와
+    // 같은 값으로 같이 꽂아준다.
+    [SerializeField] int playerId;
 
     public PlayerSaveData Data { get; private set; } = new PlayerSaveData();
 
@@ -19,7 +23,7 @@ public class PersistentSave : MonoBehaviour
     // FinishRun 때 Data.cumulativePlayPoint에 합산되고 나면 사라져도 되는 값이다.
     public int SessionPoints { get; private set; }
 
-    string SavePath => Path.Combine(Application.persistentDataPath, "Save", $"player_{owner.PlayerId}.json");
+    string SavePath => Path.Combine(Application.persistentDataPath, "Save", $"player_{playerId}.json");
 
     void Awake()
     {
@@ -40,8 +44,6 @@ public class PersistentSave : MonoBehaviour
             Debug.LogWarning($"PersistentSave: {SavePath} 읽기 실패, 새 데이터로 시작합니다. {e.Message}", this);
             Data = new PlayerSaveData();
         }
-
-        ApplyLoadThresholdRewards();
     }
 
     void WriteToDisk()
@@ -56,6 +58,11 @@ public class PersistentSave : MonoBehaviour
     // 지점 9곳(초기화 2곳 제외)을 전수 대조해 확인했다:
     // Story2 +1,+2 / creep_reward +1 / door_quest +3 / Red_dog +1(삼대장, 안 죽은 플레이어만) /
     // Quest_sky_1/2/3 +1씩(3곳) / treasure +2 = 13.
+    //
+    // ⚠️ door_quest와 Red_dog은 원작에서 한 덩어리다(PM 조사, 2026-09-05) — door_quest를
+    // 깨면 붉은개·푸른꿩·노란원숭이 중 하나가 무작위로(GetRandomInt(1,3)) 나오고, 그걸 잡는
+    // 순간이 Red_dog이다(특성포인트 +1과 세이브포인트 +1이 동시에 나간다). 나중에 만들 때
+    // 둘을 따로 잡지 말 것.
     //
     // ⚠️ 지금 우리 코드에는 이 9곳 중 실제로 존재하는 시스템이 없다(2026-09-05 확인 — creep_reward
     // ·door_quest·Red_dog·Quest_sky·treasure 전부 Assets/Scripts에 대응 코드 0건, Story는
@@ -93,28 +100,26 @@ public class PersistentSave : MonoBehaviour
     // 불러왔을 때" 그 시점의 누적 포인트로만 판정한다(사람별 "이미 받았는지" 플래그가 원작에
     // 없다 — 매 판 로드할 때마다 그 시점 누적치로 다시 판정되는 구조다. 우리도 그대로 따른다:
     // 영구 1회 지급이 아니라 "불러올 때마다, 그 시점 누적치가 문턱을 넘으면" 주는 개시 보너스).
-    // 독립 if 5개다 — 900을 넘으면 다섯 다 받는다.
-    void ApplyLoadThresholdRewards()
+    // 독립 if 5개다 — 900을 넘으면 다섯 다 받는다. RewardDistributor.Start()가 PlayerContext.
+    // Occupied마다 이 컨텍스트의 지갑들을 넘겨 부른다(GrantStartingTraitPoints와 같은 결) —
+    // PersistentSave 자신은 지갑을 안 들고 있어서 파라미터로 받는다.
+    public void ApplyLoadThresholdRewards(GoldWallet gold, ResourceWallet resources, UnitUpgrades upgrades)
     {
-        if (owner == null) return;
-
         int p = Data.cumulativePlayPoint;
-        if (p >= 10) owner.GoldWallet?.Add(10);
-        if (p >= 100) owner.ResourceWallet?.Add(ResourceType.Wood, 1);
-        if (p >= 300) owner.UnitUpgrades?.AddTraitPoints(1);
-        if (p >= 600) owner.UnitUpgrades?.AddTraitPoints(1);
-        if (p >= 900) owner.UnitUpgrades?.AddTraitPoints(1);
+        if (p >= 10) gold?.Add(10);
+        if (p >= 100) resources?.Add(ResourceType.Wood, 1);
+        if (p >= 300) upgrades?.AddTraitPoints(1);
+        if (p >= 600) upgrades?.AddTraitPoints(1);
+        if (p >= 900) upgrades?.AddTraitPoints(1);
     }
 
     // 게임 종료(신세계 완주 또는 중도 종료) 시점에 부른다. 원작 SavePlayer 그대로: 죽은
     // 플레이어는 저장하지 않는다("패배한 상태에선 더이상 세이브가 불가능합니다") — 호출부
-    // (RoundManager)가 owner.IsDead를 먼저 걸러야 한다, 여기서도 방어적으로 한 번 더 본다.
+    // (RoundManager.FinishPersistentSave)가 IsDead를 먼저 걸러서 여기까지 안 보낸다.
     // cleared가 true일 때만 누적 클리어 횟수를 올린다 — 원작이 udg_Clear_Game==1일 때만
     // Save_playcount를 올리는 것과 같다(중도 이탈은 클리어 횟수에 안 들어간다).
     public void FinishRun(bool cleared)
     {
-        if (owner != null && owner.IsDead) return;
-
         Data.cumulativePlayPoint += SessionPoints;
         if (cleared) Data.cumulativeClearCount += 1;
         if (SessionPoints > Data.bestRunPoint) Data.bestRunPoint = SessionPoints;

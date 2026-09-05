@@ -28,6 +28,7 @@ public class RewardDistributor : MonoBehaviour
     {
         GrantStartingWisps();
         GrantStartingTraitPoints();
+        GrantSaveThresholdRewards();
     }
 
     // OnEnable이 아니라 Start인 이유: 위습은 WispCell 위치에 생기는데, 맵이 만들어지고
@@ -51,6 +52,21 @@ public class RewardDistributor : MonoBehaviour
         foreach (PlayerContext context in PlayerContext.Occupied)
         {
             context.UnitUpgrades?.GrantStartingPoint();
+        }
+    }
+
+    // 11번(영속 저장) — war3map.j Trig_SaveReward_1 대응. 게임 시작 시 한 번, 로드된 누적
+    // 세이브 포인트 문턱(10/100/300/600/900)에 걸린 만큼 골드·목재·특성포인트를 준다.
+    // PersistentSave.Awake가 이미 파일을 읽어둔 뒤라(컴포넌트 실행 순서상 Start가 더 늦다)
+    // 여기서 바로 판정해도 된다.
+    void GrantSaveThresholdRewards()
+    {
+        if (!GameAuthority.IsServer) return;
+
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            context.PersistentSave?.ApplyLoadThresholdRewards(
+                context.GoldWallet, context.ResourceWallet, context.UnitUpgrades);
         }
     }
 
