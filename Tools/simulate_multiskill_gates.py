@@ -12,10 +12,11 @@ UnitAttacker.TryCastOnHitSkill의 "여러 스킬" 경로가 실전에서 한 번
 
 이 스크립트는 **UnitAttacker.TryCastOnHitSkill/UpdateSkillCooldown과 같은 알고리즘**을
 Python으로 그대로 재현한다(공유 게이지 지연 리셋 — 4aade90, OnHitCount 2차 확률
-게이트 — e23cfd8 포함). C# 코드 자체를 실행하는 게 아니므로 **C# 쪽을 고치면 이
-시뮬레이터도 같이 고쳐야 한다** — "값 계산 스크립트"이지 "테스트 러너"가 아니다.
-그래서 스크립트 맨 위에 재현 대상 커밋을 적어둔다: 4aade90(지연 리셋) · e23cfd8
-(2차 확률 게이트) 기준.
+게이트 — e23cfd8, 버프 레지스트리·게이트 — 2026-09-06 포함). C# 코드 자체를 실행하는
+게 아니므로 **C# 쪽을 고치면 이 시뮬레이터도 같이 고쳐야 한다** — "값 계산 스크립트"
+이지 "테스트 러너"가 아니다. 그래서 스크립트 맨 위에 재현 대상 커밋을 적어둔다:
+4aade90(지연 리셋) · e23cfd8(2차 확률 게이트) · 버프 레지스트리(2026-09-06,
+UnitAttacker.PassesBuffGate/AddBuff/HasBuff) 기준.
 
 사용법:
   python3 Tools/simulate_multiskill_gates.py <로스터_에셋_경로_또는_이름_일부> [--hits N] [--attack-interval 초] [--seed N]
@@ -109,6 +110,10 @@ def parse_skill(path):
         m = re.search(pattern, level_body)
         return cast(m.group(1)) if m else default
 
+    def str_field(name):
+        m = re.search(rf"\n {{4}}{name}: (.*)", level_body)
+        return m.group(1).strip() if m else ""
+
     effects_match = re.search(r"    effects:(.*?)(?=\n  - cooldown: |\Z)", level_body, re.S)
     effects_body = effects_match.group(1) if effects_match else ""
     has_effects = re.search(r"^\s*- kind:", effects_body, re.MULTILINE) is not None
@@ -124,6 +129,11 @@ def parse_skill(path):
         "hitCountThreshold": int(num(r"\n {4}hitCountThreshold: (-?\d+)", 0, int)),
         "resetTo": int(num(r"\n {4}resetTo: (-?\d+)", 0, int)),
         "gaugeKind": int(num(r"\n {4}gaugeKind: (\d+)", 0, int)),
+        # 2026-09-06 버프 레지스트리(UnitAttacker.PassesBuffGate/AddBuff) 재현 — 셋 다
+        # 빈 문자열이면 기존 동작 그대로(조건 없음). 지금 자산 전부 비어있다.
+        "requiredBuffId": str_field("requiredBuffId"),
+        "forbiddenBuffId": str_field("forbiddenBuffId"),
+        "selfBuffId": str_field("selfBuffId"),
     }
 
 
@@ -188,6 +198,25 @@ def simulate(unit_name, skills, hits, attack_interval, seed, quiet=False, extra_
     time = 0.0
     co_fire_log = []  # 한 타에 2개 이상 같이 나가면 기록
 
+    # 버프 레지스트리(UnitAttacker.activeBuffs 재현, 2026-09-06) — id → 만료 시각(time
+    # 기준). 지금 자산 전부 requiredBuffId/forbiddenBuffId/selfBuffId가 비어있어 이
+    # 블록이 실질적으로 안 쓰이지만, 실제 데이터가 채워지면 바로 검증할 수 있게 미리
+    # C#과 같은 모양으로 짜둔다.
+    buff_registry = {}
+
+    def has_buff(buff_id):
+        if not buff_id:
+            return False
+        expires_at = buff_registry.get(buff_id)
+        return expires_at is not None and (expires_at <= 0 or time < expires_at)
+
+    def passes_buff_gate(s):
+        if s["requiredBuffId"] and not has_buff(s["requiredBuffId"]):
+            return False
+        if s["forbiddenBuffId"] and has_buff(s["forbiddenBuffId"]):
+            return False
+        return True
+
     for hit in range(1, hits + 1):
         time += attack_interval
         mana_incremented = False
@@ -199,6 +228,9 @@ def simulate(unit_name, skills, hits, attack_interval, seed, quiet=False, extra_
         fired_this_hit = []
 
         for s in onhit_skills:
+            if not passes_buff_gate(s):
+                continue
+
             if s["triggerType"] == 0:
                 if s["cooldown"] > 0.0 and time < s["lockedUntil"]:
                     continue
@@ -206,6 +238,8 @@ def simulate(unit_name, skills, hits, attack_interval, seed, quiet=False, extra_
                     continue
                 if s["cooldown"] > 0.0:
                     s["lockedUntil"] = time + s["cooldown"]
+                    if s["selfBuffId"]:
+                        buff_registry[s["selfBuffId"]] = time + s["cooldown"]
             else:
                 if s["gaugeKind"] == 0:
                     if not mana_initialized:

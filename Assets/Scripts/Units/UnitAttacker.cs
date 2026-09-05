@@ -79,19 +79,36 @@ public class UnitAttacker : MonoBehaviour
         }
     }
 
+    // ⚠️ 2026-09-06 버프 레지스트리에 편입(PM 지시) — 지속시간은 그대로 호출부
+    // (SupportShop.BuffRoutine)가 Add→WaitForSeconds→Remove로 직접 관리하므로 여기서는
+    // duration<=0(영구, RemoveBuff가 부를 때까지)으로 등록한다. attackSpeedBuffs 리스트
+    // 자체의 배율곱 동작(AttackSpeedMultiplier)은 안 건드렸다 — 레지스트리는 "세고
+    // 조회하는" 용도로만 옆에 나란히 쓴다.
+    static readonly string AttackSpeedBuffId = "AttackSpeedBuff";
+    static readonly string AttackPowerBuffId = "AttackPowerBuff";
+
     public void AddAttackSpeedBuff(float multiplier)
     {
-        if (multiplier > 0f) attackSpeedBuffs.Add(multiplier);
+        if (multiplier > 0f)
+        {
+            attackSpeedBuffs.Add(multiplier);
+            AddBuff(AttackSpeedBuffId, 0f);
+        }
     }
 
     public void RemoveAttackSpeedBuff(float multiplier)
     {
         attackSpeedBuffs.Remove(multiplier);
+        RemoveBuff(AttackSpeedBuffId);
     }
 
     public void AddAttackPowerBuff(float multiplier)
     {
-        if (multiplier > 0f) attackPowerBuffs.Add(multiplier);
+        if (multiplier > 0f)
+        {
+            attackPowerBuffs.Add(multiplier);
+            AddBuff(AttackPowerBuffId, 0f);
+        }
     }
 
     // SkillEffectBasis.ResearchLevel 전용 자리 — 연구소(05번, 구현담당1)가 서기 전까지는
@@ -101,17 +118,72 @@ public class UnitAttacker : MonoBehaviour
     // 예전 동작과 같다 — 회귀 없음.
     int CountResearchLevel() => 0;
 
+    // ---- 버프 레지스트리(2026-09-06, PM 지시) — 흩어져 있던 버프류(도움소 공속·공격력
+    // 버프, OnHitChance 절대쿨의 selfBuffId, 앞으로 생길 스킬 자기버프)를 한 자리에서
+    // 세고 조회한다. ⚠️ 이번 범위는 "셀 수 있고 물어볼 수 있는 그릇"까지다 — 버프를
+    // 실제로 거는 스킬 효과(ApplyToAlly 등)는 아직 안 만든다(PM 지시, 지금 ApplyToAlly는
+    // 여전히 빈 메서드다).
+    class ActiveBuff
+    {
+        public string id;
+        public float expiresAt; // Time.time 기준. <=0이면 영구(RemoveBuff로만 없어진다).
+    }
+
+    readonly List<ActiveBuff> activeBuffs = new List<ActiveBuff>();
+
+    // duration<=0이면 영구 — attackSpeedBuffs/attackPowerBuffs처럼 지속시간을 호출부가
+    // 직접 관리(코루틴으로 Add→대기→Remove)하는 경우에 쓴다. id가 비어있으면 조용히
+    // 무시한다(호출부가 selfBuffId 미기재를 실수로 빈 문자열째 넘겨도 안전하게).
+    public void AddBuff(string id, float duration)
+    {
+        if (string.IsNullOrEmpty(id)) return;
+        activeBuffs.Add(new ActiveBuff { id = id, expiresAt = duration > 0f ? Time.time + duration : -1f });
+    }
+
+    // id가 일치하는 인스턴스를 하나만 지운다 — List.Remove(값)와 같은 관례
+    // (attackSpeedBuffs가 이미 그렇게 짝을 맞춘다). 여러 개 겹쳐 있으면 하나만 없어진다.
+    public void RemoveBuff(string id)
+    {
+        for (int i = 0; i < activeBuffs.Count; i++)
+        {
+            if (activeBuffs[i].id == id) { activeBuffs.RemoveAt(i); return; }
+        }
+    }
+
+    public bool HasBuff(string id) => !string.IsNullOrEmpty(id) && ActiveBuffCount(id) > 0;
+    public bool LacksBuff(string id) => !HasBuff(id);
+
+    // id를 지정하면 그 버프만, null이면 전체 개수(casterBuffCountFactor용).
+    int ActiveBuffCount(string id = null)
+    {
+        PruneExpiredBuffs();
+        if (id == null) return activeBuffs.Count;
+        int count = 0;
+        foreach (ActiveBuff b in activeBuffs)
+            if (b.id == id) count++;
+        return count;
+    }
+
+    void PruneExpiredBuffs()
+    {
+        for (int i = activeBuffs.Count - 1; i >= 0; i--)
+        {
+            if (activeBuffs[i].expiresAt > 0f && Time.time >= activeBuffs[i].expiresAt)
+                activeBuffs.RemoveAt(i);
+        }
+    }
+
     // SkillEffect.casterBuffCountFactor(원작 realD = 0.03×버프개수) 전용 자리.
-    // ⚠️ 2026-09-05 PM 지시: attackSpeedBuffs/attackPowerBuffs로 근사하지 않는다 — 원작은
-    // 시전자의 워크3 버프 전부를 센다(자기 스킬이 건 것·오라·적이 건 디버프까지 포함일 수
-    // 있다). 우리에 그 개념이 없어 0으로 둔다 — 버프 레지스트리가 생기면 이 한 줄만 이으면
-    // 된다. 구현담당2가 지금 밸런스를 측정 중이라, 출처를 추적할 수 없는 반쪽 근사를 섞으면
-    // 숫자가 왜 움직였는지 아무도 못 푼다.
-    int CountCasterBuffs() => 0;
+    // ⚠️ 2026-09-06: 버프 레지스트리가 생겨서 이제 실제로 센다(예전엔 항상 0). 원작
+    // "시전자의 워크3 버프 전부"와 완전히 같지는 않다 — 지금 레지스트리에 등록되는 건
+    // SupportShop 버프(AttackSpeedBuff/AttackPowerBuff)와 selfBuffId를 채운 절대쿨뿐이다
+    // (적이 거는 디버프 같은 건 아직 없다). 그래도 "0으로 죽어 있진 않다."
+    int CountCasterBuffs() => ActiveBuffCount();
 
     public void RemoveAttackPowerBuff(float multiplier)
     {
         attackPowerBuffs.Remove(multiplier);
+        RemoveBuff(AttackPowerBuffId);
     }
 
     // 방깎·마방깍 특성을 때릴 때마다 대상에 쌓는다.
@@ -254,6 +326,17 @@ public class UnitAttacker : MonoBehaviour
         return skill.levels[Mathf.Clamp(index, 0, skill.levels.Count - 1)];
     }
 
+    // SkillLevel.requiredBuffId/forbiddenBuffId 게이트(2026-09-06) — 둘 다 비어있으면
+    // 무조건 통과한다(기존 102개 게이트는 전부 비어있어 회귀 없음). CooldownAutoCast·
+    // Aura(UpdateSkillCooldown)·OnHitChance·OnHitCount(TryCastOnHitSkill) 네 발동방식이
+    // 전부 같은 판정을 쓴다.
+    bool PassesBuffGate(SkillLevel level)
+    {
+        if (!string.IsNullOrEmpty(level.requiredBuffId) && !HasBuff(level.requiredBuffId)) return false;
+        if (!string.IsNullOrEmpty(level.forbiddenBuffId) && HasBuff(level.forbiddenBuffId)) return false;
+        return true;
+    }
+
     // CooldownAutoCast·Aura 전용 — OnHitChance·OnHitCount는 평타가 실제로 맞았을 때만
     // 판정해야 해서 Update()의 공격 성공 분기에서 TryCastOnHitSkill로 따로 부른다.
     void UpdateSkillCooldown()
@@ -281,6 +364,11 @@ public class UnitAttacker : MonoBehaviour
             SkillRuntimeState state = GetRuntimeState(skill);
             state.cooldownTimer -= Time.deltaTime;
             if (state.cooldownTimer > 0f) continue;
+
+            // 버프 게이트(requiredBuffId/forbiddenBuffId, 2026-09-06) — 쿨다운이 다 돼도
+            // 이 조건을 못 넘으면 시전하지 않는다. 타이머는 일부러 안 되돌린다 — 막힌
+            // 동안 매 프레임 다시 검사하다가 조건이 풀리는 순간 그 프레임에 바로 나간다.
+            if (!PassesBuffGate(level)) continue;
 
             // 오라는 쿨다운 개념이 없다("계속 켜져 있다") — 매 프레임 판정하면 값이 생겼을 때
             // 폭증하니 1초 주기로 재판정한다.
@@ -329,6 +417,11 @@ public class UnitAttacker : MonoBehaviour
             SkillLevel level = CurrentSkillLevel(skill);
             if (level == null || level.effects == null || level.effects.Count == 0) continue;
 
+            // 버프 게이트(requiredBuffId/forbiddenBuffId, 2026-09-06) — OnHitChance·
+            // OnHitCount 둘 다 판정 시작 전에 먼저 걸린다. 원작 예: 드래곤 "B00J 미보유",
+            // 루피 "B06Y 미보유 AND 1/80"(뒤의 확률은 아래 triggerChance가 그대로 처리).
+            if (!PassesBuffGate(level)) continue;
+
             if (skill.triggerType == SkillTriggerType.OnHitChance)
             {
                 // 절대쿨(SkillLevel.cooldown 주석 참고, PM 지시 2026-09-05) — 원작은 버프
@@ -339,7 +432,16 @@ public class UnitAttacker : MonoBehaviour
 
                 if (Random.value >= level.triggerChance) continue;
 
-                if (level.cooldown > 0f) state.onHitChanceLockedUntil = Time.time + level.cooldown;
+                if (level.cooldown > 0f)
+                {
+                    state.onHitChanceLockedUntil = Time.time + level.cooldown;
+                    // selfBuffId를 채운 경우에만 이 절대쿨을 버프 레지스트리에도 등록한다
+                    // (2026-09-06) — 다른 스킬의 requiredBuffId/forbiddenBuffId가 이 잠금을
+                    // 조회할 수 있게 하는 자리다. 비어있으면(기존 21종 전부) 아무 일도 안
+                    // 하고 그대로 지나간다 — 절대쿨 자체(위 두 줄)는 이 필드와 무관하게
+                    // 계속 SkillRuntimeState 기반으로 돈다, 회귀 없음.
+                    if (!string.IsNullOrEmpty(level.selfBuffId)) AddBuff(level.selfBuffId, level.cooldown);
+                }
             }
             else
             {
