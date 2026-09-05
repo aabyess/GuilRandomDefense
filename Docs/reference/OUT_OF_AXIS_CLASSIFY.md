@@ -119,3 +119,55 @@
 4. `CountCasterBuffs()`가 실제로 값을 세는지 확인(①의 4행이 여기 걸린다).
 
 **주의**: 이 문서의 유형 개수는 `축밖메모` 문자열로 묶은 것이라 **경계가 흐린 행이 있다**(한 행이 두 유형에 걸치는 경우). 유형별 행 수를 그대로 신뢰하지 말고 CSV에서 다시 세어라.
+
+---
+
+# 추가 (2026-09-06) — 캐릭터 누적변수 6행 **전부 회수**. 50 → 44행
+
+④에서 「다음 1순위」로 지목한 6행이다. **여섯 다 카이도와 정확히 같은 구조였다.**
+
+## 누적변수 둘 다 `GetEventDamage()`를 그대로 담아둔 것이다 `[파일확인]`
+
+```jass
+Trig_Yamato_Attack_Damage_Actions   (stage 3):  udg_Yamato_Damage[플레이어] = GetEventDamage()
+Trig_Yamato_Attack_Damage2_Actions  (stage 3):  udg_Yamato_Damage[플레이어] = GetEventDamage()
+Trig_Marco_Feather1_Actions                  :  udg_marco_damage[플레이어]  = GetEventDamage()
+Trig_Legend17_Marcodamage_Actions            :  udg_marco_damage[플레이어]  = GetEventDamage()
+```
+
+둘 다 `InitGlobals`에서 **0**으로 초기화되고, **대입하는 곳이 위 넷뿐**이다(전수 확인).
+→ **「직전 평타 피해량」이고, 우리 `ReceivedDamage`(= `recentAttackDamage`)와 같은 자리다.**
+
+원작이 굳이 전역에 담아둔 이유도 카이도와 같다 — **스킬이 별도 트리거에서 지연 실행되기 때문**이지 다른 값이라서가 아니다.
+
+## 회수한 6행
+
+| 트리거 | # | 원문 | basis | mult | bonus | 대상 | 범위 | 타입 | 배율 |
+|---|---|---|---|---|---|---|---|---|---|
+| `Yamato_Dash` | 1 | `Yamato_Damage×1.15 + 215,000` | ReceivedDamage | 1.15 | 215,000 | Enemies | 450 | NORMAL/UNIVERSAL | 1 |
+| `Yamato_Dash` | 2 | 〃 | 〃 | 1.15 | 215,000 | 주대상 | — | NORMAL/UNIVERSAL | **1.25** |
+| `Marco_Feather2` | 1 | `500,000 + 3.00×marco_damage` | 〃 | 3.0 | 500,000 | Enemies | 525 | CHAOS/NORMAL | 1 |
+| `Marco_Feather2` | 2 | `750,000 + 4.50×marco_damage` | 〃 | 4.5 | 750,000 | 주대상 | — | CHAOS/UNIVERSAL | 1 |
+| `Legend17_MacroLifeSkill` | 1 | `500,000 + 5.00×marco_damage` | 〃 | 5.0 | 500,000 | Enemies | 525 | CHAOS/NORMAL | 1 |
+| `Legend17_MacroLifeSkill` | 2 | `400,000 + 2.00×marco_damage` | 〃 | 2.0 | 400,000 | 주대상 | — | CHAOS/UNIVERSAL | 1 |
+
+**`Yamato_Dash` #2는 고정 1.25배**라 정정표에도 반영했다.
+
+**→ 확정 260 · 축밖 44.**
+
+## 이 패턴이 세 번째다
+
+`ReceivedDamage`(17행) → 카이도(8행) → 야마토·마르코(6행). **세 번 같은 모양으로 나왔다.**
+
+> **「`udg_XXX_damage[플레이어]` 꼴의 캐릭터 전용 실수 배열은 `GetEventDamage()` 저장소일 가능성이 높다.」**
+> 다음에 `realD = udg_어떤캐릭터_damage[...]`를 보면 **먼저 이 가설로 확인하라.** 세 번 맞았다.
+
+## 여기까지 / 다음은 여기서
+
+**여기까지**: 축밖 54 → **44행**. 오늘 회수 10행(거프 4 + 누적변수 6).
+
+**다음**:
+1. **능력레벨·연구 카운트 3행이 우리 `ResearchLevel`에 대응하는지** — 남은 「있는데 못 알아본 것」 후보.
+2. **부릉냐 마나 게이지 ↔ 우리 `manaGaugeCounter` 증가 규칙 1:1 확인** — 그 뒤에 `CasterGaugeValue` 추가 여부 결정.
+3. `TargetMoveSpeed` basis 추가(5행) — 판단은 끝났고 배선만 남았다.
+4. 영웅능력치 10행 bonus 흡수(`Kizaru_01`은 제외).

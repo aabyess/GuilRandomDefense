@@ -80,8 +80,8 @@
 초월함,H0B4,유스타스'캡틴',Kid_Skill_3_item,1,(450000.00*(1+(s__TrigVariables__get_realD(GlobalTV)*0.01))),[축밖],,,,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Spells,AP(방어무시),LIFE게이지50.00 AND 1/10,realD=그룹 유닛 수→❌ 축 없음,축밖,1,1,1
 초월함,H0B5,해군대장-보르살리노,Kizaru_01,1,s__TrigVariables__get_realD(GlobalTV),[축밖],,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/12,realD=영웅능력치(STR/INT)→❌ 축 없음,축밖,3.25,3.25,3.25
 초월함,H0B5,해군대장-보르살리노,Kizaru_01_shoot,1,200000.00,Flat,,200000,,Enemies,385.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),1/17,,확정,1,1.5,1.25
-초월함,H0BD,오니히메,Yamato_Dash,1,((udg_Yamato_Damage[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV)))]*1.15)+215000,[축밖],,,,Enemies,450.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),1/3,캐릭터 누적변수→❌ 축 없음,축밖,1,1,1
-초월함,H0BD,오니히메,Yamato_Dash,2,((udg_Yamato_Damage[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV)))]*1.15)+215000,[축밖],,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),1/3,캐릭터 누적변수→❌ 축 없음,축밖,1.25,1.25,1.25
+초월함,H0BD,오니히메,Yamato_Dash,1,((udg_Yamato_Damage[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV)))]*1.15)+215000,ReceivedDamage,1.15,215000,,Enemies,450,범위확정,GetEnumUnit(),2,NORMAL,UNIVERSAL,1/3,udg_Yamato_Damage = GetEventDamage()를 그대로 담아둔 누적변수(초기 0). 카이도와 같은 구조 → 우리 ReceivedDamage,확정,1,1,1
+초월함,H0BD,오니히메,Yamato_Dash,2,((udg_Yamato_Damage[GetConvertedPlayerId(GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV)))]*1.15)+215000,ReceivedDamage,1.15,215000,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,NORMAL,UNIVERSAL,1/3,udg_Yamato_Damage = GetEventDamage()를 그대로 담아둔 누적변수(초기 0). 카이도와 같은 구조 → 우리 ReceivedDamage,확정,1.25,1.25,1.25
 초월함,H0BE,오니히메 인수화,Yamato_Attack_Damage2,1,((GetEventDamage()*0.75)+15000.00),ReceivedDamage,0.75,15000,,Enemies,425.00,범위확정,GetEnumUnit(),2,Chaos,AD,(게이트 없음),실제평타피해→✅ ReceivedDamage basis,확정,1,1,1
 초월함,H0BE,오니히메 인수화,Yamato_Attack_Damage2,2,((GetEventDamage()*0.20)+15000.00),ReceivedDamage,0.2,15000,,Enemies,425.00,범위확정,GetEnumUnit(),1,Chaos,AP(방어무시),(게이트 없음),실제평타피해→✅ ReceivedDamage basis,확정,1,1,1
 초월함,H0BE,오니히메 인수화,Yamato_Attack_Damage2,3,((GetEventDamage()*0.75)+15000.00),ReceivedDamage,0.75,15000,,Enemies,425.00,범위확정,GetEnumUnit(),2,Chaos,AD,(게이트 없음),실제평타피해→✅ ReceivedDamage basis,확정,1,1,1
@@ -219,8 +219,8 @@
 제한됨,h08O,마르코 흰수염 유산의 수호자 - 제한됨,Marco_S2,1,750000.00,Flat,,750000,,Enemies,475.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/7,,확정,1,1,1
 제한됨,h08O,마르코 흰수염 유산의 수호자 - 제한됨,Marco_S2,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.30)*(0.20+(0.05*I2R(GetUnitAbility",대상현재체력×계수,0.3,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),1/7,계수 0.20+0.05×레벨/연구,확정,1,1,1
 제한됨,h08O,마르코 흰수염 유산의 수호자 - 제한됨,Marco_S2,3,112500.00,Flat,,112500,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/7,,확정,1,1.5,1.25
-제한됨,h09Q,불사조 흰수염 유산의 수호자 - 제한됨,Marco_Feather2,1,(500000.00+(3.00*s__TrigVariables__get_realD(GlobalTV))),[축밖],,,,Enemies,525.00,범위확정,GetEnumUnit(),1,Chaos,AD,1/5,realD=캐릭터 누적변수→❌ 축 없음,축밖,1,1,1
-제한됨,h09Q,불사조 흰수염 유산의 수호자 - 제한됨,Marco_Feather2,2,(750000.00+(4.50*s__TrigVariables__get_realD(GlobalTV))),[축밖],,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),1/5,realD=캐릭터 누적변수→❌ 축 없음,축밖,1,1,1
+제한됨,h09Q,불사조 흰수염 유산의 수호자 - 제한됨,Marco_Feather2,1,(500000.00+(3.00*s__TrigVariables__get_realD(GlobalTV))),ReceivedDamage,3,500000,,Enemies,525,범위확정,GetEnumUnit(),1,CHAOS,NORMAL,1/5,udg_marco_damage = GetEventDamage()를 그대로 담아둔 누적변수(초기 0). 카이도와 같은 구조 → 우리 ReceivedDamage,확정,1,1,1
+제한됨,h09Q,불사조 흰수염 유산의 수호자 - 제한됨,Marco_Feather2,2,(750000.00+(4.50*s__TrigVariables__get_realD(GlobalTV))),ReceivedDamage,4.5,750000,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,CHAOS,UNIVERSAL,1/5,udg_marco_damage = GetEventDamage()를 그대로 담아둔 누적변수(초기 0). 카이도와 같은 구조 → 우리 ReceivedDamage,확정,1,1,1
 제한됨,h0AI,킹 삼재해:화재 - 제한됨,King_skill_2,1,850000.00,Flat,,850000,,Enemies,475.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),,확정,1,1,1
 제한됨,h0AI,킹 삼재해:화재 - 제한됨,King_skill_2_tr,1,1275000.00,Flat,,1275000,,Enemies,475.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),,확정,1,1,1
 제한됨,h0AI,킹 삼재해:화재 - 제한됨,King_skill_2_tr,2,10000000.00,Flat,,10000000,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),(게이트 없음),,확정,1,1,1
@@ -231,8 +231,8 @@
 전설적인,h02S,롤로노아 조로 죽음의경지'사자의노래' - 전설적,Legend13_2,2,750000.00,Flat,,750000,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/7,,확정,1,1.5,1.25
 전설적인,h02S,롤로노아 조로 죽음의경지'사자의노래' - 전설적,Legend13_2,3,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.12)*(0.20+(0.05*I2R(GetUnitAbi",대상최대체력×계수,0.12,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Pierce,AP(방어무시),1/7,계수 0.20+0.05×레벨/연구,확정,1,1,1
 전설적인,h02S,롤로노아 조로 죽음의경지'사자의노래' - 전설적,Legend13_2,4,1500000.00,Flat,,1500000,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/7,,확정,1,1.5,1.25
-전설적인,h02T,마르코 환수종'불사조' - 전설적인,Legend17_MacroLifeSkill,1,(500000.00+(5.00*s__TrigVariables__get_realD(GlobalTV))),[축밖],,,,Enemies,525.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),realD=캐릭터 누적변수→❌ 축 없음,축밖,1,1,1
-전설적인,h02T,마르코 환수종'불사조' - 전설적인,Legend17_MacroLifeSkill,2,(400000.00+(2.00*s__TrigVariables__get_realD(GlobalTV))),[축밖],,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),(게이트 없음),realD=캐릭터 누적변수→❌ 축 없음,축밖,1,1,1
+전설적인,h02T,마르코 환수종'불사조' - 전설적인,Legend17_MacroLifeSkill,1,(500000.00+(5.00*s__TrigVariables__get_realD(GlobalTV))),ReceivedDamage,5,500000,,Enemies,525,범위확정,GetEnumUnit(),1,CHAOS,NORMAL,(게이트 없음),udg_marco_damage = GetEventDamage()를 그대로 담아둔 누적변수(초기 0). 카이도와 같은 구조 → 우리 ReceivedDamage,확정,1,1,1
+전설적인,h02T,마르코 환수종'불사조' - 전설적인,Legend17_MacroLifeSkill,2,(400000.00+(2.00*s__TrigVariables__get_realD(GlobalTV))),ReceivedDamage,2,400000,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,CHAOS,UNIVERSAL,(게이트 없음),udg_marco_damage = GetEventDamage()를 그대로 담아둔 누적변수(초기 0). 카이도와 같은 구조 → 우리 ReceivedDamage,확정,1,1,1
 전설적인,h02T,마르코 환수종'불사조' - 전설적인,Legend17_Marcodamage,1,(12500.00+(0.85*GetEventDamage())),ReceivedDamage,0.85,12500,,Enemies,285.00,범위확정,GetEnumUnit(),1,Chaos,AD,(게이트 없음),,확정,1,1,1
 전설적인,h02U,"마샬.D.티치 검은수염 해적단 선장 ""검은수염""",Legend26_tichi_crows,1,4000000.00,Flat,,4000000,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),LIFE게이지40.00 AND 1/7,,확정,1,1,1
 전설적인,h02U,"마샬.D.티치 검은수염 해적단 선장 ""검은수염""",Legend26_tichi_crows,2,300000.00,Flat,,300000,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),LIFE게이지40.00 AND 1/7,,확정,1,1,1
