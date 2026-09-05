@@ -131,14 +131,22 @@ TRIGGER_NAMES = {0: "OnHitChance", 1: "CooldownAutoCast", 2: "Aura", 3: "OnHitCo
 GAUGE_NAMES = {0: "Mana", 1: "Life"}
 
 
-def simulate(unit_name, skills, hits, attack_interval, seed):
+def simulate(unit_name, skills, hits, attack_interval, seed, quiet=False, extra_anomalies=None):
     rng = random.Random(seed)
+
+    def p(*args, **kwargs):
+        if not quiet:
+            print(*args, **kwargs)
 
     # 스킬별 런타임 상태(UnitAttacker.SkillRuntimeState와 대응) — 인스턴스별이라 여기선
     # 스킬 dict마다 독립 변수로 둔다.
     for s in skills:
         s["lockedUntil"] = 0.0
         s["fireCount"] = 0
+        # 임계 도달 "기회" 횟수(확률 게이트 통과 여부와 무관) — 같은 게이지·같은 임계값을
+        # 공유하는 스킬끼리 이 값이 정확히 같아야 한다(4aade90이 제대로 됐다는 증거).
+        # fireCount는 triggerChance가 다르면 스킬마다 갈릴 수 있어(정상) 이걸로는 못 잰다.
+        s["opportunityCount"] = 0
 
     mana_counter = 0
     mana_initialized = False
@@ -148,21 +156,23 @@ def simulate(unit_name, skills, hits, attack_interval, seed):
     onhit_skills = [s for s in skills if s["triggerType"] in (0, 3) and s["hasEffects"]]
     other_skills = [s for s in skills if s["triggerType"] not in (0, 3)]
 
-    print(f"=== {unit_name} — 스킬 {len(skills)}개 ===")
+    anomalies = list(extra_anomalies) if extra_anomalies else []  # 사람이 읽을 한 줄짜리 경고 모음 — quiet 모드에서도 RESULT 줄엔 항상 반영된다.
+
+    p(f"=== {unit_name} — 스킬 {len(skills)}개 ===")
     for i, s in enumerate(skills):
         tname = TRIGGER_NAMES.get(s["triggerType"], "?")
         if s["triggerType"] in (0, 3) and not s["hasEffects"]:
-            print(f"  [{i}] {s['path'].name} — {tname}, effects 비어있음(아직 안 돎)")
+            p(f"  [{i}] {s['path'].name} — {tname}, effects 비어있음(아직 안 돎)")
         elif s["triggerType"] == 3:
-            print(f"  [{i}] {s['path'].name} — {tname}, gauge={GAUGE_NAMES.get(s['gaugeKind'],'?')}, "
-                  f"threshold={s['hitCountThreshold']}, resetTo={s['resetTo']}, "
-                  f"2차확률={s['triggerChance']}")
+            p(f"  [{i}] {s['path'].name} — {tname}, gauge={GAUGE_NAMES.get(s['gaugeKind'],'?')}, "
+              f"threshold={s['hitCountThreshold']}, resetTo={s['resetTo']}, "
+              f"2차확률={s['triggerChance']}")
         elif s["triggerType"] == 0:
-            print(f"  [{i}] {s['path'].name} — {tname}, 확률={s['triggerChance']}, 절대쿨={s['cooldown']}s")
+            p(f"  [{i}] {s['path'].name} — {tname}, 확률={s['triggerChance']}, 절대쿨={s['cooldown']}s")
         else:
-            print(f"  [{i}] {s['path'].name} — {tname} (이 스크립트는 시간 기반 발동방식은 "
-                  f"카운트만 하고 히트 시뮬레이션은 안 함)")
-    print()
+            p(f"  [{i}] {s['path'].name} — {tname} (이 스크립트는 시간 기반 발동방식은 "
+              f"카운트만 하고 히트 시뮬레이션은 안 함)")
+    p()
 
     # ⚠️ 같은 게이지·다른 임계값 조합은 원작에 0건으로 확인됐지만(리서치담당), 데이터
     # 사고로 생길 수 있으니 미리 경고한다.
@@ -170,8 +180,10 @@ def simulate(unit_name, skills, hits, attack_interval, seed):
         thresholds = {s["hitCountThreshold"] for s in onhit_skills
                       if s["triggerType"] == 3 and s["gaugeKind"] == kind}
         if len(thresholds) > 1:
-            print(f"  ⚠️  {kind_name} 게이지를 공유하는 스킬들의 hitCountThreshold가 서로 다릅니다: "
-                  f"{sorted(thresholds)} — 원작에 이런 사례가 없다고 확인됐는데 지금 이 유닛엔 있습니다.")
+            msg = (f"{kind_name} 게이지를 공유하는 스킬들의 hitCountThreshold가 서로 다릅니다: "
+                   f"{sorted(thresholds)} — 원작에 이런 사례가 없다고 확인됐는데 지금 이 유닛엔 있습니다.")
+            anomalies.append(msg)
+            p("  ⚠️ ", msg)
 
     time = 0.0
     co_fire_log = []  # 한 타에 2개 이상 같이 나가면 기록
@@ -218,6 +230,11 @@ def simulate(unit_name, skills, hits, attack_interval, seed):
                     life_should_reset = True
                     life_reset_value = s["resetTo"]
 
+                # 임계에 닿은 "기회" — 확률 게이트 통과 여부와 무관하게 센다. 같은 게이지·
+                # 같은 임계값을 공유하는 스킬끼리 이 값이 정확히 같아야 4aade90이 제대로
+                # 됐다는 뜻이다(아래 그룹 검사 참고).
+                s["opportunityCount"] += 1
+
                 # OnHitCount 2차 확률 게이트(e23cfd8) — 실패해도 리셋 예약은 살아있다.
                 if rng.random() >= s["triggerChance"]:
                     continue
@@ -233,22 +250,78 @@ def simulate(unit_name, skills, hits, attack_interval, seed):
         if len(fired_this_hit) >= 2:
             co_fire_log.append((hit, list(fired_this_hit)))
         if hit <= 30 and fired_this_hit:
-            print(f"  hit {hit:>4} (t={time:6.1f}s): {', '.join(fired_this_hit)}")
+            p(f"  hit {hit:>4} (t={time:6.1f}s): {', '.join(fired_this_hit)}")
 
-    print()
-    print("=== 요약 ===")
+    p()
+    p("=== 요약 ===")
     for s in onhit_skills:
         rate = s["fireCount"] / hits * 100
-        print(f"  {s['path'].name}: {s['fireCount']}/{hits}회 발동 ({rate:.1f}%)")
+        p(f"  {s['path'].name}: {s['fireCount']}/{hits}회 발동 ({rate:.1f}%)")
     if co_fire_log:
-        print(f"\n  같은 타에 2개 이상 동시발동: {len(co_fire_log)}회 (처음 5개)")
+        p(f"\n  같은 타에 2개 이상 동시발동: {len(co_fire_log)}회 (처음 5개)")
         for hit, names in co_fire_log[:5]:
-            print(f"    hit {hit}: {', '.join(names)}")
+            p(f"    hit {hit}: {', '.join(names)}")
     else:
-        print("\n  같은 타에 2개 이상 동시발동한 적 없음.")
+        p("\n  같은 타에 2개 이상 동시발동한 적 없음.")
     if other_skills:
-        print(f"\n  시간기반(CooldownAutoCast/Aura) 스킬 {len(other_skills)}개는 히트 시뮬레이션 대상이 "
-              f"아닙니다(별도로 시간 루프가 돕니다) — 트리거타입만 위에 표시.")
+        p(f"\n  시간기반(CooldownAutoCast/Aura) 스킬 {len(other_skills)}개는 히트 시뮬레이션 대상이 "
+          f"아닙니다(별도로 시간 루프가 돕니다) — 트리거타입만 위에 표시.")
+
+    # ── 자동 이상탐지 ──────────────────────────────────────────────────────
+    # ① 같은 (게이지, 임계값)을 공유하는 OnHitCount 스킬은 opportunityCount가 항상
+    # 정확히 같아야 한다 — 다르면 4aade90(지연 리셋)이 이 유닛 데이터에서는 안 먹혔다는
+    # 뜻이라 표본오차가 아니라 진짜 버그다.
+    groups = {}
+    for s in onhit_skills:
+        if s["triggerType"] != 3:
+            continue
+        key = (s["gaugeKind"], s["hitCountThreshold"])
+        groups.setdefault(key, []).append(s)
+    for (gauge_kind, threshold), members in groups.items():
+        if len(members) < 2:
+            continue
+        opp_counts = {s["opportunityCount"] for s in members}
+        if len(opp_counts) > 1:
+            names = ", ".join(f"{s['path'].name}={s['opportunityCount']}" for s in members)
+            msg = (f"같은 게이지({GAUGE_NAMES.get(gauge_kind,'?')})·같은 임계값({threshold})인데 "
+                   f"기회 횟수가 서로 다릅니다: {names} — 동시발동이 깨졌을 가능성이 있습니다.")
+            anomalies.append(msg)
+            p("  ⚠️⚠️ ", msg)
+
+    # ② OnHitCount(+2차확률) 실측 발동률이 이론값(1/(threshold-resetTo) × triggerChance)과
+    # 크게 벗어나는가 — e23cfd8이 의도대로 도는지 확인한다. 표본오차를 감안해 상대오차
+    # 25% 이상만 잡는다(하나가 shared gauge라 다른 스킬과 겹쳐도 opportunityCount 기준이라
+    # 무관하다).
+    for s in onhit_skills:
+        if s["triggerType"] != 3:
+            continue
+        cycle = s["hitCountThreshold"] - s["resetTo"]
+        if cycle <= 0:
+            msg = f"{s['path'].name}: hitCountThreshold({s['hitCountThreshold']}) <= resetTo({s['resetTo']}) — 매 타 발동(비정상)."
+            anomalies.append(msg)
+            p("  ⚠️⚠️ ", msg)
+            continue
+        expected_opp_rate = 1.0 / cycle
+        observed_opp_rate = s["opportunityCount"] / hits
+        if expected_opp_rate > 0:
+            rel_err = abs(observed_opp_rate - expected_opp_rate) / expected_opp_rate
+            if rel_err > 0.25:
+                msg = (f"{s['path'].name}: 기회율 실측 {observed_opp_rate:.4f} vs 이론 "
+                       f"1/{cycle}={expected_opp_rate:.4f} (오차 {rel_err*100:.0f}%) — 표본오차 범위를 "
+                       f"벗어났습니다.")
+                anomalies.append(msg)
+                p("  ⚠️⚠️ ", msg)
+
+    if not anomalies:
+        p("  이상탐지: 문제 없음.")
+
+    ok = len(anomalies) == 0
+    print(f"RESULT unit={unit_name} skills={len(skills)} onhit={len(onhit_skills)} "
+          f"status={'OK' if ok else 'ANOMALY'} anomalies={len(anomalies)}")
+    for msg in anomalies:
+        print(f"  - {msg}")
+
+    return anomalies
 
 
 def main():
@@ -257,22 +330,29 @@ def main():
     parser.add_argument("--hits", type=int, default=1000, help="시뮬레이션할 평타 횟수(기본 1000)")
     parser.add_argument("--attack-interval", type=float, default=1.0, help="평타 간격 초(기본 1.0 — 절대쿨 계산용)")
     parser.add_argument("--seed", type=int, default=0, help="난수 시드(기본 0, 재현 가능하게)")
+    parser.add_argument("--quiet", action="store_true",
+                         help="상세 로그를 생략하고 RESULT 요약 줄만 찍는다(여러 유닛을 훑을 때).")
     args = parser.parse_args()
 
     roster_path = find_roster_asset(args.unit)
     roster_text = read(roster_path)
     guids = resolve_skill_guids(roster_text)
     if not guids:
-        print(f"{roster_path.name}: 스킬이 하나도 배선돼 있지 않습니다(skill/skills 둘 다 비어있음).")
+        print(f"RESULT unit={roster_path.stem} skills=0 onhit=0 status=EMPTY anomalies=0 "
+              f"(skill/skills 둘 다 비어있음)")
         return
+
+    extra_anomalies = []
 
     # ⚠️ 2026-09-06 실전에서 실제로 발견한 사고 꼴 — 같은 SkillData guid가 skills 리스트에
     # 두 번 이상 들어가면 그 스킬이 한 타에 두 번 판정된다(예: 확률 12.5% 스킬이 사실상
     # ~23%가 됨). 조용히 지나가면 사람이 못 알아채니 여기서 바로 소리친다.
     dup_guids = {g for g in guids if guids.count(g) > 1}
-    if dup_guids:
-        print(f"⚠️⚠️  {roster_path.name}: skills 리스트에 같은 SkillData가 중복 배선돼 있습니다 — "
-              f"그 스킬은 한 타에 여러 번 판정됩니다(발동확률·게이지 증가가 왜곡됩니다).")
+    for g in dup_guids:
+        extra_anomalies.append(f"skills 리스트에 같은 SkillData(guid {g})가 {guids.count(g)}번 중복 배선됨 "
+                                f"— 한 타에 여러 번 판정됩니다.")
+    if dup_guids and not args.quiet:
+        print(f"⚠️⚠️  {roster_path.name}: skills 리스트에 같은 SkillData가 중복 배선돼 있습니다.")
         for g in dup_guids:
             print(f"    guid {g} × {guids.count(g)}회")
         print()
@@ -282,13 +362,16 @@ def main():
     for g in guids:
         path = guid_index.get(g)
         if path is None:
-            print(f"⚠️  guid {g}에 해당하는 SkillData 에셋을 못 찾았습니다 — 배선이 끊어져 있습니다.")
+            extra_anomalies.append(f"guid {g}에 해당하는 SkillData 에셋을 못 찾음 — 배선이 끊어져 있습니다.")
+            if not args.quiet:
+                print(f"⚠️  guid {g}에 해당하는 SkillData 에셋을 못 찾았습니다 — 배선이 끊어져 있습니다.")
             continue
         parsed = parse_skill(path)
         parsed["path"] = Path(path)
         skills.append(parsed)
 
-    simulate(roster_path.stem, skills, args.hits, args.attack_interval, args.seed)
+    simulate(roster_path.stem, skills, args.hits, args.attack_interval, args.seed,
+             quiet=args.quiet, extra_anomalies=extra_anomalies)
 
 
 if __name__ == "__main__":
