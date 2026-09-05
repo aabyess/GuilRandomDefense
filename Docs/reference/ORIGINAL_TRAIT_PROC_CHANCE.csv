@@ -1,0 +1,79 @@
+번호,유닛ID,이름,트리거,게이트원문,확률,유형,등장횟수,비고
+001,H090,검은수염,Trig_Tichi_Attack,"GetRandomInt(1,10)==5",0.10000,확률,1,"특성이 확률을 바꾼다: 내부 게이트 GetRandomInt(1,udg_Tichi_TR_AddInt)==3, 초기값 6 → 특성 후 3. 즉 강화판 진입이 1/6 → 1/3 (2배). 전체는 1/10 × 그 값"
+001,H090,검은수염,Trig_Tichi_Attack,"GetRandomInt(1,25)==12",0.04000,확률,1,"특성이 확률을 바꾼다: 내부 게이트 GetRandomInt(1,udg_Tichi_TR_AddInt)==3, 초기값 6 → 특성 후 3. 즉 강화판 진입이 1/6 → 1/3 (2배). 전체는 1/10 × 그 값"
+001,H090,검은수염,Trig_Tichi_Attack,"GetRandomInt(1,5)==2",0.20000,확률,1,"특성이 확률을 바꾼다: 내부 게이트 GetRandomInt(1,udg_Tichi_TR_AddInt)==3, 초기값 6 → 특성 후 3. 즉 강화판 진입이 1/6 → 1/3 (2배). 전체는 1/10 × 그 값"
+001,H090,검은수염,Trig_Tichi_Attack,LIFE 게이지 == 85.00 (평타마다 +1),0.01176,게이지 누적(확률 아님·결정론),1,평타 85회마다 정확히 1회 발동. 1/85 확률로 넣으면 기댓값은 같고 분산이 다르다
+002,H0B4,키드,Trig_Kid_Attack,"GetRandomInt(1,10)==2",0.10000,확률,1,
+002,H0B4,키드,Trig_Kid_Attack,"GetRandomInt(1,16)==2",0.06250,확률,1,
+002,H0B4,키드,Trig_Kid_Attack,LIFE 게이지 == 50.00 (평타마다 +1),0.02000,게이지 누적(확률 아님·결정론),1,평타 50회마다 정확히 1회 발동. 1/50 확률로 넣으면 기댓값은 같고 분산이 다르다
+003,H08Y,프랑키,Trig_Franky_Attack,"GetRandomInt(1,10)==2",0.10000,확률,1,
+003,H08Y,프랑키,Trig_Franky_Attack,"GetRandomInt(1,14)==2",0.07143,확률,1,
+003,H08Y,프랑키,Trig_Franky_Attack,MANA 게이지 == 100.00 (평타마다 +1),0.01000,게이지 누적(확률 아님·결정론),1,평타 100회마다 정확히 1회 발동. 1/100 확률로 넣으면 기댓값은 같고 분산이 다르다
+004,H08W,루치,Trig_Luchi_Attack,"GetRandomInt(1,6)==4",0.16667,확률,1,
+004,H08W,루치,Trig_Luchi_Attack,"GetRandomReal(1.01,100.00)<=5.25",0.04283,확률,1,
+004,H08W,루치,Trig_Luchi_Attack,"GetRandomReal(1.00,100.00)<=7.25",0.06313,확률,1,
+005,H08X,후지토라,Trig_Huji_Attack,"GetRandomInt(1,24)==10",0.04167,확률,1,"특성 운석은 Huji_02 안에서 추가로 걸린다 — 레벨==2 AND GetRandomInt(1,4)==3 → 최종 1/24 × 1/4 = 1/96"
+005,H08X,후지토라,Trig_Huji_Attack,MANA 게이지 == 140.00 (평타마다 +1),0.00714,게이지 누적(확률 아님·결정론),1,평타 140회마다 정확히 1회 발동. 1/140 확률로 넣으면 기댓값은 같고 분산이 다르다
+006,H096,로우,Trig_Law_Attack,"GetRandomInt(1,20)==6",0.05000,확률,1,
+006,H096,로우,Trig_Law_Attack,"GetRandomInt(1,8)==6",0.12500,확률,1,
+006,H096,로우,Trig_Law_Attack,MANA 게이지 == 135.00 (평타마다 +1),0.00741,게이지 누적(확률 아님·결정론),1,평타 135회마다 정확히 1회 발동. 1/135 확률로 넣으면 기댓값은 같고 분산이 다르다
+007,H08V,나미,Trig_Nami_Attack,"GetRandomInt(1,9)==2",0.11111,확률,1,
+007,H08V,나미,Trig_Nami_Attack,"GetRandomInt(1,24)==10",0.04167,확률,1,
+008,H08U,시라호시,Trig_Sirahoshi_Attack,"GetRandomInt(1,9)==5",0.11111,확률,1,
+008,H08U,시라호시,Trig_Sirahoshi_Attack,"GetRandomInt(1,25)==10",0.04000,확률,1,
+008,H08U,시라호시,Trig_Sirahoshi_Attack,MANA 게이지 == 120.00 (평타마다 +1),0.00833,게이지 누적(확률 아님·결정론),1,평타 120회마다 정확히 1회 발동. 1/120 확률로 넣으면 기댓값은 같고 분산이 다르다
+009,H094,호킨스,Trig_Hokins_Attack,"GetRandomInt(1,14)==2",0.07143,확률,1,
+009,H094,호킨스,Trig_Hokins_Attack,"GetRandomInt(1,7)==2",0.14286,확률,1,
+009,H094,호킨스,Trig_Hokins_Attack,LIFE 게이지 == 40.00 (평타마다 +1),0.02500,게이지 누적(확률 아님·결정론),1,평타 40회마다 정확히 1회 발동. 1/40 확률로 넣으면 기댓값은 같고 분산이 다르다
+009,H094,호킨스,Trig_Hokins_Attack,MANA 게이지 == 100 (평타마다 +1),0.01000,게이지 누적(확률 아님·결정론),1,평타 100회마다 정확히 1회 발동. 1/100 확률로 넣으면 기댓값은 같고 분산이 다르다
+010,H09E,도플라밍고,Trig_DP_Attack,"GetRandomInt(1,8)==2",0.12500,확률,1,
+010,H09E,도플라밍고,Trig_DP_Attack,"GetRandomInt(1,7)==4",0.14286,확률,1,
+010,H09E,도플라밍고,Trig_DP_Attack,"GetRandomInt(1,10)==6",0.10000,확률,1,
+010,H09E,도플라밍고,Trig_DP_Attack,MANA 게이지 == 150.00 (평타마다 +1),0.00667,게이지 누적(확률 아님·결정론),1,평타 150회마다 정확히 1회 발동. 1/150 확률로 넣으면 기댓값은 같고 분산이 다르다
+011,H097,아오키지,Trig_Aokigi_Attack,"GetRandomInt(1,8)==3",0.12500,확률,1,
+011,H097,아오키지,Trig_Aokigi_Attack,"GetRandomInt(1,10)==2",0.10000,확률,1,
+011,H097,아오키지,Trig_Aokigi_Attack,"GetRandomInt(1,14)==9",0.07143,확률,1,
+011,H097,아오키지,Trig_Aokigi_Attack,"GetRandomInt(1,25)==10",0.04000,확률,1,
+012,H05N,타시기,Trig_Tashigi_Attack,MANA 게이지 == 135.00,1.0,게이지 도달,1,
+013,H099,루피,Trig_Ruffy_Attack,"GetRandomInt(1,80)==70",0.01250,확률,1,
+013,H099,루피,Trig_Ruffy_Attack,"GetRandomInt(1,8)==5",0.12500,확률,1,
+013,H099,루피,Trig_Ruffy_Attack,MANA 게이지 == 160.00 (평타마다 +1),0.00625,게이지 누적(확률 아님·결정론),1,평타 160회마다 정확히 1회 발동. 1/160 확률로 넣으면 기댓값은 같고 분산이 다르다
+014,H098,로빈,Trig_Robin_Attack,"GetRandomInt(1,10)==5",0.10000,확률,1,
+014,H098,로빈,Trig_Robin_Attack,"GetRandomInt(1,20)==12",0.05000,확률,1,
+014,H098,로빈,Trig_Robin_Attack,LIFE 게이지 == 40.00 (평타마다 +1),0.02500,게이지 누적(확률 아님·결정론),1,평타 40회마다 정확히 1회 발동. 1/40 확률로 넣으면 기댓값은 같고 분산이 다르다
+015,H09B,우솝,Trig_Usop_Attack,"GetRandomInt(1,9)==2",0.11111,확률,1,
+015,H09B,우솝,Trig_Usop_Attack,"GetRandomInt(1,5)==2",0.20000,확률,1,
+015,H09B,우솝,Trig_Usop_Attack,"GetRandomInt(1,7)==2",0.14286,확률,1,
+015,H09B,우솝,Trig_Usop_Attack,MANA 게이지 == 140.00 (평타마다 +1),0.00714,게이지 누적(확률 아님·결정론),1,평타 140회마다 정확히 1회 발동. 1/140 확률로 넣으면 기댓값은 같고 분산이 다르다
+016,H091,쵸파,Trig_Chopa_Attack,MANA 게이지 == 150.00 (평타마다 +1),0.00667,게이지 누적(확률 아님·결정론),1,평타 150회마다 정확히 1회 발동. 1/150 확률로 넣으면 기댓값은 같고 분산이 다르다
+017,H095,아카이누,Trig_Akainu_Attack,"GetRandomInt(1,10)==5",0.10000,확률,2,
+017,H095,아카이누,Trig_Akainu_Attack,MANA 게이지 == 135.00 (평타마다 +1),0.00741,게이지 누적(확률 아님·결정론),1,평타 135회마다 정확히 1회 발동. 1/135 확률로 넣으면 기댓값은 같고 분산이 다르다
+018,H09I,브룩,Trig_BrookAttack,"GetRandomInt(1,7)==2",0.14286,확률,1,
+018,H09I,브룩,Trig_BrookAttack,"GetRandomInt(1,24)==10",0.04167,확률,1,
+018,H09I,브룩,Trig_BrookAttack,MANA 게이지 == 115.00 (평타마다 +1),0.00870,게이지 누적(확률 아님·결정론),1,평타 115회마다 정확히 1회 발동. 1/115 확률로 넣으면 기댓값은 같고 분산이 다르다
+019,H08Z,샹크스,Trig_Shanks_Attack,"GetRandomInt(1,10)==3",0.10000,확률,1,
+019,H08Z,샹크스,Trig_Shanks_Attack,"GetRandomInt(1,10)==5",0.10000,확률,1,
+019,H08Z,샹크스,Trig_Shanks_Attack,MANA 게이지 == 35.00,1.0,게이지 도달,1,
+021,h04E,센고쿠,Trig_Sengoku_Attack,"GetRandomInt(1,10)==6",0.10000,확률,1,
+021,h04E,센고쿠,Trig_Sengoku_Attack,"GetRandomInt(1,20)==8",0.05000,확률,1,
+021,h04E,센고쿠,Trig_Sengoku_Attack,"GetRandomInt(1,12)==6",0.08333,확률,1,
+021,h04E,센고쿠,Trig_Sengoku_Attack,LIFE 게이지 == 75.00 (평타마다 +1),0.01333,게이지 누적(확률 아님·결정론),1,평타 75회마다 정확히 1회 발동. 1/75 확률로 넣으면 기댓값은 같고 분산이 다르다
+022,h04G,제트,Trig_Z_Attack,"GetRandomInt(1,10)==4",0.10000,확률,1,
+022,h04G,제트,Trig_Z_Attack,"GetRandomInt(1,16)==7",0.06250,확률,1,
+022,h04G,제트,Trig_Z_Attack,MANA 게이지 == 160.00 (평타마다 +1),0.00625,게이지 누적(확률 아님·결정론),1,평타 160회마다 정확히 1회 발동. 1/160 확률로 넣으면 기댓값은 같고 분산이 다르다
+023,h04C,거프,Trig_Garp_Attack,MANA 게이지 == 160.00 (평타마다 +1),0.00625,게이지 누적(확률 아님·결정론),1,평타 160회마다 정확히 1회 발동. 1/160 확률로 넣으면 기댓값은 같고 분산이 다르다
+024,h04D,드래곤,Trig_Dragon_Attack,"GetRandomInt(1,10)==6",0.10000,확률,1,
+024,h04D,드래곤,Trig_Dragon_Attack,MANA 게이지 == 160.00 (평타마다 +1),0.00625,게이지 누적(확률 아님·결정론),1,평타 160회마다 정확히 1회 발동. 1/160 확률로 넣으면 기댓값은 같고 분산이 다르다
+025,h04B,시키,Trig_Shiki_Attack,"GetRandomInt(1,10)==3",0.10000,확률,1,
+025,h04B,시키,Trig_Shiki_Attack,"GetRandomInt(1,16)==3",0.06250,확률,2,
+025,h04B,시키,Trig_Shiki_Attack,"GetRandomInt(1,33)==3",0.03030,확률,1,
+025,h04B,시키,Trig_Shiki_Attack,"GetRandomInt(1,2)==1",0.50000,확률,1,
+025,h04B,시키,Trig_Shiki_Attack,MANA 게이지 == 125.00 (평타마다 +1),0.00800,게이지 누적(확률 아님·결정론),1,평타 125회마다 정확히 1회 발동. 1/125 확률로 넣으면 기댓값은 같고 분산이 다르다
+026,h049,레일리,Trig_LaillySkill,"GetRandomInt(1,17)==4",0.05882,확률,1,
+026,h049,레일리,Trig_LaillySkill,"GetRandomInt(1,20)==3",0.05000,확률,1,
+026,h049,레일리,Trig_LaillySkill,"GetRandomInt(1,50)==1",0.02000,확률,1,
+026,h049,레일리,Trig_LaillySkill,MANA 게이지 == 115.00 (평타마다 +1),0.00870,게이지 누적(확률 아님·결정론),1,평타 115회마다 정확히 1회 발동. 1/115 확률로 넣으면 기댓값은 같고 분산이 다르다
+028,h05C,핸콕,Trig_Hancock_Attack,"GetRandomInt(1,15)==3",0.06667,확률,1,
+028,h05C,핸콕,Trig_Hancock_Attack,"GetRandomInt(1,14)==2",0.07143,확률,1,
+028,h05C,핸콕,Trig_Hancock_Attack,"GetRandomInt(1,15)==6",0.06667,확률,1,
+028,h05C,핸콕,Trig_Hancock_Attack,MANA 게이지 == 175.00 (평타마다 +1),0.00571,게이지 누적(확률 아님·결정론),1,평타 175회마다 정확히 1회 발동. 1/175 확률로 넣으면 기댓값은 같고 분산이 다르다
