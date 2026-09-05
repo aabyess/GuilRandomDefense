@@ -417,7 +417,9 @@ public class GameHud : MonoBehaviour
 
         if (!upgrades.TrySpendTraitPoints(trait.costTraitPoints))
         {
-            Debug.Log("특성 포인트가 부족합니다!");
+            // 플레이어가 보고 행동을 바꿀 수 있는 실패라 화면에 띄운다(PlayerNotification.cs
+            // 상단 코멘트의 기준 그대로) — 예전엔 Debug.Log라 콘솔에만 남았다.
+            PlayerNotification.Show(owner.OwnerId, "특성 포인트가 부족합니다!");
             return;
         }
 
