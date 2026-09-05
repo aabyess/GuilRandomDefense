@@ -75,8 +75,8 @@
 초월함,H0B2,다섯번째 황제,Snake_2,2,350000.00,Flat,,350000,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Magic,AP(방어무시),1/15,,확정
 초월함,H0B2,다섯번째 황제,Snake_3_Kingkobra,1,(3500000.00*(1+(0.01*(GetUnitMoveSpeed(GetEnumUnit())*0.10)))),[축밖],,,,Enemies,550.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),MANA게이지85.00,대상 이동속도→❌ 축 없음,축밖
 초월함,H0B2,다섯번째 황제,Snake_3_Kingkobra,2,1875000.00,Flat,,1875000,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Magic,AP(방어무시),MANA게이지85.00,,확정
-초월함,H0B4,유스타스'캡틴',Kid_Skill_3,1,(300000.00*(1+(s__TrigVariables__get_realD(GlobalTV)*0.01))),[축밖],,,,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),2,Spells,AP(방어무시),LIFE게이지50.00 AND 1/10,realD=계열 안 대입 없음→❌ 추적 불가(다른 트리거에서 넘어옴),축밖
-초월함,H0B4,유스타스'캡틴',Kid_Skill_3,2,(300000.00*(1+(s__TrigVariables__get_realD(GlobalTV)*0.01))),[축밖],,,,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),2,Spells,AP(방어무시),LIFE게이지50.00 AND 1/10,realD=계열 안 대입 없음→❌ 추적 불가(다른 트리거에서 넘어옴),축밖
+초월함,H0B4,유스타스'캡틴',Kid_Skill_3,1,(300000.00*(1+(s__TrigVariables__get_realD(GlobalTV)*0.01))),[축밖],,,,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),2,Spells,AP(방어무시),LIFE게이지50.00 AND 1/10,realD를 그 트리거도 호출자도 대입하지 않는다 — 공유 레지스터에 남은 값을 읽는다. 원작 쪽 버그 가능성 [미확인],축밖
+초월함,H0B4,유스타스'캡틴',Kid_Skill_3,2,(300000.00*(1+(s__TrigVariables__get_realD(GlobalTV)*0.01))),[축밖],,,,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),2,Spells,AP(방어무시),LIFE게이지50.00 AND 1/10,realD를 그 트리거도 호출자도 대입하지 않는다 — 공유 레지스터에 남은 값을 읽는다. 원작 쪽 버그 가능성 [미확인],축밖
 초월함,H0B4,유스타스'캡틴',Kid_Skill_3_item,1,(450000.00*(1+(s__TrigVariables__get_realD(GlobalTV)*0.01))),[축밖],,,,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Spells,AP(방어무시),LIFE게이지50.00 AND 1/10,realD=그룹 유닛 수→❌ 축 없음,축밖
 초월함,H0B5,해군대장-보르살리노,Kizaru_01,1,s__TrigVariables__get_realD(GlobalTV),[축밖],,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/12,realD=영웅능력치(STR/INT)→❌ 축 없음,축밖
 초월함,H0B5,해군대장-보르살리노,Kizaru_01_shoot,1,200000.00,Flat,,200000,,Enemies,385.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),1/17,,확정
@@ -100,16 +100,16 @@
 랜덤전용,h09K,옌 - 랜덤전용,En_nomal,1,400000.00,Flat,,400000,,Enemies,500.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/4,,확정
 랜덤전용,h09L,이치의 율자 - 랜덤전용,Bronya_Skill_1,1,200000.00,Flat,,200000,,Enemies,500.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/7,,확정
 랜덤전용,h09L,이치의 율자 - 랜덤전용,Bronya_Skill_1,2,300000.00,Flat,,300000,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/7,,확정
-랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_E,1,(625000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(GlobalTV)))),[축밖],,,,Enemies,415.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/5,realM=체력계열→△ 체력 basis로 풀 수 있음,축밖
+랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_E,1,(625000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(GlobalTV)))),[축밖],,,,Enemies,415.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/5,시전자 현재 마나 비례 (realM=UNIT_STATE_MANA) — 상수×(1+0.005×마나). 우리 축에 없음,축밖
 랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_E,2,"(3125000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.02))",대상최대체력,0.02,3125000,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/5,,확정
 랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_R,1,1000000.00,Flat,,1000000,,Enemies,500.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지150.00,,확정
 랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_R,2,2500000.00,Flat,,2500000,,Enemies,500.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지150.00,,확정
 랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_R,3,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.06)",대상최대체력,0.06,0,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),MANA게이지150.00,,확정
-랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,1,(250000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(GlobalTV)))),[축밖],,,,Enemies,400.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),1/7,realM=체력계열→△ 체력 basis로 풀 수 있음,축밖
-랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,2,(225000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(GlobalTV)))),[축밖],,,,Enemies,400.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),1/7,realM=체력계열→△ 체력 basis로 풀 수 있음,축밖
-랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,3,(250000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(GlobalTV)))),[축밖],,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),1/7,realM=체력계열→△ 체력 basis로 풀 수 있음,축밖
+랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,1,(250000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(GlobalTV)))),[축밖],,,,Enemies,400.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),1/7,시전자 현재 마나 비례 (realM=UNIT_STATE_MANA) — 상수×(1+0.005×마나). 우리 축에 없음,축밖
+랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,2,(225000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(GlobalTV)))),[축밖],,,,Enemies,400.00,범위확정,GetEnumUnit(),2,Spells,AP(방어무시),1/7,시전자 현재 마나 비례 (realM=UNIT_STATE_MANA) — 상수×(1+0.005×마나). 우리 축에 없음,축밖
+랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,3,(250000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(GlobalTV)))),[축밖],,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),1/7,시전자 현재 마나 비례 (realM=UNIT_STATE_MANA) — 상수×(1+0.005×마나). 우리 축에 없음,축밖
 랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,4,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.06)",대상최대체력,0.06,0,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/7,,확정
-랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,5,(225000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(GlobalTV)))),[축밖],,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),1/7,realM=체력계열→△ 체력 basis로 풀 수 있음,축밖
+랜덤전용,h09N,부릉냐 - 랜덤전용[제한됨],BronyaMotar_laser,5,(225000.00*(1+((0.01*0.50)*s__TrigVariables__get_realM(GlobalTV)))),[축밖],,,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,2,Spells,AP(방어무시),1/7,시전자 현재 마나 비례 (realM=UNIT_STATE_MANA) — 상수×(1+0.005×마나). 우리 축에 없음,축밖
 랜덤전용,h09R,쿠죠 죠타로 - 랜덤전용[제한됨],Jotaro_R,1,2500000.00,Flat,,2500000,,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Hero,AD,MANA게이지150.00,,확정
 랜덤전용,h09R,쿠죠 죠타로 - 랜덤전용[제한됨],Jotaro_R,2,"(4250000.00+((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit())-GetUnitStateSwap(UNIT_STATE_LIFE,GetEnumUnit",[축밖],,,,Enemies,[그룹변수] s__TrigVariables__get_grou,범위확정(비수치),GetEnumUnit(),1,Hero,AD,MANA게이지150.00,분류 안 됨→⚠,축밖
 랜덤전용,h09W,나미카제 미나토 - 랜덤전용[제한됨],Minato_E,1,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(GlobalTV))*0.15)",대상최대체력,0.15,0,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/24,,확정
@@ -266,7 +266,7 @@
 영원한,h057,|CFFFFFA78알라바스타의 왕녀-ver파이러,vivi_Skill_4_Mana,4,500000.00,Flat,,500000,,SingleTarget,0,단일확정,s__TrigVariables__get_unitD(Gl,2,Hero,AP(방어무시),MANA게이지150.00,,확정
 영원한,h057,|CFFFFFA78알라바스타의 왕녀-ver파이러,vivi_skill_2,1,400000.00,Flat,,400000,,Enemies,450.00,범위확정,GetEnumUnit(),1,Chaos,AD,1/10,,확정
 영원한,h059,|CFFFFFA78'화권의' 포트거스.D.에이스,ace_skill_3,1,1000000.00,Flat,,1000000,,Enemies,650.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),1/35,,확정
-영원한,h059,|CFFFFFA78'화권의' 포트거스.D.에이스,ace_skill_5,1,s__TrigVariables__get_realD(GlobalTV),[축밖],,,,Enemies,850.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),MANA게이지185.00,realD=체력계열→△ 체력 basis로 풀 수 있음,축밖
+영원한,h059,|CFFFFFA78'화권의' 포트거스.D.에이스,ace_skill_5,1,s__TrigVariables__get_realD(GlobalTV),대상최대체력,0.02,4500000,,Enemies,850.00,범위확정,GetEnumUnit(),1,Magic,AP(방어무시),MANA게이지185.00,"realD를 한 겹 더 추적해 확정 (realD = 4,500,000 + 대상최대체력×0.02)",확정
 영원한,h05B,|CFFFFFA78해적왕자-롬멜의 카마이타치 카,Cavendish_skill_Mana,1,"(2200000.00+(I2R(GetPlayerTechCountSimple('R01M',GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV))))*4500",연구,45000,2200000,,Enemies,900.00,범위확정,GetEnumUnit(),2,Chaos,AD,MANA게이지100.00,,확정
 영원한,h05B,|CFFFFFA78해적왕자-롬멜의 카마이타치 카,Cavendish_skill_Mana,2,"(2200000.00+(I2R(GetPlayerTechCountSimple('R01M',GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV))))*4500",연구,45000,2200000,,Enemies,900.00,범위확정,GetEnumUnit(),2,Chaos,AD,MANA게이지100.00,,확정
 영원한,h05B,|CFFFFFA78해적왕자-롬멜의 카마이타치 카,Cavendish_skill_Mana,3,1000000.00,Flat,,1000000,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Chaos,AP(방어무시),MANA게이지100.00,,확정
@@ -280,7 +280,7 @@
 영원한,h088,|CFFFFFA78토트 무지카 봉인된 악보의 괴,tots_R,1,4500000.00,Flat,,4500000,,Enemies,415.00,범위확정,GetEnumUnit(),1,Hero,AP(방어무시),(게이트 없음),,확정
 영원한,h08R,|CFFFFFA78참된 호걸 코즈키 오뎅 - |,Odeng_Skill,1,1150000.00,Flat,,1150000,,Enemies,600.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),1/20,,확정
 영원한,h08R,|CFFFFFA78참된 호걸 코즈키 오뎅 - |,Odeng_Skill_mana,1,4000000.00,Flat,,4000000,,Enemies,600.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지145.00,,확정
-히든,h03J,[히든조합]시류비의 시류,siru_R,1,(1500000.00+(s__TrigVariables__get_realE(GlobalTV)*80000.00)),[축밖],,,,Enemies,450.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지100.00,realE=계열 안 대입 없음→❌ 추적 불가(다른 트리거에서 넘어옴),축밖
+히든,h03J,[히든조합]시류비의 시류,siru_R,1,(1500000.00+(s__TrigVariables__get_realE(GlobalTV)*80000.00)),[축밖],,,,Enemies,450.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지100.00,realD를 그 트리거도 호출자도 대입하지 않는다 — 공유 레지스터에 남은 값을 읽는다. 원작 쪽 버그 가능성 [미확인],축밖
 히든,h03R,[히든조합]반 더 데켄어인섬 절반면적의 노아를 ,deken_Mana,1,"(2200000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit())*0.02))",대상최대체력,0.02,2200000,,Enemies,800.00,범위확정,GetEnumUnit(),1,Spells,AP(방어무시),MANA게이지115.00,,확정
 히든,h03R,[히든조합]반 더 데켄어인섬 절반면적의 노아를 ,deken_skill_1,1,120000.00,Flat,,120000,,SingleTarget,0,단일확정,s__TrigVariables__get_unitB(Gl,1,Spells,AP(방어무시),1/16,,확정
 히든,h03V,[히든조합]코알라혁명군-어인공수도대리사범,koalla_skill_1,1,"(525000.00+(52500.00*I2R(GetPlayerTechCountSimple('R01O',GetOwningPlayer(s__TrigVariables__get_unitA(GlobalTV)",연구,52500,525000,,Enemies,500.00,범위확정,GetEnumUnit(),1,Chaos,AD,MANA게이지135.00 AND 1/8,,확정
