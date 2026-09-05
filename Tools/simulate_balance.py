@@ -132,11 +132,13 @@ def load_roster():
         attack_type = (ATTACK_TYPE_ENUM[int(at_idx)]
                        if at_idx is not None and int(at_idx) < len(ATTACK_TYPE_ENUM) else "Unassigned")
 
-        # §17(2026-09-05): 원작 능력 100종 배정(스킬 발동형 피해). skill_dps_for_unit이
-        # OnHitChance+Damage+CasterAttackPower가 아니면 0을 준다 — 대부분(37종)은 실제로
-        # 0이다(발동확률만 있고 피해 자체가 없는 원작 능력, PM 확인).
+        # §17(1차)+§18(2차, 2026-09-05): 원작 능력 배정(스킬 발동형 피해). skill_dps_for_unit이
+        # OnHitChance가 아니거나 Damage 계열이 아니면 0을 준다. skill_dps는 hp와 무관한
+        # 성분(Flat·CasterAttackPower), skill_percent_rate는 적 hp에 곱해야 완성되는
+        # 성분(%체력) — 후자는 median_dps_by_tier(구식, 라운드 hp를 모름)에서는 반영이
+        # 안 된다, median_dps_by_tier_vs_armor 쪽에서만 라운드별 hp를 곱해 완성한다.
         skill_m = re.search(r"^  skill: \{fileID: \d+, guid: ([0-9a-f]+)", text, re.MULTILINE)
-        skill_dps, skill_attack_type_idx = skill_dps_for_unit(
+        skill_dps, skill_percent_rate, skill_attack_type_idx = skill_dps_for_unit(
             skill_m.group(1) if skill_m else None, ap, aspd)
         skill_attack_type = (ATTACK_TYPE_ENUM[skill_attack_type_idx]
                               if skill_attack_type_idx is not None
@@ -148,7 +150,8 @@ def load_roster():
             "grade": gname, "tier": tier, "damagetype": dmgtype, "attack_type": attack_type,
             "base_dps": ap * aspd,
             "bash_dps": cc * cbd * aspd,
-            "skill_dps": skill_dps, "skill_attack_type": skill_attack_type,
+            "skill_dps": skill_dps, "skill_percent_rate": skill_percent_rate,
+            "skill_attack_type": skill_attack_type,
         })
     return recs
 
@@ -447,6 +450,9 @@ SKILL_EFFECT_BASIS_ENUM = parse_enum(_SKILL_DATA_CS, "SkillEffectBasis")
 SKILL_EFFECT_KIND_ENUM = parse_enum(_SKILL_DATA_CS, "SkillEffectKind")
 ONHIT_CHANCE_IDX = SKILL_TRIGGER_TYPE_ENUM.index("OnHitChance")
 CASTER_ATTACK_POWER_IDX = SKILL_EFFECT_BASIS_ENUM.index("CasterAttackPower")
+FLAT_BASIS_IDX = SKILL_EFFECT_BASIS_ENUM.index("Flat")
+MAX_HP_PERCENT_IDX = SKILL_EFFECT_BASIS_ENUM.index("TargetMaxHpPercent")
+CUR_HP_PERCENT_IDX = SKILL_EFFECT_BASIS_ENUM.index("TargetCurrentHpPercent")
 DAMAGE_KIND_IDX = SKILL_EFFECT_KIND_ENUM.index("Damage")
 
 
@@ -508,25 +514,50 @@ SKILLS = load_skill_assets()
 
 
 def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
-    """이 유닛의 스킬이 기대 DPS에 얼마를 더하는지. PM 공식 그대로:
-    발동확률 × Σ(효과확률 × (공격력×배수 + 추가피해)) × 공격속도(공격간격의 역수).
-    OnHitChance가 아니거나(쿨다운형·오라형은 이번 배정 대상이 아니다, PM 확인)
-    Damage+CasterAttackPower가 아닌 효과는 0으로 친다 — 스턴 등은 화력이 아니다.
-    반환: (skill_dps, 대표 attack_type_idx 또는 None).
+    """이 유닛의 스킬이 기대 화력에 얼마를 더하는지 — §17(1차, CasterAttackPower만)에
+    §18(2차, Flat·%체력)을 더했다.
+
+    ⚠️ %체력(TargetMaxHpPercent/TargetCurrentHpPercent)은 "적 HP에 비례"해서 고정
+    dps 스칼라로 못 접는다 — 이번 라운드 적 HP를 알아야 값이 나온다. 그래서 두
+    성분을 분리해서 돌려준다:
+      flat_dps    = 발동확률 × Σ(효과확률×(공격력×배수+추가피해 또는 배수))/공격간격 —
+                    Flat·CasterAttackPower 성분. 기존 kills_capacity 식(÷hp)에 그대로
+                    들어간다.
+      percent_rate = 발동확률 × Σ(효과확률×배수) × 공격속도 — **hp에 안 곱한 채로
+                    반환한다.** 단위가 "초당 죽이는 대상의 비율"이라 hp로 나눌 필요가
+                    없다(대상 hp가 크든 작든 배수만큼의 "비율"을 깎으므로) — 호출부가
+                    그 라운드의 실제 hp를 곱해서 flat_dps와 합친 뒤 기존 공식에 넣는다
+                    (build_median_by_armor/run_backlog_dt 참고). UnitAttacker.
+                    ResolveSkillEffectValue의 %체력 두 case가 bonus를 안 쓰는 것과
+                    똑같이 여기서도 bonus는 무시한다.
+    OnHitChance가 아니면(쿨다운형·오라형, 2차에도 일부 섞여 있다 — 아직 cooldown 값이
+    0인 미완성 상태로 보여 이번엔 제외했다, §19에서 재확인) 전부 0을 준다.
+    반환: (flat_dps, percent_rate, 대표 attack_type_idx 또는 None).
     """
     skill = SKILLS.get(skill_guid) if skill_guid else None
     if skill is None or skill["trigger_type_idx"] != ONHIT_CHANCE_IDX:
-        return 0.0, None
+        return 0.0, 0.0, None
 
-    per_hit = 0.0
+    flat_per_hit = 0.0
+    percent_per_hit = 0.0
     attack_type_idx = None
     for eff in skill["effects"]:
-        if eff["kind_idx"] != DAMAGE_KIND_IDX or eff["basis_idx"] != CASTER_ATTACK_POWER_IDX:
+        if eff["kind_idx"] != DAMAGE_KIND_IDX:
             continue
-        per_hit += eff["chance"] * (attack_power * eff["multiplier"] + eff["bonus"])
-        attack_type_idx = eff["attack_type_idx"]
+        if eff["basis_idx"] == CASTER_ATTACK_POWER_IDX:
+            flat_per_hit += eff["chance"] * (attack_power * eff["multiplier"] + eff["bonus"])
+            attack_type_idx = eff["attack_type_idx"]
+        elif eff["basis_idx"] == FLAT_BASIS_IDX:
+            flat_per_hit += eff["chance"] * eff["multiplier"]
+            attack_type_idx = eff["attack_type_idx"]
+        elif eff["basis_idx"] in (MAX_HP_PERCENT_IDX, CUR_HP_PERCENT_IDX):
+            percent_per_hit += eff["chance"] * eff["multiplier"]
+            attack_type_idx = eff["attack_type_idx"]
 
-    return skill["trigger_chance"] * per_hit * attack_speed, attack_type_idx
+    trigger_chance = skill["trigger_chance"]
+    return (trigger_chance * flat_per_hit * attack_speed,
+            trigger_chance * percent_per_hit * attack_speed,
+            attack_type_idx)
 
 
 def dt_multiplier(attack_type_name, armor_type_name):
@@ -544,44 +575,59 @@ def dt_multiplier(attack_type_name, armor_type_name):
 
 def median_dps_by_tier_vs_armor(roster, armor_type_name):
     """median_dps_by_tier와 같은 모양이지만, 유닛별 attack_type과 armor_type_name의
-    DamageTable 배율을 먼저 곱한 뒤 중앙값을 낸다.
+    DamageTable 배율을 먼저 곱한 뒤 중앙값을 낸다. §18: hp-무관 성분(flat, 평타+
+    Flat/CasterAttackPower 스킬)과 hp-비례 성분(percent_rate, %체력 스킬)을 따로
+    낸다 — 후자는 라운드별 실제 hp를 몰라서 여기선 중앙값만 내고, hp를 곱하는 건
+    run_backlog_dt가 라운드마다 한다(적 hp가 그때그때 다르므로).
 
     §17: 평타(attack_type)와 스킬(skill_attack_type)은 원작 데이터상 서로 다른 공격
     타입을 쓸 수 있어서(스킬 쪽은 CSV에 마법 여부가 없어 평타 타입을 그대로 물려받았을
     뿐 — 3cf3147 커밋 메시지 참고) 각자 자기 attack_type으로 배율을 따로 곱한다."""
-    by_tier = defaultdict(list)
+    flat_by_tier = defaultdict(list)
+    percent_by_tier = defaultdict(list)
     for r in roster:
-        v = (r["base_dps"] * dt_multiplier(r["attack_type"], armor_type_name)
-             + r["skill_dps"] * dt_multiplier(r["skill_attack_type"], armor_type_name))
-        by_tier[r["tier"]].append(v)
-    out = {}
+        skill_mult = dt_multiplier(r["skill_attack_type"], armor_type_name)
+        flat_v = (r["base_dps"] * dt_multiplier(r["attack_type"], armor_type_name)
+                  + r["skill_dps"] * skill_mult)
+        percent_v = r["skill_percent_rate"] * skill_mult
+        flat_by_tier[r["tier"]].append(flat_v)
+        percent_by_tier[r["tier"]].append(percent_v)
+    flat_out, percent_out = {}, {}
     for t in range(TIER_COUNT):
-        vals = by_tier.get(t)
-        out[t] = statistics.median(vals) if vals else None
-    return out
+        flat_vals = flat_by_tier.get(t)
+        percent_vals = percent_by_tier.get(t)
+        flat_out[t] = statistics.median(flat_vals) if flat_vals else None
+        percent_out[t] = statistics.median(percent_vals) if percent_vals else None
+    return flat_out, percent_out
 
 
 ARMOR_TYPES_REAL = ("Normal", "Large", "Fort", "Hero")
 
 
 def build_median_by_armor(roster, all_median_fallback):
-    """4개 실제 방어타입 전부에 대해 Tier별 중앙값 표를 만든다. 표본이 없는 Tier는
-    (기존 ad_median/ap_median과 같은 관례로) 전체 중앙값으로 채운다. armorType이
-    Unassigned인 라운드는 dt_multiplier가 이미 1.0을 주므로 undifferentiated
-    중앙값과 같다 — 별도 표를 안 두고 그대로 all_median_fallback을 쓴다."""
+    """4개 실제 방어타입 전부에 대해 Tier별 (flat, percent_rate) 표를 만든다. 표본이
+    없는 Tier는 (기존 ad_median/ap_median과 같은 관례로) 전체 중앙값을 flat에,
+    percent_rate는 0을 채운다(all_median_fallback엔 percent_rate 개념이 없다 —
+    §17 이전 경로라서). armorType이 Unassigned인 라운드는 dt_multiplier가 이미
+    1.0을 주므로 undifferentiated 중앙값과 같다."""
     tables = {}
     for at in ARMOR_TYPES_REAL:
-        table = median_dps_by_tier_vs_armor(roster, at)
+        flat_table, percent_table = median_dps_by_tier_vs_armor(roster, at)
+        table = {}
         for t in range(TIER_COUNT):
-            if table[t] is None:
-                table[t] = all_median_fallback[t]
+            flat_v = flat_table[t] if flat_table[t] is not None else all_median_fallback[t]
+            percent_v = percent_table[t] if percent_table[t] is not None else 0.0
+            table[t] = (flat_v, percent_v)
         tables[at] = table
-    tables["Unassigned"] = dict(all_median_fallback)
+    tables["Unassigned"] = {t: (all_median_fallback[t], 0.0) for t in range(TIER_COUNT)}
     return tables
 
 
 def fixed10_dps_fn_dt(median_by_armor):
-    return lambda r, armor_type: 10 * median_by_armor[armor_type][tier_for_round(r)]
+    def f(r, armor_type):
+        flat, percent = median_by_armor[armor_type][tier_for_round(r)]
+        return 10 * flat, 10 * percent
+    return f
 
 
 def no_combine_dps_fn_dt(median_by_armor):
@@ -591,7 +637,9 @@ def no_combine_dps_fn_dt(median_by_armor):
         owned.append(tier_for_round(r))
         owned.append(tier_for_round(r))
         table = median_by_armor[armor_type]
-        return sum(table[t] for t in owned)
+        flat = sum(table[t][0] for t in owned)
+        percent = sum(table[t][1] for t in owned)
+        return flat, percent
     return f
 
 
@@ -609,7 +657,9 @@ def greedy_combine_dps_fn_dt(median_by_armor):
                     counts[t] -= 2
                     counts[t + 1] += 1
                     changed = True
-        return sum(table[t] * n for t, n in counts.items())
+        flat = sum(table[t][0] * n for t, n in counts.items())
+        percent = sum(table[t][1] * n for t, n in counts.items())
+        return flat, percent
     return f
 
 
@@ -623,11 +673,16 @@ def local_optimal_dps_fn_dt(median_by_armor):
         while changed:
             changed = False
             for t in range(MAX_TIER):
-                if counts[t] >= 2 and table.get(t + 1) and table[t + 1] >= table[t] * 2:
+                # 조합 판단은 그 Tier의 flat 성분만 본다(percent_rate까지 넣으면
+                # 라운드별 hp가 있어야 비교가 되는데 여긴 hp가 없다) — §17까지와
+                # 같은 한계다, 새로 생긴 문제가 아니다.
+                if counts[t] >= 2 and table.get(t + 1) and table[t + 1][0] >= table[t][0] * 2:
                     counts[t] -= 2
                     counts[t + 1] += 1
                     changed = True
-        return sum(table[t] * n for t, n in counts.items())
+        flat = sum(table[t][0] * n for t, n in counts.items())
+        percent = sum(table[t][1] * n for t, n in counts.items())
+        return flat, percent
     return f
 
 
@@ -644,14 +699,27 @@ def run_backlog_dt(enemies, wave_counts, round_length_fn, defense_armor,
     """run_backlog과 같지만 매 라운드 적의 armor_type을 읽어 team_dps_fn(r, armor_type)로
     넘긴다 — DamageTable을 반영한 §13 전용. use_armor 매개변수가 없다 — B안 이후 평타가
     전부 물리라 방어력을 무시할 경로가 없다(EnemyDummy.MitigatedDamage 원문, §12-1/12-2
-    확인 그대로) — 숫자 방어력 감폭은 항상 켠다."""
+    확인 그대로) — 숫자 방어력 감폭은 항상 켠다.
+
+    §18: team_dps_fn이 (flat, percent_rate) 튜플을 돌려준다. percent_rate는 "초당
+    죽이는 대상 비율"이라 이번 라운드의 실제 hp를 곱해야 flat과 같은 단위(초당 데미지)가
+    된다 — dps = flat + percent_rate×hp로 합치면 kills_capacity = dps×mult×rl/hp가
+    자동으로 flat×mult×rl/hp + percent_rate×mult×rl로 풀려서, %체력 성분이 hp와
+    무관한 "초당 킬 수"로 정확히 떨어진다(수식 유도는 §18 문서 참고).
+
+    ⚠️ %체력 분기 게이트(EnemyData.takesPercentDamage, 원작 GetUnitPointValue<200)를
+    여기서도 반영한다 — 보스(is_boss)는 %체력 성분을 아예 안 받는다(UnitAttacker.
+    ResolveSkillEffectValue와 같은 규칙). 라운드 보스 9종만 걸린다(스토리 건물 등
+    다른 보스 판정은 이 라운드 시퀀스에 안 들어온다)."""
     backlog = 0.0
     collapse = None
     for r in range(1, total_rounds + 1):
         e = enemies[r]
         cnt = wave_counts[r]
         mult = armor_mult(e["armor"], defense_armor)
-        dps = team_dps_fn(r, e["armor_type"])
+        flat_dps, percent_rate = team_dps_fn(r, e["armor_type"])
+        percent_dps = 0.0 if e["is_boss"] else percent_rate * e["hp"]
+        dps = flat_dps + percent_dps
         rl = round_length_fn(r, e["is_boss"])
         incoming = backlog + cnt
         kills_capacity = dps * mult * rl / e["hp"]
@@ -763,7 +831,8 @@ def main():
     # -----------------------------------------------------------------
     print("\n=== §13: DamageTable(상성표) 반영 — 배정 전/후, 팀 구분 없음(전부 물리) ===")
 
-    before_by_armor = {at: dict(all_median) for at in ARMOR_TYPES_REAL + ("Unassigned",)}
+    before_by_armor = {at: {t: (all_median[t], 0.0) for t in range(TIER_COUNT)}
+                       for at in ARMOR_TYPES_REAL + ("Unassigned",)}
     after_by_armor = build_median_by_armor(roster, all_median)
 
     print("--- ① 배정 전 → 후 붕괴 라운드 (방어력 항상 적용) ---")
@@ -777,6 +846,10 @@ def main():
         after_s = f"붕괴 R{after_r}" if after_r else "완주(75R)"
         print(f"{name:20s}{before_s:14s}{after_s:14s}")
 
+    def effective_dps(table, armor_type, tier, hp, is_boss):
+        flat, percent = table[armor_type][tier]
+        return flat + (0.0 if is_boss else percent * hp)
+
     def weighted_pct_change(rounds_range):
         total_w = acc_before = acc_after = 0.0
         for r in rounds_range:
@@ -784,8 +857,8 @@ def main():
             w = wave_counts[r] * e["hp"]
             t = tier_for_round(r)
             total_w += w
-            acc_before += w * before_by_armor[e["armor_type"]][t]
-            acc_after += w * after_by_armor[e["armor_type"]][t]
+            acc_before += w * effective_dps(before_by_armor, e["armor_type"], t, e["hp"], e["is_boss"])
+            acc_after += w * effective_dps(after_by_armor, e["armor_type"], t, e["hp"], e["is_boss"])
         return (acc_after - acc_before) / acc_before * 100 if acc_before else float("nan")
 
     print("\n--- ② 구간별 실제 배정 화력 변화 (HP×마릿수 가중, tier_for_round 스케줄 기준) ---")
