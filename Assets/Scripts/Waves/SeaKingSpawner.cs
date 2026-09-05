@@ -19,6 +19,12 @@ using UnityEngine;
 // ⚠️ 원작 보상 중 둘은 안 옮겼다(PM 확인, 2026-09-05) — **1/6 확률 ItemGet**(아이템 계통이
 // 우리에 없다)과 **보유 유닛 전원에게 영웅경험치 325**(경험치 축 자체가 없다, UnitData.cs의
 // "아군 유닛엔 체력·경험치 개념이 없다" 주석과 같은 이유). 지어내지 않고 뺐다.
+//
+// ⚠️ Enemy_거대해왕류.asset은 isBoss=false다 — 원작 upoi(포인트값)=200으로 "보스"지만,
+// 우리 isBoss는 **라운드보스 보상·도박소 해금 경로**를 타는 스위치라 뜻이 다르다(round=0인
+// 이 유닛에 그 경로를 타게 하면 아무 라운드에도 안 걸려 조용히 no-op만 될 뿐이라 굳이 켤
+// 이유가 없다). 원작의 진짜 의도(보스는 %체력 비례 스킬피해를 안 받는다, war3map.j 게이트)는
+// 이 유닛에서 EnemyData.takesPercentDamage=false로 정확히 옮겼다 — 두 개념을 안 섞었다.
 public class SeaKingSpawner : MonoBehaviour
 {
     [SerializeField] EnemyData seaKingData;
