@@ -30,12 +30,14 @@ public class UnitAttacker : MonoBehaviour
     UnitCombat combat;
     UnitIdentity identity;
 
-    // 특성강화(딜증가)가 이 유닛 종에 거는 영구 배율. attackDamage(원본)는 그대로 두고 여기서만
-    // 곱한다 — 도움소의 임시 버프(ApplyStats로 원본값을 기억했다 되돌리는 방식)와 순서 상관없이
-    // 겹쳐도 안 깨지게 하려는 설계다(PM 지시). 언락 상태가 바뀔 때만 다시 계산하도록 이벤트로
-    // 무효화한다. 특성강화 11개 유형(UnitTraitData.cs 참고) 중 지금 반영되는 건 딜증가뿐이다 —
-    // 이감·방깎은 EnemyDummy 쪽 인프라가 없어서 2차로 미뤘고, 소환·메커니즘변경 등은 유닛 전용
-    // 코드(Tier B)가 필요하다.
+    // 특성강화(딜증가) + 연구소(등급 전체 강화, 05번 2026-09-05 추가)가 이 유닛 종에 거는
+    // 영구 배율 둘을 곱해서 낸다. attackDamage(원본)는 그대로 두고 여기서만 곱한다 — 도움소의
+    // 임시 버프(ApplyStats로 원본값을 기억했다 되돌리는 방식)와 순서 상관없이 겹쳐도 안
+    // 깨지게 하려는 설계다(PM 지시). 언락/레벨업 상태가 바뀔 때만 다시 계산하도록 이벤트로
+    // 무효화한다(UnitUpgrades.OnLevelChanged — Unlock과 LevelUp 둘 다 이걸 쏜다). 특성강화
+    // 11개 유형(UnitTraitData.cs 참고) 중 지금 반영되는 건 딜증가뿐이다 — 이감·방깎은
+    // EnemyDummy 쪽 인프라가 없어서 2차로 미뤘고, 소환·메커니즘변경 등은 유닛 전용 코드
+    // (Tier B)가 필요하다.
     UnitUpgrades upgrades;
     bool upgradesResolveAttempted;
     bool upgradeMultiplierDirty = true;
@@ -331,7 +333,17 @@ public class UnitAttacker : MonoBehaviour
                 float damageBonusPercent = source != null && unitData != null
                     ? source.EffectSum(unitData, TraitEffectKind.DamageIncrease)
                     : 0f;
-                cachedUpgradeMultiplier = 1f + damageBonusPercent;
+
+                // 연구소(등급 전체 강화, 05번, 2026-09-05) — 특성강화(딜증가)와 별개 축이라
+                // 곱으로 겹친다. 유닛 종의 등급이 담당 트랙에 없거나 그 트랙이 아직 레벨 0이면
+                // MultiplierForGrade가 1을 돌려줘서 무영향이다 — UnitUpgradeShop이
+                // ResearchLabImplemented로 잠겨 있는 동안은 레벨이 절대 안 올라가므로 여기도
+                // 항상 1이다.
+                float researchMultiplier = source != null && unitData != null
+                    ? source.MultiplierForGrade(unitData.grade)
+                    : 1f;
+
+                cachedUpgradeMultiplier = (1f + damageBonusPercent) * researchMultiplier;
                 upgradeMultiplierDirty = false;
             }
             return cachedUpgradeMultiplier;

@@ -106,12 +106,14 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
 
     public event Action OnLevelChanged;
 
-    // ---- 구 등급강화(레거시) ----
+    // ---- 등급강화(연구소) ----
     //
-    // UnitUpgradeShop.cs(구 유닛강화소 — 등급 전체 강화)가 아직 이 두 메서드를 그대로 부른다.
-    // 그 UI는 구현담당2의 ILaneShop 리팩터와 맞물려 있어 지금 손대면 안 된다(PM 지시:
-    // "UI는 빼세요, 둘이 합의한 뒤에 손대세요"). 특성강화용 UI가 그 자리를 대체하면
-    // UnitUpgradeShop.cs·UnitUpgradeTrackData.cs와 함께 이 블록도 통째로 지운다.
+    // ⚠️ 2026-09-05 정정: 이 필드 이름의 "legacy"는 틀린 전제였다. 만들 당시엔 "원작에
+    // '등급 전체 강화' 시스템 자체가 없다"고 알려져 있어서 UI가 정리되면 통째로 지울
+    // 자리로 취급했는데, 리서치담당이 `.w3q`(연구소 원본)를 직접 파싱해내면서 원작에
+    // 정확히 이 모양의 연구소가 있었다는 게 뒤집혔다(사장님 결정 05번). **지울 대상이
+    // 아니라 원작 연구소 그 자체다.** 필드 이름은 굳이 안 바꾼다 — 직렬화된 값이 안전하게
+    // 유지되고, 이름과 실제 역할이 어긋난다는 건 이 주석으로 충분히 남는다.
     readonly Dictionary<UnitUpgradeTrackData, int> legacyGradeLevels = new Dictionary<UnitUpgradeTrackData, int>();
 
     public int Level(UnitUpgradeTrackData track) =>
@@ -122,5 +124,19 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
         if (track == null) return;
         legacyGradeLevels[track] = Level(track) + 1;
         OnLevelChanged?.Invoke();
+    }
+
+    // UnitAttacker.UpgradeMultiplier가 부른다 — 이 유닛의 등급을 담당하는 트랙을
+    // legacyGradeLevels에서 찾아 그 레벨의 공격력 배율을 돌려준다. 레벨 0(한 번도
+    // 안 산 트랙)은 애초에 이 사전에 키로 없어도 상관없다 — 못 찾으면 기본값 1을
+    // 돌려주는데, `MultiplierForLevel(0)`도 항상 1이라 결과가 같다.
+    public float MultiplierForGrade(UnitGrade grade)
+    {
+        foreach (KeyValuePair<UnitUpgradeTrackData, int> entry in legacyGradeLevels)
+        {
+            if (entry.Key != null && entry.Key.targetGrades != null && entry.Key.targetGrades.Contains(grade))
+                return entry.Key.MultiplierForLevel(entry.Value);
+        }
+        return 1f;
     }
 }
