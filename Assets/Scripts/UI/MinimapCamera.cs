@@ -22,6 +22,12 @@ public class MinimapCamera : MonoBehaviour, IPointerClickHandler
     // 맵이 커지거나 섬이 옮겨질 때마다 값을 손으로 맞추면 언젠가 어긋난다 —
     // 실제로 레인을 1.5배로 키웠을 때 미니맵 왼쪽 위가 잘렸다.
     // 씬에 놓인 맵을 직접 재서 맞춘다. 맵을 못 찾으면 인스펙터 값을 그대로 쓴다.
+    //
+    // ⚠️ 범위는 이렇게 런타임에 스스로 맞춘다 — MapGenerator(편집 모드) 쪽에서 다시 맞추지
+    // 말 것. 이 컴포넌트는 GameHud.BuildMinimap이 `new GameObject(...)`로 실행 중에만
+    // 만든다(씬·프리팹 어디에도 없다), 그래서 편집 모드 생성기는 절대 이 인스턴스를 못 찾는다
+    // — 예전엔 그 자리에 FitMinimapToIslands()라는 죽은 단계가 있었다(2026-09-05 삭제,
+    // PM 배선 감사).
     void FitToMap()
     {
         GameObject map = GameObject.Find("Map");

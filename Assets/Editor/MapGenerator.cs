@@ -2419,7 +2419,6 @@ public static class MapGenerator
         report += Step("시작 위습", WireStartingWisps);
         report += Step("라운드 보상 위습", WireRoundRewardWisp);
         report += Step("조합 지갑", WireCombineWallet);
-        report += Step("미니맵", FitMinimapToIslands);
         report += Step("창고", MoveWarehousesToIslands);
         report += Step("조합식", WireAllRecipes);
         report += Step("카메라", SetUpCamera);
@@ -2754,21 +2753,6 @@ public static class MapGenerator
         camera.farClipPlane = Mathf.Max(camera.farClipPlane, 1000f);
 
         return "\n카메라에 RTS 조작(가장자리 밀기·WASD·휠 확대)을 붙이고 메인 필드 위로 옮겼습니다.";
-    }
-
-    // 미니맵은 바다 전체가 아니라 섬이 있는 범위를 담아야 섬이 크게 보인다.
-    static string FitMinimapToIslands()
-    {
-        MinimapCamera minimap = Object.FindFirstObjectByType<MinimapCamera>(FindObjectsInactive.Include);
-        if (minimap == null) return "";   // 미니맵은 실행 중에 만들어진다 — 편집 모드엔 없을 수 있다
-
-        IslandBounds bounds = MeasureIslands();
-        SerializedObject so = new SerializedObject(minimap);
-        so.FindProperty("mapCenter").vector3Value = bounds.Center;
-        so.FindProperty("mapExtent").floatValue = bounds.Extent + 30f;
-        so.ApplyModifiedProperties();
-
-        return "\n미니맵 범위를 섬 전체에 맞췄습니다.";
     }
 
     const float CameraMargin = 60f;   // 섬 끝을 화면 가운데 두고도 주변이 보이도록
