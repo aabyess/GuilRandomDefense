@@ -64,12 +64,14 @@ public class PersistentSave : MonoBehaviour
     // 순간이 Red_dog이다(특성포인트 +1과 세이브포인트 +1이 동시에 나간다). 나중에 만들 때
     // 둘을 따로 잡지 말 것.
     //
-    // ⚠️ 지금 우리 코드에는 이 9곳 중 실제로 존재하는 시스템이 없다(2026-09-05 확인 — creep_reward
-    // ·door_quest·Red_dog·Quest_sky·treasure 전부 Assets/Scripts에 대응 코드 0건, Story는
-    // 13개 있지만 "Story2"가 우리 스토리 몇 번에 대응하는지는 원작-우리 스토리 번호가 아예
-    // 별개라 결정할 근거가 없다). 그래서 지금은 이 메서드를 부르는 곳이 하나도 없다 —
-    // 각 시스템이 실제로 만들어질 때 그 트리거가 이 메서드를 부르면 된다. 그릇과 배선
-    // 지점만 먼저 만들어 둔다.
+    // ✅ 2026-09-05: Quest_sky_3(거대 해왕류, o02N)이 첫 실제 호출부다 — SeaKingSpawner.
+    // GrantReward가 처치 시 전 플레이어에게 +1을 부른다. 하늘섬 퀘스트 1·2는 발동 조건을
+    // 아직 못 풀어서 안 만들었다(PM 지시) — Quest_sky_1/2는 여전히 미도달.
+    //
+    // ⚠️ 나머지(Story2·creep_reward·door_quest·Red_dog·treasure)는 여전히 대응 코드가
+    // 0건이다(2026-09-05 확인 — Story는 13개 있지만 "Story2"가 우리 스토리 몇 번에
+    // 대응하는지는 원작-우리 스토리 번호가 아예 별개라 결정할 근거가 없다). 각 시스템이
+    // 실제로 만들어질 때 그 트리거가 이 메서드를 부르면 된다.
     public void AddSessionPoints(int amount)
     {
         if (amount <= 0) return;

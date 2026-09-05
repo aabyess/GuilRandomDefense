@@ -1,0 +1,93 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+// 거대 해왕류(원작 [퀘스트] 카테고리, o02N) — 이동속도 0, 맵에 좌표 하나로 고정 배치되는
+// 표적이다. 웨이브가 아니라 게임 시작에 한 번만 세운다(PM 지시, 2026-09-05) — SealSpawner와
+// 비슷한 모양이지만 단계 전환이 없어서 더 단순하다.
+//
+// 처치 보상(전 플레이어: 골드 3,000 + 흔함선택위습 1기 + 세이브 플레이포인트 1)이 EnemyData로
+// 표현 못 하는 다단 지급이라, PirateQuestManager와 같은 이유로 RewardDistributor.
+// GrantKillReward 표준 파이프라인을 안 타고 이 스크립트가 직접 지급한다 — 그래서 EnemyData는
+// goldReward=0/resourceRewards 비움으로 둔다(PirateQuestManager 클래스 주석과 같은 관례).
+public class SeaKingSpawner : MonoBehaviour
+{
+    [SerializeField] EnemyData seaKingData;
+
+    // 원작 처치 보상의 위습 몫 — 흔함선택위습. RewardDistributor.GrantWisps로 지급한다.
+    [SerializeField] WispData rewardWisp;
+
+    const int RewardGold = 3000;
+    const int RewardWispCount = 1;
+
+    // war3map.j Trig_Quest_sky_3 — PersistentSave.AddSessionPoints 코멘트의 "Quest_sky_1/2/3
+    // +1씩(3곳)" 중 3번째. 하늘섬 퀘스트 1·2는 발동 조건을 아직 안 풀어서 안 만든다(PM 지시) —
+    // 이 메서드의 첫 실제 호출부다.
+    const int RewardSessionPoints = 1;
+
+    GameObject current;
+
+    void Start()
+    {
+        if (!GameAuthority.IsServer) return;
+        StartCoroutine(Run());
+    }
+
+    IEnumerator Run()
+    {
+        if (!Spawn()) yield break;
+
+        // current는 UnityEngine.Object의 == null 오버로드를 탄다 — Destroy() 직후부터
+        // (실제 파괴가 처리되는 프레임 끝보다 먼저) true가 된다(PirateQuestManager.RunQuest와
+        // 같은 패턴).
+        yield return new WaitUntil(() => current == null);
+
+        GrantReward();
+    }
+
+    bool Spawn()
+    {
+        if (seaKingData == null || seaKingData.prefab == null)
+        {
+            Debug.LogWarning($"{name}: 거대 해왕류 데이터나 prefab이 비어있어 스폰하지 못했습니다.", this);
+            return false;
+        }
+
+        current = Instantiate(seaKingData.prefab, transform.position, Quaternion.identity);
+
+        if (current.TryGetComponent(out EnemyDummy dummy))
+        {
+            dummy.Initialize(seaKingData);
+            // 퀘스트류라 레인 소속이 없다 — 크립·해적단 미니보스와 같은 이유
+            // (레인 카운트·패배판정에 안 섞이게, 보상도 레인 주인이 아니라 이 스크립트가 직접).
+            dummy.SetLane(-1);
+        }
+
+        if (current.TryGetComponent(out WaypointMover mover))
+        {
+            mover.enabled = false; // 맵에 고정된 표적 — 순찰하지 않는다
+        }
+
+        return true;
+    }
+
+    // 원작 처치 보상은 전 플레이어에게 간다(물범류·크립과 같은 축) — 골드·위습·세이브
+    // 포인트 셋 다 마찬가지다.
+    void GrantReward()
+    {
+        List<WispReward> wisp = rewardWisp != null
+            ? new List<WispReward> { new WispReward { wisp = rewardWisp, count = RewardWispCount } }
+            : null;
+
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            context.GoldWallet?.Add(RewardGold);
+            context.PersistentSave?.AddSessionPoints(RewardSessionPoints);
+
+            if (wisp != null && RewardDistributor.Instance != null)
+                RewardDistributor.Instance.GrantWisps(context, wisp);
+
+            PlayerNotification.Show(context.PlayerId, "거대 해왕류를 처치했습니다!");
+        }
+    }
+}

@@ -118,7 +118,9 @@ public static class MapGenerator
         string displayReport = BuildGradeDisplays(root.transform);
         string gateReport = BuildPunkHazardGate(root.transform);
         string storyReport = BuildStoryZone(root.transform);
+        BuildStoryReturnPortal(root.transform);
         string sealReport = BuildSealSpawners(root.transform);
+        string seaKingReport = BuildSeaKing(root.transform);
         string questReport = BuildPirateQuestManager() +
             $"\n해적단 퀘스트 상점: {pirateQuests.Count}개 연결(레인당 1개, 재고·보충은 상점이 스스로 관리)." +
             (pirateQuests.Count == 0 ? $"\n  ⚠️ {PirateQuestFolder}에서 PirateQuestData를 하나도 못 찾았습니다." : "");
@@ -159,7 +161,7 @@ public static class MapGenerator
         string message =
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
             $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + "\n\n" +
-            tableReport + displayReport + gateReport + storyReport + sealReport + questReport +
+            tableReport + displayReport + gateReport + storyReport + sealReport + seaKingReport + questReport +
             chatUnlockReport + hiddenCombineReport + chatBoxReport + overlaps + navResult + oldGround + rewire + saveNote;
         Debug.Log("[맵] " + message);
         EditorUtility.DisplayDialog(Title, message, "확인");
@@ -1751,17 +1753,58 @@ public static class MapGenerator
         component.SetDestination(StoryZoneLandingPoint(laneIndex));
     }
 
+    // ⚠️ 2026-09-05 정정(사장님 발견): 예전엔 zone.size×0.25(존 크기에 비례)였다 — 존이
+    // 180×150으로 커지면서(2026-09-03, 1.5배) 착지점이 중심에서 58.6 떨어지게 됐는데,
+    // 로스터 최장 사거리가 47.5(최소 사거리는 30)라 **전 유닛이 못 때리는 자리**였다.
+    // "스토리존 가도 아무 일 없다"의 원인이 이거였다. 존 크기가 또 바뀌어도 사거리는
+    // 안 바뀌니, 이제 존 크기에 안 얽매이는 절대 거리로 고정한다 — 최소 사거리(30)보다
+    // 여유 있게 22(PM 권장치).
+    const float StoryZoneLandingDistance = 22f;
+
     // 스토리존 한가운데 한 점에 네 레인이 전부 쏟아지면 겹친다(사장님이 지적한 흔함 칸
     // 겹침·개별 선택 문제와 같은 종류) — 레인마다 존 안의 네 귀퉁이로 살짝 나눠 보낸다.
-    // 존이 180×150(2026-09-03에 1.5배)이라 25%만 떨어뜨려도 넉넉히 안 겹친다.
+    // 45도 대각선으로 등분해서(offset = distance/√2) 네 귀퉁이 모양은 그대로 유지한다 —
+    // 이웃한 두 착지점(예: 레인0·레인1, X부호만 다름) 사이 거리는 2×offset ≈ 31로,
+    // 유닛 하나가 다른 레인 자리까지 밀고 들어갈 일이 없다.
     static Vector3 StoryZoneLandingPoint(int laneIndex)
     {
         MapLayout.Island zone = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
 
-        float offsetX = (laneIndex % 2 == 0 ? -1f : 1f) * zone.size.x * 0.25f;
-        float offsetZ = (laneIndex < 2 ? 1f : -1f) * zone.size.y * 0.25f;
+        float offset = StoryZoneLandingDistance / Mathf.Sqrt(2f);
+        float offsetX = (laneIndex % 2 == 0 ? -1f : 1f) * offset;
+        float offsetZ = (laneIndex < 2 ? 1f : -1f) * offset;
 
         return new Vector3(zone.center.x + offsetX, MapLayout.IslandTop, zone.center.y + offsetZ);
+    }
+
+    // 기존 최대(StoryPortalDiameter=15)보다 크게 — "크게 만들라"는 사장님 지시.
+    const float StoryReturnPortalDiameter = 24f;
+
+    // 스토리존 → 레인 복귀. 레인마다가 아니라 존에 큰 포탈 하나(사장님 지시, 2026-09-05) —
+    // StoryReturnPortal이 소유자별 목적지 4개를 들고 있다가 밟은 사람의 레인 한가운데로
+    // 보낸다. 착지 지점(반지름 StoryZoneLandingDistance)·스토리 단상(반지름 platformSize×0.5,
+    // 대략 26)과 안 겹치게 존 귀퉁이 쪽(180×150의 40%)에 둔다 — 존이 넉넉히 커서 여유 있다.
+    static void BuildStoryReturnPortal(Transform parent)
+    {
+        MapLayout.Island zone = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
+
+        Vector3 ground = new Vector3(zone.center.x + zone.size.x * 0.4f,
+                                     MapLayout.IslandTop + 0.25f, zone.center.y + zone.size.y * 0.4f);
+
+        GameObject portal = CreatePortalObject(parent, "스토리_복귀포탈", ground, StoryReturnPortalDiameter);
+
+        // BuildStoryZonePortal과 같은 이유 — 트리거도 NavMesh 굽기엔 장애물로 잡힌다.
+        NavMeshModifier modifier = portal.AddComponent<NavMeshModifier>();
+        modifier.ignoreFromBuild = true;
+
+        StoryReturnPortal component = portal.AddComponent<StoryReturnPortal>();
+        Vector3[] destinations = new Vector3[MapLayout.Lanes.Length];
+        for (int i = 0; i < MapLayout.Lanes.Length; i++)
+        {
+            MapLayout.Island lane = MapLayout.Lanes[i];
+            destinations[i] = new Vector3(lane.center.x, MapLayout.IslandTop, lane.center.y);
+        }
+        component.SetDestinations(destinations);
     }
 
     // 크립섬 4곳. **원작은 3단계 순차 체인**이다(물범 → 노루 → 양) — SealSpawner 주석 참고.
@@ -1795,6 +1838,34 @@ public static class MapGenerator
         return seal != null
             ? $"\n물범: {MapLayout.SealIslands.Length}곳에 배치."
             : "\n  ⚠️ Enemy_Seal 에셋을 찾지 못해 물범이 안 나옵니다.";
+    }
+
+    // 원작 [퀘스트] 거대 해왕류(o02N) — 이동 안 하는 고정 표적이라 웨이브가 아니라 여기서
+    // 한 번만 배치한다(PM 지시, 2026-09-05). 위치는 원작 좌표를 그대로 안 쓴다 — 우리 맵은
+    // 배치가 다르다([[we-copied-design-not-layout]]). 섬 군락(대략 X −400~410, Z −203~468)
+    // 밖의 열린 바다 남쪽에 뒀다 — SeaSize(1600, ±800)에 비하면 아주 넉넉하다.
+    // ⚠️ 이 좌표에서 레인 유닛이 실제로 닿는지는 확인 못 했다 — 레인은 순찰 경로에 묶여 있고
+    // 이 표적은 그 경로 밖 먼 바다에 있다. 자리 배치만이 이번 작업 범위라 반드시 짚어 보고한다.
+    static readonly Vector3 SeaKingPosition = new Vector3(0f, MapLayout.IslandTop, -650f);
+
+    static string BuildSeaKing(Transform parent)
+    {
+        EnemyData data = AssetDatabase.LoadAssetAtPath<EnemyData>("Assets/Data/Enemies/Enemy_거대해왕류.asset");
+        WispData rewardWisp = AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_흔함선택.asset");
+
+        GameObject spawner = new GameObject("거대해왕류");
+        spawner.transform.SetParent(parent, false);
+        spawner.transform.position = SeaKingPosition;
+
+        SeaKingSpawner component = spawner.AddComponent<SeaKingSpawner>();
+        SerializedObject so = new SerializedObject(component);
+        so.FindProperty("seaKingData").objectReferenceValue = data;
+        so.FindProperty("rewardWisp").objectReferenceValue = rewardWisp;
+        so.ApplyModifiedProperties();
+
+        return data != null
+            ? "\n거대 해왕류: 배치 완료(먼 바다 남쪽, 유닛 도달 여부 미확인)."
+            : "\n  ⚠️ Enemy_거대해왕류 에셋을 찾지 못해 거대 해왕류가 안 나옵니다.";
     }
 
     // 펑크해저드 한가운데를 가로지르는 정의문. 부수기 전에는 섬이 둘로 나뉜다.
@@ -2850,6 +2921,13 @@ public static class MapGenerator
         // 스토리존 도착 지점 — 지금까지 아무도 서본 적 없는 자리라 안 구워졌을 수 있다.
         for (int i = 0; i < MapLayout.Lanes.Length; i++)
             points.Add(($"{MapLayout.Lanes[i].name} 스토리존 도착지점", StoryZoneLandingPoint(i)));
+
+        // 레인 중심 — StoryReturnPortal의 복귀 목적지다. 안 구워지면 UnitCombat.SnapTo가
+        // 조용히 실패해서 "복귀 포탈을 탔는데 안 움직인다"가 원인 불명 버그로 남는다
+        // (PM 지시, 2026-09-05).
+        for (int i = 0; i < MapLayout.Lanes.Length; i++)
+            points.Add(($"{MapLayout.Lanes[i].name} 중심(스토리 복귀지점)",
+                        new Vector3(MapLayout.Lanes[i].center.x, MapLayout.IslandTop, MapLayout.Lanes[i].center.y)));
 
         List<string> missing = new List<string>();
 
