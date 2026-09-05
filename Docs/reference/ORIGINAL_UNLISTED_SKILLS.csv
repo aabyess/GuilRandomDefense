@@ -1,0 +1,233 @@
+유닛ID,유닛이름,등급,부모평타트리거,스킬트리거,게이트,RRD수,RRD요약,타입,퍼센트체력,범위,커버
+H05N,해군의 홍일점,초월함,Trig_Tashigi_Attack,Tasigi_03,MANA게이지135.00,4,"400000.00 | ((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tr | 400000.00","MAGIC/UNIVERSAL,NORMAL/UNIVERSAL",MaxHp%,"525.00,535.00",미수록
+H05N,해군의 홍일점,초월함,Trig_Tashigi_Attack,tahsigi,(게이트 없음),4,((400000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_S | ((350000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_S | 500000.00,MAGIC/UNIVERSAL,,450.00,미수록
+H05N,해군의 홍일점,초월함,Trig_Tashigi_Attack,Tasigi_02,(게이트 없음),1,500000.00,MAGIC/UNIVERSAL,,550.00,미수록
+H08U,'포세이돈' 인어공주,초월함,Trig_Sirahoshi_Attack,Sirahoshi_skill_Mana,MANA게이지120.00,1,(3350000.00+((GetUnitStateSwap(UNIT_STATE_MA,NORMAL/UNIVERSAL,MaxHp%,800.00,특성표
+H08U,'포세이돈' 인어공주,초월함,Trig_Sirahoshi_Attack,Sirahoshi_skill_3,[트리거조건] 1/25 AND 절대쿨5.0s(B043),0,,,,,미수록
+H08V,웨더리아의 항해사,초월함,Trig_Nami_Attack,Nami_Skill_4,절대쿨3.5s(B012),1,350000.00,NORMAL/UNIVERSAL,,500.00,특성표
+H08V,웨더리아의 항해사,초월함,Trig_Nami_Attack,Nami_Skill_2,1/9,3,800000.00 | 400000.00 | 400000.00,NORMAL/UNIVERSAL,,,미수록
+H08V,웨더리아의 항해사,초월함,Trig_Nami_Attack,Nami_Skill_1,1/24,2,(300000.00+s__TrigVariables__get_realD(Globa | (450000.00+(s__TrigVariables__get_realD(Glob,NORMAL/UNIVERSAL,,400.00,특성표
+H08W,CP.Zero,초월함,Trig_Luchi_Attack,Luchi_Skill_3_6kinggun,Real<=5.25,3,"(1000000.00*(0.20+(0.05*I2R(GetUnitAbilityLe | 2000000.00 | (GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVar","CHAOS/UNIVERSAL,NORMAL/UNIVERSAL",CurHp%,400.00,미수록
+H08W,CP.Zero,초월함,Trig_Luchi_Attack,Luchi_Skill_2_ZiGun,1/6,3,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVa | (500000.00*(1+((0.001)*(I2R(udg_Load_PlayCou | (500000.00*(1+((0.001)*(I2","CHAOS/UNIVERSAL,NORMAL/UNIVERSAL",CurHp%,,미수록
+H08W,CP.Zero,초월함,Trig_Luchi_Attack,Luchi_Skill_1_Kick2,Real<=7.25,3,"400000.00 | 400000.00 | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri","CHAOS/UNIVERSAL,MAGIC/UNIVERSAL",MaxHp%,"495.00,585.00",특성표
+H08W,CP.Zero,초월함,Trig_Luchi_Attack,Luchi_Skill_1_Kick,Real<=7.25,0,,,,,특성표
+H08X,해군 대장 '성난 보라호랑이',초월함,Trig_Huji_Attack,Huji_03,MANA게이지140.00,1,6250000.00,NORMAL/UNIVERSAL,,700.00,미수록
+H08X,해군 대장 '성난 보라호랑이',초월함,Trig_Huji_Attack,Huji01,MANA게이지140.00,3,((GetEventDamage()*2.50)+250000.00) | GetEventDamage() | 350000.00,"CHAOS/NORMAL,MAGIC/UNIVERSAL",,"295.00,485.00",미수록
+H08X,해군 대장 '성난 보라호랑이',초월함,Trig_Huji_Attack,Huji_02,1/24,0,,,,,특성표
+H08Y,무적의 아이언 파이러츠,초월함,Trig_Franky_Attack,Franky_Skill_Mana1,MANA게이지100.00,1,4000000.00,NORMAL/UNIVERSAL,,425.00,미수록
+H08Y,무적의 아이언 파이러츠,초월함,Trig_Franky_Attack,Franky_Skill_1,1/10,4,500000.00 | 400000.00 | 250000.00,NORMAL/UNIVERSAL,,"400.00,500.00",특성표
+H08Y,무적의 아이언 파이러츠,초월함,Trig_Franky_Attack,Franky_misiile_re,1/14,1,180000.00,NORMAL/UNIVERSAL,,"400.00,750.00",미수록
+H090,지진과 어둠의 검은수염,초월함,Trig_Tichi_Attack,Tichi_skill_4_tr,LIFE게이지85.00 AND 1/10,0,,,,,특성표
+H090,지진과 어둠의 검은수염,초월함,Trig_Tichi_Attack,Tichi_skill_4,LIFE게이지85.00 AND 1/10,0,,,,,특성표
+H090,지진과 어둠의 검은수염,초월함,Trig_Tichi_Attack,Tichi_skill_2_tr,LIFE게이지85.00 AND 1/25,2,(385000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_ST | (385000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_ST,NORMAL/UNIVERSAL,,415.00,미수록
+H090,지진과 어둠의 검은수염,초월함,Trig_Tichi_Attack,Tichi_skill_1,LIFE게이지85.00 AND 1/5,3,4000000.00 | 1000000.00 | 2000000.00,"CHAOS/UNIVERSAL,NORMAL/UNIVERSAL",,,미수록
+H092,혁명군 참모총장,초월함,Trig_Sabo_Attack,Sabo_Mana,MANA게이지125.00,2,"3750000.00 | (0.02*GetUnitStateSwap(UNIT_STATE_LIFE,GetEn",HERO/NORMAL,CurHp%,500.00,미수록
+H092,혁명군 참모총장,초월함,Trig_Sabo_Attack,Sabo_Skill_1,MANA게이지125.00 AND 절대쿨12.5s(B00N),3,3250000.00 | ((1000000.00+s__TrigVariables__get_realD(Glo | (2500000.00+(500000.00*I2R(UnitCountBuffsExB,"CHAOS/UNIVERSAL,HERO/NORMAL,NORMAL/UNIVERSAL",,475.00,특성표
+H092,혁명군 참모총장,초월함,Trig_Sabo_Attack,Sabo_Skill_3,MANA게이지125.00 AND 절대쿨12.5s(B00N) AND 1/10,1,1150000.00,CHAOS/NORMAL,,415.00,특성표
+H092,혁명군 참모총장,초월함,Trig_Sabo_Attack,Sabo_Skill_4,MANA게이지125.00 AND 절대쿨12.5s(B00N) AND 1/10 AND 1/6,4,"500000.00 | (500000.00+(50000.00*I2R(UnitCountBuffsExBJ( | ((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_H","CHAOS/NORMAL,CHAOS/UNIVERSAL,HERO/NORMAL",MaxHp%,415.00,특성표
+H094,운명을 점치는 마술사,초월함,Trig_Hokins_Attack,Hokins_mana,MANA게이지100,1,(1350000.00+(190000.00*s__TrigVariables__get,CHAOS/NORMAL,,800.00,미수록
+H094,운명을 점치는 마술사,초월함,Trig_Hokins_Attack,Hokins_Skill_4,LIFE게이지40.00 AND 1/14,1,(162500.00+(13000.00*s__TrigVariables__get_r,NORMAL/UNIVERSAL,,500.00,미수록
+H094,운명을 점치는 마술사,초월함,Trig_Hokins_Attack,Hokins_Skill_3,LIFE게이지40.00 AND 1/7,1,(187500.00+(15000.00*s__TrigVariables__get_r,CHAOS/NORMAL,,500.00,미수록
+H095,신 해군원수 ,초월함,Trig_Akainu_Attack,Akainu_01,(게이트 없음),0,,,,,특성표
+H095,신 해군원수 ,초월함,Trig_Akainu_Attack,Akainu_01,(게이트 없음),0,,,,,특성표
+H095,신 해군원수 ,초월함,Trig_Akainu_Attack,Akainu_01,MANA게이지135.00,0,,,,,특성표
+H095,신 해군원수 ,초월함,Trig_Akainu_Attack,Akainu_02,MANA게이지135.00 AND 버프B06B==true,2,"(7250000.00+(s__TrigVariables__get_realD(Glo | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri",NORMAL/UNIVERSAL,MaxHp%,,미수록
+H095,신 해군원수 ,초월함,Trig_Akainu_Attack,Akainu_02,MANA게이지135.00 AND 버프B06B==true,2,"(7250000.00+(s__TrigVariables__get_realD(Glo | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri",NORMAL/UNIVERSAL,MaxHp%,,미수록
+H095,신 해군원수 ,초월함,Trig_Akainu_Attack,Akainu_03,MANA게이지135.00 AND 버프B06B==true AND 1/10,0,,,,,미수록
+H095,신 해군원수 ,초월함,Trig_Akainu_Attack,Akainu_02,MANA게이지135.00 AND 버프B06B==true,2,"(7250000.00+(s__TrigVariables__get_realD(Glo | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri",NORMAL/UNIVERSAL,MaxHp%,,미수록
+H095,신 해군원수 ,초월함,Trig_Akainu_Attack,Akainu_03,MANA게이지135.00 AND 버프B06B==true AND 1/10,0,,,,,미수록
+H096,로키포트 사건의 주모자,초월함,Trig_Law_Attack,Law_skill_5,버프B03Z==true AND 1/20,1,(300000.00+(GetUnitStateSwap(UNIT_STATE_LIFE,CHAOS/UNIVERSAL,CurHp%,575.00,미수록
+H096,로키포트 사건의 주모자,초월함,Trig_Law_Attack,Law_Skill_2_reinforce,버프B03Z==true AND 1/8,1,"(GetUnitStateSwap(UNIT_STATE_LIFE,udg_Hero[1",CHAOS/UNIVERSAL,CurHp%,,특성표
+H096,로키포트 사건의 주모자,초월함,Trig_Law_Attack,Law_Skill_2,버프B03Z==true AND 1/8,1,"(GetUnitStateSwap(UNIT_STATE_LIFE,udg_Hero[1",CHAOS/UNIVERSAL,CurHp%,,특성표
+H097,전 해군대장 아오키지 ,초월함,Trig_Aokigi_Attack,Aokigi_skill_3,1/10,0,,,,475.00,미수록
+H097,전 해군대장 아오키지 ,초월함,Trig_Aokigi_Attack,Aokigi_skill_4,1/14,0,,,,,미수록
+H097,전 해군대장 아오키지 ,초월함,Trig_Aokigi_Attack,Aokigi_skill_2,1/25,0,,,,,미수록
+H098,오하라의 마지막 생존자,초월함,Trig_Robin_Attack,Robine_skill_2,LIFE게이지40.00 AND 1/10,1,400000.00,NORMAL/UNIVERSAL,,525.00,미수록
+H098,오하라의 마지막 생존자,초월함,Trig_Robin_Attack,Robine_skill_3,LIFE게이지40.00 AND 1/20,1,600000.00,CHAOS/NORMAL,,350.00,미수록
+H099,명왕 레일리의 제자,초월함,Trig_Ruffy_Attack,Ruffy_AttackDamage,(게이트 없음),1,((GetEventDamage()*2.50)+32500.00),CHAOS/UNIVERSAL,,,미수록
+H099,명왕 레일리의 제자,초월함,Trig_Ruffy_Attack,Ruffy_Mana,MANA게이지160.00,2,((1750000.00+(GetUnitStateSwap(UNIT_STATE_MA | ((1750000.00+(GetUnitStateSwap(UNIT_STATE_MA,HERO/NORMAL,MaxHp%,625.00,미수록
+H09A,어인협객,초월함,Trig_jinbe_Attack,Jimbe_Mu,MANA게이지115.00,1,(4350000.00+(I2R(GetUnitAbilityLevelSwapped(,CHAOS/NORMAL,,600.00,미수록
+H09A,어인협객,초월함,Trig_jinbe_Attack,Jimbe,1/16,2,(1750000.00+(I2R(GetUnitAbilityLevelSwapped( | (4840000.00+(I2R(GetUnitAbilityLevelSwapped(,"CHAOS/NORMAL,CHAOS/UNIVERSAL",,625.00,미수록
+H09A,어인협객,초월함,Trig_jinbe_Attack,Jimbe_jingak,1/7,1,((1000000.00+s__TrigVariables__get_realD(Glo,CHAOS/NORMAL,,450.00,미수록
+H09B,G.O.D,초월함,Trig_Usop_Attack,Usop_Skill_Mana,MANA게이지140.00,1,(1000000.00+(GetUnitStateSwap(UNIT_STATE_LIF,HERO/NORMAL,CurHp%,600.00,미수록
+H09B,G.O.D,초월함,Trig_Usop_Attack,Usop_Skill_2,1/5,5,"262500.00 | 262500.00 | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri","PIERCE/NORMAL,PIERCE/UNIVERSAL",MaxHp%,600.00,미수록
+H09D,"""어둠의 조커""드레스로자의 악몽",초월함,Trig_DP_Attack_gaksung,DP_AttackDamagegaksung,(게이트 없음),1,((GetEventDamage()*0.85)+85000.00),CHAOS/NORMAL,,350.00,미수록
+H09D,"""어둠의 조커""드레스로자의 악몽",초월함,Trig_DP_Attack_gaksung,DP_Skill_3,1/6,1,(750000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_ST,PIERCE/NORMAL,,525.00,미수록
+H09D,"""어둠의 조커""드레스로자의 악몽",초월함,Trig_DP_Attack_gaksung,DP_Skill_2,1/9,2,"200000.00 | ((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVa","CHAOS/NORMAL,NORMAL/UNIVERSAL",CurHp%,,미수록
+H09E,"""어둠의 조커""드레스로자의 악몽",초월함,Trig_DP_Attack,DP_AttackDamage,(게이트 없음),1,((GetEventDamage()*0.50)+50000.00),PIERCE/NORMAL,,275.00,미수록
+H09E,"""어둠의 조커""드레스로자의 악몽",초월함,Trig_DP_Attack,DP_Skill_3,1/8,1,(750000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_ST,PIERCE/NORMAL,,525.00,미수록
+H09E,"""어둠의 조커""드레스로자의 악몽",초월함,Trig_DP_Attack,DP_Skill_2,1/10,2,"200000.00 | ((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVa","CHAOS/NORMAL,NORMAL/UNIVERSAL",CurHp%,,미수록
+H09F,수라의 검사,초월함,Trig_Zoro_Attack_re,Zoro_Samchun2,MANA게이지145.00 AND A0GT레벨==1,2,(1500000.00+s__TrigVariables__get_realD(Glob | 2500000.00,"CHAOS/NORMAL,NORMAL/UNIVERSAL",,600.00,미수록
+H09F,수라의 검사,초월함,Trig_Zoro_Attack_re,Zoro_samchun1,MANA게이지145.00 AND A0GT레벨==1,1,2500000.00,NORMAL/UNIVERSAL,,525.00,미수록
+H09F,수라의 검사,초월함,Trig_Zoro_Attack_re,Zoro_saza1,1/6,2,(602500.00+s__TrigVariables__get_realD(Globa | (903750.00+(s__TrigVariables__get_realD(Glob,CHAOS/NORMAL,,405.00,미수록
+H09F,수라의 검사,초월함,Trig_Zoro_Attack_re,Zoro_raven,1/15,3,(350000.00+s__TrigVariables__get_realD(Globa | 350000.00 | 350000.00,CHAOS/NORMAL,,500.00,미수록
+H09F,수라의 검사,초월함,Trig_Zoro_Attack_re,Zoro_tiger,1/33,0,,,,500.00,미수록
+H09G,정열의 요리사,초월함,Trig_SandiAttack_Upgrade,Sandi_skill_Mana2,MANA게이지115.00,3,"3330000.00 | ((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVa | 2075000.00","NORMAL/UNIVERSAL,SIEGE/UNIVERSAL",CurHp%,600.00,미수록
+H09G,정열의 요리사,초월함,Trig_SandiAttack_Upgrade,Sandi_skill_1,1/6,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVa | 450000.00","MAGIC/UNIVERSAL,SIEGE/UNIVERSAL",CurHp%,,미수록
+H09H,뉴카마섬의 생존자,초월함,Trig_SandiAttack,Sandi_skill_Mana2,MANA게이지115.00,3,"3330000.00 | ((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVa | 2075000.00","NORMAL/UNIVERSAL,SIEGE/UNIVERSAL",CurHp%,600.00,미수록
+H09H,뉴카마섬의 생존자,초월함,Trig_SandiAttack,Sandi_skill_1,(게이트 없음),2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVa | 450000.00","MAGIC/UNIVERSAL,SIEGE/UNIVERSAL",CurHp%,,미수록
+H09I,소울 킹,초월함,Trig_BrookAttack,Brook_Skill_Mana,MANA게이지115.00,0,,,,525.00,특성표
+H09I,소울 킹,초월함,Trig_BrookAttack,Brook_Skill_1,1/7,2,350000.00 | 350000.00,NORMAL/UNIVERSAL,,360.00,미수록
+H0B1,전 해군대장 아오키지 ,,Trig_Aokigi_Attack,Aokigi_skill_3,1/10,0,,,,475.00,미수록
+H0B1,전 해군대장 아오키지 ,,Trig_Aokigi_Attack,Aokigi_skill_4,1/14,0,,,,,미수록
+H0B1,전 해군대장 아오키지 ,,Trig_Aokigi_Attack,Aokigi_skill_2,1/25,0,,,,,미수록
+H0B2,다섯번째 황제,초월함,Trig_Snake_Attack,Snake_3_Kingkobra,MANA게이지85.00,2,(3500000.00*(1+(0.01*(GetUnitMoveSpeed(GetEn | 1875000.00,MAGIC/UNIVERSAL,,550.00,미수록
+H0B2,다섯번째 황제,초월함,Trig_Snake_Attack,Snake_2,1/15,2,(350000.00*(1+(0.01*(GetUnitMoveSpeed(GetEnu | 350000.00,MAGIC/UNIVERSAL,,475.00,미수록
+H0B3,다섯번째 황제,초월함,Trig_Snake_Attack_BlackMamba,Snake_3_Kingkobra,MANA게이지75.00,2,(3500000.00*(1+(0.01*(GetUnitMoveSpeed(GetEn | 1875000.00,MAGIC/UNIVERSAL,,550.00,미수록
+H0B3,다섯번째 황제,초월함,Trig_Snake_Attack_BlackMamba,BlackMamba_skill_1,(게이트 없음),0,,,,,미수록
+H0B3,다섯번째 황제,초월함,Trig_Snake_Attack_BlackMamba,Snake_2,1/12,2,(350000.00*(1+(0.01*(GetUnitMoveSpeed(GetEnu | 350000.00,MAGIC/UNIVERSAL,,475.00,미수록
+H0B4,유스타스'캡틴',초월함,Trig_Kid_Attack,Kid_Skill_Mana_Tr,LIFE게이지50.00,3,((400000.00+s__TrigVariables__get_realD(Glob | ((400000.00+s__TrigVariables__get_realD(Glob | ((400000.00+s__TrigVariabl,NORMAL/UNIVERSAL,,125.00,특성표
+H0B4,유스타스'캡틴',초월함,Trig_Kid_Attack,Kid_Skill_Mana,LIFE게이지50.00,1,((1000000.00+s__TrigVariables__get_realD(Glo,NORMAL/UNIVERSAL,,125.00,특성표
+H0B4,유스타스'캡틴',초월함,Trig_Kid_Attack,Kid_Skill_3_item,LIFE게이지50.00 AND 1/10,1,(450000.00*(1+(s__TrigVariables__get_realD(G,NORMAL/UNIVERSAL,,450.00,미수록
+H0B4,유스타스'캡틴',초월함,Trig_Kid_Attack,Kid_Skill_3,LIFE게이지50.00 AND 1/10,2,(300000.00*(1+(s__TrigVariables__get_realD(G | (300000.00*(1+(s__TrigVariables__get_realD(G,NORMAL/UNIVERSAL,,"450.00,95.00",미수록
+H0B5,해군대장-보르살리노,초월함,Trig_Kizaru_Attack,Kizaru_Skill_mana,1/17,0,,,,,미수록
+H0B5,해군대장-보르살리노,초월함,Trig_Kizaru_Attack,Kizaru_01,1/12,1,s__TrigVariables__get_realD(GlobalTV),NORMAL/UNIVERSAL,,,미수록
+H0BD,오니히메,초월함,Trig_Yamato_Attack,Yamato_Dash,1/3,2,((udg_Yamato_Damage[GetConvertedPlayerId(Get | ((udg_Yamato_Damage[GetConvertedPlayerId(Get,NORMAL/UNIVERSAL,,450.00,미수록
+H0BE,오니히메 인수화,초월함,Trig_Yamato_Attack_insu,Yamato_Attack_Damage2,(게이트 없음),4,((GetEventDamage()*0.75)+15000.00) | ((GetEventDamage()*0.20)+15000.00) | ((GetEventDamage()*0.75)+15000.00),"CHAOS/NORMAL,CHAOS/UNIVERSAL",,"325.00,425.00,525.00",미수록
+H0BE,오니히메 인수화,초월함,Trig_Yamato_Attack_insu,Yamato_Dash,(게이트 없음),2,((udg_Yamato_Damage[GetConvertedPlayerId(Get | ((udg_Yamato_Damage[GetConvertedPlayerId(Get,NORMAL/UNIVERSAL,,450.00,미수록
+H0BK,|CFFFFFA78태양의신-니카,,Trig_Nika_Attack,Nika_AttackDamage,LIFE게이지115.00 AND 버프B078==true,4,((GetEventDamage()*5.00)+1000000.00) | ((GetEventDamage()*2.00)+200000.00) | ((GetEventDamage()*5.00)+500000.00),"CHAOS/NORMAL,CHAOS/UNIVERSAL",,"425.00,500.00",미수록
+H0BK,|CFFFFFA78태양의신-니카,,Trig_Nika_Attack,Nika_Random_Punch,LIFE게이지115.00 AND 버프B078==true,2,(450000.00*(1+(0.01*(GetUnitMoveSpeed(GetEnu | (450000.00*(1+(0.01*(GetUnitMoveSpeed(s__Tri,"CHAOS/NORMAL,CHAOS/UNIVERSAL",,400.00,미수록
+H0BL,'신'해군대장-초록소,초월함,Trig_Rokugu_Attack,Rokugu_Tree_S,(게이트 없음),2,(2000000.00+(s__TrigVariables__get_realC(Glo | (2000000.00+(s__TrigVariables__get_realC(Glo,CHAOS/NORMAL,,405.00,미수록
+H0BL,'신'해군대장-초록소,초월함,Trig_Rokugu_Attack,Rokugu_skill_1,1/7,1,700000.00,CHAOS/NORMAL,,485.00,미수록
+H0BO,금증숲숲-초록소,초월함,Trig_RokuguTree_Attack,Rokugu_skill_1,1/7,1,700000.00,CHAOS/NORMAL,,485.00,미수록
+H0BT,염왕,초월함,Trig_Zoro_Attack_enma,Zoro_Samchun2,MANA게이지145.00 AND A0GT레벨==1,2,(1500000.00+s__TrigVariables__get_realD(Glob | 2500000.00,"CHAOS/NORMAL,NORMAL/UNIVERSAL",,600.00,미수록
+H0BT,염왕,초월함,Trig_Zoro_Attack_enma,Zoro_samchun1,MANA게이지145.00 AND A0GT레벨==1,1,2500000.00,NORMAL/UNIVERSAL,,525.00,미수록
+H0BT,염왕,초월함,Trig_Zoro_Attack_enma,Zoro_enfor_flying_draong,1/6,2,(672500.00+s__TrigVariables__get_realD(Globa | (903750.00+(s__TrigVariables__get_realD(Glob,CHAOS/NORMAL,,425.00,미수록
+H0BT,염왕,초월함,Trig_Zoro_Attack_enma,Zoro_enfor_3dragon,1/15,2,(535000.00+s__TrigVariables__get_realD(Globa | 532500.00,CHAOS/NORMAL,,"405.00,425.00",미수록
+H0BT,염왕,초월함,Trig_Zoro_Attack_enma,Zoro_tiger,1/33,0,,,,500.00,미수록
+h021,마샬.D.티치 흰수염해적단의 배신자 - 희귀함,희귀함,Trig_Unique281,Tich1_danil,1/8,2,15000.00 | 15000.00,NORMAL/UNIVERSAL,,,미수록
+h02N,겟코 모리아 쉐도우 아스가르드 - 전설적인,전설적인,Trig_Legend34Moria,Legend34Moria_Skill,(게이트 없음),2,250000.00 | 800000.00,NORMAL/UNIVERSAL,,400.00,미수록
+h02S,롤로노아 조로 죽음의경지'사자의노래' - 전설적,전설적인,Trig_Legend13,Legend13_2,1/7,4,"120000.00 | 750000.00 | ((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tr","NORMAL/UNIVERSAL,PIERCE/UNIVERSAL",MaxHp%,450.00,미수록
+h02T,마르코 환수종'불사조' - 전설적인,전설적인,Trig_Legend17_Marco,Legend17_Marcodamage,(게이트 없음),1,(12500.00+(0.85*GetEventDamage())),CHAOS/NORMAL,,285.00,미수록
+h02U,"마샬.D.티치 검은수염 해적단 선장 ""검은수염""",전설적인,Trig_Legend26,Legend26_tichi_crows,LIFE게이지40.00 AND 1/7,3,4000000.00 | 300000.00 | 300000.00,NORMAL/UNIVERSAL,,,미수록
+h032,보아 핸콕 쿠사 해적단 선장 - 전설적인,전설적인,Trig_Legend14,Legend_han_kiss_damagesc2,버프B00D==true,0,,,,,미수록
+h032,보아 핸콕 쿠사 해적단 선장 - 전설적인,전설적인,Trig_Legend14,Legend_han_1,버프B00D==true AND 1/10,3,"150000.00 | ((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tr | 112500.00","CHAOS/UNIVERSAL,NORMAL/UNIVERSAL",MaxHp%,345.00,미수록
+h032,보아 핸콕 쿠사 해적단 선장 - 전설적인,전설적인,Trig_Legend14,Legend_han_kiss,버프B00D==true,0,,,,,미수록
+h033,빈스모크 레이쥬 포이즌 핑크 - 전설적인,전설적인,Trig_Legend19,Legend19_0,1/10,3,"100000.00 | ((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVa | ((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVa","NORMAL/UNIVERSAL,PIERCE/UNIVERSAL",CurHp%,333.00,미수록
+h033,빈스모크 레이쥬 포이즌 핑크 - 전설적인,전설적인,Trig_Legend19,Legend19_1,1/19,3,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVa | ((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVa | ((GetUnitStateSwap(UNIT_ST",PIERCE/UNIVERSAL,CurHp%,,미수록
+h03B,에드워드 뉴게이트 '사황' 흰수염 해적단의 아버,전설적인,Trig_Legend5,Legend51,(게이트 없음),2,((1250000.00+(GetUnitStateSwap(UNIT_STATE_MA | ((1250000.00+(GetUnitStateSwap(UNIT_STATE_MA,HERO/NORMAL,MaxHp%,625.00,미수록
+h03J,[히든조합]시류비의 시류,,Trig_Hidden15,siru_R,MANA게이지100.00,1,(1500000.00+(s__TrigVariables__get_realE(Glo,NORMAL/UNIVERSAL,,450.00,미수록
+h03J,[히든조합]시류비의 시류,,Trig_Hidden15,siru_1,1/7,0,,,,,미수록
+h03R,[히든조합]반 더 데켄어인섬 절반면적의 노아를 ,,Trig_Hidden13,deken_Mana,MANA게이지115.00,1,(2200000.00+(GetUnitStateSwap(UNIT_STATE_MAX,NORMAL/UNIVERSAL,MaxHp%,800.00,미수록
+h03R,[히든조합]반 더 데켄어인섬 절반면적의 노아를 ,,Trig_Hidden13,deken_skill_1,1/16,1,120000.00,NORMAL/UNIVERSAL,,,미수록
+h03S,울티 토비롯포 - 전설적인,전설적인,Trig_Legend35ulti,Legend35ulti_trg,LIFE게이지35.00,1,((GetEventDamage()*0.85)+115000.00),CHAOS/NORMAL,,400.00,미수록
+h03V,[히든조합]코알라혁명군-어인공수도대리사범,,Trig_Koalla_Attack,koalla_skill_Mana,MANA게이지135.00,3,(500000.00+(40000.00*I2R(GetPlayerTechCountS | (500000.00+(40000.00*I2R(GetPlayerTechCountS | (850000.00+(40000.00*I2R(G,"CHAOS/NORMAL,NORMAL/UNIVERSAL",,625.00,미수록
+h03V,[히든조합]코알라혁명군-어인공수도대리사범,,Trig_Koalla_Attack,koalla_skill_1,MANA게이지135.00 AND 1/8,2,(525000.00+(52500.00*I2R(GetPlayerTechCountS | 525000.00,"CHAOS/NORMAL,MAGIC/UNIVERSAL",,500.00,미수록
+h03Z,[히든조합]아카이누흰수염을죽인 붉은개,,Trig_Hidden5,Akainu_02_hidden,버프B06B==true,3,"300000.00 | 1000000.00 | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri","CHAOS/UNIVERSAL,NORMAL/UNIVERSAL",MaxHp%,525.00,미수록
+h03Z,[히든조합]아카이누흰수염을죽인 붉은개,,Trig_Hidden5,Akainu_02_hidden,LIFE게이지50.00,3,"300000.00 | 1000000.00 | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri","CHAOS/UNIVERSAL,NORMAL/UNIVERSAL",MaxHp%,525.00,미수록
+h040,아인 네오 해군 장교 - 제한됨,제한됨,Trig_AinAttack,Ain_Skill_1,1/6,5,320000.00 | 320000.00 | 3500000.00,"MAGIC/UNIVERSAL,NORMAL/UNIVERSAL",,475.00,미수록
+h040,아인 네오 해군 장교 - 제한됨,제한됨,Trig_AinAttack,Ain_Skill_2,1/21,7,240000.00 | 240000.00 | 240000.00,"MAGIC/UNIVERSAL,NORMAL/UNIVERSAL",,"475.00,500.00",미수록
+h048,[히든조합]페로나고스트 프린세스,,Trig_Hidden14,perona_Mana,MANA게이지100.00,1,(2250000.00+(s__TrigVariables__get_realE(Glo,NORMAL/UNIVERSAL,,500.00,미수록
+h048,[히든조합]페로나고스트 프린세스,,Trig_Hidden14,Hidden14_perona_use2,1/8,1,(125000.00+(125000.00*s__TrigVariables__get_,NORMAL/UNIVERSAL,,360.00,미수록
+h049,실버즈 레일리 명왕 - 불멸의,불멸의,Trig_LaillySkill,LaillySkill1,(게이트 없음),1,GetEventDamage(),CHAOS/NORMAL,,400.00,미수록
+h049,실버즈 레일리 명왕 - 불멸의,불멸의,Trig_LaillySkill,LaillySkill3,MANA게이지115.00,2,3250000.00 | 2750000.00,CHAOS/NORMAL,,750.00,특성표
+h049,실버즈 레일리 명왕 - 불멸의,불멸의,Trig_LaillySkill,Kick_1,절대쿨4.75s(B070),3,"1750000.00 | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri | 787500.00",CHAOS/NORMAL,MaxHp%,400.00,특성표
+h049,실버즈 레일리 명왕 - 불멸의,불멸의,Trig_LaillySkill,Kick_1,절대쿨4.75s(B070) AND 1/50,3,"1750000.00 | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri | 787500.00",CHAOS/NORMAL,MaxHp%,400.00,특성표
+h04A,에드워드 뉴게이트 한시대를 주름잡던 대해적 - ,불멸의,Trig_Ed_Attack,Ed_Skill_1_Item,LIFE게이지115.00 AND 1/22,2,((1750000.00+(GetUnitStateSwap(UNIT_STATE_MA | ((1750000.00+(GetUnitStateSwap(UNIT_STATE_MA,HERO/NORMAL,MaxHp%,625.00,미수록
+h04A,에드워드 뉴게이트 한시대를 주름잡던 대해적 - ,불멸의,Trig_Ed_Attack,Ed_Skill_1,LIFE게이지115.00 AND 1/22,2,((1750000.00+(GetUnitStateSwap(UNIT_STATE_MA | ((1750000.00+(GetUnitStateSwap(UNIT_STATE_MA,HERO/NORMAL,MaxHp%,625.00,미수록
+h04A,에드워드 뉴게이트 한시대를 주름잡던 대해적 - ,불멸의,Trig_Ed_Attack,Ed_Skill_2sc,LIFE게이지115.00 AND 1/8,0,,,,600.00,미수록
+h04B,금사자 시키 천신 - 불멸의,불멸의,Trig_Shiki_Attack,Shiki_Lion,MANA게이지125.00,1,3250000.00,NORMAL/UNIVERSAL,,700.00,미수록
+h04B,금사자 시키 천신 - 불멸의,불멸의,Trig_Shiki_Attack,Shiki_champa2,1/10 AND 1/16,1,400000.00,MAGIC/UNIVERSAL,,450.00,미수록
+h04B,금사자 시키 천신 - 불멸의,불멸의,Trig_Shiki_Attack,Shiki_SKill_item,1/10 AND A0T4레벨==1 AND 1/33 AND 1/16 AND 1/2,1,250000.00,NORMAL/UNIVERSAL,,450.00,미수록
+h04C,몽키.D.거프 해군영웅 주먹의 거프 - 불멸의,불멸의,Trig_Garp_Attack,Garp_AttackDamage,(게이트 없음),7,(GetEventDamage()*(1.10+s__TrigVariables__ge | (2500.00*s__TrigVariables__get_realG(GlobalT | (GetEventDamage()*(1+s__Tr,"CHAOS/NORMAL,CHAOS/UNIVERSAL,HERO/NORMAL,HERO/UNIVERSAL",CurHp%,"325.00,360.00,500.00",미수록
+h04C,몽키.D.거프 해군영웅 주먹의 거프 - 불멸의,불멸의,Trig_Garp_Attack,Garp_Mana2,MANA게이지160.00,3,((6000000.00+(GetUnitStateSwap(UNIT_STATE_MA | ((6000000.00+(GetUnitStateSwap(UNIT_STATE_MA | ((7250000.00+(GetUnitState,HERO/NORMAL,MaxHp%,650.00,특성표
+h04D,몽키.D.드래곤 혁명군의 수장 - 불멸의,불멸의,Trig_Dragon_Attack,Dragon_Skill_Mana,MANA게이지160.00,1,300000.00,NORMAL/UNIVERSAL,,425.00,특성표
+h04D,몽키.D.드래곤 혁명군의 수장 - 불멸의,불멸의,Trig_Dragon_Attack,Dragon_Skill_1_T,절대쿨8.5s(B00J) AND A0FS레벨==2,3,"1250000.00 | (1.50*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s | (0.02*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s",NORMAL/UNIVERSAL,MaxHp%,475.00,특성표
+h04D,몽키.D.드래곤 혁명군의 수장 - 불멸의,불멸의,Trig_Dragon_Attack,Dragon_Skill_1,절대쿨8.5s(B00J) AND A0FS레벨==2,2,1000000.00 | 1000000.00,NORMAL/UNIVERSAL,,475.00,특성표
+h04E,"센고쿠 해군원수 ""부처님"" - 불멸의",불멸의,Trig_Sengoku_Attack,Sengoku_Skill_Item,LIFE게이지75.00 AND 1/12,1,300000.00,NORMAL/UNIVERSAL,,450.00,미수록
+h04F,스코퍼 가반 로져 해적단의 검호 - 불멸의,불멸의,Trig_Gaban_Attack,Gaban_Skill_mana,MANA게이지45.00,3,"((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_H | (0.10*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,u | (0.03*GetUnitStateSwap(UNI","CHAOS/UNIVERSAL,HERO/UNIVERSAL",MaxHp%,,미수록
+h04F,스코퍼 가반 로져 해적단의 검호 - 불멸의,불멸의,Trig_Gaban_Attack,Gaban_Skill_1,1/24,2,"8750000.00 | ((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tr","HERO/NORMAL,PIERCE/NORMAL",MaxHp%,,미수록
+h04G,"제트 해군 스승 ""Z"" - 불멸의",불멸의,Trig_Z_Attack,Z_Skill_Mana,MANA게이지160.00,1,(4850000.00+((GetUnitStateSwap(UNIT_STATE_MA,NORMAL/UNIVERSAL,MaxHp%,725.00,미수록
+h04G,"제트 해군 스승 ""Z"" - 불멸의",불멸의,Trig_Z_Attack,Z_Skill_1,버프B00M==true,2,s__TrigVariables__get_realG(GlobalTV) | 1250000.00,NORMAL/UNIVERSAL,,475.00,특성표
+h04G,"제트 해군 스승 ""Z"" - 불멸의",불멸의,Trig_Z_Attack,Z_skill_3,1/16,1,1000000.00,NORMAL/UNIVERSAL,,,미수록
+h04J,골.D.로져 해적왕 - 불멸의,불멸의,Trig_roger_Attack,roger_Mana,MANA게이지150.00,1,7250000.00,HERO/NORMAL,,500.00,미수록
+h04J,골.D.로져 해적왕 - 불멸의,불멸의,Trig_roger_Attack,roger_Skill_2,1/22,1,1450000.00,HERO/NORMAL,,850.00,미수록
+h04Q,빅 맘 강철 풍선 - 불멸의,불멸의,Trig_Bigmam_Attack,Bigmam_Eat,(게이트 없음),2,(1750000.00*(1+(0.01*I2R(GetItemCharges(udg_ | (4500000.00*(1+(0.01*I2R(GetItemCharges(udg_,"CHAOS/UNIVERSAL,NORMAL/UNIVERSAL",,"1000.00,600.00",미수록
+h04Q,빅 맘 강철 풍선 - 불멸의,불멸의,Trig_Bigmam_Attack,Bigmam_Eat,(게이트 없음),2,(1750000.00*(1+(0.01*I2R(GetItemCharges(udg_ | (4500000.00*(1+(0.01*I2R(GetItemCharges(udg_,"CHAOS/UNIVERSAL,NORMAL/UNIVERSAL",,"1000.00,600.00",미수록
+h057,|CFFFFFA78알라바스타의 왕녀-ver파이러,,Trig_ViVi_Attack,vivi_Skill_4_Mana,MANA게이지150.00,4,((300000.00+(GetUnitStateSwap(UNIT_STATE_MAX | 500000.00 | ((300000.00+(GetUnitStateSwap(UNIT_STATE_MAX,"CHAOS/UNIVERSAL,HERO/UNIVERSAL",MaxHp%,925.00,미수록
+h057,|CFFFFFA78알라바스타의 왕녀-ver파이러,,Trig_ViVi_Attack,vivi_Skill_3_Triple,MANA게이지150.00 AND 버프B06G==true,0,,,,,미수록
+h057,|CFFFFFA78알라바스타의 왕녀-ver파이러,,Trig_ViVi_Attack,vivi_Skill_Double,MANA게이지150.00 AND 1/4,0,,,,912.00,미수록
+h057,|CFFFFFA78알라바스타의 왕녀-ver파이러,,Trig_ViVi_Attack,vivi_skill_2,1/10,1,400000.00,CHAOS/NORMAL,,450.00,미수록
+h058,|CFFFFFA78세계 최강의 대검호 쥬라클 미,,Trig_Mihawk_Attack,MIhawk_Mana,MANA게이지175.00,0,,,,750.00,미수록
+h058,|CFFFFFA78세계 최강의 대검호 쥬라클 미,,Trig_Mihawk_Attack,Mihawk_2,MANA게이지175.00,0,,,,"475.00,500.00",미수록
+h058,|CFFFFFA78세계 최강의 대검호 쥬라클 미,,Trig_Mihawk_Attack,Mihawk_4,1/7,0,,,,450.00,미수록
+h059,|CFFFFFA78'화권의' 포트거스.D.에이스,,Trig_Ace_Attack,ace_skill_5,MANA게이지185.00,1,s__TrigVariables__get_realD(GlobalTV),MAGIC/UNIVERSAL,,850.00,미수록
+h059,|CFFFFFA78'화권의' 포트거스.D.에이스,,Trig_Ace_Attack,ace_skill_3,1/35,1,1000000.00,MAGIC/UNIVERSAL,,650.00,미수록
+h05B,|CFFFFFA78해적왕자-롬멜의 카마이타치 카,,Trig_Cavendish_Attack,Cavendish_skill_Mana,MANA게이지100.00,3,(2200000.00+(I2R(GetPlayerTechCountSimple('R | (2200000.00+(I2R(GetPlayerTechCountSimple('R | 1000000.00,"CHAOS/NORMAL,CHAOS/UNIVERSAL",,900.00,미수록
+h05C,|CFFFFFA78'아마존릴리의 여제'  보아 ,,Trig_Hancock_Attack,hancock_skill_Mana,MANA게이지175.00,3,"(360000.00+(I2R(GetPlayerTechCountSimple('R0 | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri | 300000.00","CHAOS/NORMAL,NORMAL/UNIVERSAL",MaxHp%,760.00,특성표
+h05C,|CFFFFFA78'아마존릴리의 여제'  보아 ,,Trig_Hancock_Attack,arrow_h2,MANA게이지175.00 AND 버프B03M==true,1,250000.00,NORMAL/UNIVERSAL,,,미수록
+h05C,|CFFFFFA78'아마존릴리의 여제'  보아 ,,Trig_Hancock_Attack,hancock_skill_9,MANA게이지175.00 AND 1/15,1,850000.00,HERO/NORMAL,,450.00,미수록
+h05C,|CFFFFFA78'아마존릴리의 여제'  보아 ,,Trig_Hancock_Attack,hancock_skill_10,1/14,1,1000000.00,HERO/NORMAL,,600.00,미수록
+h05E,에넬 G.O.D - 제한됨,제한됨,Trig_EnelAttack,Enel_Mana,MANA게이지145.00,0,,,,800.00,미수록
+h05E,에넬 G.O.D - 제한됨,제한됨,Trig_EnelAttack,Enel_skill_2,1/10,1,(182500.00+(I2R(GetPlayerTechCountSimple('R0,NORMAL/UNIVERSAL,,500.00,미수록
+h05F,크로커다일 사막의 악어 - 제한됨,제한됨,Trig_croTrans,cro_skill_2,1/20,1,1000000.00,CHAOS/NORMAL,,550.00,미수록
+h05G,패트릭 레드필드 붉은백작 - 제한됨,제한됨,Trig_RedAttack,Red_skill_1,1/22,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnu | 700000.00",NORMAL/UNIVERSAL,MaxHp%,900.00,미수록
+h05I,레베카 콜로세움 전설의  후예 - 제한됨,제한됨,Trig_RebecaAttack,Rebeca_Skill_1,1/5,2,(600000.00+(25000.00*I2R(GetUnitAbilityLevel | (2100000.00+(87500.00*I2R(GetUnitAbilityLeve,"MELEE/NORMAL,NORMAL/UNIVERSAL",,450.00,미수록
+h05I,레베카 콜로세움 전설의  후예 - 제한됨,제한됨,Trig_RebecaAttack,Rebeca_Skill_1,버프B06B==true AND 1/5,2,(600000.00+(25000.00*I2R(GetUnitAbilityLevel | (2100000.00+(87500.00*I2R(GetUnitAbilityLeve,"MELEE/NORMAL,NORMAL/UNIVERSAL",,450.00,미수록
+h05I,레베카 콜로세움 전설의  후예 - 제한됨,제한됨,Trig_RebecaAttack,Rebeca_Skill_1,1/10,2,(600000.00+(25000.00*I2R(GetUnitAbilityLevel | (2100000.00+(87500.00*I2R(GetUnitAbilityLeve,"MELEE/NORMAL,NORMAL/UNIVERSAL",,450.00,미수록
+h05I,레베카 콜로세움 전설의  후예 - 제한됨,제한됨,Trig_RebecaAttack,Rebeca_Skill_3,1/12,1,(800000.00+(30000.00*I2R(GetUnitAbilityLevel,MELEE/NORMAL,,850.00,미수록
+h05S,돈키호테 도플라밍고 하늘귀신 - 변화된,변화된,Trig_Transpom2,Transpom_dp,1/10,2,"200000.00 | ((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVa","NORMAL/UNIVERSAL,PIERCE/UNIVERSAL",CurHp%,,미수록
+h05V,포트거스.D.에이스 스페이드 해적단 선장 - 변,변화된,Trig_Transpom3,Transpom_AceMana,MANA게이지125.00,1,1850000.00,MAGIC/UNIVERSAL,,575.00,미수록
+h05V,포트거스.D.에이스 스페이드 해적단 선장 - 변,변화된,Trig_Transpom3,Transpom_Ace_bulRemake,1/10,1,350000.00,NORMAL/UNIVERSAL,,400.00,미수록
+h067,|CFFFFFA78세계의 가희 우타 - |CFF,,Trig_Uta_Attack,Uta_ArmyS,1/4,3,(I2R(s__TrigVariables__get_integerA(GlobalTV | (250000.00+((GetUnitStateSwap(UNIT_STATE_LIF | 500000.00,"HERO/UNIVERSAL,MELEE/UNIVERSAL",CurHp%,350.00,미수록
+h067,|CFFFFFA78세계의 가희 우타 - |CFF,,Trig_Uta_Attack,Uta_skill_3_mana,1/10 AND 1/33 AND MANA게이지100.00,1,2500000.00,NORMAL/UNIVERSAL,,800.00,미수록
+h071,쿠로사키 이치고 - 랜덤전용,랜덤전용,Trig_ichigo1,ichigo2,1/22,0,,,,,미수록
+h077,간부 파견 해군 - 변화된,변화된,Trig_Bugi_Attacksommon2,Bugi_SommonDamage2,(게이트 없음),1,GetEventDamage(),CHAOS/NORMAL,,325.00,미수록
+h07I,샬롯 카타쿠리 장성 밀가루 대신 - 제한됨,제한됨,Trig_katakuriAttack,katakuri_Skill_2,1/7 AND 1/7,1,375000.00,NORMAL/UNIVERSAL,,500.00,미수록
+h07I,샬롯 카타쿠리 장성 밀가루 대신 - 제한됨,제한됨,Trig_katakuriAttack,Kata_03,1/7 AND 버프B045==true,1,((GetEventDamage()*0.75)+100000.00),CHAOS/NORMAL,,415.00,미수록
+h07J,캐럿 스론 달의 사자 - 변화된,변화된,Trig_carrotattack,carrot_skill_2,1/9,1,325000.00,MAGIC/UNIVERSAL,,425.00,미수록
+h07M,카이도 사황'백수의 왕' - 불멸의,불멸의,Trig_Kaido_Attack,Kaido_Skill_1_8,(게이트 없음),2,s__TrigVariables__get_realD(GlobalTV) | s__TrigVariables__get_realD(GlobalTV),"CHAOS/NORMAL,CHAOS/UNIVERSAL",,575.00,특성표
+h07M,카이도 사황'백수의 왕' - 불멸의,불멸의,Trig_Kaido_Attack,Kaido_Dragon_buster,(게이트 없음),2,s__TrigVariables__get_realD(GlobalTV) | s__TrigVariables__get_realD(GlobalTV),"CHAOS/NORMAL,CHAOS/UNIVERSAL",,575.00,미수록
+h084,시노부 뇌쇄 쿠노이치 - 제한됨,제한됨,Trig_Sinobu_Attack,Sinobu_Skill_hp2,LIFE게이지50.00 AND 버프B06B==true,3,"2250000.00 | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri | ((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tr","MELEE/UNIVERSAL,NORMAL/UNIVERSAL",MaxHp%,,미수록
+h084,시노부 뇌쇄 쿠노이치 - 제한됨,제한됨,Trig_Sinobu_Attack,Sinobu_Skill_hp2,LIFE게이지50.00,3,"2250000.00 | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri | ((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tr","MELEE/UNIVERSAL,NORMAL/UNIVERSAL",MaxHp%,,미수록
+h084,시노부 뇌쇄 쿠노이치 - 제한됨,제한됨,Trig_Sinobu_Attack,Sinobu_Skill_4,LIFE게이지50.00 AND 1/10,1,400000.00,MAGIC/UNIVERSAL,,475.00,미수록
+h084,시노부 뇌쇄 쿠노이치 - 제한됨,제한됨,Trig_Sinobu_Attack,Sinobu_Skill_3,LIFE게이지50.00 AND 1/8,0,,,,,미수록
+h086,시노부 뇌쇄 쿠노이치 - 제한됨-소환됨,제한됨,Trig_Sinobu_Skill_5_mirror,Sinobu_Skill_3,1/10,0,,,,,미수록
+h087,아마츠키 토키 시간 여행자 - 전설적인,전설적인,Trig_Legend31,Legend31_toki,1/7,3,125000.00 | 125000.00 | 250000.00,NORMAL/UNIVERSAL,,415.00,미수록
+h088,|CFFFFFA78토트 무지카 봉인된 악보의 괴,,Trig_Uta_Tots,tots_R,(게이트 없음),1,4500000.00,HERO/UNIVERSAL,,415.00,미수록
+h08I,쿠치키 뱌쿠야 - 랜덤전용[제한됨],랜덤전용,Trig_byakuya_Attack,Byakuya_R,(게이트 없음),1,5000000.00,NORMAL/UNIVERSAL,,700.00,미수록
+h08I,쿠치키 뱌쿠야 - 랜덤전용[제한됨],랜덤전용,Trig_byakuya_Attack,byakuya_Q,1/10,1,850000.00,NORMAL/UNIVERSAL,,525.00,미수록
+h08I,쿠치키 뱌쿠야 - 랜덤전용[제한됨],랜덤전용,Trig_byakuya_Attack,Byakuya_E,절대쿨14.0s(B00K),1,4500000.00,NORMAL/UNIVERSAL,,925.00,특성표
+h08O,마르코 흰수염 유산의 수호자 - 제한됨,제한됨,Trig_Marco_Attack,Marco_S2,1/7,3,"750000.00 | ((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVa | 112500.00","CHAOS/UNIVERSAL,NORMAL/UNIVERSAL",CurHp%,475.00,미수록
+h08O,마르코 흰수염 유산의 수호자 - 제한됨,제한됨,Trig_Marco_Attack,Marco_S1,1/7 AND 1/10,2,"((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVa | 150000.00","CHAOS/UNIVERSAL,NORMAL/UNIVERSAL",CurHp%,,미수록
+h08R,|CFFFFFA78참된 호걸 코즈키 오뎅 - |,,Trig_Odeng_Attack,Odeng_Skill_mana,MANA게이지145.00,1,4000000.00,NORMAL/UNIVERSAL,,600.00,미수록
+h08R,|CFFFFFA78참된 호걸 코즈키 오뎅 - |,,Trig_Odeng_Attack,Odeng_Skill,1/20,1,1150000.00,NORMAL/UNIVERSAL,,600.00,미수록
+h09K,옌 - 랜덤전용,랜덤전용,Trig_En_Attack,En_nomal,1/4,1,400000.00,NORMAL/UNIVERSAL,,500.00,미수록
+h09K,옌 - 랜덤전용,랜덤전용,Trig_En_Attack,En_nomal,1/5,1,400000.00,NORMAL/UNIVERSAL,,500.00,미수록
+h09L,이치의 율자 - 랜덤전용,랜덤전용,Trig_Bronya_Attack,Bronya_Skill_1,1/7,2,200000.00 | 300000.00,NORMAL/UNIVERSAL,,500.00,미수록
+h09N,부릉냐 - 랜덤전용[제한됨],랜덤전용,Trig_BronyaMotar_Attack,BronyaMotar_R,MANA게이지150.00,3,"1000000.00 | 2500000.00 | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri",NORMAL/UNIVERSAL,MaxHp%,500.00,미수록
+h09N,부릉냐 - 랜덤전용[제한됨],랜덤전용,Trig_BronyaMotar_Attack,BronyaMotar_laser,1/7,5,(250000.00*(1+((0.01*0.50)*s__TrigVariables_ | (225000.00*(1+((0.01*0.50)*s__TrigVariables_ | (250000.00*(1+((0.01*0.50),NORMAL/UNIVERSAL,MaxHp%,400.00,미수록
+h09N,부릉냐 - 랜덤전용[제한됨],랜덤전용,Trig_BronyaMotar_Attack,BronyaMotar_E,1/5,2,(625000.00*(1+((0.01*0.50)*s__TrigVariables_ | (3125000.00+(GetUnitStateSwap(UNIT_STATE_MAX,NORMAL/UNIVERSAL,MaxHp%,"1000.00,415.00",미수록
+h09Q,불사조 흰수염 유산의 수호자 - 제한됨,제한됨,Trig_Marco_AttackBird,Marco_Feather1,1/5,0,,,,,미수록
+h09R,쿠죠 죠타로 - 랜덤전용[제한됨],랜덤전용,Trig_Jotaro_Attack,Jotaro_R,MANA게이지150.00,2,2500000.00 | (4250000.00+((GetUnitStateSwap(UNIT_STATE_MA,HERO/NORMAL,MaxHp%,850.00,미수록
+h09R,쿠죠 죠타로 - 랜덤전용[제한됨],랜덤전용,Trig_Jotaro_Attack,Jotaro_E,MANA게이지150.00 AND LIFE게이지45.00,0,,,,460.00,미수록
+h09R,쿠죠 죠타로 - 랜덤전용[제한됨],랜덤전용,Trig_Jotaro_Attack,Jotaro_W,MANA게이지150.00 AND LIFE게이지45.00 AND 1/20,0,,,,525.00,미수록
+h09R,쿠죠 죠타로 - 랜덤전용[제한됨],랜덤전용,Trig_Jotaro_Attack,Jotaro_D2,MANA게이지150.00 AND LIFE게이지45.00 AND 1/7,0,,,,400.00,미수록
+h09W,나미카제 미나토 - 랜덤전용[제한됨],랜덤전용,Trig_Minato_Attack,Minato_Q2,1/6,1,600000.00,NORMAL/UNIVERSAL,,500.00,미수록
+h09W,나미카제 미나토 - 랜덤전용[제한됨],랜덤전용,Trig_Minato_Attack,Minato_E,1/24,2,"(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri",NORMAL/UNIVERSAL,MaxHp%,,미수록
+h09W,나미카제 미나토 - 랜덤전용[제한됨],랜덤전용,Trig_Minato_Attack,Minato_Mana,MANA게이지100.00,1,775000.00,NORMAL/UNIVERSAL,,500.00,미수록
+h09Z,네코마무시 밤의 왕 - 전설적인,전설적인,Trig_Legend32,Legend32_neko1,LIFE게이지33.00,2,(500000.00+(GetUnitStateSwap(UNIT_STATE_MAX_ | (2000000.00+(GetUnitStateSwap(UNIT_STATE_MAX,CHAOS/UNIVERSAL,MaxHp%,525.00,미수록
+h0A2,료우기 시키 - 랜덤전용[제한됨],랜덤전용,Trig_Ryougi_Attack,Ryougi_Shiki_R2,MANA게이지115.00,4,"5000000.00 | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri","HERO/NORMAL,HERO/UNIVERSAL",MaxHp%,500.00,미수록
+h0A2,료우기 시키 - 랜덤전용[제한됨],랜덤전용,Trig_Ryougi_Attack,Ryougi_Skill_3,1/4,4,"1440000.00 | 4000000.00 | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri","HERO/NORMAL,HERO/UNIVERSAL",MaxHp%,375.00,미수록
+h0A2,료우기 시키 - 랜덤전용[제한됨],랜덤전용,Trig_Ryougi_Attack,Ryougi_Shiki_2,1/4 AND 1/16,5,"1150000.00 | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri | (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__Tri","HERO/NORMAL,HERO/UNIVERSAL,NORMAL/NORMAL",MaxHp%,425.00,미수록
+h0A6,야쿠모 유카리 - 랜덤전용[제한됨],랜덤전용,Trig_Yukari_Attack,Yukari_D2,MANA게이지145.00,2,2000000.00 | 3000000.00,NORMAL/UNIVERSAL,,"475.00,600.00",미수록
+h0A6,야쿠모 유카리 - 랜덤전용[제한됨],랜덤전용,Trig_Yukari_Attack,Yukari_R2,1/20,1,300000.00,NORMAL/UNIVERSAL,,395.00,미수록
+h0A6,야쿠모 유카리 - 랜덤전용[제한됨],랜덤전용,Trig_Yukari_Attack,Yukari_W,1/10,1,3200000.00,NORMAL/UNIVERSAL,,450.00,미수록
+h0AC,마운틴.D.히그마 - 랜덤전용[제한됨],랜덤전용,Trig_Higma_Attack,Higma_Q,LIFE게이지85.00 AND 1/20,2,100000.00 | 100000.00,NORMAL/UNIVERSAL,,375.00,미수록
+h0AC,마운틴.D.히그마 - 랜덤전용[제한됨],랜덤전용,Trig_Higma_Attack,Higma_W,LIFE게이지85.00 AND 버프B05N==true,1,175000.00,NORMAL/UNIVERSAL,,400.00,미수록
+h0AD,카이도 사황'백수의 왕' - 불멸의,불멸의,Trig_Kaido_Dragon_Attack,Kaido_Dragon_buster,LIFE게이지100.00,2,s__TrigVariables__get_realD(GlobalTV) | s__TrigVariables__get_realD(GlobalTV),"CHAOS/NORMAL,CHAOS/UNIVERSAL",,575.00,미수록
+h0AD,카이도 사황'백수의 왕' - 불멸의,불멸의,Trig_Kaido_Dragon_Attack,Kaido_Skill_1_8,LIFE게이지100.00 AND 절대쿨11.0s(B05Q) AND 1/7,2,s__TrigVariables__get_realD(GlobalTV) | s__TrigVariables__get_realD(GlobalTV),"CHAOS/NORMAL,CHAOS/UNIVERSAL",,575.00,특성표
+h0AD,카이도 사황'백수의 왕' - 불멸의,불멸의,Trig_Kaido_Dragon_Attack,Kaido_Dragon_Skill_2,LIFE게이지100.00,2,s__TrigVariables__get_realD(GlobalTV) | s__TrigVariables__get_realD(GlobalTV),CHAOS/NORMAL,,515.00,미수록
+h0AD,카이도 사황'백수의 왕' - 불멸의,불멸의,Trig_Kaido_Dragon_Attack,Kaido_Dragon_melee_1,LIFE게이지100.00,2,(s__TrigVariables__get_realD(GlobalTV)*0.56) | (s__TrigVariables__get_realD(GlobalTV)*0.35),CHAOS/NORMAL,,500.00,미수록
+h0AH,킹 백수해적단-대간판 - 전설적인,전설적인,Trig_Legend33,King_skill_1sc,1/7,0,,,,,미수록
+h0AI,킹 삼재해:화재 - 제한됨,제한됨,Trig_King_Attack,King_skill_1sc,1/7,0,,,,,미수록
+h0AI,킹 삼재해:화재 - 제한됨,제한됨,Trig_King_Attack,King_skill_2,(게이트 없음),1,850000.00,CHAOS/NORMAL,,475.00,미수록
+h0AI,킹 삼재해:화재 - 제한됨,제한됨,Trig_King_Attack,King_skill_2_tr,(게이트 없음),3,1275000.00 | 10000000.00 | 100000.00,"CHAOS/NORMAL,CHAOS/UNIVERSAL",,475.00,미수록
+h0AI,킹 삼재해:화재 - 제한됨,제한됨,Trig_King_Attack,King_skill_2,(게이트 없음),1,850000.00,CHAOS/NORMAL,,475.00,미수록
+h0BC,타츠마키 - 랜덤전용[제한됨],랜덤전용,Trig_Tatsumaki_Attack,Tatsumaki_T_Explosion_by_AZ_Attack,MANA게이지85.00,1,4000000.00,CHAOS/NORMAL,,600.00,미수록
+h0BC,타츠마키 - 랜덤전용[제한됨],랜덤전용,Trig_Tatsumaki_Attack,Tatsumaki_Q2_Attack,LIFE게이지50.00 AND 1/7,0,,,,,미수록
+h0BF,키쿄우 - 랜덤전용[제한됨],랜덤전용,Trig_kikoyou_Attack,kikoyou_hp,LIFE게이지50.00 AND 버프B06B==true,4,"1500000.00 | 1500000.00 | (GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVar","CHAOS/UNIVERSAL,HERO/NORMAL,NORMAL/UNIVERSAL",CurHp%,400.00,미수록
+h0BF,키쿄우 - 랜덤전용[제한됨],랜덤전용,Trig_kikoyou_Attack,kikoyou_hp,LIFE게이지50.00,4,"1500000.00 | 1500000.00 | (GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVar","CHAOS/UNIVERSAL,HERO/NORMAL,NORMAL/UNIVERSAL",CurHp%,400.00,미수록
+h0BF,키쿄우 - 랜덤전용[제한됨],랜덤전용,Trig_kikoyou_Attack,kikoyou_mana,LIFE게이지50.00 AND MANA게이지85.00,2,300000.00 | 100000.00,"CHAOS/NORMAL,NORMAL/UNIVERSAL",,525.00,미수록
+h0BF,키쿄우 - 랜덤전용[제한됨],랜덤전용,Trig_kikoyou_Attack,kikoyou_skill_2,LIFE게이지50.00 AND 1/16,1,125000.00,NORMAL/UNIVERSAL,,425.00,미수록
+h0BF,키쿄우 - 랜덤전용[제한됨],랜덤전용,Trig_kikoyou_Attack,kikoyou_skill_1,LIFE게이지50.00 AND 1/6,4,"350000.00 | (GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVar | (GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVar","CHAOS/NORMAL,CHAOS/UNIVERSAL,NORMAL/UNIVERSAL",CurHp%,375.00,미수록
