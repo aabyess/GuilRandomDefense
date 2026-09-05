@@ -45,6 +45,19 @@ public class EnemyDummy : MonoBehaviour
     // 스토리 건물은 변신 전까지 죽지 않는다. 피해는 그대로 쌓이고, 변신할 때 남은 체력이 보스 체력이 된다.
     bool invulnerable;
 
+    // ⚠️ 2026-09-06 추가(신세계 사이드보스, ORIGINAL_BOSS_COMBAT_SPEC.md §⑤) — 위
+    // invulnerable("1 밑으로 안 내려간다", 피해는 그대로 hp에서 깎인다)과는 **완전히 다른
+    // 뜻**이다. 원작 무적(Avul)은 "피해가 아예 안 들어간다" — 체력바가 100%에서 꿈쩍도
+    // 안 한다. 기존 invulnerable을 이 용도로 재사용하면 사이드보스가 시전 중에도 계속
+    // 깎이는 조용한 버그가 된다(리서치담당·PM 확인) — 그래서 별도 필드로 뗀다. 기존
+    // invulnerable·StoryManager 쪽은 이 필드와 무관하게 그대로 돈다.
+    bool trueInvulnerable;
+
+    /// <summary>완전 무적을 켜고 끈다 — 켜져 있으면 TakeDamage가 피해 계산 자체를 안 한다
+    /// (hp가 조금도 안 움직인다). 기존 invulnerable/SetInvulnerable과는 별개 축이다.</summary>
+    public void SetTrueInvulnerable(bool value) => trueInvulnerable = value;
+    public bool IsTrueInvulnerable => trueInvulnerable;
+
     // 스턴·구속을 거는 쪽이 각자 "원래 켜져 있었나"를 기억했다가 되돌리면, 효과가 겹쳤을 때
     // 나중에 끝나는 쪽이 "꺼져 있었다"를 복원해 적이 영영 멈춘다. 겹침 수만 세고,
     // 0이 될 때만 다시 움직이게 한다.
@@ -573,6 +586,10 @@ public class EnemyDummy : MonoBehaviour
                            int killerPlayerId, float armorIgnoreRatio = 0f, bool isAbilityDamage = true)
     {
         if (isDead) return;
+
+        // §⑤ 완전 무적 — 피해 계산 자체를 안 한다(hp가 조금도 안 움직인다). 아래
+        // invulnerable("1 밑으로 안 내려간다")과는 다른 축이라 여기서 먼저, 별도로 거른다.
+        if (trueInvulnerable) return;
 
         hp -= MitigatedDamage(amount, type, attackType, armorIgnoreRatio, isAbilityDamage);
 
