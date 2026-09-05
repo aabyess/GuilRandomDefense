@@ -146,6 +146,152 @@ public class UnitAttacker : MonoBehaviour
         if (target != null) target.RemoveFreeze();
     }
 
+    // ---- 유닛 능력(스킬) — 평타·Bash와 별개 축이다(PM 지시, 2026-09-05). 기존 attackTimer·
+    // ApplyCritIfTriggered는 위에서 안 건드렸다. UnitData.skill이 비어 있는 유닛(지금 전부)은
+    // 여기서 전부 조용히 리턴하므로 동작이 그대로다 — 사장님이 유닛별로 SkillData를
+    // 배정하기 전까지는 실질적으로 죽어 있다.
+    float skillCooldownTimer;
+
+    SkillData Skill => identity != null && identity.Data != null ? identity.Data.skill : null;
+
+    // 06번(특성 배선)이 여기를 UnitUpgrades 조회로 바꾼다 — 지금은 항상 레벨1(index 0)이다.
+    static SkillLevel CurrentSkillLevel(SkillData skill) =>
+        skill.levels != null && skill.levels.Count > 0 ? skill.levels[0] : null;
+
+    // CooldownAutoCast·Aura 전용 — OnHitChance는 평타가 실제로 맞았을 때만 판정해야 해서
+    // Update()의 공격 성공 분기에서 TryCastOnHitSkill로 따로 부른다.
+    void UpdateSkillCooldown()
+    {
+        SkillData skill = Skill;
+        if (skill == null) return;
+        if (skill.triggerType != SkillTriggerType.CooldownAutoCast && skill.triggerType != SkillTriggerType.Aura) return;
+
+        SkillLevel level = CurrentSkillLevel(skill);
+        if (level == null) return;
+
+        skillCooldownTimer -= Time.deltaTime;
+        if (skillCooldownTimer > 0f) return;
+
+        // 오라는 쿨다운 개념이 없다("계속 켜져 있다") — 매 프레임 판정하면 값이 생겼을 때
+        // 폭증하니 1초 주기로 재판정한다.
+        skillCooldownTimer = skill.triggerType == SkillTriggerType.Aura ? 1f : Mathf.Max(0.01f, level.cooldown);
+        CastSkillLevel(level, level.range, null);
+    }
+
+    void TryCastOnHitSkill(EnemyDummy attackedTarget)
+    {
+        SkillData skill = Skill;
+        if (skill == null || skill.triggerType != SkillTriggerType.OnHitChance) return;
+
+        SkillLevel level = CurrentSkillLevel(skill);
+        if (level == null) return;
+        if (Random.value >= level.triggerChance) return;
+
+        CastSkillLevel(level, level.range, attackedTarget);
+    }
+
+    // primaryTarget: OnHitChance가 이미 골라둔 대상(SingleTarget 효과가 우선 이걸 쓴다).
+    // 없으면(쿨다운·오라) 사거리 안에서 새로 고른다.
+    void CastSkillLevel(SkillLevel level, float range, EnemyDummy primaryTarget)
+    {
+        if (level.effects == null) return;
+
+        foreach (SkillEffect effect in level.effects)
+        {
+            if (effect == null || Random.value >= effect.chance) continue;
+            ApplySkillEffect(effect, range, primaryTarget);
+        }
+    }
+
+    void ApplySkillEffect(SkillEffect effect, float range, EnemyDummy primaryTarget)
+    {
+        switch (effect.target)
+        {
+            case SkillTargetKind.Enemies:
+                foreach (EnemyDummy enemy in EnemyDummy.Active)
+                {
+                    if (enemy == null) continue;
+                    if (range > 0f && Vector3.Distance(enemy.transform.position, transform.position) > range) continue;
+                    DealSkillDamage(effect, enemy);
+                }
+                break;
+
+            case SkillTargetKind.SingleTarget:
+                EnemyDummy target = primaryTarget != null ? primaryTarget : FindClosestEnemyWithin(range);
+                if (target != null) DealSkillDamage(effect, target);
+                break;
+
+            case SkillTargetKind.Allies:
+            case SkillTargetKind.Self:
+                // Damage 말고는 아직 값 의미도 읽는 코드도 없다(SkillEffectKind 주석 참고) —
+                // 아군 대상 효과를 실제로 적용할 곳이 없다. 자리만 비워둔다.
+                break;
+        }
+    }
+
+    float ResolveSkillEffectValue(SkillEffect effect, EnemyDummy target)
+    {
+        switch (effect.basis)
+        {
+            case SkillEffectBasis.Flat: return effect.multiplier;
+            case SkillEffectBasis.TargetMaxHpPercent: return target.MaxHp * effect.multiplier;
+            case SkillEffectBasis.TargetCurrentHpPercent: return target.Hp * effect.multiplier;
+            case SkillEffectBasis.CasterAttackPower: return AttackDamage * effect.multiplier + effect.bonus;
+            // 연구소(05번, 구현담당1)가 서면 실제 단계값을 여기서 곱한다 — 지금은 자리만이라
+            // bonus만 돌려준다(대개 0이라 사실상 무효).
+            case SkillEffectBasis.ResearchLevel: return effect.bonus;
+            default: return 0f;
+        }
+    }
+
+    void DealSkillDamage(SkillEffect effect, EnemyDummy target)
+    {
+        // Stun·ArmorBreak·ExtraProjectile은 아직 값 의미가 없다 — Damage만 실제로 때린다.
+        if (effect.kind != SkillEffectKind.Damage) return;
+
+        float amount = ResolveSkillEffectValue(effect, target);
+        if (amount <= 0f) return;
+
+        int hits = Mathf.Max(1, effect.hitCount);
+        if (hits <= 1)
+        {
+            target.TakeDamage(amount, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1);
+            return;
+        }
+
+        // SupportSkillData.waveCount/duration과 같은 관례 — duration에 걸쳐 나눠 때린다.
+        StartCoroutine(SkillMultiHitRoutine(target, amount, hits, effect.duration));
+    }
+
+    IEnumerator SkillMultiHitRoutine(EnemyDummy target, float amountPerHit, int hits, float duration)
+    {
+        float interval = duration > 0f ? duration / hits : 0f;
+        for (int i = 0; i < hits; i++)
+        {
+            if (target != null)
+                target.TakeDamage(amountPerHit, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1);
+            if (i < hits - 1 && interval > 0f) yield return new WaitForSeconds(interval);
+        }
+    }
+
+    EnemyDummy FindClosestEnemyWithin(float range)
+    {
+        EnemyDummy closest = null;
+        float closestSqrDistance = range * range;
+
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+        {
+            if (enemy == null) continue;
+            float sqrDistance = (enemy.transform.position - transform.position).sqrMagnitude;
+            if (sqrDistance > closestSqrDistance) continue;
+
+            closestSqrDistance = sqrDistance;
+            closest = enemy;
+        }
+
+        return closest;
+    }
+
     // 이 유닛의 데미지 판정. UnitData가 없으면(씬에 손으로 놓은 더미 등) 물리로 둔다 —
     // 여기서 None을 넘기면 EnemyDummy가 어차피 물리로 취급하므로 결과는 같지만, 뜻을 분명히 한다.
     DamageType DamageTypeOf => identity != null && identity.Data != null
@@ -233,6 +379,8 @@ public class UnitAttacker : MonoBehaviour
 
     void Update()
     {
+        UpdateSkillCooldown();
+
         attackTimer -= Time.deltaTime;
         if (attackTimer > 0f) return;
 
@@ -245,6 +393,7 @@ public class UnitAttacker : MonoBehaviour
             ApplyArmorShred(target);
             target.TakeDamage(AttackDamage, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1);
             ApplyCritIfTriggered(target);
+            TryCastOnHitSkill(target);
             return;
         }
 
