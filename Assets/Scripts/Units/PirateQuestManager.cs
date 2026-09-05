@@ -211,6 +211,19 @@ public class PirateQuestManager : MonoBehaviour
                 new List<WispReward> { new WispReward { wisp = quest.successWisp, count = quest.successWispCount } });
         }
 
+        // 특성포인트 4갈래 중 네 번째 — 피카 퀘스트 성공(사장님 확정 2026-09-05, 07번).
+        // ⚠️ 이 호출 자체는 맞게 이어졌지만 지금 당장은 도달하지 않는다 — `context.UnitUpgrades`가
+        // 씬에서 여전히 null이다(`MapGenerator`가 `UnitUpgrades` 컴포넌트를 `PlayerContext`에
+        // 안 붙인다, `WIRING_AUDIT.md` §1, 2026-09-05 재확인). `?.`라 조용히 아무 일도 안 하고
+        // 넘어간다 — 예외는 안 나지만 포인트도 안 쌓인다. §1이 풀리면 이 줄은 손 안 대도 된다.
+        // 그리고 설령 §1이 풀려도 **쓰는 쪽(트레잇 상점)이 아직 없다**(UnitTraitData.
+        // costTraitPoints를 읽어 Unlock()을 부르는 코드가 프로젝트 어디에도 없음) — 포인트는
+        // UnitUpgrades.TraitPoints에 쌓이기만 하고 당장 쓸 곳이 없다.
+        if (quest.successTraitPoints > 0)
+        {
+            context.UnitUpgrades?.GrantPirateQuestPoint();
+        }
+
         // 와포루류: 처치 성공 시 스토리 건물/보스에 직접 마법데미지를 얹는다 — 데이터에 값이
         // 있을 때만(PirateQuestData.storyDamage 주석 참고: 와포루는 원작에도 배선이 없어 0이다).
         if (quest.storyDamage > 0f && StoryManager.Instance != null)

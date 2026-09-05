@@ -50,12 +50,15 @@ public class PirateQuestData : ScriptableObject
     public WispData successWisp;
     public int successWispCount;
 
-    // 특성포인트 보상(피카: 목재1 + 특성포인트1). ⚠️ 지급 코드가 없다 — 일부러다.
-    // UnitUpgrades 배선이 3중으로 끊겨 있어(`MISSING_PLAYER_POWER.md` §3: UnitData에 필드 없음 /
-    // Unlock을 부르는 코드 없음 / Trait 에셋 effects 전부 빔) 지금 지급 코드를 넣어도 미도달이다.
-    // 필드만 두고 PirateQuestManager.HandleSuccess는 이 값을 읽지 않는다 — 그 3중 배선이
-    // 살아나면 그때 GrantTraitPoints 호출을 추가할 것.
-    [Header("성공 시 특성포인트 (⚠️ 미배선 — 위 주석 참고)")]
+    // 특성포인트 보상(피카: 목재1 + 특성포인트1, 사장님 확정 2026-09-05 07번 — 4갈래 중 넷째).
+    // ⚠️ 코드 경로는 이어졌지만(`PirateQuestManager.HandleSuccess`가 0보다 크면
+    // `UnitUpgrades.GrantPirateQuestPoint()`를 부른다) **지금 당장은 도달하지 않는다** —
+    // `PlayerContext.unitUpgrades`가 씬에서 여전히 null이다(`MapGenerator`가 그 컴포넌트를
+    // 안 붙인다, `WIRING_AUDIT.md` §1). 그리고 §1이 풀려도 **받은 포인트를 쓸 상점이 아직
+    // 없다**(`UnitTraitData.costTraitPoints`를 읽어 `Unlock()`을 부르는 코드 0건). 값 자체는
+    // 항상 1로 취급된다 — `GrantPirateQuestPoint()`가 1회 한정 bool 플래그라 필드의 정확한
+    // 수치는 안 읽는다.
+    [Header("성공 시 특성포인트 (배선은 됐으나 §1·상점 둘 다 막혀 미도달 — 위 주석 참고)")]
     public int successTraitPoints;
 
     // 처치 성공 시 스토리 건물/보스에 추가로 주는 보너스 피해. 방어력을 무시하는 마법(Spells 행)으로

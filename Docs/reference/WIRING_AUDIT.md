@@ -461,17 +461,21 @@ EnemyDummy.Update() → hpRegenPerSecond > 0 확인 → hp += rate*deltaTime, Ma
 `grep`로 확인). 다른 적 88종은 필드가 있어도 값이 0이라 사실상 무영향 — 이건 미도달이 아니라
 **설계대로 대부분 0**이다(주석이 그렇게 밝혀 둠).
 
-## ④ 특성포인트(피카) — **자리만 있음**
+## ④ 특성포인트(피카) — **반쪽** (2026-09-05 갱신: 사장님 지시로 지급 경로는 이었음)
 
 ```csharp
-public int successTraitPoints;   // PirateQuestData.cs:46 — 선언만, 읽는 곳 0건(grep 확인)
+public int successTraitPoints;   // PirateQuestData.cs — 이제 읽힌다
 ```
 
-`PirateQuestManager.HandleSuccess`가 이 필드를 안 읽는다 — **의도적으로 안 읽는다**(주석에
-이유를 남겨 뒀다). 그리고 설령 읽어서 `UnitUpgrades.GrantXxx()`를 부르게 고쳐도 **씬의
-`UnitUpgrades` 컴포넌트가 여전히 0개**이고 `PlayerContext.unitUpgrades`가 4개 전부
-`{fileID: 0}`이다(오늘도 재확인 — 09-04 §1과 **똑같은 상태, 그 사이 안 바뀌었다**). 즉 이 필드는
-**"죽은 코드"가 아니라 "다음에 §1이 풀리면 그때 한 줄 이어붙일 자리"** — 지우면 안 된다.
+`PirateQuestManager.HandleSuccess`가 `successTraitPoints > 0`이면
+`context.UnitUpgrades?.GrantPirateQuestPoint()`를 부르도록 이었다(사장님 확정, 07번 —
+특성포인트를 시작1+구매1+스토리12+피카1 총 4개로). **다만 씬의 `UnitUpgrades` 컴포넌트가
+여전히 0개**이고 `PlayerContext.unitUpgrades`가 4개 전부 `{fileID: 0}`이다(2026-09-05 재확인
+— 09-04 §1과 똑같은 상태, 오늘 밤 다른 배선을 여럿 고치는 동안에도 이것만은 안 바뀌었다).
+`?.` 널 조건 연산자라 예외 없이 조용히 아무 일도 안 하고 넘어간다. **§1이 풀리면 이 호출은
+손 안 대도 그대로 작동하고, 그때 가서 새로 걸리는 문제는 "받은 포인트를 쓸 상점이 아직
+없다"(`UnitTraitData.costTraitPoints`를 읽어 `Unlock()`을 부르는 코드 0건)이다.** 스토리
+12(코드잇) 클리어 쪽(`RewardDistributor.cs`)도 같은 이유로 같은 상태다.
 
 ## ⑤ `StoryRewardData` → `WispReward` 개명 — **도달**
 
@@ -531,7 +535,7 @@ PirateQuestManager.NextAttempt(quest, playerId) → attemptCounts에서 +1해서
 | 해적단 퀘스트(매니저+포탈 7종) | **도달** | 없음 — 씬까지 확인됨 |
 | 적 이감(AddSlow) | **반쪽** | 거는 쪽이 0건 |
 | 적 자연회복 구조 | **도달** | 없음. 값은 바제스만 |
-| 피카 특성포인트 | **자리만 있음** | `UnitUpgrades` 배선 자체가 여전히 없음(09-04와 동일) |
+| 피카 특성포인트(+스토리12) | **반쪽** | 지급 호출은 이어짐, `UnitUpgrades` 배선(§1) 자체가 여전히 없음 |
 | `StoryRewardData`→`WispReward` | **도달** | 없음 |
 | 도움소 폭우/마나환급 | **미검증** | 구현담당2 소관, 이번엔 안 봄 |
 | 해적단 재도전 스케일링 | **자리만 있음** | 토큰 재획득 경로가 없어 시도 횟수가 항상 1 |
