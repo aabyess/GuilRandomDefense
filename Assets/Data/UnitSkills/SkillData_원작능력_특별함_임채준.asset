@@ -12,12 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_특별함_임채준
   m_EditorClassIdentifier:
-  skillName: A0SQ !작살-크로
-  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 특별함 캡틴 크로 백계 - 특별함(A0SQ !작살-크로)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. ⚠️ 피해배수·추가피해가 둘 다 0 — 원작 능력 자체가 피해가 아니라 다른 효과(이동·구속 등)였을 수 있다 — 지어내지 않고 그대로 옮겼다.
+  skillName: A05E !마기탄
+  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 특별함 버기 특제 마기탄 - 특별함(h015)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 uid 그룹 총점(능력 기대값 합), 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. 능력마다 발동확률이 다르면 가장 높은 값을 대표로 썼다(SkillLevel 하나엔 triggerChance 하나뿐이라서 — 과소 계상보다 안전한 근사).
+  · A05E !마기탄: 발동0.3 배수0.0 추가800.0
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.2
+    triggerChance: 0.3
     range: 0
     effects:
     - kind: 0
@@ -26,7 +27,7 @@ MonoBehaviour:
       damageType: 1
       attackType: 3
       multiplier: 0.0
-      bonus: 0.0
+      bonus: 800.0
       chance: 1
       hitCount: 1
       duration: 0

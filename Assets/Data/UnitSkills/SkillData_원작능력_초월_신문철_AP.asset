@@ -13,23 +13,13 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_초월_신문철_AP
   m_EditorClassIdentifier:
   skillName: A0KE !숙련된 패기
-  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 초월함 몽키.D.루피 명왕 레일리의 제자 - 초월함(A0KE !숙련된 패기)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. 96유닛 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv): 원작 무적의 아이언 파이러츠(H08Y)의 미수록 스킬 2개를 통째로 이 유닛에 배정했다(개별 대응 아님, 등급 안 DPS 순위 매칭).   · Franky_Skill_Mana1#1(MANA게이지100.00): 계산식 4000000.00   · Franky_misiile_re#1(1/14): 계산식 180000.00  ⚠️ 이 유닛의 Enemies 스킬 반경이 여럿(400, 425)이라 가장 작은 400로 통일했다(넓게 잡으면 원작보다 많이 맞는 쪽으로 어긋나서, 좁게 잡는 쪽이 상대적으로 안전하다) — 반경이 원래 더 넓었던 스킬은 실제보다 좁게 적용된다.  hitCount>1인 항목은 "같은 식이 원작에서 N번 반복"이지 우리 스키마의 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: 96유닛 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv): 원작 무적의 아이언 파이러츠(H08Y)의 미수록 스킬 2개를 통째로 이 유닛에 배정했다(개별 대응 아님, 등급 안 DPS 순위 매칭).   · Franky_Skill_Mana1#1(MANA게이지100.00): 계산식 4000000.00   · Franky_misiile_re#1(1/14): 계산식 180000.00  ⚠️ 이 유닛의 Enemies 스킬 반경이 여럿(400, 425)이라 가장 작은 400로 통일했다(넓게 잡으면 원작보다 많이 맞는 쪽으로 어긋나서, 좁게 잡는 쪽이 상대적으로 안전하다) — 반경이 원래 더 넓었던 스킬은 실제보다 좁게 적용된다.  hitCount>1인 항목은 "같은 식이 원작에서 N번 반복"이지 우리 스키마의 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.0625
     range: 400.0
     effects:
-    - kind: 0
-      basis: 3
-      target: 3
-      damageType: 1
-      attackType: 3
-      multiplier: 0.0
-      bonus: 625000.0
-      chance: 1
-      hitCount: 1
-      duration: 0
     - kind: 0
       basis: 0
       target: 2

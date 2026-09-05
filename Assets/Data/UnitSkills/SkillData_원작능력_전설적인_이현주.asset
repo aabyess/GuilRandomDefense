@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_전설적인_이현주
   m_EditorClassIdentifier:
   skillName: A0L4 !코비 체
-  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 전설적인 코비 세계의 운명을 바꾼 해군루키 - 전설적인(A0L4 !코비 체)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. | 2차 배정(트리거·더미 채널): 원작 전설적인 마샬.D.티치 검은수염 해적단 선장 "검은수염" - 전설적인(Trig_Legend26).
+  description: 원작 전설적인 마샬.D.티치 검은수염 해적단 선장 "검은수염" - 전설적인(Trig_Legend26). | 1채널 우선 배정(원작 전설적인 보아 핸콕 쿠사 해적단 선장 - 전설적인(h032)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시).
+  · A05S !매료매료 열매: 발동1.0 배수0.0 추가150000.0
   triggerType: 0
   levels:
   - cooldown: 0
@@ -21,22 +22,22 @@ MonoBehaviour:
     range: 0
     effects:
     - kind: 0
-      basis: 3
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 0.0
-      bonus: 200000.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 0
       basis: 2
       target: 3
       damageType: 1
       attackType: 1
       multiplier: 0.01
       bonus: 500000.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 3
+      target: 3
+      damageType: 1
+      attackType: 1
+      multiplier: 0.0
+      bonus: 150000.0
       chance: 1
       hitCount: 1
       duration: 0

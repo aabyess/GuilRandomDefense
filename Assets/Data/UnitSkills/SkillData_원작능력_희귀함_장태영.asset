@@ -13,23 +13,14 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_희귀함_장태영
   m_EditorClassIdentifier:
   skillName: A0JW !배리어 피스트
-  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 희귀함 바르토로메오 밀짚모자 해적단 광신도 - 희귀함(A0JW !배리어 피스트)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. | 2차 배정(트리거·더미 채널): 원작 희귀함 몽키.D.루피 기어서드 초신성 - 희귀함(Trig_Unique32). | 2차 배정(트리거·더미 채널): 원작 희귀함 몽키.D.루피 기어서드 초신성 - 희귀함(더미 경로 Trig_Unique32 → e0BR(U희귀함 루피 더미 3) → A0PC). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다.
+  description: 원작 희귀함 몽키.D.루피 기어서드 초신성 - 희귀함(Trig_Unique32). | 2차 배정(트리거·더미 채널): 원작 희귀함 몽키.D.루피 기어서드 초신성 - 희귀함(더미 경로 Trig_Unique32 → e0BR(U희귀함 루피 더미 3) → A0PC). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 1채널 우선 배정(원작 희귀함 몽키.D.루피 기어서드 초신성 - 희귀함(h01X)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시).
+  · A054 !고무고무 열매: 발동0.2 배수0.0 추가3000.0
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.17
     range: 0
     effects:
-    - kind: 0
-      basis: 3
-      target: 3
-      damageType: 1
-      attackType: 3
-      multiplier: 0.0
-      bonus: 6000.0
-      chance: 1
-      hitCount: 1
-      duration: 0
     - kind: 0
       basis: 0
       target: 3
@@ -57,6 +48,16 @@ MonoBehaviour:
       attackType: 3
       multiplier: 10000.0
       bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 3
+      target: 3
+      damageType: 1
+      attackType: 3
+      multiplier: 0.0
+      bonus: 3000.0
       chance: 1
       hitCount: 1
       duration: 0

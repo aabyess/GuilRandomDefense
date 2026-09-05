@@ -13,23 +13,13 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_초월_엄태웅_AD
   m_EditorClassIdentifier:
   skillName: A03W !패기의 검술
-  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 초월함 샹크스 마린포드 정상해전 종결자 - 초월함(A03W !패기의 검술)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. 96유닛 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv): 원작 정열의 요리사(H09G)의 미수록 스킬 3개를 통째로 이 유닛에 배정했다(개별 대응 아님, 등급 안 DPS 순위 매칭).   · Sandi_skill_1#2((게이트 없음)): 계산식 450000.00   · Sandi_skill_Mana2#1(MANA게이지115.00): 계산식 3330000.00   · Sandi_skill_Mana2#3(MANA게이지115.00): 계산식 2075000.00  hitCount>1인 항목은 "같은 식이 원작에서 N번 반복"이지 우리 스키마의 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: 96유닛 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv): 원작 정열의 요리사(H09G)의 미수록 스킬 3개를 통째로 이 유닛에 배정했다(개별 대응 아님, 등급 안 DPS 순위 매칭).   · Sandi_skill_1#2((게이트 없음)): 계산식 450000.00   · Sandi_skill_Mana2#1(MANA게이지115.00): 계산식 3330000.00   · Sandi_skill_Mana2#3(MANA게이지115.00): 계산식 2075000.00  hitCount>1인 항목은 "같은 식이 원작에서 N번 반복"이지 우리 스키마의 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.12
     range: 600.0
     effects:
-    - kind: 0
-      basis: 3
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 10.0
-      bonus: 500000.0
-      chance: 1
-      hitCount: 1
-      duration: 0
     - kind: 0
       basis: 0
       target: 3

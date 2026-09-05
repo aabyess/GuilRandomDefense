@@ -31,7 +31,6 @@ import sys
 from collections import defaultdict
 
 sys.path.insert(0, 'Tools')
-import generate_unit_ability_skills as gen1
 import generate_unit_skills_by_gate as gen_gate
 import regroup_skill_damage_by_unit as gen_regroup
 
@@ -94,13 +93,13 @@ def build_master_uid_map():
     return {r['유닛ID']: (r['로스터'], r['채널']) for r in rows}
 
 
-def _scan_master_uid_map():
-    """PRIORITY: 06번① > 게이트/회수 > 1채널 > 2채널. returns uid -> roster_base.
-
-    ⚠️ 이 함수를 직접 부르지 말 것 — build_master_uid_map()이 CSV를 읽는
-    쪽이고, 이건 그 CSV를 다시 만들 때만(Tools/regenerate_master_uid_map.py
-    경유) 쓴다.
-    """
+def _scan_ground_truth_entries():
+    """06번①·게이트/회수·2채널 — 전부 실제 파일을 스캔해서 얻는 신뢰 가능한 배정.
+    1채널은 여기 없다: 1채널은 CSV+로스터 claimed 상태를 다시 시뮬레이션해야만
+    나오는데(파일 자체엔 uid가 안 남는 옛 포맷이었다), 그 계산 자체가 지금 1채널을
+    고치는 쪽(regroup_unit_ability_skills.py)에서 순환 참조가 된다 — "이미 배정된
+    uid인가"를 물을 때 자기 자신의 낡은 추정치를 근거로 쓰면 안 된다.
+    returns {uid: [(roster_base, channel), ...]} (아직 우선순위 정리 전)."""
     entries = defaultdict(list)
 
     roster_texts = {f: open(f, encoding='utf-8').read() for f in glob.glob(f'{ROSTER_DIR}/*.asset')}
@@ -132,22 +131,53 @@ def _scan_master_uid_map():
         for hm in header_re.finditer(desc.group(1)):
             entries[hm.group(1)].append((roster_base, '게이트/회수'))
 
-    by_grade1, _, _ = gen1.load_csv_rows()
-    roster1 = gen1.load_roster()
-    for gname, genum in gen1.GRADE_ENUM.items():
-        ability_rows = by_grade1.get(gname, [])
-        eligible = sorted([u for u in roster1 if u['grade'] == genum and not u['claimed']],
-                           key=lambda u: -u['dps'])
-        n = min(len(ability_rows), len(eligible))
-        for i in range(n):
-            uid = ability_rows[i]['유닛ID']
-            base = eligible[i]['path'].split('/')[-1][:-6]
-            entries[uid].append((base, '1채널'))
+    # ⑤-0(2026-09-06) 이후 1채널도 파일 자체에 uid를 담는다(description에
+    # "원작 {등급} {유닛이름}({uid})의 발동확률..." 형태로, 게이트/회수와 같은
+    # header_re로 뽑힌다) — 더 이상 CSV+로스터를 재시뮬레이션할 필요가 없다.
+    for f in glob.glob('Assets/Data/UnitSkills/SkillData_원작능력_*.asset'):
+        text = open(f, encoding='utf-8').read()
+        desc = re.search(r'^  description: (.*)$', text, re.M)
+        if not desc:
+            continue
+        base_fname = f.split('/')[-1]
+        roster_base = base_fname[len('SkillData_원작능력_'):-len('.asset')]
+        for hm in header_re.finditer(desc.group(1)):
+            entries[hm.group(1)].append((roster_base, '1채널'))
 
     mapping2 = gen_regroup.snapshot_current_mapping()
     for uid, bases in mapping2.items():
         for b in bases:
             entries[uid].append((b, '2채널'))
+
+    return entries
+
+
+def scan_non_1chan_assignments():
+    """PRIORITY: 06번① > 게이트/회수 > 2채널 — 1채널을 뺀 3채널만. 1채널 자체를
+    재배정하는 쪽(regroup_unit_ability_skills.py)이 "이 uid가 이미 다른 채널에
+    배정됐는가"를 물을 때 쓴다(PM 지시, 2026-09-06 — "62개 중 상당수가 이미 다른
+    채널에 배정된 바로 그 원작 유닛"). returns uid -> (roster_base, channel)."""
+    entries = _scan_ground_truth_entries()
+    PRIORITY = ['06번①', '게이트/회수', '2채널']
+    resolved = {}
+    for uid, lst in entries.items():
+        for ch in PRIORITY:
+            hit = next((b for b, c in lst if c == ch), None)
+            if hit:
+                resolved[uid] = (hit, ch)
+                break
+    return resolved
+
+
+def _scan_master_uid_map():
+    """PRIORITY: 06번① > 게이트/회수 > 1채널 > 2채널. returns uid -> (roster_base, channel).
+
+    ⚠️ 이 함수를 직접 부르지 말 것 — build_master_uid_map()이 CSV를 읽는
+    쪽이고, 이건 그 CSV를 다시 만들 때만(Tools/regenerate_master_uid_map.py
+    경유) 쓴다. 1채널 항목도 이제(⑤-0, 2026-09-06 이후) _scan_ground_truth_entries()가
+    실제 파일에서 직접 긁어온다 — CSV+로스터 재시뮬레이션 필요 없음.
+    """
+    entries = _scan_ground_truth_entries()
 
     PRIORITY = ['06번①', '게이트/회수', '1채널', '2채널']
     resolved = {}
