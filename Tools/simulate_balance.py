@@ -91,6 +91,14 @@ KOREAN = {"Common": "흔함", "Uncommon": "안흔함", "Special": "특별함", "
           "Transcendent": "초월함", "Immortal": "불멸", "Eternal": "영원함", "OtherWorld": "다른세계",
           "RandomUnit": "랜덤유닛", "TranscendentWisp": "초월위습", "Transformed": "변화됨"}
 
+# TranscendentWisp는 등급이 아니다(UnitData.cs의 UnitGrade enum 선언 옆 주석, 사장님 확정
+# 2026-09-02) — Tier()가 반환하는 값은 연금술 분해방지 전용이라 실제 등급 서열 계산(최대
+# Tier·단계 수)에서 빼야 한다. 09-05 Tier 재배정으로 이 값이 8에서 99로 바뀌면서 예전에
+# 여기저기 박혀 있던 "9"/"8" 하드코딩이 전부 깨졌다 — 그래서 한 곳에서 유도해서 쓴다.
+NON_GRADE_TIER = TIER_OF["TranscendentWisp"]
+MAX_TIER = max(t for t in TIER_OF.values() if t != NON_GRADE_TIER)
+TIER_COUNT = MAX_TIER + 1
+
 
 # ---------------------------------------------------------------------------
 # 2. 로스터 239종 — attackPower/attackSpeed/damageType/critChance 등을 직접 읽는다.
@@ -136,7 +144,7 @@ def median_dps_by_tier(roster, damagetype_filter=None, with_bash=False):
         v = r["base_dps"] + (r["bash_dps"] if with_bash else 0.0)
         by_tier[r["tier"]].append(v)
     out = {}
-    for t in range(9):
+    for t in range(TIER_COUNT):
         vals = by_tier.get(t)
         out[t] = statistics.median(vals) if vals else None
     return out
@@ -280,9 +288,13 @@ def make_round_length_fn(rc):
 
 
 def tier_for_round(r, total_rounds=75):
-    """9단계 Tier를 전체 라운드에 고르게 배분한다 — 09-04 문서가 만든 가정을 그대로 재사용한다.
-    실제 뽑기 확률·라운드별 등급 분포와는 무관한 단순화다(문서 §⑤ 참고)."""
-    return min(8, (r - 1) * 9 // total_rounds)
+    """TIER_COUNT단계 Tier를 전체 라운드에 고르게 배분한다 — 09-04 문서가 만든 가정을 그대로
+    재사용한다. 실제 뽑기 확률·라운드별 등급 분포와는 무관한 단순화다(문서 §⑤ 참고).
+
+    09-05 Tier 확장 때 바뀐 건 "몇 단계로 나누는가"(9 → TIER_COUNT)뿐이다 — 가정 자체
+    (라운드를 등급 수만큼 고르게 나눈다는 단순화)는 그대로다. 이 가정이 결과를 얼마나
+    좌우하는지는 §10(tier_for_round 민감도 실험)에서 이미 따로 검증했다."""
+    return min(MAX_TIER, (r - 1) * TIER_COUNT // total_rounds)
 
 
 def run_backlog(enemies, wave_counts, round_length_fn, defense_armor,
@@ -326,7 +338,7 @@ def greedy_combine_dps_fn(median_table):
         changed = True
         while changed:
             changed = False
-            for t in range(8):
+            for t in range(MAX_TIER):
                 while counts[t] >= 2:
                     counts[t] -= 2
                     counts[t + 1] += 1
@@ -343,7 +355,7 @@ def local_optimal_dps_fn(median_table):
         changed = True
         while changed:
             changed = False
-            for t in range(8):
+            for t in range(MAX_TIER):
                 if counts[t] >= 2 and median_table.get(t + 1) and median_table[t + 1] >= median_table[t] * 2:
                     counts[t] -= 2
                     counts[t + 1] += 1
@@ -380,7 +392,7 @@ def main():
     # AP 표본이 0인 Tier는 ALL(그 Tier 전체) 중앙값으로 대신 채운다 — 우리 로스터에 그 등급
     # AP 유닛이 아예 없다는 뜻이라 사실상 그 Tier는 AD=ALL이다(§ 문서에 명시할 것).
     all_median = median_dps_by_tier(roster)
-    for t in range(9):
+    for t in range(TIER_COUNT):
         if ap_median[t] is None:
             ap_median[t] = all_median[t]
         if ad_median[t] is None:
@@ -388,11 +400,11 @@ def main():
 
     print("=== ① 등급별 median DPS (Tier(), UnitData.cs에서 직접 파싱) ===")
     print(f"{'Tier':6s}{'등급':20s}{'ALL':>10s}{'AD':>10s}{'AP':>10s}")
-    for t in range(9):
+    for t in range(TIER_COUNT):
         grades = ",".join(KOREAN[g] for g in GRADE_ENUM if TIER_OF.get(g) == t)
         print(f"T{t:<5d}{grades:20s}{all_median[t]:>10.0f}{ad_median[t]:>10.0f}{ap_median[t]:>10.0f}")
 
-    mono_breaks = [t for t in range(1, 9) if all_median[t] < all_median[t - 1]]
+    mono_breaks = [t for t in range(1, TIER_COUNT) if all_median[t] < all_median[t - 1]]
     print(f"\n⚠️ 단조성 깨지는 지점(ALL 기준): T{mono_breaks}" if mono_breaks else "\n단조 증가 확인됨(ALL 기준)")
     print("이건 시뮬레이션 가정이 아니라 로스터 실값이다 — 2026-09-05 구현담당2/구현담당1 교차 확인.")
 
