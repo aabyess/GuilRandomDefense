@@ -973,6 +973,15 @@ public class GameHud : MonoBehaviour
             nextUnitCommandDimRefreshTime = Time.time + RecipeRefreshInterval;
             HideCombineTooltip();
         }
+        else
+        {
+            // ⚠️ 2026-09-05: CanCombineNow는 자원만 보고 spawner==null·result.prefab==null은
+            // 안 봐서, 그 경우 버튼은 켜져 있는데 눌러도 여기로 빠져 완전 무반응이었다
+            // ("조용한 실패" #11). 구체적 원인은 CombineSystem.TryCombine이 이미
+            // Debug.LogWarning으로 남긴다(배선 오류라 플레이어가 할 수 있는 게 없다) —
+            // 여기서는 "눌렀는데 안 됐다"는 것만 화면에 알린다.
+            PlayerNotification.Show(LocalPlayer.LocalPlayerId, "지금은 조합할 수 없습니다.");
+        }
     }
 
     // 상점 칸 클릭. targetKind == None(마나포션, 도박 굴리기, 강화 구매 등)은 위치·대상이 필요
@@ -992,7 +1001,12 @@ public class GameHud : MonoBehaviour
 
         if (view.targetKind == LaneShopTargetKind.None)
         {
+            // ⚠️ 2026-09-05: TryUse가 false여도 예전엔 그냥 끝났다 — 눌렀는데 아무 일도
+            // 안 일어난 것처럼 보였다("조용한 실패" #10). ILaneShop.TryUse는 실패 사유를
+            // 안 돌려주므로(bool 하나뿐, 4개 상점 구현을 다 건드려야 해서 이번엔 인터페이스는
+            // 안 바꿨다) 여기서 알 수 있는 건 "지금은 못 쓴다"까지다 — 그래도 무반응보다는 낫다.
             if (currentShop.TryUse(logicalIndex, default)) RefreshShopAffordability();
+            else PlayerNotification.Show(LocalPlayer.LocalPlayerId, "지금은 사용할 수 없습니다.");
             return;
         }
 
@@ -1032,7 +1046,15 @@ public class GameHud : MonoBehaviour
         LaneShopTargetKind kind = pendingTargetKind;
         pendingSlotIndex = -1;
 
-        if (!WorldPick.TryHit(cam, Mouse.current.position.ReadValue(), out RaycastHit hit)) return;
+        // ⚠️ 2026-09-05: 아무것도 안 맞으면 예전엔 그냥 취소됐다("조용한 실패" #10) — 대상
+        // 지정 모드로 들어갔다가 빈 허공을 눌러서 조용히 풀리면, 방금 그게 취소인지 실패인지
+        // 플레이어가 구분할 수 없었다. "대상을 못 찾음"과 "대상은 찾았는데 실행이 안 됨"을
+        // 갈라서 알린다 — 플레이어가 할 행동이 다르다(다시 조준 vs 자원/조건 확인).
+        if (!WorldPick.TryHit(cam, Mouse.current.position.ReadValue(), out RaycastHit hit))
+        {
+            PlayerNotification.Show(LocalPlayer.LocalPlayerId, "대상을 찾을 수 없습니다.");
+            return;
+        }
 
         bool used;
         if (kind == LaneShopTargetKind.Unit)
@@ -1044,7 +1066,13 @@ public class GameHud : MonoBehaviour
             if (hit.collider.TryGetComponent(out Selectable selectable)) targetObject = selectable.gameObject;
             else if (hit.collider.TryGetComponent(out EnemyDummy enemyTarget)) targetObject = enemyTarget.gameObject;
 
-            used = targetObject != null && shop.TryUse(index, LaneShopTarget.OnUnit(targetObject));
+            if (targetObject == null)
+            {
+                PlayerNotification.Show(LocalPlayer.LocalPlayerId, "대상으로 쓸 수 없습니다.");
+                return;
+            }
+
+            used = shop.TryUse(index, LaneShopTarget.OnUnit(targetObject));
         }
         else
         {
@@ -1052,6 +1080,7 @@ public class GameHud : MonoBehaviour
         }
 
         if (used) RefreshShopAffordability();
+        else PlayerNotification.Show(LocalPlayer.LocalPlayerId, "지금은 사용할 수 없습니다.");
     }
 
     void OnUnitCommandSlotHoverEnter(int index)

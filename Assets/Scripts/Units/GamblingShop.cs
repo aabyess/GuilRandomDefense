@@ -315,10 +315,14 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 
         // 결과를 말해주지 않으면 눌러도 아무 일도 안 일어난 것처럼 보인다 — 0엔이 나오는
         // 판이 있어서 더 그렇다. 남은 횟수까지 같이 알려준다.
+        // ⚠️ 2026-09-05 정정: 이 주석이 스스로 문제를 지적해놓고 Debug.Log로만 고쳐뒀었다 —
+        // 콘솔은 플레이어가 안 본다. PlayerNotification으로 화면에 띄운다(구현담당3 정리,
+        // "조용한 실패" #13).
         int used = context.GamblingProgress != null ? context.GamblingProgress.UsesSoFar(option) : 0;
         string left = option.maxUses > 0 ? $", 남은 횟수 {option.maxUses - used}" : "";
-        Debug.Log($"[도박] {option.optionName}: {option.cost}엔 걸어 {amount}엔 " +
-                  $"({(amount >= option.cost ? "이득" : "손해")}). 보유 {context.GoldWallet.Gold}엔{left}");
+        PlayerNotification.Show(context.PlayerId,
+            $"{option.optionName}: {option.cost}엔 걸어 {amount}엔 " +
+            $"({(amount >= option.cost ? "이득" : "손해")}) 보유 {context.GoldWallet.Gold}엔{left}");
 
         return true;
     }
@@ -346,10 +350,15 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 
         // 골드를 먼저 뺀다. 자원을 먼저 빼고 골드가 모자라면 자원만 날아간다 —
         // CanRoll이 둘 다 봤어도 그 사이에 다른 경로로 골드가 줄 수 있다.
+        // ⚠️ 2026-09-05: 이 레이스는 실제로는 드물지만, 걸리면 예전엔 완전 침묵이었다 —
+        // 되돌림까지 해놓고 플레이어에게는 아무 표시가 없었다("조용한 실패" #3).
         if (option.goldCost > 0)
         {
             if (context.GoldWallet == null || !context.GoldWallet.TrySpend(option.goldCost))
+            {
+                PlayerNotification.Show(context.PlayerId, "골드가 부족합니다.");
                 return false;
+            }
         }
 
         if (context.ResourceWallet == null || !context.ResourceWallet.TrySpend(option.costResourceType, option.cost))
@@ -357,6 +366,7 @@ public class GamblingShop : MonoBehaviour, ILaneShop
             // 자원 차감이 실패하면 이미 빠진 골드를 되돌린다.
             if (option.goldCost > 0 && context.GoldWallet != null)
                 context.GoldWallet.Add(option.goldCost);
+            PlayerNotification.Show(context.PlayerId, "자원이 부족합니다.");
             return false;
         }
 
