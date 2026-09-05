@@ -81,8 +81,11 @@ public class UnitCombat : MonoBehaviour
         if (state == CombatState.Holding) state = CombatState.Idle;
     }
 
-    /// <summary>모으기(V). 걸어오지 않고 그 자리로 옮겨 세운다 — 원작이 그렇게 동작한다.</summary>
-    public void SnapTo(Vector3 position)
+    /// <summary>모으기(V). 걸어오지 않고 그 자리로 옮겨 세운다 — 원작이 그렇게 동작한다.
+    /// NavMesh에 못 올리면(자리 없음) 아무것도 안 바꾸고 false를 돌려준다 — 호출부가 실패를
+    /// 알아야 할 때(예: StoryReturnPortal) 쓴다. 기존 호출부(UnitCommands)는 반환값을
+    /// 그냥 무시해도 기존 동작 그대로다.</summary>
+    public bool SnapTo(Vector3 position)
     {
         // NavMesh 위로 끌어다 놓는다. 좌표를 그대로 믿고 Warp하면, 그 자리에 길이 안 깔려
         // 있을 때 에이전트가 NavMesh에서 떨어져 나가고 그 뒤로는 이동 명령이 조용히 무시된다.
@@ -92,7 +95,7 @@ public class UnitCombat : MonoBehaviour
             // 못 올렸으면 옮기지 않는다. 억지로 옮기면 움직일 수 없는 유닛이 되는데,
             // 그건 제자리에 남는 것보다 나쁘다 — 선택은 되는데 명령만 안 먹는다.
             Debug.Log($"[명령] {name}: {position} 근처에 설 자리가 없어 옮기지 않았습니다.", this);
-            return;
+            return false;
         }
 
         // 옮겨놓기만 하면 복귀 지점이 예전 자리로 남아, 적을 쫓고 나서 다시 흩어진다.
@@ -100,6 +103,7 @@ public class UnitCombat : MonoBehaviour
         currentTarget = null;
         state = CombatState.Idle;
         hasDestination = false;
+        return true;
     }
 
     // UnitMover가 우클릭 이동 명령을 받으면 이걸 부른다. 도착할 때까지 자동 추적을 멈춘다.
