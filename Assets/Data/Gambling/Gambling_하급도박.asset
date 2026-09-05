@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Gambling_하급도박
   m_EditorClassIdentifier:
   optionName: 하급도박
-  description: 250엔과 목재 1개를 걸고 흔함이나 안흔함 등급 유닛을 노린다. 성공률 85%.
+  description: 250엔과 목재 1개를 걸고 흔함이나 안흔함 등급 유닛을 노린다. 성공률 85%(원작: 15% 실패 → 성공 안에서 2% 확률로 해적선, 그 외 랜덤유닛 — 종합 1.70%/83.30%).
   category: 1
   costResourceType: 0
   cost: 1
@@ -21,6 +21,8 @@ MonoBehaviour:
   primaryResultGrade: 0
   useSecondaryGrade: 1
   secondaryResultGrade: 1
+  bonusUnit: {fileID: 11400000, guid: 860e71e31404af1467d7670305231b9f, type: 2}
+  bonusChancePercent: 2
   successGoldMin: 0
   successGoldMax: 0
   grantFailureReward: 0

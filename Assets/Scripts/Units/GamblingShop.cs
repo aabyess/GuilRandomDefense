@@ -387,7 +387,13 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         // 완전한 손실이 된다(UnitInventory가 인스턴스 등록부로 바뀌어 등록 경로가
         // UnitSpawner.Spawn 하나뿐이라 더 그렇다).
         UnitGrade resultGrade = default;
-        if (success)
+        // 원작 "유닛도박 초급/중급"은 성공(85%/70%) 안에서 다시 낮은 확률(2%/3.5%)로
+        // 해적선 같은 특정 유닛을 먼저 노린다 — 실패하면 그제서야 등급 풀로 넘어간다
+        // (0.85×0.02=1.70%, 0.70×0.035=2.45%). bonusUnit이 비어 있으면(기존 도박 옵션)
+        // 이 축을 안 타 예전과 똑같이 동작한다.
+        bool bonusHit = success && option.bonusUnit != null && option.bonusChancePercent > 0f
+                        && Random.Range(0f, 100f) < option.bonusChancePercent;
+        if (success && !bonusHit)
         {
             resultGrade = PickResultGrade(option);
             if (!HasPool(resultGrade))
@@ -424,7 +430,7 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 
         if (success)
         {
-            UnitData reward = gachaTable.RollFromGrade(resultGrade);
+            UnitData reward = bonusHit ? option.bonusUnit : gachaTable.RollFromGrade(resultGrade);
             unitSpawner.Spawn(reward, ResolveSpawnPosition(reward), owner.OwnerId);
         }
         else if (option.grantFailureReward)

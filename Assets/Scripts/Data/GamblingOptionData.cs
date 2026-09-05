@@ -35,6 +35,13 @@ public class GamblingOptionData : ScriptableObject
     public bool useSecondaryGrade;
     public UnitGrade secondaryResultGrade;
 
+    // 성공 시 등급 뽑기보다 먼저 굴리는 낮은 확률의 특정 유닛 보너스(원작 "유닛도박
+    // 초급/중급"의 해적선 — UnitPortal.bonusUnit/bonusChancePercent와 같은 모양).
+    // 비어 있으면(bonusUnit==null) 이 축을 안 쓴다 — 기존 도박 옵션은 그대로 동작한다.
+    [Header("성공 시 보너스 — Unit 카테고리 전용. 등급 풀보다 먼저 이 확률로 시도한다")]
+    public UnitData bonusUnit;
+    [Range(0f, 100f)] public float bonusChancePercent;
+
     [Header("결과 — Money 카테고리 (예: 0~100엔). 0이 나올 수도 있다")]
     public int successGoldMin;
     public int successGoldMax;
