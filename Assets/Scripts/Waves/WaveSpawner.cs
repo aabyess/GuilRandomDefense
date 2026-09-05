@@ -19,6 +19,11 @@ public class WaveSpawner : MonoBehaviour
     // 기존 동작에 영향이 없다(이벤트 그대로, 안 쓰면 안 부르는 것과 같다).
     public event System.Action<int, int> OnEnemySpawned;
 
+    // §⑧ 정산 — 보스를 스폰하기 직전에 "이 레인의 보스는 시작 체력을 몇 배로 해야 하는가"를
+    // 묻는다. SideBossManager가 자신을 구독시킨다(laneIndex → multiplier, 보통 1f).
+    // 아무도 안 구독하면(null) 항상 1f — 기존 동작과 완전히 같다(회귀 0).
+    public System.Func<int, float> BossStartHpMultiplierProvider;
+
     public void SpawnRound(WaveData wave)
     {
         if (!GameAuthority.IsServer) return;
@@ -76,7 +81,12 @@ public class WaveSpawner : MonoBehaviour
 
             for (int i = 0; i < entry.count; i++)
             {
-                SpawnEnemy(entry.enemyData, laneIndex, lanePath);
+                // §⑧ 정산 — 보스만 물어본다(일반 몹에 물으면 뜻이 없다, 공급자도 어차피
+                // 보스 라운드에만 1이 아닌 값을 준다).
+                float multiplier = entry.enemyData.isBoss
+                    ? (BossStartHpMultiplierProvider?.Invoke(laneIndex) ?? 1f)
+                    : 1f;
+                SpawnEnemyInternal(entry.enemyData, laneIndex, lanePath, multiplier);
                 OnEnemySpawned?.Invoke(laneIndex, spawnCounter);
                 spawnCounter++;
                 yield return new WaitForSeconds(entry.spawnInterval);
@@ -84,12 +94,7 @@ public class WaveSpawner : MonoBehaviour
         }
     }
 
-    void SpawnEnemy(EnemyData enemyData, int laneIndex, WaypointPath lanePath)
-    {
-        SpawnEnemyInternal(enemyData, laneIndex, lanePath);
-    }
-
-    GameObject SpawnEnemyInternal(EnemyData enemyData, int laneIndex, WaypointPath lanePath)
+    GameObject SpawnEnemyInternal(EnemyData enemyData, int laneIndex, WaypointPath lanePath, float startHpMultiplier = 1f)
     {
         GameObject instance = Instantiate(enemyData.prefab);
 
@@ -101,7 +106,7 @@ public class WaveSpawner : MonoBehaviour
 
         if (instance.TryGetComponent(out EnemyDummy dummy))
         {
-            dummy.Initialize(enemyData);
+            dummy.Initialize(enemyData, startHpMultiplier);
             dummy.SetLane(laneIndex);
         }
 

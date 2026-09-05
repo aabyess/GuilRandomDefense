@@ -168,13 +168,18 @@ public class EnemyDummy : MonoBehaviour
     }
 
     // WaveSpawner가 EnemyData 전체를 넘겨줄 수 있게 되면 이 오버로드로 전환 — 보상 지급에 필요한 데이터를 함께 보관한다.
-    public void Initialize(EnemyData enemyData)
+    //
+    // ⚠️ 2026-09-06 추가(신세계 사이드보스 §⑧ 정산) — startHpMultiplier 기본값 1f는 기존
+    // 호출부 전부와 동작이 완전히 같다(회귀 0). R65/70/75 라운드 보스만 SideBossManager가
+    // 저장해둔 사이드보스전 결과를 이 값으로 넘긴다(WaveSpawner.BossStartHpMultiplierProvider
+    // 참고).
+    public void Initialize(EnemyData enemyData, float startHpMultiplier = 1f)
     {
         data = enemyData;
         if (enemyData != null)
         {
-            hp = enemyData.hp;
-            MaxHp = enemyData.hp;
+            hp = enemyData.hp * startHpMultiplier;
+            MaxHp = enemyData.hp * startHpMultiplier;
 
             // 콜라이더가 걸린 루트가 아니라 시각 부위에만 곱한다(위 visualRoot 주석 참고).
             if (visualRoot != null)

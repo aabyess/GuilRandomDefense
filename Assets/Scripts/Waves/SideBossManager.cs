@@ -34,6 +34,11 @@ public class SideBossManager : MonoBehaviour
     // (스펙 §⑥ "초기화: 맵 시작 시 100").
     readonly float[] stunGauge = NewArray(100f);
 
+    // §⑧ 정산 — 그 플레이어의 "다음 보스 라운드(R65/70/75) 시작 체력 배율". 기본 1f
+    // (사이드보스전을 안 겪었으면 그대로) — 62/66/71을 거치면 실제 값으로 채워진다.
+    // WaveSpawner.BossStartHpMultiplierProvider가 이 배열을 그대로 읽는다.
+    readonly float[] nextBossStartHpMultiplier = NewArray(1f);
+
     // 이 라운드에서 이미 스폰했는지(레인별) — 스폰카운터가 15를 넘긴 뒤에도 계속 늘어나므로
     // 한 번만 트리거되게 막는다.
     readonly HashSet<int> spawnedLanesThisRound = new HashSet<int>();
@@ -48,12 +53,21 @@ public class SideBossManager : MonoBehaviour
 
     void OnEnable()
     {
-        if (waveSpawner != null) waveSpawner.OnEnemySpawned += HandleEnemySpawned;
+        if (waveSpawner != null)
+        {
+            waveSpawner.OnEnemySpawned += HandleEnemySpawned;
+            waveSpawner.BossStartHpMultiplierProvider = ProvideBossStartHpMultiplier;
+        }
     }
 
     void OnDisable()
     {
-        if (waveSpawner != null) waveSpawner.OnEnemySpawned -= HandleEnemySpawned;
+        if (waveSpawner != null)
+        {
+            waveSpawner.OnEnemySpawned -= HandleEnemySpawned;
+            if (waveSpawner.BossStartHpMultiplierProvider == (System.Func<int, float>)ProvideBossStartHpMultiplier)
+                waveSpawner.BossStartHpMultiplierProvider = null;
+        }
     }
 
     // §②·§203 Stage0 진입 — "그 라운드 스폰 카운터가 15일 때" 표시·시작한다. 우리는 "숨긴 채
@@ -106,10 +120,22 @@ public class SideBossManager : MonoBehaviour
         stunGauge[playerId] = value;
     }
 
-    // ⚠️ §⑧ 정산(다음 R65/70/75 보스 시작 체력에 반영)은 별도 커밋에서 연결한다 — 지금은
-    // 결과를 로그로만 남긴다(회귀 0, 아직 아무 데도 안 씀).
+    // §⑧ 정산 — 다음 R65/70/75 보스 시작 체력 배율을 저장해둔다.
+    // 보스체력% = 보스체력%×0.85 + 사이드보스체력%×0.15.
     void HandleEncounterFinished(int playerId, float sideBossHpPercent)
     {
-        Debug.Log($"SideBossManager: 플레이어 {playerId} 사이드보스전 종료 — 남은 체력 {sideBossHpPercent:F1}%.");
+        if (playerId < 0 || playerId >= MaxPlayers) return;
+        float multiplier = 0.85f + (sideBossHpPercent / 100f) * 0.15f;
+        nextBossStartHpMultiplier[playerId] = multiplier;
+    }
+
+    // WaveSpawner가 보스를 스폰하기 직전에 묻는다. 쓴 뒤엔 다음 보스를 위해 1f(기본, "사이드
+    // 보스전 없었음"과 같은 취급)로 되돌린다 — R65 결과가 R70·R75까지 계속 적용되면 안 된다.
+    float ProvideBossStartHpMultiplier(int laneIndex)
+    {
+        if (laneIndex < 0 || laneIndex >= MaxPlayers) return 1f;
+        float value = nextBossStartHpMultiplier[laneIndex];
+        nextBossStartHpMultiplier[laneIndex] = 1f;
+        return value;
     }
 }
