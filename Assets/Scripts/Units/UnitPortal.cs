@@ -43,6 +43,69 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
 
     readonly HashSet<Wisp> loggedRejectionFor = new HashSet<Wisp>();
 
+    // ⚠️ 2026-09-06 추가(리서치담당 원문 확인, Trig_Random_Base1) — 랜덤 위습 포탈의
+    // 흔함 9종 지급은 순수 균등 랜덤이 아니라 "7번 랜덤 + 8번째 확정"의 8회 주기다:
+    //   correction_Count[플레이어]==7이면 → 지금까지 가장 적게 나온 종류를 확정 지급하고
+    //     카운터 리셋(동률이면 번호 작은 쪽 — 원작이 1..9 순회라 그렇다)
+    //   아니면 → 카운터+1, 9종 균등 랜덤
+    //   해적선(bonusChancePercent)이 나온 뽑기는 이 카운터도 종류 집계도 안 올린다
+    //     (원작이 그 else 분기를 통째로 건너뛴다)
+    // 집계는 플레이어별·종류별로 게임 세션 내내 누적(라운드 무관, 세이브 파일 밖).
+    // 씬/MapGenerator를 새로 안 건드리려고 이 포탈 인스턴스 안에 상태를 둔다 — 이
+    // 메커니즘을 쓰는 포탈이 지금 하나뿐이라 인스턴스별 상태로 충분하다.
+    class CommonPityState
+    {
+        public int correctionCount;
+        public readonly List<int> pullCounts = new List<int>();
+    }
+    readonly Dictionary<int, CommonPityState> commonPityByPlayer = new Dictionary<int, CommonPityState>();
+
+    // 흔함 9종의 "종류 번호"는 원작 h001~h009 순서인데 그 9명(루피·조로·나미 등)이
+    // 우리 흔함 로스터와 이름 대응이 없다(스킬 배정 4채널 어디에도 없음 — 원작에서부터
+    // 능력이 없는 기본 유닛이라 CSV 자체에 안 나온다). 이름매핑은 이미 불가로 닫혀 있어,
+    // MainGachaTable의 흔함(등급0) pool에 저장된 순서를 "종류 1~9"로 그대로 쓴다(PM
+    // 지시: 대응이 애매하면 로스터 순서를 그대로 쓰고 사실만 남기라 — 진짜 원작 인물
+    // 대응이 아니라 지급 순서의 안정적인 기준일 뿐이다).
+    List<UnitData> CommonPityOrder()
+    {
+        if (gachaTable == null || gachaTable.entries == null) return null;
+        GachaTable.GradeEntry entry = gachaTable.entries.Find(e => e != null && e.grade == UnitGrade.Common);
+        return entry?.pool;
+    }
+
+    // 해적선이 아닌 정상 흔함 지급일 때만 부른다 — 카운터·집계는 여기서만 움직인다.
+    UnitData RollCommonWithPity(int ownerId)
+    {
+        List<UnitData> order = CommonPityOrder();
+        if (order == null || order.Count == 0) return gachaTable != null ? gachaTable.RollFromGrade(UnitGrade.Common) : null;
+
+        if (!commonPityByPlayer.TryGetValue(ownerId, out CommonPityState state))
+        {
+            state = new CommonPityState();
+            commonPityByPlayer[ownerId] = state;
+        }
+        while (state.pullCounts.Count < order.Count) state.pullCounts.Add(0);
+
+        int index;
+        if (state.correctionCount >= 7)
+        {
+            index = 0;
+            for (int i = 1; i < order.Count; i++)
+            {
+                if (state.pullCounts[i] < state.pullCounts[index]) index = i;
+            }
+            state.correctionCount = 0;
+        }
+        else
+        {
+            index = Random.Range(0, order.Count);
+            state.correctionCount++;
+        }
+        state.pullCounts[index]++;
+
+        return order[index];
+    }
+
     public void OnAfterDeserialize()
     {
         if (legacyGradeMigrated) return;
@@ -83,7 +146,7 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
     // isBonus: 이 결과가 bonusChancePercent 확률(1% 상붕카 등)에서 나왔는지. 이름으로
     // "상붕카인지" 판단하지 않고(사장님이 유닛 이름을 자주 바꾼다) 어느 뽑기 경로를 탔는지로
     // 직접 표시한다 — 호출부가 이 값으로 자리(우리 vs 레인 한가운데)를 정한다.
-    UnitData RollReward(UnitGrade grade, out bool isBonus)
+    UnitData RollReward(UnitGrade grade, int ownerId, out bool isBonus)
     {
         isBonus = false;
         if (gachaTable == null) return null;
@@ -92,7 +155,17 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
         {
             UnitData bonus = bonusUnit != null ? bonusUnit : gachaTable.RollFromGrade(bonusGrade);
             // 보너스 등급 풀이 비어 있어도 뽑기 자체가 실패하면 안 된다 — 원래 등급으로 넘어간다.
+            // ⚠️ 보너스가 나온 뽑기는 아래 8회 천장 카운터·집계를 안 올린다(원작이 그 else
+            // 분기를 통째로 건너뛴다) — 그래서 이 return이 RollCommonWithPity보다 먼저다.
             if (bonus != null) { isBonus = true; return bonus; }
+        }
+
+        // 흔함 등급은 8회 천장이 있는 원작 랜덤 위습 포탈(Trig_Random_Base1) 전용 분기다.
+        // bonusUnit이 설정된 포탈만 이 메커니즘을 쓴다고 본다 — 지금 프로젝트에 그런
+        // 포탈이 이것 하나뿐이라 별도 플래그 없이 이 조합으로 충분히 구분된다.
+        if (grade == UnitGrade.Common && bonusUnit != null)
+        {
+            return RollCommonWithPity(ownerId);
         }
 
         return gachaTable.RollFromGrade(grade);
@@ -136,10 +209,17 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
             return;
         }
 
+        // 8회 천장 카운터가 플레이어별이라 RollReward보다 먼저 owner를 구해야 한다
+        // (예전엔 소환 직전에 구했는데, 그때는 아직 뽑기를 안 한 뒤였다).
+        int ownerId = wisp.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
+
+        // ⚠️ RollReward가 흔함 8회 천장이면 이 호출 자체가 카운터·집계를 이미 올린다 —
+        // 아래에서 unitSpawner/prefab 결손으로 취소돼도 되돌리지 않는다. 설정 오류로만
+        // 일어나는 경로라 실전에서는 안 걸릴 것으로 본다(정상 데이터엔 prefab이 다 있다).
         bool isBonusReward = false;
         UnitData reward = specificUnit != null
             ? specificUnit
-            : RollReward(overrideRewardGrade ? rewardGrade : grade, out isBonusReward);
+            : RollReward(overrideRewardGrade ? rewardGrade : grade, ownerId, out isBonusReward);
 
         if (reward == null)
         {
@@ -161,8 +241,6 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
             Debug.LogWarning($"UnitPortal: {reward.unitName}에 prefab이 없어 소환하지 못했습니다 — 위습을 소모하지 않았습니다.", this);
             return;
         }
-
-        int ownerId = wisp.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
 
         wisp.MarkConsumed();
         Destroy(wisp.gameObject);
