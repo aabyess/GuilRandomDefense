@@ -206,6 +206,9 @@ public class RoundManager : MonoBehaviour
         context.MarkDead();
         Debug.Log($"플레이어 {playerId + 1} 사망");
 
+        // 원작 udg_PlayerDeath[i]=1 분기의 같은 SetPlayerStateBJ(플레이어, GOLD, 0).
+        RewardDistributor.Instance?.ConfiscateGoldOnPlayerDefeated(context);
+
         if (context.UnitInventory != null)
         {
             // Consume()이 이 목록 자체를 지운다 — 돌면서 지우면 안 되니 스냅샷부터 뜬다.
@@ -350,6 +353,12 @@ public class RoundManager : MonoBehaviour
         if (waveData != null && waveData.IsBossRound)
         {
             Debug.Log($"보스 라운드! (라운드 {roundNumber})");
+
+            // 원작 Trig_Enemy_Boss_create/sinsekai: 보스 스폰 시점에 전원 골드 몰수
+            // ("보스 전에 다 써라"는 설계). 여기서 부르면 직전 라운드의 클리어 위습·
+            // 처치 보상(AdvanceRound가 StartRound보다 먼저 지급)은 이미 들어간 뒤라
+            // 순서가 원작과 같다 — 방금 받은 보상을 뺏는 게 아니다.
+            RewardDistributor.Instance?.ConfiscateGoldOnBossRoundStart();
         }
 
         if (waveSpawner != null && waveData != null)
