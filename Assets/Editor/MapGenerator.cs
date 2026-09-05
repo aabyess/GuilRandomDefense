@@ -1755,17 +1755,39 @@ public static class MapGenerator
 
     // ⚠️ 2026-09-05 정정(사장님 발견): 예전엔 zone.size×0.25(존 크기에 비례)였다 — 존이
     // 180×150으로 커지면서(2026-09-03, 1.5배) 착지점이 중심에서 58.6 떨어지게 됐는데,
-    // 로스터 최장 사거리가 47.5(최소 사거리는 30)라 **전 유닛이 못 때리는 자리**였다.
-    // "스토리존 가도 아무 일 없다"의 원인이 이거였다. 존 크기가 또 바뀌어도 사거리는
-    // 안 바뀌니, 이제 존 크기에 안 얽매이는 절대 거리로 고정한다 — 최소 사거리(30)보다
-    // 여유 있게 22(PM 권장치).
-    const float StoryZoneLandingDistance = 22f;
+    // 로스터 최장 사거리가 47.5라 **전 유닛이 못 때리는 자리**였다. "스토리존 가도 아무
+    // 일 없다"의 원인이 이거였다.
+    //
+    // ⚠️ 2차 정정(PM, 같은 날): 존 크기와 안 얽매이게 절대 거리로 바꾸며 처음엔 상수 22를
+    // 썼는데(그때 최소 사거리 30 기준 여유 8), 그 뒤 사거리에 등급 편차가 들어가면서
+    // (d04e91a) 최소 사거리가 22.2로 내려가 여유가 0.2로 사실상 사라졌다. **상수를 22→18로
+    // 다시 손으로 맞추면 사거리가 또 바뀔 때 같은 사고가 반복된다** — 그래서 상수 자체를
+    // 버리고 로스터 최소 사거리에서 매번 새로 구한다(배율 0.8만 고정 상수). 초월위습은
+    // 싸우지 않는 재료 유닛이라 attackRange=0이 정상이라 이 계산에서 제외한다.
+    const float StoryZoneLandingDistanceRatio = 0.8f;
+
+    static float MinRosterAttackRange()
+    {
+        float min = float.MaxValue;
+        foreach (string guid in AssetDatabase.FindAssets("t:UnitData", new[] { "Assets/Data/Units/Roster" }))
+        {
+            UnitData unit = AssetDatabase.LoadAssetAtPath<UnitData>(AssetDatabase.GUIDToAssetPath(guid));
+            if (unit == null || unit.grade == UnitGrade.TranscendentWisp) continue;
+            if (unit.attackRange <= 0f) continue;
+            if (unit.attackRange < min) min = unit.attackRange;
+        }
+        // 로스터를 못 찾는 극단적인 경우에만 쓰는 안전망 — 정상 실행에선 절대 안 걸린다.
+        return min < float.MaxValue ? min : 30f;
+    }
+
+    static float StoryZoneLandingDistance => MinRosterAttackRange() * StoryZoneLandingDistanceRatio;
 
     // 스토리존 한가운데 한 점에 네 레인이 전부 쏟아지면 겹친다(사장님이 지적한 흔함 칸
     // 겹침·개별 선택 문제와 같은 종류) — 레인마다 존 안의 네 귀퉁이로 살짝 나눠 보낸다.
     // 45도 대각선으로 등분해서(offset = distance/√2) 네 귀퉁이 모양은 그대로 유지한다 —
-    // 이웃한 두 착지점(예: 레인0·레인1, X부호만 다름) 사이 거리는 2×offset ≈ 31로,
-    // 유닛 하나가 다른 레인 자리까지 밀고 들어갈 일이 없다.
+    // 이웃한 두 착지점(예: 레인0·레인1, X부호만 다름) 사이 거리는 2×offset이다. 로스터
+    // 최소 사거리가 바뀌면 이 값도 같이 움직인다 — 사거리가 좁아져 이웃 간격이 너무
+    // 좁다 싶으면(대략 로스터 최소 사거리 미만) 이 45도 배치 자체를 넓히는 걸 검토할 것.
     static Vector3 StoryZoneLandingPoint(int laneIndex)
     {
         MapLayout.Island zone = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
