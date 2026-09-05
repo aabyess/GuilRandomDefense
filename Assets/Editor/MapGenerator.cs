@@ -2074,6 +2074,17 @@ public static class MapGenerator
         Collider collider = portal.GetComponent<Collider>();
         collider.isTrigger = true;
 
+        // ⚠️ 2026-09-05 정정(사장님이 게임을 돌려서 발견): 유니티 OnTriggerEnter는 둘 중
+        // 하나에 Rigidbody가 있어야 뜬다. UnitPrefab·WispPrefab은 자체 Rigidbody가 있어서
+        // 우연히 됐지만, 스킨 프리팹(Unit_idle, Unit_안흔함_상붕카 등)은 둘 다 없어 이
+        // 다섯 포탈(StoryZonePortal·UnitSellPortal·ResourcePortal·InterludeGate·UnitPortal,
+        // 전부 이 함수를 거친다) 전부가 그 유닛들에게 통째로 안 통했다. 포탈 쪽에 한 번만
+        // 붙이면 앞으로 어떤 프리팹이 와도(자체 Rigidbody 유무와 무관하게) 작동한다 —
+        // 스킨마다 따로 고치는 게 아니라 여기 한 곳이 근본 수정이다.
+        Rigidbody rb = portal.AddComponent<Rigidbody>();
+        rb.isKinematic = true;   // 없으면 포탈이 중력에 떨어진다
+        rb.useGravity = false;
+
         // 보이는 건 바닥에 깔린 납작한 원판이지만, 판정은 위아래로 높아야 한다.
         // 원판 두께(1)만 판정하면 몸이 떠 있는 위습이나 키 20짜리 유닛의 콜라이더가
         // 그 위를 지나가면서도 한 번도 닿지 않아, 포탈에 들어가도 아무 일이 없다.
