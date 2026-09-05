@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_전설적인_신지우
   m_EditorClassIdentifier:
   skillName: A0T0 !바닷물 가두기
-  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 전설적인 시키 금사자 - 전설적인(A0T0 !바닷물 가두기)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. ⚠️ 피해배수·추가피해가 둘 다 0 — 원작 능력 자체가 피해가 아니라 다른 효과(이동·구속 등)였을 수 있다 — 지어내지 않고 그대로 옮겼다. | 2차 배정(트리거·더미 채널): 원작 전설적인 코비 세계의 운명을 바꾼 해군루키 - 전설적인(Trig_Legend28koby). A11S(대상별 스킬피해 감수성) 계수는 보스 기준(×1.00)으로 고정 — 잡몹·소환체 대상엔 과다 계상될 수 있다. 2026-09-05 타입 정정(ORIGINAL_DAMAGE_TYPING.csv, 60b9797): 원작 ATTACK_TYPE_NORMAL은 이름과 달리 Spells 행이고 DAMAGE_TYPE_UNIVERSAL은 방어력을 뚫는다(우리 AP 대응) — generate_unit_skill_damage_effects.py의 배정을 재계산해 유닛ID+계산식으로 표와 대조, attackType/damageType을 정정했다.
+  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 전설적인 시키 금사자 - 전설적인(A0T0 !바닷물 가두기)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. ⚠️ 피해배수·추가피해가 둘 다 0 — 원작 능력 자체가 피해가 아니라 다른 효과(이동·구속 등)였을 수 있다 — 지어내지 않고 그대로 옮겼다. | 2차 배정(트리거·더미 채널): 원작 전설적인 트라팔가 로우 하트 해적단 선장 - 전설적인(Trig_Legend16sc).
   triggerType: 0
   levels:
   - cooldown: 0
@@ -33,10 +33,10 @@ MonoBehaviour:
     - kind: 0
       basis: 2
       target: 3
-      damageType: 2
+      damageType: 1
       attackType: 1
-      multiplier: 0.27
-      bonus: 0.0
+      multiplier: 0.15
+      bonus: 10000.0
       chance: 1
       hitCount: 1
       duration: 0

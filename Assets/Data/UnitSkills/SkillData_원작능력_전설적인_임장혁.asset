@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_전설적인_임장혁
   m_EditorClassIdentifier:
   skillName: A0IS !화이트 블로우
-  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 전설적인 스모커 집념의 해군 중장 - 전설적인(A0IS !화이트 블로우)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. | 2차 배정(트리거·더미 채널): 원작 전설적인 Dr.히루루크 나라를 치료한 의사 - 전설적인(Trig_Legend29). 2026-09-05 타입 정정(ORIGINAL_DAMAGE_TYPING.csv, 60b9797): 원작 ATTACK_TYPE_NORMAL은 이름과 달리 Spells 행이고 DAMAGE_TYPE_UNIVERSAL은 방어력을 뚫는다(우리 AP 대응) — generate_unit_skill_damage_effects.py의 배정을 재계산해 유닛ID+계산식으로 표와 대조, attackType/damageType을 정정했다.
+  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 전설적인 스모커 집념의 해군 중장 - 전설적인(A0IS !화이트 블로우)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. | 2차 배정(트리거·더미 채널): 원작 전설적인 골.D.에이스 해적왕의 아들 - 전설적인(Trig_Legend18). | 2차 배정(트리거·더미 채널): 원작 전설적인 골.D.에이스 해적왕의 아들 - 전설적인(Trig_Legend18). | 2차 배정(트리거·더미 채널): 원작 전설적인 골.D.에이스 해적왕의 아들 - 전설적인(더미 경로 Trig_Legend18 → e0DB(!전설 에이스 더미2) → A0BK). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 2차 배정(트리거·더미 채널): 원작 전설적인 골.D.에이스 해적왕의 아들 - 전설적인(더미 경로 Trig_Legend18 → e0IP(!전설 에이스 더미1) → A0BK). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -31,11 +31,71 @@ MonoBehaviour:
       hitCount: 1
       duration: 0
     - kind: 0
-      basis: 1
+      basis: 0
       target: 3
       damageType: 2
-      attackType: 4
-      multiplier: 0.5
+      attackType: 6
+      multiplier: 400000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 6
+      multiplier: 200000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 1
+      multiplier: 900.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 6
+      multiplier: 400000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 6
+      multiplier: 200000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 1
+      multiplier: 900.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 1
+      multiplier: 900.0
       bonus: 0.0
       chance: 1
       hitCount: 1

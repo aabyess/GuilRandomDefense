@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_전설적인_임채민
   m_EditorClassIdentifier:
   skillName: A03X !패기의 검술
-  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 전설적인 샹크스 사황 '붉은머리' - 전설적인(A03X !패기의 검술)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. | 2차 배정(트리거·더미 채널): 원작 전설적인 몽키.D.루피 나이트메어 - 전설적인(Trig_Legend22). 2026-09-05 타입 정정(ORIGINAL_DAMAGE_TYPING.csv, 60b9797): 원작 ATTACK_TYPE_NORMAL은 이름과 달리 Spells 행이고 DAMAGE_TYPE_UNIVERSAL은 방어력을 뚫는다(우리 AP 대응) — generate_unit_skill_damage_effects.py의 배정을 재계산해 유닛ID+계산식으로 표와 대조, attackType/damageType을 정정했다. 96유닛 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv): 원작 빈스모크 레이쥬 포이즌 핑크 - 전설적인(h033)의 미수록 스킬 1개를 통째로 이 유닛에 배정했다(개별 대응 아님, 등급 안 DPS 순위 매칭).   · Legend19_0#1(1/10): 계산식 100000.00  hitCount>1인 항목은 "같은 식이 원작에서 N번 반복"이지 우리 스키마의 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 전설적인 샹크스 사황 '붉은머리' - 전설적인(A03X !패기의 검술)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. | 2차 배정(트리거·더미 채널): 원작 전설적인 로브 루치 생명귀환 지회무신 - 전설적인(Trig_Legend21sc). | 2차 배정(트리거·더미 채널): 원작 전설적인 로브 루치 생명귀환 지회무신 - 전설적인(Trig_Legend21sc). A11S(대상별 스킬피해 감수성) 계수는 보스 기준(×1.00)으로 고정 — 잡몹·소환체 대상엔 과다 계상될 수 있다. | 2차 배정(트리거·더미 채널): 원작 전설적인 로브 루치 생명귀환 지회무신 - 전설적인(Trig_Legend21sc).
   triggerType: 0
   levels:
   - cooldown: 0
@@ -42,12 +42,57 @@ MonoBehaviour:
       duration: 0
     - kind: 0
       basis: 0
-      target: 2
+      target: 3
+      damageType: 1
+      attackType: 5
+      multiplier: 345000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 2
+      target: 3
+      damageType: 1
+      attackType: 3
+      multiplier: 0.3
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 5
+      multiplier: 345000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      randMin: 1
+      randMax: 2
+    - kind: 0
+      basis: 2
+      target: 3
+      damageType: 1
+      attackType: 3
+      multiplier: 0.3
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      randMin: 1
+      randMax: 2
+    - kind: 0
+      basis: 0
+      target: 3
       damageType: 2
-      attackType: 7
+      attackType: 6
       multiplier: 100000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
       duration: 0
-      casterBuffCountFactor: 0
+      randMin: 1
+      randMax: 2

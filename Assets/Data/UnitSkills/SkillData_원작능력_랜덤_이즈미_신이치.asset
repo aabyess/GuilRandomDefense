@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_랜덤_이즈미_신이치
   m_EditorClassIdentifier:
   skillName: A0H6 !슈타인베르거
-  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 랜덤전용 센토 이스즈 - 랜덤전용(A0H6 !슈타인베르거)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. ⚠️ 피해배수·추가피해가 둘 다 0 — 원작 능력 자체가 피해가 아니라 다른 효과(이동·구속 등)였을 수 있다 — 지어내지 않고 그대로 옮겼다. | 2차 배정(트리거·더미 채널): 원작 랜덤전용 이사야마 요미 - 랜덤전용(Trig_yomi2). 2026-09-05 타입 정정(ORIGINAL_DAMAGE_TYPING.csv, 60b9797): 원작 ATTACK_TYPE_NORMAL은 이름과 달리 Spells 행이고 DAMAGE_TYPE_UNIVERSAL은 방어력을 뚫는다(우리 AP 대응) — generate_unit_skill_damage_effects.py의 배정을 재계산해 유닛ID+계산식으로 표와 대조, attackType/damageType을 정정했다. 96유닛 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv): 원작 키쿄우 - 랜덤전용[제한됨](h0BF)의 미수록 스킬 9개를 통째로 이 유닛에 배정했다(개별 대응 아님, 등급 안 DPS 순위 매칭).   · kikoyou_hp#3(LIFE게이지50.00 AND 버프B06B==true): 계산식 (GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unit   · kikoyou_hp#4(LIFE게이지50.00 AND 버프B06B==true): 계산식 1000000.00   · kikoyou_mana#1(LIFE게이지50.00 AND MANA게이지85.00): 계산식 300000.00   · kikoyou_mana#2(LIFE게이지50.00 AND MANA게이지85.00): 계산식 100000.00   · kikoyou_skill_1#1(LIFE게이지50.00 AND 1/6): 계산식 350000.00   · kikoyou_skill_1#2(LIFE게이지50.00 AND 1/6): 계산식 (GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unit   · kikoyou_skill_1#3(LIFE게이지50.00 AND 1/6): 계산식 (GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_unit   · kikoyou_skill_1#4(LIFE게이지50.00 AND 1/6): 계산식 350000.00   · kikoyou_skill_2#1(LIFE게이지50.00 AND 1/16): 계산식 125000.00  ⚠️ 이 유닛의 Enemies 스킬 반경이 여럿(375, 425, 525)이라 가장 작은 375로 통일했다(넓게 잡으면 원작보다 많이 맞는 쪽으로 어긋나서, 좁게 잡는 쪽이 상대적으로 안전하다) — 반경이 원래 더 넓었던 스킬은 실제보다 좁게 적용된다.  hitCount>1인 항목은 "같은 식이 원작에서 N번 반복"이지 우리 스키마의 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 랜덤전용 센토 이스즈 - 랜덤전용(A0H6 !슈타인베르거)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 능력 기대값, 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. ⚠️ 피해배수·추가피해가 둘 다 0 — 원작 능력 자체가 피해가 아니라 다른 효과(이동·구속 등)였을 수 있다 — 지어내지 않고 그대로 옮겼다. | 2차 배정(트리거·더미 채널): 원작 랜덤전용 나루토 선인모드 - 랜덤전용(더미 경로 Trig_Naruto1 → e0CL(R랜유 대옥나선환 더미) → A0LF). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 2차 배정(트리거·더미 채널): 원작 랜덤전용 나루토 선인모드 - 랜덤전용(더미 경로 Trig_Naruto1 → e0CJ(R랜유 풍둔 나선 수리검 더미) → A0LG). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -130,12 +130,31 @@ MonoBehaviour:
       casterBuffCountFactor: 0
     - kind: 0
       basis: 0
-      target: 2
-      damageType: 2
-      attackType: 7
-      multiplier: 125000.0
+      target: 3
+      damageType: 1
+      attackType: 3
+      multiplier: 450000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
       duration: 0
-      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 3
+      multiplier: 450000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 3
+      multiplier: 180000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0

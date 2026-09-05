@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_전설적인_박성호
   m_EditorClassIdentifier:
-  skillName: Trig_Legend9
-  description: 원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 전설적인 스모커 집념의 해군 중장 - 전설적인(Trig_Legend9)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 전설적인 스모커 집념의 해군 중장 - 전설적인(Trig_Legend9). 2026-09-05 타입 정정(ORIGINAL_DAMAGE_TYPING.csv, 60b9797): 원작 ATTACK_TYPE_NORMAL은 이름과 달리 Spells 행이고 DAMAGE_TYPE_UNIVERSAL은 방어력을 뚫는다(우리 AP 대응) — generate_unit_skill_damage_effects.py의 배정을 재계산해 유닛ID+계산식으로 표와 대조, attackType/damageType을 정정했다.
+  skillName: Trig_Legend0
+  description: 원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 전설적인 몽키.D.루피 '기어 2' Jet 개틀링 - 전설적인(Trig_Legend0)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 유닛 하나(행 1개)를 통째로 이 유닛에 배정했다(2026-09-06 유닛 단위 재배정, TEAM_RULES 뿌리 ⑮). | 2차 배정(트리거·더미 채널): 원작 전설적인 몽키.D.루피 '기어 2' Jet 개틀링 - 전설적인(Trig_Legend0).
   triggerType: 0
   levels:
   - cooldown: 0
@@ -23,10 +23,12 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 3
-      damageType: 2
-      attackType: 7
-      multiplier: 200000.0
+      damageType: 1
+      attackType: 3
+      multiplier: 47500.0
       bonus: 0.0
       chance: 1
       hitCount: 1
       duration: 0
+      randMin: 0.5
+      randMax: 2
