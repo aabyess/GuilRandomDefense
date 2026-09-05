@@ -1,0 +1,16 @@
+항목,원작,우리,차이,우선순위,상태
+GoldPlus 자료형,real (증가 +0.60/+0.30/+0.20/+0.20),int (GoldWallet.cs:13),"소수가 하나도 안 담긴다. 최대 1.30 → 1, 배수 3.30 → 3 = 10% 과소",높음,고쳐야 함
+GoldPlus 곱셈 순서,R2I(Gold_Math x (2 + Gold_Plus)) — 곱한 뒤 한 번만 버림,goldMath * (2 + (int)goldPlus) — 곱하기 전 버림,버림 위치가 다르다,높음,고쳐야 함
+GoldPlus +0.60,Trig_UnitJohabCounter: A04X 레벨==1 AND Nami_legend_Boolean==false,없음(항상 0),경로 미구현,중간,조건 확정됨
+GoldPlus +0.30,Trig_Forever_Bugi: 버기 포에버 AND 누적클리어>=10,없음,경로 미구현 (세이브 시스템 필요),낮음,조건 확정됨
+GoldPlus +0.20,Trig_Eternal_Nami: 나미 이터널 조합,없음,경로 미구현,중간,조건 확정됨
+GoldPlus +0.20,Trig_item_up: 포인트값 22 유닛이 아이템 I00Z 획득,없음,경로 미구현,중간,조건 확정됨
+시작 골드,AdjustPlayerStateBJ(20) + 솔로면 10 추가,startingGold = 30,우리 30은 솔로 기준값. 4인이면 20,중간,맵 기본 시작 자원(w3i)이 없어 총액은 [미확인]
+시작 목재,시작 루프에 목재 지급 코드 없음,목재 1,우리 값의 근거를 맵에서 못 찾음,낮음,[미확인]
+시작 위습,e0IX x4 + e0HP x1 = 5기,위습 5,없음,-,✅ 일치
+Gold_Math 공식,"1 + 2*(L/5) + 3*(L/6) - (L/10), 정수 나눗셈",ComputeGoldMath 동일,없음,-,✅ 일치
+지급 확률,"GetRandomInt(1,4)==3",KillGoldChance = 0.25f,없음,-,✅ 일치
+보스 보상 R10~60,600/1 1500/2 2500/2 3000/3 3000/4 4000/3,BossRewardByRound 동일,없음,-,✅ 일치
+스토리 골드 1~13,180 800 1000 2000 3000 4000 6000 8000 9000 10000 10000 10000 5000,Story01~13.goldReward 동일,없음,-,✅ 일치 13/13
+스토리 목재 1~13,0 0 0 1 1 3 4 4 5 4(+2) 4 3 3,미대조,확인 안 함,중간,[미확인]
+보스 진입 시 골드 몰수,"Enemy_Boss_create / Enemy_Boss_sinsekai 에서 SetPlayerState(GOLD, 0)",미확인,있으면 경제 곡선이 완전히 달라진다,높음,[미확인] — 다음 확인 1순위
