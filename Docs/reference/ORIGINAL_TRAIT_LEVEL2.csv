@@ -1,27 +1,27 @@
-번호,유닛ID,이름,비용,종류,대상,레벨2회수경로,레벨2값
-001,H090,검은수염,2,스킬승급,A0D0,특성 플래그 변수 → 강화 트리거,udg_Tichi_TR_AddInt=3 → Tichi_skill_4_tr: (피해 아님·추가 연출/효과)  ‖ 기본(Tichi_skill_4): (기본 피해 없음)
-002,H0B4,키드,3,스킬승급,A10F,특성 플래그 변수 → 강화 트리거,udg_bool_kid_tr=true → Kid_Skill_Mana_Tr: ((400000.00+s__TrigVariables__get_realD(GlobalTV))*(1+(s__TrigVariable[NORMAL/UNIVERSAL] / ((400000.00+s__TrigVariables__get_realD(GlobalTV))*(1+(s__TrigVariable[NORMAL/UNIVERSAL] / ((400000.00+s__TrigVariables__get_realD(GlobalTV))*(1+(s
-003,H08Y,프랑키,1,스킬승급,A069,특성 플래그 변수 → 강화 트리거,udg_bool_franky_tr=true → Franky_Skill_1: 500000.00[NORMAL/UNIVERSAL] / 400000.00[NORMAL/UNIVERSAL] / 250000.00[NORMAL/UNIVERSAL]  ‖ 기본(-): -
-004,H08W,루치,2,스킬승급,A0R2,특성 플래그 변수 → 강화 트리거,"udg_bool_lucchi_tr=true → Luchi_Skill_1_Kick2: 400000.00[MAGIC/UNIVERSAL] / 400000.00[MAGIC/UNIVERSAL] / (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(Glob[CHAOS/UNIVERSAL]  ‖ 기본(Luchi_Skill_1): (기본 피해 없음)"
-005,H08X,후지토라,2,스킬승급,A0GR,트리거 레벨==2 분기,레벨==2 → Huji_meteor: 315000.00[CHAOS/NORMAL]
-006,H096,로우,1,능력교체,A10S,특성 플래그 변수 → 강화 트리거,"udg_Law_Bool=true → Law_Skill_2_reinforce: (GetUnitStateSwap(UNIT_STATE_LIFE,udg_Hero[1])*(0.2))[CHAOS/UNIVERSAL]  ‖ 기본(Law_Skill_2): (GetUnitStateSwap(UNIT_STATE_LIFE,udg_Hero[1])*(0.2))[CHAOS/UNIVERSAL]"
-007,H08V,나미,2,능력교체,A107,특성 플래그 변수 → 강화 트리거,udg_NamiT_Bool=true → Nami_Skill_1: (300000.00+s__TrigVariables__get_realD(GlobalTV))[NORMAL/UNIVERSAL] / (450000.00+(s__TrigVariables__get_realD(GlobalTV)*1.50))[NORMAL/UNIVERSAL]  ‖ 기본(-): -
-008,H08U,시라호시,2,스킬승급,A0EQ,트리거 레벨==2 분기,레벨==2 → (더미 e04V 추가)
-009,H094,호킨스,2,능력교체,A0WK,교체 능력 자체(1·2차 표),교체 후 능력이 곧 값
-010,H09E,도플라밍고,3,스킬승급,A0AL,w3a 레벨2 값,ahdu:L1=4.5→L2=6 acdn:L1=6→L2=6.45
-011,H097,아오키지,2,변신,H0B1,건너뜀(PM 지시),
-012,H05N,타시기,1,순수스탯,—,건너뜀(PM 지시),
-013,H099,루피,3,능력교체,A0JU,교체 능력 자체(1·2차 표),교체 후 능력이 곧 값
-014,H098,로빈,2,능력교체,A0FL,교체 능력 자체(1·2차 표),교체 후 능력이 곧 값
-015,H09B,우솝,3,스킬승급,A0IE,w3a 레벨2 값,adur:L1=5→L2=7.5 ahdu:L1=5→L2=7.5 Nab4:L1=200000→L2=300000 Nab5:L1=200000→L2=300000 Nab3:L1=20→L2=25
-016,H091,쵸파,2,변신,H093,건너뜀(PM 지시),
-017,H095,아카이누,1,스킬승급,A0HG,레벨을 수치로 곱함,반복 횟수 = 5 + 레벨 → L2면 7회 (Bustercall_Etc1/Akainu_01)
-018,H09I,브룩,2,능력교체,A0R1,교체 능력 자체(1·2차 표),교체 후 능력이 곧 값
-019,H08Z,샹크스,2,능력교체,A136,교체 능력 자체(1·2차 표),교체 후 능력이 곧 값
-021,h04E,센고쿠,2,스킬승급,A0D8,트리거 레벨==2 분기,레벨==2 → (더미 e0K6 추가)
-022,h04G,제트,1,스킬승급,A09E,레벨을 수치로 곱함,"피해 = 레벨×100,000 + 200,000 → L2면 400,000 (Z_Skill_1)"
-023,h04C,거프,2,스킬승급,A0GY,트리거 레벨==2 분기,"레벨을 integerA에 담은 뒤 ==2로 분기(Trig_Garp_Mana2_Func004Func006C) → 추가 효과 크기 = 대상 버프 개수 × 0.03 (누적 스택 비례, 우리 축 밖)"
-024,h04D,드래곤,3,스킬승급,A0FS,트리거 「B00J 버프 미보유」 분기 + 절대쿨 8.5초,"레벨1 Dragon_Skill_1 = 1,000,000×2회 → 레벨2 Dragon_Skill_1_T = 1,250,000(반경 425 범위) + 최대체력×1.50(단일) + 최대체력×0.02(단일). 전부 NORMAL/UNIVERSAL. 게이트는 확률이 아니라 B00J 절대쿨 8.5초"
-025,h04B,시키,2,능력교체,A0T4,교체 능력 자체(1·2차 표),교체 후 능력이 곧 값
-026,h049,레일리,3,스킬승급,A0ES,w3a 레벨2 값 + 트리거 레벨==2 분기,Had1:L1=-20→L2=-25 ‖ 레벨==2 → (더미 4기 추가)
-028,h05C,핸콕,3,스킬승급,A0IN,레벨을 수치로 곱함,"⚠⚠ 축이 뒤집힌다: 간격 = 0.03 + 0.05/레벨 → L1=0.08, L2=0.055. 값이 작아지는 것이 강화다(더 자주 터진다). multiplier에 그대로 넣으면 강화가 약화가 된다 ⚠⚠"
+번호,유닛ID,이름,비용,종류,대상,레벨2회수경로,레벨2값,rand_배율_비1
+001,H090,검은수염,2,스킬승급,A0D0,특성 플래그 변수 → 강화 트리거,udg_Tichi_TR_AddInt=3 → Tichi_skill_4_tr: (피해 아님·추가 연출/효과)  ‖ 기본(Tichi_skill_4): (기본 피해 없음),해당없음(RRD 트리거 없음)
+002,H0B4,키드,3,스킬승급,A10F,특성 플래그 변수 → 강화 트리거,udg_bool_kid_tr=true → Kid_Skill_Mana_Tr: ((400000.00+s__TrigVariables__get_realD(GlobalTV))*(1+(s__TrigVariable[NORMAL/UNIVERSAL] / ((400000.00+s__TrigVariables__get_realD(GlobalTV))*(1+(s__TrigVariable[NORMAL/UNIVERSAL] / ((400000.00+s__TrigVariables__get_realD(GlobalTV))*(1+(s,배율 전부 1
+003,H08Y,프랑키,1,스킬승급,A069,특성 플래그 변수 → 강화 트리거,udg_bool_franky_tr=true → Franky_Skill_1: 500000.00[NORMAL/UNIVERSAL] / 400000.00[NORMAL/UNIVERSAL] / 250000.00[NORMAL/UNIVERSAL]  ‖ 기본(-): -,Franky_Skill_1#1:0.8~1.5(평균1.15) ; Franky_Skill_1#2:0.8~1.5(평균1.15) ; Franky_Skill_1#3:0.8~1.5(평균1.15) ; Franky_Skill_1#4:0.8~1.5(평균1.15)
+004,H08W,루치,2,스킬승급,A0R2,특성 플래그 변수 → 강화 트리거,"udg_bool_lucchi_tr=true → Luchi_Skill_1_Kick2: 400000.00[MAGIC/UNIVERSAL] / 400000.00[MAGIC/UNIVERSAL] / (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_unitB(Glob[CHAOS/UNIVERSAL]  ‖ 기본(Luchi_Skill_1): (기본 피해 없음)",배율 전부 1
+005,H08X,후지토라,2,스킬승급,A0GR,트리거 레벨==2 분기,레벨==2 → Huji_meteor: 315000.00[CHAOS/NORMAL],배율 전부 1
+006,H096,로우,1,능력교체,A10S,특성 플래그 변수 → 강화 트리거,"udg_Law_Bool=true → Law_Skill_2_reinforce: (GetUnitStateSwap(UNIT_STATE_LIFE,udg_Hero[1])*(0.2))[CHAOS/UNIVERSAL]  ‖ 기본(Law_Skill_2): (GetUnitStateSwap(UNIT_STATE_LIFE,udg_Hero[1])*(0.2))[CHAOS/UNIVERSAL]",배율 전부 1
+007,H08V,나미,2,능력교체,A107,특성 플래그 변수 → 강화 트리거,udg_NamiT_Bool=true → Nami_Skill_1: (300000.00+s__TrigVariables__get_realD(GlobalTV))[NORMAL/UNIVERSAL] / (450000.00+(s__TrigVariables__get_realD(GlobalTV)*1.50))[NORMAL/UNIVERSAL]  ‖ 기본(-): -,Nami_Skill_1#1:1~1.5(평균1.25) ; Nami_Skill_1#2:1~1.5(평균1.25)
+008,H08U,시라호시,2,스킬승급,A0EQ,트리거 레벨==2 분기,레벨==2 → (더미 e04V 추가),해당없음(RRD 트리거 없음)
+009,H094,호킨스,2,능력교체,A0WK,교체 능력 자체(1·2차 표),교체 후 능력이 곧 값,해당없음(RRD 트리거 없음)
+010,H09E,도플라밍고,3,스킬승급,A0AL,w3a 레벨2 값,ahdu:L1=4.5→L2=6 acdn:L1=6→L2=6.45,해당없음(RRD 트리거 없음)
+011,H097,아오키지,2,변신,H0B1,건너뜀(PM 지시),,해당없음(RRD 트리거 없음)
+012,H05N,타시기,1,순수스탯,—,건너뜀(PM 지시),,해당없음(RRD 트리거 없음)
+013,H099,루피,3,능력교체,A0JU,교체 능력 자체(1·2차 표),교체 후 능력이 곧 값,해당없음(RRD 트리거 없음)
+014,H098,로빈,2,능력교체,A0FL,교체 능력 자체(1·2차 표),교체 후 능력이 곧 값,해당없음(RRD 트리거 없음)
+015,H09B,우솝,3,스킬승급,A0IE,w3a 레벨2 값,adur:L1=5→L2=7.5 ahdu:L1=5→L2=7.5 Nab4:L1=200000→L2=300000 Nab5:L1=200000→L2=300000 Nab3:L1=20→L2=25,해당없음(RRD 트리거 없음)
+016,H091,쵸파,2,변신,H093,건너뜀(PM 지시),,해당없음(RRD 트리거 없음)
+017,H095,아카이누,1,스킬승급,A0HG,레벨을 수치로 곱함,반복 횟수 = 5 + 레벨 → L2면 7회 (Bustercall_Etc1/Akainu_01),해당없음(RRD 트리거 없음)
+018,H09I,브룩,2,능력교체,A0R1,교체 능력 자체(1·2차 표),교체 후 능력이 곧 값,해당없음(RRD 트리거 없음)
+019,H08Z,샹크스,2,능력교체,A136,교체 능력 자체(1·2차 표),교체 후 능력이 곧 값,해당없음(RRD 트리거 없음)
+021,h04E,센고쿠,2,스킬승급,A0D8,트리거 레벨==2 분기,레벨==2 → (더미 e0K6 추가),해당없음(RRD 트리거 없음)
+022,h04G,제트,1,스킬승급,A09E,레벨을 수치로 곱함,"피해 = 레벨×100,000 + 200,000 → L2면 400,000 (Z_Skill_1)",배율 전부 1
+023,h04C,거프,2,스킬승급,A0GY,트리거 레벨==2 분기,"레벨을 integerA에 담은 뒤 ==2로 분기(Trig_Garp_Mana2_Func004Func006C) → 추가 효과 크기 = 대상 버프 개수 × 0.03 (누적 스택 비례, 우리 축 밖)",해당없음(RRD 트리거 없음)
+024,h04D,드래곤,3,스킬승급,A0FS,트리거 「B00J 버프 미보유」 분기 + 절대쿨 8.5초,"레벨1 Dragon_Skill_1 = 1,000,000×2회 → 레벨2 Dragon_Skill_1_T = 1,250,000(반경 425 범위) + 최대체력×1.50(단일) + 최대체력×0.02(단일). 전부 NORMAL/UNIVERSAL. 게이트는 확률이 아니라 B00J 절대쿨 8.5초",배율 전부 1
+025,h04B,시키,2,능력교체,A0T4,교체 능력 자체(1·2차 표),교체 후 능력이 곧 값,해당없음(RRD 트리거 없음)
+026,h049,레일리,3,스킬승급,A0ES,w3a 레벨2 값 + 트리거 레벨==2 분기,Had1:L1=-20→L2=-25 ‖ 레벨==2 → (더미 4기 추가),해당없음(RRD 트리거 없음)
+028,h05C,핸콕,3,스킬승급,A0IN,레벨을 수치로 곱함,"⚠⚠ 축이 뒤집힌다: 간격 = 0.03 + 0.05/레벨 → L1=0.08, L2=0.055. 값이 작아지는 것이 강화다(더 자주 터진다). multiplier에 그대로 넣으면 강화가 약화가 된다 ⚠⚠",해당없음(RRD 트리거 없음)
