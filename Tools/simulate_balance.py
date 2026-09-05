@@ -450,6 +450,7 @@ SKILL_TRIGGER_TYPE_ENUM = parse_enum(_SKILL_DATA_CS, "SkillTriggerType")
 SKILL_EFFECT_BASIS_ENUM = parse_enum(_SKILL_DATA_CS, "SkillEffectBasis")
 SKILL_EFFECT_KIND_ENUM = parse_enum(_SKILL_DATA_CS, "SkillEffectKind")
 ONHIT_CHANCE_IDX = SKILL_TRIGGER_TYPE_ENUM.index("OnHitChance")
+ONHIT_COUNT_IDX = SKILL_TRIGGER_TYPE_ENUM.index("OnHitCount")
 CASTER_ATTACK_POWER_IDX = SKILL_EFFECT_BASIS_ENUM.index("CasterAttackPower")
 FLAT_BASIS_IDX = SKILL_EFFECT_BASIS_ENUM.index("Flat")
 MAX_HP_PERCENT_IDX = SKILL_EFFECT_BASIS_ENUM.index("TargetMaxHpPercent")
@@ -494,6 +495,12 @@ def load_skill_assets():
         cd_m = re.search(r"-\s*cooldown: ([\d.]+)", level0)
         cooldown = float(cd_m.group(1)) if cd_m else 0.0
 
+        # OnHitCount(게이지형) 전용 — ea2a579의 UnitAttacker 카운터와 같은 필드.
+        threshold_m = re.search(r"hitCountThreshold: (-?\d+)", level0)
+        hit_count_threshold = int(threshold_m.group(1)) if threshold_m else 0
+        reset_m = re.search(r"resetTo: (-?\d+)", level0)
+        reset_to = int(reset_m.group(1)) if reset_m else 0
+
         effects = []
         for em in re.finditer(
                 r"- kind: (\d+)\s*\n\s*basis: (\d+)\s*\n\s*target: \d+\s*\n\s*damageType: \d+\s*\n"
@@ -510,6 +517,8 @@ def load_skill_assets():
             "trigger_type_idx": trigger_type_idx,
             "trigger_chance": trigger_chance,
             "cooldown": cooldown,
+            "hit_count_threshold": hit_count_threshold,
+            "reset_to": reset_to,
             "effects": effects,
         }
     return skills
@@ -545,12 +554,12 @@ def skill_proc_rate(trigger_chance, attack_speed, cooldown):
 
 def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
     """이 유닛의 스킬이 기대 화력에 얼마를 더하는지 — §17(1차, CasterAttackPower만)에
-    §18(2차, Flat·%체력), §19(절대쿨 발동주기)를 더했다.
+    §18(2차, Flat·%체력), §19(OnHitChance 절대쿨), §20(OnHitCount 게이지형)을 더했다.
 
     ⚠️ %체력(TargetMaxHpPercent/TargetCurrentHpPercent)은 "적 HP에 비례"해서 고정
     dps 스칼라로 못 접는다 — 이번 라운드 적 HP를 알아야 값이 나온다. 그래서 두
     성분을 분리해서 돌려준다:
-      flat_dps    = 초당발동(skill_proc_rate) × Σ(효과확률×(공격력×배수+추가피해
+      flat_dps    = 초당발동(rate) × Σ(효과확률×(공격력×배수+추가피해
                     또는 배수)) — Flat·CasterAttackPower 성분. 기존 kills_capacity
                     식(÷hp)에 그대로 들어간다.
       percent_rate = 초당발동 × Σ(효과확률×배수) — **hp에 안 곱한 채로 반환한다.**
@@ -560,13 +569,25 @@ def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
                     (build_median_by_armor/run_backlog_dt 참고). UnitAttacker.
                     ResolveSkillEffectValue의 %체력 두 case가 bonus를 안 쓰는 것과
                     똑같이 여기서도 bonus는 무시한다.
-    OnHitChance가 아니면(쿨다운형·오라형·OnHitCount, PM 지시로 OnHitCount는 이번에도
-    적용 대상 아님 — 원작 동시 사례 미확인) 전부 0을 준다.
+
+    "초당발동(rate)"은 트리거 타입에 따라 갈린다:
+      OnHitChance → skill_proc_rate(절대쿨 포함, §19)
+      OnHitCount  → 1/((threshold-resetTo)×Δ) — ea2a579의 카운터(resetTo에서 시작,
+                    threshold 도달 시 발동 후 resetTo로 복귀)와 같은 의미다. **절대쿨은
+                    안 얹는다** — 원작에 게이지+절대쿨 동시 사례가 없다(97849de도
+                    OnHitCount는 그대로 뒀다).
+    그 외(CooldownAutoCast·Aura)는 전부 0을 준다.
     반환: (flat_dps, percent_rate, 대표 attack_type_idx 또는 None).
     """
     skill = SKILLS.get(skill_guid) if skill_guid else None
-    if skill is None or skill["trigger_type_idx"] != ONHIT_CHANCE_IDX:
+    if skill is None or skill["trigger_type_idx"] not in (ONHIT_CHANCE_IDX, ONHIT_COUNT_IDX):
         return 0.0, 0.0, None
+
+    if skill["trigger_type_idx"] == ONHIT_CHANCE_IDX:
+        rate = skill_proc_rate(skill["trigger_chance"], attack_speed, skill["cooldown"])
+    else:
+        period_hits = skill["hit_count_threshold"] - skill["reset_to"]
+        rate = (1.0 / (period_hits / attack_speed)) if period_hits > 0 and attack_speed > 0 else 0.0
 
     flat_per_hit = 0.0
     percent_per_hit = 0.0
@@ -584,7 +605,6 @@ def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
             percent_per_hit += eff["chance"] * eff["multiplier"]
             attack_type_idx = eff["attack_type_idx"]
 
-    rate = skill_proc_rate(skill["trigger_chance"], attack_speed, skill["cooldown"])
     return (rate * flat_per_hit,
             rate * percent_per_hit,
             attack_type_idx)
