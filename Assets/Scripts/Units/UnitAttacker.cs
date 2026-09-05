@@ -644,6 +644,17 @@ public class UnitAttacker : MonoBehaviour
             // TryCastOnHitSkill이 그 값을 이미 알고 있어서(AttackDamage), CastSkillLevel부터
             // 여기까지 recentAttackDamage로 그대로 흘려보내면 끝이었다. 새 훅이 필요 없었다.
             case SkillEffectBasis.ReceivedDamage: return recentAttackDamage * effect.multiplier + effect.bonus;
+            // 2026-09-06(PM 직접 배선, 구현담당3 무응답). 원작 "상수 x (1 + 0.01 x 이속 x 계수)"를
+            // 전개한 꼴이라 데이터 쪽 multiplier에 (상수 x 0.01 x 계수)가 들어온다. 대상이
+            // 없거나(target null) data가 아직 없으면 이속 0 -> bonus만 남는다.
+            // ⚠️ 야마토의 반비례 꼴은 여기 안 담긴다(SkillEffectBasis 주석 참고).
+            case SkillEffectBasis.TargetMoveSpeed:
+                return (target != null ? target.MoveSpeed : 0f) * effect.multiplier + effect.bonus;
+            // 시전자 게이지 비례. 지금은 마나 게이지만 읽는다 — 원작의 이 꼴 5행이 전부
+            // 부릉냐(마나)라서다. 게이지는 lazily 초기화되므로 아직 안 돌았으면 0이고,
+            // 그 경우 bonus만 남는다(원작의 "게이지 0" 상태와 같다).
+            case SkillEffectBasis.CasterGaugeValue:
+                return manaGaugeCounter * effect.multiplier + effect.bonus;
             default: return 0f;
         }
     }

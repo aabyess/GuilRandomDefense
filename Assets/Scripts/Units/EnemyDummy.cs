@@ -31,6 +31,10 @@ public class EnemyDummy : MonoBehaviour
 
     public float Hp => hp;
     public float MaxHp { get; private set; }
+
+    // 대상 이동속도 — SkillEffectBasis.TargetMoveSpeed가 읽는다(2026-09-06). data가 private
+    // 이라 노출만 새로 뚫었다. data가 아직 없으면 0 — 그 경우 그 basis는 bonus만 남는다.
+    public float MoveSpeed => data != null ? data.moveSpeed : 0f;
     public float HpRatio => MaxHp > 0f ? Mathf.Clamp01(hp / MaxHp) : 0f;
 
     // 라운드 보스 여부(OnBossKilled와 같은 판단 기준). 도움소 흡수(즉사기)가 보스를 못 잡게

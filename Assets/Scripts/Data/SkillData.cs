@@ -75,6 +75,27 @@ public enum SkillEffectBasis
     // UnitAttacker.ResolveSkillEffectValue가 recentAttackDamage 매개변수로 그 값을 그대로
     // 받아 쓴다 — CastSkillLevel 체인을 타고 흘러온다.
     ReceivedDamage,
+
+    // ⚠️ 맨 뒤에 추가 — 직렬화 순서를 지킨다. (2026-09-06, PM. 구현담당3 무응답으로 직접 배선)
+    // 원작 "상수 x (1 + 0.01 x 대상이속 x 계수)" 꼴 4행(다섯번째 황제 2 · 니카 2)을 담는다.
+    // 전개하면 `상수 + 대상이속 x (상수 x 0.01 x 계수)`라 우리 `기준값 x multiplier + bonus`
+    // 패턴에 그대로 맞는다 — 데이터 쪽에서 multiplier에 (상수 x 0.01 x 계수)를 넣는다.
+    // 대상 이속은 EnemyData.moveSpeed(EnemyDummy.MoveSpeed)라 새 데이터가 필요 없다.
+    //
+    // ⚠️ 야마토 1행은 여기 안 담긴다 — `0.83 + min(1.17, 90/(이속+0.01))`로 **반비례**이고
+    // 상한이 있다(느릴수록 셈, 최대 2.00배). 개별 처리 대상이다
+    // (Docs/reference/OUT_OF_AXIS_CLASSIFY.md 참고).
+    TargetMoveSpeed,
+
+    // 원작 "상수 x (1 + 0.005 x 시전자 현재 게이지)" 꼴 5행(부릉냐 h09N). 위와 같은 전개로
+    // `상수 + 게이지 x (상수 x 0.005)`가 되어 같은 패턴에 담긴다.
+    //
+    // ⚠️ 이름을 "마나"로 짓지 않는다(PM 지시). 원작 마나는 **평타 +1 AND E 스킬 +5** 두
+    // 경로인데 우리엔 E 경로가 없어 게이지가 원작보다 천천히 오른다 — 배율 상한(x1.745)에
+    // 덜 도달하는 **알려진 과소**다. E를 구현하면 그때 +5를 이 게이지에 이어야 한다.
+    // ⚠️ 지금은 마나 게이지만 읽는다 — 원작의 이 꼴을 쓰는 5행이 전부 부릉냐(마나)라서다.
+    // 체력 게이지 사례가 나오면 그때 level.gaugeKind를 여기까지 흘려보내야 한다.
+    CasterGaugeValue,
 }
 
 // 무엇을 하는 효과인가.
