@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작028_h05C
   m_EditorClassIdentifier:
   skillName: A0IN !파퓸 페뮤르
-  description: 06번① 순위배정 — 원작 #028 h05C "아마존릴리의 여제" 보아 핸콕, upro: 해당없음(영웅 유닛 아님 — 등급이 unam 끝 「-불멸의/영원한」 표기에 있음), 능력 A0IN(!파퓸 페뮤르). 스킬승급형: 레벨1→2로 '!파퓸 페뮤르'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). 2026-09-05 정정: 확률형이 아니라 게이지형(OnHitCount)이었다 — 추정(A0IN을 읽는 트리거가 이것뿐 — ORIGINAL_TRAIT_GATE_MAPPING.csv). ⚠️⚠️ 레벨업 시 간격이 0.03+0.05/레벨로 작아지는 게 강화다(역방향 스케일) — levels[1] 채울 때 "레벨업=더 큰 값"으로 정렬하면 뒤집힌다. 이번엔 levels[0]만 다룬다. 2026-09-05 정정(TRAIT_GATE_BLOCKED4.md): 트리거를 최상위 if 블록 단위로 다시 잘라보니 기존에 넣었던 더미 e0E3(Blo1=-0.15)는 「1/15==6」 블록의 별개 스킬이었다 — A0IN 본체가 아니었다. 게이트(175타 게이지)는 A0IN이 맞지만, 진짜 본체(hancock_skill_Mana, +arrow_h2·hancock_skill_9 동시 실행)의 수치는 아직 못 찾아 비운다 — 지어내지 않는다. 2026-09-05 재정정(리서치담당 3e55dc5 + PM 원문 대조): 진짜 A0IN 본체(hancock_skill_Mana) 값 확보 — Flat 300,000(Enemies range 760) + TargetMaxHpPercent×0.16(SingleTarget) + ResearchLevel×30,000+360,000(Enemies range 760, R01T 연구횟수 비례, CHAOS/NORMAL→AD/Chaos 관례). range 760은 ForGroup 반경. levels[1] 역스케일은 계속 보류. 2026-09-05 levels[1] 확인(ORIGINAL_TRAIT_LEVEL2.csv): ⚠⚠ 원작이 "간격=0.03+0.05/레벨"이라 L1=0.08초, L2=0.055초 — 값이 작아지는 게 강화다(더 자주 때린다). 우리 스키마엔 "간격" 축이 없어 hitCount/duration(간격=duration/hitCount)으로 발동 빈도를 옮겼다 — levels[0]과 같은 3효과를 hitCount=2·duration=0.11(=2×0.055)로 펼쳐 레벨2가 레벨1보다 반드시 세지게 했다. 실제 간격 비율(0.08/0.055≈1.45배)의 정밀한 재현은 아니고 방향성(더 자주 터진다)만 보존한 근사다.
+  description: 06번① 순위배정 — 원작 #028 h05C "아마존릴리의 여제" 보아 핸콕, upro: 해당없음(영웅 유닛 아님 — 등급이 unam 끝 「-불멸의/영원한」 표기에 있음), 능력 A0IN(!파퓸 페뮤르). 스킬승급형: 레벨1→2로 '!파퓸 페뮤르'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). 2026-09-05 정정: 확률형이 아니라 게이지형(OnHitCount)이었다 — 추정(A0IN을 읽는 트리거가 이것뿐 — ORIGINAL_TRAIT_GATE_MAPPING.csv). ⚠️⚠️ 레벨업 시 간격이 0.03+0.05/레벨로 작아지는 게 강화다(역방향 스케일) — levels[1] 채울 때 "레벨업=더 큰 값"으로 정렬하면 뒤집힌다. 이번엔 levels[0]만 다룬다. 2026-09-05 정정(TRAIT_GATE_BLOCKED4.md): 트리거를 최상위 if 블록 단위로 다시 잘라보니 기존에 넣었던 더미 e0E3(Blo1=-0.15)는 「1/15==6」 블록의 별개 스킬이었다 — A0IN 본체가 아니었다. 게이트(175타 게이지)는 A0IN이 맞지만, 진짜 본체(hancock_skill_Mana, +arrow_h2·hancock_skill_9 동시 실행)의 수치는 아직 못 찾아 비운다 — 지어내지 않는다. 2026-09-05 재정정(리서치담당 3e55dc5 + PM 원문 대조): 진짜 A0IN 본체(hancock_skill_Mana) 값 확보 — Flat 300,000(Enemies range 760) + TargetMaxHpPercent×0.16(SingleTarget) + ResearchLevel×30,000+360,000(Enemies range 760, R01T 연구횟수 비례, CHAOS/NORMAL→AD/Chaos 관례). range 760은 ForGroup 반경. levels[1] 역스케일은 계속 보류. 2026-09-05 levels[1] 확인(ORIGINAL_TRAIT_LEVEL2.csv): ⚠⚠ 원작이 "간격=0.03+0.05/레벨"이라 L1=0.08초, L2=0.055초 — 값이 작아지는 게 강화다(더 자주 때린다). 우리 스키마엔 "간격" 축이 없어 hitCount/duration(간격=duration/hitCount)으로 발동 빈도를 옮겼다 — levels[0]과 같은 3효과를 hitCount=2·duration=0.11(=2×0.055)로 펼쳐 레벨2가 레벨1보다 반드시 세지게 했다. 실제 간격 비율(0.08/0.055≈1.45배)의 정밀한 재현은 아니고 방향성(더 자주 터진다)만 보존한 근사다. 2026-09-05 타입 정정(ORIGINAL_DAMAGE_TYPING.csv, 60b9797): 원작 ATTACK_TYPE_NORMAL은 이름과 달리 Spells 행이고 DAMAGE_TYPE_UNIVERSAL은 방어력을 뚫는다(우리 AP에 대응) — 이 효과는 표에서 유닛ID+계산식으로 직접 확인해 attackType/damageType을 정정했다. 효과 3(ResearchLevel×연구횟수)은 CHAOS/NORMAL(방어무시 X)이라 이미 넣은 Chaos/AD가 맞다 — 변경 없음.
   triggerType: 3
   levels:
   - cooldown: 0
@@ -25,8 +25,8 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 2
-      damageType: 1
-      attackType: 1
+      damageType: 2
+      attackType: 7
       multiplier: 300000.0
       bonus: 0.0
       chance: 1
@@ -35,8 +35,8 @@ MonoBehaviour:
     - kind: 0
       basis: 1
       target: 3
-      damageType: 1
-      attackType: 1
+      damageType: 2
+      attackType: 7
       multiplier: 0.16
       bonus: 0.0
       chance: 1
@@ -61,8 +61,8 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 2
-      damageType: 1
-      attackType: 1
+      damageType: 2
+      attackType: 7
       multiplier: 300000.0
       bonus: 0.0
       chance: 1
@@ -71,8 +71,8 @@ MonoBehaviour:
     - kind: 0
       basis: 1
       target: 3
-      damageType: 1
-      attackType: 1
+      damageType: 2
+      attackType: 7
       multiplier: 0.16
       bonus: 0.0
       chance: 1

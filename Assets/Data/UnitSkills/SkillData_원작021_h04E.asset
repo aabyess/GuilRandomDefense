@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작021_h04E
   m_EditorClassIdentifier:
   skillName: A0D8 !부처의 일격 센불
-  description: 06번① 순위배정 — 원작 #021 h04E 센고쿠 해군원수 "부처님", upro: 해당없음(영웅 유닛 아님 — 등급이 unam 끝 「-불멸의/영원한」 표기에 있음), 능력 A0D8(!부처의 일격 센불). 스킬승급형: 레벨1→2로 '!부처의 일격 센불'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). 2026-09-05 정정: 확률형이 아니라 게이지형(OnHitCount)이었다 — 확정(ORIGINAL_TRAIT_GATE_MAPPING.csv — 특성 스킬 Seongoku_Skill_4는 74타 게이지. 앞서 검토했던 확률 게이트 3개(1/10·1/20·1/12)는 이 능력이 아니라 다른 스킬 것이었다.) 2026-09-05 정정(TRAIT_GATE_BLOCKED4.md): 트리거를 최상위 if 블록 단위로 다시 잘라보니 기존에 넣었던 효과 3개(TargetCurrentHpPercent 2개 + 더미 A0PL)는 「GetRandomInt(1,10)==6」 블록의 별개 스킬(Sengoku_Skill_Item)이었다 — A0D8 본체가 아니었다. 진짜 A0D8 본체(Seongoku_Skill_4)는 500,000 + 2,000,000(Flat, 공격타입 미확인이라 이 유닛 자신의 평타 타입으로 대신함)으로 교체한다. 게이트(74타 게이지, 리셋1)는 그대로 맞았다. 2026-09-05 levels[1] 확인(ORIGINAL_TRAIT_LEVEL2.csv): 레벨==2 분기에서 더미 e0K6(부처의 심판2) 추가 생성뿐, 수치가 없다 — 지어내지 않고 levels[1]은 계속 비워둔다.
+  description: 06번① 순위배정 — 원작 #021 h04E 센고쿠 해군원수 "부처님", upro: 해당없음(영웅 유닛 아님 — 등급이 unam 끝 「-불멸의/영원한」 표기에 있음), 능력 A0D8(!부처의 일격 센불). 스킬승급형: 레벨1→2로 '!부처의 일격 센불'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). 2026-09-05 정정: 확률형이 아니라 게이지형(OnHitCount)이었다 — 확정(ORIGINAL_TRAIT_GATE_MAPPING.csv — 특성 스킬 Seongoku_Skill_4는 74타 게이지. 앞서 검토했던 확률 게이트 3개(1/10·1/20·1/12)는 이 능력이 아니라 다른 스킬 것이었다.) 2026-09-05 정정(TRAIT_GATE_BLOCKED4.md): 트리거를 최상위 if 블록 단위로 다시 잘라보니 기존에 넣었던 효과 3개(TargetCurrentHpPercent 2개 + 더미 A0PL)는 「GetRandomInt(1,10)==6」 블록의 별개 스킬(Sengoku_Skill_Item)이었다 — A0D8 본체가 아니었다. 진짜 A0D8 본체(Seongoku_Skill_4)는 500,000 + 2,000,000(Flat, 공격타입 미확인이라 이 유닛 자신의 평타 타입으로 대신함)으로 교체한다. 게이트(74타 게이지, 리셋1)는 그대로 맞았다. 2026-09-05 levels[1] 확인(ORIGINAL_TRAIT_LEVEL2.csv): 레벨==2 분기에서 더미 e0K6(부처의 심판2) 추가 생성뿐, 수치가 없다 — 지어내지 않고 levels[1]은 계속 비워둔다. 2026-09-05 타입 정정(ORIGINAL_DAMAGE_TYPING.csv, 60b9797): 원작 ATTACK_TYPE_NORMAL은 이름과 달리 Spells 행이고 DAMAGE_TYPE_UNIVERSAL은 방어력을 뚫는다(우리 AP에 대응) — 이 효과는 표에서 유닛ID+계산식으로 직접 확인해 attackType/damageType을 정정했다.
   triggerType: 3
   levels:
   - cooldown: 0
@@ -25,8 +25,8 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 3
-      damageType: 1
-      attackType: 4
+      damageType: 2
+      attackType: 7
       multiplier: 500000.0
       bonus: 0.0
       chance: 1
@@ -35,8 +35,8 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 3
-      damageType: 1
-      attackType: 4
+      damageType: 2
+      attackType: 7
       multiplier: 2000000.0
       bonus: 0.0
       chance: 1
