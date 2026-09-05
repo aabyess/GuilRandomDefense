@@ -100,4 +100,13 @@ public class UnitTraitData : ScriptableObject
     // 아직 안 정했다(사장님 배정 대기) — 이 필드를 null로 비워두고 원작 유닛ID만
     // description에 적어 억지로 짝짓지 않는다.
     public UnitData transformIntoUnit;
+
+    // ⚠️ transformIntoUnit==null만으로는 "변신형인데 목적지가 아직 없다"와 "애초에 변신형이
+    // 아니다"를 못 가른다 — 그래서 따로 뒀다. GameHud의 특성강화 버튼이 이걸로 구매 자체를
+    // 막는다(06번, PM 지시 2026-09-05): 언락은 HashSet.Add라 되돌릴 수 없는데, 변신형은
+    // 실행 메커니즘(위 코멘트)이 아직 없어서 포인트만 나가고 아무 일도 안 일어난다 — 다른
+    // 23개(effects가 비어도 구조는 다 이어져 값이 오면 바로 동작)와 이 둘만 다르다.
+    // 06번③이 실제로 만들어지면 GameHud.RefreshTraitButton/OnTraitButtonClicked의
+    // "trait.isTransformType" 검사 두 줄을 지우면 풀린다.
+    public bool isTransformType;
 }

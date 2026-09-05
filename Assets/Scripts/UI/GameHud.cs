@@ -334,6 +334,23 @@ public class GameHud : MonoBehaviour
         UnitTraitData trait = identity.Data.trait;
         if (trait == null) { HideTraitButton(); return; }
 
+        // ⚠️ 변신형(트레잇 3종 중 2개)은 언락 자체는 되지만(HashSet.Add라 되돌릴 수 없다)
+        // 실제로 유닛을 바꾸는 실행 메커니즘이 아직 없다(06번③ 미착수, UnitTraitData.
+        // isTransformType 코멘트 참고) — 그대로 두면 포인트만 나가고 아무 일도 안 일어나는
+        // 게 버그와 구분이 안 된다(PM 지시, 2026-09-05). 숨기지 않고 사유를 보여준다 —
+        // 숨기면 "이 유닛엔 특성이 없다"로 읽힌다. 06번③이 생기면 이 if 블록만 지우면 풀린다.
+        if (trait.isTransformType)
+        {
+            traitButtonPanel.SetActive(true);
+            if (trait != lastTraitButtonTrait)
+            {
+                lastTraitButtonTrait = trait;
+                traitButtonText.text = $"{trait.traitName}\n변신은 준비 중입니다";
+                traitButtonComponent.interactable = false;
+            }
+            return;
+        }
+
         // 소유자가 없는 유닛(중립·디버그)은 특성포인트를 낼 플레이어가 없다 — 버튼을 안 보인다.
         if (!single.TryGetComponent(out OwnedByPlayer owner)) { HideTraitButton(); return; }
 
@@ -386,6 +403,10 @@ public class GameHud : MonoBehaviour
 
         UnitTraitData trait = identity.Data.trait;
         if (trait == null) return;
+
+        // 방어적 재확인 — 버튼이 non-interactable이라 정상 경로로는 여기까지 안 온다.
+        // 06번③이 생기면 이 줄만 지우면 풀린다(RefreshTraitButton의 같은 검사와 짝).
+        if (trait.isTransformType) return;
 
         if (!single.TryGetComponent(out OwnedByPlayer owner)) return;
 
