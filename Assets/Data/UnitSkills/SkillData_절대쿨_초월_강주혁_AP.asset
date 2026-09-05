@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_절대쿨_초월_강주혁_AP
   m_EditorClassIdentifier:
   skillName: 나미 — 5절대쿨
-  description: 5절대쿨 계열(ORIGINAL_GATED_SKILLS_14.csv, 우리표커버=미수록) 신규 배정 — 원작 H08V 나미(Nami_Skill_4), 버프 B012 미보유 + 3.5초 절대쿨. Flat 350,000(Enemies range 500, NORMAL→Spells, UNIVERSAL→AP). 버프 게이트는 축 밖이라 뺐다 — OnHitChance+cooldown=3.5로만 근사.
+  description: 5절대쿨 계열(ORIGINAL_GATED_SKILLS_14.csv, 우리표커버=미수록) 신규 배정 — 원작 H08V 나미(Nami_Skill_4), 버프 B012 미보유 + 3.5초 절대쿨. Flat 350,000(Enemies range 500, NORMAL→Spells, UNIVERSAL→AP). B012는 스킬 자기잠금 버프 — SkillLevel.cooldown=3.5가 이미 그 잠금을 표현하므로 forbiddenBuffId는 따로 안 썼다(PM 지시 2026-09-06, 379cfec).
   triggerType: 0
   levels:
   - cooldown: 3.5

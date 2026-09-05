@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_절대쿨_불멸_정윤식
   m_EditorClassIdentifier:
   skillName: 레일리 — 5절대쿨(Kick_1)
-  description: 5절대쿨 계열(ORIGINAL_GATED_SKILLS_14.csv, 우리표커버=미수록) 신규 배정 — 원작 h049 실버즈 레일리(Kick_1), 버프 B070 미보유 + 4.75초 절대쿨. 3효과: Flat 1,750,000(Enemies range 400) + 대상현재체력×0.15(SingleTarget) + Flat 787,500(SingleTarget). 전부 CHAOS/NORMAL→AD 그대로. ⚠️ 표에 완전히 같은 값이 "GetRandomInt(1,50)==1" 추가게이트로도 한 번 더 나오는데(중복인지 진짜 1/50 보너스인지 불확실) 화력이 2배가 될 위험이 있어 이번엔 "(절대쿨만)" 세트만 넣었다 — PM 확인 대기. skill을 skills[0]으로 옮기고(06번① Had1, ArmorBreak) 이 스킬을 추가했다.
+  description: 5절대쿨 계열(ORIGINAL_GATED_SKILLS_14.csv, 우리표커버=미수록) 신규 배정 — 원작 h049 실버즈 레일리(Kick_1), 버프 B070 미보유 + 4.75초 절대쿨. 3효과: Flat 1,750,000(Enemies range 400) + 대상현재체력×0.15(SingleTarget) + Flat 787,500(SingleTarget). 전부 CHAOS/NORMAL→AD 그대로. B070은 스킬 자기잠금 버프 — SkillLevel.cooldown=4.75가 이미 그 잠금을 표현하므로 forbiddenBuffId는 따로 안 썼다(PM 지시 2026-09-06, 379cfec). ⚠️ 표에 완전히 같은 값이 "GetRandomInt(1,50)==1" 추가게이트로도 한 번 더 나오는데(중복인지 진짜 1/50 보너스인지 불확실) 화력이 2배가 될 위험이 있어 이번엔 "(절대쿨만)" 세트만 넣었다 — PM 확인(레일리 1/50 중복은 확정 전엔 보류 유지가 맞다고 재확인, 2026-09-06). skill을 skills[0]으로 옮기고(06번① Had1, ArmorBreak) 이 스킬을 추가했다.
   triggerType: 0
   levels:
   - cooldown: 4.75

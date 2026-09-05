@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_절대쿨_랜덤_한마_바키
   m_EditorClassIdentifier:
   skillName: 뱌쿠야 — 5절대쿨
-  description: 5절대쿨 계열(ORIGINAL_GATED_SKILLS_14.csv, 우리표커버=미수록) 신규 배정 — 원작 h08I 쿠치키 뱌쿠야(Byakuya_E), 버프 B00K 미보유 + 14.0초 절대쿨. Flat 4,500,000(Enemies range 925, NORMAL→Spells, UNIVERSAL→AP). 버프 게이트는 축 밖이라 뺐다 — OnHitChance+cooldown=14.0으로만 근사(드래곤 h04D와 같은 패턴).
+  description: 5절대쿨 계열(ORIGINAL_GATED_SKILLS_14.csv, 우리표커버=미수록) 신규 배정 — 원작 h08I 쿠치키 뱌쿠야(Byakuya_E), 버프 B00K 미보유 + 14.0초 절대쿨. Flat 4,500,000(Enemies range 925, NORMAL→Spells, UNIVERSAL→AP). B00K는 스킬이 자기에게 거는 잠금 버프(드래곤 B00J와 같은 패턴) — SkillLevel.cooldown=14.0이 이미 그 잠금을 정확히 표현하므로 forbiddenBuffId는 따로 안 썼다(PM 지시 2026-09-06, 379cfec: 같은 잠금을 두 번 걸지 않는다).
   triggerType: 0
   levels:
   - cooldown: 14.0

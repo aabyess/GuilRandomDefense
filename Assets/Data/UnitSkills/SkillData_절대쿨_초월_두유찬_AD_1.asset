@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_절대쿨_초월_두유찬_AD_1
+  m_EditorClassIdentifier:
+  skillName: 사보 — 게이지(Sabo_Skill_1)
+  description: 5절대쿨 계열(ORIGINAL_GATED_SKILLS_14.csv, 우리표커버=미수록) 신규 배정 — 원작 H092 사보(Sabo_Skill_1), 버프 B00N. 게이트=MANA게이지==125.00. ⚠️ PM 계산: 원작 절대쿨 12.5초 — 마나게이지125는 평타 125타가 필요해(사보 공격속도로도 최소 31초, 현실 60~80초) 게이지 주기가 절대쿨보다 항상 길다 → 절대쿨은 재충전 시점에 이미 풀려 있어 사실상 무효, 생략해도 동작이 거의 안 바뀐다(근사가 아니라 무해 제거). OnHitCount(마나125, gaugeKind=Mana)만으로 게이팅. Flat 3,250,000(Enemies range 475, NORMAL→Spells, UNIVERSAL→AP)만 옮겼다 — 같은 게이트의 나머지 2행(RRD#2 HERO/NORMAL, RRD#3 CHAOS/UNIVERSAL)은 계산식에 realD와 UnitCountBuffsExBJ(버프개수)가 얽혀 있는데 표 자체가 식 중간에서 잘려(truncated) 완전한 수식이 없다 — 지어내지 않고 뺐다. B00N(절대쿨 자기잠금 버프)은 절대쿨 자체를 버렸으므로 forbiddenBuffId도 안 썼다 — 애초에 표현할 잠금이 없다(PM 지시 2026-09-06, 379cfec).
+  triggerType: 3
+  levels:
+  - cooldown: 0
+    triggerChance: 1.0
+    range: 475
+    hitCountThreshold: 125
+    resetTo: 1
+    gaugeKind: 0
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 3250000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
