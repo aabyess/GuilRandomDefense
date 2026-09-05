@@ -273,8 +273,14 @@ public class SupportShop : MonoBehaviour, ILaneShop
     // 시점에 즉시 깎는다, 명중 여부와 완전히 무관하게(이건 트리거가 아니라 엔진 규칙이다).
     // 이 코드베이스에 이미 있는 유일한 반례(TryDismantleUnit의 "등급 안 맞으면 마나 환불")가
     // 오히려 이 결론을 뒷받침한다 — 기본이 환불이었다면 그 한 스킬만 따로 환불 코드를 짤
-    // 이유가 없다. 그래서 순서는 그대로 두고, **맞은 대상이 0이면 알림만 띄운다**
-    // (자원을 먹고 아무 표시도 없이 끝나는 게 문제였지, 자원을 먹는 것 자체는 원작대로다).
+    // 이유가 없다.
+    //
+    // ⚠️ 이건 확인이 아니라 추론이다 — war3map.j에서 이 스킬들(폭우·지진 등) 각각을 시전하는
+    // 트리거 자체는 못 찾았다(찾은 건 udg_Manso의 존재와 "마나 비용이 시전 시점에 깎인다"는
+    // 워크3 엔진 규칙, 그리고 위 반례뿐). 그래서 순서는 그대로 두되, **맞은 대상이 0이면
+    // 알림만 띄운다**(자원을 먹고 아무 표시도 없이 끝나는 게 문제였지, 자원을 먹는 것
+    // 자체는 원작이라고 추정한 것이지 확정한 게 아니다) — 원작 실측 자료가 나오면 이
+    // 추론부터 다시 검증할 것.
     public bool TryCastOnGround(SupportSkillData skill, Vector3 point)
     {
         if (skill == null || skill.targetKind != SupportSkillTargetKind.Ground) return false;
@@ -330,9 +336,10 @@ public class SupportShop : MonoBehaviour, ILaneShop
 
         if (enemy.IsBoss || enemy.LaneIndex < 0)
         {
-            // 원작 "보스, 스토리 적용X"(위 클래스 주석 참고) — 조준까지 했는데 왜 안 통하는지
-            // 몰라서 조용히 끝났던 자리(PM 지시 2026-09-05).
-            PlayerNotification.Show(owner.OwnerId, $"{skill.skillName}: 보스·스토리 유닛에게는 쓸 수 없습니다.");
+            // 원작 문구 그대로 — war3map.j Trig_Absolb1_Actions("Absolb"=흡수) 안에 있는
+            // 문자열이다(PM 확인, 2026-09-05). 조준까지 했는데 왜 안 통하는지 몰라서
+            // 조용히 끝났던 자리였다.
+            PlayerNotification.Show(owner.OwnerId, "보스,스토리, 특수유닛에게는 사용불가합니다!");
             return false;
         }
 
@@ -397,8 +404,10 @@ public class SupportShop : MonoBehaviour, ILaneShop
         // 마나도 안 나가고 쿨다운도 안 돈다 — 애초에 대상이 아니었던 것처럼 취급한다.
         if (identity.Data.isSystemUnit)
         {
-            // 원작 문구 그대로(PM 전달, 2026-09-05).
-            PlayerNotification.Show(owner.OwnerId, "보스,스토리, 특수유닛에게는 사용불가합니다!");
+            // ⚠️ 원작 문구 없음 — 그 문구("보스,스토리, 특수유닛에게는 사용불가합니다!")는
+            // war3map.j Trig_Absolb1_Actions(흡수) 소속이었다(PM 재확인, 2026-09-05).
+            // 연금술 쪽 원작 거부 문구는 못 찾아서 우리 문구를 쓴다.
+            PlayerNotification.Show(owner.OwnerId, $"{skill.skillName}: {identity.Data.unitName}은(는) 분해할 수 있는 유닛이 아닙니다.");
             return false;
         }
 
