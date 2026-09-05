@@ -121,4 +121,12 @@ public class EnemyData : ScriptableObject
     // 컴포넌트를 미리 못 붙여두므로(모든 적이 하나를 공유), 데이터가 프리팹을 구동하는
     // 이 프로젝트 관례를 그대로 따른다. 기본 비어 있음 — 대부분의 적은 오라가 없다.
     public List<SkillData> auraSkills;
+
+    // ⚠️ 맨 뒤에 추가 — 직렬화된 값이 밀린다.
+    // 적 89종이 MobPrefab 하나를 공유해서 크기 조절 수단이 아예 없었다(2026-09-05, 스토리
+    // 건물이 너무 작다는 사장님 지적으로 발견). EnemyDummy.Initialize가 프리팹의 시각
+    // 부위(visualRoot, "몸" 자식)에만 이 배율을 곱한다 — 콜라이더·NavMeshAgent가 걸린
+    // 루트는 그대로 둔다(콜라이더까지 커지면 유닛이 밀려나 사거리 밖으로 나갈 수 있다).
+    // 1.0(기본)이면 기존 적은 전부 무영향.
+    public float visualScale = 1f;
 }

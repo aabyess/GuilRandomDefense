@@ -5,6 +5,12 @@ public class EnemyDummy : MonoBehaviour
 {
     [SerializeField] float hp = 10f;
 
+    // MobPrefab 루트(콜라이더·NavMeshAgent가 걸린 곳)의 자식 — 메시만 들고 있는 시각 부위
+    // ("몸"). EnemyData.visualScale은 여기에만 곱한다(Initialize 참고) — 루트를 키우면
+    // 콜라이더까지 커져 유닛이 밀려나 사거리 밖으로 나갈 수 있다.
+    [SerializeField] Transform visualRoot;
+    Vector3 baseVisualScale = Vector3.one;
+
     EnemyData data;
     bool isDead;
 
@@ -150,6 +156,12 @@ public class EnemyDummy : MonoBehaviour
         {
             hp = enemyData.hp;
             MaxHp = enemyData.hp;
+
+            // 콜라이더가 걸린 루트가 아니라 시각 부위에만 곱한다(위 visualRoot 주석 참고).
+            if (visualRoot != null)
+            {
+                visualRoot.localScale = baseVisualScale * Mathf.Max(0.01f, enemyData.visualScale);
+            }
         }
 
         // Instantiate는 동기 호출이라(Awake가 그 안에서 바로 돈다) Update가 끼어들 틈이 없다 —
@@ -179,6 +191,15 @@ public class EnemyDummy : MonoBehaviour
         if (MaxHp <= 0f)
         {
             MaxHp = hp;
+        }
+
+        // Initialize보다 먼저 돈다(Instantiate가 동기 호출이라) — visualScale을 곱하기 전
+        // 프리팹 원본 비율을 여기서 찍어둔다. 그대로 곱하지 않고 원본에 곱하는 이유:
+        // Initialize가 두 번 불릴 일은 없지만(스폰마다 새 인스턴스), 있다 해도 누적 배율이
+        // 안 생기게 하려면 항상 "원본 × 이번 배율"이어야 한다.
+        if (visualRoot != null)
+        {
+            baseVisualScale = visualRoot.localScale;
         }
     }
 
