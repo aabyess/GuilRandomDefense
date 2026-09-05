@@ -34,6 +34,17 @@ public class ResourcePortal : MonoBehaviour
         roundManager = FindFirstObjectByType<RoundManager>();
     }
 
+    // ⚠️ 2026-09-05: MapGenerator.BuildResourcePortal이 SerializedObject(enumValueIndex)로
+    // acceptedGrades를 채웠는데 씬 파일에 한 번도 안 들어갔다(사장님 재생성 확인, PM 재조사).
+    // UnitPortal도 같은 증상이라 SerializedProperty 경로 자체를 의심해 이 메서드로 우회했다 —
+    // 씬 오브젝트라 프리팹 오버라이드 문제가 없다. 호출부가 EditorUtility.SetDirty를 반드시
+    // 같이 불러야 한다(직접 대입은 자동으로 dirty 표시가 안 된다).
+    public void SetAcceptedGrade(UnitGrade grade)
+    {
+        acceptedGrades.Clear();
+        acceptedGrades.Add(grade);
+    }
+
     bool Accepts(UnitGrade grade)
     {
         return acceptedGrades == null || acceptedGrades.Count == 0 || acceptedGrades.Contains(grade);

@@ -1639,6 +1639,7 @@ public static class MapGenerator
             new Vector3(ground.x, MapLayout.IslandTop + 0.25f, ground.z), diameter);
 
         ResourcePortal component = portal.AddComponent<ResourcePortal>();
+
         SerializedObject so = new SerializedObject(component);
         so.FindProperty("payout").enumValueIndex = (int)payout;
         so.FindProperty("resourceType").enumValueIndex = (int)resource;
@@ -1646,13 +1647,14 @@ public static class MapGenerator
         so.FindProperty("perRound").floatValue = perRound;
         so.FindProperty("perRoundMax").floatValue = perRoundMax;
         so.FindProperty("successChancePercent").floatValue = chance;
-
-        SerializedProperty accepted = so.FindProperty("acceptedGrades");
-        accepted.ClearArray();
-        accepted.InsertArrayElementAtIndex(0);
-        accepted.GetArrayElementAtIndex(0).enumValueIndex = (int)acceptedGrade;
-
         so.ApplyModifiedProperties();
+
+        // ⚠️ acceptedGrades(List<UnitGrade>)만은 SerializedProperty를 안 거친다 — UnitPortal과
+        // 같은 이유(ResourcePortal.SetAcceptedGrade 코멘트 참고). so.ApplyModifiedProperties()
+        // 뒤에 마지막으로 불러서, 혹시 모를 SerializedObject 왕복에 덮이지 않게 한다.
+        // SetDirty를 반드시 같이 부른다.
+        component.SetAcceptedGrade(acceptedGrade);
+        EditorUtility.SetDirty(component);
         return portal;
     }
 
@@ -2136,11 +2138,6 @@ public static class MapGenerator
         UnitPortal unitPortal = portal.AddComponent<UnitPortal>();
         SerializedObject so = new SerializedObject(unitPortal);
 
-        SerializedProperty accepted = so.FindProperty("acceptedGrades");
-        accepted.ClearArray();
-        accepted.InsertArrayElementAtIndex(0);
-        accepted.GetArrayElementAtIndex(0).enumValueIndex = (int)grade;
-
         so.FindProperty("legacyGradeMigrated").boolValue = true;
         so.FindProperty("overrideRewardGrade").boolValue = rewardGrade.HasValue;
         so.FindProperty("rewardGrade").enumValueIndex = (int)(rewardGrade ?? grade);
@@ -2150,6 +2147,13 @@ public static class MapGenerator
         // 비워두면 위습 주인의 레인 한가운데로 나간다.
         so.FindProperty("spawnPoint").objectReferenceValue = null;
         so.ApplyModifiedProperties();
+
+        // ⚠️ acceptedGrades(List<UnitGrade>)만은 SerializedProperty를 안 거친다 —
+        // enumValueIndex로 채워도 씬 파일에 한 번도 안 들어간 것으로 확인됐다(UnitPortal.
+        // SetAcceptedGrade 코멘트 참고). so.ApplyModifiedProperties() 뒤에 마지막으로 불러서
+        // SerializedObject 왕복에 덮이지 않게 한다. SetDirty를 반드시 같이 불러야 한다.
+        unitPortal.SetAcceptedGrade(grade);
+        EditorUtility.SetDirty(unitPortal);
     }
 
     // 좌표를 손으로 옮기다 보면 섬이 서로 올라타는 일이 생긴다(초월 전시가 조합식 표를 덮은 적 있음).

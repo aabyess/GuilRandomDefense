@@ -61,6 +61,20 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
 
     public void OnBeforeSerialize() { }
 
+    // ⚠️ 2026-09-05: MapGenerator.ConfigurePortal이 SerializedObject로 acceptedGrades를
+    // 채웠는데 씬 파일에 한 번도 안 들어갔다(사장님이 맵을 두 번 재생성해서 확인, PM 재조사) —
+    // 원인 후보(enumValueIndex가 리스트 원소에 안 맞는 접근자였을 가능성 등)를 확정하지
+    // 못해서, 아예 SerializedProperty를 거치지 않고 이 메서드로 필드를 직접 대입하는 쪽으로
+    // 바꿨다 — 씬 오브젝트라 프리팹 오버라이드 문제가 없어 안전하다. 호출부는
+    // EditorUtility.SetDirty를 반드시 같이 불러야 한다(직접 대입은 SerializedObject처럼
+    // 자동으로 dirty 표시가 안 된다).
+    public void SetAcceptedGrade(UnitGrade grade)
+    {
+        acceptedGrades.Clear();
+        acceptedGrades.Add(grade);
+        legacyGradeMigrated = true; // 이 값이 있으니 OnAfterDeserialize의 레거시 흡수를 안 타도 된다
+    }
+
     bool Accepts(UnitGrade grade)
     {
         return acceptedGrades == null || acceptedGrades.Count == 0 || acceptedGrades.Contains(grade);
