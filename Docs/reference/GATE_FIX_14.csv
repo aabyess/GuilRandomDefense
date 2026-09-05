@@ -1,0 +1,15 @@
+등급,우리유닛,원작경로,원작게이트,권장_평타당발동률,확신도,비고
+전설적인,전설적인_박성호,Trig_Legend0,"GetRandomInt(1,100)<46",0.45,확정,확률 45%
+전설적인,전설적인_박은석,Trig_Legend23,"GetRandomInt(1,4)==3 AND 포인트값==200 ‖ 1/4 다른 분기",0.25,추정,지점 여럿 — 보수적으로 1/4
+전설적인,전설적인_백기현,Trig_Legend10 → e00V 더미,"GetRandomInt(1,10)==3",0.10,확정,더미 채널 — DUMMY_CHANNEL_GATES.csv에 이미 있었다
+전설적인,전설적인_이유선,Trig_Legend8,"GetRandomInt(1,10)==3 AND 대상포인트값>199",0.10,확정,포인트값 조건은 대상이 보스일 때만
+전설적인,전설적인_임채현,Trig_Legend11,"GetRandomInt(1,7)==6",0.143,확정,
+전설적인,전설적인_정윤식,Trig_Legend2,시전자마나 == 145.00,0.0069,확정,게이지형 — 145타마다
+전설적인,전설적인_진연서,Trig_Legend7,시전자마나 == 115.00,0.0087,확정,게이지형 — 115타마다
+전설적인,전설적인_홍인창,Trig_Legend22,Stage 분기 여럿,[미확인],추정,Stage==N은 답이 아니다 — 호출자 추적 필요
+영원한,영원_김영원,Trig_ViVi_Attack → e0D3 더미,NOT(시전자마나==150) AND 버프 B034 미보유,~0.99,확정,거의 매 타 — 우리 1.0 근사가 크게 틀리지 않는다
+영원한,영원_최상호,Trig_Cavendish_Attack,"GetRandomInt(1,10)==6 ‖ NOT(1/10) AND GetRandomInt(1,9)==7",0.10,확정,두 갈래 배타 — 합쳐도 약 0.20
+제한됨,제한_임준성,Trig_Sinobu_Attack,"GetRandomInt(1,8)==5 (+포인트값 분기)",0.125,확정,
+제한됨,제한_최영민,Trig_RedAttack,"GetRandomInt(1,4)>1 (+포인트값 분기)",0.75,확정,1/4 초과이므로 75%
+불멸의,불멸_고도현,Trig_Z_Attack,NOT(시전자마나==160) ‖ 버프 B06B 보유,[미확인],추정,지점 여럿
+불멸의,불멸_이이삭,Trig_Sengoku_Attack,"GetRandomInt(1,20)==8 (+능력레벨 A0D8 분기)",0.05,확정,
