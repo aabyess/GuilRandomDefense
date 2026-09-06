@@ -1077,8 +1077,15 @@ def skill_dps_for_unit(skill_guid, attack_power, attack_speed, enemy_profile=Non
             # 이 시뮬은 levels[0](레벨1)만 읽는다 — 원작 레벨 번호는 언제나 1.
             out["flat_" + suffix] += weight * (1.0 * eff["multiplier"] + eff["bonus"])
         elif basis_idx in (CASTER_STRENGTH_IDX, CASTER_AGILITY_IDX, CASTER_INTELLIGENCE_IDX):
-            # 실제 게임도 지금 UnitData.baseX/xPerLevel이 전부 0이라 항상 bonus만 나간다
-            # (회귀 없음 — "조용히 0"이 아니라 "진짜로 0"이라 근사가 아니다).
+            # 2026-09-07(01번 영웅스탯 점화) 갱신 — 초월함 25기는 이제 baseX가 여전히
+            # 0이어도 heroLevel(적 처치 누적, 이 시뮬은 진행을 안 돈다)에 따라 xPerLevel만큼
+            # 자란다. ResearchLevel/CasterSelfUpgradeLevel과 같은 관례로 레벨0(바닥값,
+            # 이 시뮬의 정적 스냅샷과 일치)만 본다 — "항상 정확히 0"이 아니라 "바닥값
+            # 근사"로 격을 낮췄다(baseX가 33종 다 0이라 지금은 결과 숫자가 같지만, 근거가
+            # 바뀌었다). AttackDamage의 별도 엔진 보너스(주스탯×800, UnitAttacker.
+            # PrimaryStatAttackBonus)와 AGI×1% 공속(HeroAttackSpeedMultiplier)도 같은
+            # 이유로 이 시뮬엔 없다 — 레벨0에서 전부 0이라 지금은 무해하지만, 진행을
+            # 모델링하게 되면 이 셋을 같이 추가해야 한다.
             out["flat_" + suffix] += weight * eff["bonus"]
         elif basis_idx == CASTER_SELF_UPGRADE_LEVEL_IDX:
             # ResearchLevel과 같은 관례 — 전투 중 진행(자가강화)을 모델 안 해 레벨0
