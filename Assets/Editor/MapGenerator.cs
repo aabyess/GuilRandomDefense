@@ -2947,7 +2947,24 @@ public static class MapGenerator
             changed |= EnsurePart<UnitUpgrades>(context, so, "unitUpgrades");
             changed |= EnsurePart<PersistentSave>(context, so, "persistentSave");
 
+            // 2026-09-07 추가 — 이 셋은 PlayerContext에 **필드만** 먼저 생기고 생성 코드가
+            // 안 따라왔다. 그래서 붙인 그 순간부터 4명 전부 null이었고, 항법 5택1·
+            // 패왕의길 누적(Damage_level_Fixed)·아이템 도박이 **배선된 채로 한 번도 안 돌았다.**
+            // GamblingProgress가 똑같이 그랬던 전례가 바로 위 주석에 있다 — 같은 사고가
+            // 두 번째다. 순서가 있다: 아래 형제 참조를 걸려면 피참조 쪽이 먼저 있어야 한다.
+            changed |= EnsurePart<DamageLevelFixedState>(context, so, "damageLevelFixedState");
+            changed |= EnsurePart<NavigationState>(context, so, "navigationState");
+            changed |= EnsurePart<ItemGambleState>(context, so, "itemGambleState");
+
             if (changed) so.ApplyModifiedProperties();
+
+            // 형제끼리 서로를 참조한다 — PlayerContext 쪽 참조를 채운다고 이게 같이 차지
+            // 않는다. NavigationState는 패왕의길 +2를 DamageLevelFixedState에 누적하고,
+            // ItemGambleState는 「도움소 잠금」을 읽어 축소풀로 갈아탄다.
+            changed |= EnsureSiblingRef(context.NavigationState, "damageLevelFixedState",
+                                        context.DamageLevelFixedState);
+            changed |= EnsureSiblingRef(context.ItemGambleState, "navigationState",
+                                        context.NavigationState);
 
             // EnsurePart는 참조만 걸어준다 — PersistentSave 자신의 playerId 필드는 별도
             // SerializedObject라 여기서 항상 맞춰준다(참조가 이미 있던 기존 플레이어도
@@ -2977,6 +2994,22 @@ public static class MapGenerator
         if (part == null) part = context.gameObject.AddComponent<T>();
 
         property.objectReferenceValue = part;
+        return true;
+    }
+
+    // 형제 컴포넌트끼리의 참조. EnsurePart는 PlayerContext 쪽 필드만 채우므로, 컴포넌트가
+    // 서로를 직접 들고 있어야 하는 경우는 이걸로 따로 걸어준다.
+    static bool EnsureSiblingRef(Component owner, string field, Component target)
+    {
+        if (owner == null || target == null) return false;
+
+        SerializedObject so = new SerializedObject(owner);
+        SerializedProperty property = so.FindProperty(field);
+        if (property == null) return false;
+        if (property.objectReferenceValue == target) return false;
+
+        property.objectReferenceValue = target;
+        so.ApplyModifiedProperties();
         return true;
     }
 
