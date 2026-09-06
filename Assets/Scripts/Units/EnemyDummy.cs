@@ -451,17 +451,87 @@ public class EnemyDummy : MonoBehaviour
 
     public ArmorType ArmorType => data != null ? data.armorType : ArmorType.Normal;
 
+    // ⚠️ 2026-09-06 신설(TARGET_SIDE_AXES.md·STACK_AXES_INCREMENT_LIST.md, 리서치담당) —
+    // 원작 대상측 세 축(Aegr·AIsr·A11S)은 전부 "레벨 카운터 + 스킬이 +N씩 올림 + 상한"
+    // 구조이고 셋 다 곱이다. Aegr·A11S는 이미 아래(위)에 필드가 있었고 값도 맞았지만
+    // "스킬이 레벨을 올리는" 스택 부분이 없었다 — 여기서 그 스택만 추가한다. AIsr은
+    // 필드 자체가 없어서 새로 만든다(원작 스폰 시 세팅이 없어 모든 적이 레벨1=증폭0%에서
+    // 시작한다).
+    //
+    // ⚠️ 계산 중 발견 — 문서의 "레벨당 증분"과 "구간 끝값"이 서로 안 맞는다:
+    //   Aegr: "레벨당 +0.01, 레벨1=0.85→레벨45=1.15"인데 0.85+44*0.01=1.29다(1.15가 아님).
+    //         반면 "레벨당 +0.01"은 이미 실측 확인된 난이도 세 값(L6=0.90·L11=0.95·
+    //         L16=1.00, TARGET_SIDE_AXES.md ①)과 0.85+(L-1)*0.01로 정확히 맞아떨어진다.
+    //         그래서 레벨당 증분을 신뢰하고 구간 끝값(1.15)을 문서 쪽 오기로 본다 —
+    //         상한(L45)의 실제 배율은 이 코드 기준 1.29다.
+    //   AIsr: "레벨당 -0.01, 레벨1=0.0→레벨36=-0.25"인데 35*0.01=0.35다(마찬가지로 안
+    //         맞음). AIsr은 검증할 실측 데이터가 없지만, 같은 문서·같은 형식의 Aegr 줄이
+    //         "레벨당 증분 쪽이 맞다"로 판명 났으므로 같은 근거로 레벨당 -0.01을 쓴다 —
+    //         상한(L36)의 실제 배율은 1+(35*0.01)=1.35다.
+    // 즉 이 코드의 상한 배율(Aegr ×1.29·AIsr ×1.35)이 TARGET_SIDE_AXES.md가 적은 "최대
+    // 효과"(×1.15·×1.25)와 다르다 — 리서치담당·PM 재확인 필요, 지금은 실측 3점과 맞는
+    // 쪽(레벨당 증분)을 택했다.
+
+    const float AegrLevelStep = 0.01f;   // Def5, 레벨당(실측 3점과 일치, 위 주석 참고)
+    const int AegrCapLevel = 45;
+    int aegrStackLevels;   // 난이도 기본 레벨 위에 스킬이 추가로 올린 레벨(스택)만 센다
+
+    // data.magicArmorMultiplier(Def5)에서 난이도 기본 레벨을 역산한다 — 0.85+(L-1)*0.01의 역함수.
+    int AegrBaseLevel => Mathf.RoundToInt(1f + ((data != null ? data.magicArmorMultiplier : 1f) - 0.85f) / AegrLevelStep);
+
+    /// <summary>원작 Aegr 스택 — 스킬이 이 적의 Aegr 레벨을 N만큼 올릴 때 부른다. 상한(45)은
+    /// "난이도 기본 레벨 + 스택" 총합 기준이라, 기본 레벨을 역산해 정확히 자른다.</summary>
+    public void AddAegrStack(int amount)
+    {
+        int cap = Mathf.Max(0, AegrCapLevel - AegrBaseLevel);
+        aegrStackLevels = Mathf.Clamp(aegrStackLevels + amount, 0, cap);
+    }
+
+    const float AisrLevelStep = 0.01f;  // isr2 레벨당(위 주석 — 레벨당 증분을 신뢰)
+    const int AisrCapLevel = 36;
+    int aisrStackLevels;   // 레벨1(증폭 0%) 기준 추가 레벨. 스폰 시 세팅이 없어 항상 0에서 시작.
+
+    /// <summary>원작 AIsr(마법 데미지 증폭) 스택 — 스킬이 이 적의 AIsr 레벨을 N만큼 올릴 때
+    /// 부른다. 상한(36)은 레벨1 시작 기준이라 스택 자체를 0~35로 자르면 된다.</summary>
+    public void AddAisrStack(int amount)
+    {
+        aisrStackLevels = Mathf.Clamp(aisrStackLevels + amount, 0, AisrCapLevel - 1);
+    }
+
+    /// <summary>원작 AIsr(마법 데미지 증폭). 레벨1(스택0)이면 배율 1.0(증폭 없음) — 원작에
+    /// 스폰 시 세팅이 없어 모든 적이 여기서 시작한다. 스택마다 isr2가 -0.01씩 내려가는데,
+    /// 우리는 반대 부호(피해를 더 받는 증폭)로 표현한다: 배율 = 1 + 스택×step.</summary>
+    public float EffectiveMagicDamageAmplifier => 1f + aisrStackLevels * AisrLevelStep;
+
+    // A11S: 원작 공식 "0.20 + 0.05×레벨" (EnemyData.percentDamageTaken 주석 참고) —
+    // 레벨14→0.90(일반)·레벨16→1.00(보스)로 이미 실측 확인됨. 상한 23.
+    const float A11SLevelConst = 0.20f;
+    const float A11SLevelStep = 0.05f;
+    const int A11SCapLevel = 23;
+    int a11sStackLevels;
+
+    // data.percentDamageTaken(=0.20+0.05×기본레벨)에서 기본 레벨을 역산한다.
+    int A11SBaseLevel => Mathf.RoundToInt(((data != null ? data.percentDamageTaken : 1f) - A11SLevelConst) / A11SLevelStep);
+
+    /// <summary>원작 A11S 스택 — 스킬이 이 적의 A11S 레벨을 N만큼 올릴 때 부른다. 상한(23)은
+    /// "기본 레벨(14 또는 16) + 스택" 총합 기준이라 기본 레벨을 역산해 정확히 자른다.</summary>
+    public void AddA11SStack(int amount)
+    {
+        int cap = Mathf.Max(0, A11SCapLevel - A11SBaseLevel);
+        a11sStackLevels = Mathf.Clamp(a11sStackLevels + amount, 0, cap);
+    }
+
     /// <summary>스킬 피해 전반(%체력·고정값 basis 가리지 않음)에 곱하는 대상별 감수성 계수
     /// (원작 A11S) — 평타(일반 피해)엔 안 쓴다. ⚠️ 2026-09-05 정정: 처음엔 "%비례 피해
     /// 전용"으로 알았는데, A11S 사용처 43곳 중 게이트 없는 7곳이 고정 피해에도 같은 계수를
     /// 곱혀서(리서치담당 재조사) 스킬 피해 전반으로 넓혔다 — UnitAttacker.DealSkillDamage가
     /// basis를 안 가리고 곱한다. EnemyData.percentDamageTaken 참고.
     ///
-    /// ⚠️ 나중에 여기가 올라갈 자리 — 원작 취약도 스택(맞을수록 계수가 오르는 디버프, 예:
-    /// Trig_Hidden9 +2/carrot_skill_2 +1/Uta_skill_3_mana +5). 지금은 안 만든다(PM 지시,
-    /// 2026-09-05) — magicArmorShred와 같은 패턴(런타임 누적 필드 + Add 메서드)으로 나중에
-    /// 이 프로퍼티에 더하면 된다.</summary>
-    public float PercentDamageTakenMultiplier => data != null ? data.percentDamageTaken : 1f;
+    /// 2026-09-06: 원작 취약도 스택(맞을수록 계수가 오르는 디버프, 예: Trig_Hidden9 +2/
+    /// carrot_skill_2 +1/Uta_skill_3_mana +5)을 여기 붙였다 — AddA11SStack이 올린 레벨을
+    /// 공식에 다시 넣어 재계산한다. 스택 0이면 기존 data.percentDamageTaken과 정확히 같은
+    /// 값이 나온다(역산한 기본 레벨을 그대로 되돌리는 구조라서).</summary>
+    public float PercentDamageTakenMultiplier => A11SLevelConst + A11SLevelStep * (A11SBaseLevel + a11sStackLevels);
 
     /// <summary>이 적이 %체력 비례 스킬 피해(TargetMaxHpPercent/TargetCurrentHpPercent)를
     /// 받는가 — 원작 GetUnitPointValue(대상)&lt;200 게이트(리서치담당 재조사, 2026-09-05).
@@ -472,9 +542,13 @@ public class EnemyDummy : MonoBehaviour
     // 마방깍 누적. 마법 방어는 배율이라, 깎으면 배율이 **올라간다**(피해를 더 받는다).
     float magicArmorShred;
 
-    /// <summary>마법(AP) 피해에 곱할 배율. 1.0이 감소 없음, 1.0 초과면 더 받는다.</summary>
+    /// <summary>마법(AP) 피해에 곱할 배율. 1.0이 감소 없음, 1.0 초과면 더 받는다.
+    /// 2026-09-06: 원작 Aegr 스택(aegrStackLevels)을 Def5에 가산하고, AIsr(원작에서 Aegr와
+    /// 곱인 별개 축)을 곱했다 — 둘 다 스택 0이면 각각 무변화·배율 1.0이라 기존 값과
+    /// 정확히 같다(아래 EffectiveMagicDamageAmplifier 참고).</summary>
     public float EffectiveMagicMultiplier =>
-        Mathf.Max(0f, (data != null ? data.magicArmorMultiplier : 1f) + magicArmorShred);
+        Mathf.Max(0f, (data != null ? data.magicArmorMultiplier : 1f) + magicArmorShred + aegrStackLevels * AegrLevelStep)
+        * EffectiveMagicDamageAmplifier;
 
     /// <summary>마방깍을 건다. 조합표의 `마방깍오라(9%)`가 0.09로 들어온다.</summary>
     public void AddMagicArmorShred(float amount) => magicArmorShred += amount;
