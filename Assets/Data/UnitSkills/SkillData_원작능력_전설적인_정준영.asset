@@ -14,11 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   skillName: A0QL !어인족 수장1
   description: 원작 전설적인 스모커 집념의 해군 중장 - 전설적인(Trig_Legend9). | 2차 배정(트리거·더미 채널): 원작 전설적인 스모커 집념의 해군 중장 - 전설적인(Trig_Legend9). | 2차 배정(트리거·더미 채널): 원작 전설적인 스모커 집념의 해군 중장 - 전설적인(Trig_Legend9). | 2차 배정(트리거·더미 채널): 원작 전설적인 스모커 집념의 해군 중장 - 전설적인(더미 경로 Trig_Legend9 → e0H8(!전설 스모커 더미3) → A16K). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 1채널 추가 배정(원작 전설적인 롤로노아 조로 죽음의경지'사자의노래' - 전설적인(h02S)의 능력 2개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시). | 1채널 추가 배정(원작 전설적인 스모커 집념의 해군 중장 - 전설적인(h02V)의 능력 2개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시).
-  · A0IS !화이트 블로우: 발동0.18 배수0.0 추가250000.0
   · A16L !화이트아웃: 발동0.25 배수0.0 추가0.0 [피해 0 — 비피해 효과였을 수 있다]
-  · A0PQ !강철을 벤 사나이: 발동0.3 배수0.0 추가500000.0
-  · A06M !죽음의 경지: 발동0.66 배수5.0 추가0.0
-  확정(2026-09-06, PHASE2_39_RESOLVED.csv/f18af68, 1채널표): A0IS(18%·+250,000)·A0PQ(30%·+500,000)·A06M(66%·5.0배)·A16L(원작에서도 확률만 있고 배수·추가피해 0, atar=none이라 안 돎)이 이 파일의 basis3 블록들(bonus250000·bonus500000·mult5.0·mult0/bonus0)과 정확히 일치해 대응 확정(추가 편집 없음).
+  쪼개기 실행(2026-09-06, PHASE2_FINAL_TALLY_2026-09-06.md/08e21d6): A0IS·A0PQ·A06M을 각각 SkillData_원작능력_전설적인_정준영_A0IS/A0PQ/A06M.asset으로 뗐다(PM 설계 결정 — 능력 하나에 파일 하나). A16L은 원작에서도 atar=none이라 안 돎(확률만 있고 배수·추가피해 0) — 독립 게이트를 만들면 원작에 없던 능력을 하나 만드는 셈이라 뗴지 않고 이 파일에 0효과 그대로 둔다. 이 파일엔 A0QL 자체 배정분(원작 스모커 Trig_Legend9 직접 배정)과 1채널 추가 배정 4개(조로 h02S 2개·스모커 h02V 2개, DPS 순위 배정이라 능력별 대응 불가)가 여전히 남아있다 — 이건 쪼개기 대상이 아니다(값이 능력이 아니라 유닛 단위로 배정됐다).
   triggerType: 0
   levels:
   - cooldown: 0
@@ -123,36 +120,6 @@ MonoBehaviour:
       attackType: 1
       multiplier: 0.5
       bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 0
-      basis: 3
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 0.0
-      bonus: 500000.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 0
-      basis: 3
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 5.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 0
-      basis: 3
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 0.0
-      bonus: 250000.0
       chance: 1
       hitCount: 1
       duration: 0
