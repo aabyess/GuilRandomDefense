@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_희귀함_윤현모
   m_EditorClassIdentifier:
   skillName: A0UZ !혼포인트
-  description: 원작 희귀함 쿠잔 해군대장 아오키지 - 희귀함(더미 경로 Trig_Unique11 → e057(U희귀함 아오키지 더미) → A0PX). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다.
+  description: 원작 희귀함 쿠잔 해군대장 아오키지 - 희귀함(더미 경로 Trig_Unique11 → e057(U희귀함 아오키지 더미) → A0PX). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. 정정(2026-09-06, PM 지시 — 뿌리 ㉖ 과소 전수 첫 수확): triggerChance가 0.0(과소, 이 스킬이 조용히 죽어 있었다)이었다 — DUMMY_CHANNEL_GATES.csv 확정 게이트 GetRandomInt(1,12)==3 = 1/12로 채운다.
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.0
+    triggerChance: 0.0833333333333333
     range: 0
     effects:
     - kind: 0

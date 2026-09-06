@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_희귀함_이상혁
   m_EditorClassIdentifier:
   skillName: A06D !디아블 잠브
-  description: 원작 희귀함 돈키호테 도플라밍고 칠무해 - 희귀함(Trig_Unique12). | 2차 배정(트리거·더미 채널): 원작 희귀함 돈키호테 도플라밍고 칠무해 - 희귀함(더미 경로 Trig_Unique12 → e059(U희귀함 도플 더미) → A09W). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다.
+  description: 원작 희귀함 돈키호테 도플라밍고 칠무해 - 희귀함(Trig_Unique12). | 2차 배정(트리거·더미 채널): 원작 희귀함 돈키호테 도플라밍고 칠무해 - 희귀함(더미 경로 Trig_Unique12 → e059(U희귀함 도플 더미) → A09W). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. 정정(2026-09-06, PM 지시 — 뿌리 ㉖ 과소 전수 첫 수확): triggerChance가 0.0(과소, 이 스킬이 조용히 죽어 있었다)이었다 — DUMMY_CHANNEL_GATES.csv 확정 게이트 GetRandomInt(1,11)==3 = 1/11로 채운다.
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.0
+    triggerChance: 0.0909090909090909
     range: 0
     effects:
     - kind: 0
