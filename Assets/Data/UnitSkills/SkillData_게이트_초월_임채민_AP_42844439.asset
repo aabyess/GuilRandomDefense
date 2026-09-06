@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_초월_임채민_AP_42844439
   m_EditorClassIdentifier:
   skillName: 지진과 어둠의 검은수염 — LIFE게이지85.00 AND 1/25
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 지진과 어둠의 검은수염(H090)의 게이트 "LIFE게이지85.00 AND 1/25" 능력 2개를 이 SkillData 하나로 묶었다.   · Tichi_skill_2_tr#1: 계산식 (385000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,s__TrigVariabl   · Tichi_skill_2_tr#2: 계산식 (385000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,s__TrigVariabl  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Tichi_skill_2_tr#1] ⚠️ 영웅 능력치 비례항(multiplier=2000×스탯)은 우리에 히어로 스탯 개념이 없어 빼고 상수항(bonus)만 Flat으로 옮겼다 — 실제보다 약할 수 있다.  [Tichi_skill_2_tr#2] ⚠️ 영웅 능력치 비례항(multiplier=2000×스탯)은 우리에 히어로 스탯 개념이 없어 빼고 상수항(bonus)만 Flat으로 옮겼다 — 실제보다 약할 수 있다.
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 지진과 어둠의 검은수염(H090)의 게이트 "LIFE게이지85.00 AND 1/25" 능력 2개를 이 SkillData 하나로 묶었다.   · Tichi_skill_2_tr#1: 계산식 (385000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,s__TrigVariabl   · Tichi_skill_2_tr#2: 계산식 (385000.00+(I2R(GetHeroStatBJ(bj_HEROSTAT_STR,s__TrigVariabl  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. ⚠️ 2026-09-06 마저 채움(사장님 결정 01번, 영웅 스탯 시스템 완성) — 두 효과 모두 basis를 Flat(상수만)에서 CasterStrength로 바꿨다. multiplier=2000(STR 계수) · bonus=385000(상수항 그대로) — 이 유닛(검은수염 대응, T5)의 baseStrength/strengthPerLevel이 채워져 있어 이제 실제 값을 낸다.
   triggerType: 3
   levels:
   - cooldown: 0
@@ -24,23 +24,23 @@ MonoBehaviour:
     gaugeKind: 1
     effects:
     - kind: 0
-      basis: 0
+      basis: 9
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 385000.0
-      bonus: 0.0
+      multiplier: 2000.0
+      bonus: 385000.0
       chance: 1
       hitCount: 2
       duration: 0
       casterBuffCountFactor: 0
     - kind: 0
-      basis: 0
+      basis: 9
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 385000.0
-      bonus: 0.0
+      multiplier: 2000.0
+      bonus: 385000.0
       chance: 1
       hitCount: 2
       duration: 0

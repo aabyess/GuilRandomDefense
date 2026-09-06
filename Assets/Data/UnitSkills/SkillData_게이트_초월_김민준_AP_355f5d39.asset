@@ -13,16 +13,60 @@ MonoBehaviour:
   m_Name: SkillData_게이트_초월_김민준_AP_355f5d39
   m_EditorClassIdentifier:
   skillName: 해군의 홍일점 — (게이트 없음)
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 해군의 홍일점(H05N)의 게이트 "(게이트 없음)" 능력 3개를 이 SkillData 하나로 묶었다.   · Tasigi_02#1: 계산식 500000.00   · tahsigi#3: 계산식 500000.00   · tahsigi#4: 계산식 500000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. [확정: 원작도 매 타] 원작 트리거에 게이트가 없다(파일명 해시 355f5d39 = 「(게이트 없음)」, 리서치담당 edad47f). triggerChance = 1.0이 원작 그대로다 — 고치지 말 것.
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 해군의 홍일점(H05N)의 게이트 "(게이트 없음)" 능력 3개를 이 SkillData 하나로 묶었다.   · Tasigi_02#1: 계산식 500000.00   · tahsigi#3: 계산식 500000.00   · tahsigi#4: 계산식 500000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. [확정: 원작도 매 타] 원작 트리거에 게이트가 없다(파일명 해시 355f5d39 = 「(게이트 없음)」, 리서치담당 edad47f). triggerChance = 1.0이 원작 그대로다 — 고치지 말 것. ⚠️ 2026-09-06 마저 채움(사장님 결정 01번, 영웅 스탯 시스템 완성) — 같은 게이트의 tahsigi#1·#2가 GetHeroStatBJ(STR) 항이 있어 미뤄져 있었다. 이제 이 유닛(타시기 대응)의 baseStrength/strengthPerLevel이 채워져 CasterStrength 축이 실제 값을 낸다. 원식 tahsigi#1=(400000+STR×2500)+GetEventDamage()×3.75, tahsigi#2=(350000+STR×2500)+GetEventDamage()×6.00 — 우리 SkillEffect 하나로는 ReceivedDamage와 CasterStrength를 동시에 못 더해서(각각 basis 하나만 곱+더한다) 효과 2개(ReceivedDamage 부분 + CasterStrength 부분)로 쪼갰다. ⚠️ 근사 — 원작은 한 번의 RRD 합산 피해인데 우리는 별개의 두 타격으로 나가 방어력·상성 배율이 각 조각에 따로 곱는다(원작은 합산값 하나에 한 번만 곱함) — 총합 전(방어 적용 전) 값은 같지만 방어 적용 후엔 약간 달라질 수 있다. target=Enemies·range=450(원작 그대로)로 옮기며 level.range도 0→450으로 바꿨다(기존 3효과는 SingleTarget이라 range를 안 써서 영향 없음).
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 1.0
-    range: 0.0
+    range: 450.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
     effects:
+    - kind: 0
+      basis: 5
+      target: 2
+      damageType: 2
+      attackType: 6
+      multiplier: 3.75
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 9
+      target: 2
+      damageType: 2
+      attackType: 6
+      multiplier: 2500.0
+      bonus: 400000.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 5
+      target: 2
+      damageType: 2
+      attackType: 6
+      multiplier: 6.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 9
+      target: 2
+      damageType: 2
+      attackType: 6
+      multiplier: 2500.0
+      bonus: 350000.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
     - kind: 0
       basis: 0
       target: 3
