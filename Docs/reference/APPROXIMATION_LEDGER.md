@@ -1172,3 +1172,114 @@ Agility/Intelligence`는 실제 게임도 지금 전부 0(영웅 스탯 데이�
 ⚠️ **재발 방지**: 지금 만들지 않는다 — 항법 없이 "도움소 레벨2를 상시 적용"
 하거나 "임시 스위치"를 만들면, 항법 구현 시 그 임시 스위치와 진짜 항법이
 충돌하거나 이중 적용될 자리다.
+
+### 🟢 해소됨(2026-09-06 밤) — 항법 시스템이 생겨 배선 완료
+
+`NAVIGATION_ROUTES_FULL.md`(리서치담당)가 항법 5택1 전체를 확정했다 —
+"도움소 강화"는 그중 하나였다. `NavigationState`(PlayerContext 신규
+컴포넌트, 플레이어당 영구 1회 선택)를 만들고 위 표의 L2 값을 그대로 넣었다
+(대지진은 위에 적힌 대로 손대지 않았다). §21 참고 — 항법 5택1 전체 배선
+내역과 검산.
+
+## 21. 항법(5택1) 배선 — ①③④⑤ 완료, ② 보류(e0IX 미확정) (2026-09-06, PM 지시)
+
+`NAVIGATION_ROUTES_FULL.md`(리서치담당) 확정 반영. `NavigationState`(PlayerContext
+신규 형제 컴포넌트, `NavigationChoice` enum)를 축으로 삼았다 — **플레이어당 영구
+1회, 되돌리기 불가**(`TrySelect`가 이미 골랐거나 `None`을 넘기면 실패). 선택
+UI/시점(`H0C4` 배치)은 이번 범위 밖(맵 생성기·PM 몫) — 지금은 컴포넌트와 소비
+로직만 잇는다.
+
+### ① 패왕의길 — 완료 (리서치 재정정 `c3b8c42` 반영)
+
+`DamageLevelFixedState`(플레이어별 영구 카운터) 신설. 패왕의길 선택 시
+`NavigationState.TrySelect`가 `+2`를 흘려보낸다. 소비처는 이미 있던 자리
+(`EnemyDummy.AddA11SStack`, "취약도 스택" — PM이 짚은 `EnemyData.cs` 147행
+주석 그 자리)를 그대로 썼다 — 새 피해공식이 아니라 **기존 A11S 스택 축에
+값만 얹었다**.
+
+```
+피해 = 대상현재체력 × 0.10 × (0.20 + 0.05 × A11S레벨), A11S레벨 = 14 + Damage_level_Fixed[라인]
+기본(0)        레벨14 → 계수 0.90  (지금 "일반" 값 그대로 — 검산: AddA11SStack(0) 무변화)
+패왕의길(+2)    레벨16 → 계수 1.00  (지금 "보스" 값과 일치 — PM 기대치와 정확히 일치)
+```
+
+`WaveSpawner.SpawnEnemyInternal`에서 스폰 직후 `!enemyData.isBoss`일 때만
+그 라인의 카운터를 더한다 — **이 조건 하나로 라운드보스·신세계 사이드보스가
+동시에 빠진다**(사이드보스 EnemyData도 `isBoss=1`이라 `SpawnSideBoss`가 같은
+함수를 공유해도 자동으로 걸러진다, PM이 가장 틀리기 쉬운 자리라고 짚은 곳).
+히든 이벤트 3개(Hidden_Aokiji+2·Eternal_Lucci+2·IM_dragon+4)는 달성조건이
+아직 `[미확인]`이라 `DamageLevelFixedState.Add()`만 열어두고 아무도 안
+부른다 — 리서치 확인되면 그 트리거가 이 메서드를 부르기만 하면 된다.
+
+### ③ 도박광 — 완료
+
+`GamblingOptionData.scalesWithGamblerNavigation`(원작이 직접 확인된 다른세계
+도박에만 켬, 고급도박 등 다른 옵션은 같은 변수를 쓰는지 확인 안 돼 손대지
+않음) + `GamblingShop.FailureLuckyTokens(option, context)` 헬퍼. 원작 공식
+"1+Dobak_Tech_int" 그대로: 기본 1, 항법 선택 시 +1.
+
+⚠️ **버그 발견**: `Gambling_다른세계 도박.asset`의 `failureLuckyTokens`가
+**항법과 무관하게 항상 2**였다 — 항법 시스템이 없던 채로 "선택 후" 값이
+박혀 있었다. 기본값 1로 고치고 항법 보너스를 코드에서 더하게 바꿨다.
+
+```
+수정 전(고정)        항상 2
+수정 후 — 항법 미선택   1
+수정 후 — 도박광 선택   2
+```
+
+### ④ 도움소 강화 — 완료 (§20 해소, 위 참고)
+
+`SupportSkillData.boostedDamageBase/boostedManaCost/boostedCooldownSeconds`
+(0=이 스킬엔 강화 분기 없음, 대지진이 그 경우) + `SupportShop`의 모든
+manaCost/cooldownSeconds/ComputeDamage 호출부(13곳)를 `EffectiveManaCost`/
+`EffectiveCooldownSeconds`/`ComputeDamage(round, boosted)`로 교체.
+
+```
+해루석(A0ID)   L1(그대로) 2,500,000/마나700 → L2 3,000,000/마나600
+              ⚠️ 부가 버프 2종(Bmlc/Bmlt)은 실제 효과가 원작 조사에서
+              안 나와 결측으로 남김(수치만 반영, 버프는 안 지어냄)
+버스터콜(A0JR) 피해 불변(700만) → L2는 쿨타임100→66·마나500→333만
+대지진(AOeq)   L1=L2 완전 동일이라 boostedX 전부 0(미채움) — 항법을 골라도
+              이 스킬은 안 바뀐다(원작 자체가 그렇다)
+```
+
+### ⑤ 도움소 잠금 — 완료
+
+`ItemGambleState.ReducedPoolActive`의 하드코딩 `false` TODO를
+`navigationState.Choice == NavigationChoice.SupportLock`로 교체(신규
+형제 참조 필드 추가). `navigationState`가 안 붙어 있으면(씬 배선 전)
+`null` 체크로 기존과 같은 `false` — 회귀 없음.
+
+### ② 연합세력 — 보류(구조 확인 완료, 배선은 e0IX 대기)
+
+**확인 결과**: `UnitData.cs`에 포인트값(또는 그에 준하는 필드)이 **없다** —
+`EnemyData.pointValue`(§12/§17에서 만든 그것)는 적 전용이고, 아군 유닛 쪽엔
+대응 개념 자체가 없다. **PM 지시대로 등급 근사로 간다**:
+`POINTVALUE_CENSUS.md`의 등급→원작 포인트값 표(희귀함90/특수함102/전설101…)
+기준으로 "포인트값>100"은 **희귀함(90) 이하를 빼고 특수함/전설적인부터
+전부** 해당한다 — 우리 `UnitGrade.Tier()`로는 `Tier() >= Superior.Tier()`
+(=4, 특수함·히든 이상)가 그 경계와 정확히 겹친다(전설=Tier5도 물론 포함).
+**이건 원작대로가 아니라 우리 로스터에 맞춘 근사다** — 명시해둔다:
+
+```
+원작: 아군 유닛 자신의 GetUnitPointValue(원작 캐릭터별 고유값)가 기준
+우리: 그 유닛이 배정된 UnitGrade.Tier()가 기준(특수함·히든 이상 = "포인트값>100"으로 근사)
+이유: 원작 유닛→우리 로스터 매핑이 불가능으로 닫혀 있어 유닛별 고유값을 못 씀
+영향: 등급 경계에 걸친 개별 유닛의 실제 포인트값과 어긋날 수 있다(등급 평균으로 근사)
+```
+
+**배선 못 한 진짜 이유**: 지급할 보상 자체(`e0IX`, "흔한 소모성 위습")가
+**우리 `WispData` 자산 어디에도 아직 안 매핑돼 있다.** 리서치 쪽에 걸린
+그대로다("e0IX 위습 매핑" — PM이 대기 큐에 올려둔 항목, `A0LZ`가 이것 때문에
+미할당이라고 언급됨). 매핑이 오면 `UnitInventory.Register(UnitIdentity)`
+(모든 유닛이 필드에 들어올 때 정확히 한 번 불리는 자리, "로스터에 카운트될
+때"와 가장 가까운 훅)에서 `unit.Data.grade.Tier() >= UnitGrade.Superior.Tier()`
++ `NavigationChoice.Union`이면 `RewardDistributor.GrantWisps`(craftedWisp
+패턴과 동일)로 1개 지급하면 된다 — **로직 설계는 끝났고 자산 하나만
+기다린다.** 결측으로 만들지 않았다(추측으로 대충 만든 게 없다).
+
+**검증**: `Tools/compile_check.sh`/`check_required_fields.py`/
+`check_assignment_invariants.py` 전부 exit 0. 전부 Python/코드 리뷰
+수준 확인이지 런타임 실측은 아니다(§9 공통 구멍 그대로 적용) — 특히
+①의 A11S 스폰 시점 가산은 실제 웨이브 스폰을 돌려봐야 최종 확인된다.
