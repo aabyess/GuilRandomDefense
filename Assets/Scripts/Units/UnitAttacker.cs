@@ -62,7 +62,7 @@ public class UnitAttacker : MonoBehaviour
     // 가 맞게 들고 있었다). 그 배율을 걷어내고 AttackSpeedMultiplier로 옮겼다 — 연구소가
     // 원작대로 데미지가 아니라 공격속도를 올리게 됐다. UpgradeMultiplier엔 이제 특성강화
     // (딜증가)만 남는다.
-    public float AttackDamage => attackDamage * UpgradeMultiplier * AttackPowerMultiplier + ResearchBonus;
+    public float AttackDamage => attackDamage * UpgradeMultiplier * AttackPowerMultiplier + ResearchBonus + PrimaryStatAttackBonus;
     public float AttackRange => attackRange;
     public float AttackInterval => attackInterval / AttackSpeedMultiplier;
 
@@ -84,7 +84,7 @@ public class UnitAttacker : MonoBehaviour
     {
         get
         {
-            float product = ResearchSpeedMultiplier;
+            float product = ResearchSpeedMultiplier * HeroAttackSpeedMultiplier;
             foreach (float buff in attackSpeedBuffs) product *= buff;
             return product > 0f ? product : 1f;
         }
@@ -535,6 +535,39 @@ public class UnitAttacker : MonoBehaviour
             return unitData != null ? unitData.baseIntelligence + unitData.intelligencePerLevel * heroLevel + purchasedIntelligence : 0f;
         }
     }
+
+    // 원작 StrAttackBonus=800 — "주스탯 1점당 공격력 +800"(ORIGINAL_HERO_STATS.md ㉠, 힘
+    // 전용이 아니다). UnitData.primaryStat이 그 유닛의 주스탯을 가리킨다. None(기본값,
+    // 213종)이면 0 — AttackDamage에 더해도 회귀 없음. 엔진 원문이 가산(곱셈이 아님)이라
+    // ResearchBonus와 같은 자리에 더한다.
+    const float PrimaryStatAttackBonusPerPoint = 800f;
+
+    float PrimaryStatAttackBonus
+    {
+        get
+        {
+            UnitData unitData = identity != null ? identity.Data : null;
+            if (unitData == null) return 0f;
+
+            switch (unitData.primaryStat)
+            {
+                case PrimaryStat.Strength: return CurrentStrength * PrimaryStatAttackBonusPerPoint;
+                case PrimaryStat.Agility: return CurrentAgility * PrimaryStatAttackBonusPerPoint;
+                case PrimaryStat.Intelligence: return CurrentIntelligence * PrimaryStatAttackBonusPerPoint;
+                default: return 0f;
+            }
+        }
+    }
+
+    // 원작 AgiAttackSpeedBonus=0.01 — AGI 1점당 공격속도 +1%, 주스탯 여부와 무관하게
+    // 항상 적용된다(ORIGINAL_HERO_STATS.md ㉠ "AGI: 공격속도 +1%/점" — 주스탯 전용
+    // 조항이 아니다, 부스탯 성장분에도 걸린다). CurrentAgility가 0(기본, 213종 전부와
+    // 33종 중 AGI가 부스탯인 유닛의 초기 상태)이면 배율 1 — 회귀 없음. 기존 공속 배율
+    // 체인(ResearchSpeedMultiplier·attackSpeedBuffs)과 곱으로 합쳐진다(AttackSpeedMultiplier
+    // 참고) — 원작도 엔진 보너스가 다른 공속 원천과 곱으로 쌓이는 구조라 그대로 맞다.
+    const float AgiAttackSpeedBonusPerPoint = 0.01f;
+
+    float HeroAttackSpeedMultiplier => 1f + CurrentAgility * AgiAttackSpeedBonusPerPoint;
 
     // EnemyDummy.TakeDamage의 사망 처리(RewardDistributor.GrantKillReward와 같은 자리)가
     // 부른다 — laneIndex(원작 GetUnitUserData와 같은 라인 소유자 변수)의 초월함·영원한
