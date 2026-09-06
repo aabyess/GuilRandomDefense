@@ -1734,3 +1734,66 @@ exit 0. `김민준`(`Tasigi_03`, 타겟팅 분기 복사)은 이 건과 무관�
 **검증**: `Tools/compile_check.sh` exit 0. 14종 카운트는 `grade: 10`
 전수(`Assets/Data/Units/**/*.asset`)로 직접 세어 확인, Roster 폴더 밖엔
 없음.
+
+## 29. 06번⑥ 타시기(순수스탯형) 연결 — placeholder 걷어내고 진짜 효과로 (2026-09-07, PM 지시)
+
+`Trait_초월_노태현_AP.asset`(타시기)이 쓰던 `TraitEffectKind.DamageIncrease
+value=0` placeholder를 걷어내고 진짜 원작 효과를 연결했다: `heroXpGrant=
+5000`(⚠️ 레벨이 아니라 경험치 포인트) + `purchasedStatGrantEach=3`(STR/
+AGI/INT 각각). `UnitTraitData`에 두 필드 신설, `GameHud.OnTraitButtonClicked`
+가 구매 시점에 `ExecuteStatGrant`로 선택된 유닛 인스턴스의
+`UnitAttacker.AddHeroXp`/`AddPurchasedStat`을 1회 호출한다(`UnitUpgrades.
+IsUnlocked` 가드가 이미 "정확히 한 번만"을 보장 — 별도 잠금 불필요).
+
+`UnitAttacker.AddPurchasedStat(int statIndex, int amount = 1)`로 시그니처
+확장(기존 호출부는 amount 기본값 1이라 전부 무영향) — 타시기만 3을 넘긴다.
+
+placeholder였던 이유(과거 "우리 게임엔 경험치·능력치 축이 없다"는 전제)는
+2026-09-06 01번 영웅스탯 축 신설로 이미 깨졌었는데 이 트레잇만 안 갱신된
+상태였다 — description에 이 경위를 남겼다.
+
+**검증**: `compile_check.sh`/`check_required_fields.py`/
+`check_assignment_invariants.py` 전부 exit 0(경고 목록도 이전과 동일,
+새 위반 없음).
+
+## 30. 06번⑤ 아카이누(반복구매형) 연결 — HashSet 안 건드리고 별도 카운터 (2026-09-07, PM 지시)
+
+26명 중 유일한 반복구매형(원작: 몇 번이든 다시 살 수 있다, `UserData`=구매
+횟수 카운터, 상한 비교 없음). 나머지 25개가 쓰는 `UnitUpgrades.
+unlockedTraits`(HashSet, 1회잠금)는 **손 안 댔다** — 아카이누 하나 때문에
+그 25개의 "재구매 불가" 의미를 바꾸면 안 된다는 PM 원칙 그대로.
+
+대신 `UnitUpgrades.repeatablePurchaseCounts`(`Dictionary<UnitTraitData,
+int>`, 별도 저장소, `isRepeatablePurchase=false`인 트레잇은 아예 안 들어옴
+— 25개 무영향) + `UnitTraitData.isRepeatablePurchase`(bool, 기본 false) 신설.
+
+`GameHud.OnTraitButtonClicked`: `IsUnlocked(trait) && !isRepeatablePurchase`
+일 때만 재구매를 막는다(아카이누는 통과) — `Unlock()`은 2회차부터 그냥
+no-op(HashSet.Add가 false), 실제 횟수는 `IncrementRepeatablePurchase`가
+센다. `RefreshTraitButton`: `unlocked && isRepeatablePurchase`면 "습득
+완료"로 잠그지 않고 "N회 구매됨 — 추가 구매" + 비용/보유 포인트를 계속
+보여준다(버튼이 안 죽는다).
+
+`UnitUpgrades.SkillLevelIndexFor`: 반복구매형이면 `skillLevelUnlockIndex +
+max(0, 구매횟수-1)`을 인덱스로 쓴다(1회차=기존 인덱스 그대로, 그 뒤로
+구매마다 +1). `UnitAttacker.CurrentSkillLevel`이 이미 범위 초과 인덱스를
+마지막 레벨로 clamp하므로 상한을 따로 안 넣었다(원작 상한 없음 그대로).
+
+🔴 **원작 표(`TRAIT_LEVEL2_SOURCES.md` ③) — 반복 횟수(hitCount)=`5+레벨`**
+(레벨1=6회, 레벨2=7회 …)를 확인했지만, **`SkillData_원작017_H095.asset`의
+두 레벨 모두 여전히 `effects: []`(수치 미상, 사장님 콘텐츠 배정 대기)라
+지금은 몇 번을 사도 관측되는 변화가 없다** — 인덱스 계산 로직은 맞게
+돌지만 그 인덱스가 가리키는 레벨에 아직 아무 효과가 없어서다(정상,
+회귀 아님). 콘텐츠가 채워질 때 "인덱스 N → hitCount 5+(N+1)" 형태로
+채우면 된다는 걸 description에 남겼다.
+
+⚠️ **1회차 구매의 결과가 원작 "레벨1(6회)"과 "레벨2(7회)" 중 어느 쪽에
+대응하는지는 완전히 확정하지 않았다** — 기존(반복구매 발견 전) 판정이
+이미 `skillLevelUnlockIndex=1`(다른 15개 스킬승급형과 같은 "0=레벨1
+기본값, 1=구매 후" 관례)로 못박혀 있었고, 이번 작업은 그 기존 값을
+건드리지 않고 반복 구매분만 자연스럽게 이어 붙였다 — 값이 전부
+비어 있어 지금은 관측 불가능한 차이라 봉쇄는 안 했지만, 콘텐츠
+배정 시점에 재확인이 필요하다.
+
+**검증**: `compile_check.sh`/두 체크 스크립트 전부 exit 0, 새 경고 없음
+(2개 검증 로그를 §29 이전 상태와 diff해 확인).
