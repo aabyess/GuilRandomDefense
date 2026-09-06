@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_버프게이트_랜덤_미도리야_이즈쿠_B05N
   m_EditorClassIdentifier:
   skillName: 히그마(랜덤) — B05N 창(버프 부여)
-  description: 06번①(2026-09-06, PM 지시, 19ed606) — 원작 마운틴.D.히그마(h0AC)의 버프 B05N은 더미 Trig_Higma_Attack이 1/12(8.33%) 확률로 캐스터 자신에게 건다(오더 스트링 확인). 이 스킬이 그 opener다: 평타 적중마다 1/12 확률로 자기 자신에게 B05N을 건다(ApplyBuff, target=Self). 지속시간(1.15초)은 타수로 환산 — 1.15초 → 3대(buffHitCharges=3). 소비하는 쪽(SkillData_게이트_랜덤_미도리야_이즈쿠_079f80a5.asset, "LIFE게이지85.00 AND 버프B05N==true")은 requiredBuffId=B05N만 마저 걸면 완성되는데, 그 파일이 있는 Assets/Data/UnitSkills/를 구현담당1이 지금 같이 만지고 있어 이번엔 안 건드렸다(PM에게 보고, 디렉터리 안전해지면 이어서 완성). 그때까지 이 opener는 걸어둬도 무해하다.
+  description: 06번①(2026-09-06, PM 지시, 19ed606) — 원작 마운틴.D.히그마(h0AC)의 버프 B05N은 더미 Trig_Higma_Attack이 1/12(8.33%) 확률로 캐스터 자신에게 건다(오더 스트링 확인). 이 스킬이 그 opener다: 평타 적중마다 1/12 확률로 자기 자신에게 B05N을 건다(ApplyBuff, target=Self). 지속시간(1.15초)은 타수로 환산 — 1.15초 → 2대(buffHitCharges=2). ⚠️ 2026-09-06 정정(리서치담당 SHORT_BUFF_WINDOW_GATES.md, 연구 0단계 누락 재확인) — 등급 업그레이드는 "레벨당 조금씩"이 아니라 "첫 구매에 기본값이 통째로" 붙는 구조라 0단계와 1단계 차이가 가장 크다. 연구 1단계(원작에서 실제로 켜지는 최소 상태) 기준으로 3에서 2로 낮춘다. 소비하는 쪽(SkillData_게이트_랜덤_미도리야_이즈쿠_079f80a5.asset, "LIFE게이지85.00 AND 버프B05N==true")은 requiredBuffId=B05N만 마저 걸면 완성되는데, 그 파일이 있는 Assets/Data/UnitSkills/를 구현담당1이 지금 같이 만지고 있어 이번엔 안 건드렸다(PM에게 보고, 디렉터리 안전해지면 이어서 완성). 그때까지 이 opener는 걸어둬도 무해하다.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -40,4 +40,4 @@ MonoBehaviour:
       randMax: 1
       casterBuffCountFactor: 0
       buffId: B05N
-      buffHitCharges: 3
+      buffHitCharges: 2
