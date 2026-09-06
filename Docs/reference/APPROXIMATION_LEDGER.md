@@ -428,14 +428,33 @@ com.unity.test-framework 1.6.0 (Packages/manifest.json에 이미 있음 — 추�
 연구소 배율 등, 코드 리뷰·정적 대조·Python 재구현으로는 검증했지만 **실제 Unity
 플레이 모드에서 값이 그대로 나오는지는 아직 아무것도 확인 안 됐다.**
 
-**진행 중(2026-09-06 저녁)**: 스택 3축을 실제 피해 계산 경로로 태우는 최소 EditMode
-테스트 하네스를 `Assets/` 밖 스크래치패드에 준비 중이다(에디터가 열려 있어 `Assets/`
-아래에 파일을 두면 임포트/리컴파일이 걸려 위험) — 에디터가 닫힌 게 확인되면 옮겨서
-실행한다. 검증 대상은 정확히 "런타임이 그 코드 경로를 실제로 부르는가"이지 산술
-재확인이 아니다(그건 Python이 이미 했다).
+**실행 시도(2026-09-06 밤) — 컴파일 단계에서 막힘, 테스트 자체는 미실행**: 사장님
+에디터가 닫힌 걸 확인하고 스크래치패드의 5개 테스트파일(+asmdef)을
+`Assets/Tests/EditMode/`로 옮겨 `-batchmode -runTests -testPlatform EditMode`로
+실행했다. **"Aborting batchmode due to failure: Scripts have compiler errors."**
+— 9건 중 몇 건이 통과/실패인지조차 안 나왔다. 테스트가 도는 단계에 도달하지 못했다.
 
-**되돌릴 조건**: 위 하네스가 실행돼 통과하면 — 그 뒤로는 "숫자 대조(Python)"가 아니라
-"런타임 실측"으로 격상된다.
+원인: 테스트 asmdef가 `"references": ["Assembly-CSharp"]`로 게임 코드를 참조했는데,
+`Assets/Scripts/`엔 실제 `.asmdef` 파일이 없다(암묵적 기본 어셈블리) — Unity의 asmdef
+`references`는 프로젝트 안에 실재하는 다른 `.asmdef`의 `name`/GUID를 찾는 방식이라,
+"Assembly-CSharp"라는 이름의 진짜 asmdef가 없으면 해석이 안 된다. `SkillEffect`·
+`UnitAttacker`·`ItemGamblePoolData` 등 30여 개 타입이 전부 "못 찾음"(CS0246)으로
+떨어졌다. **이건 §9가 지금까지 말해온 "인프라는 있는데 안 찾아봤다"의 세부 사례가
+하나 더 늘어난 것이다** — asmdef 없이 짠 하네스가 실제로 컴파일되는지를 미리
+확인 안 했다.
+
+⚠️ **즉시 조치**: 이 컴파일 에러 상태로 `Assets/Tests/EditMode/`를 남겨두면 사장님이
+다음에 에디터를 여는 순간 프로젝트 전체가 컴파일 에러 상태가 된다 — 발견 즉시
+`Assets/Tests/` 전체를 삭제했다(스크래치패드 원본은 그대로 보존, 씬 파일은 안
+건드림). `Tools/compile_check.sh` 재확인 0.
+
+**진짜 수정법(승인 대기, 미실행)**: `Assets/Scripts/`에 실제 asmdef를 만들어야 테스트
+asmdef가 그걸 이름/GUID로 참조할 수 있다 — 게임 전체 코드의 컴파일 단위를 바꾸는
+침습적인 변경이라 승인 없이 진행하지 않았다.
+
+**되돌릴 조건**: `Assets/Scripts/`에 asmdef가 생기고(또는 다른 참조 방법이 확인되고)
+하네스가 실제로 컴파일·실행돼 통과하면 — 그때 "숫자 대조(Python)"가 "런타임 실측"으로
+격상된다. 지금은 여전히 Python 재현 수준에 머물러 있다.
 
 ## 10. RRD순번 다중효과 버그 수정 — 확정 2건 (2026-09-06, PM 지시)
 
