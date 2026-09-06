@@ -2396,9 +2396,6 @@ public static class MapGenerator
     // 흔함 유닛이 하나씩 나온다. 씬에 이미 직렬화된 값이 있어도 여기서 덮어쓴다.
     const int StartingWispCount = 5;
 
-    // 시작 특수유닛(원작 h05X 레일리) — 로스터가 아니라 isSystemUnit 특수 유닛이다.
-    const string StartingSpecialUnitPath = "Assets/Data/Units/Special/Unit_레일리_h05X.asset";
-
     // 라운드 클리어 보상: 라운드 하나 지날 때마다 랜덤위습 2개(사장님 지시). 시작 위습과
     // 같은 에셋(Wisp_랜덤유닛)을 재사용한다 — "랜덤위습"이 곧 이 등급(랜덤유닛)의 위습이다.
     const int RoundRewardWispCount = 2;
@@ -2546,35 +2543,6 @@ public static class MapGenerator
         so.ApplyModifiedProperties();
 
         return $"\n시작 위습을 {wisp.wispName} {StartingWispCount}개로 맞췄습니다.";
-    }
-
-    // 시작 특수유닛 — 원작은 CreateBuildingsForPlayerN에서 h05X(레일리, 희귀함
-    // 「[히든]세계의 진실을 아는 자」)를 플레이어마다 CreateUnit으로 바로 놓는다. 도박·조합
-    // 결과물이 아니라 **게임 시작부터 손에 있는 유닛**이다(2026-09-06 원문 확인,
-    // RAYLEIGH_HIDDEN_AND_H0C4_TIMING_RESOLVED.md).
-    //
-    // ⚠️ 「레일리 히든 아이템」이라고 적힌 옛 문서는 틀렸다 — 아이템이 아니라 유닛이고,
-    // 능력 A0OE(「판매-특수」)로 팔면 흔함 선택위습 1 + 특성포인트 1이 나온다. 아이템 38종
-    // 센서스에 대조해도 0건이다.
-    //
-    // ⚠️ h05Y(고대의 배)는 여기가 아니다 — 그건 스토리7 클리어 보상이라 아래
-    // WireAncientShipReward가 따로 건다. 같은 「특수 유닛」이라고 한 자리에 묶지 말 것.
-    static string WireStartingSpecialUnit()
-    {
-        RewardDistributor distributor = Object.FindFirstObjectByType<RewardDistributor>(FindObjectsInactive.Include);
-        if (distributor == null) return "";
-
-        UnitData rayleigh = AssetDatabase.LoadAssetAtPath<UnitData>(StartingSpecialUnitPath);
-        if (rayleigh == null) return $"\n⚠️ 시작 특수유닛 에셋을 못 찾았습니다: {StartingSpecialUnitPath}";
-
-        SerializedObject so = new SerializedObject(distributor);
-        SerializedProperty prop = so.FindProperty("startingSpecialUnit");
-        if (prop == null) return "\n⚠️ RewardDistributor에 startingSpecialUnit 필드가 없습니다.";
-
-        prop.objectReferenceValue = rayleigh;
-        so.ApplyModifiedProperties();
-
-        return $"\n시작 특수유닛을 {rayleigh.name}으로 맞췄습니다(플레이어마다 1기).";
     }
 
     // 05번 「고대의 배」 지급 경로 ㉡(스토리 7=Story07_메가스터디 클리어 보상, 사장님 결정) —
@@ -2746,7 +2714,6 @@ public static class MapGenerator
         report += Step("시작 자원", () => SetStartingResources(contexts));
         report += Step("위습 프리팹", ShapeWispPrefab);
         report += Step("시작 위습", WireStartingWisps);
-        report += Step("시작 특수유닛(레일리)", WireStartingSpecialUnit);
         report += Step("고대의 배 지급(스토리7)", WireAncientShipReward);
         report += Step("라운드 보상 위습", WireRoundRewardWisp);
         report += Step("사이드보스 매니저", WireSideBossManager);
