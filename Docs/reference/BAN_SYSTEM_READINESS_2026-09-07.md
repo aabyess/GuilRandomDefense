@@ -85,6 +85,31 @@ ChatUnlockManager.cs 기존 주석    "Eternal·Forever·IM 47종 + Nika 1종" =
 **category enum 자체(4종)는 원작 4계열과 이름이 맞다** — Eternal/Forever/
 Immortal/Nika. 이건 문제 없다.
 
+### 🔴 2026-09-07 갱신 — 명세 도착, 세 번째 숫자까지 나왔다. 셋 다 다르다
+
+```
+ChatUnlockManager.cs 기존 주석    "Eternal·Forever·IM 47종 + Nika 1종" = 48
+PM 1차 전달(리서치 초안)          "Eternal 27 · IM 11 · Forever 7"    = 45
+BAN_SYSTEM_SPEC(리서치 확정)      "Eternal 27 · 불멸 11 · 제한 8 · 영원 7" = 53
+```
+세 소스가 전부 다른 수를 대고 있다 — **47도 45도 53과 안 맞는다.**
+`category` enum이 Eternal/Forever/Immortal/Nika 4종인데, 확정 스펙은
+"초월(Eternal?)·불멸·제한·영원" 4계열로 **이름 자체도 다르게 부른다**
+(Forever↔영원, Immortal↔불멸이 같은 대상의 다른 이름일 가능성, 또는
+Nika가 이 53에서 아예 빠졌을 가능성) — enum 이름과 스펙 계열명이
+1:1로 맞물리는지부터 다시 봐야 한다.
+
+**⚠️ 자산이 생길 때(사장님 유닛 배정 시) 이 개수(원작 계열별 정확한
+수)를 맞추는 게 검수 항목이다** — 지금 세 숫자 중 어느 것도 확정으로
+믿지 말고, 자산을 다 채운 뒤 계열별로 직접 세어 스펙 문서(최신본)와
+대조할 것. 지어내지 않는다 원칙상 지금 이 셋 중 하나를 고르지 않는다.
+
+**범위(②)는 명세로 확정됐다 — 게임 전역 공유다.** `DisableTrigger`가
+전역 핸들이고, 잠금 자체는 `Player(0)~(3)` 4명에 개별 반복 호출되는
+구조라는 게 결정적 근거(리서치 확인). ②에서 적어둔 "두 경우 각각
+무엇을 고칠지" 표는 **게임 전역 쪽(`HashSet<ChatUnlockData>`, playerId
+키 없음)으로 확정**됐다 — 명세 구현 시 그 갈래를 쓰면 된다.
+
 ## ④ UI — 잠금 표시 자리 자체가 없다
 
 `GameChatBox`는 순수 텍스트 입력창(OnGUI, `TextField` 하나)뿐이다 —
