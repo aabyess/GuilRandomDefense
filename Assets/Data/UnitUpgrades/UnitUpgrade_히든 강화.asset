@@ -13,7 +13,11 @@ MonoBehaviour:
   m_Name: UnitUpgrade_히든 강화
   m_EditorClassIdentifier:
   trackName: 히든 강화
-  description: 히든 강화 — 해당 등급 유닛 전체의 공격력을 영구히 올립니다.
+  description: '히든 강화 — 해당 등급 유닛 전체의 공격속도를 영구히 올리고(statLevel1Multiplier/statGrowthPerLevel,
+    2026-09-06 정정: 구현담당2 발견/PM 확인 — 이 필드가 실제로는 공격력이 아니라 원작 공속
+    증가율 gba1/gmo1이었다), 공격력도 별도로 고정 가산합니다(statLevel1Bonus/statBonusGrowthPerLevel,
+    gba2/gmo2 — 이건 처음부터 맞았다). 필드 이름은 직렬화 키라 안 바꿨다(값 유실 방지, PM
+    지시) — UnitUpgradeTrackData.cs 주석 참고.'
   targetGrades:
   - 4
   maxLevel: 21

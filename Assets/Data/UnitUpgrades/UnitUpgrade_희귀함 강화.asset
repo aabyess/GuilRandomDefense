@@ -13,7 +13,11 @@ MonoBehaviour:
   m_Name: UnitUpgrade_희귀함 강화
   m_EditorClassIdentifier:
   trackName: 희귀함 강화
-  description: 희귀함 강화 — 해당 등급 유닛 전체의 공격력을 영구히 올립니다.
+  description: '희귀함 강화 — 해당 등급 유닛 전체의 공격속도를 영구히 올립니다(statLevel1Multiplier/statGrowthPerLevel,
+    2026-09-06 정정: 구현담당2 발견/PM 확인 — 이 필드가 실제로는 공격력이 아니라 원작 공속
+    증가율 gba1/gmo1이었다). statLevel1Bonus/statBonusGrowthPerLevel(공격력 고정 가산)은
+    원작에 없어 0(기본값)이 맞다 — 5개 트랙(전설적인·히든·불멸·초월함·제한됨)만 이 값이
+    있다. 필드 이름은 직렬화 키라 안 바꿨다(값 유실 방지, PM 지시).'
   targetGrades:
   - 3
   maxLevel: 16

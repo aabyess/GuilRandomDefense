@@ -42,15 +42,25 @@ public class UnitUpgradeTrackData : ScriptableObject
     // 안에서 초월·불멸=75, 랜덤유닛=50으로 잡았다 — 지어낸 숫자라는 걸 여기 남긴다. 정확한
     // 값이 필요해지면 워크3 스톡 업그레이드 비용표를 별도로 대조해야 한다.
 
-    // 공격력 배율 = 레벨<=0이면 1(강화 안 한 상태) · 레벨>=1이면
-    // statLevel1Multiplier + statGrowthPerLevel × (레벨−1). 원작이 이 선형식이다 —
-    // "레벨1 배수"가 등급마다 달라서(예: 희귀함 0.70, 초월함 2.15) 이 필드가 따로 필요했다.
+    // ⚠️ 2026-09-06 정정(구현담당2 발견, PM 확인) — 이 필드는 이름과 달리 "공격력 배율"이
+    // 아니라 **원작 공속 증가율(`gba1`/`gmo1`)**이다. 6개 트랙(불멸·전설적인·제한됨·히든·
+    // 초월함·희귀함) 전부에서 이 값이 리서치담당이 별도로 뽑은 공속 표(초월함 +215%/+6%,
+    // 불멸 +210%/+6% 등)와 정확히 일치했다 — 진짜 공격력 가산치는 아래 statLevel1Bonus
+    // (gba2/gmo2)가 이미 맞게 들고 있다. 필드 이름은 직렬화 키라 못 바꾼다(바꾸면 이미
+    // 채워진 값이 전부 날아간다, PM 지시) — 이름은 낡았지만 값은 공속으로 취급한다.
+    // 원작 뜻이 "레벨1부터 +210%"(증가율)라 배수가 아니다 — 실제 배수는
+    // 1 + statLevel1Multiplier + statGrowthPerLevel×(레벨−1)이어야 한다(SpeedMultiplierForLevel
+    // 참고). 레벨 0(강화 안 한 상태)은 증가율 0 → 배수 1로 원작과 같다.
     public float statLevel1Multiplier = 1f;
-    public float statGrowthPerLevel = 1.1f;   // 레벨당 공격력 배율 증분(가산, 더 이상 밑이 아니다)
+    public float statGrowthPerLevel = 1.1f;   // 레벨당 공속 증가율 증분(가산)
 
     // ⚠️ 랜덤유닛의 statLevel1Multiplier도 근사치다 — 원작 필드값이 0으로 읽혔는데, 다른
     // 트랙(특별함 등)에서 필드가 비면 엔진 스톡 기본값(1.0)을 상속하는 패턴이 확인돼서
     // 0이 아니라 1.0으로 해석했다(리서치담당, 2026-09-05). 레벨당 증분(+0.14)만 확정값이다.
+    // ⚠️ 위 "1.0 상속" 해석은 이제 공속 축으로 다시 봐야 한다 — 랜덤전용·특별함은 리서치담당
+    // 공속 표에서도 공속 기본이 0(원작 실값, 결측 아님)이라 이 필드도 0이 맞다. 아래
+    // SpeedMultiplierForLevel은 statLevel1Multiplier를 "1.0을 상속한 배수"가 아니라 "0인
+    // 증가율"로 다룬다 — 랜덤유닛 트랙만 이 필드가 여전히 0/+0.14로 남아 있다면 재확인 필요.
 
     public Color slotColor = Color.white;
 
@@ -61,24 +71,23 @@ public class UnitUpgradeTrackData : ScriptableObject
     // `ResearchLabImplemented`가 true여도 계속 잠긴 채로 남는다 — UnitUpgradeShop 참고.
     public bool hasOriginalResearch = true;
 
-    // 절대 가산치(`gba2`/`gmo2`, 리서치담당 2026-09-05 확정) — 배수(statLevel1Multiplier 등)와
-    // **완전히 별개 필드**로 원작에 저장돼 있다. 전설적인·히든·불멸·초월함·제한됨 5개만 이 값이
-    // 있다(나머지 특별함·희귀함·랜덤전용은 0 — 필드 기본값 그대로 두면 된다). 최종 공격력은
-    // "기본공격력 × 배수 + 가산치"로, 배수와 곱해지는 게 아니라 그 위에 그대로 더해진다
-    // (UnitAttacker.AttackDamage 참고). 배율과 같은 선형식(레벨1값 + 레벨당증분×(레벨−1))이다 —
-    // 레벨 0은 가산 없음(0).
+    // 절대 가산치(`gba2`/`gmo2`, 리서치담당 2026-09-05 확정) — 진짜 공격력(power) 데이터다.
+    // 위 statLevel1Multiplier(공속 증가율)와 **완전히 별개 필드**로 원작에 저장돼 있다.
+    // 전설적인·히든·불멸·초월함·제한됨 5개만 이 값이 있다(나머지 특별함·희귀함·랜덤전용은
+    // 0 — 필드 기본값 그대로 두면 된다). UnitAttacker.AttackDamage에 그대로 더해진다(공속
+    // 배율과는 안 곱해진다). 선형식(레벨1값 + 레벨당증분×(레벨−1))이다 — 레벨 0은 가산 없음(0).
     public float statLevel1Bonus;
     public float statBonusGrowthPerLevel;
-
-    // ⚠️ 랜덤유닛의 statLevel1Multiplier도 근사치다 — 원작 필드값이 0으로 읽혔는데, 다른
-    // 트랙(특별함 등)에서 필드가 비면 엔진 스톡 기본값(1.0)을 상속하는 패턴이 확인돼서
-    // 0이 아니라 1.0으로 해석했다(리서치담당, 2026-09-05). 레벨당 증분(+0.14)만 확정값이다.
 
     public int CostForLevel(int level) =>
         level <= 0 ? Mathf.Max(0, costBase) : Mathf.Max(0, Mathf.RoundToInt(costGrowthPerLevel));
 
-    public float MultiplierForLevel(int level) =>
-        level <= 0 ? 1f : statLevel1Multiplier + statGrowthPerLevel * (level - 1);
+    // 2026-09-06 정정 — 예전 이름 MultiplierForLevel, "공격력 배율"로 잘못 쓰였다(구현담당2
+    // 발견, PM 확인). 메서드는 직렬화되지 않으니 이름을 바로 고쳤다. statLevel1Multiplier가
+    // 원작 "증가율"(+210% 등)이라 실제 배수는 1을 더해야 한다 — 레벨 0은 증가율 0이라
+    // 자연히 배수 1(무영향)이 된다.
+    public float SpeedMultiplierForLevel(int level) =>
+        level <= 0 ? 1f : 1f + statLevel1Multiplier + statGrowthPerLevel * (level - 1);
 
     public float BonusForLevel(int level) =>
         level <= 0 ? 0f : statLevel1Bonus + statBonusGrowthPerLevel * (level - 1);

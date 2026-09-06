@@ -43,10 +43,15 @@ public class UnitAttacker : MonoBehaviour
     bool upgradeMultiplierDirty = true;
     float cachedUpgradeMultiplier = 1f;
     float cachedResearchBonus;
+    float cachedResearchSpeedMultiplier = 1f;
 
     // 디버그 표시용 — 스탯이 실제로 적용됐는지 화면에서 확인하기 위해 노출한다.
-    // 연구소 가산치(ResearchBonus)는 배수(UpgradeMultiplier)·도움소 버프(AttackPowerMultiplier)
-    // 어느 쪽과도 안 곱한다 — 원작 공식 "기본공격력×배수 + 가산치" 그대로, 맨 위에 더하기만 한다.
+    // ⚠️ 2026-09-06 정정(구현담당2 발견, PM 확인) — 예전엔 여기서 UnitUpgrades.MultiplierForGrade를
+    // 곱했는데, 그 값이 실제로는 공격력이 아니라 원작 공속 증가율(gba1/gmo1) 데이터였다
+    // (6개 트랙 전부 리서치담당 공속 표와 정확히 일치, 진짜 공격력 가산치는 이미 ResearchBonus
+    // 가 맞게 들고 있었다). 그 배율을 걷어내고 AttackSpeedMultiplier로 옮겼다 — 연구소가
+    // 원작대로 데미지가 아니라 공격속도를 올리게 됐다. UpgradeMultiplier엔 이제 특성강화
+    // (딜증가)만 남는다.
     public float AttackDamage => attackDamage * UpgradeMultiplier * AttackPowerMultiplier + ResearchBonus;
     public float AttackRange => attackRange;
     public float AttackInterval => attackInterval / AttackSpeedMultiplier;
@@ -59,13 +64,30 @@ public class UnitAttacker : MonoBehaviour
     // 출항이다(원작 확인, 2026-09-04: 공격속도가 아니라 공격력 버프다)용 — 같은 누적 방식.
     readonly List<float> attackPowerBuffs = new List<float>();
 
+    // ⚠️ 2026-09-06 연결(구현담당2, PM 승인 — "만드세요, 사장님께 안 올립니다") — 연구소
+    // 등급 강화가 원작대로 공속도 올린다(gba1/gmo1). 도움소 임시 버프(attackSpeedBuffs)와
+    // 곱으로 겹친다. 영원함 트랙은 배선하지 않는다(대응하는 원작 등급 트랙이 없다, PM 지시)
+    // — ResearchSpeedMultiplier가 legacyGradeLevels에서 영원함 트랙을 절대 못 찾아(잠긴
+    // 트랙이라 LevelUp이 안 불린다) 자동으로 1(무영향)이라 별도 예외 코드가 필요 없다.
+    // 타입 업그레이드(+최대 13%, 3레벨 별도 축)는 이번에 넣지 않는다(PM 지시).
     float AttackSpeedMultiplier
     {
         get
         {
-            float product = 1f;
+            float product = ResearchSpeedMultiplier;
             foreach (float buff in attackSpeedBuffs) product *= buff;
             return product > 0f ? product : 1f;
+        }
+    }
+
+    // 연구소 공속 배율(gba1/gmo1) — RefreshUpgradeCacheIfDirty가 같이 갱신한다(레벨업
+    // 이벤트 하나로 데미지·가산·공속 셋 다 무효화하면 되므로 dirty 플래그를 공유한다).
+    float ResearchSpeedMultiplier
+    {
+        get
+        {
+            RefreshUpgradeCacheIfDirty();
+            return cachedResearchSpeedMultiplier;
         }
     }
 
@@ -1305,8 +1327,11 @@ public class UnitAttacker : MonoBehaviour
         }
     }
 
-    // 배수(특성강화 딜증가 × 연구소 등급배율)와 가산치(연구소 절대 가산)를 한 번에 갱신한다 —
-    // 둘 다 같은 UnitUpgrades.OnLevelChanged 이벤트로만 바뀌므로 dirty 플래그를 공유해도 된다.
+    // 배수(특성강화 딜증가)·가산치(연구소 절대 가산)·공속배율(연구소 등급 공속)을 한 번에
+    // 갱신한다 — 셋 다 같은 UnitUpgrades.OnLevelChanged 이벤트로만 바뀌므로 dirty 플래그를
+    // 공유해도 된다. ⚠️ 2026-09-06 정정 — 예전엔 여기서 연구소 배율(source.MultiplierForGrade)
+    // 을 데미지에 곱했는데, 그 필드가 실제로는 공속(gba1/gmo1) 데이터였다(구현담당2 발견,
+    // PM 확인) — 데미지 쪽 곱은 걷어내고 특성강화(딜증가)만 남겼다.
     void RefreshUpgradeCacheIfDirty()
     {
         if (!upgradeMultiplierDirty) return;
@@ -1317,20 +1342,19 @@ public class UnitAttacker : MonoBehaviour
             ? source.EffectSum(unitData, TraitEffectKind.DamageIncrease)
             : 0f;
 
-        // 연구소(등급 전체 강화, 05번, 2026-09-05) — 특성강화(딜증가)와 별개 축이라
-        // 곱으로 겹친다. 유닛 종의 등급이 담당 트랙에 없거나 그 트랙이 아직 레벨 0이면
-        // MultiplierForGrade가 1을 돌려줘서 무영향이다.
-        float researchMultiplier = source != null && unitData != null
-            ? source.MultiplierForGrade(unitData.grade)
-            : 1f;
-
-        cachedUpgradeMultiplier = (1f + damageBonusPercent) * researchMultiplier;
+        cachedUpgradeMultiplier = 1f + damageBonusPercent;
 
         // 절대 가산치 — 전설·히든·불멸·초월·제한됨 5개 트랙만 0이 아니다. 대응 트랙이 없거나
         // 레벨 0이면 BonusForGrade가 0을 돌려준다.
         cachedResearchBonus = source != null && unitData != null
             ? source.BonusForGrade(unitData.grade)
             : 0f;
+
+        // 연구소 등급 공속(gba1/gmo1, 2026-09-06 신규 연결) — 유닛 종의 등급이 담당 트랙에
+        // 없거나 그 트랙이 아직 레벨 0이면 SpeedMultiplierForGrade가 1을 돌려줘서 무영향이다.
+        cachedResearchSpeedMultiplier = source != null && unitData != null
+            ? source.SpeedMultiplierForGrade(unitData.grade)
+            : 1f;
 
         upgradeMultiplierDirty = false;
     }

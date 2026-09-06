@@ -178,16 +178,21 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
         OnLevelChanged?.Invoke();
     }
 
-    // UnitAttacker.UpgradeMultiplier가 부른다 — 이 유닛의 등급을 담당하는 트랙을
-    // legacyGradeLevels에서 찾아 그 레벨의 공격력 배율을 돌려준다. 레벨 0(한 번도
-    // 안 산 트랙)은 애초에 이 사전에 키로 없어도 상관없다 — 못 찾으면 기본값 1을
-    // 돌려주는데, `MultiplierForLevel(0)`도 항상 1이라 결과가 같다.
-    public float MultiplierForGrade(UnitGrade grade)
+    // ⚠️ 2026-09-06 정정(구현담당2 발견, PM 확인) — 예전 이름 MultiplierForGrade는 이
+    // 값을 "공격력 배율"로 UnitAttacker가 데미지에 곱하고 있었는데, 실제로는 원작 공속
+    // 증가율(gba1/gmo1) 데이터였다(6개 트랙 전부 리서치담당 공속 표와 정확히 일치).
+    // 진짜 공격력 가산치는 BonusForGrade(gba2/gmo2)가 이미 맞게 들고 있다 — 이 메서드는
+    // 이제 UnitAttacker.AttackSpeedMultiplier가 부른다. 레벨 0(한 번도 안 산 트랙)은
+    // 이 사전에 키로 없어도 상관없다 — 못 찾으면 기본값 1을 돌려주는데,
+    // `SpeedMultiplierForLevel(0)`도 항상 1(무영향)이라 결과가 같다. 영원함 트랙은
+    // hasOriginalResearch=false라 LevelUp이 절대 안 불려 legacyGradeLevels에 안 들어온다
+    // — 별도 제외 코드 없이 자동으로 무영향(1)이다(PM 지시, 영원함은 배선하지 않는다).
+    public float SpeedMultiplierForGrade(UnitGrade grade)
     {
         foreach (KeyValuePair<UnitUpgradeTrackData, int> entry in legacyGradeLevels)
         {
             if (entry.Key != null && entry.Key.targetGrades != null && entry.Key.targetGrades.Contains(grade))
-                return entry.Key.MultiplierForLevel(entry.Value);
+                return entry.Key.SpeedMultiplierForLevel(entry.Value);
         }
         return 1f;
     }

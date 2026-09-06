@@ -13,7 +13,15 @@ MonoBehaviour:
   m_Name: UnitUpgrade_영원함 강화
   m_EditorClassIdentifier:
   trackName: 영원함 강화
-  description: 영원함 강화 — 원작에 대응하는 연구소가 없는 등급입니다. 잠겨 있습니다. ⚠️ 2026-09-06 추가 — 2026-09-05에 "원작 대응 없음"으로 판정해 잠갔으나, 2026-09-06 조사에서 원작 R009(glvl 25)가 후보로 나왔다. 다만 이건 "이름"만 보고 찾은 것이고(오늘 이름으로 판정했다 틀린 사례가 여럿이었다, 예: "A11S식"이 진짜 A11S와 무관했던 것) — R009가 실제로 이 등급(영원함)에 붙는지, gba1/gmo1(공속)·gba2/gmo2(공격력)·비용·glvl 전부가 맞는지는 아직 동작 기준으로 확인 안 됐다(리서치담당 확인 대기). **maxLevel=5를 포함해 이 트랙의 현재 값(costBase·costGrowthPerLevel·statLevel1Multiplier·statGrowthPerLevel 전부)은 원작 값이 아니라 전부 자리표시자다** — 확인 오기 전엔 hasOriginalResearch를 풀지 않는다(자리표시자 그대로 살아나면 원작과 다른 강화가 실제로 게임에 돈다).
+  description: '영원함 강화 — 원작에 대응하는 연구소가 없는 등급입니다. 잠겨 있습니다. 2026-09-05
+    「원작 대응 없음」 판정 유지. 2026-09-06 재확인 — 원작 R009(glvl 25)는 어느 유닛에도
+    안 붙은 죽은 업그레이드다(리서치담당 확인: R009를 참조하는 유닛(upgr) 0건, war3map.j
+    등장 0건). 원작 영원한은 등급 트랙이 아니라 유닛 전용 트랙 8종을 쓴다(미호크 R007·핸콕
+    R016·비비 R013 등 8종 개별 + 3개 유닛이 초월함 트랙 R003을 그대로 재사용 — R003 자체는
+    초월함 소속이지 영원함 트랙이 아니다). 즉 영원함을 등급 공통 트랙으로 만드는 것 자체가
+    원작에 대응이 없다 — 원작대로 가려면 유닛 8개짜리 개별 트랙이어야 하고, 지금처럼 잠가
+    두는 게 원작에서 벗어나지 않는 선택이다. 현재 값(maxLevel·costBase·costGrowthPerLevel·statLevel1Multiplier·statGrowthPerLevel
+    전부)은 자리표시자다 — hasOriginalResearch는 계속 0으로 둔다.'
   targetGrades:
   - 9
   maxLevel: 5

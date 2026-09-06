@@ -86,7 +86,11 @@ public class UnitUpgradeShop : MonoBehaviour, ILaneShop
         if (track == null) return null;
 
         int level = LevelOf(track);
-        float multiplier = track.MultiplierForLevel(level);
+        // ⚠️ 2026-09-06 정정(구현담당2 발견, PM 확인) — 이 트랙 배율은 공격력이 아니라
+        // 원작 공속 증가율(gba1/gmo1)이다. 가산치(statLevel1Bonus, gba2/gmo2)는 별도로
+        // 진짜 공격력이라 툴팁에 같이 보여준다.
+        float speedMultiplier = track.SpeedMultiplierForLevel(level);
+        float powerBonus = track.BonusForLevel(level);
 
         if (!ResearchLabImplemented)
             return $"{track.trackName}\n{track.description}\n현재 Lv.{level} — 연구소 준비 중, 아직 강화할 수 없습니다";
@@ -95,13 +99,14 @@ public class UnitUpgradeShop : MonoBehaviour, ILaneShop
             return $"{track.trackName}\n{track.description}\n원작에 대응하는 연구소가 없는 등급입니다 — 강화할 수 없습니다";
 
         if (track.maxLevel > 0 && level >= track.maxLevel)
-            return $"{track.trackName}\n{track.description}\n현재 Lv.{level} (공격력 x{multiplier:F2}) — 최대 레벨";
+            return $"{track.trackName}\n{track.description}\n현재 Lv.{level} (공속 x{speedMultiplier:F2}, 공격력 +{powerBonus:F0}) — 최대 레벨";
 
         int cost = track.CostForLevel(level);
-        float nextMultiplier = track.MultiplierForLevel(level + 1);
+        float nextSpeedMultiplier = track.SpeedMultiplierForLevel(level + 1);
+        float nextPowerBonus = track.BonusForLevel(level + 1);
         return $"{track.trackName}\n{track.description}\n"
-             + $"현재 Lv.{level} (공격력 x{multiplier:F2})\n"
-             + $"다음 레벨: x{nextMultiplier:F2} — 비용 {cost}엔";
+             + $"현재 Lv.{level} (공속 x{speedMultiplier:F2}, 공격력 +{powerBonus:F0})\n"
+             + $"다음 레벨: 공속 x{nextSpeedMultiplier:F2}, 공격력 +{nextPowerBonus:F0} — 비용 {cost}엔";
     }
 
     public bool TryUse(int index, LaneShopTarget target, out string failReason)

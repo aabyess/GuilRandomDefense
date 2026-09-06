@@ -13,13 +13,18 @@ MonoBehaviour:
   m_Name: UnitUpgrade_랜덤유닛 강화
   m_EditorClassIdentifier:
   trackName: 랜덤유닛 강화
-  description: 랜덤유닛 강화 — 해당 등급 유닛 전체의 공격력을 영구히 올립니다.
+  description: '랜덤유닛 강화 — 해당 등급 유닛 전체의 공격속도를 영구히 올립니다(2026-09-06
+    정정, 구현담당2 발견/PM 확인: statLevel1Multiplier는 공격력이 아니라 원작 공속 증가율
+    gba1/gmo1이다). statLevel1Multiplier를 1.0→0.0으로 고쳤다 — 옛 값 1.0은 "필드가 비면
+    엔진 스톡 기본값 1.0을 상속한다"는 옛 가설(2026-09-05)에서 나왔는데, 리서치담당이 새로
+    뽑은 공속 표에서 랜덤전용·특별함만 공속 기본이 0(원작 실값, 결측 아님)으로 확인돼
+    가설이 틀렸다. 레벨당 증분(+0.14)은 그대로 확정값이다.'
   targetGrades:
   - 10
   maxLevel: 21
   costBase: 50
   costGrowthPerLevel: 40
-  statLevel1Multiplier: 1.0
+  statLevel1Multiplier: 0.0
   statGrowthPerLevel: 0.14
   slotColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   hasOriginalResearch: 1
