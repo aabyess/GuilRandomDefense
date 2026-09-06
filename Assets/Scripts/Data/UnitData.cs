@@ -244,9 +244,15 @@ public class UnitGambleOption
     // 특정 유닛 결과(A023·A0OD처럼 결과가 하나로 정해진 경우). resultPool과 동시에 채우지
     // 않는다 — resultUnit이 있으면 그걸 쓰고, 없으면 resultPool에서 고른다.
     public UnitData resultUnit;
-    // 풀에서 랜덤 결과(A0OC처럼 여러 유닛 중 하나). 원작 Modelpack_R_unit 대응 풀이 아직
-    // 미확인이라 지금은 항상 비어 있다 — 비어 있으면 해당 항목은 성공해도 아무 유닛도
-    // 안 나온다(목재·유닛은 이미 소모된 뒤이므로 조용히 끝난다, 지어내지 않는다).
+    // 풀에서 랜덤 결과(A0OC처럼 여러 유닛 중 하나). 비어 있으면 해당 항목은 성공해도
+    // 아무 유닛도 안 나온다(목재·유닛은 이미 소모된 뒤이므로 조용히 끝난다, 지어내지
+    // 않는다) — GameHud가 이 상태의 버튼 자체를 숨긴다(hasResult 가드).
+    //
+    // A0OC(다른세계유닛 도박) — 원작 Modelpack_R_unit(gg_rct_Model_Pack_R1Unit 리전) 대응
+    // 풀은 이름 매핑 없이 등급으로 확정했다(PLAYER7_NEUTRAL_POOL_CENSUS.md, 2026-09-07):
+    // 원작 14종 전부 "랜덤전용" 등급 크로스오버 캐릭터였고, 우리 로스터도 마침 랜덤유닛
+    // 등급이 정확히 14종이라 근사 없이 1:1로 채웠다(Unit_고대의배_h05Y.asset 참고,
+    // name-mapping-impossible 원칙대로 이름이 아니라 등급으로 대응시켰다).
     public List<UnitData> resultPool = new List<UnitData>();
 }
 
