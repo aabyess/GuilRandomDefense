@@ -1105,10 +1105,11 @@ public class UnitAttacker : MonoBehaviour
                 return target.TakesPercentDamage ? target.Hp * effect.multiplier + effect.bonus : 0f;
             case SkillEffectBasis.CasterAttackPower: return AttackDamage * effect.multiplier + effect.bonus;
             // 연구단계 × multiplier + bonus 꼴을 명시적으로 쓴다(원작 예: 핸콕 "연구횟수×
-            // 30,000+360,000") — 예전엔 "연구단계 0"을 암묵적으로 가정해 bonus만 돌려줬는데,
-            // 연구소(05번, 구현담당1)가 서는 순간 조용히 틀렸을 것이다(연구단계가 안 곱해져
-            // 360,000에서 안 늘어남). CountResearchLevel()이 자리만 만들고 지금 0을 돌려주므로
-            // 당장은 결과가 이전과 같다(0×multiplier+bonus=bonus) — 회귀 없음.
+            // 30,000+360,000") — 이 "연구단계"는 타입 업그레이드(R01L/R01M/R01O/R01T/R01V,
+            // 최대3)다. CountResearchLevel() 주석 참고 — 우리에 그 축이 아직 없어 항상 0을
+            // 돌려준다(0×multiplier+bonus=bonus). 등급 업그레이드(최대21, 공속 축 전용)를
+            // 여기 연결하면 안 된다 — 2026-09-06 오전에 실제로 그렇게 연결됐다가 최대 7배
+            // 과대로 터졌다(뿌리 ㉜ 네 번째).
             case SkillEffectBasis.ResearchLevel: return CountResearchLevel() * effect.multiplier + effect.bonus;
             // ⚠️ 2026-09-06 연결(PM 지시): 원작 CSV의 ReceivedDamage 17행 전부 게이트가
             // "(게이트 없음)" 아니면 "MANA/LIFE게이지…"다 — 전부 OnHitChance/OnHitCount,
