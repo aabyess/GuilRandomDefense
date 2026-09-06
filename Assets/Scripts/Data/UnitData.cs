@@ -354,4 +354,19 @@ public class UnitData : ScriptableObject
     // 을 가리킨다 — 새로 안 만든다.
     public bool isAncientShip;
     public UnitData ancientShipResultUnit;
+
+    // "유닛 판매" — 원작 판매(GetSoldUnit) 대응, PM 지시(2026-09-06). 이 유닛을 팔면
+    // (GameHud 판매 버튼) 정의된 보상을 주고 유닛 자체는 사라진다(UnitIdentity.Consume,
+    // 원작 RemoveUnit과 같다). 기본값(null/0)이면 "판매 버튼 자체가 안 뜬다" — 기존
+    // 240종 전부 무영향(회귀 없음).
+    //
+    // 첫 사용처: h05X(레일리, "판매-특수" A0OE 툴팁 원문 확정) → sellRewardWisp=흔함
+    // 선택위습, sellRewardTraitPoints=1.
+    //
+    // ⚠️ h05Y(고대의 배)는 겉보기에 같은 부류(isSystemUnit)지만 판매 보상을 안 채운다 —
+    // "고대의 배를 팔면 보상을 준다"는 원작 근거가 없다(리서치 전수 확인, 2026-09-06.
+    // 예전에 그렇게 적혀 있던 문서는 접근 불가한 도박 능력 A0OD와 이름이 겹쳐 생긴
+    // 혼동이었다). h05Y는 isAncientShip 경로(위)로만 소모된다 — 판매 경로와 안 겹친다.
+    public WispData sellRewardWisp;
+    public int sellRewardTraitPoints;
 }

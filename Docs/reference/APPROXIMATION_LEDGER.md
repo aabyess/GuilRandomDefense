@@ -1368,3 +1368,44 @@ PM 질문 3개 답:
 자체(범용 or 전용), (b) `isSystemUnit` 패턴을 따르는 `h05X` UnitData
 + 맵 초기배치. 특성포인트 지급 자체는 기존 `AddTraitPoints` 호출 하나만
 추가하면 된다(막히는 지점이 아니다). 만들지 않았다 — 확인만 했다.
+
+## 23. 유닛 판매 시스템 신설 + `h05X`(레일리) — `h05Y`는 보상 없이 확인만 (2026-09-06, PM 지시)
+
+원작 `GetSoldUnit()`(유닛 판매) 대응. `UnitData`에 `sellRewardWisp`/
+`sellRewardTraitPoints`(append-only, 기본 null/0="판매 버튼 자체가 없다")를
+추가하고, `GameHud`에 고대의 배 버튼과 같은 자리·같은 관례로 "판매" 버튼을
+얹었다(`BuildSellButton`/`RefreshSellButton`/`OnSellButtonClicked`) — 단일
+선택 + 보상이 하나라도 있을 때만 뜬다. 클릭 시 보상(특성포인트→
+`UnitUpgrades.AddTraitPoints`, 위습→`RewardDistributor.GrantWisps`) 지급 후
+`UnitIdentity.Consume()`(=원작 `RemoveUnit`)으로 유닛을 없앤다 — 보상을 먼저
+읽고 나중에 소모하므로 순서 사고가 없다.
+
+```
+h05X(레일리, 능력 A0OE "판매-특수" 툴팁 원문 확정)
+  → Unit_레일리_h05X.asset 신설: isSystemUnit=1, sellRewardWisp=Wisp_흔함선택,
+    sellRewardTraitPoints=1. 프리팹은 로스터 240종이 공유하는 그 프리팹
+    그대로(전부 임시 더미라 시각 구분 불필요).
+h05Y(고대의 배)
+  → 🔴 PM이 처음 지시한 "판매 → 특성포인트1+선택위습"을 취소했다 — 리서치 전수
+    결과 "고대의 배 판매" 자체가 원작 근거 없음(접근불가 도박능력 A0OD와
+    이름이 겹친 혼동)으로 확인됐다. sellRewardWisp/sellRewardTraitPoints를
+    둘 다 안 채웠다(기본값 유지) — 판매 버튼이 안 뜬다, isAncientShip 경로만
+    그대로 산다. `UnitData.cs`의 필드 주석에 이유를 남겼다(다음 사람이 "왜
+    h05Y만 비어있지"로 또 헤매지 않게).
+```
+
+⚠️ **메타몽(H0BS) 우회는 이번에 안 건드렸다** — 지금 `ItemGambleState.stock`을
+직접 조정하는 방식이 실제로 돌고 있어서, 판매 시스템이 서자마자 원작 경로
+("메타몽을 팔면 아이템 도박")로 되돌리면 검증 안 된 변경이 겹친다(PM 지시).
+**되돌릴 조건**: 이 판매 시스템이 실제로 검증된 뒤, `ItemGambleState`가
+`sellRewardXxx` 대신 "판매 시 재고+1"을 받는 방식으로 갈아탈 것 — 그때까지
+`ItemGambleState.stock` 직접조정 우회는 그대로 둔다.
+
+**검산**: 보상 없는 기존 240종은 버튼 자체가 안 뜬다(회귀 없음) ·
+`h05X` 판매 시 위습1+특성1이 각각 정확히 한 번 호출(코드 직접 확인, 조건문
+하나씩) · `Consume()`이 인벤토리 해제+파괴를 한 번에 묶어 유령 등록 없음 ·
+특성포인트 상한 검사는 **의도적으로 안 넣었다**(리서치담당 획득처 전수
+결과 대기 중, PM 지시 — 지금 넣으면 지어낸 상한이 된다).
+
+`compile_check.sh`/`check_required_fields.py`/`check_assignment_invariants.py`
+전부 exit 0. UI 클릭 경로는 런타임 미검증(§9 공통 구멍).

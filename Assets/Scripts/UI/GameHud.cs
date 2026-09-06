@@ -71,6 +71,14 @@ public class GameHud : MonoBehaviour
     Button ancientShipButtonComponent;
     int lastAncientShipWood = int.MinValue;
 
+    // "유닛 판매" 버튼(2026-09-06, PM 지시) — 같은 이유로 같은 열, 고대의 배 버튼 바로
+    // 아래. UnitData.sellRewardWisp/sellRewardTraitPoints 둘 다 비어있지 않을 때만 뜬다
+    // (트레잇·고대의배 버튼과 같은 관례 — "보상이 없으면 버튼 자체가 없다").
+    GameObject sellButtonPanel;
+    Text sellButtonText;
+    Button sellButtonComponent;
+    UnitData lastSellButtonUnit;
+
     // 조합 카드(레시피) 12칸. 유닛 카드와 같은 패턴 — 미리 만들어두고 내용만 바꾼다.
     const float RecipeRefreshInterval = 0.4f;
     static readonly List<CombineRecipe> EmptyRecipes = new List<CombineRecipe>();
@@ -175,6 +183,7 @@ public class GameHud : MonoBehaviour
         RefreshHoveredTooltip();
         RefreshTraitButton();
         RefreshAncientShipButton();
+        RefreshSellButton();
     }
 
     void OnDestroy()
@@ -234,6 +243,7 @@ public class GameHud : MonoBehaviour
         BuildTeamPanel();
         BuildTraitButton();
         BuildAncientShipButton();
+        BuildSellButton();
         // 왼쪽 유닛 목록은 만들지 않는다. 화면 절반을 덮는데, 무엇을 들고 있는지는
         // 아래 명령 카드 그리드가 이미 보여준다. (F1 디버그 HUD에도 같은 목록이 있다.)
 
@@ -510,6 +520,93 @@ public class GameHud : MonoBehaviour
             ? hit.position
             : targetPosition;
         spawner.Spawn(resultUnit, spawnPosition, owner.OwnerId);
+    }
+
+    // "유닛 판매" 버튼(2026-09-06, PM 지시) — 고대의 배 버튼 바로 아래, 같은 열.
+    // UnitData.sellRewardWisp/sellRewardTraitPoints 둘 다 비어있으면(기본값) 버튼 자체가
+    // 안 뜬다 — 트레잇·고대의배 버튼과 같은 관례("보상이 없으면 버튼이 없다").
+    void BuildSellButton()
+    {
+        RectTransform panel = CreatePanel(transform, "SellButtonPanel", new Color(1f, 1f, 1f, 0.15f));
+        SetAnchors(panel, new Vector2(0.51f, 0.78f), new Vector2(0.70f, 0.83f));
+
+        Button button = panel.gameObject.AddComponent<Button>();
+        button.onClick.AddListener(OnSellButtonClicked);
+
+        sellButtonText = CreateLabel(panel, "SellButtonText", "");
+        sellButtonText.fontSize = 16;
+        sellButtonText.raycastTarget = false;
+
+        sellButtonPanel = panel.gameObject;
+        sellButtonComponent = button;
+        sellButtonPanel.SetActive(false);
+    }
+
+    // 단일 선택 + 판매 보상이 하나라도 있을 때만 보인다.
+    void RefreshSellButton()
+    {
+        if (sellButtonPanel == null) return;
+
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1) { HideSellButton(); return; }
+
+        Selectable single = selection.Selected[0];
+        if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null ||
+            (identity.Data.sellRewardWisp == null && identity.Data.sellRewardTraitPoints <= 0))
+        { HideSellButton(); return; }
+
+        sellButtonPanel.SetActive(true);
+
+        if (identity.Data == lastSellButtonUnit) return;
+        lastSellButtonUnit = identity.Data;
+
+        string wispPart = identity.Data.sellRewardWisp != null
+            ? $"{identity.Data.sellRewardWisp.wispName} 1기"
+            : null;
+        string pointPart = identity.Data.sellRewardTraitPoints > 0
+            ? $"특성포인트 {identity.Data.sellRewardTraitPoints}"
+            : null;
+        string rewardDesc = wispPart != null && pointPart != null ? $"{wispPart} + {pointPart}"
+            : wispPart ?? pointPart;
+        sellButtonText.text = $"판매\n({rewardDesc})";
+    }
+
+    void HideSellButton()
+    {
+        if (sellButtonPanel != null && sellButtonPanel.activeSelf) sellButtonPanel.SetActive(false);
+        lastSellButtonUnit = null;
+    }
+
+    // 원작 GetSoldUnit() 대응 — 보상 지급 후 유닛 소모(RemoveUnit과 같다, UnitIdentity.
+    // Consume). 조건 미달 개념이 없다(고대의 배와 달리 비용이 없어 항상 성공) — 버튼이
+    // 뜬 시점에 이미 보상이 확정돼 있다.
+    void OnSellButtonClicked()
+    {
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1) return;
+
+        Selectable single = selection.Selected[0];
+        if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null ||
+            (identity.Data.sellRewardWisp == null && identity.Data.sellRewardTraitPoints <= 0)) return;
+
+        if (!single.TryGetComponent(out OwnedByPlayer owner)) return;
+
+        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        if (context != null)
+        {
+            if (identity.Data.sellRewardTraitPoints > 0)
+                context.UnitUpgrades?.AddTraitPoints(identity.Data.sellRewardTraitPoints);
+
+            if (identity.Data.sellRewardWisp != null && RewardDistributor.Instance != null)
+            {
+                List<WispReward> reward = new List<WispReward> { new WispReward { wisp = identity.Data.sellRewardWisp, count = 1 } };
+                RewardDistributor.Instance.GrantWisps(context, reward);
+            }
+        }
+
+        // 보상 지급 뒤에 소모한다 — Consume이 오브젝트를 파괴하므로 그 전에 owner/보상을
+        // 전부 읽어둬야 한다(위에서 이미 다 읽었다).
+        identity.Consume();
     }
 
     // 원작 순서(Trig_T_Ability_hero_Conditions) 그대로: 이미 샀는가 → 포인트가 충분한가
