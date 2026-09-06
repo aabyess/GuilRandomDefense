@@ -234,6 +234,22 @@ public enum MovementAbility
     Teleport = 4,      // 텔레포트(경로 무시) — 필드만, 로직은 나중에 구현
 }
 
+// 05번 「고대의 배」도박 능력 한 항목 (UnitData.gambleOptions 참고).
+[System.Serializable]
+public class UnitGambleOption
+{
+    public string abilityId;          // 원작 능력 문자열(A023 등) — 참고용 태그일 뿐, 로직이 읽지 않는다.
+    public int woodCost;
+    public float successChance;       // 0~1.
+    // 특정 유닛 결과(A023·A0OD처럼 결과가 하나로 정해진 경우). resultPool과 동시에 채우지
+    // 않는다 — resultUnit이 있으면 그걸 쓰고, 없으면 resultPool에서 고른다.
+    public UnitData resultUnit;
+    // 풀에서 랜덤 결과(A0OC처럼 여러 유닛 중 하나). 원작 Modelpack_R_unit 대응 풀이 아직
+    // 미확인이라 지금은 항상 비어 있다 — 비어 있으면 해당 항목은 성공해도 아무 유닛도
+    // 안 나온다(목재·유닛은 이미 소모된 뒤이므로 조용히 끝난다, 지어내지 않는다).
+    public List<UnitData> resultPool = new List<UnitData>();
+}
+
 [CreateAssetMenu(fileName = "NewUnitData", menuName = "GuilRandomDefense/Unit Data")]
 public class UnitData : ScriptableObject
 {
@@ -344,16 +360,19 @@ public class UnitData : ScriptableObject
     public float agilityPerLevel;
     public float intelligencePerLevel;
 
-    // 05번 「고대의 배」(사장님 확정 2026-09-06, Docs/reference/ANCIENT_SHIP_SPEC_2026-09-06.md)
-    // — 로스터가 아닌 특수 유닛(isSystemUnit과 함께 켠다) h05Y 전용. true면 GameHud가 이
-    // 유닛을 선택했을 때 "시전" 버튼을 띄운다: 목재 4 소모(부족하면 아무 일도 안 남 — 원작
-    // stop 명령과 같다, 실패로 취급하지 않는다) → 유닛 소모(성공·실패 무관, RemoveUnit과
-    // 같다) → 40% 확률로 ancientShipResultUnit을 조합 구역 중심에 생성. h05Y 하나뿐이라
-    // UnitTraitData.transformIntoUnit과 같은 방식으로 필드만 얹었다(별도 데이터 클래스
-    // 없음). ancientShipResultUnit은 실제 해적선 유닛(Assets/Data/Units/Roster/해적선.asset)
-    // 을 가리킨다 — 새로 안 만든다.
-    public bool isAncientShip;
-    public UnitData ancientShipResultUnit;
+    // 05번 「고대의 배」도박 능력 목록(사장님 확정 2026-09-06, Docs/reference/
+    // ANCIENT_SHIP_SPEC_2026-09-06.md + PLAYER7_NEUTRAL_POOL_CENSUS.md) — h05Y 전용.
+    // 처음엔 "isAncientShip(bool)+ancientShipResultUnit(단일)" 하드코딩 페어로 만들었으나,
+    // 리서치가 h05Y 하나가 도박 능력을 **셋**(A023 해적선도박·A0OD 레일리도박·A0OC
+    // 다른세계유닛도박) 가진다는 걸 확인해 목록으로 바꿨다 — "나중에 늘 것 같아서"가
+    // 아니라 "지금 이미 셋이라서"다(RewardDistributor.startingSpecialUnit 때와 같은 원칙,
+    // 반대 결론). GameHud가 항목마다 버튼을 하나씩 띄운다: 목재 woodCost 소모(부족하면
+    // 아무 일도 안 남 — 원작 stop 명령과 같다, 실패로 취급 안 함) → 유닛 소모(성공·실패
+    // 무관, RemoveUnit과 같다, A023 기준으로 확인된 규칙을 셋 다에 같은 경로로 적용 —
+    // 나머지 둘의 소모 규칙이 다르다는 근거는 없다) → successChance 확률로 resultUnit(또는
+    // resultPool에서 랜덤)을 조합 구역 중심에 생성. 목록이 비면(기본값) 지금까지처럼
+    // 버튼이 하나도 안 뜬다 — 기존 239종 전부 무영향(회귀 없음).
+    public List<UnitGambleOption> gambleOptions = new List<UnitGambleOption>();
 
     // "유닛 판매" — 원작 판매(GetSoldUnit) 대응, PM 지시(2026-09-06). 이 유닛을 팔면
     // (GameHud 판매 버튼) 정의된 보상을 주고 유닛 자체는 사라진다(UnitIdentity.Consume,
