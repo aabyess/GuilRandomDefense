@@ -253,7 +253,14 @@ def load_roster(research_level=0):
             "name": name_m.group(1) if name_m else "?",
             "grade": gname, "tier": tier, "damagetype": dmgtype, "attack_type": attack_type,
             "base_dps": ap * aspd,
-            "bash_dps": cc * cbd * aspd,
+            # ⚠️ 2026-09-06 정정(PM 지시, 뿌리 ㉝) — `UnitAttacker.ApplyCritIfTriggered`
+            # (UnitAttacker.cs:305) 원문 그대로: 평타가 맞을 때마다(aspd) critChance
+            # 확률로 별도 피해 인스턴스 하나를 더 먹인다, 그 크기는
+            # `AttackDamage×critDamageMultiplier+critBonusDamage`. 예전 식(`cc*cbd*aspd`)은
+            # `ap×cdm` 항이 통째로 빠져 있었다 — cdm이 1.0인 유닛이 많아서(배수 없이
+            # 가산만) 눈에 덜 띄었을 뿐, 완전한 근사가 아니었다. 특수 처리 없이 공식을
+            # 그대로 옮기면 cdm=1.0인 유닛도 자동으로 맞다.
+            "bash_dps": aspd * cc * (ap * cdm + cbd),
             "skill": skill_components, "skill_attack_type": skill_attack_type,
             "skill_guid_count": len(skill_guids),
             "skill_guid_dupes": len(skill_guids) - len(set(skill_guids)),
@@ -878,13 +885,19 @@ def median_dps_by_tier_vs_armor(roster, armor_type_name):
     타입을 쓸 수 있어서(스킬 쪽은 CSV에 마법 여부가 없어 평타 타입을 그대로 물려받았을
     뿐 — 3cf3147 커밋 메시지 참고) 각자 자기 attack_type으로 상성표 배율을 따로
     곱한다 — 이건 armored/unarmored 구분과는 별개 축이다(상성표는 방어 무시 여부와
-    무관하게 항상 탄다, EnemyDummy.MitigatedDamage 확인)."""
+    무관하게 항상 탄다, EnemyDummy.MitigatedDamage 확인).
+
+    ⚠️ 2026-09-06 추가(PM 지시, 뿌리 ㉝ — 크리티컬이 계산은 되는데 이 경로가 아예
+    안 읽고 있었다) — `bash_dps`(치명타 기대 dps)도 base_dps와 같은 취급이다:
+    `UnitAttacker.ApplyCritIfTriggered`가 평타와 같은 DamageType/AttackType·
+    isAbilityDamage=false로 때리므로(UnitAttacker.cs 주석 확인) `flat_ad`에
+    `base_mult`(평타와 같은 attack_type 상성 배율)로 더한다 — 별도 취급 없음."""
     by_tier = defaultdict(list)
     for r in roster:
         skill_mult = dt_multiplier(r["skill_attack_type"], armor_type_name)
         base_mult = dt_multiplier(r["attack_type"], armor_type_name)
         v = scale_skill_components(r["skill"], skill_mult)
-        v["flat_ad"] += r["base_dps"] * base_mult
+        v["flat_ad"] += (r["base_dps"] + r["bash_dps"]) * base_mult
         by_tier[r["tier"]].append(v)
     out = {}
     for t in range(TIER_COUNT):
