@@ -234,6 +234,19 @@ public enum MovementAbility
     Teleport = 4,      // 텔레포트(경로 무시) — 필드만, 로직은 나중에 구현
 }
 
+// 01번 영웅 스탯 — 원작 StrAttackBonus=800이 힘 전용이 아니라 "그 유닛의 주스탯"에
+// 걸린다(ORIGINAL_HERO_STATS.md ㉠). 어느 스탯이 주스탯인지는 유닛마다 다르므로 enum으로
+// 분리했다(UnitAttacker가 이 값으로 CurrentStrength/Agility/Intelligence 중 어느 걸
+// 800배해 공격력에 더할지 고른다). None(기본값)이면 보너스 없음 — 초월·영원 33종 외
+// 213종은 전부 무영향(회귀 없음).
+public enum PrimaryStat
+{
+    None,
+    Strength,
+    Agility,
+    Intelligence,
+}
+
 // 05번 「고대의 배」도박 능력 한 항목 (UnitData.gambleOptions 참고).
 [System.Serializable]
 public class UnitGambleOption
@@ -430,4 +443,17 @@ public class UnitData : ScriptableObject
     // 목재 보너스가 빠져 있다 — 두 값이 서로 안 맞아 목재 보너스는 안 만들었다(위습만).
     public int sellRewardEveryNSells;
     public WispData sellRewardEveryNWisp;
+
+    // 01번 영웅 스탯 — 이 유닛의 주스탯(원작 `upra`, ORIGINAL_HERO_STATS.md ㉠·㉣). 배정
+    // 규칙(PM 지시 2026-09-07): ①스킬 자산이 SkillEffectBasis.CasterStrength/Agility/
+    // Intelligence를 읽으면 그 스탯 ②안 읽는 초월·영원 유닛은 원작 분포(STR11:AGI13:INT15,
+    // 39기 기준 — 우리는 로스터 33기라 30/39 비율로 축소해 8:10:12로 배정, 파일명 정렬
+    // 순 결정적 배정 — 이건 우리 판단이지 원작 1:1 매핑이 아니다). None(기본값)이면
+    // strengthPerLevel 등이 전부 0이라 보너스가 안 걸린다 — 초월·영원 33종 외 213종
+    // 무영향(회귀 없음).
+    //
+    // ⚠️ 원작엔 타시기(STR10/AGI11/INT1 시작, 성장 0.42/1.70/0.42)·야마토(성장 0.21/1.06/
+    // 0.21) 2건의 예외가 있으나 우리 로스터엔 이름 매핑이 없어 적용하지 않는다(사장님
+    // 확정 원칙 — 이름 매핑 불가). 33종 전부 시작 0/0/0 + 표준 성장(주 0.85/부 0.21)이다.
+    public PrimaryStat primaryStat;
 }
