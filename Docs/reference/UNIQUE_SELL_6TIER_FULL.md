@@ -1,6 +1,72 @@
 # `unique_sell`~`unique_sell6` 6종 전수 — 소유 유닛까지 확정
 
-조사: 리서치담당 / 2026-09-07
+## 🔴 2026-09-07 추가 — 구현이 자산에 넣은 값 3건 원문 재확인(축약 없이)
+
+### ① `unique_sell5`(`A0BB`, 해적선) — **위습은 1개가 맞다, 지금 자산(2개)이 틀렸다**
+
+`Trig_unique_sell5_Actions` 전문, 한 줄도 안 뺐다:
+```jass
+function Trig_unique_sell5_Actions takes nothing returns nothing
+call KillUnit(GetTriggerUnit())
+call AdjustPlayerStateBJ(1,GetOwningPlayer(GetTriggerUnit()),PLAYER_STATE_RESOURCE_LUMBER)
+call DisplayTimedTextToForce(...,"1기의 흔함선택위습과 1의 목재 획득!|r")
+set udg_T_Location=GetRectCenter(gg_rct_StoryReward_Base1)
+call CreateNUnitsAtLoc(1,'e018',GetOwningPlayer(GetTriggerUnit()),udg_T_Location,bj_UNIT_FACING)
+call RemoveLocation(udg_T_Location)
+endfunction
+```
+**`CreateNUnitsAtLoc` 호출이 딱 한 번, count 인자도 `1`이다.** 두 번째
+호출은 없다. 텍스트도 "1기의"라고 명시한다 — **위습은 정확히 1개다.**
+(참고: `e018`="흔함선택위습"(고를 수 있는 흔함 위습), `unique_sell`의
+`e0IX`="랜덤위습"과는 다른 아이템이다 — 서술이 "위습"으로 겹쳐 보여서
+헷갈렸을 수 있다.)
+
+### ② `unique_sell`(`A09G`, 흔함 9종) — 카운터는 **플레이어 전체 공유**, 3의 배수마다, 판당 리셋 없음
+
+`Trig_unique_sell_Actions` 전문:
+```jass
+function Trig_unique_sell_Actions takes nothing returns nothing
+call KillUnit(GetTriggerUnit())
+set udg_Sell_Point1[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=
+    (udg_Sell_Point1[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]+1)
+if(Trig_unique_sell_Func007C())then          // Sell_Point1==3
+call DisplayTimedTextToForce(...,"누적 3포인트를 획득하여 1기의 랜덤위습 획득!")
+set udg_Sell_Point1[...]=0                    // 3에 도달하면 즉시 0으로 리셋
+call CreateNUnitsAtLoc(1,'e0IX',...)          // 랜덤위습(e018 아님)
+if(Trig_unique_sell_Func007Func005C())then    // 35% 확률
+call AdjustPlayerStateBJ(1,...,LUMBER)
+"1개의 추가목재 획득!"
+endif
+else
+call DisplayTimedTextToForce(...,I2S(Sell_Point1)+" 포인트 적립!")
+endif
+endfunction
+```
+`udg_Sell_Point1`는 `integer array`로 선언되고 **`GetConvertedPlayerId(...)`
+(플레이어 인덱스)로만 색인된다 — 유닛타입 인덱스가 아니다.** 즉
+**9명 중 아무나 팔든 같은 카운터에 쌓인다**(치치를 1번, 조로를 2번
+팔아도 합쳐서 3번째에 터진다). `Func007C`는 `==3`(정확히 3일 때만),
+터지자마자 그 자리에서 `0`으로 리셋 — **3의 배수마다 반복해서
+터진다**(1회성이 아님). `InitGlobals`에서 게임 시작 시 0으로 세팅되는
+것 말고 **다른 리셋 자리는 없다** — 판 중간에 리셋되는 코드는 없다
+(라운드 전환·죽음 등과 무관하게 계속 누적).
+
+### ③ `unique_sell6`(`A080`, 노획물)의 "가끔 100골드" — **정확히 40%, 원문에 있었다**
+
+```jass
+function Trig_unique_sell6_Func006Func004C takes nothing returns boolean
+if(not(GetRandomPercentageBJ()<=40.00))then
+return false
+endif
+return true
+endfunction
+```
+**원문에 정말 있었다, 축약 때 빠진 거였다** — 어제 표에 "가끔"으로만
+적었던 게 실수다. 정확한 구조: 바깥 37%(성공하면 위습1) → **그 안에서
+다시 40% 확률로 100골드+목재1 추가**(중첩 확률, 최종 결합확률
+0.37×0.40=14.8%).
+
+## 원래 조사분(2026-09-06)
 요청: PM — 6종 각각의 능력·보상·소유유닛·등급경계·판매시소멸여부.
 `uabi`/`UnitAddAbilityBJ`/`GetSpellAbilityId()==` 세 그물 다 확인.
 
