@@ -173,6 +173,36 @@ public static class UnitGradeExtensions
             default: return -1;
         }
     }
+
+    /// <summary>
+    /// 이 등급이 "등급별 화력이 우상향하는가"를 재는 사다리(측정 대상)에 속하는가.
+    /// <see cref="Tier"/>가 서열(로스터 정렬·해체 상한)과 측정 대상을 같이 떠맡고 있어서
+    /// 사장님 03번 확정("RandomUnit·OtherWorld를 사다리에서 뺀다") 때 둘을 갈랐다
+    /// (PM 지시, 2026-09-06). <c>Tier()</c> 자체는 값·순서·주석 전부 그대로 둔다 — 조밀한
+    /// 정수열이라 빼면 유령 티어나 재번호매기기 대가가 크고, GameHud 정렬·SupportShop
+    /// 해체 상한처럼 서열이 필요한 소비처가 여전히 있기 때문이다. 사다리(등급별 DPS·
+    /// 발동률 집계) 쪽만 이 메서드로 걸러낸다.
+    ///
+    /// false인 셋:
+    /// - RandomUnit: 원작 "랜덤전용"은 등급이 아니라 작품 밖 콜라보 **카테고리**다.
+    ///   결정적 증거 — "랜덤전용[제한됨]" 10기(등급이면 둘이 겹칠 수 없다).
+    /// - OtherWorld: 원작 "다른세계"는 등급이 아니라 **도박 버튼 이름**이다(목재 7, 27%).
+    ///   그 도박이 뽑는 14기가 전부 랜덤전용이다.
+    /// - TranscendentWisp: 유닛이 아니라 조합 재료(재화)다 — 애초에 등급이 아니다
+    ///   (Tier() 주석 참고, 사장님 확정 2026-09-02).
+    /// </summary>
+    public static bool IsLadderGrade(this UnitGrade grade)
+    {
+        switch (grade)
+        {
+            case UnitGrade.RandomUnit:
+            case UnitGrade.OtherWorld:
+            case UnitGrade.TranscendentWisp:
+                return false;
+            default:
+                return true;
+        }
+    }
 }
 
 // AD = 물리공격 / AP = 마법공격 (사장님 확정 2026-09-03).
