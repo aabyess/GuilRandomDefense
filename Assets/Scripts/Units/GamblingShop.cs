@@ -17,6 +17,11 @@ public class GamblingShop : MonoBehaviour, ILaneShop
     [SerializeField] GachaTable gachaTable;
     [SerializeField] UnitSpawner unitSpawner;
 
+    // ⚠️ 맨 뒤에 추가(2026-09-07, "희귀함 리롤" A0VX) — GamblingOptionData.
+    // grantsUniqueRerollOnGenericSuccess가 켜진 옵션의 "일반 결과" 성공 스폰에 붙일
+    // 능력 수치. 비어 있으면(씬 배선 전) 해당 분기는 조용히 건너뛴다 — 회귀 없음.
+    [SerializeField] UniqueRerollAbilityData uniqueRerollAbilityData;
+
     // 특성포인트 구매(인덱스 2) — 사장님 확정(2026-09-03): 15,000엔으로 1회만.
     // 원작은 "돈 도박 졸업 후 구매"라 이 상점의 돈 도박 줄에 자리를 잡았다(구현담당1 판단).
     // GamblingOptionData로 안 만든 이유: 그 데이터는 "확률로 얼마를 돌려받는가"를 표현하는
@@ -431,7 +436,15 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         if (success)
         {
             UnitData reward = bonusHit ? option.bonusUnit : gachaTable.RollFromGrade(resultGrade);
-            unitSpawner.Spawn(reward, ResolveSpawnPosition(reward), owner.OwnerId);
+            GameObject spawned = unitSpawner.Spawn(reward, ResolveSpawnPosition(reward), owner.OwnerId);
+
+            // 희귀함 리롤(A0VX) — "지정된 특별 결과(bonusHit)가 아닌 일반 랜덤풀 결과"에만
+            // 붙는다(UNIQUE_REROLE_AND_SELL_FAMILY.md ⑦). 이 옵션이 그 소스로 확인된 경우만
+            // (grantsUniqueRerollOnGenericSuccess) 스폰된 인스턴스에 런타임으로 붙인다 —
+            // UnitData 자산에 미리 박아둘 수 없다(대상이 "가챠에서 나온 그 어떤 유닛"이라
+            // 특정 자산 하나로 고정이 안 됨, UniqueRerollAbility 클래스 주석 참고).
+            if (!bonusHit && option.grantsUniqueRerollOnGenericSuccess)
+                UniqueRerollAbility.Attach(spawned, uniqueRerollAbilityData, unitSpawner);
         }
         else if (option.grantFailureReward)
         {

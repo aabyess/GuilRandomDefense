@@ -84,6 +84,16 @@ public class GameHud : MonoBehaviour
     Button sellButtonComponent;
     UnitData lastSellButtonUnit;
 
+    // "희귀함 리롤"(A0VX, UNIQUE_REROLE_AND_SELL_FAMILY.md) 버튼(2026-09-07) — 위 세 버튼과
+    // 달리 UnitData 자산 필드가 아니라 런타임 컴포넌트(UniqueRerollAbility, 도박 성공 스폰
+    // 시점에 그 인스턴스에만 붙는다)의 유무로 뜬다 — 대상이 "가챠에서 나온 그 어떤 유닛"이라
+    // 특정 자산에 고정할 수 없다(GamblingShop.TryRollUnit 참고). 05번 열이 0.60~0.95를 이미
+    // 다 채워서, 그 바로 아래 빈 자리(0.54~0.59)에 둔다.
+    GameObject rerollButtonPanel;
+    Text rerollButtonText;
+    Button rerollButtonComponent;
+    UniqueRerollAbility lastRerollButtonAbility;
+
     // 항법(5택1, NAVIGATION_ROUTES_FULL.md) — 유닛 선택과 무관하게 항상 뜨는 진입점이라
     // (원작 H0C4가 게임 시작부터 즉시 배치, 라운드·퀘스트 게이트 없음) 위 세 버튼과 성격이
     // 다르다. 자리만 재사용한다 — 05번 버튼이 목록화되며 비게 된 y 0.84~0.89(고대의 배
@@ -236,6 +246,7 @@ public class GameHud : MonoBehaviour
         RefreshGambleButtons();
         RefreshSellButton();
         RefreshNavigationButton();
+        RefreshRerollButton();
     }
 
     void OnDestroy()
@@ -302,6 +313,7 @@ public class GameHud : MonoBehaviour
         BuildGambleButtons();
         BuildSellButton();
         BuildNavigationUI();
+        BuildRerollButton();
         // 왼쪽 유닛 목록은 만들지 않는다. 화면 절반을 덮는데, 무엇을 들고 있는지는
         // 아래 명령 카드 그리드가 이미 보여준다. (F1 디버그 HUD에도 같은 목록이 있다.)
 
@@ -745,6 +757,78 @@ public class GameHud : MonoBehaviour
         // 보상 지급 뒤에 소모한다 — Consume이 오브젝트를 파괴하므로 그 전에 owner/보상을
         // 전부 읽어둬야 한다(위에서 이미 다 읽었다).
         identity.Consume();
+    }
+
+    // "희귀함 리롤"(A0VX) 버튼 — 위 세 버튼과 같은 열의 빈 자리(0.54~0.59, 05번 열 바로
+    // 아래)를 쓴다. 목재가 모자라거나 한도를 소진했어도 항상 눌리게 둔다(고대의 배 버튼과
+    // 같은 이유 — "조건 미달"과 "실패"를 원작처럼 다른 문구로만 구분한다, interactable로
+    // 미리 막지 않는다).
+    void BuildRerollButton()
+    {
+        RectTransform panel = CreatePanel(transform, "RerollButtonPanel", new Color(1f, 1f, 1f, 0.15f));
+        SetAnchors(panel, new Vector2(0.51f, 0.54f), new Vector2(0.70f, 0.59f));
+
+        Button button = panel.gameObject.AddComponent<Button>();
+        button.onClick.AddListener(OnRerollButtonClicked);
+
+        rerollButtonText = CreateLabel(panel, "RerollButtonText", "");
+        rerollButtonText.fontSize = 16;
+        rerollButtonText.raycastTarget = false;
+
+        rerollButtonPanel = panel.gameObject;
+        rerollButtonComponent = button;
+        rerollButtonPanel.SetActive(false);
+    }
+
+    // 단일 선택 + 그 인스턴스에 UniqueRerollAbility가 붙어 있을 때만 뜬다(UnitData 자산이
+    // 아니라 런타임 컴포넌트 — GamblingShop.TryRollUnit이 붙인다).
+    void RefreshRerollButton()
+    {
+        if (rerollButtonPanel == null) return;
+
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1) { HideRerollButton(); return; }
+
+        Selectable single = selection.Selected[0];
+        if (single == null || !single.TryGetComponent(out UniqueRerollAbility reroll) ||
+            !single.TryGetComponent(out OwnedByPlayer owner))
+        { HideRerollButton(); return; }
+
+        rerollButtonPanel.SetActive(true);
+
+        if (reroll == lastRerollButtonAbility) return;
+        lastRerollButtonAbility = reroll;
+
+        UniqueRerollState state = PlayerContext.Get(owner.OwnerId)?.UniqueRerollState;
+        int used = state != null ? state.AttemptsUsed : 0;
+        int limit = state != null ? state.Limit : 0;
+        float failChance = state != null ? state.FailChancePercent : 0f;
+
+        rerollButtonText.text = $"희귀함 리롤\n(목재 {reroll.WoodCost} 소모, 실패확률 {failChance:F0}%, " +
+                                 $"남은 횟수 {Mathf.Max(0, limit - used)})";
+    }
+
+    void HideRerollButton()
+    {
+        if (rerollButtonPanel != null && rerollButtonPanel.activeSelf) rerollButtonPanel.SetActive(false);
+        lastRerollButtonAbility = null;
+    }
+
+    // 원작 Trig_unique_rerole_Actions 대응 — 실패 메시지("목재가 부족합니다!"/"리롤회수를
+    // 소진하였습니다."/"리롤을 실패하였습니다.")와 성공 메시지 전부 UniqueRerollAbility.
+    // TryCast가 만들어 돌려준다. 실패해도(한도·목재 미달 제외) 유닛은 안 죽으므로 selection이
+    // 그대로 유효하다 — Consume은 성공 분기에서만 일어난다.
+    void OnRerollButtonClicked()
+    {
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1) return;
+
+        Selectable single = selection.Selected[0];
+        if (single == null || !single.TryGetComponent(out UniqueRerollAbility reroll) ||
+            !single.TryGetComponent(out OwnedByPlayer owner)) return;
+
+        reroll.TryCast(out string message);
+        if (message != null) PlayerNotification.Show(owner.OwnerId, message);
     }
 
     // 항법 지속 버튼 — 유닛 선택과 무관하게 항상 보인다. 안 골랐으면 "항법 선택",

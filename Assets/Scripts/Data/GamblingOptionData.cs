@@ -66,6 +66,16 @@ public class GamblingOptionData : ScriptableObject
     [Header("항법 '도박광' 연동 — 원작이 이 필드를 통해 확인된 옵션만 켠다(추측 금지)")]
     public bool scalesWithGamblerNavigation;
 
+    // ⚠️ 맨 뒤에 추가(2026-09-07, "희귀함 리롤" A0VX, UNIQUE_REROLE_AND_SELL_FAMILY.md ⑦) —
+    // A0VX는 원작에서 정확히 3곳(H0B0판매·h06D 고급유닛도박·스토리Tier4)의 "최종 폴백
+    // 분기"(지정된 특별 결과가 아닌 일반 랜덤풀 결과)에서만 붙는다. 우리 도박소 옵션 중
+    // 이 소스로 확인된 건 h06D=Gambling_고급도박 하나뿐이다(GAMBLING.md:191, goldCost
+    // 2500 일치) — 다른 옵션(하급·중급·다른세계 도박)은 원작에 이 폴백-A0VX 연결 근거가
+    // 없으므로 기본값 false로 둔다(추측 금지, scalesWithGamblerNavigation과 같은 원칙).
+    // GamblingShop.TryRollUnit이 성공(bonusUnit 미적중, 즉 "이름 없는 일반 결과")일 때만 읽는다.
+    [Header("희귀함 리롤(A0VX) 연동 — 원작이 이 옵션의 최종 폴백에서 A0VX를 준다고 확인된 경우만 켠다")]
+    public bool grantsUniqueRerollOnGenericSuccess;
+
     [Header("사용 제한 — Money 카테고리 전용")]
     [Tooltip("평생 사용 가능 횟수. 0이면 무제한")]
     public int maxUses;

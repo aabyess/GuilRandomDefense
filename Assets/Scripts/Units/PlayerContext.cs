@@ -24,6 +24,10 @@ public class PlayerContext : MonoBehaviour
     // 순서를 지킨다.
     [SerializeField] NavigationState navigationState;
     [SerializeField] DamageLevelFixedState damageLevelFixedState;
+    // ⚠️ 맨 뒤에 추가(2026-09-07, "희귀함 리롤" A0VX, UNIQUE_REROLE_AND_SELL_FAMILY.md) —
+    // 직렬화 순서를 지킨다. 씬에서 같은 슬롯(GameObject)에 같이 붙는다 — 비어 있으면
+    // (씬 배선 전) UniqueRerollAbility.TryCast가 조용히 false를 돌려준다(회귀 없음).
+    [SerializeField] UniqueRerollState uniqueRerollState;
 
     static readonly List<PlayerContext> registry = new List<PlayerContext>();
 
@@ -108,6 +112,7 @@ public class PlayerContext : MonoBehaviour
     public ItemGambleState ItemGambleState => itemGambleState;
     public NavigationState NavigationState => navigationState;
     public DamageLevelFixedState DamageLevelFixedState => damageLevelFixedState;
+    public UniqueRerollState UniqueRerollState => uniqueRerollState;
 
     void OnEnable()
     {
