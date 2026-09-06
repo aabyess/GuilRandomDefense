@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: UnitUpgrade_영원함 강화
   m_EditorClassIdentifier:
   trackName: 영원함 강화
-  description: 영원함 강화 — 원작에 대응하는 연구소가 없는 등급입니다. 잠겨 있습니다.
+  description: 영원함 강화 — 원작에 대응하는 연구소가 없는 등급입니다. 잠겨 있습니다. ⚠️ 2026-09-06 추가 — 2026-09-05에 "원작 대응 없음"으로 판정해 잠갔으나, 2026-09-06 조사에서 원작 R009(glvl 25)가 후보로 나왔다. 다만 이건 "이름"만 보고 찾은 것이고(오늘 이름으로 판정했다 틀린 사례가 여럿이었다, 예: "A11S식"이 진짜 A11S와 무관했던 것) — R009가 실제로 이 등급(영원함)에 붙는지, gba1/gmo1(공속)·gba2/gmo2(공격력)·비용·glvl 전부가 맞는지는 아직 동작 기준으로 확인 안 됐다(리서치담당 확인 대기). **maxLevel=5를 포함해 이 트랙의 현재 값(costBase·costGrowthPerLevel·statLevel1Multiplier·statGrowthPerLevel 전부)은 원작 값이 아니라 전부 자리표시자다** — 확인 오기 전엔 hasOriginalResearch를 풀지 않는다(자리표시자 그대로 살아나면 원작과 다른 강화가 실제로 게임에 돈다).
   targetGrades:
   - 9
   maxLevel: 5
