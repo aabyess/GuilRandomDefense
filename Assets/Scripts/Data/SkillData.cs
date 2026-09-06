@@ -154,6 +154,15 @@ public enum SkillEffectKind
     // duration(위 필드)이 그대로 버프 지속시간이다 — 0이면 영구(RemoveBuff로만 없어짐,
     // ArmorBreak 등 기존 kind들과 같은 관례).
     ApplyBuff,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-06, B03Z/로우, PM 지시) — 발동 시 buffId로 지정한 버프를
+    // 즉시 뗀다(효과 자체는 여기까지 — 버프 지속시간·재부여 조건과 무관하게 "이 순간
+    // 뗀다"만 한다). 원작 예: 로우 "MANA==135(버프 오픈, 5초 창) → LIFE>=250이면
+    // 즉사+버프 제거+e0RR 소환" — 같은 트리거 안에서 거는 곳과 쓰는 곳이 같아, 쓰는
+    // 쪽이 버프를 직접 떼지 않으면 다음 열림 때까지 계속 남아 있다가 무한 누적된다.
+    // target(Self/Allies/Enemies)에 따라 UnitAttacker.AddBuff의 반대짝(RemoveBuff)을
+    // 부른다 — ApplyBuff와 정확히 대칭이다. buffId가 비어있으면 조용히 무시.
+    RemoveBuff,
 }
 
 // 효과 하나. 레벨 하나가 이걸 여러 개 가질 수 있다 — "레벨2에 효과가 하나 더 생긴다"(원작

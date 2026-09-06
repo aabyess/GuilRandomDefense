@@ -997,10 +997,19 @@ public class UnitAttacker : MonoBehaviour
     // ally에게 걸리는 게 맞다 — "자기 자신에게 버프"도 ally==identity==this인 경우다).
     void ApplyToAlly(SkillEffect effect, UnitIdentity ally)
     {
-        if (effect.kind != SkillEffectKind.ApplyBuff) return;
+        if (effect.kind != SkillEffectKind.ApplyBuff && effect.kind != SkillEffectKind.RemoveBuff) return;
 
         UnitAttacker allyAttacker = ally != null ? ally.GetComponent<UnitAttacker>() : null;
         if (allyAttacker == null) return;
+
+        if (effect.kind == SkillEffectKind.RemoveBuff)
+        {
+            // B03Z/로우(2026-09-06, PM 지시) — 거는 곳과 쓰는 곳이 같은 트리거 안이라,
+            // 쓰는 쪽이 직접 떼지 않으면 다음 열림 때까지 남아 무한 누적된다. ApplyBuff의
+            // 정확한 반대짝 — duration/buffHitCharges는 안 본다(그냥 지금 뗀다).
+            allyAttacker.RemoveBuff(effect.buffId);
+            return;
+        }
 
         // buffHitCharges>0이면 "N초"가 아니라 "평타 N번"으로 만료된다(2026-09-06,
         // SkillEffect.buffHitCharges 주석 참고) — 이 대상(ally, Self 포함) 자신의
@@ -1158,6 +1167,13 @@ public class UnitAttacker : MonoBehaviour
             // HealOverTime과 달리) 되돌리는 코루틴이 따로 필요 없다.
             case SkillEffectKind.ApplyBuff:
                 target.AddBuff(effect.buffId, effect.duration);
+                break;
+
+            // ApplyBuff의 반대짝(2026-09-06, B03Z/로우) — ApplyToAlly 쪽과 같은 이유.
+            // 대상(적) 버프를 즉시 뗀다 — 지금은 쓰는 자산이 없지만(캐스터 자기버프
+            // B03Z만 있음) ApplyBuff가 Enemies 타겟도 있으니 대칭으로 같이 만든다.
+            case SkillEffectKind.RemoveBuff:
+                target.RemoveBuff(effect.buffId);
                 break;
 
             // ExtraProjectile은 아직 값 의미가 없다(이번 작업 범위 밖) — 조용히 무시.
