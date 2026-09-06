@@ -779,6 +779,21 @@ public static class MapGenerator
     const float CostBlockGap = 2.0f;   // 비용 묶음과 첫 재료 사이
     const float ColumnPad = 2.0f;      // 열 바닥판 좌우 여백 — 열 사이 벽이 이 안에 선다
 
+    // 조합표 가로 축소율. 열을 자연 폭으로 늘어놓으면 섬 폭(274)을 50 넘겨서
+    // 양쪽으로 25씩 삐져나온다(2026-09-06 사장님 스크린샷). 자연 폭을 먼저 재고
+    // 섬에 맞는 비율을 여기 넣은 뒤 다시 배치한다. 1이면 축소 없음.
+    // ⚠️ 세로(RecipeRowHeight)는 건드리지 않는다 — 넘치는 건 가로뿐이고,
+    //    세로까지 줄이면 줄 간격이 좁아져 오히려 읽기 나빠진다.
+    static float RecipeScale = 1f;
+
+    static float SlotW  => RecipeSlot * RecipeScale;
+    static float GapW   => RecipeGap * RecipeScale;
+    static float ArrowW => RecipeArrowGap * RecipeScale;
+    static float PadW   => ColumnPad * RecipeScale;
+    static float CostW  => CostSlot * RecipeScale;
+    static float CostGapW => CostGap * RecipeScale;
+    static float CostBlockGapW => CostBlockGap * RecipeScale;
+
     static string BuildCombineColumns(GameObject table)
     {
         if (table == null) return "";
@@ -849,6 +864,14 @@ public static class MapGenerator
             totalWidth += columnWidths[c];
         }
 
+        // 자연 폭이 섬을 넘으면 가로만 줄여 맞춘다. 넘치지 않으면 그대로 둔다.
+        RecipeScale = totalWidth > island.size.x ? island.size.x / totalWidth : 1f;
+        if (RecipeScale < 1f)
+        {
+            for (int c = 0; c < columnWidths.Length; c++) columnWidths[c] *= RecipeScale;
+            totalWidth *= RecipeScale;
+        }
+
         float tableLeft = island.center.x - island.size.x * 0.5f;
         float tableTop = island.center.y + island.size.y * 0.5f;
         float cursorX = tableLeft + (island.size.x - totalWidth) * 0.5f;   // 표 안에서 가운데 정렬
@@ -863,8 +886,8 @@ public static class MapGenerator
             float columnLeft = cursorX;
             cursorX += columnWidth;
             float rowZ = tableTop - RecipeRowHeight;
-            float rowLeftX = columnLeft + ColumnPad + RecipeSlot * 0.5f;
-            float resultX = rowLeftX + columnMaxSlots[c] * (RecipeSlot + RecipeGap) + RecipeArrowGap;
+            float rowLeftX = columnLeft + PadW + SlotW * 0.5f;
+            float resultX = rowLeftX + columnMaxSlots[c] * (SlotW + GapW) + ArrowW;
 
             // 첫 열 왼쪽부터 마지막 열 오른쪽까지, 칸 경계마다 한 장씩.
             BuildColumnWall(parent, $"조합표_칸벽_{c}", columnLeft, island.center.y, island.size.y);
@@ -918,7 +941,15 @@ public static class MapGenerator
             ? $"가로 {totalWidth:F0}/{island.size.x:F0} 여유 {island.size.x - totalWidth:F0}"
             : $"⚠️ 가로 {totalWidth - island.size.x:F0} 모자람 — CombineTable 가로를 {Mathf.CeilToInt(totalWidth) + 8}으로";
 
-        return $"\n조합식 표: {placed}개 조합식, {columns.Count}열 (등급 블록 최대 {MaxRecipeRows}행)." +
+        // ⚠️ 뽑기섬 조합식은 제 폭이 따로 있으므로 축소율을 물려주면 안 된다 — 여기서 되돌린다.
+        float usedScale = RecipeScale;
+        RecipeScale = 1f;
+
+        string fitNote = usedScale < 1f
+            ? $"\n  가로 {usedScale:P0}로 줄여 섬(폭 {island.size.x:F0})에 맞췄습니다 — 자연 폭이 {totalWidth / usedScale:F0}였습니다."
+            : "";
+
+        return fitNote + $"\n조합식 표: {placed}개 조합식, {columns.Count}열 (등급 블록 최대 {MaxRecipeRows}행)." +
                $"\n  깊이 {deepest:F0}/{available:F0} {verdict}\n  {fit}" +
                (sample != null ? $"\n  예시: {sample}" : "");
     }
@@ -1015,7 +1046,7 @@ public static class MapGenerator
                 {
                     PlaceRecipeSlot(parent, x, z, IngredientName(ingredient), IngredientColor(ingredient),
                                     $"재료_{label}", ingredient.unit);
-                    x += RecipeSlot + RecipeGap;
+                    x += SlotW + GapW;
                 }
             }
         }
@@ -1058,7 +1089,7 @@ public static class MapGenerator
         {
             BuildCostIcon(parent, $"비용_{label}_코인_{recipe.goldCost}", x, z,
                           new Color(1.00f, 0.82f, 0.25f), CostIconShape.Coin, glow: false);
-            x += CostSlot + CostGap;
+            x += CostW + CostGapW;
             placed++;
         }
 
@@ -1073,12 +1104,12 @@ public static class MapGenerator
                               wood ? new Color(0.45f, 0.30f, 0.16f) : new Color(0.35f, 0.95f, 0.75f),
                               wood ? CostIconShape.Log : CostIconShape.Coin,
                               glow: cost.type == ResourceType.LuckyToken);
-                x += CostSlot + CostGap;
+                x += CostW + CostGapW;
                 placed++;
             }
         }
 
-        return placed == 0 ? 0f : x - leftX + CostBlockGap;
+        return placed == 0 ? 0f : x - leftX + CostBlockGapW;
     }
 
     enum CostIconShape { Coin, Log }
@@ -1132,13 +1163,15 @@ public static class MapGenerator
     {
         Vector3 ground = new Vector3(x, MapLayout.IslandTop, z);
 
-        if (TryPlaceUnitModel(parent, $"{prefix}_{label}", ground, unit, RecipeRowHeight * 0.9f)) return;
+        // ⚠️ 모델 크기도 가로 축소율을 탄다 — 칸 간격만 좁히고 모델을 그대로 두면 서로 겹친다.
+        if (TryPlaceUnitModel(parent, $"{prefix}_{label}", ground, unit,
+                              RecipeRowHeight * 0.9f * RecipeScale)) return;
 
         GameObject slot = GameObject.CreatePrimitive(PrimitiveType.Cube);
         slot.name = $"{prefix}_{label}";
         slot.transform.SetParent(parent, false);
         slot.transform.position = new Vector3(x, MapLayout.IslandTop + RecipeSlotHeight * 0.5f, z);
-        slot.transform.localScale = new Vector3(RecipeSlot, RecipeSlotHeight, RecipeSlot);
+        slot.transform.localScale = new Vector3(SlotW, RecipeSlotHeight, SlotW);
         PaintSolid(slot, color);
         // 표 위를 걸어다녀야 하므로 통과시킨다.
         Object.DestroyImmediate(slot.GetComponent<Collider>());
