@@ -136,6 +136,32 @@ check(
     boss_tier_assets,
 )
 
+# ── 6-2. EnemyData.percentDamageTaken — 전부 명시 필수(파일명/isBoss 패턴에 안 기댄다) ──
+# ⚠️ 2026-09-06(LEVEL_COEFFICIENT_AXES.md, PM 지시) — "진짜 라운드보스 vs 스토리보스"를
+# isBoss 하나로 못 가른다(둘 다 isBoss=1인데 원작 A11S 값이 다르다 — 라운드보스 1.00,
+# 스토리보스 0.90). 그래서 "보스면 기본값 1.00이 맞다"는 분류 판정을 검사기에 넣지
+# 않는다 — 오늘 파일명 패턴에 기댄 판단이 여덟 번 틀렸다(뿌리 문서 참고). 대신 "명시
+# 자체가 빠졌는가"만 본다 — 분류가 틀려도 누락은 걸린다(스토리보스 13종이 실제로 이렇게
+# 빠져 있었다). 예외는 리서치담당 확인 대기 중인 것 하나뿐(거대해왕류, A11S 값이 보스
+# 1.00인지 일반 0.90인지 아직 안 나왔다) — 답이 오면 값 채우고 이 목록에서 뺄 것.
+PERCENT_DAMAGE_TAKEN_PENDING_RESEARCH = {
+    "Enemy_거대해왕류.asset",
+}
+percent_damage_taken_assets = [
+    p for p in glob("Assets/Data/Enemies/*.asset")
+    if p.name not in PERCENT_DAMAGE_TAKEN_PENDING_RESEARCH
+]
+
+check(
+    "EnemyData.percentDamageTaken (전부 명시 필수 — 거대해왕류만 리서치 대기 예외)",
+    ["percentDamageTaken"],
+    "기본값 1.00 — 원작 A11S('폭발형데미지 증폭', 적이 스킬 피해를 얼마나 받는가) 대응"
+    " 필드다. 명시가 없으면 조용히 1.00(라운드보스 값)으로 읽혀, 일반 몹·스토리보스"
+    "(원작 0.90)가 실제보다 센 피해를 받는다. isBoss로 '보스니까 기본값이 맞다'고 판정하지"
+    " 않는다 — 스토리보스도 isBoss=1이지만 원작 값은 0.90이라 그 판정 자체가 틀렸었다.",
+    percent_damage_taken_assets,
+)
+
 # ── 7. UnitTraitData.isTransformType — 기본값 false, 조건부 검사 ────────────
 # ⚠️ 폴더 전체(Assets/Data/Traits/, 239개)가 아니라 "06번③ 변신형" 원작 26분기 중 2개만
 # 검사한다 — 이 목록은 이 스크립트를 작성하는 도중 실제로 부딪힌 문제라 남긴다: 폴더
