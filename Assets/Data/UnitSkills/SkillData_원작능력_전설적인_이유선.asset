@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_전설적인_이유선
   m_EditorClassIdentifier:
   skillName: A0TW !그림자 흡수-루피 나메
-  description: 원작 전설적인 센고쿠 전 해군 원수 - 전설적인(Trig_Legend8). | 2차 배정(트리거·더미 채널): 원작 전설적인 센고쿠 전 해군 원수 - 전설적인(더미 경로 Trig_Legend8 → e00A(!전설 센고쿠 인의 더미) → A058). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. 정정(2026-09-06, GATE_FIX_14/c1adaea): 원작 Trig_Legend8 GetRandomInt(1,10)==3 AND 대상포인트값>199 확정 — 포인트값 조건(대상이 보스일 때만, 축 밖)은 버리고 확률만 반영. triggerChance 1.0(근사) → 0.10(1/10).
+  description: 원작 전설적인 센고쿠 전 해군 원수 - 전설적인(Trig_Legend8). | 2차 배정(트리거·더미 채널): 원작 전설적인 센고쿠 전 해군 원수 - 전설적인(더미 경로 Trig_Legend8 → e00A(!전설 센고쿠 인의 더미) → A058). 정정(2026-09-06, GATE_FIX_14/c1adaea): 원작 Trig_Legend8 GetRandomInt(1,10)==3 AND 대상포인트값>199 확정 — 포인트값 조건(대상이 보스일 때만, 축 밖)은 버리고 확률만 반영. triggerChance 1.0(근사) → 0.10(1/10). 정정(2026-09-06, STOCK_FIELD_RESEARCH_RESULT.md/607351c, 라벨만 오배정 9건 중 하나): 위 A058 인용은 라벨이 잘못됐다 — A058(base Aroa/로어, 피해 필드 없음)에서 온 값이 아니라 이 465,000×2는 전부 Trig_Legend8 자신의 RRD(GATE_FIX_14에서 확정한 그 발동)에서 온 것이다. 값은 유지하고 출처 표기만 정정한다 — 능력ID만 잘못 붙었을 뿐 행 자체는 유효하다.
   triggerType: 0
   levels:
   - cooldown: 0
