@@ -136,7 +136,57 @@ TIER_COUNT = MAX_TIER + 1
 # 2. 로스터 239종 — attackPower/attackSpeed/damageType/critChance 등을 직접 읽는다.
 # ---------------------------------------------------------------------------
 
-def load_roster():
+def load_upgrade_tracks():
+    """등급 연구소 트랙(Assets/Data/UnitUpgrades/*.asset) — 2026-09-06 공속 축 배선
+    (구현담당2, 커밋 595dee7) 검산용. `잠금(hasOriginalResearch=0)` 트랙은 아예
+    안 돌려준다 — legacyGradeLevels에 절대 안 들어와 SpeedMultiplierForGrade가
+    자동으로 1을 돌려주는 런타임 동작과 같다(영원함·다른세계·흔함·안흔함 자동 제외).
+    등급(int enum index) → {maxLevel, speed1, speedGrowth, bonus1, bonusGrowth}."""
+    tracks = {}
+    for path in glob.glob(os.path.join(ROOT, "Assets/Data/UnitUpgrades/*.asset")):
+        text = open(path, encoding="utf-8").read()
+        if re.search(r"^  hasOriginalResearch: 0", text, re.MULTILINE):
+            continue
+
+        def g(field, default=0.0):
+            m = re.search(rf"^  {field}: ([-+0-9.eE]+)", text, re.MULTILINE)
+            return float(m.group(1)) if m else default
+
+        grades_m = re.search(r"^  targetGrades:\n((?:  - .*\n?)*)", text, re.MULTILINE)
+        grade_ids = [int(x) for x in re.findall(r"- (\d+)", grades_m.group(1))] if grades_m else []
+        params = {
+            "maxLevel": int(g("maxLevel")),
+            "speed1": g("statLevel1Multiplier"),
+            "speedGrowth": g("statGrowthPerLevel"),
+            "bonus1": g("statLevel1Bonus"),
+            "bonusGrowth": g("statBonusGrowthPerLevel"),
+        }
+        for gid in grade_ids:
+            tracks[gid] = params
+    return tracks
+
+
+def track_speed_multiplier(track, level):
+    """UnitUpgradeTrackData.SpeedMultiplierForLevel과 같은 식(구현담당2, 595dee7) —
+    증가율이라 1을 더한다. level<=0이면 무조건 1(무영향)."""
+    if track is None or level <= 0:
+        return 1.0
+    return 1.0 + track["speed1"] + track["speedGrowth"] * (level - 1)
+
+
+def track_power_bonus(track, level):
+    """UnitUpgradeTrackData.BonusForLevel과 같은 식. level<=0이면 무조건 0."""
+    if track is None or level <= 0:
+        return 0.0
+    return track["bonus1"] + track["bonusGrowth"] * (level - 1)
+
+
+def load_roster(research_level=0):
+    """research_level: 0(기본, 회귀 없음 — 지금까지의 모든 출력과 동일) 또는 "max"
+    (그 등급 트랙의 maxLevel, 잠긴 등급은 트랙이 아예 없어 그대로 0과 같다). 2026-09-06
+    PM 지시 — "붕괴 라운드(연구 0)"·"붕괴 라운드(연구 max)" 두 끝을 같이 낸다(계단형
+    골드-소비 모델은 창작이라 넣지 않는다, PM 확정)."""
+    tracks = load_upgrade_tracks() if research_level else None
     recs = []
     for path in glob.glob(os.path.join(ROOT, "Assets/Data/Units/Roster/*.asset")):
         text = open(path, encoding="utf-8").read()
@@ -153,6 +203,13 @@ def load_roster():
         ap, aspd = g("attackPower"), g("attackSpeed")
         if tier is None or ap is None or aspd is None:
             continue
+
+        if tracks is not None:
+            track = tracks.get(int(grade_idx))
+            level = track["maxLevel"] if (track is not None and research_level == "max") else 0
+            aspd = aspd * track_speed_multiplier(track, level)
+            ap = ap + track_power_bonus(track, level)
+
         dmgtype = int(g("damageType") or 0)
         cc = g("critChance") or 0.0
         cdm = g("critDamageMultiplier")
@@ -1171,6 +1228,44 @@ def main():
         normal_s = f"붕괴 R{normal_r}" if normal_r else "완주(75R)"
         current_s = f"붕괴 R{current_r}" if current_r else "완주(75R)"
         print(f"{name:20s}{normal_s:14s}{current_s:14s}")
+
+    # -----------------------------------------------------------------
+    # §14: 연구소 공속 축(2026-09-06, 구현담당2, 595dee7) — 두 끝만 낸다. "라운드가
+    # 오를수록 연구 단계가 얼마나 오르는가"의 완만한 곡선은 골드를 연구에 얼마나
+    # 우선순위 두는지에 달려 있는데, 그 배분 비율은 원작에도 우리에도 근거가 없어
+    # 창작이다(PM 확정 2026-09-06 — 계단형 근사 넣지 않는다). 대신 "연구 0"(하한,
+    # 지금까지의 모든 §1~§13 출력과 동일 — 이 섹션 이전 코드는 전부 load_roster()
+    # 기본값 그대로라 회귀 없음)과 "연구 max"(상한, 그 등급 트랙의 원작 maxLevel)
+    # 두 끝을 같이 낸다 — 잠긴 트랙(영원함·다른세계·흔함·안흔함)은 load_upgrade_tracks가
+    # 아예 안 돌려줘서 "연구 max"에서도 자동으로 0(무변화)과 같다.
+    # -----------------------------------------------------------------
+    print("\n=== §14: 연구소 공속 축 — 붕괴 라운드(연구 0) vs (연구 max) ===")
+
+    roster_max = load_roster(research_level="max")
+    all_median_max = median_dps_by_tier(roster_max)
+    after_by_armor_max = build_median_by_armor(roster_max, all_median_max)
+
+    print(f"{'모델':20s}{'연구 0':14s}{'연구 max':14s}")
+    for name, fn in MODELS_DT.items():
+        r0 = run_backlog_dt(enemies, wave_counts, round_length_fn, defense_armor,
+                             fn(after_by_armor), threshold=rc["enemy_count_threshold"])
+        rmax = run_backlog_dt(enemies, wave_counts, round_length_fn, defense_armor,
+                               fn(after_by_armor_max), threshold=rc["enemy_count_threshold"])
+        r0_s = f"붕괴 R{r0}" if r0 else "완주(75R)"
+        rmax_s = f"붕괴 R{rmax}" if rmax else "완주(75R)"
+        print(f"{name:20s}{r0_s:14s}{rmax_s:14s}")
+
+    # ⚠️ 아래 세 줄은 "연구가 싸다"는 결론이 아니다 — 원작 비용 필드(gglb/gglm) 두
+    # 숫자가 둘 다 골드인지, 하나가 목재인지 아직 리서치담당 확인 대기다(PM 지시
+    # 2026-09-06). 목재라면 결론이 뒤집힌다(목재가 우리 게임에서 훨씬 귀하다) — 그래서
+    # "킬 골드 기준" 전제를 명시하고 꼬리표를 단다. UnitUpgradeTrackData.CostForLevel
+    # (레벨1만 costBase, 이후 매레벨 costGrowthPerLevel 정액)과 Enemy_R*.asset의
+    # goldReward × 라운드당 마릿수로 계산했다 — 도움소·조합·특성강화 등 다른 지출은
+    # 전혀 없다고 가정한 상한값이다.
+    print("\n--- 참고: 킬 골드 기준 연구비용 도달 라운드 (⚠️ 비용 단위 gglb/gglm 확인 대기, 목재면 결론 뒤집힘) ---")
+    print("R4  누적 1,190엔   초월함 트랙 하나(1,075엔) 만렙 가능")
+    print("R16 누적 7,215엔   8개 트랙 전부(6,605엔) 만렙 가능")
+    print("8트랙 만렙 비용 = 전 게임 총수입(≈99,630엔)의 6.6% — 다른 지출 0 가정, 골드 단위 확인 전 참고치")
 
 
 if __name__ == "__main__":
