@@ -304,6 +304,13 @@ public class UnitAttacker : MonoBehaviour
     {
         public float cooldownTimer;          // CooldownAutoCast·Aura 전용
         public float onHitChanceLockedUntil; // OnHitChance 절대쿨 전용
+
+        // ⚠️ 2026-09-06 추가(오라 무한누적 근본수정, PM 지시) — Aura 전용, 지금 이 오라가
+        // 걸어둔 대상들(EnemyAuraCaster.affected와 같은 역할). null이면 "아직 한 번도
+        // 안 돌았다"는 뜻이라 UpdateAuraTick이 처음 부를 때 지연 생성한다.
+        public List<EnemyDummy> auraAffectedEnemies;
+        public List<UnitIdentity> auraAffectedAllies;
+        public List<string> auraSelfAppliedBuffIds;
     }
 
     Dictionary<SkillData, SkillRuntimeState> skillRuntimeStates;
@@ -481,27 +488,189 @@ public class UnitAttacker : MonoBehaviour
             if (level.effects == null || level.effects.Count == 0) continue;
 
             SkillRuntimeState state = GetRuntimeState(skill);
+
+            // ⚠️ 2026-09-06 근본수정(PM 지시) — Aura는 CooldownAutoCast와 다르게
+            // "재시전"이 아니라 "계속 켜져 있는 지속효과"다. 예전엔 둘을 같은 코드로
+            // 다뤄서 Aura도 1초마다 CastSkillLevel을 다시 불렀는데, ArmorBonus/
+            // HealOverTime/ApplyBuff를 duration<=0(영구)으로 걸면 "이미 걸었나" 추적이
+            // 없어 매 틱 armorShred/버프 인스턴스가 무한히 쌓인다(EnemyAuraCaster는 이미
+            // 대상 추적으로 이 문제가 없다 — 플레이어 쪽만 비대칭이었다). Aura는 여기서
+            // 갈라 UpdateAuraTick으로 보낸다(대상 추적 + Apply-once/Remove-on-exit).
+            if (skill.triggerType == SkillTriggerType.Aura)
+            {
+                // 오라는 쿨다운 개념이 없다("계속 켜져 있다") — 매 프레임 판정하면 값이
+                // 생겼을 때 폭증하니 1초 주기로만 갱신한다(예전과 같은 주기).
+                state.cooldownTimer -= Time.deltaTime;
+                if (state.cooldownTimer > 0f) continue;
+                state.cooldownTimer = 1f;
+
+                // target=null 게이트 검사는 여기선 "새로 걸 수 있는지"만 정한다 — 게이트가
+                // 막혀 있어도 이미 걸려 있던 효과는 UpdateAuraTick 안에서 정상적으로
+                // 걷어낸다(범위를 "전부 벗어난 것"으로 취급).
+                UpdateAuraTick(level, state, PassesBuffGate(level, null));
+                continue;
+            }
+
             state.cooldownTimer -= Time.deltaTime;
             if (state.cooldownTimer > 0f) continue;
 
             // 버프 게이트(requiredBuffId/forbiddenBuffId, 2026-09-06) — 쿨다운이 다 돼도
             // 이 조건을 못 넘으면 시전하지 않는다. 타이머는 일부러 안 되돌린다 — 막힌
             // 동안 매 프레임 다시 검사하다가 조건이 풀리는 순간 그 프레임에 바로 나간다.
-            // target=null — CooldownAutoCast·Aura는 이 시점에 아직 대상을 안 골랐다
-            // (대상은 CastSkillLevel 안에서 나중에 정해진다). 이 스킬에
-            // requiredTargetBuffId/forbiddenTargetBuffId가 채워져 있으면 PassesBuffGate가
-            // target==null을 보고 무조건 막는다 — 대상 버프 게이트를 가진 스킬은 이
-            // 발동방식(Aura·CooldownAutoCast)으로는 쓸 수 없다는 뜻이고, 지금은 그런
-            // 자산이 없어 회귀 없다.
+            // target=null — CooldownAutoCast는 이 시점에 아직 대상을 안 골랐다(대상은
+            // CastSkillLevel 안에서 나중에 정해진다). 이 스킬에 requiredTargetBuffId/
+            // forbiddenTargetBuffId가 채워져 있으면 PassesBuffGate가 target==null을 보고
+            // 무조건 막는다 — 대상 버프 게이트를 가진 스킬은 CooldownAutoCast로는 못
+            // 쓴다는 뜻이고, 지금은 그런 자산이 없어 회귀 없다.
             if (!PassesBuffGate(level, null)) continue;
 
-            // 오라는 쿨다운 개념이 없다("계속 켜져 있다") — 매 프레임 판정하면 값이 생겼을 때
-            // 폭증하니 1초 주기로 재판정한다.
-            state.cooldownTimer = skill.triggerType == SkillTriggerType.Aura ? 1f : Mathf.Max(0.01f, level.cooldown);
-            // recentAttackDamage: 0 — CooldownAutoCast·Aura는 "방금 맞은 평타"라는 문맥
-            // 자체가 없다(TryCastOnHitSkill 쪽만 있음, 아래 참고). ReceivedDamage basis를
-            // 쓰는 효과가 이 경로를 타면 0(적용 안 함)으로 안전하게 빠진다.
+            state.cooldownTimer = Mathf.Max(0.01f, level.cooldown);
+            // recentAttackDamage: 0 — CooldownAutoCast는 "방금 맞은 평타"라는 문맥 자체가
+            // 없다(TryCastOnHitSkill 쪽만 있음, 아래 참고). ReceivedDamage basis를 쓰는
+            // 효과가 이 경로를 타면 0(적용 안 함)으로 안전하게 빠진다.
             CastSkillLevel(level, level.range, null, 0f);
+        }
+    }
+
+    // ---- Aura 지속효과 — 대상 추적(Apply-once/Remove-on-exit), EnemyAuraCaster와 같은
+    // 설계를 플레이어 쪽에 옮긴 것. ⚠️ 범위: ArmorBonus·HealOverTime·ApplyBuff(=지속형
+    // kind) 셋만 다룬다 — Damage·Stun·ArmorBreak·ExtraProjectile은 "매 틱 다시 낸다"는
+    // 뜻이 자연스러운 즉발형이라 이 경로에 안 들어온다(지금 Aura 자산 전부(H094 1건)
+    // ArmorBonus뿐이라 즉발형이 Aura에 실제로 쓰인 사례가 없다 — EnemyAuraCaster도 같은
+    // 전제로 Allies-target 외엔 아예 안 본다). 나중에 즉발형을 Aura에 쓸 사례가 생기면
+    // 그때 이 전제를 다시 봐야 한다.
+
+    void UpdateAuraTick(SkillLevel level, SkillRuntimeState state, bool gatePasses)
+    {
+        state.auraAffectedEnemies ??= new List<EnemyDummy>();
+        state.auraAffectedAllies ??= new List<UnitIdentity>();
+        state.auraSelfAppliedBuffIds ??= new List<string>();
+
+        // Self 효과 — 범위 개념이 없다(캐스터 자기 자신). 게이트가 막히면 뗀다, 풀리면
+        // 다시 건다 — 한 번 걸고 다시 안 떼는 게 아니라 "지금 켜져 있는가"를 그대로
+        // 따른다(다른 두 타겟과 같은 규칙).
+        foreach (SkillEffect effect in level.effects)
+        {
+            if (effect.target != SkillTargetKind.Self || effect.kind != SkillEffectKind.ApplyBuff) continue;
+            if (string.IsNullOrEmpty(effect.buffId)) continue;
+
+            bool alreadyApplied = state.auraSelfAppliedBuffIds.Contains(effect.buffId);
+            if (gatePasses && !alreadyApplied)
+            {
+                AddBuff(effect.buffId, 0f);
+                state.auraSelfAppliedBuffIds.Add(effect.buffId);
+            }
+            else if (!gatePasses && alreadyApplied)
+            {
+                RemoveBuff(effect.buffId);
+                state.auraSelfAppliedBuffIds.Remove(effect.buffId);
+            }
+        }
+
+        // Enemies 타겟 지속효과 — 게이트가 막히면 범위를 "전부 벗어난 것"으로 취급해
+        // 기존에 걸어둔 효과를 전부 걷어낸다.
+        List<EnemyDummy> enemiesInRange = new List<EnemyDummy>();
+        if (gatePasses)
+        {
+            foreach (EnemyDummy enemy in EnemyDummy.Active)
+            {
+                if (enemy == null) continue;
+                if (level.range > 0f && Vector3.Distance(enemy.transform.position, transform.position) > level.range) continue;
+                enemiesInRange.Add(enemy);
+            }
+        }
+        for (int i = state.auraAffectedEnemies.Count - 1; i >= 0; i--)
+        {
+            EnemyDummy target = state.auraAffectedEnemies[i];
+            if (target == null || !enemiesInRange.Contains(target))
+            {
+                if (target != null) RemovePersistentAuraEffectsFromEnemy(level, target);
+                state.auraAffectedEnemies.RemoveAt(i);
+            }
+        }
+        foreach (EnemyDummy target in enemiesInRange)
+        {
+            if (state.auraAffectedEnemies.Contains(target)) continue;
+            ApplyPersistentAuraEffectsToEnemy(level, target);
+            state.auraAffectedEnemies.Add(target);
+        }
+
+        // Allies 타겟 지속효과 — 같은 규칙.
+        List<UnitIdentity> alliesInRange = gatePasses && identity != null
+            ? UnitIdentity.AlliesOf(identity, level.range)
+            : new List<UnitIdentity>();
+        for (int i = state.auraAffectedAllies.Count - 1; i >= 0; i--)
+        {
+            UnitIdentity ally = state.auraAffectedAllies[i];
+            if (ally == null || !alliesInRange.Contains(ally))
+            {
+                if (ally != null) RemovePersistentAuraEffectsFromAlly(level, ally);
+                state.auraAffectedAllies.RemoveAt(i);
+            }
+        }
+        foreach (UnitIdentity ally in alliesInRange)
+        {
+            if (state.auraAffectedAllies.Contains(ally)) continue;
+            ApplyPersistentAuraEffectsToAlly(level, ally);
+            state.auraAffectedAllies.Add(ally);
+        }
+    }
+
+    void ApplyPersistentAuraEffectsToEnemy(SkillLevel level, EnemyDummy target)
+    {
+        foreach (SkillEffect effect in level.effects)
+        {
+            if (effect.target != SkillTargetKind.Enemies) continue;
+            switch (effect.kind)
+            {
+                case SkillEffectKind.ArmorBonus:
+                case SkillEffectKind.HealOverTime:
+                    target.ApplyAllyAuraEffect(effect);
+                    break;
+                case SkillEffectKind.ApplyBuff:
+                    target.AddBuff(effect.buffId, 0f);
+                    break;
+            }
+        }
+    }
+
+    void RemovePersistentAuraEffectsFromEnemy(SkillLevel level, EnemyDummy target)
+    {
+        foreach (SkillEffect effect in level.effects)
+        {
+            if (effect.target != SkillTargetKind.Enemies) continue;
+            switch (effect.kind)
+            {
+                case SkillEffectKind.ArmorBonus:
+                case SkillEffectKind.HealOverTime:
+                    target.RemoveAllyAuraEffect(effect);
+                    break;
+                case SkillEffectKind.ApplyBuff:
+                    target.RemoveBuff(effect.buffId);
+                    break;
+            }
+        }
+    }
+
+    void ApplyPersistentAuraEffectsToAlly(SkillLevel level, UnitIdentity ally)
+    {
+        UnitAttacker allyAttacker = ally != null ? ally.GetComponent<UnitAttacker>() : null;
+        if (allyAttacker == null) return;
+        foreach (SkillEffect effect in level.effects)
+        {
+            if (effect.target != SkillTargetKind.Allies || effect.kind != SkillEffectKind.ApplyBuff) continue;
+            allyAttacker.AddBuff(effect.buffId, 0f);
+        }
+    }
+
+    void RemovePersistentAuraEffectsFromAlly(SkillLevel level, UnitIdentity ally)
+    {
+        UnitAttacker allyAttacker = ally != null ? ally.GetComponent<UnitAttacker>() : null;
+        if (allyAttacker == null) return;
+        foreach (SkillEffect effect in level.effects)
+        {
+            if (effect.target != SkillTargetKind.Allies || effect.kind != SkillEffectKind.ApplyBuff) continue;
+            allyAttacker.RemoveBuff(effect.buffId);
         }
     }
 
@@ -814,6 +983,15 @@ public class UnitAttacker : MonoBehaviour
     // 아닌 kind는 그냥 무시한다.
     void ApplyToEnemy(SkillEffect effect, EnemyDummy target, float recentAttackDamage)
     {
+        // 효과 단위 대상 버프 게이트(06번①-2, 2026-09-06) — SkillLevel의 게이트와
+        // 별개다(위 SkillData.cs SkillEffect.requiredTargetBuffId 주석 참고). Enemies
+        // AoE면 target이 매번 다른 개체라 이 검사도 개체마다 다시 돈다 — 그래서 "AoE
+        // 중 버프 있는 놈만" 같은 원작 구조가 자연히 나온다.
+        if (!string.IsNullOrEmpty(effect.requiredTargetBuffId) && (target == null || !target.HasBuff(effect.requiredTargetBuffId)))
+            return;
+        if (!string.IsNullOrEmpty(effect.forbiddenTargetBuffId) && target != null && target.HasBuff(effect.forbiddenTargetBuffId))
+            return;
+
         switch (effect.kind)
         {
             case SkillEffectKind.Damage:
@@ -1063,6 +1241,30 @@ public class UnitAttacker : MonoBehaviour
     void OnDestroy()
     {
         if (upgrades != null) upgrades.OnLevelChanged -= HandleUpgradesChanged;
+
+        // ⚠️ 2026-09-06 추가(오라 무한누적 근본수정) — EnemyAuraCaster.OnDestroy와 같은
+        // 이유: 이 유닛이 죽는 순간까지 걸어둔 오라 지속효과를 전부 되돌린다. 안 그러면
+        // 이 유닛이 사라져도 그 순간 범위 안에 있던 대상들에게 효과가 영구히 남는다.
+        if (skillRuntimeStates != null)
+        {
+            foreach (KeyValuePair<SkillData, SkillRuntimeState> kv in skillRuntimeStates)
+            {
+                SkillData skill = kv.Key;
+                SkillRuntimeState state = kv.Value;
+                if (skill == null || skill.triggerType != SkillTriggerType.Aura) continue;
+                SkillLevel level = CurrentSkillLevel(skill);
+                if (level == null) continue;
+
+                if (state.auraAffectedEnemies != null)
+                    foreach (EnemyDummy target in state.auraAffectedEnemies)
+                        if (target != null) RemovePersistentAuraEffectsFromEnemy(level, target);
+                if (state.auraAffectedAllies != null)
+                    foreach (UnitIdentity ally in state.auraAffectedAllies)
+                        if (ally != null) RemovePersistentAuraEffectsFromAlly(level, ally);
+                // Self 버프는 이 UnitAttacker 자신의 activeBuffs에 있고, 이 컴포넌트 자체가
+                // 지금 사라지는 중이라 별도로 뗄 필요가 없다.
+            }
+        }
     }
 
     void Update()

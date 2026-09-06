@@ -267,6 +267,19 @@ public class SkillEffect
     // 같은 자리) — 버프를 새로 거는 그 평타 자체는 아직 안 깎인 채로 게이트를 통과하지
     // 못한다(연다-쓴다가 같은 타에 안 겹친다, h04G와 같은 이유).
     public int buffHitCharges;
+
+    // ⚠️ 맨 뒤에 추가(06번①-2, 2026-09-06, PM 지시) — SkillLevel.requiredTargetBuffId/
+    // forbiddenTargetBuffId는 "스킬 전체"를 막거나 통과시킬 뿐이라, **한 스킬 안에서
+    // 효과마다 다른 대상 버프 조건**을 못 담는다(원작006 A10S 감마나이프: 효과A는 항상,
+    // 효과B는 "대상이 B06B 보유"일 때만 — SkillLevel 게이트 하나로는 A까지 같이 막히거나
+    // B까지 같이 나가버린다, 둘 다 원작과 다르다). 그래서 같은 이름의 게이트를 효과
+    // 단위에도 둔다 — `UnitAttacker.ApplyToEnemy`가 대상(target) 하나하나에 대해 이
+    // 효과를 적용하기 직전에 검사한다. **SkillLevel 쪽 게이트는 안 지운다** — 두 층이
+    // 다른 일을 한다(스킬 자체를 막는 것 vs 효과 하나를 막는 것), 원작006처럼 같은
+    // 스킬 안에 무조건 효과와 조건부 효과가 같이 있으면 레벨 게이트는 비워두고 이
+    // 필드만 쓴다. 기본값 ""(둘 다 빈 문자열) = 조건 없음 — 기존 자산 전부 회귀 0이다.
+    public string requiredTargetBuffId = "";
+    public string forbiddenTargetBuffId = "";
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
