@@ -1075,6 +1075,111 @@ MODELS_DT = {
 }
 
 
+# ---------------------------------------------------------------------------
+# §⑤(2026-09-06) — "A안"(제한): 영원함(Tier6)·초월함(Tier9)·불멸(Tier11)은
+# `war3map.j` 확정(`udg_Tech_Onedill`, `WISP_BUDGET_TIER_CEILING_2026-09-06.md`
+# §④)대로 "플레이어당 평생 1기"가 원작 상한이다. 위 MODELS_DT는 이 세 등급도
+# 다른 등급과 똑같이 "몇 기든 보유 가능"으로 취급한다 — 그 전제가 틀렸다는 게
+# 확정됐으니, 세 등급에 도달하는 슬롯을 "공유 1개"로 캡을 씌운 변형을 따로 둔다.
+# 원본 MODELS_DT는 그대로 둔다(B안은 폐기됐지만, 캡을 안 씌운 원본 자체는 다른
+# 용도(§13/§14/§15)에 계속 쓰인다).
+# ---------------------------------------------------------------------------
+
+CAPPED_GRADE_TIERS = {6, 9, 11}  # 영원함·초월함·불멸 — 셋이 공유하는 슬롯 1개
+
+
+def fixed10_dps_fn_dt_capped(median_by_armor):
+    def f(r, armor_type):
+        t = tier_for_round(r)
+        n = 1 if t in CAPPED_GRADE_TIERS else 10
+        return scale_skill_components(median_by_armor[armor_type][t], n)
+    return f
+
+
+def no_combine_dps_fn_dt_capped(median_by_armor):
+    owned = [tier_for_round(1)] * 5
+    slot_used = [False]  # 영원함·초월함·불멸 공유 슬롯 — 한 번 채워지면 그 뒤로는 버려진다
+
+    def f(r, armor_type):
+        for _ in range(2):
+            t = tier_for_round(r)
+            if t in CAPPED_GRADE_TIERS:
+                if slot_used[0]:
+                    continue
+                slot_used[0] = True
+            owned.append(t)
+        table = median_by_armor[armor_type]
+        total = zero_skill_components()
+        for t in owned:
+            total = add_skill_components(total, table[t])
+        return total
+    return f
+
+
+def greedy_combine_dps_fn_dt_capped(median_by_armor):
+    counts = Counter({tier_for_round(1): 5})
+    slot_used = [False]
+
+    def f(r, armor_type):
+        table = median_by_armor[armor_type]
+        counts[tier_for_round(r)] += 2
+        changed = True
+        while changed:
+            changed = False
+            for t in range(MAX_TIER):
+                target = t + 1
+                while counts[t] >= 2:
+                    if target in CAPPED_GRADE_TIERS:
+                        if slot_used[0]:
+                            break  # 이 이상은 못 올라간다 — 재료만 그 등급에 묶인다
+                        slot_used[0] = True
+                    counts[t] -= 2
+                    counts[target] += 1
+                    changed = True
+        total = zero_skill_components()
+        for t, n in counts.items():
+            total = add_skill_components(total, scale_skill_components(table[t], n))
+        return total
+    return f
+
+
+def local_optimal_dps_fn_dt_capped(median_by_armor):
+    counts = Counter({tier_for_round(1): 5})
+    slot_used = [False]
+
+    def f(r, armor_type):
+        table = median_by_armor[armor_type]
+        counts[tier_for_round(r)] += 2
+        changed = True
+        while changed:
+            changed = False
+            for t in range(MAX_TIER):
+                target = t + 1
+                if not (counts[t] >= 2 and table.get(target)
+                        and table[target]["flat_ad"] >= table[t]["flat_ad"] * 2):
+                    continue
+                if target in CAPPED_GRADE_TIERS:
+                    if slot_used[0]:
+                        continue
+                    slot_used[0] = True
+                counts[t] -= 2
+                counts[target] += 1
+                changed = True
+        total = zero_skill_components()
+        for t, n in counts.items():
+            total = add_skill_components(total, scale_skill_components(table[t], n))
+        return total
+    return f
+
+
+MODELS_DT_CAPPED = {
+    "고정 10기/레인": fixed10_dps_fn_dt_capped,
+    "안 조합": no_combine_dps_fn_dt_capped,
+    "최대 조합(그리디)": greedy_combine_dps_fn_dt_capped,
+    "국소최적 조합": local_optimal_dps_fn_dt_capped,
+}
+
+
 def run_backlog_dt(enemies, wave_counts, round_length_fn, defense_armor,
                     team_dps_fn, threshold, total_rounds=75):
     """run_backlog과 같지만 매 라운드 적의 armor_type을 읽어 team_dps_fn(r, armor_type)로
@@ -1523,6 +1628,55 @@ def main():
     print("  → '그 골드/위습을 유닛 확보에 즉시 쓰는지 저축하는지' 배분 비율만 정해지면")
     print("    라운드별 실제 등급 도달 시점이 창작 없이 계산으로 나온다 — 그 배분 비율은")
     print("    사장님께 여쭐 자리다.")
+
+    # -----------------------------------------------------------------
+    # §⑤(2026-09-06) — A안(제한) 붕괴 스윕. `war3map.j` 확정(`udg_Tech_Onedill`,
+    # WISP_BUDGET_TIER_CEILING_2026-09-06.md §④)대로 영원함(T6)·초월함(T9)·
+    # 불멸(T11)을 "플레이어당 공유 1기"로 캡을 씌운 MODELS_DT_CAPPED로 §15와
+    # 똑같은 12개 조합(칸수4×모양3)을 다시 돈다. B안(현재/무제한 취급)은 §15
+    # 결과가 그대로 그 값이라 다시 안 돌린다(PM 지시 — B안 폐기, A안만).
+    # -----------------------------------------------------------------
+    print("\n=== §⑤: A안(영원함·초월함·불멸 = 플레이어당 공유 1기) 붕괴 스윕 ===")
+    print("⚠️ B안(무제한 취급, §15의 값)은 폐기 — Tech_Onedill이 '제한'으로 확정됐다.")
+
+    all_results_capped = {name: [] for name in MODELS_DT_CAPPED}
+    print(f"\n--- 고정 10기/레인 상세 그리드(A안) ---")
+    print(f"{'칸수':6s}{'모양':22s}{'연구0':>10s}{'연구max':>10s}")
+    fixed_fn_capped = MODELS_DT_CAPPED["고정 10기/레인"]
+    for sc in schedule_counts:
+        for shape, shape_label in shapes:
+            tier_for_round = lambda r, total_rounds=75, _sc=sc, _sh=shape: tier_for_round_param(r, _sc, _sh, total_rounds)
+            r0 = sweep_run(fixed_fn_capped, after_by_armor)
+            rmax = sweep_run(fixed_fn_capped, after_by_armor_max)
+            all_results_capped["고정 10기/레인"].append(r0)
+            all_results_capped["고정 10기/레인"].append(rmax)
+            r0_s = f"R{r0}" if r0 else "완주"
+            rmax_s = f"R{rmax}" if rmax else "완주"
+            print(f"{sc:<6d}{shape_label:22s}{r0_s:>10s}{rmax_s:>10s}")
+
+    print("\n--- 나머지 3모델(A안) — 같은 12개 조합을 돌려 범위만 요약 ---")
+    for name, fn in MODELS_DT_CAPPED.items():
+        if name == "고정 10기/레인":
+            continue
+        for sc in schedule_counts:
+            for shape, _ in shapes:
+                tier_for_round = lambda r, total_rounds=75, _sc=sc, _sh=shape: tier_for_round_param(r, _sc, _sh, total_rounds)
+                all_results_capped[name].append(sweep_run(fn, after_by_armor))
+                all_results_capped[name].append(sweep_run(fn, after_by_armor_max))
+
+    tier_for_round = original_tier_for_round  # 반드시 원상복구
+
+    print(f"\n{'모델':20s}{'A안 범위':30s}{'B안 범위(§15, 참고)':30s}")
+    for name in MODELS_DT_CAPPED:
+        collapses_a = [c for c in all_results_capped[name] if c is not None]
+        completed_a = len(all_results_capped[name]) - len(collapses_a)
+        rng_a = (f"R{min(collapses_a)}~R{max(collapses_a)}({completed_a}완주)"
+                 if collapses_a else "전부 완주")
+        collapses_b = [c for c in all_results[name] if c is not None]
+        completed_b = len(all_results[name]) - len(collapses_b)
+        rng_b = (f"R{min(collapses_b)}~R{max(collapses_b)}({completed_b}완주)"
+                 if collapses_b else "전부 완주")
+        print(f"{name:20s}{rng_a:30s}{rng_b:30s}")
 
 
 if __name__ == "__main__":
