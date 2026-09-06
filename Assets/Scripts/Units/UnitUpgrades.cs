@@ -210,15 +210,15 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
         return 0f;
     }
 
-    // ⚠️ 2026-09-06 추가(PM 지시 — 뿌리 ㉖, "축은 있는데 값이 0으로 죽어 있었다") —
-    // SkillEffectBasis.ResearchLevel(UnitAttacker.CountResearchLevel)이 읽을 자리다.
-    // MultiplierForGrade/BonusForGrade와 같은 방식으로 이 등급을 담당하는 트랙을 찾지만,
-    // **배율·가산이 아니라 원시 레벨 숫자 그대로**를 돌려준다 — 원작 공식이 "연구단계×
-    // multiplier+bonus"라서(핸콕 h05C 효과 "연구횟수×30,000+360,000"으로 이미 검증됨)
-    // 그 "연구단계" 자체가 필요하지, UnitUpgradeTrackData의 선형 배율식이 필요한 게
-    // 아니다. **0-index 그대로**(Level()이 이미 "안 산 트랙=0, 1번 사면=1, ..."이라
-    // 연구 0단계=0이 자연스럽게 맞는다 — 별도 +1/-1 보정 없음, 핸콕 예의 "연구 0회=
-    // 상수항만 남는다"와도 일치한다). 대응 트랙이 없으면 0(연구 안 한 것과 같다).
+    // 이 등급을 담당하는 트랙(등급 업그레이드, R000~R004 계열, 최대 21)의 원시 레벨을
+    // 그대로 돌려준다. 공속 축(SpeedMultiplierForGrade/BonusForGrade) 전용이다.
+    // ⚠️ 2026-09-06 정정(PM 지시 — 뿌리 ㉜ 네 번째) — 한때 UnitAttacker.CountResearchLevel
+    // (SkillEffectBasis.ResearchLevel)이 이 메서드를 그대로 불렀는데, 그건 틀렸다.
+    // ResearchLevel은 원작 **타입 업그레이드**(R01L/R01M/R01O/R01T/R01V, 최대 3)를
+    // 뜻하는데 여기는 **등급 업그레이드**(최대 21)라 최대 7배 과대가 났다(핸콕 h05C
+    // "연구횟수×30,000+360,000" 등 9효과가 실제로 이 버그였다). 그 연결은 끊었다 —
+    // CountResearchLevel은 이제 이 메서드를 안 부르고 항상 0을 돌려준다. 이 메서드
+    // 자체는 지우지 않는다(공속 축이 여전히 쓴다) — 여기서는 등급 트랙이 맞다.
     public int LevelForGrade(UnitGrade grade)
     {
         foreach (KeyValuePair<UnitUpgradeTrackData, int> entry in legacyGradeLevels)

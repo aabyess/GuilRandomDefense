@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_제한_전법규_9ffa9c45
   m_EditorClassIdentifier:
   skillName: 에넬 G.O.D - 제한됨 — 1/10
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 에넬 G.O.D - 제한됨(h05E)의 게이트 "1/10" 능력 1개를 이 SkillData 하나로 묶었다.   · Enel_skill_2#1: 계산식 (182500.00+(I2R(GetPlayerTechCountSimple('R01L',GetOwningPla  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 에넬 G.O.D - 제한됨(h05E)의 게이트 "1/10" 능력 1개를 이 SkillData 하나로 묶었다.   · Enel_skill_2#1: 계산식 (182500.00+(I2R(GetPlayerTechCountSimple('R01L',GetOwningPla  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. ⚠️⚠️ 2026-09-06 축 혼선 정정(뿌리 ㉜ 네 번째, PM): 이 효과(R01L)는 basis=ResearchLevel(4)인데, UnitAttacker.CountResearchLevel()이 그동안 UnitUpgrades.LevelForGrade(등급 업그레이드, 제한됨=최대21)를 읽고 있었다 — 원래 뜻은 타입 업그레이드(R01L, 최대3)라 실제로 최대 7배 과대였다(제한됨 연구소는 hasOriginalResearch=1이라 실주행 상태). CountResearchLevel()을 등급 트랙 연결에서 끊어 항상 0을 반환하도록 정정했다 — 값(multiplier=12500/bonus=182500)과 basis=ResearchLevel은 그대로 둔다(우리에 타입 업그레이드 축이 아직 없어서다, 생기면 자동으로 켜진다). 정정 후 지금은 상수항(182500)만 나간다.
   triggerType: 0
   levels:
   - cooldown: 0

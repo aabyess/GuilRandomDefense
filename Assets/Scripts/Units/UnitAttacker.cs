@@ -134,19 +134,21 @@ public class UnitAttacker : MonoBehaviour
     }
 
     // SkillEffectBasis.ResearchLevel 전용 자리 — 원작 예: 핸콕 "연구횟수×30,000+360,000".
-    // ⚠️ 2026-09-06 연결(PM 지시, 뿌리 ㉖) — 연구소(05번)가 2026-09-05에 이미 서서
-    // `UnitUpgrades.LevelForGrade`로 실제 단계를 읽을 수 있는데 이 메서드만 하드코딩된
-    // 0 그대로였다 — "축이 없어서 못 켰다"가 아니라 "축은 있는데 값이 죽어 있었다"였다.
-    // CurrentSkillLevelNumber()와 같은 패턴으로 이 유닛의 등급에 대응하는 연구소 트랙의
-    // 레벨을 그대로 돌려준다(0-index, 별도 보정 없음 — UnitUpgrades.LevelForGrade 주석
-    // 참고). 연구를 하나도 안 샀으면(또는 그 등급에 연구소가 아예 없으면) 여전히 0을
-    // 돌려줘서 "0×multiplier+bonus=bonus"인 예전 동작과 값이 같다 — 회귀 없음, 실제
-    // 연구를 산 플레이어부터 값이 오른다.
+    // ⚠️ 2026-09-06 정정(PM 지시, 뿌리 ㉜ 네 번째) — 이 값은 원작 **타입 업그레이드**
+    // (`R01L`·`R01M`·`R01O`·`R01T`·`R01V` 등, 공격타입별, **최대 3레벨**)를 뜻한다.
+    // **등급 업그레이드**(`R000`~`R004`, 최대 21 — `UnitUpgrades.LevelForGrade`가 읽는
+    // 바로 그 트랙, 공속 축(SpeedMultiplierForGrade/BonusForGrade)이 정확히 그 용도로
+    // 쓴다)와는 **다른 축**이다 — 등급 트랙을 여기서 읽으면 최대 7배 과대가 된다
+    // (2026-09-06 오전, 실제로 이 버그였다 — 제한됨·히든 5효과가 실주행 중이었다).
+    // 두 함수가 우연히 같은 저장소(legacyGradeLevels)를 조회하지만 뜻은 다르다 —
+    // LevelForGrade는 지우지 않는다(공속 축 소비자가 있다), 여기서 그걸 호출하는
+    // 연결만 끊는다. 우리에 타입 업그레이드 축이 아직 없어 **항상 0**이다(연구를
+    // 하나도 안 산 것과 값이 같다 — "0×multiplier+bonus=bonus"). 그 축이 실제로
+    // 생기면(R01L/R01M/R01O/R01T/R01V별 레벨을 저장하는 무언가) 여기를 그것으로
+    // 바꾼다.
     int CountResearchLevel()
     {
-        UnitData unitData = identity != null ? identity.Data : null;
-        UnitUpgrades source = ResolveUpgrades();
-        return (unitData != null && source != null) ? source.LevelForGrade(unitData.grade) : 0;
+        return 0;
     }
 
     // ---- 버프 레지스트리(2026-09-06, PM 지시) — 흩어져 있던 버프류(도움소 공속·공격력

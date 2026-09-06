@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_영원_최상호_a8343962
   m_EditorClassIdentifier:
   skillName: |CFFFFFA78해적왕자-롬멜의 카마이타치 카 — MANA게이지100.00
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 |CFFFFFA78해적왕자-롬멜의 카마이타치 카(h05B)의 게이트 "MANA게이지100.00" 능력 3개를 이 SkillData 하나로 묶었다.   · Cavendish_skill_Mana#1: 계산식 (2200000.00+(I2R(GetPlayerTechCountSimple('R01M',GetOwningPl   · Cavendish_skill_Mana#2: 계산식 (2200000.00+(I2R(GetPlayerTechCountSimple('R01M',GetOwningPl   · Cavendish_skill_Mana#3: 계산식 1000000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 |CFFFFFA78해적왕자-롬멜의 카마이타치 카(h05B)의 게이트 "MANA게이지100.00" 능력 3개를 이 SkillData 하나로 묶었다.   · Cavendish_skill_Mana#1: 계산식 (2200000.00+(I2R(GetPlayerTechCountSimple('R01M',GetOwningPl   · Cavendish_skill_Mana#2: 계산식 (2200000.00+(I2R(GetPlayerTechCountSimple('R01M',GetOwningPl   · Cavendish_skill_Mana#3: 계산식 1000000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. ⚠️⚠️ 2026-09-06 축 혼선 정정(뿌리 ㉜ 네 번째, PM): 앞 2효과(R01M, #1·#2)는 basis=ResearchLevel(4)인데, UnitAttacker.CountResearchLevel()이 UnitUpgrades.LevelForGrade(등급 업그레이드, 영원함=최대5·hasOriginalResearch=0)를 읽는 구조였다 — 영원함 연구소는 애초에 잠겨 있어(PM 지시, 영원함은 배선하지 않는다) LevelUp이 안 불려 지금까지는 항상 0이라 무영향이었다. 하지만 원래 뜻은 타입 업그레이드(R01M, 최대3)라 축 자체는 틀려 있었다 — 영원함 연구소가 나중에 열리면 그 순간 최대 7배 과대가 될 뻔했다. CountResearchLevel()을 등급 트랙 연결에서 끊어 항상 0을 반환하도록 정정했다 — 값(multiplier=45000/bonus=2200000×2)과 basis=ResearchLevel은 그대로 둔다.
   triggerType: 3
   levels:
   - cooldown: 0
