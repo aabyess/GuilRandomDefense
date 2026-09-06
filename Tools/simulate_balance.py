@@ -145,6 +145,11 @@ def load_upgrade_tracks():
     tracks = {}
     for path in glob.glob(os.path.join(ROOT, "Assets/Data/UnitUpgrades/*.asset")):
         text = open(path, encoding="utf-8").read()
+        # ⚠️ 2026-09-06(구현담당2) — Unity YAML 직렬화가 가끔 "필드:  - 첫항목"을
+        # 줄바꿈 없이 한 줄에 붙여 쓴다(조합식 4건에서 실제로 겪음, 그때는 재료가
+        # 통째로 0개로 잘못 파싱됐었다). 아래 정규식도 같은 패턴(`^  field:\n`)에
+        # 기대므로, 여기서 미리 줄바꿈 형태로 정규화해 같은 함정을 막는다.
+        text = re.sub(r"^  targetGrades:  - ", "  targetGrades:\n  - ", text, flags=re.MULTILINE)
         if re.search(r"^  hasOriginalResearch: 0", text, re.MULTILINE):
             continue
 
@@ -190,6 +195,11 @@ def load_roster(research_level=0):
     recs = []
     for path in glob.glob(os.path.join(ROOT, "Assets/Data/Units/Roster/*.asset")):
         text = open(path, encoding="utf-8").read()
+        # ⚠️ 2026-09-06(구현담당2) — "skills:  - {첫 항목}"처럼 줄바꿈 없이 한 줄에
+        # 붙는 YAML 직렬화 변형이 실제로 조합식 4건에서 나왔다(그때는 재료가 통째로
+        # 0개로 잘못 파싱됐다) — 아래 정규식도 같은 함정(`^  skills:\n` 기대)이라
+        # 미리 정규화해둔다.
+        text = re.sub(r"^  skills:  - ", "  skills:\n  - ", text, flags=re.MULTILINE)
 
         def g(field):
             m = re.search(rf"^  {field}: ([-+0-9.eE]+)", text, re.MULTILINE)
