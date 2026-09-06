@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작013_H099_A09S
+  m_EditorClassIdentifier:
+  skillName: A09S !2범위 호크 개틀링 더미
+  description: 신설(2026-09-07, PM 지시 — check_assignment_invariants ⑦-b가 B00S를 "거는데 아무도 안 요구하는 버프"로 잡아서 원문을 다시 판 결과). SkillData_원작013_H099.asset(A0JU !호크 개틀링)의 실제 원작 툴팁(aub1)을 재확인: "발동 확률 1.25% | 2.75초동안 공격력 5만 증가 | 스턴: 지속시간동안 공격시마다 12.5% 확률로 500범위 102500의 마법데미지 +1.5초 스턴 | 1.75초의 절대쿨다운" — 이 세 번째 줄(스턴+AoE 피해)이 지금까지 SkillData_원작013_H099.asset(트리거 진입·B06Y 절대쿨·A09N 배틀로어 +40000)에 전혀 안 옮겨져 있었다. 원문(Tools/w3x/원본/war3map_new.j) 확인: `if UnitHasBuffBJ(GetAttacker(),'B00S')==true then`(버프 B00S=배틀로어 활성 중) 블록 안에서 `CreateNUnitsAtLoc(1,'e051',...)`로 더미 e051을 소환하는데, e051의 보유 능력 A09S(base AOws, 500범위 aare, Wrs1=102500 데미지, adur=1.5)가 실제 피해+스턴이다(e053은 순수 시각효과 더미, 능력 없음). 즉 B00S는 순수 표시용 버프가 아니라 **진짜 게이트**였다 — battleroar가 걸려 있는 동안 평타마다 12.5% 확률로 이 AoE 피해+스턴이 나간다는 뜻인데, 우리는 A09N(배틀로어 본체)만 옮기고 이 파생 효과는 통째로 누락했었다. requiredBuffId=B00S로 게이트를 걸고, damageType=AP(2)/attackType=Spells(7)로 마법 피해 행을 태웠다(툴팁 "마법데미지" 명시).
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 0.125
+    range: 500.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: B00S
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 102500.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 1.5
