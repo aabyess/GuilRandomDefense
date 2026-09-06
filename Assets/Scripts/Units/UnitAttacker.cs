@@ -757,8 +757,11 @@ public class UnitAttacker : MonoBehaviour
         float amount = ResolveSkillEffectValue(effect, target, recentAttackDamage) * target.PercentDamageTakenMultiplier;
         // 원작 realD = 0.03×버프개수(SkillEffect.casterBuffCountFactor 주석 참고). 기존
         // 227개 효과는 이 필드가 직렬화에 없어 C# 기본값 0f로 읽힌다 — (1+0×count)=1이라
-        // 배율이 완전히 무효, 회귀 없음. CountCasterBuffs()가 지금 항상 0을 돌려주므로
-        // factor가 채워진 스킬도 당장은 배율 1로 남는다(위 CountCasterBuffs 주석 참고).
+        // 배율이 완전히 무효, 회귀 없음. ⚠️ 2026-09-06: CountCasterBuffs()가 이제 버프
+        // 레지스트리를 실제로 센다(:181 참고) — 다만 원작은 "시전자의 워크3 버프 전부"를
+        // 세는데 우리는 우리 레지스트리(SupportShop 버프 + 절대쿨 자기버프)만 세는 과소
+        // 근사다. 거프 4행(Garp_AttackDamage #5·#6·#7, 값×(1+0.12×버프개수))이 이 factor로
+        // 실제로 걸린다.
         amount *= 1f + effect.casterBuffCountFactor * CountCasterBuffs();
         if (amount <= 0f) return;
 
