@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3dd0d10191ac4a78b909eea9d79fb207, type: 3}
+  m_Name: SupportSkill_대지진
+  m_EditorClassIdentifier:
+  skillName: 대지진
+  description: '원작 h08A 도움소 AOeq(대지진) — 2026-09-06 신규 추가(뿌리, PM 지시). "지진"(A0QT,
+    피해0·순수3초스턴)과 이름이 비슷하나 완전히 다른 능력이다. 레벨1 값만 넣었다 — 레벨2(또는 아이템)면
+    RRD가 한 번 더(총 2,000,000) 나가는 구조라 이 값은 최대치가 아니라 하한이다. 원작의 "이동속도
+    -85% 2.5초" 슬로우는 우리 SupportSkillData/SupportShop에 대응하는 필드·이펙트가 없어(armorShredOnHit류의
+    영구 디버프뿐, 시간제한 이속감소 없음) [미구현]으로 남긴다 — 새 스키마를 만들지 않는다(이번 범위
+    밖). 원작 "대상 AIsr 레벨 +5"는 PM 지시로 뺐다 — AIsr(마법 피해 증폭) 자체가 우리에 없는 축이고
+    리서치담당이 Aegr/A11S/AIsr 세 축을 한 번에 설계할 예정이라 여기서 먼저 손대지 않는다. radius=15는
+    원작에 범위 필드가 없어 발명한 값이다(SUPPORT_SHOP.md의 기존 발명값 표와 같은 성격 — "지진"과
+    원작 range가 비슷해(600/625) 그 값을 그대로 따랐다).'
+  targetKind: 0
+  effect: 0
+  manaCost: 320
+  goldCost: 0
+  cooldownSeconds: 150
+  maxUses: 0
+  radius: 15
+  mapWide: 0
+  damageBase: 1000000
+  damagePerRound: 0
+  waveCount: 1
+  duration: 0
+  manaRefundPerHit: 0
+  manaRefundCap: 0
+  manaRestoreAmount: 0
+  craftedWisp: {fileID: 0}
+  buffAttackPowerMultiplier: 1
+  buffAttackSpeedMultiplier: 1
+  firstHitMaxHpPercent: 0
+  armorShredOnHit: 0
+  maxDismantleGrade: 3
+  dismantleRefunds: []

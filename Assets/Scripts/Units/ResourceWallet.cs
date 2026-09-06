@@ -39,6 +39,15 @@ public class ResourceWallet : MonoBehaviour
     const int DefaultManaCap = 1000;
     const int DefaultManaStart = 15;
 
+    // ⚠️ 2026-09-06 추가(PM 지시 — 도움소 마나가 통째로 못 쓰이던 문제) — 원작 h08A(도움소
+    // 유닛) umpr(마나 재생) = 0.30/초(리서치담당 확인, 2569fc1). 이게 없으면 시작 마나 15로는
+    // 가장 싼 스킬(폭우, 25)도 평생 못 쓴다 — "값은 맞는데 진입 자체가 막힌" 축이었다.
+    // int 저장소에 소수 재생을 그대로 더할 수 없어 누적기(manaRegenAccumulator)에 매 프레임
+    // 쌓았다가 1 이상이 될 때만 Add(Mana,1)로 넘긴다 — 그래야 "표기 쿨다운이 아니라 마나
+    // 충전 시간이 진짜 제약"이라는 원작 설계(해루석 700마나=재생 2,333초)가 그대로 재현된다.
+    const float ManaRegenPerSecond = 0.30f;
+    float manaRegenAccumulator;
+
     [SerializeField] List<StartingAmount> startingAmounts = new List<StartingAmount>();
     [SerializeField] List<ResourceCap> caps = new List<ResourceCap>();
 
@@ -59,6 +68,20 @@ public class ResourceWallet : MonoBehaviour
         capByType[ResourceType.Mana] = DefaultManaCap;
         foreach (ResourceCap entry in caps)
             capByType[entry.type] = entry.cap;
+    }
+
+    // 서버(권한 보유 쪽)만 재생시킨다 — 다른 자원 지급(RoundManager.GrantFlatRoundReward 등)과
+    // 같은 규칙(GameAuthority.IsServer)이다. 클라이언트가 따로 돌리면 값이 서버와 어긋난다.
+    void Update()
+    {
+        if (!GameAuthority.IsServer) return;
+
+        manaRegenAccumulator += ManaRegenPerSecond * Time.deltaTime;
+        int whole = Mathf.FloorToInt(manaRegenAccumulator);
+        if (whole <= 0) return;
+
+        manaRegenAccumulator -= whole;
+        Add(ResourceType.Mana, whole);
     }
 
     public int Get(ResourceType type)

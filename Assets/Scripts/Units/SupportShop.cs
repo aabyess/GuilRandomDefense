@@ -289,6 +289,19 @@ public class SupportShop : MonoBehaviour, ILaneShop
         if (!CanCast(skill)) { failReason = CastUnavailableReason(skill, context); return false; }
         if (!TrySpendCost(skill, context)) { failReason = CastUnavailableReason(skill, context); return false; }
 
+        // ⚠️ 2026-09-06 추가(PM 지시, 원작 A0IA) — 원작은 마나 외에 특성포인트도 1 소모한다
+        // (최대 3회, maxUses가 이미 그 상한이다). 특성포인트가 없으면 방금 뺀 마나만 헛되이
+        // 나가는 게 원작보다 나쁘다 — 흡수(TryInstantKillUnit)처럼 조건을 먼저 볼 수도 있었지만,
+        // 마나 비용은 원작에서 캐스트 시점에 엔진이 무조건 깎으므로(TryCastOnGround 주석 참고)
+        // 여기서도 "일단 깎고, 특성포인트가 없으면 되돌려준다" 순서를 그대로 따른다.
+        UnitUpgrades upgrades = context != null ? context.UnitUpgrades : null;
+        if (upgrades == null || !upgrades.TrySpendTraitPoints(1))
+        {
+            if (skill.manaCost > 0) context.ResourceWallet?.Add(ResourceType.Mana, skill.manaCost);
+            failReason = "특성포인트가 부족합니다!";
+            return false;
+        }
+
         if (RewardDistributor.Instance != null)
         {
             List<WispReward> reward = new List<WispReward> { new WispReward { wisp = skill.craftedWisp, count = 1 } };
