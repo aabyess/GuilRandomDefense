@@ -342,6 +342,32 @@ public class SkillEffect
     // None으로 읽히므로 회귀 없음). targetConditionValue 기본 0은 None일 때 안 쓰인다.
     public SkillEffectTargetCondition targetCondition = SkillEffectTargetCondition.None;
     public float targetConditionValue;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-06, PM 지시, "캐스케이드 그룹") — 원작 if/elseif/else 사슬
+    // 대응. 대상 조건 게이트(targetCondition, "누가 대상이냐"로 갈리는 결정론)와는 다른
+    // 축이다 — 이건 "앞 단계가 이미 발동했느냐"로 갈리는 결정론이다(원작 예:
+    // Cavendish_Attack 1단계 10% → 실패시에만 2단계 1/9, Legend4 1단계 10% → 실패시에만
+    // 2단계 1/17, Nami_Skill_2 33%/67%). 지금은 SkillEffect.chance가 효과마다 독립
+    // 판정이라 이 셋에서 "원작에 없는 동시발동"과 "원작에 없는 둘다실패"가 생긴다
+    // (강주혁 파일 실측 각 22.11%).
+    //
+    // 기본값 0 = 그룹 없음(오늘까지의 완전 독립 판정, 회귀 없음 — 기존 365개 에셋 전부
+    // 이 필드가 없어 0으로 읽힌다). 0이 아닌 같은 값을 공유하는 효과들은 **같은 레벨의
+    // effects 리스트 안에서, 선언 순서 그대로** if/elseif/else 사슬을 이룬다 — ⚠️ 자산을
+    // 배선하는 쪽은 반드시 원작 if/elseif 순서와 같은 순서로 effects를 나열할 것(순서가
+    // 틀리면 컴파일 에러 없이 다른 캐스케이드가 나온다). 각 효과의 chance는 원작의 그
+    // 단계 확률(예: 10%, 1/9, 1/17) 그대로 넣는다 — 합성확률(예: "1단계 실패 후 1/9"의
+    // 최종 기댓값)을 미리 계산해서 넣지 않는다. 같은 그룹의 앞선 효과가 이미 발동했으면
+    // (같은 시전(CastSkillLevel 한 번) · 같은 대상 기준) 뒤 효과는 chance를 굴리지도
+    // 않고 건너뛴다(UnitAttacker.ApplyToEnemy/ApplyToAlly 참고) — "정확히 하나만"이
+    // 구조적으로 강제된다.
+    //
+    // chance==0인 효과가 그룹 안에 있으면: 그 효과 자체는 절대 안 발동하고(당연히) 그룹을
+    // "발동됨"으로 표시하지도 않는다 — 뒤 효과들에게 영향이 없다. 다만 앞 단계가 이미
+    // 발동해서 건너뛰어진 경우엔 chance==0 여부와 무관하게 건너뛴다(순서가 여전히
+    // 우선한다) — 그룹 맨 앞에 chance==0을 두면 그 효과는 사실상 죽은 자리가 된다(의도한
+    // 설계라면 그렇게 두어도 안전하다, 다만 보통은 실수일 가능성이 높다).
+    public int cascadeGroup;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에

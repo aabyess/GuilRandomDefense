@@ -999,11 +999,34 @@ public class UnitAttacker : MonoBehaviour
     {
         if (level.effects == null) return;
 
+        // 캐스케이드 그룹(2026-09-06, "캐스케이드 그룹" — SkillEffect.cascadeGroup 주석
+        // 참고) 추적. 대상(EnemyDummy/UnitIdentity, object로 키를 잡는다)별로 "이 시전
+        // 안에서 이미 발동한 그룹 번호"를 기억한다 — 이 CastSkillLevel 호출 하나에만
+        // 산다(다음 평타·발동에선 새로 만든다, 영구 상태 아님).
+        Dictionary<object, HashSet<int>> firedCascadeGroups = new Dictionary<object, HashSet<int>>();
+
         foreach (SkillEffect effect in level.effects)
         {
-            if (effect == null || Random.value >= effect.chance) continue;
-            ApplySkillEffect(effect, range, primaryTarget, recentAttackDamage);
+            if (effect == null) continue;
+            // 그룹 없음(0, 기본값) — 기존과 완전히 같다(회귀 없음): 시전 단위로 한 번만
+            // chance를 굴린다. 그룹 있음 — 여기서 안 굴린다. 대상마다 따로 굴려야 하므로
+            // ApplyToEnemy/ApplyToAlly로 미뤄서 그쪽에서 판정한다(범위 스킬이면 적마다
+            // 독립된 캐스케이드가 되도록).
+            if (effect.cascadeGroup == 0 && Random.value >= effect.chance) continue;
+            ApplySkillEffect(effect, range, primaryTarget, recentAttackDamage, firedCascadeGroups);
         }
+    }
+
+    // 캐스케이드 그룹 추적용 — target(EnemyDummy 또는 UnitIdentity, object로 통일)마다
+    // 처음 보면 새 HashSet을 만들어 등록하고, 이미 있으면 그걸 그대로 돌려준다.
+    static HashSet<int> GetFiredCascadeGroups(Dictionary<object, HashSet<int>> firedCascadeGroups, object targetKey)
+    {
+        if (!firedCascadeGroups.TryGetValue(targetKey, out HashSet<int> fired))
+        {
+            fired = new HashSet<int>();
+            firedCascadeGroups[targetKey] = fired;
+        }
+        return fired;
     }
 
     // 데이터 사고 방지 — target이 Enemies/Allies인데 range<=0이면 거리 검사 자체가 빠져
@@ -1012,7 +1035,8 @@ public class UnitAttacker : MonoBehaviour
     // (2026-09-05, PM 지시로 런타임에도 가드 추가). 콘솔이 도배되지 않게 한 번만 찍는다.
     static bool loggedUnboundedRange;
 
-    void ApplySkillEffect(SkillEffect effect, float range, EnemyDummy primaryTarget, float recentAttackDamage)
+    void ApplySkillEffect(SkillEffect effect, float range, EnemyDummy primaryTarget, float recentAttackDamage,
+        Dictionary<object, HashSet<int>> firedCascadeGroups)
     {
         if (range <= 0f &&
             (effect.target == SkillTargetKind.Enemies || effect.target == SkillTargetKind.Allies))
@@ -1033,17 +1057,17 @@ public class UnitAttacker : MonoBehaviour
                 {
                     if (enemy == null) continue;
                     if (range > 0f && Vector3.Distance(enemy.transform.position, transform.position) > range) continue;
-                    ApplyToEnemy(effect, enemy, recentAttackDamage);
+                    ApplyToEnemy(effect, enemy, recentAttackDamage, firedCascadeGroups);
                 }
                 break;
 
             case SkillTargetKind.SingleTarget:
                 EnemyDummy target = primaryTarget != null ? primaryTarget : FindClosestEnemyWithin(range);
-                if (target != null) ApplyToEnemy(effect, target, recentAttackDamage);
+                if (target != null) ApplyToEnemy(effect, target, recentAttackDamage, firedCascadeGroups);
                 break;
 
             case SkillTargetKind.Self:
-                if (identity != null) ApplyToAlly(effect, identity);
+                if (identity != null) ApplyToAlly(effect, identity, firedCascadeGroups);
                 break;
 
             case SkillTargetKind.Allies:
@@ -1052,7 +1076,7 @@ public class UnitAttacker : MonoBehaviour
                 // (04번 오라가 그쪽이다) — UnitAttacker는 플레이어 유닛에만 붙으므로 여기선
                 // 이 갈래만 있으면 된다.
                 foreach (UnitIdentity ally in UnitIdentity.AlliesOf(identity, range))
-                    ApplyToAlly(effect, ally);
+                    ApplyToAlly(effect, ally, firedCascadeGroups);
                 break;
         }
     }
@@ -1066,8 +1090,20 @@ public class UnitAttacker : MonoBehaviour
     // ApplySkillEffect가 identity를 그대로 넘긴다)와 Allies 둘 다 여기로 온다. ally의
     // UnitAttacker를 찾아 그쪽 버프 레지스트리에 건다(캐스터인 this가 아니라 대상인
     // ally에게 걸리는 게 맞다 — "자기 자신에게 버프"도 ally==identity==this인 경우다).
-    void ApplyToAlly(SkillEffect effect, UnitIdentity ally)
+    void ApplyToAlly(SkillEffect effect, UnitIdentity ally, Dictionary<object, HashSet<int>> firedCascadeGroups)
     {
+        // 캐스케이드 그룹(2026-09-06) — ApplyToEnemy와 같은 자리·같은 방식. 그룹 없음(0)
+        // 이면 CastSkillLevel에서 이미 시전 단위로 확률을 굴렸으니 그대로 통과(회귀 없음).
+        // 그룹 있으면 대상(ally)마다 따로 굴린다 — 앞선 그룹 멤버가 이 대상에게 이미
+        // 발동했으면 chance를 굴리지도 않고 건너뛴다.
+        if (effect.cascadeGroup != 0)
+        {
+            HashSet<int> fired = GetFiredCascadeGroups(firedCascadeGroups, ally);
+            if (fired.Contains(effect.cascadeGroup)) return;
+            if (Random.value >= effect.chance) return;
+            fired.Add(effect.cascadeGroup);
+        }
+
         if (effect.kind != SkillEffectKind.ApplyBuff && effect.kind != SkillEffectKind.RemoveBuff) return;
 
         UnitAttacker allyAttacker = ally != null ? ally.GetComponent<UnitAttacker>() : null;
@@ -1192,8 +1228,23 @@ public class UnitAttacker : MonoBehaviour
     // SingleTarget 갈래가 여길 거친다(Self/Allies는 ApplyToAlly). recentAttackDamage는
     // SkillEffectBasis.ReceivedDamage 전용(위 ResolveSkillEffectValue 참고) — Damage가
     // 아닌 kind는 그냥 무시한다.
-    void ApplyToEnemy(SkillEffect effect, EnemyDummy target, float recentAttackDamage)
+    void ApplyToEnemy(SkillEffect effect, EnemyDummy target, float recentAttackDamage,
+        Dictionary<object, HashSet<int>> firedCascadeGroups)
     {
+        // 캐스케이드 그룹(2026-09-06, "캐스케이드 그룹" — SkillData.cs SkillEffect.cascadeGroup
+        // 주석 참고) — 원작 if/elseif/else 사슬 대응. 그룹 없음(0, 기본값)이면 위
+        // CastSkillLevel에서 이미 시전 단위로 확률을 굴렸으니 여기선 그대로 통과한다
+        // (기존 동작 그대로, 회귀 없음). 그룹 있으면 여기서 대상(target)마다 새로 굴린다
+        // — 앞선 그룹 멤버가 이 대상에게 이미 발동했으면 chance를 굴리지도 않고
+        // 건너뛴다("정확히 하나만"을 구조적으로 강제, 범위 스킬이면 적마다 독립).
+        if (effect.cascadeGroup != 0)
+        {
+            HashSet<int> fired = GetFiredCascadeGroups(firedCascadeGroups, target);
+            if (fired.Contains(effect.cascadeGroup)) return;
+            if (Random.value >= effect.chance) return;
+            fired.Add(effect.cascadeGroup);
+        }
+
         // 효과 단위 대상 버프 게이트(06번①-2, 2026-09-06) — SkillLevel의 게이트와
         // 별개다(위 SkillData.cs SkillEffect.requiredTargetBuffId 주석 참고). Enemies
         // AoE면 target이 매번 다른 개체라 이 검사도 개체마다 다시 돈다 — 그래서 "AoE
