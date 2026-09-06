@@ -107,4 +107,37 @@ public class UnitTraitData : ScriptableObject
     // 다 이어져 값이 오면 바로 동작)와 이 둘만 다르다. transformIntoUnit이 채워지면 이
     // 필드는 그대로 두고 그 값만 넣으면 된다 — 코드를 더 지울 것 없다.
     public bool isTransformType;
+
+    // 06번⑥(순수스탯형, 26분기 중 유일하게 1개 — 타시기 전용). 스킬 레벨업이 전혀 없고
+    // 경험치+스탯만 오른다(원작: AddHeroXPSwapped(5000) + STR/AGI/INT 각 +3). 0(기본)이면
+    // 순수스탯형이 아니라는 뜻 — 스킬승급형·능력교체형·변신형과 동시에 안 쓴다(26분기
+    // 중 한 유닛이 이 넷을 겹쳐 갖는 사례가 없다). 실행은 GameHud.OnTraitButtonClicked가
+    // 구매 시 선택된 그 유닛 인스턴스(UnitAttacker.AddHeroXp/AddPurchasedStat)에 즉시
+    // 적용한다 — effects(TraitEffectKind)와 달리 "언락 상태를 매 프레임 읽는" 지속 효과가
+    // 아니라 ExecuteTransform과 같은 "구매 시 1회 실행" 패턴이다.
+    //
+    // ⚠️ 5000은 "레벨"이 아니라 "경험치 포인트"다(UnitAttacker.AddHeroXp가 누적 경험치에
+    // 그대로 더하는 값과 같은 단위) — 레벨로 착각하지 말 것.
+    public int heroXpGrant;
+
+    // STR/AGI/INT 세 스탯 각각에 이만큼(원작 +3). heroXpGrant와 항상 같이 채워진다(원작에
+    // 경험치만 주고 스탯은 안 주는, 또는 그 반대인 사례가 없다) — 그래도 필드는 독립으로
+    // 둔다(둘의 의미가 다르므로 하나로 묶으면 "0이 무슨 뜻인지"가 모호해진다).
+    public int purchasedStatGrantEach;
+
+    // 06번⑤(반복구매형, 26분기 중 유일하게 1개 — 아카이누 전용). 다른 25개는 "언락=끝"이라
+    // UnitUpgrades.unlockedTraits(HashSet)의 1회잠금이 정확히 맞는데, 이 하나만 원작이
+    // 몇 번이든 다시 살 수 있다(UserData=구매횟수 카운터, TRAIT_UPGRADE_26_HEROES_FULL.md).
+    // ⚠️ HashSet은 안 건드린다 — 그 하나 때문에 나머지 25개의 "재구매 불가" 동작을 바꾸면
+    // 안 된다(PM 지시). 대신 UnitUpgrades.repeatablePurchaseCounts(별도 저장소)가 구매
+    // 횟수를 센다 — false(기본)면 이 카운터 자체가 안 쓰인다(회귀 없음).
+    //
+    // skillLevelUnlockIndex는 "1회차 구매가 도달하는 인덱스"고, 그 뒤로는 구매할 때마다
+    // +1씩 더 간다(UnitUpgrades.SkillLevelIndexFor 참고) — 원작 "능력 레벨 = 구매 횟수,
+    // 반복 횟수(hitCount)=5+레벨"과 같은 모양이다. 인덱스가 SkillData.levels 범위를
+    // 넘으면 UnitAttacker.CurrentSkillLevel이 이미 마지막 레벨로 clamp한다(안전).
+    //
+    // ⚠️ 구매 횟수 상한 없음 — 원작 원문에 상한 비교가 없다("몇 번이든"). 상한을 넣는 건
+    // 지어내는 것이라 넣지 않았다.
+    public bool isRepeatablePurchase;
 }

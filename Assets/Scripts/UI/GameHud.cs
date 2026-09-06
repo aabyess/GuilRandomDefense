@@ -63,6 +63,7 @@ public class GameHud : MonoBehaviour
     UnitTraitData lastTraitButtonTrait;
     bool lastTraitButtonUnlocked;
     int lastTraitButtonPoints = int.MinValue;
+    int lastTraitButtonRepeatCount = int.MinValue;
 
     // 05번 「고대의 배」도박 능력 버튼들(2026-09-06 목록화) — 특성강화 버튼과 같은 이유로
     // 같은 열(선택 시 뜨는 전용 버튼)에 둔다. UnitData.gambleOptions 항목 수만큼 뜬다.
@@ -418,18 +419,28 @@ public class GameHud : MonoBehaviour
 
         bool unlocked = upgrades.IsUnlocked(trait);
         int points = upgrades.TraitPoints;
+        int repeatCount = trait.isRepeatablePurchase ? upgrades.RepeatablePurchaseCount(trait) : 0;
 
         traitButtonPanel.SetActive(true);
 
         // 다른 Refresh들과 같은 관례 — 값이 안 바뀌었으면 텍스트를 다시 안 만든다.
-        if (trait == lastTraitButtonTrait && unlocked == lastTraitButtonUnlocked && points == lastTraitButtonPoints)
+        if (trait == lastTraitButtonTrait && unlocked == lastTraitButtonUnlocked &&
+            points == lastTraitButtonPoints && repeatCount == lastTraitButtonRepeatCount)
             return;
 
         lastTraitButtonTrait = trait;
         lastTraitButtonUnlocked = unlocked;
         lastTraitButtonPoints = points;
+        lastTraitButtonRepeatCount = repeatCount;
 
-        if (unlocked)
+        // 06번⑤(반복구매형, 아카이누) — 언락 뒤에도 버튼이 안 잠긴다(원작: 몇 번이든
+        // 다시 살 수 있다). 다른 25개(아래 unlocked 분기)와 갈리는 지점이 정확히 여기다.
+        if (unlocked && trait.isRepeatablePurchase)
+        {
+            traitButtonText.text = $"{trait.traitName}\n{repeatCount}회 구매됨 — 추가 구매({trait.costTraitPoints}pt, 보유 {points}pt)";
+            traitButtonComponent.interactable = points >= trait.costTraitPoints;
+        }
+        else if (unlocked)
         {
             traitButtonText.text = $"{trait.traitName}\n습득 완료";
             traitButtonComponent.interactable = false;
@@ -868,7 +879,9 @@ public class GameHud : MonoBehaviour
         UnitUpgrades upgrades = context != null ? context.UnitUpgrades : null;
         if (upgrades == null) return;
 
-        if (upgrades.IsUnlocked(trait)) return;
+        // 06번⑤(반복구매형, 아카이누) — 다른 25개는 이미 언락됐으면 여기서 막지만,
+        // 이 하나만 언락 뒤에도 계속 구매 가능하다(원작: 몇 번이든 다시 살 수 있다).
+        if (upgrades.IsUnlocked(trait) && !trait.isRepeatablePurchase) return;
 
         if (!upgrades.TrySpendTraitPoints(trait.costTraitPoints))
         {
@@ -878,7 +891,10 @@ public class GameHud : MonoBehaviour
             return;
         }
 
+        // 반복구매형은 이미 unlockedTraits에 있어 Unlock()이 그냥 no-op(HashSet.Add가
+        // false를 돌려줄 뿐)이다 — 실제 "몇 번째 구매인가"는 아래 카운터가 센다.
         upgrades.Unlock(trait);
+        if (trait.isRepeatablePurchase) upgrades.IncrementRepeatablePurchase(trait);
 
         // Unlock 이후에 실행한다 — 실행이 실패해도(스포너 못 찾음 등) 언락 자체는 이미
         // 되돌릴 수 없으니(HashSet.Add) 순서를 바꿔봤자 의미가 없고, 오히려 언락 전에
@@ -888,8 +904,32 @@ public class GameHud : MonoBehaviour
             ExecuteTransform(identity, trait, owner.OwnerId);
         }
 
+        // 06번⑥(순수스탯형, 타시기 전용) — 스킬승급·능력교체와 달리 "언락 상태를 매
+        // 프레임 읽는" 지속 효과가 아니라 구매 시점에 딱 한 번 실행하는 지급이다.
+        if (trait.heroXpGrant > 0 || trait.purchasedStatGrantEach > 0)
+        {
+            ExecuteStatGrant(single, trait);
+        }
+
         // 다음 정기 갱신을 안 기다리고 바로 라벨을 다시 그린다.
         lastTraitButtonPoints = int.MinValue;
+    }
+
+    // 06번⑥ 실행 — 선택된 그 유닛 인스턴스에만 적용한다(ExecuteTransform과 같은 범위,
+    // 레인 전체로 안 퍼뜨린다 — 이 트레잇은 "그 유닛을 골라 사는" 구매고, 도움소
+    // 「능력치 증가」(GrantHeroStatIncreaseToLane, 레인 전체 브로드캐스트)와는 성격이 다르다).
+    void ExecuteStatGrant(Selectable single, UnitTraitData trait)
+    {
+        if (!single.TryGetComponent(out UnitAttacker attacker)) return;
+
+        if (trait.heroXpGrant > 0) attacker.AddHeroXp(trait.heroXpGrant);
+
+        if (trait.purchasedStatGrantEach > 0)
+        {
+            attacker.AddPurchasedStat(0, trait.purchasedStatGrantEach);
+            attacker.AddPurchasedStat(1, trait.purchasedStatGrantEach);
+            attacker.AddPurchasedStat(2, trait.purchasedStatGrantEach);
+        }
     }
 
     // 06번③ 변신 실행. CombineSystem.TryCombine의 뼈대(재료 UnitIdentity.Consume() → 결과

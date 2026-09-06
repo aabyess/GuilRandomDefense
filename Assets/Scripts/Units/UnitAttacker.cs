@@ -484,13 +484,16 @@ public class UnitAttacker : MonoBehaviour
     int purchasedAgility;
     int purchasedIntelligence;
 
-    public void AddPurchasedStat(int statIndex)
+    // amount 기본값 1 — 도움소 「능력치 증가」(위 주석)는 매번 1점씩 굴려서 부른다.
+    // 타시기(06번⑤ 순수스탯형, AddHeroXPSwapped(5000)+STR/AGI/INT 각 +3)처럼 특성강화가
+    // 한 번에 여러 점을 몰아줄 때만 amount를 3으로 넘긴다 — 기존 호출부(1점씩)는 그대로.
+    public void AddPurchasedStat(int statIndex, int amount = 1)
     {
         switch (statIndex)
         {
-            case 0: purchasedStrength++; break;
-            case 1: purchasedAgility++; break;
-            case 2: purchasedIntelligence++; break;
+            case 0: purchasedStrength += amount; break;
+            case 1: purchasedAgility += amount; break;
+            case 2: purchasedIntelligence += amount; break;
         }
     }
 

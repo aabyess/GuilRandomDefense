@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   targetUnit: {fileID: 11400000, guid: 75c9efeeb23f488d828f49cea3fc5775, type: 2}
   traitName: 초월_노태현_AP 특성강화
-  description: 06번② 순위배정(2차, 초월함 등급 정정) — 원작 #012 H05N 해군의 홍일점, upro(실제 이름): 대령 타시기 / 순수스탯 1pt. 원작 원문: 경험치+5000, STR/AGI/INT 각 +3. 우리 게임엔 경험치·능력치 개념이 없어 그대로 못 옮긴다 — ⚠️ 값이 아니라 축 자체가 다르다(원작은 경험치·능력치 축, 우리는 그 축이 아예 없어 공격력(DamageIncrease)으로 대체함, 환산이 아님). 나중에 사장님이 「원작대로 맞춰라」 하시면 이 축 차이부터 다시 봐야 한다. 기존 TraitEffectKind.DamageIncrease 한 칸을 대신 쓴다(수치 미상, value=0 placeholder). Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고.
+  description: 06번② 순위배정(2차, 초월함 등급 정정) — 원작 #012 H05N 해군의 홍일점, upro(실제 이름): 대령 타시기 / 순수스탯형(06번⑥, 26분기 중 유일). 원작 원문(TRAIT_UPGRADE_26_HEROES_FULL.md, Trig_T_Ability_hero_Actions): AddHeroXPSwapped(5000) + STR/AGI/INT 각 +3, 능력 레벨업이 전혀 없다. ⚠️ 5000은 레벨이 아니라 경험치 포인트다. 2026-09-07 PM 지시로 진짜 효과 연결 — heroXpGrant=5000, purchasedStatGrantEach=3로 UnitAttacker.AddHeroXp/AddPurchasedStat를 구매 시 1회 호출한다(GameHud.ExecuteStatGrant). ⚠️ 예전엔 "우리 게임엔 경험치·능력치 축이 없다"는 낡은 전제로 TraitEffectKind.DamageIncrease(value=0 placeholder, 환산 아님)를 대신 채웠었다 — 그 전제가 이제 깨졌다(01번 영웅스탯 축 신설, UnitAttacker.heroXp/purchasedStrength 등). placeholder는 걷어내고 effects를 비웠다.
   costTraitPoints: 1
-  effects:
-  - kind: 0
-    value: 0
-  specialEffectId: 
+  effects: []
+  specialEffectId:
+  heroXpGrant: 5000
+  purchasedStatGrantEach: 3
