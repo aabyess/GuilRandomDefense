@@ -945,13 +945,29 @@ public static class MapGenerator
         return width;
     }
 
+    // ⚠️ withCosts일 때는 비용 칸을 「그 등급에서 가장 많은 아이콘 수」로 고정해서 잰다 —
+    // PlaceRecipeRow가 실제로 그렇게 자리를 잡으므로(계단 어긋남 방지), 줄마다 제 아이콘
+    // 수로 재면 폭을 실제보다 좁게 잡아 "칸 폭을 넘는다" 경고를 놓친다.
     static float MaxRecipeRowWidth(UnitGrade[] grades, bool withCosts)
     {
         float widest = 0f;
 
         foreach (UnitGrade grade in grades)
-            foreach (CombineRecipe recipe in LoadRecipesProducing(grade))
-                widest = Mathf.Max(widest, RecipeRowWidth(recipe, withCosts));
+        {
+            List<CombineRecipe> recipes = LoadRecipesProducing(grade);
+
+            int maxCostIcons = 0;
+            if (withCosts)
+                foreach (CombineRecipe recipe in recipes)
+                    maxCostIcons = Mathf.Max(maxCostIcons, CountCostIcons(recipe));
+
+            float costWidth = maxCostIcons == 0
+                ? 0f
+                : maxCostIcons * (CostSlot + CostGap) + CostBlockGap;
+
+            foreach (CombineRecipe recipe in recipes)
+                widest = Mathf.Max(widest, RecipeRowWidth(recipe) + costWidth);
+        }
 
         return widest;
     }
@@ -970,15 +986,23 @@ public static class MapGenerator
     // 한 줄: 재료를 왼쪽부터 늘어놓고, 사이를 띄운 뒤 결과를 놓는다.
     // resultX를 열마다 하나로 고정하면, 재료가 2개든 5개든 결과 칸이 세로로 나란히 선다 —
     // 재료 개수만큼 결과가 오른쪽으로 밀리면 칸 안에서 대각선으로 흩어져 읽기 어렵다.
+    // costBlockWidth: 비용 칸에 고정으로 잡아둘 가로. 0이면 비용을 안 그린다.
+    // ⚠️ 실제 아이콘 개수만큼만 밀면 안 된다 — 코인만 드는 줄과 코인+목재+토큰이 드는 줄에서
+    // 첫 재료 X가 달라져 표가 계단처럼 어긋난다(2026-09-06 사장님 지적). 그 블록에서
+    // 가장 많은 아이콘 수로 자리를 잡아두고, 아이콘이 적은 줄은 그 자리를 비워 둔다.
     static void PlaceRecipeRow(Transform parent, CombineRecipe recipe, float leftX, float z, float resultX,
-                               bool showCosts = false)
+                               bool showCosts = false, float costBlockWidth = 0f)
     {
         float x = leftX;
         string label = recipe.result != null ? recipe.result.unitName : "?";
 
         // 비용은 재료보다 앞에 세운다. 재료 개수가 줄마다 달라서 뒤에 붙이면 들쭉날쭉해지는데,
         // 앞에 두면 줄이 달라도 세로로 나란히 서서 "여긴 다 토큰이 든다"가 한눈에 보인다.
-        if (showCosts) x += PlaceCostIcons(parent, recipe, x, z, label);
+        if (showCosts)
+        {
+            PlaceCostIcons(parent, recipe, x, z, label);
+            x += costBlockWidth;   // 그린 개수가 아니라 고정 폭만큼 민다
+        }
 
         if (recipe.ingredients != null)
         {
@@ -1513,7 +1537,8 @@ public static class MapGenerator
 
                 foreach (CombineRecipe recipe in recipes)
                 {
-                    PlaceRecipeRow(parent, recipe, rowLeftX, displayZ, blockResultX, showCosts: true);
+                    PlaceRecipeRow(parent, recipe, rowLeftX, displayZ, blockResultX,
+                                   showCosts: true, costBlockWidth: costWidth);
                     displayZ -= RecipeRowHeight;
                     recipeRows++;
                 }
