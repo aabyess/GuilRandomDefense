@@ -117,10 +117,22 @@ SelfUpgradeAxisRuntimeTests.SelfUpgradeLevel_ReadThroughRealDamagePath_MatchesFo
   클래스가 등록한 `PlayerContext`가 아직 registry에 남아 있거나, 여러 테스트가 같은
   `playerId`(예: 777 같은 매직넘버)를 재사용해 `Get()`이 **의도와 다른(먼저 등록된)
   인스턴스**를 돌려줄 가능성이 있다. **확인 안 함 — 다음 세션이 여기부터 볼 것.**
-- **권장 다음 단계**: 추측으로 더 고치지 말고, `TryUpgradeSelf()` 안에 임시로
+- **격리 실행으로 registry 오염 가설을 반증(2026-09-06 밤, PM 지시)**:
+  `-testFilter "SelfUpgradeAxisRuntimeTests.GuaranteedSuccess_IncrementsLevel_AndConsumesResources"`
+  로 **이 테스트 하나만** 돌려도 **똑같이 실패했다**(1 total, 0 passed, 1 failed,
+  메시지 동일) — 즉 다른 테스트 클래스나 이전 테스트가 남긴 registry 상태와
+  무관한, **자기 자신 안에서 재현되는 진짜 원인**이다. 2차 가설(static registry
+  오염)도 이걸로 반증됐다 — `PlayerContext.Get()` 자체를 더 정독해야 한다.
+- **오염 여부와 통과 12건의 근거 — 같이 확인함**: `ItemGambleRuntimeTests.
+  WeightedRoll_ReflectsConfiguredWeights_NotUniform`(통과했던 12건 중 하나)도
+  같은 방식으로 단독 격리 실행해 **똑같이 통과했다** — **통과 12건이 다른 테스트에
+  기대서 통과한 게 아니라는 것도 확인됐다.** "런타임 실측으로 격상"의 근거는
+  그대로 서 있다.
+- **권장 다음 단계**: 격리로 두 가설(Awake 순서·registry 오염)이 전부 반증됐으니,
+  남은 건 `owner`/`context`/`resourceWallet` 자체가 실제로 뭘 들고 있는지
+  로그로 찍어보는 것뿐이다 — 추측으로 더 안 고치고, `TryUpgradeSelf()` 안에 임시로
   `Debug.Log($"owner={owner}, context={context}, resourceWallet={context?.ResourceWallet}")`
-  같은 진단 로그를 넣고 한 번 더 돌려서 정확히 어느 조건에서 걸리는지 로그로 확정한 뒤
-  고칠 것 — 코드 정독만으로는 두 번 시도(가설 하나 반증)했는데도 못 찾았다.
+  를 넣고 한 번 더 돌려서 정확히 어느 조건에서 걸리는지 로그로 확정한 뒤 고칠 것.
 
 **3번(SelfUpgradeLevel_ReadThroughRealDamagePath)**: 코드를 전부 손으로 따라가봤다 —
 `ResolveSkillEffectValue`(=`ResolveBaseSkillEffectValue × RandomDamageMultiplier`)→
@@ -133,6 +145,14 @@ SelfUpgradeAxisRuntimeTests.SelfUpgradeLevel_ReadThroughRealDamagePath_MatchesFo
 단계도 같다 — 임시 로그로 각 단계 실제 반환값을 찍어보는 것이 유일하게 남은 방법.**
 ※ 참고: `randMin`/`randMax` 기본값이 둘 다 1f라 `Random.Range(1,1)=1`(배율 없음)
 확인함 — 이쪽은 원인이 아니다.
+
+⚠️ **기댓값(1.5) 자체는 근거 없는 값이 아니다(PM 지적으로 재확인)**: PM이 "레벨당
++0.05가 우리가 지어낸 값 아니냐"고 물어서 `A0LZ_CASTER_STACK_INVESTIGATION.md`를
+다시 봤다 — 그 문서 자체가 "읽는 곳(vivi_skill_2/3/4/5)이 실제로 쓰는 공식:
+(300,000+대상최대체력×0.10)×(1+레벨×0.05) 류... 배율이 1.00(레벨0)→1.50(레벨10)까지
+선형"이라고 **원작 트리거 원문에서 직접 확인한 값**이다. **지어낸 게 아니라 원작
+근거가 있는 값** — 그러니 이건 "기댓값이 틀렸다"가 아니라 "코드가 원작과 다르게
+동작한다"는 진짜 불일치다.
 
 ⚠️ **혼동하지 말 것**: A0LZ의 wispCurrency가 실제 게임 자산엔 아직 미배정 상태인 게
 맞지만(오늘 낮 `74de277` 보고), **이 3건의 테스트는 자체적으로 `wispCurrency`와
@@ -147,6 +167,38 @@ SelfUpgradeAxisRuntimeTests.SelfUpgradeLevel_ReadThroughRealDamagePath_MatchesFo
 `WaveWiring.cs`)까지 지웠다가 `git status`로 바로 알아채 `git checkout --
 Assets/Editor/`로 복구했다(커밋에 안 남음). **임시 파일은 지울 때 정확한
 하위 경로만 지정할 것 — 부모 디렉터리를 통째로 지우지 말 것.**
+
+⚠️ **"지웠다"고 보고하기 전에 `git status --porcelain`으로 실제로 확인할 것** —
+`ls`나 기억이 아니라 그 명령의 출력이 근거다. 2026-09-06 밤, 지운 뒤 보고했는데도
+빈 `Assets/Editor/Tests/` 디렉터리와 고아 `.meta`가 실제로는 남아 있었다(PM이
+발견·정리). 삭제 명령을 실행한 직후 반드시 `git status --porcelain`을 한 번 더
+실행해서 그 출력이 비어 있는지(또는 의도한 파일만 남았는지) 눈으로 확인한 뒤에만
+"지웠다"고 적을 것.
+
+## 격리 실행 — 전체 실행만으로는 오염 여부를 못 본다 (2026-09-06 밤, PM 지시)
+
+여러 테스트 클래스를 한 번에 돌리면 static 상태(레지스트리·싱글턴 등)가 테스트
+사이에 새는지 확인이 안 된다. **`-testFilter`로 테스트 하나만 격리 실행**하면
+바로 갈린다:
+
+```bash
+/Applications/Unity/Hub/Editor/6000.0.82f1/Unity.app/Contents/MacOS/Unity \
+  -batchmode \
+  -projectPath /Users/sang/Documents/GitHub/GuilRandomDefense \
+  -runTests \
+  -testPlatform EditMode \
+  -testFilter "정규화된.테스트클래스명.메서드명" \
+  -testResults /tmp/isolated.xml \
+  -logFile /tmp/isolated.log
+```
+
+오늘 밤 이렇게 확인했다: 실패 3건 중 1건(`GuaranteedSuccess_IncrementsLevel_
+AndConsumesResources`)을 단독 격리해도 **똑같이 실패**했고(다른 테스트/레지스트리
+오염 아님, 자기 자신 안의 진짜 원인), 통과 12건 중 1건(`WeightedRoll_
+ReflectsConfiguredWeights_NotUniform`)도 단독 격리해서 **똑같이 통과**했다(다른
+테스트에 기대서 통과한 게 아님) — "런타임 실측으로 격상"의 근거가 유효함을
+확인했다. **의심 가는 실패나 "혹시 이게 오염 아닐까" 싶은 통과가 있으면, 계측을
+넣기 전에 먼저 이 방법으로 격리부터 해볼 것 — 계측보다 훨씬 싸다.**
 
 ---
 
