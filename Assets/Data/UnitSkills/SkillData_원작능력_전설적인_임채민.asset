@@ -14,9 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   skillName: A03X !패기의 검술
   description: 원작 전설적인 로브 루치 생명귀환 지회무신 - 전설적인(Trig_Legend21sc). | 2차 배정(트리거·더미 채널): 원작 전설적인 로브 루치 생명귀환 지회무신 - 전설적인(Trig_Legend21sc). A11S(대상별 스킬피해 감수성) 계수는 보스 기준(×1.00)으로 고정 — 잡몹·소환체 대상엔 과다 계상될 수 있다. | 2차 배정(트리거·더미 채널): 원작 전설적인 로브 루치 생명귀환 지회무신 - 전설적인(Trig_Legend21sc). | 1채널 추가 배정(원작 전설적인 로브 루치 생명귀환 지회무신 - 전설적인(h02R)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시). | 1채널 추가 배정(원작 전설적인 마르코 환수종'불사조' - 전설적인(h02T)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시).
-  · A074 !불사조불사조열매: 발동1.0 배수3.15 추가100000.0
-  · A048 !육식: 발동1.0 배수0.0 추가250000.0
-  확정(2026-09-06, PHASE2_39_RESOLVED.csv/f18af68, 1채널표, Hbh1 미지정→규칙③ 스톡15%): A074(15%스톡·3.15배·+100,000)·A048(15%스톡·+250,000)이 이 파일의 basis3 블록(mult3.15/bonus100000·mult0/bonus250000)과 정확히 일치해 대응 확정(추가 편집 없음).
+  쪼개기 실행(2026-09-06, PHASE2_FINAL_TALLY_2026-09-06.md/08e21d6): A074·A048을 각각 SkillData_원작능력_전설적인_임채민_A074/A048.asset으로 뗐다(PM 설계 결정 — 능력 하나에 파일 하나). 루치 자체 배정분(Trig_Legend21sc 직접)은 능력별 값이 없는 유닛 단위 배정이라 쪼개기 대상이 아니다 — 원본 파일에 그대로 둔다.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -89,23 +87,3 @@ MonoBehaviour:
       duration: 0
       randMin: 1
       randMax: 2
-    - kind: 0
-      basis: 3
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 0.0
-      bonus: 250000.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 0
-      basis: 3
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 3.15
-      bonus: 100000.0
-      chance: 1
-      hitCount: 1
-      duration: 0
