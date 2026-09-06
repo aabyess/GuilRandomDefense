@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_버프게이트_제한_김민규_B045
+  m_EditorClassIdentifier:
+  skillName: 카타쿠리 — B045 창(버프 부여, 바닥+비용)
+  description: 06번①(2026-09-06, PM 지시, 19ed606) — 원작 샬롯 카타쿠리(h07I)의 버프 B045는 더미 Trig_katakuriAttack이 "1/7 AND LIFE>36" 조건으로 캐스터 자신에게 걸고, 발동 시 LIFE를 17 깎는다(오더 스트링 확인). "정확히 N타째"(hitCountThreshold)가 아니라 "게이지가 36을 넘는 동안 계속" + 확률 판정이라 신규 필드 SkillLevel.hitCountFloor(36)로 담았다 — 임계 도달 시 자동 리셋되는 hitCountThreshold와 달리 자동 리셋이 없고, 발동에 성공했을 때만(확률까지 통과했을 때만) gaugeSpendAmount(17)만큼 깎는다(비용을 빼먹으면 원작보다 강해진다, PM 지시). 지속시간(1.25초)은 타수로 환산 — 1.25초 → 4대(buffHitCharges=4). 소비하는 쪽(SkillData_게이트_제한_김민규_136d09f9.asset, "1/7 AND 버프B045==true")은 requiredBuffId=B045만 마저 걸면 완성되는데, 그 파일이 있는 Assets/Data/UnitSkills/를 구현담당1이 지금 같이 만지고 있어 이번엔 안 건드렸다(PM에게 보고, 디렉터리 안전해지면 이어서 완성). 그때까지 이 opener는 걸어둬도 무해하다(받아 쓰는 쪽이 아직 없음, LIFE 게이지 소모도 다른 스킬과 안 겹친다 — 김민규는 이 스킬 전에 OnHitCount/게이지 스킬이 없었다).
+  triggerType: 3
+  levels:
+  - cooldown: 0
+    triggerChance: 0.142857
+    range: 0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 1
+    hitCountFloor: 36
+    gaugeSpendAmount: 17
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 6
+      basis: 0
+      target: 0
+      damageType: 0
+      attackType: 0
+      multiplier: 0
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      randMin: 1
+      randMax: 1
+      casterBuffCountFactor: 0
+      buffId: B045
+      buffHitCharges: 4
