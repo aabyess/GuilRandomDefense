@@ -1680,3 +1680,29 @@ raw = A09E(300,000+1,250,000=1,550,000) + 회수 1/16(1,000,000) + A05P(50,000)
 공격 간격보다 긴지, 타수형인지)이 다 채워지면 "무조건 0/무조건 1.0"을
 버리고 유닛마다 실측 판단으로 바꿔야 한다. 그때까지 이 두 상수 근사가
 시뮬에 남아있다는 걸 다음 세션이 잊지 않게 여기 남긴다.
+
+### 22-7. 06번①-2 — 효과 단위 대상 버프 게이트 (구현담당3 07번 발견)
+
+`SkillLevel.requiredTargetBuffId`는 스킬 전체를 막거나 통과시킬 뿐이라, 한
+스킬 안에서 효과마다 다른 대상 버프 조건(원작006 A10S 감마나이프: 효과A는
+항상, 효과B는 "대상이 B06B 보유"일 때만)을 못 담는다. 같은 이름의 게이트를
+`SkillEffect`에도 추가했다(append-only) — `UnitAttacker.ApplyToEnemy`가 효과
+하나하나를 특정 대상에게 적용하기 직전에 검사한다. `SkillLevel` 쪽 게이트는
+그대로 둔다 — 스킬 전체를 막는 것과 효과 하나를 막는 것은 다른 층이다.
+
+시뮬에도 같은 방향 규칙(§22-6)을 효과 단위로 반영했다 — `requiredTargetBuffId`가
+채워진 효과는 그 효과만 건너뛴다(스킬 전체가 아니라). `load_skill_assets()`가
+효과 블록을 따로 잘라 이 필드를 찾는다(기존 정규식이 잡는 고정 필드 뒤쪽이라
+효과 하나의 시작~다음 효과 시작 구간을 substring으로 뗀다).
+
+### 22-8. 06번②(구현담당3 07번 발견) — 플레이어 오라 무한누적 근본수정 (시뮬 무관)
+
+`UnitAttacker`의 플레이어 오라가 1초마다 무조건 재시전해 `ArmorBonus`/
+`HealOverTime`/`ApplyBuff`를 영구(`duration<=0`)로 걸면 매 틱 계속 쌓이는
+결함이 있었다(적 쪽 `EnemyAuraCaster`엔 "누구에게 걸려 있나" 추적이 있는데
+플레이어 쪽엔 없어서 비대칭이었다). `EnemyAuraCaster`와 같은 방식(대상
+추적, Apply-once/Remove-on-exit)을 `UnitAttacker.UpdateAuraTick`으로
+옮겼다 — Enemies/Allies/Self 세 타겟 전부. `SkillData_원작009_H094.asset`의
+임시 우회(`duration=0.9`)를 걷어내고 원래 뜻(영구, `duration=0`)으로
+되돌렸다. skill_dps에 영향 없음(Aura는 애초에 시뮬 skill_dps_for_unit이
+읽는 대상이 아니다 — OnHitChance/OnHitCount만 본다).

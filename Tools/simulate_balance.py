@@ -607,17 +607,28 @@ def load_skill_assets():
         has_required_buff_gate = bool((req_buff_m and req_buff_m.group(1))
                                        or (req_target_buff_m and req_target_buff_m.group(1)))
 
-        effects = []
-        for em in re.finditer(
+        effect_matches = list(re.finditer(
                 r"- kind: (\d+)\s*\n\s*basis: (\d+)\s*\n\s*target: \d+\s*\n\s*damageType: (\d+)\s*\n"
                 r"\s*attackType: (\d+)\s*\n\s*multiplier: ([-+0-9.eE]+)\s*\n\s*bonus: ([-+0-9.eE]+)\s*\n"
-                r"\s*chance: ([-+0-9.eE]+)", level0):
+                r"\s*chance: ([-+0-9.eE]+)", level0))
+
+        effects = []
+        for idx, em in enumerate(effect_matches):
             kind_idx, basis_idx, damage_type_idx, attack_type_idx, multiplier, bonus, chance = em.groups()
+            # §22-8(06번①-2, 2026-09-06) — 효과 단위 대상 버프 게이트(requiredTargetBuffId/
+            # forbiddenTargetBuffId, SkillEffect 쪽)는 위 정규식이 안 잡는 뒤쪽 필드라
+            # 이 효과 블록만 따로 잘라 찾는다(다음 "- kind:" 전까지, 마지막 효과면 레벨
+            # 끝까지).
+            block_end = effect_matches[idx + 1].start() if idx + 1 < len(effect_matches) else len(level0)
+            block = level0[em.start():block_end]
+            req_t_m = re.search(r"requiredTargetBuffId:\s*(\S+)?", block)
+            has_required_target_buff = bool(req_t_m and req_t_m.group(1))
             effects.append({
                 "kind_idx": int(kind_idx), "basis_idx": int(basis_idx),
                 "damage_type_idx": int(damage_type_idx),
                 "attack_type_idx": int(attack_type_idx),
                 "multiplier": float(multiplier), "bonus": float(bonus), "chance": float(chance),
+                "has_required_target_buff": has_required_target_buff,
             })
 
         skills[guid_m.group(1)] = {
@@ -754,6 +765,12 @@ def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
     attack_type_idx = None
     for eff in skill["effects"]:
         if eff["kind_idx"] != DAMAGE_KIND_IDX:
+            continue
+        # §22-8 — 효과 단위 대상 버프 게이트(requiredTargetBuffId, SkillEffect 쪽).
+        # forbiddenTargetBuffId와 같은 방향 규칙(§22-6): required만 보수적으로 0(이
+        # 효과를 통째로 건너뜀), forbidden은 안 봐도 된다(따로 안 걸러도 그 효과가
+        # 그대로 들어간다 = 1.0 근사와 같은 효과).
+        if eff["has_required_target_buff"]:
             continue
         is_ap = eff["damage_type_idx"] == SKILL_AP_IDX
         suffix = "ap" if is_ap else "ad"
