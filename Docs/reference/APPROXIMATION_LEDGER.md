@@ -300,6 +300,30 @@ for문 1**로 두 번 나온다 — 원작은 이 능력을 **반경 안 여러 
 확정되면, 그 결과에 맞는 `ItemData` 에셋을 만들고 `CombineRecipe`에 `SpecificItem` 재료로 연결한다
 (레일리·항법도 각자 정체가 밝혀지면 같은 경로).
 
+## 9. Unity 배치테스트 인프라 없음 — 모든 런타임 축의 공통 구멍 (2026-09-06, PM 지시)
+
+**뿌리 ㉝ 두 번째.** 오늘 대상측 3축(Aegr·AIsr·A11S) 스택을 만들고 "스택0이면 기존
+값과 정확히 같은가"를 검증하려 했는데, **`EnemyDummy`를 실제로 인스턴스화해서
+돌려볼 Unity 배치모드 테스트 인프라가 이 프로젝트에 없다.** `Tools/simulate_balance.py`도
+이 필드들(`EffectiveMagicMultiplier`·`EffectiveMagicDamageAmplifier`·
+`PercentDamageTakenMultiplier`)을 모델하지 않는다.
+
+**대신 쓴 방법**: `EnemyDummy.cs`의 정확한 산술식을 Python으로 그대로 재현해 숫자를
+대조했다(스택0→기존값과 정확히 일치, 스택10→곱셈 결합 확인, float 32비트 반올림
+버그 1건 실제로 발견). **이건 "그 식이 맞게 짜였는가"는 확인하지만 "런타임이 실제로
+그 코드 경로를 그대로 부르는가"는 확인하지 못한다** — 예를 들어 `UnitAttacker.cs`의
+호출부가 잘못된 파라미터를 넘기거나, 다른 경로가 이 프로퍼티를 안 거치고 별도로
+계산하는 실수가 있어도 이 방법으로는 안 잡힌다.
+
+**적용 범위**: 이번 스택 3축뿐 아니라, **런타임에서만 값이 정해지는 축은 전부 같은
+구멍을 갖는다** — `armorShred`·`magicArmorShred`·버프 시스템(`UnitAttacker.AddBuff`)·
+연구소 배율 등, 코드 리뷰·정적 대조·Python 재구현으로는 검증했지만 **실제 Unity
+플레이 모드에서 값이 그대로 나오는지는 아직 아무것도 확인 안 됐다.**
+
+**되돌릴 조건**: Unity Test Runner(배치모드, `-runTests`)를 프로젝트에 설치하고
+`EnemyDummy`/`UnitAttacker`를 실제로 인스턴스화하는 PlayMode 테스트를 최소 1건이라도
+만들면 — 그 뒤로는 "숫자 대조(Python)"가 아니라 "런타임 실측"으로 격상된다.
+
 ## 6. 재생성 방법
 
 이 장부는 스크립트로 다시 만들 수 있다(수치가 안 바뀌었으면 그대로, 바뀌었으면
