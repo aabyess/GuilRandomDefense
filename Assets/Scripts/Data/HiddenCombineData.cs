@@ -38,4 +38,12 @@ public class HiddenCombineData : ScriptableObject
     public UnitData result;
 
     public List<HiddenCombineIngredient> ingredients = new List<HiddenCombineIngredient>();
+
+    // ⚠️ 맨 뒤에 추가(2026-09-06, CHAT_UNLOCK_70_SIDE_EFFECT_SWEEP.md, 리서치담당 전수) —
+    // 원작 udg_Damage_level_Fixed[플레이어](DamageLevelFixedState 참고, PlayerContext에
+    // 부착)에 영구 누적되는 보너스. 채팅언락 70행 전수 결과 이 변수를 건드리는 건 정확히
+    // 3개뿐이다: Hidden_Aokiji +2(여기, 히든_성탄.asset) · Eternal_Lucci +2 · IM_dragon +4
+    // (ChatUnlockData 쪽, 아직 에셋 없음 — 47종 전부 사장님 유닛배정 대기라 원래 없는 게 정상).
+    // 기본값 0 — 다른 22종은 전부 이 값을 안 건드리므로 회귀 없음.
+    public int damageLevelFixedBonus;
 }

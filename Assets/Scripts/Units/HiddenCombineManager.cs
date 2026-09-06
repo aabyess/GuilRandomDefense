@@ -75,6 +75,12 @@ public class HiddenCombineManager : MonoBehaviour
 
         Vector3 position = LaneMarker.Get(playerId)?.TakeSpawnPosition(data.result) ?? transform.position;
         unitSpawner?.Spawn(data.result, position, playerId);
+
+        // 2026-09-06 — Hidden_Aokiji(히든_성탄.asset, +2)류 Damage_level_Fixed 누적.
+        // 항법 "패왕의길"과 같은 카운터(DamageLevelFixedState)에 더해 합산되게 한다 —
+        // 각자 따로 카운터를 만들면 원작 최대(+10 = 항법2+히든2+2+4)가 안 나온다.
+        context.DamageLevelFixedState?.Add(data.damageLevelFixedBonus);
+
         lastResultMessage = $"{data.displayName} 조합 성공!";
         return true;
     }

@@ -103,6 +103,13 @@ public class ChatUnlockManager : MonoBehaviour
         }
 
         SpawnResult(context, data);
+
+        // 2026-09-06 — Eternal_Lucci(+2)·IM_dragon(+4)류 Damage_level_Fixed 누적.
+        // 항법 "패왕의길"·HiddenCombineManager의 Hidden_Aokiji와 같은 카운터
+        // (DamageLevelFixedState)에 더해 합산되게 한다 — 지금은 두 유닛 다 에셋이
+        // 없어(사장님 배정 대기) damageLevelFixedBonus가 항상 0이라 호출은 무해하다.
+        context.DamageLevelFixedState?.Add(data.damageLevelFixedBonus);
+
         lastResultMessage = $"{data.displayName} 획득!";
         return true;
     }

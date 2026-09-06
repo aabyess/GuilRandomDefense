@@ -42,4 +42,14 @@ public class ChatUnlockData : ScriptableObject
     // 0이면 조건 없음.
     public UnitData result;
     public int requiredSaveCount;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-06, CHAT_UNLOCK_70_SIDE_EFFECT_SWEEP.md, 리서치담당 전수) —
+    // 원작 udg_Damage_level_Fixed[플레이어](DamageLevelFixedState 참고, PlayerContext에
+    // 부착)에 영구 누적되는 보너스. 채팅언락 70행 전수 결과 이 변수를 건드리는 건 정확히
+    // 3개뿐이었다("Eternal 47개가 같은 게이트를 공유하니 더 있을 것"은 기우로 확정됨):
+    //   Hidden_Aokiji +2 (HiddenCombineData 쪽, 히든_성탄.asset에 반영)
+    //   Eternal_Lucci +2 · IM_dragon +4 (이 필드 — 아직 에셋 없음, 47종 전부 사장님 유닛배정
+    //   대기 상태라 원래 없는 게 정상. 에셋이 생기면 이 값을 그대로 채울 것, 지어내지 말 것)
+    // 기본값 0 — 다른 44종은 전부 이 값을 안 건드리므로 회귀 없음.
+    public int damageLevelFixedBonus;
 }

@@ -200,6 +200,12 @@ public class CombineSystem : MonoBehaviour
         if (recipe.result.grade == UnitGrade.Transcendent)
             OwnerContext?.MarkTranscendentCombineCompleted();
 
+        // 2026-09-06 — Hidden_Aokiji(히든_성탄.asset, +2)류 Damage_level_Fixed 누적.
+        // 항법 "패왕의길"·ChatUnlockManager/HiddenCombineManager와 같은 카운터
+        // (DamageLevelFixedState)에 더해 합산되게 한다. 이중 계상 경고는
+        // CombineRecipe.damageLevelFixedBonus 주석 참고.
+        OwnerContext?.DamageLevelFixedState?.Add(recipe.damageLevelFixedBonus);
+
         return true;
     }
 
