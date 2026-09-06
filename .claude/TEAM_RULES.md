@@ -1753,3 +1753,10 @@ endif
    `ConditionalTriggerExecute`/`TriggerExecute`로 호출되는지 개별 확인해야 한다 —
    71건 규모에선 비용이 커서 **지금은 안 한다.** 「원작에 있지만 안 도는 값이 있는가」는
    **열린 질문으로 남는다.**
+
+**실무 메모 (2026-09-06 밤) — 새 `.cs`를 만들면 `check_meta`도 돌려라.**
+`A0LZ` 축 작업이 `compile_check`만 돌리고 넘어가 `SelfUpgradeAbilityData.cs`의 `.meta`가
+빠진 채 커밋됐다(다음 작업의 `check_meta`가 잡아서 복구). **`.meta`가 없으면 유니티가
+새 GUID로 다시 만들고, 다른 머신·다른 시점에 만들어진 GUID와 어긋나 참조가 끊긴다** —
+컴파일은 통과하므로 `compile_check`로는 절대 안 잡힌다. **새 파일을 만든 커밋에는
+`check_meta`를 같이 돌린다.**
