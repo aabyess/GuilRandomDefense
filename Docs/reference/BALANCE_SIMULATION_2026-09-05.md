@@ -1,5 +1,10 @@
 # 원작 스탯 이식 밸런스 재시뮬레이션 (2026-09-05, 구현담당2)
 
+> 🛑 **붕괴 라운드 수치는 인용 불가 (2026-09-06 종결, `TIER_SCHEDULE_CONFIDENCE_2026-09-06.md`/`WISP_BUDGET_TIER_CEILING_2026-09-06.md` 참고)**
+> 원문 확정 캡(`Tech_Onedill`, 플레이어당 1기)을 반영하면 폭이 R12~R73까지 벌어진다.
+> 이전에 좁게 나왔던 값(R12~R14 등)은 캡 없는 모델의 가짜 수렴이며 무효다.
+> 남은 미해결: ① 75라운드 균등분할 가정 ② 안흔함~전설적인 완성 시점.
+
 > **이 결과는 `Tools/simulate_balance.py`로 재현할 수 있다.** 읽기 전용 스크립트다 — 에셋과
 > `UnitData.cs`/`RoundManager.cs`/`EnemyDummy.cs`/`ResourceWallet.cs`/`MapGenerator.cs`를
 > 직접 읽어서 계산하고, 값을 스크립트에 하드코딩하지 않는다(Tier() 매핑도 `UnitData.cs`에서
