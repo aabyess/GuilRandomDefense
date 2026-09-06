@@ -259,6 +259,7 @@ public class RoundManager : MonoBehaviour
     void AdvanceRound()
     {
         GrantRoundClearWisps(currentRound);
+        GrantItemGambleStock(currentRound);
 
         currentRound++;
         if (currentRound > totalRounds)
@@ -341,6 +342,28 @@ public class RoundManager : MonoBehaviour
             // 위습은 인벤토리가 아니라 필드에 실물로 생긴다. 빈 슬롯에 주면 아무도 안 쓰는 채로 쌓인다.
             if (!context.IsOccupied) continue;
             distributor.GrantWisps(context, waveData.wispRewards);
+        }
+    }
+
+    // 아이템 도박(H0BS 메타몽) 재고 — 원작 툴팁 "도박회수는 6/9라운드 스토리 클리어시
+    // 1회씩 증가"(2026-09-07, PM 지시). 우리 스토리(Story01~13)는 원작과 번호·내용이
+    // 무관한 창작 콘텐츠라 "그 스토리를 깼을 때"에 걸 지점이 없다 — 대신 "그 라운드에
+    // 도달했을 때"로 근사한다(라운드는 우리도 있는 축, §18 갱신). 실제 스토리 콘텐츠가
+    // 들어오면 그 클리어 시점으로 옮길 것(되돌릴 조건).
+    //
+    // ⚠️ 증분이 아니라 절대값 세팅이다 — 원작 AddUnitToStockBJ가 증분 함수가 아니라
+    // 그 시점의 재고를 그대로 지정하는 함수라, 6라운드=1·9라운드=2로 SetStock한다
+    // (ItemGambleState.SetStock 주석 참고, [Item_Int가 세팅되는 변수]는 추정).
+    void GrantItemGambleStock(int roundNumber)
+    {
+        int newStock;
+        if (roundNumber == 6) newStock = 1;
+        else if (roundNumber == 9) newStock = 2;
+        else return;
+
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            context.ItemGambleState?.SetStock(newStock);
         }
     }
 

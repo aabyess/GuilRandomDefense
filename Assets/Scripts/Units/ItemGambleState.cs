@@ -19,7 +19,12 @@ using UnityEngine;
 // 두면 그 클래스가 명시한 "필드를 안 늘린다" 원칙이 흐려진다.
 public class ItemGambleState : MonoBehaviour
 {
-    [SerializeField] int stock = 1; // 원작 Item_Int(0 시작) + 1 보정 = 1
+    // ⚠️ 2026-09-07 정정(PM 지시) — "Item_Int(0)+1 보정"은 잘못된 읽기였다. 원작은
+    // 게임 시작 시 `AddUnitToStockBJ('H0BS', ..., 0, 0)`(재고 0·최대 0 — 아예 구매
+    // 불가)이고, 첫 재고는 6라운드에 가서야 열린다(RoundManager.GrantItemGambleStock
+    // 참고, 툴팁 원문 "도박회수는 6/9라운드 스토리 클리어시 1회씩 증가"). 기본값을 0으로
+    // 내렸다 — 6라운드 전까지는 판매해도 도박이 안 돈다(재고 0, TryGamble이 false).
+    [SerializeField] int stock = 0;
 
     // ⚠️ 맨 뒤에 추가(2026-09-06, "항법" 5택1 연결, NAVIGATION_ROUTES_FULL.md) — 직렬화
     // 순서를 지킨다. PlayerContext의 다른 형제 컴포넌트(NavigationState)를 직접
@@ -73,9 +78,21 @@ public class ItemGambleState : MonoBehaviour
         return true;
     }
 
-    /// <summary>스토리 보상 등에서 재고를 늘릴 때 부른다. 지금은 아무도 안 부른다(위 주석 참고).</summary>
+    /// <summary>증분 지급용(스토리 보상 등). 지금은 아무도 안 부른다 — 6·9라운드 재고는
+    /// 증분이 아니라 절대값 세팅이라 SetStock을 쓴다(아래).</summary>
     public void AddStock(int amount)
     {
         stock += amount;
+    }
+
+    /// <summary>6·9라운드 재고 세팅 전용(RoundManager.GrantItemGambleStock). 원작
+    /// `AddUnitToStockBJ`가 그 시점의 `Item_Int` 값을 그대로 넣는 형태라 증분이 아니라
+    /// 절대값 대입이다 — 6라운드=1, 9라운드=2(이미 1을 다 썼어도 9라운드에 2로 다시
+    /// 채워진다). ⚠️ 이 해석([Item_Int가 세팅되는 변수])은 리서치 확정이 아니라 네이티브
+    /// AddUnitToStockBJ의 알려진 동작(증분 아닌 절대 재고 설정)에 근거한 추정이다 —
+    /// 틀렸으면 리서치 재확인 필요.</summary>
+    public void SetStock(int value)
+    {
+        stock = value;
     }
 }

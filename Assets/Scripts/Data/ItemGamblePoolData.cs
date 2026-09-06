@@ -46,9 +46,9 @@ public class ItemGamblePoolData : ScriptableObject
     /// 풀이 비어 있거나(제외 후) 총 가중치가 0 이하면 null — GachaTable.Roll()과 같은
     /// 방어 규칙이다(뿌리: GachaTable.weight가 실제로 안 읽히는 경로가 있었던 전례 — 여기는
     /// Roll()이 유일한 진입점이라 그 문제가 구조적으로 재발할 수 없다, 이 메서드를 우회해서
-    /// 아이템을 뽑는 다른 경로를 만들지 말 것). ⚠️ 원작이 "풀을 다 뽑은 뒤" 무엇을 하는지는
-    /// [미확인]이다 — null을 안전한 기본값으로 쓴다(호출부가 이미 null-tolerant, 지어내지
-    /// 않는다).
+    /// 아이템을 뽑는 다른 경로를 만들지 말 것). 2026-09-07 확인(PM 지시) — **원작도 빈
+    /// 풀 방어 코드가 없다**(그냥 뽑고 엔진 네이티브 동작에 맡긴다). 그래서 우리도 별도
+    /// 처리를 안 붙였다 — null을 그대로 쓰면 충분하다(호출부가 이미 null-tolerant).
     /// </summary>
     public ItemData Roll(bool useReducedPool, ISet<ItemData> excluded = null)
     {
