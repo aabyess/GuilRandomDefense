@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_영원_김정래_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_영원_김정래_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 영원_김정래. ⚠️ 축 밖이라 뺀 조건: 체력>N 조건(거의 항상 참) — 실제보다 자주 발동할 수 있다.  · Trig_Uta_Attack → e0R1(E영원 우타 오선보1) → A16W: 450000
+  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 영원_김정래. ⚠️ 축 밖이라 뺀 조건: 체력>N 조건(거의 항상 참) — 실제보다 자주 발동할 수 있다.  · Trig_Uta_Attack → e0R1(E영원 우타 오선보1) → A16W: 450000 정정(2026-09-06, CROSS_CHANNEL_DUPLICATE_SWEEP.md/65b7f96): Trig_Uta_Attack → e0R1 → A16W를 제거했다 — 원작 발동 지점이 하나(Trig_Uta_Attack)라 영원_문필환(원작능력 루트 파일 보유, 오늘 SkillData_원작능력_영원_문필환_A16W.asset으로 이미 분리됨)에 귀속. 79행 DPS 순위 배정이 독립적으로 같은 값을 또 배정한 중복이었다.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,15 +22,4 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 450000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
+    effects: []
