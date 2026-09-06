@@ -1210,6 +1210,18 @@ public class UnitAttacker : MonoBehaviour
                 target.RemoveBuff(effect.buffId);
                 break;
 
+            // 대상측 3축 스택(2026-09-06, TARGET_SIDE_AXES.md) — multiplier가 올릴 레벨 수
+            // 그대로다. Add* 쪽이 각자 상한(꺾임레벨 포함)을 알아서 자르므로 여기선 안 자른다.
+            case SkillEffectKind.AegrStack:
+                target.AddAegrStack((int)effect.multiplier);
+                break;
+            case SkillEffectKind.AisrStack:
+                target.AddAisrStack((int)effect.multiplier);
+                break;
+            case SkillEffectKind.A11SStack:
+                target.AddA11SStack((int)effect.multiplier);
+                break;
+
             // ExtraProjectile은 아직 값 의미가 없다(이번 작업 범위 밖) — 조용히 무시.
         }
     }

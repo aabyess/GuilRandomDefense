@@ -166,6 +166,15 @@ public enum SkillEffectKind
     // target(Self/Allies/Enemies)에 따라 UnitAttacker.AddBuff의 반대짝(RemoveBuff)을
     // 부른다 — ApplyBuff와 정확히 대칭이다. buffId가 비어있으면 조용히 무시.
     RemoveBuff,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-06, TARGET_SIDE_AXES.md/STACK_AXES_INCREMENT_LIST.md) —
+    // 대상측 3축(Aegr·AIsr·A11S) 스택. multiplier가 곧 올릴 레벨 수(int로 자른다,
+    // 원작 트리거의 "+N" 그대로). EnemyDummy.AddAegrStack/AddAisrStack/AddA11SStack이
+    // 각자 상한을 알아서 자른다 — 여기서 값을 다시 자르지 않는다. duration은 안 본다
+    // (원작 스택은 지속시간 없이 영구 누적).
+    AegrStack,
+    AisrStack,
+    A11SStack,
 }
 
 // 효과 하나. 레벨 하나가 이걸 여러 개 가질 수 있다 — "레벨2에 효과가 하나 더 생긴다"(원작
