@@ -84,8 +84,39 @@ def parse_grade_enum():
     return names
 
 
+def parse_ladder_grades():
+    """UnitData.cs의 `IsLadderGrade(this UnitGrade grade)`를 파싱해 "사다리가 아닌" 등급
+    이름 집합을 낸다(사장님 03번 확정 — 랜덤유닛·다른세계를 등급별 화력 사다리에서 뺀다,
+    PM 지시 2026-09-06). Tier()는 그대로 둔다 — 서열(로스터 정렬·해체 상한)엔 이 둘도
+    자리가 있어야 하고, 조밀한 정수열이라 빼면 유령 티어/재번호매기기 대가가 크다. 여기서
+    거르는 건 "등급별 집계"(사다리 단조성 검증) 쪽뿐이다. parse_tier_mapping()과 같은
+    이유로 하드코딩하지 않는다 — 값이 바뀌면 조용히 낡아지는 대신 바로 죽어야 한다."""
+    text = read("Assets/Scripts/Data/UnitData.cs")
+    m = re.search(r"public static bool IsLadderGrade\(this UnitGrade grade\)\s*\{(.*?)\n    \}", text, re.DOTALL)
+    if not m:
+        sys.exit("FATAL: UnitData.cs에서 IsLadderGrade()를 못 찾았다 — 파일 구조가 바뀐 것으로 보인다.")
+    body = m.group(1)
+
+    non_ladder = set()
+    pending = []
+    for token in re.finditer(r"case UnitGrade\.(\w+):|return (true|false);", body):
+        grade_name, ret_val = token.group(1), token.group(2)
+        if grade_name:
+            pending.append(grade_name)
+        elif ret_val == "false":
+            non_ladder.update(pending)
+            pending = []
+        elif ret_val == "true":
+            pending = []
+
+    if not non_ladder:
+        sys.exit("FATAL: IsLadderGrade() 파싱 결과 비사다리 등급이 0개다 — 파싱이 깨진 것 같다.")
+    return non_ladder
+
+
 TIER_OF = parse_tier_mapping()
 GRADE_ENUM = parse_grade_enum()
+NON_LADDER_GRADES = parse_ladder_grades()
 
 KOREAN = {"Common": "흔함", "Uncommon": "안흔함", "Special": "특별함", "Rare": "희귀함",
           "Hidden": "히든", "Superior": "특수함", "Legendary": "전설적인", "Limited": "제한됨",
@@ -189,6 +220,17 @@ def median_dps_by_tier(roster, damagetype_filter=None, with_bash=False):
         vals = by_tier.get(t)
         out[t] = statistics.median(vals) if vals else None
     return out
+
+
+def median_dps_by_tier_ladder_only(roster, damagetype_filter=None, with_bash=False):
+    """median_dps_by_tier와 같지만 IsLadderGrade()==false인 등급(랜덤유닛·다른세계·
+    초월위습)을 등급별 집계에서 뺀다(사장님 03번 확정, PM 지시 2026-09-06). "등급별
+    화력이 우상향하는가"를 재는 사다리 검증 전용 — ② 붕괴 라운드 모델(run_backlog)이
+    쓰는 median_dps_by_tier는 그대로 둔다. 그건 라운드 진행에 따라 플레이어가 실제로
+    확보할 수 있는 유닛 전체(랜덤유닛·다른세계도 뽑기·도박으로 실제 확보 가능)를 재는
+    별개 시뮬레이션이라 03번(등급 사다리 단조성)의 대상이 아니다."""
+    ladder_roster = [r for r in roster if r["grade"] not in NON_LADDER_GRADES]
+    return median_dps_by_tier(ladder_roster, damagetype_filter=damagetype_filter, with_bash=with_bash)
 
 
 # ---------------------------------------------------------------------------
@@ -933,6 +975,29 @@ def main():
     mono_breaks = [t for t in range(1, TIER_COUNT) if all_median[t] < all_median[t - 1]]
     print(f"\n⚠️ 단조성 깨지는 지점(ALL 기준): T{mono_breaks}" if mono_breaks else "\n단조 증가 확인됨(ALL 기준)")
     print("이건 시뮬레이션 가정이 아니라 로스터 실값이다 — 2026-09-05 구현담당2/구현담당1 교차 확인.")
+    print(f"⚠️ 이 표는 사다리가 아닌 2등급({','.join(KOREAN[g] for g in sorted(NON_LADDER_GRADES) if g in KOREAN)})을 "
+          f"포함해 집계된 것이다 — 03번 검산은 바로 아래 ①' 표를 본다(PM 지시 2026-09-06).")
+
+    ladder_tiers = sorted({t for g, t in TIER_OF.items() if g not in NON_LADDER_GRADES})
+    ad_median_l = median_dps_by_tier_ladder_only(roster, damagetype_filter=1)
+    ap_median_l = median_dps_by_tier_ladder_only(roster, damagetype_filter=2)
+    all_median_l = median_dps_by_tier_ladder_only(roster)
+    for t in ladder_tiers:
+        if ap_median_l[t] is None:
+            ap_median_l[t] = all_median_l[t]
+        if ad_median_l[t] is None:
+            ad_median_l[t] = all_median_l[t]
+
+    print("\n=== ①' 등급별 median DPS — 사다리 전용(랜덤유닛·다른세계 제외, 03번 검산) ===")
+    print(f"{'Tier':6s}{'등급':20s}{'ALL':>10s}{'AD':>10s}{'AP':>10s}")
+    for t in ladder_tiers:
+        grades = ",".join(KOREAN[g] for g in GRADE_ENUM if TIER_OF.get(g) == t and g not in NON_LADDER_GRADES)
+        print(f"T{t:<5d}{grades:20s}{all_median_l[t]:>10.0f}{ad_median_l[t]:>10.0f}{ap_median_l[t]:>10.0f}")
+
+    mono_breaks_l = [ladder_tiers[i] for i in range(1, len(ladder_tiers))
+                      if all_median_l[ladder_tiers[i]] < all_median_l[ladder_tiers[i - 1]]]
+    print(f"\n⚠️ 단조성 깨지는 지점(사다리 전용 ALL 기준): T{mono_breaks_l}"
+          if mono_breaks_l else "\n단조 증가 확인됨(사다리 전용 ALL 기준) — 랜덤유닛·다른세계를 빼도 사다리가 무너지지 않는다.")
 
     print("\n=== ② 붕괴 라운드 — 4개 유닛확보모델 × AD/AP ===")
     print(f"{'모델':20s}{'AD팀(방어적용)':18s}{'AP팀(방어무시)':18s}")
