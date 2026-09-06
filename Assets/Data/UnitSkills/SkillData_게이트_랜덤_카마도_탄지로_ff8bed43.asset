@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_랜덤_카마도_탄지로_ff8bed43
   m_EditorClassIdentifier:
   skillName: 료우기 시키 - 랜덤전용[제한됨] — 1/4
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 료우기 시키 - 랜덤전용[제한됨](h0A2)의 게이트 "1/4" 능력 12개를 이 SkillData 하나로 묶었다.   · Ryougi_Skill_3#1: 계산식 1440000.00   · Ryougi_Skill_3#2: 계산식 4000000.00   · Ryougi_Skill_3#3: 계산식 (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_   · Ryougi_Skill_3#4: 계산식 (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_   · Ryougi_Skill_3_double#1: 계산식 1440000.00   · Ryougi_Skill_3_double#2: 계산식 4000000.00   · Ryougi_Skill_3_double#3: 계산식 (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_   · Ryougi_Skill_3_double#4: 계산식 (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_   · Ryougi_Skill_3_triple#1: 계산식 1440000.00   · Ryougi_Skill_3_triple#2: 계산식 3200000.00   · Ryougi_Skill_3_triple#3: 계산식 (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_   · Ryougi_Skill_3_triple#4: 계산식 (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 료우기 시키 - 랜덤전용[제한됨](h0A2)의 게이트 "1/4" 능력 12개를 이 SkillData 하나로 묶었다.   · Ryougi_Skill_3#1: 계산식 1440000.00   · Ryougi_Skill_3#2: 계산식 4000000.00   · Ryougi_Skill_3#3: 계산식 (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_   · Ryougi_Skill_3#4: 계산식 (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_   · Ryougi_Skill_3_double#1: 계산식 1440000.00   · Ryougi_Skill_3_double#2: 계산식 4000000.00   · Ryougi_Skill_3_double#3: 계산식 (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_   · Ryougi_Skill_3_double#4: 계산식 (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_   · Ryougi_Skill_3_triple#1: 계산식 1440000.00   · Ryougi_Skill_3_triple#2: 계산식 3200000.00   · Ryougi_Skill_3_triple#3: 계산식 (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_   · Ryougi_Skill_3_triple#4: 계산식 (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get_  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. ⚠️ 2026-09-06 대상조건 배선(PM 지시) — 세 하위트리거(_3/_double/_triple) 각각 #2<200/#3 ELSE(>=200), #1·#4는 원작대로 무조건 별개.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -49,6 +49,8 @@ MonoBehaviour:
       randMin: 1
       randMax: 1.5
       casterBuffCountFactor: 0
+      targetCondition: 1
+      targetConditionValue: 200
     - kind: 0
       basis: 1
       target: 3
@@ -60,6 +62,8 @@ MonoBehaviour:
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      targetCondition: 3
+      targetConditionValue: 200
     - kind: 0
       basis: 1
       target: 3
@@ -99,6 +103,8 @@ MonoBehaviour:
       randMin: 1
       randMax: 1.5
       casterBuffCountFactor: 0
+      targetCondition: 1
+      targetConditionValue: 200
     - kind: 0
       basis: 1
       target: 3
@@ -110,6 +116,8 @@ MonoBehaviour:
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      targetCondition: 3
+      targetConditionValue: 200
     - kind: 0
       basis: 1
       target: 3
@@ -149,6 +157,8 @@ MonoBehaviour:
       randMin: 1
       randMax: 1.5
       casterBuffCountFactor: 0
+      targetCondition: 1
+      targetConditionValue: 200
     - kind: 0
       basis: 1
       target: 3
@@ -160,6 +170,8 @@ MonoBehaviour:
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      targetCondition: 3
+      targetConditionValue: 200
     - kind: 0
       basis: 1
       target: 3

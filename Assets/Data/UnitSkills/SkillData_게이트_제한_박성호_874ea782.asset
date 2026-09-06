@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_제한_박성호_874ea782
   m_EditorClassIdentifier:
   skillName: 마르코 흰수염 유산의 수호자 - 제한됨 — 1/7 AND 1/10
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 마르코 흰수염 유산의 수호자 - 제한됨(h08O)의 게이트 "1/7 AND 1/10" 능력 2개를 이 SkillData 하나로 묶었다.   · Marco_S1#1: 계산식 ((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni   · Marco_S1#2: 계산식 150000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Marco_S1#1] A11S식 계수(계수 0.20+0.05×레벨/연구)를 레벨1 기준으로 고정해 곱했다(원작 레벨1과 동일) — 레벨 축이 우리에 없다. ⚠️ 2026-09-06 정정(PM) — A11S는 대상 EnemyData.percentDamageTaken, 이미 보편 적용. baked 0.25를 나눠 원래 계수(0.20)만 남김 — 이중 적용 버그(0.25×0.90=0.225, 원작 0.90 대비 4.0배 과소).
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 마르코 흰수염 유산의 수호자 - 제한됨(h08O)의 게이트 "1/7 AND 1/10" 능력 2개를 이 SkillData 하나로 묶었다.   · Marco_S1#1: 계산식 ((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni   · Marco_S1#2: 계산식 150000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Marco_S1#1] A11S식 계수(계수 0.20+0.05×레벨/연구)를 레벨1 기준으로 고정해 곱했다(원작 레벨1과 동일) — 레벨 축이 우리에 없다. ⚠️ 2026-09-06 정정(PM) — A11S는 대상 EnemyData.percentDamageTaken, 이미 보편 적용. baked 0.25를 나눠 원래 계수(0.20)만 남김 — 이중 적용 버그(0.25×0.90=0.225, 원작 0.90 대비 4.0배 과소). ⚠️ 2026-09-06 대상조건 배선(PM 지시) — #1<200/#2 ELSE(>=200).
   triggerType: 0
   levels:
   - cooldown: 0
@@ -34,6 +34,8 @@ MonoBehaviour:
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      targetCondition: 1
+      targetConditionValue: 200
     - kind: 0
       basis: 0
       target: 3
@@ -47,3 +49,5 @@ MonoBehaviour:
       randMin: 1
       randMax: 1.5
       casterBuffCountFactor: 0
+      targetCondition: 3
+      targetConditionValue: 200

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_초월_조성진_AD_33bd8aa4
   m_EditorClassIdentifier:
   skillName: G.O.D — 1/5
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 G.O.D(H09B)의 게이트 "1/5" 능력 3개를 이 SkillData 하나로 묶었다.   · Usop_Skill_2#1: 계산식 262500.00   · Usop_Skill_2#2: 계산식 262500.00   · Usop_Skill_2#5: 계산식 350000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 G.O.D(H09B)의 게이트 "1/5" 능력 3개를 이 SkillData 하나로 묶었다.   · Usop_Skill_2#1: 계산식 262500.00   · Usop_Skill_2#2: 계산식 262500.00   · Usop_Skill_2#5: 계산식 350000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. ⚠️ 2026-09-06 대상조건 배선(PM 지시) — #1<300/#2 ELSE(>=300), #5는 원작대로 무조건 별개.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -34,6 +34,8 @@ MonoBehaviour:
       hitCount: 2
       duration: 0
       casterBuffCountFactor: 0
+      targetCondition: 1
+      targetConditionValue: 300
     - kind: 0
       basis: 0
       target: 2
@@ -45,6 +47,8 @@ MonoBehaviour:
       hitCount: 2
       duration: 0
       casterBuffCountFactor: 0
+      targetCondition: 3
+      targetConditionValue: 300
     - kind: 0
       basis: 0
       target: 3

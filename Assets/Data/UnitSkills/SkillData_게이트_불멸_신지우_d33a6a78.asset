@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_불멸_신지우_d33a6a78
   m_EditorClassIdentifier:
   skillName: 스코퍼 가반 로져 해적단의 검호 - 불멸의 — MANA게이지45.00
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 스코퍼 가반 로져 해적단의 검호 - 불멸의(h04F)의 게이트 "MANA게이지45.00" 능력 3개를 이 SkillData 하나로 묶었다.   · Gaban_Skill_mana#1: 계산식 ((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Gaban[3])*0.   · Gaban_Skill_mana#2: 계산식 (0.10*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Gaban[3]   · Gaban_Skill_mana#3: 계산식 (0.03*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Gaban[3]  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 스코퍼 가반 로져 해적단의 검호 - 불멸의(h04F)의 게이트 "MANA게이지45.00" 능력 3개를 이 SkillData 하나로 묶었다.   · Gaban_Skill_mana#1: 계산식 ((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Gaban[3])*0.   · Gaban_Skill_mana#2: 계산식 (0.10*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Gaban[3]   · Gaban_Skill_mana#3: 계산식 (0.03*GetUnitStateSwap(UNIT_STATE_MAX_LIFE,udg_Hero_Gaban[3]  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. ⚠️ 2026-09-06 대상조건 배선(PM 지시, >=300 보류 해제) — #1<200/#2==200/#3>=300 원작 3단 분기 그대로.
   triggerType: 3
   levels:
   - cooldown: 0
@@ -34,6 +34,8 @@ MonoBehaviour:
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      targetCondition: 1
+      targetConditionValue: 200
     - kind: 0
       basis: 1
       target: 3
@@ -45,6 +47,8 @@ MonoBehaviour:
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      targetCondition: 2
+      targetConditionValue: 200
     - kind: 0
       basis: 1
       target: 3
@@ -56,3 +60,5 @@ MonoBehaviour:
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      targetCondition: 3
+      targetConditionValue: 300

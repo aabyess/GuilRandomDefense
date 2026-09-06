@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_제한_이충민_8f2b5872
   m_EditorClassIdentifier:
   skillName: 아인 네오 해군 장교 - 제한됨 — 1/21
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 아인 네오 해군 장교 - 제한됨(h040)의 게이트 "1/21" 능력 7개를 이 SkillData 하나로 묶었다.   · Ain_Skill_2#1: 계산식 240000.00   · Ain_Skill_2#2: 계산식 240000.00   · Ain_Skill_2#3: 계산식 240000.00   · Ain_Skill_2#4: 계산식 3500000.00   · Ain_Skill_2#5: 계산식 350000.00   · Ain_Skill_2#6: 계산식 350000.00   · Ain_Skill_2#7: 계산식 350000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 아인 네오 해군 장교 - 제한됨(h040)의 게이트 "1/21" 능력 7개를 이 SkillData 하나로 묶었다.   · Ain_Skill_2#1: 계산식 240000.00   · Ain_Skill_2#2: 계산식 240000.00   · Ain_Skill_2#3: 계산식 240000.00   · Ain_Skill_2#4: 계산식 3500000.00   · Ain_Skill_2#5: 계산식 350000.00   · Ain_Skill_2#6: 계산식 350000.00   · Ain_Skill_2#7: 계산식 350000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. ⚠️ 2026-09-06 대상조건 배선(PM 지시) — #1 requiredTargetBuffId=B06B, #2 forbiddenTargetBuffId=B06B(ELSE), #3~7은 원작대로 무조건 별개(서로 다른 독립 조건).
   triggerType: 0
   levels:
   - cooldown: 0
@@ -34,6 +34,7 @@ MonoBehaviour:
       hitCount: 3
       duration: 0
       casterBuffCountFactor: 0
+      requiredTargetBuffId: B06B
     - kind: 0
       basis: 0
       target: 2
@@ -45,6 +46,7 @@ MonoBehaviour:
       hitCount: 3
       duration: 0
       casterBuffCountFactor: 0
+      forbiddenTargetBuffId: B06B
     - kind: 0
       basis: 0
       target: 2
