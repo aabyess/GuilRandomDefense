@@ -62,7 +62,15 @@ public class UnitAttacker : MonoBehaviour
     // 가 맞게 들고 있었다). 그 배율을 걷어내고 AttackSpeedMultiplier로 옮겼다 — 연구소가
     // 원작대로 데미지가 아니라 공격속도를 올리게 됐다. UpgradeMultiplier엔 이제 특성강화
     // (딜증가)만 남는다.
-    public float AttackDamage => attackDamage * UpgradeMultiplier * AttackPowerMultiplier + ResearchBonus + PrimaryStatAttackBonus;
+    // ⚠️ 2026-09-07 정정(PM 지시, 리서치 판정 f924a31) — PrimaryStatAttackBonus(주스탯×800)를
+    // 원래 배율 바깥에 더했었는데, 배율 안으로 옮겼다. 근거: Nbr1/Blo1/Inf1(공격력 % 버프
+    // 계열) 필드가 war3map.j에 0회 등장한다 — JASS 연산 없이 엔진이 직접 처리하는 네이티브
+    // 버프라는 뜻이고, 그 표준 동작은 "현재 공격력 전체(기본+주스탯+업글)에 곱한다"이다.
+    // ⚠️ 이건 원문 대조가 아니라 "데이터로는 검증 불가한 엔진 동작"에 대한 워3 표준 동작
+    // 근거 판정이다(리서치가 스스로 명시한 한계) — 나중에 반증되면 이 자리부터 다시 볼 것.
+    // ResearchBonus는 이번 판정 대상이 아니라 그대로 바깥에 남긴다(별도 판정으로 이미
+    // 그 자리에 있던 것).
+    public float AttackDamage => (attackDamage + PrimaryStatAttackBonus) * UpgradeMultiplier * AttackPowerMultiplier + ResearchBonus;
     public float AttackRange => attackRange;
     public float AttackInterval => attackInterval / AttackSpeedMultiplier;
 
@@ -538,8 +546,15 @@ public class UnitAttacker : MonoBehaviour
 
     // 원작 StrAttackBonus=800 — "주스탯 1점당 공격력 +800"(ORIGINAL_HERO_STATS.md ㉠, 힘
     // 전용이 아니다). UnitData.primaryStat이 그 유닛의 주스탯을 가리킨다. None(기본값,
-    // 213종)이면 0 — AttackDamage에 더해도 회귀 없음. 엔진 원문이 가산(곱셈이 아님)이라
-    // ResearchBonus와 같은 자리에 더한다.
+    // 213종)이면 0 — AttackDamage 어디에 넣어도 회귀 없음.
+    //
+    // ⚠️ 2026-09-07 정정(PM 지시, 리서치 판정 f924a31) — 이 값은 UpgradeMultiplier·
+    // AttackPowerMultiplier(공격력 % 버프 계열) 배율 "안"에 들어간다(attackDamage와 같은
+    // 기본항 취급) — ResearchBonus처럼 배율 바깥에 더하는 게 아니다. 근거: Nbr1/Blo1/Inf1
+    // (그 % 버프들)이 war3map.j 원문에 0회 등장 = JASS 연산이 아니라 엔진 네이티브 버프이고,
+    // 그 표준 동작이 "현재 공격력 전체(기본+주스탯+업글)에 곱한다"이다. 원문 대조가 아니라
+    // "데이터로는 검증 불가한 엔진 동작"에 대한 워3 표준 동작 근거 판정(리서치가 스스로 명시한
+    // 한계) — 실제 사용처는 AttackDamage 프로퍼티(위) 참고.
     const float PrimaryStatAttackBonusPerPoint = 800f;
 
     float PrimaryStatAttackBonus
