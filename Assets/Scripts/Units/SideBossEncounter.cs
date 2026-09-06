@@ -30,6 +30,12 @@ public class SideBossEncounter : MonoBehaviour
     System.Action<float> onFinished;         // §⑧ 정산용 — 최종 사이드보스 체력%(0~100)
     System.Action<float> onStunGaugeChanged; // 영속값 저장 콜백(플레이어별)
 
+    // §⑦ 광폭화 소환 전용(2026-09-06) — SpawnBerserkMob이 쓴다. SideBossManager가
+    // BeginEncounter 때 넘겨준다(이 컴포넌트 자신은 WaveSpawner를 모른다).
+    WaveSpawner waveSpawner;
+    EnemyData berserkMobData;
+    int laneIndex;
+
     public Stage CurrentStage => stage;
     public float CastProgress => castProgress;
     public float StunGauge => stunGauge;
@@ -39,9 +45,12 @@ public class SideBossEncounter : MonoBehaviour
     void OnEnable() => Active.Add(this);
     void OnDisable() => Active.Remove(this);
 
-    /// <summary>스폰 직후 SideBossManager가 부른다.</summary>
+    /// <summary>스폰 직후 SideBossManager가 부른다. waveSpawner/berserkMobData/laneIndex는
+    /// §⑦(광폭화 소환)에 쓴다 — berserkMobData가 null이면(콘텐츠 미배정 라운드) 소환을
+    /// 조용히 건너뛴다(다른 미배정 자리와 같은 관례).</summary>
     public void BeginEncounter(float startingStunGauge, System.Action<float> onFinishedCallback,
-                                System.Action<float> onStunGaugeChangedCallback)
+                                System.Action<float> onStunGaugeChangedCallback,
+                                WaveSpawner waveSpawner, EnemyData berserkMobData, int laneIndex)
     {
         self = GetComponent<EnemyDummy>();
         stunGauge = startingStunGauge;
@@ -49,6 +58,9 @@ public class SideBossEncounter : MonoBehaviour
         castProgress = 0f;
         onFinished = onFinishedCallback;
         onStunGaugeChanged = onStunGaugeChangedCallback;
+        this.waveSpawner = waveSpawner;
+        this.berserkMobData = berserkMobData;
+        this.laneIndex = laneIndex;
 
         // §⑤ "유닛 데이터에 처음부터 박혀 있다" — 트리거가 켜는 게 아니라 스폰 시점부터 무적.
         self.SetTrueInvulnerable(true);
@@ -127,10 +139,28 @@ public class SideBossEncounter : MonoBehaviour
         }
     }
 
-    // §⑦ 광폭화 소환 — 자리만 만든다(EnemyData·버프 배선은 콘텐츠 담당 몫, 지어내지 않는다).
+    // §⑦ 광폭화 소환(2026-09-06, 06번② B06B 거는 자리, PM 지시) — "그 라운드의 잡몹
+    // 1기"를 이 사이드보스와 같은 레인에 스폰하고 버프 B06B(신세계 광폭화)를 영구로
+    // 건다. ⚠️ B06B는 캐스터가 거는 버프가 아니다 — **적이 태어날 때부터 갖는 상태**라
+    // 지속시간·해제 조건을 안 둔다(duration=0, 아무도 안 뗀다 — 이 몬스터가 죽을 때까지
+    // 버프 레지스트리가 그 오브젝트와 함께 사라진다). ⚠️ 스펙 §⑦의 나머지(신앙의
+    // 오라·재생 오라·A11S 피해감수성 ×0.25·ANCIENT/SAPPER 타입·크기 282%)는 안
+    // 채웠다 — 전부 스톡 값이거나(A0VK 광폭화 자체 효과 수치 포함) 우리 스키마에 대응
+    // 축이 없어서(감수성 등) 지어내지 않는다(원문 그대로 §⑦ 표 참고, [미확인] 항목들).
+    // 지금 배선하는 건 B06B 태그 하나뿐이고, 그게 이번 06번의 요청 범위다.
     void SpawnBerserkMob()
     {
-        Debug.Log($"{name}: 시전 완료 — 광폭화 몬스터 소환 자리(구현 예정, §⑦).");
+        if (waveSpawner == null || berserkMobData == null)
+        {
+            Debug.Log($"{name}: 시전 완료 — 광폭화 몬스터 콘텐츠 미배정(berserkMobData 없음), 소환 건너뜀.");
+            return;
+        }
+
+        GameObject instance = waveSpawner.SpawnSideBoss(berserkMobData, laneIndex);
+        if (instance == null) return;
+
+        if (instance.TryGetComponent(out EnemyDummy mob))
+            mob.AddBuff("B06B", 0f);
     }
 
     void Finish()

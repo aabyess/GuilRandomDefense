@@ -127,4 +127,17 @@ public class WaveSpawner : MonoBehaviour
         if (enemyData == null || enemyData.prefab == null || lanePath == null) return null;
         return SpawnEnemyInternal(enemyData, laneIndex, lanePath);
     }
+
+    // §⑦ 광폭화 소환(2026-09-06) — SideBossManager/SideBossEncounter가 "그 라운드의 잡몹
+    // 1기"(원작 udg_Round_UnitType[udg_Level])를 찾을 때 쓴다. RoundManager.GetWaveData와
+    // 같은 조회를 여기 공개로 하나 더 둔다 — RoundManager 쪽은 private이고, 그 라운드의
+    // WaypointPath는 어차피 WaveSpawner만 갖고 있어 여기서 같이 찾는 게 자연스럽다.
+    public WaveData GetWaveData(int roundNumber)
+    {
+        if (waves == null) return null;
+        foreach (WaveData waveData in waves)
+            if (waveData != null && waveData.roundNumber == roundNumber)
+                return waveData;
+        return null;
+    }
 }

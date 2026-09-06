@@ -119,7 +119,24 @@ public class SideBossManager : MonoBehaviour
         encounter.BeginEncounter(
             startingGauge,
             onFinishedCallback: pct => HandleEncounterFinished(playerId, pct),
-            onStunGaugeChangedCallback: value => HandleStunGaugeChanged(playerId, value));
+            onStunGaugeChangedCallback: value => HandleStunGaugeChanged(playerId, value),
+            waveSpawner: waveSpawner,
+            berserkMobData: ResolveBerserkMobData(round),
+            laneIndex: laneIndex);
+    }
+
+    // §⑦ "그 라운드의 잡몹 1기"(원작 udg_Round_UnitType[udg_Level]) — 이 라운드의
+    // WaveData.spawnList 중 대표로 첫 항목의 EnemyData를 쓴다. 원작은 라운드당 몹
+    // 타입이 정확히 하나라는 뜻인데(단일 변수), 우리 WaveData는 레인당 여러 entry를
+    // 섞을 수 있어 완전히 같지는 않다 — 근사다. 스폰 자체가 아직(콘텐츠 미배정) 없는
+    // 라운드거나 entry가 비어있으면 null을 돌려 SpawnBerserkMob이 건너뛴다.
+    EnemyData ResolveBerserkMobData(int round)
+    {
+        WaveData wave = waveSpawner != null ? waveSpawner.GetWaveData(round) : null;
+        if (wave?.spawnList == null) return null;
+        foreach (WaveSpawnEntry entry in wave.spawnList)
+            if (entry?.enemyData != null) return entry.enemyData;
+        return null;
     }
 
     void HandleStunGaugeChanged(int playerId, float value)
