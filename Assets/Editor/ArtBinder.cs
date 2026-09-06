@@ -18,6 +18,10 @@ public static class ArtBinder
     const string GeneratedFolder = "Assets/Prefabs/Generated";
     const string MonsterFolder = "Assets/Art/Monsters";
     const string CharacterFolder = "Assets/Art/Characters";
+    // 스킨 한 종당 폴더 하나 — Assets/Art/Units/<유닛이름>/<유닛이름>.fbx + Textures/ + SOURCE.txt.
+    // Tools/import_skin.sh 가 이 모양으로 넣는다. 파일명이 로스터 에셋 이름과 같아서
+    // ResolveUnitForModel 1번 규칙으로 표 없이 바로 붙는다.
+    const string UnitFolder = "Assets/Art/Units";
     const string MobTemplate = "Assets/Prefabs/MobPrefab.prefab";
     const string ControllerPath = GeneratedFolder + "/Character.controller";
 
@@ -297,11 +301,12 @@ public static class ArtBinder
     {
         List<GameObject> monsters = LoadModels(MonsterFolder);
         List<GameObject> characters = LoadModels(CharacterFolder);
+        characters.AddRange(LoadModels(UnitFolder));
 
         if (monsters.Count == 0 && characters.Count == 0)
         {
             EditorUtility.DisplayDialog(Title,
-                $"몸이 있는 모델을 찾지 못했습니다.\n\n{MonsterFolder} 또는 {CharacterFolder} 에 " +
+                $"몸이 있는 모델을 찾지 못했습니다.\n\n{MonsterFolder}, {CharacterFolder} 또는 {UnitFolder}/<유닛이름>/ 에 " +
                 "FBX·OBJ 파일을 넣고 다시 실행하세요.\n\n" +
                 "Mixamo에서 받으셨다면 하나는 반드시 With Skin이어야 합니다 — " +
                 "Without Skin은 동작만 들어 있어 몸이 없습니다.\n\n" +
@@ -591,9 +596,12 @@ public static class ArtBinder
     }
 
     // 이름에 낱말이 들어간 첫 클립. Mixamo FBX는 클립을 파일 안에 품고 있어서 서브에셋으로 찾는다.
+    // ⚠️ Characters(공용 클립 라이브러리)만 본다. Units/ 아래 게임 추출 스킨은 클립을 수십 개씩
+    // 품고 있어서(idle_a·run·combo_a…) 거기까지 훑으면 "idle"에 어느 유닛 것이 걸리는지가
+    // 실행 순서에 달려 컨트롤러가 돌릴 때마다 달라진다. 공용 컨트롤러는 한 곳에서만 뽑는다.
     static AnimationClip FindClip(string[] words)
     {
-        foreach (string guid in AssetDatabase.FindAssets("t:AnimationClip", new[] { "Assets/Art" }))
+        foreach (string guid in AssetDatabase.FindAssets("t:AnimationClip", new[] { CharacterFolder }))
         {
             string path = AssetDatabase.GUIDToAssetPath(guid);
 
