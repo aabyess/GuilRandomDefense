@@ -186,6 +186,21 @@ public enum SkillEffectKind
     AegrStack,
     AisrStack,
     A11SStack,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-07, PM 지시 — "Self 고정값 공격력 버프" kind 신설) — 원작
+    // ANbr(배틀로어)/ACbh 계열처럼 "일정 시간 동안 공격력을 고정값만큼 올린다"는 능력을
+    // 표현한다. 기존 ApplyBuff는 buffId 등록(게이트용 이름표)만 하고 실제 수치 효과가
+    // 없고, AddAttackPowerBuff는 배율(%) 전용이라 이 값(예: A0JU +40,000)을 못 옮겼다.
+    // 전수 census(2026-09-07) 결과 이 kind가 필요한 자산이 3건 확인돼(원작013_H099/A0JU
+    // — 남겨둠, 더미채널_불멸_신지우_h04F/A05G — 이미 제거됨, 버프게이트_초월_양재모_
+    // AD_B03Z/A09H — 이미 제거됨) "하나뿐이면 과함/여럿이면 만드는 게 맞다"(PM 지시)에
+    // 따라 신설한다. multiplier가 더할 고정값, duration이 지속시간(0=영구, RemoveBuff로만
+    // 해제), buffId가 있으면 버프 레지스트리에도 등록해 requiredBuffId 게이트가 조회할
+    // 수 있게 한다(ApplyBuff와 같은 관례) — target(Self/Allies)에 따라
+    // UnitAttacker.AddFlatAttackPowerBuff를 부른다. 기존 h04F/B03Z 2건은 이 kind가
+    // 없어서 "제거"로 처리됐던 케이스라 지금 다시 채울지는 별도 판단(값이 늘어나는
+    // 변경이라 이번 배치엔 안 건드림) — H099/A0JU만 이번에 채운다.
+    AttackPowerBuffFlat,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,

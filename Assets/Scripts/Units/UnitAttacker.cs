@@ -70,7 +70,11 @@ public class UnitAttacker : MonoBehaviour
     // 근거 판정이다(리서치가 스스로 명시한 한계) — 나중에 반증되면 이 자리부터 다시 볼 것.
     // ResearchBonus는 이번 판정 대상이 아니라 그대로 바깥에 남긴다(별도 판정으로 이미
     // 그 자리에 있던 것).
-    public float AttackDamage => (attackDamage + PrimaryStatAttackBonus) * UpgradeMultiplier * AttackPowerMultiplier + ResearchBonus;
+    // ⚠️ 2026-09-07 추가(PM 지시, SkillEffectKind.AttackPowerBuffFlat 신설) — FlatAttackPowerBonus는
+    // 원작 ANbr(배틀로어) 계열의 임시 "공격력 +N" 버프다. 바로 위 PrimaryStatAttackBonus와
+    // 정확히 같은 근거(Nbr1이 그 필드 자체다 — 네이티브 버프, 현재 공격력 전체에 곱해지는
+    // 배율 안쪽)라 같은 자리에 더한다.
+    public float AttackDamage => (attackDamage + PrimaryStatAttackBonus + FlatAttackPowerBonus) * UpgradeMultiplier * AttackPowerMultiplier + ResearchBonus;
     public float AttackRange => attackRange;
     public float AttackInterval => attackInterval / AttackSpeedMultiplier;
 
@@ -220,9 +224,45 @@ public class UnitAttacker : MonoBehaviour
         // (opener 슬롯이 A09E보다 뒤에 있어 opener가 버프를 걸 때 이미 이번 평타의
         // 판정은 다 끝난 뒤라서, 이번 평타는 애초에 이 버프를 한 번도 못 썼다).
         public bool skipNextTick;
+
+        // ⚠️ 2026-09-07 추가(SkillEffectKind.AttackPowerBuffFlat 전용, PM 지시) — 0이면
+        // 기존 버프와 동일(이름표만, 수치 효과 없음 — 회귀 없음). 0이 아니면 이 버프가
+        // 살아있는 동안 FlatAttackPowerBonus에 이 값만큼 더해진다.
+        public float flatAttackPowerAmount;
     }
 
     readonly List<ActiveBuff> activeBuffs = new List<ActiveBuff>();
+
+    // ⚠️ 2026-09-07 추가(SkillEffectKind.AttackPowerBuffFlat, PM 지시) — 원작 ANbr(배틀로어)
+    // 계열의 임시 "공격력 +N" 총합. AttackDamage가 PrimaryStatAttackBonus와 같은 자리에서
+    // 읽는다(위 주석 참고). PruneExpiredBuffs를 먼저 불러 만료분을 걷어낸다.
+    public float FlatAttackPowerBonus
+    {
+        get
+        {
+            PruneExpiredBuffs();
+            float sum = 0f;
+            foreach (ActiveBuff b in activeBuffs) sum += b.flatAttackPowerAmount;
+            return sum;
+        }
+    }
+
+    // ApplyBuff(AddBuff)와 같은 관례 — hitCharges>0이면 "평타 N번" 만료, 아니면 duration초
+    // 만료(0=영구, RemoveBuff로만 해제). id가 있으면 버프 레지스트리에도 등록해
+    // requiredBuffId 게이트가 조회할 수 있다(비어있어도 magnitude 자체는 정상 적용 —
+    // 게이팅용 이름표는 선택 사항).
+    public void AddFlatAttackPowerBuff(string id, float amount, float duration, int hitCharges)
+    {
+        if (amount == 0f) return;
+        if (hitCharges > 0)
+        {
+            activeBuffs.Add(new ActiveBuff { id = id, expiresAt = -1f, hitsRemaining = hitCharges, skipNextTick = true, flatAttackPowerAmount = amount });
+        }
+        else
+        {
+            activeBuffs.Add(new ActiveBuff { id = id, expiresAt = duration > 0f ? Time.time + duration : -1f, flatAttackPowerAmount = amount });
+        }
+    }
 
     // duration<=0이면 영구 — attackSpeedBuffs/attackPowerBuffs처럼 지속시간을 호출부가
     // 직접 관리(코루틴으로 Add→대기→Remove)하는 경우에 쓴다. id가 비어있으면 조용히
@@ -1167,7 +1207,8 @@ public class UnitAttacker : MonoBehaviour
             fired.Add(effect.cascadeGroup);
         }
 
-        if (effect.kind != SkillEffectKind.ApplyBuff && effect.kind != SkillEffectKind.RemoveBuff) return;
+        if (effect.kind != SkillEffectKind.ApplyBuff && effect.kind != SkillEffectKind.RemoveBuff
+            && effect.kind != SkillEffectKind.AttackPowerBuffFlat) return;
 
         UnitAttacker allyAttacker = ally != null ? ally.GetComponent<UnitAttacker>() : null;
         if (allyAttacker == null) return;
@@ -1178,6 +1219,14 @@ public class UnitAttacker : MonoBehaviour
             // 쓰는 쪽이 직접 떼지 않으면 다음 열림 때까지 남아 무한 누적된다. ApplyBuff의
             // 정확한 반대짝 — duration/buffHitCharges는 안 본다(그냥 지금 뗀다).
             allyAttacker.RemoveBuff(effect.buffId);
+            return;
+        }
+
+        if (effect.kind == SkillEffectKind.AttackPowerBuffFlat)
+        {
+            // 2026-09-07 추가(PM 지시) — ApplyBuff와 같은 자리, multiplier가 더할 고정
+            // 공격력 값이다(buffHitCharges/duration 관례도 ApplyBuff와 동일).
+            allyAttacker.AddFlatAttackPowerBuff(effect.buffId, effect.multiplier, effect.duration, effect.buffHitCharges);
             return;
         }
 
