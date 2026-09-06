@@ -224,12 +224,15 @@ public class GameHud : MonoBehaviour
         SetAnchors(bar, new Vector2(0f, 0f), new Vector2(1f, 0.22f));
 
         // 원작 배치: [미니맵] [조합 카드] [선택 유닛 정보] [유닛 명령(공격/정지/모으기/스킬)]
+        // 미니맵 폭은 0.14 → 0.23으로 넓혔다(사장님 지시 2026-09-07: "미니맵이 가로로 너무 좁다").
+        // 남는 폭은 오른쪽 명령 카드 그리드에서 뺐다 — 그쪽은 3열(90px + 간격 6px = 282px)만
+        // 필요한데 634px을 쓰고 있어서 절반 이상이 빈 공간이었다.
         RectTransform minimapPanel = CreatePanel(bar, "MinimapPanel", new Color(1f, 1f, 1f, 0.08f));
-        SetAnchors(minimapPanel, new Vector2(0.01f, 0.05f), new Vector2(0.15f, 0.95f));
+        SetAnchors(minimapPanel, new Vector2(0.01f, 0.05f), new Vector2(0.24f, 0.95f));
         BuildMinimap(minimapPanel);
 
         RectTransform infoPanel = CreatePanel(bar, "UnitInfoPanel", new Color(1f, 1f, 1f, 0.05f));
-        SetAnchors(infoPanel, new Vector2(0.16f, 0.05f), new Vector2(0.65f, 0.95f));
+        SetAnchors(infoPanel, new Vector2(0.25f, 0.05f), new Vector2(0.81f, 0.95f));
         unitInfoText = CreateLabel(infoPanel, "UnitInfoText", "선택된 유닛 없음");
         unitInfoText.alignment = TextAnchor.UpperLeft;
         unitInfoText.fontSize = 30;
@@ -239,7 +242,9 @@ public class GameHud : MonoBehaviour
         BuildSelectionCards(infoPanel);
 
         RectTransform commandPanel = CreatePanel(bar, "UnitCommandPanel", new Color(1f, 1f, 1f, 0.05f));
-        SetAnchors(commandPanel, new Vector2(0.66f, 0.05f), new Vector2(0.99f, 0.95f));
+        // 0.33 → 0.17. 3열 그리드에 필요한 최소 폭은 282px(90×3 + 6×2)이고
+        // 0.17 × 1920 = 326px이라 여유가 남는다. 열을 늘리면 이 값을 다시 봐야 한다.
+        SetAnchors(commandPanel, new Vector2(0.82f, 0.05f), new Vector2(0.99f, 0.95f));
         BuildUnitCommandGrid(commandPanel);
 
         BuildTopBar();
