@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_전설적인_정준영_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_전설적인_정준영_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 전설적인_정준영.  · Trig_Legend2 → e000(!전설 징베 마나스킬 더미) → A077: 2000000 [추정: 자릿수 판정]
+  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 전설적인_정준영.  · Trig_Legend2 → e000(!전설 징베 마나스킬 더미) → A077: 2000000 [추정: 자릿수 판정] 정정(2026-09-06, CROSS_CHANNEL_DUPLICATE_SWEEP.md/65b7f96): Trig_Legend2 → e000 → A077을 제거했다 — 원작 발동 지점이 하나(Trig_Legend2)라 전설적인_정윤식(원작능력 루트 파일 보유, 이 트리거를 자기 소유로 인용)에 귀속. 79행 DPS 순위 배정이 독립적으로 같은 값을 또 배정한 중복이었다. ⚠️ 다만 정윤식 쪽 effects엔 이 2,000,000 값이 아직 안 보인다 — 정윤식 파일의 기존 "구조적 미해결"(A077·A001, DPS순위+개별대응 혼재) 태그가 이미 이 문제를 지적하고 있다. 값을 정윤식 쪽에 새로 추가하지는 않았다(추측 금지) — 그쪽 태그로 후속 처리한다.
   triggerType: 3
   levels:
   - cooldown: 0
@@ -22,15 +22,4 @@ MonoBehaviour:
     hitCountThreshold: 145
     resetTo: 0
     gaugeKind: 0
-    effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 2000000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
+    effects: []
