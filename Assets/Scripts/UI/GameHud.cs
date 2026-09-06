@@ -83,6 +83,44 @@ public class GameHud : MonoBehaviour
     Button sellButtonComponent;
     UnitData lastSellButtonUnit;
 
+    // 항법(5택1, NAVIGATION_ROUTES_FULL.md) — 유닛 선택과 무관하게 항상 뜨는 진입점이라
+    // (원작 H0C4가 게임 시작부터 즉시 배치, 라운드·퀘스트 게이트 없음) 위 세 버튼과 성격이
+    // 다르다. 자리만 재사용한다 — 05번 버튼이 목록화되며 비게 된 y 0.84~0.89(고대의 배
+    // 옛 단일 버튼 자리)에 넣는다.
+    static readonly NavigationChoice[] NavigationOptionOrder =
+    {
+        NavigationChoice.Hegemon, NavigationChoice.Union, NavigationChoice.Gambler,
+        NavigationChoice.SupportBoost, NavigationChoice.SupportLock,
+    };
+
+    static readonly string[] NavigationOptionNames =
+    {
+        "① 패왕의 길", "② 연합세력", "③ 도박광", "④ 도움소 강화", "⑤ 도움소 잠금",
+    };
+
+    // ⚠️ 확인된 효과만 적는다(지어내지 않는다) — ②는 효과 자체가 아직 안 돈다는 걸
+    // 그대로 적는다. 수치는 실제 자산 값(SupportSkill_해루석/버스터콜.asset,
+    // GamblingOptionData.failureLuckyTokens, ItemGambleState.ReducedPoolActive)과 일치시킨다.
+    static readonly string[] NavigationOptionDescriptions =
+    {
+        "일반 몹 강화 코드 레벨 영구 +2 (배율 0.90배→1.00배)",
+        "🔴 미구현 — e0IX 위습 매핑 대기. 지금 골라도 아무 효과 없음\n(원작: 포인트값 100 초과 유닛 로스터 편입 시 랜덤위습 +1)",
+        "「다른세계 도박」 실패 시 행운의 토큰 +1 (1개→2개)",
+        "해루석 피해 250만→300만·마나 700→600\n버스터콜 재사용 100초→66초·마나 500→333",
+        "아이템 도박 확률 풀이 13종으로 축소",
+    };
+
+    GameObject navigationButtonPanel;
+    Text navigationButtonText;
+    bool navigationButtonTextInitialized;
+    bool lastNavigationHasChosen;
+    NavigationChoice lastNavigationChoice = NavigationChoice.None;
+
+    GameObject navigationModalPanel;
+    readonly Text[] navigationRowTexts = new Text[5];
+    readonly Button[] navigationRowButtons = new Button[5];
+    readonly Text[] navigationRowButtonLabels = new Text[5];
+
     // 조합 카드(레시피) 12칸. 유닛 카드와 같은 패턴 — 미리 만들어두고 내용만 바꾼다.
     const float RecipeRefreshInterval = 0.4f;
     static readonly List<CombineRecipe> EmptyRecipes = new List<CombineRecipe>();
@@ -188,6 +226,7 @@ public class GameHud : MonoBehaviour
         RefreshTraitButton();
         RefreshGambleButtons();
         RefreshSellButton();
+        RefreshNavigationButton();
     }
 
     void OnDestroy()
@@ -253,6 +292,7 @@ public class GameHud : MonoBehaviour
         BuildTraitButton();
         BuildGambleButtons();
         BuildSellButton();
+        BuildNavigationUI();
         // 왼쪽 유닛 목록은 만들지 않는다. 화면 절반을 덮는데, 무엇을 들고 있는지는
         // 아래 명령 카드 그리드가 이미 보여준다. (F1 디버그 HUD에도 같은 목록이 있다.)
 
@@ -644,6 +684,164 @@ public class GameHud : MonoBehaviour
         // 보상 지급 뒤에 소모한다 — Consume이 오브젝트를 파괴하므로 그 전에 owner/보상을
         // 전부 읽어둬야 한다(위에서 이미 다 읽었다).
         identity.Consume();
+    }
+
+    // 항법 지속 버튼 — 유닛 선택과 무관하게 항상 보인다. 안 골랐으면 "항법 선택",
+    // 골랐으면 "항법: <이름>"으로 바뀐다(되돌릴 수 없다는 걸 상시 노출).
+    void BuildNavigationUI()
+    {
+        RectTransform panel = CreatePanel(transform, "NavigationButtonPanel", new Color(1f, 1f, 1f, 0.15f));
+        SetAnchors(panel, new Vector2(0.51f, 0.84f), new Vector2(0.70f, 0.89f));
+
+        Button button = panel.gameObject.AddComponent<Button>();
+        button.onClick.AddListener(OnNavigationButtonClicked);
+
+        navigationButtonText = CreateLabel(panel, "NavigationButtonText", "항법 선택");
+        navigationButtonText.fontSize = 16;
+        navigationButtonText.raycastTarget = false;
+
+        navigationButtonPanel = panel.gameObject;
+
+        BuildNavigationModal();
+    }
+
+    void RefreshNavigationButton()
+    {
+        if (navigationButtonText == null) return;
+
+        NavigationState state = PlayerContext.Local?.NavigationState;
+        bool hasChosen = state != null && state.HasChosen;
+        NavigationChoice choice = state != null ? state.Choice : NavigationChoice.None;
+
+        if (navigationButtonTextInitialized && hasChosen == lastNavigationHasChosen && choice == lastNavigationChoice) return;
+        navigationButtonTextInitialized = true;
+        lastNavigationHasChosen = hasChosen;
+        lastNavigationChoice = choice;
+
+        navigationButtonText.text = hasChosen ? $"항법: {NavigationDisplayName(choice)}" : "항법 선택";
+    }
+
+    static string NavigationDisplayName(NavigationChoice choice)
+    {
+        int index = System.Array.IndexOf(NavigationOptionOrder, choice);
+        return index >= 0 ? NavigationOptionNames[index] : choice.ToString();
+    }
+
+    // 화면 중앙 모달. 5행 + 상단 경고문 + 하단 "닫기"(안 고르고 진행 가능, 강제 아님).
+    // 배경 Image가 raycastTarget 기본 true라 열려 있는 동안 뒤쪽 HUD 클릭을 자연히 막는다.
+    void BuildNavigationModal()
+    {
+        RectTransform modal = CreatePanel(transform, "NavigationModalPanel", new Color(0.05f, 0.05f, 0.05f, 0.92f));
+        SetAnchors(modal, new Vector2(0.20f, 0.12f), new Vector2(0.80f, 0.88f));
+
+        RectTransform titleHolder = NewHolder(modal, "NavigationModalTitleHolder", new Vector2(0f, 0.90f), new Vector2(1f, 1f));
+        Text title = CreateLabel(titleHolder, "NavigationModalTitle",
+            "항법(진행 루트) 선택 — 플레이어당 평생 1회, 되돌릴 수 없습니다");
+        title.fontSize = 20;
+        title.color = new Color(1f, 0.55f, 0.35f);
+        title.raycastTarget = false;
+
+        RectTransform subtitleHolder = NewHolder(modal, "NavigationModalSubtitleHolder", new Vector2(0f, 0.84f), new Vector2(1f, 0.90f));
+        Text subtitle = CreateLabel(subtitleHolder, "NavigationModalSubtitle",
+            "선택하지 않아도 진행할 수 있습니다 — 다섯 효과 모두 비활성 상태로 유지됩니다.");
+        subtitle.fontSize = 15;
+        subtitle.raycastTarget = false;
+
+        for (int i = 0; i < NavigationOptionOrder.Length; i++)
+        {
+            float top = 0.82f - i * 0.1525f;
+            float bottom = top - 0.13f;
+
+            RectTransform rowPanel = CreatePanel(modal, $"NavigationRow{i}", new Color(1f, 1f, 1f, 0.08f));
+            SetAnchors(rowPanel, new Vector2(0.02f, bottom), new Vector2(0.98f, top));
+
+            RectTransform textHolder = NewHolder(rowPanel, "Text", new Vector2(0f, 0f), new Vector2(0.72f, 1f));
+            Text label = CreateLabel(textHolder, "Label", "");
+            label.alignment = TextAnchor.MiddleLeft;
+            label.fontSize = 15;
+            label.horizontalOverflow = HorizontalWrapMode.Wrap;
+            label.raycastTarget = false;
+
+            RectTransform buttonHolder = CreatePanel(rowPanel, "SelectButton", new Color(1f, 1f, 1f, 0.25f));
+            SetAnchors(buttonHolder, new Vector2(0.75f, 0.15f), new Vector2(0.98f, 0.85f));
+            Button rowButton = buttonHolder.gameObject.AddComponent<Button>();
+            int capturedIndex = i;
+            rowButton.onClick.AddListener(() => OnNavigationOptionClicked(capturedIndex));
+            Text buttonLabel = CreateLabel(buttonHolder, "SelectButtonLabel", "선택");
+            buttonLabel.fontSize = 16;
+            buttonLabel.raycastTarget = false;
+
+            navigationRowTexts[i] = label;
+            navigationRowButtons[i] = rowButton;
+            navigationRowButtonLabels[i] = buttonLabel;
+        }
+
+        RectTransform closeHolder = CreatePanel(modal, "NavigationModalClose", new Color(1f, 1f, 1f, 0.2f));
+        SetAnchors(closeHolder, new Vector2(0.40f, 0.005f), new Vector2(0.60f, 0.055f));
+        Button closeButton = closeHolder.gameObject.AddComponent<Button>();
+        closeButton.onClick.AddListener(OnNavigationCloseClicked);
+        Text closeLabel = CreateLabel(closeHolder, "NavigationModalCloseLabel", "닫기");
+        closeLabel.fontSize = 16;
+        closeLabel.raycastTarget = false;
+
+        navigationModalPanel = modal.gameObject;
+        navigationModalPanel.SetActive(false);
+    }
+
+    static RectTransform NewHolder(Transform parent, string name, Vector2 min, Vector2 max)
+    {
+        GameObject obj = new GameObject(name, typeof(RectTransform));
+        obj.transform.SetParent(parent, false);
+        RectTransform rect = obj.GetComponent<RectTransform>();
+        SetAnchors(rect, min, max);
+        return rect;
+    }
+
+    void OnNavigationButtonClicked()
+    {
+        if (navigationModalPanel == null) return;
+
+        bool nowVisible = !navigationModalPanel.activeSelf;
+        navigationModalPanel.SetActive(nowVisible);
+        if (nowVisible) RefreshNavigationModalContent();
+    }
+
+    void OnNavigationCloseClicked()
+    {
+        if (navigationModalPanel != null) navigationModalPanel.SetActive(false);
+    }
+
+    // 되돌릴 수 없다 — NavigationState.TrySelect 자체가 이미 골랐으면 실패한다(HashSet
+    // 한번잠금과 같은 성격). 여기 가드는 UI에서 버튼을 안 보이게/비활성화하는 것뿐이고
+    // 실제 방지는 TrySelect가 한다(코드 경로로도 재선택 불가).
+    void OnNavigationOptionClicked(int index)
+    {
+        NavigationState state = PlayerContext.Local?.NavigationState;
+        if (state == null || state.HasChosen) return;
+
+        state.TrySelect(NavigationOptionOrder[index]);
+        RefreshNavigationModalContent();
+        navigationModalPanel.SetActive(false);
+    }
+
+    void RefreshNavigationModalContent()
+    {
+        NavigationState state = PlayerContext.Local?.NavigationState;
+        bool hasChosen = state != null && state.HasChosen;
+        NavigationChoice choice = state != null ? state.Choice : NavigationChoice.None;
+
+        for (int i = 0; i < NavigationOptionOrder.Length; i++)
+        {
+            bool isChosenRow = hasChosen && choice == NavigationOptionOrder[i];
+
+            string body = $"{NavigationOptionNames[i]}\n{NavigationOptionDescriptions[i]}";
+            if (isChosenRow) body += "\n▶ 선택됨 — 되돌릴 수 없습니다";
+            navigationRowTexts[i].text = body;
+
+            if (navigationRowButtons[i] != null) navigationRowButtons[i].interactable = !hasChosen;
+            if (navigationRowButtonLabels[i] != null)
+                navigationRowButtonLabels[i].text = isChosenRow ? "선택됨" : hasChosen ? "선택 불가" : "선택";
+        }
     }
 
     // 원작 순서(Trig_T_Ability_hero_Conditions) 그대로: 이미 샀는가 → 포인트가 충분한가
