@@ -456,6 +456,50 @@ asmdef가 그걸 이름/GUID로 참조할 수 있다 — 게임 전체 코드의
 하네스가 실제로 컴파일·실행돼 통과하면 — 그때 "숫자 대조(Python)"가 "런타임 실측"으로
 격상된다. 지금은 여전히 Python 재현 수준에 머물러 있다.
 
+## 9-2. 🟢 재시도 성공 — 런타임 실측 15건 중 12건 통과, 3건 실패(진짜 버그 발견) (2026-09-06 밤)
+
+PM 지시대로 asmdef 없이 `Assets/Editor/Tests/`(predefined assembly
+`Assembly-CSharp-Editor`가 `Assembly-CSharp`를 자동 참조하는 경로)에 하네스를
+두고 재시도했다 — **컴파일 통과, 실제로 돌았다.** 첫 시도(`-quit` 포함)는 TestRunner
+자체가 안 붙어 결과가 안 나왔고, `-quit`를 뺀 두 번째 시도에서 실제 실행됐다
+(`UnityEditor.TestTools.TestRunner.CommandLineTest.Executer`가 로그에 찍힘).
+
+```
+전체 15건 — 12 통과 · 3 실패
+
+✅ 통과(런타임 실측으로 격상): 스택3축(Aegr플래토·AIsr) 3건, 대상조건게이트 2건,
+   캐스케이드그룹 2건, 아이템도박풀 4건, 대상조건 회귀 1건.
+
+🔴 실패 3건 — 전부 A0LZ(SelfUpgrade) 축, Python이 못 잡던 것을 잡았다:
+  1) GuaranteedSuccess_IncrementsLevel_AndConsumesResources
+     — 성공률100%인데 TryUpgradeSelf가 false를 반환.
+  2) GuaranteedFailure_DoesNotIncrementLevel_ButStillConsumesResources
+     — 실패했는데 목재가 그대로(1000, 기대 998) — "실패해도 자원 소모"가 실제
+       경로에서 안 되고 있다.
+  3) SelfUpgradeLevel_ReadThroughRealDamagePath_MatchesFormula
+     — 레벨10 실제 피해 배율이 2.0(기대 1.5, level×0.05+1.0 공식 기준).
+```
+
+**1)·2)는 같은 원인일 가능성이 높다** — `wispCurrency`가 아직 미할당(오늘 낮
+`74de277` 보고에서 이미 알려진 상태, 리서치담당 `e0IX` 매핑 확인 대기 중)이라
+`TryUpgradeSelf`가 위습 확인 단계에서 항상 실패해 목재를 되돌리고 반환하는
+"안전 실패" 경로를 매번 타는 것일 수 있다 — 즉 테스트 셋업이 실제 게임 상태
+(위습 없음)를 재현한 것이지 새 버그가 아닐 수도 있다. **3)은 원인 미상 —
+공식 자체나 리플렉션 값 전달에 진짜 문제가 있을 수 있다.** 셋 다 **추측으로
+안 고치고 다음 세션 몫으로 넘긴다.**
+
+**즉시 정리**: `Assets/Editor/Tests/`를 성공 직후 바로 삭제했다. ⚠️ **삭제 중 사고
+하나 — `rm -rf Assets/Editor`를 실행해 기존에 있던 `Assets/Editor/`의 진짜 파일
+9개(`ArtBinder.cs`·`MapGenerator.cs`·`SceneDiagnostics.cs` 등)까지 같이 지웠다.**
+`git status`로 즉시 발견해 `git checkout -- Assets/Editor/`로 전부 복구했다 —
+`compile_check.sh` 재확인 0, 커밋 이력엔 안 남았다(스테이지 전에 잡음). **재발
+방지: `Assets/` 아래 하네스를 지울 땐 하네스가 들어간 하위 폴더(`Assets/Editor/
+Tests/`)만 정확히 지정할 것 — 상위 폴더를 통째로 지우면 원래 있던 파일까지 날아간다.**
+
+**결론**: 런타임 실측 인프라 자체는 이제 확인됐다(asmdef 없이 predefined
+assembly 경로로 가능) — 다음에 이 하네스를 다시 쓸 사람은 `Assets/Editor/Tests/`
+패턴을 그대로 쓰면 된다. `Assets/Scripts/`에 asmdef를 새로 만들 필요는 없었다.
+
 ## 10. RRD순번 다중효과 버그 수정 — 확정 2건 (2026-09-06, PM 지시)
 
 02번(스킬 밀도) ①②확인 작업 중 발견 — "게이트별 배정...능력 N개를 이 SkillData
