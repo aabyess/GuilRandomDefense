@@ -127,6 +127,20 @@ public class UnitAttacker : MonoBehaviour
     {
         public string id;
         public float expiresAt; // Time.time 기준. <=0이면 영구(RemoveBuff로만 없어진다).
+
+        // ⚠️ 2026-09-06 추가(SkillEffect.buffHitCharges 전용, PM 지시) — 0이면 기존처럼
+        // expiresAt(시간)로만 만료된다. 1 이상이면 "평타 N번"으로 만료되는 버프다 —
+        // TickBuffHitCharges가 매 평타 끝에 하나씩 깎는다. expiresAt과 동시에 둘 다
+        // 쓰지 않는다(호출부가 hitCharges>0이면 duration을 무시하고 영구(-1)로 건다,
+        // 아래 AddBuff 오버로드 참고) — 섞으면 어느 쪽이 먼저 지우는지 애매해진다.
+        public int hitsRemaining;
+
+        // 버프를 건 그 평타의 TryCastOnHitSkill이 끝나면서 도는 TickBuffHitCharges 호출
+        // 한 번은 건너뛴다 — 안 그러면 "이번 평타에 막 걸린 버프"가 자기 자신이 아직
+        // 한 번도 안 쓰였는데 벌써 1회를 까먹어서, N회 요청했는데 N-1회만 유지된다
+        // (opener 슬롯이 A09E보다 뒤에 있어 opener가 버프를 걸 때 이미 이번 평타의
+        // 판정은 다 끝난 뒤라서, 이번 평타는 애초에 이 버프를 한 번도 못 썼다).
+        public bool skipNextTick;
     }
 
     readonly List<ActiveBuff> activeBuffs = new List<ActiveBuff>();
@@ -138,6 +152,32 @@ public class UnitAttacker : MonoBehaviour
     {
         if (string.IsNullOrEmpty(id)) return;
         activeBuffs.Add(new ActiveBuff { id = id, expiresAt = duration > 0f ? Time.time + duration : -1f });
+    }
+
+    // hitCharges>0 전용 오버로드(2026-09-06, PM 지시) — "N초"가 아니라 "평타 N번" 뒤에
+    // 만료된다. duration은 이 경로에서 안 쓴다(시간으로는 절대 안 죽는다, 영구(-1)로
+    // 걸고 TickBuffHitCharges가 카운트로 지운다). hitCharges<=0이면 기존 시간 오버로드로
+    // 그대로 위임한다(회귀 없음 — 기존 호출부·기존 자산 전부 이 분기를 안 탄다).
+    public void AddBuff(string id, float duration, int hitCharges)
+    {
+        if (hitCharges <= 0) { AddBuff(id, duration); return; }
+        if (string.IsNullOrEmpty(id)) return;
+        activeBuffs.Add(new ActiveBuff { id = id, expiresAt = -1f, hitsRemaining = hitCharges, skipNextTick = true });
+    }
+
+    // TryCastOnHitSkill이 평타 하나를 다 처리한 뒤 한 번 부른다(게이지 리셋과 같은 자리).
+    // hitsRemaining==0인 항목(시간 기반 버프)은 건너뛴다. skipNextTick이 서있으면(이번
+    // 평타에 막 걸린 버프) 플래그만 내리고 이번 호출에선 안 깎는다 — 위 ActiveBuff.
+    // skipNextTick 주석 참고.
+    public void TickBuffHitCharges()
+    {
+        for (int i = activeBuffs.Count - 1; i >= 0; i--)
+        {
+            if (activeBuffs[i].hitsRemaining <= 0) continue;
+            if (activeBuffs[i].skipNextTick) { activeBuffs[i].skipNextTick = false; continue; }
+            activeBuffs[i].hitsRemaining--;
+            if (activeBuffs[i].hitsRemaining <= 0) activeBuffs.RemoveAt(i);
+        }
     }
 
     // id가 일치하는 인스턴스를 하나만 지운다 — List.Remove(값)와 같은 관례
@@ -579,6 +619,13 @@ public class UnitAttacker : MonoBehaviour
         // 루프가 다 끝난 뒤에 한 번만 리셋한다 — 위 주석 참고.
         if (manaShouldReset) manaGaugeCounter = manaResetValue;
         if (lifeShouldReset) lifeGaugeCounter = lifeResetValue;
+
+        // 평타 하나가 끝났다 — "평타 N회" 버프(SkillEffect.buffHitCharges)를 여기서 한
+        // 번 깎는다. 이번 평타에서 opener가 막 건 버프도 같이 깎이지만 그래도 안전하다 —
+        // hitsRemaining을 N으로 걸었으므로 "이 평타 이후 N번"이 정확히 나온다(이 평타
+        // 자체는 게이트 판정에서 이미 버프가 없는 채로 통과됐다, 위 PassesBuffGate 호출이
+        // 이 Tick보다 먼저 돈다).
+        TickBuffHitCharges();
     }
 
     // primaryTarget: OnHitChance가 이미 골라둔 대상(SingleTarget 효과가 우선 이걸 쓴다).
@@ -663,7 +710,10 @@ public class UnitAttacker : MonoBehaviour
         UnitAttacker allyAttacker = ally != null ? ally.GetComponent<UnitAttacker>() : null;
         if (allyAttacker == null) return;
 
-        allyAttacker.AddBuff(effect.buffId, effect.duration);
+        // buffHitCharges>0이면 "N초"가 아니라 "평타 N번"으로 만료된다(2026-09-06,
+        // SkillEffect.buffHitCharges 주석 참고) — 이 대상(ally, Self 포함) 자신의
+        // TryCastOnHitSkill이 그 카운트다운을 돈다.
+        allyAttacker.AddBuff(effect.buffId, effect.duration, effect.buffHitCharges);
     }
 
     // recentAttackDamage: SkillEffectBasis.ReceivedDamage 전용 — 이 효과를 일으킨 평타의

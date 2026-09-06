@@ -255,6 +255,18 @@ public class SkillEffect
     // 것 — "정확히 0,0"만 안전장치에 걸린다.
     public float randMin = 1f;
     public float randMax = 1f;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-06, PM 지시) — SkillEffectKind.ApplyBuff 전용. 원작
+    // 제트 A09E 조사에서 나온 사례: 버프 B00M의 "0.6초 창"은 시간이 아니라 **타수**였다
+    // (원작 실효 공격간격이 연구로 크게 빨라져 0.6초 안에 약 3대가 들어간다 — 우리는
+    // 그 공격속도 스케일을 안 쓰므로 "0.6초"를 시간 그대로 옮기면 뜻이 사라진다,
+    // BALANCE_SIMULATION §22-4). **0이면(기본값) 기존처럼 `duration`초 뒤 시간 만료**
+    // (회귀 없음) — 1 이상이면 시간이 아니라 **이 버프를 가진 유닛이 평타를 N번 더
+    // 날릴 때까지** 유지되고 그 뒤 만료된다(`duration`은 이 경우 무시). 카운트다운은
+    // `UnitAttacker.TryCastOnHitSkill`이 매 평타 끝에 한 번씩 깎는다(게이지 리셋과
+    // 같은 자리) — 버프를 새로 거는 그 평타 자체는 아직 안 깎인 채로 게이트를 통과하지
+    // 못한다(연다-쓴다가 같은 타에 안 겹친다, h04G와 같은 이유).
+    public int buffHitCharges;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
