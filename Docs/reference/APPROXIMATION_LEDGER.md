@@ -1600,3 +1600,68 @@ Intelligence`(§22 참고, `AddPurchasedStat`으로 이미 쌓임)와 `heroXp`/
 
 **검증**: `check_required_fields.py`/`check_assignment_invariants.py` 둘 다
 exit 0. 자산은 description만 추가(수치·구조 변경 없음).
+
+## 25. 고대의 배 도박능력 목록화 + 행운토큰 모델링 차이 (2026-09-06/07, PM 지시)
+
+### ① `isAncientShip` 하드코딩 페어 → `UnitGambleOption` 목록
+
+h05Y가 도박 능력을 하나가 아니라 **셋**(`A023` 해적선도박·`A0OD` 레일리
+도박·`A0OC` 다른세계유닛도박, `PLAYER7_NEUTRAL_POOL_CENSUS.md`) 가진다는
+게 밝혀져 `UnitData.isAncientShip(bool)+ancientShipResultUnit(단일)` 페어로는
+표현이 안 됐다. `UnitGambleOption{abilityId, woodCost, successChance,
+resultUnit, resultPool}` 목록으로 교체했다 — "나중에 늘 것 같아서"가 아니라
+"지금 이미 셋이라서"(`RewardDistributor.startingSpecialUnit` 때와 반대
+결론). 기존 값(목재4·40%·해적선)은 손실 없이 `A023` 항목으로 이관, `A0OD`
+(목재7·25%→`h05X`)·`A0OC`(목재7·27%→`resultPool`, 미확인) 신규 추가.
+`Avul`(기능 없는 스톡 태그)은 안 만듦.
+
+🔴 **1차 구현에서 놓친 것 — "결과 없이 조용히 성공"**: `A0OC`의
+`resultPool`이 비어 있는 채로 버튼을 띄우면, 플레이어가 목재 7을 쓰고
+27%를 뽑았는데 아무 유닛도 안 나와 **버그로 오인한다**. PM 지적으로
+`GameHud.RefreshGambleButtons`에 `hasResult` 가드를 추가해 결과가 없는
+항목은 버튼 자체를 숨기도록 고쳤다(`resultPool`이 채워지면 자동으로 다시
+뜬다) — "조용히 아무 일도 안 남"을 피하는 게 오늘 밤 반복된 원칙이다.
+
+### ② 행운토큰 — 원작은 유닛, 우리는 화폐 (모델링 차이, 기능은 동등)
+
+원작 도박 실패 보상 `h06G`(행운토큰)는 **유닛 오브젝트**다
+(`CreateNUnitsAtLoc(1+Dobak_Tech_int, 'h06G')`). 우리는 `ResourceType.
+LuckyToken`(화폐)로 모델링했다 — `GamblingShop.cs:438`이 실패 시
+`ResourceWallet.Add`로 지급하고, `RecipeResourceCost{type:2}`로 조합
+비용에 이미 10개 레시피(다른세계 9 + 제한_김민규)가 쓴다.
+
+처음에 "원작 조합재료 153건 중 특수유닛이 16건인데 우리는 0건"으로 잡혔던
+수치가 이 구분으로 정정됐다: **16건 중 11건이 `h06G`고, 그건 화폐로
+이미 커버된다(11 vs 10, 커버리지 거의 동일)** — 진짜 결측은 해적선 2·
+고대의배 2·레일리 1 = **5건**뿐이다(셋 다 우리 로스터/특수유닛에 이미
+대응 유닛이 있음, `h060`=`Assets/Data/Units/Roster/해적선.asset`).
+
+⚠️ **기능은 동등하지만 구조가 다르다** — 유닛이면 맵에 실체가 생기고,
+화폐면 숫자만 는다. **이게 갈리는 자리**: 히든조합 판정이 원작처럼 맵
+전체 스캔이면 "토큰 유닛이 맵에 있는가"로 조건이 걸리는데, 우리는 화폐라
+그 축 자체가 없다. §26 참고 — **지금은 우리 히든조합이 맵 스캔을 안 해서
+문제가 안 되지만, 나중에 맵 스캔 방식으로 옮기면 여기서 갈린다.**
+
+**검증**: `Tools/compile_check.sh` exit 0. `Unit_고대의배_h05Y.asset` 값
+직접 대조(목재4·40%·해적선 guid 손실 없음).
+
+## 26. `ChatUnlockManager`/`HiddenCombineManager` 전제 검사 — 원작과 다른 방식 (2026-09-07, PM 지시로 확인만)
+
+```
+원작   GetPlayableMapRect() 전체 스캔 + 소유자 필터 없음 = "세계에 존재하는가"
+우리   PlayerContext(그 플레이어) 개인 상태만 조회         = "그 플레이어가 들고 있는가"
+```
+
+`HiddenCombineManager.TryUnlock`은 `inventory.Members`(그 플레이어 소유
+유닛만)에서 재료를 찾고, `ChatUnlockManager.TryUnlock`은 `PersistentSave`
+(클리어 횟수)·`ResourceWallet`(목재)만 본다 — 둘 다 맵 전체 스캔이 없다.
+
+⚠️ **지금은 문제 없지만 원작과 다른 방식으로 동작한다** — 중립 풀(원작
+Player(7) 619개체)이 없어도 안 막히는 건 우리 방식 덕이지만, 그 대가로
+**재료를 플레이어에게 직접 쥐여줘야** 조합이 성립한다(맵에 놓아두는 것만
+으로는 안 통과). **PM 지시로 지금은 고치지 않는다** — 원작 방식(맵 전체
+스캔 + 중립 풀 619개체 재현)으로 옮길지는 사장님 판단 대상이다.
+
+**의도된 차이인지 확인 필요** — 사장님이 "재료는 맵에 놓는 게 아니라 손에
+쥐고 있어야 한다"는 지금 방식을 그대로 확정할지, 원작처럼 맵 배치만으로
+충분하게 바꿀지 결정이 필요하다.
