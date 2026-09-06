@@ -10,6 +10,18 @@ public class UnitIdentity : MonoBehaviour
 
     UnitInventory inventory;
 
+    // 로빈(H098) 특성강화 전용(2026-09-07) — 원작 A0FL(로빈의 손날개, 영구 블링크·사거리
+    // 1500·쿨다운 10초)+A0ZP(같은 이름, 순수 시각효과 부착물)를 부여받았다는 표시.
+    // UnitTraitData.targetsOtherUnit이 대상으로 지정된 이 인스턴스에 GameHud.
+    // RefreshTraitTargeting이 이 값을 세운다 — UnitData(종류)가 아니라 인스턴스별
+    // 상태다(같은 종류의 다른 유닛은 안 받는다).
+    //
+    // ⚠️ 지금은 표시만 한다 — A0FL의 실제 블링크 효과는 아직 안 켠다. 우리 엔진에
+    // "플레이어가 지점을 클릭해 순간이동"하는 로직 자체가 없다(UnitData.MovementAbility.
+    // Teleport가 이미 "필드만, 로직은 나중에 구현"으로 못박혀 있다 — 새 기반시설이 필요한
+    // 사안이라 이번 작업 범위 밖). 그 로직이 생기면 이 값을 읽어 켜면 된다.
+    public bool hasRobinWingBlessing;
+
     // 필드에 나와 있는 아군 유닛 등록부(EnemyDummy.Active와 같은 관례) — 유닛 스킬의
     // Allies/Self 대상, 04번 보스 회복 오라, 이감처럼 "대상을 어떻게 모으나"가 필요한
     // 곳들이 공통으로 쓴다. UnitSpawner.Spawn이 유일한 플레이어 유닛 생성 경로라(주석 참고)
