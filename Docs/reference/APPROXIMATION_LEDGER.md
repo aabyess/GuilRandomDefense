@@ -1283,3 +1283,32 @@ manaCost/cooldownSeconds/ComputeDamage 호출부(13곳)를 `EffectiveManaCost`/
 `check_assignment_invariants.py` 전부 exit 0. 전부 Python/코드 리뷰
 수준 확인이지 런타임 실측은 아니다(§9 공통 구멍 그대로 적용) — 특히
 ①의 A11S 스폰 시점 가산은 실제 웨이브 스폰을 돌려봐야 최종 확인된다.
+
+## 21. 🔴 이중 계상 위험 — Hidden_Aokiji `damageLevelFixedBonus`가 두 자리에 있다 (2026-09-06, PM 지시)
+
+같은 원작 트리거(Hidden_Aokiji, +2)가 **두 시스템에 각자 필드로 들어 있다**:
+
+```
+HiddenCombineData.damageLevelFixedBonus   원작 충실 자리. 재료가 unit==null(사장님
+                                          유닛배정 대기)이라 지금 조합 자체가 항상
+                                          실패 — 안 돈다.
+CombineRecipe.damageLevelFixedBonus       지금 실제로 도는 경로. 히든_성탄.asset
+                                          (commandId="아오키지조합 / aokiji")에
+                                          2가 들어가 있다.
+```
+
+**둘 다 「죽은 시스템」이 아니라 「원작 충실 자리(비어서 대기)」와 「우리 조합식(지금
+실행)」로 같은 값을 각자 들고 있는 것** — HiddenCombineData가 죽었다고 판정하면 안
+된다는 게 오늘 밤 확인됐다(파일 자체 주석에 "사장님이 유닛별 배정을 나중에 직접
+준다"고 이미 적혀 있었다, `DisableTrigger` 오판정과 같은 자리).
+
+**되돌릴 조건이 왔을 때가 위험하다**: 사장님이 아오키지(Hidden_Aokiji) 유닛배정을
+주면 `HiddenCombineData` 쪽 에셋이 생기고 `HiddenCombineManager`가 그때부터 실제로
+돈다 — 그 순간 `CombineRecipe`(히든_성탄.asset) 경로도 여전히 살아있으면 **같은
+조합 한 번에 +2가 두 번(총 +4) 누적된다.**
+
+**처방(그때 할 일, 지금 하지 않음)**: 아오키지 유닛배정이 들어오는 시점에 다음 중
+하나를 반드시 할 것 — (a) `히든_성탄.asset`의 `damageLevelFixedBonus`를 0으로
+내리거나, (b) `CombineRecipe`(commandId="아오키지조합 / aokiji") 자체를 비활성화
+하거나 삭제해서 이 경로를 완전히 끄기. **둘 다 켜둔 채로 넘어가면 조용히 두 배가
+된다** — 오늘 밤 계속 쫓아다닌 바로 그 형태다.
