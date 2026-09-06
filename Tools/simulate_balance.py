@@ -588,15 +588,24 @@ def load_skill_assets():
         reset_to = int(reset_m.group(1)) if reset_m else 0
 
         # §22-4(2026-09-06, 06번③) — 버프 게이트(requiredBuffId/forbiddenBuffId). 시뮬은
-        # 버프 타이밍(누가 언제 거는지)을 전혀 모델하지 않으므로, 이 필드가 하나라도 채워진
-        # 스킬은 발동률을 계산하지 않고 0으로 둔다(과소평가보다 안전 — requiredBuffId가
-        # 걸린 첫 사례인 A09E/h04G는 실제로 이 유닛의 공격속도(Δ=2.25초)가 버프
-        # 지속시간(0.6초)보다 훨씬 길어 매 평타 직전에 버프가 이미 만료돼 있다 — 즉 실제
-        # 값도 0이다, 근사가 아니라 이 경우엔 정확하다). 값이 비어 있으면(기존 102개
-        # 게이트 전부) 회귀 없음.
+        # 버프 타이밍(누가 언제 거는지)을 전혀 모델하지 않는다 — **임시 조치**로 방향에
+        # 따라 반대로 근사한다(06번 완료 후 재검토 필요, PM 지시 2026-09-06):
+        #   requiredBuffId(보유해야 발동) → 발동률 0 (보수적 — 대부분의 시간엔 그 버프가
+        #     없다고 가정). ⚠️ 첫 실측(A09E/h04G, §22-5)이 벌써 이 근사가 크게 틀릴 수
+        #     있음을 보여줬다 — 실제 발동률은 0이 아니라 평타당 약 0.271이다(buffHitCharges
+        #     타수형 버프 + 재중첩 가능한 상태기계라 몬테카를로로 실측). "보수적"이
+        #     "안전하게 낮게"를 보장하지 않는다 — 이 unit 하나만도 3.5배 과소평가였다.
+        #   forbiddenBuffId(없어야 발동) → **1.0으로 근사**(= 이 게이트를 무시하고 다른
+        #     조건만 적용) — 대부분의 시간엔 그 버프가 없어서 통과하므로, 0으로 두면
+        #     requiredBuffId와 반대로 가장 크게 틀린다(PM 지적, 2026-09-06). 즉
+        #     forbiddenBuffId 단독으로는 rate를 깎지 않는다.
+        # §22-7(06번①) — requiredTargetBuffId/forbiddenTargetBuffId(대상의 버프)도 같은
+        # 방향 규칙: required는 0, forbidden은 무시. 지금은 둘 다 전 자산 공란이라
+        # 회귀 없다.
         req_buff_m = re.search(r"requiredBuffId:\s*(\S+)?", level0)
-        forbid_buff_m = re.search(r"forbiddenBuffId:\s*(\S+)?", level0)
-        has_buff_gate = bool((req_buff_m and req_buff_m.group(1)) or (forbid_buff_m and forbid_buff_m.group(1)))
+        req_target_buff_m = re.search(r"requiredTargetBuffId:\s*(\S+)?", level0)
+        has_required_buff_gate = bool((req_buff_m and req_buff_m.group(1))
+                                       or (req_target_buff_m and req_target_buff_m.group(1)))
 
         effects = []
         for em in re.finditer(
@@ -617,7 +626,7 @@ def load_skill_assets():
             "cooldown": cooldown,
             "hit_count_threshold": hit_count_threshold,
             "reset_to": reset_to,
-            "has_buff_gate": has_buff_gate,
+            "has_required_buff_gate": has_required_buff_gate,
             "effects": effects,
         }
     return skills
@@ -729,9 +738,10 @@ def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
     if skill is None or skill["trigger_type_idx"] not in (ONHIT_CHANCE_IDX, ONHIT_COUNT_IDX):
         return zero, None
 
-    if skill["has_buff_gate"]:
-        # §22-4 — 버프 게이트는 못 모델한다(위 load_skill_assets 주석 참고). h04G(A09E)
-        # 유일한 현재 사례는 실제로도 0이 맞다(공격간격이 버프 지속시간보다 길다).
+    if skill["has_required_buff_gate"]:
+        # §22-4 — **임시 조치**(위 load_skill_assets 주석 참고, 06번 완료 후 재검토
+        # 필요) — requiredBuffId만 rate=0으로 근사한다. forbiddenBuffId는 반대 방향
+        # (대부분 통과)이라 별도 처리 없이 그대로 둔다(rate를 안 깎는다).
         rate = 0.0
     elif skill["trigger_type_idx"] == ONHIT_CHANCE_IDX:
         rate = skill_proc_rate(skill["trigger_chance"], attack_speed, skill["cooldown"])
