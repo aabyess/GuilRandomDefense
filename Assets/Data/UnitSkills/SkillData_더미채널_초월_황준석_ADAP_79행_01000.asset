@@ -16,7 +16,7 @@ MonoBehaviour:
   description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.1000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.
   · e0MW(@초월 키드 더미3) A10Z 0장풍 키드초월 리펠1 [시체폭발/죽음의사슬 피해]: 300000 (원작 키드·초월함) 진입게이트: Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND NOT(UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true) | Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true
   · e0MY(@초월 키드 더미2) A17P 0장풍 키드초월 댐드펑크 [시체폭발/죽음의사슬 피해]: 600000 (원작 키드·초월함) 진입게이트: Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND NOT(UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true) | Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true
-  제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e0NM(@초월 키드 더미01) A10Z 0장풍 키드초월 리펠1: 300000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지) ⚠️ 2026-09-06 정정(PM 지시, 리서치담당 원문 확인 0c3ff5f, 뿌리 ㊸) — e0MY(60만, item==true 분기)를 삭제했다. 원작 JASS 원문: `gg_trg_Kid_Skill_3_item`이 InitTrig 직후 DisableTrigger로 꺼진 채 다시 EnableTrigger되는 곳이 8,156개 함수 어디에도 없다 — 즉 아이템을 갖고 있어도 이 분기는 원작에서 절대 발동하지 않는다. "원작 CSV에 값이 있다"와 "원작에서 그 값이 실제로 나간다"는 다르다 — 이 60만은 후자가 아니다. 조건을 붙이는 게 아니라 삭제가 맞다(조건을 붙이면 원작에 없는 분기를 우리가 되살리는 꼴). e0MW(30만, item==false 분기)만 남긴다 — triggerChance=0.1(=GetRandomInt(1,10)==2)은 원작 그대로 불변, 이 효과엔 아이템 조건 자체가 없다(원작도 무조건 30만).
+  제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e0NM(@초월 키드 더미01) A10Z 0장풍 키드초월 리펠1: 300000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지) ⚠️ 2026-09-06 정정(PM 지시, 리서치담당 원문 확인 0c3ff5f, 뿌리 ㊸, 커밋 9f3cdcc) — 한때 e0MY(60만, item==true 분기)를 "DisableTrigger로 꺼진 채 다시 안 켜지는 죽은 코드"로 보고 삭제했었다. ⚠️ 2026-09-06 재정정(리서치담당 3667276로 철회) — 틀렸다. WC3 네이티브에서 DisableTrigger는 "이 트리거가 자기 등록 이벤트에 자동반응할지"만 끄는 것이고, ConditionalTriggerExecute/TriggerExecute로 직접 호출하면 비활성 상태와 무관하게 그냥 돈다 — InitTrig에서 DisableTrigger를 거는 건 이 맵의 표준 보일러플레이트지 죽음의 신호가 아니었다. **e0MY(60만)는 살아있다** — 복원했다. 지금 30만/60만 둘 다 남기되(둘 다 chance:1, 항상 같이 발동), ⚠️ **배타인데 우리 엔진으로 표현 못 함**으로 꼬리표를 단다: 원작은 캐스터의 아이템(I010) 보유 여부로 300,000 또는 600,000 중 **하나만** 나가는데, 우리는 아이템 시스템이 없어(ItemData는 껍데기, 인스턴스 0개) 조건을 못 붙인다 — 지금은 둘 다 나가 원작보다 과대다: 아이템 보유 시 +300,000(30만→90만이 아니라 원래 60만만 나가야 할 자리에 30만이 더 붙음), 미보유 시 +600,000(30만만 나가야 할 자리에 60만이 더 붙음). 아이템 축이 생기면 캐스터 조건(I010 보유)으로 배선할 것 — 대상 조건(§12 SkillEffectTargetCondition)이 아니라 새 캐스터 조건 축이 필요하다(§12 ⑤ 논의 참고).
   triggerType: 0
   levels:
   - cooldown: 0
@@ -32,6 +32,17 @@ MonoBehaviour:
       damageType: 1
       attackType: 4
       multiplier: 300000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 4
+      multiplier: 600000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
