@@ -1705,3 +1705,32 @@ Player(7) 619개체)이 없어도 안 막히는 건 우리 방식 덕이지만, 
 
 **검증**: `check_required_fields.py`/`check_assignment_invariants.py` 둘 다
 exit 0. `김민준`(`Tasigi_03`, 타겟팅 분기 복사)은 이 건과 무관해 안 건드림.
+
+## 28. `A0OC`(다른세계유닛 도박) `resultPool` 배선 — 등급 대응, 근사 없음 (2026-09-07, PM 지시)
+
+리서치담당이 `war3map.j`의 `gg_rct_Model_Pack_R1Unit` 리전 좌표로 원작
+`Modelpack_R_unit` 결과 14종을 확정했다(`d740638`) — 나루토 선인모드·
+메구밍·센토 이스즈 등 전부 "랜덤전용" 등급 크로스오버 캐릭터고, 이미
+알려진 `Player(7)` 중립 풀의 부분집합이었다(별개 풀 아님).
+
+**이름 매핑은 시도하지 않았다**([[name-mapping-impossible]] 원칙) — 대신
+등급으로 대응시켰다: `Unit_고대의배_h05Y.asset`의 `A0OC.resultPool`을
+우리 로스터의 `UnitGrade.RandomUnit`(랜덤유닛) 등급 14종 전체로 채웠다.
+
+```
+원작   특정 14종에서 균등 추첨(Modelpack_R_unit 리전)
+우리   랜덤유닛 등급 전체(14종)에서 균등 추첨
+영향   N=14로 원작과 정확히 같다 — 이번엔 드물게 근사가 필요 없었다
+       (다른 등급 카운트였다면 개별 유닛 확률이 원작과 달라졌을 것)
+```
+
+목록: 가사이 유노·김건모·리바이 아커만·모몬가·미도리야 이즈쿠·손오공·
+야사카 카나코·이민형·이즈미 신이치·이타도리 유지·주호페이크·카마도
+탄지로·한마 바키·호시노 아이(전부 `Assets/Data/Units/Roster/랜덤_*.asset`).
+
+`GameHud.hasResult` 가드 덕에 풀이 채워지자 세 번째 도박 버튼(A0OC)이
+자동으로 뜬다 — 버튼 쪽 코드는 안 건드렸다.
+
+**검증**: `Tools/compile_check.sh` exit 0. 14종 카운트는 `grade: 10`
+전수(`Assets/Data/Units/**/*.asset`)로 직접 세어 확인, Roster 폴더 밖엔
+없음.
