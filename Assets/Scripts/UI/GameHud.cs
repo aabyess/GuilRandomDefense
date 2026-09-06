@@ -468,13 +468,20 @@ public class GameHud : MonoBehaviour
             if (gambleButtonPanels[i] == null) continue;
             if (i >= count || wallet == null) { HideGambleButton(i); continue; }
 
+            UnitGambleOption option = data.gambleOptions[i];
+
+            // 결과가 없는 항목(A0OC처럼 resultPool이 아직 안 채워진 경우)은 버튼을 안 띄운다
+            // — 목재를 쓰고 성공해도 "조용히 아무 일도 안 남"이면 플레이어가 버그로 본다
+            // (PM 지시 2026-09-07). 채워지면 자동으로 다시 뜬다.
+            bool hasResult = option.resultUnit != null || (option.resultPool != null && option.resultPool.Count > 0);
+            if (!hasResult) { HideGambleButton(i); continue; }
+
             gambleButtonPanels[i].SetActive(true);
 
             int wood = wallet.Get(ResourceType.Wood);
             if (wood == lastGambleButtonWood[i]) continue;
             lastGambleButtonWood[i] = wood;
 
-            UnitGambleOption option = data.gambleOptions[i];
             gambleButtonTexts[i].text = $"{data.unitName} 시전({option.abilityId})\n(목재 {option.woodCost} 소모, 보유 {wood}, 성공 {option.successChance:P0})";
         }
     }
