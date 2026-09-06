@@ -15,10 +15,20 @@ MonoBehaviour:
   skillName: A0MK !창검술-x드레이크1
   description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 특별함 X-드레이크 초신성 - 특별함(h01K)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 uid 그룹 총점(능력 기대값 합), 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. 능력마다 발동확률이 다르면 가장 높은 값을 대표로 썼다(SkillLevel 하나엔 triggerChance 하나뿐이라서 — 과소 계상보다 안전한 근사).
   · A0MK !창검술-x드레이크1: 발동0.1 배수2.0 추가2200.0
-  정정(2026-09-06, CRITERION3_TARGET_LIST_2026-09-06.md/bbb1ff0): 이 능력(A0MK)은 원작에서 같은 스톡 값을 최상호와 공유하는 자리다 — 대표(DPS 800.0 > 672.7)를 최상호로 남기고 이쪽은 회수했다(기준3, 사장님 확정).
+  정정(2026-09-06, CRITERION3_TARGET_LIST_2026-09-06.md/bbb1ff0): 이 능력(A0MK)은 원작에서 같은 스톡 값을 최상호와 공유하는 자리다 — 대표(DPS 800.0 > 672.7)를 최상호로 남기고 이쪽은 회수했다(기준3, 사장님 확정). 원상복구(2026-09-07, PM 지시, SKILL_DENSITY_COMPARE_2026-09-07.md §9): `a59e113`의 특별함 5건 삭감 목표치(원작 특별함 11명·18능력, 등급평균 0.545)가 `LOW_GRADE_ABILITY_ACTIVATION_2026-09-07.md`(0345573)에서 오염(중복 집계 가능성)으로 확인됐다 — 하한 재계상은 20+명·21능력이다. 목표치가 무효가 돼 이 회수도 근거를 잃었다 — effects를 되돌린다. 정확한 삭감 여부·수량은 리서치 완전 재계상 후 다시 판단한다(지금은 원상복구만, 추가 삭감 없음).
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
     range: 0
-    effects: []
+    effects:
+    - kind: 0
+      basis: 3
+      target: 3
+      damageType: 1
+      attackType: 1
+      multiplier: 2.0
+      bonus: 2200.0
+      chance: 1
+      hitCount: 1
+      duration: 0
