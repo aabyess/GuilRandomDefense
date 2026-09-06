@@ -110,6 +110,17 @@ public enum SkillEffectBasis
     // 그건 축이 없는 게 아니라 **우리 유닛에 영웅 스탯이라는 개념 자체가 없어서**다.
     // 축 하나로 안 끝나고 시스템을 만들어야 한다(사장님 판단 대기).
     CasterSkillLevel,
+
+    // ⚠️ 맨 뒤에 추가 — 직렬화 순서를 지킨다. (2026-09-06, 사장님 결정 01번)
+    // 위 CasterSkillLevel 주석에서 "시스템을 만들어야 한다"고 미뤄둔 그 축 — 원작
+    // GetHeroStatBJ(영웅, STR/AGI/INT, true) x multiplier + bonus 대응. 🔴 위험 4건
+    // (Zoro_enfor_3dragon 등, OUT_OF_AXIS_CLASSIFY.md — 고정항 대비 STR比가 28~71%라
+    // bonus 흡수가 화력을 반토막 냈을 대상들)이 이 축으로 담긴다.
+    // UnitAttacker.CurrentStrength/Agility/Intelligence가 읽는 UnitData.baseStrength 등이
+    // 전부 기본값 0f인 지금은 이 값을 채운 스킬도 항상 0을 받는다 — 회귀 없음.
+    CasterStrength,
+    CasterAgility,
+    CasterIntelligence,
 }
 
 // 무엇을 하는 효과인가.

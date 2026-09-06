@@ -328,4 +328,19 @@ public class UnitData : ScriptableObject
     // 모든 곳을 새로 확인해야 해서 위험 대비 이득이 안 맞는다는 PM 판단. 기본값 false — 기존
     // 239종은 전부 무영향이다.
     public bool isSystemUnit;
+
+    // 01번 영웅 스탯(STR/AGI/INT) — 사장님 결정 2026-09-06. 초월함 스킬 4건("영웅 능력치 ×
+    // 계수", 2,000×스탯~21,000×스탯)이 이 축이 없어서 비례항을 통째로 버리고 상수만
+    // 옮겨져 있었다(Docs/reference/TRANSCENDENT_DAMAGE_INVESTIGATION_2026-09-06.md,
+    // OUT_OF_AXIS_CLASSIFY.md). 원작은 도움소에서 사고(ADD) 시작값을 올리고, 적을 죽일
+    // 때마다 레벨이 올라 레벨당 STR+0.85(타시기는 +0.42 — 유닛마다 달라 필드로 둔다)씩
+    // 성장한다 — 정확한 시작값·성장치는 리서치담당 조사 대기 [미확인], 전부 기본값
+    // 0f이라 지금 채워도 SkillEffectBasis.CasterStrength/Agility/Intelligence 배율에
+    // 아무 영향이 없다(회귀 없음). 도움소 구매 경로는 아직 안 만든다(4번, 가격표 대기).
+    public float baseStrength;
+    public float baseAgility;
+    public float baseIntelligence;
+    public float strengthPerLevel;
+    public float agilityPerLevel;
+    public float intelligencePerLevel;
 }

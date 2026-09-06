@@ -233,8 +233,7 @@ public class UnitAttacker : MonoBehaviour
         // isAbilityDamage: false — Bash도 평타와 같은 DamageType/AttackType을 써서 방어력·
         // 상성표를 평타와 똑같이 통과시키는 게 설계 의도다(위 메서드 주석). UNIVERSAL 무시도
         // 평타와 동일하게 적용 안 한다.
-        target.TakeDamage(bonus, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
-                          armorIgnoreRatio: 0f, isAbilityDamage: false);
+        DealDamageToEnemy(target, bonus, DamageTypeOf, AttackTypeOf, armorIgnoreRatio: 0f, isAbilityDamage: false);
 
         if (unitData.critStunDuration > 0f) StartCoroutine(CritStunRoutine(target, unitData.critStunDuration));
     }
@@ -289,6 +288,55 @@ public class UnitAttacker : MonoBehaviour
     bool manaGaugeInitialized;
     int lifeGaugeCounter;
     bool lifeGaugeInitialized;
+
+    // 01번 영웅 스탯(STR/AGI/INT) — 사장님 결정 2026-09-06. 원작 "적을 죽일 때마다
+    // AddHeroXP(영웅, 1)"에 대응 — DealDamageToEnemy가 자기 타격으로 대상의 숨통을 끊을
+    // 때만 올린다(다른 유닛이 이미 죽여둔 대상을 다시 때려도 안 오른다).
+    // ⚠️ 정확한 원작 XP 곡선(레벨업까지 킬 몇 회가 필요한가)은 아직 [미확인]이다 — 지금은
+    // "킬 1회 = 레벨 1"을 그릇으로 쓴다(리서치담당 곡선이 오면 GainKillExperience만 고치면
+    // 된다, CurrentStrength 등을 읽는 쪽은 안 건드려도 된다).
+    int heroLevel;
+
+    void GainKillExperience() => heroLevel++;
+
+    public float CurrentStrength
+    {
+        get
+        {
+            UnitData unitData = identity != null ? identity.Data : null;
+            return unitData != null ? unitData.baseStrength + unitData.strengthPerLevel * heroLevel : 0f;
+        }
+    }
+
+    public float CurrentAgility
+    {
+        get
+        {
+            UnitData unitData = identity != null ? identity.Data : null;
+            return unitData != null ? unitData.baseAgility + unitData.agilityPerLevel * heroLevel : 0f;
+        }
+    }
+
+    public float CurrentIntelligence
+    {
+        get
+        {
+            UnitData unitData = identity != null ? identity.Data : null;
+            return unitData != null ? unitData.baseIntelligence + unitData.intelligencePerLevel * heroLevel : 0f;
+        }
+    }
+
+    // EnemyDummy.TakeDamage 앞뒤로 생사를 비교해 "이 호출이 실제로 숨통을 끊었는가"만
+    // 잡는다 — TakeDamage는 이미 죽은 대상엔 맨 위에서 조용히 리턴하므로, 크리티컬
+    // 보너스가 본타격 뒤에 또 들어오는 것처럼 한 공격 안에 여러 번 불려도 두 번 안 오른다.
+    void DealDamageToEnemy(EnemyDummy target, float amount, DamageType damageType, AttackType attackType,
+                            float armorIgnoreRatio = 0f, bool isAbilityDamage = true)
+    {
+        bool wasAlive = !target.IsDead;
+        target.TakeDamage(amount, damageType, attackType, owner != null ? owner.OwnerId : -1,
+                           armorIgnoreRatio, isAbilityDamage);
+        if (wasAlive && target.IsDead) GainKillExperience();
+    }
 
     // unitData.SkillAt(정적 데이터, UnitData.cs 참고)이 주는 슬롯 위에 런타임 오버레이
     // (06번① 능력교체형 트레잇)를 얹는다. ⚠️ 슬롯 0(첫 스킬)에만 적용한다 — 06번① 15종은
@@ -669,6 +717,12 @@ public class UnitAttacker : MonoBehaviour
             // 레벨과 1:1이다(CurrentSkillLevel의 index 계산과 같은 자리를 쓴다).
             case SkillEffectBasis.CasterSkillLevel:
                 return CurrentSkillLevelNumber() * effect.multiplier + effect.bonus;
+            // 01번 영웅 스탯(STR/AGI/INT, 사장님 결정 2026-09-06) — 원작
+            // GetHeroStatBJ(영웅, STR/AGI/INT, true) x multiplier + bonus 대응. UnitData의
+            // baseX/xPerLevel이 전부 0f인 지금은 항상 0을 돌려준다(회귀 없음).
+            case SkillEffectBasis.CasterStrength: return CurrentStrength * effect.multiplier + effect.bonus;
+            case SkillEffectBasis.CasterAgility: return CurrentAgility * effect.multiplier + effect.bonus;
+            case SkillEffectBasis.CasterIntelligence: return CurrentIntelligence * effect.multiplier + effect.bonus;
             default: return 0f;
         }
     }
@@ -771,7 +825,7 @@ public class UnitAttacker : MonoBehaviour
         int hits = Mathf.Max(1, effect.hitCount);
         if (hits <= 1)
         {
-            target.TakeDamage(amount, effect.damageType, effect.attackType, owner != null ? owner.OwnerId : -1);
+            DealDamageToEnemy(target, amount, effect.damageType, effect.attackType);
             return;
         }
 
@@ -785,7 +839,7 @@ public class UnitAttacker : MonoBehaviour
         for (int i = 0; i < hits; i++)
         {
             if (target != null)
-                target.TakeDamage(amountPerHit, damageType, attackType, owner != null ? owner.OwnerId : -1);
+                DealDamageToEnemy(target, amountPerHit, damageType, attackType);
             if (i < hits - 1 && interval > 0f) yield return new WaitForSeconds(interval);
         }
     }
@@ -946,8 +1000,7 @@ public class UnitAttacker : MonoBehaviour
             ApplyArmorShred(target);
             // isAbilityDamage: false — 평타는 원작에 UNIVERSAL이 없다(EnemyDummy.TakeDamage
             // 문서 참고). 로스터 damageType이 AP인 유닛이라도 평타로 방어를 무시하면 안 된다.
-            target.TakeDamage(AttackDamage, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
-                              armorIgnoreRatio: 0f, isAbilityDamage: false);
+            DealDamageToEnemy(target, AttackDamage, DamageTypeOf, AttackTypeOf, armorIgnoreRatio: 0f, isAbilityDamage: false);
             ApplyCritIfTriggered(target);
             TryCastOnHitSkill(target);
             return;

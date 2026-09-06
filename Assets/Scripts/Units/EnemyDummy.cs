@@ -14,6 +14,10 @@ public class EnemyDummy : MonoBehaviour
     EnemyData data;
     bool isDead;
 
+    // 01번 영웅 스탯(사장님 결정 2026-09-06) — UnitAttacker가 자기 타격이 숨통을 끊었는지
+    // 판정하려면(원작 "적을 죽일 때마다 AddHeroXP") TakeDamage 앞뒤로 이 값을 비교해야 한다.
+    public bool IsDead => isDead;
+
     public static readonly List<EnemyDummy> Active = new List<EnemyDummy>();
 
     // 라운드 보스(EnemyData.isBoss)가 죽으면 몇 라운드였는지를 실어 알린다. 보스가 여러
