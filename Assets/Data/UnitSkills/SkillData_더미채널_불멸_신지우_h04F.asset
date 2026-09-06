@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_불멸_신지우_h04F
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_불멸_신지우_h04F
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, aa1c1bc) — 불멸_신지우. 뿌리 ⑱ 형제 복구: d6499ef에서 h07M(카이도)의 같은-대상 파일 쓰기가 h04F(가반)의 이 더미를 조용히 덮어써서 없어졌다(파일명이 uid가 아니라 로스터 base였던 게 원인) — 이 파일은 파일명에 uid(h04F)를 박아 재발을 막는다. · Trig_Gaban_Attack → e055(#불멸 가반 공증 더미) → A05G: 750000
+  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, aa1c1bc) — 불멸_신지우. 뿌리 ⑱ 형제 복구: d6499ef에서 h07M(카이도)의 같은-대상 파일 쓰기가 h04F(가반)의 이 더미를 조용히 덮어써서 없어졌다(파일명이 uid가 아니라 로스터 base였던 게 원인) — 이 파일은 파일명에 uid(h04F)를 박아 재발을 막는다. · Trig_Gaban_Attack → e055(#불멸 가반 공증 더미) → A05G: 750000. 정정(2026-09-06, 리서치담당 ea40983): 750000은 피해가 아니라 공격력 증가량이다 — 필드 Nbr1(및 능력 접두 "!…공증")은 배틀로어(ANbr) 계열이라 5.25초간 공격력 +750,000이지, 즉시 피해가 아니다(더미이름 "가반 공증 더미", 실제 오더 battleroar가 이미 답이었다). 우리 스키마엔 임시 공격력 버프 축이 없어(ApplyBuff는 buffId 기반 우리 자체 버프에만 대응) 효과를 제거한다 — 750,000짜리를 즉시 피해로 잘못 넣으면 큰 과다가 된다.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -23,14 +23,3 @@ MonoBehaviour:
     resetTo: 0
     gaugeKind: 0
     effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 3
-      multiplier: 750000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
