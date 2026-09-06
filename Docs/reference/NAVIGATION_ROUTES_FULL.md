@@ -66,16 +66,20 @@ add→remove해서 재선택을 막는, WC3의 표준 "일회성 스킬트리 �
 
 | 플래그 | 켜는 선택지 | 읽히는 곳(확인된 것만) |
 |---|---|---|
-| `udg_Damage_level_Fixed[]` +2 | 패왕의길 | 이번엔 안 팠다 `[미확인]` — 이름상 전역 피해 스케일 변수로 보임, 다른 조사에서 이미 등장했을 수 있다 |
+| `udg_Damage_level_Fixed[]` +2 | 패왕의길(다른 3개 발생원도 있음, 아래 참고) | **확정** — `Trig_Round_10ver_Actions`에서 `SetUnitAbilityLevelSwapped('A11S', udg_Round_Unit[플레이어], udg_Damage_level_Fixed[플레이어]+14)`. 기본 레벨 14에 이 변수를 더해 특정 유닛(`udg_Round_Unit`, "라운드10버전" 체크포인트용으로 보임)의 `A11S`(스택형 카운터축, 레벨 자체가 스탯) 레벨을 영구히 올린다. **패왕의길 항법 외에도** `Trig_Hidden_Aokiji_Actions`(+2)·`Trig_Eternal_Lucci_Actions`(+2)·`Trig_IM_dragon_Actions`(+4) 세 히든/스토리 이벤트가 같은 변수를 누적시킨다 — 이 넷을 다 채우면 항법 없이도 최대 +10까지 쌓인다. 히든 이벤트 3개의 정체(달성 조건)는 `[미확인]`(이번엔 안 팜) |
 | `udg_Tech_Onedill_int[]`=1 | 패왕의길 | 각 특성 스킬의 "chest 특수효과 한 번만 보여주기" 부가 연출 게이트(이전 조사 확인, 배타/제한과 무관) |
-| `udg_Tech_union[]`=true | 연합세력 항법 | `[미확인]` — 이번엔 못 찾음, 이어서 확인 가능 |
+| `udg_Tech_union[]`=true | 연합세력 항법 | **확정** — `Trig_UnitJohabCounter_Actions`(유닛 조합/카운터 이벤트, 아마 로스터에 유닛이 들어올 때마다)에서 `if Tech_union==true then if GetUnitPointValue(트리거유닛)>100 then CreateNUnitsAtLoc(1,'e0IX',...,udg_Wisp_Regen,...)` — **포인트값 100 초과(등급 특수함 이상) 유닛이 카운트될 때마다 랜덤위습(`e0IX`, 흔한 소모성 위습) 1개를 `udg_Wisp_Regen` 위치에 추가 지급.** 항법 5택1 중 유일하게 "경제(위습 수급) 버프" 계열이다 |
 | `udg_Dobak_Tech_int[]`=1 | 도박광 | `Trig_Unit_Gemble_4`(다른세계 도박) 실패 시 럭키토큰 수량 `1+Dobak_Tech_int` — 확정 |
 | `udg_Tech_No_support[]`=true | 도움소 잠금 | `Trig_item_Gemble_Func006C`(아이템 도박 전체/축소 풀 갈림) — 확정. 도움소 자체 사용을 막는지는 `[미확인]` |
 | `A0ID`/`AOeq`/`A0JR` 레벨→2 | 도움소 강화 | 해당 능력을 직접 레벨업(레벨2 수치 자체를 우리가 조사했는지는 별도 확인 필요) |
 
 ## 남은 것
 
-- `udg_Damage_level_Fixed`·`udg_Tech_union`가 각각 어디서 읽히는지.
+- ~~`udg_Damage_level_Fixed`·`udg_Tech_union`가 각각 어디서 읽히는지~~ →
+  **해결, 위 ⑤표 참고.** `Damage_level_Fixed`는 `Round_10ver`에서 특정
+  유닛의 `A11S` 레벨(기본14+누적값)에, `Tech_union`은 포인트값>100 유닛
+  카운트마다 랜덤위습 1개 추가지급으로 소비된다. `Hidden_Aokiji`/
+  `Eternal_Lucci`/`IM_dragon` 세 히든 이벤트의 달성조건은 `[미확인]`으로 남음.
 - `udg_Tech_No_support`가 도움소 "사용 자체"도 막는지, 아이템도박 풀
   갈림에만 관여하는지.
 - ~~"도움소 강화" 선택 시 `A0ID`/`AOeq`/`A0JR`의 레벨2 필드값~~ →
