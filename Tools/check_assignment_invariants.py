@@ -151,27 +151,39 @@ def extract_original_key(description):
     return None
 
 
-# ── 불변식 ⑦ — 아무도 안 거는 버프를 조건으로 쓰는 스킬(PM 지시, 2026-09-06 06번 사후) ──
-# requiredBuffId(캐스터 자신의 버프)·requiredTargetBuffId(대상의 버프)가 채워진 게이트인데
-# 그 버프를 실제로 거는 자산·코드가 하나도 없으면 그 효과는 영영 안 나간다 — 이게 06번의
-# 원래 문제("버프를 거는 쪽이 없다")였다. 지금 고쳤지만(902dbeb, 2f36e6b) 다음에 또 생긴다
-# — 새 게이트를 걸 때 거는 쪽을 깜빡하면 조용히 죽은 스킬이 된다.
+# ── 불변식 ⑦ — 버프 게이트 방향 불일치(PM 지시, 2026-09-06 06번 사후 + 2026-09-07 양방향
+# 확장) ── 두 방향을 다 본다:
+#   (a) 요구하는데 아무도 안 거는 버프 — requiredBuffId/requiredTargetBuffId가 채워진
+#       게이트인데 그 버프를 실제로 거는 자산·코드가 하나도 없으면 그 효과는 영영 안
+#       나간다. 이게 06번의 원래 문제였다(902dbeb, 2f36e6b로 처음 고침).
+#   (b) 거는데 아무도 안 요구하는 버프 — opener가 ApplyBuff/AttackPowerBuffFlat으로
+#       버프를 걸어두고 정작 그 버프를 게이트로 쓰는 소비 쪽이 없으면, 그 opener는
+#       "걸어둬도 무해"가 아니라 **조용한 과다발동**이다(소비 스킬이 버프 유무와 무관하게
+#       항상 통과한다는 뜻 — requiredBuffId 필드 자체가 비어있으니 (a) 방향으로는 절대
+#       안 잡힌다). 2026-09-07 실제로 이 방향에서 5건(B05N·B03M·B00D·B045·B03Z)이
+#       조용히 통과 중이었던 걸 발견하고서야 이 방향을 추가했다 — "별건"이라고 미루면
+#       똑같은 사고가 다음에 또 난다(PM 지시, 이번 발견의 진짜 값어치).
 #
 # 캐스터(UnitAttacker.activeBuffs)와 대상(EnemyDummy.activeBuffs)은 서로 다른 레지스트리라
 # (PassesBuffGate 참고) "누가 거는지"도 그 방향에 맞는 쪽만 인정해야 한다:
 #   캐스터 버프 소스 = SkillLevel.selfBuffId(비어있지 않음, OnHitChance 절대쿨이 자기잠금을
-#     등록) ∪ SkillEffect.buffId(kind=ApplyBuff, target∈{Self,Allies}) ∪ UnitAttacker.cs
-#     하드코딩 캐스터 버프(AttackSpeedBuffId/AttackPowerBuffId — 소스에서 상수값을 직접
-#     읽는다, SupportShop 버프)
-#   대상 버프 소스 = SkillEffect.buffId(kind=ApplyBuff, target=Enemies) ∪ C# 소스에서
-#     `EnemyDummy` 인스턴스에 직접 문자열 리터럴로 AddBuff("...")를 부르는 자리(정규식
-#     스캔 — 지금은 SideBossEncounter의 B06B 하나, 2f36e6b)
+#     등록) ∪ SkillEffect.buffId(kind∈{ApplyBuff,AttackPowerBuffFlat}, target∈{Self,Allies})
+#     ∪ UnitAttacker.cs 하드코딩 캐스터 버프(AttackSpeedBuffId/AttackPowerBuffId — 소스에서
+#     상수값을 직접 읽는다, SupportShop 버프 — 이 둘은 (b) 방향 검사에서 제외한다, 아래 참고)
+#   대상 버프 소스 = SkillEffect.buffId(kind∈{ApplyBuff,AttackPowerBuffFlat}, target=Enemies)
+#     ∪ C# 소스에서 `EnemyDummy` 인스턴스에 직접 문자열 리터럴로 AddBuff("...")를 부르는
+#     자리(정규식 스캔 — 지금은 SideBossEncounter의 B06B 하나, 2f36e6b)
+#
+# ⚠️ (b) 방향에서 AttackSpeedBuffId/AttackPowerBuffId(하드코딩 상수)는 검사 대상에서
+# 뺀다 — 이 둘은 이름으로 조회되는 게 아니라 attackSpeedBuffs/attackPowerBuffs 리스트의
+# 존재 자체(배율곱)로만 쓰이는 구조적 버프라, "아무도 requiredBuffId로 안 부른다"가 항상
+# 참이고 그게 정상이다(설계상 게이트 대상이 아님) — 여기까지 잡으면 매번 오탐 2건이 뜬다.
 #
 # ⚠️ 코드 쪽 리터럴 스캔은 휴리스틱이다 — 변수명에 "target"/"mob"이 있으면 대상 쪽,
 # 그 외(bare AddBuff(...) 또는 "ally"가 들어간 변수)는 캐스터 쪽으로 가른다. 새 호출부가
 # 다른 이름 관례를 쓰면 놓칠 수 있다 — 이 스크립트가 조용히 통과시키면 안 되니, 분류
 # 못한 리터럴은 "미분류"로 따로 보고한다(있으면 사람이 봐야 한다).
-_ADD_BUFF_KIND = 6      # SkillEffectKind.ApplyBuff
+_ADD_BUFF_KINDS = {6, 11}  # SkillEffectKind.ApplyBuff, SkillEffectKind.AttackPowerBuffFlat
 _TARGET_SELF, _TARGET_ALLIES, _TARGET_ENEMIES = "0", "1", "2"
 
 
@@ -221,19 +233,40 @@ def find_code_granted_target_buff_ids():
 
 
 def find_orphaned_buff_gates(skill_assets):
-    caster_granted = find_caster_buff_hardcoded_ids()
+    hardcoded_ids = find_caster_buff_hardcoded_ids()
+    caster_granted = set(hardcoded_ids)
     target_granted = set()
+    # 자산이 준 버프의 출처(에셋 경로) — (b) 방향 보고용. 하드코딩·코드 리터럴 출처는
+    # 문자열로 태그한다(자산이 아니라 파일 경로 형식이 다르므로 print 쪽에서 구분).
+    caster_grant_sources = {}   # buff_id -> [str 또는 Path]
+    target_grant_sources = {}
+
     code_target_ids, code_caster_ids, unclassified_calls = find_code_granted_target_buff_ids()
-    target_granted |= code_target_ids
-    caster_granted |= code_caster_ids
+    for bid in code_target_ids:
+        target_granted.add(bid)
+        target_grant_sources.setdefault(bid, []).append("(C# 코드)")
+    for bid in code_caster_ids:
+        caster_granted.add(bid)
+        caster_grant_sources.setdefault(bid, []).append("(C# 코드)")
 
     required_caster = {}   # buff_id -> [asset paths that require it]
     required_target = {}   # buff_id -> [asset paths that require it]
+    # ⚠️ 2026-09-07 추가(PM 지시) — (b) 방향은 "거는데 아무도 안 요구하면 전부 의심"이
+    # 원칙이지만, 원작에 정말로 게이트가 없는 순수 버프도 있다(예: B035 — 네이티브 스탯
+    # 버프라 JASS 어디서도 조회 안 함, war3map_new.j 전수 검색으로 확인). 그런 경우
+    # description에 `[버프게이트예외:B035]`처럼 원문 근거와 함께 명시적으로 표시하면
+    # 이 검사기가 예외로 뺀다 — 예외를 남발하면 검사기가 무의미해지니 마커만 보고 믿지
+    # 않는다, 이 마커를 붙인 자산의 description에 반드시 원문 확인 근거(예: JASS 전수
+    # 검색 결과, 원본 필드 조사)가 같이 있어야 한다(사람이 리뷰로 강제).
+    exempted_ids = set()
 
     for sp in skill_assets:
         text = read(sp)
+        for m in re.finditer(r"\[버프게이트예외:([^\]]+)\]", text):
+            exempted_ids.add(m.group(1))
         for m in re.finditer(r"\n {4}selfBuffId: (\S+)", text):
             caster_granted.add(m.group(1))
+            caster_grant_sources.setdefault(m.group(1), []).append(sp)
         for m in re.finditer(r"\n {4}requiredBuffId: (\S+)", text):
             required_caster.setdefault(m.group(1), []).append(sp)
 
@@ -243,17 +276,32 @@ def find_orphaned_buff_gates(skill_assets):
             buff_id = field_value(block, "buffId")
             req_target_buff = field_value(block, "requiredTargetBuffId")
 
-            if kind == str(_ADD_BUFF_KIND) and buff_id:
+            if kind is not None and int(kind) in _ADD_BUFF_KINDS and buff_id:
                 if target == _TARGET_ENEMIES:
                     target_granted.add(buff_id)
+                    target_grant_sources.setdefault(buff_id, []).append(sp)
                 elif target in (_TARGET_SELF, _TARGET_ALLIES):
                     caster_granted.add(buff_id)
+                    caster_grant_sources.setdefault(buff_id, []).append(sp)
             if req_target_buff:
                 required_target.setdefault(req_target_buff, []).append(sp)
 
     orphaned_caster = {b: ps for b, ps in required_caster.items() if b not in caster_granted}
     orphaned_target = {b: ps for b, ps in required_target.items() if b not in target_granted}
-    return orphaned_caster, orphaned_target, unclassified_calls
+
+    # (b) 거는데 아무도 안 요구하는 버프 — 하드코딩 시스템 버프(AttackSpeedBuffId/
+    # AttackPowerBuffId)는 이름으로 조회되는 게 아니라서 제외하고, `[버프게이트예외:ID]`
+    # 마커로 원문 근거와 함께 명시적으로 예외 처리된 것도 뺀다(위 주석 참고).
+    dead_grant_caster = {
+        b: srcs for b, srcs in caster_grant_sources.items()
+        if b not in hardcoded_ids and b not in required_caster and b not in exempted_ids
+    }
+    dead_grant_target = {
+        b: srcs for b, srcs in target_grant_sources.items()
+        if b not in required_target and b not in exempted_ids
+    }
+
+    return orphaned_caster, orphaned_target, unclassified_calls, dead_grant_caster, dead_grant_target
 
 
 def main():
@@ -417,10 +465,11 @@ def main():
             print(f"    {p.relative_to(ROOT)}")
     print()
 
-    orphaned_caster, orphaned_target, unclassified_calls = find_orphaned_buff_gates(skill_assets)
-    print(f"[⑦ 죽은 버프 게이트] requiredBuffId(캐스터) {len(orphaned_caster)}개 · "
-          f"requiredTargetBuffId(대상) {len(orphaned_target)}개 — 그 버프를 거는 자산·코드가 "
-          f"하나도 없음(그 효과는 영영 안 나간다)")
+    orphaned_caster, orphaned_target, unclassified_calls, dead_grant_caster, dead_grant_target = \
+        find_orphaned_buff_gates(skill_assets)
+    print(f"[⑦-a 죽은 버프 게이트 — 요구하는데 아무도 안 거는 버프] requiredBuffId(캐스터) "
+          f"{len(orphaned_caster)}개 · requiredTargetBuffId(대상) {len(orphaned_target)}개 — "
+          f"그 버프를 거는 자산·코드가 하나도 없음(그 효과는 영영 안 나간다)")
     for buff_id, ps in sorted(orphaned_caster.items()):
         any_problem = True
         print(f"  ❌ requiredBuffId={buff_id} — 아무도 안 검(캐스터 버프): {', '.join(str(p.relative_to(ROOT)) for p in ps)}")
@@ -432,6 +481,24 @@ def main():
               f"(휴리스틱이 변수명을 못 알아봄 — 사람이 확인할 것):")
         for cs_path, receiver, buff_id in unclassified_calls:
             print(f"    {cs_path.relative_to(ROOT)} — {receiver}.AddBuff(\"{buff_id}\", ...)")
+    print()
+
+    print(f"[⑦-b 조용한 과다발동 — 거는데 아무도 안 요구하는 버프] 캐스터 {len(dead_grant_caster)}개 · "
+          f"대상 {len(dead_grant_target)}개 — opener가 이 버프를 걸어도 그걸 게이트로 쓰는 소비 "
+          f"쪽이 없으면, 소비 스킬이 requiredBuffId가 애초에 비어있는 것처럼(=항상 통과) "
+          f"실행된다. ⚠️ 이 숫자가 반드시 0이어야 하는 건 아니다 — 원작에 정말 게이트가 "
+          f"없는 순수 버프(B035·B06Y처럼 JASS 전수 검색으로 확인된 것)는 `[버프게이트예외:ID]` "
+          f"마커로 뺀다. 마커도 없이 남아있는 항목만 진짜 의심 대상이다(2026-09-07 발견분 "
+          f"B05N·B03M·B00D·B045·B03Z 5건은 이미 배선 완료, B00S는 SkillData_원작013_H099_A09S로 "
+          f"소비 쪽을 새로 만들어 해소했다)")
+    for buff_id, srcs in sorted(dead_grant_caster.items()):
+        any_problem = True
+        loc = ', '.join(s if isinstance(s, str) else str(s.relative_to(ROOT)) for s in srcs)
+        print(f"  ❌ buffId={buff_id}(캐스터) — 아무도 requiredBuffId로 안 씀, 거는 곳: {loc}")
+    for buff_id, srcs in sorted(dead_grant_target.items()):
+        any_problem = True
+        loc = ', '.join(s if isinstance(s, str) else str(s.relative_to(ROOT)) for s in srcs)
+        print(f"  ❌ buffId={buff_id}(대상) — 아무도 requiredTargetBuffId로 안 씀, 거는 곳: {loc}")
 
     sys.exit(1 if any_problem else 0)
 
