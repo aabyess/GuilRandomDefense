@@ -352,9 +352,22 @@ Tier별 median DPS·라운드 길이·방어상수)는 전부 그대로다.
 `tier_for_round`를 실제 데이터(뽑기 확률·라운드별 위습 보상·조합식 204개의 등급 관계)로
 교체하는 게 다음 큰 작업 후보다. 재료는 있다 — `GachaTable`(등급별 weight), `WaveData.
 wispRewards`(라운드별 위습 보상), 조합식 204개(재료→결과 등급). **다만 지금은 시작하지
-않는다**: `GachaTable`의 grade 4+ weight가 전부 0이라 실제 확률을 지금 데이터에서 못 뽑고
-(이 값을 채우는 건 사장님 콘텐츠), 사장님 답에 따라 등급 서열(`Tier()`)이 바뀔 수 있어
+않는다**: ~~`GachaTable`의 grade 4+ weight가 전부 0이라 실제 확률을 지금 데이터에서 못 뽑고
+(이 값을 채우는 건 사장님 콘텐츠)~~, 사장님 답에 따라 등급 서열(`Tier()`)이 바뀔 수 있어
 지금 지으면 두 번 지을 위험이 있다. 사장님 답이 오면 착수한다.
+
+> 🔴 **2026-09-06 정정(구현담당2, 뿌리 ㉜ 세 번째 사례)** — 취소선 문장은 **죽은
+> 필드를 근거로 삼은 오판이었다.** `GachaTable.cs`에 이미 이렇게 적혀 있다: "`Roll()`
+> (weight 기반 등급 선택)을 부르는 곳이 코드에 0건이다 — 실제 지급 경로
+> (`UnitPortal.RollReward`)는 `RollFromGrade`로 등급을 **직접 지정**해서 weight를
+> 아예 안 본다." 즉 **weight=0은 "그 등급이 결측"이라는 뜻이 아니라 "그 컬럼 자체가
+> 죽은 값"이라는 뜻이다** — grade 4(히든) pool엔 실제로 22종이 채워져 있다. 실제
+> 등급별 도달 가능 여부는 weight가 아니라 **`MapGenerator.cs`의 포탈 배선(어느
+> `UnitGrade`로 `RollFromGrade`를 실제로 부르는가) + 도박상점(`GamblingShop`,
+> 다른세계 등) + 채팅 언락(`ChatUnlockManager`, 초월·불멸·영원 47종 공유 1회) +
+> 히든 조합(`HiddenCombineManager`, 채팅 문구 트리거)을 전부 확인해야 한다 —
+> 상세는 `UNIT_ACQUISITION_REACHABILITY_2026-09-06.md` 참고. **`GachaTable.weight`
+> 필드 자체는 여전히 죽어 있다** — 쓰거나 지우거나 해야 하는 채무로 남아 있다.
 
 ---
 
