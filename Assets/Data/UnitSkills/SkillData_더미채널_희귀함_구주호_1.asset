@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_희귀함_구주호_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_희귀함_구주호_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 희귀함_구주호. [추정] 같은 더미가 여러 곳에서 소환돼 확정 못함 — 후보 중 가장 낮은 발동률/가장 대표적인 게이지를 썼다.  · Trig_Unique32 → e0BR(U희귀함 루피 더미 3) → A0PC: 10000 [추정: 자릿수 판정]
+  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 희귀함_구주호. [추정] 같은 더미가 여러 곳에서 소환돼 확정 못함 — 후보 중 가장 낮은 발동률/가장 대표적인 게이지를 썼다.  · Trig_Unique32 → e0BR(U희귀함 루피 더미 3) → A0PC: 10000 [추정: 자릿수 판정] 정정(2026-09-06, CROSS_CHANNEL_DUPLICATE_SWEEP.md/65b7f96): Trig_Unique32 → e0BR → A0PC를 제거했다 — 원작 발동 지점이 하나(Trig_Unique32)라 희귀함_장태영(원작능력 루트 파일 보유)에 귀속. 79행 DPS 순위 배정이 독립적으로 같은 값을 또 배정한 중복이었다.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,15 +22,4 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 10000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
+    effects: []
