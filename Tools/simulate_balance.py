@@ -493,8 +493,33 @@ def tier_for_round(r, total_rounds=75):
 
     09-05 Tier 확장 때 바뀐 건 "몇 단계로 나누는가"(9 → TIER_COUNT)뿐이다 — 가정 자체
     (라운드를 등급 수만큼 고르게 나눈다는 단순화)는 그대로다. 이 가정이 결과를 얼마나
-    좌우하는지는 §10(tier_for_round 민감도 실험)에서 이미 따로 검증했다."""
+    좌우하는지는 §10(tier_for_round 민감도 실험, `BALANCE_SIMULATION_2026-09-05.md`)
+    에서 이미 검증했고, §15(2026-09-06)에서 칸 수·분할 모양을 더 촘촘히 흔들었다."""
     return min(MAX_TIER, (r - 1) * TIER_COUNT // total_rounds)
+
+
+def tier_for_round_param(r, schedule_count, shape, total_rounds=75):
+    """§15(2026-09-06, PM 지시) — `tier_for_round`의 "75라운드 균등분할" 가정을
+    두 축으로 흔드는 실험 전용 함수(원본은 안 건드린다). 실제 로스터·Tier 테이블은
+    그대로 두고 "라운드 r에 몇 번째 칸을 쓰는가"만 다르게 계산한다.
+
+    schedule_count — 몇 칸으로 나누는가(원래는 TIER_COUNT=12 고정). 실제 등급 수와
+    무관한 순수 페이싱 값이다 — schedule_count가 12보다 작으면 칸 하나가 더 넓어져
+    저티어에 더 오래 머물고(먼저 실험한 12→10에서 R54→R8로 붕괴가 당겨진 것과 같은
+    효과), 12보다 크면 반대로 고티어에 더 빨리 도달한다(도달한 뒤엔 항상
+    min(MAX_TIER,...)로 클램프).
+
+    shape — 균등분할(1.0)에서 벗어나는 정도. frac=((r-1)/total_rounds)**shape로
+    라운드 진행률을 휘게 한다. shape<1(오목)이면 초반에 frac이 빨리 커져 저티어를
+    빨리 지나가고 고티어 구간이 넓어진다("뒤로 갈수록 넓게" — 상위 등급을 오래
+    쓴다). shape>1(볼록)이면 반대로 초반 저티어 구간이 넓어진다("앞으로 갈수록
+    넓게"). shape=1이면 원래와 같은 선형 균등분할이다.
+
+    ⚠️ 어느 조합이 "맞다"인지는 안 고른다(PM 지시) — "라운드 N에 플레이어가 실제로
+    뭘 갖는가"는 원작 경제(골드 배분·가챠 확률·조합 선택)를 모델링해야 나오는데
+    지금은 그 근거가 없다. 이 함수는 가정을 흔들어 결과의 흔들림 폭을 재는 용도다."""
+    frac = ((r - 1) / total_rounds) ** shape
+    return min(MAX_TIER, int(frac * schedule_count))
 
 
 def run_backlog(enemies, wave_counts, round_length_fn, defense_armor,
@@ -1421,6 +1446,73 @@ def main():
     print("R4  누적 1,190엔   초월함 트랙 하나(1,075엔) 만렙 가능")
     print("R16 누적 7,215엔   8개 트랙 전부(6,605엔) 만렙 가능")
     print("8트랙 만렙 비용 = 전 게임 총수입(≈99,630엔)의 6.6% — 다른 지출 0 가정, 골드 단위 확인 전 참고치")
+
+    # -----------------------------------------------------------------
+    # §15(2026-09-06, PM 지시) — tier_for_round 신뢰구간. "75라운드 균등분할"
+    # 가정을 두 축(칸 수·분할 모양)으로 흔들어 붕괴 라운드가 얼마나 움직이는지 잰다.
+    # ⚠️ 어느 조합이 맞는지 고르지 않는다 — 그건 원작 경제(골드 배분·가챠 확률)를
+    # 몰라서 지금은 창작이다. 로스터·Tier 테이블은 그대로 두고 tier_for_round만
+    # 일시적으로 바꿔치기한 뒤 되돌린다(§10, BALANCE_SIMULATION_2026-09-05.md와 같은
+    # 방법 — 그때는 "항상 T0/T4/T8" 극단값 3개, 이번엔 칸 수·모양을 촘촘히 스캔한다).
+    # -----------------------------------------------------------------
+    print("\n=== §15: tier_for_round 신뢰구간 — 칸 수 × 분할 모양 스윕 (4모델×연구0/max) ===")
+    print("⚠️ 어느 조합이 맞는지 고르지 않는다 — 결과의 흔들림 폭만 잰다(PM 지시).")
+
+    schedule_counts = [8, 10, 12, 14]
+    shapes = [(0.5, "뒤가 넓음(고티어 오래)"), (1.0, "균등(원래)"), (2.0, "앞이 넓음(저티어 오래)")]
+
+    global tier_for_round
+    original_tier_for_round = tier_for_round
+
+    def sweep_run(fn, after_armor):
+        return run_backlog_dt(enemies, wave_counts, round_length_fn, defense_armor,
+                               fn(after_armor), threshold=rc["enemy_count_threshold"])
+
+    all_results = {name: [] for name in MODELS_DT}  # name -> list of (collapse_or_None) across every combo×연구단계
+    print(f"\n--- 고정 10기/레인 상세 그리드 (가장 많이 인용된 모델) ---")
+    print(f"{'칸수':6s}{'모양':22s}{'연구0':>10s}{'연구max':>10s}")
+    fixed_fn = MODELS_DT["고정 10기/레인"]
+    for sc in schedule_counts:
+        for shape, shape_label in shapes:
+            tier_for_round = lambda r, total_rounds=75, _sc=sc, _sh=shape: tier_for_round_param(r, _sc, _sh, total_rounds)
+            r0 = sweep_run(fixed_fn, after_by_armor)
+            rmax = sweep_run(fixed_fn, after_by_armor_max)
+            all_results["고정 10기/레인"].append(r0)
+            all_results["고정 10기/레인"].append(rmax)
+            r0_s = f"R{r0}" if r0 else "완주"
+            rmax_s = f"R{rmax}" if rmax else "완주"
+            print(f"{sc:<6d}{shape_label:22s}{r0_s:>10s}{rmax_s:>10s}")
+
+    print("\n--- 나머지 3모델 — 같은 12개 조합(칸수4×모양3)을 돌려 범위만 요약 ---")
+    for name, fn in MODELS_DT.items():
+        if name == "고정 10기/레인":
+            continue
+        for sc in schedule_counts:
+            for shape, _ in shapes:
+                tier_for_round = lambda r, total_rounds=75, _sc=sc, _sh=shape: tier_for_round_param(r, _sc, _sh, total_rounds)
+                all_results[name].append(sweep_run(fn, after_by_armor))
+                all_results[name].append(sweep_run(fn, after_by_armor_max))
+
+    tier_for_round = original_tier_for_round  # 반드시 원상복구 — 이 아래로는 원래 함수를 쓴다
+
+    print(f"\n{'모델':20s}{'붕괴 라운드 범위(12개 조합×연구0/max, 완주 제외)':45s}")
+    for name in MODELS_DT:
+        collapses = [c for c in all_results[name] if c is not None]
+        completed = len(all_results[name]) - len(collapses)
+        if collapses:
+            rng = f"R{min(collapses)}~R{max(collapses)} (24개 중 {completed}개는 완주)"
+        else:
+            rng = "24개 조합 전부 완주"
+        print(f"{name:20s}{rng:45s}")
+
+    print("\n⚠️ 이 가정을 닫으려면 필요한 데이터(§10-5, BALANCE_SIMULATION_2026-09-05.md에서 이미 지목함):")
+    print("  GachaTable 등급별 weight(지금 등급4+ 전부 0 — 사장님 콘텐츠 필요)")
+    print("  WaveData.wispRewards(라운드별 위습 보상)")
+    print("  조합식 204개(재료→결과 등급)")
+    print("  + 라운드별 킬 골드(이미 있음, 964 계산에 씀)와 유닛 가격표")
+    print("  → '그 골드/위습을 유닛 확보에 즉시 쓰는지 저축하는지' 배분 비율만 정해지면")
+    print("    라운드별 실제 등급 도달 시점이 창작 없이 계산으로 나온다 — 그 배분 비율은")
+    print("    사장님께 여쭐 자리다.")
 
 
 if __name__ == "__main__":
