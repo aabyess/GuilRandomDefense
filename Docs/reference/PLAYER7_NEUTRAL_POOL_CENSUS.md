@@ -1,3 +1,53 @@
+# 🔴 2026-09-07 정정 — "소유자 필터 없음"은 틀렸다, PM이 잡음
+
+**아래 ③·④의 "소유자 필터 없음"·"소유권 필요 없음" 결론은 틀렸다.**
+PM이 원문을 전수로 다시 세어 정정한 내용, 리서치담당이 직접
+재확인함(`Tools/w3x`, 5개 예시 전부):
+
+```
+채팅언락 계열  스캔 423건 → 소유자 필터 있음 423 / 없음 0
+히든조합 계열  스캔 163건 → 소유자 필터 있음 163 / 없음 0
+그 밖(라운드·보스·데스카운트 등) 56건 → 있음 14 / 없음 42
+```
+
+**내가 놓친 것**: 아래 ④에서 인용한 5개 조건함수(`Trig_Hidden_Aokiji_Func002Func001001001002001`
+등)는 실제로는 `GetBooleanAnd(A,B)` 두 갈래 중 **A쪽 리프(유닛타입 일치)만**
+인용했다 — **B쪽 형제 리프**(`...002002`, 이름이 한 단계만 다름)를
+못 보고 지나쳤다. 직접 재확인한 결과:
+
+```jass
+function Trig_Hidden_Aokiji_Func002Func001001001002 takes nothing returns boolean
+return GetBooleanAnd(Trig_Hidden_Aokiji_Func002Func001001001002001(),  // 유닛타입=='h02B'
+                      Trig_Hidden_Aokiji_Func002Func001001001002002()) // ★이걸 놓쳤다
+endfunction
+function Trig_Hidden_Aokiji_Func002Func001001001002002 takes nothing returns boolean
+return(GetOwningPlayer(GetFilterUnit())==GetTriggerPlayer())
+endfunction
+```
+`Eternal_Lucci`/`IM_dragon`/`Hidden_Tiger`/`Hidden_carrot` 4건도 전부
+같은 짝(`...002002`)이 있고 전부 `GetOwningPlayer(GetFilterUnit())==GetTriggerPlayer()`다
+— **5/5 전부 소유자 필터가 있었다.** `GetPlayableMapRect()` 전체
+스캔이라는 관찰 자체는 맞지만, **그 안의 조건절이 AND로 소유자까지
+같이 본다는 걸 놓쳤다** — ㊹("전수했다"는 그 검색폼이 보여준 것만
+답한다는 뜻)와 "모양이 같아도 대응은 아니다"가 겹친 자리였다.
+
+**결론 변경**: **재료는 반드시 그 채팅/조합을 실행한 플레이어
+소유여야 한다.** 우리 `HiddenCombineManager`가 `inventory.Members`
+(플레이어 인벤토리)에서 재료를 소비하는 구조는 **원작과 맞다** —
+중립 풀이라 영영 못 통과한다던 우려는 해소됐고, 재료 자산만
+채워지면 정상 작동한다.
+
+**단, 열린 채로 남는 질문**: 그럼 `Player(7)`의 619개체 자체는
+왜 존재하는가? 재료 판정이 플레이어 소유만 본다면 이 사전배치분은
+직접 소비되는 재료 풀이 아니라는 뜻인데, 아래 ①~⑥ 조사 당시엔
+"재료 없이 세계 상태만 본다"는 틀로 해석했다 — **그 틀 자체가 이제
+다시 열린 질문이다.** 이번엔 안 판다(PM 지시, 54건/A07K/vivi 다음
+순위) — 다음 조사로 넘긴다. 아래 원문(①~⑥, ⑤·⑥·`고대의 배`
+섹션)은 이 정정과 무관한 부분(개수·좌표·특성강화 예외 등)이라
+그대로 둔다.
+
+---
+
 # `Player(7)` 중립 풀 전수 — 히든조합 전용이 아니라 채팅언락 70종 전체가 공유하는 "세계 상태" 풀
 
 조사: 리서치담당 / 2026-09-06
