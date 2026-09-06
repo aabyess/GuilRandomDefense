@@ -5,7 +5,7 @@
 #   Tools/import_skin.sh ~/Downloads/*            (여러 개 한꺼번에)
 #
 # 받는 쪽 폴더 이름이 곧 유닛 이름이다 — Assets/Data/Units/Roster/<이름>.asset 과 맞춘다.
-# .rar/.zip 안에 들어 있어도 알아서 푼다. fbx 하나만 있어도 된다.
+# 압축(rar/zip/7z/tar.gz) 안에 들어 있어도 알아서 푼다. fbx 하나만 있어도 된다.
 set -u
 PROJ="$(cd "$(dirname "$0")/.." && pwd)"
 ROSTER="$PROJ/Assets/Data/Units/Roster"
@@ -27,7 +27,7 @@ for SRC in "$@"; do
   while IFS= read -r a; do
     FOUND_ARCHIVE=1
     unar -q -f -o "$WORK" "$a" >/dev/null 2>&1
-  done < <(find "$SRC" -type f \( -iname '*.rar' -o -iname '*.zip' \))
+  done < <(find "$SRC" -type f \( -iname '*.rar' -o -iname '*.zip' -o -iname '*.7z' -o -iname '*.tar.gz' -o -iname '*.tgz' \))
   [ "$FOUND_ARCHIVE" = "0" ] && cp -R "$SRC/." "$WORK/"
   # 압축 안에 없던 텍스처(미리보기용 등)도 같이 챙긴다.
   find "$SRC" -type f -iname '*.png' -exec cp {} "$WORK/" \; 2>/dev/null
