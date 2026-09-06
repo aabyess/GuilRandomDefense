@@ -13,6 +13,14 @@ public class RewardDistributor : MonoBehaviour
     [SerializeField] WispData startingWisp;
     [SerializeField] int startingWispCount = 5;
 
+    // 맵 초기배치 특수 유닛(2026-09-06, PM 지시) — 원작 CreateBuildingsForPlayerN의
+    // CreateUnit 직접배치 대응. 우리 관례는 "맵에 오브젝트로 놓기"가 아니라 "게임 시작
+    // 지급"이라 startingWisp와 같은 자리에 둔다. 지금은 h05X(레일리, "판매-특수") 하나뿐 —
+    // 원작에서 이런 유닛이 몇 종인지 안 나와서 목록으로 안 만들었다(근거 없이 "나중에
+    // 늘 것 같다"로 목록화하지 말 것, PM 지시). 늘어나면 그때 목록으로 바꾼다. 비어있으면
+    // (기본값 null) 아무 일도 안 한다 — 기존 씬 무영향.
+    [SerializeField] UnitData startingSpecialUnit;
+
     // 05번 「고대의 배」 지급 경로 ㉡(스토리, ANCIENT_SHIP_AND_BUFF_SOURCES.md) — 원작
     // Trig_Story_reward7의 h05Y 지급 대상. 우리 스토리 번호는 원작과 별개라 이름으로는
     // 못 찾지만, 그 트리거 자체가 "완료한 스토리 개수(udg_Story_Count)==7"이라는 순서
@@ -34,6 +42,7 @@ public class RewardDistributor : MonoBehaviour
     void Start()
     {
         GrantStartingWisps();
+        GrantStartingSpecialUnits();
         GrantStartingTraitPoints();
         GrantSaveThresholdRewards();
     }
@@ -48,6 +57,28 @@ public class RewardDistributor : MonoBehaviour
         foreach (PlayerContext context in PlayerContext.Occupied)
         {
             SpawnWisp(context, startingWisp, startingWispCount);
+        }
+    }
+
+    // 맵 초기배치 특수 유닛 지급 — GrantAncientShip(아래)과 같은 패턴(창고 근처 스폰)을
+    // 게임 시작 시 전원에게 적용한다. startingSpecialUnit이 비어 있으면(기본값) 아무
+    // 일도 안 한다 — 회귀 없음.
+    void GrantStartingSpecialUnits()
+    {
+        if (!GameAuthority.IsServer) return;
+        if (startingSpecialUnit == null) return;
+
+        UnitSpawner spawner = SpawnerRef;
+        if (spawner == null)
+        {
+            Debug.LogWarning("RewardDistributor: UnitSpawner를 찾지 못해 시작 특수 유닛을 지급하지 못했습니다.", this);
+            return;
+        }
+
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            Vector3 position = context.Warehouse != null ? context.Warehouse.transform.position : context.transform.position;
+            spawner.Spawn(startingSpecialUnit, position, context.PlayerId);
         }
     }
 
