@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_전설적인_박병규_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_전설적인_박병규_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 전설적인_박병규.  · Trig_Legend7 → e00J(!전설 레일리 마나스킬 더미3) → A07L: 1000000
+  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 전설적인_박병규.  · Trig_Legend7 → e00J(!전설 레일리 마나스킬 더미3) → A07L: 1000000 정정(2026-09-06, A07L_A07K_DISPUTE_RESOLVED.md/e32f896·d3ea1f9, 리서치담당): A07L을 제거했다 — 원작 발동 지점이 h03A(레일리) 하나뿐이고 더미 경로 문자열(Trig_Legend7 → e00J → A07L)이 전설적인_진연서 파일과 글자 그대로 같다. 마나115 게이지에서 A07L(1,000,000)과 RRD 1,200,000이 같은 순간에 같이 나가는 한 발동의 두 효과이고, 그 RRD 짝이 이미 진연서 파일에 있어 A07L도 거기 귀속된다 — 이 파일(박병규)은 레일리 몫이 이미 배정된 걸 모르고 같은 값을 중복 배정한 것이었다.
   triggerType: 3
   levels:
   - cooldown: 0
@@ -22,15 +22,4 @@ MonoBehaviour:
     hitCountThreshold: 115
     resetTo: 0
     gaugeKind: 0
-    effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 3
-      multiplier: 1000000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
+    effects: []
