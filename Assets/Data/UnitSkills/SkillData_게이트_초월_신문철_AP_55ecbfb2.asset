@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_초월_신문철_AP_55ecbfb2
   m_EditorClassIdentifier:
   skillName: 명왕 레일리의 제자 — MANA게이지160.00
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 명왕 레일리의 제자(H099)의 게이트 "MANA게이지160.00" 능력 2개를 이 SkillData 하나로 묶었다.   · Ruffy_Mana#1: 계산식 ((1750000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUn   · Ruffy_Mana#2: 계산식 ((1750000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVa  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Ruffy_Mana#1] A11S식 계수(계수 1+0.025×레벨/연구)를 레벨1 기준으로 고정해 곱했다(원작 레벨1과 동일) — 레벨 축이 우리에 없다.  [Ruffy_Mana#2] A11S식 계수(계수 1.50+0.025×레벨/연구)를 레벨1 기준으로 고정해 곱했다(원작 레벨1과 동일) — 레벨 축이 우리에 없다.
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 명왕 레일리의 제자(H099)의 게이트 "MANA게이지160.00" 능력 2개를 이 SkillData 하나로 묶었다.   · Ruffy_Mana#1: 계산식 ((1750000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUn   · Ruffy_Mana#2: 계산식 ((1750000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVa  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Ruffy_Mana#1] A11S식 계수(계수 1+0.025×레벨/연구)를 레벨1 기준으로 고정해 곱했다(원작 레벨1과 동일) — 레벨 축이 우리에 없다.  [Ruffy_Mana#2] A11S식 계수(계수 1.50+0.025×레벨/연구)를 레벨1 기준으로 고정해 곱했다(원작 레벨1과 동일) — 레벨 축이 우리에 없다. ⚠️ 2026-09-06 정정(LEVEL_COEFFICIENT_AXES.md, PM) — 이건 A11S가 아니라 진짜 연구축(R01V, 최대 3레벨)이다. 원식은 (기본값+maxHP×0.03)×(1+0.025×R01V) 꼴인데, 여기 있는 「레벨1 기준 고정」은 R01V=1로 가정한 것이었다 — 그런데 연구소가 아직 없어 UnitAttacker.CountResearchLevel()이 항상 0을 돌려준다(R01V=0이 지금의 실제 상태). R01V=0 기준값(계수 1.0/1.5)으로 나눠 바로잡았다 — '레벨1 고정'이 아니라 '지금 실제 상태(연구 안 함)'를 담은 것이다. ⚠️ 연구소가 서서 CountResearchLevel()이 실제 값을 내면, maxHP비례항과 연구배율이 곱으로 얽혀 있어(우리 TargetMaxHpPercent+ResearchLevel 한 basis로는 못 담는다) tahsigi처럼 효과를 쪼개는 재설계가 필요하다 — 그때까지는 이 값(R01V=0 기준)이 맞다.
   triggerType: 3
   levels:
   - cooldown: 0
@@ -28,8 +28,8 @@ MonoBehaviour:
       target: 2
       damageType: 1
       attackType: 4
-      multiplier: 0.0307
-      bonus: 1793750.0
+      multiplier: 0.03
+      bonus: 1750000.0
       chance: 1
       hitCount: 1
       duration: 0
@@ -39,8 +39,8 @@ MonoBehaviour:
       target: 3
       damageType: 1
       attackType: 4
-      multiplier: 0.0457
-      bonus: 2668750.0
+      multiplier: 0.03
+      bonus: 1750000.0
       chance: 1
       hitCount: 1
       duration: 0
