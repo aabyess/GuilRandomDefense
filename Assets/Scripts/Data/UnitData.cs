@@ -343,4 +343,15 @@ public class UnitData : ScriptableObject
     public float strengthPerLevel;
     public float agilityPerLevel;
     public float intelligencePerLevel;
+
+    // 05번 「고대의 배」(사장님 확정 2026-09-06, Docs/reference/ANCIENT_SHIP_SPEC_2026-09-06.md)
+    // — 로스터가 아닌 특수 유닛(isSystemUnit과 함께 켠다) h05Y 전용. true면 GameHud가 이
+    // 유닛을 선택했을 때 "시전" 버튼을 띄운다: 목재 4 소모(부족하면 아무 일도 안 남 — 원작
+    // stop 명령과 같다, 실패로 취급하지 않는다) → 유닛 소모(성공·실패 무관, RemoveUnit과
+    // 같다) → 40% 확률로 ancientShipResultUnit을 조합 구역 중심에 생성. h05Y 하나뿐이라
+    // UnitTraitData.transformIntoUnit과 같은 방식으로 필드만 얹었다(별도 데이터 클래스
+    // 없음). ancientShipResultUnit은 실제 해적선 유닛(Assets/Data/Units/Roster/해적선.asset)
+    // 을 가리킨다 — 새로 안 만든다.
+    public bool isAncientShip;
+    public UnitData ancientShipResultUnit;
 }

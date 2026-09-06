@@ -64,6 +64,13 @@ public class GameHud : MonoBehaviour
     bool lastTraitButtonUnlocked;
     int lastTraitButtonPoints = int.MinValue;
 
+    // 05번 「고대의 배」(사장님 확정 2026-09-06) 버튼 — 특성강화 버튼과 같은 이유로 같은
+    // 자리(선택 시 뜨는 전용 버튼)에 둔다. UnitData.isAncientShip이 있을 때만 뜬다.
+    GameObject ancientShipButtonPanel;
+    Text ancientShipButtonText;
+    Button ancientShipButtonComponent;
+    int lastAncientShipWood = int.MinValue;
+
     // 조합 카드(레시피) 12칸. 유닛 카드와 같은 패턴 — 미리 만들어두고 내용만 바꾼다.
     const float RecipeRefreshInterval = 0.4f;
     static readonly List<CombineRecipe> EmptyRecipes = new List<CombineRecipe>();
@@ -167,6 +174,7 @@ public class GameHud : MonoBehaviour
         RefreshShopTargeting();
         RefreshHoveredTooltip();
         RefreshTraitButton();
+        RefreshAncientShipButton();
     }
 
     void OnDestroy()
@@ -225,6 +233,7 @@ public class GameHud : MonoBehaviour
         BuildStoryPanel();
         BuildTeamPanel();
         BuildTraitButton();
+        BuildAncientShipButton();
         // 왼쪽 유닛 목록은 만들지 않는다. 화면 절반을 덮는데, 무엇을 들고 있는지는
         // 아래 명령 카드 그리드가 이미 보여준다. (F1 디버그 HUD에도 같은 목록이 있다.)
 
@@ -387,6 +396,120 @@ public class GameHud : MonoBehaviour
         if (traitButtonPanel != null && traitButtonPanel.activeSelf) traitButtonPanel.SetActive(false);
         lastTraitButtonTrait = null;
         lastTraitButtonPoints = int.MinValue;
+    }
+
+    // TraitButtonPanel(0.51~0.70, 0.90~0.95) 바로 아래 — 같은 이유(단일 선택 시 뜨는 전용
+    // 버튼)라 같은 열에 쌓는다. 05번 사양(ANCIENT_SHIP_SPEC_2026-09-06.md) 그대로.
+    void BuildAncientShipButton()
+    {
+        RectTransform panel = CreatePanel(transform, "AncientShipButtonPanel", new Color(1f, 1f, 1f, 0.15f));
+        SetAnchors(panel, new Vector2(0.51f, 0.84f), new Vector2(0.70f, 0.89f));
+
+        Button button = panel.gameObject.AddComponent<Button>();
+        button.onClick.AddListener(OnAncientShipButtonClicked);
+
+        ancientShipButtonText = CreateLabel(panel, "AncientShipButtonText", "");
+        ancientShipButtonText.fontSize = 16;
+        ancientShipButtonText.raycastTarget = false;
+
+        ancientShipButtonPanel = panel.gameObject;
+        ancientShipButtonComponent = button;
+        ancientShipButtonPanel.SetActive(false);
+    }
+
+    // 단일 선택 + UnitData.isAncientShip일 때만 보인다(트레잇 버튼과 같은 관례). 버튼은
+    // 목재가 모자라도 항상 눌리게 둔다 — 원작이 "목재 부족=stop 명령"이라 조건 미달을
+    // 구매 실패와 다르게 다뤄야 하고(ExecuteAncientShipCast 참고), interactable을 꺼서
+    // 미리 막으면 그 구분이 화면에 아예 안 보인다.
+    void RefreshAncientShipButton()
+    {
+        if (ancientShipButtonPanel == null) return;
+
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1) { HideAncientShipButton(); return; }
+
+        Selectable single = selection.Selected[0];
+        if (single == null || !single.TryGetComponent(out UnitIdentity identity) ||
+            identity.Data == null || !identity.Data.isAncientShip)
+        { HideAncientShipButton(); return; }
+
+        if (!single.TryGetComponent(out OwnedByPlayer owner)) { HideAncientShipButton(); return; }
+
+        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        ResourceWallet wallet = context != null ? context.ResourceWallet : null;
+        if (wallet == null) { HideAncientShipButton(); return; }
+
+        ancientShipButtonPanel.SetActive(true);
+
+        int wood = wallet.Get(ResourceType.Wood);
+        if (wood == lastAncientShipWood) return;
+        lastAncientShipWood = wood;
+
+        ancientShipButtonText.text = $"고대의 배 시전\n(목재 {AncientShipWoodCost} 소모, 보유 {wood})";
+    }
+
+    void HideAncientShipButton()
+    {
+        if (ancientShipButtonPanel != null && ancientShipButtonPanel.activeSelf) ancientShipButtonPanel.SetActive(false);
+        lastAncientShipWood = int.MinValue;
+    }
+
+    // ANCIENT_SHIP_SPEC_2026-09-06.md 표 그대로: 목재 4(성공·실패 둘 다 차감) → 40% →
+    // 성공 시 해적선 생성. 배는 성공·실패 무관하게 항상 사라진다(RemoveUnit) — 단,
+    // 목재가 애초에 모자라면 이 함수는 아무것도 안 하고 끝난다(차감도 소모도 없음, "조건
+    // 미달"과 "도박 실패"를 같은 경로로 처리하면 안 된다는 사양 경고 그대로).
+    const int AncientShipWoodCost = 4;
+    const float AncientShipSuccessChance = 0.40f;
+
+    void OnAncientShipButtonClicked()
+    {
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1) return;
+
+        Selectable single = selection.Selected[0];
+        if (single == null || !single.TryGetComponent(out UnitIdentity identity) ||
+            identity.Data == null || !identity.Data.isAncientShip) return;
+
+        if (!single.TryGetComponent(out OwnedByPlayer owner)) return;
+
+        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        ResourceWallet wallet = context != null ? context.ResourceWallet : null;
+        if (wallet == null) return;
+
+        // 목재 부족 — 실패가 아니라 "조건 미달"이다. TrySpend가 모자라면 아무것도 안 깎고
+        // false를 돌려주므로 여기서 그냥 리턴하면 원작의 "차감 없이 stop 명령만"과 같다.
+        if (!wallet.TrySpend(ResourceType.Wood, AncientShipWoodCost))
+        {
+            PlayerNotification.Show(owner.OwnerId, "목재가 부족합니다!");
+            return;
+        }
+
+        UnitData resultUnit = identity.Data.ancientShipResultUnit;
+        Vector3 shipPosition = identity.transform.position;
+        bool success = Random.value < AncientShipSuccessChance;
+
+        // 여기부턴 목재가 이미 나갔다 — 성공/실패 상관없이 배가 사라진다(원작 RemoveUnit).
+        identity.Consume();
+
+        if (!success) return;
+
+        UnitSpawner spawner = Spawner;
+        if (spawner == null || resultUnit == null) return;
+
+        // "조합 구역 중심"(udg_Mix_Loction) — MapGenerator.BuildIsland가 "CombineTable"
+        // 이름으로 만드는 섬 오브젝트가 우리 쪽 대응이다(런타임엔 이름으로 찾는 것 말고
+        // 다른 참조 경로가 없다 — 04번 RewireScene의 GameObject.Find("Lane")과 같은 이유).
+        GameObject combineTable = GameObject.Find("CombineTable");
+        Vector3 targetPosition = combineTable != null ? combineTable.transform.position : shipPosition;
+
+        // UnitSpawner.Spawn은 위치를 그대로 Instantiate할 뿐 NavMesh 위인지 확인 안 한다
+        // (ExecuteTransform과 같은 이유로 여기서 미리 붙인다) — 결과 유닛의 이동 능력
+        // 기준으로 가장 가까운 밟을 수 있는 자리를 찾는다.
+        int areaMask = UnitSpawner.ComputeAreaMask(resultUnit.movementAbility);
+        Vector3 spawnPosition = NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, TransformSampleRadius, areaMask)
+            ? hit.position
+            : targetPosition;
+        spawner.Spawn(resultUnit, spawnPosition, owner.OwnerId);
     }
 
     // 원작 순서(Trig_T_Ability_hero_Conditions) 그대로: 이미 샀는가 → 포인트가 충분한가
