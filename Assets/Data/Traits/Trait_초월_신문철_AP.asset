@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   targetUnit: {fileID: 11400000, guid: ede9fd1d05bd450da2c14bd1afbada87, type: 2}
   traitName: 초월_신문철_AP 특성강화
-  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 #014 H098 오하라의 마지막 생존자 / upro(실제 이름): 니코 로빈 / 능력 A0FL(D로빈의 손날개) / 능력교체 2pt. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고. DPS 순위 배정 — 1:1 이름매핑 아님. ⚠️ 2026-09-06 특이사항 추가(TRAIT_UPGRADE_26_HEROES_FULL.md, Trig_T_Ability_hero_Actions 원문) — 이 특성은 대상이 캐스터 자신이 아니라 GetSpellTargetUnit()(시전 시 지정하는 다른 아군 유닛)이다. UnitAddAbilityBJ('A0FL')+UnitAddAbilityBJ('A0ZP')를 그 대상에게 걸고 UnitMakeAbilityPermanent로 영구화한다. 우리 트레잇 UI(구매=즉시 자기효과)는 대상 지정 개념이 없다 — SupportShop의 targetKind:Unit류 타겟팅 UI가 새로 필요하다(PM 지시로 판정만 하고 대기 중).
+  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 #014 H098 오하라의 마지막 생존자 / upro(실제 이름): 니코 로빈 / 능력 A0FL(D로빈의 손날개) / 대상지정형 2pt. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고. DPS 순위 배정 — 1:1 이름매핑 아님. 2026-09-06 특이사항 발견(TRAIT_UPGRADE_26_HEROES_FULL.md) — 대상이 캐스터 자신이 아니라 GetSpellTargetUnit()(다른 아군 유닛)임을 확인, 배선은 대기시킴. 🔴 2026-09-07 원문 확인 완료(Tools/w3x/원본/war3map_new.j 직접 읽음, war3map_new.w3a로 A0FL/A0ZP/구매능력 A0Q2 필드 대조) 후 배선 — ⓐ대상 선택: 플레이어가 직접 고른다(WC3 표준 대상지정 캐스트, 자동 아님). ⓑ부여물: A0FL(로빈의 손날개, 실제 게임플레이 — 영구 블링크, 사거리1500·쿨다운10초)+A0ZP(같은 이름, base=AItc 순수 시각효과 부착물 "wing-robin3.mdx", 스탯 없음). ⓒ영구화(UnitMakeAbilityPermanent)는 "제거 안 됨" 플래그일 뿐 반복구매와 무관 — 구매 자체는 다른 25개와 같은 1회성. ⓓ대상 제한: 없음(구매능력 A0Q2 자체가 Arsg가 아니라 AHtb 기반이고 atar='air,invulnerable,organic,ground', 툴팁 "어떠한 유닛이든" — 소유주 제한도 못 찾아 우리도 안 검). targetsOtherUnit=1로 배선 — GameHud.RefreshTraitTargeting이 대상 지정을 받아 UnitIdentity.hasRobinWingBlessing을 세운다. 🔴 [미확정] A0FL의 실제 블링크 효과(플레이어가 지점 클릭→순간이동)는 못 켰다 — 우리 엔진에 그 로직 자체가 없다(MovementAbility.Teleport가 "필드만, 로직은 나중에 구현"으로 이미 못박혀 있음, 새 기반시설 필요라 이 작업 범위 밖). A0ZP(시각효과)는 부착물 시스템이 없어 대응 없이 생략. ⚠️ 예전 replacementSkill(능력교체) 값은 삭제했다 — 이 트레잇의 실제 효과는 "구매자 자신의 스킬 교체"가 아니라 "대상 지정+표시"라 그 필드가 안 맞았다(초기 1차 판정의 오분류, 지금 정정).
   costTraitPoints: 2
   effects: []
-  specialEffectId: 
-  replacementSkill: {fileID: 11400000, guid: 5c58e02fa7d64bfe90c7cf47cf1f91c5, type: 2}
+  specialEffectId:
+  targetsOtherUnit: 1
