@@ -65,6 +65,13 @@ public class GameHud : MonoBehaviour
     int lastTraitButtonPoints = int.MinValue;
     int lastTraitButtonRepeatCount = int.MinValue;
 
+    // 로빈(H098) 전용 대상 지정 대기 상태 — RefreshShopTargeting(pendingShop류)과 같은
+    // 모양이지만 ILaneShop이 아니라서 별도로 둔다(WorldPick.TryHit은 그대로 재사용).
+    // pendingTraitTarget이 null이면 대기 중이 아니다.
+    UnitTraitData pendingTraitTarget;
+    PlayerContext pendingTraitContext;
+    int pendingTraitTargetingStartFrame;
+
     // 05번 「고대의 배」도박 능력 버튼들(2026-09-06 목록화) — 특성강화 버튼과 같은 이유로
     // 같은 열(선택 시 뜨는 전용 버튼)에 둔다. UnitData.gambleOptions 항목 수만큼 뜬다.
     // 슬롯 3개를 미리 만들어두고 항목 수만큼만 켠다 — 지금 알려진 목록 최대 크기(h05Y의
@@ -241,6 +248,7 @@ public class GameHud : MonoBehaviour
         RefreshUnitCommandCards();
         RefreshInventoryPanel();
         RefreshShopTargeting();
+        RefreshTraitTargeting();
         RefreshHoveredTooltip();
         RefreshTraitButton();
         RefreshGambleButtons();
@@ -476,7 +484,10 @@ public class GameHud : MonoBehaviour
         }
         else
         {
-            traitButtonText.text = $"특성강화\n({trait.costTraitPoints}pt, 보유 {points}pt)";
+            // 로빈(H098) 전용 — 눌러도 즉시 안 사지고 대상 지정 모드로 들어간다는 걸
+            // 미리 알린다(RefreshTraitTargeting 참고).
+            string suffix = trait.targetsOtherUnit ? " — 클릭 후 대상 지정" : "";
+            traitButtonText.text = $"특성강화{suffix}\n({trait.costTraitPoints}pt, 보유 {points}pt)";
             traitButtonComponent.interactable = points >= trait.costTraitPoints;
         }
     }
@@ -1031,6 +1042,26 @@ public class GameHud : MonoBehaviour
         PlayerContext context = PlayerContext.Get(owner.OwnerId);
         UnitUpgrades upgrades = context != null ? context.UnitUpgrades : null;
         if (upgrades == null) return;
+
+        // 로빈(H098) 전용 — 대상이 이 유닛(구매자) 자신이 아니라 플레이어가 다음 클릭으로
+        // 찍는 다른 유닛이다(원작 GetSpellTargetUnit()). 비용은 대상을 실제로 찍은 뒤에만
+        // 나간다(원작도 캐스트가 완료돼야, 즉 대상이 정해져야 비용을 뗀다) — 여기서는
+        // 아직 아무것도 소모하지 않고 대상 대기 모드로만 들어간다.
+        if (trait.targetsOtherUnit)
+        {
+            if (upgrades.IsUnlocked(trait)) return;
+            if (upgrades.TraitPoints < trait.costTraitPoints)
+            {
+                PlayerNotification.Show(owner.OwnerId, "특성 포인트가 부족합니다!");
+                return;
+            }
+
+            pendingTraitTarget = trait;
+            pendingTraitContext = context;
+            pendingTraitTargetingStartFrame = Time.frameCount;
+            PlayerNotification.Show(owner.OwnerId, "대상 유닛을 클릭하세요.");
+            return;
+        }
 
         // 06번⑤(반복구매형, 아카이누) — 다른 25개는 이미 언락됐으면 여기서 막지만,
         // 이 하나만 언락 뒤에도 계속 구매 가능하다(원작: 몇 번이든 다시 살 수 있다).
@@ -1754,6 +1785,70 @@ public class GameHud : MonoBehaviour
 
         if (used) RefreshShopAffordability();
         else PlayerNotification.Show(LocalPlayer.LocalPlayerId, reason ?? "지금은 사용할 수 없습니다.");
+    }
+
+    // 로빈(H098) 전용 — RefreshShopTargeting과 같은 모양(칸을 고른 뒤 다음 클릭을 기다리다
+    // WorldPick.TryHit으로 대상을 찍는다)이지만 ILaneShop이 아니라 별도로 둔다. 우클릭이면
+    // 취소, 대상이 없으면 실패 메시지 — 상점 쪽과 같은 UX. 비용은 대상이 실제로 정해진
+    // 이 시점에야 나간다(원작이 캐스트 완료 시점에만 자원을 떼는 것과 같다).
+    void RefreshTraitTargeting()
+    {
+        if (pendingTraitTarget == null) return;
+        if (Mouse.current == null) { pendingTraitTarget = null; pendingTraitContext = null; return; }
+
+        if (Mouse.current.rightButton.wasPressedThisFrame)
+        {
+            pendingTraitTarget = null;
+            pendingTraitContext = null;
+            return;
+        }
+
+        if (!Mouse.current.leftButton.wasPressedThisFrame) return;
+        if (Time.frameCount <= pendingTraitTargetingStartFrame) return;
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
+
+        Camera cam = Camera.main;
+        if (cam == null) return;
+
+        UnitTraitData trait = pendingTraitTarget;
+        PlayerContext context = pendingTraitContext;
+        pendingTraitTarget = null;
+        pendingTraitContext = null;
+
+        int notifyPlayerId = context != null ? context.PlayerId : LocalPlayer.LocalPlayerId;
+
+        if (!WorldPick.TryHit(cam, Mouse.current.position.ReadValue(), out RaycastHit hit))
+        {
+            PlayerNotification.Show(notifyPlayerId, "대상을 찾을 수 없습니다.");
+            return;
+        }
+
+        // 원작 대상 제한 확인 결과: 없음(아이템 툴팁 "어떠한 유닛이든", atar='air,
+        // invulnerable,organic,ground') — 소유주 제한도 못 찾아 우리도 안 건다. 유닛이기만
+        // 하면(적 EnemyDummy 포함, 원작이 막는다는 근거가 없어 안 막는다) 통과시킨다.
+        if (!hit.collider.TryGetComponent(out UnitIdentity targetIdentity))
+        {
+            PlayerNotification.Show(notifyPlayerId, "대상으로 쓸 수 없습니다.");
+            return;
+        }
+
+        UnitUpgrades upgrades = context != null ? context.UnitUpgrades : null;
+        if (upgrades == null || upgrades.IsUnlocked(trait)) return;
+
+        if (!upgrades.TrySpendTraitPoints(trait.costTraitPoints))
+        {
+            PlayerNotification.Show(notifyPlayerId, "특성 포인트가 부족합니다!");
+            return;
+        }
+
+        upgrades.Unlock(trait);
+
+        // 원작 A0FL(영구 블링크)+A0ZP(시각효과 전용, 날개 부착물) 부여 — 지금은 표시만
+        // 한다(UnitIdentity.hasRobinWingBlessing 주석 참고, MovementAbility.Teleport
+        // 로직이 아직 없어 실제 블링크 자체는 못 켠다).
+        targetIdentity.hasRobinWingBlessing = true;
+
+        lastTraitButtonPoints = int.MinValue;
     }
 
     void OnUnitCommandSlotHoverEnter(int index)
