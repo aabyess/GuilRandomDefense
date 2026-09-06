@@ -1064,6 +1064,14 @@ public class GameHud : MonoBehaviour
             ExecuteStatGrant(single, trait);
         }
 
+        // 우솝(G.O.D, H09B) 전용 — 산 사람의 UnitUpgrades(HashSet)가 아니라 게임 전체에
+        // 하나뿐인 플래그를 켠다. 도움소(SupportShop)가 이걸 읽어 4명 전원의 "독약" 스킬을
+        // 레벨2로 올린다 — targetUnit(=이 유닛) 자신에게는 원작에도 효과가 없다.
+        if (trait.triggersUsoppDockhouseBoost)
+        {
+            UsoppDockhouseTrait.Activate();
+        }
+
         // 다음 정기 갱신을 안 기다리고 바로 라벨을 다시 그린다.
         lastTraitButtonPoints = int.MinValue;
     }

@@ -14,6 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   skillName: 독약
   description: 강력한 독을 던져 지정 지점과 주변 적에게 두 차례 피해를 주고 방어력을 영구히 낮춘다.
+    ⚠️ 2026-09-07 정정(우솝 특성 구현 중 발견) — duration이 7.5(레벨2 값)로 잘못 들어있었다.
+    SUPPORT_SHOP.md/TRAIT_LEVEL2_SOURCES.md 대조 결과 레벨1은 5초다. 5로 되돌리고 레벨2 3종
+    (damage 200000→300000·armorShred 20→25·duration 5→7.5)은 boostedX 필드로 옮겨 우솝
+    특성(UsoppDockhouseTrait.Active)이 켜졌을 때만 나가게 했다 — 이전엔 duration만 조건 없이
+    레벨2가 나가고 있었다(뿌리 ㊺).
   targetKind: 0
   effect: 0
   manaCost: 620
@@ -25,7 +30,7 @@ MonoBehaviour:
   damageBase: 200000
   damagePerRound: 0
   waveCount: 2
-  duration: 7.5
+  duration: 5
   manaRefundPerHit: 0
   manaRefundCap: 0
   manaRestoreAmount: 0
@@ -36,3 +41,9 @@ MonoBehaviour:
   armorShredOnHit: 20
   maxDismantleGrade: 3
   dismantleRefunds: []
+  boostedDamageBase: 300000
+  boostedManaCost: 0
+  boostedCooldownSeconds: 0
+  usoppTraitBoosts: 1
+  boostedArmorShredOnHit: 25
+  boostedDuration: 7.5

@@ -142,6 +142,16 @@ public class SupportSkillData : ScriptableObject
     [Header("능력치 증가(H0B7) 전용 — 선행 조건: 초월함 조합 완료")]
     public bool requiresTranscendentCombine;
 
+    // ⚠️ 맨 뒤에 추가(2026-09-07, 우솝 특성강화 H09B/A0IE, TRAIT_UPGRADE_26_HEROES_FULL.md) —
+    // 위 boostedDamageBase 3종("항법 도움소 강화" 전용)과는 켜지는 조건이 다른 별도 축이다.
+    // 항법은 A0ID(해루석)·A0JR(버스터콜)만 레벨2로 쓰고, 우솝 특성은 오직 A0IE(독약) 하나만
+    // 레벨2로 쓴다 — 겹치는 스킬이 없다고 확인됐다(TRAIT_5GATE_REMAINING_VALUES.md ④).
+    // usoppTraitBoosts=true인 스킬(지금은 독약 하나)만 UsoppDockhouseTrait.Active를 본다.
+    [Header("우솝 특성강화(H09B, 전역) 전용 — 이 스킬이 그 대상인가")]
+    public bool usoppTraitBoosts;
+    public float boostedArmorShredOnHit;
+    public float boostedDuration;
+
     public float ComputeDamage(int currentRound, bool boosted = false)
     {
         float baseDamage = (boosted && boostedDamageBase > 0f) ? boostedDamageBase : damageBase;
@@ -153,4 +163,12 @@ public class SupportSkillData : ScriptableObject
     public int EffectiveManaCost(bool boosted) => (boosted && boostedManaCost > 0) ? boostedManaCost : manaCost;
     public float EffectiveCooldownSeconds(bool boosted) =>
         (boosted && boostedCooldownSeconds > 0f) ? boostedCooldownSeconds : cooldownSeconds;
+
+    // 우솝 특성 전용 — armorShredOnHit/duration은 항법 축(boosted 매개변수)이 아니라
+    // usoppTraitBoosts && UsoppDockhouseTrait.Active로만 올라간다. SupportShop이 그 조합을
+    // 미리 계산해 이 두 메서드에 넘긴다(둘 다 boostedX==0이면 원래값 그대로 — 회귀 없음).
+    public float EffectiveArmorShredOnHit(bool usoppBoosted) =>
+        (usoppBoosted && boostedArmorShredOnHit > 0f) ? boostedArmorShredOnHit : armorShredOnHit;
+    public float EffectiveDuration(bool usoppBoosted) =>
+        (usoppBoosted && boostedDuration > 0f) ? boostedDuration : duration;
 }

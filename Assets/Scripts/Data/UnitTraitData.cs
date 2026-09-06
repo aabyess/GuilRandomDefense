@@ -140,4 +140,11 @@ public class UnitTraitData : ScriptableObject
     // ⚠️ 구매 횟수 상한 없음 — 원작 원문에 상한 비교가 없다("몇 번이든"). 상한을 넣는 건
     // 지어내는 것이라 넣지 않았다.
     public bool isRepeatablePurchase;
+
+    // 우솝(G.O.D, H09B) 전용 — 26명 중 유일하게 targetUnit이 아니라 "전체 플레이어 공용
+    // 건물"(도움소)에 거는 특성이다(2026-09-07, 뿌리 ㊽). 언락 순간이 캐스터/targetUnit
+    // 자신에게는 원작에도 아무 효과가 없다(위 skillLevelUnlockIndex/replacementSkill 등
+    // 기존 축과 동시에 켜질 일이 없다) — GameHud.OnTraitButtonClicked이 이 플래그를 보고
+    // UsoppDockhouseTrait.Activate()를 부른다. false(기본값)면 기존 25개는 완전히 무영향.
+    public bool triggersUsoppDockhouseBoost;
 }

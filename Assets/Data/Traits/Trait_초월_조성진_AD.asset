@@ -15,7 +15,17 @@ MonoBehaviour:
   targetUnit: {fileID: 11400000, guid: 82efd2f9cf924aeea7d8ff9382a185a0, type: 2}
   traitName: 초월_조성진_AD 특성강화
   description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 #015 H09B G.O.D / upro(실제 이름): 우솝 / 능력 A0IE(9도움소 독약1) / 스킬승급 3pt. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고. DPS 순위 배정 — 1:1 이름매핑 아님. ⚠️ 2026-09-06 특이사항 추가(TRAIT_UPGRADE_26_HEROES_FULL.md, Trig_T_Ability_hero_Actions 원문) — 이 특성은 「그냥 스킬승급형」이 아니라 전역 효과다: 원작은 구매자 자신이 아니라 루프로 4명 전원의 udg_Manso[](도움소 건물)에 IncUnitAbilityLevelSwapped('A0IE')를 걸고 SetPlayerTechResearchedSwap('R017')·캐스터 INT+5도 같이 한다. 우리 UnitTraitData(targetUnit 하나에만 효과)는 이 전원
+    을 못 담아서 별도 게임전체 플래그(UsoppDockhouseTrait)를 새로 만들었다(2026-09-07). ⚠️
+    skillLevelUnlockIndex를 0으로 되돌렸다 — 원작은 targetUnit(이 유닛) 자신의 스킬을 전혀
+    안 건드린다(도움소만 건드린다), 예전 값 1은 "그냥 스킬승급형"으로 잘못 분류됐을 때의
+    잔재였다. R017(기술 카운트)·캐스터 INT+5는 이번 범위 밖 — 우리 쪽에 R017을 읽는 소비처가
+    없고(확인 안 됨), INT+5는 우리 스탯 축(purchasedStatGrantEach는 STR/AGI/INT 동시증가만
+    지원, 단일 스탯 증가 필드가 없다)에 안 맞아 미배선으로 남긴다(지어내지 않음, PM 확인 필요).
+    항법 "도움소 강화"와의 이중계상 여부는 확인됨 — 항법은 A0ID(해루석)·A0JR(버스터콜)만
+    레벨2로 쓰고 A0IE(독약)는 그 목록에 없다(TRAIT_5GATE_REMAINING_VALUES.md ④). 되돌리는
+    원작 코드 없음 — 한 번 켜지면 판 끝까지 유지.
   costTraitPoints: 3
   effects: []
-  specialEffectId: 
-  skillLevelUnlockIndex: 1
+  specialEffectId:
+  skillLevelUnlockIndex: 0
+  triggersUsoppDockhouseBoost: 1
