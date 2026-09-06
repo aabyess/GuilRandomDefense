@@ -207,11 +207,19 @@ results.append((
 # 기본값과 동일)이면 카운터가 1로 오른 순간 항상 "안 작다"가 되어 "N타째마다 1회"가
 # 아니라 매 타 발동한다. 8번과 마찬가지로 effects가 비어 있는 동안은 그 가드가 먼저
 # 걸려 무해하다 — 채우는 순간 위험해진다.
+#
+# ⚠️ 2026-09-06 예외 추가(SkillLevel.hitCountFloor 신설, B045/카타쿠리) — "바닥 조건"
+# 모드는 hitCountThreshold를 아예 안 쓰고(항상 0) hitCountFloor로 판정하므로, 이
+# 모드에선 threshold=0이 "채우는 걸 깜빡함"이 아니라 **정상 설계**다. hitCountFloor>0인
+# 레벨은 이 검사에서 뺀다.
 def onhitcount_danger(text):
     if not re.search(r"^  triggerType: 3\b", text, re.MULTILINE):
         return False  # OnHitCount가 아니면 이 카운터 경로를 안 탄다.
 
     for level_body in re.split(r"\n  - cooldown: ", text)[1:]:
+        floor_match = re.search(r"\n {4}hitCountFloor: (-?\d+)", level_body)
+        if floor_match and int(floor_match.group(1)) > 0:
+            continue  # 바닥 조건 모드 — threshold=0이 정상이다.
         threshold_match = re.search(r"\n {4}hitCountThreshold: (-?\d+)", level_body)
         threshold = int(threshold_match.group(1)) if threshold_match else 0
         if threshold != 0:
