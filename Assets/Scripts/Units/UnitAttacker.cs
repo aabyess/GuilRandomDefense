@@ -273,7 +273,8 @@ public class UnitAttacker : MonoBehaviour
         // isAbilityDamage: false — Bash도 평타와 같은 DamageType/AttackType을 써서 방어력·
         // 상성표를 평타와 똑같이 통과시키는 게 설계 의도다(위 메서드 주석). UNIVERSAL 무시도
         // 평타와 동일하게 적용 안 한다.
-        DealDamageToEnemy(target, bonus, DamageTypeOf, AttackTypeOf, armorIgnoreRatio: 0f, isAbilityDamage: false);
+        target.TakeDamage(bonus, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
+                          armorIgnoreRatio: 0f, isAbilityDamage: false);
 
         if (unitData.critStunDuration > 0f) StartCoroutine(CritStunRoutine(target, unitData.critStunDuration));
     }
@@ -337,20 +338,69 @@ public class UnitAttacker : MonoBehaviour
     bool lifeGaugeInitialized;
 
     // 01번 영웅 스탯(STR/AGI/INT) — 사장님 결정 2026-09-06. 원작 "적을 죽일 때마다
-    // AddHeroXP(영웅, 1)"에 대응 — DealDamageToEnemy가 자기 타격으로 대상의 숨통을 끊을
-    // 때만 올린다(다른 유닛이 이미 죽여둔 대상을 다시 때려도 안 오른다).
+    // AddHeroXP(영웅, 1)"에 대응.
     //
-    // ⚠️ 2026-09-06 단위 정정(PM 지적, 뿌리 ㉑) — AddHeroXP의 "1"은 레벨이 아니라
-    // 경험치 1점이다. 워크3 레벨업 문턱은 레벨마다 수백 점씩 커지는 값이라 "킬 1회 =
-    // 레벨 1"로 잘못 셌었다(원작보다 두 자릿수 배 빠르게 레벨업). heroXp는 킬마다 그대로
-    // 쌓지만, heroXp→heroLevel 변환 문턱이 아직 [미확인]이라 heroLevel은 0에 고정한다 —
-    // 문턱이 오면 여기 변환식만 넣으면 된다(CurrentStrength 등을 읽는 쪽은 안 건드려도
-    // 된다). ⚠️ 킬 귀속 자체(죽인 유닛 하나에게만 가는가, 전체 아군에게 가는가)도
-    // [미확인] — 답이 오기 전엔 이 로직을 더 정교하게 만들지 않는다(축이 바뀌면 버린다).
+    // ⚠️ 2026-09-06 축 재설계(PM, war3map.j:14734 직접 대조) — 이 값은 "죽인 유닛"이 아니라
+    // "그 라인 주인의 등록 영웅 전원"에게 간다(ForGroup(udg_Exp_Hero_Group[라인 주인], ...)
+    // → AddHeroXP(그 유닛, 1)). 누가 죽였는지는 안 본다 — 예전엔 DealDamageToEnemy가 자기
+    // 타격으로 죽였을 때만 올리게 짜여 있었는데(생사 비교 판정), 그 설계 자체가 축이
+    // 틀렸다(구조는 맞았지만 "죽인 사람"이 아니라 "라인 주인 전원"이 대상). 그 래퍼는 지금
+    // 존재 이유가 사라져 걷어냈다 — GrantHeroKillExperienceToLane(EnemyDummy.TakeDamage의
+    // 사망 처리, RewardDistributor.GrantKillReward와 같은 자리)이 대신한다.
+    //
+    // ⚠️ udg_Exp_Hero_Group에 등록되는 건 아무 유닛이 아니라 **조합으로 만든 초월함·영원한
+    // 등급 영웅뿐**이다(각 Trig_Eternal_* 조합 트리거가 생성 직후 그룹에 넣는다) — 그래서
+    // GrantHeroKillExperienceToLane이 UnitData.grade로 그 두 등급만 거른다.
     int heroXp;
-    int heroLevel; // 문턱 확정 전까지 항상 0 — 값을 넣어도 스탯 성장 없음(회귀 없음).
+    int heroLevel; // 0~23 (캐릭터 레벨 1~24). RecomputeHeroLevel이 heroXp가 바뀔 때마다 갱신.
 
-    void GainKillExperience() => heroXp++;
+    // ⚠️ MaxHeroLevel=24(스톡 10에서 원작이 늘림). war3mapMisc.txt: NeedHeroXP=33,75,116,152
+    // (레벨 2~5 누적 경험치, 리터럴) · 그 뒤(레벨 6~24)는 필요(N)=필요(N-1)×1.03+15×N.
+    // 킬 1회=경험치 1점이므로 누적 경험치=누적 킬 수와 같다. 표는 한 번만 계산해 재사용한다.
+    const int MaxHeroLevel = 24;
+    static readonly double[] HeroXpThresholds = BuildHeroXpThresholds();
+
+    static double[] BuildHeroXpThresholds()
+    {
+        // index i → 레벨(i+2)에 필요한 누적 경험치. 레벨 1은 문턱이 없어(이미 시작 레벨)
+        // 배열에 안 들어간다 — heroLevel(레벨업 누적 횟수)이 이 배열 길이(23)에 닿으면
+        // 캐릭터 레벨 24(상한)다.
+        double[] table = new double[MaxHeroLevel - 1];
+        table[0] = 33; table[1] = 75; table[2] = 116; table[3] = 152; // 레벨 2~5, 원작 리터럴
+        for (int level = 6; level <= MaxHeroLevel; level++)
+            table[level - 2] = table[level - 3] * 1.03 + 15 * level;
+        return table;
+    }
+
+    // 원작 AddHeroXP(영웅, N)에 대응 — 킬 1회는 N=1로 GainKillExperience가 부른다.
+    // ⚠️ 타시기 특성처럼 곡선을 건너뛰는 특성(AddHeroXPSwapped(5000) 등, 300~5000짜리
+    // 7건 더 있음, PM 지시 대기)이 나오면 이 메서드를 그대로 재사용하면 된다 — 킬이든
+    // 특성 일괄 지급이든 "경험치를 더한다"는 같은 동작이라 새 메서드가 필요 없다.
+    public void AddHeroXp(int amount)
+    {
+        if (amount <= 0) return;
+        heroXp += amount;
+        RecomputeHeroLevel();
+    }
+
+    void RecomputeHeroLevel()
+    {
+        int level = 0;
+        while (level < HeroXpThresholds.Length && heroXp >= HeroXpThresholds[level]) level++;
+        heroLevel = level; // HeroXpThresholds.Length(23)에서 자연히 멈춰 24레벨 상한을 지킨다.
+    }
+
+    public void GainKillExperience() => AddHeroXp(1);
+
+    // ⚠️ 아직 안 잇는다 — "어느 유닛의 주스탯이 무엇인가"(STR/AGI/INT 중 무엇이 그 유닛의
+    // 성장 축인가) 대응표가 없다(PM 지시 2026-09-06). 대응이 오면 각 유닛의 UnitData에서
+    // 주스탯 쪽 xPerLevel엔 0.85f, 나머지 둘엔 0.21f를 채운다 — 코드는 이미 그 값을
+    // 그대로 곱할 준비가 돼 있다(CurrentStrength 등, 아래). 리서치담당 검산: 평타 계열
+    // (StrAttackBonus류)의 기여는 최대 레벨에서도 7.6%뿐이고, 스탯이 주역인 건 스킬 쪽
+    // (SkillEffectBasis.CasterStrength 등, 계수 2,000~50,000)이다 — 평타 보너스를 크게
+    // 잡지 말 것.
+    const float MainStatGrowthPerLevel = 0.85f;
+    const float SecondaryStatGrowthPerLevel = 0.21f;
 
     public float CurrentStrength
     {
@@ -379,16 +429,20 @@ public class UnitAttacker : MonoBehaviour
         }
     }
 
-    // EnemyDummy.TakeDamage 앞뒤로 생사를 비교해 "이 호출이 실제로 숨통을 끊었는가"만
-    // 잡는다 — TakeDamage는 이미 죽은 대상엔 맨 위에서 조용히 리턴하므로, 크리티컬
-    // 보너스가 본타격 뒤에 또 들어오는 것처럼 한 공격 안에 여러 번 불려도 두 번 안 오른다.
-    void DealDamageToEnemy(EnemyDummy target, float amount, DamageType damageType, AttackType attackType,
-                            float armorIgnoreRatio = 0f, bool isAbilityDamage = true)
+    // EnemyDummy.TakeDamage의 사망 처리(RewardDistributor.GrantKillReward와 같은 자리)가
+    // 부른다 — laneIndex(원작 GetUnitUserData와 같은 라인 소유자 변수)의 초월함·영원한
+    // 유닛 전원에게 킬 경험치 1을 준다. 누가 죽였는지는 안 본다(원작 그대로).
+    public static void GrantHeroKillExperienceToLane(int laneIndex)
     {
-        bool wasAlive = !target.IsDead;
-        target.TakeDamage(amount, damageType, attackType, owner != null ? owner.OwnerId : -1,
-                           armorIgnoreRatio, isAbilityDamage);
-        if (wasAlive && target.IsDead) GainKillExperience();
+        if (laneIndex < 0) return;
+
+        foreach (UnitIdentity identity in UnitIdentity.Active)
+        {
+            if (identity == null || identity.Data == null) continue;
+            if (identity.Data.grade != UnitGrade.Transcendent && identity.Data.grade != UnitGrade.Eternal) continue;
+            if (identity.OwnerId != laneIndex) continue;
+            if (identity.TryGetComponent(out UnitAttacker attacker)) attacker.GainKillExperience();
+        }
     }
 
     // unitData.SkillAt(정적 데이터, UnitData.cs 참고)이 주는 슬롯 위에 런타임 오버레이
@@ -1084,7 +1138,7 @@ public class UnitAttacker : MonoBehaviour
         int hits = Mathf.Max(1, effect.hitCount);
         if (hits <= 1)
         {
-            DealDamageToEnemy(target, amount, effect.damageType, effect.attackType);
+            target.TakeDamage(amount, effect.damageType, effect.attackType, owner != null ? owner.OwnerId : -1);
             return;
         }
 
@@ -1098,7 +1152,7 @@ public class UnitAttacker : MonoBehaviour
         for (int i = 0; i < hits; i++)
         {
             if (target != null)
-                DealDamageToEnemy(target, amountPerHit, damageType, attackType);
+                target.TakeDamage(amountPerHit, damageType, attackType, owner != null ? owner.OwnerId : -1);
             if (i < hits - 1 && interval > 0f) yield return new WaitForSeconds(interval);
         }
     }
@@ -1283,7 +1337,8 @@ public class UnitAttacker : MonoBehaviour
             ApplyArmorShred(target);
             // isAbilityDamage: false — 평타는 원작에 UNIVERSAL이 없다(EnemyDummy.TakeDamage
             // 문서 참고). 로스터 damageType이 AP인 유닛이라도 평타로 방어를 무시하면 안 된다.
-            DealDamageToEnemy(target, AttackDamage, DamageTypeOf, AttackTypeOf, armorIgnoreRatio: 0f, isAbilityDamage: false);
+            target.TakeDamage(AttackDamage, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
+                              armorIgnoreRatio: 0f, isAbilityDamage: false);
             ApplyCritIfTriggered(target);
             TryCastOnHitSkill(target);
             return;

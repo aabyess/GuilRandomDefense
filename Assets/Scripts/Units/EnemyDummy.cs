@@ -639,6 +639,11 @@ public class EnemyDummy : MonoBehaviour
                 RewardDistributor.Instance.GrantKillReward(data, LaneIndex, SpawnRound, killerPlayerId);
             }
 
+            // 01번 영웅 XP(사장님 결정, war3map.j:14734 ForGroup(udg_Exp_Hero_Group[라인
+            // 주인], AddHeroXP(...,1))) — 골드와 같은 자리, 같은 변수(LaneIndex)를 쓴다.
+            // 누가 죽였는지는 안 본다 — killerPlayerId가 아니라 LaneIndex다.
+            UnitAttacker.GrantHeroKillExperienceToLane(LaneIndex);
+
             // 신호만 보낸다 — 실제 처리(도박소 해금 등)는 구독하는 쪽 몫이다.
             if (data != null && data.isBoss)
             {
