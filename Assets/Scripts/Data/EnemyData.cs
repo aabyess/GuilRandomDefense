@@ -164,4 +164,14 @@ public class EnemyData : ScriptableObject
     // ResolveSkillEffectValue) — 원작은 그 대신 별도 고정값을 쓰지만, 그 고정값 자체가
     // 아직 없어서(사장님 콘텐츠 미상) 지금은 "안 먹는다"로 대신한다.
     public bool takesPercentDamage = true;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-06, PM 지시, "대상 조건 게이트") — 원작 `GetUnitPointValue`
+    // 값 그 자체. 위 takesPercentDamage는 이 값을 200 문턱 하나로 미리 bool화해둔 것이라
+    // 재사용 못 한다 — 새로 발견된 25건의 대상 조건 분기가 200 "그리고" 300을 둘 다 쓰는
+    // 3단(<·==·>=) 비교라 원본 숫자가 필요하다(SkillEffect.targetCondition/
+    // targetConditionValue 참고). 기본값 0f = "아직 조사 안 됨" 센티널이다 — 리서치담당이
+    // 원작 적 유닛 포인트값을 전수 조사해 넘기기 전까진 이 값을 신뢰하지 말 것. 지금은
+    // 조건 게이트를 쓰는 SkillEffect가 하나도 없어(targetCondition 전부 None) 이 필드가
+    // 0이어도 회귀 없다 — 값을 채우는 건 62파일 배선(구현담당2) 작업의 일부다.
+    public float pointValue;
 }

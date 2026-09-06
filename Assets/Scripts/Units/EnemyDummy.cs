@@ -563,6 +563,12 @@ public class EnemyDummy : MonoBehaviour
     /// 아예 안 탄다. EnemyData.takesPercentDamage 참고.</summary>
     public bool TakesPercentDamage => data == null || data.takesPercentDamage;
 
+    /// <summary>원작 GetUnitPointValue(이 적). 2026-09-06 신설(PM 지시, "대상 조건 게이트") —
+    /// UnitAttacker.ApplyToEnemy가 SkillEffect.targetCondition 3단 분기(<·==·>=)를 여기 값과
+    /// 비교한다. EnemyData.pointValue가 0f(미조사 센티널)면 그대로 0을 돌려준다 — 조건이
+    /// 걸린 효과가 아직 없어(62파일 배선 전) 지금은 이 값이 어디서도 안 읽힌다.</summary>
+    public float PointValue => data != null ? data.pointValue : 0f;
+
     // 마방깍 누적. 마법 방어는 배율이라, 깎으면 배율이 **올라간다**(피해를 더 받는다).
     float magicArmorShred;
 

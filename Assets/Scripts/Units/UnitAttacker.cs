@@ -1188,6 +1188,26 @@ public class UnitAttacker : MonoBehaviour
         if (!string.IsNullOrEmpty(effect.forbiddenTargetBuffId) && target != null && target.HasBuff(effect.forbiddenTargetBuffId))
             return;
 
+        // 대상 조건 게이트(2026-09-06, PM 지시, "대상 조건 게이트") — 위 버프 게이트와 같은
+        // 자리·같은 방식(대상마다 따로 평가)으로 원작 GetUnitPointValue 3단 분기(<·==·>=)를
+        // 검사한다. targetCondition==None(기본값)이면 항상 통과 — 기존 365개 에셋 전부 이
+        // 필드가 없어 회귀 없다. target==null(Aura/CooldownAutoCast가 대상 없이 도는 경로)
+        // 이면 위 버프 게이트와 같은 원칙으로 조건이 걸려 있는 한 항상 막는다(대상이 없는데
+        // "대상이 조건을 만족한다"고 통과시키면 안전하지 않다).
+        if (effect.targetCondition != SkillEffectTargetCondition.None)
+        {
+            if (target == null) return;
+            float pointValue = target.PointValue;
+            bool passes = effect.targetCondition switch
+            {
+                SkillEffectTargetCondition.TargetPointValueLessThan => pointValue < effect.targetConditionValue,
+                SkillEffectTargetCondition.TargetPointValueEqual => pointValue == effect.targetConditionValue,
+                SkillEffectTargetCondition.TargetPointValueAtLeast => pointValue >= effect.targetConditionValue,
+                _ => true,
+            };
+            if (!passes) return;
+        }
+
         switch (effect.kind)
         {
             case SkillEffectKind.Damage:

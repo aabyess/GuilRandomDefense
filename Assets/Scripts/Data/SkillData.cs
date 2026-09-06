@@ -177,6 +177,27 @@ public enum SkillEffectKind
     A11SStack,
 }
 
+// ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
+// chance:1 다중효과 62파일 JASS 기계추적)에서 확률처럼 보이던 게 실은 **대상이 누구냐로
+// 갈리는 결정론적 분기**인 사례가 25건 나왔다 — 대부분(19건)이 `GetUnitPointValue(대상)`을
+// 문턱(200·300 등)과 비교하는 3단 분기(<·==·>=)다. `chance`로 옮기면 평균은 맞아도 분산이
+// 틀린다(원작은 보스에게 "항상" B식이 나가는데 확률로 옮기면 절반만 나간다).
+//
+// ⚠️ 버프 조건(나머지 6건 중 2건, B06B 보유 여부)은 이미 SkillEffect.requiredTargetBuffId/
+// forbiddenTargetBuffId(06번①-2)로 담을 수 있어 이 enum에 안 넣는다 — 그 필드가 정확히
+// "긍정/부정 짝"을 이미 표현하므로 중복 축을 안 만든다. 이 enum은 포인트값 비교 전용이다.
+//
+// ⚠️ 임계값(200/300 등)은 이 enum이 아니라 SkillEffect.targetConditionValue(자산 필드)에
+// 담는다 — 코드에 상수로 박지 않는다(원작에 200과 300이 둘 다 실재해서 어느 효과가 어느
+// 문턱을 쓰는지는 리서치담당 조사가 끝나야 안다).
+public enum SkillEffectTargetCondition
+{
+    None,
+    TargetPointValueLessThan,
+    TargetPointValueEqual,
+    TargetPointValueAtLeast,
+}
+
 // 효과 하나. 레벨 하나가 이걸 여러 개 가질 수 있다 — "레벨2에 효과가 하나 더 생긴다"(원작
 // 중력장: Lv2에 25% 확률 운석낙하 추가)를 "레벨마다 독립된 리스트"로 자연스럽게 담기 위함이다.
 [System.Serializable]
@@ -301,6 +322,15 @@ public class SkillEffect
     // 필드만 쓴다. 기본값 ""(둘 다 빈 문자열) = 조건 없음 — 기존 자산 전부 회귀 0이다.
     public string requiredTargetBuffId = "";
     public string forbiddenTargetBuffId = "";
+
+    // ⚠️ 맨 뒤에 추가(2026-09-06, PM 지시, "대상 조건 게이트") — 대상의 원작 포인트값
+    // (EnemyData.pointValue)을 targetConditionValue와 비교해 이 효과를 걸지 말지 정한다.
+    // 위 requiredTargetBuffId 게이트와 같은 자리(UnitAttacker.ApplyToEnemy)에서, 같은
+    // 방식(대상 하나하나마다 따로 평가 — AoE면 적마다 갈린다)으로 검사한다.
+    // 기본값 None = 조건 없음, 항상 통과(기존 365개 에셋 전부 이 필드가 없어 C# 기본값
+    // None으로 읽히므로 회귀 없음). targetConditionValue 기본 0은 None일 때 안 쓰인다.
+    public SkillEffectTargetCondition targetCondition = SkillEffectTargetCondition.None;
+    public float targetConditionValue;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
