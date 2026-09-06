@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작013_H099
   m_EditorClassIdentifier:
   skillName: A0JU !호크 개틀링
-  description: 06번① 순위배정 — 원작 명왕 레일리의 제자(H099), #013, upro(실제 이름): 몽키.D.루피, 능력교체형: (구 능력 A0KD) 제거 후 A0JU(!호크 개틀링) 부여. 2026-09-06 값 배정(TRAIT_REPLACEMENT_SKILLS.md/csv, 리서치담당 f6b44a6) — ⚠️ PM 지시: 이 스킬은 피해를 주는 게 아니라 "없애는" 분기다. Ruffy_Attack에서 평타마다 1/80(triggerChance=0.0125, GetRandomInt(1,80)==70) AND 버프 B06Y 미보유(절대쿨 1.75초, cooldown 필드로 표현 + selfBuffId="B06Y"로 다른 스킬이 조회 가능하게 등록) 판정을 통과하면, 더미 e04Q에 프로스트아머 + 원래는 clusterrockets(피해)를 걸어야 하는데 **A0JU를 보유하면 그 대신 battleroar(자기 공격력 버프, +40000, 2.5초, buff B00S)를 건다** — clusterrockets(미보유 시 기본 피해 분기)는 이 유닛의 다른 스킬(06번① 범위 밖, 별도 채널)이 이미 담당하고 여기선 안 옮긴다, 이 SkillData는 A0JU 보유 시의 대체 분기만 나타낸다. kind=ApplyBuff(Self, buffId="B00S", duration=2.5)로 버프 자체는 등록되지만, ⚠️ **공격력 +40000이라는 수치 효과는 아직 안 걸린다** — SkillEffectKind에 Self 대상 고정값 공격력 버프 case가 없다(ApplyBuff는 이름표만 세우고 UnitAttacker.AddAttackPowerBuff류는 배율 전용이라 이 고정값+버프와 안 맞는다). 새 kind가 생기기 전까지는 "산다 → 이름뿐인 버프가 잠깐 붙는다"까지만 동작한다.
+  description: 06번① 순위배정 — 원작 명왕 레일리의 제자(H099), #013, upro(실제 이름): 몽키.D.루피, 능력교체형: (구 능력 A0KD) 제거 후 A0JU(!호크 개틀링) 부여. 2026-09-06 값 배정(TRAIT_REPLACEMENT_SKILLS.md/csv, 리서치담당 f6b44a6) — ⚠️ PM 지시: 이 스킬은 피해를 주는 게 아니라 "없애는" 분기다. Ruffy_Attack에서 평타마다 1/80(triggerChance=0.0125, GetRandomInt(1,80)==70) AND 버프 B06Y 미보유(절대쿨 1.75초, cooldown 필드로 표현 + selfBuffId="B06Y"로 다른 스킬이 조회 가능하게 등록) 판정을 통과하면, 더미 e04Q에 프로스트아머 + 원래는 clusterrockets(피해)를 걸어야 하는데 **A0JU를 보유하면 그 대신 battleroar(자기 공격력 버프, +40000, 2.5초, buff B00S)를 건다** — clusterrockets(미보유 시 기본 피해 분기)는 이 유닛의 다른 스킬(06번① 범위 밖, 별도 채널)이 이미 담당하고 여기선 안 옮긴다, 이 SkillData는 A0JU 보유 시의 대체 분기만 나타낸다. kind=ApplyBuff(Self, buffId="B00S", duration=2.5)로 버프 자체는 등록되지만, ⚠️ **공격력 +40000이라는 수치 효과는 아직 안 걸린다** — SkillEffectKind에 Self 대상 고정값 공격력 버프 case가 없다(ApplyBuff는 이름표만 세우고 UnitAttacker.AddAttackPowerBuff류는 배율 전용이라 이 고정값+버프와 안 맞는다). 새 kind가 생기기 전까지는 "산다 → 이름뿐인 버프가 잠깐 붙는다"까지만 동작한다. 완료(2026-09-07, PM 지시 — 전수 census 결과 이 kind가 필요한 자산 3건 확인돼 신설): SkillEffectKind.AttackPowerBuffFlat 추가 후 이 효과(kind=11, Self, multiplier=40000, duration=2.5, buffId=B00S)를 마저 채웠다 — UnitAttacker.AddFlatAttackPowerBuff가 AttackDamage 계산에 실제로 반영한다(PrimaryStatAttackBonus와 같은 자리, 배율 안쪽). 나머지 2건(더미채널_불멸_신지우_h04F/A05G, 버프게이트_초월_양재모_AD_B03Z/A09H)은 이미 "제거"로 처리돼 있었다 — 이 kind로 되살릴지는 값이 늘어나는 변경이라 이번엔 안 건드리고 PM 판단 대기.
   triggerType: 0
   levels:
   - cooldown: 1.75
@@ -27,6 +27,17 @@ MonoBehaviour:
       damageType: 1
       attackType: 0
       multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 2.5
+      buffId: B00S
+    - kind: 11
+      basis: 0
+      target: 0
+      damageType: 1
+      attackType: 0
+      multiplier: 40000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
