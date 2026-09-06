@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_전설적인_임채민_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_전설적인_임채민_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 전설적인_임채민.  · Trig_Legend10 → e00V(!전설 샹크스 스턴) → A07T: 125000
+  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 전설적인_임채민.  · Trig_Legend10 → e00V(!전설 샹크스 스턴) → A07T: 125000 정정(2026-09-06, CROSS_CHANNEL_DUPLICATE_SWEEP.md/65b7f96): Trig_Legend10 → e00V → A07T를 제거했다 — 원작 발동 지점이 하나(Trig_Legend10)라 전설적인_백기현(원작능력 루트 파일 보유)에 귀속. 79행 DPS 순위 배정이 독립적으로 같은 값을 또 배정한 중복이었다.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,15 +22,4 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 125000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
+    effects: []
