@@ -118,14 +118,14 @@ def parse_skill(path):
     effects_body = effects_match.group(1) if effects_match else ""
     has_effects = re.search(r"^\s*- kind:", effects_body, re.MULTILINE) is not None
 
-    cooldown_m = re.match(r"([\d.]+)", level_body)
+    cooldown_m = re.match(r"([-+0-9.eE]+)", level_body)
     cooldown = float(cooldown_m.group(1)) if cooldown_m else 0.0
 
     return {
         "triggerType": trigger_type,
         "hasEffects": has_effects,
         "cooldown": cooldown,
-        "triggerChance": num(r"\n {4}triggerChance: ([\d.]+)", 1.0),
+        "triggerChance": num(r"\n {4}triggerChance: ([-+0-9.eE]+)", 1.0),
         "hitCountThreshold": int(num(r"\n {4}hitCountThreshold: (-?\d+)", 0, int)),
         "resetTo": int(num(r"\n {4}resetTo: (-?\d+)", 0, int)),
         "gaugeKind": int(num(r"\n {4}gaugeKind: (\d+)", 0, int)),

@@ -111,7 +111,7 @@ def load_roster():
         text = open(path, encoding="utf-8").read()
 
         def g(field):
-            m = re.search(rf"^  {field}: (-?[\d.]+)", text, re.MULTILINE)
+            m = re.search(rf"^  {field}: ([-+0-9.eE]+)", text, re.MULTILINE)
             return float(m.group(1)) if m else None
 
         grade_idx = g("grade")
@@ -203,8 +203,8 @@ def load_enemies():
         if not m:
             continue
         r = int(m.group(1))
-        hp = float(re.search(r"^  hp: ([\d.]+)", text, re.MULTILINE).group(1))
-        armor = float(re.search(r"^  armor: ([\d.]+)", text, re.MULTILINE).group(1))
+        hp = float(re.search(r"^  hp: ([-+0-9.eE]+)", text, re.MULTILINE).group(1))
+        armor = float(re.search(r"^  armor: ([-+0-9.eE]+)", text, re.MULTILINE).group(1))
         is_boss = int(re.search(r"^  isBoss: (\d)", text, re.MULTILINE).group(1))
         # armorType — 필드 생략 = Unassigned(0), load_roster의 attackType과 같은 이유.
         at_m = re.search(r"^  armorType: (-?\d+)", text, re.MULTILINE)
@@ -233,7 +233,7 @@ def load_wave_counts():
 # ---------------------------------------------------------------------------
 
 def parse_float_field(text, field, default=None):
-    m = re.search(rf"\[SerializeField\][^;]*?\b{field}\s*=\s*(-?[\d.]+)f?;", text)
+    m = re.search(rf"\[SerializeField\][^;]*?\b{field}\s*=\s*([-+0-9.eE]+)f?;", text)
     if m:
         return float(m.group(1))
     if default is not None:
@@ -275,7 +275,7 @@ def load_round_constants():
 
 def load_defense_armor():
     ed = read("Assets/Scripts/Units/EnemyDummy.cs")
-    m = re.search(r"public const float DefenseArmor = ([\d.]+)f;", ed)
+    m = re.search(r"public const float DefenseArmor = ([-+0-9.eE]+)f;", ed)
     if not m:
         sys.exit("FATAL: EnemyDummy.cs에서 DefenseArmor를 못 찾았다.")
     return float(m.group(1))
@@ -290,7 +290,7 @@ def load_support_skill(name):
     text = open(path, encoding="utf-8").read()
 
     def g(field, cast=float):
-        m = re.search(rf"^  {field}: (-?[\d.]+)", text, re.MULTILINE)
+        m = re.search(rf"^  {field}: ([-+0-9.eE]+)", text, re.MULTILINE)
         return cast(m.group(1)) if m else None
 
     return {
@@ -311,7 +311,7 @@ def load_mana_portal_params():
     세 값만 본다, 넷째 인자의 의미는 이 스크립트가 몰라도 된다."""
     mg = read("Assets/Editor/MapGenerator.cs")
     m = re.search(
-        r"ResourcePortal\.Payout\.Resource,\s*ResourceType\.Mana,\s*(-?[\d.]+),\s*(-?[\d.]+)f?,\s*(-?[\d.]+)f?[,)]",
+        r"ResourcePortal\.Payout\.Resource,\s*ResourceType\.Mana,\s*([-+0-9.eE]+),\s*([-+0-9.eE]+)f?,\s*([-+0-9.eE]+)f?[,)]",
         mg)
     if not m:
         sys.exit("FATAL: MapGenerator.cs에서 마나 포탈 파라미터를 못 찾았다 — 시그니처가 바뀐 것 같다.")
@@ -452,8 +452,8 @@ def parse_damage_table():
     rows = {}
     for row_name in ("normal", "pierce", "siege", "hero", "chaos", "magic", "spells"):
         m = re.search(
-            rf"  {row_name}:\n    vsLarge: ([\d.]+)\n    vsFort: ([\d.]+)\n"
-            rf"    vsNormal: ([\d.]+)\n    vsHero: ([\d.]+)", text)
+            rf"  {row_name}:\n    vsLarge: ([-+0-9.eE]+)\n    vsFort: ([-+0-9.eE]+)\n"
+            rf"    vsNormal: ([-+0-9.eE]+)\n    vsHero: ([-+0-9.eE]+)", text)
         if not m:
             sys.exit(f"FATAL: DamageTable.asset에서 '{row_name}' 행을 못 찾았다 — 파일 구조가 바뀐 것 같다.")
         rows[row_name] = {"Large": float(m.group(1)), "Fort": float(m.group(2)),
@@ -533,10 +533,10 @@ def load_skill_assets():
             continue
         level0 = level0_m.group(0)
 
-        tc_m = re.search(r"triggerChance: ([\d.]+)", level0)
+        tc_m = re.search(r"triggerChance: ([-+0-9.eE]+)", level0)
         trigger_chance = float(tc_m.group(1)) if tc_m else 0.0
 
-        cd_m = re.search(r"-\s*cooldown: ([\d.]+)", level0)
+        cd_m = re.search(r"-\s*cooldown: ([-+0-9.eE]+)", level0)
         cooldown = float(cd_m.group(1)) if cd_m else 0.0
 
         # OnHitCount(게이지형) 전용 — ea2a579의 UnitAttacker 카운터와 같은 필드.
@@ -548,8 +548,8 @@ def load_skill_assets():
         effects = []
         for em in re.finditer(
                 r"- kind: (\d+)\s*\n\s*basis: (\d+)\s*\n\s*target: \d+\s*\n\s*damageType: (\d+)\s*\n"
-                r"\s*attackType: (\d+)\s*\n\s*multiplier: (-?[\d.]+)\s*\n\s*bonus: (-?[\d.]+)\s*\n"
-                r"\s*chance: ([\d.]+)", level0):
+                r"\s*attackType: (\d+)\s*\n\s*multiplier: ([-+0-9.eE]+)\s*\n\s*bonus: ([-+0-9.eE]+)\s*\n"
+                r"\s*chance: ([-+0-9.eE]+)", level0):
             kind_idx, basis_idx, damage_type_idx, attack_type_idx, multiplier, bonus, chance = em.groups()
             effects.append({
                 "kind_idx": int(kind_idx), "basis_idx": int(basis_idx),
