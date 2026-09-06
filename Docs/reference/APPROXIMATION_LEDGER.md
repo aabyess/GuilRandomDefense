@@ -1472,3 +1472,75 @@ h05Y(고대의 배)
 
 `compile_check.sh`/`check_required_fields.py`/`check_assignment_invariants.py`
 전부 exit 0. UI 클릭 경로는 런타임 미검증(§9 공통 구멍).
+
+## 24. 특성 26분기 — 비용 전원 일치(26/26) + 부수변수/특이사항 기록 + 배정 전 선행조건 (2026-09-06, PM 지시)
+
+### ① 비용(`costTraitPoints`) 전수 대조 — 26/26 전부 일치
+
+`TRAIT_UPGRADE_26_HEROES_FULL.md`(리서치담당, 26명 전수)와 우리
+`Trait_*.asset`을 대조했다. **26/26 전부 원작 비용과 정확히 일치, 다름
+0건, 매칭실패 0건.** 사장님 07번("특성 9종 효과는 지어내라")이 이 26명엔
+필요 없었던 게 확인됐는데도 — **누구도 지어내지 않았고 결과가 원작과
+정확히 같았다.**
+
+### ② `specialEffectId` — 죽은 필드로 확인, 값을 안 채우고 기록만 한다
+
+`grep -rn "specialEffectId" Assets/Scripts/` → **선언(`UnitTraitData.cs`)
+말고 읽는 코드 0건.** `GachaTable.weight`와 같은 부류(죽은 필드) — 지금
+채워도 아무 일도 안 돈다. **그래서 `specialEffectId`엔 안 채웠다** — 대신
+해당 10개 파일의 `description`에 원작 부수변수와 "아직 안 돈다"는 상태를
+같이 적었다(그 필드가 실제로 소비되기 시작하면 그때 옮긴다).
+
+**종류가 섞여 있어 나눠 기록했다**(PM 지시대로):
+
+| 종류 | 개수 | 캐릭터(우리 파일) |
+|---|---:|---|
+| 🔴 확률식 자체를 바꾸는 변수 | 1 | 검은수염/치치(`Trait_초월_임채민_AP`) — `Tichi_TR_AddInt` 기본6→3, 다른 트리거의 `GetRandomInt` 분모로 쓰임 |
+| 단순 bool 부기 | 5 | 키드(`Trait_초월_황준석_ADAP`)·프랑키(`Trait_초월_박기찬_AD`)·루치(`Trait_초월_임장혁_AD`)·로우(`Trait_초월_두유찬_AD`)·나미(`Trait_초월_이재윤_AD`) |
+| 재구매 차단(1인1회 별도 잠금) | 3 | 시라호시(`Trait_초월_유재헌_ADAP`)·호킨스(`Trait_초월_엄태웅_AD`)·도플라밍고(`Trait_초월_최상호_AP`) |
+| 반복구매 카운터 | 1 | 아카이누(`Trait_초월_김만경_AD`, ③ 참고) |
+
+### ③ description 특이사항 3건 — "그냥 스킬승급형"으로 오인될 위험 해소
+
+우솝(`Trait_초월_조성진_AD`)·로빈(`Trait_초월_신문철_AP`)·아카이누
+(`Trait_초월_김만경_AD`)의 description에 원작 근거(`Trig_T_Ability_hero_
+Actions` 원문 인용)와 함께 특이사항을 추가했다 — 각각 §22(스키마 판정)
+결론을 그대로 인용: 우솝=전역효과(4명 도움소, 자기강화 아님), 로빈=대상이
+`GetSpellTargetUnit()`(타 유닛), 아카이누=26명 중 유일한 반복구매형(우리
+구조는 HashSet이라 1회만 허용, 재구매 시 포인트 손실 위험은 없음 — UI가
+재구매 버튼 자체를 잠근다, 다만 원작보다 덜 주는 방향).
+
+### 🔴 ④ 배정 전 선행조건 — 변신 목적지가 채워지는 순간 살아나는 버그
+
+`transformIntoUnit`(아오키지→`Trait_초월_양재모_AD`, 초파→`Trait_초월_
+배성령_AD`)은 **지금 둘 다 비어 있다**(`transformIntoUnit:` 줄 자체가
+YAML에 없음 — Unity가 기본값 직렬화를 생략한다, 직접 `grep`으로 확인).
+`GameHud.cs:392`의 가드가 구매 버튼 자체를 잠가서 **지금은 도달 불가**다.
+
+⚠️ **사장님이 이 두 유닛의 목적지를 배정하는 순간(=버튼이 풀리는 순간),
+아래가 살아있는 버그로 바뀐다 — 배정 전에 반드시 먼저 고칠 것**:
+
+```
+GameHud.ExecuteTransform이 옛 유닛을 Consume()하고 새 유닛을 스폰할 뿐
+UnitAttacker.heroXp/heroLevel/purchasedStrength·Agility·Intelligence를
+새 유닛으로 안 옮긴다 — 그냥 리셋된다. 원작은 "경험치·스탯 이월"이 명시돼
+있다. 에러도 로그도 안 남고 조용히 사라진다 — 플레이어가 변신했더니
+영웅 레벨과 산 스탯이 없어졌다는 걸 겪고 나서야 안다.
+
+A0WP(INT비례, 실패시31)/A11V(STR비례, 실패시35) — 변신 후 새 유닛에
+스탯비례 능력을 세팅하는 로직 자체가 없다.
+```
+
+**우리에게 이미 있는 재료**: `UnitAttacker.CurrentStrength/Agility/
+Intelligence`(§22 참고, `AddPurchasedStat`으로 이미 쌓임)와 `heroXp`/
+`heroLevel`(`AddHeroXp`) — `ExecuteTransform`이 `Consume()` 전에 이 값들을
+읽어 새 유닛의 같은 필드에 세팅하는 코드만 추가하면 이월 자체는 어렵지
+않다. `A0WP`/`A11V` 세팅은 별도 설계가 필요하다(스탯비례 능력을 어떻게
+표현할지 — 아직 안 봤다).
+
+⚠️ **이 배정은 채팅언락 47종·히든조합과 같은 "유닛 배정" 공통 게이트에
+걸려 있다** — 사장님이 배정을 주는 순간 여러 시스템이 한꺼번에 풀린다.
+그때 뭐가 깨지는지 이 목록이 미리 있어야 배정 직후 사고를 막는다.
+
+**검증**: `check_required_fields.py`/`check_assignment_invariants.py` 둘 다
+exit 0. 자산은 description만 추가(수치·구조 변경 없음).

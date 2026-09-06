@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   targetUnit: {fileID: 11400000, guid: c4c2ba9ea248426c97e7cdd1f0a5e501, type: 2}
   traitName: 초월_임채민_AP 특성강화
-  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 #001 H090 지진과 어둠의 검은수염 / upro(실제 이름): 마샬.D.티치 / 능력 A0D0(!흔들흔들 열매) / 스킬승급 2pt. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고. DPS 순위 배정 — 1:1 이름매핑 아님.
+  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 #001 H090 지진과 어둠의 검은수염 / upro(실제 이름): 마샬.D.티치 / 능력 A0D0(!흔들흔들 열매) / 스킬승급 2pt. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고. DPS 순위 배정 — 1:1 이름매핑 아님. ⚠️ 2026-09-06 부수변수 확인(TRAIT_UPGRADE_26_HEROES_FULL.md) — 원작은 능력레벨업(IncUnitAbilityLevelSwapped('A0D0'))과 동시에 udg_Tichi_TR_AddInt[플레이어]를 기본6→3으로 바꾼다 — 이건 부기가 아니라 [확률식 자체를 바꾸는 변수]다(다른 트리거의 GetRandomInt(1,udg_Tichi_TR_AddInt[...]) 분모로 쓰임). UnitTraitData.specialEffectId 필드는 있지만 아직 읽는 코드가 0건(죽은 필드, GachaTable.weight와 같은 부류) — 값을 채워도 안 돈다. 채우지 않고 여기 기록만 한다, 필드가 실제로 소비되기 시작하면 그때 옮긴다.
   costTraitPoints: 2
   effects: []
   specialEffectId: 

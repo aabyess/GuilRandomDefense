@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   targetUnit: {fileID: 11400000, guid: 36fcd640140f46d0b05eaab916fc748b, type: 2}
   traitName: 초월_최상호_AP 특성강화
-  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 #010 H09E "어둠의 조커"드레스로자의 악몽 / upro(실제 이름): 도플라밍고 / 능력 A0AL(6변신) / 스킬승급 3pt. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고. DPS 순위 배정 — 1:1 이름매핑 아님.
+  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 #010 H09E "어둠의 조커"드레스로자의 악몽 / upro(실제 이름): 도플라밍고 / 능력 A0AL(6변신) / 스킬승급 3pt. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고. DPS 순위 배정 — 1:1 이름매핑 아님. ⚠️ 2026-09-06 부수변수 확인(TRAIT_UPGRADE_26_HEROES_FULL.md) — 능력레벨업(SetUnitAbilityLevelSwapped('A0AL',+1))과 동시에 이 구매버튼 자체를 SetPlayerAbilityAvailableBJ(false,...)로 없애 재구매를 차단한다. UnitTraitData.specialEffectId는 아직 읽는 코드가 0건(죽은 필드) — 값을 안 채우고 기록만 한다.
   costTraitPoints: 3
   effects: []
   specialEffectId: 

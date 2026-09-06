@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   targetUnit: {fileID: 11400000, guid: 580739ea8d0141a5859ca080b778ce09, type: 2}
   traitName: 초월_김만경_AD 특성강화
-  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 #017 H095 신 해군원수 / upro(실제 이름): 아카이누 / 능력 A0HG(!유성화산-아카초) / 스킬승급 1pt. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고. DPS 순위 배정 — 1:1 이름매핑 아님.
+  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 #017 H095 신 해군원수 / upro(실제 이름): 아카이누 / 능력 A0HG(!유성화산-아카초) / 스킬승급 1pt. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고. DPS 순위 배정 — 1:1 이름매핑 아님. ⚠️ 2026-09-06 특이사항 추가(TRAIT_UPGRADE_26_HEROES_FULL.md, Trig_T_Ability_hero_Actions 원문) — 26명 중 유일한 반복구매형이다: 원작은 SetUnitAbilityLevelSwapped('A0HG',+1)이 항상 실행되고 최초 1회만 구매버튼을 없애며, 이후엔 매번 IncUnitAbilityLevelSwapped+SetUnitUserData(+1)로 몇 번이든 다시 살 수 있다(UserData=구매횟수 카운터). 우리 UnitUpgrades.Unlock()은 HashSet.Add라 한 번 사면 그걸로 끝(재구매 자체가 영구히 막힌다) — 포인트 손실 위험은 없다(UI가 재구매 버튼을 잠근다, 습득완료 표시), 다만 원작보다 덜 주는 방향이다. 카운터 기반 별도 저장소가 새로 필요하다(PM 지시로 판정만 하고 대기 중).
   costTraitPoints: 1
   effects: []
   specialEffectId: 

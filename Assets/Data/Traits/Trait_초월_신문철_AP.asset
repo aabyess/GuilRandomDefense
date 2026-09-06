@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   targetUnit: {fileID: 11400000, guid: ede9fd1d05bd450da2c14bd1afbada87, type: 2}
   traitName: 초월_신문철_AP 특성강화
-  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 #014 H098 오하라의 마지막 생존자 / upro(실제 이름): 니코 로빈 / 능력 A0FL(D로빈의 손날개) / 능력교체 2pt. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고. DPS 순위 배정 — 1:1 이름매핑 아님.
+  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 #014 H098 오하라의 마지막 생존자 / upro(실제 이름): 니코 로빈 / 능력 A0FL(D로빈의 손날개) / 능력교체 2pt. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고. DPS 순위 배정 — 1:1 이름매핑 아님. ⚠️ 2026-09-06 특이사항 추가(TRAIT_UPGRADE_26_HEROES_FULL.md, Trig_T_Ability_hero_Actions 원문) — 이 특성은 대상이 캐스터 자신이 아니라 GetSpellTargetUnit()(시전 시 지정하는 다른 아군 유닛)이다. UnitAddAbilityBJ('A0FL')+UnitAddAbilityBJ('A0ZP')를 그 대상에게 걸고 UnitMakeAbilityPermanent로 영구화한다. 우리 트레잇 UI(구매=즉시 자기효과)는 대상 지정 개념이 없다 — SupportShop의 targetKind:Unit류 타겟팅 UI가 새로 필요하다(PM 지시로 판정만 하고 대기 중).
   costTraitPoints: 2
   effects: []
   specialEffectId: 

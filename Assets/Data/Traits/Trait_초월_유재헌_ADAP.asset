@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   targetUnit: {fileID: 11400000, guid: 699894c99461462793b98a0ef6abf5cf, type: 2}
   traitName: 초월_유재헌_ADAP 특성강화
-  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 #008 H08U "포세이돈" 인어공주(시라호시) / upro(실제 이름): 시라호시 / 능력 A0EQ(!해류조정-시라호시) / 스킬승급 2pt. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고. DPS 순위 배정 — 1:1 이름매핑 아님.
+  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 #008 H08U "포세이돈" 인어공주(시라호시) / upro(실제 이름): 시라호시 / 능력 A0EQ(!해류조정-시라호시) / 스킬승급 2pt. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고. DPS 순위 배정 — 1:1 이름매핑 아님. ⚠️ 2026-09-06 부수변수 확인(TRAIT_UPGRADE_26_HEROES_FULL.md) — 능력레벨업(SetUnitAbilityLevelSwapped('A0EQ',+1))과 동시에 이 구매버튼 자체를 SetPlayerAbilityAvailableBJ(false,...)로 없애 재구매를 차단한다(1인1회 별도 잠금 — 우리 UnitUpgrades.Unlock의 HashSet 특성과 결과적으로 같은 방향이라 지금도 재구매 자체는 안 된다, 다만 그 잠금 이유가 원작과 같은 근거인지는 별개). UnitTraitData.specialEffectId는 아직 읽는 코드가 0건(죽은 필드) — 값을 안 채우고 기록만 한다.
   costTraitPoints: 2
   effects: []
   specialEffectId: 

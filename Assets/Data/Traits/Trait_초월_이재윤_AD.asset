@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   targetUnit: {fileID: 11400000, guid: 4a135c404b1b4aee8ab5985e83ce6bf9, type: 2}
   traitName: 초월_이재윤_AD 특성강화
-  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 #007 H08V 웨더리아의 항해사 / upro(실제 이름): 나미 / 능력 A107($제우스) / 능력교체 2pt. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고. DPS 순위 배정 — 1:1 이름매핑 아님.
+  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 #007 H08V 웨더리아의 항해사 / upro(실제 이름): 나미 / 능력 A107($제우스) / 능력교체 2pt. Docs/reference/ORIGINAL_TRAIT_BRANCHES.md 참고. DPS 순위 배정 — 1:1 이름매핑 아님. ⚠️ 2026-09-06 부수변수 확인(TRAIT_UPGRADE_26_HEROES_FULL.md) — 능력추가(UnitAddAbilityBJ('A107'))+더미유닛 h0AJ 소환과 동시에 udg_NamiT_Bool=true를 세팅한다(단순 bool 부기). UnitTraitData.specialEffectId는 아직 읽는 코드가 0건(죽은 필드) — 값을 안 채우고 기록만 한다.
   costTraitPoints: 2
   effects: []
   specialEffectId: 
