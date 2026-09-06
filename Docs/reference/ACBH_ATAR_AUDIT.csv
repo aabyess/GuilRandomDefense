@@ -1,0 +1,38 @@
+구분,우리 에셋/CSV,능력ID,능력이름,atar,원작 Hbh 값,우리에 들어간 값,판정,조치
+㉠ GATE_FIX_9,불멸_이승우 (A044),A044,!패기의 주먹,"air,enemies,neutral,ground",Hbh1=20 · Hbh2=5.0 · Hbh3=250000,triggerChance 0.20,✅ 유효,그대로 둔다. 450e48d 수정 정당
+㉠ GATE_FIX_9,제한_김민규 (A0QQ),A0QQ,!견문색의 패기-카타쿠리,"air,sapper,enemies,ground",Hbh1=100 · Hbh2=6.25,1.0 유지,✅ 유효,「1.0 정당」 그대로
+㉠ GATE_FIX_9,제한_강보명 (A0GK),A0GK,!단신 최강,"air,ancient,enemies,neutral,ground",Hbh1=100 · Hbh3=850000,1.0 유지,✅ 유효,그대로
+㉠ GATE_FIX_9,영원_김영원 (A0G3),A0G3,!최강의 참격,"air,enemies,ground",Hbh1=100,1.0 유지,✅ 유효,그대로
+㉠ GATE_FIX_9,불멸_박은석 (A05P),A05P,!대구경 탄환2,"air,enemies,ground",Hbh1=100 · Hbh3=50000,1.0 유지,✅ 유효,그대로
+㉠ GATE_FIX_9,불멸_정준영 (A0FS),A0FS,!용오름-드불,none,Hbh1=0 · Hbh3=0,— (해당없음 표시),✅ 영향 없음,원래 ⚪해당없음이었다
+㉠ GATE_FIX_9,불멸_정윤식 (A0EM),A0EM,!명왕의 검술,"air,enemies,neutral,ground",Hbh1 미지정 → 스톡 15% · Hbh3=92500,[미확인],✅ 규칙③ 적용 가능,15%로 닫아도 된다
+㉠ GATE_FIX_9,불멸_고도현 (A0EM),A0EM,!명왕의 검술,"air,enemies,neutral,ground",동일,[미확인],✅ 규칙③ 적용 가능,15%
+㉠ GATE_FIX_9,제한_이충민 (A15N),A15N,!봉황인,"air,enemies,ground",Hbh1 미지정 → 15% · Hbh2=3.25 · Hbh3=150000,[미확인],✅ 규칙③ 적용 가능,15%
+㉠ GATE_FIX_9,영원_조세민 (A0J7),A0J7,!쿠사의 패기,"air,enemies,ground",Hbh1 미지정 → 15% · Hbh2=8.0 · Hbh3=500000,[미확인],✅ 규칙③ 적용 가능,15%
+㉡ 안흔함,후쿠로·블루노 (A046),A046,!육식,"air,enemies,neutral,ground",Hbh1 미지정 → 15% · Hbh2=1.5,확률 [미확인],✅ 유효,15%·1.5배로 닫는다
+㉡ 안흔함,하찌 (A06P),A06P,!어인,"air,enemies,neutral,ground",Hbh1=20 · Hbh3=150,20% · 150,✅ 유효,그대로
+㉡ 안흔함,브룩 (A04C),A04C,!잠의 노래 프람,"air,enemies,neutral,ground",Hbh1=10 · Hbh3=0,10%,✅ 유효,그대로
+㉡ 안흔함,타시기 (A03M),A03M,!시구레,"air,enemies,neutral,ground",Hbh1=20 · Hbh3=200,20% · 200,✅ 유효,그대로
+㉡ 안흔함,에이스 (A06J),A06J,!이글이글열매,"air,enemies,ground",Hbh1=10 · Hbh3=200,10% · 200,✅ 유효,그대로
+㉡ 안흔함,니코 로빈 (A0T7),A0T7,!꽃꽃 열매,"air,enemies,ground",base가 ACbh 아님(Aroc). Efk1=0 · Efk2=99999 · Efk3=1 · aare=600 · adur=0.01,[미확인],⚪ 별개 축,ACbh 규칙과 무관. 아래 별도 항목 참조
+㉢ 그 밖,랜덤_이즈미_신이치,A0H6,!슈타인베르거,none,Hbh1=4.25 · Hbh2=10.0,triggerChance = 0.0425,🔴 정정필요,원작에서 안 도는 확률. 되돌릴 것
+㉢ 그 밖,랜덤_한마_바키,A0H6,!슈타인베르거,none,Hbh1=4.25 · Hbh2=10.0,"설명에 「발동0.0425」 기록, triggerChance는 1.0",🟡 값 미반영,설명만 정정
+㉢ 그 밖,불멸_김용태,A0LS,!천신,none,Hbh1=18 · Hbh3=700000,triggerChance = 0.18,🔴 정정필요,되돌릴 것
+㉢ 그 밖,불멸_고도현,A0LS,!천신,none,Hbh1=18 · Hbh3=700000,effects에 bonus 700000,🔴 정정필요,이 항 제거 검토
+㉢ 그 밖,전설적인_홍인창,A0TW,!그림자 흡수-루피 나메,none,Hbh1 미지정 · Hbh2=12.5,multiplier 12.5,🔴 정정필요,12.5배는 원작에서 안 돈다
+㉢ 그 밖,전설적인_이유선,A0TW,!그림자 흡수-루피 나메,none,동일,triggerChance 0.1은 Trig_Legend8에서 온 것(GATE_FIX_14),✅ 영향 없음,확률 출처가 다르다
+㉢ 그 밖,전설적인_양재모,A16L,!화이트아웃,none,Hbh1=25 · Hbh3=0,triggerChance = 0.25,🔴 정정필요,되돌릴 것
+㉢ 그 밖,전설적인_정준영,A16L,!화이트아웃,none,Hbh1=25 · Hbh3=0,triggerChance = 0.25,🔴 정정필요,되돌릴 것
+㉢ 그 밖,특별함_양재모,A0SI,!생체병기-특별아이콘용,"none,neutral",Hbh1=20 · Hbh3=0,triggerChance = 0.2,🔴 정정필요,되돌릴 것
+㉢ 그 밖,희귀함_배현진,A06D,!디아블 잠브,none,Hbh1=0 · Hbh3=15000,effects에 15000,🔴 정정필요,atar도 none이고 Hbh1=0이라 규칙 ④로도 무효
+㉢ 그 밖,희귀함_이상혁,A06D,!디아블 잠브,none,동일,등장만,🟡 확인 권장,
+㉢ 그 밖,희귀함_조현규,A0UZ,!혼포인트,none,Hbh1=0 · Hbh3=5000,effects에 5000,🔴 정정필요,동일
+㉢ 그 밖,희귀함_윤현모,A0UZ,!혼포인트,none,동일,등장만,🟡 확인 권장,
+㉢ 그 밖,불멸_이승우,A0FU,!주먹의거프-거불,none,Hbh1=0 · Hbh3=200000,"effects에 200000, 같은 레벨 블록의 triggerChance 0.20을 공유",🔴 정정필요,A044(유효)와 블록을 공유하는 게 문제
+㉢ 그 밖,불멸_정윤식,A0EO,!순속,none,Hbh1=12 · Hbh3=0,"설명 기록만, triggerChance 1.0",🟡 값 미반영,설명만 정정
+㉢ 그 밖,불멸_정준영 / 초월_황준석_ADAP,A0ZV,!브레스-카이도,none,Hbh1=30 · Hbh2=1.0 · Hbh3=1.0,배수 1.0·추가 1.0 (효과 없음),🟡 무해,값이 사실상 0
+㉢ 그 밖,영원_서민성,A0YF,!오뎅 이도류,none,Hbh1=20 · Hbh3=0,설명 기록만,🟡 무해,피해값 0
+㉢ 그 밖,영원_김정래,A157,!신시대-라이브,none,Hbh1=20 · Hbh3=0,설명 기록만,🟡 무해,피해값 0
+㉢ 그 밖,초월_황준석_ADAP,A103,!펑크 바이스,none,Hbh1=20 · Hbh3=0,설명 기록만,🟡 무해,피해값 0
+㉢ 그 밖,원작019_H08Z,A0XO,!패기발현,none,Hbh1=20 · Hbh3=0 · adur=0,껍데기,🟡 무해,㉯ 판정 참조
+㉢ 그 밖,원작006_H096 / Trait_초월_두유찬_AD,A10S,!감마나이프,none,Hbh1=20 · Hbh3=3.15,triggerChance 0.125 (트리거에서),✅ 이미 정정,㉮ 판정 참조
