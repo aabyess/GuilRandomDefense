@@ -395,6 +395,15 @@ public class UnitData : ScriptableObject
     public WispData sellRewardWisp;
     public int sellRewardTraitPoints;
 
+    // 등급별 판매보상 4단계(`UNIQUE_SELL_6TIER_FULL.md`, PM 지시 2026-09-07) — 안흔함
+    // (A0B8)·특별함(A0BA)·희귀함(A0B9)·해적선 전용(A0BB)이 전부 sellRewardWisp를 확률·
+    // 개수까지 다르게 쓴다. 기존 h05X(A0OE) 등은 아래 셋 다 기본값(1/1/0/1)이라 완전히
+    // 무영향(회귀 없음) — "위습이 항상 정확히 1개, 확정으로 나간다"는 예전 동작 그대로다.
+    public float sellRewardWispChance = 1f;  // 위습 지급 확률(0~1). 안흔함=0.5, 나머지 확정형은 1.
+    public int sellRewardWispCount = 1;      // 위습 개수. 희귀함·해적선=2, 나머지 1.
+    public int sellRewardWood;               // 목재 고정 지급량. 0(기본)이면 미지급.
+    public float sellRewardWoodChance = 1f;  // 목재 지급 확률(특별함=0.35). sellRewardWood>0일 때만 의미 있음.
+
     // h0BS(메타몽) 전용 판매 보상 — 원작 `Trig_item_Gemble_Actions`(진입 조건
     // `GetSoldUnit()=='H0BS'`)를 우리 "유닛 판매" 경로에 얹었다(PM 지시 2026-09-07).
     // 비어있으면(기본값) 판매해도 도박이 안 돈다 — 기존 유닛 전부 무영향(회귀 없음).

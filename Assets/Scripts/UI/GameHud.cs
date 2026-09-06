@@ -649,7 +649,7 @@ public class GameHud : MonoBehaviour
         Selectable single = selection.Selected[0];
         if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null ||
             (identity.Data.sellRewardWisp == null && identity.Data.sellRewardTraitPoints <= 0 &&
-             identity.Data.sellTriggersItemGamblePool == null))
+             identity.Data.sellRewardWood <= 0 && identity.Data.sellTriggersItemGamblePool == null))
         { HideSellButton(); return; }
 
         sellButtonPanel.SetActive(true);
@@ -657,18 +657,26 @@ public class GameHud : MonoBehaviour
         if (identity.Data == lastSellButtonUnit) return;
         lastSellButtonUnit = identity.Data;
 
-        string wispPart = identity.Data.sellRewardWisp != null
-            ? $"{identity.Data.sellRewardWisp.wispName} 1기"
+        UnitData data = identity.Data;
+        string wispPart = data.sellRewardWisp != null
+            ? data.sellRewardWispChance >= 1f
+                ? $"{data.sellRewardWisp.wispName} {data.sellRewardWispCount}기"
+                : $"{data.sellRewardWisp.wispName} {data.sellRewardWispCount}기({data.sellRewardWispChance:P0})"
             : null;
-        string pointPart = identity.Data.sellRewardTraitPoints > 0
-            ? $"특성포인트 {identity.Data.sellRewardTraitPoints}"
+        string woodPart = data.sellRewardWood > 0
+            ? data.sellRewardWoodChance >= 1f
+                ? $"목재 {data.sellRewardWood}"
+                : $"목재 {data.sellRewardWood}({data.sellRewardWoodChance:P0})"
             : null;
-        string gamblePart = identity.Data.sellTriggersItemGamblePool != null
+        string pointPart = data.sellRewardTraitPoints > 0
+            ? $"특성포인트 {data.sellRewardTraitPoints}"
+            : null;
+        string gamblePart = data.sellTriggersItemGamblePool != null
             ? "아이템 도박 1회"
             : null;
 
         StringBuilder rewardDesc = new StringBuilder();
-        foreach (string part in new[] { wispPart, pointPart, gamblePart })
+        foreach (string part in new[] { wispPart, woodPart, pointPart, gamblePart })
         {
             if (part == null) continue;
             if (rewardDesc.Length > 0) rewardDesc.Append(" + ");
@@ -694,7 +702,7 @@ public class GameHud : MonoBehaviour
         Selectable single = selection.Selected[0];
         if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null ||
             (identity.Data.sellRewardWisp == null && identity.Data.sellRewardTraitPoints <= 0 &&
-             identity.Data.sellTriggersItemGamblePool == null)) return;
+             identity.Data.sellRewardWood <= 0 && identity.Data.sellTriggersItemGamblePool == null)) return;
 
         if (!single.TryGetComponent(out OwnedByPlayer owner)) return;
 
@@ -704,10 +712,22 @@ public class GameHud : MonoBehaviour
             if (identity.Data.sellRewardTraitPoints > 0)
                 context.UnitUpgrades?.AddTraitPoints(identity.Data.sellRewardTraitPoints);
 
-            if (identity.Data.sellRewardWisp != null && RewardDistributor.Instance != null)
+            // 등급별 판매보상 4단계(UNIQUE_SELL_6TIER_FULL.md) — 위습·목재 각각 독립
+            // 확률(둘 다 기본값 1=확정이라 기존 h05X류는 항상 나가던 대로 그대로 나간다).
+            if (identity.Data.sellRewardWisp != null && RewardDistributor.Instance != null &&
+                Random.value < identity.Data.sellRewardWispChance)
             {
-                List<WispReward> reward = new List<WispReward> { new WispReward { wisp = identity.Data.sellRewardWisp, count = 1 } };
+                List<WispReward> reward = new List<WispReward>
+                {
+                    new WispReward { wisp = identity.Data.sellRewardWisp, count = identity.Data.sellRewardWispCount }
+                };
                 RewardDistributor.Instance.GrantWisps(context, reward);
+            }
+
+            if (identity.Data.sellRewardWood > 0 && context.ResourceWallet != null &&
+                Random.value < identity.Data.sellRewardWoodChance)
+            {
+                context.ResourceWallet.Add(ResourceType.Wood, identity.Data.sellRewardWood);
             }
 
             // h0BS(메타몽) 전용 — 재고(ItemGambleState.stock) 차감·도박·풀 제외 등록은
