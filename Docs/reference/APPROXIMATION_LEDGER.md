@@ -564,9 +564,25 @@ Gaban_Skill_mana(진짜 3단 `<200`/`==200`/`>=300`)와 헷갈리면 안 된다.
 구현담당2가 값만으로 원본 트리거를 역추적한 4건을 원문(진입게이트·작동여부·배타
 구조)으로 재확인한다. 하나씩 확정되는 대로 갱신한다.
 
-### `황준석_ADAP`(300,000/600,000) — **배타 맞다. 그런데 한쪽이 원작에서도 죽어 있다**
+### `황준석_ADAP`(300,000/600,000) — **배타 맞다. "죽은 코드" 부분은 철회한다**
 
-`Trig_Kid_Attack_Actions` 원문:
+🔴 **자기 정정(2026-09-06, 같은 세션 안에서 발견)** — 바로 아래 원래 판정에서
+"`600,000`(아이템 분기)이 원작에서도 죽어 있다"고 썼는데 **이건 틀렸다.**
+`DisableTrigger`/`ConditionalTriggerExecute`의 WC3 네이티브 동작을 잘못
+알았다 — **`ConditionalTriggerExecute`(내부적으로 `TriggerEvaluate`+`TriggerExecute`)는
+트리거의 활성/비활성 상태(`Enable`/`DisableTrigger`)를 아예 안 본다.** 그
+플래그는 트리거가 **자기 자신에게 등록된 네이티브 이벤트**(`TriggerRegister…Event`)에
+자동으로 반응할지만 결정한다 — 프로그램이 직접 `ConditionalTriggerExecute`/
+`TriggerExecute`로 호출하면 활성 상태와 무관하게 그냥 돈다. **이 맵의 모든
+다단계 스킬 트리거(`s__TrigVariables_RegisterTimerPutsTriggerToSleep`을 쓰는
+전부)가 `InitTrig_X`에서 `DisableTrigger`를 걸어두는 게 표준 관례**였다 —
+자기 완결적인 죽음의 신호가 아니라 그냥 보일러플레이트였다. 근거: 이번에
+아래에서 "영구 비활성"으로 걸린 71개 트리거 목록에 `kikoyou_hp`·
+`Ryougi_Shiki_R2`·`Minato_E`·`Higma_Q` 등 **이미 오늘 직접 원문을 읽어 실제로
+돈다고 확인한 트리거가 대량으로 섞여 있다** — 이게 이 방법 자체가 틀렸다는
+가장 강한 증거다.
+
+`Trig_Kid_Attack_Actions` 원문(구조 자체는 정정 불필요):
 ```jass
 if GetRandomInt(1,10)==2 then          // 우리 triggerChance=0.1과 정확히 일치
   if UnitHasItem(캐스터,udg_item_kid_mot[플레이어])==true then
@@ -576,16 +592,19 @@ if GetRandomInt(1,10)==2 then          // 우리 triggerChance=0.1과 정확히 
   endif
 endif
 ```
-**갈리는 기준은 캐스터의 아이템(`I010`) 보유 — 새 기준(Ⓔ 캐스터 아이템)이 맞다.**
-그런데 `gg_trg_Kid_Skill_3_item`은 `InitTrig_Kid_Skill_3_item`에서
-`DisableTrigger(gg_trg_Kid_Skill_3_item)`로 생성 직후 비활성화되고, **전체
-8,156개 함수 어디에도 이걸 다시 켜는 `EnableTrigger` 호출이 없다.** WC3에서
-`ConditionalTriggerExecute`는 트리거가 비활성 상태면 조건·액션을 아예 안 돈다 —
-**즉 아이템을 갖고 있어도 이 분기는 원작에서 절대 발동하지 않는다.** `600,000`
-(e0MY)은 **원작 자체의 죽은 코드**이고, 살아있는 유일한 값은 `300,000`(e0MW,
-아이템 유무와 무관하게 항상 이쪽만 실행됨)이다. **결론: 배타 구조는 맞지만
-"둘 다 배선"이 아니라 300,000 하나만 살아있는 값으로 배선해야 한다.** 아이템
-`I010`의 정체는 죽은 코드라 추가 조사 안 함.
+**갈리는 기준은 캐스터의 아이템(`I010`) 보유 — 새 기준(Ⓔ 캐스터 아이템)이
+맞다.** 그런데 **`600,000`(e0MY)이 "죽은 코드"라는 결론은 철회한다** — 두
+값(300,000/600,000) 다 원작에서 살아있는, 진짜 아이템 보유 여부로 갈리는
+배타 쌍이다. **결론: 둘 다 배선하고, 조건은 "캐스터가 아이템 `I010`을
+보유했는가"로 건다** — 지우면 안 된다.
+
+**전수 필요성**: `DisableTrigger`가 71건 나왔지만 **위 정정 때문에 그 자체로는
+"죽은 트리거" 신호가 아니다.** 71건을 하나하나 열어 진짜 죽은 것(원작에도
+없는 게이트로 막힘)과 그냥 보일러플레이트인 것을 가르려면 **각 트리거가
+`ConditionalTriggerExecute`/`TriggerExecute`로 실제로 호출되는지**를 개별
+확인해야 한다 — `DisableTrigger` 유무만으로는 못 가른다. **이 방법 자체가
+이번 정정으로 무효화됐으므로, PM이 요청한 "71건 전수"는 이 기준으로는
+진행하지 않는다** — 다른 판별 기준이 필요하면 별도로 설계해야 한다.
 
 `POINTVALUE_CENSUS.md`(원작 `upoi` 전수, 200=라운드보스/301=신세계 사이드보스/그
 외=로스터 등급 전체 `<200`)와 `CHANCE1_FIX_INSTRUCTIONS.md`(21개 파일 매핑)를 받아
