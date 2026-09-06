@@ -10,23 +10,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5755a53b1846144c895c5196893d76bd, type: 3}
-  m_Name: Quest_바제스
+  m_Name: Quest_신림패거리
   m_EditorClassIdentifier:
-  questName: 바제스
+  questName: 신림패거리
   goldCost: 10
   stockMax: 1
   stockStart: 0
-  restockSeconds: 1310
-  miniboss: {fileID: 11400000, guid: 7feea36fa21f4235bdfd1b45c687bed2, type: 2}
+  restockSeconds: 360
+  miniboss: {fileID: 11400000, guid: 69333821e3564201840826222fd82222, type: 2}
   timerSeconds: 60
-  scalesWithAttempts: 0
+  scalesWithAttempts: 1
   hpIncreasePerAttempt: 0.5
-  minRound: 1
-  maxRound: 39
-  successGold: 0
-  successResources: []
-  successWisp: {fileID: 11400000, guid: 637456e2263b4fc495bc3cd869efd84f, type: 2}
-  successWispCount: 1
+  minRound: 0
+  maxRound: 59
+  successGold: 1500
+  successResources:
+  - type: 0
+    amount: 1
+  successWisp: {fileID: 0}
+  successWispCount: 0
   successTraitPoints: 0
   storyDamage: 0
   failWispBlockRounds: 2

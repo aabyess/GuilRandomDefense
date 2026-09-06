@@ -10,25 +10,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5755a53b1846144c895c5196893d76bd, type: 3}
-  m_Name: Quest_해적단
+  m_Name: Quest_허브수경비원
   m_EditorClassIdentifier:
-  questName: 해적단
+  questName: 허브수경비원
   goldCost: 10
   stockMax: 1
-  stockStart: 0
-  restockSeconds: 360
-  miniboss: {fileID: 11400000, guid: 69333821e3564201840826222fd82222, type: 2}
+  stockStart: 1
+  restockSeconds: 3600
+  miniboss: {fileID: 11400000, guid: cfb85740d752144b23b4b256dd6b697c, type: 2}
   timerSeconds: 60
-  scalesWithAttempts: 1
+  scalesWithAttempts: 0
   hpIncreasePerAttempt: 0.5
-  minRound: 0
-  maxRound: 59
-  successGold: 1500
+  minRound: 1
+  maxRound: 30
+  successGold: 0
   successResources:
   - type: 0
     amount: 1
-  successWisp: {fileID: 0}
-  successWispCount: 0
+  successWisp: {fileID: 11400000, guid: e610498c4baf4cc88aa036f9ce7b0799, type: 2}
+  successWispCount: 1
   successTraitPoints: 0
   storyDamage: 0
   failWispBlockRounds: 2
