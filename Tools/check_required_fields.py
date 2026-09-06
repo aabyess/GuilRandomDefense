@@ -517,6 +517,39 @@ results.append((
     zero_trigger_assets,
 ))
 
+# ── 19. SkillEffect: buffHitCharges>0인데 kind가 ApplyBuff가 아님 ───────────
+# ⚠️ 2026-09-06 신설(제트 B00M 타수형 만료, PM 지시) — buffHitCharges는 "이 버프가
+# 평타 N번 뒤에 만료된다"는 뜻이라 ApplyBuff(kind=6) 효과에만 의미가 있다(SkillData.cs
+# buffHitCharges 주석 참고). UnitAttacker.ApplyToAlly/ApplyToEnemy가 ApplyBuff가 아닌
+# kind는 buffId·buffHitCharges 필드 자체를 안 읽으므로 값을 채워도 조용히 무시된다 —
+# "채웠는데 아무 일도 안 일어난다"는 오늘 하루 종일 잡아온 바로 그 패턴(값은 있는데
+# 아무도 안 읽는다)이다.
+def buff_hit_charges_without_apply_buff(text):
+    for level_body in re.split(r"\n  - cooldown: ", text)[1:]:
+        effects_match = re.search(r"    effects:(.*?)(?=\n  - cooldown: |\Z)", level_body, re.S)
+        effects_body = effects_match.group(1) if effects_match else ""
+
+        for effect_body in re.split(r"\n    - kind: ", effects_body)[1:]:
+            kind_match = re.match(r"(\d+)", effect_body)
+            kind = kind_match.group(1) if kind_match else "0"
+            charges_match = re.search(r"\n {6}buffHitCharges: (-?\d+)", effect_body)
+            charges = int(charges_match.group(1)) if charges_match else 0
+            if charges > 0 and kind != "6":  # 6 = SkillEffectKind.ApplyBuff
+                return True
+    return False
+
+
+buff_hit_charges_mismatch_assets = [p for p in skill_assets if buff_hit_charges_without_apply_buff(read(p))]
+
+results.append((
+    "SkillEffect: buffHitCharges>0인데 kind가 ApplyBuff가 아님",
+    ["kind", "buffHitCharges"],
+    "buffHitCharges는 ApplyBuff(kind=6) 효과 전용이다 — 다른 kind에 채우면 UnitAttacker가 "
+    "그 필드를 아예 안 읽어 조용히 무시된다(값은 있는데 아무 효과가 없다).",
+    len(skill_assets),
+    buff_hit_charges_mismatch_assets,
+))
+
 # ── 리포트 ───────────────────────────────────────────────────────────────
 any_problem = False
 for label, fields, danger, total, missing in results:

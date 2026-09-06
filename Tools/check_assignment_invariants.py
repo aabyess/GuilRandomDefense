@@ -27,7 +27,18 @@ check_required_fields.py #11(로스터 skill·skills 동시 채움)과 겹치는
 — PM 지시대로 그쪽에 맡긴다.
 
 exit code: ①·②·③(실제 배선 사고)만 실패로 잡는다. ⑤는 정보다(원작이 로스터 등급 정원보다
-많아 일부를 못 담는 건 정상일 수 있다) — 실패에 안 넣는다.
+많아 일부를 못 담는 건 정상일 수 있다) — 실패에 안 넣는다. ⑦도 실패로 잡는다(죽은 게이트는
+실제 배선 사고다).
+
+⚠️ ⑩(문서만, PM 지시 2026-09-06) — `forbiddenBuffId`/`forbiddenTargetBuffId`는 런타임과
+시뮬이 서로 다른 파일에서 각자 판정한다(오늘 한 번 방향이 뒤집혔던 자리라 자동 검사가
+아니라 위치만 못박아둔다 — 코드 로직 자체를 정적으로 비교할 방법이 없다):
+  런타임: Assets/Scripts/Units/UnitAttacker.cs의 PassesBuffGate — forbidden(BuffId만 없어도
+    통과) 있으면(HasBuff) 막는다(required와 정확히 반대 방향, 둘 다 "위반이면 return false").
+  시뮬:   Tools/simulate_balance.py의 skill_dps_for_unit — required는 rate=0(보수적으로
+    없다고 가정), forbidden은 아예 안 본다(그 게이트를 무시 = "대부분 없어서 통과"의 근사).
+두 방향이 다시 어긋나면(예: 시뮬이 forbidden도 0으로 잠그게 "고치면") §22-6/22-7
+(BALANCE_SIMULATION_2026-09-05.md)과 이 주석부터 다시 맞출 것.
 """
 import csv
 import re
@@ -138,6 +149,111 @@ def extract_original_key(description):
         if name:
             return name
     return None
+
+
+# ── 불변식 ⑦ — 아무도 안 거는 버프를 조건으로 쓰는 스킬(PM 지시, 2026-09-06 06번 사후) ──
+# requiredBuffId(캐스터 자신의 버프)·requiredTargetBuffId(대상의 버프)가 채워진 게이트인데
+# 그 버프를 실제로 거는 자산·코드가 하나도 없으면 그 효과는 영영 안 나간다 — 이게 06번의
+# 원래 문제("버프를 거는 쪽이 없다")였다. 지금 고쳤지만(902dbeb, 2f36e6b) 다음에 또 생긴다
+# — 새 게이트를 걸 때 거는 쪽을 깜빡하면 조용히 죽은 스킬이 된다.
+#
+# 캐스터(UnitAttacker.activeBuffs)와 대상(EnemyDummy.activeBuffs)은 서로 다른 레지스트리라
+# (PassesBuffGate 참고) "누가 거는지"도 그 방향에 맞는 쪽만 인정해야 한다:
+#   캐스터 버프 소스 = SkillLevel.selfBuffId(비어있지 않음, OnHitChance 절대쿨이 자기잠금을
+#     등록) ∪ SkillEffect.buffId(kind=ApplyBuff, target∈{Self,Allies}) ∪ UnitAttacker.cs
+#     하드코딩 캐스터 버프(AttackSpeedBuffId/AttackPowerBuffId — 소스에서 상수값을 직접
+#     읽는다, SupportShop 버프)
+#   대상 버프 소스 = SkillEffect.buffId(kind=ApplyBuff, target=Enemies) ∪ C# 소스에서
+#     `EnemyDummy` 인스턴스에 직접 문자열 리터럴로 AddBuff("...")를 부르는 자리(정규식
+#     스캔 — 지금은 SideBossEncounter의 B06B 하나, 2f36e6b)
+#
+# ⚠️ 코드 쪽 리터럴 스캔은 휴리스틱이다 — 변수명에 "target"/"mob"이 있으면 대상 쪽,
+# 그 외(bare AddBuff(...) 또는 "ally"가 들어간 변수)는 캐스터 쪽으로 가른다. 새 호출부가
+# 다른 이름 관례를 쓰면 놓칠 수 있다 — 이 스크립트가 조용히 통과시키면 안 되니, 분류
+# 못한 리터럴은 "미분류"로 따로 보고한다(있으면 사람이 봐야 한다).
+_ADD_BUFF_KIND = 6      # SkillEffectKind.ApplyBuff
+_TARGET_SELF, _TARGET_ALLIES, _TARGET_ENEMIES = "0", "1", "2"
+
+
+def iter_effect_blocks(text):
+    """레벨 경계를 안 가리고 파일 전체에서 효과 블록(각 "- kind:"부터 다음 "- kind:" 또는
+    파일 끝까지)을 순서대로 낸다 — ⑦은 "이 파일 안 어딘가에 이런 효과가 있는가"만 보면
+    되므로 check_required_fields.py처럼 레벨별로 안 갈라도 된다."""
+    starts = [m.start() for m in re.finditer(r"\n {4}- kind: \d+", text)]
+    for i, start in enumerate(starts):
+        end = starts[i + 1] if i + 1 < len(starts) else len(text)
+        yield text[start:end]
+
+
+def field_value(block, field):
+    # 블록의 첫 필드(kind)는 리스트 항목 표시("- ")가 같은 줄에 붙어 있다("    - kind: 6")
+    # — 나머지 필드는 순수 공백 들여쓰기뿐이다. 둘 다 받아야 한다.
+    m = re.search(rf"\n\s*(?:- )?{re.escape(field)}: (\S+)", block)
+    return m.group(1) if m else None
+
+
+def find_caster_buff_hardcoded_ids():
+    text = read(ROOT / "Assets/Scripts/Units/UnitAttacker.cs")
+    ids = set()
+    for m in re.finditer(r'static readonly string \w+Id = "([^"]+)";', text):
+        ids.add(m.group(1))
+    return ids
+
+
+def find_code_granted_target_buff_ids():
+    """Assets/Scripts/**/*.cs에서 EnemyDummy(대상) 쪽에 직접 문자열 리터럴로 거는
+    AddBuff("...") 호출을 찾는다. 휴리스틱: 리시버 변수명에 target/mob/enemy가 있으면
+    대상 쪽으로, 그 외는 캐스터 쪽(별도 집계, 미분류에는 안 넣는다 — 이미 selfBuffId/
+    ApplyBuff로 캐스터 쪽은 자산에서 찾으므로 여기 캐스터 쪽 리터럴은 그냥 버린다)."""
+    target_ids, caster_ids, unclassified = set(), set(), []
+    for cs_path in sorted((ROOT / "Assets/Scripts").rglob("*.cs")):
+        text = read(cs_path)
+        for m in re.finditer(r'(\w*)\.AddBuff\(\s*"([^"]+)"', text):
+            receiver, buff_id = m.group(1), m.group(2)
+            lower = receiver.lower()
+            if "target" in lower or "mob" in lower or "enemy" in lower:
+                target_ids.add(buff_id)
+            elif "ally" in lower or receiver == "":
+                caster_ids.add(buff_id)
+            else:
+                unclassified.append((cs_path, receiver, buff_id))
+    return target_ids, caster_ids, unclassified
+
+
+def find_orphaned_buff_gates(skill_assets):
+    caster_granted = find_caster_buff_hardcoded_ids()
+    target_granted = set()
+    code_target_ids, code_caster_ids, unclassified_calls = find_code_granted_target_buff_ids()
+    target_granted |= code_target_ids
+    caster_granted |= code_caster_ids
+
+    required_caster = {}   # buff_id -> [asset paths that require it]
+    required_target = {}   # buff_id -> [asset paths that require it]
+
+    for sp in skill_assets:
+        text = read(sp)
+        for m in re.finditer(r"\n {4}selfBuffId: (\S+)", text):
+            caster_granted.add(m.group(1))
+        for m in re.finditer(r"\n {4}requiredBuffId: (\S+)", text):
+            required_caster.setdefault(m.group(1), []).append(sp)
+
+        for block in iter_effect_blocks(text):
+            kind = field_value(block, "kind")
+            target = field_value(block, "target")
+            buff_id = field_value(block, "buffId")
+            req_target_buff = field_value(block, "requiredTargetBuffId")
+
+            if kind == str(_ADD_BUFF_KIND) and buff_id:
+                if target == _TARGET_ENEMIES:
+                    target_granted.add(buff_id)
+                elif target in (_TARGET_SELF, _TARGET_ALLIES):
+                    caster_granted.add(buff_id)
+            if req_target_buff:
+                required_target.setdefault(req_target_buff, []).append(sp)
+
+    orphaned_caster = {b: ps for b, ps in required_caster.items() if b not in caster_granted}
+    orphaned_target = {b: ps for b, ps in required_target.items() if b not in target_granted}
+    return orphaned_caster, orphaned_target, unclassified_calls
 
 
 def main():
@@ -299,6 +415,23 @@ def main():
               f"(①·⑤ 판정에서 제외됨 — 조용히 무시한 게 아니라 여기 목록으로 남긴다):")
         for p in unparsed_desc:
             print(f"    {p.relative_to(ROOT)}")
+    print()
+
+    orphaned_caster, orphaned_target, unclassified_calls = find_orphaned_buff_gates(skill_assets)
+    print(f"[⑦ 죽은 버프 게이트] requiredBuffId(캐스터) {len(orphaned_caster)}개 · "
+          f"requiredTargetBuffId(대상) {len(orphaned_target)}개 — 그 버프를 거는 자산·코드가 "
+          f"하나도 없음(그 효과는 영영 안 나간다)")
+    for buff_id, ps in sorted(orphaned_caster.items()):
+        any_problem = True
+        print(f"  ❌ requiredBuffId={buff_id} — 아무도 안 검(캐스터 버프): {', '.join(str(p.relative_to(ROOT)) for p in ps)}")
+    for buff_id, ps in sorted(orphaned_target.items()):
+        any_problem = True
+        print(f"  ❌ requiredTargetBuffId={buff_id} — 아무도 안 검(대상 버프): {', '.join(str(p.relative_to(ROOT)) for p in ps)}")
+    if unclassified_calls:
+        print(f"\n  ⚠️  캐스터/대상으로 못 가른 AddBuff(\"...\") 리터럴 호출 {len(unclassified_calls)}개 "
+              f"(휴리스틱이 변수명을 못 알아봄 — 사람이 확인할 것):")
+        for cs_path, receiver, buff_id in unclassified_calls:
+            print(f"    {cs_path.relative_to(ROOT)} — {receiver}.AddBuff(\"{buff_id}\", ...)")
 
     sys.exit(1 if any_problem else 0)
 
