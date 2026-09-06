@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_제한_이유범
   m_EditorClassIdentifier:
   skillName: A0GM !끓어오르는피
-  description: 원작 제한됨 킹 삼재해:화재 - 제한됨(더미 경로 Trig_King_Attack → e0NS(%제한됨변화 킹 공속더미1) → A10X). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다.
+  description: 원작 제한됨 킹 삼재해:화재 - 제한됨(더미 경로 Trig_King_Attack → e0NS(%제한됨변화 킹 공속더미1) → A10X). 정정(2026-09-06, STOCK_FIELD_RESEARCH_RESULT.csv/607351c): A10X(0.3) 효과를 제거했다 — base Ablo(블러드러스트)의 Blo1은 공격속도/공격력 증가율이지 피해 필드가 아니다. 기록만 남긴다.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -26,16 +26,6 @@ MonoBehaviour:
       damageType: 2
       attackType: 1
       multiplier: 0.08
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 0.3
       bonus: 0.0
       chance: 1
       hitCount: 1

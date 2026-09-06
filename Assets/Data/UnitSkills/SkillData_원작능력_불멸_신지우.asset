@@ -18,6 +18,7 @@ MonoBehaviour:
   · A0DP !무장색의 패기-가반: 발동0.45 배수0.0 추가350000.0
   · A0H5 !마음의 눈: 발동0.55 배수6.25 추가0.0
   · A0ET !급소베기-가반: 발동0.13 배수6.25 추가0.0
+  정정(2026-09-06, STOCK_FIELD_RESEARCH_RESULT.csv/607351c): A0ZO(0.01, e0MP)와 A05G(750000, e055 가반 공증 더미)를 제거했다 — A0ZO는 base Ablo(블러드러스트, 공격력/공속 증가율)라 피해 필드가 아니고, A05G는 base ANbr(배틀로어)라 공격력 증가량이지 즉시 피해가 아니다(불멸_신지우_h04F에서도 같은 값을 이미 정정함 — 이 파일에 중복으로 또 들어가 있었다). 둘 다 이 파일 안에서 값이 고유해 안전하게 제거했다. [미확정 — 쪼개기 2단계 대기]: A0ZX(0.35)도 같은 이유(Ainf, 공격력 증가율)로 제거 대상이지만 effects에 0.35가 두 번 있어 어느 쪽인지 추측으로 안 뺀다(PM 지시).
   triggerType: 0
   levels:
   - cooldown: 0
@@ -117,16 +118,6 @@ MonoBehaviour:
       hitCount: 1
       duration: 0
     - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 3
-      multiplier: 0.01
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 0
       basis: 3
       target: 3
       damageType: 1
@@ -162,16 +153,6 @@ MonoBehaviour:
       damageType: 1
       attackType: 3
       multiplier: 0.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 3
-      multiplier: 750000.0
       bonus: 0.0
       chance: 1
       hitCount: 1

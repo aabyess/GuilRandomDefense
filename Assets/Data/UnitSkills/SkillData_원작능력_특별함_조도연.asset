@@ -15,22 +15,13 @@ MonoBehaviour:
   skillName: A0HZ !싹둑싹둑열매
   description: 원작 특별함 몽키.D.루피 기어 세컨드 - 특별함(더미 경로 Trig_Speical5 → e05F(S특별함 루피 더미) → A0A0). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 1채널 추가 배정(원작 특별함 몽키.D.루피 기어 세컨드 - 특별함(h00U)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시).
   · A053 !고무고무 열매: 발동0.2 배수0.0 추가30.0
+  정정(2026-09-06, STOCK_FIELD_RESEARCH_RESULT.csv/607351c): A0A0(e05F, 3.6) 효과를 제거했다 — base Ablo(블러드러스트)의 Blo1은 공격속도/공격력 증가율이지 피해 필드가 아니다. 기록만 남긴다.
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.6
     range: 0
     effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 3.6
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
     - kind: 0
       basis: 3
       target: 3
