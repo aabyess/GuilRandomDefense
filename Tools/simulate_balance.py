@@ -403,6 +403,8 @@ def load_support_skill(name):
         "mana_cost": g("manaCost", int),
         "damage_base": g("damageBase"),
         "cooldown": g("cooldownSeconds"),
+        "buff_power_mult": g("buffAttackPowerMultiplier") or 1.0,
+        "buff_duration": g("duration") or 0.0,
     }
 
 
@@ -1188,8 +1190,25 @@ def main():
     # 만들어내야 해서(창작) 이번엔 안 낸다. 능력 하나만 쓴다고 가정한다(다른 능력과
     # 마나를 나눠 쓰는 배분은 안 지어낸다, PM 지시) — 각 능력을 독립으로 딱 한 번씩만 잰다.
     print("\n=== ③-보강 붕괴 라운드 — 능력 하나만 단독 사용(마나 재생 기준), 고정10기 모델 ===")
+    print("⚠️ 2026-09-06 PM 지적 — '한 방 킬' 게이트는 도움소 전용 근사다(grep 확인,")
+    print("   skill_dps_for_unit/DealSkillDamage 등 일반 스킬 피해 경로엔 이 게이트가 없다 —")
+    print("   범위 스킬 전체가 과소 계상되는 문제는 아니다). 다만 도움소 자체는 '한 방에")
+    print("   못 죽이면 기여 0'이 실제보다 비관적이라 세 가지를 나란히 낸다.")
 
-    def run_with_support_regen(median_table, use_armor, skill):
+    def run_with_support(median_table, use_armor, skill, credit_mode):
+        """credit_mode:
+        'oneshot'  — 예전 모델(그대로 보존, 비교용). e.hp<=damage_base일 때만 그 라운드
+                     cnt 전체를 죽인 것으로 친다. damage_base가 hp에 못 미치면 기여 0 —
+                     '한 방 못 죽이면 안 쓴다'가 아니라 '이 모델이 부분 기여를 못 센다'는
+                     한계였다(PM 지적).
+        'aoe_all'  — 부분 기여, 상한: 범위 안 모든 적(cnt마리)이 각자 damage_base를 맞는다고
+                     본다(설명문 '넓은 범위'). coverage=min(1, damage_base/hp)를 cnt에 곱해
+                     그 라운드 킬 수에 더한다 — 몇 마리가 실제로 맞는지는 모르니(원작 라운드당
+                     35마리가 어떻게 퍼져 있는지 불명, 지어내지 않는다) '전부 맞는다'는
+                     상한이다.
+        'single'   — 부분 기여, 하한: 단일 대상 1마리만 맞는다고 본다(coverage×1).
+        세 값을 나란히 내면 실제는 그 사이라는 게 보인다(PM 지시, 오늘 연구0/max와 같은 방식).
+        """
         backlog = 0.0
         mana = mana_start
         cd_remaining = 0.0
@@ -1206,12 +1225,21 @@ def main():
             incoming = backlog + cnt
             kills_capacity = dps * mult * rl / e["hp"]
             bonus = 0
-            if (incoming > kills_capacity and mana >= skill["mana_cost"]
-                    and cd_remaining <= rl and e["hp"] <= skill["damage_base"]):
+            can_afford = mana >= skill["mana_cost"] and cd_remaining <= rl
+            if credit_mode == "oneshot":
+                worth_casting = e["hp"] <= skill["damage_base"]
+            else:
+                worth_casting = skill["damage_base"] > 0  # 부분 기여는 항상 뭔가는 깎는다
+            if incoming > kills_capacity and can_afford and worth_casting:
                 mana -= skill["mana_cost"]
                 casts += 1
-                bonus = min(incoming, cnt)
                 cd_remaining = skill["cooldown"]
+                if credit_mode == "oneshot":
+                    bonus = min(incoming, cnt)
+                else:
+                    coverage = min(1.0, skill["damage_base"] / e["hp"])
+                    hit_count = cnt if credit_mode == "aoe_all" else 1
+                    bonus = min(incoming, coverage * hit_count)
             cd_remaining = max(0.0, cd_remaining - rl)
             remaining = incoming - bonus
             killed = min(remaining, kills_capacity)
@@ -1227,10 +1255,67 @@ def main():
         for label, mtable, use_armor in [("AD(고정10기)", ad_median, True), ("AP(고정10기)", ap_median, False)]:
             base = run_backlog(enemies, wave_counts, round_length_fn, defense_armor,
                                 fixed10_dps_fn(mtable), use_armor=use_armor, threshold=rc["enemy_count_threshold"])
-            sup, casts = run_with_support_regen(mtable, use_armor, sk)
             base_s = f"R{base}" if base else "완주"
-            sup_s = f"R{sup}" if sup else "완주"
-            print(f"    {label}: 기본 {base_s} -> 도움소 {sup_s} (캐스트 {casts}회)")
+            results = []
+            for mode, mode_label in [("oneshot", "한방킬(기존)"), ("aoe_all", "부분기여-전부맞음(상한)"),
+                                       ("single", "부분기여-한마리만(하한)")]:
+                sup, casts = run_with_support(mtable, use_armor, sk, mode)
+                sup_s = f"R{sup}" if sup else "완주"
+                results.append(f"{mode_label}={sup_s}({casts}회)")
+            print(f"    {label}: 기본 {base_s} -> " + " / ".join(results))
+
+    # ⚠️ 2026-09-06 PM 지시 — 출항이다(피해 0이라 위 damage_base 루프에서 빠짐)는 팀
+    # 전체 공격력을 map-wide로 10초간 ×1.5 올린다(buffAttackPowerMultiplier·duration,
+    # SupportSkill_출항이다.asset). 범위 안 마릿수를 몰라도 되는 축이라(map-wide라
+    # "몇 마리가 맞는가"라는 추측이 아예 없다) 정확하게 낼 수 있다 — 라운드 길이가
+    # 전부 10초보다 훨씬 길어(37~40초) 지속시간이 항상 그 라운드 안에 다 들어간다고
+    # 본다(잘려나가는 경우 없음).
+    print("\n=== ③-보강② 출항이다(공격력 버프, 피해 0) — map-wide라 마릿수 추측 불필요 ===")
+    sail = load_support_skill("출항이다")
+    print(f"  [출항이다] mana={sail['mana_cost']} cd={sail['cooldown']:.0f}s "
+          f"buff=×{sail['buff_power_mult']} {sail['buff_duration']:.0f}초")
+
+    def run_with_buff(median_table, use_armor, skill):
+        backlog = 0.0
+        mana = mana_start
+        cd_remaining = 0.0
+        casts = 0
+        collapse = None
+        dps_fn = fixed10_dps_fn(median_table)
+        for r in range(1, 76):
+            e = enemies[r]
+            cnt = wave_counts[r]
+            mult = armor_mult(e["armor"], defense_armor) if use_armor else 1.0
+            dps = dps_fn(r)
+            rl = round_length_fn(r, e["is_boss"])
+            mana = min(mana_cap, mana + mana_regen * rl)
+            incoming = backlog + cnt
+            kills_capacity = dps * mult * rl / e["hp"]
+            bonus = 0
+            if incoming > kills_capacity and mana >= skill["mana_cost"] and cd_remaining <= rl:
+                mana -= skill["mana_cost"]
+                casts += 1
+                cd_remaining = skill["cooldown"]
+                # 버프 구간(duration초)만 dps가 (buff_power_mult-1)배 더 나온다 — 그만큼
+                # 킬 능력치가 늘어난 걸 그 라운드 kills_capacity에 얹는다(위 도움소들처럼
+                # "즉시 몇 마리를 지운다"가 아니라 "이번 라운드 dps가 잠깐 더 세진다").
+                extra_dps = dps * mult * (skill["buff_power_mult"] - 1.0)
+                bonus = min(incoming, extra_dps * skill["buff_duration"] / e["hp"])
+            cd_remaining = max(0.0, cd_remaining - rl)
+            remaining = incoming - bonus
+            killed = min(remaining, kills_capacity)
+            backlog = remaining - killed
+            if backlog >= rc["enemy_count_threshold"] and collapse is None:
+                collapse = r
+        return collapse, casts
+
+    for label, mtable, use_armor in [("AD(고정10기)", ad_median, True), ("AP(고정10기)", ap_median, False)]:
+        base = run_backlog(enemies, wave_counts, round_length_fn, defense_armor,
+                            fixed10_dps_fn(mtable), use_armor=use_armor, threshold=rc["enemy_count_threshold"])
+        sup, casts = run_with_buff(mtable, use_armor, sail)
+        base_s = f"R{base}" if base else "완주"
+        sup_s = f"R{sup}" if sup else "완주"
+        print(f"    {label}: 기본 {base_s} -> 도움소 {sup_s} (캐스트 {casts}회)")
 
     # -----------------------------------------------------------------
     # §13: DamageTable(상성표) 반영 — B안 이후 실제 배정. PM 지시 2026-09-05.
