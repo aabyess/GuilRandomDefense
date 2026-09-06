@@ -228,4 +228,40 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
         }
         return 0;
     }
+
+    // ---- 공격타입 업그레이드("강화소 3", 2026-09-06) ----
+    //
+    // 원작 "강화소 3"(위 등급트랙 "강화소 1"·이름없는 "강화소"와 다른 세 번째 건물,
+    // AttackTypeUpgradeTrackData.cs 주석·ATTACKTYPE_UPGRADE_RAW_DUMP.md 참고). 등급
+    // 트랙과 완전히 같은 패턴이라 별도 Dictionary로 둔다 — 같은 저장소를 공유하면
+    // "등급이야 공격타입이야"를 나중에 또 헷갈린다(오늘 이미 그 사고가 한 번 났다).
+    readonly Dictionary<AttackTypeUpgradeTrackData, int> attackTypeLevels = new Dictionary<AttackTypeUpgradeTrackData, int>();
+
+    public int Level(AttackTypeUpgradeTrackData track) =>
+        track != null && attackTypeLevels.TryGetValue(track, out int level) ? level : 0;
+
+    public void LevelUp(AttackTypeUpgradeTrackData track)
+    {
+        if (track == null) return;
+        attackTypeLevels[track] = Level(track) + 1;
+        OnLevelChanged?.Invoke();
+    }
+
+    // `UnitAttacker.CountResearchLevel()`(SkillEffectBasis.ResearchLevel) 전용 —
+    // 이 유닛 자신의 attackType이 담당하는 공격타입 트랙의 원시 레벨(0~3)을 그대로
+    // 돌려준다. 원작 스킬 하나하나가 어느 자식ID(R01M/R01L/R01O/R01T 등)를 읽었는지는
+    // 안 갈랐다 — 우리는 유닛을 원작 이름 1:1로 매핑하지 않고 재배정하므로, "그 스킬이
+    // 원래 참조하던 ID"가 아니라 "지금 이 유닛에 배정된 공격타입"을 기준으로 읽는 게
+    // 등급트랙(LevelForGrade)과 같은 원칙이다(등급트랙도 "원작 그 캐릭터의 등급"이
+    // 아니라 "지금 이 유닛에 배정된 등급"을 쓴다). 대응 트랙이 없거나(레벨 0) 아직
+    // 안 샀으면 0 — 원작 "연구를 사야 켜지는" 설계와 같다.
+    public int LevelForAttackType(AttackType attackType)
+    {
+        foreach (KeyValuePair<AttackTypeUpgradeTrackData, int> entry in attackTypeLevels)
+        {
+            if (entry.Key != null && entry.Key.attackType == attackType)
+                return entry.Value;
+        }
+        return 0;
+    }
 }

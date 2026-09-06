@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfaf46fcf9594de4a162218e70516ab6, type: 3}
+  m_Name: AttackTypeUpgrade_관통
+  m_EditorClassIdentifier:
+  trackName: 관통 타입 업그레이드
+  description: '원작 "강화소 3" 마스터 버튼 R00I — 2026-09-06 리서치담당 war3map.w3q
+    원문 전수(ATTACKTYPE_UPGRADE_RAW_DUMP.md) 근거. 사면 자식 3개(R01S=1500·R01R=2000·
+    R01Q=3000)가 트리거로 자동 공짜 부여된다 — 자식 절대값은 안 옮긴다(레벨만 필요,
+    이중 계상 방지). 공속 증가율(gba1=gmo1 +3%)은 이번 작업 범위 밖, 필드만 둔다.
+    강화소 3 건설 비용 [미확인]. 시작 레벨0 여부도 [미확인](추정, 안전한 기본값).'
+  attackType: 2
+  maxLevel: 3
+  costGold: 3000
+  costWood: 500
+  speedPercentPerLevel: 0.03

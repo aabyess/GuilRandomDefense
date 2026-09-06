@@ -148,19 +148,35 @@ public class UnitAttacker : MonoBehaviour
     // 바꾼다.
     //
     // ⚠️ 2026-09-06 저녁 추가 확인(구현담당2, PM 지시) — "그 축을 만들면 되는가"를
-    // 봤는데 **만들 수 없다, 아직은.** 이 basis를 쓰는 9건(5개 파일)이 전부 같은
-    // 연구 하나를 읽는 게 아니라 **서로 다른 타입 업그레이드 ID를 각각 읽는다**
-    // (최상호=`R01M`, 전법규=`R01L`, 황정기 2건=`R01V`/`R01O`, h05C(핸콕)는 어느
-    // ID인지 아직 미확인 — 리서치담당에게 넘김). ID 하나짜리 최소 구현으로는 9건을
-    // 못 담고, 좁혀서 지어도 **레벨당 값·구매 비용을 우리가 지어내야 한다**(원작
-    // 조사가 아직 없다 — "전부 원작대로, 우리 창작은 조합식뿐"이 사장님 기준이라
-    // 구매 비용은 창작 허용 범위 밖이다). 그래서 지금은 **일부러 0 그대로 둔다** —
-    // 원작 타입 업그레이드(`R00G`~`R01W`, 공격타입×등급, 각 최대 3레벨) 전체 조사가
-    // 리서치담당에게서 오면 그때 다시 본다. `APPROXIMATION_LEDGER.md`(과소 크기
-    // 포함)에 기록해뒀다.
+    // 봤을 때는 **못 만든다**고 판단했다. 이 basis를 쓰는 9건(5개 파일)이 전부 같은
+    // 연구 하나를 읽는 게 아니라 서로 다른 타입 업그레이드 ID를 참조하는 것처럼
+    // 보였고(최상호=`R01M`, 전법규=`R01L`, 황정기 2건=`R01V`/`R01O`), 무엇보다
+    // **레벨당 값·구매 비용을 원작에서 조사한 적이 없어** 지금 지으면 창작이 될
+    // 상황이었다.
+    //
+    // ⚠️ 2026-09-06 밤 최종 연결(구현담당2, 리서치담당 `war3map.w3q` 원문 전수
+    // `ATTACKTYPE_UPGRADE_RAW_DUMP.md` 이후) — 비용·구조가 나와서 지어낼 게
+    // 없어졌다. 정체가 확정됐다: 원작 "강화소 3"(우리 등급트랙 "강화소 1"과 다른
+    // 건물) 하나가 공격타입 4종(일반`R00G`·공성`R00H`·관통`R01Q`·패기`R01V`, 각
+    // 골드3000+목재500, 최대 3레벨)을 판다 — 사면 트리거가 자식 3개(버킷값 고정)를
+    // 그 자리에서 공짜로 준다. **자식의 절대값은 안 옮긴다** — 이 basis를 쓰는
+    // 스킬들이 이미 자기 `multiplier`/`bonus`를 갖고 있어서, 필요한 건 "몇 번
+    // 샀는가"(레벨, 0~3)뿐이다(옮기면 이중 계상).
+    //
+    // 위에서 "9건이 서로 다른 ID를 읽는다"고 봤던 건 **원작(재배정 전) 캐릭터가
+    // 참조하던 ID였다** — 우리는 유닛을 원작 이름 1:1로 매핑하지 않고 재배정하므로
+    // (예: 최상호 파일 설명문의 `R01M`은 원작 카벤디시가 참조하던 것이지, 지금
+    // 최상호에게 배정된 공격타입과는 무관하다 — 최상호는 attackType=Hero(패기)로
+    // 재배정돼 있다). 등급트랙(`LevelForGrade`)이 "원작 그 캐릭터의 등급"이 아니라
+    // "지금 이 유닛에 배정된 등급"을 쓰는 것과 같은 원칙으로, 여기도 **"지금 이
+    // 유닛에 배정된 공격타입"**을 기준으로 읽는다 — `UnitUpgrades.LevelForAttackType`
+    // 참고. 하드코딩된 파일별 ID 매핑은 안 만든다(재배정 원칙과 안 맞고, 유지보수
+    // 부담만 커진다).
     int CountResearchLevel()
     {
-        return 0;
+        UnitData unitData = identity != null ? identity.Data : null;
+        UnitUpgrades source = ResolveUpgrades();
+        return (unitData != null && source != null) ? source.LevelForAttackType(unitData.attackType) : 0;
     }
 
     // ---- 버프 레지스트리(2026-09-06, PM 지시) — 흩어져 있던 버프류(도움소 공속·공격력
@@ -1117,11 +1133,13 @@ public class UnitAttacker : MonoBehaviour
                 return target.TakesPercentDamage ? target.Hp * effect.multiplier + effect.bonus : 0f;
             case SkillEffectBasis.CasterAttackPower: return AttackDamage * effect.multiplier + effect.bonus;
             // 연구단계 × multiplier + bonus 꼴을 명시적으로 쓴다(원작 예: 핸콕 "연구횟수×
-            // 30,000+360,000") — 이 "연구단계"는 타입 업그레이드(R01L/R01M/R01O/R01T/R01V,
-            // 최대3)다. CountResearchLevel() 주석 참고 — 우리에 그 축이 아직 없어 항상 0을
-            // 돌려준다(0×multiplier+bonus=bonus). 등급 업그레이드(최대21, 공속 축 전용)를
-            // 여기 연결하면 안 된다 — 2026-09-06 오전에 실제로 그렇게 연결됐다가 최대 7배
-            // 과대로 터졌다(뿌리 ㉜ 네 번째).
+            // 30,000+360,000") — 이 "연구단계"는 타입 업그레이드(원작 "강화소 3",
+            // 공격타입별 R00G/R00H/R00I/R01V, 최대3)다. CountResearchLevel() 주석 참고 —
+            // 2026-09-06 밤 연결 완료(`UnitUpgrades.LevelForAttackType`). 등급 업그레이드
+            // (최대21, 공속 축 전용)를 여기 연결하면 안 된다 — 2026-09-06 오전에 실제로
+            // 그렇게 연결됐다가 최대 7배 과대로 터졌다(뿌리 ㉜ 네 번째). 지금은 구매 UI가
+            // 아직 없어 레벨이 항상 0으로 남는다(0×multiplier+bonus=bonus, 회귀 없음) —
+            // 구매 경로가 생기기 전까지는 이전과 값이 같다.
             case SkillEffectBasis.ResearchLevel: return CountResearchLevel() * effect.multiplier + effect.bonus;
             // ⚠️ 2026-09-06 연결(PM 지시): 원작 CSV의 ReceivedDamage 17행 전부 게이트가
             // "(게이트 없음)" 아니면 "MANA/LIFE게이지…"다 — 전부 OnHitChance/OnHitCount,

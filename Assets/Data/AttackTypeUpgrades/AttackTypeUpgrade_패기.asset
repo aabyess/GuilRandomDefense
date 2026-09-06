@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfaf46fcf9594de4a162218e70516ab6, type: 3}
+  m_Name: AttackTypeUpgrade_패기
+  m_EditorClassIdentifier:
+  trackName: 패기 타입 업그레이드
+  description: '원작 "강화소 3" 마스터 버튼 R01V — 2026-09-06 리서치담당 war3map.w3q
+    원문 전수(ATTACKTYPE_UPGRADE_RAW_DUMP.md) 근거. 사면 자식 3개(R01W=2000·R01U=3000·
+    R01T=4000, 패기만 1500 버킷이 없고 4000이 하나 더 있어 비대칭 — 원작이 그런지
+    데이터 누락인지 [미확인])가 트리거로 자동 공짜 부여된다 — 자식 절대값은 안
+    옮긴다(레벨만 필요, 이중 계상 방지). 공속 증가율(gba1=gmo1 +4%, 다른 셋보다
+    1%p 높다)은 이번 작업 범위 밖, 필드만 둔다. 강화소 3 건설 비용 [미확인]. 시작
+    레벨0 여부도 [미확인](추정, 안전한 기본값). h05C(핸콕, 원작 upgr=R01T,R016)가
+    실측으로 이 트랙(패기) 소속임이 확인된 유일한 사례다 — R016은 별개(캐릭터
+    전용 고유보너스, 절대 가산치라 이 축과 무관).'
+  attackType: 4
+  maxLevel: 3
+  costGold: 3000
+  costWood: 500
+  speedPercentPerLevel: 0.04

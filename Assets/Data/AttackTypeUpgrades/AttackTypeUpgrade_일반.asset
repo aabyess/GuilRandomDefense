@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfaf46fcf9594de4a162218e70516ab6, type: 3}
+  m_Name: AttackTypeUpgrade_일반
+  m_EditorClassIdentifier:
+  trackName: 일반 타입 업그레이드
+  description: '원작 "강화소 3"(등급트랙 "강화소 1"과 다른 건물) 마스터 버튼 R00G —
+    2026-09-06 리서치담당 war3map.w3q 원문 전수(ATTACKTYPE_UPGRADE_RAW_DUMP.md) 근거.
+    사면 자식 3개(R01K=1500·R01L=2000·R01M=3000, 등급트랙별 버킷)가 트리거로 자동
+    공짜 부여된다 — 우리는 자식 절대값을 안 옮긴다(SkillEffectBasis.ResearchLevel
+    소비 스킬이 이미 자기 multiplier/bonus를 가짐, 레벨만 필요). 공속 증가율(gba1=gmo1
+    +3%)은 이번 작업(CountResearchLevel 연결) 범위 밖이라 필드만 두고 코드는 아직
+    안 읽는다. 강화소 3 건물 자체의 건설 비용은 [미확인]. 시작 시 레벨0인지도
+    [미확인](반증 못 찾음, 등급트랙처럼 레벨0 시작으로 추정 — 회귀 없는 안전한 기본값).'
+  attackType: 1
+  maxLevel: 3
+  costGold: 3000
+  costWood: 500
+  speedPercentPerLevel: 0.03
