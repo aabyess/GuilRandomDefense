@@ -497,6 +497,18 @@ public class UnitAttacker : MonoBehaviour
         }
     }
 
+    // 06번③ 변신 이월(GameHud.ExecuteTransform이 부른다) — 원작 GetHeroXP/GetHeroStatBJ →
+    // 새 유닛에 SetHeroXP류로 되돌리는 두 단계를, 우리 축(heroXp·purchasedStat)으로
+    // 재현한다. source는 Consume() 전에 읽은 옛 유닛 — 지운 뒤엔 0만 남아 의미가 없다.
+    public void CopyProgressionFrom(UnitAttacker source)
+    {
+        if (source == null) return;
+        if (source.heroXp > 0) AddHeroXp(source.heroXp);
+        if (source.purchasedStrength > 0) AddPurchasedStat(0, source.purchasedStrength);
+        if (source.purchasedAgility > 0) AddPurchasedStat(1, source.purchasedAgility);
+        if (source.purchasedIntelligence > 0) AddPurchasedStat(2, source.purchasedIntelligence);
+    }
+
     public float CurrentStrength
     {
         get

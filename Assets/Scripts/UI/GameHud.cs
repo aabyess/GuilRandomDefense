@@ -1092,8 +1092,9 @@ public class GameHud : MonoBehaviour
     //
     // 원작(Trig_T_Ability_hero_Actions, #011 H097→H0B1 아오키지·#016 H091→H093 쵸파)은
     // RemoveUnit 후 CreateNUnitsAtLoc으로 새 유닛을 만들고 GetHeroXP/GetHeroStatBJ로 뽑은
-    // 경험치·STR/AGI/INT를 새 유닛에 되돌린다. **우리는 그 축(레벨·능력치) 자체가 없어서
-    // 이어받을 게 없다** — 대신 우리 쪽에서 실제로 이어져야 하는 건:
+    // 경험치·STR/AGI/INT를 새 유닛에 되돌린다. 우리 쪽 대응 축은 heroXp/purchasedStat
+    // (UnitAttacker) — Consume() 전에 옛 유닛에서 읽어(지운 뒤엔 0만 남는다) 새 유닛에
+    // CopyProgressionFrom으로 되돌린다(아래). 그 외 실제로 이어져야 하는 건:
     //   · 소유자(ownerId)  — Consume()이 옛 것을 지우고, Spawn(..., ownerId)이 새 것을 같은
     //     플레이어 소유로 만든다.
     //   · 위치            — 옛 유닛이 서 있던 자리 근처(NavMesh 샘플링, CombineSystem.
@@ -1105,6 +1106,9 @@ public class GameHud : MonoBehaviour
     //     변신하자마자 선택이 풀려 방금 바뀐 유닛의 상태(체력바 등)를 못 본다.
     // 버리는 것: 전투 상태(UnitCombat의 추적 대상·이동 명령·홀딩)는 새 유닛이 항상 Idle로
     // 시작한다 — 원작도 경험치·능력치 말고는 아무것도 안 옮긴다.
+    // ⚠️ 특성 구매 이력(unlockedTraits)·공격타입 업그레이드 레벨(UnitUpgrades.
+    // LevelForAttackType)·A0LZ 자가강화 레벨(selfUpgradeLevel)도 이월돼야 하는지는 원작
+    // 확인 전까지 넣지 않는다(리서치담당 질의 대기, PM 전달).
     //
     // transformIntoUnit은 사장님 배정 전까지 null이라(H0B1·H097→H0B1, H091→H093이 우리
     // 로스터의 어떤 유닛이 될지 미정) 이 메서드는 지금 절대 안 불린다 — 호출부(위)가
@@ -1127,12 +1131,24 @@ public class GameHud : MonoBehaviour
             ? hit.position
             : oldPosition;
 
+        // ⚠️ Consume() 전에 읽는다 — 지운 뒤에 읽으면 0만 남는다(UnitIdentity.Consume이
+        // 이 컴포넌트가 붙은 게임오브젝트를 없앤다).
+        oldIdentity.TryGetComponent(out UnitAttacker oldAttacker);
+
         oldIdentity.Consume();
 
         GameObject newUnit = spawner.Spawn(trait.transformIntoUnit, spawnPosition, ownerId);
-        if (newUnit != null && newUnit.TryGetComponent(out Selectable newSelectable))
+        if (newUnit != null)
         {
-            Selection?.SelectOnly(newSelectable);
+            if (oldAttacker != null && newUnit.TryGetComponent(out UnitAttacker newAttacker))
+            {
+                newAttacker.CopyProgressionFrom(oldAttacker);
+            }
+
+            if (newUnit.TryGetComponent(out Selectable newSelectable))
+            {
+                Selection?.SelectOnly(newSelectable);
+            }
         }
     }
 
