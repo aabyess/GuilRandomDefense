@@ -584,6 +584,79 @@ results.append((
     buff_hit_charges_mismatch_assets,
 ))
 
+# ── 20. SkillEffect.targetCondition을 쓰는데 EnemyData.pointValue가 하나도 안 채워짐 ──
+# ⚠️ 2026-09-06 신설(대상 조건 게이트, PM 지시) — targetCondition(TargetPointValueLessThan/
+# Equal/AtLeast)은 EnemyData.pointValue(원작 GetUnitPointValue 원시값)와 비교해 효과를
+# 걸지 말지 정한다(SkillData.cs/EnemyData.cs 주석 참고). 지금은 이 조건을 쓰는 SkillEffect가
+# 0개라 무해하지만, 나중에 62개 파일에 조건을 배선하는 시점에 EnemyData.pointValue가
+# 아직 리서치담당 자료로 안 채워졌으면(전부 기본값 0) — 에러도 안 나고 컴파일도 되고
+# 테스트도 통과하면서 "<200" 조건이 모든 적에게 참이 돼 한쪽 분기만 항상 나가고 반대쪽은
+# 영영 안 나간다("축은 있는데 연결은 됐지만 데이터가 비어서 한쪽으로만 흐른다" — 뿌리
+# ㉜의 다음 단계, 더 안 보이는 형태). 이 검사는 "조건을 쓰기 시작한 순간"과 "포인트값을
+# 채우기 시작한 순간"이 같이 일어나도록 강제한다.
+def target_condition_used(text):
+    for level_body in re.split(r"\n  - cooldown: ", text)[1:]:
+        effects_match = re.search(r"    effects:(.*?)(?=\n  - cooldown: |\Z)", level_body, re.S)
+        effects_body = effects_match.group(1) if effects_match else ""
+        for effect_body in re.split(r"\n    - kind: ", effects_body)[1:]:
+            cond_match = re.search(r"\n {6}targetCondition: (\d+)", effect_body)
+            cond = int(cond_match.group(1)) if cond_match else 0
+            if cond != 0:  # 0 = SkillEffectTargetCondition.None
+                return True
+    return False
+
+
+def enemy_has_positive_point_value(text):
+    m = re.search(r"^  pointValue: ([\d.eE+-]+)", text, re.MULTILINE)
+    return m is not None and float(m.group(1)) > 0.0
+
+
+enemy_assets = glob("Assets/Data/Enemies/*.asset")
+skill_assets_using_target_condition = [p for p in skill_assets if target_condition_used(read(p))]
+enemies_with_point_value = [p for p in enemy_assets if enemy_has_positive_point_value(read(p))]
+
+results.append((
+    "SkillEffect.targetCondition 사용 중인데 EnemyData.pointValue가 하나도 안 채워짐",
+    ["targetCondition", "pointValue"],
+    f"targetCondition을 쓰는 SkillEffect가 {len(skill_assets_using_target_condition)}개인데 "
+    f"pointValue>0인 EnemyData가 {len(enemies_with_point_value)}개(적 {len(enemy_assets)}개 중)다 — "
+    "포인트값이 전부 0이면 '<200' 조건이 모든 적에게 참이 돼 한쪽 분기만 나가고 반대쪽은 "
+    "영영 안 나간다(에러 없이, 조용히).",
+    len(skill_assets),
+    skill_assets_using_target_condition if (skill_assets_using_target_condition and not enemies_with_point_value) else [],
+))
+
+# ── 21. SkillEffect.targetCondition != None인데 targetConditionValue == 0 ──────
+# ⚠️ 20번과 같은 종류의 함정, 다른 필드. 조건을 켰는데 임계값(원작 200/300 등)을 안
+# 채우면 "<0"처럼 사실상 항상 거짓(또는 '==0'이면 포인트값이 진짜 0인 극소수 대상에만
+# 참)이 되는 경우가 많다 — 조건 종류와 임계값은 같이 채워야 뜻이 선다.
+def target_condition_zero_threshold(text):
+    for level_body in re.split(r"\n  - cooldown: ", text)[1:]:
+        effects_match = re.search(r"    effects:(.*?)(?=\n  - cooldown: |\Z)", level_body, re.S)
+        effects_body = effects_match.group(1) if effects_match else ""
+        for effect_body in re.split(r"\n    - kind: ", effects_body)[1:]:
+            cond_match = re.search(r"\n {6}targetCondition: (\d+)", effect_body)
+            cond = int(cond_match.group(1)) if cond_match else 0
+            if cond == 0:
+                continue
+            value_match = re.search(r"\n {6}targetConditionValue: ([\d.eE+-]+)", effect_body)
+            value = float(value_match.group(1)) if value_match else 0.0
+            if value == 0.0:
+                return True
+    return False
+
+
+target_condition_zero_threshold_assets = [p for p in skill_assets if target_condition_zero_threshold(read(p))]
+
+results.append((
+    "SkillEffect.targetCondition != None인데 targetConditionValue == 0",
+    ["targetCondition", "targetConditionValue"],
+    "조건 종류(<·==·>=)만 켜고 임계값(원작 200/300 등)을 안 채우면 비교식이 뜻 없는 "
+    "값(0)과 비교돼 의도와 다르게 걸리거나 안 걸린다 — 조건을 배선할 땐 항상 값도 같이.",
+    len(skill_assets),
+    target_condition_zero_threshold_assets,
+))
+
 # ── 리포트 ───────────────────────────────────────────────────────────────
 any_problem = False
 for label, fields, danger, total, missing in results:
