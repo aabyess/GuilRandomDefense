@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_초월_강주혁_AP_5c20b80f
   m_EditorClassIdentifier:
   skillName: 웨더리아의 항해사 — 1/9
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 웨더리아의 항해사(H08V)의 게이트 "1/9" 능력 3개를 이 SkillData 하나로 묶었다.   · Nami_Skill_2#1: 계산식 800000.00   · Nami_Skill_2#2: 계산식 400000.00   · Nami_Skill_2#3: 계산식 400000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. ⚠️ 2026-09-06 정정(PM 지시, 리서치담당 JASS 원문 확인 — RRD_SEQUENCE_DUPLICATE_AUDIT.md 사례2) — #1(80만)·#2(40만)는 `if GetRandomInt(1,100)<33` 배타분기(33%/67%)이고 #3(40만)은 조건과 무관하게 항상 발동. 이전엔 셋 다 chance=1로 매번 다 나가 100% 160만 확정타였다(최대 약 4배 과다). #1 chance=0.33, #2 chance=0.67로 원작 분기 확률을 그대로 넣었다 — 값(80만/40만/40만)은 그대로. ⚠️ 엔진 한계: SkillEffect.chance는 효과별 독립 판정(UnitAttacker.CastSkillLevel, `foreach`+개별 Random.value)이라 "둘 중 하나만"을 구조적으로 강제하진 못한다 — 기대값은 정확히 맞춘 근사다(0.33×80만+0.67×40만+40만=93.2만, 이전 160만 확정 대비). #1·#2가 우연히 동시에 뜨거나(22.11%) 둘 다 안 뜰(22.11%) 경우가 원작엔 없는 이 근사만의 부작용이다.
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 웨더리아의 항해사(H08V)의 게이트 "1/9" 능력 3개를 이 SkillData 하나로 묶었다.   · Nami_Skill_2#1: 계산식 800000.00   · Nami_Skill_2#2: 계산식 400000.00   · Nami_Skill_2#3: 계산식 400000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. ⚠️ 2026-09-06 정정(PM 지시, 리서치담당 JASS 원문 확인 — RRD_SEQUENCE_DUPLICATE_AUDIT.md 사례2) — #1(80만)·#2(40만)는 `if GetRandomInt(1,100)<33` 배타분기(33%/67%)이고 #3(40만)은 조건과 무관하게 항상 발동. 이전엔 셋 다 chance=1로 매번 다 나가 100% 160만 확정타였다(최대 약 4배 과다). #1 chance=0.33, #2 chance=0.67로 원작 분기 확률을 그대로 넣었다 — 값(80만/40만/40만)은 그대로. ⚠️ 엔진 한계: SkillEffect.chance는 효과별 독립 판정(UnitAttacker.CastSkillLevel, `foreach`+개별 Random.value)이라 "둘 중 하나만"을 구조적으로 강제하진 못한다 — 기대값은 정확히 맞춘 근사다(0.33×80만+0.67×40만+40만=93.2만, 이전 160만 확정 대비). #1·#2가 우연히 동시에 뜨거나(22.11%) 둘 다 안 뜰(22.11%) 경우가 원작엔 없는 이 근사만의 부작용이다. 🔴 2026-09-07 재정정(PM 지시, 리서치담당 `Trig_Nami_Skill_2_Actions` 원문 재확인, `ebc9828`) — #1/#2의 33%/67% 분기는 그 자체가 `if UnitHasItem(캐스터, Item_nami)`(아이템 보유) 게이트 안에 있고, 아이템이 없으면 무조건 40만(#3)만 나간다. 09-06 정정은 배타 쌍(33%/67%)만 옮기고 그걸 감싼 바깥의 "아이템 보유" 조건을 놓쳤다 — 우리 유닛은 아이템을 들 수 있는 축 자체가 없으므로 지금은 "아이템 없음"이 항상 참이다. #1 chance 0.33→0, #2 chance 0.67→0으로 내려 지금은 #3(40만)만 나가게 한다(93.2만→40만, 원작보다 세게 나가던 걸 낮추는 방향). ⚠️ 값(80만/40만)은 지우지 않고 그대로 둔다 — 아이템 보유 축이 생기면 0.33/0.67로 복구할 값이다.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -30,7 +30,7 @@ MonoBehaviour:
       attackType: 7
       multiplier: 800000.0
       bonus: 0.0
-      chance: 0.33
+      chance: 0
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
@@ -41,7 +41,7 @@ MonoBehaviour:
       attackType: 7
       multiplier: 400000.0
       bonus: 0.0
-      chance: 0.67
+      chance: 0
       hitCount: 2
       duration: 0
       casterBuffCountFactor: 0
