@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_불멸_박은석_79행_00625
   m_EditorClassIdentifier:
   skillName: A09F 0장풍 불멸 Z 대구경 탄환
-  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.0625로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.  · e056(#불멸 Z 대구경 탄환1) A09F 0장풍 불멸 Z 대구경 탄환 [시체폭발/죽음의사슬 피해]: 1000000 (원작 제트·불멸) 진입게이트: Trig_Z_Attack_Actions[이벤트직결]: GetRandomInt(1,16)==7  · e0GH(#불멸 Z 차지 블래스터 시작) A0S6 0장풍 제트 차지블래스터 [시체폭발/죽음의사슬 피해]: 1000000 (원작 제트·불멸) 진입게이트: Trig_Z_Attack_Actions[이벤트직결]: GetRandomInt(1,16)==7  · e0GK(#불멸 Z 차지 블래스터 시작) A0S6 0장풍 제트 차지블래스터 [시체폭발/죽음의사슬 피해]: 1000000 (원작 제트·불멸) 진입게이트: Trig_Z_Attack_Actions[이벤트직결]: GetRandomInt(1,16)==7
+  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.0625로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.
+  · e0GK(#불멸 Z 차지 블래스터 시작) A0S6 0장풍 제트 차지블래스터 [시체폭발/죽음의사슬 피해]: 1000000 (원작 제트·불멸) 진입게이트: Trig_Z_Attack_Actions[이벤트직결]: GetRandomInt(1,16)==7
+  제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e056(#불멸 Z 대구경 탄환1) A09F 0장풍 불멸 Z 대구경 탄환: 1000000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지) / e0GH(#불멸 Z 차지 블래스터 시작) A0S6 0장풍 제트 차지블래스터: 1000000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지)
   triggerType: 0
   levels:
   - cooldown: 0
@@ -23,28 +25,6 @@ MonoBehaviour:
     resetTo: 0
     gaugeKind: 0
     effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 1000000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 1000000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
     - kind: 0
       basis: 0
       target: 3

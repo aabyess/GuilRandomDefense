@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_제한_최영민_79행_02000
   m_EditorClassIdentifier:
   skillName: A0QY 3범위 레베카제한 기본둔화
-  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.2000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.  · e0EQ(%제한됨변화 레베카 더미13) A0QY 3범위 레베카제한 기본둔화 [천둥소리 피해]: 50000 (원작 레베카·제한됨) 진입게이트: Trig_RebecaAttack_Actions[이벤트직결]: GetRandomInt(1,10)==6 | Trig_RebecaAttack_Actions[이벤트직결]: GetUnitPointValue(GetTriggerUnit())==200 AND GetRandomInt(1,5)==4 | Trig_RebecaAttack_Actions[이벤트직결]: UnitHasBuffBJ(GetTriggerUnit(),'B06B')==true AND GetRandomInt(1,5)==4  · e0F0(%제한됨변화 레베카 더미1) A0QY 3범위 레베카제한 기본둔화 [천둥소리 피해]: 50000 (원작 레베카·제한됨) 진입게이트: Trig_RebecaAttack_Actions[이벤트직결]: GetRandomInt(1,10)==6 | Trig_RebecaAttack_Actions[이벤트직결]: GetUnitPointValue(GetTriggerUnit())==200 AND GetRandomInt(1,5)==4 | Trig_RebecaAttack_Actions[이벤트직결]: UnitHasBuffBJ(GetTriggerUnit(),'B06B')==true AND GetRandomInt(1,5)==4  · e0F1(%제한됨변화 레베카 더미12) A0QY 3범위 레베카제한 기본둔화 [천둥소리 피해]: 50000 (원작 레베카·제한됨) 진입게이트: Trig_RebecaAttack_Actions[이벤트직결]: GetRandomInt(1,10)==6 | Trig_RebecaAttack_Actions[이벤트직결]: GetUnitPointValue(GetTriggerUnit())==200 AND GetRandomInt(1,5)==4 | Trig_RebecaAttack_Actions[이벤트직결]: UnitHasBuffBJ(GetTriggerUnit(),'B06B')==true AND GetRandomInt(1,5)==4
+  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.2000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.
+  · e0EQ(%제한됨변화 레베카 더미13) A0QY 3범위 레베카제한 기본둔화 [천둥소리 피해]: 50000 (원작 레베카·제한됨) 진입게이트: Trig_RebecaAttack_Actions[이벤트직결]: GetRandomInt(1,10)==6 | Trig_RebecaAttack_Actions[이벤트직결]: GetUnitPointValue(GetTriggerUnit())==200 AND GetRandomInt(1,5)==4 | Trig_RebecaAttack_Actions[이벤트직결]: UnitHasBuffBJ(GetTriggerUnit(),'B06B')==true AND GetRandomInt(1,5)==4
+  제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e0F0(%제한됨변화 레베카 더미1) A0QY 3범위 레베카제한 기본둔화: 50000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지) / e0F1(%제한됨변화 레베카 더미12) A0QY 3범위 레베카제한 기본둔화: 50000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지)
   triggerType: 0
   levels:
   - cooldown: 0
@@ -23,28 +25,6 @@ MonoBehaviour:
     resetTo: 0
     gaugeKind: 0
     effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 4
-      multiplier: 50000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 4
-      multiplier: 50000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
     - kind: 0
       basis: 0
       target: 3

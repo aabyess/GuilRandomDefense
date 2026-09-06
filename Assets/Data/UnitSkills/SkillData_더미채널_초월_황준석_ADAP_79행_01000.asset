@@ -13,7 +13,10 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_초월_황준석_ADAP_79행_01000
   m_EditorClassIdentifier:
   skillName: A10Z 0장풍 키드초월 리펠1
-  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.1000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.  · e0MW(@초월 키드 더미3) A10Z 0장풍 키드초월 리펠1 [시체폭발/죽음의사슬 피해]: 300000 (원작 키드·초월함) 진입게이트: Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND NOT(UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true) | Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true  · e0MY(@초월 키드 더미2) A17P 0장풍 키드초월 댐드펑크 [시체폭발/죽음의사슬 피해]: 600000 (원작 키드·초월함) 진입게이트: Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND NOT(UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true) | Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true  · e0NM(@초월 키드 더미01) A10Z 0장풍 키드초월 리펠1 [시체폭발/죽음의사슬 피해]: 300000 (원작 키드·초월함) 진입게이트: Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND NOT(UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true) | Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true
+  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.1000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.
+  · e0MW(@초월 키드 더미3) A10Z 0장풍 키드초월 리펠1 [시체폭발/죽음의사슬 피해]: 300000 (원작 키드·초월함) 진입게이트: Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND NOT(UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true) | Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true
+  · e0MY(@초월 키드 더미2) A17P 0장풍 키드초월 댐드펑크 [시체폭발/죽음의사슬 피해]: 600000 (원작 키드·초월함) 진입게이트: Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND NOT(UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true) | Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true
+  제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e0NM(@초월 키드 더미01) A10Z 0장풍 키드초월 리펠1: 300000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지)
   triggerType: 0
   levels:
   - cooldown: 0
@@ -40,17 +43,6 @@ MonoBehaviour:
       damageType: 1
       attackType: 4
       multiplier: 600000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 4
-      multiplier: 300000.0
       bonus: 0.0
       chance: 1
       hitCount: 1

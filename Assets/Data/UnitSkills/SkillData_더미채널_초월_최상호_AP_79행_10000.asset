@@ -13,7 +13,10 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_초월_최상호_AP_79행_10000
   m_EditorClassIdentifier:
   skillName: A0PI 3범위 도플초월 오색실1
-  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.  · e06H(@초월 도플 할퀴기) A0PI 3범위 도플초월 오색실1 [천둥소리 피해]: 205000 (원작 도플·초월함) 진입게이트: Trig_DP_Attack_gaksung_Actions[이벤트직결]: (조건없음)  · e06K(@초월 도플 거미줄) A0PI 3범위 도플초월 오색실1 [천둥소리 피해]: 205000 (원작 도플·초월함) 진입게이트: Trig_DP_Attack_Actions[이벤트직결]: (조건없음)  · e06R(@초월 도플 흉탄더미) A0AM 3범위 도플각성흉탄 [천둥소리 피해]: 150000 (원작 도플·초월함) 진입게이트: Trig_DP_Attack_gaksung_Actions[이벤트직결]: (조건없음)  · e0IW(@초월 도플 새장) A0AM 3범위 도플각성흉탄 [천둥소리 피해]: 150000 (원작 도플·초월함) 진입게이트: Trig_DP_Attack_gaksung_Actions[이벤트직결]: (조건없음)
+  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.
+  · e06K(@초월 도플 거미줄) A0PI 3범위 도플초월 오색실1 [천둥소리 피해]: 205000 (원작 도플·초월함) 진입게이트: Trig_DP_Attack_Actions[이벤트직결]: (조건없음)
+  · e0IW(@초월 도플 새장) A0AM 3범위 도플각성흉탄 [천둥소리 피해]: 150000 (원작 도플·초월함) 진입게이트: Trig_DP_Attack_gaksung_Actions[이벤트직결]: (조건없음)
+  제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e06H(@초월 도플 할퀴기) A0PI 3범위 도플초월 오색실1: 205000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지) / e06R(@초월 도플 흉탄더미) A0AM 3범위 도플각성흉탄: 150000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지)
   triggerType: 0
   levels:
   - cooldown: 0
@@ -29,28 +32,6 @@ MonoBehaviour:
       damageType: 1
       attackType: 4
       multiplier: 205000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 4
-      multiplier: 205000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 4
-      multiplier: 150000.0
       bonus: 0.0
       chance: 1
       hitCount: 1

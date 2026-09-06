@@ -13,7 +13,10 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_초월_강주혁_AP_79행_10000
   m_EditorClassIdentifier:
   skillName: A0B0 2범위 나미초월 블리자드3
-  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.  · e09H(@초월 나미 웨더리아3-얼음) A0B0 2범위 나미초월 블리자드3 [블리자드 파동당 피해]: 500000 (원작 나미·초월함) 진입게이트: Trig_Nami_Attack_Actions[이벤트직결]: UnitHasBuffBJ(GetAttacker(),'B012')==false  · e09I(@초월 나미 웨더리아4-업화피닉스1) A0AZ 2범위 나미초월 블리자드4 [블리자드 파동당 피해]: 500000 (원작 나미·초월함) 진입게이트: Trig_Nami_Attack_Actions[이벤트직결]: UnitHasBuffBJ(GetAttacker(),'B012')==false  · e0IZ(@초월 나미 웨더리아5-리메이크) A0AZ 2범위 나미초월 블리자드4 [블리자드 파동당 피해]: 500000 (원작 나미·초월함) 진입게이트: Trig_Nami_Attack_Actions[이벤트직결]: UnitHasBuffBJ(GetAttacker(),'B012')==false
+  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.
+  · e09H(@초월 나미 웨더리아3-얼음) A0B0 2범위 나미초월 블리자드3 [블리자드 파동당 피해]: 500000 (원작 나미·초월함) 진입게이트: Trig_Nami_Attack_Actions[이벤트직결]: UnitHasBuffBJ(GetAttacker(),'B012')==false
+  · e0IZ(@초월 나미 웨더리아5-리메이크) A0AZ 2범위 나미초월 블리자드4 [블리자드 파동당 피해]: 500000 (원작 나미·초월함) 진입게이트: Trig_Nami_Attack_Actions[이벤트직결]: UnitHasBuffBJ(GetAttacker(),'B012')==false
+  제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e09I(@초월 나미 웨더리아4-업화피닉스1) A0AZ 2범위 나미초월 블리자드4: 500000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지)
   triggerType: 0
   levels:
   - cooldown: 0
@@ -23,17 +26,6 @@ MonoBehaviour:
     resetTo: 0
     gaugeKind: 0
     effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 3
-      multiplier: 500000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
     - kind: 0
       basis: 0
       target: 3
