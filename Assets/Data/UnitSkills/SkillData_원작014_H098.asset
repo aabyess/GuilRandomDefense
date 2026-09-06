@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작014_H098
   m_EditorClassIdentifier:
   skillName: A0FL D로빈의 손날개
-  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 오하라의 마지막 생존자(H098), #014, 능력교체형: (구 능력 불명) 제거 후 A0FL(D로빈의 손날개) 부여. 배율/레벨 개념 아님 — 통째로 이 스킬로 바뀐다. 수치 미상 — effects가 비어 있다. upro(실제 이름): 니코 로빈. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다).
+  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 오하라의 마지막 생존자(H098), #014, 능력교체형: (구 능력 불명) 제거 후 A0FL(D로빈의 손날개) 부여. upro(실제 이름): 니코 로빈. 2026-09-06 조사 완료(TRAIT_REPLACEMENT_SKILLS.md/csv, 리서치담당 f6b44a6, 확신도 확정): 피해 없음 — 네이티브 블링크, Ebl1=1500(순간이동 거리)·acdn=1.0(쿨다운)·핫키 D. ⚠️ 값은 확인됐지만 effects는 여전히 비워둔다 — "평타에 맞았을 때/일정 주기로 자동 발동" 축만 있는 우리 SkillEffectKind/SkillTriggerType엔 "플레이어가 직접 누르는 순간이동" 같은 수동 발동 이동기 자체가 없다(우리 유닛은 전부 자동전투). 지어낼 수 없는 게 아니라 애초에 이 게임 구조에 대응 개념이 없는 능력이다 — 사장님 판단(핫키 조작을 만들지, 자동 대체 규칙을 만들지) 대기.
   triggerType: 0
   levels:
   - cooldown: 0

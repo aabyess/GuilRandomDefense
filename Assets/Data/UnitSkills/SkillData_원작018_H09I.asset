@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: SkillData_원작018_H09I
   m_EditorClassIdentifier:
   skillName: A0R1 A소울 뮤직
-  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 소울 킹(H09I), #018, 능력교체형: (구 능력 불명) 제거 후 A0R1(A소울 뮤직) 부여. 배율/레벨 개념 아님 — 통째로 이 스킬로 바뀐다. 수치 미상 — effects가 비어 있다. upro(실제 이름): 브룩. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다).
-  triggerType: 0
+  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 소울 킹(H09I), #018, 능력교체형: (구 능력 불명) 제거 후 A0R1(A소울 뮤직) 부여. upro(실제 이름): 브룩. 2026-09-06 조사 완료(TRAIT_REPLACEMENT_SKILLS.md/csv, 리서치담당 f6b44a6, 확신도 확정) — triggerType을 OnHitChance(0)→OnHitCount(3)로 정정했다: A0R1 자체(Oae1=0·Oae2=0·aare=99999·atar=none)는 아무 효과 없는 플래그 껍데기고, 실제 게이트는 Brook_Skill_Mana의 "마나 게이지==115"(ORIGINAL_TRAIT_GATE_MAPPING.csv "게이지 115타")다 — 그 게이지가 임계에 닿으면 더미 e06T(@초월 브룩음표 더미)를 소환하고, e06T가 든 A0QZ(공속+15%, 835범위, 아군/자신 대상)가 실제 효과다. hitCountThreshold=115·gaugeKind=Mana로 소환 조건까지는 정확히 담았다. ⚠️ effects는 비워둔다 — "소환된 더미가 지속적으로 오라를 낸다"를 표현할 방법이 없다(009 SkillData_원작009_H094 주석 참고, 같은 한계) + 그 오라 자체도 아군 대상 공격속도 +15%인데 SkillEffectKind에 Allies 대상 고정 배율 공격속도 버프 case가 없다(ApplyBuff는 이름표만 세운다). 「15초마다 음표 생성」 주기는 [미확인](Brook_Skill_Mana 재진입 주기 미추적).
+  triggerType: 3
   levels:
   - cooldown: 0
     triggerChance: 1
     range: 0
+    hitCountThreshold: 115
+    resetTo: 0
+    gaugeKind: 0
     effects: []
