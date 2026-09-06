@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_더미채널_히든_호치킨_79행_10000
+  m_EditorClassIdentifier:
+  skillName: A088 3범위 아카히든 대분화
+  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.  · e01M(H히든 아카이누) A088 3범위 아카히든 대분화 [천둥소리 피해]: 300000 (원작 아카이누·히든) 진입게이트: Trig_Akainu_Attack_Actions[이벤트직결]: NOT((GetUnitStateSwap(UNIT_STATE_MANA,GetAttacker())==135.00)) AND NOT(GetUnitStateSwap(UNIT_STATE_MANA,GetAttacker())==135.00) AND NOT(UnitHasBuffBJ(GetTriggerUnit(),'B06B')==true) AND NOT(GetRandomInt(1,1000)<76) AND GetRandomInt(1,10)==5 | Trig_Akainu_Attack_Actions[이벤트직결]: NOT((GetUnitStateSwap(UNIT_STATE_MANA,GetAttacker())==135.00)) AND NOT(GetUnitStateSwap(UNIT_STATE_MANA,GetAttacker())==135.00) AND UnitHasBuffBJ(GetTriggerUnit(),'B06B')==true AND GetRandomInt(1,10)==5 | Trig_Hidden5_Actions[이벤트직결]: (조건없음)
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 1.0
+    range: 0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    effects:
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 4
+      multiplier: 300000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
