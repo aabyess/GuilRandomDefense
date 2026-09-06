@@ -62,7 +62,16 @@ unam = |cff4682b4고대의 배|r |cffb22222특수|r - |cffff00ff희귀함|r
 **`h05Y`="고대의 배"가 `A0OD`("레일리 도박")를 포함해 3개의 도박 능력을
 갖고 있는 그 유닛이다.**
 
-## `Trig_Acient_Ship_Actions` — "고대의 배" 유닛이 갖는 3가지 도박, 원문 그대로
+## 🔴 2026-09-07 정정 — 아래 발췌가 `RemoveUnit` 줄을 빠뜨렸다
+
+아래 코드 블록은 요약하면서 `call RemoveUnit(GetTriggerUnit())` 줄들을
+빼고 옮겼다 — **실제로는 세 분기(A0OC/A0OD/A023) 전부, 성공·실패
+가리지 않고 `RemoveUnit(GetTriggerUnit())`(=`h05Y` 자기 자신 소모)가
+있다.** 즉 **고대의 배는 도박 1회마다 소모된다** — "목재만 있으면
+무한 도박"이 아니다. 전문·경제적 결론은
+[[acient-ship-consume-confirmed]](ACIENT_SHIP_CONSUME_CONFIRMED.md) 참고.
+
+## `Trig_Acient_Ship_Actions` — "고대의 배" 유닛이 갖는 3가지 도박, 원문 그대로(⚠️ 요약본, 위 정정 참고)
 
 ```jass
 if(Trig_Acient_Ship_Func001C())then   // GetSpellAbilityId()=='A0OC' — "다른세계 유닛 도박"
