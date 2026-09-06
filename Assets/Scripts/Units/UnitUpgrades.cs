@@ -113,6 +113,28 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
         repeatablePurchaseCounts[trait] = count + 1;
     }
 
+    // 흔함 9종 판매 누적 카운터(A09G, UNIT_SELL_AND_JOHAB_RESEARCH.md 원문 `Sell_Point1`)
+    // — 유닛타입별이 아니라 **플레이어 전체 공유**다(9명 중 누굴 팔든 같은 카운터에 +1,
+    // 리서치 확인 2026-09-07). 게임 시작 0 세팅 말고 리셋이 없다 — 라운드 전환·사망과
+    // 무관하게 계속 누적, N번째마다 0으로 돌아가고 그 뒤로도 반복된다(1회성 아님).
+    // ⚠️ 직렬화 안 함(unlockedTraits·repeatablePurchaseCounts와 같은 결, 한 판 한정).
+    int commonSellCount;
+
+    /// <summary>흔함 유닛 판매 1회 등록. everyN(=UnitData.sellRewardEveryNSells, 상수를
+    /// 코드에 안 박고 자산에서 읽는다)에 도달하면 카운터를 0으로 리셋하고 true를 돌려준다
+    /// (그 순간 위습을 지급하라는 신호 — 실제 지급은 호출부 몫). everyN<=0이면 카운터 자체를
+    /// 안 건드리고 항상 false(안전한 무동작).</summary>
+    public bool RegisterCommonSell(int everyN)
+    {
+        if (everyN <= 0) return false;
+
+        commonSellCount++;
+        if (commonSellCount < everyN) return false;
+
+        commonSellCount = 0;
+        return true;
+    }
+
     // 포인트 차감·비용 확인은 상점(아직 없음) 몫이다 — 여기선 언락 상태만 바꾼다.
     public void Unlock(UnitTraitData trait)
     {

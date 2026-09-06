@@ -661,7 +661,8 @@ public class GameHud : MonoBehaviour
         Selectable single = selection.Selected[0];
         if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null ||
             (identity.Data.sellRewardWisp == null && identity.Data.sellRewardTraitPoints <= 0 &&
-             identity.Data.sellRewardWood <= 0 && identity.Data.sellTriggersItemGamblePool == null))
+             identity.Data.sellRewardWood <= 0 && identity.Data.sellTriggersItemGamblePool == null &&
+             identity.Data.sellRewardEveryNSells <= 0))
         { HideSellButton(); return; }
 
         sellButtonPanel.SetActive(true);
@@ -686,9 +687,12 @@ public class GameHud : MonoBehaviour
         string gamblePart = data.sellTriggersItemGamblePool != null
             ? "아이템 도박 1회"
             : null;
+        string everyNPart = data.sellRewardEveryNSells > 0 && data.sellRewardEveryNWisp != null
+            ? $"{data.sellRewardEveryNSells}회 판매마다 {data.sellRewardEveryNWisp.wispName} 1기(누적형, 플레이어 공유)"
+            : null;
 
         StringBuilder rewardDesc = new StringBuilder();
-        foreach (string part in new[] { wispPart, woodPart, pointPart, gamblePart })
+        foreach (string part in new[] { wispPart, woodPart, pointPart, gamblePart, everyNPart })
         {
             if (part == null) continue;
             if (rewardDesc.Length > 0) rewardDesc.Append(" + ");
@@ -714,7 +718,8 @@ public class GameHud : MonoBehaviour
         Selectable single = selection.Selected[0];
         if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null ||
             (identity.Data.sellRewardWisp == null && identity.Data.sellRewardTraitPoints <= 0 &&
-             identity.Data.sellRewardWood <= 0 && identity.Data.sellTriggersItemGamblePool == null)) return;
+             identity.Data.sellRewardWood <= 0 && identity.Data.sellTriggersItemGamblePool == null &&
+             identity.Data.sellRewardEveryNSells <= 0)) return;
 
         if (!single.TryGetComponent(out OwnedByPlayer owner)) return;
 
@@ -740,6 +745,20 @@ public class GameHud : MonoBehaviour
                 Random.value < identity.Data.sellRewardWoodChance)
             {
                 context.ResourceWallet.Add(ResourceType.Wood, identity.Data.sellRewardWood);
+            }
+
+            // 흔함 9종 판매 누적(A09G) — 플레이어 전체 공유 카운터가 N번째에 도달할 때만
+            // 위습을 준다(UnitUpgrades.RegisterCommonSell 참고). RewardDistributor.
+            // GrantWisps는 count를 1로 고정 — 이 보상은 항상 위습 1기다.
+            if (identity.Data.sellRewardEveryNSells > 0 && identity.Data.sellRewardEveryNWisp != null &&
+                RewardDistributor.Instance != null &&
+                (context.UnitUpgrades?.RegisterCommonSell(identity.Data.sellRewardEveryNSells) ?? false))
+            {
+                List<WispReward> reward = new List<WispReward>
+                {
+                    new WispReward { wisp = identity.Data.sellRewardEveryNWisp, count = 1 }
+                };
+                RewardDistributor.Instance.GrantWisps(context, reward);
             }
 
             // h0BS(메타몽) 전용 — 재고(ItemGambleState.stock) 차감·도박·풀 제외 등록은

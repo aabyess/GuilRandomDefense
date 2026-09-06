@@ -416,4 +416,18 @@ public class UnitData : ScriptableObject
     // ⚠️ 메타몽 유닛 자체를 손에 넣는 경로(레일리 h05X 때와 같은 종류의 "선행 문제")는
     // 아직 없다 — 이 필드는 판매→도박 배선만 담당한다.
     public ItemGamblePoolData sellTriggersItemGamblePool;
+
+    // 흔함 9종 전용(A09G, 반복구매형과 같은 결의 "판매 누적형") — 이 유닛을 팔 때마다
+    // 개별이 아니라 **플레이어 전체 공유 카운터**가 1 오르고(흔함 9종 중 누굴 팔든 같은
+    // 카운터), N(=3)번째마다 카운터가 0으로 리셋되며 아래 위습이 지급된다. 1회성이 아니라
+    // 계속 반복된다(UnitUpgrades.RegisterCommonSell 참고). 위 sellRewardWisp류(즉시·매회
+    // 지급)와는 완전히 별개 축이라 필드를 나눴다 — 흔함은 매회 지급이 아니라 3의 배수에서만
+    // 터진다. 0(기본)이면 미사용 — 기존 유닛 전부 무영향(회귀 없음).
+    //
+    // ⚠️ 원작에 "35% 확률로 목재1 추가" 보너스가 있다는 옛 조사(2026-09-04,
+    // UNIT_SELL_AND_JOHAB_RESEARCH.md)가 있으나, 이후 리서치(2026-09-07,
+    // UNIQUE_SELL_6TIER_FULL.md)는 "가끔 목재1"로만 재확인 없이 인용했고 PM 배선 지시에도
+    // 목재 보너스가 빠져 있다 — 두 값이 서로 안 맞아 목재 보너스는 안 만들었다(위습만).
+    public int sellRewardEveryNSells;
+    public WispData sellRewardEveryNWisp;
 }
