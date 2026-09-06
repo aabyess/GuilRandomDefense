@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_전설적인_이현주_0e5cf375
   m_EditorClassIdentifier:
   skillName: 보아 핸콕 쿠사 해적단 선장 - 전설적인 — 버프B00D==true AND 1/10
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 보아 핸콕 쿠사 해적단 선장 - 전설적인(h032)의 게이트 "버프B00D==true AND 1/10" 능력 3개를 이 SkillData 하나로 묶었다.   · Legend_han_1#1: 계산식 150000.00   · Legend_han_1#2: 계산식 ((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get   · Legend_han_1#3: 계산식 112500.00  ⚠️ 조건(버프B00D==true)은 우리 축 밖(버프) 또는 축이 하나뿐(게이지 중복)이라 뺐다 — 실제보다 자주 발동할 수 있다.  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Legend_han_1#2] ⚠️ 2026-09-06 정정(PM) — A11S는 대상 EnemyData.percentDamageTaken이고 이미 보편 적용된다. baked 0.25를 나눠 원래 계수(0.05)만 남겼다 — 이중 적용 버그였다(0.25×0.90=0.225, 원작 0.90 대비 4.0배 과소). ⚠️ 2026-09-06 대상조건 배선(PM 지시) — #1<200/#2 ELSE(>=200), #3은 원작대로 무조건 별개.
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 보아 핸콕 쿠사 해적단 선장 - 전설적인(h032)의 게이트 "버프B00D==true AND 1/10" 능력 3개를 이 SkillData 하나로 묶었다.   · Legend_han_1#1: 계산식 150000.00   · Legend_han_1#2: 계산식 ((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get   · Legend_han_1#3: 계산식 112500.00  ⚠️ 조건(버프B00D==true)은 우리 축 밖(버프) 또는 축이 하나뿐(게이지 중복)이라 뺐다 — 실제보다 자주 발동할 수 있다.  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Legend_han_1#2] ⚠️ 2026-09-06 정정(PM) — A11S는 대상 EnemyData.percentDamageTaken이고 이미 보편 적용된다. baked 0.25를 나눠 원래 계수(0.05)만 남겼다 — 이중 적용 버그였다(0.25×0.90=0.225, 원작 0.90 대비 4.0배 과소). ⚠️ 2026-09-06 대상조건 배선(PM 지시) — #1<200/#2 ELSE(>=200), #3은 원작대로 무조건 별개. 완료(2026-09-07, PM 지시 — opener/consumer 디렉터리 충돌 해소 확인 후 마저 배선): requiredBuffId=B00D를 걸었다 — 이제 opener(SkillData_버프게이트_전설적인_이현주_B00D.asset)가 건 버프가 없으면 이 게이트가 통과하지 않는다(이전엔 필드가 아예 없어 조건 없이 항상 통과하던 조용한 과다발동 상태였다).
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,6 +22,9 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: B00D
+    forbiddenBuffId:
+    selfBuffId:
     effects:
     - kind: 0
       basis: 0
