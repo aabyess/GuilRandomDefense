@@ -13,6 +13,13 @@ public class RewardDistributor : MonoBehaviour
     [SerializeField] WispData startingWisp;
     [SerializeField] int startingWispCount = 5;
 
+    // 05번 「고대의 배」 지급 경로 ㉡(스토리, ANCIENT_SHIP_AND_BUFF_SOURCES.md) — 원작
+    // Trig_Story_reward7의 h05Y 지급 대상. 우리 스토리 번호는 원작과 별개라 이름으로는
+    // 못 찾지만, 그 트리거 자체가 "완료한 스토리 개수(udg_Story_Count)==7"이라는 순서
+    // 조건이라 우리 쪽도 StoryData.order==7(Story07_메가스터디, MapGenerator가 order로
+    // 정렬해 배선한다)이 정확히 같은 자리다 — 확인 완료(구현담당3).
+    [SerializeField] UnitData ancientShipUnit;
+
     // 우물 한가운데 뭉쳐 있게 둔다. 8로 벌리면 별 모양으로 흩어져서 다섯 덩어리로 보이는데,
     // 이건 한 사람 몫의 시작 자원이라 한 무더기로 읽혀야 한다.
     // 위습끼리는 서로 통과하듯 겹치므로(회피 반지름 0.28) 이 정도면 자연스럽게 뭉친다.
@@ -242,6 +249,13 @@ public class RewardDistributor : MonoBehaviour
             // 처치 보상과 같은 이유로 빈 슬롯은 건너뛴다 — 아무도 없는 자리에 자원이 쌓인다.
             if (context == null || !context.IsOccupied) continue;
 
+            // 스토리 7(임펠다운 대응, Story07_메가스터디) 전용 — 원작 Trig_Story_reward7이
+            // udg_PlayerDeath[플레이어]==0(그 플레이어가 아직 패배 판정을 안 받음)을
+            // 개별로 검사한다. 다른 스토리엔 이 조건이 없다(원작에 없음) — order==7일
+            // 때만 건다. PlayerContext.IsDead가 그 자리다(HandlePlayerDefeated 주석
+            // "원작 udg_PlayerDeath[i]=1 분기의 같은 SetPlayerStateBJ" 참고).
+            if (storyReward.order == 7 && context.IsDead) continue;
+
             if (storyReward.goldReward > 0 && context.GoldWallet != null)
             {
                 context.GoldWallet.Add(storyReward.goldReward);
@@ -267,7 +281,37 @@ public class RewardDistributor : MonoBehaviour
             {
                 context.UnitUpgrades?.GrantStoryPoint();
             }
+
+            // 05번 「고대의 배」 지급 경로 ㉡ — 스토리 7(임펠다운 대응) 전용, h05Y 1기.
+            // 위 IsDead 게이트를 이미 통과한 플레이어만 여기 온다.
+            if (storyReward.order == 7)
+            {
+                GrantAncientShip(context);
+            }
         }
+    }
+
+    UnitSpawner cachedUnitSpawner;
+    UnitSpawner SpawnerRef => cachedUnitSpawner != null
+        ? cachedUnitSpawner
+        : cachedUnitSpawner = FindFirstObjectByType<UnitSpawner>();
+
+    // 05번 ㉡ — CreateNUnitsAtLoc(1,'h05Y', 소유자) 대응. 위습과 달리 등급 칸이 없는 실제
+    // 유닛이라 창고(그 플레이어 소유물이 모이는 자리) 근처에 놓는다 — 창고가 아직 없으면
+    // (극히 초반) 플레이어 위치로 물러난다(SpawnWisp의 fallback과 같은 이유).
+    void GrantAncientShip(PlayerContext context)
+    {
+        if (ancientShipUnit == null) return; // 콘텐츠 결손이 아니라 배선 누락 — 조용히 넘기지 않는다.
+
+        UnitSpawner spawner = SpawnerRef;
+        if (spawner == null)
+        {
+            Debug.LogWarning("RewardDistributor: UnitSpawner를 찾지 못해 고대의 배를 지급하지 못했습니다.", this);
+            return;
+        }
+
+        Vector3 position = context.Warehouse != null ? context.Warehouse.transform.position : context.transform.position;
+        spawner.Spawn(ancientShipUnit, position, context.PlayerId);
     }
 
     public void GrantWisps(PlayerContext context, List<WispReward> wispRewards)

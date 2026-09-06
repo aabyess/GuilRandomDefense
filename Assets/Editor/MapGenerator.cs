@@ -2446,6 +2446,23 @@ public static class MapGenerator
         return $"\n시작 위습을 {wisp.wispName} {StartingWispCount}개로 맞췄습니다.";
     }
 
+    // 05번 「고대의 배」 지급 경로 ㉡(스토리 7=Story07_메가스터디 클리어 보상, 사장님 결정) —
+    // RewardDistributor.GrantAncientShip이 읽을 결과 유닛을 연결한다.
+    static string WireAncientShipReward()
+    {
+        RewardDistributor distributor = Object.FindFirstObjectByType<RewardDistributor>(FindObjectsInactive.Include);
+        if (distributor == null) return "";
+
+        UnitData ship = AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Special/Unit_고대의배_h05Y.asset");
+        if (ship == null) return "\n⚠️ 고대의 배 에셋(Unit_고대의배_h05Y)을 못 찾았습니다.";
+
+        SerializedObject so = new SerializedObject(distributor);
+        so.FindProperty("ancientShipUnit").objectReferenceValue = ship;
+        so.ApplyModifiedProperties();
+
+        return "\n스토리 7(임펠다운 대응) 보상에 고대의 배를 연결했습니다.";
+    }
+
     // 레인 하나에 이만큼 쌓이면 카운트다운이 돈다(사장님 지시, 2026-09-03: 25→100).
     // RoundManager는 "Map" 루트 밖의 독립 오브젝트라(MapGenerator가 새로 안 만들고 찾기만
     // 한다) 맵을 다시 만들어도 이 값이 안 사라진다 — 씬 파일을 직접 안 건드리고 여기서만
@@ -2598,6 +2615,7 @@ public static class MapGenerator
         report += Step("시작 자원", () => SetStartingResources(contexts));
         report += Step("위습 프리팹", ShapeWispPrefab);
         report += Step("시작 위습", WireStartingWisps);
+        report += Step("고대의 배 지급(스토리7)", WireAncientShipReward);
         report += Step("라운드 보상 위습", WireRoundRewardWisp);
         report += Step("사이드보스 매니저", WireSideBossManager);
         report += Step("조합 지갑", WireCombineWallet);

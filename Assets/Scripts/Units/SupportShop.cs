@@ -312,6 +312,10 @@ public class SupportShop : MonoBehaviour, ILaneShop
         if (!CanCast(skill)) { failReason = CastUnavailableReason(skill, context); return false; }
         if (!TrySpendCost(skill, context)) { failReason = CastUnavailableReason(skill, context); return false; }
 
+        // ⚠️ 원작 확정(리서치담당 204a212, war3map.j 원문 대조): udg_stat_int = GetRandomInt(1,3)을
+        // ForGroup 바깥에서 딱 한 번 굴려 저장해두고, 그 값에 맞는 if 하나만 타서 그룹 전체에
+        // 같은 스탯을 올린다 — "영웅마다 따로 굴린다"가 아니라 "라인 전체가 같은 결과를
+        // 받는다"가 원작 그대로다. 여기서 한 번만 굴리는 지금 구현이 정확히 그 구조다.
         int statIndex = Random.Range(0, 3); // 0=STR·1=AGI·2=INT — UI에 선택지를 만들지 말 것.
         UnitAttacker.GrantHeroStatIncreaseToLane(owner.OwnerId, statIndex);
 
