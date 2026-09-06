@@ -1227,6 +1227,8 @@ public static class MapGenerator
         GameObject figure = Object.Instantiate(unit.prefab, parent);
         figure.name = name;
 
+        PoseAsIdle(figure);
+
         // 스크립트를 먼저 지운다. NavMeshAgent를 먼저 지우려 하면 UnitMover가 그것을 요구하고
         // 있어서 거부당하고, 결과적으로 조합표 위에 살아 있는 에이전트가 남는다.
         foreach (MonoBehaviour script in figure.GetComponentsInChildren<MonoBehaviour>(true))
@@ -1266,6 +1268,27 @@ public static class MapGenerator
         // 표를 보는 방향(위에서 남쪽을 향해)에서 얼굴이 보이게 돌린다.
         figure.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
         return true;
+    }
+
+    // 스킨 인형은 애니메이터를 걷어내면 바인드 포즈(T자)로 선다. 걷어내기 전에 공용 컨트롤러의
+    // Idle 상태를 0초에서 한 번 평가해 뼈 회전만 남긴다 — 표·부스 위 인형이 팔 벌리고 서 있지 않게.
+    // Humanoid는 클립을 직접 샘플링할 수 없어 Animator.Update로 평가한다(에디터에서도 돈다).
+    // 컨트롤러가 없거나 Idle 상태가 없으면 아무것도 안 한다 — 그 경우 지금처럼 T자다.
+    static void PoseAsIdle(GameObject figure)
+    {
+        Animator animator = figure.GetComponentInChildren<Animator>(true);
+        if (animator == null || animator.runtimeAnimatorController == null) return;
+
+        try
+        {
+            animator.enabled = true;
+            animator.Play("Idle", 0, 0f);
+            animator.Update(0f);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[맵] {figure.name} 대기 자세 평가 실패 — T자로 둡니다: {e.Message}");
+        }
     }
 
     static string IngredientName(RecipeIngredient ingredient)
@@ -1428,7 +1451,8 @@ public static class MapGenerator
             ConfigurePortal(stand, UnitGrade.Common, unit, table, spawner);
 
             PlaceUnitMarker(parent, $"흔함선택_{unit.unitName}_표식",
-                new Vector3(x, 0f, rowZ + BoothDepth * 0.5f), UnitGrade.Common);
+                new Vector3(x, 0f, rowZ + BoothDepth * 0.5f), UnitGrade.Common,
+                unit, step * 0.9f);
         }
 
         // 부스를 하나씩 두르면 이웃끼리 옆벽이 겹친다. 뒷벽 한 장 + 칸막이 한 줄로 세운다.
@@ -2187,9 +2211,16 @@ public static class MapGenerator
         // 콜라이더는 남긴다 — 실제로 막히는 벽이라야 유닛이 부스 사이로 새지 않는다.
     }
 
-    // 조합식 표와 같은 자리 표시 기둥. 나중에 스킨으로 교체한다.
-    static void PlaceUnitMarker(Transform parent, string name, Vector3 groundPosition, UnitGrade grade)
+    // 조합식 표와 같은 자리 표시 기둥. 유닛과 키가 오면 스킨 인형을 먼저 세우고(2026-09-07,
+    // 사장님 지시 — 선택위습 부스에서도 스킨이 보이게), 모델이 없는 유닛만 등급 색 큐브다.
+    static void PlaceUnitMarker(Transform parent, string name, Vector3 groundPosition, UnitGrade grade,
+                                UnitData unit = null, float figureHeight = 0f)
     {
+        if (unit != null && figureHeight > 0f
+            && TryPlaceUnitModel(parent, name, new Vector3(groundPosition.x, MapLayout.IslandTop, groundPosition.z),
+                                 unit, figureHeight))
+            return;
+
         GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
         marker.name = name;
         marker.transform.SetParent(parent, false);
