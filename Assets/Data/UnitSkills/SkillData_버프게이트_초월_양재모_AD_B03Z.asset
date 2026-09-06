@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_버프게이트_초월_양재모_AD_B03Z
   m_EditorClassIdentifier:
   skillName: 로우 — B03Z 창(버프 부여)
-  description: 06번①(2026-09-06, PM 지시) — 원작 로키포트 사건의 주모자(H096, 로우)의 버프 B03Z는 A09H(umpm=최대마나=135)가 열고, A09H의 adur(버프 지속시간)=5.0초로 리서치담당이 확정했다. MANA==135는 게이지가 "가득 찼을 때"이지 임의 값이 아니다 — OnHitCount(gaugeKind=Mana, hitCountThreshold=135, resetTo=0)로 그대로 담는다. ⚠️ A09H 본체 효과(Nbr1)는 피해 30,000이 아니라 "공격력 +30,000, 5초"다(Nbr1이 배틀로어 계열 필드라는 오늘 정정과 같은 결론) — 우리 스키마엔 임시 공격력 버프 축이 없어(더미채널_불멸_신지우_h04F.asset의 A05G와 같은 사유) 그 효과 자체는 안 옮긴다, 여기선 B03Z 버프 부여만 담당한다. 지속시간은 시간(5.0초)을 그대로 쓴다 — 제트/B00M류(창이 원작 공격속도보다 짧아 타수로 바꿔야 했던 경우)와 달리, adur가 실측 5초짜리 진짜 지속시간이라 그대로 옮겨도 원작 공격속도와의 스케일 불일치가 없다(원작이 "다음 한두 대" 대용으로 짧게 잡은 값이 아니라 로우 자신의 절대쿨(A09H 재시전 주기)과 맞물린 독립된 창이라는 뜻). 소비하는 쪽(SkillData_회수_초월_양재모_AD_f54a123f.asset, "버프B03Z==true AND 1/20")에 requiredBuffId=B03Z와 RemoveBuff(자기 자신) 효과를 마저 걸어야 완성된다 — SkillEffectKind.RemoveBuff(2026-09-06 신설)로 소비 시 버프를 직접 떼지 않으면 다음 MANA==135 전까지 계속 남아 무한 누적된다(PM 지시). ⚠️ 이 opener는 걸어둬도 지금은 무해하다(소비 쪽 미배선).
+  description: 06번①(2026-09-06, PM 지시) — 원작 로키포트 사건의 주모자(H096, 로우)의 버프 B03Z는 A09H(umpm=최대마나=135)가 열고, A09H의 adur(버프 지속시간)=5.0초로 리서치담당이 확정했다. MANA==135는 게이지가 "가득 찼을 때"이지 임의 값이 아니다 — OnHitCount(gaugeKind=Mana, hitCountThreshold=135, resetTo=0)로 그대로 담는다. ⚠️ A09H 본체 효과(Nbr1)는 피해 30,000이 아니라 "공격력 +30,000, 5초"다(Nbr1이 배틀로어 계열 필드라는 오늘 정정과 같은 결론) — 당시엔 우리 스키마에 임시 공격력 버프 축이 없어(더미채널_불멸_신지우_h04F.asset의 A05G와 같은 사유) 그 효과 자체는 안 옮기고 B03Z 버프 부여(게이트용)만 담당했다. 복원(2026-09-07, PM 지시 — 피해로 오인돼 제거됐다가 SkillEffectKind.AttackPowerBuffFlat 신설로 원래 효과대로 복원): 원문(Tools/w3x/원본/war3map_new.w3a, base ANbr) 재확인 결과 Nbr1=30000.0·adur=5.0·abuf=B03Z — 이미 알고 있던 값과 정확히 일치해 그대로 kind=AttackPowerBuffFlat(11), target=Self, multiplier=30000, duration=5.0, buffId=B03Z로 추가했다(같은 buffId를 쓰는 두 효과 — ApplyBuff는 게이트용 이름표, AttackPowerBuffFlat은 실제 수치 — 가 한 트리거 안에 공존한다). 지속시간은 시간(5.0초)을 그대로 쓴다 — 제트/B00M류(창이 원작 공격속도보다 짧아 타수로 바꿔야 했던 경우)와 달리, adur가 실측 5초짜리 진짜 지속시간이라 그대로 옮겨도 원작 공격속도와의 스케일 불일치가 없다(원작이 "다음 한두 대" 대용으로 짧게 잡은 값이 아니라 로우 자신의 절대쿨(A09H 재시전 주기)과 맞물린 독립된 창이라는 뜻). 소비하는 쪽(SkillData_회수_초월_양재모_AD_f54a123f.asset, "버프B03Z==true AND 1/20")에 requiredBuffId=B03Z와 RemoveBuff(자기 자신) 효과를 마저 걸어야 완성된다 — SkillEffectKind.RemoveBuff(2026-09-06 신설)로 소비 시 버프를 직접 떼지 않으면 다음 MANA==135 전까지 계속 남아 무한 누적된다(PM 지시). ⚠️ 이 opener는 걸어둬도 지금은 무해하다(소비 쪽 미배선).
   triggerType: 3
   levels:
   - cooldown: 0
@@ -32,6 +32,21 @@ MonoBehaviour:
       damageType: 0
       attackType: 0
       multiplier: 0
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 5.0
+      randMin: 1
+      randMax: 1
+      casterBuffCountFactor: 0
+      buffId: B03Z
+      buffHitCharges: 0
+    - kind: 11
+      basis: 0
+      target: 0
+      damageType: 0
+      attackType: 0
+      multiplier: 30000.0
       bonus: 0
       chance: 1
       hitCount: 1
