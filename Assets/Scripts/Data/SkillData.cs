@@ -324,6 +324,24 @@ public class SkillLevel
     // 운석낙하가 새로 생김)를 못 담는다. 그래서 레벨2의 effects는 레벨1 effects를 고친 게
     // 아니라 그 레벨이 갖는 전체 효과 목록을 처음부터 다시 적는 것이다.
     public List<SkillEffect> effects = new List<SkillEffect>();
+
+    // ⚠️ 맨 뒤에 추가(06번①, 2026-09-06, PM 승인) — requiredBuffId/forbiddenBuffId는
+    // 캐스터 자신의 버프만 본다. 원작엔 **대상(적)의 버프**를 게이트로 쓰는 경우도 있다
+    // (B06B "신세계 광폭화 몬스터 전용" — 대상이 그 상태일 때만 발동, 캐스터와 무관).
+    // `EnemyDummy`엔 이미 독립된 버프 레지스트리와 `ApplyBuff` kind로 거는 경로가 있어서
+    // (04번 오라 경로) 여기선 "읽는 쪽"만 추가한다 — `UnitAttacker.PassesBuffGate`가
+    // 대상의 `EnemyDummy.HasBuff`를 조회한다(캐스터의 `HasBuff`와는 별개 레지스트리).
+    // 원작 버프 ID 문자열을 그대로 적는다(캐스터 쪽과 이름공간이 같다 — 같은 문자열이면
+    // 같은 버프라는 원작 전제 그대로).
+    //
+    // ⚠️ "대상 없음"일 때의 규칙 — **게이트 통과 안 함**(PM 지시). Aura·CooldownAutoCast는
+    // 게이트를 검사하는 시점에 아직 대상을 안 골랐고(대상은 CastSkillLevel 안에서 나중에
+    // 정해진다), Self 대상 스킬은 애초에 "적 대상"이 없다 — 이런 경로에서 이 필드가
+    // 채워져 있으면 조건 없이 다 나가버리는 게 아니라 **항상 막혀야 안전하다**(반대로
+    // "대상 없음=통과"로 두면 오라가 조건 없이 나간다). 둘 다 기본값 ""(빈 문자열) =
+    // 조건 없음 — 기존 자산 전부 회귀 0이다.
+    public string requiredTargetBuffId = "";   // 대상이 이 버프가 있어야만 판정을 계속한다.
+    public string forbiddenTargetBuffId = "";  // 대상이 이 버프가 있으면 판정을 막는다.
 }
 
 [CreateAssetMenu(fileName = "NewSkillData", menuName = "GuilRandomDefense/Skill Data")]

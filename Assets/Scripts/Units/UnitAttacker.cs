@@ -394,10 +394,25 @@ public class UnitAttacker : MonoBehaviour
     // 무조건 통과한다(기존 102개 게이트는 전부 비어있어 회귀 없음). CooldownAutoCast·
     // Aura(UpdateSkillCooldown)·OnHitChance·OnHitCount(TryCastOnHitSkill) 네 발동방식이
     // 전부 같은 판정을 쓴다.
-    bool PassesBuffGate(SkillLevel level)
+    //
+    // ⚠️ 06번①(2026-09-06, PM 승인) — requiredTargetBuffId/forbiddenTargetBuffId 추가.
+    // 캐스터 자신이 아니라 **대상(적)의** 버프 레지스트리(EnemyDummy.HasBuff)를 본다.
+    // target이 null이면(Aura·CooldownAutoCast처럼 게이트 검사 시점에 아직 대상을 안
+    // 고른 경로) 두 필드 중 하나라도 채워져 있으면 무조건 막는다 — "대상 없음=통과"로
+    // 두면 오라가 조건 없이 나가버린다(SkillData.cs SkillLevel 주석 참고). target이
+    // null이어도 두 필드가 전부 비어있으면(기존 전 자산) 이 분기 자체를 안 타 회귀 없다.
+    bool PassesBuffGate(SkillLevel level, EnemyDummy target)
     {
         if (!string.IsNullOrEmpty(level.requiredBuffId) && !HasBuff(level.requiredBuffId)) return false;
         if (!string.IsNullOrEmpty(level.forbiddenBuffId) && HasBuff(level.forbiddenBuffId)) return false;
+
+        bool hasTargetGate = !string.IsNullOrEmpty(level.requiredTargetBuffId) || !string.IsNullOrEmpty(level.forbiddenTargetBuffId);
+        if (hasTargetGate)
+        {
+            if (target == null) return false;
+            if (!string.IsNullOrEmpty(level.requiredTargetBuffId) && !target.HasBuff(level.requiredTargetBuffId)) return false;
+            if (!string.IsNullOrEmpty(level.forbiddenTargetBuffId) && target.HasBuff(level.forbiddenTargetBuffId)) return false;
+        }
         return true;
     }
 
@@ -432,7 +447,13 @@ public class UnitAttacker : MonoBehaviour
             // 버프 게이트(requiredBuffId/forbiddenBuffId, 2026-09-06) — 쿨다운이 다 돼도
             // 이 조건을 못 넘으면 시전하지 않는다. 타이머는 일부러 안 되돌린다 — 막힌
             // 동안 매 프레임 다시 검사하다가 조건이 풀리는 순간 그 프레임에 바로 나간다.
-            if (!PassesBuffGate(level)) continue;
+            // target=null — CooldownAutoCast·Aura는 이 시점에 아직 대상을 안 골랐다
+            // (대상은 CastSkillLevel 안에서 나중에 정해진다). 이 스킬에
+            // requiredTargetBuffId/forbiddenTargetBuffId가 채워져 있으면 PassesBuffGate가
+            // target==null을 보고 무조건 막는다 — 대상 버프 게이트를 가진 스킬은 이
+            // 발동방식(Aura·CooldownAutoCast)으로는 쓸 수 없다는 뜻이고, 지금은 그런
+            // 자산이 없어 회귀 없다.
+            if (!PassesBuffGate(level, null)) continue;
 
             // 오라는 쿨다운 개념이 없다("계속 켜져 있다") — 매 프레임 판정하면 값이 생겼을 때
             // 폭증하니 1초 주기로 재판정한다.
@@ -487,7 +508,11 @@ public class UnitAttacker : MonoBehaviour
             // 버프 게이트(requiredBuffId/forbiddenBuffId, 2026-09-06) — OnHitChance·
             // OnHitCount 둘 다 판정 시작 전에 먼저 걸린다. 원작 예: 드래곤 "B00J 미보유",
             // 루피 "B06Y 미보유 AND 1/80"(뒤의 확률은 아래 triggerChance가 그대로 처리).
-            if (!PassesBuffGate(level)) continue;
+            // ⚠️ 06번①(2026-09-06) — attackedTarget을 그대로 넘겨 requiredTargetBuffId/
+            // forbiddenTargetBuffId(대상의 버프)도 같이 판정한다. 원작 예: B06B(신세계
+            // 광폭화 몬스터 전용) — "대상이 이 상태일 때만 발동"은 캐스터가 아니라
+            // attackedTarget의 버프를 봐야 한다.
+            if (!PassesBuffGate(level, attackedTarget)) continue;
 
             if (skill.triggerType == SkillTriggerType.OnHitChance)
             {
