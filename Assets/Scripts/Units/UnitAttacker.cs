@@ -831,6 +831,42 @@ public class UnitAttacker : MonoBehaviour
                     if (!string.IsNullOrEmpty(level.selfBuffId)) AddBuff(level.selfBuffId, level.cooldown);
                 }
             }
+            else if (level.hitCountFloor > 0)
+            {
+                // ⚠️ 2026-09-06 추가(카타쿠리/B045, PM 지시) — "바닥 조건" 모드
+                // (SkillLevel.hitCountFloor 주석 참고): "정확히 N타째"가 아니라 "게이지가
+                // N을 넘는 동안"이다. 자동 리셋이 없다 — 넘긴 채로 계속 있다가 매 타
+                // triggerChance를 굴리고, 발동에 성공했을 때만 gaugeSpendAmount만큼 깎는다
+                // (원작 "1/7 AND LIFE>36 → 발동 시 LIFE−17"). 실패해도 카운터는 그대로다
+                // (아래 위쪽 hitCountThreshold 경로처럼 실패해도 리셋되는 것과 다르다 —
+                // 여기는 애초에 자동 리셋 개념이 없다).
+                if (level.gaugeKind == SkillGaugeKind.Mana)
+                {
+                    if (!manaGaugeInitialized) { manaGaugeCounter = level.resetTo; manaGaugeInitialized = true; }
+                    if (!manaIncremented) { manaGaugeCounter++; manaIncremented = true; }
+                    if (manaGaugeCounter <= level.hitCountFloor) continue;
+                }
+                else
+                {
+                    if (!lifeGaugeInitialized) { lifeGaugeCounter = level.resetTo; lifeGaugeInitialized = true; }
+                    if (!lifeIncremented) { lifeGaugeCounter++; lifeIncremented = true; }
+                    if (lifeGaugeCounter <= level.hitCountFloor) continue;
+                }
+
+                if (Random.value >= level.triggerChance) continue;
+
+                // "발동 시에만" 차감 — 위 hitCountThreshold 경로의 resetTo(확률과 무관하게
+                // 항상 적용)와 다르다, 여기까지 왔다는 건 이미 확률까지 통과했다는 뜻이라
+                // 바로 깎아도 된다(뒤쪽 스킬이 이번 평타에 같은 게이지를 또 봐야 하는
+                // 사례는 지금 김민규에게 없다 — 있으면 그때 defer 방식으로 바꿀 것).
+                if (level.gaugeSpendAmount > 0)
+                {
+                    if (level.gaugeKind == SkillGaugeKind.Mana)
+                        manaGaugeCounter = Mathf.Max(0, manaGaugeCounter - level.gaugeSpendAmount);
+                    else
+                        lifeGaugeCounter = Mathf.Max(0, lifeGaugeCounter - level.gaugeSpendAmount);
+                }
+            }
             else
             {
                 // OnHitCount: 확률이 아니라 "정확히 N타째" — 원작 특성 24건이 이렇다

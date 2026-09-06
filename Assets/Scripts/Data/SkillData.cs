@@ -367,6 +367,25 @@ public class SkillLevel
     // 조건 없음 — 기존 자산 전부 회귀 0이다.
     public string requiredTargetBuffId = "";   // 대상이 이 버프가 있어야만 판정을 계속한다.
     public string forbiddenTargetBuffId = "";  // 대상이 이 버프가 있으면 판정을 막는다.
+
+    // ⚠️ 맨 뒤에 추가(2026-09-06, PM 지시) — OnHitCount 전용, "바닥 조건" 모드. 원작
+    // 카타쿠리(B045) "1/7 AND LIFE > 36"은 hitCountThreshold의 "정확히 N타째"(도달 시
+    // 자동으로 resetTo까지 되돌림)가 아니라 **"게이지가 N을 넘는 동안 계속" + 별도 확률
+    // 판정**이다 — 카운터가 자동으로 리셋되지 않고, 넘긴 채로 있으면 매 타 triggerChance를
+    // 굴린다. **0이면(기본값) 기존 hitCountThreshold 경로 그대로**(회귀 없음) — 1 이상이면
+    // hitCountThreshold/resetTo 대신 이 값을 쓴다: 카운터가 이 값보다 **크면**(같으면 X)
+    // triggerChance를 굴리고, 실패해도 카운터는 그대로 둔다(리셋 없음 — 아래
+    // gaugeSpendAmount가 대신한다). 캐스터의 게이지 공유 규칙(gaugeKind)은 그대로다.
+    public int hitCountFloor;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-06, PM 지시) — hitCountFloor와 짝. 원작 "발동 시 LIFE−17"처럼
+    // **성공적으로 발동했을 때만** 게이지를 임의값만큼 깎는다 — hitCountThreshold의
+    // resetTo(항상 정해진 값으로 되돌림, 확률과 무관하게 적용)와 다르다: 이건 (a) 확률
+    // 판정까지 통과했을 때만 적용되고(원작 "발동 시"), (b) 고정값이 아니라 현재 카운터에서
+    // 이 값만큼 뺀 값이다(0 아래로는 안 내려간다). **0이면(기본값) 아무것도 안 깎는다** —
+    // 기존 자산 전부 0이라 회귀 없음. hitCountFloor==0(구식 경로)에서도 이 필드를 채우면
+    // 똑같이 "발동 성공 시에만 차감"이 적용된다(리셋과는 별개로 추가 차감).
+    public int gaugeSpendAmount;
 }
 
 [CreateAssetMenu(fileName = "NewSkillData", menuName = "GuilRandomDefense/Skill Data")]
