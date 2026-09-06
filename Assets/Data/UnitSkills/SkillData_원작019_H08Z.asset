@@ -13,10 +13,33 @@ MonoBehaviour:
   m_Name: SkillData_원작019_H08Z
   m_EditorClassIdentifier:
   skillName: A136 샹초 특강마나
-  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 마린포드 정상해전 종결자(H08Z), #019, 능력교체형: (구 능력 불명) 제거 후 A136(샹초 특강마나) 부여. upro(실제 이름): 샹크스. 2026-09-06 조사 완료(TRAIT_REPLACEMENT_SKILLS.md/csv, 리서치담당 f6b44a6, 확신도 확정): 피해 없음 — 네이티브 아이템 마나 보너스, Iman=34(최대 마나 +34), 트리거 참조 0건. ⚠️ effects는 비워둔다 — 우리 "마나"(manaGaugeCounter)는 최대치 개념이 없는 무제한 카운터(OnHitCount 임계값과 비교만 한다)라 "최대치 +34"를 늘릴 대상 자체가 없다. 지어낼 수 없는 게 아니라 대응 개념이 없는 능력이다. ⚠️ 새 발견 — 같은 분기에서 A0XO(!패기발현, ACbh Hbh1=20=발동 20%)도 함께 부여되는데 이건 TRAIT_REPLACEMENT_SKILLS 목록 8건에 없던 별개 능력이고 실제 효과 수치가 이 문서에 없다(리서치담당 재조사 필요 — PM에 별도 보고).
-  triggerType: 0
+  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 마린포드 정상해전 종결자(H08Z), #019, 능력교체형: (구 능력 불명) 제거 후 A136(샹초 특강마나) 부여. upro(실제 이름): 샹크스. ⚠️ 2026-09-06 정정 — "피해 없음"이 틀렸다. Iman=+34(최대 마나 +34)는 스탯 보너스가 아니라 게이트를 여는 열쇠였다: H08Z.umpm(최대마나)=1이라 특성 전엔 1+34=35에 영원히 못 닿고, 35가 되는 순간 Trig_Shanks_Attack의 게이트(UNIT_STATE_MANA==35.00)가 열린다 — 특성 미취득 시 이 스킬 자체가 원천봉쇄돼 있던 구조. OnHitCount(gaugeKind=Mana, hitCountThreshold=35, resetTo=0 — ORIGINAL_TRAIT_GAUGE_RESET.csv가 SetUnitManaBJ(0) 직접 확인)로 옮겼다. 발동: e01U 소환 후 stomp → A0S1(AOws, 이름 자체가 "2범위 샹크스초월 특성스턴" — 특성 전용이라는 확증) 피해 1500000·범위1100·스턴2.5초·버프B07H. 툴팁 "범위1100/150만 마법데미지"와 정확히 일치 확인됨 — damageType=AP(마법). attackType은 RRD가 아니라 네이티브 스톰프 능력이라 NORMAL/UNIVERSAL 같은 인용이 없어 [미확인], 안전 기본값(Unassigned)으로 둔다. ⚠️ 같이 소환되는 e01T(A08D, 425000/800/1.8초)는 명령이 안 나가 실제로 시전되지 않는다 — 안 옮김. ⚠️ [미확인] — 툴팁 "14.25초마다"인데 마나재생 1.35/초로 35를 채우면 25.9초라 다른 마나 공급원이 있을 수 있다, 지어내지 않음. A0XO(!패기발현) 동시 부여 건은 재조사 결과 Hbh1=20·Hbh3=0·adur=0·atar=none인 순수 껍데기로 확인됨(atar=none이면 Hbh*를 안 읽는다는 일반 규칙, 006 참고) — 안 옮김.
+  triggerType: 3
   levels:
   - cooldown: 0
     triggerChance: 1
-    range: 0
-    effects: []
+    range: 1100
+    hitCountThreshold: 35
+    resetTo: 0
+    gaugeKind: 0
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 0
+      multiplier: 1500000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 1
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 2.5
