@@ -292,12 +292,18 @@ public class UnitAttacker : MonoBehaviour
     // 01번 영웅 스탯(STR/AGI/INT) — 사장님 결정 2026-09-06. 원작 "적을 죽일 때마다
     // AddHeroXP(영웅, 1)"에 대응 — DealDamageToEnemy가 자기 타격으로 대상의 숨통을 끊을
     // 때만 올린다(다른 유닛이 이미 죽여둔 대상을 다시 때려도 안 오른다).
-    // ⚠️ 정확한 원작 XP 곡선(레벨업까지 킬 몇 회가 필요한가)은 아직 [미확인]이다 — 지금은
-    // "킬 1회 = 레벨 1"을 그릇으로 쓴다(리서치담당 곡선이 오면 GainKillExperience만 고치면
-    // 된다, CurrentStrength 등을 읽는 쪽은 안 건드려도 된다).
-    int heroLevel;
+    //
+    // ⚠️ 2026-09-06 단위 정정(PM 지적, 뿌리 ㉑) — AddHeroXP의 "1"은 레벨이 아니라
+    // 경험치 1점이다. 워크3 레벨업 문턱은 레벨마다 수백 점씩 커지는 값이라 "킬 1회 =
+    // 레벨 1"로 잘못 셌었다(원작보다 두 자릿수 배 빠르게 레벨업). heroXp는 킬마다 그대로
+    // 쌓지만, heroXp→heroLevel 변환 문턱이 아직 [미확인]이라 heroLevel은 0에 고정한다 —
+    // 문턱이 오면 여기 변환식만 넣으면 된다(CurrentStrength 등을 읽는 쪽은 안 건드려도
+    // 된다). ⚠️ 킬 귀속 자체(죽인 유닛 하나에게만 가는가, 전체 아군에게 가는가)도
+    // [미확인] — 답이 오기 전엔 이 로직을 더 정교하게 만들지 않는다(축이 바뀌면 버린다).
+    int heroXp;
+    int heroLevel; // 문턱 확정 전까지 항상 0 — 값을 넣어도 스탯 성장 없음(회귀 없음).
 
-    void GainKillExperience() => heroLevel++;
+    void GainKillExperience() => heroXp++;
 
     public float CurrentStrength
     {
