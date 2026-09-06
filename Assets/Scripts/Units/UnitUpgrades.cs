@@ -97,6 +97,22 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
 
     public bool IsUnlocked(UnitTraitData trait) => trait != null && unlockedTraits.Contains(trait);
 
+    // 06번⑤(반복구매형, 아카이누 전용) — unlockedTraits(HashSet, 1회잠금)와 별개 저장소다.
+    // 아카이누 하나 때문에 HashSet의 의미(다른 25개의 "재구매 불가")를 바꾸지 않기 위해서다
+    // (PM 지시, 2026-09-07). isRepeatablePurchase==false인 트레잇은 이 딕셔너리에 아예
+    // 안 들어온다 — 기존 25개는 완전히 무영향(회귀 없음).
+    readonly Dictionary<UnitTraitData, int> repeatablePurchaseCounts = new Dictionary<UnitTraitData, int>();
+
+    public int RepeatablePurchaseCount(UnitTraitData trait) =>
+        trait != null && repeatablePurchaseCounts.TryGetValue(trait, out int count) ? count : 0;
+
+    public void IncrementRepeatablePurchase(UnitTraitData trait)
+    {
+        if (trait == null) return;
+        repeatablePurchaseCounts.TryGetValue(trait, out int count);
+        repeatablePurchaseCounts[trait] = count + 1;
+    }
+
     // 포인트 차감·비용 확인은 상점(아직 없음) 몫이다 — 여기선 언락 상태만 바꾼다.
     public void Unlock(UnitTraitData trait)
     {
@@ -133,8 +149,14 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
 
         foreach (UnitTraitData trait in unlockedTraits)
         {
-            if (trait != null && trait.targetUnit == unit && trait.skillLevelUnlockIndex > 0)
-                return trait.skillLevelUnlockIndex;
+            if (trait == null || trait.targetUnit != unit || trait.skillLevelUnlockIndex <= 0) continue;
+
+            // 06번⑤(반복구매형, 아카이누) — 1회차 구매는 skillLevelUnlockIndex 그대로,
+            // 그 뒤로는 구매할 때마다 인덱스가 하나씩 더 간다(원작: 능력 레벨 = 구매 횟수).
+            // CurrentSkillLevel이 범위를 넘는 인덱스를 이미 안전하게 clamp하므로 여기서
+            // 상한을 따로 안 잰다.
+            int extra = trait.isRepeatablePurchase ? Math.Max(0, RepeatablePurchaseCount(trait) - 1) : 0;
+            return trait.skillLevelUnlockIndex + extra;
         }
 
         return 0;
