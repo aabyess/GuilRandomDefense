@@ -20,6 +20,10 @@ public class PlayerContext : MonoBehaviour
     [SerializeField] UnitUpgrades unitUpgrades;
     [SerializeField] PersistentSave persistentSave;
     [SerializeField] ItemGambleState itemGambleState;
+    // ⚠️ 맨 뒤에 추가(2026-09-06, "항법" 5택1, NAVIGATION_ROUTES_FULL.md) — 직렬화
+    // 순서를 지킨다.
+    [SerializeField] NavigationState navigationState;
+    [SerializeField] DamageLevelFixedState damageLevelFixedState;
 
     static readonly List<PlayerContext> registry = new List<PlayerContext>();
 
@@ -102,6 +106,8 @@ public class PlayerContext : MonoBehaviour
     public UnitUpgrades UnitUpgrades => unitUpgrades;
     public PersistentSave PersistentSave => persistentSave;
     public ItemGambleState ItemGambleState => itemGambleState;
+    public NavigationState NavigationState => navigationState;
+    public DamageLevelFixedState DamageLevelFixedState => damageLevelFixedState;
 
     void OnEnable()
     {

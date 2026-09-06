@@ -56,6 +56,16 @@ public class GamblingOptionData : ScriptableObject
     public int failureLuckyTokens = 2;
     public int failureWood = 1;
 
+    // ⚠️ 맨 뒤에 추가(2026-09-06, "항법" 5택1 연결, NAVIGATION_ROUTES_FULL.md) — 직렬화
+    // 순서를 지킨다. 원작 다른세계 도박(Trig_Unit_Gemble_4)만 확인된 공식이다 —
+    // 실패 시 럭키토큰 수량 = 1+Dobak_Tech_int(항법 "도박광" 선택 시 1, 아니면 0).
+    // **다른 도박 옵션(고급도박 등)이 같은 변수를 쓰는지는 확인 안 됐다** — false가
+    // 기본값이라 이 필드를 안 켠 기존 옵션은 회귀 없음. 이 필드가 켜진 옵션만
+    // failureLuckyTokens를 "항법 선택 전 기본값"으로 두고, 실제 지급 시 코드가
+    // NavigationChoice.Gambler면 +1 더한다(GamblingShop.RollUnit 참고).
+    [Header("항법 '도박광' 연동 — 원작이 이 필드를 통해 확인된 옵션만 켠다(추측 금지)")]
+    public bool scalesWithGamblerNavigation;
+
     [Header("사용 제한 — Money 카테고리 전용")]
     [Tooltip("평생 사용 가능 횟수. 0이면 무제한")]
     public int maxUses;

@@ -237,7 +237,7 @@ public class GamblingShop : MonoBehaviour, ILaneShop
             : option.primaryResultGrade.KoreanName();
 
         string failDesc = option.grantFailureReward
-            ? $"행운의토큰 {option.failureLuckyTokens} + 목재 {option.failureWood}"
+            ? $"행운의토큰 {FailureLuckyTokens(option, OwnerContext)} + 목재 {option.failureWood}"
             : "없음";
 
         return $"{option.optionName}\n{option.description}\n"
@@ -435,11 +435,23 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         }
         else if (option.grantFailureReward)
         {
-            context.ResourceWallet.Add(ResourceType.LuckyToken, option.failureLuckyTokens);
+            context.ResourceWallet.Add(ResourceType.LuckyToken, FailureLuckyTokens(option, context));
             context.ResourceWallet.Add(ResourceType.Wood, option.failureWood);
         }
 
         return true;
+    }
+
+    // ⚠️ 2026-09-06 신설("항법" 5택1 연결) — 원작 다른세계 도박 실패 시 럭키토큰 공식
+    // "1+Dobak_Tech_int"(항법 "도박광" 선택 시 1, 아니면 0)을 그대로 옮긴다.
+    // scalesWithGamblerNavigation이 꺼진 옵션(고급도박 등)은 기존 그대로
+    // failureLuckyTokens만 돌려준다 — 회귀 없음.
+    static int FailureLuckyTokens(GamblingOptionData option, PlayerContext context)
+    {
+        int bonus = (option.scalesWithGamblerNavigation
+                     && context?.NavigationState != null
+                     && context.NavigationState.Choice == NavigationChoice.Gambler) ? 1 : 0;
+        return option.failureLuckyTokens + bonus;
     }
 
     UnitGrade PickResultGrade(GamblingOptionData option)

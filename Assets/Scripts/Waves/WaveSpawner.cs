@@ -108,6 +108,19 @@ public class WaveSpawner : MonoBehaviour
         {
             dummy.Initialize(enemyData, startHpMultiplier);
             dummy.SetLane(laneIndex);
+
+            // ⚠️ 2026-09-06 추가(항법 "패왕의길"/히든 이벤트, NAVIGATION_ROUTES_FULL.md,
+            // 리서치담당 c3b8c42 정정) — 원작 Trig_Round_10ver_Actions: 일반 라운드 몹만
+            // 스폰 시점에 A11S 레벨을 이 라인의 Damage_level_Fixed만큼 영구히 올린다.
+            // 라운드보스·신세계 사이드보스는 Round_Unit과 별개 경로(A11S 고정)라 안 탄다 —
+            // `!enemyData.isBoss` 하나로 이 함수를 공유하는 SpawnSideBoss 호출까지 같이
+            // 걸러진다(사이드보스 EnemyData도 isBoss=1). Damage_level_Fixed=0(기본)이면
+            // AddA11SStack(0)이라 지금과 정확히 같다 — 회귀 없음.
+            if (!enemyData.isBoss)
+            {
+                int fixedLevel = PlayerContext.Get(laneIndex)?.DamageLevelFixedState?.Value ?? 0;
+                if (fixedLevel != 0) dummy.AddA11SStack(fixedLevel);
+            }
         }
 
         return instance;

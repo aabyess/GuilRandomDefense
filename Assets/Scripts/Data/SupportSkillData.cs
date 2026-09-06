@@ -118,6 +118,20 @@ public class SupportSkillData : ScriptableObject
     [Header("해루석 전용 — 첫 타격이 대상 최대 체력의 이 비율만큼 추가 피해(0~1). 원작 \"전체 체력의 7%\"")]
     public float firstHitMaxHpPercent;
 
+    // ⚠️ 맨 뒤에 추가(2026-09-06, "항법" 5택1 연결, MANSO_LEVEL2_UPLIFT_RESOLVED.md) —
+    // 직렬화 순서를 지킨다. 원작 "항법: 도움소 강화"를 고른 플레이어는 udg_Manso의
+    // A0ID(해루석)·A0JR(버스터콜)를 레벨2로 쓴다(대지진 AOeq는 레벨1=레벨2라 이 축
+    // 자체가 없다 — 필드를 안 채운다). 0(기본값)이면 "이 스킬엔 강화 분기가 없다"는
+    // 뜻이라 대지진은 항상 이 경로를 안 탄다. SupportShop이 캐스터의
+    // PlayerContext.NavigationState.Choice==SupportBoost일 때만 이 값들을 쓴다.
+    // ⚠️ 해루석 레벨2는 부가 버프 2종(Bmlc/Bmlt)도 새로 붙는데, 그 버프의 실제 효과가
+    // 원작 조사에서 아직 안 나왔다 — 수치(피해·마나)만 반영하고 버프는 지어내지 않는다
+    // (결측으로 남김, 리서치 추가 확인 필요).
+    [Header("항법 '도움소 강화' 전용 — 0(기본)이면 이 스킬엔 강화 분기 없음(예: 대지진)")]
+    public float boostedDamageBase;
+    public int boostedManaCost;
+    public float boostedCooldownSeconds;
+
     [Header("연금술 전용 (targetKind == Unit)")]
     public UnitGrade maxDismantleGrade = UnitGrade.Rare;
     public List<GradeManaRefund> dismantleRefunds;
@@ -128,8 +142,15 @@ public class SupportSkillData : ScriptableObject
     [Header("능력치 증가(H0B7) 전용 — 선행 조건: 초월함 조합 완료")]
     public bool requiresTranscendentCombine;
 
-    public float ComputeDamage(int currentRound)
+    public float ComputeDamage(int currentRound, bool boosted = false)
     {
-        return Mathf.Max(0f, damageBase + damagePerRound * currentRound);
+        float baseDamage = (boosted && boostedDamageBase > 0f) ? boostedDamageBase : damageBase;
+        return Mathf.Max(0f, baseDamage + damagePerRound * currentRound);
     }
+
+    // "항법 도움소 강화"가 켜졌을 때 쓸 마나/쿨다운 — 이 스킬에 강화 분기가 없으면
+    // (boostedX == 0, 예: 대지진) boosted 여부와 무관하게 기존 값 그대로다.
+    public int EffectiveManaCost(bool boosted) => (boosted && boostedManaCost > 0) ? boostedManaCost : manaCost;
+    public float EffectiveCooldownSeconds(bool boosted) =>
+        (boosted && boostedCooldownSeconds > 0f) ? boostedCooldownSeconds : cooldownSeconds;
 }

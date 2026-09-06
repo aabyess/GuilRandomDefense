@@ -51,6 +51,13 @@ public class SupportShop : MonoBehaviour, ILaneShop
 
     PlayerContext OwnerContext => PlayerContext.Get(owner.OwnerId);
 
+    // ⚠️ 2026-09-06 신설("항법" 5택1 연결, MANSO_LEVEL2_UPLIFT_RESOLVED.md) — 이
+    // 플레이어가 "도움소 강화"를 골랐는지. SupportSkillData.boostedX가 0인 스킬(예:
+    // 대지진)은 이 값과 무관하게 항상 기존 값이라 회귀 없음.
+    static bool IsBoosted(PlayerContext context) =>
+        context != null && context.NavigationState != null
+        && context.NavigationState.Choice == NavigationChoice.SupportBoost;
+
     // ---- ILaneShop ----
     // 슬롯 인덱스 = skills 리스트 인덱스. 마나포션은 위치·대상이 필요 없어 targetKind를 None으로
     // 답한다 — 예전엔 GameHud가 "effect == ManaRestore"를 직접 검사했는데, 그 판단이 여기로 옮겨왔다.
@@ -113,7 +120,8 @@ public class SupportShop : MonoBehaviour, ILaneShop
 
         if (context == null) return null;
 
-        if (skill.manaCost > 0 && (context.ResourceWallet == null || context.ResourceWallet.Get(ResourceType.Mana) < skill.manaCost))
+        int manaCost = skill.EffectiveManaCost(IsBoosted(context));
+        if (manaCost > 0 && (context.ResourceWallet == null || context.ResourceWallet.Get(ResourceType.Mana) < manaCost))
             return "마나가 부족합니다.";
 
         if (skill.goldCost > 0 && (context.GoldWallet == null || context.GoldWallet.Gold < skill.goldCost))
@@ -130,6 +138,10 @@ public class SupportShop : MonoBehaviour, ILaneShop
     // (GameHud.BuildSupportSkillTooltipText에서 그대로 옮겨왔다 — 내용 변경 없음.)
     string BuildTooltipText(SupportSkillData skill)
     {
+        bool boosted = IsBoosted(OwnerContext);
+        int manaCost = skill.EffectiveManaCost(boosted);
+        float cooldownSeconds = skill.EffectiveCooldownSeconds(boosted);
+
         tooltipBuilder.Clear();
         tooltipBuilder.Append(skill.skillName);
 
@@ -139,9 +151,9 @@ public class SupportShop : MonoBehaviour, ILaneShop
         tooltipBuilder.Append("\n비용: ");
         bool hasCost = false;
 
-        if (skill.manaCost > 0)
+        if (manaCost > 0)
         {
-            tooltipBuilder.Append("마나 ").Append(skill.manaCost);
+            tooltipBuilder.Append("마나 ").Append(manaCost);
             hasCost = true;
         }
 
@@ -154,16 +166,16 @@ public class SupportShop : MonoBehaviour, ILaneShop
 
         if (!hasCost) tooltipBuilder.Append("없음");
 
-        tooltipBuilder.Append("\n쿨다운: ").Append(skill.cooldownSeconds.ToString("0.#")).Append('s');
+        tooltipBuilder.Append("\n쿨다운: ").Append(cooldownSeconds.ToString("0.#")).Append('s');
 
         float remaining = GetCooldownRemaining(skill);
         if (remaining > 0f)
             tooltipBuilder.Append(" (재사용까지 ").Append(remaining.ToString("F1")).Append("s)");
 
-        if (skill.damageBase > 0f || skill.damagePerRound > 0f)
+        if (skill.damageBase > 0f || skill.damagePerRound > 0f || skill.boostedDamageBase > 0f)
         {
             int round = RoundManagerRef != null ? RoundManagerRef.CurrentRound : 1;
-            tooltipBuilder.Append("\n피해량: ").Append(skill.ComputeDamage(round).ToString("F0"))
+            tooltipBuilder.Append("\n피해량: ").Append(skill.ComputeDamage(round, boosted).ToString("F0"))
                 .Append(" (").Append(round).Append("라운드 기준)");
         }
 
@@ -198,7 +210,8 @@ public class SupportShop : MonoBehaviour, ILaneShop
         PlayerContext context = OwnerContext;
         if (context == null) return false;
 
-        if (skill.manaCost > 0 && (context.ResourceWallet == null || context.ResourceWallet.Get(ResourceType.Mana) < skill.manaCost))
+        int manaCost = skill.EffectiveManaCost(IsBoosted(context));
+        if (manaCost > 0 && (context.ResourceWallet == null || context.ResourceWallet.Get(ResourceType.Mana) < manaCost))
             return false;
 
         if (skill.goldCost > 0 && (context.GoldWallet == null || context.GoldWallet.Gold < skill.goldCost))
@@ -232,7 +245,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
 
     void StartCooldown(SupportSkillData skill)
     {
-        cooldownUntil[skill] = Time.time + skill.cooldownSeconds;
+        cooldownUntil[skill] = Time.time + skill.EffectiveCooldownSeconds(IsBoosted(OwnerContext));
 
         if (skill.maxUses > 0)
             usesSoFar[skill] = UsesSoFar(skill) + 1;
@@ -240,14 +253,15 @@ public class SupportShop : MonoBehaviour, ILaneShop
 
     bool TrySpendCost(SupportSkillData skill, PlayerContext context)
     {
-        if (skill.manaCost > 0 && !context.ResourceWallet.TrySpend(ResourceType.Mana, skill.manaCost))
+        int manaCost = skill.EffectiveManaCost(IsBoosted(context));
+        if (manaCost > 0 && !context.ResourceWallet.TrySpend(ResourceType.Mana, manaCost))
             return false;
 
         if (skill.goldCost > 0 && !context.GoldWallet.TrySpend(skill.goldCost))
         {
             // 골드가 모자라 취소되면, 이미 나간 마나가 있다면 되돌린다 (지금은 마나+골드를 동시에
             // 요구하는 스킬이 없지만, 나중에 생겨도 재료만 날아가는 일이 없도록).
-            if (skill.manaCost > 0) context.ResourceWallet.Add(ResourceType.Mana, skill.manaCost);
+            if (manaCost > 0) context.ResourceWallet.Add(ResourceType.Mana, manaCost);
             return false;
         }
 
@@ -297,7 +311,8 @@ public class SupportShop : MonoBehaviour, ILaneShop
         UnitUpgrades upgrades = context != null ? context.UnitUpgrades : null;
         if (upgrades == null || !upgrades.TrySpendTraitPoints(1))
         {
-            if (skill.manaCost > 0) context.ResourceWallet?.Add(ResourceType.Mana, skill.manaCost);
+            int manaCost = skill.EffectiveManaCost(IsBoosted(context));
+            if (manaCost > 0) context.ResourceWallet?.Add(ResourceType.Mana, manaCost);
             failReason = "특성포인트가 부족합니다!";
             return false;
         }
@@ -446,7 +461,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
         if (!TrySpendCost(skill, context)) { failReason = CastUnavailableReason(skill, context); return false; }
 
         int round = RoundManagerRef != null ? RoundManagerRef.CurrentRound : 1;
-        enemy.TakeDamage(skill.ComputeDamage(round), DamageType.AP, AttackType.Spells, owner.OwnerId);
+        enemy.TakeDamage(skill.ComputeDamage(round, IsBoosted(context)), DamageType.AP, AttackType.Spells, owner.OwnerId);
 
         if (skill.duration > 0f) StartCoroutine(StunRoutine(enemy, skill.duration));
 
@@ -492,7 +507,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
         if (!eligible)
         {
             // 잘못된 대상 — "등가교환" 실패. 분해하지 않고 마나만 그대로 돌려준다.
-            context.ResourceWallet?.Add(ResourceType.Mana, skill.manaCost);
+            context.ResourceWallet?.Add(ResourceType.Mana, skill.EffectiveManaCost(IsBoosted(context)));
             failReason = $"{skill.skillName}: {identity.Data.unitName}은(는) 분해할 수 없는 등급이라 마나를 돌려받았습니다.";
             StartCooldown(skill);
             return false;
@@ -552,7 +567,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
     // 여기서 매 웨이브 걸면 웨이브 수만큼 누적돼 원작 수치(20)보다 훨씬 세진다.
     int ApplyOneWaveDamage(SupportSkillData skill, Vector3 point, int round, PlayerContext context, bool isFirstWave)
     {
-        float damage = skill.ComputeDamage(round);
+        float damage = skill.ComputeDamage(round, IsBoosted(context));
         int hits = 0;
 
         // 스킬 시전은 쿨다운(수십 초)에 묶여 있어 매 프레임 도는 경로가 아니다.
@@ -587,7 +602,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
     int ApplyRoot(SupportSkillData skill, Vector3 point, int round)
     {
         int ticks = Mathf.Max(1, Mathf.RoundToInt(skill.duration));
-        float tickDamage = skill.ComputeDamage(round) / ticks;
+        float tickDamage = skill.ComputeDamage(round, IsBoosted(OwnerContext)) / ticks;
 
         List<EnemyDummy> targets = CollectInRadius(point, skill.radius);
         int hit = 0;

@@ -20,14 +20,19 @@ public class ItemGambleState : MonoBehaviour
 {
     [SerializeField] int stock = 1; // 원작 Item_Int(0 시작) + 1 보정 = 1
 
+    // ⚠️ 맨 뒤에 추가(2026-09-06, "항법" 5택1 연결, NAVIGATION_ROUTES_FULL.md) — 직렬화
+    // 순서를 지킨다. PlayerContext의 다른 형제 컴포넌트(NavigationState)를 직접
+    // 참조한다 — 씬에서 같은 슬롯(GameObject)에 같이 붙는다.
+    [SerializeField] NavigationState navigationState;
+
     public bool HasStock => stock > 0;
     public int Stock => stock;
 
-    // udg_Tech_No_support 대응 — 원작 "항법: 도움소 잠금"을 선택하면 켜지는 플래그
-    // (ITEM_POOL_FULL_CENSUS.md 후속 ②, f0d3da1). 항법 시스템이 아직 없어 이 플래그를
-    // 켜는 경로가 하나도 없다 — 지금은 항상 false(전체 풀만 쓴다). 항법이 생기면 그
-    // 선택 상태를 읽어오도록 이 프로퍼티를 교체할 것(하드코딩 false를 지우는 지점).
-    public bool ReducedPoolActive => false; // TODO(항법 시스템): 도움소 잠금 선택 시 true로
+    // udg_Tech_No_support 대응 — 원작 "항법: 도움소 잠금"(NavigationChoice.SupportLock)을
+    // 고르면 켜지는 플래그(ITEM_POOL_FULL_CENSUS.md 후속 ②, f0d3da1) — 아이템 도박이
+    // 축소풀(13종)로 바뀐다. navigationState가 안 붙어 있으면(씬 배선 전) 기존과 같이
+    // false — 회귀 없음.
+    public bool ReducedPoolActive => navigationState != null && navigationState.Choice == NavigationChoice.SupportLock;
 
     /// <summary>
     /// 도박 1회 시도 — 재고가 없으면 false(아무 것도 안 줄어들고 안 뽑힘). 재고가 있으면

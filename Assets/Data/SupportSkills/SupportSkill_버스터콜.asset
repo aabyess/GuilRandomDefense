@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: SupportSkill_버스터콜
   m_EditorClassIdentifier: 
   skillName: 버스터콜
-  description: 압도적인 화력으로 넓은 지역을 초토화한다.
+  description: 압도적인 화력으로 넓은 지역을 초토화한다. 피해량(700만)은 레벨과 무관하게 고정 — 항법
+    "도움소 강화"를 고르면 쿨타임 100→66초·마나 500→333으로 더 자주 쓸 수 있다(HELPSHOP_3_UNCONFIRMED_RESOLVED.md/MANSO_LEVEL2_UPLIFT_RESOLVED.md 확정).
   targetKind: 0
   effect: 0
   manaCost: 500
@@ -30,3 +31,6 @@ MonoBehaviour:
   buffAttackSpeedMultiplier: 1
   maxDismantleGrade: 3
   dismantleRefunds: []
+  boostedDamageBase: 0
+  boostedManaCost: 333
+  boostedCooldownSeconds: 66
