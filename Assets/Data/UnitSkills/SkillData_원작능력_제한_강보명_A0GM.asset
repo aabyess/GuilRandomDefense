@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작능력_제한_강보명_A0GM
+  m_EditorClassIdentifier:
+  skillName: A0GM !끓어오르는피
+  description: 쪼갬(2026-09-06, PM 설계 결정 — 능력 하나에 파일 하나): SkillData_원작능력_제한_강보명에서 A0GM !!끓어오르는피(발동0.2) 몫만 떼어낸 새 파일이다(원래 함께 triggerChance 하나를 공유하던 능력 2개 중 하나, 원래 파일:SkillData_원작능력_제한_강보명_A0GK). 원래 설명: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 제한됨 패트릭 레드필드 붉은백작 - 제한됨(h05G)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 uid 그룹 총점(능력 기대값 합), 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. 이 원작 유닛의 능력 2개를 전부 이 유닛 하나에 배정했다(uid 단위 배정, 뿌리 ⑮ 세 번째 얼굴 수정). 능력마다 발동확률이 다르면 가장 높은 값을 대표로 썼다(SkillLevel 하나엔 triggerChance 하나뿐이라서 — 과소 계상보다 안전한 근사).   · A0GK !단신 최강: 발동1.0 배수0.0 추가850000.0   · A0GM !끓어오르는피: 발동0.2 배수0.0 추가252500.0   확정(2026-09-06, GATE_FIX_9/5bac2f0): A0GK Hbh1=100.0(확률 100%) — triggerChance=1.0이 정당. 값 유지, 재감사 불필요. 
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 0.2
+    range: 0
+    effects:
+    - kind: 0
+      basis: 3
+      target: 3
+      damageType: 1
+      attackType: 3
+      multiplier: 0.0
+      bonus: 252500.0
+      chance: 1
+      hitCount: 1
+      duration: 0
