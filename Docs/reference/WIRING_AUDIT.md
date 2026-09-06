@@ -19,8 +19,15 @@
 
 ### 1. `UnitUpgrades` 컴포넌트가 씬에 하나도 없다 — **강화·특성·방깎이 통째로 죽었다**
 
-`MapGenerator`가 `PlayerContext`를 지으면서 지갑·인벤토리·도박진행도·창고는 붙이는데
-**`UnitUpgrades`는 만들지도, 연결하지도 않는다** (`MapGenerator.cs:2379-2394`).
+🟢 **해소됨(2026-09-05, 커밋 `f685124` "Attach UnitUpgrades to every PlayerContext")**
+— `MapGenerator.EnsurePart<UnitUpgrades>`가 `PlayerContext`마다 컴포넌트를 붙이고
+참조를 건다. **2026-09-06 재확인(구현담당2)**: 오늘 재생성된 씬(`SampleScene.unity`,
+커밋 `63e8c51`)을 직접 열어 `unitUpgrades: {fileID: ...}`가 4개 `PlayerContext`
+전부 0이 아님을 확인 — 지금은 실제로 돈다. **이 절 아래 내용(2026-09-04 시점
+기록)은 지우지 않고 남긴다** — 그 시점엔 맞았고, 같은 종류 문제가 또 생기면
+비교할 기준이 된다. **⚠️ 다음 사람: 이 문서가 아니라 그 시점의 씬 파일로
+판단할 것 — 씬은 생성 시점에 굳는 결과물이라 코드가 맞아도 씬이 낡으면
+죽는다(PM 지적, 2026-09-06).**
 
 씬의 `PlayerContext` **4개 전부** `unitUpgrades: {fileID: 0}`이다. 그래서 `PlayerContext.UnitUpgrades`는 **항상 `null`**이다.
 
