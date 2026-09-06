@@ -15,6 +15,9 @@ MonoBehaviour:
   skillName: A0O7 !그림자 일격-일도양단
   description: 원작 전설적인 나미 도둑 고양이 - 전설적인(Trig_Legend25). | 2차 배정(트리거·더미 채널): 원작 전설적인 나미 도둑 고양이 - 전설적인(더미 경로 Trig_Legend25 → e0NR(!전설 나미 더미3) → A0W6). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다.
   정정(2026-09-06, 판정 d5f72d5): A0W6의 -0.42 효과를 제거했다 — base AOae의 Oae1은 이동속도 감소율(음수)이라 피해가 아니다. 같은 파일의 다른 효과들(325000×2, Trig_Legend25 확정 대응)은 그대로 둔다. (판정 불일치는 음수값을 못 잡는 정규식 버그가 원인이었음이 밝혀져 해소됐다.)
+  배선(2026-09-06, STACK_AXES_INCREMENT_LIST.md, HashAttack 확인): 이 파일 전체가 h02P 나미의
+  Trig_Legend25 하나로만 배정돼 있어 쪼갤 필요 없이 AisrStack +1을 새 효과로 얹었다
+  (Trig_Legend25_Func007A).
   triggerType: 0
   levels:
   - cooldown: 0
@@ -43,3 +46,13 @@ MonoBehaviour:
       duration: 0
       randMin: 1
       randMax: 1.5
+    - kind: 9
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 6
+      multiplier: 1
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0

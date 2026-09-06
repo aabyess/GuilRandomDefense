@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   skillName: A0KT !체인드라이브
   description: 원작 랜덤전용 뱀파이어 - 랜덤전용(Trig_vampire). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 뱀파이어 - 랜덤전용(Trig_vampire).
+  배선(2026-09-06, STACK_AXES_INCREMENT_LIST.md, HashAttack 확인): 이 파일 전체가 h06T 뱀파이어의
+  Trig_vampire 하나로만 배정돼 있어(다른 원작 유닛과 안 섞임) 쪼갤 필요 없이 AisrStack +8을
+  이 파일 자체 발동에 새 효과로 얹었다(Trig_vampire_Func001Func007A).
   triggerType: 0
   levels:
   - cooldown: 0
@@ -273,3 +276,13 @@ MonoBehaviour:
       duration: 0
       randMin: 1
       randMax: 3
+    - kind: 9
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 5
+      multiplier: 8
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
