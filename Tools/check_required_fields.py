@@ -489,6 +489,34 @@ results.append((
     rand_min_negative_assets,
 ))
 
+# ── 18. SkillEffect: triggerChance=0인데 게이트 미확인 꼬리표가 없음 ────────
+# PM 지시(2026-09-06, DUMMY_CHANNEL_MISSING.csv 79행 이식) — 게이트를 못 찾은 새 더미
+# 채널 스킬은 실수로 매 타 발동(145배 과다 사고 재현)하지 않도록 triggerChance를 0으로
+# 잠근다(UnitAttacker.cs:734, Random.value >= 0은 항상 참이라 확실히 안 쏜다). 그런데
+# 0은 "게이트가 극도로 빡빡하다"와 "피해 자체가 0이다"를 코드만 봐서는 구분 못 한다
+# (뿌리 ⑯, 오늘 세 번째 재발). description에 "[게이트 미확인"이 없는 채로 triggerChance:
+# 0.0이 있으면 잠금인지 진짜 무효과인지 알 길이 없어진다 — 반드시 꼬리표와 짝이어야 한다.
+def zero_trigger_without_unconfirmed_tag(text):
+    tag_present = "[게이트 미확인" in text
+    for level_body in re.split(r"\n  - cooldown: ", text)[1:]:
+        tc_m = re.search(r"^    triggerChance: ([-+0-9.eE]+)", "  - cooldown: " + level_body, re.M)
+        if tc_m and float(tc_m.group(1)) == 0.0 and not tag_present:
+            return True
+    return False
+
+
+zero_trigger_assets = [p for p in skill_assets if zero_trigger_without_unconfirmed_tag(read(p))]
+
+results.append((
+    "SkillEffect: triggerChance=0인데 [게이트 미확인] 꼬리표 없음",
+    ["triggerChance"],
+    "0은 '게이트를 몰라서 잠갔다'와 '원작 자체가 무효과다'를 코드만 보고 구분 못 한다 — "
+    "description에 [게이트 미확인] 표시가 없는 0은 다음 사람이 '피해 없음'으로 잘못 읽는다"
+    "(뿌리 ⑯).",
+    len(skill_assets),
+    zero_trigger_assets,
+))
+
 # ── 리포트 ───────────────────────────────────────────────────────────────
 any_problem = False
 for label, fields, danger, total, missing in results:
