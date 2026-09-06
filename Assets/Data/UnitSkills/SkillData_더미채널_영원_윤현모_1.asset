@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_영원_윤현모_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_영원_윤현모_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 영원_윤현모. ⚠️ 축 밖이라 뺀 조건: 버프 미보유 조건 — 실제보다 자주 발동할 수 있다.  · Trig_Ace_Attack → e0AB(E영원 에이스 특대화권 더미1) → A0BL: 1150000  · Trig_Ace_Attack → e0AI(E영원 에이스 특대화권 더미2) → A0OH: 120000 [추정: 자릿수 판정]
+  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 영원_윤현모. 정정(2026-09-06, GATE_FIX_6/b0661f9): 원작 버프 B017 미보유 게이트 = 5절대쿨 에이스영원 4.25초 — ORIGINAL_ABSOLUTE_COOLDOWN.csv에 이미 있던 값이라 새 축 없이 SkillLevel.cooldown으로 그대로 표현한다.  · Trig_Ace_Attack → e0AB(E영원 에이스 특대화권 더미1) → A0BL: 1150000  · Trig_Ace_Attack → e0AI(E영원 에이스 특대화권 더미2) → A0OH: 120000 [추정: 자릿수 판정]
   triggerType: 0
   levels:
-  - cooldown: 0
+  - cooldown: 4.25
     triggerChance: 1.0
     range: 0
     hitCountThreshold: 0
