@@ -1,0 +1,7 @@
+등급,우리유닛,스킬파일,내가_잰_발동률,원작경로,원작게이트,권장값,실제발동률,판정,비고
+전설적인,전설적인_정준영,SkillData_더미채널_전설적인_정준영_2.asset,2.632,Trig_Legend2 → e006(!전설 징베 더미) → A001,버프 B00B 미보유 = 5절대쿨 징베 7.0초,cooldown = 7.0,0.143,🔴 고칠 것,ORIGINAL_ABSOLUTE_COOLDOWN.csv에 B00B=7.0초로 이미 있었다
+영원한,영원_윤현모,SkillData_더미채널_영원_윤현모_1.asset,1.724,Trig_Ace_Attack → e0AB/e0AI → A0BL/A0OH,버프 B017 미보유 = 5절대쿨 에이스영원 4.25초,cooldown = 4.25,0.235,🔴 고칠 것,같은 표에 B017=4.25초로 이미 있었다
+불멸의,불멸_신지우,SkillData_더미채널_불멸_신지우_1.asset,1.667,Trig_Kaido_Attack → e0H5 → A0SZ,"평타 트리거는 확정, stage0→4 내부 분기 미확인",[미확인],—,⚪ 유지,값을 지어내지 말 것
+불멸의,불멸_신지우,SkillData_카이도_불멸_신지우_buster.asset,1.667,Kaido_Dragon_buster,Kaido_Skill_int >= 10 (카이도 평타에서만 오르는 단조 증가 카운터),1.0 유지,1.667,⭕ 정당,10타를 넘으면 영구히 조건 만족 — 장기적으로 1.0이 정확하다
+불멸의,불멸_신지우,SkillData_카이도_불멸_신지우_skill18.asset,1.667,Kaido_Skill_1_8,경로A(Kaido_Skill_int>=11) 또는 경로B(1/7) 배타 — 카운터가 11 넘으면 경로A 상시,1.0 유지,1.667,⭕ 정당,같은 이유
+초월함,초월_강주혁_AP,SkillData_절대쿨_초월_강주혁_AP.asset,1.589,Nami_Skill_4 (H08V),버프 B012 미보유 = 5절대쿨 나미 3.5초,이미 cooldown = 3.5,0.286,⭕ 정당,🔴 내 계산이 cooldown을 안 봐서 1.589로 과대 계산했다. 파일은 처음부터 옳았다
