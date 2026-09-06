@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // H0BS("메타몽") 도박 재고 — ITEM_POOL_FULL_CENSUS.md 후속(f0d3da1) 확정: 골드로 사는 게
@@ -34,11 +35,32 @@ public class ItemGambleState : MonoBehaviour
     // false — 회귀 없음.
     public bool ReducedPoolActive => navigationState != null && navigationState.Choice == NavigationChoice.SupportLock;
 
+    // 2026-09-07 정정(PM 지시, ITEMPOOL_REMOVAL_SEMANTICS.md) — 원작은 뽑힌/지급된 아이템
+    // 타입을 그 플레이어의 풀에서 영구히 지운다(리필 없음, 전체·축소 풀 양쪽에 동시 적용 —
+    // ItemGamblePoolData.Roll 참고). 자산(ItemGamblePoolData)은 4명이 공유하는 SO라 여기에
+    // 못 두고, 플레이어별 컴포넌트인 여기(ItemGambleState)가 "이미 받은 종류"를 든다.
+    //
+    // ⚠️ 저장하지 않는다(unlockedTraits·GamblingProgress와 같은 결) — 한 판 한정 상태다.
+    readonly HashSet<ItemData> drawnItemTypes = new HashSet<ItemData>();
+
+    /// <summary>이 플레이어가 이 아이템 타입을 이미 받았는지 — 전체·축소 풀 공통(원작이
+    /// 두 풀 다 지우므로 하나만 있으면 된다).</summary>
+    public bool HasDrawn(ItemData item) => item != null && drawnItemTypes.Contains(item);
+
+    /// <summary>도박이 아닌 경로(보스 확정지급·스토리 보상·퀘스트 등, 아직 우리에 없음)로
+    /// 이 풀 소속 아이템을 지급할 때도 반드시 이걸 불러야 한다 — "획득 지점 하나로 모으기"
+    /// (PM 지시). 지금은 TryGamble이 유일한 호출부다.</summary>
+    public void RegisterAcquired(ItemData item)
+    {
+        if (item != null) drawnItemTypes.Add(item);
+    }
+
     /// <summary>
     /// 도박 1회 시도 — 재고가 없으면 false(아무 것도 안 줄어들고 안 뽑힘). 재고가 있으면
     /// 원작과 같은 순서(차감 먼저, 그다음 뽑기)로 1을 먼저 소모한 뒤 풀에서 하나를 뽑는다.
-    /// pool.Roll이 null을 돌려줘도(풀이 비어있는 등) 재고는 이미 소모된 채로 유지한다 —
-    /// 원작 트리거도 차감을 ItemGet 성공 여부와 무관하게 먼저 한다.
+    /// pool.Roll이 null을 돌려줘도(이미 다 뽑았거나 풀 자체가 비어있는 등) 재고는 이미
+    /// 소모된 채로 유지한다 — 원작 트리거도 차감을 ItemGet 성공 여부와 무관하게 먼저 한다.
+    /// 뽑힌 결과는 즉시 drawnItemTypes에 등록해 다음 도박부터 같은 종류가 다시 안 나온다.
     /// </summary>
     public bool TryGamble(ItemGamblePoolData pool, out ItemData result)
     {
@@ -46,7 +68,8 @@ public class ItemGambleState : MonoBehaviour
         if (pool == null || stock <= 0) return false;
 
         stock--;
-        result = pool.Roll(ReducedPoolActive);
+        result = pool.Roll(ReducedPoolActive, drawnItemTypes);
+        if (result != null) RegisterAcquired(result);
         return true;
     }
 
