@@ -204,4 +204,23 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
         }
         return 0f;
     }
+
+    // ⚠️ 2026-09-06 추가(PM 지시 — 뿌리 ㉖, "축은 있는데 값이 0으로 죽어 있었다") —
+    // SkillEffectBasis.ResearchLevel(UnitAttacker.CountResearchLevel)이 읽을 자리다.
+    // MultiplierForGrade/BonusForGrade와 같은 방식으로 이 등급을 담당하는 트랙을 찾지만,
+    // **배율·가산이 아니라 원시 레벨 숫자 그대로**를 돌려준다 — 원작 공식이 "연구단계×
+    // multiplier+bonus"라서(핸콕 h05C 효과 "연구횟수×30,000+360,000"으로 이미 검증됨)
+    // 그 "연구단계" 자체가 필요하지, UnitUpgradeTrackData의 선형 배율식이 필요한 게
+    // 아니다. **0-index 그대로**(Level()이 이미 "안 산 트랙=0, 1번 사면=1, ..."이라
+    // 연구 0단계=0이 자연스럽게 맞는다 — 별도 +1/-1 보정 없음, 핸콕 예의 "연구 0회=
+    // 상수항만 남는다"와도 일치한다). 대응 트랙이 없으면 0(연구 안 한 것과 같다).
+    public int LevelForGrade(UnitGrade grade)
+    {
+        foreach (KeyValuePair<UnitUpgradeTrackData, int> entry in legacyGradeLevels)
+        {
+            if (entry.Key != null && entry.Key.targetGrades != null && entry.Key.targetGrades.Contains(grade))
+                return entry.Value;
+        }
+        return 0;
+    }
 }

@@ -111,12 +111,21 @@ public class UnitAttacker : MonoBehaviour
         }
     }
 
-    // SkillEffectBasis.ResearchLevel 전용 자리 — 연구소(05번, 구현담당1)가 서기 전까지는
-    // 항상 0을 돌려준다(2026-09-05). 원작 예: 핸콕 "연구횟수×30,000+360,000" — 연구소가
-    // 서면 이 메서드 한 줄만 실제 단계값으로 이으면 된다. 0인 동안은
-    // ResolveSkillEffectValue의 "단계×multiplier+bonus"가 "0×multiplier+bonus=bonus"로
-    // 예전 동작과 같다 — 회귀 없음.
-    int CountResearchLevel() => 0;
+    // SkillEffectBasis.ResearchLevel 전용 자리 — 원작 예: 핸콕 "연구횟수×30,000+360,000".
+    // ⚠️ 2026-09-06 연결(PM 지시, 뿌리 ㉖) — 연구소(05번)가 2026-09-05에 이미 서서
+    // `UnitUpgrades.LevelForGrade`로 실제 단계를 읽을 수 있는데 이 메서드만 하드코딩된
+    // 0 그대로였다 — "축이 없어서 못 켰다"가 아니라 "축은 있는데 값이 죽어 있었다"였다.
+    // CurrentSkillLevelNumber()와 같은 패턴으로 이 유닛의 등급에 대응하는 연구소 트랙의
+    // 레벨을 그대로 돌려준다(0-index, 별도 보정 없음 — UnitUpgrades.LevelForGrade 주석
+    // 참고). 연구를 하나도 안 샀으면(또는 그 등급에 연구소가 아예 없으면) 여전히 0을
+    // 돌려줘서 "0×multiplier+bonus=bonus"인 예전 동작과 값이 같다 — 회귀 없음, 실제
+    // 연구를 산 플레이어부터 값이 오른다.
+    int CountResearchLevel()
+    {
+        UnitData unitData = identity != null ? identity.Data : null;
+        UnitUpgrades source = ResolveUpgrades();
+        return (unitData != null && source != null) ? source.LevelForGrade(unitData.grade) : 0;
+    }
 
     // ---- 버프 레지스트리(2026-09-06, PM 지시) — 흩어져 있던 버프류(도움소 공속·공격력
     // 버프, OnHitChance 절대쿨의 selfBuffId, 앞으로 생길 스킬 자기버프)를 한 자리에서
