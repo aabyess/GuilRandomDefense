@@ -394,4 +394,17 @@ public class UnitData : ScriptableObject
     // 혼동이었다). h05Y는 isAncientShip 경로(위)로만 소모된다 — 판매 경로와 안 겹친다.
     public WispData sellRewardWisp;
     public int sellRewardTraitPoints;
+
+    // h0BS(메타몽) 전용 판매 보상 — 원작 `Trig_item_Gemble_Actions`(진입 조건
+    // `GetSoldUnit()=='H0BS'`)를 우리 "유닛 판매" 경로에 얹었다(PM 지시 2026-09-07).
+    // 비어있으면(기본값) 판매해도 도박이 안 돈다 — 기존 유닛 전부 무영향(회귀 없음).
+    // 판매 시 GameHud.OnSellButtonClicked가 PlayerContext.ItemGambleState.TryGamble을
+    // 이 풀로 호출한다 — 재고 차감(ItemGambleState.stock)은 그 메서드가 이미 하므로
+    // 여기서 따로 잠그지 않는다("재고 0이면 도박이 안 돈다" 쪽으로 구현, 판매 자체(유닛
+    // 소멸)는 재고와 무관하게 항상 된다 — 원작이 "재고 0이면 애초에 못 판다"인지
+    // "팔아도 조용히 안 돈다"인지 [미확인]이라 후자를 안전한 기본값으로 골랐다).
+    //
+    // ⚠️ 메타몽 유닛 자체를 손에 넣는 경로(레일리 h05X 때와 같은 종류의 "선행 문제")는
+    // 아직 없다 — 이 필드는 판매→도박 배선만 담당한다.
+    public ItemGamblePoolData sellTriggersItemGamblePool;
 }

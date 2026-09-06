@@ -208,6 +208,14 @@ public class GameHud : MonoBehaviour
         ? unitSpawner
         : unitSpawner = FindFirstObjectByType<UnitSpawner>();
 
+    // h0BS(메타몽) 판매→아이템 도박 결과를 받는다. CombineSystem이 조합 재료로 참조하는
+    // 그 인벤토리와 같은 싱글턴 인스턴스다(씬에 하나, CombineSystem.itemInventory와 같은
+    // 자리 — PlayerContext엔 이 참조가 없다, 지금은 플레이어별이 아니라 전역 공유 상태).
+    ItemInventory itemInventory;
+    ItemInventory ItemInventoryRef => itemInventory != null
+        ? itemInventory
+        : itemInventory = FindFirstObjectByType<ItemInventory>();
+
     void Awake()
     {
         EnsureEventSystem();
@@ -640,7 +648,8 @@ public class GameHud : MonoBehaviour
 
         Selectable single = selection.Selected[0];
         if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null ||
-            (identity.Data.sellRewardWisp == null && identity.Data.sellRewardTraitPoints <= 0))
+            (identity.Data.sellRewardWisp == null && identity.Data.sellRewardTraitPoints <= 0 &&
+             identity.Data.sellTriggersItemGamblePool == null))
         { HideSellButton(); return; }
 
         sellButtonPanel.SetActive(true);
@@ -654,8 +663,17 @@ public class GameHud : MonoBehaviour
         string pointPart = identity.Data.sellRewardTraitPoints > 0
             ? $"특성포인트 {identity.Data.sellRewardTraitPoints}"
             : null;
-        string rewardDesc = wispPart != null && pointPart != null ? $"{wispPart} + {pointPart}"
-            : wispPart ?? pointPart;
+        string gamblePart = identity.Data.sellTriggersItemGamblePool != null
+            ? "아이템 도박 1회"
+            : null;
+
+        StringBuilder rewardDesc = new StringBuilder();
+        foreach (string part in new[] { wispPart, pointPart, gamblePart })
+        {
+            if (part == null) continue;
+            if (rewardDesc.Length > 0) rewardDesc.Append(" + ");
+            rewardDesc.Append(part);
+        }
         sellButtonText.text = $"판매\n({rewardDesc})";
     }
 
@@ -675,7 +693,8 @@ public class GameHud : MonoBehaviour
 
         Selectable single = selection.Selected[0];
         if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null ||
-            (identity.Data.sellRewardWisp == null && identity.Data.sellRewardTraitPoints <= 0)) return;
+            (identity.Data.sellRewardWisp == null && identity.Data.sellRewardTraitPoints <= 0 &&
+             identity.Data.sellTriggersItemGamblePool == null)) return;
 
         if (!single.TryGetComponent(out OwnedByPlayer owner)) return;
 
@@ -689,6 +708,17 @@ public class GameHud : MonoBehaviour
             {
                 List<WispReward> reward = new List<WispReward> { new WispReward { wisp = identity.Data.sellRewardWisp, count = 1 } };
                 RewardDistributor.Instance.GrantWisps(context, reward);
+            }
+
+            // h0BS(메타몽) 전용 — 재고(ItemGambleState.stock) 차감·도박·풀 제외 등록은
+            // TryGamble 안에서 전부 처리한다(§31). 재고가 0이면 false를 돌려주지만
+            // 판매(유닛 소멸) 자체는 막지 않는다 — 위 sellRewardWisp/TraitPoints와 같은
+            // 관례로 "보상이 안 나올 수 있어도 판매는 항상 된다".
+            if (identity.Data.sellTriggersItemGamblePool != null && context.ItemGambleState != null &&
+                context.ItemGambleState.TryGamble(identity.Data.sellTriggersItemGamblePool, out ItemData wonItem) &&
+                wonItem != null)
+            {
+                ItemInventoryRef?.Add(wonItem);
             }
         }
 
