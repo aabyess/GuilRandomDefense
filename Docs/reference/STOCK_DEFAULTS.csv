@@ -1,0 +1,18 @@
+항목,대상,필드,확정값,확신도,근거,비고
+스톡 능력 기본값,ACbh (Bash),Hbh1 (발동확률),15,확정,warcraft.wiki.gg 크립능력 문구 + 원작 맵 469건 중 Hbh1=15가 0건(14/16/17/18은 존재) + 미지정 20건 중 14건 툴팁 15%,에디터는 기본값과 같은 값을 저장하지 않는다
+스톡 유닛 기본값,ogru (오크 그런트),udty (방어타입),large,확정,classic.battle.net 공식 Grunt=Heavy + UnitBalance.slk 덤프 Heavy + Wowpedia 에디터명 Large=게임명 Heavy,PM 기억 medium은 오류. large는 우리 4열 안
+열 인덱스,war3mapMisc.txt DamageBonus*,index 0,small (Light),확정,Hive Armor Types + 원작 ARMORTIP 3종 자기검증,원작 사용 0기
+열 인덱스,war3mapMisc.txt DamageBonus*,index 1,medium (Medium),확정,동일,원작 사용 0기. 값 전부 1.00 (Hero만 1.05)
+열 인덱스,war3mapMisc.txt DamageBonus*,index 6,divine (Divine),확정,동일,원작 사용 0기
+열 인덱스,war3mapMisc.txt DamageBonus*,index 7,none (Unarmored),확정,동일,원작 사용 0기
+툴팁 오류,A05R !매료매료 열매 Lv1,Hbh1,15 (툴팁은 10%),확정,Hbh3=10000·adur=0.6이 툴팁과 일치 → 툴팁이 ACbh를 설명한 게 맞는데 확률만 틀림,툴팁 신뢰 금지 사례
+툴팁 오류,A05S !매료매료 열매 Lv2,Hbh1,15 (툴팁은 20%),확정,Hbh3=150000·adur=0.8이 툴팁과 일치,툴팁 신뢰 금지 사례
+툴팁 누락,A0HD !용의 발톱,Hbh1,15,확정,툴팁의 14%는 트리거 채널용. Hbh2=4.0·Hbh3=150000은 툴팁 미기재,4배 크리티컬이 15%로 조용히 돈다
+툴팁 누락,A17K !불사조의 불꽃,Hbh1,15,확정,툴팁의 18%는 트리거 채널용. Hbh2=4.25·Hbh3=150000은 툴팁 미기재,
+게이트 아님,A0HA !용의 숨결,Hbh1,해당없음,확정,툴팁 「125번 공격시 발동」 = 타수 게이트,확률로 환산 금지
+실행 안 됨,A0TW !그림자 흡수,Hbh1,해당없음,확정,atar=none — 공격 대상 없는 버프 껍데기,ACbh가 돌지 않는다
+방어타입 확정,o000 고런트-보스,udty,large,확정,ogru 기반 udty 미지정 → 스톡 상속,
+방어타입 확정,o022 레벨 76 잡몹,udty,large,확정,동일,같은 라인의 64/67/72/77은 fort로 지정됨
+방어타입 확정,o026 레벨 71 바질 호킨스,udty,large,확정,동일,동일
+방어타입 확정,o027 레벨 73 퀸,udty,large,확정,동일,동일
+방어타입 확정,o028 레벨 66 호미즈,udty,large,확정,동일,동일
