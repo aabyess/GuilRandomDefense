@@ -1465,7 +1465,12 @@ public class UnitAttacker : MonoBehaviour
     {
         if (selfUpgradeData == null) return false;
         if (owner == null) return false;
-        if (selfUpgradeLevel >= selfUpgradeData.maxLevel) return false; // 원작 alev 상한(성공확률 공식이 이미 0%를 만들지만, 식이 바뀌어도 안전하게)
+        // ⚠️ 2026-09-06 정정(PM 지시): 레벨10 이상이면 시전 자체를 막던 안전장치를 뺐다 —
+        // 원작은 레벨10에서도 시전이 되고 성공확률만 공식으로 0%가 될 뿐, 자원 낭비 자체를
+        // 막지 않는다(그게 원작 밸런스의 일부다). "전부 원작대로" 기준상 이런 "더 친절한"
+        // 가드는 창작 허용 범위 밖이다 — 막았으면 위습이 원작보다 여유로워졌을 것이다.
+        // 아래 성공확률 계산(Mathf.Clamp(...,0,100))이 레벨10 이상에서 자연히 0%를 만드므로
+        // 상한 로직은 그쪽에만 있으면 충분하다.
 
         PlayerContext context = PlayerContext.Get(owner.OwnerId);
         if (context == null || context.ResourceWallet == null) return false;
