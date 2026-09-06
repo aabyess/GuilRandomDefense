@@ -87,6 +87,7 @@ public static class MapGenerator
             BuildUnitUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildOtherWorldUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildEternalUpgradeShop(root.transform, MapLayout.Lanes[i], i);
+            BuildAttackTypeUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildPirateQuestShop(root.transform, MapLayout.Lanes[i], i, pirateQuests);
             BuildStoryZonePortal(root.transform, MapLayout.Lanes[i], i);
             laneObjects.Add(laneObject);
@@ -254,9 +255,13 @@ public static class MapGenerator
     // 등록되지 않으니 적 타겟팅 후보에도 자연히 들어가지 않는다.
     // 레인 안 상점 건물들. 순찰 흙길(TrackInset 14)보다 안쪽, 레인 가운데에 가로로 늘어선다.
     // 자리는 인덱스로 잡는다 — 0 도박소, 1 유닛강화소, 2 다른세계강화소, 3 영원함강화소,
-    // 4 도움소, 5 해적단 판매 포탈. 슬롯을 늘려도 LaneShopSlot의 간격 계산이 strip 폭을
-    // 그대로 다시 나누므로 자리를 손으로 다시 잡을 필요가 없다.
-    const int LaneShopCount = 6;
+    // 4 도움소, 5 해적단 판매 포탈, 6 공격타입강화소. 슬롯을 늘려도 LaneShopSlot의 간격
+    // 계산이 strip 폭을 그대로 다시 나누므로 자리를 손으로 다시 잡을 필요가 없다.
+    //
+    // ⚠️ 6번(공격타입강화소)은 1번(유닛강화소)과 **다른 건물**이다 — 원작에 「강화소」라는
+    // 이름의 건물이 최소 셋 있고(등급트랙 / 캐릭터 전용 보너스 / 공격타입 매트릭스),
+    // 우리 1번이 그중 등급트랙이다. 하나로 합치지 말 것(뿌리 ㊴).
+    const int LaneShopCount = 7;
     const float LaneShopSize = 9f;
 
     // 상점 줄은 필드와 벽 하나로 갈린다 — 적이 도는 곳과 내가 쓰는 곳이 눈으로 구분돼야 한다.
@@ -484,6 +489,7 @@ public static class MapGenerator
     };
 
     const string UnitUpgradeFolder = "Assets/Data/UnitUpgrades";
+    const string AttackTypeUpgradeFolder = "Assets/Data/AttackTypeUpgrades";
 
     static void BuildUnitUpgradeShop(Transform parent, MapLayout.Island lane, int laneIndex)
     {
@@ -501,6 +507,41 @@ public static class MapGenerator
     {
         BuildUpgradeShop(parent, lane, laneIndex, "영원함강화소", 3, "combine",
                          new[] { "영원함 강화" });
+    }
+
+    // 공격타입강화소(원작 「강화소 3」) — 유닛강화소(강화소 1)와 트랙 타입 자체가 다르므로
+    // BuildUpgradeShop을 재사용하지 않고 따로 짓는다. 마스터버튼 4개(일반·공성·관통·패기)를
+    // 판다. 자산 폴더도 분리돼 있다 — 스키마가 달라 같은 폴더에 두면 검사기가 오탐을 낸다.
+    static void BuildAttackTypeUpgradeShop(Transform parent, MapLayout.Island lane, int laneIndex)
+    {
+        GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_공격타입강화소",
+            LaneShopSlot(lane, 6), laneIndex, "display");
+
+        AttackTypeUpgradeShop attackShop = shop.AddComponent<AttackTypeUpgradeShop>();
+        SerializedObject so = new SerializedObject(attackShop);
+        SerializedProperty tracksProp = so.FindProperty("tracks");
+
+        // 폴더를 통째로 스캔한다 — 트랙이 늘어도 이 목록을 손보지 않게. 이름 순으로 고정해
+        // 맵을 다시 생성해도 슬롯 순서가 안 흔들린다.
+        List<AttackTypeUpgradeTrackData> tracks = AssetDatabase
+            .FindAssets("t:AttackTypeUpgradeTrackData", new[] { AttackTypeUpgradeFolder })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .OrderBy(path => path, System.StringComparer.Ordinal)
+            .Select(AssetDatabase.LoadAssetAtPath<AttackTypeUpgradeTrackData>)
+            .Where(track => track != null)
+            .ToList();
+
+        if (tracks.Count == 0)
+            Debug.LogWarning($"[맵] 공격타입 강화 트랙 에셋을 찾지 못했습니다: {AttackTypeUpgradeFolder}");
+
+        tracksProp.ClearArray();
+        for (int i = 0; i < tracks.Count; i++)
+        {
+            tracksProp.InsertArrayElementAtIndex(i);
+            tracksProp.GetArrayElementAtIndex(i).objectReferenceValue = tracks[i];
+        }
+
+        so.ApplyModifiedProperties();
     }
 
     static void BuildUpgradeShop(Transform parent, MapLayout.Island lane, int laneIndex,
