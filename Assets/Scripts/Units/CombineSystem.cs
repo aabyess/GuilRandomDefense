@@ -193,6 +193,13 @@ public class CombineSystem : MonoBehaviour
 
         // 결과도 필드에 나와야 한다. Spawn이 인벤토리 등록까지 하므로 따로 Add하지 않는다.
         spawner.Spawn(recipe.result, resultPosition, ownerId);
+
+        // 도움소 「능력치 증가」(H0B7) 선행 조건(Rhfl) — 초월함 조합을 완료한 순간 켠다.
+        // 원작은 이 순간부터 계속 조합해도 다시 안 꺼진다(한 번만 넘으면 되는 문턱)이라
+        // 되돌리는 코드는 없다.
+        if (recipe.result.grade == UnitGrade.Transcendent)
+            OwnerContext?.MarkTranscendentCombineCompleted();
+
         return true;
     }
 

@@ -402,12 +402,33 @@ public class UnitAttacker : MonoBehaviour
     const float MainStatGrowthPerLevel = 0.85f;
     const float SecondaryStatGrowthPerLevel = 0.21f;
 
+    // 도움소 「능력치 증가」(H0B7, 사장님 결정 2026-09-06) — 유닛 종류 데이터(UnitData)가
+    // 아니라 플레이어 진행 상태다(아침에 확인한 그대로: baseX/xPerLevel은 "이 유닛이
+    // 어떤 영웅인가"이고, 구매분은 "이 판에서 플레이어가 얼마나 샀는가"라 성격이 다르다).
+    // 그래서 UnitData가 아니라 여기(런타임 인스턴스)에 카운터로 둔다. 원작은
+    // GetRandomInt(1,3)으로 STR/AGI/INT 중 하나만 골라 +1 — 무엇이 오를지 플레이어가
+    // 못 고른다(설계 의도, 기대비용을 주스탯 1점당 3배로 만든다). SupportShop이 그 굴림을
+    // 하고 이 카운터엔 "이미 정해진 결과"만 들어온다(AddPurchasedStat).
+    int purchasedStrength;
+    int purchasedAgility;
+    int purchasedIntelligence;
+
+    public void AddPurchasedStat(int statIndex)
+    {
+        switch (statIndex)
+        {
+            case 0: purchasedStrength++; break;
+            case 1: purchasedAgility++; break;
+            case 2: purchasedIntelligence++; break;
+        }
+    }
+
     public float CurrentStrength
     {
         get
         {
             UnitData unitData = identity != null ? identity.Data : null;
-            return unitData != null ? unitData.baseStrength + unitData.strengthPerLevel * heroLevel : 0f;
+            return unitData != null ? unitData.baseStrength + unitData.strengthPerLevel * heroLevel + purchasedStrength : 0f;
         }
     }
 
@@ -416,7 +437,7 @@ public class UnitAttacker : MonoBehaviour
         get
         {
             UnitData unitData = identity != null ? identity.Data : null;
-            return unitData != null ? unitData.baseAgility + unitData.agilityPerLevel * heroLevel : 0f;
+            return unitData != null ? unitData.baseAgility + unitData.agilityPerLevel * heroLevel + purchasedAgility : 0f;
         }
     }
 
@@ -425,14 +446,26 @@ public class UnitAttacker : MonoBehaviour
         get
         {
             UnitData unitData = identity != null ? identity.Data : null;
-            return unitData != null ? unitData.baseIntelligence + unitData.intelligencePerLevel * heroLevel : 0f;
+            return unitData != null ? unitData.baseIntelligence + unitData.intelligencePerLevel * heroLevel + purchasedIntelligence : 0f;
         }
     }
 
     // EnemyDummy.TakeDamage의 사망 처리(RewardDistributor.GrantKillReward와 같은 자리)가
     // 부른다 — laneIndex(원작 GetUnitUserData와 같은 라인 소유자 변수)의 초월함·영원한
     // 유닛 전원에게 킬 경험치 1을 준다. 누가 죽였는지는 안 본다(원작 그대로).
-    public static void GrantHeroKillExperienceToLane(int laneIndex)
+    public static void GrantHeroKillExperienceToLane(int laneIndex) =>
+        ForEachHeroInLane(laneIndex, attacker => attacker.GainKillExperience());
+
+    // 도움소 「능력치 증가」 전용 — statIndex 0=STR·1=AGI·2=INT. 대상 집합이
+    // GrantHeroKillExperienceToLane과 완전히 같다(원작이 같은 그룹 udg_Exp_Hero_Group을
+    // 재사용) — 그래서 순회를 ForEachHeroInLane으로 뽑아 공유한다(PM 지시).
+    public static void GrantHeroStatIncreaseToLane(int laneIndex, int statIndex) =>
+        ForEachHeroInLane(laneIndex, attacker => attacker.AddPurchasedStat(statIndex));
+
+    // udg_Exp_Hero_Group에 등록되는 건 아무 유닛이 아니라 **조합으로 만든 초월함·영원한
+    // 등급 영웅뿐**이다(각 Trig_Eternal_* 조합 트리거가 생성 직후 그룹에 넣는다) — 그래서
+    // UnitData.grade로 그 두 등급만 거른다.
+    static void ForEachHeroInLane(int laneIndex, System.Action<UnitAttacker> action)
     {
         if (laneIndex < 0) return;
 
@@ -441,7 +474,7 @@ public class UnitAttacker : MonoBehaviour
             if (identity == null || identity.Data == null) continue;
             if (identity.Data.grade != UnitGrade.Transcendent && identity.Data.grade != UnitGrade.Eternal) continue;
             if (identity.OwnerId != laneIndex) continue;
-            if (identity.TryGetComponent(out UnitAttacker attacker)) attacker.GainKillExperience();
+            if (identity.TryGetComponent(out UnitAttacker attacker)) action(attacker);
         }
     }
 

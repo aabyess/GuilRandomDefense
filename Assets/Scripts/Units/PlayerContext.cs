@@ -77,6 +77,16 @@ public class PlayerContext : MonoBehaviour
         isDead = true;
     }
 
+    // 도움소 「능력치 증가」(H0B7) 선행 조건 — 원작 Rhfl(초월함 조합 완료). 세이브/로드가
+    // 없는 한 판짜리 진행 상태라 GamblingProgress와 같은 결로 런타임 bool만 둔다.
+    // CombineSystem.TryCombine이 결과 등급이 초월함일 때 세운다.
+    public bool HasCompletedTranscendentCombine { get; private set; }
+
+    public void MarkTranscendentCombineCompleted()
+    {
+        HasCompletedTranscendentCombine = true;
+    }
+
     /// <summary>해당 슬롯에 실제 플레이어가 있으면 그 컨텍스트를, 비어 있으면 null.</summary>
     public static PlayerContext GetOccupied(int playerId)
     {

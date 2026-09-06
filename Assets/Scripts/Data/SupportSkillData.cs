@@ -26,6 +26,13 @@ public enum SupportSkillEffect
     // 대상 지정 없이 흔함 선택위습 1기를 필드에 만들어낸다(선택위습제조). ManaRestore와 같은
     // "자기 자신에게 즉발"류라 targetKind는 의미 없다(원작 능력 데이터도 atar가 none이었다).
     CraftChosenWisp,
+
+    // ⚠️ 맨 뒤에 추가 — 직렬화 순서를 지킨다. (2026-09-06, 사장님 결정 01번④, H0B7)
+    // "능력치 증가" — CraftChosenWisp와 같은 "자기 자신에게 즉발"류(targetKind 의미 없음).
+    // STR/AGI/INT 중 하나를 GetRandomInt(1,3)으로 무작위로 골라(플레이어가 못 고른다 —
+    // 기대비용을 주스탯 1점당 3배로 만드는 설계 의도, UI에 선택지를 만들지 말 것) 그
+    // 라인의 등록 영웅(초월함·영원한) 전원에게 +1. SupportShop.TryHeroStatIncrease 참고.
+    HeroStatIncrease,
 }
 
 [System.Serializable]
@@ -114,6 +121,12 @@ public class SupportSkillData : ScriptableObject
     [Header("연금술 전용 (targetKind == Unit)")]
     public UnitGrade maxDismantleGrade = UnitGrade.Rare;
     public List<GradeManaRefund> dismantleRefunds;
+
+    // 능력치 증가(H0B7) 전용 — 원작 선행 조건 "초월함 조합 완료"(Rhfl). false(기본값)면
+    // 조건 없음 — 기존 스킬 전부 이 필드가 없어 회귀 없다. PlayerContext.
+    // HasCompletedTranscendentCombine을 CombineSystem.TryCombine이 세운다.
+    [Header("능력치 증가(H0B7) 전용 — 선행 조건: 초월함 조합 완료")]
+    public bool requiresTranscendentCombine;
 
     public float ComputeDamage(int currentRound)
     {

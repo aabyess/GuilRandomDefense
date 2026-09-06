@@ -74,9 +74,12 @@ public class SupportShop : MonoBehaviour, ILaneShop
     }
 
     // 대상 지정 없이 자기 자신에게 바로 발동하는 이펙트들 — 마나포션(마나 회복),
-    // 선택위습제조(원작에서도 targetKind가 "none"이었다, 2026-09-04 확인).
+    // 선택위습제조(원작에서도 targetKind가 "none"이었다, 2026-09-04 확인), 능력치 증가
+    // (H0B7 — 대상은 캐스터가 아니라 라인 등록 영웅 전원이지만, 커서로 지점·유닛을 찍는
+    // 조작 자체가 없다는 점에서 위 둘과 같다).
     static bool IsSelfCast(SupportSkillEffect effect) =>
-        effect == SupportSkillEffect.ManaRestore || effect == SupportSkillEffect.CraftChosenWisp;
+        effect == SupportSkillEffect.ManaRestore || effect == SupportSkillEffect.CraftChosenWisp ||
+        effect == SupportSkillEffect.HeroStatIncrease;
 
     // 호버할 때만 불린다 — 문자열 조립은 여기서만 한다(GetSlotView는 매번 문자열을 만들지 않는다).
     public string GetSlotTooltip(int index)
@@ -115,6 +118,9 @@ public class SupportShop : MonoBehaviour, ILaneShop
 
         if (skill.goldCost > 0 && (context.GoldWallet == null || context.GoldWallet.Gold < skill.goldCost))
             return "골드가 부족합니다.";
+
+        if (skill.requiresTranscendentCombine && !context.HasCompletedTranscendentCombine)
+            return "초월함 조합을 먼저 완료해야 합니다.";
 
         return null;
     }
@@ -172,6 +178,9 @@ public class SupportShop : MonoBehaviour, ILaneShop
         if (skill.duration > 0f)
             tooltipBuilder.Append("\n지속시간: ").Append(skill.duration.ToString("0.#")).Append('s');
 
+        if (skill.requiresTranscendentCombine)
+            tooltipBuilder.Append("\n선행 조건: 초월함 조합 완료");
+
         return tooltipBuilder.ToString();
     }
 
@@ -193,6 +202,9 @@ public class SupportShop : MonoBehaviour, ILaneShop
             return false;
 
         if (skill.goldCost > 0 && (context.GoldWallet == null || context.GoldWallet.Gold < skill.goldCost))
+            return false;
+
+        if (skill.requiresTranscendentCombine && !context.HasCompletedTranscendentCombine)
             return false;
 
         return true;
@@ -249,6 +261,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
         if (skill == null) return false;
         if (skill.effect == SupportSkillEffect.ManaRestore) return TryManaRestore(skill, out failReason);
         if (skill.effect == SupportSkillEffect.CraftChosenWisp) return TryCraftChosenWisp(skill, out failReason);
+        if (skill.effect == SupportSkillEffect.HeroStatIncrease) return TryHeroStatIncrease(skill, out failReason);
         return false;
     }
 
@@ -281,6 +294,26 @@ public class SupportShop : MonoBehaviour, ILaneShop
             List<WispReward> reward = new List<WispReward> { new WispReward { wisp = skill.craftedWisp, count = 1 } };
             RewardDistributor.Instance.GrantWisps(context, reward);
         }
+
+        StartCooldown(skill);
+        return true;
+    }
+
+    // 능력치 증가(H0B7, 사장님 결정 01번④) — 초월함 조합 완료(Rhfl) 선행 조건을 넘겼으면
+    // STR/AGI/INT 중 하나를 무작위로 골라(플레이어가 못 고른다 — 원작 설계 의도, 기대비용을
+    // 주스탯 1점당 3배로 만든다) 이 라인의 등록 영웅(초월함·영원한) 전원에게 +1.
+    // UnitAttacker.GrantHeroKillExperienceToLane과 대상 집합이 완전히 같아 그 순회를
+    // 공유한다(GrantHeroStatIncreaseToLane).
+    bool TryHeroStatIncrease(SupportSkillData skill, out string failReason)
+    {
+        failReason = null;
+        PlayerContext context = OwnerContext;
+
+        if (!CanCast(skill)) { failReason = CastUnavailableReason(skill, context); return false; }
+        if (!TrySpendCost(skill, context)) { failReason = CastUnavailableReason(skill, context); return false; }
+
+        int statIndex = Random.Range(0, 3); // 0=STR·1=AGI·2=INT — UI에 선택지를 만들지 말 것.
+        UnitAttacker.GrantHeroStatIncreaseToLane(owner.OwnerId, statIndex);
 
         StartCooldown(skill);
         return true;
