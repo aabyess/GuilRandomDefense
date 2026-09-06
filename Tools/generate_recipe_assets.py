@@ -1,4 +1,16 @@
 # -*- coding: utf-8 -*-
+"""⚠️⚠️⚠️ 재실행 금지(PM 지시, 2026-09-06) — 아래 GRADE/TIER 딕셔너리는 자체 하드코딩이고
+Assets/Scripts/Data/UnitData.cs의 실제 UnitGrade enum·Tier()와 이미 어긋나 있다(낡은
+9단계 스킴 — RandomUnit=-1, OtherWorld=7. 현재 Tier()는 RandomUnit=7, OtherWorld=8,
+Transcendent=9, Limited=10, Immortal=11, TranscendentWisp=99).
+
+이 스크립트는 단발성 생성기라(Assets/Data/Recipes/ 에셋을 이미 다 써 놓았다) 지금은
+아무도 안 부르는 죽은 코드지만, 다시 돌리면 위 딕셔너리 값 그대로 조합식을 다시 써서
+잘못된 등급·티어로 덮어쓴다 — 오늘 translate_hidden_recipes.py에서 똑같은 함정을
+실제로 밟았다(자체 등급 딕셔너리가 낡아 22개 중 20개가 조용히 바뀜, 커밋 e5caf3a).
+다시 쓸 일이 생기면 GRADE/TIER를 UnitData.cs에서 파싱하도록 먼저 고칠 것
+(Tools/simulate_balance.py의 parse_tier_mapping() 패턴 참고).
+"""
 import os, sys, uuid, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import recipes_data as D
