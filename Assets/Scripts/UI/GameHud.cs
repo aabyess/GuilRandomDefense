@@ -64,12 +64,16 @@ public class GameHud : MonoBehaviour
     bool lastTraitButtonUnlocked;
     int lastTraitButtonPoints = int.MinValue;
 
-    // 05번 「고대의 배」(사장님 확정 2026-09-06) 버튼 — 특성강화 버튼과 같은 이유로 같은
-    // 자리(선택 시 뜨는 전용 버튼)에 둔다. UnitData.isAncientShip이 있을 때만 뜬다.
-    GameObject ancientShipButtonPanel;
-    Text ancientShipButtonText;
-    Button ancientShipButtonComponent;
-    int lastAncientShipWood = int.MinValue;
+    // 05번 「고대의 배」도박 능력 버튼들(2026-09-06 목록화) — 특성강화 버튼과 같은 이유로
+    // 같은 열(선택 시 뜨는 전용 버튼)에 둔다. UnitData.gambleOptions 항목 수만큼 뜬다.
+    // 슬롯 3개를 미리 만들어두고 항목 수만큼만 켠다 — 지금 알려진 목록 최대 크기(h05Y의
+    // A023·A0OD·A0OC)에 맞춘 것이지 "나중에 늘 것 같아서" 여유를 둔 게 아니다
+    // (RewardDistributor.startingSpecialUnit과 같은 원칙).
+    const int GambleButtonSlotCount = 3;
+    readonly GameObject[] gambleButtonPanels = new GameObject[GambleButtonSlotCount];
+    readonly Text[] gambleButtonTexts = new Text[GambleButtonSlotCount];
+    readonly Button[] gambleButtonComponents = new Button[GambleButtonSlotCount];
+    readonly int[] lastGambleButtonWood = new int[GambleButtonSlotCount];
 
     // "유닛 판매" 버튼(2026-09-06, PM 지시) — 같은 이유로 같은 열, 고대의 배 버튼 바로
     // 아래. UnitData.sellRewardWisp/sellRewardTraitPoints 둘 다 비어있지 않을 때만 뜬다
@@ -182,7 +186,7 @@ public class GameHud : MonoBehaviour
         RefreshShopTargeting();
         RefreshHoveredTooltip();
         RefreshTraitButton();
-        RefreshAncientShipButton();
+        RefreshGambleButtons();
         RefreshSellButton();
     }
 
@@ -242,7 +246,7 @@ public class GameHud : MonoBehaviour
         BuildStoryPanel();
         BuildTeamPanel();
         BuildTraitButton();
-        BuildAncientShipButton();
+        BuildGambleButtons();
         BuildSellButton();
         // 왼쪽 유닛 목록은 만들지 않는다. 화면 절반을 덮는데, 무엇을 들고 있는지는
         // 아래 명령 카드 그리드가 이미 보여준다. (F1 디버그 HUD에도 같은 목록이 있다.)
@@ -408,77 +412,95 @@ public class GameHud : MonoBehaviour
         lastTraitButtonPoints = int.MinValue;
     }
 
-    // TraitButtonPanel(0.51~0.70, 0.90~0.95) 바로 아래 — 같은 이유(단일 선택 시 뜨는 전용
-    // 버튼)라 같은 열에 쌓는다. 05번 사양(ANCIENT_SHIP_SPEC_2026-09-06.md) 그대로.
-    void BuildAncientShipButton()
+    // TraitButtonPanel(0.51~0.70, 0.90~0.95) 위쪽 열 바로 아래에서 시작해 슬롯마다 한 칸씩
+    // 내려간다 — 같은 이유(단일 선택 시 뜨는 전용 버튼)라 같은 열에 쌓는다.
+    void BuildGambleButtons()
     {
-        RectTransform panel = CreatePanel(transform, "AncientShipButtonPanel", new Color(1f, 1f, 1f, 0.15f));
-        SetAnchors(panel, new Vector2(0.51f, 0.84f), new Vector2(0.70f, 0.89f));
+        for (int i = 0; i < GambleButtonSlotCount; i++)
+        {
+            float top = 0.77f - i * 0.06f;
+            float bottom = top - 0.05f;
 
-        Button button = panel.gameObject.AddComponent<Button>();
-        button.onClick.AddListener(OnAncientShipButtonClicked);
+            RectTransform panel = CreatePanel(transform, $"GambleButtonPanel{i}", new Color(1f, 1f, 1f, 0.15f));
+            SetAnchors(panel, new Vector2(0.51f, bottom), new Vector2(0.70f, top));
 
-        ancientShipButtonText = CreateLabel(panel, "AncientShipButtonText", "");
-        ancientShipButtonText.fontSize = 16;
-        ancientShipButtonText.raycastTarget = false;
+            int index = i;
+            Button button = panel.gameObject.AddComponent<Button>();
+            button.onClick.AddListener(() => OnGambleButtonClicked(index));
 
-        ancientShipButtonPanel = panel.gameObject;
-        ancientShipButtonComponent = button;
-        ancientShipButtonPanel.SetActive(false);
+            Text label = CreateLabel(panel, $"GambleButtonText{i}", "");
+            label.fontSize = 16;
+            label.raycastTarget = false;
+
+            gambleButtonPanels[i] = panel.gameObject;
+            gambleButtonTexts[i] = label;
+            gambleButtonComponents[i] = button;
+            lastGambleButtonWood[i] = int.MinValue;
+            gambleButtonPanels[i].SetActive(false);
+        }
     }
 
-    // 단일 선택 + UnitData.isAncientShip일 때만 보인다(트레잇 버튼과 같은 관례). 버튼은
+    // 단일 선택 + UnitData.gambleOptions 항목 수만큼 보인다(트레잇 버튼과 같은 관례). 버튼은
     // 목재가 모자라도 항상 눌리게 둔다 — 원작이 "목재 부족=stop 명령"이라 조건 미달을
-    // 구매 실패와 다르게 다뤄야 하고(ExecuteAncientShipCast 참고), interactable을 꺼서
+    // 구매 실패와 다르게 다뤄야 하고(OnGambleButtonClicked 참고), interactable을 꺼서
     // 미리 막으면 그 구분이 화면에 아예 안 보인다.
-    void RefreshAncientShipButton()
+    void RefreshGambleButtons()
     {
-        if (ancientShipButtonPanel == null) return;
-
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1) { HideAncientShipButton(); return; }
+        UnitData data = null;
+        OwnedByPlayer owner = null;
+        if (selection != null && selection.Selected.Count == 1)
+        {
+            Selectable single = selection.Selected[0];
+            if (single != null && single.TryGetComponent(out UnitIdentity identity) && identity.Data != null)
+            {
+                data = identity.Data;
+                single.TryGetComponent(out owner);
+            }
+        }
 
-        Selectable single = selection.Selected[0];
-        if (single == null || !single.TryGetComponent(out UnitIdentity identity) ||
-            identity.Data == null || !identity.Data.isAncientShip)
-        { HideAncientShipButton(); return; }
-
-        if (!single.TryGetComponent(out OwnedByPlayer owner)) { HideAncientShipButton(); return; }
-
-        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        int count = (data != null && data.gambleOptions != null) ? data.gambleOptions.Count : 0;
+        PlayerContext context = owner != null ? PlayerContext.Get(owner.OwnerId) : null;
         ResourceWallet wallet = context != null ? context.ResourceWallet : null;
-        if (wallet == null) { HideAncientShipButton(); return; }
 
-        ancientShipButtonPanel.SetActive(true);
+        for (int i = 0; i < GambleButtonSlotCount; i++)
+        {
+            if (gambleButtonPanels[i] == null) continue;
+            if (i >= count || wallet == null) { HideGambleButton(i); continue; }
 
-        int wood = wallet.Get(ResourceType.Wood);
-        if (wood == lastAncientShipWood) return;
-        lastAncientShipWood = wood;
+            gambleButtonPanels[i].SetActive(true);
 
-        ancientShipButtonText.text = $"고대의 배 시전\n(목재 {AncientShipWoodCost} 소모, 보유 {wood})";
+            int wood = wallet.Get(ResourceType.Wood);
+            if (wood == lastGambleButtonWood[i]) continue;
+            lastGambleButtonWood[i] = wood;
+
+            UnitGambleOption option = data.gambleOptions[i];
+            gambleButtonTexts[i].text = $"{data.unitName} 시전({option.abilityId})\n(목재 {option.woodCost} 소모, 보유 {wood}, 성공 {option.successChance:P0})";
+        }
     }
 
-    void HideAncientShipButton()
+    void HideGambleButton(int index)
     {
-        if (ancientShipButtonPanel != null && ancientShipButtonPanel.activeSelf) ancientShipButtonPanel.SetActive(false);
-        lastAncientShipWood = int.MinValue;
+        if (gambleButtonPanels[index] != null && gambleButtonPanels[index].activeSelf) gambleButtonPanels[index].SetActive(false);
+        lastGambleButtonWood[index] = int.MinValue;
     }
 
-    // ANCIENT_SHIP_SPEC_2026-09-06.md 표 그대로: 목재 4(성공·실패 둘 다 차감) → 40% →
-    // 성공 시 해적선 생성. 배는 성공·실패 무관하게 항상 사라진다(RemoveUnit) — 단,
-    // 목재가 애초에 모자라면 이 함수는 아무것도 안 하고 끝난다(차감도 소모도 없음, "조건
-    // 미달"과 "도박 실패"를 같은 경로로 처리하면 안 된다는 사양 경고 그대로).
-    const int AncientShipWoodCost = 4;
-    const float AncientShipSuccessChance = 0.40f;
-
-    void OnAncientShipButtonClicked()
+    // ANCIENT_SHIP_SPEC_2026-09-06.md 표(A023 기준 확인값)를 셋 다에 같은 경로로 적용한다:
+    // 목재 woodCost(성공·실패 둘 다 차감) → successChance → 성공 시 resultUnit(또는
+    // resultPool에서 랜덤) 생성. 시전 유닛은 성공·실패 무관하게 항상 사라진다(RemoveUnit)
+    // — 단, 목재가 애초에 모자라면 이 함수는 아무것도 안 하고 끝난다(차감도 소모도 없음,
+    // "조건 미달"과 "도박 실패"를 같은 경로로 처리하면 안 된다는 사양 경고 그대로).
+    void OnGambleButtonClicked(int index)
     {
         SelectionManager selection = Selection;
         if (selection == null || selection.Selected.Count != 1) return;
 
         Selectable single = selection.Selected[0];
-        if (single == null || !single.TryGetComponent(out UnitIdentity identity) ||
-            identity.Data == null || !identity.Data.isAncientShip) return;
+        if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null) return;
+
+        List<UnitGambleOption> options = identity.Data.gambleOptions;
+        if (options == null || index >= options.Count) return;
+        UnitGambleOption option = options[index];
 
         if (!single.TryGetComponent(out OwnedByPlayer owner)) return;
 
@@ -488,20 +510,23 @@ public class GameHud : MonoBehaviour
 
         // 목재 부족 — 실패가 아니라 "조건 미달"이다. TrySpend가 모자라면 아무것도 안 깎고
         // false를 돌려주므로 여기서 그냥 리턴하면 원작의 "차감 없이 stop 명령만"과 같다.
-        if (!wallet.TrySpend(ResourceType.Wood, AncientShipWoodCost))
+        if (!wallet.TrySpend(ResourceType.Wood, option.woodCost))
         {
             PlayerNotification.Show(owner.OwnerId, "목재가 부족합니다!");
             return;
         }
 
-        UnitData resultUnit = identity.Data.ancientShipResultUnit;
         Vector3 shipPosition = identity.transform.position;
-        bool success = Random.value < AncientShipSuccessChance;
+        bool success = Random.value < option.successChance;
 
-        // 여기부턴 목재가 이미 나갔다 — 성공/실패 상관없이 배가 사라진다(원작 RemoveUnit).
+        // 여기부턴 목재가 이미 나갔다 — 성공/실패 상관없이 시전 유닛이 사라진다(원작 RemoveUnit).
         identity.Consume();
 
         if (!success) return;
+
+        UnitData resultUnit = option.resultUnit;
+        if (resultUnit == null && option.resultPool != null && option.resultPool.Count > 0)
+            resultUnit = option.resultPool[Random.Range(0, option.resultPool.Count)];
 
         UnitSpawner spawner = Spawner;
         if (spawner == null || resultUnit == null) return;
