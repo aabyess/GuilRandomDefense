@@ -124,6 +124,17 @@ public enum SkillEffectBasis
     CasterStrength,
     CasterAgility,
     CasterIntelligence,
+
+    // ⚠️ 맨 뒤에 추가 — 직렬화 순서를 지킨다. (2026-09-06, A0LZ_CASTER_STACK_INVESTIGATION.md/7703d2c)
+    // 원작 `GetUnitAbilityLevelSwapped('AXXX', 시전자)` 꼴이되 CasterSkillLevel과는 다르다 —
+    // CasterSkillLevel은 능력 레벨이 1/2뿐이고 SkillData.levels[0]/[1]과 1:1 대응하는데, 이 축은
+    // 시전자 자신이 영구히 쌓는 0~N 정수 레벨(원작 비비 A0LZ, 0~10)로, 능력 자체의 필드값은
+    // 상수(장식)고 밖에서 읽는 레벨 정수 그 자체가 진짜 스탯이다 — A11S와 같은 "카운터 전용"
+    // 부류다. CasterStrength/Agility/Intelligence(영웅스탯, 파티 전체 공유 성장치)와도 다르고,
+    // casterBuffCountFactor(현재 버프 개수, 일시적)와도 다르다 — A0LZ는 리셋 없이 영구 누적된다.
+    // UnitAttacker.SelfUpgradeLevel(유닛 인스턴스별 런타임 카운터, TryUpgradeSelf로 올림)이
+    // 이 값을 들고 있다. multiplier/bonus는 다른 레벨 기반 basis와 같은 관례(level×multiplier+bonus).
+    CasterSelfUpgradeLevel,
 }
 
 // 무엇을 하는 효과인가.

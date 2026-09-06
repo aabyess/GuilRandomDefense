@@ -30,6 +30,16 @@ public class UnitAttacker : MonoBehaviour
     UnitCombat combat;
     UnitIdentity identity;
 
+    // 원작 비비 A0LZ류 자가시전 영구 강화(A0LZ_CASTER_STACK_INVESTIGATION.md/7703d2c) — 유닛
+    // 인스턴스마다 따로 쌓인다(WC3 GetUnitAbilityLevelSwapped가 유닛 핸들 단위이듯, 비비가
+    // 둘이면 각자 자기 레벨을 갖는다). 직렬화 안 함 — 런타임에만 존재하는 상태다(EnemyDummy의
+    // aegrStackLevels 등과 같은 부류). selfUpgradeData가 비어 있으면(대부분의 유닛) TryUpgradeSelf가
+    // 안전하게 실패한다 — 이 능력을 가진 유닛(비비)만 자산에 채워 넣으면 된다.
+    [SerializeField] SelfUpgradeAbilityData selfUpgradeData;
+    int selfUpgradeLevel;
+
+    public int SelfUpgradeLevel => selfUpgradeLevel;
+
     // 특성강화(딜증가) + 연구소(등급 전체 강화, 05번 2026-09-05 추가)가 이 유닛 종에 거는
     // 영구 배율 둘을 곱해서 낸다. attackDamage(원본)는 그대로 두고 여기서만 곱한다 — 도움소의
     // 임시 버프(ApplyStats로 원본값을 기억했다 되돌리는 방식)와 순서 상관없이 겹쳐도 안
@@ -1169,6 +1179,11 @@ public class UnitAttacker : MonoBehaviour
             case SkillEffectBasis.CasterStrength: return CurrentStrength * effect.multiplier + effect.bonus;
             case SkillEffectBasis.CasterAgility: return CurrentAgility * effect.multiplier + effect.bonus;
             case SkillEffectBasis.CasterIntelligence: return CurrentIntelligence * effect.multiplier + effect.bonus;
+            // 원작 비비 A0LZ류 자가시전 영구 강화 레벨(0~N) x multiplier + bonus. selfUpgradeLevel은
+            // TryUpgradeSelf로만 오르고(A0LZ_CASTER_STACK_INVESTIGATION.md/7703d2c) 리셋이 없다 —
+            // CasterSkillLevel(능력 레벨 1/2 전용)과 다른 축이다. 기본값 0이라 배선 전엔 항상
+            // bonus만 나간다(회귀 없음).
+            case SkillEffectBasis.CasterSelfUpgradeLevel: return selfUpgradeLevel * effect.multiplier + effect.bonus;
             default: return 0f;
         }
     }
@@ -1439,6 +1454,59 @@ public class UnitAttacker : MonoBehaviour
     }
 
     void HandleUpgradesChanged() => upgradeMultiplierDirty = true;
+
+    /// <summary>원작 비비 A0LZ류 자가시전 영구 강화 시도(A0LZ_CASTER_STACK_INVESTIGATION.md/
+    /// 7703d2c) — 상점이 아니라 유닛 자신의 액션이라 GamblingShop에 안 얹는다(PM 지시).
+    /// 자원(목재+위습)은 <b>성공/실패 무관하게 매 시도 소모</b>된다 — 원작 그대로다. 자원이
+    /// 부족하면(둘 중 하나라도) 아무것도 안 깎고 그대로 실패 반환(원작 "랜덤위습의 개수나
+    /// 목재가 부족합니다" 입장 게이트와 같다). 골드/자원 순서 되돌림은 GamblingShop.TryRollUnit의
+    /// "먼저 뺀 것을 나중 실패에 되돌린다" 패턴을 그대로 따른다.</summary>
+    public bool TryUpgradeSelf()
+    {
+        if (selfUpgradeData == null) return false;
+        if (owner == null) return false;
+        if (selfUpgradeLevel >= selfUpgradeData.maxLevel) return false; // 원작 alev 상한(성공확률 공식이 이미 0%를 만들지만, 식이 바뀌어도 안전하게)
+
+        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        if (context == null || context.ResourceWallet == null) return false;
+
+        if (!context.ResourceWallet.TrySpend(ResourceType.Wood, selfUpgradeData.woodCost))
+            return false;
+
+        List<Wisp> candidates = null;
+        if (selfUpgradeData.wispCurrency != null)
+        {
+            candidates = new List<Wisp>();
+            foreach (Wisp w in Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None))
+                if (w != null && !w.IsConsumed && w.Data == selfUpgradeData.wispCurrency)
+                    candidates.Add(w);
+        }
+
+        if (candidates == null || candidates.Count < selfUpgradeData.wispCost)
+        {
+            // 위습 자산이 아직 안 배정됐거나(candidates==null) 맵에 부족하면 목재를 되돌리고 실패.
+            context.ResourceWallet.Add(ResourceType.Wood, selfUpgradeData.woodCost);
+            return false;
+        }
+
+        // 맵에서 무작위로 wispCost기를 골라 소모한다(원작 "무작위로 3기를 집어 제거").
+        for (int i = 0; i < selfUpgradeData.wispCost; i++)
+        {
+            int pick = Random.Range(0, candidates.Count);
+            candidates[pick].MarkConsumed();
+            Destroy(candidates[pick].gameObject);
+            candidates.RemoveAt(pick);
+        }
+
+        float successChance = Mathf.Clamp(
+            selfUpgradeData.baseChancePercent - selfUpgradeLevel * selfUpgradeData.chancePerLevelPercent,
+            0f, 100f);
+        bool success = Random.Range(0f, 100f) < successChance;
+
+        // 자원은 이미 소모됐다(원작 "실패해도 자원이 나간다") — 성공했을 때만 레벨을 올린다.
+        if (success) selfUpgradeLevel++;
+        return success;
+    }
 
     public float DistanceToClosestEnemy()
     {
