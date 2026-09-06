@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작009_H094
   m_EditorClassIdentifier:
   skillName: A0WK $미니 스트로맨1
-  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 운명을 점치는 마술사(H094), #009, 능력교체형: (구 능력 불명) 제거 후 A0WK($미니 스트로맨1) 부여. upro(실제 이름): 바질 호킨스. 2026-09-06 값 배정(TRAIT_REPLACEMENT_SKILLS.md/csv, 리서치담당 f6b44a6) — 트리거 참조 0건("순수 w3a 오라", 평타 게이트 없음)이라 triggerType을 OnHitChance(0)→Aura(2)로 정정했다(구매 즉시 항상 켜져 있는 패시브). 두 효과 중 하나만 채운다: 방어력 감소는 소환체 h08L(스트로맨 미니 저주인형)이 든 A0WI(방어력 -7, 950범위, 적 대상)인데, 우리에 "소환체가 오라를 갖고 다닌다"를 표현할 방법이 없어 그 더미를 생략하고 캐스터 자신이 직접 그 범위에 아우라를 낸 것처럼 근사했다(kind=ArmorBonus, Enemies, multiplier=-7, range=950). ⚠️ duration=0.9로 뒀다 — Aura는 UnitAttacker.UpdateSkillCooldown이 1초마다 무조건 재시전하는데(EnemyAuraCaster와 달리 "이미 걸었나" 추적이 없다) ArmorBonus/HealOverTime/ApplyBuff를 duration<=0(영구)으로 걸면 매 틱 armorShred가 무한히 누적되는 엔진 결함이 있다(PM/구현담당2 확인 필요 — 플레이어 유닛 쪽 Aura 경로 전반에 걸린 문제, 이 스킬만의 문제가 아니다). duration을 재시전 주기(1초)보다 짧게 둬 매번 이전 것이 만료된 뒤 다시 걸리게 해 누적을 막았다 — 완전한 해결책은 아니고(0.1초의 공백이 생긴다) 근본 수정은 EnemyAuraCaster처럼 "누구에게 걸려 있는지" 추적하는 것. ⚠️ 자기 전용 공격속도 +12%(Oae2=0.12, atar=self) 효과는 안 채웠다 — SkillEffectKind에 Self 대상 고정 배율 공격속도 버프 case가 없다(ApplyBuff는 이름표만 세운다, UnitAttacker.AddAttackSpeedBuff류는 C# 직접 호출 전용이라 SkillEffectKind에서 못 부른다).
+  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 운명을 점치는 마술사(H094), #009, 능력교체형: (구 능력 불명) 제거 후 A0WK($미니 스트로맨1) 부여. upro(실제 이름): 바질 호킨스. 2026-09-06 값 배정(TRAIT_REPLACEMENT_SKILLS.md/csv, 리서치담당 f6b44a6) — 트리거 참조 0건("순수 w3a 오라", 평타 게이트 없음)이라 triggerType을 OnHitChance(0)→Aura(2)로 정정했다(구매 즉시 항상 켜져 있는 패시브). 두 효과 중 하나만 채운다: 방어력 감소는 소환체 h08L(스트로맨 미니 저주인형)이 든 A0WI(방어력 -7, 950범위, 적 대상)인데, 우리에 "소환체가 오라를 갖고 다닌다"를 표현할 방법이 없어 그 더미를 생략하고 캐스터 자신이 직접 그 범위에 아우라를 낸 것처럼 근사했다(kind=ArmorBonus, Enemies, multiplier=-7, range=950). ⚠️ 2026-09-06 해소 — duration=0.9 임시 우회(재시전 주기 1초보다 짧게 둬 매번 만료 후 재적용, 0.1초 공백 있음)를 걷어냈다. 근본 수정: `UnitAttacker.UpdateAuraTick`이 EnemyAuraCaster와 같은 방식으로 대상 추적(Apply-once/Remove-on-exit)을 하게 됐다 — Aura가 더 이상 매 틱 CastSkillLevel을 재호출하지 않고, 범위 안에 새로 들어온 대상에게만 한 번 걸고 범위를 벗어나면 정확히 한 번 걷어낸다. `duration`은 이 경로에서 이제 안 읽는다(Apply/Remove가 명시적으로 짝을 맞춘다) — 원래 뜻(영구)대로 0으로 되돌린다. ⚠️ 자기 전용 공격속도 +12%(Oae2=0.12, atar=self) 효과는 안 채웠다 — SkillEffectKind에 Self 대상 고정 배율 공격속도 버프 case가 없다(ApplyBuff는 이름표만 세운다, UnitAttacker.AddAttackSpeedBuff류는 C# 직접 호출 전용이라 SkillEffectKind에서 못 부른다).
   triggerType: 2
   levels:
   - cooldown: 0
@@ -29,4 +29,4 @@ MonoBehaviour:
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0.9
+      duration: 0
