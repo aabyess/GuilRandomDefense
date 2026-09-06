@@ -435,6 +435,31 @@ def load_mana_cap_and_start():
     return int(cap.group(1)), int(start.group(1))
 
 
+def load_mana_regen():
+    """ResourceWallet.cs의 `ManaRegenPerSecond`(원작 umpr, 2026-09-06 구현담당3 추가) —
+    ⚠️ 도움소의 진짜 제약은 표기 쿨다운이 아니라 이 시간 재생이다(PM 지시, 2026-09-06).
+    자원교환 포탈(`load_mana_portal_params`, 랜덤유닛 등급 위습 소비)은 플레이어가
+    위습을 유닛뽑기 대신 여기 쓰는 선택이 들어가 예산에 안 넣는다 — 아래에서 내는
+    예산은 시간 재생만 센 **하한**이다."""
+    rw = read("Assets/Scripts/Units/ResourceWallet.cs")
+    m = re.search(r"const float ManaRegenPerSecond = ([-+0-9.eE]+)f;", rw)
+    if not m:
+        sys.exit("FATAL: ResourceWallet.cs에서 ManaRegenPerSecond를 못 찾았다.")
+    return float(m.group(1))
+
+
+SUPPORT_SKILL_NAMES = ("낙뢰", "능력치증가", "대지진", "독약", "버스터콜", "불비",
+                       "선택위습제조", "지진", "출항이다", "폭우", "해루석", "흡수")
+
+
+def load_all_support_skills():
+    """도움소 12종 전부(`SupportSkill_*.asset`) — 능력별 마나 예산 최대 발동 횟수 표용."""
+    out = {}
+    for name in SUPPORT_SKILL_NAMES:
+        out[name] = load_support_skill(name)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # 6. 백로그 시뮬레이터 — 09-04/09-05 문서와 같은 수식.
 # ---------------------------------------------------------------------------
@@ -1128,15 +1153,43 @@ def main():
         ap_s = f"붕괴 R{ap_r}" if ap_r else "완주(75R)"
         print(f"{name:20s}{ad_s:18s}{ap_s:18s}")
 
-    print("\n=== ③ 도움소(버스터콜) 추가 — 고정10기 모델, 저축형 ===")
-    skill = load_support_skill("버스터콜")
-    mana_params = load_mana_portal_params()
+    # -----------------------------------------------------------------
+    # ③ 도움소 — 2026-09-06 재설계(PM 지시). 표기 쿨다운이 아니라 마나 재생
+    # (`ManaRegenPerSecond`, 원작 umpr=0.30/초, 오늘 구현담당3이 추가)이 진짜 제약이다.
+    # ⚠️ 예전엔 이 절이 자원교환 포탈(마나 포탈, 랜덤유닛 등급 위습 소비)을 "성공률 100%
+    # 자동 지급"으로 가정해 사실상 공짜 마나 취급했다 — 그 포탈은 위습을 유닛뽑기 대신
+    # 여기 쓰는 선택이 들어가는 자원교환이라 이제 모델에서 뺀다(PM 지시, 2026-09-06 —
+    # "최적 배분을 지어내지 마세요"). 시간 재생만으로 예산을 다시 낸다 — 그래서 이 값은
+    # **하한**이다(포탈까지 쓰면 더 늘어난다).
+    # -----------------------------------------------------------------
+    mana_regen = load_mana_regen()
     mana_cap, mana_start = load_mana_cap_and_start()
-    print(f"(버스터콜: mana={skill['mana_cost']} dmg={skill['damage_base']:.0f} cd={skill['cooldown']}s, "
-          f"마나포탈: base={mana_params['base_amount']} perRound={mana_params['per_round']} "
-          f"성공률={mana_params['success_pct']}%, 상한={mana_cap} 시작={mana_start})")
+    total_round_seconds = sum(round_length_fn(r, enemies[r]["is_boss"]) for r in range(1, 76))
+    mana_budget = mana_start + total_round_seconds * mana_regen
 
-    def run_with_support(median_table, use_armor):
+    print("\n=== ③ 도움소 — 마나 예산(시간 재생만, 하한) · 능력별 최대 발동 횟수 ===")
+    print(f"75라운드 총 길이 {total_round_seconds:.1f}초 × 재생 {mana_regen}/초 + 시작 {mana_start} "
+          f"= 예산 {mana_budget:.1f} (상한 {mana_cap} — 예산이 상한 밑이라 저축해도 안 넘친다)")
+    print("⚠️ 자원교환 포탈(20+라운드×1.5, 랜덤유닛 위습 소비)은 안 셌다 — 위습 배분은 창작이라 제외.")
+    print("⚠️ 표기 쿨다운 기준 '이론상 최대'는 진짜 제약이 아니다 — 마나가 항상 먼저 바닥난다.")
+    print(f"{'능력':10s}{'마나':>6s}{'쿨(초)':>8s}{'예산 기준 최대':>14s}{'쿨다운 기준 이론상':>18s}")
+    all_skills = load_all_support_skills()
+    for name, sk in all_skills.items():
+        if not sk["mana_cost"]:
+            print(f"{name:10s}{'-':>6s}{sk['cooldown'] or 0:>8.0f}{'(마나 안 씀)':>14s}{'-':>18s}")
+            continue
+        budget_max = int(mana_budget // sk["mana_cost"])
+        cd_max = int(total_round_seconds // sk["cooldown"]) if sk["cooldown"] else None
+        cd_s = f"{cd_max}" if cd_max is not None else "-"
+        print(f"{name:10s}{sk['mana_cost']:>6d}{sk['cooldown'] or 0:>8.0f}{budget_max:>14d}{cd_s:>18s}")
+
+    # 붕괴 라운드 재측정 — 피해를 직접 주는 능력만(damageBase>0). 스턴·버프·소환·즉사
+    # 등(지진·출항이다·흡수·능력치증가·선택위습제조)은 "배틀로그를 얼마나 줄이는가"를
+    # 만들어내야 해서(창작) 이번엔 안 낸다. 능력 하나만 쓴다고 가정한다(다른 능력과
+    # 마나를 나눠 쓰는 배분은 안 지어낸다, PM 지시) — 각 능력을 독립으로 딱 한 번씩만 잰다.
+    print("\n=== ③-보강 붕괴 라운드 — 능력 하나만 단독 사용(마나 재생 기준), 고정10기 모델 ===")
+
+    def run_with_support_regen(median_table, use_armor, skill):
         backlog = 0.0
         mana = mana_start
         cd_remaining = 0.0
@@ -1149,12 +1202,12 @@ def main():
             mult = armor_mult(e["armor"], defense_armor) if use_armor else 1.0
             dps = dps_fn(r)
             rl = round_length_fn(r, e["is_boss"])
-            gain = round(mana_params["base_amount"] + mana_params["per_round"] * r)
-            mana = min(mana_cap, mana + gain)  # 성공률 100%(마나 포탈)로 가정 — 실제 파라미터 확인함
+            mana = min(mana_cap, mana + mana_regen * rl)
             incoming = backlog + cnt
             kills_capacity = dps * mult * rl / e["hp"]
             bonus = 0
-            if incoming > kills_capacity and mana >= skill["mana_cost"] and cd_remaining <= rl and e["hp"] <= skill["damage_base"]:
+            if (incoming > kills_capacity and mana >= skill["mana_cost"]
+                    and cd_remaining <= rl and e["hp"] <= skill["damage_base"]):
                 mana -= skill["mana_cost"]
                 casts += 1
                 bonus = min(incoming, cnt)
@@ -1167,13 +1220,17 @@ def main():
                 collapse = r
         return collapse, casts
 
-    for label, mtable, use_armor in [("AD(고정10기)", ad_median, True), ("AP(고정10기)", ap_median, False)]:
-        base = run_backlog(enemies, wave_counts, round_length_fn, defense_armor,
-                            fixed10_dps_fn(mtable), use_armor=use_armor, threshold=rc["enemy_count_threshold"])
-        sup, casts = run_with_support(mtable, use_armor)
-        base_s = f"R{base}" if base else "완주"
-        sup_s = f"R{sup}" if sup else "완주"
-        print(f"  {label}: 기본 {base_s} -> 도움소 {sup_s} (캐스트 {casts}회)")
+    for name, sk in all_skills.items():
+        if not sk["damage_base"]:
+            continue
+        print(f"  [{name}] mana={sk['mana_cost']} dmg={sk['damage_base']:.0f} cd={sk['cooldown']:.0f}s")
+        for label, mtable, use_armor in [("AD(고정10기)", ad_median, True), ("AP(고정10기)", ap_median, False)]:
+            base = run_backlog(enemies, wave_counts, round_length_fn, defense_armor,
+                                fixed10_dps_fn(mtable), use_armor=use_armor, threshold=rc["enemy_count_threshold"])
+            sup, casts = run_with_support_regen(mtable, use_armor, sk)
+            base_s = f"R{base}" if base else "완주"
+            sup_s = f"R{sup}" if sup else "완주"
+            print(f"    {label}: 기본 {base_s} -> 도움소 {sup_s} (캐스트 {casts}회)")
 
     # -----------------------------------------------------------------
     # §13: DamageTable(상성표) 반영 — B안 이후 실제 배정. PM 지시 2026-09-05.
