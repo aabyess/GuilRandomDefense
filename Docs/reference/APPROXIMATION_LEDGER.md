@@ -1081,3 +1081,68 @@ raw 유지 확정(fold 없음): 강주혁(나미,별개)·신문철(루피,별�
 
 **갱신된 우리 총량**: 329(325~333) → **328(324~333)**, 사실상 변화 없음 —
 "미판정 정리가 폭을 안 좁힐 수도 있다"는 PM 예상 그대로였다.
+
+## 19. 시뮬레이터가 밤사이 선 축 넷을 몰랐다 — 반영 완료 (2026-09-06, PM 지시)
+
+`Tools/simulate_balance.py`(내 도구)가 어젯밤 새로 선 네 축을 하나도 몰랐다 —
+`skill_dps_for_unit`이 `SkillEffectBasis`의 4종(Flat/%maxHP/%curHP/
+CasterAttackPower/ResearchLevel)만 처리하고 나머지는 **조건문 어디에도 안
+걸려 조용히 0으로 떨어졌다**. 대상 조건 게이트·캐스케이드 그룹은 필드
+자체를 파싱도 안 했다.
+
+### 반영한 것
+
+```
+대상 조건 게이트(9c2f4e0/0bff929)  targetCondition/targetConditionValue 파싱 +
+                                  UnitAttacker.ApplyToEnemy와 같은 판정(이산
+                                  통과/차단) + EnemyData.percentDamageTaken을
+                                  스킬 피해 전체에 곱함(DealSkillDamage 그대로)
+캐스케이드 그룹(c8464dd)          cascadeGroup별로 선언순서 if/elseif 사슬 —
+                                  i번째 실효확률 = chance_i × Π_{j<i}(1-chance_j)
+A0LZ(fe6cec7)                    CasterSelfUpgradeLevel — ResearchLevel과 같은
+                                  관례로 레벨0(바닥값) 취급, bonus만 반영
+대상측 3축(eb1a0e5/45bff2b)      percentDamageTaken 베이스라인(몹0.9/보스1.0)만
+                                  반영 — 스택 증분(전투 중에만 쌓임)은 의도적으로
+                                  반영 안 함(바닥값 관례, magicArmorMultiplier는
+                                  현재 전 자산 1.0이라 반영해도 영향 없음 확인)
+```
+
+⚠️ **덤으로 발견**: 네 축과 별개로, **이미 실제 게임(`UnitAttacker.
+ResolveSkillEffectValue`)에 연결된 basis 넷을 시뮬이 여태 몰랐다** —
+`ReceivedDamage`(29건 사용 중)·`TargetMoveSpeed`(4건)·`CasterGaugeValue`
+(5건)·`CasterSkillLevel`(3건). 전부 조용히 0으로 잡히고 있었다 — 이번에
+같이 채웠다(각각 이 시뮬의 기존 근사 관례를 그대로 적용: `ReceivedDamage`는
+`CasterAttackPower`와 같은 근사, `CasterGaugeValue`는 리셋 직후 바닥값,
+`CasterSkillLevel`은 이 시뮬이 레벨1만 읽으므로 상수 1). `CasterStrength/
+Agility/Intelligence`는 실제 게임도 지금 전부 0(영웅 스탯 데이터 미기재)이라
+시뮬의 기존 0과 **우연히 일치했다** — 버그가 아니었다.
+
+### 🔴 재발 방지 — 미판정 enum 값 경고
+
+`UNHANDLED_BASIS_WARNINGS`/`UNHANDLED_KIND_WARNINGS`(Counter)를 신설했다.
+`skill_dps_for_unit`이 모르는 `SkillEffectBasis`/`SkillEffectKind` 값을
+만나면 조용히 0으로 죽는 대신 여기 잡히고, `main()` 끝(§23)이 있으면
+경고로 출력한다. **지금은 0건**(이번 반영으로 실사용 중인 모든 값을
+커버했다 확인) — 앞으로 축이 늘 때마다 이 경고가 다음 사람을 지켜준다.
+
+### 반영 전/후 — 로스터 전체 스킬 성분 합계
+
+| 성분 | 이전(버그) | 이후 — 잡몹(pointValue100) | 이후 — 보스(pointValue200) |
+|---|---:|---:|---:|
+| 고정 성분(flat+gated_flat) | 161,463,597 | 148,571,174 (**−8.0%**) | 174,895,907 (**+8.3%**) |
+| %체력 성분(percent, 배율 합) | 3.046130 | 2.579590 (**−15.3%**) | 3.009050 (**−1.2%**) |
+
+**이전 값은 "대상 조건·A11S 전부 무시 + basis 4종만 처리"였던 옛 코드를
+그대로 재현해 계산했다** — 코드에는 안 남겼다(고칠 것을 되살려두면 다음
+사람이 최신인 줄 착각한다). 재현이 필요하면 이 커밋 이전 버전의
+`skill_dps_for_unit`을 보면 된다.
+
+**해석**: 옛 시뮬은 대상 종류를 안 갈라 모든 조건부 효과를 "항상 발동"으로
+셌다 — 그래서 **잡몹 기준으로는 과대(−8.0%가 옳은 쪽)**, **보스 기준으로는
+과소(+8.3%가 옳은 쪽)**였다. 하나의 "정답"이 없고 어느 쪽을 재는지가 답을
+가른다는 게 이번 발견의 핵심이다 — 앞으로 이 시뮬을 쓰는 모든 사람은
+잡몹/보스 중 뭘 재는지 명시해야 한다(§23 리포트가 기본 잡몹, 필요시 보스도
+같이 낸다).
+
+**검증**: 반영 후 `python3 Tools/simulate_balance.py` exit 0, 전 섹션 정상
+출력 확인. 자산은 안 건드림(로직만 변경).

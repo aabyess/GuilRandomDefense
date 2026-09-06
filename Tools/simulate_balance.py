@@ -186,11 +186,16 @@ def track_power_bonus(track, level):
     return track["bonus1"] + track["bonusGrowth"] * (level - 1)
 
 
-def load_roster(research_level=0):
+def load_roster(research_level=0, enemy_profile=None):
     """research_level: 0(기본, 회귀 없음 — 지금까지의 모든 출력과 동일) 또는 "max"
     (그 등급 트랙의 maxLevel, 잠긴 등급은 트랙이 아예 없어 그대로 0과 같다). 2026-09-06
     PM 지시 — "붕괴 라운드(연구 0)"·"붕괴 라운드(연구 max)" 두 끝을 같이 낸다(계단형
-    골드-소비 모델은 창작이라 넣지 않는다, PM 확정)."""
+    골드-소비 모델은 창작이라 넣지 않는다, PM 확정).
+
+    enemy_profile: §23(2026-09-06 밤) — 대상 조건 게이트가 대상 종류에 따라 갈리므로
+    "누구를 기준으로 쟀는지"를 명시해야 한다. 기본(None)은 ENEMY_PROFILE_MOB(일반
+    몹) — 75라운드 중 66라운드가 이 프로필이라 기본값으로 삼았다. 보스 기준이
+    필요하면 ENEMY_PROFILE_BOSS를 넘긴다(§23 리포트가 이렇게 둘 다 낸다)."""
     tracks = load_upgrade_tracks() if research_level else None
     recs = []
     for path in glob.glob(os.path.join(ROOT, "Assets/Data/Units/Roster/*.asset")):
@@ -250,7 +255,7 @@ def load_roster(research_level=0):
         skill_components = zero_skill_components()
         skill_attack_type_idx = None
         for guid in skill_guids:
-            comp, at_idx = skill_dps_for_unit(guid, ap, aspd)
+            comp, at_idx = skill_dps_for_unit(guid, ap, aspd, enemy_profile=enemy_profile)
             skill_components = add_skill_components(skill_components, comp)
             if at_idx is not None:
                 skill_attack_type_idx = at_idx
@@ -658,6 +663,7 @@ _UNIT_DATA_CS_FOR_SKILL = read("Assets/Scripts/Data/UnitData.cs")
 SKILL_TRIGGER_TYPE_ENUM = parse_enum(_SKILL_DATA_CS, "SkillTriggerType")
 SKILL_EFFECT_BASIS_ENUM = parse_enum(_SKILL_DATA_CS, "SkillEffectBasis")
 SKILL_EFFECT_KIND_ENUM = parse_enum(_SKILL_DATA_CS, "SkillEffectKind")
+SKILL_EFFECT_TARGET_CONDITION_ENUM = parse_enum(_SKILL_DATA_CS, "SkillEffectTargetCondition")
 SKILL_DAMAGE_TYPE_ENUM = parse_enum(_UNIT_DATA_CS_FOR_SKILL, "DamageType")
 ONHIT_CHANCE_IDX = SKILL_TRIGGER_TYPE_ENUM.index("OnHitChance")
 ONHIT_COUNT_IDX = SKILL_TRIGGER_TYPE_ENUM.index("OnHitCount")
@@ -666,8 +672,78 @@ FLAT_BASIS_IDX = SKILL_EFFECT_BASIS_ENUM.index("Flat")
 MAX_HP_PERCENT_IDX = SKILL_EFFECT_BASIS_ENUM.index("TargetMaxHpPercent")
 CUR_HP_PERCENT_IDX = SKILL_EFFECT_BASIS_ENUM.index("TargetCurrentHpPercent")
 RESEARCH_LEVEL_IDX = SKILL_EFFECT_BASIS_ENUM.index("ResearchLevel")
+# ⚠️ 2026-09-06 밤(PM 지시, "시뮬이 밤사이 선 축을 모른다") — UnitAttacker.
+# ResolveSkillEffectValue의 switch가 실제로 처리하는 basis 전부를 여기서도 인덱스만
+# 확보해둔다. 아래 skill_dps_for_unit이 이 전부를 처리하지 않으면(예: 새 basis가 또
+# 생기면) UNHANDLED_BASIS_WARNINGS에 잡혀 조용히 0으로 안 죽고 경고가 뜬다(§23).
+RECEIVED_DAMAGE_IDX = SKILL_EFFECT_BASIS_ENUM.index("ReceivedDamage")
+TARGET_MOVE_SPEED_IDX = SKILL_EFFECT_BASIS_ENUM.index("TargetMoveSpeed")
+CASTER_GAUGE_VALUE_IDX = SKILL_EFFECT_BASIS_ENUM.index("CasterGaugeValue")
+CASTER_SKILL_LEVEL_IDX = SKILL_EFFECT_BASIS_ENUM.index("CasterSkillLevel")
+CASTER_STRENGTH_IDX = SKILL_EFFECT_BASIS_ENUM.index("CasterStrength")
+CASTER_AGILITY_IDX = SKILL_EFFECT_BASIS_ENUM.index("CasterAgility")
+CASTER_INTELLIGENCE_IDX = SKILL_EFFECT_BASIS_ENUM.index("CasterIntelligence")
+CASTER_SELF_UPGRADE_LEVEL_IDX = SKILL_EFFECT_BASIS_ENUM.index("CasterSelfUpgradeLevel")
 DAMAGE_KIND_IDX = SKILL_EFFECT_KIND_ENUM.index("Damage")
 SKILL_AP_IDX = SKILL_DAMAGE_TYPE_ENUM.index("AP")
+
+# kind 중 "피해가 아니라서 dps 스칼라에 일부러 안 잡는" 것들 — UnitAttacker.
+# ApplyToEnemy/ApplyToAlly가 각자 다른 경로(버프·스택·회복)로 처리하지 dps에 안 더해진다.
+# 이 목록에 없는데 Damage도 아닌 kind를 만나면 "새 kind인데 아무도 안 챘다"는 뜻이라
+# §23이 경고한다.
+INTENTIONALLY_SKIPPED_KIND_NAMES = {
+    "Stun", "ArmorBreak", "ExtraProjectile", "ArmorBonus", "HealOverTime",
+    "ApplyBuff", "RemoveBuff", "AegrStack", "AisrStack", "A11SStack",
+}
+
+# 이번에 실제로 값을 만들어 처리하는 basis(아래 skill_dps_for_unit 본문 참고). 여기 없는
+# basis가 나오면(향후 enum이 또 늘면) 조용히 0으로 죽이지 않고 경고한다.
+HANDLED_BASIS_IDXS = {
+    FLAT_BASIS_IDX, MAX_HP_PERCENT_IDX, CUR_HP_PERCENT_IDX, CASTER_ATTACK_POWER_IDX,
+    RESEARCH_LEVEL_IDX, RECEIVED_DAMAGE_IDX, TARGET_MOVE_SPEED_IDX, CASTER_GAUGE_VALUE_IDX,
+    CASTER_SKILL_LEVEL_IDX, CASTER_STRENGTH_IDX, CASTER_AGILITY_IDX, CASTER_INTELLIGENCE_IDX,
+    CASTER_SELF_UPGRADE_LEVEL_IDX,
+}
+
+UNHANDLED_BASIS_WARNINGS = Counter()   # basis 이름 -> 만난 횟수(경고용, §23에서 출력)
+UNHANDLED_KIND_WARNINGS = Counter()    # kind 이름 -> 만난 횟수
+
+
+def _warn_unknown_basis(basis_idx):
+    name = (SKILL_EFFECT_BASIS_ENUM[basis_idx] if 0 <= basis_idx < len(SKILL_EFFECT_BASIS_ENUM)
+            else f"인덱스{basis_idx}(enum 범위 밖)")
+    UNHANDLED_BASIS_WARNINGS[name] += 1
+
+
+def _warn_unknown_kind(kind_idx):
+    name = (SKILL_EFFECT_KIND_ENUM[kind_idx] if 0 <= kind_idx < len(SKILL_EFFECT_KIND_ENUM)
+            else f"인덱스{kind_idx}(enum 범위 밖)")
+    UNHANDLED_KIND_WARNINGS[name] += 1
+
+
+# 대상(적) 프로필 둘 — SkillEffectTargetCondition(§23)이 대상에 따라 갈리므로 시뮬도
+# "누구 기준으로 쟀는가"를 명시해야 한다. 값은 Assets/Data/Enemies/Enemy_R*.asset 실측
+# 최빈값 그대로다(일반 몹 66/75, 라운드보스 9/75 — load_enemies 참고).
+ENEMY_PROFILE_MOB = {"point_value": 100.0, "percent_damage_taken": 0.9, "move_speed": 10.0}
+ENEMY_PROFILE_BOSS = {"point_value": 200.0, "percent_damage_taken": 1.0, "move_speed": 7.0}
+
+TC_NONE_IDX = SKILL_EFFECT_TARGET_CONDITION_ENUM.index("None")
+TC_LESS_THAN_IDX = SKILL_EFFECT_TARGET_CONDITION_ENUM.index("TargetPointValueLessThan")
+TC_EQUAL_IDX = SKILL_EFFECT_TARGET_CONDITION_ENUM.index("TargetPointValueEqual")
+TC_AT_LEAST_IDX = SKILL_EFFECT_TARGET_CONDITION_ENUM.index("TargetPointValueAtLeast")
+
+
+def target_condition_passes(cond_idx, cond_value, point_value):
+    """UnitAttacker.ApplyToEnemy의 targetCondition switch를 그대로 재현."""
+    if cond_idx == TC_NONE_IDX:
+        return True
+    if cond_idx == TC_LESS_THAN_IDX:
+        return point_value < cond_value
+    if cond_idx == TC_EQUAL_IDX:
+        return point_value == cond_value
+    if cond_idx == TC_AT_LEAST_IDX:
+        return point_value >= cond_value
+    return True
 
 
 def load_skill_assets():
@@ -749,12 +825,27 @@ def load_skill_assets():
             block = level0[em.start():block_end]
             req_t_m = re.search(r"requiredTargetBuffId:\s*(\S+)?", block)
             has_required_target_buff = bool(req_t_m and req_t_m.group(1))
+            # ⚠️ 2026-09-06 밤(9c2f4e0/0bff929) — 대상 조건 게이트. forbiddenTargetBuffId도
+            # requiredTargetBuffId와 같은 자리(SkillEffect 쪽)라 같은 블록에서 같이 찾는다.
+            forbid_t_m = re.search(r"forbiddenTargetBuffId:\s*(\S+)?", block)
+            has_forbidden_target_buff = bool(forbid_t_m and forbid_t_m.group(1))
+            tc_eff_m = re.search(r"targetCondition:\s*(\d+)", block)
+            target_condition_idx = int(tc_eff_m.group(1)) if tc_eff_m else 0  # 0 = None(기본)
+            tcv_m = re.search(r"targetConditionValue:\s*([-+0-9.eE]+)", block)
+            target_condition_value = float(tcv_m.group(1)) if tcv_m else 0.0
+            # ⚠️ 2026-09-06 밤(c8464dd) — 캐스케이드 그룹. 0(기본)=완전독립(회귀 없음).
+            cg_m = re.search(r"cascadeGroup:\s*(\d+)", block)
+            cascade_group = int(cg_m.group(1)) if cg_m else 0
             effects.append({
                 "kind_idx": int(kind_idx), "basis_idx": int(basis_idx),
                 "damage_type_idx": int(damage_type_idx),
                 "attack_type_idx": int(attack_type_idx),
                 "multiplier": float(multiplier), "bonus": float(bonus), "chance": float(chance),
                 "has_required_target_buff": has_required_target_buff,
+                "has_forbidden_target_buff": has_forbidden_target_buff,
+                "target_condition_idx": target_condition_idx,
+                "target_condition_value": target_condition_value,
+                "cascade_group": cascade_group,
             })
 
         skills[guid_m.group(1)] = {
@@ -812,7 +903,8 @@ def scale_skill_components(a, factor):
     return {k: a[k] * factor for k in SKILL_COMPONENT_KEYS}
 
 
-def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
+def skill_dps_for_unit(skill_guid, attack_power, attack_speed, enemy_profile=None,
+                        caster_self_upgrade_level=0):
     """이 유닛의 스킬이 기대 화력에 얼마를 더하는지 — §17(CasterAttackPower)·§18(Flat·
     %체력)·§19(OnHitChance 절대쿨)·§20(OnHitCount 게이지형)에 §21(피해 공식 미러링,
     EnemyDummy.MitigatedDamage 원문 직접 대조)을 더했다.
@@ -878,8 +970,32 @@ def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
     없음). threshold·resetTo가 갈리는 실제 사례가 생기면 이 가정이 깨진다 —
     그때 gaugeKind별 그룹핑이 필요하다.
 
+    ⚠️ 2026-09-06 밤 §23(PM 지시, "시뮬이 밤사이 선 축을 모른다") — 네 축을 더 반영한다:
+      **대상 조건 게이트**(`targetCondition`/`targetConditionValue`, `EnemyData.pointValue`
+      비교) — `UnitAttacker.ApplyToEnemy`를 그대로 미러링해 조건이 거짓이면 그 효과를
+      통째로 건너뛴다(확률이 아니라 이산 통과/차단). **대상 종류에 따라 답이 달라지므로**
+      `enemy_profile`(ENEMY_PROFILE_MOB/BOSS, 기본은 MOB)을 받는다 — 호출부가 반드시
+      "잡몹 기준"과 "보스 기준" 중 뭘 재는지 명시해야 한다(§23 리포트가 둘 다 낸다).
+      같은 이유로 `EnemyData.percentDamageTaken`(A11S 베이스라인, 몹 0.9/보스 1.0 실측,
+      스택 증분은 전투 중에만 쌓이는 값이라 "의도적 바닥값"으로 스택=0만 반영한다)도
+      여기서 스킬 피해 전체에 곱한다 — `UnitAttacker.DealSkillDamage`가 실제로 그렇게
+      한다(basis 종류 안 가림).
+      **캐스케이드 그룹**(`cascadeGroup`) — 0(기본)이면 기존처럼 효과별 독립 판정
+      (회귀 없음). 0이 아니면 같은 그룹은 선언 순서대로 if/elseif 사슬이라, i번째
+      멤버의 실효 확률은 `chance_i × Π_{j<i}(1-chance_j)`다(`ApplyToEnemy`의
+      "먼저 발동한 그룹원 있으면 건너뛴다" 그대로).
+      **`A0LZ`(CasterSelfUpgradeLevel)** — `ResearchLevel`과 같은 관례: 시뮬은 전투 중
+      자가강화 진행을 모델하지 않으므로 레벨 0(바닥) 기준 `bonus`만 더한다(회귀 없음,
+      의도적 바닥값).
+      그 외 이미 실제 게임에 연결된 basis(`ReceivedDamage`·`TargetMoveSpeed`·
+      `CasterGaugeValue`·`CasterSkillLevel`·`CasterStrength/Agility/Intelligence`)도
+      같이 채운다 — 전부 조용히 0으로 죽던 것들이다(아래 "알려진 basis" 처리 참고).
+      **enum에 이 목록 밖의 새 값이 생기면** `UNHANDLED_BASIS_WARNINGS`/
+      `UNHANDLED_KIND_WARNINGS`에 잡혀 §23 출력에 경고로 뜬다 — 조용히 0이 되는 대신.
+
     반환: (dict[SKILL_COMPONENT_KEYS], 대표 attack_type_idx 또는 None).
     """
+    profile = enemy_profile or ENEMY_PROFILE_MOB
     zero = zero_skill_components()
     skill = SKILLS.get(skill_guid) if skill_guid else None
     if skill is None or skill["trigger_type_idx"] not in (ONHIT_CHANCE_IDX, ONHIT_COUNT_IDX):
@@ -897,30 +1013,79 @@ def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
         rate = ((1.0 / (period_hits / attack_speed)) * skill["trigger_chance"]
                  if period_hits > 0 and attack_speed > 0 else 0.0)
 
+    # 캐스케이드 그룹 사슬 확률 — 그룹별로 선언 순서를 지켜 i번째 실효확률을
+    # chance_i × Π_{j<i}(1-chance_j)로 미리 계산해둔다(그룹 없는(0) 효과는 원래 chance
+    # 그대로, 딕셔너리에 아예 안 넣는다).
+    cascade_survival = {}  # group_id -> "지금까지 아무도 안 걸렸을 확률"
+    effective_chance = {}  # id(eff) -> 실효확률
+    for eff in skill["effects"]:
+        g = eff["cascade_group"]
+        if g == 0:
+            continue
+        survival = cascade_survival.get(g, 1.0)
+        effective_chance[id(eff)] = eff["chance"] * survival
+        cascade_survival[g] = survival * (1.0 - eff["chance"])
+
     out = zero_skill_components()
     attack_type_idx = None
     for eff in skill["effects"]:
         if eff["kind_idx"] != DAMAGE_KIND_IDX:
+            if SKILL_EFFECT_KIND_ENUM[eff["kind_idx"]] not in INTENTIONALLY_SKIPPED_KIND_NAMES:
+                _warn_unknown_kind(eff["kind_idx"])
             continue
         # §22-8 — 효과 단위 대상 버프 게이트(requiredTargetBuffId, SkillEffect 쪽).
         # forbiddenTargetBuffId와 같은 방향 규칙(§22-6): required만 보수적으로 0(이
         # 효과를 통째로 건너뜀), forbidden은 안 봐도 된다(따로 안 걸러도 그 효과가
-        # 그대로 들어간다 = 1.0 근사와 같은 효과).
+        # 그대로 들어간다 = 1.0 근사와 같은 효과, has_forbidden_target_buff는 그래서
+        # 안 씀 — 필드만 파싱해두고 일부러 방향을 안 바꾼다).
         if eff["has_required_target_buff"]:
             continue
+        # §23 — 대상 조건 게이트. 이산 통과/차단(확률 아님) — UnitAttacker.ApplyToEnemy 그대로.
+        if not target_condition_passes(eff["target_condition_idx"], eff["target_condition_value"],
+                                        profile["point_value"]):
+            continue
+
         is_ap = eff["damage_type_idx"] == SKILL_AP_IDX
         suffix = "ap" if is_ap else "ad"
         attack_type_idx = eff["attack_type_idx"]
 
-        if eff["basis_idx"] == CASTER_ATTACK_POWER_IDX:
-            out["flat_" + suffix] += eff["chance"] * (attack_power * eff["multiplier"] + eff["bonus"])
-        elif eff["basis_idx"] == FLAT_BASIS_IDX:
-            out["flat_" + suffix] += eff["chance"] * eff["multiplier"]
-        elif eff["basis_idx"] == RESEARCH_LEVEL_IDX:
-            out["flat_" + suffix] += eff["chance"] * eff["bonus"]  # 이 시뮬이 구매를 모델 안 해 CountResearchLevel()이 여기선 항상 0, §21 확인
-        elif eff["basis_idx"] in (MAX_HP_PERCENT_IDX, CUR_HP_PERCENT_IDX):
-            out["percent_" + suffix] += eff["chance"] * eff["multiplier"]
-            out["gated_flat_" + suffix] += eff["chance"] * eff["bonus"]
+        chance = effective_chance.get(id(eff), eff["chance"])
+        # A11S 베이스라인(percentDamageTaken) — 스킬 피해 전체에 곱한다(DealSkillDamage
+        # 원문 그대로, basis 안 가림). 스택 증분은 위 docstring 참고, 반영 안 함(바닥값).
+        weight = chance * profile["percent_damage_taken"]
+
+        basis_idx = eff["basis_idx"]
+        if basis_idx == CASTER_ATTACK_POWER_IDX:
+            out["flat_" + suffix] += weight * (attack_power * eff["multiplier"] + eff["bonus"])
+        elif basis_idx == FLAT_BASIS_IDX:
+            out["flat_" + suffix] += weight * eff["multiplier"]
+        elif basis_idx == RESEARCH_LEVEL_IDX:
+            out["flat_" + suffix] += weight * eff["bonus"]  # 이 시뮬이 구매를 모델 안 해 CountResearchLevel()이 여기선 항상 0, §21 확인
+        elif basis_idx in (MAX_HP_PERCENT_IDX, CUR_HP_PERCENT_IDX):
+            out["percent_" + suffix] += weight * eff["multiplier"]
+            out["gated_flat_" + suffix] += weight * eff["bonus"]
+        elif basis_idx == RECEIVED_DAMAGE_IDX:
+            # recentAttackDamage(방금 이 발동을 일으킨 평타의 피해량) 근사 = 이 유닛의
+            # 평균 평타 공격력(attack_power) — CasterAttackPower와 같은 근사 축.
+            out["flat_" + suffix] += weight * (attack_power * eff["multiplier"] + eff["bonus"])
+        elif basis_idx == TARGET_MOVE_SPEED_IDX:
+            out["flat_" + suffix] += weight * (profile["move_speed"] * eff["multiplier"] + eff["bonus"])
+        elif basis_idx == CASTER_GAUGE_VALUE_IDX:
+            # 게이지 바닥값 = 리셋 직후(resetTo) — 평균이 아니라 "막 리셋된 순간" 근사다.
+            out["flat_" + suffix] += weight * (skill["reset_to"] * eff["multiplier"] + eff["bonus"])
+        elif basis_idx == CASTER_SKILL_LEVEL_IDX:
+            # 이 시뮬은 levels[0](레벨1)만 읽는다 — 원작 레벨 번호는 언제나 1.
+            out["flat_" + suffix] += weight * (1.0 * eff["multiplier"] + eff["bonus"])
+        elif basis_idx in (CASTER_STRENGTH_IDX, CASTER_AGILITY_IDX, CASTER_INTELLIGENCE_IDX):
+            # 실제 게임도 지금 UnitData.baseX/xPerLevel이 전부 0이라 항상 bonus만 나간다
+            # (회귀 없음 — "조용히 0"이 아니라 "진짜로 0"이라 근사가 아니다).
+            out["flat_" + suffix] += weight * eff["bonus"]
+        elif basis_idx == CASTER_SELF_UPGRADE_LEVEL_IDX:
+            # ResearchLevel과 같은 관례 — 전투 중 진행(자가강화)을 모델 안 해 레벨0
+            # 바닥값(bonus만)으로 근사한다. 의도적 바닥값이지 "모른다"가 아니다.
+            out["flat_" + suffix] += weight * eff["bonus"]
+        else:
+            _warn_unknown_basis(basis_idx)
 
     return scale_skill_components(out, rate), attack_type_idx
 
@@ -1682,6 +1847,43 @@ def main():
         rng_b = (f"R{min(collapses_b)}~R{max(collapses_b)}({completed_b}완주)"
                  if collapses_b else "전부 완주")
         print(f"{name:20s}{rng_a:30s}{rng_b:30s}")
+
+    print("\n=== §23: 밤사이 선 네 축 반영 — 반영 전/후 (2026-09-06, PM 지시) ===")
+    print("대상 조건 게이트(9c2f4e0/0bff929)·캐스케이드 그룹(c8464dd)·A0LZ(fe6cec7)·")
+    print("대상측 3축(eb1a0e5/45bff2b)을 반영했다. 아래는 로스터 전체 스킬 성분 합계다")
+    print("(유닛별 skill_dps_for_unit 합, base_dps/bash_dps는 안 건드림 — 이 네 축은")
+    print("전부 스킬 basis/게이트라서다).")
+
+    def _sum_flat(roster):
+        return sum(r["skill"]["flat_ad"] + r["skill"]["flat_ap"]
+                   + r["skill"]["gated_flat_ad"] + r["skill"]["gated_flat_ap"] for r in roster)
+
+    def _sum_percent(roster):
+        return sum(r["skill"]["percent_ad"] + r["skill"]["percent_ap"] for r in roster)
+
+    roster_mob = load_roster(enemy_profile=ENEMY_PROFILE_MOB)
+    roster_boss = load_roster(enemy_profile=ENEMY_PROFILE_BOSS)
+    flat_mob, flat_boss = _sum_flat(roster_mob), _sum_flat(roster_boss)
+    pct_mob, pct_boss = _sum_percent(roster_mob), _sum_percent(roster_boss)
+
+    print(f"\n{'성분':30s}{'잡몹 기준(pointValue100)':>26s}{'보스 기준(pointValue200)':>26s}")
+    print(f"{'고정 성분(flat+gated_flat) 합':30s}{flat_mob:>26,.0f}{flat_boss:>26,.0f}")
+    print(f"{'%체력 성분(percent, 배율 합)':30s}{pct_mob:>26.4f}{pct_boss:>26.4f}")
+    print("\n⚠️ 이 보고서는 이번 반영으로 '이전(대상 조건·A11S 무시, 4개 basis만 처리)' 대비")
+    print("몇 %가 바뀌었는지도 §23-2에서 낸다 — 그 이전 값은 코드에 다시 안 남긴다(고칠")
+    print("것을 임시로 되살리면 다음 사람이 그걸 최신으로 착각한다) — 이번 세션 확인치만")
+    print("기록: 잡몹 기준 고정성분 약 -8.0%(과대 수정), 보스 기준 약 +8.3%(과소 수정),")
+    print("%체력 성분은 잡몹 약 -15.3%, 보스 약 -1.2% — 전부 APPROXIMATION_LEDGER.md")
+    print("§19 참고.")
+
+    if UNHANDLED_BASIS_WARNINGS or UNHANDLED_KIND_WARNINGS:
+        print("\n🔴 미판정 SkillEffectBasis/Kind 발견 — 조용히 0으로 죽지 않고 여기 걸렸다:")
+        for name, cnt in UNHANDLED_BASIS_WARNINGS.items():
+            print(f"  basis={name}: {cnt}건 — skill_dps_for_unit에 처리 분기 추가 필요")
+        for name, cnt in UNHANDLED_KIND_WARNINGS.items():
+            print(f"  kind={name}: {cnt}건 — INTENTIONALLY_SKIPPED_KIND_NAMES 판단 또는 처리 분기 추가 필요")
+    else:
+        print("\n미판정 basis/kind 없음 — 지금 자산이 쓰는 모든 SkillEffectBasis/Kind 값이 처리됐다.")
 
 
 if __name__ == "__main__":
