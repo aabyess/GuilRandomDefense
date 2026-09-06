@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_초월_김민준_AP_2a646778
   m_EditorClassIdentifier:
   skillName: 해군의 홍일점 — MANA게이지135.00
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 해군의 홍일점(H05N)의 게이트 "MANA게이지135.00" 능력 4개를 이 SkillData 하나로 묶었다.   · Tasigi_03#1: 계산식 400000.00   · Tasigi_03#2: 계산식 ((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get   · Tasigi_03#3: 계산식 400000.00   · Tasigi_03#4: 계산식 ((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Tasigi_03#2] A11S식 계수(계수 0.25+0.15×레벨/연구)를 레벨1 기준으로 고정해 곱했다(원작 레벨1과 동일) — 레벨 축이 우리에 없다.  [Tasigi_03#4] A11S식 계수(계수 0.25+0.15×레벨/연구)를 레벨1 기준으로 고정해 곱했다(원작 레벨1과 동일) — 레벨 축이 우리에 없다. ⚠️ 2026-09-06 정정(PM) — A11S는 대상 EnemyData.percentDamageTaken, 이미 보편 적용. 두 효과 다 baked 0.40(0.25+0.15×1)을 나눠 원래 계수(0.10, CSV의 대상최대체력×0.10과 정확히 일치)만 남김 — 이중 적용 버그(0.40×0.90=0.36, 원작 0.90 대비 2.5배 과소).
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 해군의 홍일점(H05N)의 게이트 "MANA게이지135.00" 능력 4개를 이 SkillData 하나로 묶었다.   · Tasigi_03#1: 계산식 400000.00   · Tasigi_03#2: 계산식 ((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get   · Tasigi_03#3: 계산식 400000.00   · Tasigi_03#4: 계산식 ((GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVariables__get  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Tasigi_03#2] A11S식 계수(계수 0.25+0.15×레벨/연구)를 레벨1 기준으로 고정해 곱했다(원작 레벨1과 동일) — 레벨 축이 우리에 없다.  [Tasigi_03#4] A11S식 계수(계수 0.25+0.15×레벨/연구)를 레벨1 기준으로 고정해 곱했다(원작 레벨1과 동일) — 레벨 축이 우리에 없다. ⚠️ 2026-09-06 정정(PM) — A11S는 대상 EnemyData.percentDamageTaken, 이미 보편 적용. 두 효과 다 baked 0.40(0.25+0.15×1)을 나눠 원래 계수(0.10, CSV의 대상최대체력×0.10과 정확히 일치)만 남김 — 이중 적용 버그(0.40×0.90=0.36, 원작 0.90 대비 2.5배 과소). ⚠️ 2026-09-06 추가 정정(PM 지시로 재검토, RRD_SEQUENCE_DUPLICATE_AUDIT.md 사례1) — #1/#3(40만)과 #2/#4(대상최대체력×0.1)은 확률분기가 아니라 원작 JASS의 타겟팅 방식 if/else(Func003Func001C, 지정대상 vs 그룹무작위픽)가 통째로 복사되며 생긴 완전 중복이다. 원작 실제 판정은 타겟팅 방식과 무관하게 항상 "40만 확정타 1개 + 조건부(대상 포인트값<200, 우리 축 밖) 최대체력×0.1 1개" = 2개뿐이다. #3·#4(중복 사본)를 삭제했다 — chance를 건드리는 문제가 아니라(둘 다 100% 확정, 원작에도 랜덤이 없다) 중복 제거다. 이전엔 4개 다 chance=1로 40만×2+최대체력×0.1×2 = 정확히 2배 과다였다.
   triggerType: 3
   levels:
   - cooldown: 0
@@ -23,28 +23,6 @@ MonoBehaviour:
     resetTo: 0
     gaugeKind: 0
     effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 2
-      attackType: 6
-      multiplier: 400000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 2
-      duration: 0
-      casterBuffCountFactor: 0
-    - kind: 0
-      basis: 1
-      target: 3
-      damageType: 2
-      attackType: 7
-      multiplier: 0.1
-      bonus: 0.0
-      chance: 1
-      hitCount: 2
-      duration: 0
-      casterBuffCountFactor: 0
     - kind: 0
       basis: 0
       target: 3
