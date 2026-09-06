@@ -839,14 +839,19 @@ def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
       percent     = 초당발동 × Σ(효과확률×%체력효과의 배수) — hp에 안 곱한 채로
                     반환한다("초당 죽이는 대상의 비율"), TakesPercentDamage 게이트도
                     같이 탄다.
-    ResearchLevel은 `CountResearchLevel()×배수+bonus`다. ⚠️ 2026-09-06 — 연구소(05번)가
-    실제로 서서 `CountResearchLevel()`이 더는 하드코딩 0이 아니다(플레이어가 연구소에서
-    그 등급을 실제로 올린 만큼 값이 나온다, `UnitUpgrades.LevelForGrade` 참고). 이
-    시뮬레이터는 플레이어 진행 상태(연구소를 얼마나 올렸는지)를 아예 모델하지 않으므로
-    **여전히 "연구 0단계(아무것도 안 삼)" 기준으로 `bonus`만 더한다** — 이건 근사가
-    아니라 시뮬의 목적(배정 직후 기준 화력)에 맞는 의도적 바닥값이다. 실제 플레이가
-    진행되면 이 항이 시뮬 값보다 커진다는 뜻이니, 여기서 잰 숫자는 "이 정도보다는
-    세다"는 하한으로 읽을 것(게이트 없음, %체력과 다른 축이다).
+    ResearchLevel은 `CountResearchLevel()×배수+bonus`다. ⚠️ 2026-09-06 정정 — 연구소
+    (05번, 등급트랙)가 아니라 **공격타입강화소**(원작 "강화소 3", `R00G`~`R01W`)가
+    이 basis의 실제 출처다. `CountResearchLevel()`은 플레이어가 그 등급이 아니라
+    **공격타입을 실제로 올린 만큼** 값이 나온다(`UnitUpgrades.LevelForAttackType` 참고
+    — `LevelForGrade`가 아니다, 그건 등급트랙 전용이고 여기 연결하면 최대 7배 과대가
+    난다, `UnitAttacker.CountResearchLevel()` 주석 참고). 이 시뮬레이터는 플레이어
+    진행 상태(공격타입강화소를 얼마나 올렸는지)를 아예 모델하지 않으므로 **여전히
+    "연구 0단계(아무것도 안 삼)" 기준으로 `bonus`만 더한다** — 이건 근사가 아니라
+    시뮬의 목적(배정 직후 기준 화력)에 맞는 의도적 바닥값이다. 실제 플레이가 진행되면
+    이 항이 시뮬 값보다 커진다는 뜻이니, 여기서 잰 숫자는 "이 정도보다는 세다"는
+    하한으로 읽을 것(게이트 없음, %체력과 다른 축이다) — 하한 크기는 실측됐다: 이
+    basis를 쓰는 9건 기준 레벨0→레벨3(원작 최대)에서 최대 **−11.6%**
+    (L0 7,677,500 → L3 8,682,500, `APPROXIMATION_LEDGER.md` §2-2 참고).
 
     "초당발동(rate)"은 트리거 타입에 따라 갈린다(§19·§20 그대로, §22-2에서 OnHitCount에
     2차 확률을 추가):
@@ -912,7 +917,7 @@ def skill_dps_for_unit(skill_guid, attack_power, attack_speed):
         elif eff["basis_idx"] == FLAT_BASIS_IDX:
             out["flat_" + suffix] += eff["chance"] * eff["multiplier"]
         elif eff["basis_idx"] == RESEARCH_LEVEL_IDX:
-            out["flat_" + suffix] += eff["chance"] * eff["bonus"]  # CountResearchLevel()==0 항상, §21 확인
+            out["flat_" + suffix] += eff["chance"] * eff["bonus"]  # 이 시뮬이 구매를 모델 안 해 CountResearchLevel()이 여기선 항상 0, §21 확인
         elif eff["basis_idx"] in (MAX_HP_PERCENT_IDX, CUR_HP_PERCENT_IDX):
             out["percent_" + suffix] += eff["chance"] * eff["multiplier"]
             out["gated_flat_" + suffix] += eff["chance"] * eff["bonus"]
