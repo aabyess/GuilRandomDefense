@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_전설적인_임장혁_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_전설적인_임장혁_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 전설적인_임장혁.  · Trig_Legend18 → e0DB(!전설 에이스 더미2) → A0BK: 200000  · Trig_Legend18 → e0IP(!전설 에이스 더미1) → A0BK: 200000
+  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 전설적인_임장혁. 정정(2026-09-06, 리서치담당 c00f472 오더 감사): e0DB·e0IP(둘 다 A0BK, 200000×2) 전부 제거했다 — 오더 없음, ForGroupBJ(Trig_Legend18_Func022A)가 실제 피해를 내는데 그 트리거 피해가 ORIGINAL_SKILL_DAMAGE_TABLE.csv(h02O 골.D.에이스, Trig_Legend18)에 이미 있어 이중 계상이었다. 지어내지 않고 값 기록만 남긴다.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -23,25 +23,3 @@ MonoBehaviour:
     resetTo: 0
     gaugeKind: 0
     effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 200000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 200000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0

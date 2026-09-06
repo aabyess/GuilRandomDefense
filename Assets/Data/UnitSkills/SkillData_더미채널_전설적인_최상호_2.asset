@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_전설적인_최상호_2
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_전설적인_최상호_2
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 전설적인_최상호.  · Trig_Legend6 → e00F(!전설 쿠마 마나스킬 더미) → A07L: 1000000  · Trig_Legend6 → e0KE(!전설 쿠마 스턴 더미1) → A07K: 200000
+  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 전설적인_최상호.  · Trig_Legend6 → e0KE(!전설 쿠마 스턴 더미1) → A07K: 200000. 정정(2026-09-06, 리서치담당 c00f472 오더 감사): e00F(A07L, 1000000)를 제거했다 — 오더 없음, SetUnitTimeScale 후 ForGroupBJ(Trig_Legend6_Func003Func012A)가 실제 피해를 낸다(그 트리거 피해는 이미 다른 배정에 있음). 순수 연출값이라 지어내지 않고 값 기록만 남긴다.
   triggerType: 3
   levels:
   - cooldown: 0
@@ -23,17 +23,6 @@ MonoBehaviour:
     resetTo: 0
     gaugeKind: 0
     effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 4
-      multiplier: 1000000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
     - kind: 0
       basis: 0
       target: 3

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_영원_윤현모_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_영원_윤현모_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 영원_윤현모. 정정(2026-09-06, GATE_FIX_6/b0661f9): 원작 버프 B017 미보유 게이트 = 5절대쿨 에이스영원 4.25초 — ORIGINAL_ABSOLUTE_COOLDOWN.csv에 이미 있던 값이라 새 축 없이 SkillLevel.cooldown으로 그대로 표현한다.  · Trig_Ace_Attack → e0AB(E영원 에이스 특대화권 더미1) → A0BL: 1150000  · Trig_Ace_Attack → e0AI(E영원 에이스 특대화권 더미2) → A0OH: 120000 [추정: 자릿수 판정]
+  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 영원_윤현모. 정정(2026-09-06, GATE_FIX_6/b0661f9): 원작 버프 B017 미보유 게이트 = 5절대쿨 에이스영원 4.25초 — ORIGINAL_ABSOLUTE_COOLDOWN.csv에 이미 있던 값이라 새 축 없이 SkillLevel.cooldown으로 그대로 표현한다.  · Trig_Ace_Attack → e0AB(E영원 에이스 특대화권 더미1) → A0BL: 1150000. 정정(2026-09-06, 리서치담당 c00f472 오더 감사): e0AI(A0OH, 120000)를 제거했다 — 오더 없음, 생성 후 RemoveLocation+루프뿐이라 순수 연출. 지어내지 않고 값 기록만 남긴다.
   triggerType: 0
   levels:
   - cooldown: 4.25
@@ -29,17 +29,6 @@ MonoBehaviour:
       damageType: 1
       attackType: 3
       multiplier: 1150000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 3
-      multiplier: 120000.0
       bonus: 0.0
       chance: 1
       hitCount: 1

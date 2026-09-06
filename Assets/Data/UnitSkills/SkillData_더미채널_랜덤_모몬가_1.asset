@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_랜덤_모몬가_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_랜덤_모몬가_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 랜덤_모몬가. ⚠️ 축 밖이라 뺀 조건: GetUnitUserData 조건 — 실제보다 자주 발동할 수 있다.  · Trig_ichigo1 → e0O7(!이치고 월아) → A093: 450000
+  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 랜덤_모몬가. 정정(2026-09-06, 리서치담당 c00f472 오더 감사): e0O7(A093, 450000)를 제거했다 — 오더 없음, SetUnitAnimationByIndex+AddSpecialEffectTarget+SetUnitScalePercent만 있는 순수 연출 확정. 지어내지 않고 값 기록만 남긴다.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -23,14 +23,3 @@ MonoBehaviour:
     resetTo: 0
     gaugeKind: 0
     effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 450000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0

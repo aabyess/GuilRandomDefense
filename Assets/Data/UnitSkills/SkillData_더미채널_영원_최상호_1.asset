@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_영원_최상호_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_영원_최상호_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 영원_최상호.  · Trig_Cavendish_Attack → e08G(E영원 캐번디시 1스킬 더미1) → A0X3: 50000 [추정: 자릿수 판정]  · Trig_Cavendish_Attack → e08G(E영원 캐번디시 1스킬 더미1) → A0B3: 50000
+  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 영원_최상호.  · Trig_Cavendish_Attack → e08G(E영원 캐번디시 1스킬 더미1) → A0B3: 50000. 정정(2026-09-06, 리서치담당 c00f472 오더 감사): e08G의 능력ID가 A0X3(AIfb)로 잘못 적혀 있었다 — 실제 오더 stomp는 A0B3(AOws)에게 간다. A0X3 몫(값은 우연히 같은 50000)은 제거하고 A0B3 몫만 남긴다(Idam 미확인이었던 자리도 이걸로 닫힘 — 근거는 Idam이 아니라 Wrs1이었다).
   triggerType: 0
   levels:
   - cooldown: 0
@@ -23,17 +23,6 @@ MonoBehaviour:
     resetTo: 0
     gaugeKind: 0
     effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 4
-      multiplier: 50000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
     - kind: 0
       basis: 0
       target: 3

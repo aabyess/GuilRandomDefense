@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_전설적인_임채현_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_전설적인_임채현_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 전설적인_임채현.  · Trig_Legend11 → e00B(!전설 후지토라 더미2) → A07U: 192500  · Trig_Legend11 → e00Z(!전설 후지토라 더미) → A07U: 192500
+  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 전설적인_임채현.  · Trig_Legend11 → e00Z(!전설 후지토라 더미) → A07U: 192500. 정정(2026-09-06, 리서치담당 c00f472 오더 감사): e00B(같은 A07U, 192500) 몫을 제거했다 — 오더가 e00B가 아니라 바로 뒤 더미 e00Z로 간다(e00B 자체 오더 없음). e00Z 몫(아래 남은 효과)은 유효해 그대로 둔다.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -23,17 +23,6 @@ MonoBehaviour:
     resetTo: 0
     gaugeKind: 0
     effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 192500.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
     - kind: 0
       basis: 0
       target: 3

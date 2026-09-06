@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_희귀함_이상혁_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_희귀함_이상혁_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 희귀함_이상혁.  · Trig_Unique12 → e059(U희귀함 도플 더미) → A09W: 6000 [추정: 자릿수 판정]
+  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 희귀함_이상혁. 정정(2026-09-06, 리서치담당 c00f472 오더 감사): e059(A09W, 6000)를 제거했다 — 오더 없음, ForGroupBJ(Trig_Unique12_Func006A)가 실제 피해를 낸다. 지어내지 않고 값 기록만 남긴다. ⚠️ 같은 e059/A09W 값이 SkillData_원작능력_희귀함_이상혁.asset에도 중복으로 들어가 있었다 — 그쪽도 같이 정정함.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -23,14 +23,3 @@ MonoBehaviour:
     resetTo: 0
     gaugeKind: 0
     effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 3
-      multiplier: 6000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
