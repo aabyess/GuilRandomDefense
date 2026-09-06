@@ -147,4 +147,30 @@ public class UnitTraitData : ScriptableObject
     // 기존 축과 동시에 켜질 일이 없다) — GameHud.OnTraitButtonClicked이 이 플래그를 보고
     // UsoppDockhouseTrait.Activate()를 부른다. false(기본값)면 기존 25개는 완전히 무영향.
     public bool triggersUsoppDockhouseBoost;
+
+    // 로빈(H098) 전용 — 26명 중 유일하게 대상이 targetUnit(구매자 자신)이 아니라 플레이어이
+    // 다음 클릭으로 직접 찍는 다른 유닛이다(원작 `Trig_T_Ability_hero_Actions`,
+    // `GetSpellTargetUnit()` 확인, `Tools/w3x/원본/war3map_new.j`, 2026-09-07). true면
+    // GameHud.OnTraitButtonClicked가 즉시 적용하지 않고 대상 지정 모드로 들어간다
+    // (RefreshTraitTargeting, WorldPick.TryHit 재사용 — 새 인프라 안 만듦).
+    //
+    // 원작 확인 내용:
+    // ⓐ 대상 선택 — 플레이어가 고른다(WC3 표준 대상지정 스킬 캐스트, 자동 아님).
+    // ⓑ 부여물 둘 — `A0FL`("로빈의 손날개", 실제 게임플레이 능력: 영구 블링크, 사거리
+    //    1500·쿨다운 10초) + `A0ZP`(같은 이름, base=AItc 부착물 능력 — 순수 시각효과,
+    //    가슴에 `wing-robin3.mdx` 부착, 스탯·효과 없음).
+    // ⓒ "영구화"(`UnitMakeAbilityPermanent`) — 부여된 능력이 제거되지 않는다는 뜻일 뿐,
+    //    재구매·반복과는 무관하다. 구매 자체는 다른 25개와 같은 1회성(HashSet 잠금).
+    // ⓓ 대상 제한 — 없음. 로빈의 실제 구매 능력(`A0Q2`, `Arsg`가 아니라 `AHtb` 기반,
+    //    툴팁 "어떠한 유닛이든") 확인 결과 `atar`='air,invulnerable,organic,ground'로
+    //    거의 모든 유닛 카테고리를 허용한다 — 소유주 제한도 못 찾았다. 우리도 안 건다.
+    //
+    // 🔴 [미확정으로 남긴 것] `A0FL`의 실제 블링크 효과는 배선하지 않았다 — 우리 엔진에
+    // "플레이어가 지점을 클릭해 순간이동" 로직 자체가 없다(`UnitData.MovementAbility.
+    // Teleport`가 이미 "필드만, 로직은 나중에 구현"으로 못박혀 있다 — 새 기반시설이 필요한
+    // 사안이라 이 작업 범위 밖으로 판단했다). 대신 대상에게 `UnitIdentity.
+    // hasRobinWingBlessing` 표시만 남긴다(구매·소비·대상지정은 전부 실제로 동작) —
+    // 텔레포트 로직이 생기면 그 표시를 읽어 켜면 된다. `A0ZP`(순수 시각효과)는 우리에
+    // 부착물 시스템이 없어 대응 없이 생략 — 지어낼 게 없는 자리다(값 자체가 없다).
+    public bool targetsOtherUnit;
 }
