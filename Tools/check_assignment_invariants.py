@@ -183,6 +183,23 @@ def main():
             continue
         orphaned_skills.append(sp)
 
+    # ── 불변식 ⑥ — ④의 거울: 로스터 skill/skills·트레잇 replacementSkill이 가리키는
+    # guid인데 실제 SkillData 에셋이 없는 것(PM 지시, 2026-09-06 — 랜덤_미도리야_이즈쿠·
+    # 손오공 사고: bd1b267이 만든 guid를 c6f6bf8이 지웠는데 f6fa527이 그 중간 시점
+    # 로스터를 스캔해 이미 죽은 guid를 다시 참조로 남겼다, 뿌리 ⑱). ④는 "에셋은
+    # 있는데 참조가 없다", ⑥은 "참조는 있는데 에셋이 없다" — 둘 다 있어야 배선이
+    # 실제로 닫힌 것이다.
+    dangling_refs = []  # (referrer_path, guid)
+    for g, rs in guid_to_rosters.items():
+        if g in guid_to_path:
+            continue
+        for rp in rs:
+            dangling_refs.append((rp, g))
+    for tp in glob("Assets/Data/Traits/*.asset"):
+        m = re.search(r"^  replacementSkill: \{fileID: \d+(?:, guid: ([0-9a-f]+))?", read(tp), re.MULTILINE)
+        if m and m.group(1) and m.group(1) not in guid_to_path:
+            dangling_refs.append((tp, m.group(1)))
+
     # ── 불변식 ① — 원작 유닛 하나의 스킬이 두 로스터 유닛에 걸침 ────────────
     key_to_skill_paths = {}
     unparsed_desc = []
@@ -263,6 +280,13 @@ def main():
     for sp in orphaned_skills:
         any_problem = True
         print(f"  ❌ {sp.relative_to(ROOT)} — 아무 데도 안 걸림(만들어졌는데 아무도 안 씀)")
+    print()
+
+    print(f"[⑥ 끊어진 배선] 로스터·트레잇이 참조하는 guid 중 실제 SkillData 에셋이 "
+          f"없는 것 {len(dangling_refs)}개 (④의 거울 — 참조는 있는데 에셋이 없음)")
+    for referrer, g in dangling_refs:
+        any_problem = True
+        print(f"  ❌ {referrer.relative_to(ROOT)} — guid {g}를 참조하지만 그런 SkillData가 없음")
     print()
 
     print(f"[⑤ 정보] {csv_path.name}(판정=확정/부분확정) 원작 유닛 {len(csv_names)}개 중 로스터 "
