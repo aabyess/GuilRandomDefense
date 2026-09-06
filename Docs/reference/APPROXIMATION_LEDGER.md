@@ -559,7 +559,33 @@ Gaban_Skill_mana(진짜 3단 `<200`/`==200`/`>=300`)와 헷갈리면 안 된다.
 **5번째 효과가 빠진 게 아니라 처음부터 없다.** `CHANCE1_FIX_INSTRUCTIONS.md`의
 기존 매핑(effect_index0/3=무조건, 1=`<200`, 2=`==200`)은 정정 불필요, 그대로 맞다.
 
-## 12. 대상조건(포인트값/버프) 배선 완료 — 18개 파일, 39건 (2026-09-06, PM 지시)
+## 13. 트리거명 없는 4건 값-역추적 검증 (2026-09-06, PM 지시)
+
+구현담당2가 값만으로 원본 트리거를 역추적한 4건을 원문(진입게이트·작동여부·배타
+구조)으로 재확인한다. 하나씩 확정되는 대로 갱신한다.
+
+### `황준석_ADAP`(300,000/600,000) — **배타 맞다. 그런데 한쪽이 원작에서도 죽어 있다**
+
+`Trig_Kid_Attack_Actions` 원문:
+```jass
+if GetRandomInt(1,10)==2 then          // 우리 triggerChance=0.1과 정확히 일치
+  if UnitHasItem(캐스터,udg_item_kid_mot[플레이어])==true then
+    call ConditionalTriggerExecute(gg_trg_Kid_Skill_3_item)   // 600,000(e0MY)
+  else
+    call ConditionalTriggerExecute(gg_trg_Kid_Skill_3)        // 300,000(e0MW)
+  endif
+endif
+```
+**갈리는 기준은 캐스터의 아이템(`I010`) 보유 — 새 기준(Ⓔ 캐스터 아이템)이 맞다.**
+그런데 `gg_trg_Kid_Skill_3_item`은 `InitTrig_Kid_Skill_3_item`에서
+`DisableTrigger(gg_trg_Kid_Skill_3_item)`로 생성 직후 비활성화되고, **전체
+8,156개 함수 어디에도 이걸 다시 켜는 `EnableTrigger` 호출이 없다.** WC3에서
+`ConditionalTriggerExecute`는 트리거가 비활성 상태면 조건·액션을 아예 안 돈다 —
+**즉 아이템을 갖고 있어도 이 분기는 원작에서 절대 발동하지 않는다.** `600,000`
+(e0MY)은 **원작 자체의 죽은 코드**이고, 살아있는 유일한 값은 `300,000`(e0MW,
+아이템 유무와 무관하게 항상 이쪽만 실행됨)이다. **결론: 배타 구조는 맞지만
+"둘 다 배선"이 아니라 300,000 하나만 살아있는 값으로 배선해야 한다.** 아이템
+`I010`의 정체는 죽은 코드라 추가 조사 안 함.
 
 `POINTVALUE_CENSUS.md`(원작 `upoi` 전수, 200=라운드보스/301=신세계 사이드보스/그
 외=로스터 등급 전체 `<200`)와 `CHANCE1_FIX_INSTRUCTIONS.md`(21개 파일 매핑)를 받아
