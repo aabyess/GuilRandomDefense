@@ -1,0 +1,21 @@
+출처: Sketchfab — "jaguar"
+원본 파일명: source/jaguar.fbx (4.0 MB, 바이너리)
+받은 날: 2026-09-07
+
+배정: 안흔함_강재규 (unitName "재규어", 조합 결과 이름 「재규어 라이딩」)
+
+리깅: 있음 — 뼈 739개, 자체 애니메이션 1벌("Take").
+      ⚠️ 네 발 짐승이라 Humanoid가 성립하지 않는다. 뼈 이름도 Maya Advanced
+      Skeleton 규칙(Chest_M·Head_M·IndexToe1_L)이다.
+      → UnitModelPostprocessor.GenericRigUnits에 넣어 Generic으로 쓴다.
+      → 공용 Idle/Move/Attack은 못 받는다. ArtBinder가 자기 클립으로
+        전용 컨트롤러(`안흔함_강재규_자체.controller`)를 만들어 붙인다.
+
+텍스처: FBX가 세 장을 부른다 — aiStandardSurface1_baseColor.jpeg(몸통) ·
+        lengua.jpeg(혀) · ojos.jpeg(눈).
+        🔴 받은 건 두 장뿐이다. 몸통은 이름이 맞아 붙지만,
+           혀와 눈은 원본에 없다. 남은 aiStandardSurface5_baseColor.jpeg(40KB)가
+           둘 중 하나로 보이지만 어느 쪽인지 확정할 근거가 없어 이름을 안 바꿨다.
+           혀·눈이 회색으로 나오면 이 파일을 둘 중 하나로 바꿔 보면 된다.
+
+삼각형 25,880 — 가볍다. 지금까지 받은 것 중 제일 낫다.

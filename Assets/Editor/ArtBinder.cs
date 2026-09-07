@@ -710,7 +710,15 @@ public static class ArtBinder
         Animator animator = visual.GetComponentInChildren<Animator>();
         if (animator == null) return;
 
-        AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
+        // 🔴 공용 컨트롤러(Character.controller)의 클립은 **Humanoid**다. Humanoid 클립은
+        //    아바타를 거쳐 리타게팅되므로, 아바타가 없는 Generic 리그에는 한 프레임도 안 먹는다.
+        //    그런데 예전엔 Generic에도 이 컨트롤러를 물렸다 — 재생해도 바인드 포즈로 굳는다.
+        //    (사람 아닌 모델: 재규어 같은 네 발 짐승, 비표준 이름 리그)
+        //    그런 모델은 **자기 애니메이션**이 유일한 동작이므로 그걸로 컨트롤러를 만들어 준다.
+        AnimatorController controller = animator.avatar != null && animator.avatar.isHuman
+            ? AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath)
+            : GetOrCreateOwnClipController(visual);
+
         if (controller != null) animator.runtimeAnimatorController = controller;
 
         // 이동은 NavMeshAgent·WaypointMover가 시킨다. 애니메이션에 담긴 이동까지 살리면
@@ -719,6 +727,35 @@ public static class ArtBinder
         animator.applyRootMotion = false;
 
         if (root.GetComponent<CharacterAnimator>() == null) root.AddComponent<CharacterAnimator>();
+    }
+
+    // Generic 리그용 — 모델에 딸려 온 클립 하나를 기본 상태로 두는 컨트롤러를 만든다.
+    //
+    // 공용 컨트롤러처럼 Idle/Move/Attack을 가르지는 못한다(모델이 클립을 한 벌만 갖고 온다).
+    // 하지만 「굳어 서 있는 것」과 「살아서 숨 쉬는 것」의 차이가 크고, CharacterAnimator가
+    // 없는 파라미터에 값을 쓰지 않도록 미리 확인하므로 경고도 안 난다.
+    // 클립이 하나도 없으면 null을 돌려준다 — 그 경우엔 컨트롤러 없이 그냥 서 있는다.
+    static AnimatorController GetOrCreateOwnClipController(GameObject visual)
+    {
+        string modelPath = AssetDatabase.GetAssetPath(
+            PrefabUtility.GetCorrespondingObjectFromSource(visual) ?? (Object)visual);
+        if (string.IsNullOrEmpty(modelPath)) return null;
+
+        AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath(modelPath)
+            .OfType<AnimationClip>()
+            .FirstOrDefault(c => c != null && !c.name.StartsWith("__preview__"));
+        if (clip == null) return null;
+
+        EnsureFolder(GeneratedFolder);
+
+        string unit = System.IO.Path.GetFileNameWithoutExtension(modelPath);
+        string path = $"{GeneratedFolder}/{unit}_자체.controller";
+
+        AnimatorController made = AnimatorController.CreateAnimatorControllerAtPathWithClip(path, clip);
+        if (made != null && made.layers.Length > 0 && made.layers[0].stateMachine.states.Length > 0)
+            made.layers[0].stateMachine.states[0].state.name = "Idle";
+
+        return made;
     }
 
     // 모델마다 원본 크기가 제각각이라(1미터짜리도, 100미터짜리도 있다) 그대로 붙이면

@@ -36,6 +36,11 @@ public class UnitModelPostprocessor : AssetPostprocessor
     static readonly string[] GenericRigUnits =
     {
         "흔함_노태현",
+
+        //   안흔함_강재규 — 재규어(네 발 짐승)다. 사람 골격 자체가 없으니 Humanoid가 성립하지
+        //                  않는다. 뼈 739개가 Maya Advanced Skeleton 이름 규칙(Chest_M·
+        //                  IndexToe1_L 꼴)이고, 자기 애니메이션이 한 벌 들어 있다.
+        "안흔함_강재규",
     };
 
     // 이 숫자를 올리면 유니티가 Assets/Art/Units 아래 모델을 **전부 다시 임포트**한다.
@@ -43,7 +48,8 @@ public class UnitModelPostprocessor : AssetPostprocessor
     //
     // 1 → 2 (2026-09-07): 조기 반환을 없애 교체된 스킨의 아바타를 다시 만들게 했다.
     //                     기존 .meta에 남아 있던 옛 뼈 매핑을 씻어내야 T자가 풀린다.
-    public override uint GetVersion() => 2;
+    // 2 → 3 (2026-09-07): 안흔함_강재규(재규어)를 Generic으로 뺐다.
+    public override uint GetVersion() => 3;
 
     void OnPreprocessModel()
     {
