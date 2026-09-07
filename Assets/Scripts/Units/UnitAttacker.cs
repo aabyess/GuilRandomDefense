@@ -418,6 +418,12 @@ public class UnitAttacker : MonoBehaviour
         // 마방깍은 마법 방어 배율을 올린다(= 마법 피해를 더 받게 한다). 방깎과 별개 축이다.
         float magicShred = source.EffectSum(unitData, TraitEffectKind.MagicArmorShred);
         if (magicShred > 0f) target.AddMagicArmorShred(magicShred);
+
+        // 이감부여(원작 AOae류, 2026-09-07 배선 — PM 승인) — 방깎과 같은 자리·같은 관례
+        // (영구 누적, EnemyDummy.MoveSpeedFloor에서 잘림). value가 원작 "이동속도 X%
+        // 감소"의 X(0.07=7%)다.
+        float slow = source.EffectSum(unitData, TraitEffectKind.SlowOnHit);
+        if (slow > 0f) target.AddMoveSpeedShred(slow);
     }
 
     // 평타 강화(원작 Bash) — 방금 들어간 평타에 이어 확률로 별도 피해 인스턴스를 한 번 더

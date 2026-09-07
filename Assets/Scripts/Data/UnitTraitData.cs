@@ -4,14 +4,15 @@ using UnityEngine;
 // 리서치담당 3차 조사(Docs/reference/UPGRADE_SHOP.md "3차 조사") 표본 22종에서 뽑은 11개 유형.
 // 표본이 로스터의 9%뿐이라 여기서 끝났다고 보지 말 것 — 새 유형이 나오면 여기 추가한다.
 //
-// 지금 전투에 반영되는 건 DamageIncrease와 ArmorShred 둘이다(UnitAttacker 참고).
+// 지금 전투에 반영되는 건 DamageIncrease·ArmorShred·SlowOnHit 셋이다(UnitAttacker 참고).
 // ArmorShred는 2026-09-03 방어력 시스템이 들어오면서 살아났다 — EnemyDummy.AddArmorShred로 쌓인다.
-// 나머지는 데이터 자리만 있고 아직 아무 시스템도 안 읽는다 — SlowOnHit는 EnemyDummy에 %감속
-// 인프라가 없고, Summon/MechanismChange/UtilityBuff/CastMethodChange는 유닛 전용 코드(Tier B)가 필요하다.
+// SlowOnHit는 2026-09-07 EnemyDummy.AddMoveSpeedShred(MoveSpeedFloor=220 하한)로 살아났다.
+// 나머지는 데이터 자리만 있고 아직 아무 시스템도 안 읽는다 — Summon/MechanismChange/
+// UtilityBuff/CastMethodChange는 유닛 전용 코드(Tier B)가 필요하다.
 public enum TraitEffectKind
 {
     DamageIncrease,        // 딜증가 — 표본에서 가장 흔함(22종 중 10). 유일하게 지금 반영됨.
-    SlowOnHit,              // 이감부여 — EnemyDummy에 %감속 인프라 없음(2차)
+    SlowOnHit,              // 이감부여 — EnemyDummy.AddMoveSpeedShred로 쌓인다(2026-09-07)
     Summon,                 // 소환(서브유닛) — Tier B 전용
     MovementAbilityGrant,   // 이동능력부여(공중이동 등)
     StatusAilment,          // 상태이상(스턴 등)

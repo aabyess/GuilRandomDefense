@@ -38,7 +38,28 @@ public class EnemyDummy : MonoBehaviour
 
     // 대상 이동속도 — SkillEffectBasis.TargetMoveSpeed가 읽는다(2026-09-06). data가 private
     // 이라 노출만 새로 뚫었다. data가 아직 없으면 0 — 그 경우 그 basis는 bonus만 남는다.
-    public float MoveSpeed => data != null ? data.moveSpeed : 0f;
+    // ⚠️ 2026-09-07 추가(TraitEffectKind.SlowOnHit 배선, PM 승인) — moveSpeedShredPercent를
+    // 곱해서 뺀 실효값이다. 워크3 엔진은 유닛 이동속도를 220~522로 하드 클램프한다(맵
+    // 설정으로 못 바꾸는 엔진 상수 — DefenseArmor처럼 맵 파일 확인이 필요한 값이 아니다,
+    // 블리자드 공식 문서·수십 년째 불변으로 알려진 값). 원작 `AOae`류(자석자석·모래모래·
+    // 뭉게뭉게, `Oae1=-0.07`) 3개가 전부 이 최소치 밑으로 못 내려가는 게 전제라 우리도
+    // 같은 하한을 그대로 가져왔다 — MoveSpeedFloor 참고.
+    public float MoveSpeed => data != null
+        ? Mathf.Max(MoveSpeedFloor, data.moveSpeed * (1f - moveSpeedShredPercent))
+        : 0f;
+
+    // 워크3 엔진 하드 클램프(맵 설정 불가, 전 버전 공통) — 유닛 이동속도는 220 밑으로도
+    // 522 위로도 못 간다. 여기선 하한만 쓴다(감속만 다루는 축이라 상한은 대상이 아니다).
+    public const float MoveSpeedFloor = 220f;
+
+    // TraitEffectKind.SlowOnHit(이감부여) 누적치 — ArmorShred(armorShred)와 같은 패턴:
+    // 영구 누적, 위 MoveSpeedFloor에서 잘리므로 무한히 걸려도 효과는 유계다. 0(기본)이면
+    // MoveSpeed가 원본 그대로라 회귀 없음.
+    float moveSpeedShredPercent;
+
+    /// <summary>이동속도 감소(%, 0.07=7%)를 건다. 음수를 넣으면 되돌린다(지속시간 있는
+    /// 감속이 생기면 그렇게 쓴다) — AddArmorShred와 같은 관례.</summary>
+    public void AddMoveSpeedShred(float amount) => moveSpeedShredPercent += amount;
     public float HpRatio => MaxHp > 0f ? Mathf.Clamp01(hp / MaxHp) : 0f;
 
     // 라운드 보스 여부(OnBossKilled와 같은 판단 기준). 도움소 흡수(즉사기)가 보스를 못 잡게
