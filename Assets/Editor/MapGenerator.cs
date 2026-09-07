@@ -1234,11 +1234,24 @@ public static class MapGenerator
         foreach (MonoBehaviour script in figure.GetComponentsInChildren<MonoBehaviour>(true))
             if (script != null) Object.DestroyImmediate(script);
 
+        // ⚠️ Animator는 **남긴다**. 예전엔 이것까지 지우고 PoseAsIdle이 남긴 뼈 회전에만
+        //    기댔는데, 그 한 번의 평가가 실패하면 인형이 T자로 굳는다 — 실패해도 조용해서
+        //    240개 중 어느 게 굳었는지 눈으로 못 고른다(2026-09-07 사장님 「팔 벌리고있음」).
+        //    Animator를 살려 두면 컨트롤러 기본 상태가 Idle이라 실행 중엔 반드시 선다.
+        //    CharacterAnimator(게임 상태를 읽는 쪽)는 위에서 이미 지워졌으므로 Idle에 머문다.
         foreach (Component component in figure.GetComponentsInChildren<Component>(true))
         {
             if (component == null) continue;
             if (component is Transform || component is Renderer || component is MeshFilter) continue;
+            if (component is Animator) continue;
             Object.DestroyImmediate(component);
+        }
+
+        // 표 위 인형이 수백 개다. 안 보이는 동안은 계산도 끄고 시간도 안 흘린다.
+        foreach (Animator doll in figure.GetComponentsInChildren<Animator>(true))
+        {
+            doll.applyRootMotion = false;          // 제자리에 세워 둔다
+            doll.cullingMode = AnimatorCullingMode.CullCompletely;
         }
 
         Renderer[] renderers = figure.GetComponentsInChildren<Renderer>(true);
@@ -1270,10 +1283,9 @@ public static class MapGenerator
         return true;
     }
 
-    // 스킨 인형은 애니메이터를 걷어내면 바인드 포즈(T자)로 선다. 걷어내기 전에 공용 컨트롤러의
-    // Idle 상태를 0초에서 한 번 평가해 뼈 회전만 남긴다 — 표·부스 위 인형이 팔 벌리고 서 있지 않게.
-    // Humanoid는 클립을 직접 샘플링할 수 없어 Animator.Update로 평가한다(에디터에서도 돈다).
-    // 컨트롤러가 없거나 Idle 상태가 없으면 아무것도 안 한다 — 그 경우 지금처럼 T자다.
+    // 편집 중(재생 전) 씬 뷰에서도 인형이 Idle 자세로 보이게 한 번 평가해 둔다.
+    // 실행 중 자세는 이제 살아 있는 Animator가 책임진다 — 여긴 보조다.
+    // 컨트롤러가 없으면 아무것도 안 한다.
     static void PoseAsIdle(GameObject figure)
     {
         Animator animator = figure.GetComponentInChildren<Animator>(true);
