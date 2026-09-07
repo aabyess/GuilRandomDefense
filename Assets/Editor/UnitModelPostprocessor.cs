@@ -30,13 +30,13 @@ public class UnitModelPostprocessor : AssetPostprocessor
     //   안흔함_김수빈 — Hips도 무릎도 없는 판이었으나 2026-09-07 Rigify 리그판으로
     //                   교체해 이 목록에서 뺐다(Hips·thigh·shin·forearm 전부 있음).
     // Mixamo로 리깅해 오면 이 목록에서 빼야 한다(그때 mixamorig: 접두어가 붙는다).
-    //   흔함_노태현 — 뼈 이름이 LArm_Upper·LFoot_Heel·Head_Neck 꼴(상용 게임 추출 리그)이라
-    //                  유니티가 사람 골격에 **한 개도** 매핑하지 못했다(2026-09-07 실측 0개).
-    //                  자기 애니메이션은 들어 있으므로(커브 노드 4,963건) Generic으로 쓴다.
+    // 🔴 흔함_노태현은 여기 있었다가 **뺐다**(2026-09-07).
+    //    「사람 골격에 한 개도 매핑 안 된다(0개)」고 보고 넣었는데, 그 0개 자체가
+    //    아래 조기 반환이 만든 낡은 .meta였다. 조기 반환을 없애고 다시 임포트하니
+    //    필수 뼈 15개를 전부 잡았다(어깨·발가락·눈까지 21개). Humanoid로 잘 선다.
+    //    ⚠️ 교훈: 「매핑 0개」를 리그 탓으로 보기 전에 **다시 임포트부터** 시킬 것.
     static readonly string[] GenericRigUnits =
     {
-        "흔함_노태현",
-
         //   안흔함_강재규 — 재규어(네 발 짐승)다. 사람 골격 자체가 없으니 Humanoid가 성립하지
         //                  않는다. 뼈 739개가 Maya Advanced Skeleton 이름 규칙(Chest_M·
         //                  IndexToe1_L 꼴)이고, 자기 애니메이션이 한 벌 들어 있다.
@@ -49,7 +49,8 @@ public class UnitModelPostprocessor : AssetPostprocessor
     // 1 → 2 (2026-09-07): 조기 반환을 없애 교체된 스킨의 아바타를 다시 만들게 했다.
     //                     기존 .meta에 남아 있던 옛 뼈 매핑을 씻어내야 T자가 풀린다.
     // 2 → 3 (2026-09-07): 안흔함_강재규(재규어)를 Generic으로 뺐다.
-    public override uint GetVersion() => 3;
+    // 3 → 4 (2026-09-07): 흔함_노태현을 Generic에서 되돌렸다(재임포트하니 잘 매핑됐다).
+    public override uint GetVersion() => 4;
 
     void OnPreprocessModel()
     {
