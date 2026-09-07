@@ -1,17 +1,21 @@
-원본 파일명: nanachi__made_in_abyss.glb (Sketchfab)
+원본 파일명: nanachi.glb (Sketchfab, Rigify 리그판)
 받은 폴더:   ~/Downloads
 옮긴 날:     2026-09-07
-리깅:        본·스킨 데이터 5828 건 — 뼈 72개
-애니메이션:  1개(Generic 경로라 이걸 그대로 쓴다)
+리깅:        뼈 474개 — 블렌더 Rigify. Humanoid 필수 부위 전부 있음
+  Hips(hips_112·DEF-pelvis) · DEF-spine · head · upper_arm.L · forearm.L · hand.L
+  thigh.L · shin.L · foot.L
+애니메이션:  2개 있으나 Humanoid 경로라 임포트하지 않는다 — 공용 클립을 쓴다
 
-🔴 Humanoid 불가 — GenericRigUnits에 넣었다. 이유는 뼈 구조다:
-   · Hips(골반)가 없다. 루트가 spine_66이다 — 유니티 Humanoid 필수 뼈다
-   · 다리에 무릎이 없다: thigh.L → foot.L 직결(LowerLeg 필수)
-   · 이름이 블렌더 관례(spine.001·arm.L) + 숫자 접미어라 자동 매핑도 안 붙는다
-   나나치는 짐승 형태(귀 4쌍·꼬리 5마디)라 애초에 사람 골격이 아니다.
+2026-09-07 교체: nanachi__made_in_abyss.glb(12MB·뼈72·Hips없음·Generic)에서
+  이 Rigify판으로 바꿨다. 사장님 지시. Humanoid가 되어 공용 Idle/Walk/Attack을 받는다.
+
+🔴 크기 문제 — 이 프로젝트에서 가장 무거운 자산이다:
+   fbx 77MB(GitHub 권장 50MB 초과) · 삼각형 331,191(게임 캐릭터 보통 1~3만)
+   .glb 원본은 37MB인데 assimp로 .fbx 변환하며 두 배가 됐다(바이너리 표현 차이).
+   성능·저장소가 문제되면 ① 폴리곤 감소 ② 앞 버전(12MB·Generic)으로 회귀
+   ③ 다른 모델로 교체 중에 고르면 된다.
 
 ⚠️ .glb → .fbx 변환본이다(assimp). .glb는 glTFast의 ScriptedImporter가 읽어서
-   UnitModelPostprocessor가 안 걸린다. 내장 텍스처 5장은 추출해 Textures/에 뒀다.
-⚠️ 삼각형 약 164,422개 — 게임 캐릭터치고 무겁다(보통 1~3만).
+   UnitModelPostprocessor(Humanoid 강제·애니메이션 차단)가 안 걸린다.
 
 사장님 확정 2026-09-07: IP 제약 없음(상업적 사용 아님, 친구들과 재미로).
