@@ -21,11 +21,13 @@ public class SelfUpgradeAbilityData : ScriptableObject
 
     // 시도할 때마다(성공/실패 무관) 나가는 자원. A0LZ 원작값: 목재2 + 랜덤위습(e0IX) 3기.
     public int woodCost = 2;
-    // ⚠️ 랜덤위습(e0IX)에 정확히 대응하는 WispData 자산이 이 프로젝트에 아직 없다
-    // (ACQUISITION_RESEARCH.md — 우리 Wisp_* 7종 중 "isPlayerChoice=0·targetGrade=흔함"인
-    // 순수 랜덤 위습이 없다, 가장 가까운 건 Wisp_흔함선택인데 그건 isPlayerChoice=1이라
-    // 뜻이 다르다). 배정 담당(구현담당2/PM)이 그 자산을 만들거나 지정할 때까지 비워둔다 —
-    // 비어 있으면 TryUpgradeSelf가 안전하게 실패한다(아래 참고), 조용히 무제한 통과하지 않는다.
+    // ⚠️ 2026-09-07 정정(PM 지시, "필드만·아직 없다" 뼈대 구멍 점검) — e0IX 매핑 자체는
+    // 풀렸다: `Wisp_흔함.asset`(isPlayerChoice=0·targetGrade=흔함, 2026-09-07 신설, A09G
+    // 흔함 판매 누적형이 이미 이 자산을 쓴다)이 정확히 이 자리다. **다만 이 클래스의
+    // 자산 인스턴스 자체가 아직 하나도 없다**(A0LZ가 어느 로스터 유닛에 배정됐는지도
+    // 미정) — wispCurrency를 채우기 전에 먼저 SelfUpgradeAbilityData 자산 생성 + 대상
+    // 유닛 배정이 필요하다(둘 다 이번 점검 범위 밖, 콘텐츠 배정 문제). 그때까지 비어
+    // 있으면 TryUpgradeSelf가 안전하게 실패한다(아래 참고), 조용히 무제한 통과하지 않는다.
     public WispData wispCurrency;
     public int wispCost = 3;
 }
