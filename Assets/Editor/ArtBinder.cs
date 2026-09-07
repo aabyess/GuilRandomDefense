@@ -81,12 +81,34 @@ public static class ArtBinder
         return Quaternion.identity;
     }
 
+    // 흔함은 기준 키(20)보다 조금 작게 세운다 — 사장님 지시 2026-09-07("조금만 더 작게").
+    // 등급이 올라갈수록 존재감이 커지는 게 자연스러워서, 최하위 등급을 기준보다 낮춘다.
+    // ⚠️ 이 값은 **프리팹 키**만 바꾼다. 조합판·선택위습 부스에 서 있는 인형은
+    // MapGenerator가 자리 폭에 맞춰 따로 재우므로(step*0.9) 여기 영향을 안 받는다.
+    const float CommonHeightScale = 0.85f;
+
     static float HeightScaleFor(string modelName)
     {
+        // 모델별 개별 지정이 먼저다 — 상붕카(자전거)처럼 등급 규칙으로 못 맞추는 게 있다.
         foreach ((string name, Vector3 _, float scale) in ModelAdjustments)
             if (name == modelName) return scale;
 
+        if (IsCommonGradeModel(modelName)) return CommonHeightScale;
+
         return 1f;
+    }
+
+    // 이 모델이 흔함 유닛에 붙는가. 파일명이 로스터 이름 그대로인 경우와,
+    // ModelOverrides로 이름이 다르게 붙는 경우(예: idle → 흔함_최상호) 둘 다 본다.
+    // "안흔함_"은 "흔함_"으로 시작하지 않으므로 여기 안 걸린다.
+    static bool IsCommonGradeModel(string modelName)
+    {
+        if (modelName.StartsWith("흔함_")) return true;
+
+        foreach ((string model, string unit) in ModelOverrides)
+            if (model == modelName) return unit.StartsWith("흔함_");
+
+        return false;
     }
 
     // 특정 모델을 특정 유닛에 붙인다.
