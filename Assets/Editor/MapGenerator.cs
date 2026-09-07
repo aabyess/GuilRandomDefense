@@ -1282,13 +1282,55 @@ public static class MapGenerator
         try
         {
             animator.enabled = true;
+
+            // ⚠️ Update(0f)를 한 번만 부르면 상태 머신은 Idle로 들어가지만 **포즈가 안 써진다** —
+            // 델타 0이라 평가를 건너뛴다. 2026-09-07 사장님이 "몇몇 스킨이 팔 벌리고 있다"고
+            // 하신 게 이것이었다. Rebind로 바인드 포즈에서 시작해, 진입 한 번 + 평가 한 번으로
+            // 두 번 돌린다.
+            animator.Rebind();
             animator.Play("Idle", 0, 0f);
             animator.Update(0f);
+            animator.Update(0f);
+
+            // 그래도 안 먹으면(아바타 없음·Humanoid 매핑 실패 등) 클립을 직접 샘플링한다.
+            // Generic 리그는 이 경로로만 선다.
+            if (!PoseLooksApplied(animator))
+            {
+                AnimationClip idle = FindIdleClip(animator);
+                if (idle != null) idle.SampleAnimation(figure, 0f);
+            }
         }
         catch (System.Exception e)
         {
             Debug.LogWarning($"[맵] {figure.name} 대기 자세 평가 실패 — T자로 둡니다: {e.Message}");
         }
+    }
+
+    // T자(바인드 포즈)는 양팔이 좌우로 곧게 뻗어 있다. Idle이 실제로 적용됐는지를
+    // "위팔이 몸통 옆으로 내려왔는가"로 대충 가른다 — 정확한 판정이 아니라 폴백 트리거다.
+    static bool PoseLooksApplied(Animator animator)
+    {
+        if (!animator.isHuman) return false;   // Generic은 항상 샘플링 경로를 태운다
+
+        Transform upperArm = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+        Transform chest = animator.GetBoneTransform(HumanBodyBones.Chest)
+                          ?? animator.GetBoneTransform(HumanBodyBones.Spine);
+        if (upperArm == null || chest == null) return false;
+
+        // 팔이 수평에 가까우면(높이 차가 거의 없으면) 아직 T자로 본다.
+        return Mathf.Abs(upperArm.position.y - chest.position.y) > 0.05f;
+    }
+
+    static AnimationClip FindIdleClip(Animator animator)
+    {
+        RuntimeAnimatorController controller = animator.runtimeAnimatorController;
+        if (controller == null) return null;
+
+        foreach (AnimationClip clip in controller.animationClips)
+            if (clip != null && clip.name.IndexOf("idle", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                return clip;
+
+        return controller.animationClips.Length > 0 ? controller.animationClips[0] : null;
     }
 
     static string IngredientName(RecipeIngredient ingredient)

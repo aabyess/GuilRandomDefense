@@ -27,13 +27,23 @@ public class UnitModelPostprocessor : AssetPostprocessor
     //   안흔함_박준희 — SCP-049(블렌더 리그)였다가 사이렌헤드로 교체. 뼈 이름이
     //                   Hips_53·Spine_44·LeftArm_21 꼴(표준 + 숫자 접미어)이라 Humanoid로
     //                   시도한다. 유니티가 아바타를 못 만들면 여기 다시 넣으면 된다.
-    //   안흔함_김수빈 — 나나치(메이드 인 어비스). Hips가 아예 없고(루트가 spine) 다리에
-    //                   무릎도 없다(thigh→foot 직결). 짐승 형태라 사람 골격이 아니다.
+    //   안흔함_김수빈 — Hips도 무릎도 없는 판이었으나 2026-09-07 Rigify 리그판으로
+    //                   교체해 이 목록에서 뺐다(Hips·thigh·shin·forearm 전부 있음).
     // Mixamo로 리깅해 오면 이 목록에서 빼야 한다(그때 mixamorig: 접두어가 붙는다).
+    //   흔함_노태현 — 뼈 이름이 LArm_Upper·LFoot_Heel·Head_Neck 꼴(상용 게임 추출 리그)이라
+    //                  유니티가 사람 골격에 **한 개도** 매핑하지 못했다(2026-09-07 실측 0개).
+    //                  자기 애니메이션은 들어 있으므로(커브 노드 4,963건) Generic으로 쓴다.
     static readonly string[] GenericRigUnits =
     {
-        "안흔함_김수빈",
+        "흔함_노태현",
     };
+
+    // 이 숫자를 올리면 유니티가 Assets/Art/Units 아래 모델을 **전부 다시 임포트**한다.
+    // 위의 규칙을 고쳤는데 이미 임포트된 모델에 반영이 안 될 때 올린다.
+    //
+    // 1 → 2 (2026-09-07): 조기 반환을 없애 교체된 스킨의 아바타를 다시 만들게 했다.
+    //                     기존 .meta에 남아 있던 옛 뼈 매핑을 씻어내야 T자가 풀린다.
+    public override uint GetVersion() => 2;
 
     void OnPreprocessModel()
     {
@@ -50,10 +60,15 @@ public class UnitModelPostprocessor : AssetPostprocessor
             return;
         }
 
-        // 이미 사람 손이 닿은 모델은 그대로 둔다 — 이 프로세서는 "처음 들어올 때"만 맞춘다.
-        if (importer.importSettingsMissing == false && importer.animationType == ModelImporterAnimationType.Human)
-            return;
-
+        // ⚠️ 예전엔 여기서 "이미 Humanoid면 그대로 둔다"고 조기 반환했다. 그게 T자 자세의
+        //    진짜 원인이었다(2026-09-07). 같은 경로의 모델 파일만 새 스킨으로 갈아끼우면
+        //    .meta는 살아남는다 — 그 안의 humanDescription(뼈 매핑)은 **이전 모델의 것**이다.
+        //    animationType이 이미 Human이라 조기 반환하니 아바타가 영영 안 다시 만들어지고,
+        //    없는 뼈를 가리키는 아바타로는 리타게팅이 조용히 실패해 바인드 포즈(T자)로 선다.
+        //    실측: 안흔함_황정기 FBX엔 mixamorig 뼈가 34개 있는데 메타 매핑은 4개뿐이었다.
+        //
+        //    이 프로세서는 스킨 240종을 자동으로 세우는 게 목적이라 Rig 탭을 손으로 만지지
+        //    않는다. 예외가 필요하면 GenericRigUnits로 뺀다. 그래서 매번 다시 만든다.
         importer.animationType = ModelImporterAnimationType.Human;
         importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
         importer.optimizeGameObjects = false;
@@ -67,6 +82,30 @@ public class UnitModelPostprocessor : AssetPostprocessor
         importer.importAnimation = false;
 
         KeepBones(importer);
+    }
+
+    // 아바타가 실제로 만들어졌는지 확인한다.
+    //
+    // 왜 — Humanoid 매핑 실패는 **조용하다**. 임포트는 성공하고, 프리팹도 생기고, 컨트롤러도
+    // 붙는다. 다만 유닛이 T자로 서 있을 뿐이다. 부스에 240개가 서 있으면 어느 게 실패한
+    // 건지 눈으로 못 고른다. 그래서 임포트 시점에 이름을 찍어 준다.
+    void OnPostprocessModel(GameObject root)
+    {
+        if (!assetPath.StartsWith(UnitModelRoot)) return;
+        if (IsGenericRigUnit(assetPath)) return;
+
+        ModelImporter importer = (ModelImporter)assetImporter;
+        if (importer.animationType != ModelImporterAnimationType.Human) return;
+
+        Animator animator = root.GetComponent<Animator>();
+        if (animator != null && animator.avatar != null && animator.avatar.isValid && animator.avatar.isHuman)
+            return;
+
+        Debug.LogError(
+            $"[스킨] {assetPath} — Humanoid 아바타를 못 만들었다. 이 유닛은 T자로 선다.\n" +
+            "뼈 이름이 표준(Hips·Spine·LeftArm…)이 아닐 가능성이 크다. " +
+            "Mixamo로 리깅해 오거나, UnitModelPostprocessor.GenericRigUnits에 유닛 이름을 넣어 " +
+            "Generic(자기 애니메이션 사용)으로 돌려라.");
     }
 
     // 폴더 이름이 목록에 있으면 Generic으로 둔다. 경로는 "Assets/Art/Units/<유닛>/<파일>" 꼴이다.

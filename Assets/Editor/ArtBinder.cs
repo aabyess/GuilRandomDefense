@@ -214,11 +214,7 @@ public static class ArtBinder
     [MenuItem("Tools/아트/텍스처 연결")]
     public static void LinkTextures()
     {
-        List<Texture2D> textures = AssetDatabase.FindAssets("t:Texture2D", new[] { "Assets/Art" })
-            .Select(AssetDatabase.GUIDToAssetPath)
-            .Select(AssetDatabase.LoadAssetAtPath<Texture2D>)
-            .Where(t => t != null)
-            .ToList();
+        List<Texture2D> textures = LoadTexturesUnder("Assets/Art");
 
         if (textures.Count == 0)
         {
@@ -239,6 +235,13 @@ public static class ArtBinder
             ModelImporter importer = AssetImporter.GetAtPath(modelPath) as ModelImporter;
             if (importer == null) continue;
 
+            // 🔴 텍스처는 **그 모델 폴더 안에서만** 찾는다.
+            //
+            // 예전엔 Assets/Art 전체에서 찾았다. 그러면 김수빈의 텍스처가 문필환 머티리얼에
+            // 붙는다 — 특히 glb에서 뽑은 텍스처는 파일명이 `0.png`~`7.png`라, 아래 부분일치가
+            // 이름에 "0"이 든 **모든** 머티리얼에 걸린다(2026-09-07 사장님 「스킨 색이 없고」).
+            List<Texture2D> ownTextures = LoadTexturesUnder(System.IO.Path.GetDirectoryName(modelPath).Replace('\\', '/'));
+
             // 모델 안에 박힌 머티리얼은 못 고친다. 밖으로 빼서 우리가 만든 것으로 갈아 끼운다.
             List<AssetImporter.SourceAssetIdentifier> slots =
                 AssetDatabase.LoadAllAssetsAtPath(modelPath)
@@ -253,7 +256,7 @@ public static class ArtBinder
 
             foreach (AssetImporter.SourceAssetIdentifier slot in slots)
             {
-                Texture2D texture = MatchTexture(slot.name, textures);
+                Texture2D texture = MatchTexture(slot.name, ownTextures);
                 if (texture == null)
                 {
                     unmatched.Add($"{System.IO.Path.GetFileName(modelPath)} / {slot.name}");
@@ -261,7 +264,10 @@ public static class ArtBinder
                     continue;
                 }
 
-                string materialPath = $"{MaterialFolder}/{slot.name}.mat";
+                // 유닛 이름을 앞에 붙인다 — glb 변환 머티리얼은 이름이 `material_0` 꼴이라
+                // 여러 유닛이 같은 .mat 하나를 두고 서로 덮어쓴다.
+                string owner = System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(modelPath));
+                string materialPath = $"{MaterialFolder}/{owner}_{slot.name}.mat";
                 Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
                 if (material == null)
                 {
@@ -304,14 +310,31 @@ public static class ArtBinder
         Texture2D exact = textures.FirstOrDefault(t => t.name.ToLowerInvariant() == target);
         if (exact != null) return exact;
 
+        // ⚠️ 부분일치는 **양쪽 다 3글자 이상**일 때만 쓴다.
+        //    `0.png`처럼 한 글자짜리 이름은 아무 머티리얼에나 걸려서, 짝이 맞는 것처럼
+        //    보이는 엉뚱한 텍스처를 붙인다. 차라리 못 찾았다고 하는 게 낫다.
         Texture2D partial = textures.FirstOrDefault(t =>
         {
             string name = t.name.ToLowerInvariant();
+            if (name.Length < 3 || target.Length < 3) return false;
             return target.Contains(name) || name.Contains(target);
         });
         if (partial != null) return partial;
 
+        // 폴더에 텍스처가 하나뿐이면 그걸 쓴다. 이제 폴더 단위로 좁혀 놨으므로
+        // 「이 모델의 유일한 텍스처」라는 뜻이고, 예전처럼 남의 유닛 것이 아니다.
         return textures.Count == 1 ? textures[0] : null;
+    }
+
+    static List<Texture2D> LoadTexturesUnder(string folder)
+    {
+        if (string.IsNullOrEmpty(folder) || !AssetDatabase.IsValidFolder(folder)) return new List<Texture2D>();
+
+        return AssetDatabase.FindAssets("t:Texture2D", new[] { folder })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .Select(AssetDatabase.LoadAssetAtPath<Texture2D>)
+            .Where(t => t != null)
+            .ToList();
     }
 
     static IEnumerable<string> ModelPaths()
