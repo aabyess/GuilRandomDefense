@@ -23,13 +23,13 @@ public class UnitModelPostprocessor : AssetPostprocessor
     // (idle/walk/attack) 리타게팅은 못 받지만, 애초에 받을 수 있는 골격이 아니다.
     //
     // 2026-09-07 조사(PM):
-    //   안흔함_박준희 — 블렌더 기본 이름(Armature·Bone_001…). 사람 골격 매핑 불가
-    //   안흔함_황정기 — 뼈가 Scene_Root뿐. 사실상 오브젝트 애니메이션
-    // 둘 다 Mixamo로 리깅해 오면 이 목록에서 빼야 한다(그때 mixamorig: 접두어가 붙는다).
+    //   안흔함_박준희 — SCP-049 모델로 교체됨. 블렌더 리그(Foot.L·DownArm.L…)라 사람 골격
+    //                   매핑 불가. 대신 자체 애니메이션이 아주 많다(스택 48개).
+    //   안흔함_황정기 — Mixamo로 리깅해 와서 **이 목록에서 뺐다**(mixamorig 표준 뼈 34개).
+    // Mixamo로 리깅해 오면 이 목록에서 빼야 한다(그때 mixamorig: 접두어가 붙는다).
     static readonly string[] GenericRigUnits =
     {
         "안흔함_박준희",
-        "안흔함_황정기",
     };
 
     void OnPreprocessModel()
@@ -54,6 +54,14 @@ public class UnitModelPostprocessor : AssetPostprocessor
         importer.animationType = ModelImporterAnimationType.Human;
         importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
         importer.optimizeGameObjects = false;
+
+        // 모델에 딸려 온 애니메이션은 안 가져온다.
+        //
+        // 왜 — Humanoid 유닛은 공용 컨트롤러(Character.controller)의 Idle/Walk/Attack을
+        // 리타게팅해서 쓴다. 모델 자체 클립까지 들어오면 그게 이기고, 부스·조합판 인형이
+        // 엉뚱한 자세로 선다(2026-09-07 김경현이 Mixamo의 FreeRunning 발차기 자세로 섰다).
+        // Generic 쪽은 정반대로 자기 애니메이션이 유일한 동작이라 위에서 건드리지 않는다.
+        importer.importAnimation = false;
 
         KeepBones(importer);
     }
