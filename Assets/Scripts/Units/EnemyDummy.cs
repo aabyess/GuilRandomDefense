@@ -38,23 +38,26 @@ public class EnemyDummy : MonoBehaviour
 
     // 대상 이동속도 — SkillEffectBasis.TargetMoveSpeed가 읽는다(2026-09-06). data가 private
     // 이라 노출만 새로 뚫었다. data가 아직 없으면 0 — 그 경우 그 basis는 bonus만 남는다.
-    // ⚠️ 2026-09-07 추가(TraitEffectKind.SlowOnHit 배선, PM 승인) — moveSpeedShredPercent를
-    // 곱해서 뺀 실효값이다. 워크3 엔진은 유닛 이동속도를 220~522로 하드 클램프한다(맵
-    // 설정으로 못 바꾸는 엔진 상수 — DefenseArmor처럼 맵 파일 확인이 필요한 값이 아니다,
-    // 블리자드 공식 문서·수십 년째 불변으로 알려진 값). 원작 `AOae`류(자석자석·모래모래·
-    // 뭉게뭉게, `Oae1=-0.07`) 3개가 전부 이 최소치 밑으로 못 내려가는 게 전제라 우리도
-    // 같은 하한을 그대로 가져왔다 — MoveSpeedFloor 참고.
+    // ⚠️ 2026-09-07 정정(PM 지적, 958bbe5 회귀) — 처음엔 워크3 엔진 하드 클램프(220~522)의
+    // **절대값 220**을 그대로 하한으로 썼는데, 우리 `EnemyData.moveSpeed`는 워크3 단위가
+    // 아니다(실측: 0/7.0/10.0뿐, 레인 한 변 110·적 키 15 스케일 — `ArtBinder` 참고). 그
+    // 결과 `Max(220, 10)=220`이 되어 shred 여부와 무관하게 **95종 전부 220으로 튀는
+    // 회귀**였다. 절대값 대신 **워크3 클램프의 비율(220/522≈0.42, "최저는 최고의 42%")**
+    // 만 가져온다 — 단위가 달라도 비율은 그대로 옮겨쓸 수 있다. shred=0이면
+    // `Max(MoveSpeedFloorRatio, 1)=1`이라 `data.moveSpeed` 그대로(진짜 회귀 없음),
+    // moveSpeed=0(고정형 20종)도 0×무엇=0으로 그대로 유지된다.
     public float MoveSpeed => data != null
-        ? Mathf.Max(MoveSpeedFloor, data.moveSpeed * (1f - moveSpeedShredPercent))
+        ? data.moveSpeed * Mathf.Max(MoveSpeedFloorRatio, 1f - moveSpeedShredPercent)
         : 0f;
 
-    // 워크3 엔진 하드 클램프(맵 설정 불가, 전 버전 공통) — 유닛 이동속도는 220 밑으로도
-    // 522 위로도 못 간다. 여기선 하한만 쓴다(감속만 다루는 축이라 상한은 대상이 아니다).
-    public const float MoveSpeedFloor = 220f;
+    // 워크3 엔진 하드 클램프(맵 설정 불가, 전 버전 공통) 220~522의 **비율**만 가져온다 —
+    // 우리 이동속도 단위가 워크3과 다르므로 절대값 220/522는 못 쓴다(위 MoveSpeed 주석
+    // 참고). 여기선 하한 비율만 쓴다(감속만 다루는 축이라 상한은 대상이 아니다).
+    public const float MoveSpeedFloorRatio = 220f / 522f;
 
     // TraitEffectKind.SlowOnHit(이감부여) 누적치 — ArmorShred(armorShred)와 같은 패턴:
-    // 영구 누적, 위 MoveSpeedFloor에서 잘리므로 무한히 걸려도 효과는 유계다. 0(기본)이면
-    // MoveSpeed가 원본 그대로라 회귀 없음.
+    // 영구 누적, 위 MoveSpeedFloorRatio에서 잘리므로 무한히 걸려도 효과는 유계다. 0(기본)
+    // 이면 MoveSpeed가 원본 그대로라 회귀 없음.
     float moveSpeedShredPercent;
 
     /// <summary>이동속도 감소(%, 0.07=7%)를 건다. 음수를 넣으면 되돌린다(지속시간 있는
