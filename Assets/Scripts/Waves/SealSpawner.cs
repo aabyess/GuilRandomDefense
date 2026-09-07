@@ -11,16 +11,13 @@ using UnityEngine;
 // 「전원」과 「처치자만」이 단계마다 갈리는 것도 원작 그대로다 —
 // EnemyData의 rewardsAllPlayers / rewardsKillerOnly가 그 자리다.
 //
-// 옮기지 못한 것 둘(원작에는 있다):
+// 옮긴 것 하나 + 못 옮긴 것 하나(원작에는 둘 다 있다):
 //   · 2단계의 **세이브 플레이포인트 1(처치자 전용, 50/50 두 분기 모두 적용, EVENTS_RESEARCH_
-//     NAMED.md 확인)** — ⚠️ 2026-09-07 정정(PM 지시, "필드만·아직 없다" 뼈대 구멍 점검):
-//     "세이브 시스템이 아직 없다"는 낡은 이유였다 — PersistentSave(11번)가 이미 있고
-//     PersistentSave.AddSessionPoints가 정확히 이 용도의 단일 창구다(SeaKingSpawner.
-//     GrantReward가 이미 그 창구를 쓰는 실제 호출부). 다만 SealSpawner는 지금 "누가
-//     2단계를 처치했는지"를 안 받는다(ChainRoutine이 WaitUntil(current==null)만 보고
-//     killerPlayerId를 안 받는 구조) — **시스템은 있는데 이 지급 하나가 여전히 안
-//     옮겨진 상태**다. 컴파일 검증이 막혀있는 지금(Assets/Editor/Tests 정리 전) 킬러
-//     추적 배선까지 새로 만드는 건 보류한다 — 다음에 이어서 할 것.
+//     NAMED.md 확인)** — 2026-09-07 연결 완료(PM 지시). SealSpawner에 새 킬러 추적을
+//     만들지 않고, 이미 있는 표준 파이프라인(EnemyDummy → RewardDistributor.GrantKillReward
+//     → GrantToKiller, killerPlayerId를 이미 받는다)을 재사용했다 — EnemyData에
+//     savePointReward 필드를 신설해 Enemy_Creep2_노루.asset에 1을 채우면, GrantToKiller가
+//     PersistentSave.AddSessionPoints(SeaKingSpawner가 이미 쓰는 그 창구)로 흘려보낸다.
 //   · 2단계의 **50% [나무2 + 「해적선」] / 50% [나무7]** 분기 — 해적선에 해당하는 유닛이
 //     우리 로스터에 없다. 분기를 남기면 한쪽이 그냥 나쁜 결과가 되므로 **나무7로 통일했다**
 //     (PM 판단). 해적선이 생기면 분기를 되살릴 것.

@@ -58,6 +58,13 @@ public class EnemyData : ScriptableObject
     public int goldReward;
     public List<EnemyResourceReward> resourceRewards;
 
+    // 2026-09-07 신설(PM 지시, "필드만·아직 없다" 뼈대 구멍 점검) — 원작 크립 2단계(노루)
+    // 처치 시 세이브 플레이포인트 +1(EVENTS_RESEARCH_NAMED.md, 50/50 두 분기 모두 적용).
+    // 0(기본값)이면 아무 일도 안 한다 — 기존 자산 전부 회귀 없음. RewardDistributor가
+    // GrantToKiller/GrantTo에서 이 값을 PersistentSave.AddSessionPoints로 흘려보낸다
+    // (SeaKingSpawner가 이미 쓰는 그 창구를 그대로 재사용 — 새 추적 안 만듦).
+    public int savePointReward;
+
     // true면 처치자 1명이 아니라 전체 플레이어에게 각자 보상 지급 (예: 물범 → 목재 1개씩).
     public bool rewardsAllPlayers;
 

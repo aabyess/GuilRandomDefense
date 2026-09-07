@@ -187,6 +187,7 @@ public class RewardDistributor : MonoBehaviour
 
         if (data.goldReward > 0) killer.GoldWallet?.Add(data.goldReward);
         GrantResources(killer, data);
+        if (data.savePointReward > 0) killer.PersistentSave?.AddSessionPoints(data.savePointReward);
         if (data.isBoss) GrantBossReward(killer, round);
     }
 
@@ -202,6 +203,8 @@ public class RewardDistributor : MonoBehaviour
         }
 
         GrantResources(context, data);
+
+        if (data.savePointReward > 0) context.PersistentSave?.AddSessionPoints(data.savePointReward);
     }
 
     void GrantResources(PlayerContext context, EnemyData data)
