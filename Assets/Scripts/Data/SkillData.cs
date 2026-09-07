@@ -55,16 +55,17 @@ public enum SkillTargetKind
 // 여섯 갈래 중 넷만 담는다 — 연구단계(ResearchLevel)는 연구소가 만들어지는 중이라 포함했다.
 // ⚠️ 2026-09-06 정정: 영웅스탯 비례 축은 사장님 01번 확정("영웅 스탯 시스템을 만들어라")으로
 // 방침이 뒤집혔다 — "영웅 스탯 개념 자체가 없고 생길 계획도 없다"는 이 주석의 옛 전제는
-// 더 이상 맞지 않는다. 영웅스탯 비례 basis는 아직 미구현이며 담을 예정이다(enum은 직렬화
-// 순서 때문에 여기서 안 건드림).
+// 더 이상 맞지 않는다. 영웅스탯 비례 basis(CasterStrength/Agility/Intelligence, 아래 enum
+// 맨 뒤)는 2026-09-06 밤 실제로 배선됐다 — UnitAttacker.ResolveSkillEffectValue가 읽는다
+// (2026-09-07 확인, "필드만·아직 없다" 뼈대 구멍 점검).
 public enum SkillEffectBasis
 {
     Flat,                    // multiplier가 고정값 그 자체
     TargetMaxHpPercent,      // 대상 최대체력 × multiplier
     TargetCurrentHpPercent,  // 대상 현재체력 × multiplier
     CasterAttackPower,       // 시전자 평타 공격력 × multiplier + bonus (원작 예: atk×2.5+32500)
-    ResearchLevel,           // 연구소 단계 × multiplier + bonus. 연구소(05번, 구현담당1)가
-                             // 서면 그 값을 여기 잇는다 — 지금은 자리만이다.
+    ResearchLevel,           // 연구소 단계 × multiplier + bonus. 연구소(05번)가 서서 이미
+                             // 연결됐다(UnitAttacker.CountResearchLevel, 2026-09-07 확인).
 
     // ⚠️ 맨 뒤에 추가 — 직렬화 순서를 지킨다.
     // 원작 GetEventDamage() 비례(715건 중 17건) — 처음엔 "이 유닛이 받은 피해에 비례해
@@ -119,8 +120,10 @@ public enum SkillEffectBasis
     // GetHeroStatBJ(영웅, STR/AGI/INT, true) x multiplier + bonus 대응. 🔴 위험 4건
     // (Zoro_enfor_3dragon 등, OUT_OF_AXIS_CLASSIFY.md — 고정항 대비 STR比가 28~71%라
     // bonus 흡수가 화력을 반토막 냈을 대상들)이 이 축으로 담긴다.
-    // UnitAttacker.CurrentStrength/Agility/Intelligence가 읽는 UnitData.baseStrength 등이
-    // 전부 기본값 0f인 지금은 이 값을 채운 스킬도 항상 0을 받는다 — 회귀 없음.
+    // ⚠️ 2026-09-07 정정 — 위 "UnitData.baseStrength 등이 전부 기본값 0f"는 이 주석을
+    // 쓴 시점(01번 착수 전) 얘기다. Tools/generate_hero_stats.py로 초월함 25종(김민준
+    // 제외 24종 + 예외 1종)의 실제 성장곡선이 이미 채워졌다 — 그 25종은 이 basis가 실제
+    // 0이 아닌 값을 낸다. 나머지 유닛(영원 8종 등, 이름매핑 불가로 미배정)은 여전히 0.
     CasterStrength,
     CasterAgility,
     CasterIntelligence,
