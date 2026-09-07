@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_회수_초월_구주호_AD_c453ba09
   m_EditorClassIdentifier:
   skillName: 해군대장-보르살리노 — 1/17
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 해군대장-보르살리노(H0B5)의 게이트 "1/17" 능력 1개를 이 SkillData 하나로 묶었다.   · Kizaru_01_shoot#1: 계산식 200000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 해군대장-보르살리노(H0B5)의 게이트 "1/17" 능력 1개를 이 SkillData 하나로 묶었다.   · Kizaru_01_shoot#1: 계산식 200000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. 정정(2026-09-08, PM — Tools/classify_multihit_loops.py 전수): 원작 Trig_Kizaru_01_Actions 스테이지1은 "integerB<6이면 B를 1 올리고, B가 짝수일 때만 RRD, 그리고 0.09초 뒤 스테이지1로 되돌아감"이다. B=1..6을 도는 동안 짝수는 2·4·6 세 번 — 즉 이 RRD는 한 번이 아니라 **세 번** 터진다. hitCount 1→3(피해 3배). 간격 0.09초는 MULTIHIT_INTERVAL_SPEC의 "0.02~0.25초는 실질 동일" 범위라 duration=0 유지.
   triggerType: 0
   levels:
   - cooldown: 0
@@ -31,7 +31,7 @@ MonoBehaviour:
       multiplier: 200000.0
       bonus: 0.0
       chance: 1
-      hitCount: 1
+      hitCount: 3
       duration: 0
       randMin: 1
       randMax: 1.5

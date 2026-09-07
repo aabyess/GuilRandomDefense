@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_랜덤_한마_바키_355f5d39
   m_EditorClassIdentifier:
   skillName: 쿠치키 뱌쿠야 - 랜덤전용[제한됨] — (게이트 없음)
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 쿠치키 뱌쿠야 - 랜덤전용[제한됨](h08I)의 게이트 "(게이트 없음)" 능력 3개를 이 SkillData 하나로 묶었다.   · Byakuya_R#1: 계산식 5000000.00   · byakuya_Chan#1: 계산식 (425000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVari   · byakuya_Chan#2: 계산식 500000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. ⚠️ 2026-09-06 대상조건 배선(PM 지시) — byakuya_Chan#1<200/#2 ELSE(>=200), Byakuya_R#1은 원작대로 무조건 별개(다른 트리거).
+  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 쿠치키 뱌쿠야 - 랜덤전용[제한됨](h08I)의 게이트 "(게이트 없음)" 능력 3개를 이 SkillData 하나로 묶었다.   · Byakuya_R#1: 계산식 5000000.00   · byakuya_Chan#1: 계산식 (425000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVari   · byakuya_Chan#2: 계산식 500000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. 정정(2026-09-08, PM — Tools/classify_multihit_loops.py 전수): 원작 Trig_byakuya_Chan_Actions 스테이지2는 "integerA를 1 올리고, A>=33이면 빠져나가고 아니면 RRD를 때린 뒤 0.12초 뒤 스테이지2로 되돌아감"이다. A=1..32에서 RRD가 돌고 A=33에서 끝나므로 **32번** 반복이다(#1<200과 #2 ELSE는 서로 배타라 한 번에 하나씩). byakuya_Chan#1/#2만 hitCount 1→32. ⚠️ Byakuya_R#1(5,000,000)은 **다른 트리거**라 그대로 1이다. 간격 0.12초는 "0.02~0.25초 실질 동일" 범위라 duration=0 유지. ⚠️ 2026-09-06 대상조건 배선(PM 지시) — byakuya_Chan#1<200/#2 ELSE(>=200), Byakuya_R#1은 원작대로 무조건 별개(다른 트리거).
   triggerType: 0
   levels:
   - cooldown: 0
@@ -44,7 +44,7 @@ MonoBehaviour:
       multiplier: 0.0175
       bonus: 425000.0
       chance: 1
-      hitCount: 1
+      hitCount: 32
       duration: 0
       casterBuffCountFactor: 0
       targetCondition: 1
@@ -57,7 +57,7 @@ MonoBehaviour:
       multiplier: 500000.0
       bonus: 0.0
       chance: 1
-      hitCount: 1
+      hitCount: 32
       duration: 0
       casterBuffCountFactor: 0
       targetCondition: 3
