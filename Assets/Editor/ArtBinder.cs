@@ -76,16 +76,59 @@ public static class ArtBinder
         // 키 10 — 기준 20의 절반.
         ("안흔함_상붕카", new Vector3(-90f, 90f, 0f), 0.5f),
 
-        // glb→fbx(assimp) 변환을 거친 **스킨 메시**는 원본이 똑바로 서 있어도 뒤집혀 들어온다
-        // (2026-09-08 사장님 스크린샷: 박준희 거꾸로, 박민수 누움). 원본 GLB 세 개를 풀어 보니
-        // 루트 회전은 전부 -90/+90 상쇄 = 0이었다. 변환 단계의 바인드 포즈 축 문제라
-        // 예측이 안 되므로, 여기서 눈으로 보고 잡는다. 틀리면 부호만 뒤집으면 된다.
-        ("안흔함_박준희", new Vector3(180f, 0f, 0f), 1f),   // 거꾸로 → X 180
-        ("안흔함_박민수", new Vector3(-90f, 0f, 0f), 1f),   // 누움 → X -90 (반대로 누우면 +90)
+        // ⚠️ 사람형(Humanoid)은 여기 적지 않는다 — AutoUpright가 뼈 위치로 재서 자동으로 세운다.
+        //    2026-09-08: 박준희 거꾸로 → X180으로 고쳤더니 박민수는 「거꾸로 서서 뒤돎」, 김수빈은
+        //    「누워서 오른쪽 봄」. 부호를 두 번 틀리고 나서 추측을 그만뒀다.
+        //    변환 축 오류는 90°·180° 단위라 뼈로 재면 정확히 나온다.
     };
 
     // 에셋 이름의 한글은 macOS에서 NFC가 아닐 수 있다 — 리터럴과 견주기 전에 맞춘다.
     static string Nfc(string s) => s?.Normalize(System.Text.NormalizationForm.FormC);
+
+    // 머리·골반·양팔 뼈의 위치로 이 모델이 지금 어느 쪽을 "위"와 "앞"으로 삼는지 재서,
+    // 위=+Y·앞=+Z가 되게 돌린다(유니티 규약: 캐릭터는 +Z를 본다).
+    //
+    // 왜 필요한가 — glb→fbx(assimp) 변환은 스킨 메시를 90°·180° 단위로 틀어 놓는다.
+    // 원본 GLB의 루트 회전을 읽어도 안 나온다(실측: 셋 다 -90/+90 상쇄 = 0인데 결과는 제각각).
+    // 그래서 결과물의 뼈를 직접 잰다. 잰 각은 90° 단위로 반올림한다 — 바인드 포즈의
+    // 자잘한 기울기(A자 팔 등)는 노이즈로 버린다.
+    //
+    // Generic(아바타 없음)은 못 잰다 — 그건 수동 표(ModelAdjustments)에 적는다.
+    static void AutoUpright(GameObject visual)
+    {
+        Animator animator = visual.GetComponentInChildren<Animator>();
+        if (animator == null || animator.avatar == null || !animator.avatar.isValid || !animator.isHuman) return;
+
+        Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+        Transform head = animator.GetBoneTransform(HumanBodyBones.Head);
+        Transform leftArm = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+        Transform rightArm = animator.GetBoneTransform(HumanBodyBones.RightUpperArm);
+        if (hips == null || head == null || leftArm == null || rightArm == null) return;
+
+        // visual 자신의 회전을 정하는 것이므로 부모(=visual의 부모) 기준 로컬 방향으로 잰다.
+        Transform parent = visual.transform.parent;
+        Vector3 L(Vector3 world) => parent != null ? parent.InverseTransformPoint(world) : world;
+
+        Vector3 up = L(head.position) - L(hips.position);
+        Vector3 right = L(rightArm.position) - L(leftArm.position);
+        if (up.sqrMagnitude < 1e-8f || right.sqrMagnitude < 1e-8f) return;
+
+        up.Normalize();
+        right = Vector3.ProjectOnPlane(right, up);
+        if (right.sqrMagnitude < 1e-8f) return;      // 팔이 머리~골반 축과 평행 = 못 잰다
+        right.Normalize();
+
+        Vector3 forward = Vector3.Cross(right, up);  // 왼손 좌표계에서 X × Y = +Z
+        Quaternion fix = Quaternion.Inverse(Quaternion.LookRotation(forward, up));
+
+        Vector3 e = fix.eulerAngles;
+        e = new Vector3(Mathf.Round(e.x / 90f) * 90f, Mathf.Round(e.y / 90f) * 90f, Mathf.Round(e.z / 90f) * 90f);
+        Quaternion snapped = Quaternion.Euler(e);
+        if (Quaternion.Angle(snapped, Quaternion.identity) < 1f) return;
+
+        visual.transform.localRotation = snapped * visual.transform.localRotation;
+        Debug.Log($"[아트] {visual.name}: 뼈로 재서 {e}만큼 돌려 세웠습니다.");
+    }
 
     static Quaternion RotationFor(string modelName)
     {
@@ -729,6 +772,8 @@ public static class ArtBinder
         // 크기를 재기 **전에** 돌린다. 돌리면 경계 상자가 바뀌므로, 나중에 돌리면
         // 엉뚱한 축 길이에 키를 맞춰 납작하거나 길쭉해진다.
         visual.transform.localRotation = RotationFor(model.name);
+        // 사람형은 뼈로 방향을 재서 자동으로 세운다. 수동 표에 적힌 모델은 그게 우선이다.
+        if (RotationFor(model.name) == Quaternion.identity) AutoUpright(visual);
         FitToHeight(instance, visual, HeightScaleFor(model.name));
         AttachAnimator(instance, visual);
 

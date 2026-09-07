@@ -42,10 +42,13 @@ public class UnitModelPostprocessor : AssetPostprocessor
         //                  IndexToe1_L 꼴)이고, 자기 애니메이션이 한 벌 들어 있다.
         "안흔함_강재규",
 
-        // 🔴 안흔함_이호준(좀비)도 여기 있었다가 **뺐다**(2026-09-08). 「손목 뼈가 없다」고 봤는데,
-        //    손가락 다섯 갈래의 뿌리가 전부 손목 한 점에 모여 있어서 유니티가 그중 하나를 손으로
-        //    잡았다. 팔 비율도 맞게 나왔다. 노태현과 같은 교훈이 **두 번째**다 —
-        //    리그를 못 쓴다고 하기 전에 유니티에게 먼저 시켜 본다.
+        // 안흔함_이호준(좀비) — 세 번 뒤집혔다. 기록을 남긴다.
+        //   ① 「손목 뼈 없음」으로 Generic → ② 유니티가 28개를 매핑해서 Humanoid로 복귀 →
+        //   ③ 그런데 유니티 **자신의 검증**(avatar.isValid)이 그 아바타를 무효로 판정했다
+        //      (2026-09-08 05:03 로그, OnPostprocessModel "아바타를 못 만들었다").
+        //      매핑 표가 있어도 뼈 계층·회전이 사람 골격 규칙에 안 맞으면 아바타가 안 선다.
+        //      자체 Mixamo 클립이 있으니 Generic이 맞다. 이번 근거는 유니티 판정이다.
+        "안흔함_이호준",
     };
 
     // 이 숫자를 올리면 유니티가 Assets/Art/Units 아래 모델을 **전부 다시 임포트**한다.
@@ -57,7 +60,8 @@ public class UnitModelPostprocessor : AssetPostprocessor
     // 3 → 4 (2026-09-07): 흔함_노태현을 Generic에서 되돌렸다(재임포트하니 잘 매핑됐다).
     // 4 → 5 (2026-09-07): 안흔함_이호준(좀비)을 Generic으로 뺐다.
     // 5 → 6 (2026-09-08): 한글 경로 NFC 정규화 · 옛 humanDescription 초기화 · 이호준 Humanoid 복귀.
-    public override uint GetVersion() => 6;
+    // 6 → 7 (2026-09-08): 이호준 Generic 확정(유니티 아바타 검증 실패 실측).
+    public override uint GetVersion() => 7;
 
     void OnPreprocessModel()
     {

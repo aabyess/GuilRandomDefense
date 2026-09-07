@@ -57,10 +57,13 @@ public static class MapGenerator
         { "portal",    new Surface(null,    new Color(0.30f, 0.70f, 0.85f), 0f,     0.60f) },
     };
 
+    const string ScenePath = "Assets/Scenes/SampleScene.unity";
+
     [MenuItem("Tools/맵/원랜디 맵 생성")]
     static void Generate()
     {
         if (!EditorGuards.RequireEditMode(Title)) return;
+        if (!EnsureSampleSceneOpen()) return;
 
         GameObject existing = GameObject.Find(RootName);
         if (existing != null &&
@@ -1254,7 +1257,11 @@ public static class MapGenerator
         {
             doll.applyRootMotion = false;          // 제자리에 세워 둔다
             doll.cullingMode = AnimatorCullingMode.CullCompletely;
+            // 에디터에선 꺼 둔다 — 켜진 Animator는 씬 로드·프리팹 갱신 때 다시 바인드하면서
+            // 방금 써 둔 Idle 자세를 기본 자세(T)로 되돌릴 수 있다. 실행 때 DollIdle이 켠다.
+            doll.enabled = false;
         }
+        if (figure.GetComponent<DollIdle>() == null) figure.AddComponent<DollIdle>();
 
         Renderer[] renderers = figure.GetComponentsInChildren<Renderer>(true);
         if (renderers.Length == 0)
@@ -1285,6 +1292,25 @@ public static class MapGenerator
         return true;
     }
 
+    // 🔴 Untitled 씬에서 돌리면 SaveScene이 조용히 false를 돌려주고, NavMesh도 파일로 못 남긴다.
+    //    2026-09-08 로그 실측: "씬이 저장된 적 없어" + "씬 저장에 실패" — 씬 파일이 어제 것으로
+    //    멈춰 있었고, 사장님이 보시는 화면과 저장소가 달랐다. 여기서 실제 씬을 열고 시작한다.
+    static bool EnsureSampleSceneOpen()
+    {
+        var active = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+        if (active.path == ScenePath) return true;
+
+        if (!EditorUtility.DisplayDialog(Title,
+                (string.IsNullOrEmpty(active.path) ? "지금 열린 씬이 저장된 적 없는(Untitled) 씬입니다." : $"지금 열린 씬이 {active.path}입니다.") +
+                $"\n\n맵은 {ScenePath}에 만들어야 저장됩니다. 그 씬을 열고 계속할까요?",
+                "열고 계속", "취소"))
+            return false;
+
+        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return false;
+        EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+        return true;
+    }
+
     // 편집 중(재생 전) 씬 뷰에서도 인형이 Idle 자세로 보이게 한 번 평가해 둔다.
     // 실행 중 자세는 살아 있는 Animator가 책임진다 — 여긴 보조다.
     //
@@ -1299,6 +1325,13 @@ public static class MapGenerator
 
         AnimationClip idle = FindIdleClip(animator);
         if (idle == null) return;
+
+        // 🔴 Animator는 렌더러가 **보이지 않으면 뼈를 안 쓴다**(기본 컬링 CullUpdateTransforms).
+        //    맵 생성 중의 인형은 아직 한 번도 그려진 적이 없어 "안 보임"이다 — Update()도,
+        //    PlayableGraph도 예외 없이 지나가면서 아무것도 안 썼다(2026-09-08, 로그에 실패 기록
+        //    0건인데 전부 T자). 평가하는 동안만 항상 계산하게 푼다.
+        animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+        animator.enabled = true;
 
         PlayableGraph graph = PlayableGraph.Create("맵 인형 자세");
         try
@@ -1318,6 +1351,20 @@ public static class MapGenerator
         {
             if (graph.IsValid()) graph.Destroy();
         }
+
+        // 실패는 조용하다. 여기서 한 번 재서 이름을 남긴다 — 수백 개 중 어느 게 굳었는지 눈으로 못 고른다.
+        if (animator.isHuman && !PoseLooksApplied(animator))
+            Debug.LogWarning($"[맵] {figure.name} — Idle을 평가했는데 팔이 아직 수평이다(T자). 아바타·클립을 의심할 것.");
+    }
+
+    // T자(바인드 포즈)는 양팔이 좌우로 곧게 뻗어 있다. "위팔이 가슴 높이에서 벗어났는가"로 가른다.
+    static bool PoseLooksApplied(Animator animator)
+    {
+        Transform upperArm = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+        Transform hand = animator.GetBoneTransform(HumanBodyBones.LeftHand);
+        if (upperArm == null || hand == null) return true;   // 못 재면 경고하지 않는다
+        // T자는 손이 위팔과 같은 높이다. 내려온 팔은 손이 훨씬 아래다.
+        return (upperArm.position.y - hand.position.y) > 0.1f * Mathf.Max(0.01f, animator.humanScale);
     }
 
     static AnimationClip FindIdleClip(Animator animator)
