@@ -2,7 +2,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // 원작 "채팅 코드 입력" 초월/불멸/영원 획득(war3map.j Trig_Eternal_*/Trig_Forever_*/
-// Trig_IM_*, Docs/reference/ORIGINAL_CHAT_UNLOCK_TRIGGERS.csv 47행 + Nika 1행).
+// Trig_IM_*, Docs/reference/ORIGINAL_CHAT_UNLOCK_TRIGGERS.csv).
+//
+// 개수는 47이 맞다 — Eternal 28 + Forever 8 + IM 11. 원작 실측(2026-09-08):
+//   grep -oE "function Trig_Eternal_[A-Za-z0-9_]*_Actions" war3map_new.j | sort -u | wc -l
+// ⚠️ 옛 주석의 "+ Nika 1행"은 착오였다. Eternal_Nika는 이미 그 28 안에 있고,
+//    오히려 **밴 후보에서 빠지는** 쪽이다(Forever_uta도 같다).
+// ⚠️ 밴 시스템의 53과 헷갈리지 말 것 — 그건 다른 것을 센다(제한됨 8종은 채팅언락이
+//    아니라 능력 상점잠금이고, Nika/uta 2종은 밴 후보에서 제외된다).
+//    분해는 Docs/reference/BAN_COUNT_MISMATCH_RESOLVED_2026-09-08.md.
 // Hidden 23종은 여기 없다 — 채팅이 재료 조합의 확인 트리거일 뿐이라 다른 진입점이 필요하다
 // (PM 지시 2026-09-05: CombineSystem에 합치지 말고 판정 로직만 재사용, 진입점은 따로).
 //
