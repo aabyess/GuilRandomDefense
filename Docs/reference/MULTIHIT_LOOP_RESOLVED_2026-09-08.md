@@ -78,16 +78,32 @@ endif
 ⚠️ 카운터 상한만 읽으면 이 넷이 각각 6·10·—·— 로 부풀려진다. `else`와
 「카운터 특정값 게이트」를 안 가르면 **넷 다 틀린다.**
 
-## 3. 남는 한계 — 솔직히 적는다
+## 3. 판정불가 52건은 무엇이었나 — 호출 빈도로 확인했다
 
-- **판정불가 52건**은 "반복 피해가 아니다"가 아니라 "이 도구의 신호로는 피해도 이동도
-  안 잡혔다"는 뜻이다. 버프·소환·그룹 처리로 보이지만 전수로 열어보진 않았다.
+52건에서 실제로 불리는 함수를 세어 보니 **소환·연출 루프**다. 피해 함수가 없는 게 맞다.
+
+```
+235 Setinteger          171 CreateNUnitsAtLoc   153 SleepForStage
+116 SetlocationAutoRemove  99 Setunit            97 Setreal
+ 82 Flush                80 KillUnit            64 SetUnitAnimationByIndex
+ 56 UnitAddAbilityBJ     40 SetUnitScalePercent 37 ForGroupBJ
+```
+
+`CreateNUnitsAtLoc`(171회) + `UnitAddAbilityBJ`(56회) + `KillUnit`(80회) 조합은
+**더미 유닛을 만들어 능력을 붙이고 곧 지우는** 패턴이다 — 원작이 광역기·채널링을
+구현하는 표준 방식이고, 우리 쪽에는 이미 `더미채널_*` 자산 계열로 별도 축이 있다.
+
+🔴 **따라서 이 52건의 피해는 「없다」가 아니라 「다른 축에 있다」**. 소환된 더미가
+자기 능력으로 때리는 경로다. `hitCount`(같은 RRD를 N번 반복)와는 다른 물건이므로
+이 조사의 결론(반복 피해 3건)은 그대로 유효하다.
+
+## 4. 남는 한계 — 솔직히 적는다
 - 도구는 **자기루프(같은 스테이지로 되돌아감)**만 본다. 여러 스테이지를 순회하며
   매 바퀴 때리는 구조가 있다면 못 잡는다.
 - `RRD`·`UnitDamageTarget` 말고 다른 경로로 피해를 주는 자리가 있으면 못 잡는다
   (`DAMAGE_CALLS` 상수에 추가하면 된다).
 
-## 4. 재현
+## 5. 재현
 
 ```bash
 python3 Tools/classify_multihit_loops.py --csv out.csv
