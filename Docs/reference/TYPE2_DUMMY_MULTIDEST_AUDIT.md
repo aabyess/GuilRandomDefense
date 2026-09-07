@@ -3,10 +3,36 @@
 조사: 리서치담당 / 2026-09-06
 전제: 구현담당2가 재식별한 유형②(더미채널 다목적지) 56개 파일 중 트리거명이 확인된
 41개 + 리서치담당이 `DUMMY_CHANNEL_GATES/MISSING.csv`에서 독자적으로 뽑은 30개
-그룹(그중 41개와 안 겹치는 12개, 나머지 8개는 앞서 유형①/①-콜백 작업에서 이미
+그룹(그중 41개와 안 겹치는 12개, 나머지는 앞서 유형①/①-콜백 작업에서 이미
 개별 확인됨: `Ruffy_Attack`·`Z_skill_3`·`Tichi_skill_2_tr`·`Tichi_skill_4`·
-`Tichi_skill_4_tr`·`DP_Attack_gaksung`·`Brook_Skill_1`·`Nami_Skill_4`·`Kid_Skill_3`·
-`Kid_Skill_3_item`·`Rebeca_Skill_1` — 전부 별개로 이미 확정됨) 를 유형①과 같은
+`Tichi_skill_4_tr`·`DP_Attack_gaksung`·`Brook_Skill_1`·`Nami_Skill_4`·`Rebeca_Skill_1`
+— 전부 별개로 확정, 아래 🔴 표 참고) 를 유형①과 같은
+
+> 🔴 **2026-09-06 PM 지적으로 재확인 — `Kid_Skill_3`/`Kid_Skill_3_item`은
+> 이 줄에서 "별개로 이미 확정"이라고 잘못 적었다.** 구현담당2가 원문을 다시
+> 열어 `if GetRandomInt(1,10)==2 then if UnitHasItem(캐스터,I010) then 600,000
+> else 300,000`을 찾아냈고, 이건 **황준석_ADAP 조사(`APPROXIMATION_LEDGER.md`
+> §14, 커밋 `3667276`)에서 내가 이미 직접 원문 확인해 "아이템 보유로 갈리는
+> 진짜 배타"라고 결론 냈던 바로 그 쌍이다.** 즉 이 줄을 쓸 때 §14의 내 결론을
+> 다시 대조하지 않고 "유형① 작업에서 다뤘으니 별개겠지" 식으로 목록만 베껴
+> 썼다 — **원문 재대조 없이 과거 판정을 옮기지 말라는 원칙(뿌리 ㉛/㊷)을
+> 내가 이 줄에서 어겼다.** `Kid_Skill_3`(_item)을 이 "별개 확정" 리스트에서
+> **제외**한다 — 실제로는 **배타**다(아이템 `I010` 보유 여부로 600,000/300,000
+> 갈림, 400,000/700,000 등 다른 페어가 아니라 이 하나뿐).
+>
+> **나머지 9개는 재확인했다** — 전부 실제 raw JASS를 직접 열어 다시 확인,
+> 목록 대조가 아니었다: `Nami_Skill_4`(강주혁_AP, §14 직접 재확인)·
+> `Ruffy_Attack`(신문철_AP, §14 직접 재확인, `ConditionalTriggerExecute`
+> 무조건 호출)·`Tichi_skill_4`/`Tichi_skill_4_tr`(이번에 `Trig_Tichi_Attack_Actions`
+> 원문 재확인 — 아래 Tichi 절 참고, `e0PH`+`e066`이 두 트리거 각각에서 항상
+> 같이 나감, 배타 아님)·`Z_skill_3`(이번에 원문 재확인, `Stage[GlobalTV]`
+> 순차 다단히트 구조, 뿌리 ㊶ 패턴)·`DP_Attack_gaksung`(최상호_AP 조사에서
+> `Trig_DP_Attack_gaksung` 원문 직접 인용)·`Brook_Skill_1`·`Rebeca_Skill_1`·
+> `Tichi_skill_2_tr`(전부 `CHANCE1_DUPLICATE_EFFECT_AUDIT.md`의 70트리거
+> 기계판정에서 branch-tracer로 원문 직접 추적, 45건 별개 쪽) — **이
+> 9개는 결론 유지.**
+
+를 유형①과 같은
 방법(if/elseif/else/endif 중첩 + `ForGroupBJ` 콜백 추적, `CreateNUnitsAtLoc`류
 더미 생성 호출 기준)으로 기계판정했다. **총 53개 트리거 완료.**
 
