@@ -75,12 +75,23 @@ public static class ArtBinder
         // Y로 돌려 옆모습이 보이게 한다. 바퀴가 위로 가면 X를 +90으로 뒤집으면 된다.
         // 키 10 — 기준 20의 절반.
         ("안흔함_상붕카", new Vector3(-90f, 90f, 0f), 0.5f),
+
+        // glb→fbx(assimp) 변환을 거친 **스킨 메시**는 원본이 똑바로 서 있어도 뒤집혀 들어온다
+        // (2026-09-08 사장님 스크린샷: 박준희 거꾸로, 박민수 누움). 원본 GLB 세 개를 풀어 보니
+        // 루트 회전은 전부 -90/+90 상쇄 = 0이었다. 변환 단계의 바인드 포즈 축 문제라
+        // 예측이 안 되므로, 여기서 눈으로 보고 잡는다. 틀리면 부호만 뒤집으면 된다.
+        ("안흔함_박준희", new Vector3(180f, 0f, 0f), 1f),   // 거꾸로 → X 180
+        ("안흔함_박민수", new Vector3(-90f, 0f, 0f), 1f),   // 누움 → X -90 (반대로 누우면 +90)
     };
+
+    // 에셋 이름의 한글은 macOS에서 NFC가 아닐 수 있다 — 리터럴과 견주기 전에 맞춘다.
+    static string Nfc(string s) => s?.Normalize(System.Text.NormalizationForm.FormC);
 
     static Quaternion RotationFor(string modelName)
     {
+        modelName = Nfc(modelName);
         foreach ((string name, Vector3 euler, float _) in ModelAdjustments)
-            if (name == modelName) return Quaternion.Euler(euler);
+            if (Nfc(name) == modelName) return Quaternion.Euler(euler);
 
         return Quaternion.identity;
     }
@@ -95,7 +106,7 @@ public static class ArtBinder
     {
         // 모델별 개별 지정이 먼저다 — 상붕카(자전거)처럼 등급 규칙으로 못 맞추는 게 있다.
         foreach ((string name, Vector3 _, float scale) in ModelAdjustments)
-            if (name == modelName) return scale;
+            if (Nfc(name) == Nfc(modelName)) return scale;
 
         if (IsCommonGradeModel(modelName)) return CommonHeightScale;
 
@@ -258,9 +269,14 @@ public static class ArtBinder
                 if (pair.Key.type == typeof(Material) && !slots.Any(s => s.name == pair.Key.name))
                     slots.Add(pair.Key);
 
+            string unitName = Nfc(System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(modelPath)));
+
             foreach (AssetImporter.SourceAssetIdentifier slot in slots)
             {
-                Texture2D texture = MatchTexture(slot.name, ownTextures);
+                // 유닛별 강제 지정이 먼저다 — Mixamo가 재질 이름을 통째로 잃은 모델은
+                // 이름으로는 영영 못 맞춘다(2026-09-08 신문철: 재질 0개, 텍스처 10장).
+                Texture2D texture = ForcedTextureFor(unitName, ownTextures)
+                                    ?? MatchTexture(slot.name, ownTextures);
                 if (texture == null)
                 {
                     unmatched.Add($"{System.IO.Path.GetFileName(modelPath)} / {slot.name}");
@@ -307,6 +323,22 @@ public static class ArtBinder
     // 머티리얼 이름과 텍스처 파일명을 맞춘다. 완전히 같은 것부터 보고, 없으면 한쪽이 다른 쪽을
     // 품고 있는지 본다(Mixamo가 이름에 접미사를 붙이는 경우가 있다).
     // 텍스처가 딱 하나뿐이면 그걸 쓴다 — 머티리얼도 하나일 가능성이 높다.
+    // Mixamo가 재질 정보를 잃은 모델: 유닛 이름 → 이 폴더에서 쓸 텍스처 파일명(확장자 없이).
+    // 재질이 하나뿐이라 몸통 텍스처 한 장만 붙는다 — 원본이 여러 재질이었으면 눈·머리 등은
+    // 그 한 장으로 덮여 어긋날 수 있다. 제대로 하려면 재질을 살린 채 Mixamo에 다시 올린다.
+    static readonly (string unit, string texture)[] ForcedTextures =
+    {
+        ("안흔함_신문철", "nrt_tex01"),   // 나루토 몸통. 2026-09-08 사장님 「색상이 없고」
+    };
+
+    static Texture2D ForcedTextureFor(string unitName, List<Texture2D> textures)
+    {
+        foreach ((string unit, string texture) in ForcedTextures)
+            if (Nfc(unit) == unitName)
+                return textures.FirstOrDefault(t => Nfc(t.name) == Nfc(texture));
+        return null;
+    }
+
     static Texture2D MatchTexture(string materialName, List<Texture2D> textures)
     {
         string target = materialName.ToLowerInvariant();

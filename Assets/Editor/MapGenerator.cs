@@ -4,6 +4,8 @@ using Unity.AI.Navigation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine.AI;
+using UnityEngine.Animations;
+using UnityEngine.Playables;
 using UnityEngine;
 
 /// <summary>
@@ -1284,53 +1286,38 @@ public static class MapGenerator
     }
 
     // 편집 중(재생 전) 씬 뷰에서도 인형이 Idle 자세로 보이게 한 번 평가해 둔다.
-    // 실행 중 자세는 이제 살아 있는 Animator가 책임진다 — 여긴 보조다.
-    // 컨트롤러가 없으면 아무것도 안 한다.
+    // 실행 중 자세는 살아 있는 Animator가 책임진다 — 여긴 보조다.
+    //
+    // ⚠️ Animator.Update()·Play()는 에디터 모드에서 포즈를 **안 쓴다**(2026-09-08 사장님
+    //    스크린샷 — Rebind+Update 두 번으로 바꾼 뒤에도 전부 T자였다). 에디터에서 Humanoid
+    //    클립을 실제로 뼈에 쓰는 검증된 길은 PlayableGraph다 — 타임라인 미리보기가 쓰는 것과
+    //    같은 경로라 아바타 리타게팅까지 탄다. 평가 뒤 그래프를 지워도 뼈에 쓰인 값은 남는다.
     static void PoseAsIdle(GameObject figure)
     {
         Animator animator = figure.GetComponentInChildren<Animator>(true);
         if (animator == null || animator.runtimeAnimatorController == null) return;
 
+        AnimationClip idle = FindIdleClip(animator);
+        if (idle == null) return;
+
+        PlayableGraph graph = PlayableGraph.Create("맵 인형 자세");
         try
         {
-            animator.enabled = true;
-
-            // ⚠️ Update(0f)를 한 번만 부르면 상태 머신은 Idle로 들어가지만 **포즈가 안 써진다** —
-            // 델타 0이라 평가를 건너뛴다. 2026-09-07 사장님이 "몇몇 스킨이 팔 벌리고 있다"고
-            // 하신 게 이것이었다. Rebind로 바인드 포즈에서 시작해, 진입 한 번 + 평가 한 번으로
-            // 두 번 돌린다.
-            animator.Rebind();
-            animator.Play("Idle", 0, 0f);
-            animator.Update(0f);
-            animator.Update(0f);
-
-            // 그래도 안 먹으면(아바타 없음·Humanoid 매핑 실패 등) 클립을 직접 샘플링한다.
-            // Generic 리그는 이 경로로만 선다.
-            if (!PoseLooksApplied(animator))
-            {
-                AnimationClip idle = FindIdleClip(animator);
-                if (idle != null) idle.SampleAnimation(figure, 0f);
-            }
+            graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+            AnimationPlayableOutput output = AnimationPlayableOutput.Create(graph, "자세", animator);
+            AnimationClipPlayable clip = AnimationClipPlayable.Create(graph, idle);
+            clip.SetTime(0.0);
+            output.SetSourcePlayable(clip);
+            graph.Evaluate(0f);   // 여기서 뼈 Transform에 실제로 써진다
         }
         catch (System.Exception e)
         {
             Debug.LogWarning($"[맵] {figure.name} 대기 자세 평가 실패 — T자로 둡니다: {e.Message}");
         }
-    }
-
-    // T자(바인드 포즈)는 양팔이 좌우로 곧게 뻗어 있다. Idle이 실제로 적용됐는지를
-    // "위팔이 몸통 옆으로 내려왔는가"로 대충 가른다 — 정확한 판정이 아니라 폴백 트리거다.
-    static bool PoseLooksApplied(Animator animator)
-    {
-        if (!animator.isHuman) return false;   // Generic은 항상 샘플링 경로를 태운다
-
-        Transform upperArm = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
-        Transform chest = animator.GetBoneTransform(HumanBodyBones.Chest)
-                          ?? animator.GetBoneTransform(HumanBodyBones.Spine);
-        if (upperArm == null || chest == null) return false;
-
-        // 팔이 수평에 가까우면(높이 차가 거의 없으면) 아직 T자로 본다.
-        return Mathf.Abs(upperArm.position.y - chest.position.y) > 0.05f;
+        finally
+        {
+            if (graph.IsValid()) graph.Destroy();
+        }
     }
 
     static AnimationClip FindIdleClip(Animator animator)
