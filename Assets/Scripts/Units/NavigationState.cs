@@ -15,10 +15,11 @@ public enum NavigationChoice
 {
     None,
     Hegemon,       // 패왕의길 — A11S 강화코드 레벨 +2(DamageLevelFixedState 경유)
-    // 연합세력 — 🔴 여전히 미배선(2026-09-07 정정, PM 지시). e0IX 위습 매핑 자체는
-    // 풀렸다(Wisp_흔함.asset, SelfUpgradeAbilityData.cs 주석 참고) — 남은 건 "유닛
-    // 포인트값>100 로스터 편입" 감지 로직 자체가 아직 없다는 것(원작: 그 순간 랜덤위습
-    // +1). 위습 자산이 아니라 이 감지 훅이 진짜 남은 구멍이다.
+    // 연합세력 — 2026-09-07 배선 완료(PM 지시). RewardDistributor.GrantUnionWispIfEligible
+    // (UnitSpawner.Spawn에서 호출)이 원작 Trig_UnitJohabCounter_Actions를 재현한다 —
+    // 유닛 등급 Tier()>=Superior(포인트값>100 근사) + 이 항법 선택 시 랜덤위습(e0IX,
+    // Wisp_흔함.asset) 1기. ⚠️ RewardDistributor 씬 컴포넌트의 unionWisp 필드에 실제로
+    // Wisp_흔함.asset을 꽂아야 동작한다(씬 배선은 이 점검 범위 밖 — PM/씬 담당 확인).
     Union,
     Gambler,       // 도박광 — 다른세계 도박 실패 시 럭키토큰 +1
     SupportBoost,  // 도움소 강화 — 해루석/버스터콜 레벨2 수치

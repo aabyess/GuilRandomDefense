@@ -55,6 +55,11 @@ public class UnitSpawner : MonoBehaviour
         }
         identity.RegisterTo(inventory);
 
+        // 항법 "연합세력" — 원작 Trig_UnitJohabCounter_Actions 재현(RewardDistributor.
+        // GrantUnionWispIfEligible 주석 참고). 여기가 유일한 플레이어 유닛 생성 지점이라
+        // 조합·가챠 구분 없이 원작과 같은 범위를 덮는다.
+        RewardDistributor.Instance?.GrantUnionWispIfEligible(data, ownerId);
+
         return instance;
     }
 

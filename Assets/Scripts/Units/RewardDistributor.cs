@@ -28,6 +28,11 @@ public class RewardDistributor : MonoBehaviour
     // 정렬해 배선한다)이 정확히 같은 자리다 — 확인 완료(구현담당3).
     [SerializeField] UnitData ancientShipUnit;
 
+    // 항법 "연합세력"(NavigationChoice.Union) 전용 위습 — 원작 e0IX. Wisp_흔함.asset이
+    // 그 자리다(2026-09-07, APPROXIMATION_LEDGER.md §① 설계 확정 후 배선). 비어 있으면
+    // (기본값 null) GrantUnionWispIfEligible이 아무 일도 안 한다.
+    [SerializeField] WispData unionWisp;
+
     // 우물 한가운데 뭉쳐 있게 둔다. 8로 벌리면 별 모양으로 흩어져서 다섯 덩어리로 보이는데,
     // 이건 한 사람 몫의 시작 자원이라 한 무더기로 읽혀야 한다.
     // 위습끼리는 서로 통과하듯 겹치므로(회피 반지름 0.28) 이 정도면 자연스럽게 뭉친다.
@@ -357,6 +362,31 @@ public class RewardDistributor : MonoBehaviour
             if (reward == null || reward.wisp == null) continue;
             SpawnWisp(context, reward.wisp, Mathf.Max(1, reward.count));
         }
+    }
+
+    // 2026-09-07 연결 완료(PM 지시, "필드만·아직 없다" 뼈대 구멍 점검) — 원작
+    // Trig_UnitJohabCounter_Actions 재현. 원문 확정(직접 대조):
+    //   TriggerRegisterEnterRectSimple(전체 맵) + 조건 IsUnitType(유닛, UNIT_TYPE_GIANT)
+    //   → "Giant 타입 유닛이 맵에 등장할 때마다"(획득 경로 불문 — 조합·가챠·그 밖 전부
+    //   포함, 트리거 자체가 방법을 안 가린다) 발동. 액션: udg_Tech_union[플레이어]==true
+    //   AND GetUnitPointValue(유닛)>100이면 e0IX 1기 지급.
+    // 원작 로스터 원본 유닛 전수 확인 결과 h001~ 등 222종이 전부 "undead,giant"라
+    // (war3map_new.w3u, utyp 필드) 우리 로스터 240종 전체가 이 GIANT 분류에 대응한다 —
+    // 그래서 훅을 딱 하나(UnitSpawner.Spawn, "플레이어 유닛을 만드는 곳이 여기뿐" 주석
+    // 참고)에 걸면 조합·가챠 구분 없이 원작과 같은 범위를 덮는다.
+    // 포인트값>100은 UnitGrade.Tier()>=Superior.Tier()로 근사한다(원작 유닛 개별
+    // 매핑 불가라 등급으로 근사 — APPROXIMATION_LEDGER.md §① 확정, 이미 설계돼 있던
+    // 자리를 그대로 썼다).
+    public void GrantUnionWispIfEligible(UnitData data, int ownerId)
+    {
+        if (data == null || unionWisp == null) return;
+        if (data.grade.Tier() < UnitGrade.Superior.Tier()) return;
+
+        PlayerContext context = PlayerContext.Get(ownerId);
+        if (context == null || !context.IsOccupied) return;
+        if (context.NavigationState == null || context.NavigationState.Choice != NavigationChoice.Union) return;
+
+        GrantWisps(context, new List<WispReward> { new WispReward { wisp = unionWisp, count = 1 } });
     }
 
     void SpawnWisp(PlayerContext context, WispData wispData, int count)
