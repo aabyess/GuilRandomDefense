@@ -106,8 +106,10 @@ public class UnitAttacker : MonoBehaviour
         }
     }
 
-    // 연구소 공속 배율(gba1/gmo1) — RefreshUpgradeCacheIfDirty가 같이 갱신한다(레벨업
-    // 이벤트 하나로 데미지·가산·공속 셋 다 무효화하면 되므로 dirty 플래그를 공유한다).
+    // 연구소 공속 배율(gba1/gmo1) — 등급트랙("강화소 1")과 공격타입트랙("강화소 3") 둘 다
+    // 곱해진 값이다(2026-09-07, 아래 RefreshUpgradeCacheIfDirty 참고). RefreshUpgradeCacheIfDirty가
+    // 같이 갱신한다(레벨업 이벤트 하나로 데미지·가산·공속 셋 다 무효화하면 되므로 dirty
+    // 플래그를 공유한다).
     float ResearchSpeedMultiplier
     {
         get
@@ -1678,8 +1680,12 @@ public class UnitAttacker : MonoBehaviour
 
         // 연구소 등급 공속(gba1/gmo1, 2026-09-06 신규 연결) — 유닛 종의 등급이 담당 트랙에
         // 없거나 그 트랙이 아직 레벨 0이면 SpeedMultiplierForGrade가 1을 돌려줘서 무영향이다.
+        // ⚠️ 2026-09-07 추가(PM 지시, "필드만·아직 없다" 뼈대 구멍 점검) — 공격타입강화소
+        // ("강화소 3")의 공속(gba1/gmo1, AttackTypeUpgradeTrackData.speedPercentPerLevel)도
+        // 같은 성격의 연구소 공속이라 여기 같이 곱한다 — 서로 다른 건물(등급트랙 vs
+        // 공격타입트랙)이라 독립적으로 곱해져도 안전하다(원작에도 둘 다 존재).
         cachedResearchSpeedMultiplier = source != null && unitData != null
-            ? source.SpeedMultiplierForGrade(unitData.grade)
+            ? source.SpeedMultiplierForGrade(unitData.grade) * source.SpeedMultiplierForAttackType(unitData.attackType)
             : 1f;
 
         upgradeMultiplierDirty = false;
