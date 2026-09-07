@@ -27,9 +27,12 @@ public class UnitModelPostprocessor : AssetPostprocessor
     //   안흔함_박준희 — SCP-049(블렌더 리그)였다가 사이렌헤드로 교체. 뼈 이름이
     //                   Hips_53·Spine_44·LeftArm_21 꼴(표준 + 숫자 접미어)이라 Humanoid로
     //                   시도한다. 유니티가 아바타를 못 만들면 여기 다시 넣으면 된다.
+    //   안흔함_김수빈 — 나나치(메이드 인 어비스). Hips가 아예 없고(루트가 spine) 다리에
+    //                   무릎도 없다(thigh→foot 직결). 짐승 형태라 사람 골격이 아니다.
     // Mixamo로 리깅해 오면 이 목록에서 빼야 한다(그때 mixamorig: 접두어가 붙는다).
     static readonly string[] GenericRigUnits =
     {
+        "안흔함_김수빈",
     };
 
     void OnPreprocessModel()
