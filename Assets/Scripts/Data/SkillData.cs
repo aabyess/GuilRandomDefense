@@ -201,6 +201,22 @@ public enum SkillEffectKind
     // 없어서 "제거"로 처리됐던 케이스라 지금 다시 채울지는 별도 판단(값이 늘어나는
     // 변경이라 이번 배치엔 안 건드림) — H099/A0JU만 이번에 채운다.
     AttackPowerBuffFlat,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-07, PM 지시 — "Allies/Self 고정 배율 공격속도 버프" kind
+    // 신설) — 원작 AOae(Endurance Aura) 계열의 "범위 내 아군/자신 공격속도 +N%" 능력을
+    // 표현한다. 기존 ApplyBuff는 이름표만, AddAttackSpeedBuff(attackSpeedBuffs 리스트)는
+    // 수동 관리(호출부가 직접 Remove) 전용이라 SkillEffect 기반 자동 만료(duration/
+    // buffHitCharges)와 안 맞는다. 전수 census(2026-09-07) 결과 4건 확인 — 원작009_H094/
+    // A0WK(Self+12%, 채움) · 원작018_H09I/A0QZ(Allies+15%, 소환된 더미가 오라를 내는
+    // 구조라 이 kind와는 별개로 "지속 오라를 내는 더미" 축이 여전히 없어 미완성 유지,
+    // 채우지 않음) · 원작007_H08V/A107(Self+7%, 채움) · 하네카와 츠바사/A0L8(Allies+20%,
+    // 이 원작 캐릭터 자체가 아직 로스터 어디에도 배정 안 됨 — ROSTER_DEFICIT 백로그
+    // 항목이라 별개, 채우지 않음). "여럿이면 만드는 게 맞다"(PM 지시)에 따라 신설.
+    // multiplier는 원작 그대로 raw 퍼센트(0.15=15%, 배율 아님) — UnitAttacker가
+    // (1+multiplier)로 변환한다. duration/buffId/buffHitCharges 관례는 AttackPowerBuffFlat과
+    // 동일. AttackSpeedMultiplier 체인에 배율로 곱해진다(HeroAttackSpeedMultiplier와
+    // 같은 성격 — 공속은 애초에 배율 축이다, AttackDamage의 가산 축과 다르다).
+    AttackSpeedBuffPercent,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,

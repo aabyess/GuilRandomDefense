@@ -183,7 +183,7 @@ def extract_original_key(description):
 # 그 외(bare AddBuff(...) 또는 "ally"가 들어간 변수)는 캐스터 쪽으로 가른다. 새 호출부가
 # 다른 이름 관례를 쓰면 놓칠 수 있다 — 이 스크립트가 조용히 통과시키면 안 되니, 분류
 # 못한 리터럴은 "미분류"로 따로 보고한다(있으면 사람이 봐야 한다).
-_ADD_BUFF_KINDS = {6, 11}  # SkillEffectKind.ApplyBuff, SkillEffectKind.AttackPowerBuffFlat
+_ADD_BUFF_KINDS = {6, 11, 12}  # ApplyBuff, AttackPowerBuffFlat, AttackSpeedBuffPercent
 _TARGET_SELF, _TARGET_ALLIES, _TARGET_ENEMIES = "0", "1", "2"
 
 

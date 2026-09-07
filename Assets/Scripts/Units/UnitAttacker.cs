@@ -96,7 +96,11 @@ public class UnitAttacker : MonoBehaviour
     {
         get
         {
-            float product = ResearchSpeedMultiplier * HeroAttackSpeedMultiplier;
+            // ⚠️ 2026-09-07 추가(PM 지시, SkillEffectKind.AttackSpeedBuffPercent 신설) —
+            // SkillAttackSpeedBuffMultiplier는 ActiveBuff 레지스트리 기반(자동 만료)이라
+            // 기존 attackSpeedBuffs(수동 Add/Remove, SupportShop 전용)와 별도 축이다 — 곱은
+            // 순서 무관이라 그냥 같이 곱한다.
+            float product = ResearchSpeedMultiplier * HeroAttackSpeedMultiplier * SkillAttackSpeedBuffMultiplier;
             foreach (float buff in attackSpeedBuffs) product *= buff;
             return product > 0f ? product : 1f;
         }
@@ -229,6 +233,11 @@ public class UnitAttacker : MonoBehaviour
         // 기존 버프와 동일(이름표만, 수치 효과 없음 — 회귀 없음). 0이 아니면 이 버프가
         // 살아있는 동안 FlatAttackPowerBonus에 이 값만큼 더해진다.
         public float flatAttackPowerAmount;
+
+        // ⚠️ 2026-09-07 추가(SkillEffectKind.AttackSpeedBuffPercent 전용, PM 지시) — 기본값
+        // 1f(배율 항등원 — 곱해도 무효과, 회귀 없음). 1이 아니면 이 버프가 살아있는 동안
+        // SkillAttackSpeedBuffMultiplier에 이 배율이 곱해진다(1+원작 raw퍼센트로 변환된 값).
+        public float attackSpeedMultiplierAmount = 1f;
     }
 
     readonly List<ActiveBuff> activeBuffs = new List<ActiveBuff>();
@@ -261,6 +270,37 @@ public class UnitAttacker : MonoBehaviour
         else
         {
             activeBuffs.Add(new ActiveBuff { id = id, expiresAt = duration > 0f ? Time.time + duration : -1f, flatAttackPowerAmount = amount });
+        }
+    }
+
+    // ⚠️ 2026-09-07 추가(SkillEffectKind.AttackSpeedBuffPercent, PM 지시) — 원작 AOae
+    // (Endurance Aura) 계열의 임시 "공격속도 +N%" 곱. AttackSpeedMultiplier가 곱하는
+    // 자리에서 읽는다(위 주석 참고).
+    public float SkillAttackSpeedBuffMultiplier
+    {
+        get
+        {
+            PruneExpiredBuffs();
+            float product = 1f;
+            foreach (ActiveBuff b in activeBuffs) product *= b.attackSpeedMultiplierAmount;
+            return product > 0f ? product : 1f;
+        }
+    }
+
+    // AddFlatAttackPowerBuff와 같은 관례. percent는 원작 raw 퍼센트(0.15=15%) — 여기서
+    // (1+percent)로 변환해 저장한다(SkillAttackSpeedBuffMultiplier가 곱셈 항등원 1을
+    // 기준으로 곱하므로).
+    public void AddAttackSpeedBuffPercent(string id, float percent, float duration, int hitCharges)
+    {
+        if (percent == 0f) return;
+        float multiplier = 1f + percent;
+        if (hitCharges > 0)
+        {
+            activeBuffs.Add(new ActiveBuff { id = id, expiresAt = -1f, hitsRemaining = hitCharges, skipNextTick = true, attackSpeedMultiplierAmount = multiplier });
+        }
+        else
+        {
+            activeBuffs.Add(new ActiveBuff { id = id, expiresAt = duration > 0f ? Time.time + duration : -1f, attackSpeedMultiplierAmount = multiplier });
         }
     }
 
@@ -668,6 +708,24 @@ public class UnitAttacker : MonoBehaviour
         return unitData.SkillAt(index);
     }
 
+    // ⚠️ 2026-09-07 버그 발견·수정(PM 지시로 AttackSpeedBuffPercent 채우다가 발견) —
+    // 06번① 능력교체형 15종 중 3종(초월_박민석_ADAP·초월_엄태웅_AD·초월_이재윤_AD)은
+    // "구 능력 불명"이라 UnitData.skill/skills를 아예 안 채운 채로 남겨뒀다
+    // (SkillCount==0). 문제: 위 두 호출부(UpdateSkillCooldown·TryCastOnHitSkill)가
+    // unitData.SkillCount로 루프 상한을 정하고 그 안에서만 ResolveSkillAt(0)을 부르는데,
+    // SkillCount==0이면 루프 자체가 안 돌아서 **트레잇을 사도 slot0 교체가 영영 실행되지
+    // 않는다** — 나머지 12종(skills에 최소 1개 이상 채워둠)은 우연히 이 문제를 피해갔다.
+    // 고정: 기본 SkillCount가 0이어도 이 유닛을 targetUnit으로 하는 언락된 트레잇에
+    // replacementSkill이 있으면 최소 1로 올려 slot0 진입을 보장한다 — 나머지 12종은
+    // SkillCount가 이미 1 이상이라 이 분기를 안 타므로 회귀 없음.
+    int EffectiveSkillCount(UnitData unitData)
+    {
+        int count = unitData.SkillCount;
+        if (count > 0) return count;
+        UnitUpgrades source = ResolveUpgrades();
+        return (source != null && source.ReplacementSkillFor(unitData) != null) ? 1 : 0;
+    }
+
     // 06번① 완료: 스킬승급형 트레잇(UnitTraitData.skillLevelUnlockIndex)이 UnitUpgrades에
     // 걸려 있으면 그 레벨을, 없으면 레벨1(index 0)을 쓴다. 원작이 "레벨2 = 레벨1 그대로 +
     // 새 효과"로 만들어서(수치 배율이 아니다) 인덱스만 바꾸는 것으로 충분하다 — 레벨1/2
@@ -731,7 +789,7 @@ public class UnitAttacker : MonoBehaviour
         UnitData unitData = identity != null ? identity.Data : null;
         if (unitData == null) return;
 
-        int count = unitData.SkillCount;
+        int count = EffectiveSkillCount(unitData);
         for (int i = 0; i < count; i++)
         {
             SkillData skill = ResolveSkillAt(unitData, i);
@@ -810,15 +868,23 @@ public class UnitAttacker : MonoBehaviour
         // Self 효과 — 범위 개념이 없다(캐스터 자기 자신). 게이트가 막히면 뗀다, 풀리면
         // 다시 건다 — 한 번 걸고 다시 안 떼는 게 아니라 "지금 켜져 있는가"를 그대로
         // 따른다(다른 두 타겟과 같은 규칙).
+        // ⚠️ 2026-09-07 추가(SkillEffectKind.AttackSpeedBuffPercent, PM 지시) — 원작009
+        // H094/A0WK(자기 전용 공속+12%)가 Aura triggerType의 Self 효과라 이 자리를 탄다.
+        // ApplyBuff는 이름표만(AddBuff), AttackSpeedBuffPercent는 수치까지
+        // (AddAttackSpeedBuffPercent) 건다 — 둘 다 RemoveBuff(id)로 정확히 대칭 해제된다.
         foreach (SkillEffect effect in level.effects)
         {
-            if (effect.target != SkillTargetKind.Self || effect.kind != SkillEffectKind.ApplyBuff) continue;
+            if (effect.target != SkillTargetKind.Self) continue;
+            if (effect.kind != SkillEffectKind.ApplyBuff && effect.kind != SkillEffectKind.AttackSpeedBuffPercent) continue;
             if (string.IsNullOrEmpty(effect.buffId)) continue;
 
             bool alreadyApplied = state.auraSelfAppliedBuffIds.Contains(effect.buffId);
             if (gatePasses && !alreadyApplied)
             {
-                AddBuff(effect.buffId, 0f);
+                if (effect.kind == SkillEffectKind.AttackSpeedBuffPercent)
+                    AddAttackSpeedBuffPercent(effect.buffId, effect.multiplier, 0f, 0);
+                else
+                    AddBuff(effect.buffId, 0f);
                 state.auraSelfAppliedBuffIds.Add(effect.buffId);
             }
             else if (!gatePasses && alreadyApplied)
@@ -919,8 +985,15 @@ public class UnitAttacker : MonoBehaviour
         if (allyAttacker == null) return;
         foreach (SkillEffect effect in level.effects)
         {
-            if (effect.target != SkillTargetKind.Allies || effect.kind != SkillEffectKind.ApplyBuff) continue;
-            allyAttacker.AddBuff(effect.buffId, 0f);
+            if (effect.target != SkillTargetKind.Allies) continue;
+            // 2026-09-07 추가(SkillEffectKind.AttackSpeedBuffPercent, PM 지시) — 아직 이
+            // 경로를 실제로 쓰는 자산은 없다(H09I/A0QZ가 후보였으나 "소환된 더미가 지속
+            // 오라를 낸다"를 표현할 방법이 없어 여전히 미완성) — RemoveBuff를 Enemies
+            // 타겟에도 미리 만들어둔 것과 같은 이유로, 대칭을 미리 갖춰둔다.
+            if (effect.kind == SkillEffectKind.AttackSpeedBuffPercent)
+                allyAttacker.AddAttackSpeedBuffPercent(effect.buffId, effect.multiplier, 0f, 0);
+            else if (effect.kind == SkillEffectKind.ApplyBuff)
+                allyAttacker.AddBuff(effect.buffId, 0f);
         }
     }
 
@@ -930,7 +1003,8 @@ public class UnitAttacker : MonoBehaviour
         if (allyAttacker == null) return;
         foreach (SkillEffect effect in level.effects)
         {
-            if (effect.target != SkillTargetKind.Allies || effect.kind != SkillEffectKind.ApplyBuff) continue;
+            if (effect.target != SkillTargetKind.Allies) continue;
+            if (effect.kind != SkillEffectKind.ApplyBuff && effect.kind != SkillEffectKind.AttackSpeedBuffPercent) continue;
             allyAttacker.RemoveBuff(effect.buffId);
         }
     }
@@ -940,7 +1014,7 @@ public class UnitAttacker : MonoBehaviour
         UnitData unitData = identity != null ? identity.Data : null;
         if (unitData == null) return;
 
-        int count = unitData.SkillCount;
+        int count = EffectiveSkillCount(unitData);
         if (count == 0) return;
 
         // 공유 게이지(OnHitCount)는 이 평타 한 번에 게이지 종류당 최대 한 번만 올린다 —
@@ -1208,7 +1282,8 @@ public class UnitAttacker : MonoBehaviour
         }
 
         if (effect.kind != SkillEffectKind.ApplyBuff && effect.kind != SkillEffectKind.RemoveBuff
-            && effect.kind != SkillEffectKind.AttackPowerBuffFlat) return;
+            && effect.kind != SkillEffectKind.AttackPowerBuffFlat
+            && effect.kind != SkillEffectKind.AttackSpeedBuffPercent) return;
 
         UnitAttacker allyAttacker = ally != null ? ally.GetComponent<UnitAttacker>() : null;
         if (allyAttacker == null) return;
@@ -1227,6 +1302,14 @@ public class UnitAttacker : MonoBehaviour
             // 2026-09-07 추가(PM 지시) — ApplyBuff와 같은 자리, multiplier가 더할 고정
             // 공격력 값이다(buffHitCharges/duration 관례도 ApplyBuff와 동일).
             allyAttacker.AddFlatAttackPowerBuff(effect.buffId, effect.multiplier, effect.duration, effect.buffHitCharges);
+            return;
+        }
+
+        if (effect.kind == SkillEffectKind.AttackSpeedBuffPercent)
+        {
+            // 2026-09-07 추가(PM 지시) — ApplyBuff와 같은 자리, multiplier가 원작 raw
+            // 퍼센트(0.15=15%)다(buffHitCharges/duration 관례도 ApplyBuff와 동일).
+            allyAttacker.AddAttackSpeedBuffPercent(effect.buffId, effect.multiplier, effect.duration, effect.buffHitCharges);
             return;
         }
 
