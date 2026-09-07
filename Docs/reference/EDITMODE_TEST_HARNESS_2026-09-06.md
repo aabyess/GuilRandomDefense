@@ -232,6 +232,12 @@ false·`TryGamble` false 확인)과 `GrantedStock_AllowsExactlyOneGamble`(`SetSt
 ※ 참고: `randMin`/`randMax` 기본값이 둘 다 1f라 `Random.Range(1,1)=1`(배율 없음)
 확인함 — 이쪽은 원인이 아니다.
 
+🔴 **MoveSpeed 클램프 테스트 추가 예정 — `958bbe5` 회귀 사례.** 이동속도를 재는
+런타임 테스트가 하나도 없어서 `EnemyDummy.MoveSpeed`에 워크3 절대값(220)을 그대로
+하한으로 넣는 실수(`eadd517`로 정정, 비율 220/522로 교체)가 유니티 없이는 안 잡혔다
+— 다음에 유니티가 닫히면 `moveSpeed=10` 기준 shred 0/0.07/0.9 → 10/9.3/4.21을
+확인하는 EditMode 테스트를 이 하네스에 추가할 것.
+
 ⚠️ **기댓값(1.5) 자체는 근거 없는 값이 아니다(PM 지적으로 재확인)**: PM이 "레벨당
 +0.05가 우리가 지어낸 값 아니냐"고 물어서 `A0LZ_CASTER_STACK_INVESTIGATION.md`를
 다시 봤다 — 그 문서 자체가 "읽는 곳(vivi_skill_2/3/4/5)이 실제로 쓰는 공식:
