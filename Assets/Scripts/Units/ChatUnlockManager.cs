@@ -28,11 +28,18 @@ public class ChatUnlockManager : MonoBehaviour
     public bool HasClaimedSharedSlot(int playerId) =>
         hasClaimedShared.TryGetValue(playerId, out bool claimed) && claimed;
 
-    // 항법(원작 route) "패왕의 길" 전제 — 사장님 판단 대기라 항법 시스템 자체가 아직 없다.
-    // 기본값을 열림(true)으로 둔다: 이 게이트가 될 시스템이 "정해지지 않았을 뿐 존재는 할
-    // 것"이라, 지금 열어두면 원작보다 살짝 후해질 뿐이다. 반대로 잠가두면 47개가 통째로
-    // 하나도 안 나와 테스트 자체가 안 된다. 항법이 정해지면 이 메서드를 실제 조회로 바꾼다.
-    public virtual bool HasChosenConquerorPath(int playerId) => true;
+    // 항법(원작 route) "패왕의 길" 전제 — 2026-09-07 연결 완료(PM 지시, "필드만·아직 없다"
+    // 뼈대 구멍 전수 점검). 항법 시스템(NavigationState, d4d48e4)이 이미 생겨서
+    // NavigationChoice.Hegemon 선택 여부를 실제로 조회한다. PlayerContext가 없거나
+    // NavigationState가 안 붙어 있으면(씬 배선 전) 안전하게 false — "아직 선택 안 함"과
+    // 같은 취급이라 회귀 위험이 없다(예전 하드코딩 true보다 오히려 원작에 더 가깝다,
+    // 원작도 이 항법을 실제로 골라야만 게이트가 열린다).
+    public virtual bool HasChosenConquerorPath(int playerId)
+    {
+        PlayerContext context = PlayerContext.Get(playerId);
+        NavigationState nav = context != null ? context.NavigationState : null;
+        return nav != null && nav.Choice == NavigationChoice.Hegemon;
+    }
 
     // Nika 전제(원작 udg_Nika_Johab_Bool+udg_Nika_Item_Bool, 루피 기어5 계열로 보이는
     // 별도 퀘스트) — 우리 게임엔 그 퀘스트 자체가 없다. 기본값을 잠김(false)으로 둔다:
