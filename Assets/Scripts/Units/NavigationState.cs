@@ -15,7 +15,11 @@ public enum NavigationChoice
 {
     None,
     Hegemon,       // 패왕의길 — A11S 강화코드 레벨 +2(DamageLevelFixedState 경유)
-    Union,         // 연합세력 — 🔴 미배선(e0IX 위습 매핑 대기). 원작: 포인트값 100 초과 유닛 로스터 편입 시 랜덤위습 +1
+    // 연합세력 — 🔴 여전히 미배선(2026-09-07 정정, PM 지시). e0IX 위습 매핑 자체는
+    // 풀렸다(Wisp_흔함.asset, SelfUpgradeAbilityData.cs 주석 참고) — 남은 건 "유닛
+    // 포인트값>100 로스터 편입" 감지 로직 자체가 아직 없다는 것(원작: 그 순간 랜덤위습
+    // +1). 위습 자산이 아니라 이 감지 훅이 진짜 남은 구멍이다.
+    Union,
     Gambler,       // 도박광 — 다른세계 도박 실패 시 럭키토큰 +1
     SupportBoost,  // 도움소 강화 — 해루석/버스터콜 레벨2 수치
     SupportLock,   // 도움소 잠금 — 아이템 도박 축소풀(13종)
