@@ -3,7 +3,12 @@ guid: d7fa5b85e96a74dc29daa526c4797c8b
 ModelImporter:
   serializedVersion: 24000
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: pl_franky_punk01
+    second: {fileID: 2100000, guid: 42b7ef45cc3dd4105b8229651a4931db, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -18,35 +23,7 @@ ModelImporter:
     removeConstantScaleCurves: 0
     motionNodeName: 
     animationImportErrors: 
-    animationImportWarnings: "\nClip 'pl_franky_punk01_shake' has import animation
-      warnings that might lower retargeting quality:\nNote: Activate translation
-      DOF on avatar to improve retargeting quality.\n\t'LArm_Clavicle' has translation
-      animation that will be discarded.\n\t'RArm_Clavicle' has translation animation
-      that will be discarded.\n\nClip 'pl_franky_punk01_combo_c' has import animation
-      warnings that might lower retargeting quality:\nNote: Activate translation
-      DOF on avatar to improve retargeting quality.\n\t'RArm_Clavicle' has translation
-      animation that will be discarded.\n\nClip 'pl_franky_punk01_victory' has import
-      animation warnings that might lower retargeting quality:\nNote: Activate translation
-      DOF on avatar to improve retargeting quality.\n\t'LArm_Clavicle' has translation
-      animation that will be discarded.\n\t'RArm_Clavicle' has translation animation
-      that will be discarded.\n\nClip 'pl_franky_punk01_lose_lp' has import animation
-      warnings that might lower retargeting quality:\nNote: Activate translation
-      DOF on avatar to improve retargeting quality.\n\t'Head_Face' has translation
-      animation that will be discarded.\n\nClip 'pl_franky_punk01_jump_lp' has import
-      animation warnings that might lower retargeting quality:\nNote: Activate translation
-      DOF on avatar to improve retargeting quality.\n\t'Head_Face' has translation
-      animation that will be discarded.\n\nClip 'pl_franky_punk01_skill_b' has import
-      animation warnings that might lower retargeting quality:\nNote: Activate translation
-      DOF on avatar to improve retargeting quality.\n\t'RArm_Clavicle' has translation
-      animation that will be discarded.\n\nClip 'pl_franky_punk01_skill_a' has import
-      animation warnings that might lower retargeting quality:\nNote: Activate translation
-      DOF on avatar to improve retargeting quality.\n\t'LHand_constriction' has scale
-      animation that will be discarded.\n\t'RHand_constriction' has scale animation
-      that will be discarded.\n\nClip 'pl_franky_punk01_lose' has import animation
-      warnings that might lower retargeting quality:\nNote: Activate translation
-      DOF on avatar to improve retargeting quality.\n\t'Body_Belly' has translation
-      animation that will be discarded.\n\t'Head_Face' has translation animation
-      that will be discarded.\n"
+    animationImportWarnings: 
     animationRetargetingWarnings: 
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0
@@ -359,13 +336,13 @@ ModelImporter:
       scale: {x: 1, y: 1, z: 1}
     - name: Body_Pelvis
       parentName: world_joint
-      position: {x: 1.4210854e-18, y: 0.04325918, z: -0.0005407722}
-      rotation: {x: -0.0000000012606144, y: -0, z: -0, w: 1}
+      position: {x: -0, y: 0.04577, z: 0.00020999997}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: Body_Belly
       parentName: Body_Pelvis
       position: {x: -0, y: 0.00493, z: 0.000010000001}
-      rotation: {x: 0.012598258, y: -0, z: -0, w: 0.99992067}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: Body_Chest
       parentName: Body_Belly
@@ -375,48 +352,48 @@ ModelImporter:
     - name: Bweapon
       parentName: Body_Chest
       position: {x: 0.01375, y: 0.01358, z: -0.02185}
-      rotation: {x: 0.009430037, y: 5.6746576e-25, z: 3.3989758e-26, w: 0.9999556}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: Head_Neck
       parentName: Body_Chest
       position: {x: -0, y: 0.014529999, z: -0.0024399997}
-      rotation: {x: 0.000000004656613, y: -0, z: -0, w: 1}
-      scale: {x: 1, y: 0.99999994, z: 0.99999994}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: Head_Face
       parentName: Head_Neck
       position: {x: -0, y: 0.0053099995, z: 0}
-      rotation: {x: -0.012598252, y: -0, z: -0, w: 0.99992067}
-      scale: {x: 1, y: 0.9999999, z: 0.9999999}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: LArm_Clavicle
       parentName: Body_Chest
-      position: {x: -0.01018, y: 0.00973, z: -0.00006}
-      rotation: {x: -0, y: -0, z: -0, w: 1}
+      position: {x: -0.0071799997, y: 0.00973, z: -0.00006}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: LShoulder
       parentName: LArm_Clavicle
-      position: {x: -0.02847, y: 0.0056, z: 3.5527136e-19}
-      rotation: {x: 9.313226e-10, y: 1.6432913e-10, z: -0.000000025052076, w: 1}
-      scale: {x: 1.0000002, y: 1.0000002, z: 1}
+      position: {x: -0.02847, y: 0.0056, z: -1.110223e-20}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: LArm_Upper
       parentName: LArm_Clavicle
       position: {x: -0.028629998, y: 0.0056, z: 0}
-      rotation: {x: 9.313226e-10, y: 1.3453619e-10, z: -0.000000016217143, w: 1}
-      scale: {x: 1.0000002, y: 1.0000002, z: 1}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: LArm_Fore
       parentName: LArm_Upper
       position: {x: -0.026649999, y: 0, z: 1.4901157e-13}
-      rotation: {x: -0.0000000027939677, y: -0.000000005235341, z: 0.000000022412449, w: 1}
-      scale: {x: 1.0000001, y: 1.0000001, z: 1}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: LHand_constriction
       parentName: LArm_Fore
       position: {x: -0.022279998, y: 0, z: 0}
-      rotation: {x: -0, y: -0, z: -1.4627374e-17, w: 1}
-      scale: {x: 1.0000001, y: 1.0000001, z: 1}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: LHand_Palm
       parentName: LArm_Fore
       position: {x: -0.0402, y: -6.82121e-17, z: -1.3877787e-21}
-      rotation: {x: -0.012598249, y: 0.000000008716234, z: -0.0000000022473738, w: 0.99992067}
-      scale: {x: 1.0000004, y: 1.0000004, z: 1}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: LHand_cannon
       parentName: LHand_Palm
       position: {x: -0.014029999, y: -0.00085, z: 0}
@@ -424,34 +401,34 @@ ModelImporter:
       scale: {x: 1, y: 1, z: 1}
     - name: RArm_Clavicle
       parentName: Body_Chest
-      position: {x: 0.01018, y: 0.00973, z: -0.00006}
-      rotation: {x: -0, y: -0, z: -0, w: 1}
+      position: {x: 0.0071799997, y: 0.00973, z: -0.00006}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: RShoulder
       parentName: RArm_Clavicle
-      position: {x: 0.02847, y: 0.0056, z: 1.7763568e-19}
-      rotation: {x: 9.313226e-10, y: -1.6432913e-10, z: 0.000000025052076, w: 1}
-      scale: {x: 1.0000002, y: 1.0000002, z: 1}
+      position: {x: 0.02847, y: 0.0056, z: -5.551115e-21}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: RArm_Upper
       parentName: RArm_Clavicle
       position: {x: 0.028629998, y: 0.0056, z: 0}
-      rotation: {x: 9.313226e-10, y: -1.3453619e-10, z: 0.000000016217143, w: 1}
-      scale: {x: 1.0000002, y: 1.0000002, z: 1}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: RArm_Fore
       parentName: RArm_Upper
       position: {x: 0.026649999, y: 0, z: 1.4901157e-13}
-      rotation: {x: -0.0000000027939677, y: 0.000000005235341, z: -0.000000022412449, w: 1}
-      scale: {x: 1.0000001, y: 1.0000001, z: 1}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: RHand_constriction
       parentName: RArm_Fore
       position: {x: 0.022279998, y: 0, z: 0}
-      rotation: {x: -0, y: -0, z: 1.4627374e-17, w: 1}
-      scale: {x: 1.0000001, y: 1.0000001, z: 1}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: RHand_Palm
       parentName: RArm_Fore
       position: {x: 0.0402, y: -2.2737367e-17, z: 0}
-      rotation: {x: -0.012598249, y: -0.000000008716234, z: 0.0000000022473738, w: 0.99992067}
-      scale: {x: 1.0000004, y: 1.0000004, z: 1}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: RHand_cannon
       parentName: RHand_Palm
       position: {x: 0.01588, y: -0.00090999994, z: 0}
@@ -460,42 +437,42 @@ ModelImporter:
     - name: LLeg_Thigh
       parentName: Body_Pelvis
       position: {x: -0.010499999, y: -0.0019799997, z: 0.00137}
-      rotation: {x: 0.000000007666, y: -0.000000024549774, z: -0.000000010260257, w: 1}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: LLeg_Calf
       parentName: LLeg_Thigh
       position: {x: -0, y: -0.01945, z: 0}
-      rotation: {x: -0.000000014154365, y: 0.00000002818947, z: 0.000000010496929, w: 1}
-      scale: {x: 1.0000001, y: 1.0000001, z: 1}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: LFoot_Heel
       parentName: LLeg_Calf
       position: {x: -0, y: -0.017539999, z: 0.00021999999}
-      rotation: {x: 0.000000007749253, y: 0.000000009218597, z: -2.367523e-10, w: 1}
-      scale: {x: 1, y: 1, z: 0.99999994}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: LFoot_Toe
       parentName: LFoot_Heel
       position: {x: -0, y: -0.00564, z: 0.0089}
-      rotation: {x: 0.000004188902, y: -0, z: -0, w: 1}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: RLeg_Thigh
       parentName: Body_Pelvis
       position: {x: 0.010499999, y: -0.0019799997, z: 0.00137}
-      rotation: {x: 0.000000007666, y: 0.000000024549774, z: 0.000000010260257, w: 1}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: RLeg_Calf
       parentName: RLeg_Thigh
       position: {x: -0, y: -0.01945, z: 0}
-      rotation: {x: -0.000000014154365, y: -0.00000002818947, z: -0.000000010496929, w: 1}
-      scale: {x: 1.0000001, y: 1.0000001, z: 1}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: RFoot_Heel
       parentName: RLeg_Calf
       position: {x: -0, y: -0.017539999, z: 0.00021999999}
-      rotation: {x: 0.000000007749253, y: -0.000000009218597, z: 2.367523e-10, w: 1}
-      scale: {x: 1, y: 1, z: 0.99999994}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
     - name: RFoot_Toe
       parentName: RFoot_Heel
       position: {x: -0, y: -0.00564, z: 0.0089}
-      rotation: {x: 0.000004188902, y: -0, z: -0, w: 1}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     armTwist: 0.5
     foreArmTwist: 0.5
