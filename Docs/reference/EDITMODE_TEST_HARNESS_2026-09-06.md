@@ -143,6 +143,92 @@ SelfUpgradeAxisRuntimeTests.SelfUpgradeLevel_ReadThroughRealDamagePath_MatchesFo
 1.0, `ArmorMultiplier(armor=0)`도 1.0) — **모든 단계가 정확히 1.5를 내야 하는데
 실측은 2.0이었다(3회 재현 동일).** 코드 정독으로는 이 차이를 못 찾았다. **다음
 단계도 같다 — 임시 로그로 각 단계 실제 반환값을 찍어보는 것이 유일하게 남은 방법.**
+
+## 2026-09-07 밤 — 4건 전부 해결(Debug.Log 계측), 16/16 통과
+
+사장님이 유니티를 닫아주신 창을 이용해 위 3건 + 낡은 테스트 1건(`StartState_
+AllowsExactlyOneGamble`, `007a967`이 시작재고 1→0으로 바꾼 뒤 낡음)을 전부 해결했다.
+**게임 로직 버그는 0건 — 전부 테스트 하네스 쪽 문제였다.** `TryUpgradeSelf`/
+`ResolveSkillEffectValue`/`DealSkillDamage`/`MitigatedDamage` 어디도 안 고쳤다(계측용
+`Debug.Log`를 넣었다 뺀 것 말고는 무변화).
+
+### 1·2번(GuaranteedSuccess/GuaranteedFailure) — 진짜 원인: EditMode엔 Awake/OnEnable이 안 돈다
+
+위 "1차 가설(반증됨)"·"2차 가설(registry 오염, 격리로 반증)" 둘 다 틀린 방향이었다 —
+**진짜 원인은 셋 다 아니고, 더 근본적이다: EditMode 테스트는 Play Mode가 아니라서
+`[ExecuteInEditMode]`/`[ExecuteAlways]`가 없는 일반 MonoBehaviour의 `Awake()`/
+`OnEnable()`이 컴포넌트를 몇 개를 어떤 순서로 붙이든 아예 실행되지 않는다.**
+`Debug.Log`를 `TryUpgradeSelf` 초입에 찍어 확정했다: `owner`는 계속 null인데, 바로 그
+순간 `GetComponent<OwnedByPlayer>()`를 직접 불러보면 "found"였다 — 즉 컴포넌트는
+정상적으로 붙어 있는데, 그걸 캐싱하는 `UnitAttacker.Awake()` 자체가 한 번도 안 돈
+것이다. 같은 이유로 `PlayerContext.OnEnable()`(`registry.Add(this)`)도 안 돌아
+`PlayerContext.All.Count`가 끝까지 0이었다 — 이게 "1차 가설 반증"과 "2차 가설(격리로도
+재현)"이 동시에 참이었던 이유다: Awake 순서는 상관없었고(어차피 아예 안 도니까),
+registry도 "오염"된 게 아니라 "비어 있었을 뿐"이라 격리해도 똑같이 실패했다.
+
+**고치는 법(하네스 파일에 이미 반영)**: 이 파일의 다른 자리(`selfUpgradeData`·
+`playerId`·`resourceWallet`·`selfUpgradeLevel`)가 이미 하던 패턴 그대로 — Awake/
+OnEnable에 기대지 말고 **리플렉션으로 직접 채우거나 직접 호출한다.**
+- `SetUp()`에서 `attacker`의 private `owner` 필드를 `SetPrivateField(attacker, "owner",
+  ownedByPlayer)`로 직접 주입한다(컴포넌트 추가 순서는 이제 안 중요하다).
+- `PlayerContext.OnEnable()`을 `typeof(PlayerContext).GetMethod("OnEnable", NonPublic
+  | Instance).Invoke(playerContext, null)`로 직접 불러 registry에 등록한다.
+- `TearDown()`에서 대칭으로 `OnDisable()`도 리플렉션으로 직접 불러 registry에서 뺀다
+  ("DestroyImmediate가 OnDisable을 대신 불러준다"는 기존 주석도 같은 근거 없는
+  낙관이었다 — 확인 안 하고 넘어갔던 가정).
+
+### 위습 개수 불일치 — `Destroy()`가 프레임 끝에 처리된다(EditMode `[Test]`엔 프레임이 없다)
+
+owner/context를 고친 뒤 새로 드러난 문제: `GuaranteedFailure`가 "위습이 그대로다
+(Expected 0, But was 3)"로 실패했다. `TryUpgradeSelf`는 소모한 위습에 `Object.
+MarkConsumed()`+`Object.Destroy()`를 부르는데, `Destroy()`는 **프레임 끝에야 실제로
+객체를 지운다** — `[UnityTest]`(코루틴, 프레임이 도는)가 아니라 `[Test]`(동기 실행,
+프레임 자체가 없는)에서는 `TryUpgradeSelf()` 호출 직후 `Object.FindObjectsByType
+<Wisp>()`를 세도 그 오브젝트가 여전히 살아 있다(`IsConsumed`만 true). **개수가
+아니라 `IsConsumed==false`인 것만 세도록** `CountRemainingWisps()` 헬퍼로 바꿨다 —
+프레임 지연과 무관하게 정확하다.
+
+### `Destroy()`가 EditMode에서 `[Error]` 로그를 찍어 그게 테스트를 실패시킨다
+
+그다음 드러난 문제: 실제 assert는 전부 통과하는데 테스트가 여전히 실패로 표시됐다
+— 원인은 `Object.Destroy()` 자체가 EditMode에서 불리면 "Destroy may not be called
+from edit mode! Use DestroyImmediate instead."를 `[Error]` 레벨로 찍고, NUnit은 처리
+안 된 에러 로그를 그 자체로 테스트 실패로 센다는 것이었다(실제 게임 코드는 문제
+없다 — Play Mode/빌드에선 이 경고 자체가 안 뜬다. EditMode 테스트로 런타임 코드를
+태워서만 생기는 부작용). `UnityEngine.TestTools.LogAssert.Expect(LogType.Error, ...)`로
+"이 에러는 예상된 것"이라고 위습 소모 개수(`wispCost`)만큼 미리 등록해 흡수한다 —
+게임 코드는 손 안 댔다.
+
+### 3번(SelfUpgradeLevel_ReadThroughRealDamagePath) — 진짜 원인: float 정밀도
+
+`ResolveBaseSkillEffectValue`에 `Debug.Log`를 찍어보니 `selfUpgradeLevel=10
+multiplier=0.05 bonus=1 => 1.5`로 **코드는 처음부터 정확히 1.5를 계산하고 있었다.**
+`DealSkillDamage`도 `resolved=1.5 pctTaken=1 amount=1.5`, `EnemyDummy.TakeDamage`도
+`amount=1.5 mitigated=1.5`로 매 단계 정확했다. 그런데 최종 `hpBefore-hpAfter`는 2.0
+이었다 — **원인은 테스트가 고른 `hp=10_000_000f`였다.** `float`는 24비트 가수부라
+10,000,000 근방(2^23~2^24 사이)에서 ULP(최소 표현 간격)가 정확히 1.0이다 —
+10,000,000 − 1.5 = 9,999,998.5는 표현 불가능한 값이라 가장 가까운 짝수로 반올림되며
+9,999,998이 되고, 델타가 1.5가 아니라 2.0으로 관측된 것이다. **hp를 1000f로
+낮췄다** — 델타(최대 1.5)보다 훨씬 크면서 그 크기에서 float 정밀도가 안전하다.
+
+### `ItemGambleRuntimeTests.StartState_AllowsExactlyOneGamble` — 낡은 테스트, 재작성
+
+`007a967`(PM 지시, `ItemGambleState.cs:22-27`)이 시작 재고를 "`Item_Int(0)+1`
+보정"(1)에서 "원작 `AddUnitToStockBJ('H0BS',...,0,0)`"(0, 6라운드까지 도박 자체가
+안 됨)으로 정정하면서 이 테스트의 "시작=1, 1회 가능" 전제가 낡았다. **코드가 맞고
+테스트가 틀렸다** — 둘로 쪼갰다: `StartState_HasNoStock`(시작=재고0, `HasStock`
+false·`TryGamble` false 확인)과 `GrantedStock_AllowsExactlyOneGamble`(`SetStock(1)`로
+6·9라운드 지급을 흉내내 그 뒤에만 정확히 1회 가능함을 확인).
+
+### 최종 결과
+
+```
+16/16 통과 (exit code 0)
+```
+
+아래 코드 블록(`ItemGambleRuntimeTests.cs`·`SelfUpgradeAxisRuntimeTests.cs`)은 위
+수정을 전부 반영한 **현재 버전**으로 갱신했다 — 이 문서에서 복원하면 이제 16/16이
+바로 통과해야 한다(다음에 또 낡은 버전을 복원하지 않도록).
 ※ 참고: `randMin`/`randMax` 기본값이 둘 다 1f라 `Random.Range(1,1)=1`(배율 없음)
 확인함 — 이쪽은 원인이 아니다.
 
@@ -796,9 +882,13 @@ public class ItemGambleRuntimeTests
     }
 
     [Test]
-    public void StartState_AllowsExactlyOneGamble()
+    public void StartState_HasNoStock()
     {
-        // 기본값(코드 기본값 1, 원작 Item_Int(0)+1 보정)을 그대로 쓴다 — 리플렉션으로 안 건드림.
+        // ⚠️ 2026-09-07 재정정(PM 지시, 007a967) — "Item_Int(0)+1 보정"은 잘못된 읽기였다.
+        // 원작은 시작 시 AddUnitToStockBJ('H0BS', ..., 0, 0)(재고 0)이고, 첫 재고는 6라운드에
+        // 가서야 RoundManager.GrantItemGambleStock이 연다. 이 테스트는 그 "시작=재고 0,
+        // 도박 자체가 안 된다"를 확인한다 — 예전 버전은 반대(시작=1, 1회 가능)를 검증했는데
+        // 그게 코드 기본값이 0으로 바뀌면서 낡았다(ItemGambleState.cs:22-27 주석 참고).
         SetFullPool(new List<ItemGamblePoolData.Entry>
         {
             new ItemGamblePoolData.Entry { item = testItems[0], weight = 1f },
@@ -809,14 +899,42 @@ public class ItemGambleRuntimeTests
         {
             ItemGambleState state = stateGO.AddComponent<ItemGambleState>();
 
-            Assert.IsTrue(state.HasStock, "시작 상태(재고 기본값)에서 HasStock이 false다 — +1 보정이 빠졌을 수 있다.");
+            Assert.IsFalse(state.HasStock, "시작 상태(재고 기본값 0)에서 HasStock이 true다 — 기본값이 다시 0이 아니게 바뀌었을 수 있다.");
+
+            bool result = state.TryGamble(pool, out ItemData rolled);
+            Assert.IsFalse(result, "시작 상태(재고 0)인데 TryGamble이 성공을 돌려줬다.");
+            Assert.IsNull(rolled, "재고 0인데 아이템이 뽑혔다.");
+        }
+        finally
+        {
+            Object.DestroyImmediate(stateGO);
+        }
+    }
+
+    [Test]
+    public void GrantedStock_AllowsExactlyOneGamble()
+    {
+        // 6·9라운드 지급 경로(RoundManager.GrantItemGambleStock → SetStock)를 흉내낸다 —
+        // "재고를 받으면 정확히 그만큼만 돌 수 있다"가 지금 검증할 실제 동작이다.
+        SetFullPool(new List<ItemGamblePoolData.Entry>
+        {
+            new ItemGamblePoolData.Entry { item = testItems[0], weight = 1f },
+        });
+
+        GameObject stateGO = new GameObject("Test_ItemGambleState_GrantedStock");
+        try
+        {
+            ItemGambleState state = stateGO.AddComponent<ItemGambleState>();
+            state.SetStock(1);
+
+            Assert.IsTrue(state.HasStock, "SetStock(1) 뒤인데 HasStock이 false다.");
 
             bool first = state.TryGamble(pool, out ItemData firstRoll);
-            Assert.IsTrue(first, "시작 상태에서 첫 도박이 실패했다.");
+            Assert.IsTrue(first, "재고 1을 받은 뒤 첫 도박이 실패했다.");
             Assert.IsNotNull(firstRoll, "첫 도박에서 아이템이 안 뽑혔다.");
 
             bool second = state.TryGamble(pool, out ItemData secondRoll);
-            Assert.IsFalse(second, "시작 상태(재고 1)인데 두 번째 도박까지 성공했다 — +1 보정이 2 이상으로 잘못 들어갔을 수 있다.");
+            Assert.IsFalse(second, "재고 1인데 두 번째 도박까지 성공했다 — 차감이 안 되고 있을 수 있다.");
             Assert.IsNull(secondRoll, "재고가 없는데도 두 번째 도박에서 아이템이 뽑혔다.");
         }
         finally
@@ -875,7 +993,6 @@ public class ItemGambleRuntimeTests
         }
     }
 }
-
 ```
 
 ### `SelfUpgradeAxisRuntimeTests.cs`
@@ -884,6 +1001,7 @@ public class ItemGambleRuntimeTests
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 // 목적: 원작 비비 A0LZ류 "자가시전 영구 강화" 축(2026-09-06, A0LZ_CASTER_STACK_INVESTIGATION.md/
 // 7703d2c, commit 미정 — 이 커밋 해시는 하네스를 옮길 때 실제 커밋으로 교체할 것)이 실제
@@ -910,19 +1028,22 @@ public class SelfUpgradeAxisRuntimeTests
     [SetUp]
     public void SetUp()
     {
-        // ⚠️ 2026-09-06 밤 실측에서 잡힌 테스트 버그(게임 로직 버그 아님): UnitAttacker.Awake()가
-        // owner = GetComponent<OwnedByPlayer>()를 그 자리에서 바로 읽는다 — AddComponent는
-        // 활성 GameObject에 즉시 Awake를 돌리므로, UnitAttacker를 먼저 붙이면 그 순간 아직
-        // OwnedByPlayer가 없어 owner가 영원히 null로 굳는다(Awake는 한 번만 돈다).
-        // TryUpgradeSelf()의 "if (owner == null) return false;"가 항상 걸려 성공률과 무관하게
-        // 매번 실패로 보였다 — GuaranteedSuccess/GuaranteedFailure 두 실패의 진짜 원인이었다.
-        // 고치는 법: 비활성 상태로 만들어 모든 컴포넌트를 붙인 뒤 활성화한다(Awake를 그때까지 미룸).
+        // ⚠️ 2026-09-07 세 번째 재정정(실측, Debug.Log 계측으로 확정) — 컴포넌트 추가 순서
+        // 문제가 아니었다. **EditMode 테스트는 Play Mode가 아니라서 일반 MonoBehaviour의
+        // Awake()가 아예 안 돈다**([ExecuteInEditMode]/[ExecuteAlways]가 없는 한). 그래서
+        // UnitAttacker.Awake()의 "owner = GetComponent<OwnedByPlayer>()"가 컴포넌트를 어떤
+        // 순서로 붙이든 전혀 실행되지 않고, owner는 C# 기본값 null로 테스트 내내 고정된다
+        // (실측: TryUpgradeSelf 안에서 owner는 계속 null인데 그 순간 GetComponent<OwnedByPlayer>()를
+        // 직접 불러보면 "found"였다 — 컴포넌트는 붙어 있는데 Awake가 그걸 캐싱을 못 한
+        // 것이었다). 이 하네스의 다른 자리(selfUpgradeData·playerId·resourceWallet·
+        // selfUpgradeLevel)가 전부 리플렉션으로 필드를 직접 채우는 이유가 바로 이거다 —
+        // 여기도 같은 패턴을 써야 한다. Awake에 의존하는 대신 owner 필드를 리플렉션으로
+        // 직접 채운다.
         attackerGO = new GameObject("Test_UnitAttacker_SelfUpgrade");
-        attackerGO.SetActive(false);
-        attacker = attackerGO.AddComponent<UnitAttacker>();
         ownedByPlayer = attackerGO.AddComponent<OwnedByPlayer>();
         ownedByPlayer.SetOwner(PlayerId);
-        attackerGO.SetActive(true);
+        attacker = attackerGO.AddComponent<UnitAttacker>();
+        SetPrivateField(attacker, "owner", ownedByPlayer);
 
         playerContextGO = new GameObject("Test_PlayerContext_SelfUpgrade");
         playerContext = playerContextGO.AddComponent<PlayerContext>();
@@ -932,6 +1053,18 @@ public class SelfUpgradeAxisRuntimeTests
         // 공개 세터가 없다. 이 하네스의 기존 파일들도 이런 자리는 리플렉션으로 채운다.
         SetPrivateField(playerContext, "playerId", PlayerId);
         SetPrivateField(playerContext, "resourceWallet", resourceWallet);
+
+        // ⚠️ 2026-09-07 추가(같은 EditMode 한계, 위 owner 재정정과 같은 원인) — PlayerContext는
+        // OnEnable()에서 스스로를 static registry에 등록하는데, 그 OnEnable도 EditMode에서
+        // 안 돈다(실측: 여기까지 온 뒤 PlayerContext.All.Count가 0이었다). PlayerContext.Get이
+        // 이 registry를 순회하므로, 등록이 없으면 TryUpgradeSelf가 "context==null"로 항상
+        // 실패한다 — GuaranteedSuccess/GuaranteedFailure 두 실패의 진짜 원인이었다(owner 수정만
+        // 으론 부족했다). OnEnable을 리플렉션으로 직접 불러 등록을 흉내낸다 — DestroyImmediate는
+        // (Awake/OnEnable과 달리) OnDisable을 동기적으로 확실히 부르므로 TearDown 쪽은 그대로
+        // 둬도 registry에서 빠진다(별도 조치 불필요).
+        MethodInfo onEnable = typeof(PlayerContext).GetMethod("OnEnable", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(onEnable, "PlayerContext.OnEnable을 리플렉션으로 못 찾았다.");
+        onEnable.Invoke(playerContext, null);
 
         resourceWallet.Add(ResourceType.Wood, 1000); // 충분히 크게 — 이 테스트에서 고갈 안 시킴.
 
@@ -949,8 +1082,16 @@ public class SelfUpgradeAxisRuntimeTests
     [TearDown]
     public void TearDown()
     {
-        // OnEnable에서 PlayerContext.registry에 등록되므로, GameObject를 지우면 OnDisable이
-        // 불려 자동으로 registry에서 빠진다 — 여기서 따로 안 챙겨도 된다.
+        // ⚠️ 2026-09-07 정정 — 위 "OnDisable이 자동으로 불린다"는 가정도 위 OnEnable과 같은
+        // 근거 없는 낙관이었다(EditMode에선 이런 메시지가 확실히 안 돈다는 게 이번에 실측으로
+        // 드러났다). registry에서 안 빠지면 static 리스트에 파괴된 PlayerContext가 계속 쌓여
+        // 다음 테스트(같은 PlayerId=777)가 죽은 참조를 집을 위험이 있다 — 명시적으로 지운다.
+        if (playerContext != null)
+        {
+            MethodInfo onDisable = typeof(PlayerContext).GetMethod("OnDisable", BindingFlags.NonPublic | BindingFlags.Instance);
+            onDisable?.Invoke(playerContext, null);
+        }
+
         foreach (Wisp w in Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None))
             if (w != null) Object.DestroyImmediate(w.gameObject);
 
@@ -984,6 +1125,30 @@ public class SelfUpgradeAxisRuntimeTests
         }
     }
 
+    // ⚠️ 2026-09-07 추가 — TryUpgradeSelf가 소모한 위습을 Destroy()로 지운다(Object.Destroy,
+    // DestroyImmediate 아님). Destroy는 프레임 끝에야 실제로 처리되므로, 프레임이 안 도는
+    // EditMode [Test](UnityTest가 아니다)에서는 Object.FindObjectsByType<Wisp>()의 개수가
+    // TryUpgradeSelf 호출 뒤에도 안 줄어든다 — 객체는 아직 그대로고 IsConsumed만 true다.
+    // "몇 마리 남았나"는 개수가 아니라 IsConsumed==false 개수로 세야 이 프레임 지연과
+    // 무관하게 정확하다.
+    static int CountRemainingWisps() =>
+        System.Linq.Enumerable.Count(Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None), w => w != null && !w.IsConsumed);
+
+    // ⚠️ 2026-09-07 추가 — TryUpgradeSelf가 소모된 위습에 Object.Destroy()를 부르는데,
+    // Destroy()는 EditMode(플레이 모드 아님)에서 부르면 "Destroy may not be called from
+    // edit mode!"를 [Error] 레벨로 찍는다(실제 게임 코드는 정상 — 이 경고는 우리가 EditMode
+    // 테스트로 런타임 코드를 태워서만 생긴다). 처리 안 된 에러 로그는 그 자체로 NUnit이
+    // 테스트를 실패시키므로, TryUpgradeSelf 호출 전에 소모될 개수만큼 미리 "이 에러는
+    // 예상된 것"이라고 등록해둔다 — 게임 로직을 안 건드리고 테스트 쪽에서만 흡수한다.
+    static void ExpectDestroyEditModeWarnings(int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            LogAssert.Expect(LogType.Error,
+                new System.Text.RegularExpressions.Regex("Destroy may not be called from edit mode.*", System.Text.RegularExpressions.RegexOptions.Singleline));
+        }
+    }
+
     [Test]
     public void GuaranteedSuccess_IncrementsLevel_AndConsumesResources()
     {
@@ -992,8 +1157,9 @@ public class SelfUpgradeAxisRuntimeTests
         SpawnWisps(3);
 
         int woodBefore = resourceWallet.Get(ResourceType.Wood);
-        int wispCountBefore = Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None).Length;
+        int wispCountBefore = CountRemainingWisps();
 
+        ExpectDestroyEditModeWarnings(upgradeData.wispCost);
         bool result = attacker.TryUpgradeSelf();
 
         Assert.IsTrue(result, "100% 성공률인데 TryUpgradeSelf가 실패를 돌려줬다.");
@@ -1002,7 +1168,7 @@ public class SelfUpgradeAxisRuntimeTests
         Assert.AreEqual(woodBefore - upgradeData.woodCost, resourceWallet.Get(ResourceType.Wood),
             "성공 시 목재가 woodCost만큼 안 깎였다.");
 
-        int wispCountAfter = Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None).Length;
+        int wispCountAfter = CountRemainingWisps();
         Assert.AreEqual(wispCountBefore - upgradeData.wispCost, wispCountAfter,
             "성공 시 위습이 wispCost기만큼 안 없어졌다.");
     }
@@ -1018,8 +1184,9 @@ public class SelfUpgradeAxisRuntimeTests
         SpawnWisps(3);
 
         int woodBefore = resourceWallet.Get(ResourceType.Wood);
-        int wispCountBefore = Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None).Length;
+        int wispCountBefore = CountRemainingWisps();
 
+        ExpectDestroyEditModeWarnings(upgradeData.wispCost);
         bool result = attacker.TryUpgradeSelf();
 
         Assert.IsFalse(result, "0% 성공률인데 TryUpgradeSelf가 성공을 돌려줬다.");
@@ -1028,7 +1195,7 @@ public class SelfUpgradeAxisRuntimeTests
         Assert.AreEqual(woodBefore - upgradeData.woodCost, resourceWallet.Get(ResourceType.Wood),
             "실패했는데도 목재가 그대로다 — 원작은 실패해도 자원이 나간다(뒤바뀐 환불 버그일 수 있다).");
 
-        int wispCountAfter = Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None).Length;
+        int wispCountAfter = CountRemainingWisps();
         Assert.AreEqual(wispCountBefore - upgradeData.wispCost, wispCountAfter,
             "실패했는데도 위습이 그대로다 — 원작은 실패해도 자원이 나간다.");
     }
@@ -1069,7 +1236,11 @@ public class SelfUpgradeAxisRuntimeTests
         GameObject targetGO = new GameObject("Test_EnemyDummy_SelfUpgradeRead");
         EnemyDummy target = targetGO.AddComponent<EnemyDummy>();
         EnemyData targetData = ScriptableObject.CreateInstance<EnemyData>();
-        targetData.hp = 10_000_000f;
+        // ⚠️ 2026-09-07 재정정(실측): 10,000,000처럼 큰 hp는 float 정밀도 한계(그 크기에서
+        // ULP≈1.0)에 걸려 1.5같은 작은 델타를 정확히 못 뺀다 — 10,000,000-1.5가 반올림되며
+        // 기대값(1.5)과 다른 값(실측 2.0)이 나왔다. 게임 로직 버그가 아니라 테스트가 고른
+        // hp 크기의 문제였다 — 델타(최대 1.5)보다 훨씬 크면서 float 정밀도가 안전한 값으로 낮춘다.
+        targetData.hp = 1000f;
         targetData.magicArmorMultiplier = 1f;
         targetData.percentDamageTaken = 1f;
         target.Initialize(targetData);
@@ -1113,7 +1284,6 @@ public class SelfUpgradeAxisRuntimeTests
         }
     }
 }
-
 ```
 
 ### `GuilRandomDefense.Tests.EditMode.asmdef`
