@@ -63,14 +63,15 @@ public class PirateQuestData : ScriptableObject
     public int successWispCount;
 
     // 특성포인트 보상(피카: 목재1 + 특성포인트1, 사장님 확정 2026-09-05 07번 — 4갈래 중 넷째).
-    // ⚠️ 코드 경로는 이어졌지만(`PirateQuestManager.HandleSuccess`가 0보다 크면
-    // `UnitUpgrades.GrantPirateQuestPoint()`를 부른다) **지금 당장은 도달하지 않는다** —
-    // `PlayerContext.unitUpgrades`가 씬에서 여전히 null이다(`MapGenerator`가 그 컴포넌트를
-    // 안 붙인다, `WIRING_AUDIT.md` §1). 그리고 §1이 풀려도 **받은 포인트를 쓸 상점이 아직
-    // 없다**(`UnitTraitData.costTraitPoints`를 읽어 `Unlock()`을 부르는 코드 0건). 값 자체는
-    // 항상 1로 취급된다 — `GrantPirateQuestPoint()`가 1회 한정 bool 플래그라 필드의 정확한
-    // 수치는 안 읽는다.
-    [Header("성공 시 특성포인트 (배선은 됐으나 §1·상점 둘 다 막혀 미도달 — 위 주석 참고)")]
+    // 코드 경로 완주 확인(2026-09-07, PM 지시로 재확인, 낡은 주석 정정): `PirateQuestManager.
+    // HandleSuccess`가 0보다 크면 `UnitUpgrades.GrantPirateQuestPoint()`를 부르고,
+    // `PlayerContext.unitUpgrades`는 씬 4개 전부 실제 컴포넌트로 배선돼 있다(`MapGenerator.
+    // EnsurePart<UnitUpgrades>`, `WIRING_AUDIT.md` §1 해소 커밋 `f685124`가 실제 씬 파일에도
+    // 반영됨 — fileID 확인). 받은 포인트를 쓰는 쪽(트레잇 상점)도 이제 있다 — `GameHud.cs`가
+    // `UnitUpgrades.TrySpendTraitPoints(trait.costTraitPoints)`로 차감한 뒤 `Unlock(trait)`를
+    // 부른다(1080·1844행). 값 자체는 항상 1로 취급된다 — `GrantPirateQuestPoint()`가 1회
+    // 한정 bool 플래그라 필드의 정확한 수치는 안 읽는다.
+    [Header("성공 시 특성포인트 (배선·상점 둘 다 도달함 — 위 주석 참고)")]
     public int successTraitPoints;
 
     // 처치 성공 시 스토리 건물/보스에 추가로 주는 보너스 피해. 방어력을 무시하는 마법(Spells 행)으로
