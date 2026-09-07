@@ -17,9 +17,8 @@ using UnityEngine;
 // [미확인] — 우리는 `SkillEffectBasis.ResearchLevel` 소비 스킬들이 이미 자기
 // multiplier×level+bonus 공식을 갖고 있으므로 "레벨 그대로"만 필요해 안전하다.
 //
-// ⚠️ 공속 증가율(gba1=gmo1, "레벨1값=레벨당증분" 관례 — 등급트랙과 같은 선형식)은
-// 이번 작업 범위 밖이다(PM 지시, `SkillEffectBasis.ResearchLevel` 연결만). 필드는
-// 미리 담아두되(다음에 붙일 때 새로 만들지 않도록) 아직 아무 코드도 안 읽는다.
+// 공속 증가율(gba1=gmo1)은 2026-09-07 연결 완료 — 아래 speedPercentPerLevel 필드
+// 주석 참고(UnitUpgrades.SpeedMultiplierForAttackType → UnitAttacker.AttackSpeedMultiplier).
 [CreateAssetMenu(fileName = "NewAttackTypeUpgradeTrackData", menuName = "GuilRandomDefense/Attack Type Upgrade Track Data")]
 public class AttackTypeUpgradeTrackData : ScriptableObject
 {
@@ -40,11 +39,18 @@ public class AttackTypeUpgradeTrackData : ScriptableObject
     public int costGold = 3000;
     public int costWood = 500;
 
-    // 공속 증가율(gba1=gmo1) — 일반·공성·관통 3%, 패기 4%. 이번 작업(ResearchLevel
-    // 연결)은 이 값을 안 쓴다 — 나중에 AttackSpeedMultiplier에 붙일 때를 위해 필드만
-    // 미리 둔다(직렬화 추가, PM 지시).
+    // 공속 증가율(gba1=gmo1) — 일반·공성·관통 3%, 패기 4%. 2026-09-07 연결 완료(PM 지시,
+    // "필드만·아직 없다"류 뼈대 구멍 전수 점검) — UnitUpgrades.SpeedMultiplierForAttackType이
+    // 이 값을 읽고 UnitAttacker.AttackSpeedMultiplier가 곱한다. "레벨당 곱해 누적되는지
+    // 1회성 완전해금인지"는 원문 미확인(위 costGold 옆 주석 참고)이라, 다른 ResearchLevel
+    // 소비 스킬들과 같은 원칙("레벨 그대로"만 넘기고 배율은 스킬 쪽 multiplier×level 공식이
+    // 이미 담당)에 맞춰 여기서도 **레벨에 선형 비례**(1+speedPercentPerLevel×level)로
+    // 다룬다 — 레벨 0은 자연히 배수 1(무영향).
     public float speedPercentPerLevel;
 
     public int CostForLevel(int level) => Mathf.Max(0, costGold);
     public int WoodCostForLevel(int level) => Mathf.Max(0, costWood);
+
+    // 2026-09-07 신설(PM 지시) — 등급트랙 SpeedMultiplierForLevel과 같은 자리·같은 관례.
+    public float SpeedMultiplierForLevel(int level) => 1f + speedPercentPerLevel * level;
 }

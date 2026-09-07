@@ -308,4 +308,17 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
         }
         return 0;
     }
+
+    // 2026-09-07 신설(PM 지시, "필드만·아직 없다" 뼈대 구멍 전수 점검) — SpeedMultiplierForGrade
+    // 와 같은 자리·같은 관례, UnitAttacker.AttackSpeedMultiplier가 곱한다. 대응 트랙이
+    // 없거나 아직 레벨 0이면 1(무영향)을 돌려준다.
+    public float SpeedMultiplierForAttackType(AttackType attackType)
+    {
+        foreach (KeyValuePair<AttackTypeUpgradeTrackData, int> entry in attackTypeLevels)
+        {
+            if (entry.Key != null && entry.Key.attackType == attackType)
+                return entry.Key.SpeedMultiplierForLevel(entry.Value);
+        }
+        return 1f;
+    }
 }
