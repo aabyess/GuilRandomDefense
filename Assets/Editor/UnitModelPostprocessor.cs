@@ -41,6 +41,15 @@ public class UnitModelPostprocessor : AssetPostprocessor
         //                  않는다. 뼈 739개가 Maya Advanced Skeleton 이름 규칙(Chest_M·
         //                  IndexToe1_L 꼴)이고, 자기 애니메이션이 한 벌 들어 있다.
         "안흔함_강재규",
+
+        //   안흔함_이호준 — 좀비. 뼈 71개가 전부 `Bone.NNN` 꼴이다(블렌더에서 이름을 안 붙였다).
+        //                  유니티 자동 매핑은 이름을 보므로 한 개도 못 잡는다.
+        //                  뼈 위치를 계산해 골격은 다 풀었지만(척추·팔·다리·손가락 전부 확인),
+        //                  **손목 뼈가 따로 없다** — 아래팔이 손가락 다섯 갈래로 바로 이어진다.
+        //                  Humanoid 필수인 Hand를 채우려면 어깨를 위팔로 한 칸씩 밀어야 하는데,
+        //                  그러면 팔꿈치가 엉뚱한 데서 꺾인다. 자체 Mixamo 애니메이션이
+        //                  들어 있으므로 그걸 쓰는 쪽이 낫다.
+        "안흔함_이호준",
     };
 
     // 이 숫자를 올리면 유니티가 Assets/Art/Units 아래 모델을 **전부 다시 임포트**한다.
@@ -50,7 +59,8 @@ public class UnitModelPostprocessor : AssetPostprocessor
     //                     기존 .meta에 남아 있던 옛 뼈 매핑을 씻어내야 T자가 풀린다.
     // 2 → 3 (2026-09-07): 안흔함_강재규(재규어)를 Generic으로 뺐다.
     // 3 → 4 (2026-09-07): 흔함_노태현을 Generic에서 되돌렸다(재임포트하니 잘 매핑됐다).
-    public override uint GetVersion() => 4;
+    // 4 → 5 (2026-09-07): 안흔함_이호준(좀비)을 Generic으로 뺐다.
+    public override uint GetVersion() => 5;
 
     void OnPreprocessModel()
     {
