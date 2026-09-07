@@ -23,13 +23,13 @@ public class UnitModelPostprocessor : AssetPostprocessor
     // (idle/walk/attack) 리타게팅은 못 받지만, 애초에 받을 수 있는 골격이 아니다.
     //
     // 2026-09-07 조사(PM):
-    //   안흔함_박준희 — SCP-049 모델로 교체됨. 블렌더 리그(Foot.L·DownArm.L…)라 사람 골격
-    //                   매핑 불가. 대신 자체 애니메이션이 아주 많다(스택 48개).
-    //   안흔함_황정기 — Mixamo로 리깅해 와서 **이 목록에서 뺐다**(mixamorig 표준 뼈 34개).
+    //   안흔함_황정기 — Mixamo로 리깅해 와서 이 목록에서 뺐다(mixamorig 표준 뼈 34개).
+    //   안흔함_박준희 — SCP-049(블렌더 리그)였다가 사이렌헤드로 교체. 뼈 이름이
+    //                   Hips_53·Spine_44·LeftArm_21 꼴(표준 + 숫자 접미어)이라 Humanoid로
+    //                   시도한다. 유니티가 아바타를 못 만들면 여기 다시 넣으면 된다.
     // Mixamo로 리깅해 오면 이 목록에서 빼야 한다(그때 mixamorig: 접두어가 붙는다).
     static readonly string[] GenericRigUnits =
     {
-        "안흔함_박준희",
     };
 
     void OnPreprocessModel()

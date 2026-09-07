@@ -1,7 +1,14 @@
-원본 파일명: SCP_049.fbx
-받은 폴더:   /var/folders/xg/fb93t40j38j8b2swdmjblvp00000gn/T/tmp.8Yn1liUzWR/안흔함_박준희
+원본 파일명: siren_head (1).glb  (Sketchfab, 1k 텍스처판)
+받은 폴더:   ~/Downloads
 옮긴 날:     2026-09-07
-리깅:        본·스킨 데이터 561 건
-애니메이션:  커브 26196 건
+리깅:        본·스킨 데이터 1620 건 — 뼈 55개(Hips_53·Spine_44·LeftArm_21 꼴)
+애니메이션:  원본에 1개 있었으나 Humanoid 경로라 임포트하지 않는다
 
-⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
+⚠️ .glb → .fbx 변환본이다(assimp). 이유: .glb는 glTFast의 ScriptedImporter가
+   읽어서 UnitModelPostprocessor(Humanoid 강제·애니메이션 차단)가 안 걸린다.
+   내장 텍스처 8장은 GLB에서 추출해 Textures/에 풀어뒀다.
+⚠️ 삼각형 약 214,940개 — 게임 캐릭터치고 무겁다(보통 1~3만). 성능 문제가
+   보이면 데시메이션(폴리곤 감소)이 필요하다.
+
+2026-09-07 교체: SCP-049 → 사이렌헤드. 사장님 지시.
+사장님 확정: IP 제약 없음(상업적 사용 아님, 친구들과 재미로).
