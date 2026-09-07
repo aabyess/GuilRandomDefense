@@ -19,4 +19,4 @@ MonoBehaviour:
   linkedAbilityId:
   sellWoodMin: 0
   sellWoodMax: 0
-  designNote: "확정(2026-09-07, Docs/reference/I00E_I00F_RESOLVED.md, war3map.w3t 직접 파싱) — '미상'이 아니라 unam·utub이 원작에 처음부터 있었다. '확장팩 인증은 맵 중앙 유닛을 클릭' 문구는 h08B를 가리킨다(맵 중앙 유닛 후보로 추정, 확정은 아님). 판매 상점(획득 경로)은 war3mapUnits.doo가 이 맵에서 안 열려 도구 한계로 확정 못함(Docs/reference/ITEM_GATES_I00A_D_E_F_RESOLVED.md)."
+  designNote: "확정(2026-09-07, Docs/reference/I00E_I00F_RESOLVED.md, war3map.w3t 직접 파싱) — '미상'이 아니라 unam·utub이 원작에 처음부터 있었다. 🔴 정정(2026-09-08, I00F_UNLOCK_CHAIN_2026-09-08.md — 트리거 체인 재구성): '확장팩 인증은 맵 중앙 유닛을 클릭' 문구가 가리키는 건 h08B가 **아니라 h06M**이다. 맵 중앙(rect 이름이 그대로 gg_rct_Expansion_pack)에 서는 건 h06M(|cffff8200원랜디 확장팩 - 모델 팩 가동, Point Value 500)이고, 그걸 클릭하면(Trig_Model_Pack_Conditions가 upoi==500으로 특정) Trig_Model_Pack_Actions가 h08B를 지급한다 — h08B는 클릭 대상이 아니라 **받는 인증 증표**다. Player1~4용 트리거가 네 벌 따로 있다(war3map_new.j:3722·3747~3765). 판매 상점(획득 경로)은 여전히 미확인 — war3mapUnits.doo가 **이 맵에 아예 없다**(war3map.doo는 정상 추출되므로 접근 문제가 아니다). AddItemToStock 계열 호출도 스크립트 전체에 0건이라 상점 재고가 전부 정적 데이터인데 그 데이터가 없다. ⚠️ 아이템 38종 전체에 걸리는 한계지 이 항목만의 문제가 아니다(Docs/reference/ITEM_GATES_I00A_D_E_F_RESOLVED.md)."
