@@ -107,10 +107,14 @@ public static class ArtBinder
     // "안흔함_"은 "흔함_"으로 시작하지 않으므로 여기 안 걸린다.
     static bool IsCommonGradeModel(string modelName)
     {
+        // 에셋 경로에서 온 한글은 macOS에서 NFC가 아닐 수 있다(UnitModelPostprocessor 참고).
+        // 리터럴과 견주기 전에 맞춘다 — 안 맞추면 흔함 유닛이 조용히 안 줄어든다.
+        modelName = modelName.Normalize(System.Text.NormalizationForm.FormC);
         if (modelName.StartsWith("흔함_")) return true;
 
         foreach ((string model, string unit) in ModelOverrides)
-            if (model == modelName) return unit.StartsWith("흔함_");
+            if (model.Normalize(System.Text.NormalizationForm.FormC) == modelName)
+                return unit.StartsWith("흔함_");
 
         return false;
     }

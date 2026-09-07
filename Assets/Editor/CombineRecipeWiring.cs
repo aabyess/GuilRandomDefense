@@ -19,7 +19,9 @@ public static class CombineRecipeWiring
     {
         if (!EditorGuards.RequireEditMode(Title)) return;
 
-        Wire(path => System.IO.Path.GetFileName(path).StartsWith("안흔함_"), "테스트용(안흔함)");
+        // 한글 경로는 NFC로 맞춰 비교한다 — macOS에서 자모가 풀린 채 오면 조용히 0건이 된다.
+        Wire(path => System.IO.Path.GetFileName(path).Normalize(System.Text.NormalizationForm.FormC)
+                         .StartsWith("안흔함_"), "테스트용(안흔함)");
     }
 
     [MenuItem("Tools/조합 레시피/전체 연결")]

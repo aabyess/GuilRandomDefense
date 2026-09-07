@@ -42,14 +42,10 @@ public class UnitModelPostprocessor : AssetPostprocessor
         //                  IndexToe1_L 꼴)이고, 자기 애니메이션이 한 벌 들어 있다.
         "안흔함_강재규",
 
-        //   안흔함_이호준 — 좀비. 뼈 71개가 전부 `Bone.NNN` 꼴이다(블렌더에서 이름을 안 붙였다).
-        //                  유니티 자동 매핑은 이름을 보므로 한 개도 못 잡는다.
-        //                  뼈 위치를 계산해 골격은 다 풀었지만(척추·팔·다리·손가락 전부 확인),
-        //                  **손목 뼈가 따로 없다** — 아래팔이 손가락 다섯 갈래로 바로 이어진다.
-        //                  Humanoid 필수인 Hand를 채우려면 어깨를 위팔로 한 칸씩 밀어야 하는데,
-        //                  그러면 팔꿈치가 엉뚱한 데서 꺾인다. 자체 Mixamo 애니메이션이
-        //                  들어 있으므로 그걸 쓰는 쪽이 낫다.
-        "안흔함_이호준",
+        // 🔴 안흔함_이호준(좀비)도 여기 있었다가 **뺐다**(2026-09-08). 「손목 뼈가 없다」고 봤는데,
+        //    손가락 다섯 갈래의 뿌리가 전부 손목 한 점에 모여 있어서 유니티가 그중 하나를 손으로
+        //    잡았다. 팔 비율도 맞게 나왔다. 노태현과 같은 교훈이 **두 번째**다 —
+        //    리그를 못 쓴다고 하기 전에 유니티에게 먼저 시켜 본다.
     };
 
     // 이 숫자를 올리면 유니티가 Assets/Art/Units 아래 모델을 **전부 다시 임포트**한다.
@@ -60,7 +56,8 @@ public class UnitModelPostprocessor : AssetPostprocessor
     // 2 → 3 (2026-09-07): 안흔함_강재규(재규어)를 Generic으로 뺐다.
     // 3 → 4 (2026-09-07): 흔함_노태현을 Generic에서 되돌렸다(재임포트하니 잘 매핑됐다).
     // 4 → 5 (2026-09-07): 안흔함_이호준(좀비)을 Generic으로 뺐다.
-    public override uint GetVersion() => 5;
+    // 5 → 6 (2026-09-08): 한글 경로 NFC 정규화 · 옛 humanDescription 초기화 · 이호준 Humanoid 복귀.
+    public override uint GetVersion() => 6;
 
     void OnPreprocessModel()
     {
@@ -72,7 +69,11 @@ public class UnitModelPostprocessor : AssetPostprocessor
         {
             // Generic이어도 뼈는 남긴다 — 자기 애니메이션이 그 뼈를 쓴다.
             importer.animationType = ModelImporterAnimationType.Generic;
+            importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
             importer.optimizeGameObjects = false;
+            // Humanoid로 한 번 잘못 들어갔다 오면 .meta에 importAnimation:0이 남는다.
+            // Generic은 자기 애니메이션이 유일한 동작이라 반드시 켠다.
+            importer.importAnimation = true;
             KeepBones(importer);
             return;
         }
@@ -89,6 +90,16 @@ public class UnitModelPostprocessor : AssetPostprocessor
         importer.animationType = ModelImporterAnimationType.Human;
         importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
         importer.optimizeGameObjects = false;
+
+        // 🔴 .meta에 뼈 매핑(humanDescription)이 이미 있으면 유니티는 그걸 **사람이 정한 값**으로
+        //    보고 자동 매핑을 건너뛴다. avatarSetup을 CreateFromThisModel로 둬도 마찬가지다.
+        //    2026-09-08 로그 실측: 황정기가 재임포트됐는데도 이전 모델의 뼈 4개를 그대로 물고
+        //    "아바타를 못 만들었다"로 끝났다. 매핑을 비워야 현재 파일로 다시 잡는다.
+        //    우리는 Rig 탭을 손으로 안 만지므로(240종 자동화) 지울 값은 없다.
+        HumanDescription fresh = importer.humanDescription;
+        fresh.human = new HumanBone[0];
+        fresh.skeleton = new SkeletonBone[0];
+        importer.humanDescription = fresh;
 
         // 모델에 딸려 온 애니메이션은 안 가져온다.
         //
@@ -128,8 +139,14 @@ public class UnitModelPostprocessor : AssetPostprocessor
     // 폴더 이름이 목록에 있으면 Generic으로 둔다. 경로는 "Assets/Art/Units/<유닛>/<파일>" 꼴이다.
     static bool IsGenericRigUnit(string path)
     {
+        // 🔴 macOS에서 유니티가 넘기는 assetPath는 한글이 NFC가 아니다(자모가 풀린 채 온다).
+        //    소스의 리터럴은 NFC라서 그냥 StartsWith하면 **조용히 false**다 — 2026-09-08
+        //    재규어가 이 목록에 있는데도 Humanoid로 임포트됐던 게 이것이다.
+        //    양쪽을 NFC로 맞춰 비교한다. 한글 경로를 리터럴과 견주는 곳은 전부 같은 함정이다.
+        string nfc = path.Normalize(System.Text.NormalizationForm.FormC);
         foreach (string unit in GenericRigUnits)
-            if (path.StartsWith(UnitModelRoot + unit + "/")) return true;
+            if (nfc.StartsWith((UnitModelRoot + unit + "/").Normalize(System.Text.NormalizationForm.FormC)))
+                return true;
 
         return false;
     }
