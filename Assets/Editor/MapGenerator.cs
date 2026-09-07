@@ -2955,10 +2955,32 @@ public static class MapGenerator
         // GamblingProgress가 실제로 그랬다 — 없으면 GamblingShop.CanRoll이 돈 도박을
         // 무조건 false로 돌려서, 10엔 도박 칸이 눌러도 아무 반응이 없었다.
         int repaired = RepairPlayerParts();
+        bool unionWispFixed = RepairRewardDistributorUnionWisp();
 
         return "\n플레이어 2~4번 자리는 비워뒀습니다 — 그 레인엔 적이 안 나옵니다."
              + (created > 0 ? $" (새로 만든 슬롯 {created}개)" : "")
-             + (repaired > 0 ? $"\n기존 플레이어 {repaired}명에게 빠져 있던 조각을 채웠습니다." : "");
+             + (repaired > 0 ? $"\n기존 플레이어 {repaired}명에게 빠져 있던 조각을 채웠습니다." : "")
+             + (unionWispFixed ? "\n연합세력 항법 위습(RewardDistributor.unionWisp)을 채웠습니다." : "");
+    }
+
+    // 2026-09-07 추가(연합세력 항법 훅) — RewardDistributor는 PlayerContext와 달리 씬에
+    // 하나뿐인 매니저(Instance 싱글턴)라 RepairPlayerParts의 플레이어별 루프 밖에서 한 번만
+    // 검사한다. unionWisp가 비어 있으면 Wisp_흔함.asset(e0IX)을 꽂는다 — 이미 값이 있으면
+    // 안 건드리고, 자산 자체가 없으면(경로가 바뀌었거나 지워졌으면) 경고만 남기고 넘어간다.
+    static bool RepairRewardDistributorUnionWisp()
+    {
+        RewardDistributor distributor = Object.FindFirstObjectByType<RewardDistributor>(FindObjectsInactive.Include);
+        if (distributor == null) return false;
+
+        WispData unionWisp = AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_흔함.asset");
+        if (unionWisp == null)
+        {
+            Debug.LogWarning("MapGenerator: Assets/Data/Wisps/Wisp_흔함.asset을 찾지 못해 " +
+                              "RewardDistributor.unionWisp를 채우지 못했습니다(연합세력 항법 위습 지급 불가).");
+            return false;
+        }
+
+        return EnsureAssetRef(distributor, "unionWisp", unionWisp);
     }
 
     static int RepairPlayerParts()
@@ -3040,6 +3062,23 @@ public static class MapGenerator
         if (property.objectReferenceValue == target) return false;
 
         property.objectReferenceValue = target;
+        so.ApplyModifiedProperties();
+        return true;
+    }
+
+    // EnsureSiblingRef와 같은 모양이되 대상이 컴포넌트가 아니라 자산(ScriptableObject 등)인
+    // 경우 — 2026-09-07 추가(연합세력 항법, RewardDistributor.unionWisp). 이미 값이 있으면
+    // 안 건드린다(수동으로 다른 자산을 꽂아둔 경우를 덮어쓰지 않는다).
+    static bool EnsureAssetRef(Component owner, string field, Object asset)
+    {
+        if (owner == null || asset == null) return false;
+
+        SerializedObject so = new SerializedObject(owner);
+        SerializedProperty property = so.FindProperty(field);
+        if (property == null) return false;
+        if (property.objectReferenceValue != null) return false;
+
+        property.objectReferenceValue = asset;
         so.ApplyModifiedProperties();
         return true;
     }
