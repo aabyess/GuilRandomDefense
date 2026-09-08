@@ -97,13 +97,23 @@ public static class ArtBinder
     static void AutoUpright(GameObject visual)
     {
         Animator animator = visual.GetComponentInChildren<Animator>();
-        if (animator == null || animator.avatar == null || !animator.avatar.isValid || !animator.isHuman) return;
+        bool human = animator != null && animator.avatar != null && animator.avatar.isValid && animator.isHuman;
 
-        Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
-        Transform head = animator.GetBoneTransform(HumanBodyBones.Head);
-        Transform leftArm = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
-        Transform rightArm = animator.GetBoneTransform(HumanBodyBones.RightUpperArm);
-        if (hips == null || head == null || leftArm == null || rightArm == null) return;
+        Transform hips = human ? animator.GetBoneTransform(HumanBodyBones.Hips) : null;
+        Transform head = human ? animator.GetBoneTransform(HumanBodyBones.Head) : null;
+        Transform leftArm = human ? animator.GetBoneTransform(HumanBodyBones.LeftUpperArm) : null;
+        Transform rightArm = human ? animator.GetBoneTransform(HumanBodyBones.RightUpperArm) : null;
+
+        // 🔴 아바타가 없는 모델(사람 골격 매핑 실패·Generic)은 뼈로 못 잰다.
+        //    2026-09-08 흔함_문필환이 그랬다 — 매핑 0개라 자동 세우기를 그냥 건너뛰고 누운 채로 섰다.
+        //    그런 모델은 **렌더러 경계 상자**로 잰다. 사람 모양은 서 있으면 세로가 제일 길고
+        //    앞뒤(두께)가 제일 짧다. 그 성질만으로 어느 축이 「위」인지 정해진다.
+        //    정확도는 뼈보다 낮지만 「누워 있는 것」과 「서 있는 것」은 확실히 가른다.
+        if (!human || hips == null || head == null || leftArm == null || rightArm == null)
+        {
+            UprightByBounds(visual);
+            return;
+        }
 
         // visual 자신의 회전을 정하는 것이므로 부모(=visual의 부모) 기준 로컬 방향으로 잰다.
         Transform parent = visual.transform.parent;
@@ -128,6 +138,32 @@ public static class ArtBinder
 
         visual.transform.localRotation = snapped * visual.transform.localRotation;
         Debug.Log($"[아트] {visual.name}: 뼈로 재서 {e}만큼 돌려 세웠습니다.");
+    }
+
+    // 아바타가 없어 뼈로 못 재는 모델을 경계 상자로 세운다.
+    //
+    // 사람 모양은 서 있을 때 **세로가 가장 길고 두께가 가장 짧다**. 지금 가장 긴 축이
+    // Y가 아니면 누워 있는 것이므로, 그 축이 Y로 오게 90° 돌린다.
+    // ⚠️ 앞뒤(어느 쪽을 보는가)는 이 방법으로 못 정한다 — 대칭이라 구분할 근거가 없다.
+    //    세우는 것까지만 한다. 방향이 틀리면 ModelAdjustments에 Y 회전을 적는다.
+    static void UprightByBounds(GameObject visual)
+    {
+        Bounds b = MeasureRenderers(visual);
+        Vector3 size = b.size;
+        if (size.x <= 0.0001f || size.y <= 0.0001f || size.z <= 0.0001f) return;
+
+        // 가장 긴 축이 이미 Y면 서 있는 것이다.
+        int longest = size.x > size.y ? (size.x > size.z ? 0 : 2) : (size.y > size.z ? 1 : 2);
+        if (longest == 1) return;
+
+        // 가장 긴 축을 Y로 보낸다. X가 길면 Z로 돌리고, Z가 길면 X로 돌린다.
+        Vector3 euler = longest == 0 ? new Vector3(0f, 0f, 90f) : new Vector3(-90f, 0f, 0f);
+        visual.transform.localRotation = Quaternion.Euler(euler) * visual.transform.localRotation;
+
+        Bounds after = MeasureRenderers(visual);
+        Debug.Log($"[아트] {visual.name}: 아바타가 없어 경계 상자로 세웠습니다 — {euler} " +
+                  $"(가로세로 {size.x:F1}×{size.y:F1}×{size.z:F1} → {after.size.x:F1}×{after.size.y:F1}×{after.size.z:F1}). " +
+                  "앞뒤 방향이 틀리면 ModelAdjustments에 Y 회전을 적으세요.");
     }
 
     static Quaternion RotationFor(string modelName)
