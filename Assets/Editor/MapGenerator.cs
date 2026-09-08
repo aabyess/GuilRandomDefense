@@ -1382,8 +1382,21 @@ public static class MapGenerator
         modelUp.Normalize();
 
         // 손이 위팔보다 "모델 기준 아래"로 얼마나 내려왔는가.
+        //
+        // 🔴 문턱을 humanScale에 비례시키면 안 된다. 인형은 FitToHeight가 목표 키(17/20)에
+        //    맞춰 크게 키우는데(수백~수천 배), humanScale은 **원본 모델**의 크기를 따른다 —
+        //    둘이 따로 놀아서 모델마다 기준이 제멋대로가 된다.
+        //    2026-09-09 실측: 김경현과 신문철은 뼈·매핑이 똑같은데(mixamorig 66개, 52매핑)
+        //    김경현만 경고가 떴다. 파일 크기·뼈 수·리그 종류 어느 것과도 상관이 없었다.
+        //    → **몸통 길이(골반→머리)에 대한 비율**로 잰다. 스케일과 무관해진다.
+        float bodyLength = (head.position - hips.position).magnitude;
+        if (bodyLength < 1e-4f) return true;
+
         float drop = Vector3.Dot(upperArm.position - hand.position, modelUp);
-        return drop > 0.1f * Mathf.Max(0.01f, animator.humanScale);
+
+        // 팔을 내린 사람은 손이 위팔보다 몸통의 0.25배쯤 아래에 있다(어깨~손목 ≈ 상체 길이).
+        // T자는 그 값이 0 근처다. 0.12로 넉넉히 잡아 A자 포즈까지 통과시킨다.
+        return drop / bodyLength > 0.12f;
     }
 
     static AnimationClip FindIdleClip(Animator animator)
