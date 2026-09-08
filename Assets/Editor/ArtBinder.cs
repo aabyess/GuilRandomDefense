@@ -109,6 +109,9 @@ public static class ArtBinder
         //    그런 모델은 **렌더러 경계 상자**로 잰다. 사람 모양은 서 있으면 세로가 제일 길고
         //    앞뒤(두께)가 제일 짧다. 그 성질만으로 어느 축이 「위」인지 정해진다.
         //    정확도는 뼈보다 낮지만 「누워 있는 것」과 「서 있는 것」은 확실히 가른다.
+        // ⚠️ `avatar.isValid`는 매핑이 0개여도 참을 돌려준다(2026-09-08 흔함_문필환 실측 —
+        //    animationType은 Human인데 humanName 매핑이 0개인데도 여기를 통과했다).
+        //    **실제로 뼈를 집을 수 있는가**로 판정해야 한다. 넷 중 하나라도 없으면 경계 상자로 간다.
         if (!human || hips == null || head == null || leftArm == null || rightArm == null)
         {
             UprightByBounds(visual);
@@ -150,7 +153,19 @@ public static class ArtBinder
     {
         Bounds b = MeasureRenderers(visual);
         Vector3 size = b.size;
-        if (size.x <= 0.0001f || size.y <= 0.0001f || size.z <= 0.0001f) return;
+
+        // 🔴 SkinnedMeshRenderer의 bounds는 프리팹을 막 만든 직후엔 0으로 나올 수 있다
+        //    (2026-09-08 안흔함_이호준이 0×0×0으로 찍혔다). 그 상태로 판정하면 엉뚱하게 돌린다.
+        //    메시의 정점 경계로 다시 잰다 — 이건 렌더링과 무관하게 항상 값이 있다.
+        if (size.x <= 0.0001f || size.y <= 0.0001f || size.z <= 0.0001f)
+        {
+            size = MeasureMeshes(visual);
+            if (size.x <= 0.0001f || size.y <= 0.0001f || size.z <= 0.0001f)
+            {
+                Debug.LogWarning($"[아트] {visual.name}: 크기를 못 재서 세우지 못했습니다.");
+                return;
+            }
+        }
 
         // 가장 긴 축이 이미 Y면 서 있는 것이다.
         int longest = size.x > size.y ? (size.x > size.z ? 0 : 2) : (size.y > size.z ? 1 : 2);
@@ -164,6 +179,25 @@ public static class ArtBinder
         Debug.Log($"[아트] {visual.name}: 아바타가 없어 경계 상자로 세웠습니다 — {euler} " +
                   $"(가로세로 {size.x:F1}×{size.y:F1}×{size.z:F1} → {after.size.x:F1}×{after.size.y:F1}×{after.size.z:F1}). " +
                   "앞뒤 방향이 틀리면 ModelAdjustments에 Y 회전을 적으세요.");
+    }
+
+    // 메시의 정점으로 크기를 잰다. 렌더러 bounds가 0으로 나오는 경우의 대비책이다.
+    static Vector3 MeasureMeshes(GameObject root)
+    {
+        Bounds? acc = null;
+        foreach (SkinnedMeshRenderer smr in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+        {
+            if (smr.sharedMesh == null) continue;
+            Bounds mb = smr.sharedMesh.bounds;
+            if (acc == null) acc = mb; else { Bounds a = acc.Value; a.Encapsulate(mb); acc = a; }
+        }
+        foreach (MeshFilter mf in root.GetComponentsInChildren<MeshFilter>(true))
+        {
+            if (mf.sharedMesh == null) continue;
+            Bounds mb = mf.sharedMesh.bounds;
+            if (acc == null) acc = mb; else { Bounds a = acc.Value; a.Encapsulate(mb); acc = a; }
+        }
+        return acc?.size ?? Vector3.zero;
     }
 
     static Quaternion RotationFor(string modelName)
