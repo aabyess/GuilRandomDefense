@@ -684,6 +684,14 @@ public class EnemyDummy : MonoBehaviour
         {
             amount *= damageTable.Multiplier(attackType, ArmorType);
         }
+        else if (damageTable == null && !loggedNoDamageTable)
+        {
+            // damageTable이 비면 위 두 분기 다 안 타서 **상성 배율이 조용히 1.0**이 된다.
+            // 새 적 프리팹에서 이 필드를 빼먹으면 밸런스가 조용히 깨지는데 알 방법이 없었다.
+            loggedNoDamageTable = true;
+            Debug.LogWarning($"EnemyDummy: {name}에 damageTable이 배선되지 않아 공격타입 상성이 " +
+                             "적용되지 않습니다(배율 1.0 고정).", this);
+        }
         else if (damageTable != null && !loggedRowMismatch)
         {
             // ⚠️ 확인: RowMatches가 지금 항상 true를 돌려주므로(DamageTable.cs) 이 분기는
@@ -699,6 +707,8 @@ public class EnemyDummy : MonoBehaviour
 
     // 짝이 안 맞는 조합을 처음 봤을 때만 경고한다(타격마다 찍으면 콘솔이 도배된다).
     static bool loggedRowMismatch;
+    static bool loggedNoRewardDistributor;
+    static bool loggedNoDamageTable;
 
     public static float ArmorMultiplier(float armor) =>
         armor >= 0f
@@ -768,6 +778,15 @@ public class EnemyDummy : MonoBehaviour
             if (data != null && RewardDistributor.Instance != null)
             {
                 RewardDistributor.Instance.GrantKillReward(data, LaneIndex, SpawnRound, killerPlayerId);
+            }
+            else if (data != null && !loggedNoRewardDistributor)
+            {
+                // 🔴 씬에 RewardDistributor가 없으면 **게임 전체의 킬 보상이 통째로 죽는다.**
+                //    예전엔 로그가 한 줄도 없어 "적을 잡아도 돈이 안 들어온다"로만 보였다.
+                //    한 번만 찍는다 — 매 킬마다 찍으면 콘솔이 묻힌다.
+                loggedNoRewardDistributor = true;
+                Debug.LogWarning("EnemyDummy: 씬에 RewardDistributor가 없어 킬 보상이 지급되지 않습니다. " +
+                                 "Tools > 맵 > 원랜디 맵 생성을 돌려 배선하세요.");
             }
 
             // 01번 영웅 XP(사장님 결정, war3map.j:14734 ForGroup(udg_Exp_Hero_Group[라인

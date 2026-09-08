@@ -49,6 +49,15 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 
     void Awake()
     {
+        // 🔴 배선이 빠지면 유닛 도박 칸이 영구히 비활성인데 예전엔 문구도 로그도 없었다 —
+        //    같은 파일의 다른 실패(골드 부족 등)는 전부 알리는데 이 자리만 침묵이라
+        //    개발자도 원인을 못 찾았다. 시작할 때 한 번 알린다.
+        if (unitSpawner == null || gachaTable == null)
+            Debug.LogWarning($"GamblingShop({name}): " +
+                             (unitSpawner == null ? "unitSpawner " : "") +
+                             (gachaTable == null ? "gachaTable " : "") +
+                             "가 배선되지 않아 유닛 도박이 동작하지 않습니다.", this);
+
         owner = GetComponent<OwnedByPlayer>();
     }
 

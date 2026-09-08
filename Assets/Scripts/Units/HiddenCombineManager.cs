@@ -66,6 +66,19 @@ public class HiddenCombineManager : MonoBehaviour
             return false;
         }
 
+        // 🔴 소환할 수 있는지도 **소모 전에** 본다. 예전엔 재료를 먼저 없애고
+        //    `unitSpawner?.Spawn(...)`으로 넘어가서, 배선이 빠져 있으면 재료만 사라지고
+        //    로그조차 안 남았다(`?.`가 통째로 삼킨다). UnitPortal·ChatUnlockManager와 같은 순서다.
+        if (unitSpawner == null || data.result == null || data.result.prefab == null)
+        {
+            string why = unitSpawner == null ? "유닛 소환기가 배선되지 않았습니다"
+                       : data.result == null ? "지급할 유닛이 지정되지 않았습니다"
+                       : $"{data.result.unitName}에 프리팹이 없습니다";
+            lastResultMessage = $"{data.displayName}: {why}";
+            Debug.LogWarning($"HiddenCombineManager: {data.displayName} — {why}. 재료를 소모하지 않았습니다.", this);
+            return false;
+        }
+
         // 전부 확보된 뒤에만 소모한다 — 중간에 실패해서 일부만 사라지는 일이 없게
         // (CombineSystem.TryCombine과 같은 순서 원칙).
         foreach (UnitIdentity unit in toConsume)
@@ -74,7 +87,7 @@ public class HiddenCombineManager : MonoBehaviour
         }
 
         Vector3 position = LaneMarker.Get(playerId)?.TakeSpawnPosition(data.result) ?? transform.position;
-        unitSpawner?.Spawn(data.result, position, playerId);
+        unitSpawner.Spawn(data.result, position, playerId);
 
         // 2026-09-06 — Hidden_Aokiji(히든_성탄.asset, +2)류 Damage_level_Fixed 누적.
         // 항법 "패왕의길"과 같은 카운터(DamageLevelFixedState)에 더해 합산되게 한다 —

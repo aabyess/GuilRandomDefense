@@ -102,6 +102,17 @@ public class ChatUnlockManager : MonoBehaviour
         PlayerContext context = PlayerContext.Get(playerId);
         if (context == null) return false;
 
+        // 🔴 소환할 수 있는지 **먼저** 본다. 예전엔 목재를 쓰고 판당 1회 게이트를 잠근 뒤에
+        //    소환을 시도해서, 배선이 빠져 있으면 유닛은 안 나오는데 목재와 1회권만 사라졌다
+        //    (되돌리는 코드가 없었다 — 로그에도 "자원은 이미 소모됐습니다"라고 적혀 있었다).
+        //    UnitPortal이 이미 같은 순서를 쓴다: "소환할 수 있는지까지 확인한 뒤에 위습을 소모한다".
+        if (!CanSpawnResult(data, out string blockReason))
+        {
+            lastResultMessage = $"{data.displayName}: {blockReason}";
+            Debug.LogWarning($"ChatUnlockManager: {data.displayName} — {blockReason}. 자원을 소모하지 않았습니다.", this);
+            return false;
+        }
+
         if (data.woodCost > 0 && context.ResourceWallet != null)
         {
             if (!context.ResourceWallet.TrySpend(ResourceType.Wood, data.woodCost))
@@ -179,12 +190,24 @@ public class ChatUnlockManager : MonoBehaviour
         return true;
     }
 
+    // 소환이 실제로 가능한지만 본다 — 아무것도 안 건드린다. 자원을 쓰기 전에 부른다.
+    bool CanSpawnResult(ChatUnlockData data, out string reason)
+    {
+        if (unitSpawner == null) { reason = "유닛 소환기가 배선되지 않았습니다"; return false; }
+        if (data.result == null) { reason = "지급할 유닛이 지정되지 않았습니다"; return false; }
+        if (data.result.prefab == null) { reason = $"{data.result.unitName}에 프리팹이 없습니다"; return false; }
+
+        reason = null;
+        return true;
+    }
+
     void SpawnResult(PlayerContext context, ChatUnlockData data)
     {
+        // 여기 오기 전에 CanSpawnResult가 통과했다. 그래도 남겨 둔다 — 사이에 씬이
+        // 바뀌는 경로가 생기면 조용히 지나가는 것보다 로그가 낫다.
         if (unitSpawner == null)
         {
-            Debug.LogWarning($"ChatUnlockManager: unitSpawner가 비어있어 {data.displayName}을(를) 소환하지 못했습니다 " +
-                              "(자원은 이미 소모됐습니다).", this);
+            Debug.LogWarning($"ChatUnlockManager: unitSpawner가 비어있어 {data.displayName}을(를) 소환하지 못했습니다.", this);
             return;
         }
 
