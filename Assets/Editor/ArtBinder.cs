@@ -186,7 +186,11 @@ public static class ArtBinder
             size = MeasureMeshes(visual);
             if (size.x <= 0.0001f || size.y <= 0.0001f || size.z <= 0.0001f)
             {
-                Debug.LogWarning($"[아트] {visual.name}: 크기를 못 재서 세우지 못했습니다.");
+                // 🔴 못 재면 **아무것도 하지 않는다.** 예전엔 0×0×0인데도 -90°를 돌렸다
+                //    (2026-09-08 안흔함_이호준 로그: `0.0×0.0×0.0 → 0.0×0.0×0.0`).
+                //    근거 없이 돌리면 멀쩡한 모델을 눕힌다.
+                Debug.LogWarning($"[아트] {visual.name}: 크기를 못 재서 **건드리지 않았습니다**. " +
+                                 "모델이 누워 보이면 ModelAdjustments에 직접 적으세요.");
                 return;
             }
         }
@@ -947,13 +951,35 @@ public static class ArtBinder
         float height = HeightFor(root) * heightScale;
 
         Bounds bounds = MeasureRenderers(visual);
-        if (bounds.size.y > 0.001f)
-        {
-            visual.transform.localScale *= height / bounds.size.y;
+        float measured = bounds.size.y;
 
-            // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발이 바닥에 닿게 내린다.
-            bounds = MeasureRenderers(visual);
-            visual.transform.position += Vector3.up * (root.transform.position.y - bounds.min.y);
+        // 🔴 SkinnedMeshRenderer의 bounds는 프리팹을 막 만든 직후 **0이나 거의 0**으로 나올 수 있다.
+        //    그대로 나누면 스케일이 폭주한다 — 2026-09-08 실측: 안흔함_이호준이 **7,062배**로
+        //    부풀어 맵에 검은 뿔 덩어리로 나타났다(사장님 스크린샷). 김경현도 5,050배였다.
+        //    0.001 검사만으로는 못 막는다. 메시 정점으로 다시 재서 **둘 중 큰 값**을 쓴다.
+        float fromMesh = MeasureMeshes(visual).y;
+        if (fromMesh > measured) measured = fromMesh;
+
+        if (measured > 0.001f)
+        {
+            float factor = height / measured;
+
+            // 그래도 말이 안 되는 배율이면 건드리지 않는다. 사람 키 20에 맞추는 일이라
+            // 원본이 아무리 작아도 1000배를 넘을 이유가 없다 — 넘으면 잰 값이 틀린 것이다.
+            if (factor > 1000f)
+            {
+                Debug.LogWarning($"[아트] {visual.name}: 크기를 제대로 못 재서 키 맞추기를 건너뜁니다 " +
+                                 $"(잰 높이 {measured:F4}, 배율 {factor:F0}배). 모델이 거대해지는 것을 막았습니다.");
+            }
+            else
+            {
+                visual.transform.localScale *= factor;
+
+                // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발이 바닥에 닿게 내린다.
+                bounds = MeasureRenderers(visual);
+                if (bounds.size.y > 0.001f)
+                    visual.transform.position += Vector3.up * (root.transform.position.y - bounds.min.y);
+            }
         }
 
         float radius = height * 0.18f;   // 사람 비율 어림 — 키의 약 1/5
