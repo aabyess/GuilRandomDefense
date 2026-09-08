@@ -3063,11 +3063,13 @@ public static class MapGenerator
         // 무조건 false로 돌려서, 10엔 도박 칸이 눌러도 아무 반응이 없었다.
         int repaired = RepairPlayerParts();
         bool unionWispFixed = RepairRewardDistributorUnionWisp();
+        int rerollFixed = RepairUniqueReroll();
 
         return "\n플레이어 2~4번 자리는 비워뒀습니다 — 그 레인엔 적이 안 나옵니다."
              + (created > 0 ? $" (새로 만든 슬롯 {created}개)" : "")
              + (repaired > 0 ? $"\n기존 플레이어 {repaired}명에게 빠져 있던 조각을 채웠습니다." : "")
-             + (unionWispFixed ? "\n연합세력 항법 위습(RewardDistributor.unionWisp)을 채웠습니다." : "");
+             + (unionWispFixed ? "\n연합세력 항법 위습(RewardDistributor.unionWisp)을 채웠습니다." : "")
+             + (rerollFixed > 0 ? $"\n희귀함 리롤(고유 재추첨)을 {rerollFixed}곳에 배선했습니다." : "");
     }
 
     // 2026-09-07 추가(연합세력 항법 훅) — RewardDistributor는 PlayerContext와 달리 씬에
@@ -3176,6 +3178,60 @@ public static class MapGenerator
     // EnsureSiblingRef와 같은 모양이되 대상이 컴포넌트가 아니라 자산(ScriptableObject 등)인
     // 경우 — 2026-09-07 추가(연합세력 항법, RewardDistributor.unionWisp). 이미 값이 있으면
     // 안 건드린다(수동으로 다른 자산을 꽂아둔 경우를 덮어쓰지 않는다).
+    // 🔴 「희귀함 리롤」(원작 A0VX, Trig_unique_rerole)이 통째로 안 돌고 있었다 —
+    //    코드는 다 있는데 **UniqueRerollAbilityData 자산이 0개**였고, 씬에도
+    //    UniqueRerollState 컴포넌트가 하나도 없었다(PlayerContext 4개 전부 빈 필드).
+    //    데이터가 없으면 GamblingShop이 능력을 못 붙이고, 상태가 없으면 한도·실패율이
+    //    전부 0으로 읽혀 시도 자체가 성립하지 않는다. 둘 다 조용히 실패한다.
+    //    2026-09-08 버그 사냥에서 발견.
+    //
+    //    원작 값과 자산 기본값이 정확히 같다: 목재 2 · 한도 2(도박 특성이면 3) ·
+    //    실패 20%(도박 0%). Trig_unique_rerole_Func001Func001Func005C의
+    //    `GetRandomInt(1,100)<=(20-(Dobak_Tech*80))`가 그 근거다.
+    static int RepairUniqueReroll()
+    {
+        UniqueRerollAbilityData data = AssetDatabase.LoadAssetAtPath<UniqueRerollAbilityData>(
+            "Assets/Data/UniqueRerollAbility_희귀함리롤.asset");
+        if (data == null)
+        {
+            Debug.LogWarning("[맵] UniqueRerollAbility_희귀함리롤.asset을 찾지 못해 희귀함 리롤을 배선하지 못했습니다.");
+            return 0;
+        }
+
+        int fixedCount = 0;
+
+        // ① 도박소마다 능력 데이터를 꽂는다.
+        foreach (GamblingShop shop in Object.FindObjectsByType<GamblingShop>(
+                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (EnsureAssetRef(shop, "uniqueRerollAbilityData", data)) fixedCount++;
+
+        // ② 플레이어마다 상태 컴포넌트를 만들고 서로 잇는다.
+        //    상태는 씬 컴포넌트라 자산처럼 그냥 꽂을 수 없다 — 없으면 만들어야 한다.
+        foreach (PlayerContext context in Object.FindObjectsByType<PlayerContext>(
+                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            UniqueRerollState state = context.GetComponent<UniqueRerollState>();
+            if (state == null) state = context.gameObject.AddComponent<UniqueRerollState>();
+
+            // 상태 → 데이터, 상태 → 항법(도박 특성 판정), 플레이어 → 상태
+            if (EnsureAssetRef(state, "data", data)) fixedCount++;
+
+            NavigationState navigation = context.GetComponent<NavigationState>();
+            if (navigation != null) EnsureAssetRef(state, "navigationState", navigation);
+
+            SerializedObject so = new SerializedObject(context);
+            SerializedProperty property = so.FindProperty("uniqueRerollState");
+            if (property != null && property.objectReferenceValue == null)
+            {
+                property.objectReferenceValue = state;
+                so.ApplyModifiedProperties();
+                fixedCount++;
+            }
+        }
+
+        return fixedCount;
+    }
+
     static bool EnsureAssetRef(Component owner, string field, Object asset)
     {
         if (owner == null || asset == null) return false;
