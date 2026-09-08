@@ -17,6 +17,43 @@ public static class SkinOrientationReport
 {
     const string GeneratedFolder = "Assets/Prefabs/Generated";
 
+    // 머리 뼈와 발 뼈의 높이 차이로 판정한다. 경계 상자와 달리 이건 흔들리지 않는다.
+    //
+    // 뼈 이름이 제각각이라(mixamorig:Head · Head · BN_Toe_L1 · spine.005 …) 이름에
+    // 흔한 낱말이 든 것을 찾는다. 못 찾으면 "못 잼"이라고 정직하게 적는다 — 추측하지 않는다.
+    static string HeadFootVerdict(GameObject instance)
+    {
+        Transform head = FindBone(instance, new[] { "head" }, new[] { "headtop", "_end" });
+        Transform foot = FindBone(instance, new[] { "toe", "foot", "ankle" }, new[] { "_end" });
+        if (head == null || foot == null) return "뼈로는 못 잼";
+
+        float dy = head.position.y - foot.position.y;
+
+        // 몸 전체 크기와 견줘야 한다 — 절대값은 스케일마다 다르다.
+        Bounds? b = null;
+        foreach (Renderer r in instance.GetComponentsInChildren<Renderer>(true))
+        {
+            if (b == null) b = r.bounds; else { Bounds a = b.Value; a.Encapsulate(r.bounds); b = a; }
+        }
+        float scale = b == null ? 1f : Mathf.Max(0.001f, Mathf.Max(b.Value.size.x, Mathf.Max(b.Value.size.y, b.Value.size.z)));
+        float ratio = dy / scale;
+
+        if (ratio > 0.55f) return $"✅ 서 있음 (머리-발 {ratio:F2})";
+        if (ratio < 0.2f) return $"🔴 누움 (머리-발 {ratio:F2})";
+        return $"🟡 기울어짐 (머리-발 {ratio:F2})";
+    }
+
+    static Transform FindBone(GameObject root, string[] want, string[] avoid)
+    {
+        foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+        {
+            string n = t.name.ToLowerInvariant();
+            if (avoid.Any(a => n.Contains(a))) continue;
+            if (want.Any(w => n.Contains(w))) return t;
+        }
+        return null;
+    }
+
     [MenuItem("Tools/아트/스킨 방향 점검")]
     public static void Report()
     {
@@ -61,6 +98,12 @@ public static class SkinOrientationReport
 
                 Vector3 s = acc.Value.size;
 
+                // 🔴 렌더러 경계는 못 믿는다. SkinnedMeshRenderer의 bounds는 뼈가 움직일 여지까지
+                //    감안한 **넉넉한 상자**라 실제 메시보다 훨씬 클 수 있다(2026-09-08 흔함_문필환:
+                //    원본 메시는 앞뒤/키 0.37인데 유니티 경계로는 0.69로 나왔다).
+                //    그래서 **뼈 높이를 직접 잰다** — 머리와 발의 높이 차이다. 이건 안 흔들린다.
+                string boneVerdict = HeadFootVerdict(instance);
+
                 // 🔴 「세로가 제일 길면 서 있다」로 보면 안 된다 — FitToHeight가 세로를 목표 키
                 //    (17/20)로 **고정**해 놓기 때문에 세로는 항상 그 값이다. 실제로 2026-09-08
                 //    첫 판에서 22개 중 15개를 「서 있음」으로 잘못 통과시켰다.
@@ -77,8 +120,8 @@ public static class SkinOrientationReport
                 else verdict = "🟡 애매";
 
                 lines.Add($"{prefab.name,-30} {s.x,7:F2}{s.y,7:F2}{s.z,7:F2}  " +
-                          $"{rx,6:F2}{rz,6:F2}   {verdict}");
-                if (bad) suspects.Add($"{prefab.name}  {verdict}");
+                          $"{rx,6:F2}{rz,6:F2}   {verdict,-22} {boneVerdict}");
+                if (bad || boneVerdict.StartsWith("🔴")) suspects.Add($"{prefab.name}  {boneVerdict} / 상자:{verdict}");
             }
             finally
             {
@@ -90,7 +133,8 @@ public static class SkinOrientationReport
             "가로(X) 세로(Y) 앞뒤(Z) · 가로/키 앞뒤/키\n" +
             "⚠️ 세로는 FitToHeight가 목표 키로 고정하므로 **비율로 본다**.\n" +
             "   서 있는 사람: 가로/키 0.25~0.45 · 앞뒤/키 0.2~0.35\n" +
-            "   가로만 크고 앞뒤가 얇으면 팔 벌림(T자), 둘 다 크면 누움.\n\n" +
+            "   가로만 크고 앞뒤가 얇으면 팔 벌림(T자), 둘 다 크면 누움.\n" +
+            "⚠️ 상자는 넉넉하게 잡혀 못 믿는다 — **맨 오른쪽 「머리-발」 판정이 진짜다**.\n\n" +
             string.Join("\n", lines);
 
         Debug.Log("[아트] 스킨 방향 점검\n" + report);
