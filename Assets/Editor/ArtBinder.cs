@@ -131,16 +131,40 @@ public static class ArtBinder
         if (right.sqrMagnitude < 1e-8f) return;      // 팔이 머리~골반 축과 평행 = 못 잰다
         right.Normalize();
 
-        Vector3 forward = Vector3.Cross(right, up);  // 왼손 좌표계에서 X × Y = +Z
-        Quaternion fix = Quaternion.Inverse(Quaternion.LookRotation(forward, up));
+        // 🔴 오일러 각을 축마다 따로 90°로 반올림하면 안 된다. 회전은 그렇게 분해되지 않는다 —
+        //    (270,180,270) 같은 값이 나와도 그게 원하는 회전이라는 보장이 없다.
+        //    2026-09-08 실측: 이 방식으로 돌린 안흔함_박준희가 오히려 **누웠다**(머리-발 0.01).
+        //
+        //    대신 **축을 직접 맞춘다.** 지금의 「위」가 어느 세계 축에 제일 가까운지,
+        //    「오른쪽」이 어느 축에 제일 가까운지 골라서 그 둘로 회전을 만든다.
+        //    90° 배수만 나오고, 중간에 애매한 각이 끼어들 여지가 없다.
+        Vector3 upAxis = NearestAxis(up);
+        Vector3 rightAxis = NearestAxis(right, exclude: upAxis);
+        if (rightAxis == Vector3.zero) return;
 
-        Vector3 e = fix.eulerAngles;
-        e = new Vector3(Mathf.Round(e.x / 90f) * 90f, Mathf.Round(e.y / 90f) * 90f, Mathf.Round(e.z / 90f) * 90f);
-        Quaternion snapped = Quaternion.Euler(e);
+        // 이 모델의 (오른쪽, 위)를 세계의 (+X, +Y)로 보내는 회전.
+        Vector3 fwdAxis = Vector3.Cross(rightAxis, upAxis);
+        Quaternion snapped = Quaternion.Inverse(Quaternion.LookRotation(fwdAxis, upAxis));
         if (Quaternion.Angle(snapped, Quaternion.identity) < 1f) return;
 
         visual.transform.localRotation = snapped * visual.transform.localRotation;
-        Debug.Log($"[아트] {visual.name}: 뼈로 재서 {e}만큼 돌려 세웠습니다.");
+        Debug.Log($"[아트] {visual.name}: 뼈로 재서 세웠습니다 — 위 {upAxis}, 오른쪽 {rightAxis}.");
+    }
+
+    // 방향 벡터를 여섯 축(±X·±Y·±Z) 중 가장 가까운 것으로 맞춘다.
+    // exclude를 주면 그 축과 나란한 것(±)은 후보에서 뺀다 — 위와 오른쪽이 겹치면 안 되기 때문이다.
+    static Vector3 NearestAxis(Vector3 v, Vector3 exclude = default)
+    {
+        Vector3[] axes = { Vector3.right, Vector3.left, Vector3.up, Vector3.down, Vector3.forward, Vector3.back };
+        Vector3 best = Vector3.zero;
+        float bestDot = -2f;
+        foreach (Vector3 a in axes)
+        {
+            if (exclude != Vector3.zero && Mathf.Abs(Vector3.Dot(a, exclude)) > 0.9f) continue;
+            float d = Vector3.Dot(v.normalized, a);
+            if (d > bestDot) { bestDot = d; best = a; }
+        }
+        return best;
     }
 
     // 아바타가 없어 뼈로 못 재는 모델을 경계 상자로 세운다.
