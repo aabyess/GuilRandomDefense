@@ -55,16 +55,30 @@ public static class SkinOrientationReport
                 if (acc == null)
                 {
                     lines.Add($"{prefab.name,-30} 렌더러 없음");
+                    suspects.Add($"{prefab.name}  렌더러 없음");
                     continue;
                 }
 
                 Vector3 s = acc.Value.size;
-                // 사람 모양은 서 있으면 세로가 제일 길다. 아니면 누웠거나 옆으로 섰다.
-                bool standing = s.y >= s.x && s.y >= s.z;
-                string verdict = standing ? "서 있음" : (s.x > s.z ? "🔴 옆으로 누움(X가 김)" : "🔴 앞뒤로 누움(Z가 김)");
 
-                lines.Add($"{prefab.name,-30} {s.x,7:F2}{s.y,7:F2}{s.z,7:F2}   {verdict}");
-                if (!standing) suspects.Add(prefab.name);
+                // 🔴 「세로가 제일 길면 서 있다」로 보면 안 된다 — FitToHeight가 세로를 목표 키
+                //    (17/20)로 **고정**해 놓기 때문에 세로는 항상 그 값이다. 실제로 2026-09-08
+                //    첫 판에서 22개 중 15개를 「서 있음」으로 잘못 통과시켰다.
+                //    비율로 봐야 한다. 서 있는 사람은 가로/키 0.25~0.45, 앞뒤/키 0.2~0.35다.
+                float rx = s.y > 0.001f ? s.x / s.y : 0f;
+                float rz = s.y > 0.001f ? s.z / s.y : 0f;
+
+                string verdict;
+                bool bad = true;
+                if (rx > 1.3f || rz > 1.3f) verdict = "🔴 누움(확실)";
+                else if (rx > 0.7f && rz > 0.55f) verdict = "🔴 누움 또는 기울어짐";
+                else if (rx > 0.7f && rz < 0.45f) verdict = "🟡 팔 벌림(T자)";
+                else if (rx < 0.55f && rz < 0.5f) { verdict = "✅ 정상"; bad = false; }
+                else verdict = "🟡 애매";
+
+                lines.Add($"{prefab.name,-30} {s.x,7:F2}{s.y,7:F2}{s.z,7:F2}  " +
+                          $"{rx,6:F2}{rz,6:F2}   {verdict}");
+                if (bad) suspects.Add($"{prefab.name}  {verdict}");
             }
             finally
             {
@@ -73,15 +87,18 @@ public static class SkinOrientationReport
         }
 
         string report =
-            "가로(X) 세로(Y) 앞뒤(Z) — 세로가 제일 길어야 서 있는 것이다.\n\n" +
+            "가로(X) 세로(Y) 앞뒤(Z) · 가로/키 앞뒤/키\n" +
+            "⚠️ 세로는 FitToHeight가 목표 키로 고정하므로 **비율로 본다**.\n" +
+            "   서 있는 사람: 가로/키 0.25~0.45 · 앞뒤/키 0.2~0.35\n" +
+            "   가로만 크고 앞뒤가 얇으면 팔 벌림(T자), 둘 다 크면 누움.\n\n" +
             string.Join("\n", lines);
 
         Debug.Log("[아트] 스킨 방향 점검\n" + report);
 
         string summary = suspects.Count == 0
             ? $"프리팹 {prefabs.Count}개 전부 서 있습니다."
-            : $"프리팹 {prefabs.Count}개 중 {suspects.Count}개가 누워 있습니다:\n  " +
-              string.Join("\n  ", suspects.Take(12)) +
+            : $"프리팹 {prefabs.Count}개 중 {suspects.Count}개가 문제가 있습니다:\n  " +
+              string.Join("\n  ", suspects.Take(24)) +
               "\n\n자세한 수치는 콘솔을 보세요.";
 
         EditorUtility.DisplayDialog("스킨 방향 점검", summary, "확인");

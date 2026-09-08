@@ -167,7 +167,9 @@ public static class ArtBinder
             }
         }
 
-        // 가장 긴 축이 이미 Y면 서 있는 것이다.
+        // 🔴 여기는 **FitToHeight보다 먼저** 불린다 — 즉 아직 원본 비율이다. 그래서 "가장 긴 축"이
+        //    쓸 수 있다. (점검 도구는 반대다: FitToHeight 뒤라 세로가 고정돼 비율로 봐야 한다.)
+        //    사람 모양은 서 있으면 세로가 제일 길다.
         int longest = size.x > size.y ? (size.x > size.z ? 0 : 2) : (size.y > size.z ? 1 : 2);
         if (longest == 1) return;
 
