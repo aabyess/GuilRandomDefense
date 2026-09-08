@@ -1363,14 +1363,27 @@ public static class MapGenerator
             Debug.LogWarning($"[맵] {figure.name} — Idle을 평가했는데 팔이 아직 수평이다(T자). 아바타·클립을 의심할 것.");
     }
 
-    // T자(바인드 포즈)는 양팔이 좌우로 곧게 뻗어 있다. "위팔이 가슴 높이에서 벗어났는가"로 가른다.
+    // T자(바인드 포즈)는 양팔이 좌우로 곧게 뻗어 있다. "손이 위팔보다 얼마나 내려왔는가"로 가른다.
+    //
+    // 🔴 세계 좌표의 Y로 재면 안 된다. 모델이 돌아가 있으면(자동 세우기가 90°·180° 돌린다)
+    //    팔이 제대로 내려와 있어도 세계 Y 차이가 안 난다 — 2026-09-08 실측: 김수빈·박준희만
+    //    T자 경고 9건이 떴는데, 그 둘이 정확히 자동 세우기가 회전시킨 유닛이었다.
+    //    **모델 자신의 위쪽**(골반→머리)을 기준으로 잰다. 회전과 무관해진다.
     static bool PoseLooksApplied(Animator animator)
     {
         Transform upperArm = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
         Transform hand = animator.GetBoneTransform(HumanBodyBones.LeftHand);
-        if (upperArm == null || hand == null) return true;   // 못 재면 경고하지 않는다
-        // T자는 손이 위팔과 같은 높이다. 내려온 팔은 손이 훨씬 아래다.
-        return (upperArm.position.y - hand.position.y) > 0.1f * Mathf.Max(0.01f, animator.humanScale);
+        Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+        Transform head = animator.GetBoneTransform(HumanBodyBones.Head);
+        if (upperArm == null || hand == null || hips == null || head == null) return true;
+
+        Vector3 modelUp = head.position - hips.position;
+        if (modelUp.sqrMagnitude < 1e-6f) return true;   // 못 재면 경고하지 않는다
+        modelUp.Normalize();
+
+        // 손이 위팔보다 "모델 기준 아래"로 얼마나 내려왔는가.
+        float drop = Vector3.Dot(upperArm.position - hand.position, modelUp);
+        return drop > 0.1f * Mathf.Max(0.01f, animator.humanScale);
     }
 
     static AnimationClip FindIdleClip(Animator animator)
