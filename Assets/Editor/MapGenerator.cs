@@ -1323,6 +1323,12 @@ public static class MapGenerator
         Animator animator = figure.GetComponentInChildren<Animator>(true);
         if (animator == null || animator.runtimeAnimatorController == null) return;
 
+        // 공용 Idle은 Humanoid 클립이라 아바타를 거쳐 옮겨진다. 아바타가 성립 안 하면
+        // 결과가 정의되지 않으므로 아예 손대지 않는다 — 바인드 포즈로 두는 게 낫다.
+        if (!animator.isHuman || animator.avatar == null || !animator.avatar.isValid
+            || animator.GetBoneTransform(HumanBodyBones.Hips) == null)
+            return;
+
         AnimationClip idle = FindIdleClip(animator);
         if (idle == null) return;
 
