@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // 2026-09-06 정정(PM 지시): 위 판단이 뒤집혔다. 그때는 원작 아이템 후보를 3개(고대의 배
@@ -13,6 +14,41 @@ using UnityEngine;
 // 비워둔다." 이 결론 중 "죽은 코드가 아니다"는 그대로 유효하다 — 콘텐츠가 없다는 전제만
 // 틀렸다. 고대의 배 "유닛" h05Y는 이것과 무관 — ANCIENT_SHIP_SPEC_2026-09-06.md로 이미
 // 특수 유닛으로 확정돼 있다.)
+// 2026-09-09 신설(PM 지시, 아이템 40종 값 대조 후속) — SkillData.SkillEffect와 같은 결
+// (kind + 값 하나)이다, 새 축을 발명하지 않고 그 관례를 그대로 따랐다 — 나중에 스킬·
+// 아이템 두 효과 축을 같이 세야 할 일이 생길 걸 대비해 이름도 최대한 맞췄다
+// (SkillEffectKind.AttackSpeedBuffPercent와 짝이 되게 AttackSpeedPercent 등).
+// ⚠️ 반드시 맨 뒤에만 추가한다 — 중간에 끼우면 이미 채운 kind 값이 전부 밀린다.
+//
+// ⚠️ 값의 근거 원칙(2026-09-08 아이템 40종 값 대조 세션에서 확정) — `tooltipText`(사람이
+// 읽는 문장)나 아이템 능력의 `aub1`(설명문 필드)은 근거로 안 쓴다. `aub1`은 이 맵에서
+// 다른 아이템 내용을 그대로 복붙한 흔적이 여러 건 확인됐다(A171·A17Q 등, 아이템 40종
+// 대조 보고 참고) — 진짜 값은 그 능력 고유의 수치 필드(Cac1·Oae2·Hab1·Uau2·Isx1 등)
+// 에서만 읽는다. `iabi`가 `A109`(base AIx2, Iagi=Iint=Istr 전부 0)인 아이템은 이 필드로는
+// 검증 불가 — 원작에서도 완전 무효과 스텁이라 실제 효과가 있다면 JASS 트리거로 구현된
+// 것이다(w3a로는 못 본다).
+public enum ItemEffectKind
+{
+    AttackPowerPercent,     // 아군 공격력 +N%(원작 필드 Cac1) — 예: I007·I00N·I00Q
+    AttackSpeedPercent,     // 아군 공격속도 +N%(원작 필드 Oae2) — 예: I00H·I00R
+    ManaRegenPerSecond,     // 아군 초당 마나회복 +N(원작 필드 Hab1) — 예: I00V
+    HealthRegenPerSecond,   // 아군 초당 체력회복 +N(원작 필드 Uau2) — 예: I00W·I00Y
+    StackDamagePercent,     // 스택 1개당 피해 +N%(원작 필드 Isx1) — 예: I005
+}
+
+// 아이템 수치 효과 하나. SkillEffect처럼 "레벨(여기선 아이템 하나)이 효과 여러 개를
+// 가질 수 있다"는 전제로 리스트로 둔다 — 지금 채우는 항목은 전부 효과 1개뿐이지만,
+// 나중에 다중 효과 아이템이 나와도 구조를 새로 안 만들어도 된다.
+[System.Serializable]
+public class ItemEffect
+{
+    public ItemEffectKind kind;
+
+    // 원작 raw 값 그대로(0.15=15%, 0.5=+0.5 등) — 퍼센트/배율 변환은 적용부(런타임 코드,
+    // 이번 범위 밖)의 몫이다. 여기선 원문 필드 값을 그대로 옮겨 적는다.
+    public float value;
+}
+
 [CreateAssetMenu(fileName = "NewItemData", menuName = "GuilRandomDefense/Item Data")]
 public class ItemData : ScriptableObject
 {
@@ -49,4 +85,12 @@ public class ItemData : ScriptableObject
     // 원작 조사에서 아직 못 밝힌 부분·이 자산 특유의 메모(구조화된 필드로 못 담는 것).
     // 예: "판매 가능하다는 언급은 있으나 수량 미확인", "풀 밖(도박 풀에 안 들어감)".
     public string designNote;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-09, PM 지시) — 위 ItemEffectKind 주석 참고. tooltipText는
+    // 사람이 읽는 문장일 뿐 게임 로직이 읽는 데이터가 아니다(같은 원칙, 위 tooltipText
+    // 주석과 동일) — 검증된 수치만 여기 구조화해서 담는다. 값을 못 채운 이유는 각
+    // 자산의 designNote에 개별로 남긴다. 이 필드를 실제로 적용하는 런타임 코드는
+    // 이번 범위 밖이다(PM 지시) — 인벤토리가 플레이어별 구조로 바뀐 뒤에 적용 지점을
+    // 정한다. 지금은 스키마와 검증된 값까지만이다.
+    public List<ItemEffect> effects = new List<ItemEffect>();
 }
