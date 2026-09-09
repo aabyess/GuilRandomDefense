@@ -16,7 +16,10 @@ MonoBehaviour:
   hasGrade: 1
   grade: 3
   tooltipText: "아군 체력회복0.25증가. 흰수염 불멸 보유시 지진강타 강화(시전20%감소+데미지15%증가)"
-  linkedAbilityId:
+  linkedAbilityId: A16N
   sellWoodMin: 0
   sellWoodMax: 0
-  designNote: "흰수염 해금형. 풀 있음. 연결 능력ID 미확정 — linkedAbilityId 비움."
+  designNote: "흰수염 해금형. 풀 있음. 효과값 확정(2026-09-09, 아이템 40종 값 대조 후속 재확인): 연결 능력 A16N(base AUau)의 Uau2=0.25 필드 직접 확인, 툴팁 앞부분(체력회복0.25)과 일치 — linkedAbilityId=A16N으로 채웠다. 뒷부분(흰수염 불멸 보유시 지진강타 시전20%감소+데미지15%증가)은 이 능력 필드에 없다 — 조건부 트리거 구현으로 보이며 w3a로는 검증 불가, 비워둔다."
+  effects:
+  - kind: 3
+    value: 0.25

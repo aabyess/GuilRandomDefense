@@ -19,4 +19,7 @@ MonoBehaviour:
   linkedAbilityId:
   sellWoodMin: 0
   sellWoodMax: 0
-  designNote: "범용. 풀 있음."
+  designNote: "범용. 풀 있음. 🔴 필드-툴팁 불일치(원작 자체의 문제, 2026-09-09 아이템 40종 값 대조): 툴팁·unam 둘 다 \"0.3\"인데 실제 연결 능력 A17M의 필드는 Uau2=0.25다 — 원작 제작자가 툴팁 수정 없이 다른 값을 넣은 것으로 보인다. tooltipText는 원작 툴팁 원문 그대로 0.3을 유지하고, effects(실제 적용값)는 \"필드가 진실\" 원칙대로 0.25를 쓴다."
+  effects:
+  - kind: 3
+    value: 0.25
