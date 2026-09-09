@@ -94,6 +94,7 @@ public static class MapGenerator
             BuildEternalUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildAttackTypeUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildPirateQuestShop(root.transform, MapLayout.Lanes[i], i, pirateQuests);
+            BuildVoyageLogShop(root.transform, MapLayout.Lanes[i], i);
             BuildStoryZonePortal(root.transform, MapLayout.Lanes[i], i);
             laneObjects.Add(laneObject);
         }
@@ -266,7 +267,11 @@ public static class MapGenerator
     // ⚠️ 6번(공격타입강화소)은 1번(유닛강화소)과 **다른 건물**이다 — 원작에 「강화소」라는
     // 이름의 건물이 최소 셋 있고(등급트랙 / 캐릭터 전용 보너스 / 공격타입 매트릭스),
     // 우리 1번이 그중 등급트랙이다. 하나로 합치지 말 것(뿌리 ㊴).
-    const int LaneShopCount = 7;
+    // 2026-09-09: 7→8 (항해일지 추가, ITEM_SYSTEM_AUDIT_2026-09-09.md ③).
+    // 이 값이 상점 사이 간격을 정한다 — 늘리면 기존 상점들이 조금씩 좁혀 선다.
+    // 자리는 0 도박소 · 1 유닛강화 · 2 다른세계강화 · 3 영원함강화 · 4 도움소 ·
+    //          5 해적단상점 · 6 공격타입강화 · 7 항해일지.
+    const int LaneShopCount = 8;
     const float LaneShopSize = 9f;
 
     // 상점 줄은 필드와 벽 하나로 갈린다 — 적이 도는 곳과 내가 쓰는 곳이 눈으로 구분돼야 한다.
@@ -641,6 +646,34 @@ public static class MapGenerator
 
         so.ApplyModifiedProperties();
     }
+
+    // 항해일지(원작 H0C4) — 7번 자리. 원작은 판 시작 시 4명 기지에 하나씩 놓이는 건물이라
+    // (CreateUnitsForPlayer0~3의 CreateUnit(Player(N),'H0C4',...)), 우리도 레인당 하나다.
+    //
+    // 🔴 이걸 안 지어서 아이템 시스템이 통째로 안 돌았다 — 메타몽(h0BS) 유닛도 있고
+    //    도박 풀 배선도 정확한데 **그 유닛을 주는 경로가 프로젝트 전체에 0건**이었다.
+    //    (ITEM_SYSTEM_AUDIT_2026-09-09.md ③) 재고는 이 상점이 아니라 ItemGambleState가
+    //    들고 RoundManager가 6·9라운드에 채운다 — 원작도 같은 자리다.
+    static void BuildVoyageLogShop(Transform parent, MapLayout.Island lane, int laneIndex)
+    {
+        GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_항해일지",
+            LaneShopSlot(lane, 7), laneIndex, "gacha");
+
+        VoyageLogShop voyageLog = shop.AddComponent<VoyageLogShop>();
+        SerializedObject so = new SerializedObject(voyageLog);
+
+        UnitData metamong = AssetDatabase.LoadAssetAtPath<UnitData>(VoyageLogUnitPath);
+        if (metamong == null)
+            Debug.LogWarning($"[맵] 항해일지가 팔 유닛을 찾지 못했습니다: {VoyageLogUnitPath}");
+
+        so.FindProperty("gambleUnit").objectReferenceValue = metamong;
+        so.FindProperty("unitSpawner").objectReferenceValue =
+            Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
+        so.ApplyModifiedProperties();
+    }
+
+    // 원작 w3u 원문 그대로 ugol=5000·ulum=3 — 값은 VoyageLogShop의 기본값에 있다.
+    const string VoyageLogUnitPath = "Assets/Data/Units/Special/Unit_메타몽_h0BS.asset";
 
     // 해적단류 퀘스트 매니저 — 씬 전체에 하나, 퀘스트 목록은 안 들고 있다(그건 이제 상점
     // 쪽 몫). 미니보스 소환·제한시간 판정·성공/실패 보상만 한다 — 빈 껍데기가 아니다.
