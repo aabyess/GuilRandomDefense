@@ -20,6 +20,7 @@ public class GameHud : MonoBehaviour
     const int MaxSelectionCards = 12;
     const int SelectionCardColumns = 4;   // 유닛 정보 칸이 좁아져 6열은 넘친다 (12칸 = 4열 3행)
     const int MaxInventoryEntries = 16;
+    const int MaxItemInventorySlots = 8;
 
     [SerializeField] SelectionManager selectionManager;
 
@@ -200,6 +201,20 @@ public class GameHud : MonoBehaviour
     UnitInventory subscribedInventory;
     bool inventoryDirty = true;
 
+    // 아이템 인벤토리 표시(2026-09-09, PM 지시) — 도박에 당첨돼도 화면에 아무것도 안 뜨는
+    // 문제(토스트·로그·사운드 0건) 대응. 위 UnitInventory 패널과 같은 결(dirty 플래그 +
+    // OnInventoryChanged 구독, 매 프레임 폴링 안 함)이지만 종류별 개수 목록 한 줄이 아니라
+    // 항목별로 호버 툴팁(tooltipText)이 필요해 슬롯을 여러 개 만든다(BuildSelectionCards의
+    // 고정 풀 관례와 같다 — 최대 개수만 미리 만들어두고 안 쓰는 칸은 숨긴다).
+    GameObject itemInventoryTitleObject;
+    readonly GameObject[] itemInventoryRowRoots = new GameObject[MaxItemInventorySlots];
+    readonly Text[] itemInventoryRowTexts = new Text[MaxItemInventorySlots];
+    readonly ItemData[] itemInventoryRowItems = new ItemData[MaxItemInventorySlots];
+    readonly Dictionary<ItemData, int> itemInventoryCounts = new Dictionary<ItemData, int>();
+    readonly List<ItemData> itemInventoryKeys = new List<ItemData>();
+    ItemInventory subscribedItemInventory;
+    bool itemInventoryDirty = true;
+
     bool teamPanelInitialized;
     int lastTotalEnemyCount = int.MinValue;
     readonly int[] lastSlotEnemyCount = new int[TeamSlotCount];
@@ -262,6 +277,7 @@ public class GameHud : MonoBehaviour
         RefreshStoryPanel();
         RefreshUnitCommandCards();
         RefreshInventoryPanel();
+        RefreshItemInventoryPanel();
         RefreshShopTargeting();
         RefreshTraitTargeting();
         RefreshHoveredTooltip();
@@ -277,6 +293,11 @@ public class GameHud : MonoBehaviour
         if (subscribedInventory != null)
         {
             subscribedInventory.OnInventoryChanged -= OnLocalInventoryChanged;
+        }
+
+        if (subscribedItemInventory != null)
+        {
+            subscribedItemInventory.OnInventoryChanged -= OnItemInventoryChanged;
         }
     }
 
@@ -337,6 +358,7 @@ public class GameHud : MonoBehaviour
         BuildSellButton();
         BuildNavigationUI();
         BuildRerollButton();
+        BuildItemInventoryPanel();
         // 왼쪽 유닛 목록은 만들지 않는다. 화면 절반을 덮는데, 무엇을 들고 있는지는
         // 아래 명령 카드 그리드가 이미 보여준다. (F1 디버그 HUD에도 같은 목록이 있다.)
 
@@ -796,6 +818,10 @@ public class GameHud : MonoBehaviour
                 wonItem != null)
             {
                 InventoryOf(context)?.Add(wonItem);
+
+                // 원작 ItemGet: DisplayTextToPlayer(GetOwningPlayer(v), ..., "아이템 : "+GetItemName(it)+"획득!")
+                // — 그 소유자에게만 띄운다. 당첨이 조용해 플레이어가 뭘 얻었는지 몰랐다(PM 지시 2026-09-09).
+                PlayerNotification.Show(owner.OwnerId, $"아이템 : {wonItem.itemName} 획득!");
             }
         }
 
@@ -874,6 +900,157 @@ public class GameHud : MonoBehaviour
 
         reroll.TryCast(out string message);
         if (message != null) PlayerNotification.Show(owner.OwnerId, message);
+    }
+
+    // 아이템 인벤토리 패널(2026-09-09, PM 지시) — TeamPanel(0.71~0.99, 0.70~0.95) 바로
+    // 아래 빈 자리에 둔다. 유닛 선택과 무관하게 항상 보이는 패널이라(NavigationButtonPanel과
+    // 같은 성격), 단일 선택 시에만 뜨는 05번 열(0.51~0.70)이 아니라 TeamPanel과 같은 열에
+    // 쌓는다. 칸마다 EventTrigger로 호버 시 tooltipText를 띄운다(ShowTooltip/HideCombineTooltip
+    // 재사용 — 조합 카드 툴팁과 같은 함수, 새 툴팁 시스템을 만들지 않는다).
+    void BuildItemInventoryPanel()
+    {
+        RectTransform title = CreatePanel(transform, "ItemInventoryTitlePanel", new Color(0f, 0f, 0f, 0.6f));
+        SetAnchors(title, new Vector2(0.71f, 0.65f), new Vector2(0.99f, 0.70f));
+        itemInventoryTitleObject = title.gameObject;
+
+        Text titleText = CreateLabel(title, "ItemInventoryTitleText", "보유 아이템");
+        titleText.fontSize = 18;
+        titleText.raycastTarget = false;
+
+        for (int i = 0; i < MaxItemInventorySlots; i++)
+        {
+            float top = 0.64f - i * 0.05f;
+            float bottom = top - 0.045f;
+
+            RectTransform row = CreatePanel(transform, $"ItemInventoryRow{i}", new Color(1f, 1f, 1f, 0.15f));
+            SetAnchors(row, new Vector2(0.71f, bottom), new Vector2(0.99f, top));
+            itemInventoryRowRoots[i] = row.gameObject;
+
+            Text label = CreateLabel(row, $"ItemInventoryRowText{i}", "");
+            label.fontSize = 16;
+            label.alignment = TextAnchor.MiddleLeft;
+            label.raycastTarget = false;
+            itemInventoryRowTexts[i] = label;
+
+            int capturedIndex = i;
+            EventTrigger trigger = row.gameObject.AddComponent<EventTrigger>();
+            AddTriggerEntry(trigger, EventTriggerType.PointerEnter, _ => OnItemInventoryRowHoverEnter(capturedIndex));
+            AddTriggerEntry(trigger, EventTriggerType.PointerExit, _ => HideCombineTooltip());
+
+            row.gameObject.SetActive(false);
+        }
+    }
+
+    void OnItemInventoryRowHoverEnter(int index)
+    {
+        if (index < 0 || index >= MaxItemInventorySlots || itemInventoryRowRoots[index] == null) return;
+
+        ItemData item = itemInventoryRowItems[index];
+        if (item == null) return;
+
+        string text = !string.IsNullOrEmpty(item.tooltipText) ? item.tooltipText : item.itemName;
+        ShowTooltip(text, (RectTransform)itemInventoryRowRoots[index].transform);
+    }
+
+    // PlayerContext.Local이 없으면 패널 자체를 숨긴다(UnitInventory 패널과 같은 관례).
+    // InventoryOf(local)을 써서 맵 생성 전(플레이어별 컴포넌트 미배선) 폴백까지 그대로 탄다.
+    void RefreshItemInventoryPanel()
+    {
+        if (itemInventoryTitleObject == null) return;
+
+        PlayerContext local = PlayerContext.Local;
+        ItemInventory inventory = local != null ? InventoryOf(local) : null;
+
+        if (inventory != subscribedItemInventory)
+        {
+            if (subscribedItemInventory != null)
+            {
+                subscribedItemInventory.OnInventoryChanged -= OnItemInventoryChanged;
+            }
+
+            subscribedItemInventory = inventory;
+
+            if (subscribedItemInventory != null)
+            {
+                subscribedItemInventory.OnInventoryChanged += OnItemInventoryChanged;
+            }
+
+            itemInventoryDirty = true;
+        }
+
+        bool visible = inventory != null;
+        if (itemInventoryTitleObject.activeSelf != visible)
+        {
+            itemInventoryTitleObject.SetActive(visible);
+        }
+
+        if (!visible)
+        {
+            for (int i = 0; i < MaxItemInventorySlots; i++)
+            {
+                if (itemInventoryRowRoots[i] != null && itemInventoryRowRoots[i].activeSelf)
+                {
+                    itemInventoryRowRoots[i].SetActive(false);
+                }
+            }
+            return;
+        }
+
+        if (!itemInventoryDirty) return;
+
+        itemInventoryDirty = false;
+        RebuildItemInventoryRows(inventory);
+    }
+
+    void OnItemInventoryChanged()
+    {
+        itemInventoryDirty = true;
+    }
+
+    // 이름순 정렬 + 종류별 "이름 xN". 슬롯보다 종류가 많으면 마지막 칸에 "외 N종 더"를 덧붙인다
+    // (RebuildInventoryText의 "외 N종" 관례와 같다).
+    void RebuildItemInventoryRows(ItemInventory inventory)
+    {
+        itemInventoryCounts.Clear();
+        foreach (ItemData item in inventory.Items)
+        {
+            if (item == null) continue;
+            itemInventoryCounts.TryGetValue(item, out int count);
+            itemInventoryCounts[item] = count + 1;
+        }
+
+        itemInventoryKeys.Clear();
+        foreach (ItemData item in itemInventoryCounts.Keys)
+        {
+            itemInventoryKeys.Add(item);
+        }
+        itemInventoryKeys.Sort((a, b) => string.CompareOrdinal(a.itemName, b.itemName));
+
+        int shown = Mathf.Min(itemInventoryKeys.Count, MaxItemInventorySlots);
+        for (int i = 0; i < MaxItemInventorySlots; i++)
+        {
+            bool used = i < shown;
+            if (itemInventoryRowRoots[i].activeSelf != used)
+            {
+                itemInventoryRowRoots[i].SetActive(used);
+            }
+
+            if (!used)
+            {
+                itemInventoryRowItems[i] = null;
+                continue;
+            }
+
+            ItemData item = itemInventoryKeys[i];
+            itemInventoryRowItems[i] = item;
+            itemInventoryRowTexts[i].text = $"{item.itemName} x{itemInventoryCounts[item]}";
+        }
+
+        int remaining = itemInventoryKeys.Count - shown;
+        if (remaining > 0 && shown > 0)
+        {
+            itemInventoryRowTexts[shown - 1].text += $" 외 {remaining}종 더";
+        }
     }
 
     // 항법 지속 버튼 — 유닛 선택과 무관하게 항상 보인다. 안 골랐으면 "항법 선택",
