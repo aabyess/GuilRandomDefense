@@ -1319,6 +1319,48 @@ public static class MapGenerator
         return best;
     }
 
+    /// <summary>
+    /// 인형의 월드 경계를 **메시 자산에서 직접** 잰다.
+    ///
+    /// 🔴 Renderer.bounds를 쓰면 안 된다. 한 번도 그려진 적이 없는 인형에서는 갱신이 늦어
+    ///    엉뚱한 값이 나온다 — 2026-09-09에 이걸로 두 번 당했다.
+    ///    ① 스케일을 준 뒤 다시 읽어 검사했더니 437배가 그대로 통과했다.
+    ///    ② 스케일을 주기 전 값도 못 믿는다 — 그 값으로 height/size.y를 계산하니
+    ///       박준희가 97배로 부풀었다(사장님 「검은 물체 안사라지는데」).
+    ///
+    /// sharedMesh.bounds는 **자산에 저장된 값**이라 언제 읽어도 같다. 그 8개 꼭짓점을
+    /// 렌더러의 localToWorld로 옮겨 합치면, 지금 걸린 회전·스케일이 그대로 반영된
+    /// 월드 경계가 나온다. 그려졌는지 여부와 무관하다.
+    /// </summary>
+    static bool TryMeasureFigure(GameObject figure, out Bounds bounds)
+    {
+        bounds = default;
+        bool any = false;
+
+        foreach (Renderer renderer in figure.GetComponentsInChildren<Renderer>(true))
+        {
+            Mesh mesh = renderer is SkinnedMeshRenderer skinned
+                ? skinned.sharedMesh
+                : (renderer.TryGetComponent(out MeshFilter filter) ? filter.sharedMesh : null);
+            if (mesh == null) continue;
+
+            Bounds local = mesh.bounds;
+            Matrix4x4 toWorld = renderer.transform.localToWorldMatrix;
+
+            for (int corner = 0; corner < 8; corner++)
+            {
+                Vector3 sign = new Vector3((corner & 1) == 0 ? -1f : 1f,
+                                           (corner & 2) == 0 ? -1f : 1f,
+                                           (corner & 4) == 0 ? -1f : 1f);
+                Vector3 world = toWorld.MultiplyPoint3x4(local.center + Vector3.Scale(local.extents, sign));
+                if (!any) { bounds = new Bounds(world, Vector3.zero); any = true; }
+                else bounds.Encapsulate(world);
+            }
+        }
+
+        return any;
+    }
+
     // 가로·앞뒤가 키의 몇 배까지 되어도 봐줄 것인가. 서 있는 사람은 팔을 벌려도 0.7배
     // 남짓이고, 네 발 짐승(재규어)이나 자전거(상붕카)를 감안해도 3배면 넉넉하다.
     // 이걸 넘으면 누워 있는 것이다 — 그 짧은 세로에 키를 맞추면 전체가 폭주한다.
@@ -1381,9 +1423,7 @@ public static class MapGenerator
 
         figure.transform.position = ground;
 
-        Bounds bounds = renderers[0].bounds;
-        for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
-        if (bounds.size.y < 0.001f)
+        if (!TryMeasureFigure(figure, out Bounds bounds) || bounds.size.y < 0.001f)
         {
             Object.DestroyImmediate(figure);
             return false;
@@ -1418,9 +1458,8 @@ public static class MapGenerator
         figure.transform.localScale *= height / bounds.size.y;
 
         // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발을 바닥에 붙인다.
-        bounds = renderers[0].bounds;
-        for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
-        figure.transform.position += Vector3.up * (ground.y - bounds.min.y);
+        if (TryMeasureFigure(figure, out bounds))
+            figure.transform.position += Vector3.up * (ground.y - bounds.min.y);
 
         // 표를 보는 방향(위에서 남쪽을 향해)에서 얼굴이 보이게 돌린다.
         // 대입이 아니라 곱이다 — 앞 단계가 회전을 걸어 뒀다면 덮지 않는다.
@@ -1470,6 +1509,12 @@ public static class MapGenerator
         AnimationClip idle = FindIdleClip(animator);
         if (idle == null) return;
 
+        // 자세를 입히면 뼈가 움직인다. 터졌을 때 되돌리려면 먼저 적어 둬야 한다(아래 참고).
+        Transform[] bones = figure.GetComponentsInChildren<Transform>(true);
+        var saved = new (Vector3 pos, Quaternion rot, Vector3 scale)[bones.Length];
+        for (int i = 0; i < bones.Length; i++)
+            saved[i] = (bones[i].localPosition, bones[i].localRotation, bones[i].localScale);
+
         // 🔴 Animator는 렌더러가 **보이지 않으면 뼈를 안 쓴다**(기본 컬링 CullUpdateTransforms).
         //    맵 생성 중의 인형은 아직 한 번도 그려진 적이 없어 "안 보임"이다 — Update()도,
         //    PlayableGraph도 예외 없이 지나가면서 아무것도 안 썼다(2026-09-08, 로그에 실패 기록
@@ -1496,10 +1541,61 @@ public static class MapGenerator
             if (graph.IsValid()) graph.Destroy();
         }
 
+        // 🔴 리타게팅이 **터지는** 모델이 있다. 실패로 안 끝나고 뼈가 사방으로 흩어진다.
+        //    2026-09-09 실측(사장님 「검은 물체 안사라지는데」): 안흔함_박준희(사이렌헤드)의
+        //    인형은 뼈 구름이 437까지 퍼져 있었다 — 다른 인형은 전부 4~5다.
+        //    그 상태로 키를 맞추면 무엇을 기준으로 재든 표를 통째로 덮는 크기가 나온다.
+        //    크기 검사로는 못 막는다(원인이 크기가 아니라 자세다). **자세를 되돌린다** —
+        //    바인드 포즈(T자)는 보기 아쉬워도 표를 가리지는 않는다.
+        if (PoseExploded(figure, bones))
+        {
+            for (int i = 0; i < bones.Length; i++)
+            {
+                bones[i].localPosition = saved[i].pos;
+                bones[i].localRotation = saved[i].rot;
+                bones[i].localScale = saved[i].scale;
+            }
+            Debug.LogWarning($"[맵] {figure.name}: Idle을 입히니 뼈가 사방으로 흩어졌습니다 " +
+                             "(리타게팅 실패). 바인드 포즈로 되돌렸습니다 — " +
+                             "이 모델은 아바타를 다시 봐야 합니다.", figure);
+            return;
+        }
+
         // 실패는 조용하다. 여기서 한 번 재서 이름을 남긴다 — 수백 개 중 어느 게 굳었는지 눈으로 못 고른다.
         if (animator.isHuman && !PoseLooksApplied(animator))
             Debug.LogWarning($"[맵] {figure.name} — Idle을 평가했는데 팔이 아직 수평이다(T자). 아바타·클립을 의심할 것.");
     }
+
+    /// <summary>
+    /// 자세를 입힌 뒤 뼈가 메시보다 터무니없이 넓게 흩어졌는지 본다.
+    ///
+    /// 정상적인 자세에서 뼈는 메시 안이나 그 언저리에 있다. 리타게팅이 터지면 뼈가
+    /// 사방으로 날아가는데, 스킨 메시가 그걸 따라가므로 화면에서는 거대한 검은 덩어리가 된다.
+    /// 메시 자산의 경계(sharedMesh.bounds)는 자세와 무관한 고정값이라 기준으로 쓸 수 있다.
+    /// </summary>
+    static bool PoseExploded(GameObject figure, Transform[] bones)
+    {
+        if (!TryMeasureFigure(figure, out Bounds mesh)) return false;
+
+        float meshSize = Mathf.Max(mesh.size.x, Mathf.Max(mesh.size.y, mesh.size.z));
+        if (meshSize < 1e-6f) return false;
+
+        Vector3 min = Vector3.positiveInfinity, max = Vector3.negativeInfinity;
+        foreach (Transform bone in bones)
+        {
+            if (bone == null) continue;
+            min = Vector3.Min(min, bone.position);
+            max = Vector3.Max(max, bone.position);
+        }
+        Vector3 spread = max - min;
+        float boneSize = Mathf.Max(spread.x, Mathf.Max(spread.y, spread.z));
+
+        // 뼈가 메시의 몇 배까지 퍼져도 봐줄 것인가. 무기·머리카락 뼈가 조금 삐져나오는 건
+        // 흔하므로 넉넉히 잡는다. 박준희는 이 값이 90배 언저리였다.
+        return boneSize > meshSize * BoneSpreadLimit;
+    }
+
+    const float BoneSpreadLimit = 6f;
 
     // T자(바인드 포즈)는 양팔이 좌우로 곧게 뻗어 있다. "손이 위팔보다 얼마나 내려왔는가"로 가른다.
     //
