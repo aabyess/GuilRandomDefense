@@ -1,0 +1,29 @@
+원본 파일명: luffy.glb (Sketchfab, 원피스 루피)
+받은 폴더:   ~/Downloads
+옮긴 날:     2026-09-09
+매칭:        특별함_최상호 (unitName = 일진) — 사장님 지정
+
+🔧 리그를 고쳐서 넣었다. 원본은 유니티 Humanoid로 **못 쓰는 구조**였다.
+   다리  root hips → pelvis → thigh → knee 에서 끊기고,
+         발은 root ground 밑의 **별도 IK 사슬**(ankle.004→.003→.002→.001→toes)이었다.
+   팔    shoulder1 → shoulder2 → elbow 에서 끊기고,
+         손은 arm.ctrl 밑에 따로 달려 있었다.
+   유니티는 발이 무릎의 자손, 손이 팔꿈치의 자손이어야 아바타를 만든다.
+
+   glTF는 노드를 번호로 참조하고 스키닝이 globalTransform × inverseBindMatrix라,
+   **월드 변환만 보존하면** 옮겨도 메시가 안 움직인다:
+       newLocal = inverse(newParentGlobal) × oldGlobal
+   네 노드(양쪽 ankle.001, 양쪽 wrist)를 옮기고 22개 뼈 이름을 유니티 규약으로 바꿨다.
+   검증: 노드 489개 전부 월드 변환 최대 오차 2.22e-16 (부동소수점 한계) — 안 움직였다.
+
+   실제 발 뼈는 ankle.L.001이다(y=0.087, 진짜 발목). .004/.003/.002는 발 롤 컨트롤이라
+   그대로 뒀다. 바인드 포즈는 서 있는 T자다(팔이 y=1.422로 수평).
+
+텍스처:      9장. assimp 번호와 glTF 이미지 번호가 1:1로 일치하는 것을 MTL 대조로 확인했다
+             (밀리는 사고가 전례에 있다 — 덴지). 6.jpg가 빨간 천(셔츠·리본)인 것을 눈으로 확인.
+             UV 아틀라스가 아니라 반복 천 무늬라 단색에 가깝게 보이는 게 정상이다.
+
+애니메이션:  자체 클립은 0.42초 'blink'(눈꺼풀 20채널)뿐 — 몸 동작 없음.
+             Humanoid로 만들었으므로 공용 Character.controller의 Idle/Walk/Attack을 쓴다.
+
+2026-09-07 사장님 확정: IP 제약 없음(상업적 사용 아님, 친구들과 재미로).
