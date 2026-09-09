@@ -80,6 +80,23 @@ def main():
     check("OwnerItems" in read("Assets/Scripts/Units/CombineSystem.cs"),
           "조합이 그 플레이어 인벤토리에서 재료를 뺀다")
 
+    # ── 효과 층 ─────────────────────────────────────────────
+    applier = "Assets/Scripts/Units/ItemEffectApplier.cs"
+    check(os.path.exists(os.path.join(ROOT, applier)), "아이템 효과 집행기가 있다")
+    check("AddComponent<ItemEffectApplier>()" in mg, "맵 생성이 4명분 집행기를 붙인다")
+    check("SetManaRegenBonus" in read("Assets/Scripts/Units/ResourceWallet.cs"),
+          "마나 회복 보너스를 받을 자리가 있다")
+
+    # 효과가 실제로 채워져 있나 — 스키마만 있고 값이 0이면 안 돈 것과 같다.
+    filled = sum(1 for p in glob.glob(os.path.join(ROOT, "Assets/Data/Items/*.asset"))
+                 if re.search(r"^  effects:\n  - kind:", open(p, encoding="utf-8").read(), re.M))
+    check(filled >= 10, "수치가 채워진 아이템이 있다", f"{filled}종")
+
+    # ── UI 층 ───────────────────────────────────────────────
+    hud = read("Assets/Scripts/UI/GameHud.cs")
+    check("BuildItemInventoryPanel" in hud, "보유 아이템 패널이 있다")
+    check("아이템 : " in hud, "당첨 시 획득 알림을 띄운다")
+
     # ── 원작 대조 ───────────────────────────────────────────
     # 원작 조합 능력 255개 중 아이템을 재료로 요구하는 것은 0개다(w3a의 acat).
     gates = sum(len(re.findall(r"^  - kind: 1", read(os.path.relpath(p, ROOT)), re.M))
