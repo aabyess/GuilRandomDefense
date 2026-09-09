@@ -4,9 +4,6 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.AI;
-// PlayableExtensions.SetTime / PlayableOutputExtensions.SetSourcePlayable 은 확장 메서드라
-// 정규화 이름만으로는 안 잡힌다 — using이 있어야 한다(UprightAnimatedPose).
-using UnityEngine.Playables;
 
 /// <summary>
 /// Assets/Art/ 에 넣은 모델을 프리팹으로 만들고 EnemyData·UnitData에 연결한다.
@@ -80,6 +77,14 @@ public static class ArtBinder
         ("안흔함_상붕카", new Vector3(-90f, 90f, 0f), 0.5f),
 
         // ⚠️ 사람형(Humanoid)은 여기 적지 않는다 — AutoUpright가 뼈 위치로 재서 자동으로 세운다.
+        //
+        // 🔴 2026-09-09에 여기(프리팹 만드는 시점)에서 Idle을 입혀 보고 다시 재는
+        //    UprightAnimatedPose를 넣었다가 걷어냈다. **아무 일도 안 했다** — 실제로 누워 있는
+        //    흔함_문필환(코비)에 회전 0을 돌려줬고(프리팹은 재생성됐는데 회전이 그대로),
+        //    특별함_최상호(루피)에는 -90을 걸어 오히려 눕혔다.
+        //    이 시점의 인스턴스는 한 번도 그려진 적이 없어 아바타 바인딩이 덜 된 것으로 보인다.
+        //    누운 자세를 실제로 잡아내는 것은 MapGenerator.StandFigureUpright다 —
+        //    살아 있는 인형에서 구워진 자세를 잰다. 여기서 다시 시도하지 말 것.
         //    2026-09-08: 박준희 거꾸로 → X180으로 고쳤더니 박민수는 「거꾸로 서서 뒤돎」, 김수빈은
         //    「누워서 오른쪽 봄」. 부호를 두 번 틀리고 나서 추측을 그만뒀다.
         //    변환 축 오류는 90°·180° 단위라 뼈로 재면 정확히 나온다.
@@ -154,122 +159,6 @@ public static class ArtBinder
         Debug.Log($"[아트] {visual.name}: 뼈로 재서 세웠습니다 — 위 {upAxis}, 오른쪽 {rightAxis}.");
     }
 
-    /// <summary>
-    /// 컨트롤러의 Idle을 한 번 입혀 본 뒤 **그 자세로** 다시 재서, 누워 있으면 세운다.
-    ///
-    /// 왜 AutoUpright만으로는 모자란가 — AutoUpright는 **바인드 포즈**(임포트된 그대로의
-    /// 뼈 배치)를 잰다. 그런데 플레이어가 보는 것은 공용 Character.controller의 Idle이
-    /// 아바타를 거쳐 리타게팅된 자세다. 이 둘의 방향이 다른 모델이 실제로 있다.
-    ///
-    /// 🔴 2026-09-09 실측(사장님 스크린샷 「조합판 코비가 누워있고 안흔함 박민수가 이상함」):
-    ///    흔함_문필환(코비)의 FBX 바인드 포즈는 멀쩡히 서 있다 — assimp로 잰 경계가
-    ///    가로 1.27 · **세로 1.75** · 앞뒤 0.64에 발이 y=0이다(서 있는 T자).
-    ///    그런데 씬에 놓인 인형의 뼈를 월드로 풀어 보니 **머리 y=0.23 · 발 y=1.37**로
-    ///    머리가 발보다 아래였다(머리-발 비율 -0.06). 안흔함_박민수(로이킴)도 0.01이었다.
-    ///    프리팹의 뼈는 바인드 포즈 그대로이므로, 눕힌 것은 그 사이에 있는 리타게팅뿐이다.
-    ///    그래서 AutoUpright는 "돌릴 필요 없음"으로 지나갔고(프리팹 회전 0), 아무도 못 잡았다.
-    ///
-    /// ⚠️ MapGenerator.PoseLooksApplied는 **팔이 내려왔는지만** 본다 — 리타게팅이
-    ///    "성공"하면서 몸을 눕혀도 통과한다. 그래서 경고도 안 떴다.
-    ///
-    /// 재고 나서 뼈는 **원래대로 되돌린다.** 프리팹에는 바인드 포즈를 남기고 회전만 고친다 —
-    /// 자세는 실행 중 Animator가, 조합판 인형은 MapGenerator.PoseAsIdle이 각자 입힌다.
-    /// 서 있는 모델은 아무것도 안 건드린다(회전이 identity면 그대로 반환) — 지금 멀쩡한
-    /// 모델에는 회귀가 없다.
-    /// </summary>
-    static void UprightAnimatedPose(GameObject visual)
-    {
-        Animator animator = visual.GetComponentInChildren<Animator>();
-        if (animator == null || animator.runtimeAnimatorController == null) return;
-        if (!animator.isHuman || animator.avatar == null || !animator.avatar.isValid) return;
-
-        Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
-        Transform head = animator.GetBoneTransform(HumanBodyBones.Head);
-        Transform leftArm = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
-        Transform rightArm = animator.GetBoneTransform(HumanBodyBones.RightUpperArm);
-        if (hips == null || head == null || leftArm == null || rightArm == null) return;
-
-        AnimationClip idle = null;
-        foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips)
-            if (clip != null && clip.name.IndexOf("idle", System.StringComparison.OrdinalIgnoreCase) >= 0)
-            { idle = clip; break; }
-        if (idle == null) return;
-
-        // 자세를 입히면 뼈가 실제로 움직인다. 재고 나서 되돌려야 하므로 먼저 적어 둔다.
-        Transform[] bones = visual.GetComponentsInChildren<Transform>(true);
-        var saved = new (Vector3 pos, Quaternion rot, Vector3 scale)[bones.Length];
-        for (int i = 0; i < bones.Length; i++)
-            saved[i] = (bones[i].localPosition, bones[i].localRotation, bones[i].localScale);
-
-        // 🔴 렌더러가 한 번도 안 보였으면 Animator는 뼈를 안 쓴다(기본 컬링).
-        //    MapGenerator.PoseAsIdle이 같은 이유로 같은 조치를 한다.
-        AnimatorCullingMode culling = animator.cullingMode;
-        bool wasEnabled = animator.enabled;
-        animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-        animator.enabled = true;
-
-        bool posed = false;
-        UnityEngine.Playables.PlayableGraph graph = UnityEngine.Playables.PlayableGraph.Create("배선 자세 점검");
-        try
-        {
-            graph.SetTimeUpdateMode(UnityEngine.Playables.DirectorUpdateMode.Manual);
-            var output = UnityEngine.Animations.AnimationPlayableOutput.Create(graph, "자세", animator);
-            var playable = UnityEngine.Animations.AnimationClipPlayable.Create(graph, idle);
-            playable.SetTime(0.0);
-            output.SetSourcePlayable(playable);
-            graph.Evaluate(0f);
-            posed = true;
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning($"[아트] {visual.name}: 자세를 못 입혀 방향 재점검을 건너뜁니다 — {e.Message}");
-        }
-        finally
-        {
-            if (graph.IsValid()) graph.Destroy();
-        }
-
-        Quaternion snapped = Quaternion.identity;
-        if (posed)
-        {
-            // AutoUpright와 **같은 방법**으로 잰다 — 오일러 반올림이 아니라 축 직접 맞추기다.
-            Transform parent = visual.transform.parent;
-            Vector3 L(Vector3 world) => parent != null ? parent.InverseTransformPoint(world) : world;
-
-            Vector3 up = L(head.position) - L(hips.position);
-            Vector3 right = L(rightArm.position) - L(leftArm.position);
-            if (up.sqrMagnitude > 1e-8f && right.sqrMagnitude > 1e-8f)
-            {
-                up.Normalize();
-                right = Vector3.ProjectOnPlane(right, up);
-                if (right.sqrMagnitude > 1e-8f)
-                {
-                    right.Normalize();
-                    Vector3 upAxis = NearestAxis(up);
-                    Vector3 rightAxis = NearestAxis(right, exclude: upAxis);
-                    if (rightAxis != Vector3.zero)
-                        snapped = Quaternion.Inverse(
-                            Quaternion.LookRotation(Vector3.Cross(rightAxis, upAxis), upAxis));
-                }
-            }
-        }
-
-        // 뼈를 원래대로. 프리팹에는 바인드 포즈가 남는다.
-        for (int i = 0; i < bones.Length; i++)
-        {
-            bones[i].localPosition = saved[i].pos;
-            bones[i].localRotation = saved[i].rot;
-            bones[i].localScale = saved[i].scale;
-        }
-        animator.cullingMode = culling;
-        animator.enabled = wasEnabled;
-
-        if (Quaternion.Angle(snapped, Quaternion.identity) < 1f) return;   // 서 있다 — 안 건드린다
-
-        visual.transform.localRotation = snapped * visual.transform.localRotation;
-        Debug.Log($"[아트] {visual.name}: 자세를 입혀 보니 누워 있어 세웠습니다 " +
-                  $"(바인드 포즈는 서 있어서 AutoUpright가 못 잡던 경우).");
-    }
 
     // 방향 벡터를 여섯 축(±X·±Y·±Z) 중 가장 가까운 것으로 맞춘다.
     // exclude를 주면 그 축과 나란한 것(±)은 후보에서 뺀다 — 위와 오른쪽이 겹치면 안 되기 때문이다.
@@ -1021,17 +910,8 @@ public static class ArtBinder
         visual.transform.localRotation = RotationFor(model.name);
         // 사람형은 뼈로 방향을 재서 자동으로 세운다. 수동 표에 적힌 모델은 그게 우선이다.
         if (RotationFor(model.name) == Quaternion.identity) AutoUpright(visual);
-        // 컨트롤러를 먼저 물린다 — 자세를 입혀 보려면 클립이 있어야 한다.
-        AttachAnimator(instance, visual);
-        // 그 자세로 한 번 더 잰다. AutoUpright는 바인드 포즈를 재는데, 화면에 보이는 건
-        // 리타게팅된 자세다 — 둘이 어긋나는 모델이 실제로 있다(코비 등).
-        //
-        // 🔴 반드시 FitToHeight **앞**이어야 한다. 위 주석대로 "돌리면 경계 상자가 바뀌므로,
-        //    나중에 돌리면 엉뚱한 축 길이에 키를 맞춰 납작하거나 길쭉해진다."
-        //    2026-09-09에 이걸 FitToHeight 뒤에 뒀다가 그대로 겪었다 — 세워진 유닛들의
-        //    크기가 누운 상태 기준으로 맞춰져 조금씩 부풀었다.
-        UprightAnimatedPose(visual);
         FitToHeight(instance, visual, HeightScaleFor(model.name));
+        AttachAnimator(instance, visual);
 
         GameObject saved = PrefabUtility.SaveAsPrefabAsset(instance, path);
         Object.DestroyImmediate(instance);

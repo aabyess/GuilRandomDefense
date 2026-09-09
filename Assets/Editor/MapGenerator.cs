@@ -1256,6 +1256,69 @@ public static class MapGenerator
         Object.DestroyImmediate(slot.GetComponent<Collider>());
     }
 
+    /// <summary>
+    /// 자세를 입힌 뒤 실제로 누워 있으면 인형을 통째로 돌려 세운다.
+    ///
+    /// 🔴 2026-09-09 사장님 스크린샷(조합판) — 코비(흔함_문필환)가 누워 있었다. 씬의 뼈를
+    ///    월드로 풀어 재 보니 **머리 y=0.23 · 발 y=1.37**로 머리가 발보다 아래였다
+    ///    (머리-발 비율 -0.06). 안흔함_박민수(로이킴)도 0.01이었다.
+    ///    원본 FBX의 바인드 포즈는 멀쩡히 서 있다(assimp 실측: 세로 1.75가 제일 길고 발이 y=0).
+    ///    즉 눕힌 것은 **리타게팅된 Idle 자세**다 — 프리팹 회전은 0이었고 아무도 못 잡았다.
+    ///
+    /// ⚠️ PoseLooksApplied는 팔이 내려왔는지만 본다. 리타게팅이 "성공"하면서 몸을 눕혀도
+    ///    통과한다 — 그래서 경고가 한 건도 안 떴다.
+    ///
+    /// AutoUpright와 같은 방법(축 직접 맞추기)을 쓴다. 오일러를 축마다 90°로 반올림하면
+    /// 회전이 그렇게 분해되지 않아 오히려 눕는다(2026-09-08 박준희 실측).
+    /// 서 있는 인형은 회전이 identity로 나와 아무것도 안 한다 — 회귀 없음.
+    /// </summary>
+    static void StandFigureUpright(GameObject figure)
+    {
+        Animator animator = figure.GetComponentInChildren<Animator>(true);
+        if (animator == null || !animator.isHuman || animator.avatar == null || !animator.avatar.isValid) return;
+
+        Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+        Transform head = animator.GetBoneTransform(HumanBodyBones.Head);
+        Transform leftArm = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+        Transform rightArm = animator.GetBoneTransform(HumanBodyBones.RightUpperArm);
+        if (hips == null || head == null || leftArm == null || rightArm == null) return;
+
+        Vector3 up = head.position - hips.position;
+        Vector3 right = rightArm.position - leftArm.position;
+        if (up.sqrMagnitude < 1e-8f || right.sqrMagnitude < 1e-8f) return;
+
+        up.Normalize();
+        right = Vector3.ProjectOnPlane(right, up);
+        if (right.sqrMagnitude < 1e-8f) return;      // 팔이 몸통 축과 나란하면 못 잰다
+        right.Normalize();
+
+        Vector3 upAxis = NearestWorldAxis(up);
+        Vector3 rightAxis = NearestWorldAxis(right, exclude: upAxis);
+        if (rightAxis == Vector3.zero) return;
+
+        Quaternion snapped = Quaternion.Inverse(
+            Quaternion.LookRotation(Vector3.Cross(rightAxis, upAxis), upAxis));
+        if (Quaternion.Angle(snapped, Quaternion.identity) < 1f) return;   // 이미 서 있다
+
+        figure.transform.rotation = snapped * figure.transform.rotation;
+        Debug.Log($"[맵] {figure.name}: 자세가 누워 있어 세웠습니다 — 위 {upAxis}, 오른쪽 {rightAxis}.");
+    }
+
+    // ArtBinder.NearestAxis와 같은 것 — 에디터 클래스가 서로를 못 부르므로 여기 한 벌 둔다.
+    static Vector3 NearestWorldAxis(Vector3 v, Vector3 exclude = default)
+    {
+        Vector3[] axes = { Vector3.right, Vector3.left, Vector3.up, Vector3.down, Vector3.forward, Vector3.back };
+        Vector3 best = Vector3.zero;
+        float bestDot = -2f;
+        foreach (Vector3 a in axes)
+        {
+            if (exclude != Vector3.zero && Mathf.Abs(Vector3.Dot(a, exclude)) > 0.9f) continue;
+            float d = Vector3.Dot(v.normalized, a);
+            if (d > bestDot) { bestDot = d; best = a; }
+        }
+        return best;
+    }
+
     // 인형이 목표 키의 몇 배까지 퍼져도 봐줄 것인가. 사람 모양은 팔을 벌려도 가로가 키의
     // 0.7배 남짓이고, 네 발 짐승(재규어)이나 자전거(상붕카)를 감안해도 3배면 넉넉하다.
     // 이걸 넘으면 크기가 맞은 게 아니라 방향이 틀어진 것이다.
@@ -1271,6 +1334,14 @@ public static class MapGenerator
         figure.name = name;
 
         PoseAsIdle(figure);
+        // 🔴 자세를 입힌 결과가 누워 있으면 인형을 통째로 돌려 세운다.
+        //    2026-09-09 실측으로 **이것만이 실제로 듣는다**는 게 확인됐다 — 프리팹 쪽에서
+        //    같은 일을 시도한 ArtBinder.UprightAnimatedPose는 문필환에 회전 0을 돌려줬고
+        //    (프리팹은 재생성됐는데 회전이 그대로였다), 이걸 걷어내자마자 코비가 다시 누웠다
+        //    (머리-발 0.77 → -0.06). 살아 있는 인형에서 실제로 구운 자세를 재는 쪽이 맞다.
+        //    ⚠️ 이 회전이 틀리면 바로 아래 크기 맞추기가 엉뚱한 축에 키를 맞춰 폭주한다 —
+        //    그 대비가 MaxFigureSpread 검사다(박준희가 97배로 부풀었던 자리).
+        StandFigureUpright(figure);
 
         // 스크립트를 먼저 지운다. NavMeshAgent를 먼저 지우려 하면 UnitMover가 그것을 요구하고
         // 있어서 거부당하고, 결과적으로 조합표 위에 살아 있는 에이전트가 남는다.
