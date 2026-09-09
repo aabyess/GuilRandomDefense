@@ -48,6 +48,17 @@ public class ResourceWallet : MonoBehaviour
     const float ManaRegenPerSecond = 0.30f;
     float manaRegenAccumulator;
 
+    // 아이템이 더해 주는 초당 마나 회복(2026-09-09, ItemEffectApplier가 세팅한다).
+    // 원작 I00V「거인족의술잔」의 실측 필드값 Hab1=0.5가 여기로 들어온다 —
+    // 기본 재생이 0.30이라 술잔 하나로 2.67배가 된다(마나가 진짜 제약인 설계라 크게 먹힌다).
+    // 아이템을 팔거나 잃으면 적용기가 0으로 되돌린다.
+    float manaRegenBonus;
+
+    public void SetManaRegenBonus(float value)
+    {
+        manaRegenBonus = Mathf.Max(0f, value);
+    }
+
     [SerializeField] List<StartingAmount> startingAmounts = new List<StartingAmount>();
     [SerializeField] List<ResourceCap> caps = new List<ResourceCap>();
 
@@ -76,7 +87,7 @@ public class ResourceWallet : MonoBehaviour
     {
         if (!GameAuthority.IsServer) return;
 
-        manaRegenAccumulator += ManaRegenPerSecond * Time.deltaTime;
+        manaRegenAccumulator += (ManaRegenPerSecond + manaRegenBonus) * Time.deltaTime;
         int whole = Mathf.FloorToInt(manaRegenAccumulator);
         if (whole <= 0) return;
 

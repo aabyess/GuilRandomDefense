@@ -3172,6 +3172,16 @@ public static class MapGenerator
 
             if (changed) so.ApplyModifiedProperties();
 
+            // 아이템 효과 집행기(2026-09-09) — PlayerContext에 참조 필드를 두지 않는다.
+            // 아무도 이걸 조회하지 않고 스스로 인벤토리 변화를 듣고 돌기만 하기 때문이다
+            // (PersistentSave처럼 되짚어 참조하지 않는 부류). 그래서 EnsurePart가 아니라
+            // 컴포넌트 존재만 보장한다.
+            if (context.GetComponent<ItemEffectApplier>() == null)
+            {
+                context.gameObject.AddComponent<ItemEffectApplier>();
+                changed = true;
+            }
+
             // 형제끼리 서로를 참조한다 — PlayerContext 쪽 참조를 채운다고 이게 같이 차지
             // 않는다. NavigationState는 패왕의길 +2를 DamageLevelFixedState에 누적하고,
             // ItemGambleState는 「도움소 잠금」을 읽어 축소풀로 갈아탄다.
