@@ -30,7 +30,7 @@
 
 import argparse
 import codecs
-import math
+import glob
 import os
 import re
 import sys
@@ -121,6 +121,22 @@ def pick(bones, want, avoid=()):
     return None, None
 
 
+def leftover_placeholders():
+    """모델을 붙였는데 자리표시 캡슐(`몸`)이 안 꺼진 프리팹.
+
+    🔴 2026-09-09 사장님 「스킨에 회색 원통이 생겼는데」 — 22개 전부가 그랬다.
+    예전엔 자리표시 메시가 프리팹 루트에 있어 ArtBinder가 지웠는데, 메시를 `몸` 자식으로
+    떼어내는 변경이 들어간 뒤로 그 제거가 헛돌았다. 캡슐은 유니티 내장 메시 10208이고
+    머티리얼은 URP 기본 회색이라, 스킨 옆에 회색 원통으로 선다.
+    """
+    capsule = "10208, guid: 0000000000000000e000000000000000"
+    out = []
+    for path in sorted(glob.glob(os.path.join(ROOT, "Assets/Prefabs/Generated/Unit_*.prefab"))):
+        if capsule in open(path, encoding="utf-8").read():
+            out.append(os.path.basename(path))
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--all", action="store_true", help="서 있는 인형까지 전부 보여준다")
@@ -129,6 +145,8 @@ def main():
     if not os.path.exists(SCENE):
         print(f"  씬 파일이 없습니다: {SCENE}")
         return 2
+
+    placeholders = leftover_placeholders()
 
     names, tr_of_go, go_of_tr, children, trs = load()
     dolls = [(g, n) for g, n in names.items()
@@ -202,12 +220,18 @@ def main():
         print("     씬에서 뼈가 한 점에 모여 읽힌다. **누운 게 아니라 못 재는 것**이다 —")
         print("     유니티 안에서 Tools > 아트 > 스킨 방향 점검으로 봐야 한다.")
 
-    if bad:
-        print(f"\n  🔴 {len(bad)}종이 똑바로 안 서 있습니다.")
+    if placeholders:
+        print(f"\n  🔴 자리표시 캡슐이 남은 프리팹 {len(placeholders)}개 — 스킨 옆에 회색 원통으로 보인다.")
+        print("     " + " · ".join(p[5:-7] for p in placeholders[:8])
+              + (" …" if len(placeholders) > 8 else ""))
+
+    if bad or placeholders:
+        if bad:
+            print(f"\n  🔴 {len(bad)}종이 똑바로 안 서 있습니다.")
         print("     고친 뒤에는 Tools > 아트 > 모델 배선 → Tools > 맵 > 원랜디 맵 생성 순서로 다시 돌리세요.")
         return 1
 
-    print("\n  전부 서 있습니다.")
+    print("\n  전부 서 있고, 자리표시 캡슐도 없습니다.")
     return 0
 
 

@@ -968,6 +968,32 @@ public static class ArtBinder
 
     // ── 프리팹 만들기 ──────────────────────────────────────────────────
 
+    /// <summary>
+    /// 모델을 붙일 때 자리표시용 캡슐을 끈다.
+    ///
+    /// 🔴 2026-09-09 사장님 「스킨에 회색 원통이 생겼는데」 — 스킨 옆에 회색 캡슐이 같이 서 있었다.
+    ///
+    /// 왜 생겼나 — 예전엔 자리표시 메시가 프리팹 **루트**에 있어서, 위 두 줄
+    /// (root의 MeshFilter·MeshRenderer 제거)로 깨끗이 사라졌다. 그런데 나중에
+    /// "메시를 자식으로 떼어내 그것만 키운다"는 변경이 들어가면서(같은 파일의 몸 분리 루틴 —
+    /// 루트를 키우면 NavMeshAgent 발자국까지 커져 유닛이 설 자리를 잃기 때문이다)
+    /// 캡슐이 `몸` 자식으로 옮겨갔다. **그때부터 위 두 줄이 헛돌았다** — 루트엔 이미
+    /// 아무것도 없으니 지울 게 없고, 캡슐은 자식에 그대로 남는다.
+    /// 실측: 스킨 프리팹 21개 전부 `몸`에 MeshFilter(Capsule) + 켜진 MeshRenderer가 있었다.
+    ///
+    /// ⚠️ GameObject 자체는 **남긴다.** `EnemyDummy.visualRoot`가 이 자식을 직렬화 참조로
+    ///    들고 있고(EnemyData.visualScale이 여기에만 곱한다), 지우면 그 참조가 끊긴다.
+    ///    렌더링만 멈추면 되므로 메시와 렌더러만 걷어낸다.
+    /// </summary>
+    static void StripPlaceholderBody(GameObject instance)
+    {
+        Transform body = instance.transform.Find("몸");
+        if (body == null) return;
+
+        if (body.TryGetComponent(out MeshRenderer renderer)) Object.DestroyImmediate(renderer);
+        if (body.TryGetComponent(out MeshFilter filter)) Object.DestroyImmediate(filter);
+    }
+
     static GameObject GetOrCreate(Dictionary<GameObject, GameObject> cache, GameObject template,
                                   GameObject model, string prefix, ref int made)
     {
@@ -986,6 +1012,7 @@ public static class ArtBinder
         // 컴포넌트(EnemyDummy·WaypointMover·콜라이더 등)는 그대로 둔다 — 그게 이 프리팹의 알맹이다.
         Object.DestroyImmediate(instance.GetComponent<MeshFilter>());
         Object.DestroyImmediate(instance.GetComponent<MeshRenderer>());
+        StripPlaceholderBody(instance);
 
         GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(model, instance.transform);
         visual.transform.localPosition = Vector3.zero;
