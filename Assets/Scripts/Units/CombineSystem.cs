@@ -43,6 +43,16 @@ public class CombineSystem : MonoBehaviour
         }
     }
 
+    // 🔴 2026-09-09 — 위 Inventory/Wallet/Resources와 달리 아이템 인벤토리만 직렬화 필드를
+    //    **그대로** 쓰고 있었다. 그런데 씬의 ItemInventory는 하나뿐(플레이어 0 슬롯)이라,
+    //    어느 플레이어가 조합하든 재료를 플레이어 0의 인벤토리에서 뺐다. 형제인
+    //    ItemGambleState가 4개인 것과 어긋난다 — 원작은 습득·보관·해금이 전부 pid로 갈린다.
+    //    OwnerContext를 거치게 해서 위 셋과 같은 결로 맞춘다(인스펙터 값이 있으면 그게 우선 —
+    //    다른 플레이어 것에 일부러 물려 놓은 배선을 덮지 않는다).
+    ItemInventory OwnerItems => itemInventory != null
+        ? itemInventory
+        : OwnerContext != null ? OwnerContext.ItemInventory : null;
+
     // 창고에는 "이 개체를 내가 들고 있나"만 물어본다. 없어도(null이어도) 조합은 그냥 돌아간다.
     Warehouse OwnerWarehouse
     {
@@ -170,11 +180,12 @@ public class CombineSystem : MonoBehaviour
             material.Consume();
         }
 
-        if (itemInventory != null)
+        ItemInventory ownerItems = OwnerItems;
+        if (ownerItems != null)
         {
             foreach (ItemData item in itemsToRemove)
             {
-                itemInventory.Remove(item);
+                ownerItems.Remove(item);
             }
         }
 
@@ -409,7 +420,8 @@ public class CombineSystem : MonoBehaviour
 
         if (!hasItemIngredient) return true;
 
-        if (itemInventory == null)
+        ItemInventory ownerItems = OwnerItems;
+        if (ownerItems == null)
         {
             if (loggedItemInventoryMissingFor.Add(recipe))
             {
@@ -418,7 +430,7 @@ public class CombineSystem : MonoBehaviour
             return false;
         }
 
-        List<ItemData> pool = new List<ItemData>(itemInventory.Items);
+        List<ItemData> pool = new List<ItemData>(ownerItems.Items);
 
         foreach (RecipeIngredient ingredient in recipe.ingredients)
         {

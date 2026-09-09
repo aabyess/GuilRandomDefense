@@ -28,6 +28,16 @@ public class PlayerContext : MonoBehaviour
     // 직렬화 순서를 지킨다. 씬에서 같은 슬롯(GameObject)에 같이 붙는다 — 비어 있으면
     // (씬 배선 전) UniqueRerollAbility.TryCast가 조용히 false를 돌려준다(회귀 없음).
     [SerializeField] UniqueRerollState uniqueRerollState;
+    // ⚠️ 맨 뒤에 추가(2026-09-09, ITEM_SYSTEM_AUDIT_2026-09-09.md) — 직렬화 순서를 지킨다.
+    //
+    // 🔴 여기 오기 전까지 ItemInventory는 씬에 **하나뿐**이었다(플레이어 0 슬롯). GameHud가
+    //    FindFirstObjectByType으로 그 하나를 잡고 CombineSystem도 같은 인스턴스를 써서,
+    //    누가 도박에 이겨도 아이템이 전부 플레이어 0에게 들어가고 조합도 그 하나를 뒤졌다.
+    //    원작은 위에서 아래까지 전부 플레이어별이다 — itpool[pid]로 풀을 고르고,
+    //    ItemGet이 `UnitAddItem(v, ...)`으로 그 유닛에게 직접 넣고, 획득 메시지도
+    //    그 소유자에게만 띄우며, 아이템 보유형 해금도 GetOwningPlayer(GetTriggerUnit())로
+    //    인덱싱한다. 형제인 ItemGambleState는 이미 4개인데 인벤토리만 1개였던 것이다.
+    [SerializeField] ItemInventory itemInventory;
 
     static readonly List<PlayerContext> registry = new List<PlayerContext>();
 
@@ -113,6 +123,7 @@ public class PlayerContext : MonoBehaviour
     public NavigationState NavigationState => navigationState;
     public DamageLevelFixedState DamageLevelFixedState => damageLevelFixedState;
     public UniqueRerollState UniqueRerollState => uniqueRerollState;
+    public ItemInventory ItemInventory => itemInventory;
 
     void OnEnable()
     {

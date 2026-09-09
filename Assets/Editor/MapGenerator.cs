@@ -3131,6 +3131,12 @@ public static class MapGenerator
             changed |= EnsurePart<NavigationState>(context, so, "navigationState");
             changed |= EnsurePart<ItemGambleState>(context, so, "itemGambleState");
 
+            // 2026-09-09 추가 — 같은 사고의 세 번째다. 이번엔 필드조차 없었다:
+            // ItemGambleState는 4명 다 붙어 있는데 ItemInventory는 씬 전체에 하나뿐이라,
+            // 누가 도박에 이겨도 아이템이 전부 플레이어 0에게 갔다(원작은 itpool[pid]로
+            // 갈린다). 형제가 넷인데 받는 그릇이 하나였던 것이다.
+            changed |= EnsurePart<ItemInventory>(context, so, "itemInventory");
+
             if (changed) so.ApplyModifiedProperties();
 
             // 형제끼리 서로를 참조한다 — PlayerContext 쪽 참조를 채운다고 이게 같이 차지

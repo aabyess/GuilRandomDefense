@@ -225,13 +225,28 @@ public class GameHud : MonoBehaviour
         ? unitSpawner
         : unitSpawner = FindFirstObjectByType<UnitSpawner>();
 
-    // h0BS(메타몽) 판매→아이템 도박 결과를 받는다. CombineSystem이 조합 재료로 참조하는
-    // 그 인벤토리와 같은 싱글턴 인스턴스다(씬에 하나, CombineSystem.itemInventory와 같은
-    // 자리 — PlayerContext엔 이 참조가 없다, 지금은 플레이어별이 아니라 전역 공유 상태).
+    // h0BS(메타몽) 판매→아이템 도박 결과를 받는다.
+    //
+    // 🔴 2026-09-09 정정 — 여기가 씬 전역 1개를 잡고 있었다. 씬의 ItemInventory는 플레이어 0
+    //    슬롯에 하나뿐이라, **누가 도박에 이겨도 아이템이 전부 플레이어 0에게** 들어갔다
+    //    (형제인 ItemGambleState는 4개인데 받는 그릇만 하나였다). 원작은 ItemGet이
+    //    `UnitAddItem(v, ...)`으로 그 유닛에게 직접 넣고 획득 메시지도 그 소유자에게만 띄운다.
+    //    이제 PlayerContext.ItemInventory(플레이어별)를 먼저 본다.
+    //
+    // ⚠️ 전역 조회를 남겨 둔 이유: 플레이어별 컴포넌트는 MapGenerator.RepairPlayerParts가
+    //    붙인다. 맵을 아직 안 돌린 씬에서는 1~3번 슬롯이 비어 있어, 그대로 두면 아이템이
+    //    조용히 사라진다. 배선 전에는 예전과 같이 동작하게 두고(회귀 없음), 맵 생성을
+    //    한 번 돌리면 자동으로 플레이어별로 갈린다.
     ItemInventory itemInventory;
     ItemInventory ItemInventoryRef => itemInventory != null
         ? itemInventory
         : itemInventory = FindFirstObjectByType<ItemInventory>();
+
+    ItemInventory InventoryOf(PlayerContext context)
+    {
+        if (context != null && context.ItemInventory != null) return context.ItemInventory;
+        return ItemInventoryRef;
+    }
 
     void Awake()
     {
@@ -780,7 +795,7 @@ public class GameHud : MonoBehaviour
                 context.ItemGambleState.TryGamble(identity.Data.sellTriggersItemGamblePool, out ItemData wonItem) &&
                 wonItem != null)
             {
-                ItemInventoryRef?.Add(wonItem);
+                InventoryOf(context)?.Add(wonItem);
             }
         }
 
