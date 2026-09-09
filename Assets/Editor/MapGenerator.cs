@@ -1319,9 +1319,9 @@ public static class MapGenerator
         return best;
     }
 
-    // 인형이 목표 키의 몇 배까지 퍼져도 봐줄 것인가. 사람 모양은 팔을 벌려도 가로가 키의
-    // 0.7배 남짓이고, 네 발 짐승(재규어)이나 자전거(상붕카)를 감안해도 3배면 넉넉하다.
-    // 이걸 넘으면 크기가 맞은 게 아니라 방향이 틀어진 것이다.
+    // 가로·앞뒤가 키의 몇 배까지 되어도 봐줄 것인가. 서 있는 사람은 팔을 벌려도 0.7배
+    // 남짓이고, 네 발 짐승(재규어)이나 자전거(상붕카)를 감안해도 3배면 넉넉하다.
+    // 이걸 넘으면 누워 있는 것이다 — 그 짧은 세로에 키를 맞추면 전체가 폭주한다.
     const float MaxFigureSpread = 3f;
 
     // 유닛 프리팹에서 보이는 부분만 떼어 세운다. 프리팹을 통째로 놓으면 조합표 위에
@@ -1389,30 +1389,37 @@ public static class MapGenerator
             return false;
         }
 
-        figure.transform.localScale *= height / bounds.size.y;
-
-        // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발을 바닥에 붙인다.
-        bounds = renderers[0].bounds;
-        for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
-
-        // 🔴 크기를 맞췄는데도 칸을 한참 넘으면, 그 모델은 방향이 틀어져 있어서 키를 엉뚱한
-        //    축에 맞춘 것이다. 그대로 두면 인형 하나가 조합판을 통째로 덮는다.
+        // 🔴 키를 맞추기 **전에** 가로세로 비율로 판정한다.
+        //    서 있는 사람은 가로·앞뒤가 키보다 작다. 키(세로)가 가장 짧으면 그 모델은
+        //    누워 있는 것이고, 그 짧은 값에 목표 키를 맞추려다 전체가 폭주한다.
         //    2026-09-09 실측(사장님 「조합편에 이상한게 생김」): 안흔함_박준희가 가로 437로
         //    부풀어 표 절반을 가렸다. 목표 키는 4.5였다 — 97배다.
-        //    같은 사고가 두 번째다(2026-09-08 「맵에 이상한게 생겼는데」, 그땐 7,062배였다).
+        //    같은 사고가 세 번째다(2026-09-08엔 7,062배였다).
+        //
+        //    ⚠️ 스케일을 바꾼 뒤에 renderers[].bounds를 **다시 읽어서** 재면 안 된다.
+        //       SkinnedMeshRenderer의 bounds는 한 번도 그려지지 않은 인형에서 갱신이 늦어,
+        //       방금 준 스케일이 반영 안 된 옛 값이 나온다. 2026-09-09에 그렇게 짜서
+        //       437배가 검사를 그대로 통과했다. 비율은 스케일과 무관하므로 이 문제가 없다.
+        //
         //    ⚠️ 원인(방향 오판)은 여기서 못 고친다. 여기서는 **번지지 않게** 막고 이름을 남긴다 —
         //    색 큐브로 떨어지면 어느 모델이 문제인지 표에서 바로 보인다.
-        Vector3 fitted = bounds.size;
-        float widest = Mathf.Max(fitted.x, Mathf.Max(fitted.y, fitted.z));
-        if (widest > height * MaxFigureSpread)
+        Vector3 raw = bounds.size;
+        float flatness = Mathf.Max(raw.x, raw.z) / Mathf.Max(raw.y, 1e-6f);
+        if (flatness > MaxFigureSpread)
         {
-            Debug.LogWarning($"[맵] {name}: 키를 {height:F1}에 맞췄는데 가장 긴 축이 {widest:F1}입니다 " +
-                             $"({widest / height:F0}배). 모델 방향이 틀어진 것으로 보여 색 큐브로 둡니다 — " +
+            Debug.LogWarning($"[맵] {name}: 원본 비율이 가로 {raw.x:F2} · 세로 {raw.y:F2} · 앞뒤 {raw.z:F2}로 " +
+                             $"납작합니다(가로/키 {flatness:F0}배). 누워 있는 모델에 키를 맞추면 " +
+                             $"{height * flatness:F0} 크기로 부풀어 표를 덮으므로 색 큐브로 둡니다 — " +
                              "Tools > 아트 > 스킨 방향 점검으로 확인하세요.", figure);
             Object.DestroyImmediate(figure);
             return false;
         }
 
+        figure.transform.localScale *= height / bounds.size.y;
+
+        // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발을 바닥에 붙인다.
+        bounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
         figure.transform.position += Vector3.up * (ground.y - bounds.min.y);
 
         // 표를 보는 방향(위에서 남쪽을 향해)에서 얼굴이 보이게 돌린다.
