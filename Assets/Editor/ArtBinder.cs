@@ -1021,11 +1021,17 @@ public static class ArtBinder
         visual.transform.localRotation = RotationFor(model.name);
         // 사람형은 뼈로 방향을 재서 자동으로 세운다. 수동 표에 적힌 모델은 그게 우선이다.
         if (RotationFor(model.name) == Quaternion.identity) AutoUpright(visual);
-        FitToHeight(instance, visual, HeightScaleFor(model.name));
+        // 컨트롤러를 먼저 물린다 — 자세를 입혀 보려면 클립이 있어야 한다.
         AttachAnimator(instance, visual);
-        // 컨트롤러가 붙은 **뒤에** 한 번 더 잰다 — AutoUpright는 바인드 포즈를 재는데,
-        // 화면에 보이는 건 리타게팅된 자세다. 둘이 어긋나는 모델이 실제로 있다.
+        // 그 자세로 한 번 더 잰다. AutoUpright는 바인드 포즈를 재는데, 화면에 보이는 건
+        // 리타게팅된 자세다 — 둘이 어긋나는 모델이 실제로 있다(코비 등).
+        //
+        // 🔴 반드시 FitToHeight **앞**이어야 한다. 위 주석대로 "돌리면 경계 상자가 바뀌므로,
+        //    나중에 돌리면 엉뚱한 축 길이에 키를 맞춰 납작하거나 길쭉해진다."
+        //    2026-09-09에 이걸 FitToHeight 뒤에 뒀다가 그대로 겪었다 — 세워진 유닛들의
+        //    크기가 누운 상태 기준으로 맞춰져 조금씩 부풀었다.
         UprightAnimatedPose(visual);
+        FitToHeight(instance, visual, HeightScaleFor(model.name));
 
         GameObject saved = PrefabUtility.SaveAsPrefabAsset(instance, path);
         Object.DestroyImmediate(instance);
