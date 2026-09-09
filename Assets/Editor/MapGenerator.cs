@@ -1266,6 +1266,11 @@ public static class MapGenerator
         figure.name = name;
 
         PoseAsIdle(figure);
+        // 🔴 안전망 — 자세를 입힌 결과가 누워 있으면 인형을 통째로 돌려 세운다.
+        //    ArtBinder.UprightAnimatedPose가 프리팹 쪽에서 같은 일을 하지만, 거기서
+        //    못 잡고 넘어오는 모델이 있으면 조합판에 그대로 드러난다(사장님이 보시는 화면이다).
+        //    실제로 누웠을 때만 움직이므로 이미 고쳐진 모델에는 아무 일도 안 한다.
+        StandFigureUpright(figure);
 
         // 스크립트를 먼저 지운다. NavMeshAgent를 먼저 지우려 하면 UnitMover가 그것을 요구하고
         // 있어서 거부당하고, 결과적으로 조합표 위에 살아 있는 에이전트가 남는다.
@@ -1321,8 +1326,73 @@ public static class MapGenerator
         figure.transform.position += Vector3.up * (ground.y - bounds.min.y);
 
         // 표를 보는 방향(위에서 남쪽을 향해)에서 얼굴이 보이게 돌린다.
-        figure.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+        // ⚠️ 대입이 아니라 **곱**이다 — StandFigureUpright가 세워 둔 보정을 덮으면 안 된다.
+        //    누운 적이 없는 인형은 여기서 회전이 항상 identity라 예전과 결과가 같다.
+        figure.transform.rotation = Quaternion.Euler(0f, 180f, 0f) * figure.transform.rotation;
         return true;
+    }
+
+    /// <summary>
+    /// 자세를 입힌 뒤 실제로 누워 있으면 인형을 통째로 돌려 세운다.
+    ///
+    /// 🔴 2026-09-09 사장님 스크린샷(조합판) — 코비(흔함_문필환)가 누워 있었다. 씬의 뼈를
+    ///    월드로 풀어 재 보니 **머리 y=0.23 · 발 y=1.37**로 머리가 발보다 아래였다
+    ///    (머리-발 비율 -0.06). 안흔함_박민수(로이킴)도 0.01이었다.
+    ///    원본 FBX의 바인드 포즈는 멀쩡히 서 있다(assimp 실측: 세로 1.75가 제일 길고 발이 y=0).
+    ///    즉 눕힌 것은 **리타게팅된 Idle 자세**다 — 프리팹 회전은 0이었고 아무도 못 잡았다.
+    ///
+    /// ⚠️ PoseLooksApplied는 팔이 내려왔는지만 본다. 리타게팅이 "성공"하면서 몸을 눕혀도
+    ///    통과한다 — 그래서 경고가 한 건도 안 떴다.
+    ///
+    /// AutoUpright와 같은 방법(축 직접 맞추기)을 쓴다. 오일러를 축마다 90°로 반올림하면
+    /// 회전이 그렇게 분해되지 않아 오히려 눕는다(2026-09-08 박준희 실측).
+    /// 서 있는 인형은 회전이 identity로 나와 아무것도 안 한다 — 회귀 없음.
+    /// </summary>
+    static void StandFigureUpright(GameObject figure)
+    {
+        Animator animator = figure.GetComponentInChildren<Animator>(true);
+        if (animator == null || !animator.isHuman || animator.avatar == null || !animator.avatar.isValid) return;
+
+        Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+        Transform head = animator.GetBoneTransform(HumanBodyBones.Head);
+        Transform leftArm = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+        Transform rightArm = animator.GetBoneTransform(HumanBodyBones.RightUpperArm);
+        if (hips == null || head == null || leftArm == null || rightArm == null) return;
+
+        Vector3 up = head.position - hips.position;
+        Vector3 right = rightArm.position - leftArm.position;
+        if (up.sqrMagnitude < 1e-8f || right.sqrMagnitude < 1e-8f) return;
+
+        up.Normalize();
+        right = Vector3.ProjectOnPlane(right, up);
+        if (right.sqrMagnitude < 1e-8f) return;      // 팔이 몸통 축과 나란하면 못 잰다
+        right.Normalize();
+
+        Vector3 upAxis = NearestWorldAxis(up);
+        Vector3 rightAxis = NearestWorldAxis(right, exclude: upAxis);
+        if (rightAxis == Vector3.zero) return;
+
+        Quaternion snapped = Quaternion.Inverse(
+            Quaternion.LookRotation(Vector3.Cross(rightAxis, upAxis), upAxis));
+        if (Quaternion.Angle(snapped, Quaternion.identity) < 1f) return;   // 이미 서 있다
+
+        figure.transform.rotation = snapped * figure.transform.rotation;
+        Debug.Log($"[맵] {figure.name}: 자세가 누워 있어 세웠습니다 — 위 {upAxis}, 오른쪽 {rightAxis}.");
+    }
+
+    // ArtBinder.NearestAxis와 같은 것 — 에디터 클래스가 서로를 못 부르므로 여기 한 벌 둔다.
+    static Vector3 NearestWorldAxis(Vector3 v, Vector3 exclude = default)
+    {
+        Vector3[] axes = { Vector3.right, Vector3.left, Vector3.up, Vector3.down, Vector3.forward, Vector3.back };
+        Vector3 best = Vector3.zero;
+        float bestDot = -2f;
+        foreach (Vector3 a in axes)
+        {
+            if (exclude != Vector3.zero && Mathf.Abs(Vector3.Dot(a, exclude)) > 0.9f) continue;
+            float d = Vector3.Dot(v.normalized, a);
+            if (d > bestDot) { bestDot = d; best = a; }
+        }
+        return best;
     }
 
     // 🔴 Untitled 씬에서 돌리면 SaveScene이 조용히 false를 돌려주고, NavMesh도 파일로 못 남긴다.
