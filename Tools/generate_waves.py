@@ -14,6 +14,14 @@
 돌리면 그 네 필드가 89종 전부에서 사라진다** — 65/70/75 라인몹 둘(아래 MOB_*_OVERRIDE)
 은 이 스크립트가 직접 쓰므로 예외지만, 나머지는 재실행 전에 그 패치 과정을 먼저
 찾아 이 스크립트에 합치거나 실행 순서를 맞춰야 한다(이번 작업 범위 밖, PM에게 보고).
+그 재작업 자체는 여기서 하지 않는다 — 대신 그 사고가 실제로 나지 않게 아래에서
+기본을 "손대지 않음"으로 막는다.
+
+⚠️ 유니티 메뉴(맵 생성 등)는 이 스크립트를 안 부른다(2026-09-11, PM 확인 — Assets/Editor
+전체에 이 스크립트를 실행하는 코드 0건). 위험은 **사람이 손으로 이 스크립트를 다시
+돌릴 때**뿐이다 — 그래도 그 순간 위 필드 소실 사고가 조용히 나면 안 되므로, 기존
+자산이 있으면 기본은 아무것도 안 쓰고 멈춘다. 정말 다시 만들고 싶으면
+`--force`를 붙인다(2026-09-11, PM 지시).
 """
 import os, sys, hashlib
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -99,6 +107,20 @@ def wisp_rewards(rnd, boss):
         elif rnd <= 60: rewards.append(('희귀함', 1))
         else:           rewards.append(('전설', 1))
     return rewards
+
+# ⚠️ 2026-09-11 추가(PM 지시) — 기존 자산이 있으면 기본은 손대지 않고 멈춘다. 이 스크립트가
+# armor·armorType·percentDamageTaken·pointValue를 전혀 모르는 채로 89종을 전부 지우고 다시
+# 쓰면 그 네 필드가 조용히 사라진다(위 docstring 참고) — "그럴 리 없겠지"가 아니라 실제로
+# 벌어지는 사고라 기본값 자체를 안전한 쪽으로 둔다. `--force`를 주면 예전처럼 그대로 돈다
+# (배포 실태에 맞추는 전면 재작업은 이 플래그로 하는 게 아니다 — 그건 별도로 배정될 작업).
+FORCE = '--force' in sys.argv
+_existing = [f for folder in ('Assets/Data/Enemies', 'Assets/Data/Waves')
+             if os.path.isdir(folder) for f in os.listdir(folder) if f.endswith('.asset')]
+if _existing and not FORCE:
+    print(f"기존 자산 {len(_existing)}개가 있어 아무것도 안 쓰고 멈췄다(예: {_existing[0]}).")
+    print("이 스크립트가 모르는 필드: armor·armorType·percentDamageTaken·pointValue —")
+    print("덮어쓰면 89종에서 사라진다. 정말 다시 만들려면 --force를 붙여라.")
+    sys.exit(1)
 
 for folder in ('Assets/Data/Enemies', 'Assets/Data/Waves'):
     os.makedirs(folder, exist_ok=True)
