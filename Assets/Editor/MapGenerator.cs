@@ -2992,6 +2992,35 @@ public static class MapGenerator
                (durationFixed ? $"\n라운드 길이를 원작값 {NormalRoundDuration}초로 고쳤습니다(옛 값 28초)." : "");
     }
 
+    // 난이도 6종(2026-09-11, PM 지시) — SideBossManager와 같은 관례로 "Map" 루트 밖의 독립
+    // 오브젝트 둘을 둔다. DifficultyManager는 상태(선택된 모드)만 들고, DifficultySelectHud는
+    // 그 상태를 읽어 호스트에게 6버튼을, 나머지에게 대기 문구를 그린다 — 둘 다 서로 직접
+    // 참조를 안 갖고 DifficultyManager.Instance 정적 접근으로만 통신한다(SerializedObject로
+    // 이어줄 필드가 없다). 씬을 다시 만들어도 없으면 새로 만들고, 있으면 그대로 둔다(상태를
+    // 안 갖는 컴포넌트라 재배선할 것도 없다).
+    static string WireDifficultySystem()
+    {
+        bool madeManager = false;
+        if (Object.FindFirstObjectByType<DifficultyManager>(FindObjectsInactive.Include) == null)
+        {
+            new GameObject("DifficultyManager").AddComponent<DifficultyManager>();
+            madeManager = true;
+        }
+
+        bool madeHud = false;
+        if (Object.FindFirstObjectByType<DifficultySelectHud>(FindObjectsInactive.Include) == null)
+        {
+            new GameObject("DifficultySelectHud").AddComponent<DifficultySelectHud>();
+            madeHud = true;
+        }
+
+        if (!madeManager && !madeHud) return "\n난이도 시스템(모드 매니저·선택창)은 이미 배선돼 있습니다.";
+
+        return "\n난이도 시스템을 배선했습니다" +
+               (madeManager ? " (DifficultyManager 신설)" : "") +
+               (madeHud ? " (DifficultySelectHud 신설)" : "") + ".";
+    }
+
     // 신세계 사이드보스(도플라밍고·빅맘·카이도, ORIGINAL_BOSS_COMBAT_SPEC.md) — RoundManager처럼
     // "Map" 루트 밖의 독립 오브젝트로 둔다. 맵을 다시 만들어도 스턴게이지·정산 배율(플레이어별
     // 배열) 상태가 안 사라진다. 없으면 여기서 새로 만들고, 있으면 참조만 다시 맞춘다.
@@ -3108,6 +3137,7 @@ public static class MapGenerator
         report += Step("시작 위습", WireStartingWisps);
         report += Step("고대의 배 지급(스토리7)", WireAncientShipReward);
         report += Step("라운드 보상 위습", WireRoundRewardWisp);
+        report += Step("난이도 시스템", WireDifficultySystem);
         report += Step("사이드보스 매니저", WireSideBossManager);
         report += Step("조합 지갑", WireCombineWallet);
         report += Step("창고", MoveWarehousesToIslands);
