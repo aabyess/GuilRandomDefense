@@ -156,8 +156,10 @@ for rnd in range(1, TOTAL_ROUNDS + 1):
 
     # ⚠️ 2026-09-11 추가 — 65/70/75만 해당(ENEMIES에 이 셋만 "라인몹"이 채워져 있다,
     # enemy_roster.py 참고). 위 보스 EnemyData와 별개로 두 번째 EnemyData(라인몹)를
-    # 만들어 spawnList 맨 앞에 끼운다 — 순서는 무관하지만 사람이 읽을 때 라인몹이
-    # 먼저 보이는 쪽이 자연스럽다.
+    # 만들어 spawnList **보스 뒤에** 붙인다. 🔴 순서가 동작을 바꾼다 — WaveSpawner.SpawnRoutine은
+    # 항목을 차례로 뽑아서, 라인몹(35×0.65초)이 앞이면 보스가 22.75초 늦게 나오고 보스
+    # 제한시간(34.80초)이 라운드(36.67초)를 넘겨 버린다. 원작은 보스(Trig_Enemy_Boss_sinsekai)와
+    # 라인몹 루프(Trig_Round_10ver)가 라운드 시작에 같이 돈다(2026-09-11 PM 정정).
     if boss and rnd in ENEMIES:
         # ⚠️ count/interval을 위 BASE_COUNT 점증 공식으로 계산하지 않는다 — 배포된 실제
         # 자산을 R01부터 R74까지 전수 대조해보니(2026-09-11) 이 공식은 이미 죽어 있다.
@@ -181,7 +183,7 @@ for rnd in range(1, TOTAL_ROUNDS + 1):
               f"  prefab: {{fileID: {MOB_PREFAB_FILEID}, guid: {MOB_PREFAB_GUID}, type: 3}}\n"
               f"  percentDamageTaken: 0.9\n  pointValue: 100.0\n",
               mob_guid)
-        spawn_entries.insert(0,
+        spawn_entries.append(
             f"  - enemyData: {{fileID: 11400000, guid: {mob_guid}, type: 2}}\n"
             f"    count: {mob_count}\n    spawnInterval: {mob_interval}\n")
 

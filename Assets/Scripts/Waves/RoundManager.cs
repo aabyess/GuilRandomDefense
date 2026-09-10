@@ -292,6 +292,10 @@ public class RoundManager : MonoBehaviour
 
         yield return new WaitForSeconds(timeLimit);
 
+        // 판이 이미 끝났으면(전멸·마지막 라운드 클리어) 판정하지 않는다 — 클리어한 사람을
+        // 뒤늦게 탈락시키면 안 된다.
+        if (isGameOver) yield break;
+
         if (boss == null) yield break; // 이미 잡았다 — 유니티 오버로드 null이라 파괴된 개체를 정확히 건진다.
 
         PlayerContext context = PlayerContext.Get(laneIndex);
