@@ -10,10 +10,11 @@ using UnityEngine;
 // 쓰는 관례(라운드 정보를 playerId로 인덱싱한 배열 필드로 들고 있는다, MaxTrackedLanes)를
 // 그대로 따른다. 씬(SampleScene.unity)을 직접 못 고치는 제약과도 맞다.
 //
-// ⚠️ 우리 게임엔 "난이도(어려움 등)" 개념이 없다 — 원작 조건(§②, udg_Mode != "어려움")은
-// 항상 통과로 취급한다(그 상태 자체가 될 수 없으니 항상 열려 있는 게 맞다). 원작의
-// "Level mod 5 == 0이면 즉시 종료" 안전장치도 안 옮겼다 — 우리 트리거 조건 자체가 정확히
-// {62, 66, 71}만 골라내서 5의 배수가 애초에 안 걸린다(62·66·71 전부 5의 배수가 아니다).
+// 2026-09-11 갱신(PM 지시, G) — 난이도가 생겨 위 "항상 열려 있다" 전제가 끝났다. 원작 조건
+// (§②, udg_Mode != "어려움") 그대로 HandleEnemySpawned 맨 앞에서 건다 — 이유는 파일에 없고
+// 조건만 확정돼 있다(DIFFICULTY_SPEC_2026-09-11.md §8-1). 원작의 "Level mod 5 == 0이면 즉시
+// 종료" 안전장치는 여전히 안 옮겼다 — 우리 트리거 조건 자체가 정확히 {62, 66, 71}만 골라내서
+// 5의 배수가 애초에 안 걸린다(62·66·71 전부 5의 배수가 아니다).
 public class SideBossManager : MonoBehaviour
 {
     const int MaxPlayers = 8; // RoundManager.MaxTrackedLanes와 같은 값 — 그쪽은 private라 따로 둔다.
@@ -86,6 +87,11 @@ public class SideBossManager : MonoBehaviour
     void HandleEnemySpawned(int laneIndex, int spawnCounter)
     {
         if (roundManager == null || waveSpawner == null) return;
+
+        // G — 어려움에서만 사이드보스가 아예 안 나온다(원작 조건 Mode!=어려움 하나뿐).
+        if (DifficultyManager.Instance != null && DifficultyManager.Instance.IsModeSelected &&
+            DifficultyManager.Instance.Current == DifficultyMode.Hard) return;
+
         int round = roundManager.CurrentRound;
         if (System.Array.IndexOf(TriggerRounds, round) < 0) return;
         if (spawnCounter != 15) return;
