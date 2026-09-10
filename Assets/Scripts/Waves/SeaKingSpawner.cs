@@ -35,6 +35,15 @@ public class SeaKingSpawner : MonoBehaviour
     const int RewardGold = 3000;
     const int RewardWispCount = 1;
 
+    // ⚠️ 2026-09-11 추가(PM 지시, 원문 직접 대조) — 원작 o02N은 Player(5) 소유
+    // (CreateUnitsForPlayer5, war3map_new.j:13434)이고 upgr에 R01A~R01E가 걸려 있는데,
+    // 모드 선택 시 여섯 모드 전부 그중 하나를 Player(5)에 연구한다(각 +50%, rhpo
+    // gba1=0.5) — 즉 실제 체력은 36,000,000(=EnemyData.hp, uhpm 그대로)이 아니라
+    // 36,000,000 × 1.5 = 54,000,000이다. EnemyData.hp는 "원작 uhpm 그대로"라는 규칙을
+    // 지키려고 자산은 안 고치고 여기서 곱한다(EnemyDummy.Initialize(EnemyData,
+    // startHpMultiplier)가 이미 있는 자리 — 신세계 사이드보스 §⑧과 같은 메커니즘).
+    const float HpMultiplier = 1.5f;
+
     // war3map.j Trig_Quest_sky_3 — PersistentSave.AddSessionPoints 코멘트의 "Quest_sky_1/2/3
     // +1씩(3곳)" 중 3번째 — 이 메서드의 첫 실제 호출부다.
     const int RewardSessionPoints = 1;
@@ -71,7 +80,7 @@ public class SeaKingSpawner : MonoBehaviour
 
         if (current.TryGetComponent(out EnemyDummy dummy))
         {
-            dummy.Initialize(seaKingData);
+            dummy.Initialize(seaKingData, HpMultiplier);
             // 퀘스트류라 레인 소속이 없다 — 크립·해적단 미니보스와 같은 이유
             // (레인 카운트·패배판정에 안 섞이게, 보상도 레인 주인이 아니라 이 스크립트가 직접).
             dummy.SetLane(-1);
