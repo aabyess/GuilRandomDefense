@@ -26,6 +26,12 @@ public class DifficultyManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+
+        // 🔴 2026-09-11 정정(PM 리뷰) — EnemyDummy.DifficultyAegrLevelOffset은 static이라
+        // 씬을 다시 로드해도 이전 판의 값이 그대로 남는다. 새 판이 시작될 때(이 컴포넌트가
+        // 다시 Awake될 때) 0(=오프셋 없음)으로 되돌려 선택 전에는 항상 기존과 동작이
+        // 같도록 한다.
+        EnemyDummy.DifficultyAegrLevelOffset = 0;
     }
 
     void OnDestroy()
@@ -44,10 +50,12 @@ public class DifficultyManager : MonoBehaviour
 
         current = mode;
 
-        // Aegr(마법 피해 배율)은 적마다 스폰 시점에 곱하는 게 아니라 전역 배율 하나로
-        // 둔다(EnemyDummy.EffectiveMagicMultiplier 참고) — 원작도 마스터 함수에서 딱 한 번
-        // 레인별로 건 뒤 게임 내내 안 바뀐다.
-        EnemyDummy.DifficultyMagicMultiplier = CurrentData.magicMultiplier;
+        // Aegr(마법 피해)는 적마다 스폰 시점에 곱하는 게 아니라 전역 레벨 오프셋 하나로
+        // 둔다(EnemyDummy.EffectiveMagicMultiplier/AegrBaseLevel 참고) — 원작도 마스터
+        // 함수에서 딱 한 번 레인별로 건 뒤 게임 내내 안 바뀐다. 🔴 2026-09-11 정정(PM 리뷰):
+        // 배율(CurrentData.magicMultiplier)을 곱하던 걸 레벨 오프셋으로 바꿨다 — 위 Awake
+        // 주석과 EnemyDummy.DifficultyAegrLevelOffset 참고.
+        EnemyDummy.DifficultyAegrLevelOffset = CurrentData.aegrLevelOffset;
 
         Debug.Log($"난이도 확정: {mode.KoreanName()}");
     }

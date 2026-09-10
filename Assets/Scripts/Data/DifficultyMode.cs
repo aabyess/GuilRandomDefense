@@ -53,10 +53,17 @@ public readonly struct DifficultyModeData
     // R00B/N/K/L/M, PM 확인).
     public readonly int bossPercent;
 
-    // Aegr(마법 피해 배율). EnemyData.magicArmorMultiplier가 이미 "난이도 기본레벨 16"
-    // (=1.00) 가정으로 전부 기본값 1f라, 이 값을 그대로 곱하면 지옥·신(레벨11=0.95)·
-    // 악몽(레벨6=0.90)까지 정확히 재현된다(EnemyDummy.AegrBaseLevel 역산식과 일치 확인).
+    // Aegr(마법 피해 배율) — 표 기록용(사람이 읽는 참고값). 🔴 2026-09-11 정정(PM 리뷰):
+    // 실제 적용은 이 값을 곱하는 게 아니라 아래 aegrLevelOffset(레벨 오프셋)으로 한다.
+    // 원작은 난이도가 Aegr **기본 레벨**을 정하고(16/11/6) 스킬 스택은 그 위에 등차로
+    // 더해지다 레벨31에서 꺾인다 — 배율을 통째로 곱하면 스택이 있을 때 원작과 어긋난다
+    // (EnemyDummy.EffectiveMagicMultiplier 주석 참고).
     public readonly float magicMultiplier;
+
+    // Aegr 레벨 오프셋 — 난이도 기본레벨(16/11/6)을 자산 역산 레벨(16, magicArmorMultiplier=1f
+    // 기준) 대비 얼마나 내리는지. 쉬움·보통·어려움 0(레벨16 그대로) · 지옥·신 −5(레벨11) ·
+    // 악몽 −10(레벨6). EnemyDummy.AegrBaseLevel이 이 오프셋을 더해 최종 기본 레벨을 낸다.
+    public readonly int aegrLevelOffset;
 
     // 어려움에서만 사이드보스(62/66/71)가 제외된다(원작 조건 정확히 Mode!=어려움 하나).
     public readonly bool sideBossExcluded;
@@ -70,7 +77,7 @@ public readonly struct DifficultyModeData
 
     public DifficultyModeData(int totalRounds, int mobCommonPercent,
         int band15to29Percent, int band31to49Percent, int band51to59Percent, int band61to75Percent,
-        int bossPercent, float magicMultiplier, bool sideBossExcluded, bool isNightmare,
+        int bossPercent, float magicMultiplier, int aegrLevelOffset, bool sideBossExcluded, bool isNightmare,
         int round41UnitCountLimit)
     {
         this.totalRounds = totalRounds;
@@ -81,6 +88,7 @@ public readonly struct DifficultyModeData
         this.band61to75Percent = band61to75Percent;
         this.bossPercent = bossPercent;
         this.magicMultiplier = magicMultiplier;
+        this.aegrLevelOffset = aegrLevelOffset;
         this.sideBossExcluded = sideBossExcluded;
         this.isNightmare = isNightmare;
         this.round41UnitCountLimit = round41UnitCountLimit;
@@ -100,18 +108,18 @@ public static class DifficultyTable
     //   41라운드 유닛수 한계: 지옥60·신55·악몽50(나머지는 안 바뀜=0)
     static readonly DifficultyModeData[] Table =
     {
-        // Easy
-        new DifficultyModeData(50, 0, 0, 0, 0, 0, -15, 1.00f, false, false, 0),
-        // Normal
-        new DifficultyModeData(60, 10, 0, 0, 0, 0, 0, 1.00f, false, false, 0),
-        // Hard
-        new DifficultyModeData(75, 50, 27, 192, 200, 181, 200, 1.00f, true, false, 0),
-        // Hell
-        new DifficultyModeData(75, 100, 54, 480, 500, 586, 450, 0.95f, false, false, 60),
-        // God
-        new DifficultyModeData(75, 140, 81, 576, 700, 667, 725, 0.95f, false, false, 55),
-        // Nightmare
-        new DifficultyModeData(75, 150, 108, 576, 800, 748, 725, 0.90f, false, true, 50),
+        // Easy      aegrLevelOffset 0(레벨16)
+        new DifficultyModeData(50, 0, 0, 0, 0, 0, -15, 1.00f, 0, false, false, 0),
+        // Normal    aegrLevelOffset 0(레벨16)
+        new DifficultyModeData(60, 10, 0, 0, 0, 0, 0, 1.00f, 0, false, false, 0),
+        // Hard      aegrLevelOffset 0(레벨16)
+        new DifficultyModeData(75, 50, 27, 192, 200, 181, 200, 1.00f, 0, true, false, 0),
+        // Hell      aegrLevelOffset -5(레벨11)
+        new DifficultyModeData(75, 100, 54, 480, 500, 586, 450, 0.95f, -5, false, false, 60),
+        // God       aegrLevelOffset -5(레벨11)
+        new DifficultyModeData(75, 140, 81, 576, 700, 667, 725, 0.95f, -5, false, false, 55),
+        // Nightmare aegrLevelOffset -10(레벨6)
+        new DifficultyModeData(75, 150, 108, 576, 800, 748, 725, 0.90f, -10, false, true, 50),
     };
 
     public static DifficultyModeData Get(DifficultyMode mode) => Table[(int)mode];

@@ -512,9 +512,14 @@ public class EnemyDummy : MonoBehaviour
     const int AegrCapLevel = 45;         // alev 최대 레벨(스택 누적 자체의 상한, 꺾임 이후는 값이 안 바뀜)
     int aegrStackLevels;   // 난이도 기본 레벨 위에 스킬이 추가로 올린 레벨(스택)만 센다
 
-    // data.magicArmorMultiplier(Def5)에서 난이도 기본 레벨을 역산한다 — 0.85+(L-1)*0.01의 역함수.
+    // data.magicArmorMultiplier(Def5)에서 자산 기준 레벨(16, 모든 적 공통 1f)을 역산한 뒤
+    // 난이도 오프셋을 더한다 — 0.85+(L-1)*0.01의 역함수 + DifficultyAegrLevelOffset.
+    // 🔴 2026-09-11 정정(PM 리뷰): 예전엔 이 레벨에 배율을 곱해 최종값을 냈는데, 원작은
+    // 난이도가 "레벨"을 정하고(16/11/6) 스킬 스택은 그 레벨 위에 등차로 얹힌다 — 배율을
+    // 곱하면 스택이 있을 때 원작과 어긋난다(지옥에서 스택 15+면 곱셈 1.0925 vs 원작 1.15).
     // 난이도 기본 레벨(6/11/16)은 전부 꺾임(31) 안쪽이라 이 역산은 그대로 유효하다.
-    int AegrBaseLevel => Mathf.RoundToInt(1f + ((data != null ? data.magicArmorMultiplier : 1f) - 0.85f) / AegrLevelStep);
+    int AegrBaseLevel => Mathf.RoundToInt(1f + ((data != null ? data.magicArmorMultiplier : 1f) - 0.85f) / AegrLevelStep)
+        + DifficultyAegrLevelOffset;
 
     /// <summary>원작 Aegr 스택 — 스킬이 이 적의 Aegr 레벨을 N만큼 올릴 때 부른다. 스택 누적
     /// 자체의 상한(45)은 "난이도 기본 레벨 + 스택" 총합 기준이라, 기본 레벨을 역산해 정확히
@@ -596,25 +601,30 @@ public class EnemyDummy : MonoBehaviour
     // 마방깍 누적. 마법 방어는 배율이라, 깎으면 배율이 **올라간다**(피해를 더 받는다).
     float magicArmorShred;
 
-    // 난이도별 Aegr 최종 배율(2026-09-11, PM 지시, DifficultyMode.cs 참고) — 쉬움·보통·어려움
-    // 1.00·지옥·신 0.95·악몽 0.90. data.magicArmorMultiplier가 모든 적 에셋에서 이미 기본값
-    // 1f(=난이도 기본레벨 16 가정)라, 여기에 이 배율을 곱하는 것만으로 지옥·신(레벨11=0.95)·
-    // 악몽(레벨6=0.90)까지 정확히 재현된다 — AegrBaseLevel 역산식은 그대로 두고 건드리지
-    // 않는다(스킬이 거는 스택 계산은 난이도와 무관한 별개 축).
-    // DifficultyManager.SelectMode가 모드 확정 시 한 번만 설정한다. 선택 전(기본 1f)에는
+    // 난이도별 Aegr 레벨 오프셋(2026-09-11, PM 지시, DifficultyMode.cs 참고) — 쉬움·보통·어려움
+    // 0(레벨16 그대로)·지옥·신 −5(레벨11)·악몽 −10(레벨6).
+    // 🔴 2026-09-11 정정(PM 리뷰): 처음엔 이 자리가 배율(1.00/0.95/0.90)이었다 — 원작은
+    // 난이도가 Aegr **레벨**을 정하고 스킬 스택이 그 위에 등차로 얹히다 레벨31에서 꺾이는
+    // 구조라, 배율을 곱하면 꺾임 여유·AddAegrStack 상한이 전부 틀어진다(레벨16 기준으로
+    // 잘려서, 지옥이면 실제 레벨11 기준보다 5칸 적게 잘린다). 레벨 오프셋으로 두면
+    // AegrBaseLevel 하나만 바뀌고 꺾임 여유·상한 계산(둘 다 AegrBaseLevel 참조)이 자동으로
+    // 맞는다.
+    // DifficultyManager.SelectMode가 모드 확정 시 한 번만 설정하고, Awake에서 0으로 되돌린다
+    // (정적 값이라 씬 재시작 사이에 이전 판 값이 남는 것을 막는다). 선택 전(기본 0)에는
     // 기존과 동작이 완전히 같다(회귀 0).
-    public static float DifficultyMagicMultiplier = 1f;
+    public static int DifficultyAegrLevelOffset = 0;
 
     /// <summary>마법(AP) 피해에 곱할 배율. 1.0이 감소 없음, 1.0 초과면 더 받는다.
     /// 2026-09-06: 원작 Aegr 스택(aegrStackLevels)을 Def5에 가산하고, AIsr(원작에서 Aegr와
     /// 곱인 별개 축)을 곱했다 — 둘 다 스택 0이면 각각 무변화·배율 1.0이라 기존 값과
     /// 정확히 같다(아래 EffectiveMagicDamageAmplifier 참고). Aegr 스택은 꺾임레벨(31)에서
     /// 멈춘다 — AegrBaseLevel부터 31까지 남은 만큼만 반영하고, 그 이상 쌓인 스택은 값에
-    /// 영향이 없다(뿌리 ㊲).</summary>
+    /// 영향이 없다(뿌리 ㊲). 난이도 오프셋은 기본항에 등차 스텝으로 "더한다"(곱하지 않는다) —
+    /// 위 DifficultyAegrLevelOffset 주석 참고.</summary>
     public float EffectiveMagicMultiplier =>
-        Mathf.Max(0f, (data != null ? data.magicArmorMultiplier : 1f) + magicArmorShred
+        Mathf.Max(0f, (data != null ? data.magicArmorMultiplier : 1f) + DifficultyAegrLevelOffset * AegrLevelStep
+            + magicArmorShred
             + Mathf.Min(aegrStackLevels, Mathf.Max(0, AegrKinkLevel - AegrBaseLevel)) * AegrLevelStep)
-            * DifficultyMagicMultiplier
         * EffectiveMagicDamageAmplifier;
 
     /// <summary>마방깍을 건다. 조합표의 `마방깍오라(9%)`가 0.09로 들어온다.</summary>
