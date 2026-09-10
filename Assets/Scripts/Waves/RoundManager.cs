@@ -43,7 +43,23 @@ public class RoundManager : MonoBehaviour
     [SerializeField] float round60Delay = 40f;
     // 씬에는 75가 들어 있다. 기본값이 25로 남아 있으면 새로 만든 씬이 조용히
     // 25라운드짜리가 된다 — 웨이브 에셋은 Wave_Round01~75로 다 있다.
+    // 2026-09-11(PM 지시): 난이도 선택 즉시 DifficultyModeData.totalRounds(쉬움50·보통60·
+    // 나머지75)로 덮어쓴다 — 이 필드는 그때까지의(그리고 DifficultyManager가 없을 때의)
+    // 기본값일 뿐이다.
     [SerializeField] int totalRounds = 75;
+
+    [Header("41라운드 게이트 — [미확인] 원작 스토리11(드레스로사)/12(홀케이크섬) 대응 확정 안 됨")]
+    // 2026-09-11(PM 지시 F) — 지옥은 원작 스토리11, 신·악몽은 스토리12 클리어 여부로 41라운드에
+    // 전멸/유닛수한계변경이 갈린다. 그런데 우리 스토리 13개는 원작과 번호·내용이 무관한 창작
+    // 콘텐츠고(story-numbering-is-ours), Docs/reference/DIFFICULTY_RESEARCH.md가 제안한
+    // "우리 11번째(日本)=원작 스토리11· 우리 12번째(코드잇)=원작 스토리12" 매핑은 그 문서
+    // 자신이 "[제안] — 순서만 맞춘 것이고 원작 근거는 아니다"라고 명시한 미확정 값이다.
+    // 지어낸 매핑으로 전멸시키는 건 안 하는 게 안전하다(PM: "훅만 두고 [미확인] 꼬리표 +
+    // 보고") — 그래서 여기는 "StoryManager.FinishedCount가 이 값 이상이어야 통과"라는 값을
+    // 담는 빈 슬롯만 두고 기본값 0(=검사 비활성, 통과 취급)으로 둔다. 매핑이 확정되면
+    // 사장님/PM이 인스펙터에서 11·12를 채우면 그걸로 끝난다 — 코드 변경이 필요 없다.
+    [SerializeField] int hellRound41ClearGateOrder;      // 지옥 — [미확인], 0=검사 안 함
+    [SerializeField] int godNightmareRound41ClearGateOrder; // 신·악몽 — [미확인], 0=검사 안 함
     // 레인 하나 기준. 전체 합이 아니다. 원작 udg_ModeEnemyInt — 여섯 난이도 전부 70으로
     // 시작한다(Trig_Select_effect_Actions). 2026-09-03 사장님 지시로 100이었다가 2026-09-11
     // 「원작대로 바꾸자」로 70. 씬 값은 MapGenerator.WireRoundRewardWisp가 맵 생성 때 맞춘다.
@@ -97,6 +113,12 @@ public class RoundManager : MonoBehaviour
         return playerId >= 0 && playerId < MaxTrackedLanes ? laneDeathCount[playerId] : 0;
     }
 
+    // 2026-09-11(PM 지시 B) — 원작 InitTrig_Select1/Select_effect: 라운드는 호스트가 난이도를
+    // 고르기 전엔 시작되지 않는다(제한시간·기본값 없음, 무한 대기). DifficultyManager가 없는
+    // 씬(맵 생성 전, 또는 구조를 볼 때 끄고 테스트하는 씬)에서는 예전처럼 즉시 시작한다 —
+    // 회귀 없음.
+    bool roundsStarted;
+
     void Start()
     {
         for (int i = 0; i < MaxTrackedLanes; i++)
@@ -106,13 +128,28 @@ public class RoundManager : MonoBehaviour
         }
 
         currentRound = 1;
-        BeginPreRoundWait(1, firstRoundDelay);
+
+        if (DifficultyManager.Instance == null)
+        {
+            roundsStarted = true;
+            BeginPreRoundWait(1, firstRoundDelay);
+        }
     }
 
     void Update()
     {
         if (!GameAuthority.IsServer) return;
         if (isGameOver) return;
+
+        if (!roundsStarted)
+        {
+            if (DifficultyManager.Instance == null || !DifficultyManager.Instance.IsModeSelected) return;
+
+            totalRounds = DifficultyManager.Instance.CurrentData.totalRounds;
+            roundsStarted = true;
+            BeginPreRoundWait(1, firstRoundDelay);
+            return;
+        }
 
         UpdateDeathCount();
         if (isGameOver) return;
@@ -272,6 +309,12 @@ public class RoundManager : MonoBehaviour
             return;
         }
 
+        // F — 지옥·신·악몽만 41라운드에 게이트가 있다. 전멸 처리됐으면 다음 라운드로 안 넘어간다.
+        if (currentRound == 41 && ApplyRound41DifficultyGate())
+        {
+            return;
+        }
+
         // 다음 라운드가 실제로 시작될 때만 준다 — 마지막 라운드를 넘기지 못하고 위에서
         // 게임이 끝나는 경로로 빠지면 여기까지 안 온다. 1라운드 시작(Start())에서는 이 메서드
         // 자체가 안 불리므로 시작 위습(RewardDistributor.GrantStartingWisps)과도 안 겹친다.
@@ -285,6 +328,42 @@ public class RoundManager : MonoBehaviour
                 laneDeathCount[i] = NewWorldDeathCount;
         }
         BeginPreRoundWait(currentRound, currentRound == 60 ? round60Delay : 0f);
+    }
+
+    // F — 41라운드 지옥/신/악몽 게이트. 통과 못 하면 전멸시키고 true를 돌려준다(호출부가 그
+    // 라운드 진행을 멈춘다). 쉬움·보통·어려움이거나 DifficultyManager가 없으면(맵 생성 전
+    // 등) 항상 false — 이 라운드는 평범하게 지나간다.
+    //
+    // [미확인] — hellRound41ClearGateOrder/godNightmareRound41ClearGateOrder는 기본값 0이라
+    // 클리어 검사 자체가 꺼져 있다(원작 스토리11/12에 대응하는 우리 자산이 확정되지 않아서,
+    // 지어낸 매핑으로 전멸시키지 않는다 — PM 지시). 검사가 꺼져 있어도 유닛수 한계(지옥60·
+    // 신55·악몽50)는 그대로 적용한다 — F의 그 절반은 스토리 매핑과 무관하게 확정된 값이다.
+    bool ApplyRound41DifficultyGate()
+    {
+        if (DifficultyManager.Instance == null || !DifficultyManager.Instance.IsModeSelected) return false;
+
+        DifficultyMode mode = DifficultyManager.Instance.Current;
+        if (mode != DifficultyMode.Hell && mode != DifficultyMode.God && mode != DifficultyMode.Nightmare) return false;
+
+        int gateOrder = mode == DifficultyMode.Hell ? hellRound41ClearGateOrder : godNightmareRound41ClearGateOrder;
+        if (gateOrder > 0 && (StoryManager.Instance == null || StoryManager.Instance.FinishedCount < gateOrder))
+        {
+            Debug.Log($"41라운드 게이트 — {mode.KoreanName()} 모드, 대응 스토리 미클리어(FinishedCount<{gateOrder})로 전멸 처리합니다.");
+            foreach (PlayerContext context in PlayerContext.Occupied)
+            {
+                if (!context.IsDead) HandlePlayerDefeated(context.PlayerId, context);
+            }
+            return true;
+        }
+
+        int newLimit = DifficultyManager.Instance.CurrentData.round41UnitCountLimit;
+        if (newLimit > 0)
+        {
+            enemyCountThreshold = newLimit;
+            Debug.Log($"41라운드 — {mode.KoreanName()} 모드 레인당 유닛수 한계를 {newLimit}로 낮췄습니다.");
+        }
+
+        return false;
     }
 
     // "라운드 하나 지날 때마다" 랜덤위습 N개(사장님 지시, 기본 2개) — RewardDistributor의
