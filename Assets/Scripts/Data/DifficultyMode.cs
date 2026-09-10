@@ -75,10 +75,17 @@ public readonly struct DifficultyModeData
     // 아무것도 안 바뀐다"(쉬움·보통·어려움) — 지옥60·신55·악몽50만 값이 있다.
     public readonly int round41UnitCountLimit;
 
+    // 이동속도(R024, 2단계 B) — 원작 라운드 몹 upgr에만 걸린다(보스·사이드보스·광폭화
+    // 소환 몹은 안 받는다). 기준 umvs 300 대비 배율: 쉬움·보통 1.0·어려움 1.097·
+    // 지옥 1.193·신·악몽 1.29. ⚠️ R39는 HP(R00A 포함)는 전부 면제지만 이동속도는
+    // R024만 별개 upgr이라 R39도 그대로 받는다 — WaveSpawner에서 라운드로 안 가리고
+    // 모드 하나로만 곱한다(DifficultyTable.MoveSpeedMultiplier 참고).
+    public readonly float moveSpeedMultiplier;
+
     public DifficultyModeData(int totalRounds, int mobCommonPercent,
         int band15to29Percent, int band31to49Percent, int band51to59Percent, int band61to75Percent,
         int bossPercent, float magicMultiplier, int aegrLevelOffset, bool sideBossExcluded, bool isNightmare,
-        int round41UnitCountLimit)
+        int round41UnitCountLimit, float moveSpeedMultiplier)
     {
         this.totalRounds = totalRounds;
         this.mobCommonPercent = mobCommonPercent;
@@ -92,6 +99,7 @@ public readonly struct DifficultyModeData
         this.sideBossExcluded = sideBossExcluded;
         this.isNightmare = isNightmare;
         this.round41UnitCountLimit = round41UnitCountLimit;
+        this.moveSpeedMultiplier = moveSpeedMultiplier;
     }
 }
 
@@ -108,18 +116,18 @@ public static class DifficultyTable
     //   41라운드 유닛수 한계: 지옥60·신55·악몽50(나머지는 안 바뀜=0)
     static readonly DifficultyModeData[] Table =
     {
-        // Easy      aegrLevelOffset 0(레벨16)
-        new DifficultyModeData(50, 0, 0, 0, 0, 0, -15, 1.00f, 0, false, false, 0),
-        // Normal    aegrLevelOffset 0(레벨16)
-        new DifficultyModeData(60, 10, 0, 0, 0, 0, 0, 1.00f, 0, false, false, 0),
-        // Hard      aegrLevelOffset 0(레벨16)
-        new DifficultyModeData(75, 50, 27, 192, 200, 181, 200, 1.00f, 0, true, false, 0),
-        // Hell      aegrLevelOffset -5(레벨11)
-        new DifficultyModeData(75, 100, 54, 480, 500, 586, 450, 0.95f, -5, false, false, 60),
-        // God       aegrLevelOffset -5(레벨11)
-        new DifficultyModeData(75, 140, 81, 576, 700, 667, 725, 0.95f, -5, false, false, 55),
-        // Nightmare aegrLevelOffset -10(레벨6)
-        new DifficultyModeData(75, 150, 108, 576, 800, 748, 725, 0.90f, -10, false, true, 50),
+        // Easy      aegrLevelOffset 0(레벨16) · 이동속도 1.0
+        new DifficultyModeData(50, 0, 0, 0, 0, 0, -15, 1.00f, 0, false, false, 0, 1.00f),
+        // Normal    aegrLevelOffset 0(레벨16) · 이동속도 1.0
+        new DifficultyModeData(60, 10, 0, 0, 0, 0, 0, 1.00f, 0, false, false, 0, 1.00f),
+        // Hard      aegrLevelOffset 0(레벨16) · 이동속도 1.097
+        new DifficultyModeData(75, 50, 27, 192, 200, 181, 200, 1.00f, 0, true, false, 0, 1.097f),
+        // Hell      aegrLevelOffset -5(레벨11) · 이동속도 1.193
+        new DifficultyModeData(75, 100, 54, 480, 500, 586, 450, 0.95f, -5, false, false, 60, 1.193f),
+        // God       aegrLevelOffset -5(레벨11) · 이동속도 1.29
+        new DifficultyModeData(75, 140, 81, 576, 700, 667, 725, 0.95f, -5, false, false, 55, 1.29f),
+        // Nightmare aegrLevelOffset -10(레벨6) · 이동속도 1.29
+        new DifficultyModeData(75, 150, 108, 576, 800, 748, 725, 0.90f, -10, false, true, 50, 1.29f),
     };
 
     public static DifficultyModeData Get(DifficultyMode mode) => Table[(int)mode];
@@ -148,4 +156,8 @@ public static class DifficultyTable
 
     // 보스 최종 HP 배율. R00A/구간가산 전부 안 타고 이 값 하나만 적용된다.
     public static float BossHpMultiplier(DifficultyMode mode) => 1f + Get(mode).bossPercent / 100f;
+
+    // 일반 라운드 몹 이동속도 배율(R024, 2단계 B) — 라운드와 무관하게 모드 하나로만
+    // 정해진다(R39 예외 없음 — HP의 R00A 면제와는 별개 축).
+    public static float MoveSpeedMultiplier(DifficultyMode mode) => Get(mode).moveSpeedMultiplier;
 }

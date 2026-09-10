@@ -24,6 +24,14 @@ public class WaveSpawner : MonoBehaviour
     // 아무도 안 구독하면(null) 항상 1f — 기존 동작과 완전히 같다(회귀 0).
     public System.Func<int, float> BossStartHpMultiplierProvider;
 
+    // 보스 타임리밋 패배(2단계 A, 원작 Trig_Enemy_Boss_create/sinsekai) — 일반 스폰
+    // 목록(spawnList)을 타는 라운드보스가 스폰될 때만 쏜다(laneIndex, roundNumber, 그
+    // EnemyDummy). SpawnSideBoss(사이드보스 62/66/71, 광폭화 소환 몹)는 이 이벤트를
+    // 아예 안 거쳐서 자동으로 제외된다 — 사이드보스는 시간이 지나도 패배가 아니라는
+    // PM 지시와 정확히 일치한다. RoundManager가 구독해 라운드별 제한시간(구세계
+    // 75.30초/신세계 34.80초)을 잰다.
+    public event System.Action<int, int, EnemyDummy> OnRoundBossSpawned;
+
     // SpawnSideBoss가 일반 몹(광폭화 소환)을 스폰할 때 원작 R00A 구간 보너스를 적용하려면
     // 그 라운드 번호가 필요하다(2026-09-11, PM 리뷰 정정). GameHud 등과 같은 지연 조회 관례.
     RoundManager roundManager;
@@ -103,7 +111,14 @@ public class WaveSpawner : MonoBehaviour
                         : DifficultyTable.MobHpMultiplier(DifficultyManager.Instance.Current, wave.roundNumber))
                     : 1f;
 
-                SpawnEnemyInternal(entry.enemyData, laneIndex, lanePath, sideBossSettlement * difficultyMultiplier);
+                GameObject spawned = SpawnEnemyInternal(entry.enemyData, laneIndex, lanePath, sideBossSettlement * difficultyMultiplier);
+
+                // 보스 타임리밋 패배(2단계 A) — 일반 스폰 목록을 타는 라운드보스만 쏜다.
+                if (entry.enemyData.isBoss && spawned != null && spawned.TryGetComponent(out EnemyDummy bossDummy))
+                {
+                    OnRoundBossSpawned?.Invoke(laneIndex, wave.roundNumber, bossDummy);
+                }
+
                 OnEnemySpawned?.Invoke(laneIndex, spawnCounter);
                 spawnCounter++;
                 yield return new WaitForSeconds(entry.spawnInterval);
@@ -118,7 +133,14 @@ public class WaveSpawner : MonoBehaviour
         if (instance.TryGetComponent(out WaypointMover mover))
         {
             mover.SetPath(lanePath);
-            mover.SetMoveSpeed(enemyData.moveSpeed);
+
+            // 이동속도(R024, 2단계 B) — 원작 라운드 몹 upgr에만 걸린다. 보스(라운드보스·
+            // 신세계보스·사이드보스)와 광폭화 소환 몹은 안 받는다 — 여기 SpawnEnemyInternal은
+            // 셋 다 거치는 공용 경로라 !enemyData.isBoss로 가른다(A11S 고정 레벨과 같은 게이트).
+            float moveSpeedMultiplier = !enemyData.isBoss && DifficultyManager.Instance != null && DifficultyManager.Instance.IsModeSelected
+                ? DifficultyTable.MoveSpeedMultiplier(DifficultyManager.Instance.Current)
+                : 1f;
+            mover.SetMoveSpeed(enemyData.moveSpeed * moveSpeedMultiplier);
         }
 
         if (instance.TryGetComponent(out EnemyDummy dummy))
@@ -160,8 +182,8 @@ public class WaveSpawner : MonoBehaviour
         // SpawnBerserkMob(§⑦ 광폭화 소환)도 같은 함수로 "그 라운드의 잡몹"(berserkMobData,
         // isBoss=false)을 스폰한다. 원작 Trig_sin_boss_skill1~4는 그 잡몹을 udg_Round_UnitType로
         // 만들어 R00A(구간 보너스 포함)+R00W를 그대로 받는다 — 보스 전용표(BossHpMultiplier)를
-        // 무조건 곱하면 지옥·신·악몽에서 그 잡몹이 실제보다 과체력이 된다(지옥 ×5.5 vs 원작
-        // ×7.86 등, isBoss로 안 가르면 반대 방향 사고). 신세계 사이드보스는 isBoss=1이라
+        // 무조건 곱하면 지옥·신·악몽에서 그 잡몹이 실제보다 저체력이 된다(지옥 ×5.5 vs 원작
+        // ×7.86 등, isBoss로 안 가르면 원작보다 약하게 나가는 사고). 신세계 사이드보스는 isBoss=1이라
         // 원래 의도대로 BossHpMultiplier를 그대로 받는다(PM 지시 C — R00A 안 받고 보스 전용
         // 표만 적용). §⑧ 정산 배율은 SideBossManager가 이 보스 자체엔 안 건다(다음
         // 라운드보스한테만 건다, ProvideBossStartHpMultiplier 참고) — 여기선 난이도 배율만
