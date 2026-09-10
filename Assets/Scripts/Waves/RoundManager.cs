@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -60,6 +61,14 @@ public class RoundManager : MonoBehaviour
     // 사장님/PM이 인스펙터에서 11·12를 채우면 그걸로 끝난다 — 코드 변경이 필요 없다.
     [SerializeField] int hellRound41ClearGateOrder;      // 지옥 — [미확인], 0=검사 안 함
     [SerializeField] int godNightmareRound41ClearGateOrder; // 신·악몽 — [미확인], 0=검사 안 함
+
+    // 보스 타임리밋 패배(2단계 A, 원작 Trig_Enemy_Boss_create/sinsekai의 SleepForStageAdd).
+    // 구세계 보스(R10~60)는 스폰 후 75.30초, 신세계 보스(R65/70/75)는 34.80초 지나도 살아
+    // 있으면 그 보스가 선 레인의 플레이어가 패배한다. 쉬움 모드는 구세계 보스만 면제된다
+    // (원작 문구 "쉬움 모드는 보스를 잡지 않아도 패배하지 않습니다") — 신세계는 쉬움이
+    // 50라운드에서 끝나 애초에 도달하지 못하지만, PM 지시대로 모드 예외 없이 균일하게 둔다.
+    [SerializeField] float oldWorldBossTimeLimit = 75.30f;
+    [SerializeField] float newWorldBossTimeLimit = 34.80f;
     // 레인 하나 기준. 전체 합이 아니다. 원작 udg_ModeEnemyInt — 여섯 난이도 전부 70으로
     // 시작한다(Trig_Select_effect_Actions). 2026-09-03 사장님 지시로 100이었다가 2026-09-11
     // 「원작대로 바꾸자」로 70. 씬 값은 MapGenerator.WireRoundRewardWisp가 맵 생성 때 맞춘다.
@@ -134,6 +143,9 @@ public class RoundManager : MonoBehaviour
             roundsStarted = true;
             BeginPreRoundWait(1, firstRoundDelay);
         }
+
+        // 보스 타임리밋 패배(2단계 A) — waveSpawner가 라운드보스를 스폰할 때마다 이 알림을 받는다.
+        if (waveSpawner != null) waveSpawner.OnRoundBossSpawned += OnRoundBossSpawned;
     }
 
     void Update()
@@ -262,6 +274,44 @@ public class RoundManager : MonoBehaviour
             if (enemy != null && enemy.LaneIndex == playerId) Destroy(enemy.gameObject);
 
         CheckAllDefeated();
+    }
+
+    // 보스 타임리밋 패배(2단계 A) — 원작 Trig_Enemy_Boss_create(구세계)/Trig_Enemy_Boss_sinsekai
+    // (신세계)의 SleepForStageAdd 뒤 생존 판정. WaveSpawner.OnRoundBossSpawned는 일반
+    // 스폰목록을 타는 라운드보스가 뜰 때만 쏜다(사이드보스 62/66/71·광폭화 소환 몹은
+    // 이 이벤트 자체가 안 온다 — WaveSpawner 쪽 게이트 참고).
+    void OnRoundBossSpawned(int laneIndex, int roundNumber, EnemyDummy boss)
+    {
+        StartCoroutine(BossTimeoutRoutine(laneIndex, roundNumber, boss));
+    }
+
+    IEnumerator BossTimeoutRoutine(int laneIndex, int roundNumber, EnemyDummy boss)
+    {
+        bool isNewWorldBoss = roundNumber >= 65; // R65/70/75. 구세계는 R10/20/30/40/50/60.
+        float timeLimit = isNewWorldBoss ? newWorldBossTimeLimit : oldWorldBossTimeLimit;
+
+        yield return new WaitForSeconds(timeLimit);
+
+        if (boss == null) yield break; // 이미 잡았다 — 유니티 오버로드 null이라 파괴된 개체를 정확히 건진다.
+
+        PlayerContext context = PlayerContext.Get(laneIndex);
+        if (context == null || !context.IsOccupied || context.IsDead) yield break;
+
+        // 쉬움은 구세계 보스만 면제(원작 문구, TRIGSTR 미확인 — PM이 준 원문 그대로 인용).
+        // 신세계는 PM 지시대로 모드 예외 없이 균일 적용(쉬움이 50R에서 끝나 실질적으로
+        // 도달 못 하는 것과는 별개로, 코드에 특례를 안 둔다).
+        bool isEasy = DifficultyManager.Instance != null && DifficultyManager.Instance.IsModeSelected
+            && DifficultyManager.Instance.Current == DifficultyMode.Easy;
+
+        if (!isNewWorldBoss && isEasy)
+        {
+            PlayerNotification.Show(laneIndex, "쉬움 모드는 보스를 잡지 않아도 패배하지 않습니다.");
+            yield break;
+        }
+
+        // 원문 TRIGSTR_10804.
+        PlayerNotification.Show(laneIndex, "제한시간안에 보스를 잡지 못해 패배하였습니다.");
+        HandlePlayerDefeated(laneIndex, context);
     }
 
     void CheckAllDefeated()
