@@ -596,6 +596,15 @@ public class EnemyDummy : MonoBehaviour
     // 마방깍 누적. 마법 방어는 배율이라, 깎으면 배율이 **올라간다**(피해를 더 받는다).
     float magicArmorShred;
 
+    // 난이도별 Aegr 최종 배율(2026-09-11, PM 지시, DifficultyMode.cs 참고) — 쉬움·보통·어려움
+    // 1.00·지옥·신 0.95·악몽 0.90. data.magicArmorMultiplier가 모든 적 에셋에서 이미 기본값
+    // 1f(=난이도 기본레벨 16 가정)라, 여기에 이 배율을 곱하는 것만으로 지옥·신(레벨11=0.95)·
+    // 악몽(레벨6=0.90)까지 정확히 재현된다 — AegrBaseLevel 역산식은 그대로 두고 건드리지
+    // 않는다(스킬이 거는 스택 계산은 난이도와 무관한 별개 축).
+    // DifficultyManager.SelectMode가 모드 확정 시 한 번만 설정한다. 선택 전(기본 1f)에는
+    // 기존과 동작이 완전히 같다(회귀 0).
+    public static float DifficultyMagicMultiplier = 1f;
+
     /// <summary>마법(AP) 피해에 곱할 배율. 1.0이 감소 없음, 1.0 초과면 더 받는다.
     /// 2026-09-06: 원작 Aegr 스택(aegrStackLevels)을 Def5에 가산하고, AIsr(원작에서 Aegr와
     /// 곱인 별개 축)을 곱했다 — 둘 다 스택 0이면 각각 무변화·배율 1.0이라 기존 값과
@@ -605,6 +614,7 @@ public class EnemyDummy : MonoBehaviour
     public float EffectiveMagicMultiplier =>
         Mathf.Max(0f, (data != null ? data.magicArmorMultiplier : 1f) + magicArmorShred
             + Mathf.Min(aegrStackLevels, Mathf.Max(0, AegrKinkLevel - AegrBaseLevel)) * AegrLevelStep)
+            * DifficultyMagicMultiplier
         * EffectiveMagicDamageAmplifier;
 
     /// <summary>마방깍을 건다. 조합표의 `마방깍오라(9%)`가 0.09로 들어온다.</summary>
