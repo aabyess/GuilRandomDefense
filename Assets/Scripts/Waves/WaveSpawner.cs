@@ -83,10 +83,20 @@ public class WaveSpawner : MonoBehaviour
             {
                 // §⑧ 정산 — 보스만 물어본다(일반 몹에 물으면 뜻이 없다, 공급자도 어차피
                 // 보스 라운드에만 1이 아닌 값을 준다).
-                float multiplier = entry.enemyData.isBoss
+                float sideBossSettlement = entry.enemyData.isBoss
                     ? (BossStartHpMultiplierProvider?.Invoke(laneIndex) ?? 1f)
                     : 1f;
-                SpawnEnemyInternal(entry.enemyData, laneIndex, lanePath, multiplier);
+
+                // 난이도 체력 배율(2026-09-11, PM 지시) — 사이드보스 정산 배율과는 완전히
+                // 다른 축이라 곱해서 합친다(둘 다 "시작 체력에 곱하는 배수"라 startHpMultiplier
+                // 하나로 합쳐 넘길 수 있다, DifficultyMode.cs 참고).
+                float difficultyMultiplier = DifficultyManager.Instance != null && DifficultyManager.Instance.IsModeSelected
+                    ? (entry.enemyData.isBoss
+                        ? DifficultyTable.BossHpMultiplier(DifficultyManager.Instance.Current)
+                        : DifficultyTable.MobHpMultiplier(DifficultyManager.Instance.Current, wave.roundNumber))
+                    : 1f;
+
+                SpawnEnemyInternal(entry.enemyData, laneIndex, lanePath, sideBossSettlement * difficultyMultiplier);
                 OnEnemySpawned?.Invoke(laneIndex, spawnCounter);
                 spawnCounter++;
                 yield return new WaitForSeconds(entry.spawnInterval);
@@ -138,7 +148,15 @@ public class WaveSpawner : MonoBehaviour
     {
         WaypointPath lanePath = GetLanePath(laneIndex);
         if (enemyData == null || enemyData.prefab == null || lanePath == null) return null;
-        return SpawnEnemyInternal(enemyData, laneIndex, lanePath);
+
+        // 신세계 사이드보스도 "보스"다(PM 지시 C — R00A 안 받고 보스 전용 표만 적용).
+        // §⑧ 정산 배율은 SideBossManager가 이 보스 자체엔 안 건다(다음 라운드보스한테만
+        // 건다, ProvideBossStartHpMultiplier 참고) — 여기선 난이도 배율만 곱하면 된다.
+        float difficultyMultiplier = DifficultyManager.Instance != null && DifficultyManager.Instance.IsModeSelected
+            ? DifficultyTable.BossHpMultiplier(DifficultyManager.Instance.Current)
+            : 1f;
+
+        return SpawnEnemyInternal(enemyData, laneIndex, lanePath, difficultyMultiplier);
     }
 
     // §⑦ 광폭화 소환(2026-09-06) — SideBossManager/SideBossEncounter가 "그 라운드의 잡몹
