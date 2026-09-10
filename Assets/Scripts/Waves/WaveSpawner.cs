@@ -24,6 +24,13 @@ public class WaveSpawner : MonoBehaviour
     // 아무도 안 구독하면(null) 항상 1f — 기존 동작과 완전히 같다(회귀 0).
     public System.Func<int, float> BossStartHpMultiplierProvider;
 
+    // SpawnSideBoss가 일반 몹(광폭화 소환)을 스폰할 때 원작 R00A 구간 보너스를 적용하려면
+    // 그 라운드 번호가 필요하다(2026-09-11, PM 리뷰 정정). GameHud 등과 같은 지연 조회 관례.
+    RoundManager roundManager;
+    RoundManager RoundManagerRef => roundManager != null
+        ? roundManager
+        : roundManager = FindFirstObjectByType<RoundManager>();
+
     public void SpawnRound(WaveData wave)
     {
         if (!GameAuthority.IsServer) return;
@@ -149,12 +156,27 @@ public class WaveSpawner : MonoBehaviour
         WaypointPath lanePath = GetLanePath(laneIndex);
         if (enemyData == null || enemyData.prefab == null || lanePath == null) return null;
 
-        // 신세계 사이드보스도 "보스"다(PM 지시 C — R00A 안 받고 보스 전용 표만 적용).
-        // §⑧ 정산 배율은 SideBossManager가 이 보스 자체엔 안 건다(다음 라운드보스한테만
-        // 건다, ProvideBossStartHpMultiplier 참고) — 여기선 난이도 배율만 곱하면 된다.
-        float difficultyMultiplier = DifficultyManager.Instance != null && DifficultyManager.Instance.IsModeSelected
-            ? DifficultyTable.BossHpMultiplier(DifficultyManager.Instance.Current)
-            : 1f;
+        // 🔴 2026-09-11 정정(PM 리뷰) — 이 함수는 사이드보스 전용이 아니다. SideBossEncounter.
+        // SpawnBerserkMob(§⑦ 광폭화 소환)도 같은 함수로 "그 라운드의 잡몹"(berserkMobData,
+        // isBoss=false)을 스폰한다. 원작 Trig_sin_boss_skill1~4는 그 잡몹을 udg_Round_UnitType로
+        // 만들어 R00A(구간 보너스 포함)+R00W를 그대로 받는다 — 보스 전용표(BossHpMultiplier)를
+        // 무조건 곱하면 지옥·신·악몽에서 그 잡몹이 실제보다 과체력이 된다(지옥 ×5.5 vs 원작
+        // ×7.86 등, isBoss로 안 가르면 반대 방향 사고). 신세계 사이드보스는 isBoss=1이라
+        // 원래 의도대로 BossHpMultiplier를 그대로 받는다(PM 지시 C — R00A 안 받고 보스 전용
+        // 표만 적용). §⑧ 정산 배율은 SideBossManager가 이 보스 자체엔 안 건다(다음
+        // 라운드보스한테만 건다, ProvideBossStartHpMultiplier 참고) — 여기선 난이도 배율만
+        // 곱하면 된다.
+        float difficultyMultiplier;
+        if (DifficultyManager.Instance != null && DifficultyManager.Instance.IsModeSelected)
+        {
+            difficultyMultiplier = enemyData.isBoss
+                ? DifficultyTable.BossHpMultiplier(DifficultyManager.Instance.Current)
+                : DifficultyTable.MobHpMultiplier(DifficultyManager.Instance.Current, RoundManagerRef != null ? RoundManagerRef.CurrentRound : 0);
+        }
+        else
+        {
+            difficultyMultiplier = 1f;
+        }
 
         return SpawnEnemyInternal(enemyData, laneIndex, lanePath, difficultyMultiplier);
     }
