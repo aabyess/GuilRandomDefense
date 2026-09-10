@@ -21,15 +21,26 @@ HERO_ROUNDS = {68, 69, 74}                            # 원작 레벨 68·69·74
 SKIP_ROUNDS = {66, 71, 73}
 
 
+# ⚠️ 2026-09-11 추가 — 65/70/75는 이제 라운드 하나에 `Enemy_R{r}_`로 시작하는 파일이
+# 둘이다(보스 + 라인몹, generate_waves.py 참고). 아래 정규식은 라운드 번호만 보고 갈라서,
+# 손대지 않으면 라인몹 파일도 BOSS_ROUNDS에 걸려 large로 잘못 찍힌다 — 실제로는 이
+# 스크립트가 이미 armorType이 있는 파일을 건너뛰므로(if 'armorType:' in text) 지금
+# 당장은 안 걸리지만, 나중에 그 줄이 지워진 채로 다시 돌리는 사고를 막기 위해 이름
+# 꼬리로 먼저 가른다.
+LINE_MOB_ARMOR_TYPE = {65: NORMAL, 70: NORMAL, 75: HERO}   # 원작 udty(o01S·o02G·o02H) 그대로
+
+
 def armor_type_for(name):
     if name == 'Enemy_Seal':                       # 원작 「1단계 크립 물범」 — 이름까지 같다
         return NORMAL, '크립 (원작 1단계 크립 물범)'
     if name.startswith('Enemy_Story'):             # 원작 스토리 섬 13종이 전부 fort
         return FORT, '스토리 섬 (원작 13/13 fort)'
-    m = re.match(r'^Enemy_R(\d\d)_', name)
+    m = re.match(r'^Enemy_R(\d\d)_(.+)$', name)
     if not m:
         return None, '알 수 없는 이름 꼴'
     r = int(m.group(1))
+    if m.group(2) == '라인몹' and r in LINE_MOB_ARMOR_TYPE:
+        return LINE_MOB_ARMOR_TYPE[r], f'신세계 라인몹 (원작 R{r} udty 직접 확인)'
     if r in SKIP_ROUNDS:
         return None, '원작이 방어 타입을 안 적었다 (베이스 상속) — 비워 둔다'
     if r in BOSS_ROUNDS:
