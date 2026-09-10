@@ -2947,11 +2947,16 @@ public static class MapGenerator
         return "\n스토리 7(임펠다운 대응) 보상에 고대의 배를 연결했습니다.";
     }
 
-    // 레인 하나에 이만큼 쌓이면 카운트다운이 돈다(사장님 지시, 2026-09-03: 25→100).
+    // 레인 하나에 이만큼 쌓이면 데스카운트가 깎인다. 원작 udg_ModeEnemyInt=70(여섯 난이도 공통).
+    // 2026-09-03 사장님 지시로 100이었다가 2026-09-11 「원작대로 바꾸자」로 70.
     // RoundManager는 "Map" 루트 밖의 독립 오브젝트라(MapGenerator가 새로 안 만들고 찾기만
     // 한다) 맵을 다시 만들어도 이 값이 안 사라진다 — 씬 파일을 직접 안 건드리고 여기서만
     // 관리한다.
-    const int EnemyCountThreshold = 100;
+    const int EnemyCountThreshold = 70;
+    // 원작 데스카운트 9회 · 0.65초 틱. 씬에 옛 값(10회 · 1초)이 직렬화돼 있어 코드 기본값만
+    // 고치면 안 먹는다(유니티는 씬을 이긴다) — 임계치와 같이 여기서 덮어쓴다.
+    const int StartingDeathCount = 9;
+    const float DeathCountTickInterval = 0.65f;
 
     // 라운드 길이도 여기서 맞춘다 — 원작값(war3map.j 확인, 2026-09-04):
     // 일반 40.65초 / 보스 75.4초 / 신세계(61+) 38.67초. 우리는 셋 다 28초였다.
@@ -2972,6 +2977,8 @@ public static class MapGenerator
         so.FindProperty("roundRewardWisp").objectReferenceValue = wisp;
         so.FindProperty("roundRewardCount").intValue = RoundRewardWispCount;
         so.FindProperty("enemyCountThreshold").intValue = EnemyCountThreshold;
+        so.FindProperty("startingDeathCount").intValue = StartingDeathCount;
+        so.FindProperty("deathCountTickInterval").floatValue = DeathCountTickInterval;
 
         // 28(옛 값)일 때만 덮어쓴다 — 사람이 일부러 바꿔둔 값은 건드리지 않는다.
         SerializedProperty duration = so.FindProperty("roundDuration");
@@ -2981,7 +2988,7 @@ public static class MapGenerator
         so.ApplyModifiedProperties();
 
         return $"\n라운드 클리어 보상을 {wisp.wispName} {RoundRewardWispCount}개로, " +
-               $"패배 임계치를 레인당 {EnemyCountThreshold}마리로 맞췄습니다." +
+               $"패배 임계치를 레인당 {EnemyCountThreshold}마리 · 데스카운트 {StartingDeathCount}회({DeathCountTickInterval}초 틱, 누적)로 맞췄습니다." +
                (durationFixed ? $"\n라운드 길이를 원작값 {NormalRoundDuration}초로 고쳤습니다(옛 값 28초)." : "");
     }
 

@@ -44,13 +44,17 @@ public class RoundManager : MonoBehaviour
     // 씬에는 75가 들어 있다. 기본값이 25로 남아 있으면 새로 만든 씬이 조용히
     // 25라운드짜리가 된다 — 웨이브 에셋은 Wave_Round01~75로 다 있다.
     [SerializeField] int totalRounds = 75;
-    // 레인 하나 기준. 전체 합이 아니다. 씬의 실제 값은 MapGenerator.WireRoundRewardWisp가
-    // 맵 생성 때마다 100으로 맞춘다(사장님 지시, 2026-09-03: 25→100) — 여기 기본값도
-    // 새로 만들어지는 인스턴스가 헷갈리지 않게 같이 맞춰둔다.
-    [SerializeField] int enemyCountThreshold = 100;
+    // 레인 하나 기준. 전체 합이 아니다. 원작 udg_ModeEnemyInt — 여섯 난이도 전부 70으로
+    // 시작한다(Trig_Select_effect_Actions). 2026-09-03 사장님 지시로 100이었다가 2026-09-11
+    // 「원작대로 바꾸자」로 70. 씬 값은 MapGenerator.WireRoundRewardWisp가 맵 생성 때 맞춘다.
+    // ⚠️ 원작 지옥·신·악몽은 41라운드에 60/55/50으로 내려간다 — 우리엔 아직 난이도가 없다.
+    [SerializeField] int enemyCountThreshold = 70;
     [SerializeField] bool deathCountEnabled = true;  // 구조를 볼 땐 꺼두고 테스트한다.
-    [SerializeField] int startingDeathCount = 10;
-    [SerializeField] float deathCountTickInterval = 1f;
+    // 원작 udg_Counter_death_amount 초기값 9, 틱 0.65초(InitTrig_DeathTimer5의 TimerStart).
+    [SerializeField] int startingDeathCount = 9;
+    [SerializeField] float deathCountTickInterval = 0.65f;
+    // 신세계 대기(「60라운드-신세계 대기중」) 때 원작이 전원의 데스카운트를 1로 덮어쓴다(Trig_Round_10ver).
+    const int NewWorldDeathCount = 1;
 
     [Header("라운드 클리어 보상 — 사장님 지시: 라운드 하나 지날 때마다 랜덤위습 N개")]
     [SerializeField] WispData roundRewardWisp;
@@ -157,14 +161,12 @@ public class RoundManager : MonoBehaviour
             PlayerContext context = PlayerContext.Get(playerId);
             if (context == null || !context.IsOccupied || context.IsDead) continue;
 
-            if (laneCounts[playerId] <= enemyCountThreshold)
+            // 원작 Trig_DeathTimer5: 유닛 수가 한계 **이상**이면 깎고, 아래로 내려가도 **되돌리지
+            // 않는다** — Counter_death_amount를 올리는 자리가 원문 전체에 없다(판 전체 누적).
+            // 2026-09-03엔 사장님 지시로 회복식이었는데 2026-09-11 「원작대로 바꾸자」로 누적식.
+            if (laneCounts[playerId] < enemyCountThreshold)
             {
-                // 사장님 원문: "그 안에 100 아래로 줄지 않을시" — 줄이면 사는 뜻이라 카운트다운
-                // 자체가 취소돼야 한다(PM 지시, 2026-09-03). 예전(레인이 하나였을 때)엔 안
-                // 돌려놨는데, 그러면 75라운드짜리 게임에서 평생 10초치만 밀려도 죽는
-                // "누적 경고" 시스템이 되어 사장님 의도와 달라진다 — 회복 방식으로 바꿨다.
                 laneDeathTimer[playerId] = deathCountTickInterval;
-                laneDeathCount[playerId] = startingDeathCount;
                 continue;
             }
 
@@ -276,6 +278,12 @@ public class RoundManager : MonoBehaviour
         GrantFlatRoundReward();
 
         // 60라운드(신세계 진입) 전에만 원작대로 대기시간을 둔다. 나머지는 예전처럼 바로 이어진다.
+        // 원작은 같은 블록에서 데스카운트를 전원 1로 덮어쓴다 — 신세계부턴 한 번 넘치면 끝이다.
+        if (currentRound == 60)
+        {
+            for (int i = 0; i < MaxTrackedLanes; i++)
+                laneDeathCount[i] = NewWorldDeathCount;
+        }
         BeginPreRoundWait(currentRound, currentRound == 60 ? round60Delay : 0f);
     }
 
