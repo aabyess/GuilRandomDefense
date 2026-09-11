@@ -1455,7 +1455,13 @@ public static class MapGenerator
             return false;
         }
 
-        figure.transform.localScale *= height / bounds.size.y;
+        // 사람은 키(Y)에 맞추고, 사람이 아닌 모델(네 발 짐승·탈것)은 **가장 긴 축**에 맞춘다.
+        // 재규어를 키로 맞추면 몸길이가 키의 1.7배라 옆 칸을 밀고 나간다(2026-09-11 사장님
+        // 스크린샷 — 조합 표 위 재규어가 사람 셋만 했다). ArtBinder.FitToHeight와 같은 규칙이다.
+        Animator poser = figure.GetComponentInChildren<Animator>(true);
+        bool humanFigure = poser != null && poser.avatar != null && poser.avatar.isValid && poser.isHuman;
+        float fit = humanFigure ? bounds.size.y : Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+        figure.transform.localScale *= height / fit;
 
         // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발을 바닥에 붙인다.
         if (TryMeasureFigure(figure, out bounds))

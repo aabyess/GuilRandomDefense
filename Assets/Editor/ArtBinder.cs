@@ -93,6 +93,33 @@ public static class ArtBinder
     // 에셋 이름의 한글은 macOS에서 NFC가 아닐 수 있다 — 리터럴과 견주기 전에 맞춘다.
     static string Nfc(string s) => s?.Normalize(System.Text.NormalizationForm.FormC);
 
+    // 🔴 몸길이가 키보다 긴 게 **정상인** 모델. 세우는 규칙에서 빼고, 키도 몸길이로 맞춘다.
+    //
+    // 왜 필요한가 — UprightByBounds는 「가장 긴 축이 세로가 아니면 누워 있는 것」이라는
+    // 사람 기준 규칙이다. 네 발 짐승은 원래 앞뒤가 제일 기니까 이 규칙에 걸려 **뒷다리로
+    // 선다**(2026-09-11 사장님 스크린샷 — 재규어가 사람처럼 일어서 있었다. 로그:
+    // "아바타가 없어 경계 상자로 세웠습니다 — (-90, 0, 0) (1.3×1.0×1.7 → 1.3×1.7×1.0)").
+    // 그 1.3×1.0×1.7이 이미 올바른 자세다 — 안 건드리는 게 맞다.
+    static readonly string[] FourLeggedModels =
+    {
+        "안흔함_강재규",   // 재규어
+    };
+
+    static bool IsFourLegged(string modelName)
+    {
+        modelName = Nfc(modelName);
+        foreach (string name in FourLeggedModels)
+            if (Nfc(name) == modelName) return true;
+        return false;
+    }
+
+    // 사람 골격이 실제로 잡히는가. 아바타가 있어도 매핑이 0개면 거짓이다([[skin-import-traps]]).
+    static bool IsHumanVisual(GameObject visual)
+    {
+        Animator animator = visual.GetComponentInChildren<Animator>(true);
+        return animator != null && animator.avatar != null && animator.avatar.isValid && animator.isHuman;
+    }
+
     // 머리·골반·양팔 뼈의 위치로 이 모델이 지금 어느 쪽을 "위"와 "앞"으로 삼는지 재서,
     // 위=+Y·앞=+Z가 되게 돌린다(유니티 규약: 캐릭터는 +Z를 본다).
     //
@@ -909,7 +936,8 @@ public static class ArtBinder
         // 엉뚱한 축 길이에 키를 맞춰 납작하거나 길쭉해진다.
         visual.transform.localRotation = RotationFor(model.name);
         // 사람형은 뼈로 방향을 재서 자동으로 세운다. 수동 표에 적힌 모델은 그게 우선이다.
-        if (RotationFor(model.name) == Quaternion.identity) AutoUpright(visual);
+        // 네 발 짐승은 건드리지 않는다 — 세우는 규칙이 사람 기준이라 오히려 일으켜 세운다.
+        if (RotationFor(model.name) == Quaternion.identity && !IsFourLegged(model.name)) AutoUpright(visual);
         FitToHeight(instance, visual, HeightScaleFor(model.name));
         AttachAnimator(instance, visual);
 
@@ -987,14 +1015,17 @@ public static class ArtBinder
         float height = HeightFor(root) * heightScale;
 
         Bounds bounds = MeasureRenderers(visual);
-        float measured = bounds.size.y;
 
         // 🔴 SkinnedMeshRenderer의 bounds는 프리팹을 막 만든 직후 **0이나 거의 0**으로 나올 수 있다.
         //    그대로 나누면 스케일이 폭주한다 — 2026-09-08 실측: 안흔함_이호준이 **7,062배**로
         //    부풀어 맵에 검은 뿔 덩어리로 나타났다(사장님 스크린샷). 김경현도 5,050배였다.
         //    0.001 검사만으로는 못 막는다. 메시 정점으로 다시 재서 **둘 중 큰 값**을 쓴다.
-        float fromMesh = MeasureMeshes(visual).y;
-        if (fromMesh > measured) measured = fromMesh;
+        Vector3 size = Vector3.Max(bounds.size, MeasureMeshes(visual));
+
+        // 사람은 키(Y)에 맞춘다. 사람이 아닌 모델(네 발 짐승·탈것)은 **가장 긴 축**에 맞춘다 —
+        // 몸길이가 키보다 긴 짐승을 키로 맞추면 몸길이가 기준을 넘어 거대해진다
+        // (재규어: 키 20에 맞추면 몸길이 34, 사람 둘을 합친 것보다 길다).
+        float measured = IsHumanVisual(visual) ? size.y : Mathf.Max(size.x, size.y, size.z);
 
         if (measured > 0.001f)
         {
