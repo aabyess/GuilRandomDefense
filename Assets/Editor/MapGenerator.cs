@@ -1461,7 +1461,12 @@ public static class MapGenerator
         Animator poser = figure.GetComponentInChildren<Animator>(true);
         bool humanFigure = poser != null && poser.avatar != null && poser.avatar.isValid && poser.isHuman;
         float fit = humanFigure ? bounds.size.y : Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
-        figure.transform.localScale *= height / fit;
+
+        // 짐승은 사람만큼 크게 두지 않는다(사장님 지시 2026-09-11). 프리팹 쪽 배수와 같은 표를
+        // 쓴다 — 여기서는 프리팹 크기를 안 쓰고 칸 폭에 맞춰 다시 재우기 때문에 따로 먹여야 한다.
+        // 프리팹 이름은 "Unit_<모델명>"이라 접두사만 떼면 ArtBinder의 표 열쇠가 된다.
+        string modelName = unit.prefab.name.StartsWith("Unit_") ? unit.prefab.name.Substring(5) : unit.prefab.name;
+        figure.transform.localScale *= height * ArtBinder.FigureScaleFor(modelName) / fit;
 
         // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발을 바닥에 붙인다.
         if (TryMeasureFigure(figure, out bounds))

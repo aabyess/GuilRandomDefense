@@ -100,17 +100,33 @@ public static class ArtBinder
     // 선다**(2026-09-11 사장님 스크린샷 — 재규어가 사람처럼 일어서 있었다. 로그:
     // "아바타가 없어 경계 상자로 세웠습니다 — (-90, 0, 0) (1.3×1.0×1.7 → 1.3×1.7×1.0)").
     // 그 1.3×1.0×1.7이 이미 올바른 자세다 — 안 건드리는 게 맞다.
-    static readonly string[] FourLeggedModels =
+    // scale은 **몸길이**를 기준 키(20)의 몇 배로 놓을지다 — 사람의 키와 짐승의 몸길이를
+    // 같은 자에 올린다. 재규어 0.6 = 몸길이 12, 사람 키 20의 60%(사장님 지시 2026-09-11
+    // 「재규어 크기 줄여줘야함」). 더 줄이려면 이 숫자만 내리면 된다.
+    static readonly (string model, float scale)[] FourLeggedModels =
     {
-        "안흔함_강재규",   // 재규어
+        ("안흔함_강재규", 0.6f),   // 재규어
     };
 
     static bool IsFourLegged(string modelName)
     {
         modelName = Nfc(modelName);
-        foreach (string name in FourLeggedModels)
+        foreach ((string name, float _) in FourLeggedModels)
             if (Nfc(name) == modelName) return true;
         return false;
+    }
+
+    /// <summary>
+    /// 이 모델을 기준 키의 몇 배로 놓을 것인가. 사람은 1.0이고, 네 발 짐승만 표에 적힌 값을 쓴다.
+    /// MapGenerator가 조합 표·뽑기 섬 인형에도 같은 배수를 먹이려고 부른다 —
+    /// 그쪽은 프리팹 크기를 안 쓰고 칸 폭에 맞춰 다시 재우기 때문이다.
+    /// </summary>
+    public static float FigureScaleFor(string modelName)
+    {
+        modelName = Nfc(modelName);
+        foreach ((string name, float scale) in FourLeggedModels)
+            if (Nfc(name) == modelName) return scale;
+        return 1f;
     }
 
     // 사람 골격이 실제로 잡히는가. 아바타가 있어도 매핑이 0개면 거짓이다([[skin-import-traps]]).
@@ -286,6 +302,9 @@ public static class ArtBinder
         // 모델별 개별 지정이 먼저다 — 상붕카(자전거)처럼 등급 규칙으로 못 맞추는 게 있다.
         foreach ((string name, Vector3 _, float scale) in ModelAdjustments)
             if (Nfc(name) == Nfc(modelName)) return scale;
+
+        // 네 발 짐승은 몸길이를 기준 키에 맞추므로(FitToHeight) 그 배수를 여기서 같이 준다.
+        if (IsFourLegged(modelName)) return FigureScaleFor(modelName);
 
         if (IsCommonGradeModel(modelName)) return CommonHeightScale;
 
