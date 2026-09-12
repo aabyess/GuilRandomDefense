@@ -312,6 +312,12 @@ def bake_all(out_dir=None, size=BAKE_SIZE, only=None):
         tex = nt.nodes.new("ShaderNodeTexImage")
         tex.image = img
         nt.nodes.active = tex
+        principled = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
+        rough = principled.inputs["Roughness"].default_value
+        metal = principled.inputs["Metallic"].default_value
+        # DIFFUSE 색 굽기는 금속성을 물리적으로 반영해 색을 어둡게 죽인다(금 0.8 → 절반 밝기로 구워졌다 —
+        # 구현담당2 실측 2026-09-12). 유니티는 색만 쓰니 굽는 동안만 금속성 0.
+        principled.inputs["Metallic"].default_value = 0.0
         bpy.ops.object.select_all(action="DESELECT")
         plane.select_set(True)
         bpy.context.view_layer.objects.active = plane
@@ -321,8 +327,6 @@ def bake_all(out_dir=None, size=BAKE_SIZE, only=None):
         img.save()
         img.reload()
         # 이미지 재질로 교체(거칠기·금속성은 셰이더 값 유지)
-        rough = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED").inputs["Roughness"].default_value
-        metal = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED").inputs["Metallic"].default_value
         nt.nodes.clear()
         out = nt.nodes.new("ShaderNodeOutputMaterial")
         bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
