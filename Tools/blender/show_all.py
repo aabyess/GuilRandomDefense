@@ -33,31 +33,39 @@ BOARDS = [
                    ("Nature/Grass/덤불_02", "Bush_02", False),
                    ("Nature/Grass/억새_01", "Reed_01", False)])]),
     ("판_벽", "WALLS", [
-        ("돌 벽", [("Walls/돌담_두꺼움", "StoneWall_Thick", True),
-                  ("Walls/돌담_얇음", "StoneWall_Thin", True),
-                  ("Walls/돌기둥", "StonePillar", False)]),
-        ("나무 울타리", [("Walls/나무울타리", "WoodFence", True)])]),
+        ("기둥", [("Walls/돌기둥", "StonePillar", False), ("Walls/나무기둥", "WoodPost_Lantern", False), ("Walls/이끼돌기둥", "MossyPillar", False)]),
+        ("울타리", [("Walls/나무울타리", "WoodFence", True), ("Walls/목책", "Palisade", True), ("Walls/목장울타리", "Rail_Fence", True),
+                  ("Walls/대나무울타리", "Bamboo_Fence", True), ("Walls/밧줄난간", "Rope_Rail", True)]),
+        ("얇은 벽", [("Walls/돌담_얇음", "StoneWall_Thin", True), ("Walls/석축_이끼", "Mossy_Wall", True),
+                   ("Walls/벽돌담", "Brick_Wall", True), ("Walls/해안방파제", "Breakwater", True)]),
+        ("두꺼운 벽", [("Walls/돌담_두꺼움", "StoneWall_Thick", True), ("Walls/성벽_마름돌", "Ashlar_Wall", True),
+                    ("Walls/폐허벽", "Ruin_Wall", True), ("Walls/흉벽성벽", "Battlement", True)])]),
     ("판_문", "GATE", [
         ("문", [("Walls/정의문", "JusticeGate", False)])]),
     ("판_해왕류", "SEA KING", []),
     ("판_바위", "ROCKS", [
-        ("바위", [("Nature/Rocks/바위_01", "Rock_01", False),
-                 ("Nature/Rocks/바위_02", "Rock_02", False),
-                 ("Nature/Rocks/바위_03", "Rock_03", False),
-                 ("Nature/Rocks/바위_04", "Rock_04", False),
-                 ("Nature/Rocks/바위_05", "Rock_05", False)]),
-        ("판석·무리", [("Nature/Rocks/판석_01", "Slab_01", False),
-                    ("Nature/Rocks/판석_02", "Slab_02", False),
-                    ("Nature/Rocks/바위무리_01", "Rock_Cluster_01", False),
-                    ("Nature/Rocks/바위무리_02", "Rock_Cluster_02", False)])]),
+        ("작은 돌", [("Nature/Rocks/둥근강돌_01", "RiverStone_01", False), ("Nature/Rocks/둥근강돌_02", "RiverStone_02", False),
+                  ("Nature/Rocks/바위_01", "Rock_01", False), ("Nature/Rocks/판석_01", "Slab_01", False),
+                  ("Nature/Rocks/판석_02", "Slab_02", False), ("Nature/Rocks/바위_02", "Rock_02", False),
+                  ("Nature/Rocks/자갈무리_01", "Gravel_01", False), ("Nature/Rocks/바위_03", "Rock_03", False)]),
+        ("중간 바위", [("Nature/Rocks/이끼바위_01", "MossRock_01", False), ("Nature/Rocks/해안바위_01", "CoastRock_01", False),
+                   ("Nature/Rocks/바위_04", "Rock_04", False), ("Nature/Rocks/이끼바위_02", "MossRock_02", False),
+                   ("Nature/Rocks/뾰족바위_01", "Spire_01", False), ("Nature/Rocks/해안바위_02", "CoastRock_02", False)]),
+        ("큰 바위", [("Nature/Rocks/바위무리_01", "Rock_Cluster_01", False), ("Nature/Rocks/바위_05", "Rock_05", False),
+                  ("Nature/Rocks/바위무리_02", "Rock_Cluster_02", False), ("Nature/Rocks/뾰족바위_02", "Spire_02", False),
+                  ("Nature/Rocks/암벽조각_01", "Cliff_01", False), ("Nature/Rocks/암벽조각_02", "Cliff_02", False)])]),
     ("판_나무", "TREES", [
-        ("나무", [("Nature/Trees/그루터기_01", "Stump_01", False),
-                 ("Nature/Trees/죽은나무_01", "DeadTree_01", False),
-                 ("Nature/Trees/활엽수_01", "Broadleaf_01", False),
-                 ("Nature/Trees/활엽수_가을", "Broadleaf_Autumn", False),
-                 ("Nature/Trees/야자수_01", "Palm_01", False),
-                 ("Nature/Trees/침엽수_01", "Conifer_01", False),
-                 ("Nature/Trees/침엽수_02", "Conifer_02", False)])]),
+        ("작은 나무", [("Nature/Trees/그루터기_01", "Stump_01", False), ("Nature/Trees/쓰러진통나무_01", "FallenLog_01", False),
+                   ("Nature/Trees/어린나무_01", "Sapling_01", False), ("Nature/Trees/야자수_03", "Palm_03", False),
+                   ("Nature/Trees/죽은나무_01", "DeadTree_01", False), ("Nature/Trees/활엽수_01", "Broadleaf_01", False),
+                   ("Nature/Trees/벚나무_01", "Cherry_01", False)]),
+        ("중간 나무", [("Nature/Trees/활엽수_가을", "Broadleaf_Autumn", False), ("Nature/Trees/버드나무_01", "Willow_01", False),
+                   ("Nature/Trees/단풍나무_01", "Maple_01", False), ("Nature/Trees/자작나무_01", "Birch_01", False),
+                   ("Nature/Trees/소나무_01", "Pine_01", False), ("Nature/Trees/야자수_01", "Palm_01", False),
+                   ("Nature/Trees/야자수_02", "Palm_02", False)]),
+        ("큰 나무", [("Nature/Trees/침엽수_01", "Conifer_01", False), ("Nature/Trees/은행나무_01", "Ginkgo_01", False),
+                  ("Nature/Trees/가문비_01", "Spruce_01", False), ("Nature/Trees/참나무_01", "Oak_01", False),
+                  ("Nature/Trees/침엽수_02", "Conifer_02", False), ("Nature/Trees/전나무_01", "Fir_01", False)])]),
 ]
 # 바둑판: 앞줄에 작은 판들, 뒷줄에 큰 판들(뒷줄 판을 나중에 뒤로 늘려도 안 부딪힌다).
 GRID = [["판_풀", "판_벽", "판_문", "판_해왕류"], ["판_바위", "판_나무"]]
@@ -65,8 +73,8 @@ EMPTY_BOARD = {"판_해왕류": (28.0, 24.0)}        # 자리만 비워 두는 �
 
 
 def show_all(extra=None):
-    """extra = {"판_해왕류": 함수(컬렉션) → [(줄 이름, [무리, ...]), ...]} — 아직 FBX가 없는 샘플(창에서 바로
-    짓는 것)을 그 판에 올릴 때. 판 배치·크기·뷰는 똑같이 잡힌다."""
+    """extra = {"판_해왕류": 함수(컬렉션) → [(줄 이름, [무리, ...]), ...]} — 창에서 바로 짓는 것을 그 판에 올릴 때.
+    extra가 있는 판은 FBX 줄 대신 그 결과만 쓴다(내보내기 전 창 확인용). 판 배치·크기·뷰는 똑같이 잡힌다."""
     here = os.path.dirname(os.path.abspath(__file__))
     if here not in sys.path:
         sys.path.insert(0, here)
@@ -80,7 +88,7 @@ def show_all(extra=None):
     for col_name, title, spec in BOARDS:
         col = showcase.collection(col_name)
         rows = []
-        for kind, items in spec:
+        for kind, items in ([] if extra and col_name in extra else spec):
             groups = []
             for rel, label, tiling in items:
                 obj = showcase.import_fbx(col, os.path.join(ART, rel + ".fbx"), 1.0 / UNITS_PER_METER)
@@ -103,7 +111,7 @@ def show_all(extra=None):
                 groups.append(showcase.group(label, parts))
             rows.append((kind, groups))
         if extra and col_name in extra:
-            rows += extra[col_name](col)
+            rows = extra[col_name](col)
         width, depth = EMPTY_BOARD.get(col_name, (0.0, 0.0))
         boards[col_name] = showcase.lay_out(col, rows, title=title, min_width=width, min_depth=depth)
 
