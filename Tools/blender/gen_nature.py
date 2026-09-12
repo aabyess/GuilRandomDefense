@@ -32,7 +32,7 @@ import numpy as np
 import os
 import random
 import sys
-from mathutils import Euler, Vector
+from mathutils import Vector
 
 UNITS_PER_METER = 11.4          # 사람 키 20 ÷ 1.75m
 PROJECT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -46,11 +46,8 @@ COLORS = {
     "나무껍질": (0.30, 0.22, 0.16, 1.0),
     "잎":     (0.24, 0.46, 0.26, 1.0),
     "잎_가을":  (0.62, 0.42, 0.16, 1.0),
-    # 2026-09-12 추가 — 전부 기존 "잎"보다 채도가 낮다(맵에 깔리는 양이 많아 튀면 안 된다).
-    "풀":     (0.38, 0.52, 0.30, 1.0),
-    "덤불":   (0.22, 0.38, 0.24, 1.0),
-    "마른풀":  (0.62, 0.55, 0.38, 1.0),   # 억새 줄기·잎
-    "억새꽃":  (0.72, 0.66, 0.52, 1.0),   # 더 밝으면 흰 종잇조각처럼 뜬다(첫 렌더)
+    # 2026-09-12 추가. 풀·덤불·마른풀·억새꽃은 이번에 C 스타일(잎 카드)로 바뀌며 material()로
+    # 안 부르는 죽은 항목이 됐다 — 지웠다(같은 날 밤 나무 쪽에서 재질을 지운 것과 같은 이유).
     "나무속":  (0.64, 0.52, 0.38, 1.0),   # 그루터기 잘린 단면
     "마른껍질": (0.40, 0.36, 0.31, 1.0),   # 죽은 나무 — 나무껍질보다 잿빛
     "야자껍질": (0.46, 0.38, 0.28, 1.0),
@@ -230,27 +227,6 @@ def cap(bm, ring, center, material_index, facing_axis):
         j = (i + 1) % count
         loop = (middle, ring[i], ring[j]) if facing_axis else (middle, ring[j], ring[i])
         bm.faces.new(loop).material_index = material_index
-
-
-def add_ribbon(bm, points, widths, side, material_index):
-    """가운데 선(points)을 따라 좌우로 widths만큼 벌린 띠 — 풀잎·억새·야자잎.
-
-    폭이 0인 점은 뾰족한 끝이 된다.
-    🔴 앞뒤 두 벌로 만든다 — 유니티 기본 재질은 뒷면을 안 그려서, 한 장짜리 잎은
-    반대편에서 보면 통째로 사라진다. 대신 삼각형이 두 배다."""
-    for back in (False, True):
-        rows = []
-        for center, width in zip(points, widths):
-            if width <= 0:
-                rows.append([bm.verts.new(center)])
-            else:
-                half = side * (width / 2)
-                rows.append([bm.verts.new(center - half), bm.verts.new(center + half)])
-        for lower, upper in zip(rows, rows[1:]):
-            loop = lower + upper[::-1]
-            if back:
-                loop.reverse()
-            bm.faces.new(loop).material_index = material_index
 
 
 def add_rock_lump(bm, rng, x, y, radius, subdivisions, roughness=0.30):
@@ -1181,64 +1157,100 @@ def make_fallen_log_c(seed):
     return obj
 
 
-# ──────────────────────────────────────────────────────────── 풀
+# ──────────────────────────────────────────────────────────── 풀 (2026-09-12 낮, C 스타일로
+# 다시 교체 — blender 세션 지시. 리본(add_ribbon, 뒷면 없어 앞뒤 두 벌) 대신 잎 카드
+# (add_leaf_card, 알파컷 재질이라 뒷면 컬링을 이미 꺼 둬서 한 장으로 끝난다)로 짓는다.
+# 텍스처는 최대한 공유한다(사장님·blender 지시) — 새로 굽는 건 풀_잎카드·억새_잎카드
+# 둘뿐이고, 덤불은 나무 쪽 C_활엽_껍질·활엽_잎카드를 그대로 가져다 쓴다(신규 0장).
 
-def make_grass(seed, blades):
-    """풀 포기 — 한 점에서 잎날이 사방으로 뻗는다. 위로 갈수록 좁아지고 바깥으로 휜다.
+def _grass_c_bm(seed, blades):
+    """풀 포기 — 바늘잎 다발 카드(needle=True, 한 장이 이미 여러 블레이드 다발처럼 보이는
+    텍스처)를 두 마디로 세운다. 아래 마디는 거의 곧게, 위 마디는 바깥으로 기운 방향
+    (up_hint)으로 휘어 뻣뻣한 판자가 아니라 휘어진 블레이드처럼 보이게 한다.
 
-    휨은 기울기를 높이의 제곱으로 준다 — 밑동은 곧게 서고 끝으로 갈수록 눕는다.
-    비율로 짓는다(가장 긴 잎 = 1)."""
+    카드의 normal에 'out'이 아니라 'side'(out에 수직인 수평 벡터)를 준다 — normal은
+    카드 면이 향하는 축이라, 여기 out을 주면 카드가 눕는 방향(up_hint) 자체가 normal에
+    수직이어야 하는 add_leaf_card 규칙 때문에 바깥으로 못 기운다. side를 normal로 주면
+    up_hint(out·UP 섞은 기울기)가 이미 side에 수직이라 그대로 카드의 "위" 축이 된다."""
     rng = random.Random(seed)
     bm = bmesh.new()
-    start = rng.uniform(0, math.tau)
+    uv = bm.loops.layers.uv.new("UVMap")
     for i in range(blades):
-        angle = start + math.tau * i / blades + rng.uniform(-0.35, 0.35)
+        angle = rng.uniform(0, math.tau)
         out = Vector((math.cos(angle), math.sin(angle), 0.0))
         side = Vector((-out.y, out.x, 0.0))
-        length = 1.0 if i == 0 else rng.uniform(0.55, 0.92)    # 첫 잎이 가장 길다 → 높이 기준
-        lean = length * rng.uniform(0.22, 0.45)
-        width = rng.uniform(0.07, 0.10)
+        length = 1.0 if i == 0 else rng.uniform(0.6, 0.95)      # 첫 블레이드가 가장 길다 → 높이 기준
+        lean = rng.uniform(0.18, 0.42)
+        width = rng.uniform(0.22, 0.34)
         base = out * rng.uniform(0.0, 0.06)
-        points = [base + out * (lean * t * t) + UP * (length * t) for t in (0.0, 0.45, 0.8, 1.0)]
-        add_ribbon(bm, points, (width, width * 0.7, width * 0.35, 0.0), side, 0)
-    return build_object(bm, ["풀"])
+        lower_h = length * rng.uniform(0.45, 0.60)
+        tip_dir = (UP * (1.0 - lean * 0.6) + out * lean).normalized()
+        add_leaf_card(bm, uv, base, side, UP, width, lower_h, 0, rng)
+        mid = base + UP * lower_h
+        add_leaf_card(bm, uv, mid, side, tip_dir, width * 0.65, length - lower_h, 0, rng)
+    return bm
 
 
-def make_bush(seed, lumps):
-    """덤불 — 둥근 덩어리 여럿을 겹친다. 땅 아래로 내려간 부분은 눌러 평평하게 한다(바위와 같은 이유).
+def make_grass_c(seed, blades):
+    leaf = procedural_leaf_c("풀_잎카드", (0.10, 0.28, 0.08), (0.42, 0.62, 0.20), needle=True)
+    obj = build_object_c(_grass_c_bm(seed, blades), [leaf])
+    bake_material_c(obj, leaf, alpha=True)
+    return obj
 
-    비율로 짓는다(가운데 덩어리 반지름 = 1)."""
+
+def _bush_c_bm(seed, lumps, twigs, twig_cards, direct_cards):
+    """덤불 — 땅 근처에서 여러 굵은 줄기(lumps)가 사방으로 뻗고, 줄기마다 잔가지(twigs)와
+    잎 카드 덩어리가 붙는다. _broadleaf_c_bm과 같은 결(가지→잔가지→카드)이지만 트렁크
+    하나가 아니라 여러 줄기가 땅에서 바로 갈라져 나온다는 점이 다르다(덤불다운 모양)."""
     rng = random.Random(seed)
     bm = bmesh.new()
-    for i in range(lumps):
-        if i == 0:
-            x = y = 0.0
-            radius = 1.0
-        else:
-            angle = math.tau * i / (lumps - 1) + rng.uniform(-0.4, 0.4)
-            reach = rng.uniform(0.55, 0.85)
-            x, y = math.cos(angle) * reach, math.sin(angle) * reach
-            radius = rng.uniform(0.55, 0.80)
-        # 🔴 덩어리마다 아무렇게나 돌린다 — 안 돌리면 20면체 꼭짓점이 전부 위를 향해서, 덤불이
-        # 초록 보석(결정) 무더기처럼 보인다(첫 렌더). 흔드는 폭도 키워야 반듯한 각이 무너진다.
-        turn = Euler((rng.uniform(0, math.tau), rng.uniform(0, math.tau), rng.uniform(0, math.tau))).to_matrix()
-        squash = rng.uniform(0.62, 0.82)
-        lift = radius * squash * rng.uniform(0.25, 0.55)
-        for v in bmesh.ops.create_icosphere(bm, subdivisions=1, radius=radius)["verts"]:
-            co = turn @ (v.co + v.co.normalized() * (rng.uniform(-0.20, 0.20) * radius))
-            v.co = Vector((x + co.x, y + co.y, lift + co.z * squash))
+    uv = bm.loops.layers.uv.new("UVMap")
+    tube = BranchTube(bm, uv, 0)
+    azimuth = rng.uniform(0, math.tau)
+    for n in range(lumps):
+        azimuth += math.tau * 0.382 + rng.uniform(-0.3, 0.3)
+        heading = Vector((math.cos(azimuth), math.sin(azimuth), 0.0))
+        rise = math.radians(rng.uniform(35, 70))
+        direction = (heading * math.cos(rise) + UP * math.sin(rise)).normalized()
+        base = heading * rng.uniform(0.0, 0.12)
+        length = rng.uniform(0.55, 0.85)
+        branch, _ = tube.grow(rng, base, direction, length, 0.038, 6, 4, 0.55, 0.12, 3.0)
+        for k in range(twigs):
+            q, qd = path_point(branch, rng.uniform(0.3, 0.9))
+            side = qd.cross(UP).normalized() * rng.choice((-1, 1))
+            sub_dir = (qd * 0.5 + side * 0.7 + UP * rng.uniform(0.1, 0.5)).normalized()
+            twig, _ = tube.grow(rng, q, sub_dir, rng.uniform(0.18, 0.30), 0.016, 5, 3, 0.65, 0.15, 5.0)
+            for c in range(twig_cards):
+                lp, ld = path_point(twig, rng.uniform(0.2, 1.0))
+                normal = (ld.cross(UP) * rng.uniform(-1, 1) + UP * rng.uniform(0.2, 1.0)
+                          + Vector((rng.uniform(-0.5, 0.5), rng.uniform(-0.5, 0.5), 0))).normalized()
+                add_leaf_card(bm, uv, lp, normal, ld, rng.uniform(0.14, 0.20), rng.uniform(0.16, 0.24), 1, rng)
+        for c in range(direct_cards):
+            lp, ld = path_point(branch, rng.uniform(0.5, 1.0))
+            normal = (UP * rng.uniform(0.3, 1.0) + Vector((rng.uniform(-1, 1), rng.uniform(-1, 1), 0))).normalized()
+            add_leaf_card(bm, uv, lp, normal, ld, rng.uniform(0.15, 0.22), rng.uniform(0.17, 0.25), 1, rng)
+    return bm
 
-    for v in bm.verts:
-        v.co.z = max(v.co.z, 0.0)
-    return build_object(bm, ["덤불"])
+
+def make_bush_c(seed, lumps, twigs=3, twig_cards=9, direct_cards=6):
+    """덤불 — 재질은 나무 쪽 C_활엽_껍질·활엽_잎카드를 이름만 같게 넘겨 그대로 공유한다
+    (신규로 굽는 텍스처 없음, blender 세션 제안)."""
+    bark = procedural_bark_c("C_활엽_껍질", (0.14, 0.10, 0.07), (0.36, 0.27, 0.18))
+    leaf = procedural_leaf_c("활엽_잎카드", (0.09, 0.24, 0.09), (0.32, 0.54, 0.22), needle=False)
+    obj = build_object_c(_bush_c_bm(seed, lumps, twigs, twig_cards, direct_cards), [bark, leaf])
+    bake_material_c(obj, bark, alpha=False)
+    bake_material_c(obj, leaf, alpha=True)
+    return obj
 
 
-def make_reed(seed, stalks):
-    """억새 — 가는 줄기 끝에 이삭이 고개를 숙이고, 밑동에서 긴 잎 셋이 휘어 눕는다. 바닷가용.
-
-    비율로 짓는다(가장 긴 줄기 = 1)."""
+def _reed_c_bm(seed, stalks):
+    """억새 — 줄기(stalks)마다 카드 한 장으로 몸통을 세우고 끝에서 이삭도 카드 두 장으로
+    늘어뜨린다(blender 지시 "이삭까지 카드"). 밑동에는 눕는 긴 잎 셋을 따로 카드로 편다.
+    전부 같은 재질(억새_잎카드) 한 장을 공유한다 — needle=True 텍스처라 줄기·잎·이삭
+    어디에 써도 "가는 블레이드 다발" 결로 자연스럽게 맞는다."""
     rng = random.Random(seed)
     bm = bmesh.new()
+    uv = bm.loops.layers.uv.new("UVMap")
     start = rng.uniform(0, math.tau)
     for i in range(stalks):
         angle = start + math.tau * i / stalks + rng.uniform(-0.4, 0.4)
@@ -1246,27 +1258,34 @@ def make_reed(seed, stalks):
         side = Vector((-out.y, out.x, 0.0))
         length = 1.0 if i == 0 else rng.uniform(0.72, 0.95)
         base = out * rng.uniform(0.0, 0.05)
-        top = base + out * (length * rng.uniform(0.05, 0.12)) + UP * length
-        add_ribbon(bm, [base, base.lerp(top, 0.5), top], (0.018, 0.013, 0.0), side, 0)
+        lean_dir = (UP * 0.94 + out * rng.uniform(0.08, 0.18)).normalized()
+        add_leaf_card(bm, uv, base, side, lean_dir, 0.05, length, 0, rng)
+        top = base + lean_dir * length
 
-        # 이삭 — 줄기 끝에서 바깥으로 살짝 올라갔다가 숙인다. 가늘고 길게 — 넓고 짧으면
-        # 줄기에 매단 깃발처럼 보인다(첫 렌더).
+        # 이삭 — 줄기 끝에서 바깥으로 살짝 올라갔다 숙인다. 두 마디 카드로 늘어짐을 낸다.
         plume = rng.uniform(0.26, 0.34)
-        points = [top + out * (plume * t) + UP * (plume * (1.1 * t - 1.3 * t * t))
-                  for t in (0.0, 0.35, 0.7, 1.0)]
-        add_ribbon(bm, points, (0.012, 0.03, 0.022, 0.0), side, 1)
+        rise_dir = (out * 0.55 + UP * 0.62).normalized()
+        droop_dir = (out * 0.65 - UP * 0.30).normalized()
+        add_leaf_card(bm, uv, top, side, rise_dir, 0.10, plume * 0.55, 0, rng)
+        mid = top + rise_dir * (plume * 0.55)
+        add_leaf_card(bm, uv, mid, side, droop_dir, 0.08, plume * 0.45, 0, rng)
 
     for i in range(3):
         angle = start + math.tau * (i + 0.5) / 3 + rng.uniform(-0.3, 0.3)
         out = Vector((math.cos(angle), math.sin(angle), 0.0))
         side = Vector((-out.y, out.x, 0.0))
         length = rng.uniform(0.35, 0.50)
-        lean = length * rng.uniform(0.6, 0.8)
-        points = [out * (0.02 + lean * t * t) + UP * (length * (1.6 * t - 0.9 * t * t))
-                  for t in (0.0, 0.45, 0.8, 1.0)]
-        add_ribbon(bm, points, (0.04, 0.03, 0.015, 0.0), side, 0)
+        lean_dir = (UP * 0.55 + out * 0.75).normalized()
+        add_leaf_card(bm, uv, out * 0.02, side, lean_dir, rng.uniform(0.06, 0.09), length, 0, rng)
 
-    return build_object(bm, ["마른풀", "억새꽃"])
+    return bm
+
+
+def make_reed_c(seed, stalks):
+    leaf = procedural_leaf_c("억새_잎카드", (0.35, 0.30, 0.14), (0.72, 0.62, 0.35), needle=True)
+    obj = build_object_c(_reed_c_bm(seed, stalks), [leaf])
+    bake_material_c(obj, leaf, alpha=True)
+    return obj
 
 
 # ──────────────────────────────────────────────────────────── 목록
@@ -1288,13 +1307,16 @@ CATALOG = [
     ("Trees", "활엽수_01", lambda: make_broadleaf_c(seed=203), "높이 5.24m, C 스타일", 5.24),
     ("Trees", "활엽수_가을", lambda: make_broadleaf_c(seed=204, autumn=True), "높이 7.04m, C 스타일 단풍색", 7.04),
 
-    # 2026-09-12 추가 ─ 풀(300번대)
-    ("Grass", "풀_01", lambda: make_grass(seed=301, blades=4), "높이 0.4m, 잎날 4장", 0.4),
-    ("Grass", "풀_02", lambda: make_grass(seed=302, blades=5), "높이 0.65m, 잎날 5장", 0.65),
-    ("Grass", "풀_03", lambda: make_grass(seed=303, blades=7), "높이 0.9m, 잎날 7장", 0.9),
-    ("Grass", "덤불_01", lambda: make_bush(seed=311, lumps=5), "높이 0.9m", 0.9),
-    ("Grass", "덤불_02", lambda: make_bush(seed=312, lumps=7), "높이 1.4m", 1.4),
-    ("Grass", "억새_01", lambda: make_reed(seed=321, stalks=6), "높이 1.8m, 바닷가용", 1.8),
+    # 2026-09-12 추가 ─ 풀(300번대). 같은 날 낮에 C 스타일(잎 카드)로 다시 교체(blender
+    # 세션 지시) — 씨앗·높이는 기존 실측값 그대로(fit_height로 다시 못박아 둔다).
+    ("Grass", "풀_01", lambda: make_grass_c(seed=301, blades=16), "높이 0.40m, C 스타일 잎카드", 0.40),
+    ("Grass", "풀_02", lambda: make_grass_c(seed=302, blades=22), "높이 0.65m, C 스타일 잎카드", 0.65),
+    ("Grass", "풀_03", lambda: make_grass_c(seed=303, blades=30), "높이 0.90m, C 스타일 잎카드", 0.90),
+    ("Grass", "덤불_01", lambda: make_bush_c(seed=311, lumps=5), "높이 0.90m, C 스타일(활엽_잎카드 공유)", 0.90),
+    ("Grass", "덤불_02", lambda: make_bush_c(seed=312, lumps=7, twig_cards=7),
+     "높이 1.40m, C 스타일(활엽_잎카드 공유)", 1.40),
+    ("Grass", "억새_01", lambda: make_reed_c(seed=321, stalks=6),
+     "높이 1.80m, C 스타일 이삭도 카드, 바닷가용", 1.80),
 
     # 2026-09-12 추가 ─ 돌(150·160번대)
     ("Rocks", "판석_01", lambda: make_slab(seed=151, width_m=0.7, thickness_m=0.12),
