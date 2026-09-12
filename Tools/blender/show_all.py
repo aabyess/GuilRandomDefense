@@ -64,7 +64,9 @@ GRID = [["판_풀", "판_벽", "판_문", "판_해왕류"], ["판_바위", "판_
 EMPTY_BOARD = {"판_해왕류": (28.0, 24.0)}        # 자리만 비워 두는 판의 가로×앞뒤(m)
 
 
-def show_all():
+def show_all(extra=None):
+    """extra = {"판_해왕류": 함수(컬렉션) → [(줄 이름, [무리, ...]), ...]} — 아직 FBX가 없는 샘플(창에서 바로
+    짓는 것)을 그 판에 올릴 때. 판 배치·크기·뷰는 똑같이 잡힌다."""
     here = os.path.dirname(os.path.abspath(__file__))
     if here not in sys.path:
         sys.path.insert(0, here)
@@ -100,6 +102,8 @@ def show_all():
                         parts.append((stretched, length * 0.25 + length * 1.5 * k, depth + 0.1))
                 groups.append(showcase.group(label, parts))
             rows.append((kind, groups))
+        if extra and col_name in extra:
+            rows += extra[col_name](col)
         width, depth = EMPTY_BOARD.get(col_name, (0.0, 0.0))
         boards[col_name] = showcase.lay_out(col, rows, title=title, min_width=width, min_depth=depth)
 
