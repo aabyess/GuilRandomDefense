@@ -21,6 +21,7 @@
 """
 
 import math
+import os
 
 import bpy
 import bmesh
@@ -88,7 +89,30 @@ def import_fbx(collection, path, scale):
             bpy.data.objects.remove(obj, do_unlink=True)
     obj = meshes[0]
     obj.scale = obj.scale * scale
+    relink_textures(obj, os.path.join(os.path.dirname(os.path.dirname(path)), "Textures"))
     return obj
+
+
+def relink_textures(obj, tex_dir):
+    """FBX가 가리키는 이미지 경로가 깨져 있으면(분홍) 재질 이름으로 Textures/<재질이름>.png를 다시 잇는다 —
+    유니티도 PM 코드가 재질 이름으로 PNG를 찾으니 창도 같은 규칙으로 본다. 재질 이름의 `.001` 꼬리는 뗀다."""
+    for slot in obj.material_slots:
+        mat = slot.material
+        if mat is None or not mat.use_nodes:
+            continue
+        base = mat.name.rsplit(".", 1)[0] if mat.name[-4:-3] == "." and mat.name[-3:].isdigit() else mat.name
+        candidate = os.path.join(tex_dir, base + ".png")
+        for node in mat.node_tree.nodes:
+            if node.type != "TEX_IMAGE" or node.image is None:
+                continue
+            img = node.image
+            current = bpy.path.abspath(img.filepath) if img.filepath else ""
+            if current and os.path.exists(current):
+                continue
+            if os.path.exists(candidate):
+                img.filepath = candidate
+                img.source = "FILE"
+                img.reload()
 
 
 def group(label, parts):
@@ -197,8 +221,12 @@ def size_of(board):
 
 
 def shift(board, dx, dy):
-    """판과 그 컬렉션의 물체 전부를 옮긴다(위치만)."""
-    for obj in board.users_collection[0].objects:
+    """판과 그 컬렉션의 물체 전부를 옮긴다(위치만).
+    부모가 같은 컬렉션에 있는 자식(뼈대에 붙은 메시)은 건너뛴다 — 같이 옮기면 두 번 밀린다(해왕류가 판 밖으로 나갔다)."""
+    objects = set(board.users_collection[0].objects)
+    for obj in objects:
+        if obj.parent in objects:
+            continue
         obj.location.x += dx
         obj.location.y += dy
 
