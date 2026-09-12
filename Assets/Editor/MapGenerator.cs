@@ -127,7 +127,7 @@ public static class MapGenerator
         string storyReport = BuildStoryZone(root.transform);
         BuildStoryReturnPortal(root.transform);
         string sealReport = BuildSealSpawners(root.transform);
-        string seaKingReport = BuildSeaKing(root.transform);
+        string seaKingReport = BuildSeaKing(root.transform) + BuildTreasureHunt(root.transform);
         string questReport = BuildPirateQuestManager() +
             $"\n해적단 퀘스트 상점: {pirateQuests.Count}개 연결(레인당 1개, 재고·보충은 상점이 스스로 관리)." +
             (pirateQuests.Count == 0 ? $"\n  ⚠️ {PirateQuestFolder}에서 PirateQuestData를 하나도 못 찾았습니다." : "");
@@ -2712,6 +2712,99 @@ public static class MapGenerator
         return data != null
             ? "\n거대 해왕류: 배치 완료(먼 바다 남쪽, 유닛 도달 여부 미확인)."
             : "\n  ⚠️ Enemy_거대해왕류 에셋을 찾지 못해 거대 해왕류가 안 나옵니다.";
+    }
+
+    // ---- 보물찾기(TreasureHunt, TREASURE_SPEC_2026-09-12.md) ----
+    // 원작 좌표(war3map_new.j) — 레인 필드 넷과 보물 구역. 우리 맵은 배치를 새로 짰으니 좌표를 그대로 못 쓴다.
+    // 대신 **레인 필드 넷을 감싼 사각형에서 사방으로 얼마나 더 나가는지**를 필드 한 칸 크기의 비율로 옮긴다
+    // (리서치담당 대조: 원작 구역은 레인 넷을 전부 품고 창고는 밖이다). 탐색 반경도 필드 크기 비율로 옮긴다.
+    static readonly Rect[] OriginalLifeZones =
+    {
+        Rect.MinMaxRect(-5440f, 2848f, -2240f, 5600f),   // gg_rct_p1_life_zone
+        Rect.MinMaxRect(-1280f, 2848f, 1984f, 5536f),    // p2
+        Rect.MinMaxRect(-5504f, -1248f, -2240f, 1440f),  // p3
+        Rect.MinMaxRect(-1440f, -1248f, 1856f, 1472f),   // p4
+    };
+    static readonly Rect OriginalTreasureZone = Rect.MinMaxRect(-5856f, -2400f, 2464f, 6080f);
+    const float OriginalSearchRange = 750f;              // udg_treasure_range_int 초기값
+    const float OriginalLegendNamiSearchRange = 863f;    // 전설 나미 뒤
+
+    const string TreasureLegendNamiPath = "Assets/Data/Units/Roster/전설적인_엄태웅.asset";   // h02P
+    const string TreasureCooldownItemPath = "Assets/Data/Items/ItemData_I00K_탐사도구.asset";
+
+    static string BuildTreasureHunt(Transform parent)
+    {
+        Rect[] fields = new Rect[MapLayout.Lanes.Length];
+        for (int i = 0; i < fields.Length; i++)
+        {
+            MapLayout.Island field = MapLayout.LaneField(MapLayout.Lanes[i]);
+            fields[i] = new Rect(field.center - field.size * 0.5f, field.size);
+        }
+
+        Rect originalBlock = EncloseRects(OriginalLifeZones);
+        Vector2 originalField = AverageRectSize(OriginalLifeZones);
+        Rect block = EncloseRects(fields);
+        Vector2 fieldSize = AverageRectSize(fields);
+
+        Rect zone = Rect.MinMaxRect(
+            block.xMin - (originalBlock.xMin - OriginalTreasureZone.xMin) / originalField.x * fieldSize.x,
+            block.yMin - (originalBlock.yMin - OriginalTreasureZone.yMin) / originalField.y * fieldSize.y,
+            block.xMax + (OriginalTreasureZone.xMax - originalBlock.xMax) / originalField.x * fieldSize.x,
+            block.yMax + (OriginalTreasureZone.yMax - originalBlock.yMax) / originalField.y * fieldSize.y);
+
+        // 원작 필드는 가로로 길고(3256×2712) 우리 필드는 정사각형이라, 가로로 재면 23.0%·세로로 재면 27.7%로
+        // 갈린다. 넓이가 같은 정사각형의 한 변끼리 비교해 그 사이 값을 쓴다.
+        float rangeScale = Mathf.Sqrt(fieldSize.x * fieldSize.y) / Mathf.Sqrt(originalField.x * originalField.y);
+
+        GameObject huntObject = new GameObject("보물찾기");
+        huntObject.transform.SetParent(parent, false);
+        TreasureHunt hunt = huntObject.AddComponent<TreasureHunt>();
+
+        WispData randomWisp = AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_랜덤유닛.asset");      // e0IX
+        WispData commonChoiceWisp = AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_흔함선택.asset"); // e018
+        WispData uncommonWisp = AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_안흔함.asset");      // e017
+        UnitData legendNami = AssetDatabase.LoadAssetAtPath<UnitData>(TreasureLegendNamiPath);
+        ItemData cooldownItem = AssetDatabase.LoadAssetAtPath<ItemData>(TreasureCooldownItemPath);
+
+        SerializedObject so = new SerializedObject(hunt);
+        SerializedProperty zones = so.FindProperty("chestZones");
+        zones.arraySize = 1;
+        zones.GetArrayElementAtIndex(0).rectValue = zone;
+        so.FindProperty("chestHeight").floatValue = MapLayout.IslandTop;
+        so.FindProperty("searchRange").floatValue = OriginalSearchRange * rangeScale;
+        so.FindProperty("legendNamiSearchRange").floatValue = OriginalLegendNamiSearchRange * rangeScale;
+        so.FindProperty("randomWisp").objectReferenceValue = randomWisp;
+        so.FindProperty("commonChoiceWisp").objectReferenceValue = commonChoiceWisp;
+        so.FindProperty("uncommonWisp").objectReferenceValue = uncommonWisp;
+        so.FindProperty("legendNami").objectReferenceValue = legendNami;
+        so.FindProperty("boostedCooldownItem").objectReferenceValue = cooldownItem;
+        so.ApplyModifiedProperties();
+
+        string report = $"\n보물찾기: 구역 X {zone.xMin:0}~{zone.xMax:0} · Z {zone.yMin:0}~{zone.yMax:0}, " +
+                        $"탐색 반경 {OriginalSearchRange * rangeScale:0.#}(전설 나미 {OriginalLegendNamiSearchRange * rangeScale:0.#}).";
+        if (randomWisp == null || commonChoiceWisp == null || uncommonWisp == null)
+            report += "\n  ⚠️ 보물 보상 위습(Wisp_랜덤유닛·흔함선택·안흔함) 중 못 찾은 것이 있습니다.";
+        if (legendNami == null)
+            report += $"\n  ⚠️ 전설 나미를 못 찾아 보물 보너스가 안 붙습니다: {TreasureLegendNamiPath}";
+        if (cooldownItem == null)
+            report += $"\n  ⚠️ 탐사도구(I00K)를 못 찾아 탐색 쿨타임이 70초로 안 줄어듭니다: {TreasureCooldownItemPath}";
+        return report;
+    }
+
+    static Rect EncloseRects(Rect[] rects)
+    {
+        Rect enclosed = rects[0];
+        foreach (Rect rect in rects)
+            enclosed = Rect.MinMaxRect(Mathf.Min(enclosed.xMin, rect.xMin), Mathf.Min(enclosed.yMin, rect.yMin),
+                                       Mathf.Max(enclosed.xMax, rect.xMax), Mathf.Max(enclosed.yMax, rect.yMax));
+        return enclosed;
+    }
+
+    static Vector2 AverageRectSize(Rect[] rects)
+    {
+        Vector2 sum = Vector2.zero;
+        foreach (Rect rect in rects) sum += rect.size;
+        return sum / rects.Length;
     }
 
     // 펑크해저드 한가운데를 가로지르는 정의문. 부수기 전에는 섬이 둘로 나뉜다.

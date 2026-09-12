@@ -525,6 +525,10 @@ public class RoundManager : MonoBehaviour
             RewardDistributor.Instance?.ConfiscateGoldOnBossRoundStart();
         }
 
+        // 원작 Trig_Round_10ver: 10·20·…·60라운드가 시작되면 보스 생성 직전에 보물상자를 숨긴다
+        // (보스 처치와 무관). 몇 라운드인지 판정은 TreasureHunt가 한다.
+        TreasureHunt.Instance?.OnRoundStarted(roundNumber);
+
         if (waveSpawner != null && waveData != null)
         {
             waveSpawner.SpawnRound(waveData);

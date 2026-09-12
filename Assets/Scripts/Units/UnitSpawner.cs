@@ -60,6 +60,9 @@ public class UnitSpawner : MonoBehaviour
         // 조합·가챠 구분 없이 원작과 같은 범위를 덮는다.
         RewardDistributor.Instance?.GrantUnionWispIfEligible(data, ownerId);
 
+        // 같은 원작 트리거의 전설 나미 분기(Func020) — 보물찾기 반경·보상 개수·Gold_Plus.
+        TreasureHunt.Instance?.OnUnitSpawned(data, ownerId);
+
         return instance;
     }
 

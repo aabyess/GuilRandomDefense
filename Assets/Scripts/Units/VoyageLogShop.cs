@@ -29,9 +29,16 @@ using UnityEngine;
 //    지킨다). 사고 파는 게 1:1이라 **총 도박 횟수는 원작과 같다.**
 //    다만 그대로 두면 재고 1로 메타몽을 여러 마리 사서 돈만 버릴 수 있어,
 //    「이미 들고 있는 메타몽 수」를 재고에서 빼고 판다(AvailableStock).
+//
+// 두 번째 칸은 「탐색」(원작 AHta) — 보물찾기. 원작에서 AHta를 가진 건 항해일지 H0C4와 그 분기
+// 건물들(H0C0·H0C1·H0C2·H0BZ·H0BQ)이고, I00K 툴팁도 "항해일지-탐색 쿨타임"이라 **모든 플레이어가
+// 자기 항해일지로** 찾는다. 규칙·상태는 전부 TreasureHunt에 있고 여기선 버튼만 단다.
 [RequireComponent(typeof(Selectable), typeof(OwnedByPlayer))]
 public class VoyageLogShop : MonoBehaviour, ILaneShop
 {
+    const int GambleSlot = 0;
+    const int SearchSlot = 1;
+
     [SerializeField] UnitData gambleUnit;
     [SerializeField] int goldCost = 5000;
     [SerializeField] int woodCost = 3;
@@ -88,11 +95,12 @@ public class VoyageLogShop : MonoBehaviour, ILaneShop
 
     // ---- ILaneShop ----
 
-    public int SlotCount => 1;
+    public int SlotCount => 2;
 
     public LaneShopSlotView GetSlotView(int index)
     {
-        if (index != 0 || gambleUnit == null) return LaneShopSlotView.Empty;
+        if (index == SearchSlot) return GetSearchSlotView();
+        if (index != GambleSlot || gambleUnit == null) return LaneShopSlotView.Empty;
 
         int stock = AvailableStock(OwnerContext);
         if (!cacheBuilt || cachedStock != stock)
@@ -109,7 +117,8 @@ public class VoyageLogShop : MonoBehaviour, ILaneShop
 
     public string GetSlotTooltip(int index)
     {
-        if (index != 0 || gambleUnit == null) return null;
+        if (index == SearchSlot) return GetSearchTooltip();
+        if (index != GambleSlot || gambleUnit == null) return null;
 
         PlayerContext context = OwnerContext;
         int stock = AvailableStock(context);
@@ -133,7 +142,13 @@ public class VoyageLogShop : MonoBehaviour, ILaneShop
     {
         failReason = null;
 
-        if (index != 0) return false;
+        if (index == SearchSlot)
+        {
+            TreasureHunt hunt = TreasureHunt.Instance;
+            return hunt != null && hunt.TrySearch(owner.OwnerId, target.point, out failReason);
+        }
+
+        if (index != GambleSlot) return false;
         if (gambleUnit == null || gambleUnit.prefab == null) return false;   // 배선 오류, reason 없음
         if (unitSpawner == null) return false;
 
@@ -183,6 +198,40 @@ public class VoyageLogShop : MonoBehaviour, ILaneShop
 
         return context.GoldWallet.Gold >= goldCost
             && context.ResourceWallet.Get(ResourceType.Wood) >= woodCost;
+    }
+
+    // ---- 탐색(보물찾기) ----
+
+    // 쿨타임 남은 초가 바뀔 때만 라벨을 새로 만든다(GetSlotView는 0.4초마다 불린다).
+    int cachedSearchSeconds = -1;
+    string cachedSearchLabel;
+
+    LaneShopSlotView GetSearchSlotView()
+    {
+        TreasureHunt hunt = TreasureHunt.Instance;
+        if (hunt == null) return LaneShopSlotView.Empty;
+
+        int seconds = Mathf.CeilToInt(hunt.CooldownRemaining(owner.OwnerId));
+        if (seconds != cachedSearchSeconds)
+        {
+            cachedSearchSeconds = seconds;
+            cachedSearchLabel = seconds > 0 ? $"탐색\n{seconds}초" : "탐색\n보물찾기";
+        }
+
+        return new LaneShopSlotView(cachedSearchLabel, LogColor, seconds <= 0, LaneShopTargetKind.Ground);
+    }
+
+    string GetSearchTooltip()
+    {
+        TreasureHunt hunt = TreasureHunt.Instance;
+        if (hunt == null) return null;
+
+        int playerId = owner.OwnerId;
+        return "탐색 — 찍은 지점 주변의 숨겨진 보물상자를 모두 찾습니다.\n"
+             + "상자는 10·20·30·40·50·60라운드가 시작될 때 맵 곳곳(창고 제외)에 숨겨집니다.\n"
+             + $"찾으면 랜덤위습·흔함선택위습·안흔함 위습 중 하나를 {hunt.RewardCountFor(playerId)}기 받습니다.\n"
+             + $"쿨타임 {hunt.CooldownFor(OwnerContext):0}초 (탐사도구 보유 시 70초)\n"
+             + $"팀이 찾은 보물 {hunt.TeamFoundCount}개 — 9번째를 찾으면 전원 목재 +2";
     }
 
     // GamblingShop.ResolveSpawnPosition과 같은 관례 — 산 유닛은 그 플레이어 레인에 선다.

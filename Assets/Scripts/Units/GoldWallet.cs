@@ -17,7 +17,15 @@ public class GoldWallet : MonoBehaviour
     //   +0.20  포인트값 22 유닛이 아이템 I00Z 획득
     // 포에버·이터널·누적 클리어 개념이 우리에 없어 아직 배선 안 함(PM 지시) — 정해지면
     // 이 필드를 채우는 코드만 새로 붙이면 된다. 공식(RewardDistributor) 쪽은 이미 준비됨.
+    // ✅ 2026-09-12: 첫 줄(+0.60 전설 나미)은 TreasureHunt.OnUnitSpawned가 부른다 — 원작도 보물찾기
+    //    보너스와 같은 블록(Trig_UnitJohabCounter_Func020)에서 준다.
     public float GoldPlus { get; private set; }
+
+    public void AddGoldPlus(float amount)
+    {
+        if (amount <= 0f) return;
+        GoldPlus += amount;
+    }
 
     public event System.Action<int> OnGoldChanged;
 

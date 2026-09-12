@@ -68,7 +68,9 @@ public class PersistentSave : MonoBehaviour
     // GrantReward가 처치 시 전 플레이어에게 +1을 부른다. 하늘섬 퀘스트 1·2는 발동 조건을
     // 아직 못 풀어서 안 만들었다(PM 지시) — Quest_sky_1/2는 여전히 미도달.
     //
-    // ⚠️ 나머지(Story2·creep_reward·door_quest·Red_dog·treasure)는 여전히 대응 코드가
+    // ✅ 2026-09-12: treasure(+2, 팀이 9번째 보물상자를 찾는 순간 전원) — TreasureHunt.
+    //
+    // ⚠️ 나머지(Story2·creep_reward·door_quest·Red_dog)는 여전히 대응 코드가
     // 0건이다(2026-09-05 확인 — Story는 13개 있지만 "Story2"가 우리 스토리 몇 번에
     // 대응하는지는 원작-우리 스토리 번호가 아예 별개라 결정할 근거가 없다). 각 시스템이
     // 실제로 만들어질 때 그 트리거가 이 메서드를 부르면 된다.
