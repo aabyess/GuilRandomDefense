@@ -246,8 +246,12 @@ def stone_material(name):
         uv_sep = nt.nodes.new("ShaderNodeSeparateXYZ")
         nt.links.new(coord.outputs["UV"], uv_sep.inputs["Vector"])
 
+        # 🔴 2026-09-12 정정 — PM 렌더 검수: 형광 초록 "덩어리"로 보인다는 지적.
+        # 원인 둘: (1) 이끼색이 너무 밝고 채도 높음, (2) GREATER_THAN이 0/1 이진 마스크라
+        # 경계가 칼같이 갈려 덩어리 얼룩으로 보인다. 무늬 스케일도 24(잦음=바쁨)라 지적한
+        # "얼룩무늬가 바쁘다"와 맞물린다 — 낮춰서 더 크고 완만한 얼룩으로 바꾼다.
         moss_noise = nt.nodes.new("ShaderNodeTexNoise")
-        moss_noise.inputs["Scale"].default_value = 24.0
+        moss_noise.inputs["Scale"].default_value = 9.0
         moss_noise.inputs["Detail"].default_value = 4.0
         nt.links.new(mapping.outputs["Vector"], moss_noise.inputs["Vector"])
 
@@ -266,13 +270,18 @@ def stone_material(name):
         nt.links.new(thresh.outputs[0], perturbed.inputs[0])
         nt.links.new(jitter.outputs[0], perturbed.inputs[1])
 
+        # 이진 마스크(GREATER_THAN) 대신 완만한 램프(MULTIPLY_ADD + 클램프)로 —
+        # perturbed*4+0.5를 0~1로 잘라 경계 폭 0.25짜리 선형 전이를 만든다. 값이
+        # 0.62 문턱 근처일수록 얇게 섞이고, 훌쩍 위/아래면 완전히 돌/이끼가 된다.
         mask = nt.nodes.new("ShaderNodeMath")
-        mask.operation = "GREATER_THAN"
+        mask.operation = "MULTIPLY_ADD"
+        mask.use_clamp = True
         nt.links.new(perturbed.outputs[0], mask.inputs[0])
-        mask.inputs[1].default_value = 0.0
+        mask.inputs[1].default_value = 4.0
+        mask.inputs[2].default_value = 0.5
 
         moss_mix = nt.nodes.new("ShaderNodeMixRGB")
-        moss_mix.inputs["Color2"].default_value = (0.20, 0.34, 0.14, 1.0)
+        moss_mix.inputs["Color2"].default_value = (0.18, 0.26, 0.10, 1.0)
         nt.links.new(mask.outputs[0], moss_mix.inputs["Factor"])
         nt.links.new(ramp.outputs["Color"], moss_mix.inputs["Color1"])
         base_color_socket = moss_mix.outputs["Color"]
