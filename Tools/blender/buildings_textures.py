@@ -77,6 +77,12 @@ MATERIALS = {
     "건물_바닥_운동장":       (16,   (0.55, 0.46, 0.32, 1.0), 256),
     "건물_시계판":          (None, (0.92, 0.92, 0.90, 1.0), 256),
     "건물_국기_태극기":       (None, (0.95, 0.95, 0.93, 1.0), 256),
+    # 화난 버전(2026-09-12, blender 세션 추가) — 같은 건물이 화났다: 붉게 달아오른 창·금·그을음·연기
+    "건물_창_분노":          (None, (0.80, 0.20, 0.05, 1.0), 256),
+    "건물_커튼월_분노":       (8,    (0.40, 0.06, 0.03, 1.0), 512),
+    "건물_금_잎카드":         (None, (0.03, 0.03, 0.03, 1.0), 512),
+    "건물_그을음_잎카드":      (None, (0.05, 0.05, 0.05, 1.0), 256),
+    "건물_연기_잎카드":       (None, (0.20, 0.20, 0.20, 1.0), 256),
 }
 
 
@@ -644,6 +650,103 @@ SHADERS = {
     "건물_시계판": shader_clock,
     "건물_국기_태극기": shader_flag,
 }
+
+
+# ──────────────────────────────────────────────────────────── 화난 버전(2026-09-12, blender 세션 추가)
+# 기본판 실루엣은 그대로 두고 색·파손으로 「같은 건물이 화났다」를 낸다(PM 방향). 색은 선형값, 발광 없음(유니티는 색만 씀).
+
+def shader_angry_window(mat):
+    """붉게 달아오른 창 — 그을린 짙은 창틀 + 아래에서 번지는 주황·빨강 불빛(깜빡이는 얼룩) + 깨진 유리 금. FIT."""
+    nt, bsdf, uv = _tree(mat)
+    u, v = _sep_uv(nt, uv)
+    frame_w = 0.07
+    near_edge = _math(nt, "MINIMUM", _math(nt, "MINIMUM", u, _math(nt, "SUBTRACT", 1.0, u)), _math(nt, "MINIMUM", v, _math(nt, "SUBTRACT", 1.0, v)))
+    is_frame = _math(nt, "MAXIMUM", _math(nt, "LESS_THAN", near_edge, frame_w),
+                     _math(nt, "LESS_THAN", _math(nt, "ABSOLUTE", _math(nt, "SUBTRACT", u, 0.5)), frame_w * 0.55))
+    dx = _math(nt, "SUBTRACT", u, 0.5)
+    dy = _math(nt, "MULTIPLY", _math(nt, "SUBTRACT", v, 0.1), 0.8)
+    dist = _math(nt, "SQRT", _math(nt, "ADD", _math(nt, "MULTIPLY", dx, dx), _math(nt, "MULTIPLY", dy, dy)))
+    flick = _noise(nt, uv, 5.0, 4.0, 0.6)
+    glow = _math(nt, "ADD", _math(nt, "SUBTRACT", 1.0, _math(nt, "MULTIPLY", dist, 1.5)),
+                 _math(nt, "MULTIPLY", _math(nt, "SUBTRACT", flick, 0.5), 0.4), clamp=True)
+    inner = _ramp(nt, glow, ((0.0, (0.04, 0.004, 0.003, 1)), (0.45, (0.45, 0.03, 0.01, 1)),
+                             (0.8, (0.95, 0.25, 0.03, 1)), (1.0, (1.0, 0.62, 0.15, 1))))
+    crack = _voronoi(nt, uv, 3.5, "DISTANCE_TO_EDGE")
+    crack_line = _math(nt, "MULTIPLY", _math(nt, "LESS_THAN", crack.outputs["Distance"], 0.012),
+                       _math(nt, "GREATER_THAN", _noise(nt, uv, 2.0, 2.0, 0.5), 0.45))
+    inner = _mix(nt, crack_line, inner, (0.02, 0.01, 0.01, 1))
+    nt.links.new(_mix(nt, is_frame, inner, (0.08, 0.07, 0.07, 1)), bsdf.inputs["Base Color"])
+    bsdf.inputs["Roughness"].default_value = 0.3
+
+
+def shader_angry_curtain(mat):
+    """붉게 달아오른 유리 외벽 — 멀리언 2×2칸, 칸마다 불빛 세기가 달라(어떤 칸은 시뻘겋고 어떤 칸은 꺼멓게) 불난 층처럼."""
+    nt, bsdf, uv = _tree(mat)
+    u, v = _sep_uv(nt, uv)
+    lines = _grid_lines(nt, u, v, 2.0, 2.0, 0.02)
+    cell_id = _math(nt, "ADD", _math(nt, "FLOOR", _math(nt, "MULTIPLY", u, 2.0)), _math(nt, "MULTIPLY", _math(nt, "FLOOR", _math(nt, "MULTIPLY", v, 2.0)), 5.0))
+    lit = _math(nt, "ADD", _math(nt, "MULTIPLY", _hash(nt, cell_id), 0.8), _math(nt, "MULTIPLY", _noise(nt, uv, 3.0, 3.0, 0.5), 0.4), clamp=True)
+    glass = _ramp(nt, lit, ((0.0, (0.03, 0.005, 0.004, 1)), (0.5, (0.30, 0.03, 0.01, 1)), (1.0, (0.95, 0.30, 0.05, 1))))
+    nt.links.new(_mix(nt, lines, glass, (0.05, 0.04, 0.04, 1)), bsdf.inputs["Base Color"])
+    bsdf.inputs["Roughness"].default_value = 0.3
+
+
+def _radius(nt, u, v, cx=0.5, cy=0.5):
+    dx, dy = _math(nt, "SUBTRACT", u, cx), _math(nt, "SUBTRACT", v, cy)
+    return _math(nt, "SQRT", _math(nt, "ADD", _math(nt, "MULTIPLY", dx, dx), _math(nt, "MULTIPLY", dy, dy)))
+
+
+def shader_crack(mat):
+    """벽의 금 — 가운데서 뻗는 굵은 금(보로노이 경계) + 가는 잔금, 가장자리로 갈수록 사라진다. 나머지는 투명."""
+    nt, bsdf, uv = _tree(mat)
+    u, v = _sep_uv(nt, uv)
+    r = _radius(nt, u, v)
+    main = _math(nt, "LESS_THAN", _voronoi(nt, uv, 2.5, "DISTANCE_TO_EDGE").outputs["Distance"], 0.018)
+    fine = _math(nt, "MULTIPLY", _math(nt, "LESS_THAN", _voronoi(nt, uv, 7.0, "DISTANCE_TO_EDGE").outputs["Distance"], 0.01),
+                 _math(nt, "GREATER_THAN", _noise(nt, uv, 4.0, 2.0, 0.5), 0.55))
+    mask = _math(nt, "MAXIMUM", _math(nt, "MULTIPLY", main, _math(nt, "LESS_THAN", r, 0.46)),
+                 _math(nt, "MULTIPLY", fine, _math(nt, "LESS_THAN", r, 0.32)))
+    bsdf.inputs["Base Color"].default_value = (0.025, 0.02, 0.018, 1.0)
+    nt.links.new(mask, bsdf.inputs["Alpha"])
+    bsdf.inputs["Roughness"].default_value = 0.9
+    mat.use_backface_culling = False
+
+
+def shader_soot(mat):
+    """그을음 — 창 위로 번져 오르는 검은 자국: 아래가 넓고 진하며 위로 갈수록 가늘고 성기다. 나머지는 투명."""
+    nt, bsdf, uv = _tree(mat)
+    u, v = _sep_uv(nt, uv)
+    wobble = _math(nt, "MULTIPLY", _math(nt, "SUBTRACT", _noise(nt, uv, 4.0, 5.0, 0.65), 0.5), 0.25)
+    width = _math(nt, "SUBTRACT", 0.42, _math(nt, "MULTIPLY", v, 0.18))
+    inside = _math(nt, "LESS_THAN", _math(nt, "ABSOLUTE", _math(nt, "SUBTRACT", _math(nt, "SUBTRACT", u, 0.5), wobble)), width)
+    grain = _noise(nt, uv, 9.0, 4.0, 0.6)
+    mask = _math(nt, "MULTIPLY", inside, _math(nt, "GREATER_THAN", grain, _math(nt, "ADD", 0.15, _math(nt, "MULTIPLY", v, 0.8))))
+    nt.links.new(_ramp(nt, grain, ((0.0, (0.02, 0.018, 0.016, 1)), (1.0, (0.08, 0.07, 0.065, 1)))), bsdf.inputs["Base Color"])
+    nt.links.new(mask, bsdf.inputs["Alpha"])
+    bsdf.inputs["Roughness"].default_value = 1.0
+    mat.use_backface_culling = False
+
+
+def shader_smoke(mat):
+    """연기 한 뭉치 — 노이즈로 가장자리가 울퉁불퉁한 둥근 덩어리, 아래는 짙고 위는 옅은 회색. 나머지는 투명."""
+    nt, bsdf, uv = _tree(mat)
+    u, v = _sep_uv(nt, uv)
+    puff = _noise(nt, uv, 3.0, 5.0, 0.6)
+    mask = _math(nt, "LESS_THAN", _math(nt, "ADD", _radius(nt, u, v), _math(nt, "MULTIPLY", _math(nt, "SUBTRACT", puff, 0.5), 0.3)), 0.42)
+    tone = _math(nt, "ADD", _math(nt, "MULTIPLY", v, 0.6), _math(nt, "MULTIPLY", puff, 0.4), clamp=True)
+    nt.links.new(_ramp(nt, tone, ((0.0, (0.05, 0.05, 0.05, 1)), (1.0, (0.28, 0.27, 0.26, 1)))), bsdf.inputs["Base Color"])
+    nt.links.new(mask, bsdf.inputs["Alpha"])
+    bsdf.inputs["Roughness"].default_value = 1.0
+    mat.use_backface_culling = False
+
+
+SHADERS.update({
+    "건물_창_분노": shader_angry_window,
+    "건물_커튼월_분노": shader_angry_curtain,
+    "건물_금_잎카드": shader_crack,
+    "건물_그을음_잎카드": shader_soot,
+    "건물_연기_잎카드": shader_smoke,
+})
 
 
 # ──────────────────────────────────────────────────────────── 굽기

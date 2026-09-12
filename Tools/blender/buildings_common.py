@@ -451,6 +451,127 @@ class Builder:
             self.box(x - 0.15, x + 0.15, yb, plane, bz, bz + 0.3, bracket_mat, skip=("+y",))
         return bw, bh
 
+    # ── 화난 버전
+    # 사장님 순서(2026-09-12): 기본 13채 다음 「화난 버전」. PM 방향 — 실루엣·원점·크기는 기본판 그대로,
+    # 표정·색·파손으로만 「같은 건물이 화났다」가 읽히게. 건물마다 make_xxx(angry=True)가 눈썹(brow)·기운 간판
+    # (sign tilt)을 넣고, 마지막에 angrify()가 창을 붉게 바꾸고 금·그을음·연기를 뿌린다.
+
+    def swap(self, mapping):
+        """재질 이름 바꾸기(면은 그대로) — 같은 이름이 둘이 되면 한 슬롯으로 합친다."""
+        names, remap = [], {}
+        for i, name in enumerate(self.names):
+            new = mapping.get(name, name)
+            if new not in names:
+                names.append(new)
+                material_info(new)
+            remap[i] = names.index(new)
+        for f in self.bm.faces:
+            f.material_index = remap[f.material_index]
+        self.names = names
+
+    def brow(self, side, plane, outer, inner, thick=1.8, depth=1.0, mat="건물_색_검정"):   # 1.1이면 게임 시점에서 선처럼 가늘었다
+        """눈썹 — 벽면(side, plane)에서 튀어나온 짙은 각재. outer·inner = (가로 u, 높이 z), 안쪽 끝을 낮게 주면 화난 눈썹."""
+        n, _, _ = side_frame(side)
+        a = self._on_side(side, plane, outer[0]) + UP * outer[1] + n * (depth / 2 + 0.05)
+        b = self._on_side(side, plane, inner[0]) + UP * inner[1] + n * (depth / 2 + 0.05)
+        self.beam(a, b, depth, thick, mat)
+
+    def tilt_front(self, side, plane, u0, u1, z0, z1, degrees):
+        """벽면(side, plane) 앞으로 튀어나온 것 중 창(u0..u1, z0..z1) 안의 정점만 기울인다 — 이미 지은 간판을 나중에
+        「한쪽 나사가 빠진 듯」 돌릴 때(기본판 코드를 안 고치고). degrees > 0이면 오른쪽 끝이 처진다(왼쪽 위 모서리가 축),
+        < 0이면 왼쪽 끝이 처진다. 벽면 자체의 정점(plane 위)은 안 움직인다. 돌린 정점 수를 돌려준다."""
+        n, r, _ = side_frame(side)
+        picked = []
+        for v in self.bm.verts:
+            u = v.co.x if side in ("-y", "+y") else v.co.y
+            out = (v.co - self._on_side(side, plane, 0.0)).dot(n)
+            if out > 0.01 and u0 <= u <= u1 and z0 <= v.co.z <= z1:
+                picked.append(v)
+        if not picked:
+            return 0
+        along = [v.co.dot(r) for v in picked]
+        top = max(v.co.z for v in picked)
+        anchor = picked[along.index(min(along) if degrees > 0 else max(along))].co
+        pivot = Vector((anchor.x, anchor.y, top)) if side in ("-y", "+y") else Vector((anchor.x, anchor.y, top))
+        rot = Matrix.Rotation(math.radians(-degrees), 3, n)      # 밖에서 봐서 시계 방향이 −
+        for v in picked:
+            v.co = pivot + rot @ (v.co - pivot)
+        return len(picked)
+
+    def angrify(self, seed=0, cracks=10, soot=5, smoke=2, keep=()):
+        """화난 버전 마무리 — ① 유리를 붉게 달아오른 창으로 ② 큰 벽면에 금 데칼 ③ 붉은 창 위에 그을음 ④ 연기.
+        연기는 옥상에서 오르되 전체 높이 90·바닥 45×45 안에서 멈춘다(규격은 기본판과 같다). 삼각형 +100 안팎.
+        keep = 붉게 안 바꿀 재질 이름들(13 쉬었음의 불 켜진 방 `건물_원룸창` — 화난 건물 속 그 방만 조용한 대비)."""
+        import random
+        rng = random.Random(seed)
+        self.swap({k: v for k, v in ANGRY_SWAP.items() if k not in keep})
+        bm = self.bm
+        bm.normal_update()
+        bm.faces.ensure_lookup_table()
+        walls, windows, roofs = [], [], []
+        for f in list(bm.faces):
+            name = self.names[f.material_index]
+            area = f.calc_area()
+            if f.normal.z > 0.99 and area > 12.0:
+                zs = [v.co.z for v in f.verts]
+                roofs.append((max(zs), [v.co.copy() for v in f.verts], area))
+                continue
+            side = next((s for s, v in SIDES.items() if f.normal.dot(v) > 0.99), None)
+            if side is None:
+                continue
+            cos = [v.co for v in f.verts]
+            us = [c.x if side in ("-y", "+y") else c.y for c in cos]
+            plane = cos[0].y if side in ("-y", "+y") else cos[0].x
+            box = (side, plane, min(us), max(us), min(c.z for c in cos), max(c.z for c in cos))
+            if name in WALL_MATS and area > 60.0:
+                walls.append((area * (3.0 if side == "-y" else 1.0), box))   # 정면(게임 카메라 쪽)에 금이 더 자주
+            elif name in ("건물_창_분노",):
+                windows.append(box)
+        # ② 금 — 넓은 벽일수록 자주, 벽 안에 들어가는 크기만
+        total = sum(a for a, _ in walls)
+        for _ in range(cracks * 4 if walls else 0):
+            if cracks <= 0:
+                break
+            pick = rng.uniform(0, total)
+            for area, (side, plane, u0, u1, z0, z1) in walls:
+                pick -= area
+                if pick <= 0:
+                    break
+            w = rng.uniform(5.0, 10.0)
+            h = w * rng.uniform(0.8, 1.3)
+            if u1 - u0 < w + 1.0 or z1 - z0 < h + 1.0:
+                continue
+            self.panel(side, plane, rng.uniform(u0 + w / 2 + 0.5, u1 - w / 2 - 0.5), rng.uniform(z0 + 0.5, z1 - h - 0.5), w, h,
+                       "건물_금_잎카드", offset=0.14)
+            cracks -= 1
+        # ③ 그을음 — 붉은 창 몇 개 위로 번진 검은 자국
+        rng.shuffle(windows)
+        for side, plane, u0, u1, z0, z1 in windows[:soot]:
+            w = (u1 - u0) * 1.3
+            self.panel(side, plane, (u0 + u1) / 2, z1 - 1.0, w, min(8.0, w * 1.4), "건물_그을음_잎카드", offset=0.10)
+        # ④ 연기 — 가장 높은 옥상 면에서 퍼지며 오르는 알파 카드(십자 둘씩), 높이 89.5 넘지 않게
+        # 옥상 면: 넓이 60 넘는 윗면 중 위로 10 이상 여유가 있는 가장 높은 면 — 넓은 면만 보면 1층 바닥판이 뽑혀 연기가
+        # 필로티에서 올랐고(2차 렌더), 높이만 보면 계단실 꼭대기·난간 갓돌처럼 좁은 면이 뽑힌다.
+        roofs = [r for r in roofs if 89.5 - r[0] >= 10.0 and r[2] > 60.0]
+        if roofs and smoke:
+            top, verts, _ = max(roofs, key=lambda r: r[0])
+            xs, ys = [c.x for c in verts], [c.y for c in verts]
+            room = 89.5 - top
+            for k in range(smoke):
+                cx = rng.uniform(min(xs) + 2, max(xs) - 2) if max(xs) - min(xs) > 4 else (min(xs) + max(xs)) / 2
+                cy = rng.uniform(min(ys) + 2, max(ys) - 2) if max(ys) - min(ys) > 4 else (min(ys) + max(ys)) / 2
+                z = top + 0.5
+                for size in (4.0, 6.5, 9.0):
+                    size = min(size, room - (z - top) - 0.5)
+                    if size < 2.0:
+                        break
+                    c = Vector((max(-22.0 + size / 2, min(22.0 - size / 2, cx)), max(-22.0 + size / 2, min(22.0 - size / 2, cy)), z))
+                    hs = size / 2
+                    self.face((c + Vector((-hs, 0, 0)), c + Vector((hs, 0, 0)), c + Vector((hs, 0, size)), c + Vector((-hs, 0, size))), "건물_연기_잎카드")
+                    self.face((c + Vector((0, -hs, 0)), c + Vector((0, hs, 0)), c + Vector((0, hs, size)), c + Vector((0, -hs, size))), "건물_연기_잎카드")
+                    z += size * 0.7
+                    cx += rng.uniform(-1.5, 1.5)
+
     # ── 마무리
 
     def to_object(self, name, collection, meters=True):
@@ -617,3 +738,30 @@ def story_rows(collection, meters=True):
     if back:
         rows.append(("08~13", groups(back, collection, meters)))
     return rows
+
+
+# ──────────────────────────────────────────────────────────── 화난 버전
+
+# 붉게 달아오르는 유리(창 한 장 FIT은 FIT로, 타일 커튼월은 타일로 — UV 방식이 같아야 한다)
+ANGRY_SWAP = {"건물_유리창": "건물_창_분노", "건물_원룸창": "건물_창_분노", "건물_유리_커튼월": "건물_커튼월_분노"}
+# 금이 가는 넓은 벽 재질(간판·창틀·지붕·바닥은 제외)
+WALL_MATS = {"건물_벽돌_붉은", "건물_콘크리트", "건물_외벽_흰", "건물_타일_베이지", "건물_외벽_노랑", "건물_외벽_분홍",
+             "건물_외벽_하늘", "건물_외벽_연두", "건물_나무_판", "건물_금속_골함석"}
+
+
+def angry_variant(maker, seed=0, brows=(), tilts=(), extra=None, keep=(), cracks=10, soot=5, smoke=2):
+    """기본판 maker()를 그대로 지은 뒤 화나게 — 기본판 코드는 안 고친다(실루엣·원점·크기가 기본판과 같게).
+    tilts = [(side, plane, u0, u1, z0, z1, 각도)] — 그 벽면 앞 창 안의 간판 정점만 기울인다(+면 오른쪽이 처짐).
+    brows = [(side, plane, (바깥 u, z), (안쪽 u, z))] — 눈으로 쓸 창 위의 짙은 눈썹(안쪽 끝을 낮게).
+    extra(b) = 그 건물다운 파손을 더하는 함수(꺼진 네온·휜 게양대 등). keep = 붉게 안 바꿀 재질.
+    CATALOG 항목: ("StoryNN_이름_화남", "NN Name Angry", lambda: angry_variant(make_xxx, ...), "설명")."""
+    b = maker()
+    for side, plane, u0, u1, z0, z1, degrees in tilts:
+        if b.tilt_front(side, plane, u0, u1, z0, z1, degrees) == 0:
+            print(f"⚠️ 기울일 간판 정점이 없다: {side} plane {plane} u {u0}~{u1} z {z0}~{z1}")
+    for side, plane, outer, inner in brows:
+        b.brow(side, plane, outer, inner)
+    if extra:
+        extra(b)
+    b.angrify(seed=seed, cracks=cracks, soot=soot, smoke=smoke, keep=keep)
+    return b

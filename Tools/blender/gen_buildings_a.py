@@ -190,6 +190,14 @@ def make_kindergarten():
 CATALOG = [
     ("Story01_하이츠", "01 Heights", make_heights, "붉은 벽돌 빌라 · 1층 필로티 · 베란다 둘 · 계단실 · 옥상 물탱크 · 실외기·가스관·홈통 · 간판 하이츠"),
     ("Story02_큰소망유치원", "02 Kindergarten", make_kindergarten, "박공 집 셋(노랑·분홍·하늘 벽 / 빨강·파랑·초록 지붕) · 흰 창틀 · 놀이터 미끄럼틀·시소 · 간판 큰소망유치원"),
+    # 화난 버전 — 기본판을 그대로 지은 뒤 얼굴(맨 위층 베란다 두 칸 = 눈, 계단실 = 코, 붉은 현관 = 입)에 눈썹을 달고
+    # 간판을 오른쪽이 처지게 기울이고, 공용 angrify로 붉은 창·금·그을음·연기.
+    ("Story01_하이츠_화남", "01 Heights Angry",
+     lambda: bc.angry_variant(make_heights, seed=1101, cracks=16,
+                              brows=[("-y", -15.5, (-16.8, GROUND_H + 47.0), (-3.8, GROUND_H + 42.4)),
+                                     ("-y", -15.5, (16.8, GROUND_H + 47.0), (3.8, GROUND_H + 42.4))],
+                              tilts=[("-y", -14.0, -4.5, 4.5, GROUND_H + 47.4, GROUND_H + 53.5, 18.0)]),
+     "하이츠 화난 버전 · 맨 위층 베란다 눈 + 짙은 눈썹 · 간판 기울어짐 · 붉은 창 · 금·그을음 · 옥상 연기"),
 ]
 
 
