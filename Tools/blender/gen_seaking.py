@@ -758,7 +758,7 @@ def export(obj, arm, folder=None):
         bake_anim_use_all_actions=True,
         bake_anim_step=1.0,
         bake_anim_simplify_factor=0.0,
-        path_mode="AUTO",                    # 텍스처는 FBX에 안 박는다 — PNG 파일이 따로 정본
+        path_mode="STRIP",                   # 경로를 아예 안 넣는다 — 유니티는 재질 이름으로 PNG를 찾는다(PM 약속)
     )
 
 
@@ -812,7 +812,12 @@ def main():
             f"재질: {', '.join(n for n, *_ in MATERIALS)} — 텍스처는 Textures/<재질이름>.png, "
             "`_잎카드`는 양면+알파 컷(막), 나머지 불투명.\n"
             f"동작: Idle_Breath 8초·{FPS}fps·{FRAMES}프레임 반복(첫=끝). FBX 클립 이름은 「{NAME}_뼈대|Idle_Breath」.\n"
-            f"삼각형 {tris}개.\n")
+            f"삼각형 {tris}개.\n\n"
+            "진행 상태(2026-09-12, 사장님 지시로 여기서 일단 멈춤 — 유니티 연결은 아직):\n"
+            "  [됨] 얼굴 — 원작 해왕류 느낌(길게 찢어진 입·위아래 이빨 줄·두툼한 주둥이·콧구멍·박힌 눈+눈썹 뼈·지느러미 귀·수염)\n"
+            "  [됨] 목 토시 이음새(반지름 코사인 보간) · 까만 조각(눈 뒷면, 눈을 박아 해결) · 굴곡 꺾임(제어점 고르게)\n"
+            "  [됨] 애니메이션 차분하게 — 8초·240프레임·30fps, 폭 축소(오르내림 0.12·부풂 2%·턱 2.5°·볏 4°·꼬리 3.5°), 첫=끝\n"
+            "  [남음] 사장님·PM 최종 검수 뒤 세부 조정(위상 지연을 둘지, 눈 크기·이빨 수 등) · 유니티 프리팹 교체(PM)\n")
     print("=" * 60)
     print(f"만듦  {NAME}  삼각형 {tris}  뼈 {len(arm.data.bones)}  텍스처 {len(textures)}  루프 {check_loop(arm)}")
 
