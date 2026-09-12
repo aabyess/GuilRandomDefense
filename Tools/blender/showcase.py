@@ -1,22 +1,22 @@
-"""사장님 Blender 창의 작업물 전시 — 큰 판 위에 종류별로 한 줄씩 늘어놓는다.
+"""사장님 Blender 창의 작업물 전시 — 종류마다 큰 판을 따로 깔고, 판 안에서 한 줄씩 늘어놓는다.
 
-사장님 지시(2026-09-12): 「돌은 돌끼리 나무는 나무끼리 문은 문끼리 이쁘게 나열」. 창에 짓는 모든
-Blender 작업(gen_walls.py·show_all.py, 앞으로의 gen_*.py)이 이걸 쓴다.
+사장님 지시(2026-09-12): 「돌은 돌끼리 나무는 나무끼리 문은 문끼리 이쁘게 나열」, 그리고 「판 하나에 다
+담지 말고 종류마다 큰 판을 따로」. 창에 짓는 모든 Blender 작업(show_all.py, gen_*.py의 build_live)이 이걸 쓴다.
 
 🔴 보여주는 배치일 뿐이다 — 물체의 위치(와 전시용 배율)만 바꾸고 메시는 안 건드리므로, FBX를
 내보낼 때의 원점·축과는 무관하다. 내보내기는 각 gen_*.py의 main()이 따로 한다.
 
 쓰는 법(창에서):
-    group = showcase.group("StoneWall_Thick", [(obj, 0.0, 0.0), (twin, length, 0.0), ...])
-    board = showcase.lay_out(collection, [("돌", [group, ...]), ("나무", [...])])
-    showcase.frame(board)
+    board = showcase.lay_out(collection, [("돌", [group, ...]), ...], title="ROCKS")   # 판 하나
+    showcase.arrange([[board_a, board_b], [board_c]])   # 앞줄·뒷줄 바둑판, 통로 간격
+    showcase.frame_all([board_a, board_b, board_c])
 
-규칙:
-- 한 줄에 한 종류. 앞줄(뷰 쪽, −y)부터 늘어놓는다 — 키 큰 것(나무)을 마지막 줄에 두면 앞을 안 가린다.
-- 줄 안: 칸 너비 = 그 줄에서 가장 넓은 무리 + 간격. 무리는 칸 가운데 — 같은 간격이고, 크기가
-  제각각이어도 서로 안 겹친다. 원점은 줄마다 같은 선(y), 전부 같은 방향(길이 = X축).
-- 줄 사이: 앞줄의 뒤끝과 다음 줄 라벨 사이가 늘 같은 간격 — 줄마다 깊이가 달라도 고르다.
-- 무리 앞에 영어 라벨(한글은 Blender 기본 폰트에서 깨진다). 판은 사방에 여유를 두고 깐다.
+판 규칙:
+- 판마다 컬렉션 따로, 크기는 내용물에 맞게 + 사방 여유, 앞 가장자리에 큰 영어 제목.
+- 판 안: 한 줄에 한 종류. 앞줄(뷰 쪽, −y)부터 — 키 큰 것은 뒷줄에 둬야 앞을 안 가린다.
+  칸 너비 = 그 줄에서 가장 넓은 무리 + 간격, 무리는 칸 가운데. 원점은 줄마다 같은 선(y),
+  전부 같은 방향(길이 = X축). 무리 앞에 영어 이름표(한글은 기본 폰트에서 깨진다).
+- 판끼리: 앞줄·뒷줄 바둑판, 통로처럼 간격. 작은 판은 앞줄, 큰 판은 뒷줄.
 - 마지막에 뷰를 판 전체(키 큰 것 꼭대기까지)에 맞춘다 — 사장님이 키를 안 눌러도 다 보이게.
 """
 
@@ -26,9 +26,9 @@ import bpy
 import bmesh
 from mathutils import Euler, Vector
 
-BOARD_NAME = "전시판"
 BOARD_COLOR = (0.80, 0.80, 0.78, 1.0)
 LABEL_COLOR = (0.12, 0.12, 0.12, 1.0)
+TITLE_COLOR = (0.30, 0.30, 0.28, 1.0)
 
 
 def _material(name, color):
@@ -51,6 +51,23 @@ def clear(collection):
             bpy.data.meshes.remove(data)
         elif isinstance(data, bpy.types.Curve):
             bpy.data.curves.remove(data)
+
+
+def collection(name):
+    """이름의 컬렉션을 비운 채로 돌려준다(없으면 만든다)."""
+    col = bpy.data.collections.get(name)
+    if col is None:
+        col = bpy.data.collections.new(name)
+        bpy.context.scene.collection.children.link(col)
+    clear(col)
+    return col
+
+
+def remove_collection(name):
+    col = bpy.data.collections.get(name)
+    if col is not None:
+        clear(col)
+        bpy.data.collections.remove(col)
 
 
 def import_fbx(collection, path, scale):
@@ -93,26 +110,54 @@ def group(label, parts):
             "x_min": min(xs), "x_max": max(xs), "y_min": min(ys), "y_max": max(ys)}
 
 
-def lay_out(collection, rows, start=(7.0, 0.0), gap=0.6, margin=0.8, label_size=0.22):
-    """rows = [(종류, [무리, ...]), ...] — 앞 줄(뷰 쪽, −y)부터. 판을 깔고 라벨을 눕혀 두고, 판 물체를 돌려준다.
+def _text(collection, body, size, location, material, align="CENTER", spin=0.0):
+    curve = bpy.data.curves.new(body, "FONT")
+    curve.body = body
+    curve.size = size
+    curve.align_x = align
+    curve.align_y = "CENTER"
+    curve.materials.append(material)
+    text = bpy.data.objects.new(body, curve)          # 기본이 판에 누운 방향(XY 평면)이다
+    collection.objects.link(text)
+    text.location = location
+    text.rotation_euler = (0.0, 0.0, spin)
+    return text
 
-    start는 첫 줄의 왼쪽 끝과 원점 선(창 단위). 판은 전시물보다 margin만큼 바깥까지 깐다.
+
+def _board_mesh(collection, name, x0, x1, y0, y1):
+    # 판은 z를 아주 조금 내린다 — 조각 바닥과 같은 높이면 겹쳐 깜빡인다.
+    bm = bmesh.new()
+    corners = [bm.verts.new(Vector((x, y, -0.003))) for x, y in ((x0, y0), (x1, y0), (x1, y1), (x0, y1))]
+    bm.faces.new(corners)
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.materials.append(_material("전시판", BOARD_COLOR))
+    board = bpy.data.objects.new(name, mesh)
+    collection.objects.link(board)
+    return board
+
+
+def lay_out(collection, rows, title=None, gap=0.6, margin=0.8, label_size=0.22, title_size=2.0,
+            min_width=0.0, min_depth=0.0):
+    """rows = [(종류, [무리, ...]), ...] — 앞 줄(뷰 쪽, −y)부터. 판을 깔고 이름표·제목을 눕혀 두고, 판을 돌려준다.
+
+    판의 왼쪽 앞 모서리가 (0, 0)이다 — 어디에 둘지는 arrange()가 정한다(shift로 통째로 옮긴다).
+    rows가 비면 min_width×min_depth의 빈 판(자리만)이 된다.
     🔴 뒷줄로 갈수록 +y다 — 첫 창 확인에서 나무 줄을 앞에 두니 7m 나무가 문 줄을 가렸다."""
-    label_band = label_size * 2.2                                   # 무리 앞 라벨 자리
+    label_band = label_size * 2.2                                   # 무리 앞 이름표 자리
+    title_band = title_size * 1.6 if title else 0.0                 # 판 앞 가장자리 제목 자리
     label_mat = _material("라벨", LABEL_COLOR)
 
-    left = start[0]
+    left = margin
     right = left
-    front_edge = back_edge = None
+    front = margin + title_band                                     # 첫 줄 이름표의 앞끝
+    back_edge = front
     for r, (_, row) in enumerate(rows):
         row_front = min(g["y_min"] for g in row)                    # 원점 선 기준(음수 쪽)
         row_back = max(g["y_max"] for g in row)
-        if r == 0:
-            line_y = start[1]
-            front_edge = line_y + row_front - label_band
-        else:
-            line_y = back_edge + gap + label_band - row_front        # 앞줄 뒤끝 + 간격 + 라벨 자리
-        label_y = line_y + row_front - label_band * 0.5             # 라벨은 줄마다 한 선에
+        line_y = (back_edge + gap if r else front) + label_band - row_front
+        label_y = line_y + row_front - label_band * 0.5             # 이름표는 줄마다 한 선에
 
         slot = max(g["x_max"] - g["x_min"] for g in row) + gap
         for k, g in enumerate(row):
@@ -120,51 +165,74 @@ def lay_out(collection, rows, start=(7.0, 0.0), gap=0.6, margin=0.8, label_size=
             origin_x = center_x - (g["x_min"] + g["x_max"]) / 2      # 무리 가운데를 칸 가운데에
             for obj, dx, dy in g["parts"]:
                 obj.location = (origin_x + dx, line_y + dy, 0.0)
-
-            curve = bpy.data.curves.new(g["label"], "FONT")
-            curve.body = g["label"]
-            curve.size = label_size
-            curve.align_x = "CENTER"
-            curve.align_y = "CENTER"
-            curve.materials.append(label_mat)
-            text = bpy.data.objects.new(g["label"], curve)          # 기본이 판에 누운 방향(XY 평면)이다
-            collection.objects.link(text)
-            text.location = (center_x, label_y, 0.002)
+            _text(collection, g["label"], label_size, (center_x, label_y, 0.002), label_mat)
 
         right = max(right, left + slot * len(row))
         back_edge = line_y + row_back
 
-    x0, x1 = left - margin, right + margin
-    y0, y1 = front_edge - margin, back_edge + margin
-
-    # 판은 z를 아주 조금 내린다 — 조각 바닥과 같은 높이면 겹쳐 깜빡인다.
-    bm = bmesh.new()
-    corners = [bm.verts.new(Vector((x, y, -0.003))) for x, y in ((x0, y0), (x1, y0), (x1, y1), (x0, y1))]
-    bm.faces.new(corners)
-    mesh = bpy.data.meshes.new(BOARD_NAME)
-    bm.to_mesh(mesh)
-    bm.free()
-    mesh.materials.append(_material(BOARD_NAME, BOARD_COLOR))
-    board = bpy.data.objects.new(BOARD_NAME, mesh)
-    collection.objects.link(board)
+    x1 = max(right + margin, min_width)
+    y1 = max(back_edge + margin, min_depth)
+    board = _board_mesh(collection, collection.name, 0.0, x1, 0.0, y1)
+    board["앞끝"], board["뒤끝"], board["오른끝"] = 0.0, y1, x1
+    if title:
+        _text(collection, title, title_size, (margin, margin + title_band * 0.5, 0.002),
+              _material("제목", TITLE_COLOR), align="LEFT")
     return board
 
 
-def frame(board, tilt_degrees=42.0):
-    """3D 뷰를 판 전체에 맞춘다 — 사장님이 따로 키를 안 눌러도 판이 한눈에 들어오게.
-    정면(−y)에서 내려다봐서 줄이 가로로 반듯하게 보이고 라벨이 읽힌다."""
+def extend_board(board, back=None, right=None):
+    """판을 뒤(+y)나 오른쪽(+x)으로 늘린다 — 나중에 줄을 더 붙일 때(나무 다듬기 샘플 등)."""
+    for v in board.data.vertices:
+        if back is not None and v.co.y > board["앞끝"] + 1e-6:
+            v.co.y = max(v.co.y, back)
+        if right is not None and v.co.x > 1e-6:
+            v.co.x = max(v.co.x, right)
+    board.data.update()
+    board["뒤끝"] = max(board["뒤끝"], back or 0.0)
+    board["오른끝"] = max(board["오른끝"], right or 0.0)
+
+
+def size_of(board):
+    return board["오른끝"], board["뒤끝"]
+
+
+def shift(board, dx, dy):
+    """판과 그 컬렉션의 물체 전부를 옮긴다(위치만)."""
+    for obj in board.users_collection[0].objects:
+        obj.location.x += dx
+        obj.location.y += dy
+
+
+def arrange(rows_of_boards, start=(7.0, 0.0), corridor=3.0):
+    """판들을 바둑판처럼 — rows_of_boards[0]이 앞줄(−y), 다음이 그 뒤. 줄 안은 왼쪽부터.
+    판은 lay_out 직후(모서리 (0,0)) 상태여야 한다."""
+    y = start[1]
+    for boards in rows_of_boards:
+        x = start[0]
+        depth = 0.0
+        for board in boards:
+            w, d = size_of(board)
+            shift(board, x, y)
+            x += w + corridor
+            depth = max(depth, d)
+        y += depth + corridor
+
+
+def frame_all(boards, tilt_degrees=42.0):
+    """3D 뷰를 판 전체에 맞춘다 — 정면(−y)에서 내려다봐서 줄이 가로로 반듯하고 라벨이 읽힌다."""
     bpy.context.view_layer.update()
-    points = [board.matrix_world @ v.co for v in board.data.vertices]
+    points, tallest = [], 0.0
+    for board in boards:
+        for obj in board.users_collection[0].objects:
+            if obj.type != "MESH":
+                continue
+            world = [obj.matrix_world @ v.co for v in obj.data.vertices]
+            points += world
+            if obj is not board:
+                tallest = max(tallest, max(p.z for p in world))
     lo = Vector((min(p.x for p in points), min(p.y for p in points), 0.0))
     hi = Vector((max(p.x for p in points), max(p.y for p in points), 0.0))
-
-    # 판 위에서 가장 키 큰 것까지 화면에 들어오게 — 판만 재면 뒷줄 나무 꼭대기와 앞줄 라벨이
-    # 화면 밖으로 잘렸다(첫 창 확인). 원근 때문에 앞쪽이 커지므로 거리를 넉넉히 둔다.
-    tallest = 0.0
-    for obj in board.users_collection[0].objects:
-        if obj.type == "MESH" and obj is not board:
-            tallest = max(tallest, max((obj.matrix_world @ v.co).z for v in obj.data.vertices))
-    size = max(hi.x - lo.x, hi.y - lo.y, tallest)
+    size = max(hi.x - lo.x, (hi.y - lo.y) * 1.4, tallest)
     center = (lo + hi) / 2
     center.z = tallest * 0.3
     for window in bpy.context.window_manager.windows:
