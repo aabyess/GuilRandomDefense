@@ -43,8 +43,11 @@ BOARDS = [
     ("판_문", "GATE", [
         ("문", [("Walls/정의문", "JusticeGate", False)])]),
     ("판_해왕류", "SEA KING", []),
-    # 물범 섬 표적 셋(물범 → 노루 → 양) — 창에서는 extra={"판_동물": gen_creatures.rows}로 짓는다.
-    ("판_동물", "CREATURES", []),
+    # 물범 섬 표적 셋(물범 → 노루 → 양) + 따로 남는 물범바위. FBX는 메시만 올라온다(뼈대·숨쉬기는 extra 훅
+    # gen_creatures.rows로 창에서 지으면 보인다).
+    ("판_동물", "CREATURES", [
+        ("동물", [("Creatures/물범", "Seal", False), ("Creatures/노루", "Roe Deer", False),
+                 ("Creatures/양", "Sheep", False), ("Creatures/물범바위", "Seal_Rock", False)])]),
     ("판_바위", "ROCKS", [
         ("작은 돌", [("Nature/Rocks/둥근강돌_01", "RiverStone_01", False), ("Nature/Rocks/둥근강돌_02", "RiverStone_02", False),
                   ("Nature/Rocks/바위_01", "Rock_01", False), ("Nature/Rocks/판석_01", "Slab_01", False),
@@ -68,8 +71,16 @@ BOARDS = [
         ("큰 나무", [("Nature/Trees/침엽수_01", "Conifer_01", False), ("Nature/Trees/은행나무_01", "Ginkgo_01", False),
                   ("Nature/Trees/가문비_01", "Spruce_01", False), ("Nature/Trees/참나무_01", "Oak_01", False),
                   ("Nature/Trees/침엽수_02", "Conifer_02", False), ("Nature/Trees/전나무_01", "Fir_01", False)])]),
-    # 스토리 건물 13종 — 창에서는 extra={"판_스토리": buildings_common.story_rows}로 짓는다(생활 순서 두 줄).
-    ("판_스토리", "STORY", []),
+    # 스토리 건물 13종 — 생활 순서 두 줄. 스크립트를 고치는 중이면 extra={"판_스토리": buildings_common.story_rows}로
+    # 창에서 바로 짓는다(FBX 대신).
+    ("판_스토리", "STORY", [
+        ("01~07", [("Buildings/Story01_하이츠", "01 Heights", False), ("Buildings/Story02_큰소망유치원", "02 Kindergarten", False),
+                   ("Buildings/Story03_한양영어유치원", "03 English Kindergarten", False),
+                   ("Buildings/Story04_구일초등학교", "04 Guil Elementary", False), ("Buildings/Story05_구일중학교", "05 Guil Middle", False),
+                   ("Buildings/Story06_구일고등학교", "06 Guil High", False), ("Buildings/Story07_메가스터디", "07 Megastudy", False)]),
+        ("08~13", [("Buildings/Story08_사이버넷", "08 Cybernet", False), ("Buildings/Story09_7탄약창", "09 Ammo Depot", False),
+                   ("Buildings/Story10_동양미래대학교", "10 University", False), ("Buildings/Story11_日本", "11 Japan", False),
+                   ("Buildings/Story12_코드잇", "12 Codeit", False), ("Buildings/Story13_쉬었음", "13 Rested", False)])]),
 ]
 # 바둑판: 앞줄에 작은 판들, 뒷줄에 큰 판들(뒷줄 판을 나중에 뒤로 늘려도 안 부딪힌다). 건물은 제일 크니 맨 뒷줄.
 GRID = [["판_풀", "판_벽", "판_문", "판_해왕류", "판_동물"], ["판_바위", "판_나무"], ["판_스토리"]]
