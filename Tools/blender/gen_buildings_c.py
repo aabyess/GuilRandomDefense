@@ -279,21 +279,22 @@ def make_guil_high():
 
     b.box(x0 - 1.0, x1 + 1.0, y0 - 1.0, y1 + 1.0, 0.0, 0.3, "건물_바닥_보도블록", skip=("bottom",))
     b.box(x0, x1, y0, y1, 0.3, top, concrete, skip=("bottom", "top"))
+    # 🔴 정정(PM 렌더 검수) — 회색+흰 격자가 게임 시점에서 거의 흰 덩어리로 날아가 07 옆에서 대비가
+    # 약했다. 남색 띠를 층마다 두껍게(0.8→1.4) 두르고, 창틀 흰 핀(trim)을 콘크리트로 낮췄다 —
+    # 「회색+남색 줄무늬」로 읽히도록.
     for z in (G,) + tuple(G + FLOOR_H * k for k in (1, 2, 3)):
-        b.box(x0 - 0.2, x1 + 0.2, y0 - 0.2, y1 + 0.2, z - 0.7, z + 0.1, concrete, skip=("bottom", "top"))
-    b.box(x0 - 0.2, x1 + 0.2, y0 - 0.2, y1 + 0.2, G - 0.7, G + 0.1, navy)         # 1층 위 남색 띠(상징색 포인트)
+        b.box(x0 - 0.2, x1 + 0.2, y0 - 0.2, y1 + 0.2, z - 1.0, z + 0.4, navy, skip=("bottom", "top"))
     cols = [x0 + 3.0 + 3.08 * k for k in range(13)]
     for i, cx in enumerate(cols):
         b.box_c(cx, y0 - 0.35, 1.0, 0.5, 0.3, top, concrete, skip=("bottom", "top"))
-        b.box_c(cx, y0 - 0.35, 1.0, 0.5, top - 0.6, 0.6, navy)                    # 핀 꼭대기만 남색 포인트
     for k in range(4):
         z = G + FLOOR_H * k
         us = [x0 + 4.5 + 3.08 * j for j in range(12)]
-        b.windows("-y", y0, us, (z + 4.5,), 2.2, 6.5, sill_mat=concrete, frame_mat=trim)
-        b.windows("+y", y1, [x0 + 4.5 + 6.16 * j for j in range(6)], (z + 4.5,), 2.6, 6.5, sill_mat=concrete, frame_mat=trim)
+        b.windows("-y", y0, us, (z + 4.5,), 2.2, 6.5, sill_mat=concrete, frame_mat=concrete)
+        b.windows("+y", y1, [x0 + 4.5 + 6.16 * j for j in range(6)], (z + 4.5,), 2.6, 6.5, sill_mat=concrete, frame_mat=concrete)
     # 1층 옆면 창(전에는 위 칸에만 있어 1층이 통째로 막힌 벽이었다)
-    b.windows("-x", x0, (0.0,), (5.0, G + 4.5), 2.4, 5.0, sill_mat=concrete, frame_mat=trim)
-    b.windows("+x", x1, (0.0,), (5.0, G + 4.5), 2.4, 5.0, sill_mat=concrete, frame_mat=trim)
+    b.windows("-x", x0, (0.0,), (5.0, G + 4.5), 2.4, 5.0, sill_mat=concrete, frame_mat=concrete)
+    b.windows("+x", x1, (0.0,), (5.0, G + 4.5), 2.4, 5.0, sill_mat=concrete, frame_mat=concrete)
 
     # 현관
     cx = 0.0
