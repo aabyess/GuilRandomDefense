@@ -240,56 +240,68 @@ def stone_material(name):
     base_color_socket = ramp.outputs["Color"]
 
     if moss:
-        # box_uv가 만든 v(오브젝트 실제 높이 0~1, 위=1)를 그대로 읽어 이끼를 섞는다.
-        # 노이즈로 경계를 얼룩덜룩하게(0.62 문턱 자체를 흔들어) — 일직선 경계는 이끼처럼
-        # 안 보인다.
+        # 🔴 2026-09-12 정정(2차) — PM 렌더 검수(dbc2118b 이후): 여전히 큰 초록 "덩어리".
+        # 원인 — 1차 수정도 마스크의 주 원료가 높이(v) 하나뿐이라, v>~0.745인 면은
+        # 노이즈 진폭(0.18)이 못 뒤집을 만큼 통째로 위쪽 절반이 이끼가 됐다(PNG를 직접
+        # 봐야 알 수 있는 문제 — v 그라데이션 자체가 얼룩이 아니라 띠였다). 이번엔 마스크의
+        # 주 원료를 노이즈로 바꾸고 높이는 가중치만 얹는다 — 그래야 한 높이 안에서도
+        # 돌·이끼가 섞인다.
         uv_sep = nt.nodes.new("ShaderNodeSeparateXYZ")
         nt.links.new(coord.outputs["UV"], uv_sep.inputs["Vector"])
 
-        # 🔴 2026-09-12 정정 — PM 렌더 검수: 형광 초록 "덩어리"로 보인다는 지적.
-        # 원인 둘: (1) 이끼색이 너무 밝고 채도 높음, (2) GREATER_THAN이 0/1 이진 마스크라
-        # 경계가 칼같이 갈려 덩어리 얼룩으로 보인다. 무늬 스케일도 24(잦음=바쁨)라 지적한
-        # "얼룩무늬가 바쁘다"와 맞물린다 — 낮춰서 더 크고 완만한 얼룩으로 바꾼다.
-        moss_noise = nt.nodes.new("ShaderNodeTexNoise")
-        moss_noise.inputs["Scale"].default_value = 9.0
-        moss_noise.inputs["Detail"].default_value = 4.0
-        nt.links.new(mapping.outputs["Vector"], moss_noise.inputs["Vector"])
+        patch_noise = nt.nodes.new("ShaderNodeTexNoise")
+        patch_noise.inputs["Scale"].default_value = 8.0
+        patch_noise.inputs["Detail"].default_value = 4.0
+        patch_noise.inputs["Roughness"].default_value = 0.6
+        nt.links.new(mapping.outputs["Vector"], patch_noise.inputs["Vector"])
 
-        thresh = nt.nodes.new("ShaderNodeMath")
-        thresh.operation = "SUBTRACT"
-        nt.links.new(uv_sep.outputs["Y"], thresh.inputs[0])
-        thresh.inputs[1].default_value = 0.62
+        height_weight = nt.nodes.new("ShaderNodeMath")
+        height_weight.operation = "MULTIPLY"
+        nt.links.new(uv_sep.outputs["Y"], height_weight.inputs[0])
+        height_weight.inputs[1].default_value = 0.15   # 가중치만 — 위쪽에 살짝 더 나도록
 
-        jitter = nt.nodes.new("ShaderNodeMath")
-        jitter.operation = "MULTIPLY"
-        nt.links.new(moss_noise.outputs["Factor"], jitter.inputs[0])
-        jitter.inputs[1].default_value = 0.18
+        combined = nt.nodes.new("ShaderNodeMath")
+        combined.operation = "ADD"
+        nt.links.new(patch_noise.outputs["Factor"], combined.inputs[0])
+        nt.links.new(height_weight.outputs[0], combined.inputs[1])
 
-        perturbed = nt.nodes.new("ShaderNodeMath")
-        perturbed.operation = "ADD"
-        nt.links.new(thresh.outputs[0], perturbed.inputs[0])
-        nt.links.new(jitter.outputs[0], perturbed.inputs[1])
+        # combined 분포를 실측(probe_noise_dist.py)해 문턱을 잡았다 — 0.55~0.75처럼 폭을
+        # 넓게 두면 대부분 픽셀이 "약하게만" 섞여 회색에 묻혀 안 보인다(1차 재시도 때
+        # 실측: 강한 초록<0.08> 3%뿐). 0.60(≈면적 상위 37%)~0.66(폭 0.06)로 좁혀 — 문턱을
+        # 넘은 면적 대부분이 빠르게 진한 이끼색까지 차오르고, 가장자리만 얇게 섞인다.
+        mask = nt.nodes.new("ShaderNodeMapRange")
+        mask.clamp = True
+        nt.links.new(combined.outputs[0], mask.inputs["Value"])
+        mask.inputs["From Min"].default_value = 0.60
+        mask.inputs["From Max"].default_value = 0.66
+        mask.inputs["To Min"].default_value = 0.0
+        mask.inputs["To Max"].default_value = 1.0
+        mask_out = mask.outputs["Result"]
 
-        # 이진 마스크(GREATER_THAN) 대신 완만한 램프(MULTIPLY_ADD + 클램프)로 —
-        # perturbed*4+0.5를 0~1로 잘라 경계 폭 0.25짜리 선형 전이를 만든다. 값이
-        # 0.62 문턱 근처일수록 얇게 섞이고, 훌쩍 위/아래면 완전히 돌/이끼가 된다.
-        mask = nt.nodes.new("ShaderNodeMath")
-        mask.operation = "MULTIPLY_ADD"
-        mask.use_clamp = True
-        nt.links.new(perturbed.outputs[0], mask.inputs[0])
-        mask.inputs[1].default_value = 4.0
-        mask.inputs[2].default_value = 0.5
+        # 이끼 위에도 돌 결(voronoi×noise의 mix 출력)을 30%만 곱해 평평한 색 면을 없앤다.
+        grain = nt.nodes.new("ShaderNodeMath")
+        grain.operation = "MULTIPLY_ADD"
+        grain.use_clamp = True
+        nt.links.new(mix.outputs["Color"], grain.inputs[0])
+        grain.inputs[1].default_value = 0.3
+        grain.inputs[2].default_value = 0.7
+
+        moss_shaded = nt.nodes.new("ShaderNodeMixRGB")
+        moss_shaded.blend_type = "MULTIPLY"
+        moss_shaded.inputs["Factor"].default_value = 1.0
+        moss_shaded.inputs["Color1"].default_value = (0.10, 0.15, 0.05, 1.0)  # 짙은 회녹
+        nt.links.new(grain.outputs[0], moss_shaded.inputs["Color2"])
 
         moss_mix = nt.nodes.new("ShaderNodeMixRGB")
-        moss_mix.inputs["Color2"].default_value = (0.18, 0.26, 0.10, 1.0)
-        nt.links.new(mask.outputs[0], moss_mix.inputs["Factor"])
+        nt.links.new(mask_out, moss_mix.inputs["Factor"])
         nt.links.new(ramp.outputs["Color"], moss_mix.inputs["Color1"])
+        nt.links.new(moss_shaded.outputs["Color"], moss_mix.inputs["Color2"])
         base_color_socket = moss_mix.outputs["Color"]
 
         rough_mix = nt.nodes.new("ShaderNodeMixRGB")
         rough_mix.inputs["Color1"].default_value = (0.88, 0.88, 0.88, 1.0)
         rough_mix.inputs["Color2"].default_value = (0.97, 0.97, 0.97, 1.0)
-        nt.links.new(mask.outputs[0], rough_mix.inputs["Factor"])
+        nt.links.new(mask_out, rough_mix.inputs["Factor"])
         nt.links.new(rough_mix.outputs["Color"], bsdf.inputs["Roughness"])
 
     nt.links.new(base_color_socket, bsdf.inputs["Base Color"])
