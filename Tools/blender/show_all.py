@@ -45,6 +45,10 @@ BOARDS = [
     ("판_해왕류", "SEA KING", []),
     # 물범 섬 표적 셋(물범 → 노루 → 양) + 따로 남는 물범바위. FBX는 메시만 올라온다(뼈대·숨쉬기는 extra 훅
     # gen_creatures.rows로 창에서 지으면 보인다).
+    # 보물찾기 소품 넷(구현담당2, gen_props.py) — 상자 Open 동작은 extra 훅 gen_props.rows로 창에서 지으면 재생된다.
+    ("판_보물", "TREASURE", [
+        ("보물", [("Props/보물상자", "Chest", False), ("Props/보물상자_열림", "Chest_Open", False),
+                 ("Props/금화더미", "Gold_Pile", False), ("Props/보물표시", "Dig_Spot", False)])]),
     ("판_동물", "CREATURES", [
         ("동물", [("Creatures/물범", "Seal", False), ("Creatures/노루", "Roe Deer", False),
                  ("Creatures/양", "Sheep", False), ("Creatures/물범바위", "Seal_Rock", False)])]),
@@ -83,7 +87,7 @@ BOARDS = [
                    ("Buildings/Story12_코드잇", "12 Codeit", False), ("Buildings/Story13_쉬었음", "13 Rested", False)])]),
 ]
 # 바둑판: 앞줄에 작은 판들, 뒷줄에 큰 판들(뒷줄 판을 나중에 뒤로 늘려도 안 부딪힌다). 건물은 제일 크니 맨 뒷줄.
-GRID = [["판_풀", "판_벽", "판_문", "판_해왕류", "판_동물"], ["판_바위", "판_나무"], ["판_스토리"]]
+GRID = [["판_풀", "판_벽", "판_문", "판_해왕류", "판_동물", "판_보물"], ["판_바위", "판_나무"], ["판_스토리"]]
 EMPTY_BOARD = {"판_해왕류": (28.0, 24.0), "판_스토리": (34.0, 12.0)}   # 자리만 비워 두는 판의 가로×앞뒤(m)
 
 
