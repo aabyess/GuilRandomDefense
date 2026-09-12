@@ -27,7 +27,8 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
 
     // 규칙을 바꾸면 올린다 — 올려야 이미 임포트된 FBX도 다시 돈다.
     // 1 → 2 (2026-09-12): 거대 해왕류(Assets/Art/Monsters)를 대상에 추가.
-    public override uint GetVersion() => 2;
+    // 2 → 3 (2026-09-12): Blender 복제 번호(.001) 꼬리를 떼고 매칭 — 이미 임포트된 침엽수_02·활엽수_가을도 다시 돌게.
+    public override uint GetVersion() => 3;
 
     // URP의 기본 재질 설명 처리(셰이더를 Lit로, 색을 FBX 기본색으로)가 먼저 돈 뒤에 덧붙인다.
     public override int GetPostprocessOrder() => 100;
@@ -45,7 +46,10 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
     {
         if (!Applies(assetPath)) return;
 
-        string materialName = Nfc(description.materialName);
+        // Blender는 한 번에 여러 나무를 지으면 같은 재질을 `C_침엽_껍질.001`처럼 복제해 이름 뒤에 번호를 붙인다.
+        // 그대로 비교하면 텍스처(C_침엽_껍질.png)도 못 찾고 `_잎카드` 꼬리도 안 맞아 잎이 네모 판으로 나온다
+        // (2026-09-12 실측: 침엽수_02·활엽수_가을이 이 상태로 들어왔다). 번호 꼬리는 떼고 비교한다.
+        string materialName = StripBlenderDuplicateSuffix(Nfc(description.materialName));
         string texturePath = FindTexturePath(materialName);
         if (texturePath != null)
         {
@@ -62,6 +66,13 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
 
         if (materialName != null && materialName.EndsWith(LeafCardSuffix))
             MakeLeafCard(material);
+    }
+
+    // "이름.001" → "이름". 점 뒤가 숫자 세 자리일 때만 뗀다 — 이름 자체에 점이 들어간 경우를 안 망가뜨리게.
+    static string StripBlenderDuplicateSuffix(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return name;
+        return System.Text.RegularExpressions.Regex.Replace(name, @"\.\d{3}$", "");
     }
 
     // 잎 카드: 투명한 부분을 잘라내고(알파 컷) 앞뒤 양쪽을 다 그린다.
