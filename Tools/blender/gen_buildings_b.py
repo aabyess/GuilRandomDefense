@@ -8,6 +8,7 @@
 x = 가로, y = 앞뒤(정면 −y), z = 위. 원점 = 바닥 가운데.
 """
 
+import math
 import os
 import sys
 
@@ -18,7 +19,25 @@ if HERE not in sys.path:
 from mathutils import Vector
 
 import buildings_common as bc
-from buildings_common import DOOR_H, FLOOR_H, GROUND_H, Builder
+from buildings_common import DOOR_H, FLOOR_H, GROUND_H, UP, Builder, side_frame
+
+
+def floating_sign(b, body, side, plane, u, z, board_mat, text_mat, size=4.0, pad=1.0, board_depth=0.6,
+                   text_depth=0.3, max_width=None):
+    """Builder.sign()과 똑같이 짓되, 판 뒷면(공용 sign()이 skip=("-y",)로 비우는 벽에 붙는다는
+    가정)까지 다 막는다 — 벽이 없는 자리(도리이 가로보 사이처럼 공중에 뜬 간판)에 쓴다.
+    공용 buildings_common.py는 안 고친다(다른 세션이 쓰는 파일)는 규칙이라, 그 함수의 로직을
+    여기로 옮겨 skip만 뺐다(11 日本 편액, 2026-09-12 PM 검수로 뒷면 뚫림 발견)."""
+    _, _, (x0, x1, y0, y1) = b._text_mesh(body, size, text_depth)
+    scale = min(1.0, max_width / (x1 - x0)) if max_width else 1.0
+    tw, th = (x1 - x0) * scale, (y1 - y0) * scale
+    bw, bh = tw + pad * 2, th + pad * 2
+    n, r, _ = side_frame(side)
+    base = b._on_side(side, plane, u)
+    b.box_frame(base - r * (bw / 2) + UP * z, r * bw, n * board_depth, UP * bh, board_mat)
+    b.text(body, base + n * (board_depth + 0.02) + UP * (z + bh / 2), side, size, text_mat, text_depth,
+           max_width=max_width)
+    return bw, bh
 
 
 # ──────────────────────────────────────────────────────────── 08 사이버넷
@@ -105,9 +124,12 @@ def make_cybernet():
     # 옥상 — 얇은 파라펫 + 실외기 셋 + 물탱크 + 환기구
     b.face(((x0, y0, f3), (x1, y0, f3), (x1, y1, f3), (x0, y1, f3)), "건물_옥상_방수")
     t = 0.5
+    # 🔴 2026-09-12 PM 검수(카메라각 뒷면 검사) — skip에 "top"이 있으면 이 얇은 파라펫 링이
+    # 열린 뚜껑이라, 비스듬한 카메라가 그 틈으로 들어가 반대쪽 안쪽 벽면을 뒤에서 보게 된다
+    # (뒤(+Y) 방위에서 (−15.9, 10.5, 57.8) 넓이 96으로 발견). skip=("bottom",)로 닫는다.
     for bx0, bx1, by0, by1 in ((x0, x1, y0, y0 + t), (x0, x1, y1 - t, y1),
                                (x0, x0 + t, y0 + t, y1 - t), (x1 - t, x1, y0 + t, y1 - t)):
-        b.box(bx0, bx1, by0, by1, f3, top, concrete, skip=("bottom", "top"))
+        b.box(bx0, bx1, by0, by1, f3, top, concrete, skip=("bottom",))
     for ux in (-12.0, -6.5, -1.0):
         b.box_c(ux, 6.0, 2.6, 1.4, f3, 2.0, metal, skip=("bottom",))
     b.cylinder(-11.0, -3.0, f3, f3 + 3.0, 1.3, 10, stainless, top_radius=1.2, base_cap=True)
@@ -213,7 +235,10 @@ def make_ammo_depot():
     for px in (-gate_x, gate_x):
         b.box_c(px, y0, 1.0, 1.0, 0.3, 10.0, concrete, skip=("bottom",))
     b.beam((-gate_x, y0, 9.7), (gate_x, y0, 9.7), 0.8, 0.6, concrete)            # 문주 상인방
-    b.sign("7탄약창", "-y", y0 - 0.3, 0.0, 10.0, white, black, size=3.4, pad=0.7, max_width=14.0)
+    # 🔴 2026-09-12 PM 검수(카메라각 뒷면 검사) — 정문 문주는 벽이 없는 자유형 구조물이라
+    # b.sign()의 skip=("-y",)(벽에 붙는다는 전제)가 판 안쪽 면을 비워, 안(북쪽, 부지 안)에서
+    # 보면 그 자리가 뚫려 보였다(11 日本 편액과 같은 원인). floating_sign()으로 6면 다 막는다.
+    floating_sign(b, "7탄약창", "-y", y0 - 0.3, 0.0, 10.0, white, black, size=3.4, pad=0.7, max_width=14.0)
     b.beam((-gate_x + 1.5, y0, 4.0), (gate_x - 1.5, y0, 4.0), 0.25, 0.15, warn)  # 차단봉
     b.box_c(-gate_x + 1.5, y0 + 0.6, 1.0, 1.0, 0.3, 3.0, metal, skip=("bottom",))  # 차단기 조작함
 
@@ -238,7 +263,8 @@ def make_ammo_depot():
     fence_run("-x", x0, y0, y1)
     fence_run("+x", x1, y0, y1)
     # 🔴 PM 규칙 — 경고판도 1/12 이상(≈3.4). size 1.0은 너무 작았다. 4글자×2줄이라 max_width도 넉넉히.
-    b.sign("관계자외\n출입금지", "+y", y1, 10.0, 0.3, white, red, size=3.4, pad=0.7, max_width=14.0)
+    # 🔴 같은 이유(펜스에 매단 경고판도 벽이 없다) — floating_sign()으로 6면 다 막는다.
+    floating_sign(b, "관계자외\n출입금지", "+y", y1, 10.0, 0.3, white, red, size=3.4, pad=0.7, max_width=14.0)
     # 탄약고 앞 탄약상자 더미 — 군용 창고다운 소품
     for k, (cx, cy) in enumerate(((dx0 + 4.0, 6.0), (dx0 + 5.4, 6.0), (dx0 + 4.7, 6.6), (dx0 + 6.8, 6.0))):
         b.box_c(cx, cy, 1.2, 0.8, 0.3 + k * 0.02, 0.7, concrete, skip=("bottom",))
@@ -301,11 +327,15 @@ def make_university():
 
     # 옥상 — 방수 + 흰 코니스 트림 + 콘크리트 파라펫
     b.face(((x0, y0, f3), (x1, y0, f3), (x1, y1, f3), (x0, y1, f3)), "건물_옥상_방수")
-    b.box(x0 - 0.2, x1 + 0.2, y0 - 0.2, y1 + 0.2, f3 - 0.4, f3 + 0.4, white, skip=("bottom", "top"))
+    # 🔴 2026-09-12 PM 검수(카메라각 뒷면 검사) — 두 링(코니스 띠·파라펫) 모두 skip에 "top"이
+    # 있으면 열린 뚜껑이라, 비스듬한 카메라가 그 틈으로 들어가 반대쪽 안쪽 벽면을 본다(파라펫
+    # 좌·우 조각에서 실측 확인: (±21.0, −7.4, 57.6) 넓이 39). 08 사이버넷과 같은 원인·같은 수정
+    # (skip=("bottom",)만) — 코니스 띠도 같은 구조라 예방으로 같이 닫는다.
+    b.box(x0 - 0.2, x1 + 0.2, y0 - 0.2, y1 + 0.2, f3 - 0.4, f3 + 0.4, white, skip=("bottom",))
     t = 0.5
     for bx0, bx1, by0, by1 in ((x0, x1, y0, y0 + t), (x0, x1, y1 - t, y1),
                                (x0, x0 + t, y0 + t, y1 - t), (x1 - t, x1, y0 + t, y1 - t)):
-        b.box(bx0, bx1, by0, by1, f3 + 0.4, top, concrete, skip=("bottom", "top"))
+        b.box(bx0, bx1, by0, by1, f3 + 0.4, top, concrete, skip=("bottom",))
 
     # 정문 — 문주(간격 16, 통로 높이 22) + 국기 게양대. 포치 바로 앞(전정 1.5)에 붙여 원점이 안 쏠리게
     # 한다 — 처음 3.5로 뒀을 때 check()가 "원점이 가운데가 아님(중심 0.0, -3.3)"으로 잡았다(허용 ±3.0).
@@ -409,7 +439,12 @@ def make_japan():
     b.beam((-7.5, ty, kasagi_z), (-9.7, ty, kasagi_z + 0.7), 1.5, 0.9, black)
     b.beam((7.5, ty, kasagi_z), (9.7, ty, kasagi_z + 0.7), 1.5, 0.9, black)
     # 편액 「日本」 — 누키와 가사기 사이. 검정 글씨(목판에 먹으로 쓴 전통 방식과 같은 느낌).
-    b.sign("日本", "-y", ty, 0.0, 23.4, wood, black, size=3.2, pad=0.7, max_width=8.0)
+    # 🔴 2026-09-12 PM 검수(카메라각 뒷면 검사) — b.sign()의 판은 skip=("-y",)라 벽에 붙는
+    # 것을 전제한다(뒷면은 벽 속에 묻혀 안 보인다는 가정). 이 편액은 도리이 두 가로보 사이에
+    # 떠 있어 벽이 없다 — 뒤(+Y)에서 보면 그 스킵된 뒷면 자리가 뻥 뚫려 보였다(실측:
+    # (−2.2, −16.8, 23.9) 넓이 19.5). sign()을 못 바꾸니(공용 파일) 그 로직을 여기 그대로
+    # 옮기되 skip 없이 6면 다 막은 판으로 새로 짓는다.
+    floating_sign(b, "日本", "-y", ty, 0.0, 23.4, wood, black, size=3.2, pad=0.7, max_width=8.0)
 
     # 디딤길 — 도리이~툇마루 사이 판석 4장(가운데 한 줄, 간격 2.2). 양옆에 돌 등롱 한 쌍.
     deck_front = y0 - deck_depth
@@ -645,6 +680,44 @@ def _angry_ammo_depot_extra(b):
     b.box_c(8.0, -18.0, 0.5, 0.5, 10.0, 0.4, red, skip=("bottom",))
     # ④ 연기 자리 — 마구리(+x, dx1=14) 환기 루버 옆
     b.markers.append(("연기_자리_01", Vector((14.6, 0.0, 11.5))))
+    # ⑤ 위병소 얼굴 — 정면 창(u=11.0, z 10~13, PM 지시로 swap이 이미 붉게 만든다) 위에
+    # 그을린 눈썹. 문(u 4.5~9.5) 쪽으로 처지게 해 "붉은 문+눈썹"이 얼굴로 읽히게 한다.
+    b.brow("-y", -17.5, (13.0, 15.0), (9.7, 13.4))
+    # ⑥·⑦ 지붕 파손(PM 지시, 내려다보는 카메라에서 가장 크게 보이는 부분) — 돔 좌표는
+    # make_ammo_depot과 같은 규칙(half_cylinder 프로파일: y=cos(a)·radius, z=dz0+sin(a)·radius,
+    # a=0이 +y쪽·a=180°가 −y쪽). 정문(−y)에서 올려다보이는 남쪽 사면(a 90°~180°)에 배치한다.
+    dx0, dx1, radius, dz0 = -14.0, 14.0, 15.0, 0.8
+    soot = "건물_그을음_잎카드"
+    right = Vector((1.0, 0.0, 0.0))
+
+    def dome_point(angle_deg, x):
+        a = math.radians(angle_deg)
+        n = Vector((0.0, math.cos(a), math.sin(a)))
+        c = Vector((x, n.y * radius, dz0 + n.z * radius))
+        return c, n
+
+    # ⑥ 그을음 — 옅게 띄운 판 두 장. `_잎카드` 재질이라 카메라각 뒷면검사 예외(한 겹으로 충분).
+    for ang, cx, hw in ((112.0, -6.0, 3.0), (144.0, 5.0, 2.6)):
+        c, n = dome_point(ang, cx)
+        up = n.cross(right).normalized()
+        c = c + n * 0.06
+        hh = hw * 0.55
+        b.face((c - right * hw - up * hh, c + right * hw - up * hh,
+                c + right * hw + up * hh, c - right * hw + up * hh), soot)
+
+    # ⑦ 찢겨 말려 올라간 골판 — 경첩(lo, 곡면에 거의 붙음)에서 반대쪽(hi)이 바깥·위로 들린
+    # 두꺼운 판(hexa, 진짜 두께를 줘서 카메라각 뒷면검사에 안 걸린다). 들린 틈으로 붉은 불빛.
+    c, n = dome_point(128.0, 0.0)
+    up = n.cross(right).normalized()
+    hw2 = 2.2
+    lo, hi = c - up * 1.0, c + up * 1.6
+    lift = n * 1.6 + up * 0.6
+    inner = (lo - right * hw2, lo + right * hw2, hi + right * hw2 + lift, hi - right * hw2 + lift)
+    outer = tuple(p + n * 0.08 for p in inner)
+    b.hexa(inner + outer, "건물_금속_골함석")
+    # 안쪽 붉은 불빛 — 두 겹 사이(안쪽 면 바로 앞)에 얇은 판 한 장
+    glow0, glow1, glow2, glow3 = (p + n * 0.03 for p in inner)
+    b.face((glow0, glow1, glow2, glow3), "건물_창_분노")
 
 
 CATALOG += [
