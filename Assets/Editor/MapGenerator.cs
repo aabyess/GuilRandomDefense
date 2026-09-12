@@ -137,6 +137,9 @@ public static class MapGenerator
 
         string portalReport = BuildGachaPortals(gachaIsland);
 
+        // 자연물은 **맨 마지막에** 뿌린다 — 건물·포탈·인형이 다 선 뒤라야 그 자리를 피할 수 있다.
+        string natureReport = BuildNatureBorders(root.transform);
+
         string overlaps = CheckOverlaps();
 
         // 배선 중 예외가 나도 NavMesh는 굽는다. 여기서 통째로 죽으면 길이 안 깔린 맵이 남는데,
@@ -167,7 +170,7 @@ public static class MapGenerator
 
         string message =
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
-            $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + "\n\n" +
+            $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + natureReport + "\n\n" +
             tableReport + displayReport + gateReport + storyReport + sealReport + seaKingReport + questReport +
             chatUnlockReport + hiddenCombineReport + chatBoxReport + overlaps + navResult + oldGround + rewire + saveNote;
         Debug.Log("[맵] " + message);
@@ -216,6 +219,298 @@ public static class MapGenerator
         obj.transform.localScale = new Vector3(island.size.x, GrassThickness, island.size.y);
         Paint(obj, island.tint, island.size.x, island.size.y);
         return obj;
+    }
+
+    // ──────────────────────────────────────────────────────────── 섬 테두리 자연물
+    //
+    // 사장님 지시 2026-09-12 「테두리로 맵에 뿌려줘」. Assets/Art/Nature의 저폴리 돌·나무·풀
+    // (Blender로 생성, Tools/blender/gen_nature.py)을 **섬 가장자리 띠에만** 둔다 — 디펜스 맵이라
+    // 한가운데에 두면 유닛과 적을 가린다.
+    //
+    // - 띠 안에만 둔다. 소품의 발자국(원)이 섬 안쪽, 가장자리에서 띠 폭 이내에 들어가야 한다.
+    //   레인은 띠를 7로 좁게 잡는다 — 흙길(순찰로)이 가장자리에서 8부터 시작해서 그걸 안 덮으려는 것이다.
+    //   레인 아래 두 줄(우리·상점)은 통째로 건너뛴다.
+    // - 키 큰 나무만 가지가 바다 쪽으로 나가도 된다(줄기가 섬 안이면). 돌·풀이 밖으로 나가면 떠 보인다.
+    // - 이미 선 건물·포탈·인형·벽과 겹치면 안 둔다(렌더러 경계로 판정).
+    // - 크기는 배율이 아니라 **게임 단위 높이**로 정한다(사람 키 20). 잰 높이로 나눠 맞추므로
+    //   FBX 임포트 단위(useFileScale)가 어떻게 먹어도 크기가 안 틀어진다.
+    // - 씨앗은 섬 이름에서 뽑는다 — 다시 생성해도 같은 자리에 같은 것이 선다(씬 변경이 안 쌓인다).
+    // - 콜라이더가 없고(임포트 addColliders 0) NavMesh는 콜라이더로 굽으므로 길을 안 막는다.
+    //   혹시 모르니 담는 오브젝트에 ignoreFromBuild도 건다.
+
+    const string NatureFolder = "Assets/Art/Nature/";
+    const int NatureLane = 1, NatureSmall = 2, NatureBig = 4;
+
+    readonly struct NatureProp
+    {
+        public readonly string file;        // NatureFolder 아래, 확장자 뺀 경로
+        public readonly float minHeight;    // 게임 단위(사람 키 20)
+        public readonly float maxHeight;
+        public readonly int weight;
+        public readonly int zones;          // NatureLane | NatureSmall | NatureBig
+        public readonly bool canOverhang;   // 줄기만 섬 안이면 가지가 바다 쪽으로 나가도 된다
+
+        public NatureProp(string file, float minHeight, float maxHeight, int weight, int zones, bool canOverhang = false)
+        {
+            this.file = file;
+            this.minHeight = minHeight;
+            this.maxHeight = maxHeight;
+            this.weight = weight;
+            this.zones = zones;
+            this.canOverhang = canOverhang;
+        }
+    }
+
+    // 무게가 클수록 자주 나온다. 나무는 적게 — 많으면 섬 테두리가 숲이 되어 시야를 가린다.
+    static readonly NatureProp[] NatureProps =
+    {
+        new NatureProp("Grass/풀_01", 4f, 6f, 6, NatureLane | NatureSmall | NatureBig),
+        new NatureProp("Grass/풀_02", 6f, 8f, 6, NatureLane | NatureSmall | NatureBig),
+        new NatureProp("Grass/풀_03", 8f, 11f, 5, NatureLane | NatureSmall | NatureBig),
+        new NatureProp("Grass/덤불_01", 7f, 11f, 4, NatureBig),
+        new NatureProp("Grass/덤불_02", 10f, 15f, 3, NatureBig),
+        new NatureProp("Grass/억새_01", 14f, 20f, 3, NatureBig, canOverhang: true),
+        new NatureProp("Rocks/바위_01", 2f, 5f, 5, NatureLane | NatureSmall | NatureBig),
+        new NatureProp("Rocks/바위_02", 5f, 8f, 4, NatureLane | NatureBig),
+        new NatureProp("Rocks/바위_03", 7f, 10f, 3, NatureBig),
+        new NatureProp("Rocks/바위_04", 9f, 13f, 2, NatureBig),
+        new NatureProp("Rocks/바위_05", 14f, 22f, 1, NatureBig),
+        new NatureProp("Rocks/바위무리_01", 8f, 12f, 2, NatureBig),
+        new NatureProp("Rocks/바위무리_02", 11f, 16f, 1, NatureBig),
+        new NatureProp("Rocks/판석_01", 0.8f, 1.5f, 3, NatureLane | NatureSmall | NatureBig),
+        new NatureProp("Rocks/판석_02", 1.5f, 2.2f, 2, NatureLane | NatureBig),
+        new NatureProp("Trees/그루터기_01", 4f, 6f, 2, NatureLane | NatureBig),
+        new NatureProp("Trees/침엽수_01", 26f, 38f, 2, NatureBig, canOverhang: true),
+        new NatureProp("Trees/침엽수_02", 30f, 42f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Trees/활엽수_01", 22f, 32f, 2, NatureBig, canOverhang: true),
+        new NatureProp("Trees/활엽수_가을", 24f, 34f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Trees/야자수_01", 18f, 26f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Trees/죽은나무_01", 20f, 30f, 1, NatureBig, canOverhang: true),
+    };
+
+    class NatureAsset
+    {
+        public GameObject asset;
+        public NatureProp prop;
+        public float height;            // 잰 원본 높이
+        public float minY;              // 원점에서 최저점까지 — 0이어야 정상이지만 혹시 몰라 보정한다
+        public float radiusPerHeight;   // 원점 기준 가로 반경 ÷ 높이. 어떻게 돌려도 이 원 안에 든다
+    }
+
+    static string BuildNatureBorders(Transform root)
+    {
+        List<NatureAsset> assets = new List<NatureAsset>();
+        List<string> missing = new List<string>();
+        foreach (NatureProp prop in NatureProps)
+        {
+            GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(NatureFolder + prop.file + ".fbx");
+            if (asset == null || !TryMeasureFigure(asset, out Bounds bounds) || bounds.size.y < 0.001f)
+            {
+                missing.Add(prop.file);
+                continue;
+            }
+
+            // 원점이 발자국 가운데가 아닐 수 있다(야자수는 한쪽으로 기운다) — 원점에서 가장 먼 모서리로 잰다.
+            float reachX = Mathf.Max(Mathf.Abs(bounds.min.x), Mathf.Abs(bounds.max.x));
+            float reachZ = Mathf.Max(Mathf.Abs(bounds.min.z), Mathf.Abs(bounds.max.z));
+            assets.Add(new NatureAsset
+            {
+                asset = asset,
+                prop = prop,
+                height = bounds.size.y,
+                minY = bounds.min.y,
+                radiusPerHeight = Mathf.Sqrt(reachX * reachX + reachZ * reachZ) / bounds.size.y,
+            });
+        }
+
+        if (assets.Count == 0)
+            return "\n⚠️ 섬 테두리 자연물: Assets/Art/Nature에서 FBX를 하나도 못 읽었습니다.";
+
+        // 소품을 놓기 **전에** 이미 선 것들의 자리를 모은다. 섬 판·절벽·바다(윗면이 섬 높이 이하)와
+        // 바닥에 깐 흙길·표식(두께 0.6 이하)은 장애물이 아니다.
+        List<Rect> obstacles = new List<Rect>();
+        foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>(true))
+        {
+            Bounds bounds = renderer.bounds;
+            if (bounds.max.y <= MapLayout.IslandTop + 0.3f) continue;
+            if (bounds.size.y <= 0.6f) continue;
+            obstacles.Add(Rect.MinMaxRect(bounds.min.x - 1f, bounds.min.z - 1f, bounds.max.x + 1f, bounds.max.z + 1f));
+        }
+
+        GameObject container = new GameObject("Nature");
+        container.transform.SetParent(root, false);
+        container.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
+
+        List<Vector3> placed = new List<Vector3>();   // (x, z, 반경)
+        int blocked = 0;
+
+        int laneCount = 0;
+        foreach (MapLayout.Island lane in MapLayout.Lanes)
+            laneCount += ScatterBorder(container.transform, lane, NatureLane, 7f, 6f, 16f,
+                MapLayout.LaneApronDepth, assets, obstacles, placed, ref blocked);
+
+        List<MapLayout.Island> others = new List<MapLayout.Island>();
+        others.AddRange(MapLayout.Warehouses);
+        others.AddRange(MapLayout.SealIslands);
+        others.AddRange(MapLayout.Zones);
+
+        int smallCount = 0, bigCount = 0;
+        foreach (MapLayout.Island island in others)
+        {
+            float minSide = Mathf.Min(island.size.x, island.size.y);
+            if (minSide < 60f)
+                smallCount += ScatterBorder(container.transform, island, NatureSmall, Mathf.Min(6f, minSide * 0.2f),
+                    3f, 9f, -1f, assets, obstacles, placed, ref blocked);
+            else
+                bigCount += ScatterBorder(container.transform, island, NatureBig, Mathf.Min(24f, minSide * 0.22f),
+                    1f, 8f, -1f, assets, obstacles, placed, ref blocked);
+        }
+
+        string report = $"\n섬 테두리 자연물: {laneCount + smallCount + bigCount}개 — 레인 {laneCount} · 작은 섬 {smallCount} · " +
+                        $"큰 섬 {bigCount} (건물·인형과 겹쳐 뺀 자리 {blocked}).";
+        if (missing.Count > 0)
+            report += $"\n  ⚠️ 못 읽은 자연물 {missing.Count}종: {string.Join(", ", missing)} — " +
+                      "유니티가 아직 임포트를 안 했으면 창에 한 번 포커스를 준 뒤 다시 생성하세요.";
+        return report;
+    }
+
+    // 섬 한 개의 테두리를 변마다 걸으며 소품을 놓는다. bottomApron이 0 이상이면(레인) 아래 변을 빼고,
+    // 왼쪽·오른쪽 변도 아래에서 그만큼 올라간 데서 시작한다.
+    static int ScatterBorder(Transform parent, MapLayout.Island island, int zone, float band,
+        float minGap, float maxGap, float bottomApron, List<NatureAsset> assets,
+        List<Rect> obstacles, List<Vector3> placed, ref int blocked)
+    {
+        List<NatureAsset> choices = assets.Where(a => (a.prop.zones & zone) != 0).ToList();
+        if (choices.Count == 0 || band < 1f) return 0;
+        int totalWeight = choices.Sum(a => a.prop.weight);
+
+        System.Random rng = new System.Random(StableSeed(island.name));
+        float halfX = island.size.x * 0.5f;
+        float halfZ = island.size.y * 0.5f;
+        float cx = island.center.x;
+        float cz = island.center.y;
+
+        bool skipBottom = bottomApron >= 0f;
+        // 모서리는 위·아래 변이 덮으므로 왼쪽·오른쪽 변은 띠 폭만큼 건너뛴다.
+        float sideStart = skipBottom ? bottomApron : band;
+        float sideLength = halfZ * 2f - sideStart - band;
+
+        var sides = new List<(Vector2 start, Vector2 along, Vector2 inward, float length)>
+        {
+            (new Vector2(cx - halfX, cz + halfZ), Vector2.right, Vector2.down, halfX * 2f),
+            (new Vector2(cx - halfX, cz - halfZ + sideStart), Vector2.up, Vector2.right, sideLength),
+            (new Vector2(cx + halfX, cz - halfZ + sideStart), Vector2.up, Vector2.left, sideLength),
+        };
+        if (!skipBottom)
+            sides.Add((new Vector2(cx - halfX, cz - halfZ), Vector2.right, Vector2.up, halfX * 2f));
+
+        int count = 0;
+        foreach (var side in sides)
+        {
+            float cursor = (float)rng.NextDouble() * maxGap;
+            while (cursor < side.length)
+            {
+                NatureAsset pick = PickWeighted(choices, totalWeight, rng);
+                float height = Mathf.Lerp(pick.prop.minHeight, pick.prop.maxHeight, (float)rng.NextDouble());
+                float yaw = (float)rng.NextDouble() * 360f;
+                float gap = Mathf.Lerp(minGap, maxGap, (float)rng.NextDouble());
+                float depthRoll = (float)rng.NextDouble();
+
+                // 발자국이 띠를 넘으면 띠에 맞춰 줄인다. 원래 최소의 60%보다 작아지면 그 자리엔 안 둔다.
+                // 나무는 원점이 반경의 35%만 안쪽이면 되므로 더 크게 들어간다.
+                float inwardShare = pick.prop.canOverhang ? 1.35f : 2f;
+                float fitHeight = (band - 0.5f) / inwardShare / pick.radiusPerHeight;
+                if (fitHeight < height) height = fitHeight;
+                if (height < pick.prop.minHeight * 0.6f)
+                {
+                    cursor += minGap;
+                    continue;
+                }
+
+                float radius = height * pick.radiusPerHeight;
+                float minDepth = pick.prop.canOverhang ? Mathf.Max(1.5f, radius * 0.35f) : radius + 0.5f;
+                float maxDepth = Mathf.Max(minDepth, band - radius);
+                float along = cursor + radius;
+                if (along > side.length) break;
+
+                Vector2 at = side.start + side.along * along + side.inward * Mathf.Lerp(minDepth, maxDepth, depthRoll);
+                cursor = along + radius + gap;
+
+                if (HitsAnything(at, radius, obstacles, placed))
+                {
+                    blocked++;
+                    continue;
+                }
+
+                PlaceNatureProp(parent, pick, at, height, yaw);
+                placed.Add(new Vector3(at.x, at.y, radius));
+                count++;
+            }
+        }
+        return count;
+    }
+
+    static NatureAsset PickWeighted(List<NatureAsset> choices, int totalWeight, System.Random rng)
+    {
+        int roll = rng.Next(totalWeight);
+        foreach (NatureAsset choice in choices)
+        {
+            roll -= choice.prop.weight;
+            if (roll < 0) return choice;
+        }
+        return choices[choices.Count - 1];
+    }
+
+    static bool HitsAnything(Vector2 at, float radius, List<Rect> obstacles, List<Vector3> placed)
+    {
+        foreach (Rect rect in obstacles)
+        {
+            float dx = at.x - Mathf.Clamp(at.x, rect.xMin, rect.xMax);
+            float dz = at.y - Mathf.Clamp(at.y, rect.yMin, rect.yMax);
+            if (dx * dx + dz * dz < radius * radius) return true;
+        }
+
+        foreach (Vector3 other in placed)
+        {
+            float reach = radius + other.z + 0.5f;
+            float dx = at.x - other.x;
+            float dz = at.y - other.y;
+            if (dx * dx + dz * dz < reach * reach) return true;
+        }
+        return false;
+    }
+
+    static void PlaceNatureProp(Transform parent, NatureAsset pick, Vector2 at, float height, float yaw)
+    {
+        GameObject prop = (GameObject)PrefabUtility.InstantiatePrefab(pick.asset, parent);
+        float scale = height / pick.height;
+
+        // FBX 루트가 가진 회전·크기(축 변환)를 지우지 않고 그 위에 곱한다. 대입하면 옆으로 눕는다.
+        prop.transform.localScale = pick.asset.transform.localScale * scale;
+        prop.transform.rotation = Quaternion.Euler(0f, yaw, 0f) * pick.asset.transform.localRotation;
+        prop.transform.position = new Vector3(at.x, MapLayout.IslandTop - pick.minY * scale, at.y);
+
+        foreach (Collider collider in prop.GetComponentsInChildren<Collider>(true))
+            Object.DestroyImmediate(collider);
+
+        // 수백 개가 서므로 정적 배칭으로 묶어 드로우콜을 줄인다.
+        foreach (Transform part in prop.GetComponentsInChildren<Transform>(true))
+            GameObjectUtility.SetStaticEditorFlags(part.gameObject, StaticEditorFlags.BatchingStatic);
+    }
+
+    // string.GetHashCode는 실행 환경마다 달라질 수 있다 — 이름에서 늘 같은 씨앗을 뽑는다(FNV-1a).
+    static int StableSeed(string text)
+    {
+        unchecked
+        {
+            uint hash = 2166136261;
+            foreach (char c in text)
+            {
+                hash ^= c;
+                hash *= 16777619;
+            }
+            return (int)hash;
+        }
     }
 
     // 레인 지형. 적이 도는 자리에 흙길을 깐다.
