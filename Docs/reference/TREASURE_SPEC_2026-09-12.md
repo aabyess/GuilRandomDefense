@@ -88,8 +88,9 @@ gg_rct_treasure_chest_zone = Rect(-5856.0, -2400.0, 2464.0, 6080.0)   (맵에 �
 
 스폰 코드는 `GetRandomLocInRect(gg_rct_treasure_chest_zone)`를 **`udg_treasure_box_int`번
 반복**해서 각기 독립적으로 뽑는다 — 이름표가 붙은 좌표 목록이나 서브존 배열은 없다.
-`udg_treasure_box_int`는 기본 **7**(`InitGlobals`), 전설나미 조합 후 **9**(§5-2)로 전역
-1회 변경된다(플레이어별 아님, 게임 전체 공용 상수). `[파일확인]`
+`udg_treasure_box_int`는 기본 **7**(`InitGlobals`), 전설나미 조합 후 **9**(§6-1)로 전역
+1회 변경된다(플레이어별 아님, 게임 전체 공용 상수 — §6-1의 나머지 세 변수와 달리 이것만
+전역이다). `[파일확인]`
 
 ⚠️ `AHta` 툴팁은 "창고,조합식 제외 랜덤한 위치"라고 적어 두었지만, **스폰 코드 자체에는
 창고·조합식 지역을 걸러내는 조건이 없다** — 단일 rect 안에서 순수 무작위이므로, 창고·조합
@@ -156,25 +157,33 @@ endloop
 
 ## 6. 탐색범위·보상 증가 — 나미(전설) 2배 보상은 실제로 있다, 단 "영원" 나미와는 다른 별개 유닛이다
 
-### 6-1. 전설 나미(`h02P` 도둑고양이 나미, 능력 `A04X`) — PM 웹조사의 "2배 보상"이 정확히 여기서 나온다
+### 6-1. 전설 나미(`h02P` 도둑고양이 나미, 능력 `A04X`) — 🔴 정정: 툴팁은 "전체 한번만"이라 쓰지만 실제론 조합한 플레이어 개인별이다
 
 `A04X` 툴팁 원문: *"도둑 고양이 나미를 한번이라도 조합했을 경우 탐색범위가 15% 증가하고
 앞으로 보물 탐색 성공시 2배의 보상을 얻게 됩니다. 10라운드마다 리젠되는 보물상자의 개수가
-2개 증가합니다(조합시 플레이어 전체 한번만 적용)."* — 이 세 문장이 `Trig_UnitJohabCounter_Actions`
-(맵 전체를 도는 `UNIT_TYPE_GIANT` 진입 감지 트리거, `A04X` 레벨1 보유 + `Nami_legend_Boolean`
-가드로 팀 전체 1회만 발동)의 실제 코드와 **전부 정확히 일치한다**:
+2개 증가합니다(조합시 플레이어 전체 한번만 적용)."* — `Trig_UnitJohabCounter_Actions`
+(맵 전체를 도는 `UNIT_TYPE_GIANT` 진입 감지 트리거, `Func020Func001C`가 `A04X` 레벨1
+보유 + `Nami_legend_Boolean` 가드로 게이팅) 실제 코드(33537~33542행 부근)를 다시 읽으면
+**툴팁의 "전체 한번만"과 코드가 어긋난다**:
 
 ```jass
-udg_treasure_box_int      = 9        // 7+2, 툴팁의 "+2개"와 일치
-udg_treasure_range_int[p] = 863.00   // 750×1.15=862.5≈863, 툴팁의 "+15%"와 일치
-udg_TreasureChest[p]      = TreasureChest[p]+1   // 기본1→2, §4의 "지급 개수"가 그대로 2배가 됨
-                                                   // = 툴팁의 "2배의 보상"과 정확히 일치
-udg_Gold_Plus[p]          += 0.60    // 툴팁엔 없는 별도 보너스(공통 골드 배율)
+set udg_treasure_box_int=9                                                    // 전역 스칼라 — 이것만 팀 전체 공용
+set udg_treasure_range_int[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=863.00   // 배열, 조합한 플레이어 인덱스만
+set udg_Nami_legend_Boolean[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=true     // 배열, 조합한 플레이어 인덱스만(가드 자체도 per-player)
+set udg_TreasureChest[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=(...+1)         // 배열, 조합한 플레이어 인덱스만
+set udg_Gold_Plus[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=(...+0.60)          // 배열, 조합한 플레이어 인덱스만
 ```
 
-**결론: PM 웹조사의 "나미(전설) 보유 시 보상 2배"는 사실이다 — 다만 그 실체는 "보상에
-곱연산 2×를 거는" 게 아니라, "발견 시 지급 개수(`TreasureChest`)가 1에서 2로 늘어나는" 것이다.**
-결과적으로 위습 개수가 정확히 2배가 되므로 체감상 완전히 동일하다. `[파일확인]`
+`treasure_range_int`/`TreasureChest`/`Gold_Plus`/가드 `Nami_legend_Boolean` **넷 다
+`GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))`로 인덱싱되는 배열**이고,
+가드 자체가 플레이어별이라 **4명이 각자 한 번씩 독립적으로 이 보너스를 받을 수 있다** —
+"조합시 플레이어 전체 한번만 적용"이라는 툴팁 문구와 실제 실행 코드가 다르다. **전역으로
+공유되는 건 `treasure_box_int=9`(상자 재생성 개수) 하나뿐**이다. `[파일확인]`
+
+**결론(정정): "나미(전설) 보유 시 보상 2배"는 사실이지만, 그 대상은 "팀 전체"가 아니라
+"그 나미를 실제로 조합한 플레이어 개인"이다.** 그 효과 자체("보상에 곱연산 2×"가 아니라
+"발견 시 지급 개수(`TreasureChest`)가 1→2로 늘어나는" 방식)는 이전 결론 그대로 맞다 —
+틀렸던 건 "누구에게 적용되는가"뿐이다.
 
 ### 6-2. 영원 나미(채팅 "날씨는맑음"/"nami tr" 획득) — 별개의, 더 큰 범위 보너스
 
@@ -347,7 +356,7 @@ function Trig_item_up_Func005C takes nothing returns boolean
 | 1회 시전 결과 | 반경 내 상자 **전부** 동시 발견 가능(1개 제한 없음) | §4 |
 | 보상표 | 1/3씩: 랜덤위습(`e0IX`) / 흔함선택위습(`e018`) / 안흔함위습(`e017`), 개수=`TreasureChest[pid]`(기본1, 전설나미 후 2) | §4 |
 | 보상 대상 | 발견한 플레이어 개인에게만 지급 | §4 |
-| 나미(전설) 2배 보상 | **실제로 있다** — `TreasureChest` 1→2 (곱연산이 아니라 지급개수 자체가 2배) | §6-1 |
+| 나미(전설) 2배 보상 | **실제로 있다, 단 조합한 플레이어 개인에게만**(`TreasureChest`/`treasure_range_int`/`Gold_Plus`/가드 전부 per-player 배열) — 툴팁의 "전체 한번만"은 코드와 다름. 전역인 건 상자 재생성 개수(9)뿐 | §6-1 |
 | I002("찾은 보물 개수") | 발견 때마다 **전원**(4인 공용 진행도) +1, `iabi=A109`(무효과 스텁·순수 카운터) | §5 |
 | 세이브 +2 | **매 발견 아님** — `treasurequest`가 정확히 9에 도달하는 순간 1회, 전원에게 목재+2/`Save_playpoint`+2/`present_Save_playpoint`+2 | §5 |
 | 모건 "100초마다 추가 탐색" | **근거 없음**(반증: 모건 전용 트리거 0건, AHta 쿨타임 오독으로 추정) | §7 |
@@ -364,3 +373,9 @@ function Trig_item_up_Func005C takes nothing returns boolean
    면적이 zone의 0.06% 미만이라 확률상 거의 안 걸린다.
 3. 탐색 반경을 레인 크기 대비 비율로 냈다: 레인 폭 대비 기본23.0%/전설26.5%/영원28.9%,
    레인 높이 대비 27.7%/31.8%/34.7%.
+
+## 1줄 결론 (2차 정정, PM 회신용)
+
+§6-1 정정 완료 — 나미(전설) 보너스는 "조합시 플레이어 전체 한번만"이라는 툴팁과 달리
+실제로는 조합한 플레이어 개인에게만 걸린다(전역인 건 상자 재생성 개수 9뿐, 나머지 셋+
+가드는 전부 per-player 배열).
