@@ -20,11 +20,14 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
 {
     const string NatureRoot = "Assets/Art/Nature/";
     const string WallRoot = "Assets/Art/Walls/";
-    const string TextureFolder = "Assets/Art/Nature/Textures";
-    const string LeafCardSuffix = "_잎카드";
+    const string MonsterRoot = "Assets/Art/Monsters/";
+    // 텍스처는 자기 종류 폴더의 Textures에서 찾는다(자연물·벽은 Nature/Textures, 괴물은 Monsters/Textures).
+    static readonly string[] TextureFolders = { "Assets/Art/Nature/Textures", "Assets/Art/Monsters/Textures" };
+    const string LeafCardSuffix = "_잎카드";   // 잎 카드·지느러미 막 — 양면 + 알파 컷
 
     // 규칙을 바꾸면 올린다 — 올려야 이미 임포트된 FBX도 다시 돈다.
-    public override uint GetVersion() => 1;
+    // 1 → 2 (2026-09-12): 거대 해왕류(Assets/Art/Monsters)를 대상에 추가.
+    public override uint GetVersion() => 2;
 
     // URP의 기본 재질 설명 처리(셰이더를 Lit로, 색을 FBX 기본색으로)가 먼저 돈 뒤에 덧붙인다.
     public override int GetPostprocessOrder() => 100;
@@ -35,7 +38,7 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
     static bool Applies(string path)
     {
         string nfc = Nfc(path);
-        return nfc != null && (nfc.StartsWith(NatureRoot) || nfc.StartsWith(WallRoot));
+        return nfc != null && (nfc.StartsWith(NatureRoot) || nfc.StartsWith(WallRoot) || nfc.StartsWith(MonsterRoot));
     }
 
     void OnPreprocessMaterialDescription(MaterialDescription description, Material material, AnimationClip[] animations)
@@ -78,9 +81,12 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
     // 파일명과 재질 이름을 NFC로 맞춰 비교한다. LoadAssetAtPath에 이름을 그대로 붙이면 자모 분리 때문에 조용히 못 찾는다.
     static string FindTexturePath(string materialName)
     {
-        if (string.IsNullOrEmpty(materialName) || !AssetDatabase.IsValidFolder(TextureFolder)) return null;
+        if (string.IsNullOrEmpty(materialName)) return null;
 
-        return AssetDatabase.FindAssets("t:Texture2D", new[] { TextureFolder })
+        string[] folders = TextureFolders.Where(AssetDatabase.IsValidFolder).ToArray();
+        if (folders.Length == 0) return null;
+
+        return AssetDatabase.FindAssets("t:Texture2D", folders)
             .Select(AssetDatabase.GUIDToAssetPath)
             .FirstOrDefault(path => Nfc(System.IO.Path.GetFileNameWithoutExtension(path)) == materialName);
     }
@@ -90,9 +96,13 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
     // 건드리지 않으므로 되돌아와서 무한히 돌지 않는다.
     static void OnPostprocessAllAssets(string[] imported, string[] deleted, string[] moved, string[] movedFrom)
     {
-        if (!imported.Any(path => Nfc(path).StartsWith(TextureFolder + "/"))) return;
+        if (!imported.Any(path => TextureFolders.Any(folder => Nfc(path).StartsWith(folder + "/")))) return;
 
-        string[] models = AssetDatabase.FindAssets("t:Model", new[] { "Assets/Art/Nature", "Assets/Art/Walls" })
+        string[] roots = new[] { "Assets/Art/Nature", "Assets/Art/Walls", "Assets/Art/Monsters" }
+            .Where(AssetDatabase.IsValidFolder).ToArray();
+        if (roots.Length == 0) return;
+
+        string[] models = AssetDatabase.FindAssets("t:Model", roots)
             .Select(AssetDatabase.GUIDToAssetPath)
             .Where(path => path.EndsWith(".fbx", System.StringComparison.OrdinalIgnoreCase))
             .ToArray();
