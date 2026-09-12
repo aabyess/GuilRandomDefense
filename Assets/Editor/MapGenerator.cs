@@ -279,12 +279,42 @@ public static class MapGenerator
         new NatureProp("Rocks/바위무리_02", 11f, 16f, 1, NatureBig),
         new NatureProp("Rocks/판석_01", 0.8f, 1.5f, 3, NatureLane | NatureSmall | NatureBig),
         new NatureProp("Rocks/판석_02", 1.5f, 2.2f, 2, NatureLane | NatureBig),
+        // 2026-09-12 사실적 바위 11종 추가(구현담당2, 3d699f49). 해안바위·암벽조각은 섬 가장자리에 걸쳐
+        // 바다 쪽으로 튀어나오는 게 자연스러워 canOverhang — 원 전체를 띠에 넣으면 너무 작아져 늘 빠진다.
+        new NatureProp("Rocks/둥근강돌_01", 1.5f, 2.5f, 3, NatureLane | NatureSmall | NatureBig),
+        new NatureProp("Rocks/둥근강돌_02", 3f, 5f, 2, NatureLane | NatureBig),
+        new NatureProp("Rocks/뾰족바위_01", 10f, 16f, 1, NatureBig),
+        new NatureProp("Rocks/뾰족바위_02", 16f, 24f, 1, NatureBig),
+        new NatureProp("Rocks/암벽조각_01", 12f, 21f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Rocks/암벽조각_02", 14f, 27f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Rocks/이끼바위_01", 4f, 6f, 2, NatureBig),
+        new NatureProp("Rocks/이끼바위_02", 8f, 12f, 1, NatureBig),
+        new NatureProp("Rocks/자갈무리_01", 3f, 5f, 2, NatureBig),
+        new NatureProp("Rocks/해안바위_01", 2.5f, 4f, 2, NatureBig, canOverhang: true),
+        new NatureProp("Rocks/해안바위_02", 5f, 8f, 1, NatureBig, canOverhang: true),
+
+        // 나무 20종(C 스타일, 2026-09-12 구현담당1 9355113d). 종류가 세 배로 늘어 무게를 전부 1로 낮췄다 —
+        // 그대로 두면 큰 섬 테두리가 숲이 되어 시야를 가린다. 높이는 실제 비율의 1/3쯤(사람 키 20 기준)으로
+        // 줄여 둔다 — 실제 크기면 나무 한 그루가 섬 절반을 덮는다.
         new NatureProp("Trees/그루터기_01", 4f, 6f, 2, NatureLane | NatureBig),
-        new NatureProp("Trees/침엽수_01", 26f, 38f, 2, NatureBig, canOverhang: true),
+        new NatureProp("Trees/쓰러진통나무_01", 3f, 5f, 1, NatureBig),
+        new NatureProp("Trees/어린나무_01", 8f, 14f, 2, NatureBig),
+        new NatureProp("Trees/침엽수_01", 26f, 38f, 1, NatureBig, canOverhang: true),
         new NatureProp("Trees/침엽수_02", 30f, 42f, 1, NatureBig, canOverhang: true),
-        new NatureProp("Trees/활엽수_01", 22f, 32f, 2, NatureBig, canOverhang: true),
+        new NatureProp("Trees/소나무_01", 24f, 34f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Trees/전나무_01", 30f, 44f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Trees/가문비_01", 28f, 38f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Trees/활엽수_01", 22f, 32f, 1, NatureBig, canOverhang: true),
         new NatureProp("Trees/활엽수_가을", 24f, 34f, 1, NatureBig, canOverhang: true),
-        new NatureProp("Trees/야자수_01", 18f, 26f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Trees/참나무_01", 24f, 34f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Trees/자작나무_01", 26f, 38f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Trees/벚나무_01", 20f, 30f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Trees/단풍나무_01", 22f, 32f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Trees/은행나무_01", 26f, 36f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Trees/버드나무_01", 20f, 28f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Trees/야자수_01", 22f, 30f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Trees/야자수_02", 24f, 32f, 1, NatureBig, canOverhang: true),
+        new NatureProp("Trees/야자수_03", 16f, 24f, 1, NatureBig, canOverhang: true),
         new NatureProp("Trees/죽은나무_01", 20f, 30f, 1, NatureBig, canOverhang: true),
     };
 
@@ -417,8 +447,11 @@ public static class MapGenerator
                 float depthRoll = (float)rng.NextDouble();
 
                 // 발자국이 띠를 넘으면 띠에 맞춰 줄인다. 원래 최소의 60%보다 작아지면 그 자리엔 안 둔다.
-                // 나무는 원점이 반경의 35%만 안쪽이면 되므로 더 크게 들어간다.
-                float inwardShare = pick.prop.canOverhang ? 1.35f : 2f;
+                // 가지가 넓은 것(canOverhang)은 줄기만 섬 안이면 되고, 가지는 바다 쪽으로 넘어가도, 띠 안쪽으로
+                // 반경의 일부만큼 넘어가도 된다. 발자국 원 전체를 띠에 넣게 하면 넓은 나무가 사람보다 작아진다
+                // (2026-09-12 나무 20종 실측: 참나무 가로 158·높이 114 — 원 전체를 띠 24에 넣으면 키가 17이었다).
+                // 조건: 줄기 깊이(반경의 25%) + 안쪽으로 뻗는 가지(반경의 60%) ≤ 띠.
+                float inwardShare = pick.prop.canOverhang ? 0.85f : 2f;
                 float fitHeight = (band - 0.5f) / inwardShare / pick.radiusPerHeight;
                 if (fitHeight < height) height = fitHeight;
                 if (height < pick.prop.minHeight * 0.6f)
@@ -428,8 +461,8 @@ public static class MapGenerator
                 }
 
                 float radius = height * pick.radiusPerHeight;
-                float minDepth = pick.prop.canOverhang ? Mathf.Max(1.5f, radius * 0.35f) : radius + 0.5f;
-                float maxDepth = Mathf.Max(minDepth, band - radius);
+                float minDepth = pick.prop.canOverhang ? Mathf.Max(1.5f, radius * 0.25f) : radius + 0.5f;
+                float maxDepth = Mathf.Max(minDepth, pick.prop.canOverhang ? band - radius * 0.6f : band - radius);
                 float along = cursor + radius;
                 if (along > side.length) break;
 
@@ -2889,6 +2922,48 @@ public static class MapGenerator
 
     const string WallFolder = "Assets/Art/Walls/";
 
+    // 벽 조각의 **규격 치수**(게임 단위, 길이 X × 높이 Y × 두께 Z). gen_walls.py가 이 규격으로 짓는다.
+    // 🔴 늘릴 배율은 잰 크기가 아니라 이 규격으로 잡는다 — 흉벽성벽은 총안이 위로 1.3, 나무기둥은 랜턴 팔이
+    //    옆으로 튀어나와서, 잰 크기로 나누면 몸통이 눌린다(2026-09-12 벽 17종, a8cde0fb). 장식은 튀어나온 채로 붙는다.
+    static readonly Dictionary<string, Vector3> WallPieceSizes = new Dictionary<string, Vector3>
+    {
+        // 두꺼운 벽
+        { "돌담_두꺼움", new Vector3(8f, 5.5f, 7f) },
+        { "성벽_마름돌", new Vector3(8f, 5.5f, 7f) },
+        { "폐허벽", new Vector3(8f, 5.5f, 7f) },
+        { "흉벽성벽", new Vector3(8f, 5.5f, 7f) },
+        // 얇은 벽
+        { "돌담_얇음", new Vector3(6f, 5.5f, 1.4f) },
+        { "석축_이끼", new Vector3(6f, 5.5f, 1.4f) },
+        { "벽돌담", new Vector3(6f, 5.5f, 1.4f) },
+        { "해안방파제", new Vector3(6f, 5.5f, 1.4f) },
+        // 울타리
+        { "나무울타리", new Vector3(6f, 5.5f, 1f) },
+        { "목책", new Vector3(6f, 5.5f, 1f) },
+        { "목장울타리", new Vector3(6f, 5.5f, 1f) },
+        { "대나무울타리", new Vector3(6f, 5.5f, 1f) },
+        { "밧줄난간", new Vector3(6f, 5.5f, 1f) },
+        // 기둥
+        { "돌기둥", new Vector3(2.2f, 7f, 2.2f) },
+        { "나무기둥", new Vector3(2.2f, 7f, 2.2f) },
+        { "이끼돌기둥", new Vector3(2.2f, 7f, 2.2f) },
+        // 문
+        { "정의문", new Vector3(20.6f, 7f, 1.4f) },
+    };
+
+    // 조각의 실제 크기를 규격으로 돌려준다. 유니티 임포트 단위(useFileScale)가 어떻게 먹었는지는
+    // **장식이 안 걸리는 축**으로 잰다 — 기둥은 높이(랜턴 팔은 옆), 나머지는 길이(이어 붙이는 조각은 끝면이 정확).
+    // 규격표에 없는 조각은 잰 크기를 그대로 쓴다.
+    static Vector3 WallPieceSize(string pieceName, Vector3 measured, out bool isPillar, out bool isKnown)
+    {
+        isPillar = pieceName.EndsWith("기둥");
+        isKnown = WallPieceSizes.TryGetValue(pieceName, out Vector3 nominal);
+        if (!isKnown) return measured;
+
+        float unit = isPillar ? measured.y / nominal.y : measured.x / nominal.x;
+        return nominal * unit;
+    }
+
     // 어떤 조각을 쓸지 고른다. 두께만으로 가르면 부스 끝벽처럼 뭉툭한 울타리가 돌담이 되므로 이름을 먼저 본다.
     static string WallPieceFor(string name, Vector3 scale)
     {
@@ -2918,12 +2993,14 @@ public static class MapGenerator
         dressing.transform.position = wall.transform.position - Vector3.up * (height * 0.5f);   // 바닥 가운데
         dressing.transform.rotation = Quaternion.Euler(0f, alongZ ? 90f : 0f, 0f);                // 조각의 길이 방향은 X
 
-        int count = pieceName == "돌기둥" ? 1 : Mathf.Max(1, Mathf.RoundToInt(length / bounds.size.x));
-        Vector3 factor = new Vector3(length / (count * bounds.size.x), height / bounds.size.y, thickness / bounds.size.z);
+        Vector3 pieceSize = WallPieceSize(pieceName, bounds.size, out bool pillar, out bool known);
+        int count = pillar ? 1 : Mathf.Max(1, Mathf.RoundToInt(length / pieceSize.x));
+        Vector3 factor = new Vector3(length / (count * pieceSize.x), height / pieceSize.y, thickness / pieceSize.z);
         float step = length / count;
-        // 원점이 바닥 한가운데로 만들어져 있지만, 조금이라도 어긋나 있으면 여기서 되돌린다.
-        float offsetX = -(bounds.min.x + bounds.max.x) * 0.5f * factor.x;
-        float offsetZ = -(bounds.min.z + bounds.max.z) * 0.5f * factor.z;
+        // 규격 조각은 원점이 바닥 한가운데로 약속돼 있다 — 경계 상자로 다시 가운데를 잡으면 한쪽으로 튀어나온
+        // 장식(랜턴 팔) 때문에 몸통이 반대로 밀린다. 규격표에 없는 조각만 경계 상자로 되돌린다.
+        float offsetX = known ? 0f : -(bounds.min.x + bounds.max.x) * 0.5f * factor.x;
+        float offsetZ = known ? 0f : -(bounds.min.z + bounds.max.z) * 0.5f * factor.z;
 
         for (int i = 0; i < count; i++)
         {
@@ -2957,7 +3034,8 @@ public static class MapGenerator
             return;
 
         Vector3 parentScale = gate.transform.localScale;
-        Vector3 world = new Vector3(parentScale.x / bounds.size.x, parentScale.y / bounds.size.y, parentScale.z / bounds.size.z);
+        Vector3 gateSize = WallPieceSize("정의문", bounds.size, out _, out bool gateKnown);
+        Vector3 world = new Vector3(parentScale.x / gateSize.x, parentScale.y / gateSize.y, parentScale.z / gateSize.z);
 
         GameObject tile = (GameObject)PrefabUtility.InstantiatePrefab(piece, gate.transform);
         tile.name = "정의문_모양";
@@ -2967,9 +3045,9 @@ public static class MapGenerator
 
         // 문 상자 원점은 한가운데, 조각 원점은 바닥 가운데다. 세계 기준 오프셋을 부모 배율로 나눠 넣는다.
         Vector3 offset = new Vector3(
-            -(bounds.min.x + bounds.max.x) * 0.5f * world.x,
+            gateKnown ? 0f : -(bounds.min.x + bounds.max.x) * 0.5f * world.x,
             -parentScale.y * 0.5f - bounds.min.y * world.y,
-            -(bounds.min.z + bounds.max.z) * 0.5f * world.z);
+            gateKnown ? 0f : -(bounds.min.z + bounds.max.z) * 0.5f * world.z);
         tile.transform.localPosition = new Vector3(offset.x / parentScale.x, offset.y / parentScale.y, offset.z / parentScale.z);
 
         foreach (Collider collider in tile.GetComponentsInChildren<Collider>(true))
