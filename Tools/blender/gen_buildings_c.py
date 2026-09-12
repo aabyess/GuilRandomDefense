@@ -117,7 +117,9 @@ def make_hanyang_kindergarten():
     # 간판 「한양영어유치원」(폭의 1/12 이상 — 34.5/12≈2.9) + 부제 ENGLISH
     b.sign("한양영어유치원", "-y", y0, rcx, right_top - 6.4, "건물_색_흰", "건물_색_남색",
            size=3.2, pad=0.6, max_width=13.5)
-    b.text("ENGLISH", (rcx, y0 - 0.02, right_top - 8.3), "-y", 1.5, "건물_색_빨강", 0.2)
+    # 🔴 정정(PM 렌더 검수) — z=34.7이 2층 사선 가새(z 25~40.5)의 딱 중간을 지나 글자가 가려졌다.
+    # 가새보다 확실히 앞으로(y0-0.02 → y0-0.7) 뺐다.
+    b.text("ENGLISH", (rcx, y0 - 0.7, right_top - 8.3), "-y", 1.5, "건물_색_빨강", 0.2)
     return b
 
 
@@ -148,8 +150,10 @@ def make_guil_elementary():
     for z in floors:
         b.windows("-y", y0, us_front, (z + 4.5,), 2.6, 6.5, sill_mat=concrete, frame_mat=trim)
     b.windows("+y", y1, us_front, (5.0, G + 4.5, floors[1] + 4.5), 2.6, 6.5, sill_mat=concrete, frame_mat=trim)
-    b.windows("-x", x0, (0.0,), (5.0, G + 4.5), 2.4, 5.0, sill_mat=concrete, frame_mat=trim)
-    b.windows("+x", x1, (0.0,), (5.0, G + 4.5), 2.4, 5.0, sill_mat=concrete, frame_mat=trim)
+    # 🔴 정정(PM 렌더 검수) — u=0.0은 이 건물의 y 범위([y0,y1], YS만큼 밀려 있다) 밖이라 창이 벽에서
+    # 떨어져 운동장 쪽에 붕 떠 있었다. 벽 안(가운데)으로 옮긴다.
+    b.windows("-x", x0, ((y0 + y1) / 2,), (5.0, G + 4.5), 2.4, 5.0, sill_mat=concrete, frame_mat=trim)
+    b.windows("+x", x1, ((y0 + y1) / 2,), (5.0, G + 4.5), 2.4, 5.0, sill_mat=concrete, frame_mat=trim)
     for x in (x0 + 0.5, x1 - 0.5):
         b.box_c(x, y0 - 0.45, 0.5, 0.5, 0.3, top + 0.6, "건물_금속_회색", skip=("bottom",))
     b.box_c(x1 - 2.0, 0.0, 1.8, 1.4, 5.5, 1.6, trim)                # 옆벽 실외기
