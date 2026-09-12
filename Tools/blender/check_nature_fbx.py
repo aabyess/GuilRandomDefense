@@ -17,18 +17,27 @@
 속이 뚫려 보이거나 부재가 사라져 보인다(스토리 04·05·06 옥상 면 누락, 08·12 차양 윗면 누락을 이 검사로 찾았다).
 바닥을 24×24 격자로 훑어 적중 수와 위치를 찍고, 적중 면 넓이가 바닥 넓이의 1% 이상이면 경고(문제로 셈),
 미만이면 작은 부재 밑면일 수 있어 참고로만 표시한다. `_잎카드` 면은 양면이라 셈하지 않는다.
+
+⚠️ 게임 카메라 각도 뒷면 검사(2026-09-12 추가, PM 상설 지시): 옆·비스듬히 보이는 뒷면(보물상자의 두께 없는
+한 겹 뚜껑 안쪽 등)은 위에서 본 검사가 못 잡는다. 내려다보는 각 50°·방위 넷(앞·뒤·좌·우)에서 쏜 광선이 처음
+맞는 면이 광선을 등지면 기록한다 — 기준은 위와 같다(1% 이상 경고, `_잎카드` 제외). 뼈대가 붙은 모델은 이름이
+…Open으로 끝나는 액션의 마지막 프레임 자세에서도 한 번 더 돈다.
 """
 
 import bpy
 import bmesh
 import glob
+import math
 import os
 import sys
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 
-GRID = 24                  # 위에서 본 뒷면 검사 격자(한 변)
+GRID = 24                  # 뒷면 검사 격자(한 변)
 BACKFACE_WARN_RATIO = 0.01  # 적중 면 넓이 ÷ 바닥 넓이가 이 이상이면 경고
+CAMERA_ELEVATION = 50.0     # 게임 카메라가 내려다보는 각(도)
+# 방위 — 카메라가 있는 쪽 : 광선의 수평 방향. 앞(−Y)에 선 카메라는 +Y 쪽을 본다.
+AZIMUTHS = {"앞(−Y)에서": (0.0, 1.0), "뒤(+Y)에서": (0.0, -1.0), "왼(−X)에서": (1.0, 0.0), "오른(+X)에서": (-1.0, 0.0)}
 
 PROJECT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 DEFAULT_ROOT = os.path.join(PROJECT, "Assets", "Art", "Nature")
@@ -67,9 +76,77 @@ def measure(path):
         # 유니티는 사각형·다각형을 삼각형으로 쪼갠다 — n각형 하나 = 삼각형 n-2개.
         tris = sum(len(poly.vertices) - 2 for poly in obj.data.polygons)
         mats = sorted({slot.material.name for slot in obj.material_slots if slot.material})
-        rows.append((obj.name, hi[0] - lo[0], hi[2] - lo[2], hi[1] - lo[1],
-                     lo[2], obj.matrix_world.translation.length, tris, mats, top_down_backfaces(obj, lo, hi)))
+        rows.append([obj.name, hi[0] - lo[0], hi[2] - lo[2], hi[1] - lo[1],
+                     lo[2], obj.matrix_world.translation.length, tris, mats, top_down_backfaces(obj, lo, hi),
+                     camera_backfaces(obj, "기본 자세")])
+    # 애니메이션 모델은 `Open` 끝 자세에서도 한 번 더(열린 뚜껑 안쪽 같은 뒷면은 그 자세에서만 보인다)
+    pose = open_end_pose()
+    if pose:
+        by_name = {row[0]: row for row in rows}
+        for obj in bpy.context.scene.objects:
+            if obj.type == "MESH" and obj.name in by_name and obj.find_armature() is not None:
+                by_name[obj.name][9] += camera_backfaces(obj, pose)
     return rows
+
+
+def open_end_pose():
+    """가져온 액션 중 이름이 …Open으로 끝나는 것을 뼈대에 걸고 마지막 프레임으로 — 돌려주는 값은 자세 이름(없으면 None)."""
+    act = next((a for a in bpy.data.actions if a.name.endswith("Open")), None)
+    if act is None:
+        return None
+    for arm in (o for o in bpy.context.scene.objects if o.type == "ARMATURE"):
+        if arm.animation_data is None:
+            arm.animation_data_create()
+        arm.animation_data.action = act
+    bpy.context.scene.frame_set(int(act.frame_range[1]))
+    return "Open 끝 자세"
+
+
+def _evaluated_bmesh(obj):
+    """모디파이어(뼈대 자세)까지 반영한 월드 좌표 메시."""
+    bm = bmesh.new()
+    bm.from_object(obj, bpy.context.evaluated_depsgraph_get())
+    bm.transform(obj.matrix_world)
+    bm.normal_update()
+    bm.faces.ensure_lookup_table()
+    return bm
+
+
+def camera_backfaces(obj, pose):
+    """게임 카메라 각도(내려다보는 각 CAMERA_ELEVATION, 방위 넷)에서 쏜 광선이 처음 맞는 면이 광선을 등지는 곳 —
+    [(방위, x, y, z, 넓이, 경고인가, 자세)]. 옆·비스듬히 보이는 뒷면(한 겹 뚜껑 안쪽 등)은 위에서 본 검사가 못 잡는다.
+    땅 위 과녁 격자는 바닥 사각형을 광선이 나아가는 쪽으로 (키 ÷ tan 각)만큼 늘려 건물 옆면까지 덮는다."""
+    bm = _evaluated_bmesh(obj)
+    tree = BVHTree.FromBMesh(bm)
+    names = [slot.material.name if slot.material else "" for slot in obj.material_slots]
+    xs = [v.co.x for v in bm.verts]
+    ys = [v.co.y for v in bm.verts]
+    zs = [v.co.z for v in bm.verts]
+    lo, hi = Vector((min(xs), min(ys), min(zs))), Vector((max(xs), max(ys), max(zs)))
+    floor = max((hi.x - lo.x) * (hi.y - lo.y), 1e-6)
+    height = max(hi.z - lo.z, 0.1)
+    el = math.radians(CAMERA_ELEVATION)
+    reach = height / math.tan(el) + 1.0
+    travel = height / math.sin(el) + 2.0
+    found = {}
+    for label, (ax, ay) in AZIMUTHS.items():
+        d = Vector((ax * math.cos(el), ay * math.cos(el), -math.sin(el)))
+        x0, x1 = lo.x - (reach if ax < 0 else 0.0), hi.x + (reach if ax > 0 else 0.0)
+        y0, y1 = lo.y - (reach if ay < 0 else 0.0), hi.y + (reach if ay > 0 else 0.0)
+        for i in range(GRID):
+            for j in range(GRID):
+                target = Vector((x0 + (x1 - x0) * (i + 0.5) / GRID, y0 + (y1 - y0) * (j + 0.5) / GRID, lo.z))
+                loc, _, index, _ = tree.ray_cast(target - d * travel, d, travel * 2.0)
+                if loc is None or index in found:
+                    continue
+                face = bm.faces[index]
+                name = names[face.material_index] if face.material_index < len(names) else ""
+                if face.normal.dot(d) > 0.1 and not name.split(".")[0].endswith("_잎카드"):
+                    area = face.calc_area()
+                    found[index] = (label, round(loc.x, 1), round(loc.y, 1), round(loc.z, 1), area,
+                                    area / floor >= BACKFACE_WARN_RATIO, pose)
+    bm.free()
+    return list(found.values())
 
 
 def top_down_backfaces(obj, lo, hi):
@@ -110,7 +187,7 @@ def main():
     print("=" * 100)
     print(f"{'파일':24} {'가로':>7} {'세로':>7} {'앞뒤':>7} {'최저점':>7} {'원점거리':>8} {'삼각형':>6}  재질")
     notes = []
-    for rel, name, w, h, d, low, origin, tris, mats, backfaces in measured:
+    for rel, name, w, h, d, low, origin, tris, mats, backfaces, cams in measured:
         flags = []
         if abs(low) > 0.01:
             flags.append("최저점≠0")
@@ -121,12 +198,20 @@ def main():
         warn = [b for b in backfaces if b[3]]
         if warn:
             flags.append(f"위에서 뒷면 {len(warn)}곳")
+        cam_warn = [c for c in cams if c[5]]
+        if cam_warn:
+            flags.append(f"카메라각 뒷면 {len(cam_warn)}곳")
         problems += len(flags)
         note = ("  ⚠️ " + ",".join(flags)) if flags else ""
         print(f"{rel:24} {w:7.2f} {h:7.2f} {d:7.2f} {low:7.2f} {origin:8.2f} {tris:6d}  {'/'.join(mats)}{note}")
         if backfaces:
             listed = ", ".join(f"({x}, {y}) 넓이 {a:.1f}{'' if big else ' 참고'}" for x, y, a, big in backfaces[:6])
             notes.append(f"  {rel}: 위에서 본 뒷면 {len(backfaces)}곳(경고 {len(warn)}) — {listed}")
+        if cams:
+            ordered = sorted(cams, key=lambda c: -c[4])
+            listed = ", ".join(f"[{lab}·{pose}] ({x}, {y}, {z}) 넓이 {a:.1f}{'' if big else ' 참고'}"
+                               for lab, x, y, z, a, big, pose in ordered[:5])
+            notes.append(f"  {rel}: 카메라각(50°) 뒷면 {len(cams)}곳(경고 {len(cam_warn)}) — {listed}")
     print("=" * 100)
     for line in notes:
         print(line)
