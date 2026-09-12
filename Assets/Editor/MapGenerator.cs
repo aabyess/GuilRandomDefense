@@ -1528,6 +1528,7 @@ public static class MapGenerator
         // 콜라이더는 뺀다. 표를 가로지르는 벽 8장이 실제로 막히면 NavMesh가 세로로 조각나고
         // 표 위를 걸어 지나갈 수 없게 된다. 여긴 싸우는 곳이 아니라 보는 곳이다.
         Object.DestroyImmediate(wall.GetComponent<Collider>());
+        DressWall(wall, "돌담_얇음");   // 보기용이라 막는 상자는 없고 겉모습만 돌담
     }
 
     // 모델이 붙은 유닛은 조합표에도 그 모습으로 세운다 — 색 큐브만 있으면 무엇이 재료인지
@@ -2717,6 +2718,7 @@ public static class MapGenerator
         gate.transform.localScale = new Vector3(GateWidth - GateThickness, GateHeight, GateThickness);
         PaintGlow(gate, new Color(0.85f, 0.72f, 0.30f));   // 부술 대상이라 눈에 띄어야 한다
         gate.AddComponent<DestructibleGate>();
+        DressGate(gate);
 
         return "\n펑크해저드에 정의문을 세웠습니다 (부수면 길이 열립니다).";
     }
@@ -2869,6 +2871,128 @@ public static class MapGenerator
         wall.transform.localScale = scale;
         Paint(wall, "rock", scale.x, scale.z);
         // 콜라이더는 남긴다 — 실제로 막히는 벽이라야 유닛이 부스 사이로 새지 않는다.
+        DressWall(wall, WallPieceFor(name, scale));
+    }
+
+    // ──────────────────────────────────────────────────────────── 벽 겉모습 (2026-09-12)
+    //
+    // 사장님 지시 「벽도 새롭게 만드는거 어때?」. 벽은 지금까지 회색 상자였다. Assets/Art/Walls의 조각
+    // (Tools/blender/gen_walls.py)을 이어 붙여 **겉모습만** 바꾼다.
+    //
+    // 🔴 막히는 상자(콜라이더)는 위치·크기 그대로 둔다. 렌더러만 떼고 그 자리에 조각을 세운다 —
+    //    NavMesh는 콜라이더로 굽으므로 유닛 길과 게임 동작이 하나도 안 바뀐다.
+    // - 조각은 벽 상자의 자식이 아니라 옆에 둔다. 상자는 422×5.5×6처럼 한쪽으로 늘어나 있어서,
+    //   자식으로 두면 그 배율을 물려받아 조각이 찌그러진다.
+    // - 긴 변을 따라 조각을 N개 이어 붙이고, 끝이 정확히 맞게 길이 방향으로만 살짝 늘린다
+    //   (조각은 양 끝면이 같게 만들어져 있어 이어도 틈이 없다 — b91838ed 보고).
+    // - 조각 FBX를 못 찾으면 예전 상자 그대로 둔다. 맵 생성이 깨지지 않게.
+
+    const string WallFolder = "Assets/Art/Walls/";
+
+    // 어떤 조각을 쓸지 고른다. 두께만으로 가르면 부스 끝벽처럼 뭉툭한 울타리가 돌담이 되므로 이름을 먼저 본다.
+    static string WallPieceFor(string name, Vector3 scale)
+    {
+        float along = Mathf.Max(scale.x, scale.z);
+        float across = Mathf.Min(scale.x, scale.z);
+        if (along < across * 1.5f && scale.y > along) return "돌기둥";   // 가로세로가 비슷하고 키가 크다
+        if (name.StartsWith("레인간")) return "돌담_두꺼움";
+        if (name.StartsWith("펑크해저드")) return "돌담_얇음";
+        return "나무울타리";                                              // 유닛 우리·부스·칸막이
+    }
+
+    static void DressWall(GameObject wall, string pieceName)
+    {
+        GameObject piece = AssetDatabase.LoadAssetAtPath<GameObject>(WallFolder + pieceName + ".fbx");
+        if (piece == null || !TryMeasureFigure(piece, out Bounds bounds) ||
+            bounds.size.x < 0.001f || bounds.size.y < 0.001f || bounds.size.z < 0.001f)
+            return;
+
+        Vector3 size = wall.transform.localScale;
+        bool alongZ = size.z > size.x;
+        float length = alongZ ? size.z : size.x;
+        float thickness = alongZ ? size.x : size.z;
+        float height = size.y;
+
+        GameObject dressing = new GameObject(wall.name + "_모양");
+        dressing.transform.SetParent(wall.transform.parent, false);
+        dressing.transform.position = wall.transform.position - Vector3.up * (height * 0.5f);   // 바닥 가운데
+        dressing.transform.rotation = Quaternion.Euler(0f, alongZ ? 90f : 0f, 0f);                // 조각의 길이 방향은 X
+
+        int count = pieceName == "돌기둥" ? 1 : Mathf.Max(1, Mathf.RoundToInt(length / bounds.size.x));
+        Vector3 factor = new Vector3(length / (count * bounds.size.x), height / bounds.size.y, thickness / bounds.size.z);
+        float step = length / count;
+        // 원점이 바닥 한가운데로 만들어져 있지만, 조금이라도 어긋나 있으면 여기서 되돌린다.
+        float offsetX = -(bounds.min.x + bounds.max.x) * 0.5f * factor.x;
+        float offsetZ = -(bounds.min.z + bounds.max.z) * 0.5f * factor.z;
+
+        for (int i = 0; i < count; i++)
+        {
+            GameObject tile = (GameObject)PrefabUtility.InstantiatePrefab(piece, dressing.transform);
+            tile.transform.localRotation = piece.transform.localRotation;
+            tile.transform.localScale = ScaleInWorldAxes(piece.transform, factor);
+            tile.transform.localPosition = new Vector3(
+                -length * 0.5f + step * (i + 0.5f) + offsetX, -bounds.min.y * factor.y, offsetZ);
+
+            foreach (Collider collider in tile.GetComponentsInChildren<Collider>(true))
+                Object.DestroyImmediate(collider);
+            foreach (Transform part in tile.GetComponentsInChildren<Transform>(true))
+                GameObjectUtility.SetStaticEditorFlags(part.gameObject, StaticEditorFlags.BatchingStatic);
+        }
+
+        // 막히는 상자는 남기고 보이는 것만 뗀다.
+        if (wall.TryGetComponent(out MeshRenderer renderer)) Object.DestroyImmediate(renderer);
+        if (wall.TryGetComponent(out MeshFilter filter)) Object.DestroyImmediate(filter);
+    }
+
+    // 정의문 겉모습. 벽과 달리 **문 상자의 자식**으로 붙인다 — DestructibleGate.Break가 부서질 때
+    // 문 상자 자체를 아래로 내리므로(transform.position), 옆에 두면 모양만 제자리에 남는다.
+    // 문 상자는 20.6×7×1.4로 한쪽으로 늘어나 있어서 자식이 그 배율을 물려받는다 — 배율과 위치를
+    // 부모 배율로 나눠 되돌린다. 문 상자는 회전이 없고 조각 회전은 90° 단위라 모양이 비틀리지 않는다.
+    // 문을 찾는 쪽(UnitAttacker)은 DestructibleGate.Active 목록을 보므로 렌더러를 떼도 공격 대상은 그대로다.
+    static void DressGate(GameObject gate)
+    {
+        GameObject piece = AssetDatabase.LoadAssetAtPath<GameObject>(WallFolder + "정의문.fbx");
+        if (piece == null || !TryMeasureFigure(piece, out Bounds bounds) ||
+            bounds.size.x < 0.001f || bounds.size.y < 0.001f || bounds.size.z < 0.001f)
+            return;
+
+        Vector3 parentScale = gate.transform.localScale;
+        Vector3 world = new Vector3(parentScale.x / bounds.size.x, parentScale.y / bounds.size.y, parentScale.z / bounds.size.z);
+
+        GameObject tile = (GameObject)PrefabUtility.InstantiatePrefab(piece, gate.transform);
+        tile.name = "정의문_모양";
+        tile.transform.localRotation = piece.transform.localRotation;
+        tile.transform.localScale = ScaleInWorldAxes(piece.transform,
+            new Vector3(world.x / parentScale.x, world.y / parentScale.y, world.z / parentScale.z));
+
+        // 문 상자 원점은 한가운데, 조각 원점은 바닥 가운데다. 세계 기준 오프셋을 부모 배율로 나눠 넣는다.
+        Vector3 offset = new Vector3(
+            -(bounds.min.x + bounds.max.x) * 0.5f * world.x,
+            -parentScale.y * 0.5f - bounds.min.y * world.y,
+            -(bounds.min.z + bounds.max.z) * 0.5f * world.z);
+        tile.transform.localPosition = new Vector3(offset.x / parentScale.x, offset.y / parentScale.y, offset.z / parentScale.z);
+
+        foreach (Collider collider in tile.GetComponentsInChildren<Collider>(true))
+            Object.DestroyImmediate(collider);
+
+        // 문 상자의 콜라이더(막는 판정)와 DestructibleGate는 그대로. 빛나는 상자만 안 보이게 한다.
+        if (gate.TryGetComponent(out MeshRenderer renderer)) Object.DestroyImmediate(renderer);
+        if (gate.TryGetComponent(out MeshFilter filter)) Object.DestroyImmediate(filter);
+    }
+
+    // FBX 루트가 축 변환 회전(예: X −90)을 갖고 있으면 루트의 로컬 축과 세계 축이 뒤바뀐다.
+    // 세계 축 기준 배율을 루트 로컬 축 배율로 옮겨 적는다. 회전이 90° 단위라 축이 섞이지는 않는다.
+    static Vector3 ScaleInWorldAxes(Transform root, Vector3 factor)
+    {
+        Vector3[] axes = { Vector3.right, Vector3.up, Vector3.forward };
+        Vector3 local = Vector3.one;
+        for (int j = 0; j < 3; j++)
+        {
+            Vector3 world = root.localRotation * axes[j];
+            float ax = Mathf.Abs(world.x), ay = Mathf.Abs(world.y), az = Mathf.Abs(world.z);
+            local[j] = ax >= ay && ax >= az ? factor.x : (ay >= az ? factor.y : factor.z);
+        }
+        return Vector3.Scale(root.localScale, local);
     }
 
     // 조합식 표와 같은 자리 표시 기둥. 유닛과 키가 오면 스킨 인형을 먼저 세우고(2026-09-07,
