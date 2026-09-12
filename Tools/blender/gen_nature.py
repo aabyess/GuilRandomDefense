@@ -114,12 +114,34 @@ def export(obj, folder, name):
 
     # global_scale로 미터 → 게임 단위. 축 기본값(-Z 앞, Y 위)이 유니티 규약과 같다.
     #
-    # 🔴 2026-09-12 정정 — path_mode="COPY"였다. 그동안 이 카탈로그 어떤 것도 실제
+    # 🔴 2026-09-12 정정(1차) — path_mode="COPY"였다. 그동안 이 카탈로그 어떤 것도 실제
     # 이미지 텍스처가 없어(전부 material()의 단색 재질) 눈에 띄지 않았는데, C 스타일
     # 나무가 처음으로 진짜 텍스처를 쓰면서 그대로 뒀으면 파일마다 옆에 <이름>.fbm/
     # 폴더가 생겨 PNG를 복사했을 것이다 — PM 약속(재질 이름과 같은 PNG를
-    # Assets/Art/Nature/Textures/에 한 벌만, FBX에 안 박는다)과 어긋난다. 기본값(AUTO)으로
-    # 두면 이미 그 폴더에 저장해 둔 PNG를 복사 없이 그대로 가리킨다.
+    # Assets/Art/Nature/Textures/에 한 벌만, FBX에 안 박는다)과 어긋난다.
+    #
+    # 🔴 2026-09-12 정정(2차, 사장님·blender 세션 확인) — 위에서 "기본값(AUTO)"으로 바꿨는데
+    # AUTO도 틀렸다. 이미지의 소스 경로가 이미 절대경로(Textures/ 아래 PNG를 os.path.join한
+    # 절대경로)라, AUTO가 그걸 내보내는 FBX 기준 상대경로로 바꾸려다 실패하고
+    # "Trees/Users/sang/.../Textures/C_침엽_껍질.png" 같은 뒤섞인 경로를 그대로 박아 넣었다
+    # — Blender/뷰어가 그 경로를 못 찾아 텍스처가 분홍(누락)으로 떴다.
+    #
+    # 🔴 2026-09-12 정정(3차) — path_mode="STRIP"으로 한 번 더 고쳤다가 직접 재현해서
+    # 확인해 보니 이것도 틀렸다. STRIP은 경로를 아예 버리고 파일명만 남기는데, 그러면
+    # FBX를 읽는 쪽(Blender)이 "이미지가 FBX와 같은 폴더에 있다"고 가정해 Trees/ 밑에서
+    # 찾는다 — 실제 PNG는 형제 폴더 Textures/에 있어서 여전히 못 찾는다(재현: 갓 구운
+    # FBX를 새 세션에 다시 임포트하면 image.has_data가 False로 나왔다). 유니티는
+    # PM 코드가 **재질 이름**으로 Textures/ 폴더의 PNG를 찾아 붙이므로 FBX 안 경로와
+    # 무관하지만, blender 세션이 원래 지적한 "Blender에서 직접 열면 분홍으로 뜬다"는
+    # 문제 자체를 고치려면 경로가 실제로 그 PNG를 가리켜야 한다 — path_mode="RELATIVE"로
+    # 바꾸니 FBX 기준 올바른 상대경로(예: ../Textures/C_침엽_껍질.png)가 박히고,
+    # 재임포트 시 image.has_data가 True로 나오는 것까지 직접 확인했다.
+    #
+    # ⚠️ RELATIVE도 원본 PNG의 **절대경로**를 함께 저장한다(파일을 다른 컴퓨터로 옮기면
+    # 그 절대경로는 못 찾지만, 상대경로가 있어 같은 프로젝트 구조를 유지하는 한 문제
+    # 없다) — 유니티·Blender 둘 다 상대경로를 우선 시도하고 실패하면 절대경로로
+    # 넘어가는 표준 동작이라, 우리 저장소 구조(Trees·Textures가 항상 형제 폴더) 안에서는
+    # 안전하다.
     bpy.ops.export_scene.fbx(
         filepath=os.path.join(folder, f"{name}.fbx"),
         use_selection=True,
@@ -130,6 +152,7 @@ def export(obj, folder, name):
         use_mesh_modifiers=True,
         add_leaf_bones=False,         # 뼈가 없는 모델이라 빈 뼈를 만들지 않는다
         bake_anim=False,
+        path_mode="RELATIVE",
     )
 
 
@@ -817,15 +840,19 @@ def _stump_c_bm(seed):
     return bm
 
 
-def _palm_c_bm(seed, rng):
+def _palm_c_bm(seed, rng, lean_strength=0.34):
     """야자수 — 살짝 기운 줄기 꼭대기에서 잎줄기(라키스) 일곱이 뻗어 나가다 처지고,
-    그 잎줄기마다 좌우로 잎사귀 카드가 달린다."""
+    그 잎줄기마다 좌우로 잎사귀 카드가 달린다.
+
+    lean_strength 기본값(0.34)은 원래 값 그대로다 — 2026-09-12 밤 추가(13종 확장)에서
+    야자수_02(크게 휜 줄기)에 더 큰 값을 넘기려고 상수를 인자로 뺐다. 기본값을 안
+    바꿨으니 기존 야자수_01(make_palm_c) 호출은 모양이 그대로다."""
     bm = bmesh.new()
     uv = bm.loops.layers.uv.new("UVMap")
     tube = BranchTube(bm, uv, 0)
     lean_angle = rng.uniform(0, math.tau)
     lean_dir = Vector((math.cos(lean_angle), math.sin(lean_angle), 0.0))
-    trunk_dir = (UP * 0.94 + lean_dir * 0.34).normalized()
+    trunk_dir = (UP * 0.94 + lean_dir * lean_strength).normalized()
     _, top_ring = tube.grow(rng, Vector((0, 0, 0)), trunk_dir, 0.85, 0.045, 8, 10, 0.30, 0.02, 1.4,
                              cap_tip=False)
 
@@ -855,6 +882,181 @@ def _palm_c_bm(seed, rng):
                 normal = (UP * 0.3 + side * sgn * 0.9).normalized()
                 center = lp + side * sgn * 0.02
                 add_leaf_card(bm, uv, center, normal, ld, rng.uniform(0.05, 0.07), rng.uniform(0.22, 0.30), 1, rng)
+    return bm
+
+
+# ─────── 종별 조립(기하) — 2026-09-12 밤 추가(13종 확장, blender 세션 제안). 텍스처를
+# 최대한 공유하려고(사장님·blender 지시) 활엽수 계열은 공용 뼈대(_deciduous_c_bm) 하나에
+# 파라미터만 다르게 줘서 짓는다 — 종마다 새 골격 코드를 만들지 않는다. 기존 7종
+# (_conifer_c_bm·_broadleaf_c_bm 등)은 그대로 두고 안 건드렸다 — 이미 커밋된 침엽수·활엽수
+# 모양·삼각형 수가 조금이라도 바뀌면 안 된다.
+
+def _pine_c_bm(seed):
+    """소나무 — 구불구불한 줄기(wobble을 키움) 끝에 우산처럼 넓게 퍼진 가지 한 층.
+    아래쪽엔 가지가 거의 없다 — 위쪽 22% 구간에만 몰아서 편다."""
+    rng = random.Random(seed)
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new("UVMap")
+    tube = BranchTube(bm, uv, 0)
+    trunk, _ = tube.grow(rng, Vector((0, 0, 0)), UP, 1.0, 0.055, 8, 14, 0.55, 0.10, 2.0)
+    spin = rng.uniform(0, math.tau)
+    count = 9
+    for k in range(count):
+        a = spin + math.tau * k / count + rng.uniform(-0.15, 0.15)
+        t = rng.uniform(0.78, 0.97)
+        p, _ = path_point(trunk, t)
+        heading = Vector((math.cos(a), math.sin(a), 0.0))
+        rise = math.radians(rng.uniform(5, 20))          # 거의 수평 — 우산처럼 편다
+        direction = heading * math.cos(rise) + UP * math.sin(rise)
+        branch, _ = tube.grow(rng, p, direction, rng.uniform(0.30, 0.42), 0.018, 5, 4, 0.65, 0.06, 4.0)
+        for c in range(11):
+            lp, ld = path_point(branch, rng.uniform(0.15, 1.0))
+            side = ld.cross(UP).normalized()
+            normal = (UP * rng.uniform(0.5, 1.0) + side * rng.uniform(-0.6, 0.6)).normalized()
+            add_leaf_card(bm, uv, lp, normal, ld, rng.uniform(0.10, 0.14), rng.uniform(0.16, 0.22), 1, rng)
+    return bm
+
+
+def _fir_c_bm(seed):
+    """전나무 — 좁고 뾰족한 원뿔형. 층을 11개까지 촘촘히 쌓되 가지 하나당 폭·길이를
+    줄여 실루엣을 가늘게 유지한다(기존 침엽수보다 층이 많고 폭은 좁다)."""
+    rng = random.Random(seed)
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new("UVMap")
+    tube = BranchTube(bm, uv, 0)
+    trunk, _ = tube.grow(rng, Vector((0, 0, 0)), UP, 1.0, 0.04, 7, 12, 0.9, 0.015, 2.0)
+    tiers = 11
+    spin = rng.uniform(0, math.tau)
+    for i in range(tiers):
+        t = i / (tiers - 1)
+        z = 0.08 + 0.90 * t
+        count = 5
+        span = 0.20 * (1 - t) ** 1.3 + 0.03
+        spin += 0.55
+        for k in range(count):
+            a = spin + math.tau * k / count + rng.uniform(-0.12, 0.12)
+            p, _ = path_point(trunk, z)
+            heading = Vector((math.cos(a), math.sin(a), 0.0))
+            direction = (heading + UP * rng.uniform(-0.05, 0.08)).normalized()
+            branch, _ = tube.grow(rng, p, direction, span, 0.008, 4, 2, 0.75, 0.05, 6.0)
+            for c in range(6):
+                lp, ld = path_point(branch, rng.uniform(0.1, 1.0))
+                side = ld.cross(UP).normalized()
+                normal = (UP + side * rng.uniform(-0.6, 0.6)).normalized()
+                add_leaf_card(bm, uv, lp, normal, ld, rng.uniform(0.08, 0.11), rng.uniform(0.13, 0.17), 1, rng)
+    for c in range(5):
+        lp, ld = path_point(trunk, rng.uniform(0.92, 1.0))
+        a = rng.uniform(0, math.tau)
+        normal = Vector((math.cos(a), math.sin(a), 0.7)).normalized()
+        add_leaf_card(bm, uv, lp, normal, UP, 0.05, 0.10, 1, rng)
+    return bm
+
+
+def _spruce_c_bm(seed):
+    """가문비나무 — 촘촘한 층이 빽빽하게 겹친다(층 13개, 층 간격이 좁고 가지가 많다)."""
+    rng = random.Random(seed)
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new("UVMap")
+    tube = BranchTube(bm, uv, 0)
+    trunk, _ = tube.grow(rng, Vector((0, 0, 0)), UP, 1.0, 0.048, 8, 11, 0.82, 0.02, 2.0)
+    tiers = 13
+    spin = rng.uniform(0, math.tau)
+    for i in range(tiers):
+        t = i / (tiers - 1)
+        z = 0.12 + 0.84 * t
+        count = max(3, 6 - i // 4)
+        span = 0.30 * (1 - t) + 0.05
+        spin += 0.35
+        for k in range(count):
+            a = spin + math.tau * k / count + rng.uniform(-0.12, 0.12)
+            p, _ = path_point(trunk, z)
+            heading = Vector((math.cos(a), math.sin(a), 0.0))
+            direction = (heading + UP * rng.uniform(-0.10, 0.02)).normalized()
+            branch, _ = tube.grow(rng, p, direction, span, 0.010 * (1.1 - t * 0.4), 4, 2, 0.7, 0.06, 6.0)
+            for c in range(6):
+                lp, ld = path_point(branch, rng.uniform(0.1, 1.0))
+                side = ld.cross(UP).normalized()
+                normal = (UP + side * rng.uniform(-0.7, 0.7)).normalized()
+                add_leaf_card(bm, uv, lp, normal, ld, rng.uniform(0.09, 0.12), rng.uniform(0.14, 0.19), 1, rng)
+    return bm
+
+
+def _deciduous_c_bm(seed, branches, trunk_h, trunk_r, rise_deg, branch_len, twigs, twig_cards, canopy_cards,
+                     droop=False):
+    """활엽수 계열 공용 골격 — 참나무·자작나무·벚나무·단풍나무·은행나무·버드나무·어린나무
+    전부 이 뼈대를 쓰고 가지 수·굵기·퍼짐 각도·카드 밀도만 다르게 받는다(다양성이 목적이라
+    종마다 새 골격 코드를 안 만들려고 파라미터로 뺐다, blender 세션 지시). 기존
+    _broadleaf_c_bm과 뼈대는 닮았지만 완전히 별개 함수다 — 이미 커밋된 활엽수_01/가을의
+    난수 호출 순서를 조금이라도 안 건드리려고 그쪽은 그대로 두고 이걸 새로 만들었다.
+
+    droop=True면 가지가 BranchTube.bend_to로 활처럼 아래로 늘어진다(버드나무 전용)."""
+    rng = random.Random(seed)
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new("UVMap")
+    tube = BranchTube(bm, uv, 0)
+    trunk, _ = tube.grow(rng, Vector((0, 0, 0)), UP, trunk_h, trunk_r, 8, 8, 0.5, 0.05, 2.0)
+    azimuth = rng.uniform(0, math.tau)
+    for n in range(branches):
+        azimuth += math.tau * 0.382 + rng.uniform(-0.3, 0.3)
+        p, d = path_point(trunk, rng.uniform(0.5, 0.92))
+        heading = Vector((math.cos(azimuth), math.sin(azimuth), 0.0))
+        rise = math.radians(rng.uniform(*rise_deg))
+        direction = heading * math.cos(rise) + UP * math.sin(rise)
+        length = rng.uniform(*branch_len)
+        bend_to, bend_amount = (None, 0.0)
+        if droop:
+            bend_to = (heading * 0.8 - UP * 0.9).normalized()
+            bend_amount = 0.28
+        branch, _ = tube.grow(rng, p, direction, length, 0.022, 6, 5, 0.6, 0.10, 4.0,
+                               bend_to=bend_to, bend_amount=bend_amount)
+        for k in range(twigs):
+            q, qd = path_point(branch, rng.uniform(0.35, 0.95))
+            side = qd.cross(UP).normalized() * rng.choice((-1, 1))
+            sub_dir = (qd * 0.6 + side * 0.6 + UP * rng.uniform(0.05, 0.5)).normalized()
+            twig, _ = tube.grow(rng, q, sub_dir, rng.uniform(0.16, 0.24), 0.012, 5, 3, 0.7, 0.14, 6.0)
+            for c in range(twig_cards):
+                lp, ld = path_point(twig, rng.uniform(0.15, 1.0))
+                normal = (ld.cross(UP) * rng.uniform(-1, 1) + UP * rng.uniform(0.2, 1.0)
+                          + Vector((rng.uniform(-0.5, 0.5), rng.uniform(-0.5, 0.5), 0))).normalized()
+                add_leaf_card(bm, uv, lp, normal, ld, rng.uniform(0.12, 0.18), rng.uniform(0.14, 0.21), 1, rng)
+        for c in range(canopy_cards):
+            lp, ld = path_point(branch, rng.uniform(0.55, 1.0))
+            normal = (UP * rng.uniform(0.3, 1.0) + Vector((rng.uniform(-1, 1), rng.uniform(-1, 1), 0))).normalized()
+            add_leaf_card(bm, uv, lp, normal, ld, rng.uniform(0.13, 0.19), rng.uniform(0.15, 0.22), 1, rng)
+    return bm
+
+
+def _fallen_log_c_bm(seed):
+    """쓰러진 통나무 — 옆으로 누운 굵은 줄기 하나. 밑동 쪽 잘린 단면은 손수 만든 원판에
+    나이테 재질을 입히고, 반대쪽 끝은 튜브 기본 동작대로 뾰족하게 닫혀 부러진 자리처럼
+    보인다.
+
+    🔴 BranchTube.grow()는 마지막 고리만 cap_tip=False로 돌려주고 첫 고리는 못 돌려준다 —
+    그래서 시작점에 내가 직접 같은 자리에 원판을 만들고, 바로 그 자리에서 grow()를
+    부른다. grow()가 또 자기 첫 고리를 새 정점으로 만들어 좌표가 겹치는 정점이 생기지만
+    (공유 안 함), 위치가 정확히 같아 이음매가 안 보인다."""
+    rng = random.Random(seed)
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new("UVMap")
+    tube = BranchTube(bm, uv, 0)
+    start = Vector((0.0, 0.0, 0.26))
+    direction = Vector((1.0, 0.05, 0.0)).normalized()
+    radius = 0.26
+    sides = 9
+
+    u, w = frame(direction)
+    cut_ring = [bm.verts.new(start + (u * math.cos(a) + w * math.sin(a)) * radius)
+                for a in (math.tau * i / sides for i in range(sides))]
+    mid = bm.verts.new(start)
+    for i in range(sides):
+        j = (i + 1) % sides
+        f = bm.faces.new((mid, cut_ring[j], cut_ring[i]))     # 방향 반대 — 시작점 뒤(바깥)를 본다
+        f.material_index = 1
+        for loop, vtx in zip(f.loops, (mid, cut_ring[j], cut_ring[i])):
+            local = vtx.co - start
+            loop[uv].uv = (0.5 + local.dot(u) * 1.6, 0.5 + local.dot(w) * 1.6)
+
+    tube.grow(rng, start, direction, 4.6, radius, sides, 10, 0.18, 0.02, 1.0)
     return bm
 
 
@@ -906,6 +1108,76 @@ def make_palm_c(seed):
     obj = build_object_c(_palm_c_bm(seed, rng), [bark, frond])
     bake_material_c(obj, bark, alpha=False)
     bake_material_c(obj, frond, alpha=True)
+    return obj
+
+
+# 2026-09-12 밤 추가(13종 확장) — 새 재질은 4장만 굽는다(자작나무 껍질, 벚꽃·단풍·은행
+# 잎카드). 나머지 9종은 procedural_bark_c/procedural_leaf_c/bake_material_c의 "이미 구운
+# 재질이면 다시 안 만든다" 캐시(mat.get("_c_baked"))를 그대로 타서 위 7종 재질을 공유한다 —
+# 이름만 똑같이 넘기면 된다.
+
+def make_pine_c(seed):
+    bark = procedural_bark_c("C_침엽_껍질", (0.13, 0.09, 0.06), (0.34, 0.24, 0.16))
+    needle = procedural_leaf_c("침엽_잎카드", (0.05, 0.20, 0.09), (0.20, 0.42, 0.20), needle=True)
+    obj = build_object_c(_pine_c_bm(seed), [bark, needle])
+    bake_material_c(obj, bark, alpha=False)
+    bake_material_c(obj, needle, alpha=True)
+    return obj
+
+
+def make_fir_c(seed):
+    bark = procedural_bark_c("C_침엽_껍질", (0.13, 0.09, 0.06), (0.34, 0.24, 0.16))
+    needle = procedural_leaf_c("침엽_잎카드", (0.05, 0.20, 0.09), (0.20, 0.42, 0.20), needle=True)
+    obj = build_object_c(_fir_c_bm(seed), [bark, needle])
+    bake_material_c(obj, bark, alpha=False)
+    bake_material_c(obj, needle, alpha=True)
+    return obj
+
+
+def make_spruce_c(seed):
+    bark = procedural_bark_c("C_침엽_껍질", (0.13, 0.09, 0.06), (0.34, 0.24, 0.16))
+    needle = procedural_leaf_c("침엽_잎카드", (0.05, 0.20, 0.09), (0.20, 0.42, 0.20), needle=True)
+    obj = build_object_c(_spruce_c_bm(seed), [bark, needle])
+    bake_material_c(obj, bark, alpha=False)
+    bake_material_c(obj, needle, alpha=True)
+    return obj
+
+
+def make_deciduous_variant_c(seed, bark_name, bark_dark, bark_light,
+                              card_name, card_dark, card_light, needle, **shape_kwargs):
+    """참나무·자작나무·벚나무·단풍나무·은행나무·버드나무·어린나무 공용 — 재질 이름·색과
+    _deciduous_c_bm에 넘길 골격 파라미터를 받아 조립한다. bark_name/card_name이 위 7종과
+    같으면(예 "C_활엽_껍질") procedural_*_c가 캐시를 돌려줘 자동으로 공유된다."""
+    bark = procedural_bark_c(bark_name, bark_dark, bark_light)
+    card = procedural_leaf_c(card_name, card_dark, card_light, needle=needle)
+    obj = build_object_c(_deciduous_c_bm(seed, **shape_kwargs), [bark, card])
+    bake_material_c(obj, bark, alpha=False)
+    bake_material_c(obj, card, alpha=True)
+    return obj
+
+
+def make_palm2_c(seed, lean_strength=0.34):
+    """야자수_02/03 전용 — make_palm_c와 재질은 완전히 같다(공유). lean_strength만
+    다르게 줘서 줄기가 얼마나 휘는지를 바꾼다."""
+    rng = random.Random(seed)
+    bark = procedural_bark_c("C_야자_껍질", (0.16, 0.11, 0.06), (0.42, 0.33, 0.20),
+                              band_scale=26.0, distortion=2.0, vertical_scale=1.0)
+    frond = procedural_leaf_c("야자_잎카드", (0.08, 0.24, 0.10), (0.30, 0.52, 0.22), needle=False)
+    obj = build_object_c(_palm_c_bm(seed, rng, lean_strength=lean_strength), [bark, frond])
+    bake_material_c(obj, bark, alpha=False)
+    bake_material_c(obj, frond, alpha=True)
+    return obj
+
+
+def make_fallen_log_c(seed):
+    """쓰러진통나무_01 — 죽은나무와 같은 재질(C_고사_껍질)을 눕힌 줄기에, 그루터기와 같은
+    나이테(C_나이테)를 밑동 단면에 쓴다. 둘 다 완전히 공유라 새로 굽는 텍스처가 없다."""
+    bark = procedural_bark_c("C_고사_껍질", (0.16, 0.14, 0.12), (0.40, 0.36, 0.31),
+                              band_scale=10.0, distortion=8.0)
+    rings = procedural_rings_c("C_나이테", (0.42, 0.30, 0.16), (0.68, 0.52, 0.32))
+    obj = build_object_c(_fallen_log_c_bm(seed), [bark, rings])
+    bake_material_c(obj, bark, alpha=False)
+    bake_material_c(obj, rings, alpha=False)
     return obj
 
 
@@ -1039,6 +1311,56 @@ CATALOG = [
     ("Trees", "그루터기_01", lambda: make_stump_c(seed=251), "높이 0.45m, C 스타일 나이테", 0.45),
     ("Trees", "죽은나무_01", lambda: make_dead_tree_c(seed=252), "높이 5m, C 스타일 잎 없음", 5.0),
     ("Trees", "야자수_01", lambda: make_palm_c(seed=253), "높이 6.5m, C 스타일 잎이 늘어짐, 바닷가용", 6.5),
+
+    # 2026-09-12 밤 추가 ─ 나무 13종 더(260번대, blender 세션 제안 — 다양성이 목적이라
+    # 실존 종과 정확히 대응하진 않는다, 사장님 승인). 텍스처는 최대한 공유한다 — 새로
+    # 굽는 건 자작나무 껍질(C_자작_껍질)과 벚꽃·단풍·은행 잎카드 4장뿐이고, 나머지 9종은
+    # 위 7종의 재질(C_활엽_껍질·C_침엽_껍질·C_야자_껍질·C_고사_껍질·C_나이테·활엽_잎카드·
+    # 야자_잎카드)을 이름만 같게 넘겨 그대로 공유한다.
+    ("Trees", "소나무_01", lambda: make_pine_c(seed=260), "높이 8.5m, 구불한 줄기+우산형 윗부분", 8.5),
+    ("Trees", "전나무_01", lambda: make_fir_c(seed=261), "높이 11.0m, 좁고 뾰족", 11.0),
+    ("Trees", "가문비_01", lambda: make_spruce_c(seed=262), "높이 9.5m, 촘촘한 층", 9.5),
+    ("Trees", "참나무_01", lambda: make_deciduous_variant_c(
+        seed=263, bark_name="C_활엽_껍질", bark_dark=(0.14, 0.10, 0.07), bark_light=(0.36, 0.27, 0.18),
+        card_name="활엽_잎카드", card_dark=(0.09, 0.24, 0.09), card_light=(0.32, 0.54, 0.22), needle=False,
+        branches=6, trunk_h=0.5, trunk_r=0.09, rise_deg=(10, 35), branch_len=(0.42, 0.58),
+        twigs=5, twig_cards=11, canopy_cards=9), "높이 10.0m, 넓게 퍼진 가지(활엽_잎카드 공유)", 10.0),
+    ("Trees", "자작나무_01", lambda: make_deciduous_variant_c(
+        seed=264, bark_name="C_자작_껍질", bark_dark=(0.45, 0.42, 0.38), bark_light=(0.88, 0.86, 0.80),
+        card_name="활엽_잎카드", card_dark=(0.09, 0.24, 0.09), card_light=(0.32, 0.54, 0.22), needle=False,
+        branches=4, trunk_h=1.0, trunk_r=0.035, rise_deg=(40, 65), branch_len=(0.20, 0.30),
+        twigs=2, twig_cards=7, canopy_cards=4), "높이 8.0m, 흰 껍질(신규)·가는 줄기·성긴 잎(활엽_잎카드 공유)", 8.0),
+    ("Trees", "벚나무_01", lambda: make_deciduous_variant_c(
+        seed=265, bark_name="C_활엽_껍질", bark_dark=(0.14, 0.10, 0.07), bark_light=(0.36, 0.27, 0.18),
+        card_name="벚꽃_잎카드", card_dark=(0.55, 0.20, 0.30), card_light=(0.95, 0.68, 0.75), needle=False,
+        branches=5, trunk_h=0.55, trunk_r=0.065, rise_deg=(25, 50), branch_len=(0.26, 0.38),
+        twigs=4, twig_cards=10, canopy_cards=8), "높이 6.0m, 분홍 꽃 카드(신규)", 6.0),
+    ("Trees", "단풍나무_01", lambda: make_deciduous_variant_c(
+        seed=266, bark_name="C_활엽_껍질", bark_dark=(0.14, 0.10, 0.07), bark_light=(0.36, 0.27, 0.18),
+        card_name="단풍_잎카드", card_dark=(0.32, 0.05, 0.03), card_light=(0.68, 0.14, 0.08), needle=False,
+        branches=5, trunk_h=0.55, trunk_r=0.07, rise_deg=(25, 55), branch_len=(0.28, 0.40),
+        twigs=4, twig_cards=11, canopy_cards=8), "높이 7.5m, 붉은 잎(신규)", 7.5),
+    ("Trees", "은행나무_01", lambda: make_deciduous_variant_c(
+        seed=267, bark_name="C_활엽_껍질", bark_dark=(0.14, 0.10, 0.07), bark_light=(0.36, 0.27, 0.18),
+        card_name="은행_잎카드", card_dark=(0.45, 0.36, 0.05), card_light=(0.85, 0.72, 0.15), needle=False,
+        branches=6, trunk_h=0.70, trunk_r=0.06, rise_deg=(45, 70), branch_len=(0.24, 0.34),
+        twigs=3, twig_cards=9, canopy_cards=6), "높이 9.0m, 노란 잎(신규)·위로 선 수형", 9.0),
+    ("Trees", "버드나무_01", lambda: make_deciduous_variant_c(
+        seed=268, bark_name="C_활엽_껍질", bark_dark=(0.14, 0.10, 0.07), bark_light=(0.36, 0.27, 0.18),
+        card_name="활엽_잎카드", card_dark=(0.09, 0.24, 0.09), card_light=(0.32, 0.54, 0.22), needle=False,
+        branches=8, trunk_h=0.62, trunk_r=0.07, rise_deg=(35, 55), branch_len=(0.45, 0.60),
+        twigs=3, twig_cards=9, canopy_cards=5, droop=True), "높이 7.0m, 늘어진 가지(활엽_잎카드 공유)", 7.0),
+    ("Trees", "야자수_02", lambda: make_palm2_c(seed=269, lean_strength=0.62),
+     "높이 9.0m, 크게 휜 줄기(재질 야자수_01과 공유)", 9.0),
+    ("Trees", "야자수_03", lambda: make_palm2_c(seed=270),
+     "높이 4.0m, 키 작은 야자수(재질 야자수_01과 공유)", 4.0),
+    ("Trees", "어린나무_01", lambda: make_deciduous_variant_c(
+        seed=271, bark_name="C_활엽_껍질", bark_dark=(0.14, 0.10, 0.07), bark_light=(0.36, 0.27, 0.18),
+        card_name="활엽_잎카드", card_dark=(0.09, 0.24, 0.09), card_light=(0.32, 0.54, 0.22), needle=False,
+        branches=3, trunk_h=0.9, trunk_r=0.035, rise_deg=(30, 55), branch_len=(0.20, 0.28),
+        twigs=2, twig_cards=6, canopy_cards=3), "높이 1.5m, 묘목(가지·잎을 성기게, 활엽_잎카드 공유)", 1.5),
+    ("Trees", "쓰러진통나무_01", lambda: make_fallen_log_c(seed=272),
+     "높이(=지름) 0.5m, 누운 통나무(재질 죽은나무·그루터기와 공유)", 0.5),
 ]
 
 
