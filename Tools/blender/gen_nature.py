@@ -88,7 +88,11 @@ def finish(obj, name):
     원점이 발밑에 있어야 맵에 놓을 때 y만 지면 높이로 주면 된다 — 가운데에 있으면
     절반이 땅에 묻힌다."""
     bpy.context.view_layer.objects.active = obj
-    bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+    # 🔴 위치까지 굽는다(2026-09-12 정정). 예전엔 location=False라, 조각을 location으로 올려
+    # 짓고 join한 나무는 오브젝트 위치가 기둥 절반 높이에 남았다 — 최저점은 0인데 원점이
+    # 13~25 단위 떠 있어서, 맵에 놓으며 위치를 덮어쓰면 그만큼 땅에 묻혔다.
+    # 월드 좌표는 그대로 두고 원점만 옮기는 것이라 모양·크기는 안 바뀐다.
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
     lowest = min((obj.matrix_world @ v.co).z for v in obj.data.vertices)
     for v in obj.data.vertices:
@@ -123,11 +127,9 @@ def export(obj, folder, name):
 
 # ──────────────────────────────────────────────────────────── 한 메시로 짓기 (2026-09-12 추가)
 #
-# 🔴 새로 만드는 것은 조각마다 오브젝트를 만들어 join하지 않고, 처음부터 bmesh 하나에 짓는다.
-# 기존 나무(make_conifer·make_broadleaf)는 합친 뒤 오브젝트 위치가 기둥 절반 높이에 남는다 —
-# 기둥을 location으로 올려 만들었고 finish()는 위치를 굽지 않기 때문이다. 최저점은 0이라
-# 겉보기엔 맞지만, check_nature_fbx.py로 다시 읽으면 원점이 발밑에서 13~25 게임 단위 떠 있다.
-# 한 메시로 지으면 위치가 처음부터 원점이라 이 문제가 안 생긴다.
+# 새로 만드는 것은 조각마다 오브젝트를 만들어 join하지 않고, 처음부터 bmesh 하나에 짓는다 —
+# 원점·재질 번호·삼각형 수를 한 곳에서 통제할 수 있어서다. (처음엔 join한 기존 나무의 원점이
+# 기둥 절반 높이에 떠 있던 것도 이유였는데, 그건 finish()가 위치까지 굽도록 고쳐 풀렸다.)
 #
 # 크기는 비율로 짓고 마지막에 fit_height()가 미터로 맞춘다 — "의도한 높이"와 파일 속 높이가
 # 어긋날 틈을 없애려는 것이다(판석·그루터기처럼 미터로 지은 것도 같은 길로 한 번 더 맞춘다).
