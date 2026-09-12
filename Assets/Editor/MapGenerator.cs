@@ -2663,11 +2663,19 @@ public static class MapGenerator
             AssetDatabase.LoadAssetAtPath<EnemyData>("Assets/Data/Enemies/Enemy_Creep3_양.asset"),
         };
 
+        GameObject rockAsset = AssetDatabase.LoadAssetAtPath<GameObject>(SealRockPath);
+        Bounds rockBounds = default;
+        bool hasRock = rockAsset != null && TryMeasureFigure(rockAsset, out rockBounds) && rockBounds.size.y > 0.001f;
+
         foreach (MapLayout.Island island in MapLayout.SealIslands)
         {
+            // 바위를 서쪽 가장자리에 붙이고, 단계 적(물범→노루→양)은 그 동쪽에 세운다.
+            float standX = island.center.x;
+            if (hasRock) standX = PlaceSealRock(parent, island, rockAsset, rockBounds);
+
             GameObject spawner = new GameObject($"{island.name}_물범");
             spawner.transform.SetParent(parent, false);
-            spawner.transform.position = new Vector3(island.center.x, MapLayout.IslandTop, island.center.y);
+            spawner.transform.position = new Vector3(standX, MapLayout.IslandTop, island.center.y);
 
             SealSpawner component = spawner.AddComponent<SealSpawner>();
             SerializedObject so = new SerializedObject(component);
@@ -2681,9 +2689,44 @@ public static class MapGenerator
             so.ApplyModifiedProperties();
         }
 
+        string rockNote = hasRock
+            ? " 물범바위도 함께."
+            : $"\n  ⚠️ 물범바위를 못 읽었습니다({SealRockPath}) — 유니티가 아직 임포트를 안 했으면 창에 포커스를 준 뒤 다시 생성하세요.";
         return seal != null
-            ? $"\n물범: {MapLayout.SealIslands.Length}곳에 배치."
+            ? $"\n물범: {MapLayout.SealIslands.Length}곳에 배치." + rockNote
             : "\n  ⚠️ Enemy_Seal 에셋을 찾지 못해 물범이 안 나옵니다.";
+    }
+
+    // 물범바위(Blender, 2026-09-12) — 섬마다 하나. 단계 적 셋은 같은 자리에서 차례로 나오므로 바위를 가운데
+    // 두면 셋 다 파묻힌다. 서쪽 가장자리에 긴 변을 남북으로 눕혀 붙인다. 장식이라 콜라이더는 없다(자연물과 같다).
+    // 이 함수가 바위보다 먼저 서야 한다 — BuildNatureBorders가 뒤에서 이 바위 자리를 피해 풀·돌을 뿌린다.
+    const string SealRockPath = "Assets/Art/Creatures/물범바위.fbx";
+    const float SealRockLength = 14.6f;    // Blender 치수(게임 단위) — 14.6 × 10.9 × 높이 3.5
+    const float SealRockEdgeMargin = 0.4f;
+    const float SealStandGap = 4f;         // 바위 동쪽 끝에서 적 중심까지 — 물범 몸통 폭 절반 남짓
+
+    // 돌려주는 값: 적이 설 자리의 월드 X.
+    static float PlaceSealRock(Transform parent, MapLayout.Island island, GameObject rockAsset, Bounds bounds)
+    {
+        float scale = SealRockLength / Mathf.Max(bounds.size.x, bounds.size.z);
+        bool longAlongX = bounds.size.x >= bounds.size.z;
+        float yaw = longAlongX ? 90f : 0f;
+        float halfWidthX = (longAlongX ? bounds.size.z : bounds.size.x) * scale * 0.5f;
+        float rockX = island.center.x - island.size.x * 0.5f + SealRockEdgeMargin + halfWidthX;
+
+        GameObject rock = (GameObject)PrefabUtility.InstantiatePrefab(rockAsset, parent);
+        rock.name = $"{island.name}_물범바위";
+        // FBX 루트의 회전·크기(축 변환)는 지우지 않고 그 위에 곱한다 — PlaceNatureProp과 같다.
+        rock.transform.localScale = rockAsset.transform.localScale * scale;
+        rock.transform.rotation = Quaternion.Euler(0f, yaw, 0f) * rockAsset.transform.localRotation;
+        rock.transform.position = new Vector3(rockX, MapLayout.IslandTop - bounds.min.y * scale, island.center.y);
+
+        foreach (Collider collider in rock.GetComponentsInChildren<Collider>(true))
+            Object.DestroyImmediate(collider);
+        foreach (Transform part in rock.GetComponentsInChildren<Transform>(true))
+            GameObjectUtility.SetStaticEditorFlags(part.gameObject, StaticEditorFlags.BatchingStatic);
+
+        return rockX + halfWidthX + SealStandGap;
     }
 
     // 원작 [퀘스트] 거대 해왕류(o02N) — 이동 안 하는 고정 표적이라 웨이브가 아니라 여기서

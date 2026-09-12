@@ -17,6 +17,8 @@ public static class ArtBinder
     const string Title = "모델 배선";
     const string GeneratedFolder = "Assets/Prefabs/Generated";
     const string MonsterFolder = "Assets/Art/Monsters";
+    const string CreatureFolder = "Assets/Art/Creatures";   // Blender로 지은 물범·노루·양(2026-09-12)
+    const string BuildingFolder = "Assets/Art/Buildings";   // Blender로 지은 스토리 건물 13채(2026-09-12)
     const string CharacterFolder = "Assets/Art/Characters";
     // 스킨 한 종당 폴더 하나 — Assets/Art/Units/<유닛이름>/<유닛이름>.fbx + Textures/ + SOURCE.txt.
     // Tools/import_skin.sh 가 이 모양으로 넣는다. 파일명이 로스터 에셋 이름과 같아서
@@ -572,9 +574,15 @@ public static class ArtBinder
             .ToList();
     }
 
+    // 🔴 스킨 폴더(Characters·Units)만 본다(2026-09-12). 예전엔 Assets/Art 전체였다 — Blender로 지은
+    //    자연물·벽·건물·해왕류·짐승이 들어오면서 그대로 두면 MakeHumanoid가 나무·바위·물범까지 Humanoid로
+    //    바꿔 재임포트하고, LinkTextures가 NatureMaterialPostprocessor가 입힌 재질(잎 알파 컷)을 갈아 끼운다.
     static IEnumerable<string> ModelPaths()
     {
-        return AssetDatabase.FindAssets("t:GameObject", new[] { "Assets/Art" })
+        string[] folders = new[] { CharacterFolder, UnitFolder }.Where(AssetDatabase.IsValidFolder).ToArray();
+        if (folders.Length == 0) return Enumerable.Empty<string>();
+
+        return AssetDatabase.FindAssets("t:GameObject", folders)
             .Select(AssetDatabase.GUIDToAssetPath)
             .Where(path => !path.EndsWith(".prefab"))
             .Distinct();
@@ -584,6 +592,8 @@ public static class ArtBinder
     public static void Bind()
     {
         List<GameObject> monsters = LoadModels(MonsterFolder);
+        monsters.AddRange(LoadModels(CreatureFolder));
+        monsters.AddRange(LoadModels(BuildingFolder));
         List<GameObject> characters = LoadModels(CharacterFolder);
         characters.AddRange(LoadModels(UnitFolder));
 
@@ -617,6 +627,33 @@ public static class ArtBinder
 
     // ── 적 ─────────────────────────────────────────────────────────────
 
+    // 적 모델은 **표에 적힌 것만** 붙인다(2026-09-12).
+    //
+    // 예전엔 Monsters 폴더 모델을 적 전체에 돌려가며 나눠줬다. 지금 Monsters에는 거대 해왕류 하나뿐이라
+    // 그대로 두면 **적 전부가 해왕류**가 된다. 해왕류를 게임에 붙이는 건 사장님이 정할 일이라 표에 없다.
+    // 키는 게임 단위(사람 20 = 1.75m) — Blender가 실제 치수로 지어 FBX를 다시 읽어 잰 값이다.
+    static readonly (string model, string enemyAsset, float height)[] EnemyModels =
+    {
+        ("물범", "Enemy_Seal", 4.6f),          // 몸길이 17.2
+        ("노루", "Enemy_Creep2_노루", 12.0f),   // 뿔 끝까지(어깨 8.0)
+        ("양", "Enemy_Creep3_양", 9.4f),        // 어깨 9.2
+
+        // 스토리 적 = 건물 13채. 바닥은 전부 45×45 안이고 원점은 바닥 가운데다.
+        ("Story01_하이츠", "Enemy_Story01_하이츠", 81.8f),
+        ("Story02_큰소망유치원", "Enemy_Story02_큰소망유치원", 52.0f),
+        ("Story03_한양영어유치원", "Enemy_Story03_한양영어유치원", 58.8f),
+        ("Story04_구일초등학교", "Enemy_Story04_구일초등학교", 75.0f),
+        ("Story05_구일중학교", "Enemy_Story05_구일중학교", 71.6f),
+        ("Story06_구일고등학교", "Enemy_Story06_구일고등학교", 87.4f),
+        ("Story07_메가스터디", "Enemy_Story07_메가스터디", 89.0f),
+        ("Story08_사이버넷", "Enemy_Story08_사이버넷", 59.8f),
+        ("Story09_7탄약창", "Enemy_Story09_7탄약창", 44.1f),
+        ("Story10_동양미래대학교", "Enemy_Story10_동양미래대학교", 58.0f),
+        ("Story11_日本", "Enemy_Story11_日本", 41.3f),
+        ("Story12_코드잇", "Enemy_Story12_코드잇", 88.8f),
+        ("Story13_쉬었음", "Enemy_Story13_쉬었음", 56.5f),
+    };
+
     static string BindEnemies(List<GameObject> models)
     {
         GameObject template = AssetDatabase.LoadAssetAtPath<GameObject>(MobTemplate);
@@ -625,30 +662,36 @@ public static class ArtBinder
         List<EnemyData> enemies = LoadAll<EnemyData>("Assets/Data/Enemies");
         if (enemies.Count == 0) return "\n⚠️ EnemyData가 없습니다.";
 
-        // 보스는 눈에 띄어야 한다. 목록 뒤쪽(대개 덩치 큰 종)을 보스에게 몰아준다.
-        List<EnemyData> bosses = enemies.Where(e => e.isBoss).ToList();
-        List<EnemyData> mobs = enemies.Where(e => !e.isBoss).ToList();
-
         int made = 0;
         Dictionary<GameObject, GameObject> cache = new Dictionary<GameObject, GameObject>();
+        List<string> bound = new List<string>();
 
-        for (int i = 0; i < bosses.Count; i++)
+        foreach ((string modelName, string enemyAsset, float height) in EnemyModels)
         {
-            GameObject model = models[models.Count - 1 - (i % models.Count)];
-            bosses[i].prefab = GetOrCreate(cache, template, model, "Mob", ref made);
-            EditorUtility.SetDirty(bosses[i]);
+            GameObject model = models.FirstOrDefault(m => Nfc(m.name) == Nfc(modelName));
+            EnemyData enemy = enemies.FirstOrDefault(e => Nfc(e.name) == Nfc(enemyAsset));
+            if (model == null || enemy == null) continue;
+
+            enemy.prefab = GetOrCreate(cache, template, model, "Mob", ref made, height);
+            EditorUtility.SetDirty(enemy);
+            bound.Add($"{modelName} → {enemy.enemyName}");
         }
 
-        for (int i = 0; i < mobs.Count; i++)
+        // Bind가 Generated 폴더를 통째로 지운 뒤라, 거기 물려 있던 적은 참조가 비었다 — 자리표시 프리팹으로 되돌린다.
+        int reset = 0;
+        foreach (EnemyData enemy in enemies)
         {
-            GameObject model = models[i % models.Count];
-            mobs[i].prefab = GetOrCreate(cache, template, model, "Mob", ref made);
-            EditorUtility.SetDirty(mobs[i]);
+            if (enemy.prefab != null) continue;
+            enemy.prefab = template;
+            EditorUtility.SetDirty(enemy);
+            reset++;
         }
 
-        return $"\n적: 모델 {models.Count}종 → 프리팹 {made}개, " +
-               $"잡몹 {mobs.Count}종 · 보스 {bosses.Count}종에 연결했습니다." +
-               (models.Count < 10 ? "\n  ⚠️ 모델이 적어 여러 적이 같은 모습을 씁니다." : "");
+        List<string> unused = models.Where(m => !cache.ContainsKey(m)).Select(m => m.name).ToList();
+        return $"\n적: 표에 적힌 모델 {bound.Count}종을 붙였습니다" +
+               (bound.Count > 0 ? $" ({string.Join(", ", bound)})." : ".") +
+               (reset > 0 ? $"\n  자리표시 프리팹으로 되돌린 적 {reset}종." : "") +
+               (unused.Count > 0 ? $"\n  표(ArtBinder.EnemyModels)에 없어 안 붙인 모델: {string.Join(", ", unused)}" : "");
     }
 
     // ── 아군 ───────────────────────────────────────────────────────────
@@ -931,7 +974,7 @@ public static class ArtBinder
     }
 
     static GameObject GetOrCreate(Dictionary<GameObject, GameObject> cache, GameObject template,
-                                  GameObject model, string prefix, ref int made)
+                                  GameObject model, string prefix, ref int made, float authoredHeight = 0f)
     {
         if (cache.TryGetValue(model, out GameObject cached)) return cached;
 
@@ -952,13 +995,23 @@ public static class ArtBinder
 
         GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(model, instance.transform);
         visual.transform.localPosition = Vector3.zero;
-        // 크기를 재기 **전에** 돌린다. 돌리면 경계 상자가 바뀌므로, 나중에 돌리면
-        // 엉뚱한 축 길이에 키를 맞춰 납작하거나 길쭉해진다.
-        visual.transform.localRotation = RotationFor(model.name);
-        // 사람형은 뼈로 방향을 재서 자동으로 세운다. 수동 표에 적힌 모델은 그게 우선이다.
-        // 네 발 짐승은 건드리지 않는다 — 세우는 규칙이 사람 기준이라 오히려 일으켜 세운다.
-        if (RotationFor(model.name) == Quaternion.identity && !IsFourLegged(model.name)) AutoUpright(visual);
-        FitToHeight(instance, visual, HeightScaleFor(model.name));
+        if (authoredHeight > 0f)
+        {
+            // Blender로 지은 모델 — 방향은 파일에 맞게 들어 있다. 회전을 대입하면 FBX 루트의 축 변환이
+            // 지워져 옆으로 눕고(MapGenerator.PlaceNatureProp 주석과 같은 함정), 경계 상자로 세우면
+            // 몸길이가 긴 짐승이 일어선다(재규어). 그래서 돌리지 않고 키만 맞춘다.
+            FitToHeight(instance, visual, 1f, authoredHeight);
+        }
+        else
+        {
+            // 크기를 재기 **전에** 돌린다. 돌리면 경계 상자가 바뀌므로, 나중에 돌리면
+            // 엉뚱한 축 길이에 키를 맞춰 납작하거나 길쭉해진다.
+            visual.transform.localRotation = RotationFor(model.name);
+            // 사람형은 뼈로 방향을 재서 자동으로 세운다. 수동 표에 적힌 모델은 그게 우선이다.
+            // 네 발 짐승은 건드리지 않는다 — 세우는 규칙이 사람 기준이라 오히려 일으켜 세운다.
+            if (RotationFor(model.name) == Quaternion.identity && !IsFourLegged(model.name)) AutoUpright(visual);
+            FitToHeight(instance, visual, HeightScaleFor(model.name));
+        }
         AttachAnimator(instance, visual);
 
         GameObject saved = PrefabUtility.SaveAsPrefabAsset(instance, path);
@@ -1028,11 +1081,12 @@ public static class ArtBinder
     //
     // 보이는 모델만 키우면 안 된다 — 콜라이더가 발치에 남아 클릭이 발끝에서만 먹고
     // 체력바도 발밑에 뜬다. NavMeshAgent의 반지름·높이도 스케일을 안 따라가므로 같이 맞춘다.
-    static void FitToHeight(GameObject root, GameObject visual, float heightScale = 1f)
+    // authoredHeight > 0이면 기준 키 대신 그 값으로 맞춘다(Blender로 실제 치수대로 지은 모델, BindEnemies 표).
+    static void FitToHeight(GameObject root, GameObject visual, float heightScale = 1f, float authoredHeight = 0f)
     {
         // 콜라이더·에이전트도 같은 키를 쓴다. 보이는 것만 줄이면 클릭 판정과 체력바가
         // 원래 크기 자리에 남아서, 작아진 모델 위 허공을 눌러야 선택된다.
-        float height = HeightFor(root) * heightScale;
+        float height = authoredHeight > 0f ? authoredHeight : HeightFor(root) * heightScale;
 
         Bounds bounds = MeasureRenderers(visual);
 
@@ -1045,7 +1099,8 @@ public static class ArtBinder
         // 사람은 키(Y)에 맞춘다. 사람이 아닌 모델(네 발 짐승·탈것)은 **가장 긴 축**에 맞춘다 —
         // 몸길이가 키보다 긴 짐승을 키로 맞추면 몸길이가 기준을 넘어 거대해진다
         // (재규어: 키 20에 맞추면 몸길이 34, 사람 둘을 합친 것보다 길다).
-        float measured = IsHumanVisual(visual) ? size.y : Mathf.Max(size.x, size.y, size.z);
+        // 표에 키를 적은 모델은 짐승이어도 키(Y)로 잰다 — 그 표의 값 자체가 키다.
+        float measured = authoredHeight > 0f || IsHumanVisual(visual) ? size.y : Mathf.Max(size.x, size.y, size.z);
 
         if (measured > 0.001f)
         {
@@ -1079,8 +1134,23 @@ public static class ArtBinder
         }
         else if (root.TryGetComponent(out BoxCollider box))
         {
-            box.size = new Vector3(radius * 2f, height, radius * 2f);
-            box.center = new Vector3(0f, height * 0.5f, 0f);
+            Vector3 footprint = new Vector3(radius * 2f, height, radius * 2f);
+            Vector3 center = new Vector3(0f, height * 0.5f, 0f);
+
+            // 실제 치수로 지은 모델은 앞뒤·좌우가 길다(물범 몸길이 17.2에 키 4.6, 건물 바닥 45×45) — 키 비례
+            // 기둥이면 몸 대부분이 클릭에 안 걸린다. 몸 경계만큼 넓힌다(경계가 0으로 나오면 기둥 그대로 둔다).
+            if (authoredHeight > 0f)
+            {
+                Bounds body = MeasureRenderers(visual);
+                footprint.x = Mathf.Max(footprint.x, body.size.x);
+                footprint.z = Mathf.Max(footprint.z, body.size.z);
+                Vector3 local = root.transform.InverseTransformPoint(body.center);
+                if (body.size.x > 0.001f) center.x = local.x;
+                if (body.size.z > 0.001f) center.z = local.z;
+            }
+
+            box.size = footprint;
+            box.center = center;
         }
 
         // 높이만 맞추고 **반지름은 건드리지 않는다.** NavMesh는 반지름 0.5로 굽혀 있어서
