@@ -22,7 +22,8 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
     const string WallRoot = "Assets/Art/Walls/";
     const string MonsterRoot = "Assets/Art/Monsters/";
     // 텍스처는 자기 종류 폴더의 Textures에서 찾는다(자연물·벽은 Nature/Textures, 괴물은 Monsters/Textures).
-    static readonly string[] TextureFolders = { "Assets/Art/Nature/Textures", "Assets/Art/Monsters/Textures" };
+    static readonly string[] TextureFolders =
+        { "Assets/Art/Nature/Textures", "Assets/Art/Walls/Textures", "Assets/Art/Monsters/Textures" };
     const string LeafCardSuffix = "_잎카드";   // 잎 카드·지느러미 막 — 양면 + 알파 컷
 
     // 규칙을 바꾸면 올린다 — 올려야 이미 임포트된 FBX도 다시 돈다.
