@@ -497,7 +497,7 @@ class Builder:
             a, b, bt, at = wall[k], wall[k + 1], tip[k + 1], tip[k]
             self.hexa((a, b, bt, at, a + up, b + up, bt + up, at + up), mat)
 
-    def tilt_front(self, side, plane, u0, u1, z0, z1, degrees):
+    def tilt_front(self, side, plane, u0, u1, z0, z1, degrees, min_out=0.01):
         """벽면(side, plane) 앞으로 튀어나온 것 중 창(u0..u1, z0..z1) 안의 정점만 기울인다 — 이미 지은 간판을 나중에
         「한쪽 나사가 빠진 듯」 돌릴 때(기본판 코드를 안 고치고). degrees > 0이면 오른쪽 끝이 처진다(왼쪽 위 모서리가 축),
         < 0이면 왼쪽 끝이 처진다. 벽면 자체의 정점(plane 위)은 안 움직인다. 돌린 정점 수를 돌려준다."""
@@ -800,8 +800,8 @@ def angry_variant(maker, seed=0, brows=(), tilts=(), extra=None, keep=(), cracks
     extra(b) = 그 건물다운 파손을 더하는 함수(꺼진 네온·휜 게양대 등). keep = 붉게 안 바꿀 재질.
     CATALOG 항목: ("StoryNN_이름_화남", "NN Name Angry", lambda: angry_variant(make_xxx, ...), "설명")."""
     b = maker()
-    for side, plane, u0, u1, z0, z1, degrees in tilts:
-        if b.tilt_front(side, plane, u0, u1, z0, z1, degrees) == 0:
+    for side, plane, u0, u1, z0, z1, degrees, *rest in tilts:     # 8번째(선택) = 최소 돌출 — 창틀(0.35)·창턱(0.6) 제외용
+        if b.tilt_front(side, plane, u0, u1, z0, z1, degrees, *(rest[:1] or [0.01])) == 0:
             print(f"⚠️ 기울일 간판 정점이 없다: {side} plane {plane} u {u0}~{u1} z {z0}~{z1}")
     for side, plane, outer, inner in brows:
         b.brow(side, plane, outer, inner)

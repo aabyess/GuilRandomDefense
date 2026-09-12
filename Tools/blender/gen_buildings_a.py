@@ -17,6 +17,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
+from mathutils import Vector
+
 import buildings_common as bc
 from buildings_common import DOOR_H, FLOOR_H, GROUND_H, Builder
 
@@ -200,8 +202,48 @@ CATALOG = [
                               brows=[("-y", -15.5, (-16.8, GROUND_H + 47.0), (-3.8, GROUND_H + 42.4)),
                                      ("-y", -15.5, (16.8, GROUND_H + 47.0), (3.8, GROUND_H + 42.4))],
                               tilts=[("-y", -14.0, -4.5, 4.5, GROUND_H + 47.4, GROUND_H + 53.5, 18.0)]),
-     "하이츠 화난 버전 · 맨 위층 베란다 눈 + 짙은 눈썹 · 간판 기울어짐 · 붉은 창 · 금·그을음 · 옥상 연기"),
+     "하이츠 화난 버전 · 맨 위층 베란다 눈 + 그을린 차양 눈썹 · 간판 기울어짐 · 붉은 창 · 금·그을음 · 옥상 연기 자리"),
+    # 유치원 화난 버전 — 박공 집 셋이 한 얼굴: 왼쪽(노랑)·오른쪽(하늘) 집 2층 창이 눈, 가운데 붉은 현관이 입.
+    # 눈썹은 두 집 2층 창 위 처마 밑에서 가운데로 처지는 그을린 차양, 「큰소망유치원」 간판은 왼쪽이 처지게.
+    ("Story02_큰소망유치원_화남", "02 Kindergarten Angry",
+     lambda: bc.angry_variant(make_kindergarten, seed=1102, cracks=12,
+                              brows=[("-y", -2.0, (-20.5, GROUND_H - 1.0 + 13.8), (-8.2, GROUND_H - 1.0 + 11.0)),
+                                     ("-y", -2.0, (20.5, GROUND_H - 1.0 + 13.8), (8.2, GROUND_H - 1.0 + 11.0))],
+                              tilts=[("-y", -2.0, -7.5, 7.5, GROUND_H - 1.0 + 10.6, GROUND_H - 1.0 + 14.6, -15.0)],
+                              cracks_at=[("-y", -2.0, -4.3, 6.0, 1.8, 7.0)],
+                              extra=lambda b: _angry_kindergarten_extra(b)),
+     "유치원 화난 버전 · 양쪽 집 2층 창 눈 + 그을린 차양 눈썹 · 간판 기울어짐 · 붉은 창·현관 · 넘어진 울타리·찢어진 차양·"
+     "부서진 미끄럼틀 · 금·그을음 · 용마루 연기 자리"),
 ]
+
+
+def _angry_kindergarten_extra(b):
+    """유치원다운 파손 — 정면(게임 카메라 쪽)에서 크게 보이는 자리에(PM): ① 앞 울타리 가운데 한 구간이 마당 안쪽으로
+    넘어짐 ② 노란 현관 차양 오른쪽이 찢겨 아래로 늘어짐 ③ 미끄럼틀 비탈 한 토막이 부러져 모래 위에 떨어짐.
+    좌표는 make_kindergarten과 같은 기준(울타리 y −21.5, 현관 차양 y −5.2~−2.0·z DOOR_H+1.3, 미끄럼틀 발판 (−11, −14))."""
+    green, yellow = "건물_색_초록", "건물_색_노랑"
+    # ① 넘어진 울타리 — 앞 울타리 가운데 긴 구간(기둥 여섯, 폭 15)이 마당 안쪽(+y)으로 거의 누움. 기둥 사이 가로살도
+    # 따라 누워 게임 시점(위)에서 「초록 사다리가 쓰러진」 크기로 읽히게(PM: 두세 칸으로는 안 읽혔다).
+    tops = []
+    for x in (-7.5, -4.5, -1.5, 1.5, 4.5, 7.5):
+        base = Vector((x, -21.3, 0.3))
+        top = base + Vector((0.2 * (x / 7.5), 3.0, 0.9))
+        b.beam(base, top, 0.45, 0.45, green)
+        tops.append(top)
+    b.beam(tops[0], tops[-1], 0.45, 0.45, green)
+    mids = [Vector((t.x, -21.3 + 1.5, 0.75)) for t in tops]
+    b.beam(mids[0], mids[-1], 0.4, 0.4, green)
+    # ② 찢어져 늘어진 차양 조각
+    b.hexa(((1.2, -5.9, DOOR_H - 2.8), (4.6, -6.1, DOOR_H - 3.4), (4.6, -5.8, DOOR_H - 3.4), (1.2, -5.6, DOOR_H - 2.8),
+            (1.0, -5.2, DOOR_H + 1.3), (4.8, -5.2, DOOR_H + 1.3), (4.8, -4.9, DOOR_H + 1.3), (1.0, -4.9, DOOR_H + 1.3)), yellow)
+    # ③ 부러진 미끄럼틀 판 — 반으로 꺾여 ∧자로 모래에 꽂힘(PM: 바닥에 누운 토막은 게임 시점에서 안 읽혔다).
+    # 초록 판 두 쪽 + 양옆 노란 난간이 꺾인 선을 따라간다. 끝은 모래 높이(0.3)에서 멈춰 바닥 원점 규칙을 지킨다.
+    foot_a, bend, foot_b = Vector((-10.0, -12.8, 0.3)), Vector((-6.6, -11.6, 4.6)), Vector((-2.6, -10.2, 0.3))
+    for a, c in ((foot_a, bend), (bend, foot_b)):
+        b.beam(a, c, 2.4, 0.4, green)
+        for side in (-1.2, 1.2):
+            off = Vector((0.33, -0.94, 0.0)) * side
+            b.beam(a + off + Vector((0, 0, 0.5)), c + off + Vector((0, 0, 0.5)), 0.3, 0.8, yellow)
 
 
 if __name__ == "__main__":

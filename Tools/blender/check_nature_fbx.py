@@ -11,12 +11,24 @@
 
 ⚠️ 원점 검사: 최저점이 0이어도 오브젝트 위치가 0이 아니면 "원점은 발밑"이 아니다 —
 맵에 놓을 때 위치를 덮어쓰면 그 차이만큼 뜨거나 묻힌다. 그래서 둘 다 찍는다.
+
+⚠️ 위에서 본 뒷면 검사(2026-09-12 추가, PM 상설 지시): 유니티는 뒷면을 안 그린다(`_잎카드` 재질만 양면). 게임
+카메라는 위에서 내려다보므로, 위에서 수직으로 쏜 광선이 처음 맞는 면이 「아래를 보는 면」이면 그 자리는 게임에서
+속이 뚫려 보이거나 부재가 사라져 보인다(스토리 04·05·06 옥상 면 누락, 08·12 차양 윗면 누락을 이 검사로 찾았다).
+바닥을 24×24 격자로 훑어 적중 수와 위치를 찍고, 적중 면 넓이가 바닥 넓이의 1% 이상이면 경고(문제로 셈),
+미만이면 작은 부재 밑면일 수 있어 참고로만 표시한다. `_잎카드` 면은 양면이라 셈하지 않는다.
 """
 
 import bpy
+import bmesh
 import glob
 import os
 import sys
+from mathutils import Vector
+from mathutils.bvhtree import BVHTree
+
+GRID = 24                  # 위에서 본 뒷면 검사 격자(한 변)
+BACKFACE_WARN_RATIO = 0.01  # 적중 면 넓이 ÷ 바닥 넓이가 이 이상이면 경고
 
 PROJECT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 DEFAULT_ROOT = os.path.join(PROJECT, "Assets", "Art", "Nature")
@@ -56,8 +68,35 @@ def measure(path):
         tris = sum(len(poly.vertices) - 2 for poly in obj.data.polygons)
         mats = sorted({slot.material.name for slot in obj.material_slots if slot.material})
         rows.append((obj.name, hi[0] - lo[0], hi[2] - lo[2], hi[1] - lo[1],
-                     lo[2], obj.matrix_world.translation.length, tris, mats))
+                     lo[2], obj.matrix_world.translation.length, tris, mats, top_down_backfaces(obj, lo, hi)))
     return rows
+
+
+def top_down_backfaces(obj, lo, hi):
+    """위에서 수직으로 쏜 광선이 처음 맞는 면이 아래를 보는 면인 곳 — [(x, y, 넓이, 경고인가)]. 월드 좌표(게임 단위)."""
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bm.transform(obj.matrix_world)
+    bm.normal_update()
+    bm.faces.ensure_lookup_table()
+    tree = BVHTree.FromBMesh(bm)
+    names = [slot.material.name if slot.material else "" for slot in obj.material_slots]
+    floor = max((hi[0] - lo[0]) * (hi[1] - lo[1]), 1e-6)
+    found = {}
+    for i in range(GRID):
+        for j in range(GRID):
+            x = lo[0] + (hi[0] - lo[0]) * (i + 0.5) / GRID
+            y = lo[1] + (hi[1] - lo[1]) * (j + 0.5) / GRID
+            loc, _, index, _ = tree.ray_cast(Vector((x, y, hi[2] + 1.0)), Vector((0.0, 0.0, -1.0)))
+            if loc is None:
+                continue
+            face = bm.faces[index]
+            name = names[face.material_index] if face.material_index < len(names) else ""
+            if face.normal.z < -0.1 and not name.split(".")[0].endswith("_잎카드"):
+                area = face.calc_area()
+                found.setdefault(index, (round(x, 1), round(y, 1), area, area / floor >= BACKFACE_WARN_RATIO))
+    bm.free()
+    return list(found.values())
 
 
 def main():
@@ -70,7 +109,8 @@ def main():
     problems = 0
     print("=" * 100)
     print(f"{'파일':24} {'가로':>7} {'세로':>7} {'앞뒤':>7} {'최저점':>7} {'원점거리':>8} {'삼각형':>6}  재질")
-    for rel, name, w, h, d, low, origin, tris, mats in measured:
+    notes = []
+    for rel, name, w, h, d, low, origin, tris, mats, backfaces in measured:
         flags = []
         if abs(low) > 0.01:
             flags.append("최저점≠0")
@@ -78,10 +118,18 @@ def main():
             flags.append("원점≠발밑")
         if tris > TRIANGLE_LIMIT:
             flags.append(f"삼각형>{TRIANGLE_LIMIT}")
+        warn = [b for b in backfaces if b[3]]
+        if warn:
+            flags.append(f"위에서 뒷면 {len(warn)}곳")
         problems += len(flags)
         note = ("  ⚠️ " + ",".join(flags)) if flags else ""
         print(f"{rel:24} {w:7.2f} {h:7.2f} {d:7.2f} {low:7.2f} {origin:8.2f} {tris:6d}  {'/'.join(mats)}{note}")
+        if backfaces:
+            listed = ", ".join(f"({x}, {y}) 넓이 {a:.1f}{'' if big else ' 참고'}" for x, y, a, big in backfaces[:6])
+            notes.append(f"  {rel}: 위에서 본 뒷면 {len(backfaces)}곳(경고 {len(warn)}) — {listed}")
     print("=" * 100)
+    for line in notes:
+        print(line)
     print(f"문제 {problems}건")
 
 

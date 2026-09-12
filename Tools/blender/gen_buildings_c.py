@@ -140,6 +140,9 @@ def make_guil_elementary():
 
     b.box(x0 - 1.0, x1 + 1.0, y0 - 6.0, y1 + 1.0, 0.0, 0.3, "건물_바닥_보도블록", skip=("bottom",))
     b.box(x0, x1, y0, y1, 0.3, top, tile, skip=("bottom", "top"))
+    # 🔴 2026-09-12 정정(blender 세션) — 몸통 top을 빼고 옥상 면을 안 넣어, 위에서 보면 속이 뚫려 있었다(유니티는
+    # 뒷면을 안 그린다 — 게임 카메라가 위에서 내려다본다). 옥상 방수 면을 덮는다.
+    b.face(((x0, y0, top), (x1, y0, top), (x1, y1, top), (x0, y1, top)), "건물_옥상_방수")
     b.box(x0 - 0.2, x1 + 0.2, y0 - 0.2, y1 + 0.2, 0.3, 1.0, concrete, skip=("bottom", "top"))
     for z in (G,) + tuple(f + FLOOR_H for f in floors):
         b.box(x0 - 0.25, x1 + 0.25, y0 - 0.25, y1 + 0.25, z - 0.7, z + 0.1, concrete, skip=("bottom", "top"))
@@ -225,6 +228,9 @@ def make_guil_middle():
     # 위 3개 층(A·B 몸통 전부)
     b.box(ax0, ax1, ay0, ay1, G + 0.2, top, brick, skip=("bottom", "top"))
     b.box(bx0, bx1, ay1, by1, 0.3, top, brick, skip=("bottom", "top"))
+    # 🔴 2026-09-12 정정(blender 세션) — 두 날개 모두 옥상 면이 없어 위에서 속이 뚫려 보였다(유니티는 뒷면을 안 그린다).
+    b.face(((ax0, ay0, top), (ax1, ay0, top), (ax1, ay1, top), (ax0, ay1, top)), "건물_옥상_방수")
+    b.face(((bx0, ay1, top), (bx1, ay1, top), (bx1, by1, top), (bx0, by1, top)), "건물_옥상_방수")
     for z in (G,) + tuple(G + FLOOR_H * k for k in (1, 2)):
         b.box(ax0 - 0.25, ax1 + 0.25, ay0 - 0.25, ay1 + 0.25, z + FLOOR_H - 0.6, z + FLOOR_H + 0.15, "건물_색_흰", skip=("bottom", "top"))
         b.box(bx0 - 0.25, bx1 + 0.25, ay1 - 0.25, by1 + 0.25, z + FLOOR_H - 0.6, z + FLOOR_H + 0.15, "건물_색_흰", skip=("bottom", "top"))
@@ -279,6 +285,8 @@ def make_guil_high():
 
     b.box(x0 - 1.0, x1 + 1.0, y0 - 1.0, y1 + 1.0, 0.0, 0.3, "건물_바닥_보도블록", skip=("bottom",))
     b.box(x0, x1, y0, y1, 0.3, top, concrete, skip=("bottom", "top"))
+    # 🔴 2026-09-12 정정(blender 세션) — 옥상 면이 없어 위에서 속이 뚫려 보였다(유니티는 뒷면을 안 그린다).
+    b.face(((x0, y0, top), (x1, y0, top), (x1, y1, top), (x0, y1, top)), "건물_옥상_방수")
     # 🔴 정정(PM 렌더 검수) — 회색+흰 격자가 게임 시점에서 거의 흰 덩어리로 날아가 07 옆에서 대비가
     # 약했다. 남색 띠를 층마다 두껍게(0.8→1.4) 두르고, 창틀 흰 핀(trim)을 콘크리트로 낮췄다 —
     # 「회색+남색 줄무늬」로 읽히도록.
@@ -386,7 +394,105 @@ CATALOG = [
      "5층 판상형 · 수직 콘크리트 기둥 줄 · 옥상 난간 · 최상층 남색 간판띠 구일고등학교"),
     ("Story07_메가스터디", "07 Megastudy", make_megastudy,
      "좁고 높은 학원 빌딩 · 촘촘한 창 격자 · 1층 유리 상가 · 옆면 커튼월 + 세로 간판 · 정면 가로 간판 메가스터디"),
+
+    # ── 화난 버전(2026-09-12, blender 세션이 덧붙임 — 위 기본판 make_* 는 한 줄도 안 고친다). 공용 bc.angry_variant:
+    # brows = 눈으로 쓸 창 위 그을린 차양(바깥 끝 높게·안쪽 끝 낮게) · tilts = (side, plane, u0, u1, z0, z1, 각도, 최소 돌출)
+    # — 최소 돌출보다 앞으로 나온 정점만 기울여 창틀(0.35)·창턱(0.6)은 안 딸려 온다 · cracks_at = 꼭 보여야 할 금 ·
+    # extra = 건물다운 파손(정면에서 크게 보이는 자리, PM)과 연기 자리(평평한 옥상 면이 없거나 위치를 정할 때, smoke=0).
+    ("Story03_한양영어유치원_화남", "03 English Kindergarten Angry",
+     lambda: bc.angry_variant(make_hanyang_kindergarten, seed=1103, cracks=8, smoke=0,
+                              brows=[("-y", -8.0, (5.0, 36.2), (8.8, 34.5)), ("-y", -8.0, (15.0, 36.2), (11.2, 34.5))],
+                              tilts=[("-y", -8.0, 2.5, 17.5, 36.4, 41.8, 12.0, 0.25)],
+                              cracks_at=[("-y", -8.0, -6.5, 10.5, 3.0, 6.0)],
+                              extra=lambda b: _angry_hanyang(b)),
+     "한양영어유치원 화난 버전 · 오른쪽 집 2층 창 눈 + 차양 눈썹 · 간판 기울어짐 · 현관을 막은 떨어진 각재 · 부러진 굴뚝"),
+    ("Story04_구일초등학교_화남", "04 Guil Elementary Angry",
+     lambda: bc.angry_variant(make_guil_elementary, seed=1104, cracks=10, smoke=0,
+                              brows=[("-y", 5.0, (-20.8, 54.6), (-12.3, 52.2)), ("-y", 5.0, (20.8, 54.6), (12.3, 52.2))],
+                              tilts=[("-y", 5.0, -12.0, 12.0, 47.3, 53.0, 10.0, 0.45),
+                                     ("-y", 5.2, -4.2, 4.2, 65.0, 73.4, 22.0, 0.01)],
+                              cracks_at=[("-y", 5.0, -18.3, 3.0, 3.0, 7.0)],
+                              extra=lambda b: _angry_elementary(b)),
+     "구일초등학교 화난 버전 · 3층 양끝 창 눈 + 차양 눈썹 · 간판·시계판 기울어짐 · 운동장 철망 담장 한 구간 넘어짐"),
+    ("Story05_구일중학교_화남", "05 Guil Middle Angry",
+     lambda: bc.angry_variant(make_guil_middle, seed=1105, cracks=10, smoke=0,
+                              brows=[("-y", -6.0, (-17.8, 69.3), (-4.5, 66.3)), ("-y", -6.0, (19.2, 69.3), (6.0, 66.3))],
+                              tilts=[("-y", -6.0, -15.0, 4.5, 57.3, 63.5, -12.0, 0.61)],
+                              cracks_at=[("-y", -6.0, 14.5, 12.5, 5.0, 7.0)],
+                              extra=lambda b: _angry_middle(b)),
+     "구일중학교 화난 버전 · 4층 양쪽 창 눈 + 차양 눈썹 · 간판 글자 미끄러짐 · 벽돌 떨어진 구멍과 더미 · 찢겨 떨어진 깃발"),
+    ("Story06_구일고등학교_화남", "06 Guil High Angry",
+     lambda: bc.angry_variant(make_guil_high, seed=1106, cracks=10, smoke=0,
+                              brows=[("-y", -6.5, (-20.5, 70.2), (-6.5, 67.2)), ("-y", -6.5, (20.5, 70.2), (6.5, 67.2))],
+                              tilts=[("-y", -6.5, -14.0, 14.0, 78.8, 85.0, 8.0, 0.65)],
+                              cracks_at=[("-y", -6.5, -12.4, 6.0, 1.8, 7.0), ("-y", -6.5, 9.2, 10.0, 1.8, 8.0)],
+                              extra=lambda b: _angry_high(b)),
+     "구일고등학교 화난 버전 · 4층 양쪽 창 눈 + 차양 눈썹(남색 띠 높이) · 간판 기울어짐 · 떨어져 매달린 남색 띠 · 부러진 기둥 핀"),
+    ("Story07_메가스터디_화남", "07 Megastudy Angry",
+     lambda: bc.angry_variant(make_megastudy, seed=1107, cracks=6,
+                              brows=[("-y", -9.0, (-10.8, 69.8), (-3.5, 68.0)), ("-y", -9.0, (10.8, 69.8), (3.5, 68.0))],
+                              tilts=[("-y", -9.0, -9.5, 9.5, 54.8, 57.6, 10.0, 0.1),
+                                     ("-y", -9.0, 9.0, 9.8, 25.0, 45.0, -14.0, 0.4)],
+                              cracks_at=[("-y", -9.0, -5.0, 4.0, 5.0, 8.0), ("-y", -9.0, 4.5, 8.0, 4.0, 7.0)],
+                              extra=lambda b: _angry_megastudy(b)),
+     "메가스터디 화난 버전 · 4층 창 눈 + 차양 눈썹 · 찢겨 늘어진 현수막 · 기운 세로 간판 · 금 간 1층 유리 · 떨어진 간판 조각"),
 ]
+
+
+# ──────────────────────────────────────────────────────────── 화난 버전 — 건물다운 파손(정면에서 크게)
+
+def _angry_hanyang(b):
+    """① 오른쪽 집 반목조 각재 하나가 떨어져 현관 앞을 비스듬히 막음 ② 굴뚝 머리가 부러져 지붕에 걸침 ③ 연기 자리."""
+    from mathutils import Vector
+    b.beam(Vector((14.5, -8.4, 20.0)), Vector((11.0, -9.6, 1.0)), 0.8, 0.4, "건물_나무_판")
+    b.beam(Vector((13.8, 1.5, 46.2)), Vector((16.8, 2.8, 45.0)), 1.6, 1.6, "건물_벽돌_붉은")
+    b.markers += [("연기_자리_01", Vector((16.0, 0.0, 52.5))), ("연기_자리_02", Vector((-6.5, 0.0, 46.5)))]
+
+
+def _angry_elementary(b):
+    """① 운동장 앞 철망 담장 왼쪽 두 칸이 쓰러져 흙바닥에 누움(서 있던 판은 지운다) ② 연기 자리(옥상)."""
+    import bmesh
+    from mathutils import Vector
+    mesh_i = b.m("건물_철망_잎카드")
+    fy = 5.0 - 21.8
+    doomed = [f for f in b.bm.faces if f.material_index == mesh_i and -18.5 < f.calc_center_median().x < -9.5]
+    bmesh.ops.delete(b.bm, geom=doomed, context="FACES")
+    for x, skew in ((-16.0, 0.4), (-12.0, -0.3)):
+        b.face(((x - 1.6, fy + 0.3, 0.25), (x + 1.6, fy + 0.3 + skew, 0.25),
+                (x + 1.6, fy + 3.2 + skew, 0.3), (x - 1.6, fy + 3.2, 0.3)), "건물_철망_잎카드")
+    b.markers += [("연기_자리_01", Vector((-10.0, 10.5, 55.5))), ("연기_자리_02", Vector((12.0, 11.5, 55.5)))]
+
+
+def _angry_middle(b):
+    """① 1층 정면 벽돌이 떨어져 나간 검은 구멍 + 둘레 금 + 앞 바닥 벽돌 더미 ② 가운데 태극기에 그을음,
+    찢겨 떨어진 깃발 한 장이 마당에 ③ 연기 자리(A·B 날개 옥상)."""
+    import random
+    from mathutils import Vector
+    rng = random.Random(1105)
+    b.panel("-y", -6.0, 3.0, 13.5, 3.6, 4.6, "건물_색_검정", offset=0.06)
+    b.panel("-y", -6.0, 3.0, 12.0, 6.5, 8.0, "건물_금_잎카드", offset=0.15)
+    for _ in range(9):
+        p = Vector((3.0 + rng.uniform(-2.8, 2.8), -7.2 - rng.uniform(0.0, 2.2), 0.45 + rng.uniform(0.0, 0.6)))
+        d = Vector((rng.uniform(-1, 1), rng.uniform(-1, 1), rng.uniform(-0.3, 0.3))).normalized() * rng.uniform(0.9, 1.6)
+        b.beam(p, p + d, 0.7, 0.55, "건물_벽돌_붉은")
+    b.panel("-y", -16.5, 3.7, 24.0, 3.2, 4.7, "건물_그을음_잎카드", offset=0.05)
+    b.face(((1.3, -21.6, 0.35), (5.8, -21.2, 0.35), (5.5, -18.0, 0.35), (1.0, -18.5, 0.35)), "건물_국기_태극기")
+    b.markers += [("연기_자리_01", Vector((0.0, 0.0, 70.5))), ("연기_자리_02", Vector((13.7, 12.0, 70.5)))]
+
+
+def _angry_high(b):
+    """① 오른쪽 남색 띠 한 토막이 떨어져 벽에 비스듬히 매달림 ② 기둥 핀 하나가 부러져 앞 바닥에 누움 ③ 연기 자리."""
+    from mathutils import Vector
+    b.beam(Vector((8.0, -7.1, 54.6)), Vector((17.0, -7.9, 46.5)), 0.5, 1.4, "건물_색_남색")
+    b.beam(Vector((-10.5, -9.8, 0.55)), Vector((-3.0, -8.2, 0.55)), 1.0, 0.5, "건물_콘크리트")
+    b.markers += [("연기_자리_01", Vector((-8.0, 0.0, 85.5))), ("연기_자리_02", Vector((9.0, 2.0, 85.5)))]
+
+
+def _angry_megastudy(b):
+    """① 떨어진 간판 조각 둘이 1층 앞 바닥에(현수막·세로 간판 기울기와 1층 유리 금은 tilts·cracks_at) ② 연기 자리는 옥상 자동."""
+    from mathutils import Vector
+    b.beam(Vector((-6.0, -11.5, 0.5)), Vector((-3.2, -10.6, 0.5)), 1.6, 0.3, "건물_색_남색")
+    b.beam(Vector((2.0, -11.8, 0.5)), Vector((4.2, -12.4, 0.5)), 1.4, 0.3, "건물_색_흰")
 
 
 if __name__ == "__main__":
