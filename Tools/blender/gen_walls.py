@@ -358,86 +358,82 @@ def make_gate(length, height, thickness):
 
 # ──────────────────────────────────────────────────────────── 목록
 #
-# (이름, 만들기, 설명, 이어 붙이는가) — 치수는 게임 단위(길이 X × 높이 × 두께).
+# (이름, 만들기, 설명, 이어 붙이는가, 전시 줄, 라벨) — 치수는 게임 단위(길이 X × 높이 × 두께).
+# 전시 줄·라벨은 사장님 창의 판 위 배치(showcase.py)에만 쓰인다 — FBX와 무관하다.
+# 라벨이 영어인 건 Blender 기본 폰트가 한글을 못 그려서다.
 
 CATALOG = [
     ("돌담_두꺼움", lambda: make_stone_wall(seed=401, length=8.0, height=5.5, thickness=7.0, columns=6),
-     "8 × 5.5 × 7, 레인 사이 벽, 이어 붙임", True),
+     "8 × 5.5 × 7, 레인 사이 벽, 이어 붙임", True, "돌", "StoneWall_Thick"),
     ("돌담_얇음", lambda: make_stone_wall(seed=402, length=6.0, height=5.5, thickness=1.4, columns=5),
-     "6 × 5.5 × 1.4, 펑크해저드 벽, 이어 붙임", True),
+     "6 × 5.5 × 1.4, 펑크해저드 벽, 이어 붙임", True, "돌", "StoneWall_Thin"),
     ("돌기둥", lambda: make_pillar(seed=403, width=2.2, height=7.0),
-     "2.2 × 7 × 2.2, 문기둥·벽 끝", False),
+     "2.2 × 7 × 2.2, 문기둥·벽 끝", False, "돌", "StonePillar"),
     ("나무울타리", lambda: make_fence(seed=404, length=6.0, height=5.5, thickness=1.0, planks=6),
-     "6 × 5.5 × 1.0, 유닛 우리 벽·칸막이·뽑기 부스, 이어 붙임", True),
+     "6 × 5.5 × 1.0, 유닛 우리 벽·칸막이·뽑기 부스, 이어 붙임", True, "나무", "WoodFence"),
     ("정의문", lambda: make_gate(length=20.6, height=7.0, thickness=1.4),
-     "20.6 × 7 × 1.4, 펑크해저드 문(부서짐, 금빛)", False),
+     "20.6 × 7 × 1.4, 펑크해저드 문(부서짐, 금빛)", False, "문", "JusticeGate"),
 ]
 
 
 # ──────────────────────────────────────────────────────────── 사장님 창에서 짓기
 
-def build_live(prefixes=(), start_x=7.0, row_y=0.0, stretched_row_y=-2.5, gap=1.0, meters=True):
-    """사장님 Blender 창용 — LIVE_COLLECTION 안에 짓고 Cube 오른쪽으로 늘어놓는다(위치 인자는 창 단위).
+ROW_ORDER = ("돌", "나무", "문")     # 판 위 줄 순서(앞부터). 여기 없는 종류(자연물 등)는 그 뒤에 붙는다.
 
-    🔴 이 컬렉션 안의 물체만 지우고 다시 짓는다. 기존 물체(Cube·Light·Camera·나무)는 안 건드린다.
-    이어 붙이는 조각은 세 개를 딱 붙여 놓고(틈 확인), 뒷줄에 1.5배로 늘린 세 개를 또 붙여 놓는다
+
+def build_live(meters=True, extra_fbx=()):
+    """사장님 Blender 창용 — LIVE_COLLECTION을 비우고 조각을 전부 다시 지어, 큰 판 위에 종류별로
+    한 줄씩 전시한다(showcase.py, 사장님 지시). 마지막에 뷰를 판에 맞춘다.
+
+    🔴 이 컬렉션 안의 물체만 지운다. 컬렉션 밖(Cube·Light·Camera 등)은 안 건드린다.
+    이어 붙이는 조각은 세 개를 딱 붙이고(틈 확인), 그 뒤에 1.5배로 늘린 세 개를 또 붙인다
     (PM 코드가 끝을 맞춰 늘리므로 늘어난 모양도 봐야 한다). 복제는 메시를 공유한다.
+    extra_fbx = ((줄, 라벨, FBX 경로), ...) — 이미 커밋된 FBX를 들여와 같은 판에 함께 둔다(예: 자연물).
 
-    ⚠️ 기본은 미터(meters=True) — 사장님 장면이 미터라서다(침엽수_01이 높이 7.06으로 들어가 있다).
-    내보내는 메시와 같은 크기라, 창에서 본 것이 곧 FBX 속 모양이다."""
+    ⚠️ 기본은 미터(meters=True) — 사장님 장면이 미터라서다. 내보내는 메시와 같은 크기라, 창에서
+    본 것이 곧 FBX 속 모양이다. 전시 배치는 물체 위치만 바꾸므로 FBX 원점·축과 무관하다."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    import importlib
+    import showcase
+    importlib.reload(showcase)                  # 창에서 여러 번 돌리므로 고친 내용이 바로 반영되게
+
     unit = 1.0 / UNITS_PER_METER if meters else 1.0
-    scene = bpy.context.scene
     collection = bpy.data.collections.get(LIVE_COLLECTION)
     if collection is None:
         collection = bpy.data.collections.new(LIVE_COLLECTION)
-        scene.collection.children.link(collection)
+        bpy.context.scene.collection.children.link(collection)
+    showcase.clear(collection)
 
-    chosen = {name for name, _, _, _ in CATALOG
-              if not prefixes or any(name.startswith(p) for p in prefixes)}
-
-    # 고른 조각만 지운다 — 한 조각씩 고치며 다시 지어도 옆 조각이 안 사라진다.
-    doomed = [obj for obj in collection.objects if obj.name.split(".")[0] in chosen]
-    old_meshes = {obj.data for obj in doomed if obj.type == "MESH"}
-    for obj in doomed:
-        bpy.data.objects.remove(obj, do_unlink=True)
-    for mesh in old_meshes:
-        if mesh.users == 0:
-            bpy.data.meshes.remove(mesh)
-
-    # 자리는 목록 전체로 정한다 — 무엇을 골라 다시 짓든 각 조각이 늘 같은 자리에 선다.
-    placed = []
-    x = start_x
-    for name, maker, _, tiling in CATALOG:
+    rows = {}
+    for name, maker, _, tiling, kind, label in CATALOG:
         bm, material_names = maker()
-        xs = [v.co.x for v in bm.verts]
-        length = (max(xs) - min(xs)) * unit
-        slot = length * 4.5 if tiling else length
-        if name not in chosen:
-            bm.free()
-            x += slot + gap
-            continue
+        length = (max(v.co.x for v in bm.verts) - min(v.co.x for v in bm.verts)) * unit
+        depth = (max(v.co.y for v in bm.verts) - min(v.co.y for v in bm.verts)) * unit
         original = build_object(bm, material_names, name, collection, meters=meters)
+        parts = [(original, 0.0, 0.0)]
+        if tiling:
+            for k in (1, 2):
+                twin = original.copy()
+                collection.objects.link(twin)
+                parts.append((twin, length * k, 0.0))
+            behind = depth + 0.1                # 붙인 줄 바로 뒤 — 조금 띄워 두 줄이 구분되게
+            for k in range(3):
+                stretched = original.copy()
+                collection.objects.link(stretched)
+                stretched.scale.x = 1.5
+                parts.append((stretched, length * 0.25 + length * 1.5 * k, behind))
+        rows.setdefault(kind, []).append(showcase.group(label, parts))
 
-        if not tiling:
-            original.location = (x + length / 2, row_y, 0.0)
-            placed.append(original)
-            x += slot + gap
-            continue
+    for kind, label, path in extra_fbx:
+        obj = showcase.import_fbx(collection, path, unit)
+        rows.setdefault(kind, []).append(showcase.group(label, [(obj, 0.0, 0.0)]))
 
-        for k in range(3):
-            piece = original if k == 0 else original.copy()
-            if k:
-                collection.objects.link(piece)
-            piece.location = (x + length / 2 + length * k, row_y, 0.0)
-            placed.append(piece)
-        for k in range(3):
-            piece = original.copy()
-            collection.objects.link(piece)
-            piece.scale.x = 1.5
-            piece.location = (x + length * 0.75 + length * 1.5 * k, stretched_row_y, 0.0)
-            placed.append(piece)
-        x += length * 4.5 + gap
-    return placed
+    order = [k for k in ROW_ORDER if k in rows] + [k for k in rows if k not in ROW_ORDER]
+    board = showcase.lay_out(collection, [(k, rows[k]) for k in order])
+    showcase.frame(board)
+    return board
 
 
 # ──────────────────────────────────────────────────────────── 실행(화면 없이)
@@ -450,7 +446,7 @@ def main():
         raise SystemExit(f"이름이 맞는 게 없다: {prefixes}")
 
     made = []
-    for name, maker, note, _ in picked:
+    for name, maker, note, *_ in picked:
         clear_scene()
         bm, material_names = maker()
         obj = build_object(bm, material_names, name, bpy.context.scene.collection, meters=True)
@@ -464,7 +460,7 @@ def main():
             f"Blender {bpy.app.version_string}, 사장님 창에서 짓고 확인한 뒤 화면 없이 내보냄\n\n"
             f"크기 기준: 1m = {UNITS_PER_METER} 게임 단위(사람 키 20 = 1.75m). 치수는 게임 단위.\n"
             "원점: 바닥면 한가운데. 길이 X축. 이어 붙이는 조각은 양 끝면이 같은 단면이다.\n\n"
-            "만들어진 것:\n" + "".join(f"  {n:10} {d}\n" for n, _, d, _ in CATALOG))
+            "만들어진 것:\n" + "".join(f"  {n:10} {d}\n" for n, _, d, *_ in CATALOG))
 
     print("=" * 60)
     for name, note in made:
