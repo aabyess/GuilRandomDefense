@@ -24,7 +24,14 @@ TRIANGLE_LIMIT = 150
 
 
 def targets():
+    """-- 뒤의 경로들. `--limit N`이 섞여 있으면 삼각형 상한을 N으로 바꾼다
+    (벽 조각은 PM 배정 기준이 200 — 자연물 기준 150으로 재면 멀쩡한 조각이 걸린다)."""
+    global TRIANGLE_LIMIT
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    if "--limit" in args:
+        at = args.index("--limit")
+        TRIANGLE_LIMIT = int(args[at + 1])
+        args = args[:at] + args[at + 2:]
     paths = []
     for arg in args or [DEFAULT_ROOT]:
         if os.path.isdir(arg):
