@@ -720,6 +720,49 @@ def _angry_ammo_depot_extra(b):
     b.face((glow0, glow1, glow2, glow3), "건물_창_분노")
 
 
+def _angry_university_extra(b):
+    """대학 본관다운 파손 — ① 시계판에 금(깨진 시계) ② 옥상 방수 바닥에 그을음 자국(위에서
+    내려다보는 카메라에 가장 크게 보이는 자리, PM 지시). 좌표는 make_university와 같은 기준
+    (시계: u=0·y0=−8·z 32~35.6, 옥상: f3=55)."""
+    # ① 시계 금 — 패널(offset 0.08)·프레임(depth 0.2)보다 확실히 앞(0.28)에 둔다.
+    b.panel("-y", -8.0, 0.0, 32.0, 3.4, 3.4, "건물_금_잎카드", offset=0.28)
+    # ② 옥상 그을음 — 두 군데, 넓은 자국이라 위에서 잘 보인다.
+    soot = "건물_그을음_잎카드"
+    b.face(((-6.0, -4.0, 55.05), (2.0, -5.0, 55.05), (3.0, 3.0, 55.05), (-5.0, 4.0, 55.05)), soot)
+    b.face(((6.0, -6.0, 55.05), (10.0, -5.0, 55.05), (9.5, 1.0, 55.05), (5.5, 0.0, 55.05)), soot)
+
+
+def _angry_japan_extra(b):
+    """日本다운 파손 — ① 기와지붕에 구멍(기와 몇 장 빠진 자리, 어두운 판) ② 그 둘레 기와
+    몇 장이 흘러내린 듯 살짝 어긋난 hexa 조각. 앞쪽(−y) 사면(처마→용마루)에 낸다 — 게임
+    카메라가 내려다볼 때 가장 크게 보이는 자리(PM 지시). 좌표는 make_japan과 같은 기준
+    (YSHIFT=3.8, wall_top=27, roof_rise=13 → ridge_z=40, ry0=−9.2·cy=3.8)."""
+    wall_top, ridge_z, ry0, cy = 27.0, 40.0, -9.2, 3.8
+    slope = Vector((0.0, cy - ry0, ridge_z - wall_top)).normalized()   # 처마→용마루 방향(경사를 타고 오른다)
+    right = Vector((1.0, 0.0, 0.0))
+    normal = right.cross(slope).normalized()                          # 사면 바깥쪽(앞·위)
+    if normal.z < 0:
+        normal = -normal
+
+    def slope_point(t, x):
+        return Vector((x, ry0, wall_top)) + slope * (t * Vector((0.0, cy - ry0, ridge_z - wall_top)).length)
+
+    c = slope_point(0.38, 4.0) + normal * 0.04
+    hw, hh = 1.3, 1.0
+    b.face((c - right * hw - slope * hh, c + right * hw - slope * hh,
+            c + right * hw + slope * hh, c - right * hw + slope * hh), "건물_색_검정")
+    for dx, dt, ang in ((3.0, 0.30, 6.0), (-2.6, 0.46, -8.0), (1.0, 0.55, 5.0)):
+        p = slope_point(dt, 4.0 + dx) + normal * 0.05
+        w, h = 0.9, 0.7
+        tilt = math.radians(ang)
+        shift = right * math.sin(tilt) * h * 0.3 + normal * math.cos(tilt) * 0.25
+        b.hexa((p - right * w - slope * h, p + right * w - slope * h,
+                p + right * w + slope * h + shift, p - right * w + slope * h + shift,
+                p - right * w - slope * h + normal * 0.06, p + right * w - slope * h + normal * 0.06,
+                p + right * w + slope * h + shift + normal * 0.06, p - right * w + slope * h + shift + normal * 0.06),
+               "건물_지붕_기와")
+
+
 CATALOG += [
     ("Story08_사이버넷_화남", "08 Cybernet Angry",
      lambda: bc.angry_variant(make_cybernet, seed=1108, cracks=12,
@@ -742,6 +785,31 @@ CATALOG += [
                               extra=_angry_ammo_depot_extra, smoke=0),
      "7탄약창 화난 버전 · 감시탑 초소 새 창 두 개 눈 + 그을린 차양 눈썹 · 정문 간판 기울어짐 · "
      "뜯긴 철망 · 빨간 경고등 · 붉은 창 · 금·그을음 · 환기구 옆 연기 자리"),
+    ("Story10_동양미래대학교_화남", "10 University Angry",
+     lambda: bc.angry_variant(make_university, seed=1110, cracks=14,
+                              # 포치 기둥 바로 위 2층 창 두 개(u=−9·9)를 눈으로, 안쪽(현관 쪽)으로
+                              # 처지는 눈썹 한 쌍(창 위 34.7부터, 클수록 자연스러워 36.5 기준)
+                              brows=[("-y", -8.0, (-11.0, 36.5), (-6.0, 35.0)),
+                                     ("-y", -8.0, (11.0, 36.5), (6.0, 35.0))],
+                              # 스테인리스 간판판만 기울인다(실측 격리 확인: z 29.45 밑으로는
+                              # 시계 프레임과 안 겹친다 — 판 맨 위 테두리 0.8만 제외, 글자는 다 걸림)
+                              tilts=[("-y", -8.0, -9.7, 9.7, 25.9, 29.45, 9.0)],
+                              extra=_angry_university_extra, smoke=0),
+     "동양미래대학교 화난 버전 · 포치 위 2층 두 창 눈 + 그을린 차양 눈썹 · 간판 기울어짐 · "
+     "시계 금 · 옥상 그을음 · 붉은 창 · 금·그을음"),
+    ("Story11_日本_화남", "11 Japan Angry",
+     lambda: bc.angry_variant(make_japan, seed=1111, cracks=8,
+                              # 정면 쇼지창 두 칸(u=−8·8, 벽면 y0=−6.2)을 눈으로, 안쪽(문 쪽)으로
+                              # 처지는 눈썹(쇼지 z 5~13 위, 13.5부터)
+                              brows=[("-y", -6.2, (-10.5, 14.5), (-6.0, 12.8)),
+                                     ("-y", -6.2, (10.5, 14.5), (6.0, 12.8))],
+                              # 「日本」 편액만 기울인다(도리이 y=ty=ry0−7.0=−9.2−7.0=−16.2. 실측
+                              # 격리 확인: u −8~8·z 23.3~26.3 상자가 도리이 기둥·누키·가사기와
+                              # 안 겹치고 편액 146정점만 걸린다)
+                              tilts=[("-y", -16.2, -8.0, 8.0, 23.3, 26.3, -8.0)],
+                              extra=_angry_japan_extra, smoke=0),
+     "日本 화난 버전 · 정면 쇼지 두 칸 눈 + 그을린 차양 눈썹 · 편액 기울어짐 · 기와지붕 구멍·"
+     "어긋난 기와 · 붉은 창 · 금·그을음"),
 ]
 
 
