@@ -332,15 +332,30 @@ class Builder:
     def _on_side(self, side, plane, u):
         return Vector((u, plane, 0.0)) if side in ("-y", "+y") else Vector((plane, u, 0.0))
 
-    def windows(self, side, plane, us, zs, w, h, mat="건물_유리창", sill_mat=None, sill=0.5):
-        """창문 격자 — us(가로 위치들) × zs(창 밑 높이들). 창 한 장 = 판 하나(FIT 텍스처). sill_mat이면 아래 턱."""
+    def frame(self, side, plane, u, z, w, h, mat, width=0.35, depth=0.35, bottom=True):
+        """벽면 사각 구멍(창·문) 둘레의 돌출 테두리 — 납작한 판에 그림자 깊이를 준다. 테두리 하나에 삼각형 ~40."""
+        n, r, _ = side_frame(side)
+        base = self._on_side(side, plane, u)
+        left = base - r * (w / 2 + width)
+        self.box_frame(left + UP * (z + h), r * (w + 2 * width), n * depth, UP * width, mat, skip=("-y",))
+        self.box_frame(left + UP * z, r * width, n * depth, UP * h, mat, skip=("-y",))
+        self.box_frame(base + r * (w / 2) + UP * z, r * width, n * depth, UP * h, mat, skip=("-y",))
+        if bottom:
+            self.box_frame(left + UP * (z - width), r * (w + 2 * width), n * depth, UP * width, mat, skip=("-y",))
+
+    def windows(self, side, plane, us, zs, w, h, mat="건물_유리창", sill_mat=None, sill=0.5, frame_mat=None, frame=0.35):
+        """창문 격자 — us(가로 위치들) × zs(창 밑 높이들). 창 한 장 = 판 하나(FIT 텍스처).
+        frame_mat이면 돌출 창틀(권장 — 없으면 벽에 붙인 스티커처럼 납작하다), sill_mat이면 아래 턱."""
         n, r, _ = side_frame(side)
         for z in zs:
             for u in us:
                 self.panel(side, plane, u, z, w, h, mat)
+                if frame_mat:
+                    self.frame(side, plane, u, z, w, h, frame_mat, width=frame, bottom=not sill_mat)
                 if sill_mat:
                     base = self._on_side(side, plane, u)
-                    self.box_frame(base - r * (w / 2 + 0.3) + UP * (z - sill), r * (w + 0.6), n * sill * 1.2, UP * sill,
+                    self.box_frame(base - r * (w / 2 + 0.3 + (frame if frame_mat else 0)) + UP * (z - sill),
+                                   r * (w + 0.6 + (2 * frame if frame_mat else 0)), n * sill * 1.2, UP * sill,
                                    sill_mat, skip=("-y",))   # 로컬 −y = 벽에 붙는 면
 
     def railing(self, points, height, mat, post_gap=3.0, post=0.35, rail=0.3, closed=False):
@@ -418,6 +433,22 @@ class Builder:
         self.box_frame(base - r * (bw / 2) + UP * z, r * bw, n * board_depth, UP * bh, board_mat, skip=("-y",))
         self.text(body, base + n * (board_depth + 0.02) + UP * (z + bh / 2), side, size, text_mat, text_depth,
                   max_width=max_width)
+        return bw, bh
+
+    def blade_sign(self, body, x, plane, z, board_mat, text_mat, size=3.0, pad=0.6, thickness=0.6, gap=0.5,
+                   max_width=None, bracket_mat="건물_금속_회색"):
+        """돌출 간판 — 정면 벽(y=plane)에서 −y로 직각으로 튀어나온 판. 글자는 양옆(±x)에서 읽힌다(길 따라 오는 사람용).
+        세로쓰기는 글자마다 줄바꿈(예: "P\\nC"). x = 판 가운데, z = 판 밑. 벽과는 위아래 받침 두 개로 잇는다.
+        돌려주는 값: 판 (앞으로 나온 길이, 세로)."""
+        _, _, (x0, x1, y0, y1) = self._text_mesh(body, size, 0.3)
+        scale = min(1.0, max_width / (x1 - x0)) if max_width else 1.0
+        bw, bh = (x1 - x0) * scale + pad * 2, (y1 - y0) * scale + pad * 2
+        ya, yb = plane - gap - bw, plane - gap
+        self.box(x - thickness / 2, x + thickness / 2, ya, yb, z, z + bh, board_mat)
+        for side, sx in (("+x", x + thickness / 2 + 0.02), ("-x", x - thickness / 2 - 0.02)):
+            self.text(body, (sx, (ya + yb) / 2, z + bh / 2), side, size, text_mat, 0.3, max_width=max_width)
+        for bz in (z + bh * 0.15, z + bh * 0.85 - 0.3):
+            self.box(x - 0.15, x + 0.15, yb, plane, bz, bz + 0.3, bracket_mat, skip=("+y",))
         return bw, bh
 
     # ── 마무리

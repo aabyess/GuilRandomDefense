@@ -120,3 +120,22 @@ def show_all(extra=None):
     showcase.arrange([[boards[n] for n in row] for row in GRID])
     showcase.frame_all(list(boards.values()))
     return boards
+
+
+def refresh(col_name, rows_fn):
+    """판 하나만 그 자리에서 다시 짓는다(다른 판·해왕류는 그대로) — 건물이 두 채씩 들어올 때 전체를 다시 안 깔려고.
+    rows_fn(컬렉션) → [(줄 이름, [무리, ...]), ...]. 판의 왼쪽 앞 모서리 위치는 원래 자리를 따른다.
+    ⚠️ 판이 커져서 옆·뒤 판과 겹치면 show_all()을 다시 돌린다."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    import showcase
+    importlib.reload(showcase)
+    old = bpy.data.objects.get(col_name)
+    corner = (old.location.x, old.location.y) if old is not None else (0.0, 0.0)
+    col = showcase.collection(col_name)
+    title = next(t for n, t, _ in BOARDS if n == col_name)
+    width, depth = EMPTY_BOARD.get(col_name, (0.0, 0.0))
+    board = showcase.lay_out(col, rows_fn(col), title=title, min_width=width, min_depth=depth)
+    showcase.shift(board, *corner)
+    return board
