@@ -497,7 +497,10 @@ class Builder:
             a, b, bt, at = wall[k], wall[k + 1], tip[k + 1], tip[k]
             self.hexa((a, b, bt, at, a + up, b + up, bt + up, at + up), mat)
 
-    def tilt_front(self, side, plane, u0, u1, z0, z1, degrees, min_out=0.01):
+    def tilt_front(self, side, plane, u0, u1, z0, z1, degrees, min_out=0.01, mats=None):
+        # mats = 이 재질 면에 붙은 정점만(간판 판·글자 재질). 영역 안에 지붕 처마가 걸치면 처마까지 딸려 가 면이
+        # 뒤집혔다(화난 02 박공 처마·04 시계탑 모임지붕 — 카메라각 뒷면 검사로 찾음).
+        allowed = None if mats is None else {i for i, name in enumerate(self.names) if name in mats}
         """벽면(side, plane) 앞으로 튀어나온 것 중 창(u0..u1, z0..z1) 안의 정점만 기울인다 — 이미 지은 간판을 나중에
         「한쪽 나사가 빠진 듯」 돌릴 때(기본판 코드를 안 고치고). degrees > 0이면 오른쪽 끝이 처진다(왼쪽 위 모서리가 축),
         < 0이면 왼쪽 끝이 처진다. 벽면 자체의 정점(plane 위)은 안 움직인다. 돌린 정점 수를 돌려준다."""
@@ -506,7 +509,8 @@ class Builder:
         for v in self.bm.verts:
             u = v.co.x if side in ("-y", "+y") else v.co.y
             out = (v.co - self._on_side(side, plane, 0.0)).dot(n)
-            if out > 0.01 and u0 <= u <= u1 and z0 <= v.co.z <= z1:
+            if out > min_out and u0 <= u <= u1 and z0 <= v.co.z <= z1 and \
+                    (allowed is None or any(f.material_index in allowed for f in v.link_faces)):
                 picked.append(v)
         if not picked:
             return 0
@@ -555,10 +559,14 @@ class Builder:
         tree = BVHTree.FromBMesh(bm)
 
         def clear_view(side, plane, u, z, w, h):
+            """앞이 트였고(광선이 아무것에도 안 맞음) 뒤에 벽이 받치고 있어야(뒤로 0.3 안에 면) 붙인다. 뒤 받침 검사가
+            없을 때는 박공 삼각형·시계탑 폭 밖으로 삐져나온 데칼이 뒤에서 뒷면으로 보였다(카메라각 검사로 찾음)."""
             n, _, _ = side_frame(side)
-            for du, dz in ((0.0, 0.5), (-0.4, 0.1), (0.4, 0.1), (-0.4, 0.9), (0.4, 0.9)):
+            for du, dz in ((0.0, 0.5), (-0.48, 0.02), (0.48, 0.02), (-0.48, 0.98), (0.48, 0.98)):
                 origin = self._on_side(side, plane, u + du * w) + UP * (z + dz * h) + n * 0.03
                 if tree.ray_cast(origin, n, 80.0)[0] is not None:
+                    return False
+                if tree.ray_cast(origin, -n, 0.3)[0] is None:
                     return False
             return True
 
@@ -583,9 +591,16 @@ class Builder:
             cracks -= 1
         # ③ 그을음 — 붉은 창 몇 개 위로 번진 검은 자국
         rng.shuffle(windows)
-        for side, plane, u0, u1, z0, z1 in windows[:soot]:
+        placed = 0
+        for side, plane, u0, u1, z0, z1 in windows:
+            if placed >= soot:
+                break
             w = (u1 - u0) * 1.3
-            self.panel(side, plane, (u0 + u1) / 2, z1 - 1.0, w, min(8.0, w * 1.4), "건물_그을음_잎카드", offset=0.10)
+            h = min(8.0, w * 1.4)
+            if not clear_view(side, plane, (u0 + u1) / 2, z1 - 1.0, w, h):   # 지붕선 위로 삐져나오면 뒤에서 뒷면이 보인다
+                continue
+            self.panel(side, plane, (u0 + u1) / 2, z1 - 1.0, w, h, "건물_그을음_잎카드", offset=0.10)
+            placed += 1
         # ④ 연기 자리 — 메시가 아니라 위치만(PM 2026-09-12: 교차 카드 연기는 위에서 「X자 종이」로 보였다. 유니티에서
         # PM이 이 자리에 움직이는 파티클 연기를 붙인다). 빈 오브젝트 `연기_자리_01`… 으로 FBX에 들어간다(to_object).
         # 옥상 면: 넓이 60 넘는 윗면 중 가장 높은 면 — 넓은 면만 보면 1층 바닥판이, 높이만 보면 계단실 꼭대기가 뽑혔다.
@@ -800,8 +815,9 @@ def angry_variant(maker, seed=0, brows=(), tilts=(), extra=None, keep=(), cracks
     extra(b) = 그 건물다운 파손을 더하는 함수(꺼진 네온·휜 게양대 등). keep = 붉게 안 바꿀 재질.
     CATALOG 항목: ("StoryNN_이름_화남", "NN Name Angry", lambda: angry_variant(make_xxx, ...), "설명")."""
     b = maker()
-    for side, plane, u0, u1, z0, z1, degrees, *rest in tilts:     # 8번째(선택) = 최소 돌출 — 창틀(0.35)·창턱(0.6) 제외용
-        if b.tilt_front(side, plane, u0, u1, z0, z1, degrees, *(rest[:1] or [0.01])) == 0:
+    # 8번째(선택) = 최소 돌출(창틀 0.35·창턱 0.6 제외용), 9번째(선택) = 기울일 재질 이름들(처마 등 딸려 가지 않게)
+    for side, plane, u0, u1, z0, z1, degrees, *rest in tilts:
+        if b.tilt_front(side, plane, u0, u1, z0, z1, degrees, *rest) == 0:
             print(f"⚠️ 기울일 간판 정점이 없다: {side} plane {plane} u {u0}~{u1} z {z0}~{z1}")
     for side, plane, outer, inner in brows:
         b.brow(side, plane, outer, inner)

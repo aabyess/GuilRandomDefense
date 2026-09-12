@@ -209,7 +209,9 @@ CATALOG = [
      lambda: bc.angry_variant(make_kindergarten, seed=1102, cracks=12,
                               brows=[("-y", -2.0, (-20.5, GROUND_H - 1.0 + 13.8), (-8.2, GROUND_H - 1.0 + 11.0)),
                                      ("-y", -2.0, (20.5, GROUND_H - 1.0 + 13.8), (8.2, GROUND_H - 1.0 + 11.0))],
-                              tilts=[("-y", -2.0, -7.5, 7.5, GROUND_H - 1.0 + 10.6, GROUND_H - 1.0 + 14.6, -15.0)],
+                              # 가운데 집 박공 처마가 간판 높이에 걸쳐 같이 기울던 것 — 간판 판(노랑)·글자(남색) 재질만
+                              tilts=[("-y", -2.0, -7.5, 7.5, GROUND_H - 1.0 + 10.6, GROUND_H - 1.0 + 14.6, -15.0, 0.01,
+                                      ("건물_색_노랑", "건물_색_남색"))],
                               cracks_at=[("-y", -2.0, -4.3, 6.0, 1.8, 7.0)],
                               extra=lambda b: _angry_kindergarten_extra(b)),
      "유치원 화난 버전 · 양쪽 집 2층 창 눈 + 그을린 차양 눈썹 · 간판 기울어짐 · 붉은 창·현관 · 넘어진 울타리·찢어진 차양·"
