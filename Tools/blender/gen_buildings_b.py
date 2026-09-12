@@ -459,7 +459,10 @@ def make_codeit():
     # 로비 유리문 + 캐노피(정문을 도드라지게 하는 요령 — 08 차양과 같은 결)
     b.panel("-y", y0, 0.0, 0.3, 5.6, DOOR_H, glass, offset=0.05)
     b.frame("-y", y0, 0.0, 0.3, 5.6, DOOR_H, stainless, width=0.3, depth=0.25, bottom=False)
-    b.box(-6.0, 6.0, y0 - 2.6, y0 + 0.2, DOOR_H + 0.4, DOOR_H + 1.2, stainless, skip=("top",))
+    # 🔴 2026-09-12 PM 검수 — skip=("top",)면 캐노피 밑면만 남아 위에서 내려다보는 카메라에
+    # 윗면이 안 보인다(08 사이버넷 차양과 같은 종류 버그). skip=("bottom",)로 바로잡는다 —
+    # 밑면은 사람이 안 보는 각도라 없어도 되고, 위에서 보이는 윗면이 있어야 한다.
+    b.box(-6.0, 6.0, y0 - 2.6, y0 + 0.2, DOOR_H + 0.4, DOOR_H + 1.2, stainless, skip=("bottom",))
     for cx in (-5.6, 5.6):
         b.box_c(cx, y0 - 2.4, 0.3, 0.3, 0.3, DOOR_H + 0.4, stainless, skip=("bottom", "top"))
     # 🔴 2026-09-12 blender 재검수 — size 3.3(폭37/12=3.08)는 통과선 바로 위라 렌더에서 작아
@@ -467,13 +470,17 @@ def make_codeit():
     b.sign("코드잇", "-y", y0, 0.0, DOOR_H + 2.2, black, neon, size=4.0, pad=0.8, max_width=18.0)
 
     # 2~5층 — 층마다 스판드럴 띠(스테인리스, 얇게) + 큰 커튼월 유리판(전 면). 코너는 멀리언 각재가 대신한다.
+    # 🔴 2026-09-12 PM 검수(카메라각 뒷면 검사) — panel()은 한 겹 판이라 뒤가 없다. 원래 폭을
+    # W−4/D−4로 좁혀 코너에 2칸씩 빈틈을 남겼는데(멀리언 각재 1×1만 있고 벽이 없다), 그 틈으로
+    # 비스듬히 보면 건물 반대편 벽의 판 뒷면이 그대로 비쳐 보였다(원인: 뚫린 틈, 뒤집힌 면이
+    # 아니었다). 판을 건물 폭 그대로(W/D) 늘려 모서리 각재와 만나게 해 틈을 없앤다.
     for zb in floor_bottoms:
         b.box(x0 - 0.1, x1 + 0.1, y0 - 0.1, y1 + 0.1, zb, zb + 1.5, stainless, skip=("bottom", "top"))
         gz, gh = zb + 1.5, FLOOR_H - 1.5                # 유리존 — 스판드럴 위부터 층 꼭대기까지
-        b.panel("-y", y0, 0.0, gz, W - 4.0, gh, curtainwall)
-        b.panel("+y", y1, 0.0, gz, W - 4.0, gh, curtainwall)
-        b.panel("-x", x0, 0.0, gz, D - 4.0, gh, curtainwall)
-        b.panel("+x", x1, 0.0, gz, D - 4.0, gh, curtainwall)
+        b.panel("-y", y0, 0.0, gz, W, gh, curtainwall)
+        b.panel("+y", y1, 0.0, gz, W, gh, curtainwall)
+        b.panel("-x", x0, 0.0, gz, D, gh, curtainwall)
+        b.panel("+x", x1, 0.0, gz, D, gh, curtainwall)
 
     # 코너 멀리언 — 네 모서리를 스테인리스 각재로 바닥부터 옥상까지 이어(텍스처 안 격자와 이어 보이게)
     for cx, cy in ((x0, y0), (x0, y1), (x1, y0), (x1, y1)):
@@ -482,9 +489,12 @@ def make_codeit():
     # 옥상 — 평지붕 + 설비함 + 난간
     b.face(((x0, y0, top), (x1, y0, top), (x1, y1, top), (x0, y1, top)), "건물_옥상_방수")
     t = 0.5
+    # 🔴 2026-09-12 PM 검수(카메라각 뒷면 검사) — skip에 "top"이 있으면 이 얇은 파라펫 조각이
+    # 열린 뚜껑이 된다. 비스듬한 카메라가 그 뚫린 위쪽으로 들어가 안쪽 벽의 뒷면(정상적으로는
+    # 옥상 내부를 향해야 할 면)을 바깥에서 보게 된다. skip=("bottom",)로 닫는다(08·10과 같은 수정).
     for bx0, bx1, by0, by1 in ((x0, x1, y0, y0 + t), (x0, x1, y1 - t, y1),
                                (x0, x0 + t, y0 + t, y1 - t), (x1 - t, x1, y0 + t, y1 - t)):
-        b.box(bx0, bx1, by0, by1, top, top + 0.5, concrete, skip=("bottom", "top"))
+        b.box(bx0, bx1, by0, by1, top, top + 0.5, concrete, skip=("bottom",))
     # 옥탑 계단실 박스(가장 큼) + 실외기 여럿 — blender 재검수 지시("설비함 하나뿐"이라 밋밋했다).
     b.box_c(-6.0, 0.0, 8.0, 6.0, top, roof_top - top, "건물_금속_회색", skip=("bottom",))
     for ux, uy in ((6.0, -5.0), (6.0, 0.0), (6.0, 5.0), (-6.0, 6.0)):
