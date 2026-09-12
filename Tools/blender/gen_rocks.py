@@ -674,6 +674,120 @@ CATALOG = [
 ]
 
 
+# ──────────────────────────────────────────────────────────── 면 방향·밑면 정리(2026-09-12, blender 세션 — PM 배정)
+#
+# 새 뒷면 검사(check_nature_fbx.py 위에서·카메라각 50°)에서 바위_03·뾰족바위_01·02·암벽조각_02가 걸렸다.
+# 챔퍼(bevel)·바닥 누르기(z를 floor로 자르기)가 면 몇 장을 안으로 뒤집어 놓는다 — 유니티는 뒷면을 안 그려
+# 그 자리가 구멍처럼 보인다. 정점은 한 개도 안 옮기고 면만 손본다 → 씨앗·모양·크기·원점 그대로.
+# 🔴 섬 가장자리 밖 바다 위에 걸쳐 놓이는 넷(OVERHANG, PM)은 밑면이 카메라에 그대로 보이므로, 바닥에
+#    눌려 겹쳐 쌓인 면들을 걷어내고 테두리를 한 장으로 막아 닫힌 솔리드로 만든다.
+
+OVERHANG = ("암벽조각_01", "암벽조각_02", "해안바위_01", "해안바위_02")
+
+
+def tidy_faces(bm, close_bottom=False):
+    bm.verts.ensure_lookup_table()
+    if close_bottom:
+        floor = min(v.co.z for v in bm.verts)
+        flat = [f for f in bm.faces if all(abs(v.co.z - floor) < 1e-5 for v in f.verts)]
+        if flat:
+            bmesh.ops.delete(bm, geom=flat, context="FACES_ONLY")
+            loose = [e for e in bm.edges if not e.link_faces]
+            if loose:
+                bmesh.ops.delete(bm, geom=loose, context="EDGES")
+            boundary = [e for e in bm.edges if e.is_boundary]
+            if boundary:
+                bmesh.ops.holes_fill(bm, edges=boundary, sides=0)
+    # 사각·다각 면을 미리 삼각형으로 — 챔퍼 면·뾰족바위 고리 사이 면은 평평하지 않아서, 평균 법선은 바깥인데
+    # 유니티가 쪼갠 삼각형 하나는 안을 보는 경우가 있었다(뒷면 검사가 같은 면을 계속 잡음). 정점은 그대로이고
+    # 유니티가 받는 삼각형 수도 같다.
+    ngons = [f for f in bm.faces if len(f.verts) > 3]
+    if ngons:
+        bmesh.ops.triangulate(bm, faces=ngons, quad_method="BEAUTY", ngon_method="BEAUTY")
+    orient_outward(bm)
+    return bm
+
+
+def orient_outward(bm, directions=320, grid=24):   # 160×14로는 암벽조각_02 밑면 조각을 못 맞췄다
+    """밖에서 보이는 면만 바깥을 보게 뒤집는다 — 바위를 둘러싼 구 위 방향 320개에서 격자 광선을 쏴, 처음 맞는 면이
+    광선을 등지는(뒷면으로 보이는) 횟수가 앞면으로 보이는 횟수보다 많으면 그 면을 뒤집는다. 속에 묻힌 면은 한 번도
+    안 맞으니 안 건드린다. 게임 카메라가 실제로 보는 것 기준이라 뒷면 검사(check_nature_fbx)와 판정이 같다.
+    🔴 1차 recalc_face_normals는 챔퍼·바닥 누르기로 겹친 면이 있는 바위에서 덩어리째 안쪽으로 뒤집었고(바위_04
+    경고 0 → 35), 2차 광선 홀짝 판정은 속에 겹친 면을 지나는 광선이 홀짝을 틀려 멀쩡한 면을 대량으로 뒤집었다."""
+    from mathutils.bvhtree import BVHTree
+    bm.normal_update()
+    bm.faces.ensure_lookup_table()
+    bm.faces.index_update()
+    tree = BVHTree.FromBMesh(bm)
+    lo = Vector((min(v.co.x for v in bm.verts), min(v.co.y for v in bm.verts), min(v.co.z for v in bm.verts)))
+    hi = Vector((max(v.co.x for v in bm.verts), max(v.co.y for v in bm.verts), max(v.co.z for v in bm.verts)))
+    center, radius = (lo + hi) / 2, (hi - lo).length / 2 + 1e-4
+    front = [0] * len(bm.faces)
+    back = [0] * len(bm.faces)
+    golden = math.pi * (3.0 - math.sqrt(5.0))
+    for k in range(directions):
+        z = 1.0 - 2.0 * (k + 0.5) / directions
+        ring = math.sqrt(max(0.0, 1.0 - z * z))
+        d = Vector((math.cos(golden * k) * ring, math.sin(golden * k) * ring, z))
+        u = d.orthogonal().normalized()
+        w = d.cross(u)
+        for i in range(grid):
+            for j in range(grid):
+                a, b = (i + 0.5) / grid * 2.0 - 1.0, (j + 0.5) / grid * 2.0 - 1.0
+                origin = center + (u * a + w * b) * radius - d * (radius * 2.0)
+                index = tree.ray_cast(origin, d, radius * 4.0)[2]
+                if index is None:
+                    continue
+                if bm.faces[index].normal.dot(d) > 0.0:
+                    back[index] += 1
+                else:
+                    front[index] += 1
+    flips = [f for f in bm.faces if back[f.index] > front[f.index]]
+    # 접힌 면 — 거칠기 흔들기로 표면이 제 위로 접힌 자리는 같은 삼각형이 한쪽에선 앞면, 반대쪽에선 뒷면으로 보인다
+    # (바위_03 위에서 본 (10.4, −3.4)). 뒤집기로는 못 고치고 정점을 옮기면 모양이 바뀐다 — 그 삼각형만 뒤집은 쌍둥이를
+    # 따로 붙여 양면으로 만든다(정점 위치 그대로, 삼각형 몇 개만 는다).
+    folds = [f for f in bm.faces if back[f.index] >= 2 and front[f.index] >= back[f.index]]
+    for f in flips:
+        f.normal_flip()
+    bm.normal_update()
+    # 삐져나온 밑면 — 밑면 정점이 옆면 밖으로 0.01 단위쯤 튀어나온 자리는 가는 띠만 보여서 구 광선으로는 거의 안 맞는다
+    # (바위_03 뒤(+Y)에서 50° (3.4, 10.7, 1.0)). 면마다 꼭짓점·변 바로 안쪽 점을 직접 겨눠 위쪽 방향에서 쏘고,
+    # 처음 맞는 게 그 면의 뒷면이면 쌍둥이를 붙인다. 게임 카메라는 위에서만 보니 아래에서 올려다보는 광선은 안 쏜다.
+    uppers = []
+    for k in range(directions // 4):
+        z = -(0.17 + 0.83 * (k + 0.5) / (directions // 4))   # 내려다보는 각 약 10°~90°
+        ring = math.sqrt(max(0.0, 1.0 - z * z))
+        uppers.append(Vector((math.cos(golden * k) * ring, math.sin(golden * k) * ring, z)))
+    folded = set(f.index for f in folds)
+    for f in bm.faces:
+        if f.index in folded:
+            continue
+        corners = [v.co for v in f.verts]
+        middle = sum(corners, Vector()) / len(corners)
+        points = [c + (middle - c) * 0.002 for c in corners]
+        points += [(a + b) / 2 + (middle - (a + b) / 2) * 0.002 for a, b in zip(corners, corners[1:] + corners[:1])]
+        points.append(middle)
+        hit = False
+        for d in uppers:
+            if f.normal.dot(d) <= 0.1:
+                continue
+            for p in points:
+                index = tree.ray_cast(p - d * (radius * 4.0), d, radius * 4.0 + 1e-4)[2]
+                if index == f.index:
+                    hit = True
+                    break
+            if hit:
+                break
+        if hit:
+            folds.append(f)
+            folded.add(f.index)
+    for f in folds:
+        twin = bm.faces.new([bm.verts.new(v.co.copy()) for v in reversed(f.verts)])
+        twin.material_index, twin.smooth = f.material_index, f.smooth
+    bm.normal_update()
+    return len(flips), len(folds)
+
+
 # ──────────────────────────────────────────────────────────── 실행
 
 def main():
@@ -696,7 +810,7 @@ def main():
     built = []
     used_materials = set()
     for folder, name, build_bm, mat_name, height_m, note in picked:
-        obj = build_object(build_bm(), mat_name)
+        obj = build_object(tidy_faces(build_bm(), close_bottom=name in OVERHANG), mat_name)
         finish(obj, name)
         if height_m:
             fit_height(obj, height_m)

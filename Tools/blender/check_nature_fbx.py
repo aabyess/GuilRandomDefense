@@ -141,7 +141,9 @@ def camera_backfaces(obj, pose):
                     continue
                 face = bm.faces[index]
                 name = names[face.material_index] if face.material_index < len(names) else ""
-                if face.normal.dot(d) > 0.1 and not name.split(".")[0].endswith("_잎카드"):
+                # 같은 자리에 카메라를 보는 면이 겹쳐 있으면(양면 쌍둥이) 보이는 면이므로 뒷면이 아니다
+                covered = any(bm.faces[k].normal.dot(d) < -0.1 for _, _, k, _ in tree.find_nearest_range(loc, 1e-3))
+                if face.normal.dot(d) > 0.1 and not covered and not name.split(".")[0].endswith("_잎카드"):
                     area = face.calc_area()
                     found[index] = (label, round(loc.x, 1), round(loc.y, 1), round(loc.z, 1), area,
                                     area / floor >= BACKFACE_WARN_RATIO, pose)
@@ -169,7 +171,9 @@ def top_down_backfaces(obj, lo, hi):
                 continue
             face = bm.faces[index]
             name = names[face.material_index] if face.material_index < len(names) else ""
-            if face.normal.z < -0.1 and not name.split(".")[0].endswith("_잎카드"):
+            # 같은 자리에 위를 보는 면이 겹쳐 있으면(뒤집은 쌍둥이로 만든 양면) 위에서 보이므로 뒷면이 아니다
+            covered = any(bm.faces[k].normal.z > 0.1 for _, _, k, _ in tree.find_nearest_range(loc, 1e-3))
+            if face.normal.z < -0.1 and not covered and not name.split(".")[0].endswith("_잎카드"):
                 area = face.calc_area()
                 found.setdefault(index, (round(x, 1), round(y, 1), area, area / floor >= BACKFACE_WARN_RATIO))
     bm.free()
