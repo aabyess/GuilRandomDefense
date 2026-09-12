@@ -1243,15 +1243,22 @@ def make_bush_c(seed, lumps, twigs=3, twig_cards=9, direct_cards=6):
     return obj
 
 
-def _reed_c_bm(seed, stalks):
-    """억새 — 줄기(stalks)마다 카드 한 장으로 몸통을 세우고 끝에서 이삭도 카드 두 장으로
-    늘어뜨린다(blender 지시 "이삭까지 카드"). 밑동에는 눕는 긴 잎 셋을 따로 카드로 편다.
-    전부 같은 재질(억새_잎카드) 한 장을 공유한다 — needle=True 텍스처라 줄기·잎·이삭
-    어디에 써도 "가는 블레이드 다발" 결로 자연스럽게 맞는다."""
+def _reed_c_bm(seed, stalks, plume_stalks, base_leaves):
+    """억새 — 줄기(stalks)마다 카드 한 장으로 몸통을 세우고, 그중 일부(plume_stalks)는
+    끝에서 이삭도 카드 두 장으로 늘어뜨린다(blender 지시 "이삭까지 카드") — 전부에 달면
+    다발이 아니라 빗자루처럼 보여, 무작위로 고른 일부에만 단다. 밑동에는 눕는 긴 잎을
+    여러 장(base_leaves) 따로 카드로 편다. 전부 같은 재질(억새_잎카드) 한 장을 공유한다
+    — needle=True 텍스처라 줄기·잎·이삭 어디에 써도 "가는 블레이드 다발" 결로 자연스럽게
+    맞는다.
+
+    2026-09-12 PM 보강 지시 — 첫 렌더에서 이삭이 몇 가닥뿐이라 성기고 흐릿했다. 줄기
+    6→10~14·이삭 카드 총 8~12장(전부가 아니라 일부 줄기에만 2장씩 달아 그 수를 맞춘다)·
+    밑동 잎 3→더 늘림으로 보강한다(CATALOG 호출부에서 실제 개수를 정한다)."""
     rng = random.Random(seed)
     bm = bmesh.new()
     uv = bm.loops.layers.uv.new("UVMap")
     start = rng.uniform(0, math.tau)
+    plume_indices = set(rng.sample(range(stalks), min(plume_stalks, stalks)))
     for i in range(stalks):
         angle = start + math.tau * i / stalks + rng.uniform(-0.4, 0.4)
         out = Vector((math.cos(angle), math.sin(angle), 0.0))
@@ -1262,6 +1269,9 @@ def _reed_c_bm(seed, stalks):
         add_leaf_card(bm, uv, base, side, lean_dir, 0.05, length, 0, rng)
         top = base + lean_dir * length
 
+        if i not in plume_indices:
+            continue
+
         # 이삭 — 줄기 끝에서 바깥으로 살짝 올라갔다 숙인다. 두 마디 카드로 늘어짐을 낸다.
         plume = rng.uniform(0.26, 0.34)
         rise_dir = (out * 0.55 + UP * 0.62).normalized()
@@ -1270,8 +1280,8 @@ def _reed_c_bm(seed, stalks):
         mid = top + rise_dir * (plume * 0.55)
         add_leaf_card(bm, uv, mid, side, droop_dir, 0.08, plume * 0.45, 0, rng)
 
-    for i in range(3):
-        angle = start + math.tau * (i + 0.5) / 3 + rng.uniform(-0.3, 0.3)
+    for i in range(base_leaves):
+        angle = start + math.tau * (i + 0.5) / base_leaves + rng.uniform(-0.3, 0.3)
         out = Vector((math.cos(angle), math.sin(angle), 0.0))
         side = Vector((-out.y, out.x, 0.0))
         length = rng.uniform(0.35, 0.50)
@@ -1281,9 +1291,12 @@ def _reed_c_bm(seed, stalks):
     return bm
 
 
-def make_reed_c(seed, stalks):
-    leaf = procedural_leaf_c("억새_잎카드", (0.35, 0.30, 0.14), (0.72, 0.62, 0.35), needle=True)
-    obj = build_object_c(_reed_c_bm(seed, stalks), [leaf])
+def make_reed_c(seed, stalks, plume_stalks=5, base_leaves=7):
+    # 2026-09-12 PM 보강 지시 — 이삭 색을 더 진한 황갈로(재굽기). 재질 이름이 그대로라
+    # bake_material_c의 _c_baked 캐시가 이 프로세스에서 다시 안 구울 수 있는데, 매 CLI
+    # 호출이 factory-startup으로 새 파일에서 시작해 이 함수를 한 번만 부르므로 문제 없다.
+    leaf = procedural_leaf_c("억새_잎카드", (0.28, 0.20, 0.08), (0.58, 0.42, 0.18), needle=True)
+    obj = build_object_c(_reed_c_bm(seed, stalks, plume_stalks, base_leaves), [leaf])
     bake_material_c(obj, leaf, alpha=True)
     return obj
 
@@ -1315,8 +1328,10 @@ CATALOG = [
     ("Grass", "덤불_01", lambda: make_bush_c(seed=311, lumps=5), "높이 0.90m, C 스타일(활엽_잎카드 공유)", 0.90),
     ("Grass", "덤불_02", lambda: make_bush_c(seed=312, lumps=7, twig_cards=7),
      "높이 1.40m, C 스타일(활엽_잎카드 공유)", 1.40),
-    ("Grass", "억새_01", lambda: make_reed_c(seed=321, stalks=6),
-     "높이 1.80m, C 스타일 이삭도 카드, 바닷가용", 1.80),
+    # 2026-09-12 PM 보강 지시 — 이삭이 성기다는 지적으로 줄기 6→12·이삭 다는 줄기 5(카드
+    # 10장)·밑동 잎 3→7, 색도 더 진한 황갈로(make_reed_c 기본값 참고).
+    ("Grass", "억새_01", lambda: make_reed_c(seed=321, stalks=12, plume_stalks=5, base_leaves=7),
+     "높이 1.80m, C 스타일 이삭도 카드(보강판), 바닷가용", 1.80),
 
     # 2026-09-12 추가 ─ 돌(150·160번대)
     ("Rocks", "판석_01", lambda: make_slab(seed=151, width_m=0.7, thickness_m=0.12),
