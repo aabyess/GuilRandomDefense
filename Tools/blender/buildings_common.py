@@ -142,6 +142,7 @@ class Builder:
     def __init__(self):
         self.bm = bmesh.new()
         self.names = []
+        self.markers = []      # (이름, 위치) — 메시 없는 빈 오브젝트로 FBX에 들어간다(연기 자리 등, PM이 유니티에서 붙인다)
 
     def m(self, name):
         if name not in self.names:
@@ -469,12 +470,32 @@ class Builder:
             f.material_index = remap[f.material_index]
         self.names = names
 
-    def brow(self, side, plane, outer, inner, thick=1.8, depth=1.0, mat="건물_색_검정"):   # 1.1이면 게임 시점에서 선처럼 가늘었다
-        """눈썹 — 벽면(side, plane)에서 튀어나온 짙은 각재. outer·inner = (가로 u, 높이 z), 안쪽 끝을 낮게 주면 화난 눈썹."""
+    def hexa(self, corners, mat):
+        """꼭짓점 8개(밑 0~3, 위 4~7 — box_frame과 같은 순서)로 찌그러진 상자. 왼손 순서면 뒤집어 밖을 보게 한다."""
+        c = [Vector(p) for p in corners]
+        if (c[1] - c[0]).cross(c[3] - c[0]).dot(c[4] - c[0]) < 0:
+            c = [c[3], c[2], c[1], c[0], c[7], c[6], c[5], c[4]]
+        vs = [self.v(p) for p in c]
+        for ids in ((0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (2, 3, 7, 6), (3, 0, 4, 7), (1, 2, 6, 5)):
+            self.face([vs[i] for i in ids], mat)
+
+    def brow(self, side, plane, outer, inner, depth=2.4, thick=0.35, droop=1.2, mat="건물_금속_그을림"):
+        """눈썹 = 그을린 금속 차양(PM 2026-09-12) — 창 위 벽에 원래 붙어 있을 법한 얇은 차양판이 바깥 끝은 반듯하고
+        안쪽으로 갈수록 처지게 휘었다. 벽에 붙는 선(outer → inner, 각각 (가로 u, 높이 z))이 V자 윗선을 만들고,
+        차양 앞끝은 안쪽 마디일수록 droop만큼 더 처진다. (1차의 짙은 각재 눈썹은 만화 같았다.)"""
         n, _, _ = side_frame(side)
-        a = self._on_side(side, plane, outer[0]) + UP * outer[1] + n * (depth / 2 + 0.05)
-        b = self._on_side(side, plane, inner[0]) + UP * inner[1] + n * (depth / 2 + 0.05)
-        self.beam(a, b, depth, thick, mat)
+        ts = (0.0, 0.45, 0.75, 1.0)
+        wall, tip = [], []
+        for t in ts:
+            u = outer[0] + (inner[0] - outer[0]) * t
+            z = outer[1] + (inner[1] - outer[1]) * t ** 1.6          # 안쪽으로 갈수록 더 꺾여 휜 느낌
+            p = self._on_side(side, plane, u) + UP * z + n * 0.05
+            wall.append(p)
+            tip.append(p + n * depth - UP * (0.25 + droop * t ** 1.5))
+        up = UP * thick
+        for k in range(len(ts) - 1):
+            a, b, bt, at = wall[k], wall[k + 1], tip[k + 1], tip[k]
+            self.hexa((a, b, bt, at, a + up, b + up, bt + up, at + up), mat)
 
     def tilt_front(self, side, plane, u0, u1, z0, z1, degrees):
         """벽면(side, plane) 앞으로 튀어나온 것 중 창(u0..u1, z0..z1) 안의 정점만 기울인다 — 이미 지은 간판을 나중에
@@ -523,13 +544,26 @@ class Builder:
             us = [c.x if side in ("-y", "+y") else c.y for c in cos]
             plane = cos[0].y if side in ("-y", "+y") else cos[0].x
             box = (side, plane, min(us), max(us), min(c.z for c in cos), max(c.z for c in cos))
-            if name in WALL_MATS and area > 60.0:
-                walls.append((area * (3.0 if side == "-y" else 1.0), box))   # 정면(게임 카메라 쪽)에 금이 더 자주
+            if name in WALL_MATS and area > 20.0:
+                # 정면(게임 카메라 쪽)에 금이 더 자주, 뒤는 드물게. 좁은 면(계단실 기둥·필로티 기둥)도 후보
+                walls.append((area * {"-y": 3.0, "+y": 0.3}.get(side, 1.0), box))
             elif name in ("건물_창_분노",):
                 windows.append(box)
-        # ② 금 — 넓은 벽일수록 자주, 벽 안에 들어가는 크기만
+        # ② 금 — 밖에서 보이는 벽에만(PM: 베란다 뒤처럼 가려진 자리 금지). 데칼 네 귀퉁이·가운데에서 벽 바깥으로
+        # 쏜 광선이 아무것에도 안 맞아야 붙인다 — 창·창틀·베란다·간판 뒤는 자동으로 빠진다.
+        from mathutils.bvhtree import BVHTree
+        tree = BVHTree.FromBMesh(bm)
+
+        def clear_view(side, plane, u, z, w, h):
+            n, _, _ = side_frame(side)
+            for du, dz in ((0.0, 0.5), (-0.4, 0.1), (0.4, 0.1), (-0.4, 0.9), (0.4, 0.9)):
+                origin = self._on_side(side, plane, u + du * w) + UP * (z + dz * h) + n * 0.03
+                if tree.ray_cast(origin, n, 80.0)[0] is not None:
+                    return False
+            return True
+
         total = sum(a for a, _ in walls)
-        for _ in range(cracks * 4 if walls else 0):
+        for _ in range(cracks * 10 if walls else 0):
             if cracks <= 0:
                 break
             pick = rng.uniform(0, total)
@@ -537,40 +571,40 @@ class Builder:
                 pick -= area
                 if pick <= 0:
                     break
-            w = rng.uniform(5.0, 10.0)
-            h = w * rng.uniform(0.8, 1.3)
-            if u1 - u0 < w + 1.0 or z1 - z0 < h + 1.0:
+            w = min(rng.uniform(3.0, 8.0), (u1 - u0) * 0.85)
+            h = min(w * rng.uniform(1.0, 1.8), (z1 - z0) * 0.85)
+            if w < 1.0 or h < 2.0:
                 continue
-            self.panel(side, plane, rng.uniform(u0 + w / 2 + 0.5, u1 - w / 2 - 0.5), rng.uniform(z0 + 0.5, z1 - h - 0.5), w, h,
-                       "건물_금_잎카드", offset=0.14)
+            u = rng.uniform(u0 + w / 2, u1 - w / 2)
+            z = rng.uniform(z0, z1 - h)
+            if not clear_view(side, plane, u, z, w, h):
+                continue
+            self.panel(side, plane, u, z, w, h, "건물_금_잎카드", offset=0.14)
             cracks -= 1
         # ③ 그을음 — 붉은 창 몇 개 위로 번진 검은 자국
         rng.shuffle(windows)
         for side, plane, u0, u1, z0, z1 in windows[:soot]:
             w = (u1 - u0) * 1.3
             self.panel(side, plane, (u0 + u1) / 2, z1 - 1.0, w, min(8.0, w * 1.4), "건물_그을음_잎카드", offset=0.10)
-        # ④ 연기 — 가장 높은 옥상 면에서 퍼지며 오르는 알파 카드(십자 둘씩), 높이 89.5 넘지 않게
-        # 옥상 면: 넓이 60 넘는 윗면 중 위로 10 이상 여유가 있는 가장 높은 면 — 넓은 면만 보면 1층 바닥판이 뽑혀 연기가
-        # 필로티에서 올랐고(2차 렌더), 높이만 보면 계단실 꼭대기·난간 갓돌처럼 좁은 면이 뽑힌다.
-        roofs = [r for r in roofs if 89.5 - r[0] >= 10.0 and r[2] > 60.0]
+        # ④ 연기 자리 — 메시가 아니라 위치만(PM 2026-09-12: 교차 카드 연기는 위에서 「X자 종이」로 보였다. 유니티에서
+        # PM이 이 자리에 움직이는 파티클 연기를 붙인다). 빈 오브젝트 `연기_자리_01`… 으로 FBX에 들어간다(to_object).
+        # 옥상 면: 넓이 60 넘는 윗면 중 가장 높은 면 — 넓은 면만 보면 1층 바닥판이, 높이만 보면 계단실 꼭대기가 뽑혔다.
+        # 넓이는 가장 넓은 윗면의 1/4 이상만(계단실 꼭대기 62는 빠지고 옥상 884는 남는다 — 3차에서 연기 자리가 계단실 위에 몰렸다).
+        # 뽑힌 면이 건물 키의 절반보다 낮으면(박공지붕처럼 평평한 옥상이 없는 건물 — 바닥판이 뽑힌다) 가장 높은 점 둘레로.
+        biggest = max((r[2] for r in roofs), default=0.0)
+        roofs = [r for r in roofs if r[2] >= biggest * 0.25]
+        height = max((v.co.z for v in bm.verts), default=0.0)
         if roofs and smoke:
             top, verts, _ = max(roofs, key=lambda r: r[0])
+            if top < height * 0.5:
+                peak = max(bm.verts, key=lambda v: v.co.z).co
+                top = peak.z - 1.0
+                verts = [peak + Vector((dx, dy, 0)) for dx, dy in ((-3, -3), (3, -3), (3, 3), (-3, 3))]
             xs, ys = [c.x for c in verts], [c.y for c in verts]
-            room = 89.5 - top
             for k in range(smoke):
                 cx = rng.uniform(min(xs) + 2, max(xs) - 2) if max(xs) - min(xs) > 4 else (min(xs) + max(xs)) / 2
                 cy = rng.uniform(min(ys) + 2, max(ys) - 2) if max(ys) - min(ys) > 4 else (min(ys) + max(ys)) / 2
-                z = top + 0.5
-                for size in (4.0, 6.5, 9.0):
-                    size = min(size, room - (z - top) - 0.5)
-                    if size < 2.0:
-                        break
-                    c = Vector((max(-22.0 + size / 2, min(22.0 - size / 2, cx)), max(-22.0 + size / 2, min(22.0 - size / 2, cy)), z))
-                    hs = size / 2
-                    self.face((c + Vector((-hs, 0, 0)), c + Vector((hs, 0, 0)), c + Vector((hs, 0, size)), c + Vector((-hs, 0, size))), "건물_연기_잎카드")
-                    self.face((c + Vector((0, -hs, 0)), c + Vector((0, hs, 0)), c + Vector((0, hs, size)), c + Vector((0, -hs, size))), "건물_연기_잎카드")
-                    z += size * 0.7
-                    cx += rng.uniform(-1.5, 1.5)
+                self.markers.append((f"연기_자리_{k + 1:02d}", Vector((cx, cy, top + 0.5))))
 
     # ── 마무리
 
@@ -607,6 +641,14 @@ class Builder:
         collection.objects.link(obj)
         for old in used:
             mesh.materials.append(material(self.names[old]))
+        k = 1.0 / UNITS_PER_METER if meters else 1.0
+        for marker, pos in self.markers:              # 빈 오브젝트(메시 없음) — 건물의 자식이라 같이 옮겨지고 같이 내보내진다
+            empty = bpy.data.objects.new(marker, None)
+            empty.empty_display_type = "SPHERE"
+            empty.empty_display_size = 0.15
+            empty.location = pos * k
+            empty.parent = obj
+            collection.objects.link(empty)
         return obj
 
 
@@ -654,11 +696,13 @@ def export(obj, name):
     os.makedirs(OUT_ROOT, exist_ok=True)
     bpy.ops.object.select_all(action="DESELECT")
     obj.select_set(True)
+    for child in obj.children:                 # 연기 자리 같은 빈 오브젝트도 같이
+        child.select_set(True)
     bpy.context.view_layer.objects.active = obj
     bpy.ops.export_scene.fbx(
         filepath=os.path.join(OUT_ROOT, f"{name}.fbx"), use_selection=True, global_scale=UNITS_PER_METER,
         apply_unit_scale=True, apply_scale_options="FBX_SCALE_NONE", mesh_smooth_type="FACE",
-        use_mesh_modifiers=True, add_leaf_bones=False, bake_anim=False,
+        use_mesh_modifiers=True, add_leaf_bones=False, bake_anim=False, object_types={"MESH", "EMPTY"},
         path_mode="RELATIVE")                # ../Textures 상대경로 — AUTO는 경로가 깨지고 STRIP은 형제 폴더를 못 찾는다
 
 
@@ -749,7 +793,7 @@ WALL_MATS = {"건물_벽돌_붉은", "건물_콘크리트", "건물_외벽_흰",
              "건물_외벽_하늘", "건물_외벽_연두", "건물_나무_판", "건물_금속_골함석"}
 
 
-def angry_variant(maker, seed=0, brows=(), tilts=(), extra=None, keep=(), cracks=10, soot=5, smoke=2):
+def angry_variant(maker, seed=0, brows=(), tilts=(), extra=None, keep=(), cracks=10, soot=5, smoke=2, cracks_at=()):
     """기본판 maker()를 그대로 지은 뒤 화나게 — 기본판 코드는 안 고친다(실루엣·원점·크기가 기본판과 같게).
     tilts = [(side, plane, u0, u1, z0, z1, 각도)] — 그 벽면 앞 창 안의 간판 정점만 기울인다(+면 오른쪽이 처짐).
     brows = [(side, plane, (바깥 u, z), (안쪽 u, z))] — 눈으로 쓸 창 위의 짙은 눈썹(안쪽 끝을 낮게).
@@ -761,6 +805,8 @@ def angry_variant(maker, seed=0, brows=(), tilts=(), extra=None, keep=(), cracks
             print(f"⚠️ 기울일 간판 정점이 없다: {side} plane {plane} u {u0}~{u1} z {z0}~{z1}")
     for side, plane, outer, inner in brows:
         b.brow(side, plane, outer, inner)
+    for side, plane, u, z, w, h in cracks_at:      # 꼭 보여야 할 금(정면 기둥 등) — (side, plane, 가로 u, 밑 z, 폭, 높이)
+        b.panel(side, plane, u, z, w, h, "건물_금_잎카드", offset=0.14)
     if extra:
         extra(b)
     b.angrify(seed=seed, cracks=cracks, soot=soot, smoke=smoke, keep=keep)

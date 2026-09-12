@@ -82,7 +82,6 @@ MATERIALS = {
     "건물_커튼월_분노":       (8,    (0.40, 0.06, 0.03, 1.0), 512),
     "건물_금_잎카드":         (None, (0.03, 0.03, 0.03, 1.0), 512),
     "건물_그을음_잎카드":      (None, (0.05, 0.05, 0.05, 1.0), 256),
-    "건물_연기_잎카드":       (None, (0.20, 0.20, 0.20, 1.0), 256),
 }
 
 
@@ -740,13 +739,29 @@ def shader_smoke(mat):
     mat.use_backface_culling = False
 
 
+def shader_scorched_metal(mat):
+    """그을린 금속 차양(화난 눈썹) — 까맣게 탄 철판 결 + 세로로 흘러내린 녹물 줄. PM: 각재 눈썹 대신 원래 붙어 있을 법한 부재."""
+    nt, bsdf, uv = _tree(mat)
+    u, v = _sep_uv(nt, uv)
+    grain = _noise(nt, uv, 18.0, 5.0, 0.6)
+    streak = _noise(nt, _combine(nt, _math(nt, "MULTIPLY", u, 14.0), _math(nt, "MULTIPLY", v, 1.5)), 1.0, 4.0, 0.6)
+    base = _ramp(nt, grain, ((0.0, (0.015, 0.014, 0.013, 1)), (1.0, (0.07, 0.065, 0.06, 1))))
+    rust = _math(nt, "MULTIPLY", _math(nt, "GREATER_THAN", streak, 0.62), 0.7)
+    nt.links.new(_mix(nt, rust, base, (0.16, 0.06, 0.025, 1)), bsdf.inputs["Base Color"])
+    bsdf.inputs["Roughness"].default_value = 0.8
+
+
+MATERIALS["건물_금속_그을림"] = (4, (0.05, 0.045, 0.04, 1.0), 256)
+
 SHADERS.update({
+    "건물_금속_그을림": shader_scorched_metal,
     "건물_창_분노": shader_angry_window,
     "건물_커튼월_분노": shader_angry_curtain,
     "건물_금_잎카드": shader_crack,
     "건물_그을음_잎카드": shader_soot,
-    "건물_연기_잎카드": shader_smoke,
 })
+# 🔴 건물_연기_잎카드는 뺐다(PM 2026-09-12) — 정지한 교차 카드 연기가 게임 시점에서 「X자 종이」로 보였다. 연기는 FBX 안
+# 빈 오브젝트 `연기_자리_NN` 위치에 유니티 파티클로 붙인다. shader_smoke는 다시 쓸 일이 생길 때를 위해 남겨 둔다.
 
 
 # ──────────────────────────────────────────────────────────── 굽기

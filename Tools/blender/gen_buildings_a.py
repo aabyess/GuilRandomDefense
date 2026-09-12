@@ -194,6 +194,9 @@ CATALOG = [
     # 간판을 오른쪽이 처지게 기울이고, 공용 angrify로 붉은 창·금·그을음·연기.
     ("Story01_하이츠_화남", "01 Heights Angry",
      lambda: bc.angry_variant(make_heights, seed=1101, cracks=16,
+                              # PM: 정면 한가운데 흰 계단실 기둥에 금 두 줄(층참 창 사이 빈 벽)
+                              cracks_at=[("-y", -14.0, -0.6, GROUND_H + 13.0, 3.4, 6.0),
+                                         ("-y", -14.0, 0.8, GROUND_H + 29.0, 3.0, 6.5)],
                               brows=[("-y", -15.5, (-16.8, GROUND_H + 47.0), (-3.8, GROUND_H + 42.4)),
                                      ("-y", -15.5, (16.8, GROUND_H + 47.0), (3.8, GROUND_H + 42.4))],
                               tilts=[("-y", -14.0, -4.5, 4.5, GROUND_H + 47.4, GROUND_H + 53.5, 18.0)]),
