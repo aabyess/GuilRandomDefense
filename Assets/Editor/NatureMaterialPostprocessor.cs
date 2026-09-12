@@ -22,9 +22,12 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
     const string WallRoot = "Assets/Art/Walls/";
     const string MonsterRoot = "Assets/Art/Monsters/";
     const string BuildingRoot = "Assets/Art/Buildings/";   // 스토리 건물 13종(2026-09-12)
+    const string CreatureRoot = "Assets/Art/Creatures/";   // 물범·노루·양(2026-09-12)
+    const string PropRoot = "Assets/Art/Props/";           // 보물상자·금화더미·보물표시(2026-09-12)
     // 텍스처는 자기 종류 폴더의 Textures에서 찾는다(자연물·벽은 Nature/Textures, 괴물은 Monsters/Textures).
     static readonly string[] TextureFolders =
-        { "Assets/Art/Nature/Textures", "Assets/Art/Walls/Textures", "Assets/Art/Monsters/Textures", "Assets/Art/Buildings/Textures" };
+        { "Assets/Art/Nature/Textures", "Assets/Art/Walls/Textures", "Assets/Art/Monsters/Textures",
+          "Assets/Art/Buildings/Textures", "Assets/Art/Creatures/Textures", "Assets/Art/Props/Textures" };
     const string LeafCardSuffix = "_잎카드";   // 잎 카드·지느러미 막 — 양면 + 알파 컷
 
     // 규칙을 바꾸면 올린다 — 올려야 이미 임포트된 FBX도 다시 돈다.
@@ -42,7 +45,8 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
     {
         string nfc = Nfc(path);
         return nfc != null && (nfc.StartsWith(NatureRoot) || nfc.StartsWith(WallRoot) ||
-                               nfc.StartsWith(MonsterRoot) || nfc.StartsWith(BuildingRoot));
+                               nfc.StartsWith(MonsterRoot) || nfc.StartsWith(BuildingRoot) ||
+                               nfc.StartsWith(CreatureRoot) || nfc.StartsWith(PropRoot));
     }
 
     void OnPreprocessMaterialDescription(MaterialDescription description, Material material, AnimationClip[] animations)
@@ -112,7 +116,8 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
     {
         if (!imported.Any(path => TextureFolders.Any(folder => Nfc(path).StartsWith(folder + "/")))) return;
 
-        string[] roots = new[] { "Assets/Art/Nature", "Assets/Art/Walls", "Assets/Art/Monsters", "Assets/Art/Buildings" }
+        string[] roots = new[] { "Assets/Art/Nature", "Assets/Art/Walls", "Assets/Art/Monsters", "Assets/Art/Buildings",
+                                 "Assets/Art/Creatures", "Assets/Art/Props" }
             .Where(AssetDatabase.IsValidFolder).ToArray();
         if (roots.Length == 0) return;
 
