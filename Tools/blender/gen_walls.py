@@ -150,11 +150,18 @@ def shader_rubble(mat, mossy=False, wet=False):
     if wet:
         base = _ramp(nt, tone, ((0.0, (0.05, 0.06, 0.07, 1)), (0.3, (0.16, 0.19, 0.21, 1)), (1.0, (0.36, 0.40, 0.42, 1))))
     else:
-        base = _ramp(nt, tone, ((0.0, (0.12, 0.11, 0.10, 1)), (0.3, (0.36, 0.35, 0.33, 1)), (1.0, (0.62, 0.60, 0.56, 1))))
-    color = _mix(nt, 0.25, base, tint, "OVERLAY")
+        base = _ramp(nt, tone, ((0.0, (0.10, 0.09, 0.08, 1)), (0.3, (0.30, 0.29, 0.27, 1)), (1.0, (0.50, 0.48, 0.44, 1))))
+    # 돌마다 색을 보로노이 색으로 겹치면 파스텔 사탕처럼 알록달록해졌다(PM 렌더 검수) — 셀 색은 명암으로만 쓴다:
+    # 보로노이 색의 밝기 한 값을 뽑아 회색·회갈색 안에서 살짝만(±6%) 어둡고 밝게.
+    lum = nt.nodes.new("ShaderNodeRGBToBW")
+    nt.links.new(tint, lum.inputs["Color"])
+    shade = _math(nt, "ADD", 0.82, _math(nt, "MULTIPLY", lum.outputs["Val"], 0.36))      # 돌마다 0.82~1.18배 명암
+    color = _mix(nt, 1.0, base, _ramp(nt, shade, ((0.8, (0.8, 0.8, 0.8, 1)), (1.2, (1.2, 1.2, 1.2, 1)))), "MULTIPLY")
     if mossy:
-        moss = _math(nt, "GREATER_THAN", _math(nt, "ADD", _noise(nt, uv, 3.0, 3.0), _math(nt, "MULTIPLY", gap, -0.4)), 0.55)
-        color = _mix(nt, _math(nt, "MULTIPLY", moss, 0.85), color, (0.22, 0.38, 0.14, 1))
+        # 이끼는 짙은 올리브로 얇게 번지듯(선명한 초록 덩어리 금지 — PM 검수). 틈 근처에 더 낀다.
+        moss = _math(nt, "SUBTRACT", _math(nt, "ADD", _noise(nt, uv, 3.0, 3.0), _math(nt, "MULTIPLY", gap, -0.35)), 0.38, clamp=True)
+        moss = _math(nt, "MULTIPLY", moss, 2.2, clamp=True)
+        color = _mix(nt, _math(nt, "MULTIPLY", moss, 0.8), color, (0.19, 0.26, 0.11, 1))
     if wet:
         speck = _math(nt, "LESS_THAN", _voronoi(nt, uv, 40.0, "F1").outputs["Distance"], 0.12)
         color = _mix(nt, _math(nt, "MULTIPLY", speck, 0.7), color, (0.78, 0.76, 0.70, 1))
