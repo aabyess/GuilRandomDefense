@@ -1,0 +1,640 @@
+"""유닛 모델 정리 재내보내기(PM 2026-09-13, 사장님 「유닛들 눕혀져 있거나 그런 거 확인하고 고쳐」). blender 세션.
+    blender -b --factory-startup --python fix_unit_fbx.py -- [이름 ...] [--out 폴더] [--blend]
+이름을 안 주면 UNITS 표 전부. --out을 주면 그 폴더에 쓰고(시험), 없으면 같은 경로·같은 파일명으로 덮어쓴다(.meta GUID 유지, .meta는 안 건드림).
+--blend: 내보내기 직전 장면을 <출력>_진단.blend로 남긴다.
+
+유니티에서 본 문제(PM 실측): 1) 키 약 0.02 + Idle 리타게팅 실패 — glTF→FBX 변환본의 겉싸개 노드에 배율 0.01·0.0001·100·±90°가 겹겹이
+  2) Idle 입히면 누움(흔함_문필환)  3) 메시 납작(안흔함_박민수)  4) 너무 작음(상붕카)
+
+방식 — 연산자로 굽지 않고 **다시 짓는다**
+  🔴 1차(블렌더 「변환 적용」·「자세를 쉬는 자세로」): 배율 걸린 아마추어에서 스킨이 틀어져 조각이 수백 m 흩어졌다(박준희 y −850).
+  · 파일을 애니메이션 없이 읽은 **기본 자세**(유니티가 보여 주는 모습)를 원본으로 삼는다.
+    뼈: 세계 자세 행렬의 머리·꼬리·회전. 메시: 기본 자세가 쉬는 자세와 같으면 원래 데이터(모양 키 포함), 다르면 자세대로 변형한 모양.
+    🔴 2차: 쉬는 자세로 뼈를 지었더니 재규어(뿌리 뼈 기본 자세에 배율 10)의 클립이 10배로 늘어났다 — 기본 자세로 짓는다.
+  · 새 아마추어: 같은 뼈 이름·부모, 행렬 G(바닥·가운데 이동 × 배율 × 방향)를 곱해 짓는다. 메시는 G × 세계 행렬로 굽고 새 아마추어에만 스킨.
+    뼈에 매달린 굳은 조각은 그 뼈에 가중치 1. 겉싸개 빈 오브젝트·다른 아마추어는 옮기지 않는다(0개). 재질 이름 그대로.
+  · 방향: 사람형은 엉덩이→머리 = +Z, 좌우 허벅지·어깨로 오른쪽을 잡아 앞(위 × 오른쪽) = −Y. 재규어는 머리 쪽 = −Y, 자전거는 그대로.
+  · 크기: 사람형 키 1.8m, 볼보이 키 1.2m, 재규어 몸길이 2.0m, 자전거 길이 1.8m. 발바닥 z=0, 사람형은 엉덩이, 나머지는 경계 가운데가 원점.
+  · 🛡 뼈와 메시가 같은 자리에 없으면(블렌더 FBX 가져오기가 assimp 변환본의 스킨 결합을 못 살린 경우) 쓰지 않고 멈춘다.
+  · 클립: Generic 둘(강재규·이호준)은 `_자체.controller`가 파일 안 클립을 쓴다 → 원본을 애니메이션째 읽어 프레임마다 세계 뼈 행렬을 뽑아
+    새 뼈대의 자세로 다시 굽는다. 사람형은 공용 Idle을 리타게팅하므로(importAnimation 0) 싣지 않는다.
+  · 🔴 3차(흔함_문필환 Humanoid 실패): FBX의 Null 노드(가중치 없는 Biped 팔다리·손가락 45개, _end·HELPER 등)는 블렌더가 뼈 밑에 매단
+    빈 오브젝트로 읽는다. 그걸 겉싸개로 알고 지웠더니 유니티가 Thigh·UpperArm을 못 찾았다 — 부모 사슬이 아마추어에 닿는 빈 오브젝트는
+    같은 이름·같은 세계 자세의 뼈로 살린다(가중치 없음). glb에서 다시 짓는 넷은 기준 FBX에 있던 이름만 살린다.
+  · 🔴 테이크 이름은 원본 그대로 — 유니티 클립 ID가 이름에서 나오고 `_자체.controller`가 그 ID를 가리킨다. 블렌더 FBX 가져오기가 붙이는
+    「아마추어|」 한 칸만 떼고, 내보내기의 「오브젝트|액션」 이름 짓기를 액션 이름만 쓰게 바꿔 끼운다.
+  · 🔴 텍스처(김수빈 흰색): glb 이미지는 경로 없는 내장 이미지라 내보내기가 참조를 「Image_0」(확장자 없음)로 쓰거나 빼먹었다(최상호·박민수 0개).
+    glb에서 다시 짓는 넷은 기준 FBX의 재질별 텍스처 표(DiffuseColor·NormalMap → 파일명)를 원시로 읽어, 재질을 그 표대로 다시 짜고
+    같은 폴더 Textures/의 실제 파일을 물린다(재질 이름·기본색 그대로).
+  · 🔴 원본은 git 커밋에서 꺼낸다(rev = 유닛을 처음 들인 커밋). 같은 경로를 덮어쓰므로, 다시 돌리면 이미 정리된 파일(보조 노드·텍스처가 빠진)을
+    원본으로 삼게 된다 — 임시 폴더에 꺼내고 Textures/는 유닛 폴더를 링크한다.
+  · 내보내기: FBX 단위 적용(1m = 유니티 1), 앞 −Z·위 Y(블렌더 −Y 정면 → 유니티 +Z), 끝 뼈 안 붙임. 상붕카는 원래 .glb(glTFast)라 GLB로.
+
+원본 glb에서 다시 짓는 넷(PM 결정 2026-09-13 — 블렌더가 이 FBX들의 스킨 결합을 못 살려서)
+  지금 FBX를 **기준**으로 읽어 이름을 맞춘다: 메시 이름·재질 이름·뼈 이름·뼈 부모가 기준과 똑같아야 통과(assert).
+  SOURCE.txt의 이전 손질을 재현한다 — 박민수: 포치타 아마추어·메시와 외곽선 껍데기 제거, 척추 이름 6개. 최상호: 뼈 이름 22개,
+  발·손 노드를 무릎·팔꿈치 밑으로(기준 FBX의 부모를 그대로 따른다). 김수빈: 재질 Baked_All.001 → Baked_All. 공통: 조명용 Icosphere 제거.
+  안흔함_박준희는 원본(siren_head.glb)이 없어 파일을 건드리지 않는다 — PM이 유니티 쪽에서 맞춘다.
+"""
+import math
+import os
+import re
+import subprocess
+import sys
+import tempfile
+
+import bpy
+from mathutils import Matrix, Vector
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
+DL = os.path.expanduser("~/Downloads")
+LUFFY_RENAME = {
+    "root hips_429": "Hips", "spine lower_428": "Spine", "spine middle_427": "Chest", "spine upper_426": "UpperChest",
+    "head neck lower_217": "Neck", "head neck upper_216": "Head",
+    "leg *side* thigh.L_19": "LeftUpperLeg", "leg *side* knee.L_11": "LeftLowerLeg", "leg *side* ankle.L.001_434": "LeftFoot",
+    "leg *side* toes.L_433": "LeftToes", "leg *side* thigh.R_37": "RightUpperLeg", "leg *side* knee.R_29": "RightLowerLeg",
+    "leg *side* ankle.R.001_445": "RightFoot", "leg *side* toes.R_444": "RightToes",
+    "arm *side* shoulder 1.L_245": "LeftShoulder", "arm *side* shoulder 2.L_224": "LeftUpperArm", "arm *side* elbow.L_220": "LeftLowerArm",
+    "arm *side* wrist.L_243": "LeftHand", "arm *side* shoulder 1.R_273": "RightShoulder", "arm *side* shoulder 2.R_252": "RightUpperArm",
+    "arm *side* elbow.R_248": "RightLowerArm", "arm *side* wrist.R_271": "RightHand",
+}
+DENJI_RENAME = {"spine_09": "Hips", "spine.001_010": "Spine", "spine.002_011": "Chest", "spine.003_012": "UpperChest",
+                "spine.004_013": "Neck", "spine.005_014": "Head"}
+UNITS = {
+    "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
+    "안흔함_이호준": dict(rev="6b2afdbc", path="Assets/Art/Units/안흔함_이호준/안흔함_이호준.fbx", kind="human", size=("height", 1.2), anim=True,
+                      hips="Bone_61", head="Bone.004_3", source=os.path.join(DL, "zombi.glb"), recipe={}),
+    "안흔함_김경현": dict(rev="4c92dba1", path="Assets/Art/Units/안흔함_김경현/안흔함_김경현.fbx", kind="human", size=("height", 1.8)),
+    "안흔함_김수빈": dict(rev="c6cc54d4", path="Assets/Art/Units/안흔함_김수빈/안흔함_김수빈.fbx", kind="human", size=("height", 1.8), hips="hips_112",
+                      source=os.path.join(DL, "nanachi.glb"),
+                      # Object_4 = 몸에서 멀리 떨어진 Rigify FK 위젯 조각(128정점) — 경계 상자를 3.3m로 부풀려 PM 승인으로 뺀다(2026-09-13)
+                      recipe=dict(material_alias={"Baked_All.001": "Baked_All"}, drop_meshes=["Object_4"])),
+    "안흔함_문필환": dict(rev="81a18fbb", path="Assets/Art/Units/안흔함_문필환/안흔함_문필환.fbx", kind="human", size=("height", 1.8)),
+    "안흔함_박준희": dict(path="Assets/Art/Units/안흔함_박준희/안흔함_박준희.fbx", kind="human", size=("height", 1.8),
+                      hold="원본 siren_head.glb 없음 — 블렌더 FBX 가져오기가 스킨 결합을 못 살려 파일을 건드리지 않음(PM이 유니티 쪽에서 맞춤)"),
+    "안흔함_신문철": dict(rev="483a35ec", path="Assets/Art/Units/안흔함_신문철/안흔함_신문철.fbx", kind="human", size=("height", 1.8)),
+    "특별함_양재모": dict(rev="2d515a55", path="Assets/Art/Units/특별함_양재모/특별함_양재모.fbx", kind="human", size=("height", 1.8)),
+    "특별함_최상호": dict(rev="b037f72d", path="Assets/Art/Units/특별함_최상호/특별함_최상호.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(DL, "luffy.glb"),
+                      # mesh_0(Pupil 582정점·모양 키 3) = Object_7, mesh_0.001(shock 60정점·모양 키 3) = Object_8
+                      recipe=dict(rename=LUFFY_RENAME, mesh_alias={"mesh_0": "Object_7", "mesh_0.001": "Object_8"})),
+    "흔함_문필환": dict(rev="01d46427", path="Assets/Art/Units/흔함_문필환/흔함_문필환.fbx", kind="human", size=("height", 1.8)),
+    "안흔함_박민수": dict(rev="dd84a0cb", path="Assets/Art/Units/안흔함_박민수/안흔함_박민수.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(DL, "denji_and_pochita.glb"), gltf_guess_bind=False,
+                      recipe=dict(rename=DENJI_RENAME)),
+    "안흔함_상붕카": dict(path="Assets/Art/Characters/안흔함_상붕카.glb", kind="prop", size=("length", 1.8)),
+}
+HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
+HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")
+UPPER = re.compile(r"(?i)(up_?leg|upper_?leg|thigh|upper_?arm|[:_ ]arm$|shoulder|clavicle|bone\.029|bone\.006)")
+LEFT = re.compile(r"(?i)(left|(^|[:_ ])l([:_ ]|$)|\.l($|_)|_l($|_)|^l(arm|leg))")
+RIGHT = re.compile(r"(?i)(right|(^|[:_ ])r([:_ ]|$)|\.r($|_)|_r($|_)|^r(arm|leg))")
+SKIP = ("end", "top", "tweak", "mch", "org", "pole", "widget", "adj", "vis_")
+
+
+def load(path, anim, guess_bind=True):
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    if path.lower().endswith((".glb", ".gltf")):
+        # guess_bind=False: 쉬는 자세 = 장면 기본 노드 자세. 🔴 denji는 결합 자세(추정)로 읽으면 메시가 가는 선으로 뭉개졌다(실측) —
+        # 장면 자세로 읽어야 T자(6.9×1.5×7.4)가 나온다. zombi·luffy·nanachi는 기본값(추정 켬)이 지금 FBX 모양과 같다.
+        bpy.ops.import_scene.gltf(filepath=path, guess_original_bind_pose=guess_bind)
+        if not anim:                                           # glTF는 클립을 늘 싣는다 — 기본 자세로 읽으려면 걷고 자세를 되돌린다
+            for o in bpy.context.scene.objects:
+                if o.type == "ARMATURE":
+                    if o.animation_data:
+                        o.animation_data.action = None
+                    for pb in o.pose.bones:
+                        pb.matrix_basis = Matrix.Identity(4)
+            for act in list(bpy.data.actions):
+                bpy.data.actions.remove(act)
+    else:
+        bpy.ops.import_scene.fbx(filepath=path, use_anim=anim)
+    bpy.context.view_layer.update()
+
+
+def skinned_to(mesh):
+    return next((m.object for m in mesh.modifiers if m.type == "ARMATURE" and m.object), None)
+
+
+def main_armature():
+    arms = [o for o in bpy.context.scene.objects if o.type == "ARMATURE"]
+    if not arms:
+        return None
+    meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
+    return max(arms, key=lambda a: (sum(1 for m in meshes if skinned_to(m) == a), len(a.data.bones)))
+
+
+FBX_TEX_SLOT = {"DiffuseColor": "base_color_texture", "NormalMap": "normalmap_texture"}
+
+
+def fbx_texture_table(path):
+    """원시 FBX에서 재질 이름 → [(속성, 파일명)] — Material ← Texture(OP 연결의 속성) ← Video의 RelativeFilename."""
+    from io_scene_fbx import parse_fbx
+    root, _ = parse_fbx.parse(path)
+    objects = next(e for e in root.elems if e.id == b"Objects")
+    conns = next(e for e in root.elems if e.id == b"Connections")
+    node = {e.props[0]: e for e in objects.elems}
+
+    def filename(e):
+        rf = next((s for s in e.elems if s.id in (b"RelativeFilename", b"FileName")), None)
+        return rf.props[0].decode("utf-8", "replace").replace("\\", "/").rsplit("/", 1)[-1] if rf else None
+
+    video = {c.props[2]: filename(node[c.props[1]]) for c in conns.elems
+             if c.props[1] in node and c.props[2] in node and node[c.props[1]].id == b"Video" and node[c.props[2]].id == b"Texture"}
+    table = {}
+    for c in conns.elems:
+        ch, pa = c.props[1], c.props[2]
+        if c.props[0] == b"OP" and ch in node and pa in node and node[ch].id == b"Texture" and node[pa].id == b"Material":
+            entry = (c.props[3].decode(), video.get(ch) or filename(node[ch]))
+            refs = table.setdefault(node[pa].props[1].split(b"\x00\x01")[0].decode("utf-8", "replace"), [])
+            if entry not in refs:
+                refs.append(entry)
+    return table
+
+
+def relink_textures(table, tex_dir):
+    """재질마다 노드를 비우고 원칙형 BSDF 하나로 다시 짜 기준 FBX 표대로 텍스처를 건다(표에 없는 재질은 텍스처 없이)."""
+    from bpy_extras.node_shader_utils import PrincipledBSDFWrapper
+    used = sorted({s.material.name for o in bpy.context.scene.objects if o.type == "MESH" for s in o.material_slots if s.material})
+    missing = set(table) - set(used)
+    assert not missing, f"기준 FBX에 텍스처가 걸린 재질이 원본에 없다: {missing}"
+    done = []
+    for mat_name in used:
+        mat = bpy.data.materials[mat_name]
+        old = PrincipledBSDFWrapper(mat, is_readonly=True)
+        color, alpha = tuple(old.base_color)[:3], old.alpha
+        mat.use_nodes = True
+        mat.node_tree.nodes.clear()
+        new = PrincipledBSDFWrapper(mat, is_readonly=False)
+        new.base_color, new.alpha = color, alpha
+        for prop, fn in table.get(mat_name, ()):
+            assert prop in FBX_TEX_SLOT, f"{mat_name}: 옮길 줄 모르는 텍스처 속성 {prop}"
+            file = os.path.join(tex_dir, fn)
+            assert os.path.isfile(file), f"{mat_name}: 텍스처 파일이 없다 {file}"
+            getattr(new, FBX_TEX_SLOT[prop]).image = bpy.data.images.load(file, check_existing=True)
+            done.append(f"{mat_name}.{prop}={fn}")
+    return done
+
+
+def reference(path):
+    """지금 FBX에서 이름만 읽는다(블렌더가 이 파일의 결합을 못 살려도 이름·부모·재질은 믿을 수 있다)."""
+    load(path, anim=False)
+    arm = main_armature()
+    meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
+    return dict(bones={b.name: (b.parent.name if b.parent else None) for b in arm.data.bones},
+                meshes={m.name for m in meshes}, mats={s.material.name for m in meshes for s in m.material_slots if s.material},
+                empties={o.name for o in skeleton_empties(arm)}, textures=fbx_texture_table(path))
+
+
+def apply_recipe(recipe, ref, report=None):
+    scene = bpy.context.scene
+    glb_mats = sorted({s.material.name for o in scene.objects if o.type == "MESH" for s in o.material_slots if s.material})
+    ref = dict(ref, meshes=ref["meshes"] - set(recipe.get("drop_meshes", ())))     # 기준 FBX에 있어도 뺄 조각(PM 승인)
+    for old, new in recipe.get("mesh_alias", {}).items():             # glb 이름이 기준 FBX와 다른 메시(정점 수·재질·모양 키로 대조함)
+        o = bpy.data.objects.get(old)
+        assert o is not None and o.type == "MESH", f"이름 바꿀 메시가 원본에 없다: {old}"
+        clash = bpy.data.objects.get(new)
+        if clash is not None and clash != o:
+            clash.name = new + "__원본노드"                          # 🔴 glb엔 같은 이름의 빈 노드가 있어 그냥 바꾸면 .001이 붙어 지워졌다
+        o.name = new
+        assert o.name == new, f"메시 이름을 {new}로 못 바꿨다({o.name})"
+    for o in [o for o in scene.objects if o.type == "MESH" and o.name not in ref["meshes"]]:
+        bpy.data.objects.remove(o, do_unlink=True)                       # 포치타·외곽선 껍데기·Icosphere 등 기준에 없는 메시
+    meshes = [o for o in scene.objects if o.type == "MESH"]
+    missing = ref["meshes"] - {m.name for m in meshes}
+    assert not missing, f"기준 FBX에 있는데 원본에 없는 메시: {missing}"
+    for src, dst in recipe.get("material_alias", {}).items():
+        for m in meshes:
+            for slot in m.material_slots:
+                if slot.material and slot.material.name == src:
+                    slot.material = bpy.data.materials.get(dst) or slot.material
+    arm = main_armature()
+    for o in [o for o in scene.objects if o.type == "ARMATURE" and o != arm]:
+        bpy.data.objects.remove(o, do_unlink=True)                       # 포치타 뼈대
+    for old, new in recipe.get("rename", {}).items():
+        assert old in arm.data.bones, f"이름 바꿀 뼈가 원본에 없다: {old}"
+        arm.data.bones[old].name = new                                    # 스킨 메시의 정점 그룹 이름도 같이 바뀐다
+        for m in meshes:
+            g = m.vertex_groups.get(old)
+            if g is not None:
+                g.name = new
+    moved = []
+    bpy.context.view_layer.objects.active = arm
+    for o in scene.objects:
+        o.select_set(o == arm)
+    bpy.ops.object.mode_set(mode="EDIT")
+    for name, parent in ref["bones"].items():
+        eb = arm.data.edit_bones.get(name)
+        assert eb is not None, f"기준 FBX의 뼈가 원본에 없다: {name}"
+        now = eb.parent.name if eb.parent else None
+        if now != parent:
+            eb.use_connect = False
+            eb.parent = arm.data.edit_bones[parent] if parent else None   # 에딧 본은 세계 위치를 그대로 두고 부모만 바꾼다
+            moved.append(f"{name}: {now} → {parent}")
+    bpy.ops.object.mode_set(mode="OBJECT")
+    assert set(arm.data.bones.keys()) == set(ref["bones"]), f"뼈 이름 차: {set(arm.data.bones.keys()) ^ set(ref['bones'])}"
+    assert all((b.parent.name if b.parent else None) == ref["bones"][b.name] for b in arm.data.bones)
+    mats = {s.material.name for m in meshes for s in m.material_slots if s.material}
+    assert mats <= ref["mats"] and (mats == ref["mats"] or recipe.get("drop_meshes")), f"재질 이름 차: 원본 {sorted(mats)} / 기준 {sorted(ref['mats'])}"
+    if report is not None:
+        report["재질 대조"] = f"glb {glb_mats} → FBX {sorted(mats)}"
+        report["부모 옮김"] = moved
+    bpy.context.view_layer.update()
+
+
+def bone_above(obj, arm, empties=()):
+    o = obj
+    while o is not None:
+        if o.parent is not None and o.parent.name in empties:            # 뼈로 살린 빈 오브젝트 밑에 매달린 조각
+            return o.parent.name
+        if o.parent == arm and o.parent_type == "BONE" and o.parent_bone:
+            return o.parent_bone
+        o = o.parent
+    return None
+
+
+def skeleton_empties(arm, keep=None):
+    """부모 사슬이 (빈 오브젝트만 거쳐) 아마추어에 닿는 빈 오브젝트 = FBX 뼈대 속 Null 노드. 부모 먼저 순서.
+    keep을 주면 그 이름만(glb에서 다시 짓는 넷 — 기준 FBX에 있던 것만)."""
+    def depth(o):
+        d, p = 0, o.parent
+        while p is not None and p != arm:
+            if p.type != "EMPTY":
+                return None
+            d, p = d + 1, p.parent
+        return d if p == arm else None
+    found = [(depth(o), o.name, o) for o in bpy.context.scene.objects if o.type == "EMPTY"]
+    return [o for d, _, o in sorted((t for t in found if t[0] is not None), key=lambda t: (t[0], t[1]))
+            if keep is None or o.name in keep]
+
+
+def empty_parent(o, arm, names):
+    """살린 뼈의 부모 이름 — 가장 가까운, 살린 빈 오브젝트 또는 매달린 뼈. 아마추어에 바로 붙었으면 None."""
+    p, child = o.parent, o
+    while p is not None and p != arm:
+        if p.name in names:
+            return p.name
+        p, child = p.parent, p
+    return child.parent_bone if child.parent_type == "BONE" and child.parent_bone else None
+
+
+def pick(arm, name, pattern):
+    if name:
+        return arm.data.bones.get(name)
+    return next((b for b in arm.data.bones if pattern.search(b.name) and not any(x in b.name.lower() for x in SKIP)), None)
+
+
+def pose_head(arm, bone):
+    return arm.matrix_world @ arm.pose.bones[bone.name].head
+
+
+def orientation(cfg, arm, report):
+    """방향 행렬 R(3×3) — 기본 자세의 세계 → 위 +Z · 정면 −Y."""
+    R = Matrix.Identity(3)
+    if arm is None or cfg["kind"] == "prop":
+        return R
+    if cfg["kind"] == "beast":
+        head = pick(arm, cfg.get("head"), re.compile(r"(?i)^head"))
+        root = next(b for b in arm.data.bones if b.parent is None)
+        fwd = pose_head(arm, head) - pose_head(arm, root)
+        fwd.z = 0.0
+        yaw = math.atan2(fwd.x, -fwd.y)
+        report["방향"] = f"머리 쪽 {math.degrees(-yaw):+.0f}°"
+        return Matrix.Rotation(-yaw, 3, "Z")
+    hips, head = pick(arm, cfg.get("hips"), HIPS), pick(arm, cfg.get("head"), HEAD)
+    report["엉덩이/머리"] = f"{hips.name if hips else None}/{head.name if head else None}"
+    if hips and head:
+        up = (pose_head(arm, head) - pose_head(arm, hips)).normalized()
+        R = up.rotation_difference(Vector((0, 0, 1))).to_matrix()
+        report["위"] = tuple(round(c, 2) for c in up)
+    lefts = [pose_head(arm, b) for b in arm.data.bones if UPPER.search(b.name) and LEFT.search(b.name) and not RIGHT.search(b.name)]
+    rights = [pose_head(arm, b) for b in arm.data.bones if UPPER.search(b.name) and RIGHT.search(b.name) and not LEFT.search(b.name)]
+    if lefts and rights:
+        right = R @ (sum(rights, Vector()) / len(rights) - sum(lefts, Vector()) / len(lefts))
+        right.z = 0.0
+        fwd = Vector((0, 0, 1)).cross(right.normalized())
+        yaw = math.atan2(fwd.x, -fwd.y)
+        R = Matrix.Rotation(-yaw, 3, "Z") @ R
+        report["정면"] = f"{math.degrees(-yaw):+.0f}° (좌 {len(lefts)}·우 {len(rights)})"
+    else:
+        report["정면"] = "좌우 뼈 못 찾음 — 회전 안 함"
+    return R
+
+
+def sample_clips(src, arm_name, recipe, ref, guess_bind=True):
+    """애니메이션째 읽어 액션마다 프레임별 세계 뼈 행렬."""
+    load(src, anim=True, guess_bind=guess_bind)
+    if recipe is not None:
+        apply_recipe(recipe, ref)
+    arm = bpy.data.objects[arm_name]
+    empties = skeleton_empties(arm, ref["empties"] if ref is not None else None)
+    from_gltf = src.lower().endswith((".glb", ".gltf"))
+    clips = []
+    for act in list(bpy.data.actions):
+        ad = arm.animation_data or arm.animation_data_create()
+        ad.action = act
+        if hasattr(ad, "action_slot") and len(act.slots):
+            ad.action_slot = act.slots[0]
+        # 🔴 glTF로 읽은 액션은 frame_range가 1~1로 나와 한 프레임만 구웠다(이호준 시험) — 실제 키 범위로
+        curves = list(act.fcurves) if hasattr(act, "fcurves") else []
+        if not curves:
+            curves = [fc for layer in act.layers for strip in layer.strips for bag in strip.channelbags for fc in bag.fcurves]
+        keys = [kp.co.x for fc in curves for kp in fc.keyframe_points]
+        f0, f1 = (int(math.floor(min(keys))), int(math.ceil(max(keys)))) if keys else (int(round(f)) for f in act.frame_range)
+        frames = []
+        for f in range(f0, f1 + 1):
+            # 🔴 액션이 키를 안 가진 뼈는 앞서 남은 자세를 그대로 쥔다(이호준 키 1개짜리 첫 클립이 둘째 클립 1프레임 자세로 구워졌다).
+            # 유니티에서 곡선 없는 뼈는 쉬는 자세 — 매 프레임 쉬는 자세로 되돌린 뒤 평가한다.
+            for pb in arm.pose.bones:
+                pb.matrix_basis = Matrix.Identity(4)
+            bpy.context.scene.frame_set(f)
+            world = {pb.name: arm.matrix_world @ pb.matrix for pb in arm.pose.bones}
+            world.update({o.name: o.matrix_world.copy() for o in empties})
+            frames.append(world)
+        # 블렌더 FBX 가져오기는 액션 이름 앞에 「아마추어|」를 붙인다(강재규: 원본 테이크 「skeleton #1|skeleton #1|skeleton #1|All…」 →
+        # 액션 「skeleton #1|」 + 그것). 🔴 예전엔 아마추어 이름과 같은 칸을 전부 떼 「skeleton #1|All…」로 바뀌었다. glTF 액션 이름은 원본 그대로.
+        take = act.name[len(arm_name) + 1:] if not from_gltf and act.name.startswith(arm_name + "|") else act.name
+        clips.append((take, f0, frames))
+    return clips
+
+
+def _normalized(M):
+    loc, q, _ = M.decompose()
+    return Matrix.Translation(loc) @ q.to_matrix().to_4x4()
+
+
+def original(cfg):
+    """덮어쓰기 전 원본 파일 — git 커밋 rev에서 임시 폴더로 꺼낸다(Textures/는 유닛 폴더를 링크해 텍스처 경로가 풀리게)."""
+    data = subprocess.run(["git", "-C", ROOT, "show", f"{cfg['rev']}:{cfg['path']}"], capture_output=True, check=True).stdout
+    tmp = tempfile.mkdtemp(prefix="fix_unit_")
+    out = os.path.join(tmp, os.path.basename(cfg["path"]))
+    with open(out, "wb") as f:
+        f.write(data)
+    tex = os.path.join(ROOT, os.path.dirname(cfg["path"]), "Textures")
+    if os.path.isdir(tex):
+        os.symlink(tex, os.path.join(tmp, "Textures"))
+    return out
+
+
+def fix(name, cfg, out_dir=None, save_blend=False):
+    if cfg.get("hold"):
+        return {"이름": name, "보류": cfg["hold"]}
+    dst_path = os.path.join(ROOT, cfg["path"])
+    orig = original(cfg) if cfg.get("rev") else dst_path
+    src = cfg.get("source", orig)
+    recipe = cfg.get("recipe") if "source" in cfg else None
+    report = {"이름": name, "원본": f"{cfg.get('rev', '작업 파일')} {os.path.basename(src)}"}
+    ref = reference(orig) if recipe is not None else None
+    guess = cfg.get("gltf_guess_bind", True)
+    load(src, anim=False, guess_bind=guess)
+    if recipe is not None:
+        apply_recipe(recipe, ref, report)
+    scene = bpy.context.scene
+    arm = main_armature()
+    arm_name = arm.name if arm else None
+    clips = []
+    if arm is not None and cfg.get("anim"):
+        clips = sample_clips(src, arm_name, recipe, ref, guess)
+        load(src, anim=False, guess_bind=guess)
+        if recipe is not None:
+            apply_recipe(recipe, ref)
+        arm = bpy.data.objects[arm_name]
+    scene = bpy.context.scene
+    if recipe is not None:
+        report["텍스처"] = relink_textures(ref["textures"], os.path.join(os.path.dirname(dst_path), "Textures"))
+    meshes = [o for o in scene.objects if o.type == "MESH"]
+    mats_before = sorted({s.material.name for o in meshes for s in o.material_slots if s.material})
+
+    # ── 기본 자세 그대로 붙잡기
+    if arm is not None:
+        arm.data.pose_position = "POSE"
+        bpy.context.view_layer.update()
+        posed = max(max(abs(a - b) for ra, rb in zip(pb.matrix_basis, Matrix.Identity(4)) for a, b in zip(ra, rb)) for pb in arm.pose.bones)
+        report["기본 자세≠쉬는 자세"] = round(posed, 4)
+        if posed > 1e-4:
+            dg = bpy.context.evaluated_depsgraph_get()
+            for m in meshes:
+                if skinned_to(m) != arm:
+                    continue
+                assert not m.data.shape_keys, f"{m.name}: 모양 키가 있는데 기본 자세가 쉬는 자세와 달라 굳힐 수 없다"
+                baked = bpy.data.meshes.new_from_object(m.evaluated_get(dg), preserve_all_data_layers=True, depsgraph=dg)
+                m.data = baked
+        # 🛡 뼈와 메시가 같은 자리에 있는지
+        mp = [o.matrix_world @ v.co for o in meshes for v in o.data.vertices]
+        bp = [arm.matrix_world @ pb.head for pb in arm.pose.bones]
+        mlo = Vector((min(p.x for p in mp), min(p.y for p in mp), min(p.z for p in mp)))
+        mhi = Vector((max(p.x for p in mp), max(p.y for p in mp), max(p.z for p in mp)))
+        blo = Vector((min(p.x for p in bp), min(p.y for p in bp), min(p.z for p in bp)))
+        bhi = Vector((max(p.x for p in bp), max(p.y for p in bp), max(p.z for p in bp)))
+        ext = max(mhi - mlo)
+        spill = max(max(mlo - blo), max(bhi - mhi), 0.0) / max(ext, 1e-12)
+        report["뼈 넘침"] = round(spill, 3)
+        if spill > 0.5 or max(bhi - blo) < 0.2 * ext:
+            raise RuntimeError(f"{name}: 뼈({tuple(round(c, 3) for c in blo)}~{tuple(round(c, 3) for c in bhi)})와 메시"
+                               f"({tuple(round(c, 3) for c in mlo)}~{tuple(round(c, 3) for c in mhi)})가 어긋난다 — 쓰지 않음")
+    mesh_world = {m.name: m.matrix_world.copy() for m in meshes}
+
+    # ── G = 이동 × 배율 × 방향
+    R = orientation(cfg, arm, report)
+    pts = [R @ (mesh_world[o.name] @ v.co) for o in meshes for v in o.data.vertices]
+    lo = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
+    hi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
+    axis, target = cfg["size"]
+    current = (hi - lo).z if axis == "height" else max((hi - lo).x, (hi - lo).y)
+    s = target / max(current, 1e-12)
+    cx, cy = (lo.x + hi.x) / 2, (lo.y + hi.y) / 2
+    if cfg["kind"] == "human" and arm is not None:
+        hips = pick(arm, cfg.get("hips"), HIPS)
+        if hips is not None:
+            h = R @ pose_head(arm, hips)
+            cx, cy = h.x, h.y
+    G = Matrix.Scale(s, 4) @ Matrix.Translation((-cx, -cy, -lo.z)) @ R.to_4x4()
+
+    # ── 새 아마추어(기본 자세 = 새 쉬는 자세)
+    new_arm, rigid, root_bone, revived = None, {}, None, set()
+    if arm is not None:
+        W = arm.matrix_world
+        G3 = G.to_3x3()
+        bones = [(pb.name, G @ (W @ pb.head), G @ (W @ pb.tail), (G3 @ (W @ pb.matrix).to_3x3()).normalized(),
+                  pb.parent.name if pb.parent else None, pb.bone.use_connect) for pb in arm.pose.bones]
+        # 뼈대 속 Null(빈 오브젝트) → 뼈. 머리 = 세계 위치, 꼬리 = 자식 쪽(없으면 부모 방향으로 짧게)
+        extra = skeleton_empties(arm, ref["empties"] if ref is not None else None)
+        extra_names = {o.name for o in extra}
+        clash = extra_names & {b[0] for b in bones}
+        assert not clash, f"{name}: 빈 오브젝트와 뼈 이름이 겹친다: {sorted(clash)[:5]}"
+        bones += [(o.name, G @ o.matrix_world.translation, None, (G3 @ o.matrix_world.to_3x3()).normalized(),
+                   empty_parent(o, arm, extra_names), False) for o in extra]
+        heads = {b[0]: b[1] for b in bones}
+        kids = {}
+        for b in bones:
+            if b[4]:
+                kids.setdefault(b[4], []).append(b[0])
+        tails = {b[0]: b[2] for b in bones if b[2] is not None}
+        for bname, head, tail, rot, parent, connect in bones:
+            if tail is not None:
+                continue
+            child = next((heads[c] for c in kids.get(bname, ()) if (heads[c] - head).length > 1e-6), None)
+            if child is not None:
+                tails[bname] = child
+            elif parent in tails and (tails[parent] - heads[parent]).length > 1e-9:
+                d = tails[parent] - heads[parent]
+                tails[bname] = head + d.normalized() * max(0.3 * d.length, 0.01)
+            else:
+                tails[bname] = head + rot.col[1] * 0.05
+        bones = [(n, h, tails[n], r, p, c) for n, h, t, r, p, c in bones]
+        revived = extra_names
+        report["Null→뼈"] = len(extra)
+        if ref is not None and ref["empties"] - extra_names:
+            report["기준에만 있는 Null"] = sorted(ref["empties"] - extra_names)
+        rigid = {m.name: (bone_above(m, arm, extra_names) if skinned_to(m) is None else None) for m in meshes}
+        root_bone = next(b.name for b in arm.data.bones if b.parent is None)
+        data = bpy.data.armatures.new(arm.data.name)
+        bpy.data.objects.remove(arm, do_unlink=True)
+        new_arm = bpy.data.objects.new(arm_name, data)
+        scene.collection.objects.link(new_arm)
+        for o in scene.objects:
+            o.select_set(o == new_arm)
+        bpy.context.view_layer.objects.active = new_arm
+        bpy.ops.object.mode_set(mode="EDIT")
+        for bname, head, tail, rot, parent, connect in bones:
+            eb = data.edit_bones.new(bname)
+            eb.head = head
+            eb.tail = tail if (tail - head).length > 1e-9 else head + rot.col[1] * 1e-3
+            eb.align_roll(rot.col[2])
+        for bname, head, tail, rot, parent, connect in bones:
+            if parent:
+                eb = data.edit_bones[bname]
+                eb.parent = data.edit_bones[parent]
+                eb.use_connect = connect and (data.edit_bones[parent].tail - eb.head).length < 1e-6
+        bpy.ops.object.mode_set(mode="OBJECT")
+        report["뼈"] = len(data.bones)
+
+    # ── 메시: 세계로 굽고 새 아마추어에만 스킨
+    for m in meshes:
+        M = G @ mesh_world[m.name]
+        m.parent = None
+        if m.data.users > 1:
+            m.data = m.data.copy()
+        m.data.transform(M)
+        if M.determinant() < 0:
+            m.data.flip_normals()
+        m.matrix_parent_inverse = Matrix.Identity(4)
+        m.matrix_basis = Matrix.Identity(4)
+        if new_arm is not None:
+            for mod in [x for x in m.modifiers if x.type == "ARMATURE"]:
+                m.modifiers.remove(mod)
+            bone = rigid.get(m.name)
+            if bone is not None or not m.vertex_groups:
+                bone = bone or root_bone
+                group = m.vertex_groups.get(bone) or m.vertex_groups.new(name=bone)
+                group.add(list(range(len(m.data.vertices))), 1.0, "REPLACE")
+            mod = m.modifiers.new("Armature", "ARMATURE")
+            mod.object = new_arm
+            m.parent = new_arm
+            m.matrix_parent_inverse = Matrix.Identity(4)
+            m.matrix_basis = Matrix.Identity(4)
+    removed = [o.name for o in scene.objects if o.type != "MESH" and o != new_arm and o.name not in revived]
+    for o in [o for o in scene.objects if o.type != "MESH" and o != new_arm]:
+        bpy.data.objects.remove(o, do_unlink=True)
+    report["지운 노드"] = len(removed)
+    for act in list(bpy.data.actions):
+        bpy.data.actions.remove(act)
+
+    # ── 클립 다시 굽기
+    if new_arm is not None and clips:
+        rest = {b.name: b.matrix_local.copy() for b in new_arm.data.bones}
+        parent = {b.name: (b.parent.name if b.parent else None) for b in new_arm.data.bones}
+        order = []
+        seen = set()
+
+        def visit(b):
+            if b.name in seen:
+                return
+            if b.parent:
+                visit(b.parent)
+            seen.add(b.name)
+            order.append(b.name)
+
+        for b in new_arm.data.bones:
+            visit(b)
+        new_arm.animation_data_create()
+        for pb in new_arm.pose.bones:
+            pb.rotation_mode = "QUATERNION"
+        for take, f0, frames in clips:
+            act = bpy.data.actions.new(take)
+            assert act.name == take, f"{name}: 액션 이름이 잘렸다/바뀌었다: {take!r} → {act.name!r}"
+            act.use_fake_user = True                                    # --blend 진단 파일에 클립이 다 남게(사용자 0이면 저장 때 빠진다)
+            new_arm.animation_data.action = act
+            for fi, world in enumerate(frames):
+                pose = {}
+                for bname in order:
+                    P = _normalized(G @ world[bname])
+                    pose[bname] = P
+                    p = parent[bname]
+                    local = rest[p].inverted() @ rest[bname] if p else rest[bname]
+                    basis = local.inverted() @ ((pose[p].inverted() @ P) if p else P)
+                    bl, bq, _ = basis.decompose()
+                    pb = new_arm.pose.bones[bname]
+                    pb.location, pb.rotation_quaternion = bl, bq
+                    pb.keyframe_insert("location", frame=f0 + fi)
+                    pb.keyframe_insert("rotation_quaternion", frame=f0 + fi)
+        report["클립"] = [c[0] for c in clips]
+
+    # ── 검사·내보내기
+    bpy.context.view_layer.update()
+    pts = [m.matrix_world @ v.co for m in meshes for v in m.data.vertices]
+    lo2 = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
+    hi2 = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
+    report["크기(m)"] = tuple(round(c, 3) for c in (hi2 - lo2))
+    report["최저 z"] = round(lo2.z, 4)
+    mats_after = sorted({sl.material.name for o in meshes for sl in o.material_slots if sl.material})
+    assert mats_after == mats_before, f"{name} 재질 이름이 바뀌었다: {set(mats_before) ^ set(mats_after)}"
+    dst = os.path.join(out_dir, os.path.basename(dst_path)) if out_dir else dst_path
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    if save_blend:
+        bpy.ops.wm.save_as_mainfile(filepath=os.path.splitext(dst)[0] + "_진단.blend", copy=True)
+    if dst.lower().endswith(".glb"):
+        bpy.ops.export_scene.gltf(filepath=dst, export_format="GLB", export_yup=True, use_selection=False, export_animations=False)
+    else:
+        import io_scene_fbx.export_fbx_bin as fbx_bin
+        name_of = fbx_bin.get_blenderID_name
+
+        def take_name(bid):                                             # (오브젝트, 액션) → 액션 이름만(원본 테이크 이름 유지)
+            if isinstance(bid, tuple) and len(bid) == 2 and isinstance(bid[1], bpy.types.Action):
+                return bid[1].name
+            return name_of(bid)
+
+        fbx_bin.get_blenderID_name = take_name
+        try:
+            bpy.ops.export_scene.fbx(filepath=dst, use_selection=False, object_types={"ARMATURE", "MESH"}, apply_unit_scale=True,
+                                     apply_scale_options="FBX_SCALE_UNITS", axis_forward="-Z", axis_up="Y", add_leaf_bones=False,
+                                     primary_bone_axis="Y", secondary_bone_axis="X", use_armature_deform_only=False,
+                                     mesh_smooth_type="FACE", path_mode="STRIP", embed_textures=False,
+                                     bake_anim=bool(clips), bake_anim_use_all_actions=True, bake_anim_use_nla_strips=False,
+                                     bake_anim_force_startend_keying=True, bake_anim_simplify_factor=0.0)
+        finally:
+            fbx_bin.get_blenderID_name = name_of
+    report["메시"] = len(meshes)
+    report["출력"] = dst
+    return report
+
+
+def main():
+    args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    out_dir, names, save_blend = None, [], False
+    it = iter(args)
+    for a in it:
+        if a == "--out":
+            out_dir = next(it)
+        elif a == "--blend":
+            save_blend = True
+        else:
+            names.append(a)
+    for name in names or list(UNITS):
+        r = fix(name, UNITS[name], out_dir, save_blend)
+        print("정리  " + "  ".join(f"{k} {v}" for k, v in r.items() if k != "출력"))
+
+
+if __name__ == "__main__":
+    main()
