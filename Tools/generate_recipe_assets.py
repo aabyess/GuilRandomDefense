@@ -15,7 +15,8 @@ import os, sys, uuid, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import recipes_data as D
 
-ROOT = "/Users/sang/Documents/GitHub/GuilRandomDefense"
+# 이 파일 위치(Tools/)의 한 단계 위가 프로젝트 루트 — 경로를 박아 두면 폴더를 옮길 때마다 깨진다(2026-09-13).
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UNITDATA_GUID   = "e1426f971d9174ed9b3e5519d787e74b"
 ITEMDATA_GUID   = "287e5f1f1efa421eab118d0dda3fdd4c"
 RECIPE_GUID     = "d9e360a1ab0e48608e0b08ef0e946ccf"

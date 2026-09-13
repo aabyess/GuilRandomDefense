@@ -16,7 +16,7 @@
 
 ## 2. 환경 (실측 확인됨)
 - Unity 6.0 LTS **6000.0.82f1**, Apple Silicon, Universal 3D (URP) 템플릿
-- 경로: `/Users/sang/Documents/GitHub/GuilRandomDefense`
+- 경로: `/Users/sang/GitHub/GuilRandomDefense` (2026-09-13 `~/Documents/GitHub`에서 옮김 — 문서 폴더는 macOS 권한 차단이 반복됐다)
 - git: `main`, remote `https://github.com/aabyess/GuilRandomDefense` (PRIVATE), 공식 Unity .gitignore 적용
 - `com.unity.ai.navigation` 2.0.14 설치됨 → NavMesh 바로 사용
 - **Input System** (`com.unity.inputsystem` 1.19.0) 기준 — 구 Input Manager 사용 금지
