@@ -145,6 +145,9 @@ public static class ClaudeCommands
                 return Lineup(parts[0], parts.Length > 1 ? parts[1] : "Assets/Prefabs/Generated",
                               parts.Length > 2 ? int.Parse(parts[2]) : 0, parts.Length > 3 ? int.Parse(parts[3]) : 40);
 
+            case "units":
+                return UnitLineup(parts[0], parts.Length > 1 ? int.Parse(parts[1]) : 0, parts.Length > 2 ? int.Parse(parts[2]) : 16);
+
             default:
                 return $"❌ 모르는 명령: {verb}";
         }
@@ -231,6 +234,80 @@ public static class ClaudeCommands
             float span = Mathf.Max(perRow, rows) * cell;
             string shot = Render(file, center + new Vector3(0f, span * 0.55f, -span * 0.85f), center, 50f, preview);
             return shot + $"\n   {folder} {start}번부터 {prefabs.Count}개(위에서 본 격자, 1행이 맨 뒤):\n" + table;
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(preview);
+        }
+    }
+
+    // 게임에서 보이는 모습 그대로: 생성된 Unit_ 프리팹만, 맵 생성기와 같은 방법(MapGenerator.PoseAsIdle)으로 Idle을 입혀
+    // **세우기 보정 없이** 앞에서 찍는다. 칸마다 실제 크기와 몸의 위쪽(골반→머리) 방향을 같이 적는다 — 누움·극소형을 숫자로도 가른다.
+    static string UnitLineup(string file, int start, int count)
+    {
+        List<GameObject> prefabs = AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Prefabs/Generated" })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .Where(p => Path.GetFileNameWithoutExtension(p).StartsWith("Unit_"))
+            .OrderBy(p => p, StringComparer.Ordinal)
+            .Select(AssetDatabase.LoadAssetAtPath<GameObject>)
+            .Where(p => p != null)
+            .Skip(start).Take(count).ToList();
+        if (prefabs.Count == 0) return $"❌ Unit_ 프리팹 없음({start}번부터)";
+
+        MethodInfo pose = typeof(MapGenerator).GetMethod("PoseAsIdle", BindingFlags.Static | BindingFlags.NonPublic);
+        MethodInfo measure = typeof(MapGenerator).GetMethod("TryMeasureFigure", BindingFlags.Static | BindingFlags.NonPublic);
+
+        Scene preview = EditorSceneManager.NewPreviewScene();
+        StringBuilder table = new StringBuilder();
+        try
+        {
+            GameObject sun = new GameObject("해");
+            SceneManager.MoveGameObjectToScene(sun, preview);
+            Light light = sun.AddComponent<Light>();
+            light.type = LightType.Directional;
+            light.intensity = 1.2f;
+            sun.transform.rotation = Quaternion.Euler(40f, -20f, 0f);
+
+            const int perRow = 8;
+            const float cell = 28f;
+            int rows = (prefabs.Count + perRow - 1) / perRow;
+            for (int i = 0; i < prefabs.Count; i++)
+            {
+                int row = i / perRow, column = i % perRow;
+                GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefabs[i], preview);
+                instance.transform.position = new Vector3(column * cell, 0f, row * cell);   // 1행이 맨 앞
+                pose?.Invoke(null, new object[] { instance });
+
+                string size = "크기 못 잼";
+                if (measure != null)
+                {
+                    object[] args = { instance, null };
+                    if ((bool)measure.Invoke(null, args))
+                    {
+                        Bounds b = (Bounds)args[1];
+                        size = $"가로 {b.size.x:F2} · 키 {b.size.y:F2} · 앞뒤 {b.size.z:F2} · 바닥 {b.min.y:F2}";
+                    }
+                }
+
+                string up = "뼈 없음";
+                Animator animator = instance.GetComponentInChildren<Animator>(true);
+                if (animator != null && animator.isHuman)
+                {
+                    Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+                    Transform head = animator.GetBoneTransform(HumanBodyBones.Head);
+                    if (hips != null && head != null)
+                    {
+                        Vector3 v = (head.position - hips.position).normalized;
+                        up = $"몸 위쪽 ({v.x:F2}, {v.y:F2}, {v.z:F2})" + (v.y > 0.8f ? " ✅" : v.y < 0.4f ? " 🔴 누움" : " 🟡 기울어짐");
+                    }
+                }
+                table.AppendLine($"   {row + 1}행 {column + 1}열 {prefabs[i].name}: {size} · {up}");
+            }
+
+            Vector3 center = new Vector3((perRow - 1) * cell * 0.5f, 8f, (rows - 1) * cell * 0.5f);
+            float span = perRow * cell;
+            string shot = Render(file, center + new Vector3(0f, span * 0.3f, -span * 0.95f), center, 45f, preview);
+            return shot + $"\n   Unit_ {start}번부터 {prefabs.Count}개(앞에서 봄, 1행이 맨 앞·1열이 왼쪽):\n" + table;
         }
         finally
         {
