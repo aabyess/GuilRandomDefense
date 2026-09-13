@@ -2736,7 +2736,8 @@ public static class MapGenerator
     // 원작처럼 바다를 건너는 유닛(비행·수상보행)만 닿는다.
     static readonly Vector2 OriginalSeaKingPoint = new Vector2(-8404.1f, -1619.3f);
     const float OriginalSeaKingFacing = 316.717f;   // WC3 각도: 동=0°, 반시계
-    const float SeaKingClearance = 190f;            // 몸길이 350의 절반 + 여유 — 이만큼 모든 섬과 떨어진다
+    const float SeaKingClearance = 100f;            // 몸길이 175(09-13 절반으로 줄임)의 절반 + 여유 — 이만큼 모든 섬과 떨어진다
+    const float SeaKingExtraWest = 120f;            // 사장님 09-13 「너무 붙어있다, 왼쪽으로 벌려」 — 섬에서 떨어뜨린 뒤 서쪽으로 더
     const float SeaSurfaceY = 0f;                   // BuildSea: 바다 상자 윗면. 해왕류 모델 원점이 수면이다
 
     static Vector3 SeaKingPosition()
@@ -2759,6 +2760,12 @@ public static class MapGenerator
         Vector2 outward = (point - block.center).normalized;
         for (int step = 0; step < 400 && TooCloseToIsland(point, SeaKingClearance); step++)
             point += outward * 2f;
+        point.x -= SeaKingExtraWest;
+
+        // 바다 판(±SeaSize/2) 안에 몸 전체가 남게 — 서쪽으로 민 만큼 가장자리를 넘지 않는지 막는다.
+        float limit = MapLayout.SeaSize * 0.5f - SeaKingClearance;
+        point.x = Mathf.Clamp(point.x, -limit, limit);
+        point.y = Mathf.Clamp(point.y, -limit, limit);
 
         return new Vector3(point.x, SeaSurfaceY, point.y);
     }
