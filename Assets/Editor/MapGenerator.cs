@@ -1712,44 +1712,21 @@ public static class MapGenerator
     // 이걸 넘으면 누워 있는 것이다 — 그 짧은 세로에 키를 맞추면 전체가 폭주한다.
     const float MaxFigureSpread = 3f;
 
-    // 실제로 그려지는 인형이 목표 크기의 몇 배까지면 봐줄 것인가 — 무기·팔 벌림·망토로 2배 가까이 되는 건 흔하다(양재모 무기 1.8배).
-    const float MaxRenderedOversize = 4f;
-
-    // 뼈를 거친 **실제 정점**으로 잰 월드 경계(SkinnedMeshRenderer.BakeMesh). TryMeasureFigure(메시 자산 경계)와 달리
-    // 스킨이 틀어진 변환본도 화면에 보이는 크기 그대로다. BakeMesh는 노드 배율을 빼고 주므로 lossyScale을 곱해 옮긴다
-    // (09-13 bakesize 실측: 양재모 노드 배율 6.17에서 구운 키 1.61 × 6.17 = 렌더러 경계 10).
-    static bool TryMeasureRendered(GameObject figure, out Bounds bounds)
-    {
-        bounds = default;
-        bool any = false;
-        Mesh baked = new Mesh();
-        try
-        {
-            foreach (SkinnedMeshRenderer skin in figure.GetComponentsInChildren<SkinnedMeshRenderer>(true))
-            {
-                if (skin.sharedMesh == null) continue;
-                skin.BakeMesh(baked, false);
-                Matrix4x4 toWorld = Matrix4x4.TRS(skin.transform.position, skin.transform.rotation, skin.transform.lossyScale);
-                foreach (Vector3 vertex in baked.vertices)
-                {
-                    Vector3 world = toWorld.MultiplyPoint3x4(vertex);
-                    if (!any) { bounds = new Bounds(world, Vector3.zero); any = true; }
-                    else bounds.Encapsulate(world);
-                }
-            }
-        }
-        finally
-        {
-            Object.DestroyImmediate(baked);
-        }
-        return any;
-    }
+    // 🔴 뼈와 메시가 어긋난 변환본 — 조합표·부스 인형으로 세우지 않고 색 큐브로 둔다(프리팹 이름에서 Unit_을 뗀 모델 이름).
+    //    2026-09-13 사장님 「조합판 이상한 게 크게 있다」: 안흔함_김수빈 인형 넷이 350×41×112 흰 덩어리로 표를 덮었다.
+    //    이 모델은 TryPlaceUnitModel이 믿는 메시 자산 경계와 실제 스킨 크기가 수백 배 달라 크기 맞추기가 폭주한다.
+    //    ⚠️ 모든 인형을 BakeMesh로 다시 재는 일반 검사를 먼저 넣었다가 **정상 유닛 수십 개를 큐브로 바꿔** 걷어냈다(edda60a8 되돌림) —
+    //       편집 중 스킨 크기 재기는 모델마다 기준이 달라 믿을 수 없다. 이름으로 막는다.
+    //    blender가 원본 glb로 다시 지은 파일이 들어오면 이 줄을 지운다.
+    static readonly string[] BrokenSkinDolls = { "안흔함_김수빈" };
 
     // 유닛 프리팹에서 보이는 부분만 떼어 세운다. 프리팹을 통째로 놓으면 조합표 위에
     // 진짜 유닛이 살아 움직이게 된다 — 이건 보여주기용 인형이라 부품을 전부 걷어낸다.
     static bool TryPlaceUnitModel(Transform parent, string name, Vector3 ground, UnitData unit, float height)
     {
         if (unit == null || unit.prefab == null) return false;
+        string brokenCheck = unit.prefab.name.StartsWith("Unit_") ? unit.prefab.name.Substring(5) : unit.prefab.name;
+        if (BrokenSkinDolls.Contains(brokenCheck)) return false;   // 색 큐브로 — 위 표 주석 참고
 
         GameObject figure = Object.Instantiate(unit.prefab, parent);
         figure.name = name;
@@ -1852,19 +1829,6 @@ public static class MapGenerator
         // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발을 바닥에 붙인다.
         if (TryMeasureFigure(figure, out bounds))
             figure.transform.position += Vector3.up * (ground.y - bounds.min.y);
-
-        // 🔴 뼈와 메시가 어긋난 변환본은 메시 자산 경계(위 맞추기가 믿는 값)와 **실제로 그려지는 스킨** 크기가 수백 배 다르다.
-        //    2026-09-13 사장님 「조합판 이상한 게 크게 있다」 — 안흔함_김수빈 인형 넷이 350×41×112 흰 덩어리로 표를 덮었다.
-        //    뼈를 거친 실제 정점으로 다시 재서 목표 크기의 몇 배를 넘으면 색 큐브로 둔다(덩어리가 표를 덮는 것보다 낫다).
-        float target = height * ArtBinder.FigureScaleFor(modelName);
-        if (TryMeasureRendered(figure, out Bounds rendered)
-            && Mathf.Max(rendered.size.x, rendered.size.y, rendered.size.z) > target * MaxRenderedOversize)
-        {
-            Debug.LogWarning($"[맵] {name}: 실제로 그려지는 크기 {rendered.size}가 목표 {target:F1}의 {MaxRenderedOversize}배를 넘습니다 — " +
-                             "뼈와 메시가 어긋난 모델로 보고 색 큐브로 둡니다(모델 파일을 다시 지어야 함).", figure);
-            Object.DestroyImmediate(figure);
-            return false;
-        }
 
         // 표를 보는 방향(위에서 남쪽을 향해)에서 얼굴이 보이게 돌린다.
         // 대입이 아니라 곱이다 — 앞 단계가 회전을 걸어 뒀다면 덮지 않는다.
