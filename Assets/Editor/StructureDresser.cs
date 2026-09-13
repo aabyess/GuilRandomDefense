@@ -230,6 +230,9 @@ public static class StructureDresser
         if (circle == null) return false;
 
         HideRenderer(disc);
+        // 빛으로 된 마법진이다 — 떠 있는 고리가 땅에 그림자를 떨어뜨리면 물체처럼 보인다(blender v3 렌더에서 확인).
+        foreach (Renderer renderer in circle.GetComponentsInChildren<Renderer>(true))
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         WireSpin(circle);
         if (disc.TryGetComponent(out InterludeGate gate))
             gate.SetVisuals(circle.GetComponentsInChildren<Renderer>(true));

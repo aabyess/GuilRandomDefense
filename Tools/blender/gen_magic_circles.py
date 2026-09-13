@@ -1,21 +1,27 @@
-"""포탈 마법진 3종 — 돌 아치 포탈을 대체하는 바닥 마법진(PM 2026-09-13, 사장님 「밑에 마법진 같은 걸로 이동」). blender 세션.
-원작 WC3 Circle of Power(바닥 룬 원) 계열, 사실적 C 화풍: 바닥에 새긴 돌 홈 + 홈 안에서 빛나는 룬.
+"""포탈 마법진 3종 v3 — 순수한 빛의 다층 마법진(PM 2026-09-13, 사장님 「장송의 프리렌 느낌 나게, 디테일하게」). blender 세션.
+🔴 저작권: 특정 작품의 마법진을 옮기지 않는다 — 가는 빛 선 여러 겹·문자 띠·다각별·위성 원·떠 있는 층이라는 문법만 빌려 문양은 새로 짠다.
+v2(돌판에 굵은 선)는 방향이 달라 폐기.
 
 화면 없이(정본):  blender --background --factory-startup --python gen_magic_circles.py [-- 포탈_마법진_스토리 ...]
 사장님 창(보여 주기만): import gen_magic_circles as mc; mc.build_in_window(이름, 컬렉션, 텍스처 폴더, 위치)
 
-규격(PM)
-| 파일 | 색(발광) | 쓰임 |
-| 포탈_마법진_스토리 | 호박 1.0,0.72,0.35 | 레인→스토리존 |
-| 포탈_마법진_뽑기   | 보라 0.72,0.45,1.0 | 뽑기 섬 |
-| 포탈_마법진_복귀   | 청록 0.35,0.95,0.85 | 스토리존→레인(한 겹 더 화려) |
-- 지름 10(게임 단위) — 유니티가 판정 원판 지름(6.5·9·15·24)에 맞춰 배율. 원점 바닥 가운데, 정면 없음.
-- 최상위 = 빈 오브젝트(파일 이름). 자식: 마법진_바닥 · 마법진_고리_밖_회전_시계 · 마법진_고리_안_회전_반시계 · 마법진_중심 · 빛_자리_01(가운데 높이 1.0).
-- 높이: 바닥 돌판은 z 0.03 한 장(0~0.08), 발광 층은 그 위 0.02(0.05·0.055·0.06으로 살짝 엇갈려 z-fighting 방지), 전체 ≤ 0.15.
-- 재질: 바닥 `포탈_마법진_<색>_바닥_잎카드`(가장자리 알파로 흙에 스며듦), 발광 셋 `포탈_마법진_<색>_발광_잎카드`(선에만 알파·발광).
-- 삼각형 1,000 이하 — 문양은 메시가 아니라 텍스처(2048). UV는 위에서 본 평면 투영(u = x/10+½) — 네 메시가 한 장의 원을 나눠 쓴다.
-- 🔸 도는 고리와 돌 홈이 어긋나지 않게: 도는 두 고리의 룬·별은 돌에 판 **둥근 홈 띠** 안에서 돌고, 돌에 모양 그대로 새긴 건 안 도는 가운데 문양뿐.
-좌표는 게임 단위로 짓고 1/11.4로 줄여 m(FBX global_scale 11.4). 문양 텍스처는 numpy로 직접 그림(가상의 룬 — 실제 언어 글자 아님).
+규격(PM, 유니티 코드와 약속)
+| 파일 | 색 | 쓰임 |
+| 포탈_마법진_스토리 | 흰 금빛 | 레인→스토리존 |
+| 포탈_마법진_뽑기   | 흰 보랏빛 | 뽑기 섬(지름 6.5로 작게 수십 개) |
+| 포탈_마법진_복귀   | 흰 하늘빛 | 스토리존→레인(가장 화려) |
+- 지름 10(게임 단위), 원점 바닥 가운데. 최상위 = 빈 오브젝트(파일 이름), 자식 메시는 피벗 (0,0,0):
+    마법진_바닥_문자띠_회전_시계        z 0.03  r 3.55~5.00  문자 띠 2줄(복귀 3줄)·이중 테두리·눈금·마디 원        텍스처 4096
+    마법진_바닥_기하_회전_반시계        z 0.03  r 0~3.55     8각별·7각별 겹침·교차 호·기준선·위성 원(안에 작은 문양) 텍스처 2048
+    마법진_중심                        z 0.05  r 0~1.00     안 도는 가운데 문양                                   텍스처 1024
+    마법진_떠있는고리_아래_회전_반시계  z 0.35  r 2.95~4.25  문자 띠·이중 테두리·마디                             텍스처 4096
+    마법진_떠있는고리_위_회전_시계      z 0.80  r 1.95~2.85  작은 문자·위성 점·눈금                               텍스처 2048
+    빛_자리_01                          (0, 0, 1.0)
+- 재질 `포탈_마법진_<색>_<층>_발광_잎카드`(알파 컷 + 발광). 유니티 임포터는 알파 컷만 — 부드러운 번짐 대신 선 옆에 더 넓고
+  어두운 색 발광 띠(halo)를 한 번 더 그린다. 선 가운데는 거의 흰빛, 번짐 띠에만 색이 확실히.
+- 🔸 게임 거리(마법진 폭 화면 약 120px): 머리카락 선은 사라져도 되지만 원·별·문자 띠 윤곽은 읽혀야 한다 → 윤곽 요소만 굵은 halo를 준다.
+- 삼각형 파일당 1,000 이하, 전체 높이 ≤ 1.2. 층마다 UV = 위에서 본 평면 투영(그 층 바깥 반지름에 맞춤).
+좌표는 게임 단위로 짓고 1/11.4로 줄여 m(FBX global_scale 11.4). 문양은 numpy로 그린다.
 """
 import math
 import os
@@ -30,26 +36,30 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 UNITS = 11.4
 OUT = os.path.join(HERE, "..", "..", "Assets", "Art", "Structures")
 RADIUS = 5.0
-TEX = 2048
-FLOOR_Z, GLOW_Z = 0.03, (0.05, 0.055, 0.06)            # 바닥 · 밖 고리 · 안 고리 · 가운데(아래 BANDS 순서)
 TRI_LIMIT = 1000
-# 반지름은 원판 반지름(5) = 1로 정규화. 메시 띠: 밖 고리 0.69~0.99 · 안 고리 0.30~0.69 · 가운데 0~0.30
-BANDS = {"밖": (0.69, 0.99), "안": (0.30, 0.69), "중심": (0.0, 0.30)}
-VARIANTS = {
-    "포탈_마법진_스토리": dict(color_key="호박", glow=(1.0, 0.72, 0.35), runes=24, star=(6, 2), seed=11, extra=False, emblem="crescent"),
-    "포탈_마법진_뽑기": dict(color_key="보라", glow=(0.72, 0.45, 1.0), runes=30, star=(7, 3), seed=23, extra=False, emblem="diamond"),
-    "포탈_마법진_복귀": dict(color_key="청록", glow=(0.35, 0.95, 0.85), runes=36, star=(8, 3), seed=37, extra=True, emblem="spiral"),
-}
-CHILDREN = ("마법진_바닥", "마법진_고리_밖_회전_시계", "마법진_고리_안_회전_반시계", "마법진_중심")
+HEIGHT_LIMIT = 1.2
 SOCKET = ("빛_자리_01", (0.0, 0.0, 1.0))
-
-
-# ──────────────────────────────────────────────────────────── 그리기 도구(정규화 좌표 X,Y ∈ [−1,1], 한 픽셀 = 2/TEX)
-
-def _grid(n):
-    c = (np.arange(n) + 0.5) / n * 2.0 - 1.0
-    X, Y = np.meshgrid(c, c)
-    return X, Y, np.hypot(X, Y), np.arctan2(Y, X)
+# 층: 자식 이름 → (재질 꼬리, z, 안 반지름, 바깥 반지름, 조각 수, 고리 수, 텍스처 크기)
+LAYERS = {
+    "마법진_바닥_문자띠_회전_시계": ("문자띠", 0.03, 3.55, 5.00, 64, 1, 4096),
+    "마법진_바닥_기하_회전_반시계": ("기하", 0.03, 0.00, 3.55, 48, 2, 2048),
+    "마법진_중심": ("중심", 0.05, 0.00, 1.00, 32, 1, 1024),
+    "마법진_떠있는고리_아래_회전_반시계": ("고리아래", 0.35, 2.95, 4.25, 64, 1, 4096),
+    "마법진_떠있는고리_위_회전_시계": ("고리위", 0.80, 1.95, 2.85, 48, 1, 2048),
+}
+VARIANTS = {
+    "포탈_마법진_스토리": dict(color_key="금빛", tint=(1.00, 0.78, 0.40), seed=11, sats=6, bands=2, glyphs=(132, 96, 0), ring_glyphs=84,
+                           emblem="eye", level=0),
+    "포탈_마법진_뽑기": dict(color_key="보랏빛", tint=(0.76, 0.52, 1.00), seed=23, sats=7, bands=2, glyphs=(140, 100, 0), ring_glyphs=90,
+                          emblem="squares", level=1),
+    "포탈_마법진_복귀": dict(color_key="하늘빛", tint=(0.50, 0.80, 1.00), seed=37, sats=8, bands=3, glyphs=(150, 108, 72), ring_glyphs=100,
+                          emblem="spiral", level=2),
+}
+# 선 굵기(게임 단위). 머리카락 HAIR는 가까이서만, 윤곽 MAIN + 번짐 HALO는 멀리서도 남는다.
+HAIR, MAIN, GLYPH = 0.010, 0.026, 0.013
+# 🔴 1차(0.15·0.030·0.034, 번짐 색 = 색×0.58)는 가까이서 번짐 띠가 굵은 파스텔 관으로 보여 「굵은 네온」으로 돌아갔다 —
+#    폭을 줄이고 번짐 색을 어둡고 짙게. 0.11도 게임 거리(폭 120px)에서 윤곽 한 픽셀 남짓이라 원·별은 읽힌다.
+HALO_MAIN, HALO_HAIR, HALO_GLYPH = 0.11, 0.022, 0.022
 
 
 def _smooth(e0, e1, x):
@@ -57,250 +67,279 @@ def _smooth(e0, e1, x):
     return t * t * (3.0 - 2.0 * t)
 
 
-def _cover(dist, half, px):
-    """거리장 → 덮임(0~1), 가장자리 한 픽셀 부드럽게."""
-    return _smooth(half + px, half - px, dist)
+class Layer:
+    """반지름 R 정사각 캔버스(게임 단위 좌표). core = 흰 가운데 선, halo = 색 번짐 띠."""
+
+    def __init__(self, radius, n):
+        self.R, self.n = radius, n
+        self.px = 2.0 * radius / n
+        c = ((np.arange(n, dtype=np.float32) + 0.5) * self.px - radius)
+        self.xs = c
+        self.rad = np.hypot(c[None, :], c[:, None]).astype(np.float32)
+        self.core = np.zeros((n, n), dtype=np.float32)
+        self.halo = np.zeros((n, n), dtype=np.float32)
+
+    def _put(self, sel, dist, width, halo):
+        if width:
+            np.maximum(self.core[sel], _smooth(width / 2 + self.px, width / 2 - self.px, dist), out=self.core[sel])
+        if halo:
+            np.maximum(self.halo[sel], _smooth(halo / 2 + self.px, halo / 2 - self.px, dist), out=self.halo[sel])
+
+    def ring(self, r0, width=HAIR, halo=HALO_HAIR):
+        pad = max(width, halo) / 2 + 2 * self.px
+        lo, hi = max(r0 - pad, 0.0), r0 + pad
+        rows = np.nonzero((np.abs(self.xs) <= hi))[0]
+        if len(rows) == 0:
+            return
+        sel = (slice(rows[0], rows[-1] + 1), slice(rows[0], rows[-1] + 1))
+        d = np.abs(self.rad[sel] - r0)
+        self._put(sel, d, width, halo)
+
+    def polyline(self, pts, width=HAIR, halo=HALO_HAIR, closed=False):
+        pts = np.asarray(pts, dtype=np.float32)
+        if closed:
+            pts = np.vstack([pts, pts[:1]])
+        pad = max(width, halo) / 2 + 2 * self.px
+        x0, y0 = pts.min(0) - pad
+        x1, y1 = pts.max(0) + pad
+        c0 = max(int((x0 + self.R) / self.px), 0)
+        c1 = min(int((x1 + self.R) / self.px) + 1, self.n)
+        r0 = max(int((y0 + self.R) / self.px), 0)
+        r1 = min(int((y1 + self.R) / self.px) + 1, self.n)
+        if c1 <= c0 or r1 <= r0:
+            return
+        sel = (slice(r0, r1), slice(c0, c1))
+        X = self.xs[c0:c1][None, :]
+        Y = self.xs[r0:r1][:, None]
+        d = np.full((r1 - r0, c1 - c0), 1e9, dtype=np.float32)
+        a, b = pts[:-1], pts[1:]
+        for (ax, ay), (bx, by) in zip(a, b):
+            dx, dy = bx - ax, by - ay
+            L2 = max(dx * dx + dy * dy, 1e-12)
+            t = np.clip(((X - ax) * dx + (Y - ay) * dy) / L2, 0.0, 1.0)
+            np.minimum(d, np.hypot(X - (ax + t * dx), Y - (ay + t * dy)), out=d)
+        self._put(sel, d, width, halo)
+
+    def circle(self, cx, cy, r, width=HAIR, halo=HALO_HAIR, steps=None):
+        steps = steps or max(12, int(r * 90))
+        th = np.linspace(0, math.tau, steps + 1)
+        self.polyline(np.stack([cx + r * np.cos(th), cy + r * np.sin(th)], 1), width, halo)
+
+    def dot(self, x, y, r, halo=HALO_HAIR):
+        self.polyline([(x, y), (x, y)], 2 * r, halo)
+
+    def rgba(self, tint):
+        tint = np.asarray(tint, dtype=np.float32)
+        core_col = np.float32(0.80) + np.float32(0.20) * tint             # 가운데는 거의 흰빛에 색 기운만
+        halo_col = tint ** np.float32(1.5) * np.float32(0.5)                # 번짐은 어둡고 채도를 올려 색이 확실히
+        core = self.core[..., None]
+        col = halo_col[None, None, :] * (1 - core) + core_col[None, None, :] * core
+        alpha = np.maximum(self.core, self.halo)
+        return np.dstack([col, alpha]).astype(np.float32)
 
 
-def _seg_dist(X, Y, a, b):
-    ax, ay = a
-    bx, by = b
-    dx, dy = bx - ax, by - ay
-    L2 = max(dx * dx + dy * dy, 1e-12)
-    t = np.clip(((X - ax) * dx + (Y - ay) * dy) / L2, 0.0, 1.0)
-    return np.hypot(X - (ax + t * dx), Y - (ay + t * dy))
+# ──────────────────────────────────────────────────────────── 문양 조각
+
+def _bez(p0, p1, p2, n=9):
+    t = np.linspace(0, 1, n)[:, None]
+    return (1 - t) ** 2 * np.asarray(p0) + 2 * (1 - t) * t * np.asarray(p1) + t * t * np.asarray(p2)
 
 
-def _blur(a, radius):
-    """상자 흐림 세 번(≈가우스) — 누적합."""
-    out = a
-    for _ in range(3):
-        for axis in (0, 1):
-            c = np.cumsum(np.pad(out, [(radius + 1, radius)] if False else [((radius + 1, radius) if ax == axis else (0, 0)) for ax in (0, 1)], mode="edge"), axis=axis)
-            hi = np.take(c, np.arange(2 * radius + 1, c.shape[axis]), axis=axis)
-            lo = np.take(c, np.arange(0, c.shape[axis] - 2 * radius - 1), axis=axis)
-            out = (hi - lo) / (2 * radius + 1)
-    return out
+def glyph(rng):
+    """가상의 필기체 한 글자(글자 칸 u∈[−½,½], v∈[−½,½]) — 휜 줄기 + 갈고리·곡선 가지 1~2 + 가끔 작은 고리·점. 실제 문자 아님."""
+    strokes, dots = [], []
+    u0 = rng.uniform(-0.18, 0.18)
+    lean = rng.uniform(-0.25, 0.25)
+    strokes.append(_bez((u0 - lean * 0.5, -0.5), (u0 + rng.uniform(-0.35, 0.35), 0.0), (u0 + lean * 0.5, 0.5)))
+    for _ in range(rng.integers(1, 3)):
+        v = rng.uniform(-0.35, 0.35)
+        side = rng.choice((-1.0, 1.0))
+        strokes.append(_bez((u0, v), (u0 + side * 0.45, v + rng.uniform(-0.4, 0.4)), (u0 + side * rng.uniform(0.15, 0.45), v + rng.uniform(-0.45, 0.45))))
+    if rng.random() < 0.35:
+        cv_ = rng.choice((-0.42, 0.42))
+        th = np.linspace(0, math.tau, 13)
+        strokes.append(np.stack([u0 + 0.12 * np.cos(th), cv_ + 0.1 * np.sin(th)], 1))
+    if rng.random() < 0.45:
+        dots.append((u0 + rng.uniform(-0.3, 0.3), rng.choice((-0.62, 0.62))))
+    return strokes, dots
 
 
-def _fbm(n, rng, base=6, octaves=6):
-    out = np.zeros((n, n))
-    amp, total = 1.0, 0.0
-    for o in range(octaves):
-        k = base * 2 ** o
-        g = rng.random((k + 1, k + 1))
-        idx = np.linspace(0, k, n)
-        i0 = np.floor(idx).astype(int).clip(0, k - 1)
-        f = idx - i0
-        f = f * f * (3 - 2 * f)
-        row = g[i0] * (1 - f)[:, None] + g[i0 + 1] * f[:, None]
-        layer = row[:, i0] * (1 - f)[None, :] + row[:, i0 + 1] * f[None, :]
-        out += amp * layer
-        total += amp
-        amp *= 0.5
-    return out / total
-
-
-class Canvas:
-    """덮임을 모아 둔다: glow(빛나는 선), groove(돌에 판 홈), rng로 가상의 룬."""
-
-    def __init__(self, n=TEX):
-        self.n = n
-        self.px = 2.0 / n
-        self.X, self.Y, self.R, self.T = _grid(n)
-        self.glow = np.zeros((n, n))
-        self.groove = np.zeros((n, n))
-        self.channels = np.zeros((n, n))
-
-    def ring(self, r0, width, glow=True, groove=True, extra_groove=0.012):
-        d = np.abs(self.R - r0)
-        if glow:
-            self.glow = np.maximum(self.glow, _cover(d, width / 2, self.px))
-        if groove:
-            self.groove = np.maximum(self.groove, _cover(d, width / 2 + extra_groove, self.px * 2))
-
-    def channel(self, r0, r1, depth=0.75):
-        """도는 고리가 들어가는 둥근 홈 띠 — 테두리는 비스듬히."""
-        inside = _smooth(r0 - 0.006, r0 + 0.006, self.R) * _smooth(r1 + 0.006, r1 - 0.006, self.R)
-        self.groove = np.maximum(self.groove, depth * inside)
-        self.channels = np.maximum(self.channels, inside)
-
-    def segments(self, segs, width, glow=True, groove=True, extra_groove=0.012, box=None):
-        if box is None:
-            sel = (slice(None), slice(None))
-        else:
-            x0, x1, y0, y1 = box
-            c0 = max(int((x0 + 1) / self.px) - 4, 0)
-            c1 = min(int((x1 + 1) / self.px) + 4, self.n)
-            r0 = max(int((y0 + 1) / self.px) - 4, 0)
-            r1 = min(int((y1 + 1) / self.px) + 4, self.n)
-            if c1 <= c0 or r1 <= r0:
-                return
-            sel = (slice(r0, r1), slice(c0, c1))
-        X, Y = self.X[sel], self.Y[sel]
-        d = np.full(X.shape, 9.0)
-        for a, b in segs:
-            d = np.minimum(d, _seg_dist(X, Y, a, b))
-        if glow:
-            self.glow[sel] = np.maximum(self.glow[sel], _cover(d, width / 2, self.px))
-        if groove:
-            self.groove[sel] = np.maximum(self.groove[sel], _cover(d, width / 2 + extra_groove, self.px * 2))
-
-    def dot(self, x, y, radius, glow=True, groove=True):
-        box = (x - radius - 0.02, x + radius + 0.02, y - radius - 0.02, y + radius + 0.02)
-        self.segments([((x, y), (x, y))], 2 * radius, glow, groove, box=box)
-
-    def arc(self, cx, cy, r, a0, a1, width, steps=24, **kw):
-        pts = [(cx + r * math.cos(a0 + (a1 - a0) * i / steps), cy + r * math.sin(a0 + (a1 - a0) * i / steps)) for i in range(steps + 1)]
-        self.segments(list(zip(pts, pts[1:])), width, box=(cx - r - 0.02, cx + r + 0.02, cy - r - 0.02, cy + r + 0.02), **kw)
-
-
-def _rune_strokes(rng):
-    """가상의 룬 한 글자 — 3×5 기준점 격자에서 세로 줄기 하나 + 가지 2~4개(대각·갈고리·짧은 가로), 가끔 점 하나."""
-    cols, rows = (-0.5, 0.0, 0.5), (-1.0, -0.5, 0.0, 0.5, 1.0)
-    spine_x = rng.choice(cols)
-    strokes = [((spine_x, -1.0), (spine_x, 1.0))]
-    for _ in range(rng.integers(2, 5)):
-        y0 = float(rng.choice(rows))
-        x1 = float(rng.choice([c for c in cols if c != spine_x]))
-        y1 = float(np.clip(y0 + rng.choice([-1.0, -0.5, 0.0, 0.5, 1.0]), -1.0, 1.0))
-        strokes.append(((spine_x, y0), (x1, y1)))
-    dot = (float(rng.choice(cols)), float(rng.choice((-1.35, 1.35)))) if rng.random() < 0.35 else None
-    return strokes, dot
-
-
-def draw_runes(cv, r_mid, height, count, seed, width):
+def text_band(layer, r_mid, height, count, seed, inward=False, width=GLYPH):
     rng = np.random.default_rng(seed)
     step = math.tau / count
+    gw = min(height * 0.55, r_mid * step * 0.8)
     for i in range(count):
         th = i * step
-        strokes, dot = _rune_strokes(rng)
-        radial = (math.cos(th), math.sin(th))
-        tangent = (-math.sin(th), math.cos(th))
-        sx, sy = height * 0.32, height * 0.5              # 글자 폭·높이(정규화)
+        strokes, dots = glyph(rng)
+        rad = np.array((math.cos(th), math.sin(th)))
+        tan = np.array((-math.sin(th), math.cos(th)))
+        sgn = -1.0 if inward else 1.0
 
-        def place(p):
-            u, v = p
-            return (radial[0] * (r_mid + v * sy) + tangent[0] * u * sx, radial[1] * (r_mid + v * sy) + tangent[1] * u * sx)
+        def place(uv):
+            uv = np.atleast_2d(uv)
+            return rad * (r_mid + sgn * uv[:, 1:2] * height) + tan * (sgn * uv[:, 0:1] * gw)
 
-        segs = [(place(a), place(b)) for a, b in strokes]
-        cx, cy = radial[0] * r_mid, radial[1] * r_mid
-        box = (cx - height, cx + height, cy - height, cy + height)
-        cv.segments(segs, width, box=box, extra_groove=0.0, groove=False)
-        if dot:
-            px, py = place(dot)
-            cv.dot(px, py, width * 0.9, groove=False)
+        for s in strokes:
+            layer.polyline(place(s), width, HALO_GLYPH)
+        for d in dots:
+            p = place(np.array(d))[0]
+            layer.dot(p[0], p[1], width * 0.9, HALO_GLYPH)
 
 
-def star_segments(r, n, k, rot=0.0):
+def double_border(layer, r_out, gap, main=True):
+    w, h = (MAIN, HALO_MAIN) if main else (HAIR, HALO_HAIR)
+    layer.ring(r_out, w, h)
+    layer.ring(r_out - gap, HAIR, HALO_HAIR)
+
+
+def ticks(layer, r0, r1, count, long_every=10, width=HAIR):
+    for i in range(count):
+        th = math.tau * i / count
+        rr1 = r1 + (r1 - r0) * 0.6 if long_every and i % long_every == 0 else r1
+        layer.polyline([(r0 * math.cos(th), r0 * math.sin(th)), (rr1 * math.cos(th), rr1 * math.sin(th))], width, 0)
+
+
+def star(layer, r, n, k, rot, width=MAIN, halo=HALO_MAIN):
     pts = [(r * math.cos(rot + math.tau * i / n), r * math.sin(rot + math.tau * i / n)) for i in range(n)]
-    return [(pts[i], pts[(i + k) % n]) for i in range(n)]
-
-
-def draw_pattern(cfg):
-    cv = Canvas()
-    w = 0.010                                             # 발광 선 굵기(정규화 0.010 ≈ 0.05 게임 단위)
-    # ── 밖 고리(돈다): 테두리 두 줄 + 룬 띠. 돌에는 둥근 홈 띠만.
-    cv.channel(0.715, 0.965)
-    cv.ring(0.955, w, groove=False)
-    cv.ring(0.725, w, groove=False)
-    draw_runes(cv, 0.84, 0.13, cfg["runes"], cfg["seed"], w * 0.85)
-    if cfg["extra"]:                                      # 복귀: 바깥에 눈금 한 겹 더
-        for i in range(72):
-            th = math.tau * i / 72
-            r0, r1 = (0.968, 0.985) if i % 2 else (0.962, 0.99)
-            cv.segments([((r0 * math.cos(th), r0 * math.sin(th)), (r1 * math.cos(th), r1 * math.sin(th)))], w * 0.6,
-                        groove=False, box=(math.cos(th) * 0.97 - 0.03, math.cos(th) * 0.97 + 0.03, math.sin(th) * 0.97 - 0.03, math.sin(th) * 0.97 + 0.03))
-        cv.ring(0.975, w * 0.5, groove=False)
-    # ── 안 고리(반대로 돈다): 동심원 + 다각형 별
-    cv.channel(0.315, 0.68, depth=0.6)
-    cv.ring(0.67, w, groove=False)
-    cv.ring(0.325, w, groove=False)
-    n, k = cfg["star"]
-    cv.segments(star_segments(0.655, n, k, math.pi / 2), w, groove=False)
-    cv.ring(0.50, w * 0.7, groove=False)
     for i in range(n):
-        th = math.pi / 2 + math.tau * i / n
-        cv.dot(0.655 * math.cos(th), 0.655 * math.sin(th), 0.018, groove=False)
-    if cfg["extra"]:
-        cv.segments(star_segments(0.47, n, 1, math.pi / 2 + math.pi / n), w * 0.7, groove=False)
-        for i in range(n):
-            th = math.pi / 2 + math.pi / n + math.tau * i / n
-            cv.arc(0.575 * math.cos(th), 0.575 * math.sin(th), 0.03, 0, math.tau, w * 0.6, groove=False)
-    # ── 가운데(안 돈다): 돌에 모양 그대로 새김
-    cv.ring(0.27, w)
-    cv.ring(0.245, w * 0.6)
+        layer.polyline([pts[i], pts[(i + k) % n]], width, halo)
+
+
+def satellite(layer, cx, cy, r, rng, level):
+    layer.circle(cx, cy, r, MAIN, HALO_MAIN * 0.6)
+    layer.circle(cx, cy, r * 0.78, HAIR, 0)
+    kind = rng.integers(0, 3)
+    if kind == 0:                                           # 작은 삼각별
+        pts = [(cx + 0.55 * r * math.cos(a), cy + 0.55 * r * math.sin(a)) for a in np.linspace(math.pi / 2, math.pi / 2 + math.tau, 4)]
+        layer.polyline(pts, HAIR, 0)
+        layer.polyline([(cx + 0.55 * r * math.cos(a), cy + 0.55 * r * math.sin(a)) for a in np.linspace(-math.pi / 2, -math.pi / 2 + math.tau, 4)], HAIR, 0)
+    elif kind == 1:                                         # 십자 + 원
+        layer.polyline([(cx - 0.6 * r, cy), (cx + 0.6 * r, cy)], HAIR, 0)
+        layer.polyline([(cx, cy - 0.6 * r), (cx, cy + 0.6 * r)], HAIR, 0)
+        layer.circle(cx, cy, r * 0.32, HAIR, 0)
+    else:                                                   # 점 고리
+        for a in np.linspace(0, math.tau, 9)[:-1]:
+            layer.dot(cx + 0.5 * r * math.cos(a), cy + 0.5 * r * math.sin(a), 0.012, 0)
+    layer.dot(cx, cy, 0.02, HALO_HAIR)
+    if level >= 2:                                          # 복귀: 위성마다 눈금 한 겹
+        for a in np.linspace(0, math.tau, 17)[:-1]:
+            layer.polyline([(cx + 0.86 * r * math.cos(a), cy + 0.86 * r * math.sin(a)), (cx + 0.95 * r * math.cos(a), cy + 0.95 * r * math.sin(a))], HAIR * 0.8, 0)
+
+
+def draw_text_layer(cfg, n):
+    L = Layer(5.0, n)
+    rng_seed = cfg["seed"]
+    double_border(L, 4.96, 0.07)                            # 가장 바깥 이중 테두리(좁은 띠)
+    ticks(L, 4.74, 4.83, 360, 10)
+    for i in range(8):                                      # 테두리 마디 원
+        th = math.tau * i / 8 + math.pi / 8
+        L.circle(4.91 * math.cos(th), 4.91 * math.sin(th), 0.085, HAIR, HALO_HAIR)
+        L.dot(4.91 * math.cos(th), 4.91 * math.sin(th), 0.02)
+    double_border(L, 4.68, 0.04)
+    text_band(L, 4.39, 0.36, cfg["glyphs"][0], rng_seed)     # 바깥 문자 띠(120자 이상, 바로 선 글자)
+    double_border(L, 4.10, 0.035)
+    text_band(L, 3.88, 0.20, cfg["glyphs"][1], rng_seed + 1, inward=True)   # 둘째 띠: 작고 거꾸로
+    L.ring(3.72, MAIN, HALO_MAIN)
+    if cfg["bands"] >= 3:                                   # 복귀: 셋째 띠 대신 점·짧은 획 줄
+        for i in range(cfg["glyphs"][2]):
+            th = math.tau * (i + 0.5) / cfg["glyphs"][2]
+            r = 3.63
+            if i % 3:
+                L.dot(r * math.cos(th), r * math.sin(th), 0.014)
+            else:
+                L.polyline([((r - 0.05) * math.cos(th), (r - 0.05) * math.sin(th)), ((r + 0.05) * math.cos(th), (r + 0.05) * math.sin(th))], HAIR, 0)
+    L.ring(3.58, HAIR, 0)
+    return L
+
+
+def draw_geometry_layer(cfg, n):
+    L = Layer(3.55, n)
+    rng = np.random.default_rng(cfg["seed"] + 5)
+    star(L, 3.45, 8, 3, math.pi / 8)                        # 8각별
+    star(L, 3.20, 7, 3, math.pi / 2, MAIN * 0.8, HALO_MAIN * 0.7)   # 7각별 겹침
+    star(L, 3.20, 7, 2, math.pi / 2, HAIR, 0)
+    L.ring(3.45, HAIR, 0)
+    L.ring(3.20, HAIR, 0)
+    for i in range(16):                                     # 기준선
+        th = math.tau * i / 16
+        L.polyline([(1.12 * math.cos(th), 1.12 * math.sin(th)), (3.40 * math.cos(th), 3.40 * math.sin(th))], HAIR * 0.8, 0)
+    ns = cfg["sats"]
+    for i in range(ns):                                     # 교차 호: 원점을 지나는 원 여럿
+        th = math.tau * i / ns
+        L.circle(1.75 * math.cos(th), 1.75 * math.sin(th), 1.75, HAIR, 0, steps=220)
+    for i in range(ns):                                     # 위성 원
+        th = math.tau * i / ns + math.pi / ns
+        satellite(L, 2.72 * math.cos(th), 2.72 * math.sin(th), 0.42, rng, cfg["level"])
+    double_border(L, 1.36, 0.045)
+    ticks(L, 1.14, 1.24, 96, 8)
+    L.ring(1.06, HAIR, HALO_HAIR)
+    return L
+
+
+def draw_center_layer(cfg, n):
+    L = Layer(1.0, n)
+    L.ring(0.96, MAIN, HALO_MAIN * 0.6)
+    L.ring(0.90, HAIR, 0)
     e = cfg["emblem"]
-    if e == "crescent":
-        cv.arc(0.0, 0.0, 0.15, math.radians(40), math.radians(320), w * 1.2)
-        cv.arc(0.045, 0.0, 0.12, math.radians(60), math.radians(300), w)
-        cv.dot(0.07, 0.0, 0.028)
-        for i in range(6):
-            th = math.tau * i / 6
-            cv.segments([((0.19 * math.cos(th), 0.19 * math.sin(th)), (0.235 * math.cos(th), 0.235 * math.sin(th)))], w)
-    elif e == "diamond":
-        d = 0.19
-        cv.segments([((0, d), (d, 0)), ((d, 0), (0, -d)), ((0, -d), (-d, 0)), ((-d, 0), (0, d))], w * 1.1)
-        s = 0.085
-        cv.segments([((-s, -s), (s, -s)), ((s, -s), (s, s)), ((s, s), (-s, s)), ((-s, s), (-s, -s))], w * 0.8)
-        for x, y in ((0.0, 0.12), (0.12, 0.0), (0.0, -0.12), (-0.12, 0.0)):
-            cv.dot(x * 1.0, y * 1.0, 0.018)
-        cv.dot(0.0, 0.0, 0.03)
-    else:
-        for i in range(3):                               # 세 갈래 소용돌이
-            base = math.tau * i / 3
-            pts = [((0.02 + 0.17 * t) * math.cos(base + 2.4 * t), (0.02 + 0.17 * t) * math.sin(base + 2.4 * t)) for t in np.linspace(0, 1, 28)]
-            cv.segments(list(zip(pts, pts[1:])), w * 1.1, box=(-0.26, 0.26, -0.26, 0.26))
+    if e == "eye":                                          # 스토리: 두 호로 된 눈 + 눈동자 원 + 햇살 12
+        for sgn in (1, -1):
+            L.polyline(_bez((-0.62, 0.0), (0.0, sgn * 0.52), (0.62, 0.0), 40), MAIN, HALO_MAIN * 0.5)
+        L.circle(0, 0, 0.2, HAIR, HALO_HAIR)
+        L.dot(0, 0, 0.07)
         for i in range(12):
             th = math.tau * i / 12
-            cv.dot(0.215 * math.cos(th), 0.215 * math.sin(th), 0.012)
-        cv.dot(0.0, 0.0, 0.025)
-    return cv
+            L.polyline([(0.70 * math.cos(th), 0.70 * math.sin(th)), (0.84 * math.cos(th), 0.84 * math.sin(th))], HAIR, 0)
+    elif e == "squares":                                    # 뽑기: 엇갈린 사각 둘 + 마름모 + 네 점
+        for rot in (0.0, math.pi / 4):
+            pts = [(0.62 * math.cos(rot + a), 0.62 * math.sin(rot + a)) for a in np.linspace(math.pi / 4, math.pi / 4 + math.tau, 5)]
+            L.polyline(pts, MAIN * 0.8, HALO_MAIN * 0.4)
+        L.polyline([(0, 0.34), (0.34, 0), (0, -0.34), (-0.34, 0), (0, 0.34)], HAIR, HALO_HAIR)
+        for x, y in ((0, 0.5), (0.5, 0), (0, -0.5), (-0.5, 0)):
+            L.dot(x, y, 0.035)
+        L.dot(0, 0, 0.06)
+    else:                                                   # 복귀: 세 갈래 소용돌이 + 점 고리 + 육각별
+        for i in range(3):
+            base = math.tau * i / 3
+            t = np.linspace(0, 1, 40)
+            L.polyline(np.stack([(0.04 + 0.55 * t) * np.cos(base + 2.6 * t), (0.04 + 0.55 * t) * np.sin(base + 2.6 * t)], 1), MAIN, HALO_MAIN * 0.4)
+        for i in range(24):
+            th = math.tau * i / 24
+            L.dot(0.78 * math.cos(th), 0.78 * math.sin(th), 0.018)
+        star(L, 0.68, 6, 2, math.pi / 2, HAIR, 0)
+    return L
 
 
-# ──────────────────────────────────────────────────────────── 텍스처
-
-def floor_texture(cv, cfg):
-    """닳은 돌 원판(가운데 둥근 판 + 바깥 쐐기돌 16) · 판 홈(어둡고 비스듬한 빛) · 홈에 남은 옅은 빛 얼룩 · 가장자리 흙으로 흩어짐(알파 컷)."""
-    rng = np.random.default_rng(cfg["seed"] + 100)
-    n = cv.n
-    R, T = cv.R, cv.T
-    noise = _fbm(n, rng, 5, 7)
-    fine = _fbm(n, rng, 40, 3)
-    stone = np.array((0.50, 0.47, 0.43)) + (np.array((0.66, 0.63, 0.57)) - np.array((0.50, 0.47, 0.43))) * noise[..., None]
-    stone *= (0.88 + 0.24 * fine)[..., None]
-    joints = _cover(np.abs(R - 0.69), 0.004, cv.px) * (R < 0.99)
-    wedge = np.abs(((T / (math.tau / 16)) % 1.0) - 0.5) * (math.tau / 16) * R
-    joints = np.maximum(joints, _cover(np.abs(wedge - (math.tau / 32) * R), 0.0035, cv.px) * _smooth(0.69, 0.70, R))
-    stone *= (1.0 - 0.45 * joints)[..., None]
-    g = cv.groove
-    gy, gx = np.gradient(g)
-    bevel = np.clip(-(gx * -0.7 + gy * 0.7) * n * 0.012, -1.0, 1.0)      # 빛은 왼쪽 위에서
-    col = stone * (1.0 - 0.5 * g)[..., None] + (0.18 * bevel)[..., None]
-    glow = np.array(cfg["glow"])
-    # 홈에 번진 빛(발광 아님) — 안 도는 가운데는 문양을 흐린 테두리 빛, 도는 두 띠는 홈 띠 전체에 옅게.
-    # 🔴 1차는 선만 하얗게 떠 스티커 같았다 — 돌이 빛을 받아 물든 것처럼 보여야 새긴 홈 안의 빛으로 읽힌다.
-    halo = _blur(cv.glow * (R < 0.30), 10) * 1.6 + 0.35 * cv.channels
-    col = col + glow * (0.22 * np.clip(halo, 0, 1) * (0.7 + 0.3 * noise))[..., None]
-    soil = np.array((0.36, 0.28, 0.19)) * (0.8 + 0.4 * noise)[..., None]
-    edge = 0.965 + 0.025 * (_fbm(n, rng, 12, 3) - 0.5) * 2
-    dirt = _smooth(0.86, edge, R)
-    col = col * (1.0 - 0.55 * dirt)[..., None] + soil * (0.55 * dirt)[..., None]
-    crumbs = (fine > 0.62) & (R < edge + 0.03) & (R < 0.999)
-    alpha = ((R < edge) | crumbs).astype(float)
-    col = np.where((R >= edge)[..., None], soil, col)
-    return np.dstack([np.clip(col, 0, 1), alpha])
+def draw_ring_low(cfg, n):
+    L = Layer(4.25, n)
+    double_border(L, 4.20, 0.05)
+    double_border(L, 3.05, -0.05)
+    text_band(L, 3.62, 0.30, cfg["ring_glyphs"], cfg["seed"] + 7)
+    for i in range(12):
+        th = math.tau * i / 12
+        L.circle(4.05 * math.cos(th), 4.05 * math.sin(th), 0.07, HAIR, HALO_HAIR)
+        L.dot(3.20 * math.cos(th), 3.20 * math.sin(th), 0.02)
+    ticks(L, 3.92, 3.98, 180, 15)
+    return L
 
 
-def glow_texture(cv, cfg):
-    """선 색 = PM 지정 발광 색 그대로(채도 유지), 가운데만 살짝 밝게(0.12), 선을 따라 세기 흔들림 — 🔴 1차(흰색 0.4 섞음)는 낮에 거의 흰 선."""
-    rng = np.random.default_rng(cfg["seed"] + 200)
-    glow = np.array(cfg["glow"])
-    core = _smooth(0.6, 1.0, cv.glow)
-    flick = 0.78 + 0.22 * _fbm(cv.n, rng, 16, 3)
-    col = glow[None, None, :] * flick[..., None] + (0.12 * core)[..., None]
-    return np.dstack([np.clip(col, 0, 1), cv.glow])
+def draw_ring_high(cfg, n):
+    L = Layer(2.85, n)
+    L.ring(2.80, MAIN, HALO_MAIN)
+    L.ring(2.74, HAIR, 0)
+    L.ring(2.02, MAIN, HALO_MAIN * 0.7)
+    text_band(L, 2.38, 0.18, 64 + 16 * cfg["level"], cfg["seed"] + 9, inward=True, width=GLYPH * 0.9)
+    count = cfg["sats"] + (8 if cfg["level"] >= 2 else 0)
+    for i in range(count):
+        th = math.tau * i / count
+        L.circle(2.62 * math.cos(th), 2.62 * math.sin(th), 0.05, HAIR, HALO_HAIR)
+    ticks(L, 2.08, 2.13, 120, 0)
+    return L
 
+
+DRAW = {"문자띠": draw_text_layer, "기하": draw_geometry_layer, "중심": draw_center_layer, "고리아래": draw_ring_low, "고리위": draw_ring_high}
+
+
+# ──────────────────────────────────────────────────────────── 텍스처·재질·메시
 
 def save_png(name, rgba, folder):
     os.makedirs(folder, exist_ok=True)
@@ -308,14 +347,14 @@ def save_png(name, rgba, folder):
     if old is not None:
         bpy.data.images.remove(old)
     img = bpy.data.images.new(name, rgba.shape[1], rgba.shape[0], alpha=True)
-    img.pixels.foreach_set(rgba.astype(np.float32).ravel())
+    img.pixels.foreach_set(rgba.ravel())
     img.filepath_raw = os.path.join(folder, name + ".png")
     img.file_format = "PNG"
     img.save()
     return img
 
 
-def material(name, img, glow_color=None):
+def material(name, img):
     mat = bpy.data.materials.get(name) or bpy.data.materials.new(name)
     mat.use_nodes = True
     nt = mat.node_tree
@@ -331,37 +370,29 @@ def material(name, img, glow_color=None):
     cut.inputs[1].default_value = 0.5
     nt.links.new(tex.outputs["Alpha"], cut.inputs[0])
     nt.links.new(cut.outputs["Value"], bsdf.inputs["Alpha"])
+    nt.links.new(tex.outputs["Color"], bsdf.inputs["Emission Color"])
+    bsdf.inputs["Emission Strength"].default_value = 2.5
     bsdf.inputs["Metallic"].default_value = 0.0
-    bsdf.inputs["Roughness"].default_value = 0.85
-    if glow_color is not None:
-        nt.links.new(tex.outputs["Color"], bsdf.inputs["Emission Color"])
-        bsdf.inputs["Emission Strength"].default_value = 2.0
+    bsdf.inputs["Roughness"].default_value = 1.0
     mat.use_backface_culling = False
     return mat
 
 
-# ──────────────────────────────────────────────────────────── 메시
-
-def _disc_mesh(r0, r1, segments, rings, z, mat_index):
-    """r0~r1 띠(r0=0이면 가운데 점부터) — 위(+Z)를 보는 한 장, UV는 위에서 본 평면 투영."""
+def _annulus(r0, r1, segments, rings, z, uv_radius):
     bm = bmesh.new()
     uv = bm.loops.layers.uv.new("UVMap")
     radii = [r0 + (r1 - r0) * i / rings for i in range(rings + 1)]
-    ringverts = []
+    rows = []
     for r in radii:
-        if r == 0.0:
-            ringverts.append([bm.verts.new((0.0, 0.0, z))])
-        else:
-            ringverts.append([bm.verts.new((r * math.cos(math.tau * k / segments), r * math.sin(math.tau * k / segments), z))
-                              for k in range(segments)])
+        rows.append([bm.verts.new((0.0, 0.0, z))] if r == 0.0 else
+                    [bm.verts.new((r * math.cos(math.tau * k / segments), r * math.sin(math.tau * k / segments), z)) for k in range(segments)])
 
     def face(vs):
         f = bm.faces.new(vs)
-        f.material_index = mat_index
         for loop in f.loops:
-            loop[uv].uv = (loop.vert.co.x / (2 * RADIUS) + 0.5, loop.vert.co.y / (2 * RADIUS) + 0.5)
+            loop[uv].uv = (loop.vert.co.x / (2 * uv_radius) + 0.5, loop.vert.co.y / (2 * uv_radius) + 0.5)
 
-    for a, b in zip(ringverts, ringverts[1:]):
+    for a, b in zip(rows, rows[1:]):
         for k in range(segments):
             k1 = (k + 1) % segments
             if len(a) == 1:
@@ -374,31 +405,24 @@ def _disc_mesh(r0, r1, segments, rings, z, mat_index):
     return bm
 
 
-def assemble(name, collection, folder, location=(0.0, 0.0, 0.0)):
+def assemble(name, collection, folder, location=(0.0, 0.0, 0.0), tex_scale=1.0):
     cfg = VARIANTS[name]
-    cv = draw_pattern(cfg)
-    key = cfg["color_key"]
-    floor_name, glow_name = f"포탈_마법진_{key}_바닥_잎카드", f"포탈_마법진_{key}_발광_잎카드"
-    floor_mat = material(floor_name, save_png(floor_name, floor_texture(cv, cfg), folder))
-    glow_mat = material(glow_name, save_png(glow_name, glow_texture(cv, cfg), folder), cfg["glow"])
     root = bpy.data.objects.new(name, None)
     root.empty_display_type = "PLAIN_AXES"
     root.empty_display_size = 0.2
-    root.location = Vector(location) / UNITS if location else Vector()
+    root.location = Vector(location) / UNITS
     collection.objects.link(root)
-    parts = {
-        "마법진_바닥": (_disc_mesh(0.0, RADIUS, 48, 2, FLOOR_Z, 0), floor_mat),
-        "마법진_고리_밖_회전_시계": (_disc_mesh(BANDS["밖"][0] * RADIUS, BANDS["밖"][1] * RADIUS, 64, 1, GLOW_Z[0], 0), glow_mat),
-        "마법진_고리_안_회전_반시계": (_disc_mesh(BANDS["안"][0] * RADIUS, BANDS["안"][1] * RADIUS, 48, 1, GLOW_Z[1], 0), glow_mat),
-        "마법진_중심": (_disc_mesh(0.0, BANDS["중심"][1] * RADIUS, 32, 1, GLOW_Z[2], 0), glow_mat),
-    }
-    info = {"tris": {}, "z": [9.0, -9.0], "radius": 0.0}
-    objs = []
-    for child, (bm, mat) in parts.items():
+    info = {"tris": {}, "z": {}, "textures": []}
+    for child, (tail, z, r0, r1, segs, rings, size) in LAYERS.items():
+        n = max(256, int(size * tex_scale))
+        layer = DRAW[tail](cfg, n)
+        mat_name = f"포탈_마법진_{cfg['color_key']}_{tail}_발광_잎카드"
+        mat = material(mat_name, save_png(mat_name, layer.rgba(cfg["tint"]), folder))
+        info["textures"].append(f"{mat_name}.png ({n})")
+        del layer
+        bm = _annulus(r0, r1, segs, rings, z, r1)
         info["tris"][child] = sum(len(f.verts) - 2 for f in bm.faces)
-        zs = [v.co.z for v in bm.verts]
-        info["z"] = [min(info["z"][0], min(zs)), max(info["z"][1], max(zs))]
-        info["radius"] = max(info["radius"], max(math.hypot(v.co.x, v.co.y) for v in bm.verts))
+        info["z"][child] = z
         bmesh.ops.scale(bm, vec=Vector((1, 1, 1)) / UNITS, verts=bm.verts)
         mesh = bpy.data.meshes.new(f"{name}_{child}")
         bm.to_mesh(mesh)
@@ -407,22 +431,23 @@ def assemble(name, collection, folder, location=(0.0, 0.0, 0.0)):
         obj = bpy.data.objects.new(child, mesh)
         collection.objects.link(obj)
         obj.parent = root
-        objs.append(obj)
     marker = bpy.data.objects.new(SOCKET[0], None)
     marker.empty_display_type = "PLAIN_AXES"
     marker.empty_display_size = 0.1
     marker.location = Vector(SOCKET[1]) / UNITS
     collection.objects.link(marker)
     marker.parent = root
-    assert sum(info["tris"].values()) <= TRI_LIMIT, f"{name} 삼각형 {sum(info['tris'].values())} > {TRI_LIMIT}"
-    assert info["z"][1] <= 0.15 and info["z"][0] >= 0.0 and FLOOR_Z <= 0.08, f"{name} 높이 {info['z']}"
-    assert GLOW_Z[0] - FLOOR_Z >= 0.02 - 1e-9, "발광 층이 바닥에서 0.02 안 뜬다"
-    assert abs(info["radius"] - RADIUS) < 1e-3, f"{name} 반지름 {info['radius']}"
-    return root, objs + [marker], info
+    total = sum(info["tris"].values())
+    assert total <= TRI_LIMIT, f"{name} 삼각형 {total} > {TRI_LIMIT}"
+    assert max(info["z"].values()) <= HEIGHT_LIMIT and max(l[3] for l in LAYERS.values()) <= RADIUS + 1e-9
+    zs = [info["z"][c] for c in LAYERS if "떠있는" in c]
+    dirs = [c.rsplit("_", 1)[1] for c in LAYERS if "떠있는" in c]
+    assert len(set(dirs)) == len(dirs), "떠 있는 층끼리 도는 방향이 같다"
+    return root, info
 
 
-def build_in_window(name, collection, folder, location):
-    return assemble(name, collection, folder, location)
+def build_in_window(name, collection, folder, location, tex_scale=1.0):
+    return assemble(name, collection, folder, location, tex_scale)
 
 
 def main():
@@ -432,16 +457,16 @@ def main():
         bpy.ops.wm.read_factory_settings(use_empty=True)
         col = bpy.data.collections.new("판_마법진")
         bpy.context.scene.collection.children.link(col)
-        root, children, info = assemble(name, col, folder)
+        root, info = assemble(name, col, folder)
         names = sorted(c.name for c in root.children)
-        assert names == sorted(list(CHILDREN) + [SOCKET[0]]), f"자식 이름이 밀렸다: {names}"
+        assert names == sorted(list(LAYERS) + [SOCKET[0]]), f"자식 이름이 밀렸다: {names}"
+        assert {o.name for o in bpy.context.scene.objects} == {root.name, *LAYERS, SOCKET[0]}
         path = os.path.join(OUT, name + ".fbx")
-        # 🔴 선택으로 고르면 헤드리스에서 아무것도 안 골려 빈 FBX(4KB·0.0003초)가 나왔다 — 빈 장면에 이 마법진만 있으니 장면 전체를 내보낸다
-        assert {o.name for o in bpy.context.scene.objects} == {root.name, *CHILDREN, SOCKET[0]}, [o.name for o in bpy.context.scene.objects]
+        # 🔴 v2: 선택으로 고르면 헤드리스에서 빈 FBX(4KB) — 빈 장면에 이 마법진만 있으니 장면 전체를 내보낸다
         bpy.ops.export_scene.fbx(filepath=path, use_selection=False, object_types={"MESH", "EMPTY"}, global_scale=UNITS,
                                  path_mode="RELATIVE", add_leaf_bones=False, bake_anim=False, mesh_smooth_type="FACE")
-        print(f"만듦  {name}  지름 {2 * info['radius']:.2f}  z {info['z'][0]:.3f}~{info['z'][1]:.3f}  삼각형 {info['tris']} "
-              f"(합 {sum(info['tris'].values())})  자식 {names}  소켓 {SOCKET[0]} {SOCKET[1]}  → {os.path.normpath(path)}")
+        print(f"만듦  {name}  지름 {2 * RADIUS:.1f}  층 z {info['z']}  삼각형 {info['tris']} (합 {sum(info['tris'].values())})  "
+              f"텍스처 {info['textures']}  소켓 {SOCKET}  → {os.path.normpath(path)}")
 
 
 if __name__ == "__main__":
