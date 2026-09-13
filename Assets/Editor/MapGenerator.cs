@@ -75,7 +75,8 @@ public static class MapGenerator
         if (existing != null) Object.DestroyImmediate(existing);
 
         GameObject root = new GameObject(RootName);
-        BuildSea(root.transform);
+        StructureDresser.BeginReport();
+        string seaReport = BuildSea(root.transform);
 
         List<PirateQuestData> pirateQuests = LoadPirateQuests();
 
@@ -108,6 +109,7 @@ public static class MapGenerator
             SerializedObject so = new SerializedObject(warehouse);
             so.FindProperty("ownerPlayerId").intValue = i;
             so.ApplyModifiedProperties();
+            StructureDresser.PlaceWarehouseShed(root.transform, MapLayout.Warehouses[i], i);
         }
         foreach (MapLayout.Island island in MapLayout.SealIslands) BuildIsland(root.transform, island);
 
@@ -136,6 +138,8 @@ public static class MapGenerator
         string chatBoxReport = BuildGameChatBox();
 
         string portalReport = BuildGachaPortals(gachaIsland);
+        StructureDresser.DressGachaPortals(root.transform);
+        string dockReport = StructureDresser.PlaceDocks(root.transform);
 
         // 자연물은 **맨 마지막에** 뿌린다 — 건물·포탈·인형이 다 선 뒤라야 그 자리를 피할 수 있다.
         string natureReport = BuildNatureBorders(root.transform);
@@ -170,14 +174,15 @@ public static class MapGenerator
 
         string message =
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
-            $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + natureReport + "\n\n" +
+            $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + natureReport +
+            seaReport + dockReport + StructureDresser.Report() + "\n\n" +
             tableReport + displayReport + gateReport + storyReport + sealReport + seaKingReport + questReport +
             chatUnlockReport + hiddenCombineReport + chatBoxReport + overlaps + navResult + oldGround + rewire + saveNote;
         Debug.Log("[맵] " + message);
         EditorUtility.DisplayDialog(Title, message, "확인");
     }
 
-    static void BuildSea(Transform parent)
+    static string BuildSea(Transform parent)
     {
         GameObject sea = GameObject.CreatePrimitive(PrimitiveType.Cube);
         sea.name = "Sea";
@@ -192,6 +197,9 @@ public static class MapGenerator
         NavMeshModifier modifier = sea.AddComponent<NavMeshModifier>();
         modifier.overrideArea = true;
         modifier.area = MapLayout.SeaAreaIndex;
+
+        // 보이는 수면은 물결 격자가 맡는다(2026-09-13). 이 상자는 콜라이더(NavMesh Sea 영역)로만 남는다.
+        return SeaWaterBuilder.Apply(parent, sea);
     }
 
     static GameObject BuildIsland(Transform parent, MapLayout.Island island)
@@ -773,6 +781,8 @@ public static class MapGenerator
 
         shop.AddComponent<Selectable>();
         shop.AddComponent<OwnedByPlayer>().SetOwner(laneIndex);
+        // Blender 상점 건물을 입히고 클릭 상자를 건물 크기로 늘린다. 모델이 없으면 이 상자가 그대로 보인다.
+        StructureDresser.DressLaneShop(shop);
         return shop;
     }
 
@@ -1170,6 +1180,8 @@ public static class MapGenerator
     const float SlotSpacing = 6f;
     const float SlotSize = 3f;
     const float SlotHeight = 3.4f;
+    const float PedestalDiameter = 6f;         // 받침_불멸 지름·받침_초월 모서리 지름(Blender 규격)
+    const float CombinePedestalWidth = 5.98f;  // 받침_조합 한 변
 
     const float GradeWallGap = 8f;     // 한 열 안에서 등급이 바뀔 때 두는 벽 자리
     const int MaxRecipeRows = 25;      // 한 열에 넣을 최대 조합식 수. 넘으면 옆 열로 이어간다
@@ -1571,6 +1583,11 @@ public static class MapGenerator
     {
         Vector3 ground = new Vector3(x, MapLayout.IslandTop, z);
 
+        // 칸마다 낮은 돌 받침(5.98×5.98, 2026-09-13 Blender)을 칸 폭에 맞춰 깔고 그 위에 세운다.
+        float lift = StructureDresser.PlacePedestal(parent, "받침_조합", $"{prefix}_{label}_받침",
+                                                    ground, 0f, SlotW / CombinePedestalWidth);
+        ground.y += lift;
+
         // ⚠️ 모델 크기도 가로 축소율을 탄다 — 칸 간격만 좁히고 모델을 그대로 두면 서로 겹친다.
         if (TryPlaceUnitModel(parent, $"{prefix}_{label}", ground, unit,
                               RecipeRowHeight * 0.9f * RecipeScale)) return;
@@ -1578,7 +1595,7 @@ public static class MapGenerator
         GameObject slot = GameObject.CreatePrimitive(PrimitiveType.Cube);
         slot.name = $"{prefix}_{label}";
         slot.transform.SetParent(parent, false);
-        slot.transform.position = new Vector3(x, MapLayout.IslandTop + RecipeSlotHeight * 0.5f, z);
+        slot.transform.position = new Vector3(x, ground.y + RecipeSlotHeight * 0.5f, z);
         slot.transform.localScale = new Vector3(SlotW, RecipeSlotHeight, SlotW);
         PaintSolid(slot, color);
         // 표 위를 걸어다녀야 하므로 통과시킨다.
@@ -2489,19 +2506,25 @@ public static class MapGenerator
     {
         MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
 
-        GameObject platform = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        platform.name = "스토리_단상";
-        platform.transform.SetParent(parent, false);
-        platform.transform.position = new Vector3(island.center.x, MapLayout.IslandTop + 0.15f, island.center.y);
-        // 단상은 섬 크기에 비례하게 — 섬을 키울 때마다 따로 고치지 않아도 되게.
-        float platformSize = Mathf.Min(island.size.x, island.size.y) * 0.35f;
-        platform.transform.localScale = new Vector3(platformSize, 0.3f, platformSize);
-        Paint(platform, "rock", platformSize, platformSize);
-        Object.DestroyImmediate(platform.GetComponent<Collider>());
+        Vector3 center = new Vector3(island.center.x, MapLayout.IslandTop, island.center.y);
+
+        // 포석 광장(지름 66, 윗면 1, 가운데 45×45는 스토리 적 건물 자리). 모델이 없으면 옛 원기둥.
+        if (StructureDresser.PlaceStoryPlaza(parent, center) < 0f)
+        {
+            GameObject platform = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            platform.name = "스토리_단상";
+            platform.transform.SetParent(parent, false);
+            platform.transform.position = new Vector3(island.center.x, MapLayout.IslandTop + 0.15f, island.center.y);
+            // 단상은 섬 크기에 비례하게 — 섬을 키울 때마다 따로 고치지 않아도 되게.
+            float platformSize = Mathf.Min(island.size.x, island.size.y) * 0.35f;
+            platform.transform.localScale = new Vector3(platformSize, 0.3f, platformSize);
+            Paint(platform, "rock", platformSize, platformSize);
+            Object.DestroyImmediate(platform.GetComponent<Collider>());
+        }
 
         GameObject spawn = new GameObject("스토리_등장지점");
         spawn.transform.SetParent(parent, false);
-        spawn.transform.position = new Vector3(island.center.x, MapLayout.IslandTop, island.center.y);
+        spawn.transform.position = center + Vector3.up * StructureDresser.StoryPlazaLift;
 
         StoryManager manager = Object.FindFirstObjectByType<StoryManager>(FindObjectsInactive.Include);
         if (manager == null)
@@ -2575,6 +2598,7 @@ public static class MapGenerator
 
         StoryZonePortal component = portal.AddComponent<StoryZonePortal>();
         component.SetDestination(StoryZoneLandingPoint(laneIndex));
+        StructureDresser.DressPortal(portal, "포탈_작은_스토리", 0f, StructureDresser.StoryGlow, hideDisc: true);
     }
 
     // ⚠️ 2026-09-05 정정(사장님 발견): 예전엔 zone.size×0.25(존 크기에 비례)였다 — 존이
@@ -2620,7 +2644,9 @@ public static class MapGenerator
         float offsetX = (laneIndex % 2 == 0 ? -1f : 1f) * offset;
         float offsetZ = (laneIndex < 2 ? 1f : -1f) * offset;
 
-        return new Vector3(zone.center.x + offsetX, MapLayout.IslandTop, zone.center.y + offsetZ);
+        // 착지점은 광장 안(반지름 33)이라 광장 윗면에 내린다.
+        return new Vector3(zone.center.x + offsetX, MapLayout.IslandTop + StructureDresser.StoryPlazaLift,
+                           zone.center.y + offsetZ);
     }
 
     // 기존 최대(StoryPortalDiameter=15)보다 크게 — "크게 만들라"는 사장님 지시.
@@ -2651,6 +2677,7 @@ public static class MapGenerator
             destinations[i] = new Vector3(lane.center.x, MapLayout.IslandTop, lane.center.y);
         }
         component.SetDestinations(destinations);
+        StructureDresser.DressPortal(portal, "포탈_큰_복귀", 0f, StructureDresser.ReturnGlow, hideDisc: true);
     }
 
     // 크립섬 4곳. **원작은 3단계 순차 체인**이다(물범 → 노루 → 양) — SealSpawner 주석 참고.
@@ -2888,6 +2915,7 @@ public static class MapGenerator
         PaintGlow(gate, new Color(0.85f, 0.72f, 0.30f));   // 부술 대상이라 눈에 띄어야 한다
         gate.AddComponent<DestructibleGate>();
         DressGate(gate);
+        StructureDresser.ScatterPunkHazard(parent, island, GateWidth, GateThickness);
 
         return "\n펑크해저드에 정의문을 세웠습니다 (부수면 길이 열립니다).";
     }
@@ -2914,9 +2942,13 @@ public static class MapGenerator
 
         for (int i = 0; i < units.Count; i++)
         {
-            PlaceUnitMarker(parent, $"초월_{units[i].unitName}",
-                new Vector3(startX + (i % perRow) * SlotSpacing, 0f, startZ - (i / perRow) * SlotSpacing),
-                UnitGrade.Transcendent);
+            Vector3 ground = new Vector3(startX + (i % perRow) * SlotSpacing, MapLayout.IslandTop,
+                                         startZ - (i / perRow) * SlotSpacing);
+            // 팔각 받침(모서리 지름 6)이 칸 간격 6과 같아 맞닿는다 — 0.9배로 틈을 둔다.
+            float lift = StructureDresser.PlacePedestal(parent, "받침_초월", $"초월_{units[i].unitName}_받침",
+                                                        ground, 0f, SlotSpacing * 0.9f / PedestalDiameter);
+            PlaceUnitMarker(parent, $"초월_{units[i].unitName}", new Vector3(ground.x, 0f, ground.z),
+                UnitGrade.Transcendent, lift: lift);
         }
 
         return units.Count;
@@ -2928,18 +2960,26 @@ public static class MapGenerator
         List<UnitData> units = LoadUnitsOfGrade(UnitGrade.Immortal);
 
         BuildStoneFloor(parent, "불멸전시_바닥", island);
-        BuildBrazier(parent, new Vector3(island.center.x, MapLayout.IslandTop, island.center.y));
+        Vector3 center = new Vector3(island.center.x, MapLayout.IslandTop, island.center.y);
+        // 원작 불멸 전시 가운데 캠프파이어(2026-09-13 Blender). 모델이 없으면 옛 원기둥 화로.
+        if (!StructureDresser.PlaceCampfire(parent, center)) BuildBrazier(parent, center);
 
         // 화로에서 떨어져 둘러앉는 반지름 — 섬 밖으로 나가지 않는 선에서 가장 넓게 잡는다.
         float radius = Mathf.Min(island.size.x, island.size.y) * 0.5f - SlotSize * 2f;
+        // 받침(지름 6)이 둘레에 다 안 들어가면 줄인다 — 이웃과 닿지 않게 둘레 몫의 85%까지.
+        float pedestalScale = Mathf.Min(1f,
+            2f * Mathf.PI * radius / Mathf.Max(1, units.Count) * 0.85f / PedestalDiameter);
 
         for (int i = 0; i < units.Count; i++)
         {
             float angle = i / (float)Mathf.Max(1, units.Count) * Mathf.PI * 2f;
-            PlaceUnitMarker(parent, $"불멸_{units[i].unitName}",
-                new Vector3(island.center.x + Mathf.Cos(angle) * radius, 0f,
-                            island.center.y + Mathf.Sin(angle) * radius),
-                UnitGrade.Immortal);
+            Vector3 ground = new Vector3(island.center.x + Mathf.Cos(angle) * radius, MapLayout.IslandTop,
+                                         island.center.y + Mathf.Sin(angle) * radius);
+            // 받침_불멸은 +Y(그을린 쪽)가 불을 본다.
+            float lift = StructureDresser.PlacePedestal(parent, "받침_불멸", $"불멸_{units[i].unitName}_받침",
+                ground, StructureDresser.YawTowardCenter(ground, center), pedestalScale);
+            PlaceUnitMarker(parent, $"불멸_{units[i].unitName}", new Vector3(ground.x, 0f, ground.z),
+                UnitGrade.Immortal, lift: lift);
         }
 
         return units.Count;
@@ -3211,11 +3251,13 @@ public static class MapGenerator
 
     // 조합식 표와 같은 자리 표시 기둥. 유닛과 키가 오면 스킨 인형을 먼저 세우고(2026-09-07,
     // 사장님 지시 — 선택위습 부스에서도 스킨이 보이게), 모델이 없는 유닛만 등급 색 큐브다.
+    // lift = 섬 윗면에서 더 올려 세울 높이(받침 윗면). 0이면 섬 바닥에 선다.
     static void PlaceUnitMarker(Transform parent, string name, Vector3 groundPosition, UnitGrade grade,
-                                UnitData unit = null, float figureHeight = 0f)
+                                UnitData unit = null, float figureHeight = 0f, float lift = 0f)
     {
         if (unit != null && figureHeight > 0f
-            && TryPlaceUnitModel(parent, name, new Vector3(groundPosition.x, MapLayout.IslandTop, groundPosition.z),
+            && TryPlaceUnitModel(parent, name,
+                                 new Vector3(groundPosition.x, MapLayout.IslandTop + lift, groundPosition.z),
                                  unit, figureHeight))
             return;
 
@@ -3223,7 +3265,7 @@ public static class MapGenerator
         marker.name = name;
         marker.transform.SetParent(parent, false);
         marker.transform.position = new Vector3(
-            groundPosition.x, MapLayout.IslandTop + SlotHeight * 0.5f, groundPosition.z);
+            groundPosition.x, MapLayout.IslandTop + lift + SlotHeight * 0.5f, groundPosition.z);
         marker.transform.localScale = new Vector3(SlotSize, SlotHeight, SlotSize);
         PaintSolid(marker, GradeColor(grade));
         Object.DestroyImmediate(marker.GetComponent<Collider>());
