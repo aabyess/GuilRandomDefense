@@ -1105,9 +1105,13 @@ public static class ArtBinder
             PrefabUtility.GetCorrespondingObjectFromSource(visual) ?? (Object)visual);
         if (string.IsNullOrEmpty(modelPath)) return null;
 
+        // 첫 클립이 아니라 **가장 긴** 클립을 쓴다 — 안흔함_이호준 원본은 첫 클립이 키 1개짜리
+        // 「Armature.001|mixamo.com|Layer0」이고 실제 4초 동작이 둘째라, 첫 클립을 쓰면 한 자세로 굳었다(09-13 blender 대조).
         AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath(modelPath)
             .OfType<AnimationClip>()
-            .FirstOrDefault(c => c != null && !c.name.StartsWith("__preview__"));
+            .Where(c => c != null && !c.name.StartsWith("__preview__"))
+            .OrderByDescending(c => c.length)
+            .FirstOrDefault();
         if (clip == null) return null;
 
         EnsureFolder(GeneratedFolder);
