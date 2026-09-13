@@ -273,21 +273,34 @@ public static class ArtBinder
     }
 
     // 메시의 정점으로 크기를 잰다. 렌더러 bounds가 0으로 나오는 경우의 대비책이다.
+    //
+    // 🔴 메시 자산 경계는 **메시 자기 축**이다. 노드 변환(회전·배율)을 거쳐 월드로 옮겨야 화면 크기와 맞는다
+    //    (MapGenerator.TryMeasureFigure와 같은 방식 — 8꼭짓점을 노드의 localToWorld로 옮긴다).
+    //    2026-09-13 bakesize 실측으로 잡은 두 사고:
+    //    · 특별함_양재모 — Blender 내보내기는 노드에 축 회전이 걸려 있어 무기(길이 2m)의 자기 Y축을 키로 읽었다 → 키 11
+    //    · 안흔함_박준희 — glb→fbx 변환본은 노드에 0.01 배율이 걸려 있는데 그걸 못 봐 12.29로 읽고 거의 안 키웠다 → 게임 안 크기 0.2
     static Vector3 MeasureMeshes(GameObject root)
     {
         Bounds? acc = null;
+
+        void Add(Transform node, Mesh mesh)
+        {
+            if (mesh == null) return;
+            Matrix4x4 toWorld = node.localToWorldMatrix;
+            Bounds mb = mesh.bounds;
+            for (int corner = 0; corner < 8; corner++)
+            {
+                Vector3 sign = new Vector3((corner & 1) == 0 ? -1f : 1f, (corner & 2) == 0 ? -1f : 1f, (corner & 4) == 0 ? -1f : 1f);
+                Vector3 world = toWorld.MultiplyPoint3x4(mb.center + Vector3.Scale(mb.extents, sign));
+                if (acc == null) acc = new Bounds(world, Vector3.zero);
+                else { Bounds a = acc.Value; a.Encapsulate(world); acc = a; }
+            }
+        }
+
         foreach (SkinnedMeshRenderer smr in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
-        {
-            if (smr.sharedMesh == null) continue;
-            Bounds mb = smr.sharedMesh.bounds;
-            if (acc == null) acc = mb; else { Bounds a = acc.Value; a.Encapsulate(mb); acc = a; }
-        }
+            Add(smr.transform, smr.sharedMesh);
         foreach (MeshFilter mf in root.GetComponentsInChildren<MeshFilter>(true))
-        {
-            if (mf.sharedMesh == null) continue;
-            Bounds mb = mf.sharedMesh.bounds;
-            if (acc == null) acc = mb; else { Bounds a = acc.Value; a.Encapsulate(mb); acc = a; }
-        }
+            Add(mf.transform, mf.sharedMesh);
         return acc?.size ?? Vector3.zero;
     }
 
