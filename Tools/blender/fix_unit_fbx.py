@@ -28,6 +28,8 @@
     같은 폴더 Textures/의 실제 파일을 물린다(재질 이름·기본색 그대로).
   · 🔴 원본은 git 커밋에서 꺼낸다(rev = 유닛을 처음 들인 커밋). 같은 경로를 덮어쓰므로, 다시 돌리면 이미 정리된 파일(보조 노드·텍스처가 빠진)을
     원본으로 삼게 된다 — 임시 폴더에 꺼내고 Textures/는 유닛 폴더를 링크한다.
+  · clip_ground(이호준, PM 결정 2026-09-13): 원본 좀비 클립은 몸을 낮춰 발이 쉬는 자세 바닥보다 0.11~0.14m 묻힌다(원본 glb 실측 그대로).
+    유니티 편집 중엔 동작을 못 틀어 높이를 맞출 수 없으니 원천에서 — 프레임마다 변형된 메시 최저점을 z=0에 닿게 뿌리 뼈 위치 키를 옮긴다.
   · 내보내기: FBX 단위 적용(1m = 유니티 1), 앞 −Z·위 Y(블렌더 −Y 정면 → 유니티 +Z), 끝 뼈 안 붙임. 상붕카는 원래 .glb(glTFast)라 GLB로.
 
 원본 glb에서 다시 짓는 넷(PM 결정 2026-09-13 — 블렌더가 이 FBX들의 스킨 결합을 못 살려서)
@@ -64,7 +66,7 @@ DENJI_RENAME = {"spine_09": "Hips", "spine.001_010": "Spine", "spine.002_011": "
 UNITS = {
     "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
     "안흔함_이호준": dict(rev="6b2afdbc", path="Assets/Art/Units/안흔함_이호준/안흔함_이호준.fbx", kind="human", size=("height", 1.2), anim=True,
-                      hips="Bone_61", head="Bone.004_3", source=os.path.join(DL, "zombi.glb"), recipe={}),
+                      hips="Bone_61", head="Bone.004_3", source=os.path.join(DL, "zombi.glb"), recipe={}, clip_ground=True),
     "안흔함_김경현": dict(rev="4c92dba1", path="Assets/Art/Units/안흔함_김경현/안흔함_김경현.fbx", kind="human", size=("height", 1.8)),
     "안흔함_김수빈": dict(rev="c6cc54d4", path="Assets/Art/Units/안흔함_김수빈/안흔함_김수빈.fbx", kind="human", size=("height", 1.8), hips="hips_112",
                       source=os.path.join(DL, "nanachi.glb"),
@@ -579,6 +581,25 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                     pb.location, pb.rotation_quaternion = bl, bq
                     pb.keyframe_insert("location", frame=f0 + fi)
                     pb.keyframe_insert("rotation_quaternion", frame=f0 + fi)
+            if cfg.get("clip_ground"):
+                # 뿌리만 세계 z로 옮기면 자식은 부모 기준 키라 통째로 따라온다. 뿌리 기본 행렬의 이동 = 쉬는 자세 회전⁻¹ × 세계 이동
+                roots = [b.name for b in new_arm.data.bones if b.parent is None]
+                lifts = []
+                for fi in range(len(frames)):
+                    scene.frame_set(f0 + fi)
+                    dg = bpy.context.evaluated_depsgraph_get()
+                    low = float("inf")
+                    for m in meshes:
+                        ev = m.evaluated_get(dg)
+                        me = ev.to_mesh()
+                        low = min(low, min((ev.matrix_world @ v.co).z for v in me.vertices))
+                        ev.to_mesh_clear()
+                    for r in roots:
+                        pb = new_arm.pose.bones[r]
+                        pb.location = pb.location + rest[r].to_quaternion().inverted() @ Vector((0.0, 0.0, -low))
+                        pb.keyframe_insert("location", frame=f0 + fi)
+                    lifts.append(-low)
+                report.setdefault("클립 접지(m)", {})[take[-12:]] = (round(min(lifts), 3), round(max(lifts), 3))
         report["클립"] = [c[0] for c in clips]
 
     # ── 검사·내보내기
