@@ -56,6 +56,17 @@ public class UnitModelPostprocessor : AssetPostprocessor
         "해적선",
     };
 
+    // 원본 단위가 달라 유니티에 몇 cm짜리로 들어오는 모델 — 임포트 배율로 먼저 키운다(폴더 이름 = 유닛 이름).
+    //
+    // 왜 여기서 — ArtBinder.FitToHeight는 1000배 넘게 키워야 하면 「잘못 잰 것」으로 보고 건너뛴다
+    // (2026-09-08 이호준 7,062배 폭주를 막은 안전장치). 진짜로 작은 모델은 그 문턱에 걸려 점처럼 남는다.
+    // 파일을 다시 지을 수 없는 모델만 여기 적는다 — 나머지는 blender가 fix_unit_fbx.py로 실제 크기로 다시 짓는다.
+    static readonly (string unit, float scale)[] ImportScales =
+    {
+        // 사이렌헤드(glb→fbx assimp 변환본, 원본 glb 없음). 09-13 원격 preview 실측: 게임 안 크기 0.07×0.04×0.21.
+        ("안흔함_박준희", 100f),
+    };
+
     // 이 숫자를 올리면 유니티가 Assets/Art/Units 아래 모델을 **전부 다시 임포트**한다.
     // 위의 규칙을 고쳤는데 이미 임포트된 모델에 반영이 안 될 때 올린다.
     //
@@ -67,13 +78,15 @@ public class UnitModelPostprocessor : AssetPostprocessor
     // 5 → 6 (2026-09-08): 한글 경로 NFC 정규화 · 옛 humanDescription 초기화 · 이호준 Humanoid 복귀.
     // 6 → 7 (2026-09-08): 이호준 Generic 확정(유니티 아바타 검증 실패 실측).
     // 7 → 8 (2026-09-13): 배 유닛 고대의배·해적선을 Generic으로 추가.
-    public override uint GetVersion() => 8;
+    // 8 → 9 (2026-09-13): ImportScales(박준희 100배) 추가.
+    public override uint GetVersion() => 9;
 
     void OnPreprocessModel()
     {
         if (!assetPath.StartsWith(UnitModelRoot)) return;
 
         ModelImporter importer = (ModelImporter)assetImporter;
+        importer.globalScale = ImportScaleFor(assetPath);
 
         if (IsGenericRigUnit(assetPath))
         {
@@ -159,6 +172,15 @@ public class UnitModelPostprocessor : AssetPostprocessor
                 return true;
 
         return false;
+    }
+
+    static float ImportScaleFor(string path)
+    {
+        string nfc = path.Normalize(System.Text.NormalizationForm.FormC);   // IsGenericRigUnit과 같은 NFC 함정
+        foreach ((string unit, float scale) in ImportScales)
+            if (nfc.StartsWith((UnitModelRoot + unit + "/").Normalize(System.Text.NormalizationForm.FormC)))
+                return scale;
+        return 1f;
     }
 
     // 외부 애니메이션(Mixamo 등)을 나중에 붙일 수 있게 뼈를 남긴다.

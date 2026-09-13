@@ -73,10 +73,9 @@ public static class ArtBinder
     // 맞추면 탈것이나 짐승은 어색해진다. 모델 파일을 고치는 대신 여기서 조정한다.
     static readonly (string model, Vector3 euler, float heightScale)[] ModelAdjustments =
     {
-        // 자전거가 끝으로 선 채(앞바퀴가 하늘) 들어온다. X로 눕혀 바퀴 둘을 바닥에 놓고,
-        // Y로 돌려 옆모습이 보이게 한다. 바퀴가 위로 가면 X를 +90으로 뒤집으면 된다.
-        // 키 10 — 기준 20의 절반.
-        ("안흔함_상붕카", new Vector3(-90f, 90f, 0f), 0.5f),
+        // (09-13) 안흔함_상붕카 줄을 뺐다 — blender가 fix_unit_fbx.py로 두 바퀴가 바닥에 닿게 다시 지었다
+        // (앞바퀴 −Y, 길이 1.8m). 옛 파일은 끝으로 선 채 들어와 여기서 (−90, 90, 0)으로 눕혔는데, 그대로 두면 두 번 눕는다.
+        // 이제 FourLeggedModels(몸길이 기준)에서 크기만 맞춘다.
 
         // ⚠️ 사람형(Humanoid)은 여기 적지 않는다 — AutoUpright가 뼈 위치로 재서 자동으로 세운다.
         //
@@ -113,6 +112,9 @@ public static class ArtBinder
         // 1.0 = 가장 긴 축(이물 돛대 포함 약 29)을 기준 키 20에 맞춘다.
         ("고대의배", 1.0f),
         ("해적선", 1.0f),
+        // 자전거(2026-09-13 blender 재내보내기 — 두 바퀴가 바닥, 길이 1.8m). 가장 긴 축(길이)을 사람 키 20에 맞춘다 —
+        // 실제로도 자전거 길이 ≈ 사람 키라 키는 약 12. 옛 표(ModelAdjustments 키 10)와 거의 같은 크기다.
+        ("안흔함_상붕카", 1.0f),
     };
 
     static bool IsFourLegged(string modelName)
