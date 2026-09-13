@@ -24,16 +24,24 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
     const string BuildingRoot = "Assets/Art/Buildings/";   // 스토리 건물 13종(2026-09-12)
     const string CreatureRoot = "Assets/Art/Creatures/";   // 물범·노루·양(2026-09-12)
     const string PropRoot = "Assets/Art/Props/";           // 보물상자·금화더미·보물표시(2026-09-12)
+    const string StructureRoot = "Assets/Art/Structures/"; // 캠프파이어·상점·포탈·창고·받침·부두 등 구조물(2026-09-13)
+    // 배 유닛 두 척(2026-09-13, Blender) — Units 아래지만 사람 스킨이 아니라 Blender 규칙(텍스처·_잎카드·_발광)을 따른다.
+    static readonly string[] ShipRoots = { "Assets/Art/Units/고대의배/", "Assets/Art/Units/해적선/" };
     // 텍스처는 자기 종류 폴더의 Textures에서 찾는다(자연물·벽은 Nature/Textures, 괴물은 Monsters/Textures).
     static readonly string[] TextureFolders =
         { "Assets/Art/Nature/Textures", "Assets/Art/Walls/Textures", "Assets/Art/Monsters/Textures",
-          "Assets/Art/Buildings/Textures", "Assets/Art/Creatures/Textures", "Assets/Art/Props/Textures" };
+          "Assets/Art/Buildings/Textures", "Assets/Art/Creatures/Textures", "Assets/Art/Props/Textures",
+          "Assets/Art/Structures/Textures" };
     const string LeafCardSuffix = "_잎카드";   // 잎 카드·지느러미 막 — 양면 + 알파 컷
+    const string EmissiveSuffix = "_발광";     // 스스로 빛남 — 색 텍스처를 Emission에도(`_발광_잎카드`면 둘 다)
+    // 이름 규칙이 생기기 전에 커밋된 발광 재질 — 다시 내보내지 않고 이름으로 처리한다(화난 건물의 붉은 창).
+    static readonly string[] EmissiveNames = { "건물_창_분노", "건물_커튼월_분노" };
 
     // 규칙을 바꾸면 올린다 — 올려야 이미 임포트된 FBX도 다시 돈다.
     // 1 → 2 (2026-09-12): 거대 해왕류(Assets/Art/Monsters)를 대상에 추가.
     // 2 → 3 (2026-09-12): Blender 복제 번호(.001) 꼬리를 떼고 매칭 — 이미 임포트된 침엽수_02·활엽수_가을도 다시 돌게.
-    public override uint GetVersion() => 3;
+    // 3 → 4 (2026-09-13): Structures·배 유닛 대상 추가, `_발광` 규칙, FBX 옆 Textures 폴더 우선 탐색.
+    public override uint GetVersion() => 4;
 
     // URP의 기본 재질 설명 처리(셰이더를 Lit로, 색을 FBX 기본색으로)가 먼저 돈 뒤에 덧붙인다.
     public override int GetPostprocessOrder() => 100;
@@ -46,7 +54,8 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
         string nfc = Nfc(path);
         return nfc != null && (nfc.StartsWith(NatureRoot) || nfc.StartsWith(WallRoot) ||
                                nfc.StartsWith(MonsterRoot) || nfc.StartsWith(BuildingRoot) ||
-                               nfc.StartsWith(CreatureRoot) || nfc.StartsWith(PropRoot));
+                               nfc.StartsWith(CreatureRoot) || nfc.StartsWith(PropRoot) ||
+                               nfc.StartsWith(StructureRoot) || ShipRoots.Any(nfc.StartsWith));
     }
 
     void OnPreprocessMaterialDescription(MaterialDescription description, Material material, AnimationClip[] animations)
@@ -57,13 +66,14 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
         // 그대로 비교하면 텍스처(C_침엽_껍질.png)도 못 찾고 `_잎카드` 꼬리도 안 맞아 잎이 네모 판으로 나온다
         // (2026-09-12 실측: 침엽수_02·활엽수_가을이 이 상태로 들어왔다). 번호 꼬리는 떼고 비교한다.
         string materialName = StripBlenderDuplicateSuffix(Nfc(description.materialName));
-        string texturePath = FindTexturePath(materialName);
+        string texturePath = FindTexturePath(materialName, SiblingTextureFolder(assetPath));
+        Texture2D texture = null;
         if (texturePath != null)
         {
             // 텍스처가 나중에 바뀌어도 이 FBX가 다시 임포트되게 묶는다.
             context.DependsOnSourceAsset(texturePath);
 
-            Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
+            texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
             if (texture != null)
             {
                 material.SetTexture("_BaseMap", texture);
@@ -71,8 +81,34 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
             }
         }
 
-        if (materialName != null && materialName.EndsWith(LeafCardSuffix))
+        if (materialName == null) return;
+
+        if (materialName.EndsWith(LeafCardSuffix))
             MakeLeafCard(material);
+
+        // `포탈_막_호박_발광_잎카드`처럼 두 꼬리가 겹칠 수 있다 — 잎카드 꼬리를 떼고 발광 꼬리를 본다.
+        string withoutLeafCard = materialName.EndsWith(LeafCardSuffix)
+            ? materialName.Substring(0, materialName.Length - LeafCardSuffix.Length)
+            : materialName;
+        if (withoutLeafCard.EndsWith(EmissiveSuffix) || EmissiveNames.Contains(materialName))
+            MakeEmissive(material, texture);
+    }
+
+    // 스스로 빛나는 면(불씨·붉게 달아오른 창·포탈 막·등불). 색 텍스처를 그대로 발광 지도로 쓴다 —
+    // 텍스처가 이미 「빛나는 곳만 밝게」 구워져 있어서(불씨 발광 면적 10% 안팎) 따로 마스크가 필요 없다.
+    static void MakeEmissive(Material material, Texture2D texture)
+    {
+        material.EnableKeyword("_EMISSION");
+        material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+        material.SetColor("_EmissionColor", Color.white);
+        if (texture != null) material.SetTexture("_EmissionMap", texture);
+    }
+
+    // FBX 바로 옆 Textures 폴더. 배 유닛처럼 유닛마다 폴더가 따로인 경우를 위해 먼저 본다.
+    static string SiblingTextureFolder(string path)
+    {
+        string dir = System.IO.Path.GetDirectoryName(path);
+        return string.IsNullOrEmpty(dir) ? null : dir.Replace('\\', '/') + "/Textures";
     }
 
     // "이름.001" → "이름". 점 뒤가 숫자 세 자리일 때만 뗀다 — 이름 자체에 점이 들어간 경우를 안 망가뜨리게.
@@ -97,11 +133,15 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
     }
 
     // 파일명과 재질 이름을 NFC로 맞춰 비교한다. LoadAssetAtPath에 이름을 그대로 붙이면 자모 분리 때문에 조용히 못 찾는다.
-    static string FindTexturePath(string materialName)
+    static string FindTexturePath(string materialName, string siblingFolder)
     {
         if (string.IsNullOrEmpty(materialName)) return null;
 
-        string[] folders = TextureFolders.Where(AssetDatabase.IsValidFolder).ToArray();
+        // FBX 옆 폴더는 유니티가 준 실제 경로에서 뽑았으니, 한글 폴더 이름의 정규화(NFC/NFD) 차이에 안 걸린다.
+        string[] folders = new[] { siblingFolder }.Concat(TextureFolders)
+            .Where(folder => !string.IsNullOrEmpty(folder) && AssetDatabase.IsValidFolder(folder))
+            .Distinct()
+            .ToArray();
         if (folders.Length == 0) return null;
 
         return AssetDatabase.FindAssets("t:Texture2D", folders)
@@ -114,10 +154,12 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
     // 건드리지 않으므로 되돌아와서 무한히 돌지 않는다.
     static void OnPostprocessAllAssets(string[] imported, string[] deleted, string[] moved, string[] movedFrom)
     {
-        if (!imported.Any(path => TextureFolders.Any(folder => Nfc(path).StartsWith(folder + "/")))) return;
+        if (!imported.Any(path => TextureFolders.Any(folder => Nfc(path).StartsWith(folder + "/")) ||
+                                  ShipRoots.Any(root => Nfc(path).StartsWith(root + "Textures/")))) return;
 
         string[] roots = new[] { "Assets/Art/Nature", "Assets/Art/Walls", "Assets/Art/Monsters", "Assets/Art/Buildings",
-                                 "Assets/Art/Creatures", "Assets/Art/Props" }
+                                 "Assets/Art/Creatures", "Assets/Art/Props", "Assets/Art/Structures" }
+            .Concat(ShipRoots.Select(root => root.TrimEnd('/')))
             .Where(AssetDatabase.IsValidFolder).ToArray();
         if (roots.Length == 0) return;
 

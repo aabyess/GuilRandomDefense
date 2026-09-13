@@ -13,10 +13,13 @@ using UnityEditor;
 /// </summary>
 public class BlenderClipPostprocessor : AssetPostprocessor
 {
-    static readonly string[] Roots = { "Assets/Art/Monsters/", "Assets/Art/Creatures/", "Assets/Art/Props/" };
+    // 배 유닛(Units/고대의배·해적선, 2026-09-13)도 Blender 클립 「…|Idle_Bob」이라 같은 규칙을 탄다.
+    static readonly string[] Roots = { "Assets/Art/Monsters/", "Assets/Art/Creatures/", "Assets/Art/Props/",
+                                       "Assets/Art/Units/고대의배/", "Assets/Art/Units/해적선/" };
 
     // 규칙을 바꾸면 올린다 — 올려야 이미 임포트된 FBX도 다시 돈다.
-    public override uint GetVersion() => 1;
+    // 1 → 2 (2026-09-13): 배 유닛 폴더 추가.
+    public override uint GetVersion() => 2;
 
     void OnPreprocessAnimation()
     {

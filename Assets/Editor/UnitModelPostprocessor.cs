@@ -49,6 +49,11 @@ public class UnitModelPostprocessor : AssetPostprocessor
         //      매핑 표가 있어도 뼈 계층·회전이 사람 골격 규칙에 안 맞으면 아바타가 안 선다.
         //      자체 Mixamo 클립이 있으니 Generic이 맞다. 이번 근거는 유니티 판정이다.
         "안흔함_이호준",
+
+        // 배 유닛 두 척(2026-09-13, Blender) — 선체·돛 뼈대(Root·Hull·Sail_*·Flag)라 사람 골격이 아니다.
+        // 자기 클립 「<이름>_뼈대|Idle_Bob」(8초 흔들림)이 유일한 동작이다. 폴더 이름은 FBX 이름과 같다.
+        "고대의배",
+        "해적선",
     };
 
     // 이 숫자를 올리면 유니티가 Assets/Art/Units 아래 모델을 **전부 다시 임포트**한다.
@@ -61,7 +66,8 @@ public class UnitModelPostprocessor : AssetPostprocessor
     // 4 → 5 (2026-09-07): 안흔함_이호준(좀비)을 Generic으로 뺐다.
     // 5 → 6 (2026-09-08): 한글 경로 NFC 정규화 · 옛 humanDescription 초기화 · 이호준 Humanoid 복귀.
     // 6 → 7 (2026-09-08): 이호준 Generic 확정(유니티 아바타 검증 실패 실측).
-    public override uint GetVersion() => 7;
+    // 7 → 8 (2026-09-13): 배 유닛 고대의배·해적선을 Generic으로 추가.
+    public override uint GetVersion() => 8;
 
     void OnPreprocessModel()
     {

@@ -109,6 +109,10 @@ public static class ArtBinder
     static readonly (string model, float scale)[] FourLeggedModels =
     {
         ("안흔함_강재규", 0.1f),   // 재규어
+        // 배 유닛(2026-09-13, Blender) — 선체가 앞뒤로 긴 게 정상이라 경계 상자로 세우면 고물로 선다.
+        // 1.0 = 가장 긴 축(이물 돛대 포함 약 29)을 기준 키 20에 맞춘다.
+        ("고대의배", 1.0f),
+        ("해적선", 1.0f),
     };
 
     static bool IsFourLegged(string modelName)
@@ -336,6 +340,9 @@ public static class ArtBinder
     static readonly (string model, string unit)[] ModelOverrides =
     {
         ("idle", "흔함_최상호"),   // 나루토 — Mixamo에서 With Skin으로 받은 파일이라 이름이 idle이다
+        // 고대의 배(2026-09-13, Blender) — 로스터가 아니라 Special의 스토리7 보상 유닛이라 에셋 이름이 다르다.
+        // 해적선은 로스터 에셋 이름(해적선)과 파일명이 같아 표 없이 붙는다.
+        ("고대의배", "Unit_고대의배_h05Y"),
     };
 
     /// <summary>
@@ -703,6 +710,9 @@ public static class ArtBinder
 
         List<UnitData> units = LoadAll<UnitData>("Assets/Data/Units/Roster");
         if (units.Count == 0) return "\n⚠️ UnitData가 없습니다.";
+        // Special(고대의 배·메타몽 등 보상·도박 전용 유닛)도 스킨 대상이다(2026-09-13 고대의 배).
+        // 표나 파일명이 가리킬 때만 붙으므로, 아래 「남은 유닛 자리표시로 되돌리기」에는 섞지 않는다.
+        List<UnitData> specialUnits = LoadAll<UnitData>("Assets/Data/Units/Special");
 
         // 같은 등급이 같은 모델로 몰리지 않도록 등급 안에서 돌려가며 준다.
         // 등급별 색은 SelectionIndicator·마커가 이미 입히므로 모델까지 등급을 나눌 필요는 없다.
@@ -716,7 +726,8 @@ public static class ArtBinder
         foreach ((string modelName, string unitName) in ModelOverrides)
         {
             GameObject model = models.FirstOrDefault(m => m.name == modelName);
-            UnitData unit = units.FirstOrDefault(u => u.name == unitName);
+            UnitData unit = units.FirstOrDefault(u => u.name == unitName)
+                         ?? specialUnits.FirstOrDefault(u => u.name == unitName);
             if (model == null || unit == null) continue;
 
             unit.prefab = GetOrCreate(cache, template, model, "Unit", ref made);
