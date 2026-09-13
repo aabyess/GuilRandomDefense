@@ -68,7 +68,7 @@ public static class SkinOrientationReport
 
         if (prefabs.Count == 0)
         {
-            EditorUtility.DisplayDialog("스킨 방향 점검",
+            EditorGuards.Dialog("스킨 방향 점검",
                 $"{GeneratedFolder} 에서 유닛 프리팹을 찾지 못했습니다.\n\n" +
                 "먼저 Tools > 아트 > 모델 배선을 돌려주세요.", "확인");
             return;
@@ -145,6 +145,6 @@ public static class SkinOrientationReport
               string.Join("\n  ", suspects.Take(24)) +
               "\n\n자세한 수치는 콘솔을 보세요.";
 
-        EditorUtility.DisplayDialog("스킨 방향 점검", summary, "확인");
+        EditorGuards.Dialog("스킨 방향 점검", summary, "확인");
     }
 }

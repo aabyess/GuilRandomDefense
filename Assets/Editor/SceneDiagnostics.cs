@@ -83,7 +83,7 @@ public static class SceneDiagnostics
         AssetDatabase.Refresh();
 
         Debug.Log($"[진단] 씬 배선을 {OutputPath}에 썼습니다.");
-        EditorUtility.DisplayDialog("씬 배선 덤프", $"{OutputPath} 에 저장했습니다.", "확인");
+        EditorGuards.Dialog("씬 배선 덤프", $"{OutputPath} 에 저장했습니다.", "확인");
     }
 
     static string HierarchyPath(Transform t)
@@ -147,19 +147,20 @@ public static class SceneDiagnostics
 
         if (EditorSettings.serializationMode != SerializationMode.ForceText)
         {
-            EditorUtility.DisplayDialog("재직렬화",
+            EditorGuards.Dialog("재직렬화",
                 $"Asset Serialization이 {EditorSettings.serializationMode}입니다.\n" +
                 "Project Settings > Editor 에서 Force Text로 바꾼 뒤 다시 실행하세요.", "확인");
             return;
         }
 
         Scene scene = SceneManager.GetActiveScene();
-        if (scene.isDirty && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+        // 무인 실행(ClaudeCommands)에선 저장 여부를 물을 사람이 없다 — 저장 안 된 씬이면 멈춘다.
+        if (scene.isDirty && (EditorGuards.IsUnattended || !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())) return;
 
         AssetDatabase.ForceReserializeAssets(new[] { scene.path });
         AssetDatabase.Refresh();
 
-        EditorUtility.DisplayDialog("재직렬화",
+        EditorGuards.Dialog("재직렬화",
             $"{scene.path} 를 다시 저장했습니다.\n형식이 바뀌었는지 확인해 주세요.", "확인");
     }
 }

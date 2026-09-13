@@ -21,7 +21,7 @@ public static class WaveWiring
         RoundManager manager = Object.FindFirstObjectByType<RoundManager>(FindObjectsInactive.Include);
         if (manager == null)
         {
-            EditorUtility.DisplayDialog(Title, "열린 씬에서 RoundManager를 찾지 못했습니다.", "확인");
+            EditorGuards.Dialog(Title, "열린 씬에서 RoundManager를 찾지 못했습니다.", "확인");
             return;
         }
 
@@ -71,7 +71,7 @@ public static class WaveWiring
                          (duplicates.Length > 0 ? $"⚠️ roundNumber 중복: {duplicates}\n\n" : "") +
                          "Cmd+S 로 씬을 저장하세요.";
         Debug.Log("[웨이브] " + message);
-        EditorUtility.DisplayDialog(Title, message, "확인");
+        EditorGuards.Dialog(Title, message, "확인");
     }
 
     static void Fill(SerializedObject so, string propertyName, List<WaveData> waves)

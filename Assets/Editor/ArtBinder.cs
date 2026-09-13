@@ -367,7 +367,7 @@ public static class ArtBinder
 
         AssetDatabase.SaveAssets();
         Debug.Log("[아트] " + report);
-        EditorUtility.DisplayDialog(Title, report.TrimStart('\n'), "확인");
+        EditorGuards.Dialog(Title, report.TrimStart('\n'), "확인");
     }
 
     static string ScalePlaceholder(string path)
@@ -441,7 +441,7 @@ public static class ArtBinder
 
         if (textures.Count == 0)
         {
-            EditorUtility.DisplayDialog(Title,
+            EditorGuards.Dialog(Title,
                 "Assets/Art 아래에서 텍스처를 찾지 못했습니다.\n\n" +
                 "모델을 받은 폴더의 PNG·JPG를 모델과 같은 곳에 넣어주세요.", "확인");
             return;
@@ -525,7 +525,7 @@ public static class ArtBinder
                       $"\n\n{MaterialFolder} 에서 직접 텍스처를 끌어다 넣으면 됩니다.";
 
         Debug.Log("[아트] " + report);
-        EditorUtility.DisplayDialog(Title, report, "확인");
+        EditorGuards.Dialog(Title, report, "확인");
     }
 
     // 머티리얼 이름과 텍스처 파일명을 맞춘다. 완전히 같은 것부터 보고, 없으면 한쪽이 다른 쪽을
@@ -606,7 +606,7 @@ public static class ArtBinder
 
         if (monsters.Count == 0 && characters.Count == 0)
         {
-            EditorUtility.DisplayDialog(Title,
+            EditorGuards.Dialog(Title,
                 $"몸이 있는 모델을 찾지 못했습니다.\n\n{MonsterFolder}, {CharacterFolder} 또는 {UnitFolder}/<유닛이름>/ 에 " +
                 "FBX·OBJ 파일을 넣고 다시 실행하세요.\n\n" +
                 "Mixamo에서 받으셨다면 하나는 반드시 With Skin이어야 합니다 — " +
@@ -629,7 +629,7 @@ public static class ArtBinder
         AssetDatabase.Refresh();
 
         Debug.Log("[아트] " + report);
-        EditorUtility.DisplayDialog(Title, report, "확인");
+        EditorGuards.Dialog(Title, report, "확인");
     }
 
     // ── 적 ─────────────────────────────────────────────────────────────

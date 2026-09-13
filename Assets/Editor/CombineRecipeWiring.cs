@@ -60,7 +60,7 @@ public static class CombineRecipeWiring
         }
 
         Debug.Log("[조합 레시피] " + report);
-        EditorUtility.DisplayDialog(Title, report, "확인");
+        EditorGuards.Dialog(Title, report, "확인");
     }
 
     static void Wire(System.Func<string, bool> filter, string label)
@@ -68,7 +68,7 @@ public static class CombineRecipeWiring
         CombineSystem system = Object.FindFirstObjectByType<CombineSystem>(FindObjectsInactive.Include);
         if (system == null)
         {
-            EditorUtility.DisplayDialog(Title,
+            EditorGuards.Dialog(Title,
                 "열려 있는 씬에서 CombineSystem을 찾지 못했습니다.\n씬을 먼저 열어주세요.", "확인");
             return;
         }
@@ -98,6 +98,6 @@ public static class CombineRecipeWiring
         string message = $"{system.gameObject.name}의 Recipes를 {label} {recipes.Count}개로 채웠습니다.\n\n" +
                          "Cmd+S 로 씬을 저장하세요.";
         Debug.Log("[조합 레시피] " + message);
-        EditorUtility.DisplayDialog(Title, message, "확인");
+        EditorGuards.Dialog(Title, message, "확인");
     }
 }

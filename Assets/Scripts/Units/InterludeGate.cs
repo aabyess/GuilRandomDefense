@@ -23,6 +23,9 @@ public class InterludeGate : MonoBehaviour
     [SerializeField] WispData choiceTrackedWispData;
     [SerializeField] Color alreadyChosenColor = new Color(0.25f, 0.2f, 0.5f, 0.6f);
 
+    [Header("원판 대신 보이는 것 — 바닥 마법진(맵 생성기가 채움). 원판 그림이 꺼져 있으면 이쪽을 물들인다")]
+    [SerializeField] Renderer[] visuals = new Renderer[0];
+
     enum VisualState { Open, ClosedByInterlude, ClosedByChoice }
 
     Collider gateCollider;
@@ -94,21 +97,31 @@ public class InterludeGate : MonoBehaviour
         ApplyColor(state);
     }
 
+    public void SetVisuals(Renderer[] renderers) => visuals = renderers ?? new Renderer[0];
+
     void ApplyColor(VisualState state)
     {
-        if (gateRenderer == null) return;
+        ApplyColor(gateRenderer, state);
+        foreach (Renderer visual in visuals) ApplyColor(visual, state);
+    }
+
+    void ApplyColor(Renderer target, VisualState state)
+    {
+        if (target == null) return;
 
         if (state == VisualState.Open)
         {
             // 오버라이드를 지워서 원래 공유 머티리얼 색으로 되돌린다 — 인스턴스 머티리얼을
             // 만들면 포탈끼리 배칭이 깨진다.
-            gateRenderer.SetPropertyBlock(null);
+            target.SetPropertyBlock(null);
             return;
         }
 
         Color color = state == VisualState.ClosedByChoice ? alreadyChosenColor : closedColor;
-        gateRenderer.GetPropertyBlock(propertyBlock);
+        target.GetPropertyBlock(propertyBlock);
         propertyBlock.SetColor("_BaseColor", color);
-        gateRenderer.SetPropertyBlock(propertyBlock);
+        // 마법진은 발광이라 바탕색만 바꾸면 계속 빛난다 — 닫힌 동안은 빛도 같은 색으로 낮춘다.
+        propertyBlock.SetColor("_EmissionColor", color * 0.3f);
+        target.SetPropertyBlock(propertyBlock);
     }
 }

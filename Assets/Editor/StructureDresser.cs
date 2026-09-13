@@ -213,11 +213,12 @@ public static class StructureDresser
     public static readonly Color ReturnGlow = new Color(0.35f, 0.95f, 0.85f);
 
     /// <summary>
-    /// 트리거 원판(판정)은 그대로 두고 돌 아치를 세운다. 아치 폭을 원판 지름에 맞춘다.
-    /// hideDisc: 원판 그림을 끌지. 뽑기 섬 포탈은 끄지 않는다 — 원판 색이 열림·닫힘(InterludeGate 등)을 보여 준다.
-    /// light: 막 가운데 점광원을 달지.
+    /// 트리거 원판(판정)은 그대로 두고 바닥 마법진을 깐다(사장님 09-13: 「문처럼 하지 말고 밑에 마법진 같은 걸로」).
+    /// 마법진 지름을 원판 지름에 맞춘다. 원판 그림은 끈다 — 원판 윗면(섬 위 0.75)이 납작한 마법진을 덮기 때문이다.
+    /// 원판 색으로 열림·닫힘을 보여 주던 InterludeGate는 마법진 렌더러를 대신 물들인다.
+    /// light: 가운데 점광원을 달지.
     /// </summary>
-    public static bool DressPortal(GameObject disc, string model, float yaw, Color glow, bool hideDisc, bool light = true)
+    public static bool DressPortal(GameObject disc, string model, Color glow, bool light = true)
     {
         GameObject asset = Load(model);
         if (asset == null || !TryMeasure(asset, out Bounds bounds)) return false;
@@ -225,12 +226,30 @@ public static class StructureDresser
         float diameter = disc.transform.lossyScale.x;
         float scale = diameter / Mathf.Max(0.001f, Mathf.Max(bounds.size.x, bounds.size.z));
         Vector3 ground = new Vector3(disc.transform.position.x, MapLayout.IslandTop, disc.transform.position.z);
-        GameObject arch = Place(disc.transform.parent, model, disc.name + "_아치", ground, yaw, scale);
-        if (arch == null) return false;
+        GameObject circle = Place(disc.transform.parent, model, disc.name + "_마법진", ground, 0f, scale);
+        if (circle == null) return false;
 
-        if (hideDisc) HideRenderer(disc);
-        EffectSockets.Attach(arch, glow, light);   // 빛_자리
+        HideRenderer(disc);
+        WireSpin(circle);
+        if (disc.TryGetComponent(out InterludeGate gate))
+            gate.SetVisuals(circle.GetComponentsInChildren<Renderer>(true));
+        EffectSockets.Attach(circle, glow, light);   // 빛_자리
         return true;
+    }
+
+    // Blender 약속: 돌릴 고리는 자식 이름에 `_회전_시계`·`_회전_반시계`. 실행 중 이름 비교(정규화 차이)를 피하려고 여기서 찾아 넣는다.
+    static void WireSpin(GameObject circle)
+    {
+        List<Transform> clockwise = new List<Transform>();
+        List<Transform> counterClockwise = new List<Transform>();
+        foreach (Transform child in circle.GetComponentsInChildren<Transform>(true))
+        {
+            string name = child.name.Normalize(System.Text.NormalizationForm.FormC);
+            if (name.Contains("_회전_반시계")) counterClockwise.Add(child);
+            else if (name.Contains("_회전_시계")) clockwise.Add(child);
+        }
+        if (clockwise.Count + counterClockwise.Count == 0) return;
+        circle.AddComponent<MagicCircleSpin>().SetRings(clockwise.ToArray(), counterClockwise.ToArray());
     }
 
     /// <summary>뽑기 섬 위의 위습 포탈(UnitPortal·ResourcePortal) 전부에 작은 뽑기 아치.</summary>
@@ -248,7 +267,7 @@ public static class StructureDresser
             if (!area.Contains(new Vector2(disc.transform.position.x, disc.transform.position.z))) continue;
 
             // 포탈이 수십 개라 광원은 안 단다 — 빛 알갱이만.
-            if (DressPortal(disc, "포탈_작은_뽑기", 0f, GachaGlow, hideDisc: false, light: false)) dressed++;
+            if (DressPortal(disc, "포탈_마법진_뽑기", GachaGlow, light: false)) dressed++;
         }
         return dressed;
     }

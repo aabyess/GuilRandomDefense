@@ -67,7 +67,7 @@ public static class MapGenerator
 
         GameObject existing = GameObject.Find(RootName);
         if (existing != null &&
-            !EditorUtility.DisplayDialog(Title,
+            !EditorGuards.Dialog(Title,
                 "이미 Map이 있습니다. 지우고 다시 만들까요?\n(Map 아래 직접 수정한 것은 사라집니다)",
                 "다시 만들기", "취소"))
             return;
@@ -179,7 +179,7 @@ public static class MapGenerator
             tableReport + displayReport + gateReport + storyReport + sealReport + seaKingReport + questReport +
             chatUnlockReport + hiddenCombineReport + chatBoxReport + overlaps + navResult + oldGround + rewire + saveNote;
         Debug.Log("[맵] " + message);
-        EditorUtility.DisplayDialog(Title, message, "확인");
+        EditorGuards.Dialog(Title, message, "확인");
     }
 
     static string BuildSea(Transform parent)
@@ -1834,13 +1834,22 @@ public static class MapGenerator
         var active = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
         if (active.path == ScenePath) return true;
 
-        if (!EditorUtility.DisplayDialog(Title,
+        if (!EditorGuards.Dialog(Title,
                 (string.IsNullOrEmpty(active.path) ? "지금 열린 씬이 저장된 적 없는(Untitled) 씬입니다." : $"지금 열린 씬이 {active.path}입니다.") +
                 $"\n\n맵은 {ScenePath}에 만들어야 저장됩니다. 그 씬을 열고 계속할까요?",
                 "열고 계속", "취소"))
             return false;
 
-        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return false;
+        // 무인 실행(ClaudeCommands)에선 저장 여부를 물을 사람이 없다 — 저장 안 된 다른 씬을 조용히 버리지 않게 멈춘다.
+        if (EditorGuards.IsUnattended)
+        {
+            if (active.isDirty)
+            {
+                Debug.LogError($"[맵] 저장 안 된 씬({active.path})이 열려 있어 무인 맵 생성을 멈춥니다.");
+                return false;
+            }
+        }
+        else if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return false;
         EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
         return true;
     }
@@ -2598,7 +2607,7 @@ public static class MapGenerator
 
         StoryZonePortal component = portal.AddComponent<StoryZonePortal>();
         component.SetDestination(StoryZoneLandingPoint(laneIndex));
-        StructureDresser.DressPortal(portal, "포탈_작은_스토리", 0f, StructureDresser.StoryGlow, hideDisc: true);
+        StructureDresser.DressPortal(portal, "포탈_마법진_스토리", StructureDresser.StoryGlow);
     }
 
     // ⚠️ 2026-09-05 정정(사장님 발견): 예전엔 zone.size×0.25(존 크기에 비례)였다 — 존이
@@ -2677,7 +2686,7 @@ public static class MapGenerator
             destinations[i] = new Vector3(lane.center.x, MapLayout.IslandTop, lane.center.y);
         }
         component.SetDestinations(destinations);
-        StructureDresser.DressPortal(portal, "포탈_큰_복귀", 0f, StructureDresser.ReturnGlow, hideDisc: true);
+        StructureDresser.DressPortal(portal, "포탈_마법진_복귀", StructureDresser.ReturnGlow);
     }
 
     // 크립섬 4곳. **원작은 3단계 순차 체인**이다(물범 → 노루 → 양) — SealSpawner 주석 참고.
@@ -3482,7 +3491,7 @@ public static class MapGenerator
     {
         string report = ShapeWispPrefab();
         Debug.Log("[맵] " + report);
-        EditorUtility.DisplayDialog(Title, report.TrimStart('\n'), "확인");
+        EditorGuards.Dialog(Title, report.TrimStart('\n'), "확인");
     }
 
     static string ShapeWispPrefab()
@@ -4482,7 +4491,7 @@ public static class MapGenerator
 
         string text = report.ToString();
         Debug.Log("[맵] " + text);
-        EditorUtility.DisplayDialog(Title, text, "확인");
+        EditorGuards.Dialog(Title, text, "확인");
     }
 
     static string BuildNavMesh(GameObject root)

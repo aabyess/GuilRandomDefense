@@ -19,7 +19,7 @@ public static class HudWiring
         if (existing != null)
         {
             Selection.activeGameObject = existing.gameObject;
-            EditorUtility.DisplayDialog(Title, $"이미 씬에 있습니다: {existing.gameObject.name}", "확인");
+            EditorGuards.Dialog(Title, $"이미 씬에 있습니다: {existing.gameObject.name}", "확인");
             return;
         }
 
@@ -28,7 +28,7 @@ public static class HudWiring
         Selection.activeGameObject = layer;
 
         EditorSceneManager.MarkSceneDirty(layer.scene);
-        EditorUtility.DisplayDialog(Title,
+        EditorGuards.Dialog(Title,
             "적 체력바를 씬에 추가했습니다.\nCanvas와 바는 실행 시 자동 생성됩니다.\n\nCmd+S 로 저장하세요.", "확인");
     }
 
@@ -45,7 +45,7 @@ public static class HudWiring
         if (existing != null)
         {
             Selection.activeGameObject = existing.gameObject;
-            EditorUtility.DisplayDialog(Title, $"이미 씬에 있습니다: {existing.gameObject.name}", "확인");
+            EditorGuards.Dialog(Title, $"이미 씬에 있습니다: {existing.gameObject.name}", "확인");
             return;
         }
 
@@ -54,7 +54,7 @@ public static class HudWiring
         Selection.activeGameObject = layer;
 
         EditorSceneManager.MarkSceneDirty(layer.scene);
-        EditorUtility.DisplayDialog(Title,
+        EditorGuards.Dialog(Title,
             "사이드보스 캐스팅바·스턴게이지바·무적 표시를 씬에 추가했습니다.\n" +
             "Canvas와 바는 실행 시 자동 생성되며, 사이드보스가 없는 동안은 아무것도 안 뜹니다.\n\n" +
             "Cmd+S 로 저장하세요.", "확인");
@@ -69,7 +69,7 @@ public static class HudWiring
         if (existing != null)
         {
             Selection.activeGameObject = existing.gameObject;
-            EditorUtility.DisplayDialog(Title,
+            EditorGuards.Dialog(Title,
                 $"이미 씬에 있습니다: {existing.gameObject.name}\nHierarchy에서 선택해 뒀습니다.", "확인");
             return;
         }
@@ -79,7 +79,7 @@ public static class HudWiring
         Selection.activeGameObject = hud;
 
         EditorSceneManager.MarkSceneDirty(hud.scene);
-        EditorUtility.DisplayDialog(Title,
+        EditorGuards.Dialog(Title,
             "GameHud를 씬에 추가했습니다.\n\nCanvas·하단 바·명령 그리드는 실행 시 자동 생성되므로\n" +
             "Hierarchy에는 GameObject 하나만 보이는 게 정상입니다.\n\nCmd+S 로 저장하세요.", "확인");
     }
