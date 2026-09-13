@@ -160,6 +160,10 @@ public static class ClaudeCommands
             case "rig":
                 return RigReport(rest);
 
+            case "big":
+                return BigObjects(parts[0], parts.Length > 1 ? F(parts[1]) : 30f,
+                                  parts.Length > 2 ? parts[2] : null);
+
             default:
                 return $"❌ 모르는 명령: {verb}";
         }
@@ -292,6 +296,35 @@ public static class ClaudeCommands
         {
             EditorSceneManager.ClosePreviewScene(preview);
         }
+    }
+
+    // 「이상한 게 크게 있다」를 이름으로 찾는다 — 루트 바로 아래 자식마다 렌더러 경계를 합쳐, 가장 긴 변이 기준보다 큰 것을 큰 순서로.
+    // big <루트 이름> [최소 크기] [이름에 들어갈 글자(선택)]
+    static string BigObjects(string rootName, float minSize, string nameFilter)
+    {
+        GameObject root = FindInOpenScenes(rootName);
+        if (root == null) return $"❌ 씬에서 못 찾음: {rootName}";
+
+        List<(string name, Bounds bounds)> found = new List<(string, Bounds)>();
+        foreach (Transform child in root.transform)
+        {
+            if (nameFilter != null && !child.name.Contains(nameFilter)) continue;
+            Bounds? bounds = null;
+            foreach (Renderer renderer in child.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!(renderer is MeshRenderer || renderer is SkinnedMeshRenderer) || !renderer.enabled) continue;
+                if (bounds == null) bounds = renderer.bounds;
+                else { Bounds b = bounds.Value; b.Encapsulate(renderer.bounds); bounds = b; }
+            }
+            if (bounds == null) continue;
+            Vector3 s = bounds.Value.size;
+            if (Mathf.Max(s.x, s.y, s.z) >= minSize) found.Add((child.name, bounds.Value));
+        }
+
+        StringBuilder sb = new StringBuilder($"📏 {rootName} 아래 가장 긴 변 {minSize} 이상: {found.Count}개\n");
+        foreach ((string name, Bounds b) in found.OrderByDescending(f => Mathf.Max(f.bounds.size.x, f.bounds.size.y, f.bounds.size.z)).Take(40))
+            sb.AppendLine($"   {name} · 크기 {b.size} · 중심 {b.center}");
+        return sb.ToString();
     }
 
     // Humanoid 아바타가 왜 안 서는지 — 유니티는 자동 매핑 실패 이유를 로그에 안 남긴다. 임포터의 매핑 결과·아바타 판정·
