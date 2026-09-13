@@ -148,6 +148,9 @@ public static class ClaudeCommands
             case "units":
                 return UnitLineup(parts[0], parts.Length > 1 ? int.Parse(parts[1]) : 0, parts.Length > 2 ? int.Parse(parts[2]) : 16);
 
+            case "inspect":
+                return Inspect(rest);
+
             default:
                 return $"❌ 모르는 명령: {verb}";
         }
@@ -185,6 +188,40 @@ public static class ClaudeCommands
         Vector3 direction = new Vector3(0f, 0.75f, -1f).normalized;   // 게임 카메라처럼 남쪽 위에서
         return Render(file, area.center + direction * distance, area.center, 45f, null) +
                $"\n   경계 중심 {area.center} · 크기 {area.size}";
+    }
+
+    // 화면에 안 보이는 원인을 사진 대신 값으로 본다 — 자식마다 위치·배율, 렌더러 켜짐, 재질·셰이더·텍스처·컷오프·컬·발광, 메시 크기.
+    static string Inspect(string objectName)
+    {
+        GameObject found = FindInOpenScenes(objectName);
+        if (found == null) return $"❌ 씬에서 못 찾음: {objectName}";
+
+        StringBuilder sb = new StringBuilder($"🔎 {objectName} (활성 {found.activeInHierarchy})\n");
+        foreach (Transform t in found.GetComponentsInChildren<Transform>(true))
+        {
+            int depth = 0;
+            for (Transform p = t; p != null && p != found.transform; p = p.parent) depth++;
+            string indent = new string(' ', 3 + 2 * depth);
+
+            sb.Append($"{indent}{t.name} · 활성 {t.gameObject.activeSelf} · 월드 {t.position} · 배율 {t.lossyScale} · 회전 {t.rotation.eulerAngles}");
+            if (t.TryGetComponent(out MeshFilter filter) && filter.sharedMesh != null)
+                sb.Append($"\n{indent}  메시 {filter.sharedMesh.name} · 정점 {filter.sharedMesh.vertexCount} · 자산 경계 {filter.sharedMesh.bounds.size}");
+            if (t.TryGetComponent(out Renderer renderer))
+            {
+                sb.Append($"\n{indent}  렌더러 {(renderer.enabled ? "켜짐" : "꺼짐")} · 월드 경계 중심 {renderer.bounds.center} 크기 {renderer.bounds.size} · 그림자 {renderer.shadowCastingMode}");
+                foreach (Material m in renderer.sharedMaterials)
+                {
+                    if (m == null) { sb.Append($"\n{indent}  재질 없음"); continue; }
+                    Texture texture = m.HasProperty("_BaseMap") ? m.GetTexture("_BaseMap") : null;
+                    string F(string prop) => m.HasProperty(prop) ? m.GetFloat(prop).ToString("0.##") : "-";
+                    sb.Append($"\n{indent}  재질 {m.name} · 셰이더 {m.shader.name} · 큐 {m.renderQueue} · 텍스처 {(texture != null ? $"{texture.name} {texture.width}×{texture.height}" : "없음")}" +
+                              $" · 알파클립 {F("_AlphaClip")} 컷오프 {F("_Cutoff")} · 컬 {F("_Cull")} · 표면 {F("_Surface")}" +
+                              $" · 발광 {(m.HasProperty("_EmissionColor") ? m.GetColor("_EmissionColor").ToString() : "-")} · 키워드 [{string.Join(",", m.shaderKeywords)}]");
+                }
+            }
+            sb.AppendLine();
+        }
+        return sb.ToString();
     }
 
     static GameObject FindInOpenScenes(string name)

@@ -41,7 +41,8 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
     // 1 → 2 (2026-09-12): 거대 해왕류(Assets/Art/Monsters)를 대상에 추가.
     // 2 → 3 (2026-09-12): Blender 복제 번호(.001) 꼬리를 떼고 매칭 — 이미 임포트된 침엽수_02·활엽수_가을도 다시 돌게.
     // 3 → 4 (2026-09-13): Structures·배 유닛 대상 추가, `_발광` 규칙, FBX 옆 Textures 폴더 우선 탐색.
-    public override uint GetVersion() => 4;
+    // 4 → 5 (2026-09-13): 포탈 마법진 발광 세기 올림(낮 화면에서 흐리게 보였음).
+    public override uint GetVersion() => 5;
 
     // URP의 기본 재질 설명 처리(셰이더를 Lit로, 색을 FBX 기본색으로)가 먼저 돈 뒤에 덧붙인다.
     public override int GetPostprocessOrder() => 100;
@@ -91,16 +92,20 @@ public class NatureMaterialPostprocessor : AssetPostprocessor
             ? materialName.Substring(0, materialName.Length - LeafCardSuffix.Length)
             : materialName;
         if (withoutLeafCard.EndsWith(EmissiveSuffix) || EmissiveNames.Contains(materialName))
-            MakeEmissive(material, texture);
+            MakeEmissive(material, texture, materialName.StartsWith(MagicCirclePrefix) ? MagicCircleEmission : 1f);
     }
+
+    // 포탈 마법진은 돌판 없는 순수한 빛이라 발광 1배로는 낮 조명에서 섬 바닥색에 묻혔다(2026-09-13 원격 캡처).
+    const string MagicCirclePrefix = "포탈_마법진_";
+    const float MagicCircleEmission = 2.5f;
 
     // 스스로 빛나는 면(불씨·붉게 달아오른 창·포탈 막·등불). 색 텍스처를 그대로 발광 지도로 쓴다 —
     // 텍스처가 이미 「빛나는 곳만 밝게」 구워져 있어서(불씨 발광 면적 10% 안팎) 따로 마스크가 필요 없다.
-    static void MakeEmissive(Material material, Texture2D texture)
+    static void MakeEmissive(Material material, Texture2D texture, float intensity)
     {
         material.EnableKeyword("_EMISSION");
         material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-        material.SetColor("_EmissionColor", Color.white);
+        material.SetColor("_EmissionColor", Color.white * intensity);   // 1 넘으면 HDR — 블룸이 켜져 있으면 번진다
         if (texture != null) material.SetTexture("_EmissionMap", texture);
     }
 

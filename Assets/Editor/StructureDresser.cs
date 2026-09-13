@@ -207,6 +207,8 @@ public static class StructureDresser
 
     // ───────────────────────── 포탈 ─────────────────────────
 
+    const float CircleLift = 0.06f;   // 마법진 원점을 섬 윗면에서 띄우는 높이(깊이 겹침 방지)
+
     // 막 재질 색(gen_portals.py: 호박·보라·청록)에 맞춘 빛_자리 빛깔.
     public static readonly Color StoryGlow = new Color(1f, 0.72f, 0.35f);
     public static readonly Color GachaGlow = new Color(0.72f, 0.45f, 1f);
@@ -225,8 +227,11 @@ public static class StructureDresser
 
         float diameter = disc.transform.lossyScale.x;
         float scale = diameter / Mathf.Max(0.001f, Mathf.Max(bounds.size.x, bounds.size.z));
-        Vector3 ground = new Vector3(disc.transform.position.x, MapLayout.IslandTop, disc.transform.position.z);
-        GameObject circle = Place(disc.transform.parent, model, disc.name + "_마법진", ground, 0f, scale);
+        // 🔴 바닥 맞춤(snapBottom)을 쓰면 가장 낮은 층(z 0.03)이 섬 윗면과 **같은 높이**가 되어 땅과 깜빡이며 사라진다
+        //    (09-13 inspect 실측: 문자띠·기하 층 월드 y 1.00 = 섬 윗면, 복귀·스토리에서 별 문양이 안 보였음).
+        //    원점(바닥 가운데)을 섬 윗면보다 조금 위에 둔다 — 작은 뽑기 포탈(배율 0.65)에서도 층이 땅과 떨어지게.
+        Vector3 ground = new Vector3(disc.transform.position.x, MapLayout.IslandTop + CircleLift, disc.transform.position.z);
+        GameObject circle = Place(disc.transform.parent, model, disc.name + "_마법진", ground, 0f, scale, snapBottom: false);
         if (circle == null) return false;
 
         HideRenderer(disc);
