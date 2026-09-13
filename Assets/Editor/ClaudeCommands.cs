@@ -157,6 +157,9 @@ public static class ClaudeCommands
             case "bakesize":
                 return BakeSize(rest);
 
+            case "rig":
+                return RigReport(rest);
+
             default:
                 return $"❌ 모르는 명령: {verb}";
         }
@@ -289,6 +292,40 @@ public static class ClaudeCommands
         {
             EditorSceneManager.ClosePreviewScene(preview);
         }
+    }
+
+    // Humanoid 아바타가 왜 안 서는지 — 유니티는 자동 매핑 실패 이유를 로그에 안 남긴다. 임포터의 매핑 결과·아바타 판정·
+    // 필수 뼈 후보(이름에 pelvis/hips·spine·head·thigh·calf·foot·upperarm·forearm·hand)의 부모 사슬을 찍는다.
+    // rig <모델 경로(공백 없이)>
+    static string RigReport(string assetPath)
+    {
+        ModelImporter importer = AssetImporter.GetAtPath(assetPath) as ModelImporter;
+        if (importer == null) return $"❌ 모델 임포터 없음: {assetPath}";
+
+        StringBuilder sb = new StringBuilder($"🦴 {assetPath}\n");
+        HumanDescription description = importer.humanDescription;
+        sb.AppendLine($"   애니메이션 타입 {importer.animationType} · 아바타 설정 {importer.avatarSetup} · 매핑된 사람 뼈 {description.human?.Length ?? 0}개 · 골격 {description.skeleton?.Length ?? 0}개");
+        if (description.human != null)
+            foreach (HumanBone bone in description.human.Take(24))
+                sb.AppendLine($"     {bone.humanName} = {bone.boneName}");
+
+        Avatar avatar = AssetDatabase.LoadAllAssetsAtPath(assetPath).OfType<Avatar>().FirstOrDefault();
+        sb.AppendLine(avatar == null ? "   아바타 에셋 없음" : $"   아바타 {avatar.name} · isValid {avatar.isValid} · isHuman {avatar.isHuman}");
+
+        GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+        if (model != null)
+        {
+            string[] keys = { "pelvis", "hips", "spine", "neck", "head", "thigh", "upleg", "calf", "leg", "foot", "clavicle", "upperarm", "forearm", "hand" };
+            foreach (Transform t in model.GetComponentsInChildren<Transform>(true))
+            {
+                string lower = t.name.ToLowerInvariant();
+                if (!keys.Any(lower.Contains) || lower.Contains("finger") || lower.Contains("toe") || lower.Contains("nub")) continue;
+                List<string> chain = new List<string>();
+                for (Transform p = t; p != null; p = p.parent) chain.Add(p.name);
+                sb.AppendLine($"     {t.name} · 로컬회전 {t.localRotation.eulerAngles} · 로컬위치 {t.localPosition} · 사슬 {string.Join(" < ", chain.Take(6))}");
+            }
+        }
+        return sb.ToString();
     }
 
     // 화면에 안 보이는 원인을 사진 대신 값으로 본다 — 자식마다 위치·배율, 렌더러 켜짐, 재질·셰이더·텍스처·컷오프·컬·발광, 메시 크기.

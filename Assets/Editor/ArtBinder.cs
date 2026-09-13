@@ -310,6 +310,12 @@ public static class ArtBinder
         return acc?.size ?? Vector3.zero;
     }
 
+    /// <summary>
+    /// 표(ModelAdjustments)에 회전을 직접 적은 모델인가. 그런 모델은 뼈로 재서 세우지 않는다 —
+    /// 뼈와 메시가 따로 노는 변환본(안흔함_박준희)은 뼈 기준으로 돌리면 오히려 눕는다. MapGenerator 인형 세우기도 이걸 본다.
+    /// </summary>
+    public static bool HasManualRotation(string modelName) => RotationFor(modelName) != Quaternion.identity;
+
     static Quaternion RotationFor(string modelName)
     {
         modelName = Nfc(modelName);

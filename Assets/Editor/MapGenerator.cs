@@ -1729,7 +1729,9 @@ public static class MapGenerator
         //    (머리-발 0.77 → -0.06). 살아 있는 인형에서 실제로 구운 자세를 재는 쪽이 맞다.
         //    ⚠️ 이 회전이 틀리면 바로 아래 크기 맞추기가 엉뚱한 축에 키를 맞춰 폭주한다 —
         //    그 대비가 MaxFigureSpread 검사다(박준희가 97배로 부풀었던 자리).
-        StandFigureUpright(figure);
+        // ⚠️ 표에 회전을 직접 적은 모델(뼈와 메시가 따로 노는 변환본)은 뼈로 세우면 오히려 눕는다 — 프리팹 회전을 믿는다.
+        string prefabModel = unit.prefab.name.StartsWith("Unit_") ? unit.prefab.name.Substring("Unit_".Length) : unit.prefab.name;
+        if (!ArtBinder.HasManualRotation(prefabModel)) StandFigureUpright(figure);
 
         // 스크립트를 먼저 지운다. NavMeshAgent를 먼저 지우려 하면 UnitMover가 그것을 요구하고
         // 있어서 거부당하고, 결과적으로 조합표 위에 살아 있는 에이전트가 남는다.
