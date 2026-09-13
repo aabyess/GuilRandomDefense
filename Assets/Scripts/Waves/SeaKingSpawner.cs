@@ -76,7 +76,8 @@ public class SeaKingSpawner : MonoBehaviour
             return false;
         }
 
-        current = Instantiate(seaKingData.prefab, transform.position, Quaternion.identity);
+        // 방향은 맵 생성기가 원작 316.717°에 맞춰 이 스포너에 걸어 둔다(MapGenerator.SeaKingYaw).
+        current = Instantiate(seaKingData.prefab, transform.position, transform.rotation);
 
         if (current.TryGetComponent(out EnemyDummy dummy))
         {

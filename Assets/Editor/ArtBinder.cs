@@ -659,7 +659,14 @@ public static class ArtBinder
         ("Story11_日本", "Enemy_Story11_日本", 41.3f),
         ("Story12_코드잇", "Enemy_Story12_코드잇", 88.8f),
         ("Story13_쉬었음", "Enemy_Story13_쉬었음", 56.5f),
+
+        // 원작 [퀘스트] 거대 해왕류(o02N) — 사장님 09-13 「원랜디 참고해서 해왕류 바다에 넣어줄래?」로 표에 넣었다.
+        // 바다뱀형, 몸길이 350·높이 195.5(수면 위 121 + 물속 74, Blender 실측). 원점 = 수면이라 WaterlineModels에도 있다.
+        ("거대해왕류", "Enemy_거대해왕류", 195.5f),
     };
+
+    // 원점이 **수면**인 모델 — 발바닥을 바닥에 맞추지 않는다(맞추면 물속 부분이 수면 위로 솟는다).
+    static readonly string[] WaterlineModels = { "거대해왕류" };
 
     static string BindEnemies(List<GameObject> models)
     {
@@ -1011,7 +1018,7 @@ public static class ArtBinder
             // Blender로 지은 모델 — 방향은 파일에 맞게 들어 있다. 회전을 대입하면 FBX 루트의 축 변환이
             // 지워져 옆으로 눕고(MapGenerator.PlaceNatureProp 주석과 같은 함정), 경계 상자로 세우면
             // 몸길이가 긴 짐승이 일어선다(재규어). 그래서 돌리지 않고 키만 맞춘다.
-            FitToHeight(instance, visual, 1f, authoredHeight);
+            FitToHeight(instance, visual, 1f, authoredHeight, keepOrigin: WaterlineModels.Contains(Nfc(model.name)));
         }
         else
         {
@@ -1093,7 +1100,9 @@ public static class ArtBinder
     // 보이는 모델만 키우면 안 된다 — 콜라이더가 발치에 남아 클릭이 발끝에서만 먹고
     // 체력바도 발밑에 뜬다. NavMeshAgent의 반지름·높이도 스케일을 안 따라가므로 같이 맞춘다.
     // authoredHeight > 0이면 기준 키 대신 그 값으로 맞춘다(Blender로 실제 치수대로 지은 모델, BindEnemies 표).
-    static void FitToHeight(GameObject root, GameObject visual, float heightScale = 1f, float authoredHeight = 0f)
+    // keepOrigin: 모델 원점을 그대로 둔다(수면 원점 모델) — 경계 최저점을 바닥에 맞추지 않는다.
+    static void FitToHeight(GameObject root, GameObject visual, float heightScale = 1f, float authoredHeight = 0f,
+                            bool keepOrigin = false)
     {
         // 콜라이더·에이전트도 같은 키를 쓴다. 보이는 것만 줄이면 클릭 판정과 체력바가
         // 원래 크기 자리에 남아서, 작아진 모델 위 허공을 눌러야 선택된다.
@@ -1130,7 +1139,7 @@ public static class ArtBinder
 
                 // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발이 바닥에 닿게 내린다.
                 bounds = MeasureRenderers(visual);
-                if (bounds.size.y > 0.001f)
+                if (!keepOrigin && bounds.size.y > 0.001f)
                     visual.transform.position += Vector3.up * (root.transform.position.y - bounds.min.y);
             }
         }

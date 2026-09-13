@@ -2725,12 +2725,68 @@ public static class MapGenerator
     }
 
     // 원작 [퀘스트] 거대 해왕류(o02N) — 이동 안 하는 고정 표적이라 웨이브가 아니라 여기서
-    // 한 번만 배치한다(PM 지시, 2026-09-05). 위치는 원작 좌표를 그대로 안 쓴다 — 우리 맵은
-    // 배치가 다르다([[we-copied-design-not-layout]]). 섬 군락(대략 X −400~410, Z −203~468)
-    // 밖의 열린 바다 남쪽에 뒀다 — SeaSize(1600, ±800)에 비하면 아주 넉넉하다.
-    // ⚠️ 이 좌표에서 레인 유닛이 실제로 닿는지는 확인 못 했다 — 레인은 순찰 경로에 묶여 있고
-    // 이 표적은 그 경로 밖 먼 바다에 있다. 자리 배치만이 이번 작업 범위라 반드시 짚어 보고한다.
-    static readonly Vector3 SeaKingPosition = new Vector3(0f, MapLayout.IslandTop, -650f);
+    // 한 번만 배치한다(PM 지시, 2026-09-05).
+    //
+    // 자리(사장님 09-13 「원랜디 참고해서 해왕류 바다에 넣어줄래? 원랜디처럼」): 원작은 CreateUnitsForPlayer5에서
+    // (-8404.1, -1619.3)에 방향 316.717°로 세운다(war3map_new.j:13434) — 레인 필드 넷의 서남쪽 바다다
+    // (3번 필드 서쪽 가장자리에서 필드 폭의 0.89배 서쪽, 아래 가장자리에서 필드 높이의 0.14배 남쪽).
+    // 우리 맵은 배치가 달라 좌표를 그대로 못 쓰니 보물 구역(BuildTreasureHunt)과 같은 방법으로 **레인 필드 넷을
+    // 감싼 사각형 기준 비율**로 옮긴다. 우리 해왕류 모델은 몸길이 350·높이 195(원점 = 수면)라 그 자리에 그대로 두면
+    // 3번 레인 섬·스토리존에 몸이 걸친다 — 필드 묶음 중심에서 멀어지는 쪽으로 모든 섬과 떨어질 때까지 민다.
+    // 원작처럼 바다를 건너는 유닛(비행·수상보행)만 닿는다.
+    static readonly Vector2 OriginalSeaKingPoint = new Vector2(-8404.1f, -1619.3f);
+    const float OriginalSeaKingFacing = 316.717f;   // WC3 각도: 동=0°, 반시계
+    const float SeaKingClearance = 190f;            // 몸길이 350의 절반 + 여유 — 이만큼 모든 섬과 떨어진다
+    const float SeaSurfaceY = 0f;                   // BuildSea: 바다 상자 윗면. 해왕류 모델 원점이 수면이다
+
+    static Vector3 SeaKingPosition()
+    {
+        Rect[] fields = MapLayout.Lanes.Select(lane =>
+        {
+            MapLayout.Island field = MapLayout.LaneField(lane);
+            return new Rect(field.center - field.size * 0.5f, field.size);
+        }).ToArray();
+
+        Rect originalBlock = EncloseRects(OriginalLifeZones);
+        Vector2 originalField = AverageRectSize(OriginalLifeZones);
+        Rect block = EncloseRects(fields);
+        Vector2 fieldSize = AverageRectSize(fields);
+
+        Vector2 point = new Vector2(
+            block.xMin - (originalBlock.xMin - OriginalSeaKingPoint.x) / originalField.x * fieldSize.x,
+            block.yMin - (originalBlock.yMin - OriginalSeaKingPoint.y) / originalField.y * fieldSize.y);
+
+        Vector2 outward = (point - block.center).normalized;
+        for (int step = 0; step < 400 && TooCloseToIsland(point, SeaKingClearance); step++)
+            point += outward * 2f;
+
+        return new Vector3(point.x, SeaSurfaceY, point.y);
+    }
+
+    static bool TooCloseToIsland(Vector2 point, float clearance)
+    {
+        foreach (MapLayout.Island island in AllIslands())
+        {
+            float dx = Mathf.Max(Mathf.Abs(point.x - island.center.x) - island.size.x * 0.5f, 0f);
+            float dz = Mathf.Max(Mathf.Abs(point.y - island.center.y) - island.size.y * 0.5f, 0f);
+            if (dx * dx + dz * dz < clearance * clearance) return true;
+        }
+        return false;
+    }
+
+    // 원작 방향을 **머리 뼈**로 맞춘다 — 모델 파일의 앞 축을 추측하지 않는다(Blender→FBX→유니티 축 변환은 헷갈리기 쉽다).
+    static float SeaKingYaw(EnemyData data)
+    {
+        float want = 90f - OriginalSeaKingFacing;   // WC3 (cos a, sin a) → 유니티 yaw(+Z=0°, 위에서 시계)
+        if (data == null || data.prefab == null) return want;
+
+        Transform head = data.prefab.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "Head");
+        if (head == null) return want;
+
+        Vector3 toHead = head.position - data.prefab.transform.position;
+        if (new Vector2(toHead.x, toHead.z).sqrMagnitude < 1e-4f) return want;
+        return want - Mathf.Atan2(toHead.x, toHead.z) * Mathf.Rad2Deg;
+    }
 
     static string BuildSeaKing(Transform parent)
     {
@@ -2739,7 +2795,8 @@ public static class MapGenerator
 
         GameObject spawner = new GameObject("거대해왕류");
         spawner.transform.SetParent(parent, false);
-        spawner.transform.position = SeaKingPosition;
+        spawner.transform.position = SeaKingPosition();
+        spawner.transform.rotation = Quaternion.Euler(0f, SeaKingYaw(data), 0f);
 
         SeaKingSpawner component = spawner.AddComponent<SeaKingSpawner>();
         SerializedObject so = new SerializedObject(component);
@@ -2748,7 +2805,8 @@ public static class MapGenerator
         so.ApplyModifiedProperties();
 
         return data != null
-            ? "\n거대 해왕류: 배치 완료(먼 바다 남쪽, 유닛 도달 여부 미확인)."
+            ? $"\n거대 해왕류: 원작 자리(레인 서남쪽 바다) ({spawner.transform.position.x:F0}, {spawner.transform.position.z:F0})에 배치 — 바다를 건너는 유닛만 닿는다." +
+              (data.prefab == null || !data.prefab.name.Contains("해왕류") ? "\n  ⚠️ 해왕류 모델이 아직 안 붙었습니다 — 모델 배선을 먼저 돌리세요." : "")
             : "\n  ⚠️ Enemy_거대해왕류 에셋을 찾지 못해 거대 해왕류가 안 나옵니다.";
     }
 

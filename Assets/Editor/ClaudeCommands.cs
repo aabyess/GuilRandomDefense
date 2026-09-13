@@ -151,6 +151,9 @@ public static class ClaudeCommands
             case "inspect":
                 return Inspect(rest);
 
+            case "preview":
+                return Preview(parts[0], parts[1], parts[2], parts.Length > 3 ? F(parts[3]) : 1.2f);
+
             default:
                 return $"❌ 모르는 명령: {verb}";
         }
@@ -188,6 +191,41 @@ public static class ClaudeCommands
         Vector3 direction = new Vector3(0f, 0.75f, -1f).normalized;   // 게임 카메라처럼 남쪽 위에서
         return Render(file, area.center + direction * distance, area.center, 45f, null) +
                $"\n   경계 중심 {area.center} · 크기 {area.size}";
+    }
+
+    // 실행 중에만 생기는 것(스포너가 Start에서 만드는 해왕류 등)을 편집 중에 본다 — 프리팹을 기준 오브젝트의 위치·회전에
+    // 잠깐 세워 찍고 바로 지운다. 오브젝트는 남지 않지만 씬의 「변경됨」 표시는 남는다(되돌리는 API가 없다).
+    // preview <파일> <프리팹 경로(Assets/..., 공백 없이)> <기준 오브젝트 이름> [거리배율]
+    static string Preview(string file, string prefabPath, string anchorName, float distanceScale)
+    {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+        if (prefab == null) return $"❌ 프리팹 없음: {prefabPath}";
+        GameObject anchor = FindInOpenScenes(anchorName);
+        if (anchor == null) return $"❌ 씬에서 못 찾음: {anchorName}";
+
+        GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, anchor.scene);
+        try
+        {
+            instance.transform.SetPositionAndRotation(anchor.transform.position, anchor.transform.rotation);
+
+            Bounds? bounds = null;
+            foreach (Renderer renderer in instance.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!(renderer is MeshRenderer || renderer is SkinnedMeshRenderer)) continue;
+                if (bounds == null) bounds = renderer.bounds;
+                else { Bounds b = bounds.Value; b.Encapsulate(renderer.bounds); bounds = b; }
+            }
+            Bounds area = bounds ?? new Bounds(anchor.transform.position, Vector3.one * 20f);
+
+            float distance = Mathf.Max(20f, area.size.magnitude * distanceScale);
+            Vector3 direction = new Vector3(0f, 0.75f, -1f).normalized;
+            return Render(file, area.center + direction * distance, area.center, 45f, null) +
+                   $"\n   {prefab.name} @ {anchorName} {anchor.transform.position} · 회전 {anchor.transform.eulerAngles.y:F0}° · 경계 중심 {area.center} · 크기 {area.size}";
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(instance);
+        }
     }
 
     // 화면에 안 보이는 원인을 사진 대신 값으로 본다 — 자식마다 위치·배율, 렌더러 켜짐, 재질·셰이더·텍스처·컷오프·컬·발광, 메시 크기.
