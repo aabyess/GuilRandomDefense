@@ -154,6 +154,9 @@ public static class ClaudeCommands
             case "preview":
                 return Preview(parts[0], parts[1], parts[2], parts.Length > 3 ? F(parts[3]) : 1.2f);
 
+            case "bakesize":
+                return BakeSize(rest);
+
             default:
                 return $"❌ 모르는 명령: {verb}";
         }
@@ -225,6 +228,66 @@ public static class ClaudeCommands
         finally
         {
             UnityEngine.Object.DestroyImmediate(instance);
+        }
+    }
+
+    // 스킨 모델이 **실제로 그려지는 크기**를 잰다 — 메시 자산 경계·렌더러 경계·뼈 퍼짐은 서로 다를 수 있다
+    // (glb→fbx 변환본은 뼈 범위가 메시의 수천 배로 나와 키 맞추기가 뼈 크기에 속았다). BakeMesh는 뼈를 거친 정점이다.
+    // bakesize <모델 또는 프리팹 경로(공백 없이)>
+    static string BakeSize(string assetPath)
+    {
+        GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+        if (asset == null) return $"❌ 에셋 없음: {assetPath}";
+
+        Scene preview = EditorSceneManager.NewPreviewScene();
+        StringBuilder sb = new StringBuilder($"🔎 {assetPath}\n");
+        try
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(asset, preview);
+            instance.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            sb.AppendLine($"   루트 배율 {instance.transform.lossyScale}");
+
+            foreach (SkinnedMeshRenderer skin in instance.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                Mesh baked = new Mesh();
+                try
+                {
+                    skin.BakeMesh(baked, true);   // 배율까지 반영한 로컬 정점
+                    Vector3 min = Vector3.positiveInfinity, max = Vector3.negativeInfinity;
+                    Matrix4x4 toWorld = Matrix4x4.TRS(skin.transform.position, skin.transform.rotation, Vector3.one);
+                    foreach (Vector3 v in baked.vertices)
+                    {
+                        Vector3 w = toWorld.MultiplyPoint3x4(v);
+                        min = Vector3.Min(min, w);
+                        max = Vector3.Max(max, w);
+                    }
+
+                    Vector3 boneMin = Vector3.positiveInfinity, boneMax = Vector3.negativeInfinity;
+                    foreach (Transform bone in skin.bones)
+                    {
+                        if (bone == null) continue;
+                        boneMin = Vector3.Min(boneMin, bone.position);
+                        boneMax = Vector3.Max(boneMax, bone.position);
+                    }
+
+                    sb.AppendLine($"   {skin.name}: 정점 {baked.vertexCount} · **구운 크기** {max - min} (바닥 {min.y:F3})" +
+                                  $" · 자산 경계 {skin.sharedMesh?.bounds.size} · 렌더러 경계 {skin.bounds.size}" +
+                                  $" · 뼈 {skin.bones.Length}개 퍼짐 {boneMax - boneMin} · 루트뼈 {skin.rootBone?.name} · 노드 배율 {skin.transform.lossyScale}");
+                }
+                finally
+                {
+                    UnityEngine.Object.DestroyImmediate(baked);
+                }
+            }
+
+            foreach (MeshFilter filter in instance.GetComponentsInChildren<MeshFilter>(true))
+                if (filter.sharedMesh != null)
+                    sb.AppendLine($"   (정적) {filter.name}: 자산 경계 {filter.sharedMesh.bounds.size} · 노드 배율 {filter.transform.lossyScale}");
+            return sb.ToString();
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(preview);
         }
     }
 
