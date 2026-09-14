@@ -159,6 +159,15 @@ SABO_RENAME = {"Body_Pelvis_07": "mixamorig:Hips", "Body_Belly_08": "mixamorig:S
                "RArm_Clavicle_020": "mixamorig:RightShoulder", "RArm_Upper_021": "mixamorig:RightArm", "RArm_Fore_022": "mixamorig:RightForeArm", "RHand_Palm_024": "mixamorig:RightHand",
                "LLeg_Thigh_033": "mixamorig:LeftUpLeg", "LLeg_Calf_034": "mixamorig:LeftLeg", "LFoot_Heel_035": "mixamorig:LeftFoot", "LFoot_Toe_036": "mixamorig:LeftToeBase",
                "RLeg_Thigh_037": "mixamorig:RightUpLeg", "RLeg_Calf_038": "mixamorig:RightLeg", "RFoot_Heel_039": "mixamorig:RightFoot", "RFoot_Toe_040": "mixamorig:RightToeBase"}
+# 이토시 린(프리파이어 코스튬 FBX, 2026-09-14): bone_ 이름 → mixamorig. bone_Hips는 가중치 0이지만 다리·척추의 부모(엉덩이 정점은 자식 bone_Hips_Dummy가 몬다).
+RIN_RENAME = {"bone_Hips": "mixamorig:Hips", "bone_Spine": "mixamorig:Spine", "bone_Spine1": "mixamorig:Spine1", "bone_Neck": "mixamorig:Neck",
+              "bone_Head": "mixamorig:Head"}
+for _side in ("Left", "Right"):
+    RIN_RENAME.update({f"bone_{_side}Clav": f"mixamorig:{_side}Shoulder", f"bone_{_side}Arm": f"mixamorig:{_side}Arm",
+                       f"bone_{_side}ForeArm": f"mixamorig:{_side}ForeArm", f"bone_{_side}Hand": f"mixamorig:{_side}Hand",
+                       f"bone_{_side}LegUpper": f"mixamorig:{_side}UpLeg", f"bone_{_side}Leg": f"mixamorig:{_side}Leg",
+                       f"bone_{_side}Ankle": f"mixamorig:{_side}Foot", f"bone_{_side}Toe": f"mixamorig:{_side}ToeBase"})
+_RIN_TEX = "~/Downloads/rin-itoshi-free-fire-skin/textures/Male_{}_Cos_FB2_D.png"
 NARUTO_FACE_RUNS = [["nrt_tex02", 450], ["nrt_eye", 62], ["nrt_tex01", 1106], ["nrt_tex02", 1919]]
 UNITS = {
     "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
@@ -197,6 +206,19 @@ UNITS = {
                       source=os.path.join(DL, "denji_and_pochita.glb"), gltf_guess_bind=False,
                       recipe=dict(rename=DENJI_RENAME)),
     "안흔함_상붕카": dict(path="Assets/Art/Characters/안흔함_상붕카.glb", kind="prop", size=("length", 1.8)),
+    # 이토시 린: 쉬는 자세 A자 50.5° → T자(tpose_arms에 mixamorig 이름표 — 손가락은 순서가 불확실해 손바닥 굴리기 건너뜀). 기본 자세≠쉬는 자세라 굽힌다.
+    #   재질 5개가 전부 비어 있다(이미지 없음) → 메시 이름으로 텍스처를 짝지어 재질을 새로. 렌더로 확인: Accessory 메시 = 머리카락(Hair 텍스처),
+    #   Accessory_VFX 메시 = 얼굴·귀(Accessory 텍스처 — 이펙트가 아니었다). Cube 메시는 블렌더가 읽지 않음(면 없음).
+    "특별함_박진웅": dict(path="Assets/Art/Units/특별함_박진웅/특별함_박진웅.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.expanduser("~/Downloads/rin-itoshi-free-fire-skin/source/rin itoshi.fbx"),
+                      rename_bones=RIN_RENAME, orient_snap=True,
+                      tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm", "Forearm": f"mixamorig:{side}ForeArm",
+                                      "Hand": f"mixamorig:{side}Hand"} for s, side in (("L", "Left"), ("R", "Right"))},
+                      copy_textures={_RIN_TEX.format(k): f"Male_{k}_Cos_FB2_D.png" for k in ("Top", "Bottom", "Shoe", "Accessory", "Hair")},
+                      materials=dict(mesh_material={"Male_Lobby_Top_Cos_FB2": "Male_Top_Cos_FB2", "Male_Lobby_Bottom_Cos_FB2": "Male_Bottom_Cos_FB2",
+                                                    "Male_Lobby_Shoe_Cos_FB2": "Male_Shoe_Cos_FB2", "Male_Lobby_Accessory_Cos_FB2": "Male_Hair_Cos_FB2",
+                                                    "Male_Lobby_Accessory_Cos_FB2_VFX": "Male_Accessory_Cos_FB2"},
+                                     textures={f"Male_{k}_Cos_FB2": [("DiffuseColor", f"Male_{k}_Cos_FB2_D.png")] for k in ("Top", "Bottom", "Shoe", "Accessory", "Hair")})),
     # 조즈(바운티러시 pl_ 리그, zip 안 7z): 이미 T자. 표정 3·손 2벌 겹침 → face_normal + 주먹(close, 권투형 거구 기본 모습). Cube 메시는 원본에 없음.
     #   텍스처: 7z 안 _diff.tga와 zip의 _diff.png가 픽셀 동일(1024) — 알파 = 명암 마스크(중간값 99%)라 tga에서 알파 뺀 RGB PNG로 새로 쓰고 재질을 거기에 잇는다.
     "특별함_조성진": dict(path="Assets/Art/Units/특별함_조성진/특별함_조성진.fbx", kind="human", size=("height", 1.8),

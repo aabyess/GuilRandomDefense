@@ -1,0 +1,25 @@
+출처: Sketchfab — "one-piece-bounty-rush-jozu" (원피스 바운티러시 다이아몬드 조즈, pl_jozu_orig01)
+받은 날: 2026-09-14 · 유닛: 특별함_조성진 (unitName 작은메주, Special)
+원본(보존 — 지우지 말 것): ~/Downloads/one-piece-bounty-rush-jozu.zip · 1906594 bytes · sha256 6d4cd13a58257148cbc5f4e7fd99aca5c1a3b1cb62ab5f882c3342532d77d44a
+  └ textures/pl_jozu_orig01_diff.png · 725660 bytes · sha256 a6524a7b4f3b85824a97a53e779f89871f58302cf6771eb6e5d4de92449bc449
+  └ source/pl_jozu.7z · 1180662 bytes · sha256 10efe6f610573d79e039035f44e8c3d28887d0d0446a2b53a3ad09a1be3cf7cc (rar가 아니라 7z — bsdtar로 꺼냄)
+      └ pl_jozu/pl_jozu_orig01.fbx · 716160 bytes · sha256 891b450fdefe832c9d4cc1cd6b62d10cd5aa5f688e2d572ab9ca1ed9055bde5f
+      └ pl_jozu/pl_jozu_orig01_diff.tga · 4194322 bytes · sha256 01035a75f61f0ea6b4fd11193b02fe807cf88b1ea97343c0643d2bc2260c7af6 ← 정본 텍스처의 원천(알파 뺀 RGB PNG로)
+      └ pl_jozu_orig01_diff_rp.tga · pl_jozu_orig01_refl_rp.tga · abnormal_pattern.tga · ramp.tga · stg_gasha_tex_bayer_dither.tga (툰 보조 — 안 씀)
+원본 FBX: 아마추어 'pl_jozu_orig01' 뼈 34 · 메시 8 · 삼각형 9,256 · 액션 0 · Null 0
+
+정리: 2026-09-14 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_조성진」으로 재현(zip → 7z에서 FBX·tga를 꺼내 짓는다).
+  - 사람형 경로. 쉬는 자세 이미 T자 → 굽기 없음. 가중치 없는 뼈는 world_joint·HELPER뿐(보조 뼈 재부착 없음).
+  - 겹친 변형 메시 기본만(렌더: open/close):
+      뺌 4: face_attack · face_damage · l_hand_open · r_hand_open(갈퀴처럼 편 손)
+      남김 4: body · face_normal · l_hand_close · r_hand_close(주먹 — 권투형 거구 기본 모습)
+      (원본에 Cube 메시는 없었다)
+  - 사람형 매핑 뼈 21개 mixamorig 이름(PL_RENAME). l/r_shoulder(어깨 갑옷 보조 뼈, Clavicle 밑 — Arm_Upper와 형제)·치마 뼈 이름 그대로.
+  - 겉싸개 배율 0.01·X 90° 없앰 · 키 1.8m · 발 z 0 · 정면 −Y(90° 단위만). 크기 2.396 × 0.661 × 1.8 m(거구·어깨 갑옷).
+
+재질 → 텍스처(재질 이름 그대로):
+  pl_jozu_orig01 → pl_jozu_orig01_diff.png — 7z 안 _diff.tga(4.2MB)와 zip의 _diff.png는 픽셀 완전 동일(둘 다 1024², 해상도 차이 없음).
+    🔴 알파 = 명암 마스크(중간값 99%) → tga에서 알파 채널을 뺀 8비트 RGB PNG로 새로 씀(RGB 값 원본 그대로, fix_unit_fbx.write_rgb_png). 원본 FBX는 .tga를 DiffuseColor로 불렀는데 재질을 이 PNG로 다시 이음.
+  'Dots Stroke'·'Material'은 원본에 쓰는 면 없음.
+
+⚠️ 상용 게임(One Piece Bounty Rush) 추출 에셋. 2026-09-07 사장님 확정: IP 제약 없음(상업적 사용 아님).
