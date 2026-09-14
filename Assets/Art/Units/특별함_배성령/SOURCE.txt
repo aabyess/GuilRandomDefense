@@ -1,0 +1,19 @@
+출처: Sketchfab — "saitama_everyday_opm_-_opm" (원펀맨 사이타마 평상복, Ready Player Me(Wolf3D) 아바타)
+받은 날: 2026-09-14 · 유닛: 특별함_배성령 (unitName 해커, Special)
+원본(보존 — 지우지 말 것): ~/Downloads/saitama_everyday_opm_-_opm.glb · 5198720 bytes · sha256 a922e10660fa4cf60d4860ead3aca2b7f057c554f18325f93ac88ba7996f0ea8
+glb: Sketchfab-12.65.0 · Mixamo 리그(스킨 1 · 조인트 68, 이름에 번호 꼬리) · 메시 8(+조명용 Icosphere) · 삼각형 11,237 · 애니메이션 0 · 재질 7 · 이미지 14
+
+정리: 2026-09-14 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_배성령」으로 재현(source = 이 glb).
+  - 뼈 이름의 번호 꼬리를 떼고 mixamorig 표준 이름으로(67개, 가중치 그룹 같이): Hips_66→mixamorig:Hips · Spine_55 · Spine1_54 · Spine2_53 · Neck_4 · Head_3 ·
+    Left/RightShoulder · Arm · ForeArm · Hand · 손가락 Thumb/Index/Middle/Ring/Pinky 1~4 · UpLeg · Leg · Foot · ToeBase · Toe_End · HeadTop_End · Left/RightEye.
+    GLTF_created_0_rootJoint는 그대로(그 바로 밑 Hips).
+  - 🔸 쉬는 자세 A자(위팔 수평 아래 59°, 아래팔 앞으로 33°, RPM 기본 자세) → T자로 굽힘: Shoulder·Arm·ForeArm·Hand ±X, 손바닥 아래(검지→새끼 −Y), 손가락 곧게, 굽기 오차 0.
+  - 조명용 Icosphere 뺌 · glTF 메시 노드 빈 오브젝트는 뼈로 안 살림 · orient_snap · 키 1.8m · 발 z 0 · 정면 −Y. 크기 1.803 × 0.438 × 1.8 m.
+
+재질 → 텍스처(재질 이름 그대로 7개, glb 내장 이미지 원본 바이트 11장, 노멀은 _normal):
+  Wolf3D_Eye → Wolf3D_Eye_baseColor.jpg
+  Wolf3D_Body → Wolf3D_Body_baseColor.jpg + Wolf3D_Body_normal.jpg — 🔸 베이스가 1×1 단색 jpg(287 bytes). 4×4 PNG로 바꾸지 않고 원본 바이트 그대로 둠(유니티가 1×1 텍스처를 그대로 읽어 같은 색)
+  Wolf3D_Skin → Wolf3D_Skin_baseColor.jpg
+  Wolf3D_Outfit_Top → _baseColor.jpg + _normal.jpg · Wolf3D_Outfit_Bottom → _baseColor.jpg + _normal.jpg · Wolf3D_Outfit_Footwear → _baseColor.jpg + _normal.jpg
+  Wolf3D_Teeth → Wolf3D_Teeth_baseColor.jpg
+  안 쓴 이미지: 5·8·11(PNG 팔레트 — 금속·거칠기, 재질이 안 부름). 알파 없음.
