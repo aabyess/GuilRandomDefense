@@ -1,0 +1,23 @@
+출처: Sketchfab — "gon-freecss" (헌터x헌터 곤 프릭스)
+원본 파일명: source/Gon Freecss.glb · 413936 bytes · sha256 00122ed14700741a99e7f36a1bb3df037203682ffa19f063af1da2665bc33dc7
+받은 묶음: ~/Downloads/gon-freecss.zip · 474622 bytes · sha256 dec82e756a34296e0a588053cb904b9597fac1672caae1646e5ce280442ef309 (원본 보존 — 지우지 말 것)
+받은 날: 2026-09-14 · 유닛: 안흔함_김민준 (unitName 김민준, Uncommon)
+glb: Microsoft GLTF Exporter 2.4.2.20 · 메시 10 · 삼각형 2,970 · 뼈·스킨 0 · 애니메이션 0 · 재질 10(전부 alphaMode MASK, KHR_materials_pbrSpecularGlossiness)
+
+리깅: 2026-09-14 blender에서 직접 했다(Mixamo 안 씀) — Tools/blender/gen_skin_rig.py 「안흔함_김민준」으로 재현.
+  - 메시 10개를 하나(Gon)로 합침 · 뼈대 Armature, mixamorig 사람형 22뼈(Hips 루트 · Spine·Spine1·Spine2·Neck·Head ·
+    Left/Right Shoulder·Arm·ForeArm·Hand·UpLeg·Leg·Foot·ToeBase, 손가락 없음) · 모든 뼈 +Y가 자식 쪽 · T자 쉬는 자세(원본이 T자)
+  - 가중치: UV 이음새로 갈라진 정점을 붙인 사본에서 자동 가중치 → 위치로 되옮김(찢어짐 방지).
+    작은 조각은 한 뼈 100%: 35·36 → Head, 37 → Spine2, 38·41 → LeftHand, 39·42 → RightHand, 43·44(낚싯대·찌) → RightHand
+  - 키 1.8m(원본 0.512 × 3.5156) · 발 z 0 · 정면 −Y · 원점 두 다리 사이
+
+재질 → 텍스처(재질 이름은 원본 그대로, 이미지는 glb 내장 원본 바이트를 그대로 풀었다):
+  35 → 35_diffuse.png (내장 이미지 3 · 눈썹·눈)
+  36 → 36_diffuse.png (내장 이미지 6 · 얼굴)
+  37·38·39·40·41·42 → 37_diffuse.png (내장 이미지 9 · 몸·손·배지)
+  43·44 → 43_diffuse.png (내장 이미지 0 · 낚싯대·찌·줄)
+  - 기준은 KHR_materials_pbrSpecularGlossiness diffuseTexture(내장 0·3·6·9). pbrMetallicRoughness baseColor(내장 1·4·7·10)는 안 씀.
+  - 알파: 43·44만 컷아웃 유지(이미지 0의 α<0.5가 41%, 중간값 0). 나머지 이미지는 알파가 전부 1이라 불투명으로.
+  - ~/Downloads/gon-freecss/textures/gltf_embedded_0·3·6·9.png는 같은 그림을 다시 인코딩한 것(바이트 다름) — 쓰지 않았다.
+
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
