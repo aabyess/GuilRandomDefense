@@ -125,6 +125,26 @@ for _s, _side in (("left", "Left"), ("right", "Right")):
                           f"leg {_s} thigh": f"mixamorig:{_side}UpLeg", f"leg {_s} calf": f"mixamorig:{_side}Leg",
                           f"leg {_s} foot": f"mixamorig:{_side}Foot", f"leg {_s} toes": f"mixamorig:{_side}ToeBase"})
 _MH = "~/Downloads/mihawk/textures/mpr_bound_character_mplc014mihawk_"
+# 가로우(원펀맨 게임 추출 glb, 2026-09-14): 사람형 매핑 뼈를 mixamorig로. CLANK = 종아리, TOE1 = 발, TOE2 = 발끝. ROLL(트위스트)은 이미 팔다리 뼈의 자식.
+GAROU_RENAME = {"WAIST_079": "mixamorig:Hips", "SPINE1_074": "mixamorig:Spine", "SPINE2_072": "mixamorig:Spine1", "SPINE3_068": "mixamorig:Spine2",
+                "NECK_010": "mixamorig:Neck", "HEAD_02": "mixamorig:Head"}
+for _side, _ids in (("Left", dict(CLAVICLE="CLAVICLE_L_069", SHOULDER="SHOULDER_L_071", ELBOW="ELBOW_L_084", WRIST="WRIST_L_086", THIGH="THIGH_L_082",
+                                  CLANK="CLANK_L_0139", TOE1="TOE1_L_0127", TOE2="TOE2_L_0140",
+                                  fingers={"Thumb": ("F_THUMB1_L_087", "F_THUMB2_L_0106", "F_THUMB3_L_0117"), "Index": ("F_FORE1_L_00", "F_FORE2_L_01", "F_FORE3_L_0108"),
+                                           "Middle": ("F_MIDDLE1_L_0107", "F_MIDDLE2_L_0115", "F_MIDDLE3_L_0116"),
+                                           "Ring": ("F_MEDICINAL1_L_0109", "F_MEDICINAL2_L_0110", "F_MEDICINAL3_L_0114"),
+                                           "Pinky": ("F_LITTLE1_L_0111", "F_LITTLE2_L_0112", "F_LITTLE3_L_0113")})),
+                    ("Right", dict(CLAVICLE="CLAVICLE_R_073", SHOULDER="SHOULDER_R_076", ELBOW="ELBOW_R_088", WRIST="WRIST_R_090", THIGH="THIGH_R_083",
+                                   CLANK="CLANK_R_0138", TOE1="TOE1_R_0132", TOE2="TOE2_R_0141",
+                                   fingers={"Thumb": ("F_THUMB1_R_091", "F_THUMB2_R_0103", "F_THUMB3_R_0105"), "Index": ("F_FORE1_R_096", "F_FORE2_R_097", "F_FORE3_R_099"),
+                                            "Middle": ("F_MIDDLE1_R_098", "F_MIDDLE2_R_0102", "F_MIDDLE3_R_0104"),
+                                            "Ring": ("F_MEDICINAL1_R_093", "F_MEDICINAL2_R_0100", "F_MEDICINAL3_R_0101"),
+                                            "Pinky": ("F_LITTLE1_R_092", "F_LITTLE2_R_094", "F_LITTLE3_R_095")}))):
+    GAROU_RENAME.update({_ids["CLAVICLE"]: f"mixamorig:{_side}Shoulder", _ids["SHOULDER"]: f"mixamorig:{_side}Arm", _ids["ELBOW"]: f"mixamorig:{_side}ForeArm",
+                         _ids["WRIST"]: f"mixamorig:{_side}Hand", _ids["THIGH"]: f"mixamorig:{_side}UpLeg", _ids["CLANK"]: f"mixamorig:{_side}Leg",
+                         _ids["TOE1"]: f"mixamorig:{_side}Foot", _ids["TOE2"]: f"mixamorig:{_side}ToeBase"})
+    for _finger, _chain in _ids["fingers"].items():
+        GAROU_RENAME.update({_bone: f"mixamorig:{_side}Hand{_finger}{_i}" for _i, _bone in enumerate(_chain, start=1)})
 NARUTO_FACE_RUNS = [["nrt_tex02", 450], ["nrt_eye", 62], ["nrt_tex01", 1106], ["nrt_tex02", 1919]]
 UNITS = {
     "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
@@ -163,6 +183,30 @@ UNITS = {
                       source=os.path.join(DL, "denji_and_pochita.glb"), gltf_guess_bind=False,
                       recipe=dict(rename=DENJI_RENAME)),
     "안흔함_상붕카": dict(path="Assets/Art/Characters/안흔함_상붕카.glb", kind="prop", size=("length", 1.8)),
+    # 가로우(원펀맨 게임 추출 glb): 이미 T자. 뿌리 NULL_0133 > RESERVE_0143(가중치 0 중간 뼈)가 WAIST(Hips) 위에 끼어 있다 → 뺀다(흔함_문필환 Bip001 교훈).
+    #   조명용 Icosphere 뺌. 텍스처 10장(재질 14가 나눠 씀) → 재질 이름 기준 파일, 공유 이미지는 파일 하나.
+    "특별함_유재헌": dict(path="Assets/Art/Units/특별함_유재헌/특별함_유재헌.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(DL, "garouopm.glb"), drop_meshes=["Icosphere"], no_nulls=True,
+                      rename_bones=GAROU_RENAME, drop_bones=["RESERVE_0143", "NULL_0133"], orient_snap=True,
+                      glb_images={0: "hairShapeH_HAIR_baseColor.png", 1: "faceShapeS_FACE_baseColor.png", 2: "eyeShapeE_EYE_baseColor.png",
+                                  3: "C_inmouthShapeS_SKIN_baseColor.png", 4: "bodyShapeC_TOPS_baseColor.png", 5: "bodyShapeC_TOPS_normal.png",
+                                  6: "handShapeS_HAND_baseColor.png", 7: "pantsShapeC_BOTTOMS_baseColor.png", 8: "pantsShapeC_BOTTOMS_normal.png",
+                                  9: "footShapeC_SHOES_baseColor.png"},
+                      materials=dict(textures={
+                          "hairShapeH_HAIR": [("DiffuseColor", "hairShapeH_HAIR_baseColor.png")],
+                          "faceShapeS_FACE": [("DiffuseColor", "faceShapeS_FACE_baseColor.png")],
+                          "eyebrowShapeH_EYEBROW": [("DiffuseColor", "faceShapeS_FACE_baseColor.png")],
+                          "eye_LShapeE_EYE_L": [("DiffuseColor", "eyeShapeE_EYE_baseColor.png")],
+                          "eye_RShapeE_EYE_R": [("DiffuseColor", "eyeShapeE_EYE_baseColor.png")],
+                          "C_inmouthShapeS_SKIN": [("DiffuseColor", "C_inmouthShapeS_SKIN_baseColor.png")],
+                          "toothdownShapeT_TOOTH": [("DiffuseColor", "C_inmouthShapeS_SKIN_baseColor.png")],
+                          "bodyShapeC_TOPS": [("DiffuseColor", "bodyShapeC_TOPS_baseColor.png"), ("NormalMap", "bodyShapeC_TOPS_normal.png")],
+                          "neckShapeS_NECK": [("DiffuseColor", "bodyShapeC_TOPS_baseColor.png")],
+                          "handShapeS_HAND": [("DiffuseColor", "handShapeS_HAND_baseColor.png")],
+                          "obiShapeC_OBI": [("DiffuseColor", "pantsShapeC_BOTTOMS_baseColor.png")],
+                          "pantsShapeC_BOTTOMS": [("DiffuseColor", "pantsShapeC_BOTTOMS_baseColor.png"), ("NormalMap", "pantsShapeC_BOTTOMS_normal.png")],
+                          "footShapeC_SHOES": [("DiffuseColor", "footShapeC_SHOES_baseColor.png")],
+                          "footShapeS_FOOT": [("DiffuseColor", "footShapeC_SHOES_baseColor.png")]})),
     # 진베 오니가시마(바운티러시 pl_ 리그를 Annettlw가 합친 판, 2026-09-14): 이미 T자. 표정 5·손 3벌 겹침 + 찻잔(cup). 손은 주먹(close) — 어인 가라테 기본 모습.
     #   🔴 코트 소매 뼈 l_arm01·r_arm01이 팔이 아니라 coat_root(가슴) 밑이라 유니티가 팔을 내려도 소매가 T자에 남는다 → 위팔(LeftArm·RightArm) 밑으로.
     "특별함_김용태": dict(path="Assets/Art/Units/특별함_김용태/특별함_김용태.fbx", kind="human", size=("height", 1.8),
@@ -868,7 +912,7 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         bones = [(pb.name, G @ (W @ pb.head), G @ (W @ pb.tail), (G3 @ (W @ pb.matrix).to_3x3()).normalized(),
                   pb.parent.name if pb.parent else None, pb.bone.use_connect) for pb in arm.pose.bones]
         # 뼈대 속 Null(빈 오브젝트) → 뼈. 머리 = 세계 위치, 꼬리 = 자식 쪽(없으면 부모 방향으로 짧게)
-        extra = skeleton_empties(arm, ref["empties"] if ref is not None else None)
+        extra = [] if cfg.get("no_nulls") else skeleton_empties(arm, ref["empties"] if ref is not None else None)   # glb는 Null 뼈 개념이 없다 — 메시 노드 빈 오브젝트를 뼈로 살리지 않음
         extra_names = {o.name for o in extra}
         clash = extra_names & {b[0] for b in bones}
         assert not clash, f"{name}: 빈 오브젝트와 뼈 이름이 겹친다: {sorted(clash)[:5]}"

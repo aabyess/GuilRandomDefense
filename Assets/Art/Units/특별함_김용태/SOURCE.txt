@@ -1,0 +1,27 @@
+출처: Sketchfab — "one-piece-bounty-rush-jinbei-onigashima" (원피스 바운티러시 진베 오니가시마판, pl_jinbe_atta01 — Annettlw가 합친 판)
+받은 날: 2026-09-14 · 유닛: 특별함_김용태 (unitName 흑화, Special)
+원본(보존 — 지우지 말 것):
+- ~/Downloads/one-piece-bounty-rush-jinbei-onigashima.zip · 2682693 bytes · sha256 048e5e48a7be1b9c5fdf5b373e3c33bc293865ba9ebcf70f083f92ed08bb776d
+- ~/Downloads/one-piece-bounty-rush-jinbei-onigashima/ (풀린 폴더)
+    textures/pl_jinbe_atta01_diff_hq.png · 1159705 bytes · sha256 99373901bd4ae54e361a928ee07bace3943cd8fb9de7fe69ccdb24c5be001395
+    source/Jinbei Onigashima.rar · 1522686 bytes · sha256 b864ce8a94aa7b1b64f37d3d67b3945dc869d42a50ea70cd925327b3c2ca5f19
+      └ Jinbei Onigashima/Jinbei Onigashima by Annettlw.fbx · 904800 bytes · sha256 6e207a9e6f89ef9bb3b7dc9f32b782343c8c23e769772ff284956b5bd95e4d99
+      └ Jinbei Onigashima/pl_jinbe_atta01_diff_hq.png · 1161853 bytes · sha256 7c36cee2b153f4348407e2b8bfc08ca92a4ef7f85168979bfffaac5fcd20aed6 ← 정본에 씀(그대로)
+원본 FBX: 아마추어 'Armature' 뼈 71 · 메시 15 · 삼각형 7,274 · 액션 1 · Null 0
+
+정리: 2026-09-14 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_김용태」로 재현(폴더의 rar에서 FBX·텍스처를 꺼내 짓는다).
+  - 사람형 경로: 애니메이션 안 실음(공용 Idle). 쉬는 자세 이미 T자 → 굽기 없음.
+  - 겹친 변형 메시 기본만 남김(렌더: 전부/open/close/sp01/찻잔):
+      뺌 9: face_attack · face_damage · face_sp01 · face_sp02 · l/r_hand_open(갈퀴처럼 편 손) · l/r_hand_sp_01(편 손바닥) · cup(찻잔 소품)
+      남김 7: body · coat · face_normal · l/r_forearm · l/r_hand_close(주먹 — 어인 가라테 기본 모습)
+      (원본에 Cube 메시는 없었다 — 블렌더가 읽는 메시 15개 중 없음)
+  - 🔴 코트 소매 뼈 l_arm01·r_arm01(가중치 17·18정점 + 자식 l/r_arm02)이 팔이 아니라 coat_root(가슴) 밑이라, 유니티가 팔을 내리면 소매가 T자에 남아 찢어진다
+    → 위팔 mixamorig:LeftArm·RightArm 밑으로 옮김(자세 시험 렌더에서 소매가 팔을 따라감 확인). L/R_sode는 원래 아래팔 밑이라 그대로.
+  - 사람형 매핑 뼈 21개 mixamorig 이름(PL_RENAME). 코트·소매·오비·sode 보조 뼈 이름 그대로. 뼈 71개 그대로(뺀 뼈 없음).
+  - 겉싸개 배율 0.01·X 90° 없앰 · 키 1.8m · 발 z 0 · 정면 −Y(90° 단위만). 크기 2.411 × 1.442 × 1.8 m(거구·코트).
+
+재질 → 텍스처(재질 이름 그대로):
+  pl_jinbe_atta01 → pl_jinbe_atta01_diff_hq.png (rar 안 원본 그대로 — 알파 거의 불투명, 중간값 2.3%라 명암 마스크 아님). FBX는 DiffuseColor로만 부름.
+  'Dots Stroke'·'Material'은 쓰는 면 0 → 정본에 없음.
+
+⚠️ 상용 게임(One Piece Bounty Rush) 추출 에셋. 2026-09-07 사장님 확정: IP 제약 없음(상업적 사용 아님).
