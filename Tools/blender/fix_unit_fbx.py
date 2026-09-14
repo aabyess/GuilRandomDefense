@@ -116,6 +116,15 @@ for _s, _side in (("L", "Left"), ("R", "Right")):
     PL_RENAME.update({f"{_s}Arm_Clavicle": f"mixamorig:{_side}Shoulder", f"{_s}Arm_Upper": f"mixamorig:{_side}Arm", f"{_s}Arm_Fore": f"mixamorig:{_side}ForeArm",
                       f"{_s}Hand_Palm": f"mixamorig:{_side}Hand", f"{_s}Leg_Thigh": f"mixamorig:{_side}UpLeg", f"{_s}Leg_Calf": f"mixamorig:{_side}Leg",
                       f"{_s}Foot_Heel": f"mixamorig:{_side}Foot", f"{_s}Foot_Toe": f"mixamorig:{_side}ToeBase"})
+# 미호크(특별함_박기찬, 2026-09-14): 뼈 이름이 공백식(body lower·arm left arm1…) — 사람형 매핑 뼈만 mixamorig로. 손가락·얼굴·모자·검 뼈는 그대로.
+MIHAWK_RENAME = {"body lower": "mixamorig:Hips", "body upper": "mixamorig:Spine", "body spine1": "mixamorig:Spine1", "body spine2": "mixamorig:Spine2",
+                 "head neck": "mixamorig:Neck", "head head": "mixamorig:Head"}
+for _s, _side in (("left", "Left"), ("right", "Right")):
+    MIHAWK_RENAME.update({f"arm {_s} shoulder": f"mixamorig:{_side}Shoulder", f"arm {_s} arm1": f"mixamorig:{_side}Arm",
+                          f"arm {_s} arm2": f"mixamorig:{_side}ForeArm", f"arm {_s} hand": f"mixamorig:{_side}Hand",
+                          f"leg {_s} thigh": f"mixamorig:{_side}UpLeg", f"leg {_s} calf": f"mixamorig:{_side}Leg",
+                          f"leg {_s} foot": f"mixamorig:{_side}Foot", f"leg {_s} toes": f"mixamorig:{_side}ToeBase"})
+_MH = "~/Downloads/mihawk/textures/mpr_bound_character_mplc014mihawk_"
 NARUTO_FACE_RUNS = [["nrt_tex02", 450], ["nrt_eye", 62], ["nrt_tex01", 1106], ["nrt_tex02", 1919]]
 UNITS = {
     "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
@@ -136,7 +145,12 @@ UNITS = {
     "안흔함_황정기": dict(rev="4fe82fb5", path="Assets/Art/Units/안흔함_황정기/안흔함_황정기.fbx", kind="human", size=("height", 1.8),
                       materials=dict(mesh_material={"173_2": "173texture.jpg"},
                                      textures={"173texture.jpg": [("DiffuseColor", "173texture.jpg"), ("NormalMap", "173_Norm.jpg")]})),
-    "특별함_양재모": dict(rev="2d515a55", path="Assets/Art/Units/특별함_양재모/특별함_양재모.fbx", kind="human", size=("height", 1.8)),
+    # 🔸 기존 pl_ 여섯(2026-09-14 PM): 표정·손 변형 메시가 겹친 채 게임에 들어가 있었다 → 기본만 남기고, 매핑 뼈 이름을 PL_RENAME(모리아에서 유니티 통과)으로.
+    #    로(양재모) 무기 3: weapon_01 = 오른손에 뽑은 칼날(앞으로), weapon_02 = 왼손 칼집(술 달림, 뒤로) + weapon_03 = 코등이·손잡이 — 02+03이 칼집에 든 기본 모습.
+    "특별함_양재모": dict(rev="2d515a55", path="Assets/Art/Units/특별함_양재모/특별함_양재모.fbx", kind="human", size=("height", 1.8),
+                      drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_open_death_01", "l_hand_open_death_02",
+                                   "l_hand_open_death_03", "weapon_01"],
+                      rename_bones=PL_RENAME, null_frames_from_node=True),
     "특별함_최상호": dict(rev="b037f72d", path="Assets/Art/Units/특별함_최상호/특별함_최상호.fbx", kind="human", size=("height", 1.8),
                       source=os.path.join(DL, "luffy.glb"),
                       # mesh_0(Pupil 582정점·모양 키 3) = Object_7, mesh_0.001(shock 60정점·모양 키 3) = Object_8
@@ -149,6 +163,27 @@ UNITS = {
                       source=os.path.join(DL, "denji_and_pochita.glb"), gltf_guess_bind=False,
                       recipe=dict(rename=DENJI_RENAME)),
     "안흔함_상붕카": dict(path="Assets/Art/Characters/안흔함_상붕카.glb", kind="prop", size=("length", 1.8)),
+    # 루치: 손 open만, 비둘기 날개는 접은 쪽(close)
+    "흔함_노태현": dict(rev="bab90f7c", path="Assets/Art/Units/흔함_노태현/흔함_노태현.fbx", kind="human", size=("height", 1.8),
+                    drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_shigun", "r_hand_shigun",
+                                 "pigeon_l_wing_open", "pigeon_r_wing_open"],
+                    rename_bones=PL_RENAME, null_frames_from_node=True),
+    # 시저: 손 open만, 이펙트 메시 eff 뺌. r_sword_01·coat·leg 유지
+    "흔함_강주혁": dict(rev="fbcca7bb", path="Assets/Art/Units/흔함_강주혁/흔함_강주혁.fbx", kind="human", size=("height", 1.8),
+                    drop_meshes=["eff", "face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_gastanets", "r_hand_gastanets",
+                                 "l_hand_pose", "r_hand_pose"],
+                    rename_bones=PL_RENAME, null_frames_from_node=True),
+    # 마젤란: 손 open만
+    "흔함_박민석": dict(rev="57d13ab9", path="Assets/Art/Units/흔함_박민석/흔함_박민석.fbx", kind="human", size=("height", 1.8),
+                    drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close"],
+                    rename_bones=PL_RENAME, null_frames_from_node=True),
+    "특별함_노태현": dict(rev="2d515a55", path="Assets/Art/Units/특별함_노태현/특별함_노태현.fbx", kind="human", size=("height", 1.8),
+                      drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_shigan", "r_hand_shigan"],
+                      rename_bones=PL_RENAME, null_frames_from_node=True),
+    # 🔴 특별함_박민석: r_hand_open이 쉬는 자세에서 몸 오른쪽 2배 키 거리에 떠 있다(원본 결함) → 손은 양쪽 close(주먹)를 기본으로. chain·headphone·boot 유지
+    "특별함_박민석": dict(rev="2d515a55", path="Assets/Art/Units/특별함_박민석/특별함_박민석.fbx", kind="human", size=("height", 1.8),
+                      drop_meshes=["face_attack", "face_damage", "l_hand_open", "r_hand_open"],
+                      rename_bones=PL_RENAME, null_frames_from_node=True),
     # 새 스킨(git 원본 없음) — 다운로드 rar에서 FBX·텍스처를 꺼내 짓는다. 쉬는 자세 팔 A자 44.7° → T자로 굽는다. 재질 34065 하나(Dots Stroke·Material은 면 0, 안 읽힘).
     "특별함_황정기": dict(path="Assets/Art/Units/특별함_황정기/특별함_황정기.fbx", kind="human", size=("height", 1.8),
                       archive=(os.path.join(DL, "one-piece-fighting-path-usopp-onigashima/source/Usopp Onigashimaa.rar"),
@@ -164,6 +199,28 @@ UNITS = {
                       drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_scissors_open", "l_hand_scissors_close",
                                    "L_scissor", "R_scissor", "L_scissors"],
                       rename_bones=PL_RENAME, null_frames_from_node=True),
+    # 미호크: 이미 T자·미터 단위. 「-」 메시 3개(손에 쥔 검·손 칼날 = 공격 변형)를 빼고 「+」(등의 검·목걸이 칼)는 남긴다.
+    #   텍스처: 재질 14개가 occ/alb/nmh/spec 4장씩 부르는데 폴더엔 이름 잘린 알베도 4장뿐 → 재질을 7개로 모아 그 4장을 물리고,
+    #   없는 머리·수염(hair_kidsalb)·모자 깃털(fur_blend_kidsalb)은 단색. 옷(Body·코트·칼집·목걸이)은 cloth 알베도(원본은 fur_blend를 불렀지만 UV가 cloth 그림).
+    "특별함_박기찬": dict(path="Assets/Art/Units/특별함_박기찬/특별함_박기찬.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.expanduser("~/Downloads/mihawk/source/Mihawk.fbx"), hips="mixamorig:Hips", head="mixamorig:Head",
+                      drop_meshes=["24_-SwordHand_0.1_1.0_1.0", "24_-BladeHandL_0.1_1.0_1.0", "24_-BladeHandR_0.1_1.0_1.0"],
+                      # 손에 쥔 검 메시를 빼면 그 뼈(검 끝이 앞으로 2.1m)는 가중치 없이 남아 경계를 망친다 — 같이 뺀다(자식부터)
+                      drop_bones=["sword tip", "sword bottom", "arm right weapon"],
+                      # 등의 검 끝(원본 z 2.4)이 모자(2.07)보다 높아 키에 넣으면 몸이 1.49m로 작아진다 — 키는 검 빼고 모자 끝까지로
+                      size_ignore_meshes=["24_+SwordBack_0.1_1.0_1.0"],
+                      rename_bones=MIHAWK_RENAME,
+                      copy_textures={_MH + "face_kid.png": "Mihawk_Face.png", _MH + "skin_kid.png": "Mihawk_Skin.png",
+                                     _MH + "cloth_ki.png": "Mihawk_Cloth.png", _MH + "weapon_k.png": "Mihawk_Weapon.png"},
+                      materials=dict(mesh_material={"24_Hair_0.1_1.0_1.0": "Mihawk_Hair", "24_FacialHair_0.1_1.0_1.0": "Mihawk_Beard",
+                                                    "24_Face_0.1_1.0_1.0": "Mihawk_Face", "24_Skin_0.1_1.0_1.0": "Mihawk_Skin",
+                                                    "24_Body_0.1_1.0_1.0": "Mihawk_Cloth", "24_Body_0.1_1.0_1.001": "Mihawk_Cloth",
+                                                    "24_BodySwordSheath_0.1_1.0_1.0": "Mihawk_Cloth", "24_+BladeNeck_0.1_1.0_1.0": "Mihawk_Cloth",
+                                                    "24_Fur_0.1_1.0_1.0": "Mihawk_Plume", "24_+SwordBack_0.1_1.0_1.0": "Mihawk_Weapon"},
+                                     textures={"Mihawk_Face": [("DiffuseColor", "Mihawk_Face.png")], "Mihawk_Skin": [("DiffuseColor", "Mihawk_Skin.png")],
+                                               "Mihawk_Cloth": [("DiffuseColor", "Mihawk_Cloth.png")], "Mihawk_Weapon": [("DiffuseColor", "Mihawk_Weapon.png")],
+                                               "Mihawk_Hair": [("BaseColor", (0.02, 0.02, 0.02))], "Mihawk_Beard": [("BaseColor", (0.02, 0.02, 0.02))],
+                                               "Mihawk_Plume": [("BaseColor", (0.75, 0.72, 0.66))]})),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")
@@ -249,6 +306,10 @@ def relink_textures(table, tex_dir):
         new = PrincipledBSDFWrapper(mat, is_readonly=False)
         new.base_color, new.alpha = color, alpha
         for prop, fn in table.get(mat_name, ()):
+            if prop == "BaseColor":                                     # 텍스처가 없는 재질은 단색(fn = RGB) — 미호크 머리·수염·깃털
+                new.base_color = tuple(fn)
+                done.append(f"{mat_name}.BaseColor={tuple(fn)}")
+                continue
             assert prop in FBX_TEX_SLOT, f"{mat_name}: 옮길 줄 모르는 텍스처 속성 {prop}"
             file = os.path.join(tex_dir, fn)
             assert os.path.isfile(file), f"{mat_name}: 텍스처 파일이 없다 {file}"
@@ -632,6 +693,12 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     scene = bpy.context.scene
     if recipe is not None:
         report["텍스처"] = relink_textures(ref["textures"], os.path.join(os.path.dirname(dst_path), "Textures"))
+    if cfg.get("copy_textures"):                                        # 흩어진 원본 텍스처를 재질 이름 기준 파일명으로 유닛 Textures/에(재질을 짜기 전에)
+        tex_repo = os.path.join(os.path.dirname(dst_path), "Textures")
+        os.makedirs(tex_repo, exist_ok=True)
+        for src_tex, dst_name in cfg["copy_textures"].items():
+            shutil.copy2(os.path.expanduser(src_tex), os.path.join(tex_repo, dst_name))
+            arc_textures.append(os.path.join(tex_repo, dst_name))
     if cfg.get("materials"):
         report["재질 새로"] = build_materials(cfg["materials"], os.path.join(os.path.dirname(dst_path), "Textures"))
     meshes = [o for o in scene.objects if o.type == "MESH"]
@@ -653,7 +720,7 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 m.data = baked
         # 🛡 뼈와 메시가 같은 자리에 있는지
         mp = [o.matrix_world @ v.co for o in meshes for v in o.data.vertices]
-        bp = [arm.matrix_world @ pb.head for pb in arm.pose.bones]
+        bp = [arm.matrix_world @ pb.head for pb in arm.pose.bones if pb.name not in set(cfg.get("drop_bones", ()))]   # 뺄 뼈(빈 무기 뼈 등)는 대조에서 제외
         mlo = Vector((min(p.x for p in mp), min(p.y for p in mp), min(p.z for p in mp)))
         mhi = Vector((max(p.x for p in mp), max(p.y for p in mp), max(p.z for p in mp)))
         blo = Vector((min(p.x for p in bp), min(p.y for p in bp), min(p.z for p in bp)))
@@ -668,7 +735,9 @@ def fix(name, cfg, out_dir=None, save_blend=False):
 
     # ── G = 이동 × 배율 × 방향
     R = orientation(cfg, arm, report)
-    pts = [R @ (mesh_world[o.name] @ v.co) for o in meshes for v in o.data.vertices]
+    ignore = set(cfg.get("size_ignore_meshes", ()))                      # 키를 잴 때 뺄 메시(몸보다 높이 솟은 등의 검 등) — 바닥·가운데·배율은 몸으로
+    assert ignore <= {o.name for o in meshes}, f"{name}: size_ignore_meshes에 없는 메시 {ignore - {o.name for o in meshes}}"
+    pts = [R @ (mesh_world[o.name] @ v.co) for o in meshes if o.name not in ignore for v in o.data.vertices]
     lo = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
     hi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
     axis, target = cfg["size"]
@@ -873,7 +942,8 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         tex_out = os.path.join(os.path.dirname(dst), "Textures")
         os.makedirs(tex_out, exist_ok=True)
         for t in arc_textures:
-            shutil.copy2(t, os.path.join(tex_out, os.path.basename(t)))
+            if os.path.abspath(t) != os.path.abspath(os.path.join(tex_out, os.path.basename(t))):
+                shutil.copy2(t, os.path.join(tex_out, os.path.basename(t)))
         report["텍스처 복사"] = [os.path.basename(t) for t in arc_textures]
     if save_blend:
         bpy.ops.wm.save_as_mainfile(filepath=os.path.splitext(dst)[0] + "_진단.blend", copy=True)
