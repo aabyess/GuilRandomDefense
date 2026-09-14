@@ -4,6 +4,7 @@
 게임 스킨은 저장소의 FBX·텍스처·git 첫 임포트 커밋만으로 다시 지을 수 있다(`Tools/blender/fix_unit_fbx.py`가 git rev에서 원본을 꺼냄).
 🔴 예외 — 삭제 제외·보존(스크립트가 ~/Downloads에서 직접 읽음): `zombi.glb`·`nanachi.glb`·`luffy.glb`·`denji_and_pochita.glb`
 (`Tools/blender/fix_unit_fbx.py` DL 경로, luffy는 `Tools/fix_glb_rig_for_humanoid.py`도). 이 넷을 지우려면 먼저 저장소로 옮기고 경로를 바꿀 것.
+🔴 예외 — 스킨 미완성이라 보존: 안흔함_강주혁(알라) `hxh__koala_chimera_ant.glb`·`강주혁_mixamo업로드.obj` (모델 FBX 없음, Mixamo 리깅 대기).
 휴지통(~/.Trash)에 있던 항목은 기록만 했고 휴지통 비우기는 사장님 몫.
 
 원본을 다시 받아야 하면 아래 파일명·zip 이름으로 Sketchfab 등에서 찾고 sha256 앞 16자리로 같은 파일인지 확인한다.
