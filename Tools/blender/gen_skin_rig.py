@@ -7,8 +7,11 @@
 import json
 import math
 import os
+import shutil
 import struct
 import sys
+import tempfile
+import zipfile
 
 import bmesh
 import bpy
@@ -79,6 +82,52 @@ SKINS = {
         rigid={},
         alpha_keep=set(),
     ),
+    # 이지원(음지소녀) — 원본이 zip 속 FBX(source/Lilith.fbx) + 곁텍스처 하나(textures/Plane.001.png,
+    # Eye 재질용)라 glb 파이프라인을 그대로 못 쓴다. source_type="fbx_zip"로 갈래를 타서 build()가
+    # zip을 풀고 FBX를 임포트한 뒤, 진짜 텍스처가 있는 재질(Eye) 하나만 그 파일을 잇고 나머지
+    # 19개 재질(대부분 FBX에 이미지 없이 색만 있음, 일부는 "Lilithbody.001" 같은 깨진 경로를
+    # 참조하지만 실제 파일이 zip에 없음)은 그 재질의 Base Color 값을 그대로 16×16 단색 PNG로
+    # 구워 잇는다(회색 기본재질 방지).
+    # 🔴 PM 사전조사와 다른 점 셋(직접 확인): ① Cube는 이 파일에 없다(13종이 아니라 실제 12개
+    #   메시). ② Detail1/Detail1.001은 중복이 아니라 좌우 대칭 쌍(bbox가 x=0 기준 거울상, 부츠
+    #   목 높이의 장식 — 렌더로 확인). 재질(Material.009·010)을 공유해서 좌우로 못 가르니 둘 다
+    #   Hips에 rigid로 묶었다 — ⚠️ 실제로는 종아리 높이 장식이라 Leg가 해부학적으로는 맞지만,
+    #   한쪽 다리 뼈에 둘 다 묶으면 반대쪽 장식이 그 다리를 따라가 걸을 때 어긋난다. Hips는
+    #   적어도 좌우 대칭은 깨지지 않아 덜 어색한 절충안이다(사장님/PM 판단 필요하면 보고).
+    #   ③ 전부 포함한 실제 삼각형 합이 11,488로 PM 추정(~11,500)과 정확히 일치 — 뺄 게 없다는 뜻.
+    # TeethUp·TeethDown은 재질 슬롯이 아예 없어서(FBX에 재질 미지정) build()가 임포트 직후
+    # 자동으로 "<메시이름>Mat" 재질을 만들어 붙인다(치아색 기본값), rigid에서 Head로 묶는다.
+    # 방향: 원본이 이미 −Y를 보고 서 있다(Eye·TeethUp·TeethDown 전부 head 메시의 −y쪽 끝에
+    # 몰려 있어 확인, 얼굴이 원래 정면 그대로) — rotate_z 불필요.
+    # 몸(Detail3, 팔·다리·코트·장갑·부츠를 다 담은 메시)이 재질별로 자동가중치 될 단일 몸통이라
+    # body_mesh_name으로 지정(자동 선택은 정점 수로 고르는데 Hair가 Detail3보다 정점이 많아
+    # 잘못 고른다 — 실제로 확인함).
+    "특별함_이지원": dict(
+        source="~/Downloads/lilith-one-piece.zip",
+        source_type="fbx_zip",
+        fbx_member="source/Lilith.fbx",
+        tex_member="textures/Plane.001.png",
+        real_texture_material="Eye",
+        path="Assets/Art/Units/특별함_이지원/특별함_이지원.fbx",
+        mesh_name="Lilith",
+        height=1.8,
+        body_mesh_name="Detail3",
+        center_band=(0.05, 0.15),                                        # 발목~정강이 높이(원본 z 0.065~2.51 부근, 데이터로 확인)
+        joints=dict(Hips=(0, 0, 0.48), Spine=(0, 0, 0.54), Spine1=(0, 0, 0.61), Spine2=(0, 0, 0.69), Neck=(0, 0, 0.80),
+                    Head=(0, 0, 0.85), HeadTop=(0, 0, 1.0),
+                    Shoulder=(0.10, 0, 0.77), Arm=(0.16, 0, 0.765), ForeArm=(0.28, 0, 0.765), Hand=(0.40, 0, 0.765),
+                    HandTip=(0.46, 0, 0.765),
+                    UpLeg=(0.09, 0, 0.47), Leg=(0.09, 0, 0.26), Foot=(0.09, -0.01, 0.045), ToeBase=(0.09, -0.07, 0.02),
+                    ToeTip=(0.09, -0.10, 0.02)),
+        # 얼굴·귀·눈썹·머리카락 3장·눈·이(치아 두 재질은 build()가 즉석 생성)는 Head로. 골반 옆
+        # 대칭 소품(Material.009·010, 좌우 공유라 못 가름)은 Hips로. 몸(Pink·Coat·Hands·
+        # Boots1~3·Material.008)은 rigid 없이 자동가중치.
+        rigid={"Material": "Head", "Material.001": "Head", "Material.002": "Head", "Material.003": "Head",
+               "Material.004": "Head", "Material.005": "Head", "Material.006": "Head", "Material.007": "Head",
+               "Eye": "Head", "TeethUpMat": "Head", "TeethDownMat": "Head",
+               "Material.009": "Hips", "Material.010": "Hips"},
+        alpha_keep=set(),
+    ),
 }
 
 # (뼈, 머리 관절, 꼬리 관절, 부모) — 왼쪽/오른쪽은 L·R 두 벌
@@ -104,6 +153,16 @@ def image_bytes(j, binchunk, index):
     return binchunk[s:s + bv["byteLength"]]
 
 
+def write_solid_png(path, rgba, size=16):
+    """이미지 없는 재질용 합성 텍스처 — Base Color 값 그대로 작은 단색 PNG로 굽는다(회색 기본재질 방지)."""
+    img = bpy.data.images.new("_solid", size, size, alpha=True)
+    img.pixels = list(rgba) * (size * size)
+    img.filepath_raw = path
+    img.file_format = "PNG"
+    img.save()
+    bpy.data.images.remove(img)
+
+
 def bone_table(joints):
     out = []
     for name, head, tail, parent in SPINE:
@@ -122,30 +181,63 @@ def build(name, cfg, out_dir=None, render_dir=None):
     tex_dir = os.path.join(os.path.dirname(dst), "Textures")
     report = {"이름": name, "원본": src}
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    bpy.ops.import_scene.gltf(filepath=src)
-    scene = bpy.context.scene
 
-    # ── 텍스처: 재질이 쓰는 내장 이미지를 원본 바이트 그대로 Textures/에(파일 이름 = 그 이미지를 쓰는 첫 재질 이름)
-    j, binchunk = glb(src)
-    os.makedirs(tex_dir, exist_ok=True)
-    mat_image, files = {}, {}
-    for mt in (j["materials"] if not cfg.get("textures") else []):
-        ext = mt.get("extensions", {}).get("KHR_materials_pbrSpecularGlossiness", {})
-        tex = ext.get("diffuseTexture") or mt.get("pbrMetallicRoughness", {}).get("baseColorTexture")
-        src_index = j["textures"][tex["index"]]["source"]
-        if src_index not in files:
-            fname = f"{mt['name']}_diffuse.png"
-            open(os.path.join(tex_dir, fname), "wb").write(image_bytes(j, binchunk, src_index))
-            files[src_index] = fname
-        mat_image[mt["name"]] = files[src_index]
-    for mt in (j["materials"] if cfg.get("textures") else []):
-        entries = []
-        for socket, slot, fname in cfg["textures"][mt["name"]]:
-            tex = mt.get(slot) or mt.get("pbrMetallicRoughness", {}).get(slot)
-            open(os.path.join(tex_dir, fname), "wb").write(image_bytes(j, binchunk, j["textures"][tex["index"]]["source"]))
-            entries.append((socket, fname))
-        mat_image[mt["name"]] = entries
-    report["재질→텍스처"] = mat_image
+    if cfg.get("source_type") == "fbx_zip":
+        # ── zip 속 FBX(뼈·텍스처 임베드 없음) — glb 파이프라인과 갈라서 여기서 끝낸다.
+        extract_dir = tempfile.mkdtemp(prefix="skinzip_")
+        with zipfile.ZipFile(src) as z:
+            z.extractall(extract_dir)
+        bpy.ops.import_scene.fbx(filepath=os.path.join(extract_dir, cfg["fbx_member"]))
+        scene = bpy.context.scene
+        # 재질 슬롯이 아예 없는 메시(예: 이·치아) — 즉석에서 "<메시이름>Mat" 재질을 만들어 붙인다.
+        # rigid 표에서 이 이름으로 뼈에 묶는다(특별함_이지원의 TeethUpMat·TeethDownMat 참고).
+        for o in list(scene.objects):
+            if o.type == "MESH" and len(o.material_slots) == 0:
+                mat = bpy.data.materials.new(f"{o.name}Mat")
+                mat.use_nodes = True
+                mat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.85, 0.8, 0.78, 1.0)
+                o.data.materials.append(mat)
+        os.makedirs(tex_dir, exist_ok=True)
+        real_name = cfg.get("real_texture_material")
+        real_src = os.path.join(extract_dir, cfg["tex_member"]) if cfg.get("tex_member") else None
+        mat_image = {}
+        for mt in list(bpy.data.materials):
+            if mt.name == real_name and real_src:
+                fname = f"{mt.name}_diffuse.png"
+                shutil.copy(real_src, os.path.join(tex_dir, fname))
+            else:
+                bsdf = next((n for n in mt.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None) if mt.node_tree else None
+                rgba = tuple(bsdf.inputs["Base Color"].default_value) if bsdf else (0.6, 0.6, 0.6, 1.0)
+                fname = f"{mt.name}_solid.png"
+                write_solid_png(os.path.join(tex_dir, fname), rgba)
+            mat_image[mt.name] = [("Base Color", fname)]
+        report["재질→텍스처"] = mat_image
+        cfg = dict(cfg, textures=True)                                  # 아래 재질 루프가 rebuild_material 경로를 타게
+    else:
+        bpy.ops.import_scene.gltf(filepath=src)
+        scene = bpy.context.scene
+
+        # ── 텍스처: 재질이 쓰는 내장 이미지를 원본 바이트 그대로 Textures/에(파일 이름 = 그 이미지를 쓰는 첫 재질 이름)
+        j, binchunk = glb(src)
+        os.makedirs(tex_dir, exist_ok=True)
+        mat_image, files = {}, {}
+        for mt in (j["materials"] if not cfg.get("textures") else []):
+            ext = mt.get("extensions", {}).get("KHR_materials_pbrSpecularGlossiness", {})
+            tex = ext.get("diffuseTexture") or mt.get("pbrMetallicRoughness", {}).get("baseColorTexture")
+            src_index = j["textures"][tex["index"]]["source"]
+            if src_index not in files:
+                fname = f"{mt['name']}_diffuse.png"
+                open(os.path.join(tex_dir, fname), "wb").write(image_bytes(j, binchunk, src_index))
+                files[src_index] = fname
+            mat_image[mt["name"]] = files[src_index]
+        for mt in (j["materials"] if cfg.get("textures") else []):
+            entries = []
+            for socket, slot, fname in cfg["textures"][mt["name"]]:
+                tex = mt.get(slot) or mt.get("pbrMetallicRoughness", {}).get(slot)
+                open(os.path.join(tex_dir, fname), "wb").write(image_bytes(j, binchunk, j["textures"][tex["index"]]["source"]))
+                entries.append((socket, fname))
+            mat_image[mt["name"]] = entries
+        report["재질→텍스처"] = mat_image
 
     meshes = [o for o in scene.objects if o.type == "MESH"]
     Rz = Matrix.Rotation(math.radians(cfg.get("rotate_z", 0.0)), 4, "Z")
@@ -153,7 +245,12 @@ def build(name, cfg, out_dir=None, render_dir=None):
     P = np.concatenate(list(world.values()))
     lo, hi = P.min(0), P.max(0)
     H = float(hi[2] - lo[2])
-    body = max(meshes, key=lambda o: len(o.data.vertices))
+    # 정점 수로 자동 고르면(대부분은 이게 맞다) 몸통이 아니라 다른 조각이 뽑힐 수 있다 — 이지원은
+    # Hair(2536)가 Detail3(2066, 실제 몸통)보다 정점이 많아 body_mesh_name으로 못박는다.
+    body = None
+    if cfg.get("body_mesh_name"):
+        body = next((o for o in meshes if o.name == cfg["body_mesh_name"]), None)
+    body = body or max(meshes, key=lambda o: len(o.data.vertices))
     B = world[body.name]
     band = B[(B[:, 2] >= lo[2] + H * cfg["center_band"][0]) & (B[:, 2] <= lo[2] + H * cfg["center_band"][1])]
     cx, cy = float(band[:, 0].min() + band[:, 0].max()) / 2, float(band[:, 1].min() + band[:, 1].max()) / 2
