@@ -150,7 +150,7 @@ UNITS = {
     "특별함_양재모": dict(rev="2d515a55", path="Assets/Art/Units/특별함_양재모/특별함_양재모.fbx", kind="human", size=("height", 1.8),
                       drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_open_death_01", "l_hand_open_death_02",
                                    "l_hand_open_death_03", "weapon_01"],
-                      rename_bones=PL_RENAME, null_frames_from_node=True),
+                      rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True),
     "특별함_최상호": dict(rev="b037f72d", path="Assets/Art/Units/특별함_최상호/특별함_최상호.fbx", kind="human", size=("height", 1.8),
                       source=os.path.join(DL, "luffy.glb"),
                       # mesh_0(Pupil 582정점·모양 키 3) = Object_7, mesh_0.001(shock 60정점·모양 키 3) = Object_8
@@ -163,27 +163,35 @@ UNITS = {
                       source=os.path.join(DL, "denji_and_pochita.glb"), gltf_guess_bind=False,
                       recipe=dict(rename=DENJI_RENAME)),
     "안흔함_상붕카": dict(path="Assets/Art/Characters/안흔함_상붕카.glb", kind="prop", size=("length", 1.8)),
+    # 놀란드(바운티러시 pl_ (merge) 리그, 2026-09-14): 이미 T자. 표정 5·손 4 변형 + 칼 두 상태(오른손에 뽑은 칼 r_weapon_01 / 칼집에 든 손잡이 l_handle_sheath).
+    #   l_handle_sheath는 쉬는 자세에서 오른발 옆 바닥에 떨어져 있다(원본 결함) → 뽑은 칼 + 왼허리 빈 칼집(l_sheath) + 칼 쥔 오른손 주먹을 기본으로.
+    #   텍스처 알파 = 명암 마스크(중간값 99.8%) → 알파 뺀 RGB PNG로(rgb_textures). 원본 FBX는 DiffuseColor만 부름.
+    "특별함_이현빈": dict(path="Assets/Art/Units/특별함_이현빈/특별함_이현빈.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(DL, "one-piece-bounty-rush-nolan.zip"), "source/nolan.rar", "nolan/pl_noland_sora01 (merge).fbx"),
+                      archive_textures=["nolan/pl_noland_sora01_diff.png"], rgb_textures=["pl_noland_sora01_diff.png"],
+                      drop_meshes=["face_attack", "face_damage", "face_sp01", "face_sp02", "l_hand_close", "r_hand_open", "l_handle_sheath"],
+                      rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True),
     # 루치: 손 open만, 비둘기 날개는 접은 쪽(close)
     "흔함_노태현": dict(rev="bab90f7c", path="Assets/Art/Units/흔함_노태현/흔함_노태현.fbx", kind="human", size=("height", 1.8),
                     drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_shigun", "r_hand_shigun",
                                  "pigeon_l_wing_open", "pigeon_r_wing_open"],
-                    rename_bones=PL_RENAME, null_frames_from_node=True),
+                    rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True),
     # 시저: 손 open만, 이펙트 메시 eff 뺌. r_sword_01·coat·leg 유지
     "흔함_강주혁": dict(rev="fbcca7bb", path="Assets/Art/Units/흔함_강주혁/흔함_강주혁.fbx", kind="human", size=("height", 1.8),
                     drop_meshes=["eff", "face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_gastanets", "r_hand_gastanets",
                                  "l_hand_pose", "r_hand_pose"],
-                    rename_bones=PL_RENAME, null_frames_from_node=True),
+                    rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True),
     # 마젤란: 손 open만
     "흔함_박민석": dict(rev="57d13ab9", path="Assets/Art/Units/흔함_박민석/흔함_박민석.fbx", kind="human", size=("height", 1.8),
                     drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close"],
-                    rename_bones=PL_RENAME, null_frames_from_node=True),
+                    rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True),
     "특별함_노태현": dict(rev="2d515a55", path="Assets/Art/Units/특별함_노태현/특별함_노태현.fbx", kind="human", size=("height", 1.8),
                       drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_shigan", "r_hand_shigan"],
-                      rename_bones=PL_RENAME, null_frames_from_node=True),
+                      rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True),
     # 🔴 특별함_박민석: r_hand_open이 쉬는 자세에서 몸 오른쪽 2배 키 거리에 떠 있다(원본 결함) → 손은 양쪽 close(주먹)를 기본으로. chain·headphone·boot 유지
     "특별함_박민석": dict(rev="2d515a55", path="Assets/Art/Units/특별함_박민석/특별함_박민석.fbx", kind="human", size=("height", 1.8),
                       drop_meshes=["face_attack", "face_damage", "l_hand_open", "r_hand_open"],
-                      rename_bones=PL_RENAME, null_frames_from_node=True),
+                      rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True),
     # 새 스킨(git 원본 없음) — 다운로드 rar에서 FBX·텍스처를 꺼내 짓는다. 쉬는 자세 팔 A자 44.7° → T자로 굽는다. 재질 34065 하나(Dots Stroke·Material은 면 0, 안 읽힘).
     "특별함_황정기": dict(path="Assets/Art/Units/특별함_황정기/특별함_황정기.fbx", kind="human", size=("height", 1.8),
                       archive=(os.path.join(DL, "one-piece-fighting-path-usopp-onigashima/source/Usopp Onigashimaa.rar"),
@@ -617,6 +625,28 @@ def _normalized(M):
     return Matrix.Translation(loc) @ q.to_matrix().to_4x4()
 
 
+def write_rgb_png(src, dst):
+    """알파를 뺀 8비트 RGB PNG로 다시 쓴다 — 바운티러시 _diff의 알파는 투명이 아니라 명암 마스크(중간값 99%)라 유니티가 투명으로 읽지 않게.
+    블렌더 저장(색 관리)을 거치지 않고 바이트 픽셀을 그대로 zlib로 싸서 색이 1도 안 바뀐다."""
+    import struct
+    import zlib
+    import numpy as np
+    img = bpy.data.images.load(src, check_existing=False)
+    w, h = img.size
+    px = np.empty(w * h * 4, dtype=np.float32)
+    img.pixels.foreach_get(px)
+    rgb = np.clip(np.round(px.reshape(h, w, 4)[::-1, :, :3] * 255.0), 0, 255).astype(np.uint8)
+    bpy.data.images.remove(img)
+    raw = b"".join(b"\x00" + row.tobytes() for row in rgb)
+
+    def chunk(tag, data):
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+
+    with open(dst, "wb") as f:
+        f.write(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
+    return dst
+
+
 def extract_archive(archive, members):
     """압축 원본(rar·zip)에서 필요한 파일만 임시 폴더로 — bsdtar(libarchive)가 rar도 읽는다. 받은 순서대로 경로를 돌려준다."""
     tmp = tempfile.mkdtemp(prefix="fix_unit_arc_")
@@ -735,6 +765,15 @@ def fix(name, cfg, out_dir=None, save_blend=False):
 
     # ── G = 이동 × 배율 × 방향
     R = orientation(cfg, arm, report)
+    if cfg.get("orient_snap"):                                          # 엉덩이→머리가 몸 구부정해서 기운 경우(시저 22°) — 기울기는 버리고 90° 단위 축 교정만(유니티 AutoUpright와 같게)
+        M3 = Matrix(((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)))
+        used = set()
+        for i in range(3):
+            j = max((j for j in range(3) if j not in used), key=lambda j: abs(R[i][j]))
+            used.add(j)
+            M3[i][j] = 1.0 if R[i][j] > 0 else -1.0
+        R = M3 if abs(M3.determinant() - 1.0) < 1e-6 else Matrix.Identity(3)
+        report["방향 스냅"] = [[int(v) for v in row] for row in R]
     ignore = set(cfg.get("size_ignore_meshes", ()))                      # 키를 잴 때 뺄 메시(몸보다 높이 솟은 등의 검 등) — 바닥·가운데·배율은 몸으로
     assert ignore <= {o.name for o in meshes}, f"{name}: size_ignore_meshes에 없는 메시 {ignore - {o.name for o in meshes}}"
     pts = [R @ (mesh_world[o.name] @ v.co) for o in meshes if o.name not in ignore for v in o.data.vertices]
@@ -942,8 +981,12 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         tex_out = os.path.join(os.path.dirname(dst), "Textures")
         os.makedirs(tex_out, exist_ok=True)
         for t in arc_textures:
-            if os.path.abspath(t) != os.path.abspath(os.path.join(tex_out, os.path.basename(t))):
-                shutil.copy2(t, os.path.join(tex_out, os.path.basename(t)))
+            out_t = os.path.join(tex_out, os.path.basename(t))
+            if os.path.basename(t) in set(cfg.get("rgb_textures", ())):         # 알파(명암 마스크) 뺀 RGB로
+                write_rgb_png(t, out_t)
+                report.setdefault("알파 뺀 텍스처", []).append(os.path.basename(t))
+            elif os.path.abspath(t) != os.path.abspath(out_t):
+                shutil.copy2(t, out_t)
         report["텍스처 복사"] = [os.path.basename(t) for t in arc_textures]
     if save_blend:
         bpy.ops.wm.save_as_mainfile(filepath=os.path.splitext(dst)[0] + "_진단.blend", copy=True)

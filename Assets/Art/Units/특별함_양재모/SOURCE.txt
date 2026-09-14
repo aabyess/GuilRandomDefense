@@ -21,3 +21,12 @@
 - ~/Downloads/one-piece-bounty-rush-law-wano/ (풀어 둔 폴더 · 3.9MB · 파일 2개)
     textures/pl_law_wano01_diff.png (1.3MB)
     source/pl_law_wano01.rar (2.6MB)
+
+── 2026-09-14 정리: 겹친 변형 메시 빼기 + 매핑 뼈 이름 (PM 지시) ──
+  - 표정·손·무기 상태 변형 메시가 겹쳐 게임에 그대로 보였다 → 기본만 남김(렌더 3벌: 전부/기본/뺀 것으로 판정).
+    뺌: face_attack · face_damage · l/r_hand_close · l_hand_open_death_01~03 · weapon_01(오른손에 뽑은 칼날)
+    남김: body · coat · face_normal · hair · hat · l/r_hand_open · weapon_02(왼손 칼집, 술) · weapon_03(코등이·손잡이) — 02+03 = 칼집에 든 기본 모습
+  - 재현: Tools/blender/fix_unit_fbx.py UNITS 「특별함_양재모」(원본 = git 2d515a55의 이 파일). 텍스처·재질 그대로(재질 표 원본과 동일 — DiffuseColor만, 투명 슬롯 없음).
+  - 사람형 매핑 뼈 21개 이름을 mixamorig로(PL_RENAME, 가중치 그룹 같이 — 모리아에서 유니티 통과한 방식): Body_Pelvis→Hips · Body_Belly→Spine · Body_Chest→Spine1 ·
+    Head_Neck→Neck · Head_Face→Head · L/R Arm_Clavicle→Shoulder · Arm_Upper→Arm · Arm_Fore→ForeArm · Hand_Palm→Hand · Leg_Thigh→UpLeg · Leg_Calf→Leg · Foot_Heel→Foot · Foot_Toe→ToeBase
+  - Null 13개는 같은 이름·같은 자리 뼈로(원래 노드 틀). 겉싸개 배율 0.01·X 90° 없앰, 키 1.8m · 발 z 0 · 정면 −Y(방향은 90° 단위로만 — orient_snap). 액션은 안 실음(사람형 공용 Idle).
