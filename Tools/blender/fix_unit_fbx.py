@@ -30,6 +30,12 @@
     원본으로 삼게 된다 — 임시 폴더에 꺼내고 Textures/는 유닛 폴더를 링크한다.
   · clip_ground(이호준, PM 결정 2026-09-13): 원본 좀비 클립은 몸을 낮춰 발이 쉬는 자세 바닥보다 0.11~0.14m 묻힌다(원본 glb 실측 그대로).
     유니티 편집 중엔 동작을 못 틀어 높이를 맞출 수 없으니 원천에서 — 프레임마다 변형된 메시 최저점을 z=0에 닿게 뿌리 뼈 위치 키를 옮긴다.
+  · 재질을 새로 짜는 유닛(2026-09-14 사장님 「회색」 제보, PM 요청) — cfg materials:
+    mesh_material {메시: 재질} = 그 메시 전부 한 재질 / face_runs = 면 순서대로 (재질, 개수) 연속 구간 / textures = relink_textures 표.
+    황정기: Mixamo 교체본(4fe82fb5)에 재질이 0개 — 옛 원본(4c92dba1)의 재질 「173texture.jpg」(Diffuse 173texture.jpg · Normal 173_Norm.jpg)를 다시 짠다.
+    신문철: Mixamo가 재질을 버렸다 — 원본 Naruto.obj(Wii Clash of Ninja Rev 3 추출, 면 3,537·정점 1,941)의 usemtl 묶음을
+    리깅본 면에 정점 번호 집합으로 대조(3,537/3,537 일치, 겹침 0)해 NARUTO_FACE_RUNS로 적어 뒀다(휴지통 원본이 없어도 재현).
+    원본 MTL의 nrta_tex2는 텍스처가 nrt_tex02와 같아 합쳤다(Kd 색은 내보내기 잔재). hige·nrt_tex10/20·오라·툰 맵은 이 모델이 안 쓴다.
   · 내보내기: FBX 단위 적용(1m = 유니티 1), 앞 −Z·위 Y(블렌더 −Y 정면 → 유니티 +Z), 끝 뼈 안 붙임. 상붕카는 원래 .glb(glTFast)라 GLB로.
 
 원본 glb에서 다시 짓는 넷(PM 결정 2026-09-13 — 블렌더가 이 FBX들의 스킨 결합을 못 살려서)
@@ -63,6 +69,7 @@ LUFFY_RENAME = {
 }
 DENJI_RENAME = {"spine_09": "Hips", "spine.001_010": "Spine", "spine.002_011": "Chest", "spine.003_012": "UpperChest",
                 "spine.004_013": "Neck", "spine.005_014": "Head"}
+NARUTO_FACE_RUNS = [["nrt_tex02", 450], ["nrt_eye", 62], ["nrt_tex01", 1106], ["nrt_tex02", 1919]]
 UNITS = {
     "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
     "안흔함_이호준": dict(rev="6b2afdbc", path="Assets/Art/Units/안흔함_이호준/안흔함_이호준.fbx", kind="human", size=("height", 1.2), anim=True,
@@ -75,7 +82,13 @@ UNITS = {
     "안흔함_문필환": dict(rev="81a18fbb", path="Assets/Art/Units/안흔함_문필환/안흔함_문필환.fbx", kind="human", size=("height", 1.8)),
     "안흔함_박준희": dict(path="Assets/Art/Units/안흔함_박준희/안흔함_박준희.fbx", kind="human", size=("height", 1.8),
                       hold="원본 siren_head.glb 없음 — 블렌더 FBX 가져오기가 스킨 결합을 못 살려 파일을 건드리지 않음(PM이 유니티 쪽에서 맞춤)"),
-    "안흔함_신문철": dict(rev="483a35ec", path="Assets/Art/Units/안흔함_신문철/안흔함_신문철.fbx", kind="human", size=("height", 1.8)),
+    "안흔함_신문철": dict(rev="483a35ec", path="Assets/Art/Units/안흔함_신문철/안흔함_신문철.fbx", kind="human", size=("height", 1.8),
+                      materials=dict(face_runs={"Naruto.001_Naruto": NARUTO_FACE_RUNS},
+                                     textures={"nrt_tex01": [("DiffuseColor", "nrt_tex01.png")], "nrt_tex02": [("DiffuseColor", "nrt_tex02.png")],
+                                               "nrt_eye": [("DiffuseColor", "nrt_eye.png")]})),
+    "안흔함_황정기": dict(rev="4fe82fb5", path="Assets/Art/Units/안흔함_황정기/안흔함_황정기.fbx", kind="human", size=("height", 1.8),
+                      materials=dict(mesh_material={"173_2": "173texture.jpg"},
+                                     textures={"173texture.jpg": [("DiffuseColor", "173texture.jpg"), ("NormalMap", "173_Norm.jpg")]})),
     "특별함_양재모": dict(rev="2d515a55", path="Assets/Art/Units/특별함_양재모/특별함_양재모.fbx", kind="human", size=("height", 1.8)),
     "특별함_최상호": dict(rev="b037f72d", path="Assets/Art/Units/특별함_최상호/특별함_최상호.fbx", kind="human", size=("height", 1.8),
                       source=os.path.join(DL, "luffy.glb"),
@@ -176,6 +189,36 @@ def relink_textures(table, tex_dir):
             assert os.path.isfile(file), f"{mat_name}: 텍스처 파일이 없다 {file}"
             getattr(new, FBX_TEX_SLOT[prop]).image = bpy.data.images.load(file, check_existing=True)
             done.append(f"{mat_name}.{prop}={fn}")
+    return done
+
+
+def build_materials(spec, tex_dir):
+    """재질을 새로 짠다 — mesh_material(메시 통째로 한 재질)·face_runs(면 순서 연속 구간) 뒤 textures 표대로 텍스처를 문다."""
+    done = {}
+    for mesh_name, mat_name in spec.get("mesh_material", {}).items():
+        obj = bpy.data.objects[mesh_name]
+        mat = bpy.data.materials.get(mat_name) or bpy.data.materials.new(mat_name)
+        obj.data.materials.clear()
+        obj.data.materials.append(mat)
+        for p in obj.data.polygons:
+            p.material_index = 0
+        done[mesh_name] = {mat_name: len(obj.data.polygons)}
+    for mesh_name, runs in spec.get("face_runs", {}).items():
+        obj = bpy.data.objects[mesh_name]
+        polys = obj.data.polygons
+        assert sum(n for _, n in runs) == len(polys), f"{mesh_name}: 면 수 {len(polys)} ≠ 구간 합 {sum(n for _, n in runs)}"
+        order = list(dict.fromkeys(m for m, _ in runs))
+        obj.data.materials.clear()
+        for m in order:
+            obj.data.materials.append(bpy.data.materials.get(m) or bpy.data.materials.new(m))
+        i = 0
+        for m, n in runs:
+            k = order.index(m)
+            for j in range(i, i + n):
+                polys[j].material_index = k
+            i += n
+        done[mesh_name] = {m: sum(n for mm, n in runs if mm == m) for m in order}
+    done["텍스처"] = relink_textures(spec["textures"], tex_dir)
     return done
 
 
@@ -405,6 +448,8 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     scene = bpy.context.scene
     if recipe is not None:
         report["텍스처"] = relink_textures(ref["textures"], os.path.join(os.path.dirname(dst_path), "Textures"))
+    if cfg.get("materials"):
+        report["재질 새로"] = build_materials(cfg["materials"], os.path.join(os.path.dirname(dst_path), "Textures"))
     meshes = [o for o in scene.objects if o.type == "MESH"]
     mats_before = sorted({s.material.name for o in meshes for s in o.material_slots if s.material})
 
@@ -509,6 +554,20 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 eb = data.edit_bones[bname]
                 eb.parent = data.edit_bones[parent]
                 eb.use_connect = connect and (data.edit_bones[parent].tail - eb.head).length < 1e-6
+        # drop_bones: 가중치 없는 중간 뼈를 빼고 자식을 그 부모에 잇는다(세계 위치 그대로) — 흔함_문필환 시험(2026-09-14):
+        #   유니티 아바타가 Bip001(무게중심, 매핑 안 됨) 아래 Bip001 Pelvis(Hips)를 바닥 높이로 저장해 하반신이 묻혔다 — 김경현처럼 Hips를 루트 밑에
+        for gone in cfg.get("drop_bones", ()):
+            eb = data.edit_bones.get(gone)
+            assert eb is not None, f"{name}: 뺄 뼈가 없다 {gone}"
+            for m in meshes:
+                g = m.vertex_groups.get(gone)
+                assert g is None or not any(ge.group == g.index and ge.weight > 1e-4 for v in m.data.vertices for ge in v.groups), \
+                    f"{name}: {gone}에 가중치가 있어 뺄 수 없다({m.name})"
+            for child in list(eb.children):
+                child.use_connect = False
+                child.parent = eb.parent
+            data.edit_bones.remove(eb)
+            report.setdefault("뺀 뼈", []).append(gone)
         bpy.ops.object.mode_set(mode="OBJECT")
         report["뼈"] = len(data.bones)
 

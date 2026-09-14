@@ -562,9 +562,10 @@ public static class ArtBinder
     // Mixamo가 재질 정보를 잃은 모델: 유닛 이름 → 이 폴더에서 쓸 텍스처 파일명(확장자 없이).
     // 재질이 하나뿐이라 몸통 텍스처 한 장만 붙는다 — 원본이 여러 재질이었으면 눈·머리 등은
     // 그 한 장으로 덮여 어긋날 수 있다. 제대로 하려면 재질을 살린 채 Mixamo에 다시 올린다.
+    // 2026-09-14 안흔함_신문철 줄 제거 — blender가 원본 Naruto.obj 재질(nrt_tex01·nrt_tex02·nrt_eye)을 FBX에 되살렸다.
+    // 이 줄이 남으면 몸통 한 장이 눈·옷까지 덮는다.
     static readonly (string unit, string texture)[] ForcedTextures =
     {
-        ("안흔함_신문철", "nrt_tex01"),   // 나루토 몸통. 2026-09-08 사장님 「색상이 없고」
     };
 
     static Texture2D ForcedTextureFor(string unitName, List<Texture2D> textures)
