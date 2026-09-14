@@ -1,0 +1,24 @@
+출처: Sketchfab — "Indian Man In Kurta" · 작성자 Pixel_Monster (https://sketchfab.com/ar.jethin) · 라이선스 SKETCHFAB Standard
+      https://sketchfab.com/3d-models/indian-man-in-kurta-a7fcb7ce36984b1b860ac7e476033bb1
+받은 날: 2026-09-14 · 유닛: 특별함_이병준 (unitName 불법체류자, Special)
+원본(보존 — 지우지 말 것): ~/Downloads/indian_man_in_kurta.glb · 10090484 bytes · sha256 9af8f33d63f5db03fd483a1fa75fdf303b9f38debe12565a5895980569602c2d
+glb: Sketchfab-16.31.0 · Avatar SDK·Mixamo 리그(스킨 1 · 조인트 74) · 메시 11(+조명용 Icosphere) · 삼각형 65,095 · 애니메이션 1 'mixamo.com'(안 씀) · 재질 11 · 이미지 14
+
+정리: 2026-09-14 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_이병준」으로 재현(source = 이 glb).
+  - 뼈 이름의 Sketchfab 번호 꼬리를 떼고 mixamorig 표준 이름으로(가중치 그룹 같이, 73개): Hips_01→mixamorig:Hips · Spine_02→Spine · Spine1_03 · Spine2_04 · Neck_05 · Neck1_06 · Neck2_07 ·
+    Head_08 · LeftEye_09 · HeadTop_End_011 · LeftShoulder_012 · LeftArm_013 · LeftForeArm_014 · LeftForeArm1_015·2_016(트위스트) · LeftHand_017 · 손가락 Thumb/Index/Middle/Ring/Pinky 1~4 ·
+    LeftUpLeg_063 · LeftLeg_064 · LeftFoot_065 · LeftToeBase_066 · LeftToe_End_067 (오른쪽 같게). _rootJoint는 그대로(그 밑 Hips).
+  - glTF 메시 노드 빈 오브젝트 11개(재질과 같은 이름)가 뼈로 살아나는 걸 뺌 · 조명용 Icosphere 메시 뺌.
+  - 쉬는 자세 이미 T자(위팔 수평 아래 2.6°, 아래팔 앞 16°) → 굽기 없음. 기본 자세 = 쉬는 자세(애니메이션 첫 프레임 아님, 확인).
+  - 키 1.8m(원본 배율 1.84 겹친 것 풀어서) · 발 z 0 · 정면 −Y. 크기 1.75 × 0.351 × 1.8 m.
+  - 🔸 삼각형 65,095는 **줄이지 않음** — 머리카락 카드(17k)·얼굴(14k)·옷(14k)이 대부분이라 UV·가중치·알파 컷아웃 경계를 망가뜨리지 않고 줄이기 어렵다.
+
+재질 → 텍스처(재질 이름 그대로, glb 내장 이미지 원본 바이트, 노멀은 파일명 _normal):
+  AvatarBody → AvatarBody_baseColor.jpg + AvatarBody_normal.png          AvatarHead → AvatarHead_baseColor.jpg + AvatarHead_normal.png
+  AvatarLeftCornea → AvatarLeftCornea_baseColor.jpg                      AvatarRightCornea → AvatarRightCornea_baseColor.jpg
+  AvatarLeft/RightEyeball → AvatarEyeball_baseColor.jpg + AvatarEyeball_normal.png (둘이 같은 이미지 — 파일 하나)
+  AvatarTeethLower/Upper → AvatarTeeth_baseColor.jpg + AvatarTeeth_normal.png (둘이 같은 이미지 — 파일 하나)
+  outfit → outfit_baseColor.jpg + outfit_normal.png
+  haircut → haircut_baseColor.png + haircut_normal.png — 🔸 **알파 컷아웃 유지**(원본 alphaMode MASK, 컷오프 0.12; FBX에 TransparencyFactor로 실림). 유니티 유닛 재질에 컷아웃 규칙이 없어 PM 확인 필요.
+  AvatarEyelashes → 텍스처 없음, 원본 색 검정 (0, 0, 0)
+  안 쓴 이미지: 없음(14장 전부 연결).

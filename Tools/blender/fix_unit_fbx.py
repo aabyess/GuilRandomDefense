@@ -163,6 +163,15 @@ UNITS = {
                       source=os.path.join(DL, "denji_and_pochita.glb"), gltf_guess_bind=False,
                       recipe=dict(rename=DENJI_RENAME)),
     "안흔함_상붕카": dict(path="Assets/Art/Characters/안흔함_상붕카.glb", kind="prop", size=("length", 1.8)),
+    # 진베 오니가시마(바운티러시 pl_ 리그를 Annettlw가 합친 판, 2026-09-14): 이미 T자. 표정 5·손 3벌 겹침 + 찻잔(cup). 손은 주먹(close) — 어인 가라테 기본 모습.
+    #   🔴 코트 소매 뼈 l_arm01·r_arm01이 팔이 아니라 coat_root(가슴) 밑이라 유니티가 팔을 내려도 소매가 T자에 남는다 → 위팔(LeftArm·RightArm) 밑으로.
+    "특별함_김용태": dict(path="Assets/Art/Units/특별함_김용태/특별함_김용태.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(DL, "one-piece-bounty-rush-jinbei-onigashima/source/Jinbei Onigashima.rar"),
+                               "Jinbei Onigashima/Jinbei Onigashima by Annettlw.fbx"),
+                      archive_textures=["Jinbei Onigashima/pl_jinbe_atta01_diff_hq.png"],
+                      drop_meshes=["face_attack", "face_damage", "face_sp01", "face_sp02", "l_hand_open", "r_hand_open", "l_hand_sp_01", "r_hand_sp_01", "cup"],
+                      rename_bones=PL_RENAME, reparent_bones={"l_arm01": "mixamorig:LeftArm", "r_arm01": "mixamorig:RightArm"},
+                      null_frames_from_node=True, orient_snap=True),
     # 쿠르타 입은 인도 남자(Avatar SDK·Mixamo 리그 glb, 2026-09-14): 뼈 이름에 Sketchfab 번호 꼬리 → mixamorig 표준 이름(_rootJoint 밑 Hips 그대로).
     #   쉬는 자세 이미 T자(위팔 수평 아래 2.6°). 조명용 Icosphere 뺌. 텍스처: glb 내장 이미지를 재질 이름 기준 파일로, 노멀은 _normal,
     #   머리카락(haircut)만 알파 컷아웃(원본 alphaMode MASK — 진짜 컷아웃). 눈썹(AvatarEyelashes)은 원본 검정 단색. 삼각형 65,095는 줄이지 않음.
