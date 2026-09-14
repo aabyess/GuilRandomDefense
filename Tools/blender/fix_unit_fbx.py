@@ -145,6 +145,13 @@ for _side, _ids in (("Left", dict(CLAVICLE="CLAVICLE_L_069", SHOULDER="SHOULDER_
                          _ids["TOE1"]: f"mixamorig:{_side}Foot", _ids["TOE2"]: f"mixamorig:{_side}ToeBase"})
     for _finger, _chain in _ids["fingers"].items():
         GAROU_RENAME.update({_bone: f"mixamorig:{_side}Hand{_finger}{_i}" for _i, _bone in enumerate(_chain, start=1)})
+# 레이쥬(게임 이벤트 모델 glb, 뼈 이름 전부 익명 bone_N, 2026-09-14): 계층·세계 위치로 사람형 뼈를 찾았다. +X = 왼쪽(발끝 −Y). 손가락은 사슬이 모호해 이름 그대로.
+REIJU_RENAME = {"bone_2_04": "mixamorig:Hips", "bone_3_05": "mixamorig:Spine", "bone_4_06": "mixamorig:Spine1", "bone_5_07": "mixamorig:Spine2",
+                "bone_6_08": "mixamorig:Neck", "bone_7_09": "mixamorig:Head",
+                "bone_16_018": "mixamorig:LeftShoulder", "bone_18_020": "mixamorig:LeftArm", "bone_20_022": "mixamorig:LeftForeArm", "bone_22_024": "mixamorig:LeftHand",
+                "bone_17_019": "mixamorig:RightShoulder", "bone_19_021": "mixamorig:RightArm", "bone_21_023": "mixamorig:RightForeArm", "bone_23_025": "mixamorig:RightHand",
+                "bone_8_010": "mixamorig:LeftUpLeg", "bone_10_012": "mixamorig:LeftLeg", "bone_12_014": "mixamorig:LeftFoot", "bone_14_016": "mixamorig:LeftToeBase",
+                "bone_9_011": "mixamorig:RightUpLeg", "bone_11_013": "mixamorig:RightLeg", "bone_13_015": "mixamorig:RightFoot", "bone_15_017": "mixamorig:RightToeBase"}
 NARUTO_FACE_RUNS = [["nrt_tex02", 450], ["nrt_eye", 62], ["nrt_tex01", 1106], ["nrt_tex02", 1919]]
 UNITS = {
     "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
@@ -183,10 +190,49 @@ UNITS = {
                       source=os.path.join(DL, "denji_and_pochita.glb"), gltf_guess_bind=False,
                       recipe=dict(rename=DENJI_RENAME)),
     "안흔함_상붕카": dict(path="Assets/Art/Characters/안흔함_상붕카.glb", kind="prop", size=("length", 1.8)),
+    # 레이쥬: 이미 T자. 뿌리 bone_0_02 > bone_1_03(+ 형제 bone_26_028) — 가중치 0 중간 뼈 → 빼서 Hips(bone_2_04)가 _rootJoint 바로 밑.
+    #   🔴 트위스트 뼈가 형제로 붙음(우솝 교훈): 팔꿈치 자리 bone_202/203이 위팔 밑, 무릎 자리 bone_200/201이 넓적다리 밑 → 아래팔·종아리 밑으로.
+    #   mat_4(Object_15)는 이미지 없는 알파 0 BLEND 판(Object_13과 같은 자리 겹침, 안 보이는 재질) · 조명용 Icosphere 뺌.
+    "특별함_고우선": dict(path="Assets/Art/Units/특별함_고우선/특별함_고우선.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(DL, "reiju.glb"), no_nulls=True, drop_meshes=["Object_15", "Icosphere"],
+                      rename_bones=REIJU_RENAME, drop_bones=["bone_26_028", "bone_1_03", "bone_0_02"],
+                      reparent_bones={"bone_202_073": "mixamorig:LeftForeArm", "bone_203_074": "mixamorig:RightForeArm",
+                                      "bone_200_071": "mixamorig:LeftLeg", "bone_201_072": "mixamorig:RightLeg"},
+                      orient_snap=True,
+                      glb_images={0: "model_0_mat_0_baseColor.png", 2: "model_0_mat_0_normal.png", 4: "model_0_mat_1_baseColor.png", 6: "model_0_mat_1_normal.png",
+                                  8: "model_0_mat_2_normal.png", 9: "model_0_mat_3_baseColor.png", 10: "model_0_mat_3_normal.png", 12: "model_0_mat_7_normal.png",
+                                  13: "model_0_mat_8_baseColor.png", 14: "model_0_mat_9_baseColor.png", 15: "model_0_mat_9_normal.png",
+                                  16: "model_0_mat_12_baseColor.png", 18: "model_0_mat_12_normal.png"},
+                      materials=dict(textures={
+                          "model_0_mat_0": [("DiffuseColor", "model_0_mat_0_baseColor.png"), ("NormalMap", "model_0_mat_0_normal.png")],
+                          "model_0_mat_1": [("DiffuseColor", "model_0_mat_1_baseColor.png"), ("NormalMap", "model_0_mat_1_normal.png")],
+                          "model_0_mat_2": [("DiffuseColor", "model_0_mat_1_baseColor.png"), ("NormalMap", "model_0_mat_2_normal.png")],
+                          "model_0_mat_11": [("DiffuseColor", "model_0_mat_1_baseColor.png"), ("NormalMap", "model_0_mat_2_normal.png")],
+                          "model_0_mat_3": [("DiffuseColor", "model_0_mat_3_baseColor.png"), ("NormalMap", "model_0_mat_3_normal.png")],
+                          "model_0_mat_5": [("DiffuseColor", "model_0_mat_3_baseColor.png"), ("NormalMap", "model_0_mat_3_normal.png")],
+                          "model_0_mat_6": [("DiffuseColor", "model_0_mat_3_baseColor.png")],
+                          "model_0_mat_7": [("DiffuseColor", "model_0_mat_3_baseColor.png"), ("NormalMap", "model_0_mat_7_normal.png")],
+                          "model_0_mat_8": [("DiffuseColor", "model_0_mat_8_baseColor.png")],
+                          "model_0_mat_9": [("DiffuseColor", "model_0_mat_9_baseColor.png"), ("NormalMap", "model_0_mat_9_normal.png")],
+                          "model_0_mat_10": [("DiffuseColor", "model_0_mat_9_baseColor.png"), ("NormalMap", "model_0_mat_9_normal.png")],
+                          "model_0_mat_12": [("DiffuseColor", "model_0_mat_12_baseColor.png"), ("NormalMap", "model_0_mat_12_normal.png")],
+                          "model_0_mat_13": [("DiffuseColor", "model_0_mat_12_baseColor.png"), ("NormalMap", "model_0_mat_12_normal.png")]})),
+    # 쿠로사키 잇신(모바일 게임 추출 glb, 3ds Max Biped, 2026-09-14): 이름 번호 꼬리를 떼 Biped 이름 그대로(Bip001 Pelvis…). 쉬는 자세 A자 35.8° → T자.
+    #   Bip001(무게중심, 가중치 0) 뺌. 🔴 칼(Object_58)은 Bip001 > Prop1 > rweapon에 매달려 쉬는 자세에서 발밑 바닥에 앞으로 누워 있다(애니가 손으로 옮기던 것)
+    #   → 유니티 Idle에선 바닥에 남으니 칼 메시와 그 뼈 사슬을 뺀다. 손가락은 Finger0·Finger1 두 줄뿐이라 T자 굽기의 손바닥 굴리기는 건너뜀.
+    "특별함_이정범": dict(path="Assets/Art/Units/특별함_이정범/특별함_이정범.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(DL, "isshin_kurosaki.glb"), no_nulls=True, drop_meshes=["Object_58", "Icosphere"],
+                      rename_regex=(r"(.+?)_[0-9]+", r"\1"),
+                      drop_bones=["yixin_weapon_0_nocloth", "rweapon", "Bip001 Prop1", "Bip001"], tpose_arms=True, orient_snap=True,
+                      glb_images={0: "yixin_leye_0_baseColor.png", 1: "yixin_mouth_0_baseColor.png", 2: "yixin_reye_0_baseColor.png",
+                                  4: "yixin_body_0_baseColor.png", 5: "yixin_face_0_baseColor.png", 6: "yixin_hair_0_baseColor.png"},
+                      materials=dict(textures={f"yixin_{k}_0": [("DiffuseColor", f"yixin_{k}_0_baseColor.png")] for k in ("leye", "mouth", "reye", "body", "face", "hair")})),
     # 가로우(원펀맨 게임 추출 glb): 이미 T자. 뿌리 NULL_0133 > RESERVE_0143(가중치 0 중간 뼈)가 WAIST(Hips) 위에 끼어 있다 → 뺀다(흔함_문필환 Bip001 교훈).
     #   조명용 Icosphere 뺌. 텍스처 10장(재질 14가 나눠 씀) → 재질 이름 기준 파일, 공유 이미지는 파일 하나.
     "특별함_유재헌": dict(path="Assets/Art/Units/특별함_유재헌/특별함_유재헌.fbx", kind="human", size=("height", 1.8),
                       source=os.path.join(DL, "garouopm.glb"), drop_meshes=["Icosphere"], no_nulls=True,
+                      # 🔴 NULL_0133 배율 ×10000을 풀어 다시 싸고(glb_unscale_joint) 결합 자세 추정을 꺼야(gltf_guess_bind=False) 뼈대·스킨이 안 뭉개진다
+                      glb_unscale_joint="NULL_0133", gltf_guess_bind=False,
                       rename_bones=GAROU_RENAME, drop_bones=["RESERVE_0143", "NULL_0133"], orient_snap=True,
                       glb_images={0: "hairShapeH_HAIR_baseColor.png", 1: "faceShapeS_FACE_baseColor.png", 2: "eyeShapeE_EYE_baseColor.png",
                                   3: "C_inmouthShapeS_SKIN_baseColor.png", 4: "bodyShapeC_TOPS_baseColor.png", 5: "bodyShapeC_TOPS_normal.png",
@@ -653,22 +699,34 @@ def tpose_arms(arm, meshes, report):
 
     bpy.context.view_layer.update()
     before = {}
+    have = lambda n: n in pose
     for side in "LR":
         d = Vector((1.0 if side == "L" else -1.0, 0.0, 0.0))
         b = lambda k: f"Bip001 {side} {k}"
         align(b("Clavicle"), b("Clavicle"), b("UpperArm"), d)
         align(b("UpperArm"), b("UpperArm"), b("Forearm"), d)
         align(b("Forearm"), b("Forearm"), b("Hand"), d)
-        for _ in range(2):
-            roll_to(b("Forearm"), d, P(b("Finger1")) - P(b("Finger4")), Vector((0.0, -1.0, 0.0)))   # 검지가 앞 = 손바닥 아래
-            align(b("Hand"), b("Hand"), b("Finger2"), d)
+        skipped = []
+        # 손가락이 다 있을 때만 손바닥 굴리기·손가락 펴기(모바일 추출 Biped는 Finger0·Finger1 두 줄뿐 — 특별함_이정범)
+        if all(have(b(k)) for k in ("Finger1", "Finger4", "Finger2")):
+            for _ in range(2):
+                roll_to(b("Forearm"), d, P(b("Finger1")) - P(b("Finger4")), Vector((0.0, -1.0, 0.0)))   # 검지가 앞 = 손바닥 아래
+                align(b("Hand"), b("Hand"), b("Finger2"), d)
+        else:
+            skipped.append("손바닥 굴리기")
+            if have(b("Finger1")):
+                align(b("Hand"), b("Hand"), b("Finger1"), d)
         for f in "1234":
-            align(b(f"Finger{f}"), b(f"Finger{f}"), b(f"Finger{f}1"), d)
-            align(b(f"Finger{f}1"), b(f"Finger{f}1"), b(f"Finger{f}2"), d)
-        thumb = P(b("Finger01")) - P(b("Finger0"))
-        align(b("Finger01"), b("Finger01"), b("Finger02"), thumb)
+            if have(b(f"Finger{f}1")):
+                align(b(f"Finger{f}"), b(f"Finger{f}"), b(f"Finger{f}1"), d)
+            if have(b(f"Finger{f}2")):
+                align(b(f"Finger{f}1"), b(f"Finger{f}1"), b(f"Finger{f}2"), d)
+        if have(b("Finger02")):
+            thumb = P(b("Finger01")) - P(b("Finger0"))
+            align(b("Finger01"), b("Finger01"), b("Finger02"), thumb)
         before[side] = dict(arm=tuple(round(c, 3) for c in (P(b("Hand")) - P(b("UpperArm"))).normalized()),
-                            spread=tuple(round(c, 3) for c in (P(b("Finger1")) - P(b("Finger4"))).normalized()))
+                            spread=tuple(round(c, 3) for c in (P(b("Finger1")) - P(b("Finger4"))).normalized()) if have(b("Finger4")) else None,
+                            건너뜀=skipped)
     # 굽기: 변형된 메시를 데이터로, 자세를 쉬는 자세로
     dg = bpy.context.evaluated_depsgraph_get()
     posed_verts = {}
@@ -734,6 +792,50 @@ def write_rgb_png(src, dst):
     return dst
 
 
+def unscale_glb_joint(src, joint_name):
+    """glb 조인트 하나의 큰 균일 배율(가로우 NULL_0133 ×10000 + inverseBindMatrices ×0.0001)을 풀어 임시 glb로 다시 싼다.
+    블렌더 뼈는 배율을 못 담아 그 밑 뼈대·스킨이 한 줄로 뭉개졌다(2026-09-14). 자손 조인트 이동 ×배율, 그 조인트·자손의 IBM 앞에 ×배율 —
+    G_new·IBM_new = G_old·S⁻¹·S·IBM_old라 스킨 정점 세계 위치는 그대로. 결합 자세 추정(gltf_guess_bind)도 꺼야 바르게 선다."""
+    import json as _json
+    import struct as _struct
+    import numpy as np
+    b = open(src, "rb").read()
+    n = _struct.unpack_from("<I", b, 12)[0]
+    j = _json.loads(b[20:20 + n])
+    blen = _struct.unpack_from("<I", b, 20 + n)[0]
+    binc = bytearray(b[20 + n + 8:20 + n + 8 + blen])
+    nodes = j["nodes"]
+    ji = next(i for i, nd in enumerate(nodes) if nd.get("name") == joint_name)
+    sc = nodes[ji]["scale"]
+    assert max(sc) - min(sc) < 1e-6, f"{joint_name}: 균일 배율이 아니다 {sc}"
+    s = float(sc[0])
+    nodes[ji]["scale"] = [1.0, 1.0, 1.0]
+    desc, stack = set(), list(nodes[ji].get("children", []))
+    while stack:
+        c = stack.pop()
+        desc.add(c)
+        nodes[c]["translation"] = [v * s for v in nodes[c].get("translation", [0.0, 0.0, 0.0])]
+        stack += nodes[c].get("children", [])
+    S = np.diag([s, s, s, 1.0])
+    for sk in j["skins"]:
+        acc = j["accessors"][sk["inverseBindMatrices"]]
+        bv = j["bufferViews"][acc["bufferView"]]
+        start = bv.get("byteOffset", 0) + acc.get("byteOffset", 0)
+        m = np.frombuffer(bytes(binc[start:start + 64 * acc["count"]]), dtype="<f4").reshape(-1, 4, 4).astype(np.float64)
+        for k, joint in enumerate(sk["joints"]):
+            if joint == ji or joint in desc:
+                m[k] = (S @ m[k].T).T                                     # glTF 열 우선 → 행 우선으로 곱하고 되돌림
+        binc[start:start + 64 * acc["count"]] = m.astype("<f4").tobytes()
+    js = _json.dumps(j, separators=(",", ":")).encode()
+    js += b" " * (-len(js) % 4)
+    binc += b"\x00" * (-len(binc) % 4)
+    out = os.path.join(tempfile.mkdtemp(prefix="fix_unit_glb_"), os.path.basename(src))
+    with open(out, "wb") as f:
+        f.write(_struct.pack("<III", 0x46546C67, 2, 12 + 8 + len(js) + 8 + len(binc)) + _struct.pack("<II", len(js), 0x4E4F534A) + js
+                + _struct.pack("<II", len(binc), 0x004E4942) + bytes(binc))
+    return out, dict(배율=s, 자손=len(desc))
+
+
 def extract_archive(archive, members):
     """압축 원본(rar·zip)에서 필요한 파일만 임시 폴더로 — bsdtar(libarchive)가 rar도 읽는다. 받은 순서대로 경로를 돌려준다."""
     tmp = tempfile.mkdtemp(prefix="fix_unit_arc_")
@@ -764,6 +866,9 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     orig = original(cfg) if cfg.get("rev") else dst_path
     src = cfg.get("source", orig)
     arc_textures = []
+    unscale_info = None
+    if cfg.get("glb_unscale_joint"):
+        src, unscale_info = unscale_glb_joint(src, cfg["glb_unscale_joint"])
     if cfg.get("archive"):                                              # 새로 들이는 스킨(git 원본 없음): 다운로드 압축에서 FBX·텍스처를 꺼내 읽는다
         *outer, member = cfg["archive"]                                 # (압축, 파일) 또는 (zip, zip 안 rar, 파일) — 겹친 압축은 안쪽부터 꺼낸다
         arc = outer[0]
@@ -773,6 +878,8 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         src, arc_textures = got[0], got[1:]
     recipe = cfg.get("recipe") if "source" in cfg else None
     report = {"이름": name, "원본": f"{cfg.get('rev', '작업 파일')} {os.path.basename(src)}"}
+    if unscale_info:
+        report["glb 조인트 배율 풂"] = dict(unscale_info, 조인트=cfg["glb_unscale_joint"])
     ref = reference(orig) if recipe is not None else None
     guess = cfg.get("gltf_guess_bind", True)
     load(src, anim=False, guess_bind=guess)
@@ -828,7 +935,7 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     if cfg.get("rename_regex"):                                         # 번호 꼬리 이름(Hips_01·LeftHandIndex1_022) → mixamorig 표준 이름, 가중치 그룹 같이
         pattern, repl = cfg["rename_regex"]
         arm0 = main_armature()
-        table = {b.name: re.sub(pattern, repl, b.name) for b in arm0.data.bones if re.fullmatch(pattern, b.name)}
+        table = {b.name: re.fullmatch(pattern, b.name).expand(repl) for b in arm0.data.bones if re.fullmatch(pattern, b.name)}   # 🔴 re.sub은 이름 속 _0_ 마다 또 바꿨다(yixin_weapon_0_nocloth_45) — 통째 일치로만
         assert len(set(table.values())) == len(table), f"{name}: 이름 바꾸면 겹친다"
         for old, new in table.items():
             arm0.data.bones[old].name = new

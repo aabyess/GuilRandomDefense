@@ -1,0 +1,28 @@
+출처: Sketchfab — "garouopm" (원펀맨 가로우, 게임 추출 — 원본 노드 chr0025_00.FBX)
+받은 날: 2026-09-14 · 유닛: 특별함_유재헌 (unitName 피망, Special)
+원본(보존 — 지우지 말 것): ~/Downloads/garouopm.glb · 3697784 bytes · sha256 b26e2ad075230b32cb95dc9d587f96fa0a011bcc0eb3764f5fabda7cf55db2c8
+glb: Sketchfab-16.29.0 · 게임 리그(스킨 1 · 조인트 150, 이름에 번호 꼬리) · 메시 21(+조명용 Icosphere) · 삼각형 35,132 · 애니메이션 0 · 재질 14 · 이미지 10
+
+정리: 2026-09-14 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_유재헌」으로 재현(source = 이 glb).
+  - 🔴 가져오기 막힘 원인: 뿌리 조인트 NULL_0133에 노드 배율 ×10000(inverseBindMatrices는 ×0.0001로 맞춰 둠). 블렌더 뼈는 배율을 못 담아 뼈대·스킨이 한 줄로 뭉개졌고,
+    결합 자세 추정(guess_original_bind_pose)까지 켜면 더 망가졌다. → 가져오기 전에 임시 glb로 다시 싼다(glb_unscale_joint = NULL_0133):
+    그 조인트 배율 1, 자손 조인트 이동 ×10000, 그 조인트·자손 148개의 IBM 앞에 ×10000(스킨 정점 세계 위치 그대로) + gltf_guess_bind=False. 원본 파일은 안 건드림.
+  - NULL_0133·RESERVE_0143(가중치 0 중간 뼈)이 WAIST(엉덩이) 위에 끼어 있어 뺌 → Hips가 _rootJoint 바로 밑. 뼈 150 → 148.
+  - 사람형 매핑 뼈 52개를 mixamorig 이름으로(가중치 그룹 같이). 얼굴(MOUTH·TOOTH·CHEEK·EYE·EYEBROWS…)·옷(CLOTH_A·OBI)·ROLL 트위스트 뼈 이름은 그대로:
+      WAIST_079→Hips · SPINE1_074→Spine · SPINE2_072→Spine1 · SPINE3_068→Spine2 · NECK_010→Neck · HEAD_02→Head
+      CLAVICLE_L_069→LeftShoulder · SHOULDER_L_071→LeftArm · ELBOW_L_084→LeftForeArm · WRIST_L_086→LeftHand
+      THIGH_L_082→LeftUpLeg · CLANK_L_0139→LeftLeg(종아리) · TOE1_L_0127→LeftFoot · TOE2_L_0140→LeftToeBase
+      손가락 F_THUMB→Thumb · F_FORE→Index · F_MIDDLE→Middle · F_MEDICINAL→Ring · F_LITTLE→Pinky 1~3 (오른쪽 _R_ 같게)
+  - ROLL(트위스트) 뼈는 전부 이미 팔다리 뼈의 자식(CLAVICLEROLL←CLAVICLE · SHOULDERROLL←SHOULDER · ELBOWROLL←ELBOW · CLANKROLL←CLANK) → 재부착 없음.
+  - 쉬는 자세 이미 T자(위팔·아래팔 수평) → 굽기 없음. 조명용 Icosphere 뺌 · glTF 메시 노드 빈 오브젝트는 뼈로 안 살림.
+  - 키 1.8m · 발 z 0 · 정면 −Y(90° 단위만). 크기 1.763 × 0.295 × 1.8 m.
+
+재질 → 텍스처(재질 이름 그대로 14개, glb 내장 이미지 10장 원본 바이트, 여러 재질이 같은 이미지를 쓰면 파일 하나, 노멀은 _normal, 알파 없음):
+  hairShapeH_HAIR → hairShapeH_HAIR_baseColor.png
+  faceShapeS_FACE · eyebrowShapeH_EYEBROW → faceShapeS_FACE_baseColor.png
+  eye_LShapeE_EYE_L · eye_RShapeE_EYE_R → eyeShapeE_EYE_baseColor.png (팔레트)
+  C_inmouthShapeS_SKIN · toothdownShapeT_TOOTH → C_inmouthShapeS_SKIN_baseColor.png
+  bodyShapeC_TOPS → bodyShapeC_TOPS_baseColor.png + bodyShapeC_TOPS_normal.png · neckShapeS_NECK → bodyShapeC_TOPS_baseColor.png
+  handShapeS_HAND → handShapeS_HAND_baseColor.png
+  pantsShapeC_BOTTOMS → pantsShapeC_BOTTOMS_baseColor.png + pantsShapeC_BOTTOMS_normal.png · obiShapeC_OBI → pantsShapeC_BOTTOMS_baseColor.png
+  footShapeC_SHOES · footShapeS_FOOT → footShapeC_SHOES_baseColor.png

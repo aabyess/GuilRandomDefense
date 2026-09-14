@@ -1,0 +1,18 @@
+출처: Sketchfab — "isshin_kurosaki" (블리치 쿠로사키 잇신, 모바일 게임 추출 — 재질 접두 yixin_)
+받은 날: 2026-09-14 · 유닛: 특별함_이정범 (unitName 벨튀선구자, Special)
+원본(보존 — 지우지 말 것): ~/Downloads/isshin_kurosaki.glb · 1372068 bytes · sha256 da8fabea960672d9dc0a9145746883e1946248a283f9e80f65c8cd6bc9090c4e
+glb: Sketchfab-16.95.0 · 3ds Max Biped 리그(스킨 1 · 조인트 42, 이름에 번호 꼬리) · 메시 8(+조명용 Icosphere) · 삼각형 4,457 · 애니메이션 23개(안 씀) · 재질 7 · 이미지 7
+
+정리: 2026-09-14 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_이정범」으로 재현(source = 이 glb).
+  - 뼈 이름의 번호 꼬리만 떼서 Biped 이름 그대로(41개, 가중치 그룹 같이): Bip001 Pelvis_9 → Bip001 Pelvis · Bip001 L UpperArm_21 → Bip001 L UpperArm … (유니티가 Biped 이름을 매핑)
+  - Bip001(무게중심, 가중치 0)이 Pelvis 위에 끼어 있어 뺌(흔함_문필환 교훈) — Pelvis가 GLTF_created_0_rootJoint 바로 밑.
+  - 🔴 칼(Object_58 · 재질 yixin_weapon_0)은 Bip001 > Bip001 Prop1 > rweapon > yixin_weapon_0_nocloth에 매달려, 쉬는 자세에서 **발밑 바닥에 앞으로 누워** 있다
+    (게임 애니메이션이 손으로 옮기던 것) → 유니티 Idle에선 바닥에 남으니 칼 메시와 그 뼈 3개를 뺌. 뼈 42 → 38.
+  - 쉬는 자세 팔이 A자(수평 아래 35.8°) → T자로 굽힘(tpose_arms: Clavicle·UpperArm·Forearm ±X, 굽기 오차 0).
+    손가락이 Finger0(엄지)·Finger1 두 줄뿐이라 손바닥 굴리기는 건너뜀(Finger1·Finger4가 있어야 방향을 잰다).
+  - 조명용 Icosphere 뺌 · glTF 메시 노드 빈 오브젝트는 뼈로 안 살림(no_nulls) · 키 1.8m · 발 z 0 · 정면 −Y(90° 단위만). 크기 1.594 × 0.639 × 1.8 m.
+
+재질 → 텍스처(재질 이름 그대로, glb 내장 이미지 원본 바이트, 전부 베이스만·알파 없음):
+  yixin_body_0 → yixin_body_0_baseColor.png (512) · yixin_face_0 → yixin_face_0_baseColor.png (256) · yixin_hair_0 → yixin_hair_0_baseColor.png (128×256, 팔레트)
+  yixin_leye_0 → yixin_leye_0_baseColor.png · yixin_reye_0 → yixin_reye_0_baseColor.png · yixin_mouth_0 → yixin_mouth_0_baseColor.png (128)
+  안 씀: 이미지 3(yixin_weapon_0 칼 텍스처 — 칼 메시를 빼서)
