@@ -23,3 +23,22 @@
     glb: 메시 4 · 노드 8 · 스킨 0 · 애니 0 [] · 이미지 3
     재질 tripo_material_6a2fe4d0-e7a3-4194-a14c-a24004d42c3c→image0/n:image2
 - ~/Downloads/강주혁_mixamo업로드.obj · 45.3MB · sha256 3c3fe7d4882b7221
+
+── 2026-09-14 교체: medium_poly_koala ──
+출처: Sketchfab — "medium poly koala 3d model free" (Sketchfab-17.17.0 내보내기)
+원본 파일명: ~/Downloads/medium_poly_koala_3d_model_free.glb · 4163476 bytes · sha256 8fffeca154a2bf4fc4c83ab67a5c8e0bd5242fe6fc297c61f91c295c352b80b1 (원본 보존 — 지우지 말 것)
+glb: 메시 1(Object_4) · 삼각형 18,672 · 뼈·스킨 0 · 애니메이션 0 · UV 5벌 · 재질 1(material_0: 베이스·금속거칠기·발광·노멀)
+옛 키메라 앤트 원본(hxh__koala_chimera_ant.glb·강주혁_mixamo업로드.obj)은 ~/Downloads에 그대로 보존 중. 옛 Textures/0.jpg·1.png·2.jpg도 지우지 않았다.
+
+리깅: blender에서 직접(Mixamo 안 씀) — Tools/blender/gen_skin_rig.py 「안흔함_강주혁」으로 재현. 경로 = 사람형(두 발로 선 체형).
+  - 원본은 +X를 봐서 Z −90° 돌림 · 키 1.8m(원본 2.0 × 0.9) · 발 z 0 · 정면 −Y · 원점 두 다리 사이
+  - 뼈대 Armature, mixamorig 사람형 22뼈(Hips 루트 · Spine·Spine1·Spine2·Neck·Head · Left/Right Shoulder·Arm·ForeArm·Hand·UpLeg·Leg·Foot·ToeBase,
+    손가락 없음) · 모든 뼈 +Y가 자식 쪽 · 꼬리는 따로 뼈 없이 Hips·다리 쪽 가중치
+  - T자 굽기: 원본 팔이 앞으로 뻗고 처져 있어 위팔 18.4° · 아래팔 24.1° · 손 26.5°를 ±X로 돌려 메시를 굽고 쉬는 자세로 삼음
+  - 가중치: UV 이음새 정점 8,467개 붙인 사본에서 자동 가중치 → 위치로 되옮김. bone heat가 못 푼 1,911정점(귀털·발톱 조각)은
+    가장 가까운 가중치 정점을 따라감(가까운 뼈로 주면 귀털이 어깨에 붙어 12배 늘어났다)
+  - 판정(팔 45° 내림+무릎 90°): 최대 늘어짐 1.91(무릎 앞) · 상위 1% 1.2
+
+재질 → 텍스처(재질 이름 원본 그대로, 이미지는 glb 내장 원본 바이트):
+  material_0 → material_0_baseColor.jpeg (베이스, 내장 이미지 0) · material_0_normal.jpeg (노멀, 내장 이미지 3)
+  - 금속거칠기(이미지 1)·발광(이미지 2)은 안 씀: 금속 0 · 거칠기 0.8 · 발광 끔 · 불투명. UV는 첫 벌(UVMap)만 남김.

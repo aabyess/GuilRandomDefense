@@ -578,6 +578,10 @@ public static class ArtBinder
 
     static Texture2D MatchTexture(string materialName, List<Texture2D> textures)
     {
+        // 🔴 노멀맵은 색 텍스처 후보에서 뺀다(2026-09-14). 재질 material_0에 material_0_baseColor·material_0_normal이
+        //    둘 다 부분일치로 걸린다 — 알파벳 순서 덕에 색이 먼저 잡혔을 뿐, 순서가 바뀌면 파란 노멀맵이 몸에 칠해진다.
+        textures = textures.Where(t => !UnitTextureImporter.IsUnitNormalMap(AssetDatabase.GetAssetPath(t))).ToList();
+
         string target = materialName.ToLowerInvariant();
 
         Texture2D exact = textures.FirstOrDefault(t => t.name.ToLowerInvariant() == target);
