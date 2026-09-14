@@ -1,0 +1,20 @@
+출처: Sketchfab — "garen_league_of_legends_character" (리그 오브 레전드 가렌, 게임 추출 glb)
+받은 날: 2026-09-14 · 유닛: 특별함_박민수 (unitName 루키인싸, Special)
+원본(보존 — 지우지 말 것): ~/Downloads/garen_league_of_legends_character.glb · 8671412 bytes · sha256 483504d4c8d6aad69092511824add39edb8850320d58b0137e2af0bedf1c83ad
+glb: Sketchfab-15.25.0 · LoL 리그(스킨 1 · 조인트 69, 이름에 번호 꼬리) · 메시 1(+조명용 Icosphere) · 삼각형 6,336 · 애니메이션 31(garen_2013_*.anm — 안 씀) · 재질 1 · 이미지 1
+
+정리: 2026-09-14 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_박민수」로 재현(source = 이 glb).
+  - 🔴 좌우 뒤집힌 추출본: 정면 −Y인데 R_ 뼈가 +X(몸 왼쪽)에 있었다(LoL 왼손 좌표계). mirror_x로 통째 X 거울 → 뼈 이름대로의 몸 쪽, 대검이 오른손.
+    거울 뒤 면 방향은 뒤집고 사용자 법선은 (면, 정점)으로 짝지어 다시 넣음(오차 최대 0.002).
+  - 🔸 바인드 자세에선 대검(Weapon_21, R_Hand 자식)이 손을 떠나 몸 옆에 서 있고 스카프 뼈 사슬(Scarf1~3)이 머리 높이에서 뒤로 수평이었다 —
+    유니티 사람형 Idle은 매핑 안 된 뼈를 안 움직이므로 garen_2013_idle1 0프레임의 Weapon_21 · 오른손 손가락 10 · Scarf1~3 자세로 굳힘(14뼈).
+  - 뼈 이름 → mixamorig(22개): Root_1→Hips(가중치 359, Spine1·Pelvis_41의 부모) · Spine1_2→Spine · Spine2_3→Spine1 · Spine3_4→Spine2 · Neck_5 · Head_6 ·
+    R/L_Clavicle→Right/LeftShoulder · R/L_Shoulder→Arm · R/L_Elbow→ForeArm · R/L_Hand→Hand · R/L_Hip→UpLeg · R/L_KneeUpper→Leg · R/L_Foot→Foot · R/L_Toe→ToeBase.
+    Pelvis_41·KneeLower(무릎 같은 자리 중간 뼈)·손가락(두 마디)·어깨 패드·Cloth·Scarf·Weapon_21은 원래 이름 그대로(매핑 안 함 — 대검 쥔 손 모양 유지).
+  - Buffbone_*_Loc 12개(가중치 0 표식) 뺌 · GLTF_created_0_rootJoint는 그대로(그 바로 밑 Hips).
+  - 쉬는 자세 A자(위팔 수평 아래 58°) → T자로 굽힘: Shoulder·Arm·ForeArm ±X, 굽기 오차 0(손바닥 굴리기는 손가락 매핑이 없어 건너뜀).
+  - 조명용 Icosphere 뺌 · glTF 메시 노드 빈 오브젝트는 뼈로 안 살림 · orient_snap · 키 1.8m · 발 z 0 · 정면 −Y. 뼈 57.
+    크기 2.17 × 2.089 × 1.8 m(T자 팔 + 오른손 대검이 앞으로 1.47m — 무기·스카프 뺀 몸 2.03 × 0.65 × 1.8).
+
+재질 → 텍스처(재질 이름 그대로):
+  Garen_Base_Mat → Garen_Base_Mat.png (glb 내장 이미지 0, 512×512 RGB PNG 원본 바이트 — 알파 없음)

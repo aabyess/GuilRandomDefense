@@ -168,6 +168,15 @@ for _side in ("Left", "Right"):
                        f"bone_{_side}LegUpper": f"mixamorig:{_side}UpLeg", f"bone_{_side}Leg": f"mixamorig:{_side}Leg",
                        f"bone_{_side}Ankle": f"mixamorig:{_side}Foot", f"bone_{_side}Toe": f"mixamorig:{_side}ToeBase"})
 _RIN_TEX = "~/Downloads/rin-itoshi-free-fire-skin/textures/Male_{}_Cos_FB2_D.png"
+# 가렌(LoL 추출 glb, 2026-09-14): 번호 꼬리 이름 → mixamorig. Root_1(가중치 359)이 Spine1과 Pelvis_41의 부모라 Root_1 = Hips, Pelvis_41은 중간 뼈로 둔다.
+#   무릎은 KneeUpper(종아리)·KneeLower(같은 자리 중간 뼈) 둘 — KneeUpper = Leg. 손가락(두 마디)은 매핑 안 함(대검 쥔 모양 유지).
+GAREN_RENAME = {"Root_1": "mixamorig:Hips", "Spine1_2": "mixamorig:Spine", "Spine2_3": "mixamorig:Spine1", "Spine3_4": "mixamorig:Spine2",
+                "Neck_5": "mixamorig:Neck", "Head_6": "mixamorig:Head"}
+for _s, _side, _arm, _leg in (("R", "Right", 7, 42), ("L", "Left", 23, 47)):
+    GAREN_RENAME.update({f"{_s}_Clavicle_{_arm}": f"mixamorig:{_side}Shoulder", f"{_s}_Shoulder_{_arm + 1}": f"mixamorig:{_side}Arm",
+                         f"{_s}_Elbow_{_arm + 2}": f"mixamorig:{_side}ForeArm", f"{_s}_Hand_{_arm + 3}": f"mixamorig:{_side}Hand",
+                         f"{_s}_Hip_{_leg}": f"mixamorig:{_side}UpLeg", f"{_s}_KneeUpper_{_leg + 1}": f"mixamorig:{_side}Leg",
+                         f"{_s}_Foot_{_leg + 3}": f"mixamorig:{_side}Foot", f"{_s}_Toe_{_leg + 4}": f"mixamorig:{_side}ToeBase"})
 NARUTO_FACE_RUNS = [["nrt_tex02", 450], ["nrt_eye", 62], ["nrt_tex01", 1106], ["nrt_tex02", 1919]]
 UNITS = {
     "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
@@ -432,6 +441,23 @@ UNITS = {
                                                "Mihawk_Cloth": [("DiffuseColor", "Mihawk_Cloth.png")], "Mihawk_Weapon": [("DiffuseColor", "Mihawk_Weapon.png")],
                                                "Mihawk_Hair": [("BaseColor", (0.02, 0.02, 0.02))], "Mihawk_Beard": [("BaseColor", (0.02, 0.02, 0.02))],
                                                "Mihawk_Plume": [("BaseColor", (0.75, 0.72, 0.66))]})),
+    # 가렌(LoL 추출 glb, 뼈 69·메시 1·삼각형 6,336): 🔴 좌우 뒤집힌 추출본 — 정면 −Y인데 R_ 뼈가 +X(몸 왼쪽)에 있다(LoL 왼손 좌표계).
+    #   mirror_x로 통째 X 거울 → 뼈 이름대로의 몸 쪽(대검이 오른손). 쉬는 자세 A자(위팔 수평 아래 58°) → T자.
+    #   바인드 자세에선 대검(Weapon_21, R_Hand 자식)이 손을 떠나 몸 옆에 서 있고 스카프 뼈 사슬이 머리 높이에서 뒤로 수평으로 뻗었다 —
+    #   유니티 사람형 Idle은 매핑 안 된 뼈를 안 움직이니 idle1 첫 프레임의 무기·오른손 손가락·스카프 자세로 굳힌다.
+    #   Buffbone_*_Loc 12개 = 가중치 0 표식 → 뺌. 재질 1(Garen_Base_Mat, 512 RGB PNG — 알파 없음).
+    "특별함_박민수": dict(path="Assets/Art/Units/특별함_박민수/특별함_박민수.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(DL, "garen_league_of_legends_character.glb"), no_nulls=True, drop_meshes=["Icosphere"], mirror_x=True,
+                      pose_from_clip=("garen_2013_idle1.anm", 0, ["Weapon_21", "Scarf1_38", "Scarf2_39", "Scarf3_40"]
+                                      + [f"R_{f}{k}_{11 + 2 * i + k - 1}" for i, f in enumerate(("Thumb", "Index", "Middle", "Ring", "Pinky")) for k in (1, 2)]),
+                      rename_bones=GAREN_RENAME, orient_snap=True,
+                      drop_bones=["C_Buffbone_Glb_Head_Loc_62", "Buffbone_Glb_Weapon_1_59", "R_Buffbone_Glb_Hand_Loc_68", "L_Buffbone_Glb_Hand_Loc_66",
+                                  "C_Buffbone_Glb_Chest_Loc_61", "R_Buffbone_Glb_Foot_Loc_67", "L_Buffbone_Glb_Foot_Loc_65", "Buffbone_Glb_Channel_Loc_57",
+                                  "Buffbone_Glb_Ground_Loc_58", "C_Buffbone_Glb_Center_Loc_60", "C_Buffbone_Glb_Layout_Loc_63", "C_Buffbone_Glb_Overhead_Loc_64"],
+                      tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm", "Forearm": f"mixamorig:{side}ForeArm",
+                                      "Hand": f"mixamorig:{side}Hand"} for s, side in (("L", "Left"), ("R", "Right"))},
+                      glb_images={0: "Garen_Base_Mat.png"},
+                      materials=dict(textures={"Garen_Base_Mat": [("DiffuseColor", "Garen_Base_Mat.png")]})),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")
@@ -836,6 +862,23 @@ def tpose_arms(arm, meshes, report, names=None):
     report["T자"] = dict(before, 굽기_오차=round(drift, 6))
 
 
+def clip_pose(src, guess_bind, clip, frame, bones):
+    """glTF 클립 한 프레임의 뼈 자세(쉬는 자세 기준 basis)를 읽는다 — 바인드 자세에 없는 무기 쥔 자리·늘어진 천(특별함_박민수 가렌)."""
+    load(src, anim=True, guess_bind=guess_bind)
+    arm = main_armature()
+    ad = arm.animation_data
+    for t in ad.nla_tracks:                                             # glTF 가져오기는 클립마다 NLA 트랙을 깐다 — 다 끄고 한 클립만
+        t.mute = True
+    act = bpy.data.actions[clip]
+    ad.action = act
+    if hasattr(ad, "action_slot") and act.slots:
+        ad.action_slot = act.slots[0]
+    bpy.context.scene.frame_set(int(frame))
+    missing = [n for n in bones if n not in arm.pose.bones]
+    assert not missing, f"클립 자세로 굳힐 뼈가 없다 {missing}"
+    return {n: arm.pose.bones[n].matrix_basis.copy() for n in bones}
+
+
 def _normalized(M):
     loc, q, _ = M.decompose()
     return Matrix.Translation(loc) @ q.to_matrix().to_4x4()
@@ -961,9 +1004,24 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         report["glb 조인트 배율 풂"] = dict(unscale_info, 조인트=cfg["glb_unscale_joint"])
     ref = reference(orig) if recipe is not None else None
     guess = cfg.get("gltf_guess_bind", True)
+    held_pose = clip_pose(src, guess, *cfg["pose_from_clip"]) if cfg.get("pose_from_clip") else None
     load(src, anim=False, guess_bind=guess)
     if recipe is not None:
         apply_recipe(recipe, ref, report)
+    if held_pose:                                                       # 기본 자세로 두면 아래 「기본 자세 그대로 붙잡기」가 메시·뼈를 그 자세로 굽는다
+        arm0 = main_armature()
+        for bname, basis in held_pose.items():
+            arm0.pose.bones[bname].matrix_basis = basis
+        bpy.context.view_layer.update()
+        report["클립 자세로 굳힌 뼈"] = f"{cfg['pose_from_clip'][0]} {cfg['pose_from_clip'][1]}프레임 {len(held_pose)}개"
+    if cfg.get("mirror_x"):                                             # 좌우 뒤집힌 추출본(LoL): 뿌리 오브젝트마다 세계 X 거울 — 아래 G·뼈·메시가 거울 좌표로 짜인다
+        Mx = Matrix.Diagonal((-1.0, 1.0, 1.0, 1.0))
+        for o in [o for o in bpy.context.scene.objects if o.parent is None]:
+            o.matrix_world = Mx @ o.matrix_world
+        bpy.context.view_layer.update()
+        arm0 = main_armature()
+        assert arm0 is None or arm0.matrix_world.determinant() < 0, f"{name}: X 거울이 안 먹었다"
+        report["X 거울"] = "좌우 뒤집힌 원본 되돌림"
     if cfg.get("drop_meshes"):                                          # 바운티러시 pl_ 리그: 표정·손 모양 변형 메시가 한자리에 겹쳐 있다 — 기본만 남긴다
         assert not cfg.get("anim"), f"{name}: drop_meshes는 클립 다시 굽기와 같이 못 쓴다"
         for gone in cfg["drop_meshes"]:
@@ -1180,9 +1238,23 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         m.parent = None
         if m.data.users > 1:
             m.data = m.data.copy()
+        held_normals = None
+        if M.determinant() < 0 and m.data.has_custom_normals:
+            # 🔴 거울(mirror_x): transform + flip_normals만으론 사용자 법선이 틀어졌다(가렌 실측 정점 평균 오차 중앙 0.058·99% 0.96) —
+            #    (면, 정점)으로 짝지어 역전치로 옮긴 법선을 다시 넣는다(오차 최대 0.002)
+            N3 = M.to_3x3().inverted().transposed()
+            poly_of = [0] * len(m.data.loops)
+            for poly in m.data.polygons:
+                poly_of[poly.loop_start:poly.loop_start + poly.loop_total] = [poly.index] * poly.loop_total
+            held_normals = {(poly_of[i], lp.vertex_index): (N3 @ m.data.corner_normals[i].vector).normalized() for i, lp in enumerate(m.data.loops)}
         m.data.transform(M)
         if M.determinant() < 0:
             m.data.flip_normals()
+            if held_normals is not None:
+                poly_of = [0] * len(m.data.loops)
+                for poly in m.data.polygons:
+                    poly_of[poly.loop_start:poly.loop_start + poly.loop_total] = [poly.index] * poly.loop_total
+                m.data.normals_split_custom_set([held_normals[(poly_of[i], lp.vertex_index)] for i, lp in enumerate(m.data.loops)])
         m.matrix_parent_inverse = Matrix.Identity(4)
         m.matrix_basis = Matrix.Identity(4)
         if new_arm is not None:
