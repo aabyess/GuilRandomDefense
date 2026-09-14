@@ -128,6 +128,65 @@ SKINS = {
                "Material.009": "Hips", "Material.010": "Hips"},
         alpha_keep=set(),
     ),
+    # 마마보이(오크 전사) — 66메시·69,576삼각형짜리 Sketchfab 조각 세트(몸통 하나 + 갑옷·소품
+    # 60여 개가 전부 따로). 정면·회전 확인(fromNegY 렌더): 원본이 이미 정면 −Y·팔 좌우
+    # 확산(X)·키 Z위라 rotate_z 불필요 — 04부터 셋 다 rotate_z가 필요했던 것과 다르다.
+    # 팔이 어깨에서 약 30~40° 처져 있어(A자에 가까움) level_arms로 편다.
+    "특별함_주영호": dict(
+        source="~/Downloads/stylised_orc_model.glb",
+        path="Assets/Art/Units/특별함_주영호/특별함_주영호.fbx",
+        mesh_name="Orc",
+        height=1.8,
+        # 정점 수로 자동 고르면 Shoulder_Fur(10,964정점)가 Body_Low(정확한 몸통)보다 많아 잘못
+        # 뽑힌다 — 이지원(Hair vs Detail3)과 같은 함정이라 body_mesh_name으로 못박는다.
+        body_mesh_name="Body_Low_Body_Texture_0",
+        # Body_Low는 몸통·머리·팔뿐(정점 z 0.40~1.0 사이) — 다리는 전부 별도 조각(Trouser·
+        # Leg_Wrap·Boot)이라 발목 높이로는 center_band를 못 잡는다. Body_Low 자체의 맨 아래
+        # (골반 끝단, 0.40~0.45)에서 좌우 중심을 잡는다.
+        center_band=(0.40, 0.45),
+        joints=dict(Hips=(0, 0, 0.47), Spine=(0, 0, 0.53), Spine1=(0, 0, 0.60), Spine2=(0, 0, 0.66), Neck=(0, 0, 0.78),
+                    Head=(0, 0, 0.83), HeadTop=(0, 0, 1.0),
+                    Shoulder=(0.09, 0, 0.66), Arm=(0.20, -0.01, 0.62), ForeArm=(0.30, -0.02, 0.53), Hand=(0.38, -0.02, 0.44),
+                    HandTip=(0.44, -0.02, 0.40),
+                    UpLeg=(0.09, 0, 0.47), Leg=(0.09, 0, 0.27), Foot=(0.09, 0, 0.06), ToeBase=(0.09, -0.06, 0.02),
+                    ToeTip=(0.09, -0.10, 0.01)),
+        level_arms=True,
+        rigid={},                                                        # 재질 기준 rigid는 안 씀(대부분 Armour_Texture 하나를
+                                                                          # 60여 조각이 같이 써서 재질로는 못 가른다) — 아래 참고
+        alpha_keep=set(),
+        # 노멀맵 있는 둘만 명시 — Eye_Texture(베이스만)·Default_Material(이미지 자체가 없음)은
+        # 목록에서 빼서 build()가 Eye는 그대로, Default_Material은 baseColorFactor로 단색
+        # PNG를 합성하게 한다(PM: image1·4·6·7 안 씀 — 그것들이 바로 이 둘의 금속/거칠기 맵).
+        textures={"Body_Texture": [("Base Color", "baseColorTexture", "Body_Texture_diffuse.png"),
+                                    ("Normal", "normalTexture", "Body_Texture_normal.png")],
+                  "Eye_Texture": [("Base Color", "baseColorTexture", "Eye_Texture_diffuse.png")],
+                  "Armour_Texture": [("Base Color", "baseColorTexture", "Armour_Texture_diffuse.png"),
+                                      ("Normal", "normalTexture", "Armour_Texture_normal.png")]},
+        # ── 이 유닛 전용: 66조각을 이름으로 갈라 몸통(자동가중치)과 갑옷/소품(rigid)으로 나눈다.
+        # (부분 문자열, 뼈 틀 — "{side}"는 그 조각의 최종 x부호로 채운다. None이면 자동가중치로 둔다.)
+        # 순서대로 첫 매치 — Body_Low·Jaw·Leg_Wrap·Trouser(몸에 밀착해 자동가중치가 자연스럽다)는
+        # 전부 매치 없음(자동가중치). Eye는 Head. 허리 장신구(Belt·Tooth류, 좌우 안 가려도 되는
+        # 것)는 Hips. Wrist는 팔뚝, Boot는 발. 어깨쪽(Shoulder·Horn·Ring)은 대부분 좌우 한쪽에만
+        # 있는 비대칭 디자인이라(원작 확인 — Shoulder_Small/Large/Fur가 1개씩뿐, 좌우 쌍이 아님)
+        # x부호로 그때그때 판정하되, 중앙(|x|<0.06m)이면 어깨 망토로 보고 Spine2로.
+        # 🔴 Boot는 rigid에서 뺐다 — 전부 Foot에 100% 묶으면 ToeBase가 가중치 0으로 남아
+        # assert가 막는다(발이 통째로 부츠 속이라 맨발 메시가 아예 없다). 부츠 자체를
+        # 자동가중치로 두면 발목~발끝을 잇는 연속 메시라 Foot·ToeBase 둘 다 히트가 닿는다.
+        rigid_by_name=[
+            ("Eye", "Head", None), ("Jaw", "Head", None),
+            ("Belt", "Hips", None), ("Tooth", "Hips", None), ("Loop", "Hips", None),
+            ("Wrist", "{side}ForeArm", None),
+            ("Shoulder", "{side}Arm", 0.06), ("Horn", "{side}Arm", 0.06), ("Ring", "{side}Arm", 0.06),
+        ],
+        # ── 66조각 중 큰 털/모피 덩어리 셋(Shoulder_Fur 19,296·Belt_Fur_1 7,150·Belt_Fur_2 7,494
+        # = 33,940 = 전체의 49%)이 삼각형을 절반 가까이 먹는다 — 실제 굴곡이 아니라 털 가닥을
+        # 기하로 흉내낸 것이라 크게 줄여도 실루엣이 거의 안 바뀐다. Body_Low·Jaw·Eye(얼굴 판정
+        # 부위, PM 지시 "얼굴·손은 덜 줄이게")는 안 줄이고, 나머지(허리띠·장화·손목·뿔 등 소품)는
+        # 중간 정도만 줄인다. (부분 문자열, 목표 비율 — bmesh decimate_collapse, delimit={UV·
+        # NORMAL·MATERIAL}로 UV 이음매 보존) 순서대로 첫 매치, 미매치는 1.0(안 줄임).
+        decimate_rules=[("Fur", 0.22), ("Body_Low", 1.0), ("Jaw", 1.0), ("Eye", 1.0), ("Hand", 1.0)],
+        decimate_default=0.72,
+    ),
 }
 
 # (뼈, 머리 관절, 꼬리 관절, 부모) — 왼쪽/오른쪽은 L·R 두 벌
@@ -232,6 +291,15 @@ def build(name, cfg, out_dir=None, render_dir=None):
             mat_image[mt["name"]] = files[src_index]
         for mt in (j["materials"] if cfg.get("textures") else []):
             entries = []
+            if mt["name"] not in cfg["textures"]:
+                # 이 재질은 이미지가 아예 없다(예: Default_Material — 벨트 장식 몇 조각, 색만 있음).
+                # glTF baseColorFactor를 그대로 단색 PNG로(강주혁 항목이 대상 재질을 전부 나열해
+                # 두면 이 분기는 안 타지만, 이미지 없는 재질까지 갖는 소스는 여기로 떨어진다).
+                rgba = tuple(mt.get("pbrMetallicRoughness", {}).get("baseColorFactor", (0.6, 0.6, 0.6, 1.0)))
+                fname = f"{mt['name']}_solid.png"
+                write_solid_png(os.path.join(tex_dir, fname), rgba)
+                mat_image[mt["name"]] = [("Base Color", fname)]
+                continue
             for socket, slot, fname in cfg["textures"][mt["name"]]:
                 tex = mt.get(slot) or mt.get("pbrMetallicRoughness", {}).get(slot)
                 open(os.path.join(tex_dir, fname), "wb").write(image_bytes(j, binchunk, j["textures"][tex["index"]]["source"]))
@@ -259,6 +327,21 @@ def build(name, cfg, out_dir=None, render_dir=None):
     report["원본 키"] = round(float(H), 4)
     report["배율"] = round(s, 4)
 
+    # ── 조각별 감량(선택) — UV·재질·법선 경계를 넘지 않게(delimit) bmesh decimate_collapse.
+    # 원본이 그대로면(비율 1.0) 건너뛴다. 이름 매치 순서대로 첫 비율, 없으면 decimate_default.
+    name_rigid_points = []                                              # (최종 좌표, 뼈이름) — 이름 기준 rigid, 조각별로 미리 기록
+    decimate_rules = cfg.get("decimate_rules", [])
+    decimate_default = cfg.get("decimate_default", 1.0)
+    rigid_by_name = cfg.get("rigid_by_name", [])
+    tri_before = tri_after = 0
+
+    def resolve_bone(template, obj_final_pts, side_threshold):
+        if "{side}" not in template:
+            return template
+        if side_threshold is not None and abs(float(np.mean(obj_final_pts[:, 0]))) < side_threshold:
+            return "Spine2"
+        return template.format(side="Left" if float(np.mean(obj_final_pts[:, 0])) >= 0 else "Right")
+
     # ── 메시를 세계로 굽고 하나로
     for o in meshes:
         M = G @ o.matrix_world
@@ -267,6 +350,37 @@ def build(name, cfg, out_dir=None, render_dir=None):
         if M.determinant() < 0:
             o.data.flip_normals()
         o.matrix_basis = Matrix.Identity(4)
+        tri_before += len(o.data.polygons)                              # (사각형 섞여도 나중 삼각분할 후 report로 다시 잰다 — 대략치)
+        ratio = decimate_default
+        for sub, r in decimate_rules:
+            if sub in o.name:
+                ratio = r
+                break
+        if ratio < 0.999:
+            # 🔴 이 Blender(5.2.1)엔 bmesh.ops.decimate_collapse가 없다(UV 경계를 델리밋으로
+            # 보존하는 그 연산 대신 표준 Decimate 모디파이어 COLLAPSE로 — UV 경계를 정확히
+            # 안 지키지만(약간의 이음매 왜곡 가능) 안정적으로 동작한다. 털/모피처럼 원래
+            # 텍스처가 반복 패턴이라 이음매가 조금 어긋나도 눈에 잘 안 띄는 조각 위주로만
+            # 크게 줄여서(Fur 0.22) 이 위험을 줄인다).
+            mod = o.modifiers.new("decimate", "DECIMATE")
+            mod.ratio = ratio
+            dg = bpy.context.evaluated_depsgraph_get()
+            ev = o.evaluated_get(dg)
+            new_mesh = bpy.data.meshes.new_from_object(ev, preserve_all_data_layers=True, depsgraph=dg)
+            o.modifiers.remove(mod)
+            old_mesh = o.data
+            o.data = new_mesh
+            bpy.data.meshes.remove(old_mesh)
+        tri_after += len(o.data.polygons)
+        for sub, template, side_threshold in rigid_by_name:
+            if sub in o.name:
+                pts = np.array([v.co for v in o.data.vertices])
+                bone = resolve_bone(template, pts, side_threshold)
+                for p in pts:
+                    name_rigid_points.append((Vector(p), PREFIX + bone))
+                break
+    if decimate_rules or decimate_default < 0.999:
+        report["감량(조각별, 대략)"] = {"전": tri_before, "후": tri_after}
     for o in [o for o in scene.objects if o.type != "MESH"]:
         bpy.data.objects.remove(o, do_unlink=True)
     for o in scene.objects:
@@ -337,13 +451,37 @@ def build(name, cfg, out_dir=None, render_dir=None):
         if p.material_index in rigid_slots:
             for vi in p.vertices:
                 rigid_vert[vi] = rigid_slots[p.material_index]
+    # 이름 기준 rigid(재질 하나를 60여 조각이 같이 쓰는 마마보이류) — 조각별로 미리 적어 둔
+    # (최종 좌표, 뼈) 목록을 합친 뒤의 실제 정점에 위치로 되찾아 붙인다(조각 순서가 join 뒤
+    # 그대로 남는다는 가정 없이, 자동가중치 되옮김과 같은 방식으로 안전하게).
+    if name_rigid_points:
+        body_kd = KDTree(len(body.data.vertices))
+        for v in body.data.vertices:
+            body_kd.insert(v.co, v.index)
+        body_kd.balance()
+        matched, missed = 0, 0
+        for pos, bone in name_rigid_points:
+            _, vi, dist = body_kd.find(pos)
+            if dist < 1e-4:
+                rigid_vert[vi] = bone
+                matched += 1
+            else:
+                missed += 1
+        report["이름기준 rigid 정점"] = {"매치": matched, "놓침(감량으로 위치 이동)": missed}
     tmp = body.copy()
     tmp.data = body.data.copy()
     scene.collection.objects.link(tmp)
     bm = bmesh.new()
     bm.from_mesh(tmp.data)
     rigid_idx = set(rigid_slots)
-    bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.material_index in rigid_idx], context="FACES")
+    # 🔴 이름 기준 rigid(마마보이류)도 재질 기준과 똑같이 자동가중치 사본에서 빼야 한다 —
+    # 안 빼면 눈·이빨·허리 장신구·손목·어깨 갑옷 60여 조각이 전부 본히트 계산에 같이 들어가
+    # (서로 안 이어진 섬이 잔뜩 섞여) 히트 확산 자체가 실패한다(실측: 이걸 빼기 전엔
+    # weighted 정점이 통째로 0개 — "Bone Heat Weighting: failed to find solution" 경고 뒤
+    # 전부 실패).
+    rigid_vert_idx = set(rigid_vert)
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.material_index in rigid_idx or any(v.index in rigid_vert_idx for v in f.verts)],
+                     context="FACES")
     bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
     welded = len(bm.verts)
     bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
