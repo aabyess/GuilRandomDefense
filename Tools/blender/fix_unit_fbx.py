@@ -47,6 +47,7 @@
 import math
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -100,6 +101,13 @@ def _biped_leg_reparent():
 
 
 BIPED_LIMB_REPARENT = dict(BIPED_ARM_REPARENT, **_biped_leg_reparent())
+# 특별함_황정기(우솝 오니가시마, Fighting Path Biped, 2026-09-14): Twist 뼈가 팔다리 뼈의 형제로 붙어 있다(ThighTwist ← Spine, CalfTwist ← Thigh,
+#   UpArmTwist ← Clavicle, ForeTwist ← UpperArm). 유니티가 Thigh·Calf·UpperArm·Forearm(가중치 0)을 돌리면 메시가 안 따라가니 그 뼈 밑으로 옮긴다.
+#   Bone001(따로 서 있는 새총 지팡이, 1,246정점)은 Bip001(무게중심, 뺀다) 밑이라 뿌리로 떨어진다 → 몸을 따라가게 Pelvis 밑으로.
+USOPP_REPARENT = {f"Bip001 {s}{twist}": f"Bip001 {s} {limb}" for s in "LR"
+                  for twist, limb in (("ThighTwist", "Thigh"), ("CalfTwist", "Calf"), ("UpArmTwist", "UpperArm"))}
+USOPP_REPARENT.update({f"Bip001 {s} ForeTwist": f"Bip001 {s} Forearm" for s in "LR"})
+USOPP_REPARENT["Bone001"] = "Bip001 Pelvis"
 NARUTO_FACE_RUNS = [["nrt_tex02", 450], ["nrt_eye", 62], ["nrt_tex01", 1106], ["nrt_tex02", 1919]]
 UNITS = {
     "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
@@ -133,6 +141,21 @@ UNITS = {
                       source=os.path.join(DL, "denji_and_pochita.glb"), gltf_guess_bind=False,
                       recipe=dict(rename=DENJI_RENAME)),
     "안흔함_상붕카": dict(path="Assets/Art/Characters/안흔함_상붕카.glb", kind="prop", size=("length", 1.8)),
+    # 새 스킨(git 원본 없음) — 다운로드 rar에서 FBX·텍스처를 꺼내 짓는다. 쉬는 자세 팔 A자 44.7° → T자로 굽는다. 재질 34065 하나(Dots Stroke·Material은 면 0, 안 읽힘).
+    "특별함_황정기": dict(path="Assets/Art/Units/특별함_황정기/특별함_황정기.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(DL, "one-piece-fighting-path-usopp-onigashima/source/Usopp Onigashimaa.rar"),
+                               "Usopp Onigashima/Usopp Onigashima by Annettlw.fbx"),
+                      archive_textures=["Usopp Onigashima/34065_D.png"],
+                      drop_bones=["Bip001"], reparent_bones=USOPP_REPARENT, tpose_arms=True),
+    # 모리아(바운티러시 pl_ 리그, 2026-09-14): 팔은 이미 T자(팔·손 뼈 같은 높이). 표정·손 모양 변형 메시가 한자리에 겹쳐 있어 기본만 남긴다 —
+    #   남김 body·coat·face_normal(웃는 얼굴)·l/r_hand_open, 뺌 = 아래 9개(공격 얼굴·주먹·가위 쥔 손·작은 가위 날). 끝·이펙트 Null은 원래 틀 그대로 뼈로.
+    "특별함_임채준": dict(path="Assets/Art/Units/특별함_임채준/특별함_임채준.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(DL, "one-piece-gecko-moria-marineford.zip"), "source/pl_geckomoria_topw01.rar",
+                               "pl_geckomoria_topw01/pl_geckomoria_topw01.fbx"),
+                      archive_textures=["pl_geckomoria_topw01/pl_geckomoria_topw01_diff.png"],
+                      drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_scissors_open", "l_hand_scissors_close",
+                                   "L_scissor", "R_scissor", "L_scissors"],
+                      null_frames_from_node=True),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")
@@ -525,6 +548,16 @@ def _normalized(M):
     return Matrix.Translation(loc) @ q.to_matrix().to_4x4()
 
 
+def extract_archive(archive, members):
+    """압축 원본(rar·zip)에서 필요한 파일만 임시 폴더로 — bsdtar(libarchive)가 rar도 읽는다. 받은 순서대로 경로를 돌려준다."""
+    tmp = tempfile.mkdtemp(prefix="fix_unit_arc_")
+    subprocess.run(["bsdtar", "-xf", os.path.expanduser(archive), "-C", tmp] + list(members), check=True)
+    out = [os.path.join(tmp, m) for m in members]
+    for f in out:
+        assert os.path.isfile(f), f"압축에서 못 꺼냈다: {f}"
+    return out
+
+
 def original(cfg):
     """덮어쓰기 전 원본 파일 — git 커밋 rev에서 임시 폴더로 꺼낸다(Textures/는 유닛 폴더를 링크해 텍스처 경로가 풀리게)."""
     data = subprocess.run(["git", "-C", ROOT, "show", f"{cfg['rev']}:{cfg['path']}"], capture_output=True, check=True).stdout
@@ -544,6 +577,14 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     dst_path = os.path.join(ROOT, cfg["path"])
     orig = original(cfg) if cfg.get("rev") else dst_path
     src = cfg.get("source", orig)
+    arc_textures = []
+    if cfg.get("archive"):                                              # 새로 들이는 스킨(git 원본 없음): 다운로드 압축에서 FBX·텍스처를 꺼내 읽는다
+        *outer, member = cfg["archive"]                                 # (압축, 파일) 또는 (zip, zip 안 rar, 파일) — 겹친 압축은 안쪽부터 꺼낸다
+        arc = outer[0]
+        for inner in outer[1:]:
+            arc = extract_archive(arc, [inner])[0]
+        got = extract_archive(arc, [member] + list(cfg.get("archive_textures", ())))
+        src, arc_textures = got[0], got[1:]
     recipe = cfg.get("recipe") if "source" in cfg else None
     report = {"이름": name, "원본": f"{cfg.get('rev', '작업 파일')} {os.path.basename(src)}"}
     ref = reference(orig) if recipe is not None else None
@@ -551,6 +592,13 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     load(src, anim=False, guess_bind=guess)
     if recipe is not None:
         apply_recipe(recipe, ref, report)
+    if cfg.get("drop_meshes"):                                          # 바운티러시 pl_ 리그: 표정·손 모양 변형 메시가 한자리에 겹쳐 있다 — 기본만 남긴다
+        assert not cfg.get("anim"), f"{name}: drop_meshes는 클립 다시 굽기와 같이 못 쓴다"
+        for gone in cfg["drop_meshes"]:
+            o = bpy.data.objects.get(gone)
+            assert o is not None and o.type == "MESH", f"{name}: 뺄 메시가 없다 {gone}"
+            bpy.data.objects.remove(o, do_unlink=True)
+        report["뺀 메시"] = list(cfg["drop_meshes"])
     scene = bpy.context.scene
     arm = main_armature()
     arm_name = arm.name if arm else None
@@ -801,6 +849,12 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     assert mats_after == mats_before, f"{name} 재질 이름이 바뀌었다: {set(mats_before) ^ set(mats_after)}"
     dst = os.path.join(out_dir, os.path.basename(dst_path)) if out_dir else dst_path
     os.makedirs(os.path.dirname(dst), exist_ok=True)
+    if arc_textures:
+        tex_out = os.path.join(os.path.dirname(dst), "Textures")
+        os.makedirs(tex_out, exist_ok=True)
+        for t in arc_textures:
+            shutil.copy2(t, os.path.join(tex_out, os.path.basename(t)))
+        report["텍스처 복사"] = [os.path.basename(t) for t in arc_textures]
     if save_blend:
         bpy.ops.wm.save_as_mainfile(filepath=os.path.splitext(dst)[0] + "_진단.blend", copy=True)
     if dst.lower().endswith(".glb"):

@@ -1,0 +1,25 @@
+출처: Sketchfab — "one-piece-fighting-path-usopp-onigashima" (원피스 파이팅 패스 우솝 오니가시마, 제작 Annettlw)
+받은 날: 2026-09-14 · 유닛: 특별함_황정기 (unitName 헝그리맨, Special)
+원본(보존 — 지우지 말 것):
+- ~/Downloads/one-piece-fighting-path-usopp-onigashima.zip · 498485 bytes · sha256 11964d3021d8455c978a275427413cc1295f550028019c9201ff8e25a6db492b
+- ~/Downloads/one-piece-fighting-path-usopp-onigashima/ (풀어 둔 폴더)
+    source/Usopp Onigashimaa.rar · 457804 bytes · sha256 3f8bd9971471338c6db21820b90e7943560a8ba59fe40c7dd953334f21843f9b
+      └ Usopp Onigashima/Usopp Onigashima by Annettlw.fbx · 635712 bytes · sha256 3b0da70bce30df596482b80372a6814792f457e33618dd941f9bf83438a664a5
+      └ Usopp Onigashima/34065_D.png · 40432 bytes · sha256 75f372c5c7271331760c8cd02ed643bcb9c495b72416a6727a8b6647706c75db
+    textures/34065_D.png · 40411 bytes · sha256 0ceebc97073eb94ea0b4418de04e1e70ea8c2f090351e43be2c997bafe1b05a1 (rar 안 것과 픽셀 동일, 바이트만 다름)
+원본 FBX: 3ds Max Biped 아마추어 '34065' 뼈 93 · 메시 1(34065.001, 정점 9,324 · 면 11,979) · 액션 0 · Null 0
+
+정리: 2026-09-14 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_황정기」로 재현(rar에서 FBX·텍스처를 꺼내 짓는다).
+  - 겉싸개 배율 0.01·X 90° 없앰 · 키 1.8m(지팡이 끝 포함) · 발 z 0 · 정면 −Y · 원점 엉덩이
+  - Bip001(무게중심, 가중치 0) 뺌 — Pelvis를 뿌리로(흔함_문필환 하반신 묻힘 교훈). 뼈 93 → 92
+  - Twist 뼈가 팔다리 뼈의 형제로 붙어 있어(유니티가 Thigh·Calf·UpperArm·Forearm을 돌려도 메시가 안 따라감) 그 뼈 밑으로 옮김 8개:
+      L/R ThighTwist ← Spine → Thigh · L/R CalfTwist ← Thigh → Calf · L/R UpArmTwist ← Clavicle → UpperArm · L/R ForeTwist ← UpperArm → Forearm
+  - Bone001(옆에 따로 서 있는 새총 지팡이, 정점 1,246)은 Bip001 밑이었다 → Bip001 Pelvis 밑으로(몸을 따라감)
+  - 쉬는 자세 팔이 A자(수평 아래 44.7°) → T자로 굽힘(tpose_arms: Clavicle·UpperArm·Forearm ±X, 손바닥 아래, 손가락 곧게, 굽기 오차 0)
+  - 크기 1.945 × 0.602 × 1.8 m(가로는 T자 팔 + 오른편 지팡이)
+
+재질 → 텍스처(재질 이름 그대로):
+  34065 → 34065_D.png (rar 안 파일 그대로). 알파 전부 1 → 알파 없음.
+  원본 FBX의 'Dots Stroke'·'Material' 재질은 쓰는 면 0(블렌더가 읽지도 않음) → 정본에 없음.
+
+⚠️ 상용 게임 추출 에셋. 2026-09-07 사장님 확정: IP 제약 없음(상업적 사용 아님).
