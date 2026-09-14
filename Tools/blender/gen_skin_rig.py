@@ -59,6 +59,26 @@ SKINS = {
         textures={"material_0": [("Base Color", "baseColorTexture", "material_0_baseColor.jpeg"), ("Normal", "normalTexture", "material_0_normal.jpeg")]},
         level_arms=True,
     ),
+    # 서아인(사이코패스) — 비만형 도살자, 피 묻은 앞치마. 원본은 +X를 봐서(강주혁과 같은 이유) Z −90°.
+    # 이미 T자라 level_arms 불필요 — 렌더로 확인. 목깃 옆에 작은 칼(고정 소품)이 있는데 재질이
+    # 하나뿐이라 rigid로 못 떼어낸다 — 몸통에 붙어 있어 자동 가중치로도 그대로 몸통을 따라간다(두
+    # 자세 렌더에서 확인, 팔·다리만 움직이는 판정 자세라 문제 없음).
+    "특별함_서아인": dict(
+        source="~/Downloads/psychopath_hunt.glb",
+        path="Assets/Art/Units/특별함_서아인/특별함_서아인.fbx",
+        mesh_name="Psychopath",
+        height=1.8,
+        rotate_z=-90.0,
+        center_band=(0.02, 0.10),
+        joints=dict(Hips=(0, 0, 0.50), Spine=(0, 0, 0.56), Spine1=(0, 0, 0.63), Spine2=(0, 0, 0.72), Neck=(0, 0, 0.855),
+                    Head=(0, 0, 0.90), HeadTop=(0, 0, 1.0),
+                    Shoulder=(0.06, 0, 0.78), Arm=(0.16, 0, 0.775), ForeArm=(0.32, 0, 0.775), Hand=(0.46, 0, 0.775),
+                    HandTip=(0.53, 0, 0.775),
+                    UpLeg=(0.10, 0, 0.50), Leg=(0.10, 0, 0.27), Foot=(0.10, -0.01, 0.045), ToeBase=(0.10, -0.06, 0.02),
+                    ToeTip=(0.10, -0.08, 0.02)),
+        rigid={},
+        alpha_keep=set(),
+    ),
 }
 
 # (뼈, 머리 관절, 꼬리 관절, 부모) — 왼쪽/오른쪽은 L·R 두 벌
