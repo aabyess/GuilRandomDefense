@@ -1,0 +1,22 @@
+출처: Sketchfab — "one_oiece_bounty_rush_sabo_stampede" (원피스 바운티러시 사보 스탬피드판, pl_sabo_stam01)
+받은 날: 2026-09-14 · 유닛: 특별함_박예원 (unitName 성대결절, Special)
+원본(보존 — 지우지 말 것): ~/Downloads/one_oiece_bounty_rush_sabo_stampede.glb · 2977028 bytes · sha256 b8322d906a4b6f8abbbe7c26c3d68e659333699c70985d001f112202c1fde0ad
+glb: Sketchfab-16.72.0 · 바운티러시 pl_ 리그(스킨 1 · 조인트 45, 이름에 번호 꼬리) · 메시 26(이름 전부 Object_6~31) · 삼각형 7,848 · 애니메이션 30(안 씀) · 재질 1 · 이미지 1
+
+정리: 2026-09-14 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_박예원」으로 재현(source = 이 glb).
+  - 🔴 블렌더가 만드는 오브젝트 이름이 Object_6~31이라 겹친 변형을 가려야 했다(idle_a 애니엔 노드 배율 채널이 없어 애니로는 못 가림).
+    옆으로 늘어놓은 렌더로 1차 판정한 뒤, glTF 메시 데이터 이름(Object_N = mesh N−6)으로 확인 — 🔸 1차 판정에서 얼굴을 face_attack(무표정처럼 보임)으로
+    골랐다가 이름 대조로 face_normal(Object_9)로 바로잡음:
+      Object_6 body · 7 face_attack · 8 face_damage · 9 face_normal · 10 goggle · 11 hair · 12 hat · 13 hat_hair
+      14/23 l/r_glove_close · 15/24 l/r_glove_dragon · 16/25 l/r_glove_open · 17/26 l/r_hand_close · 18/27 l/r_hand_dragon · 19/28 l/r_hand_open
+      20/29 l/r_leg · 21 pipe(등에 멤) · 22 pipe_weapon(손에 듦) · 30/31 sp_l/r_leg(불꽃 바지)
+    남김 11: body · face_normal · goggle · hair · hat · hat_hair · l/r_glove_open(장갑 편 손) · l/r_leg(검은 바지·장화) · pipe
+    뺌 16: face_attack · face_damage · l/r_glove_close · l/r_glove_dragon · l/r_hand_close · l/r_hand_dragon · l/r_hand_open · pipe_weapon · sp_l/r_leg · 조명용 Icosphere
+  - 사람형 매핑 뼈 21개 mixamorig 이름(꼬리 붙은 이름에 PL_RENAME과 같은 매핑: Body_Pelvis_07→Hips … RFoot_Toe_040→RightToeBase), 나머지 뼈는 번호 꼬리만 뗌
+    (coat_bl_01_025 → coat_bl_01 · pipe_weapon_joint_017 → pipe_weapon_joint 등). 쇠파이프 뼈 pipe_01/02는 가슴 밑 그대로.
+  - 이미 T자 · glTF 메시 노드 빈 오브젝트는 뼈로 안 살림 · orient_snap · 키 1.8m · 발 z 0 · 정면 −Y. 크기 1.602 × 0.385 × 1.8 m.
+
+재질 → 텍스처(재질 이름 그대로):
+  pl_sabo_stam01 → pl_sabo_stam01_diff.png (glb 내장 이미지 원본 바이트, RGB·알파 없음). 원본의 KHR_materials_unlit(조명 없음)은 일반 재질로.
+
+⚠️ 상용 게임(One Piece Bounty Rush) 추출 에셋. 2026-09-07 사장님 확정: IP 제약 없음(상업적 사용 아님).

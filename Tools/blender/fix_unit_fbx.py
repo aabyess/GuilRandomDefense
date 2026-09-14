@@ -152,6 +152,13 @@ REIJU_RENAME = {"bone_2_04": "mixamorig:Hips", "bone_3_05": "mixamorig:Spine", "
                 "bone_17_019": "mixamorig:RightShoulder", "bone_19_021": "mixamorig:RightArm", "bone_21_023": "mixamorig:RightForeArm", "bone_23_025": "mixamorig:RightHand",
                 "bone_8_010": "mixamorig:LeftUpLeg", "bone_10_012": "mixamorig:LeftLeg", "bone_12_014": "mixamorig:LeftFoot", "bone_14_016": "mixamorig:LeftToeBase",
                 "bone_9_011": "mixamorig:RightUpLeg", "bone_11_013": "mixamorig:RightLeg", "bone_13_015": "mixamorig:RightFoot", "bone_15_017": "mixamorig:RightToeBase"}
+# 사보(바운티러시 pl_ 리그 glb, 뼈 이름에 Sketchfab 번호 꼬리): PL_RENAME과 같은 매핑을 꼬리 붙은 이름에. 나머지 꼬리는 rename_regex로 뗀다.
+SABO_RENAME = {"Body_Pelvis_07": "mixamorig:Hips", "Body_Belly_08": "mixamorig:Spine", "Body_Chest_09": "mixamorig:Spine1", "Head_Neck_010": "mixamorig:Neck",
+               "Head_Face_011": "mixamorig:Head",
+               "LArm_Clavicle_012": "mixamorig:LeftShoulder", "LArm_Upper_013": "mixamorig:LeftArm", "LArm_Fore_014": "mixamorig:LeftForeArm", "LHand_Palm_016": "mixamorig:LeftHand",
+               "RArm_Clavicle_020": "mixamorig:RightShoulder", "RArm_Upper_021": "mixamorig:RightArm", "RArm_Fore_022": "mixamorig:RightForeArm", "RHand_Palm_024": "mixamorig:RightHand",
+               "LLeg_Thigh_033": "mixamorig:LeftUpLeg", "LLeg_Calf_034": "mixamorig:LeftLeg", "LFoot_Heel_035": "mixamorig:LeftFoot", "LFoot_Toe_036": "mixamorig:LeftToeBase",
+               "RLeg_Thigh_037": "mixamorig:RightUpLeg", "RLeg_Calf_038": "mixamorig:RightLeg", "RFoot_Heel_039": "mixamorig:RightFoot", "RFoot_Toe_040": "mixamorig:RightToeBase"}
 NARUTO_FACE_RUNS = [["nrt_tex02", 450], ["nrt_eye", 62], ["nrt_tex01", 1106], ["nrt_tex02", 1919]]
 UNITS = {
     "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
@@ -190,6 +197,25 @@ UNITS = {
                       source=os.path.join(DL, "denji_and_pochita.glb"), gltf_guess_bind=False,
                       recipe=dict(rename=DENJI_RENAME)),
     "안흔함_상붕카": dict(path="Assets/Art/Characters/안흔함_상붕카.glb", kind="prop", size=("length", 1.8)),
+    # 조즈(바운티러시 pl_ 리그, zip 안 7z): 이미 T자. 표정 3·손 2벌 겹침 → face_normal + 주먹(close, 권투형 거구 기본 모습). Cube 메시는 원본에 없음.
+    #   텍스처: 7z 안 _diff.tga와 zip의 _diff.png가 픽셀 동일(1024) — 알파 = 명암 마스크(중간값 99%)라 tga에서 알파 뺀 RGB PNG로 새로 쓰고 재질을 거기에 잇는다.
+    "특별함_조성진": dict(path="Assets/Art/Units/특별함_조성진/특별함_조성진.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(DL, "one-piece-bounty-rush-jozu.zip"), "source/pl_jozu.7z", "pl_jozu/pl_jozu_orig01.fbx"),
+                      archive_rgb={"pl_jozu/pl_jozu_orig01_diff.tga": "pl_jozu_orig01_diff.png"},
+                      drop_meshes=["face_attack", "face_damage", "l_hand_open", "r_hand_open"],
+                      rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True,
+                      materials=dict(textures={"pl_jozu_orig01": [("DiffuseColor", "pl_jozu_orig01_diff.png")]})),
+    # 사보 스탬피드(바운티러시 glb): 메시 이름이 전부 Object_N으로 지워져 겹친 변형을 렌더로 판정(idle_a엔 배율 채널이 없어 애니로 못 가림).
+    #   (glTF 메시 데이터 이름으로 확인: Object_N = mesh N−6 — 7 face_attack · 8 face_damage · 9 face_normal · 10 goggle · 13 hat_hair · 16/25 glove_open · 20/29 leg · 21 pipe · 22 pipe_weapon · 30/31 sp_leg)
+    #   남김: Object_6 body · 9 face_normal · 10 goggle · 11 hair · 12 hat · 13 hat_hair · 16/25 l/r_glove_open · 20/29 l/r_leg · 21 pipe(등에 멤)
+    #   뺌: 7 face_attack · 8 face_damage · 14/23 glove_close · 15/24 glove_dragon · 17/26 hand_close · 18/27 hand_dragon · 19/28 hand_open · 22 pipe_weapon · 30/31 sp_leg · Icosphere
+    "특별함_박예원": dict(path="Assets/Art/Units/특별함_박예원/특별함_박예원.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(DL, "one_oiece_bounty_rush_sabo_stampede.glb"), no_nulls=True,
+                      drop_meshes=["Object_7", "Object_8", "Object_14", "Object_15", "Object_17", "Object_18", "Object_19", "Object_22", "Object_23", "Object_24",
+                                   "Object_26", "Object_27", "Object_28", "Object_30", "Object_31", "Icosphere"],
+                      rename_bones=SABO_RENAME, rename_regex=(r"([A-Za-z][A-Za-z0-9_]*?)_[0-9]+", r"\1"), orient_snap=True,
+                      glb_images={0: "pl_sabo_stam01_diff.png"},
+                      materials=dict(textures={"pl_sabo_stam01": [("DiffuseColor", "pl_sabo_stam01_diff.png")]})),
     # 레이쥬: 이미 T자. 뿌리 bone_0_02 > bone_1_03(+ 형제 bone_26_028) — 가중치 0 중간 뼈 → 빼서 Hips(bone_2_04)가 _rootJoint 바로 밑.
     #   🔴 트위스트 뼈가 형제로 붙음(우솝 교훈): 팔꿈치 자리 bone_202/203이 위팔 밑, 무릎 자리 bone_200/201이 넓적다리 밑 → 아래팔·종아리 밑으로.
     #   mat_4(Object_15)는 이미지 없는 알파 0 BLEND 판(Object_13과 같은 자리 겹침, 안 보이는 재질) · 조명용 Icosphere 뺌.
@@ -671,7 +697,7 @@ def sample_clips(src, arm_name, recipe, ref, guess_bind=True):
     return clips
 
 
-def tpose_arms(arm, meshes, report):
+def tpose_arms(arm, meshes, report, names=None):
     """쉬는 자세를 진짜 T자로(흔함_문필환, PM 2026-09-14): 좌우 Clavicle·UpperArm·Forearm을 몸 옆(L +X · R −X)으로 곧게, 아래팔을 굴려
     손바닥 아래(검지→새끼 방향이 앞 −Y의 반대 = 검지가 앞), 손·손가락 곧게. 그 자세로 메시를 굽고 쉬는 자세로 적용한다.
     🔴 유니티가 아바타를 만들 때 T자를 강제로 맞추는데, 쉬는 자세가 A자(수평 아래 43°)면 skeleton 행이 실제와 어긋나 어깨 근육값이 −1.99로
@@ -702,7 +728,8 @@ def tpose_arms(arm, meshes, report):
     have = lambda n: n in pose
     for side in "LR":
         d = Vector((1.0 if side == "L" else -1.0, 0.0, 0.0))
-        b = lambda k: f"Bip001 {side} {k}"
+        # names = {"L": {"Clavicle": 뼈, "UpperArm": 뼈, "Forearm": 뼈, "Hand": 뼈, ...손가락 선택}, "R": {...}} — 없으면 Biped 이름(Bip001 L …)
+        b = (lambda k, _m=names[side]: _m.get(k, f"__없음_{k}")) if names else (lambda k, _s=side: f"Bip001 {_s} {k}")
         align(b("Clavicle"), b("Clavicle"), b("UpperArm"), d)
         align(b("UpperArm"), b("UpperArm"), b("Forearm"), d)
         align(b("Forearm"), b("Forearm"), b("Hand"), d)
@@ -876,6 +903,14 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             arc = extract_archive(arc, [inner])[0]
         got = extract_archive(arc, [member] + list(cfg.get("archive_textures", ())))
         src, arc_textures = got[0], got[1:]
+        if cfg.get("archive_rgb"):                                      # 압축 속 텍스처를 알파 뺀 RGB PNG로 유닛 Textures/에 새 이름으로(재질을 짜기 전에 — 재질 표가 이 파일을 부른다)
+            tex_repo = os.path.join(os.path.dirname(dst_path), "Textures")
+            os.makedirs(tex_repo, exist_ok=True)
+            members = list(cfg["archive_rgb"])
+            for got_path, member_name in zip(extract_archive(arc, members), members):
+                out_path = os.path.join(tex_repo, cfg["archive_rgb"][member_name])
+                write_rgb_png(got_path, out_path)
+                arc_textures.append(out_path)
     recipe = cfg.get("recipe") if "source" in cfg else None
     report = {"이름": name, "원본": f"{cfg.get('rev', '작업 파일')} {os.path.basename(src)}"}
     if unscale_info:
@@ -1120,7 +1155,7 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             m.matrix_parent_inverse = Matrix.Identity(4)
             m.matrix_basis = Matrix.Identity(4)
     if new_arm is not None and cfg.get("tpose_arms"):
-        tpose_arms(new_arm, meshes, report)
+        tpose_arms(new_arm, meshes, report, cfg["tpose_arms"] if isinstance(cfg["tpose_arms"], dict) else None)
     removed = [o.name for o in scene.objects if o.type != "MESH" and o != new_arm and o.name not in revived]
     for o in [o for o in scene.objects if o.type != "MESH" and o != new_arm]:
         bpy.data.objects.remove(o, do_unlink=True)
