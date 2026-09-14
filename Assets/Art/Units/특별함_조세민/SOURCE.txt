@@ -1,0 +1,27 @@
+출처: Sketchfab — "one-piece-bounty-rush-mr-5" (원피스 바운티러시 Mr.5, pl_mr5five_orig01)
+받은 날: 2026-09-14 · 유닛: 특별함_조세민 (unitName 이청용, Special)
+원본(보존 — 지우지 말 것): ~/Downloads/one-piece-bounty-rush-mr-5.zip · 2659073 bytes · sha256 26477edf67eb04ed51c717bc49f90af4aa14c8b98687e329c1ebf36b237fed82
+  └ textures/pl_mr5five_orig01_diff.png · 774017 bytes · sha256 f49ab771c0b9ac03c0c88510657a20f83d06f87af9c17755bcb9a9c75b5dcef9
+  └ source/mr 5.rar · 1884782 bytes · sha256 2f9ceca253f80e11c38a6d8600f9d9070090d425caaf07f541c279cf4c9a5bc2
+      └ mr 5/pl_mr5five_orig01 (merge).fbx · 1672208 bytes · sha256 2dff306e144e9bde854bf3a9dbaa6c99350bfbbd1fa2c637a124997c514cfb57
+      └ mr 5/pl_mr5five_orig01_diff.png · 774170 bytes · sha256 aa9dab58330f7ec2b2dff4d641ece338f279e03d5546b0a8cd244a3a2e1fe980 ← 정본에 씀(알파 뺀 RGB로)
+      └ abnormal_pattern.png · matcap.png · ramp.png · stg_gasha_tex_bayer_dither.png (툰 보조 — 안 씀)
+      └ Mesh/ 스킬 이펙트 OBJ 8개 · Texture2D/ 이펙트·아이콘 PNG 9장 (게임 스킨에 불필요 — 안 옮김)
+원본 FBX: 아마추어 'pl_mr5five_orig01' 뼈 48 · 메시 24 · 삼각형 19,088 · 액션 21 · Null 15
+
+정리: 2026-09-14 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_조세민」으로 재현(zip → rar에서 FBX·텍스처를 꺼내 짓는다).
+  - FBX 안에는 이펙트 메시가 없었다(메시 24개 = 몸·머리·안경 + 표정 5 + 손 모양 13 + 권총 1). 이펙트는 rar의 Mesh/ 폴더에만 있음.
+  - 사람형 경로: 애니메이션 21개 안 실음(공용 Idle). 쉬는 자세 이미 T자 → 굽기 없음. 가중치 없는 뼈는 world_joint뿐.
+  - 겹친 변형 메시 기본만 남김(렌더: 전부/권총/양손 open):
+      뺌 16: face_attack · face_damage · face_sp01 · face_sp02 · l/r_hand_close · r_hand_open · l/r_hand_nose_01·02(코 파기) ·
+             l/r_hand_nose_fancycannon_01·02(코딱지 대포) · l_hand_put_revolver(권총 집어넣는 손)
+      남김 7: body · hair · glasses · face_normal · l_hand_open · r_hand_weapon_revolver(권총 쥔 손) · r_weapon_revolver_01(권총)
+  - 사람형 매핑 뼈 21개 mixamorig 이름(PL_RENAME). 권총 뼈 r_weapon_revolver_01_root/open/rotate는 RHand_Palm(→ RightHand) 밑 그대로 — 권총이 손을 따라감.
+  - Null 15개는 같은 자리 뼈로(원래 노드 틀). 뼈 48 → 63. (merge) 겉싸개 빈 오브젝트 지움.
+  - 겉싸개 배율 0.01·X 90° 없앰 · 키 1.8m · 발 z 0 · 정면 −Y(90° 단위만). 크기 2.074 × 0.503 × 1.8 m(가로는 T자 팔 + 권총).
+
+재질 → 텍스처(재질 이름 그대로):
+  pl_mr5five_orig01 → pl_mr5five_orig01_diff.png — 🔴 원본 알파 = 명암 마스크(중간값 100%) → 알파 채널을 뺀 8비트 RGB PNG로(RGB 값 원본 그대로).
+  원본 FBX는 DiffuseColor로만 부름. 'Dots Stroke'·'Material'은 쓰는 면 0 → 정본에 없음.
+
+⚠️ 상용 게임(One Piece Bounty Rush) 추출 에셋. 2026-09-07 사장님 확정: IP 제약 없음(상업적 사용 아님).

@@ -163,6 +163,31 @@ UNITS = {
                       source=os.path.join(DL, "denji_and_pochita.glb"), gltf_guess_bind=False,
                       recipe=dict(rename=DENJI_RENAME)),
     "안흔함_상붕카": dict(path="Assets/Art/Characters/안흔함_상붕카.glb", kind="prop", size=("length", 1.8)),
+    # 쿠르타 입은 인도 남자(Avatar SDK·Mixamo 리그 glb, 2026-09-14): 뼈 이름에 Sketchfab 번호 꼬리 → mixamorig 표준 이름(_rootJoint 밑 Hips 그대로).
+    #   쉬는 자세 이미 T자(위팔 수평 아래 2.6°). 조명용 Icosphere 뺌. 텍스처: glb 내장 이미지를 재질 이름 기준 파일로, 노멀은 _normal,
+    #   머리카락(haircut)만 알파 컷아웃(원본 alphaMode MASK — 진짜 컷아웃). 눈썹(AvatarEyelashes)은 원본 검정 단색. 삼각형 65,095는 줄이지 않음.
+    "특별함_이병준": dict(path="Assets/Art/Units/특별함_이병준/특별함_이병준.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(DL, "indian_man_in_kurta.glb"), drop_meshes=["Icosphere"],
+                      rename_regex=(r"([A-Za-z][A-Za-z0-9_]*?)_[0-9]+", r"mixamorig:\1"),
+                      # glTF 메시 노드 빈 오브젝트 11개(재질과 같은 이름)가 Null로 살아나 가중치 없는 뿌리 뼈가 된다 — 뺀다
+                      drop_bones=["AvatarBody", "AvatarEyelashes", "AvatarHead", "AvatarLeftCornea", "AvatarLeftEyeball", "AvatarRightCornea",
+                                  "AvatarRightEyeball", "AvatarTeethLower", "AvatarTeethUpper", "haircut", "outfit"],
+                      glb_images={0: "AvatarBody_baseColor.jpg", 1: "AvatarBody_normal.png", 2: "AvatarHead_baseColor.jpg", 3: "AvatarHead_normal.png",
+                                  4: "AvatarLeftCornea_baseColor.jpg", 5: "AvatarEyeball_baseColor.jpg", 6: "AvatarEyeball_normal.png",
+                                  7: "AvatarRightCornea_baseColor.jpg", 8: "AvatarTeeth_baseColor.jpg", 9: "AvatarTeeth_normal.png",
+                                  10: "haircut_baseColor.png", 11: "haircut_normal.png", 12: "outfit_baseColor.jpg", 13: "outfit_normal.png"},
+                      materials=dict(textures={
+                          "AvatarBody": [("DiffuseColor", "AvatarBody_baseColor.jpg"), ("NormalMap", "AvatarBody_normal.png")],
+                          "AvatarHead": [("DiffuseColor", "AvatarHead_baseColor.jpg"), ("NormalMap", "AvatarHead_normal.png")],
+                          "AvatarLeftCornea": [("DiffuseColor", "AvatarLeftCornea_baseColor.jpg")],
+                          "AvatarRightCornea": [("DiffuseColor", "AvatarRightCornea_baseColor.jpg")],
+                          "AvatarLeftEyeball": [("DiffuseColor", "AvatarEyeball_baseColor.jpg"), ("NormalMap", "AvatarEyeball_normal.png")],
+                          "AvatarRightEyeball": [("DiffuseColor", "AvatarEyeball_baseColor.jpg"), ("NormalMap", "AvatarEyeball_normal.png")],
+                          "AvatarTeethLower": [("DiffuseColor", "AvatarTeeth_baseColor.jpg"), ("NormalMap", "AvatarTeeth_normal.png")],
+                          "AvatarTeethUpper": [("DiffuseColor", "AvatarTeeth_baseColor.jpg"), ("NormalMap", "AvatarTeeth_normal.png")],
+                          "haircut": [("DiffuseColor", "haircut_baseColor.png"), ("TransparencyFactor", "haircut_baseColor.png"), ("NormalMap", "haircut_normal.png")],
+                          "outfit": [("DiffuseColor", "outfit_baseColor.jpg"), ("NormalMap", "outfit_normal.png")],
+                          "AvatarEyelashes": [("BaseColor", (0.0, 0.0, 0.0))]})),
     # 놀란드(바운티러시 pl_ (merge) 리그, 2026-09-14): 이미 T자. 표정 5·손 4 변형 + 칼 두 상태(오른손에 뽑은 칼 r_weapon_01 / 칼집에 든 손잡이 l_handle_sheath).
     #   l_handle_sheath는 쉬는 자세에서 오른발 옆 바닥에 떨어져 있다(원본 결함) → 뽑은 칼 + 왼허리 빈 칼집(l_sheath) + 칼 쥔 오른손 주먹을 기본으로.
     #   텍스처 알파 = 명암 마스크(중간값 99.8%) → 알파 뺀 RGB PNG로(rgb_textures). 원본 FBX는 DiffuseColor만 부름.
@@ -279,7 +304,7 @@ def main_armature():
     return max(arms, key=lambda a: (sum(1 for m in meshes if skinned_to(m) == a), len(a.data.bones)))
 
 
-FBX_TEX_SLOT = {"DiffuseColor": "base_color_texture", "NormalMap": "normalmap_texture"}
+FBX_TEX_SLOT = {"DiffuseColor": "base_color_texture", "NormalMap": "normalmap_texture", "TransparencyFactor": "alpha_texture"}
 
 
 def fbx_texture_table(path):
@@ -732,6 +757,33 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     scene = bpy.context.scene
     if recipe is not None:
         report["텍스처"] = relink_textures(ref["textures"], os.path.join(os.path.dirname(dst_path), "Textures"))
+    if cfg.get("glb_images"):                                           # glb 내장 이미지를 원본 바이트 그대로 재질 이름 기준 파일로(재질을 짜기 전에)
+        import json as _json
+        import struct as _struct
+        tex_repo = os.path.join(os.path.dirname(dst_path), "Textures")
+        os.makedirs(tex_repo, exist_ok=True)
+        raw = open(src, "rb").read()
+        jlen = _struct.unpack_from("<I", raw, 12)[0]
+        gj = _json.loads(raw[20:20 + jlen])
+        blen = _struct.unpack_from("<I", raw, 20 + jlen)[0]
+        gbin = raw[20 + jlen + 8:20 + jlen + 8 + blen]
+        for index, fname in cfg["glb_images"].items():
+            bv = gj["bufferViews"][gj["images"][index]["bufferView"]]
+            with open(os.path.join(tex_repo, fname), "wb") as f:
+                f.write(gbin[bv.get("byteOffset", 0):bv.get("byteOffset", 0) + bv["byteLength"]])
+            arc_textures.append(os.path.join(tex_repo, fname))
+    if cfg.get("rename_regex"):                                         # 번호 꼬리 이름(Hips_01·LeftHandIndex1_022) → mixamorig 표준 이름, 가중치 그룹 같이
+        pattern, repl = cfg["rename_regex"]
+        arm0 = main_armature()
+        table = {b.name: re.sub(pattern, repl, b.name) for b in arm0.data.bones if re.fullmatch(pattern, b.name)}
+        assert len(set(table.values())) == len(table), f"{name}: 이름 바꾸면 겹친다"
+        for old, new in table.items():
+            arm0.data.bones[old].name = new
+            for m in bpy.context.scene.objects:
+                g = m.vertex_groups.get(old) if m.type == "MESH" else None
+                if g is not None:
+                    g.name = new
+        report["이름 바꾼 뼈"] = len(table)
     if cfg.get("copy_textures"):                                        # 흩어진 원본 텍스처를 재질 이름 기준 파일명으로 유닛 Textures/에(재질을 짜기 전에)
         tex_repo = os.path.join(os.path.dirname(dst_path), "Textures")
         os.makedirs(tex_repo, exist_ok=True)
