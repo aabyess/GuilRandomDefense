@@ -108,6 +108,14 @@ USOPP_REPARENT = {f"Bip001 {s}{twist}": f"Bip001 {s} {limb}" for s in "LR"
                   for twist, limb in (("ThighTwist", "Thigh"), ("CalfTwist", "Calf"), ("UpArmTwist", "UpperArm"))}
 USOPP_REPARENT.update({f"Bip001 {s} ForeTwist": f"Bip001 {s} Forearm" for s in "LR"})
 USOPP_REPARENT["Bone001"] = "Bip001 Pelvis"
+# 바운티러시 pl_ 리그 사람형 뼈 → mixamorig 이름(2026-09-14 PM 유니티): 모리아에서 자동 매핑이 망토 뼈 l_cloak_Clavicle을 Jaw·LeftEye로 겹쳐 잡아
+#   「Found duplicate transform」로 아바타가 실패했다 — 매핑 뼈 이름을 표준으로 박아 모호함을 없앤다. 보조 뼈(망토·후드·치마·무기)는 이름 그대로.
+PL_RENAME = {"Body_Pelvis": "mixamorig:Hips", "Body_Belly": "mixamorig:Spine", "Body_Chest": "mixamorig:Spine1", "Head_Neck": "mixamorig:Neck",
+             "Head_Face": "mixamorig:Head"}
+for _s, _side in (("L", "Left"), ("R", "Right")):
+    PL_RENAME.update({f"{_s}Arm_Clavicle": f"mixamorig:{_side}Shoulder", f"{_s}Arm_Upper": f"mixamorig:{_side}Arm", f"{_s}Arm_Fore": f"mixamorig:{_side}ForeArm",
+                      f"{_s}Hand_Palm": f"mixamorig:{_side}Hand", f"{_s}Leg_Thigh": f"mixamorig:{_side}UpLeg", f"{_s}Leg_Calf": f"mixamorig:{_side}Leg",
+                      f"{_s}Foot_Heel": f"mixamorig:{_side}Foot", f"{_s}Foot_Toe": f"mixamorig:{_side}ToeBase"})
 NARUTO_FACE_RUNS = [["nrt_tex02", 450], ["nrt_eye", 62], ["nrt_tex01", 1106], ["nrt_tex02", 1919]]
 UNITS = {
     "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
@@ -155,7 +163,7 @@ UNITS = {
                       archive_textures=["pl_geckomoria_topw01/pl_geckomoria_topw01_diff.png"],
                       drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_scissors_open", "l_hand_scissors_close",
                                    "L_scissor", "R_scissor", "L_scissors"],
-                      null_frames_from_node=True),
+                      rename_bones=PL_RENAME, null_frames_from_node=True),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")
@@ -599,6 +607,18 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             assert o is not None and o.type == "MESH", f"{name}: 뺄 메시가 없다 {gone}"
             bpy.data.objects.remove(o, do_unlink=True)
         report["뺀 메시"] = list(cfg["drop_meshes"])
+    if cfg.get("rename_bones"):                                         # 사람형 매핑 뼈 이름을 표준으로(가중치 그룹 이름도 같이)
+        arm0 = main_armature()
+        for old, new in cfg["rename_bones"].items():
+            b = arm0.data.bones.get(old)
+            assert b is not None, f"{name}: 이름 바꿀 뼈가 없다 {old}"
+            assert new not in arm0.data.bones, f"{name}: 새 이름이 이미 있다 {new}"
+            b.name = new
+            for m in bpy.context.scene.objects:
+                g = m.vertex_groups.get(old) if m.type == "MESH" else None
+                if g is not None:
+                    g.name = new
+        report["이름 바꾼 뼈"] = len(cfg["rename_bones"])
     scene = bpy.context.scene
     arm = main_armature()
     arm_name = arm.name if arm else None

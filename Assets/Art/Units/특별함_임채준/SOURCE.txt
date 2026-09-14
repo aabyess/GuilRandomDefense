@@ -1,0 +1,27 @@
+출처: Sketchfab — "one-piece-gecko-moria-marineford" (원피스 바운티러시 겍코 모리아 마린포드판, pl_geckomoria_topw01)
+받은 날: 2026-09-14 · 유닛: 특별함_임채준 (unitName 따까리, Special)
+원본(보존 — 지우지 말 것): ~/Downloads/one-piece-gecko-moria-marineford.zip · 4107036 bytes · sha256 e3abbdc0d12d0413a6c93cd7042e9bd7e4dbe416b600d86993f6bb49a7cbc30d
+  └ textures/pl_geckomoria_topw01_diff.png · 994264 bytes · sha256 0f42ccb6cecdd33cb6b1ed6c3fa033dab130980608e91ad6b3f3bc8c1909ef47 (RGB, 알파 없음)
+  └ source/pl_geckomoria_topw01.rar · 3112460 bytes · sha256 83773d3e3778d7f2704bd13b381b414ce47ada8f10c990a6b19c67b3925ae211
+      └ pl_geckomoria_topw01/pl_geckomoria_topw01.fbx · 8198720 bytes · sha256 00d31b45fe7db9e520b256489c08bb2c4ee3d693464209b0d281c028c36deb5f
+      └ pl_geckomoria_topw01/pl_geckomoria_topw01_diff.png · 1256940 bytes · sha256 0f8909657e3ae78285a53c7b1b7f6784f26675c13fcc188e9a8d9c95ec8817b8 (RGBA, 알파 전부 불투명) ← 정본에 씀
+      └ pl_geckomoria_topw01_diff.jpeg · abnormal_pattern.png/.jpeg · matcap.png/.jpeg · ramp.png/.jpeg · stg_gasha_tex_bayer_dither.png/.jpeg (툰 보조 — 안 씀)
+원본 FBX: 아마추어 'Armature' 뼈 57 · 메시 14 · 삼각형 7,970 · 액션 62 · Null 7(eff_muzzle_a/b/c·model_root·c/l/r_cloak_end)
+
+정리: 2026-09-14 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_임채준」으로 재현(zip → rar에서 FBX·텍스처를 꺼내 짓는다).
+  - 사람형 경로: 애니메이션 62개는 싣지 않음(공용 Idle 리타게팅). 쉬는 자세 팔이 이미 T자(팔·손 뼈 같은 높이) → 굽기 안 함.
+  - 표정·손 모양 변형 메시가 한자리에 겹쳐 있어 기본만 남김 — 남김 5: body · coat · face_normal(웃는 얼굴) · l_hand_open · r_hand_open
+    뺌 9: face_attack · face_damage · l_hand_close · r_hand_close · l_hand_scissors_open · l_hand_scissors_close · L_scissor · R_scissor · L_scissors
+  - Null 7개는 같은 이름·같은 세계 자세의 뼈로(가중치 없음, 원래 노드 틀 그대로 — null_frames_from_node). 뼈 57 → 64. 몸·팔다리 뼈는 직접 변형(보조 뼈 재부착 필요 없음).
+  - 뼈 사슬은 원본 그대로(pl_geckomoria_topw01 > world_joint > Body_Pelvis — 유니티에서 서는 다른 pl_ 유닛과 같은 구조).
+  - 겉싸개 배율 0.01·X 90° 없앰 · 키 1.8m(머리 뿔 끝 포함) · 발 z 0 · 정면 −Y · 원점 엉덩이. 크기 2.798 × 1.18 × 1.8 m(거구·팔 벌림 — 가로가 키보다 넓다).
+  - 🔴 2026-09-14 유니티 1차 실패(PM): 「Found duplicate transform 'l_cloak_Clavicle' for human bone 'Jaw' and 'LeftEye'」 — 자동 매핑이 망토 뼈를 턱·왼눈에 겹쳐 잡았다.
+    → 사람형 매핑 뼈 이름을 mixamorig 표준으로 바꿔 다시 씀(fix_unit_fbx.py PL_RENAME, 가중치 그룹 이름도 같이). 망토·후드·치마·무기 보조 뼈 이름은 그대로.
+      Body_Pelvis→mixamorig:Hips · Body_Belly→Spine · Body_Chest→Spine1 · Head_Neck→Neck · Head_Face→Head (Head_Neck1은 그대로, Neck과 Head 사이)
+      L/R Arm_Clavicle→Left/RightShoulder · Arm_Upper→Arm · Arm_Fore→ForeArm · Hand_Palm→Hand · Leg_Thigh→UpLeg · Leg_Calf→Leg · Foot_Heel→Foot · Foot_Toe→ToeBase
+
+재질 → 텍스처(재질 이름 그대로):
+  pl_geckomoria_topw01 → pl_geckomoria_topw01_diff.png (rar 안 RGBA 원본, 알파 전부 1 — 명암 마스크 아님)
+  원본 FBX의 'Dots Stroke'·'Material'은 쓰는 면 0(블렌더가 읽지 않음) → 정본에 없음.
+
+⚠️ 상용 게임(One Piece Bounty Rush) 추출 에셋. 2026-09-07 사장님 확정: IP 제약 없음(상업적 사용 아님).
