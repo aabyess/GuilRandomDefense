@@ -1,0 +1,29 @@
+출처: Sketchfab — "rin-itoshi-free-fire-skin" (블루록 이토시 린 프리파이어 코스튬, 등번호 10 파란 유니폼)
+받은 날: 2026-09-14 · 유닛: 특별함_박진웅 (unitName 축구의달인, Special)
+원본(보존 — 지우지 말 것):
+- ~/Downloads/rin-itoshi-free-fire-skin.zip · 1065069 bytes · sha256 9e126568fafb9bee83f0e7d268b545cfad8109cf903307dc31e4f1377d16957c
+- ~/Downloads/rin-itoshi-free-fire-skin/ (풀린 폴더)
+    source/rin itoshi.fbx · 782156 bytes · sha256 a5fbcbfe3ee25ceefc180c23d5414ad9a5510faa2c2bb5c4040343ea694164eb
+    textures/Male_Top_Cos_FB2_D.png · 117192 bytes · sha256 19ca90b78bac6b0d86d8eae735d18e1d10137cc2cf4945c3171fe9cbd2b114ea
+    textures/Male_Bottom_Cos_FB2_D.png · 75136 bytes · sha256 550780009722119547f2c257475ef26e969bab759543c1f0c6db762394aef7dd
+    textures/Male_Shoe_Cos_FB2_D.png · 48654 bytes · sha256 225cb8469475e43216419390db8c1aa306846ab1a966336c99735152ce3f72c5
+    textures/Male_Accessory_Cos_FB2_D.png · 31156 bytes · sha256 731867c99aac4ecb2a9569376a22dc357624fb6bd2eddfe881465c6100ccb194
+    textures/Male_Hair_Cos_FB2_D.png · 9923 bytes · sha256 b70299e88131936c061e5f7d930c9846af472c6d33b3d0d2e383016e6be2c9a7
+원본 FBX: 프리파이어 리그 아마추어 'Bip01' 뼈 79 · 메시 5(+ 면 없는 Cube) · 삼각형 11,145 · 액션 0
+
+정리: 2026-09-14 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_박진웅」으로 재현(source = 이 폴더의 FBX, 텍스처는 파일명 그대로 복사).
+  - 사람형 매핑 뼈 21개 mixamorig 이름: bone_Hips→Hips · bone_Spine→Spine · bone_Spine1→Spine1 · bone_Neck→Neck · bone_Head→Head ·
+    bone_Left/RightClav→Shoulder · Arm→Arm · ForeArm→ForeArm · Hand→Hand · LegUpper→UpLeg · Leg→Leg · Ankle→Foot · Toe→ToeBase.
+    손가락(bone_Left_Finger01~42)·머리 보조(Head_M_FB2_Cos_Bone)·무기/배낭 슬롯 뼈 이름 그대로.
+  - bone_Hips는 가중치 0이지만 다리·척추의 부모(엉덩이 정점은 그 자식 bone_Hips_Dummy가 몬다 — 따라가므로 재부착 없음).
+  - 원본 기본 자세가 쉬는 자세와 달라(차 0.103) 기본 자세 그대로 굽힘. 쉬는 자세 팔이 A자(수평 아래 50.5°) → T자로 굽힘(Shoulder·Arm·ForeArm·Hand ±X, 굽기 오차 0).
+    손가락 순서(엄지/검지/새끼)가 이름으로 확실하지 않아 손바닥 굴리기는 건너뜀.
+  - 겉싸개(아마추어 Z −90° · 높이 0.488) 없앰 · 키 1.8m · 발 z 0 · 정면 −Y(90° 단위만). 크기 1.721 × 0.311 × 1.8 m.
+
+재질 → 텍스처(원본 재질 5개가 전부 비어 있음(Material.001~005) → 메시 이름으로 짝지어 텍스처 이름과 같은 재질을 새로):
+  Male_Lobby_Top_Cos_FB2(몸통·팔·손) → 재질 Male_Top_Cos_FB2 · Male_Top_Cos_FB2_D.png
+  Male_Lobby_Bottom_Cos_FB2(다리) → 재질 Male_Bottom_Cos_FB2 · Male_Bottom_Cos_FB2_D.png
+  Male_Lobby_Shoe_Cos_FB2 → 재질 Male_Shoe_Cos_FB2 · Male_Shoe_Cos_FB2_D.png
+  🔸 Male_Lobby_Accessory_Cos_FB2 = **머리카락** → 재질 Male_Hair_Cos_FB2 · Male_Hair_Cos_FB2_D.png (Accessory 그림을 입히면 얼굴 무늬가 흩어짐 — 렌더로 판정)
+  🔸 Male_Lobby_Accessory_Cos_FB2_VFX = **얼굴·귀**(이펙트 아님) → 재질 Male_Accessory_Cos_FB2 · Male_Accessory_Cos_FB2_D.png
+  텍스처 5장 모두 원본 바이트 그대로(알파 불투명). 'Dots Stroke'·'Material'·빈 재질은 정본에 없음.

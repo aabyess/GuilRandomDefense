@@ -206,6 +206,28 @@ UNITS = {
                       source=os.path.join(DL, "denji_and_pochita.glb"), gltf_guess_bind=False,
                       recipe=dict(rename=DENJI_RENAME)),
     "안흔함_상붕카": dict(path="Assets/Art/Characters/안흔함_상붕카.glb", kind="prop", size=("length", 1.8)),
+    # 사이타마(Ready Player Me·Mixamo 리그 glb, 2026-09-14): 번호 꼬리를 떼고 mixamorig 이름으로. 쉬는 자세 A자(위팔 수평 아래 59°, 아래팔 앞 33°) → T자
+    #   (손가락 네 줄이 다 있어 손바닥 굴리기까지). 조명용 Icosphere 뺌. Wolf3D_Body 베이스는 1×1 단색 jpg — 원본 바이트 그대로(유니티가 읽음).
+    "특별함_배성령": dict(path="Assets/Art/Units/특별함_배성령/특별함_배성령.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(DL, "saitama_everyday_opm_-_opm.glb"), no_nulls=True, drop_meshes=["Icosphere"],
+                      rename_regex=(r"([A-Za-z][A-Za-z0-9_]*?)_[0-9]+", r"mixamorig:\1"), orient_snap=True,
+                      tpose_arms={s: dict({"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm", "Forearm": f"mixamorig:{side}ForeArm",
+                                           "Hand": f"mixamorig:{side}Hand"},
+                                          **{f"Finger{i}{j}": f"mixamorig:{side}Hand{finger}{k}" for i, finger in enumerate(("Thumb", "Index", "Middle", "Ring", "Pinky"))
+                                             for j, k in (("", 1), ("1", 2), ("2", 3))})
+                                  for s, side in (("L", "Left"), ("R", "Right"))},
+                      glb_images={0: "Wolf3D_Eye_baseColor.jpg", 1: "Wolf3D_Body_baseColor.jpg", 2: "Wolf3D_Body_normal.jpg", 3: "Wolf3D_Skin_baseColor.jpg",
+                                  4: "Wolf3D_Outfit_Bottom_baseColor.jpg", 6: "Wolf3D_Outfit_Bottom_normal.jpg", 7: "Wolf3D_Outfit_Footwear_baseColor.jpg",
+                                  9: "Wolf3D_Outfit_Footwear_normal.jpg", 10: "Wolf3D_Outfit_Top_baseColor.jpg", 12: "Wolf3D_Outfit_Top_normal.jpg",
+                                  13: "Wolf3D_Teeth_baseColor.jpg"},
+                      materials=dict(textures={
+                          "Wolf3D_Eye": [("DiffuseColor", "Wolf3D_Eye_baseColor.jpg")],
+                          "Wolf3D_Body": [("DiffuseColor", "Wolf3D_Body_baseColor.jpg"), ("NormalMap", "Wolf3D_Body_normal.jpg")],
+                          "Wolf3D_Skin": [("DiffuseColor", "Wolf3D_Skin_baseColor.jpg")],
+                          "Wolf3D_Outfit_Bottom": [("DiffuseColor", "Wolf3D_Outfit_Bottom_baseColor.jpg"), ("NormalMap", "Wolf3D_Outfit_Bottom_normal.jpg")],
+                          "Wolf3D_Outfit_Footwear": [("DiffuseColor", "Wolf3D_Outfit_Footwear_baseColor.jpg"), ("NormalMap", "Wolf3D_Outfit_Footwear_normal.jpg")],
+                          "Wolf3D_Outfit_Top": [("DiffuseColor", "Wolf3D_Outfit_Top_baseColor.jpg"), ("NormalMap", "Wolf3D_Outfit_Top_normal.jpg")],
+                          "Wolf3D_Teeth": [("DiffuseColor", "Wolf3D_Teeth_baseColor.jpg")]})),
     # 이토시 린: 쉬는 자세 A자 50.5° → T자(tpose_arms에 mixamorig 이름표 — 손가락은 순서가 불확실해 손바닥 굴리기 건너뜀). 기본 자세≠쉬는 자세라 굽힌다.
     #   재질 5개가 전부 비어 있다(이미지 없음) → 메시 이름으로 텍스처를 짝지어 재질을 새로. 렌더로 확인: Accessory 메시 = 머리카락(Hair 텍스처),
     #   Accessory_VFX 메시 = 얼굴·귀(Accessory 텍스처 — 이펙트가 아니었다). Cube 메시는 블렌더가 읽지 않음(면 없음).
