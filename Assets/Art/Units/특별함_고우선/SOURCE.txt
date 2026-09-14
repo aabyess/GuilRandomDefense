@@ -1,0 +1,25 @@
+출처: Sketchfab — "reiju" (원피스 빈스모크 레이쥬, 게임 이벤트 모델 — 애니 EV041_Reiju_A~F·Reiju_0000)
+받은 날: 2026-09-14 · 유닛: 특별함_고우선 (unitName 전정실부인, Special)
+원본(보존 — 지우지 말 것): ~/Downloads/reiju.glb · 13111296 bytes · sha256 dea6d7aa28e20c8deebbcf3c3d50c450fe4693ceba054592c99d9b203097bfd3
+glb: Sketchfab-16.12.0 · 스킨 1 · 조인트 165(이름 전부 익명 bone_N) · 메시 14(+조명용 Icosphere) · 삼각형 38,601 · 애니메이션 6(안 씀) · 재질 14 · 이미지 19
+
+정리: 2026-09-14 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_고우선」으로 재현(source = 이 glb).
+  - 뼈 이름이 익명이라 계층·세계 위치로 사람형 뼈를 찾아 mixamorig 이름으로(22개, 가중치 그룹 같이). +X = 캐릭터 왼쪽(발끝이 −Y):
+      bone_2_04→Hips(척추·다리 둘 다의 부모) · bone_3_05→Spine · bone_4_06→Spine1 · bone_5_07→Spine2 · bone_6_08→Neck · bone_7_09→Head
+      bone_16_018→LeftShoulder · bone_18_020→LeftArm · bone_20_022→LeftForeArm · bone_22_024→LeftHand (오른쪽 17·19·21·23)
+      bone_8_010→LeftUpLeg · bone_10_012→LeftLeg · bone_12_014→LeftFoot · bone_14_016→LeftToeBase (오른쪽 9·11·13·15)
+    손가락(bone_24~58)·얼굴(bone_300대)·머리카락(bone_400대)·옷 뼈는 사슬이 모호해 이름 그대로.
+  - 뿌리 bone_0_02 > bone_1_03(+ 형제 bone_26_028) — 가중치 0 중간 뼈라 뺌 → Hips가 _rootJoint 바로 밑. 뼈 165 → 162.
+  - 🔴 트위스트 뼈가 나란한 형제(우솝과 같은 구조): 팔꿈치 자리 bone_202_073·203_074가 위팔 밑, 무릎 자리 bone_200_071·201_072가 넓적다리 밑 → 아래팔·종아리 밑으로 옮김.
+    (bone_204~211·212~221 등 나머지 보조 뼈는 이미 알맞은 뼈의 자식)
+  - 쉬는 자세 이미 T자 → 굽기 없음. glTF 메시 노드 빈 오브젝트는 뼈로 안 살림 · orient_snap · 키 1.8m · 발 z 0 · 정면 −Y. 크기 1.667 × 0.501 × 1.8 m.
+  - 뺀 메시: Object_15(재질 model_0_mat_4 — 이미지 없이 색 0.8 · 알파 0 · BLEND, Object_13과 같은 자리에 겹친 안 보이는 판) · 조명용 Icosphere.
+
+재질 → 텍스처(재질 이름 그대로 13개, glb 내장 이미지 원본 바이트 13장, 여러 재질이 같은 이미지를 쓰면 파일 하나, 노멀 _normal, 알파 없음):
+  model_0_mat_0 → model_0_mat_0_baseColor.png + _normal.png
+  model_0_mat_1 → model_0_mat_1_baseColor.png + model_0_mat_1_normal.png · model_0_mat_2 · model_0_mat_11 → model_0_mat_1_baseColor.png + model_0_mat_2_normal.png
+  model_0_mat_3 · model_0_mat_5 → model_0_mat_3_baseColor.png + model_0_mat_3_normal.png · model_0_mat_6 → model_0_mat_3_baseColor.png · model_0_mat_7 → model_0_mat_3_baseColor.png + model_0_mat_7_normal.png
+  model_0_mat_8 → model_0_mat_8_baseColor.png
+  model_0_mat_9 · model_0_mat_10 → model_0_mat_9_baseColor.png + model_0_mat_9_normal.png
+  model_0_mat_12 · model_0_mat_13 → model_0_mat_12_baseColor.png + model_0_mat_12_normal.png
+  안 쓴 이미지: 1·3·5·7·11·17(재질이 안 부름 — 스페큘러/마스크 추정) · mat_0·1·2·11의 KHR_materials_specular 무시.
