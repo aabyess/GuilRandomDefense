@@ -69,6 +69,37 @@ LUFFY_RENAME = {
 }
 DENJI_RENAME = {"spine_09": "Hips", "spine.001_010": "Spine", "spine.002_011": "Chest", "spine.003_012": "UpperChest",
                 "spine.004_013": "Neck", "spine.005_014": "Head"}
+def _biped_arm_reparent():
+    """흔함_문필환: 팔·손 메시를 움직이는 BN_ 보조 뼈가 전부 Clavicle 직계 자식으로 나란히 붙어 있다(3ds Max 제약으로 Biped를 따라가던 뼈).
+    유니티 사람형은 Bip001 UpperArm·Forearm·Hand·Finger(가중치 0)를 돌리므로, 위치가 같은 Biped 마디 밑으로 옮겨야 메시가 따라간다(2026-09-14 실측)."""
+    table = {}
+    for side in "LR":
+        for k, seg in ((1, "UpperArm"), (2, "UpperArm"), (3, "UpperArm"), (4, "Forearm"), (5, "Forearm"), (6, "Forearm"), (7, "Hand")):
+            table[f"BN_Arm_{side}0{k}"] = f"Bip001 {side} {seg}"
+        for k in (1, 2):
+            table[f"BN_BiXiu_{side}0{k}"] = f"Bip001 {side} Forearm"
+        for i, sfx in enumerate(("0", "01", "02", "1", "11", "12", "2", "21", "22", "3", "31", "32", "4", "41", "42"), start=1):
+            table[f"BN_Finger_{side}{i}"] = f"Bip001 {side} Finger{sfx}"
+    return table
+
+
+BIPED_ARM_REPARENT = _biped_arm_reparent()
+
+
+def _biped_leg_reparent():
+    """다리도 같은 구조(2026-09-14 실측): 다리·발 정점을 움직이는 BN_Cal·BN_TuiXiu·BN_Toe가 전부 Bip001 Pelvis 직계 자식으로 나란히 붙어 있다.
+    BN_Cal 01~03 = 넓적다리 구간, 04 = 무릎(Calf 머리)~06 = 종아리 구간, 07 = 발목(Foot 머리), TuiXiu = 무릎, BN_Toe 1 = 발끝(Toe0 머리)."""
+    table = {}
+    for side in "LR":
+        for k, seg in ((1, "Thigh"), (2, "Thigh"), (3, "Thigh"), (4, "Calf"), (5, "Calf"), (6, "Calf"), (7, "Foot")):
+            table[f"BN_Cal_{side}0{k}"] = f"Bip001 {side} {seg}"
+        for k in (1, 2):
+            table[f"BN_TuiXiu_{side}0{k}"] = f"Bip001 {side} Calf"
+        table[f"BN_Toe_{side}1"] = f"Bip001 {side} Toe0"
+    return table
+
+
+BIPED_LIMB_REPARENT = dict(BIPED_ARM_REPARENT, **_biped_leg_reparent())
 NARUTO_FACE_RUNS = [["nrt_tex02", 450], ["nrt_eye", 62], ["nrt_tex01", 1106], ["nrt_tex02", 1919]]
 UNITS = {
     "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
@@ -94,7 +125,10 @@ UNITS = {
                       source=os.path.join(DL, "luffy.glb"),
                       # mesh_0(Pupil 582정점·모양 키 3) = Object_7, mesh_0.001(shock 60정점·모양 키 3) = Object_8
                       recipe=dict(rename=LUFFY_RENAME, mesh_alias={"mesh_0": "Object_7", "mesh_0.001": "Object_8"})),
-    "흔함_문필환": dict(rev="01d46427", path="Assets/Art/Units/흔함_문필환/흔함_문필환.fbx", kind="human", size=("height", 1.8)),
+    # 🔴 원인 3겹(2026-09-14 PM 유니티 확인): ①Biped 무게중심 Bip001이 Hips 위에 끼어 엉덩이 높이가 바닥으로 저장 ②팔·다리 메시를 BN_ 보조 뼈가
+    #    Pelvis/Clavicle에 나란히 붙어 몰았다 ③살린 Null 뼈 틀 규약이 Biped와 섞여 아바타 skeleton 90° + A자 쉬는 자세 → 넷을 다 켠다(outT3와 같은 설정)
+    "흔함_문필환": dict(rev="01d46427", path="Assets/Art/Units/흔함_문필환/흔함_문필환.fbx", kind="human", size=("height", 1.8),
+                    drop_bones=["Bip001"], reparent_bones=BIPED_LIMB_REPARENT, tpose_arms=True, null_frames_from_node=True),
     "안흔함_박민수": dict(rev="dd84a0cb", path="Assets/Art/Units/안흔함_박민수/안흔함_박민수.fbx", kind="human", size=("height", 1.8),
                       source=os.path.join(DL, "denji_and_pochita.glb"), gltf_guess_bind=False,
                       recipe=dict(rename=DENJI_RENAME)),
@@ -404,6 +438,88 @@ def sample_clips(src, arm_name, recipe, ref, guess_bind=True):
     return clips
 
 
+def tpose_arms(arm, meshes, report):
+    """쉬는 자세를 진짜 T자로(흔함_문필환, PM 2026-09-14): 좌우 Clavicle·UpperArm·Forearm을 몸 옆(L +X · R −X)으로 곧게, 아래팔을 굴려
+    손바닥 아래(검지→새끼 방향이 앞 −Y의 반대 = 검지가 앞), 손·손가락 곧게. 그 자세로 메시를 굽고 쉬는 자세로 적용한다.
+    🔴 유니티가 아바타를 만들 때 T자를 강제로 맞추는데, 쉬는 자세가 A자(수평 아래 43°)면 skeleton 행이 실제와 어긋나 어깨 근육값이 −1.99로
+    범위를 넘고 Idle을 입히면 팔이 들렸다."""
+    pose = arm.pose.bones
+
+    def P(n):
+        return arm.matrix_world @ pose[n].head
+
+    def turn(n, R3):
+        pivot = P(n)
+        pose[n].matrix = Matrix.Translation(pivot) @ R3.to_4x4() @ Matrix.Translation(-pivot) @ pose[n].matrix
+        bpy.context.view_layer.update()
+
+    def align(n, a, b, target):
+        cur = P(b) - P(a)
+        if cur.length > 1e-6:
+            turn(n, cur.normalized().rotation_difference(target.normalized()).to_matrix())
+
+    def roll_to(n, axis, vec, target):
+        axis = axis.normalized()
+        a = (vec - axis * vec.dot(axis)).normalized()
+        b = (target - axis * target.dot(axis)).normalized()
+        turn(n, Matrix.Rotation(math.atan2(axis.dot(a.cross(b)), a.dot(b)), 3, axis))
+
+    bpy.context.view_layer.update()
+    before = {}
+    for side in "LR":
+        d = Vector((1.0 if side == "L" else -1.0, 0.0, 0.0))
+        b = lambda k: f"Bip001 {side} {k}"
+        align(b("Clavicle"), b("Clavicle"), b("UpperArm"), d)
+        align(b("UpperArm"), b("UpperArm"), b("Forearm"), d)
+        align(b("Forearm"), b("Forearm"), b("Hand"), d)
+        for _ in range(2):
+            roll_to(b("Forearm"), d, P(b("Finger1")) - P(b("Finger4")), Vector((0.0, -1.0, 0.0)))   # 검지가 앞 = 손바닥 아래
+            align(b("Hand"), b("Hand"), b("Finger2"), d)
+        for f in "1234":
+            align(b(f"Finger{f}"), b(f"Finger{f}"), b(f"Finger{f}1"), d)
+            align(b(f"Finger{f}1"), b(f"Finger{f}1"), b(f"Finger{f}2"), d)
+        thumb = P(b("Finger01")) - P(b("Finger0"))
+        align(b("Finger01"), b("Finger01"), b("Finger02"), thumb)
+        before[side] = dict(arm=tuple(round(c, 3) for c in (P(b("Hand")) - P(b("UpperArm"))).normalized()),
+                            spread=tuple(round(c, 3) for c in (P(b("Finger1")) - P(b("Finger4"))).normalized()))
+    # 굽기: 변형된 메시를 데이터로, 자세를 쉬는 자세로
+    dg = bpy.context.evaluated_depsgraph_get()
+    posed_verts = {}
+    for m in meshes:
+        if skinned_to(m) != arm:
+            continue
+        assert not m.data.shape_keys, f"{m.name}: 모양 키가 있어 T자로 굽지 못한다"
+        baked = bpy.data.meshes.new_from_object(m.evaluated_get(dg), preserve_all_data_layers=True, depsgraph=dg)
+        m.data = baked
+        posed_verts[m.name] = [v.co.copy() for v in baked.vertices]
+    rest = {pb.name: (pb.head.copy(), pb.tail.copy(), pb.matrix.copy()) for pb in pose}
+    for o in bpy.context.view_layer.objects:
+        o.select_set(o == arm)
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.mode_set(mode="EDIT")
+    for eb in arm.data.edit_bones:
+        eb.use_connect = False
+    for eb in arm.data.edit_bones:
+        h, t, M = rest[eb.name]
+        eb.head, eb.tail = h, t if (t - h).length > 1e-9 else h + M.col[1].xyz * 1e-3
+        eb.align_roll(M.col[2].xyz)
+    bpy.ops.object.mode_set(mode="OBJECT")
+    for pb in pose:
+        pb.matrix_basis = Matrix.Identity(4)
+    bpy.context.view_layer.update()
+    dg = bpy.context.evaluated_depsgraph_get()
+    drift = 0.0
+    for m in meshes:
+        if m.name not in posed_verts:
+            continue
+        ev = m.evaluated_get(dg)
+        me = ev.to_mesh()
+        drift = max(drift, max((ev.matrix_world @ v.co - m.matrix_world @ c).length for v, c in zip(me.vertices, posed_verts[m.name])))
+        ev.to_mesh_clear()
+    assert drift < 1e-4, f"T자 굽기 뒤 메시가 {drift:.5f} 움직였다"
+    report["T자"] = dict(before, 굽기_오차=round(drift, 6))
+
+
 def _normalized(M):
     loc, q, _ = M.decompose()
     return Matrix.Translation(loc) @ q.to_matrix().to_4x4()
@@ -522,7 +638,11 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             if tail is not None:
                 continue
             child = next((heads[c] for c in kids.get(bname, ()) if (heads[c] - head).length > 1e-6), None)
-            if child is not None:
+            if cfg.get("null_frames_from_node"):
+                # 🔴 흔함_문필환(2026-09-14): 꼬리를 자식 쪽으로 지으면 살린 뼈만 +Y가 자식 쪽(블렌더 규약)이 되고, 원래 LimbNode(Pelvis·Spine·Clavicle)는
+                #    +X가 자식 쪽(3ds Max 규약)이라 틀이 90° 섞였다 — 유니티 아바타 skeleton이 그 자리마다 90° 틀어졌다. 원래 Null 회전 그대로(뼈 Y = 노드 Y) 짓는다.
+                tails[bname] = head + rot.col[1] * max((child - head).length if child is not None else 0.05, 1e-3)
+            elif child is not None:
                 tails[bname] = child
             elif parent in tails and (tails[parent] - heads[parent]).length > 1e-9:
                 d = tails[parent] - heads[parent]
@@ -568,6 +688,13 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 child.parent = eb.parent
             data.edit_bones.remove(eb)
             report.setdefault("뺀 뼈", []).append(gone)
+        for child_name, parent_name in cfg.get("reparent_bones", {}).items():
+            eb, par = data.edit_bones.get(child_name), data.edit_bones.get(parent_name)
+            assert eb is not None and par is not None, f"{name}: 다시 붙일 뼈가 없다 {child_name} → {parent_name}"
+            eb.use_connect = False
+            eb.parent = par
+        if cfg.get("reparent_bones"):
+            report["다시 붙인 뼈"] = len(cfg["reparent_bones"])
         bpy.ops.object.mode_set(mode="OBJECT")
         report["뼈"] = len(data.bones)
 
@@ -595,6 +722,8 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             m.parent = new_arm
             m.matrix_parent_inverse = Matrix.Identity(4)
             m.matrix_basis = Matrix.Identity(4)
+    if new_arm is not None and cfg.get("tpose_arms"):
+        tpose_arms(new_arm, meshes, report)
     removed = [o.name for o in scene.objects if o.type != "MESH" and o != new_arm and o.name not in revived]
     for o in [o for o in scene.objects if o.type != "MESH" and o != new_arm]:
         bpy.data.objects.remove(o, do_unlink=True)
