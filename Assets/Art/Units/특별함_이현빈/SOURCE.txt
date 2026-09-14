@@ -1,0 +1,25 @@
+출처: Sketchfab — "one-piece-bounty-rush-nolan" (원피스 바운티러시 몽블랑 놀란드, pl_noland_sora01)
+받은 날: 2026-09-14 · 유닛: 특별함_이현빈 (unitName 파파라치, Special)
+원본(보존 — 지우지 말 것): ~/Downloads/one-piece-bounty-rush-nolan.zip · 3017952 bytes · sha256 bf75ad008108c291d6261e5e7603c4d42b94eff17e63f5ca96fc112767846429
+  └ textures/pl_noland_sora01_diff.png · 849350 bytes · sha256 f212c7f4611e99cd016151ff19166a06295a31cc3d4c8f49e1a51598d076f305
+  └ source/nolan.rar · 2168328 bytes · sha256 e0b02f44d6ea5e986f163c2f857b0d9fb8b9ce0ffa4038a52337e6e1f9a8f7f1
+      └ nolan/pl_noland_sora01 (merge).fbx · 8325456 bytes · sha256 9362ff829dfac994a7adb0beecac1c8b9aac29b27d6c8654549c0f81064fea0d
+      └ nolan/pl_noland_sora01_diff.png · 849515 bytes · sha256 73cdf9a76e2f757be1fff07d92b8c721c8686c63befb2501e3e85a3621366b95 ← 정본에 씀(알파 뺀 RGB로)
+      └ nolan/stg_gasha_tex_bayer_dither.png (툰 보조 — 안 씀)
+원본 FBX: 아마추어 'pl_noland_sora01' 뼈 56 · 메시 16 · 삼각형 12,013 · 액션 87 · Null 14
+
+정리: 2026-09-14 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_이현빈」으로 재현(zip → rar에서 FBX·텍스처를 꺼내 짓는다).
+  - 사람형 경로: 애니메이션 87개 안 실음(공용 Idle). 쉬는 자세 이미 T자(팔·손 뼈 같은 높이) → 굽기 없음. 가중치 없는 뼈는 world_joint뿐(보조 뼈 재부착 필요 없음).
+  - 겹친 변형 메시 기본만 남김(렌더: 전부/뽑은 칼/칼집 든 칼):
+      뺌 7: face_attack · face_damage · face_sp01 · face_sp02 · l_hand_close · r_hand_open ·
+            l_handle_sheath(칼집에 든 손잡이 — 🔴 쉬는 자세에서 오른발 옆 바닥에 떨어져 있는 원본 결함)
+      남김 9: body · cloth · belt · hair · face_normal · l_hand_open · r_hand_close(칼 쥔 주먹) · r_weapon_01(오른손에 뽑은 칼) · l_sheath(왼허리 빈 칼집)
+  - 사람형 매핑 뼈 21개 mixamorig 이름(PL_RENAME, 모리아와 같은 방식). 치마·벨트·깃·무기 보조 뼈 이름 그대로.
+  - Null 14개(eff_muzzle·model_root·flag·*_end·HELPER)는 같은 자리 뼈로(원래 노드 틀). 뼈 56 → 70. (merge) 겉싸개 빈 오브젝트 지움.
+  - 겉싸개 배율 0.01·X 90° 없앰 · 키 1.8m · 발 z 0 · 정면 −Y(90° 단위만). 크기 1.791 × 1.435 × 1.8 m(앞뒤는 앞으로 뻗은 칼).
+
+재질 → 텍스처(재질 이름 그대로):
+  pl_noland_sora01 → pl_noland_sora01_diff.png — 🔴 원본 알파 = 명암 마스크(중간값 99.8%) → 알파 채널을 뺀 8비트 RGB PNG로 다시 씀(RGB 값은 원본과 1도 안 다름, fix_unit_fbx.write_rgb_png).
+  원본 FBX는 이 텍스처를 DiffuseColor로만 부름(투명 슬롯 없음). 'Dots Stroke'·'Material'은 쓰는 면 0 → 정본에 없음.
+
+⚠️ 상용 게임(One Piece Bounty Rush) 추출 에셋. 2026-09-07 사장님 확정: IP 제약 없음(상업적 사용 아님).

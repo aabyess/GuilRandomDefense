@@ -171,6 +171,15 @@ UNITS = {
                       archive_textures=["nolan/pl_noland_sora01_diff.png"], rgb_textures=["pl_noland_sora01_diff.png"],
                       drop_meshes=["face_attack", "face_damage", "face_sp01", "face_sp02", "l_hand_close", "r_hand_open", "l_handle_sheath"],
                       rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True),
+    # Mr.5(바운티러시 pl_ (merge) 리그, 2026-09-14): 이미 T자. 표정 5 · 손 13 변형(주먹·코 파기·코딱지 대포·권총 쥔 손·권총 집어넣는 손). FBX 안에 이펙트 메시는 없다
+    #   (rar의 Mesh/·Texture2D/ 스킬 이펙트 OBJ·PNG는 안 옮김). 기본 = 오른손에 권총(r_hand_weapon_revolver + r_weapon_revolver_01) · 왼손 open. 알파 = 명암 마스크 → RGB.
+    "특별함_조세민": dict(path="Assets/Art/Units/특별함_조세민/특별함_조세민.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(DL, "one-piece-bounty-rush-mr-5.zip"), "source/mr 5.rar", "mr 5/pl_mr5five_orig01 (merge).fbx"),
+                      archive_textures=["mr 5/pl_mr5five_orig01_diff.png"], rgb_textures=["pl_mr5five_orig01_diff.png"],
+                      drop_meshes=["face_attack", "face_damage", "face_sp01", "face_sp02", "l_hand_close", "r_hand_close", "r_hand_open",
+                                   "l_hand_nose_01", "l_hand_nose_02", "r_hand_nose_01", "r_hand_nose_02", "l_hand_nose_fancycannon_01",
+                                   "l_hand_nose_fancycannon_02", "r_hand_nose_fancycannon_01", "r_hand_nose_fancycannon_02", "l_hand_put_revolver"],
+                      rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True),
     # 루치: 손 open만, 비둘기 날개는 접은 쪽(close)
     "흔함_노태현": dict(rev="bab90f7c", path="Assets/Art/Units/흔함_노태현/흔함_노태현.fbx", kind="human", size=("height", 1.8),
                     drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_shigun", "r_hand_shigun",
