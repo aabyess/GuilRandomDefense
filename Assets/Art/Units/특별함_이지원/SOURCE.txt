@@ -1,0 +1,28 @@
+출처: ~/Downloads/one-piece-bounty-rush-york.zip (3,585,410 bytes · sha256 75dfdde2dee1c89f3950aee95a6c2bfa2949801a17ab4620a59fb43af32c9eb2) — 원피스 바운티러시 요크
+  zip 속 source/york.rar (2,650,624 bytes · sha256 297e41933c616698…) 속 「york/pl_york_orig01 (merge).fbx」(7,424,640 bytes · sha256 e06d44c76a556d19…)
+  + textures/pl_york_orig01_diff.png(zip, sha256 fa713e5f…)·rar 안 york/pl_york_orig01_diff.png(sha256 7b2991fc…) — 바이트는 다르지만 픽셀 비교 결과 RGB·알파 전부 동일(1024 RGBA). FBX가 부르는 rar 판 기준.
+  안 쓴 파일: stg_gasha_tex_bayer_dither.png(게임 셰이더용)
+받은 날: 2026-09-15 · 유닛: 특별함_이지원 (unitName 음지소녀, Special)
+🔁 2026-09-15 사장님 지시로 기존 릴리스 스킨을 요크로 교체(옛 FBX·Textures·SOURCE.txt는 PM이 지움, gen_skin_rig.py 릴리스 항목은 구현담당1이 뺌).
+원본(보존 — 지우지 말 것). FBX: 바운티러시 pl_ 리그 · 아마추어 pl_york_orig01 뼈 66 · 배율 0.01·X 90° · 메시 22 · 재질 3(pl_york_orig01·_trans·_trans_goggles, 모두 같은 diff) · 애니 114(안 씀)
+
+⚠️ 상용 게임(One Piece Bounty Rush) 추출 에셋. 2026-09-07 사장님 확정: IP 제약 없음(상업적 사용 아님).
+
+정리: 2026-09-15 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_이지원」으로 재현(archive = zip → rar → fbx).
+  - 이미 T자(위팔·아래팔 수평) · 기본 자세 = 쉬는 자세(바운티러시 손 결합 밀림 없음).
+  - 겹친 변형 메시 12개 뺌: 얼굴 face_attack·face_damage·face_sp01·face_sp02·face_sp03(→ face_normal만) · 손 l/r_hand_close·l/r_hand_open_02(→ l/r_hand_open만) ·
+    오른손 총 r_weapon_gun_01 + 총 쥔 손 r_hand_weapon_gun01(기본 대기 모습엔 없음) · 콧물 풍선 snot_bubble(자는 연출).
+    남김 10: body · face_normal · hair · goggles · goggles_lens · receiver_01(등에 멘 전보벌레) · l/r_hand_open · l/r_domshoes.
+  - 사람형 매핑 뼈 19개 mixamorig 이름(YORK_RENAME = PL_RENAME에서 발끝만 뺌): Body_Pelvis→Hips · Body_Belly→Spine · Body_Chest→Spine1 · Head_Neck→Neck · Head_Face→Head ·
+    L/RArm_Clavicle→Shoulder · Arm_Upper→Arm · Arm_Fore→ForeArm · Hand_Palm→Hand · Leg_Thigh→UpLeg · Leg_Calf→Leg · Foot_Heel→Foot.
+    🔸 L/RFoot_Toe는 뼈가 아니라 빈 오브젝트(Heel 자식) → ToeBase 없이. 🔸 다리는 L/RLeg_Root(가중치 0) → Leg_Thigh로 한 칸 더 — UpLeg = Thigh(Root는 중간 뼈).
+    보조 뼈(coat·hood·hair·twintail 1~5·breast·*_sup·knee_support·domshoes·receiver·snot_bubble·r_weapon_gun)는 이름 그대로 — 매핑 이름과 안 겹침.
+  - 빈 오브젝트 15(총구 효과·플래그·머리끝·발끝 표식)는 뼈로 안 살림.
+  - orient_snap · 키 1.8m · 발 z 0 · 정면 −Y. 크기 1.46 × 0.364 × 1.8 m · 뼈 66 · 메시 10.
+■ 판정: T 1.0 · 팔45°·무릎90° 최대 3.88(가랑이 가운데)·상위 1% 1.16 · 유니티 공용 Idle(idle.fbx) 최대 5.05(오른 어깨 뒤 모자·후드 자리)·상위 1% 1.18 —
+  코트·트윈테일·후드 관통·찢김 없음(최악 프레임 정면·옆 렌더, hem_follow 불필요) ·
+  원시 FBX: 뼈 Lcl 전역 vs TransformLink 0.0 · 메시 전역 vs 메시 결합 0.0 · 뼈 배율 1.0 · 쉬는 자세 스킨 결과 vs 원시 정점 최대 0.0006mm · 가중치 없는 정점 0.
+
+재질 → 텍스처(재질 이름 그대로):
+  pl_york_orig01 · pl_york_orig01_trans_goggles(고글 렌즈 24삼각형) → pl_york_orig01_diff.png — 🔸 알파가 명암 마스크(알파<0.98 픽셀 99.16%·평균 0.884)라 알파 뺀 RGB PNG로 새로 씀(archive_rgb).
+    고글 렌즈 투명은 포기(불투명). pl_york_orig01_trans 재질은 뺀 콧물 풍선만 쓰던 것이라 결과 FBX에 없음.

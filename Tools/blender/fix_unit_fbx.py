@@ -119,6 +119,19 @@ for _s, _side in (("L", "Left"), ("R", "Right")):
 # 요크(바운티러시 pl_ 리그, 2026-09-15): PL_RENAME과 같되 발끝 LFoot_Toe·RFoot_Toe가 뼈가 아니라 빈 오브젝트(Heel 자식) → ToeBase 없이.
 #   다리는 L/RLeg_Root(가중치 0) → L/RLeg_Thigh로 한 칸 더 — UpLeg는 Thigh(Root는 Hips와 UpLeg 사이 중간 뼈).
 YORK_RENAME = {k: v for k, v in PL_RENAME.items() if not k.endswith("Foot_Toe")}
+# 기사(strong_knight.glb, 2026-09-15): 번호 꼬리 조인트 → mixamorig. anke(발목, 원본 오타)→Foot · foot(발볼)→ToeBase · toes는 끝.
+#   손가락 thumb/point/middle/ring/pink 1~3 → HandThumb/Index/Middle/Ring/Pinky 1~3(tpose_arms 손바닥 굴리기). Joint_3_*·tip은 끝 조인트(가중치 0).
+KNIGHT_RENAME = {"hips_01": "mixamorig:Hips", "spine_012": "mixamorig:Spine", "chest_013": "mixamorig:Spine1", "neck_061": "mixamorig:Neck", "head_062": "mixamorig:Head"}
+for _s, _side, _n, _fingers in (("L", "Left", (14, 15, 16, 17, 2, 3, 4, 5), {"thumb": 18, "pink": 22, "ring": 26, "middle": 30, "point": 34}),
+                                ("R", "Right", (38, 39, 40, 41, 7, 8, 9, 10), {"thumb": 42, "pink": 45, "ring": 49, "middle": 53, "point": 57})):
+    KNIGHT_RENAME.update({f"{_s}_shoulder_0{_n[0]}": f"mixamorig:{_side}Shoulder", f"{_s}_arm_0{_n[1]}": f"mixamorig:{_side}Arm",
+                          f"{_s}_elbow_0{_n[2]}": f"mixamorig:{_side}ForeArm", f"{_s}_wrist_0{_n[3]}": f"mixamorig:{_side}Hand",
+                          f"{_s}_leg_0{_n[4]}": f"mixamorig:{_side}UpLeg", f"{_s}_knee_0{_n[5]}": f"mixamorig:{_side}Leg",
+                          f"{_s}_anke_0{_n[6]}": f"mixamorig:{_side}Foot", f"{_s}_foot_0{_n[7]}": f"mixamorig:{_side}ToeBase"})
+    for _f, _start in _fingers.items():
+        _fn = {"thumb": "Thumb", "point": "Index", "middle": "Middle", "ring": "Ring", "pink": "Pinky"}[_f]
+        for _k in (1, 2, 3):
+            KNIGHT_RENAME[f"{_s}_{_f}{_k}_0{_start + _k - 1}"] = f"mixamorig:{_side}Hand{_fn}{_k}"
 # 미호크(특별함_박기찬, 2026-09-14): 뼈 이름이 공백식(body lower·arm left arm1…) — 사람형 매핑 뼈만 mixamorig로. 손가락·얼굴·모자·검 뼈는 그대로.
 MIHAWK_RENAME = {"body lower": "mixamorig:Hips", "body upper": "mixamorig:Spine", "body spine1": "mixamorig:Spine1", "body spine2": "mixamorig:Spine2",
                  "head neck": "mixamorig:Neck", "head head": "mixamorig:Head"}
@@ -518,6 +531,22 @@ UNITS = {
                                   for s, side in (("L", "Left"), ("R", "Right"))},
                       solid_textures={"Iron_man_leg:red": None, "Iron_man_leg:gold": None, "HD_Ironman:silver": None, "lambert1": None, "14 - Default": None,
                                       "HD_Ironman:darksilver": (0.3, 0.3, 0.32), "HD_Ironman:black": (0.02, 0.02, 0.02), "HD_Ironman:yellow": (1.0, 0.9, 0.55)}),
+    # 기사(strong_knight.glb, Sketchfab-12.66, 스킨 조인트 65·메시 5·삼각형 12,944·클립 idle1 안 씀) — 2026-09-15 새 스킨.
+    #   🔴 끝 조인트 14개(_rootJoint·toes·손가락 끝 Joint_3_*·tip) IBM이 단위행렬 → glb_fix_identity_ibm(탐 켄치와 같은 수리). 좌우·정면은 이름대로(L이 +X, 발끝 −Y).
+    #   팔 A자(위팔 수평 아래 37°·아래팔 45° 아래·앞으로 59°) → T자(손가락 매핑으로 손바닥 굴리기). 조종용 빈 오브젝트(hipcontrol·*_Goal·*_Pole 등)는 뼈로 안 살림.
+    #   무기 3개는 스킨 없음: Maul(등에 멘 망치) ← chest_013 · daggercase·dagger(왼 허리 단검집) ← spine_012 → 그 뼈 100%(파이프라인 rigid).
+    #   망치 머리가 정수리보다 8cm 위라 키는 망치 빼고 잰다(size_ignore_meshes). 재질 3(cloth·knight·weapons)이 KHR_materials_pbrSpecularGlossiness —
+    #   diffuse(이미지 0·3·6)·노멀(2·5·8)을 원본 바이트 그대로 <재질>_diffuse.png·_normal.png로. specularGlossiness(1·4·7)는 안 씀.
+    "특별함_왕승환": dict(path="Assets/Art/Units/특별함_왕승환/특별함_왕승환.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(DL, "strong_knight.glb"), glb_fix_identity_ibm=True, no_nulls=True, drop_meshes=["Icosphere"],
+                      rename_bones=KNIGHT_RENAME, orient_snap=True, size_ignore_meshes=["Maul_weapons_0"],
+                      tpose_arms={s: dict({"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm", "Forearm": f"mixamorig:{side}ForeArm",
+                                           "Hand": f"mixamorig:{side}Hand"},
+                                          **{f"Finger{i}{j}": f"mixamorig:{side}Hand{finger}{k}" for i, finger in enumerate(("Thumb", "Index", "Middle", "Ring", "Pinky"))
+                                             for j, k in (("", 1), ("1", 2), ("2", 3))})
+                                  for s, side in (("L", "Left"), ("R", "Right"))},
+                      glb_images={0: "cloth_diffuse.png", 2: "cloth_normal.png", 3: "knight_diffuse.png", 5: "knight_normal.png", 6: "weapons_diffuse.png", 8: "weapons_normal.png"},
+                      materials=dict(textures={m: [("DiffuseColor", f"{m}_diffuse.png"), ("NormalMap", f"{m}_normal.png")] for m in ("cloth", "knight", "weapons")})),
     # 류마(바운티러시 pl_ 리그 FBX, zip 속 rar 속 pl_ryuma_orig01.fbx) — 2026-09-15 새 스킨. 이미 T자·기본 자세 = 쉬는 자세. 뼈 62(번호 꼬리 없음 → PL_RENAME 그대로).
     #   겹친 변형: 손 2벌 → l/r_hand_open · 칼 3벌(허리에 찬 waist_blade+waist_sheath / 왼손 l_blade+l_sheath / 오른손 r_blade) → 허리 한 벌만(렌더로 판정:
     #   손에 든 칼은 T자 손끝에 칼코등이만 떠 보이고, 허리 칼은 대기 모습에 맞음). 빈 오브젝트 7(무기 자리·플래그 표식)은 뼈로 안 살림.
