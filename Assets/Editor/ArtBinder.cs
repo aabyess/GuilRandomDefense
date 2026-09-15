@@ -119,6 +119,8 @@ public static class ArtBinder
         // 1.0 = 가장 긴 축(이물 돛대 포함 약 29)을 기준 키 20에 맞춘다.
         ("고대의배", 1.0f),
         ("해적선", 1.0f),
+        // 특별함_노건완(노가리, 잉어 — 2026-09-14): 몸길이 기준, 재규어와 같은 0.45(몸길이 약 9). 사장님 보고 조정.
+        ("특별함_노건완", 0.45f),
         // 자전거(2026-09-13 blender 재내보내기 — 두 바퀴가 바닥, 길이 1.8m). 가장 긴 축(길이)을 사람 키 20에 맞춘다 —
         // 실제로도 자전거 길이 ≈ 사람 키라 키는 약 12. 옛 표(ModelAdjustments 키 10)와 거의 같은 크기다.
         ("안흔함_상붕카", 1.0f),
@@ -286,7 +288,10 @@ public static class ArtBinder
     //    2026-09-13 bakesize 실측으로 잡은 두 사고:
     //    · 특별함_양재모 — Blender 내보내기는 노드에 축 회전이 걸려 있어 무기(길이 2m)의 자기 Y축을 키로 읽었다 → 키 11
     //    · 안흔함_박준희 — glb→fbx 변환본은 노드에 0.01 배율이 걸려 있는데 그걸 못 봐 12.29로 읽고 거의 안 키웠다 → 게임 안 크기 0.2
-    static Vector3 MeasureMeshes(GameObject root)
+    static Vector3 MeasureMeshes(GameObject root) => MeasureMeshBounds(root)?.size ?? Vector3.zero;
+
+    // 위와 같은 방식의 월드 경계(최저점 포함). 맵 인형·줄세우기(MapGenerator.TryMeasureFigure)와 같은 잣대다.
+    static Bounds? MeasureMeshBounds(GameObject root)
     {
         Bounds? acc = null;
 
@@ -308,7 +313,7 @@ public static class ArtBinder
             Add(smr.transform, smr.sharedMesh);
         foreach (MeshFilter mf in root.GetComponentsInChildren<MeshFilter>(true))
             Add(mf.transform, mf.sharedMesh);
-        return acc?.size ?? Vector3.zero;
+        return acc;
     }
 
     /// <summary>
@@ -1152,7 +1157,15 @@ public static class ArtBinder
         //    그대로 나누면 스케일이 폭주한다 — 2026-09-08 실측: 안흔함_이호준이 **7,062배**로
         //    부풀어 맵에 검은 뿔 덩어리로 나타났다(사장님 스크린샷). 김경현도 5,050배였다.
         //    0.001 검사만으로는 못 막는다. 메시 정점으로 다시 재서 **둘 중 큰 값**을 쓴다.
-        Vector3 size = Vector3.Max(bounds.size, MeasureMeshes(visual));
+        //
+        //    🔴 2026-09-15 그런데 둘 중 큰 값이 **렌더러 경계**면 그게 틀린 값이다. 스킨 렌더러 경계는 메시 경계를 루트뼈 축으로
+        //       돌려 감싼 상자라, 루트뼈(Hips 등)가 비스듬하면 사방으로 부푼다 — 걷는 남성 스캔(특별함_최동준)은 실제 키 16.5인데
+        //       렌더러 경계가 20이라 작게 줄었고, 그 부푼 바닥에 맞춰 1.57 떴다. 사장님 「노가리 스킨이 맵에 너무 띄워져 있다」
+        //       (잉어는 몸높이의 1/3). 줄세우기로 재니 유닛 52개 중 24개가 0.4~2.0 떠 있었다.
+        //       → 메시 경계가 재지면 그것만 쓴다(맵 인형·줄세우기와 같은 잣대). 렌더러 경계는 메시를 못 잴 때의 대비책.
+        Bounds? meshBounds = MeasureMeshBounds(visual);
+        bool meshMeasured = meshBounds.HasValue && meshBounds.Value.size.y > 0.001f;
+        Vector3 size = meshMeasured ? meshBounds.Value.size : bounds.size;
 
         // 사람은 키(Y)에 맞춘다. 사람이 아닌 모델(네 발 짐승·탈것)은 **가장 긴 축**에 맞춘다 —
         // 몸길이가 키보다 긴 짐승을 키로 맞추면 몸길이가 기준을 넘어 거대해진다
@@ -1175,8 +1188,9 @@ public static class ArtBinder
             {
                 visual.transform.localScale *= factor;
 
-                // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발이 바닥에 닿게 내린다.
-                bounds = MeasureRenderers(visual);
+                // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발이 바닥에 닿게 내린다 — 크기를 잰 것과 같은 잣대로(위 🔴 09-15).
+                meshBounds = meshMeasured ? MeasureMeshBounds(visual) : null;
+                bounds = meshBounds ?? MeasureRenderers(visual);
                 if (!keepOrigin && bounds.size.y > 0.001f)
                     visual.transform.position += Vector3.up * (root.transform.position.y - bounds.min.y);
             }
