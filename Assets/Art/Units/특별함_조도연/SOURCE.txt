@@ -1,0 +1,26 @@
+출처: Sketchfab — "league_of_legend_fan_arttahm_kench" (리그 오브 레전드 탐 켄치 팬아트, 두꺼비 거구)
+받은 날: 2026-09-14 · 유닛: 특별함_조도연 (unitName 좆돼지, Special)
+원본(보존 — 지우지 말 것): ~/Downloads/league_of_legend_fan_arttahm_kench.glb · 6813384 bytes · sha256 7487b93675f10a749fc6d9e27cbbd09b4a490e618656e674e73742636eda144c
+glb: mGear 리그(스킨 1 · 조인트 94, <부위>_<C0/L0/R0>_<이름>_Jnt_<n>) · 메시 11(+조명용 Icosphere) · 삼각형 16,194 · 애니메이션 1(Take 001, 정지 자세) · 재질 2 · 이미지 8
+
+정리: 2026-09-14 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_조도연」으로 재현(source = 이 glb).
+  - 🔴 가중치 없는 조인트 19개의 inverseBindMatrices가 단위행렬 → 결합 자세로 읽으면 원점에 뭉개졌다(왼팔 upperarm·hand, 왼다리 thigh·calf·foot,
+    neck_C0_0/1, chain_C0_3, 눈·입 보조, 오른쪽 leaf_ 넷, 루트 둘). glb_fix_identity_ibm: 멀쩡한 자식의 결합 자리 × 자식 로컬⁻¹(leaf_ 자식은 로컬 단위라
+    본 뼈 = leaf 자리), 자식이 없으면 부모 결합 × 제 로컬로 IBM을 다시 채워 임시 glb로 재포장. 가중치 있는 조인트는 그대로라 정점 불변. 94뼈 제자리·좌우 대칭.
+  - leaf_ 뼈는 본 뼈의 자식(형제 아님). 가중치: 오른쪽은 본 뼈, 왼쪽은 leaf_ — 매핑은 본 뼈(leaf_가 따라감).
+  - 얼굴·혀 조인트의 비균일 배율(혀 최대 ×2.2 등)은 장면 노드 자세에만 있고 IBM엔 없다(det 1) — 결합 자세로 읽어 영향 없음.
+  - 뼈 이름 → mixamorig(22개): spine_C0_pelvis→Hips · spine_01→Spine · spine_02→Spine1 · spine_04→Spine2(spine_03은 중간 뼈 — 04가 목·어깨의 부모) ·
+    neck_C0_0→Neck(neck_1·2 중간) · neck_C0_head→Head · shoulder→Shoulder · upperarm→Arm · lowerarm→ForeArm · hand→Hand · thigh→UpLeg · calf→Leg · foot→Foot · ball→ToeBase.
+    손가락(엄지+둘)·눈·턱·모자·수염·혀는 원래 이름 그대로(매핑 안 함).
+  - 🔸 혀(Object_280, thongue_C0_0~4)가 쉬는 자세에서 입 밖 앞으로 1.06m(몸 키보다 김) — PM 결정(a): 첫 혀 뼈 머리 중심으로 사슬 방향 성분만 ×0.285
+    (정점 237·혀 뼈 쉬는 자리 같이). 혀 끝이 윗니 앞면보다 0.07m 뒤 — 입 앞 확대 렌더에서 입술·이 밖으로 안 나옴.
+  - 🔸 메기 수염(stach_R0/L0_0~3)이 결합 자세에선 입 양옆으로 곧게 뻗은 막대 — Take 001 0프레임의 수염 8뼈 자세로 굳혀 턱 앞으로 늘어뜨림.
+  - 꼬리 chain_C0_0(가중치 524/418/318 사슬)이 root_C0_root 밑(pelvis 형제) → mixamorig:Hips 밑으로 다시 붙임.
+  - 쉬는 자세 A자(위팔 수평 아래 21°·뒤로 15°) → T자로 굽힘: Arm·ForeArm ±X, 굽기 오차 0. 쇄골(Shoulder)은 위·뒤로 45°라 펴지 않음(어깨 몸통 보존), 손바닥 굴리기는 손가락 매핑이 없어 건너뜀.
+  - 조명용 Icosphere 뺌 · glTF 메시 노드 빈 오브젝트는 뼈로 안 살림 · orient_snap · 모자 포함 키 1.8m(모자 뺀 머리 꼭대기 1.605) · 발 z 0 · 정면 −Y. 뼈 94.
+    크기 2.973 × 1.92 × 1.8 m(T자 팔 · 뒤로 뻗은 꼬리).
+
+재질 → 텍스처(재질 이름 그대로, glb 내장 이미지 원본 바이트, 1024 RGB PNG — 알파 없음):
+  Body   → Body_baseColor.png(이미지 0) + Body_normal.png(이미지 2)
+  Assets → Assets_baseColor.png(이미지 3) + Assets_normal.png(이미지 6)
+  안 쓴 이미지: 1·4(ORM — 금속·거칠기·차폐), 5(Assets 발광), 7(Assets 스펙큘러, RGBA) — FBX가 안 실음.

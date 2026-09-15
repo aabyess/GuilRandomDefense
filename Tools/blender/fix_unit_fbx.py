@@ -177,6 +177,15 @@ for _s, _side, _arm, _leg in (("R", "Right", 7, 42), ("L", "Left", 23, 47)):
                          f"{_s}_Elbow_{_arm + 2}": f"mixamorig:{_side}ForeArm", f"{_s}_Hand_{_arm + 3}": f"mixamorig:{_side}Hand",
                          f"{_s}_Hip_{_leg}": f"mixamorig:{_side}UpLeg", f"{_s}_KneeUpper_{_leg + 1}": f"mixamorig:{_side}Leg",
                          f"{_s}_Foot_{_leg + 3}": f"mixamorig:{_side}Foot", f"{_s}_Toe_{_leg + 4}": f"mixamorig:{_side}ToeBase"})
+# 탐 켄치(LoL 팬아트 glb, mGear 리그, 2026-09-14): <부위>_<C0/L0/R0>_<이름>_Jnt_<n> → mixamorig. spine 넷 중 03은 중간 뼈(04가 목·어깨의 부모라 Spine2).
+#   왼쪽 본 뼈는 가중치 0(leaf_ 자식이 짐)이지만 매핑은 본 뼈 — leaf_는 자식이라 따라간다. 손가락(엄지+둘)·눈·턱은 매핑 안 함.
+TAHM_RENAME = {"spine_C0_pelvis_Jnt_01": "mixamorig:Hips", "spine_C0_spine_01_Jnt_02": "mixamorig:Spine", "spine_C0_spine_02_Jnt_03": "mixamorig:Spine1",
+               "spine_C0_spine_04_Jnt_05": "mixamorig:Spine2", "neck_C0_0_Jnt_06": "mixamorig:Neck", "neck_C0_head_Jnt_09": "mixamorig:Head"}
+for _s, _side, _n in (("R", "Right", (39, 40, 42, 44, 76, 78, 80, 82)), ("L", "Left", (58, 59, 61, 63, 83, 85, 87, 69))):
+    TAHM_RENAME.update({f"shoulder_{_s}0_shoulder_Jnt_0{_n[0]}": f"mixamorig:{_side}Shoulder", f"arm_{_s}0_upperarm_Jnt_0{_n[1]}": f"mixamorig:{_side}Arm",
+                        f"arm_{_s}0_lowerarm_Jnt_0{_n[2]}": f"mixamorig:{_side}ForeArm", f"arm_{_s}0_hand_Jnt_0{_n[3]}": f"mixamorig:{_side}Hand",
+                        f"leg_{_s}0_thigh_Jnt_0{_n[4]}": f"mixamorig:{_side}UpLeg", f"leg_{_s}0_calf_Jnt_0{_n[5]}": f"mixamorig:{_side}Leg",
+                        f"leg_{_s}0_foot_Jnt_0{_n[6]}": f"mixamorig:{_side}Foot", f"foot_{_s}0_ball_Jnt_0{_n[7]}": f"mixamorig:{_side}ToeBase"})
 NARUTO_FACE_RUNS = [["nrt_tex02", 450], ["nrt_eye", 62], ["nrt_tex01", 1106], ["nrt_tex02", 1919]]
 UNITS = {
     "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
@@ -458,6 +467,22 @@ UNITS = {
                                       "Hand": f"mixamorig:{side}Hand"} for s, side in (("L", "Left"), ("R", "Right"))},
                       glb_images={0: "Garen_Base_Mat.png"},
                       materials=dict(textures={"Garen_Base_Mat": [("DiffuseColor", "Garen_Base_Mat.png")]})),
+    # 탐 켄치(LoL 팬아트 glb, mGear 뼈 94·메시 11·삼각형 16,194): 🔴 가중치 없는 조인트 19개(왼팔·왼다리 본 뼈·neck_C0_0/1·chain_C0_3 등)의 IBM이 단위행렬 →
+    #   결합 자세로 읽으면 원점에 뭉개졌다 → glb_fix_identity_ibm(자식 leaf_ 결합 자리에서 되짚음). 얼굴·혀 비균일 배율은 장면 노드 자세에만 있고 IBM엔 없다(det 1).
+    #   혀(Object_280, thongue_C0_0~4)가 쉬는 자세에서 입 밖 앞으로 1.06m(몸 키 1.03m보다 김) — PM 결정(a) 입 안으로: 사슬 방향으로 0.285배(끝이 윗니 앞 −0.485 뒤 −0.44).
+    #   🔸 메기 수염(stach_R0/L0_0~3)이 결합 자세에선 입 양옆으로 곧게 뻗은 막대(좌우 0.4) — Take 001(정지 자세 클립) 0프레임의 수염 8뼈 자세로 굳혀 늘어뜨린다.
+    #   꼬리 chain_C0_0~2(가중치 524/418/318)가 root 밑(pelvis 형제) → Hips 밑으로. 쇄골이 위·뒤로 45°라 쇄골은 안 펴고 위팔부터 T자(수평 아래 21°).
+    #   모자 포함 키 1.8. 재질 Body(이미지 0 + 노멀 2)·Assets(3 + 노멀 6) — 1(ORM)·4(ORM)·5(발광)·7(스펙큘러)은 FBX가 안 실음.
+    "특별함_조도연": dict(path="Assets/Art/Units/특별함_조도연/특별함_조도연.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(DL, "league_of_legend_fan_arttahm_kench.glb"), glb_fix_identity_ibm=True, no_nulls=True, drop_meshes=["Icosphere"],
+                      squash_chain=dict(bones=[f"thongue_C0_{i}_Jnt_0{26 + i}" for i in range(5)], factor=0.285),
+                      pose_from_clip=("Take 001", 0, [f"stach_{s}0_{i}_Jnt_0{base + i}" for s, base in (("R", 31), ("L", 35)) for i in range(4)]),
+                      rename_bones=TAHM_RENAME, orient_snap=True, reparent_bones={"chain_C0_0_Jnt_089": "mixamorig:Hips"},
+                      tpose_arms={s: {"UpperArm": f"mixamorig:{side}Arm", "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                                  for s, side in (("L", "Left"), ("R", "Right"))},
+                      glb_images={0: "Body_baseColor.png", 2: "Body_normal.png", 3: "Assets_baseColor.png", 6: "Assets_normal.png"},
+                      materials=dict(textures={"Body": [("DiffuseColor", "Body_baseColor.png"), ("NormalMap", "Body_normal.png")],
+                                               "Assets": [("DiffuseColor", "Assets_baseColor.png"), ("NormalMap", "Assets_normal.png")]})),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")
@@ -800,7 +825,8 @@ def tpose_arms(arm, meshes, report, names=None):
         d = Vector((1.0 if side == "L" else -1.0, 0.0, 0.0))
         # names = {"L": {"Clavicle": 뼈, "UpperArm": 뼈, "Forearm": 뼈, "Hand": 뼈, ...손가락 선택}, "R": {...}} — 없으면 Biped 이름(Bip001 L …)
         b = (lambda k, _m=names[side]: _m.get(k, f"__없음_{k}")) if names else (lambda k, _s=side: f"Bip001 {_s} {k}")
-        align(b("Clavicle"), b("Clavicle"), b("UpperArm"), d)
+        if have(b("Clavicle")):                                         # 쇄골 없이 넘기면 안 굽힘(탐 켄치: 쇄골이 위·뒤로 45° — 펴면 어깨 몸통이 크게 틀어진다)
+            align(b("Clavicle"), b("Clavicle"), b("UpperArm"), d)
         align(b("UpperArm"), b("UpperArm"), b("Forearm"), d)
         align(b("Forearm"), b("Forearm"), b("Hand"), d)
         skipped = []
@@ -950,6 +976,76 @@ def unscale_glb_joint(src, joint_name):
     return out, dict(배율=s, 자손=len(desc))
 
 
+def repair_glb_identity_ibm(src):
+    """가중치 없는 조인트에 inverseBindMatrices가 단위행렬로 박힌 glb(mGear 리그 탐 켄치 — 왼팔·왼다리 본 뼈, neck_C0_0 등 19개)를 고쳐 임시 glb로 다시 싼다.
+    결합 자세 추정이 IBM으로 뼈를 세우니 그 뼈들이 원점에 뭉개졌다(2026-09-14). 결합 세계 행렬 B = IBM⁻¹:
+      자식 중 IBM이 멀쩡한 게 있으면 B = B_자식 × 자식 로컬⁻¹(leaf_ 자식은 로컬이 단위라 본 뼈 = leaf 자리) — 아래에서 위로 되풀이,
+      없으면 B = B_부모 × 제 로컬(끝 뼈) — 위에서 아래로. 회전은 직교화(뼈는 배율을 못 담는다). 가중치 있는 조인트는 IBM이 멀쩡하니 스킨 정점은 그대로."""
+    import json as _json
+    import struct as _struct
+    import numpy as np
+    b = open(src, "rb").read()
+    n = _struct.unpack_from("<I", b, 12)[0]
+    j = _json.loads(b[20:20 + n])
+    blen = _struct.unpack_from("<I", b, 20 + n)[0]
+    binc = bytearray(b[20 + n + 8:20 + n + 8 + blen])
+    nodes = j["nodes"]
+    parent = {c: i for i, nd in enumerate(nodes) for c in nd.get("children", [])}
+
+    def local(i):
+        nd = nodes[i]
+        if "matrix" in nd:
+            return np.array(nd["matrix"], dtype=np.float64).reshape(4, 4).T
+        x, y, z, w = nd.get("rotation", [0.0, 0.0, 0.0, 1.0])
+        R = np.array([[1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
+                      [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
+                      [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)]])
+        M = np.eye(4)
+        M[:3, :3] = R * np.array(nd.get("scale", [1.0, 1.0, 1.0]))
+        M[:3, 3] = nd.get("translation", [0.0, 0.0, 0.0])
+        return M
+
+    def ortho(M):
+        U, _, Vt = np.linalg.svd(M[:3, :3])
+        out = M.copy()
+        out[:3, :3] = U @ Vt
+        return out
+
+    fixed = []
+    for sk in j["skins"]:
+        acc = j["accessors"][sk["inverseBindMatrices"]]
+        bv = j["bufferViews"][acc["bufferView"]]
+        start = bv.get("byteOffset", 0) + acc.get("byteOffset", 0)
+        m = np.frombuffer(bytes(binc[start:start + 64 * acc["count"]]), dtype="<f4").reshape(-1, 4, 4).astype(np.float64)
+        slot = {joint: k for k, joint in enumerate(sk["joints"])}
+        bind = {joint: np.linalg.inv(m[k].T) for joint, k in slot.items() if np.abs(m[k] - np.eye(4)).max() > 1e-6}
+        todo = [joint for joint in sk["joints"] if joint not in bind]
+        changed = True
+        while changed:
+            changed = False
+            for joint in list(todo):
+                kid = next((c for c in nodes[joint].get("children", []) if c in bind), None)
+                if kid is not None:
+                    bind[joint] = ortho(bind[kid] @ np.linalg.inv(local(kid)))
+                elif parent.get(joint) in bind:
+                    bind[joint] = ortho(bind[parent[joint]] @ local(joint))
+                else:
+                    continue
+                todo.remove(joint)
+                m[slot[joint]] = np.linalg.inv(bind[joint]).T
+                fixed.append(nodes[joint].get("name", str(joint)))
+                changed = True
+        binc[start:start + 64 * acc["count"]] = m.astype("<f4").tobytes()
+    js = _json.dumps(j, separators=(",", ":")).encode()
+    js += b" " * (-len(js) % 4)
+    binc += b"\x00" * (-len(binc) % 4)
+    out = os.path.join(tempfile.mkdtemp(prefix="fix_unit_glb_"), os.path.basename(src))
+    with open(out, "wb") as f:
+        f.write(_struct.pack("<III", 0x46546C67, 2, 12 + 8 + len(js) + 8 + len(binc)) + _struct.pack("<II", len(js), 0x4E4F534A) + js
+                + _struct.pack("<II", len(binc), 0x004E4942) + bytes(binc))
+    return out, dict(고친_조인트=len(fixed), 이름=fixed)
+
+
 def extract_archive(archive, members):
     """압축 원본(rar·zip)에서 필요한 파일만 임시 폴더로 — bsdtar(libarchive)가 rar도 읽는다. 받은 순서대로 경로를 돌려준다."""
     tmp = tempfile.mkdtemp(prefix="fix_unit_arc_")
@@ -983,6 +1079,9 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     unscale_info = None
     if cfg.get("glb_unscale_joint"):
         src, unscale_info = unscale_glb_joint(src, cfg["glb_unscale_joint"])
+    ibm_info = None
+    if cfg.get("glb_fix_identity_ibm"):                                 # 가중치 없는 조인트의 단위행렬 IBM → 뼈가 원점에 뭉개짐(탐 켄치)
+        src, ibm_info = repair_glb_identity_ibm(src)
     if cfg.get("archive"):                                              # 새로 들이는 스킨(git 원본 없음): 다운로드 압축에서 FBX·텍스처를 꺼내 읽는다
         *outer, member = cfg["archive"]                                 # (압축, 파일) 또는 (zip, zip 안 rar, 파일) — 겹친 압축은 안쪽부터 꺼낸다
         arc = outer[0]
@@ -1002,6 +1101,8 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     report = {"이름": name, "원본": f"{cfg.get('rev', '작업 파일')} {os.path.basename(src)}"}
     if unscale_info:
         report["glb 조인트 배율 풂"] = dict(unscale_info, 조인트=cfg["glb_unscale_joint"])
+    if ibm_info:
+        report["glb 단위 IBM 고침"] = ibm_info["고친_조인트"]
     ref = reference(orig) if recipe is not None else None
     guess = cfg.get("gltf_guess_bind", True)
     held_pose = clip_pose(src, guess, *cfg["pose_from_clip"]) if cfg.get("pose_from_clip") else None
@@ -1091,6 +1192,44 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         report["재질 새로"] = build_materials(cfg["materials"], os.path.join(os.path.dirname(dst_path), "Textures"))
     meshes = [o for o in scene.objects if o.type == "MESH"]
     mats_before = sorted({s.material.name for o in meshes for s in o.material_slots if s.material})
+    if arm is not None and cfg.get("squash_chain"):
+        # 쉬는 자세에서 입 밖으로 뻗은 혀(탐 켄치): 첫 뼈 머리를 중심으로 사슬 방향 성분만 factor배 — 정점(사슬 가중치 비율만큼)과 사슬 뼈 쉬는 자리를 같이.
+        #   자세는 단위라 쉬는 자리를 옮겨도 스킨 변형은 그대로 0이다. 중심 뒤쪽(입 안 뿌리) 정점은 안 건드린다.
+        sq = cfg["squash_chain"]
+        chain, f = sq["bones"], sq["factor"]
+        W0 = arm.matrix_world
+        pivot = W0 @ arm.data.bones[chain[0]].head_local
+        axis = ((W0 @ arm.data.bones[chain[-1]].head_local) - pivot).normalized()
+
+        def squash(p, w=1.0):
+            t = (p - pivot).dot(axis)
+            return p - axis * (t * (1.0 - f) * w) if t > 0 else p
+
+        moved = 0
+        for m in meshes:
+            ids = {g.index for g in m.vertex_groups if g.name in chain}
+            if not ids:
+                continue
+            assert not m.data.shape_keys, f"{name}: {m.name} 모양 키가 있어 사슬을 줄이지 못한다"
+            Mw = m.matrix_world
+            Mi = Mw.inverted()
+            for v in m.data.vertices:
+                tot = sum(g.weight for g in v.groups)
+                w = sum(g.weight for g in v.groups if g.group in ids)
+                if w > 0 and tot > 0:
+                    v.co = Mi @ squash(Mw @ v.co, w / tot)
+                    moved += 1
+        for o in scene.objects:
+            o.select_set(o == arm)
+        bpy.context.view_layer.objects.active = arm
+        bpy.ops.object.mode_set(mode="EDIT")
+        Wi = W0.inverted()
+        for n in chain:
+            eb = arm.data.edit_bones[n]
+            eb.head, eb.tail = Wi @ squash(W0 @ eb.head), Wi @ squash(W0 @ eb.tail)
+        bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.context.view_layer.update()
+        report["사슬 줄임"] = f"{chain[0]}~{chain[-1]} ×{f} · 정점 {moved}"
 
     # ── 기본 자세 그대로 붙잡기
     if arm is not None:
