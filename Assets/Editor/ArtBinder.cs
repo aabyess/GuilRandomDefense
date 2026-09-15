@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
@@ -121,6 +122,8 @@ public static class ArtBinder
         ("해적선", 1.0f),
         // 특별함_노건완(노가리, 잉어 — 2026-09-14): 몸길이 기준, 재규어와 같은 0.45(몸길이 약 9). 사장님 보고 조정.
         ("특별함_노건완", 0.45f),
+        // 특별함_김정래(프로그래머, 노트북 — 2026-09-15): 뼈 없는 소품. 가로(가장 긴 변) 기준 0.6(가로 약 12·키 약 8) — 사람보다 작게. 사장님 보고 조정.
+        ("특별함_김정래", 0.6f),
         // 자전거(2026-09-13 blender 재내보내기 — 두 바퀴가 바닥, 길이 1.8m). 가장 긴 축(길이)을 사람 키 20에 맞춘다 —
         // 실제로도 자전거 길이 ≈ 사람 키라 키는 약 12. 옛 표(ModelAdjustments 키 10)와 거의 같은 크기다.
         ("안흔함_상붕카", 1.0f),
@@ -581,11 +584,19 @@ public static class ArtBinder
         return null;
     }
 
+    // 색이 아닌 맵 이름 — 구분자(_ - 공백 .)로 떨어진 낱말만. 흔함_강재규의 Body_Metallic·Body_Roughness·Body_Mixed_AO·Body_Height가
+    // 재질 Body에 Body_Base_Color와 똑같이 부분일치로 걸린다(09-15 전수 조사, 걸리는 폴더는 그 하나였다).
+    static readonly Regex NonColorMapName = new Regex(
+        @"(^|[_\-\s.])(emissive|emission|metallicroughness|metallic|roughness|occlusion|ao|height|specularglossiness|specular|glossiness|gloss)([_\-\s.]|$)",
+        RegexOptions.IgnoreCase);
+
     static Texture2D MatchTexture(string materialName, List<Texture2D> textures)
     {
         // 🔴 노멀맵은 색 텍스처 후보에서 뺀다(2026-09-14). 재질 material_0에 material_0_baseColor·material_0_normal이
         //    둘 다 부분일치로 걸린다 — 알파벳 순서 덕에 색이 먼저 잡혔을 뿐, 순서가 바뀌면 파란 노멀맵이 몸에 칠해진다.
         textures = textures.Where(t => !UnitTextureImporter.IsUnitNormalMap(AssetDatabase.GetAssetPath(t))).ToList();
+        // 🔴 같은 이유로 발광·금속·거칠기·차폐·반사 맵도 뺀다(2026-09-15 노트북 ComputerFrame_baseColor·ComputerFrame_emissive).
+        textures = textures.Where(t => !NonColorMapName.IsMatch(t.name)).ToList();
 
         string target = materialName.ToLowerInvariant();
 
