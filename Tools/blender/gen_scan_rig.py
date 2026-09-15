@@ -68,12 +68,8 @@ from gen_skin_rig import judge, POSES  # noqa: E402 — 판정 렌더도 그대�
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 PREFIX = "mixamorig:"
 
-UNIT = "특별함_최동준"
-SOURCE = os.path.expanduser("~/Downloads/free_download_athletic_african_man_walking_223.glb")
-OUT_PATH = f"Assets/Art/Units/{UNIT}/{UNIT}.fbx"
-HEIGHT = 1.8                       # 최종 키(m)
-CENTER_BAND = (0.02, 0.08)         # 발목 높이(원본 키 비율) — 두 발 사이로 원점(gen_skin_rig.py와 같은 방식)
-DECIMATE_RATIO = 0.4               # 99,994 → 약 4만 삼각형(균등 감량 — 이유는 아래 build() 주석)
+# 유닛 표(2026-09-15 blender — 두 번째 유닛 특별함_강주혁을 받으며 표로 바꿈). 관절 좌표는 원본 단위·rotate_z 적용 뒤 좌표계.
+#   center_band: 발목 높이(원본 키 비율) — 두 발 사이로 원점 · decimate: 균등 감량 비율 · textures: (소켓, glb 이미지 번호, 파일 이름)
 
 # ── 관절(원본 스캔 cm, 월드 좌표) — 위 docstring 참고. z=바닥 기준 실측 높이, x=+왼쪽/−오른쪽, y=−앞/+뒤.
 # 🔴 2차(blender, 2026-09-15) 윗몸 다시 잼 — 1차 표는 위팔 관절이 x ±10·z 123(가슴 속, 실제보다 8cm 안·11cm 아래), 목이 z 131이라
@@ -92,6 +88,43 @@ JOINTS_CM = dict(
     RightUpLeg=(-9, 0, 84), RightLeg=(-6.7, 17.1, 50.4), RightFoot=(0.3, 34.6, 8),
     RightToeBase=(0, 24.6, 3), RightToeTip=(0, 14.6, 2),
 )
+
+UNITS = {
+    "특별함_최동준": dict(
+        source=os.path.expanduser("~/Downloads/free_download_athletic_african_man_walking_223.glb"),
+        height=1.8, center_band=(0.02, 0.08), decimate=0.4, rotate_z=0.0, joints=JOINTS_CM,
+        textures=[("Base Color", 0, "default_baseColor.jpg"), ("Normal", 1, "default_normal.png")]),
+    # HxH 키메라 앤트 코알라(tripo AI 생성 glb, 뼈 없음) — 구현담당1이 gen_skin_rig.py(좌우 대칭 관절표)로 3회 시도하다 왼팔 가중치가 죽어 멈춤(PM 인계 09-15).
+    #   65536 정점 한도로 4조각 → 합쳐 이음새 붙이면 섬 1(경계변 19). 원본 Z 위·정면 +X → rotate_z −90. UV 네 벌이 바이트 동일(노멀 texCoord 2도 UV0과 같음).
+    #   관절은 높이 0.01 단면(스크래치 koala/slices.py): 다리 x ±0.075·y 0.04 곧게(z −0.20~−0.42), 윗도리 밑단에서 합침 z −0.23, 목 좁아짐 z 0.11~0.13,
+    #   오른팔(−X)은 앞으로 소품 쥔 손(손목 (−0.21, −0.02, −0.16)), 왼팔(+X)은 윗도리 옆에 붙어 주머니로(팔꿈치 (0.18, 0.08, −0.06)). 큰 신발은 앞·바깥 35°로 벌어짐.
+    #   다리는 이미 곧아 팔만 T자로 편다(신발 방향은 그대로). 손에 든 소품(아래 둥근 공 + 위 호리병, 손이 가운데 목을 쥠)은 베이스 텍스처 황갈색으로 골라 RightHand 100%.
+    "특별함_강주혁": dict(
+        source=os.path.expanduser("~/Downloads/hxh__koala_chimera_ant.glb"),
+        height=1.8, center_band=(0.02, 0.08), decimate=0.086, rotate_z=-90.0,
+        joints=dict(
+            Hips=(0, 0.03, -0.19), Spine=(0, 0.03, -0.12), Spine1=(0, 0.035, -0.04), Spine2=(0, 0.04, 0.03),
+            Neck=(0, 0.04, 0.10), Head=(0, 0.03, 0.14), HeadTop=(0, 0.03, 0.46),
+            LeftShoulder=(0.04, 0.05, 0.075), LeftArm=(0.145, 0.06, 0.065), LeftForeArm=(0.19, 0.06, -0.07),
+            LeftHand=(0.165, 0.05, -0.16), LeftHandTip=(0.13, 0.05, -0.20),
+            RightShoulder=(-0.04, 0.05, 0.075), RightArm=(-0.14, 0.07, 0.07), RightForeArm=(-0.185, 0.03, -0.06),
+            RightHand=(-0.21, -0.02, -0.16), RightHandTip=(-0.215, -0.03, -0.21),
+            LeftUpLeg=(0.075, 0.04, -0.20), LeftLeg=(0.077, 0.045, -0.31), LeftFoot=(0.077, 0.045, -0.42),
+            LeftToeBase=(0.17, -0.04, -0.46), LeftToeTip=(0.25, -0.10, -0.47),
+            RightUpLeg=(-0.075, 0.04, -0.20), RightLeg=(-0.07, 0.04, -0.31), RightFoot=(-0.07, 0.04, -0.42),
+            RightToeBase=(-0.17, -0.04, -0.46), RightToeTip=(-0.23, -0.07, -0.47)),
+        straighten=["LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand", "RightShoulder", "RightArm", "RightForeArm", "RightHand"],
+        rigid_color=dict(bone="RightHand", texture="tripo_material_6a2fe4d0-e7a3-4194-a14c-a24004d42c3c_baseColor.jpg",
+                         hue=(15, 55), sat_min=0.35, val_min=0.18, box_src=(-0.40, -0.02, -0.30, 0.08, -0.36, 0.05), close=3, min_cluster=100,
+                         fill_src=0.015, fill_hue=(0, 70), fill_sat=0.12),
+        # 🔴 몸에 붙은 팔(1회차 T자 렌더): bone heat가 윗도리 옆판·허리를 팔 뼈에 실어 T자로 펴자 날개처럼 끌려 나왔다 → 팔 중심선 캡슐 밖 정점은 팔 가중치를 뺀다
+        arm_capsule=dict(radius_src=(0.045, 0.04, 0.04), margin_src=0.02),
+        closeups=[("armpit", 1.0, 0.9), ("crotch", 0.5, 0.6)],
+        # 머리+큰 귀털이 키의 40%·정점 밀도도 높아 Head 몫이 56%로 나온다(실패 아님 — 22뼈 전부 가중치·빈 정점 0, 복셀 대리 메시로 옮겨도 56%로 같음)
+        max_bone_share=0.65,
+        textures=[("Base Color", 0, "tripo_material_6a2fe4d0-e7a3-4194-a14c-a24004d42c3c_baseColor.jpg"),
+                  ("Normal", 2, "tripo_material_6a2fe4d0-e7a3-4194-a14c-a24004d42c3c_normal.jpg")]),
+}
 
 # (뼈, 머리 관절, 꼬리 관절, 부모) — gen_skin_rig.py의 SPINE/LIMB와 같은 모양이지만, 여기서는
 # 팔다리 표가 애초에 Left*/Right*로 따로 있어(대칭 거울식 계산이 없다) 그대로 딕셔너리 키로 찾는다.
@@ -129,7 +162,7 @@ def bone_table(joints):
     return out
 
 
-def straighten_limbs(arm, body):
+def straighten_limbs(arm, body, only=None):
     """걷는 자세 그대로 잡은 뼈대를 팔다리 네 사슬(어깨~손·엉덩이~발끝) 전부 T자로 편 뒤 그 자세를
     쉬는 자세로 굽는다 — gen_skin_rig.py의 level_arms()와 같은 기법(뼈 하나씩 현재 방향→목표 방향
     쿼터니언 회전)을 팔다리 전부·발까지 일반화했다. 굽기 전후 메시가 움직이지 않는지, 최종 뼈
@@ -139,7 +172,8 @@ def straighten_limbs(arm, body):
         o.select_set(o == arm)
     bpy.context.view_layer.objects.active = arm
     turned = {}
-    for bone, target in STRAIGHTEN:
+    plan = [(b, t) for b, t in STRAIGHTEN if only is None or b in only]
+    for bone, target in plan:
         pb = arm.pose.bones[PREFIX + bone]
         head, tail = pb.matrix.to_translation(), pb.tail.copy()
         d = (tail - head).normalized()
@@ -166,7 +200,7 @@ def straighten_limbs(arm, body):
     ev.to_mesh_clear()
     drift = float(np.abs(got - want).max())
     assert drift < 1e-4, f"이완 뒤 메시가 움직였다 {drift}"
-    for bone, target in STRAIGHTEN:
+    for bone, target in plan:
         b = arm.data.bones[PREFIX + bone]
         d = (b.tail_local - b.head_local).normalized()
         assert d.dot(target) > 0.995, f"{bone} 정렬 실패 {d} vs {target}"
@@ -245,6 +279,189 @@ def bone_weights(mesh, table, data, k=3, smooth_iters=3):
     return top, wk, names
 
 
+def mask_arm_weights(body, G, joints, spec):
+    """몸에 붙은 팔(코알라 왼팔 주머니·오른팔 소품): 팔 사슬(Arm→ForeArm→Hand→HandTip) 중심선에서 반지름(구간별) 밖 정점은 그쪽 팔 뼈 가중치를
+    margin 거리에 걸쳐 0으로 줄이고 남은 뼈로 다시 정규화 — T자로 팔을 들 때 윗도리 옆판이 날개처럼 끌려가지 않게. 남은 게 없으면 가장 가까운 정점 가중치 복사."""
+    me = body.data
+    n = len(me.vertices)
+    co = np.empty(n * 3)
+    me.vertices.foreach_get("co", co)
+    co = co.reshape(-1, 3)
+    scale = G.to_scale().x
+    groups = {g.name: g.index for g in body.vertex_groups}
+    Wm = np.zeros((n, len(body.vertex_groups)))
+    for v in me.vertices:
+        for ge in v.groups:
+            Wm[v.index, ge.group] = ge.weight
+    out = {}
+    for side in ("Left", "Right"):
+        pts = [np.array(G @ Vector(joints[side + k])) for k in ("Arm", "ForeArm", "Hand", "HandTip")]
+        factor = np.zeros(n)
+        for (a, b), r in zip(zip(pts[:-1], pts[1:]), spec["radius_src"]):
+            ab = b - a
+            t = np.clip(((co - a) @ ab) / max(ab @ ab, 1e-12), 0.0, 1.0)
+            d = np.linalg.norm(co - (a + np.outer(t, ab)), axis=1)
+            factor = np.maximum(factor, np.clip(1.0 - (d - r * scale) / (spec["margin_src"] * scale), 0.0, 1.0))
+        cols = [groups[PREFIX + side + k] for k in ("Arm", "ForeArm", "Hand") if PREFIX + side + k in groups]
+        before = (Wm[:, cols].sum(1) > 0.01).sum()
+        Wm[:, cols] *= factor[:, None]
+        out[side] = dict(팔가중치정점_전=int(before), 후=int((Wm[:, cols].sum(1) > 0.01).sum()))
+    total = Wm.sum(1)
+    empty = np.where(total <= 1e-6)[0]
+    if len(empty):
+        from mathutils.kdtree import KDTree
+        full = np.where(total > 1e-6)[0]
+        kd = KDTree(len(full))
+        for i in full:
+            kd.insert(Vector(co[i]), int(i))
+        kd.balance()
+        for i in empty:
+            Wm[i] = Wm[kd.find(Vector(co[i]))[1]]
+        total = Wm.sum(1)
+    Wm /= np.maximum(total, 1e-9)[:, None]
+    for g in body.vertex_groups:
+        col = Wm[:, g.index]
+        zero = [int(i) for i in np.where(col <= 1e-4)[0]]
+        if zero:
+            g.remove(zero)
+        for i in np.where(col > 1e-4)[0]:
+            g.add([int(i)], float(col[i]), "REPLACE")
+    out["다시채운정점"] = int(len(empty))
+    return out
+
+
+def rigid_by_color(body, G, spec, tex_dir):
+    """손에 든 소품(코알라: 아래 둥근 공 + 위 호리병)을 한 뼈 100%로. 소품이 손에 붙어 이음새를 붙이면 몸과 한 섬이라 섬으로는 못 가른다 —
+    베이스 텍스처 색(색상·채도·명도)을 정점 UV에서 뽑고 원본 좌표 상자(G로 옮김) 안에서 고른 뒤, 변 그래프로 닫기(팽창→침식, 줄무늬 구멍 메움)·
+    작은 조각 버림(min_cluster). 소품 정점의 다른 가중치는 지운다."""
+    me = body.data
+    img = bpy.data.images.load(os.path.join(tex_dir, spec["texture"]), check_existing=True)
+    w, h = img.size
+    px = np.empty(w * h * img.channels, dtype=np.float32)
+    img.pixels.foreach_get(px)
+    px = px.reshape(h, w, img.channels)
+    nl, n = len(me.loops), len(me.vertices)
+    uv = np.empty(nl * 2, dtype=np.float32)
+    me.uv_layers[0].data.foreach_get("uv", uv)
+    uv = uv.reshape(-1, 2)
+    lv = np.empty(nl, dtype=np.int64)
+    me.loops.foreach_get("vertex_index", lv)
+    xi = np.clip((np.mod(uv[:, 0], 1.0) * w).astype(int), 0, w - 1)
+    yi = np.clip((np.mod(uv[:, 1], 1.0) * h).astype(int), 0, h - 1)
+    col = np.zeros((n, 3))
+    cnt = np.zeros(n)
+    np.add.at(col, lv, px[yi, xi, :3])
+    np.add.at(cnt, lv, 1)
+    col /= np.maximum(cnt, 1)[:, None]
+    mx, mn = col.max(1), col.min(1)
+    sat = np.where(mx > 1e-6, (mx - mn) / np.maximum(mx, 1e-6), 0.0)
+    hue = np.degrees(np.arctan2(np.sqrt(3) * (col[:, 1] - col[:, 2]), 2 * col[:, 0] - col[:, 1] - col[:, 2])) % 360
+    co = np.empty(n * 3)
+    me.vertices.foreach_get("co", co)
+    co = co.reshape(-1, 3)
+    x0, x1, y0, y1, z0, z1 = spec["box_src"]
+    lo, hi = np.array(G @ Vector((x0, y0, z0))), np.array(G @ Vector((x1, y1, z1)))
+    box = np.all((co >= np.minimum(lo, hi)) & (co <= np.maximum(lo, hi)), axis=1)
+    sel = box & (hue > spec["hue"][0]) & (hue < spec["hue"][1]) & (sat > spec["sat_min"]) & (mx > spec["val_min"])
+    E = np.empty(len(me.edges) * 2, dtype=np.int64)
+    me.edges.foreach_get("vertices", E)
+    E = E.reshape(-1, 2)
+    for _ in range(spec.get("close", 3)):
+        t = sel.copy()
+        t[E[:, 0][sel[E[:, 1]]]] = True
+        t[E[:, 1][sel[E[:, 0]]]] = True
+        sel = t & box
+    for _ in range(spec.get("close", 3)):
+        t = sel.copy()
+        t[E[:, 0][~sel[E[:, 1]]]] = False
+        t[E[:, 1][~sel[E[:, 0]]]] = False
+        sel = t
+    adj = [[] for _ in range(n)]
+    for a, b in E[sel[E[:, 0]] & sel[E[:, 1]]]:
+        adj[a].append(b)
+        adj[b].append(a)
+    label = -np.ones(n, dtype=np.int64)
+    sizes = []
+    for v in np.where(sel)[0]:
+        if label[v] >= 0:
+            continue
+        k = len(sizes)
+        stack, size = [v], 0
+        label[v] = k
+        while stack:
+            x = stack.pop()
+            size += 1
+            for y in adj[x]:
+                if label[y] < 0:
+                    label[y] = k
+                    stack.append(y)
+        sizes.append(size)
+    keep = [k for k, sz in enumerate(sizes) if sz >= spec.get("min_cluster", 100)]
+    final = np.isin(label, keep)
+    filled = 0
+    if spec.get("fill_src"):
+        # 줄무늬(검은 갈색)·그늘진 안쪽 면이 색 문턱에서 빠져 몸 뼈에 남으면 T자에서 줄처럼 늘어났다 — 고른 소품 가까이의 넓은 황갈 계열은 소품으로
+        from mathutils.kdtree import KDTree
+        kd = KDTree(int(final.sum()))
+        for i in np.where(final)[0]:
+            kd.insert(Vector(co[i]), int(i))
+        kd.balance()
+        reach = spec["fill_src"] * G.to_scale().x
+        broad = box & ~final & (hue >= spec.get("fill_hue", (0, 70))[0]) & (hue <= spec.get("fill_hue", (0, 70))[1]) & (sat > spec.get("fill_sat", 0.12))
+        for i in np.where(broad)[0]:
+            if kd.find(Vector(co[i]))[2] <= reach:
+                final[i] = True
+                filled += 1
+    ids = [int(i) for i in np.where(final)[0]]
+    # 🔴 소품이 몸(배)에 닿은 자리에서 이음새를 붙이면 한 면으로 이어진다 — 손이 움직이면 소품(손 100%)↔배(Spine·Hips) 모서리가 100배로 찢겼다
+    #   (코알라 팔 안 편 시험: 팔45° 100×·Idle 113×, T자에선 그게 굽혀져 줄무늬 띠). 소품 면을 몸에서 떼어낸다 — 떼인 몸 쪽 고리 정점은 가장 가까운 비소품 정점 가중치로.
+    import bmesh
+    from mathutils.kdtree import KDTree
+    others = np.where(~final)[0]
+    kd = KDTree(len(others))
+    for i in others:
+        kd.insert(Vector(co[i]), int(i))
+    kd.balance()
+    body_w = {int(i): {ge.group: ge.weight for ge in me.vertices[int(i)].groups} for i in others}
+    for g in body.vertex_groups:
+        g.remove(ids)
+    grp = body.vertex_groups.get(PREFIX + spec["bone"]) or body.vertex_groups.new(name=PREFIX + spec["bone"])
+    grp.add(ids, 1.0, "REPLACE")
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bm.verts.ensure_lookup_table()
+    sel_set = set(ids)
+    prop_faces = [f for f in bm.faces if all(v.index in sel_set for v in f.verts)]
+    n_before = len(bm.verts)
+    bmesh.ops.split(bm, geom=prop_faces, use_only_faces=True)
+    loose = [v for v in bm.verts if not v.link_faces]
+    bmesh.ops.delete(bm, geom=loose, context="VERTS")
+    bm.verts.ensure_lookup_table()
+    dl = bm.verts.layers.deform.verify()
+    ring = 0
+    prop_face_verts = {v for f in bm.faces if f.select is False for v in f.verts}  # 자리 채움(아래에서 다시 계산)
+    prop_vert_ids = set()
+    for f in bm.faces:
+        pass
+    for v in bm.verts:
+        w = v[dl]
+        bone_idx = grp.index
+        if len(w) == 1 and bone_idx in w and w[bone_idx] >= 0.999:
+            # 손 100% 정점 — 몸 면에만 붙어 있으면(떼인 고리) 몸 가중치로 바꾼다. 소품 면은 전부 손 100% 정점만 쓰니 이웃 면 중 하나라도 비손 정점이면 몸 쪽.
+            body_side = any(any(not (len(u[dl]) == 1 and bone_idx in u[dl] and u[dl][bone_idx] >= 0.999) for u in f.verts) for f in v.link_faces)
+            if body_side:
+                j = kd.find(v.co)[1]
+                w.clear()
+                for gi, ww in body_w[j].items():
+                    w[gi] = ww
+                ring += 1
+    bm.to_mesh(me)
+    bm.free()
+    me.update()
+    return dict(뼈=spec["bone"], 정점=len(ids), 조각=sorted((sizes[k] for k in keep), reverse=True), 버린조각=len(sizes) - len(keep), 가까이채움=filled,
+                떼어낸면=len(prop_faces), 정점증가=len(me.vertices) - n_before, 몸쪽고리=ring)
+
+
 def fill_unweighted(body):
     """bone heat가 못 준 정점(합 0)은 가장 가까운 가중치 있는 정점의 가중치를 복사(static-skin-rigging 교훈 — 가까운 「뼈」로 주면 늘어난다)."""
     from mathutils.kdtree import KDTree
@@ -266,33 +483,51 @@ def fill_unweighted(body):
     return dict(빈정점=len(miss), 최대거리=round(far, 4))
 
 
-def build(out_dir=None, render_dir=None):
-    dst = os.path.join(out_dir, os.path.basename(OUT_PATH)) if out_dir else os.path.join(ROOT, OUT_PATH)
+def build(name, out_dir=None, render_dir=None):
+    cfg = UNITS[name]
+    out_path = f"Assets/Art/Units/{name}/{name}.fbx"
+    source = cfg["source"]
+    dst = os.path.join(out_dir, os.path.basename(out_path)) if out_dir else os.path.join(ROOT, out_path)
     tex_dir = os.path.join(os.path.dirname(dst), "Textures")
-    report = {"이름": UNIT, "원본": SOURCE, "sha256": hashlib.sha256(open(SOURCE, "rb").read()).hexdigest()}
+    report = {"이름": name, "원본": source, "sha256": hashlib.sha256(open(source, "rb").read()).hexdigest()}
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    bpy.ops.import_scene.gltf(filepath=SOURCE)
+    bpy.ops.import_scene.gltf(filepath=source)
     scene = bpy.context.scene
-    body = next(o for o in scene.objects if o.type == "MESH")
+    meshes = [o for o in scene.objects if o.type == "MESH" and not o.name.startswith("Icosphere")]
+    if len(meshes) > 1:
+        # 65536 정점 한도로 쪼개진 한 몸(코알라 4조각) — 세계 변환을 각자 데이터에 구운 뒤 하나로 합친다(이음새는 아래에서 붙인다)
+        for o in meshes:
+            o.data.transform(o.matrix_world)
+            o.parent = None
+            o.matrix_basis = Matrix.Identity(4)
+        for o in scene.objects:
+            o.select_set(o in meshes)
+        bpy.context.view_layer.objects.active = meshes[0]
+        bpy.ops.object.join()
+        report["합친 조각"] = len(meshes)
+    body = bpy.context.view_layer.objects.active if len(meshes) > 1 else meshes[0]
     body.name = body.data.name = "Body"
     report["원본 정점·삼각형"] = [len(body.data.vertices), sum(len(p.vertices) - 2 for p in body.data.polygons)]
+    if cfg.get("rotate_z"):                                             # 원본 정면이 −Y가 아니면(코알라 +X) 세계 변환과 함께 돌린다
+        body.data.transform(Matrix.Rotation(math.radians(cfg["rotate_z"]), 4, "Z") @ body.matrix_world)
+        body.parent = None
+        body.matrix_basis = Matrix.Identity(4)
 
     # ── 텍스처: PM 조사대로 이미지 0=베이스(jpeg)·1=노멀(png), 원본 바이트 그대로 Textures/에.
-    j, binchunk = glb(SOURCE)
+    j, binchunk = glb(source)
     os.makedirs(tex_dir, exist_ok=True)
-    base_path, normal_path = os.path.join(tex_dir, "default_baseColor.jpg"), os.path.join(tex_dir, "default_normal.png")
-    open(base_path, "wb").write(image_bytes(j, binchunk, 0))
-    open(normal_path, "wb").write(image_bytes(j, binchunk, 1))
-    rebuild_material(body.data.materials[0], [("Base Color", "default_baseColor.jpg"), ("Normal", "default_normal.png")], tex_dir)
+    for socket, index, fname in cfg["textures"]:
+        open(os.path.join(tex_dir, fname), "wb").write(image_bytes(j, binchunk, index))
+    rebuild_material(body.data.materials[0], [(socket, fname) for socket, index, fname in cfg["textures"]], tex_dir)
 
     # ── 중심맞춤·스케일(gen_skin_rig.py의 build()와 같은 식) — 회전은 불필요(이미 −Y를 본다,
     # raw_from_negY.png로 확인). 관절도 메시와 같은 G를 써서 어긋나지 않게 한다.
     world = np.array([body.matrix_world @ v.co for v in body.data.vertices])
     lo, hi = world.min(0), world.max(0)
     H = float(hi[2] - lo[2])
-    band = world[(world[:, 2] >= lo[2] + H * CENTER_BAND[0]) & (world[:, 2] <= lo[2] + H * CENTER_BAND[1])]
+    band = world[(world[:, 2] >= lo[2] + H * cfg["center_band"][0]) & (world[:, 2] <= lo[2] + H * cfg["center_band"][1])]
     cx, cy = float((band[:, 0].min() + band[:, 0].max()) / 2), float((band[:, 1].min() + band[:, 1].max()) / 2)
-    s = HEIGHT / H
+    s = cfg["height"] / H
     G = Matrix.Scale(s, 4) @ Matrix.Translation((-cx, -cy, -lo[2]))
     report["원본 키(cm)"], report["배율"] = round(H, 3), round(s, 6)
     body.data.transform(G @ body.matrix_world)
@@ -321,7 +556,7 @@ def build(out_dir=None, render_dir=None):
     # 설명(~/Downloads/특별함_최동준_mixamo업로드_설명.txt)이 이미 같은 이유로 균등 감량했고,
     # 이 파일도 시간상 그 판단을 따른다. 정점그룹으로 얼굴·손 보호는 나중에 필요하면 추가 가능).
     mod = body.modifiers.new("decimate", "DECIMATE")
-    mod.ratio = DECIMATE_RATIO
+    mod.ratio = cfg["decimate"]
     dg = bpy.context.evaluated_depsgraph_get()
     new_mesh = bpy.data.meshes.new_from_object(body.evaluated_get(dg), preserve_all_data_layers=True, depsgraph=dg)
     body.modifiers.remove(mod)
@@ -332,7 +567,7 @@ def build(out_dir=None, render_dir=None):
 
     # ── 뼈대: 22개(Hips 루트 + Spine·Spine1·Spine2·Neck·Head + 좌우 Shoulder·Arm·ForeArm·Hand
     # + 좌우 UpLeg·Leg·Foot·ToeBase) — 위 JOINTS_CM(걷는 자세 그대로, 좌우 따로)에 G를 적용해 짓는다.
-    table = bone_table(JOINTS_CM)
+    table = bone_table(cfg["joints"])
     data = bpy.data.armatures.new("Armature")
     arm = bpy.data.objects.new("Armature", data)
     scene.collection.objects.link(arm)
@@ -367,10 +602,16 @@ def build(out_dir=None, render_dir=None):
     report["뼈별 정점(w>0.01)"] = counts
     dead = [k for k, c in counts.items() if c == 0]
     assert not dead, f"가중치 없는 뼈 {dead}"
-    top_share = max(counts.values()) / len(body.data.vertices)
-    assert top_share < 0.5, f"한 뼈에 정점 {top_share:.0%} — bone heat 실패(1차 증상)"
+    top_bone = max(counts, key=counts.get)
+    top_share = counts[top_bone] / len(body.data.vertices)
+    report["최대 몫 뼈"] = [top_bone, round(top_share, 3)]
+    assert top_share < cfg.get("max_bone_share", 0.5), f"한 뼈({top_bone})에 정점 {top_share:.0%} — bone heat 실패(1차 증상)? 분포 {counts}"
 
-    report["걷는 자세→T자(°)"] = straighten_limbs(arm, body)
+    if cfg.get("arm_capsule"):
+        report["팔 캡슐"] = mask_arm_weights(body, G, cfg["joints"], cfg["arm_capsule"])
+    if cfg.get("rigid_color"):
+        report["손 소품 한 뼈"] = rigid_by_color(body, G, cfg["rigid_color"], tex_dir)
+    report["걷는 자세→T자(°)"] = straighten_limbs(arm, body, cfg.get("straighten"))
 
     # 🔴 다리를 곧게 펴면(사슬 길이는 그대로, 끝점만 바뀐다) 원래 걷는 자세에서 발목까지의 수직
     # 거리보다 편 다리의 길이가 더 길어져 발이 바닥(z=0) 밑으로 내려간다(실측: -0.07m) — 메시·
@@ -388,7 +629,7 @@ def build(out_dir=None, render_dir=None):
     bpy.context.view_layer.update()
     # 다리를 펴면 키가 늘어난다(1.8 → 1.873 실측) — 발 z 0 기준으로 메시·뼈대를 같이 줄여 키 1.8로
     top = max(v.co.z for v in body.data.vertices)
-    k = HEIGHT / top
+    k = cfg["height"] / top
     body.data.transform(Matrix.Scale(k, 4))
     bpy.ops.object.mode_set(mode="EDIT")
     for eb in arm.data.edit_bones:
@@ -407,38 +648,42 @@ def build(out_dir=None, render_dir=None):
                              mesh_smooth_type="FACE", path_mode="STRIP", embed_textures=False, bake_anim=False)
     report["출력"] = dst
     if render_dir:
-        report["판정"] = judge(UNIT, arm, body, render_dir)
-        report["옆구리·가랑이 확대"] = armpit_crotch_renders(arm, body, render_dir)
+        report["판정"] = judge(name, arm, body, render_dir)
+        report["옆구리·가랑이 확대"] = armpit_crotch_renders(name, arm, body, render_dir, cfg.get("closeups"))
     return report
 
 
-def armpit_crotch_renders(arm, body, out):
+def armpit_crotch_renders(unit, arm, body, out, closeups=None):
     """PM 요청 — T자에서 옆구리(겨드랑이)·가랑이 확대. judge()가 이미 만든 씬(카메라·조명)을 그대로 쓴다."""
     scene = bpy.context.scene
     for pb in arm.pose.bones:
         pb.matrix_basis = Matrix.Identity(4)
     bpy.context.view_layer.update()
     cam = scene.camera
-    views = [("armpit", (0, -3, 1.35), (math.radians(90), 0, 0), 0.7), ("crotch", (0, -3, 0.78), (math.radians(90), 0, 0), 0.6)]
+    views = [(tag, (0, -3, z), (math.radians(90), 0, 0), sc) for tag, z, sc in (closeups or [("armpit", 1.35, 0.7), ("crotch", 0.78, 0.6)])]
     for tag, loc, rot, sc in views:
         cam.location, cam.rotation_euler, cam.data.ortho_scale = loc, rot, sc
-        scene.render.filepath = os.path.join(out, f"{UNIT}_{tag}.png")
+        scene.render.filepath = os.path.join(out, f"{unit}_{tag}.png")
         bpy.ops.render.render(write_still=True)
-    return [f"{UNIT}_{tag}.png" for tag, *_ in views]
+    return [f"{unit}_{tag}.png" for tag, *_ in views]
 
 
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     out_dir = render_dir = None
+    names = []
     it = iter(args)
     for a in it:
         if a == "--out":
             out_dir = next(it)
         elif a == "--render":
             render_dir = next(it)
+        else:
+            names.append(a)
     import json
-    r = build(out_dir, render_dir)
-    print("리깅  " + json.dumps(r, ensure_ascii=False))
+    for name in names or list(UNITS):
+        r = build(name, out_dir, render_dir)
+        print("리깅  " + json.dumps(r, ensure_ascii=False))
 
 
 if __name__ == "__main__":
