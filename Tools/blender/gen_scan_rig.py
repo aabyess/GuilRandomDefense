@@ -94,6 +94,37 @@ UNITS = {
         source=os.path.expanduser("~/Downloads/free_download_athletic_african_man_walking_223.glb"),
         height=1.8, center_band=(0.02, 0.08), decimate=0.4, rotate_z=0.0, joints=JOINTS_CM,
         textures=[("Base Color", 0, "default_baseColor.jpg"), ("Normal", 1, "default_normal.png")]),
+    # 원피스 피규어 베르고(뼈 없는 glb, 28cm, 긴 누비 코트·팔을 코트 옆에 내린 선 자세·다리 벌림) — 2026-09-15 PM 인계: 구현담당1이 gen_skin_rig.py로 1차 리깅했지만
+    #   유니티에서 쉬는 가로 1.05 m(팔 뼈가 허리 높이 z 1.12에서 수평, Shoulder 뼈가 수직 아래)·Idle에서 코트 풍선·자락 훌라후프 → 원본부터 다시(좌우 따로 관절표).
+    #   관절은 원본 좌표 1% 단면(스크래치 vergo/arm_slices.py): 왼팔(+X)은 z 0.117~0.19에서 몸과 떨어져 x 0.041·y −0.366, 오른팔은 z 0.14~0.19 코트에 붙고 더 뒤(y −0.350),
+    #   겨드랑이 z 0.192 · 코트 밑단 z 0.044(다리는 그 밑에서 둘로) · 발목 x +0.040/−0.023(벌린 자세). 뼈 없는 원본의 오브젝트 이동(g0_0)은 G가 같이 굽는다.
+    "특별함_최준우": dict(
+        source=os.path.expanduser("~/Downloads/onepiece_figure_vergo.glb"), mesh_name="Vergo",
+        height=1.8, center_band=(0.30, 0.40), decimate=0.52, rotate_z=0.0,
+        joints=dict(
+            Hips=(0.002, -0.360, 0.1417), Spine=(0.002, -0.360, 0.1613), Spine1=(0.002, -0.361, 0.181), Spine2=(0.002, -0.362, 0.2005),
+            Neck=(0.002, -0.366, 0.2257), Head=(0.002, -0.370, 0.2411), HeadTop=(0.002, -0.370, 0.2733),
+            LeftShoulder=(0.008, -0.362, 0.208), LeftArm=(0.029, -0.362, 0.206), LeftForeArm=(0.0405, -0.364, 0.1711),
+            LeftHand=(0.0433, -0.3676, 0.1375), LeftHandTip=(0.043, -0.371, 0.1166),
+            # 🔴 오른팔은 2회차까지 소매 앞면(y가 소매 반지름만큼 앞)을 지나 bone heat가 아래 소매를 Shoulder·Spine에 줬다 → 소매 바깥 끝 x−반지름·앞뒤 끝 가운데로 다시 잼(vergo/sleeve.py)
+            RightShoulder=(-0.004, -0.360, 0.208), RightArm=(-0.024, -0.357, 0.206), RightForeArm=(-0.0305, -0.3435, 0.1711),
+            RightHand=(-0.0343, -0.3495, 0.1375), RightHandTip=(-0.029, -0.360, 0.1166),
+            LeftUpLeg=(0.016, -0.360, 0.1417), LeftLeg=(0.029, -0.357, 0.0718), LeftFoot=(0.040, -0.352, 0.013),
+            LeftToeBase=(0.050, -0.372, 0.003), LeftToeTip=(0.058, -0.388, 0.001),
+            RightUpLeg=(-0.012, -0.360, 0.1417), RightLeg=(-0.018, -0.357, 0.0718), RightFoot=(-0.023, -0.352, 0.013),
+            RightToeBase=(-0.035, -0.372, 0.003), RightToeTip=(-0.045, -0.388, 0.001)),
+        straighten=["LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand", "RightShoulder", "RightArm", "RightForeArm", "RightHand"],
+        # 🔸 6회차: 캡슐(0.009·0.0095·0.007, 여유 0.003)이 부푼 누비 소매 겉까지 잘라 오른팔 가중치 정점 4,746→2,369 — 코트는 가름·법선 마스크가 막으니 소매 전체가 들어가게 넓힘
+        arm_capsule=dict(radius_src=(0.013, 0.013, 0.010), margin_src=0.004),
+        # 🔴 1회차: 오른팔(코트에 붙음)이 T자에서 코트 옆판을 커튼처럼 끌고 나옴. 2회차 표면 거리 마스크는 소매·코트가 표면째 붙어 효과 0 →
+        #   법선이 팔 축을 향한 정점(소매 옆 코트 옆판)은 팔 가중치 빼기
+        arm_facing=dict(lo=-0.1, hi=0.2, smooth=2),
+        # 🔴 5회차: 팔 가중치 채우기(assign)는 경계 찢김만 키움(Idle 17배) → 6회차: bone heat 전에 오른 소매·코트 붙은 띠(원본 z 0.136~0.192) 면을 가름
+        arm_split=dict(sides=("Right",), radius_src=0.012, facing=0.45, z_src=(0.136, 0.192)),
+        # 코트 자락(엉덩이 z 0.1417 ~ 밑단 0.044): 팔 가중치는 그대로 두고 나머지를 Hips→좌우 UpLeg로(아래로 갈수록 넓적다리 몫) — 종아리·어깨에 안 실리게
+        coat_hem=dict(hip_src=0.1417, hem_src=0.044, band_src=0.012, center_x_src=0.002, split_src=0.008, share=0.8),
+        closeups=[("armpit", 1.25, 0.8), ("crotch", 0.55, 0.9)],
+        textures=[("Base Color", 0, "material_diffuse.png")]),
 }
 
 # 🗑 폐기(2026-09-15 사장님 지시 — 특별함_강주혁 모델을 아이언맨으로 교체, fix_unit_fbx.py로): 코알라는 AI 메시가 닿은 곳마다 붙어 있어
@@ -467,6 +498,206 @@ def rigid_by_color(body, G, spec, tex_dir):
                 떼어낸면=len(prop_faces), 정점증가=len(me.vertices) - n_before, 몸쪽고리=ring)
 
 
+def mask_arm_facing(body, G, joints, spec):
+    """코트에 붙은 팔(베르고 오른팔 — 원본 z 0.14~0.19에서 소매와 코트가 표면째 붙어 표면 거리로도 안 갈림, 2회차 실측 전·후 정점 수 같음):
+    팔 가중치 정점마다 팔 사슬(Arm→ForeArm→Hand→HandTip) 가장 가까운 점에서 정점으로 향하는 방향과 정점 법선의 내적을 본다 —
+    소매 겉은 축 바깥을 보고(+), 소매 옆 코트 옆판은 팔 축을 향한다(−). 내적이 lo 이하면 팔 가중치 0, hi 이상이면 그대로, 사이는 부드럽게.
+    그 몫을 이웃과 몇 번 평균 내 찢김 없이 잇고, 빈 정점은 가장 가까운 정점 가중치 복사. 🔴 1회차: T자에서 코트 옆판이 커튼처럼 끌려 나옴."""
+    from mathutils.kdtree import KDTree
+    me = body.data
+    n = len(me.vertices)
+    co = np.empty(n * 3)
+    me.vertices.foreach_get("co", co)
+    co = co.reshape(-1, 3)
+    nor = np.empty(n * 3)
+    me.vertices.foreach_get("normal", nor)
+    nor = nor.reshape(-1, 3)
+    ev = np.empty(len(me.edges) * 2, dtype=np.int64)
+    me.edges.foreach_get("vertices", ev)
+    ev = ev.reshape(-1, 2)
+    groups = {g.name: g.index for g in body.vertex_groups}
+    Wm = np.zeros((n, len(body.vertex_groups)))
+    for v in me.vertices:
+        for ge in v.groups:
+            Wm[v.index, ge.group] = ge.weight
+    lo, hi = spec.get("lo", -0.1), spec.get("hi", 0.2)
+    out = {}
+    for side in spec.get("sides", ("Left", "Right")):
+        pts = [np.array(G @ Vector(joints[side + k])) for k in ("Arm", "ForeArm", "Hand", "HandTip")]
+        best = np.full(n, np.inf)
+        radial = np.zeros((n, 3))
+        for a, b in zip(pts[:-1], pts[1:]):
+            ab = b - a
+            t = np.clip(((co - a) @ ab) / max(ab @ ab, 1e-12), 0.0, 1.0)
+            r = co - (a + np.outer(t, ab))
+            d = np.linalg.norm(r, axis=1)
+            m = d < best
+            best[m], radial[m] = d[m], r[m]
+        rhat = radial / np.maximum(np.linalg.norm(radial, axis=1, keepdims=True), 1e-9)
+        dot = (rhat * nor).sum(1)
+        factor = np.clip((dot - lo) / (hi - lo), 0.0, 1.0)
+        for _ in range(spec.get("smooth", 2)):                           # 이웃 평균(변 양끝) — 경계 한 줄 찢김 방지
+            acc = factor.copy()
+            cnt = np.ones(n)
+            np.add.at(acc, ev[:, 0], factor[ev[:, 1]])
+            np.add.at(acc, ev[:, 1], factor[ev[:, 0]])
+            np.add.at(cnt, ev[:, 0], 1)
+            np.add.at(cnt, ev[:, 1], 1)
+            factor = acc / cnt
+        cols = [groups[PREFIX + side + k] for k in ("Arm", "ForeArm", "Hand") if PREFIX + side + k in groups]
+        had = Wm[:, cols].sum(1) > 0.01
+        Wm[:, cols] *= factor[:, None]
+        out[side] = dict(팔가중치정점_전=int(had.sum()), 후=int((Wm[:, cols].sum(1) > 0.01).sum()), 축향한정점=int((had & (dot < lo)).sum()))
+        # 🔴 베르고 오른팔 3·4회차: bone heat가 코트에 붙은 아래 소매·소맷부리를 애초에 Spine·Hips·UpLeg에 줘서(팔 가중치 0) T자에서 소매 조각이 제자리에 남아
+        #   엉덩이 가시·겨드랑이 커튼이 됐다 → assign_radius_src 안에서 팔 축 바깥을 보는(내적 > hi) 정점은 사슬 투영 구간 뼈로 팔 가중치를 채운다
+        #   (관절 근처는 이웃 뼈와 반씩, 위팔 위 25%는 어깨 쪽으로 서서히 줄여 겨드랑이는 bone heat 그대로).
+        if side in spec.get("assign_sides", ()):
+            scale = G.to_scale().x
+            ar, am, bl = spec["assign_radius_src"] * scale, spec["assign_margin_src"] * scale, spec.get("blend_src", 0.006) * scale
+            segs = list(zip(pts[:-1], pts[1:]))
+            seg_k = np.zeros(n, dtype=np.int64)
+            seg_t = np.zeros(n)
+            best2 = np.full(n, np.inf)
+            for k, (a, b) in enumerate(segs):
+                ab = b - a
+                t = np.clip(((co - a) @ ab) / max(ab @ ab, 1e-12), 0.0, 1.0)
+                d = np.linalg.norm(co - (a + np.outer(t, ab)), axis=1)
+                m = d < best2
+                best2[m], seg_k[m], seg_t[m] = d[m], k, t[m]
+            L = [float(np.linalg.norm(b - a)) for a, b in segs]
+            strength = np.clip(1.0 - (best2 - ar) / am, 0.0, 1.0) * np.clip((dot - hi) / 0.2, 0.0, 1.0)
+            strength *= np.where(seg_k == 0, np.clip(seg_t / 0.25, 0.0, 1.0), 1.0)
+            bone_cols = [groups[PREFIX + side + k] for k in ("Arm", "ForeArm", "Hand")]
+            share = np.zeros((n, 3))
+            share[np.arange(n), np.minimum(seg_k, 2)] = 1.0
+            Lk = np.array(L)[seg_k]
+            prev = 0.5 * np.clip(1.0 - seg_t * Lk / bl, 0.0, 1.0) * (seg_k > 0)
+            nxt = 0.5 * np.clip(1.0 - (1.0 - seg_t) * Lk / bl, 0.0, 1.0) * (seg_k < 2)
+            rows = np.arange(n)
+            share[rows, np.minimum(seg_k, 2)] -= prev + nxt
+            share[rows[seg_k > 0], seg_k[seg_k > 0] - 1] += prev[seg_k > 0]
+            share[rows[seg_k < 2], np.minimum(seg_k[seg_k < 2] + 1, 2)] += nxt[seg_k < 2]
+            cur_arm = Wm[:, bone_cols].sum(1)
+            gain = strength > cur_arm + 1e-3
+            keep = 1.0 - strength
+            rest = Wm.copy()
+            rest[:, bone_cols] = 0.0
+            rs = rest.sum(1, keepdims=True)
+            rest = np.where(rs > 1e-9, rest / np.maximum(rs, 1e-9), 0.0)
+            newW = rest * keep[:, None]
+            newW[:, bone_cols] = share * strength[:, None]
+            Wm[gain] = newW[gain]
+            out[side]["팔로채운정점"] = int(gain.sum())
+    total = Wm.sum(1)
+    empty = np.where(total <= 1e-6)[0]
+    if len(empty):
+        full = np.where(total > 1e-6)[0]
+        kd = KDTree(len(full))
+        for i in full:
+            kd.insert(Vector(co[i]), int(i))
+        kd.balance()
+        for i in empty:
+            Wm[i] = Wm[kd.find(Vector(co[i]))[1]]
+        total = Wm.sum(1)
+    Wm /= np.maximum(total, 1e-9)[:, None]
+    for g in body.vertex_groups:
+        col = Wm[:, g.index]
+        zero = [int(i) for i in np.where(col <= 1e-4)[0]]
+        if zero:
+            g.remove(zero)
+        for i in np.where(col > 1e-4)[0]:
+            g.add([int(i)], float(col[i]), "REPLACE")
+    out["다시채운정점"] = int(len(empty))
+    return out
+
+
+def split_arm_contact(body, G, joints, spec):
+    """코트와 한 표면으로 붙은 소매(베르고 오른팔, 원본 z 0.14~0.19): 가중치로는 붙은 띠의 삼각형이 팔·코트 둘 다에 묶여 T자에서 커튼·엉덩이 가시가 남았다(3~5회차).
+    bone heat 전에 면을 가른다 — 팔 사슬에서 radius 안이고 법선이 팔 축 바깥을 보는(내적 > facing) 면을 팔 면으로, 팔 면과 아닌 면 사이 변 중 z 띠 안의 것만 split_edges.
+    (띠 밖 소매·겨드랑이·소맷부리 아래는 그대로 이어진다.)"""
+    bm = bmesh.new()
+    bm.from_mesh(body.data)
+    bm.normal_update()
+    scale = G.to_scale().x
+    R, thr = spec["radius_src"] * scale, spec.get("facing", 0.45)
+    zlo, zhi = (G @ Vector((0, 0, spec["z_src"][0]))).z, (G @ Vector((0, 0, spec["z_src"][1]))).z
+    out = {}
+    for side in spec["sides"]:
+        pts = [G @ Vector(joints[side + k]) for k in ("Arm", "ForeArm", "Hand", "HandTip")]
+        arm = set()
+        for f in bm.faces:
+            c = f.calc_center_median()
+            best = None
+            for a, b in zip(pts[:-1], pts[1:]):
+                ab = b - a
+                t = max(0.0, min(1.0, (c - a).dot(ab) / max(ab.length_squared, 1e-12)))
+                r = c - (a + ab * t)
+                if best is None or r.length < best.length:
+                    best = r
+            if 1e-9 < best.length < R and f.normal.dot(best.normalized()) > thr:
+                arm.add(f)
+        cut = [e for e in bm.edges if len(e.link_faces) == 2 and ((e.link_faces[0] in arm) != (e.link_faces[1] in arm))
+               and zlo < (e.verts[0].co.z + e.verts[1].co.z) / 2 < zhi]
+        bmesh.ops.split_edges(bm, edges=cut)
+        out[side] = dict(팔면=len(arm), 자른변=len(cut))
+    bm.to_mesh(body.data)
+    bm.free()
+    body.data.update()
+    return out
+
+
+def coat_hem(body, G, spec):
+    """긴 코트 자락(베르고): 엉덩이~밑단 사이 정점은 팔·손 가중치를 그대로 두고, 나머지 몫을 Hips와 좌우 UpLeg에 높이·좌우로 나눈다.
+    아래로 갈수록(밑단 share) 넓적다리 몫, 가운데는 좌우를 부드럽게 반씩. 엉덩이 위·밑단 아래 band 구간에서 bone heat 가중치와 섞어 이음매가 안 튀게.
+    🔴 bone heat 그대로면 자락이 종아리(Leg)·어깨에 실려 Idle에서 훌라후프처럼 벌어졌다(구현담당1 1차 유니티 실측)."""
+    me = body.data
+    n = len(me.vertices)
+    co = np.empty(n * 3)
+    me.vertices.foreach_get("co", co)
+    co = co.reshape(-1, 3)
+    groups = {g.name: g.index for g in body.vertex_groups}
+    Wm = np.zeros((n, len(body.vertex_groups)))
+    for v in me.vertices:
+        for ge in v.groups:
+            Wm[v.index, ge.group] = ge.weight
+    hip, hem = (G @ Vector((0, 0, spec["hip_src"]))).z, (G @ Vector((0, 0, spec["hem_src"]))).z
+    scale = G.to_scale().x
+    band, split = spec["band_src"] * scale, spec["split_src"] * scale
+    cx = (G @ Vector((spec["center_x_src"], 0, 0))).x
+    z, x = co[:, 2], co[:, 0]
+    smooth = lambda t: t * t * (3 - 2 * t)
+    t = np.clip((hip - z) / (hip - hem), 0.0, 1.0)                      # 엉덩이 0 → 밑단 1
+    blend = smooth(np.clip((hip + band - z) / band, 0, 1)) * smooth(np.clip((z - (hem - band)) / band, 0, 1))   # 규칙이 쓰이는 몫(구간 밖 0)
+    arm_cols = [groups[PREFIX + s + k] for s in ("Left", "Right") for k in ("Arm", "ForeArm", "Hand") if PREFIX + s + k in groups]
+    arm_w = Wm[:, arm_cols].sum(1).clip(0, 1)
+    rule = np.zeros_like(Wm)
+    leg = spec["share"] * smooth(t)
+    left = smooth(np.clip(0.5 + (x - cx) / (2 * split), 0, 1))
+    rule[:, groups[PREFIX + "Hips"]] = 1 - leg
+    rule[:, groups[PREFIX + "LeftUpLeg"]] = leg * left
+    rule[:, groups[PREFIX + "RightUpLeg"]] = leg * (1 - left)
+    rest = Wm.copy()
+    rest[:, arm_cols] = 0
+    rs = rest.sum(1, keepdims=True)
+    heat_rest = np.where(rs > 1e-9, rest / np.maximum(rs, 1e-9), rule)   # 팔 몫 뺀 나머지의 bone heat 비율
+    new_rest = heat_rest * (1 - blend)[:, None] + rule * blend[:, None]
+    new = new_rest * (1 - arm_w)[:, None]
+    new[:, arm_cols] = Wm[:, arm_cols]
+    new /= np.maximum(new.sum(1, keepdims=True), 1e-9)
+    touched = np.where(blend > 1e-6)[0]
+    for g in body.vertex_groups:
+        col = new[:, g.index]
+        zero = [int(i) for i in touched if col[i] <= 1e-4]
+        if zero:
+            g.remove(zero)
+        for i in touched:
+            if col[i] > 1e-4:
+                g.add([int(i)], float(col[i]), "REPLACE")
+    before_leg = sum(int((Wm[touched, groups[PREFIX + s + "Leg"]] > 0.05).sum()) for s in ("Left", "Right"))
+    after_leg = sum(int((new[touched, groups[PREFIX + s + "Leg"]] > 0.05).sum()) for s in ("Left", "Right"))
+    return dict(정점=int(len(touched)), 종아리가중치정점=[before_leg, after_leg], 팔몫남긴정점=int((arm_w[touched] > 0.01).sum()))
+
+
 def fill_unweighted(body):
     """bone heat가 못 준 정점(합 0)은 가장 가까운 가중치 있는 정점의 가중치를 복사(static-skin-rigging 교훈 — 가까운 「뼈」로 주면 늘어난다)."""
     from mathutils.kdtree import KDTree
@@ -511,7 +742,7 @@ def build(name, out_dir=None, render_dir=None):
         bpy.ops.object.join()
         report["합친 조각"] = len(meshes)
     body = bpy.context.view_layer.objects.active if len(meshes) > 1 else meshes[0]
-    body.name = body.data.name = "Body"
+    body.name = body.data.name = cfg.get("mesh_name", "Body")      # 베르고: 1차 FBX 메시 이름 Vergo 유지(유니티 .meta 이름표)
     report["원본 정점·삼각형"] = [len(body.data.vertices), sum(len(p.vertices) - 2 for p in body.data.polygons)]
     if cfg.get("rotate_z"):                                             # 원본 정면이 −Y가 아니면(코알라 +X) 세계 변환과 함께 돌린다
         body.data.transform(Matrix.Rotation(math.radians(cfg["rotate_z"]), 4, "Z") @ body.matrix_world)
@@ -569,6 +800,8 @@ def build(name, out_dir=None, render_dir=None):
     body.data = new_mesh
     bpy.data.meshes.remove(old_mesh)
     report["감량 후 삼각형"] = sum(len(p.vertices) - 2 for p in body.data.polygons)
+    if cfg.get("arm_split"):
+        report["소매·코트 가름"] = split_arm_contact(body, G, cfg["joints"], cfg["arm_split"])
 
     # ── 뼈대: 22개(Hips 루트 + Spine·Spine1·Spine2·Neck·Head + 좌우 Shoulder·Arm·ForeArm·Hand
     # + 좌우 UpLeg·Leg·Foot·ToeBase) — 위 JOINTS_CM(걷는 자세 그대로, 좌우 따로)에 G를 적용해 짓는다.
@@ -614,8 +847,12 @@ def build(name, out_dir=None, render_dir=None):
 
     if cfg.get("arm_capsule"):
         report["팔 캡슐"] = mask_arm_weights(body, G, cfg["joints"], cfg["arm_capsule"])
+    if cfg.get("arm_facing"):
+        report["팔 법선 마스크"] = mask_arm_facing(body, G, cfg["joints"], cfg["arm_facing"])
     if cfg.get("rigid_color"):
         report["손 소품 한 뼈"] = rigid_by_color(body, G, cfg["rigid_color"], tex_dir)
+    if cfg.get("coat_hem"):
+        report["코트 자락"] = coat_hem(body, G, cfg["coat_hem"])
     report["걷는 자세→T자(°)"] = straighten_limbs(arm, body, cfg.get("straighten"))
 
     # 🔴 다리를 곧게 펴면(사슬 길이는 그대로, 끝점만 바뀐다) 원래 걷는 자세에서 발목까지의 수직
