@@ -102,32 +102,10 @@ SKINS = {
     # 몸(Detail3, 팔·다리·코트·장갑·부츠를 다 담은 메시)이 재질별로 자동가중치 될 단일 몸통이라
     # body_mesh_name으로 지정(자동 선택은 정점 수로 고르는데 Hair가 Detail3보다 정점이 많아
     # 잘못 고른다 — 실제로 확인함).
-    "특별함_이지원": dict(
-        source="~/Downloads/lilith-one-piece.zip",
-        source_type="fbx_zip",
-        fbx_member="source/Lilith.fbx",
-        tex_member="textures/Plane.001.png",
-        real_texture_material="Eye",
-        path="Assets/Art/Units/특별함_이지원/특별함_이지원.fbx",
-        mesh_name="Lilith",
-        height=1.8,
-        body_mesh_name="Detail3",
-        center_band=(0.05, 0.15),                                        # 발목~정강이 높이(원본 z 0.065~2.51 부근, 데이터로 확인)
-        joints=dict(Hips=(0, 0, 0.48), Spine=(0, 0, 0.54), Spine1=(0, 0, 0.61), Spine2=(0, 0, 0.69), Neck=(0, 0, 0.80),
-                    Head=(0, 0, 0.85), HeadTop=(0, 0, 1.0),
-                    Shoulder=(0.10, 0, 0.77), Arm=(0.16, 0, 0.765), ForeArm=(0.28, 0, 0.765), Hand=(0.40, 0, 0.765),
-                    HandTip=(0.46, 0, 0.765),
-                    UpLeg=(0.09, 0, 0.47), Leg=(0.09, 0, 0.26), Foot=(0.09, -0.01, 0.045), ToeBase=(0.09, -0.07, 0.02),
-                    ToeTip=(0.09, -0.10, 0.02)),
-        # 얼굴·귀·눈썹·머리카락 3장·눈·이(치아 두 재질은 build()가 즉석 생성)는 Head로. 골반 옆
-        # 대칭 소품(Material.009·010, 좌우 공유라 못 가름)은 Hips로. 몸(Pink·Coat·Hands·
-        # Boots1~3·Material.008)은 rigid 없이 자동가중치.
-        rigid={"Material": "Head", "Material.001": "Head", "Material.002": "Head", "Material.003": "Head",
-               "Material.004": "Head", "Material.005": "Head", "Material.006": "Head", "Material.007": "Head",
-               "Eye": "Head", "TeethUpMat": "Head", "TeethDownMat": "Head",
-               "Material.009": "Hips", "Material.010": "Hips"},
-        alpha_keep=set(),
-    ),
+    # 🔴 2026-09-15 요크로 교체되어 항목 삭제 — 사장님 지시로 특별함_이지원 스킨을 바운티러시
+    # 요크로 바꾼다(기존 릴리스 폐기, blender가 fix_unit_fbx.py로 새로 지음). 위 설명 주석은
+    # 다른 유닛(특별함_주영호 141행 등)이 같은 함정을 참고하므로 남겨 둔다 — 이 dict만 뺐다.
+    # 다시 이 이름으로 build()를 돌리면 요크 릴리스를 덮어쓰니 되살리지 말 것.
     # 마마보이(오크 전사) — 66메시·69,576삼각형짜리 Sketchfab 조각 세트(몸통 하나 + 갑옷·소품
     # 60여 개가 전부 따로). 정면·회전 확인(fromNegY 렌더): 원본이 이미 정면 −Y·팔 좌우
     # 확산(X)·키 Z위라 rotate_z 불필요 — 04부터 셋 다 rotate_z가 필요했던 것과 다르다.
@@ -187,6 +165,19 @@ SKINS = {
         decimate_rules=[("Fur", 0.22), ("Body_Low", 1.0), ("Jaw", 1.0), ("Eye", 1.0), ("Hand", 1.0)],
         decimate_default=0.72,
     ),
+    # 🔴 2026-09-15 아이언맨으로 교체되어 항목 삭제 — 되살리지 말 것. 사장님 지시로
+    # 특별함_강주혁 스킨을 아이언맨으로 바꾼다(blender가 fix_unit_fbx.py로 같은 경로에 새로
+    # 짓는 중). 아래 설명 주석(좌우 비대칭 관절표 한계·위축 Z·정면 +X 등)은 교훈이라 남기지만
+    # dict 항목은 뺐다 — 이 이름으로 build()를 다시 돌리면 아이언맨을 코알라로 덮어쓴다.
+    # 강주혁(코알라, 카이메라 앤트) — 사이트페브 tripo AI 생성. 기존 안흔함_강주혁(다른 소스,
+    # medium_poly 코알라)과 이름만 접두만 다르고 완전히 별개 유닛 — 그 폴더는 안 건드린다.
+    # 4조각(Object_4~7, 각 6.4만 정점 근처 — 65536 정점 한도로 쪼개진 한 몸이다. 직접 확인:
+    # 정점 수 다르고 bbox가 서로 겹치는 부분 몸통 조각이라 LOD 중복이 아니라 분할 조각. join+
+    # 이음새 용접으로 합친다). 원본은 이미 Z-up(PM 사전조사의 "Y가 위"는 틀렸다 — 실측
+    # bbox z 스팬 1.0 > y 스팬 0.59 > x 스팬 0.4, Z가 세로축)에 정면은 +X(렌더로 확인, 넥타이
+    # 맨 정장 차림 카이메라 앤트 코알라가 +X쪽을 본다) → rotate_z=-90으로 −Y 정면.
+    # 팔은 T자가 아니라 몸통 옆에 늘어뜨린 자세(한 손엔 호리병 모양 소품을 들고, 한 손은
+    # 주머니에) — level_arms로 사후에 수평으로 편다.
 }
 
 # (뼈, 머리 관절, 꼬리 관절, 부모) — 왼쪽/오른쪽은 L·R 두 벌

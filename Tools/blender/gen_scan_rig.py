@@ -94,6 +94,11 @@ UNITS = {
         source=os.path.expanduser("~/Downloads/free_download_athletic_african_man_walking_223.glb"),
         height=1.8, center_band=(0.02, 0.08), decimate=0.4, rotate_z=0.0, joints=JOINTS_CM,
         textures=[("Base Color", 0, "default_baseColor.jpg"), ("Normal", 1, "default_normal.png")]),
+}
+
+# 🗑 폐기(2026-09-15 사장님 지시 — 특별함_강주혁 모델을 아이언맨으로 교체, fix_unit_fbx.py로): 코알라는 AI 메시가 닿은 곳마다 붙어 있어
+#   T자·Idle에서 찢겨 6회 만에 멈췄다(Mixamo 업로드본 ~/Downloads/특별함_강주혁_mixamo업로드.fbx, 안 기다림). 설정은 기록용으로만 남긴다 — 빌드 대상 아님.
+RETIRED = {
     # HxH 키메라 앤트 코알라(tripo AI 생성 glb, 뼈 없음) — 구현담당1이 gen_skin_rig.py(좌우 대칭 관절표)로 3회 시도하다 왼팔 가중치가 죽어 멈춤(PM 인계 09-15).
     #   65536 정점 한도로 4조각 → 합쳐 이음새 붙이면 섬 1(경계변 19). 원본 Z 위·정면 +X → rotate_z −90. UV 네 벌이 바이트 동일(노멀 texCoord 2도 UV0과 같음).
     #   관절은 높이 0.01 단면(스크래치 koala/slices.py): 다리 x ±0.075·y 0.04 곧게(z −0.20~−0.42), 윗도리 밑단에서 합침 z −0.23, 목 좁아짐 z 0.11~0.13,

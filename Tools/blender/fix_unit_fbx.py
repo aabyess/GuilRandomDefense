@@ -116,6 +116,9 @@ for _s, _side in (("L", "Left"), ("R", "Right")):
     PL_RENAME.update({f"{_s}Arm_Clavicle": f"mixamorig:{_side}Shoulder", f"{_s}Arm_Upper": f"mixamorig:{_side}Arm", f"{_s}Arm_Fore": f"mixamorig:{_side}ForeArm",
                       f"{_s}Hand_Palm": f"mixamorig:{_side}Hand", f"{_s}Leg_Thigh": f"mixamorig:{_side}UpLeg", f"{_s}Leg_Calf": f"mixamorig:{_side}Leg",
                       f"{_s}Foot_Heel": f"mixamorig:{_side}Foot", f"{_s}Foot_Toe": f"mixamorig:{_side}ToeBase"})
+# 요크(바운티러시 pl_ 리그, 2026-09-15): PL_RENAME과 같되 발끝 LFoot_Toe·RFoot_Toe가 뼈가 아니라 빈 오브젝트(Heel 자식) → ToeBase 없이.
+#   다리는 L/RLeg_Root(가중치 0) → L/RLeg_Thigh로 한 칸 더 — UpLeg는 Thigh(Root는 Hips와 UpLeg 사이 중간 뼈).
+YORK_RENAME = {k: v for k, v in PL_RENAME.items() if not k.endswith("Foot_Toe")}
 # 미호크(특별함_박기찬, 2026-09-14): 뼈 이름이 공백식(body lower·arm left arm1…) — 사람형 매핑 뼈만 mixamorig로. 손가락·얼굴·모자·검 뼈는 그대로.
 MIHAWK_RENAME = {"body lower": "mixamorig:Hips", "body upper": "mixamorig:Spine", "body spine1": "mixamorig:Spine1", "body spine2": "mixamorig:Spine2",
                  "head neck": "mixamorig:Neck", "head head": "mixamorig:Head"}
@@ -186,6 +189,18 @@ for _s, _side, _n in (("R", "Right", (39, 40, 42, 44, 76, 78, 80, 82)), ("L", "L
                         f"arm_{_s}0_lowerarm_Jnt_0{_n[2]}": f"mixamorig:{_side}ForeArm", f"arm_{_s}0_hand_Jnt_0{_n[3]}": f"mixamorig:{_side}Hand",
                         f"leg_{_s}0_thigh_Jnt_0{_n[4]}": f"mixamorig:{_side}UpLeg", f"leg_{_s}0_calf_Jnt_0{_n[5]}": f"mixamorig:{_side}Leg",
                         f"leg_{_s}0_foot_Jnt_0{_n[6]}": f"mixamorig:{_side}Foot", f"foot_{_s}0_ball_Jnt_0{_n[7]}": f"mixamorig:{_side}ToeBase"})
+# 아이언맨(3ds Max 2020 Biped FBX, 2026-09-15): Bip01 이름 → mixamorig. 척추 넷 중 Spine3가 목·쇄골의 부모라 Spine2(UpperChest), Spine2는 중간 뼈.
+#   Twist 뼈·무게중심 뼈 없음(Pelvis가 뿌리). 손가락 다섯 × 세 마디 → HandThumb/Index/Middle/Ring/Pinky 1~3(tpose_arms 손바닥 굴리기에 쓴다).
+IRONMAN_RENAME = {"Bip01 Pelvis": "mixamorig:Hips", "Bip01 Spine": "mixamorig:Spine", "Bip01 Spine1": "mixamorig:Spine1", "Bip01 Spine3": "mixamorig:Spine2",
+                  "Bip01 Neck": "mixamorig:Neck", "Bip01 Head": "mixamorig:Head"}
+for _s, _side in (("L", "Left"), ("R", "Right")):
+    IRONMAN_RENAME.update({f"Bip01 {_s} Clavicle": f"mixamorig:{_side}Shoulder", f"Bip01 {_s} UpperArm": f"mixamorig:{_side}Arm",
+                           f"Bip01 {_s} Forearm": f"mixamorig:{_side}ForeArm", f"Bip01 {_s} Hand": f"mixamorig:{_side}Hand",
+                           f"Bip01 {_s} Thigh": f"mixamorig:{_side}UpLeg", f"Bip01 {_s} Calf": f"mixamorig:{_side}Leg",
+                           f"Bip01 {_s} Foot": f"mixamorig:{_side}Foot", f"Bip01 {_s} Toe0": f"mixamorig:{_side}ToeBase"})
+    for _i, _finger in enumerate(("Thumb", "Index", "Middle", "Ring", "Pinky")):
+        for _j, _k in (("", 1), ("1", 2), ("2", 3)):
+            IRONMAN_RENAME[f"Bip01 {_s} Finger{_i}{_j}"] = f"mixamorig:{_side}Hand{_finger}{_k}"
 NARUTO_FACE_RUNS = [["nrt_tex02", 450], ["nrt_eye", 62], ["nrt_tex01", 1106], ["nrt_tex02", 1919]]
 UNITS = {
     "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
@@ -481,6 +496,37 @@ UNITS = {
     #   → 클립 0프레임 전체를 새 쉬는 자세로 굽고(pose_from_clip "all" — 매 프레임 변형 = 자세(f)·자세(0)⁻¹이라 틀린 IBM이 상쇄된다) 클립을 새 뼈대에 다시 굽는다.
     #   _rootJoint는 세계 원점(몸에서 14 떨어짐, 가중치 0) → 빼고 꼬리 사슬 Bone.001_010을 같은 자리 Bone_00 밑으로(뿌리 하나). 방향은 머리 Bone.003_02 ↔ 꼬리 Bone.008_014(0프레임 꼬리가 휘어 81° — orient_snap으로 90° 단위).
     #   Generic(사람형 아님) · 몸길이 2.0 · 배 최저 z 0 · 머리 −Y · 테이크 Idle(루트 이동 없음 — clip_ground 안 씀). 구현담당1 두 차례 경위는 SOURCE.txt.
+    # 아이언맨 Mk.III(3ds Max 2020 Biped FBX, ironman.zip 속 source/IronMan.fbx) — 2026-09-15 사장님 지시로 코알라(폐기) 대신 특별함_강주혁.
+    #   뼈 106(Bip01, 손가락 5×3·Nub·아머 판 보조 뼈 Bone02~21) · 메시 125 · 삼각형 211,872 · 오브젝트 배율 0.0254·Z −90°(파이프라인이 세계로 굽는다).
+    #   Biped 보조 메시 9개(SpineRemoval*·Calf*Removal1·FootRemovCtr1·*SeqCtlr1 — 몸에서 멀리 떨어진 1,008정점 조종 도형, 재질·가중치 없음)와
+    #   손 빔 표식 2개(9정점) 뺌 → 보조 뺀 몸 2.61×1.26×6.06(가로가 넓어 보인 건 조종 도형 탓, T자 아님). 부모·스킨 없는 허리 판 polySurface3864(82정점)는
+    #   뿌리 뼈(Hips) 100%로. 결합 자세는 팔 늘어뜨림(수평 아래 73°)·다리 넓게·아머 판 닫힘, FBX 기본 자세는 T자·다리 곧게인데 아머 판 보조 뼈가 판을 연 채
+    #   → Bip01 뼈만 기본 자세, 보조 뼈는 결합 자세(default_pose_only). 큰 메시(600삼각형 이상 71개)만 ×0.25 감량(단색이라 UV 걱정 없음) → 약 6.2만.
+    "특별함_강주혁": dict(path="Assets/Art/Units/특별함_강주혁/특별함_강주혁.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(DL, "ironman.zip"), "source/IronMan.fbx"),
+                      drop_meshes=["SpineRemoval1", "SpineRemoval02", "SpineRemoval03", "SpineRemoval04", "CalfRRemoval1", "CalfLRemoval1",
+                                   "FootRemovCtr1", "RSeqCtlr1", "LSeqCtlr1", "righthandBEAM", "LeftHandBEAM"],
+                      decimate=dict(min_tris=600, ratio=0.25), default_pose_only=r"^Bip01 ",
+                      rename_bones=IRONMAN_RENAME, orient_snap=True,
+                      tpose_arms={s: dict({"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm", "Forearm": f"mixamorig:{side}ForeArm",
+                                           "Hand": f"mixamorig:{side}Hand"},
+                                          **{f"Finger{i}{j}": f"mixamorig:{side}Hand{finger}{k}" for i, finger in enumerate(("Thumb", "Index", "Middle", "Ring", "Pinky"))
+                                             for j, k in (("", 1), ("1", 2), ("2", 3))})
+                                  for s, side in (("L", "Left"), ("R", "Right"))},
+                      solid_textures={"Iron_man_leg:red": None, "Iron_man_leg:gold": None, "HD_Ironman:silver": None, "lambert1": None, "14 - Default": None,
+                                      "HD_Ironman:darksilver": (0.3, 0.3, 0.32), "HD_Ironman:black": (0.02, 0.02, 0.02), "HD_Ironman:yellow": (1.0, 0.9, 0.55)}),
+    # 요크(바운티러시 pl_ 리그 FBX, zip 속 rar 속 「pl_york_orig01 (merge).fbx」) — 2026-09-15 사장님 지시로 릴리스 스킨 교체. 이미 T자.
+    #   겹친 변형: 얼굴 6벌 → face_normal · 손 4벌 → l/r_hand_open · 오른손 총(r_weapon_gun_01)·총 쥔 손(r_hand_weapon_gun01) 뺌(기본 대기) ·
+    #   콧물 풍선(snot_bubble, 자는 연출) 뺌. 고글 렌즈(_trans_goggles 재질)는 남기되 불투명(알파는 명암 마스크라 RGB로).
+    #   텍스처: rar 안 _diff.png와 zip textures/ 판이 바이트는 다르지만 픽셀 동일 — 알파 = 명암 마스크(알파<0.98 99.2%) → RGB PNG. 재질 3개가 같은 텍스처.
+    "특별함_이지원": dict(path="Assets/Art/Units/특별함_이지원/특별함_이지원.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(DL, "one-piece-bounty-rush-york.zip"), "source/york.rar", "york/pl_york_orig01 (merge).fbx"),
+                      archive_rgb={"york/pl_york_orig01_diff.png": "pl_york_orig01_diff.png"},
+                      drop_meshes=["face_attack", "face_damage", "face_sp01", "face_sp02", "face_sp03", "l_hand_close", "r_hand_close",
+                                   "l_hand_open_02", "r_hand_open_02", "r_hand_weapon_gun01", "r_weapon_gun_01", "snot_bubble"],
+                      rename_bones=YORK_RENAME, no_nulls=True, orient_snap=True,
+                      materials=dict(textures={m: [("DiffuseColor", "pl_york_orig01_diff.png")]
+                                               for m in ("pl_york_orig01", "pl_york_orig01_trans", "pl_york_orig01_trans_goggles")})),
     "특별함_노건완": dict(path="Assets/Art/Units/특별함_노건완/특별함_노건완.fbx", kind="beast", size=("length", 2.0), anim=True, anim_drop_ok=True,
                       source=os.path.join(DL, "carp_fish.glb"), no_nulls=True, drop_meshes=["Icosphere"], head="Bone.003_02", tail="Bone.008_014", orient_snap=True,
                       pose_from_clip=("Scene", 0, "all"), take_names={"Scene": "Idle"}, clip_scene_basis=True,
@@ -933,6 +979,23 @@ def _normalized(M):
     return Matrix.Translation(loc) @ q.to_matrix().to_4x4()
 
 
+def safe_texture_name(material_name):
+    """재질 이름 → 파일 이름(아이언맨 HD_Ironman:black → HD_Ironman_black) — 영문·숫자·_·- 밖의 글자(:·공백 등)는 _로."""
+    return re.sub(r"[^0-9A-Za-z_\-]+", "_", material_name)
+
+
+def write_solid_png(dst, rgb_linear, size=4):
+    """단색 텍스처(sRGB 8비트 RGB PNG) — 기본색만 있는 재질을 유니티가 재질 이름으로 텍스처를 찾아도 회색이 안 되게(황정기 함정)."""
+    import struct as _struct
+    import zlib
+    enc = lambda c: 12.92 * c if c <= 0.0031308 else 1.055 * (c ** (1 / 2.4)) - 0.055
+    px = bytes(int(round(max(0.0, min(1.0, enc(max(0.0, c)))) * 255)) for c in rgb_linear[:3])
+    raw = b"".join(b"\x00" + px * size for _ in range(size))
+    chunk = lambda t, d: _struct.pack(">I", len(d)) + t + d + _struct.pack(">I", zlib.crc32(t + d) & 0xFFFFFFFF)
+    with open(dst, "wb") as f:
+        f.write(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", _struct.pack(">IIBBBBB", size, size, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b""))
+
+
 def write_rgb_png(src, dst):
     """알파를 뺀 8비트 RGB PNG로 다시 쓴다 — 바운티러시 _diff의 알파는 투명이 아니라 명암 마스크(중간값 99%)라 유니티가 투명으로 읽지 않게.
     블렌더 저장(색 관리)을 거치지 않고 바이트 픽셀을 그대로 zlib로 싸서 색이 1도 안 바뀐다."""
@@ -1132,6 +1195,16 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     load(src, anim=False, guess_bind=guess)
     if recipe is not None:
         apply_recipe(recipe, ref, report)
+    if cfg.get("default_pose_only"):
+        # 🔴 아이언맨(2026-09-15): FBX 기본 자세가 T자(팔 수평·다리 곧게)인데 아머 판 보조 뼈(Bone02~21·Rseq/Lseq)는 등 날개·종아리 판을 연 채였다
+        #   (등 뒤로 막대처럼 뻗고 헬멧 옆 판이 섬). 결합 자세는 판이 다 닫힌 깨끗한 모습 — 이름이 맞는 뼈만 기본 자세를 두고 나머지는 결합 자세로 되돌린다.
+        arm0 = main_armature()
+        keep_re = re.compile(cfg["default_pose_only"])
+        reset = [pb.name for pb in arm0.pose.bones if not keep_re.search(pb.name)]
+        for bname in reset:
+            arm0.pose.bones[bname].matrix_basis = Matrix.Identity(4)
+        bpy.context.view_layer.update()
+        report["결합 자세로 되돌린 뼈"] = len(reset)
     if held_pose:                                                       # 기본 자세로 두면 아래 「기본 자세 그대로 붙잡기」가 메시·뼈를 그 자세로 굽는다
         arm0 = main_armature()
         for bname, basis in held_pose.items():
@@ -1153,6 +1226,26 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             assert o is not None and o.type == "MESH", f"{name}: 뺄 메시가 없다 {gone}"
             bpy.data.objects.remove(o, do_unlink=True)
         report["뺀 메시"] = list(cfg["drop_meshes"])
+    if cfg.get("decimate"):
+        # 부품 많은 딱딱한 표면(아이언맨 21만 삼각형): 큰 메시만 균등 감량 — 아마추어보다 먼저 적용해 정점 그룹이 보간돼 따라가게. 단색 텍스처라 UV 이음새 걱정 없음.
+        dec = cfg["decimate"]
+        tri_before = tri_after = cut = 0
+        for m in [o for o in bpy.context.scene.objects if o.type == "MESH"]:
+            tris = sum(len(p.vertices) - 2 for p in m.data.polygons)
+            tri_before += tris
+            if tris >= dec.get("min_tris", 1000):
+                assert not m.data.shape_keys, f"{name}: {m.name} 모양 키가 있어 감량 못 함"
+                if m.data.users > 1:
+                    m.data = m.data.copy()
+                mod = m.modifiers.new("fix_decimate", "DECIMATE")
+                mod.ratio = dec["ratio"]
+                mod.use_collapse_triangulate = True
+                with bpy.context.temp_override(object=m, active_object=m, selected_objects=[m]):
+                    bpy.ops.object.modifier_move_to_index(modifier="fix_decimate", index=0)
+                    bpy.ops.object.modifier_apply(modifier="fix_decimate")
+                cut += 1
+            tri_after += sum(len(p.vertices) - 2 for p in m.data.polygons)
+        report["감량"] = f"삼각형 {tri_before} → {tri_after} (메시 {cut}개 ×{dec['ratio']}, {dec.get('min_tris', 1000)}삼각형 이상만)"
     if cfg.get("rename_bones"):                                         # 사람형 매핑 뼈 이름을 표준으로(가중치 그룹 이름도 같이)
         arm0 = main_armature()
         for old, new in cfg["rename_bones"].items():
@@ -1223,8 +1316,28 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         for src_tex, dst_name in cfg["copy_textures"].items():
             shutil.copy2(os.path.expanduser(src_tex), os.path.join(tex_repo, dst_name))
             arc_textures.append(os.path.join(tex_repo, dst_name))
-    if cfg.get("materials"):
-        report["재질 새로"] = build_materials(cfg["materials"], os.path.join(os.path.dirname(dst_path), "Textures"))
+    mat_spec = cfg.get("materials")
+    if cfg.get("solid_textures"):
+        # 3ds Max 맵이 파일 경로 없이 빠진 FBX(아이언맨 Map #1·#3) + 색만 있는 재질: 재질마다 기본색을 단색 PNG로 구워 Textures/<안전한 재질 이름>.png에 건다.
+        #   None = 원본 기본색 그대로, (r,g,b) = 선형 색으로 바로잡음(3ds Max 내보내기가 black·darksilver를 0.8 회색, yellow를 흰색으로 떨궜다).
+        from bpy_extras.node_shader_utils import PrincipledBSDFWrapper
+        tex_repo = os.path.join(os.path.dirname(dst_path), "Textures")
+        os.makedirs(tex_repo, exist_ok=True)
+        table = dict((mat_spec or {}).get("textures", {}))
+        solid_done = {}
+        for mat_name, rgb in cfg["solid_textures"].items():
+            mat = bpy.data.materials.get(mat_name)
+            assert mat is not None, f"{name}: 단색 텍스처 재질이 없다 {mat_name}"
+            color = tuple(rgb) if rgb is not None else tuple(PrincipledBSDFWrapper(mat, is_readonly=True).base_color)[:3]
+            fname = safe_texture_name(mat_name) + ".png"
+            write_solid_png(os.path.join(tex_repo, fname), color)
+            arc_textures.append(os.path.join(tex_repo, fname))
+            table[mat_name] = [("BaseColor", color), ("DiffuseColor", fname)]
+            solid_done[mat_name] = (fname, tuple(round(c, 3) for c in color))
+        mat_spec = dict(mat_spec or {}, textures=table)
+        report["단색 텍스처"] = solid_done
+    if mat_spec:
+        report["재질 새로"] = build_materials(mat_spec, os.path.join(os.path.dirname(dst_path), "Textures"))
     meshes = [o for o in scene.objects if o.type == "MESH"]
     mats_before = sorted({s.material.name for o in meshes for s in o.material_slots if s.material})
     if arm is not None and cfg.get("squash_chain"):
