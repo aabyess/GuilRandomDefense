@@ -57,6 +57,9 @@ public class UnitModelPostprocessor : AssetPostprocessor
 
         // 특별함_노건완(노가리, 잉어 — 2026-09-14) — 물고기라 사람 골격이 없다. 자기 Idle 클립(헤엄·꼬리짓)만 쓴다.
         "특별함_노건완",
+
+        // 특별함_김정래(프로그래머, 노트북 — 2026-09-15) — 뼈 없는 소품. Humanoid로 들이면 「아바타를 못 만들었다」 오류만 난다.
+        "특별함_김정래",
     };
 
     // 원본 단위가 달라 유니티에 몇 cm짜리로 들어오는 모델 — 임포트 배율로 먼저 키운다(폴더 이름 = 유닛 이름).
@@ -82,7 +85,8 @@ public class UnitModelPostprocessor : AssetPostprocessor
     // 6 → 7 (2026-09-08): 이호준 Generic 확정(유니티 아바타 검증 실패 실측).
     // 7 → 8 (2026-09-13): 배 유닛 고대의배·해적선을 Generic으로 추가.
     // 8 → 9 (2026-09-13): ImportScales(박준희 100배) 추가.
-    public override uint GetVersion() => 9;
+    // 9 → 10 (2026-09-15): 노트북 소품 특별함_김정래를 Generic으로 추가.
+    public override uint GetVersion() => 10;
 
     void OnPreprocessModel()
     {

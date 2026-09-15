@@ -1,0 +1,51 @@
+특별함_김정래(프로그래머) — 노트북 소품 유닛, 2026-09-15
+
+■ 출처
+~/Downloads/laptop.glb (457,076B)
+sha256: 026f04e3fad173f88066fdd67cf56ac8d9dda6951da00aa629243ac0254269a0
+Sketchfab-12.68.0 내보내기, 뼈·애니메이션 없음.
+메시 2개: Frame_ComputerFrame_0(8,164삼각형·바닥판+키보드·약 30.4×20cm), Screen_ComputerScreen_0(158삼각형·화면판).
+
+■ 정리 내용 (Tools/blender/gen_prop_unit.py)
+- 원본 노드 계층(Sketchfab_model·*.fbx·RootNode·Frame·Screen)에 축 회전·×100 스케일이 겹겹이 걸려
+  있었다. 각 메시 오브젝트의 matrix_world를 메시 데이터에 그대로 구운 뒤 부모를 끊고 오브젝트
+  행렬을 항등으로 만드는 방식(gen_skin_rig.py·fix_unit_fbx.py와 같은 관례)으로 풀었다 — 부모를
+  안 끊으면 겉싸개의 ×100이 남아 내보낸 뒤 재수입 시 크기가 100배(60m)로 폭주하는 걸 실측으로
+  확인하고 고쳤다.
+- 화면(Screen)은 원본 노드 행렬 자체가 경첩이 비스듬히 열린 값이었다 — PM 지시대로 그 모양
+  그대로 두었다(따로 접거나 세우지 않음).
+- 방향: 겉싸개를 다 구운 원본 좌표 그대로 이미 정면(화면 보는 쪽=키보드 앞쪽)이 −Y, 위에서 보면
+  키보드가 −Y(가까운) 쪽에 있었다 — rotate_z 불필요.
+- 크기: 가장 긴 변(가로, 원본 30.4cm 상당) 기준 0.6m로 스케일(배율 0.019737). 원점은 프레임(바닥
+  접지면) 사각형의 가운데, 바닥 z=0(전체 최저점 기준 — 화면판 밑변이 프레임보다 약간 낮았다).
+- 두 메시(Frame·Screen)를 하나의 오브젝트로 합쳤다(재질 슬롯 2개는 그대로 유지).
+- 재질: ComputerFrame(베이스=이미지0, 발광=이미지1) · ComputerScreen(베이스=이미지2, 발광=이미지4)
+  — 내장 이미지 원본 바이트 그대로 Textures/<재질>_baseColor.png · <재질>_emissive.png로 뺐다
+  (재인코딩 안 함). 발광 텍스처는 Emission Color에 연결하고 Emission Strength=1.0로 켰다(gen_skin_rig.py의
+  rebuild_material은 Normal 소켓용이라 Emission Strength를 0으로 고정해 두므로 그대로 못 썼다 —
+  이 파일 전용 set_material()을 새로 짰다).
+- 안 쓴 이미지: 이미지3 = ComputerScreen 재질의 metallicRoughness(금속성·거칠기) 맵. 이 파이프라인은
+  베이스+발광만 쓰므로 파일로 안 뺐다.
+
+■ 산출물
+Assets/Art/Units/특별함_김정래/특별함_김정래.fbx (메시 1개, 삼각형 8,322, 재질 2개)
+Assets/Art/Units/특별함_김정래/Textures/ComputerFrame_baseColor.png
+Assets/Art/Units/특별함_김정래/Textures/ComputerFrame_emissive.png
+Assets/Art/Units/특별함_김정래/Textures/ComputerScreen_baseColor.png
+Assets/Art/Units/특별함_김정래/Textures/ComputerScreen_emissive.png
+
+■ 판정(FBX 재수입 실측)
+크기(m): 가로 0.600 · 세로(높이) 0.406 · 앞뒤 0.405
+최저 z: 0.0 (바닥에 닿음) · 오브젝트 원점거리: 0.0(원점 항등, 겉싸개 잔여 이동 없음)
+렌더(스크래치): /tmp/laptop_render_final3/특별함_김정래_front.png · _side.png · _top.png
+  front: 화면 정면(−Y)으로 보임 · side: 화면이 경첩 각 그대로 열려 바닥에 앉음 · top: 키보드·트랙패드가
+  −Y(앞쪽)에, 화면 경첩이 +Y(뒤쪽)에 있음 — 전부 확인.
+
+■ 정정(2026-09-15, PM 유니티 실측 — 옆으로 누움)
+유니티에 넣으니 노트북이 옆으로 누워 들어왔다. 원인: 뼈 없는 단일 메시 FBX라 블렌더 Z위→Y위
+축 변환이 정점이 아니라 메시 노드 자체의 Lcl Rotation(−90,0,0)으로 남아 있었다(원시 FBX 파싱으로
+확인) — 뼈 있는 유닛은 이 회전이 아마추어(자식) 노드에 걸려 안 드러나는데, 유니티 ArtBinder가
+노드 하나짜리 FBX의 모델 루트 회전을 항등으로 대입해 버려서 그 −90°가 지워져 누웠다.
+export_scene.fbx에 bake_space_transform=True를 추가해 축 변환을 정점에 굽고(Lcl Rotation을
+(0,0,0)으로) 다시 내보냈다 — 크기·바닥·원점은 그대로, 원시 파싱으로 Model Lcl Rotation=(0,0,0)
+확인.
