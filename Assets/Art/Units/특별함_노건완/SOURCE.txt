@@ -1,0 +1,34 @@
+출처: ~/Downloads/carp_fish.glb (Sketchfab, 잉어) · 4,105,436 bytes · sha256 9aa465afb18456a5b211d91ead0af9fbc3c45960102869ce6ae41234853645bd
+받은 날: 2026-09-14 · 유닛: 특별함_노건완(unitName 노가리) · Generic(사람형 아님)
+원본(보존 — 지우지 말 것). glb: Sketchfab-16.16.0 · 스킨 1·조인트 30(_rootJoint > Bone_00 머리·가슴지느러미 / Bone.001_010 몸통·꼬리·등·배지느러미) ·
+메시 Object_9 1개(삼각형 7,406, +조명용 Icosphere) · 애니메이션 1개 「Scene」(1.97초, 10채널 — 뼈 8개 회전 + Bone.005_011 이동) · 재질 carp 1(베이스 image0·노멀 image2·ORM image1)
+
+정리: 2026-09-15 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_노건완」으로 재현
+  blender -b --factory-startup --python Tools/blender/fix_unit_fbx.py -- 특별함_노건완
+
+■ 경위(구현담당1, 2026-09-14 — Tools/blender/gen_animal_skin.py)
+  1차: 방향·배율(Rz+90°·×3.231)을 armature 오브젝트 행렬에만 곱하고 뼈·메시는 그대로 → FBX bake_anim이 오브젝트 채널을 매 프레임 키로 구워
+       유니티 줄세우기 키 8.49·바닥 −178.35.
+  2차: glTF 임포트가 armature 위 「Armature」 빈 오브젝트에 숨긴 배율 25.38을 놓쳐 배 밑 −13.9 → transform_apply 두 단계로 구워 블렌더 재수입 경계는 정상.
+       그러나 유니티에서 여전히 뜸(PM 실측): 새 아마추어가 뼈 위치는 맞지만 pose_bone.matrix @ bone.matrix_local⁻¹이 전 뼈에서 배율 1.479 + 회전 24~180°
+       (edit bone 행렬에 회전·배율이 안 구워짐) → 원시 메시 0.58×0.81×2.00인데 쉬는 자세 스킨 결과 0.74×1.07×2.19·최저 −0.168.
+■ blender 3차(이 파일)
+  - 🔴 원본 inverseBindMatrices가 틀렸다: 결합 자세로 읽으면 물고기가 세로로 선다(0.25×0.18×0.63). 클립 0프레임은 정상(0.62×0.18×0.25, 머리 −X·등 +Z).
+    → 클립 0프레임 전체(30뼈)를 새 쉬는 자세로 굽는다(pose_from_clip "all"). 매 프레임 변형이 자세(f)·자세(0)⁻¹이 되어 틀린 IBM이 상쇄된다.
+  - 🔴 glTF 곡선 없는 채널: 액션엔 Bone_00 이동 곡선이 없고, 노드 기본 TRS(틀린 결합 자세 기준으로 옮기면 큰 이동)가 가져온 직후 자세에만 있다.
+    매 프레임 단위 자세로 되돌리던 클립 읽기(sample_clips)는 모든 프레임을 결합 자리(6,0,−13)에 떨어뜨려 새 쉬는 자세와 47m 어긋났다
+    → clip_scene_basis: 되돌릴 자세 = 가져온 직후 자세, NLA 끔.
+  - _rootJoint(세계 원점, 몸에서 14 떨어짐, 가중치 0) 뺌 → 몸통·꼬리 사슬 Bone.001_010을 같은 자리 Bone_00 밑으로(뿌리 하나). 뼈 29.
+  - 새 아마추어는 뼈 머리·꼬리·롤로 새로 지어 오브젝트·뼈 배율 없음(아마추어 오브젝트 스트레이 배율 0.458 제거). 클립은 세계 뼈 행렬을 배율 떼고 새 뼈대에 다시 굽는다.
+  - 방향: 머리 Bone.003_02 ↔ 꼬리 Bone.008_014(0프레임 꼬리가 휘어 81°) → 90° 단위 스냅, 머리 −Y. 몸길이 2.0 · 배 최저 z 0.
+  - 테이크 「Scene」 → 「Idle」(헤엄 루프, 루트 이동 없음 — 접지 보정 안 함). 내보내기 전 첫 프레임으로 두어 FBX Lcl 기본 자세 = 결합 자세.
+  - 조명용 Icosphere 뺌 · glTF 메시 노드 빈 오브젝트는 뼈로 안 살림.
+■ 판정(원시 FBX 파싱 — io_scene_fbx.parse_fbx, 스크래치 carp/verify.py)
+  ① 뼈 Lcl 전역 vs Cluster TransformLink 최대 원소차 1e-6 · 메시 Model 전역 vs 메시 결합(TransformLink·Transform — 블렌더는 Transform에 L⁻¹·메시를 적는다) 0.0 ·
+    뼈 전역 배율 1.0 · 쉬는 자세 스킨 결과 vs 원시 정점×메시 전역 최대 0.0013mm · 가중치 없는 정점 0.
+  ② S 곡선 전부 1.0(최대 차 1e-6, 49키) · Idle 0프레임 스킨 결과 = 쉬는 자세(최대 0.001mm) · 최저점 0.
+  ③ 블렌더 재수입: 모든 프레임 뼈 행렬 배율 1(최대 차 3e-6) · 쉬는 자세·0프레임 0.577×2.0×0.81·최저 z 0 · 중간 프레임 0.567×1.996×0.81(꼬리 흔들림).
+  크기 0.577 × 2.0 × 0.81 m · 메시 1 · 정점 4,007.
+
+재질 → 텍스처(재질 이름 기준, glb 내장 이미지 원본 바이트, 1024 RGB PNG — 알파 없음):
+  carp → carp_baseColor.png(image0) + carp_normal.png(image2). 안 쓴 이미지: image1(ORM).

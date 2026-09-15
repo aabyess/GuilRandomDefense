@@ -476,6 +476,17 @@ UNITS = {
     #   🔸 메기 수염(stach_R0/L0_0~3)이 결합 자세에선 입 양옆으로 곧게 뻗은 막대(좌우 0.4) — Take 001(정지 자세 클립) 0프레임의 수염 8뼈 자세로 굳혀 늘어뜨린다.
     #   꼬리 chain_C0_0~2(가중치 524/418/318)가 root 밑(pelvis 형제) → Hips 밑으로. 쇄골이 위·뒤로 45°라 쇄골은 안 펴고 위팔부터 T자(수평 아래 21°).
     #   모자 포함 키 1.8. 재질 Body(이미지 0 + 노멀 2)·Assets(3 + 노멀 6) — 1(ORM)·4(ORM)·5(발광)·7(스펙큘러)은 FBX가 안 실음.
+    # 잉어(Sketchfab carp_fish.glb, 뼈 30·메시 1·삼각형 7,406·헤엄 클립 1개 「Scene」 1.97초): 🔴 inverseBindMatrices가 틀려 결합 자세로 읽으면
+    #   물고기가 세로로 선다(0.25×0.18×0.63 — 긴 축이 z), 클립 0프레임은 정상(0.62×0.18×0.25, 머리 −X·등 +Z). 아마추어 오브젝트 세계 배율 0.458(스트레이).
+    #   → 클립 0프레임 전체를 새 쉬는 자세로 굽고(pose_from_clip "all" — 매 프레임 변형 = 자세(f)·자세(0)⁻¹이라 틀린 IBM이 상쇄된다) 클립을 새 뼈대에 다시 굽는다.
+    #   _rootJoint는 세계 원점(몸에서 14 떨어짐, 가중치 0) → 빼고 꼬리 사슬 Bone.001_010을 같은 자리 Bone_00 밑으로(뿌리 하나). 방향은 머리 Bone.003_02 ↔ 꼬리 Bone.008_014(0프레임 꼬리가 휘어 81° — orient_snap으로 90° 단위).
+    #   Generic(사람형 아님) · 몸길이 2.0 · 배 최저 z 0 · 머리 −Y · 테이크 Idle(루트 이동 없음 — clip_ground 안 씀). 구현담당1 두 차례 경위는 SOURCE.txt.
+    "특별함_노건완": dict(path="Assets/Art/Units/특별함_노건완/특별함_노건완.fbx", kind="beast", size=("length", 2.0), anim=True, anim_drop_ok=True,
+                      source=os.path.join(DL, "carp_fish.glb"), no_nulls=True, drop_meshes=["Icosphere"], head="Bone.003_02", tail="Bone.008_014", orient_snap=True,
+                      pose_from_clip=("Scene", 0, "all"), take_names={"Scene": "Idle"}, clip_scene_basis=True,
+                      drop_bones=["_rootJoint"], reparent_bones={"Bone.001_010": "Bone_00"},
+                      glb_images={0: "carp_baseColor.png", 2: "carp_normal.png"},
+                      materials=dict(textures={"carp": [("DiffuseColor", "carp_baseColor.png"), ("NormalMap", "carp_normal.png")]})),
     "특별함_조도연": dict(path="Assets/Art/Units/특별함_조도연/특별함_조도연.fbx", kind="human", size=("height", 1.8),
                       source=os.path.join(DL, "league_of_legend_fan_arttahm_kench.glb"), glb_fix_identity_ibm=True, no_nulls=True, drop_meshes=["Icosphere"],
                       squash_chain=dict(bones=[f"thongue_C0_{i}_Jnt_0{26 + i}" for i in range(5)], factor=0.285),
@@ -732,7 +743,8 @@ def orientation(cfg, arm, report):
         return R
     if cfg["kind"] == "beast":
         head = pick(arm, cfg.get("head"), re.compile(r"(?i)^head"))
-        root = next(b for b in arm.data.bones if b.parent is None)
+        # tail: 뿌리 뼈가 몸에서 멀리 떨어진 리그(잉어 _rootJoint가 세계 원점) — 머리↔꼬리 뼈로 방향을 잰다
+        root = arm.data.bones[cfg["tail"]] if cfg.get("tail") else next(b for b in arm.data.bones if b.parent is None)
         fwd = pose_head(arm, head) - pose_head(arm, root)
         fwd.z = 0.0
         yaw = math.atan2(fwd.x, -fwd.y)
@@ -758,12 +770,18 @@ def orientation(cfg, arm, report):
     return R
 
 
-def sample_clips(src, arm_name, recipe, ref, guess_bind=True):
-    """애니메이션째 읽어 액션마다 프레임별 세계 뼈 행렬."""
+def sample_clips(src, arm_name, recipe, ref, guess_bind=True, scene_basis=False):
+    """애니메이션째 읽어 액션마다 프레임별 세계 뼈 행렬.
+    scene_basis: 매 프레임 되돌릴 자세 = 가져온 직후 자세(glTF 노드 기본 TRS를 결합 자세 기준으로 옮긴 것). 🔴 잉어(2026-09-15): IBM이 틀린 glb는
+    곡선 없는 채널(Bone_00 이동 등)이 단위가 아니라 노드 기본값이어야 한다 — 단위로 되돌리면 모든 프레임이 결합 자리(6,0,−13)에 떨어져 새 쉬는 자세와 47m 어긋났다."""
     load(src, anim=True, guess_bind=guess_bind)
     if recipe is not None:
         apply_recipe(recipe, ref)
     arm = bpy.data.objects[arm_name]
+    hold = {pb.name: pb.matrix_basis.copy() for pb in arm.pose.bones} if scene_basis else None
+    if scene_basis and arm.animation_data:
+        for t in arm.animation_data.nla_tracks:                         # NLA 트랙 끄고 활성 액션 하나만(clip_pose와 같은 조건)
+            t.mute = True
     empties = skeleton_empties(arm, ref["empties"] if ref is not None else None)
     from_gltf = src.lower().endswith((".glb", ".gltf"))
     clips = []
@@ -783,7 +801,7 @@ def sample_clips(src, arm_name, recipe, ref, guess_bind=True):
             # 🔴 액션이 키를 안 가진 뼈는 앞서 남은 자세를 그대로 쥔다(이호준 키 1개짜리 첫 클립이 둘째 클립 1프레임 자세로 구워졌다).
             # 유니티에서 곡선 없는 뼈는 쉬는 자세 — 매 프레임 쉬는 자세로 되돌린 뒤 평가한다.
             for pb in arm.pose.bones:
-                pb.matrix_basis = Matrix.Identity(4)
+                pb.matrix_basis = hold[pb.name] if hold else Matrix.Identity(4)
             bpy.context.scene.frame_set(f)
             world = {pb.name: arm.matrix_world @ pb.matrix for pb in arm.pose.bones}
             world.update({o.name: o.matrix_world.copy() for o in empties})
@@ -903,6 +921,8 @@ def clip_pose(src, guess_bind, clip, frame, bones):
     if hasattr(ad, "action_slot") and act.slots:
         ad.action_slot = act.slots[0]
     bpy.context.scene.frame_set(int(frame))
+    if bones == "all":                                                  # 바인드(IBM)가 틀린 glb(잉어): 한 프레임 전체를 새 쉬는 자세로
+        bones = [pb.name for pb in arm.pose.bones]
     missing = [n for n in bones if n not in arm.pose.bones]
     assert not missing, f"클립 자세로 굳힐 뼈가 없다 {missing}"
     return {n: arm.pose.bones[n].matrix_basis.copy() for n in bones}
@@ -1127,7 +1147,7 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         assert arm0 is None or arm0.matrix_world.determinant() < 0, f"{name}: X 거울이 안 먹었다"
         report["X 거울"] = "좌우 뒤집힌 원본 되돌림"
     if cfg.get("drop_meshes"):                                          # 바운티러시 pl_ 리그: 표정·손 모양 변형 메시가 한자리에 겹쳐 있다 — 기본만 남긴다
-        assert not cfg.get("anim"), f"{name}: drop_meshes는 클립 다시 굽기와 같이 못 쓴다"
+        assert not cfg.get("anim") or cfg.get("anim_drop_ok"), f"{name}: drop_meshes는 클립 다시 굽기와 같이 못 쓴다(다시 불러온 뒤 또 빼려면 anim_drop_ok)"
         for gone in cfg["drop_meshes"]:
             o = bpy.data.objects.get(gone)
             assert o is not None and o.type == "MESH", f"{name}: 뺄 메시가 없다 {gone}"
@@ -1150,11 +1170,23 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     arm_name = arm.name if arm else None
     clips = []
     if arm is not None and cfg.get("anim"):
-        clips = sample_clips(src, arm_name, recipe, ref, guess)
+        clips = sample_clips(src, arm_name, recipe, ref, guess, scene_basis=cfg.get("clip_scene_basis", False))
         load(src, anim=False, guess_bind=guess)
         if recipe is not None:
             apply_recipe(recipe, ref)
         arm = bpy.data.objects[arm_name]
+        if held_pose:                                                   # 🔴 클립 읽느라 다시 불러오면 굳힌 자세가 날아간다(잉어) — 다시 입힌다
+            for bname, basis in held_pose.items():
+                arm.pose.bones[bname].matrix_basis = basis
+            bpy.context.view_layer.update()
+        if cfg.get("drop_meshes"):
+            for gone in cfg["drop_meshes"]:
+                o = bpy.data.objects.get(gone)
+                if o is not None:
+                    bpy.data.objects.remove(o, do_unlink=True)
+        if cfg.get("take_names"):                                       # 원본 테이크 이름 → 유니티 클립 이름(잉어 Scene → Idle)
+            clips = [(cfg["take_names"].get(t, t), f0, fr) for t, f0, fr in clips]
+            report["테이크 이름"] = [c[0] for c in clips]
     scene = bpy.context.scene
     if recipe is not None:
         report["텍스처"] = relink_textures(ref["textures"], os.path.join(os.path.dirname(dst_path), "Textures"))
@@ -1554,6 +1586,9 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         report["클립"] = [c[0] for c in clips]
 
     # ── 검사·내보내기
+    if new_arm is not None and clips and cfg.get("clip_scene_basis"):
+        # FBX 모델 Lcl(기본 자세)은 내보낼 때 현재 프레임 자세로 적힌다 — 첫 프레임(= 새 쉬는 자세)으로 두어 Lcl 전역 = Cluster TransformLink
+        scene.frame_set(clips[0][1])
     bpy.context.view_layer.update()
     pts = [m.matrix_world @ v.co for m in meshes for v in m.data.vertices]
     lo2 = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
