@@ -541,6 +541,9 @@ UNITS = {
                       drop_meshes=["face_attack", "face_sp_01", "face_sp_02", "face_damage", "l_hand_close", "r_hand_close", "l_hand_weapon_01", "r_hand_weapon_01",
                                    "l_hand_weapon_02", "r_hand_weapon_02", "weapon_01", "weapon_02"],
                       rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
+                      # 🔴 유니티 아바타 실패(앞머리 f_l_hair_t가 Jaw·LeftEye 겹침) — 2차(HairRoot + 가중치 0 이름 눈·턱 뼈)도 실패 →
+                      #   Head 자손 머리카락 15뼈(앞 6 · 뒤 3사슬×3) 가중치를 Head로 합치고 지움. 휴머노이드 Idle은 이 뼈들을 원래 안 움직인다.
+                      merge_bones=dict(pattern=r"^(f_[lr]_hair_[bct]|b_[clr]_hair_0[123])$", into="mixamorig:Head"),
                       materials=dict(textures={"pl_adio_orig01": [("DiffuseColor", "pl_adio_orig01_diff.png")]})),
     # 찰로스(바운티러시 pl_ 리그 FBX, zip 속 rar 속 「charlos/pl_charlos_orig01 (merge).fbx」) — 2026-09-15 새 스킨. 이미 T자·기본 자세 = 쉬는 자세(손 결합 밀림 없음).
     #   뼈 60 · 발끝 뼈 있음 → PL_RENAME 그대로. 겹친 변형 16개 뺌: 얼굴 face_sp01·sp02·attack·damage(→ face_normal) · 손 close·sp02·sp03·sp04·r_hand_weapon01(→ l/r_hand_open) ·
@@ -1583,6 +1586,46 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             eb.parent = par
         if cfg.get("reparent_bones"):
             report["다시 붙인 뼈"] = len(cfg["reparent_bones"])
+        # 🔴 특별함_송형성(아디오, 2026-09-15 PM 유니티): 「Found duplicate transform 'f_l_hair_t' for human bone 'Jaw' and 'LeftEye'」 — 눈·턱 뼈 없는 pl_ 리그에서
+        #   유니티 자동 매핑이 Head 자손 머리카락 끝 뼈를 선택 얼굴 뼈로 잡는다(요크도 LeftEye=l_hair_01·Jaw=f_l_hair_01 — 겹치지만 않아 통과). 2차에서 앞머리를
+        #   가중치 0 HairRoot 밑으로 + 가중치 0 mixamorig:LeftEye·RightEye·Jaw를 넣었지만 유니티가 여전히 f_l_hair_t를 둘 다에 잡음 — 가중치 0 뼈는 스킨 뼈 목록에
+        #   없어 후보로 안 센 것으로 본다(사이타마·이병준 이름 붙은 눈은 눈 메시가 실려 있다). 휴머노이드 클립은 매핑 안 된 뼈를 안 움직이니
+        #   merge_bones: 이름이 맞는 뼈의 가중치를 into 뼈에 더하고 뼈를 지운다(겉모습·게임 동작 그대로, Head 자손에서 후보 자체를 없앰).
+        if cfg.get("merge_bones"):
+            mb = cfg["merge_bones"]
+            gone = [eb.name for eb in data.edit_bones if re.search(mb["pattern"], eb.name)]
+            assert gone and mb["into"] in data.edit_bones, f"{name}: merge_bones 대상 없음"
+            moved = 0
+            for m in meshes:
+                src = {m.vertex_groups[n].index for n in gone if n in m.vertex_groups}
+                if not src:
+                    continue
+                tg = m.vertex_groups.get(mb["into"]) or m.vertex_groups.new(name=mb["into"])
+                for v in m.data.vertices:
+                    add = sum(ge.weight for ge in v.groups if ge.group in src)
+                    if add > 0:
+                        cur = sum(ge.weight for ge in v.groups if ge.group == tg.index)
+                        tg.add([v.index], cur + add, "REPLACE")
+                        moved += 1
+                for gi in sorted(src, reverse=True):
+                    m.vertex_groups.remove(m.vertex_groups[gi])
+            for n in gone:
+                eb = data.edit_bones[n]
+                for c in list(eb.children):
+                    c.use_connect = False
+                    c.parent = eb.parent
+                data.edit_bones.remove(eb)
+            report["합친 뼈"] = f"{len(gone)}개 → {mb['into']} · 옮긴 정점 {moved}"
+        # 유니티식 선택 얼굴 뼈 겹침 점검(휴리스틱 — 경고만, PM 2026-09-15): Head 자손 중 이름이 Eye·Jaw가 아닌 끝 뼈(자식 없음)가 앞쪽(−Y)에서 좌우 짝이면 위험.
+        #   요크·고우선·김태영 등 걸려도 통과한 유니티가 있어 판정이 아니라 표시. 가중치 0 뼈는 유니티가 뼈로 안 세니 이름 붙인 빈 눈 뼈로는 못 막는다.
+        if "mixamorig:Head" in data.edit_bones:
+            head_eb = data.edit_bones["mixamorig:Head"]
+            unit = max(head_eb.length, 1e-4)
+            desc = [eb for eb in data.edit_bones if eb != head_eb and head_eb in eb.parent_recursive]
+            leaves = [(eb.name, (eb.head - head_eb.head) / unit) for eb in desc
+                      if not eb.children and not re.search(r"(?i)eye|jaw", eb.name) and (eb.head - head_eb.head).y < -0.1 * unit]
+            risky = sorted(n for n, d in leaves if abs(d.x) > 0.1 and any(abs(d2.x + d.x) < 0.15 and abs(d2.y - d.y) < 0.15 and abs(d2.z - d.z) < 0.15 for _, d2 in leaves))
+            report["얼굴 뼈 겹침 점검"] = f"Head 자손 {len(desc)}" + (f" · ⚠️ 끝·앞쪽·좌우 짝 {risky}" if risky else " · 위험 없음")
         bpy.ops.object.mode_set(mode="OBJECT")
         report["뼈"] = len(data.bones)
 

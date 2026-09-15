@@ -1,0 +1,37 @@
+출처: ~/Downloads/one-piece-bounty-rush-adio.zip (4,516,684 bytes · sha256 313c259c03e4de3a901cfa705db5bd96c0982897c46f9e1723e895178fb110db) — 원피스 바운티러시 아디오
+  zip 속 source/pl_adio_orig01.rar (3,432,107 bytes · sha256 b8550f86f4fe3543…) 속 pl_adio_orig01/pl_adio_orig01.fbx (9,490,080 bytes · sha256 39f3c64ce6d7a7ed…)
+  + textures/pl_adio_orig01_diff.png(zip, sha256 93dde3cd…)·rar 안 pl_adio_orig01_diff.png(1,335,384 bytes · sha256 1924ee9b…) — 바이트는 다르지만 픽셀 비교 결과 RGB·알파 전부 동일(1024 RGBA).
+  FBX 안 파일명 문자열은 .png만(abnormal_pattern·matcap·pl_adio_orig01_diff·ramp·stg_gasha_tex_bayer_dither) → rar 안 png 기준. 같은 이름 .jpeg 판(diff는 RGB 평균차 0.0002)은 안 씀.
+받은 날: 2026-09-15 · 유닛: 특별함_송형성 (unitName 틱장애, Special)
+원본(보존 — 지우지 말 것). FBX: 바운티러시 pl_ 리그 · 아마추어 뼈 64 · 배율 0.01·X 90° · 메시 17 · 재질 1 · 애니 150(안 씀)
+
+⚠️ 상용 게임(One Piece Bounty Rush) 추출 에셋. 2026-09-07 사장님 확정: IP 제약 없음(상업적 사용 아님).
+
+정리: 2026-09-15 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_송형성」으로 재현(archive = zip → rar → fbx).
+  - 이미 T자 · 기본 자세 = 쉬는 자세 → 빡빡이(특별함_박민석)식 손 클러스터 결합 밀림 없음.
+  - 겹친 변형 메시 12개 뺌: 얼굴 face_attack·face_sp_01·face_sp_02·face_damage(→ face_normal) · 손 l/r_hand_close·l/r_hand_weapon_01·l/r_hand_weapon_02(→ l/r_hand_open) ·
+    쌍권총 weapon_01·weapon_02(기본 대기 모습엔 없음). 남김 5: body · face_normal · hair · l/r_hand_open.
+  - 사람형 매핑 뼈 21개 mixamorig 이름(PL_RENAME — 발끝 뼈 있음): Body_Pelvis→Hips · Body_Belly→Spine · Body_Chest→Spine1 · Head_Neck→Neck · Head_Face→Head ·
+    L/RArm_Clavicle→Shoulder · Arm_Upper→Arm · Arm_Fore→ForeArm · Hand_Palm→Hand · Leg_Thigh→UpLeg · Leg_Calf→Leg · Foot_Heel→Foot · Foot_Toe→ToeBase.
+    보조 뼈(치마 b/f/s × l/r × 01~02 · f_c_skirt · collar b/l/r · hair b_c/b_l/b_r 01~03 · f_l/f_r_hair_b/c/t · parts f_l/f_r/l/r · l/r_weapon_joint · L/RHand_Fore_sup · HELPER)는 이름 그대로.
+  - 빈 오브젝트 13(총구 효과·플래그·머리끝·치마끝 표식)은 뼈로 안 살림.
+  - orient_snap · 키 1.8m · 발 z 0 · 정면 −Y. 크기 1.646 × 0.561 × 1.8 m · 뼈 64 · 메시 5.
+■ 판정: T 1.0 · 팔45°·무릎90° 최대 2.72·상위 1% 1.10 · 유니티 공용 Idle(idle.fbx) 최대 1.89·상위 1% 1.19 · 원시 FBX: 뼈 Lcl 전역 vs TransformLink 1e-6 · 메시 전역 vs 메시 결합 0.0 ·
+  뼈 배율 1.0 · 쉬는 자세 스킨 결과 vs 원시 정점 최대 0.0005mm · 가중치 없는 정점 0.
+
+재질 → 텍스처(재질 이름 그대로):
+  pl_adio_orig01 → pl_adio_orig01_diff.png — 알파가 전부 1.0(명암 마스크 아님)이라 RGB PNG로 써도 잃는 것 없음(다른 pl_ 유닛과 같은 archive_rgb 경로).
+
+2026-09-15 수정(PM 유니티 실측): Humanoid 아바타 실패 「Invalid Avatar Rig Configuration. Missing or invalid transform:
+  Found duplicate transform 'f_l_hair_t' for human bone 'Jaw' and 'LeftEye'」 — 이 리그엔 눈·턱 뼈가 없어 유니티 자동 매핑이
+  Head(Head_Face) 자손 중 앞머리 끝 뼈 f_l_hair_t를 선택 얼굴 뼈 Jaw·LeftEye 둘 다에 잡았다(.meta humanDescription: LeftEye·Jaw = f_l_hair_t, RightEye = f_r_hair_t).
+  - 2차(실패): 앞머리 6뼈를 가중치 0 HairRoot 밑으로 + 가중치 0 mixamorig:LeftEye·RightEye·Jaw 추가 → 유니티가 같은 매핑·같은 오류.
+    가중치 0 뼈는 스킨 뼈 목록에 없어 후보로 안 세는 것으로 본다(이름으로 잡힌 사이타마·이병준 눈 뼈엔 눈 메시가 실려 있다).
+  - 3차(현재): fix_unit_fbx.py UNITS 「특별함_송형성」 merge_bones — Head 자손 머리카락 15뼈(f_l/f_r_hair_b·c·t, b_c/b_l/b_r_hair_01~03)의
+    가중치를 mixamorig:Head에 더하고 뼈를 지움(옮긴 정점 1,296). 휴머노이드 클립은 매핑 안 된 뼈를 원래 안 움직이니 겉모습·게임 동작 그대로.
+    Head 자손 0 → 유니티가 Jaw·Eye 후보로 잡을 뼈 자체가 없다. 매핑 21뼈 mixamorig 이름·메시·텍스처는 그대로.
+  - 빌드 보고 「얼굴 뼈 겹침 점검」: Head 자손 중 이름이 Eye·Jaw 아닌 끝 뼈가 앞쪽(−Y) 좌우 짝이면 경고 — 이 판 「Head 자손 0 · 위험 없음」.
+    ※ 경고일 뿐 판정이 아니다: 요크(LeftEye=l_hair_01·Jaw=f_l_hair_01)·고우선·김태영 등은 겹치지 않아 통과했다.
+검증: FBX 521,276 bytes · 뼈 49 · 크기 1.646×0.561×1.8 m · 최저 z 0 · 텍스처 pl_adio_orig01_diff.png 바이트 동일.
+  원시 FBX: 뼈 전역 vs TransformLink 1e-6 · 쉬는 자세 스킨 vs 원시 정점 0.0005 mm · 가중치 없는 정점 0.
+  T자 늘어짐 1.0 · 팔45°·무릎90° 최대 2.72(상위1% 1.10) · idle.fbx 옮겨 입힘 최악 1.89(f85)·상위1% 1.19 — 머리카락 뼈를 합치기 전과 같음.
