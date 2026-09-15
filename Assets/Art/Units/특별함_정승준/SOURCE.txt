@@ -1,0 +1,24 @@
+출처: ~/Downloads/one-piece-bounty-rush-ryuma.zip (3,822,053 bytes · sha256 ca01e8c2d42201fb081ddd37a5fbbc067c4833515197a04f8ab7d12e976544b6) — 원피스 바운티러시 류마
+  zip 속 source/pl_ryuma_orig01.rar (2,538,885 bytes · sha256 0ed111c7cd2a4574…, RAR5 — bsdtar로 풀림) 속 pl_ryuma_orig01/pl_ryuma_orig01.fbx (8,523,280 bytes · sha256 189e518d56ab080d…)
+  + textures/pl_ryuma_orig01_diff.png(zip, sha256 69fba358…)·rar 안 pl_ryuma_orig01_diff.png(sha256 d553c3ff…) — 바이트는 다르지만 픽셀 비교 결과 RGB·알파 전부 동일(1024 RGBA). FBX가 부르는 rar 판 기준.
+  안 쓴 파일: ramp·matcap·abnormal_pattern·stg_common_bayer_dither.png(게임 셰이더용)
+받은 날: 2026-09-15 · 유닛: 특별함_정승준 (unitName 저승사자, Special)
+원본(보존 — 지우지 말 것). FBX: 바운티러시 pl_ 리그 · 아마추어 뼈 62(번호 꼬리 없음) · 배율 0.01·X 90° · 메시 11(삼각형 3,741) · 재질 1 · 애니 90(안 씀)
+
+⚠️ 상용 게임(One Piece Bounty Rush) 추출 에셋. 2026-09-07 사장님 확정: IP 제약 없음(상업적 사용 아님).
+
+정리: 2026-09-15 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_정승준」으로 재현(archive = zip → rar → fbx).
+  - 이미 T자(위팔·아래팔 수평) · 기본 자세 = 쉬는 자세.
+  - 겹친 변형 메시: 손 2벌(open·close) → l/r_hand_open만 · 칼 3벌 → 허리에 찬 한 벌(waist_blade 178 + waist_sheath 92)만.
+    뺌: l_hand_close · r_hand_close · l_blade · l_sheath(왼손에 든 칼) · r_blade(오른손에 든 칼). 렌더로 판정 — 손에 든 칼은 T자 손끝에 칼코등이만 떠 보이고,
+    허리 칼은 대기 모습에 맞음. 남김 6: body · face_normal · l/r_hand_open · waist_blade · waist_sheath. 크기 앞뒤가 긴 건 허리에 가로로 찬 칼.
+  - 사람형 매핑 뼈 21개 mixamorig 이름(PL_RENAME — 사보·조즈와 같은 규칙): Body_Pelvis→Hips · Body_Belly→Spine · Body_Chest→Spine1 · Head_Neck→Neck · Head_Face→Head ·
+    L/RArm_Clavicle→Shoulder · Arm_Upper→Arm · Arm_Fore→ForeArm · Hand_Palm→Hand · Leg_Thigh→UpLeg · Leg_Calf→Leg · Foot_Heel→Foot · Foot_Toe→ToeBase.
+    보조 뼈(BMuffler/FMuffler 1~3 목도리 · L/RSode 1~2 소매 · Skirt a~f 01~03 · Weapon_Sheath·Sheath1·Blade1 · HELPER · Mage)는 이름 그대로 — 매핑 이름이 겹치지 않음.
+  - 빈 오브젝트 7(l_hand_weapon·waist_weapon·model_root·post/pre_flag·Weapon_Blade·HELPER_key — 무기 자리·플래그 표식)은 뼈로 안 살림.
+  - orient_snap · 키 1.8m · 발 z 0 · 정면 −Y. 크기 1.696 × 1.33 × 1.8 m · 뼈 62 · 메시 6.
+■ 판정: T 1.0 · 팔45°·무릎90° 최대 1.97·상위 1% 1.04 · 유니티 공용 Idle(idle.fbx) 최대 2.51·상위 1% 1.16 — 목도리·소매·치마(겉옷 자락) 관통·찢김 없음(최악 프레임 정면·옆·가랑이 렌더) ·
+  원시 FBX: 뼈 Lcl 전역 vs TransformLink 1e-6 · 메시 전역 vs 메시 결합 0.0 · 뼈 배율 1.0 · 쉬는 자세 스킨 결과 vs 원시 정점 최대 0.0004mm · 가중치 없는 정점 0.
+
+재질 → 텍스처(재질 이름 그대로):
+  pl_ryuma_orig01 → pl_ryuma_orig01_diff.png — 🔸 알파가 명암 마스크(알파<0.98 픽셀 99.99%·평균 0.746)라 알파 뺀 RGB PNG로 새로 씀(archive_rgb).
