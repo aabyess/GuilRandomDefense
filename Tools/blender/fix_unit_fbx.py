@@ -428,8 +428,11 @@ UNITS = {
                       drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_shigan", "r_hand_shigan"],
                       rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True),
     # 🔴 특별함_박민석: r_hand_open이 쉬는 자세에서 몸 오른쪽 2배 키 거리에 떠 있다(원본 결함) → 손은 양쪽 close(주먹)를 기본으로. chain·headphone·boot 유지
+    #   09-15 사장님 신고(오른팔 이상): r_hand_open 메시 노드가 오른쪽으로 4.47 밀리고 그 클러스터 TransformLink도 같이 밀려, 블렌더가 RHand 뼈 쉬는 자리를 틀리게 잡았다 →
+    #   정점이 맞는 r_hand_close가 기본 자세 굽기에서 왼손 쪽(+x)으로 넘어가 유니티 Idle에서 오른 주먹이 2.2m 옆에 떴다. body1도 오른 소매 끝이 RHand 뼈에 실려 같은 사고 →
+    #   둘 다 원시 정점 그대로(bake_rest_meshes). 원본에서 기본 자세가 쉬는 자세와 다른 뼈는 이 밀린 오른손 사슬뿐이라 원시 정점 = 옳은 기본 모습.
     "특별함_박민석": dict(rev="2d515a55", path="Assets/Art/Units/특별함_박민석/특별함_박민석.fbx", kind="human", size=("height", 1.8),
-                      drop_meshes=["face_attack", "face_damage", "l_hand_open", "r_hand_open"],
+                      drop_meshes=["face_attack", "face_damage", "l_hand_open", "r_hand_open"], bake_rest_meshes=["r_hand_close", "body1"],
                       rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True),
     # 새 스킨(git 원본 없음) — 다운로드 rar에서 FBX·텍스처를 꺼내 짓는다. 쉬는 자세 팔 A자 44.7° → T자로 굽는다. 재질 34065 하나(Dots Stroke·Material은 면 0, 안 읽힘).
     "특별함_황정기": dict(path="Assets/Art/Units/특별함_황정기/특별함_황정기.fbx", kind="human", size=("height", 1.8),
@@ -515,6 +518,16 @@ UNITS = {
                                   for s, side in (("L", "Left"), ("R", "Right"))},
                       solid_textures={"Iron_man_leg:red": None, "Iron_man_leg:gold": None, "HD_Ironman:silver": None, "lambert1": None, "14 - Default": None,
                                       "HD_Ironman:darksilver": (0.3, 0.3, 0.32), "HD_Ironman:black": (0.02, 0.02, 0.02), "HD_Ironman:yellow": (1.0, 0.9, 0.55)}),
+    # 류마(바운티러시 pl_ 리그 FBX, zip 속 rar 속 pl_ryuma_orig01.fbx) — 2026-09-15 새 스킨. 이미 T자·기본 자세 = 쉬는 자세. 뼈 62(번호 꼬리 없음 → PL_RENAME 그대로).
+    #   겹친 변형: 손 2벌 → l/r_hand_open · 칼 3벌(허리에 찬 waist_blade+waist_sheath / 왼손 l_blade+l_sheath / 오른손 r_blade) → 허리 한 벌만(렌더로 판정:
+    #   손에 든 칼은 T자 손끝에 칼코등이만 떠 보이고, 허리 칼은 대기 모습에 맞음). 빈 오브젝트 7(무기 자리·플래그 표식)은 뼈로 안 살림.
+    #   텍스처: rar 안 _diff.png와 zip textures/ 판이 바이트는 다르지만 픽셀 동일 — 알파 = 명암 마스크(알파<0.98 99.99%·평균 0.746) → RGB PNG.
+    "특별함_정승준": dict(path="Assets/Art/Units/특별함_정승준/특별함_정승준.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(DL, "one-piece-bounty-rush-ryuma.zip"), "source/pl_ryuma_orig01.rar", "pl_ryuma_orig01/pl_ryuma_orig01.fbx"),
+                      archive_rgb={"pl_ryuma_orig01/pl_ryuma_orig01_diff.png": "pl_ryuma_orig01_diff.png"},
+                      drop_meshes=["l_hand_close", "r_hand_close", "l_blade", "l_sheath", "r_blade"],
+                      rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
+                      materials=dict(textures={"pl_ryuma_orig01": [("DiffuseColor", "pl_ryuma_orig01_diff.png")]})),
     # 요크(바운티러시 pl_ 리그 FBX, zip 속 rar 속 「pl_york_orig01 (merge).fbx」) — 2026-09-15 사장님 지시로 릴리스 스킨 교체. 이미 T자.
     #   겹친 변형: 얼굴 6벌 → face_normal · 손 4벌 → l/r_hand_open · 오른손 총(r_weapon_gun_01)·총 쥔 손(r_hand_weapon_gun01) 뺌(기본 대기) ·
     #   콧물 풍선(snot_bubble, 자는 연출) 뺌. 고글 렌즈(_trans_goggles 재질)는 남기되 불투명(알파는 명암 마스크라 RGB로).
@@ -525,8 +538,8 @@ UNITS = {
                       drop_meshes=["face_attack", "face_damage", "face_sp01", "face_sp02", "face_sp03", "l_hand_close", "r_hand_close",
                                    "l_hand_open_02", "r_hand_open_02", "r_hand_weapon_gun01", "r_weapon_gun_01", "snot_bubble"],
                       rename_bones=YORK_RENAME, no_nulls=True, orient_snap=True,
-                      materials=dict(textures={m: [("DiffuseColor", "pl_york_orig01_diff.png")]
-                                               for m in ("pl_york_orig01", "pl_york_orig01_trans", "pl_york_orig01_trans_goggles")})),
+                      # pl_york_orig01_trans 재질은 뺀 콧물 풍선만 써서 표에서 뺀다(없는 재질을 걸면 relink가 멈춘다)
+                      materials=dict(textures={m: [("DiffuseColor", "pl_york_orig01_diff.png")] for m in ("pl_york_orig01", "pl_york_orig01_trans_goggles")})),
     "특별함_노건완": dict(path="Assets/Art/Units/특별함_노건완/특별함_노건완.fbx", kind="beast", size=("length", 2.0), anim=True, anim_drop_ok=True,
                       source=os.path.join(DL, "carp_fish.glb"), no_nulls=True, drop_meshes=["Icosphere"], head="Bone.003_02", tail="Bone.008_014", orient_snap=True,
                       pose_from_clip=("Scene", 0, "all"), take_names={"Scene": "Idle"}, clip_scene_basis=True,
@@ -1387,8 +1400,11 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         report["기본 자세≠쉬는 자세"] = round(posed, 4)
         if posed > 1e-4:
             dg = bpy.context.evaluated_depsgraph_get()
+            keep_rest = set(cfg.get("bake_rest_meshes", ()))
             for m in meshes:
-                if skinned_to(m) != arm:
+                if skinned_to(m) != arm or m.name in keep_rest:
+                    # bake_rest_meshes: 🔴 특별함_박민석(2026-09-15 사장님 신고 「오른팔 이상」) — 원본 r_hand_open의 오른손 클러스터 결합이 오른쪽으로 4.47 밀려 있어
+                    #   블렌더가 그걸로 RHand 뼈 쉬는 자리를 잡는다. 정점이 맞는 r_hand_close도 그 틀린 쉬는 자리 기준 기본 자세로 변형되면 왼손 쪽(+x)으로 넘어갔다 → 원시 정점 그대로.
                     continue
                 assert not m.data.shape_keys, f"{m.name}: 모양 키가 있는데 기본 자세가 쉬는 자세와 달라 굳힐 수 없다"
                 baked = bpy.data.meshes.new_from_object(m.evaluated_get(dg), preserve_all_data_layers=True, depsgraph=dg)

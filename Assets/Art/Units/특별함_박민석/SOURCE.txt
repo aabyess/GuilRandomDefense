@@ -28,3 +28,17 @@
   - 사람형 매핑 뼈 21개 이름을 mixamorig로(PL_RENAME, 가중치 그룹 같이 — 모리아에서 유니티 통과한 방식): Body_Pelvis→Hips · Body_Belly→Spine · Body_Chest→Spine1 ·
     Head_Neck→Neck · Head_Face→Head · L/R Arm_Clavicle→Shoulder · Arm_Upper→Arm · Arm_Fore→ForeArm · Hand_Palm→Hand · Leg_Thigh→UpLeg · Leg_Calf→Leg · Foot_Heel→Foot · Foot_Toe→ToeBase
   - Null 5개는 같은 이름·같은 자리 뼈로(원래 노드 틀). 겉싸개 배율 0.01·X 90° 없앰, 키 1.8m · 발 z 0 · 정면 −Y(방향은 90° 단위로만 — orient_snap). 액션은 안 실음(사람형 공용 Idle).
+
+── 2026-09-15 수정: 오른팔·오른 주먹이 엉뚱한 자리에 붙던 것(사장님 신고 「빡빡이 스킨 오른쪽 팔이 이상함」) ──
+  - 증상: 유니티 Idle에서 오른팔이 내려가면 오른 주먹이 몸 옆으로 2.2m 떨어져 날아감(인형 오른 소매 끝에 손 없음).
+    옛 FBX: r_hand_close 131정점 전부가 RightHand 뼈(x −1.02)가 아니라 왼손 쪽(무게중심 x +1.167)에 있었고, body1의 오른 소매 끝 정점 51개 중 36개도 왼쪽.
+  - 원인(원본 원시 FBX 파싱): r_hand_open 메시 노드가 오른쪽으로 4.47(원본 단위) 밀려 있고 그 클러스터의 RHand_Palm·RHand_Fore_sup TransformLink도 같이 4.47 밀려 있다.
+    블렌더 가져오기가 이 결합으로 오른손 뼈 쉬는 자리를 잡아(RHand_Palm −0.065 ↔ LHand_Palm +0.020), 정점이 맞는 r_hand_close·body1(오른 소매)이
+    기본 자세 굽기에서 그 틀린 쉬는 자리 기준으로 변형돼 왼쪽으로 넘어갔다. 원본에서 기본 자세가 쉬는 자세와 다른 뼈는 이 오른손 사슬뿐이다.
+    (09-14 기록의 「r_hand_open이 쉬는 자세에서 떠 있는 결함」도 같은 밀린 결합 — 기본 자세로 변형하면 r_hand_open은 제자리.)
+  - 수정: fix_unit_fbx.py bake_rest_meshes=["r_hand_close", "body1"] — 두 메시는 기본 자세로 변형하지 않고 원시 정점 그대로(뼈는 기본 자세 = 옳은 Lcl 자리).
+    손은 여전히 양쪽 주먹(close). 몸·체인·헤드폰·부츠·재질·텍스처 그대로.
+  - 결과: 오른 주먹 무게중심 x −1.087 = 왼 주먹 +1.087 대칭(각 Hand 뼈 머리보다 7cm 바깥 — 주먹이 손목 앞으로 나온 모양, 왼쪽과 같음) ·
+    오른팔·손 뼈가 최대 가중치인데 왼쪽에 있는 정점 167 → 0 · 크기 2.409 × 0.957 × 1.8 m.
+  - 판정: T 1.0 · 팔45°·무릎90° 최대 3.57 · 유니티 공용 Idle(idle.fbx) 최대 4.83(어깨 뒤 좌우 대칭 자리, 손 아님) · 두 주먹 소매 끝에 붙음(렌더) ·
+    원시 FBX: 뼈 Lcl 전역 vs TransformLink 0.0 · 메시 전역 vs 결합 0.0 · 쉬는 자세 스킨 결과 vs 원시 정점 최대 0.0003mm.
