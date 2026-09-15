@@ -1,0 +1,24 @@
+출처: ~/Downloads/one-piece-bounty-rush-charlos.zip (3,577,424 bytes · sha256 318224ca4363c8dae72b65391138482c468b148701ed39fb98a451a8a73ef583) — 원피스 바운티러시 찰로스 성
+  zip 속 source/charlos.rar (2,678,807 bytes · sha256 949f9e0aed99ff11…) 속 「charlos/pl_charlos_orig01 (merge).fbx」(9,753,760 bytes · sha256 0ea350012506a0ce…)
+  + textures/pl_charlos_orig01_diff.png(zip, sha256 655750a2…)·rar 안 charlos/pl_charlos_orig01_diff.png(sha256 6fdc656b…) — 바이트는 다르지만 픽셀 비교 결과 RGB·알파 전부 동일(1024 RGBA). FBX가 부르는 rar 판 기준.
+  안 쓴 파일: stg_gasha_tex_bayer_dither.png(게임 셰이더용)
+받은 날: 2026-09-15 · 유닛: 특별함_김태영 (unitName 일베조무사, Special)
+원본(보존 — 지우지 말 것). FBX: 바운티러시 pl_ 리그((merge) 형식) · 아마추어 pl_charlos_orig01 뼈 60 · 배율 0.01·X 90° · 메시 22 · 재질 1 · 애니 128(안 씀)
+
+⚠️ 상용 게임(One Piece Bounty Rush) 추출 에셋. 2026-09-07 사장님 확정: IP 제약 없음(상업적 사용 아님).
+
+정리: 2026-09-15 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_김태영」으로 재현(archive = zip → rar → fbx).
+  - 이미 T자 · 기본 자세 = 쉬는 자세 → 빡빡이(특별함_박민석)식 손 클러스터 결합 밀림 없음(원시 ↔ 기본 자세 변형 이동 0).
+  - 겹친 변형 메시 15개 뺌: 얼굴 face_sp01·face_sp02·face_attack·face_damage(→ face_normal) · 손 l/r_hand_close·l/r_hand_sp02·sp03·sp04·r_hand_weapon01(→ l/r_hand_open) ·
+    총 r_weapon_01(기본 대기엔 없음) · 콧물 변형 hanamizu_sp. 남김 7: body · face_normal · hair · backpack(우주복 등 탱크) · hanamizu(콧물, 찰로스 특징이라 남김) · l/r_hand_open.
+  - 사람형 매핑 뼈 21개 mixamorig 이름(PL_RENAME — 발끝 뼈 있음): Body_Pelvis→Hips · Body_Belly→Spine · Body_Chest→Spine1 · Head_Neck→Neck · Head_Face→Head ·
+    L/RArm_Clavicle→Shoulder · Arm_Upper→Arm · Arm_Fore→ForeArm · Hand_Palm→Hand · Leg_Thigh→UpLeg · Leg_Calf→Leg · Foot_Heel→Foot · Foot_Toe→ToeBase.
+    보조 뼈(치마 b/f/s × l/r × 01~03 · collar b/f/l/r · backpack_01~02 · body_parts_01~04 · hair · r_hanamizu·sp · r_weapon_joint · L/RHand_Fore_sup)는 이름 그대로 — 매핑과 안 겹침.
+  - 빈 오브젝트 16(총구·비눗방울 효과·플래그·shabon_joint)은 뼈로 안 살림.
+  - orient_snap · 키 1.8m · 발 z 0 · 정면 −Y. 크기 1.907 × 0.748 × 1.8 m(앞뒤는 등 탱크) · 뼈 60 · 메시 7.
+■ 판정: T 1.0 · 팔45°·무릎90° 최대 1.82·상위 1% 1.09 · 유니티 공용 Idle(idle.fbx) 최대 3.52·상위 1% 1.27 — 겉옷 자락·등 탱크·콧물 찢김·다리 관통 없음(최악 프레임 정면·가랑이 렌더).
+  🔸 Idle에서 앞·옆 치마 판이 서로 겹치는 자리에 옅은 줄이 보임(판끼리 겹침, 찢김 아님 — hem_follow 안 씀) ·
+  원시 FBX: 뼈 Lcl 전역 vs TransformLink 0.0 · 메시 전역 vs 메시 결합 0.0 · 뼈 배율 1.0 · 쉬는 자세 스킨 결과 vs 원시 정점 최대 0.0004mm · 가중치 없는 정점 0.
+
+재질 → 텍스처(재질 이름 그대로):
+  pl_charlos_orig01 → pl_charlos_orig01_diff.png — 🔸 알파가 명암 마스크(알파<0.98 픽셀 98.6%·평균 0.856)라 알파 뺀 RGB PNG로 새로 씀(archive_rgb).

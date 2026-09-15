@@ -531,6 +531,17 @@ UNITS = {
                                   for s, side in (("L", "Left"), ("R", "Right"))},
                       solid_textures={"Iron_man_leg:red": None, "Iron_man_leg:gold": None, "HD_Ironman:silver": None, "lambert1": None, "14 - Default": None,
                                       "HD_Ironman:darksilver": (0.3, 0.3, 0.32), "HD_Ironman:black": (0.02, 0.02, 0.02), "HD_Ironman:yellow": (1.0, 0.9, 0.55)}),
+    # 아디오(바운티러시 pl_ 리그 FBX, zip 속 rar 속 pl_adio_orig01.fbx) — 2026-09-15 새 스킨. 이미 T자·기본 자세 = 쉬는 자세(손 결합 밀림 없음). 뼈 64 · 발끝 뼈 있음 → PL_RENAME.
+    #   겹친 변형 13개 뺌: 얼굴 face_attack·face_sp_01·face_sp_02·face_damage(→ face_normal) · 손 close·weapon_01·weapon_02(→ l/r_hand_open) · 쌍권총 weapon_01·weapon_02(기본 대기엔 없음).
+    #   빈 오브젝트 13(총구 효과·플래그·머리끝·치마끝 표식)은 뼈로 안 살림.
+    #   텍스처: FBX는 .png를 부름(rar 안 같은 이름 .jpeg 판은 안 씀). rar 안 png와 zip textures/ 판이 바이트는 다르지만 픽셀 동일, 알파 전부 1.0(마스크 아님) — RGB로 써도 잃는 것 없음.
+    "특별함_송형성": dict(path="Assets/Art/Units/특별함_송형성/특별함_송형성.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(DL, "one-piece-bounty-rush-adio.zip"), "source/pl_adio_orig01.rar", "pl_adio_orig01/pl_adio_orig01.fbx"),
+                      archive_rgb={"pl_adio_orig01/pl_adio_orig01_diff.png": "pl_adio_orig01_diff.png"},
+                      drop_meshes=["face_attack", "face_sp_01", "face_sp_02", "face_damage", "l_hand_close", "r_hand_close", "l_hand_weapon_01", "r_hand_weapon_01",
+                                   "l_hand_weapon_02", "r_hand_weapon_02", "weapon_01", "weapon_02"],
+                      rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
+                      materials=dict(textures={"pl_adio_orig01": [("DiffuseColor", "pl_adio_orig01_diff.png")]})),
     # 찰로스(바운티러시 pl_ 리그 FBX, zip 속 rar 속 「charlos/pl_charlos_orig01 (merge).fbx」) — 2026-09-15 새 스킨. 이미 T자·기본 자세 = 쉬는 자세(손 결합 밀림 없음).
     #   뼈 60 · 발끝 뼈 있음 → PL_RENAME 그대로. 겹친 변형 16개 뺌: 얼굴 face_sp01·sp02·attack·damage(→ face_normal) · 손 close·sp02·sp03·sp04·r_hand_weapon01(→ l/r_hand_open) ·
     #   총 r_weapon_01 · 콧물 변형 hanamizu_sp. 콧물 hanamizu(찰로스 트레이드마크)·등 탱크 backpack은 남김. 빈 오브젝트 16(총구·비눗방울 효과·플래그)은 뼈로 안 살림.
