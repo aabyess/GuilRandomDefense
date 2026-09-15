@@ -276,6 +276,9 @@ UNITS = {
                       drop_meshes=["Object_7", "Object_8", "Object_14", "Object_15", "Object_17", "Object_18", "Object_19", "Object_22", "Object_23", "Object_24",
                                    "Object_26", "Object_27", "Object_28", "Object_30", "Object_31", "Icosphere"],
                       rename_bones=SABO_RENAME, rename_regex=(r"([A-Za-z][A-Za-z0-9_]*?)_[0-9]+", r"\1"), orient_snap=True,
+                      # 🔴 유니티 Idle에서 바지가 코트 앞·옆 트임을 뚫음(PM 09-14) — idle.fbx를 옮겨 입혀 잰 관통 98% 프레임·최대 9cm →
+                      #   자락 가중치 85%까지 같은 쪽 넓적다리로(엉덩이→끝 선형) + 코트에 가려진 넓적다리·허리 반지름 ×0.45 → 27% 프레임·정점 1개 최대 2.2cm, 렌더로 안 보임
+                      hem_follow=dict(prefix="coat", share=0.85, ramp="linear", thigh_shrink=0.45, shrink_top=0.12, shrink_min_leg=0.15),
                       glb_images={0: "pl_sabo_stam01_diff.png"},
                       materials=dict(textures={"pl_sabo_stam01": [("DiffuseColor", "pl_sabo_stam01_diff.png")]})),
     # 레이쥬: 이미 T자. 뿌리 bone_0_02 > bone_1_03(+ 형제 bone_26_028) — 가중치 0 중간 뼈 → 빼서 Hips(bone_2_04)가 _rootJoint 바로 밑.
@@ -1411,6 +1414,79 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             m.matrix_basis = Matrix.Identity(4)
     if new_arm is not None and cfg.get("tpose_arms"):
         tpose_arms(new_arm, meshes, report, cfg["tpose_arms"] if isinstance(cfg["tpose_arms"], dict) else None)
+    if new_arm is not None and cfg.get("hem_follow"):
+        # 🔴 특별함_박예원(사보) 유니티 Idle(2026-09-15): 긴 코트 자락이 척추 뼈(coat_*)에만 실려 넓적다리가 벌어지면 바지가 코트 앞·옆 트임을 뚫었다
+        #   (idle.fbx를 옮겨 입혀 잰 관통: 98% 프레임, 최대 9cm). UpLeg 높이 아래 코트 정점의 코트 가중치 일부를 같은 쪽 UpLeg로 넘긴다 —
+        #   엉덩이 높이 0 → 자락 끝 share, 가운데 ±center에서 좌우를 매끄럽게 나눠 앞섶이 안 찢기게. 코트 아닌 가중치는 그대로.
+        hf = cfg["hem_follow"]
+        share, center, ramp, shrink = hf.get("share", 0.6), hf.get("center", 0.05), hf.get("ramp", "smooth"), hf.get("thigh_shrink", 1.0)
+        left, right = hf.get("left", "mixamorig:LeftUpLeg"), hf.get("right", "mixamorig:RightUpLeg")
+        top = (new_arm.matrix_world @ new_arm.data.bones[left].head_local).z
+        moved = 0
+        for m in meshes:
+            coat_ids = {g.index for g in m.vertex_groups if g.name.startswith(hf["prefix"])}
+            if not coat_ids:
+                continue
+            Mw = m.matrix_world
+            zs = [(Mw @ v.co).z for v in m.data.vertices if any(g.group in coat_ids and g.weight > 1e-4 for g in v.groups)]
+            if not zs:                                                  # 그룹 이름만 있고 실린 정점이 없는 메시
+                continue
+            hem = min(zs)
+            gl = m.vertex_groups.get(left) or m.vertex_groups.new(name=left)
+            gr = m.vertex_groups.get(right) or m.vertex_groups.new(name=right)
+            for v in m.data.vertices:
+                cw = [(g.group, g.weight) for g in v.groups if g.group in coat_ids and g.weight > 1e-4]
+                if not cw:
+                    continue
+                p = Mw @ v.co
+                t = min(max((top - p.z) / max(top - hem, 1e-6), 0.0), 1.0)
+                if ramp == "smooth":
+                    t = t * t * (3.0 - 2.0 * t)
+                k = share * t
+                if k <= 1e-4:
+                    continue
+                amount = sum(w for _, w in cw) * k
+                for gi, w in cw:
+                    m.vertex_groups[gi].add([v.index], w * (1.0 - k), "REPLACE")
+                wl = min(max(0.5 + p.x / (2.0 * center), 0.0), 1.0)      # 정면 −Y 규약: 몸 왼쪽 = +X
+                for grp, part in ((gl, wl), (gr, 1.0 - wl)):
+                    if part > 1e-4:
+                        old = next((g.weight for g in v.groups if g.group == grp.index), 0.0)
+                        grp.add([v.index], old + amount * part, "REPLACE")
+                moved += 1
+        shrunk = 0
+        if shrink < 1.0:
+            # 코트에 가려진 넓적다리(엉덩이 z ~ 자락 끝 위 fade)를 UpLeg→Leg 축 쪽으로 반지름 × thigh_shrink — 자락 끝 아래 보이는 바지는 그대로
+            fade = hf.get("fade", 0.06)
+            s_top = top + hf.get("shrink_top", 0.0)                     # 엉덩이 높이 위(허리까지) 바지도 넓적다리 따라 앞으로 나와 코트를 뚫었다(사보 프레임 49, z 0.88)
+            min_leg = hf.get("shrink_min_leg", 0.5)                     # 넓적다리 가중치가 이보다 작으면 안 줄임, 사이는 몫에 비례
+            W1 = new_arm.matrix_world
+            axes = {}
+            for side, up in ((1.0, left), (-1.0, right)):
+                b = new_arm.data.bones[up]
+                axes[side] = (W1 @ b.head_local, W1 @ b.children[0].head_local if b.children else W1 @ b.tail_local)
+            for m in meshes:
+                legs = {g.index for g in m.vertex_groups if g.name in (left, right) or g.name == left.replace("UpLeg", "Leg") or g.name == right.replace("UpLeg", "Leg")}
+                if not legs or not any(g.name.startswith(hf["prefix"]) for g in m.vertex_groups):
+                    continue
+                Mw = m.matrix_world
+                Mi = Mw.inverted()
+                for v in m.data.vertices:
+                    tot = sum(g.weight for g in v.groups)
+                    lw = sum(g.weight for g in v.groups if g.group in legs)
+                    if tot <= 0 or lw / tot < min_leg or any(m.vertex_groups[g.group].name.startswith(hf["prefix"]) and g.weight > 1e-4 for g in v.groups):
+                        continue
+                    p = Mw @ v.co
+                    if p.z >= s_top or p.z <= hem:
+                        continue
+                    k = min((p.z - hem) / fade, 1.0) * min(lw / tot / 0.5, 1.0)
+                    a0, a1 = axes[1.0 if p.x >= 0 else -1.0]
+                    d = a1 - a0
+                    u = min(max((p - a0).dot(d) / max(d.length_squared, 1e-9), 0.0), 1.0)
+                    q = a0 + d * u
+                    v.co = Mi @ (q + (p - q) * (1.0 - (1.0 - shrink) * k))
+                    shrunk += 1
+        report["코트 자락 → 넓적다리"] = f"{hf['prefix']}* 정점 {moved} · 끝 몫 {share} · {ramp} · 엉덩이 z {top:.3f}" + (f" · 가린 넓적다리 ×{shrink} 정점 {shrunk}" if shrunk else "")
     removed = [o.name for o in scene.objects if o.type != "MESH" and o != new_arm and o.name not in revived]
     for o in [o for o in scene.objects if o.type != "MESH" and o != new_arm]:
         bpy.data.objects.remove(o, do_unlink=True)
