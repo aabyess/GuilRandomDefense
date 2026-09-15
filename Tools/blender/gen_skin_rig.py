@@ -165,6 +165,36 @@ SKINS = {
         decimate_rules=[("Fur", 0.22), ("Body_Low", 1.0), ("Jaw", 1.0), ("Eye", 1.0), ("Hand", 1.0)],
         decimate_default=0.72,
     ),
+    # 최준우(원피스 피규어 베르고) — Sketchfab 단일 메시(Object_4, PM 사전조사의 "Object_0"은
+    # 틀렸다 — 실제 이름은 Object_4, 삼각형 77,202는 일치). Sketchfab_model(X−90)·
+    # GLTF_SceneRootNode(X+90) 상쇄 확인(직접 실측 — 임포트 후 오브젝트 loc/rot/scale 전부
+    # 항등, g0_0 이동(−0.0006,−0.3693,0.1253)만 남는다). 정면 −Y는 렌더로 직접 확인(카메라
+    # −Y쪽에서 얼굴이 보임) — rotate_z 불필요. 원본 키(z) 0.2799(PM 0.280과 일치).
+    # 🔴 팔 위험 확인(코알라 교훈) — x단면 스캔(30분할)으로 봤을 때 팔이 있는 높이 구간 전부
+    # x폭이 허리~가슴 몸통 폭(약 0.08~0.10)을 못 넘는다 — 긴 코트가 팔까지 통째로 감싸서
+    # 단면만으로는 팔이 안 갈린다(코알라와 같은 위험 신호). 다만 코알라는 "좌우 비대칭"이라
+    # 관절표 자체가 표현 불가능했던 반면, 이건 팔이 좌우 대칭으로 몸에 붙어 있어 bone_table의
+    # x부호 미러가 그대로 통하는 케이스다 — 자동가중치가 실패하는지는 실제로 돌려서 판정한다.
+    # 자세: 팔이 옆으로 살짝 벌어져 내려간 것(T자 아님) → level_arms로 사후 수평.
+    "특별함_최준우": dict(
+        source="~/Downloads/onepiece_figure_vergo.glb",
+        path="Assets/Art/Units/특별함_최준우/특별함_최준우.fbx",
+        mesh_name="Vergo",
+        height=1.8,
+        center_band=(0.05, 0.20),                                        # 발목 높이(원본 z 0~0.05 부근)에서 좌우 중심
+        joints=dict(Hips=(0, -0.01, 0.53), Spine=(0, -0.01, 0.60), Spine1=(0, -0.01, 0.67), Spine2=(0, -0.01, 0.75),
+                    Neck=(0, -0.01, 0.83), Head=(0, -0.01, 0.88), HeadTop=(0, -0.01, 0.98),
+                    # 팔 — 코트 안이라 x는 몸통 폭(약 0.045)에 딱 붙이고 z만 어깨→손 순서로 내려간다
+                    # (T자 아닌 하방 자세를 그대로 표현). level_arms가 웨이팅 뒤 수평으로 편다.
+                    Shoulder=(0.045, -0.01, 0.80), Arm=(0.05, -0.01, 0.62), ForeArm=(0.05, -0.01, 0.50),
+                    Hand=(0.05, -0.01, 0.40), HandTip=(0.05, -0.01, 0.35),
+                    UpLeg=(0.03, -0.01, 0.53), Leg=(0.025, -0.01, 0.33), Foot=(0.03, -0.01, 0.02),
+                    ToeBase=(0.03, -0.045, 0.005), ToeTip=(0.03, -0.09, 0.005)),
+        rigid={},                                                        # 재질 1개(material)뿐이라 재질 기준 rigid 불가 — 선글라스도 자동가중치
+        alpha_keep=set(),
+        level_arms=True,
+        decimate_default=0.52,                                           # 77,202 → 약 4만
+    ),
     # 🔴 2026-09-15 아이언맨으로 교체되어 항목 삭제 — 되살리지 말 것. 사장님 지시로
     # 특별함_강주혁 스킨을 아이언맨으로 바꾼다(blender가 fix_unit_fbx.py로 같은 경로에 새로
     # 짓는 중). 아래 설명 주석(좌우 비대칭 관절표 한계·위축 Z·정면 +X 등)은 교훈이라 남기지만
@@ -532,8 +562,21 @@ def build(name, cfg, out_dir=None, render_dir=None):
 
     bpy.context.view_layer.update()
     V = np.array([v.co for v in body.data.vertices])
-    report["크기(m)"] = [round(float(c), 3) for c in (V.max(0) - V.min(0))]
+    size = V.max(0) - V.min(0)
+    report["크기(m)"] = [round(float(c), 3) for c in size]
     report["최저 z"] = round(float(V[:, 2].min()), 4)
+    # 🔴 2026-09-15 PM 지시(베르고 교훈) — 팔 45°·무릎 90° 판정과 뼈 0mm 검사로는 "쉬는 자세가
+    # 진짜 T자인가"가 안 잡힌다. 베르고는 팔이 옆으로 살짝 내려온 자세라 이 검사들은 전부
+    # 통과했는데, 유니티에서 공용 Idle을 입히자(리타게팅) 팔이 들리고 코트가 풍선처럼 부풀며
+    # 자락이 훌라후프처럼 벌어졌다 — Idle이 "T자에서 이만큼 굽힌다"는 상대 회전이라, 쉬는
+    # 자세 자체가 T자가 아니면 그 상대 회전이 엉뚱한 절대 자세로 어긋난다(가로 1.05m인데
+    # 키 1.8m — 팔을 편 폭이 키의 0.9배도 안 됨). 가로(V.max(0)-V.min(0)의 x 성분)가 키의
+    # 0.9배 이상이어야 "팔이 수평"이라고 본다 — 안 되면 level_arms를 켜거나 joints의 Arm/
+    # ForeArm/Hand z값을 Shoulder와 같은 높이로 맞출 것.
+    assert size[0] >= Hf * 0.9, (
+        f"{name}: 쉬는 자세 가로 {size[0]:.3f}m가 키 {Hf}m의 0.9배 미만 — 팔이 수평 T자가 아니다"
+        f"(유니티 Idle 리타게팅에서 팔이 들리고 옷이 풍선처럼 부푼다, 베르고 교훈). "
+        f"level_arms=True를 켜거나 joints의 Arm/ForeArm/Hand z를 Shoulder와 맞출 것.")
 
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     bpy.ops.export_scene.fbx(filepath=dst, use_selection=False, object_types={"ARMATURE", "MESH"}, apply_unit_scale=True,
