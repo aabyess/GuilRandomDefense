@@ -531,6 +531,17 @@ UNITS = {
                                   for s, side in (("L", "Left"), ("R", "Right"))},
                       solid_textures={"Iron_man_leg:red": None, "Iron_man_leg:gold": None, "HD_Ironman:silver": None, "lambert1": None, "14 - Default": None,
                                       "HD_Ironman:darksilver": (0.3, 0.3, 0.32), "HD_Ironman:black": (0.02, 0.02, 0.02), "HD_Ironman:yellow": (1.0, 0.9, 0.55)}),
+    # 찰로스(바운티러시 pl_ 리그 FBX, zip 속 rar 속 「charlos/pl_charlos_orig01 (merge).fbx」) — 2026-09-15 새 스킨. 이미 T자·기본 자세 = 쉬는 자세(손 결합 밀림 없음).
+    #   뼈 60 · 발끝 뼈 있음 → PL_RENAME 그대로. 겹친 변형 16개 뺌: 얼굴 face_sp01·sp02·attack·damage(→ face_normal) · 손 close·sp02·sp03·sp04·r_hand_weapon01(→ l/r_hand_open) ·
+    #   총 r_weapon_01 · 콧물 변형 hanamizu_sp. 콧물 hanamizu(찰로스 트레이드마크)·등 탱크 backpack은 남김. 빈 오브젝트 16(총구·비눗방울 효과·플래그)은 뼈로 안 살림.
+    #   텍스처: rar 안 _diff.png와 zip textures/ 판이 바이트는 다르지만 픽셀 동일 — 알파 = 명암 마스크(알파<0.98 98.6%·평균 0.856) → RGB PNG.
+    "특별함_김태영": dict(path="Assets/Art/Units/특별함_김태영/특별함_김태영.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(DL, "one-piece-bounty-rush-charlos.zip"), "source/charlos.rar", "charlos/pl_charlos_orig01 (merge).fbx"),
+                      archive_rgb={"charlos/pl_charlos_orig01_diff.png": "pl_charlos_orig01_diff.png"},
+                      drop_meshes=["face_sp01", "face_sp02", "face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_sp02", "r_hand_sp02",
+                                   "l_hand_sp03", "r_hand_sp03", "l_hand_sp04", "r_hand_sp04", "r_hand_weapon01", "r_weapon_01", "hanamizu_sp"],
+                      rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
+                      materials=dict(textures={"pl_charlos_orig01": [("DiffuseColor", "pl_charlos_orig01_diff.png")]})),
     # 기사(strong_knight.glb, Sketchfab-12.66, 스킨 조인트 65·메시 5·삼각형 12,944·클립 idle1 안 씀) — 2026-09-15 새 스킨.
     #   🔴 끝 조인트 14개(_rootJoint·toes·손가락 끝 Joint_3_*·tip) IBM이 단위행렬 → glb_fix_identity_ibm(탐 켄치와 같은 수리). 좌우·정면은 이름대로(L이 +X, 발끝 −Y).
     #   팔 A자(위팔 수평 아래 37°·아래팔 45° 아래·앞으로 59°) → T자(손가락 매핑으로 손바닥 굴리기). 조종용 빈 오브젝트(hipcontrol·*_Goal·*_Pole 등)는 뼈로 안 살림.

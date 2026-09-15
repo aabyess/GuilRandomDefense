@@ -1,0 +1,24 @@
+출처: ~/Downloads/strong_knight.glb (9,383,748 bytes · sha256 08663be7aab6fca5b4bebfef6f51bbdb9b1219f7746b1f60d6df878a22cefddf) — Sketchfab 「strong knight」(검은 갑옷 기사)
+받은 날: 2026-09-15 · 유닛: 특별함_왕승환 (unitName 왕싱싱, Special)
+원본(보존 — 지우지 말 것). glb: Sketchfab-12.66.0 · 스킨 1·조인트 65(_rootJoint > hips_01 …, 손가락 5×3 + 끝 조인트 Joint_3_*·tip_063) · 메시 5(삼각형 12,944) ·
+재질 3(cloth·knight·weapons — KHR_materials_pbrSpecularGlossiness) · 이미지 9 · 애니 idle1(42채널, 안 씀)
+
+정리: 2026-09-15 blender — Tools/blender/fix_unit_fbx.py UNITS 「특별함_왕승환」으로 재현(source = 이 glb).
+  - 🔴 끝 조인트 14개(_rootJoint · L/R_toes · 손가락 끝 Joint_3_* 10 · tip_063, 모두 가중치 0)의 inverseBindMatrices가 단위행렬 → 결합 자세로 읽으면 원점에 뭉개짐 →
+    glb_fix_identity_ibm(자식·부모 결합 자리에서 되짚어 IBM 채워 재포장, 탐 켄치와 같은 수리). 가중치 있는 조인트는 원래 IBM이라 정점 불변.
+  - 좌우·정면은 이름대로(L_ 뼈가 +X, 발끝 −Y) — 거울 없음. 루트 행렬 Sketchfab_model(X −90°)·c7679…fbx(X +90°)는 서로 상쇄.
+  - 팔 A자(위팔 수평 아래 37°, 아래팔 45° 아래·앞으로 59°) → T자로 굽힘(손가락 매핑으로 손바닥 굴리기, 굽기 오차 0).
+  - 뼈 이름 → mixamorig(51개, KNIGHT_RENAME): hips_01→Hips · spine_012→Spine · chest_013→Spine1(Spine2 없음) · neck_061→Neck · head_062→Head ·
+    L/R_shoulder→Shoulder · arm→Arm · elbow→ForeArm · wrist→Hand · leg→UpLeg · knee→Leg · anke(발목, 원본 오타)→Foot · foot(발볼)→ToeBase(toes는 끝) ·
+    손가락 thumb/point/middle/ring/pink 1~3 → HandThumb/Index/Middle/Ring/Pinky 1~3. 끝 조인트는 이름 그대로.
+  - 무기 3개는 스킨 없는 메시 → 붙은 뼈 100%: Maul_weapons_0(등에 멘 망치) ← chest_013 · daggercase_weapons_0·dagger_weapons_0(왼 허리 단검집·단검) ← spine_012.
+  - 조종용 빈 오브젝트(hipcontrol·*control·*_Goal·*_Pole·meshes 등)는 뼈로 안 살림 · 조명용 Icosphere 뺌.
+  - 🔸 키는 망치 빼고 잼(size_ignore_meshes) — 몸(투구 꼭대기) 1.8m, 망치 머리가 6.7cm 더 위. 크기 1.923 × 0.635 × 1.867 m(망치 포함) · 발 z 0 · 정면 −Y · 뼈 65 · 메시 5.
+■ 판정: T 1.0 · 팔45°·무릎90° 최대 2.78·상위 1% 1.17 · 유니티 공용 Idle(idle.fbx) 최대 5.45·상위 1% 1.20 — 망치·단검집이 몸 따라감, 치마·갑옷 찢김 없음(렌더) ·
+  원시 FBX: 뼈 Lcl 전역 vs TransformLink 1e-6 · 메시 전역 vs 메시 결합 0.0 · 뼈 배율 1.0 · 쉬는 자세 스킨 결과 vs 원시 정점 최대 0.0014mm · 가중치 없는 정점 0.
+
+재질 → 텍스처(재질 이름 기준, glb 내장 이미지 원본 바이트 1024 RGB PNG — 알파 없음):
+  cloth   → cloth_diffuse.png(이미지 0) + cloth_normal.png(2)
+  knight  → knight_diffuse.png(3) + knight_normal.png(5)
+  weapons → weapons_diffuse.png(6) + weapons_normal.png(8)
+  안 쓴 이미지: 1·4·7(specularGlossiness — FBX가 안 실음). 원래 검은 갑옷이라 어두운 게 정상(무늬·벨트·고리 보임).
