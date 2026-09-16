@@ -1,0 +1,25 @@
+출처: Free Fire 립 — 나루토 휴가 히나타 스킨(「hinata skin.fbx」, mixamorig 78뼈 완비). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_이현주.zip
+  1,133,553 bytes · sha256 bf4c6066da6940fd07a42b86… · 안에 source/hinata skin.fbx + textures/head_hhhhh.png·top_hhh.png·bottom_hhhh.png(RGB, 알파 없음)
+받은 날: 2026-09-17 · 유닛: 전설적인_이현주 (별명 그분의애마, 전설적인)
+
+원본 상태(blender 실측): FBX · 아마추어 배율 −0.01(X 90° · Z 180°) · 메시 5(Mesh_0026·7477·7485·7488·7494 .rip, 각 배율 −7.875) · 재질 4(Material.009~012, HASHED,
+  노드 이름 bottom hhhh.tga·top hhh.tga·head hhhhh.png) · mixamorig 78뼈 · 전 메시 무가중치 0 · 삼각형 약 1.46만 · 기본 = 결합 자세 · A자.
+  🔴 **좌우 이름이 뒤바뀐 거울 리그**: 얼굴·발끝은 −Y(정면)인데 mixamorig:LeftArm·LeftHand·LeftUpLeg 뼈가 −X(캐릭터의 오른쪽)에 있다(음수 배율 거울).
+    유니티 휴머노이드가 Left 팔 애니를 실제 오른팔에 입혀 **손목이 바깥으로 꺾이고 손바닥이 밖**으로 보였다(구현담당1 산출물 증상).
+
+경위: 구현담당1 1차(유니티 Idle 손목 꺾임) → blender 재빌드.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_이현주」로 재현(원본 뼈·가중치 그대로).
+  - HINATA_SWAP: mixamorig:Left* ↔ Right* 이름 교환(어깨·팔·손·손가락 3마디·다리·발, 69뼈 — 임시 이름 거쳐). 교환 뒤 정면 판정 +1°(돌리지 않음).
+  - 가중치 0 끝 뼈(HeadTop_End · Toe_End · 손가락 4번 · *_end 26개) 뺌 · 새 뼈대는 머리·꼬리·롤로 새로 지어 배율 1(음수 배율 사라짐).
+  - tpose_arms(손가락 펼침 포함) · 키 1.8 m · 발 z 0 · 정면 −Y.
+  - 텍스처: Material.009·012 → bottom_hhhh.png · Material.010 → head_hhhhh.png · Material.011 → top_hhh.png(archive_rgb, 이름은 구현담당1 그대로 — .meta 유지).
+    내보내기에서 재질 불투명(HASHED → OPAQUE).
+
+검증(blender): FBX 911,004 bytes · sha256 d26f2479bdd23e82a5c51b5b… · 뼈 52 · 메시 5(정점 9,770) · 크기 1.631 × 0.331 × 1.8 m · 최저 z 0.
+  원시 FBX: 쉬는 스킨↔원시 0.0081 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상(층 1).
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 2.47(상위1% 1.14) · 유니티 공용 idle.fbx 옮겨 입힘 최악 3.49(상위1% **1.252**).
+  굽힘: 아래팔 90°·손목 45° 렌더에서 팔꿈치·손목 정상, 손가락 모임(스크래치 hinata/b1/hn_bend_*). Idle 렌더에서 양손 자연스럽게 내림(hn_idle_*).
+  판정 렌더: 스크래치 hinata/j1 · hinata/b1 — 흰 후드 점퍼·그물 옷깃·이마 보호대·오른허벅지 파우치.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
