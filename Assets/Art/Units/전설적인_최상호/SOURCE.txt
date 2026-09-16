@@ -1,0 +1,38 @@
+출처: 블리치 Brave Souls(ROS) 추출 — 아이젠 소스케. 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_최상호.glb
+  10,866,844 bytes · sha256 3bf658a4174e479308eaf051…
+받은 날: 2026-09-17 · 유닛: 전설적인_최상호 (전설적인)
+
+원본 상태(blender 실측): Sketchfab-16.72 · 스킨 1 · 메시 21(조명용 Icosphere 포함) · 재질 21 · 이미지 19 · 애니 0 · 삼각형 약 158k.
+  그림죠(희귀함_박기찬)와 같은 `pl0NN_` 리그(pl020) — 처리 방식이 같다. glTF 결합 추정 켜나 끄나 자세 차 0.
+  매핑 뼈: pl020_cos02_00_ hips_587 · lback_529 · mback_528 · uback_485 · neck_332 + face01_00_head_331
+    + clavicle/shoulder/elbow/hand R(389/388/376/358)·L(439/438/426/408) + groin/knee/ankle/toe R(556/547/531/530)·L(583/574/558/557).
+    thorax_468은 이름 그대로(유니티는 매핑 안 된 중간 뼈를 지나간다). 손가락은 매핑 안 함(Humanoid 선택 뼈).
+  쉬는 자세 A자(어깨 ±0.188/1.446 → 팔꿈치 ±0.374/1.260 → 손 ±0.555/1.079) → tpose_arms로 T자.
+  🔴 칼 메시 `Object_11`(재질 `5_-Sword` — 이름의 `-` = 숨김 변형, 8,553정점, y −0.95까지 뻗은 칼날)은 오른손 weapon_R 밑 자기 `wep00_00_00_body/blade00~04/bottom` 사슬에 실려 있다.
+    허리 칼집 `Object_9`·손잡이 `Object_7`은 `wep00_00_01_body_584`, 허리 장식 `Object_45`(5_wep)는 `waist_weapon_root`에 실려 있다.
+  🔸 이 리그는 위팔·아래팔 살이 매핑 뼈가 아니라 자식 보조 뼈(shoulder/elbow `AS`·`sway`)에 실려 **매핑 Arm·ForeArm 가중치가 0**이다(그림죠도 같았음).
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_최상호」로 재현(이름표 AIZEN_RENAME).
+  - 매핑 22뼈를 mixamorig로 · merge_bones(under=Head)로 Head 자손 331개(hair base 포함)를 Head에 합침(정점 13,813 이동) → 「Head 자손 0 · 위험 없음」.
+  - 보조 뼈 합치기(유니티에선 안 움직이는 딸린 자식이라 변형 같음): shoulder_*_AS/sway → Arm(11개씩) · elbow_*_AS/sway → ForeArm(17개씩)
+    · groin_*_AS/sway → UpLeg(7개씩) · knee_*_AS/sway → Leg(14개씩) · thorax_sway·옷깃 eri_*00·칼집 holder_00(가중치 0 중간 뼈) → thorax.
+  - 칼 메시와 그 뼈 사슬 + 가중치 0 뼈(weapon_R/L · root ground · GLTF rootJoint)를 뺌. 허리 칼집·손잡이는 남겨 칼 찬 인상 유지.
+  - 조명용 Icosphere 뺌 · 감량 147,125 → 38,546삼각형(1,000삼각형 이상 메시 14개 ×0.25) · 메시 20 유지.
+  - 키 1.8 m · 발 z 0 · 정면 −Y · orient_snap.
+
+재질 → 텍스처(glb 내장 이미지를 인덱스로 원본 바이트 그대로 뽑음. 재질 20개가 이미지 10장을 나눠 씀):
+  weapon_baseColor.png(0) ← 5_Hilt · scabbard · wep   ·   cloak_baseColor.png(3) ← 5_cloak   ·   cloth_baseColor.png(5) ← 5_cloth
+  eyebrows_baseColor.png(7) ← 5_eyebrows   ·   eyelashes_baseColor.png(9) ← 5_eyelashes · 7_eyeshadow
+  face_baseColor.png(10) ← 5_face · eyelines · eyes · eyewhite · mouth · noselines · teeth · tongue
+  feet_baseColor.png(11) ← 5_feet   ·   hair_baseColor.png(13) ← 5_hair(16² 단색)   ·   hakama_baseColor.png(15) ← 5_hakama   ·   skin_baseColor.png(17) ← 5_skin
+  알파: 속눈썹 이미지(9)만 0.49~1이고 99.7%가 이진 → 그대로. 나머지는 전부 불투명.
+
+검증(blender): FBX 4,837,148 bytes · sha256 3264544626514b98a4cedc53… · 뼈 135 · 메시 20(정점 33,586) · 크기 1.81 × 0.737 × 1.8 m(깊이는 뒤로 퍼진 망토) · 최저 z 0 · 뼈 넘침 0.
+  원시 FBX: 쉬는 자세 스킨 결과 vs 원시 정점 0.0027 mm · 가중치 없는 정점 0 · **가중치 0 뼈 0**.
+  UV 판정: 20메시 중 17 정상 · 머리카락(Object_31)은 UV 층 2개지만 첫 층 정상(u 0.968 · v 1.007, 16² 단색이라 어느 층이든 색 같음).
+    🔸 eyelines(0.012/0.001)·noselines(0.009/0.019)·eyeshadow(0.072/0.001)는 UV가 한 점에 가깝지만 **원본 glb와 같은 값**(단색 장식 조각, 그림죠와 같은 부류).
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 4.65(뒤 망토 자락, 상위1% 1.16) · 유니티 공용 idle.fbx 옮겨 입힘 최악 6.96(상위1% **1.215**).
+    최대 6.96은 오른 어깨 망토 정점 3개(RightArm+thorax) — Idle 앞·겨드랑이 렌더에서 찢김 안 보임.
+  판정 렌더: 스크래치 aizen/judge · aizen/b1(az_idle_*).
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
