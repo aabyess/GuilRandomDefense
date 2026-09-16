@@ -1,0 +1,21 @@
+출처: Sketchfab — 진격의 거인 갑옷거인(중국 모바일 게임 립 role_kaizhijuren, 토지 role_fuheishener와 같은 게임 · 3ds Max Biped)
+받은 날: 2026-09-16 · 유닛: 희귀함_박은석 (Rare) — ※ 동명 다섯 중 희귀함
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_박은석.glb · 2740556 bytes · sha256 c5540f2378a096b58920e8f35580c030fa49778d15af74aab76c381b33178659
+glb: Sketchfab-17.8.0 · 스킨 1 · 뼈 69(glTF 번호 꼬리) · 메시 3(+조명용 Icosphere) · 재질 3 · 이미지 3 · 애니 0
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_박은석」으로 재현(source = 이 glb).
+  - 🔴 glTF 결합 자세 추정(guess_original_bind_pose)을 켜면 가중치 0인 UpperArm·Forearm의 역결합 행렬이 쓰레기라 **팔이 키의 두 배 리본으로 늘어났다**(쉬는 경계 x ±0.159)
+    → gltf_guess_bind=False: 쉼 = 자세 = 주먹 쥔 전투 선 자세(깨끗) → 팔만 T자로(굽기 오차 0). 다리·몸통은 선 자세 그대로(오른발 앞, 상체 조금 숙임 — 원작 자세).
+  - 🔴 조명용 Icosphere 뺌(키 맞추기 전에).
+  - 뼈: Bip001 → mixamorig(biped_rename + rename_strip으로 번호 꼬리 짝짓기, 손가락 다섯 × 세 마디). 뿌리 _rootJoint · Bip001_00(가중치 0) 뺌.
+    Twist(토지와 같은 구조, 팔 본체 가중치 0): twist_bone_L/R_001~003 → Arm · ForeTwist·ForeTwist1·shouzhou → ForeArm. Head 밑 Bone001·Point001·head_bar → Head.
+  - 재질: 텍스처 × 정점색 MIX인데 정점색이 전부 0.5 회색 — 이 게임 셰이더의 중립값(토지는 텍스처 단독) → 텍스처만 기본색에.
+
+결과 FBX: 1088364 bytes · sha256 6444ae168fd2835af6c45f010dc0a9a5e35418fe2853393c8ebcd414183c7d1f
+  뼈 52 · 메시 3 · 정점 16,551 · 삼각형 20,300(감량 없음) · 크기 2.145 × 0.788 × 1.8 m · 최저 z 0 · 뼈 넘침 0
+  🔸 정면 판정 +26°(90° 단위 스냅 안 함) — 전투 선 자세로 몸을 약간 튼 원작 자세. 깊이 0.788도 앞뒤로 벌린 다리 때문.
+  쉬는 스킨↔원시 정점 0.0007 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · UV 3메시 1층 정상 · 「Head 자손 0 · 위험 없음」
+  늘어짐 T 1.00 · 팔45°·무릎90° 1.95(상위1% 1.26) · 공용 Idle 최대 4.11(상위1% 1.39)
+
+재질 → 텍스처(glb 이미지 원본 바이트):
+  role_kaizhijuren_body_mat_01 → role_kaizhijuren_body_baseColor.png(이미지0) · _face_mat_01 → _face_baseColor.png(이미지1) · _hair_mat_01 → _hair_baseColor.png(이미지2)
