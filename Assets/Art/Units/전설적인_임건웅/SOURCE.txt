@@ -1,0 +1,24 @@
+출처: 원피스 바운티러시 후지토라(잇쇼, pl_fujitora_orig01) 추출. 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_임건웅.zip
+  4,542,958 bytes · sha256 64c0b9d8f66fc27efa317f77… · 안에 source/pl_fujitora_orig01.rar(안에 FBX + _diff.png + 안 쓰는 matcap·ramp·dither·abnormal_pattern)
+받은 날: 2026-09-17 · 유닛: 전설적인_임건웅 (별명 초대받지않은외부인, 전설적인)
+
+원본 상태(blender 실측): FBX · ×0.01 · 아마추어 「Armature」 · 뿌리 pl_fujitora_orig01 → world_joint · 뼈 68 · 빈 오브젝트 9 · 메시 13 · 재질 1 · 전 메시 무가중치 0 · 이미 T자.
+  pl_ 리그(PL_RENAME 21뼈). Head_Face 자손 없음.
+  겹친 변형: face_normal/attack/damage · l/r_hand_open/close.
+  🔴 무기 메시 이름 오타 `weopen_01~04`(weapon 아님) — 넷 다 손 뼈에 실려 손에서 앞뒤(원시 y)로 수평으로 뻗는다:
+    weopen_01(오른손 weapon_01_joint, 뒤로 0.023) · weopen_04(오른손, 뒤로 0.01) · weopen_02(왼손 weapon_02_joint, 뒤로 0.022) · weopen_03(왼손, 앞으로 0.003) — 지팡이칼·칼집.
+  보조 뼈: 코트 coat_root·c_coat/02/03·l/r_coat/01~03·l/r_coat_arm/01/02 · 치마 BL/BR/FL/FR/SL/SR skirt1~3 · 소매 L/R_sode01~02(Fore 밑) · L/RHand_Fore_sup · 가중치 0 HELPER_name.
+  🔴 _diff 알파는 음영 마스크(최소 0.43 · 평균 0.84 · 98%가 0.98 미만) → archive_rgb로 알파 뗌.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_임건웅」으로 재현.
+  - 남긴 변형: face_normal · l/r_hand_open · body · coat. 뺀 것: face_attack/damage · l/r_hand_close · weopen_01~04(손에서 수평으로 뻗는 칼·칼집, 시류 기준) + weapon_01/02_joint ·
+    가중치 0 HELPER_name · world_joint · pl_fujitora_orig01.
+  - 보조 뼈 합치기(PM 09-17 방침): 코트 18개 → Spine1 · 치마 18개 → Hips · 소매 sode·Hand_Fore_sup → ForeArm(소매 뼈 팔 오매핑 후보 없어짐).
+  - 키 1.8 m · 발 z 0 · 정면 −Y.
+
+검증(blender): FBX 355,692 bytes · sha256 c169f9fbd799eca08e6beb07… · 뼈 21 · 메시 5(정점 3,989) · 크기 1.982 × 0.949 × 1.8 m · 최저 z 0.
+  원시 FBX: 쉬는 스킨↔원시 0.0003 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 1.77(상위1% 1.05) · 유니티 공용 idle.fbx 옮겨 입힘 최악 2.48(상위1% **1.222**).
+  판정 렌더: 스크래치 pl/fujitora/j1 · pl/fujitora/b1(fj_idle_*) — 보라 기모노·해군 코트·목도리·게타, 무기 없음.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
