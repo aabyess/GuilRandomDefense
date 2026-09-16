@@ -1,0 +1,26 @@
+출처: 원피스 바운티러시 카이도(pl_kaido_orig01) 추출. 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_김용태.zip
+  5,355,813 bytes · sha256 2eb699e96cd63960de943b32… · 안에 source/pl_kaido_orig01.rar(안에 FBX + _diff.png + 안 쓰는 matcap·ramp·dither·abnormal_pattern)
+받은 날: 2026-09-17 · 유닛: 전설적인_김용태 (별명 되돌아온동료, 전설적인) — ※ 동명 김용태(안흔함·특별함·불멸) 중 전설적인
+
+원본 상태(blender 실측): FBX · ×0.01 · 아마추어 「Armature」 · 뿌리 pl_kaido_orig01 → world_joint · 뼈 63 · 빈 오브젝트 3 · 메시 14 · 재질 1 · 전 메시 무가중치 0 · 이미 T자.
+  pl_ 리그(PL_RENAME 21뼈). 🔸 거구 체형(원시 몸 폭 ±0.055 · 머리카락 꼭대기 z 0.1).
+  겹친 변형: face_normal/attack/damage · 손 l/r_hand_open/close/par.
+  🔴 kanabo(쇠몽둥이, 오른손 kanabo_joint 100%) — 원시 y −0.073까지 앞으로 크게 뻗음.
+  🔴 hyotan(술 호리병) — 허리가 아니라 오른손 RHand_Palm 밑 hyotan_01~03에 매달려 손 바깥(x −0.085, 손끝 −0.07)으로 가로만 늘림.
+  보조 뼈: 코트 coat_root·c/l/r_coat01~04·l/r_coat_kata · Head 자손 b/l/r_hair·l/r_Beard_01~04 · l/r_leg_sup_01~02(Pelvis 직속 바지 보조) · l/r_shide(시메나와 종이) ·
+    L/RHand_Fore_sup · 가중치 0 HELPER_key·HELPER_name.
+  🔴 _diff 알파는 음영 마스크(평균 0.71 · 99.6%가 0.98 미만) → archive_rgb로 알파 뗌.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_김용태」로 재현.
+  - 남긴 변형: face_normal · l/r_hand_open · body · coat · hair.
+  - 뺀 것: face_attack/damage · l/r_hand_close · l/r_hand_par · kanabo + kanabo_joint · hyotan + hyotan_01~03 · 가중치 0 HELPER 2 · world_joint · pl_kaido_orig01.
+  - 보조 뼈 합치기(PM 09-17 방침): Head 자손 11개 → Head · 코트 15개 → Spine1 · leg_sup·shide 6개 → Hips(Pelvis 직속이라 Hips가 맞다) · L/RHand_Fore_sup → ForeArm.
+  - 체형 그대로 · 키 1.8 m · 발 z 0 · 정면 −Y.
+
+검증(blender): FBX 467,580 bytes · sha256 5abaef6d434426b3742400b7… · 뼈 21 · 메시 6(정점 6,713) · 크기 2.496 × 0.984 × 1.8 m · 최저 z 0.
+  🔸 T자 가로 2.496 m = 키 20 기준 약 27.7(거구, 26 넘음).
+  원시 FBX: 쉬는 스킨↔원시 0.0003 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 2.3(상위1% 1.16) · 유니티 공용 idle.fbx 옮겨 입힘 최악 4.26(상위1% **1.17**).
+  판정 렌더: 스크래치 pl/kaido/j1 · pl/kaido/b1(kd_idle_*) — 뿔·긴 머리·수염·용 문신·털 코트·시메나와, 무기·호리병 없음.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
