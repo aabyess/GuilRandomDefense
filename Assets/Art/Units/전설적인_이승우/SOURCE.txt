@@ -1,0 +1,25 @@
+출처: 블리치 모바일 게임 립 — 이치마루 긴(yinwanjie_0_battleout, Noesis로 glb 변환). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_이승우.zip
+  1,601,112 bytes · sha256 453a054126c9dfd39cd47b86… · 안에 source/yinwanjie_0_battleout.glb + textures/ 7장(glb 내장 이미지와 같은 그림, 재질은 glb 내장 원본 바이트로 뽑음)
+받은 날: 2026-09-17 · 유닛: 전설적인_이승우 (별명 구일의악을흩뿌린장본인, 전설적인) — ※ 동명 이승우(희귀함 레일리 등) 중 전설적인
+
+원본 상태(blender 실측): 스킨 1 · 뼈 42(3ds Max Biped Bip001) · 메시 8 + 조명 Icosphere · 재질 7(전부 OPAQUE · 이미지 알파 1.0) · 애니 22(attack·die·hit·idle·move·skill·win…) · 삼각형 4,167 · 단위 m.
+  채드(희귀함_구주호)와 같은 블리치 모바일 Noesis glb 형식.
+  🔴 애니가 있어 가져온 기본 자세가 클립 프레임(웅크린 전투 자세)이다. 결합 자세는 선 A자.
+  🔴 몸 메시 둘(같은 재질 yin_body_0): yin_body_0(1,678정점, 코소데·하카마) · yin_body_0_c(645정점, 대장 하오리 + 검은 소매) — 렌더로 보니 겹친 사본이 아니라 겉옷 층.
+  yin_weapon_0(칼 신소, 320정점, 발밑에 누워 있음 · 길이 0.685) — Bip001 Prop1 → rweapon → yin_weapon_0 뼈에 실림.
+  얼굴 뼈 head(가중치 0) 밑 yin_leye_0·yin_mouth_0·yin_reye_0 · Pelvis 밑 Bone001~004(하카마 자락) · 손가락 Finger0/1 두 마디.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_이승우」로 재현(채드 설정 재사용).
+  - use_rest_pose(결합 자세 선 A자) → tpose_arms로 T자. 시험판 B(idle 0프레임을 쉬는 자세로)는 정면 +31° 틀어지고 깊이 0.854로 퍼져 버림.
+  - biped_rename("Bip001", 손가락 2×2, Spine2) 30뼈 · Head 밑 4개 → Head · Bone001~004 → Hips.
+  - 뺀 것: Icosphere · yin_weapon_0 + Bip001 Prop1·rweapon·yin_weapon_0 뼈 · 가중치 0 뿌리 Bip001. 몸 두 벌(코소데·하카마 + 하오리)은 둘 다 유지.
+  - 키 1.8 m · 발 z 0 · 정면 −Y.
+
+재질 → 텍스처(glb 내장 이미지 인덱스, 원본 바이트): yin_body_baseColor.png(0) ← yin_body_0 · yin_face(1) · yin_hair(2) · yin_leye(3) · yin_mouth(4) · yin_reye(5). 칼 이미지(6)는 안 씀.
+
+검증(blender): FBX 441,644 bytes · sha256 bb331541ce5013996a4b6139… · 뼈 30 · 메시 7(정점 3,128) · 크기 1.594 × 0.496 × 1.8 m · 최저 z 0.
+  원시 FBX: 쉬는 스킨↔원시 0.0058 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 2.07(상위1% 1.32) · 유니티 공용 idle.fbx 옮겨 입힘 최악 2.77(상위1% **1.308**).
+  판정 렌더: 스크래치 gin/jA·jR(채택) · gin/jB(버린 idle 자세판) · gin/bA(gin_idle_*) — 은발·대장 하오리·검은 사무복·흰 허리띠, 칼 없음.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
