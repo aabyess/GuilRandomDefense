@@ -1,0 +1,31 @@
+희귀함_윤현모(비지니스) — 조셉 죠스타, JoJo Diamond Records 모바일 립, 2026-09-16
+
+■ 출처
+~/Desktop/구랜디스킨모음/04_희귀함/희귀함_윤현모.zip
+sha256: 53c31ae7d4f69f7631066dd85bb27d5b183a767e946663fdfdb20a9a895d958a
+이중 zip 구조: 바깥 zip 안 source/Mobile - JoJo's Bizarre Adventure_ Diamond Records Reversal.zip
+속에 Joseph.obj + Joseph.mtl + Joseph.png(1024×1024 아틀라스, map_Kd로 이미 연결).
+원본 정점 2,733 · 삼각형 3,032 · 원본 키 2.0098(임의 단위) · 이미 T자·좌우 대칭.
+
+■ 정리 내용 (Tools/blender/gen_objrip_skin.py)
+- 이미 −Y 정면·T자였다(원본 좌표 그대로 확인, 회전·자세 보정 불필요).
+- 키 1.8m로 스케일(배율 0.89561), 원점은 발목 높이(2~6%H) 밴드의 좌우·앞뒤 중심, 바닥 z=0.
+- 뼈대: mixamorig 축약 세트 21개(Hips·Spine·Chest·Neck·Head + 좌우 Shoulder·Arm·ForeArm·Hand
+  + 좌우 UpLeg·Leg·Foot·ToeBase). 관절 좌표는 PM 실측(팔 0.81H 수평·핸드팁 x비 0.478)과 표준
+  인체 비율을 섞어 짰다. Head 직계 자식 뼈 없음(HeadTop은 Head의 tail일 뿐 별도 뼈 아님).
+- 가중치: bone heat(자동가중치) 시도 → 전부 실패(뼈 21개 전부 정점 0개, 경고 로그 확인) →
+  gen_scan_rig.py에서 검증한 지오데식(표면 최근접 다익스트라 + 이웃 평균 스무딩)으로 대체.
+  발끝(LeftToeBase·RightToeBase)은 부츠가 저폴리라 지오데식으로도 정점을 못 얻어(Foot이 부츠
+  전체를 가져감), Foot 소유 정점 중 이 뼈 마디에 가장 가까운 30%를 넘겨받았다.
+- 텍스처: Joseph.png 원본 그대로 Textures/에 복사, Base Color에 연결(Metallic 0·Roughness 0.8).
+- UV0 검사: 범위 (0.0039~0.9977, 0.011~0.9986), [0,1] 밖 루프 0개.
+
+■ 산출물
+Assets/Art/Units/희귀함_윤현모/희귀함_윤현모.fbx (뼈 21 · 정점/삼각형 원본과 동일)
+Assets/Art/Units/희귀함_윤현모/Textures/Joseph.png
+
+■ 판정
+크기(m): 가로 1.721 · 세로(키) 1.8 · 앞뒤 0.858(스카프가 앞으로 두껍게 튀어나옴 — 정상, 렌더로 확인)
+최저 z: 0.0 · 뼈별 정점(w>0.01) 전부 0 초과(가중치 없는 뼈 없음).
+렌더(스크래치): /tmp/objrip_render_final/희귀함_윤현모_front.png · _side.png — T자 유지, 스카프가
+몸 뼈(Chest 주변)를 따라감, 텍스처 정상 확인.
