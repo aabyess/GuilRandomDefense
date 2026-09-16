@@ -90,6 +90,35 @@ JOINTS_CM = dict(
 )
 
 UNITS = {
+    # 헌터x헌터 레오리오(zip 안 Microsoft GLTF Exporter glb) — 2026-09-16 희귀함 5호. 뼈·스킨·애니 0 · 메시 14 · 재질 14 · 총 3,228삼각형(감량 불필요).
+    #   **이미 정확한 T자**(팔이 수평 z 0.129 · 팔 span 0.441 ≈ 키 0.450) → straighten=[]로 아무 뼈도 안 편다(기본 STRAIGHTEN을 그대로 두면 다리·발까지 억지로 돌린다).
+    #   🔴 왼손 가방을 뺀다: mesh_id16·mesh_id17(납작한 검은 판)과 mesh_id15(손잡이). 판이 x −0.256까지 뻗어 가로를 키우고, 렌더로 보면 두께 없는 판자라 대기 모습에 안 맞는다.
+    #     (원하면 손 뼈에 붙여 되살릴 수 있다 — 그때는 세 메시를 살리고 rigid로 LeftHand 100%.)
+    #   🔴 텍스처는 **glb 인덱스로** 뽑는다: zip의 textures/gltf_embedded_N.png는 재인코딩본이라 glb 이미지와 바이트가 다르고 번호도 한 칸 밀려 있다(JSON 이미지 18개 vs 파일 6개).
+    #     재질 14개가 이미지 4장을 나눠 쓴다 — 4번(정장·피부 계열 6재질) · 1번(3재질) · 10번(머리카락, **알파 45%가 투명한 컷아웃**) · 7번(1재질).
+    #   모델이 원점에서 x +0.035 · y −0.27만큼 치우쳐 있어 관절도 그 자리(원본 좌표)로 적는다. 발은 x 0.008·0.0625, 발끝은 −Y.
+    "희귀함_두유찬": dict(
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/04_희귀함/희귀함_두유찬.zip"),
+        member="source/Leorio.glb",
+        height=1.8, center_band=(0.02, 0.08), decimate=1.0, rotate_z=0.0,
+        drop_meshes=["mesh_id15", "mesh_id16", "mesh_id17"],
+        joints=dict(
+            Hips=(0.035, -0.270, 0.014), Spine=(0.035, -0.270, 0.048), Spine1=(0.035, -0.270, 0.082), Spine2=(0.035, -0.270, 0.118),
+            Neck=(0.035, -0.265, 0.142), Head=(0.035, -0.262, 0.160), HeadTop=(0.035, -0.262, 0.222),
+            LeftShoulder=(0.052, -0.258, 0.128), LeftArm=(0.080, -0.255, 0.129), LeftForeArm=(0.159, -0.252, 0.129),
+            LeftHand=(0.217, -0.251, 0.128), LeftHandTip=(0.252, -0.251, 0.127),
+            RightShoulder=(0.018, -0.258, 0.128), RightArm=(-0.010, -0.255, 0.129), RightForeArm=(-0.089, -0.252, 0.129),
+            RightHand=(-0.147, -0.251, 0.128), RightHandTip=(-0.182, -0.251, 0.127),
+            LeftUpLeg=(0.055, -0.270, 0.014), LeftLeg=(0.060, -0.268, -0.099), LeftFoot=(0.0625, -0.262, -0.198),
+            LeftToeBase=(0.0625, -0.290, -0.216), LeftToeTip=(0.0625, -0.312, -0.222),
+            RightUpLeg=(0.015, -0.270, 0.014), RightLeg=(0.010, -0.268, -0.099), RightFoot=(0.008, -0.262, -0.198),
+            RightToeBase=(0.008, -0.290, -0.216), RightToeTip=(0.008, -0.312, -0.222)),
+        straighten=[],
+        closeups=[("armpit", 1.35, 0.8), ("crotch", 0.85, 0.9)],
+        glb_images={4: "47_baseColor.png", 1: "43_baseColor.png", 10: "44_baseColor.png", 7: "38_baseColor.png"},
+        materials={m: [("Base Color", "47_baseColor.png")] for m in ("47", "37", "39", "40", "41", "42")}
+                  | {m: [("Base Color", "43_baseColor.png")] for m in ("43", "45", "46")}
+                  | {"44": [("Base Color", "44_baseColor.png")], "38": [("Base Color", "38_baseColor.png")]}),
     "특별함_최동준": dict(
         source=os.path.expanduser("~/Desktop/구랜디스킨모음/03_특별함/특별함_최동준.glb"),
         height=1.8, center_band=(0.02, 0.08), decimate=0.4, rotate_z=0.0, joints=JOINTS_CM,
@@ -835,12 +864,21 @@ def build(name, out_dir=None, render_dir=None):
 
     # ── 텍스처: PM 조사대로 이미지 0=베이스(jpeg)·1=노멀(png), 원본 바이트 그대로 Textures/에.
     os.makedirs(tex_dir, exist_ok=True)
+    wrote = set()
+    if cfg.get("glb_images"):                                           # glb 내장 이미지를 인덱스로 뽑는다(레오리오: zip의 textures/ 파일 이름과 glb 이미지 인덱스가 안 맞는다 — 이미지 18개 vs 파일 6개)
+        j, binchunk = glb(src_file)
+        for index, fname in cfg["glb_images"].items():
+            open(os.path.join(tex_dir, fname), "wb").write(image_bytes(j, binchunk, index))
+            wrote.add(fname)
+        report["glb 이미지"] = {k: v for k, v in cfg["glb_images"].items()}
     if cfg.get("materials"):                                            # 재질 이름 → [(소켓, 파일)] — FBX가 텍스처 경로를 잃은 경우(히소카) 압축 안 textures/에서 원본 바이트 그대로
         import shutil
         for mat_name, entries in cfg["materials"].items():
             m = body.data.materials.get(mat_name)
             assert m is not None, f"{name}: 재질이 없다 {mat_name} (있는 것 {[mm.name for mm in body.data.materials]})"
             for socket, fname in entries:
+                if fname in wrote:                                      # glb에서 이미 뽑은 파일
+                    continue
                 src_tex = os.path.join(tex_src_dir, fname)
                 assert os.path.exists(src_tex), f"{name}: 텍스처가 없다 {src_tex}"
                 shutil.copyfile(src_tex, os.path.join(tex_dir, fname))
