@@ -1,0 +1,62 @@
+희귀함_정내연 (Nobara Kugisaki) 스킨 출처
+
+원본: ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_정내연.zip
+  내용물: textures/Hair_baseColor.png(모음집이 겉에 복사해 둔 것, 안 씀) +
+          source/nobara_kugisaki.zip(스케치팹 원본 그대로, 한 번 더 압축된 zip —
+          scene.gltf + scene.bin + license.txt + textures/Hair_baseColor.png)
+
+라이선스: CC-BY-4.0 (source/nobara_kugisaki.zip 안 license.txt 원문)
+  title: Nobara Kugisaki
+  source: https://sketchfab.com/3d-models/nobara-kugisaki-d9ceed236ec1482cabdf293bb1aae573
+  author: Godfrey (https://sketchfab.com/godfreywilliamsofficial)
+  크레딧 문구(그대로 사용할 것):
+  "This work is based on "Nobara Kugisaki"
+  (https://sketchfab.com/3d-models/nobara-kugisaki-d9ceed236ec1482cabdf293bb1aae573) by Godfrey
+  (https://sketchfab.com/godfreywilliamsofficial) licensed under CC-BY-4.0
+  (http://creativecommons.org/licenses/by/4.0/)"
+
+빌드 스크립트: Tools/blender/gen_rigify_skin.py (SKINS["희귀함_정내연"])
+  실행: /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
+        --python Tools/blender/gen_rigify_skin.py -- 희귀함_정내연
+
+파이프라인 요약:
+- 소스 zip 속에 스케치팹 원본 zip이 한 번 더 있어(find_glb_and_extras에 중첩 zip 자동 풀기
+  추가) scene.gltf를 직접 임포트. 리기파이 160본(glTF 임포트가 이름 끝에 고유번호를 붙임,
+  예: spine_164, upper_arm.L_116) → mixamorig 22본.
+- 얼굴 대형 서브트리(face_91 자손 약 90개: 코·입술·턱·귀·눈썹·눈꺼풀·이마·볼·눈·이·혀)는
+  하나하나 나열하지 않고 새 기능 fold_subtree로 뿌리 이름 하나만 줘서 전부 Head로 접음.
+  손가락(palm.*_숫자, f_index.*_숫자 등)도 접미 숫자를 떼고 판정하도록 target_mixamorig
+  일반화(둘 다 gen_rigify_skin.py 공용 로직 — 나나미·카스미에도 영향 없음, 그쪽은 이름
+  충돌이 원래 없었다).
+- Icosphere(조명 구, 캐릭터와 무관)와 Outline/OH_Outline_Material 중복 셸(몸 곳곳 7+2곳,
+  원본 메시와 bbox가 거의 겹침) 전부 드롭.
+- 못(Nail_147 밑 Object_61, PM 지시)과 망치(Hammer_144 밑 Object_53~57)는 둘 다 드롭.
+  🔴 망치는 처음엔 "손에 쥘 크기"라 오른손 100% 강체로 시도했으나, 실측 결과 월드 위치가
+  hand.R 뼈에서 1.15~1.28m 떨어져 있었다(반대쪽 옆구리 바깥, 손 근처가 전혀 아님) — 강체로
+  물리면 팔 각도가 바뀔 때마다 그 거리만큼 큰 반지름으로 휘둘려 첫 빌드가 폭 2.939m로
+  튀었다(유니티 줄세우기 가로폭 32.65, 다른 유닛 18~24 대비 이상 — PM이 먼저 발견, 원인은
+  이 실측과 일치). 실루엣 보존 원칙(강체가 실루엣을 왜곡·비정상적으로 매달리면 버림)대로
+  드롭 — 재배치해서 살릴지는 PM 판단 대상.
+- 전부 Emission 전용(정점색 아님, Hair만 실제 텍스처 2048×2048·나머지는 Emission 상수색을
+  단색 재질로). "emission_texture" 굽기 방식.
+- _shadow/_highlight 재질(Hair_shadow·skirt_shadow·head_skin_shadow·Tights_shadow·
+  Tights_highlight·Shoes_highlight 등)은 표면거리 실측(본체 대비 최소거리 0.0인데 대부분
+  수mm~십수cm — 완전히 겹친 복제 셸은 아님, 특히 Tights_shadow는 본체와 중앙값 19cm 떨어진
+  별도 부위) 결과 전부 KEEP — PM 판정기준("본체와 안 겹치는 별도 부위 = 버리면 구멍")에 해당,
+  Emission 단색 재질로 살림.
+- level_arms로 사후 T자 보정(양팔 약 26.8°→8.9°→3.6° 순서로 굽힘, A자 소스).
+- 22.6만 → 1.8만 삼각형 감량(UV·정점색·가중치 보존).
+- 키 1.8m, 발바닥 z≈0, 정면 −Y.
+
+검증 결과(2026-09-16, 실측 — 최종 FBX 재임포트로 직접 재검사, 자체 리포트 신뢰 안 함):
+- 뼈 22개, 매핑 안 된 뼈 0, 죽은 뼈 0.
+- 무가중치 정점 0개(전체 18,969개 중).
+- 크기 [1.783, 0.422, 1.8]m, 최저 z ≈ 0.0(−0.0003).
+- UV0 면적 1.0013(퇴화 없음).
+- 재질 27개, 전부 Emission→Principled 단색/텍스처 재배선 확인(Hair만 실제 텍스처).
+- OH_Outline_Material 실사용 면 0(전부 드롭됨).
+
+주의:
+- 원본 zip은 삭제 금지.
+- 망치는 실루엣 왜곡 문제로 이번 빌드에서 완전히 빠졌다 — 캐릭터가 무기 없이 나간다.
+  재배치(수동으로 손 근처 위치로 옮긴 뒤 강체 결합)해서 살릴지는 PM/사장님 판단 대상.
