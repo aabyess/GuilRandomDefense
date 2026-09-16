@@ -1,0 +1,22 @@
+출처: 원피스 바운티러시 빅맘(샬롯 링링, pl_bigmom_orig01) 추출. 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_신지우.zip
+  3,849,050 bytes · sha256 c7e595df3bb23c566b294627… · 안에 source/pl_bigmom_orig01.rar(안에 FBX + _diff.png + 안 쓰는 matcap·ramp·dither·abnormal_pattern)
+받은 날: 2026-09-17 · 유닛: 전설적인_신지우 (별명 빅맘, 전설적인) — ※ 불멸_신지우와 동명
+
+원본 상태(blender 실측): FBX · ×0.01 · 뼈 41 · 빈 오브젝트 5 · 메시 13 · 재질 1 · 전 메시 무가중치 0 · 이미 T자 · 무기 메시 없음.
+  pl_ 리그(PL_RENAME 21뼈). 🔸 거구 체형(원시 몸 폭 ±0.047 · 키 0.099).
+  겹친 변형: face_normal/attack/damage · 손 l/r_hand_open/close/sp_open.
+  보조 뼈: 망토 b/l_cloak_01~03 · 🔴 오른 망토 이름 오타 r_croak_01~03 · 치마 bl/br/fl/fr_skirt · Head 자손 b/l/r_hair·Head_chin · L/RHand_Fore_sup.
+  🔴 _diff 알파는 음영 마스크(최소 0.08 · 평균 0.85 · 100%가 0.98 미만) → archive_rgb로 알파 뗌.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_신지우」로 재현.
+  - 남긴 변형: face_normal · l/r_hand_open · body · cloak · hair · hat. 뺀 것: face_attack/damage · l/r_hand_close · l/r_hand_sp_open · 가중치 0 뿌리 world_joint.
+  - 보조 뼈 합치기(PM 09-17 방침): Head 자손 4개 → Head · 망토 9개(croak 포함) → Spine1 · 치마 4개 → Hips · L/RHand_Fore_sup → ForeArm.
+  - 체형 그대로 · 키 1.8 m · 발 z 0 · 정면 −Y.
+
+검증(blender): FBX 415,852 bytes · sha256 bc6b1014615b46d0084ec4f6… · 뼈 21 · 메시 7(정점 4,438) · 크기 2.211 × 1.358 × 1.8 m · 최저 z 0.
+  🔸 T자 가로 2.211 m = 키 20 기준 약 24.6(26 미만) · 깊이 1.358 m(뒤로 퍼진 망토·배).
+  원시 FBX: 쉬는 스킨↔원시 0.0004 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 1.81(상위1% 1.10) · 유니티 공용 idle.fbx 옮겨 입힘 최악 2.47(상위1% **1.297**).
+  판정 렌더: 스크래치 pl/bigmom/j1 · pl/bigmom/b1(bm_idle_*) — 물방울 원피스·해적모자·분홍 머리·흰 망토.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
