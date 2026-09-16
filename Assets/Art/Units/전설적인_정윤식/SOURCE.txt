@@ -1,0 +1,31 @@
+출처: 원펀맨 「아무도 모르는 영웅」 킹 — 팬 변환(XPS/Blender/FBX, DeviantArt eagle_31). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_정윤식.zip
+  7,817,399 bytes · sha256 cd0dba41fb168abe2da5f60b… · 안에 source/opm_a_hero_nobody_knows___king__xps__blend_fbx__by_eagle_31_ddt5.7z
+  (7z 안 King.blend · King.fbx · King.xps/.mesh · 텍스처 13장 · King_preview.png). zip의 textures/는 재인코딩본이라 7z 안 원본을 썼다.
+받은 날: 2026-09-17 · 유닛: 전설적인_정윤식 (별명 SM설립자, 전설적인)
+
+원본 상태(blender 실측, King.fbx): 아마추어 NULL(X 90°) · 뼈 136 · 메시 9 · 재질 7(각 텍스처 노드 2) · 삼각형 23,192 · 전 메시 무가중치 0.
+  **이미 T자**(손목 z 1.61 = 어깨) · 기본 자세 = 결합 자세 · 정면 −Y.
+  심해왕(희귀함_이태훈)과 같은 게임 뼈 이름이지만 bone0000_ 접두어·번호 꼬리가 없고 어깨 이름이 한 칸 다르다:
+    SHOULDER_L/R = 쇄골 · ARM = 위팔 · ELBOW · WRIST · THIGH · CLANK = 무릎 · TOE1 = 발목 · TOE2 = 발끝 · 손가락 F_THUMB/FORE/MIDDLE/MEDICINAL/LITTLE 1~3.
+  보조 뼈: SHOULDERROLL(위팔 살) · SHOULDERROLL_*1(가중치 0) · ELBOWROLL · CLAVICLEROLL · EFFECT(손 4정점) · CLANKROLL · CLANK_*C(종아리 살) · Head 밑 FACE2 사슬 68개.
+  텍스처 7장(RGBA인데 알파 전부 1.0). 마스크 _m_ · eye_shadow_* 는 안 씀.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_정윤식」으로 재현(이름표 KING_RENAME).
+  - 매핑 52뼈(손가락 5×3 포함) · 가중치 0 뼈 root_ground · CLOTH_A_00 뺌.
+  - 보조 뼈 합치기(PM 09-17 방침 — 유니티에선 딸린 자식이라 변형 같음): Head 밑 68개 → Head · SHOULDERROLL → Arm · ELBOWROLL → ForeArm ·
+    CLAVICLEROLL → Shoulder · EFFECT → Hand · CLANKROLL·CLANK_*C → Leg.
+  - 감량 없음 · tpose_arms(손가락 펼침) · 키 1.8 m · 발 z 0.
+
+🔴 2차(2026-09-17 PM 유니티 반려 — 인형이 유령처럼 반투명): 원본 재질 알파가 0.1대(메시 이름 _0.1_)라 relink가 그 알파를 그대로 넘겨
+  1차 FBX 재질 7개가 전부 TransparencyFactor 1 · Opacity 0으로 나갔다. → fix_unit_fbx.py가 내보내기 직전 모든 재질 Alpha 1 · Alpha 연결 끊기 · OPAQUE로 못박고
+  남으면 실패(assert)하게 고침. 2차 FBX 재질 투명 속성 0개 확인(스크래치 units/fbx_alpha.py).
+
+재질 → 텍스처(archive_rgb, 7z 원본에서): Body → body_c_0020.png · Pants(바지·신발) → leg_c_0020.png · Face → face_c_0020.png · Hair(머리·눈썹) → hair_c_0020.png ·
+  Hands → hand_c_0020.png · Mouth → tooth1_c.png · Eyes → eye_c_0020.001.png.
+
+검증(blender): FBX 1,408,732 bytes · sha256 8d4ccec639fe6b8813195132… · 뼈 52 · 메시 9(정점 14,240) · 크기 1.968 × 0.292 × 1.8 m · 최저 z 0.
+  원시 FBX: 쉬는 스킨↔원시 0.0007 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · UV 층 메시마다 1(DiffuseUV) 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 4.87(가랑이, 상위1% 1.28) · 유니티 공용 idle.fbx 옮겨 입힘 최악 2.33(상위1% **1.323**).
+  판정 렌더: 스크래치 king/j1 · king/b1(kn_idle_*) — 검은 긴팔·청바지·금발·흉터 얼굴.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
