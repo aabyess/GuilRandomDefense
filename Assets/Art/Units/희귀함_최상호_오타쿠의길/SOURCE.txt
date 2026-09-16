@@ -1,0 +1,43 @@
+출처: Sketchfab — 블리치 쿠로사키 이치고(사신 복장, 등에 참월). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_최상호_오타쿠의길.glb
+  10,378,892 bytes · sha256 adee1532e665861a…
+받은 날: 2026-09-16 · 유닛: 희귀함_최상호_오타쿠의길 (unitName 오타쿠의길, 희귀함) — ⚠️ 접미사까지가 유닛 이름이다(폴더·FBX·UNITS 키 전부 이 전체 이름).
+
+glb: Sketchfab-16.71.0 · 스킨 1 · 조인트 296(가중치 있는 것 256) · 메시 26(조명용 Icosphere 포함) · 재질 25 · 이미지 10 · 애니 0.
+  뼈 이름은 번호 꼬리 형식(hips_293 · lback_221 …). **R이 −X · L이 +X**(shoulder R_161 머리 x −0.188로 확인).
+  자세: 좌우 대칭 A자 45° — 어깨 ±0.188/z 1.446 → 팔꿈치 ±0.374/1.26 → 손 ±0.555/1.079.
+  키: 몸 1.82 m(칼 포함 1.826). 정면 −Y.
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_최상호_오타쿠의길」으로 재현.
+  - 매핑 52뼈를 mixamorig 이름으로(ICHIGO_RENAME): hips→Hips · lback→Spine · mback→Spine1 · uback→Spine2 · neck→Neck · head→Head ·
+    clavicle→Shoulder · shoulder→Arm · elbow→ForeArm · hand→Hand · groin→UpLeg · knee→Leg · ankle→Foot · toe→ToeBase ·
+    손가락 A~E → Thumb/Index/Middle/Ring/Pinky 1~3(위치로 확인: A가 손에 바로 붙고 제일 앞 y −0.013 = 엄지, 나머지는 y 순서로 검지 −0.018 · 중지 0.004 · 약지 0.027 · 새끼 0.047).
+    thorax_210(uback과 neck 사이)·ido_294·AS/sway 보조 뼈는 이름 그대로(유니티는 매핑 안 된 중간 뼈를 그냥 지나간다).
+  - 🔴 숨김 변형 메시 3개를 뺌(재질 `5_-` 접두사): Object_13(5_-armRhidden) · Object_15(5_-WepHand.1) · Object_17(5_-WepHand.2).
+    두면 손에 든 칼·붕대가 몸을 가로질러 3 m 뻗는다(Object_15는 y −1.4, Object_17은 y +1.58까지).
+  - 그 칼·붕대 뼈 13개(bandage01~08 A · blade01~05 A)도 뺌 — 남는 메시엔 가중치가 0인데 뼈 머리가 y +1.57·−1.38까지 나가 「뼈 넘침」 판정에 걸린다.
+  - 🔴 얼굴 뼈 105개(pupil·eyelid·eyebrow·tooth·tongue·jaw·nose·cheek …)가 Head 자손 — 아디오와 같은 Jaw/Eye 오매핑 위험.
+    진짜 눈 뼈 eye R.001_19·eye L.001_51은 **가중치 0**이라 이름만 붙여선 유니티가 뼈로 안 센다(아디오에서 확인) →
+    merge_bones(under=mixamorig:Head)로 Head 자손을 통째로 Head에 합침(정점 6,345개 옮김, 93개가 가중치 있던 뼈). 휴머노이드 클립은 얼굴 뼈를 안 움직이니 겉모습 그대로.
+    결과 「얼굴 뼈 겹침 점검: Head 자손 0 · 위험 없음」 · 뼈 178.
+  - 감량: 1,000삼각형 이상 메시만 ×0.25 → 158,297 → 43,131 삼각형(메시 22개 유지).
+  - 쉬는 자세 A자 45° → tpose_arms로 진짜 T자(손바닥 아래, 손가락 폄, 굽기 오차 0). 등에 멘 칼(Object_9·11)은 남기고 키 잴 때만 뺌(size_ignore_meshes).
+  - 키 1.8 m · 발 z 0 · 정면 −Y · orient_snap.
+
+재질 → 텍스처(glb 내장 이미지 10장을 재질 25개가 나눠 씀. 파일명은 그 이미지를 대표하는 재질 이름 기준):
+  5_skin_baseColor.png(이미지 0, 512×1024) ← 5_skin · 5_armRdefault
+  5_WepBack_1_baseColor.png(1) ← 5_WepBack.1 · 5_WepBack_2_baseColor.png(2) ← 5_WepBack.2
+  5_torso_baseColor.png(3) ← 5_torso · 5_sleeves · 5_acc
+  5_hakama_baseColor.png(4) ← 5_hakama · 5_belt
+  5_face_baseColor.png(5) ← 5_face · 5_eyes · 5_eyebrow · 5_eyelashes · 5_mouth · 5_teeth
+  5_feet_baseColor.png(6) · 5_hair_baseColor.png(7, **8×8 팔레트** — 원본이 그렇다, 머리카락은 단색) · 5_noseline_baseColor.png(8) · 7_eyeshadow_baseColor.png(9, 1024×4)
+  텍스처 없는 재질 3개(5_eyeshine · 5_eyewhite · 5_tongue)는 색만 — 원본도 같다.
+
+검증(blender): FBX 6,171,900 bytes · sha256 955e612894fb43c399ac7f4c… · 크기 1.764 × 0.484 × 1.809 m · 최저 z 0 · 뼈 넘침 0.
+  원시 FBX: 뼈 전역(Lcl) vs TransformLink 2.3e-5 · 쉬는 자세 스킨 결과 vs 원시 정점 0.0015 mm · 가중치 없는 정점 0 · 뼈 배율 1.0.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 4.03(상위1% 1.20 — 하카마 자락) · 유니티 공용 idle.fbx 옮겨 입힘 최악 3.05(상위1% 1.31, 왼손·하카마 옆).
+  UV 판정(2026-09-16 히소카 사고 뒤 추가): 첫 UV 범위 정상 — 머리카락 면 평균색 (0.97, 0.64, 0.30) 주황 · 피부 (0.72, 0.56, 0.46) · 상의 (0.20, 0.20, 0.21).
+  🔸 눈그림자(Object_55 0.071/0.003) · 눈반짝(Object_29 0.253/0.038) · 코선(Object_43 0.009/0.019)은 UV가 한 점에 가깝고, 머리카락(Object_37)은 UV 층이 2개인데 **원본 glb와 같다**(원래 단색으로 칠하는 장식 조각). 첫 층이 정상이라 유니티도 같게 읽는다.
+  판정 렌더: 스크래치 ichigo/judgeF(T자·팔45°·무릎90°) · ichigo/idleF(idle 프레임 앞·옆·겨드랑이·가랑이).
+창 판: 판_새스킨_오타쿠의길(사장님 블렌더 창).
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
