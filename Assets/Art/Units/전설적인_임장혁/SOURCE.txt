@@ -1,0 +1,26 @@
+출처: 블리치 모바일 게임 립 — 메노스 그란데(cha_menosgrande_R_6). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_임장혁.zip
+  145,977 bytes · sha256 5ed2c00284b999453beb9c4d… · 안에 source/cha_menosgrande_R_6.fbx + textures/cha_menosgrande_R_6.png(256² RGBA, 알파 전부 1.0)
+받은 날: 2026-09-17 · 유닛: 전설적인_임장혁 (별명 짱스파단장, 전설적인) — ※ 동명 임장혁(흔함·특별함·초월) 중 전설적인 · 🔸 사람형 아님 → Generic
+
+원본 상태(blender 실측): FBX · ×0.01(아마추어 X 90°) · 메시 1(cha_menosgrande_R_6_0, 정점 2,395 · 1,610면) · 재질 1 · UV 「Attribute」 · 전 메시 무가중치 0 · **애니메이션 없음**.
+  형태: 팔·다리 없는 원추형 검은 망토 + 긴 코 가면 + 가슴 구멍 + 목깃 가시(원작 그대로). 망토 밑에 발끝만 보인다. 정면 −Y(코끝·발끝).
+  뼈 11: cha_menosgrande_R_6(뿌리, 가중치 0) → Bip01(가중치 0) → Skirt·Skirt1(자락) / spine·spine1·spine2·Head → Point001(가중치 0) → Mouse(코끝) · cha_menosgrande_R_6.001(가중치 0).
+  FBX가 부르는 cha_menosgrande_R_6_rgb1.png(색 교체 마스크)는 zip에 없다 — 기본색 png만 씀.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_임장혁」으로 재현(kind beast · generic).
+  - 가중치 0 뼈 cha_menosgrande_R_6 · .001 · Point001 뺌(Mouse는 Head 밑으로). Bip01은 뿌리 하나로 남기고 seed_zero_bones=0.001(스킨 뼈 목록에 들게).
+  - 방향: 머리 쪽 = Mouse(코끝) ↔ Head → 정면 −Y 그대로. 키 1.8 m · 발 z 0.
+  - 🔴 원본 클립이 없어 새 옵션 synth_idle로 **Idle 루프를 지음**(72프레임 = 24fps 3초, 3프레임마다 키):
+      spine·spine1·spine2 좌우(세계 Y축) 1.5°씩 위상 차로 누적 흔들림 + spine·spine2 앞뒤 0.8° · Head 끄덕임(X) 2.5°·도리(Z) 2.0° ·
+      Skirt −0.8° · Skirt1 −1.0°(몸과 반대로 자락이 늦게 따라옴).
+      각도 = 진폭 × (sin(2πt/72 + 위상) − sin(위상)) → 첫·끝 프레임 모두 쉬는 자세(루프 이음새 없음, FBX 기본 자세 = 결합 자세).
+    1회차 자락 −1.5·−2.0°는 옷단이 바닥 밑 2.4 cm로 내려가 절반으로 줄임.
+  - 유니티 GenericRigUnits 목록 추가는 PM 몫(Assets/Editor).
+
+검증(blender): FBX 224,860 bytes · sha256 f598cd3b6c811137b8f5ba00… · 뼈 8 · 메시 1(정점 2,395) · 크기 0.9 × 0.764 × 1.8 m · 최저 z 0.
+  원시 FBX: 쉬는 스킨↔원시 0.0037 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 재질 투명 속성 0 · UV 정상(u 0.972 · v 0.923).
+  클립(재수입): 테이크 Idle(블렌더 가져오기 이름 「Armature|Idle」) 1~73 · 0프레임 스킨 = 쉬는 자세(0.0037 mm) · 루프 끝-처음 0 mm ·
+    최대 늘어짐 1.66 · 최저 z −0.014~0(옷단 1.4 cm 살짝 흔들림).
+  판정 렌더: 스크래치 menos/b1(mn_f*_front·side) · menos(mnr_*).
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
