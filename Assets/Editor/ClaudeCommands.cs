@@ -8,6 +8,8 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Playables;
+using UnityEngine.Animations;
 
 /// <summary>
 /// Claude가 사장님 대신 유니티 메뉴를 돌리고 화면을 찍어 결과를 읽는 창구(2026-09-13, 사장님: 「모델배선·맵생성 아직도 내가 해줘야 하냐」).
@@ -160,6 +162,12 @@ public static class ClaudeCommands
             case "rig":
                 return RigReport(rest);
 
+            case "clipcheck":
+                return ClipCheck(rest);
+
+            case "clipsample":
+                return ClipSample(rest);
+
             case "big":
                 return BigObjects(parts[0], parts.Length > 1 ? F(parts[1]) : 30f,
                                   parts.Length > 2 ? parts[2] : null);
@@ -240,6 +248,162 @@ public static class ClaudeCommands
 
     // 스킨 모델이 **실제로 그려지는 크기**를 잰다 — 메시 자산 경계·렌더러 경계·뼈 퍼짐은 서로 다를 수 있다
     // (glb→fbx 변환본은 뼈 범위가 메시의 수천 배로 나와 키 맞추기가 뼈 크기에 속았다). BakeMesh는 뼈를 거친 정점이다.
+    // clipcheck <모델 경로(공백 없이)>
+    // 모델에 딸린 클립의 배율 커브 첫 값을 그 노드의 임포트된 정적 배율과 견준다 — 실행 때만 모델이 커지는 사고를 편집 모드에서 잡는다.
+    // 2026-09-15 해적선: cm 파일 뿌리 노드 정적 배율은 ×0.01이 붙어 11.4인데 클립 키는 1140 그대로라 Animator가 켜지면 100배.
+    static string ClipCheck(string assetPath)
+    {
+        GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+        if (model == null) return $"❌ 에셋 없음: {assetPath}";
+
+        StringBuilder sb = new StringBuilder($"🎞 {assetPath}\n");
+        List<AnimationClip> clips = AssetDatabase.LoadAllAssetRepresentationsAtPath(assetPath)
+            .OfType<AnimationClip>()
+            .Where(c => !c.name.StartsWith("__preview__"))
+            .ToList();
+        if (clips.Count == 0) return sb.Append("   클립 없음").ToString();
+
+        foreach (AnimationClip clip in clips)
+        {
+            int checkedCurves = 0, bad = 0;
+            foreach (EditorCurveBinding binding in AnimationUtility.GetCurveBindings(clip))
+            {
+                if (!binding.propertyName.StartsWith("m_LocalScale.")) continue;
+                Transform node = string.IsNullOrEmpty(binding.path) ? model.transform : model.transform.Find(binding.path);
+                if (node == null) continue;
+
+                AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);
+                if (curve == null || curve.length == 0) continue;
+                checkedCurves++;
+
+                float key = curve.Evaluate(0f);
+                char axis = binding.propertyName[binding.propertyName.Length - 1];
+                float still = axis == 'x' ? node.localScale.x : axis == 'y' ? node.localScale.y : node.localScale.z;
+                float ratio = Mathf.Abs(still) > 1e-6f ? key / still : float.PositiveInfinity;
+                if (Mathf.Abs(ratio - 1f) <= 0.05f) continue;
+
+                bad++;
+                sb.AppendLine($"   🔴 {clip.name} · {(string.IsNullOrEmpty(binding.path) ? "(루트)" : binding.path)} · {binding.propertyName}: 클립 첫 값 {key:G4} vs 정적 {still:G4} (×{ratio:G3})");
+            }
+            sb.AppendLine($"   {clip.name}: 배율 커브 {checkedCurves}개 중 어긋남 {bad}개" + (bad == 0 ? " ✅" : ""));
+        }
+        return sb.ToString();
+    }
+
+    // clipsample <프리팹 경로(공백 없이)>
+    // 프리팹을 미리보기 씬에 놓고 Animator에 물린 클립을 실제로 샘플링해(첫·중간 프레임) 구운 메시 크기를 전후로 잰다.
+    // 커브 값만 보는 clipcheck가 못 잡는 「실행 때만 커짐」을 편집 모드에서 재현한다. 크기가 튀면 많이 움직인 노드를 적는다.
+    static string ClipSample(string prefabPath)
+    {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+        if (prefab == null) return $"❌ 프리팹 없음: {prefabPath}";
+
+        Scene preview = EditorSceneManager.NewPreviewScene();
+        StringBuilder sb = new StringBuilder($"🎬 {prefabPath}\n");
+        try
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, preview);
+            instance.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+
+            Animator animator = instance.GetComponentInChildren<Animator>(true);
+            AnimationClip clip = animator != null && animator.runtimeAnimatorController != null
+                ? animator.runtimeAnimatorController.animationClips.FirstOrDefault()
+                : null;
+            if (clip == null) return sb.Append("   Animator·클립 없음").ToString();
+            sb.AppendLine($"   Animator {animator.gameObject.name} · 컨트롤러 {animator.runtimeAnimatorController.name} · 클립 {clip.name} ({clip.length:F2}초) · isHuman {animator.isHuman}");
+
+            Transform[] nodes = instance.GetComponentsInChildren<Transform>(true);
+            var before = nodes.ToDictionary(t => t, t => (t.position, t.lossyScale));
+            Vector3 size0 = BakedWorldSize(instance);
+            sb.AppendLine($"   샘플 전 구운 크기 {size0}");
+
+            foreach (float time in new[] { 0f, clip.length * 0.5f })
+            {
+                clip.SampleAnimation(animator.gameObject, time);
+                Vector3 size = BakedWorldSize(instance);
+                sb.AppendLine($"   SampleAnimation t={time:F2} 구운 크기 {size} (×{(size0.magnitude > 1e-6f ? size.magnitude / size0.magnitude : 0f):F2})");
+            }
+
+            // 실행 때 Animator와 같은 길 — PlayableGraph로 Animator에 평가한다(MapGenerator.PoseAsIdle과 같은 방식).
+            // SampleAnimation(레거시)은 Generic 아바타의 루트 노드 처리가 실행 때와 다를 수 있다.
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            animator.enabled = true;
+            animator.applyRootMotion = false;
+            foreach (float time in new[] { 0f, clip.length * 0.5f })
+            {
+                UnityEngine.Playables.PlayableGraph graph = UnityEngine.Playables.PlayableGraph.Create("clipsample");
+                try
+                {
+                    graph.SetTimeUpdateMode(UnityEngine.Playables.DirectorUpdateMode.Manual);
+                    var output = UnityEngine.Animations.AnimationPlayableOutput.Create(graph, "샘플", animator);
+                    var playable = UnityEngine.Animations.AnimationClipPlayable.Create(graph, clip);
+                    playable.SetTime(time);
+                    output.SetSourcePlayable(playable);
+                    graph.Evaluate(0f);
+                }
+                finally
+                {
+                    if (graph.IsValid()) graph.Destroy();
+                }
+                Vector3 size = BakedWorldSize(instance);
+                sb.AppendLine($"   Animator 평가 t={time:F2} 구운 크기 {size} (×{(size0.magnitude > 1e-6f ? size.magnitude / size0.magnitude : 0f):F2}) · Animator 노드 배율 {animator.transform.localScale}");
+            }
+
+            // 실행 때 Animator가 켜지면 먼저 하는 일 — 아바타 기본 자세로 다시 묶기(Rebind). cm 단위 파일에서 이 기본 자세가
+            // 단위 변환 없이 쓰이면 뼈가 100배로 퍼질 수 있다(2026-09-15 해적선 인형 의심).
+            animator.Rebind();
+            animator.Update(0f);
+            Vector3 rebound = BakedWorldSize(instance);
+            sb.AppendLine($"   Rebind+Update 구운 크기 {rebound} (×{(size0.magnitude > 1e-6f ? rebound.magnitude / size0.magnitude : 0f):F2})");
+
+            foreach (var moved in nodes
+                .Select(t => (t, move: (t.position - before[t].position).magnitude, scale: t.lossyScale.magnitude / Mathf.Max(before[t].lossyScale.magnitude, 1e-6f)))
+                .OrderByDescending(x => Mathf.Max(x.move / Mathf.Max(size0.magnitude, 1e-6f), Mathf.Abs(Mathf.Log(Mathf.Max(x.scale, 1e-6f)))))
+                .Take(6))
+                sb.AppendLine($"     {moved.t.name}: 이동 {moved.move:F2} · 배율 ×{moved.scale:F2}");
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(preview);
+        }
+        return sb.ToString();
+    }
+
+    static Vector3 BakedWorldSize(GameObject root)
+    {
+        Vector3 min = Vector3.positiveInfinity, max = Vector3.negativeInfinity;
+        foreach (SkinnedMeshRenderer skin in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+        {
+            Mesh baked = new Mesh();
+            try
+            {
+                skin.BakeMesh(baked, true);
+                Matrix4x4 toWorld = Matrix4x4.TRS(skin.transform.position, skin.transform.rotation, Vector3.one);
+                foreach (Vector3 v in baked.vertices)
+                {
+                    Vector3 w = toWorld.MultiplyPoint3x4(v);
+                    min = Vector3.Min(min, w);
+                    max = Vector3.Max(max, w);
+                }
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(baked);
+            }
+        }
+        foreach (MeshFilter filter in root.GetComponentsInChildren<MeshFilter>(true))
+        {
+            if (filter.sharedMesh == null) continue;
+            foreach (Vector3 v in filter.sharedMesh.vertices)
+            {
+                Vector3 w = filter.transform.TransformPoint(v);
+                min = Vector3.Min(min, w);
+                max = Vector3.Max(max, w);
+            }
+        }
+        return max.x >= min.x ? max - min : Vector3.zero;
+    }
+
     // bakesize <모델 또는 프리팹 경로(공백 없이)>
     static string BakeSize(string assetPath)
     {
