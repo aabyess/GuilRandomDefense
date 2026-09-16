@@ -24,7 +24,8 @@
 """
 import json, struct, sys
 
-SRC = "/Users/sang/Downloads/luffy.glb"
+import os
+SRC = os.path.expanduser("~/Desktop/구랜디스킨모음/03_특별함/특별함_최상호.glb")  # 09-16 원본을 바탕화면 모음집으로 옮기고 유닛 이름으로 바꿈
 DST = "/tmp/luffy_probe/luffy_humanoid.glb"
 
 def load(p):

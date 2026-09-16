@@ -34,7 +34,7 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 
 UNITS = {
     "특별함_김정래": dict(
-        source=os.path.expanduser("~/Downloads/laptop.glb"),
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/03_특별함/특별함_김정래.glb"),
         path="Assets/Art/Units/특별함_김정래/특별함_김정래.fbx",
         length=0.6, rotate_z=0.0,
         # 메시 이름별 재질 → (베이스 이미지 번호, 발광 이미지 번호 또는 None)

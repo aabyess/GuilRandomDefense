@@ -58,6 +58,9 @@ from mathutils import Matrix, Vector
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 DL = os.path.expanduser("~/Downloads")
+# 2026-09-16 사장님이 원본을 바탕화면 모음집으로 옮기고 유닛 이름으로 바꿨다(등급 폴더 안, README.md 있음).
+# DL은 이미 지워진 옛 항목(나루토·재규어 등, rev=로 되살림)만 남아 있는 자리다.
+SKINS = os.path.expanduser("~/Desktop/구랜디스킨모음")
 LUFFY_RENAME = {
     "root hips_429": "Hips", "spine lower_428": "Spine", "spine middle_427": "Chest", "spine upper_426": "UpperChest",
     "head neck lower_217": "Neck", "head neck upper_216": "Head",
@@ -140,7 +143,7 @@ for _s, _side in (("left", "Left"), ("right", "Right")):
                           f"arm {_s} arm2": f"mixamorig:{_side}ForeArm", f"arm {_s} hand": f"mixamorig:{_side}Hand",
                           f"leg {_s} thigh": f"mixamorig:{_side}UpLeg", f"leg {_s} calf": f"mixamorig:{_side}Leg",
                           f"leg {_s} foot": f"mixamorig:{_side}Foot", f"leg {_s} toes": f"mixamorig:{_side}ToeBase"})
-_MH = "~/Downloads/mihawk/textures/mpr_bound_character_mplc014mihawk_"
+_MH = "~/Desktop/구랜디스킨모음/03_특별함/특별함_박기찬/textures/mpr_bound_character_mplc014mihawk_"
 # 가로우(원펀맨 게임 추출 glb, 2026-09-14): 사람형 매핑 뼈를 mixamorig로. CLANK = 종아리, TOE1 = 발, TOE2 = 발끝. ROLL(트위스트)은 이미 팔다리 뼈의 자식.
 GAROU_RENAME = {"WAIST_079": "mixamorig:Hips", "SPINE1_074": "mixamorig:Spine", "SPINE2_072": "mixamorig:Spine1", "SPINE3_068": "mixamorig:Spine2",
                 "NECK_010": "mixamorig:Neck", "HEAD_02": "mixamorig:Head"}
@@ -183,7 +186,7 @@ for _side in ("Left", "Right"):
                        f"bone_{_side}ForeArm": f"mixamorig:{_side}ForeArm", f"bone_{_side}Hand": f"mixamorig:{_side}Hand",
                        f"bone_{_side}LegUpper": f"mixamorig:{_side}UpLeg", f"bone_{_side}Leg": f"mixamorig:{_side}Leg",
                        f"bone_{_side}Ankle": f"mixamorig:{_side}Foot", f"bone_{_side}Toe": f"mixamorig:{_side}ToeBase"})
-_RIN_TEX = "~/Downloads/rin-itoshi-free-fire-skin/textures/Male_{}_Cos_FB2_D.png"
+_RIN_TEX = "~/Desktop/구랜디스킨모음/03_특별함/특별함_박진웅/textures/Male_{}_Cos_FB2_D.png"
 # 가렌(LoL 추출 glb, 2026-09-14): 번호 꼬리 이름 → mixamorig. Root_1(가중치 359)이 Spine1과 Pelvis_41의 부모라 Root_1 = Hips, Pelvis_41은 중간 뼈로 둔다.
 #   무릎은 KneeUpper(종아리)·KneeLower(같은 자리 중간 뼈) 둘 — KneeUpper = Leg. 손가락(두 마디)은 매핑 안 함(대검 쥔 모양 유지).
 GAREN_RENAME = {"Root_1": "mixamorig:Hips", "Spine1_2": "mixamorig:Spine", "Spine2_3": "mixamorig:Spine1", "Spine3_4": "mixamorig:Spine2",
@@ -218,10 +221,10 @@ NARUTO_FACE_RUNS = [["nrt_tex02", 450], ["nrt_eye", 62], ["nrt_tex01", 1106], ["
 UNITS = {
     "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
     "안흔함_이호준": dict(rev="6b2afdbc", path="Assets/Art/Units/안흔함_이호준/안흔함_이호준.fbx", kind="human", size=("height", 1.2), anim=True,
-                      hips="Bone_61", head="Bone.004_3", source=os.path.join(DL, "zombi.glb"), recipe={}, clip_ground=True),
+                      hips="Bone_61", head="Bone.004_3", source=os.path.join(SKINS, "02_안흔함/안흔함_이호준.glb"), recipe={}, clip_ground=True),
     "안흔함_김경현": dict(rev="4c92dba1", path="Assets/Art/Units/안흔함_김경현/안흔함_김경현.fbx", kind="human", size=("height", 1.8)),
     "안흔함_김수빈": dict(rev="c6cc54d4", path="Assets/Art/Units/안흔함_김수빈/안흔함_김수빈.fbx", kind="human", size=("height", 1.8), hips="hips_112",
-                      source=os.path.join(DL, "nanachi.glb"),
+                      source=os.path.join(SKINS, "02_안흔함/안흔함_김수빈.glb"),
                       # Object_4 = 몸에서 멀리 떨어진 Rigify FK 위젯 조각(128정점) — 경계 상자를 3.3m로 부풀려 PM 승인으로 뺀다(2026-09-13)
                       recipe=dict(material_alias={"Baked_All.001": "Baked_All"}, drop_meshes=["Object_4"])),
     "안흔함_문필환": dict(rev="81a18fbb", path="Assets/Art/Units/안흔함_문필환/안흔함_문필환.fbx", kind="human", size=("height", 1.8)),
@@ -241,7 +244,7 @@ UNITS = {
                                    "l_hand_open_death_03", "weapon_01"],
                       rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True),
     "특별함_최상호": dict(rev="b037f72d", path="Assets/Art/Units/특별함_최상호/특별함_최상호.fbx", kind="human", size=("height", 1.8),
-                      source=os.path.join(DL, "luffy.glb"),
+                      source=os.path.join(SKINS, "03_특별함/특별함_최상호.glb"),
                       # mesh_0(Pupil 582정점·모양 키 3) = Object_7, mesh_0.001(shock 60정점·모양 키 3) = Object_8
                       recipe=dict(rename=LUFFY_RENAME, mesh_alias={"mesh_0": "Object_7", "mesh_0.001": "Object_8"})),
     # 🔴 원인 3겹(2026-09-14 PM 유니티 확인): ①Biped 무게중심 Bip001이 Hips 위에 끼어 엉덩이 높이가 바닥으로 저장 ②팔·다리 메시를 BN_ 보조 뼈가
@@ -249,13 +252,13 @@ UNITS = {
     "흔함_문필환": dict(rev="01d46427", path="Assets/Art/Units/흔함_문필환/흔함_문필환.fbx", kind="human", size=("height", 1.8),
                     drop_bones=["Bip001"], reparent_bones=BIPED_LIMB_REPARENT, tpose_arms=True, null_frames_from_node=True),
     "안흔함_박민수": dict(rev="dd84a0cb", path="Assets/Art/Units/안흔함_박민수/안흔함_박민수.fbx", kind="human", size=("height", 1.8),
-                      source=os.path.join(DL, "denji_and_pochita.glb"), gltf_guess_bind=False,
+                      source=os.path.join(SKINS, "02_안흔함/안흔함_박민수.glb"), gltf_guess_bind=False,
                       recipe=dict(rename=DENJI_RENAME)),
     "안흔함_상붕카": dict(path="Assets/Art/Characters/안흔함_상붕카.glb", kind="prop", size=("length", 1.8)),
     # 사이타마(Ready Player Me·Mixamo 리그 glb, 2026-09-14): 번호 꼬리를 떼고 mixamorig 이름으로. 쉬는 자세 A자(위팔 수평 아래 59°, 아래팔 앞 33°) → T자
     #   (손가락 네 줄이 다 있어 손바닥 굴리기까지). 조명용 Icosphere 뺌. Wolf3D_Body 베이스는 1×1 단색 jpg — 원본 바이트 그대로(유니티가 읽음).
     "특별함_배성령": dict(path="Assets/Art/Units/특별함_배성령/특별함_배성령.fbx", kind="human", size=("height", 1.8),
-                      source=os.path.join(DL, "saitama_everyday_opm_-_opm.glb"), no_nulls=True, drop_meshes=["Icosphere"],
+                      source=os.path.join(SKINS, "03_특별함/특별함_배성령.glb"), no_nulls=True, drop_meshes=["Icosphere"],
                       rename_regex=(r"([A-Za-z][A-Za-z0-9_]*?)_[0-9]+", r"mixamorig:\1"), orient_snap=True,
                       tpose_arms={s: dict({"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm", "Forearm": f"mixamorig:{side}ForeArm",
                                            "Hand": f"mixamorig:{side}Hand"},
@@ -278,7 +281,7 @@ UNITS = {
     #   재질 5개가 전부 비어 있다(이미지 없음) → 메시 이름으로 텍스처를 짝지어 재질을 새로. 렌더로 확인: Accessory 메시 = 머리카락(Hair 텍스처),
     #   Accessory_VFX 메시 = 얼굴·귀(Accessory 텍스처 — 이펙트가 아니었다). Cube 메시는 블렌더가 읽지 않음(면 없음).
     "특별함_박진웅": dict(path="Assets/Art/Units/특별함_박진웅/특별함_박진웅.fbx", kind="human", size=("height", 1.8),
-                      source=os.path.expanduser("~/Downloads/rin-itoshi-free-fire-skin/source/rin itoshi.fbx"),
+                      source=os.path.expanduser("~/Desktop/구랜디스킨모음/03_특별함/특별함_박진웅/source/rin itoshi.fbx"),
                       rename_bones=RIN_RENAME, orient_snap=True,
                       tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm", "Forearm": f"mixamorig:{side}ForeArm",
                                       "Hand": f"mixamorig:{side}Hand"} for s, side in (("L", "Left"), ("R", "Right"))},
@@ -290,7 +293,7 @@ UNITS = {
     # 조즈(바운티러시 pl_ 리그, zip 안 7z): 이미 T자. 표정 3·손 2벌 겹침 → face_normal + 주먹(close, 권투형 거구 기본 모습). Cube 메시는 원본에 없음.
     #   텍스처: 7z 안 _diff.tga와 zip의 _diff.png가 픽셀 동일(1024) — 알파 = 명암 마스크(중간값 99%)라 tga에서 알파 뺀 RGB PNG로 새로 쓰고 재질을 거기에 잇는다.
     "특별함_조성진": dict(path="Assets/Art/Units/특별함_조성진/특별함_조성진.fbx", kind="human", size=("height", 1.8),
-                      archive=(os.path.join(DL, "one-piece-bounty-rush-jozu.zip"), "source/pl_jozu.7z", "pl_jozu/pl_jozu_orig01.fbx"),
+                      archive=(os.path.join(SKINS, "03_특별함/특별함_조성진.zip"), "source/pl_jozu.7z", "pl_jozu/pl_jozu_orig01.fbx"),
                       archive_rgb={"pl_jozu/pl_jozu_orig01_diff.tga": "pl_jozu_orig01_diff.png"},
                       drop_meshes=["face_attack", "face_damage", "l_hand_open", "r_hand_open"],
                       rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True,
@@ -300,7 +303,7 @@ UNITS = {
     #   남김: Object_6 body · 9 face_normal · 10 goggle · 11 hair · 12 hat · 13 hat_hair · 16/25 l/r_glove_open · 20/29 l/r_leg · 21 pipe(등에 멤)
     #   뺌: 7 face_attack · 8 face_damage · 14/23 glove_close · 15/24 glove_dragon · 17/26 hand_close · 18/27 hand_dragon · 19/28 hand_open · 22 pipe_weapon · 30/31 sp_leg · Icosphere
     "특별함_박예원": dict(path="Assets/Art/Units/특별함_박예원/특별함_박예원.fbx", kind="human", size=("height", 1.8),
-                      source=os.path.join(DL, "one_oiece_bounty_rush_sabo_stampede.glb"), no_nulls=True,
+                      source=os.path.join(SKINS, "03_특별함/특별함_박예원.glb"), no_nulls=True,
                       drop_meshes=["Object_7", "Object_8", "Object_14", "Object_15", "Object_17", "Object_18", "Object_19", "Object_22", "Object_23", "Object_24",
                                    "Object_26", "Object_27", "Object_28", "Object_30", "Object_31", "Icosphere"],
                       rename_bones=SABO_RENAME, rename_regex=(r"([A-Za-z][A-Za-z0-9_]*?)_[0-9]+", r"\1"), orient_snap=True,
@@ -313,7 +316,7 @@ UNITS = {
     #   🔴 트위스트 뼈가 형제로 붙음(우솝 교훈): 팔꿈치 자리 bone_202/203이 위팔 밑, 무릎 자리 bone_200/201이 넓적다리 밑 → 아래팔·종아리 밑으로.
     #   mat_4(Object_15)는 이미지 없는 알파 0 BLEND 판(Object_13과 같은 자리 겹침, 안 보이는 재질) · 조명용 Icosphere 뺌.
     "특별함_고우선": dict(path="Assets/Art/Units/특별함_고우선/특별함_고우선.fbx", kind="human", size=("height", 1.8),
-                      source=os.path.join(DL, "reiju.glb"), no_nulls=True, drop_meshes=["Object_15", "Icosphere"],
+                      source=os.path.join(SKINS, "03_특별함/특별함_고우선.glb"), no_nulls=True, drop_meshes=["Object_15", "Icosphere"],
                       rename_bones=REIJU_RENAME, drop_bones=["bone_26_028", "bone_1_03", "bone_0_02"],
                       reparent_bones={"bone_202_073": "mixamorig:LeftForeArm", "bone_203_074": "mixamorig:RightForeArm",
                                       "bone_200_071": "mixamorig:LeftLeg", "bone_201_072": "mixamorig:RightLeg"},
@@ -340,7 +343,7 @@ UNITS = {
     #   Bip001(무게중심, 가중치 0) 뺌. 🔴 칼(Object_58)은 Bip001 > Prop1 > rweapon에 매달려 쉬는 자세에서 발밑 바닥에 앞으로 누워 있다(애니가 손으로 옮기던 것)
     #   → 유니티 Idle에선 바닥에 남으니 칼 메시와 그 뼈 사슬을 뺀다. 손가락은 Finger0·Finger1 두 줄뿐이라 T자 굽기의 손바닥 굴리기는 건너뜀.
     "특별함_이정범": dict(path="Assets/Art/Units/특별함_이정범/특별함_이정범.fbx", kind="human", size=("height", 1.8),
-                      source=os.path.join(DL, "isshin_kurosaki.glb"), no_nulls=True, drop_meshes=["Object_58", "Icosphere"],
+                      source=os.path.join(SKINS, "03_특별함/특별함_이정범.glb"), no_nulls=True, drop_meshes=["Object_58", "Icosphere"],
                       rename_regex=(r"(.+?)_[0-9]+", r"\1"),
                       drop_bones=["yixin_weapon_0_nocloth", "rweapon", "Bip001 Prop1", "Bip001"], tpose_arms=True, orient_snap=True,
                       glb_images={0: "yixin_leye_0_baseColor.png", 1: "yixin_mouth_0_baseColor.png", 2: "yixin_reye_0_baseColor.png",
@@ -349,7 +352,7 @@ UNITS = {
     # 가로우(원펀맨 게임 추출 glb): 이미 T자. 뿌리 NULL_0133 > RESERVE_0143(가중치 0 중간 뼈)가 WAIST(Hips) 위에 끼어 있다 → 뺀다(흔함_문필환 Bip001 교훈).
     #   조명용 Icosphere 뺌. 텍스처 10장(재질 14가 나눠 씀) → 재질 이름 기준 파일, 공유 이미지는 파일 하나.
     "특별함_유재헌": dict(path="Assets/Art/Units/특별함_유재헌/특별함_유재헌.fbx", kind="human", size=("height", 1.8),
-                      source=os.path.join(DL, "garouopm.glb"), drop_meshes=["Icosphere"], no_nulls=True,
+                      source=os.path.join(SKINS, "03_특별함/특별함_유재헌.glb"), drop_meshes=["Icosphere"], no_nulls=True,
                       # 🔴 NULL_0133 배율 ×10000을 풀어 다시 싸고(glb_unscale_joint) 결합 자세 추정을 꺼야(gltf_guess_bind=False) 뼈대·스킨이 안 뭉개진다
                       glb_unscale_joint="NULL_0133", gltf_guess_bind=False,
                       rename_bones=GAROU_RENAME, drop_bones=["RESERVE_0143", "NULL_0133"], orient_snap=True,
@@ -375,7 +378,7 @@ UNITS = {
     # 진베 오니가시마(바운티러시 pl_ 리그를 Annettlw가 합친 판, 2026-09-14): 이미 T자. 표정 5·손 3벌 겹침 + 찻잔(cup). 손은 주먹(close) — 어인 가라테 기본 모습.
     #   🔴 코트 소매 뼈 l_arm01·r_arm01이 팔이 아니라 coat_root(가슴) 밑이라 유니티가 팔을 내려도 소매가 T자에 남는다 → 위팔(LeftArm·RightArm) 밑으로.
     "특별함_김용태": dict(path="Assets/Art/Units/특별함_김용태/특별함_김용태.fbx", kind="human", size=("height", 1.8),
-                      archive=(os.path.join(DL, "one-piece-bounty-rush-jinbei-onigashima/source/Jinbei Onigashima.rar"),
+                      archive=(os.path.join(SKINS, "03_특별함/특별함_김용태/source/Jinbei Onigashima.rar"),
                                "Jinbei Onigashima/Jinbei Onigashima by Annettlw.fbx"),
                       archive_textures=["Jinbei Onigashima/pl_jinbe_atta01_diff_hq.png"],
                       drop_meshes=["face_attack", "face_damage", "face_sp01", "face_sp02", "l_hand_open", "r_hand_open", "l_hand_sp_01", "r_hand_sp_01", "cup"],
@@ -385,7 +388,7 @@ UNITS = {
     #   쉬는 자세 이미 T자(위팔 수평 아래 2.6°). 조명용 Icosphere 뺌. 텍스처: glb 내장 이미지를 재질 이름 기준 파일로, 노멀은 _normal,
     #   머리카락(haircut)만 알파 컷아웃(원본 alphaMode MASK — 진짜 컷아웃). 눈썹(AvatarEyelashes)은 원본 검정 단색. 삼각형 65,095는 줄이지 않음.
     "특별함_이병준": dict(path="Assets/Art/Units/특별함_이병준/특별함_이병준.fbx", kind="human", size=("height", 1.8),
-                      source=os.path.join(DL, "indian_man_in_kurta.glb"), drop_meshes=["Icosphere"],
+                      source=os.path.join(SKINS, "03_특별함/특별함_이병준.glb"), drop_meshes=["Icosphere"],
                       rename_regex=(r"([A-Za-z][A-Za-z0-9_]*?)_[0-9]+", r"mixamorig:\1"),
                       # glTF 메시 노드 빈 오브젝트 11개(재질과 같은 이름)가 Null로 살아나 가중치 없는 뿌리 뼈가 된다 — 뺀다
                       drop_bones=["AvatarBody", "AvatarEyelashes", "AvatarHead", "AvatarLeftCornea", "AvatarLeftEyeball", "AvatarRightCornea",
@@ -410,14 +413,14 @@ UNITS = {
     #   l_handle_sheath는 쉬는 자세에서 오른발 옆 바닥에 떨어져 있다(원본 결함) → 뽑은 칼 + 왼허리 빈 칼집(l_sheath) + 칼 쥔 오른손 주먹을 기본으로.
     #   텍스처 알파 = 명암 마스크(중간값 99.8%) → 알파 뺀 RGB PNG로(rgb_textures). 원본 FBX는 DiffuseColor만 부름.
     "특별함_이현빈": dict(path="Assets/Art/Units/특별함_이현빈/특별함_이현빈.fbx", kind="human", size=("height", 1.8),
-                      archive=(os.path.join(DL, "one-piece-bounty-rush-nolan.zip"), "source/nolan.rar", "nolan/pl_noland_sora01 (merge).fbx"),
+                      archive=(os.path.join(SKINS, "03_특별함/특별함_이현빈.zip"), "source/nolan.rar", "nolan/pl_noland_sora01 (merge).fbx"),
                       archive_textures=["nolan/pl_noland_sora01_diff.png"], rgb_textures=["pl_noland_sora01_diff.png"],
                       drop_meshes=["face_attack", "face_damage", "face_sp01", "face_sp02", "l_hand_close", "r_hand_open", "l_handle_sheath"],
                       rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True),
     # Mr.5(바운티러시 pl_ (merge) 리그, 2026-09-14): 이미 T자. 표정 5 · 손 13 변형(주먹·코 파기·코딱지 대포·권총 쥔 손·권총 집어넣는 손). FBX 안에 이펙트 메시는 없다
     #   (rar의 Mesh/·Texture2D/ 스킬 이펙트 OBJ·PNG는 안 옮김). 기본 = 오른손에 권총(r_hand_weapon_revolver + r_weapon_revolver_01) · 왼손 open. 알파 = 명암 마스크 → RGB.
     "특별함_조세민": dict(path="Assets/Art/Units/특별함_조세민/특별함_조세민.fbx", kind="human", size=("height", 1.8),
-                      archive=(os.path.join(DL, "one-piece-bounty-rush-mr-5.zip"), "source/mr 5.rar", "mr 5/pl_mr5five_orig01 (merge).fbx"),
+                      archive=(os.path.join(SKINS, "03_특별함/특별함_조세민.zip"), "source/mr 5.rar", "mr 5/pl_mr5five_orig01 (merge).fbx"),
                       archive_textures=["mr 5/pl_mr5five_orig01_diff.png"], rgb_textures=["pl_mr5five_orig01_diff.png"],
                       drop_meshes=["face_attack", "face_damage", "face_sp01", "face_sp02", "l_hand_close", "r_hand_close", "r_hand_open",
                                    "l_hand_nose_01", "l_hand_nose_02", "r_hand_nose_01", "r_hand_nose_02", "l_hand_nose_fancycannon_01",
@@ -449,14 +452,14 @@ UNITS = {
                       rename_bones=PL_RENAME, null_frames_from_node=True, orient_snap=True),
     # 새 스킨(git 원본 없음) — 다운로드 rar에서 FBX·텍스처를 꺼내 짓는다. 쉬는 자세 팔 A자 44.7° → T자로 굽는다. 재질 34065 하나(Dots Stroke·Material은 면 0, 안 읽힘).
     "특별함_황정기": dict(path="Assets/Art/Units/특별함_황정기/특별함_황정기.fbx", kind="human", size=("height", 1.8),
-                      archive=(os.path.join(DL, "one-piece-fighting-path-usopp-onigashima/source/Usopp Onigashimaa.rar"),
+                      archive=(os.path.join(SKINS, "03_특별함/특별함_황정기/source/Usopp Onigashimaa.rar"),
                                "Usopp Onigashima/Usopp Onigashima by Annettlw.fbx"),
                       archive_textures=["Usopp Onigashima/34065_D.png"],
                       drop_bones=["Bip001"], reparent_bones=USOPP_REPARENT, tpose_arms=True),
     # 모리아(바운티러시 pl_ 리그, 2026-09-14): 팔은 이미 T자(팔·손 뼈 같은 높이). 표정·손 모양 변형 메시가 한자리에 겹쳐 있어 기본만 남긴다 —
     #   남김 body·coat·face_normal(웃는 얼굴)·l/r_hand_open, 뺌 = 아래 9개(공격 얼굴·주먹·가위 쥔 손·작은 가위 날). 끝·이펙트 Null은 원래 틀 그대로 뼈로.
     "특별함_임채준": dict(path="Assets/Art/Units/특별함_임채준/특별함_임채준.fbx", kind="human", size=("height", 1.8),
-                      archive=(os.path.join(DL, "one-piece-gecko-moria-marineford.zip"), "source/pl_geckomoria_topw01.rar",
+                      archive=(os.path.join(SKINS, "03_특별함/특별함_임채준.zip"), "source/pl_geckomoria_topw01.rar",
                                "pl_geckomoria_topw01/pl_geckomoria_topw01.fbx"),
                       archive_textures=["pl_geckomoria_topw01/pl_geckomoria_topw01_diff.png"],
                       drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_scissors_open", "l_hand_scissors_close",
@@ -466,7 +469,7 @@ UNITS = {
     #   텍스처: 재질 14개가 occ/alb/nmh/spec 4장씩 부르는데 폴더엔 이름 잘린 알베도 4장뿐 → 재질을 7개로 모아 그 4장을 물리고,
     #   없는 머리·수염(hair_kidsalb)·모자 깃털(fur_blend_kidsalb)은 단색. 옷(Body·코트·칼집·목걸이)은 cloth 알베도(원본은 fur_blend를 불렀지만 UV가 cloth 그림).
     "특별함_박기찬": dict(path="Assets/Art/Units/특별함_박기찬/특별함_박기찬.fbx", kind="human", size=("height", 1.8),
-                      source=os.path.expanduser("~/Downloads/mihawk/source/Mihawk.fbx"), hips="mixamorig:Hips", head="mixamorig:Head",
+                      source=os.path.expanduser("~/Desktop/구랜디스킨모음/03_특별함/특별함_박기찬/source/Mihawk.fbx"), hips="mixamorig:Hips", head="mixamorig:Head",
                       drop_meshes=["24_-SwordHand_0.1_1.0_1.0", "24_-BladeHandL_0.1_1.0_1.0", "24_-BladeHandR_0.1_1.0_1.0"],
                       # 손에 쥔 검 메시를 빼면 그 뼈(검 끝이 앞으로 2.1m)는 가중치 없이 남아 경계를 망친다 — 같이 뺀다(자식부터)
                       drop_bones=["sword tip", "sword bottom", "arm right weapon"],
@@ -490,7 +493,7 @@ UNITS = {
     #   유니티 사람형 Idle은 매핑 안 된 뼈를 안 움직이니 idle1 첫 프레임의 무기·오른손 손가락·스카프 자세로 굳힌다.
     #   Buffbone_*_Loc 12개 = 가중치 0 표식 → 뺌. 재질 1(Garen_Base_Mat, 512 RGB PNG — 알파 없음).
     "특별함_박민수": dict(path="Assets/Art/Units/특별함_박민수/특별함_박민수.fbx", kind="human", size=("height", 1.8),
-                      source=os.path.join(DL, "garen_league_of_legends_character.glb"), no_nulls=True, drop_meshes=["Icosphere"], mirror_x=True,
+                      source=os.path.join(SKINS, "03_특별함/특별함_박민수.glb"), no_nulls=True, drop_meshes=["Icosphere"], mirror_x=True,
                       pose_from_clip=("garen_2013_idle1.anm", 0, ["Weapon_21", "Scarf1_38", "Scarf2_39", "Scarf3_40"]
                                       + [f"R_{f}{k}_{11 + 2 * i + k - 1}" for i, f in enumerate(("Thumb", "Index", "Middle", "Ring", "Pinky")) for k in (1, 2)]),
                       rename_bones=GAREN_RENAME, orient_snap=True,
@@ -519,7 +522,7 @@ UNITS = {
     #   뿌리 뼈(Hips) 100%로. 결합 자세는 팔 늘어뜨림(수평 아래 73°)·다리 넓게·아머 판 닫힘, FBX 기본 자세는 T자·다리 곧게인데 아머 판 보조 뼈가 판을 연 채
     #   → Bip01 뼈만 기본 자세, 보조 뼈는 결합 자세(default_pose_only). 큰 메시(600삼각형 이상 71개)만 ×0.25 감량(단색이라 UV 걱정 없음) → 약 6.2만.
     "특별함_강주혁": dict(path="Assets/Art/Units/특별함_강주혁/특별함_강주혁.fbx", kind="human", size=("height", 1.8),
-                      archive=(os.path.join(DL, "ironman.zip"), "source/IronMan.fbx"),
+                      archive=(os.path.join(SKINS, "03_특별함/특별함_강주혁.zip"), "source/IronMan.fbx"),
                       drop_meshes=["SpineRemoval1", "SpineRemoval02", "SpineRemoval03", "SpineRemoval04", "CalfRRemoval1", "CalfLRemoval1",
                                    "FootRemovCtr1", "RSeqCtlr1", "LSeqCtlr1", "righthandBEAM", "LeftHandBEAM"],
                       decimate=dict(min_tris=600, ratio=0.25), default_pose_only=r"^Bip01 ",
@@ -536,7 +539,7 @@ UNITS = {
     #   빈 오브젝트 13(총구 효과·플래그·머리끝·치마끝 표식)은 뼈로 안 살림.
     #   텍스처: FBX는 .png를 부름(rar 안 같은 이름 .jpeg 판은 안 씀). rar 안 png와 zip textures/ 판이 바이트는 다르지만 픽셀 동일, 알파 전부 1.0(마스크 아님) — RGB로 써도 잃는 것 없음.
     "특별함_송형성": dict(path="Assets/Art/Units/특별함_송형성/특별함_송형성.fbx", kind="human", size=("height", 1.8),
-                      archive=(os.path.join(DL, "one-piece-bounty-rush-adio.zip"), "source/pl_adio_orig01.rar", "pl_adio_orig01/pl_adio_orig01.fbx"),
+                      archive=(os.path.join(SKINS, "03_특별함/특별함_송형성.zip"), "source/pl_adio_orig01.rar", "pl_adio_orig01/pl_adio_orig01.fbx"),
                       archive_rgb={"pl_adio_orig01/pl_adio_orig01_diff.png": "pl_adio_orig01_diff.png"},
                       drop_meshes=["face_attack", "face_sp_01", "face_sp_02", "face_damage", "l_hand_close", "r_hand_close", "l_hand_weapon_01", "r_hand_weapon_01",
                                    "l_hand_weapon_02", "r_hand_weapon_02", "weapon_01", "weapon_02"],
@@ -550,7 +553,7 @@ UNITS = {
     #   총 r_weapon_01 · 콧물 변형 hanamizu_sp. 콧물 hanamizu(찰로스 트레이드마크)·등 탱크 backpack은 남김. 빈 오브젝트 16(총구·비눗방울 효과·플래그)은 뼈로 안 살림.
     #   텍스처: rar 안 _diff.png와 zip textures/ 판이 바이트는 다르지만 픽셀 동일 — 알파 = 명암 마스크(알파<0.98 98.6%·평균 0.856) → RGB PNG.
     "특별함_김태영": dict(path="Assets/Art/Units/특별함_김태영/특별함_김태영.fbx", kind="human", size=("height", 1.8),
-                      archive=(os.path.join(DL, "one-piece-bounty-rush-charlos.zip"), "source/charlos.rar", "charlos/pl_charlos_orig01 (merge).fbx"),
+                      archive=(os.path.join(SKINS, "03_특별함/특별함_김태영.zip"), "source/charlos.rar", "charlos/pl_charlos_orig01 (merge).fbx"),
                       archive_rgb={"charlos/pl_charlos_orig01_diff.png": "pl_charlos_orig01_diff.png"},
                       drop_meshes=["face_sp01", "face_sp02", "face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_sp02", "r_hand_sp02",
                                    "l_hand_sp03", "r_hand_sp03", "l_hand_sp04", "r_hand_sp04", "r_hand_weapon01", "r_weapon_01", "hanamizu_sp"],
@@ -563,7 +566,7 @@ UNITS = {
     #   망치 머리가 정수리보다 8cm 위라 키는 망치 빼고 잰다(size_ignore_meshes). 재질 3(cloth·knight·weapons)이 KHR_materials_pbrSpecularGlossiness —
     #   diffuse(이미지 0·3·6)·노멀(2·5·8)을 원본 바이트 그대로 <재질>_diffuse.png·_normal.png로. specularGlossiness(1·4·7)는 안 씀.
     "특별함_왕승환": dict(path="Assets/Art/Units/특별함_왕승환/특별함_왕승환.fbx", kind="human", size=("height", 1.8),
-                      source=os.path.join(DL, "strong_knight.glb"), glb_fix_identity_ibm=True, no_nulls=True, drop_meshes=["Icosphere"],
+                      source=os.path.join(SKINS, "03_특별함/특별함_왕승환.glb"), glb_fix_identity_ibm=True, no_nulls=True, drop_meshes=["Icosphere"],
                       rename_bones=KNIGHT_RENAME, orient_snap=True, size_ignore_meshes=["Maul_weapons_0"],
                       tpose_arms={s: dict({"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm", "Forearm": f"mixamorig:{side}ForeArm",
                                            "Hand": f"mixamorig:{side}Hand"},
@@ -577,7 +580,7 @@ UNITS = {
     #   손에 든 칼은 T자 손끝에 칼코등이만 떠 보이고, 허리 칼은 대기 모습에 맞음). 빈 오브젝트 7(무기 자리·플래그 표식)은 뼈로 안 살림.
     #   텍스처: rar 안 _diff.png와 zip textures/ 판이 바이트는 다르지만 픽셀 동일 — 알파 = 명암 마스크(알파<0.98 99.99%·평균 0.746) → RGB PNG.
     "특별함_정승준": dict(path="Assets/Art/Units/특별함_정승준/특별함_정승준.fbx", kind="human", size=("height", 1.8),
-                      archive=(os.path.join(DL, "one-piece-bounty-rush-ryuma.zip"), "source/pl_ryuma_orig01.rar", "pl_ryuma_orig01/pl_ryuma_orig01.fbx"),
+                      archive=(os.path.join(SKINS, "03_특별함/특별함_정승준.zip"), "source/pl_ryuma_orig01.rar", "pl_ryuma_orig01/pl_ryuma_orig01.fbx"),
                       archive_rgb={"pl_ryuma_orig01/pl_ryuma_orig01_diff.png": "pl_ryuma_orig01_diff.png"},
                       drop_meshes=["l_hand_close", "r_hand_close", "l_blade", "l_sheath", "r_blade"],
                       rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
@@ -587,7 +590,7 @@ UNITS = {
     #   콧물 풍선(snot_bubble, 자는 연출) 뺌. 고글 렌즈(_trans_goggles 재질)는 남기되 불투명(알파는 명암 마스크라 RGB로).
     #   텍스처: rar 안 _diff.png와 zip textures/ 판이 바이트는 다르지만 픽셀 동일 — 알파 = 명암 마스크(알파<0.98 99.2%) → RGB PNG. 재질 3개가 같은 텍스처.
     "특별함_이지원": dict(path="Assets/Art/Units/특별함_이지원/특별함_이지원.fbx", kind="human", size=("height", 1.8),
-                      archive=(os.path.join(DL, "one-piece-bounty-rush-york.zip"), "source/york.rar", "york/pl_york_orig01 (merge).fbx"),
+                      archive=(os.path.join(SKINS, "03_특별함/특별함_이지원.zip"), "source/york.rar", "york/pl_york_orig01 (merge).fbx"),
                       archive_rgb={"york/pl_york_orig01_diff.png": "pl_york_orig01_diff.png"},
                       drop_meshes=["face_attack", "face_damage", "face_sp01", "face_sp02", "face_sp03", "l_hand_close", "r_hand_close",
                                    "l_hand_open_02", "r_hand_open_02", "r_hand_weapon_gun01", "r_weapon_gun_01", "snot_bubble"],
@@ -595,13 +598,13 @@ UNITS = {
                       # pl_york_orig01_trans 재질은 뺀 콧물 풍선만 써서 표에서 뺀다(없는 재질을 걸면 relink가 멈춘다)
                       materials=dict(textures={m: [("DiffuseColor", "pl_york_orig01_diff.png")] for m in ("pl_york_orig01", "pl_york_orig01_trans_goggles")})),
     "특별함_노건완": dict(path="Assets/Art/Units/특별함_노건완/특별함_노건완.fbx", kind="beast", size=("length", 2.0), anim=True, anim_drop_ok=True,
-                      source=os.path.join(DL, "carp_fish.glb"), no_nulls=True, drop_meshes=["Icosphere"], head="Bone.003_02", tail="Bone.008_014", orient_snap=True,
+                      source=os.path.join(SKINS, "03_특별함/특별함_노건완.glb"), no_nulls=True, drop_meshes=["Icosphere"], head="Bone.003_02", tail="Bone.008_014", orient_snap=True,
                       pose_from_clip=("Scene", 0, "all"), take_names={"Scene": "Idle"}, clip_scene_basis=True,
                       drop_bones=["_rootJoint"], reparent_bones={"Bone.001_010": "Bone_00"},
                       glb_images={0: "carp_baseColor.png", 2: "carp_normal.png"},
                       materials=dict(textures={"carp": [("DiffuseColor", "carp_baseColor.png"), ("NormalMap", "carp_normal.png")]})),
     "특별함_조도연": dict(path="Assets/Art/Units/특별함_조도연/특별함_조도연.fbx", kind="human", size=("height", 1.8),
-                      source=os.path.join(DL, "league_of_legend_fan_arttahm_kench.glb"), glb_fix_identity_ibm=True, no_nulls=True, drop_meshes=["Icosphere"],
+                      source=os.path.join(SKINS, "03_특별함/특별함_조도연.glb"), glb_fix_identity_ibm=True, no_nulls=True, drop_meshes=["Icosphere"],
                       squash_chain=dict(bones=[f"thongue_C0_{i}_Jnt_0{26 + i}" for i in range(5)], factor=0.285),
                       pose_from_clip=("Take 001", 0, [f"stach_{s}0_{i}_Jnt_0{base + i}" for s, base in (("R", 31), ("L", 35)) for i in range(4)]),
                       rename_bones=TAHM_RENAME, orient_snap=True, reparent_bones={"chain_C0_0_Jnt_089": "mixamorig:Hips"},

@@ -24,7 +24,7 @@ PREFIX = "mixamorig:"
 
 SKINS = {
     "안흔함_김민준": dict(
-        source="~/Downloads/gon-freecss/source/Gon Freecss.glb",
+        source="~/Desktop/구랜디스킨모음/02_안흔함/안흔함_김민준/source/Gon Freecss.glb",
         path="Assets/Art/Units/안흔함_김민준/안흔함_김민준.fbx",
         mesh_name="Gon",
         height=1.8,
@@ -43,7 +43,7 @@ SKINS = {
     # 알라(코알라) — 옛 키메라 앤트 자리. 두 발로 선 T자 체형이라 사람형. 원본은 +X를 봐서 Z −90°.
     # 팔이 앞으로 약 30° 뻗고 7° 처져 있어 level_arms로 ±X에 맞춰 굽는다(쉬는 자세 = T자).
     "안흔함_강주혁": dict(
-        source="~/Downloads/medium_poly_koala_3d_model_free.glb",
+        source="~/Desktop/구랜디스킨모음/02_안흔함/안흔함_강주혁.glb",
         path="Assets/Art/Units/안흔함_강주혁/안흔함_강주혁.fbx",
         mesh_name="Koala",
         height=1.8,
@@ -67,7 +67,7 @@ SKINS = {
     # 하나뿐이라 rigid로 못 떼어낸다 — 몸통에 붙어 있어 자동 가중치로도 그대로 몸통을 따라간다(두
     # 자세 렌더에서 확인, 팔·다리만 움직이는 판정 자세라 문제 없음).
     "특별함_서아인": dict(
-        source="~/Downloads/psychopath_hunt.glb",
+        source="~/Desktop/구랜디스킨모음/03_특별함/특별함_서아인.glb",
         path="Assets/Art/Units/특별함_서아인/특별함_서아인.fbx",
         mesh_name="Psychopath",
         height=1.8,
@@ -111,7 +111,7 @@ SKINS = {
     # 확산(X)·키 Z위라 rotate_z 불필요 — 04부터 셋 다 rotate_z가 필요했던 것과 다르다.
     # 팔이 어깨에서 약 30~40° 처져 있어(A자에 가까움) level_arms로 편다.
     "특별함_주영호": dict(
-        source="~/Downloads/stylised_orc_model.glb",
+        source="~/Desktop/구랜디스킨모음/03_특별함/특별함_주영호.glb",
         path="Assets/Art/Units/특별함_주영호/특별함_주영호.fbx",
         mesh_name="Orc",
         height=1.8,

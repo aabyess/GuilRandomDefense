@@ -13,10 +13,10 @@
 
 왜 gen_skin_rig.py를 그대로 못 쓰나 — 그 파일의 joints 표는 한 벌의 (x,y,z)만 받아 Left/Right를
 x부호만 뒤집어 대칭으로 만들고(bone_table 참고), level_arms()도 팔 세 뼈만 한 축으로 돌려 수평으로
-펴는 좁은 용도다. 이 원본(~/Downloads/free_download_athletic_african_man_walking_223.glb)은 파일명
+펴는 좁은 용도다. 이 원본(~/Desktop/구랜디스킨모음/03_특별함/특별함_최동준.glb)은 파일명
 그대로 "걷는 도중" 스캔이라 좌우가 전혀 다른 자세(한쪽 발 앞·반대쪽 뒤, 팔도 한쪽은 팔꿈치 굽혀
 가슴 쪽으로·반대쪽은 뒤로 스윙)라 이 구조로는 표현이 안 된다(구현담당1이 확인하고 멈춘 지점 —
-~/Downloads/특별함_최동준_mixamo업로드_설명.txt 참고). 그래서 이 파일은 (1) 관절을 왼쪽/오른쪽
+~/Desktop/구랜디스킨모음/03_특별함/특별함_최동준_mixamo업로드_설명.txt 참고). 그래서 이 파일은 (1) 관절을 왼쪽/오른쪽
 따로 갖는 JOINTS_CM 표, (2) 팔다리 네 사슬 전부(어깨~손·엉덩이~발끝)를 각각 T자로 펴는 일반화된
 straighten_limbs()를 새로 짠다. 내보내기 설정·판정 렌더는 gen_skin_rig.py와 같은 방식이라 그
 파일에서 그대로 가져와 쓴다(읽기 전용 import — 그 파일 자체는 고치지 않는다).
@@ -91,7 +91,7 @@ JOINTS_CM = dict(
 
 UNITS = {
     "특별함_최동준": dict(
-        source=os.path.expanduser("~/Downloads/free_download_athletic_african_man_walking_223.glb"),
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/03_특별함/특별함_최동준.glb"),
         height=1.8, center_band=(0.02, 0.08), decimate=0.4, rotate_z=0.0, joints=JOINTS_CM,
         textures=[("Base Color", 0, "default_baseColor.jpg"), ("Normal", 1, "default_normal.png")]),
     # 원피스 피규어 베르고(뼈 없는 glb, 28cm, 긴 누비 코트·팔을 코트 옆에 내린 선 자세·다리 벌림) — 2026-09-15 PM 인계: 구현담당1이 gen_skin_rig.py로 1차 리깅했지만
@@ -99,7 +99,7 @@ UNITS = {
     #   관절은 원본 좌표 1% 단면(스크래치 vergo/arm_slices.py): 왼팔(+X)은 z 0.117~0.19에서 몸과 떨어져 x 0.041·y −0.366, 오른팔은 z 0.14~0.19 코트에 붙고 더 뒤(y −0.350),
     #   겨드랑이 z 0.192 · 코트 밑단 z 0.044(다리는 그 밑에서 둘로) · 발목 x +0.040/−0.023(벌린 자세). 뼈 없는 원본의 오브젝트 이동(g0_0)은 G가 같이 굽는다.
     "특별함_최준우": dict(
-        source=os.path.expanduser("~/Downloads/onepiece_figure_vergo.glb"), mesh_name="Vergo",
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/03_특별함/특별함_최준우.glb"), mesh_name="Vergo",
         height=1.8, center_band=(0.30, 0.40), decimate=0.52, rotate_z=0.0,
         joints=dict(
             Hips=(0.002, -0.360, 0.1417), Spine=(0.002, -0.360, 0.1613), Spine1=(0.002, -0.361, 0.181), Spine2=(0.002, -0.362, 0.2005),
@@ -128,7 +128,7 @@ UNITS = {
 }
 
 # 🗑 폐기(2026-09-15 사장님 지시 — 특별함_강주혁 모델을 아이언맨으로 교체, fix_unit_fbx.py로): 코알라는 AI 메시가 닿은 곳마다 붙어 있어
-#   T자·Idle에서 찢겨 6회 만에 멈췄다(Mixamo 업로드본 ~/Downloads/특별함_강주혁_mixamo업로드.fbx, 안 기다림). 설정은 기록용으로만 남긴다 — 빌드 대상 아님.
+#   T자·Idle에서 찢겨 6회 만에 멈췄다(Mixamo 업로드본 ~/Desktop/구랜디스킨모음/99_폐기_교체된원본/특별함_강주혁_이전_코알라_mixamo업로드.fbx, 안 기다림). 설정은 기록용으로만 남긴다 — 빌드 대상 아님.
 RETIRED = {
     # HxH 키메라 앤트 코알라(tripo AI 생성 glb, 뼈 없음) — 구현담당1이 gen_skin_rig.py(좌우 대칭 관절표)로 3회 시도하다 왼팔 가중치가 죽어 멈춤(PM 인계 09-15).
     #   65536 정점 한도로 4조각 → 합쳐 이음새 붙이면 섬 1(경계변 19). 원본 Z 위·정면 +X → rotate_z −90. UV 네 벌이 바이트 동일(노멀 texCoord 2도 UV0과 같음).
@@ -136,7 +136,7 @@ RETIRED = {
     #   오른팔(−X)은 앞으로 소품 쥔 손(손목 (−0.21, −0.02, −0.16)), 왼팔(+X)은 윗도리 옆에 붙어 주머니로(팔꿈치 (0.18, 0.08, −0.06)). 큰 신발은 앞·바깥 35°로 벌어짐.
     #   다리는 이미 곧아 팔만 T자로 편다(신발 방향은 그대로). 손에 든 소품(아래 둥근 공 + 위 호리병, 손이 가운데 목을 쥠)은 베이스 텍스처 황갈색으로 골라 RightHand 100%.
     "특별함_강주혁": dict(
-        source=os.path.expanduser("~/Downloads/hxh__koala_chimera_ant.glb"),
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/99_폐기_교체된원본/특별함_강주혁_이전_코알라.glb"),
         height=1.8, center_band=(0.02, 0.08), decimate=0.086, rotate_z=-90.0,
         joints=dict(
             Hips=(0, 0.03, -0.19), Spine=(0, 0.03, -0.12), Spine1=(0, 0.035, -0.04), Spine2=(0, 0.04, 0.03),
@@ -789,7 +789,7 @@ def build(name, out_dir=None, render_dir=None):
     report["이음새 붙임"] = dict(정점=[before_v, len(body.data.vertices)], 경계변=boundary, 비다양체변=nonman)
 
     # ── 감량: 균등 비율(단일 메시·단일 재질이라 이름/재질로 얼굴·손을 따로 못 가린다 — 감량본
-    # 설명(~/Downloads/특별함_최동준_mixamo업로드_설명.txt)이 이미 같은 이유로 균등 감량했고,
+    # 설명(~/Desktop/구랜디스킨모음/03_특별함/특별함_최동준_mixamo업로드_설명.txt)이 이미 같은 이유로 균등 감량했고,
     # 이 파일도 시간상 그 판단을 따른다. 정점그룹으로 얼굴·손 보호는 나중에 필요하면 추가 가능).
     mod = body.modifiers.new("decimate", "DECIMATE")
     mod.ratio = cfg["decimate"]
