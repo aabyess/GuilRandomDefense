@@ -1,0 +1,47 @@
+희귀함_김만경 — 오오와다 몬도(단간론파), MMD/PMX 유래 FBX, 2026-09-16
+
+■ 출처
+~/Desktop/구랜디스킨모음/04_희귀함/희귀함_김만경.zip
+sha256: 6372a06eff512630eef10c3d9a7d6c7e8583af6d096df9d7c1a0931544c219be
+source/Mondo Owada.fbx + textures/(uwagi.png·s_tehuku.png·kaoz_pi.tga.png·kaoz_pi2.tga.png·
+kaoc_ho.tga.png·kaoc_kuma.tga.png·kaoc_kuro.tga.png·kami1.png·sita.png·hitomi_o.png, 10장).
+메시 1개(이름 깨짐, "Mondo"로 새로 지음) 정점 38,332·삼각형 60,291. 원본 뼈 381개(가중치 있는
+정점그룹 146개). 표정 셰이프키 58개. 이시마루(희귀함_임채민)와 같은 업로더 MMD 골격 규약이라
+gen_mmd_skin.py의 bone_table()·DEFAULT_WEIGHT_MAP을 그대로 재사용했다.
+
+■ 이시마루와 다른 점(이 캐릭터 전용 확장)
+- 리젠트 머리 뼈(`リーゼント1`·`リーゼント2`, Head 직계 자식, 가중치 3,178·3,483 — 정점의 1/4
+  가까이 차지하는 큰 덩어리) → 가중치만 Head로 합치고 뼈 자체는 안 만듦(PM 경고: 리젠트를
+  뼈로 남기면 Jaw·Eye로 오매핑되는 사고 방지, weight_map_extra).
+- 옷깃 보조 뼈(`BackCollar`·`BackCollar_L/R`·`CollarParent`·`Collar_L/R`) → Chest로 병합.
+- 코트 밑단 물리 뼈 `CoatLowerClothes_0_1`~`_7_8`(8×8=64개 낱개 이름, 원래 자락 흔들림용) →
+  weight_prefix_map으로 접두어 일치 전부 Hips로 병합(뒤에서 접히는 긴 코트라 골반이 가장
+  자연스러운 정착점 — T자 정지 상태에는 영향 없음, 렌더로 자락 형태 확인).
+- WEIGHT_MAP에 있지만 이 캐릭터엔 없는 이름(HandTwist2_L/R·String1~4(신발끈 없음)·勲章)은
+  자동으로 무시됨 — 정상(이시마루 전용 항목이 그냥 존재하지 않을 뿐).
+
+■ 재질 45개 → 6장(텍스처 노드 원래 0개, PM 지시대로 이름 기준 대응)
+face: kaoz_pi.tga.png — Ears·Neck·Hand·Face·WhiteEye·Eyebrow·EyebrowInterval線·アイライン·
+  Double線·鼻線·UpperTeeth·LowerTeeth·m_隈·m_ピキ·m_ピキピキ·m_Face影·m_Pale·m_FaceRed·
+  m_CheekBlush·Sweat·Sweat2·Tears (kaoz_pi2·kaoc_ho/kuma/kuro는 표정 모프 전용 텍스처 교체용으로
+  보여 기본 상태만 남기며 안 씀)
+tongue: sita.png — Tongue·MouthInside
+tehuku: s_tehuku.png — Tanクトップ(속옷/탱크톱)
+hair: kami1.png(139B, PM 경고대로 단색 placeholder 의심 — 렌더 확인 결과 갈색으로 정상 표시됨)
+  — リーゼント·リーゼントBehhス·HairBack·HairLowerStrand
+hitomi: hitomi_o.png — Pupil
+fuku: uwagi.png — Belt·Buckle·ButtButton·Button·Coat·Coat裏地·CollarMiddle·CollarOutside·Leg·
+  Shoes·Shoes底·SleeveButton·TrousersLeft·TrousersRight·爪(PM이 명시 안 한 나머지도 렌더로
+  색 확인, 검정/보라 코트·바지·신발 전부 자연스럽게 나옴)
+
+■ 산출물
+Assets/Art/Units/희귀함_김만경/희귀함_김만경.fbx (뼈 51 · 정점 38,332 · 삼각형 60,291 · 재질 6)
+Assets/Art/Units/희귀함_김만경/Textures/(6장)
+
+■ 판정
+크기(m): 가로 1.76 · 세로(키) 1.8 · 앞뒤 0.644 · 최저 z 0.0
+가중치 없는 뼈 없음, 무가중치 정점 0개, 원본 아마추어 삭제 확인(재수입: 아마추어 1개·뼈 51개).
+UV0 범위 [0,1.0]×[0,1.5289], [0,1] 밖 루프 6개(60,291면 중 미미한 수 — 큰 헤어 메시 이음매
+부근으로 추정, 육안 렌더에서 이상 안 보임).
+렌더(스크래치): /tmp/mondo_render_final/희귀함_김만경_front.png · _side.png — T자, 갈색 리젠트
+머리·검정/보라 코트(금색 자수)·흰 탱크톱·검정 바지(늑대 문양)·검정 신발 전부 정상 확인.
