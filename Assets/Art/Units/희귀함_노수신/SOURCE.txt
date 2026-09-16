@@ -1,0 +1,32 @@
+출처: 원피스 바운티러시 추출 — 시류(하치노스). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_노수신.zip
+  3,665,218 bytes · sha256 1fe1325e7d3ea6c4192a5430…
+  안: source/shiryu.rar + textures/pl_shiryu_hach01_diff.png
+  rar 안: shiryu/pl_shiryu_hach01 (merge).fbx · shiryu/pl_shiryu_hach01_diff.png · stg_gasha_tex_bayer_dither.png(디더 패턴, 안 씀)
+받은 날: 2026-09-16 · 유닛: 희귀함_노수신 (unitName 말파이트보법장인, 희귀함)
+
+원본 상태(blender 실측): FBX 7300 · 아마추어 「pl_shiryu_hach01 (merge)」 뼈 81 · 배율 0.01 · 메시 19 · 재질 1 · 빈 오브젝트 15.
+  마르코·후즈후와 같은 (merge) 형식 pl_ 리그 → PL_RENAME 그대로(매핑 21뼈).
+  🔸 **이미 T자**: Upper(±0.0046) → Fore(±0.0107) → Palm(±0.0157)이 전부 z 0.0266 — tpose_arms 불필요(직접 확인). 기본 자세 = 쉬는 자세(어긋난 뼈 0).
+  보조 뼈: 코트(coat_root · b_c/b_l/b_r_coat_01~03 · l/r_coat_01~05 · l/r_coat_arm_01~03 · l/r_coat_shoulder · b_c_collar · l/r_collar) ·
+    치마(b_l/b_r/f_l/f_r/s_l/s_r_skirt_01~03) · 무기 조인트 · cigarette 조인트.
+  🔴 모리아 교훈(자동 매핑이 망토 뼈를 Jaw·LeftEye로 겹쳐 잡아 아바타 실패): 여기도 l_collar·l/r_coat_shoulder가 같은 부류 —
+    매핑 뼈를 mixamorig 이름으로 박고, Head_Face 자손(head_jaw 356 · cigarette_mouth_joint 71)은 merge_bones로 Head에 합쳐 후보를 없앴다 → 「Head 자손 0 · 위험 없음」.
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_노수신」으로 재현(zip → rar → fbx를 임시 폴더에 풀어 읽음).
+  - 겹친 변형 정리: 표정 4벌 → face_normal · 손 5벌 → l/r_hand_open · 담배 2벌 → 입에 문 cigarette_mouth.
+  - 🔴 **무기 5벌은 전부 뺐다.** weapon_01은 오른손(r_weapon_joint, 434정점)에 제대로 실려 있지만 **길이 1.8 m 칼을 수평으로 앞으로 뻗은 모양**이라
+    T자 전시에서 몸을 가로지르고 깊이를 2.135 m로 부풀렸다(렌더로 확인 → 뺀 뒤 0.906 m). 이치고의 등에 멘 칼이나 후즈후 꼬리와 달리 실루엣으로 안 읽힌다.
+    되살리려면 weapon_01 + r_weapon_joint만 살리면 된다. 버린 무기 메시의 뼈 5개(l_weapon_joint 계열·r_weapon_joint·cigarette_joint)도 함께 뺐다 — 남기면 가중치 0 뼈가 경계를 부풀린다.
+  - 남긴 7메시(body 2,449 · coat 1,552 · hat 697 · face_normal 772 · l/r_hand_open · cigarette_mouth) 약 7.7천 삼각형 → 감량 없음.
+  - 빈 오브젝트는 뼈로 안 살림(no_nulls) · orient_snap · 키 1.8 m · 발 z 0 · 정면 −Y.
+
+재질 → 텍스처: pl_shiryu_hach01 → Textures/pl_shiryu_hach01_diff.png(941,228 B).
+  🔴 원본 알파는 음영 마스크(최소 0.133 · 평균 0.835 · 87.7%가 0.98 미만, 이진 아님 — 0.75~0.94 구간에 65만 픽셀이 몰려 있다) → archive_rgb로 알파를 떼고 RGB PNG로 저장.
+
+검증(blender): FBX 900,908 bytes · sha256 8df3c6a783127c7654c19247… · 뼈 74 · 메시 7(정점 5,833) · 크기 1.998 × 0.906 × 1.8 m · 최저 z 0 · 뼈 넘침 0.
+  원시 FBX: 뼈 전역(Lcl) vs TransformLink 0.0 · 쉬는 자세 스킨 결과 vs 원시 정점 0.0004 mm · 가중치 없는 정점 0 · 뼈 배율 1.0.
+  UV 판정: 7메시 전부 첫 UV 정상(퇴화 0) · 면 중심 색 body (0.17,0.14,0.14) · coat (0.38,0.38,0.37) · 얼굴 (0.56,0.43,0.36)로 서로 다름.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 2.66(상위1% 1.14) · 유니티 공용 idle.fbx 옮겨 입힘 최악 4.05(상위1% 1.22).
+  판정 렌더: 스크래치 shiryu/jF · shiryu/idleF(T자 렌더에서 군복 코트·해골 버클·모자·입에 문 담배 확인).
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
