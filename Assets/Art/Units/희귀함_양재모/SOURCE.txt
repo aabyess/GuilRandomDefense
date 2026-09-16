@@ -1,0 +1,38 @@
+출처: 원피스 바운티러시 추출 — 후즈후(SMILE 표범 인수형). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_양재모.zip
+  3,548,005 bytes · sha256 336789f573fb526b…
+  안: source/whoswho.rar(2,536,111 B) + textures/pl_whoswho_jinj01_diff.png(1,011,614 B)
+  rar 안: whoswho/pl_whoswho_jinj01 (merge).fbx(8,589,680 B) · whoswho/pl_whoswho_jinj01_diff.png(1,011,815 B) ·
+    stg_gasha_tex_bayer_dither.png(셰이더용) · Mesh/ 이펙트 OBJ 3개(mdl_ef_c00_Stone_01_00 · mdl_ef_c00_o00_dash_01 · mdl_ef_xdrake_jinj01_aura_01) — 전부 안 씀
+받은 날: 2026-09-16 · 유닛: 희귀함_양재모 (unitName 상호파의개, 희귀함)
+
+원본 상태(blender 실측): 아마추어 「pl_whoswho_jinj01 (merge)」 뼈 66 · 오브젝트 배율 0.01 · 메시 23 · 재질 1 · 빈 오브젝트 13 · 애니 108(안 씀).
+  매핑 뼈는 pl_ 표준 → PL_RENAME 그대로(발끝 Toe 있음, LFoot_Toe_02는 이름 유지).
+  보조 뼈: b_l/b_r/f_l/f_r_jacket_01~02 · chest_fur_01 · c_hair_a·f_l/f_r_hair·l/r_hair_a(머리카락) · l_ear·r_ear · Head_fang · Head_jaw · tail_01~10(긴 꼬리) · L/RArm_Upper_sup · L/RHand_Fore_sup.
+  🔸 **이미 T자**: Upper(±0.013) → Fore(±0.0228) → Hand(±0.0347)가 전부 z 0.0349 — tpose_arms 불필요(직접 확인).
+  🔸 기본 자세 = 쉬는 자세(어긋난 뼈 0) — 빡빡이식 손 결합 밀림 없음.
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_양재모」로 재현(zip → rar → fbx를 임시 폴더에 풀어 읽음).
+  - 🔴 Head_Face 자손 16개(c_hair_a_01~02 · f_l/f_r_hair_01~02 · l/r_hair_a_01~03 · l_ear · r_ear · Head_fang · Head_jaw)가 **전부 가중치 있음**.
+    좌우 짝인 귀가 Eye로, Head_jaw가 Jaw로 잡힐 수 있어(아디오 사고와 같은 부류) merge_bones(under=mixamorig:Head)로 Head 자손을 통째로 Head에 합침(정점 1,801개 이동).
+    Head_jaw만 mixamorig:Jaw로 이름 주는 방법도 있었지만(가중치가 있으니 유니티가 셈) 후보를 아예 없애는 쪽을 골랐다 — 휴머노이드 클립은 얼굴·귀·머리카락 뼈를 안 움직이니 겉모습은 그대로. 결과 「Head 자손 0 · 위험 없음」.
+  - 겹친 변형: 얼굴 6벌 → face_normal · 손 5벌 → l/r_hand_open · 손목 2벌 → l/r_wrist.
+    🔸 손목은 l_wrist와 l_wrist_b가 둘 다 14정점이고 편 손과 똑같이 맞물린다(평균 최근접 0.00227 · 최소 0.0) — 면 중심 색이 기본판은 (0.07,0.05,0.02), _b판은 (0.00,0.00,0.00) 새까만 자리라 기본판을 남겼다.
+  - 남긴 8메시 7,393삼각형(body 3,641 · hair 1,834 · face_normal 1,128 · tail 344 · l/r_hand_open 211 · l/r_wrist 12) — 감량 없음.
+  - 꼬리(tail_01~10)는 Body_Pelvis 밑이라 그대로 뒀다 — 뒤로 길게 뻗은 원본 설계라 깊이가 2.57 m가 된다(키 1.8 기준).
+  - 빈 오브젝트는 뼈로 안 살림(no_nulls) · orient_snap · 키 1.8 m · 발 z 0 · 정면 −Y.
+
+재질 → 텍스처: pl_whoswho_jinj01 → Textures/pl_whoswho_jinj01_diff.png(1,127,263 B).
+  🔸 zip 판(1,011,614 B)과 rar 판(1,011,815 B)은 바이트만 다르고 **픽셀 완전 동일**(1024² 최대차 0.0) — FBX가 부르는 rar 판 기준.
+  🔴 알파는 음영 마스크(최소 0.0 · 평균 0.748 · 98.9%가 0.98 미만) → 알파 뺀 RGB PNG로 저장(archive_rgb).
+
+검증(blender): FBX 755,644 bytes · sha256 238bc52ac1046f50c1299c93… · 뼈 50(66 − 합친 16) · 메시 8 · 크기 3.193 × 2.567 × 1.8 m · 최저 z 0 · 뼈 넘침 0.019.
+  🔸 가로 3.19 m·깊이 2.57 m는 오류가 아니라 원본 비율이다 — 인수형이라 팔이 키의 1.8배로 길고 꼬리가 뒤로 길다(T자 렌더로 확인).
+  원시 FBX: 뼈 전역(Lcl) vs TransformLink 1e-6 · 쉬는 자세 스킨 결과 vs 원시 정점 0.0014 mm · 가중치 없는 정점 0 · 뼈 배율 1.0.
+  UV 판정: body u0.978 v0.980 · hair 0.492/0.492 · face_normal 0.697/0.495 · 손 0.204/0.106 정상.
+    🔸 l/r_wrist(0.018/0.054)와 tail(0.348/0.045)은 UV가 한 점에 가깝지만 **원본도 똑같다**(단색으로 칠하는 조각).
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 3.45(상위1% 1.18) · 유니티 공용 idle.fbx 옮겨 입힘 최악 4.90(상위1% 1.41, 손목 부근) —
+    프레임 렌더에서 꼬리가 다리·가랑이를 뚫지 않고(엉덩이 높이로 곧게 뒤로), 자켓 자락·귀도 몸을 안 뚫는다.
+  판정 렌더: 스크래치 whoswho/judgeF · whoswho/idleF.
+창 판: 판_새스킨_상호파의개(사장님 블렌더 창).
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.

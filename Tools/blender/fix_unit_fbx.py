@@ -236,6 +236,22 @@ for _side, _sfx, _ids in (("L", "Left", ((165, 164, 163), (168, 167, 166), (172,
             ICHIGO_RENAME[f"finger {_side} {_letter}0{_j}_{_id}"] = f"mixamorig:{_sfx}Hand{_finger}{_num}"
 
 UNITS = {
+    # 바운티러시 후즈후 → 희귀함_양재모(2026-09-16 희귀함 4호). (merge) 형식 pl_ 리그(뼈 66 · 배율 0.01 · 재질 1 · 빈 오브젝트 13).
+    #   이미 T자(Upper ±0.013 → Fore ±0.0228 → Hand ±0.0347이 전부 z 0.0349) · 기본 자세 = 쉬는 자세(어긋난 뼈 0, 손 밀림 없음) · PL_RENAME 그대로(발끝 Toe 있음, Toe_02는 이름 유지).
+    #   🔴 Head_Face 자손 16개(c_hair_a·f_l/f_r_hair·l/r_hair_a·l_ear·r_ear·Head_fang·Head_jaw)가 **전부 가중치 있음** — 좌우 짝인 귀가 Eye로, Head_jaw가 Jaw로 잡힐 수 있다.
+    #     Head_jaw만 이름을 주는 방법도 있지만(가중치 있으니 유니티가 셈), 이치고처럼 merge_bones under로 Head 자손을 통째로 합쳐 후보 자체를 없앤다(휴머노이드 클립은 얼굴·귀·머리카락 뼈를 안 움직인다).
+    #   겹친 변형: 얼굴 6벌 → face_normal · 손 5벌 → l/r_hand_open · 손목 2벌 → l/r_wrist(둘 다 편 손과 똑같이 맞물려서 기본판을 남김, _b는 sp용).
+    #   남긴 8메시 7,393삼각형이라 감량 없음. 꼬리(tail_01~10, Body_Pelvis 밑)는 그대로 — 뒤로 길어 깊이가 2.5 m쯤 된다(원본 설계).
+    #   🔸 텍스처: zip 판과 rar 판 픽셀 완전 동일(최대차 0.0) · 알파는 음영 마스크(최소 0.0 · 평균 0.748 · 98.9%가 0.98 미만) → archive_rgb로 알파 뺌.
+    "희귀함_양재모": dict(path="Assets/Art/Units/희귀함_양재모/희귀함_양재모.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(SKINS, "04_희귀함/희귀함_양재모.zip"), "source/whoswho.rar", "whoswho/pl_whoswho_jinj01 (merge).fbx"),
+                      archive_rgb={"whoswho/pl_whoswho_jinj01_diff.png": "pl_whoswho_jinj01_diff.png"},
+                      drop_meshes=["face_attack", "face_damage", "face_sp01", "face_sp02_a", "face_sp02_b",
+                                   "l_hand_close", "r_hand_close", "l_hand_sp01", "r_hand_sp01",
+                                   "l_hand_sp01_b", "r_hand_sp01_b", "l_hand_sp02", "r_hand_sp02", "l_wrist_b", "r_wrist_b"],
+                      rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
+                      merge_bones=dict(under="mixamorig:Head", into="mixamorig:Head"),
+                      materials=dict(textures={"pl_whoswho_jinj01": [("DiffuseColor", "pl_whoswho_jinj01_diff.png")]})),
     # 바운티러시 마르코 → 희귀함_노태현(2026-09-16 희귀함 3호). 류마·아디오와 같은 pl_ 리그(뼈 52 · 배율 0.01 · 재질 2).
     #   이미 T자(Clavicle·Upper·Fore·Hand가 전부 z 0.0169) · 기본 자세 = 쉬는 자세(빡빡이식 손 밀림 없음, 어긋난 뼈 0) · Head_Face 자손 0(얼굴 뼈 겹침 위험 자체가 없다).
     #   🔴 불꽃(스킬) 판을 뺀다: l/r_arm_skill(재질 pl_marco_orig01_skill) · l/r_leg_skill — 기본 대기 모습이 아니고 x ±0.0245까지(몸은 ±0.0029) 퍼져 크기도 망친다.
