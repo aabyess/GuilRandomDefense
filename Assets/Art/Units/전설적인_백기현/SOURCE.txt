@@ -1,0 +1,24 @@
+출처: 원피스 바운티러시 우르즈(pl_urouge_orig01) 추출. 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_백기현.zip
+  4,730,743 bytes · sha256 2799facdd80e93c882e0de4d… · 안에 source/pl_urouge_orig01.rar(안에 FBX + _diff.png + 안 쓰는 matcap·ramp·dither·abnormal_pattern)
+받은 날: 2026-09-17 · 유닛: 전설적인_백기현 (별명 코끼리다리, 전설적인)
+
+원본 상태(blender 실측): FBX · ×0.01 · 뼈 63 · 빈 오브젝트 10 · 메시 13 · 재질 1 · 전 메시 무가중치 0 · 기본 = 결합 자세 · 이미 T자.
+  레일리(희귀함_이승우)와 같은 pl_ 리그(PL_RENAME 21뼈).
+  겹친 변형: face_normal/attack/damage · 손 l_hand_open/close/pray · r_hand_open/close.
+  🔴 무기 weapon01(40정점, 오른손 밑 weapon_joint01) · weapon02(80정점, 뿌리 직속 weapon_joint02) — 둘 다 앞뒤(원시 y −0.019~+0.021)로 크게 뻗음.
+  보조 뼈: 코트 coat_root·c_coat/01/02·F_coat01·l/r_coat_clavicle·l/r_coat/01/02 · 등 날개 L/Rwing_01~02 · 묵주 rosary_01~05 · ribbon_01~02 ·
+    치마 BL/BR/FL/FR/SL/SR skirt_01~02(🔴 temp_FRskirt_02 이름 불규칙) · beard_joint(Head 자손) · L/RHand_Fore_sup.
+  🔴 _diff 알파는 음영 마스크(0.02 미만은 0.03%뿐 — 안 쓰는 검은 텍셀) → archive_rgb로 알파 뗌.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_백기현」으로 재현.
+  - 남긴 변형: face_normal · l/r_hand_open · body · cort · hair. 뺀 것: face_attack/damage · l/r_hand_close · l_hand_pray · weapon01·02 + 뼈 · 가중치 0 뿌리 world_joint.
+  - 보조 뼈 합치기(PM 09-17 방침): 코트·날개·묵주·리본 24개 → Spine1(코트 clavicle 뼈가 어깨로 자동 매핑될 후보도 사라짐) · 치마 12개 → Hips · beard_joint → Head · L/RHand_Fore_sup → ForeArm.
+  - 등 날개(스카이피아인 원작 외형)는 유지 · 키 1.8 m · 발 z 0 · 정면 −Y.
+
+검증(blender): FBX 388,220 bytes · sha256 0a1946dc56274b98f3a1bb82… · 뼈 21 · 메시 6(정점 4,180) · 크기 2.414 × 0.776 × 1.8 m · 최저 z 0.
+  🔸 T자 가로 2.414 m = 키 20 기준 약 26.8(거구 체형, 26 살짝 넘음).
+  원시 FBX: 쉬는 스킨↔원시 0.0002 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 전부 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 4.26(상위1% 1.22) · 유니티 공용 idle.fbx 옮겨 입힘 최악 6.03(왼어깨 망토, 상위1% **1.466**).
+  판정 렌더: 스크래치 pl/urouge/j1 · pl/urouge/b1(ur_idle_*) — 망토·묵주·등 날개·턱수염·장갑, 무기 없음.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
