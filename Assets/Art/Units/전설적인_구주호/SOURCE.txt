@@ -1,0 +1,21 @@
+출처: 블리치 모바일 게임 립 — 사도 야스토라 「거인의 오른팔」(cha_chad_arm). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_구주호.zip
+  336,174 bytes · sha256 c39935e5ff88c2cd8ca12b5c… · 안에 source/cha_chad_arm.fbx + textures/cha_chad_arm.png(256² RGBA, 알파 전부 1.0)
+받은 날: 2026-09-17 · 유닛: 전설적인_구주호 (별명 희대의사기꾼, 전설적인) — ※ 희귀함_구주호(채드)와 동명
+
+원본 상태(blender 실측): FBX · ×0.01 · 3ds Max Biped Bip01(공백 이름) · 뼈 63 · 메시 1(이름 빈 문자열, 4,104정점) · 재질 1 · UV 「Attribute」 · 무가중치 0 · 애니 없음.
+  켄파치(전설적인_양재모)와 같은 cha_ 형식 — Spine·Spine1만, 다리 Thigh가 Spine 밑. 손가락 Finger0~4 × 3마디. 팔 내린 쉬는 자세.
+  보조 뼈: L/R_twist(Forearm 밑) · Head 밑 eye·hair_B·hair_L01~02·hair_R01~02·Bone003. 가중치 0: 뿌리 cha_chad_arm · Bip01 · cha_chad_arm.001.
+  🔸 오른팔 거대 갑주(검정·붉은 줄, 어깨 지느러미)가 원작 — 비대칭. FBX가 부르는 _rgb1/_rgb2(색 교체 마스크)는 zip에 없다.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_구주호」로 재현.
+  - biped_rename("Bip01", 손가락 5×3) 51뼈 · use_rest_pose · tpose_arms(손가락 펼침 포함).
+  - 보조 뼈 합치기(PM 09-17 방침): Head 밑 7개 → Head · L/R_twist → ForeArm. 가중치 0 뿌리 3개 뺌.
+  - 갑주 비대칭 그대로 · 키 1.8 m · 발 z 0 · 정면 −Y.
+
+검증(blender): FBX 297,772 bytes · sha256 390272613b7556974edb8d5d… · 뼈 51 · 메시 1(정점 4,104) · 크기 1.847 × 0.371 × 1.8 m · 최저 z 0.
+  🔸 T자 가로 1.847 m = 키 20 기준 약 20.5(26 미만).
+  원시 FBX: 쉬는 스킨↔원시 0.0082 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상(u 0.970 · v 0.974).
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 3.9(상위1% 1.30) · 유니티 공용 idle.fbx 옮겨 입힘 최악 2.38(상위1% **1.228**).
+  판정 렌더: 스크래치 chadarm/j1 · chadarm/b1(ca_idle_*) — 오른팔 갑주·민소매·목걸이·검은 바지.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
