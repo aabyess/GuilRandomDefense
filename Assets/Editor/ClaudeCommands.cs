@@ -129,6 +129,13 @@ public static class ClaudeCommands
             case "menu":
                 return EditorApplication.ExecuteMenuItem(rest) ? $"✅ 실행: {rest}" : $"❌ 메뉴를 못 찾음: {rest}";
 
+            // 에셋 하나를 강제로 다시 임포트한다. 파일 내용이 그대로면 refresh·touch로는 안 다시 읽는다
+            // (유니티는 수정 시각이 아니라 내용 해시를 본다) — 임포트 프로세서 코드만 바꿨을 때 쓴다.
+            case "reimport":
+                if (AssetImporter.GetAtPath(rest) == null) return $"❌ 에셋 없음: {rest}";
+                AssetDatabase.ImportAsset(rest, ImportAssetOptions.ForceUpdate);
+                return $"✅ 다시 임포트: {rest}";
+
             case "call":
                 return Call(rest);
 
