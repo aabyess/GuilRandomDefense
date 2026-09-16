@@ -168,6 +168,9 @@ public static class ClaudeCommands
             case "clipsample":
                 return ClipSample(rest);
 
+            case "mats":
+                return MaterialReport(rest);
+
             case "big":
                 return BigObjects(parts[0], parts.Length > 1 ? F(parts[1]) : 30f,
                                   parts.Length > 2 ? parts[2] : null);
@@ -286,6 +289,39 @@ public static class ClaudeCommands
                 sb.AppendLine($"   🔴 {clip.name} · {(string.IsNullOrEmpty(binding.path) ? "(루트)" : binding.path)} · {binding.propertyName}: 클립 첫 값 {key:G4} vs 정적 {still:G4} (×{ratio:G3})");
             }
             sb.AppendLine($"   {clip.name}: 배율 커브 {checkedCurves}개 중 어긋남 {bad}개" + (bad == 0 ? " ✅" : ""));
+        }
+        return sb.ToString();
+    }
+
+    // mats <프리팹 또는 모델 경로(공백 없이)>
+    // 렌더러의 재질 슬롯마다 실제로 붙은 텍스처를 적는다 — 「모델은 멀쩡한데 게임에서 회색」 사고를 눈이 아니라 숫자로 가른다
+    // (2026-09-07 황정기·신문철, 09-15 아이언맨, 09-16 히소카 옷). 재질 이름과 텍스처 이름이 어떻게 짝지어졌는지도 같이 본다.
+    static string MaterialReport(string assetPath)
+    {
+        GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+        if (asset == null) return $"❌ 에셋 없음: {assetPath}";
+
+        StringBuilder sb = new StringBuilder($"🎨 {assetPath}\n");
+        foreach (Renderer renderer in asset.GetComponentsInChildren<Renderer>(true))
+        {
+            sb.AppendLine($"   렌더러 {renderer.name} · 슬롯 {renderer.sharedMaterials.Length}개");
+            foreach (Material material in renderer.sharedMaterials)
+            {
+                if (material == null) { sb.AppendLine("     (빈 슬롯)"); continue; }
+
+                string textures = "";
+                foreach (string slot in new[] { "_BaseMap", "_MainTex", "_BaseColorMap" })
+                {
+                    if (!material.HasProperty(slot)) continue;
+                    Texture tex = material.GetTexture(slot);
+                    if (tex != null) textures += $" · {slot}={tex.name}";
+                }
+                if (textures.Length == 0) textures = " · 텍스처 없음(색만)";
+
+                Color color = material.HasProperty("_BaseColor") ? material.GetColor("_BaseColor")
+                            : material.HasProperty("_Color") ? material.GetColor("_Color") : Color.white;
+                sb.AppendLine($"     {material.name} ({material.shader.name}) 색 ({color.r:F2}, {color.g:F2}, {color.b:F2}){textures}");
+            }
         }
         return sb.ToString();
     }
