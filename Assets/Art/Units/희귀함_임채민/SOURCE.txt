@@ -1,0 +1,64 @@
+희귀함_임채민 — 이시마루 키요타카(단간론파), MMD/PMX 유래 FBX, 2026-09-16
+
+■ 출처
+~/Desktop/구랜디스킨모음/04_희귀함/희귀함_임채민.zip
+sha256: ca1a1011091aad9e70f5220b7ee9e0ae137b2f7cec7c80554c9feab2e25d697c
+source/Kiyotaka Ishimaru.fbx(FBX 7400·UnitScaleFactor 1.0·UpAxis Y) + textures/face.png·fuku.png·
+hb.png·hitomi_i.png·wp.png. 메시 1개(이름이 Shift-JIS라 깨짐, "Kiyotaka"로 새로 지음) 정점 27,529·
+삼각형 35,374. 원본 뼈 302개(실제 가중치 있는 정점그룹은 87개뿐 — 나머지 215개는 IK·더미·그림자·
+문자열·혀·눈 보조 뼈로 가중치 자체가 없음). 표정 셰이프키 56개.
+
+■ 정리 내용 (Tools/blender/gen_mmd_skin.py)
+- 셰이프키 56개 전부 삭제(표정 애니메이션 안 씀).
+- 재질 66개 → 5개(MMD_face/fuku/hair/hitomi/wp)로 통합. 이름 대응은 SOURCE 하단 "재질 대응" 표
+  참고. 원본 FBX가 텍스처를 안 물고 있어(재질 66개·텍스처 노드 0개) 5장을 새로 만들어 물렸다.
+  🔴 재작업 중 발견한 버그: mesh.materials.clear()를 먼저 부르면 그 시점에 모든 폴리곤의
+  material_index가 조용히 0으로 눌린다 — clear() 뒤에 예전 인덱스를 읽으면 전부 같은 값이 되어
+  버려(실측: 35,374면 전부 같은 재질로 몰림, 렌더로 확인). clear() 전에 원래 인덱스를 파이썬
+  리스트로 먼저 떠 두고 그걸로 재배정하도록 고쳤다.
+- 뼈대: mixamorig 축약+손가락 세트 51개(Hips·Spine·Chest·Neck·Head + 좌우 Shoulder·Arm·ForeArm·
+  Hand·손가락 15개×2 + 좌우 UpLeg·Leg·Foot·ToeBase). Head 직계 자식 뼈 없음(Eye_L/R·혀는 가중치만
+  Head로 합치고 뼈는 안 만듦 — PM 경고, 아디오·모리아 아바타 사고 방지).
+- 🔴 PM 정정 핵심 — D(Deform) 계열·트위스트 뼈 가중치 합치기: `Leg_L/Knee_L/Ankle_L`은 실측
+  가중치 정점 0개, 실제로 다리를 움직이는 건 `LegD_L/KneeD_L/AnkleD_L`이었다(우솝 Annettlw Biped
+  사고와 같은 함정). 팔도 `Arm_L`(가중치 31) 하나가 아니라 `ArmTwist_L/1/2/3`(합쳐서 550+)·
+  `Elbow_L`+`HandTwist_L/1/2/3`가 나눠 가지고 있었다. WEIGHT_MAP으로 이 전부를 새 목표 뼈 하나에
+  누적 합산한 뒤 정규화했다(원본 87개 정점그룹은 병합 후 삭제).
+- 자세: 원본이 PM 짐작(A자)과 달리 실측상 이미 거의 T자(팔이 수평에서 23~29° 처짐, 다리는
+  0.2~3.5°로 사실상 수직)였다. gen_skin_rig.py의 level_arms()와 같은 기법(뼈 하나씩 현재→목표
+  방향 쿼터니언 회전 후 그 자세를 쉬는 자세로 굽기)으로 어깨·팔꿈치·손목만 수평으로 폈다(굽기
+  전후 메시가 안 움직이는지, 최종 손 방향이 ±X와 맞는지 코드로 검증).
+- 무가중치 정점: 병합 뒤 0개(눈 주변 300개가 한 번 누락됐다가 Eye_L/Eye_R을 WEIGHT_MAP에 제대로
+  넣어 해결 — 처음엔 "Eye_{s}" 자리표시자가 side 없는 Head 뼈에서 치환이 안 되는 버그였다).
+- 키: 원본 22.0937(파일 단위, MMD 8등신 관례와 무관한 임의 배율)을 실측해 1.8m로 스케일
+  (배율 0.081471) — 규격값을 신용하지 않고 그대로 쟀다.
+
+■ 산출물
+Assets/Art/Units/희귀함_임채민/희귀함_임채민.fbx (뼈 51 · 정점 27,529 · 삼각형 35,374 · 재질 5)
+Assets/Art/Units/희귀함_임채민/Textures/face.png·fuku.png·hb.png·hitomi_i.png·wp.png
+
+■ 재질 대응(66→5)
+face: Double線·Ears·Eyebrow·EyebrowInterval線1/2·Face·Hand·Lower睫·MouthInside·Neck·TeethLower/
+  Upper·Tongue·WhiteEye·m_CheekBlush·m_FaceRed·m_Face影·m_Ohこ·m_Pale·m_隈.002·アイライン.002·鼻線.002
+fuku: Arm章·Arm章ピン1/2·Arm章裏·Belt·Belt留·Belt金具·BreastポJacket·Button·Button穴1/2·CoatArm·
+  CoatポJacket·Coat胴·Coat裏地·Collar·CollarMiddle·CollarPart1/2·ShoulderPart·SleeveButton·
+  SleeveMiddle·Trousers·TrousersPart·勲章1/2/3.001
+hair: Hair
+hitomi: EyeLightり·Pupil
+wp(나머지): Boots·Boots編Raise·ShoesString1/2/3·Sweat1/2·Tears1/2/3·時計1/2.001·爪.002·鼻Water
+
+■ 판정
+크기(m): 가로 1.637 · 세로(키) 1.8 · 앞뒤 0.322 · 최저 z 0.0
+가중치 없는 뼈 없음, 무가중치 정점 0개, UV0 범위 [0,1]×[0,1] 밖 0개(아틀라스 전체 사용, 정상).
+렌더(스크래치): /tmp/mmd_render_final2/희귀함_임채민_front.png · _side.png — T자, 얼굴(붉은 눈·
+흰 머리)·교복(흰색, PM 지시대로 흰 교복이라 정상)·부츠(빨강/검정/금색) 텍스처 전부 정상 확인.
+
+■ 정정(2026-09-16, PM 유니티 실측 — Idle 리타게팅 실패로 T자 고정)
+줄세우기 로그: "Idle을 입히니 뼈가 사방으로 흩어졌습니다(리타게팅 실패) — 바인드 포즈로
+되돌렸습니다". 원인: 새 뼈대(51개)를 다 지은 뒤에도 원본 MMD 아마추어(원본 뼈 302개)를 씬에서
+안 지워서, 내보내기가 그것까지 같이 담아 골격이 357개로 잡혔다. IK·더미·그림자·D·트위스트
+계열이 사람 뼈 사슬 바깥(루트 쪽)에 매달린 채로 남아 있어 Idle이 골반·다리를 움직여도 안
+따라가 뼈구름이 벌어진 것. 새 뼈대를 다 짓고 위치 참고가 끝난 시점에 원본 아마추어 오브젝트·
+데이터·거기 매달린 낡은 Armature 모디파이어까지 전부 삭제하도록 고쳤다 — 재수입 확인: 아마추어
+오브젝트 1개·뼈 51개만 남음(ParentNode·Center·Groove 같은 MMD 이동용 더미 사슬도 통째로 없어져
+Hips가 그대로 루트). 무가중치 정점 0개는 그대로 유지 확인.
