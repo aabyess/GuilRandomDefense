@@ -1,0 +1,39 @@
+희귀함_황준석 (Nanami) 스킨 출처
+
+원본: ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_황준석.zip
+  sha256: a1146534e47cdfb3b9e05e260d7f8ebbc99b9bc5b8c93c822a15a3106c85a571
+  내용물: source/Nanami_rest.glb (Rigify 68본 스켈레톤 + 정점색 스킨, 383,238 삼각형)
+          textures/TieLeopardPattern.png (넥타이 재질용 실제 텍스처)
+
+빌드 스크립트: Tools/blender/gen_rigify_skin.py (SKINS["희귀함_황준석"])
+  실행: /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
+        --python Tools/blender/gen_rigify_skin.py -- 희귀함_황준석
+
+파이프라인 요약:
+- Rigify 68본 → mixamorig 22본 변환(rename/fold), 죽은 뼈 0개, 매핑 안 된 뼈 0개.
+- 정점색 전용 재질(텍스처 이미지가 원본에 없음)은 Emission 굽기로 텍스처화.
+  넥타이(Tie)만 원본 실제 텍스처(TieLeopardPattern.png)를 그대로 사용, 재언랩 안 함.
+- Weapon·Auto_Eye_IRIS는 원본에 스킨이 없어 각각 RightHand·Head에 강체 결합(가중치 1.0).
+- level_arms로 사후 T자 자세 보정(양팔 수평 근접).
+- 383,236 → 38,323 삼각형으로 감량(UV·정점색·가중치 보존).
+- 키 1.8m, 발바닥 z=0, 정면 −Y.
+
+검증 결과(2026-09-16, 실측):
+- 뼈 22개, 매핑 안 된 뼈 0, 죽은 뼈 0.
+- UV0 면적 1.0(퇴화 없음).
+- 크기 [1.994, 0.698, 1.8]m, 최저 z 0.0.
+- 팔 수평 굽기: LeftArm/RightArm 65.7°, ForeArm 25.2°, Hand 3.2°(같은 쪽 대칭 확인).
+- 정점색 굽기 정확도: sRGB 인코딩 기준 비교 시 대부분 재질 최대차 0.0(Belt·Goggles·Watch·
+  Weapon·Nanami 본체·Eyebrows·Eyelashes 전부). Hair 재질만 예외 — 표본 최대차 0.694,
+  전수조사 결과 Hair 면의 14.7%가 오차>0.05(원인: 헤어 카드 특유의 극소/중첩 UV 섬이
+  2048 해상도·여백=2px 굽기 한계를 넘어서는 정점색 번짐, 원본 정점색이 거의 단색이라
+  시각적 영향은 제한적으로 추정). 텍스처 해상도 4096·섬 여백 0.15로 올려 재시도했으나
+  개선되지 않고 오히려 19.4%로 악화되어(중복/거의 동일 위치 폴리곤이 원인일 가능성이
+  높음, margin 조정으로 해결되는 종류의 문제가 아님) 원복함 — Unity 검증은 이 상태로
+  이미 통과함(PM 확인, 2026-09-16).
+- 삼각형 383,236 → 38,323 감량 확인.
+
+주의:
+- 원본 zip은 삭제 금지.
+- Hair 재질의 잔여 UV 번짐(14.7%)은 알려진 한계로 남겨둠 — 추후 개선 시도 시
+  Hair 메시의 중복/근접 위치 폴리곤(백페이스 등) 여부부터 확인할 것.
