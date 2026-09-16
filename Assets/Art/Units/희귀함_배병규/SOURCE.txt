@@ -1,0 +1,23 @@
+출처: Sketchfab — 죠죠의 기묘한 모험 3부 쿠죠 죠타로(SFM ValveBiped 리그 glb, Sketchfab-15.44.0)
+받은 날: 2026-09-16 · 유닛: 희귀함_배병규 (Rare)
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_배병규.glb · 1478772 bytes · sha256 4488ac4b257e04a0b29f55f310923c22472eefd5a3ad149f41e4c9552a54b84b
+glb: 스킨 1 · 뼈 145 · 메시 7(+조명용 Icosphere) · 재질 7 · 이미지 3(jpg 1 + png 2) · 삼각형 10,048 · 애니 0
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_배병규」로 재현(source = 이 glb).
+  - 🔴 glTF 결합 자세 추정을 켜면 쉬는 메시가 z 4.98~11.22로 떠서 다리가 뭉개진다(PM 조사의 「뼈 y 0~6 vs 메시 y −0.04~15.6, 2.4배 불일치」의 정체)
+    → gltf_guess_bind=False(쉼 = 자세 = 이미 T자).
+  - 뼈 이름(VALVE_RENAME, 번호 꼬리는 rename_strip): Pelvis→Hips · Spine1→Spine · Spine2→Spine1 · Neck · Head · Clavicle→Shoulder · UpperArm→Arm ·
+    Forearm→ForeArm · Hand · Thigh→UpLeg · Calf→Leg · Foot · Toe→ToeBase · Finger0~4 × 3 → 엄지~새끼 1~3.
+  - 어깨 보조 뼈: Arm_*_Shoulder_Adj_A(어깨, 가중치 36) → Arm · Adj_B(팔꿈치, 19)·Sleeve(70) → ForeArm으로 합침(본체 UpperArm 32·Forearm 69~81).
+  - Head 밑 얼굴 뼈 62개(눈꺼풀·눈썹·볼·코·입·혀·이빨·눈·모자 챙·머리카락) → Head. 옷깃·재킷 자락·주머니 뼈는 가중치가 있어 둔다.
+  - 🔴 1회차 T자: 옷깃 금색 키체인이 옆으로 수평 막대처럼 뻗음(쉬는 자세 뼈가 수평 — 게임은 물리로 늘어뜨림) →
+    사슬 뿌리 Keychain_A를 세계 축 (0, 0.84, −0.55)로 90° 돌려 왼 옷깃에서 코트 앞으로 늘어뜨림(pose_bones_world; 2회차 곧게 아래는 코트 속에 묻혔다).
+  - 조명용 Icosphere 뺌. 이빨·혀 재질 3개는 텍스처 없음(입 안 흰색 단색 그대로 — 입을 다물고 있어 안 보임).
+
+결과 FBX: 1009788 bytes · sha256 5650087e1982f6ee169c11de0553c4f2566ec7b00d6ef06350abc42886fb646d
+  뼈 76 · 메시 7 · 정점 7,164 · 삼각형 10,048 · 크기 1.931 × 0.565 × 1.8 m · 최저 z 0 · 정면 −Y · 뼈 넘침 0
+  쉬는 스킨↔원시 정점 0.0017 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 「Head 자손 0 · 위험 없음」
+  UV: 몸·얼굴·눈 정상 · 🔸 혀 첫 UV 범위 ~0.04(텍스처 없는 단색이라 무방)
+  늘어짐 T 1.00 · 팔45°·무릎90° 2.87(상위1% 1.22) · 공용 Idle 최대 4.91(상위1% 1.24)
+
+재질 → 텍스처(glb 이미지 원본 바이트): EyeR → JotaroKujoPart3_EyeR_baseColor.jpg(0) · EyeL → _EyeL_baseColor.png(1) · Face·Body → _Body_baseColor.png(2)
