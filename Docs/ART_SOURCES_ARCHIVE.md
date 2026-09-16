@@ -477,3 +477,50 @@
     재질 Material.004→-
     재질 Material.001→-
 
+
+# 스킨 원본 보관 기록 — 2026-09-15 추가분
+
+09-14 기록과 같은 규칙이다(원본을 지우면 아래 파일명·sha256으로 다시 받아 대조한다).
+유닛 폴더의 SOURCE.txt에 더 자세한 내역(리그·메시·재질)이 있다.
+
+## 특별함_노건완 — 노가리(잉어)
+- 출처: ~/Downloads/carp_fish.glb (Sketchfab, 잉어) · 4,105,436 bytes · sha256 9aa465afb18456a5b211d91ead0af9fbc3c45960102869ce6ae41234853645bd
+
+## 특별함_최동준 — 구일톱블랙홀(걷는 남성 스캔)
+- 원본(보존 — 지우지 말 것): ~/Downloads/free_download_athletic_african_man_walking_223.glb · 5011880 bytes · sha256 c4fc1f47d58987fad56439a9e7f1b7830bde3317241b749045554f780a46e917
+
+## 특별함_강주혁 — 코알라 자리 → 아이언맨
+- 출처: ~/Downloads/ironman.zip (7,831,238 bytes · sha256 c3f0f6523bb11c75e23f681a829f68d2b604dd36658d2d0e34138dcb1454abb5) 속 source/IronMan.fbx(7,831,104 bytes) — 아이언맨 Mk.III
+- 🗑 이 유닛의 이전 모델(HxH 키메라 앤트 코알라, ~/Downloads/hxh__koala_chimera_ant.glb)은 2026-09-15 폐기 — AI 생성 메시가 닿은 곳마다 붙어 있어 T자·Idle에서 찢겨
+
+## 특별함_왕승환 — 왕싱싱(강한 기사)
+- 출처: ~/Downloads/strong_knight.glb (9,383,748 bytes · sha256 08663be7aab6fca5b4bebfef6f51bbdb9b1219f7746b1f60d6df878a22cefddf) — Sketchfab 「strong knight」(검은 갑옷 기사)
+
+## 특별함_정승준 — 저승사자(류마)
+- 출처: ~/Downloads/one-piece-bounty-rush-ryuma.zip (3,822,053 bytes · sha256 ca01e8c2d42201fb081ddd37a5fbbc067c4833515197a04f8ab7d12e976544b6) — 원피스 바운티러시 류마
+- zip 속 source/pl_ryuma_orig01.rar (2,538,885 bytes · sha256 0ed111c7cd2a4574…, RAR5 — bsdtar로 풀림) 속 pl_ryuma_orig01/pl_ryuma_orig01.fbx (8,523,280 bytes · sha256 189e518d56ab080d…)
+- + textures/pl_ryuma_orig01_diff.png(zip, sha256 69fba358…)·rar 안 pl_ryuma_orig01_diff.png(sha256 d553c3ff…) — 바이트는 다르지만 픽셀 비교 결과 RGB·알파 전부 동일(1024 RGBA). FBX가 부르는 rar 판 기준.
+
+## 특별함_이지원 — 음지소녀(요크, 릴리스 교체)
+- 출처: ~/Downloads/one-piece-bounty-rush-york.zip (3,585,410 bytes · sha256 75dfdde2dee1c89f3950aee95a6c2bfa2949801a17ab4620a59fb43af32c9eb2) — 원피스 바운티러시 요크
+- zip 속 source/york.rar (2,650,624 bytes · sha256 297e41933c616698…) 속 「york/pl_york_orig01 (merge).fbx」(7,424,640 bytes · sha256 e06d44c76a556d19…)
+- + textures/pl_york_orig01_diff.png(zip, sha256 fa713e5f…)·rar 안 york/pl_york_orig01_diff.png(sha256 7b2991fc…) — 바이트는 다르지만 픽셀 비교 결과 RGB·알파 전부 동일(1024 RGBA). FBX가 부르는 rar 판 기준.
+
+## 특별함_김태영 — 일베조무사(찰로스)
+- 출처: ~/Downloads/one-piece-bounty-rush-charlos.zip (3,577,424 bytes · sha256 318224ca4363c8dae72b65391138482c468b148701ed39fb98a451a8a73ef583) — 원피스 바운티러시 찰로스 성
+- zip 속 source/charlos.rar (2,678,807 bytes · sha256 949f9e0aed99ff11…) 속 「charlos/pl_charlos_orig01 (merge).fbx」(9,753,760 bytes · sha256 0ea350012506a0ce…)
+- + textures/pl_charlos_orig01_diff.png(zip, sha256 655750a2…)·rar 안 charlos/pl_charlos_orig01_diff.png(sha256 6fdc656b…) — 바이트는 다르지만 픽셀 비교 결과 RGB·알파 전부 동일(1024 RGBA). FBX가 부르는 rar 판 기준.
+
+## 특별함_송형성 — 틱장애(아디오)
+- 출처: ~/Downloads/one-piece-bounty-rush-adio.zip (4,516,684 bytes · sha256 313c259c03e4de3a901cfa705db5bd96c0982897c46f9e1723e895178fb110db) — 원피스 바운티러시 아디오
+- zip 속 source/pl_adio_orig01.rar (3,432,107 bytes · sha256 b8550f86f4fe3543…) 속 pl_adio_orig01/pl_adio_orig01.fbx (9,490,080 bytes · sha256 39f3c64ce6d7a7ed…)
+- + textures/pl_adio_orig01_diff.png(zip, sha256 93dde3cd…)·rar 안 pl_adio_orig01_diff.png(1,335,384 bytes · sha256 1924ee9b…) — 바이트는 다르지만 픽셀 비교 결과 RGB·알파 전부 동일(1024 RGBA).
+
+## 특별함_최준우 — 원조렝가(베르고 피규어)
+- 출처: ~/Downloads/onepiece_figure_vergo.glb(원피스 피규어 베르고, Sketchfab, 원작 배포처 미상 — 사장님 다운로드분)
+- 원본 파일: onepiece_figure_vergo.glb · 3,704,312 bytes(3.53MB) · sha256 35fb4c4e20f7ea6cdb1754c095b3b1053563042a8602dc27ccdb6c324ba52e1a
+
+## 특별함_김정래 — 프로그래머(노트북)
+- ~/Downloads/laptop.glb (457,076B)
+- sha256: 026f04e3fad173f88066fdd67cf56ac8d9dda6951da00aa629243ac0254269a0
+
