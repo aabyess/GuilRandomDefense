@@ -1,0 +1,21 @@
+출처: DeviantArt kurokozeref — "Jujutsu Kaisen - Toji Fushiguro"(중국 모바일 게임 립, role_fuheishener_skin, 3ds Max Biped FBX)
+받은 날: 2026-09-16 · 유닛: 희귀함_이재윤 (Rare)
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_이재윤.zip · 3183759 bytes · sha256 f9770c8195a966f81872524e00e7c13c5d6b0803690b5b77b58c54c11a8cda16
+  zip 안 source/jujutsu_kaisen___toji_fushiguro_by_kurokozeref_dgzfc93.zip 안 role_fuheishener_skin#3092/role_fuheishener_skin.fbx(1,177,952 B) + 텍스처 6 + 참고 그림 2
+FBX: 바이너리 7300 · ×0.1 노드(세계 키 0.29) · 뼈 129 · 메시 7 · 재질 7(텍스처 노드 0) · 빈 오브젝트 16(이펙트 더미)
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_이재윤」으로 재현(archive = 위 zip 안 zip).
+  - 🔴 FBX 기본 자세가 **전투 자세**(몸 +X로 73° 돌고 오른 주먹 든 채) — 결합 자세는 −Y를 본 A자라 use_rest_pose로 결합 자세 사용(1회차는 기본 자세를 구워 몸이 기울었다).
+  - 뺀 메시 3: zhouling(몸에 감긴 저주령 벌레, 6,239정점, Bone033~048 사슬) · wuqi2(칼) · wuqi1(단검) — 둘 다 스킨 없이 몸에서 떨어져 떠 있다.
+  - 뼈: Bip001 → mixamorig(biped_rename, 52개). 🔴 팔 본체 UpperArm·Forearm이 **가중치 0**이고 보조 뼈가 실었다(위팔 bone_niuqu·niuqu_shouzhou·Circle00x, 아래팔 ForeTwist·ForeTwist1)
+    → 되붙이기 대신 **본체로 합침**(매핑 뼈에 가중치가 생긴다). 등 niuqu_spine_01/02 → Spine. 얼굴 뼈 37개(eye·meimao·yanpi·xiaba·yachi·zuichun·zuijiao·hair) → Head.
+  - 뺀 뼈: 뿌리 role_fuheishener_skin · Bip001(가중치 0) · dadao · xiaodao · Bone033~048. 허리띠 yaodai 사슬은 Pelvis 밑 그대로.
+  - A자 → T자(tpose_arms, 굽기 오차 0). 🔴 2회차: Bip001 이름 그대로면 공용 Idle 판정이 뼈를 하나도 못 돌려 1.0(가짜 통과) → mixamorig로 바꿔 다시 잼.
+
+결과 FBX: 832924 bytes · sha256 7d577736b838f638350f72dd3adf8f7d8eeff8ab3bbf2e55983a429ff770fe0c
+  뼈 58 · 메시 4(face·skin·body·hair) · 정점 9,518 · 삼각형 14,572(감량 없음) · 크기 1.898 × 0.413 × 1.8 m · 최저 z 0 · 정면 −Y · 뼈 넘침 0
+  쉬는 스킨↔원시 정점 0.0085 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · UV 4메시 1층 정상 · 「Head 자손 0 · 위험 없음」
+  늘어짐 T 1.00 · 팔45°·무릎90° 5.28(상위1% 1.25) · 공용 Idle 최대 6.69(상위1% 1.41, 오른 위팔)
+
+재질 → 텍스처: face·skin·body·hair 네 재질 → Textures/tex_role_fuheishener.png(1024², 🔸 알파는 음영 마스크 — 중간값 15% · 평균 0.749 → archive_rgb로 뗀 RGB)
+  안 씀: tex_role_fuheishener_m.png(마스크) · _wuqi·_wuqi_m(뺀 무기) · _zhouling·_zhouling_m(뺀 벌레)
