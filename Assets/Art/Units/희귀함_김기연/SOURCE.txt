@@ -1,0 +1,23 @@
+출처: Sketchfab — 진격의 거인 에렌 예거(4기 리베리오 잠입 — 왼다리 절단·목발·붕대, SFM 계열 리그 glb, Sketchfab-14.87.0)
+받은 날: 2026-09-16 · 유닛: 희귀함_김기연 (Rare)
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_김기연.glb · 4377240 bytes · sha256 872f5a287f104b885374f5d05c7e17e8178b58940e5b16ee33e71495c9bd71c2
+glb: 스킨 1 · 뼈 211(절반이 가중치 0 _End 끝점 뼈) · 메시 11(+조명용 Icosphere) · 재질 11 · 이미지 11 · 애니 0
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_김기연」으로 재현(source = 이 glb).
+  - 🔴 glTF 결합 자세 추정을 켜면 쉬는 메시가 옆으로 눕는다(Y 위) → gltf_guess_bind=False(쉼 = 자세, Z 위).
+  - 🔴 **왼다리가 없다**(원작 4기 설정 — 허벅지 뼈 Left leg만, 신발도 오른쪽 하나). 유니티 휴머노이드는 LeftLowerLeg·LeftFoot이 필수라
+    오른 무릎·발목 뼈를 X 거울로 세우고(add_bones) 왼 허벅지 그룹의 가장 낮은 정점(접어 올린 바짓단 끝) 3개에 0.001 씨앗 가중치 — 겉모습 영향 없음.
+  - 뺀 것: 조명용 Icosphere · 목발(Object_226, 바닥까지 닿는 막대)과 Crutches 뼈 6개 · 가중치 0 _End 뼈(정규식) · 뿌리 _rootJoint.
+  - 뼈 이름(EREN_RENAME, 번호 꼬리는 rename_strip): Hips · Spine · Chest→Spine1 · Neck · Head · shoulder/arm/elbow/wrist → Shoulder/Arm/ForeArm/Hand ·
+    leg/knee/ankle → UpLeg/Leg/Foot · 손가락 Thumb0~2·Index/Middle/Ring/Little 1~3 → 1~3(Little=Pinky).
+  - Twist: ZArmTwist → Arm · ZHandTwist → ForeArm(PM 지적: ZHandTwist_L 꼬리가 엉뚱하게 뻗음 — 합쳐서 없앰). Head 밑 얼굴 뼈 58개 → Head.
+  - 팔 조금 내린 A자 → T자(굽기 오차 0). 붕대(Bandage)·완장(Armband) 남김.
+
+결과 FBX: 1510156 bytes · sha256 06320209c0ffce11f9831709c693b29c377759d345239d6f8d82ff811ecad76e
+  뼈 49 · 메시 10 · 정점 16,446 · 삼각형 24,643 · 크기 1.704 × 0.338 × 1.8 m · 최저 z 0 · 정면 −Y
+  🔸 뼈 넘침 0.147 — 거울로 세운 왼 정강이·발 뼈가 메시 없는 자리(절단 아래)에 있어서(기준 0.5 안).
+  쉬는 스킨↔원시 정점 0.0018 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · UV 정상 · 「Head 자손 0 · 위험 없음」
+  늘어짐 T 1.00 · 공용 Idle 최대 3.55(상위1% 1.28)
+
+재질 → 텍스처(glb 이미지 원본 바이트, 재질 이름 기준 파일 10장): Buttons_A/B/C · Shoes · Head · Face · Gloves · Armband · Bandage · Nail_Finger (+ _baseColor.png)
+  안 씀: 이미지 9(목발)
