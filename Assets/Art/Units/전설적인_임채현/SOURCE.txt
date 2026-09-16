@@ -1,0 +1,31 @@
+출처: 킹콩(2005 영화판) — Sketchfab glb. 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_임채현.glb
+  16,686,292 bytes · sha256 40dbf5ab263f86e29f00f06c…
+받은 날: 2026-09-17 · 유닛: 전설적인_임채현 (별명 호모사피엔스, 전설적인)
+
+원본 상태(blender 실측): Sketchfab-17.15 · 스킨 1 · 뼈 169(glTF 번호 꼬리) · 메시 6 + 조명 Icosphere · 재질 6 · 이미지 6 · 애니 0 · 삼각형 148,842.
+  이름 규칙은 사스케(희귀함_이은엽)와 같은 영어 띄어쓰기(pelvis · spine lower · head neck lower/upper · arm left shoulder 1/2 · elbow · wrist · leg left thigh/knee/ankle/toes · finger thumb~pinky 1~3).
+  🔴 쉬는(결합) 자세는 바닥에 **누워 있다** — 기본 자세가 선 A자 고릴라라 기본 자세를 굳혔다(원본 렌더 kong/default_front vs rest_front).
+  다리는 pelvis 밑(정상) · 🔴 spine lower가 pelvis의 형제(root hips 밑)라 휴머노이드 계층이 안 맞음.
+  척추 뼈 넷(spine lower · middle 1 · middle 2 · upper) — 매핑은 lower/middle 1/upper, middle 2는 이름 그대로 중간 뼈.
+  메시: 24_Body(43,346정점·80,674삼각형) · 38_Eyes · 털 카드 4개 25_FurLegs/Arms/Head/Body(합 66k삼각형).
+  🔴 털 카드 재질은 BLEND · baseColorFactor 알파 0.303(상수)이고 **텍스처 알파가 없다**(이미지 6장 전부 알파 1.0 — 0 눈·2 털·4 몸 기본색, 1·3·5는 노멀).
+    → 알파 컷아웃 마스크가 원본에 없다. 컷아웃 문턱을 정할 텍스처가 없고, 원작의 반투명은 재질 상수 30%뿐.
+  UV 5층: glTF texCoord 0(첫 층)이 진짜 — 몸 0~1 · 털·눈은 u 1~3(반복 샘플러로 감김). 나머지 4층은 뺐다.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_임채현」으로 재현(이름표 KONG_RENAME, rename_strip 번호 꼬리).
+  - 매핑 52뼈(손가락 5×3 포함) · reparent Spine → Hips · 가중치 0 뿌리(_rootJoint · root ground · root hips) 뺌.
+  - 보조 뼈 합치기(유니티에선 딸린 자식이라 변형 같음): Head 밑 얼굴 69개 → Head · skin belly lower → Hips · belly upper → Spine · torso pec → Spine2 ·
+    torso back/pit → Shoulder · arm upper a/b → Arm · arm lower → ForeArm · 발가락 toe a~e 15개씩 → ToeBase.
+  - Icosphere 뺌 · 첫 UV만 남김(24층 뺌) · 감량 148,762 → 58,246삼각형(몸 ×0.3, 털 카드·눈 ×0.5 — 카드 모양 보호로 약하게).
+  - tpose_arms(손가락 펼침 포함) · 키 1.8 m · 발 z 0 · 정면 −Y · orient_snap(Y위 → Z위).
+
+재질 → 텍스처(glb 내장 이미지를 인덱스로 원본 바이트 그대로):
+  kong_body_baseColor.jpg(4) ← 24_Body · kong_eyes_baseColor.jpg(0) ← 38_Eyes · kong_fur_baseColor.png(2) ← 25_FurLegs/Arms/Head/Body.
+
+검증(blender): FBX 3,851,836 bytes · sha256 629e95faeae62492adf2d15f… · 뼈 53 · 메시 6(정점 67,777) · 크기 2.692 × 0.654 × 1.8 m(T자 팔 폭) · 최저 z 0.
+  원시 FBX: 쉬는 스킨↔원시 0.0011 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · UV 층 메시마다 1.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 5.22(겨드랑이 털 카드, 상위1% 1.40) · 유니티 공용 idle.fbx 옮겨 입힘 최악 6.64(상위1% **1.431**).
+  판정 렌더: 스크래치 kong/j1 · kong/b1(kg_idle_*).
+  🔸 워크벤치 렌더에서 털 카드가 불투명 판자처럼 보인다(알파 마스크가 없으니 유니티 불투명 재질도 같음). 반투명 30% 재질 또는 털 카드 빼기는 유니티 판정 몫.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
