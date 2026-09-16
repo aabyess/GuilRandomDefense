@@ -1,0 +1,29 @@
+출처: Left 4 Dead 2 — Special Infected 「Boomer」 추출본. 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_이용민.zip
+  4,327,890 bytes · sha256 ca952e7f81b3654c77dca39f…
+  안: source/PC _ Computer - Left 4 Dead 2 - Special Infected - Boomer.fbx + textures/boomer_color.png(2048², 얼굴·셔츠·바지가 한 장인 아틀라스)
+받은 날: 2026-09-16 · 유닛: 희귀함_이용민 (unitName 만삭, 희귀함)
+
+원본 상태(blender 실측): FBX 7700 · 아마추어 배율 0.01 · 뼈 33 · 메시 1(boomer_reference, 2,659정점 · 5,257삼각형) · 애니 0.
+  🔸 **뼈가 이미 mixamorig 표준 이름**이라 이름 바꾸기가 필요 없다(Hips·Spine/1/2·Neck·Head·HeadTop_End·Left/Right Shoulder/Arm/ForeArm/Hand·UpLeg/Leg/Foot/ToeBase/Toe_End).
+    손가락은 검지(HandIndex1~4) 한 줄뿐 — 유니티 Humanoid에서 선택 뼈라 그대로 뒀다(tpose_arms의 손바닥 굴리기는 자동으로 건너뜀).
+  🔸 **Head 직계 자식이 HeadTop_End 하나뿐** — 아디오식 Jaw/Eye 오매핑 위험이 없다(보고 「Head 자손 1 · 위험 없음」).
+  🔸 기본 자세 = 쉬는 자세(어긋난 뼈 0) · 위쪽 +z(엉덩이→머리 (0, 0.155, 0.988)) · **정면 −Y**(양발 발끝이 −y로 0.03씩, 배가 y −0.211까지 나옴) → 돌릴 필요 없음(방향 스냅이 항등).
+  쉬는 자세는 팔이 수평 아래 약 58°(어깨 ±0.14/0.563 → 손 ±0.25/0.389) → tpose_arms로 T자.
+  🔴 FBX에 **재질·텍스처가 0개** — 아틀라스가 안 물려 있다.
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_이용민」으로 재현(zip에서 FBX·텍스처를 임시 폴더에 풀어 읽음).
+  - 재질이 없어 mesh_material로 `boomer_color` 재질을 새로 만들어 메시(5,257면)에 붙이고 아틀라스를 이었다.
+  - 🔸 텍스처는 archive_rgb로 유닛 Textures/에 **먼저** 놓는다 — archive_textures만 쓰면 임시 폴더에만 풀려서 재질을 짤 때 「텍스처 파일이 없다」로 멈춘다(이 유닛에서 실제로 걸림).
+    이 아틀라스는 알파가 전부 1.0(완전 불투명, 0.98 미만 0%)이라 RGB로 저장해도 그림이 달라지지 않는다.
+  - 키 1.8 m · 발 z 0 · 정면 −Y · 감량 없음(5,257삼각형).
+
+재질 → 텍스처: boomer_color → Textures/boomer_color.png (2,811,152 B, 원본 아틀라스를 RGB로 다시 저장한 판)
+
+검증(blender): FBX 297,148 bytes · sha256 9cc0cc741b612d7847303330… · 뼈 33 · 메시 1(정점 2,659) · 크기 2.153 × 0.872 × 1.8 m · 최저 z 0 · 뼈 넘침 0.
+  🔸 가로 2.15 m는 팔을 T자로 편 결과다(원본은 팔을 내린 자세라 1.40 m). 배가 커서 앞뒤 0.87 m.
+  원시 FBX: 뼈 전역(Lcl) vs TransformLink 2e-6 · 쉬는 자세 스킨 결과 vs 원시 정점 0.0019 mm · 가중치 없는 정점 0 · 뼈 배율 1.0.
+  UV 판정: 층 1개(boomer_referenceDiffuseUVLayer) · 첫 UV 범위 u 0.995 · v 0.994 · 면 중심 색 (0.19, 0.17, 0.14).
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 2.44(상위1% 1.23) · 유니티 공용 idle.fbx 옮겨 입힘 최악 3.93(상위1% 1.41).
+  판정 렌더: 스크래치 boomer/jF · boomer/idleF.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
