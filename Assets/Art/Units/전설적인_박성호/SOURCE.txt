@@ -1,0 +1,24 @@
+출처: 블리치 모바일 게임 립 — 시바 간쥬(cha_ganzu). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_박성호.zip
+  320,319 bytes · sha256 d9b935d39ca0dcfc9a04a4cb… · 안에 source/cha_ganzu.fbx + textures/cha_ganzu.png(256² RGBA, 알파 전부 1.0)
+받은 날: 2026-09-17 · 유닛: 전설적인_박성호 (별명 리플리증후군, 전설적인)
+
+원본 상태(blender 실측): FBX · ×0.01 · 3ds Max Biped Bip01 · 뼈 46 · 메시 2 · 재질 1 · UV 「Attribute」 · 무가중치 0 · 애니 없음 · 팔 내린 쉬는 자세.
+  채드 거인의 오른팔(전설적인_구주호)과 같은 cha_ 형식. 손가락 Finger0~2 × 2마디.
+  메시: cha_ganzu_0(몸, 4,429정점) · 🔴 cha_ganzu_B_123_bomb_0(64정점, 오른손 밑 Bone_weapon_02에 쥔 폭탄 소품).
+  보조 뼈: Head 밑 Bone_eyes·Bone_head_01/02 · Pelvis 밑 Bone_cloth_01/02·Point_knife→Bone_weapon_01(허리 칼)·Bone_drum(허리 상자) — 칼·상자는 몸 메시에 박혀 있다.
+  가중치 0: 뿌리 cha_ganzu · Bip01 · cha_ganzu.001 · cha_ganzu_B_123_bomb.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_박성호」로 재현.
+  - 폭탄 메시 + Bone_weapon_02 뺌 · 가중치 0 뿌리 4개 뺌.
+  - 허리 칼·상자는 몸에 붙어 앞뒤로 안 튀어나와 유지(원시 깊이 0.006 · 키 0.022).
+  - biped_rename("Bip01", 손가락 3×2) 33뼈 · use_rest_pose · tpose_arms.
+  - 보조 뼈 합치기(PM 09-17 방침): Head 밑 3개 → Head · 옷자락·칼·상자 5개 → Hips.
+  - 키 1.8 m · 발 z 0 · 정면 −Y.
+
+검증(blender): FBX 266,348 bytes · sha256 723b3ac06f8fcb28d86782b8… · 뼈 33 · 메시 1(정점 4,429) · 크기 1.915 × 0.485 × 1.8 m · 최저 z 0.
+  🔸 T자 가로 1.915 m = 키 20 기준 약 21.3(26 미만).
+  원시 FBX: 쉬는 스킨↔원시 0.0047 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상(u 0.944 · v 0.957).
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 4.92(상위1% 1.28) · 유니티 공용 idle.fbx 옮겨 입힘 최악 5.16(오른어깨, 상위1% **1.304**).
+  판정 렌더: 스크래치 ganju/j1 · ganju/b1(gz_idle_*) — 두건·녹색 조끼·붉은 띠·허리 칼과 상자, 폭탄 없음.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
