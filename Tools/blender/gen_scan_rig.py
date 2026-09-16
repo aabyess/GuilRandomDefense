@@ -94,6 +94,34 @@ UNITS = {
         source=os.path.expanduser("~/Desktop/구랜디스킨모음/03_특별함/특별함_최동준.glb"),
         height=1.8, center_band=(0.02, 0.08), decimate=0.4, rotate_z=0.0, joints=JOINTS_CM,
         textures=[("Base Color", 0, "default_baseColor.jpg"), ("Normal", 1, "default_normal.png")]),
+    # 히소카(헌터x헌터, Sketchfab zip 안 FBX) — 2026-09-16 희귀함 1호. 뼈·가중치·애니 0인 정적 메시, 좌우 대칭 A자(팔 수평 아래 28°)라 베르고보다 쉽다.
+    #   🔴 툰 외곽선 껍데기 3개(재질 Outline)를 빼야 한다 — 두면 캐릭터를 검게 덮는다. 눈은 별도 메시(Eye_L/R)라 bone heat가 머리 뼈로 가져간다.
+    #   관절은 원본 좌표 실측(스크래치 hisoka/measure.py·measure_arm.py): 팔은 거의 수평이라 z단면 말고 **x 띠**로 잘라 중심 z·y와 굵기를 봤다 —
+    #   어깨 x 0.24·z 1.50 → 팔꿈치 0.43·1.42 → 손목(제일 가늘다) 0.605·1.33 → 손끝 0.79·1.15. 다리는 엉덩이 x 0.105 → 무릎 0.21 → 발목 0.232로 살짝 벌어짐(굽 부츠).
+    "희귀함_최상호_윤식파의두뇌": dict(
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/04_희귀함/희귀함_최상호_윤식파의두뇌.zip"),
+        member="source/Hisoka_Sketchfab.fbx", textures_dir="textures",
+        height=1.8, center_band=(0.02, 0.08), decimate=1.0, rotate_z=0.0,
+        drop_meshes=["HairOutline", "ClothingOutline", "CharacterOutline.001"],
+        # 남긴 193,438 삼각형 → 4만 안팎(머리카락이 9만이라 거기서 많이, 눈은 구라서 크게 줄여도 된다)
+        decimate_by_mesh={"Hair": 0.13, "Character": 0.45, "Clothing": 0.28, "Eye_L": 0.08, "Eye_R": 0.08},
+        joints=dict(
+            Hips=(0.0, 0.0, 0.95), Spine=(0.0, 0.0, 1.08), Spine1=(0.0, 0.0, 1.21), Spine2=(0.0, 0.0, 1.36),
+            Neck=(0.0, 0.0, 1.60), Head=(0.0, 0.0, 1.72), HeadTop=(0.0, 0.0, 1.95),
+            LeftShoulder=(0.07, 0.02, 1.49), LeftArm=(0.24, 0.02, 1.50), LeftForeArm=(0.43, 0.02, 1.42),
+            LeftHand=(0.605, -0.04, 1.33), LeftHandTip=(0.79, -0.09, 1.15),
+            RightShoulder=(-0.07, 0.02, 1.49), RightArm=(-0.24, 0.02, 1.50), RightForeArm=(-0.43, 0.02, 1.42),
+            RightHand=(-0.605, -0.04, 1.33), RightHandTip=(-0.79, -0.09, 1.15),
+            LeftUpLeg=(0.105, 0.0, 0.95), LeftLeg=(0.21, 0.01, 0.52), LeftFoot=(0.232, 0.02, 0.135),
+            LeftToeBase=(0.235, -0.06, 0.03), LeftToeTip=(0.235, -0.17, 0.02),
+            RightUpLeg=(-0.105, 0.0, 0.95), RightLeg=(-0.21, 0.01, 0.52), RightFoot=(-0.232, 0.02, 0.135),
+            RightToeBase=(-0.235, -0.06, 0.03), RightToeTip=(-0.235, -0.17, 0.02)),
+        straighten=["LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand", "RightShoulder", "RightArm", "RightForeArm", "RightHand"],
+        closeups=[("armpit", 1.35, 0.8), ("crotch", 0.85, 0.9)],
+        materials={"Skin": [("Base Color", "HisokaUV_001_Skin_Light_Albedo.png")],
+                   "Clothing": [("Base Color", "HisokaUV_001_Clothing_Light_Albedo.png")],
+                   "Hair": [("Base Color", "HisokaUV_001_Hair_Light_Albedo.png")],
+                   "Eye": [("Base Color", "HisokaUV_001_EyeLight_Albedo.png")]}),
     # 원피스 피규어 베르고(뼈 없는 glb, 28cm, 긴 누비 코트·팔을 코트 옆에 내린 선 자세·다리 벌림) — 2026-09-15 PM 인계: 구현담당1이 gen_skin_rig.py로 1차 리깅했지만
     #   유니티에서 쉬는 가로 1.05 m(팔 뼈가 허리 높이 z 1.12에서 수평, Shoulder 뼈가 수직 아래)·Idle에서 코트 풍선·자락 훌라후프 → 원본부터 다시(좌우 따로 관절표).
     #   관절은 원본 좌표 1% 단면(스크래치 vergo/arm_slices.py): 왼팔(+X)은 z 0.117~0.19에서 몸과 떨어져 x 0.041·y −0.366, 오른팔은 z 0.14~0.19 코트에 붙고 더 뒤(y −0.350),
@@ -727,10 +755,66 @@ def build(name, out_dir=None, render_dir=None):
     tex_dir = os.path.join(os.path.dirname(dst), "Textures")
     report = {"이름": name, "원본": source, "sha256": hashlib.sha256(open(source, "rb").read()).hexdigest()}
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    bpy.ops.import_scene.gltf(filepath=source)
+    src_file, tex_src_dir = source, os.path.dirname(source)
+    if cfg.get("member"):                                               # 압축 원본(히소카 zip: source/*.fbx + textures/*.png) — 임시 폴더에 풀어 쓴다(사장님 원본은 그대로)
+        import tempfile
+        import zipfile
+        tmp_dir = tempfile.mkdtemp(prefix="scanrig_")
+        with zipfile.ZipFile(source) as z:
+            z.extractall(tmp_dir)
+        src_file = os.path.join(tmp_dir, cfg["member"])
+        tex_src_dir = os.path.join(tmp_dir, cfg.get("textures_dir", "textures"))
+        report["압축 안"] = cfg["member"]
+    if src_file.lower().endswith(".fbx"):
+        bpy.ops.import_scene.fbx(filepath=src_file, use_anim=False)
+    else:
+        bpy.ops.import_scene.gltf(filepath=src_file)
     scene = bpy.context.scene
     meshes = [o for o in scene.objects if o.type == "MESH" and not o.name.startswith("Icosphere")]
+    if cfg.get("drop_meshes"):                                          # 🔴 툰 외곽선 껍데기(재질 Outline) — 그대로 두면 캐릭터를 검게 덮는다(덴지·히소카)
+        drop = set(cfg["drop_meshes"])
+        assert drop <= {o.name for o in meshes}, f"{name}: drop_meshes에 없는 메시 {drop - {o.name for o in meshes}}"
+        gone = [o for o in meshes if o.name in drop]
+        meshes = [o for o in meshes if o.name not in drop]              # 먼저 목록을 갈라야 한다 — 지운 뒤 o.name을 읽으면 StructRNA removed
+        for o in gone:
+            bpy.data.objects.remove(o, do_unlink=True)
+        report["뺀 메시"] = sorted(drop)
+    if cfg.get("decimate_by_mesh"):                                     # 조각마다 다른 비율(히소카는 머리카락 9만·눈 1.6만 × 2) — 합치기 전에 각자 이음새 붙이고 감량
+        by = cfg["decimate_by_mesh"]
+        assert set(by) <= {o.name for o in meshes}, f"{name}: decimate_by_mesh에 없는 메시 {set(by) - {o.name for o in meshes}}"
+        stats = {}
+        for o in meshes:
+            before = sum(len(p.vertices) - 2 for p in o.data.polygons)
+            bm = bmesh.new()
+            bm.from_mesh(o.data)
+            bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-6)
+            bm.to_mesh(o.data)
+            bm.free()
+            o.data.update()
+            r = by.get(o.name, 1.0)
+            if r < 1.0:
+                mod = o.modifiers.new("decimate", "DECIMATE")
+                mod.ratio = r
+                dg = bpy.context.evaluated_depsgraph_get()
+                nm = bpy.data.meshes.new_from_object(o.evaluated_get(dg), preserve_all_data_layers=True, depsgraph=dg)
+                o.modifiers.remove(mod)
+                om = o.data
+                o.data = nm
+                bpy.data.meshes.remove(om)
+            stats[o.name] = [before, sum(len(p.vertices) - 2 for p in o.data.polygons)]
+        report["조각별 감량"] = stats
     if len(meshes) > 1:
+        # 🔴 합치기 전에 UV 이름을 하나로(히소카 2026-09-16 PM 유니티): 조각마다 UV 이름이 다르면(Character·Hair·Clothing은 UVMap, Eye_L/R은 DiffuseUV)
+        #   join이 이름별로 층을 따로 만들어 **첫 UV가 빈 층**이 된다 → 유니티가 _BaseMap을 UV0로 뽑아 텍스처 평균색(회백색)만 보인다. 여분 UV 층도 뺀다.
+        uv_names = {}
+        for o in meshes:
+            uvs = o.data.uv_layers
+            assert len(uvs), f"{name}: {o.name}에 UV가 없다"
+            uv_names[o.name] = [u.name for u in uvs]
+            while len(uvs) > 1:                                          # 첫(활성) 층만 남긴다
+                uvs.remove(uvs[len(uvs) - 1])
+            uvs[0].name = "UVMap"
+        report["UV 이름 통일"] = uv_names
         # 65536 정점 한도로 쪼개진 한 몸(코알라 4조각) — 세계 변환을 각자 데이터에 구운 뒤 하나로 합친다(이음새는 아래에서 붙인다)
         for o in meshes:
             o.data.transform(o.matrix_world)
@@ -750,11 +834,25 @@ def build(name, out_dir=None, render_dir=None):
         body.matrix_basis = Matrix.Identity(4)
 
     # ── 텍스처: PM 조사대로 이미지 0=베이스(jpeg)·1=노멀(png), 원본 바이트 그대로 Textures/에.
-    j, binchunk = glb(source)
     os.makedirs(tex_dir, exist_ok=True)
-    for socket, index, fname in cfg["textures"]:
-        open(os.path.join(tex_dir, fname), "wb").write(image_bytes(j, binchunk, index))
-    rebuild_material(body.data.materials[0], [(socket, fname) for socket, index, fname in cfg["textures"]], tex_dir)
+    if cfg.get("materials"):                                            # 재질 이름 → [(소켓, 파일)] — FBX가 텍스처 경로를 잃은 경우(히소카) 압축 안 textures/에서 원본 바이트 그대로
+        import shutil
+        for mat_name, entries in cfg["materials"].items():
+            m = body.data.materials.get(mat_name)
+            assert m is not None, f"{name}: 재질이 없다 {mat_name} (있는 것 {[mm.name for mm in body.data.materials]})"
+            for socket, fname in entries:
+                src_tex = os.path.join(tex_src_dir, fname)
+                assert os.path.exists(src_tex), f"{name}: 텍스처가 없다 {src_tex}"
+                shutil.copyfile(src_tex, os.path.join(tex_dir, fname))
+            rebuild_material(m, entries, tex_dir)
+        report["재질→텍스처"] = {k: [f for _, f in v] for k, v in cfg["materials"].items()}
+        extra = [mm.name for mm in body.data.materials if mm.name not in cfg["materials"]]
+        assert not extra, f"{name}: 텍스처를 안 이은 재질 {extra}"
+    else:
+        j, binchunk = glb(source)
+        for socket, index, fname in cfg["textures"]:
+            open(os.path.join(tex_dir, fname), "wb").write(image_bytes(j, binchunk, index))
+        rebuild_material(body.data.materials[0], [(socket, fname) for socket, index, fname in cfg["textures"]], tex_dir)
 
     # ── 중심맞춤·스케일(gen_skin_rig.py의 build()와 같은 식) — 회전은 불필요(이미 −Y를 본다,
     # raw_from_negY.png로 확인). 관절도 메시와 같은 G를 써서 어긋나지 않게 한다.
@@ -883,6 +981,13 @@ def build(name, out_dir=None, render_dir=None):
     report["크기(m)"] = [round(float(c), 3) for c in (V.max(0) - V.min(0))]
     report["최저 z"] = round(float(V[:, 2].min()), 4)
 
+    uvs = body.data.uv_layers
+    uv = np.array([d.uv[:] for d in uvs[0].data])
+    span = [float(uv[:, 0].max() - uv[:, 0].min()), float(uv[:, 1].max() - uv[:, 1].min())]
+    report["UV0"] = dict(층=[u.name for u in uvs], 범위=[round(v, 4) for v in span],
+                         u=[round(float(uv[:, 0].min()), 4), round(float(uv[:, 0].max()), 4)],
+                         v=[round(float(uv[:, 1].min()), 4), round(float(uv[:, 1].max()), 4)])
+    assert len(uvs) == 1 and min(span) > 0.05, f"{name}: 첫 UV가 퇴화했다(유니티가 텍스처 평균색만 읽는다) {report['UV0']}"
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     bpy.ops.export_scene.fbx(filepath=dst, use_selection=False, object_types={"ARMATURE", "MESH"}, apply_unit_scale=True,
                              apply_scale_options="FBX_SCALE_UNITS", axis_forward="-Z", axis_up="Y", add_leaf_bones=False,

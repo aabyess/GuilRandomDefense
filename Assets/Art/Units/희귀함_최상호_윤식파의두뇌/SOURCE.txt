@@ -1,0 +1,41 @@
+출처: Sketchfab — 히소카(헌터x헌터) 정적 피규어 모델. 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_최상호_윤식파의두뇌.zip
+  11,908,213 bytes · sha256 3c4b15e96908c0244061d58dc3e052c68d00bcf028db60973a314de4daae8a95
+  안: source/Hisoka_Sketchfab.fbx(10,702,300 B) · textures/ 5장(Skin·Clothing·Hair·EyeLight albedo 2048 RGB + internal_ground_ao_texture.jpeg 안 씀)
+받은 날: 2026-09-16 · 유닛: 희귀함_최상호_윤식파의두뇌 (unitName 윤식파의두뇌, 희귀함) — ⚠️ 접미사까지가 유닛 이름이다(폴더·FBX·UNITS 키 전부 이 전체 이름).
+
+원본 상태: 아마추어 0 · 가중치 0 · 애니 0(뼈를 새로 넣어야 하는 정적 메시) · 오브젝트 8 · 재질 이름 Skin·Clothing·Hair·Eye·Outline.
+  키 2.001 m · 최저 z ≈ 0 · 정면 −Y 이미 맞음 · 좌우 대칭 A자(팔이 수평 아래 약 28°, 손가락 펴짐, 굽 있는 부츠).
+  🔴 툰 외곽선 껍데기 3개(재질 Outline): HairOutline 90,620 · ClothingOutline 42,878 · CharacterOutline.001 27,132 — 그대로 두면 캐릭터를 검게 덮는다(덴지 때와 같은 함정) → drop_meshes로 뺌.
+  🔴 FBX가 텍스처 경로를 잃어 재질에 이미지가 안 물려 있다 → 재질 이름 기준으로 다시 이음(아래).
+
+리깅: 2026-09-16 blender — Tools/blender/gen_scan_rig.py UNITS 「희귀함_최상호_윤식파의두뇌」로 재현(Mixamo 안 씀).
+  - 압축 원본을 임시 폴더에 풀어 source/Hisoka_Sketchfab.fbx를 읽는다(사장님 원본은 그대로). 새 옵션: member·textures_dir·drop_meshes·decimate_by_mesh·materials.
+  - 감량(조각마다 다른 비율, 합치기 전에 각자 이음새 붙임): Hair 90,620→11,780(0.13) · Clothing 43,430→12,148(0.28) · Character 27,132→12,208(0.45) ·
+    Eye_L·Eye_R 각 16,128→1,290(0.08). 남긴 5조각 합쳐 삼각형 38,716 · 정점 19,610(193,438 → 4만 안팎).
+  - 관절은 원본 좌표 실측(스크래치 hisoka/measure.py·measure_arm.py). 🔸 팔이 거의 수평이라 z단면으로는 관절이 안 보여 **x 띠**로 잘라 중심 z·y와 굵기를 봤다 —
+    어깨 x 0.24·z 1.50 → 팔꿈치 0.43·1.42 → 손목(제일 가늘다, 두께 0.08) 0.605·1.33 → 손끝 0.79·1.15. 다리는 엉덩이 x 0.105 → 무릎 0.21 → 발목 0.232(굽 부츠라 발목 z 0.135).
+    가랑이 z 0.84 · 머리 z 1.71부터 · 머리끝(머리카락) 1.95.
+  - 가중치: bone heat → 빈 정점 2,084개는 가장 가까운 가중치 정점에서 복사(최대 0.036 m) — 눈이 별도 닫힌 구라 열이 못 닿는다.
+    눈 부근 정점 1,128개 중 1,095개가 Head로 붙었다(PM이 말한 「눈은 머리 뼈 100%」와 같은 결과). 최대 몫 뼈 Head 46.7%(머리카락+얼굴+눈).
+  - 팔만 T자로 폄(Arm 26.2° · ForeArm·Hand 17.5° · Clavicle 3.4°), 다리는 원본 그대로. 키 1.8 m(배율 0.8997) · 발 z 0 · 정면 −Y.
+
+재질 → 텍스처(압축 안 textures/에서 원본 바이트 그대로 복사, sha 앞 12자리 동일 확인):
+  Skin     → HisokaUV_001_Skin_Light_Albedo.png(497,395 B)
+  Clothing → HisokaUV_001_Clothing_Light_Albedo.png(422,030 B)
+  Hair     → HisokaUV_001_Hair_Light_Albedo.png(220,641 B)
+  Eye      → HisokaUV_001_EyeLight_Albedo.png(32,247 B)
+  안 쓴 것: internal_ground_ao_texture.jpeg(바닥 AO). 알파 없음 → 전부 불투명.
+
+검증(blender): FBX 1,492,844 bytes · sha256 5a7648f50b7aa7e0496087d4… · mixamorig 22뼈 전부 가중치 · 크기 1.745 × 0.399 × 1.8 m · 최저 z 0.
+  쉬는 자세 가로 1.745 ≥ 키×0.9(1.62) — 진짜 T자.
+  원시 FBX: 뼈 전역(Lcl) vs TransformLink 1e-6 · 쉬는 자세 스킨 결과 vs 원시 정점 0.0006 mm · 가중치 없는 정점 0 · 뼈 배율 1.0.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 2.08(상위1% 1.15) · 유니티 공용 idle.fbx 옮겨 입힘 최악 4.18(상위1% 1.17) — 최댓값은 부츠 발목 한 점(z 0.21), 프레임 렌더에서 옆구리·겨드랑이·바지 찢김 없음.
+  판정 렌더: 스크래치 hisoka/final(T자 앞·옆, 팔45°·무릎90° 앞·옆·무릎·어깨, 겨드랑이·가랑이 확대) · hisoka/final_idle(idle 프레임 앞·옆·겨드랑이·가랑이).
+🔴 2026-09-16 1차 수정(PM 유니티): 첫 판은 유니티에서 몸·옷이 회백색으로 나왔다 — 조각마다 UV 이름이 달라(Character·Hair·Clothing = UVMap, Eye_L/R = DiffuseUV)
+  join이 층을 둘로 만들고 **첫 UV가 빈 층**이 됐다. 유니티는 _BaseMap을 UV0에서 뽑으니 한 점(텍스처 평균색)만 읽힌 것.
+  고침: gen_scan_rig.py가 합치기 전에 UV 층을 하나만 남기고 이름을 UVMap으로 통일한다. 내보내기 직전 「UV0 퇴화」 검사도 추가(층 1개 + u·v 범위 > 0.05, 아니면 실패).
+  다시 지은 판: UV 층 1개(UVMap) · UV0 범위 u 0.998 · v 0.998 · 면 중심 UV 색 평균이 재질마다 다르게 나옴(Hair 0.91/0.26/0.38 붉은색 · Skin 0.94/0.89/0.92 · Clothing 어두운색) — 평균색 한 점이 아니라 실제로 텍스처를 읽는다.
+  기하·가중치·판정 수치는 그대로(아래와 동일).
+창 판: 판_새스킨_윤식파의두뇌(사장님 블렌더 창).
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
