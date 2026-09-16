@@ -1,0 +1,48 @@
+전설적인_임채민 (Jonathan Joestar, JoJo 1부) 스킨 출처 — PM 사양(2026-09-17, 착수 전 원문 보존)
+※ 임채민 동명 셋 — 희귀함_임채민(이시마루, 채민파리더)은 이미 있는 별개 유닛. 이건 전설적인_임채민.
+
+원본: ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_임채민.zip → source/Jojo PT1.glb(2.9MB) +
+  textures/body1_0.png(2048×1024) · eye_1.png(256²)
+
+PM 실측 사양 원문:
+- 아마추어 p1jnt01_ARM · 뼈 74(SMD 게임 추출, 이름 명확): bip_pelvis→Hips · bip_spine_0/1→
+  Spine/Chest · bip_neck→Neck · bip_head→Head · bip_collar_L→LeftShoulder · bip_upperArm_L→
+  LeftArm · bip_lowerArm_L→LeftForeArm · bip_hand_L→LeftHand(다리도 bip_upperLeg/lowerLeg/foot
+  식일 것, R 동일).
+- 손가락: palm.01~04.L · f_index/f_middle/f_ring/f_pinky.01~03.L · thumb.01~03.L → 나나미·
+  카스미와 같은 Rigify 손가락 규칙(palm은 Hand로 합치기).
+- Head 직계 자식 12: Eyebrow.L/R · Cheek.L/R · Mouth.L/R · MouthTop · Nose · LowerJaw
+  (→MouthBottom·TeethLower·Tongue) · Eye.L/R · TeethUpper → Head로 병합.
+- 메시 8(SMD 이름): body 4,886정점 · face 1,173 · hair 2,153 · eye_l/r · upper/lower_teeth ·
+  tongue → 삼각형 12,016(감량 불필요).
+- 재질 body1·eye → 텍스처 이미 연결(TEX_IMAGE).
+- 좌우 대칭 99.7% · 이미 T자(bip_upperArm_L z 1.495 → bip_hand_L z 1.474, 거의 수평).
+- Icosphere(조명 구) → 키 맞추기 전에 삭제.
+- 규격: 키 1.8 · 발 z 0 · 정면 −Y · T자 · mixamorig 이름 · 무가중치 정점 0 · 가중치 0 뼈 없기.
+
+빌드 스크립트: Tools/blender/gen_rigify_skin.py (SKINS["전설적인_임채민"]) — 손가락 이름이
+Rigify 규칙이라 gen_biped_skin.py 대신 이쪽에 추가(PM이 준 선택지 중 편한 쪽).
+  실행: /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
+        --python Tools/blender/gen_rigify_skin.py -- 전설적인_임채민
+
+직접 재확인한 것(빌드 전 조사):
+- 뼈 74개·이름·부모 전부 PM 목록과 일치. 단 손 뼈 대소문자가 다르다(직접 확인) —
+  bip_hand_L(소문자 h) vs bip_Hand_R(대문자 H).
+- Head 직계 자식 정확히 12개, PM 목록과 일치.
+- 척추가 bip_spine_0·bip_spine_1 2마디뿐(PM 언급대로) — mixamorig는 Spine·Spine1·Spine2
+  3마디 필요. bip_spine_1을 Spine2(어깨가 갈라지는 진짜 지점, bip_collar_L/R의 부모가
+  bip_spine_1 — 확인)로 쓰고, Spine1은 bip_spine_0 꼬리(=bip_spine_1 시작점)에 0-길이
+  자리표시로 둔다 — 가중치가 없는 게 정상이라 gen_rigify_skin.py에 새로 추가한
+  allow_dead_bones·bone_position_override로 처리(다른 유닛엔 영향 없음).
+- 재질 body1·eye 둘 다 Principled+TEX_IMAGE 직결, 정점색 없음(직접 확인) — 그대로 재사용.
+- 정면 −Y 확인(eye_l y −0.10~−0.08, 얼굴 앞쪽에 몰려 있음).
+
+검증 결과(2026-09-17, 실측 — 최종 FBX 재임포트로 직접 재검사):
+- 뼈 22개(Spine1은 가중치 0인 0-길이 자리표시, 정상), 매핑 안 된 뼈 0.
+- 무가중치 정점 0개(전체 8,690개 중).
+- 크기 [1.951, 0.419, 1.8]m(T자 폭 비율 1.08, 정상), 최저 z 0.0.
+- 삼각형 11,936(감량 없음, PM 지시대로).
+- 재질 2개 전부 실제 텍스처 확인(body1 2048×1024, eye 256×256).
+
+주의:
+- 원본 zip은 삭제 금지.
