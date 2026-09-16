@@ -1,0 +1,55 @@
+전설적인_박병규(세상물정모르는도련님) — 죠죠 디오(각성), MMD/PMX 유래 FBX, 2026-09-17
+
+■ 출처
+~/Desktop/구랜디스킨모음/06_전설적인/전설적인_박병규.zip
+sha256: 29ff2f56dbac38469d4b26fb770ff210da12505a64cf93b14be0bd7df9886207
+단일 zip(이중 아님): source/Dio (Awakened).fbx + textures/BUT_IT_WAS_ME_DIO_AWAKENED.png(몸 아틀라스)
++ textures/eyel_(Awakened).png(눈). 원본 뼈 222개 · 메시 1개(6,857정점·10,276면, shape_keys로
+표정 모프 31개 내장) · 재질 7개(Body·Face·UpperTeeth·LowerTeeth·Tongue·EyeR·EyeL).
+
+■ 이시마루·몬도와 다른 점 — gen_mmd_skin.py를 일본어 원문 뼈 이름용으로 일반화
+이시마루·몬도는 같은 업로더의 "영어 번역 뼈 이름 + _L/_R 접미어" MMD였는데, 이 파일은 뼈 이름이
+일본어 원문 그대로에 ".L"/".R"(밑줄 아님, 점) 접미어를 쓴다(예: "ひじ.L"). 게다가 IK·D계열·
+트위스트·センター/グルーブ가 아예 없다(실측: 가중치 있는 정점그룹 134개가 그대로 몸 골격 전체
+— 87/302였던 이시마루보다 훨씬 단순). 이 차이 때문에 gen_mmd_skin.py의 SPINE/LIMB/FINGER_CHAINS/
+DEFAULT_WEIGHT_MAP을 스킨별로 갈아 끼울 수 있게 고쳤다(cfg["spine"]/["limb"]/["finger_chains"]/
+["weight_map"]/["bone_sep"]/["root_bone"]/["hip_tail_bones"] — 이시마루·몬도는 값을 안 주면
+기존 표 그대로 써서 동작 안 바뀜, 범용 개선):
+- 上半身2(Chest)가 원본에 없어 上半身의 head→tail 60% 지점을 Spine·Chest 가상 경계로 삼는
+  cfg["torso_mid_bone"]도 새로 추가(둘 다 上半身에서 가중치를 받아 그 구간이 50/50으로 섞이지만
+  정적 T자 표시라 무해, 렌더로 이음새 없음 확인).
+- SFM식 영어 이름 뼈(얼굴 Head_*·머리카락 Hair_*·귀걸이 Earring_*·어깨끈 Strap_*)는 뼈를 새로
+  만들지 않고 weight_prefix_map으로 Head_*/Hair_*/Earring_*→Head, Strap_*→Chest에 뭉뚱그렸다.
+- 어깨·팔꿈치 보조 뼈(Arm_Left_Shoulder_Adj_A/B 등, MMD "捩"(트위스트)에 대응하는 SFM식 이름)는
+  "_Left"/"_Right"(긴 이름) 접미어라 기존 "{s}"(.L/.R)와 별도로 "{S}" 치환을 추가해 대응.
+- 표정 셰이프키 31개 삭제(정적 스킨이라 불필요).
+- 재질 7개 → 2버킷(body: Body·Face·UpperTeeth·LowerTeeth·Tongue / eye: EyeL·EyeR).
+
+■ 정정 — 유니티 Idle에서 위팔이 비틀린 수건처럼 가늘어지는 버그(PM 발견, 커밋 전 반려)
+■■ 원인 1(범용, gen_objrip_skin.py에도 같은 버그 있어 같이 고침): straighten_arms()가
+d.rotation_difference(target)로 뼈를 돌리면 방향(swing)만 목표에 맞을 뿐 그 축을 중심으로 한
+회전(roll·비틀림)은 원본 자세 그대로 뼈마다 제각각 남는다 — T자 렌더는 멀쩡해 보였다(바인드=
+레스트라 roll이 뭐든 변형이 항등이라 안 보임). 유니티가 팔을 실제로 움직이면 그 제각각의 roll이
+팔꿈치 굽힘 축을 엉뚱한 방향으로 돌려 놓는다. armature_apply 뒤(바인드=레스트 상태라 roll을
+바꿔도 메시는 안 움직임) bone_table()과 같은 규칙(Vector((0,-1,0)) 기준)으로 팔 8개 뼈의 roll을
+다시 맞췄다.
+■■ 원인 2(디오 전용): Arm_*_Shoulder_Adj_A/B를 Shoulder(빗장뼈)로 합쳤는데, 이름과 달리
+실제로는 위팔 시작 부위를 보정하는 트위스트류 뼈였다 — Arm으로 옮겼다.
+■■ 검증: 재수출 FBX를 새 세션에서 불러와 팔을 회전시켜(위·아래 양방향) 렌더 — 위팔 굵기·
+근육 형태가 T자와 똑같이 유지됨, 비틀림·가늘어짐 없음 확인(스크린샷 /tmp/dio_pose_test2/
+dio_arms_down_front.png).
+
+■ 판정
+- 뼈 51개 전부 가중치 있음, 무가중치 정점 236개는 최근접 복사로 채워 최종 0개.
+- 팔은 이미 거의 T자(처짐 4.8~12°만 straighten_arms로 폄).
+- 병합 안 된 소스 그룹은 "全ての親"(전체 부모/루트) 하나뿐 — 정상(가중치 필요 없는 진짜 루트).
+- UV0 범위 [−0.25~0.9961]×[0.0015~1.25], 밖 루프 582개 — 여러 재질별 개별 아틀라스라 반복
+  타일링 의도로 보임(사무라이 소드와 같은 패턴), 렌더로 확인해도 이상 없음.
+크기(m): 가로 1.802 · 세로(키) 1.8 · 앞뒤 0.35 · 최저 z 0.0
+
+■ 산출물
+Assets/Art/Units/전설적인_박병규/전설적인_박병규.fbx (뼈 51 · 정점 6,857+236채움 · 재질 2)
+Assets/Art/Units/전설적인_박병규/Textures/BUT_IT_WAS_ME_DIO_AWAKENED.png · eyel_(Awakened).png
+
+렌더(스크래치): /tmp/dio_render_final/전설적인_박병규_front.png · _side.png — 깨끗한 T자, 금발
+스파이크 머리·검정 탱크톱·금팔찌·황토색 바지(초록 하트 장식)·검정 부츠·빨간 눈동자 전부 정상 확인.
