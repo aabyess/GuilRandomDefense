@@ -1,0 +1,20 @@
+출처: 블리치 모바일 게임 립 — 야마다 하나타로(cha_yamada, 3ds Max Biped FBX)
+받은 날: 2026-09-16 · 유닛: 희귀함_현성현 (Rare)
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_현성현.zip · 267566 bytes · sha256 458e0a225e579e3781d28e8af80fa7698e2480285e653931f1195ae641e302d6
+  zip 안 source/cha_yamada.fbx(249,632 B) + textures/cha_yamada.png(256², 17,672 B)
+FBX: ×0.01(세계 키 0.02) · 뼈 39 · 메시 2 · 재질 1 · 기본 자세 = 결합 자세(차 3e-6)
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_현성현」으로 재현(archive = 위 zip).
+  - 뼈: Bip01 → mixamorig(biped_rename, 33개 — 손가락 셋 × 두 마디). Twist 보조 뼈 없음, 팔다리 본체에 가중치 있음. 얼굴 뼈 eye Bone 하나 → Head.
+  - 🔴 둘째 메시 cha_yamada_Y_wp1_0(220정점, 뿌리 직계 Weapon1 100%)은 등에 멘 칼이 아니라 **몸 옆 x 0.84에 세워 둔 참백도**(1회차 T자 렌더) → 칼 메시·Weapon1 뼈 뺌.
+  - 뺀 뼈(가중치 0): 뿌리 cha_yamada · Bip01 · cha_yamada.001 · cha_yamada_Y_wp1 · Weapon1.
+  - 결합 자세 A자 → T자(tpose_arms, 손가락이 셋이라 손바닥 굴리기 건너뜀, 굽기 오차 0).
+
+결과 FBX: 239836 bytes · sha256 84178ff9e3f765a4c83bb7598c1ea1abd27cf386c1ab50d29217daf61e906843
+  뼈 33 · 메시 1 · 정점 3,766 · 삼각형 2,707(감량 없음) · 크기 1.802 × 0.444 × 1.8 m · 최저 z 0 · 정면 −Y · 뼈 넘침 0.001
+  쉬는 스킨↔원시 정점 0.0054 mm · 가중치 없는 정점 0 · UV 1층 정상 · 「Head 자손 0 · 위험 없음」
+  🔸 가중치 0 뼈 1: mixamorig:Neck — 원본부터 목 정점이 Spine1·Head에 실려 있다(몸 안쪽이라 경계는 안 부풂, 유니티 선택 뼈).
+  늘어짐 T 1.00 · 팔45°·무릎90° 6.33(상위1% 1.35, 하카마 가랑이 가운데) · 공용 Idle 최대 2.93(상위1% 1.30)
+
+재질 → 텍스처: cha_yamada → Textures/cha_yamada.png(256² 불투명, 원본 그대로 RGB 저장)
+  FBX가 부르는 cha_yamada_rgb1.png·cha_yamada_rgb2.png는 zip에 없다(색 교체 마스크로 보임) — 안 씀.
