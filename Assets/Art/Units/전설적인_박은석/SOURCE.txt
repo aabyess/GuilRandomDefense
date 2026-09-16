@@ -1,0 +1,22 @@
+출처: 원피스 바운티러시 바솔로뮤 쿠마(pl_bkuma_orig01) 추출. 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_박은석.zip
+  2,635,756 bytes · sha256 0ad02b68602289f82d706249… · 안에 source/pl_bkuma_orig01.rar(안에 FBX + _diff.png + 안 쓰는 matcap·ramp·dither·abnormal_pattern)
+받은 날: 2026-09-17 · 유닛: 전설적인_박은석 (별명 은석가족두목, 전설적인) — ※ 동명 박은석(희귀함·초월위습) 중 전설적인
+
+원본 상태(blender 실측): FBX · ×0.01 · 아마추어 「Armature」 · 뿌리 pl_bkuma_orig01 → world_joint · 뼈 29 · 빈 오브젝트 3 · 메시 14 · 재질 1 · 전 메시 무가중치 0 · 이미 T자.
+  pl_ 리그(PL_RENAME 21뼈). 🔸 거구 체형(원시 몸 폭 ±0.045 · 키 0.07).
+  겹친 변형: face_normal/attack/damage · 🔴 손 다섯 벌 — l/r_hand_open · close · close_gloves · open_gloves · l_hand_close_gloves_02.
+  book(왼손 LHand_Palm 100%, 손바닥 위 성경책, 원시 x 0.039~0.05). 보조 뼈: hair1~3(Head_Neck 밑 — Head 자손 아님) · 가중치 0 HELPER·HELPER_key·HELPER_name.
+  🔴 _diff 알파는 음영 마스크(최소 0.07 · 평균 0.56 · 100%가 0.98 미만) → archive_rgb로 알파 뗌.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_박은석」으로 재현.
+  - 남긴 변형: face_normal · **l/r_hand_open_gloves**(원작의 발바닥 장갑) · body · book(원작 상징 소품, 왼손바닥에 붙음).
+  - 뺀 것: face_attack/damage · l/r_hand_open(맨손) · l/r_hand_close · l/r_hand_close_gloves · l_hand_close_gloves_02 · 가중치 0 HELPER 3 · world_joint · pl_bkuma_orig01.
+  - hair1~3 → Head로 합침 · 체형 그대로 · 키 1.8 m · 발 z 0 · 정면 −Y.
+
+검증(blender): FBX 235,116 bytes · sha256 bca9c769c10e4b100e7d68e8… · 뼈 21 · 메시 5(정점 1,629) · 크기 2.903 × 0.681 × 1.8 m · 최저 z 0.
+  🔸 T자 가로 2.903 m = 키 20 기준 약 32.3(거구·긴 팔, 26 넘음).
+  원시 FBX: 쉬는 스킨↔원시 0.0003 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 2.2(상위1% 1.36) · 유니티 공용 idle.fbx 옮겨 입힘 최악 4.82(상위1% **1.382**).
+  판정 렌더: 스크래치 pl/kuma/j1 · pl/kuma/b1(km_idle_*) — 검은 코트·곰 귀 모자·장갑·왼손 성경책.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
