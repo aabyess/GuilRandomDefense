@@ -1,0 +1,17 @@
+출처: Sketchfab — 나의 히어로 아카데미아 다비(Mixamo 리그 glb)
+받은 날: 2026-09-16 · 유닛: 희귀함_배성령 (Rare) — ※ 동명 셋 중 희귀함(특별함_배성령은 사이타마)
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_배성령.glb · 1265204 bytes · sha256 016403cd82ffc96f586e821b09ac7afd5ce6b32afbc8fd93ef65069383529139
+glb: 스킨 1 · 뼈 79(이미 mixamorig + glTF 번호 꼬리) · 메시 5(+조명용 Icosphere) · 재질 5 · 이미지 5 · 애니 1 · 단위 cm(원점이 엉덩이)
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_배성령」으로 재현(source = 이 glb).
+  - 🔴 애니 1개라 가져온 자세가 클립 프레임(결합 자세와 차 449) → use_rest_pose(결합 자세 = T자, 팔 수평).
+  - 🔴 가중치 0 끝점 뼈(HeadTop_End · 손가락 4번 · Toe_End · _end)가 전부 쓰레기 자리(−0.47, −8.45, −251.7 cm)에 모여 있다
+    (PM 조사의 「Head 뼈 꼬리가 z 530까지」와 같은 원인) → 정규식으로 뺌. 키는 메시 기준.
+  - 조명용 Icosphere 뺌. 뼈 이름은 번호 꼬리만 뗌(rename_regex). Head 자식은 HeadTop_End 하나뿐(뺌).
+
+결과 FBX: 662284 bytes · sha256 bca855df9074f79f3d66326bb4761132736dcb8c3e1043109fb0b063520a0a7a
+  뼈 52 · 메시 5 · 정점 5,397 · 삼각형 7,402 · 크기 1.75 × 0.337 × 1.8 m · 최저 z 0 · 정면 −Y · 뼈 넘침 0
+  쉬는 스킨↔원시 정점 0.0032 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · UV 5메시 정상 · 「Head 자손 0 · 위험 없음」
+  늘어짐 T 1.00 · 팔45°·무릎90° 3.45(상위1% 1.26) · 공용 Idle 최대 1.84(상위1% 1.14)
+
+재질 → 텍스처(glb 이미지 원본 바이트): 21_lower → dabi_lower · 21_face → dabi_face · 21_hair → dabi_hair · 21_upper → dabi_upper · 21_eyes → dabi_eyes (_baseColor.png)
