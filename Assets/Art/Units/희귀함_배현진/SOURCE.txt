@@ -1,0 +1,53 @@
+희귀함_배현진 (Kasumi Miwa) 스킨 출처
+
+원본: ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_배현진.zip
+  sha256: 704bbd3605792172f49f8570d12defb94a0195096e1c224cfa2f1e3350399891
+  내용물: source/Sketchfab_2023_10_30_10_06_59.blend (Rigify 스켈레톤 "Kasumi Miwa Rig " +
+          실제 텍스처 이미지 재질, 무기용 1뼈짜리 보조 rig 3개 별도 포함 — Blade Rig·
+          Cabbard Rig·Sword Rig, armature_name으로 본 rig만 명시 지정)
+
+빌드 스크립트: Tools/blender/gen_rigify_skin.py (SKINS["희귀함_배현진"])
+  실행: /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
+        --python Tools/blender/gen_rigify_skin.py -- 희귀함_배현진
+
+파이프라인 요약:
+- .blend 파일을 소스로 직접 열어(source_type="blend") 사용, 씬에 존재하는 여러 armature 중
+  "Kasumi Miwa Rig "를 armature_name으로 명시 지정(다른 armature를 잘못 집는 사고 방지).
+- Rigify 본 → mixamorig 22본 변환(rename/fold), 매핑 안 된 뼈 0개.
+- Blade·Cube(리기파이 위젯용 기본 정육면체, custom_shape로 은근히 export에 딸려나오는 것
+  실측 확인 후 완전히 씬에서 remove)는 drop_meshes로 제외.
+- OH_Outline_Material(솔리디파이 셸 전용 재질) 슬롯 제거 — 실사용 면 0개 확인.
+- head·hair·hair highlight → Head, Cabbard(칼집) → Spine 강체 결합(가중치 1.0).
+- 재질은 전부 emission_texture 모드(텍스처 이미지는 실존하지만 Emission에 물려 있어
+  FBX가 못 들고 나가는 걸 Principled Base Color로 재배선) — 27개 재질 전부 처리.
+- level_arms로 사후 T자 자세 보정.
+- UV 층을 "UVMap" 하나로 통일 후 join(UV0 퇴화 방지).
+
+검증 결과(2026-09-16, 실측, 독립 재검증):
+- 뼈 22개, 매핑 안 된 뼈 0, 죽은 뼈 0.
+- 정점 7,597 / 삼각형 14,204(감량 없음 — 소스가 이미 저폴리).
+- UV0 범위 (0,1)×(0,1), 면적 1.0(퇴화 없음).
+- 크기 [2.171, 0.907, 1.8]m, 최저 z 0.0, 키 1.8000002m(허용오차 내 정확).
+- 팔 수평 굽기: LeftArm/RightArm 38.7°, ForeArm 5.8°, Hand 3.4°(좌우 대칭 확인) —
+  가로 폭 2.171m가 키(1.8m)의 1.2배로 T자 자세 요건(0.9배 이상) 충분히 만족.
+- 재질 27개 전부 확인(OH_Outline_Material·Blade·Cube 잔류 없음), 표본 8종
+  (hair·head skin·tie primary·top suit primary·top suit secondary·scabbard color·
+  handle tip 2·buttons) 전부 Principled+실제 텍스처 이미지 연결 확인(빈 이미지 없음).
+- 무가중치 정점: 0개(재검증 완료).
+
+버그 수정 이력(이 세션에서 발견·수정):
+1. Cabbard(칼집)→Spine 강체 결합 실패(218개 무가중치 정점, scabbard color·handle tip 2
+   재질로 추적) — 원인: build()의 그룹 최종합치 코드가 옛 리기파이 이름(mapping 키)으로만
+   그룹을 찾는데, rigid 결합 단계는 최종 이름(예: "Spine")으로 그룹을 직행 생성해 그 그룹이
+   아예 안 잡혔다. "Head"는 fold(face·spine.006→Head)로 우연히 다른 경로가 있어 가려져
+   있었을 뿐, 같은 버그였다. 최종 이름과 같은 그룹은 자기 자신으로 통과시키도록 수정
+   (gen_rigify_skin.py, 모든 rigify 유닛에 적용되는 공용 수정).
+2. 위 수정 후 재검증에서 top 메시(단추·옷깃) 64개 정점이 새로 드러남 — Cabbard와 무관하게
+   소스 파일 자체의 자동 가중치가 애초에 비어 있던 순정점(OH_Outline_VertexGroup만 있고
+   뼈 그룹이 하나도 없음)이었다. gen_skin_rig.py의 본 히트 실패 대체 기법과 같은 원칙으로
+   가장 가까운 "이미 가중치 있는" 정점의 분포를 복사하는 안전망을 build()에 추가(역시 공용
+   수정, 다음 rigify 유닛들에도 자동 적용됨).
+
+주의:
+- 원본 zip은 삭제 금지.
+- 알려진 한계 없음(이번 검증에서 무가중치·매핑 실패·재질 누락 전부 0으로 닫힘).
