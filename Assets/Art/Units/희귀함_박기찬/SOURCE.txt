@@ -1,0 +1,35 @@
+출처: 블리치 Brave Souls(ROS) 추출 — 그림죠 재거잭. 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_박기찬.glb
+  10,364,064 bytes · sha256 9d862844b10ed82f439e5fe2…
+받은 날: 2026-09-16 · 유닛: 희귀함_박기찬 (unitName DDR의권위자, 희귀함)
+
+원본 상태(blender 실측): Sketchfab-16.72.0 · 스킨 1 · 뼈 **720**(가중치 있는 것 651) · 메시 21(조명용 Icosphere 포함) · 재질 20 · 이미지 17 · 애니 0 · 삼각형 166,539.
+  이치고(희귀함_최상호_오타쿠의길)와 같은 `pl0NN_` 리그라 처리 방식이 같다.
+  매핑 뼈: pl038_cos00_00_ hips · lback · mback · uback · neck + face00_00_head + clavicle/shoulder/elbow/hand(R·L) + groin/knee/ankle/toe(R·L).
+    thorax_652는 이치고와 마찬가지로 이름 그대로 뒀다(유니티는 매핑 안 된 중간 뼈를 지나간다). 🔸 손가락 뼈(finger_R/L_A~E)는 **매핑하지 않았다** — 유니티 Humanoid에서 선택 뼈다.
+  쉬는 자세 A자 45°(어깨 ±0.188/1.473 → 팔꿈치 ±0.374/1.287 → 손 ±0.562/1.099) → tpose_arms로 T자(손가락이 없어 손바닥 굴리기는 자동으로 건너뜀).
+  🔴 **Head 자손이 472개**(가중치 있는 것 460) — 눈썹·눈꺼풀·동공·턱이 전부 Head 밑이라 아디오식 Jaw/Eye 오매핑 조건이 그대로다.
+  🔴 칼 메시 `Object_11`(7,888정점, y −1.0까지 뻗은 1.1 m 칼날)은 **손 뼈가 아니라 자기 `wep00_00_00_body/blade00~05/bottom` 뼈 사슬**에 실려 있다.
+    허리에 찬 칼집 `Object_35`·손잡이 `Object_9`는 `waist_weapon_root`에 제대로 실려 있다.
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_박기찬」으로 재현(이름표 GRIMM_RENAME).
+  - 매핑 22뼈를 mixamorig로 · merge_bones(under=Head)로 Head 자손 472개를 Head에 합침(정점 17,152 이동) → 「Head 자손 0 · 위험 없음」.
+  - 칼 메시와 그 뼈 8개를 함께 뺌(남길 메시엔 가중치 0 — 실측). 허리 칼집·손잡이는 남겨 시류처럼 칼을 찬 모습이 된다.
+  - 조명용 Icosphere 뺌 · 감량 156,368 → 41,183삼각형(1,000삼각형 이상 메시만 ×0.25) · 메시 19 유지(이 경로는 메시를 합치지 않는다).
+  - 키 1.8 m · 발 z 0 · 정면 −Y · orient_snap.
+
+재질 → 텍스처(glb 내장 이미지를 인덱스로 뽑아 대표 재질 이름으로 저장. 재질 19개가 이미지 10장을 나눠 쓴다):
+  face_baseColor.png(0) ← 5_face · faceshadow · facelines · eyebrows · mouth · teeth
+  weapon_baseColor.png(1) ← 5_hiltwaist · scabbard   ·   cloth_baseColor.png(3) ← 5_cloth
+  eyes_baseColor.png(6) ← 5_eyes · eyewhite · eyelashes · tongue   ·   feet_baseColor.png(7) ← 5_feet
+  hair_baseColor.png(9) ← 5_hair   ·   hakama_baseColor.png(10) ← 5_hakama   ·   skin_baseColor.png(12) ← 5_skin
+  skull_baseColor.png(14) ← 5_skull   ·   eyeshadow_baseColor.png(16) ← 7_eyeshadow
+  (뺀 칼 재질 `5_-sword`가 쓰던 이미지 1은 칼집·손잡이가 같이 쓰므로 그대로 뽑았다.)
+
+검증(blender): FBX 6,821,612 bytes · sha256 b9eaf3b9640d6015426f8a5e… · 뼈 240 · 메시 19(정점 33,182) · 크기 1.773 × 0.47 × 1.8 m · 최저 z 0 · 뼈 넘침 0.
+  원시 FBX: 뼈 전역(Lcl) vs TransformLink 1.2e-4 · 쉬는 자세 스킨 결과 vs 원시 정점 0.0079 mm · 가중치 없는 정점 0 · 뼈 배율 1.0.
+  UV 판정: 17메시 첫 UV 정상 · 머리카락(Object_29)은 UV 층이 2개지만 **첫 층이 정상**(u 0.974 · v 0.918, 파란 머리색으로 샘플됨)이라 유니티도 같게 읽는다.
+    🔸 facelines(0.034/0.006)·eyeshadow(0.081/0.005)는 UV가 한 점에 가깝지만 **원본 glb와 같은 값**(단색으로 칠하는 장식 조각) — 이치고와 같은 부류다.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 3.10(상위1% 1.18) · 유니티 공용 idle.fbx 옮겨 입힘 최악 2.83(상위1% 1.21).
+  판정 렌더: 스크래치 grimm/jF · grimm/idleF(T자 렌더에서 흰 상의·하카마·파란 머리·허리에 찬 칼 확인).
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
