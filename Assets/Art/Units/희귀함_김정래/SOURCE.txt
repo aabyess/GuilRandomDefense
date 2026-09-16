@@ -1,0 +1,24 @@
+출처: 팬 제작 모델 — 슈타인즈 게이트 오카베 린타로(okabe_wiggle, Rigify 리그 · 원본 블렌더 파일 포함)
+받은 날: 2026-09-16 · 유닛: 희귀함_김정래 (Rare) — ※ 동명 넷 중 희귀함
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_김정래.zip · 6759188 bytes · sha256 dbafc1555e24837a603ca4d955488c7ac9a0f96c8de2f44de498065208852fe7
+  zip 안 source/okabe_wiggle.zip 안 okabe_wiggle.blend1(10,417,770 B, 이것을 직접 연다) · okabe_wiggle.fbx(안 씀) · okabe UV- base.png · shade.png · Circle.png
+블렌드: Rigify 생성 리그 rig(뼈 489 · 변형 114 = DEF 70 + 코트·벨트·이빨·혀 44) · 메시 11 · 이미 T자 · +Y 정면 · 키 약 36(단위 m 아님)
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_김정래」로 재현(archive = zip 안 zip 안 .blend1, 새 blend_prep 단계).
+  - 🔴 외곽선은 따로 된 메시가 아니라 **Solidify 수정자 + Outline 재질 칸** → 수정자 13개(Solidify·지오메트리 노드·대상 없는 Armature)·빈 재질 칸 8개 삭제.
+  - 🔴 DEF 뼈가 ORG/MCH 밑이라 변형 뼈끼리 계층이 없다 → 변형 뼈 114개만 남기고 다시 이음(허벅지·코트·벨트 → Hips, 어깨 → Spine2, 위팔 → 어깨, 이빨·혀 → Head). 포즈 제약·드라이버 삭제.
+  - 🔴 머리 메시 가중치 32%가 **변형 아닌 뼈 face**(와 mouthbox·lipUP/DOWN)에 실려 있다 — 블렌더는 무시하지만 FBX는 클러스터로 쓴다 → 그 그룹 7개 삭제(빈 정점 0).
+  - 뼈 이름(OKABE_RENAME): DEF-spine→Hips · .001→Spine · .002→Spine1 · .003→Spine2 · .004→Neck · DEF-head→Head · shoulder·upper_arm·forearm·hand · thigh·shin·foot·toe · 손가락 5×3.
+    분할 뼈 .001(위팔·아래팔·허벅지·정강이)·palm 01~04·목 spine.005/006은 본체로 합침. Head 밑(이빨·혀) → Head. 코트·벨트 흔들림 뼈는 Hips 밑 그대로.
+  - 🔴 1회차 렌더: 머리카락·손이 회색 — hair·Skin 재질이 툰 노드(Shader to RGB→Ramp→Mix)뿐이라 FBX가 뷰포트 회색을 쓴다 →
+    원본 Mix의 밝은 쪽 색을 Principled 기본색으로(hair (0.037, 0.042, 0.050) · Skin (0.913, 0.694, 0.402), 선형).
+  - 얼굴(head_alteredTop)·COAT의 모양 키(표정 · 팔꿈치 보정)는 그대로 둠(드라이버만 뺌). +Y 정면 → 180° 돌림(orient_snap).
+
+결과 FBX: 3594092 bytes · sha256 0863261f8942092d1042b838f30210ed04d94b1bd1102e778f93dfa51f13650b
+  뼈 91 · 메시 11 · 정점 25,431 · 삼각형 48,546(감량 없음) · 크기 1.839 × 0.466 × 1.8 m · 최저 z 0 · 정면 −Y · 뼈 넘침 0
+  쉬는 스킨↔원시 정점 0.0006 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 「Head 자손 0 · 위험 없음」
+  UV: 대부분 정상 · 🔸 hairbox(단색 머리 속 상자)·tongue 첫 UV 범위 ~0 — 단색 재질이라 무방
+  늘어짐 T 1.00 · 팔45°·무릎90° 5.92(상위1% 1.08) · 공용 Idle 최대 2.97(상위1% 1.14)
+
+재질 → 텍스처: body_new · specular · BODY_CELL → okabe_UV_base.png(원본 okabe UV- base.png) · eyes → Circle.png · hair · Skin → 단색(위)
+  안 씀: okabe UV- shade.png(툰 음영) · okabe UV- tga.png·okabe UV.png(zip에 없음, base로 대체)
