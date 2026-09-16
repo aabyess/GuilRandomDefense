@@ -1,0 +1,22 @@
+출처: Sketchfab — 코토부키 히비키(ValveBiped 리그 glb, Sketchfab-16.67.0)
+받은 날: 2026-09-16 · 유닛: 희귀함_박수찬 (Rare)
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_박수찬.glb · 10684524 bytes · sha256 4b1704c6653cc818e2ac2dd54b157ba49f12c7d8853006ff3c31e28c421afca3
+glb: 스킨 1 · 뼈 108 · 메시 16(+조명용 Icosphere) · 재질 14 · 이미지 12 · 삼각형 58,318 · 애니 0 · 이미 T자
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_박수찬」으로 재현(source = 이 glb).
+  - 🔴 재질 14개가 전부 KHR_materials_pbrSpecularGlossiness의 diffuseTexture에 텍스처(표준 baseColor는 비어 있음 — 그대로면 흰 인형) →
+    확장의 diffuse 이미지를 재질 이름 기준 파일로 원본 바이트 그대로 뽑아 기본색에 물림. Glasses(검정 0.092)·glass(투명 알파 0.097)는 색 그대로.
+  - 🔴 가중치 0 매핑 뼈 Spine1·Spine4·Toe0·손가락 끝 마디가 glTF 결합 추정에서 원점(0,0,0) 쓰레기 자리 → gltf_guess_bind=False + 뺌
+    (척추는 Spine → Spine2 → Neck1, 쇄골은 Spine2 밑으로 이어짐).
+  - 뼈 이름(HIBIKI_RENAME, 번호 꼬리는 rename_strip): Pelvis→Hips · Spine · Spine2→Spine1 · Neck1→Neck · Head1→Head · Clavicle·UpperArm·Forearm·Hand ·
+    Thigh→UpLeg · Calf→Leg · Foot · 손가락 Finger0~4 × 2마디 → 엄지~새끼 1·2.
+  - Head1 직계 자식 익명 뼈 54개(boneN.NNN — 머리카락·헤드폰·안경 흔들림) → Head로 합침. 조명용 Icosphere 뺌.
+  - 머리카락 메시만 UV 2벌(UVMap·UVMap.001) — 메시를 합치지 않는 경로라 첫 UV 범위 확인만(0.98×0.98 정상).
+
+결과 FBX: 3143196 bytes · sha256 f7bdd7b2f4c44831cd9d23d5722c7447f35182b95d75245b8d4d84f238289e69
+  뼈 39 · 메시 16 · 정점 43,446 · 삼각형 58,318(감량 없음) · 크기 1.664 × 0.348 × 1.8 m · 최저 z 0 · 정면 −Y · 뼈 넘침 0
+  쉬는 스킨↔원시 정점 0.0007 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · UV 16메시 정상 · 「Head 자손 0 · 위험 없음」
+  늘어짐 T 1.00 · 팔45°·무릎90° 3.0(상위1% 1.01) · 공용 Idle 최대 5.54(상위1% 1.15)
+
+재질 → 텍스처(확장 diffuse 이미지 원본 바이트): Shirt(0) · Body(1) · ArmCover(2) · Scarf(3) · Pants(4) · Jacket(5) · Headphones(6) · Eye_R·Eye_L(7) · Hair(8) · Bracelet(10) · Boots(11)
+  → hibiki_<재질>_diffuse.png (Eye_L은 Eye_R 파일 공유). 이미지 9는 어느 재질도 안 씀.
