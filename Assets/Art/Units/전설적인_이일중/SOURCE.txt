@@ -1,0 +1,24 @@
+출처: 원피스 바운티러시 샹크스 사황(pl_shanks_hand01) — 팬 재내보내기 「Shanks Yonko by Annettlw」. 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_이일중.zip
+  3,348,309 bytes · sha256 456976d7f79e9b961da6404a… · 안에 source/"Shanks Yonko.rar"(🔴 이름에 공백) → Shanks Yonko/Shanks Yonko by Annettlw.fbx + pl_shanks_hand01_diff.png
+받은 날: 2026-09-17 · 유닛: 전설적인_이일중 (별명 엄친아, 전설적인)
+
+원본 상태(blender 실측): FBX · ×0.01 · 아마추어 「Armature」 · 뿌리 pl_shanks_hand01 → world_joint · 뼈 51 · 빈 오브젝트 7 · 메시 11 · 재질 1 · 전 메시 무가중치 0 · 이미 T자.
+  pl_ 리그(PL_RENAME 21뼈).
+  🔸 **왼팔이 없는 게 원작** — l_hand 메시 없음, LArm_Fore·LHand_Fore_sup·LHand_Palm 가중치 0(망토가 왼쪽 어깨를 덮음).
+  겹친 변형: face_normal/attack/damage · r_hand_open/close. 무기: weapon_01(오른손 RHand_Weapon 칼) · weapon_02(허리 칼집, sword_sheath_joint) · weapon_03(칼집에 꽂힌 자루, sword_handle_sheath_joint).
+  보조 뼈: 망토 Cort_Top·C/F/L/R_Cort01~03·F_Cort01_sup · C/L/R_Collar · LHair/RHair(Head 자손) · RArm_Upper_sup · 가중치 0 HELPER·HELPER_key·HELPER_name.
+  _diff 알파는 전부 1.0.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_이일중」으로 재현.
+  - 남긴 변형: face_normal · r_hand_open · body · coat · hair · weapon_02(칼집) · weapon_03(칼자루) — 허리에 찬 칼은 아이젠 기준으로 유지.
+  - 뺀 것: face_attack/damage · r_hand_close · weapon_01(쥔 칼) + RHand_Weapon · 가중치 0 HELPER 3 · world_joint · pl_shanks_hand01.
+  - 보조 뼈 합치기(PM 09-17 방침): 망토·깃 17개 → Spine1(Collar 어깨 오매핑 후보도 사라짐) · sword_* → Hips · LHair/RHair → Head · RArm_Upper_sup → RightArm · L/RHand_Fore_sup → ForeArm.
+  - 왼팔 손을 만들지 않고 새 옵션 seed_zero_bones=0.001: 가중치 0인 LeftForeArm·LeftHand 뼈 머리에 가장 가까운 망토 정점 3개씩에 0.001(오비토 교훈 — 휴머노이드 매핑용, 겉모습 그대로).
+  - 키 1.8 m · 발 z 0 · 정면 −Y.
+
+검증(blender): FBX 366,268 bytes · sha256 29cdfff9ed1d0994b4e8e317… · 뼈 21 · 메시 7(정점 3,299) · 크기 1.446 × 1.211 × 1.8 m(깊이는 뒤로 비스듬히 뻗은 칼집) · 최저 z 0.
+  원시 FBX: 쉬는 스킨↔원시 0.0003 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 4.69(상위1% 1.27) · 유니티 공용 idle.fbx 옮겨 입힘 최악 2.39(상위1% **1.426**).
+  판정 렌더: 스크래치 pl/shanks/j1 · pl/shanks/b1(sk_idle_*) — 흰 셔츠·무늬 바지·검은 망토(왼어깨 덮음)·허리 칼집.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
