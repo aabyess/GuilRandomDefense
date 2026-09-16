@@ -1,0 +1,35 @@
+출처: 원피스 바운티러시 추출 — 마르코(불사조). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_노태현.zip
+  4,330,335 bytes · sha256 64690e8d89c8e927…
+  안: source/pl_marco_orig01.rar(2,779,505 B) + textures/pl_marco_orig01_diff.png(1,550,538 B)
+  rar 안: pl_marco_orig01/pl_marco_orig01.fbx(8,170,544 B) · pl_marco_orig01_diff.png(1,550,864 B) ·
+    ramp·ramp_white·matcap·abnormal_pattern·abnormal_emis_blue·stg_common_bayer_dither(셰이더용, 안 씀)
+받은 날: 2026-09-16 · 유닛: 희귀함_노태현 (unitName 노짱, 희귀함)
+
+원본 상태(blender 실측): 아마추어 뼈 52 · 오브젝트 배율 0.01 · 메시 17 · 재질 2 · 빈 오브젝트 9 · 애니 128(안 씀).
+  매핑 뼈는 pl_ 표준(Body_Pelvis/Belly/Chest · Head_Neck/Face · L/RArm_Clavicle/Upper/Fore · L/RHand_Palm · L/RLeg_Thigh/Calf · L/RFoot_Heel/Toe) → PL_RENAME 그대로(발끝 뼈 있음).
+  보조 뼈: B_/L_/R_jacket01~02(코트 자락) · ob_a01·obi_a02·obi_b01~03(오비) · L/RArm_Wing_01~07·_sup(불사조 날개) · HELPER_key·HELPER_name.
+  🔸 **이미 T자**: Clavicle(±0.0004) → Upper(±0.0019) → Fore(±0.0046) → Hand(±0.0074)가 전부 z 0.0169 — tpose_arms 불필요(직접 확인).
+  🔸 기본 자세 = 쉬는 자세(어긋난 뼈 0) — 빡빡이식 손 결합 밀림 없음.
+  🔸 **Head_Face 자손 0** — 얼굴 보조 뼈가 아예 없어서 아디오식 Jaw/Eye 오매핑 위험이 없다(빌드 보고 「Head 자손 0 · 위험 없음」).
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_노태현」으로 재현(zip → rar → fbx를 임시 폴더에 풀어 읽음, 사장님 원본은 그대로).
+  - 겹친 변형 정리: 얼굴 3벌 → face_normal · 손 3벌 → l/r_hand_open.
+  - 🔴 불꽃(스킬) 판 뺌: l_arm_skill·r_arm_skill(재질 pl_marco_orig01_skill) · l_leg_skill·r_leg_skill.
+    이유 — 기본 대기 모습이 아니고(마르코의 파란 불꽃은 스킬 상태), x ±0.0245까지 퍼져(몸은 ±0.0029) 키·경계를 망친다. PM 권고와 같은 판단.
+  - 🔴 불사조 날개 뼈 16개(L/RArm_Wing_01~07·_sup)도 뺌 — 스킬 판에만 가중치가 있어(남길 메시엔 0, 실측) 메시만 빼면 가중치 0으로 남아 뼈 머리가 x ±0.0226까지 나가 「뼈 넘침」 판정에 걸린다.
+  - 남긴 8메시 3,932삼각형(body 2,353 · face_normal 689 · l/r_arm 112 · l/r_leg 225·189 · l/r_hand_open 126) — 감량 없음.
+  - 빈 오브젝트는 뼈로 안 살림(no_nulls) · orient_snap · 키 1.8 m · 발 z 0 · 정면 −Y.
+
+재질 → 텍스처: pl_marco_orig01 → Textures/pl_marco_orig01_diff.png(1,154,351 B).
+  🔸 zip 판(1,550,538 B)과 rar 판(1,550,864 B)은 **바이트만 다르고 픽셀은 완전히 같다**(1024×1024 전 픽셀 최대차 0.000000) — FBX가 부르는 rar 판 기준으로 뽑음.
+  🔴 원본 알파는 음영 마스크(최소 0.247 · 평균 0.834 · 100%가 0.98 미만, 이진 마스크 아님) → 알파를 빼고 RGB PNG로 저장(archive_rgb). 알파를 두면 유니티에서 몸이 비친다.
+  안 쓴 것: ramp · ramp_white · matcap · abnormal_pattern · abnormal_emis_blue · bayer(셰이더 전용) · 재질 pl_marco_orig01_skill(불꽃 판과 함께 빠짐).
+
+검증(blender): FBX 510,540 bytes · sha256 40dc3152d610820997f7f523… · 뼈 36(52 − 날개 16) · 메시 8 · 크기 1.671 × 0.335 × 1.8 m · 최저 z 0 · 뼈 넘침 0.196.
+  원시 FBX: 뼈 전역(Lcl) vs TransformLink 0.0 · 쉬는 자세 스킨 결과 vs 원시 정점 0.0004 mm · 가중치 없는 정점 0 · 뼈 배율 1.0.
+  UV 판정: 8메시 전부 첫 UV 정상(퇴화 0) · 면 중심 색 평균 body (0.54,0.43,0.30) · 팔 (0.49,0.23,0.37) 보라 재킷 · 얼굴 (0.79,0.63,0.52).
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 1.82(상위1% 1.20) · 유니티 공용 idle.fbx 옮겨 입힘 최악 2.57(상위1% 1.21) — 프레임 렌더에서 코트 자락·오비 찢김이나 몸 관통 없음.
+  판정 렌더: 스크래치 marco/judgeF · marco/idleF.
+창 판: 판_새스킨_노짱(사장님 블렌더 창).
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.

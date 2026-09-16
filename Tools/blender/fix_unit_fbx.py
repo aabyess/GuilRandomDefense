@@ -218,7 +218,83 @@ for _s, _side in (("L", "Left"), ("R", "Right")):
         for _j, _k in (("", 1), ("1", 2), ("2", 3)):
             IRONMAN_RENAME[f"Bip01 {_s} Finger{_i}{_j}"] = f"mixamorig:{_side}Hand{_finger}{_k}"
 NARUTO_FACE_RUNS = [["nrt_tex02", 450], ["nrt_eye", 62], ["nrt_tex01", 1106], ["nrt_tex02", 1919]]
+# 블리치 이치고(Sketchfab glb, 조인트 296) → mixamorig. R이 −X · L이 +X(위치로 확인: shoulder R_161 머리 x −0.188).
+#   손가락 A~E는 위치로 확인 — A는 손에 바로 붙고 제일 앞(y −0.013) = 엄지, 나머지는 y가 커지는 순서로 검지(B −0.018)·중지(C 0.004)·약지(D 0.027)·새끼(E 0.047).
+#   thorax_210(uback과 neck 사이)·ido_294(hips 위 뿌리)·AS/sway 보조 뼈는 이름 그대로 둔다(유니티는 매핑 안 된 중간 뼈를 그냥 지나간다).
+ICHIGO_RENAME = {"hips_293": "mixamorig:Hips", "lback_221": "mixamorig:Spine", "mback_220": "mixamorig:Spine1",
+                 "uback_215": "mixamorig:Spine2", "neck_108": "mixamorig:Neck", "head_107": "mixamorig:Head"}
+for _side, _sfx, _n in (("L", "Left", (198, 197, 191, 180, 279, 268, 252, 251)), ("R", "Right", (162, 161, 155, 144, 250, 239, 223, 222))):
+    _c, _s, _e, _h, _g, _k, _a, _t = _n
+    ICHIGO_RENAME.update({f"clavicle {_side}_{_c}": f"mixamorig:{_sfx}Shoulder", f"shoulder {_side}_{_s}": f"mixamorig:{_sfx}Arm",
+                          f"elbow {_side}_{_e}": f"mixamorig:{_sfx}ForeArm", f"hand {_side}_{_h}": f"mixamorig:{_sfx}Hand",
+                          f"groin {_side}_{_g}": f"mixamorig:{_sfx}UpLeg", f"knee {_side}_{_k}": f"mixamorig:{_sfx}Leg",
+                          f"ankle {_side}_{_a}": f"mixamorig:{_sfx}Foot", f"toe {_side}_{_t}": f"mixamorig:{_sfx}ToeBase"})
+for _side, _sfx, _ids in (("L", "Left", ((165, 164, 163), (168, 167, 166), (172, 171, 170), (175, 174, 173), (178, 177, 176))),
+                          ("R", "Right", ((111, 110, 109), (114, 113, 112), (118, 117, 116), (121, 120, 119), (124, 123, 122)))):
+    for _letter, _finger, _three in zip("ABCDE", ("Thumb", "Index", "Middle", "Ring", "Pinky"), _ids):
+        for _j, (_num, _id) in enumerate(zip((1, 2, 3), _three)):
+            ICHIGO_RENAME[f"finger {_side} {_letter}0{_j}_{_id}"] = f"mixamorig:{_sfx}Hand{_finger}{_num}"
+
 UNITS = {
+    # 바운티러시 마르코 → 희귀함_노태현(2026-09-16 희귀함 3호). 류마·아디오와 같은 pl_ 리그(뼈 52 · 배율 0.01 · 재질 2).
+    #   이미 T자(Clavicle·Upper·Fore·Hand가 전부 z 0.0169) · 기본 자세 = 쉬는 자세(빡빡이식 손 밀림 없음, 어긋난 뼈 0) · Head_Face 자손 0(얼굴 뼈 겹침 위험 자체가 없다).
+    #   🔴 불꽃(스킬) 판을 뺀다: l/r_arm_skill(재질 pl_marco_orig01_skill) · l/r_leg_skill — 기본 대기 모습이 아니고 x ±0.0245까지(몸은 ±0.0029) 퍼져 크기도 망친다.
+    #     그러면 불사조 날개 뼈 16개(L/RArm_Wing_01~07·_sup)가 가중치 0으로 남아 「뼈 넘침」 가드에 걸리므로 같이 뺀다(남길 메시엔 가중치 0 — 실측 확인).
+    #   겹친 변형: 얼굴 3벌 → face_normal · 손 3벌 → l/r_hand_open. 남긴 8메시 합 3,932삼각형이라 감량 없음.
+    #   🔸 텍스처: zip 판(1,550,538 B)과 rar 판(1,550,864 B)은 바이트만 다르고 **픽셀은 완전히 같다**(최대차 0.000000). FBX가 부르는 rar 판 기준.
+    #     알파는 음영 마스크(최소 0.247 · 평균 0.834 · 100%가 0.98 미만) → archive_rgb로 알파 뺀 RGB PNG.
+    "희귀함_노태현": dict(path="Assets/Art/Units/희귀함_노태현/희귀함_노태현.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(SKINS, "04_희귀함/희귀함_노태현.zip"), "source/pl_marco_orig01.rar", "pl_marco_orig01/pl_marco_orig01.fbx"),
+                      archive_rgb={"pl_marco_orig01/pl_marco_orig01_diff.png": "pl_marco_orig01_diff.png"},
+                      drop_meshes=["face_attack", "face_damage", "l_arm_skill", "r_arm_skill", "l_leg_skill", "r_leg_skill",
+                                   "l_hand_close", "r_hand_close", "r_hand_sp"],
+                      drop_bones=[f"{s}Arm_Wing_{k}" for s in ("L", "R") for k in ("01", "02", "03", "04", "05", "06", "07", "sup")],
+                      rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
+                      materials=dict(textures={"pl_marco_orig01": [("DiffuseColor", "pl_marco_orig01_diff.png")]})),
+    # 블리치 이치고 → 희귀함_최상호_오타쿠의길(2026-09-16 희귀함 2호, Sketchfab glb 조인트 296 중 256개에 가중치).
+    #   쉬는 자세 A자 45°(어깨 ±0.188/1.446 → 팔꿈치 ±0.374/1.26 → 손 ±0.555/1.079) → tpose_arms로 T자. R이 −X · L이 +X.
+    #   🔴 숨김 판 세 개(재질 `5_-` 접두사)를 뺀다: 5_-armRhidden(Object_13) · 5_-WepHand.1(Object_15, y −1.4까지 뻗은 칼) · 5_-WepHand.2(Object_17, y +1.58) — 두면 3m 칼날이 몸을 가로지른다.
+    #   🔴 얼굴 뼈 105개(pupil·eyelid·eyebrow·tooth·tongue·jaw·nose…)가 Head 자손 — 아디오와 같은 Jaw/Eye 오매핑 위험. 진짜 눈 뼈 eye R.001_19·eye L.001_51은 **가중치 0**이라
+    #     이름만 붙여선 유니티가 뼈로 안 센다(아디오에서 확인) → merge_bones under로 Head 자손을 통째로 Head에 합친다(93개가 가중치 있음, 휴머노이드 클립은 얼굴 뼈를 안 움직이니 겉모습 그대로).
+    #   등에 멘 칼(5_WepBack.1/.2)은 남기되 키 잴 때 뺀다(칼 포함 1.826 vs 몸 1.82). 남긴 158,297 삼각형 → 1,000삼각형 이상 메시만 ×0.25로 약 4만.
+    "희귀함_최상호_오타쿠의길": dict(path="Assets/Art/Units/희귀함_최상호_오타쿠의길/희귀함_최상호_오타쿠의길.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(SKINS, "04_희귀함/희귀함_최상호_오타쿠의길.glb"), no_nulls=True, orient_snap=True,
+                      drop_meshes=["Icosphere", "Object_13", "Object_15", "Object_17"],
+                      size_ignore_meshes=["Object_9", "Object_11"],
+                      # 숨김 칼 메시를 빼도 그 뼈는 남아 「뼈 넘침」 가드에 걸린다(붕대 뼈 머리가 y +1.57, 칼날 뼈가 y −1.38) — 남는 메시에 가중치 0이라 뺀다
+                      drop_bones=[f"bandage0{i} A_{j}" for i, j in zip(range(1, 9), (133, 132, 131, 130, 129, 128, 127, 126))]
+                                 + [f"blade0{i} A_{j}" for i, j in zip(range(1, 6), (139, 138, 137, 136, 135))],
+                      rename_bones=ICHIGO_RENAME,
+                      merge_bones=dict(under="mixamorig:Head", into="mixamorig:Head"),
+                      decimate=dict(min_tris=1000, ratio=0.25),
+                      tpose_arms={s: dict({"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm", "Forearm": f"mixamorig:{side}ForeArm",
+                                           "Hand": f"mixamorig:{side}Hand"},
+                                          **{f"Finger{i}{j}": f"mixamorig:{side}Hand{finger}{k}" for i, finger in enumerate(("Thumb", "Index", "Middle", "Ring", "Pinky"))
+                                             for j, k in (("", 1), ("1", 2), ("2", 3))})
+                                  for s, side in (("L", "Left"), ("R", "Right"))},
+                      glb_images={0: "5_skin_baseColor.png", 1: "5_WepBack_1_baseColor.png", 2: "5_WepBack_2_baseColor.png", 3: "5_torso_baseColor.png",
+                                  4: "5_hakama_baseColor.png", 5: "5_face_baseColor.png", 6: "5_feet_baseColor.png", 7: "5_hair_baseColor.png",
+                                  8: "5_noseline_baseColor.png", 9: "7_eyeshadow_baseColor.png"},
+                      materials=dict(textures={
+                          "5_skin_1.0_0_0": [("DiffuseColor", "5_skin_baseColor.png")],
+                          "5_armRdefault_1.0_0_0": [("DiffuseColor", "5_skin_baseColor.png")],
+                          "5_WepBack.1_1.0_0_0": [("DiffuseColor", "5_WepBack_1_baseColor.png")],
+                          "5_WepBack.2_1.0_0_0": [("DiffuseColor", "5_WepBack_2_baseColor.png")],
+                          "5_torso_1.0_0_0": [("DiffuseColor", "5_torso_baseColor.png")],
+                          "5_sleeves_1.0_0_0": [("DiffuseColor", "5_torso_baseColor.png")],
+                          "5_acc_1.0_0_0": [("DiffuseColor", "5_torso_baseColor.png")],
+                          "5_hakama_1.0_0_0": [("DiffuseColor", "5_hakama_baseColor.png")],
+                          "5_belt_1.0_0_0": [("DiffuseColor", "5_hakama_baseColor.png")],
+                          "5_face_1.0_0_0.001": [("DiffuseColor", "5_face_baseColor.png")],
+                          "5_eyes_1.0_0_0.001": [("DiffuseColor", "5_face_baseColor.png")],
+                          "5_eyebrow_1.0_0_0.001": [("DiffuseColor", "5_face_baseColor.png")],
+                          "5_eyelashes_1.0_0_0.001": [("DiffuseColor", "5_face_baseColor.png")],
+                          "5_mouth_1.0_0_0.001": [("DiffuseColor", "5_face_baseColor.png")],
+                          "5_teeth_1.0_0_0.001": [("DiffuseColor", "5_face_baseColor.png")],
+                          "5_feet_1.0_0_0": [("DiffuseColor", "5_feet_baseColor.png")],
+                          "5_hair_1.0_0_0": [("DiffuseColor", "5_hair_baseColor.png")],
+                          "5_noseline_1_0_0": [("DiffuseColor", "5_noseline_baseColor.png")],
+                          "7_eyeshadow_1.0_0_0.001": [("DiffuseColor", "7_eyeshadow_baseColor.png")]})),
     "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
     "안흔함_이호준": dict(rev="6b2afdbc", path="Assets/Art/Units/안흔함_이호준/안흔함_이호준.fbx", kind="human", size=("height", 1.2), anim=True,
                       hips="Bone_61", head="Bone.004_3", source=os.path.join(SKINS, "02_안흔함/안흔함_이호준.glb"), recipe={}, clip_ground=True),
@@ -1596,7 +1672,11 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         #   merge_bones: 이름이 맞는 뼈의 가중치를 into 뼈에 더하고 뼈를 지운다(겉모습·게임 동작 그대로, Head 자손에서 후보 자체를 없앰).
         if cfg.get("merge_bones"):
             mb = cfg["merge_bones"]
-            gone = [eb.name for eb in data.edit_bones if re.search(mb["pattern"], eb.name)]
+            if mb.get("under"):                                         # 이름 규칙이 제각각인 얼굴 뼈 100개(이치고) — 그 뼈의 자손을 통째로
+                root_eb = data.edit_bones[mb["under"]]
+                gone = [eb.name for eb in data.edit_bones if root_eb in eb.parent_recursive]
+            else:
+                gone = [eb.name for eb in data.edit_bones if re.search(mb["pattern"], eb.name)]
             assert gone and mb["into"] in data.edit_bones, f"{name}: merge_bones 대상 없음"
             moved = 0
             for m in meshes:
