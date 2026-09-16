@@ -1,0 +1,21 @@
+출처: Sketchfab — 체인소맨 덴지(사람 모습, 흰 셔츠·넥타이 차림 T자, Sketchfab-16.6.0 glb)
+받은 날: 2026-09-16 · 유닛: 희귀함_박민수 (Rare) — ※ 동명 여섯 중 희귀함
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_박민수.glb · 3327940 bytes · sha256 6cb2f98a03a57ad77a3767fbc8790d57c50213357d1f9080d30d90f0e05298d2
+glb: 뼈·스킨·애니 0 · 메시 5 · 재질 5 · 이미지 6 · 삼각형 28,293 · 키 74.6(단위 cm 계열) · 이미 좌우 대칭 T자 · −Y 정면
+
+정리: 2026-09-16 blender — Tools/blender/gen_scan_rig.py UNITS 「희귀함_박민수」로 재현(source = 이 glb).
+  - 재질 이름(BODY·FACE·HAIR·01___Default·21_body_1_0_0)이 섞여 여러 모델을 합친 듯 보였지만, 메시별 렌더로 확인하니 겹친 몸 없음:
+    Object_2 몸(셔츠·넥타이·바지) · Object_3 얼굴 · Object_4 머리카락 · Object_5 운동화 · Object_6 팔·손.
+  - 관절: 대칭 T자라 단면 + 렌더 비율로(팔 z 57 수평 · 어깨 ±7 · 팔꿈치 ±19 · 손목 ±31 · 다리 x ±3.8 · 고관절 z 38 · 무릎 21 · 발목 4.5).
+  - 🔴 bone heat 전체 실패(가중치 정점 0/14,254). 복셀 리메시 대리 메시(닫힌 한 덩어리)에서도 실패 →
+    메시별로 떼어 시험하니 **얼굴 Object_3이 원인**(얼굴 빼면 8,424/8,424 · 얼굴 혼자 3,442/5,863) → 얼굴은 heat에서 떼었다가 **Head 100%**로 붙임(rigid_meshes).
+  - 얼굴·머리카락이 저폴리 몸보다 훨씬 촘촘해 Head 몫이 73%(실패 아님, max_bone_share 0.8).
+
+결과 FBX: 983148 bytes · sha256 429cefb26587b08ef513ba6f2604ef38d5372a799b52d6e954cc90f8adc56218
+  뼈 22 · 메시 1 · 정점 14,254 · 삼각형 28,235 · 크기 1.795 × 0.271 × 1.8 m · 최저 z 0 · 정면 −Y
+  쉬는 스킨↔원시 정점 0.0002 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0
+  🔸 UV0 범위 u −15.37~1.00 — 원본 glb부터 팔·손 메시(glTF 메시 4) UV만 정수 칸 밖(u −15.37~−15.27 · v 16.0~16.4)에 있다(유니티 기본 반복 감싸기로 같은 자리 색).
+  늘어짐 T 1.00 · 팔45°·무릎90° 1.52(상위1% 1.04) · 공용 Idle 최대 1.92(상위1% 1.05)
+
+재질 → 텍스처(glb 이미지 원본 바이트): BODY → denji_body_baseColor.png(이미지0) · FACE → denji_face_baseColor.png(2) · HAIR → denji_hair_baseColor.png(3)
+  01___Default → denji_shoes_baseColor.png(4) · 21_body_1_0_0 → denji_arms_baseColor.png(5) · 이미지1(denji_body_normal.png, 몸·팔 보조맵)은 파일만 둠
