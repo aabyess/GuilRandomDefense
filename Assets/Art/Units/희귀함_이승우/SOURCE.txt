@@ -1,0 +1,20 @@
+출처: 원피스 바운티러시 추출 모델 — 실버즈 레일리(pl_rayleigh_orig01)
+받은 날: 2026-09-16 · 유닛: 희귀함_이승우 (Rare) — ※ 동명 셋 중 희귀함
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_이승우.zip · 4089912 bytes · sha256 691590596ae0d016e2be0b88c61673a3115fff3f5f0466c6720c250b19367440
+  zip 안 source/pl_rayleigh_orig01.rar 안 pl_rayleigh_orig01/pl_rayleigh_orig01.fbx(6,798,272 B) + _diff.png + 툰 셰이더용 matcap·ramp·dither·abnormal_pattern
+FBX: ×0.01 · 뼈 49 · Null 8 · 메시 15 · 재질 1 · 기본 자세 = 결합 자세(이미 T자)
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_이승우」로 재현(archive = zip 안 rar). 시류(희귀함_노수신)와 같은 pl_ 리그 처리.
+  - 겹친 변형 중 기본만: face_normal(attack·damage 뺌) · l/r_hand_open(close·skittle 뺌). glass(안경)는 얼굴 부속이라 남김.
+  - 뺀 소품: skittle(술병) · weapon_01(왼손 칼 — 앞으로 뻗어 깊이를 늘림, 시류 기준). 뼈 weapon_01_joint · skittle_joint도.
+  - 뼈: PL_RENAME(Body_Pelvis→Hips · Belly→Spine · Chest→Spine1 · Head_Neck→Neck · Head_Face→Head · Clavicle·Upper·Fore·Palm · Thigh·Calf·Heel·Toe).
+    Head 밑 LHair·RHair → Head로. 코트 뼈(coat_root·c/l/r_coat·l/r_coat_a/b)는 가슴 밑 그대로.
+  - 🔴 1회차 판정에서 가중치 0 뼈 4개(뿌리 pl_rayleigh_orig01 · world_joint · HELPER_key · HELPER_name — 뼈 넘침 0.132) → 같이 뺌(Hips가 뿌리). Null 8(model_root·flag·coat_end)은 뼈로 안 살림.
+
+결과 FBX: 533948 bytes · sha256 d6b3467ffd406af4ac5fb9218448e7f46978bbdc7d64edb083465546768db463
+  뼈 41 · 메시 7(body·coat·hair·face_normal·glass·l/r_hand_open) · 정점 3,212 · 삼각형 4,418 · 크기 1.864 × 0.737 × 1.8 m · 최저 z 0 · 정면 −Y · 뼈 넘침 0
+  쉬는 스킨↔원시 정점 0.0003 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · UV 7메시 정상 · 「Head 자손 0 · 위험 없음」
+  늘어짐 T 1.00 · 팔45°·무릎90° 1.71(상위1% 1.13) · 공용 Idle 최대 2.08(상위1% 1.19)
+
+재질 → 텍스처: pl_rayleigh_orig01 → Textures/pl_rayleigh_orig01_diff.png
+  🔸 알파는 음영 마스크(최소 0.09 · 평균 0.808 · 100%가 0.98 미만) → archive_rgb로 알파 뗀 RGB. matcap·ramp·dither·abnormal_pattern은 안 씀.
