@@ -1,0 +1,75 @@
+전설적인_신문철 (나루토, 선인모드, 프리파이어 콜라보 코스튬) 스킨 출처 — PM 사양
+(2026-09-17, 착수 전 원문 보존)
+※ 신문철 동명 셋(안흔함 모델 있음). 이건 전설적인_신문철.
+
+원본: ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_신문철.zip → source/Male_Lobby_Cos_NB_Sage.zip
+  안 FBX + 텍스처(_D 색·_SD 보조, _D만 씀)
+
+PM 실측 사양 원문:
+- 완전한 캐릭터(메시 이름이 옷뿐이라 몸이 없는 줄 알았는데, 렌더하니 얼굴·손·발이
+  Accessory·Top 안에 들어 있다). 붉은 망토(불꽃 밑단)·등 두루마리·이마 보호대·주황 바지·
+  샌들. A자 자세.
+- 메시 4: Top(3,752정점, 재질 Top_Yellow+Top_Sage) · Accessory(3,757, 재질 Accessory+Hair) ·
+  Bottom(1,215) · Shoe(1,536) → 합계 약 1.2만 삼각형, 감량 불필요.
+- 뼈 126 · Null 35 · 이름 bone_Hips·bone_Hips_Dummy… (프리파이어 공용 규칙).
+- 망토 밑단 흔들뼈 Hemline_NB_Sage_Cos_Bone001~0xx 수십 개 → Hips(뒤쪽 자락)·UpLeg(앞자락
+  좌우)로 합치고 삭제. 전부 Hips로 몰면 걸을 때 자락이 다리를 뚫는다.
+- _Dummy 뼈·Null 35개는 게임용 → 가중치 0이면 삭제.
+- 재질 6 · 텍스처 노드 12(base_color_texture + alpha_texture 짝) → 알파가 머리카락·망토
+  가장자리 컷아웃일 수 있으니 확인. _D만 baseColor, _SD는 안 씀.
+- 원시 키 0.264(단위 작음) → 1.8로.
+- 규격: 키 1.8 · 발 z 0 · 정면 −Y · T자 · mixamorig 이름 · 무가중치 정점 0 · 가중치 0 뼈 없기.
+
+빌드 스크립트: Tools/blender/gen_biped_skin.py (SKINS["전설적인_신문철"])
+  실행: /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
+        --python Tools/blender/gen_biped_skin.py -- 전설적인_신문철
+
+직접 재확인한 것(빌드 전 조사):
+- 뼈 126개 확인. 🔴 이름이 "Bip01 X"(3ds Biped)가 아니라 "bone_X"(직접 확인) — rename을
+  cfg에 직접 지정(biped_rename_table 자동생성 대신), gen_biped_skin.py에 이 분기를 새로
+  추가.
+- 소스가 FBX(gltf 아님) — gen_biped_skin.py에 FBX 임포트 분기 추가(source_format="fbx").
+- 척추가 bone_Spine·bone_Spine1 2마디뿐(죠나단과 같은 패턴) — bone_Spine1→Spine2(어깨가
+  갈라지는 실제 지점, LeftClav 부모가 Spine1), Spine1은 bone_Spine 꼬리에 0-길이 자리표시로
+  처리(allow_dead_bones).
+- 망토 흔들뼈(Hemline) 확인: Dummy001 밑 8갈래가 골반을 한 바퀴 도는 링 구조. 세계좌표 y<0
+  (앞)인 001·006·036은 그쪽 UpLeg로, y≥0(뒤·옆)인 011·016·021·026·031은 Hips로 분배 —
+  전부 Hips로 몰지 말라는 PM 지시대로 위치 기반 분리.
+- 머리카락(Hair_NB_Sage_Cos_Dummy001 밑 2갈래) → Head.
+- 손가락(Finger01~42, 5개×2마디) → fold_subtree로 각 첫마디를 뿌리 삼아 {side}Hand로 접음
+  (Rigify 이름이 아니라 finger_prefixes 대신).
+- 무기/배낭 더미(Spine_Backpack·Spine_Weapon·Weapon)는 대응 메시가 없어 가중치 0으로 추정,
+  안전하게 Spine2/Hand로 접음(실제 0이면 결과에 영향 없음).
+- 재질 6개 전부 Principled+TEX_IMAGE(BaseColor·Alpha 짝, 같은 이미지) — texture_direct로
+  그대로 재배선(정점색 없음).
+
+🔴 유니티 반려 2회(2026-09-17) 후 재수정:
+1차: level_arms를 pb.tail 기반(월드 행렬 곱 없이 섞어 씀)에서 fix_unit_fbx.py의 tpose_arms
+   방식(읽기만, 안 건드림) 참고해 world 벡터로 재구현 — 폭은 좋아졌으나(1.794m) 앞뒤가
+   1.623m로 커짐.
+2차: 구현담당2가 디오에서 먼저 찾은 버그(gen_mmd_skin.py·gen_objrip_skin.py에 기록, 읽기만
+   참고) 이식 — rotation_difference는 방향(swing)만 맞추고 그 축 둘레 비틀림(roll)은 뼈마다
+   제각각 남는다. T자 렌더는 바인드=레스트라 안 보이지만 유니티가 실제로 팔다리를 움직이면
+   그 제각각의 roll이 굽힘 축을 엉뚱한 방향으로 돌려 관절이 뒤틀린다(팔이 머리 뒤로 꺾이고
+   다리가 벌어짐 — 실제 증상과 일치). armature_apply 직후(바인드=레스트라 지금 roll을
+   바꿔도 메시는 안 움직임) 전체 22뼈 roll을 표준 규칙(align_roll, Z-up 또는 -Y-forward)
+   으로 재표준화 — gen_biped_skin.py 전체에 적용(일반 수정, 히나타에도 재적용함).
+- 재빌드 결과: 폭 1.763m(비율 0.98)·앞뒤 0.601m(A자 원래 값과 동일, 왜곡 없음) — 둘 다 정상.
+- 직접 포즈 테스트(양팔 ±70° 내림·양다리 60° 굽힘)로 확인: 자세 후 크기 [0.798,0.869,1.622]m
+  — 극단적 스트레칭·뒤집힘 없이 정상 범위. PM 렌더 판정 요청대로 확인함.
+
+검증 결과(2026-09-17, 실측 — 최종 FBX 재임포트로 직접 재검사):
+- 뼈 22개, 매핑 안 된 뼈 0, 가중치 0 뼈 0(Spine1 제외 — 척추 2마디뿐이라 0-길이 자리표시,
+  allow_dead_bones로 정상 처리).
+- 무가중치 정점 0개(전체 10,260개 중).
+- 크기 [1.763, 0.601, 1.8]m(폭 비율 0.98, 앞뒤 정상 — 둘 다 통과).
+- 삼각형 12,223(감량 없음, PM 지시대로).
+- UV0 면적 0.9892(퇴화 없음).
+
+주의:
+- 원본 zip은 삭제 금지.
+- Male_Hair_Cos_NB_Sage 재질이 Accessory 텍스처를 쓰는 것(PM 지적) — 직접 확인: 소스
+  자체에서 이미 그렇게 연결돼 있음(Accessory 메시가 헬멧+머리카락을 한 재질 세트로 공유,
+  원본 구조 그대로 옮긴 것이지 이 파이프라인이 잘못 붙인 게 아님).
+- roll 표준화 버그는 gen_biped_skin.py 전체(타시기·죠나단·히나타 포함)에 이미 적용됨 —
+  이 셋도 재빌드해 커밋 전이면 이 수정이 반영된 상태.
