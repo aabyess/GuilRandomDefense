@@ -1,0 +1,23 @@
+출처: 블리치 모바일 게임 립 — 자라키 켄파치(cha_kenpachi_general). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_양재모.zip
+  387,094 bytes · sha256 8fba05095bbfa51a0abb656d… · 안에 source/cha_kenpachi_general.fbx + textures/cha_kenpachi_general.png(256² RGBA, 알파 전부 1.0)
+받은 날: 2026-09-17 · 유닛: 전설적인_양재모 (별명 상호파비밀병기, 전설적인) — ※ 동명 양재모 다섯 중 전설적인
+
+원본 상태(blender 실측): FBX 7300 · 3ds Max Biped Bip01 뼈 66 · 메시 2 · 재질 1 · FBX ×0.01. 하나타로(희귀함_현성현)와 같은 추출본이라 처리가 같다.
+  몸 cha_kenpachi_general_0(5,136정점) · 둘째 wp1_0(260정점, 오른손 밑 weapon_01 사슬 100%).
+  🔴 wp1_0은 쥔 칼이 아니라 **몸 옆에 세워 둔 칼**(원본 앞 렌더에서 몸 오른쪽에 따로 섬) → 하나타로 때처럼 뺀다.
+  보조 뼈: 바지 Bone_leg_L/R_01·02(Calf 밑) · 소매 Bone_arm_L/R_01·02(Forearm 밑) · 옷자락 Bone_cloth_L/R_01~06(Pelvis 밑) · Head 밑 Bone_eyes·Bone_hair_01/02·Bone_mouth·Point_eye patch(_scale, 안대).
+  손가락 셋 × 두 마디. FBX가 부르는 _rgb1/_rgb2(색 교체 마스크)는 zip에 없다 — 기본색 png만 씀.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_양재모」로 재현.
+  - biped_rename("Bip01", 손가락 3×2) 33뼈 · use_rest_pose(결합 자세, 기본 자세와 차 0) · tpose_arms로 T자.
+  - 칼 메시·뼈(weapon_01 · Bone_weapon_01/02 · wp1) + 가중치 0 뿌리(cha_kenpachi_general · Bip01 · .001) 뺌.
+  - 보조 뼈 합치기(PM 09-17 방침 — 유니티에선 안 움직이는 딸린 자식이라 변형 같음): Head 밑 6개 → Head · Bone_leg → Leg · Bone_arm → ForeArm · Bone_cloth 12개 → Hips.
+  - 감량 없음(3,526삼각형) · 키 1.8 m · 발 z 0 · 정면 −Y.
+
+검증(blender): FBX 292,700 bytes · sha256 0679725d69ac64e30a6e43e2… · 뼈 33 · 메시 1(정점 5,136) · 크기 1.773 × 0.51 × 1.8 m · 최저 z 0.
+  원시 FBX: 쉬는 스킨↔원시 0.0058 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0.
+  UV: 첫 UV 정상(u 0.995 · v 0.987).
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 3.85(가랑이 하카마, 상위1% 1.32) · 유니티 공용 idle.fbx 옮겨 입힘 최악 2.61(상위1% **1.176**).
+  판정 렌더: 스크래치 kenpachi/j1 · kenpachi/b1(kp_idle_*) — 흰 하오리·검은 사무복·뾰족 머리·안대, 칼 없음.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
