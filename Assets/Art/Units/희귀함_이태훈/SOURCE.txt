@@ -1,0 +1,29 @@
+출처: Sketchfab — 원펀맨 심해왕(괴인 형태, 모바일 게임 추출 모델 glb, Sketchfab-16.14.0)
+받은 날: 2026-09-16 · 유닛: 희귀함_이태훈 (Rare)
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_이태훈.glb · 6417644 bytes · sha256 0657fd552b86ffc38c3b66daed4c4673842242f8cdcd564aa360dcb2c020c03a
+glb: 스킨 1 · 뼈 188 · 노드 259 · 메시 48(+조명용 Icosphere) · 재질 48 · 이미지 9 · 애니 0 · 뿌리 Sketchfab_model → dsk.fbx(×0.01) → RootNode
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_이태훈」으로 재현(source = 이 glb).
+  - 이미 T자(어깨·팔꿈치·손목 높이 같음) · 발끝 −Y · 키 1.8 m · 발 z 0.
+  - 🔴 얼굴 세 벌 중 하나만: face_old*(기본색 알파 0·BLEND = 숨긴 판, 대부분 뿌리 NULL 100%) · face1/face2(표정 판) 뺌 → modelface* 남김.
+    modelface 이빨 up0/up2/up3/down0/down2/down3도 알파 0 숨김 판이라 뺌. 조명용 Icosphere(±1 m, 1회차 「뼈 넘침」 원인) 뺌. 뺀 메시 27.
+  - 뼈 이름(SEAKING_RENAME 52개): WAIST→Hips · SPINE1/2/3→Spine/Spine1/Spine2 · NECK · HEAD · CLAVICLE→Shoulder · SHOULDER→Arm · ELBOW→ForeArm ·
+    WRIST→Hand · THIGH→UpLeg · CLANK→Leg(무릎) · TOE1→Foot(발목) · TOE2→ToeBase · 손가락 FORE/MIDDLE/MEDICINAL/LITTLE/THUMB 1~3 → Index/Middle/Ring/Pinky/Thumb.
+  - 가중치 0 부속 뼈 33개 뺌(_rootJoint · NULL · RESERVE · EFFECT · CLANK_*C · EQUIPMENT · THROW · UTILITY · OPTION — OPTION_76은 몸에서 2 m 밖 · 빈 CLOTH_A 셋).
+  - 얼굴 뼈 68개(눈·눈썹·입·이빨·볼·HAIR_03 왕관) → Head로 합침(아디오식 Jaw/Eye 오매핑 방지, 「Head 자손 0 · 위험 없음」).
+  - 🔴 1회차 공용 Idle 46배: 털 망토(Object_13) 뒤쪽이 천 시뮬 뼈 CLOTH_A_17 100%, 옆 정점은 RightShoulder 45% → 팔을 가슴 앞으로 가져오면 2 mm 변이 95 mm로 벌어짐.
+    → 천 뼈 사슬 16개를 Spine2로 합치고(합치기만으로는 그대로 46배) 털 망토 가중치를 이웃 평균 12회로 고름 → Idle 8.23.
+  - 팔꿈치·어깨 ROLL 뼈는 가중치가 커서(ELBOWROLL 413 > ELBOW 102) 남김 — 매핑 뼈 자식이라 따라 움직인다.
+  - 감량 없음(남긴 삼각형 37,994).
+
+결과 FBX: 3087356 bytes · sha256 2c930669db85733c89942cd9d238f16603b226394a859964db4f5575a03d518f
+  뼈 71 · 메시 22 · 정점 24,648 · 크기 2.463 × 0.689 × 1.8 m · 최저 z 0 · 뼈 넘침 0.001 · 쉬는 스킨↔원시 정점 0.0005 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0
+  UV 22메시 모두 1층·정상 · 늘어짐 T 1.00 · 팔45°·무릎90° 3.13(상위1% 1.22) · 공용 Idle 최대 8.23(상위1% 1.87, 오른어깨 털·어깨 근육)
+
+재질 → 텍스처(glb 이미지 원본 바이트, 재질 이름 기준 파일 8장 — 이미지 6 이빨 알파판은 안 씀):
+  이미지0 fin_PARTS_baseColor.png ← fin_shoulder · fin_back · bodyShapeC_PARTS
+  이미지1 body_BODY_baseColor.png ← BODY_b · BODY_r · BODY_w · NAIL
+  이미지2 fur_FUR_baseColor.png ← FUR_STEG · accessory FUR_g
+  이미지3 mantle_MANT_baseColor.png ← mantle (🔸 알파 이진 컷아웃: 중간값 0.7% — 유니티에서 컷아웃으로)
+  이미지4 eye_EYE_baseColor.png ← 눈 4 · 이미지5 face_FACE_baseColor.png ← face · hige · tongue
+  이미지7 crown_CROWN_baseColor.png ← crown · crown_red · 이미지8 ear_EAR_baseColor.png ← fin_ear1 · teeth_up · teeth_down
