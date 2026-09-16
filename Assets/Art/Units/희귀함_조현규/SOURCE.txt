@@ -1,0 +1,20 @@
+출처: Sketchfab — 리그 오브 레전드 피즈(게임 추출 glb, LoL 리그)
+받은 날: 2026-09-16 · 유닛: 희귀함_조현규 (Rare)
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_조현규.glb · 10431144 bytes · sha256 0fa67b1cc0f4e6bb2f86399ee286e46114b7b20f3cf91fc233635b7270a456d1
+glb: Sketchfab-15.25.0 · 스킨 1 · 뼈 84 · 메시 1(Object_6, 4,929정점 · 7,891삼각형)+조명용 Icosphere · 재질 1 · 이미지 1(512²) · 애니 24 · 단위 cm
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_조현규」로 재현(source = 이 glb).
+  - 🔴 LoL 추출본은 좌우 뒤집힘(L_ 뼈가 −x인데 눈·발끝은 −Y) → mirror_x.
+  - 🔴 애니 24개라 가져온 자세가 클립 프레임(결합 자세와 차 61) → use_rest_pose(결합 자세 A자) → T자(굽기 오차 0). 조명용 Icosphere 뺌.
+  - 🔴 **삼지창이 몸과 같은 메시 안**에 있고 뿌리 직계 Weapon_70 뼈 100%(몸 옆 x 82에 세워 둠) → drop_verts_of_bones로 그 뼈 몫이 반 넘는 정점 808개를 지움.
+  - 뼈 이름(FIZZ_RENAME, 번호 꼬리는 rename_strip): Root→Hips(Spine·Hip의 부모) · Spine · Chest→Spine1 · Head(Neck 없음 — 유니티 선택 뼈) ·
+    Shoulder · UpArm→Arm · ForeArm · hand→Hand · thigh→UpLeg · knee→Leg · foot→Foot · toe→ToeBase · 손가락 Index/Middle/Thumb a·b → 1·2. Hip_9는 Hips와 UpLeg 사이 중간 뼈로 둠.
+  - Head 밑 머리카락 사슬 A/B/C · 눈 · 눈꺼풀 · 입 · 귀걸이 25개 → Head로 합침. 가중치 0 BUFFBONE·PARENTING_HAND_LOC·뿌리·Weapon 뼈 16개 뺌. 손 지느러미 L/R_Fin은 손 자식이라 둠.
+
+결과 FBX: 337084 bytes · sha256 b05885b00a35f4704d0b95310969c3d1b02eed210a5fd213b0d9b06886e0d530
+  뼈 43 · 메시 1 · 정점 4,121 · 삼각형 6,522 · 크기 2.012 × 1.167 × 1.8 m · 최저 z 0 · 정면 −Y · 뼈 넘침 0
+  🔸 깊이 1.167은 요들족 체형 그대로(뒤로 길게 늘어진 머리 지느러미 + 넓적한 물갈퀴 발).
+  쉬는 스킨↔원시 정점 0.0005 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 「Head 자손 0 · 위험 없음」
+  늘어짐 T 1.00 · 팔45°·무릎90° 8.45(상위1% 1.30, 물갈퀴 발) · 공용 Idle 최대 8.60(상위1% 1.73, 발목·물갈퀴)
+
+재질 → 텍스처: MAT_fizz_base2 → Textures/fizz_base_baseColor.png(glb 이미지 0 원본 바이트, 512²)
