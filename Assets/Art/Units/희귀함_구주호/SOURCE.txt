@@ -1,0 +1,22 @@
+출처: 블리치 모바일 게임 립 — 사도 야스토라(채드) chadu_0_battleout (Noesis 변환 → glb, 3ds Max Biped)
+받은 날: 2026-09-16 · 유닛: 희귀함_구주호 (Rare)
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/04_희귀함/희귀함_구주호.zip · 2042594 bytes · sha256 754cf46934de9b9f05b20ce8fef860bfb2a7f906a77ee644bc26b92f0782b884
+  zip 안 source/chadu_0_battleout.glb(1,932,304 B) + textures/ 6장(glb 내장 이미지와 같은 그림)
+glb: Khronos glTF Blender I/O 4.5 · 스킨 1 · 뼈 35 · 메시 6(+조명용 Icosphere) · 재질 6 · 이미지 6 · 애니 24 · 이미 m 단위(키 1.80)
+
+정리: 2026-09-16 blender — Tools/blender/fix_unit_fbx.py UNITS 「희귀함_구주호」로 재현(archive = 위 zip).
+  - 🔴 애니 24개라 가져온 자세가 클립 프레임(결합 자세와 차 1.08) → use_rest_pose로 결합 자세(팔 내린 A자 약 67°) → T자(굽기 오차 0).
+  - 🔴 조명용 Icosphere(±1 m) 뺌 — 키 맞추기 전에.
+  - 뼈: Bip001 → mixamorig(biped_rename, 29개 — Spine2 있음, 손가락 둘 × 두 마디). 뿌리 Bip001(가중치 0) 뺌.
+    얼굴 뼈 head(가중치 0) · chadu_leye_0 · chadu_reye_0 · chadu_mouth_0 → Head로 합침. Twist 보조 뼈 없음.
+  - 재질: 몸·얼굴·머리가 텍스처 × 정점색 MIX였는데 **정점색이 전부 1.0(흰색)** → 곱해도 그대로라 텍스처를 기본색에 직접 물림(굽기 불필요).
+
+결과 FBX: 398284 bytes · sha256 6319e913494aedd544c6a70a18287f88e88881f7a382befc810be9554632298e
+  뼈 30 · 메시 6 · 정점 2,886 · 삼각형 3,646(감량 없음) · 크기 1.734 × 0.291 × 1.8 m · 최저 z 0 · 정면 −Y · 뼈 넘침 0.001
+  쉬는 스킨↔원시 정점 0.0048 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · UV 6메시 1층 정상 · 「Head 자손 0 · 위험 없음」
+  늘어짐 T 1.00 · 팔45°·무릎90° 2.53(상위1% 1.27, 겨드랑이 번짐 없음) · 공용 Idle 최대 2.62(상위1% 1.25)
+
+재질 → 텍스처(glb 이미지 원본 바이트):
+  chadu_body_0 → chadu_body_baseColor.png(이미지0, tex03 512²) · chadu_face_0 → chadu_face_baseColor.png(이미지1, tex04)
+  chadu_hair_0 → chadu_hair_baseColor.png(이미지2, tex05) · chadu_leye_0 → chadu_leye_baseColor.png(이미지3, tex00)
+  chadu_mouth_0 → chadu_mouth_baseColor.png(이미지4, tex02) · chadu_reye_0 → chadu_reye_baseColor.png(이미지5, tex01)
