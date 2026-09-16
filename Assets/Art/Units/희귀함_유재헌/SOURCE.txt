@@ -1,0 +1,47 @@
+희귀함_유재헌(토토교수) — 야가미 라이토(데스노트), AI 생성 립, 2026-09-16
+
+■ 출처
+~/Desktop/구랜디스킨모음/04_희귀함/희귀함_유재헌.zip
+sha256: 306011ab0e7b5c16c43ea4d9502af6e4e510645decb15e560760d090e4ad9b20
+이중 zip: source/Light yagami.zip 속 Character_in_Suit_wit_0325145158_texture_fbx/ 폴더에
+…_texture.fbx(뼈 없음, 메시 1개 "temp") + …_texture.png(2048², Base Color에 이미 연결됨).
+원본 정점 52,989·삼각형 106,002 · 좌우 대칭 99.9%(AI 생성 특유의 완전 거울 대칭) · 원본 키 1.9968.
+이 파일은 OBJ가 아니라 FBX 소스라 gen_objrip_skin.py의 extract_source()/build()를 확장해
+.fbx도 받게 했다(mesh_path 확장자로 분기, os.walk로 하위 폴더까지 재귀 검색).
+
+■ 정리 내용 (Tools/blender/gen_objrip_skin.py)
+- 이미 −Y 정면. 텍스처는 이미 Base Color에 연결돼 있어(PM 실측) 새로 짓지 않고 파일 경로만
+  Textures/로 다시 이었다(재질 대응 판단 로직에 "이미 연결됨" 분기 추가).
+- 감량: 106,002 → 37,100삼각형(비율 0.35, decimate_ratio 신설 옵션 — AI 생성 메시 전용).
+- 🔴 자세: T자가 아니라 A자(팔이 수평에서 약 25~33° 처짐, 팔 끝 높이비 61%) — 처음으로
+  gen_objrip_skin.py에 straighten_arms=True 옵션과 그 구현을 추가했다(gen_mmd_skin.py의
+  straighten_arms()와 같은 기법: 뼈 하나씩 현재→목표(±X 수평) 방향 쿼터니언 회전 후 그 자세를
+  쉬는 자세로 굽기). 관절 좌표는 실제 처진 자세를 그대로 측정한 값을 넣고(가중치 계산이 실제
+  메시 모양과 맞아야 하므로), 다 지은 뒤에 폈다.
+- 🔴 진짜 버그 둘을 여기서 처음 찾아 고쳤다(다음 캐릭터부터도 이득):
+  1) 팔을 편 뒤 렌더에서 어깨가 이상하게 뭉쳐 있었다 — 원인은 죽은 뼈가 전체의 15% 미만이면
+     지오데식 대신 살리는 "이웃 뼈 구제"가 없어서, LeftToeBase·RightToeBase 단 2개만 실패했는데
+     메시 전체를 지오데식으로 갈아엎어(팔·몸통까지) bone heat의 더 정교한 경계를 잃었었다.
+     "죽은 뼈 15% 미만이면 이웃 구제만, 그 이상이면 지오데식 전체 교체"로 나눠 고쳤다(이 문턱
+     밑에서는 bone heat 결과를 그대로 살린다).
+  2) 그래도 팔이 수평이 아니라 위로 솟아 보였다 — 뼈 자체(edit-bone rest)는 정확히 수평인데
+     메시만 어긋나 있어서 원인을 찾다가, `parent_set(type="ARMATURE_AUTO")`가 이미 Armature
+     모디파이어를 하나 만들어 놓은 상태에서 build() 끝에서 또 하나를 더 만들어, 팔 펴기 회전이
+     두 겹으로(2배 각도) 적용되고 있었다 — 새 모디파이어를 만들기 전에 기존 Armature 모디파이어를
+     전부 지우도록 고쳤다. 고친 뒤 재수출 FBX의 뼈 방향을 직접 확인: LeftArm/ForeArm/Hand 전부
+     정확히 (1,0,0)(완전 수평).
+- 🔴 메시 노드 Lcl Scaling=100 우려(PM) — check_model_scale=True로 내보낸 뒤 원시 FBX 파싱
+  재확인, 전부 1.0(오차 1e-7 이내) 확인. 우리 파이프라인(o.parent=None 뒤 데이터에 겉싸개를
+  굽는 방식)이 원래 이 문제를 안 만든다.
+- UV0 검사: 범위 [0,1]×[0,1], [0,1] 밖 0개.
+- 가중치: bone heat로 대부분 성공, LeftToeBase·RightToeBase만 실패해 이웃(Foot)에서 30% 이관.
+
+■ 산출물
+Assets/Art/Units/희귀함_유재헌/희귀함_유재헌.fbx (뼈 21 · 삼각형 37,100)
+Assets/Art/Units/희귀함_유재헌/Textures/Character_in_Suit_wit_0325145158_texture.png
+
+■ 판정
+크기(m): 가로 1.684 · 세로(키) 1.8 · 앞뒤 0.313 · 최저 z 0.0
+가중치 없는 뼈 없음, 무가중치 정점 0개.
+렌더(스크래치): /tmp/light_render_final/희귀함_유재헌_front.png · _side.png — 깨끗한 T자, 팔이
+정확히 수평, 갈색 블레이저·빨간 넥타이 텍스처 정상, 어깨 뭉침 없음(위 버그 수정 후 확인).
