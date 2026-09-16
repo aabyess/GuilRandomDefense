@@ -1,0 +1,32 @@
+전설적인_김건(YM파행동대장) — 사장님이 전설적인_이시원(제파)과 같은 원본을 보내심(2026-09-17).
+원본(보존): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_김건.zip · sha256 810c78364077fcfcfdaa223ce625f369c7f59ec36b146ae894bfe0249491443e (= 전설적인_이시원.zip)
+산출: 전설적인_이시원의 검증된 FBX·Textures를 복사(파일명만 전설적인_김건.fbx). 아래는 원본 유닛의 기록.
+
+출처: 원피스 바운티러시 제파(pl_zephyr_orig01) 추출. 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/06_전설적인/전설적인_이시원.zip
+  3,846,896 bytes · sha256 810c78364077fcfcfdaa223c… · 안에 source/zephyr.rar(안에 zephyr/pl_zephyr_orig01 (merge).fbx + _diff.png + _dyanagan_diff.png + 안 쓰는 dither)
+받은 날: 2026-09-17 · 유닛: 전설적인_이시원 (별명 일러스트레이터, 전설적인)
+
+원본 상태(blender 실측): FBX 7300 · ×0.01 · 뼈 67 · 빈 오브젝트 14 · 메시 18 · 재질 3(orig01 · _dyanagan · _dyanagan_trans) · 전 메시 무가중치 0 · 기본 = 결합 자세 · 이미 T자.
+  레일리(희귀함_이승우)·시류와 같은 pl_ 리그(PL_RENAME).
+  🔴 오른손 메시·RHand_Palm 뼈가 없다 — **배틀스매셔가 오른손 자체(의수)**. RArm_Fore 밑 weapon_root(손목 자리, 스매셔 499정점)와 그 자식
+    weapon_slide·wrist·finger_01~03·tube_01~05·parts_01~03에 실려 있고, 통이 팔과 수직으로 앞뒤(원시 y −0.016~+0.019)로 뻗는다.
+  🔴 다이나건 통(dynagan_container·stone·glass)은 스매셔 앞끝에 끼워져 있는데 뼈 dynagan_joint가 **world_joint 직속**(팔을 안 따라감).
+  cartridge(탄창)는 뿌리 직속 cartridge_joint에 실려 발밑 원점에 떠 있다.
+  겹친 변형: face_normal/attack/damage/sp · l_hand_open/close · battlesmasher_open/close(집게).
+  🔴 _diff 알파는 음영 마스크(최소 0.05 · 평균 0.755 · 100%가 0.98 미만) · _dyanagan_diff도 0.61~1 → 둘 다 archive_rgb로 알파 뗌.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「전설적인_이시원」으로 재현.
+  - 남긴 변형: face_normal · l_hand_open · battlesmasher_close(open은 집게가 벌어져 가로를 키움). 뺀 것: face_attack/damage/sp · l_hand_close · battlesmasher_open ·
+    dynagan_glass(투명 재질이라 불투명으로 나가면 통을 덮음) · cartridge(발밑에 뜬 탄창) + cartridge_joint · 가중치 0 뿌리 world_joint.
+  - 스매셔는 무기 규칙 예외(오른손 자체)로 남김 — **weapon_root를 mixamorig:RightHand로 매핑**(휴머노이드 필수 뼈), weapon_* 자식 14개 → RightHand로 합침.
+  - dynagan_joint를 RightHand 밑으로 다시 붙이고 dynagan_* → RightHand로 합침(Idle에서 통이 스매셔를 따라감).
+  - 보조 뼈 합치기(PM 09-17 방침): coat_root 사슬·깃·bodyparts 19개 → Spine1 · RArm_Clavicle 밑 코트·깃 7개 → RightShoulder · L/RHand_Fore_sup → ForeArm · Inhaler_joint → Head.
+  - 키 1.8 m · 발 z 0 · 정면 −Y · orient_snap(정면 −3°).
+
+검증(blender): FBX 605,388 bytes · sha256 abf9a27d65d691c7e911cb81… · 뼈 21 · 메시 11(정점 6,750) · 크기 1.992 × 1.954 × 1.8 m · 최저 z 0.
+  🔸 가로 1.992 m = 키 20 기준 약 22.1(26 미만) · 깊이 1.954 m = 약 21.7(스매셔 통이 앞뒤로 뻗은 탓).
+  원시 FBX: 쉬는 스킨↔원시 0.0003 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 8.5(상위1% 1.16) · 유니티 공용 idle.fbx 옮겨 입힘 최대 10.62(오른어깨 견갑, 상위1% **1.313**).
+  판정 렌더: 스크래치 pl/zephyr/j1 · pl/zephyr/b1(zp_idle_*) — 오른팔 끝 스매셔+붉은 다이나건 통, 왼어깨 코트·견장, 선글라스·흡입기.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
