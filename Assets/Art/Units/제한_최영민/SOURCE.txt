@@ -1,0 +1,22 @@
+출처: 원피스 바운티러시 빈스모크 이치지(pl_ichiji_orig01 (merge)) 추출. 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/07_제한됨/제한_최영민.zip
+  3,703,724 bytes · sha256 44cae00eb2015022b5b6bc74… · 안에 source/ichiji.rar(안에 ichiji/pl_ichiji_orig01 (merge).fbx + _diff.png)
+받은 날: 2026-09-17 · 유닛: 제한_최영민 (제한됨)
+
+원본 상태(blender 실측): FBX · ×0.01 · 아마추어 pl_ichiji_orig01 · 뿌리 world_joint · 뼈 67 · 빈 오브젝트 14 · 메시 16 · 재질 1 · 전 메시 무가중치 0 · 이미 T자 · 무기 메시 없음.
+  시류·레일리형 pl_ 리그(PL_RENAME 21뼈).
+  겹친 변형: face_normal/attack/damage/sp01 · 손 l/r_hand_open/close/sp01/sp02. glasses(선글라스).
+  보조 뼈: 코트 coat_root·b_c/b_l/b_r_coat_01~03·f_coat_01~03·l/r_coat_01~05·l/r_coat_shoulder·b/f/l/r_collar · 목도리 scarf_root·scarf_01/02(+_sub) ·
+    머리 b/f_hair_01(Head 자손) · 자락 b/f_l/r_suso·l/r_suso·belt_01 · L/RHand_Fore_sup.
+  🔴 _diff 알파는 음영 마스크(최소 0.03 · 평균 0.815 · 100%가 0.98 미만) → archive_rgb로 알파 뗌.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「제한_최영민」으로 재현.
+  - 남긴 변형: face_normal · l/r_hand_open · body · coat · hair · glasses. 뺀 것: face_attack/damage/sp01 · 손 close/sp01/sp02 · 가중치 0 뿌리 world_joint.
+  - 보조 뼈 합치기(PM 09-17 방침): 코트·깃·목도리 34개 → Spine1(깃·코트 어깨 뼈의 어깨 오매핑 후보 없어짐) · 머리 2 → Head · 자락·벨트 7 → Hips · L/RHand_Fore_sup → ForeArm.
+  - 키 1.8 m · 발 z 0 · 정면 −Y.
+
+검증(blender): FBX 573,340 bytes · sha256 4c7d1dc3af426289f35785fa… · 뼈 21 · 크기 1.728 × 0.701 × 1.8 m · 최저 z 0.
+  원시 FBX: 쉬는 스킨↔원시 0.0003 mm · 정점 7,877 · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 3.42(상위1% 1.18) · 유니티 공용 idle.fbx 옮겨 입힘 최악 2.32(상위1% **1.233**).
+  판정 렌더: 스크래치 pl/ichiji/b1(j_T_front · i_idle_*) — 붉은 제복 66·흰 망토·붉은 머리·목도리.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
