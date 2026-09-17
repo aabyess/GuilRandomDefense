@@ -1,0 +1,49 @@
+초월_노태현_AP (쿠로츠치 마유리, Bleach Mobile) 스킨 출처 — PM 사양(2026-09-18, 착수 전 원문 보존)
+
+원본: ~/Desktop/구랜디스킨모음/08_초월/초월_노태현_AP.zip → source/cha_mayuri.fbx +
+  textures/cha_mayuri.png·cha_mayuri_wp.png.
+
+PM 실측 사양 원문:
+- 메시 2 · 무가중치 0 · UV 'Attribute' 1층.
+- cha_mayuri_0(4,755정점, 몸) 유지 · cha_mayuri_wp_0(1,745, 무기 아시소기 지조) → 뺌 + 뼈
+  weapon_01·weapon_02·weapon_case·cha_mayuri_wp.
+- 뼈 56: 뿌리 cha_mayuri → Bip01 · 손가락 Finger0~2×2(→Hand) · Bone_eyes·Bone_mouth·
+  Point_eye_L/R(→Head) · Bone_arm_L/R_01~02(팔 보조 — 부모 따라 위팔/아래팔로) ·
+  Bone_cloth_L/R_01~04(옷자락 → Hips/UpLeg) · 끝 cha_mayuri.001 제거.
+- Spine·Spine1만. 관절 단면 실측·필수 15뼈·OPAQUE. 텍스처는 cha_mayuri.png만.
+- 원작 모습: 얼굴 화장·머리 장식·긴 하오리 — 한 겹 옷자락이면 뒷면 잘림 확인(유기 교훈).
+
+빌드 스크립트: Tools/blender/gen_biped_skin.py (SKINS["초월_노태현_AP"])
+  실행: /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
+        --python Tools/blender/gen_biped_skin.py -- 초월_노태현_AP
+
+직접 재확인한 것(빌드 전 조사):
+- 뼈 56개·부모 관계 전부 PM 목록과 일치.
+- 척추가 Bip01 Spine·Spine1 2마디뿐(Spine2 없음, 타시기와 같은 패턴 — 여긴 Clavicle이
+  Neck에 직접 붙음, 직접 확인) → Bip01 Spine1→Spine2로 매핑, Spine1은 Bip01 Spine 꼬리에
+  0-길이 자리표시(bone_position_override, allow_dead_bones).
+- Bone_arm_L/R_01(부모 Forearm)→ForeArm, Bone_cloth_L/R_01·03(부모 Pelvis, 각각 독립 뿌리
+  둘)→Hips, 전부 fold_subtree로 자손(_02, _04) 포함 처리.
+- weapon_01/02·weapon_case·cha_mayuri_wp — 드롭한 무기 메시 전용이라 실제 가중치는 없지만
+  "모든 뼈를 매핑해야" 하는 파이프라인 요구사항 때문에 안전한 기존 대상(Hips/RightHand)으로
+  접어둠(가중치 0 기여, 결과에 영향 없음).
+- 손가락은 biped_rename_table의 기본 {side}Hand 접기를 그대로 사용(타시기 교훈 이미 반영됨).
+
+🔴 버그 발견·수정(2026-09-18) 둘:
+1. rename에 biped_rename_table()의 기본 "Bip01 Spine2"(실존하지 않는 이름) 항목을 남긴 채
+   Spine1→Spine2로 덮어쓰면, 뼈대 재구성 시 이름 뒤집기(reverse)가 삽입 순서상 없는 이름을
+   다시 골라 KeyError가 났다 — 그 항목을 명시적으로 빼도록 gen_biped_skin.py SKINS 항목
+   작성 패턴을 수정(다른 유닛에도 이 패턴 적용 시 참고).
+2. FBX가 참조하는 텍스처 경로가 source/ 폴더 바로 밑을 가리키는데 실제 파일은 zip의
+   textures/ 안에 있어(직접 확인: 크기 (0,0), 못 찾음) texture_direct로는 안 됨 —
+   texture_file(tex_member)로 실제 위치에서 새로 불러오도록 변경.
+
+검증 결과(2026-09-18, 실측 — 최종 FBX 재임포트로 직접 재검사):
+- 뼈 22개, 매핑 안 된 뼈 0, 가중치 0 뼈 0(Spine1 제외 — 자리표시, 정상).
+- 무가중치 정점 0개(전체 4,755개 중).
+- 크기 [1.85, 0.659, 1.8]m(T자 폭 비율 1.03, 정상).
+- 재질 1개 실제 텍스처(256×256) 확인. Textures/ 폴더 파일 1개만(오염 없음).
+
+주의:
+- 원본 zip은 삭제 금지.
+- 하오리(옷자락) 뒷면 잘림 여부는 렌더로 직접 확인 못 함 — PM 인형 사진 판정 요청.
