@@ -1,0 +1,62 @@
+초월_신문철_AP(신문철) — 육도 나루토(Naruto Shippuden, NUNS 계열 팬 리그 FBX), 2026-09-18
+
+■ 출처
+~/Desktop/구랜디스킨모음/08_초월/초월_신문철_AP.zip
+sha256: 7a3075a2931b4d99d0753ce9f34f257e2bd067980b5ac4da5129e6ebbb9eb854
+outer zip 안 source/naruto-shippuden.zip(zip 안 zip) 안 source/untitled.fbx. 텍스처는
+outer/textures/(Untitled195·196·198·Eye.png·Weapon.png, 안쪽 zip에도 자체 textures/가
+있지만 이름이 겹쳐 바깥 것을 씀). 아마추어 뼈 342개 전부 직접 확인. 메시 1(20,632정점·
+28,493면), 재질 슬롯 25개(공백 포함 자체 이름: jacket1·kami1/11~13·kao1/2·teeth·tongue·
+wep01.001·wep02.001·body1/2/6·hand·eyel/eyer·sphere001~008). 원본 A자(손 허리 높이).
+
+■ 정리 내용 (Tools/blender/gen_valvebiped_skin.py — 이미 있는 리그 이름만 바꾸는 계열)
+- 뼈 이름이 "body pelvis" 식 공백 포함 자체 규칙(3ds Biped 아님) — rename 직접 사용.
+- 척추 2마디뿐(body upper·body spine1) → body spine1=Spine2, Spine1은 body upper의
+  tail에 자리표시(무가중치 허용, 신문철/이치고와 같은 패턴).
+- 🔴 "head head extra" 밑에 머리카락(hair left/right/top 01~09)·얼굴(head face 01~03)·
+  입(mouth upper/lower·teeth·tongue·chin)·눈꺼풀·눈썹·포니테일·이마보호대 끈(cloth
+  headband)·눈 전부가 서브트리로 매달려 있어(직접 확인) 뿌리 하나만 Head로 접어 한 번에
+  처리(PM 목록보다 간단하게 끝남). "unused head neck"·"head neck left/right/back"은 그
+  서브트리 밖(body spine1 직계 자식)이라 따로 Neck으로 접음.
+- 재킷 자락 흔들뼈(cloth jacket front/side/back left/right, body spine1 직계) + 장식
+  구슬(body ball root 01~08, 육도모드 챠크라 구슬 — 원작 그대로 몸 주위에 뜸, 정상)도
+  Spine2로 접음.
+- 🔴 실측 발견 — "leg left/right foot extra 01~05"를 처음에 전부 Foot으로 접었더니
+  LeftLeg·RightLeg(정강이)가 무가중치로 나왔다(직접 확인: "leg left leg2" 자체는 정점
+  그룹조차 없음, 원본이 정강이 자체엔 가중치를 안 두고 옆에 붙은 붕대 장식 뼈로 대신
+  받는 구조). 부모 뼈 기준으로 다시 나눔 — extra 01·02(부모 leg1=허벅지)→UpLeg,
+  extra 03·04·05(부모 leg2=정강이, hem 포함)→Leg. 재확인 결과 정상 확보.
+- 팔: shoulder→Shoulder·arm1→Arm·arm2→ForeArm·hand→Hand, 손가락 5×3(thumb/index/
+  middle/ring/pinky) 첫마디를 Hand로 접음, arm extra 01~03(arm1 자식)→Arm, arm extra
+  04~06+sleeve(arm2 자식)→ForeArm.
+- 🔴 무기(wep01.001·wep02.001, 육도모드 구도옥/지팡이 추정)는 몸과 같은 메시 오브젝트에
+  재질 슬롯만 다르게 붙어 있어 drop_meshes로 못 뺌 — cfg["drop_materials"](이번에 새로
+  추가한 기능, gen_valvebiped_skin.py 일반화)로 그 재질이 걸린 면만 bmesh로 지움. 뼈
+  (weapon 01/02 root)는 각각 반대편 Hand로 접어 매핑 오류 없이 정리.
+- 🔴 재질 25개 전부 텍스처 노드 자체가 없었음(직접 확인, bpy.data.images 빈 배열) — 전부
+  texture_file로 새로 연결. 이름만으로는 대응이 안 맞아(kao1/2를 처음에 Untitled198로
+  연결했더니 렌더에서 얼굴이 단색 금색 실루엣으로 나옴 — 198이 그냥 단색 실루엣 마스크였음)
+  렌더로 직접 대조해 Untitled196(뺨 살구색 패치+수염자국 확인)으로 바꿈, 몸/손/장신구는
+  Untitled195(고리·쉼표 무늬, 배·목 장식과 일치 확인)로 정상 렌더 확인.
+- 🔴 UV0 범위가 [2.63, 1.91](정상 [0,1]의 몇 배)로 넓게 나오지만(신문철 이전 캐릭터들과
+  다른 유별난 수치) 렌더로 확인한 결과 텍스처가 밀리거나 깨지지 않고 정상 출력됨(반복
+  타일링 배경이라 큰 범위에서도 무리 없이 보이는 것으로 추정) — 히소카식 UV0 퇴화(면적
+  과소)와는 다른 종류(면적 과다)라 일단 렌더 결과로 판단, 문제 생기면 재검토.
+- level_arms로 A자→T자(좌우 대칭, Shoulder 4.3°·Arm 41.7°·ForeArm 0.1° 굽음 보정).
+- 감량 없음(28,493면 유지).
+
+■ 산출물
+Assets/Art/Units/초월_신문철_AP/초월_신문철_AP.fbx (뼈 22 · 정점 27,485 · 재질 23(무기 2개 면 삭제 후 실질 사용))
+Assets/Art/Units/초월_신문철_AP/Textures/(Untitled195·196·Eye.png)
+
+■ 판정
+크기(m): 가로 1.555 · 앞뒤 0.649 · 세로(키) 1.8 · 최저 z 0.0
+매핑 안 된 뼈 없음, 무가중치 정점 0개.
+
+■ 초월 등급 특이사항 — 유니티 맵 인형 판정 불가(PM 안내)
+블렌더 자체 렌더로 (1) T자 정면 (2) 다리 앞뒤로 벌린 걷기 자세(측면) (3) 어깨 내리고
+팔꿈치 굽힌 자세 직접 검증(라이토 교훈 + 오쿠야스/토지에서 나온 다리 융착·소매 안 따라옴
+교훈). 다리 완전히 분리(붙은 원통 없음), 팔이 굽힘에 자연스럽게 따라옴(위팔 굵기 정상,
+뒤틀림 없음), 챠크라 구슬 8개가 원작대로 몸 주위에 뜬 채 유지.
+렌더(스크래치): /tmp/naruto_render2/front_tpose.png(정면 T자) · legs_spread_side.png
+(걷기 자세, 다리 분리 확인) · bend_front_view.png(어깨 내리고 팔꿈치 굽힘, 정상).
