@@ -1,0 +1,25 @@
+출처: 블리치 모바일 게임 립 바라간 루이센방 해방형(bailegangwanjie_0_battleout = 巴勒岡 卍解, Noesis로 glb 변환). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/08_초월/초월_임장혁_AD.zip · 3,044,147 bytes · sha256 8b11a4d5e40b98de75202367e0813dcb…
+  zip 안 source/bailegangwanjie_0_battleout.glb(2,891,676 bytes) + textures/ 7장(tex00~06 — 안 씀, 재질은 glb 내장 이미지 원본 바이트로 뽑음).
+받은 날: 2026-09-18 · 유닛: 초월_임장혁_AD (초월, 별명 임장혁)
+
+원본 상태(blender 실측): 스킨 1 · 뼈 78(Biped Bip001 + Bone028~078) · 메시 7 + 조명 Icosphere · 재질 7(OPAQUE) · 애니 19 · 삼각형 8,914 · 결합 자세 키 약 2.0 · 손가락 2×2.
+  모습: 왕관 쓴 해골 · 털 옷깃 · 보라 줄무늬 넝마 로브 · 왼손에서 늘어진 사슬.
+  🔴 wing_0(5,963정점)은 날개·망토가 아니라 **옆에 세운 큰 양날 도끼(그란 카이다)와 사슬**(렌더 스크래치 barr/look.png) — 뿌리 bailegangwanjie_0_battle·Bip001 Prop1·Bone061~078에 실림.
+  넓적다리·Pelvis·Neck 가중치 0(로브가 덮음).
+
+정리: 2026-09-18 blender — Tools/blender/fix_unit_fbx.py UNITS 「초월_임장혁_AD」(긴·코마무라 설정 재사용).
+  - use_rest_pose(애니 19) → tpose_arms로 T자 · biped_rename(손가락 2×2, Spine2).
+  - 뺀 메시: Icosphere · wing_0(도끼). 뺀 뼈: bailegangwanjie_0_battle · Bip001 · Bip001 Prop1 · Bone061~071·073~078(도끼 사슬).
+  - 합친 뼈: Head 밑(head·leye·mouth·reye) → Head · 왼손 사슬·소매 Bone049/050/052/053/058/059 → LeftForeArm · Bone055/056 → RightForeArm ·
+    로브 앞 자락 사슬 Bone028~031 → Spine2 · 로브 앞·옆·뒤 자락 Bone033~047 → Spine.
+  - smooth_weights 몸 메시 3회(1회차 Idle 상위1% 1.54·최대 14.3 — 털 옷깃 짧은 변의 Spine2/Shoulder 몫 끊김).
+  - 가중치 0 Hips·UpLeg·Neck 씨앗 0.001 · 키 1.8 m · 발 z 0 · 정면 −Y.
+재질 → 텍스처(glb 이미지 인덱스, 원본 바이트): bailegangwanjie_body(0) · face(1) · hair(2) · leye(3) · mouth(4) · reye(5) → bailegang_*_baseColor.png.
+
+검증(blender): FBX 498,780 bytes · sha256 e74970be53515ca0f2458775… · 뼈 30 · 정점 4,643 · 크기 2.299 × 1.579 × 1.8 m(T자 — 넓은 소매·퍼진 로브 자락) · 최저 z 0.
+  쉬는 스킨↔원시 0.0088 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 1.34(상위1% 1.02) · 유니티 공용 idle.fbx 옮겨 입힘 최악 3.18(상위1% **1.30**, 옷깃 뒤).
+  뒷면 자르기 렌더 정상(barr/cull.png).
+  판정 렌더(초월은 이 렌더가 최종 판정): 스크래치 barr/rr(i_idle_f79_front · i_idle_f79_side · j_arms45_knees90_front) · barr/rr/sheet.png.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
