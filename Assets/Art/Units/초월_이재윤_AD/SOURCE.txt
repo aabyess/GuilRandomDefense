@@ -1,0 +1,47 @@
+초월_이재윤_AD (옷코츠 유타, Jujutsu Kaisen Sketchfab) 스킨 출처 — PM 사양(2026-09-18,
+착수 전 원문 보존)
+
+원본: ~/Desktop/구랜디스킨모음/08_초월/초월_이재윤_AD.zip → source/Sketchfab_2023_11_04_19_44_13.blend
+  하나(텍스처는 blend 안에 packed 29장 — 대부분 부위별 단색/그라데이션 조각).
+
+PM 실측 사양 원문:
+- 아마추어 "Yuta Okkotsu Rig" 뼈 157(Rigify metarig: spine~spine.006 · face·nose·lip·jaw·
+  ear·brow·lid… → Head, 팔다리 upper_arm/forearm/hand/thigh/shin/foot 예상) + "Sword Rig"
+  (뼈 1) → 칼 리그와 Sword 메시(칼, x 0.3~0.86) 뺌.
+- 메시 6(hair·hands·head·pants·shirt·shoes, 각 1~1.6천 정점, 무가중치 0) · 수정자 SUBSURF +
+  SOLIDIFY + ARMATURE — SOLIDIFY + 재질 OH_Outline_Material은 뒤집힌 외곽선 껍데기라 제거
+  (셀 교훈), SUBSURF는 적용해서 모양 살리되 삼각형 수 확인(목표 3~5만).
+- 메시당 재질 3~9개(skin·shadow·highlight 등 단색 조각 텍스처) — 전부 packed 이미지
+  내보내기로 Textures/에, OPAQUE.
+- 키 약 1.81 · 손(hands 메시)이 따로 · 팔 roll 표준화·관절 단면 실측·필수 15뼈.
+
+빌드 스크립트: Tools/blender/gen_rigify_skin.py (SKINS["초월_이재윤_AD"], 카스미 설정 재사용)
+  실행: /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
+        --python Tools/blender/gen_rigify_skin.py -- 초월_이재윤_AD
+
+직접 재확인한 것(빌드 전 조사):
+- 아마추어 2개(Yuta Okkotsu Rig 157뼈 + Sword Rig 1뼈) 확인 — armature_name으로 본체 특정
+  (카스미의 Blade Rig 문제와 같은 함정, 같은 해법).
+- 비-얼굴 뼈 66개가 카스미와 정확히 같은 이름 규칙(spine~spine.006·pelvis.L/R·heel.02.L/R)
+  — 카스미의 rename/fold/fold_subtree 그대로 재사용 가능 확인.
+- 재질 20개(Sword 제외) 전부 이미 Emission→TEX_IMAGE(packed) 직결, 정점색 없음 —
+  emission_texture 그대로 사용.
+- 파이프라인은 .data 원본만 사용해 SUBSURF·SOLIDIFY(OH_Outline 셸 포함) 모디파이어를
+  평가하지 않아 자동으로 무시됨 — 별도 처리 불필요, OH_Outline_Material은 기존
+  outline_material_names 기본값으로 자동 제거.
+
+🔴 새 기능 추가 — SUBSURF(레벨2) 적용하면 원본 15,178삼각형이 약 16배(24만대)로 불어나서,
+gen_rigify_skin.py에 apply_subsurf cfg 옵션을 새로 추가(SOLIDIFY는 지우고 SUBSURF만
+modifier_apply, ARMATURE는 그대로 둬 가중치 보존). 이 유닛은 자동가중치(bone heat)가 아니라
+원본 리그 가중치를 그대로 이어받는 방식이라 감량 비율을 0.3 밑으로 내려도 하나미·코라손이
+겪은 "bone heat 전체 실패" 위험이 없음 — 0.17로 목표(3~5만) 달성.
+
+검증 결과(2026-09-18, 실측 — 최종 FBX 재임포트로 직접 재검사):
+- 뼈 22개, 매핑 안 된 뼈 0.
+- 무가중치 정점 0개(전체 21,662개 중). 소스 자체 무가중치 133개는 최근접 정점으로 채움.
+- 크기 [1.707, 0.384, 1.8]m(T자 폭 비율 0.95, 정상).
+- 삼각형 248,224(SUBSURF 적용 후) → 42,197(목표 3~5만 달성).
+- 재질 20개, Textures/ 폴더 파일 정확히 20개(오염 없음).
+
+주의:
+- 원본 zip은 삭제 금지.
