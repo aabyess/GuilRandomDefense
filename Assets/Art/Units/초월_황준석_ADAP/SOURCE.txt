@@ -1,0 +1,70 @@
+초월_황준석_ADAP (쿠자/아오키지, One Piece Fighting-mobile 하치노스판) 스킨 출처 — PM 사양
+원문 보존(2026-09-18, 착수 전)
+
+원본: ~/Desktop/구랜디스킨모음/08_초월/초월_황준석_ADAP.zip
+  → source/opds___kuzan__hachinosu__by_o_dv89_o_djj3jxr.rar(bsdtar) 안
+    「OPDS - Kuzan (Hachinosu)/role_shifanduiqingzhi_skin.fbx」(같은 폴더 .blend·.blend1·
+    xps.xps 있음, PM 지시대로 FBX 우선) + zip textures/tex_role_kuzan_shifan.png.
+
+PM 사전조사(헤드리스): 아마추어 role_shifanduiqingzhi_skin 뼈 128 · 메시 1(role_kuzan_shifan,
+11,682정점) · 재질 1 · 무가중치 0.
+- 🔴 팔 본체 UpperArm·Forearm이 가중치 0이고 보조 뼈(niuqu·ForeTwist 등)가 실음 → 본체로
+  합칠 것. 기본 자세가 전투 자세일 수 있음 → 결합 자세 기준.
+- 얼굴 보조 뼈(eye·meimao·xiaba·zuichun 등) → Head · 옷자락 사슬 → Hips/Spine.
+- 🔸 키 큰 체형(쿠잔 3m급) — 비율 유지.
+- roll 표준화·관절 단면·필수 15뼈·OPAQUE · Idle 렌더 판정 보고.
+
+직접 재확인한 것(빌드 전 조사, 헤드리스):
+- 뼈 128개, 메시 1개(11,682정점/15,601면), 재질 1개(tex_role_kuzan_shifan_mat_01) — 전부
+  PM 사전조사와 일치.
+- 3ds Biped 표준 이름("Bip001 X", biped_rename_table("Bip001") 그대로 재사용 가능) —
+  Pelvis·Spine·Spine1·Spine2·Neck·Head 전부 있음(Spine2 없음 패턴 아님, 마유리·가프·쵸파와
+  다름).
+- PM이 경고한 "본체 0·보조 뼈가 실음" 패턴 직접 확인: "Bip001 L UpperArm"·"Bip001 L
+  Forearm"은 정점그룹 자체가 없음(0표가 아니라 그룹 자체 부재) — 대신 "Bip001 LUpArmTwist"
+  (167정점, 위팔 몫) · "Bip001 L ForeTwist"(128)+"Bip001 L ForeTwist1"(338, 아래팔 몫)가
+  실제로 물려 있음 → fold로 UpArmTwist→Arm, ForeTwist(+1)→ForeArm에 합침(우·좌 동일).
+  PM 사전조사의 "niuqu"라는 중국어 명칭과는 다른(3ds Biped 표준) 이름이었지만 같은 패턴.
+- 얼굴·옷자락 보조 뼈 실측 — bone06~10(Head 자식 5개)→Head. bone01·Dummy001(L Clavicle
+  자식)→LeftShoulder, bone03·Dummy002(R Clavicle 자식)→RightShoulder. bone11~15·17~20+79·
+  23~38·40~43·45~49·51~55·Dummy003·4(전부 Spine2 자식 트리, 케이프/코트 천 시뮬레이션 뼈로
+  추정 — 실측 80여 개)→Spine2. bone57~59·61~63·65~67·69~71·73~75·77+21+22(Spine 자식
+  트리)→Spine. fold_subtree로 뿌리만 적어 자동 하위 전개.
+- 무재질 오소그래픽 렌더로 자세 직접 확인 — PM 경고대로 결합 자세가 T자가 아니라 "쿨하게
+  선" 액션 포즈에 가까움: 한쪽 팔이 앞으로 살짝 뻗고 다리는 자연스러운 보행 자세(깊은
+  전투 크라우치는 아님), 긴 코트/케이프가 한쪽으로 크게 젖혀짐(에어록 바람에 날리는
+  연출 추정) — Corazon의 Mantle과 같은 부류지만 재질이 몸 전체와 하나뿐이라 재질 기준
+  rigid로 못 뺌(이미 원본 리그 가중치를 그대로 쓰는 파이프라인이라 케이프도 이미 Spine2
+  계열 시뮬레이션 뼈에 정상적으로 물려 있어 별도 강체 처리 불필요 — 뼈대 보존 방식이라
+  Bone Heat 실패 위험 자체가 없음).
+- level_arms=True로 팔만 사후 T자 교정. 다리는 이 파이프라인에 교정 기능이 없어 원본
+  자세 그대로 둠 — 깊은 크라우치가 아니라 큰 문제는 없을 것으로 보이나, 유니티 Idle
+  리타게팅에서 다리가 어색하면 추가 보고 예정.
+
+빌드 스크립트: Tools/blender/gen_biped_skin.py (SKINS["초월_황준석_ADAP"], 가프 설정 재사용)
+  실행: /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
+        --python Tools/blender/gen_biped_skin.py -- 초월_황준석_ADAP
+
+🔴 실측으로 밝혀진 것 — 무재질 렌더로 본 "액션 포즈"는 원본 메시 원시 좌표 자체에 얼어
+있던 것이었는데(포즈 뼈 자체도 항등이 아닌 잔여값이 남아 있었음, FBX BindPose 클러스터와
+편집 뼈 rest가 어긋난 전형적 3ds Max 내보내기 흔적으로 추정), 이 파이프라인은 편집 뼈
+rest(head_local/tail_local)만으로 새 22뼈를 다시 짓고 원본 스킨 가중치(포즈 무관)만
+그대로 옮기기 때문에 그 잔여 자세와 무관하게 재구성됐다 — level_arms 적용 후 렌더로
+직접 확인한 결과 다리도 별도 교정 없이 이미 자연스럽게 곧게 서 있었다(우려했던 다리
+교정은 불필요).
+
+검증 결과(2026-09-18, 실측 — 최종 FBX 재임포트로 직접 재검사):
+- 뼈 22개, 필수 뼈 전부 매핑됨(매핑 안 된 뼈 0).
+- 무가중치 정점 0개(전체 11,682개 중).
+- 크기 [1.677, 0.756, 1.8]m — 쵸파와 같은 방식(키 1.8 정규화, 비율로 큰 체형感 유지).
+- 팔 관절 길이 직접 확인(스쿠나·스모커 교훈 적용해 미리 점검) — LeftShoulder(쇄골)
+  0.075m·LeftArm(위팔) 0.227m·LeftForeArm(아래팔) 0.309m로 정상 범위(원본 리그 가중치를
+  그대로 쓰는 파이프라인이라 관절표를 직접 짜지 않아도 이 문제 자체가 없음).
+- 재질 1개, 텍스처 1024² 정상 확인.
+- 렌더(T자 앞·옆) 직접 확인 — 찢어짐·뜬 조각 없음, 팔 수평·다리 곧음·케이프 자연스럽게
+  대칭으로 늘어짐.
+
+주의:
+- 원본 zip은 삭제 금지.
+- 초월 등급은 유니티 인형 사진이 없어 Idle 판정이 안 됨 — 블렌더 쪽 팔45°·Idle 렌더
+  판정을 직접 하고 결과를 PM에게 보고할 것.
