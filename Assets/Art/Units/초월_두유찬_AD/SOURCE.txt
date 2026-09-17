@@ -1,0 +1,66 @@
+초월_두유찬_AD (게토 스구루/켄자쿠, Jujutsu Kaisen Sketchfab) 스킨 출처 — PM 사양 원문
+보존(2026-09-18, 착수 전)
+
+원본: ~/Desktop/구랜디스킨모음/08_초월/초월_두유찬_AD.zip → source/Sketchfab_2023_10_30_
+06_15_48.blend 하나(텍스처는 blend 안에 packed).
+
+PM 사전조사: 유타와 같은 제작자 .blend(Rigify "Kenjaku Rig" 뼈 159 · 메시마다 SUBSURF+
+SOLIDIFY+ARMATURE · Outline 재질) → gen_rigify_skin.py 유타 설정(apply_subsurf·외곽선
+제거) 그대로.
+- 메시 5(feet 2,317 · hair 2,473 · hands 1,128 · head 1,539 · robe 2,502) · 무가중치 0 ·
+  무기 메시 없음.
+- 🔴 hands가 z 0.40~2.21·x ±0.92 — 한 손이 머리 위(키 1.85보다 높음)로 든 포즈로 저장된
+  것 같음 → 현재 포즈가 아니라 rest(결합) 자세로 내보내고, rest도 손 든 자세면 T자로 펴기.
+- robe(오조 가사)는 넓은 소매·긴 자락 — 소매는 팔, 자락은 다리/Hips 반반(아이젠 교훈),
+  한 겹이면 양면.
+- 머리 재질 ear rings·teeth·tougue 등 유지, Outline 재질 면 삭제. 삼각형 3~5만.
+- 필수 15뼈·OPAQUE·Idle 렌더 판정 보고.
+
+직접 재확인한 것(빌드 전 조사, 헤드리스):
+- 메시 5개·아마추어 1개("Kenjaku Rig" 159뼈, PM 사전조사와 일치, 별도 무기 리그 없음).
+- 재질 확인: head(head skin·darker head skin·Inside of mouth·Inside of eye·ear rings·
+  teeth·tougue·eyes·eyelashes·Outline) · robe(top clothes·top clothes shadow·white·
+  bronze·darker bronze·green·darker green·shirt·Outline) · hands(hand skin·Outline) ·
+  hair(hair·hair highlight·Outline) · feet(bottom clothes·bottom clothes shadow·socks·
+  darker socks·sole·straps·Outline) — Outline 전부 기본 outline_material_names로 자동
+  제거, 나머지는 PM 지시대로 전부 유지(ear rings·teeth·tougue 포함).
+- 🔴 손 든 포즈 걱정 — 무재질 렌더로 REST(결합) 자세 직접 확인 결과 이미 깨끗한 좌우
+  대칭 T자(양팔 수평, 넓은 소매, 다리 곧음, 자락 발목까지) — PM 사전조사의 z 0.40~2.21
+  수치는 다른(포즈 적용된) 프레임에서 잰 것으로 추정, rest 자체는 정상이라 별도 교정
+  불필요(레벨 아즈나 교훈과 달리 이번엔 뼈 rest 좌표 자체가 이미 정상이었음).
+- 비-얼굴 뼈 25개가 카스미·유타와 정확히 같은 이름 규칙(spine~spine.006·shoulder/
+  upper_arm/forearm/hand.L/R·pelvis.L/R·thigh/shin/foot.L/R·heel.02.L/R) 확인 — 유타의
+  rename/fold/fold_subtree 그대로 재사용.
+- 재질 전부 이미 emission_texture 계열로 확인(유타와 같은 패턴).
+- SUBSURF+SOLIDIFY+ARMATURE 모디파이어 — 파이프라인은 .data 원본만 써서 두 수정자
+  자동 무시, apply_subsurf=True로 SUBSURF만 적용해 삼각형 수 확보(유타와 동일 옵션).
+
+빌드 스크립트: Tools/blender/gen_rigify_skin.py (SKINS["초월_두유찬_AD"], 유타 설정 재사용)
+  실행: /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
+        --python Tools/blender/gen_rigify_skin.py -- 초월_두유찬_AD
+
+🔴 실측으로 밝혀진 추가 문제 3건(빌드 중 발견·수정):
+1. "Kenjaku Head Texture "(끝 공백까지 원본, head skin 재질이 씀)가 소스 자체에서 누락
+   (packed=False·size=(0,0), 외부 OneDrive 경로만 남고 실제 파일이 .blend 안에 없음 —
+   산타나의 "//"이슈와 다른, 진짜 누락) → gen_rigify_skin.py에 새 cfg["image_substitute"]
+   기능 추가, 톤이 가장 가까운 손 텍스처(Kenjaku Hands Texture)로 대체(완벽히 같은 피부는
+   아니니 PM 판단 필요하면 보고).
+2. PM 사전조사에 없던 뼈 2개("Bone"·"Bone.001", upper_arm.L/R의 자식, 소매 커프스 장식
+   추정 — "Bone"만 robe에 실제 가중치 있음) → LeftArm/RightArm으로 fold.
+3. "spine.001"(→Spine)이 전 메시에서 가중치 0(직접 확인, robe도 spine·spine.002·003만
+   쓰고 건너뜀) — 죠나단·가프의 Spine1 없음과 같은 종류, 이번엔 Spine 자리
+   → bone_position_override로 spine.002 머리에 0-길이 자리표시, allow_dead_bones.
+
+검증 결과(2026-09-18, 실측 — 최종 FBX 재임포트로 직접 재검사):
+- 뼈 22개, 필수 뼈 전부 매핑됨.
+- 무가중치 정점 0개(전체 20,386개 중).
+- 삼각형 39,887(SUBSURF 적용 후 458,496 → decimate_ratio 0.087로 목표 3~5만 달성).
+- 크기 [1.961, 0.487, 1.8]m(폭비 1.09, 정상 — 넓은 소매 특유 형태).
+- 재질 26개 전부 실제 텍스처(대부분 4096²) 연결 확인, head skin도 대체 텍스처로 정상.
+- 합성 자세 렌더(팔 75°내림·무릎 70°굽힘) 직접 확인 — 찢어짐·뜬 조각 없이 소매가
+  자연스럽게 따라오고 로브 자락이 무릎 굽힘에 맞춰 자연스럽게 벌어짐.
+
+주의:
+- 원본 zip은 삭제 금지.
+- 초월 등급은 유니티 인형 사진이 없어 Idle 판정이 안 됨 — 블렌더 쪽 팔45°·Idle 렌더
+  판정을 직접 하고 결과를 PM에게 보고할 것.
