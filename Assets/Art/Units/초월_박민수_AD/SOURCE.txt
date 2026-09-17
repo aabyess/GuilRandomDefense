@@ -1,0 +1,24 @@
+출처: 주술회전 후시구로 토지 — 포트나이트 콜라보 립 Toji.fbx(뼈 없는 정적 메시, 텍스처는 FBX 안 Toji.fbm에 박혀 있음). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/08_초월/초월_박민수_AD.zip · 2,231,221 bytes · sha256 cb6245a6eb277b8f105bd996b7103ef9…
+  zip 안 source/Toji.fbx(2,190,220) + textures/ T_ApplePound_Head_CL.png · Body_CL.png · FaceAcc_CS.png.
+받은 날: 2026-09-18 · 유닛: 초월_박민수_AD (초월, 별명 박민수)
+🔸 2026-09-18 재리깅: 구현담당2 산출물이 유니티에서 2회 반려(오버사이즈 스웨터 소매가 팔을 안 따라감 · 어깨 솔기 찢김) → blender 세션이 gen_scan_rig.py로 새로 만들어 덮어씀.
+
+원본 상태(blender 실측): 뼈·스킨·애니 0 · 메시 3(Body 19,458정점 · Hair 8,790 · Head 6,842) · 재질 3 · 키 1.697 · A자(손이 허리 높이) · Body는 닫히지 않은 껍데기(경계 변 4,876).
+  🔴 재질 이름이 메시와 뒤바뀌어 있다: Hair 메시에 「Head」 재질 · Head 메시에 「Hair」 재질.
+  🔴 텍스처 짝은 **FBX에 박힌 것(Toji.fbm)** 기준이 정답: Body → Body_CL · Hair(=얼굴) → Head_CL · **Head(=머리카락) → FaceAcc_CS**(2048², 짙은 회청색).
+    재질 이름만 보고 Head → Head_CL로 묶으면 머리카락이 살색으로 나온다(1회차 실측 — 원본 렌더와 대조해 잡음).
+
+정리: 2026-09-18 blender — Tools/blender/gen_scan_rig.py UNITS 「초월_박민수_AD」.
+  - 관절(원본 좌표 단면 실측 toji2/verts.npz): 어깨 x 0.19 z 1.29 → 팔꿈치 0.40 z 1.16 → 손 0.55 z 0.94 → 손끝 0.597 z 0.88(A자 그대로 재고 straighten으로 T자) ·
+    가랑이 0.68 · 무릎 0.4 · 발목 0.06 · 다리 x ±0.15 · 목 1.33 · 머리 1.40 · 꼭대기 1.697.
+  - 가중치: bone heat(뼈에서 보이는 안쪽 부피로 퍼지니 헐렁한 소매 안의 팔 뼈를 제대로 잡는다 — 지오데식 표면거리로는 소매가 가슴에 더 가까워 반려됐던 부분) ·
+    빈 정점 31개만 가까운 가중치로(최대 1.1 mm) · 머리카락·얼굴 메시는 Head 강체 · 가랑이(0.66) 밑은 split_legs로 반대쪽 다리 몫 0.
+  - 뼈 22(mixamorig) · 키 1.8 m · 발 z 0 · 정면 −Y · 감량 없음.
+재질 → 텍스처: Body → T_ApplePound_Body_CL.png · Hair → T_ApplePound_Head_CL.png · Head → T_ApplePound_FaceAcc_CS.png(셋 다 원본 바이트, 1차와 같은 이름이라 .meta 유지).
+
+검증(blender): FBX 2,088,060 bytes · sha256 ef42e0501782a059ba515449… · 뼈 22 · 정점 32,823 · 크기 1.685 × 0.336 × 1.8 m(T자) · 최저 z 0.
+  쉬는 스킨↔원시 0.0002 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 5.73(상위1% 1.14) · 유니티 공용 idle.fbx 옮겨 입힘 최악 3.40(상위1% **1.28**, 왼 정강이).
+  PM 판정 렌더: 어깨 80° 내림 + 다리 앞뒤 35° 벌림 스크래치 toji2/rr/pose.png — 소매가 팔을 따라 내려오고 어깨 솔기 찢김 없음, 두 다리 따로 움직임.
+  판정 렌더(초월은 이 렌더가 최종 판정): 스크래치 toji2/rr(i_idle_f175_front · i_idle_f175_side) · toji2/rr/sheet.png · 머리 근접 toji2/b2/show.png.
