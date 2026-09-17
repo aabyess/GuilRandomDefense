@@ -1,0 +1,40 @@
+초월_박기찬_AD (료멘 스쿠나, Ryomen Sukuna, Jujutsu Kaisen) 스킨 출처 — 착수 전 원문 보존
+
+⚠️ 이 유닛은 PM이 원문 사양을 보내기 전, 압축(컨텍스트 요약) 중간에 조사가 끊겼다가 재개됨
+— 아래는 PM 원문 인용이 아니라 구현담당1이 직접 소스 파일을 열어 확인한 실측 사양이다.
+
+원본: ~/Desktop/구랜디스킨모음/08_초월/초월_박기찬_AD.zip
+  → source/untitled.zip 안 「Ryomen Sukuna.obj」(mtllib untitled.mtl 참조하지만 그 mtl
+    파일 자체가 없음 — usemtl 이름만 살아 있는 상태) + 바깥 zip 최상위 textures/에
+    T_CP_020_00_Hair_C.png · T_CP_020_00_Eyes_C.png · T_CP_020_00_Face_C.png ·
+    T_CP_020_00_Body_C.png 4장(Iris 전용 파일은 없음).
+
+직접 확인한 것(빌드 전 조사, 헤드리스):
+- 정점 14,856 · 면 28,156(삼각분할 기준). obj_import 직후 재질 15개가 이미 이름별로
+  갈려 있음(usemtl만으로 — mtl 파일 없이도 Blender obj_import가 면을 재질별로 쪼갠다):
+  Hair·Face·Eyes·Iris·ClothesA/B/C·Skin·Leg·ShoesA/B·Outline·Decal·DecayDecal·Toonline.
+- Outline·Toonline·Decal·DecayDecal 4개는 셀 교훈대로 외곽선/데칼 껍데기 재질 — 별
+  오브젝트가 아니라 재질로만 갈려 있어(drop_meshes 불가) 새로 만든 drop_materials로
+  그 재질을 쓰는 면부터 지운다.
+- 무재질 오소그래픽 렌더로 실루엣 직접 확인 — 이미 T자, 어깨~손목까지 넓게 늘어진
+  기모노형 소매 한 벌(자락은 발목까지, 다리가 안 갈리는 통옷 — 코라손·베가펑크와 같은
+  부류). Iris 전용 텍스처가 없어 Eyes_C를 공유(material_textures에서 같은 파일로 매핑).
+- 단면 실측(원본 키 174.26 기준 프랙션): 오른손끝 x=71.60(폭비 0.411)이 z frac 0.488(허리
+  높이 — 넓은 소매가 손목까지 아래로 처져 있다), 어깨선 x=20.8 at frac 0.82, 목~머리는
+  frac 0.84~0.99(폭 9~11 거의 일정). 최종 폭비 0.822(0.9 기준 미달, 늘어진 소매 특유
+  형태) → tpose_width_ratio=0.8로 낮춤(베가펑크와 같은 사유, 직접 실측 후 적용).
+
+🔴 새 기능 추가(gen_skin_rig.py obj_zip 갈래) — cfg["drop_materials"](재질 이름 집합,
+해당 재질 쓰는 면 삭제) + cfg["material_textures"](재질 이름 → extract_dir 기준 상대경로,
+같은 경로면 파일 한 번만 복사) 추가. 베가펑크의 paint_regions(재질 자체가 0개라 새로
+만듦)와 달리 이 소스는 재질 이름이 이미 올바르게 있고 텍스처만 없는 경우라 다른 처리가
+필요했다.
+
+빌드 스크립트: Tools/blender/gen_skin_rig.py (SKINS["초월_박기찬_AD"])
+  실행: /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
+        --python Tools/blender/gen_skin_rig.py -- 초월_박기찬_AD
+
+주의:
+- 원본 zip은 삭제 금지.
+- 초월 등급은 유니티 인형 사진이 없어 Idle 판정이 안 됨 — 블렌더 쪽 팔45°·Idle 렌더
+  판정을 직접 하고 결과를 PM에게 보고할 것.
