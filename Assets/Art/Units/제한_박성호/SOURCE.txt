@@ -1,0 +1,57 @@
+제한_박성호 (퍼펙트 셀, Dragon Ball Sparking Zero) 스킨 출처 — PM 사양(2026-09-17, 착수 전
+원문 보존)
+※ 박성호 동명(전설적인_박성호=간쥬)와 다름, 제한_ 접두 필수.
+
+원본: ~/Desktop/구랜디스킨모음/07_제한됨/제한_박성호.zip → source/Cell Perfect.zip 안
+  Cell Perfect.gltf+.bin + zip textures/ 9장.
+
+PM 실측 사양 원문(gltf JSON):
+- 스킨 1(Armature) 뼈 239: root·pelvis·spine 01~03·neck 01·head·head end + 얼굴 fb*
+  수백(facialbase·fbJaw·fbLip·fbEyelid…) → 전부 Head로. 팔다리 이름은 UE 규칙(공백 포함
+  「upperarm l」류).
+- 메시 14: OUTLINE 메시 4개(7_0001·0005·0007·0009) = 외곽선용 뒤집힌 껍데기 → 전부 뺌.
+  본체 7_0000(9,327 상체)·7_0002(4,200, 날개 포함 뒤로 −0.77·키 2.02)·7_0004(2,257 머리)·
+  7_0006(1,362 머리 볏 2.29)·7_0008(3,248 하체)·7_0014(1,206 얼굴 부분)·눈 4(EyeLB/LW/RB/
+  RW 62씩) 유지.
+- 재질 14개 전부 BLEND → OPAQUE로. 텍스처: *_di(색) 사용, *_li(조명 마스크) 무시.
+  hardparts_di.png는 82바이트(단색 1픽셀 추정).
+- 키 약 2.29(머리 볏 포함) · y-up · 날개가 등 뒤로 뻗음(원작 신체라 유지, 앞뒤 확인).
+- 필수 15뼈 가중치>0 · 관절 단면 실측 · 알파 OPAQUE.
+
+빌드 스크립트: Tools/blender/gen_biped_skin.py (SKINS["제한_박성호"])
+  실행: /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
+        --python Tools/blender/gen_biped_skin.py -- 제한_박성호
+
+직접 재확인한 것(빌드 전 조사):
+- 뼈 239개, 메시 14개+Icosphere(조명 구, PM 목록에 없었음 — 직접 발견, 드롭 추가) 확인.
+- 척추 4마디(root→pelvis→spine 01/02/03→neck 01→head) mixamorig 6마디에 정확히 대응 —
+  죠나단·나루토와 달리 이번엔 자리표시 불필요.
+- Head 직계 자식(head end·facialbase·head eyeball right/left) 확인 — facialbase 밑에
+  fb* 수백 개가 서브트리로 달려 있어 fold_subtree 하나로 처리.
+- 손가락(middle/thumb/index/ring/pinky 01~03+end) → 각 01을 fold_subtree 뿌리로 {side}Hand.
+- 트위스트 뼈(upperarm/lowerarm/thigh/calf twist 01~03) → 해당 본체 뼈로 fold.
+- 날개(wing 01~06 l/r, spine 03 자식) — PM 지시대로 원작 신체라 유지, Spine2로 접어 가중치
+  보존(카스미 Cabbard·코라손 Mantle과 같은 원칙, 다만 여긴 fold라 auto-weight로 남음 —
+  별도 메시가 아니라 본체 메시 7_0002에 포함된 정점이라 rigid 대상이 아님).
+- 자세 확인: L UpperArm world z 1.628 → L Hand z 1.165, x 0.238→0.62 = A자(팔이 아래로
+  처짐) → level_arms로 T자 보정.
+- 재질 10개(Outline 4개 제외) 전부 이미 Principled+TEX_IMAGE(_di) 연결 확인, 정점색 없음
+  → texture_direct 재사용, wire_texture_direct·wire_image_material에 OPAQUE 강제를 새로
+  추가(이 유닛 계기, 다른 유닛에도 적용).
+
+검증 결과(2026-09-17, 실측 — 최종 FBX 재임포트로 직접 재검사):
+- 뼈 22개, 매핑 안 된 뼈 0, 가중치 0 뼈 0.
+- 무가중치 정점 0개(전체 21,848개 중).
+- 크기 [1.668, 0.779, 1.8]m(T자 폭 비율 0.93, 정상 — 날개 때문에 앞뒤도 어느 정도 있음,
+  정상 범위로 판단).
+- 재질 10개 전부 실제 텍스처(_di) 확인.
+- ⚠️ blend_method — 내보내기 코드에서 OPAQUE로 강제했지만, 재수입해서 확인하니 Blender
+  자체가 HASHED로 다시 표시한다(알파 연결은 실제로 다 제거했음 — Blender FBX 재수입 쪽의
+  자체 판정 방식일 가능성, FBX 포맷 자체엔 blend_method 개념이 없음). 유니티가 실제로
+  불투명하게 읽는지는 PM 확인 요청.
+
+주의:
+- 원본 zip은 삭제 금지.
+- 날개(wing 01~06)는 auto-weight로 Spine2에 접었다 — 별도 메시가 아니라 7_0002(상체+날개)
+  메시에 포함된 정점이라 rigid 강체 대신 자동가중치 폴드를 썼다. 팔다리 움직일 때 날개가
+  이상하게 안 따라가는지 확인 권장.
