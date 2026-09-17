@@ -1,0 +1,23 @@
+출처: 원피스 마샬 D. 티치/검은수염 — 중국 모바일 게임 립(heihuzi = 黑胡子, 3ds Max Biped) glb 「Marshall D_ Teach」. 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/08_초월/초월_김건_AP.zip · 5,350,261 bytes · sha256 27c2679d0aeaf7a2b785d7481c834125…
+  zip 안 source/Marshall D_ Teach.glb(4,605,088 bytes) + textures/heihuzi_shenti_1.png · heihuzi_pifeng_0.png(glb 내장과 같은 그림 — 재질은 glb 내장 원본 바이트로 뽑음).
+받은 날: 2026-09-18 · 유닛: 초월_김건_AP (초월, 별명 김건)
+
+원본 상태(blender 실측): 스킨 1 · 뼈 94(Bip001 · 손가락 5×3 · Bone01~41) · 메시 2 + 조명 Icosphere · 재질 2(OPAQUE, 이미지 알파 1.0) · 애니 12 · 삼각형 36,645.
+  heihuzi_shenti(26,034정점) = 몸·코트·모자·권총 · heihuzi_pifeng(6,025) = 모피 깃 망토.
+  🔴 가져온 자세는 애니 전투 자세 · 결합 자세는 선 A자(렌더 스크래치 teach/look.png).
+  보조 뼈: Head 밑 Bone01~03·16~23·41(모자 깃털·수염·얼굴·모자) · 쇄골 밑 Bone27/28 · Spine2 밑 망토 사슬 3줄(Bone04~15) · Spine 밑 배·권총 Bone24~26 ·
+  Spine 밑 코트 자락 사슬 6줄(Bone29~40, 좌 x>0 · 우 x<0) · 다리 뼈는 Spine 자식.
+
+정리: 2026-09-18 blender — Tools/blender/fix_unit_fbx.py UNITS 「초월_김건_AP」(쿠마 과거·토지 계열 + 아이젠 천년혈전 자락 반반).
+  - use_rest_pose(선 A자) → tpose_arms로 T자 · biped_rename(손가락 5×3, Spine2) · 뿌리 Bip001 · Icosphere 뺌.
+  - 합친 뼈: Head 밑 12 → Head · Bone28 → LeftShoulder · Bone27 → RightShoulder · 망토 사슬 12 → Spine2 · 배·권총 3 → Spine ·
+    코트 자락 좌 6 → LeftUpLeg 50%·Hips 50% · 우 6 → RightUpLeg 50%·Hips 50%(merge_bones share).
+  - 키 1.8 m · 발 z 0 · 정면 −Y · 체형 그대로(거구).
+재질 → 텍스처(glb 이미지 인덱스, 원본 바이트): Material.002 → heihuzi_pifeng.png(0) · Material.001 → heihuzi_shenti.png(1).
+
+검증(blender): FBX 1,733,148 bytes · sha256 6fc616d5d86dada364cd7605… · 정점 32,059 · 크기 2.055 × 1.239 × 1.8 m(T자) · 최저 z 0.
+  쉬는 스킨↔원시 0.0057 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 2.35(상위1% 1.10) · 유니티 공용 idle.fbx 옮겨 입힘 최악 2.97(상위1% **1.15**).
+  판정 렌더(초월은 이 렌더가 최종 판정): 스크래치 teach/rr(i_idle_f193_front · i_idle_f193_side · j_arms45_knees90_front) · teach/rr/sheet.png.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
