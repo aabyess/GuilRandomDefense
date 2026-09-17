@@ -1,0 +1,21 @@
+출처: 원피스 바운티러시 추출 제저스 버제스 2년 전(pl_burgess_orig01, 검은수염 해적단). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/08_초월/초월_구주호_AD.zip · 1,997,986 bytes · sha256 03609f74abc0916bf854c22bf0b71f58…
+  zip 안 source/Jesus Burgess - Blackbeard Pirates.7z → 「Jesus Burgess Blackbeard Pirates/」 pl_burgess_orig01.fbx(848,160) · pl_burgess_orig01_diff.png(823,287 — 텍스처는 이쪽) + zip textures/ 같은 이름.
+받은 날: 2026-09-18 · 유닛: 초월_구주호_AD (초월, 별명 구주호)
+
+원본 상태(blender 실측): 아마추어 「Armature」 · 뼈 42(뿌리 pl_burgess_orig01 → world_joint + model_root·eff_muzzle_a~c·pre/post_flag·HELPER_key/name 가중치 0) · 메시 11 · 재질 1 ·
+  ×0.01 · 이미 T자(기본 자세 = 결합 자세) · 무가중치 0 · 무기 없음 · _diff 알파 1.0 · 거구(팔·어깨 큼).
+  겹친 변형: face_normal/attack/damage · l/r_hand_open/close · l_hand_sp. hat·hair(c/l/r_hair)·body.
+
+정리: 2026-09-18 blender — Tools/blender/fix_unit_fbx.py UNITS 「초월_구주호_AD」(샹크스형 pl_ 리그, PL_RENAME).
+  - 뺀 메시: face_attack · face_damage · l/r_hand_close · l_hand_sp.
+  - 뺀 뼈: pl_burgess_orig01 · world_joint · model_root · eff_muzzle_a/b/c · pre_flag · post_flag · HELPER_key · HELPER_name.
+  - 합친 뼈: 머리카락 c/l/r_hair_01·02·joint_end → Head · L/RHand_Fore_sup → ForeArm. 남은 뼈 21.
+  - 키 1.8 m · 발 z 0 · 정면 −Y · 체형 그대로 · 알파 뗀 RGB PNG(archive_rgb).
+재질 → 텍스처: pl_burgess_orig01 → pl_burgess_orig01_diff.png.
+
+검증(blender): FBX 359,772 bytes · sha256 08644b243100221be6fe905a… · 뼈 21 · 정점 3,607 · 크기 2.673 × 0.568 × 1.8 m(T자 — 긴 팔) · 최저 z 0.
+  쉬는 스킨↔원시 0.0002 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 1.68(상위1% 1.22) · 유니티 공용 idle.fbx 옮겨 입힘 최악 4.69(상위1% **1.35**).
+  판정 렌더(초월은 이 렌더가 최종 판정): 스크래치 burg/rr(i_idle_f103_front · i_idle_f103_side · j_arms45_knees90_front) · burg/rr/sheet.png.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
