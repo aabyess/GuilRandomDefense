@@ -1,0 +1,22 @@
+출처: 블리치 모바일 게임 립 코마무라 사진(bocunwanjie_0_battleout, Noesis로 glb 변환). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/08_초월/초월_강주혁_AP.zip · 1,888,423 bytes · sha256 adc1e0e1eb3fbab2223eb3f291bec1c5…
+  zip 안 source/bocunwanjie_0_battleout.glb(1,799,244 bytes) + textures/ 6장(tex00~05 — 안 씀, 재질은 glb 내장 이미지 원본 바이트로 뽑음).
+받은 날: 2026-09-18 · 유닛: 초월_강주혁_AP (초월, 별명 강주혁)
+
+원본 상태(blender 실측): 스킨 1 · 뼈 45(3ds Max Biped Bip001) · 메시 7 + 조명 Icosphere · 재질 6(OPAQUE) · 애니 22 · 결합 자세 키 약 2.88(늑대 얼굴 거구) · 손가락 Finger0/1 두 마디.
+  몸 둘(같은 재질 bocun_body_0): bocun_body_0(2,182정점) + bocun_body_0_c(575, 소매·겉옷 층 — 긴과 같은 구조, 겹친 사본 아님).
+  bocun_weapon_0(칼, 215) · 보조 뼈: Bone005/007(쇄골 밑 어깨 갑옷) · Bone001~004·008(Pelvis 밑 갑옷 자락) · 얼굴 head·leye·mouth·reye(Head 밑).
+
+정리: 2026-09-18 blender — Tools/blender/fix_unit_fbx.py UNITS 「초월_강주혁_AP」(긴 전설적인_이승우 설정 재사용).
+  - use_rest_pose(애니 22 — 가져온 자세가 클립 프레임) → tpose_arms로 T자 · biped_rename(손가락 2×2, Spine2) 30뼈.
+  - 뺀 것: Icosphere · 칼 메시 + Bip001 Prop1·rweapon·bocun_weapon_0 뼈 · 가중치 0 뿌리 Bip001.
+  - 합친 뼈: Head 밑 4 → Head · Bone007 → LeftShoulder · Bone005 → RightShoulder · Bone001~004·008 → Hips.
+  - smooth_weights 몸 두 메시 각 2회(1회차 Idle 상위1% 1.52 — 저폴리 목깃·어깨 굵은 변의 반반 경계, 찢김 아님).
+  - 키 1.8 m · 발 z 0 · 정면 −Y · 체형 그대로(거구 비율).
+재질 → 텍스처(glb 이미지 인덱스, 원본 바이트): bocun_body(0) · face(1) · leye(2) · mouth(3) · reye(4)_baseColor.png.
+
+검증(blender): FBX 442,092 bytes · sha256 248284b0a9761961af2e2fc9… · 뼈 30 · 정점 3,504 · 크기 1.993 × 0.701 × 1.8 m(T자) · 최저 z 0.
+  쉬는 스킨↔원시 0.0150 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 2.90(상위1% 1.37) · 유니티 공용 idle.fbx 옮겨 입힘 최악 1.92(상위1% **1.25**).
+  판정 렌더(초월은 이 렌더가 최종 판정): 스크래치 koma/rr(i_idle_f133_front · i_idle_f133_side · j_arms45_knees90_front) · koma/rr/sheet.png.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
