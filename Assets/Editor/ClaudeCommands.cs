@@ -165,6 +165,10 @@ public static class ClaudeCommands
 
             // 맵에 모델 인형이 없는 유닛(초월 전시는 자리표시 상자)을 조합판 인형과 같은 Idle 자세로 정면에서 찍는다.
             // idleview <파일> <프리팹 경로> <기준 오브젝트 이름> [거리배율]
+            // 유닛 모델 전체에서 투명(Surface=1)으로 임포트된 재질을 찾는다 — 인형이 유령처럼 보이는 사고(킹·이치고)를 한 번에 훑기.
+            case "transparent":
+                return TransparentMaterials();
+
             case "idleview":
                 return IdleView(parts[0], parts[1], parts[2], parts.Length > 3 ? F(parts[3]) : 1.2f);
 
@@ -229,6 +233,28 @@ public static class ClaudeCommands
     // 실행 중에만 생기는 것(스포너가 Start에서 만드는 해왕류 등)을 편집 중에 본다 — 프리팹을 기준 오브젝트의 위치·회전에
     // 잠깐 세워 찍고 바로 지운다. 오브젝트는 남지 않지만 씬의 「변경됨」 표시는 남는다(되돌리는 API가 없다).
     // preview <파일> <프리팹 경로(Assets/..., 공백 없이)> <기준 오브젝트 이름> [거리배율]
+    static string TransparentMaterials()
+    {
+        StringBuilder sb = new StringBuilder("🔍 투명으로 임포트된 유닛 재질\n");
+        int models = 0, hits = 0;
+        foreach (string guid in AssetDatabase.FindAssets("t:Model", new[] { "Assets/Art/Units" }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (model == null) continue;
+            models++;
+            var bad = model.GetComponentsInChildren<Renderer>(true)
+                .SelectMany(r => r.sharedMaterials)
+                .Where(m => m != null && m.HasProperty("_Surface") && m.GetFloat("_Surface") > 0.5f)
+                .Select(m => m.name).Distinct().ToList();
+            if (bad.Count == 0) continue;
+            hits++;
+            sb.AppendLine($"   {path} · {bad.Count}개: {string.Join(", ", bad.Take(6))}");
+        }
+        sb.Append($"   모델 {models}개 중 {hits}개");
+        return sb.ToString();
+    }
+
     static string IdleView(string file, string prefabPath, string anchorName, float distanceScale)
     {
         GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
