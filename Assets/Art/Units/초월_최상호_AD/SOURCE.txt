@@ -1,0 +1,71 @@
+초월_최상호_AD(최상호) — 완전 호로화 이치고(Bleach, VRChat 립), 2026-09-18
+※ 최상호는 초월 AD·AP(바지사장) 둘, 이건 AD.
+
+■ 출처
+~/Desktop/구랜디스킨모음/08_초월/초월_최상호_AD.zip
+sha256: 4225ed7571029228cc0803d72a0d017df77363037192e99635afcbd2acf5422a
+바깥 zip 안 source/HIchigo.zip(zip 안 zip) 안 HollofiedIchigo.fbx + Textures/tex01.png·
+tex02.png(+tex_katana.png, PM 브리핑에 없던 여분 — 확인해 보니 칼 메시 자체가 없어 안 씀,
+Assets에도 안 넣음).
+
+■ 정리 내용 (첫 처리는 Tools/blender/gen_biped_skin.py — 이미 있는 리그 이름만 바꾸는 계열,
+아래 정정 이후 Tools/blender/gen_valvebiped_skin.py로 옮김)
+- VRChat 휴머노이드 리그가 이미 있고 가중치도 정상이라(본체 스캔·재구축이 아니라) 이름만
+  mixamorig 규칙으로 바꾸는 쪽으로 처리(에이스/디오처럼 새로 짓는 쪽이 아님).
+- 메시 1(Body, 12,605정점·4,195면) · 재질 6(Mouth·Material1·A new.001·A new·Material0·
+  Fist) 전부 이미 Base Color에 텍스처 연결됨(already_linked, 직접 확인 6/6) →
+  texture_direct로 그대로 씀, 새로 불러온 텍스처 없음.
+- UV 1층("UVMap", 실측 범위 0.003~0.998, 정상) — 히소카식 UV0 퇴화 없음.
+- 키 3.4042(PM 실측 3.40과 일치, matrix_world 곱해 확인).
+- 뼈 52개 전부 직접 확인 후 전부 매핑(매핑 안 된 뼈 0개):
+  · Hips→Spine→Chest→Neck→Head(척추 2마디뿐, 신문철과 같은 자리표시 처리 — Chest를
+    Spine2로 보내고 Spine1은 bone_position_override로 Spine의 tail에 자리표시, 무가중치
+    허용).
+  · 머리카락 체인 Hair→Hair2~4·R_Hair→R_Hair2~3·L_Hair→L_Hair2~3(전부 Hair 서브트리)
+    + Mouth·LeftEye·RightEye → 전부 Head로 폴드(PM 지시 — T자 렌더로 자락이 어깨·등으로
+    안 늘어지는지 확인, 문제 없음).
+  · 좌우 shoulder/arm/elbow/wrist → Shoulder/Arm/ForeArm/Hand.
+  · 손가락은 Thumb0~2·IndexFinger1~3·RingFinger1~3뿐(Middle·Pinky 없음, 3갈래만) →
+    각 첫마디를 fold_subtree 뿌리로 Hand에 접음(타시기 교훈과 같은 방식).
+  · 좌우 leg/knee/ankle/toe → UpLeg/Leg/Foot/ToeBase.
+- 원본 가중치가 이미 전 정점을 덮어(직접 확인) 최근접 정점 보정 0건 — bone heat/지오데식
+  대체 자체가 필요 없었음.
+- 팔 자세: level_arms로 T자 보정(좌우 대칭, Shoulder 13.6°·Arm 58.0°·ForeArm 13.5° 굽음
+  보정 — 좌우 완전 대칭이라 원본도 대칭이었음 확인).
+- 감량 없음(4,195면, 이미 저폴리).
+
+■ 초월 등급 특이사항 — 유니티 맵 인형 판정 불가(PM 안내)
+초월 유닛은 맵에 인형 대신 자리표시 상자만 있어 유니티 Idle 인형 사진 판정이 안 됨 →
+블렌더 자체 렌더로 (1) T자 정면/측면 (2) 팔 내리고 팔꿈치 90° 굽힌 자세를 직접 만들어
+라이토 교훈(관절이 비틀리면 팔꿈치 굽힘 렌더에서 위팔이 수건처럼 가늘어지고 옆으로 꺾여
+드러난다)대로 검증. 위팔 굵기·팔꿈치 굽힘 축 전부 정상, 뒤틀림 없음.
+
+■ 정정 (2026-09-18, 유니티 반려 뒤)
+🔴 유니티 Idle 자세로 세우면 인형 전체가 반투명하게 보임(PM 실측, "킹 교훈") — rig
+isValid·isHuman·팔 렌더는 정상이었지만 FBX 안에 TransparencyFactor/Opacity 항목 8개가
+실려 나갔다. 원인: gen_biped_skin.py의 wire_texture_direct()가 Mix·VertexColor 노드만
+지우고 Principled BSDF의 Alpha 소켓(원본 재질에 남아 있던 링크·값)은 그대로 둬서, 텍스처
+자체는 알파 255(불투명)인데도 FBX 내보내기가 그 Alpha 소켓 값을 TransparencyFactor로
+그대로 실었다. 텍스처 tex01/tex02는 알파 무관(RGB만 검사해도 불투명 확인) → 텍스처 탓
+아님, 재질 그래프 탓.
+🔴 또한 gen_biped_skin.py는 구현담당1 담당 파일(한 스크립트=한 세션 규칙)이라는 걸 뒤늦게
+알아 SKINS 항목을 그 파일에서 빼고, 같은 로직을 옮겨 적은 Tools/blender/gen_valvebiped_skin.py
+(신규, 구현담당2 담당)로 옮겼다. 이 파일에 force_opaque() 함수를 추가해 내보내기 직전
+전 재질의 Principled Alpha 링크를 끊고 값을 1.0으로 고정 — 재수출 후 FBX 안
+TransparencyFactor/Opacity 항목이 8개→1개(재질별 값이 아니라 템플릿 정의 1개뿐)로 줄어든
+것을 직접 확인. 렌더는 재수출 전후 완전히 동일(회귀 없음).
+※ gen_biped_skin.py 자체를 고치진 않았음(구현담당1 파일) — 같은 버그가 그 파일로 만든 다른
+유닛에도 있을 수 있어 PM께 별도 보고.
+
+■ 산출물
+Assets/Art/Units/초월_최상호_AD/초월_최상호_AD.fbx (뼈 22 · 정점 12,605 · 삼각형 4,195 · 재질 6)
+Assets/Art/Units/초월_최상호_AD/Textures/(tex01.png · tex02.png)
+
+■ 판정
+크기(m): 가로 1.751 · 앞뒤 0.836 · 세로(키) 1.8 · 최저 z 0.0
+매핑 안 된 뼈 0개, 무가중치 정점 0개(최근접 보정 0건 — 원본이 이미 전부 덮음), UV0 면적
+0.9891(정상).
+렌더(스크래치, 재수출 후 재확인): /tmp/ichigo_render2/front_tpose.png(정면 T자) ·
+side_tpose.png(측면 T자, 등 뒤 자락·소매 자연스러움) · arms_down_elbow_bent.png(팔 내리고
+팔꿈치 90° 굽힘 — 위팔 굵기 정상, 뒤틀림 없음, 좌우 대칭) 전부 정상 확인, 재수출 전과
+동일(회귀 없음).
