@@ -1,0 +1,24 @@
+출처: 원펀맨 A Hero Nobody Knows 립 음속의 소닉 「Speed-o'-Sound Sonic」 — Sketchfab(https://sketchfab.com/3d-models/speed-o-sound-sonic-6c354d2903c040fdaff5c1eda1037f73),
+  작성자 Cyrone™, glb에 적힌 라이선스 CC-BY-4.0(배포 시 표기 필요). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/08_초월/초월_김민준_AP.glb · 4,318,920 bytes · sha256 4bec150ec2f41facef2f79d5d974f549…
+받은 날: 2026-09-18 · 유닛: 초월_김민준_AP (초월, 별명 김민준)
+
+원본 상태(blender 실측): Sketchfab-16.75.0 · 스킨 1 · 뼈 164(킹과 같은 게임 이름 + _번호 꼬리: WAIST_03 · SHOULDER_R_073 · ARM_L_095 …) · 메시 13 + 조명 Icosphere ·
+  재질 13(OPAQUE) · 이미지 11 · 삼각형 32,456 · 애니 0 · 스킨 좌표 0.02 수준.
+  메시(glTF 순서 = Object_5~17): Body · Mantle(목도리, 긴 꼬리가 바람에 날리는 모양으로 모델링) · Default.Eyes/Face/Mouth · SwordBack(등의 칼) ·
+    -Neta.Eyes/Face/Mouth(「-」 숨김 변형) · -SwordHand(손에 든 칼) · Armor · Hair · Sheath.
+  Mantle 첫 UV가 한 점(0,0) — 원본 그대로 단색 보라 목도리.
+
+정리: 2026-09-18 blender — Tools/blender/fix_unit_fbx.py UNITS 「초월_김민준_AP」(킹 KING_RENAME + rename_strip).
+  - 뺀 메시: Icosphere · Object_11~14(-Neta.Eyes/Face/Mouth · -SwordHand). 등 칼·칼집은 남김.
+  - 뺀 뼈: ROOT_GROUND_02 · EQUIPMENT_00_R_01(손 칼 뺀 뒤 가중치 0).
+  - 합친 뼈: Head 자손 63(얼굴·눈썹·입·이·HAIR) → Head · NECKSCALE → Neck · 목도리 mantle1~34 + 등 칼 WEP2 → Spine2 ·
+    SHOULDERROLL → Arm · ELBOWROLL → ForeArm · CLAVICLEROLL → Shoulder · CLANKROLL·CLANK_?C → Leg.
+  - tpose_arms(손가락 5×3)로 T자 · 뿌리 _rootJoint 씨앗 0.001 · 키 1.8 m · 발 z 0 · 정면 −Y.
+재질 → 텍스처(glb 이미지 인덱스, 원본 바이트): Body 0 → sonic_body · Mantle 1 → sonic_mantle · Eyes 2 · Face 3 · Mouth 4 · SwordBack·Sheath 5 → sonic_sword · Armor 9 · Hair 10.
+
+검증(blender): FBX 1,573,308 bytes · sha256 922074bdfa6840bd9b2b8bac… · 정점 19,115 · 크기 1.92 × 1.007 × 1.8 m(T자 — 가로·깊이는 날리는 목도리 꼬리) · 최저 z 0.
+  쉬는 스킨↔원시 0.0006 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 3.64(상위1% 1.11) · 유니티 공용 idle.fbx 옮겨 입힘 최악 6.19(상위1% **1.20**, 오른 겨드랑이 — 근접 렌더 정상).
+  뒷면 자르기 렌더: 목도리 정상(sonic/cull.png).
+  판정 렌더(초월은 이 렌더가 최종 판정): 스크래치 sonic/rr(i_idle_f97_front · i_idle_f97_side · i_idle_f97_armpit · j_arms45_knees90_front) · sonic/b1/sheet.png.
