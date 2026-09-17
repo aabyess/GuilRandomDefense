@@ -1,0 +1,47 @@
+초월_양재모_AD (몽키 D. 가프, One Piece Fighting Pass XPS) 스킨 출처 — PM 사양(2026-09-18,
+착수 전 원문 보존)
+
+원본: ~/Desktop/구랜디스킨모음/08_초월/초월_양재모_AD.zip → source/*.rar(bsdtar) 안
+  「OPFP - Monkey D. Garp/12002.fbx」 + zip textures/ 12002_D.png·12002B_D.png.
+
+PM 실측 사양 원문(타시기 12014와 같은 OPFP XPS 계열, 번호만 12002):
+- 아마추어 "12002" 뼈 141 · 메시 3 · 무가중치 0 · UV0 1층.
+- 0_Face(3,630, 12002_Face → 12002_D) · Body(4,685, 12002_Body → 12002_D) · Body_a(2,443,
+  12002_B → 12002B_D — 어깨에 걸친 해군 코트로 추정) → 전부 유지. 코트가 한 겹 천이면
+  양면(유기 교훈), 팔 몫 최소로 날개처럼 안 뜨게(흰수염·유기 교훈).
+- 뼈: Bip001(손가락 Finger0~4×3 → Hand, 타시기 손가락 접기 교훈) · Facebone·Facebone_01~67
+  (→ Head) · Bone006~010·015~017 등(부모 확인 — 코트 자락이면 Spine2/Hips).
+- roll 표준화·관절 단면 실측·필수 15뼈·OPAQUE.
+
+빌드 스크립트: Tools/blender/gen_biped_skin.py (SKINS["초월_양재모_AD"])
+  실행: /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
+        --python Tools/blender/gen_biped_skin.py -- 초월_양재모_AD
+
+직접 재확인한 것(빌드 전 조사):
+- source/ 안이 zip이 아니라 rar(bsdtar 필요) — gen_biped_skin.py에 .rar 확장자 분기를 새로
+  추가(bsdtar 서브프로세스 호출, 맥 기본 제공이라 별도 설치 불필요).
+- 뼈 141개 확인. 척추가 Bip001 Pelvis·Spine·Spine1 3마디뿐(Spine2 없음, Clavicle이 Neck에
+  붙음 — 타시기·마유리와 같은 패턴) → Bip001 Spine1→Spine2, Spine1은 Bip001 Spine 꼬리에
+  0-길이 자리표시.
+- Facebone(Head 자식, 68개 서브트리) 확인 — fold_subtree 하나로 처리.
+- 코트 자락: L Clavicle 자식 2뿌리(Bone006·Bone015)→LeftShoulder, R Clavicle 자식
+  2뿌리(Bone001·Bone018)→RightShoulder, Spine1 자식 1뿌리(Bone000)→Spine2로 안정적인
+  뼈에 접어 날개처럼 안 뜨게 함.
+- 텍스처 경로 문제(마유리와 같은 클래스) 예방 차원으로 처음부터 texture_file 사용 —
+  12002_Body·12002_Face→12002_D.png, 12002_B→12002B_D.png(zip 바깥 textures/ 폴더).
+
+검증 결과(2026-09-18, 실측 — 최종 FBX 재임포트로 직접 재검사):
+- 뼈 22개, 매핑 안 된 뼈 0, 가중치 0 뼈 0(Spine1 제외 — 자리표시, 정상).
+- 무가중치 정점 0개(전체 10,758개 중).
+- 크기 [2.184, 0.67, 1.8]m — 폭 비율 1.21(가프가 원작에서도 거구 체형이라 그런지 다른
+  유닛보다 큼). 재질 3개 전부 실제 텍스처(1024²) 확인.
+- 직접 포즈 테스트(양팔 ±70° 내림·양다리 60° 굽힘): 크기 [2.184, 1.066, 1.624]m — 다리
+  굽힘은 반영됐지만(키 1.8→1.624) **가로(X)가 거의 안 줄었다**(2.184→2.184) — 팔을 안으로
+  굽혔는데 폭이 그대로인 게 이상해 보일 수 있음. 이 리그의 뼈 축(roll) 특성상 제가 쓴
+  회전축(Z 로컬)이 실제 "팔을 몸쪽으로 굽히는" 축이 아닐 가능성이 있어, 정확한 판정은
+  블렌더 팔 45°·Idle 렌더로 재확인 부탁드립니다(PM 지시대로 초월 등급은 유니티 인형 사진이
+  없어 이 부분 특히 꼼꼼히 봐주시면 좋겠습니다).
+
+주의:
+- 원본 zip은 삭제 금지.
+- 코트(Body_a) 뒷면·날개처럼 뜨는지 여부 렌더 확인 요청.
