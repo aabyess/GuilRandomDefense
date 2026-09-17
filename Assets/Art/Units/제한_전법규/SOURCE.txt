@@ -1,0 +1,51 @@
+제한_전법규 (산타나, JoJo 1부 기둥의 남자) 스킨 출처 — PM 사양(2026-09-17, 착수 전 원문 보존)
+
+원본: ~/Desktop/구랜디스킨모음/07_제한됨/제한_전법규.zip → source/santana.zip(zip 안 zip)
+  안 santana.blend + Santana.png (zip textures/에도 Santana.png).
+
+PM 실측 사양 원문:
+- 메시 1(Mesh_0000.rip, 4,339정점·6,064면·무가중치 0·Armature 수정자) · z 0~2.05 ·
+  x ±1.05(팔 벌린 자세) · 재질 Mesh_0000.rip → //Santana.png(나머지 Dots Stroke·Material은
+  빈 재질, 무시).
+- 아마추어 metarig 뼈 50: pelvis·spine.001~003·neck·head·shoulder/upper_arm/forearm/
+  hand.L/R·손가락 index/thumb/middle/ring/pinky_0~2_L/R·thigh/shin/foot.L/R (Rigify 규칙이라
+  죠나단과 같음, toe 없음).
+- 손가락 → Hand로 접기, Spine1 자리표시 방식은 죠나단과 같이. roll 표준화·필수 15뼈·알파
+  OPAQUE.
+- 커밋 전 Textures/에 안 쓰는 파일 남지 않게(written_textures 추적 확인).
+
+빌드 스크립트: Tools/blender/gen_rigify_skin.py (SKINS["제한_전법규"])
+  실행: /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
+        --python Tools/blender/gen_rigify_skin.py -- 제한_전법규
+
+직접 재확인한 것(빌드 전 조사):
+- 뼈 50개·이름 전부 PM 목록과 일치. 척추는 spine.001~003 세 마디 다 있어(죠나단과 달리)
+  자리표시 불필요 — 대신 **발가락 뼈가 아예 없다**(foot이 끝, 직접 확인) → LeftToeBase/
+  RightToeBase를 foot.L/R 꼬리에 0-길이 자리표시로(bone_position_override, 죠나단의 Spine1
+  방식 재사용).
+- 정점색 없음(직접 확인) — 재질이 이미 Principled+TEX_IMAGE(Santana.png) 직결이라
+  emission_texture로 그대로 재사용.
+- 🔴 아마추어 오브젝트 자체에 배율 1.0396(직접 확인, matrix_world) — gen_rigify_skin.py의
+  뼈대 재구성 코드가 이 배율을 안 곱하고 있어서(히나타 때 gen_biped_skin.py에서 찾은 것과
+  같은 버그) old_head_tail 계산에 arm_obj.matrix_world를 곱하도록 일반 수정(다른 유닛은
+  이미 항등이라 영향 없음).
+- 팔이 이미 거의 수평(upper_arm.L z 1.643 → hand.L z 1.66, 거의 평평) — level_arms는 보험
+  차원으로 켜 둠, 큰 보정 없을 것으로 예상.
+
+🔴 버그 발견·수정(2026-09-17):
+1. 중첩 zip(source_type="blend") 처리 코드가 안의 실제 파일 이름을 항상 "scene.gltf" 기본값
+   으로 찾고 있었다 — .blend일 때는 inner_blend cfg 키로 실제 이름을 받도록 일반 수정.
+2. "//Santana.png" 상대경로 이미지가 파일을 열자마자는 has_data=True였는데, 파이프라인
+   중간(원인 정확히 못 좁힘)에 데이터가 사라져 image.save()가 "does not have any image
+   data"로 죽었다. reload()도 안 먹혀서, 파일을 연 직후 모든 FILE 소스 이미지를 즉시
+   pack()해 파일 참조 없이 메모리에 고정하도록 일반 수정 — 앞으로 .blend 소스 전부에 안전.
+
+검증 결과(2026-09-17, 실측 — 최종 FBX 재임포트로 직접 재검사):
+- 뼈 22개, 매핑 안 된 뼈 0.
+- 무가중치 정점 0개(전체 4,339개 중). 소스 자체 무가중치 355개는 최근접 정점으로 채움
+  (원본 자체가 일부 정점에 가중치가 비어 있었음, 허용 범위).
+- 크기 [1.821, 0.514, 1.8]m(T자 폭 비율 1.01 — 원래 거의 수평이던 팔 그대로 통과).
+- 재질 1개, 실제 텍스처(1024×1024) 확인. Textures/ 폴더에 파일 1개만(오염 없음).
+
+주의:
+- 원본 zip은 삭제 금지.
