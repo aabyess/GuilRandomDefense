@@ -1,0 +1,24 @@
+출처: 나루토 질풍전 나루티밋 스톰 4(NUNS4) XPS 립 「Obito (Young Cloak Hidden)」(블렌더 파일, 제작 O-DV89-O). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/07_제한됨/제한_김민규.zip · 1,158,003 bytes · sha256 56d932a784ed370af99669c6e94e88c6…
+  zip 안 source/nuns4___obito__young_cloak_hidden__xps_blend_by_o_dv89_o_dfw5a21.rar → 「NUNS4 - Obito (Young Cloak Hidden)/」 OBXBod1.blend · xps.xps · 2obxbody/2obxeye/2obxwrinkle.dds
+  + textures/2obxbody.png(RGB) · 2obxeye.png(팔레트) — dds와 같은 그림(body dds 알파 전부 255)이라 PNG를 씀.
+받은 날: 2026-09-17 · 유닛: 제한_김민규 (제한됨)
+
+원본 상태(blender 실측): 아마추어 1 · 뼈 192(`2obx00t0 l thigh` 식 Biped 소문자 이름) · 메시 6 · 재질 6(+안 쓰는 Material) · 애니 0 · 면 16,406 · 단위 m(두건 꼭대기 1.811) · 쉬는 자세 A자.
+  메시: 5_body(망토 몸) · 5_hood(두건) · 5_Hcells(하시라마 세포 몸) · 5_wood(오른 어깨 뒤 나무 가시 — 원작 모습이라 남김) · 5_face(가면 반쪽) · 5_eye(사륜안 한쪽).
+  얼굴·눈 메시가 한쪽 절반뿐인 것은 원본 그대로(가면 모습).
+  🔴 upperarm·forearm·calf 본체 뼈는 가중치 0 — 팔·다리 가중치는 전부 비틀림 보조 뼈(arm bone01~06·sleeve·foot bone01~05)에 실려 있다.
+  🔴 spine이 pelvis 자식이 아니라 루트 `2obx00t0`(가중치 0) 자식이다.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「제한_김민규」(blend 직접 열기 · archive_rgb_outer 새 옵션으로 바깥 zip 텍스처).
+  - Biped 이름표(소문자)로 매핑 · 루트 2obx00t0·trall 뺌 · Spine → Hips에 다시 붙임.
+  - 합친 뼈: Head 자손 76 → Head · foot bone01~02 → UpLeg · foot bone03~05+asianime → Leg · arm bone01~03 → Arm · arm bone04~06+sleeve+udeanm → ForeArm ·
+    망토 앞·옆·뒤 뼈 12+body+cutting → Hips · hood_off 3 → Spine1. 남은 뼈 51(손가락 5×3).
+  - tpose_arms로 T자 · 키 1.8 m(나무 가시 포함 경계) · 발 z 0 · 정면 −Y · 첫 UV만.
+재질 → 텍스처: 5_eye → 2obxeye.png · 5_body·hood·Hcells·wood·face → 2obxbody.png(평면 색 아틀라스, UV 반복).
+
+검증(blender): FBX 986,188 bytes · sha256 ec7ab24a217949208d2cac0d… · 뼈 51 · 정점 10,979 · 크기 1.703 × 0.745 × 1.797 m(깊이는 등 뒤 나무 가시) · 최저 z 0.
+  쉬는 스킨↔원시 0.0007 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 6메시 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 4.09(상위1% 1.34) · 유니티 공용 idle.fbx 옮겨 입힘 최악 4.09(상위1% **1.487**, 최악 자리 오른 어깨 뒤 (−0.12, 0.12, 1.45)).
+  판정 렌더: 스크래치 obito2/b1(j_T_front · i_idle_f109_*): 두건·가면·사륜안·망토·어깨 나무 가시 정상.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
