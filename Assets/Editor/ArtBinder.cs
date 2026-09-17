@@ -127,6 +127,10 @@ public static class ArtBinder
         // 자전거(2026-09-13 blender 재내보내기 — 두 바퀴가 바닥, 길이 1.8m). 가장 긴 축(길이)을 사람 키 20에 맞춘다 —
         // 실제로도 자전거 길이 ≈ 사람 키라 키는 약 12. 옛 표(ModelAdjustments 키 10)와 거의 같은 크기다.
         ("안흔함_상붕카", 1.0f),
+        // 제한_김강민(리카 — 2026-09-17 blender, Generic): 다리 없이 꼬리로 서고 팔을 벌려 가로(2.34)가 키(1.8)보다 길다.
+        // 사람 규칙(UprightByBounds)이면 가장 긴 축을 세로로 알고 눕히므로 이 표로 뺀다.
+        // 1.3 = 가장 긴 축(팔 벌린 가로)을 26에 → 키가 약 20으로 사람과 같아진다.
+        ("제한_김강민", 1.3f),
     };
 
     static bool IsFourLegged(string modelName)
