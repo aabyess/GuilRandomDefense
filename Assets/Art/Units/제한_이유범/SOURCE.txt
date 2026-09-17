@@ -1,0 +1,27 @@
+출처: 원피스 바운티러시 추출 길드 테소로(pl_tesoro_orig01, 제작 JosouKitsune 배포 7z). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+  🔸 이 자리는 도르도니 → 레그 → 테소로로 사장님이 최종 교체(2026-09-18). 이전 도르도니 FBX·텍스처는 지워졌고 duoerduoni_*.meta만 남음(PM 정리).
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/07_제한됨/제한_이유범.zip · 4,298,661 bytes · sha256 5cf52101c195bb779787d4668e1115ee…
+  zip 안 source/gild_tesoro___bounty_rush_by_josoukitsune_dfawye9.7z → pl_tesoro_orig01/ pl_tesoro_orig01.fbx(9,346,688 bytes, 원본 — 이걸 씀)
+  · pl_tesoro_orig01out.fbx(923,952, 팬 재내보내기 — 안 씀) · _diff.png · matcap·ramp·abnormal_pattern·bayer_dither(툰 셰이더용, 안 씀) + zip textures/_diff.png.
+받은 날: 2026-09-18 · 유닛: 제한_이유범 (제한됨)
+
+원본 상태(blender 실측): FBX 7300 · 아마추어 1 · 뼈 43 · 메시 24 · 재질 2(pl_tesoro_orig01 · _trans) · 무가중치 정점 0 · 쉬는 자세 = 오른손 내민 서 있는 자세(T자 아님).
+  겹친 변형 메시: face_normal/attack/damage · l/r_hand_open/close/sp_01~04(r_hand_sp_01은 없음) · 안경 glass(머리에 올림)/glass_set(눈에 씀) + 각 렌즈.
+  l_skill(왼손에서 뻗는 황금 스킬 이펙트, l_skill_01~06_joint) · weapon_01 = 오른손을 덮은 황금 손(RHand_Palm·Fore_sup).
+  🔴 _diff 알파는 음영 마스크(최소 0.231 · 평균 0.729 · 100%가 0.98 미만).
+
+정리: 2026-09-18 blender — Tools/blender/fix_unit_fbx.py UNITS 「제한_이유범」(이치지·pl_ 리그 설정 재사용, PL_RENAME).
+  - 뺀 메시 14: face_attack · face_damage · glass_set · glass_lenz_set · l_skill · l/r_hand_close · l_hand_sp_01~04 · r_hand_sp_02~04.
+  - 안경은 glass(머리에 올린 기본 — _set 없는 이름) 남김(렌더 비교 스크래치 tesoro/g_cmp.png) · 렌즈 glass_lenz는 _trans 재질이지만 불투명 diff(보라).
+  - weapon_01(황금 손) 남김 — 손을 덮을 뿐 튀어나오지 않음(tesoro/g_weapon.png).
+  - 뺀 뼈: world_joint · HELPER_key · HELPER_name · glass_joint_set · l_skill_01~06_joint(모두 남은 메시에 가중치 0).
+  - 합친 뼈: Head 자손 4(c_hair · glass_joint · l/r_earring_joint) → Head · 셔츠 자락 b_shirt · f_l/f_r/l/r_shirt → Hips · L/RHand_Fore_sup → ForeArm.
+  - tpose_arms로 T자 · 뿌리 pl_tesoro_orig01에 씨앗 가중치 0.001 · 키 1.8 m · 발 z 0 · 정면 −Y · 알파 뗀 RGB PNG(archive_rgb).
+재질 → 텍스처: pl_tesoro_orig01 · pl_tesoro_orig01_trans → pl_tesoro_orig01_diff.png.
+
+검증(blender): FBX 501,820 bytes · sha256 46ec8e75baf1cb89d09f9332… · 뼈 22 · 정점 4,451 · 크기 1.778 × 0.344 × 1.8 m · 최저 z 0.
+  쉬는 스킨↔원시 0.0005 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0.
+  UV: glass_lenz 첫 UV가 한 점에 가까움(u 0.017 · v 0.033) — 원본 그대로(보라 단색 조각, 이치고류).
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 2.70(상위1% 1.12) · 유니티 공용 idle.fbx 옮겨 입힘 최악 3.65(상위1% **1.19**).
+  판정 렌더: 스크래치 tesoro/b1/sheet.png(T 정면·옆 · 팔45° · Idle 정면 · 겨드랑이 확대).
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
