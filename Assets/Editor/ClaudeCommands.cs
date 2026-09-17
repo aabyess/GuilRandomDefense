@@ -163,6 +163,11 @@ public static class ClaudeCommands
             case "preview":
                 return Preview(parts[0], parts[1], parts[2], parts.Length > 3 ? F(parts[3]) : 1.2f);
 
+            // 맵에 모델 인형이 없는 유닛(초월 전시는 자리표시 상자)을 조합판 인형과 같은 Idle 자세로 정면에서 찍는다.
+            // idleview <파일> <프리팹 경로> <기준 오브젝트 이름> [거리배율]
+            case "idleview":
+                return IdleView(parts[0], parts[1], parts[2], parts.Length > 3 ? F(parts[3]) : 1.2f);
+
             case "bakesize":
                 return BakeSize(rest);
 
@@ -224,6 +229,42 @@ public static class ClaudeCommands
     // 실행 중에만 생기는 것(스포너가 Start에서 만드는 해왕류 등)을 편집 중에 본다 — 프리팹을 기준 오브젝트의 위치·회전에
     // 잠깐 세워 찍고 바로 지운다. 오브젝트는 남지 않지만 씬의 「변경됨」 표시는 남는다(되돌리는 API가 없다).
     // preview <파일> <프리팹 경로(Assets/..., 공백 없이)> <기준 오브젝트 이름> [거리배율]
+    static string IdleView(string file, string prefabPath, string anchorName, float distanceScale)
+    {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+        if (prefab == null) return $"❌ 프리팹 없음: {prefabPath}";
+        GameObject anchor = FindInOpenScenes(anchorName);
+        if (anchor == null) return $"❌ 씬에서 못 찾음: {anchorName}";
+
+        GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, anchor.scene);
+        try
+        {
+            // 기준 자리 위 공중에 띄운다 — 자리표시 상자·이웃 인형에 가리지 않게.
+            instance.transform.SetPositionAndRotation(anchor.transform.position + Vector3.up * 60f, Quaternion.identity);
+            MethodInfo pose = typeof(MapGenerator).GetMethod("PoseAsIdle", BindingFlags.Static | BindingFlags.NonPublic);
+            pose?.Invoke(null, new object[] { instance });
+
+            Bounds? bounds = null;
+            foreach (Renderer renderer in instance.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!(renderer is MeshRenderer || renderer is SkinnedMeshRenderer)) continue;
+                if (bounds == null) bounds = renderer.bounds;
+                else { Bounds b = bounds.Value; b.Encapsulate(renderer.bounds); bounds = b; }
+            }
+            Bounds area = bounds ?? new Bounds(anchor.transform.position, Vector3.one * 20f);
+
+            // 유닛은 +Z를 본다 — 앞(+Z)에서 살짝 위로 찍는다.
+            float distance = Mathf.Max(20f, area.size.magnitude * distanceScale);
+            Vector3 direction = new Vector3(0f, 0.35f, 1f).normalized;
+            return Render(file, area.center + direction * distance, area.center, 45f, null) +
+                   $"\n   {prefab.name} Idle @ {anchorName} · 경계 크기 {area.size}";
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(instance);
+        }
+    }
+
     static string Preview(string file, string prefabPath, string anchorName, float distanceScale)
     {
         GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
