@@ -1,0 +1,25 @@
+출처: 원피스 바솔로뮤 쿠마 과거 모습 — OPDS 립 「Kuma (Flashback)」(role_mushixiong_skin, 제작 O-DV89-O, 중국 모바일 게임 role_*_skin 계열). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/08_초월/초월_조성진_AD.zip · 1,806,824 bytes · sha256 8cc569c15de50f29335248466785ce91…
+  zip 안 source/opds___kuma__flashback__by_o_dv89_o_djj3jcd.rar → 「OPDS - Kuma (Flashback)/」 role_mushixiong_skin.fbx(726,480) · OPDSKumaFlashback.blend · xps.xps ·
+  role_mushixiong.png · role_mushixiong_pifeng.png (+ zip textures/ 같은 이름 PNG — 재인코딩본이라 rar 쪽 사용).
+받은 날: 2026-09-18 · 유닛: 초월_조성진_AD (초월, 별명 조성진)
+
+원본 상태(blender 실측): 아마추어 1(×0.01) · 뼈 99(🔴 Bip002 · 손가락 5×3 · Bone023~078과 「(mirrored)」 짝 보조 뼈) · 메시 2 · 재질 2 · 무가중치 0.
+  mushixiong_shizhuang(7,977정점, daxiong_yifu) = 몸 · mushixiong_pifeng_shizhuang(1,035, daxiong_pifeng) = 오른쪽으로 날리는 흰 망토.
+  **왼손에 성경**(Bone023, 200정점 — 원작 소품) · 다리 뼈가 Pelvis가 아니라 Spine 자식.
+  🔴 성경·망토 뼈의 결합 자세가 원점·머리 위 → 결합 자세로 구우면 성경이 발밑에 떨어지고 망토가 머리 위로 솟는다(1회차) → 가져온 기본 자세(서서 성경 든 모습) 사용.
+  텍스처 알파 거의 1(최소 146, 0.98 미만 0.000%).
+
+정리: 2026-09-18 blender — Tools/blender/fix_unit_fbx.py UNITS 「초월_조성진_AD」(토지 희귀함_이재윤 계열).
+  - biped_rename("Bip002", 손가락 5×3, Spine2) · 뿌리 Bip002 뺌 · tpose_arms로 T자.
+  - 합친 뼈: Head 밑 6(머리카락) → Head · 성경 Bone023 → LeftHand · 망토 사슬 Bone051~061·(mirrored)(쇄골·Spine2 밑) 22개 → Spine2(팔 몫 0) ·
+    앞·뒤·옆 자락 Bone062~078·(mirrored) 17개 → Spine.
+  - 키 1.8 m · 발 z 0 · 정면 −Y · 알파 뗀 RGB PNG(archive_rgb) · 체형 그대로(거구).
+재질 → 텍스처: daxiong_yifu → role_mushixiong.png · daxiong_pifeng → role_mushixiong_pifeng.png.
+
+검증(blender): FBX 655,180 bytes · sha256 9e261024adc30e7ffbc3dfb9… · 뼈 52 · 정점 9,012 · 크기 2.513 × 1.3 × 1.991 m(T자 — 키 1.8은 머리 기준으로 맞췄고 날리는 망토 끝이 머리 위 1.99까지) · 최저 z 0.
+  쉬는 스킨↔원시 0.0013 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 1.85(상위1% 1.10) · 유니티 공용 idle.fbx 옮겨 입힘 최악 3.28(상위1% **1.20**).
+  🔸 망토는 Spine2 강체라 T자·팔45°에선 팔이 망토를 뚫고 나옴(Idle에선 원래 모습대로 팔 위를 덮음).
+  판정 렌더(초월은 이 렌더가 최종 판정): 스크래치 kuma/rr(i_idle_f193_front · i_idle_f193_side · j_arms45_knees90_front) · kuma/rr/sheet.png · 원본 모습 kuma/look.png.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
