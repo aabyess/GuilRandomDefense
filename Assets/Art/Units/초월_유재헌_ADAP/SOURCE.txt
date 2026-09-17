@@ -1,0 +1,27 @@
+출처: 나루토 우치하 마다라 — Sketchfab 「Madara Uchiha 𖣐」(https://sketchfab.com/3d-models/madara-uchiha-f870efe15d934e669a7ed9dcee9aee5f),
+  작성자 Frankie-2nd_account, glb에 적힌 라이선스 CC-BY-4.0(배포 시 표기 필요). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/08_초월/초월_유재헌_ADAP.glb · 1,120,588 bytes · sha256 c997b84738bc623f4a95011bd3484dd2…
+받은 날: 2026-09-18 · 유닛: 초월_유재헌_ADAP (초월, 별명 유재헌)
+
+원본 상태(blender 실측): Sketchfab-15.10.0 · **뼈·스킨·애니 0(정적 메시)** · 메시 12 · 재질 3 · 이미지 2(256², 알파 없음) · 삼각형 34,481 · 키 1.582 · A자(팔 약 30° 아래) · 정면 −Y.
+  메시: torso_0(9,169 몸 전체) · torso_1(눈) · Eye_brows · Front/Top/Back hair(Back hair 2,561 — 허리 z 0.712까지) · Upper_Metal_Plates(가슴·어깨) ·
+    Lower_robe · Lower_Metal_Plates Left/Middle/Right(좌 x −0.278~−0.114 · 가운데 ±0.09 · 우 0.114~0.278 — 사본이 아니라 세 판) ·
+    🔴 Sphere_for_copying_normals_to_madara_face(1,986정점, 재질 Root·텍스처 없음) = 얼굴 법선 복사용 도우미 구체.
+  🔴 재질에 Principled 노드가 없다(Unlit 계열) · Left 판 메시는 배율이 음수(거울) — 내보낸 뒤 뒷면 자르기 렌더로 정상 확인.
+
+정리: 2026-09-18 blender — Tools/blender/gen_scan_rig.py UNITS 「초월_유재헌_ADAP」(오쿠야스 방식).
+  - 뺀 메시: 도우미 구체.
+  - 관절(원본 좌표 단면 실측): 어깨 z 1.21(몸통 폭 ±0.196) · 팔이 30° 내려가 x 0.17 z 1.19 → 팔꿈치 0.36 z 1.02 → 손 0.50 z 0.89 → 손끝 0.60 z 0.83 ·
+    가랑이 0.68 · 무릎 0.36 · 발목 0.06 · 다리 x ±0.1 · 목 1.27 · 머리 1.33 · 꼭대기 1.582. straighten으로 팔을 T자로 폄.
+  - 가중치: bone heat(빈 정점 568은 가까운 가중치로, 최대 5.9 cm) · 🔴 복셀 대리는 몸 torso_0이 닫히지 않은 껍데기라 로브·갑옷 판만 덩어리가 되고 몸·팔·발 뼈 가중치 0(키드와 같은 증상) → 직접 heat.
+    허리까지 오는 뒷머리 → Spine2 강체(Head 강체면 머리 흔들 때 허리까지 흔들림) · 앞·위 머리카락·눈썹·눈 → Head 강체 ·
+    허리 갑옷 판 3개와 로브 자락 → coat_hem(엉덩이 0.85 → 밑단 0.36, 넓적다리 몫 0.5, 정점 3,088) · 가랑이(0.66) 밑은 split_legs로 반대쪽 다리 몫 0.
+  - 뼈 22(mixamorig) · 키 1.8 m · 발 z 0 · 정면 −Y · 감량 없음.
+재질 → 텍스처(glb 이미지 원본 바이트): Blender_Render_Madara_Material → madara_body.png(0) · _Eyes → madara_eyes.png(1).
+  🔸 원본 재질에 Principled가 없어 gen_scan_rig가 Principled를 새로 깔고 텍스처를 물림(새 처리).
+
+검증(blender): FBX 1,058,444 bytes · sha256 7cd8275d119924e71a9dfedf… · 뼈 22 · 정점 15,474 · 크기 1.709 × 0.545 × 1.8 m(T자) · 최저 z 0.
+  쉬는 스킨↔원시 0.0002 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 8.72(상위1% 1.13) · 유니티 공용 idle.fbx 옮겨 입힘 최악 9.30(상위1% **1.19**, 오른 어깨 갑옷판 가장자리).
+  PM 판정 렌더: 어깨 80° 내림 + 다리 앞뒤 35° 벌림 스크래치 madara/rr/pose.png · 뒷면 자르기 madara/b2/pose_cull.png(오른쪽 둘).
+  판정 렌더(초월은 이 렌더가 최종 판정): 스크래치 madara/rr(i_idle_f97_front · i_idle_f97_side) · madara/rr/sheet.png · 원본 모습 madara/look.png.
