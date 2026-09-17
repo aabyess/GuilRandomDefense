@@ -1,0 +1,23 @@
+출처: 원피스 돈키호테 도플라밍고 — Sketchfab 「Donquixote Doflamingo」(https://sketchfab.com/3d-models/donquixote-doflamingo-3f5e193663a44fccb1607a987c24a7b0),
+  작성자 LorisC93, glb에 적힌 라이선스 CC-BY-4.0(배포 시 표기 필요). 반다이 게임 뼈 이름 계열. 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/08_초월/초월_김만경_AD.glb · 3,619,520 bytes · sha256 bbf2c3b74d5d15a3d7cebba2530d7867…
+받은 날: 2026-09-18 · 유닛: 초월_김만경_AD (초월, 별명 김만경)
+
+원본 상태(blender 실측): Sketchfab-16.7.0 · 스킨 1 · 뼈 33(_번호 꼬리) · 메시 24(Object_5~28) + 조명 Icosphere · 재질 24(OPAQUE) · 이미지 11(알파 없음) · 삼각형 16,958 · 애니 0 · 스킨 좌표 0.03 수준.
+  🔴 어깨는 유기식 — CLAVICLE=쇄골 · SHOULDER=위팔 · ELBOW=아래팔 · WRIST=손 · TOE1=발(발끝·손가락 뼈 없음).
+  분홍 깃털 코트(fur_* 재질 Object_24~28)는 CLOTH_A_00~02에 실림(CLOTH_A_03~08은 가중치 0) · 코트가 뒤로 비스듬히 뻗은 모양은 원본 모델링(렌더 dofla/look.png).
+  선글라스·귀걸이(GLASS·FRAME 재질)는 불투명 텍스처라 그대로 보임.
+
+정리: 2026-09-18 blender — Tools/blender/fix_unit_fbx.py UNITS 「초월_김만경_AD」.
+  - 뼈 이름: WAIST→Hips · SPINE1~3→Spine~Spine2 · NECK · HEAD · CLAVICLE→Shoulder · SHOULDER→Arm · ELBOW→ForeArm · WRIST→Hand · THIGH→UpLeg · CLANK→Leg · TOE1→Foot(rename_strip _번호).
+  - 뺀 것: Icosphere · 가중치 0 NULL_01·RESERVE_02. 합친 뼈: FACE_016 → Head · CLOTH_A_00~08 → Spine2.
+  - tpose_arms로 T자 · 뿌리 _rootJoint 씨앗 0.001 · 키 1.8 m · 발 z 0 · 정면 −Y.
+재질 → 텍스처(glb 이미지 인덱스, 원본 바이트): 옷·신발·벨트·밧줄·바지 → dofla_cloth(0) · 피부·얼굴 → dofla_skin(3) · 선글라스·귀걸이 → dofla_accessory(6) ·
+  입·이 → dofla_face(8) · 머리카락 → dofla_hair(9) · 깃털 코트 → dofla_fur(10).
+
+검증(blender): FBX 1,504,556 bytes · sha256 8ebf4f7c11e37027a7c1b5ba… · 정점 17,481 · 크기 1.853 × 1.106 × 1.8 m(깊이는 뒤로 뻗은 코트) · 최저 z 0.
+  쉬는 스킨↔원시 0.0004 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0.
+  UV: 깃털 Object_24·25 첫 UV가 작은 조각(단색 분홍 부분) — 원본 그대로.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 2.65(상위1% 1.00) · 유니티 공용 idle.fbx 옮겨 입힘 최악 8.69(상위1% **1.40**, 오른 위팔 옆 — 근접 렌더 정상).
+  뒷면 자르기 렌더 앞·옆·뒤 정상(dofla/cull.png).
+  판정 렌더(초월은 이 렌더가 최종 판정): 스크래치 dofla/rr(i_idle_f97_front · i_idle_f97_side · j_arms45_knees90_front) · dofla/b1/i_idle_f97_armpit.png · dofla/rr/sheet.png.
