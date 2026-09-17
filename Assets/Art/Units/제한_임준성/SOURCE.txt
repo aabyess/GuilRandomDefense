@@ -1,0 +1,32 @@
+출처: 유희왕 게임 추출 무토 유기(chr0400, 언리얼 엔진 내보내기 「Yugi Moto.fbx」 FBX 7500 · UnitScale 2.54). 사장님 다운로드분, PM이 모음집으로 옮겨 이름 바꿈.
+원본(보존 — 지우지 말 것): ~/Desktop/구랜디스킨모음/07_제한됨/제한_임준성.zip · 6,042,661 bytes · sha256 98340901cebaf8a0df141ba6c8b8117a…
+  zip 안 source/Yugi Moto.fbx(2,501,968 bytes) + textures/T_Chr0400_{skin,cloth_01,cloth_02,weapon,eyeshadow,hair,eye}_C.png(RGBA, 알파 전부 255) · internal_ground_ao_texture.jpeg(안 씀).
+받은 날: 2026-09-17 · 유닛: 제한_임준성 (제한됨)
+
+원본 상태(blender 실측): 아마추어 1(배율 0.025) · 뼈 127 · 메시 4 · 재질 15 · 애니 0 · 정점 32,495 · 면 54,381 · 쉬는 자세 A자.
+  메시: chr0400_form0(몸·옷·머리카락·결투 원반 — 얼굴 없음, 피부는 목까지) · chr0400_facial1(얼굴·눈 테두리·입 안 — form0과 안 겹침, 최근접 중앙 23 mm)
+        · chr0400_damage_AB = 🔴 이름과 달리 **어깨에 걸친 재킷 망토**(배틀시티 복장, 재질 cloth_01.001 4,417면) · damage_BC = 몸 속에 묻힌 찢김 패치(허벅지·종아리·가슴, cloth_01.002+damage_skin).
+  뼈 이름: 킹·심해왕 게임 계열. 🔴 어깨는 심해왕식 CLAVICLE=쇄골 · SHOULDER=위팔(킹은 SHOULDER·ARM). CLANK=무릎 · TOE1=발목 · TOE2=발끝 · FORE/MIDDLE/MEDICINAL/LITTLE 손가락.
+  결투 원반은 EQUIPMENT_00_L(왼 팔꿈치 밑) 뼈에 실려 있다.
+
+정리: 2026-09-17 blender — Tools/blender/fix_unit_fbx.py UNITS 「제한_임준성」(drop_material_faces 새 옵션).
+  - 뺀 메시: damage_BC만(렌더로 몸 안에 묻힌 패치 확인). damage_AB 재킷은 넣음(PM 2차 지시 — 1차는 뺐었음).
+  - 🔴 재킷 양면(double_sided_meshes 새 옵션): 한 겹 천이라 유니티가 뒷면을 잘라 정면에서 망토 안쪽이 안 보이고 앞 모서리 띠만 「실」처럼 남았다(PM 인형 Idle) —
+    가중치 늘어짐이 아님(Idle 변 2배 넘는 곳은 목깃뿐) · 면 4,417개를 복제·뒤집어 법선 반대로 키의 0.03% 밀어 넣음. 뒷면 자르기 렌더로 전후 확인(스크래치 yugi/cull_cmp.png).
+  - 재킷 가중치: CLOTH_A → Spine2 · 위팔 몫(SHOULDER_L/R) → move_weights(새 옵션)로 같은 쪽 쇄골 Shoulder(정점 549/528) — 팔 따라 날개처럼 안 뜨게.
+  - 뺀 재질 면(form0 안): lens 286(눈 덮개, 텍스처 없음) · weapon_glow 110(원반 발광) ·
+    eyeshadow 286(눈 위 반투명 그늘 — 불투명이면 눈이 검은 선글라스처럼 덮인다, 얼굴 근접 렌더로 확인).
+  - 뺀 뼈(가중치 0): NULL · RESERVE · THROW · UTILITY_00~09.
+  - 합친 뼈: Head 자손 32(HAIR_00~25·FACE·EYE·EYEBALL) → Head · CLOTH_A/E/G 20(등 뒤·깃·목걸이 앞자락) → Spine2 · CLAVICLEROLL → Shoulder ·
+    ELBOWROLL → ForeArm · EFFECT → Hand · CLANKROLL → Leg · EQUIPMENT_00_L(결투 원반) → LeftForeArm · EQUIPMENT_00_R → RightHand. 남은 뼈 52(손가락 5×3).
+  - tpose_arms로 T자 · 키 1.8 m · 발 z 0 · 정면 −Y.
+재질 → 텍스처: skin·skin.001·oral → T_Chr0400_skin_C · hair·hair.001(눈 테두리) → hair_C · cloth_01·cloth_01.001(재킷) → cloth_01_C · cloth_02 · weapon · eye → 각 _C.png.
+  🔸 눈: eye_C의 보라 홍채가 크게 보인다(언리얼 눈 재질은 재질 값으로 홍채 자리를 잡는데 FBX엔 그 값이 없음) — 근접 렌더 스크래치 yugi/face_final.png.
+
+검증(blender): FBX 2,052,556 bytes · sha256 8f90203b1270784018633f24… · 뼈 52 · 정점 34,100 · 크기 1.432 × 0.648 × 1.8 m · 최저 z 0.
+  쉬는 스킨↔원시 0.0006 mm · 가중치 없는 정점 0 · 가중치 0 뼈 0 · 휴머노이드 필수 15뼈 가중치 있음 · 재질 투명 속성 0 · UV 정상.
+  늘어짐: T자 1.00 · 팔45°·무릎90° 최대 2.05(상위1% 1.01) · 유니티 공용 idle.fbx 옮겨 입힘 최악 3.37(상위1% **1.25**, 등 위 재킷 깃).
+  재킷: T자·팔45°·Idle 렌더에서 어깨에 붙어 있음(스크래치 yugi/b2/sheet.png).
+  판정 렌더: 스크래치 yugi/b2(j_T_front · j_arms45_knees90_front · i_idle_f97_front/side) · yugi/face_cmp.png(eyeshadow 유무 비교).
+  🔸 천년퍼즐 목걸이는 원본 결합 자세에서 앞으로 비스듬히 떠 있다(옆 렌더) — 정면·Idle에선 가슴 위.
+⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
