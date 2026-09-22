@@ -1,0 +1,37 @@
+히든_정욱진(블리치 토센 카나메, 아란칼 편 "총괄관" 흰 제복) — blender 세션(2026-09-22).
+gen_biped_skin.py SKINS["히든_정욱진"]로 처리. 참월·진타와 같은 cha_ Bip01 3마디 손가락
+형식.
+
+■ 원본
+~/Desktop/구랜디스킨모음/05_히든/히든_정욱진.zip
+ - source/cha_tosen_general.fbx (뼈 54·메시 4·재질 1·애니 0) + textures/cha_tosen_general.png
+
+■ 확인
+- 🔴 스즈무시(칼) — "Weapon"·"Weapon_case" 뼈가 손이 아니라 Bip01(허리 높이)에 바로
+  물려 있어(직접 확인) 처음엔 허리에 찬 칼집으로 봤지만, 1차 T자 렌더로 직접 보니 칼이
+  뼈 부모와 무관하게 오른손 위치에서 뻗어 나와 실제로 쥔 자세였음(뼈 부모는 팔 흔들림에
+  안 끌리게 하려는 트릭으로 보임) → wp1_0(칼날)·wp3_0(칼자루 고리 장식) 둘 다 드롭 후 재
+  렌더로 확인.
+- Cube(8정점, 면 없어 이 파이프라인이 안 읽음, 다른 유닛과 같은 증상).
+- 척추가 Pelvis-Spine-Spine1까지만(Spine2 없음, 우루루·참월과 같은 증상) →
+  bone_position_override 3항 lerp로 처리.
+
+■ 처리
+- drop_meshes: cha_tosen_B_234_wp1_0·cha_tosen_B_234_wp3_0(위 칼 재판정).
+- fold: 뿌리 뼈 셋(cha_tosen_general·Bip01·cha_tosen_B_123, 전부 가중치 0) → Hips.
+  wp1·wp3 더미 뼈(메시 이미 드롭) → Hips.
+- fold_subtree: 머리카락(Hair_B01·Hair_F01)·후드(Hood01) → Head. 옷자락 4갈래(Skirt_BL/
+  BR/FL/FR01) → Hips. Weapon·Weapon_case(칼집 뼈, 메시 드롭 후에도 뼈는 남아 있어 접음)
+  → Hips.
+- 🔸 gen_biped_skin.py에 보편 수정 추가: 내보내기 직전 arm_obj.name="Armature" 고정
+  (참월 때 "Armature.001"로 남던 것 — PM이 유니티에서 확인상 무해했지만 fix_unit_fbx.py와
+  통일해 두기로 함, 다른 유닛에도 자동 적용됨). 재수입해서 "Armature"로 정상 확인.
+
+■ 검증
+- 배치 리포트: 뼈 22개, 매핑 안 된 뼈 없음, 크기 (1.814, 0.504, 1.8)m(칼 뺀 뒤 폭 줄어듦),
+  최저 z 0.
+- 재수입 확인: 최상위 오브젝트 "Armature", Hips 부모 None, 다리 완전 수직.
+- Idle 리타겟(정면·측면 렌더) — 접힘·찢어짐 없음, 긴 코트 자연스럽게 따라감, 칼 없음 확인.
+
+■ 산출물(스크래치만, Assets 미반영)
+히든_정욱진.fbx · Textures/cha_tosen_general.png · idle_front.png · idle_side.png

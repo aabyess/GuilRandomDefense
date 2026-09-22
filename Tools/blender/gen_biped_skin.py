@@ -1286,6 +1286,10 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
     assert uv_area > 0.05, f"{name}: UV0가 퇴화됐다(면적 {uv_area:.4f})"
 
     os.makedirs(os.path.dirname(dst), exist_ok=True)
+    # 🔴 참월(2026-09-22, PM 유니티 검수) — 아마추어 오브젝트 이름이 "Armature.001"로 남는
+    # 경우가 있었다(무해했지만 fix_unit_fbx.py와 같은 보편 수정을 넣어 둠 — 다른 이름과
+    # 충돌해도 "Armature"로 통일).
+    arm_obj.name = "Armature"
     for o in scene.objects:
         o.select_set(o in (body, arm_obj))
     bpy.ops.export_scene.fbx(filepath=dst, use_selection=True, object_types={"ARMATURE", "MESH"}, apply_unit_scale=True,
