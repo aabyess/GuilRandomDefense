@@ -1,0 +1,70 @@
+불멸_고도현(센고쿠 불상형, One Piece 바운티러시 pl_sengoku_orig02) 스킨 출처
+— blender 세션(2026-09-22)
+
+■ 원본
+~/Desktop/구랜디스킨모음/09_불멸/불멸_고도현.zip
+ - source/pl_sengoku_orig02.rar(bsdtar) 안 pl_sengoku_orig02.fbx + pl_sengoku_orig02_diff.png
+   + matcap_gold.png·ramp.png·abnormal_pattern.png·stg_common_bayer_dither.png(원작 게임
+   셰이더 전용, 전부 안 씀)
+ - textures/pl_sengoku_orig02_diff.png(위와 동일 파일)
+
+■ 확인 결과(PM 지시 3건)
+1) 황금 광택 — diff.png만으로 이미 충분히 금색으로 보임(렌더 확인). 재질을 직접 열어보니
+   Metallic이 이미 1.0으로 설정돼 있었음(원작 자체가 금속 재질로 만들어짐) — 재질을 통째로
+   다시 만들면 이 값을 잃으므로, 이번엔 기존 노드를 보존하고 Alpha 링크만 끊는 방식으로
+   처리(다른 유닛들과 다른 처리 — 아래 참고).
+2) 거구 체형 — 얌마와 같은 방식으로 키 1.8m 강제 안 하고 원본 비율 먼저 보고: T자 가로:
+   세로 비율 1.359(얌마 1.135보다 더 벌크, 불상형 특유의 넓은 어깨·큰 배 반영). 산출 FBX는
+   일단 키 1.8m로 정규화해서 바로 쓸 수 있게 만듦 — 크기 [2.445, 0.967, 1.8]m. 최종 키는
+   PM 판단 대기.
+3) trans(변신) 클립 — 확인 결과 별도 "일반 형태" 메시는 없었음. "_trans" 재질은 glass_lens
+   (안경 렌즈, 32정점) 하나에만 쓰이고, 이건 Tesoro 선례와 같은 "반투명 렌즈지만 불투명
+   diff로" 패턴 — 겹친 일반 형태 메시 자체가 존재하지 않아 뺄 것도 없었음.
+
+■ 메시 정리(총 11개, Icosphere 없음)
+- 표정 3개(face_normal 294·face_attack 533·face_damage 327) → face_normal만.
+- 손 상태 2벌×2쪽(l/r_hand_open 120·l/r_hand_close 136) → open만(자연스러운 편 손 형태,
+  Tesoro·얌마 선례와 동일 기준).
+- body(1,363)·coat(1,123)·glass(308, 안경테)·glass_lens(32, 렌즈) 전부 유지.
+- 합친 정점 3,360.
+
+■ 뼈 구조(55개, pl_ 계열 — Tesoro와 같은 리그 패턴)
+Body_Pelvis→Belly→Chest(3단 척추, Spine2 없음 대신 Chest를 Spine2로) · Head_Neck→Face ·
+LArm_Clavicle→Upper→Fore→(Hand_Fore_sup·Hand_Palm 두 자식) · 다리 Thigh→Calf→Heel→Toe ·
+코트 뼈대(coat_root 밑 c_coat×3·l/r_coat×3·l/r_coat_arm×2·l/r_collar·l/r_epaulette_joint×2,
+전부 Body_Chest 자식) · 치마자락(bl/br/fl/fr/sl/srskirt_01, Body_Pelvis 자식) · world_joint(루트).
+- 🔴 척추 자리표시 퇴화 재확인 — Body_Belly tail과 Body_Chest head가 z 0.0653으로 동일(길이
+  0). Body_Belly 자신의 구간을 bone_position_lerp 방식(50%)으로 나눠 Spine·Spine1 둘 다
+  실제 길이를 갖게 함(크로커다일·드래곤과 동일 수법).
+- LHand_Fore_sup·RHand_Fore_sup(팔뚝 보조) → ForeArm. 코트 전체(coat_root 서브트리, coat_arm
+  포함) → Spine2 강체(팔에 안 물려 있어 팔 따라 뒤집힐 위험 자체가 없음 — l_coat_arm 등은
+  구조상 LArm 계열이 아니라 coat_root 밑에서만 갈라짐). 치마자락 → Hips. world_joint → Hips.
+- 팔다리 전부 실측 확인 — 손상된 뼈 없음, 무가중치 뼈도 Spine1 외엔 없음.
+- 🔴 armature 자체가 이미 T자 레스트 자세(LeftArm→LeftHand 벡터가 순수 +X, z차 0) —
+  level_arms 불필요(뷰포트에 보였던 "주먹 쥔 듯한" 자세는 FBX가 기본으로 물고 있던 어떤
+  애니메이션 프레임의 포즈였을 뿐, 실제 bind rest 데이터는 처음부터 T자였음 — 새 22뼈
+  rest는 항상 armature 데이터의 head_local/tail_local만 쓰므로 그 포즈와 무관하게 정확함).
+
+■ 재질
+pl_sengoku_orig02(몸 전체)·pl_sengoku_orig02_trans(glass_lens) 둘 다 Metallic 1.0으로
+이미 설정된 원본 노드를 보존, Alpha 소켓 링크만 제거하고 값 1.0으로 고정 + blend_method
+OPAQUE 강제(재질을 통째로 재구성하지 않음 — 금속성 값 보존이 이번 건의 핵심).
+
+■ 검증(재임포트 + idle/walk 리타겟, Rendered 모드로 확인 — Material Preview는 가로우 때처럼
+표시 버그가 있을 수 있어 이번엔 처음부터 Rendered 사용)
+- 뼈 22개, 무가중치 뼈 Spine1만(허용).
+- 크기 [2.445, 0.967, 1.8]m(임시 1.8 정규화), 최저 z 0.
+- T자 정면 — 금색 광택 뚜렷, 코트 양옆 대칭, 찢어짐 없음.
+- Idle 프레임1 — 코트가 머리 위로 안 뜸, 양팔 자연스러운 제스처, 눈이 흰 점으로 반짝이는
+  부분은 원본 diff 텍스처 자체의 그림(공막 흰색) — 별도 발광 노드 없음, 정상.
+- Walk — 다리 확인됨(코트에 일부 가려지지만 발 위치가 앞뒤로 다름), 코트 자연스럽게 흔들림.
+
+■ 산출물(스크래치만, Assets 미반영)
+불멸_고도현.fbx · Textures/pl_sengoku_orig02_diff.png(999KB)
+
+■ 질문 — 스크립트 반영처
+PM이 최근 "산출물 보고 시 스크립트 SKINS 표에도 같이 반영"이라고 지시했는데, 이 pl_ 계열은
+gen_biped_skin.py/gen_valvebiped_skin.py가 아니라 fix_unit_fbx.py(구현담당2 전담 파일,
+"한 스크립트=한 세션" 규칙)로 처리해 온 선례임. 이번 건도 fix_unit_fbx.py에 내가 직접
+추가할지, 구현담당2에게 넘길지, 아니면 스크립트 반영 없이 스크래치 산출물만으로 충분한지
+PM 판단 부탁.
