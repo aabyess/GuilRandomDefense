@@ -1,0 +1,32 @@
+영원_이지원(파란 동물 후드 잠옷/키구루미, 공룡·용 꼬리 달림) — blender 세션(2026-09-22).
+fix_unit_fbx.py UNITS["영원_이지원"]로 처리.
+
+■ 원본
+~/Desktop/구랜디스킨모음/10_영원/영원_이지원.glb
+뼈 66(_rootJoint 포함) · 메시 4(Object_6=eyeSG2 9,336정점, Object_7=lambert3SG1 6,720정점,
++ Cube·Icosphere 조명용 더미) · 이미지 4(전부 1024²) · 애니 1(Take 001, 0~23.2프레임, 안 씀).
+
+■ 확인
+- 뼈 이름이 이미 mixamorig: + Sketchfab 번호 꼬리(예: mixamorig:Hips_01) — 희귀함_배성령
+  (다비)와 완전히 같은 계열. rename_regex로 꼬리 일괄 제거.
+- 손가락 4번 마디·HeadTop_End·Toe_End 전부 (0,0,0) 근처 쓰레기 자리(가중치 0) — 다비와
+  같은 증상, drop_bones_re로 일괄 제거(rename_regex가 꼬리를 먼저 뗀 뒤 매치).
+- 다리 레스트가 거의 수직(UpLeg→Leg→Foot 델타가 거의 -Z 하나, x/y 성분 미미) — 영원_김영원
+  처럼 쪼그려 앉은 레스트가 아니라서 유니티 Hips 자동 판정 걱정 없음(PM이 방금 찾은 원인과
+  같은 함정을 안 밟음, 직접 확인).
+- 팔 레스트는 T자가 아니라 아래로 처져 있음(수평 기준 약 58° 아래, 진짜 bind pose 값 —
+  액션이 있지만 edit bone 레스트와 무관) → tpose_arms로 폄(손가락은 이미 접어 손바닥
+  굴리기 건너뜀).
+- 재질 eyeSG2·lambert3SG1 둘 다 BaseColor가 이미 같은 Image_0 하나를 씀(직접 확인) — 그
+  한 장만 내보내 relink.
+- Cube(8정점, 면 없음 — 이 파이프라인이 안 읽음, 영원_김영원과 같은 증상)는 drop_meshes에
+  안 넣음. Icosphere(조명용 더미)만 드롭.
+
+■ 검증
+- 배치 리포트: 뼈 52개, 휴머노이드 필수 15뼈 전부 가중치 있음, T자 굽기 오차 0, 크기
+  (1.941, 1.45, 1.8)m, 최저 z 0.
+- Idle 리타겟(idle.fbx 리타겟 후 정면·측면 렌더): 접힘·찢어짐 없음, 후드·꼬리(공룡 등지느러미
+  달린 긴 꼬리)가 몸을 자연스럽게 따라감, 서 있는 자세 정상.
+
+■ 산출물(스크래치만, Assets 미반영)
+영원_이지원.fbx · Textures/jiwon_diffuse.png · idle_front.png · idle_side.png · rest_front.png
