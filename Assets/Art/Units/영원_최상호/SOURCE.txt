@@ -1,0 +1,29 @@
+영원_최상호(나비/나방 날개 달린 캐릭터, 긴 갈래머리·검은 코트) — blender 세션(2026-09-22).
+fix_unit_fbx.py UNITS["영원_최상호"]로 처리.
+
+■ 원본
+~/Desktop/구랜디스킨모음/10_영원/영원_최상호.glb
+뼈 120(3ds Max Biped "Bip001 X_NN", 문필환과 완전히 같은 계열) · 메시 2(Object_9=525241
+12,224정점 몸통, Object_11=525241_body 818정점 — 이너 레이어, 유지) · 이미지 1(512²,
+Emission+Transparent Mix 토스처 셰이더, 문필환과 같음) · 애니 14(idle 포함, 안 씀).
+
+■ 확인
+- 손에 든 무기 없음(렌더로 확인, 양손 다 빈손).
+- rename_bones=biped_rename("Bip001", fingers=5, joints=3, spine2="Spine2")(Spine2 있음,
+  문필환과 다름) + rename_strip.
+- 🔴 Bip001 Head_014_0 — Bip001 Head_014와 세계 위치가 완전히 같은 중복 뼈인데 실가중치가
+  있어(1차 배치에서 assert로 발견, "드롭 못 함") Head로 merge_bones.
+- 장식 뼈(BoneNNN, biped_rename 표에 없어 번호 꼬리만 정리되고 그대로 남음, 전부 사람
+  골격 아님, 문필환처럼 이름만 정리하고 둠): Bone001~009(머리에서 무릎 아래까지 늘어지는
+  긴 갈래머리) · Bone058~065(머리 뒤쪽 짧은 머리채) · Bone046~057(등에서 뻗는 나비 날개
+  3쌍) · Bone010~045(골반 자식 6갈래, 코트 자락 앞뒤·옆).
+
+■ 검증
+- 배치 리포트: 뼈 117개, 휴머노이드 필수 15뼈 전부 가중치 있음, 크기 (1.878, 0.616, 1.8)m,
+  최저 z 0.
+- 재수입 확인: 최상위 오브젝트 "Armature", Hips 부모 None, 다리(UpLeg→Leg→Foot) 자연스러운
+  선 자세 수준의 미세한 굽음뿐(x/y 드리프트 ~0.02~0.03, level_chain 안 씀).
+- Idle 리타겟(정면·측면 렌더): 나비 날개·긴 갈래머리 다 몸을 자연스럽게 따라감, 찢어짐 없음.
+
+■ 산출물(스크래치만, Assets 미반영)
+영원_최상호.fbx · Textures/sangho_diffuse.png · idle_front.png · idle_side.png
