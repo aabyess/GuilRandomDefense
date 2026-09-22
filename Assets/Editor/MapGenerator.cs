@@ -2995,8 +2995,9 @@ public static class MapGenerator
             // 팔각 받침(모서리 지름 6)이 칸 간격 6과 같아 맞닿는다 — 0.9배로 틈을 둔다.
             float lift = StructureDresser.PlacePedestal(parent, "받침_초월", $"초월_{units[i].unitName}_받침",
                                                         ground, 0f, SlotSpacing * 0.9f / PedestalDiameter);
+            // 스킨이 있으면 색 큐브 대신 인형을 세운다(2026-09-18 초월 25종 스킨 완성). 칸 간격보다 조금 작게.
             PlaceUnitMarker(parent, $"초월_{units[i].unitName}", new Vector3(ground.x, 0f, ground.z),
-                UnitGrade.Transcendent, lift: lift);
+                UnitGrade.Transcendent, units[i], SlotSpacing * 1.6f, lift);
         }
 
         return units.Count;

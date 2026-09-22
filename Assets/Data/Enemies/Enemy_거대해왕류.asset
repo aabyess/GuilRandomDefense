@@ -10,26 +10,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a91828e7d70cc420499707cd4f2912a5, type: 3}
-  m_Name: Enemy_거대해왕류
-  m_EditorClassIdentifier:
-  enemyName: 거대 해왕류
+  m_Name: "Enemy_\uAC70\uB300\uD574\uC655\uB958"
+  m_EditorClassIdentifier: 
+  enemyName: "\uAC70\uB300 \uD574\uC655\uB958"
   hp: 36000000
   moveSpeed: 0
   goldReward: 5000
   resourceRewards: []
+  savePointReward: 0
   rewardsAllPlayers: 0
+  rewardsKillerOnly: 0
   isBoss: 0
   armor: 141
+  magicArmorMultiplier: 1
   armorType: 2
-  prefab: {fileID: 3685248672397471059, guid: 85f952ec56b9f4258b079a5873623d2b, type: 3}
+  prefab: {fileID: 1929187827030439879, guid: eaf20b3d273bd4aa2b0dca94c9a1399b, type: 3}
   armorShredBuildingOnly: 1
   hpRegenPerSecond: 0
+  auraSkills: []
+  visualScale: 1
+  percentDamageTaken: 1
   takesPercentDamage: 0
-# ⚠️ 관통 방어 미구현 (PM 지시, 2026-09-05 — 근거 없이 필드부터 만들지 않는다):
-# 원작 A0P9 "해왕류 관통 방어" — 스톡 Aegr 기반, Def1=0.85 · Def5=0.90.
-# 이 값이 "0.85배로 만든다"인지 "85%를 깎는다"인지 미확인 — 스톡 Aegr 정의를
-# 못 봐서 확정 못 함(리서치담당 [미확인]). 관통 공격에 강한 것은 확실하다
-# (툴팁·데이터 일치). 나중에 스톡 정의를 확인하면 그때 EnemyData에 스칼라
-# 필드(예: pierceResistanceMultiplier, magicArmorMultiplier와 같은 패턴)를
-# 추가할 것 — 지금은 해왕류 한 종뿐이라 이르다.
-  pointValue: 100.0
+  pointValue: 0

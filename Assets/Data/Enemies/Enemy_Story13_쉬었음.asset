@@ -10,25 +10,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a91828e7d70cc420499707cd4f2912a5, type: 3}
-  m_Name: Enemy_Story13_쉬었음
+  m_Name: "Enemy_Story13_\uC26C\uC5C8\uC74C"
   m_EditorClassIdentifier: 
-  enemyName: 쉬었음
+  enemyName: "\uC26C\uC5C8\uC74C"
   hp: 294124.3
   moveSpeed: 0
   goldReward: 0
   resourceRewards: []
+  savePointReward: 0
   rewardsAllPlayers: 0
+  rewardsKillerOnly: 0
   isBoss: 1
-  takesPercentDamage: 0
-  # 사장님 확정(2026-09-05): 스토리13 "쉬어가는 챕터". 균등 배분(i×75/13)식이면 395(최댓값)가
-  # 나오는데 클리어 보상(Story13.asset goldReward 5,000)이 "쉬어가는" 위치라 그 식을 안 썼다.
-  # 대신 클리어 보상 골드로 난이도 위치를 구했다: 5,000은 스토리6(4,000·armor142.5)과
-  # 스토리7(6,000·armor170) 사이, 정확히 중간(5,000-4,000)/(6,000-4,000)=0.5 지점이다.
-  # armor = 142.5 + 0.5×(170-142.5) = 156.25.
   armor: 156.25
+  magicArmorMultiplier: 1
   armorType: 3
-  prefab: {fileID: 3685248672397471059, guid: 85f952ec56b9f4258b079a5873623d2b, type: 3}
+  prefab: {fileID: 5740767476888015513, guid: 348af2e0a6ed94714a711ba5329e18be, type: 3}
   armorShredBuildingOnly: 1
+  hpRegenPerSecond: 0
+  auraSkills: []
   visualScale: 50
   percentDamageTaken: 0.9
-  pointValue: 300.0
+  takesPercentDamage: 0
+  pointValue: 300
