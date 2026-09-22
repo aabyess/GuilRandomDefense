@@ -1,0 +1,39 @@
+히든_여은서(원피스 야마토, pl_aceyamato_yamato_doub01) — blender 세션(2026-09-22).
+fix_unit_fbx.py UNITS["히든_여은서"]로 처리.
+
+■ 원본
+~/Desktop/구랜디스킨모음/05_히든/히든_여은서.zip
+ - source/Yamato.rar(bsdtar로 품) 안 "Yamato by Annettlw.fbx"(공백 있음) +
+   pl_aceyamato_yamato_doub01_diff.png
+ - textures/pl_aceyamato_yamato_doub01_diff.png(같은 파일)
+
+■ 확인
+- "doub01"은 에이스+야마토 더블 캐릭터 "파일명"일 뿐 — 렌더로 직접 확인, 메시 목록에
+  에이스 요소 없음(body·horn·earring·bottle_sake 등 전부 야마토 단독분), 따로 뺄 것 없음.
+- 쇠몽둥이(카나보, weapon 메시) — 렌더로 확인, 오른손으로 실제 휘두르는 자세라 드롭.
+- 술병(bottle_sake, L_bottle 뼈로 왼손목에 작은 사슬로 매달림) — 렌더로 확인, 쥔 무기가
+  아니라 손목 장신구라 유지. 구슬 사슬 장식(l/r_chain_01~03, 팔 자식)은 이미 팔 뼈에
+  실려 있어 안 건드림 — Idle 렌더에서 몸을 자연스럽게 도는 고리 모양으로 확인.
+- 뼈대는 표준 PL_RENAME(번호 꼬리 없음), Toe 뼈 있음(요크·아틀라스와 달리 정상).
+- 🔴 world_joint 하나만 드롭했더니(1차 배치) 재수입 확인에서 Hips 부모가 그 위의 진짜
+  최상위 뼈(아마추어 이름과 같은 "pl_aceyamato_yamato_doub01", 시키 때와 같은 증상)로
+  남아 있었음 — 같이 드롭해서 고침.
+
+■ 처리
+- drop_meshes: face_attack·face_damage·face_sp·face_sp02·face_sp03(face_normal만 유지)·
+  l/r_hand_close·l/r_hand_sp01(l/r_hand_open만 유지)·weapon.
+- merge_bones: 머리카락 3갈래(b_c/f_l/f_r_hair_01)·귀걸이(l/r_earring) → Head. 가슴 흔들뼈
+  (l/r_breast_01) → Spine1. 치마 6갈래(l/r_skirt_b/f/s_01)·허리 장식 4갈래(l/r_tuna_
+  under/upper_01, "tuna"는 원본 이름 그대로 — 실제로는 하카마 허리끈/술 장식으로 추정) →
+  Hips.
+
+■ 검증
+- 배치 리포트: 뼈 37개, 휴머노이드 필수 15뼈 전부 가중치 있음, 크기 (1.432, 0.559, 1.8)m,
+  최저 z 0.
+- 재수입 확인: 최상위 오브젝트 "Armature", Hips 부모 None, 다리 완전 수직.
+- Idle 리타겟(정면·측면 렌더) — 정면 정상(얼굴 보임, 뒤돌아 서지 않음), 접힘·찢어짐 없음,
+  구슬 사슬 장식이 몸을 자연스럽게 도는 고리 모양 유지, 술병·머리카락 다 잘 따라감.
+
+■ 산출물(스크래치만, Assets 미반영)
+히든_여은서.fbx · Textures/pl_aceyamato_yamato_doub01_diff.png · idle_front.png ·
+idle_side.png

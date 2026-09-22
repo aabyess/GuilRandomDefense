@@ -2260,6 +2260,95 @@ UNITS = {
                     glb_images={0: "sangho_diffuse.png"},
                     materials=dict(textures={"525241": [("DiffuseColor", "sangho_diffuse.png")],
                                              "525241_body": [("DiffuseColor", "sangho_diffuse.png")]})),
+    # 원피스 바운티러시 아틀라스(베가펑크 위성 '폭력', pl_atlas_orig01) → 히든_전주연
+    # (2026-09-22 히든, blender 세션). zip 안 rar(bsdtar로 품 — extract_archive는 이미
+    # bsdtar만 씀, 7z 안 거침·폴백 불필요 확인) 안 pl_ 표준 계열(Body_Pelvis, PL_RENAME
+    # 그대로, 번호 꼬리 없음 — 다른 pl_ 유닛과 같은 뼈대, 우루루의 Body_Waist 같은 함정 없음).
+    # 손에 든 무기 없음(메시 목록에 weapon류 없음, rockat=등에 멘 로켓 추진체라 신체 일부로
+    # 유지 — rocket_joint 서브트리도 안 건드림).
+    "히든_전주연": dict(path="Assets/Art/Units/히든_전주연/히든_전주연.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_전주연.zip"),
+                             "source/atlas.rar", "atlas/pl_atlas_orig01 (merge).fbx"),
+                    archive_rgb={"atlas/pl_atlas_orig01_diff.png": "pl_atlas_orig01_diff.png"},
+                    drop_meshes=["face_attack", "face_damage", "face_sp01", "l_hand_close", "l_hand_sp01",
+                                 "r_hand_close", "r_hand_sp01"],
+                    # 🔴 1차 배치는 통과했지만 재수입해서 확인하니 Hips 부모가 world_joint로
+                    # 남아 있었음(다른 pl_ 유닛처럼 드롭을 깜빡함) — 오늘 교훈 그대로 적용해
+                    # 드롭, Hips를 진짜 뿌리로.
+                    drop_bones=["world_joint"],
+                    rename_bones=YORK_RENAME, no_nulls=True, orient_snap=True,
+                    merge_bones=[dict(pattern=r"^(b_collar|f_collar|l_collar|r_collar)$", into="mixamorig:Spine1"),
+                                 dict(pattern=r"^(b_l_skirt_01|b_r_skirt_01|f_l_skirt_01|f_r_skirt_01|s_l_skirt_01|s_r_skirt_01)$",
+                                      into="mixamorig:Hips"),
+                                 dict(under="b_hair_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="c_hair_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="r_hair_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="l_antenna_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="l_ear_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="r_ear_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="l_hail_01", into="mixamorig:Head", with_root=True)],
+                    materials=dict(textures={"pl_atlas_orig01": [("DiffuseColor", "pl_atlas_orig01_diff.png")]})),
+    # 원피스 야마토(pl_aceyamato_yamato_doub01, 바운티러시) → 히든_여은서(2026-09-22 히든,
+    # blender 세션). zip 안 rar(bsdtar로 품) 안 "Yamato by Annettlw.fbx"(공백 있음).
+    # "doub01"은 에이스+야마토 더블 캐릭터 파일 이름일 뿐 — 렌더로 직접 확인, 메시 목록에
+    # 에이스 관련 요소 없음(body·horn·earring·bottle_sake 등 전부 야마토 단독분), 따로 뺄 것
+    # 없음.
+    # 쇠몽둥이(카나보, weapon 메시) — 렌더로 확인, 오른손으로 실제 휘두르는 자세라 무기로
+    # 드롭(오른손 뼈 밑 r_weapon_joint는 무게 0으로 남아도 무해, 안 건드림).
+    # 술병(bottle_sake, L_bottle 뼈로 왼손목에 작은 사슬로 매달림) — 렌더로 확인, 쥔 무기가
+    # 아니라 손목에 매달린 장신구라 유지. 어깨에 걸친 구슬 사슬 장식(l/r_chain_01~03, 팔
+    # 자식)도 유지 — 이미 팔 뼈에 실려 있어 안 건드림.
+    "히든_여은서": dict(path="Assets/Art/Units/히든_여은서/히든_여은서.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_여은서.zip"),
+                             "source/Yamato.rar", "Yamato/Yamato by Annettlw.fbx"),
+                    archive_rgb={"Yamato/pl_aceyamato_yamato_doub01_diff.png": "pl_aceyamato_yamato_doub01_diff.png"},
+                    drop_meshes=["face_attack", "face_damage", "face_sp", "face_sp02", "face_sp03",
+                                 "l_hand_close", "l_hand_sp01", "r_hand_close", "r_hand_sp01", "weapon"],
+                    # 🔴 world_joint 하나만 드롭했더니(1차 배치) 재수입 확인에서 Hips 부모가
+                    # 그 위의 진짜 최상위 뼈(아마추어 이름과 같은 "pl_aceyamato_yamato_doub01",
+                    # 시키 때와 같은 증상)로 남아 있었음 — 같이 드롭.
+                    drop_bones=["pl_aceyamato_yamato_doub01", "world_joint", "HELPER_key", "HELPER_name"],
+                    rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
+                    merge_bones=[dict(under="b_c_hair_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="f_l_hair_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="f_r_hair_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="l_earring", into="mixamorig:Head", with_root=True),
+                                 dict(under="r_earring", into="mixamorig:Head", with_root=True),
+                                 dict(under="l_breast_01", into="mixamorig:Spine1", with_root=True),
+                                 dict(under="r_breast_01", into="mixamorig:Spine1", with_root=True),
+                                 dict(under="l_skirt_b_01", into="mixamorig:Hips", with_root=True),
+                                 dict(under="l_skirt_f_01", into="mixamorig:Hips", with_root=True),
+                                 dict(under="l_skirt_s_01", into="mixamorig:Hips", with_root=True),
+                                 dict(under="r_skirt_b_01", into="mixamorig:Hips", with_root=True),
+                                 dict(under="r_skirt_f_01", into="mixamorig:Hips", with_root=True),
+                                 dict(under="r_skirt_s_01", into="mixamorig:Hips", with_root=True),
+                                 dict(under="l_tuna_under_01", into="mixamorig:Hips", with_root=True),
+                                 dict(under="l_tuna_upper_01", into="mixamorig:Hips", with_root=True),
+                                 dict(under="r_tuna_under_01", into="mixamorig:Hips", with_root=True),
+                                 dict(under="r_tuna_upper_01", into="mixamorig:Hips", with_root=True)],
+                    materials=dict(textures={"pl_aceyamato_yamato_doub01":
+                                             [("DiffuseColor", "pl_aceyamato_yamato_doub01_diff.png")]})),
+    # 원피스 바운티러시 가짜 루피(데마로 블랙, pl_demaroblack_orig01) → 히든_한나웅
+    # (2026-09-22 히든, blender 세션). zip 안 rar(bsdtar로 품) 안 "fake luffy" 폴더 안
+    # "pl_demaroblack_orig01 (merge).fbx"(공백·괄호 있는 파일명).
+    # 🔴 아틀라스 때 발견한 "(merge)" 관련 90°회전+0.01배율 구조 — 이번엔 별도 빈 오브젝트가
+    # 아니라 아마추어 오브젝트 자신에게 바로 있음(이름도 "...(merge)" 그대로). matrix_world
+    # 굽기는 어느 쪽이든 결과가 같아서(직접 확인) 이 패턴 자체는 "(merge)" 파일들의 공통
+    # 내보내기 흔적으로 보이고 정면·좌우 반전의 직접 원인은 아닌 듯 — 계속 지켜볼 것.
+    # 무기(가짜 권총류, 왼손 전용) — l_hand_weapon·l_weapon_01·l_weapon_02(935+704정점,
+    # 꽤 큼) 렌더 없이도 이름·정점 규모로 명백, 손 변형 중 close/sp01도 같이 드롭.
+    "히든_한나웅": dict(path="Assets/Art/Units/히든_한나웅/히든_한나웅.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_한나웅.zip"),
+                             "source/fake luffy.rar", "fake luffy/pl_demaroblack_orig01 (merge).fbx"),
+                    archive_rgb={"fake luffy/pl_demaroblack_orig01_diff.png": "pl_demaroblack_orig01_diff.png"},
+                    drop_meshes=["face_attack", "face_damage", "face_sp01", "l_hand_close", "l_hand_sp01",
+                                 "r_hand_close", "r_hand_sp01", "l_hand_weapon", "l_weapon_01", "l_weapon_02"],
+                    drop_bones=["pl_demaroblack_orig01", "world_joint"],
+                    rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
+                    merge_bones=[dict(pattern=r"^[bfs]_[lr]_coat_01$", into="mixamorig:Spine"),
+                                 dict(under="c_collar_01", into="mixamorig:Spine1", with_root=True),
+                                 dict(under="c_hat_01", into="mixamorig:Head", with_root=True)],
+                    materials=dict(textures={"pl_demaroblack_orig01": [("DiffuseColor", "pl_demaroblack_orig01_diff.png")]})),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")
