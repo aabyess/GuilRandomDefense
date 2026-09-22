@@ -2399,11 +2399,18 @@ UNITS = {
                         "MAT_HERO_GENOS04_Body": [("DiffuseColor", "genos_body_metal.png")],
                         "MAT_HERO_GENOS04_Meta01": [("DiffuseColor", "genos_body_metal.png")]})),
     # 원피스 바운티러시 알비다(pl_alvida_orig01) → 히든_석성례(2026-09-22 히든, blender
-    # 세션). zip 안 rar(bsdtar로 품) 안 pl_alvida_orig01.fbx. 표준 pl_ 계열, world_joint가
-    # 바로 뿌리(그 위에 별도 아마추어 이름 뼈 없음 — 시키·야마토와 다름, 직접 확인), Toe
-    # 뼈 있음.
+    # 세션). 🔴 1차 렌더에서 "알비다가 아니다"로 판단해 멈췄다가(날씬한 여성이 아니라 거구
+    # 남성형으로 보여서) PM 확인 — 슈베슈베 열매를 먹기 전(원작 1화, 동쪽 바다) 뚱뚱한
+    # 알비다가 맞음. 남색 코트·깃털 모자·체크 셔츠 차림의 거구 체형이 원작 그대로.
+    # zip 안 rar(bsdtar로 품) 안 pl_alvida_orig01.fbx. 표준 pl_ 계열, world_joint가 바로
+    # 뿌리(그 위에 별도 아마추어 이름 뼈 없음 — 시키·야마토와 다름, 직접 확인), Toe 뼈 있음.
+    # 🔴 1차 배치: "기본 자세≠쉬는 자세" 2.1991(다른 pl_ 유닛은 0.0) — 렌더로 확인하니 몸
+    # 전체가 대각선으로 기울어진 채 굳어 있었음(가져온 기본 자세가 애니메이션 중간 프레임)
+    # → use_rest_pose로 진짜 결합 자세(한쪽 팔 든 비대칭 포즈, 원작 자세로 보임)를 씀.
     # 철퇴(weapon_01·weapon_02, 오른손 RHand_Weapon01 뼈) — 렌더 없이도 이름·정점 규모로
-    # 명백해 드롭.
+    # 명백해 드롭. 보조뼈(Bellyband·Body_Bust·머리카락·스카프)는 전부 단일 체인이라 로켓
+    # 같은 3갈래 구조가 없음(오늘 교훈 확인) — Head·Neck이 mixamorig:Head/Neck 그대로
+    # 잡힐 것으로 보임.
     "히든_석성례": dict(path="Assets/Art/Units/히든_석성례/히든_석성례.fbx", kind="human", size=("height", 1.8),
                     archive=(os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_석성례.zip"),
                              "source/pl_alvida_orig01.rar", "pl_alvida_orig01/pl_alvida_orig01.fbx"),
@@ -2425,6 +2432,33 @@ UNITS = {
                                  dict(under="LScarf01", into="mixamorig:Spine1", with_root=True),
                                  dict(under="RScarf01", into="mixamorig:Spine1", with_root=True)],
                     materials=dict(textures={"pl_alvida_orig01": [("DiffuseColor", "pl_alvida_orig01_diff.png")]})),
+    # 원피스 바운티러시 가뭄의 잭(맘모스 인수형/orig01) → 히든_정기훈(2026-09-22 히든,
+    # blender 세션). zip 안 7z(bsdtar로 품) 안 pl_jack/ 폴더에 두 판본:
+    #   orig01 — 렌더로 확인, 사람형(두 다리로 선 표준 자세, 머리에 맘모스 어금니 장식,
+    #     너덜너덜한 모피 망토, 해수 벨트) — 메시 body·coat·face×3·l/r_hand×2·l/r_horn·
+    #     l/r_weapon(쌍낫 추정) 정상. 기본으로 이걸 씀(PM 지시).
+    #   orig02 — 렌더로 확인, 완전한 네발 맘모스 짐승형(인간형 아님, 얼굴·손 메시 자체가
+    #     없음, body·fur·l/r_armor·l/r_horn뿐) — 게임 캐릭터 기본 모습으로 안 맞아 안 씀
+    #     (사람형 리그 자체가 불가능한 체형이라 orig01이 정상이면 물어볼 필요 없음).
+    # 쌍낫(l_weapon·r_weapon, 양손 l/r_weapon_joint 뼈) — 렌더로 확인, 드롭.
+    # 코트(모피 망토, coat_root 서브트리 15개) → Spine1 강체. 뿔 장식(l/r_horn_joint_01
+    # 서브트리) → Head. 치마(허리에 걸친 천 6갈래, b/f/s_l/r_skirt_01) → Hips.
+    "히든_정기훈": dict(path="Assets/Art/Units/히든_정기훈/히든_정기훈.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_정기훈.zip"),
+                             "source/pl_jack.7z", "pl_jack/pl_jack_orig01.fbx"),
+                    archive_rgb={"pl_jack/pl_jack_orig01_diff.tga": "pl_jack_orig01_diff.png"},
+                    drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close",
+                                 "l_weapon", "r_weapon"],
+                    drop_bones=["world_joint"],
+                    rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
+                    merge_bones=[dict(under="coat_root", into="mixamorig:Spine1", with_root=True),
+                                 dict(under="l_horn_joint_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="r_horn_joint_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="c_hair_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="l_hair_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="r_hair_01", into="mixamorig:Head", with_root=True),
+                                 dict(pattern=r"^[bfs]_[lr]_skirt_01$", into="mixamorig:Hips")],
+                    materials=dict(textures={"pl_jack_orig01": [("DiffuseColor", "pl_jack_orig01_diff.png")]})),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")

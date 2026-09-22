@@ -1,0 +1,44 @@
+히든_석성례(원피스 알비다 — 슈베슈베 열매 먹기 전, 원작 1화 거구 모습, pl_alvida_orig01)
+— blender 세션(2026-09-22). fix_unit_fbx.py UNITS["히든_석성례"]로 처리.
+
+■ 🔴 정체 확인
+1차 렌더에서 날씬한 여성이 아니라 거구 남성형 실루엣(남색 코트·깃털 모자·체크 셔츠·보라
+허리띠)으로 보여 "알비다가 아니다"로 판단해 멈추고 PM에게 확인 요청 — PM이 사장님께 확인:
+슈베슈베 열매를 먹기 전(원작 1화, 동쪽 바다) 뚱뚱한 알비다가 맞음. "orig01"이 그 원본
+모습, 날씬한 알비다는 열매 능력 이후 모습. 확인 뒤 계속 진행.
+
+■ 원본
+~/Desktop/구랜디스킨모음/05_히든/히든_석성례.zip
+ - source/pl_alvida_orig01.rar(bsdtar로 품) 안 pl_alvida_orig01.fbx + _diff.png(jpeg 사본도
+   있으나 안 씀) + matcap·ramp·dither·abnormal_pattern(셰이더 전용, 안 씀)
+ - textures/pl_alvida_orig01_diff.png(같은 파일)
+
+■ 확인
+- 표준 pl_ 계열, world_joint가 바로 뿌리(그 위에 별도 아마추어 이름 뼈 없음 — 시키·야마토
+  와 다름, 직접 확인). Toe 뼈 있음(PL_RENAME 그대로).
+- 🔴 1차 배치: "기본 자세≠쉬는 자세" 2.1991(다른 pl_ 유닛은 대부분 0.0) — 렌더로 확인하니
+  몸 전체가 대각선으로 기울어진 채 굳어 있었음(가져온 기본 자세가 진짜 결합 자세가 아니라
+  애니메이션 중간 프레임으로 보임) → use_rest_pose로 진짜 결합 자세(한쪽 팔을 든 비대칭
+  포즈 — 원작 특유의 과장된 자세로 보임)를 씀. 결과 렌더 정상.
+- 철퇴(weapon_01·weapon_02, 오른손 RHand_Weapon01 뼈) — 렌더 없이도 이름·정점 규모로
+  명백해 드롭.
+- 보조뼈(Bellyband·Body_Bust·머리카락 3갈래·좌우 스카프)는 전부 단일 체인 구조라 로켓팩
+  같은 "갈래 셋" 오탐 구조가 없음(오늘 교훈 확인) — Head·Neck이 mixamorig:Head/Neck으로
+  정상 매핑될 것으로 보임.
+
+■ 처리
+- drop_meshes: face_attack·face_damage(face_normal만 유지)·l_hand_close·r_hand_close
+  (l/r_hand_open만 유지)·weapon_01·weapon_02.
+- merge_bones: 허리띠(Bellyband) → Hips. 가슴 흔들뼈(Body_Bust) → Spine1. 머리카락
+  (CHair01·LSide_Hair·RSide_Hair) → Head. 좌우 스카프(LScarf01·RScarf01) → Spine1.
+- use_rest_pose=True(위 1차 반려 수정).
+
+■ 검증
+- 배치 리포트: 뼈 22개, 휴머노이드 필수 15뼈 전부 가중치 있음, 크기 (2.622, 1.079, 1.8)m
+  (한쪽 팔을 위로 든 비대칭 원작 자세라 폭이 큼 — 팔을 내린 상태 기준 폭은 이보다 작을
+  것), 최저 z 0.
+- 재수입 확인: 최상위 오브젝트 "Armature", Hips 부모 None, 다리 완전 수직.
+- Idle 리타겟(정면·측면 렌더) — 접힘·찢어짐 없음, 코트·모자·허리띠 다 자연스럽게 따라감.
+
+■ 산출물(스크래치만, Assets 미반영)
+히든_석성례.fbx · Textures/pl_alvida_orig01_diff.png · idle_front.png · idle_side.png
