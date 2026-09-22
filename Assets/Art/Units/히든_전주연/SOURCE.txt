@@ -1,0 +1,50 @@
+히든_전주연(원피스 베가펑크 위성 '폭력' 아틀라스, pl_atlas_orig01) — blender 세션
+(2026-09-22). fix_unit_fbx.py UNITS["히든_전주연"]로 처리.
+
+■ 원본
+~/Desktop/구랜디스킨모음/05_히든/히든_전주연.zip
+ - source/atlas.rar(bsdtar로 품 — extract_archive()는 이미 bsdtar만 씀, 7z 안 거쳐 PM
+   우려한 "Unsupported Method" 문제 자체가 없었음, 확인) 안 atlas/pl_atlas_orig01
+   (merge).fbx(공백·괄호 있는 파일명) + pl_atlas_orig01_diff.png + stg_gasha_tex_
+   bayer_dither.png(셰이더 전용, 안 씀)
+ - textures/pl_atlas_orig01_diff.png(같은 파일)
+
+■ 확인
+- 손에 든 무기 없음(메시 목록에 weapon류 자체가 없음). rockat(등에 멘 로켓 추진체,
+  748정점)은 신체 일부(디자인 자체)라 메시는 유지.
+- 뼈대는 표준 PL_RENAME 계열(Body_Pelvis 등 번호 꼬리 없음, 우루루의 Body_Waist 같은
+  함정 없음)이지만 LFoot_Toe·RFoot_Toe가 없음(요크와 같은 증상) → YORK_RENAME(ToeBase
+  뺀 PL_RENAME).
+- 🔴 1차 배치는 통과했지만 재수입해서 확인하니 Hips 부모가 world_joint로 남아 있었음
+  (다른 pl_ 유닛처럼 드롭을 깜빡함) — drop_bones=["world_joint"] 추가해서 Hips를 진짜
+  뿌리로 고침.
+- 🔴 2차 PM 반려(유니티 Idle에서 고개가 앞으로 숙여짐, 로켓팩이 안 보임) — 제 파이프라인
+  (블렌더 직접 본이름 복사 리타겟)에서는 재현이 안 됐음(레스트 자세·본 방향·Idle 회전값
+  다 정상, 얼굴 클로즈업도 정상). PM이 유니티에서 직접 실측: Head가 mixamorig:Head가
+  아니라 rocket_joint로 잘못 매핑돼 있었음 — rocket_joint 밑에 l/r_rocket_joint 두 자식이
+  갈라진 모양이 유니티 자동 매핑엔 "머리+눈 둘" 구조로 보여서 그쪽을 Head로 골랐고, Idle의
+  고개 끄덕임이 로켓팩에 걸리면서 진짜 머리는 기본 자세로 남아 숙여진 것처럼 보인 것.
+  수정: rocket_joint 서브트리(l/r_rocket_joint 포함, 748정점) 전체를 merge_bones로
+  Spine1 강체에 합쳐서 그 "머리처럼 보이는" 구조 자체를 없앰. 재수입해서 rocket 관련 뼈가
+  스켈레톤에 하나도 안 남은 것 확인(뼈 30→27개).
+
+■ 처리
+- drop_meshes: face_attack·face_damage·face_sp01(face_normal만 유지)·l/r_hand_close·
+  l/r_hand_sp01(l/r_hand_open만 유지).
+- merge_bones: 옷깃(b/f/l/r_collar) → Spine1. 치마(b/f/s_l/r_skirt_01, 6개) → Hips.
+  머리카락·더듬이·귀(b_hair_01·c_hair_01·r_hair_01·l_antenna_01·l_ear_01·r_ear_01·
+  l_hail_01, 각 서브트리) → Head. 로켓팩(rocket_joint 서브트리, 위 2차 반려 수정) → Spine1.
+  tail_01~04(꼬리)·l/r_domshoes_01(부츠 장식)은 사람 골격이 아니라 그대로 둠.
+- 텍스처: archive_rgb로 알파 뺀 RGB PNG로 relink.
+
+■ 검증
+- 배치 리포트: 뼈 27개, 휴머노이드 필수 15뼈 전부 가중치 있음, 크기 (1.569, 1.052, 1.8)m,
+  최저 z 0.
+- 재수입 확인: 최상위 오브젝트 "Armature", Hips 부모 None, 다리 완전 수직, rocket 관련
+  뼈 스켈레톤에서 완전히 사라짐.
+- Idle 리타겟(정면·측면 렌더) — 접힘·찢어짐 없음, 머리카락·로켓부츠·로켓팩 다 자연스럽게
+  따라감(단, 이 렌더 방식으로는 애초에 2차 반려 증상이 재현된 적이 없어 로켓팩 문제 해결
+  자체는 이 렌더로 확인 불가 — 뼈 목록에서 rocket 계열이 사라진 것으로 구조적 수정 확인).
+
+■ 산출물(스크래치만, Assets 미반영)
+히든_전주연.fbx · Textures/pl_atlas_orig01_diff.png · idle_front.png · idle_side.png

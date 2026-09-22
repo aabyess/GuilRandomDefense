@@ -2286,7 +2286,15 @@ UNITS = {
                                  dict(under="l_antenna_01", into="mixamorig:Head", with_root=True),
                                  dict(under="l_ear_01", into="mixamorig:Head", with_root=True),
                                  dict(under="r_ear_01", into="mixamorig:Head", with_root=True),
-                                 dict(under="l_hail_01", into="mixamorig:Head", with_root=True)],
+                                 dict(under="l_hail_01", into="mixamorig:Head", with_root=True),
+                                 # 🔴 PM 진단(유니티 실측) — rocket_joint 밑에 l/r_rocket_joint
+                                 # 두 자식이 갈라져 있는 모양이 유니티 자동 매핑엔 "머리+눈 둘"
+                                 # 구조로 보여서 Head가 진짜 mixamorig:Head가 아니라
+                                 # rocket_joint로 잘못 잡혔음(Idle 고개 끄덕임이 로켓팩에
+                                 # 걸리고 진짜 머리는 기본 자세로 남아 숙여진 것처럼 보인
+                                 # 원인). 등 로켓팩을 몸통(Spine1) 강체로 합쳐서 그 구조
+                                 # 자체를 없앤다.
+                                 dict(under="rocket_joint", into="mixamorig:Spine1", with_root=True)],
                     materials=dict(textures={"pl_atlas_orig01": [("DiffuseColor", "pl_atlas_orig01_diff.png")]})),
     # 원피스 야마토(pl_aceyamato_yamato_doub01, 바운티러시) → 히든_여은서(2026-09-22 히든,
     # blender 세션). zip 안 rar(bsdtar로 품) 안 "Yamato by Annettlw.fbx"(공백 있음).
