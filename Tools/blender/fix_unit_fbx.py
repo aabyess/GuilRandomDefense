@@ -1189,6 +1189,54 @@ UNITS = {
                     seed_zero_bones=0.001,
                     materials=dict(textures={"pl_sengoku_orig02": [("DiffuseColor", "pl_sengoku_orig02_diff.png")],
                                              "pl_sengoku_orig02_trans": [("DiffuseColor", "pl_sengoku_orig02_diff.png")]})),
+    # 원피스 바운티러시 흰수염 에드워드 뉴게이트 전성기(pl_whitebeard_youn01) → 불멸_이이삭
+    # (2026-09-22 불멸, blender 세션). 원본이 zip 안 glb 하나(바로 source=, archive 불필요).
+    #   pl_ 리그 뼈 61(센고쿠와 같은 계열이나 Sketchfab glb라 전부 "_NN" 번호 꼬리 — rename_strip
+    #   으로 PL_RENAME 그대로 재사용) · 메시 14 · 재질 1(_trans 없음) · 무가중치 0.
+    #   겹친 변형: face_normal만(attack·damage 뺌). 손은 PM 지시대로 open만(hold·close 뺌 —
+    #   무기를 손에서 없애니 쥔 모양 자체가 안 맞음).
+    #   🔴 무기(weapon, 언월도) — PM 지시대로 뺌. 메시(weapon)뿐 아니라 그 부착 뼈
+    #   weapon_01_047(RHand_Palm 자식)도 drop_bones로 같이 뺌(메시가 없으면 무가중치로
+    #   남는데, 굳이 남겨 둘 이유가 없어 정리).
+    #   🔴 코트 — PM 경고대로 어깨에 걸친 망토형(소매 안 낌). coat_root 서브트리(c_coat×3·
+    #   c_collar·l/r_coat×3·l/r_coat_arm×3·l/r_collar) 전부 Chest(mixamorig:Spine1)로 강체 —
+    #   이 리그도 coat_arm이 LArm/RArm 계열이 아니라 coat_root 밑에서만 갈라져(직접 확인)
+    #   팔 뼈에 안 물려 있어 팔 따라 뒤집힐 위험 자체가 없음(센고쿠와 같은 구조).
+    #   머리카락(c_hair×2·l_hair×2·r_hair×2)·모자(hat_parts) → Head. 허리끈 waist_01/02 → Hips.
+    #   뿌리 쪽 보조 뼈(post_flag·pre_flag·world_joint·HELPER_key·HELPER_name, 전부 무가중치
+    #   확인) → drop_bones.
+    #   거구 체형 — 얌마·센고쿠 선례대로 키 1.8 정규화(유니티 쪽에서 최종 크기 조정).
+    "불멸_이이삭": dict(path="Assets/Art/Units/불멸_이이삭/불멸_이이삭.fbx", kind="human", size=("height", 1.8),
+                    source=os.path.join(SKINS, "09_불멸/불멸_이이삭.glb"),
+                    # 🔴 glTF "바인드 자세 추정"(기본값 켜짐)이 이 리그에서 완전히 잘못 재구성돼
+                    # 뼈·메시 전부가 z≈29.8(정상 범위 0~1.8과 무관)로 튀었다(직접 확인 — 조명용
+                    # Icosphere만 정상 z −1~1, 캐릭터 전부는 z 29.76~29.815). 덴지·좀비·루피·
+                    # 나나치와 같은 함정 — guess_bind 꺼서 장면 기본 자세를 그대로 쓴다.
+                    gltf_guess_bind=False,
+                    glb_images={0: "pl_whitebeard_youn01_diff.png"},   # glb 내장 이미지(Image_0, 1024², 외부 텍스처 파일 없음)
+                    # glb 임포트라 오브젝트 이름이 Object_N(글b 노드 순서) — 직접 확인한 대응:
+                    # Object_7=face_attack · Object_8=face_damage · Object_13=l_hand_close ·
+                    # Object_15=l_hand_hold · Object_19=r_hand_close · Object_21=r_hand_hold ·
+                    # Object_24=weapon.
+                    drop_meshes=["Object_7", "Object_8", "Object_13", "Object_15", "Object_19", "Object_21", "Object_24", "Icosphere"],
+                    # 🔴 PM 재반려(2026-09-22, 유니티 rig) — _rootJoint 자체를 안 빼서 최상위가
+                    # Armature > _rootJoint > mixamorig:Hips로 남아 유니티가 _rootJoint를
+                    # Hips로 오인했다(뼈 31개, 다른 유닛 25개 수준과 다름). _rootJoint도 같이
+                    # 뺀다 — 부모 없는 진짜 루트라 빼면 mixamorig:Hips가 Armature 바로 밑
+                    # 최상위가 된다(센고쿠·테소로와 같은 형태).
+                    drop_bones=["_rootJoint", "pl_whitebeard_youn01_01", "post_flag_02", "pre_flag_00",
+                                "world_joint_03", "HELPER_key_058", "HELPER_name_059", "weapon_01_047"],
+                    rename_bones=PL_RENAME, rename_strip=r"_[0-9]+$", no_nulls=True, orient_snap=True,
+                    merge_bones=[dict(pattern=r"^(coat_root|c_coat|c_collar|l_coat|l_coat_arm|l_collar"
+                                        r"|r_coat|r_coat_arm|r_collar)(_[0-9]+)*$", into="mixamorig:Spine1"),
+                                 dict(pattern=r"^waist(_[0-9]+)*$", into="mixamorig:Hips"),
+                                 dict(pattern=r"^(c_hair|l_hair|r_hair|hat_parts)(_[0-9]+)*$", into="mixamorig:Head"),
+                                 dict(pattern=r"^LHand_Fore_sup(_[0-9]+)*$", into="mixamorig:LeftForeArm"),
+                                 dict(pattern=r"^RHand_Fore_sup(_[0-9]+)*$", into="mixamorig:RightForeArm")],
+                    tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm", "Forearm": f"mixamorig:{side}ForeArm",
+                                    "Hand": f"mixamorig:{side}Hand"} for s, side in (("L", "Left"), ("R", "Right"))},
+                    seed_zero_bones=0.001,
+                    materials=dict(textures={"pl_whitebeard_youn01": [("DiffuseColor", "pl_whitebeard_youn01_diff.png")]})),
     # 나루토 젊은 오비토(NUNS4 XPS 립 「Obito (Young Cloak Hidden)」, 원본 .blend) → 제한_김민규(2026-09-17 제한됨). zip → source/*.rar → OBXBod1.blend.
     #   뼈 192(`2obx00t0 l thigh` 식 Biped 소문자) · 메시 6(body·hood·Hcells(하시라마 세포)·wood(나무 가시)·face·eye — 얼굴·눈은 한쪽 절반뿐, 나머지 반은 세포 몸) · 애니 0 · 쉬는 자세 A자.
     #   🔴 upperarm·forearm·calf 본체 뼈는 가중치 0 — 전부 비틀림 보조 뼈(arm bone01~06·sleeve·foot bone01~05)에 실려 있다 → 본체로 합친다.
@@ -2080,7 +2128,22 @@ def fbx_texture_table(path):
     return table
 
 
-def relink_textures(table, tex_dir):
+def _find_texture(tex_dir, fallback_dir, fn):
+    """🔴 흰수염(2026-09-22) — --out 시험 때 tex_dir(=tex_out_dir)이 방금 이번 실행이 쓴
+    파일만 있는 빈 폴더일 수 있다(archive_rgb 등을 안 쓰는 유닛이 이미 커밋된 실제 Textures/
+    파일을 참조하는 경우). tex_dir에 없으면 fallback_dir(실제 커밋 경로)에서 읽기만 한다
+    (기존 유닛 --out 회귀 시험이 깨지지 않게 — 쓰기는 절대 fallback_dir로 안 감)."""
+    file = os.path.join(tex_dir, fn)
+    if os.path.isfile(file):
+        return file
+    if fallback_dir:
+        alt = os.path.join(fallback_dir, fn)
+        if os.path.isfile(alt):
+            return alt
+    return file
+
+
+def relink_textures(table, tex_dir, fallback_dir=None):
     """재질마다 노드를 비우고 원칙형 BSDF 하나로 다시 짜 기준 FBX 표대로 텍스처를 건다(표에 없는 재질은 텍스처 없이)."""
     from bpy_extras.node_shader_utils import PrincipledBSDFWrapper
     used = sorted({s.material.name for o in bpy.context.scene.objects if o.type == "MESH" for s in o.material_slots if s.material})
@@ -2101,14 +2164,14 @@ def relink_textures(table, tex_dir):
                 done.append(f"{mat_name}.BaseColor={tuple(fn)}")
                 continue
             assert prop in FBX_TEX_SLOT, f"{mat_name}: 옮길 줄 모르는 텍스처 속성 {prop}"
-            file = os.path.join(tex_dir, fn)
+            file = _find_texture(tex_dir, fallback_dir, fn)
             assert os.path.isfile(file), f"{mat_name}: 텍스처 파일이 없다 {file}"
             getattr(new, FBX_TEX_SLOT[prop]).image = bpy.data.images.load(file, check_existing=True)
             done.append(f"{mat_name}.{prop}={fn}")
     return done
 
 
-def build_materials(spec, tex_dir):
+def build_materials(spec, tex_dir, fallback_dir=None):
     """재질을 새로 짠다 — mesh_material(메시 통째로 한 재질)·face_runs(면 순서 연속 구간) 뒤 textures 표대로 텍스처를 문다."""
     done = {}
     for mesh_name, mat_name in spec.get("mesh_material", {}).items():
@@ -2134,7 +2197,7 @@ def build_materials(spec, tex_dir):
                 polys[j].material_index = k
             i += n
         done[mesh_name] = {m: sum(n for mm, n in runs if mm == m) for m in order}
-    done["텍스처"] = relink_textures(spec["textures"], tex_dir)
+    done["텍스처"] = relink_textures(spec["textures"], tex_dir, fallback_dir)
     return done
 
 
@@ -2736,6 +2799,12 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     if cfg.get("hold"):
         return {"이름": name, "보류": cfg["hold"]}
     dst_path = os.path.join(ROOT, cfg["path"])
+    # 🔴 흰수염(2026-09-22, PM 지시) — 아래 네 군데 텍스처 저장소(archive_rgb·glb_images·
+    # texture_file 복사·단색 PNG 생성)가 전부 dst_path 기준으로만 썼다. --out으로 시험
+    # 내보내기를 해도 이 텍스처들은 커밋된 실제 Assets Textures/에 그대로 덮어써졌다(센고쿠
+    # 시험 때 실측 — git status에 잡혀 되돌림). FBX 출력과 같은 규칙으로 --out이 있으면
+    # 거기 Textures/에 쓰게 한다.
+    tex_out_dir = os.path.join(out_dir, "Textures") if out_dir else os.path.join(os.path.dirname(dst_path), "Textures")
     orig = original(cfg) if cfg.get("rev") else dst_path
     src = cfg.get("source", orig)
     arc_textures = []
@@ -2753,7 +2822,7 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         got = extract_archive(arc, [member] + list(cfg.get("archive_textures", ())))
         src, arc_textures = got[0], got[1:]
         if cfg.get("archive_rgb"):                                      # 압축 속 텍스처를 알파 뺀 RGB PNG로 유닛 Textures/에 새 이름으로(재질을 짜기 전에 — 재질 표가 이 파일을 부른다)
-            tex_repo = os.path.join(os.path.dirname(dst_path), "Textures")
+            tex_repo = tex_out_dir
             os.makedirs(tex_repo, exist_ok=True)
             members = list(cfg["archive_rgb"])
             rgb_arc = outer[0] if cfg.get("archive_rgb_outer") else arc   # 🔸 젊은 오비토(2026-09-17): 텍스처 PNG가 rar 안이 아니라 바깥 zip의 textures/에 있다
@@ -3047,11 +3116,11 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             report["테이크 이름"] = [c[0] for c in clips]
     scene = bpy.context.scene
     if recipe is not None:
-        report["텍스처"] = relink_textures(ref["textures"], os.path.join(os.path.dirname(dst_path), "Textures"))
+        report["텍스처"] = relink_textures(ref["textures"], tex_out_dir, os.path.join(os.path.dirname(dst_path), "Textures"))
     if cfg.get("glb_images"):                                           # glb 내장 이미지를 원본 바이트 그대로 재질 이름 기준 파일로(재질을 짜기 전에)
         import json as _json
         import struct as _struct
-        tex_repo = os.path.join(os.path.dirname(dst_path), "Textures")
+        tex_repo = tex_out_dir
         os.makedirs(tex_repo, exist_ok=True)
         raw = open(src, "rb").read()
         jlen = _struct.unpack_from("<I", raw, 12)[0]
@@ -3076,7 +3145,7 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                     g.name = new
         report["이름 바꾼 뼈"] = len(table)
     if cfg.get("copy_textures"):                                        # 흩어진 원본 텍스처를 재질 이름 기준 파일명으로 유닛 Textures/에(재질을 짜기 전에)
-        tex_repo = os.path.join(os.path.dirname(dst_path), "Textures")
+        tex_repo = tex_out_dir
         os.makedirs(tex_repo, exist_ok=True)
         for src_tex, dst_name in cfg["copy_textures"].items():
             shutil.copy2(os.path.expanduser(src_tex), os.path.join(tex_repo, dst_name))
@@ -3086,7 +3155,7 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         # 3ds Max 맵이 파일 경로 없이 빠진 FBX(아이언맨 Map #1·#3) + 색만 있는 재질: 재질마다 기본색을 단색 PNG로 구워 Textures/<안전한 재질 이름>.png에 건다.
         #   None = 원본 기본색 그대로, (r,g,b) = 선형 색으로 바로잡음(3ds Max 내보내기가 black·darksilver를 0.8 회색, yellow를 흰색으로 떨궜다).
         from bpy_extras.node_shader_utils import PrincipledBSDFWrapper
-        tex_repo = os.path.join(os.path.dirname(dst_path), "Textures")
+        tex_repo = tex_out_dir
         os.makedirs(tex_repo, exist_ok=True)
         table = dict((mat_spec or {}).get("textures", {}))
         solid_done = {}
@@ -3102,7 +3171,7 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         mat_spec = dict(mat_spec or {}, textures=table)
         report["단색 텍스처"] = solid_done
     if mat_spec:
-        report["재질 새로"] = build_materials(mat_spec, os.path.join(os.path.dirname(dst_path), "Textures"))
+        report["재질 새로"] = build_materials(mat_spec, tex_out_dir, os.path.join(os.path.dirname(dst_path), "Textures"))
     meshes = [o for o in scene.objects if o.type == "MESH"]
     mats_before = sorted({s.material.name for o in meshes for s in o.material_slots if s.material})
     if arm is not None and cfg.get("squash_chain"):

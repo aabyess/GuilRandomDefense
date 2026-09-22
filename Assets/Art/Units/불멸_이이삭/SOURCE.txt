@@ -1,0 +1,47 @@
+불멸_이이삭(흰수염 에드워드 뉴게이트 전성기, One Piece 바운티러시 pl_whitebeard_youn01)
+— blender 세션(2026-09-22). fix_unit_fbx.py UNITS["불멸_이이삭"]로 처리, 정본은 스크립트.
+
+■ 원본
+~/Desktop/구랜디스킨모음/09_불멸/불멸_이이삭.glb (1.3MB)
+PM 사전조사: 뼈 61·재질 1·이미지 1·애니 없음. pl_ 바운티러시 리그(센고쿠·테소로와 같은 계열).
+메시 14: body·coat·hair·hat·weapon + face_attack/damage/normal + l/r_hand_close/hold/open.
+
+■ 확인 결과(PM 지시 3건)
+1) 코트 — 어깨에 걸친 망토형(소매 안 낌) 맞음. coat_root 서브트리가 LArm/RArm 계열이 아니라
+   coat_root 밑에서만 갈라져 팔 뼈에 안 물려 있음(직접 확인) → 전부 Chest(mixamorig:Spine1)
+   강체. 팔 자세와 완전히 무관하게 안 뜸(구조적으로 보장, 자세 실험 불필요).
+2) 무기(weapon, 언월도) — 메시(weapon)와 부착 뼈(weapon_01) 둘 다 뺌. 손은 open만 남김
+   (hold·close 뺌).
+3) 거구 체형 — 얌마·센고쿠 선례대로 키 1.8 정규화.
+
+■ 새로 발견한 버그 3건(스크립트 자체를 고침, 다른 유닛 회귀 확인함)
+- archive_rgb 등 텍스처 저장 4곳이 --out 무시하고 항상 실제 Assets Textures/에 썼음(센고쿠
+  때 실측) → out_dir 있으면 거기 쓰게 고침, 읽기는 --out 우선 + 실제 경로 폴백.
+- glTF "바인드 자세 추정" 실패로 뼈·메시 전부 z≈29.8로 튐(조명용 Icosphere만 정상 z −1~1로
+  비교 발견) → gltf_guess_bind=False로 해결(덴지·좀비·루피·나나치와 같은 함정).
+- 🔴 PM 재반려(1차) — `_rootJoint` 자체를 drop_bones에서 빠뜨려 최상위가
+  Armature > _rootJoint > mixamorig:Hips로 남았고, 유니티가 _rootJoint를 Hips로 오인
+  (뼈 31개로 잡힘). `_rootJoint`를 drop_bones에 추가해 해결 — 재검증 결과 mixamorig:Hips가
+  Armature 바로 밑 최상위(부모 없음), 전체 뼈 21개(센고쿠·테소로와 같은 수준). PM 유니티
+  재확인 통과.
+
+■ 메시 정리
+- 표정 3개 → face_normal만. 손 6벌 → l/r_hand_open만. weapon·Icosphere(조명구, 라이브
+  세션 임포트엔 안 보였지만 배치 로드엔 있었음) 드롭. 최종 7개.
+
+■ 뼈 처리(61→21)
+- PL_RENAME + rename_strip(r"_[0-9]+$")로 번호 꼬리 뗀 이름 매칭.
+- coat_root 서브트리(21개) → Spine1(코트). waist_01/02(2개) → Hips(허리끈). c/l/r_hair·
+  hat_parts(7개) → Head. L/RHand_Fore_sup → 해당 ForeArm.
+- drop_bones: _rootJoint(진짜 루트, 1차 반려 원인) · pl_whitebeard_youn01_01(추가 루트 래퍼,
+  안 빼면 크기 계산이 깨짐 — 실측) · post_flag·pre_flag·world_joint·HELPER_key·HELPER_name·
+  weapon_01(전부 무가중치 확인).
+
+■ 검증(T자 렌더 + idle 리타겟, Rendered 모드 + 내보낸 FBX 재임포트로 Hips 부모 직접 확인)
+- 뼈 21개, 휴머노이드 필수 15뼈 전부 가중치 있음, 뼈 넘침 0, T자 굽기오차 0.
+- mixamorig:Hips 부모 = 없음(최상위), Armature 오브젝트 부모 = 없음(씬 최상위).
+- 크기 [1.932, 0.966, 1.8]m, 최저 z 0.
+- T자·Idle 둘 다 확인 — 초록 하오리형 코트 양옆 대칭, 금발 수염·해적모 정상, 끊김 없음.
+
+■ 산출물(스크래치만, Assets 미반영 — PM 통과 확정, 커밋 대기)
+불멸_이이삭.fbx · Textures/pl_whitebeard_youn01_diff.png
