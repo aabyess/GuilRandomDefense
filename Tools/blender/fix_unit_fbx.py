@@ -2203,6 +2203,69 @@ UNITS = {
                     glb_images={0: "moonpil_diffuse.png"},
                     materials=dict(textures={"415121": [("DiffuseColor", "moonpil_diffuse.png")],
                                              "415121_body": [("DiffuseColor", "moonpil_diffuse.png")]})),
+    # 원피스 바운티러시 시키(shiki, pl_shiki_orig01) → 영원_윤현모(2026-09-22 영원, blender
+    # 세션). ⚠️ PM 지시: 다리가 칼날 모양인 게 원작 — 무기처럼 빼지 말고 다리로 그대로 둘 것
+    # (선례와 달리 이번엔 손에 든 무기 자체가 아예 없음, 렌더로 확인 — 다리 자체가 칼).
+    # zip 안 7z(shiki___bounty_rush_by_josoukitsune_dfawyed.7z, bsdtar로 품) 안 pl_
+    # 계열 FBX. 뼈대는 표준 PL_RENAME 이름을 쓰지만 LFoot_Toe·RFoot_Toe가 없음(요크와 같은
+    # 증상) → YORK_RENAME(ToeBase 뺀 PL_RENAME).
+    # 🔴 Body_Waist가 다른 pl_ 유닛과 다르게 world_joint 밑에서 Body_Pelvis와 형제(부모-자식
+    # 아님)로 떨어져 있고, 정작 배·가슴·다리·치마·리본은 전부 Body_Waist 자식 — 이대로 두면
+    # Hips(Pelvis)와 나머지 몸통이 서로 끊긴 두 갈래가 된다 → reparent_bones로 Body_Waist를
+    # Hips 밑에 붙임.
+    # 코트(coat_root 서브트리, 21개) → Spine1 강체(아카이누 선례). 치마(b/f_l/r_skirt) →
+    # Hips 강체. 리본(waist 허리끈, ribbon 서브트리) → Hips 강체. 하카마(l/r_hakama, 넓적다리·
+    # 종아리 자식)는 이미 다리 뼈에 물려 있어 손 안 댐. 소매(l/r_sode)도 마찬가지로 손 안 댐.
+    # 머리카락 5갈래(b/f_l/f_r_hair)·수염(beard_joint)·담배(cigar_joint) → Head.
+    # world_joint·HELPER_key·HELPER_name(가중치 0, 원본 최상위 pl_shiki_orig01 뼈까지) 드롭
+    # 해서 Hips를 뿌리로.
+    "영원_윤현모": dict(path="Assets/Art/Units/영원_윤현모/영원_윤현모.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.expanduser("~/Desktop/구랜디스킨모음/10_영원/영원_윤현모.zip"),
+                             "source/shiki___bounty_rush_by_josoukitsune_dfawyed.7z",
+                             "pl_shiki_orig01/pl_shiki_orig01.fbx"),
+                    archive_rgb={"textures/pl_shiki_orig01_diff.png": "pl_shiki_orig01_diff.png"}, archive_rgb_outer=True,
+                    drop_meshes=["face_attack", "face_damage", "face_sp", "l_hand_close", "l_hand_sp",
+                                 "r_hand_close", "r_hand_sp"],
+                    drop_bones=["pl_shiki_orig01", "world_joint", "HELPER_key", "HELPER_name"],
+                    rename_bones=YORK_RENAME,
+                    reparent_bones={"Body_Waist": "mixamorig:Hips"},
+                    merge_bones=[dict(under="coat_root", into="mixamorig:Spine1", with_root=True),
+                                 dict(under="b_l_skirt", into="mixamorig:Hips", with_root=True),
+                                 dict(under="b_r_skirt", into="mixamorig:Hips", with_root=True),
+                                 dict(under="f_l_skirt", into="mixamorig:Hips", with_root=True),
+                                 dict(under="f_r_skirt", into="mixamorig:Hips", with_root=True),
+                                 dict(under="ribbon", into="mixamorig:Hips", with_root=True),
+                                 dict(under="b_c_hair_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="b_l_hair_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="b_r_hair_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="f_l_hair_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="f_r_hair_01", into="mixamorig:Head", with_root=True),
+                                 dict(under="beard_joint", into="mixamorig:Head", with_root=True),
+                                 dict(under="cigar_joint", into="mixamorig:Head", with_root=True)],
+                    no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
+                    materials=dict(textures={"pl_shiki_orig01": [("DiffuseColor", "pl_shiki_orig01_diff.png")]})),
+    # 나비/나방 날개 달린 여성 캐릭터(긴 갈래머리, 검은 코트) glb → 영원_최상호(2026-09-22
+    # 영원, blender 세션). 문필환과 완전히 같은 계열(3ds Max Biped "Bip001 X_NN") — 뼈 120
+    # · 메시 2(Object_9=525241 12,224정점 몸통, Object_11=525241_body 818정점 — 이너
+    # 레이어, 유지) · 이미지 1(512², Emission+Transparent Mix 토스처 셰이더, 문필환과 같음)
+    # · 애니 14(idle 포함, 안 씀). 손에 든 무기 없음(렌더로 확인, 양손 다 빈손).
+    # 🔴 Bip001 Head_014_0 — Bip001 Head_014와 세계 위치가 완전히 같은 중복 뼈인데 실가중치가
+    # 있어(배치 1차 시도에서 assert로 발견) 드롭은 못 하고 Head로 합침.
+    # 장식 뼈(BoneNNN, biped_rename 표에 없어 번호 꼬리만 정리되고 그대로 남음, 전부 사람
+    # 골격 아님, 문필환처럼 이름만 정리하고 둠): Bone001~009(머리에서 아래로 길게 늘어지는
+    # 갈래머리, 무릎 아래까지) · Bone058~065(머리 뒤쪽 짧은 머리채) · Bone046~057(등에서
+    # 뻗는 나비 날개 3쌍) · Bone010~045(骨반 자식 6갈래, 코트 자락 앞뒤·옆).
+    "영원_최상호": dict(path="Assets/Art/Units/영원_최상호/영원_최상호.fbx", kind="human", size=("height", 1.8),
+                    source=os.path.expanduser("~/Desktop/구랜디스킨모음/10_영원/영원_최상호.glb"),
+                    no_nulls=True, orient_snap=True, drop_meshes=["Icosphere"],
+                    drop_bones=["_rootJoint", "Bip001_02"],
+                    rename_bones=biped_rename("Bip001", fingers=5, joints=3, spine2="Spine2"),
+                    rename_strip=r"_[0-9]+$",
+                    merge_bones=[dict(under="Bip001 Head_014_0", into="mixamorig:Head", with_root=True)],
+                    tpose_arms=biped_tpose_names(fingers=5, joints=3),
+                    glb_images={0: "sangho_diffuse.png"},
+                    materials=dict(textures={"525241": [("DiffuseColor", "sangho_diffuse.png")],
+                                             "525241_body": [("DiffuseColor", "sangho_diffuse.png")]})),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")

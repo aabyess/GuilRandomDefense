@@ -1,0 +1,42 @@
+영원_윤현모(원피스 바운티러시 시키, pl_shiki_orig01 — PM 지시: 다리가 칼날인 게 원작,
+무기처럼 빼지 말고 다리로 유지) — blender 세션(2026-09-22). fix_unit_fbx.py
+UNITS["영원_윤현모"]로 처리.
+
+■ 원본
+~/Desktop/구랜디스킨모음/10_영원/영원_윤현모.zip
+ - source/shiki___bounty_rush_by_josoukitsune_dfawyed.7z(bsdtar로 품) 안 pl_shiki_orig01/
+   pl_shiki_orig01.fbx + 같은 폴더 _diff.png · matcap·ramp·dither·abnormal_pattern(셰이더
+   전용, 안 씀)
+ - textures/pl_shiki_orig01_diff.png(같은 파일)
+
+■ 확인
+- 손에 든 무기 자체는 없음(렌더로 확인) — 다리 자체가 칼날 모양이라 PM 지시대로 그대로 둠.
+- 뼈대는 표준 PL_RENAME 이름(Body_Pelvis·LArm_Clavicle 등)이지만 LFoot_Toe·RFoot_Toe가
+  없음(요크와 같은 증상) → YORK_RENAME(ToeBase 뺀 PL_RENAME).
+- 🔴 Body_Waist가 다른 pl_ 유닛과 다르게 world_joint 밑에서 Body_Pelvis와 형제로 떨어져
+  있고, 배·가슴·다리·치마·리본이 전부 Body_Waist 자식이라 이대로 두면 Hips와 몸통이 두
+  갈래로 끊김 — reparent_bones로 Body_Waist를 mixamorig:Hips 밑에 붙임(새로 발견한 패턴,
+  다른 pl_ 유닛에서는 못 봤음).
+- LeftUpLeg·RightUpLeg 실가중치 0(하카마가 허벅지를 덮어 그쪽 메시가 하카마 뼈에 물림) →
+  seed_zero_bones=0.001로 안전판.
+
+■ 처리
+- drop_meshes: face_attack·face_damage·face_sp(face_normal만 유지)·l/r_hand_close·
+  l/r_hand_sp(l/r_hand_open만 유지).
+- drop_bones: pl_shiki_orig01(원본 최상위 뼈)·world_joint·HELPER_key·HELPER_name.
+- merge_bones: 코트(coat_root 서브트리 24개) → Spine1 강체(아카이누 선례). 치마(b/f_l/r_
+  skirt 4개) · 리본(ribbon 서브트리) → Hips 강체. 머리카락 5갈래(b/f_l/f_r_hair)·수염
+  (beard_joint)·담배(cigar_joint) → Head. 하카마(l/r_hakama)·소매(l/r_sode)는 이미 다리·
+  팔 뼈 자식이라 손 안 댐(그대로 따라감).
+- 텍스처: archive_rgb_outer로 안쪽 7z가 아니라 바깥 zip의 textures/pl_shiki_orig01_diff.png
+  를 알파 뺀 RGB로 relink(젊은 오비토 선례).
+
+■ 검증
+- 배치 리포트: 뼈 32개, 휴머노이드 필수 15뼈 전부 가중치 있음, 크기 (1.536, 1.222, 1.8)m,
+  최저 z 0.
+- 재수입 확인: 최상위 오브젝트 "Armature", Hips 부모 None, 다리(UpLeg→Leg→Foot) x·y 성분
+  0으로 완전히 수직.
+- Idle 리타겟(정면·측면 렌더): 코트·머리카락·다리(칼날) 다 자연스럽게 따라감, 찢어짐 없음.
+
+■ 산출물(스크래치만, Assets 미반영)
+영원_윤현모.fbx · Textures/pl_shiki_orig01_diff.png · idle_front.png · idle_side.png
