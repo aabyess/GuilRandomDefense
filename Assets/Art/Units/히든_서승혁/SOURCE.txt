@@ -1,0 +1,32 @@
+히든_서승혁(블리치 참월, 이치고의 참백도 정령) — blender 세션(2026-09-22).
+gen_biped_skin.py SKINS["히든_서승혁"]로 처리. 얌마·진타와 완전히 같은 블리치 cha_
+Bip01 3마디 손가락 형식 — 진타 항목 그대로 본뜸(PM 예상대로 빨리 끝남).
+
+■ 원본
+~/Desktop/구랜디스킨모음/05_히든/히든_서승혁.zip
+ - source/cha_zangetsu.fbx (뼈 67·메시 3·재질 1·애니 0) + textures/cha_zangetsu.png
+
+■ 확인
+- 칼(wp1_0 메시, "weapon"+weapon_line01~03 뼈 사슬로 오른손에 물림) — 렌더 없이도 이름·
+  구조로 명백해 드롭. Cube(8정점, 면 없어 이 파이프라인이 안 읽음, 다른 유닛과 같은 증상).
+- 척추가 Pelvis-Spine-Spine1까지만 있고 Spine2가 없음(우루루와 같은 증상, 1차 배치에서
+  KeyError로 발견) → gen_biped_skin.py에 이미 있던 bone_position_override 3항 lerp
+  기능(Spine1↔Neck 반으로 보간)으로 처리 — 재수입 확인상 Spine1 길이 0.1074·Spine2 길이
+  0.1097로 둘 다 정상.
+- 뿌리 뼈 둘(cha_zangetsu·Bip01, 둘 다 가중치 0) + cha_zangetsu.001·wp1(칼 전용 보조
+  스켈레톤 뿌리, 메시 이미 드롭) → 전부 Hips로 접음.
+- 머리카락 3갈래(F_hair01·L_hair01·L_hair03·L_hair05·R_hair01) → Head. 목깃 장식
+  (L_neck01·R_neck01) → Spine1. 옷자락 4갈래(skirt_BL/BR/FL/FR01) → Hips.
+- 🔸 재수입한 FBX의 최상위 오브젝트 이름이 "Armature.001"로 나옴(fix_unit_fbx.py 계열
+  유닛은 전부 "Armature"인데 이 스크립트는 다름) — Hips 부모는 정상적으로 None이라 구조
+  자체는 문제 없어 보이나, 전주연 rocket_joint 교훈처럼 유니티가 오브젝트 이름 자체로
+  뭔가를 판정하는 경우가 있었으니 참고삼아 기록.
+
+■ 검증
+- 배치 리포트: 뼈 22개, 매핑 안 된 뼈 없음, 크기 (1.713, 0.475, 1.8)m, 최저 z 0.
+- 재수입 확인: Hips 부모 None, 다리 완전 수직, Spine1·Spine2 둘 다 비영 길이.
+- Idle 리타겟(정면·측면 렌더) — 접힘·찢어짐 없음, 긴 코트가 자연스럽게 따라감(머리 위로
+  안 솟음), 칼 없음 확인.
+
+■ 산출물(스크래치만, Assets 미반영)
+히든_서승혁.fbx · Textures/cha_zangetsu.png · idle_front.png · idle_side.png

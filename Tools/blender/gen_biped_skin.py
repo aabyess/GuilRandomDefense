@@ -722,6 +722,62 @@ SKINS = {
         decimate_ratio=1.0,
         uv_layers=1,
     ),
+    # 블리치 참월(이치고의 참백도 정령, 선글라스·검은 코트 아저씨) → 히든_서승혁
+    # (2026-09-22 히든, blender 세션). 얌마·진타와 완전히 같은 블리치 cha_ Bip01 3마디
+    # 손가락 형식(biped_prefix="Bip01") — 진타 항목 그대로 본뜸.
+    # 뼈 67 · 메시 3(cha_zangetsu_0 몸통, wp1_0=칼, Cube 면 없어 안 읽힘) · 재질 1 · 애니 0.
+    # 칼(wp1_0, "weapon"+weapon_line01~03 뼈 사슬로 오른손에 물림) — 드롭.
+    "히든_서승혁": dict(
+        source="~/Desktop/구랜디스킨모음/05_히든/히든_서승혁.zip",
+        glb_member="source/cha_zangetsu.fbx",
+        path="Assets/Art/Units/히든_서승혁/히든_서승혁.fbx",
+        mesh_name="Zangetsu",
+        height=1.8,
+        biped_prefix="Bip01",
+        drop_meshes={"wp1_0"},
+        fold={"cha_zangetsu": "Hips", "cha_zangetsu.001": "Hips", "Bip01": "Hips", "wp1": "Hips"},
+        fold_subtree={"F_hair01": "Head", "L_hair01": "Head", "L_hair03": "Head", "L_hair05": "Head",
+                      "R_hair01": "Head", "L_neck01": "Spine1", "R_neck01": "Spine1",
+                      "skirt_BL01": "Hips", "skirt_BR01": "Hips", "skirt_FL01": "Hips", "skirt_FR01": "Hips",
+                      "weapon": "Hips"},
+        # 척추가 Pelvis-Spine-Spine1까지만 있고 Spine2가 없음(우루루와 같은 증상) —
+        # Spine1↔Neck 사이를 반으로 보간(lerp)해 Spine1·Spine2 둘 다 실제 길이를 갖게 함.
+        bone_position_override={"Spine2": ("Bip01 Spine1", "Bip01 Neck", 0.5)},
+        tex_member="textures/cha_zangetsu.png",
+        materials={"cha_zangetsu": ("texture_file", "tex_member")},
+        level_arms=True,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
+    # 블리치 토센 카나메(아란칼 편 "총괄관", 흰 제복) → 히든_정욱진(2026-09-22 히든,
+    # blender 세션). 참월·진타와 같은 cha_ Bip01 3마디 손가락 형식.
+    # 뼈 54 · 메시 4(B_123=몸통 5,147정점, B_234_wp1=240정점, B_234_wp3=102정점, Cube 면
+    # 없어 안 읽힘) · 재질 1 · 애니 0.
+    # 🔴 스즈무시(칼) — "Weapon"·"Weapon_case" 뼈는 손이 아니라 Bip01(허리 높이)에 물려
+    # 있어(직접 확인) 처음엔 허리에 찬 칼집으로 봤지만, 1차 T자 렌더로 실제로 보니 칼이
+    # 뼈 부모와 무관하게 오른손 위치에서 뻗어 나와 실제로 쥔 자세임(뼈 부모는 팔 흔들림에
+    # 안 끌리게 하려는 트릭으로 보임) → PM 지시대로("손에 들었으면 뺄 것") wp1_0(칼날)·
+    # wp3_0(칼자루 고리 장식) 둘 다 드롭.
+    "히든_정욱진": dict(
+        source="~/Desktop/구랜디스킨모음/05_히든/히든_정욱진.zip",
+        glb_member="source/cha_tosen_general.fbx",
+        path="Assets/Art/Units/히든_정욱진/히든_정욱진.fbx",
+        mesh_name="Tosen",
+        height=1.8,
+        biped_prefix="Bip01",
+        drop_meshes={"cha_tosen_B_234_wp1_0", "cha_tosen_B_234_wp3_0"},
+        fold={"cha_tosen_general": "Hips", "Bip01": "Hips", "cha_tosen_B_123": "Hips",
+              "cha_tosen_B_234_wp1": "Hips", "cha_tosen_B_234_wp3": "Hips"},
+        fold_subtree={"Hair_B01": "Head", "Hair_F01": "Head", "Hood01": "Head",
+                      "Skirt_BL01": "Hips", "Skirt_BR01": "Hips", "Skirt_FL01": "Hips", "Skirt_FR01": "Hips",
+                      "Weapon": "Hips", "Weapon_case": "Hips"},
+        bone_position_override={"Spine2": ("Bip01 Spine1", "Bip01 Neck", 0.5)},
+        tex_member="textures/cha_tosen_general.png",
+        materials={"cha_tosen_general": ("texture_file", "tex_member")},
+        level_arms=True,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
 }
 
 # 22뼈 계층 — gen_rigify_skin.py·gen_skin_rig.py와 같은 이름 규칙(PREFIX만 공유).
