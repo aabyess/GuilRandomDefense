@@ -518,6 +518,48 @@ SKINS = {
         decimate_ratio=1.0,
         uv_layers=1,
     ),
+    # 불멸_김용태(얌마 리야르고, Bleach Mobile cha_ 립) — blender 세션(2026-09-22).
+    # 원본: ~/Desktop/구랜디스킨모음/09_불멸/불멸_김용태.zip 안 source/cha_yammy_arrancar.fbx
+    # (286KB, 저폴리) + textures/cha_yammy_arrancar.png(256², RGBA). 뼈 42(3ds Biped "Bip01
+    # X" 표준, 노태현_AP 마유리와 같은 "cha_" 계열)·메시 1(4,941정점)·재질 1.
+    # 척추 Hips-Spine-Spine1까지만(Spine2 없음, 마유리와 같은 패턴) — Spine1→Spine2, Spine1은
+    # 자리표시(Spine tail·Spine1 head 사이 간격 있어 퇴화 없음, 직접 확인).
+    # 손가락 3갈래×1마디(Finger0/1/2 + 각 "01"접미, Pinky·중간마디 없음) —
+    # biped_rename_table(fingers=3, joints=2)로 커버.
+    # 팔다리 전부 실측 확인 — 손상된 뼈 없음(로저·크로커다일과 달리 Forearm·Hand 정상).
+    # Bone_eyes·Bone_mouth(Head 자식)→Head. Bone_hair_01→02→03(Head 자식 체인)→Head.
+    # 🔴 Bone_sword(Spine 직계 자식, 210정점 실가중치) — 렌더로 직접 확인, 허리 옆구리에 찬
+    # 장검(칼집). 원작 신체(허리 강체 부착)라 유지, Spine으로 fold.
+    # 🔴 텍스처: FBX가 참조하는 경로(source/cha_yammy_arrancar.png)가 깨져 있어(실제 위치는
+    # zip textures/) texture_file로 재연결. RGBA 4채널이나 알파 전 픽셀 1.0 고정 확인(PM
+    # 우려대로 반투명 위험 있었음) — texture_file/texture_direct 공통 로직이 Alpha 링크 없이
+    # Base Color만 연결하고 blend_method OPAQUE 강제해 해결.
+    # ⚠️ 스케일 — PM 지시대로 키 1.8m을 강제하지 않고 원본 비율(T자 가로:세로 1.135, 일반
+    # 인체보다 다소 벌크)을 먼저 보고했음. PM 검수 결과 1.8 정규화 그대로 괜찮다고 확정
+    # (유니티 쪽에서 크기 조정) — height=1.8 유지.
+    "불멸_김용태": dict(
+        source="~/Desktop/구랜디스킨모음/09_불멸/불멸_김용태.zip",
+        glb_member="source/cha_yammy_arrancar.fbx",
+        source_format="fbx",
+        tex_member="textures/cha_yammy_arrancar.png",
+        path="Assets/Art/Units/불멸_김용태/불멸_김용태.fbx",
+        mesh_name="Yammy",
+        height=1.8,
+        biped_prefix="Bip01",
+        rename={k: v for k, v in dict(biped_rename_table("Bip01", fingers=3, joints=2),
+                                        **{"Bip01 Spine1": "Spine2"}).items() if k != "Bip01 Spine2"},
+        fold={
+            "cha_yammy_arrancar": "Hips", "Bip01": "Hips", "cha_yammy_arrancar.001": "Hips",
+            "Bone_eyes": "Head", "Bone_mouth": "Head", "Bone_sword": "Spine",
+        },
+        fold_subtree={"Bone_hair_01": "Head"},
+        bone_position_override={"Spine1": ("Bip01 Spine", "tail")},
+        allow_dead_bones={"Spine1"},
+        materials={"cha_yammy_arrancar": ("texture_file", "tex_member")},
+        level_arms=True,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
 }
 
 # 22뼈 계층 — gen_rigify_skin.py·gen_skin_rig.py와 같은 이름 규칙(PREFIX만 공유).

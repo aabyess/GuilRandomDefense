@@ -280,6 +280,60 @@ SKINS = {
         decimate_ratio=1.0,
         uv_layers=1,
     ),
+    # 불멸_정준영(몽키 D. 드래곤, Cha_9063 립) — blender 세션(2026-09-22). 크로커다일과 완전히
+    # 같은 게임/형식(같은 CH_ 뼈 이름·같은 케이프 이중화 패턴) — 처음부터 선례 그대로 적용.
+    # 원본: ~/Desktop/구랜디스킨모음/09_불멸/불멸_정준영.glb(1.2MB). 뼈 56·메시 6(Cha_9063_body
+    # 5,284정점·cape0 697·cape 384·face_9063_00/01/02 756·904·907).
+    # 🔴 face 3개 바운딩박스 완전히 동일(겹친 표정) → 00만 남기고 01/02 드롭.
+    # 🔴 케이프 2개 — cape0은 본체 뼈(CH_Hips_02·CH_L/RShoulder·CH_L/RArm·CH_Spine1_011·
+    # CH_Spine_010, "_0" 중복 없음)에 정상 물려 정상 위치(z 0.0114~0.0175, 몸통 최고
+    # 0.0198 안쪽). cape는 바인드 상태부터 z 전부 음수(지면 아래)이고 B_cape/BL_cape/
+    # BR_cape(root_Hips_048 자식, 물리 시뮬 전용)에만 물림 — 크로커다일 "머리 위로 솟은
+    # 케이프"의 반대 방향(지면 아래로 숨음) 같은 함정. cape(Object_17) 전체 드롭.
+    # 🔴 척추 Spine1 자리표시 퇴화(CH_Spine_010 tail = CH_Spine1_011 head, 길이 0) — Spine
+    # 구간을 bone_position_lerp로 절반씩 나눠 해결(크로커다일과 동일 수법).
+    # 팔다리 전부 실측 확인 — 손상된 뼈 없음(Forearm·Hand 정상, "_0" 중복 관절도 없음,
+    # 크로커다일보다 훨씬 깨끗한 리그) — position override·씨앗 가중치 불필요.
+    # 재질 2개(Cha_9063_00 몸·Cha_9063_01 망토) 둘 다 실제로는 이미지 1장(Image_0)만 씀
+    # (Image_1은 MATH 노드로만 감, 크로커다일과 동일 디코이 — wire_texture_direct의
+    # next(TEX_IMAGE) 순서가 Base Color에 실제 연결된 첫 노드를 안정적으로 집는다,
+    # 크로커다일 배치 검증에서 확인).
+    "불멸_정준영": dict(
+        source="~/Desktop/구랜디스킨모음/09_불멸/불멸_정준영.glb",
+        path="Assets/Art/Units/불멸_정준영/불멸_정준영.fbx",
+        mesh_name="Dragon",
+        height=1.8,
+        drop_meshes={"Icosphere", "Object_17", "Object_13", "Object_15"},
+        rename={
+            "CH_Hips_02": "Hips", "CH_Spine_010": "Spine", "CH_Spine1_011": "Spine2",
+            "CH_Neck_028": "Neck", "CH_Head_029": "Head",
+            "CH_LeftShoulder_012": "LeftShoulder", "CH_LeftArm_013": "LeftArm",
+            "CH_LeftForeArm_014": "LeftForeArm", "CH_LeftHand_015": "LeftHand",
+            "CH_LeftUpLeg_03": "LeftUpLeg", "CH_LeftLeg_04": "LeftLeg", "CH_LeftFoot_05": "LeftFoot", "CH_LeftToeBase_06": "LeftToeBase",
+            "CH_RightShoulder_031": "RightShoulder", "CH_RightArm_032": "RightArm",
+            "CH_RightForeArm_033": "RightForeArm", "CH_RightHand_034": "RightHand",
+            "CH_RightUpLeg_07": "RightUpLeg", "CH_RightLeg_00": "RightLeg", "CH_RightFoot_08": "RightFoot", "CH_RightToeBase_09": "RightToeBase",
+        },
+        fold={
+            "_rootJoint": "Hips", "CH_Reference_01": "Hips",
+            "Cha_9063_hip_047": "Hips", "root_Hips_048": "Hips",
+            "eye_030": "Head",
+        },
+        fold_subtree={
+            "CH_LeftHandIndex1_016": "LeftHand", "CH_LeftHandMiddle1_019": "LeftHand",
+            "CH_LeftHandRing1_022": "LeftHand", "CH_LeftHandThumb1_025": "LeftHand",
+            "CH_RightHandIndex1_035": "RightHand", "CH_RightHandMiddle1_038": "RightHand",
+            "CH_RightHandRing1_041": "RightHand", "CH_RightHandThumb1_044": "RightHand",
+            "B_cape_00_049": "Hips", "BL_cape_00_051": "Hips", "BR_cape_00_053": "Hips",
+        },
+        bone_position_lerp={"Spine1": ("CH_Spine_010", 0.5)},
+        allow_dead_bones={"Spine1"},
+        materials={"Cha_9063_00": ("texture_direct", None), "Cha_9063_01": ("texture_direct", None)},
+        level_arms_bones=("Shoulder", "Arm", "ForeArm", "Hand"),
+        level_arms=True,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
 }
 
 # 22뼈 계층 — gen_biped_skin.py·gen_rigify_skin.py·gen_skin_rig.py와 같은 이름 규칙(PREFIX만 공유).
