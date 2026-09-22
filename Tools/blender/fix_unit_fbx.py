@@ -2176,6 +2176,33 @@ UNITS = {
                                     "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
                                 for s, side in (("L", "Left"), ("R", "Right"))},
                     seed_zero_bones=0.001, orient_snap=True),
+    # 블리치 히츠가야 토시로 만해(효린마루, 얼음 날개) glb → 영원_문필환(2026-09-22 영원,
+    # blender 세션). 뼈 110(3ds Max Biped, "Bip001 X_NN" — 갑옷거인과 같은 계열) · 메시
+    # 2(Object_9=415121 8,464정점 몸통 전체, Object_11=415121_body 492정점 — 헤드·척추만
+    # 물려 있어 속옷/이너 레이어로 추정, 유지) · 이미지 1(512², 토스처 셰이더: Emission+
+    # Transparent Mix, BSDF_PRINCIPLED 없음 — DiffuseColor로만 relink해도 원본과 같은 결과,
+    # 직접 렌더 확인) · 애니 32(attack·die·run·skill·idle·stay_show 등, 이번엔 안 씀).
+    # rename_bones=biped_rename("Bip001", fingers=5, joints=3)(Spine2 없음, 갑옷거인 선례와
+    # 같은 골격) + rename_strip으로 glTF 번호 꼬리 제거.
+    # 🔴 검(카타나) — Bip001 Prop1(뿌리 자식, "소품" 이름) 밑 Bone037이 실제 칼(Object_9
+    # 안에 201정점, 진타 야구방망이와 같은 증상) → drop_verts_of_bones로 정점 지우고 두
+    # 뼈 다 드롭.
+    # 장식 뼈(BoneNNN 계열, biped_rename 표에 없어 이름만 정리되고 그대로 남음, 전부 실
+    # 가중치 있음 확인): Bone038~040(머리 위 z 2.1~2.5, 뾰족한 흰 머리카락 끝) · Bone041~050
+    # (척추에서 아래로 길게 늘어지는 사슬, 코트 자락 추정) · Bone052~058·059~065(좌우 대칭,
+    # x ±1.7까지 뻗음 — 얼음 날개 한 쌍) · Bone066~087(4쌍, 골반 자식, 짧게 늘어짐 — 하카마
+    # 자락/허리끈). 전부 사람 골격이 아니라 Unity Humanoid가 안 다루니 이름만 정리하고 그대로
+    # 둠(다른 유닛의 장식 뼈와 같은 처리).
+    "영원_문필환": dict(path="Assets/Art/Units/영원_문필환/영원_문필환.fbx", kind="human", size=("height", 1.8),
+                    source=os.path.expanduser("~/Desktop/구랜디스킨모음/10_영원/영원_문필환.glb"),
+                    no_nulls=True, orient_snap=True, drop_meshes=["Icosphere"],
+                    drop_verts_of_bones=["Bone037_0108"],
+                    drop_bones=["_rootJoint", "Bip001_02", "Bip001 Prop1_0107", "Bone037_0108"],
+                    rename_bones=biped_rename("Bip001", fingers=5, joints=3), rename_strip=r"_[0-9]+$",
+                    tpose_arms=biped_tpose_names(fingers=5, joints=3),
+                    glb_images={0: "moonpil_diffuse.png"},
+                    materials=dict(textures={"415121": [("DiffuseColor", "moonpil_diffuse.png")],
+                                             "415121_body": [("DiffuseColor", "moonpil_diffuse.png")]})),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")
