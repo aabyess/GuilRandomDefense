@@ -1,0 +1,41 @@
+히든_이동엽(원피스 고래 라분, Reverse Mountain 파수꾼) — blender 세션(2026-09-22).
+gen_scan_rig.py UNITS["히든_이동엽"]로 처리. Generic 리그+합성 Idle(빅맘·리카 선례).
+
+■ 원본
+~/Desktop/구랜디스킨모음/05_히든/히든_이동엽.zip
+ - source/edf3994d2ae141ca82c2b7c11597e683.zip(zip 안 zip) 안 "Laboon One Piece.obj"
+   (정점 95·삼각형 104, 뼈·애니 없음, 아주 단순한 저폴리) + 같은 폴더 Laboon.png(128²
+   RGBA)·LaboonAlpha.png(128² L)
+ - textures/Laboon.png·LaboonAlpha.png — 안쪽 zip 것과 픽셀 크기(128²)는 같은데 팔레트
+   압축(P 모드)이라 화질 손실 있음 → 무손실인 안쪽 zip 버전을 씀.
+
+■ 확인
+- LaboonAlpha.png: 흑백 마스크인데 무엇을 가리는지 확신 없음(몸 문양 UV 자리의 미사용
+  영역으로 보임) — 유니티 OPAQUE 원칙대로 알파 없이 RGB만 사용(PM 확인 OK).
+- 회전 불필요 — 원본 OBJ가 이미 −Y를 보고 옆으로 누운 헤엄 자세(Y축이 몸 길이 방향).
+- height=1.8 관례는 Z(등~배 두께) 기준이라 라분은 "키"가 아니라 몸통 두께가 1.8m로 맞춰짐
+  — 결과 크기 (폭 2.311, 길이 3.259, 두께 1.8)m, 비율 길이:두께:폭 ≈ 1.81:1:1.28. 게임 안
+  크기는 PM이 표에서 정함.
+- Head 몫이 85%(단순 5뼈·정점 95개짜리 저폴리라 큰 머리가 몸통 대부분을 차지 — bone heat
+  실패 아님, max_bone_share 완화).
+
+■ 처리
+- generic_bones 5개: Body(루트, 중심)→Head(앞), Body→Tail1→Tail2→TailTip(뒤, 꼬리 지느러미
+  까지). 좌표는 y-대역별 단면 밀도로 대략 추정.
+- 합성 Idle: Body·Head 미세 피치(회전), Tail1→Tail2→TailTip으로 갈수록 진폭(3°→5°→8°)·
+  위상차 커지는 X축 회전 — 꼬리지느러미가 뒤로 갈수록 크게 출렁이는 파동.
+- materials: material1 → Laboon.png(Base Color만).
+
+■ 🔴 PM 추가지시(2026-09-22) — Body 진짜 상하 이동
+gen_scan_rig.py의 synth_idle_scan()에 위치 파형(loc) 지원을 새로 추가(opt-in, 기존 회전만
+쓰던 유닛엔 영향 없음). Body 뼈에 loc={"Body": [((0,0,1), 0.04, 0.0)]} 적용 — 세계 Z축
+±4cm, 72프레임 한 바퀴. 재수입해서 프레임별 Body 세계 z 직접 확인: 0.539→0.579(+4cm,
+frame18)→0.539(frame37)→0.499(-4cm, frame55) — 정확히 ±4cm 진동 확인.
+
+■ 검증
+- 배치 리포트: 뼈 5개, 최대 몫 뼈 Head 85.3%(허용치 내), 크기 위 참고, 최저 z 0.
+- 재수입 확인: 최상위 오브젝트 "Armature", 뼈 이름 mixamorig:Body/Head/Tail1/Tail2/TailTip,
+  액션 "Idle" 정상, Body z 상하 이동 확인(위 참고).
+
+■ 산출물(스크래치만, Assets 미반영)
+히든_이동엽.fbx · Textures/Laboon.png
