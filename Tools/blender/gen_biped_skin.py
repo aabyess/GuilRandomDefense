@@ -560,6 +560,49 @@ SKINS = {
         decimate_ratio=1.0,
         uv_layers=1,
     ),
+    # 히단자와 진타(블리치, cha_ 립) → 초월_김경현_AP(2026-09-22 초월, 사장님 지시로 크로커다일
+    # 자리를 히든_황정기로 옮기고 이 키를 진타로 재배정). 얌마(불멸_김용태)와 완전히 같은
+    # "cha_" Bleach mobile Biped 형식이라 그 항목을 그대로 본떠서 만듦.
+    # 원본: ~/Desktop/구랜디스킨모음/08_초월/초월_김경현_AP.zip 안 source/cha_jinta.fbx
+    # (250KB, 저폴리) + textures/cha_jinta.png(256², RGBA). 뼈 40(3ds Biped "Bip01 X" 표준)·
+    # 메시 1(3,736정점)·재질 1. 척추 Pelvis-Spine-Spine1까지만(Spine2 없음, 얌마와 같은 패턴) —
+    # 이번엔 Spine1 자체가 실가중치(368)를 쥐고 있었지만 얌마 템플릿 그대로 Spine2로 보내고
+    # Spine1은 자리표시(허용 — 퇴화 아님, Spine tail z 0.0079 vs Spine1 head z 0.0093로 간격
+    # 있음, 직접 확인).
+    # 손가락 3갈래×2마디(Finger0/1/2 + 각 "01"접미, 얌마와 동일 패턴) — biped_rename_table
+    # (fingers=3, joints=2).
+    # 팔다리 전부 실측 확인 — 손상된 뼈 없음. Bone_eyes(Head 자식)→Head. Bone_hair_01→02
+    # (Head 자식 체인)→Head.
+    # 🔴 Bone_weapon(135정점 실가중치) — 진타가 드는 야구방망이. PM 지시대로 뺌(선례: 손에
+    # 드는 무기는 제거).
+    # 🔴 텍스처: FBX가 참조하는 경로가 깨져 있어(이미지 채널 0, size (0,0)) texture_file로
+    # 재연결. RGBA 4채널 — 얌마 때와 같은 패턴이라 texture_file/texture_direct 공통 로직이
+    # Alpha 링크 없이 Base Color만 연결하고 OPAQUE 강제.
+    "초월_김경현_AP": dict(
+        source="~/Desktop/구랜디스킨모음/08_초월/초월_김경현_AP.zip",
+        glb_member="source/cha_jinta.fbx",
+        source_format="fbx",
+        tex_member="textures/cha_jinta.png",
+        path="Assets/Art/Units/초월_김경현_AP/초월_김경현_AP.fbx",
+        mesh_name="Jinta",
+        height=1.8,
+        biped_prefix="Bip01",
+        drop_meshes=set(),
+        rename={k: v for k, v in dict(biped_rename_table("Bip01", fingers=3, joints=2),
+                                        **{"Bip01 Spine1": "Spine2"}).items() if k != "Bip01 Spine2"},
+        fold={
+            "cha_jinta": "Hips", "Bip01": "Hips", "cha_jinta.001": "Hips",
+            "Bone_eyes": "Head", "Bone_weapon": "RightHand",
+        },
+        fold_subtree={"Bone_hair_01": "Head"},
+        drop_bone_verts={"Bone_weapon"},
+        bone_position_override={"Spine1": ("Bip01 Spine", "tail")},
+        allow_dead_bones={"Spine1"},
+        materials={"cha_jinta": ("texture_file", "tex_member")},
+        level_arms=True,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
     # 불멸_이승우(가로우 우주적 공포 모드, 원펀맨) — blender 세션(2026-09-22).
     # 원본: ~/Desktop/구랜디스킨모음/09_불멸/불멸_이승우.glb(2.9MB). 스킨 1·뼈 66(표준
     # mixamorig: 이름 + "_NN" 번호 꼬리, 손가락 4갈래×4마디 전부)·메시 2(G7_Cosmic_0
@@ -788,6 +831,34 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
     for o in list(all_meshes):
         if o not in keep:
             bpy.data.objects.remove(o, do_unlink=True)
+
+    # 🔴 진타(2026-09-22) — 무기(야구방망이)가 별도 메시가 아니라 한 메시 안에 뼈(Bone_weapon)
+    # 가중치로만 구분돼 있어 drop_meshes로 못 뺀다(그 메시엔 몸도 같이 있다). cfg["drop_bone_verts"]
+    # (뼈 이름 집합)면 그 뼈에 주로 물린(가중치 최댓값 기준) 면을 bmesh로 지운다 — 선례
+    # fix_unit_fbx.py의 drop_material_faces와 같은 원리, 뼈 기준이라는 점만 다르다.
+    if cfg.get("drop_bone_verts"):
+        import bmesh as _bmesh
+        target_bones = cfg["drop_bone_verts"]
+        for o in keep:
+            gidx = {vg.index for vg in o.vertex_groups if vg.name in target_bones}
+            if not gidx:
+                continue
+            drop_vidx = set()
+            for v in o.data.vertices:
+                best = max(v.groups, key=lambda g: g.weight, default=None)
+                if best is not None and best.group in gidx and best.weight > 0.5:
+                    drop_vidx.add(v.index)
+            if not drop_vidx:
+                continue
+            bm = _bmesh.new()
+            bm.from_mesh(o.data)
+            bm.verts.ensure_lookup_table()
+            to_del = [bm.verts[i] for i in drop_vidx]
+            _bmesh.ops.delete(bm, geom=to_del, context="VERTS")
+            bm.to_mesh(o.data)
+            bm.free()
+            o.data.update()
+        report["뼈 기준 정점 삭제"] = {b: 0 for b in target_bones}  # 개수는 실측 로그로 대체(아래)
 
     # UV 층을 첫 장만 남기고 통일(히소카 사고 재발 방지 — 이 소스는 UV1이 범위 1.9×2.0으로
     # 퇴화가 아니라 오히려 "너무 큰" 비정상 라이트맵이라 반드시 첫 장만 남겨야 한다).

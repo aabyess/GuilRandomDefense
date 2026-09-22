@@ -194,9 +194,12 @@ SKINS = {
         decimate_ratio=1.0,
         uv_layers=1,
     ),
-    # 초월_김경현_AP(크로커다일, One Piece Sketchfab glb) — PM 사양 원문 보존(2026-09-18),
-    # 재작업(2026-09-22, blender 세션, PM 재반려 뒤 실측으로 근본 원인 재특정).
-    # 원본: ~/Desktop/구랜디스킨모음/08_초월/초월_김경현_AP.glb(1.5MB). 스킨 1·뼈 65·재질 1
+    # 크로커다일, One Piece Sketchfab glb → 히든_황정기(2026-09-22, 사장님 지시로
+    # "초월_김경현_AP" 자리에서 이름만 옮김 — 그 키는 진타로 재배정됨, gen_biped_skin.py 참고).
+    # PM 사양 원문 보존(2026-09-18), 재작업(2026-09-22, blender 세션, PM 재반려 뒤 실측으로
+    # 근본 원인 재특정) — 내용은 전부 그대로, 경로만 05_히든/히든_황정기로 바뀜.
+    # 원본: ~/Desktop/구랜디스킨모음/05_히든/히든_황정기.glb(1.5MB, 예전 08_초월/
+    # 초월_김경현_AP.glb와 동일 파일). 스킨 1·뼈 65·재질 1
     # (Cha_2200_00, 이미 Base Color에 텍스처 연결됨 Image_0).
     # 🔴 스킨 좌표가 0.02~0.04 수준(직접 확인, 몸통 메시 Object_7 z 0.001~0.028)으로 아주
     # 작지만 각 메시 오브젝트 자체의 matrix_world가 그만큼 확대해 두고 있어(build()가 항상
@@ -225,9 +228,9 @@ SKINS = {
     # 사이에 자리표시를 두면 방향이 안 정해졌다. CH_Spine_010 자신의 구간(머리→꼬리)을
     # bone_position_lerp로 절반씩 나눠 Spine·Spine1 둘 다 실제 길이를 갖게 한다. Spine2
     # (코트가 물린 뼈, CH_Spine1_011 그대로)는 손대지 않음 — 코트 거동엔 영향 없음.
-    "초월_김경현_AP": dict(
-        source="~/Desktop/구랜디스킨모음/08_초월/초월_김경현_AP.glb",
-        path="Assets/Art/Units/초월_김경현_AP/초월_김경현_AP.fbx",
+    "히든_황정기": dict(
+        source="~/Desktop/구랜디스킨모음/05_히든/히든_황정기.glb",
+        path="Assets/Art/Units/히든_황정기/히든_황정기.fbx",
         mesh_name="Crocodile",
         height=1.8,
         drop_meshes={"Icosphere", "Object_17", "Object_13", "Object_15"},

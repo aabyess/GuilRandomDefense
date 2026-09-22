@@ -1,78 +1,30 @@
-초월_김경현_AP(김경현) — 크로커다일 재작업 (2026-09-22, PM 재반려 처리)
+초월_김경현_AP(히단자와 진타, Bleach cha_ 립) — blender 세션(2026-09-22).
+gen_biped_skin.py UNITS["초월_김경현_AP"]로 처리. 얌마(불멸_김용태) 항목을 그대로 본떠서
+만듦(사장님 지시로 이 키가 크로커다일→진타로 재배정됨, 크로커다일은 히든_황정기로 이동).
 
-■ PM 재반려 근거(유니티 idleview 실측)
-1) 검은 코트가 머리 위로 키의 절반만큼 솟은 거대한 판(경계 18.53,21.74,7.78) — 09-18과 동일.
-2) 갈고리 왼팔이 몸 옆으로 뜸. 오른팔만 정상.
-3) FBX rig 보고: 매핑된 사람 뼈 20개(Chest·UpperChest 안 잡힘) · Spine1 로컬회전
-   (271.45,180,180, 뒤집힘) · Spine2 로컬위치(0,0.01,0)·길이 거의 0 · LeftHand 로컬위치
-   (0,1.22,0, 발 근처) · LeftForeArm 로컬회전 z 105.16(오른쪽은 0.82).
-4) SOURCE.txt에 적힌 "갈고리 씨앗 가중치 0.02 ADD 5정점" 정정이 스크립트(gen_valvebiped_skin.py)
-   에는 여전히 dead_bone_donor(30% 이관)로만 남아 실제 반영 안 됨.
+■ 원본
+~/Desktop/구랜디스킨모음/08_초월/초월_김경현_AP.zip
+ - source/cha_jinta.fbx (250KB, 저폴리) + textures/cha_jinta.png (256², RGBA)
 
-■ 직접 재진단(라이브 Blender 세션, 실측)
-🔴 새로 찾은 근본 원인 — PM이 지목한 "_0" 보조뼈 문제가 아니었다. 메시가 실제로는 7개가
-아니라 6개(Icosphere 제외)인데, 그중 "케이프"가 cha_2200_cape0(1,233정점)과
-cha_2200_cape(1,358정점) 두 개였다(1차 작업 SOURCE.txt엔 "코트" 단수로만 기록되어 둘 다
-그대로 썼음). 바운딩박스 직접 대조:
-  - cha_2200_cape0: z 0.0169~0.0267 (몸통 최고점 z 0.0279과 거의 일치, 정상 코트 높이)
-  - cha_2200_cape:  z 0.0208~0.0357 (바인드 자세부터 이미 몸통 최고점보다 위로 솟아 있음)
-cha_2200_cape는 B_cape/BL_cape/BR_cape 뼈(root_Hips_049 자식, 케이프 물리 시뮬레이션
-전용 뼈대)에만 물려 있고, 이 뼈들은 기존 스크립트에서 Hips 강체로 접혀 있었다 — 즉
-"바인드 상태부터 솟아 있는 여분 메시"가 Hips에 그대로 고정돼 움직이지 않는 거대한
-판으로 남은 것. cape0(정상 케이프)와 별개로 존재하는 진짜 원인. → cha_2200_cape(Object_17)
-전체 드롭.
-🔴 얼굴도 3개(face_2200_00/01/02, 1080·1105·1088정점)가 완전히 동일한 바운딩박스로 겹쳐
-있었다(표정 교체용 추정) — face_2200_00 하나만 남기고 01·02 드롭.
-🔴 LeftHand(CH_LeftHand_015) 레스트 위치 실측 재확인 — head z 0.001(발 근처, 몸통 z
-0.023~0.047과 무관). 실제 갈고리(CH_LeftForeArm_014에 물린 597정점, bbox x 0.0071~0.0159·
-z 0.0218~0.025)의 바깥쪽 끝을 기준으로 LeftHand 위치를 (0.0159, 0.0005, 0.0234)로 대체.
-🔴 척추 Spine1 퇴화 재확인 — CH_Spine_010의 tail이 CH_Spine1_011의 head와 좌표가 거의
-같아(둘 다 z 0.0224) 그 사이에 자리표시 Spine1을 두면 길이 0에 가까워 방향이 안 정해짐
-(정확히 이게 유니티가 본 271° 헛돈 회전의 원인). CH_Spine_010 자신의 구간(머리→꼬리)을
-절반으로 나눠 Spine·Spine1 둘 다 실제 길이(각 0.00117, 스케일 후 약 0.078m)를 갖게 함.
-Spine2(코트가 물린 뼈, CH_Spine1_011 그대로)는 손대지 않음 — 코트 거동엔 영향 없음.
+■ 확인
+뼈 40(3ds Biped "Bip01 X" 표준, 얌마와 완전히 같은 형식)·메시 1(3,736정점)·재질 1.
+척추 Pelvis-Spine-Spine1까지만(Spine2 없음, 얌마와 같은 패턴) — 얌마 템플릿 그대로
+Spine1→Spine2로 보내고 Spine1은 자리표시(Spine tail z 0.0079 vs Spine1 head z 0.0093로
+간격 있어 퇴화 아님, 직접 확인 — 이번엔 실측으로 Spine1 자체도 원래 실가중치 368을
+쥐고 있었지만 얌마 템플릿과 일관되게 그대로 처리).
+손가락 3갈래×2마디, 팔다리 전부 정상 가중치. Bone_eyes·Bone_hair_01(자식 02 포함)→Head.
 
-■ 정리 내용
-- 메시: Object_7(몸, 5,493)·Object_9(cha_2200_cape0, 1,233)·Object_11(face_2200_00, 1,080)만
-  사용. Icosphere·Object_17(cha_2200_cape, 중복 솟은 케이프)·Object_13/15(face_01/02, 겹친
-  표정) 드롭. 합친 정점 7,806.
-- rename: CH_Hips_02→Hips·CH_Spine_010→Spine·CH_Spine1_011→Spine2·CH_Neck_028→Neck·
-  CH_Head_029→Head·팔다리 8쌍(기존과 동일).
-- fold: _rootJoint·CH_Reference_01·CH_Hips_02_0·Cha_2200_hip_048·root_Hips_049→Hips ·
-  CH_Spine_010_0→Spine · CH_Spine1_011_0·CH_LeftShoulder_012_0·CH_LeftArm_013_0·
-  CH_RightShoulder_032_0·CH_RightArm_033_0→Spine2(코트, 기존과 동일) · CH_Neck_028_0→Neck ·
-  eye_030·Attach_Acc_031→Head.
-- fold_subtree: 손가락 8갈래(Index/Middle/Ring/Thumb×좌우)→해당 Hand · B_cape_00·
-  BL_cape_00·BR_cape_00(+01 자식)→Hips(케이프 메시 자체를 뺐으니 이제 무가중치, 안전).
-- Spine1: bone_position_override 대신 CH_Spine_010 구간 50% 지점으로 직접 계산(위 설명).
-  allow_dead_bones={"Spine1"}.
-- LeftHand: 위치 override(0.0159,0.0005,0.0234), tail은 head+(0.003,0,0)로 별도 보정(원본
-  tail도 깨져 있었음, 발 근처 좌표 그대로 물려받던 것 수정). 씨앗 가중치 0.02(ADD)를
-  LeftForeArm 최근접 정점 5개에 부여(REPLACE 아님, LeftForeArm 소유는 그대로 유지) —
-  PM이 이전에 제안했던 "오비토·샹크스 방식"을 이번에 실제로 스크립트/FBX에 반영.
-- level_arms_bones=("Shoulder","Arm","ForeArm","Hand") — LeftHand 위치가 고쳐져 Hand까지
-  체인에 포함(PM 지시 a). 결과 좌우 대칭(Shoulder 18.5°/18.6°·Arm 16.4°/16.4°·
-  ForeArm 3.0°/2.9°).
+■ 🔴 무기 제거 — 신규 기능 추가
+진타가 드는 야구방망이가 별도 메시가 아니라 한 메시 안에 Bone_weapon 가중치(135정점,
+오른손 근처)로만 구분돼 있어 기존 drop_meshes로는 못 뺐음. gen_biped_skin.py에
+cfg["drop_bone_verts"](뼈 이름 집합, 최댓값 가중치 기준 그 뼈에 주로 물린 면을 bmesh로
+삭제)를 새로 추가해서 처리 — 다른 유닛엔 영향 없음(옵션 안 쓰면 이전과 동일 동작).
+텍스처는 FBX 참조 경로가 깨져 있어(채널 0) texture_file로 재연결.
 
-■ 검증(PM 신규 지시 방식 — FBX 내보낸 뒤 새 씬에 재임포트, 공용_애니메이션 idle/walk
-Mixamo 리타겟 렌더)
-- 뼈 22개, 무가중치 뼈 Spine1만(허용), LeftHand 5정점(씨앗) 확인.
-- 크기 [2.051, 0.574, 1.8]m(T자 기준, 갈고리 팔 폭 포함) · 최저 z 0.0000.
-- T자 정면 렌더 — 코트가 정상 크기로 몸에 붙음(머리 위로 솟지 않음), 갈고리 손목에 정상
-  위치, 좌우 팔 대칭.
-- Idle 리타겟(프레임1) — 코트 정상(뜨지 않음), 오른팔이 위로 뻗는 동작(로저 때와 같은
-  클립 특성 — 잔잔한 대기가 아니라 제스처가 있는 Idle 클립으로 확인됨, PM이 로저 때
-  같은 패턴을 정상 판정함). 갈고리 팔도 늘어지거나 두 조각으로 쪼개지지 않고 하나의
-  강체로 자연스럽게 따라 올라감.
-- Walk 리타겟 — 다리 완전 분리, 코트가 보행에 맞춰 자연스럽게 흔들림(Hips/Spine2 강체
-  거동 정상), 갈고리 팔도 보행 동작에 맞춰 자연스럽게 흔들림, 끊김·겹침 없음.
-- 텍스처 Image_0.png 515KB, 0바이트 아님.
+■ 검증(T자 렌더)
+뼈 22개, 매핑 안 된 뼈 0. 크기 [1.616, 0.319, 1.8]m, 최저 z 0. 야구방망이 완전히 사라짐
+(렌더로 직접 확인 — 오른손 비어 있음), "浦原商店"(우라하라 상점) 로고 티셔츠·빨간 스파이크
+머리 정상, T자 대칭.
 
 ■ 산출물(스크래치만, Assets 미반영)
-초월_김경현_AP.fbx · Textures/Image_0.png
-
-■ 남은 일
-- PM 검수 통과 확정되면 Tools/blender/gen_valvebiped_skin.py의 SKINS["초월_김경현_AP"]에
-  이번 수정(케이프 드롭 목록 추가, 얼굴 드롭, Spine1 50% 분할 로직, LeftHand 위치+씨앗
-  가중치, level_arms_bones에 Hand 포함)을 옮겨 적어야 함 — 아직 스크립트에는 반영 안 함
-  (정본은 스크립트, PM 지시).
+초월_김경현_AP.fbx · Textures/cha_jinta.png
