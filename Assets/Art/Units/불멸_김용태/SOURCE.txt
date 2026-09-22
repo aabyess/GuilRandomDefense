@@ -1,0 +1,64 @@
+불멸_김용태(얌마 리야르고, Bleach Mobile cha_ 립) 스킨 출처 — blender 세션(2026-09-22)
+
+■ 원본
+~/Desktop/구랜디스킨모음/09_불멸/불멸_김용태.zip
+ - source/cha_yammy_arrancar.fbx (286KB, 저폴리)
+ - textures/cha_yammy_arrancar.png (256×256 RGBA 한 장)
+
+PM 사전조사: 3ds Max Biped(Bip01 계열), 약 66개 뼈 추정.
+직접 확인: 뼈 42개(PM 추정보다 적음 — 손가락이 3갈래×각 1마디뿐이라 적게 나옴), 메시 1개
+(4,941정점), 재질 1개(cha_yammy_arrancar).
+
+■ 직접 재확인
+- 3ds Biped 표준 이름("Bip01 X", 노태현_AP 마유리와 같은 계열·같은 파일 이름 규칙
+  "cha_" 확인) — 척추 Hips-Spine-Spine1까지만 있고(Spine2 없음, 마유리·가프·쵸파와 같은
+  패턴) Spine1→Spine2로 보내고 Spine1은 Spine의 tail에 자리표시(무가중치 허용). 이번엔
+  자리표시 위치가 퇴화하지 않음(Spine tail z 0.0154 vs Spine1 head z 0.0179, 간격 있음 —
+  크로커다일과 다른 패턴, 직접 확인).
+- 팔다리 체인 전부 실측 확인 — 손상된 뼈 없음(로저·크로커다일과 달리 Forearm·Hand 전부
+  정상 위치·정상 가중치, ForeTwist 류 보조뼈 자체가 없음).
+- 손가락 3갈래(Finger0/1/2, 각 1마디)뿐 — Thumb/Index/Middle 대응 추정, fold_subtree로
+  각 뿌리를 Hand에.
+- 얼굴 보조 뼈 Bone_eyes·Bone_mouth(Head 자식) → Head. 머리카락 Bone_hair_01→02→03
+  (Head 자식 체인) → Head.
+- 🔴 Bone_sword(Spine 직계 자식, 210정점 실가중치) — 렌더로 직접 확인한 결과 허리 옆구리에
+  찬 장검(칼집)이었다. 원작 신체(허리 강체 부착)라 유지, Spine으로 fold(원본 부모와 동일
+  대상이라 자연스러움).
+- 텍스처: FBX가 참조하는 경로(source/cha_yammy_arrancar.png)가 깨져 있어(실제 위치는
+  textures/) 직접 재연결. RGBA 4채널이나 알파 전 픽셀 1.0 고정 확인(PM 우려대로 반투명
+  위험 있었음) — texture_direct 재배선으로 Principled Alpha 링크 자체를 없애고
+  blend_method OPAQUE 강제해 해결.
+
+■ 정리
+- rename: Bip01 Pelvis→Hips·Spine→Spine·Spine1→Spine2·Neck·Head·팔다리 8쌍(3ds Biped
+  표준 매핑).
+- fold: cha_yammy_arrancar(루트)·Bip01·cha_yammy_arrancar.001→Hips · Bone_eyes·
+  Bone_mouth→Head · Bone_sword→Spine.
+- fold_subtree: Bone_hair_01→Head(자식 02·03 자동 포함) · 손가락 Finger0/1/2×좌우→해당 Hand.
+- bone_position_override={"Spine1": ("Bip01 Spine","tail")}, allow_dead_bones={"Spine1"}.
+- 재질: texture_direct(FBX 참조 경로 깨져서 이미지 직접 재로드 후 텍스처 노드 재연결,
+  Alpha 링크 제거+OPAQUE 강제).
+- level_arms=True(팔 T자 정렬, 좌우 대칭 17.9°/17.9°·38.4°/38.4°·19.8°/19.8°).
+
+■ 스케일 — ⚠️ PM 최종 판단 대기
+PM 지시대로 키 1.8m을 강제하지 않고 원본 비율을 우선 보고함. 원본(스케일 무관) 가로
+(T자 팔 벌린 폭) : 세로(키) 비율 = 1.135 (가로가 키보다 약간 더 넓음 — 일반 인체 T자
+비율(~1.0)보다 다소 벌크가 큼, 얌마 특유의 거구·근육질 체형이 어느 정도 반영된 비율로
+보임). 다만 이 비율 자체는 "얼마나 커 보이는가"의 근거로 쓰기엔 약함(원본 파일 자체의
+제작 스케일 관례에 달려 있어, 절대적인 "몇 미터"를 알려주는 지표가 아님).
+산출 FBX는 일단 키 1.8m로 정규화해서 바로 쓸 수 있게 만들어 뒀음(다른 불멸 유닛들과
+동일한 파이프라인, 파일 자체는 언제든 재사용 가능) — 크기 [2.043, 0.605, 1.8]m.
+PM이 최종 키(또는 배율)를 정해서 알려주면 그 값으로 다시 내보낼 수 있음.
+
+■ 검증(재임포트 + 공용_애니메이션 idle/walk Mixamo 리타겟 렌더)
+- 뼈 22개, 매핑 안 된 뼈 0, 무가중치 뼈 Spine1만(허용).
+- 최저 z 0.0000.
+- T자 정면 — 찢어짐 없음, 좌우 대칭, 검집 정상 위치.
+- Idle 프레임1 — 자연스러운 휴식 자세(로저·크로커다일의 이 클립과 달리 팔을 크게 뻗지
+  않음), 코트·검 정상.
+- Walk(측면 확인) — 다리 완전 분리, 하카마 자락이 보행에 맞춰 자연스럽게 펄럭임, 검이
+  허리에 고정된 채 자연스럽게 따라 움직임, 끊김·관통 없음.
+- 텍스처 cha_yammy_arrancar.png 15KB(256×256 저해상도 원본 그대로), 0바이트 아님.
+
+■ 산출물(스크래치만, Assets 미반영)
+불멸_김용태.fbx · Textures/cha_yammy_arrancar.png
