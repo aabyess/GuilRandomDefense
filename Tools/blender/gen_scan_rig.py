@@ -611,6 +611,12 @@ UNITS = {
     # 기모노 밑단 — PM 지시대로 coat_hem(Hips↔UpLeg 반반)으로 가랑이 아래 찢어짐 방지.
     # 관절 좌표 — 오쿠야스·키드급 단면 실측 대신 중심축(|x|<0.4) 단면 밀도로 대략 추정
     # (전신 키 raw 2.56, 머리 꼭대기 2.5·목 1.85·가슴 1.4·엉덩이 0.75·무릎 0.35·발목 0.05).
+    # 🔴 Humanoid 두 번 반려(2026-09-22) 뒤 PM 지시로 방식을 바꿈: 제한_김강민(리카) 선례처럼
+    # Generic 리그(몸통·머리·팔뿐, 다리 없음 — 통 기모노라 다리 메시 자체가 없다) + 합성 Idle
+    # (호흡하듯 몸통이 오르내림)으로. 필수 뼈 검사가 없어(generic_bones 쓰면 humanoid_weight_
+    # check 자동 스킵) 통 기모노도 문제 안 됨. 모든 메시를 강체로 몰아서(heat 없음) 접힘 걱정
+    # 자체가 사라진다 — 1·2차 Humanoid 시도에서 이미 검증된 메시별 z분류(머리/몸통/밑단/팔)를
+    # 그대로 재사용.
     "불멸_신지우": dict(
         source=os.path.expanduser("~/Desktop/구랜디스킨모음/09_불멸/불멸_신지우.glb"), mesh_name="BigMom",
         height=1.8, center_band=(0.0, 0.05), decimate=1.0, rotate_z=0.0,
@@ -618,37 +624,34 @@ UNITS = {
         # 메시를 처리 못 함(assert). 눈 흰자위·단추 추정, 1차에선 뺌.
         # Object_17 — 검 블레이드, PM 지시대로 드롭(선례: 손에 드는 무기는 뺀다).
         drop_meshes=["Object_28", "Object_29", "Object_30", "Object_31", "Object_32", "Object_33", "Object_34", "Object_17"],
-        # 🔴 PM 지시로 "몸통 강체"(2026-09-22) 1회 시도함 — 머리·얼굴을 Head, 가슴·배·허리를
-        # Spine1, 기모노 밑단(Object_5)을 Hips에 통째로 강체로 묶고 발·왼팔손만 heat로 남김.
-        # bone heat 실패(Idle 접힘) 자체는 재현 안 해봤지만 그 전에 다른 벽에 막힘: 바닥까지
-        # 오는 통 기모노라 Spine/RightArm/RightForeArm/RightHand/RightUpLeg/RightLeg/RightFoot
-        # 등에 물릴 메시가 아예 없어(오른팔 전체가 RightShoulder 강체 한 뼈로 몰림, 다리는
-        # 기모노에 가려 별도 메시가 없음) 유니티 휴머노이드 필수 뼈 가중치 검사(humanoid_
-        # weight_check)를 통과 못 함 — 짧은 재시도로 풀 성질이 아니라서(오른팔·다리를 뼈별로
-        # 쪼갤 메시 경계가 없음) PM 지시대로 여기서 접고 미룸. 빅맘은 보류, 아래는 마지막으로
-        # 배치 통과했던 coat_hem(heat) 버전으로 되돌려 둠 — Idle 접힘은 여전히 미해결.
+        # 전부 강체(heat 없음) — Humanoid 1·2차 시도에서 이미 확인한 z중간값 분류 그대로:
+        #   머리·얼굴·머리장식 → Head · 가슴·배·허리 → Spine1 · 기모노 밑단+발(다리 뼈가
+        #   없어 발도 여기로) → Hips · 오른팔(검 뺀 뭉치) → RightShoulder · 왼팔·손 →
+        #   LeftShoulder(신규 — Humanoid 시도 땐 heat로 남겼던 유일한 부분, 이제 강체로).
         rigid_meshes={n: "RightShoulder" for n in
-                      ("Object_2", "Object_18", "Object_20", "Object_24", "Object_25", "Object_26", "Object_27")},
-        heat_proxy=dict(voxel_m=0.02, keep_largest=True),
-        coat_hem=dict(hip_src=0.75, hem_src=0.1, band_src=0.1, split_src=0.1, center_x_src=0.0, share=0.5,
-                      only_meshes=["Object_3", "Object_4", "Object_5", "Object_6", "Object_7", "Object_8", "Object_9",
-                                   "Object_10", "Object_11", "Object_12", "Object_13", "Object_14", "Object_15", "Object_16",
-                                   "Object_19", "Object_21", "Object_22", "Object_23", "Object_35"]),
-        joints=dict(
-            Hips=(0.0, 0.0, 0.75), Spine=(0.0, 0.0, 0.95), Spine1=(0.0, 0.0, 1.15), Spine2=(0.0, 0.0, 1.4),
-            Neck=(0.0, 0.0, 1.85), Head=(0.0, 0.0, 2.05), HeadTop=(0.0, 0.0, 2.5),
-            LeftShoulder=(0.15, 0.0, 1.75), LeftArm=(0.35, -0.1, 1.7), LeftForeArm=(0.7, -0.3, 1.6),
-            LeftHand=(1.0, -0.5, 1.55), LeftHandTip=(1.15, -0.6, 1.5),
-            RightShoulder=(-0.15, 0.0, 1.75), RightArm=(-0.35, -0.1, 1.7), RightForeArm=(-0.7, -0.3, 1.6),
-            RightHand=(-1.0, -0.5, 1.55), RightHandTip=(-1.15, -0.6, 1.5),
-            LeftUpLeg=(0.12, 0.0, 0.7), LeftLeg=(0.12, 0.0, 0.35), LeftFoot=(0.12, -0.05, 0.05),
-            LeftToeBase=(0.12, -0.15, 0.0), LeftToeTip=(0.12, -0.22, 0.0),
-            RightUpLeg=(-0.12, 0.0, 0.7), RightLeg=(-0.12, 0.0, 0.35), RightFoot=(-0.12, -0.05, 0.05),
-            RightToeBase=(-0.12, -0.15, 0.0), RightToeTip=(-0.12, -0.22, 0.0)),
+                      ("Object_2", "Object_18", "Object_20", "Object_24", "Object_25", "Object_26", "Object_27")} | {
+                      "Object_19": "LeftShoulder", "Object_21": "LeftShoulder"} | {
+                      n: "Head" for n in
+                      ("Object_4", "Object_6", "Object_7", "Object_11", "Object_12", "Object_15", "Object_16",
+                       "Object_22", "Object_23")} | {
+                      n: "Spine1" for n in ("Object_10", "Object_13", "Object_14")} | {
+                      n: "Hips" for n in ("Object_5", "Object_3", "Object_8", "Object_9", "Object_35")},
+        # 몸통·머리·팔뿐인 적은 뼈(리카 선례) — 원본 좌표는 Humanoid 시도 때 실측한 값 재사용.
+        generic_bones=[
+            ("Hips", (0.0, 0.0, 0.0), (0.0, 0.0, 0.75), None),
+            ("Spine1", (0.0, 0.0, 0.75), (0.0, 0.0, 1.4), "Hips"),
+            ("Head", (0.0, 0.0, 1.4), (0.0, 0.0, 2.5), "Spine1"),
+            ("LeftShoulder", (0.15, 0.0, 1.75), (1.0, -0.5, 1.55), "Spine1"),
+            ("RightShoulder", (-0.15, 0.0, 1.75), (-1.0, -0.5, 1.55), "Spine1")],
+        straighten=[],
+        seed_zero_bones=0.001,
+        # 호흡: Spine1이 살짝 뒤로 젖혀졌다 펴지고(숨 들이쉬기), Head가 반대로 살짝 끄덕여
+        # 자연스럽게. 팔은 고정(원작 자세 그대로).
+        synth_idle=dict(take="Idle", frames=72, step=3, bones={
+            "Spine1": [((1, 0, 0), 2.0, 0.0)], "Head": [((1, 0, 0), 1.0, -0.5)]}),
         closeups=[("armpit", 1.35, 0.8), ("crotch", 0.75, 0.9)],
-        # RightShoulder에 오른팔+검 뭉치를 통째로 강체로 몰아서 정점의 53%가 몰림(의도한 것,
-        # bone heat 실패 증상이 아님) — 기본 50% 안전판을 완화.
-        max_bone_share=0.6,
+        # 강체라 Head·Spine1·RightShoulder에 정점이 크게 몰림(의도한 것) — 기본 안전판 완화.
+        max_bone_share=0.9,
         # 재질 27개(Material.013·015는 미사용이라 자동 제외, Material.022는 드롭한 Object_34
         # 전용이라 배제) 전부 Image_0 또는 Image_1을 공유 아틀라스로 씀(직접 확인) — 이미
         # Base Color가 정상 연결돼 있었지만, 이 파이프라인은 materials cfg 없이는 재질을
@@ -798,6 +801,76 @@ UNITS = {
         coat_hem=dict(hip_src=0.1417, hem_src=0.044, band_src=0.012, center_x_src=0.002, split_src=0.008, share=0.8),
         closeups=[("armpit", 1.25, 0.8), ("crotch", 0.55, 0.9)],
         textures=[("Base Color", 0, "material_diffuse.png")]),
+    # 원피스 밍크족 토끼 캐럿(Sketchfab 정적 glb, 뼈 없음) → 히든_최윤서(2026-09-22 히든,
+    # blender 세션). 메시 8: carrot(몸+팔다리+귀, 10,345정점)·hair(거대한 휘날리는 머리카락,
+    # 3,058정점)·tail(꼬리, 2,421정점)·moon(배경 보름달 원반, 정점 65개인데 반경 11 — 캐릭터와
+    # 완전히 동떨어진 배경 소품, 렌더로 확인) · wheel.001·wheel.002(양손에 든 북/전자 드럼
+    # 무기 한 쌍, 렌더로 확인 — 팔·손은 몸 메시에 이미 완비돼 있어 이건 손에 쥔 무기가 맞음,
+    # 선례대로 뺌) · Cube·Icosphere×2(조명용 더미, 뺌).
+    # 🔴 키 1.8 정규화 기준(PM 질문) — 귀를 뺄지 여부: 몸 메시(carrot) 혼자 측정한 높이가
+    # 이미 전체 장면 높이와 같다(13.159 = 13.159, 직접 확인) — 귀 끝이 이미 몸 메시 자체의
+    # 최고점이라 머리카락·꼬리를 포함해도 안 넘어감. 귀 제외 기준을 따로 둘 필요 없음, 그냥
+    # 전신(귀 포함) 높이로 정규화.
+    # 관절 좌표 — 정밀 실측 대신 중심축 단면 밀도로 대략 추정(치마 자락 z 5.8~6.4에서 단면이
+    # 갑자기 커져 골반대 위치로 판단, 목 z 10.7~11.35에서 극도로 가늘어짐, 귀 끝 z 13.0).
+    "히든_최윤서": dict(
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_최윤서.glb"), mesh_name="Carrot",
+        height=1.8, center_band=(0.0, 0.05), decimate=1.0, rotate_z=0.0,
+        drop_meshes=["moon_moon_0_Material.019_0", "wheel.001_wheel_0_Material.023_0", "wheel.002_wheel_0_wheel_0"],
+        rigid_meshes={"hair_Hair_0_Material.021_0": "Head", "tail_tail_0_Material.022_0": "Hips"},
+        joints=dict(
+            Hips=(0.0, 0.0, 5.8), Spine=(0.0, 0.0, 7.0), Spine1=(0.0, 0.0, 8.3), Spine2=(0.0, 0.0, 9.4),
+            Neck=(0.0, 0.0, 10.7), Head=(0.0, 0.0, 11.6), HeadTop=(0.0, 0.0, 12.3),
+            LeftShoulder=(1.0, 0.0, 9.2), LeftArm=(1.4, 0.0, 9.0), LeftForeArm=(1.7, 0.0, 7.5),
+            LeftHand=(1.4, 0.0, 6.2), LeftHandTip=(1.25, 0.0, 5.6),
+            RightShoulder=(-1.0, 0.0, 9.2), RightArm=(-1.4, 0.0, 9.0), RightForeArm=(-1.7, 0.0, 7.5),
+            RightHand=(-1.4, 0.0, 6.2), RightHandTip=(-1.25, 0.0, 5.6),
+            LeftUpLeg=(0.75, 0.0, 5.8), LeftLeg=(0.75, 0.0, 2.8), LeftFoot=(0.75, -0.1, 0.3),
+            LeftToeBase=(0.75, -0.4, -0.16), LeftToeTip=(0.75, -0.6, -0.16),
+            RightUpLeg=(-0.75, 0.0, 5.8), RightLeg=(-0.75, 0.0, 2.8), RightFoot=(-0.75, -0.1, 0.3),
+            RightToeBase=(-0.75, -0.4, -0.16), RightToeTip=(-0.75, -0.6, -0.16)),
+        straighten=["LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand", "RightShoulder", "RightArm", "RightForeArm", "RightHand"],
+        closeups=[("armpit", 1.25, 0.8), ("crotch", 0.55, 0.9)],
+        glb_images={0: "carrot_body_baseColor.png", 1: "carrot_hair_baseColor.png", 3: "carrot_tail_baseColor.png"},
+        materials={"Material.020": [("Base Color", "carrot_body_baseColor.png")],
+                   "Material.021": [("Base Color", "carrot_hair_baseColor.png")],
+                   "Material.022": [("Base Color", "carrot_tail_baseColor.png")]}),
+    # 원피스 고래 라분(Reverse Mountain 파수꾼) → 히든_이동엽(2026-09-22 히든, blender 세션).
+    # zip 안 zip(source/edf3994d2ae141ca82c2b7c11597e683.zip) 안 "Laboon One Piece.obj" —
+    # 아주 단순한 저폴리(정점 95·삼각형 104), 뼈 없음. 정면 −Y(원작 OBJ 그대로, 이미 옆으로
+    # 누운 헤엄 자세라 회전 불필요).
+    # 🔴 사람형이 아니라 다리·팔 없이 몸(Body 루트)·머리·꼬리 사슬뿐인 Generic 리그(빅맘·리카
+    # 선례) — height=1.8 관례는 Z(등~배 두께)를 기준으로 삼는데, 라분은 Y축으로 길게 누워
+    # 있어(길이 244 vs 두께 135 vs 폭 173, 직접 측정) "키"가 아니라 몸통 두께가 1.8m로 맞춰짐
+    # — 결과 몸길이는 이 두께의 약 1.8배(약 3.2~3.3m, 배치 리포트에서 확인). 게임 안 크기는
+    # PM이 표에서 정하되, 참고로 실제 길이 비율(길이:두께:폭 ≈ 1.8:1:1.3)을 SOURCE에 남김.
+    # 🔴 텍스처 두 벌(안쪽 zip Laboon.png/LaboonAlpha.png 128² RGBA·L 대 바깥 zip textures/
+    # 같은 이름 128² 팔레트 P) — 픽셀 크기는 같지만 안쪽이 팔레트 손실 없는 원본이라 그쪽을
+    # 씀. LaboonAlpha.png는 흑백 마스크(무엇을 가리는지 불확실 — 몸 문양 UV 자리의 미사용
+    # 영역으로 보임, 확신 없음) → 유니티 OPAQUE 원칙대로 알파 없이 RGB만 사용, PM 확인 필요
+    # 시 알림.
+    # 🔴 synth_idle은 회전만 지원(이동 불가, synth_idle_scan 구현 확인) — PM이 말한 "위아래로
+    # 흔들리며 둥실"은 Body·Head의 미세한 피치 흔들림으로 근사(진짜 상하 이동 아님, 한계로
+    # 기록).
+    "히든_이동엽": dict(
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_이동엽.zip"), mesh_name="Laboon",
+        member=["source/edf3994d2ae141ca82c2b7c11597e683.zip", "Laboon One Piece.obj"], textures_dir="",
+        height=1.8, center_band=(0.0, 0.05), decimate=1.0, rotate_z=0.0,
+        generic_bones=[
+            ("Body", (0.0, -20.0, 40.0), (0.0, 0.0, 40.0), None),
+            ("Head", (0.0, -20.0, 40.0), (0.0, -129.0, 60.0), "Body"),
+            ("Tail1", (0.0, -20.0, 40.0), (0.0, 30.0, 42.0), "Body"),
+            ("Tail2", (0.0, 30.0, 42.0), (0.0, 75.0, 75.0), "Tail1"),
+            ("TailTip", (0.0, 75.0, 75.0), (0.0, 115.0, 89.0), "Tail2")],
+        straighten=[],
+        synth_idle=dict(take="Idle", frames=72, step=3, bones={
+            "Body": [((1, 0, 0), 2.0, 0.0)], "Head": [((1, 0, 0), 1.0, -0.3)],
+            "Tail1": [((1, 0, 0), 3.0, -0.5)], "Tail2": [((1, 0, 0), 5.0, -1.0)],
+            "TailTip": [((1, 0, 0), 8.0, -1.5)]}),
+        # 고래 머리가 몸통 대부분을 차지(원작 자체 비율 — Head 몫 85%, 정점 95개짜리
+        # 저폴리라 더 그렇다) — bone heat 실패 증상 아님, 기본 안전판 완화.
+        max_bone_share=0.9,
+        materials={"material1": [("Base Color", "Laboon.png")]}),
 }
 
 # 🗑 폐기(2026-09-15 사장님 지시 — 특별함_강주혁 모델을 아이언맨으로 교체, fix_unit_fbx.py로): 코알라는 AI 메시가 닿은 곳마다 붙어 있어

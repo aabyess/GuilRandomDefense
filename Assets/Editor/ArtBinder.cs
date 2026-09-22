@@ -131,6 +131,10 @@ public static class ArtBinder
         // 사람 규칙(UprightByBounds)이면 가장 긴 축을 세로로 알고 눕히므로 이 표로 뺀다.
         // 1.3 = 가장 긴 축(팔 벌린 가로)을 26에 → 키가 약 20으로 사람과 같아진다.
         ("제한_김강민", 1.3f),
+        // 불멸_신지우(빅맘)·영원_김영원(두꺼비) — 2026-09-22 Generic. 둘 다 가로가 키(1.8)보다 넓어(2.3·2.85)
+        // UprightByBounds가 옆으로 눕혔다. 가장 긴 축(가로)을 기준으로 키가 약 20이 되게 잡는다.
+        ("불멸_신지우", 1.28f),
+        ("영원_김영원", 1.58f),
     };
 
     static bool IsFourLegged(string modelName)

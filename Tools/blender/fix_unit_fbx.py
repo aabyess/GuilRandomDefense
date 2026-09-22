@@ -2157,24 +2157,18 @@ UNITS = {
                                  dict(under="bone_Left_Finger11", into="mixamorig:LeftHand", with_root=True),
                                  dict(under="bone_Right_Finger01", into="mixamorig:RightHand", with_root=True),
                                  dict(under="bone_Right_Finger11", into="mixamorig:RightHand", with_root=True)],
-                    # 🔴 PM 재반려(2026-09-22, 유니티 재검수) — 유니티가 여전히 Hips를 최상위
-                    # 오브젝트로 잡고 Chest(Spine1)도 못 찾음(사람 뼈 20개뿐). 원인은 오브젝트
-                    # 이름이 아니라 레스트 자세: 두꺼비가 원래 쪼그려 앉은 체형이라 넓적다리가
-                    # 옆으로 벌어지고(UpLeg 로컬회전 320°/39° — 수직이 아님) 무릎이 158° 굽어
-                    # 있어 유니티 휴머노이드 자동 매핑의 골반 판정 전제(서 있는 T자에 가까운
-                    # 레스트)가 깨졌음(PM이 재수입해 회전값 직접 확인). level_chain(신규 범용
-                    # 기능, tpose_arms와 같은 회전 방식을 다리·척추 임의 사슬에 재사용)으로
-                    # 레스트를 곧게 세운다 — 웅크린 원작 체형은 Idle 애니메이션이 입히므로
-                    # 레스트가 곧게 서 있어도 겉모습엔 지장 없음(PM 확인).
-                    level_chains=[dict(chain=["mixamorig:Hips", "mixamorig:Spine", "mixamorig:Spine1",
-                                              "mixamorig:Neck", "mixamorig:Head"], target=(0.0, 0.0, 1.0)),
-                                  dict(chain=["mixamorig:LeftUpLeg", "mixamorig:LeftLeg", "mixamorig:LeftFoot"],
-                                       target=(0.0, 0.0, -1.0)),
-                                  dict(chain=["mixamorig:RightUpLeg", "mixamorig:RightLeg", "mixamorig:RightFoot"],
-                                       target=(0.0, 0.0, -1.0))],
-                    tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
-                                    "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
-                                for s, side in (("L", "Left"), ("R", "Right"))},
+                    # 🔴 PM 재반려 두 번(2026-09-22, 유니티 재검수) — 오브젝트 이름 수정 뒤에도
+                    # 유니티가 여전히 Hips를 최상위 오브젝트로 잡고 Chest도 못 찾음(사람 뼈
+                    # 20개뿐). level_chain으로 다리·척추를 곧게 세워도(재수입 확인상 무릎 굽힘
+                    # 0·완전 수직까지 만들었음) 안 됨 — 두꺼비는 애초에 사람 체형이 아니라서
+                    # Humanoid 자체를 포기함(PM 지시). 빅맘·라분과 같은 Generic+합성 Idle로
+                    # 전환 — tpose_arms·level_chains 다 빼고 원작의 웅크린 레스트를 그대로 씀
+                    # (Idle이 아니라 레스트 자체가 웅크린 두꺼비 자세, 원작 그대로).
+                    generic=True,
+                    synth_idle=dict(take="Idle", frames=72, step=3, bones={
+                        "mixamorig:Spine": [((1, 0, 0), 2.0, 0.0)],
+                        "mixamorig:Spine1": [((1, 0, 0), 1.5, -0.4)],
+                        "mixamorig:Head": [((1, 0, 0), 1.0, -0.6)]}),
                     seed_zero_bones=0.001, orient_snap=True),
     # 블리치 히츠가야 토시로 만해(효린마루, 얼음 날개) glb → 영원_문필환(2026-09-22 영원,
     # blender 세션). 뼈 110(3ds Max Biped, "Bip001 X_NN" — 갑옷거인과 같은 계열) · 메시
