@@ -2357,6 +2357,74 @@ UNITS = {
                                  dict(under="c_collar_01", into="mixamorig:Spine1", with_root=True),
                                  dict(under="c_hat_01", into="mixamorig:Head", with_root=True)],
                     materials=dict(textures={"pl_demaroblack_orig01": [("DiffuseColor", "pl_demaroblack_orig01_diff.png")]})),
+    # 원펀맨 게임 립 제노스(데몬 사이보그) → 히든_최경범(2026-09-22 히든, blender 세션).
+    # glb 하나(뼈 296·스킨 1·애니 0·메시 18·재질 7·이미지 3). 뼈 이름은 이미 mixamorig
+    # 계열(Hips·Spine·LeftShoulder 등)에 번호 꼬리만 붙음("Hips_00" — "mixamorig:" 접두는
+    # 없음) → rename_regex로 접두 붙이며 꼬리 제거.
+    # 🔴 메시 18개 중 상당수가 LOD 중복(PM 사전조사와 일치) — glTF 재질 이름에 LOD가 실제로
+    # 안 남는 것(Hair01·Metal·Body)도 있어 재질만으론 못 가르고, 정점 수 내림차순(LOD00이
+    # 가장 조밀하다는 표준 관례) + 가져오기 로그 순서로 각 쌍을 대조해 판정:
+    #   Face01: Object_8(4,019·LOD00, 재질에 "_LOD00" 명시돼 있어 확실) 유지 · Object_10
+    #     (2,307·LOD01)·Object_12(1,462·LOD02) 드롭.
+    #   Hair01: Object_18(15,125) 유지 · Object_20(6,741)·Object_22(5,347) 드롭(재질 이름에
+    #     LOD 구분 없어 정점 수로만 판정 — 세 배 가까이 차이나 확신 있음).
+    #   GENOS04_Metal: Object_32(18,756) 유지 · Object_34(7,052)·Object_36(12,671) 드롭.
+    #   GENOS04_Body: Object_38(6,338) 유지 · Object_40(2,586)·Object_42(4,416) 드롭.
+    #   Teeth·Tongue·눈 등 작은 얼굴 부속(Object_14·16·30, 재질 "MAT_..._Face"로 LOD00과
+    #   다름 — LOD 계열 아니라 별개 부속) + Plug01~03(목·머리 케이블 꽂이, PM 지시대로
+    #   신체 유지) 전부 남김. Plug04는 gltf 가져오기 로그엔 있는데 실제 오브젝트가 안
+    #   생김(면 없음 추정, 이번 세션에 여러 번 본 Cube 증상과 같음) — drop_meshes에 안 넣음.
+    # 팔에 박힌 무기(소이포 캐논 등)는 GENOS04_Metal 메시 자체(제노스의 기계 팔)라 원래도
+    # 따로 뺄 대상이 없음(별도 이펙트 메시 없음, 확인).
+    # 🔸 재질별 이미지는 glTF에서 직접 읽음(덴지 교훈): MAT_..._Face_LOD00·MAT_..._Face
+    #   둘 다 Image_0 · MAT_..._Hair01 → Image_1 · MAT_..._Body·MAT_..._Meta01 둘 다 Image_2
+    #   (금속·피부가 같은 아틀라스 공유). 원본 재질에 Principled BSDF 자체가 없어(이모션/
+    #   언릿 계열 셰이더로 보임) Metallic 스칼라를 블렌더에서 못 읽음 — 유니티에서 직접
+    #   Metallic 값 확인 필요(PM 요청 사항, 제가 여기서는 확인 불가).
+    "히든_최경범": dict(path="Assets/Art/Units/히든_최경범/히든_최경범.fbx", kind="human", size=("height", 1.8),
+                    source=os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_최경범.glb"),
+                    no_nulls=True, orient_snap=True,
+                    drop_meshes=["Object_10", "Object_12", "Object_20", "Object_22",
+                                 "Object_34", "Object_36", "Object_40", "Object_42", "Icosphere"],
+                    drop_bones=["_rootJoint"],
+                    rename_regex=(r"([A-Za-z][A-Za-z0-9_]*?)_[0-9]+", r"mixamorig:\1"),
+                    # Hips_00 자체는 가중치 0(자식 Hipsd_01이 실제 엉덩이 가중치를 쥠, 린의
+                    # bone_Hips_Dummy와 같은 패턴) → 안전판.
+                    seed_zero_bones=0.001,
+                    glb_images={0: "genos_face.png", 1: "genos_hair.png", 2: "genos_body_metal.png"},
+                    materials=dict(textures={
+                        "MAT_HERO_GENOS01_Face_LOD00": [("DiffuseColor", "genos_face.png")],
+                        "MAT_HERO_GENOS01_Face": [("DiffuseColor", "genos_face.png")],
+                        "MAT_HERO_GENOS01_Hair01": [("DiffuseColor", "genos_hair.png")],
+                        "MAT_HERO_GENOS04_Body": [("DiffuseColor", "genos_body_metal.png")],
+                        "MAT_HERO_GENOS04_Meta01": [("DiffuseColor", "genos_body_metal.png")]})),
+    # 원피스 바운티러시 알비다(pl_alvida_orig01) → 히든_석성례(2026-09-22 히든, blender
+    # 세션). zip 안 rar(bsdtar로 품) 안 pl_alvida_orig01.fbx. 표준 pl_ 계열, world_joint가
+    # 바로 뿌리(그 위에 별도 아마추어 이름 뼈 없음 — 시키·야마토와 다름, 직접 확인), Toe
+    # 뼈 있음.
+    # 철퇴(weapon_01·weapon_02, 오른손 RHand_Weapon01 뼈) — 렌더 없이도 이름·정점 규모로
+    # 명백해 드롭.
+    "히든_석성례": dict(path="Assets/Art/Units/히든_석성례/히든_석성례.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_석성례.zip"),
+                             "source/pl_alvida_orig01.rar", "pl_alvida_orig01/pl_alvida_orig01.fbx"),
+                    archive_rgb={"pl_alvida_orig01/pl_alvida_orig01_diff.png": "pl_alvida_orig01_diff.png"},
+                    drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close",
+                                 "weapon_01", "weapon_02"],
+                    drop_bones=["world_joint"],
+                    # 🔴 1차 배치: "기본 자세≠쉬는 자세" 2.1991(다른 pl_ 유닛은 0.0) — 렌더로
+                    # 확인하니 몸 전체가 대각선으로 기울어진 채 굳어 있었음(가져온 기본 자세가
+                    # 진짜 쉬는 자세가 아니라 애니메이션 중간 프레임으로 보임) → use_rest_pose로
+                    # 진짜 결합 자세를 씀.
+                    use_rest_pose=True,
+                    rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
+                    merge_bones=[dict(under="Bellyband", into="mixamorig:Hips", with_root=True),
+                                 dict(under="Body_Bust", into="mixamorig:Spine1", with_root=True),
+                                 dict(under="CHair01", into="mixamorig:Head", with_root=True),
+                                 dict(under="LSide_Hair", into="mixamorig:Head", with_root=True),
+                                 dict(under="RSide_Hair", into="mixamorig:Head", with_root=True),
+                                 dict(under="LScarf01", into="mixamorig:Spine1", with_root=True),
+                                 dict(under="RScarf01", into="mixamorig:Spine1", with_root=True)],
+                    materials=dict(textures={"pl_alvida_orig01": [("DiffuseColor", "pl_alvida_orig01_diff.png")]})),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")
