@@ -1,0 +1,88 @@
+불멸_정윤식 (골 D. 로저, 중국 모바일 role_ 립) 스킨 출처 — PM 사양 원문 보존
+(2026-09-22, 착수 전)
+
+원본: ~/Desktop/구랜디스킨모음/09_불멸/불멸_정윤식.glb (8.9MB)
+
+PM 사전조사: 스킨 1개·뼈 114개(Bip001 계열 + Bone029 같은 이름 없는 보조뼈)·메시 3·재질 3·
+이미지 3·애니 30.
+재질: tex_role_luojie_body_mat / tex_role_luojieshizhuang_body_mat / tex_role_luojieshizhuang_pifeng_mat
+⚠️ luojie(로저) 기본 몸과 luojieshizhuang(의상) 몸이 겹친 두 벌일 수 있음 — 직접 확인해서
+하나만 남길 것.
+
+직접 재확인한 것(빌드 전 조사, 라이브 Blender 세션):
+- 뼈 114개, 메시 4개(role_luojie_qiang 684정점·role_luojieshizhuang_body 10,723정점·
+  role_luojieshizhuang_pifeng 5,893정점 — PM 사전조사엔 3개로 적혔으나 실제로 role_luojie_qiang
+  까지 포함해 3개 재질에 대응하는 메시가 맞고, 총 조인 후 17,300정점).
+- 🔴 PM 우려("luojie 기본 몸과 의상 몸이 겹친 두 벌") 직접 확인 결과 사실 아님 — role_luojie_qiang
+  (684정점)은 몸 복제본이 아니라 골반(Bip001 Pelvis) 자식 qiang_Bone34/41에 물린 별도 소품
+  (허리에 찬 장검 칼집, 렌더로 확인)이었다. tex_role_luojie_body_mat 재질명은 텍스처 아틀라스
+  공유일 뿐 겹침이 아니다. luojieshizhuang_body(10,723)가 유일한 몸통 메시 — 겹친 두 벌
+  자체가 없어 하나 빼는 판단이 불필요했음.
+- 3ds Biped 계열이나 _rootJoint 루트 + 이름 뒤에 "_NN" 순번이 붙은 변형(Sketchfab 재추출
+  흔적) — biped_rename_table 자동표 대신 실제 이름으로 직접 rename 표 작성.
+- 🔴 PM 경고 그대로 실측 — "Bip001 L/R Forearm"은 정점그룹은 있으나 실제 가중치 0(죽은
+  뼈)이고 "L/R ForeTwist(+1)"이 팔뚝 몫을 실제로 짐 → ForeTwist를 ForeArm으로 fold.
+  ⚠️ 여기서 더 나아가 새로 발견한 함정: 이 Forearm 죽은 뼈의 레스트 좌표 자체가 발목
+  높이(z 0.0016, Toe0과 같은 좌표)로 무너져 있었다 — 처음 빌드에서 이 좌표로 LeftForeArm의
+  머리 위치를 잡았다가 렌더에서 팔이 화면 밖으로 크게 늘어지는 사고가 났다(실측·재현).
+  ForeTwist의 head 위치(팔꿈치로 타당한 좌표)로 bone_position_override 해서 해결.
+- 🔴 두 번째로 새로 발견한 함정: 위치 계산용 src_bone_of를 전체 매핑(rename+fold+
+  fold_subtree 합친 것)에서 만들면 안 된다 — RightHand처럼 rename 소스(Bip001 R Hand)
+  외에도 fold_subtree 소스(wuqi_bone01·eff_luojie_skill_2_dao 서브트리)가 같은 대상으로
+  섞여 있으면 뼈 이름 순회 순서상 나중 것이 덮어써 완전히 엉뚱한(발밑) 좌표를 준다(실측·
+  재현). rename 표만으로 src_bone_of를 만들어야 한다(gen_biped_skin.py 원본 방식과 동일 —
+  이번에 merged mapping을 썼다가 걸린 것).
+- 수염(로저 특유의 팔자수염) 2가닥 — Bone046→047→048, Bone050→051→052(Head 자식) +
+  단일 Bone054(280정점, 턱 중앙 추정) → 전부 Head로 fold.
+- 옷깃 흔들뼈 Bone007~011·024~027(L Clavicle 자식, 좌 9개)·Bone013~017·019~022(R Clavicle
+  자식, 우 9개) → 각각 LeftShoulder/RightShoulder.
+- 가슴 흔들뼈 Bone001~005·037/038·040/041·043/044(전부 Spine2 자식) → Spine2.
+- 왼쪽 허벅지 전용 흔들뼈 Bone029→030→031(507정점, 실질적 가중치)·Bone033(166) → 좌측에만
+  있는 비대칭 장식(코트 자락 추정) → LeftUpLeg로 fold.
+- wuqi_bone01(339정점, "무기" — R Hand 자식) → RightHand. 스킬 이펙트 뼈(eff_luojie_skill_2_dao
+  서브트리 leidian·Particle System 등, 전부 무가중치) → RightHand로 정리(가중치 없어 안전).
+- "_0" 접미사 중복 관절(L/R Clavicle_0·L/R UpperArm_0·Spine2_0, 전부 실가중치 있음) → 각각
+  본체와 같은 대상(코트의 별도 뼈대가 아니라 같은 관절의 이중 노드, 동일 대상이라 위험 없음
+  — 정준영 케이스와 다른 패턴).
+- 왼발끝(Bip001 L Toe0)만 무가중치(오른발끝은 35정점 유효) — 원본 자체의 비대칭, 허용
+  예외(allow_dead_bones)로 둠.
+- 결합 자세(바인드) 팔 각도 실측 — 수평 기준 약 22° 처진 약한 A자 → level_arms로 T자 교정.
+
+빌드: 라이브 Blender 세션에서 직접 실행(execute_blender_code, gen_biped_skin.py의 build()
+로직을 이식). 배치 스크립트 파일 자체는 아직 반영 안 함 — 통과 확정되면 정본(gen_biped_skin.py
+SKINS 표)에 옮겨 적을 것.
+
+검증 결과(2026-09-22, 실측 — PM 신규 지시 방식: FBX 내보낸 뒤 새 씬에 재임포트하고
+~/Desktop/구랜디스킨모음/99_공용_애니메이션의 idle.fbx/walk.fbx(Mixamo)를 리타게팅해서
+렌더로 재검사):
+- 뼈 22개, 매핑 안 된 뼈 0개, 무가중치 정점 0개(전체 17,300개 중, 최근접 채움 0건 —
+  원본부터 전부 커버됨).
+- 크기 [1.973, 0.954, 1.8]m(T자 기준, 팔 벌린 폭 포함) · 최저 z 0.0000 · 키 1.8m 정규화.
+- 텍스처 3장 전부 정상 저장 확인(luojie_body.png 298KB·luojieshizhuang_body.png 229KB·
+  luojieshizhuang_pifeng.png 137KB, 0바이트 없음).
+- T자 정면 렌더 — 찢어짐·뜬 조각 없음, 팔 좌우 대칭(레벨링 후 좌 31.6°·우 31.6°, 수정 전
+  53.4°/75.9°로 비대칭이었던 것과 대조).
+- Idle 리타겟(프레임1, 어깨 내리고 팔꿈치 굽힘) 렌더 — 코트가 머리 위로 솟거나 뒤집히지
+  않음, 자연스럽게 늘어짐. 허리에 찬 검집(qiang)은 Hips를 따라 고정, 손 쪽 무기(wuqi)는
+  RightHand를 따라감.
+- Walk 리타겟 렌더 — 다리 앞뒤·좌우 분리 정상, 코트가 보행에 맞춰 자연스럽게 흔들림,
+  관통·끊김 없음.
+
+■ 정정 (2026-09-22, PM 재검수 — 유니티 idleview)
+🔴 role_luojie_qiang(684정점)을 "허리 검집" 소품으로 판단해 남겼는데, PM이 유니티에서
+확인한 결과 권총(수발총)이 오른쪽(화면 기준) 어깨 옆 허공에 떠 있었다. qiang(枪)은
+중국어로 총이라는 뜻 — 검이 아니라 권총 소품이었다(직접 확인 렌더에서 곡선진 형태를
+검집으로 오판). 원인: 이 메시의 레스트 좌표는 가슴~어깨 높이(z 전체 몸높이의 약
+59~69%)인데, 뼈대 계층상 부모가 Pelvis(qiang_Bone34)라는 이유만으로 Hips 강체로
+접었다 — Hips는 애니메이션 중 회전 폭이 가장 커서, 가슴 높이 소품을 Hips에 강체로 물리면
+Idle 중 궤적이 크게 벌어져 어깨 옆 허공에 떠 보인 것. 선례대로(버제스·킬러 등 손에 드는
+무기 전부 제거) role_luojie_qiang 메시를 통째로 드롭 — qiang_Bone34/41는 무가중치로
+Hips에 접어 안전하게 정리.
+재검증(스크래치, FBX 재임포트+idle/walk 리타겟): 권총 사라짐. 크기 [1.732, 0.954, 1.8]m
+(권총 제거로 가로폭이 1.973→1.732 감소). Idle·Walk 렌더 모두 코트·검(허리에 찬 장검,
+costume 몸통 메시 자체에 고정 모델링된 장식 — 애니메이션 내내 몸에 붙어 자연스럽게
+움직임, 이건 소품이 아니라 costume 지오메트리 일부라 문제 없음) 정상.
+
+주의:
+- 원본 glb는 삭제 금지.
+- 산출물은 스크래치에만 둠(PM 지시) — Assets 반영 안 함.
