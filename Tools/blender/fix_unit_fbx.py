@@ -1237,6 +1237,42 @@ UNITS = {
                                     "Hand": f"mixamorig:{side}Hand"} for s, side in (("L", "Left"), ("R", "Right"))},
                     seed_zero_bones=0.001,
                     materials=dict(textures={"pl_whitebeard_youn01": [("DiffuseColor", "pl_whitebeard_youn01_diff.png")]})),
+    # 원피스 바운티러시 사카즈키(아카이누) 해군 원수(pl_akainu_gens01) → 초월_양재모_AD
+    # (2026-09-22 초월, 사장님 지시로 가프↔아카이누 스킨 맞바꿈 — 기존 "초월_양재모_AD" 가프
+    # 항목은 "불멸_박은석"으로 옮겨졌고 PM이 커밋함, 이 키를 재사용). zip 안 source/*.rar 안 FBX.
+    #   pl_ 리그 뼈 63(센고쿠·흰수염과 같은 계열, 번호 꼬리 없음) · 메시 17 · 재질 1(전체) ·
+    #   애니 combo·damage·dodge·down 등 다수(안 씀, 결합 자세 기준) · 무가중치 0.
+    #   겹친 변형: face_normal만(attack·damage 뺌). 손은 open만(close·close_magma 뺌).
+    #   🔴 용암 개 소환수(이누가미 모델 메이고) 스킬 이펙트 — l/r_sp01_dog·l/r_sp01_dog_eye
+    #   메시(용암 텍스처 늑대머리 모양, 렌더로 직접 확인) + 전용 뼈 사슬(Arm_Upper_Magma→
+    #   Fore_Magma→sp_joint01/02→Palm_Magma→sp_dog01_Lear/Rear·sp_dog_jaw, 좌우 각 6개=12개)
+    #   전부 뺌. l_hand_close_magma·r_hand_close_magma(마그마 코팅 주먹)도 같이 뺌 — 몸
+    #   텍스처(diff)에 그려진 마그마 무늬는 그대로 유지(빼는 건 별도 메시로 튀어나온 이펙트뿐).
+    #   l_arms·r_arms(101정점씩, 렌더로 확인 — 소맷단/토시 장식, 원작 신체) → 유지.
+    #   🔴 코트 — 해군 원수 코트도 흰수염·센고쿠와 같은 패턴, coat_root 서브트리(c_coat×3·
+    #   c_coat_eri·l/r_coat×3·l/r_coat_arm×2·l/r_coat_eri)가 LArm/RArm 계열이 아니라 coat_root
+    #   밑에서만 갈라져(직접 확인) 팔 뼈에 안 물려 있음 → Chest(mixamorig:Spine1) 강체로 안전.
+    #   옷자락 suso_l/suso_r(Body_Pelvis 자식) → Hips.
+    "초월_양재모_AD": dict(path="Assets/Art/Units/초월_양재모_AD/초월_양재모_AD.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.join(SKINS, "08_초월/초월_양재모_AD.zip"), "source/pl_akainu_gens01.rar",
+                             "pl_akainu_gens01/pl_akainu_gens01.fbx"),
+                    archive_rgb={"pl_akainu_gens01/pl_akainu_gens01_diff.png": "pl_akainu_gens01_diff.png"},
+                    drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close",
+                                 "l_hand_close_magma", "r_hand_close_magma",
+                                 "l_sp01_dog", "r_sp01_dog", "l_sp01_dog_eye", "r_sp01_dog_eye"],
+                    drop_bones=["world_joint"],
+                    drop_bones_re=r"^[LR]Arm_(Upper_Magma|Upper_Fore_Magma|sp_joint0[12]|Upper_Palm_Magma)$"
+                                  r"|^[LR]_sp_dog01_[LR]ear$|^[LR]sp_dog_jaw$",
+                    rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
+                    merge_bones=[dict(pattern=r"^(coat_root|c_coat0[123]|c_coat_eri|l_coat|l_coat0[123]|l_coat_arm|l_coat_arm0[12]"
+                                        r"|l_coat_eri|r_coat|r_coat0[123]|r_coat_arm|r_coat_arm0[12]|r_coat_eri)$", into="mixamorig:Spine1"),
+                                 dict(pattern=r"^suso_[lr]$", into="mixamorig:Hips"),
+                                 dict(pattern=r"^LHand_Fore_sup$", into="mixamorig:LeftForeArm"),
+                                 dict(pattern=r"^RHand_Fore_sup$", into="mixamorig:RightForeArm")],
+                    tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm", "Forearm": f"mixamorig:{side}ForeArm",
+                                    "Hand": f"mixamorig:{side}Hand"} for s, side in (("L", "Left"), ("R", "Right"))},
+                    seed_zero_bones=0.001,
+                    materials=dict(textures={"pl_akainu_gens01": [("DiffuseColor", "pl_akainu_gens01_diff.png")]})),
     # 나루토 젊은 오비토(NUNS4 XPS 립 「Obito (Young Cloak Hidden)」, 원본 .blend) → 제한_김민규(2026-09-17 제한됨). zip → source/*.rar → OBXBod1.blend.
     #   뼈 192(`2obx00t0 l thigh` 식 Biped 소문자) · 메시 6(body·hood·Hcells(하시라마 세포)·wood(나무 가시)·face·eye — 얼굴·눈은 한쪽 절반뿐, 나머지 반은 세포 몸) · 애니 0 · 쉬는 자세 A자.
     #   🔴 upperarm·forearm·calf 본체 뼈는 가중치 0 — 전부 비틀림 보조 뼈(arm bone01~06·sleeve·foot bone01~05)에 실려 있다 → 본체로 합친다.
