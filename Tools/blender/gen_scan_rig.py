@@ -591,6 +591,77 @@ UNITS = {
         materials={"face": [("Base Color", "kid_face.png")], "coat": [("Base Color", "kid_coat.png")], "skin": [("Base Color", "kid_skin.png")],
                    "hair": [("Base Color", "kid_hair.png")], "material": [("Base Color", "kid_arm.png")], "cloth": [("Base Color", "kid_cloth.png")],
                    "model_0_mat_10": [("Base Color", "kid_goggles.png")]}),
+    # 원피스 샬롯 링링(빅맘) → 불멸_신지우(2026-09-22 불멸, blender 세션, PM 1차 러프 승인 —
+    # 오쿠야스·키드급 정밀 측정 대신 대략 좌표로 먼저 만들고 유니티 반려 시 다듬기로 함).
+    # 원본: ~/Desktop/구랜디스킨모음/09_불멸/불멸_신지우.glb(7.4MB). 뼈대 없음(정적 Sketchfab)
+    # 메시 34(Object_2~35, 전부 무의미한 이름) · 재질 32(FlamesStatic + Material.001~030,
+    # Material.013·015는 실제로 안 쓰임) · 이미지 2장(Image_0·Image_1, 대부분 재질이 이 둘을
+    # 아틀라스로 공유 — Base Color 이미 정상 연결 확인, materials cfg 불필요) · 애니 없음.
+    # 🔴 FlamesStatic(Object_28~33, 46,729정점) — PM 우려(이펙트인지 신체 일부인지)와 달리
+    # 렌더로 직접 확인한 결과 이펙트가 아니라 텍스처 없는 흰색 "중복 껍데기"였다(나머지 28개
+    # 메시와 완전히 같은 실루엣 — 옷·얼굴·검까지 포함). 드롭.
+    # 🔴 PM 재반려(1차) — 검(나폴레옹)이 안 빠짐. Object_17(178정점, 길고 굽은 칼날에 눈
+    # 무늬)이 검 블레이드였다(단독 렌더로 확인 — 다른 7개는 손·손목·소매처럼 뭉툭한 비율인데
+    # Object_17만 유독 길쭉함 0.42×1.06×1.17). 검 자체는 드롭, 손/소매(나머지 7개)만
+    # RightShoulder 강체 유지 — PM 지시("칼을 든 팔은 강체로 둬도 되지만 칼은 없어야 함")
+    # 그대로.
+    # 결합 자세가 한쪽 팔(오른팔, 화면상 −x)을 들어 검을 쥔 비대칭 자세 — 1차는 그 팔 뭉치를
+    # RightShoulder에 강체로 통째로 붙임(관절 기반 스킨 없이). 나머지 20개 메시(몸통·기모노·
+    # 왼팔·다리·얼굴)는 복셀 대리 heat로 정상 스킨.
+    # 기모노 밑단 — PM 지시대로 coat_hem(Hips↔UpLeg 반반)으로 가랑이 아래 찢어짐 방지.
+    # 관절 좌표 — 오쿠야스·키드급 단면 실측 대신 중심축(|x|<0.4) 단면 밀도로 대략 추정
+    # (전신 키 raw 2.56, 머리 꼭대기 2.5·목 1.85·가슴 1.4·엉덩이 0.75·무릎 0.35·발목 0.05).
+    "불멸_신지우": dict(
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/09_불멸/불멸_신지우.glb"), mesh_name="BigMom",
+        height=1.8, center_band=(0.0, 0.05), decimate=1.0, rotate_z=0.0,
+        # Object_34(218정점, Material.022 흰색 단색, UV 없음) — 이 파이프라인은 UV 없는
+        # 메시를 처리 못 함(assert). 눈 흰자위·단추 추정, 1차에선 뺌.
+        # Object_17 — 검 블레이드, PM 지시대로 드롭(선례: 손에 드는 무기는 뺀다).
+        drop_meshes=["Object_28", "Object_29", "Object_30", "Object_31", "Object_32", "Object_33", "Object_34", "Object_17"],
+        # 🔴 PM 지시로 "몸통 강체"(2026-09-22) 1회 시도함 — 머리·얼굴을 Head, 가슴·배·허리를
+        # Spine1, 기모노 밑단(Object_5)을 Hips에 통째로 강체로 묶고 발·왼팔손만 heat로 남김.
+        # bone heat 실패(Idle 접힘) 자체는 재현 안 해봤지만 그 전에 다른 벽에 막힘: 바닥까지
+        # 오는 통 기모노라 Spine/RightArm/RightForeArm/RightHand/RightUpLeg/RightLeg/RightFoot
+        # 등에 물릴 메시가 아예 없어(오른팔 전체가 RightShoulder 강체 한 뼈로 몰림, 다리는
+        # 기모노에 가려 별도 메시가 없음) 유니티 휴머노이드 필수 뼈 가중치 검사(humanoid_
+        # weight_check)를 통과 못 함 — 짧은 재시도로 풀 성질이 아니라서(오른팔·다리를 뼈별로
+        # 쪼갤 메시 경계가 없음) PM 지시대로 여기서 접고 미룸. 빅맘은 보류, 아래는 마지막으로
+        # 배치 통과했던 coat_hem(heat) 버전으로 되돌려 둠 — Idle 접힘은 여전히 미해결.
+        rigid_meshes={n: "RightShoulder" for n in
+                      ("Object_2", "Object_18", "Object_20", "Object_24", "Object_25", "Object_26", "Object_27")},
+        heat_proxy=dict(voxel_m=0.02, keep_largest=True),
+        coat_hem=dict(hip_src=0.75, hem_src=0.1, band_src=0.1, split_src=0.1, center_x_src=0.0, share=0.5,
+                      only_meshes=["Object_3", "Object_4", "Object_5", "Object_6", "Object_7", "Object_8", "Object_9",
+                                   "Object_10", "Object_11", "Object_12", "Object_13", "Object_14", "Object_15", "Object_16",
+                                   "Object_19", "Object_21", "Object_22", "Object_23", "Object_35"]),
+        joints=dict(
+            Hips=(0.0, 0.0, 0.75), Spine=(0.0, 0.0, 0.95), Spine1=(0.0, 0.0, 1.15), Spine2=(0.0, 0.0, 1.4),
+            Neck=(0.0, 0.0, 1.85), Head=(0.0, 0.0, 2.05), HeadTop=(0.0, 0.0, 2.5),
+            LeftShoulder=(0.15, 0.0, 1.75), LeftArm=(0.35, -0.1, 1.7), LeftForeArm=(0.7, -0.3, 1.6),
+            LeftHand=(1.0, -0.5, 1.55), LeftHandTip=(1.15, -0.6, 1.5),
+            RightShoulder=(-0.15, 0.0, 1.75), RightArm=(-0.35, -0.1, 1.7), RightForeArm=(-0.7, -0.3, 1.6),
+            RightHand=(-1.0, -0.5, 1.55), RightHandTip=(-1.15, -0.6, 1.5),
+            LeftUpLeg=(0.12, 0.0, 0.7), LeftLeg=(0.12, 0.0, 0.35), LeftFoot=(0.12, -0.05, 0.05),
+            LeftToeBase=(0.12, -0.15, 0.0), LeftToeTip=(0.12, -0.22, 0.0),
+            RightUpLeg=(-0.12, 0.0, 0.7), RightLeg=(-0.12, 0.0, 0.35), RightFoot=(-0.12, -0.05, 0.05),
+            RightToeBase=(-0.12, -0.15, 0.0), RightToeTip=(-0.12, -0.22, 0.0)),
+        closeups=[("armpit", 1.35, 0.8), ("crotch", 0.75, 0.9)],
+        # RightShoulder에 오른팔+검 뭉치를 통째로 강체로 몰아서 정점의 53%가 몰림(의도한 것,
+        # bone heat 실패 증상이 아님) — 기본 50% 안전판을 완화.
+        max_bone_share=0.6,
+        # 재질 27개(Material.013·015는 미사용이라 자동 제외, Material.022는 드롭한 Object_34
+        # 전용이라 배제) 전부 Image_0 또는 Image_1을 공유 아틀라스로 씀(직접 확인) — 이미
+        # Base Color가 정상 연결돼 있었지만, 이 파이프라인은 materials cfg 없이는 재질을
+        # 못 지나가(textures 단일 경로만 있음) 전부 명시.
+        glb_images={0: "bigmom_0.png", 1: "bigmom_1.png"},
+        materials={n: [("Base Color", "bigmom_0.png")] for n in
+                   ("Material.001", "Material.009", "Material.010", "Material.011", "Material.012",
+                    "Material.014", "Material.016", "Material.017", "Material.018", "Material.019",
+                    "Material.020", "Material.021", "Material.029", "Material.030")} |
+                  {n: [("Base Color", "bigmom_1.png")] for n in
+                   ("Material.002", "Material.003", "Material.004", "Material.005", "Material.006",
+                    "Material.007", "Material.008", "Material.024", "Material.025",
+                    "Material.026", "Material.027", "Material.028")}),  # Material.023은 검(Object_17) 전용이라 드롭 후 사라짐
     # 원피스 베가펑크(초기 모습 — 사과 모자·긴 혀·흰 가운·큰 부츠, ZBrush 2021 OBJ, 뼈 없음) → 제한_이충민(2026-09-17 제한됨, 구현담당1 gen_skin_rig 산출물 반려 후 새로).
     #   zip 안 source/Vegapunk_75k.zip 안 OBJ 하나 · 정점 75,000 · 삼각형 159,012 · UV·법선·재질 0 · Y위(가져오기가 Z위로) · 이미 T자 · 정면 −Y.
     #   🔴 섬 100개(각각 닫힌 조각 — 경계 변 730뿐, 이음새가 아니라 ZBrush 부품) → 붙이지 않고 모양 그대로, bone heat는 복셀 대리(heat_proxy)에서 풀어 옮긴다.
@@ -2368,7 +2439,7 @@ def build(name, out_dir=None, render_dir=None):
             if ge.weight > 0.01 and gname[ge.group].startswith(PREFIX):
                 counts[gname[ge.group][len(PREFIX):]] += 1
     report["뼈별 정점(w>0.01)"] = counts
-    dead = [k for k, c in counts.items() if c == 0]
+    dead = [k for k, c in counts.items() if c == 0 and k not in cfg.get("allow_dead_bones", ())]
     assert not dead, f"가중치 없는 뼈 {dead}"
     top_bone = max(counts, key=counts.get)
     top_share = counts[top_bone] / len(body.data.vertices)

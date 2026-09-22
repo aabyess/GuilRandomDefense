@@ -283,6 +283,11 @@ for _side in ("Left", "Right"):
                        f"bone_{_side}LegUpper": f"mixamorig:{_side}UpLeg", f"bone_{_side}Leg": f"mixamorig:{_side}Leg",
                        f"bone_{_side}Ankle": f"mixamorig:{_side}Foot", f"bone_{_side}Toe": f"mixamorig:{_side}ToeBase"})
 _RIN_TEX = "~/Desktop/구랜디스킨모음/03_특별함/특별함_박진웅/textures/Male_{}_Cos_FB2_D.png"
+# 개구리 코스튬(프리파이어 INGAME_ANIMATION_SUPEREMOTE_MALE_FROG, 2026-09-22): 린과 같은 bone_
+# 계열이지만 Spine1만 이름이 다르다 — bone_Spine1은 없고(rename_bones는 없는 키를 못 참아
+# 통째로 빼야 한다) "Bip01 Spine1"이 유일한 실가중치 Spine1(518정점, 직접 확인)이라 그
+# 한 뼈만 얹는다.
+FROG_RENAME = {k: v for k, v in RIN_RENAME.items() if k != "bone_Spine1"} | {"Bip01 Spine1": "mixamorig:Spine1"}
 # 가렌(LoL 추출 glb, 2026-09-14): 번호 꼬리 이름 → mixamorig. Root_1(가중치 359)이 Spine1과 Pelvis_41의 부모라 Root_1 = Hips, Pelvis_41은 중간 뼈로 둔다.
 #   무릎은 KneeUpper(종아리)·KneeLower(같은 자리 중간 뼈) 둘 — KneeUpper = Leg. 손가락(두 마디)은 매핑 안 함(대검 쥔 모양 유지).
 GAREN_RENAME = {"Root_1": "mixamorig:Hips", "Spine1_2": "mixamorig:Spine", "Spine2_3": "mixamorig:Spine1", "Spine3_4": "mixamorig:Spine2",
@@ -2091,6 +2096,86 @@ UNITS = {
                       glb_images={0: "Body_baseColor.png", 2: "Body_normal.png", 3: "Assets_baseColor.png", 6: "Assets_normal.png"},
                       materials=dict(textures={"Body": [("DiffuseColor", "Body_baseColor.png"), ("NormalMap", "Body_normal.png")],
                                                "Assets": [("DiffuseColor", "Assets_baseColor.png"), ("NormalMap", "Assets_normal.png")]})),
+    # 파란 동물 후드 잠옷(키구루미) 캐릭터 glb → 영원_이지원(2026-09-22 영원, blender 세션).
+    # 뼈 66(_rootJoint 포함) · 메시 4(+Cube·Icosphere 조명용 더미) · 이미지 4(다 1024²) ·
+    # 애니 1(Take 001, 0~23.2프레임 — 안 씀). 이미 mixamorig: 이름에 Sketchfab 번호 꼬리만
+    # 붙음(희귀함_배성령/다비와 완전히 같은 계열) → rename_regex로 꼬리 통째로 떼고
+    # 손가락 4번·HeadTop_End·Toe_End(전부 (0,0,0) 근처 쓰레기 자리) 드롭.
+    # 다리는 레스트에서 이미 거의 수직(UpLeg→Leg→Foot 델타가 거의 -Z 하나로만, x/y 성분
+    # 미미 — 영원_김영원처럼 쪼그려 앉은 레스트가 아니라 유니티 Hips 자동 판정 걱정 없음).
+    # 팔은 레스트가 수평 T가 아니라 아래로 처져 있어(수평 기준 약 58° 아래, 애니메이션 프레임
+    # 이 아니라 진짜 bind pose — 액션은 있지만 edit bone 레스트 값과 무관) tpose_arms로 폄.
+    # 재질 eyeSG2(Object_6, 9336정점) · lambert3SG1(Object_7, 6720정점) 둘 다 BaseColor가
+    # 이미 Image_0 하나를 같이 씀(직접 확인) — 그 한 장만 내보내 relink.
+    "영원_이지원": dict(path="Assets/Art/Units/영원_이지원/영원_이지원.fbx", kind="human", size=("height", 1.8),
+                    source=os.path.expanduser("~/Desktop/구랜디스킨모음/10_영원/영원_이지원.glb"),
+                    no_nulls=True, orient_snap=True, drop_meshes=["Icosphere"],
+                    rename_regex=(r"(mixamorig:[A-Za-z0-9]+?)_[0-9]+", r"\1"),
+                    drop_bones=["_rootJoint"],
+                    drop_bones_re=r"(HeadTop_End|Thumb4|Index4|Middle4|Ring4|Pinky4|Toe_End)((_end)?_[0-9]+)?$",
+                    tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                                    "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                                for s, side in (("L", "Left"), ("R", "Right"))},
+                    glb_images={0: "jiwon_diffuse.png"},
+                    materials=dict(textures={"eyeSG2": [("DiffuseColor", "jiwon_diffuse.png")],
+                                             "lambert3SG1": [("DiffuseColor", "jiwon_diffuse.png")]})),
+    # 프리파이어 개구리 코스튬(INGAME_ANIMATION_SUPEREMOTE_MALE_FROG) → 영원_김영원(2026-09-22
+    # 영원, blender 세션). zip 안 source/*.fbx(뼈 45·메시 3) + textures/Male_Cos_NB_Frog_D.png
+    # — FBX 자체 텍스처 참조는 깨져 있음(크기 0×0, 없는 경로) → archive_textures로 같은 zip의
+    # textures/에서 직접 꺼내 기본 이름 그대로 relink(재질 표 불필요, 원본 재질이 이미 이
+    # 파일명을 그대로 부름).
+    # 뼈대: bone_Hips(실가중치 125) 밑으로 bone_Spine → Bip01 Spine1(FROG_RENAME 주석 참고)
+    # → bone_Neck → bone_Head, 팔·다리는 린과 같은 bone_ 계열. 손가락 두 마디(bone_·Bip01 각
+    # 한 벌씩 실가중치 있음, 렌더링에 안 크게 영향 줘서 FROG_RENAME이 안 다루는 나머지는
+    # merge_bones로 Hand에 몰아 접음(관절 없이 손 하나로).
+    # 🔴 다리 옆 장식 뼈 8개(Bone002·003·008·009·011·012·014·015, 전부 bone_Spine 자식이라
+    # 다리 체인이 아니라 허리에 매달린 장식) — x부호로 좌우 확인(양수=왼쪽, bone_LeftLegUpper
+    # x=+0.46로 검증): Bone017·018·014·015(양수)=왼쪽, Bone008·009·011·012(음수)=오른쪽인데
+    # 그중 몸 중앙(x≈0)인 Bone002·003만 별도로 척추(Spine)에 붙임. 나머지 8개는 다리를 따라
+    # 움직이도록 해당 쪽 Leg에 붙임.
+    # 눈·입(Bone_Lefteye·Lefteye001·Mouth, 전부 bone_Head 자식) → Head로 접음.
+    # 더미: Cube(단위 정육면체, 정점 그룹 0 — 면이 없어 이 파이프라인은 아예 안 읽음, 린과
+    # 같은 증상이라 drop_meshes에 안 넣는다)·Male_Cos_NB_Frog01(118정점, 원점 근처 티끌,
+    # Bone001 하나만 묾) — 렌더로 확인, 둘 다 몸통과 무관한 원본 잡동사니라 드롭.
+    # bone_Root·Bip01(둘 다 실가중치 0, bone_Hips 위 래퍼) → 드롭해서 Hips를 뿌리로.
+    "영원_김영원": dict(path="Assets/Art/Units/영원_김영원/영원_김영원.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.expanduser("~/Desktop/구랜디스킨모음/10_영원/영원_김영원.zip"),
+                             "source/INGAME_ANIMATION_SUPEREMOTE_MALE_FROG_Rig.fbx"),
+                    archive_textures=["textures/Male_Cos_NB_Frog_D.png"],
+                    drop_meshes=["Male_Cos_NB_Frog01"],
+                    drop_bones=["bone_Root", "Bip01", "Bone001"],
+                    rename_bones=FROG_RENAME,
+                    merge_bones=[dict(under="Bone002", into="mixamorig:Spine", with_root=True),
+                                 dict(under="Bone017", into="mixamorig:LeftLeg", with_root=True),
+                                 dict(under="Bone014", into="mixamorig:LeftLeg", with_root=True),
+                                 dict(under="Bone008", into="mixamorig:RightLeg", with_root=True),
+                                 dict(under="Bone011", into="mixamorig:RightLeg", with_root=True),
+                                 dict(under="Bone_Lefteye", into="mixamorig:Head", with_root=True),
+                                 dict(under="Bone_Lefteye001", into="mixamorig:Head", with_root=True),
+                                 dict(under="Bone_Mouth", into="mixamorig:Head", with_root=True),
+                                 dict(under="bone_Left_Finger01", into="mixamorig:LeftHand", with_root=True),
+                                 dict(under="bone_Left_Finger11", into="mixamorig:LeftHand", with_root=True),
+                                 dict(under="bone_Right_Finger01", into="mixamorig:RightHand", with_root=True),
+                                 dict(under="bone_Right_Finger11", into="mixamorig:RightHand", with_root=True)],
+                    # 🔴 PM 재반려(2026-09-22, 유니티 재검수) — 유니티가 여전히 Hips를 최상위
+                    # 오브젝트로 잡고 Chest(Spine1)도 못 찾음(사람 뼈 20개뿐). 원인은 오브젝트
+                    # 이름이 아니라 레스트 자세: 두꺼비가 원래 쪼그려 앉은 체형이라 넓적다리가
+                    # 옆으로 벌어지고(UpLeg 로컬회전 320°/39° — 수직이 아님) 무릎이 158° 굽어
+                    # 있어 유니티 휴머노이드 자동 매핑의 골반 판정 전제(서 있는 T자에 가까운
+                    # 레스트)가 깨졌음(PM이 재수입해 회전값 직접 확인). level_chain(신규 범용
+                    # 기능, tpose_arms와 같은 회전 방식을 다리·척추 임의 사슬에 재사용)으로
+                    # 레스트를 곧게 세운다 — 웅크린 원작 체형은 Idle 애니메이션이 입히므로
+                    # 레스트가 곧게 서 있어도 겉모습엔 지장 없음(PM 확인).
+                    level_chains=[dict(chain=["mixamorig:Hips", "mixamorig:Spine", "mixamorig:Spine1",
+                                              "mixamorig:Neck", "mixamorig:Head"], target=(0.0, 0.0, 1.0)),
+                                  dict(chain=["mixamorig:LeftUpLeg", "mixamorig:LeftLeg", "mixamorig:LeftFoot"],
+                                       target=(0.0, 0.0, -1.0)),
+                                  dict(chain=["mixamorig:RightUpLeg", "mixamorig:RightLeg", "mixamorig:RightFoot"],
+                                       target=(0.0, 0.0, -1.0))],
+                    tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                                    "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                                for s, side in (("L", "Left"), ("R", "Right"))},
+                    seed_zero_bones=0.001, orient_snap=True),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")
@@ -2424,6 +2509,99 @@ def sample_clips(src, arm_name, recipe, ref, guess_bind=True, scene_basis=False)
         take = act.name[len(arm_name) + 1:] if not from_gltf and act.name.startswith(arm_name + "|") else act.name
         clips.append((take, f0, frames))
     return clips
+
+
+def level_chain(arm, chain, target, report=None, report_key=None):
+    """뼈 사슬(부모→자식 이름 순서)을 target 방향으로 곧게 편다(영원_김영원, PM 2026-09-22):
+    쪼그려 앉은 레스트(무릎 굽음·척추가 골반에서 비껴남)는 유니티 휴머노이드 자동 매핑이
+    Hips 판정에 실패해 최상위 오브젝트를 Hips로 잘못 잡는 원인이 된다 — tpose_arms와 같은
+    회전 방식(사슬의 부모 뼈를 통째로 돌려 자식이 target 방향을 보게)을 다리·척추 등
+    임의의 사슬에 재사용."""
+    pose = arm.pose.bones
+
+    def P(n):
+        return arm.matrix_world @ pose[n].head
+
+    def turn(n, R3):
+        pivot = P(n)
+        pose[n].matrix = Matrix.Translation(pivot) @ R3.to_4x4() @ Matrix.Translation(-pivot) @ pose[n].matrix
+        bpy.context.view_layer.update()
+
+    bpy.context.view_layer.update()
+    moved = []
+    for a, b in zip(chain, chain[1:]):
+        cur = P(b) - P(a)
+        if cur.length > 1e-6:
+            turn(a, cur.normalized().rotation_difference(Vector(target).normalized()).to_matrix())
+            moved.append(a)
+    if report is not None:
+        report[report_key or "곧게 편 사슬"] = moved
+    return moved
+
+
+def refit_size(arm, meshes, cfg, report):
+    """level_chain으로 다리를 펴면 키가 늘어나(웅크린 자세보다 커짐) 진작 재 놓은 크기·바닥
+    맞춤(G 변환, cfg["size"] 기준)이 틀어진다 — 자세를 다 바꾼 뒤 여기서 다시 잰다. 회전만
+    쓰는 turn()과 달리 배율까지 필요해서 루트 뼈 세계 행렬에 배율+이동을 왼쪽곱(자식은
+    부모를 따라간다, turn()과 같은 원리). 🔴 pose.matrix만 바꾸면 FBX 내보내기가 읽는
+    edit bone(레스트)엔 안 남는다(tpose_arms에서 배운 교훈) — tpose_arms의 굽기 순서
+    그대로 재사용: 변형된 메시를 새 데이터로 굽고, 자세를 edit bone(레스트)에 박은 뒤
+    pose를 항등으로 되돌린다."""
+    pose = arm.pose.bones
+    bpy.context.view_layer.update()
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    pts = []
+    for o in meshes:
+        eo = o.evaluated_get(depsgraph)
+        me = eo.to_mesh()
+        pts.extend(eo.matrix_world @ v.co for v in me.vertices)
+        eo.to_mesh_clear()
+    lo = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
+    hi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
+    axis, target = cfg["size"]
+    current = (hi - lo).z if axis == "height" else max((hi - lo).x, (hi - lo).y)
+    s = target / max(current, 1e-12)
+    cx, cy = (lo.x + hi.x) / 2, (lo.y + hi.y) / 2
+    M = Matrix.Scale(s, 4) @ Matrix.Translation((-cx, -cy, -lo.z))
+    # 뿌리 뼈가 여럿일 수 있다(영원_김영원: mixamorig:Hips 말고 Null→뼈로 살아난 Point001도
+    # 부모 없는 뿌리) — 엉덩이만 정확히 골라야 한다.
+    hips = pick(arm, cfg.get("hips"), HIPS)
+    root = pose[hips.name] if hips is not None else next(b for b in pose if b.parent is None)
+    root.matrix = M @ root.matrix
+    bpy.context.view_layer.update()
+
+    dg = bpy.context.evaluated_depsgraph_get()
+    posed_verts = {}
+    for m in meshes:
+        assert not m.data.shape_keys, f"{m.name}: 모양 키가 있어 재맞춤으로 굽지 못한다"
+        baked = bpy.data.meshes.new_from_object(m.evaluated_get(dg), preserve_all_data_layers=True, depsgraph=dg)
+        m.data = baked
+        posed_verts[m.name] = [v.co.copy() for v in baked.vertices]
+    rest = {pb.name: (pb.head.copy(), pb.tail.copy(), pb.matrix.copy()) for pb in pose}
+    for o in bpy.context.view_layer.objects:
+        o.select_set(o == arm)
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.mode_set(mode="EDIT")
+    for eb in arm.data.edit_bones:
+        eb.use_connect = False
+    for eb in arm.data.edit_bones:
+        h, t, Mb = rest[eb.name]
+        eb.head, eb.tail = h, t if (t - h).length > 1e-9 else h + Mb.col[1].xyz * 1e-3
+        eb.align_roll(Mb.col[2].xyz)
+    bpy.ops.object.mode_set(mode="OBJECT")
+    for pb in pose:
+        pb.matrix_basis = Matrix.Identity(4)
+    bpy.context.view_layer.update()
+
+    dg = bpy.context.evaluated_depsgraph_get()
+    drift = 0.0
+    for m in meshes:
+        ev = m.evaluated_get(dg)
+        me = ev.to_mesh()
+        drift = max(drift, max((ev.matrix_world @ v.co - m.matrix_world @ c).length for v, c in zip(me.vertices, posed_verts[m.name])))
+        ev.to_mesh_clear()
+    assert drift < 1e-4, f"재맞춤 굽기 뒤 메시가 {drift:.5f} 움직였다"
+    report["다리 편 뒤 재맞춤"] = {"배율": round(s, 4), "이동": [round(-cx, 4), round(-cy, 4), round(-lo.z, 4)], "굽기_오차": round(drift, 6)}
 
 
 def tpose_arms(arm, meshes, report, names=None):
@@ -3598,8 +3776,13 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             m.parent = new_arm
             m.matrix_parent_inverse = Matrix.Identity(4)
             m.matrix_basis = Matrix.Identity(4)
+    if new_arm is not None and cfg.get("level_chains"):
+        for i, lc in enumerate(cfg["level_chains"]):
+            level_chain(new_arm, lc["chain"], lc["target"], report, f"곧게 편 사슬 {i}")
     if new_arm is not None and cfg.get("tpose_arms"):
         tpose_arms(new_arm, meshes, report, cfg["tpose_arms"] if isinstance(cfg["tpose_arms"], dict) else None)
+    if new_arm is not None and cfg.get("level_chains"):
+        refit_size(new_arm, meshes, cfg, report)
     if new_arm is not None and cfg.get("hem_follow"):
         # 🔴 특별함_박예원(사보) 유니티 Idle(2026-09-15): 긴 코트 자락이 척추 뼈(coat_*)에만 실려 넓적다리가 벌어지면 바지가 코트 앞·옆 트임을 뚫었다
         #   (idle.fbx를 옮겨 입혀 잰 관통: 98% 프레임, 최대 9cm). UpLeg 높이 아래 코트 정점의 코트 가중치 일부를 같은 쪽 UpLeg로 넘긴다 —
@@ -3851,6 +4034,15 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         report["가중치 0 뼈 씨앗"] = seeded
     if cfg.get("kind") == "human" and not cfg.get("generic"):
         report["휴머노이드 가중치"] = humanoid_weight_check(name, [o for o in scene.objects if o.type == "MESH"])
+    # 🔴 영원_김영원(2026-09-22, PM 유니티 반려) — 아마추어 오브젝트 이름이 원본 그대로
+    # (예: "INGAME_ANIMATION_SUPEREMOTE_MALE_FROG_Rig")로 남으면 블렌더 FBX 내보내기가
+    # 그 오브젝트 노드와 뿌리 뼈(mixamorig:Hips) 노드를 겹쳐 써서, 유니티가 Hips를 뼈가
+    # 아니라 그 오브젝트 이름으로 잡는다(뼈대 자체는 정상 — Hips는 부모 없는 진짜 뿌리
+    # 뼈였다, 재수입해서 직접 확인). 다른 유닛은 원본 아마추어 오브젝트 이름이 우연히
+    # "Armature"였을 뿐이라 안 드러났던 문제 — 내보내기 직전에 무조건 통일한다.
+    arm_obj = main_armature()
+    if arm_obj is not None:
+        arm_obj.name = "Armature"
     if dst.lower().endswith(".glb"):
         bpy.ops.export_scene.gltf(filepath=dst, export_format="GLB", export_yup=True, use_selection=False, export_animations=False)
     else:
