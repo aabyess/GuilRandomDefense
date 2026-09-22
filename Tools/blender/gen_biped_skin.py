@@ -560,6 +560,60 @@ SKINS = {
         decimate_ratio=1.0,
         uv_layers=1,
     ),
+    # 불멸_이승우(가로우 우주적 공포 모드, 원펀맨) — blender 세션(2026-09-22).
+    # 원본: ~/Desktop/구랜디스킨모음/09_불멸/불멸_이승우.glb(2.9MB). 스킨 1·뼈 66(표준
+    # mixamorig: 이름 + "_NN" 번호 꼬리, 손가락 4갈래×4마디 전부)·메시 2(G7_Cosmic_0
+    # 14,169정점·G7_White_0 13,137정점)·재질 2(Cosmic·White)·이미지 1장.
+    # 🔴 White 재질은 텍스처가 아예 없이 고정 회색(0.76)뿐 — wire_flat_color로 처리.
+    # Cosmic·White 둘 다 실루엣이 거의 같은 이중 레이어(면 비율 52:48)로, 코즈믹 별무늬
+    # 겉면 + 무지 안쪽면으로 추정(원작 이중 레이어 효과, 프로시저럴 노드·발광 없음 —
+    # 굽기 불필요, 그대로 유니티에 넘어감).
+    # 좌우 뒤집힘(히나타 함정) 없음 — armature matrix_world 배율 전부 양수, LeftShoulder
+    # x=+·RightShoulder x=− 정상 확인. 표준 이름이라 rename은 접두어·번호만 떼면 됨,
+    # 무가중치 뼈 0개(이번 불멸 6건 중 가장 깨끗한 리그).
+    # 🔴 mixamorig:Head_06의 tail이 z 2.83(키 1.8보다 큼, 가중치 정점은 z 1.39~1.71로
+    # 정상)으로 원본 자체가 깨져 있었다 — bone_tail_offset으로 head+(0,0,0.25) 대체
+    # (가중치엔 영향 없음, T자 렌더에서 머리 위 거대한 뼈 표시로 발견).
+    # 원본 팔 각도 A자 약 63°(수평 기준) — level_arms로 T자 교정.
+    "불멸_이승우": dict(
+        source="~/Desktop/구랜디스킨모음/09_불멸/불멸_이승우.glb",
+        path="Assets/Art/Units/불멸_이승우/불멸_이승우.fbx",
+        mesh_name="Garou",
+        height=1.8,
+        rename={
+            "mixamorig:Hips_01": "Hips", "mixamorig:Spine_02": "Spine", "mixamorig:Spine1_03": "Spine1",
+            "mixamorig:Spine2_04": "Spine2", "mixamorig:Neck_05": "Neck", "mixamorig:Head_06": "Head",
+            "mixamorig:LeftShoulder_08": "LeftShoulder", "mixamorig:LeftArm_09": "LeftArm",
+            "mixamorig:LeftForeArm_010": "LeftForeArm", "mixamorig:LeftHand_011": "LeftHand",
+            "mixamorig:RightShoulder_032": "RightShoulder", "mixamorig:RightArm_033": "RightArm",
+            "mixamorig:RightForeArm_034": "RightForeArm", "mixamorig:RightHand_035": "RightHand",
+            "mixamorig:LeftUpLeg_056": "LeftUpLeg", "mixamorig:LeftLeg_057": "LeftLeg",
+            "mixamorig:LeftFoot_058": "LeftFoot", "mixamorig:LeftToeBase_059": "LeftToeBase",
+            "mixamorig:RightUpLeg_061": "RightUpLeg", "mixamorig:RightLeg_00": "RightLeg",
+            "mixamorig:RightFoot_062": "RightFoot", "mixamorig:RightToeBase_063": "RightToeBase",
+        },
+        fold={
+            "_rootJoint": "Hips",
+            "mixamorig:HeadTop_End_07": "Head",
+            "mixamorig:LeftToe_End_060": "LeftToeBase", "mixamorig:RightToe_End_064": "RightToeBase",
+        },
+        fold_subtree={
+            "mixamorig:LeftHandThumb1_012": "LeftHand", "mixamorig:LeftHandIndex1_016": "LeftHand",
+            "mixamorig:LeftHandMiddle1_020": "LeftHand", "mixamorig:LeftHandRing1_024": "LeftHand",
+            "mixamorig:LeftHandPinky1_028": "LeftHand",
+            "mixamorig:RightHandThumb1_036": "RightHand", "mixamorig:RightHandIndex1_040": "RightHand",
+            "mixamorig:RightHandMiddle1_044": "RightHand", "mixamorig:RightHandRing1_048": "RightHand",
+            "mixamorig:RightHandPinky1_052": "RightHand",
+        },
+        bone_tail_offset={"Head": (0.0, 0.0, 0.25)},
+        materials={
+            "Cosmic": ("texture_direct", None),
+            "White": ("flat_color", (0.76, 0.76, 0.76, 1.0)),
+        },
+        level_arms=True,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
 }
 
 # 22뼈 계층 — gen_rigify_skin.py·gen_skin_rig.py와 같은 이름 규칙(PREFIX만 공유).
@@ -631,6 +685,21 @@ def wire_texture_direct(mat):
         if n.type in ("MIX", "MIX_RGB", "VERTEX_COLOR", "ATTRIBUTE"):
             nt.nodes.remove(n)
     nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
+    if hasattr(mat, "blend_method"):
+        mat.blend_method = "OPAQUE"
+
+
+def wire_flat_color(mat, color):
+    """텍스처가 아예 없고 단색인 재질(가로우 White — TEX_IMAGE 자체가 없이 고정 회색)을
+    Principled Base Color 상수로 재배선. 노드를 다 밀고 새로 잇는다(wire_image_material과
+    같은 전략, 이미지 대신 상수)."""
+    nt = mat.node_tree
+    for n in list(nt.nodes):
+        nt.nodes.remove(n)
+    bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    bsdf.inputs["Base Color"].default_value = color
     nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
     if hasattr(mat, "blend_method"):
         mat.blend_method = "OPAQUE"
@@ -741,6 +810,8 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
             kind, arg = mat_plan.get(m.name, (None, None))
             if kind == "texture_direct":
                 wire_texture_direct(m)
+            elif kind == "flat_color":
+                wire_flat_color(m, arg)
             elif kind == "texture_file":
                 img = wired_files.get(arg)
                 if img is None:
@@ -894,11 +965,22 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
     # bone_LeftArm의 tail이 bone_LeftForeArm의 head와 전혀 다른 방향), level_arms의 방향
     # 계산이 178.5°짜리 헛돈 회전을 만들었다(팔이 반대로 꺾임, 크기 Y가 키보다 커짐). 다음
     # 관절의 head를 tail로 체인처럼 잇는다 — 끝 뼈(Head·Hand·ToeBase)만 옛 tail을 쓴다.
+    # 🔴 가로우(2026-09-22) — 그 "옛 tail"조차 깨진 경우(mixamorig:Head_06의 tail이 키
+    # 전체(1.8)보다 큰 z 2.83, 가중치 정점은 z 1.39~1.71로 멀쩡한데 tail만 허공에 뜸) —
+    # cfg["bone_tail_offset"]={target: (dx,dy,dz)}면 head_of(tname)+델타로 대체(가중치엔
+    # 영향 없음, 표시·roll 계산용 안전판).
+    tail_offset = cfg.get("bone_tail_offset", {})
+
+    def terminal_tail(tname):
+        if tname in tail_offset:
+            return head_of(tname) + Vector(tail_offset[tname])
+        return old_head_tail[src_bone_of[tname]][1]
+
     spine_chain = [t for t, _ in SPINE]
     eb_by_name = {}
     for i, (tname, parent) in enumerate(SPINE):
         h = head_of(tname)
-        t = head_of(spine_chain[i + 1]) if i + 1 < len(spine_chain) else old_head_tail[src_bone_of[tname]][1]
+        t = head_of(spine_chain[i + 1]) if i + 1 < len(spine_chain) else terminal_tail(tname)
         eb = new_arm_data.edit_bones.new(PREFIX + tname)
         eb.head, eb.tail = h, t
         eb_by_name[tname] = eb
@@ -911,7 +993,7 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
             tname = side + limb
             h = head_of(tname)
             next_limb = LIMB_NAMES[i + 1] if i + 1 < len(LIMB_NAMES) and LIMB_NAMES[i + 1] not in ("UpLeg",) else None
-            t = head_of(side + next_limb) if next_limb else old_head_tail[src_bone_of[tname]][1]
+            t = head_of(side + next_limb) if next_limb else terminal_tail(tname)
             eb = new_arm_data.edit_bones.new(PREFIX + tname)
             eb.head, eb.tail = h, t
             parent_t = {"Shoulder": "Spine2", "Arm": side + "Shoulder", "ForeArm": side + "Arm", "Hand": side + "ForeArm",
