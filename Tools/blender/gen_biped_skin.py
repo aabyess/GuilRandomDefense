@@ -657,6 +657,71 @@ SKINS = {
         decimate_ratio=1.0,
         uv_layers=1,
     ),
+    # 블리치 우라하라 상점 츠무기야 우루루(진타와 콤비) → 히든_전유라(2026-09-22 히든,
+    # blender 세션). 뼈 47·3ds Biped "Bip001 X"(Tashigi와 같은 규칙, biped_prefix 그대로
+    # 씀) · 메시 7(body·face·hair·leye·reye·mouth·weapon) · 애니 26(안 씀).
+    # 🔴 weapon(바주카 계열) — 렌더로 확인, 몸에서 분리된 별도 메시라 통째로 드롭.
+    # 뿌리 "Bip001"(가중치 0, Pelvis 위 래퍼) → Hips로 접음(타시기와 같은 패턴).
+    # 얼굴: Bip001 Head 밑에 "head"(소문자, 실가중치 있는 진짜 얼굴 서브루트) → 그 밑에
+    # yu_leye_0·yu_mouth_0·yu_reye_0(눈·입 뼈, 메시 이름과 같음) — "head" 서브트리 통째로
+    # Head에 합침(fold_subtree).
+    # Toe0 뼈 없음(발까지만, PM 사전조사와 일치) — biped_rename_table 기본표에 Toe0 매핑이
+    # 있지만 원본에 없는 이름이라 그냥 매치가 안 될 뿐(에러 아님), ToeBase는 무가중치라
+    # allow_dead_bones로 허용.
+    # 재질↔이미지는 파일명 끝 번호로 추측하지 않고 glTF material.node_tree에서 직접 읽어
+    # 확인(덴지 교훈): yu_body_0→tex04·yu_face_0→tex05·yu_hair_0→tex06·yu_leye_0→tex00·
+    # yu_mouth_0→tex01·yu_reye_0→tex02(weapon=tex03, 드롭이라 안 씀). 파일명 끝 숫자(_0~_6)는
+    # 이 tex 번호와 무관한 값이라 파일명은 texNN 부분 문자열로만 매칭.
+    "히든_전유라": dict(
+        source="~/Desktop/구랜디스킨모음/05_히든/히든_전유라.zip",
+        glb_member="source/yu_0_battleout.glb",
+        path="Assets/Art/Units/히든_전유라/히든_전유라.fbx",
+        mesh_name="Ururu",
+        height=1.8,
+        biped_prefix="Bip001",
+        # 🔴 1차 시도에서 "yu_weapon_0"이 실제 오브젝트 이름과 안 맞아(noesis 접미사 붙음)
+        # 조용히 안 빠지고 "쓴 메시"에 들어갔다 — 전체 이름으로 정정. 조명용 Icosphere도
+        # 같은 증상으로 딸려 들어갔었어서 같이 뺌(Cube는 면이 없어 이 파이프라인이 아예
+        # 안 읽음, 다른 유닛과 같은 증상이라 안 넣어도 됨).
+        drop_meshes={"yu_weapon_0_noesis_meshnode_0003", "Icosphere"},
+        fold={"Bip001": "Hips"},
+        # 바주카(메시 드롭과 별개로 뼈도 따로 있음, 1차 배치 assert로 발견): Bip001 Prop1
+        # 밑 서브트리(rweapon·메시와 이름이 같은 yu_weapon_0 뼈) — 메시를 이미 드롭했으니
+        # 어디로 접든 상관없어 Hips로.
+        # Bip001 Spine 자식으로 따로 달린 3마디짜리 사슬 4개(Bone001→002→003·005→006→007·
+        # 009→010→011·013→014→015) — Prop1과 무관, body 메시에 실가중치 있음(각 13~24정점,
+        # 직접 확인 — 가슴 주변 장식용 늘어진 리본/끈으로 추정) → 몸통(Spine2)으로 접음.
+        fold_subtree={"head": "Head", "Bip001 Prop1": "Hips",
+                      "Bone001": "Spine2", "Bone005": "Spine2", "Bone009": "Spine2", "Bone013": "Spine2"},
+        # 척추가 Pelvis-Spine-Spine1까지만 있고 Spine2가 없음(PM 사전조사와 일치).
+        # 🔴 PM 재검수(유니티 Idle에서 양팔이 얼굴 위로 말려 올라감) — Spine1의 tail을 그대로
+        # 쓰면 원본이 이미 Neck 바로 앞에서 끝나 Spine2가 사실상 길이 0으로 무너짐(크로커다일·
+        # 드래곤 때와 같은 함정) → Spine1↔Neck 사이를 반으로 보간(lerp)해 Spine1·Spine2 둘 다
+        # 실제 길이를 갖게 함.
+        # Toe0도 없음(발까지만) — 마찬가지로 Foot의 tail을 자리표시로(다리 끝이라 자식이 없어
+        # 길이 0이어도 리타겟에 영향 없음, Spine2와 다른 경우).
+        bone_position_override={"Spine2": ("Bip001 Spine1", "Bip001 Neck", 0.5),
+                                "LeftToeBase": ("Bip001 L Foot", "tail"), "RightToeBase": ("Bip001 R Foot", "tail")},
+        bone_tail_offset={"LeftToeBase": (0.0, -0.1, -0.02), "RightToeBase": (0.0, -0.1, -0.02)},
+        allow_dead_bones={"Spine2", "LeftToeBase", "RightToeBase"},
+        tex00_member="textures/yu_0_battleout0_tex00_3.png",
+        tex01_member="textures/yu_0_battleout0_tex01_4.png",
+        tex02_member="textures/yu_0_battleout0_tex02_5.png",
+        tex04_member="textures/yu_0_battleout0_tex04_0.png",
+        tex05_member="textures/yu_0_battleout0_tex05_1.png",
+        tex06_member="textures/yu_0_battleout0_tex06_2.png",
+        materials={
+            "yu_leye_0": ("texture_file", "tex00_member"),
+            "yu_mouth_0": ("texture_file", "tex01_member"),
+            "yu_reye_0": ("texture_file", "tex02_member"),
+            "yu_body_0": ("texture_file", "tex04_member"),
+            "yu_face_0": ("texture_file", "tex05_member"),
+            "yu_hair_0": ("texture_file", "tex06_member"),
+        },
+        level_arms=True,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
 }
 
 # 22뼈 계층 — gen_rigify_skin.py·gen_skin_rig.py와 같은 이름 규칙(PREFIX만 공유).
@@ -1023,11 +1088,21 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
                    and "Finger" not in k}
     # cfg["bone_position_override"] — {target: (source_bone, "head"|"tail")}로 그 점 하나에
     # 0-길이 자리표시 뼈를 짓는다(위 allow_dead_bones와 짝, gen_rigify_skin.py와 같은 장치).
+    # 🔴 우루루(2026-09-22, PM 유니티 재검수) — Spine2가 없는 골격에 이 방식으로 자리표시를
+    # 하면(Spine1의 tail = 원본이 이미 Neck 바로 앞에서 끝나는 자리라 사실상 같은 점) Spine2가
+    # 길이 0으로 무너져 유니티 리타겟에서 자식(어깨·팔)이 방향을 못 잡고 헛돈다(크로커다일·
+    # 드래곤 때와 같은 함정). {target: (source_a, source_b, 비율)} 3항이면 두 원본 뼈의 head
+    # 사이를 보간(lerp) — Spine1↔Neck 사이를 반으로 갈라 Spine1·Spine2 둘 다 실제 길이를
+    # 가지게 한다.
     pos_override = cfg.get("bone_position_override", {})
 
     def head_of(tname):
         if tname in pos_override:
-            src, end = pos_override[tname]
+            ov = pos_override[tname]
+            if len(ov) == 3:
+                src_a, src_b, t = ov
+                return old_head_tail[src_a][0].lerp(old_head_tail[src_b][0], t)
+            src, end = ov
             return old_head_tail[src][0 if end == "head" else 1]
         return old_head_tail[src_bone_of[tname]][0]
 

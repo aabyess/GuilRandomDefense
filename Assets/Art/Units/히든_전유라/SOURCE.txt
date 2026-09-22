@@ -1,0 +1,55 @@
+히든_전유라(블리치 우라하라 상점 츠무기야 우루루, 진타와 콤비) — blender 세션(2026-09-22).
+gen_biped_skin.py SKINS["히든_전유라"]로 처리.
+
+■ 원본
+~/Desktop/구랜디스킨모음/05_히든/히든_전유라.zip
+ - source/yu_0_battleout.glb(2.5MB) — 스킨 1·뼈 47(3ds Biped "Bip001 X", 타시기와 같은
+   규칙, biped_prefix 그대로) · 메시 7(body·face·hair·leye·reye·mouth·weapon) · 애니 26
+   (안 씀).
+
+■ 확인
+- weapon(바주카 계열) — 렌더로 확인, 몸에서 분리된 별도 메시라 드롭. 🔴 1차 시도에서
+  drop_meshes="yu_weapon_0"이 실제 오브젝트 이름(...noesis_meshnode_0003 접미사)과 안
+  맞아 조용히 안 빠지고 "쓴 메시"에 들어갔었음 — 전체 이름으로 정정, 조명용 Icosphere도
+  같은 증상이라 같이 뺌.
+- 재질↔이미지는 파일명 끝 번호로 추측하지 않고 glTF material.node_tree에서 직접 읽어 확인
+  (덴지 교훈): yu_body_0→tex04·yu_face_0→tex05·yu_hair_0→tex06·yu_leye_0→tex00·
+  yu_mouth_0→tex01·yu_reye_0→tex02(weapon=tex03, 드롭이라 안 씀). 텍스처 파일명 끝 숫자
+  (_0~_6)는 이 tex 번호와 무관한 값이라(파일명 예: tex04_0.png · tex00_3.png) texNN
+  부분 문자열로만 대응.
+- 팔레트 PNG(tex01=입·tex05=얼굴, P 모드 확인)는 Blender 이미지 로더가 그대로 읽어(내부
+  변환 불필요) 별도 RGB 변환 없이 texture_file로 바로 연결 — 렌더로 얼굴 확인해도 문제
+  없음.
+- 얼굴: Bip001 Head 밑에 "head"(소문자, 실가중치 있는 진짜 얼굴 서브루트) → 그 밑에
+  yu_leye_0·yu_mouth_0·yu_reye_0(눈·입 뼈, 메시 이름과 같음) — fold_subtree로 "head"
+  서브트리 통째로 Head에 합침. 눈·입 z-fighting 없음(얼굴 확대 렌더로 확인, 유니티에서도
+  정상 확인됨 - PM).
+- Toe0 뼈 없음(발까지만), Spine2 뼈도 없음(Pelvis-Spine-Spine1까지만, 척추가 한 마디 짧음)
+  → ToeBase는 bone_position_override로 자리표시(Foot의 tail + bone_tail_offset),
+  allow_dead_bones로 무가중치 허용.
+- 🔴 PM 재검수(유니티 Idle에서 양팔이 얼굴 위로 말려 올라가고 몸통이 비틀림) — Spine2를
+  처음엔 Spine1의 tail을 그대로 자리표시로 썼는데, 원본이 이미 Neck 바로 앞에서 끝나
+  Spine2가 사실상 길이 0으로 무너졌던 것(크로커다일·드래곤 때와 같은 함정) — 그 자식인
+  Shoulder·Arm이 방향 기준을 못 잡아 유니티 리타겟에서 헛돎.
+  수정: gen_biped_skin.py의 bone_position_override에 3항 형식(source_a, source_b, 비율)을
+  새로 추가 — 두 원본 뼈의 head 사이를 보간(lerp). Spine1↔Neck 사이를 반으로 갈라 Spine1·
+  Spine2 둘 다 실제 길이를 갖게 함. 재수입해서 직접 확인: Spine1 길이 0.125·Spine2 길이
+  0.0945(둘 다 비영), Spine~Head까지 전부 +Z 방향, LeftShoulder/RightShoulder/Arm 전부
+  완전 수평 (±1,0,0). Idle 재검증 — 팔이 정상적인 위치(레스트: 살짝 든 자세, Idle: 가슴
+  앞으로 자연스럽게)로 나옴, 말려 올라가거나 몸통이 비트는 증상 없음.
+- 뿌리 "Bip001"(가중치 0) → Hips로 접음(타시기와 같은 패턴).
+- Bip001 Spine 자식으로 따로 달린 3마디 사슬 4개(Bone001~015, 번호 듬성듬성 — 가슴 주변
+  장식용 리본/끈으로 추정, body 메시에 각 13~24정점 실가중치 있음, 직접 확인) → Spine2로
+  접음. Bip001 Prop1 서브트리(rweapon·yu_weapon_0 뼈)는 무기 메시 자체를 이미 뺐으니
+  Hips로.
+
+■ 검증
+- 배치 리포트: 매핑 안 된 뼈 없음, 뼈 22개, 크기 (1.451, 0.367, 1.8)m, 최저 z 0.
+- 재수입 확인: 최상위 오브젝트 "Armature", Hips 부모 None, 다리 자연스러운 미세 굽음뿐,
+  척추 전 구간 +Z 방향·어깨·팔 완전 수평(위 재검수 항목 참고).
+- 얼굴 확대 렌더 — 눈·입 겹침·튀어나옴 없음.
+- Idle 리타겟(레스트·정면·측면 렌더) — 접힘·찢어짐·팔 뒤틀림 없음, 치마·트윈테일 다
+  자연스럽게 따라감.
+
+■ 산출물(스크래치만, Assets 미반영)
+히든_전유라.fbx · Textures/(6장) · idle_front.png · idle_side.png · rest_front.png

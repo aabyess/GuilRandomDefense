@@ -863,10 +863,13 @@ UNITS = {
             ("Tail2", (0.0, 30.0, 42.0), (0.0, 75.0, 75.0), "Tail1"),
             ("TailTip", (0.0, 75.0, 75.0), (0.0, 115.0, 89.0), "Tail2")],
         straighten=[],
+        # 🔴 PM 지시(2026-09-22) — "위아래로 흔들리며 둥실"을 진짜 상하 이동으로: synth_idle에
+        # 새로 추가한 loc(위치 파형)으로 Body가 세계 Z축 ±4cm, 72프레임 한 바퀴로 움직임.
         synth_idle=dict(take="Idle", frames=72, step=3, bones={
             "Body": [((1, 0, 0), 2.0, 0.0)], "Head": [((1, 0, 0), 1.0, -0.3)],
             "Tail1": [((1, 0, 0), 3.0, -0.5)], "Tail2": [((1, 0, 0), 5.0, -1.0)],
-            "TailTip": [((1, 0, 0), 8.0, -1.5)]}),
+            "TailTip": [((1, 0, 0), 8.0, -1.5)]},
+            loc={"Body": [((0, 0, 1), 0.04, 0.0)]}),
         # 고래 머리가 몸통 대부분을 차지(원작 자체 비율 — Head 몫 85%, 정점 95개짜리
         # 저폴리라 더 그렇다) — bone heat 실패 증상 아님, 기본 안전판 완화.
         max_bone_share=0.9,
@@ -1928,7 +1931,10 @@ def delete_stretched_faces(body, co_before, spec):
 
 def synth_idle_scan(arm, spec):
     """🔸 리카(Generic): 원본 클립이 없는 유닛의 Idle 루프 — fix_unit_fbx.py synth_idle과 같은 식.
-    뼈마다 [(세계 축, 진폭°, 위상)] · 각도 = 진폭 × (sin(2πt/N + 위상) − sin(위상)) → 첫·끝 프레임 = 쉬는 자세. 뼈 이름은 PREFIX 뺀 이름."""
+    뼈마다 [(세계 축, 진폭°, 위상)] · 각도 = 진폭 × (sin(2πt/N + 위상) − sin(위상)) → 첫·끝 프레임 = 쉬는 자세. 뼈 이름은 PREFIX 뺀 이름.
+    🔸 라분(2026-09-22, PM 지시): spec["loc"]로 이동도 지원(opt-in, 기본 회전만 쓰던 유닛은
+    안 건드림) — {뼈: [(세계 축, 진폭m, 위상), ...]}, 같은 파형을 위치에 왼쪽곱 대신 덧셈으로.
+    "위아래로 흔들리며 둥실" 같은 진짜 상하 이동(부양감)에 쓴다."""
     scene = bpy.context.scene
     n, step = int(spec.get("frames", 72)), int(spec.get("step", 3))
     arm.animation_data_create()
@@ -1937,6 +1943,7 @@ def synth_idle_scan(arm, spec):
     for pb in arm.pose.bones:
         pb.rotation_mode = "QUATERNION"
     frames = list(range(0, n, step)) + [n]
+    loc_spec = spec.get("loc", {})
     for f in frames:
         for bname, waves in spec["bones"].items():
             pb = arm.pose.bones[PREFIX + bname]
@@ -1947,9 +1954,19 @@ def synth_idle_scan(arm, spec):
                 rot = Matrix.Rotation(ang, 3, Vector(axis).normalized()) @ rot
             pb.rotation_quaternion = (R3.inverted() @ rot @ R3).to_quaternion()
             pb.keyframe_insert("rotation_quaternion", frame=1 + f)
+        for bname, waves in loc_spec.items():
+            pb = arm.pose.bones[PREFIX + bname]
+            R3 = (arm.matrix_world.to_3x3() @ pb.bone.matrix_local.to_3x3())
+            delta_world = Vector((0.0, 0.0, 0.0))
+            for axis, meters, phase in waves:
+                t = math.sin(2 * math.pi * f / n + phase) - math.sin(phase)
+                delta_world += Vector(axis).normalized() * (meters * t)
+            pb.location = R3.inverted() @ delta_world
+            pb.keyframe_insert("location", frame=1 + f)
     scene.frame_start, scene.frame_end = 1, 1 + n
     scene.frame_set(1)
-    return f"{act.name} {n}프레임(키 {len(frames)}) · 뼈 {list(spec['bones'])}"
+    bones = sorted(set(spec["bones"]) | set(loc_spec))
+    return f"{act.name} {n}프레임(키 {len(frames)}) · 뼈 {bones}"
 
 
 def coat_hem(body, G, spec):
@@ -2663,6 +2680,16 @@ def build(name, out_dir=None, render_dir=None):
     if cfg.get("synth_idle"):
         report["지은 Idle"] = synth_idle_scan(arm, cfg["synth_idle"])
         clip = True
+    # 🔴 빅맘(2026-09-22, PM 유니티 URP 검수) — 여러 조각을 이어 붙인 static obj/glb는 노멀이
+    # 안쪽으로 뒤집힌 면이 섞여 있을 수 있다(Sketchfab 합본 흔한 증상). 블렌더는 기본적으로
+    # 양면을 그려 안 보이지만, 유니티 URP는 뒷면 컬링이 기본이라 뒤집힌 면이 속이 비쳐
+    # 반투명처럼 보인다 — 내보내기 전에 항상 다시 계산(이미 맞는 면은 그대로, 안전).
+    bm = bmesh.new()
+    bm.from_mesh(body.data)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(body.data)
+    bm.free()
+    body.data.update()
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     import io_scene_fbx.export_fbx_bin as fbx_bin                        # 테이크 이름 = 액션 이름(「Armature|Idle」 아닌 「Idle」 — fix_unit_fbx.py와 같은 처리)
     name_of = fbx_bin.get_blenderID_name
