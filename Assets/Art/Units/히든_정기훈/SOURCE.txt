@@ -1,0 +1,38 @@
+히든_정기훈(원피스 가뭄의 잭, 맘모스 인수형/pl_jack_orig01) — blender 세션(2026-09-22).
+fix_unit_fbx.py UNITS["히든_정기훈"]로 처리.
+
+■ 원본
+~/Desktop/구랜디스킨모음/05_히든/히든_정기훈.zip
+ - source/pl_jack.7z(bsdtar로 품) 안 pl_jack/ 폴더에 두 판본:
+   · orig01 — 렌더로 확인, 사람형(두 다리로 선 표준 자세, 머리에 맘모스 어금니 장식, 너덜
+     너덜한 모피 망토, 해수 벨트) — 메시 body·coat·face×3·l/r_hand×2·l/r_horn·l/r_weapon
+     (쌍낫 추정) 정상. 기본으로 이걸 씀(PM 지시).
+   · orig02 — 렌더로 확인, 완전한 네발 맘모스 짐승형(인간형 아님, 얼굴·손 메시 자체가
+     없음, body·fur·l/r_armor·l/r_horn뿐) — 사람형 리그 자체가 불가능한 체형이라 orig01이
+     정상으로 나와서 따로 안 물어봄(PM이 "orig01이 이상하면 물어보라" 했는데 이상하지
+     않았음).
+ - textures/pl_jack_orig01_diff.png(참고용 PNG, 실제로는 안쪽 7z의 .tga를 archive_rgb로
+   변환해 씀)
+
+■ 확인
+- 쌍낫(l_weapon·r_weapon, 양손 l/r_weapon_joint 뼈) — 렌더로 확인, 드롭.
+- 표준 pl_ 계열, world_joint가 바로 뿌리, Toe 뼈 있음.
+- 1차 배치부터 클린 통과(기본 자세≠쉬는 자세 0.0, 뼈 넘침 0.0).
+
+■ 처리
+- drop_meshes: face_attack·face_damage(face_normal만 유지)·l/r_hand_close(l/r_hand_open
+  만 유지)·l_weapon·r_weapon.
+- merge_bones: 모피 망토(coat_root 서브트리, 12개) → Spine1 강체. 뿔 장식(l/r_horn_
+  joint_01 서브트리) → Head. 머리카락 3갈래(c/l/r_hair_01) → Head. 치마(허리 천 6갈래,
+  b/f/s_l/r_skirt_01) → Hips.
+- 텍스처: archive_rgb로 .tga를 알파 뺀 RGB PNG로 변환.
+
+■ 검증
+- 배치 리포트: 뼈 25개, 휴머노이드 필수 15뼈 전부 가중치 있음, 크기 (2.921, 1.368, 1.8)m
+  (거구 체형 + 망토·뿔이 넓게 퍼져 폭이 큼), 최저 z 0.
+- 재수입 확인: 최상위 오브젝트 "Armature", Hips 부모 None, 다리 완전 수직.
+- Idle 리타겟(정면·측면 렌더) — 접힘·찢어짐 없음, 모피 망토·뿔 장식 다 자연스럽게 따라감,
+  무기 없음 확인.
+
+■ 산출물(스크래치만, Assets 미반영)
+히든_정기훈.fbx · Textures/pl_jack_orig01_diff.png · idle_front.png · idle_side.png
