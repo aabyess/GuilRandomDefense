@@ -1157,6 +1157,38 @@ UNITS = {
                     seed_zero_bones=0.001,
                     materials=dict(textures={"pl_tesoro_orig01": [("DiffuseColor", "pl_tesoro_orig01_diff.png")],
                                              "pl_tesoro_orig01_trans": [("DiffuseColor", "pl_tesoro_orig01_diff.png")]})),
+    # 원피스 바운티러시 센고쿠 불상형(pl_sengoku_orig02) → 불멸_고도현(2026-09-22 불멸, blender 세션
+    # — 이제 fix_unit_fbx.py도 blender 세션 전담, 구현담당2 꺼짐). zip 안 source/*.rar 안 FBX.
+    #   pl_ 리그 뼈 55 · 메시 11 · 재질 2(기본·_trans) · 무가중치 0(테소로와 같은 리그, 손상 뼈
+    #   없음) · 기본 자세 = 팔을 들어 주먹 쥔 자세(T자 아님) → tpose_arms.
+    #   겹친 변형: face_normal · l/r_hand_open만 남김(attack·damage·close 뺌).
+    #   코트: coat_root 서브트리(c_coat×3·l/r_coat×3·l/r_coat_arm×2·l/r_collar·l/r_epaulette_joint
+    #   ×2) 전부 Chest(mixamorig:Spine1)로 — 이 리그는 coat_arm이 LArm/RArm 계열이 아니라
+    #   coat_root 밑에서만 갈라져 팔 뼈에 안 물려 있음(직접 확인) → 팔 따라 뒤집힐 위험 자체가
+    #   없어 별도 주의 없이 통째로 강체 처리.
+    #   치마자락 bl/br/fl/fr/sl/srskirt_01 → Hips.
+    #   🔴 황금 광택 — 원본 재질이 이미 Metallic 1.0으로 만들어져 있었다(직접 확인). diff.png
+    #   만으로 금색이 잘 나옴 — matcap_gold·ramp·dither(원작 게임 셰이더 전용)는 안 씀.
+    #   🔴 _diff 알파는 그림자 마스크로 추정(테소로와 같은 패턴) → archive_rgb로 알파 없이.
+    #   거구 체형 — 키 1.8 정규화(얌마 선례, PM 확정: 유니티 쪽에서 최종 크기 조정) · T자 가로:
+    #   세로 비율 1.359(참고용, 얌마 1.135보다 더 벌크).
+    "불멸_고도현": dict(path="Assets/Art/Units/불멸_고도현/불멸_고도현.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.join(SKINS, "09_불멸/불멸_고도현.zip"), "source/pl_sengoku_orig02.rar",
+                             "pl_sengoku_orig02/pl_sengoku_orig02.fbx"),
+                    archive_rgb={"pl_sengoku_orig02/pl_sengoku_orig02_diff.png": "pl_sengoku_orig02_diff.png"},
+                    drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close"],
+                    drop_bones=["world_joint"],
+                    rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
+                    merge_bones=[dict(pattern=r"^(coat_root|c_coat\d*|c_collar|l_coat\d*|l_collar|l_coat_arm\d*|l_epaulette_0[12]_joint"
+                                        r"|r_coat\d*|r_collar|r_coat_arm\d*|r_epaurette_0[12]_joint)$", into="mixamorig:Spine1"),
+                                 dict(pattern=r"^(bl|br|fl|fr|sl|sr)skirt_01$", into="mixamorig:Hips"),
+                                 dict(pattern=r"^LHand_Fore_sup$", into="mixamorig:LeftForeArm"),
+                                 dict(pattern=r"^RHand_Fore_sup$", into="mixamorig:RightForeArm")],
+                    tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm", "Forearm": f"mixamorig:{side}ForeArm",
+                                    "Hand": f"mixamorig:{side}Hand"} for s, side in (("L", "Left"), ("R", "Right"))},
+                    seed_zero_bones=0.001,
+                    materials=dict(textures={"pl_sengoku_orig02": [("DiffuseColor", "pl_sengoku_orig02_diff.png")],
+                                             "pl_sengoku_orig02_trans": [("DiffuseColor", "pl_sengoku_orig02_diff.png")]})),
     # 나루토 젊은 오비토(NUNS4 XPS 립 「Obito (Young Cloak Hidden)」, 원본 .blend) → 제한_김민규(2026-09-17 제한됨). zip → source/*.rar → OBXBod1.blend.
     #   뼈 192(`2obx00t0 l thigh` 식 Biped 소문자) · 메시 6(body·hood·Hcells(하시라마 세포)·wood(나무 가시)·face·eye — 얼굴·눈은 한쪽 절반뿐, 나머지 반은 세포 몸) · 애니 0 · 쉬는 자세 A자.
     #   🔴 upperarm·forearm·calf 본체 뼈는 가중치 0 — 전부 비틀림 보조 뼈(arm bone01~06·sleeve·foot bone01~05)에 실려 있다 → 본체로 합친다.
