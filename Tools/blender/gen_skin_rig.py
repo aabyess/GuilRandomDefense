@@ -106,6 +106,209 @@ SKINS = {
     # 요크로 바꾼다(기존 릴리스 폐기, blender가 fix_unit_fbx.py로 새로 지음). 위 설명 주석은
     # 다른 유닛(특별함_주영호 141행 등)이 같은 함정을 참고하므로 남겨 둔다 — 이 dict만 뺐다.
     # 다시 이 이름으로 build()를 돌리면 요크 릴리스를 덮어쓰니 되살리지 말 것.
+    # 코라손(전설적인_홍인창, One Piece 돈키호테 로시난테) — PM 사양 원문 보존(2026-09-17):
+    # 뼈 없음·메시 7(Body 2,623·Face 3,088·Hair 6,969·Iris 98·Met 1,543·Wear 4,816·
+    # Mantle 57,213정점·삼각형 54,624=전체 63%)·재질 7개 전부 TEX_IMAGE 직결·좌우 대칭 99.6%·
+    # 크기 2.621×1.459×2.885(단위 아님→키 1.8)·팔을 거의 수평으로 벌린 자세(T자에 가까움).
+    # 감량은 Mantle 위주(목표 3~4만), 0.3 밑으로 내리면 bone heat 전체가 죽는다(하나미 교훈).
+    # 직접 확인: 삼각형 합 86,182 정확히 일치, 전 메시 UV 1층뿐. Body는 팔 부분만 있고
+    # (z 56.6~91.6%) 몸통 아래는 Wear가 전체(0~88.9%) 담당 → body_mesh_name="Object_8".
+    "전설적인_홍인창": dict(
+        source="~/Desktop/구랜디스킨모음/06_전설적인/전설적인_홍인창.glb",
+        path="Assets/Art/Units/전설적인_홍인창/전설적인_홍인창.fbx",
+        mesh_name="Corazon",
+        height=1.8,
+        body_mesh_name="Object_8",
+        center_band=(0.05, 0.15),
+        joints=dict(Hips=(0, 0, 0.450), Spine=(0, 0, 0.500), Spine1=(0, 0, 0.550), Spine2=(0, 0, 0.600), Neck=(0, 0, 0.780),
+                    Head=(0, 0, 0.840), HeadTop=(0, 0, 0.970),
+                    Shoulder=(0.052, 0.02, 0.610), Arm=(0.173, 0.02, 0.610), ForeArm=(0.312, 0.02, 0.610), Hand=(0.381, 0, 0.590),
+                    HandTip=(0.416, 0, 0.580),
+                    UpLeg=(0.070, 0, 0.420), Leg=(0.070, 0, 0.220), Foot=(0.070, 0, 0.030), ToeBase=(0.070, -0.050, 0.010),
+                    ToeTip=(0.070, -0.090, 0.010)),
+        # 🔴 실측 발견 — 감량 비율과 무관하게(원본 그대로도 실패) Mantle(깃털 코트)이 껴 있으면
+        # Bone Heat Weighting이 전체(가중치 있는 정점 0개)로 죽는다(하나미와 증상은 같지만
+        # 원인이 다름 — 감량 문제가 아니라 Mantle을 빼면 바로 통과한다, 직접 실측으로 격리
+        # 확인). 깃털이 잘게 쪼개진 조각들이라 메시 그래프가 심하게 끊겨 있어 열 확산 계산
+        # 자체가 안 되는 것으로 추정 — 코트라 몸통을 그대로 따라가면 충분하다고 보고 강체로
+        # 뺀다(카스미 Cabbard와 같은 원칙).
+        rigid={"MI_N127_E001_Mantle_CS01": "Spine2"},
+        alpha_keep=set(),
+        textures={
+            "MI_N127_E001_Body_CS01": [("Base Color", "baseColorTexture", "Body_diffuse.png")],
+            "MI_N127_E001_Face_CS01": [("Base Color", "baseColorTexture", "Face_diffuse.png")],
+            "MI_N127_E001_Hair_CS01": [("Base Color", "baseColorTexture", "Hair_diffuse.png")],
+            "MI_N127_E001_Iris_CS01": [("Base Color", "baseColorTexture", "Iris_diffuse.png")],
+            "MI_N127_E001_Mantle_CS01": [("Base Color", "baseColorTexture", "Mantle_diffuse.png")],
+            "MI_N127_E001_Met_CS01": [("Base Color", "baseColorTexture", "Met_diffuse.png")],
+            "MI_N127_E001_Wear_CS01": [("Base Color", "baseColorTexture", "Wear_diffuse.png")],
+        },
+        level_arms=True,
+        # 🔴 decimate_rules는 오브젝트 "이름"으로 매치하는데, 이 소스는 전부 glTF 기본 이름
+        # (Object_N)이라 "Mantle"이라는 문자열이 아예 없어 처음엔 감량이 하나도 안 먹었다
+        # (직접 확인: 전 86,182 → 후 86,182, 그대로). Mantle의 실제 오브젝트 이름 Object_6으로.
+        decimate_rules=[("Object_6", 0.3)],
+        decimate_default=1.0,
+    ),
+    # 사쿠라(전설적인_진연서, 윤식파여장부) — PM 사양 원문 보존(2026-09-17):
+    # 메시 20개 = 같은 몸 세 벌 겹침(Object_4/10/16 각 28,877정점 등 작은 부품까지 3회 반복,
+    # 직접 확인 bbox 완전 동일 — 진짜 겹침, 다른 위치 아님) + 한 번만 있는 Object_22/23.
+    # 삼각형 160,766 → 한 벌만 남기면 약 5.4만(직접 확인 55,030, 거의 일치).
+    # 좌우 대칭 92.9% · A자(팔 높이 50~54%) · 크기 119×33×163 · 텍스처 3장 연결됨.
+    # 🔴 Object_22(1,068정점, 머리 위로 뻗은 부속물 추정)·Object_23(96정점)이 몸(0~162 단위)과
+    # 완전히 다른 단위로 들어와 있었다(직접 확인: 정점 좌표 자체가 0~1.8 스케일, 부모·자체
+    # scale은 항등이라 데이터 자체의 문제) — 100배 해야 몸 단위와 맞고, 그러면 z 115.6~177.0
+    # (몸 키 162.3보다 위로 솟음 — 머리 위 장식물, 아마 리본/땋은머리)로 위치가 앞뒤 맥락과
+    # 맞는다. mesh_scale_override로 보정.
+    "전설적인_진연서": dict(
+        source="~/Desktop/구랜디스킨모음/06_전설적인/전설적인_진연서.glb",
+        path="Assets/Art/Units/전설적인_진연서/전설적인_진연서.fbx",
+        mesh_name="Sakura",
+        height=1.8,
+        body_mesh_name="Object_4",
+        drop_meshes={"Object_10", "Object_11", "Object_12", "Object_13", "Object_14", "Object_15",
+                     "Object_16", "Object_17", "Object_18", "Object_19", "Object_20", "Object_21"},
+        mesh_scale_override={"Object_22": 100.0, "Object_23": 100.0},
+        center_band=(0.05, 0.15),
+        joints=dict(Hips=(0, 0, 0.30), Spine=(0, 0, 0.38), Spine1=(0, 0, 0.45), Spine2=(0, 0, 0.52), Neck=(0, 0, 0.78),
+                    Head=(0, 0, 0.85), HeadTop=(0, 0, 0.98),
+                    # 🔴 실측 발견 — 48% 높이엔 팔이 아예 없다가(x 16.6, 몸통뿐) 50%에서 갑자기
+                    # 59.7로 튀고 위로 갈수록(52~70%) 서서히 좁아진다 — 팔이 이미 거의 수평으로
+                    # 뻗어 있어 그 "높이"에서만 단면이 잡히는 것(A자가 아니라 이미 T자에 가까움).
+                    # z를 그 실제 높이(50~51%)에 맞추고, ForeArm~Hand 사이에 실제 정점이 있는
+                    # 구간만 좁게 잡아야 bone heat가 Hand 몫을 챙긴다(처음엔 Hand가 메시 맨 끝
+                    # 정점이라 ForeArm에 다 뺏겨 가중치 0였다).
+                    Shoulder=(0.10, 0, 0.60), Arm=(0.15, 0, 0.56), ForeArm=(0.20, 0, 0.52), Hand=(0.30, 0, 0.44),
+                    HandTip=(0.42, 0, 0.38),
+                    UpLeg=(0.061, 0, 0.30), Leg=(0.061, 0, 0.15), Foot=(0.061, 0, 0.02), ToeBase=(0.061, -0.049, 0.01),
+                    ToeTip=(0.061, -0.092, 0.01)),
+        rigid={},
+        alpha_keep=set(),
+        level_arms=True,
+        # 🔴 bone heat가 성공하는 관절 배치 범위 안에서는 가로가 최대 1.3m대까지만 나온다
+        # (직접 실측 — 더 벌리면 손 쪽에 정점이 없어 bone heat 자체가 죽는다). 기본 0.9는
+        # 못 채워 PM 판단 대상으로 낮춰 둠(0.72 — 실측 1.301m/1.8m).
+        tpose_width_ratio=0.7,
+        decimate_rules=[],
+        decimate_default=1.0,
+    ),
+    # 베가펑크(제한_이충민, One Piece 초기 모습) — PM 사양 원문 보존(2026-09-17):
+    # ZBrush 2021 내보내기 · 정점 75,000 · 면 159,012(직접 확인 158,892, 삼각분할 방식 차이) ·
+    # UV 0 · 법선 0 · 재질 0 · MTL·텍스처 없음(색 전혀 없는 회색 조각상).
+    # 원시 크기 5.99×2.25×7.02(직접 확인 정확히 일치) · 좌우 대칭 98.7% · 이미 T자(팔 높이
+    # 키의 60~70%) · 정면 −Y.
+    # 형태(렌더 확인): 사과 달린 모자·부스스한 옆머리·콧수염·긴 혀가 배까지 늘어짐·짧은 흰
+    # 가운·가는 다리·큰 부츠(옆에 안테나).
+    # 🔴 색 입히기 필요 — 텍스처 없이 부위별 단색(paint_regions, 이번에 새로 추가한 기능):
+    # 높이(z)·좌우폭(x)·앞뒤(y)로 첫 매치 우선 잘라 재질 슬롯을 만든다. 원작 색이 애매해
+    # (렌더 확인은 했지만 정확한 색상값은 근거 없음) 무난한 근사색으로 넣고 PM 판단 요청.
+    "제한_이충민": dict(
+        source="~/Desktop/구랜디스킨모음/07_제한됨/제한_이충민.zip",
+        source_type="obj_zip",
+        obj_member="source/Vegapunk_75k.zip",
+        inner_obj="Vegapunk_75k.obj",
+        # ZBrush 내보내기가 100개 섬으로 쪼개져 있어(직접 확인) bone heat가 전체 실패한다 —
+        # merge-by-distance로 붙인다(직접 실측: 0.05에서 1개+작은 조각 3개로 거의 다 붙음).
+        weld_distance=0.05,
+        path="Assets/Art/Units/제한_이충민/제한_이충민.fbx",
+        mesh_name="Vegapunk",
+        height=1.8,
+        body_mesh_name="Vegapunk_75k",
+        center_band=(0.05, 0.15),
+        # 관절표: 원본 키 7.0175(zmin −3.549) 대비 비율. 단면 실측: 65~70% 높이에서 팔이
+        # x=±2.99까지 벌어짐(이미 T자) · 42% 부근 허리 · 90~98% 머리 · 98%+ 모자.
+        joints=dict(Hips=(0, 0, 0.42), Spine=(0, 0, 0.48), Spine1=(0, 0, 0.55), Spine2=(0, 0, 0.67), Neck=(0, 0, 0.87),
+                    Head=(0, 0, 0.91), HeadTop=(0, 0, 0.98),
+                    Shoulder=(0.08, 0, 0.67), Arm=(0.20, 0, 0.67), ForeArm=(0.32, 0, 0.67), Hand=(0.415, 0, 0.67),
+                    HandTip=(0.44, 0, 0.67),
+                    UpLeg=(0.10, 0, 0.40), Leg=(0.10, 0, 0.20), Foot=(0.10, 0, 0.03), ToeBase=(0.10, -0.05, 0.01),
+                    ToeTip=(0.10, -0.10, 0.01)),
+        rigid={},
+        alpha_keep=set(),
+        level_arms=True,
+        # 이미 T자라(PM 확인) level_arms가 교정할 게 거의 없다 — 폭은 실제 팔 메시 범위
+        # (원본 x=±2.99, 키 대비 0.426)로 정해져 관절표를 더 벌려도 안 바뀐다(직접 실측).
+        # 0.848 실측 — 0.9 기본 기준 미달이라 유닛별로 낮춤.
+        tpose_width_ratio=0.8,
+        # 첫 매치 우선 — 좁은 예외(사과·혀·맨팔)를 넓은 부위(로브·머리)보다 앞에 둔다.
+        paint_regions=[
+            ("apple", (0.55, 0.05, 0.05, 1.0), lambda x, y, z: z > 3.35 and x > -0.05),
+            ("tongue", (0.85, 0.45, 0.5, 1.0), lambda x, y, z: -0.8 <= z < 1.2 and y < -0.5),
+            ("arm_skin", (0.85, 0.68, 0.58, 1.0), lambda x, y, z: 0.8 <= z < 2.4 and abs(x) > 0.55),
+            ("hat", (0.12, 0.12, 0.14, 1.0), lambda x, y, z: z > 3.15),
+            ("hair", (0.83, 0.81, 0.76, 1.0), lambda x, y, z: 2.4 <= z < 3.15 and y > 0.05),
+            ("face_skin", (0.85, 0.68, 0.58, 1.0), lambda x, y, z: 2.4 <= z < 3.15 and y <= 0.05),
+            ("robe", (0.90, 0.90, 0.88, 1.0), lambda x, y, z: -0.6 <= z < 2.4),
+            ("leg_skin", (0.85, 0.68, 0.58, 1.0), lambda x, y, z: -3.0 <= z < -0.6),
+            ("boots", (0.13, 0.09, 0.07, 1.0), lambda x, y, z: True),
+        ],
+        # 🔴 weld_distance=0.05 자체가 이미 75,000 → 약 10,155정점(섬을 붙이려면 이보다 작은
+        # 거리로는 100개 섬이 안 붙는다, 직접 실측)으로 크게 줄인다 — 그 위에 추가로
+        # decimate까지 걸면 과하게 뭉개진다(직접 겪음: 4,596정점까지 떨어짐). 감량은 weld
+        # 하나로 끝낸다.
+        decimate_rules=[],
+        decimate_default=1.0,
+    ),
+    # 하나미(희귀함_고어진) — PM 사양 원문 보존(2번 유실됐던 지시, 다음 압축 대비 여기 그대로
+    # 적어 둔다, 2026-09-16):
+    # 목표 키 1.8m(흔함만 1.53, 나머지 전 등급 1.8) · 발 z 0 · 정면 −Y · T자 · mixamorig 이름 ·
+    # 무가중치 정점 0. 팔은 있다("몸통형" 아님) — PM 실측(gltf Z업): 몸+머리+다리만 재면 좌우
+    # 대칭 99.9%(Body만 100%). 팔 끝 높이 0.89~1.13(키 1.93의 46~58%) · 40~60% 높이대 폭 1.13 →
+    # 팔이 몸 옆으로 비스듬히 내려온 A자(팔이 Body 메시 안에 통짜로 붙어 있어 따로 조각이 없을
+    # 뿐). 높이대별 폭(전체 대비 %): 0%:0.58·10%:0.54·20~30%:0.56·40%:1.13·50%:1.11·60%:0.97·
+    # 70%:0.75·80%:0.56·90%:0.20 → 팔은 60~80% 높이의 어깨에서 시작해 40~50% 높이에서 손끝.
+    # 관절표는 이 단면 실측으로 잡고 level_arms로 T자로 편다.
+    # 메시: Hanami_Body_0(4,156·6,892, x±0.56, z −0.03~1.73) · Hanami_Head_0(3,506·6,006,
+    # z 1.62~1.90) · Hanami_Leg_0(1,842·3,030, z 0.13~1.12 — 겉 하의, Body와 같은 다리 사슬로
+    # 자동가중치) · Hanami_Teeth_0(10,434·16,944 — 입 안인데 무거움, 크게 감량) ·
+    # Leaf_leaf_0(17,896·34,464) · Leaf_flower_0(4,244·7,832) — 잎·꽃은 오른쪽 어깨에만(비대칭,
+    # x +0.12~+0.35, z 1.53~1.74, 직접 확인) → 드롭 말고 오른쪽 어깨 뼈에 100% 강체(하나미
+    # 상징), 크게 감량. 재질 6개 전부 Principled TEX_IMAGE 기본색 연결(흰 인형 위험 없음).
+    # UV 층이 메시마다 2~3개 → join 전 통일 필요. 조명 구 없음. 전체 삼각형 75,168 → 목표 3~4만.
+    # 🔴 좌우 라벨 주의 — 이 스크립트 관례(파일 맨 위 docstring)는 "+X = 캐릭터 왼쪽"인데 PM
+    # 실측 보고는 잎·꽃 위치를 "오른쪽"이라 불렀다(뷰어 기준일 수 있음) — rigid_by_name의
+    # "{side}"는 실제 빌드 시점 좌표의 x부호로 자동 판정하므로 이 라벨 혼동과 무관하게 항상
+    # 맞게 붙는다(직접 하드코딩 안 함).
+    "희귀함_고어진": dict(
+        source="~/Desktop/구랜디스킨모음/04_희귀함/희귀함_고어진.glb",
+        path="Assets/Art/Units/희귀함_고어진/희귀함_고어진.fbx",
+        mesh_name="Hanami",
+        height=1.8,
+        uv_layers=1,
+        # 정점 수로 자동 고르면 Leaf_leaf_0(17,896)이 Hanami_Body_0(4,156)보다 많아 잘못
+        # 뽑힌다 — 이지원·주영호와 같은 함정, body_mesh_name으로 못박는다(직접 겪음: 처음
+        # 돌렸을 때 center_band가 몸통이 아니라 잎에 걸려 빈 배열로 죽었다).
+        body_mesh_name="Hanami_Body_0",
+        center_band=(0.05, 0.15),                                        # 낮은 다리 높이대 — 좌우 중심 잡기
+        # 🔴 실측 발견 — 관절표는 "원본 미터"가 아니라 키(원본 H) 대비 "비율"이다(bone_table이
+        # 나중에 Vector(h)*Hf로 최종 키를 곱해 절대위치를 만든다 — 김민준 HeadTop=0.95, Shoulder
+        # z=0.715처럼 전부 0~1 근방). 처음에 원본 실측 미터(z 1.05~1.87 등)를 그대로 넣었다가
+        # 뼈가 전부 키의 몇 배 높이로 날아가 메시 밖에 놓였고, Bone Heat Weighting이 정점을
+        # 하나도 못 찾아 kd_w가 빈 트리가 돼 "'>' not supported between NoneType and float"로
+        # 죽었다 — 원본 z를 (z−바닥)/원본키(1.9319)로, x·y도 /원본키로 나눠 비율로 바꿔 해결.
+        joints=dict(Hips=(0, 0, 0.577), Spine=(0, 0, 0.665), Spine1=(0, 0, 0.732), Spine2=(0, 0, 0.794), Neck=(0, 0, 0.872),
+                    Head=(0, 0, 0.908), HeadTop=(0, 0, 0.986),
+                    # PM 실측 단면(40~50% 높이=손끝, 60~80% 높이=어깨) 기반 — 팔이 몸 옆으로
+                    # 비스듬히 내려온 A자, level_arms로 사후 T자.
+                    Shoulder=(0.052, 0.026, 0.820), Arm=(0.129, 0.026, 0.794), ForeArm=(0.259, 0.016, 0.613), Hand=(0.290, 0, 0.484),
+                    HandTip=(0.295, 0, 0.432),
+                    UpLeg=(0.078, 0, 0.561), Leg=(0.078, 0, 0.302), Foot=(0.078, 0, 0.044), ToeBase=(0.078, -0.052, 0.018),
+                    ToeTip=(0.078, -0.093, 0.018)),
+        rigid={},
+        alpha_keep=set(),
+        level_arms=True,
+        # 잎·꽃(하나미 상징) — 실루엣 왜곡보다 상징성이 중요하다고 PM이 명시, 드롭 말고 강체.
+        # side_threshold=None → 항상 실제 x부호로 판정(중앙 예외 없음, 이미 한쪽에만 있어 필요없다).
+        rigid_by_name=[("Leaf", "{side}Shoulder", None)],
+        # 입 안(Teeth)과 잎(Leaf, 전체의 69%가 이 둘)이 무거워 감량, 몸통·머리·다리는 원본 유지
+        # (실루엣·판정 부위). 🔴 실측 발견 — 0.08·0.15처럼 너무 세게 줄이면 표준 Decimate
+        # COLLAPSE가 이 잘게 쪼개진 이빨/꽃잎 지오메트리를 퇴화 삼각형으로 뭉개, Bone Heat
+        # Weighting이 전체(가중치 있는 정점 0개)로 실패해 kd_w가 빈 트리라 죽었다("'>' not
+        # supported between NoneType and float"). 0.3까지만 줄이면 안정적으로 동작(직접 실측:
+        # 감량 후 75,168→33,699, PM 목표 3~4만과 일치).
+        decimate_rules=[("Teeth", 0.3), ("Leaf", 0.3), ("Body", 1.0), ("Head", 1.0), ("Leg", 1.0)],
+        decimate_default=1.0,
+    ),
     # 마마보이(오크 전사) — 66메시·69,576삼각형짜리 Sketchfab 조각 세트(몸통 하나 + 갑옷·소품
     # 60여 개가 전부 따로). 정면·회전 확인(fromNegY 렌더): 원본이 이미 정면 −Y·팔 좌우
     # 확산(X)·키 Z위라 rotate_z 불필요 — 04부터 셋 다 rotate_z가 필요했던 것과 다르다.
@@ -194,6 +397,137 @@ SKINS = {
     # 맨 정장 차림 카이메라 앤트 코알라가 +X쪽을 본다) → rotate_z=-90으로 −Y 정면.
     # 팔은 T자가 아니라 몸통 옆에 늘어뜨린 자세(한 손엔 호리병 모양 소품을 들고, 한 손은
     # 주머니에) — level_arms로 사후에 수평으로 편다.
+
+    # 박기찬(료멘 스쿠나, Jujutsu Kaisen) — zip 속 zip(source/untitled.zip) 안 맨 OBJ
+    # (Ryomen Sukuna.obj, 정점 14,856·면 28,156, 직접 확인) — usemtl로 재질 15개 이름은
+    # 이미 붙어 있는데(MI_CP_020_00_*) mtllib(untitled.mtl)가 없어 임포트 직후엔 색이
+    # 비어 있다. 베가펑크(재질 0개, paint_regions로 새로 만듦)와는 다른 경우라
+    # material_textures(기존 재질 이름 → 텍스처 파일)로 새 갈래를 추가해 처리.
+    # 텍스처 4장은 안쪽 zip이 아니라 바깥 zip 최상위 textures/에 있다(직접 확인):
+    # Hair_C·Eyes_C·Face_C·Body_C — Iris용 별도 파일은 없어 Eyes_C를 공유.
+    # Outline·Toonline·Decal·DecayDecal 4개는 외곽선/데칼 껍데기 재질이라(셀 교훈)
+    # drop_materials로 그 재질을 쓰는 면부터 지운다(별 오브젝트가 아니라 재질로만
+    # 갈려 있어 drop_meshes로는 못 뺀다).
+    # 렌더로 직접 확인(오소그래픽 무재질 렌더) — 이미 T자, 소매가 넓게 늘어진 통옷(자락이
+    # 발목까지) 한 벌에 다리가 안 갈린다(코라손·베가펑크와 같은 부류). 단면 실측:
+    # 오른손끝 x=71.60(폭비 0.411) at z frac 0.488(허리 높이 — 넓은 소매가 손목까지 아래로
+    # 처져 있다), 어깨선 x=20.8 at frac 0.82, 목~머리는 frac 0.84~0.99(폭 9~11 일정).
+    # 최종 폭비 실측 0.822(0.9 기준 미달) — 늘어진 소매 특유 형태라 tpose_width_ratio로
+    # 낮춤(베가펑크와 같은 사유).
+    "초월_박기찬_AD": dict(
+        source="~/Desktop/구랜디스킨모음/08_초월/초월_박기찬_AD.zip",
+        source_type="obj_zip",
+        obj_member="source/untitled.zip",
+        inner_obj="Ryomen Sukuna.obj",
+        drop_materials={"MI_CP_020_00_Outline", "MI_CP_020_00_Toonline", "MI_CP_020_00_Decal",
+                         "MI_CP_020_00_DecayDecal"},
+        material_textures={
+            "MI_CP_020_00_Hair": "textures/T_CP_020_00_Hair_C.png",
+            "MI_CP_020_00_Face": "textures/T_CP_020_00_Face_C.png",
+            "MI_CP_020_00_Eyes": "textures/T_CP_020_00_Eyes_C.png",
+            "MI_CP_020_00_Iris": "textures/T_CP_020_00_Eyes_C.png",
+            "MI_CP_020_00_ClothesA": "textures/T_CP_020_00_Body_C.png",
+            "MI_CP_020_00_ClothesB": "textures/T_CP_020_00_Body_C.png",
+            "MI_CP_020_00_ClothesC": "textures/T_CP_020_00_Body_C.png",
+            "MI_CP_020_00_Skin": "textures/T_CP_020_00_Body_C.png",
+            "MI_CP_020_00_Leg": "textures/T_CP_020_00_Body_C.png",
+            "MI_CP_020_00_ShoesA": "textures/T_CP_020_00_Body_C.png",
+            "MI_CP_020_00_ShoesB": "textures/T_CP_020_00_Body_C.png",
+        },
+        path="Assets/Art/Units/초월_박기찬_AD/초월_박기찬_AD.fbx",
+        mesh_name="Sukuna",
+        height=1.8,
+        center_band=(0.05, 0.15),
+        # 관절표: 실측 프랙션(원본 키 174.26 대비). 팔은 어깨(0.82)에서 손(0.49)까지 늘어진
+        # 소매를 그대로 따라 대각선으로 잡아야 bone heat가 소매를 제대로 갈라 먹는다 —
+        # level_arms가 나중에 수평 T자로 편다.
+        # 🔴 PM 실측 정정(2026-09-18, 유니티 idleview + 직접 뼈 좌표 재검사) — 처음 관절표는
+        # 소매 바깥 천 윤곽(당겨 늘어진 실루엣)을 그대로 따라가 "Shoulder" 뼈 하나가 위팔
+        # 전체를 먹고(0.41m) "Arm"(실제 어깨 관절)이 팔꿈치 근처(키 65%)에 잡혀 있었다 —
+        # 유니티는 Shoulder를 거의 안 돌려서 위팔이 수평으로 남고 팔꿈치에서만 꺾이는
+        # 허수아비 자세가 나왔다(롤 문제가 아니었다 — roll 수정은 결과를 안 바꿈, PM 확인).
+        # 진짜 어깨 관절/팔꿈치/손목은 겉천보다 훨씬 안쪽(짧다) — PM이 표준 비율(위팔
+        # ≈0.28m·아래팔≈0.25m)로 다시 잡은 좌표를 그대로 반영, 겉천(손끝까지 늘어진 소매
+        # 자락)은 HandTip 몫으로 bone heat가 알아서 확산해 가져가게 둔다.
+        joints=dict(Hips=(0, 0, 0.45), Spine=(0, 0, 0.52), Spine1=(0, 0, 0.60), Spine2=(0, 0, 0.68),
+                    Neck=(0, 0, 0.83), Head=(0, 0, 0.87), HeadTop=(0, 0, 0.99),
+                    # 🔴 재빌드 1차 시도 실패(직접 확인) — Hand·HandTip을 손목 실측 위치(0.23H)
+                    # 그대로 짧게 두니 소매 끝(실제 천이 x=0.41H까지 나가는 부분)에 bone heat가
+                    # 안착할 뼈가 없어져(전 뼈에서 멀어짐) 정점이 엉뚱한 뼈로 흩어지며 메시가
+                    # 찢어졌다(렌더 직접 확인 — 팔 한쪽이 허공에 뜬 조각으로 떨어져 나감).
+                    # Hand 뼈 자체(손목→HandTip)는 실제 손보다 길게 늘여 늘어진 소매 끝까지
+                    # 닿게 둔다 — 이 캐릭터는 원래 손목 밖으로 천이 한참 늘어진 디자인이라
+                    # Hand 하나가 손목+늘어진 자락을 함께 맡는 게 정상(다른 뼈로 새로 안 뺀다).
+                    Shoulder=(0.03, 0, 0.83), Arm=(0.10, 0, 0.80), ForeArm=(0.20, 0, 0.68),
+                    Hand=(0.30, 0, 0.58), HandTip=(0.41, 0, 0.49),
+                    UpLeg=(0.07, 0, 0.43), Leg=(0.07, 0, 0.20), Foot=(0.07, 0, 0.02),
+                    ToeBase=(0.07, -0.06, 0.01), ToeTip=(0.07, -0.12, 0.01)),
+        rigid={},
+        alpha_keep=set(),
+        level_arms=True,
+        # 폭 실측 0.822 — 늘어진 넓은 소매 특유 형태(베가펑크와 같은 사유로 낮춤).
+        tpose_width_ratio=0.8,
+    ),
+
+    # 이태훈(스모커, One Piece 타임스킵 후) — 뼈 없는 단일 glb(코라손과 같은 소스 계열
+    # MI_N118_*, PM 원문은 압축 중 유실돼 직접 재조사, SOURCE.txt 참고). 메시 7개(Fur·
+    # Iris·Body·Face·Hair·Mantle·Wear) — Wear(19,286정점)가 몸통 전체를 담은 본체.
+    # 삼각형 합 49,718로 이미 목표(3~5만) 안이라 감량 불필요.
+    # 렌더로 직접 확인: 팔이 거의 T자, 발끝까지 오는 긴 코트 한 벌에 다리가 안 갈림(코라손과
+    # 같은 부류) — Fur(털 옷깃)·Mantle(젖혀진 코트 자락)은 코라손 교훈대로 선제적으로
+    # Spine2에 강체 바인딩(깃털/조각난 코트가 Bone Heat를 통째로 죽이는 전례).
+    # 단면 실측(원본 키 1.9575 기준): 손끝 x=0.846(폭비 0.432) at frac 0.587, 어깨선
+    # x=0.365~0.40 at frac 0.80~0.82 — 코라손처럼 소매가 어깨보다 살짝 처져 있다.
+    "초월_이태훈_AP": dict(
+        source="~/Desktop/구랜디스킨모음/08_초월/초월_이태훈_AP.glb",
+        path="Assets/Art/Units/초월_이태훈_AP/초월_이태훈_AP.fbx",
+        mesh_name="Smoker",
+        height=1.8,
+        body_mesh_name="Object_8",
+        center_band=(0.05, 0.15),
+        # 🔴 스쿠나에서 배운 교훈 그대로 선반영 — 처음엔 겉천(코트 소매) 윤곽을 그대로 따라
+        # 4등분해서 "Shoulder"가 위팔 몫을 다 먹고 "Arm"(실제 어깨 관절)이 팔꿈치 근처에
+        # 잡히는 실수를 할 뻔했다. Shoulder는 목 옆 짧게, Arm=실제 어깨 관절(겉천 단면에서
+        # 잡은 원래 "Shoulder" 자리), ForeArm=팔꿈치(표준 위팔 길이 비율로 보간), Hand=손목,
+        # HandTip만 원래 소매 끝(겉천 실측 자리)까지 길게 늘여 bone heat가 늘어진 소매 끝에
+        # 안착할 자리를 준다.
+        joints=dict(Hips=(0, 0, 0.44), Spine=(0, 0, 0.50), Spine1=(0, 0, 0.56), Spine2=(0, 0, 0.62),
+                    Neck=(0, 0, 0.87), Head=(0, 0, 0.91), HeadTop=(0, 0, 0.99),
+                    Shoulder=(0.03, 0, 0.85), Arm=(0.19, 0, 0.82), ForeArm=(0.30, 0, 0.71),
+                    Hand=(0.40, 0, 0.62), HandTip=(0.46, 0, 0.56),
+                    UpLeg=(0.06, 0, 0.42), Leg=(0.06, 0, 0.20), Foot=(0.06, 0, 0.02),
+                    ToeBase=(0.06, -0.06, 0.01), ToeTip=(0.06, -0.12, 0.01)),
+        # 🔴 실측 발견 — 실패 원인은 Fur가 아니라 소스 자체가 748개 섬(가장 큰 게 4.5%뿐,
+        # 재질 경계마다 중복 정점이 나는 소스로 추정)으로 쪼개져 있던 것 — rigid를 아예
+        # 비워도 실패가 그대로였다(직접 격리 확인). weld_distance로 고쳤다.
+        # 🔴 유니티 반려(PM) — Fur를 Spine2에 강체로 고정하니 목깃이 어깨/소매(Wear, 팔을
+        # 따라 움직임)와 뜯어져 팔이 조금만 움직여도 목깃 조각이 공중에 뚝 떨어져 보였다
+        # (직접 확인: Arm/Hand 가중치를 받은 정점은 전부 Wear·Body 재질이었지 Fur가 아니었다
+        # — Fur 강체 자체는 "제대로" 작동했다, 문제는 강체를 건 정책 자체). Fur는 목~어깨에
+        # 걸쳐 있어 한 뼈로 통째로 얼리면 안 맞는다 — weld 수정으로 섬 문제가 없어졌으니
+        # 이제 강체를 빼고 다시 bone heat에 맡겨 Neck/Spine2/Shoulder에 자연스럽게 걸치게
+        # 한다(마유리·가프처럼 조각이 아니라 "몸에 붙은 옷깃" 부류로 재분류).
+        rigid={"MI_N118_E002_Mantle_CS01": "Spine2"},
+        # 🔴 실측 발견 — 748개 섬(가장 큰 게 4.5%)이라 기본 이음새 거리(1e-4)로는 274개로만
+        # 줄고 본 히트가 전부 실패(weighted 정점 0개, 베가펑크와 같은 증상이나 원인은 재질
+        # 경계 중복 정점으로 추정). 0.005에서 97%가 한 섬으로 붙는 것을 직접 실측 확인.
+        weld_distance=0.005,
+        alpha_keep=set(),
+        textures={
+            "MI_N118_E001_Fur_CS01": [("Base Color", "baseColorTexture", "Fur_diffuse.png")],
+            "MI_N118_E001_Iris_CS01": [("Base Color", "baseColorTexture", "Iris_diffuse.png")],
+            "MI_N118_E002_Body_CS01": [("Base Color", "baseColorTexture", "Body_diffuse.png")],
+            "MI_N118_E002_Face_CS01": [("Base Color", "baseColorTexture", "Face_diffuse.png")],
+            "MI_N118_E002_Hair_CS01": [("Base Color", "baseColorTexture", "Hair_diffuse.png")],
+            "MI_N118_E002_Mantle_CS01": [("Base Color", "baseColorTexture", "Mantle_diffuse.png")],
+            "MI_N118_E002_Wear_CS01": [("Base Color", "baseColorTexture", "Wear_diffuse.png")],
+        },
+        level_arms=True,
+        # 폭 실측 0.865(0.9 기준 살짝 미달) — 코라손과 같은 처진 소매 형태.
+        tpose_width_ratio=0.85,
+        decimate_rules=[],
+        decimate_default=1.0,
+    ),
 }
 
 # (뼈, 머리 관절, 꼬리 관절, 부모) — 왼쪽/오른쪽은 L·R 두 벌
@@ -279,6 +613,104 @@ def build(name, cfg, out_dir=None, render_dir=None):
             mat_image[mt.name] = [("Base Color", fname)]
         report["재질→텍스처"] = mat_image
         cfg = dict(cfg, textures=True)                                  # 아래 재질 루프가 rebuild_material 경로를 타게
+    elif cfg.get("source_type") == "obj_zip":
+        # ── zip(속 zip) 안 OBJ, 재질·UV·법선 전부 없는 조각상(베가펑크) — 부위별로 직접
+        # 색을 칠한다. cfg["paint_regions"] = [(이름, RGBA, predicate(x,y,z)), ...] 순서대로
+        # 첫 매치 우선(겹치면 앞 항목이 이긴다 — 혀·사과처럼 좁은 예외를 넓은 부위보다 먼저 둘 것).
+        extract_dir = tempfile.mkdtemp(prefix="skinobj_")
+        with zipfile.ZipFile(src) as z:
+            z.extractall(extract_dir)
+        obj_path = os.path.join(extract_dir, cfg["obj_member"])
+        if obj_path.lower().endswith(".zip"):
+            inner_dir = os.path.join(extract_dir, "inner")
+            with zipfile.ZipFile(obj_path) as z:
+                z.extractall(inner_dir)
+            obj_path = os.path.join(inner_dir, cfg["inner_obj"])
+        bpy.ops.wm.obj_import(filepath=obj_path)
+        scene = bpy.context.scene
+        body_obj = next(o for o in scene.objects if o.type == "MESH")
+        # 🔴 실측 발견(베가펑크) — ZBrush 내보내기가 조각을 100개 섬(가장 큰 게 전체 정점의
+        # 6.7%뿐)으로 안 붙인 채 내보냈다. Bone Heat Weighting은 메시가 하나로 이어져 있어야
+        # 열 확산을 풀 수 있는데, 섬이 이 정도로 쪼개져 있으면 전체(가중치 있는 정점 0개)로
+        # 죽는다(하나미·코라손과 증상은 같지만 원인은 처음 보는 종류 — 직접 실측으로 격리
+        # 확인: merge-by-distance 1e-4(원래 이음새 붙이기 거리)로는 섬 100→96개뿐, 0.05로는
+        # 1개(97%)+작은 조각 3개로 거의 다 붙는다). cfg["weld_distance"]로 유닛별 조정 가능.
+        weld = cfg.get("weld_distance")
+        if weld:
+            import bmesh as _bmesh
+            _bm = _bmesh.new()
+            _bm.from_mesh(body_obj.data)
+            _bmesh.ops.remove_doubles(_bm, verts=_bm.verts, dist=weld)
+            _bm.to_mesh(body_obj.data)
+            _bm.free()
+            body_obj.data.update()
+        # 🔴 스쿠나 — 이 소스는 재질·UV 자체는 있다(usemtl로 면마다 이름 붙어 있음, mtl 파일만
+        # 없어 임포트 직후엔 색이 비어 있다). paint_regions(베가펑크, 재질 자체가 0)와는
+        # 다른 경우라 cfg["material_textures"](기존 재질 이름 → 텍스처 멤버 키)로 처리하는
+        # 갈래를 새로 추가. cfg["drop_materials"]가 있으면 그 재질을 쓰는 면부터 지운다
+        # (Outline·Toonline류 외곽선/데칼 껍데기 — 별도 오브젝트가 아니라 재질로만 갈려
+        # 있어 drop_meshes로는 못 뺀다).
+        if cfg.get("drop_materials"):
+            drop_idx = {i for i, m in enumerate(body_obj.data.materials) if m and m.name in cfg["drop_materials"]}
+            bm = bmesh.new()
+            bm.from_mesh(body_obj.data)
+            bm.faces.ensure_lookup_table()
+            bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.material_index in drop_idx], context="FACES")
+            bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+            bm.to_mesh(body_obj.data)
+            bm.free()
+            # 면을 지워도 재질 슬롯 자체는 남아 있어 이후 mat_image[m.name] 조회에서
+            # KeyError가 난다 — 슬롯째로 제거(뒤에서부터 pop해 인덱스 밀림 방지).
+            for i in sorted(drop_idx, reverse=True):
+                body_obj.data.materials.pop(index=i)
+        if cfg.get("material_textures"):
+            # material_textures = {재질이름: extract_dir 기준 상대경로} — 값(경로)이 같으면
+            # 같은 파일로 묶여 한 번만 복사(스쿠나의 Body 아틀라스 하나를 여러 재질이 공유).
+            os.makedirs(tex_dir, exist_ok=True)
+            mat_image = {}
+            written = {}
+            for mat_name, rel_path in cfg["material_textures"].items():
+                m = bpy.data.materials.get(mat_name)
+                if m is None:
+                    continue
+                fname = written.get(rel_path)
+                if fname is None:
+                    src_path = os.path.join(extract_dir, rel_path)
+                    fname = os.path.basename(src_path)
+                    dst_path = os.path.join(tex_dir, fname)
+                    if not os.path.exists(dst_path):
+                        shutil.copy(src_path, dst_path)
+                    written[rel_path] = fname
+                mat_image[m.name] = [("Base Color", fname)]
+            report["재질→텍스처"] = mat_image
+            cfg = dict(cfg, textures=True)
+        else:
+            regions = cfg["paint_regions"]
+            mat_idx = {}
+            for rname, rgba, _ in regions:
+                m = bpy.data.materials.new(rname)
+                m.use_nodes = True
+                body_obj.data.materials.append(m)
+                mat_idx[rname] = len(body_obj.data.materials) - 1
+            Mw = body_obj.matrix_world
+            vw = [Mw @ v.co for v in body_obj.data.vertices]
+            for p in body_obj.data.polygons:
+                n = len(p.vertices)
+                cx = sum(vw[vi].x for vi in p.vertices) / n
+                cy = sum(vw[vi].y for vi in p.vertices) / n
+                cz = sum(vw[vi].z for vi in p.vertices) / n
+                for rname, rgba, pred in regions:
+                    if pred(cx, cy, cz):
+                        p.material_index = mat_idx[rname]
+                        break
+            os.makedirs(tex_dir, exist_ok=True)
+            mat_image = {}
+            for rname, rgba, _ in regions:
+                fname = f"{rname}_solid.png"
+                write_solid_png(os.path.join(tex_dir, fname), rgba)
+                mat_image[rname] = [("Base Color", fname)]
+            report["재질→텍스처"] = mat_image
+            cfg = dict(cfg, textures=True)
     else:
         bpy.ops.import_scene.gltf(filepath=src)
         scene = bpy.context.scene
@@ -314,9 +746,19 @@ def build(name, cfg, out_dir=None, render_dir=None):
             mat_image[mt["name"]] = entries
         report["재질→텍스처"] = mat_image
 
-    meshes = [o for o in scene.objects if o.type == "MESH"]
+    # cfg["drop_meshes"] — 이름으로 잡동사니·중복 조각을 뺀다(사쿠라: 몸 세 벌이 완전히 겹쳐
+    # 있어 한 벌만 남기고 나머지 둘은 뺀다, 직접 확인 bbox 완전 동일).
+    meshes = [o for o in scene.objects if o.type == "MESH" and o.name not in cfg.get("drop_meshes", set())]
+    report["뺀 메시"] = sorted(cfg.get("drop_meshes", set()))
+    # cfg["mesh_scale_override"] — {오브젝트이름: 배율}로 단위가 다른 조각을 몸통 단위에 맞춘다
+    # (사쿠라: Object_22·23이 몸(0~162 단위)과 다른 단위(0~1.8, 100배 작음)로 들어와 있었다,
+    # 직접 확인 — 부모·자체 scale은 항등인데 정점 좌표 자체의 스케일이 다름).
+    scale_override = cfg.get("mesh_scale_override", {})
     Rz = Matrix.Rotation(math.radians(cfg.get("rotate_z", 0.0)), 4, "Z")
-    world = {o.name: np.array([Rz @ o.matrix_world @ v.co for v in o.data.vertices]) for o in meshes}
+    world = {}
+    for o in meshes:
+        s = scale_override.get(o.name, 1.0)
+        world[o.name] = np.array([Rz @ o.matrix_world @ (v.co * s) for v in o.data.vertices])
     P = np.concatenate(list(world.values()))
     lo, hi = P.min(0), P.max(0)
     H = float(hi[2] - lo[2])
@@ -351,6 +793,9 @@ def build(name, cfg, out_dir=None, render_dir=None):
 
     # ── 메시를 세계로 굽고 하나로
     for o in meshes:
+        s = scale_override.get(o.name)
+        if s:
+            o.data.transform(Matrix.Scale(s, 4))
         M = G @ o.matrix_world
         o.parent = None
         o.data.transform(M)
@@ -491,7 +936,11 @@ def build(name, cfg, out_dir=None, render_dir=None):
                      context="FACES")
     bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
     welded = len(bm.verts)
-    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
+    # 🔴 실측 발견(스모커) — 기본 이음새 거리(1e-4)로는 748개 섬(가장 큰 게 4.5%뿐)이 274개
+    # 로만 줄고 절반은 여전히 안 이어져 본 히트가 전부 실패한다(weighted 정점 0개, 베가펑크와
+    # 같은 증상). 재질 경계마다 중복 정점이 많이 나는 소스로 보임 — cfg["weld_distance"]로
+    # 유닛별로 키울 수 있게 연다(0.005에서 97%가 한 섬으로 붙는 것을 직접 실측 확인).
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=cfg.get("weld_distance", 1e-4))
     report["이음새 붙임(정점)"] = welded - len(bm.verts)
     bm.to_mesh(tmp.data)
     bm.free()
@@ -559,11 +1008,27 @@ def build(name, cfg, out_dir=None, render_dir=None):
     # 키 1.8m — 팔을 편 폭이 키의 0.9배도 안 됨). 가로(V.max(0)-V.min(0)의 x 성분)가 키의
     # 0.9배 이상이어야 "팔이 수평"이라고 본다 — 안 되면 level_arms를 켜거나 joints의 Arm/
     # ForeArm/Hand z값을 Shoulder와 같은 높이로 맞출 것.
-    assert size[0] >= Hf * 0.9, (
-        f"{name}: 쉬는 자세 가로 {size[0]:.3f}m가 키 {Hf}m의 0.9배 미만 — 팔이 수평 T자가 아니다"
+    # 🔴 사쿠라(전설적인_진연서) — 이 캐릭터는 실제 팔(손끝) 메시가 몸통 대비 짧아서(직접 실측:
+    # bone heat가 성공하는 관절 배치로는 가로가 아무리 조정해도 1.2~1.3m를 못 넘었다 — 손을
+    # 더 벌리면 그 자리에 정점이 없어 bone heat 자체가 죽는다) 이 안전선을 못 채운다. PM 판단
+    # 대상으로 cfg["tpose_width_ratio"]로 유닛별 하한을 낮출 수 있게 열어 둔다(기본 0.9 그대로).
+    min_ratio = cfg.get("tpose_width_ratio", 0.9)
+    assert size[0] >= Hf * min_ratio, (
+        f"{name}: 쉬는 자세 가로 {size[0]:.3f}m가 키 {Hf}m의 {min_ratio}배 미만 — 팔이 수평 T자가 아니다"
         f"(유니티 Idle 리타게팅에서 팔이 들리고 옷이 풍선처럼 부푼다, 베르고 교훈). "
         f"level_arms=True를 켜거나 joints의 Arm/ForeArm/Hand z를 Shoulder와 맞출 것.")
 
+    # 🔴 실측 발견(사쿠라) — 중복 메시(Object_10~21)를 드롭해도 그 오브젝트들이 쓰던 재질
+    # 데이터블록(material_6~17)이 파일에 남아 FBX로 같이 나간다(직접 확인: use_selection=
+    # False라 장면 오브젝트 타입만 보는 게 아니라 bpy.data.materials 전체를 씀. orphans_purge
+    # 로는 안 지워짐 — glTF 임포트가 재질에 use_fake_user를 걸어 두는 것으로 추정). 최종
+    # body가 실제로 쓰는 재질 이름 목록 밖의 것들을 직접 지운다.
+    used_mat_names = {sl.material.name for sl in body.material_slots if sl.material}
+    for m in list(bpy.data.materials):
+        if m.name not in used_mat_names:
+            m.use_fake_user = False
+            bpy.data.materials.remove(m)
+    bpy.data.orphans_purge(do_local_ids=True, do_recursive=True)
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     bpy.ops.export_scene.fbx(filepath=dst, use_selection=False, object_types={"ARMATURE", "MESH"}, apply_unit_scale=True,
                              apply_scale_options="FBX_SCALE_UNITS", axis_forward="-Z", axis_up="Y", add_leaf_bones=False,
@@ -637,6 +1102,22 @@ def level_arms(arm, body):
     ev.to_mesh_clear()
     drift = float(np.abs(got - want).max())
     assert drift < 1e-4, f"팔 굽기 뒤 메시가 움직였다 {drift}"
+    # 🔴 실측 발견(스쿠나, 구현담당2가 gen_biped_skin.py에서 "디오"로 먼저 찾은 것과 같은
+    # 버그) — rotation_difference 기반 스윙 교정은 방향(swing)만 고치고 roll(자기 축
+    # 비틀림)은 armature_apply가 그 순간의 아무 값으로 굳혀 버린다. bind=rest라 이 시점엔
+    # 눈에 안 보이지만(변형이 항등) 실제 애니메이션(유니티 Idle 리타게팅)에서 팔이 엉뚱한
+    # 축으로 굽는다 — 코라손·베가펑크는 스윙 각도가 작아(0~수 도) 티가 안 났고, 스쿠나는
+    # 52°나 돌아 확 드러났다. armature_apply 직후 EDIT 모드로 다시 들어가 뼈 생성 때와
+    # 같은 규칙(817행)으로 align_roll을 다시 먹인다 — bind=rest 상태라 roll을 바꿔도
+    # 이 시점 메시엔 변화가 없다(위 drift assert가 이미 통과한 뒤).
+    bpy.ops.object.mode_set(mode="EDIT")
+    for side in ("Left", "Right"):
+        for bone in ("Arm", "ForeArm", "Hand"):
+            eb = arm.data.edit_bones[PREFIX + side + bone]
+            d = (eb.tail - eb.head).normalized()
+            eb.align_roll(Vector((0, 0, 1)) if abs(d.y) > 0.7 else Vector((0, -1, 0)))
+    bpy.ops.object.mode_set(mode="OBJECT")
+    bpy.context.view_layer.update()
     for side, sx in (("Left", 1.0), ("Right", -1.0)):
         b = arm.data.bones[PREFIX + side + "Hand"]
         assert (b.tail_local - b.head_local).normalized().dot(Vector((sx, 0, 0))) > 0.999
