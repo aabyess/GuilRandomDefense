@@ -1,0 +1,38 @@
+히든_한나웅(원피스 가짜 루피/데마로 블랙, pl_demaroblack_orig01) — blender 세션
+(2026-09-22). fix_unit_fbx.py UNITS["히든_한나웅"]로 처리.
+
+■ 원본
+~/Desktop/구랜디스킨모음/05_히든/히든_한나웅.zip
+ - source/fake luffy.rar(bsdtar로 품) 안 "pl_demaroblack_orig01 (merge).fbx" +
+   pl_demaroblack_orig01_diff.png + stg_gasha_tex_bayer_dither.png(셰이더 전용, 안 씀)
+ - textures/pl_demaroblack_orig01_diff.png(같은 파일)
+
+■ 확인
+- 🔴 아틀라스 때 발견한 "(merge)" 관련 90°회전+0.01배율 구조 — 이번엔 별도 빈 오브젝트가
+  아니라 아마추어 오브젝트 자신에게 바로 있음(이름도 "...(merge)" 그대로 남음, 배치
+  리포트에 "armatures['pl_demaroblack_orig01 (merge).001']"로 보임). matrix_world 굽기는
+  어느 경우든 결과가 같아 이 패턴 자체가 정면·좌우 반전의 원인은 아닌 것으로 보임(전유라·
+  야마토처럼 이 유닛도 Idle 정면 정상 — 아래 검증 참고) — "(merge)" 파일들의 공통 내보내기
+  흔적으로 추정.
+- 가짜 권총류 무기(왼손 전용) — l_hand_weapon(144)·l_weapon_01(935)·l_weapon_02(704정점,
+  꽤 큼) 이름·정점 규모로 명백해 렌더 없이 드롭. 손 변형 close·sp01도 같이 드롭(l/r_hand_
+  open만 유지).
+- 뼈대는 표준 PL_RENAME(번호 꼬리 없음), Toe 뼈 있음.
+- 뿌리 "pl_demaroblack_orig01"·world_joint(둘 다 가중치 0) → 드롭해서 Hips를 진짜 뿌리로.
+
+■ 처리
+- drop_meshes: face_attack·face_damage·face_sp01(face_normal만 유지)·l/r_hand_close·
+  l/r_hand_sp01(l/r_hand_open만 유지)·l_hand_weapon·l_weapon_01·l_weapon_02.
+- merge_bones: 코트/조끼 자락 6갈래(b/f/s_l/r_coat_01, Body_Belly 자식) → Spine(허리
+  높이에 바로 붙어 있어 Spine1 대신 Spine으로). 옷깃(c_collar_01) → Spine1. 밀짚모자
+  (c_hat_01) → Head.
+
+■ 검증
+- 배치 리포트: 뼈 26개, 휴머노이드 필수 15뼈 전부 가중치 있음, 크기 (2.429, 0.681, 1.8)m
+  (거구 체형이라 폭이 큼), 최저 z 0.
+- 재수입 확인: 최상위 오브젝트 "Armature", Hips 부모 None, 다리 완전 수직.
+- Idle 리타겟(정면·측면 렌더) — 정면 정상(얼굴 보임), 접힘·찢어짐 없음, 조끼·모자 다
+  자연스럽게 따라감.
+
+■ 산출물(스크래치만, Assets 미반영)
+히든_한나웅.fbx · Textures/pl_demaroblack_orig01_diff.png · idle_front.png · idle_side.png
