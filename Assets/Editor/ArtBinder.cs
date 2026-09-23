@@ -1223,23 +1223,29 @@ public static class ArtBinder
         {
             float factor = height / measured;
 
-            // 그래도 말이 안 되는 배율이면 건드리지 않는다. 사람 키 20에 맞추는 일이라
-            // 원본이 아무리 작아도 1000배를 넘을 이유가 없다 — 넘으면 잰 값이 틀린 것이다.
-            if (factor > 1000f)
-            {
-                Debug.LogWarning($"[아트] {visual.name}: 크기를 제대로 못 재서 키 맞추기를 건너뜁니다 " +
-                                 $"(잰 높이 {measured:F4}, 배율 {factor:F0}배). 모델이 거대해지는 것을 막았습니다.");
-            }
-            else
-            {
-                visual.transform.localScale *= factor;
+            // 🔴 (09-23) 문턱을 「배율 > 1000」에서 뺐다. **목표 키에 딸려 움직이는 문턱이었다.**
+            //    이 검사가 생긴 원래 이유는 배율이 커서가 아니라 **잰 값이 0으로 나오던 것**이다
+            //    (09-08 이호준 7,062배 — 렌더러 경계가 비어 있었다). 그런데 문턱을 배율로 잡아 두니
+            //    목표 키를 올리는 순간 경계에 있던 모델이 조용히 넘어간다:
+            //      2026-09-23 사장님 「유닛 크기 키워라」로 20 → 30을 넣었더니
+            //      노드 배율 907배·700배이던 특별함_임장혁·흔함_양재모가 1361·1050이 되어
+            //      **둘 다 화면에서 점이 됐다.** 20일 때는 멀쩡히 서 있던 것들이다.
+            //    지금은 메시 경계(MeasureMeshBounds)로 재므로, 「잰 값이 쓸모없는가」만 보면 된다.
+            //    진짜 극소형(0.02m)은 그냥 키우고, 대신 **경고를 남겨** blender 재출고 대상이 드러나게 한다.
+            //    (구현담당2 제안 2026-09-23 — 근거가 맞아 그대로 받았다.)
+            const float TinyModelWarn = 500f;   // 이만큼 키워야 하면 원본이 규약(1.8m)에서 벗어난 것이다
+            if (factor > TinyModelWarn)
+                Debug.LogWarning($"[아트] {visual.name}: 원본이 너무 작습니다 — 잰 높이 {measured:F4}, " +
+                                 $"{factor:F0}배로 키웁니다(목표 {height:F0}). 세우기는 하지만 blender가 " +
+                                 "1.8m 규약으로 다시 내보내야 합니다.", visual);
 
-                // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발이 바닥에 닿게 내린다 — 크기를 잰 것과 같은 잣대로(위 🔴 09-15).
-                meshBounds = meshMeasured ? MeasureMeshBounds(visual) : null;
-                bounds = meshBounds ?? MeasureRenderers(visual);
-                if (!keepOrigin && bounds.size.y > 0.001f)
-                    visual.transform.position += Vector3.up * (root.transform.position.y - bounds.min.y);
-            }
+            visual.transform.localScale *= factor;
+
+            // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발이 바닥에 닿게 내린다 — 크기를 잰 것과 같은 잣대로(위 🔴 09-15).
+            meshBounds = meshMeasured ? MeasureMeshBounds(visual) : null;
+            bounds = meshBounds ?? MeasureRenderers(visual);
+            if (!keepOrigin && bounds.size.y > 0.001f)
+                visual.transform.position += Vector3.up * (root.transform.position.y - bounds.min.y);
         }
 
         float radius = height * 0.18f;   // 사람 비율 어림 — 키의 약 1/5

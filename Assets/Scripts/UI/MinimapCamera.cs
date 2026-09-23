@@ -16,6 +16,9 @@ public class MinimapCamera : MonoBehaviour, IPointerClickHandler
     [SerializeField] int textureSize = 256;
     [SerializeField] float refreshesPerSecond = 12f;
     [SerializeField] RtsCameraController mainCameraController;
+    // 미니맵에서 빼고 그릴 레이어(기본 없음 = 지금과 같다). UI 레이어는 이것과 별개로 항상 뺀다.
+    // 용도: 수면을 단색으로 보이게 할 때 수면 레이어를 여기 넣는다(2026-09-23 PM — 수면 레이어 지정은 MapGenerator 쪽 일).
+    [SerializeField] LayerMask excludedLayers;
 
     Camera minimapCam;
     RenderTexture renderTexture;
@@ -164,9 +167,10 @@ public class MinimapCamera : MonoBehaviour, IPointerClickHandler
         // 배경이 그대로 보인다. 검정이면 「잘린 검은 띠」로 읽혀서 수면과 비슷한 짙은 파랑으로 둔다.
         minimapCam.backgroundColor = new Color(0.06f, 0.16f, 0.30f);
 
-        // UI를 다시 찍으면 미니맵 안에 HUD가 또 그려지므로 UI 레이어만 뺀다.
+        // UI를 다시 찍으면 미니맵 안에 HUD가 또 그려지므로 UI 레이어는 항상 뺀다. excludedLayers도 같이 뺀다.
         int uiLayer = LayerMask.NameToLayer("UI");
-        minimapCam.cullingMask = uiLayer >= 0 ? ~(1 << uiLayer) : ~0;
+        int culled = excludedLayers.value | (uiLayer >= 0 ? 1 << uiLayer : 0);
+        minimapCam.cullingMask = ~culled;
 
         // 칸 크기는 아직 모른다 — GameHud가 `new GameObject(..., typeof(MinimapCamera))`로 만들어 Awake가
         // 부모·앵커를 정하기 **전에** 불린다. 일단 정사각으로 두고 Start·크기 변경 때 칸 비율로 다시 맞춘다.

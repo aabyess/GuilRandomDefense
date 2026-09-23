@@ -32,6 +32,15 @@ public class GameHud : MonoBehaviour
     // (예전엔 3열 13칸이라 정렬만 다섯째 줄에 혼자 떨어져 있었다 — 사장님 지적).
     // 칸은 정사각 38 — 패널 높이(캔버스 기준 약 214)에 4줄(38×4 + 6×3 = 170)이 들어가는 크기다.
     const int CommandSlotCount = 16;
+
+    // 하단 바 높이(화면 비율)와 미니맵 칸 윗변(화면 비율). 미니맵만 하단 바 위로 솟는다(BuildUI의 MinimapPanel 주석).
+    // MinimapTop 고르는 법 — 1920×1080 기준:
+    //   0.43 (가) 약 442×442 정사각 · 맵 배율 약 2배 · 왼쪽 아래 3D 화면을 약 442×230px 더 가린다  ← 지금(PM 확정 2026-09-23)
+    //   0.32 (나) 약 442×330 · 배율 약 1.5배 · 가림 절반
+    //   0.22 (라) 하단 바 안(옛 모양, 약 442×214)
+    // 사장님이 「3D 화면이 가린다」고 하시면 이 숫자 하나만 낮춘다. 미니맵 그림은 칸 비율을 따라가므로(MinimapCamera) 다른 곳은 안 고친다.
+    const float BottomBarHeight = 0.22f;
+    const float MinimapTop = 0.43f;
     const int CommandColumns = 4;
     const int TeamSlotCount = 4;
     const int MaxSelectionCards = 12;
@@ -351,7 +360,7 @@ public class GameHud : MonoBehaviour
             gameObject.AddComponent<GraphicRaycaster>();
 
         RectTransform bar = CreatePanel(transform, "BottomBar", PanelColor);
-        SetAnchors(bar, new Vector2(0f, 0f), new Vector2(1f, 0.22f));
+        SetAnchors(bar, new Vector2(0f, 0f), new Vector2(1f, BottomBarHeight));
 
         // 3D 화면과 갈리는 경계선. 판이 불투명해도 위쪽 경계가 밋밋하면 화면에 얹힌 게 아니라
         // 잘린 것처럼 보인다 — 밝은 선 한 줄이 "여기부터 UI"를 읽히게 한다.
@@ -365,8 +374,13 @@ public class GameHud : MonoBehaviour
         // 패널 배경 알파를 0.05~0.08로 두면 3D 화면 위에서 사실상 안 보여서, 선택 정보·명령
         // 버튼이 "배경 없이 떠 있는" 것처럼 보였다(사장님 스크린샷, 2026-09-23). 세 칸 다
         // BottomBar 자체(검정 0.75)보다는 옅되 눈에 들어오는 값으로 올린다.
-        RectTransform minimapPanel = CreatePanel(bar, "MinimapPanel", SlotColor);
-        SetAnchors(minimapPanel, new Vector2(0.01f, 0.05f), new Vector2(0.24f, 0.95f));
+        // 🔴 2026-09-23 미니맵 칸만 하단 바 위로 솟게 했다(PM 확정 (가)). 맵이 세로로 길어(3175×3715) 칸 **높이**가 배율을
+        //    정하는데, 칸이 하단 바 높이(약 214px)에 갇혀 있어 맵이 작고 좌우가 비었다. 폭 0.23은 사장님 09-07 지시
+        //    (「미니맵이 가로로 너무 좁다」)라 그대로 두고 **높이만** 키운다 — WC3 미니맵 틀도 콘솔 위로 솟아 있다.
+        //    그래서 부모를 하단 바가 아니라 HUD 루트로 두고 화면 비율로 잡는다(아래변·좌우는 하단 바 안 자리와 같다).
+        //    초상화·정보 칸·명령 격자는 하단 바 안이라 안 움직인다.
+        RectTransform minimapPanel = CreatePanel(transform, "MinimapPanel", SlotColor);
+        SetAnchors(minimapPanel, new Vector2(0.01f, BottomBarHeight * 0.05f), new Vector2(0.24f, MinimapTop));
         BuildMinimap(minimapPanel);
         AddPanelBorder(minimapPanel, BorderColor, BorderThickness);
 
