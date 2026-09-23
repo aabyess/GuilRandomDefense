@@ -72,9 +72,10 @@ public static class ClaudeCommands
         // gameshot이 플레이 모드를 예약했으면 결과는 찍고 나온 뒤 한꺼번에 쓴다. 지금 쓰면 기다리는 쪽이
         // 「⏳ 진행 중」만 든 파일을 결과로 읽는다.
         GameShotJob job = LoadGameShot();
-        if (job != null && job.id == id && job.prefix == null)
+        if (job != null && job.id == id && !job.prefixReady)
         {
             job.prefix = text;
+            job.prefixReady = true;
             SaveGameShot(job);
             return;
         }
@@ -936,6 +937,9 @@ public static class ClaudeCommands
         public double stageSince;   // EditorApplication.timeSinceStartup — 도메인 리로드를 넘어 이어진다
         public long lastSize = -1;
         public string prefix;       // 같은 inbox 파일에서 먼저 돈 명령들의 결과(Poll이 채운다)
+        // 🔴 prefix == null로 「아직 안 채움」을 가리면 안 된다 — JsonUtility는 null 문자열을 ""로 저장해서, 한 번 저장·로드하면
+        //    늘 「채움」으로 보인다. 그래서 Poll이 「⏳ 진행 중」만 든 결과를 먼저 써 버렸다(2026-09-23 outbox 2002). 따로 표시한다.
+        public bool prefixReady;
         public string report = "";  // 결과 본문
         public List<GameShotLog> logs = new List<GameShotLog>();
         public int droppedLogs;     // 종류 상한을 넘어 못 실은 로그 수
@@ -1033,7 +1037,7 @@ public static class ClaudeCommands
         nextGameShotTick = EditorApplication.timeSinceStartup + 0.25;
 
         GameShotJob job = LoadGameShot();
-        if (job == null || job.prefix == null) return;   // prefix가 비었으면 아직 Poll이 명령 파일을 다 안 돌렸다
+        if (job == null || !job.prefixReady) return;   // 아직 Poll이 명령 파일을 다 안 돌렸다
 
         double inStage = EditorApplication.timeSinceStartup - job.stageSince;
         if (job.stage != "entering" && job.stage != "exiting" && !EditorApplication.isPlaying)

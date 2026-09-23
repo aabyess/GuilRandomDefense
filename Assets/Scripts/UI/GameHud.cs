@@ -48,6 +48,7 @@ public class GameHud : MonoBehaviour
     TMP_Text goldWoodText;
     TMP_Text roundTimeText;
     TMP_Text teamPanelText;
+    RectTransform rightColumn;   // 팀 패널 + 보유 아이템을 위에서부터 쌓는 오른쪽 열(RightColumn())
     TMP_Text storyText;
     TMP_Text inventoryText;
     GameObject inventoryPanelObject;
@@ -150,6 +151,7 @@ public class GameHud : MonoBehaviour
     };
 
     GameObject navigationButtonPanel;
+    RectTransform topBarButtons;   // 상단 바 오른쪽 버튼 줄(메뉴·동맹·대화) — 항법 버튼도 여기 선다
     TMP_Text navigationButtonText;
     bool navigationButtonTextInitialized;
     bool lastNavigationHasChosen;
@@ -474,6 +476,7 @@ public class GameHud : MonoBehaviour
         roundTimeText.fontSize = 22;
 
         RectTransform menuButtonsPanel = CreatePanel(topBar, "TopBarButtons", Color.clear);
+        topBarButtons = menuButtonsPanel;
         SetAnchors(menuButtonsPanel, new Vector2(0.66f, 0.08f), new Vector2(0.99f, 0.92f));
 
         HorizontalLayoutGroup layout = menuButtonsPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
@@ -490,15 +493,17 @@ public class GameHud : MonoBehaviour
         CreateTopBarButton(menuButtonsPanel, "ChatButton", "대화");
     }
 
-    static void CreateTopBarButton(Transform parent, string name, string label)
+    static TMP_Text CreateTopBarButton(Transform parent, string name, string label, float width = 90f)
     {
         GameObject obj = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
         obj.transform.SetParent(parent, false);
         obj.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.15f);
-        obj.GetComponent<LayoutElement>().preferredWidth = 90f;
+        obj.GetComponent<LayoutElement>().preferredWidth = width;
 
         TMP_Text text = CreateLabel(obj.transform, name + "Label", label);
         text.fontSize = 18;
+        text.raycastTarget = false;
+        return text;
     }
 
     // StoryPanel(0.01~0.5)과 TeamPanel(0.71~0.99) 사이, 같은 높이띠에 낀다 — 기존 앵커를
@@ -964,15 +969,16 @@ public class GameHud : MonoBehaviour
         if (message != null) PlayerNotification.Show(owner.OwnerId, message);
     }
 
-    // 아이템 인벤토리 패널(2026-09-09, PM 지시) — TeamPanel(0.71~0.99, 0.70~0.95) 바로
-    // 아래 빈 자리에 둔다. 유닛 선택과 무관하게 항상 보이는 패널이라(NavigationButtonPanel과
-    // 같은 성격), 단일 선택 시에만 뜨는 05번 열(0.51~0.70)이 아니라 TeamPanel과 같은 열에
+    // 아이템 인벤토리 패널(2026-09-09, PM 지시) — TeamPanel 바로 아래에 둔다(2026-09-23부터
+    // RightColumn 레이아웃이 팀 패널 높이에 맞춰 붙인다). 유닛 선택과 무관하게 항상 보이는 패널이라,
+    // 단일 선택 시에만 뜨는 05번 열(0.51~0.70)이 아니라 TeamPanel과 같은 열에
     // 쌓는다. 칸마다 EventTrigger로 호버 시 tooltipText를 띄운다(ShowTooltip/HideCombineTooltip
     // 재사용 — 조합 카드 툴팁과 같은 함수, 새 툴팁 시스템을 만들지 않는다).
     void BuildItemInventoryPanel()
     {
-        RectTransform title = CreatePanel(transform, "ItemInventoryTitlePanel", new Color(0f, 0f, 0f, 0.6f));
-        SetAnchors(title, new Vector2(0.71f, 0.65f), new Vector2(0.99f, 0.70f));
+        // 팀 패널 바로 밑에 붙는다 — 위치는 RightColumn의 레이아웃이 정한다(화면 비율로 박지 않는다).
+        RectTransform title = CreatePanel(RightColumn(), "ItemInventoryTitlePanel", new Color(0f, 0f, 0f, 0.6f));
+        SetLayoutHeight(title, ItemTitleHeight);
         itemInventoryTitleObject = title.gameObject;
 
         TMP_Text titleText = CreateLabel(title, "ItemInventoryTitleText", "보유 아이템");
@@ -981,11 +987,8 @@ public class GameHud : MonoBehaviour
 
         for (int i = 0; i < MaxItemInventorySlots; i++)
         {
-            float top = 0.64f - i * 0.05f;
-            float bottom = top - 0.045f;
-
-            RectTransform row = CreatePanel(transform, $"ItemInventoryRow{i}", new Color(1f, 1f, 1f, 0.15f));
-            SetAnchors(row, new Vector2(0.71f, bottom), new Vector2(0.99f, top));
+            RectTransform row = CreatePanel(RightColumn(), $"ItemInventoryRow{i}", new Color(1f, 1f, 1f, 0.15f));
+            SetLayoutHeight(row, ItemRowHeight);
             itemInventoryRowRoots[i] = row.gameObject;
 
             TMP_Text label = CreateLabel(row, $"ItemInventoryRowText{i}", "");
@@ -1116,20 +1119,24 @@ public class GameHud : MonoBehaviour
     }
 
     // 항법 지속 버튼 — 유닛 선택과 무관하게 항상 보인다. 안 골랐으면 "항법 선택",
-    // 골랐으면 "항법: <이름>"으로 바뀐다(되돌릴 수 없다는 걸 상시 노출).
+    // 골랐으면 "항법: <이름>"으로 바뀐다(되돌릴 수 없다는 걸 상시 노출). 고른 뒤에도 숨기지 않는다 —
+    // 되돌릴 수 없는 선택이라 뭘 골랐는지 계속 보여야 한다(PM 확정 2026-09-23).
+    // 자리: 상단 바 메뉴·동맹·대화 줄의 맨 앞(PM 확정 2026-09-23). 예전엔 화면 가운데 위(0.51~0.70 × 0.84~0.89)에
+    // 테두리 없는 반투명 판으로 떠 있어 「내용 없는 미완성 박스」로 읽혔다(1920×1080 실측).
+    // 글자가 「항법: ④ 도움소 강화」까지 길어지므로 다른 버튼(90)보다 넓게 두고, 넘치면 글자를 줄인다.
     void BuildNavigationUI()
     {
-        RectTransform panel = CreatePanel(transform, "NavigationButtonPanel", new Color(1f, 1f, 1f, 0.15f));
-        SetAnchors(panel, new Vector2(0.51f, 0.84f), new Vector2(0.70f, 0.89f));
+        navigationButtonText = CreateTopBarButton(topBarButtons, "NavigationButton", "항법 선택", 210f);
+        navigationButtonText.enableAutoSizing = true;
+        navigationButtonText.fontSizeMin = 12f;
+        navigationButtonText.fontSizeMax = 18f;
+        navigationButtonText.textWrappingMode = TextWrappingModes.NoWrap;
 
-        Button button = panel.gameObject.AddComponent<Button>();
-        button.onClick.AddListener(OnNavigationButtonClicked);
+        GameObject panel = navigationButtonText.transform.parent.gameObject;
+        panel.transform.SetAsFirstSibling();   // 메뉴·동맹·대화는 원작 자리(오른쪽 끝) 그대로
+        panel.GetComponent<Button>().onClick.AddListener(OnNavigationButtonClicked);
 
-        navigationButtonText = CreateLabel(panel, "NavigationButtonText", "항법 선택");
-        navigationButtonText.fontSize = 16;
-        navigationButtonText.raycastTarget = false;
-
-        navigationButtonPanel = panel.gameObject;
+        navigationButtonPanel = panel;
 
         BuildNavigationModal();
     }
@@ -1451,14 +1458,55 @@ public class GameHud : MonoBehaviour
     // 세계 좌표 거리라 유닛 크기가 아니라 맵 배율을 따라간다.
     const float TransformSampleRadius = 4f * WorldScale.Value;
 
+    // 오른쪽 열: 상단 바 바로 밑(0.95)에서 아래로 팀 패널 → 「보유 아이템」 제목 → 아이템 칸을 **내용만큼** 쌓는다.
+    // 예전엔 셋이 각자 화면 비율 앵커로 박혀 있어서, 하나를 줄이면 나머지가 제자리에 떠 있었다
+    // (팀 패널을 0.86으로 줄이자 0.70~0.86이 비고 「보유 아이템」만 화면 중간에 혼자 남음, 09-23).
+    // 꺼진 칸(SetActive false)은 레이아웃 그룹이 건너뛰므로 아이템이 없으면 제목 밑이 바로 끝난다.
+    // 열 자체엔 Image가 없어 클릭을 막지 않는다. 아래 끝 0.23은 하단 바(0.22) 바로 위다.
+    RectTransform RightColumn()
+    {
+        if (rightColumn != null) return rightColumn;
+
+        GameObject obj = new GameObject("RightColumn", typeof(RectTransform), typeof(VerticalLayoutGroup));
+        obj.transform.SetParent(transform, false);
+        rightColumn = (RectTransform)obj.transform;
+        SetAnchors(rightColumn, new Vector2(0.71f, 0.23f), new Vector2(0.99f, 0.95f));
+
+        VerticalLayoutGroup layout = obj.GetComponent<VerticalLayoutGroup>();
+        layout.childAlignment = TextAnchor.UpperCenter;
+        layout.spacing = ItemRowGap;
+        layout.childControlWidth = true;
+        layout.childControlHeight = true;
+        layout.childForceExpandWidth = true;
+        layout.childForceExpandHeight = false;
+        return rightColumn;
+    }
+
+    // 옛 앵커 값을 캔버스 기준 높이(1080)로 옮긴 것 — 제목 0.05, 칸 0.045, 칸 사이 0.005.
+    const float ItemTitleHeight = 54f, ItemRowHeight = 48.6f, ItemRowGap = 5.4f;
+
+    static void SetLayoutHeight(RectTransform rect, float height)
+    {
+        LayoutElement element = rect.gameObject.AddComponent<LayoutElement>();
+        element.minHeight = height;
+        element.preferredHeight = height;
+    }
+
     void BuildTeamPanel()
     {
         // 원작 멀티보드다 — 원작에 있는 정보라 끄지 않는다([[follow-original-everywhere]]).
-        // 다만 내용은 4줄인데 상자가 화면 높이의 25%(0.70~0.95)를 먹어서 아래 「보유 아이템」과
-        // 겹쳤다(사장님 화면 2026-09-23). **끄지 말고 내용 높이에 맞춘다**(PM 지시) —
-        // 아래변을 0.70 → 0.86으로 올려 4줄 분량(화면 높이 9%)만 쓴다.
-        RectTransform teamPanel = CreatePanel(transform, "TeamPanel", new Color(0f, 0f, 0f, 0.6f));
-        SetAnchors(teamPanel, new Vector2(0.71f, 0.86f), new Vector2(0.99f, 0.95f));
+        // 다만 내용은 몇 줄인데 상자가 화면 높이의 25%(0.70~0.95)를 먹어서 아래 「보유 아이템」과
+        // 겹쳤다(사장님 화면 2026-09-23). **끄지 말고 내용 높이에 맞춘다**(PM 지시).
+        // 🔴 높이를 숫자로 박지 않는다. 0.86으로 박았더니 줄이 5줄(유닛 카운트 + 플레이어 4)이라
+        //    「플레이어 4」가 상자 밑으로 흘러나왔다(09-23 1920×1080 실측). 줄 수·플레이어 수가 바뀌어도
+        //    맞게, 패널의 레이아웃 그룹이 글자의 preferredHeight로 높이를 정한다(RightColumn 참고).
+        RectTransform teamPanel = CreatePanel(RightColumn(), "TeamPanel", new Color(0f, 0f, 0f, 0.6f));
+        VerticalLayoutGroup fit = teamPanel.gameObject.AddComponent<VerticalLayoutGroup>();
+        fit.padding = new RectOffset(8, 8, 4, 6);
+        fit.childControlWidth = true;
+        fit.childControlHeight = true;
+        fit.childForceExpandWidth = true;
+        fit.childForceExpandHeight = false;
 
         teamPanelText = CreateLabel(teamPanel, "TeamPanelText", "");
         teamPanelText.alignment = TextAlignmentOptions.TopLeft;
