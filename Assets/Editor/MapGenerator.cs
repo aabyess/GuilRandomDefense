@@ -33,7 +33,11 @@ public static class MapGenerator
     {
         public string texture;      // Assets/Textures/Map/<이름>.png
         public Color tint;
-        public float tilesPerUnit;  // 섬 크기에 비례해 반복시켜 늘어나 보이지 않게 한다
+        /// <summary>
+        /// 면적 1 × 1당 타일 몇 장. ⚠️ 이 값은 **맵 배율 1일 때** 기준이다 —
+        /// 실제로 쓸 때는 <see cref="TilesPerUnit"/>가 Scale로 나눠 준다.
+        /// </summary>
+        public float tilesPerUnit;
         public float smoothness;
 
         public Surface(string texture, Color tint, float tilesPerUnit, float smoothness)
@@ -4930,6 +4934,26 @@ public static class MapGenerator
         return "\n기존 Ground는 새 맵과 겹쳐서 비활성화했습니다.";
     }
 
+    /// <summary>
+    /// 타일 반복 횟수는 면 크기에 비례해야 하지만, **맵 배율에까지 비례하면 안 된다.**
+    ///
+    /// 🔴 2026-09-24에 난 사고: `tilesPerUnit`은 「세계 단위당 타일 수」라 절대값이다.
+    ///    맵이 4.167배 커지자 같은 바닥의 반복 횟수도 4.167배가 됐다 —
+    ///    상점 바닥이 가로 19회에서 **81회**, 우리 바닥이 25회에서 **103회**.
+    ///    화면 가로로 그렇게 촘촘해지면 밉맵·이방성 필터가 못 따라가서
+    ///    바닥이 **희끄무레한 세로 줄무늬 카펫**이 된다(사장님 「하얀 가시밭」).
+    ///
+    /// 증거: 같은 `dirt` 재질인데 흙길(가로 반복 3.2회)은 멀쩡한 갈색이고,
+    ///       우리 바닥(가로 반복 103회)만 깨졌다. 재질도 텍스처도 같고 **반복 횟수만** 달랐다.
+    ///
+    /// Scale로 나누면 타일 하나의 세계 크기가 맵과 함께 커져서 반복 횟수가 배율에
+    /// 상관없이 일정해진다. 표의 값은 「맵 배율 1일 때」의 뜻 그대로 남는다.
+    /// </summary>
+    static float TilesPerUnit(Surface surface)
+    {
+        return surface.tilesPerUnit / MapLayout.Scale;
+    }
+
     static void Paint(GameObject obj, string key, float sizeX = 1f, float sizeZ = 1f)
     {
         if (!Surfaces.TryGetValue(key, out Surface surface)) return;
@@ -4944,8 +4968,8 @@ public static class MapGenerator
         MaterialPropertyBlock block = new MaterialPropertyBlock();
         renderer.GetPropertyBlock(block);
         Vector4 tiling = new Vector4(
-            Mathf.Max(1f, sizeX * surface.tilesPerUnit),
-            Mathf.Max(1f, sizeZ * surface.tilesPerUnit), 0f, 0f);
+            Mathf.Max(1f, sizeX * TilesPerUnit(surface)),
+            Mathf.Max(1f, sizeZ * TilesPerUnit(surface)), 0f, 0f);
         block.SetVector("_BaseMap_ST", tiling);
         block.SetVector("_BumpMap_ST", tiling);
         renderer.SetPropertyBlock(block);
