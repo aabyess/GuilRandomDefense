@@ -82,6 +82,9 @@ public static class MapGenerator
 
         if (existing != null) Object.DestroyImmediate(existing);
 
+        TiledCache.Clear();
+        TiledUsed.Clear();
+
         GameObject root = new GameObject(RootName);
         StructureDresser.BeginReport();
         string seaReport = BuildSea(root.transform);
@@ -180,8 +183,9 @@ public static class MapGenerator
 
         // BindTextures가 고친 재질은 SetDirty만 걸려 있다 — 여기서 디스크에 남기지 않으면
         // 다음에 열 때 도로 빈 채로 돌아온다.
+        string sweep = SweepTiledMaterials();
         AssetDatabase.SaveAssets();
-        string textureReport = SurfaceTextureReport();
+        string textureReport = SurfaceTextureReport() + sweep;
 
         Selection.activeGameObject = root;
         EditorSceneManager.MarkSceneDirty(root.scene);
@@ -4960,25 +4964,88 @@ public static class MapGenerator
         return surface.tilesPerUnit / MapLayout.Scale;
     }
 
+    /// <summary>
+    /// 면 하나를 칠한다. 타일링은 **크기별 재질 에셋**에 담는다.
+    ///
+    /// 🔴 2026-09-24에 하루를 잡아먹은 것: 예전에는 렌더러별 `MaterialPropertyBlock`에
+    ///    `_BaseMap_ST`를 넣었다. 배칭을 지키려던 것인데, **프로퍼티 블록은 씬에 저장되지 않는다.**
+    ///    씬을 다시 열거나 스크립트를 고쳐 도메인 리로드가 한 번 돌면 통째로 날아가고,
+    ///    모든 면이 재질의 기본값 (1,1)로 돌아간다 — 256×256 한 장이 570×77 바닥에 늘어난다.
+    ///    가로 텍셀 2.2 · 세로 텍셀 0.3의 **7:1 비등방**이 되어 화면에는 희끄무레한 세로
+    ///    줄무늬 카펫으로 보였고(사장님 「하얀 가시밭」), 밉이 가로를 뭉개 **rock과 dirt가
+    ///    같은 색**으로 나왔다. 실행 중 사진은 **항상** 그 상태였다 — 플레이 모드가 씬을
+    ///    디스크에서 다시 읽기 때문이다.
+    ///
+    /// 그래서 타일 횟수마다 `.mat`을 하나씩 둔다. 정수로 반올림하는 것은 개수를 줄이려는 것이기도
+    /// 하고, 타일 경계가 면 가장자리에 맞아 이음매가 덜 보이기 때문이기도 하다.
+    /// </summary>
     static void Paint(GameObject obj, string key, float sizeX = 1f, float sizeZ = 1f)
     {
         if (!Surfaces.TryGetValue(key, out Surface surface)) return;
 
         Renderer renderer = obj.GetComponent<Renderer>();
-        renderer.sharedMaterial = GetOrCreateMaterial(key, surface);
 
-        if (surface.texture == null || surface.tilesPerUnit <= 0f) return;
+        if (surface.texture == null || surface.tilesPerUnit <= 0f)
+        {
+            renderer.sharedMaterial = GetOrCreateMaterial(key, surface);
+            return;
+        }
 
-        // 섬마다 크기가 달라 타일 횟수도 달라야 하는데, 머티리얼은 공유한다.
-        // 머티리얼을 복제하면 배칭이 깨지므로 렌더러별 프로퍼티 블록으로 타일링만 덮어쓴다.
-        MaterialPropertyBlock block = new MaterialPropertyBlock();
-        renderer.GetPropertyBlock(block);
-        Vector4 tiling = new Vector4(
-            Mathf.Max(1f, sizeX * TilesPerUnit(surface)),
-            Mathf.Max(1f, sizeZ * TilesPerUnit(surface)), 0f, 0f);
-        block.SetVector("_BaseMap_ST", tiling);
-        block.SetVector("_BumpMap_ST", tiling);
-        renderer.SetPropertyBlock(block);
+        int tilesX = Mathf.Max(1, Mathf.RoundToInt(sizeX * TilesPerUnit(surface)));
+        int tilesZ = Mathf.Max(1, Mathf.RoundToInt(sizeZ * TilesPerUnit(surface)));
+        renderer.sharedMaterial = GetOrCreateTiledMaterial(key, surface, tilesX, tilesZ);
+    }
+
+    // 한 번 생성하는 동안 Paint가 수천 번 불린다. AssetDatabase를 그때마다 두드리면 느려서
+    // 이 판에서 만든 것을 들고 있는다. 생성 시작마다 비운다.
+    static readonly Dictionary<string, Material> TiledCache = new Dictionary<string, Material>();
+    static readonly HashSet<string> TiledUsed = new HashSet<string>();
+
+    static Material GetOrCreateTiledMaterial(string key, Surface surface, int tilesX, int tilesZ)
+    {
+        string path = $"{MaterialFolder}/{key}_{tilesX}x{tilesZ}.mat";
+        TiledUsed.Add(path);
+        if (TiledCache.TryGetValue(path, out Material cached) && cached != null) return cached;
+
+        Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (material == null)
+        {
+            // 기본 재질에서 복제한다 — 색·매끄러움을 사람이 맞춰 둔 것이 있으면 그대로 따라온다.
+            material = new Material(GetOrCreateMaterial(key, surface));
+            AssetDatabase.CreateAsset(material, path);
+        }
+
+        BindTextures(material, surface);
+        Vector2 scale = new Vector2(tilesX, tilesZ);
+        if (material.GetTextureScale("_BaseMap") != scale)
+        {
+            material.SetTextureScale("_BaseMap", scale);
+            material.SetTextureScale("_BumpMap", scale);
+            EditorUtility.SetDirty(material);
+        }
+
+        TiledCache[path] = material;
+        return material;
+    }
+
+    /// <summary>
+    /// 이번 판에 안 쓰인 크기별 재질을 지운다. 안 지우면 맵 크기를 바꿀 때마다
+    /// `lane_19x7.mat` 같은 것이 쌓여서 어느 게 살아 있는지 알 수 없게 된다.
+    /// 이름이 `<키>_<가로>x<세로>.mat` 꼴인 것만 건드린다 — 손으로 만든 재질은 안 지운다.
+    /// </summary>
+    static string SweepTiledMaterials()
+    {
+        int removed = 0;
+        foreach (string guid in AssetDatabase.FindAssets("t:Material", new[] { MaterialFolder }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            string name = System.IO.Path.GetFileNameWithoutExtension(path);
+            if (!System.Text.RegularExpressions.Regex.IsMatch(name, @"^.+_\d+x\d+$")) continue;
+            if (TiledUsed.Contains(path)) continue;
+            AssetDatabase.DeleteAsset(path);
+            removed++;
+        }
+        return $" · 크기별 재질 {TiledUsed.Count}종{(removed > 0 ? $"(낡은 {removed}종 지움)" : "")}";
     }
 
     static Material GetOrCreateMaterial(string key, Surface surface)

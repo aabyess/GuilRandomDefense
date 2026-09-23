@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 /// <summary>
@@ -20,7 +21,11 @@ public static class ApronProbe
 
     // 씬에서 잰 레인1 앞치마(578.2 × 199.4). 윗면은 IslandTop = 8.
     static readonly Rect Apron = Rect.MinMaxRect(-1911.6f, 1089.4f, -1333.4f, 1288.8f);
-    const float FloorTop = 8.3f;          // 바닥 장식(두께 0.1, 윗면 8.1)보다 위만 센다
+
+    // 🔴 처음엔 8.3으로 뒀다가 크게 헤맸다. 「서 있는 것만 보겠다」고 8.3을 넘겼더니
+    //    앞치마 바로 위에 깔린 바닥(윗면 8.1)이 통째로 빠졌고, 「위에 아무것도 없다」는
+    //    답이 나왔다. 찾는 물건을 거르는 문턱을 세우면 안 된다 — 앞치마 윗면(8.0)부터 전부 본다.
+    const float FloorTop = 8.0f;
 
     [MenuItem("Tools/진단/앞치마 위에 선 것 찍기")]
     static void Probe()
@@ -118,6 +123,112 @@ public static class ApronProbe
         EditorGuards.Dialog(Title, sb.ToString(), "확인");
     }
 
+    // ── 픽셀에 직접 묻기 ──────────────────────────────────────────────────────
+    //
+    // 좌표 역산·씬 파싱·색칠은 전부 **간접**이었고 09-24에 셋 다 틀린 길로 갔다.
+    // 직접 묻는 방법은 하나다 — 카메라에서 그 픽셀 방향으로 광선을 쏴서 맞는 것을 본다.
+    //
+    // ⚠️ `Physics.Raycast`는 못 쓴다. 맵 장식은 콜라이더를 일부러 떼기 때문에(NavMesh를
+    //    망치므로) 물리로는 하나도 안 잡힌다. `HandleUtility.PickGameObject`는 GUI 문맥이
+    //    있어야 한다. 그래서 렌더러 경계상자로 후보를 추리고, 읽을 수 있는 메시는
+    //    **삼각형까지** 맞혀서 거리를 잡는다. 읽을 수 없는 메시는 경계상자 거리로 두고
+    //    「경계」라고 표시한다 — 속으면 안 되니까 어느 쪽인지 꼭 찍는다.
+    //
+    // 플레이 중에도 돌아간다. 사진이 플레이 모드면 **플레이 중에 돌려야** 같은 화면이다 —
+    // 프로퍼티 블록이나 저장 안 한 변경은 플레이 모드에서 사라지기 때문이다.
+
+    [MenuItem("Tools/진단/픽셀이 무엇인지 찍기")]
+    static void PickPixels()
+    {
+        Camera cam = Camera.main ?? Object.FindFirstObjectByType<Camera>();
+        if (cam == null) { EditorGuards.Dialog(Title, "카메라를 못 찾았습니다.", "확인"); return; }
+
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine($"카메라 {cam.transform.position} / fov {cam.fieldOfView} / " +
+                      $"{cam.pixelWidth}×{cam.pixelHeight} / {(Application.isPlaying ? "플레이 중" : "편집 중")}");
+
+        Renderer[] all = Object.FindObjectsByType<Renderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+
+        foreach (float v in new[] { 0.25f, 0.5f, 0.75f })
+        {
+            Vector3 screen = new Vector3(cam.pixelWidth * 0.5f, cam.pixelHeight * v, 0f);
+            Ray ray = cam.ScreenPointToRay(screen);
+            sb.AppendLine($"── 화면 가운데 · 높이 {v * 100:0}%  (픽셀 {screen.x:0},{screen.y:0})");
+
+            List<(float dist, Renderer r, bool exact)> hits = new List<(float, Renderer, bool)>();
+            foreach (Renderer renderer in all)
+            {
+                if (!renderer.bounds.IntersectRay(ray, out float boundsDist)) continue;
+                hits.Add(MeshHit(renderer, ray, out float meshDist)
+                    ? (meshDist, renderer, true)
+                    : (boundsDist, renderer, false));
+            }
+            hits.Sort((a, b) => a.dist.CompareTo(b.dist));
+
+            if (hits.Count == 0) { sb.AppendLine("   아무것도 안 맞음"); continue; }
+            for (int i = 0; i < Mathf.Min(3, hits.Count); i++)
+            {
+                (float dist, Renderer r, bool exact) = hits[i];
+                Vector3 p = ray.GetPoint(dist);
+                Material m = r.sharedMaterial;
+                sb.AppendLine($"   {i + 1}. {r.gameObject.name}  거리 {dist:0.#}{(exact ? "" : "(경계)")}" +
+                              $"  맞은 자리 y={p.y:0.##}  재질 {(m == null ? "없음" : m.name)}" +
+                              $"  반복 {(m == null ? Vector2.zero : m.GetTextureScale("_BaseMap"))}");
+            }
+        }
+
+        Debug.Log("[픽셀 질의] " + sb);
+        EditorGuards.Dialog(Title, sb.ToString(), "확인");
+    }
+
+    /// <summary>읽을 수 있는 메시면 삼각형까지 맞혀 정확한 거리를 준다.</summary>
+    static bool MeshHit(Renderer renderer, Ray ray, out float distance)
+    {
+        distance = 0f;
+        if (!renderer.TryGetComponent(out MeshFilter filter)) return false;
+        Mesh mesh = filter.sharedMesh;
+        if (mesh == null || !mesh.isReadable) return false;
+
+        Transform t = renderer.transform;
+        Ray local = new Ray(t.InverseTransformPoint(ray.origin), t.InverseTransformDirection(ray.direction));
+
+        Vector3[] verts = mesh.vertices;
+        int[] tris = mesh.triangles;
+        float best = float.MaxValue;
+        for (int i = 0; i < tris.Length; i += 3)
+        {
+            if (!RayTriangle(local, verts[tris[i]], verts[tris[i + 1]], verts[tris[i + 2]], out float d)) continue;
+            if (d < best) best = d;
+        }
+        if (best == float.MaxValue) return false;
+
+        // 로컬 거리는 배율이 섞여 있으니 월드로 되돌려 잰다.
+        distance = Vector3.Distance(ray.origin, t.TransformPoint(local.GetPoint(best)));
+        return true;
+    }
+
+    // Möller–Trumbore. 양면 다 맞힌다 — 안쪽에서 보는 면도 화면에 나올 수 있다.
+    static bool RayTriangle(Ray ray, Vector3 a, Vector3 b, Vector3 c, out float distance)
+    {
+        distance = 0f;
+        Vector3 ab = b - a, ac = c - a;
+        Vector3 pv = Vector3.Cross(ray.direction, ac);
+        float det = Vector3.Dot(ab, pv);
+        if (Mathf.Abs(det) < 1e-8f) return false;
+
+        float inv = 1f / det;
+        Vector3 tv = ray.origin - a;
+        float u = Vector3.Dot(tv, pv) * inv;
+        if (u < 0f || u > 1f) return false;
+
+        Vector3 qv = Vector3.Cross(tv, ab);
+        float w = Vector3.Dot(ray.direction, qv) * inv;
+        if (w < 0f || u + w > 1f) return false;
+
+        distance = Vector3.Dot(ac, qv) * inv;
+        return distance > 0f;
+    }
+
     // ── 색칠 시험 ────────────────────────────────────────────────────────────
     //
     // 여기까지 와서도 안 풀린 것은 **「사진의 그 픽셀이 정말 그 오브젝트냐」**다.
@@ -158,8 +269,11 @@ public static class ApronProbe
             done++;
         }
         AssetDatabase.SaveAssets();
+        // 🔴 저장을 빼먹어서 첫 시험이 헛돌았다(09-24). 플레이 모드는 씬을 **디스크에서 다시 읽는다** —
+        //    저장 안 한 재질 교체는 실행하는 순간 사라지고, 사진은 바꾸기 전과 똑같이 나온다.
+        EditorSceneManager.SaveOpenScenes();
         EditorGuards.Dialog(Title,
-            $"{done}개 면을 민무늬 단색으로 바꿨습니다.\n" +
+            $"{done}개 면을 민무늬 단색으로 바꾸고 **씬을 저장**했습니다.\n" +
             "상점바닥=빨강 · 우리바닥=파랑 · 앞치마=자홍 · 흙길=노랑\n\n" +
             "같은 자리에서 한 장 찍어 주세요. 끝나면 「바닥 색칠 시험 — 되돌리기」.", "확인");
     }
@@ -182,8 +296,9 @@ public static class ApronProbe
             done++;
         }
         AssetDatabase.SaveAssets();
+        EditorSceneManager.SaveOpenScenes();
         EditorGuards.Dialog(Title,
-            $"{done}개 면을 되돌렸습니다.\n\n" +
-            "⚠️ 타일링(프로퍼티 블록)은 안 돌아옵니다 — 맵을 다시 생성해야 제 값이 됩니다.", "확인");
+            $"{done}개 면을 되돌리고 씬을 저장했습니다.\n\n" +
+            "⚠️ 타일링은 맵을 다시 생성해야 제 값이 됩니다(기본 재질로 돌려놨습니다).", "확인");
     }
 }
