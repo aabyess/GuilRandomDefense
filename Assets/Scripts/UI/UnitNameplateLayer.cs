@@ -23,9 +23,23 @@ public class UnitNameplateLayer : MonoBehaviour
     [SerializeField] Vector2 labelSize = new Vector2(160f, 20f);
 
     // 거리 컬링 — 화면이 유닛으로 뒤덮이는 걸 막는다(PM 지시: "멀면 작아지거나 사라지게").
-    // fadeStartDistance부터 alpha가 선형으로 줄다가 maxDistance에서 완전히 사라진다.
-    [SerializeField] float fadeStartDistance = 35f;
-    [SerializeField] float maxDistance = 60f;
+    //
+    // 🔴 (09-23) 세계 거리 고정값(35·60)이었다. **그래서 이 기능은 한 번도 화면에 보인 적이 없다.**
+    //    옛 맵에서도 카메라 기본 거리가 68이라 60을 이미 넘었고, 맵이 4.167배가 된 뒤로는
+    //    기본 거리가 283이라 아예 말이 안 됐다. 실제 게임 화면에서 확인한 적이 없어 몰랐다.
+    //
+    //    고정 거리는 맵 배율·유닛 크기가 바뀌면 조용히 어긋난다(09-23에만 같은 병을 일곱 번 봤다).
+    //    라벨이 쓸모 있는 건 「유닛이 화면에서 알아볼 만할 때」이고, 그건 절대 거리가 아니라
+    //    **카메라 높이 대비 거리**로 정해진다. 그래서 배수로 바꿨다 — 줌을 당기면 뜨고,
+    //    빼면 사라진다. 맵을 또 키워도 따라온다.
+    //    (기본값은 카메라 기본 높이 216·거리 283 기준으로 잡았다: 283 ÷ 216 = 1.31이므로
+    //     1.6에서 흐려지기 시작해 2.6에서 사라진다 = 기본 줌에서는 또렷하게 보인다.)
+    [SerializeField] float fadeStartHeights = 1.6f;
+    [SerializeField] float maxHeights = 2.6f;
+
+    // 유닛이 서는 섬 윗면 높이. MapLayout.IslandTop(에디터 전용 상수)과 같은 값이다 —
+    // 런타임에서 그 상수를 못 보므로 여기 적는다. 섬 높이를 바꾸면 여기도 같이 바꿀 것.
+    const float GroundY = 8f;
 
     class Label
     {
@@ -119,6 +133,13 @@ public class UnitNameplateLayer : MonoBehaviour
 
         int used = 0;
         Vector3 camPos = cam.transform.position;
+
+        // 문턱을 **카메라 높이에 비례**해서 매 프레임 다시 잡는다(위 🔴 주석 참고).
+        // 유닛이 서는 땅 높이(MapLayout.IslandTop = 8)를 빼서 「지면에서 얼마나 떠 있나」로 센다 —
+        // 섬 높이가 또 바뀌어도 값이 안 어긋난다. 바닥에 붙어도 1 밑으로는 안 내려가게 막는다.
+        float camAboveGround = Mathf.Max(1f, camPos.y - GroundY);
+        float maxDistance = camAboveGround * maxHeights;
+        float fadeStartDistance = camAboveGround * fadeStartHeights;
 
         foreach (UnitIdentity identity in UnitIdentity.Active)
         {
