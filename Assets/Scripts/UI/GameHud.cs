@@ -35,12 +35,18 @@ public class GameHud : MonoBehaviour
 
     // 하단 바 높이(화면 비율)와 미니맵 칸 윗변(화면 비율). 미니맵만 하단 바 위로 솟는다(BuildUI의 MinimapPanel 주석).
     // MinimapTop 고르는 법 — 1920×1080 기준:
-    //   0.43 (가) 약 442×442 정사각 · 맵 배율 약 2배 · 왼쪽 아래 3D 화면을 약 442×230px 더 가린다  ← 지금(PM 확정 2026-09-23)
+    //   0.43 (가) 약 442×442 정사각 · 맵 배율 약 2배 · 왼쪽 아래 3D 화면을 약 442×230px 더 가린다
     //   0.32 (나) 약 442×330 · 배율 약 1.5배 · 가림 절반
-    //   0.22 (라) 하단 바 안(옛 모양, 약 442×214)
-    // 사장님이 「3D 화면이 가린다」고 하시면 이 숫자 하나만 낮춘다. 미니맵 그림은 칸 비율을 따라가므로(MinimapCamera) 다른 곳은 안 고친다.
+    //   0.22 (라) 하단 바 안(옛 모양, 약 442×214)  ← 지금
+    //
+    // 🔴 2026-09-24 사장님 「미니맵 크기가 너무 큰데?」 → (가) 0.43에서 (라) 0.22로 되돌렸다.
+    //    (가)는 구현담당2가 「화면 가림이 늘어나니 사장님 확인이 필요하면 받으라」고 경고한 안인데
+    //    PM이 **안 여쭙고 승인**했다. 팀원이 보낸 스크린샷만 보고 「통과」라고 했지, 3D 화면을
+    //    얼마나 가리는지는 실제 플레이 화면에서 판단하지 않았다.
+    //    교훈: **화면을 덮는 변경은 만든 사람 말고 보는 사람이 판정한다.**
+    // 사장님이 「너무 작다」고 하시면 이 숫자 하나만 올린다. 미니맵 그림은 칸 비율을 따라가므로(MinimapCamera) 다른 곳은 안 고친다.
     const float BottomBarHeight = 0.22f;
-    const float MinimapTop = 0.43f;
+    const float MinimapTop = 0.22f;
     const int CommandColumns = 4;
     const int TeamSlotCount = 4;
     const int MaxSelectionCards = 12;
@@ -55,6 +61,9 @@ public class GameHud : MonoBehaviour
     TMP_Text unitInfoPortraitInitial;
     GameObject unitInfoPortraitSlotObject;
     TMP_Text goldWoodText;
+    TMP_Text wispCountText;
+    int lastWispCount = -1;
+    float nextWispCountTime;
     TMP_Text roundTimeText;
     TMP_Text teamPanelText;
     RectTransform rightColumn;   // 팀 패널 + 보유 아이템을 위에서부터 쌓는 오른쪽 열(RightColumn())
@@ -383,6 +392,19 @@ public class GameHud : MonoBehaviour
         SetAnchors(minimapPanel, new Vector2(0.01f, BottomBarHeight * 0.05f), new Vector2(0.24f, MinimapTop));
         BuildMinimap(minimapPanel);
         AddPanelBorder(minimapPanel, BorderColor, BorderThickness);
+
+        // 🔴 미니맵 바로 위 위습 개수 (사장님 지시 2026-09-24: 「랜덤위습도 시간지나서 추가되면
+        //    미니맵 위쪽에 위습 몇개 있는지 뜨게 해주고 원랜디처럼」).
+        //    원작도 미니맵 위에 내 위습 수가 붙어 있다. 라운드 보상으로 위습이 늘어나는데
+        //    지금은 맵을 훑어 세야만 알 수 있었다.
+        //    ⚠️ 하단 바가 아니라 HUD 루트에 붙인다 — 미니맵 칸 높이(MinimapTop)를 바꿔도 따라오게
+        //    아래변을 MinimapTop에 맞춘다. 숫자를 박으면 오늘처럼 미니맵을 옮길 때 어긋난다.
+        RectTransform wispPanel = CreatePanel(transform, "WispCountPanel", SlotColor);
+        SetAnchors(wispPanel, new Vector2(0.01f, MinimapTop), new Vector2(0.24f, MinimapTop + 0.035f));
+        AddPanelBorder(wispPanel, BorderColor, BorderThickness);
+        wispCountText = CreateLabel(wispPanel, "WispCountText", "위습 0");
+        SetAnchors((RectTransform)wispCountText.transform, new Vector2(0.04f, 0f), new Vector2(0.96f, 1f));
+        wispCountText.alignment = TextAlignmentOptions.Left;
 
         RectTransform infoPanel = CreatePanel(bar, "UnitInfoPanel", SlotColor);
         SetAnchors(infoPanel, new Vector2(0.25f, 0.05f), new Vector2(0.81f, 0.95f));
@@ -2567,6 +2589,31 @@ public class GameHud : MonoBehaviour
                     ? $"라운드 {round}   준비 {timeTenths / 10f:F1}s"
                     : $"라운드 {round}   남은시간 {timeTenths / 10f:F1}s";
         }
+
+        RefreshWispCount();
+    }
+
+    // 미니맵 위 위습 개수. 매 프레임 맵을 훑으면 비싸니 0.5초에 한 번만 센다 —
+    // 위습은 라운드 보상으로 늘고 포탈에 넣으면 줄어드는, 초 단위로 안 바뀌는 값이다
+    // (DebugHud.CountOwnedWisps와 같은 주기·같은 방식).
+    void RefreshWispCount()
+    {
+        if (wispCountText == null) return;
+        if (Time.unscaledTime < nextWispCountTime) return;
+        nextWispCountTime = Time.unscaledTime + 0.5f;
+
+        int localPlayerId = LocalPlayer.LocalPlayerId;
+        int count = 0;
+        foreach (Wisp wisp in FindObjectsByType<Wisp>(FindObjectsSortMode.None))
+        {
+            if (wisp == null || wisp.Data == null) continue;
+            if (wisp.TryGetComponent(out OwnedByPlayer owner) && owner.OwnerId != localPlayerId) continue;
+            count++;
+        }
+
+        if (count == lastWispCount) return;
+        lastWispCount = count;
+        wispCountText.text = $"위습 {count}";
     }
 
     // 팀 현황판 값은 자주 안 바뀌므로(적/골드/목재), 이전 프레임과 비교해 실제로 바뀐 경우에만

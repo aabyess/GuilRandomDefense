@@ -228,36 +228,29 @@ public class CombineSystem : MonoBehaviour
         return context != null ? context.PlayerId : LocalPlayer.LocalPlayerId;
     }
 
-    // 결과는 재료가 서 있던 자리에서 나온다. 단 창고 개체는 바다 건너 창고 섬에 있어서,
-    // 창고와 필드 개체를 같이 평균 내면 그 사이 바다 한가운데가 나온다 — 필드에 있던 것만 센다.
+    // 🔴 조합 결과는 **그 플레이어 레인의 한가운데**에 나온다 (사장님 지시 2026-09-24:
+    //    「흔함 조합해서 나오는것들은 각 레인의 맵 가운데에 배치하게해야하지」).
+    //
+    //    그 전에는 **재료가 서 있던 자리의 평균**이었다. 그러면 조합할 때마다 결과가 우리 근처나
+    //    레인 구석에 흩어져 나와서, 새로 만든 유닛을 찾아 옮기는 일이 매번 생겼다.
+    //    가운데에서 나오면 어디서 조합했든 나오는 자리가 늘 같다.
+    //
+    //    LaneCenter는 레인 섬 오브젝트 자신의 위치라 곧 기하학적 한가운데다(LaneMarker 주석).
+    //    옛 평균 방식이 신경 쓰던 「창고 개체는 바다 건너에 있어 같이 평균 내면 바다가 나온다」는
+    //    문제도 같이 사라진다 — 재료 위치를 아예 안 본다.
     Vector3 ResolveResultPosition(List<UnitIdentity> materials, UnitData result, int ownerId)
     {
         LaneMarker lane = LaneMarker.Get(ownerId);
-        Vector3 fallback = lane != null ? lane.TakeSpawnPosition(result) : transform.position;
+        if (lane == null) return transform.position;
 
-        Warehouse warehouse = OwnerWarehouse;
-        Vector3 sum = Vector3.zero;
-        int counted = 0;
-
-        foreach (UnitIdentity material in materials)
-        {
-            if (material == null) continue;
-            if (warehouse != null && warehouse.Contains(material.gameObject)) continue;
-
-            sum += material.transform.position;
-            counted++;
-        }
-
-        if (counted == 0) return fallback;
-
-        // 평균이 바다나 벽 안으로 떨어질 수 있다(레인 유닛과 창고 유닛의 중간 등).
+        // 가운데가 NavMesh 밖일 수 있다(그 자리에 건물이 서 있는 등).
         // NavMesh 밖에 스폰된 NavMeshAgent는 경로를 못 잡고 그 자리에 굳는다 —
         // UnitMover.TryMoveToCursor가 이동 목적지에 같은 검사를 한다.
         // 지상 유닛 자리를 바다에서 찾지 않도록 그 유닛이 실제로 쓸 areaMask로 본다.
         int areaMask = UnitSpawner.ComputeAreaMask(result.movementAbility);
-        return NavMesh.SamplePosition(sum / counted, out NavMeshHit hit, ResultSampleRadius, areaMask)
+        return NavMesh.SamplePosition(lane.LaneCenter, out NavMeshHit hit, ResultSampleRadius, areaMask)
             ? hit.position
-            : fallback;
+            : lane.TakeSpawnPosition(result);   // 가운데를 못 쓰면 예전대로 빈 자리로
     }
 
     bool CanAfford(CombineRecipe recipe, bool pickForExecution,
