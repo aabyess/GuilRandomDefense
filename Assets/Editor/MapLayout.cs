@@ -24,7 +24,31 @@ public static class MapLayout
     // 맵 전체 배율과 같이 커진다(MapGenerator.SetUpCamera의 maxHeight·CameraMargin도 같은
     // 배율로 맞췄다). IslandTop·IslandThickness는 Y축(높이·두께)이라 그대로 둔다.
     public const float SeaSize = 1600f * Scale;
-    public const float IslandTop = 1f;      // 섬 윗면 높이 — 바다보다 한 단 높아 지상 유닛이 넘어가지 못한다
+
+    /// <summary>
+    /// NavMesh 굽기 복셀 크기. MapGenerator.BuildNavMesh가 이 값을 쓴다.
+    ///
+    /// 🔴 **이 값과 <see cref="IslandTop"/>은 한 쌍이다. 하나만 바꾸면 조용히 깨진다.**
+    /// Recast는 한 기둥에서 윗면이 가까운 두 층을 **한 층으로 합치고 영역 번호는 큰 쪽을 남긴다.**
+    /// 바다 윗면(y=0, Sea 영역 3)과 섬 윗면이 복셀 두 칸 안으로 붙으면 섬 윗면까지 **바다로**
+    /// 구워지고, 지상 유닛은 areaMask에서 Sea가 빠져 있어 **섬 안으로 못 들어간다.**
+    ///
+    /// 2026-09-23에 실제로 그랬다. 맵이 4.167배가 되며 넓이가 17배가 되자 굽기가 무거워져
+    /// 복셀을 0.5 → 2.0으로 올렸는데, 섬 윗면 높이 1은 "Y축이라 안 탄다"며 그대로 뒀다.
+    /// 높이 차 1 &lt; 복셀 2.0이라 두 면이 한 층으로 합쳐졌고, 레인 섬 윗면의 **89%가 바다 영역**이
+    /// 됐다(땅 칸 3000개 중 걸을 수 있는 곳 344개). Y를 안 키운 것 자체는 맞았지만
+    /// **복셀을 4배로 키운 것과의 관계를 아무도 안 봤다.**
+    ///
+    /// 그래서 IslandTop을 이 값에서 유도한다. 복셀을 또 바꾸면 섬 높이가 따라온다.
+    /// </summary>
+    public const float NavMeshVoxelSize = 2f;
+
+    /// <summary>
+    /// 섬 윗면 높이 — 바다보다 높아 지상 유닛이 넘어가지 못한다.
+    /// 복셀 **네 칸**(합쳐지지 않는 최소는 두 칸)으로 여유를 둔다. 위 주석 참고.
+    /// </summary>
+    public const float IslandTop = NavMeshVoxelSize * 4f;   // 8
+
     public const float IslandThickness = 1f;
     public const int SeaAreaIndex = 3;      // ProjectSettings/NavMeshAreas.asset 3번 = Sea
 

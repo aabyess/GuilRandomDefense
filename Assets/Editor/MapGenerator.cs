@@ -20,7 +20,11 @@ public static class MapGenerator
     const string TextureFolder = "Assets/Textures/Map";
     const string Title = "맵 생성";
     const float GrassThickness = 0.35f;   // 잔디 윗면 두께
-    const float CliffHeight = 2.2f;       // 바위 치마 높이 (바다 아래까지 내려간다)
+    // 바위 치마 높이 (바다 아래까지 내려간다). 윗면은 늘 잔디 밑면(IslandTop − GrassThickness)에
+    // 붙으므로, 아랫면이 바다 상자 바닥(−IslandThickness)보다 내려가려면 이만큼은 돼야 한다.
+    // 2026-09-23에 IslandTop이 1 → 8이 되면서(NavMeshVoxelSize 주석 참고) 2.2로는 섬이 공중에
+    // 떴다 — 치마가 수면까지 못 닿았다. 8.65가 최소고 여유를 둬 10으로 잡는다.
+    const float CliffHeight = 10f;
     const float CliffOverhang = 3.5f;     // 잔디보다 얼마나 넓게 나올지
 
     // 구역을 색으로만 구분하면 원랜디 느낌이 안 난다. 잔디/물/바위 텍스처를 깔고
@@ -4813,7 +4817,7 @@ public static class MapGenerator
         // 칸 수가 같이 17배가 돼서 굽기가 무거워진다. 0.5→2.0으로 올려 칸 수 증가를 상쇄한다
         // (유닛 반지름 0.28 기준으로도 이 정도 거칠기면 통행에는 지장이 없다).
         surface.overrideVoxelSize = true;
-        surface.voxelSize = 2.0f;
+        surface.voxelSize = MapLayout.NavMeshVoxelSize;
         surface.overrideTileSize = true;
         surface.tileSize = 256;
 
