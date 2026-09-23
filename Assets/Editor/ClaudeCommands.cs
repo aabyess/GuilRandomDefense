@@ -913,6 +913,11 @@ public static class ClaudeCommands
     //   · spawn:<유닛>  클릭이 끝난 뒤 플레이어 1(0번 레인) 적 경로 안쪽, **경로에서 사거리 절반 거리**에 그 유닛을 세운다
     //                  (Assets/Data/Units/Roster/<유닛>.asset). 기다리는 동안 0번 레인 적의 체력 감소를 0.25초마다 세서
     //                  「적 한 마리당 몇 대 맞았나」·총 피해·골드 변화를 결과에 싣는다 — 사거리·공속 검증용(2026-09-23 PM 승인 (B)).
+    //                  `spawn:<유닛>@pen`이면 **실제 뽑기와 같은 자리**(LaneMarker.TakeSpawnPosition → 우리)에 세운다.
+    //                  2026-09-23 이름표를 경로 안쪽(spawn: 기본 자리)에서만 확인하고 「고쳤다」고 보고했는데, 플레이어 유닛은
+    //                  우리에 생겨 사장님 화면에선 여전히 안 보였다 — 시험 자리가 보는 사람 자리와 달랐다. 그래서 둘 다 화면 좌표를 찍는다.
+    //                  같은 날 교훈 하나 더: **계산이 맞는지 전에 그 값이 실제로 쓰이는지 본다** — 씬에 적힌 편집 시점 카메라 값으로
+    //                  계산했는데 실행하면 RtsCameraController.FocusOnLocalLane이 덮어써 헛계산이 됐다. 판정은 이 명령의 👁 줄(실행 중 실측)로.
     //                  `spawn:<유닛>@corner`면 레인 안쪽 **모서리**(경로가 두 변으로 지나는 자리)에 대각선으로 세운다 —
     //                  원작 플레이어가 실제로 서는 자리. 모서리가 여러 개면 돌아가며 쓴다.
     //                  🔴 **에디터 촬영 전용.** 뽑기·골드를 거치지 않고 유닛을 만든다 — 게임 코드(Assets/Scripts)로 옮기면 치트가 된다.
@@ -1104,6 +1109,7 @@ public static class ClaudeCommands
             case "spawning":
                 if (job.clickIndex > 0 && inStage < GameShotClickGap) break;   // 마지막 클릭(난이도 등)이 반영될 틈
                 spawnedUnits.Clear();
+                shotUnits.Clear();
                 theoreticalDps = 0f;
                 enemyPresentSeconds = 0f;
                 lastWatchTime = watchStartTime = EditorApplication.timeSinceStartup;
@@ -1126,7 +1132,12 @@ public static class ClaudeCommands
                 if (job.spawns.Count > 0) WatchLaneHits();
                 if (inStage >= job.seconds)
                 {
-                    if (job.spawns.Count > 0) job.report += DescribeLaneHits(job, inStage);
+                    if (job.spawns.Count > 0)
+                    {
+                        job.report += DescribeLaneHits(job, inStage);
+                        foreach (GameObject shotUnit in shotUnits)
+                            job.report += $"   👁 찍는 순간 {(shotUnit != null ? shotUnit.name : "(사라짐)")}: {DescribeOnScreen(shotUnit)}\n";
+                    }
                     ScreenCapture.CaptureScreenshot(job.file, job.superSize);   // 이 프레임 끝에 Game 뷰(UI 포함)를 파일로 쓴다
                     Advance(job, "capturing");
                 }
@@ -1310,14 +1321,31 @@ public static class ClaudeCommands
     {
         string unitName = spec.Split('@')[0];
         bool corner = spec.EndsWith("@corner");
+        bool pen = spec.EndsWith("@pen");
         UnitData data = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{unitName}.asset");
         UnitSpawner spawner = UnityEngine.Object.FindFirstObjectByType<UnitSpawner>();
         LaneMarker lane = LaneMarker.Get(0);
         if (data == null || spawner == null || lane == null)
             return $"❌ 소환 실패 {unitName}: 에셋 {(data != null)} · UnitSpawner {(spawner != null)} · 0번 레인 {(lane != null)}";
 
+        if (pen)
+        {
+            // 실제 뽑기 경로 그대로 — 자리를 받아 Spawn에 넘긴다(Spawn 안에서 NavPlacement가 NavMesh에 붙인다). 옮기지 않는다.
+            Vector3 penPosition = lane.TakeSpawnPosition(data);
+            GameObject penUnit = spawner.Spawn(data, penPosition, 0);
+            if (penUnit == null) return $"❌ 소환 실패 {unitName}: Spawn이 null(프리팹 없음?)";
+            shotUnits.Add(penUnit);
+            bool penOnMesh = penUnit.TryGetComponent(out NavMeshAgent penAgent) && penAgent.isOnNavMesh;
+            spawnedUnits.Add((unitName, penOnMesh, true));   // 우리는 싸우는 자리가 아니라 사거리는 따지지 않는다
+            UnitAttacker penAttacker = penUnit.GetComponent<UnitAttacker>();
+            if (penAttacker != null && penAttacker.AttackInterval > 0f) theoreticalDps += penAttacker.AttackDamage / penAttacker.AttackInterval;
+            return $"🧍 소환 {unitName} → **우리**(TakeSpawnPosition {penPosition}) · 실제 위치 {penUnit.transform.position} · NavMesh 위 {(penOnMesh ? "✅" : "❌")}\n" +
+                   $"      소환 직후 {DescribeOnScreen(penUnit)}";
+        }
+
         GameObject unit = spawner.Spawn(data, lane.LaneCenter, 0);
         if (unit == null) return $"❌ 소환 실패 {unitName}: Spawn이 null(프리팹 없음?)";
+        shotUnits.Add(unit);
         UnitAttacker attacker = unit.GetComponent<UnitAttacker>();
         float range = attacker != null ? attacker.AttackRange : 0f;
 
@@ -1409,6 +1437,27 @@ public static class ClaudeCommands
     static double lastWatchTime, watchStartTime;
     static int lastGold = int.MinValue;
     static readonly List<string> eventLog = new List<string>();
+    static readonly List<GameObject> shotUnits = new List<GameObject>();
+
+    // 유닛 머리(렌더러 경계 윗면 가운데)가 지금 카메라 화면 안인가 — 이름표(UnitNameplateLayer)가 쓰는 판정과 같다(screenPos.z > 0).
+    static string DescribeOnScreen(GameObject unit)
+    {
+        Camera cam = Camera.main;
+        if (cam == null) return "화면: Camera.main 없음";
+        if (unit == null) return "화면: 유닛이 사라짐";
+        Bounds? b = null;
+        foreach (Renderer r in unit.GetComponentsInChildren<Renderer>())
+        {
+            if (b == null) b = r.bounds;
+            else { Bounds x = b.Value; x.Encapsulate(r.bounds); b = x; }
+        }
+        Vector3 head = b != null ? new Vector3(b.Value.center.x, b.Value.max.y, b.Value.center.z) : unit.transform.position;
+        Vector3 sp = cam.WorldToScreenPoint(head);
+        bool inFront = sp.z > 0f;
+        bool inside = inFront && sp.x >= 0f && sp.x <= cam.pixelWidth && sp.y >= 0f && sp.y <= cam.pixelHeight;
+        string verdict = inside ? "✅ 화면 안" : !inFront ? "❌ 카메라 **뒤**(screenPos.z ≤ 0 → 이름표 건너뜀)" : "❌ 화면 밖(앞이지만 가장자리 너머)";
+        return $"화면: {verdict} · 머리 screenPos ({sp.x:F0}, {sp.y:F0}, z {sp.z:F1}) / 화면 {cam.pixelWidth}×{cam.pixelHeight} · 카메라 {cam.transform.position} 방향 {cam.transform.forward}";
+    }
     // 라운드가 바뀌는 순간 0번 레인에 남은 적 수 — 「적이 쌓이면 레인당 70에서 패배」를 보려고.
     static int watchedRound = -1, maxLaneEnemies;
     static readonly List<string> roundLog = new List<string>();

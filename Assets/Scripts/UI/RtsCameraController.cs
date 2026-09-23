@@ -65,6 +65,7 @@ public class RtsCameraController : MonoBehaviour
         string source;
 
         LaneMarker lane = LaneMarker.Get(laneIndex);
+        if (lane != null && FrameLaneAndPen(lane)) return;
         if (lane != null)
         {
             center = lane.transform.position;
@@ -92,6 +93,154 @@ public class RtsCameraController : MonoBehaviour
 
         Debug.Log($"[카메라] {laneIndex}번 레인({source}) 중심 {center}, 크기 {extent:F0} " +
                   $"→ 높이 {targetHeight:F0}, 카메라 위치 {transform.position}, 회전 {transform.eulerAngles}");
+    }
+
+    // ─────────────── 시작 구도: 레인 섬 + 우리를 HUD 사이 보이는 띠 안에 ───────────────
+    //
+    // 🔴 2026-09-23 사장님 「아직도 유닛 위에 이름이 안 보인다」. 예전엔 레인 섬 **중심을 화면 가운데**에 뒀는데,
+    //    ① 뽑은 유닛은 섬 **밖 아래** 우리(LaneMarker.TakeSpawnPosition)에 생기고
+    //    ② 기울어진 카메라는 가운데 아래쪽을 훨씬 짧게 보며(높이 425·50.4°에서 가운데→아래 끝 279, →위 끝 791)
+    //    ③ 하단 HUD가 화면 아래 22%를 또 덮는다.
+    //    그래서 새 유닛이 화면 아래 끝 너머에 생겼다(gameshot @pen 실측: 머리 screenPos y −187, HUD 윗선 238).
+    //    이름표 코드는 멀쩡했다 — 시험을 경로 안쪽(보이는 자리)에서만 해서 「고쳤다」고 잘못 보고했다.
+    // 그래서 **가운데 맞추기를 버리고** 광선으로 맞춘다: 우리 앞쪽 끝이 「하단 바 윗선 바로 위」에 오게 카메라를 밀고,
+    // 섬 먼 끝과 좌우가 상단 바 아래·화면 안에 들 때까지 높이를 올린다. HUD 높이는 **실제 배치에서 읽는다**(숫자 안 박음).
+    // 수렴 못 하면 경고를 남기고 그 자리에 둔다 — 조용히 이상한 높이로 끝내지 않는다.
+    // 🔴 **계산이 맞는지 보기 전에, 그 값이 실제로 쓰이는지 본다.** MapGenerator.SetUpCamera가 씬에 적는 시작 카메라 값
+    //    (09-23: 높이 216.7·z 1432.4)은 실행하면 이 함수가 **덮어쓴다**(실측 높이 425.5·z 1224.9). 그 편집 시점 값으로 계산해
+    //    「높이 338.7로 올리자」까지 갔었는데, 넣었으면 화면이 한 픽셀도 안 바뀌었다. 시작 구도는 여기서만 정해진다.
+
+    const int FrameIterations = 10;
+    const float FrameMarginRatio = 0.03f;   // 보이는 띠 높이의 3%씩 위아래 여유
+    const float FrameHeightStep = 1.15f;
+
+    bool FrameLaneAndPen(LaneMarker lane)
+    {
+        Camera cam = GetComponent<Camera>();
+        Vector3 planar = Vector3.ProjectOnPlane(transform.forward, Vector3.up);
+        // 이 구도는 카메라가 z축을 따라 볼 때만 뜻이 있다(우리 맵은 +z를 본다). 아니면 예전 방식으로.
+        if (cam == null || Mathf.Abs(planar.z) < Mathf.Abs(planar.x)) return false;
+
+        Transform island = lane.transform;
+        Bounds region = new Bounds(island.position, island.lossyScale);   // 섬은 스케일된 큐브다
+        bool hasPen = TryGetPenBounds(lane, out Bounds pen);
+        if (hasPen) region.Encapsulate(pen);
+        float groundY = island.position.y + island.lossyScale.y * 0.5f;
+
+        (float bottom, float top, string hudSource) = VisibleViewportBand();
+        float margin = (top - bottom) * FrameMarginRatio;
+        float nearViewportY = bottom + margin, farViewportY = top - margin;
+
+        bool towardPlusZ = planar.z > 0f;
+        float nearZ = towardPlusZ ? region.min.z : region.max.z;
+        float farZ = towardPlusZ ? region.max.z : region.min.z;
+
+        float height = Mathf.Clamp(HeightToCover(region.size.z), minHeight, maxHeight);
+        bool converged = false;
+        int iteration;
+        for (iteration = 0; iteration < FrameIterations; iteration++)
+        {
+            // 높이를 정하고, 가로는 영역 가운데에 맞춘 뒤, 「보이는 띠 아래 끝」 광선이 우리 앞쪽 끝에 닿게 z를 민다.
+            Vector3 position = transform.position;
+            position.y = height;
+            transform.position = position;
+            position.x = region.center.x - FocusOffset().x;
+            transform.position = position;
+
+            if (!RayToGround(cam.ViewportPointToRay(new Vector3(0.5f, nearViewportY, 0f)), groundY, out Vector3 nearHit)) break;
+            position.z += nearZ - nearHit.z;
+            transform.position = position;
+
+            // 먼 끝(좌우 두 모서리)과 앞쪽 좌우 모서리가 띠 안·화면 안인가.
+            if (InBand(cam, new Vector3(region.min.x, groundY, farZ), nearViewportY, farViewportY) &&
+                InBand(cam, new Vector3(region.max.x, groundY, farZ), nearViewportY, farViewportY) &&
+                InBand(cam, new Vector3(region.min.x, groundY, nearZ), nearViewportY - margin, farViewportY) &&
+                InBand(cam, new Vector3(region.max.x, groundY, nearZ), nearViewportY - margin, farViewportY))
+            {
+                converged = true;
+                break;
+            }
+            if (height >= maxHeight) break;
+            height = Mathf.Min(height * FrameHeightStep, maxHeight);
+        }
+
+        Vector3 unclamped = transform.position;
+        Vector3 clamped = unclamped;
+        clamped.x = Mathf.Clamp(clamped.x, boundsMin.x, boundsMax.x);
+        clamped.z = Mathf.Clamp(clamped.z, boundsMin.y, boundsMax.y);
+        transform.position = clamped;
+        targetHeight = transform.position.y;
+
+        string report = $"[카메라] 레인 {lane.LaneIndex} 시작 구도 — 섬{(hasPen ? "+우리" : "(우리 못 찾음)")} z {region.min.z:F0}~{region.max.z:F0} · " +
+                        $"보이는 띠 뷰포트 {bottom:F2}~{top:F2}({hudSource}) · 높이 {transform.position.y:F0} · 위치 {transform.position} · 반복 {iteration + 1}";
+        if (!converged || clamped != unclamped)
+            Debug.LogWarning(report + (converged ? "" : $" — ⚠️ {FrameIterations}번 안에(또는 최대 높이 {maxHeight:F0}에서) 다 못 담았다") +
+                             (clamped != unclamped ? $" — ⚠️ 이동 범위에 걸려 {unclamped} → {clamped}로 잘렸다" : ""), this);
+        else
+            Debug.Log(report, this);
+        return true;
+    }
+
+    static bool InBand(Camera cam, Vector3 world, float minViewportY, float maxViewportY)
+    {
+        Vector3 v = cam.WorldToViewportPoint(world);
+        return v.z > 0f && v.x >= 0f && v.x <= 1f && v.y >= minViewportY - 0.001f && v.y <= maxViewportY + 0.001f;
+    }
+
+    static bool RayToGround(Ray ray, float groundY, out Vector3 hit)
+    {
+        hit = Vector3.zero;
+        if (ray.direction.y >= -0.0001f) return false;
+        float t = (groundY - ray.origin.y) / ray.direction.y;
+        if (t <= 0f) return false;
+        hit = ray.origin + ray.direction * t;
+        return true;
+    }
+
+    static bool TryGetPenBounds(LaneMarker lane, out Bounds bounds)
+    {
+        bounds = default;
+        Transform pen = lane.UnitPen;
+        if (pen == null) return false;
+        bool any = false;
+        foreach (Renderer r in pen.GetComponentsInChildren<Renderer>())
+        {
+            if (!any) { bounds = r.bounds; any = true; }
+            else bounds.Encapsulate(r.bounds);
+        }
+        foreach (Vector3 slot in lane.FirstRowSlotPositions())
+        {
+            if (!any) { bounds = new Bounds(slot, Vector3.zero); any = true; }
+            else bounds.Encapsulate(slot);
+        }
+        return any;
+    }
+
+    // 화면에서 3D가 실제로 보이는 세로 띠(뷰포트 0~1) — 하단 바 윗선 ~ 상단 바 아랫선. GameHud가 **실제로 배치한** 판을 읽는다
+    // (상수를 옮겨 적으면 하단 바를 바꿀 때 또 어긋난다 — 2026-09-23 미니맵·팀 패널에서 같은 병). 못 찾으면 화면 전체.
+    static (float bottom, float top, string source) VisibleViewportBand()
+    {
+        Canvas.ForceUpdateCanvases();
+        float bottom = 0f, top = 1f;
+        string source = "HUD 못 찾음 — 화면 전체";
+        if (TryScreenYRange("BottomBar", out float _, out float bottomBarTop)) { bottom = bottomBarTop; source = "하단 바"; }
+        if (TryScreenYRange("TopBar", out float topBarBottom, out float _)) { top = topBarBottom; source += "·상단 바"; }
+        if (top - bottom < 0.2f) return (0f, 1f, $"HUD 띠가 비정상({bottom:F2}~{top:F2}) — 화면 전체");
+        return (bottom, top, source);
+    }
+
+    static bool TryScreenYRange(string objectName, out float minViewportY, out float maxViewportY)
+    {
+        minViewportY = maxViewportY = 0f;
+        GameObject found = GameObject.Find(objectName);
+        if (found == null || !(found.transform is RectTransform rect) || Screen.height <= 0) return false;
+        Canvas canvas = rect.GetComponentInParent<Canvas>();
+        if (canvas == null || canvas.renderMode != RenderMode.ScreenSpaceOverlay) return false;   // 오버레이면 월드 모서리 = 화면 픽셀
+        Vector3[] corners = new Vector3[4];
+        rect.GetWorldCorners(corners);
+        minViewportY = Mathf.Min(corners[0].y, corners[2].y) / Screen.height;
+        maxViewportY = Mathf.Max(corners[0].y, corners[2].y) / Screen.height;
+        return true;
     }
 
     /// <summary>지면에서 세로로 span만큼 담기려면 필요한 카메라 높이.</summary>

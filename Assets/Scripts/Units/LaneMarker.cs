@@ -79,6 +79,9 @@ public class LaneMarker : MonoBehaviour
     // 에디터 전용이라 런타임 스크립트가 못 읽는다 — 여기서 다시 노출해야 하는 이유다.
     public Vector3 LaneCenter => transform.position;
 
+    /// <summary>새 유닛이 생기는 우리(TakeSpawnPosition의 자리). 시작 카메라가 섬과 함께 이걸 화면에 담는다(RtsCameraController).</summary>
+    public Transform UnitPen => unitPen;
+
     /// <summary>
     /// 이 레인 소유 유닛이 새로 생겨날 자리. 우리가 없으면 레인 한가운데.
     ///
