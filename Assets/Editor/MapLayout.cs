@@ -97,6 +97,9 @@ public static class MapLayout
         UnitGrade.Uncommon, UnitGrade.Special,
         UnitGrade.Rare, UnitGrade.Legendary, UnitGrade.Limited,
         UnitGrade.Hidden,
+        // 2026-09-23 사장님 지시 — 불멸·영원도 표에 올린다. 스킨이 다 들어와 인형으로 서기 때문에
+        // "조합식 없이 전시만" 하던 이유가 사라졌다. 초월은 가로줄 전시 섬이 따로 있어 그대로 둔다.
+        UnitGrade.Immortal, UnitGrade.Eternal,
     };
 
     // 뽑기 섬 왼쪽 열: 등급 내 랜덤으로 지급하는 포탈.

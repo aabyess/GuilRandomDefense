@@ -1725,7 +1725,7 @@ public static class MapGenerator
 
     // 유닛 프리팹에서 보이는 부분만 떼어 세운다. 프리팹을 통째로 놓으면 조합표 위에
     // 진짜 유닛이 살아 움직이게 된다 — 이건 보여주기용 인형이라 부품을 전부 걷어낸다.
-    static bool TryPlaceUnitModel(Transform parent, string name, Vector3 ground, UnitData unit, float height)
+    static bool TryPlaceUnitModel(Transform parent, string name, Vector3 ground, UnitData unit, float height, float yaw = 0f)
     {
         if (unit == null || unit.prefab == null) return false;
         string brokenCheck = unit.prefab.name.StartsWith("Unit_") ? unit.prefab.name.Substring(5) : unit.prefab.name;
@@ -1836,7 +1836,8 @@ public static class MapGenerator
         // 표를 보는 방향(위에서 남쪽을 향해)에서 얼굴이 보이게 돌린다.
         // 대입이 아니라 곱이다 — 앞 단계가 회전을 걸어 뒀다면 덮지 않는다.
         //    지금은 앞에서 회전을 안 걸므로 identity라 예전과 결과가 같다.
-        figure.transform.rotation = Quaternion.Euler(0f, 180f, 0f) * figure.transform.rotation;
+        // yaw는 그 기본 방향에서 더 돌릴 각이다(불멸 전시: 화로를 바라보게 — 사장님 지시 2026-09-23).
+        figure.transform.rotation = Quaternion.Euler(0f, 180f + yaw, 0f) * figure.transform.rotation;
         return true;
     }
 
@@ -3027,8 +3028,14 @@ public static class MapGenerator
             // 받침_불멸은 +Y(그을린 쪽)가 불을 본다.
             float lift = StructureDresser.PlacePedestal(parent, "받침_불멸", $"불멸_{units[i].unitName}_받침",
                 ground, StructureDresser.YawTowardCenter(ground, center), pedestalScale);
+            // 스킨이 있으면 색 큐브 대신 인형을 세운다(2026-09-23 불멸 8종 스킨 완성). 초월 전시와 같은 규칙.
+            // 받침과 같은 각으로 돌려 가운데 화로를 바라보게 한다(사장님 지시 2026-09-23).
+            //   받침의 yaw는 "+Y(그을린 쪽)가 중심을 본다"는 규약이고, 인형의 기본 방향은 남쪽(180°)이다.
+            //   같은 각을 그대로 더하면 두 방향 규약이 어긋나 등을 보이므로, 중심을 향한 각을 따로 구한다.
+            Vector3 toCenter = center - ground;
+            float faceYaw = Mathf.Atan2(toCenter.x, toCenter.z) * Mathf.Rad2Deg - 180f;
             PlaceUnitMarker(parent, $"불멸_{units[i].unitName}", new Vector3(ground.x, 0f, ground.z),
-                UnitGrade.Immortal, lift: lift);
+                UnitGrade.Immortal, units[i], SlotSpacing * 1.6f, lift, faceYaw);
         }
 
         return units.Count;
@@ -3302,12 +3309,12 @@ public static class MapGenerator
     // 사장님 지시 — 선택위습 부스에서도 스킨이 보이게), 모델이 없는 유닛만 등급 색 큐브다.
     // lift = 섬 윗면에서 더 올려 세울 높이(받침 윗면). 0이면 섬 바닥에 선다.
     static void PlaceUnitMarker(Transform parent, string name, Vector3 groundPosition, UnitGrade grade,
-                                UnitData unit = null, float figureHeight = 0f, float lift = 0f)
+                                UnitData unit = null, float figureHeight = 0f, float lift = 0f, float yaw = 0f)
     {
         if (unit != null && figureHeight > 0f
             && TryPlaceUnitModel(parent, name,
                                  new Vector3(groundPosition.x, MapLayout.IslandTop + lift, groundPosition.z),
-                                 unit, figureHeight))
+                                 unit, figureHeight, yaw))
             return;
 
         GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
