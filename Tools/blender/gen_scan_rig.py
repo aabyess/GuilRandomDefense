@@ -874,6 +874,43 @@ UNITS = {
         # 저폴리라 더 그렇다) — bone heat 실패 증상 아님, 기본 안전판 완화.
         max_bone_share=0.9,
         materials={"material1": [("Base Color", "Laboon.png")]}),
+    # 블리치 콘(우라하라 상점 의혼환이 든 봉제 사자인형) → 히든_솔(2026-09-22 히든, blender 세션).
+    # source/"xps_new (2).obj"(assimp v5.0.0 내보내기) — 정점 958·삼각형 1,788의 아주 저폴리, 뼈 없음.
+    # mtllib(1763275093_xps_new.mtl)이 압축에 없지만 OBJ 가져오기가 usemtl 이름으로 재질을 만든다(흰수염 선례) → "monster-hun"으로 텍스처를 건다.
+    # 원본 Y 위 → 가져오기가 Z 위로 돌리고, 얼굴이 이미 −Y라 rotate_z 불필요(look_front.png로 확인).
+    # 🔴 사람형으로 간다(PM 「안 되면 바로 Generic」 단서 — 시도해 보니 될 만했다): 팔·다리가 몸통에서 확실히 떨어진 덩어리다(높이 단면 실측 —
+    #   z 1.25에서 다리가 x ±0.22~0.95 둘로 갈리고, z 2.5~3.5에서 팔이 x ±1.2~2.2로 몸통 ±0.85 밖에 따로 선다).
+    # 🔴 머리 위에 떠 있는 초록 의혼환(소울 캔디, 떨어진 섬 62정점 z 7.47~8.05)은 **살린다** — 1차에선 공중 정지가 버그로 보여 뺐지만, PM 판단(2026-09-23)으로
+    #   「콘의 정체 자체가 의혼환이라 원작 상징」이라 되살렸다. rigid_loose_parts로 Head 100% → 머리에 매달려 따라다니므로 공중 정지로 안 보인다.
+    #   ⚠️ 다만 이게 bbox 꼭대기라 그대로 두면 height=1.8이 「알 포함 키」가 되어 몸이 1.55m로 줄어든다 → height_top_z로 **키는 몸(머리 꼭대기 z 6.9524)만**
+    #   으로 재고 알은 1.8 위로 삐져나오게 둔다(PM 지시). 결과 전체 높이는 1.8보다 약 0.29m 높다.
+    # 🔴 비율이 사람과 전혀 다르다(알 뺀 뒤 실측): 머리 z 4.0~6.95 = 키의 42%, 다리 z 0~1.75 = 25%. 유니티 크기 표는 PM이 판단.
+    # 팔은 거의 수평(중심선 z 3.35→3.0, 약 10° 처짐)이라 straighten으로 눕히기만 하고, 다리는 관절을 애초에 수직으로 박았다(원본 다리가 아래로 벌어지는
+    #   원뿔이라 뼈를 그 중심 x 0.6에 곧게 두면 발만 바깥으로 벌어진 모습이 그대로 남는다 — 「레스트 다리 수직」 검증도 이쪽이 맞다).
+    # 꼬리(y 0.61~1.79)는 몸통과 한 섬이라 떼어 못 준다 — bone heat가 Hips·UpLeg에 나눠 주는 대로 두고 Idle 렌더로 확인.
+    "히든_솔": dict(
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_솔.zip"), mesh_name="Kon",
+        member=["source/xps_new (2).obj"],
+        height=1.8, height_top_z=6.9524, center_band=(0.0, 0.05), decimate=1.0, rotate_z=0.0,
+        rigid_loose_parts=[dict(box_src=((-0.5, -1.5, 7.2), (0.5, -0.5, 8.3)), bone="Head")],
+        joints=dict(
+            Hips=(0.0, 0.1, 1.75), Spine=(0.0, 0.1, 2.3), Spine1=(0.0, 0.05, 2.85), Spine2=(0.0, 0.05, 3.3),
+            Neck=(0.0, 0.0, 3.65), Head=(0.0, 0.0, 4.05), HeadTop=(0.0, 0.0, 6.9),
+            LeftShoulder=(0.35, 0.0, 3.35), LeftArm=(0.85, 0.0, 3.2), LeftForeArm=(1.45, 0.0, 3.1),
+            LeftHand=(1.95, 0.0, 3.05), LeftHandTip=(2.25, 0.0, 3.0),
+            RightShoulder=(-0.35, 0.0, 3.35), RightArm=(-0.85, 0.0, 3.2), RightForeArm=(-1.45, 0.0, 3.1),
+            RightHand=(-1.95, 0.0, 3.05), RightHandTip=(-2.25, 0.0, 3.0),
+            LeftUpLeg=(0.6, 0.05, 1.75), LeftLeg=(0.6, 0.05, 0.95), LeftFoot=(0.6, 0.05, 0.3),
+            LeftToeBase=(0.6, -0.35, 0.12), LeftToeTip=(0.6, -0.7, 0.12),
+            RightUpLeg=(-0.6, 0.05, 1.75), RightLeg=(-0.6, 0.05, 0.95), RightFoot=(-0.6, 0.05, 0.3),
+            RightToeBase=(-0.6, -0.35, 0.12), RightToeTip=(-0.6, -0.7, 0.12)),
+        straighten=["LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand", "RightShoulder", "RightArm", "RightForeArm", "RightHand"],
+        closeups=[("armpit", 1.25, 0.8), ("crotch", 0.55, 0.9)],
+        # 머리가 키의 42%인데다 갈기 뿔이 정점을 많이 먹어 Head 몫이 53%로 나온다(뼈 22개 전부 가중치 있고 팔·다리 분포도 좌우 대칭 —
+        # bone heat 실패 증상 아님, 라분과 같은 처리). 기본 50% 안전판만 살짝 풀고 감시는 남긴다.
+        max_bone_share=0.7,
+        texture_sources={"kon_baseColor.png": "monster_hun.png"},
+        materials={"monster-hun": [("Base Color", "kon_baseColor.png")]}),
 }
 
 # 🗑 폐기(2026-09-15 사장님 지시 — 특별함_강주혁 모델을 아이언맨으로 교체, fix_unit_fbx.py로): 코알라는 AI 메시가 닿은 곳마다 붙어 있어
@@ -2137,7 +2174,11 @@ def build(name, out_dir=None, render_dir=None):
         report["뺀 메시"] = sorted(drop)
     for dp in cfg.get("drop_loose_parts", []):
         # 🔸 흰수염: 세워 든 대검(무라쿠모기리)이 몸과 **같은 메시**에 느슨한 조각 16개로 들어 있다 — 이음새 붙인 뒤 조각 중심이 x_max보다 왼쪽(−X)인 조각을 지운다
+        # 🔸 콘(히든_솔, 2026-09-23): 머리 위에 **떠 있는** 의혼환(초록 알)도 같은 메시의 떨어진 조각이라 같은 방식으로 뺀다 — 다만 기준이 x가 아니라 z라
+        #   축·상한/하한을 골라 쓸 수 있게 넓혔다(x_max·x_min·y_max·y_min·z_max·z_min, 준 것만 모두 만족하는 조각을 지운다. 흰수염 항목은 x_max 하나뿐이라 그대로).
         o = bpy.data.objects[dp["mesh"]]
+        lims = [(k, dp[k]) for k in ("x_max", "x_min", "y_max", "y_min", "z_max", "z_min") if k in dp]
+        assert lims, f"{name}: drop_loose_parts에 기준이 없다 {dp}"
         bm = bmesh.new()
         bm.from_mesh(o.data)
         bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=dp.get("weld", 0.01))
@@ -2158,7 +2199,7 @@ def build(name, out_dir=None, render_dir=None):
                         seen.add(y.index)
                         stack.append(y)
             c = sum(((Mw @ q.co) for q in comp), Vector()) / len(comp)
-            if c.x < dp["x_max"]:
+            if all((c["xyz".index(k[0])] < lim) if k.endswith("_max") else (c["xyz".index(k[0])] > lim) for k, lim in lims):
                 kill += comp
                 nparts += 1
         bmesh.ops.delete(bm, geom=kill, context="VERTS")
@@ -2321,12 +2362,19 @@ def build(name, out_dir=None, render_dir=None):
     world = np.array([body.matrix_world @ v.co for v in body.data.vertices])
     lo, hi = world.min(0), world.max(0)
     H = float(hi[2] - lo[2])
+    # 🔸 콘(히든_솔, 2026-09-23): 머리 위에 **떠 있는** 의혼환이 bbox 꼭대기라 키를 그대로 재면 「알까지 포함한 키」가 1.8이 되어 몸이 1.55로 줄어든다 →
+    #   PM 지시대로 키는 몸(머리 꼭대기)만으로 재고 알은 1.8 위로 삐져나오게 둔다. 값은 원본 좌표의 z(몸 꼭대기).
+    if cfg.get("height_top_z") is not None:
+        H = float(cfg["height_top_z"] - lo[2])
     band = world[(world[:, 2] >= lo[2] + H * cfg["center_band"][0]) & (world[:, 2] <= lo[2] + H * cfg["center_band"][1])]
     cx, cy = float((band[:, 0].min() + band[:, 0].max()) / 2), float((band[:, 1].min() + band[:, 1].max()) / 2)
     s = cfg["height"] / H
     G = Matrix.Scale(s, 4) @ Matrix.Translation((-cx, -cy, -lo[2]))
     report["원본 키(cm)"], report["배율"] = round(H, 3), round(s, 6)
     body.data.transform(G @ body.matrix_world)
+    # 🔸 콘: height_top_z를 쓰면 「키 재는 몸」이 메시 전체가 아니다 — 아래 T자 뒤 키 맞춤에서도 같은 정점만 써야 하므로 여기서 골라 둔다(G 적용 뒤 몸 꼭대기가 정확히 height).
+    fit_verts = [i for i, v in enumerate(body.data.vertices) if v.co.z <= cfg["height"] + 1e-4] if cfg.get("height_top_z") is not None else None
+    fit_nverts = len(body.data.vertices)
     # 🔴 glTF가 메시를 Sketchfab 뿌리 빈 오브젝트(Y위→Z위 회전 행렬) 밑에 둔다 — 세계 변환을 데이터에 구운 뒤 부모를 안 끊으면
     # 메시가 세계에서 또 회전돼 뼈대와 어긋나고 bone heat가 조용히 실패했다(1차 증상 「한 뼈 97%」의 진짜 원인, 2차 실측: 부모 끊으니 죽은 뼈 0).
     body.parent = None
@@ -2654,7 +2702,11 @@ def build(name, out_dir=None, render_dir=None):
     bpy.ops.object.mode_set(mode="OBJECT")
     bpy.context.view_layer.update()
     # 다리를 펴면 키가 늘어난다(1.8 → 1.873 실측) — 발 z 0 기준으로 메시·뼈대를 같이 줄여 키 1.8로
-    top = max(v.co.z for v in body.data.vertices)
+    if fit_verts is None:
+        top = max(v.co.z for v in body.data.vertices)
+    else:                                                               # 🔸 콘: 머리 위 의혼환은 키에서 뺀다(위 fit_verts) — 그 사이에 정점이 지워졌으면 번호가 어긋나므로 막는다
+        assert len(body.data.vertices) == fit_nverts, f"{name}: height_top_z를 쓰는데 정점 수가 바뀌었다({fit_nverts}→{len(body.data.vertices)}) — 정점 번호로 고른 키 기준이 깨진다"
+        top = max(body.data.vertices[i].co.z for i in fit_verts)
     k = cfg["height"] / top
     body.data.transform(Matrix.Scale(k, 4))
     bpy.ops.object.mode_set(mode="EDIT")
