@@ -1156,11 +1156,21 @@ public static class ArtBinder
         if (root.GetComponent<CharacterAnimator>() == null) root.AddComponent<CharacterAnimator>();
     }
 
-    // Generic 리그용 — 모델에 딸려 온 클립 하나를 기본 상태로 두는 컨트롤러를 만든다.
+    // Generic 리그용 — 모델에 딸려 온 **자기 클립**으로 Idle/Move/Attack을 엮는다.
     //
-    // 공용 컨트롤러처럼 Idle/Move/Attack을 가르지는 못한다(모델이 클립을 한 벌만 갖고 온다).
-    // 하지만 「굳어 서 있는 것」과 「살아서 숨 쉬는 것」의 차이가 크고, CharacterAnimator가
-    // 없는 파라미터에 값을 쓰지 않도록 미리 확인하므로 경고도 안 난다.
+    // 🔴 (09-23) 예전에는 「가장 긴 클립 하나를 Idle로」였다. 그게 안흔함_강재규에서 사고를 냈다 —
+    //    그 모델의 클립은 `All Animations`라는 **한 덩어리**여서, 서 있기 → 걷기 → 웅크리기 →
+    //    덮치기 → 눕기가 이어 붙은 353프레임이었다. 가장 길다는 이유로 그걸 Idle에 넣었으니
+    //    **가만히 있어야 할 재규어가 주기적으로 눕고 덮쳤다.** 아무도 신고 안 했지만 계속 그랬다.
+    //    blender가 곡선을 보고 셋으로 잘랐고(Idle 115 · Move 110 · Attack 71), 전수 조사에서
+    //    「한 덩어리」는 그 하나뿐이었다(배 둘은 241프레임이지만 이음새 0.000인 순수 루프).
+    //
+    // 클립 이름 규칙은 blender 쪽과 맞춘 것이다 — `Idle` · `Move` · `Attack`으로 시작한다
+    // (고대의배·해적선의 `Idle_Bob`도 걸린다). 없는 것은 그냥 안 엮는다:
+    //   Move 없음  → 이호준·노건완·김정래·고대의배·해적선  (Speed 파라미터를 안 만든다)
+    //   Attack 없음 → 노건완·배 둘
+    //   Die        → 13종 어디에도 없다. CharacterAnimator.hasDie가 거짓이라 알아서 안 쓴다.
+    // 이름이 안 맞는 모델은 **가장 긴 클립을 Idle로** 두는 옛 동작으로 떨어진다(안전망).
     // 클립이 하나도 없으면 null을 돌려준다 — 그 경우엔 컨트롤러 없이 그냥 서 있는다.
     static AnimatorController GetOrCreateOwnClipController(GameObject visual)
     {
@@ -1168,24 +1178,81 @@ public static class ArtBinder
             PrefabUtility.GetCorrespondingObjectFromSource(visual) ?? (Object)visual);
         if (string.IsNullOrEmpty(modelPath)) return null;
 
-        // 첫 클립이 아니라 **가장 긴** 클립을 쓴다 — 안흔함_이호준 원본은 첫 클립이 키 1개짜리
-        // 「Armature.001|mixamo.com|Layer0」이고 실제 4초 동작이 둘째라, 첫 클립을 쓰면 한 자세로 굳었다(09-13 blender 대조).
-        AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath(modelPath)
+        List<AnimationClip> clips = AssetDatabase.LoadAllAssetsAtPath(modelPath)
             .OfType<AnimationClip>()
             .Where(c => c != null && !c.name.StartsWith("__preview__"))
-            .OrderByDescending(c => c.length)
-            .FirstOrDefault();
-        if (clip == null) return null;
+            .ToList();
+        if (clips.Count == 0) return null;
+
+        AnimationClip Named(string word) =>
+            clips.FirstOrDefault(c => c.name.StartsWith(word, System.StringComparison.OrdinalIgnoreCase));
+
+        AnimationClip idle = Named("Idle");
+        AnimationClip move = Named("Move");
+        AnimationClip attack = Named("Attack");
+
+        // 안전망 — 이름 규칙을 안 따르는 모델은 옛 동작대로 **가장 긴** 클립을 Idle로 둔다.
+        // (안흔함_이호준 옛 파일은 첫 클립이 키 1개짜리 껍데기여서 첫 클립을 쓰면 한 자세로 굳었다, 09-13.)
+        if (idle == null) idle = clips.OrderByDescending(c => c.length).First();
 
         EnsureFolder(GeneratedFolder);
 
         string unit = System.IO.Path.GetFileNameWithoutExtension(modelPath);
         string path = $"{GeneratedFolder}/{unit}_자체.controller";
 
-        AnimatorController made = AnimatorController.CreateAnimatorControllerAtPathWithClip(path, clip);
-        if (made != null && made.layers.Length > 0 && made.layers[0].stateMachine.states.Length > 0)
-            made.layers[0].stateMachine.states[0].state.name = "Idle";
+        AnimatorController made = AssetDatabase.LoadAssetAtPath<AnimatorController>(path);
+        if (made == null) made = AnimatorController.CreateAnimatorControllerAtPath(path);
 
+        // 다시 돌릴 때 상태가 쌓이지 않도록 매번 새로 짠다(공용 컨트롤러와 같은 규칙).
+        AnimatorStateMachine machine = made.layers[0].stateMachine;
+        foreach (ChildAnimatorState child in machine.states.ToArray()) machine.RemoveState(child.state);
+        foreach (AnimatorControllerParameter parameter in made.parameters.ToArray())
+            made.RemoveParameter(parameter);
+
+        AnimatorState idleState = machine.AddState("Idle");
+        idleState.motion = idle;
+        machine.defaultState = idleState;
+
+        if (move != null)
+        {
+            // 대기↔이동은 속도 하나로 갈린다. 문턱을 하나로 두면 그 값 근처에서 깜빡이므로 위아래를 벌린다.
+            made.AddParameter(CharacterAnimator.SpeedParam, AnimatorControllerParameterType.Float);
+
+            AnimatorState moveState = machine.AddState("Move");
+            moveState.motion = move;
+
+            AnimatorStateTransition toMove = idleState.AddTransition(moveState);
+            toMove.hasExitTime = false;
+            toMove.duration = 0.1f;
+            toMove.AddCondition(AnimatorConditionMode.Greater, 0.15f, CharacterAnimator.SpeedParam);
+
+            AnimatorStateTransition toIdle = moveState.AddTransition(idleState);
+            toIdle.hasExitTime = false;
+            toIdle.duration = 0.1f;
+            toIdle.AddCondition(AnimatorConditionMode.Less, 0.05f, CharacterAnimator.SpeedParam);
+        }
+
+        if (attack != null)
+        {
+            made.AddParameter(CharacterAnimator.AttackParam, AnimatorControllerParameterType.Trigger);
+
+            AnimatorState attackState = machine.AddState("Attack");
+            attackState.motion = attack;
+
+            AnimatorStateTransition enter = machine.AddAnyStateTransition(attackState);
+            enter.hasExitTime = false;
+            enter.duration = 0.05f;
+            enter.canTransitionToSelf = false;
+            enter.AddCondition(AnimatorConditionMode.If, 0f, CharacterAnimator.AttackParam);
+
+            // 공격은 한 번 재생하고 돌아온다 — 안 돌려보내면 그 자세로 굳는다.
+            AnimatorStateTransition exit = attackState.AddTransition(idleState);
+            exit.hasExitTime = true;
+            exit.exitTime = 0.9f;
+            exit.duration = 0.1f;
+        }
+
+        EditorUtility.SetDirty(made);
         return made;
     }
 

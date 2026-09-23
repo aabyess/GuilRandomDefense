@@ -1,21 +1,44 @@
-원본 파일명: Blueno CP9 by Annettlw.fbx
-받은 폴더:   /Users/sang/Downloads/흔함_박민수
-옮긴 날:     2026-09-07
-리깅:        본·스킨 데이터 916 건
-애니메이션:  커브 12385 건
+흔함_박민수(원피스 블루노 CP9, 바운티러시 pl_blueno_orig01) — blender 세션 **재출력**(2026-09-23, PM 요청 ④).
+fix_unit_fbx.py UNITS["흔함_박민수"]로 처리.
 
-   내부 테스트용 임시 모델. 배포 전 교체 필요.
+■ 원본
+커밋된 FBX를 원본 삼았다: Assets/Art/Units/흔함_박민수/흔함_박민수.fbx
+텍스처는 커밋본 Textures/pl_blueno_orig01_diff.png 한 장 그대로(내용 안 바뀜).
 
-2026-09-07 사장님 확정: IP 제약 없음(상업적 사용 아님, 친구들과 재미로).
-이 모델을 그대로 써도 된다 — 이전 IP 경고는 철회됐다.
+■ 왜 다시 냈나
+ArtBinder의 「1,000배 넘게 키워야 하면 잘못 잰 것」 문턱을 **경고만** 남기게 바꾼 뒤 처음 걸린 건이다:
+    [아트] 흔함_박민수: 원본이 너무 작습니다 — 잰 높이 0.0266, 959배로 키웁니다(목표 26).
+게임에선 정상으로 선다(25.5). 다만 **959배는 1,000에 붙어 있어** 목표 키를 조금만 올리면
+옛 방식에서는 점이 됐을 자리다 → 규약대로 **1.8m**로 다시 냈다.
+2026-09-14에 손본 「pl_ 여섯」에서 이 유닛이 빠져 있었다(특별함_임장혁·흔함_양재모와 같은 사정).
 
-── 원본 보관 기록 (2026-09-14, 다운로드 원본 삭제 전) ──
-사장님 결정: 정보만 여기 적고 다운로드 원본은 지운다. 전체 목록 Docs/ART_SOURCES_ARCHIVE.md
-- ~/.Trash/one-piece-bounty-rush-blueno-cp9.zip · 2.9MB · sha256 c5562443da852a44
-    source/Blueno CP9.rar (2.0MB)
-      └ Blueno CP9/Blueno CP9 by Annettlw.fbx (6.8MB)
-      └ Blueno CP9/pl_blueno_orig01_diff.png (0.9MB)
-    textures/pl_blueno_orig01_diff.png (0.9MB)
-- ~/.Trash/흔함_박민수/ (풀어 둔 폴더 · 2.9MB · 파일 2개)
-    textures/pl_blueno_orig01_diff.png (0.9MB)
-    source/Blueno CP9.rar (2.0MB)
+■ 고친 것
+- 키 **1.8m 규약**으로 정규화(발바닥 z=0 · Hips x·y 원점 · +Z 위 · 앞 −Y).
+- 뼈 이름을 **PL_RENAME**으로 → mixamorig 21뼈.
+  남은 7개는 merge_to_nearest가 합쳤다 — **Hips 5**(코트 자락 b_suso·f_l/r_suso·l/r_suso) ·
+  L/RForeArm 각 1(LHand_Fore_sup·RHand_Fore_sup).
+- 겹쳐 들어가 있던 변형 메시 10개를 뺐다: 표정 다섯 중 **face_normal만** 남기고
+  face_attack·face_damage·face_sp01·face_sp02 · 손 넷 중 **편 손만** 남기고 close·sp01·sp02 좌우.
+
+■ 🔴 전전무시(덴덴무시) 달팽이는 뺐다 — PM 승인, 안흔함_박민수(포치타) 선례
+직접 재 보니 **몸 바깥에 따로 서 있는 별개의 생물**이었다:
+ - 뼈 denden_body가 Body_Pelvis가 아니라 **world_joint 밑**(= Hips보다 위)에 붙어 있다.
+ - 위치가 (0.000, 0.000, 0.000) — 두 발 사이 **바닥**이다(손에 든 게 아니다).
+ - 메시 dendenmushi도 z 0.000~0.003(캐릭터 키 0.026의 아래 1/9)에 y +0.011까지, 발치 뒤쪽이다.
+유니티 휴머노이드 뼈대로는 들고 갈 수 없고, world_joint를 빼면 뿌리 없는 뼈로 남아 merge_to_nearest가 막는다.
+**실루엣은 안 밋밋해졌다** — 달팽이가 원래 발치 바닥에 있어 서 있는 모습에 거의 안 보탰다(cull_full.png).
+되살리려면 denden_body를 RHand_Palm 밑으로 reparent하고 위치를 손으로 옮겨야 한다(원작과 다른 자세가 된다).
+
+■ 그 밖에 뺀 뼈(전부 가중치 0인 표식)
+pl_blueno_orig01 · world_joint(루트 둘) · model_root · HELPER_name · HELPER_key · pre_flag · post_flag ·
+eff_muzzle_a/b/c(이펙트 자리) · melt_plane(녹는 연출 판).
+
+■ 검증(절차 넷)
+- 배치 리포트: 뼈 21 · **휴머노이드 필수 15뼈 전부 가중치 있음** · 크기 (2.094, 0.369, 1.8)m · 최저 z 0.
+- 재수입: 최상위 오브젝트 "Armature" 하나 · mixamorig:Hips 부모 None.
+- 뒷면 컬링 렌더(cull_full.png · cull_head.png) — 비쳐 보이는 면 없음.
+  검은 정장·노란 포켓치프·소뿔·검은 장갑·구두 전부 제 색.
+- **clip_spread.py**: 최댓값 **0.98**(기준 3.0 이하) 통과. 대조군 바키 0.97 · 손오공 0.97.
+
+■ 산출물(스크래치만, Assets 미반영)
+흔함_박민수.fbx · Textures/pl_blueno_orig01_diff.png(커밋본 그대로) · cull_full.png · cull_head.png

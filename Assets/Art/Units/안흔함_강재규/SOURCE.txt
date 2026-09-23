@@ -1,32 +1,43 @@
-출처: Sketchfab — "jaguar"
-원본 파일명: source/jaguar.fbx (4.0 MB, 바이너리)
-받은 날: 2026-09-07
+안흔함_강재규(재규어) — blender 세션 **클립 나누기**(2026-09-23, PM 요청 ①). fix_unit_fbx.py.
 
-배정: 안흔함_강재규 (unitName "재규어", 조합 결과 이름 「재규어 라이딩」)
+■ 🔴 무엇이 잘못돼 있었나 — **클립 하나에 모든 동작이 이어 붙어 있었다**
+```
+"skeleton #1|…|All Animations_skeleton #1"   353프레임 한 덩어리
+```
+`ArtBinder.GetOrCreateOwnClipController`는 모델 안에서 **가장 긴 클립 하나**를 골라 한 상태짜리 컨트롤러를 만든다.
+그래서 게임에서 재규어는 **가만히 있어야 할 때 그 353프레임 전체를 Idle로 무한 반복**하고 있었다 —
+주기적으로 웅크리고 앞발을 친다. 아무도 신고하지 않았지만 화면에 계속 나오고 있었다.
 
-리깅: 있음 — 뼈 739개, 자체 애니메이션 1벌("Take").
-      ⚠️ 네 발 짐승이라 Humanoid가 성립하지 않는다. 뼈 이름도 Maya Advanced
-      Skeleton 규칙(Chest_M·Head_M·IndexToe1_L)이다.
-      → UnitModelPostprocessor.GenericRigUnits에 넣어 Generic으로 쓴다.
-      → 공용 Idle/Move/Attack은 못 받는다. ArtBinder가 자기 클립으로
-        전용 컨트롤러(`안흔함_강재규_자체.controller`)를 만들어 붙인다.
+■ 어떻게 경계를 잡았나
+- **자동 컷 검출은 안 먹었다.** 프레임 사이 자세 변화량이 한 번도 안 튄다(중앙값의 6배를 넘는 프레임 0개) —
+  원본이 동작 전환을 **블렌딩해서 구웠기** 때문이다. 그래서 눈과 수치를 같이 썼다.
+- 10프레임 간격 렌더 36장(grid.png)과 **뼈 높이 곡선**(Root_M z · Head_M z · 앞발 Fingers1_L y·z)으로 구간을 읽었다:
+```
+    1~115   머리 0.801 → 0.865 → 0.805 로 돌아오는 **서서 숨쉬기**            → Idle
+  121~230   머리가 0.805 → **0.542**까지 내려갔다 0.688로 올라오는 **웅크려 노리기** → Move
+  271~341   뿌리가 0.893 → **0.827**로 앉으며 앞발이 z **0.75**까지 오르는 **앞발 치기** → Attack
+```
+- ⚠️ **원본에 걷기가 없다.** 네 발(Ankle_L/R · Fingers1_L/R)의 y가 클립 내내 거의 고정이다(0.53 / 0.47).
+  전부 제자리 동작이라, Move는 「웅크려 노리기」로 대신했다(고양이과의 살금살금 접근으로 읽힌다).
+  진짜 네 발 걸음이 필요하면 synth_clips로 지어야 한다 — 말씀 주시면 만든다.
 
-텍스처: FBX가 세 장을 부른다 — aiStandardSurface1_baseColor.jpeg(몸통) ·
-        lengua.jpeg(혀) · ojos.jpeg(눈).
-        🔴 받은 건 두 장뿐이다. 몸통은 이름이 맞아 붙지만,
-           혀와 눈은 원본에 없다. 남은 aiStandardSurface5_baseColor.jpeg(40KB)가
-           둘 중 하나로 보이지만 어느 쪽인지 확정할 근거가 없어 이름을 안 바꿨다.
-           혀·눈이 회색으로 나오면 이 파일을 둘 중 하나로 바꿔 보면 된다.
+■ 어떻게 잘랐나(새 기능 split_clips)
+이 파이프라인은 클립을 **프레임별 세계 뼈 행렬 목록**으로 들고 있다(sample_clips) — 자르는 건 그 목록을 저미는 일이라
+곡선을 손댈 필요가 없다. ⚠️ 블렌더 5는 `Action.fcurves`가 없어졌지만(슬롯 액션) 이 경로는 그 영향을 안 받는다.
 
-삼각형 25,880 — 가볍다. 지금까지 받은 것 중 제일 낫다.
+■ 🔴 이음새 다듬기(loop=12)
+잘라 낸 구간은 대개 첫 자세로 안 돌아온다(원본이 353프레임 내내 한 동작이라, 첫 자세에 가까워지는 건 맨 끝뿐이다 —
+뼈당 RMS 거리로 확인). 그대로 두면 Idle이 한 바퀴 돌 때마다 튄다.
+→ 끝 12프레임을 **첫 프레임 쪽으로 서서히 당겨** 마지막 프레임이 첫 프레임과 같아지게 했다(위치 선형·회전 구면 보간).
+   이음새 **0.055 → 0.016 m**(뼈당 RMS). Attack은 한 번짜리라 안 걸었다(유니티가 트리거 뒤 Idle로 섞어 돌아간다).
 
-── 원본 보관 기록 (2026-09-14, 다운로드 원본 삭제 전) ──
-사장님 결정: 정보만 여기 적고 다운로드 원본은 지운다. 전체 목록 Docs/ART_SOURCES_ARCHIVE.md
-- ~/Downloads/jaguar.zip · 7.2MB · sha256 a287851024ec7a68
-    source/jaguar.fbx (4.2MB)
-    textures/aiStandardSurface5_baseColor.jpeg (0.0MB)
-    textures/aiStandardSurface1_baseColor.jpeg (2.9MB)
-- ~/Downloads/jaguar/ (풀어 둔 폴더 · 7.2MB · 파일 3개)
-    textures/aiStandardSurface5_baseColor.jpeg (0.0MB)
-    textures/aiStandardSurface1_baseColor.jpeg (2.9MB)
-    source/jaguar.fbx (4.2MB)
+■ 그 밖에 손댄 것
+`clip_ground=True`를 켰다 — 원본 애니가 바닥을 1.2cm 파고들었다.
+
+■ 검증
+- 접촉 시트 clips.png(위에서부터 Idle · Move · Attack) — 서기 / 웅크려 노리기 / 앞발 치기가 각각 제 구간에 들어갔다.
+- 클립별 전 프레임 최저 z: Idle −0.0001 · Move 0.0000 · Attack 0.0000.
+- 모델(메시·뼈 300개·텍스처·크기 0.487×2.0×0.988m)은 **커밋본과 같다.** 클립만 나뉘었다.
+
+■ 산출물(스크래치만, Assets 미반영)
+안흔함_강재규.fbx(클립 3벌) · clips.png · grid.png(36프레임 판독용)
