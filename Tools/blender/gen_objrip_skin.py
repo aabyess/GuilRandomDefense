@@ -955,6 +955,20 @@ def build(name, cfg, out_dir=None, render_dir=None):
         bpy.data.meshes.remove(old_mesh)
         report["감량"] = {"전": tri_before, "후": sum(len(p.vertices) - 2 for p in body.data.polygons)}
 
+    # 🔴 노멀 재계산(2026-09-23 blender, 사장님이 희귀함_장하민 머리가 게임에서 검은 덩어리로 보인다고 지적 → 원인):
+    #   게임 립 OBJ는 면 방향이 뒤집혀 들어온다(장하민 실측: 면 4,772개 중 바깥을 보는 게 1,784개뿐 = 37%).
+    #   블렌더 기본 렌더는 양면을 다 그려서 멀쩡해 보이지만, 유니티 URP는 뒷면을 버리므로 **얼굴이 안쪽 껍데기로 보여 검게** 나온다
+    #   (뒷면 컬링을 켜고 렌더해 그대로 재현함). 껍질마다 바깥으로 맞춘다 — gen_scan_rig.py가 이미 상시로 하는 것과 같은 처리.
+    bm = bmesh.new()
+    bm.from_mesh(body.data)
+    before = sum(1 for f in bm.faces if f.normal.dot(f.calc_center_median() - sum((v.co for v in bm.verts), Vector()) / len(bm.verts)) > 0)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    after = sum(1 for f in bm.faces if f.normal.dot(f.calc_center_median() - sum((v.co for v in bm.verts), Vector()) / len(bm.verts)) > 0)
+    bm.to_mesh(body.data)
+    bm.free()
+    body.data.update()
+    report["노멀 재계산"] = {"면": len(body.data.polygons), "바깥 향한 면 전": before, "후": after}
+
     world = np.array([body.matrix_world @ v.co for v in body.data.vertices])
     lo, hi = world.min(0), world.max(0)
     H = float(hi[2] - lo[2])
