@@ -4324,7 +4324,7 @@ public static class MapGenerator
         return $"\n레인 경로 {lanePaths.Count}개를 WaveSpawner에 연결했습니다.";
     }
 
-    // 맵이 420×420이라 기존 카메라 위치(원점 근처, 높이 35)에서는 아무것도 안 보인다.
+    // 맵이 넓어서(MapLayout.SeaSize) 원점 근처 낮은 위치에서는 아무것도 안 보인다.
     static string SetUpCamera()
     {
         Camera camera = Camera.main;
@@ -4344,25 +4344,33 @@ public static class MapGenerator
             new Vector2(bounds.minX - CameraMargin, bounds.minZ - CameraMargin);
         cameraSo.FindProperty("boundsMax").vector2Value =
             new Vector2(bounds.maxX + CameraMargin, bounds.maxZ + CameraMargin);
-        cameraSo.FindProperty("moveSpeed").floatValue = 110f;
+        // moveSpeed·maxHeight는 세계 좌표 단위라 맵이 커진 만큼 같이 커져야 한다(원작 비율
+        // 2단계, PM 지시 2026-09-23 "카메라 maxHeight·bounds도 같은 배율로"). edgeThickness는
+        // 화면 픽셀 단위라 맵 배율과 무관해서 그대로 둔다. minHeight는 유닛 크기(그대로,
+        // "유닛 기준 키 20이 기준자")에 맞춘 근접 줌이라 역시 안 건드린다.
+        cameraSo.FindProperty("moveSpeed").floatValue = 110f * MapLayout.Scale;
         cameraSo.FindProperty("edgeThickness").floatValue = 16f;
         cameraSo.FindProperty("minHeight").floatValue = 20f;
-        cameraSo.FindProperty("maxHeight").floatValue = 420f;
+        cameraSo.FindProperty("maxHeight").floatValue = 420f * MapLayout.Scale;
         cameraSo.ApplyModifiedProperties();
 
         // 시작 시점은 내 레인(1번) 하나가 화면에 차는 정도. 전체 조망은 휠로 빼면 된다.
+        // height도 세계 좌표라 같이 커진다 — 안 키우면 레인이 781×651로 커진 뒤 시작 화면에
+        // 구석 일부만 잡힌다.
         MapLayout.Island lane = MapLayout.Lanes[0];
         const float pitch = 50f;
-        const float height = 52f;
+        float height = 52f * MapLayout.Scale;
         float backOff = height / Mathf.Tan(pitch * Mathf.Deg2Rad);
         camera.transform.position = new Vector3(lane.center.x, height, lane.center.y - backOff);
         camera.transform.rotation = Quaternion.Euler(pitch, 0f, 0f);
-        camera.farClipPlane = Mathf.Max(camera.farClipPlane, 1000f);
+        // farClipPlane도 세계 좌표 거리라 같이 늘려야 한다 — 안 그러면 맵 먼 쪽이 잘려 보인다.
+        camera.farClipPlane = Mathf.Max(camera.farClipPlane, 1000f * MapLayout.Scale);
 
         return "\n카메라에 RTS 조작(가장자리 밀기·WASD·휠 확대)을 붙이고 메인 필드 위로 옮겼습니다.";
     }
 
-    const float CameraMargin = 60f;   // 섬 끝을 화면 가운데 두고도 주변이 보이도록
+    // 섬 끝을 화면 가운데 두고도 주변이 보이도록. 세계 좌표 단위라 맵 배율과 같이 커진다.
+    const float CameraMargin = 60f * MapLayout.Scale;
 
     struct IslandBounds
     {
@@ -4551,11 +4559,12 @@ public static class MapGenerator
         surface.collectObjects = CollectObjects.Children;
         surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
 
-        // 바다가 1600×1600이라 굽는 범위가 그만큼 넓다. 기본 복셀 크기(에이전트 반지름/3 ≈ 0.17)로는
-        // 한 변이 만 칸 가까이 나와서 굽기가 무거워진다. 유닛 반지름이 0.28이라 이 정도로 거칠게
-        // 잡아도 통행에는 지장이 없다.
+        // 바다가 MapLayout.SeaSize(원작 비율 2단계 기준 6667×6667, PM 지시 2026-09-23)라 굽는
+        // 범위가 그만큼 넓다. 넓이가 Scale² ≈ 17.4배가 됐는데 복셀 크기(0.5)를 그대로 두면
+        // 칸 수가 같이 17배가 돼서 굽기가 무거워진다. 0.5→2.0으로 올려 칸 수 증가를 상쇄한다
+        // (유닛 반지름 0.28 기준으로도 이 정도 거칠기면 통행에는 지장이 없다).
         surface.overrideVoxelSize = true;
-        surface.voxelSize = 0.5f;
+        surface.voxelSize = 2.0f;
         surface.overrideTileSize = true;
         surface.tileSize = 256;
 

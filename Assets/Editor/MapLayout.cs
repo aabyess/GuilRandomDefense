@@ -7,21 +7,20 @@ using UnityEngine;
 /// </summary>
 public static class MapLayout
 {
-    // 원작 비율 작업(PM 지시 2026-09-23, "맵·속도·사거리를 원작 비율로 맞추기" 1단계)용 배율
-    // 훅이다. 레인·창고·물범섬·존의 좌표·크기가 전부 이 값을 거치게 해서, 나중에 실제 배율
-    // (정본 배율 4.167의 역수, WC3 1단위 = 우리 0.24)을 적용할 때 숫자를 여기저기 손으로
-    // 옮기지 않고 이 상수 하나(와 아래 각 배열의 기준값)만 조정하면 되게 한다.
-    // ⚠️ 지금은 반드시 1이어야 한다 — 1이면 ×1.0f는 부동소수점 오차 없이 원래 값과 정확히
-    // 같으므로 맵 생성 결과가 지금과 완전히 같다(1단계는 리팩터만, 수치 변경은 다음 단계).
-    public const float Scale = 1f;
+    // 원작 비율 작업(PM 지시 2026-09-23, "맵·속도·사거리를 원작 비율로 맞추기"). 레인·창고·
+    // 물범섬·존의 좌표·크기가 전부 이 값을 거친다. 1단계에서 Scale=1(무변화)로 리팩터만
+    // 검증했고, 2단계부터 실제 배율(정본 배율 4.167, 근거: 충돌 크기 기준·"레인 폭÷유닛
+    // 지름" 기준이 둘 다 4.167로 나온다 — 속도 기준 23.73은 안 쓴다, PM 지시 참고)을 켠다.
+    public const float Scale = 4.167f;
 
     // 섬 전체는 X -310~320, Z -193~291 (630×484). 바다는 그보다 훨씬 커야 한다 —
     // 카메라를 가장자리까지 밀었을 때 바다 밖 회색이 보이면 맵이 끊긴 것처럼 읽힌다.
     // 최대 높이(420)에서 경계 끝까지 밀면 가로로 약 680이 보인다.
     // 카메라 경계(±380)에 그 절반을 더한 720까지 바다가 있어야 밖이 안 보인다.
-    // ⚠️ SeaSize·IslandTop·IslandThickness는 Scale을 안 탄다 — 바다 크기는 카메라 범위와
-    // 함께(2단계), 섬 두께·높이는 Y축이라 레인 가로·세로 배율과 무관하다.
-    public const float SeaSize = 1600f;
+    // (2026-09-23, 2단계) 위 수치는 Scale=1 시절 기준이다 — SeaSize는 이제 Scale을 타서
+    // 맵 전체 배율과 같이 커진다(MapGenerator.SetUpCamera의 maxHeight·CameraMargin도 같은
+    // 배율로 맞췄다). IslandTop·IslandThickness는 Y축(높이·두께)이라 그대로 둔다.
+    public const float SeaSize = 1600f * Scale;
     public const float IslandTop = 1f;      // 섬 윗면 높이 — 바다보다 한 단 높아 지상 유닛이 넘어가지 못한다
     public const float IslandThickness = 1f;
     public const int SeaAreaIndex = 3;      // ProjectSettings/NavMeshAreas.asset 3번 = Sea
@@ -45,21 +44,42 @@ public static class MapLayout
         }
     }
 
-    // 메인 방어 필드 — 2×2로 붙은 레인 4개 = 플레이어 4명
-    // ⚠️ 아래 좌표·크기는 전부 Scale을 거친다(원본 리터럴 × Scale) — Scale=1인 동안은
-    // 정확히 지금 값 그대로다. 이 배열 안 숫자 자체는 "Scale=1일 때의 기준값"이므로
-    // 다음 단계에서 배율을 올릴 때도 이 리터럴은 그대로 두고 Scale만 바꾸면 된다
-    // (단, 레인처럼 가로세로 비율 자체가 바뀌어야 하는 항목은 기준값도 같이 고쳐야 한다 —
-    // 그건 다음 단계 몫).
+    // 메인 방어 필드 — 2×2로 붙은 레인 4개 = 플레이어 4명.
+    //
+    // (2026-09-23, 2단계, PM 지시) 레인만 원작 대각선 비율(가로가 긴 1.20)로 바꾼다. 목표
+    // 크기 = 원작 레인 평균 3256×2712 ÷ Scale(4.167) = 781.4×650.9. 다른 섬처럼 "기존 리터럴
+    // × Scale"로는 안 나온다 — 기존 165×211(세로가 긴 0.782)은 원작과 반대 비율이라 리터럴
+    // 자체를 갈아야 한다(그래서 아래는 Scale을 다시 안 곱인다 — 781.4를 Scale로 나눈 값에
+    // 또 Scale을 곱이면 의미 없는 이중연산이다). 목표값을 리터럴로 고정했다.
+    //
+    // ⚠️ "레인 간격"(원작 x 960·z 1408 ÷ Scale = 230.4·337.9, PM 지시)의 뜻을 확정 못 했다.
+    // 중심간 거리로 읽으면 레인 크기(781.4)의 절반(390.7)보다 작아서 2×2 인접 배치가
+    // 수학적으로 불가능하다 — 그래서 "섬 가장자리 사이 간격"으로 해석했다: 중심간 거리 =
+    // 크기 + 이 간격. PM 확인 대기 중(2026-09-23 보고).
+    const float LaneSizeX = 781.4f;
+    const float LaneSizeZ = 650.9f;
+    const float LaneGapX = 230.4f;
+    const float LaneGapZ = 337.9f;
+    const float LaneSpacingX = LaneSizeX + LaneGapX;   // 1011.8 — 레인 중심간 x거리
+    const float LaneSpacingZ = LaneSizeZ + LaneGapZ;   // 988.8  — 레인 중심간 z거리
+
+    // 오른쪽 열(레인2·4)의 오른쪽 끝을 -220에 둔다 — Scale=4.167 기준 PunkHazard 오른쪽 끝이
+    // x=187.5라 32.5 여유를 두고 확실히 비껴간다(사장님 지시 "오른쪽에 펑크해저드·창고가
+    // 있어 레인은 왼쪽으로 펼치는 쪽이 낫다"). 아래로는 GachaIsland·StoryZone이 전부 z<63에
+    // 있어 필드 바닥을 z=100에서 시작하면 안 걸린다. MapGenerator.cs:3508 Overlaps()와 같은
+    // 식으로 Warehouses·SealIslands·Zones 전체와 대조해 0건 확인했다(2026-09-23, 별도 계산).
+    const float LaneRightEdgeX = -220f;
+    const float LaneRightColumnX = LaneRightEdgeX - LaneSizeX * 0.5f;   // -610.7
+    const float LaneLeftColumnX = LaneRightColumnX - LaneSpacingX;     // -1622.5
+    const float LaneBottomRowZ = 100f + LaneSizeZ * 0.5f;              // 425.45
+    const float LaneTopRowZ = LaneBottomRowZ + LaneSpacingZ;           // 1414.25
+
     public static readonly Island[] Lanes =
     {
-        // 필드를 1.5배(110→165)로 키웠다. 아래 두 줄(유닛 우리 20 + 상점 26)은 그대로다 —
-        // 건물과 우리는 커질 이유가 없고, 커지면 오히려 필드에서 멀어진다.
-        // 넓힌 만큼 왼쪽으로 펼쳤다. 오른쪽은 펑크해저드·창고가 있어 못 넓힌다.
-        new Island("Lane1", -318f * Scale, 362f * Scale, 165f * Scale, 211f * Scale, "lane"),
-        new Island("Lane2", -148f * Scale, 362f * Scale, 165f * Scale, 211f * Scale, "lane"),
-        new Island("Lane3", -318f * Scale, 144f * Scale, 165f * Scale, 211f * Scale, "lane"),
-        new Island("Lane4", -148f * Scale, 144f * Scale, 165f * Scale, 211f * Scale, "lane"),
+        new Island("Lane1", LaneLeftColumnX,  LaneTopRowZ,    LaneSizeX, LaneSizeZ, "lane"),
+        new Island("Lane2", LaneRightColumnX, LaneTopRowZ,    LaneSizeX, LaneSizeZ, "lane"),
+        new Island("Lane3", LaneLeftColumnX,  LaneBottomRowZ, LaneSizeX, LaneSizeZ, "lane"),
+        new Island("Lane4", LaneRightColumnX, LaneBottomRowZ, LaneSizeX, LaneSizeZ, "lane"),
     };
 
     // 창고 — 플레이어별 개인 섬 (C키로 유닛을 보냄)

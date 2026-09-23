@@ -10,7 +10,8 @@ using UnityEngine.InputSystem;
 public class RtsCameraController : MonoBehaviour
 {
     [Header("이동")]
-    [SerializeField] float moveSpeed = 110f;
+    // 110 * 4.167 — maxHeight와 같은 이유로 생성 시점엔 MapGenerator.SetUpCamera가 덮어쓴다.
+    [SerializeField] float moveSpeed = 458.4f;
     [SerializeField] float edgeThickness = 16f;      // 화면 가장자리에서 몇 픽셀 안쪽까지를 밀기 영역으로 볼지
     [SerializeField] bool edgeScrollEnabled = true;
     [SerializeField] float inputSmoothing = 12f;     // 클수록 즉각적. 0이면 감속 없음
@@ -19,11 +20,18 @@ public class RtsCameraController : MonoBehaviour
     [SerializeField] float zoomStep = 8f;            // 휠 한 칸당 높이 변화
     [SerializeField] float zoomSmoothing = 10f;
     [SerializeField] float minHeight = 12f;
-    [SerializeField] float maxHeight = 420f;
+    // 420 * 4.167(원작 비율 2단계 정본 배율, PM 지시 2026-09-23) — 맵 실제 생성 시점엔
+    // MapGenerator.SetUpCamera가 이 값을 다시 덮어쓴다(MapLayout은 에디터 전용이라 여기서
+    // 직접 참조할 수 없다). 이 기본값은 생성 전 인스펙터에 뜨는 값일 뿐이라 실제 동작에는
+    // 영향이 없지만, 혼동을 막기 위해 같이 올려둔다.
+    [SerializeField] float maxHeight = 1750.1f;
 
     [Header("이동 범위")]
-    [SerializeField] Vector2 boundsMin = new Vector2(-400f, -300f);
-    [SerializeField] Vector2 boundsMax = new Vector2(410f, 380f);
+    // 실제 생성 시점엔 MapGenerator.SetUpCamera가 MeasureIslands()로 섬 배치를 실측해
+    // ±CameraMargin을 더한 값으로 덮어쓴다 — 여기 기본값은 그 결과를 그대로 옮겨 적은 것뿐이다
+    // (레인이 좌우로 비대칭 확장돼 단순 배율(420 구간)로는 안 나온다).
+    [SerializeField] Vector2 boundsMin = new Vector2(-2263.2f, -1095.9f);
+    [SerializeField] Vector2 boundsMax = new Vector2(1391.8f, 1989.7f);
 
     // 이동 속도의 기준 높이. 이보다 높으면 빠르게, 낮으면 천천히 움직여
     // 화면에서 체감하는 이동량을 비슷하게 유지한다.
