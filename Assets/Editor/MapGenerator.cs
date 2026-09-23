@@ -169,6 +169,11 @@ public static class MapGenerator
         string navResult = BuildNavMesh(root);
         string oldGround = DisableOldGround();
 
+        // HUD 넷은 씬에 GameObject 하나씩만 있으면 되는데, 메뉴로만 두니 아무도 안 돌려서
+        // 씬에 0개인 채로 오래 굴렀다(이름표가 화면에 한 번도 안 나온 첫 번째 이유).
+        // 맵 생성이 어차피 씬을 갈아엎으니 여기서 보장한다. ⚠️ 저장보다 먼저.
+        string hudReport = HudWiring.EnsureAll();
+
         Selection.activeGameObject = root;
         EditorSceneManager.MarkSceneDirty(root.scene);
 
@@ -185,7 +190,7 @@ public static class MapGenerator
             $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + natureReport +
             seaReport + dockReport + StructureDresser.Report() + "\n\n" +
             tableReport + displayReport + gateReport + storyReport + sealReport + seaKingReport + questReport +
-            chatUnlockReport + hiddenCombineReport + chatBoxReport + overlaps + navResult + oldGround + rewire + saveNote;
+            chatUnlockReport + hiddenCombineReport + chatBoxReport + overlaps + navResult + oldGround + hudReport + rewire + saveNote;
         Debug.Log("[맵] " + message);
         EditorGuards.Dialog(Title, message, "확인");
     }
