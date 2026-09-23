@@ -4160,7 +4160,12 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             for poly in m.data.polygons:
                 poly_of[poly.loop_start:poly.loop_start + poly.loop_total] = [poly.index] * poly.loop_total
             held_normals = {(poly_of[i], lp.vertex_index): (N3 @ m.data.corner_normals[i].vector).normalized() for i, lp in enumerate(m.data.loops)}
-        m.data.transform(M)
+        # 🔴 shape_keys=True를 반드시 준다(2026-09-23 blender, 사장님이 게임에서 오카베가 점으로 보인다고 지적 → 원인 추적):
+        #   blender의 Mesh.transform()은 **기본값이 shape_keys=False**라 모양 키 데이터를 안 건드린다. 그래서 원본이 키 36짜리였던
+        #   희귀함_김정래는 본체만 1.8로 줄고 모양 키는 원본 좌표 그대로 남아, COAT의 elbow.L/R 키 변위가 28.5(메시는 1.46) ·
+        #   얼굴 키 14개가 6.37(메시 0.39)이 됐다. 유니티는 **블렌드셰이프 범위까지 넣어 메시 경계를 잡으므로** 자산 경계가
+        #   29.19·7.75로 부풀고(PM 유니티 실측과 정확히 일치), ArtBinder.FitToHeight가 그걸 키로 읽어 인형을 0.16배로 줄였다.
+        m.data.transform(M, shape_keys=True)
         if M.determinant() < 0:
             m.data.flip_normals()
             if held_normals is not None:
