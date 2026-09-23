@@ -529,6 +529,7 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
     os.makedirs(workdir, exist_ok=True)
     glb_path, extra_paths = find_glb_and_extras(cfg, workdir)
     report["원본"] = glb_path
+    src_colors = gltf_material_colors(glb_path)          # 언릿 glTF의 emissiveFactor(위 함수 설명 참고)
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
     if cfg.get("source_type") == "blend":
@@ -742,10 +743,15 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
             else:
                 emit = next((n for n in m.node_tree.nodes if n.type == "EMISSION"), None)
                 color = tuple(emit.inputs["Color"].default_value) if emit else (0.6, 0.6, 0.6, 1.0)
+                if max(color[:3]) <= 1e-4:                         # 🔴 위 gltf_material_colors 참고 — 임포터가 버린 emissiveFactor를 원본에서 되찾는다
+                    color = src_colors.get(mat_name, color)
+                assert max(color[:3]) > 1e-4, \
+                    f"{name}: 재질 {mat_name}의 단색이 새까맣다 — 원본에서 색을 못 찾았다(게임에서 검게 보인다)"
                 sp = os.path.join(tex_dir_tmp, safe_filename(mat_name) + ".png")
                 img = solid_png(sp, color, 64)
                 written_textures.add(os.path.basename(sp))
                 wire_image_material(m, img)
+                report.setdefault("원본 색으로 채운 단색 재질", {})[mat_name] = [round(c, 3) for c in color[:3]]
         elif kind == "texture_file":
             src_path = extra_paths[arg]
             dst_path = os.path.join(tex_dir_tmp, os.path.basename(src_path))
@@ -1240,6 +1246,39 @@ def wire_image_material(mat, image):
     bsdf.inputs["Metallic"].default_value = 0.0
     bsdf.inputs["Roughness"].default_value = 0.8
     nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
+
+
+def gltf_material_colors(path):
+    """🔴 노바라(희귀함_정내연, 2026-09-23 사장님 지적 「얼굴·목·다리가 새까맣다») — 언릿(KHR_materials_unlit) glTF는
+    **진짜 색이 emissiveFactor에 있고 baseColorFactor는 [0,0,0]**인 경우가 있다(이 원본은 재질 36개 중 35개가 그렇다).
+    블렌더 glTF 임포터는 언릿 재질을 Emission+Transparent로 만들면서 **baseColor만** Emission Color에 넣고 emissiveFactor는
+    버린다 → 우리가 그 검은 Emission을 읽어 64×64 새까만 PNG를 27장 구웠고, 게임에서 피부·옷·눈이 전부 검게 나왔다
+    (머리카락만 유일하게 텍스처가 있어 제대로 나왔다 — 그래서 「머리만 정상」으로 보였다).
+    원본 파일에서 재질 이름 → (r,g,b,1)을 직접 읽는다. emissiveFactor가 있으면 그걸, 없거나 검으면 baseColorFactor를 쓴다.
+    (glTF 색은 선형이고 solid_png도 선형 픽셀을 받으므로 그대로 넘기면 된다.)"""
+    import json as _json
+    import struct as _struct
+    if not path or not os.path.exists(path):
+        return {}
+    if path.lower().endswith(".glb"):
+        raw = open(path, "rb").read()
+        jlen = _struct.unpack_from("<I", raw, 12)[0]
+        j = _json.loads(raw[20:20 + jlen])
+    elif path.lower().endswith(".gltf"):
+        j = _json.load(open(path, encoding="utf-8"))
+    else:
+        return {}
+    out = {}
+    for m in j.get("materials", []):
+        nm = m.get("name")
+        if not nm:
+            continue
+        emis = m.get("emissiveFactor")
+        base = m.get("pbrMetallicRoughness", {}).get("baseColorFactor")
+        pick = emis if (emis and max(emis[:3]) > 1e-4) else (base if (base and max(base[:3]) > 1e-4) else None)
+        if pick:
+            out[nm] = tuple(pick[:3]) + (1.0,)
+    return out
 
 
 def solid_png(path, rgba, size=16):
