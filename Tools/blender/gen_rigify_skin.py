@@ -111,11 +111,16 @@ SKINS = {
         # Cube는 캐릭터와 무관한 찌꺼기(직접 확인: 정점그룹 0개, 몸통과 안 겹치는 위치 z −1~1
         # — 리기파이 뼈 커스텀 모양(위젯)용 기본 정육면체로 보인다). 첫 빌드에서 그대로 같이
         # 나가는 걸 발견해 추가(뼈 목록 조사 때는 hidden collection이라 안 보였던 것으로 추정).
-        drop_meshes={"Blade", "Cube"},
+        # 🔴 Cabbard(칼집)도 뺀다(2026-09-23, 사장님이 게임에서 「칼이 몸을 관통한다」고 지적 → PM 지시로 재판정).
+        #   1차엔 「허리에 찬 장비」로 보고 Spine 강체로 남겼는데, 재수입 + Idle 리타겟 렌더로 직접 보니 칼집이
+        #   골반~허벅지를 **대각선으로 뚫고** 반대쪽으로 튀어나온다 — 원본에서 칼집이 스킨이 아예 없는(Armature
+        #   모디파이어 없는) 조각이라 어느 뼈 하나에 통째로 묶으면 몸을 따라갈 수가 없다. 게다가 칼날(Blade)은
+        #   1차에서 이미 뺐으므로 남은 건 빈 칼집뿐이다. 손에 든 무기를 빼는 선례와 같은 처리.
+        drop_meshes={"Blade", "Cube", "Cabbard"},
         # 스킨이 아예 없는 조각(Armature 모디파이어 자체가 없다, 직접 확인) — head·hair·hair
         # highlight는 얼굴/머리 덩어리라 Head에, Cabbard(칼집)는 허리~등 높이(월드 z 0.6~0.89,
         # spine 뼈 z 1.12~1.27보다 낮다)라 허리 쪽 Spine에 강체 고정.
-        rigid={"head": "Head", "hair": "Head", "hair highlight": "Head", "Cabbard": "Spine"},
+        rigid={"head": "Head", "hair": "Head", "hair highlight": "Head"},   # Cabbard는 위 drop_meshes로 뺐다
         # 나나미와 사실상 같은 리기파이 표준 체인(뼈 68개, 이름 동일) — 직접 확인.
         rename={
             "spine": "Hips", "spine.001": "Spine", "spine.002": "Spine1", "spine.003": "Spine2",
@@ -1051,6 +1056,28 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
                 if os.path.exists(final_path):
                     node.image.filepath = final_path
                     node.image.reload()
+
+    # 🔴 면 정리 + 삼각형화(2026-09-23 blender, 사장님이 희귀함_배현진 팔이 게임에서 종잇장처럼 눌려 보인다고 지적 → 원인):
+    #   유니티 임포트 경고 192건 "A polygon of Mesh 'Kasumi' ... is self-intersecting and has been discarded" —
+    #   유니티는 스스로 교차하는 다각형을 **버린다**. 즉 게임 안에서 그 면들이 실제로 없어져 팔·어깨가 뚫려 보였다.
+    #   원본(리기파이 .blend)은 사각형이 6,576개인데, 그중 심하게 휜 것(면 크기 대비 평면 이탈 0.25 초과)이 19개
+    #   있었다(최대 0.694) — 유니티가 제 방식으로 삼각형화하면서 자기교차로 판정한 것들이다.
+    #   → ① 겹친 정점 합치기 ② 면적 0 면 없애기 ③ **전부 삼각형으로** 나눠 내보낸다. 어차피 유니티는 삼각형으로
+    #      바꿔 쓰므로 겉모습은 안 변하고, 나누는 주체가 유니티가 아니라 우리가 되어 버려지는 면이 없어진다.
+    tri_before = len(body.data.polygons)
+    bm = bmesh.new()
+    bm.from_mesh(body.data)
+    v0 = len(bm.verts)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
+    gone = [f for f in bm.faces if f.calc_area() < 1e-10]
+    if gone:
+        bmesh.ops.delete(bm, geom=gone, context="FACES")
+    bmesh.ops.triangulate(bm, faces=bm.faces)
+    bm.to_mesh(body.data)
+    bm.free()
+    body.data.update()
+    report["면 정리"] = {"정점": [v0, len(body.data.vertices)], "면적0 면 지움": len(gone),
+                      "면": [tri_before, len(body.data.polygons)], "전부 삼각형": all(len(p.vertices) == 3 for p in body.data.polygons)}
 
     # UV0 퇴화 검사(히소카 사고) — 면적이 사실상 0이면 실패로 본다.
     uv = body.data.uv_layers.active
