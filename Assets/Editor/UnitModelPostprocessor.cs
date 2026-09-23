@@ -96,8 +96,9 @@ public class UnitModelPostprocessor : AssetPostprocessor
     // 파일을 다시 지을 수 없는 모델만 여기 적는다 — 나머지는 blender가 fix_unit_fbx.py로 실제 크기로 다시 짓는다.
     static readonly (string unit, float scale)[] ImportScales =
     {
-        // 사이렌헤드(glb→fbx assimp 변환본, 원본 glb 없음). 09-13 원격 preview 실측: 게임 안 크기 0.07×0.04×0.21.
-        ("안흔함_박준희", 100f),
+        // (09-23) 안흔함_박준희 줄을 뺐다 — blender가 뼈를 메시에 다시 맞춰(refit_armature_to_mesh)
+        // 실제 크기로 내보냈다. 100배를 남겨 두면 한 번 더 걸려 백 배로 커진다.
+        // 지금은 비어 있다. 다시 지을 수 없는 모델이 또 나오면 그때 여기 적는다.
     };
 
     // 이 숫자를 올리면 유니티가 Assets/Art/Units 아래 모델을 **전부 다시 임포트**한다.
@@ -113,6 +114,8 @@ public class UnitModelPostprocessor : AssetPostprocessor
     // 7 → 8 (2026-09-13): 배 유닛 고대의배·해적선을 Generic으로 추가.
     // 8 → 9 (2026-09-13): ImportScales(박준희 100배) 추가.
     // 9 → 10 (2026-09-15): 노트북 소품 특별함_김정래를 Generic으로 추가.
+    // (09-23) 10에서 안 올렸다 — 이번에 바뀐 규칙(ImportScales에서 안흔함_박준희 삭제)이 닿는 모델이
+    // 그 하나뿐이고, 그 파일은 새로 들어와 어차피 다시 임포트된다. 올리면 400개를 전부 다시 읽는다.
     public override uint GetVersion() => 10;
 
     void OnPreprocessModel()
