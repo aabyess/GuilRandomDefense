@@ -180,6 +180,7 @@ public static class MapGenerator
             : "\n\n⚠️ 씬 저장에 실패했습니다 — Cmd+S를 직접 눌러주세요.";
 
         string message =
+            BaselineReport() +
             $"섬 {MapLayout.Lanes.Length + MapLayout.Warehouses.Length + MapLayout.SealIslands.Length + MapLayout.Zones.Length}개, " +
             $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + natureReport +
             seaReport + dockReport + StructureDresser.Report() + "\n\n" +
@@ -4608,6 +4609,20 @@ public static class MapGenerator
         cameraSo.ApplyModifiedProperties();
 
         // 시작 시점은 내 레인(1번) 하나가 화면에 차는 정도. 전체 조망은 휠로 빼면 된다.
+        //
+        // 🔴 **여기서 잡는 위치·높이는 런타임에 덮어써진다.**
+        //    `RtsCameraController.Start()` → `FocusOnLocalLane()`이 LaneMarker를 찾아 높이와
+        //    위치를 **다시 계산**한다. 2026-09-23에 편집 시점 값(높이 216.7·z 1432.4)으로
+        //    「우리가 카메라 뒤에 있다」를 계산해 고치려 했는데, 실제 플레이 중 값은
+        //    **높이 425.5·z 1224.9**로 전혀 달랐다. 계산은 둘 다 맞았고 **재는 대상이 틀렸다.**
+        //    시작 화면 구도를 고치려면 여기가 아니라 `RtsCameraController`를 봐야 한다.
+        //    (여기 값은 플레이 전 씬을 에디터에서 볼 때의 구도로만 남는다.)
+        //
+        // ⚠️ 그리고 유니티 FOV는 **세로 기준**이다 — 세로로 긴 창에서는 가로 시야가 줄고,
+        //    **높이를 올려도 가로는 그대로**다. 16:9(가로 시야 886 > 필드 폭 781)에서는 들어가지만
+        //    9:16이면 280뿐이라 필드의 36%만 보인다. 세로 창을 받쳐야 하면 높이를 올릴 게 아니라
+        //    FOV를 가로 기준으로 잡아야 한다(`RtsCameraController`).
+        //
         // height도 세계 좌표라 같이 커진다 — 안 키우면 레인이 781×651로 커진 뒤 시작 화면에
         // 구석 일부만 잡힌다.
         MapLayout.Island lane = MapLayout.Lanes[0];
@@ -4800,6 +4815,29 @@ public static class MapGenerator
         string text = report.ToString();
         Debug.Log("[맵] " + text);
         EditorGuards.Dialog(Title, text, "확인");
+    }
+
+    /// <summary>
+    /// 이번 생성에 **실제로 쓰인** 기준값 한 줄. 보고문 맨 앞에 붙인다.
+    ///
+    /// 🔴 왜 있나: 유니티는 컴파일이 안 끝났거나 실패하면 **마지막으로 성공한 어셈블리로**
+    ///    메뉴를 돌린다. 그러면 고친 값이 아니라 **옛 값으로 맵이 구워지는데 아무 경고가 없다.**
+    ///    2026-09-23 하루에만 두 번 그랬고(조합판·섬 높이), 두 번 다 **사후에 좌표를 재고 나서야**
+    ///    알았다. 그 전까지는 "내 수정이 틀렸나"를 의심하며 시간을 쓴다.
+    ///    이 줄이 있으면 **대화상자를 닫기도 전에** 옛 코드임이 드러난다.
+    ///
+    /// ⚠️ 값을 문자열로 적지 말 것 — 상수를 직접 읽어야 이 줄이 같이 낡지 않는다.
+    /// </summary>
+    static string BaselineReport()
+    {
+        // 바다 상자는 윗면이 늘 y=0이므로(BuildSea) 높이 차 = IslandTop이다.
+        float gap = MapLayout.IslandTop;
+        float cells = gap / MapLayout.NavMeshVoxelSize;
+        // 복셀 두 칸 이하로 붙으면 Recast가 섬 윗면과 바다 윗면을 한 층으로 합치고 영역이
+        // Sea로 덮인다 — 지상 유닛이 섬에 못 들어간다(MapLayout.NavMeshVoxelSize 주석).
+        string flag = cells > 2f ? "" : "  🔴 복셀 두 칸 이하 — 섬 윗면이 바다로 구워진다";
+        return $"[기준값] Scale {MapLayout.Scale:0.###} · IslandTop {MapLayout.IslandTop:0.##} · " +
+               $"복셀 {MapLayout.NavMeshVoxelSize:0.##} · 섬윗면−바다윗면 {gap:0.##}(복셀 {cells:0.#}칸){flag}\n";
     }
 
     static string BuildNavMesh(GameObject root)
