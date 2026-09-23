@@ -7,10 +7,20 @@ using UnityEngine;
 /// </summary>
 public static class MapLayout
 {
+    // 원작 비율 작업(PM 지시 2026-09-23, "맵·속도·사거리를 원작 비율로 맞추기" 1단계)용 배율
+    // 훅이다. 레인·창고·물범섬·존의 좌표·크기가 전부 이 값을 거치게 해서, 나중에 실제 배율
+    // (정본 배율 4.167의 역수, WC3 1단위 = 우리 0.24)을 적용할 때 숫자를 여기저기 손으로
+    // 옮기지 않고 이 상수 하나(와 아래 각 배열의 기준값)만 조정하면 되게 한다.
+    // ⚠️ 지금은 반드시 1이어야 한다 — 1이면 ×1.0f는 부동소수점 오차 없이 원래 값과 정확히
+    // 같으므로 맵 생성 결과가 지금과 완전히 같다(1단계는 리팩터만, 수치 변경은 다음 단계).
+    public const float Scale = 1f;
+
     // 섬 전체는 X -310~320, Z -193~291 (630×484). 바다는 그보다 훨씬 커야 한다 —
     // 카메라를 가장자리까지 밀었을 때 바다 밖 회색이 보이면 맵이 끊긴 것처럼 읽힌다.
     // 최대 높이(420)에서 경계 끝까지 밀면 가로로 약 680이 보인다.
     // 카메라 경계(±380)에 그 절반을 더한 720까지 바다가 있어야 밖이 안 보인다.
+    // ⚠️ SeaSize·IslandTop·IslandThickness는 Scale을 안 탄다 — 바다 크기는 카메라 범위와
+    // 함께(2단계), 섬 두께·높이는 Y축이라 레인 가로·세로 배율과 무관하다.
     public const float SeaSize = 1600f;
     public const float IslandTop = 1f;      // 섬 윗면 높이 — 바다보다 한 단 높아 지상 유닛이 넘어가지 못한다
     public const float IslandThickness = 1f;
@@ -36,24 +46,29 @@ public static class MapLayout
     }
 
     // 메인 방어 필드 — 2×2로 붙은 레인 4개 = 플레이어 4명
+    // ⚠️ 아래 좌표·크기는 전부 Scale을 거친다(원본 리터럴 × Scale) — Scale=1인 동안은
+    // 정확히 지금 값 그대로다. 이 배열 안 숫자 자체는 "Scale=1일 때의 기준값"이므로
+    // 다음 단계에서 배율을 올릴 때도 이 리터럴은 그대로 두고 Scale만 바꾸면 된다
+    // (단, 레인처럼 가로세로 비율 자체가 바뀌어야 하는 항목은 기준값도 같이 고쳐야 한다 —
+    // 그건 다음 단계 몫).
     public static readonly Island[] Lanes =
     {
         // 필드를 1.5배(110→165)로 키웠다. 아래 두 줄(유닛 우리 20 + 상점 26)은 그대로다 —
         // 건물과 우리는 커질 이유가 없고, 커지면 오히려 필드에서 멀어진다.
         // 넓힌 만큼 왼쪽으로 펼쳤다. 오른쪽은 펑크해저드·창고가 있어 못 넓힌다.
-        new Island("Lane1", -318f, 362f, 165f, 211f, "lane"),
-        new Island("Lane2", -148f, 362f, 165f, 211f, "lane"),
-        new Island("Lane3", -318f, 144f, 165f, 211f, "lane"),
-        new Island("Lane4", -148f, 144f, 165f, 211f, "lane"),
+        new Island("Lane1", -318f * Scale, 362f * Scale, 165f * Scale, 211f * Scale, "lane"),
+        new Island("Lane2", -148f * Scale, 362f * Scale, 165f * Scale, 211f * Scale, "lane"),
+        new Island("Lane3", -318f * Scale, 144f * Scale, 165f * Scale, 211f * Scale, "lane"),
+        new Island("Lane4", -148f * Scale, 144f * Scale, 165f * Scale, 211f * Scale, "lane"),
     };
 
     // 창고 — 플레이어별 개인 섬 (C키로 유닛을 보냄)
     public static readonly Island[] Warehouses =
     {
-        new Island("Warehouse1",  94f, 266f, 44f, 44f, "warehouse"),
-        new Island("Warehouse2", 146f, 266f, 44f, 44f, "warehouse"),
-        new Island("Warehouse3",  94f, 214f, 44f, 44f, "warehouse"),
-        new Island("Warehouse4", 146f, 214f, 44f, 44f, "warehouse"),
+        new Island("Warehouse1",  94f * Scale, 266f * Scale, 44f * Scale, 44f * Scale, "warehouse"),
+        new Island("Warehouse2", 146f * Scale, 266f * Scale, 44f * Scale, 44f * Scale, "warehouse"),
+        new Island("Warehouse3",  94f * Scale, 214f * Scale, 44f * Scale, 44f * Scale, "warehouse"),
+        new Island("Warehouse4", 146f * Scale, 214f * Scale, 44f * Scale, 44f * Scale, "warehouse"),
     };
 
     // 물범 섬 — 4개. 물범을 잡으면 전체 플레이어에게 목재 1개씩.
@@ -63,28 +78,28 @@ public static class MapLayout
     // 180 기준)를 넘어간다. 이 배치는 양옆 다 17만큼 여유를 두고 안에 들어간다.
     public static readonly Island[] SealIslands =
     {
-        new Island("SealIsland1", -362f, -180f, 26f, 26f, "seal"),
-        new Island("SealIsland2", -314f, -180f, 26f, 26f, "seal"),
-        new Island("SealIsland3", -266f, -180f, 26f, 26f, "seal"),
-        new Island("SealIsland4", -218f, -180f, 26f, 26f, "seal"),
+        new Island("SealIsland1", -362f * Scale, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
+        new Island("SealIsland2", -314f * Scale, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
+        new Island("SealIsland3", -266f * Scale, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
+        new Island("SealIsland4", -218f * Scale, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
     };
 
     public static readonly Island[] Zones =
     {
         // 이벤트 존이 위, 그 아래 불멸·초월 전시가 가로로 나란히.
-        new Island("PunkHazard",         0f, 130f, 90f, 60f, "event"),
+        new Island("PunkHazard",         0f * Scale, 130f * Scale, 90f * Scale, 60f * Scale, "event"),
         // 초월은 25종이 가로 14칸씩 두 줄로 서므로 세로가 그만큼만 있으면 된다.
         // 불멸은 화로를 둘러싼 원형이라 지름이 필요해서 50을 유지한다.
         // 둘 다 조합식 표 바로 위로 내려, 사이에 비던 자리를 없앴다.
-        new Island("ImmortalDisplay",  150f,  52f, 90f, 50f, "display"),
-        new Island("TranscendDisplay", 150f,   8f, 90f, 26f, "display"),
+        new Island("ImmortalDisplay",  150f * Scale,  52f * Scale, 90f * Scale, 50f * Scale, "display"),
+        new Island("TranscendDisplay", 150f * Scale,   8f * Scale, 90f * Scale, 26f * Scale, "display"),
         // 1.5배로 키운 값(원래 120x100). 여유가 빠듯하다 — 봉인섬과 z로 12,
         // 뽑기섬과 x로 10밖에 안 남으니 더 키우려면 이웃을 먼저 옮겨야 한다.
-        new Island("StoryZone",       -290f, -80f, 180f, 150f, "story"),
+        new Island("StoryZone",       -290f * Scale, -80f * Scale, 180f * Scale, 150f * Scale, "story"),
         // 오른쪽 전시 칸이 다른세계 조합식 한 줄(재료 6칸 + 비용 3칸)을 담아야 해서 폭을 넓혔다.
-        new Island("GachaIsland",      -82f, -80f, 136f, 190f, "gacha"),
+        new Island("GachaIsland",      -82f * Scale, -80f * Scale, 136f * Scale, 190f * Scale, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
-        new Island("CombineTable",     137f, -110f, 274f, 186f, "combine"),
+        new Island("CombineTable",     137f * Scale, -110f * Scale, 274f * Scale, 186f * Scale, "combine"),
         // 도박소. StoryZone 서쪽, 같은 z대역이라 나란히 배치되고 40유닛 간격으로 안 겹친다.
     };
 
@@ -135,10 +150,10 @@ public static class MapLayout
     /// 레인 아래에 덧댄 상점 줄의 깊이. 도박소·강화소 셋·도움소가 여기 가로로 늘어선다.
     /// 적은 여기로 안 내려온다 — 순찰 경로도 흙길도 이 줄을 뺀 필드에서만 잡는다.
     /// </summary>
-    public const float ShopStripDepth = 26f;
+    public const float ShopStripDepth = 26f * Scale;
 
     /// <summary>상점 줄 바로 위, 새 유닛이 처음 서는 우리가 놓이는 줄.</summary>
-    public const float UnitPenDepth = 20f;
+    public const float UnitPenDepth = 20f * Scale;
 
     /// <summary>필드가 아닌 아래 두 줄(우리 + 상점)의 합.</summary>
     public const float LaneApronDepth = ShopStripDepth + UnitPenDepth;
@@ -168,7 +183,7 @@ public static class MapLayout
             lane.size.x, ShopStripDepth, lane.tint);
     }
 
-    public static Vector3[] LaneLoop(Island lane, float inset = 14f)
+    public static Vector3[] LaneLoop(Island lane, float inset = 14f * Scale)
     {
         Island field = LaneField(lane);
         float halfX = field.size.x * 0.5f - inset;
