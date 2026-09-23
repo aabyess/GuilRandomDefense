@@ -19,8 +19,15 @@ public class UnitNameplateLayer : MonoBehaviour
 
     [SerializeField] int maxLabels = 48;
     [SerializeField] float headHeightMargin = 6f;   // 머리 위로 띄우는 여유
-    [SerializeField] float fontSize = 13f;
-    [SerializeField] Vector2 labelSize = new Vector2(160f, 20f);
+
+    // 🔴 (09-24) 13 → 24. 사장님 「유닛 위에 이름이 안 보여」의 남은 몫이 **크기**였다.
+    //    1920×1080 실측으로 글자 높이가 **11~12px**이었다 — 겨우 읽히는 수준이고,
+    //    HUD 본문(팀 패널 20 · 보유 아이템 18)보다 작아서 「HUD는 읽히는데 이름표만 안 읽힌다」가 됐다.
+    //    24면 같은 비율로 약 21~22px이 되어 HUD와 같은 급이 된다.
+    //    ⚠️ 이건 캔버스 기준 크기라 창이 작아지면 HUD와 **같이** 줄어든다 — 화면 비율이 유지된다.
+    //    고정 px로 박으면 창 크기가 바뀔 때 어긋난다(09-23·24에 같은 병을 여덟 번 봤다).
+    [SerializeField] float fontSize = 24f;
+    [SerializeField] Vector2 labelSize = new Vector2(220f, 34f);
 
     // 거리 컬링 — 화면이 유닛으로 뒤덮이는 걸 막는다(PM 지시: "멀면 작아지거나 사라지게").
     //
@@ -110,8 +117,13 @@ public class UnitNameplateLayer : MonoBehaviour
 
         // 맨눈에 잘 읽히도록 검정 외곽선. TMP는 머티리얼이 외곽선을 직접 지원해서
         // 레거시 Outline 컴포넌트(정점을 네 벌 더 그리던 방식)보다 싸고 깨끗하다.
-        text.outlineWidth = 0.2f;
-        text.outlineColor = new Color32(0, 0, 0, 220);
+        //
+        // 🔴 (09-24) 0.2 → 0.28, 알파 220 → 255. **대비가 크기만큼 중요하다.**
+        //    등급 색은 중간 명도(흔함=초록 등)인데 바닥이 풀밭(올리브)·우리 모래(베이지)·
+        //    바다로 계속 바뀌어서, 글자를 키우기만 하면 밝은 바닥에서 또 묻힌다.
+        //    외곽선이 배경과 글자 사이에 어두운 테를 만들어 어떤 바닥에서도 떨어져 보이게 한다.
+        text.outlineWidth = 0.28f;
+        text.outlineColor = new Color32(0, 0, 0, 255);
 
         root.SetActive(false);
         return new Label { root = rootRect, text = text };
@@ -175,16 +187,32 @@ public class UnitNameplateLayer : MonoBehaviour
         }
     }
 
-    // HealthBarLayer.HeadHeight·SideBossBarLayer.HeadHeight와 같은 계산이다 — 둘 다
-    // private static이라 재사용할 수 없어 여기도 같은 방식으로 둔다.
+    // 🔴 (09-24) **그리는 것(Renderer)을 먼저 본다.** HealthBarLayer·SideBossBarLayer는
+    //    콜라이더를 먼저 보는데, 이름표에서는 그게 틀린 답을 낸다:
+    //    `ArtBinder.FitToHeight`가 캡슐 콜라이더를 **유닛 키(30)로 통일**해 세우기 때문에,
+    //    네발짐승처럼 실제로 낮은 모델은 콜라이더가 몸보다 한참 높다.
+    //    안흔함_강재규(재규어)는 몸이 13.8인데 콜라이더가 30이라 이름표가 **머리 위 16쯤에
+    //    떠 있었다**(09-24 플레이 캡처에서 눈에 띄게 어긋났다).
+    //    그리는 것의 경계를 쓰면 키가 어떻든 늘 머리 바로 위에 붙는다.
+    //    ⚠️ 체력바는 안 건드린다 — 적은 자리표시 큐브라 콜라이더와 경계가 같고,
+    //       거기서는 지금 계산이 맞게 동작한다. 고칠 이유가 없는 것을 같이 고치지 않는다.
     static float HeadHeight(UnitIdentity identity)
     {
+        Renderer tallest = null;
+        float top = float.NegativeInfinity;
+        foreach (Renderer renderer in identity.GetComponentsInChildren<Renderer>())
+        {
+            if (!(renderer is MeshRenderer || renderer is SkinnedMeshRenderer)) continue;
+            if (!renderer.enabled) continue;
+            if (renderer.bounds.max.y <= top) continue;
+            top = renderer.bounds.max.y;
+            tallest = renderer;
+        }
+
+        if (tallest != null) return top - identity.transform.position.y;
+
         if (identity.TryGetComponent(out Collider body))
             return body.bounds.max.y - identity.transform.position.y;
-
-        Renderer renderer = identity.GetComponentInChildren<Renderer>();
-        if (renderer != null)
-            return renderer.bounds.max.y - identity.transform.position.y;
 
         return 2f;
     }

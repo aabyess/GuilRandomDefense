@@ -910,6 +910,8 @@ public static class ClaudeCommands
     //   · click:<버튼>  플레이 모드에서 그 버튼을 누른다. **게임 오브젝트 이름**(Button_Easy) 또는 **버튼 글자**(쉬움)로 찾는다.
     //                  여러 개 주면 적은 순서대로 1초 간격으로 누른다. 못 찾으면 그때 보이던 버튼 목록을 결과에 남긴다.
     //                  글자에 공백이 있으면 게임 오브젝트 이름으로 준다.
+    //   · click?:<버튼> 있으면 누르고 **없으면 건너뛴다**(2초 찾고 포기, 실패로 안 끝남). 2026-09-24부터 난이도를 기억해서
+    //                  기억이 있으면 난이도 창이 안 뜬다 — `click:쉬움`은 그때 「못 찾음」으로 판이 끝나니 `click?:쉬움`을 쓴다.
     //   · spawn:<유닛>  클릭이 끝난 뒤 플레이어 1(0번 레인) 적 경로 안쪽, **경로에서 사거리 절반 거리**에 그 유닛을 세운다
     //                  (Assets/Data/Units/Roster/<유닛>.asset). 기다리는 동안 0번 레인 적의 체력 감소를 0.25초마다 세서
     //                  「적 한 마리당 몇 대 맞았나」·총 피해·골드 변화를 결과에 싣는다 — 사거리·공속 검증용(2026-09-23 PM 승인 (B)).
@@ -938,7 +940,7 @@ public static class ClaudeCommands
 
     const string GameShotKey = "ClaudeCommands.GameShot";
     const double GameShotEnterTimeout = 60, GameShotCaptureTimeout = 15, GameShotExitTimeout = 60;
-    const double GameShotSettle = 1.0, GameShotClickGap = 1.0, GameShotClickSearch = 5.0;
+    const double GameShotSettle = 1.0, GameShotClickGap = 1.0, GameShotClickSearch = 5.0, GameShotOptionalClickSearch = 2.0;
     const int GameShotMaxLogKinds = 40;
 
     [Serializable]
@@ -1001,7 +1003,12 @@ public static class ClaudeCommands
         // 인자는 모양으로 가른다 — 순서를 외울 필요가 없게.
         foreach (string token in parts.Skip(1))
         {
-            if (token.StartsWith("click:"))
+            if (token.StartsWith("click?:"))
+            {
+                if (token.Length == 7) return "❌ click?: 뒤에 버튼 이름이나 글자를 주세요";
+                job.clicks.Add("?" + token.Substring(7));   // 앞의 ?가 「없으면 건너뜀」 표시
+            }
+            else if (token.StartsWith("click:"))
             {
                 if (token.Length == 6) return "❌ click: 뒤에 버튼 이름이나 글자를 주세요";
                 job.clicks.Add(token.Substring(6));
@@ -1092,7 +1099,16 @@ public static class ClaudeCommands
             {
                 if (job.clickIndex > 0 && inStage < GameShotClickGap) break;   // 앞 클릭의 결과가 화면에 반영될 틈
                 string target = job.clicks[job.clickIndex];
+                bool optional = target.StartsWith("?");
+                if (optional) target = target.Substring(1);
                 string clicked = ClickButton(target);
+                if (clicked == null && optional && inStage > GameShotOptionalClickSearch)
+                {
+                    job.report += $"   🖱 {job.clickIndex + 1}번째 클릭: 「{target}」 없음 — 선택 클릭이라 건너뜀\n";
+                    job.clickIndex++;
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count > 0 ? "spawning" : "waiting");
+                    break;
+                }
                 if (clicked != null)
                 {
                     job.report += $"   🖱 {job.clickIndex + 1}번째 클릭: {clicked}\n";
