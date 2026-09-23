@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Playables;
 using UnityEngine.Animations;
+using UnityEngine.AI;
 
 /// <summary>
 /// Claude가 사장님 대신 유니티 메뉴를 돌리고 화면을 찍어 결과를 읽는 창구(2026-09-13, 사장님: 「모델배선·맵생성 아직도 내가 해줘야 하냐」).
@@ -29,6 +30,7 @@ using UnityEngine.Animations;
 ///   lineup &lt;파일&gt; [폴더] [시작] [개수]        생성된 유닛 프리팹을 격자로 세워 찍는다(누운 유닛 찾기). 칸↔이름 표는 결과에
 ///   gameshot &lt;파일&gt; [초] [가로x세로] [super:N] [click:&lt;버튼&gt;]  플레이 모드로 들어가 버튼을 눌러 가며 **UI까지** 게임 화면을 찍고 나온다(아래 GameShot 절).
 ///                                             글씨·UI 판정엔 해상도를 꼭 박는다: gameshot hud.png 3 1920x1080 click:쉬움
+///   navlane &lt;레인&gt; [칸 수]                   레인 섬 위 NavMesh 지도(걸을 수 있음·바다 영역·없음). 🔴 맵 배율·복셀·섬 높이를 건드린 뒤엔 반드시 돌린다
 /// 사진은 ClaudeBridge/shots/에 PNG로 남는다. 명령마다 그동안의 Debug 로그(경고·오류 포함)가 결과에 실린다.
 /// </summary>
 [InitializeOnLoad]
@@ -220,6 +222,9 @@ public static class ClaudeCommands
 
             case "gameshot":
                 return StartGameShot(parts);
+
+            case "navlane":
+                return NavLane(parts.Length > 0 ? int.Parse(parts[0]) : 0, parts.Length > 1 ? int.Parse(parts[1]) : 48);
 
             default:
                 return $"❌ 모르는 명령: {verb}";
@@ -905,6 +910,13 @@ public static class ClaudeCommands
     //   · click:<버튼>  플레이 모드에서 그 버튼을 누른다. **게임 오브젝트 이름**(Button_Easy) 또는 **버튼 글자**(쉬움)로 찾는다.
     //                  여러 개 주면 적은 순서대로 1초 간격으로 누른다. 못 찾으면 그때 보이던 버튼 목록을 결과에 남긴다.
     //                  글자에 공백이 있으면 게임 오브젝트 이름으로 준다.
+    //   · spawn:<유닛>  클릭이 끝난 뒤 플레이어 1(0번 레인) 적 경로 안쪽, **경로에서 사거리 절반 거리**에 그 유닛을 세운다
+    //                  (Assets/Data/Units/Roster/<유닛>.asset). 기다리는 동안 0번 레인 적의 체력 감소를 0.25초마다 세서
+    //                  「적 한 마리당 몇 대 맞았나」·총 피해·골드 변화를 결과에 싣는다 — 사거리·공속 검증용(2026-09-23 PM 승인 (B)).
+    //                  `spawn:<유닛>@corner`면 레인 안쪽 **모서리**(경로가 두 변으로 지나는 자리)에 대각선으로 세운다 —
+    //                  원작 플레이어가 실제로 서는 자리. 모서리가 여러 개면 돌아가며 쓴다.
+    //                  🔴 **에디터 촬영 전용.** 뽑기·골드를 거치지 않고 유닛을 만든다 — 게임 코드(Assets/Scripts)로 옮기면 치트가 된다.
+    //                  이 파일은 Assets/Editor라 빌드에 안 들어간다. 여기 밖으로 꺼내지 말 것.
     //
     // 왜 플레이 모드인가 — shot·shotobj·idleview는 카메라를 RenderTexture로 굽는다. ScreenSpaceOverlay 캔버스는 카메라를 안 거쳐서
     // 거기 안 담긴다. 게다가 GameHud·DifficultySelectHud는 **실행 때 Awake에서 캔버스를 만든다** — 편집 모드의 Game 뷰엔 HUD가 아예 없다.
@@ -932,6 +944,8 @@ public static class ClaudeCommands
         public float seconds;
         public int superSize = 1;
         public List<string> clicks = new List<string>();
+        public List<string> spawns = new List<string>();
+        public int goldAtSpawn = -1;
         public int clickIndex;
         public string stage;        // entering · settling · clicking · waiting · capturing · exiting
         public double stageSince;   // EditorApplication.timeSinceStartup — 도메인 리로드를 넘어 이어진다
@@ -987,6 +1001,13 @@ public static class ClaudeCommands
                 if (token.Length == 6) return "❌ click: 뒤에 버튼 이름이나 글자를 주세요";
                 job.clicks.Add(token.Substring(6));
             }
+            else if (token.StartsWith("spawn:"))
+            {
+                string unitName = token.Substring(6).Split('@')[0];
+                if (AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{unitName}.asset") == null)
+                    return $"❌ 유닛 에셋 없음: Assets/Data/Units/Roster/{unitName}.asset";
+                job.spawns.Add(token.Substring(6));   // 「이름@corner」 꼴 그대로 둔다 — SpawnForShot이 가른다
+            }
             else if (token.StartsWith("super:"))
             {
                 if (!int.TryParse(token.Substring(6), out job.superSize) || job.superSize < 1 || job.superSize > 4)
@@ -1026,6 +1047,7 @@ public static class ClaudeCommands
         EditorApplication.isPlaying = true;   // 이 update가 끝난 뒤에 들어간다
 
         string clicks = job.clicks.Count > 0 ? $" · 누를 버튼 {string.Join(" → ", job.clicks)}" : "";
+        if (job.spawns.Count > 0) clicks += $" · 세울 유닛 {string.Join(", ", job.spawns)}";
         return $"⏳ 플레이 모드로 들어가 찍는다(씬 {SceneManager.GetActiveScene().name}{clicks} · 마지막 뒤 {job.seconds:F1}초 · ×{job.superSize}) — 결과는 나온 뒤 이 파일에 이어 쓴다";
     }
 
@@ -1058,7 +1080,7 @@ public static class ClaudeCommands
                 break;
 
             case "settling":
-                if (inStage >= GameShotSettle) Advance(job, job.clicks.Count > 0 ? "clicking" : "waiting");
+                if (inStage >= GameShotSettle) Advance(job, job.clicks.Count > 0 ? "clicking" : job.spawns.Count > 0 ? "spawning" : "waiting");
                 break;
 
             case "clicking":
@@ -1070,7 +1092,7 @@ public static class ClaudeCommands
                 {
                     job.report += $"   🖱 {job.clickIndex + 1}번째 클릭: {clicked}\n";
                     job.clickIndex++;
-                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : "waiting");
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count > 0 ? "spawning" : "waiting");
                 }
                 else if (inStage > GameShotClickSearch)
                 {
@@ -1079,9 +1101,32 @@ public static class ClaudeCommands
                 break;
             }
 
+            case "spawning":
+                if (job.clickIndex > 0 && inStage < GameShotClickGap) break;   // 마지막 클릭(난이도 등)이 반영될 틈
+                spawnedUnits.Clear();
+                theoreticalDps = 0f;
+                enemyPresentSeconds = 0f;
+                lastWatchTime = watchStartTime = EditorApplication.timeSinceStartup;
+                lastGold = int.MinValue;
+                eventLog.Clear();
+                for (int i = 0; i < job.spawns.Count; i++)
+                    job.report += "   " + SpawnForShot(job.spawns[i], i, job.spawns.Count) + "\n";
+                int good = spawnedUnits.Count(u => u.onMesh && u.inRange);
+                job.report += $"   {(good == job.spawns.Count ? "✅" : "⚠️")} 배치 {good}/{job.spawns.Count}기가 NavMesh 위 + 경로가 사거리 안" +
+                              (good == job.spawns.Count ? "" : $" — 어긋난 유닛: {string.Join(", ", spawnedUnits.Where(u => !(u.onMesh && u.inRange)).Select(u => $"{u.name}({(u.onMesh ? "" : "NavMesh 밖 ")}{(u.inRange ? "" : "사거리 밖")})"))} → **이 판의 처치·골드는 유닛 수만큼 믿으면 안 된다**") + "\n";
+                job.goldAtSpawn = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
+                hitWatch.Clear();
+                roundLog.Clear();
+                watchedRound = -1;
+                maxLaneEnemies = 0;
+                Advance(job, "waiting");
+                break;
+
             case "waiting":
+                if (job.spawns.Count > 0) WatchLaneHits();
                 if (inStage >= job.seconds)
                 {
+                    if (job.spawns.Count > 0) job.report += DescribeLaneHits(job, inStage);
                     ScreenCapture.CaptureScreenshot(job.file, job.superSize);   // 이 프레임 끝에 Game 뷰(UI 포함)를 파일로 쓴다
                     Advance(job, "capturing");
                 }
@@ -1119,6 +1164,325 @@ public static class ClaudeCommands
                 }
                 break;
         }
+    }
+
+    // navlane <레인 번호> [가로 칸 수]
+    // 레인 섬 위를 격자로 내려 찍어 칸마다 걸을 수 있는지 글자 지도로 그린다.
+    //
+    // 🔴 **정식 검사다 — 맵 배율(WorldScale)·NavMesh 복셀·섬 높이(IslandTop)·바다 상자를 건드린 뒤엔 맵 생성 다음에 꼭 돌린다.**
+    //    2026-09-23 사고: 맵을 4.167배로 키우며 굽기 무게를 줄이려고 복셀을 0.5 → 2.0으로 올렸는데(773dfe5b), 섬 윗면(y 1)과
+    //    바다 윗면(y 0)의 높이 차 1은 그대로였다. 한 복셀보다 얕은 두 층을 Recast가 한 층으로 합치면서 영역 번호가 큰 쪽(Sea=3)이
+    //    이겨, **레인 섬 윗면의 89%가 바다 영역**이 됐다(outbox 2026: 3000칸 중 걸을 수 있음 344). 지상 유닛은 Sea를 못 걸어
+    //    레인 안에 못 들어가고 우리·가장자리 줄에서만 싸웠다. 적은 WaypointMover라 멀쩡히 돌아서 겉으론 안 보였다 —
+    //    spawn: 판에서 「어디를 노려도 가장 가까운 걸을 수 있는 면이 130~260 떨어져 있다」는 곁가지 관찰로 잡혔다(outbox 2024).
+    //    합격선: 섬 안쪽 땅 칸 대부분이 #, ~는 섬 밖(바다)만. 결과 첫 줄의 높이 차 경고가 없어야 한다.
+    //   # 걸을 수 있음(Walkable) · ~ 바다 영역 · . NavMesh 없음 · 공백 = 섬 밖(콜라이더 없음) · E 적 경로 점 근처
+    // 못 걷는 칸은 맨 위 콜라이더 이름을 세서 「무엇이 덮고 있나」를 같이 적는다.
+    static string NavLane(int laneIndex, int columns)
+    {
+        // 🔴 편집 모드에서 맵을 막 새로 만든 직후엔 물리 엔진이 새 오브젝트의 위치를 아직 모른다 — 콜라이더 경계가 원점에 붙고
+        //    레이캐스트도 원점 근처 오브젝트만 맞힌다. 2026-09-23 outbox 1305: 섬 경계 x −1~1·칸 0.0으로 2704칸이 전부
+        //    「Lane1_유닛우리_칸막이1」을 맞히고 「걸을 수 있음 0%」라는 그럴듯한 숫자를 냈다. 재기 전에 반드시 동기화한다.
+        Physics.SyncTransforms();
+
+        LaneMarker lane = UnityEngine.Object.FindObjectsByType<LaneMarker>(FindObjectsSortMode.None).FirstOrDefault(l => l.LaneIndex == laneIndex);
+        if (lane == null) return $"❌ {laneIndex}번 레인 LaneMarker 없음";
+
+        // 섬 경계는 **렌더러**로 잰다(물리 동기화와 무관). 레인 섬 판 자신과 자식 중, 섬 판 중심을 품는 큰 것만.
+        Bounds? island = null;
+        foreach (Renderer rend in lane.GetComponents<Renderer>().Concat(lane.GetComponentsInChildren<Renderer>(true)))
+        {
+            if (!rend.bounds.Contains(new Vector3(lane.LaneCenter.x, rend.bounds.center.y, lane.LaneCenter.z))) continue;
+            if (island == null) island = rend.bounds;
+            else { Bounds b = island.Value; b.Encapsulate(rend.bounds); island = b; }
+        }
+        // 🔴 빈 경계면 숫자를 내지 않는다 — 조용히 틀린 값(0%)이 제일 위험하다(위 1305 사고). 레인은 수백 단위라 50 미만이면 못 찾은 것이다.
+        if (island == null || island.Value.size.x < 50f || island.Value.size.z < 50f)
+            return $"❌ {lane.name}(레인 {laneIndex})의 섬 경계를 못 잡았다 — {(island == null ? "렌더러 없음" : $"크기 {island.Value.size}")}. " +
+                   $"LaneMarker 위치 {lane.LaneCenter}. 숫자를 내지 않고 끝낸다(빈 경계로 재면 「0%」 같은 거짓 숫자가 나온다).";
+
+        Bounds area = island.Value;
+        area.Expand(new Vector3(area.size.x * 0.15f, 0f, area.size.z * 0.15f));   // 섬 바깥 경로까지 보이게 여유
+        float step = area.size.x / columns;
+        int rows = Mathf.CeilToInt(area.size.z / step);
+        if (step < 1f) return $"❌ 칸 간격 {step:F2}로 재면 모든 칸이 한 자리를 찍는다 — 섬 경계 {area.size}를 다시 보세요. 숫자를 내지 않는다.";
+
+        WaypointPath path = LanePathNear(lane.LaneCenter);
+        int seaArea = NavMesh.GetAreaFromName("Sea");
+        int walk = 0, sea = 0, none = 0, air = 0;
+        Dictionary<string, int> blockers = new Dictionary<string, int>();
+        StringBuilder map = new StringBuilder();
+        for (int row = rows - 1; row >= 0; row--)   // 위(+z)가 윗줄
+        {
+            for (int col = 0; col < columns; col++)
+            {
+                float x = area.min.x + (col + 0.5f) * step, z = area.min.z + (row + 0.5f) * step;
+                Vector3 top = new Vector3(x, area.max.y + 500f, z);
+                bool nearPath = false;
+                if (path != null)
+                    for (int i = 0; i + 1 < path.PointCount && !nearPath; i++)
+                        nearPath = DistanceToSegmentXZ(new Vector3(x, 0f, z), path.GetPoint(i), path.GetPoint(i + 1)) < step * 0.5f;
+
+                if (!Physics.Raycast(top, Vector3.down, out RaycastHit ground, 2000f, ~0, QueryTriggerInteraction.Ignore))
+                {
+                    map.Append(nearPath ? 'E' : ' ');
+                    air++;
+                    continue;
+                }
+                char mark;
+                if (NavMesh.SamplePosition(ground.point, out NavMeshHit hit, step * 0.5f, NavMesh.AllAreas)
+                    && Mathf.Abs(hit.position.y - ground.point.y) < 6f)
+                {
+                    if (hit.mask == 1 << seaArea) { mark = '~'; sea++; }
+                    else { mark = '#'; walk++; }
+                }
+                else
+                {
+                    mark = '.';
+                    none++;
+                    string key = ground.collider.name;
+                    blockers[key] = blockers.TryGetValue(key, out int n) ? n + 1 : 1;
+                }
+                map.Append(nearPath ? 'E' : mark);
+            }
+            map.Append('\n');
+        }
+
+        NavMeshBuildSettings settings = NavMesh.GetSettingsByID(0);
+
+        // 섬 윗면과 바다 콜라이더 윗면의 높이 차 — 복셀 두 칸보다 얕으면 굽기에서 한 층으로 합쳐져 영역이 섞인다(위 🔴).
+        float islandTop = lane.LaneCenter.y;
+        if (Physics.Raycast(lane.LaneCenter + Vector3.up * 500f, Vector3.down, out RaycastHit centerHit, 2000f, ~0, QueryTriggerInteraction.Ignore))
+            islandTop = centerHit.point.y;
+        GameObject seaBox = GameObject.Find("Sea");
+        float? seaTop = seaBox != null && seaBox.TryGetComponent(out Collider seaCollider) ? seaCollider.bounds.max.y : (float?)null;
+        float voxel = UnityEngine.Object.FindObjectsByType<Unity.AI.Navigation.NavMeshSurface>(FindObjectsSortMode.None)
+            .Select(v => v.overrideVoxelSize ? v.voxelSize : settings.agentRadius / 3f).DefaultIfEmpty(0f).Max();
+        string gap = seaTop == null ? "바다 콜라이더(Sea) 못 찾음"
+            : $"섬 윗면 y {islandTop:F2} − 바다 윗면 y {seaTop.Value:F2} = {islandTop - seaTop.Value:F2} (복셀 {voxel:F2}의 2칸 = {voxel * 2f:F2})" +
+              (islandTop - seaTop.Value < voxel * 2f ? " 🔴 얕다 — 섬과 바다가 한 층으로 합쳐져 섬이 바다 영역이 될 수 있다" : " ✅");
+        int land = walk + sea + none;
+        StringBuilder sb = new StringBuilder($"🗺 {lane.name}(레인 {laneIndex}) 섬 경계 x {island.Value.min.x:F0}~{island.Value.max.x:F0} · z {island.Value.min.z:F0}~{island.Value.max.z:F0} · 칸 {step:F1}\n");
+        sb.AppendLine($"   높이 차: {gap} · 설계값 MapLayout.IslandTop {MapLayout.IslandTop:F2}" +
+                      (Mathf.Abs(islandTop - MapLayout.IslandTop) > 0.5f ? " ⚠️ 잰 섬 윗면과 설계값이 다르다 — 재는 자리(광선이 맞힌 것)를 의심할 것" : ""));
+        sb.AppendLine($"   땅 칸 {land}개 중 걸을 수 있음 {walk}({(land > 0 ? 100f * walk / land : 0):F0}%) · 바다 영역 {sea} · NavMesh 없음 {none}({(land > 0 ? 100f * none / land : 0):F0}%) · 콜라이더 없음 {air}");
+        sb.AppendLine($"   굽기 설정(에이전트 0): 반경 {settings.agentRadius} · 높이 {settings.agentHeight} · 오르기 {settings.agentClimb} · 경사 {settings.agentSlope}°");
+        foreach (var surface in UnityEngine.Object.FindObjectsByType<Unity.AI.Navigation.NavMeshSurface>(FindObjectsSortMode.None))
+            sb.AppendLine($"   NavMeshSurface {surface.name}: 에이전트 {surface.agentTypeID} · 수집 {surface.collectObjects} · 기하 {surface.useGeometry} · 레이어 {surface.layerMask.value} · " +
+                          $"복셀 {(surface.overrideVoxelSize ? surface.voxelSize.ToString() : "자동")} · 최소 영역 {surface.minRegionArea}");
+        if (blockers.Count > 0)
+            sb.AppendLine("   NavMesh 없는 칸의 맨 위 콜라이더: " + string.Join(" · ", blockers.OrderByDescending(b => b.Value).Take(8).Select(b => $"{b.Key} {b.Value}")));
+        sb.AppendLine("   # 걸을 수 있음 · ~ 바다 영역 · . NavMesh 없음 · 공백 섬 밖 · E 적 경로(위가 +z):");
+        sb.Append(map);
+        return sb.ToString();
+    }
+
+    static float DistanceToSegmentXZ(Vector3 p, Vector3 a, Vector3 b)
+    {
+        Vector2 P = new Vector2(p.x, p.z), A = new Vector2(a.x, a.z), B = new Vector2(b.x, b.z);
+        Vector2 AB = B - A;
+        float t = AB.sqrMagnitude > 0f ? Mathf.Clamp01(Vector2.Dot(P - A, AB) / AB.sqrMagnitude) : 0f;
+        return Vector2.Distance(P, A + AB * t);
+    }
+
+    // ── spawn: (에디터 촬영 전용 — 위 GameShot 절 🔴) ──
+
+    // 0번 레인(플레이어 1) 적 경로. WaveSpawner의 목록은 비공개라, 레인 섬 중심에 가장 가까운 경로를 고른다.
+    static WaypointPath LanePathNear(Vector3 laneCenter)
+    {
+        WaypointPath best = null;
+        float bestDistance = float.MaxValue;
+        foreach (WaypointPath path in UnityEngine.Object.FindObjectsByType<WaypointPath>(FindObjectsSortMode.None))
+        {
+            if (path.PointCount == 0) continue;
+            Vector3 sum = Vector3.zero;
+            for (int i = 0; i < path.PointCount; i++) sum += path.GetPoint(i);
+            float distance = Vector3.Distance(sum / path.PointCount, laneCenter);
+            if (distance < bestDistance) { bestDistance = distance; best = path; }
+        }
+        return best;
+    }
+
+    // 레인 가운데에 세운 뒤, 경로에서 가장 긴 변의 가운데를 골라 **안쪽으로 사거리 절반** 들어간 자리로 옮긴다.
+    // 사거리를 먼저 알아야 자리를 정할 수 있어서(ApplyStats가 맵 배율을 곱한다) 세운 뒤 읽는다.
+    // 여러 기면 한 자리에 겹치지 않게 경로의 **긴 변들을 돌아가며**, 같은 변에 둘 이상이면 변을 나눠 세운다.
+    static string SpawnForShot(string spec, int index, int total)
+    {
+        string unitName = spec.Split('@')[0];
+        bool corner = spec.EndsWith("@corner");
+        UnitData data = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{unitName}.asset");
+        UnitSpawner spawner = UnityEngine.Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        if (data == null || spawner == null || lane == null)
+            return $"❌ 소환 실패 {unitName}: 에셋 {(data != null)} · UnitSpawner {(spawner != null)} · 0번 레인 {(lane != null)}";
+
+        GameObject unit = spawner.Spawn(data, lane.LaneCenter, 0);
+        if (unit == null) return $"❌ 소환 실패 {unitName}: Spawn이 null(프리팹 없음?)";
+        UnitAttacker attacker = unit.GetComponent<UnitAttacker>();
+        float range = attacker != null ? attacker.AttackRange : 0f;
+
+        WaypointPath path = LanePathNear(lane.LaneCenter);
+        if (path == null || path.PointCount < 2) return $"⚠️ {unitName}을 레인 가운데에 세움(경로를 못 찾음) · 사거리 {range:F1}";
+
+        // 경로의 변을 길이순으로. 짧은 이음새(모서리 꺾임)는 빼고 가장 긴 변의 절반 이상인 것만 쓴다.
+        List<(Vector3 a, Vector3 b)> sides = new List<(Vector3, Vector3)>();
+        for (int i = 0; i + 1 < path.PointCount; i++) sides.Add((path.GetPoint(i), path.GetPoint(i + 1)));
+        sides = sides.OrderByDescending(e => Vector3.Distance(e.a, e.b)).ToList();
+        float longest = Vector3.Distance(sides[0].a, sides[0].b);
+        sides = sides.Where(e => Vector3.Distance(e.a, e.b) >= longest * 0.5f).ToList();
+        Vector3 edge, target;
+        string where;
+        if (corner)
+        {
+            // 경로가 꺾이는 점(앞뒤 변 방향이 45° 넘게 바뀌는 점)이 모서리다. 모서리에서 레인 가운데 쪽 대각선으로 들어가
+            // 두 변 모두에서 사거리 절반쯤 떨어지게 선다(대각선 거리 = 반사거리 × √2).
+            List<Vector3> corners = new List<Vector3>();
+            for (int i = 1; i + 1 < path.PointCount; i++)
+            {
+                Vector3 before = path.GetPoint(i) - path.GetPoint(i - 1), after = path.GetPoint(i + 1) - path.GetPoint(i);
+                before.y = after.y = 0f;
+                if (before.sqrMagnitude > 1f && after.sqrMagnitude > 1f && Vector3.Angle(before, after) > 45f) corners.Add(path.GetPoint(i));
+            }
+            if (corners.Count == 0) return $"❌ {unitName}: 경로에서 모서리를 못 찾음(점 {path.PointCount}개)";
+            edge = corners[index % corners.Count];
+            Vector3 diagonal = lane.LaneCenter - edge;
+            diagonal.y = 0f;
+            target = edge + diagonal.normalized * Mathf.Min(range * 0.5f * 1.4142f, diagonal.magnitude);
+            where = $"{index % corners.Count + 1}번째 모서리(모서리 {corners.Count}개)";
+        }
+        else
+        {
+            (Vector3 a, Vector3 b) = sides[index % sides.Count];
+            int perSide = (total + sides.Count - 1) / sides.Count;
+            float along = (index / sides.Count + 1f) / (perSide + 1f);   // 한 변에 k기면 1/(k+1) 간격
+            edge = Vector3.Lerp(a, b, along);
+            Vector3 inward = lane.LaneCenter - edge;
+            inward.y = 0f;
+            target = edge + inward.normalized * Mathf.Min(range * 0.5f, inward.magnitude);
+            where = $"{index % sides.Count + 1}번째 긴 변({along:P0} 지점)";
+        }
+        // 섬 윗면 높이를 모르니 높이 차까지 덮게 넉넉히(300) 찾되, **그 유닛의 에이전트 종류·영역**으로 찾는다 —
+        // AllAreas로 찾으면 바다(Sea) 영역이나 다른 에이전트 종류의 면에 붙어 Warp가 실패한다(outbox 2018: y 2에서 못 올라감).
+        string sampled = "못 찾음";
+        NavMeshAgent sampleAgent = unit.GetComponent<NavMeshAgent>();
+        NavMeshQueryFilter filter = new NavMeshQueryFilter
+        {
+            agentTypeID = sampleAgent != null ? sampleAgent.agentTypeID : 0,
+            areaMask = sampleAgent != null ? sampleAgent.areaMask : NavMesh.AllAreas,
+        };
+        if (NavMesh.SamplePosition(target, out NavMeshHit hit, 300f, filter))
+        {
+            sampled = $"{Vector3.Distance(hit.position, target):F1} 떨어진 곳";
+            target = hit.position;
+        }
+        // 🔴 Warp는 **항상** 한다. 레인 가운데(첫 소환 자리)는 NavMesh 위가 아닐 수 있어 isOnNavMesh가 거짓인데, 그때 transform만 옮기면
+        //    에이전트가 NavMesh 밖에 남아 UnitCombat의 추격·복귀가 「active agent … placed on a NavMesh」 오류로 멎는다
+        //    (2026-09-23 outbox 2016: 641건, 유닛이 제자리에서만 때렸다). Warp는 에이전트를 새 자리의 NavMesh에 올린다.
+        bool onMesh = false;
+        if (unit.TryGetComponent(out NavMeshAgent agent)) onMesh = agent.Warp(target) && agent.isOnNavMesh;
+        else unit.transform.position = target;
+
+        // 경로까지 거리 = 경로의 모든 변 중 가장 가까운 것(모서리 배치에선 두 변 모두 가깝다).
+        float toPath = float.MaxValue;
+        for (int i = 0; i + 1 < path.PointCount; i++)
+            toPath = Mathf.Min(toPath, DistanceToSegmentXZ(unit.transform.position, path.GetPoint(i), path.GetPoint(i + 1)));
+        Vector3 flat = new Vector3(toPath, 0f, 0f);
+        shotUnitInset = toPath;
+        spawnedUnits.Add((unitName, onMesh, toPath < range));
+        if (attacker != null && attacker.AttackInterval > 0f) theoreticalDps += attacker.AttackDamage / attacker.AttackInterval;
+        shotUnitRange = range;
+        shotUnitInterval = attacker != null ? attacker.AttackInterval : 0f;
+        return $"🧍 소환 {unitName} → 플레이어 1 레인 {where}, 경로까지 {flat.magnitude:F1} · 사거리 {range:F1} · NavMesh 위 {(onMesh ? "✅" : "❌")}(가까운 면 {sampled}) · " +
+               $"공격력 {attacker?.AttackDamage:F1} · 공격 간격 {attacker?.AttackInterval:F2}초 · 위치 {unit.transform.position}";
+    }
+
+    // 0번 레인 적의 체력을 0.25초마다 보고, 줄어든 횟수를 「맞은 횟수」로 센다(공격 간격이 이보다 길어 한 번 줄면 한 대다).
+    // 도메인 리로드를 넘길 필요가 없다 — 리로드가 나면 판 자체가 오염 표시된다.
+    class HitRecord { public float lastHp; public int hits; public float damage; public bool gone; public float maxHp; public float speed; }
+    // 소환한 유닛이 경로에서 얼마나 떨어졌는지·사거리·공격 간격 — 「한 번 지나갈 때 이론상 몇 대」를 계산하는 데 쓴다.
+    static float shotUnitInset, shotUnitRange, shotUnitInterval;
+    // 세운 유닛마다 (이름, NavMesh 위인가, 경로가 사거리 안인가) — 판이 유효한지 결과 머리에서 바로 가린다.
+    // 2026-09-23 outbox 2024: 5기 중 1기는 NavMesh 밖, 1기는 사거리 밖이라 그 판이 무효였는데 줄마다 흩어져 있어 늦게 봤다.
+    static readonly List<(string name, bool onMesh, bool inRange)> spawnedUnits = new List<(string, bool, bool)>();
+    // DPS·가동률(이론 = 세운 유닛의 공격력÷간격 합, 실측 = 총 피해 ÷ 레인에 적이 있던 시간)과 처치·골드 시점 기록.
+    static float theoreticalDps, enemyPresentSeconds;
+    static double lastWatchTime, watchStartTime;
+    static int lastGold = int.MinValue;
+    static readonly List<string> eventLog = new List<string>();
+    // 라운드가 바뀌는 순간 0번 레인에 남은 적 수 — 「적이 쌓이면 레인당 70에서 패배」를 보려고.
+    static int watchedRound = -1, maxLaneEnemies;
+    static readonly List<string> roundLog = new List<string>();
+    static readonly Dictionary<EnemyDummy, HitRecord> hitWatch = new Dictionary<EnemyDummy, HitRecord>();
+
+    static void WatchLaneHits()
+    {
+        double now = EditorApplication.timeSinceStartup;
+        int laneCount = EnemyDummy.CountInLane(0);
+        if (laneCount > 0) enemyPresentSeconds += (float)(now - lastWatchTime);
+        lastWatchTime = now;
+        string at = $"{now - watchStartTime:F1}초";
+        int gold = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
+        if (lastGold != int.MinValue && gold != lastGold && eventLog.Count < 60) eventLog.Add($"{at} 골드 {lastGold}→{gold}({gold - lastGold:+0;-0})");
+        lastGold = gold;
+        maxLaneEnemies = Mathf.Max(maxLaneEnemies, laneCount);
+        RoundManager rounds = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
+        if (rounds != null && rounds.CurrentRound != watchedRound)
+        {
+            if (watchedRound >= 0) roundLog.Add($"라운드 {watchedRound}→{rounds.CurrentRound} 때 레인 적 {laneCount}");
+            watchedRound = rounds.CurrentRound;
+        }
+
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+        {
+            if (enemy == null || enemy.LaneIndex != 0) continue;
+            if (!hitWatch.TryGetValue(enemy, out HitRecord record))
+            {
+                hitWatch[enemy] = new HitRecord { lastHp = enemy.Hp, maxHp = enemy.MaxHp, speed = enemy.MoveSpeed };
+                continue;
+            }
+            if (enemy.Hp < record.lastHp - 0.001f)
+            {
+                record.hits++;
+                record.damage += record.lastHp - enemy.Hp;
+            }
+            record.lastHp = enemy.Hp;
+        }
+        foreach (KeyValuePair<EnemyDummy, HitRecord> pair in hitWatch)
+        {
+            if (pair.Value.gone || (pair.Key != null && !pair.Key.IsDead)) continue;
+            pair.Value.gone = true;
+            // 사라진 이유를 가른다: 마지막으로 본 체력이 한 대 거리 안이었고 맞은 적이 있으면 처치, 아니면 다른 이유(흡수·레인 밖 등).
+            bool likelyKill = pair.Value.hits > 0 && pair.Value.lastHp <= pair.Value.maxHp * 0.5f;
+            if (eventLog.Count < 60) eventLog.Add($"{at} 적 사라짐({(likelyKill ? "처치로 보임" : "처치 아님?")}, 마지막 체력 {pair.Value.lastHp:F0}/{pair.Value.maxHp:F0}, 맞은 {pair.Value.hits}대)");
+        }
+    }
+
+    static string DescribeLaneHits(GameShotJob job, double watched)
+    {
+        List<HitRecord> hitOnes = hitWatch.Values.Where(r => r.hits > 0).ToList();
+        int gold = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
+        string histogram = string.Join(" · ", hitOnes.GroupBy(r => r.hits).OrderBy(g => g.Key).Select(g => $"{g.Key}대 {g.Count()}마리"));
+        int killed = hitOnes.Count(r => r.gone);
+        string avg = hitOnes.Count > 0 ? $"{hitOnes.Average(r => r.hits):F2}" : "-";
+        // 이론: 유닛이 곧은 경로에서 inset만큼 안쪽에 있으면 사거리 원이 경로를 자르는 길이는 2√(R²−d²).
+        //       적이 그 길이를 지나는 시간 ÷ 공격 간격 = 한 마리를 혼자 상대할 때 최대 몇 대. 적이 몰려 오면 나눠 맞아 평균이 이보다 낮다.
+        float speed = hitWatch.Count > 0 ? hitWatch.Values.Average(r => r.speed) : 0f;
+        float hp = hitWatch.Count > 0 ? hitWatch.Values.Average(r => r.maxHp) : 0f;
+        float chord = shotUnitRange > shotUnitInset ? 2f * Mathf.Sqrt(shotUnitRange * shotUnitRange - shotUnitInset * shotUnitInset) : 0f;
+        float inRange = speed > 0f ? chord / speed : 0f;
+        string theory = $"   📐 이론: 경로에서 {shotUnitInset:F1} 안쪽 · 사거리 {shotUnitRange:F1} → 사거리 안 경로 {chord:F0} · 적 이속 평균 {speed:F1} → " +
+                        $"머무는 시간 {inRange:F2}초 ÷ 공격 간격 {shotUnitInterval:F2}초 = 한 마리 혼자 지나갈 때 최대 {(shotUnitInterval > 0f ? inRange / shotUnitInterval : 0f):F1}대 · 적 최대체력 평균 {hp:F0}\n";
+        RoundManager roundManager = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
+        string rounds = $"   🏁 지금 라운드 {roundManager?.CurrentRound} · 남은시간 {roundManager?.RoundTimeLeft:F1}s · 준비 {roundManager?.PreRoundTimeLeft:F1}s · " +
+                        $"0번 레인 적 지금 {EnemyDummy.CountInLane(0)} · 최대 {maxLaneEnemies} · 패배 여부 {roundManager?.IsGameOver}" +
+                        (roundLog.Count > 0 ? $" · {string.Join(" · ", roundLog)}" : "") + "\n";
+        float measuredDps = enemyPresentSeconds > 0f ? hitOnes.Sum(r => r.damage) / enemyPresentSeconds : 0f;
+        string dps = $"   ⚔️ 이론 DPS {theoreticalDps:F1}(세운 유닛 공격력÷간격 합) · 실측 DPS {measuredDps:F1}(총 피해 ÷ 레인에 적이 있던 {enemyPresentSeconds:F1}초) · " +
+                     $"가동률 {(theoreticalDps > 0f ? 100f * measuredDps / theoreticalDps : 0f):F0}%\n";
+        string events = eventLog.Count > 0 ? "   🕒 처치·골드 시점: " + string.Join(" · ", eventLog) + "\n" : "   🕒 처치·골드 변화 없음\n";
+        return rounds + dps + events + theory + $"   📊 {watched:F0}초 관찰(0번 레인 적 {hitWatch.Count}마리 추적): 맞은 적 {hitOnes.Count}마리 · 총 {hitOnes.Sum(r => r.hits)}대 · " +
+               $"총 피해 {hitOnes.Sum(r => r.damage):F0} · 사라진(처치 추정) {killed}마리 · 골드 {job.goldAtSpawn} → {gold}\n" +
+               $"   📊 적 한 마리당 맞은 횟수: 평균 {avg} · 분포 {(histogram.Length > 0 ? histogram : "없음")}\n";
     }
 
     // 지금 화면에 켜져 있고 누를 수 있는 버튼 중 이름이나 글자가 target인 것을 누른다. 누른 버튼 설명을 돌려준다(못 찾으면 null).
