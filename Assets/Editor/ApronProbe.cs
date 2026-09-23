@@ -149,7 +149,10 @@ public static class ApronProbe
 
         Renderer[] all = Object.FindObjectsByType<Renderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 
-        foreach (float v in new[] { 0.25f, 0.5f, 0.75f })
+        // 화면 아래에서 위로 훑는다. 09-24에 찾던 가시 줄은 화면 높이의 **39% 근처**(월드 z≈1280,
+        // 우리 북쪽 열린 변)에 있었다 — 25%·50%·75% 세 점만 쏘면 그 사이로 빠져나간다.
+        // 촘촘히 훑어야 「어느 행부터 무엇이 바뀌는지」가 보인다.
+        foreach (float v in new[] { 0.20f, 0.25f, 0.30f, 0.34f, 0.37f, 0.39f, 0.41f, 0.44f, 0.50f, 0.60f, 0.75f })
         {
             Vector3 screen = new Vector3(cam.pixelWidth * 0.5f, cam.pixelHeight * v, 0f);
             Ray ray = cam.ScreenPointToRay(screen);
@@ -166,14 +169,16 @@ public static class ApronProbe
             hits.Sort((a, b) => a.dist.CompareTo(b.dist));
 
             if (hits.Count == 0) { sb.AppendLine("   아무것도 안 맞음"); continue; }
-            for (int i = 0; i < Mathf.Min(3, hits.Count); i++)
+            for (int i = 0; i < Mathf.Min(2, hits.Count); i++)
             {
                 (float dist, Renderer r, bool exact) = hits[i];
                 Vector3 p = ray.GetPoint(dist);
                 Material m = r.sharedMaterial;
-                sb.AppendLine($"   {i + 1}. {r.gameObject.name}  거리 {dist:0.#}{(exact ? "" : "(경계)")}" +
-                              $"  맞은 자리 y={p.y:0.##}  재질 {(m == null ? "없음" : m.name)}" +
-                              $"  반복 {(m == null ? Vector2.zero : m.GetTextureScale("_BaseMap"))}");
+                // 맞은 자리의 월드 x·z를 같이 찍는다 — 「어느 오브젝트냐」와 「어디냐」가 같이 나와야
+                // 사진의 행과 맞춰 볼 수 있다(호모그래피로 잰 값과 대조하려면 z가 필요하다).
+                sb.AppendLine($"   {i + 1}. {r.gameObject.name}{(exact ? "" : "(경계)")}" +
+                              $"  맞은 자리 x={p.x:0.#} y={p.y:0.##} z={p.z:0.#}" +
+                              $"  재질 {(m == null ? "없음" : m.name)}");
             }
         }
 
