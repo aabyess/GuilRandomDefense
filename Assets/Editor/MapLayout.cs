@@ -11,7 +11,10 @@ public static class MapLayout
     // 물범섬·존의 좌표·크기가 전부 이 값을 거친다. 1단계에서 Scale=1(무변화)로 리팩터만
     // 검증했고, 2단계부터 실제 배율(정본 배율 4.167, 근거: 충돌 크기 기준·"레인 폭÷유닛
     // 지름" 기준이 둘 다 4.167로 나온다 — 속도 기준 23.73은 안 쓴다, PM 지시 참고)을 켠다.
-    public const float Scale = 4.167f;
+    // ⚠️ 값 자체는 WorldScale(런타임 어셈블리)에 있다 — 길찾기 표본 반경처럼 Assets/Scripts
+    // 쪽에서도 같은 배율을 써야 하는데, 런타임은 에디터 어셈블리를 못 보기 때문이다.
+    // 배율을 바꿀 때는 WorldScale.Value 한 곳만 고치면 된다.
+    public const float Scale = WorldScale.Value;
 
     // 섬 전체는 X -310~320, Z -193~291 (630×484). 바다는 그보다 훨씬 커야 한다 —
     // 카메라를 가장자리까지 밀었을 때 바다 밖 회색이 보이면 맵이 끊긴 것처럼 읽힌다.
@@ -56,12 +59,21 @@ public static class MapLayout
     // 중심간 거리로 읽으면 레인 크기(781.4)의 절반(390.7)보다 작아서 2×2 인접 배치가
     // 수학적으로 불가능하다 — 그래서 "섬 가장자리 사이 간격"으로 해석했다: 중심간 거리 =
     // 크기 + 이 간격. PM 확인 대기 중(2026-09-23 보고).
-    const float LaneSizeX = 781.4f;
-    const float LaneSizeZ = 650.9f;
+    // ⚠️ 원작 3256×2712는 **레인 섬 전체가 아니라 적이 도는 방어구역(p1_life_zone) 자체**의
+    // 크기다(PM 정정 2026-09-23). 우리는 앞치마(상점 줄 26 + 유닛 우리 20)를 레인 섬 안에
+    // 넣어 두고 그 **전체**를 3256×2712에 맞췄던 탓에, 정작 필드가 781.4×459.2(비 1.70)로
+    // 납작해져 있었다. 필드 쪽을 781.4×650.9(비 1.20)로 놓고 앞치마를 그 아래에 덧붙인다.
+    const float LaneFieldSizeX = 781.4f;               // 원작 3256 ÷ Scale
+    const float LaneFieldSizeZ = 650.9f;               // 원작 2712 ÷ Scale — 비 1.20
+    // 2026-09-23 (6단계): **레인 섬 = 필드**다. 앞치마는 섬 밖 아래로 내려갔다(LaneUnitPenRow·
+    // LaneShopStrip 참고) — 원작 1comZone이 필드 밖에 있는 구조를 그대로 따른 것이다.
+    const float LaneSizeX = LaneFieldSizeX;
+    const float LaneSizeZ = LaneFieldSizeZ;
+
     const float LaneGapX = 230.4f;
     const float LaneGapZ = 337.9f;
     const float LaneSpacingX = LaneSizeX + LaneGapX;   // 1011.8 — 레인 중심간 x거리
-    const float LaneSpacingZ = LaneSizeZ + LaneGapZ;   // 988.8  — 레인 중심간 z거리
+    const float LaneSpacingZ = LaneSizeZ + LaneGapZ;   // 1180.5 — 레인 중심간 z거리
 
     // 오른쪽 열(레인2·4)의 오른쪽 끝을 -220에 둔다 — Scale=4.167 기준 PunkHazard 오른쪽 끝이
     // x=187.5라 32.5 여유를 두고 확실히 비껴간다(사장님 지시 "오른쪽에 펑크해저드·창고가
@@ -71,8 +83,14 @@ public static class MapLayout
     const float LaneRightEdgeX = -220f;
     const float LaneRightColumnX = LaneRightEdgeX - LaneSizeX * 0.5f;   // -610.7
     const float LaneLeftColumnX = LaneRightColumnX - LaneSpacingX;     // -1622.5
-    const float LaneBottomRowZ = 100f + LaneSizeZ * 0.5f;              // 425.45
-    const float LaneTopRowZ = LaneBottomRowZ + LaneSpacingZ;           // 1414.25
+    // ⚠️ 앞치마는 필드 **아래로** 199.4만큼 뻗는다(ApronGap 7.7 + 우리 83.3 + 상점 108.3).
+    // 겹침 검사(MapGenerator.CheckOverlaps)는 Lanes 배열 = 필드만 보므로 앞치마는 손으로
+    // 확인해야 한다. 아래 줄 레인의 앞치마 바닥이 뽑기섬 윗변(z=62.5)을 안 넘게 필드 아래변을
+    // z=300에 둔다 → 앞치마 바닥 z=100.6, 뽑기섬과 38.1 여유(2026-09-23 계산 확인).
+    // 위쪽은 레인1·2 꼭대기까지 아무것도 없다(바다 반폭 3334).
+    const float LaneFieldBottomZ = 300f;
+    const float LaneBottomRowZ = LaneFieldBottomZ + LaneSizeZ * 0.5f;  // 625.45
+    const float LaneTopRowZ = LaneBottomRowZ + LaneSpacingZ;           // 1614.25
 
     public static readonly Island[] Lanes =
     {
@@ -138,7 +156,11 @@ public static class MapLayout
         // ⚠️ 둘 다 **오른쪽·아래로만** 늘렸다: 왼쪽 끝은 x=0에 그대로 둬야 뽑기섬(오른쪽 끝
         //    x=-58.3)과 안 붙고, 윗변은 z=-71에 그대로 둬야 초월 전시(아래변 z=-30.8)와 안 겹친다.
         //    그래서 중심도 같이 옮겼다(폭 540·세로 220 리터럴 기준). 18개 섬 전수 대조 겹침 0건.
-        new Island("CombineTable",     270f * Scale, -127.03f * Scale, 540f * Scale, 220f * Scale, "combine"),
+        // (2026-09-23 2차) 사장님 "너비가 너무 길어지는 느낌" → 열을 세로로 먼저 채우게 바꾸고
+        // (BuildCombineColumns) 비용·간격 상수의 비율도 바로잡자 자연 가로가 2192 → **822**로
+        // 줄었다. 섬도 880(여유 58)으로 줄인다 — 내용보다 섬이 크게 남으면 그것대로 허전하다.
+        // 세로 917은 유지(깊이 909, 여유 8). 왼쪽 끝 x=0은 그대로 두고 오른쪽만 당겼다.
+        new Island("CombineTable",     105.6f * Scale, -127.03f * Scale, 211.2f * Scale, 220f * Scale, "combine"),
         // 도박소. StoryZone 서쪽, 같은 z대역이라 나란히 배치되고 40유닛 간격으로 안 겹친다.
     };
 
@@ -194,39 +216,113 @@ public static class MapLayout
     /// <summary>상점 줄 바로 위, 새 유닛이 처음 서는 우리가 놓이는 줄.</summary>
     public const float UnitPenDepth = 20f * Scale;
 
-    /// <summary>필드가 아닌 아래 두 줄(우리 + 상점)의 합.</summary>
-    public const float LaneApronDepth = ShopStripDepth + UnitPenDepth;
+    /// <summary>
+    /// 흔함 줄이 필드 바닥에서 떨어져 있는 간격. 원작 <c>1comZone</c>이 필드(p1_life_zone)
+    /// **밖**, 바닥에서 32 아래에 있다(war3map_new.j:3234~3242) → 32 ÷ Scale.
+    /// </summary>
+    public const float ApronGap = 32f / Scale;              // 7.68
 
-    /// <summary>적이 도는 필드. 섬에서 아래 두 줄을 뺀 나머지다.</summary>
-    public static Island LaneField(Island lane)
+    /// <summary>흔함 줄 폭 ÷ 레인 폭. 원작 2368/3200 = 0.74.</summary>
+    public const float UnitRowWidthRatio = 0.74f;
+
+    /// <summary>필드 아래로 내려 붙는 앞치마 전체 깊이(간격 + 우리 줄 + 상점 줄).</summary>
+    public const float LaneApronDepth = ApronGap + UnitPenDepth + ShopStripDepth;
+
+    /// <summary>
+    /// 적이 도는 필드. **이제 레인 섬이 곧 필드다**(2026-09-23, 6단계).
+    ///
+    /// 예전에는 레인 섬 안에 앞치마(우리 줄 + 상점 줄)를 넣고 그걸 뺀 나머지를 필드로 삼았다.
+    /// 그 구조 때문에 섬 전체를 원작 3256×2712에 맞추면 정작 필드가 781.4×459.2(비 1.70)로
+    /// 납작해졌다. 원작 <c>p1_life_zone</c>은 그 자체가 필드이고 <c>1comZone</c>은 필드 **밖**
+    /// 아래에 따로 있다 — 그래서 섬 = 필드로 두고 앞치마를 밖으로 내렸다.
+    /// 호출부를 바꾸지 않으려고 함수는 남겨 둔다(지금은 항등).
+    /// </summary>
+    public static Island LaneField(Island lane) => lane;
+
+    /// <summary>
+    /// 앞치마 **지반** — 우리 줄·상점 줄이 올라앉는 땅. 레인 섬(=필드)이 더 이상 이들을
+    /// 품지 않으므로(6단계) 따로 깔아야 한다.
+    ///
+    /// ⚠️ 윗변을 필드 아래변에 **딱 붙인다.** ApronGap(원작 32÷Scale)은 "우리 줄이 필드
+    /// 가장자리에서 떨어진 거리"지 물길이 아니다 — 여기를 비우면 그 사이가 바다가 되고,
+    /// 지상 유닛은 바다 영역을 못 지나므로(UnitSpawner의 areaMask) 우리에서 나온 유닛이
+    /// 필드로 걸어 들어갈 수 없게 된다. 땅은 이어 두고 줄만 ApronGap만큼 안쪽에 세운다.
+    /// </summary>
+    public static Island LaneApron(Island lane)
     {
-        return new Island(lane.name,
-            lane.center.x, lane.center.y + LaneApronDepth * 0.5f,
-            lane.size.x, lane.size.y - LaneApronDepth, lane.tint);
+        float fieldBottom = lane.center.y - lane.size.y * 0.5f;
+        return new Island(lane.name + "_앞치마",
+            lane.center.x, fieldBottom - LaneApronDepth * 0.5f,
+            lane.size.x * UnitRowWidthRatio, LaneApronDepth, lane.tint);
     }
 
-    /// <summary>유닛 우리가 놓이는 줄. 상점 줄과 필드 사이다.</summary>
+    /// <summary>
+    /// 유닛 우리가 놓이는 줄 — **필드 밖 아래**. 폭은 레인의 74%(원작 2368/3200),
+    /// 필드 바닥에서 ApronGap만큼 띄운다.
+    /// </summary>
     public static Island LaneUnitPenRow(Island lane)
     {
-        float bottom = lane.center.y - lane.size.y * 0.5f;
+        float fieldBottom = lane.center.y - lane.size.y * 0.5f;
         return new Island(lane.name,
-            lane.center.x, bottom + ShopStripDepth + UnitPenDepth * 0.5f,
-            lane.size.x, UnitPenDepth, lane.tint);
+            lane.center.x, fieldBottom - ApronGap - UnitPenDepth * 0.5f,
+            lane.size.x * UnitRowWidthRatio, UnitPenDepth, lane.tint);
     }
 
-    /// <summary>상점이 서는 아래 줄.</summary>
+    /// <summary>
+    /// 상점이 서는 줄 — 우리 줄 바로 아래. ⚠️ 원작 `.j`에는 상점 좌표가 없다(선배치로 보인다).
+    /// 근거가 없으므로 배치 방식은 우리 것을 유지하고, 폭만 우리 줄과 맞춘다(PM 지시 2026-09-23).
+    /// </summary>
     public static Island LaneShopStrip(Island lane)
     {
+        Island pen = LaneUnitPenRow(lane);
+        float penBottom = pen.center.y - pen.size.y * 0.5f;
         return new Island(lane.name,
-            lane.center.x, lane.center.y - (lane.size.y - ShopStripDepth) * 0.5f,
-            lane.size.x, ShopStripDepth, lane.tint);
+            lane.center.x, penBottom - ShopStripDepth * 0.5f,
+            pen.size.x, ShopStripDepth, lane.tint);
     }
 
-    public static Vector3[] LaneLoop(Island lane, float inset = 14f * Scale)
+    /// <summary>
+    /// 조합소 자리 — 원작은 <c>johab1</c>이 **필드 한복판**(1536,672 = 가로 48%·세로 24%)에 있다.
+    /// 우리처럼 상점 줄에 일렬로 두지 않는다(war3map_new.j:3234~3242).
+    /// </summary>
+    public static Vector3 LaneCombineSpot(Island lane)
     {
         Island field = LaneField(lane);
-        float halfX = field.size.x * 0.5f - inset;
-        float halfZ = field.size.y * 0.5f - inset;
+        return new Vector3(
+            field.center.x - field.size.x * 0.5f + field.size.x * 0.48f,
+            IslandTop,
+            field.center.y - field.size.y * 0.5f + field.size.y * 0.24f);
+    }
+
+    /// <summary>
+    /// 순찰 경로(=흙길)가 필드 가장자리에서 안으로 들어오는 비율. **원작 실측값**이다 —
+    /// 원문 <c>war3map_new.j:3234~3242</c>의 필드 3200×2752와 <c>:6007~6014</c>의 순찰
+    /// 4지점 (464,2304)(480,256)(2864,320)(2848,2336)에서 뽑았다:
+    /// 가로 좌464·우336(평균 400 = 12.5%), 세로 하256·상416(평균 336 = 12.2%).
+    ///
+    /// ⚠️ 고정 거리(옛 14)가 아니라 **비율**이어야 한다. 고정값으로 두면 필드가 커질 때
+    /// 순찰 사각형이 상대적으로 바깥으로 밀려 둘레가 길어지고, 랩 시간이 원작과 어긋난다
+    /// (실제로 그랬다: 옛 14×Scale은 7.5%라 둘레 2398 → 랩 33.3초, 원작은 29.87초).
+    /// 이 비율로 두면 둘레 2156 → **랩 29.94초로 원작과 맞는다(적 속도 72 그대로)**.
+    ///
+    /// 원작은 좌우·상하가 서로 다르지만(비대칭) 우리 경로는 사각형 하나라 축별 평균을 쓴다.
+    /// </summary>
+    public const float TrackInsetRatioX = 0.125f;
+    public const float TrackInsetRatioZ = 0.122f;
+
+    /// <summary>이 레인의 순찰 경로·흙길 inset(x, z). 둘이 같은 값을 봐야 적이 흙길 위를 걷는다.</summary>
+    public static Vector2 LaneTrackInset(Island lane)
+    {
+        Island field = LaneField(lane);
+        return new Vector2(field.size.x * TrackInsetRatioX, field.size.y * TrackInsetRatioZ);
+    }
+
+    public static Vector3[] LaneLoop(Island lane)
+    {
+        Island field = LaneField(lane);
+        Vector2 inset = LaneTrackInset(lane);
+        float halfX = field.size.x * 0.5f - inset.x;
+        float halfZ = field.size.y * 0.5f - inset.y;
         float x = field.center.x;
         float z = field.center.y;
 

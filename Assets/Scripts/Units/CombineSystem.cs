@@ -5,8 +5,10 @@ using UnityEngine.AI;
 public class CombineSystem : MonoBehaviour
 {
     // 재료가 흩어져 있으면 평균 지점이 실제로 밟을 수 있는 땅에서 조금 벗어난다.
-    // 우클릭 이동(UnitMover)의 2f보다 넉넉히 잡아, 조금 빗나간 정도는 붙여서 쓴다.
-    const float ResultSampleRadius = 4f;
+    // 우클릭 이동(UnitMover)보다 넉넉히 잡아, 조금 빗나간 정도는 붙여서 쓴다.
+    // 맵이 WorldScale.Value배가 됐으므로 이 거리도 같이 커진다(2026-09-23) —
+    // 재료가 흩어진 거리 자체가 맵 배율만큼 늘어나기 때문이다.
+    const float ResultSampleRadius = 4f * WorldScale.Value;
 
     [SerializeField] UnitInventory inventory;
     [SerializeField] ItemInventory itemInventory;

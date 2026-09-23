@@ -12,7 +12,9 @@ public static class NavPlacement
 {
     // 원하는 자리에서 이만큼 안에 NavMesh가 있으면 거기로 끌어다 놓는다.
     // 너무 넓게 잡으면 벽 너머로 순간이동하므로 몸집 정도로만 둔다.
-    const float SearchRadius = 6f;
+    // 맵이 WorldScale.Value배가 됐으므로 이 거리도 같이 커져야 한다(2026-09-23) —
+    // 세계 좌표 거리라 유닛 크기가 아니라 맵 배율을 따라간다.
+    const float SearchRadius = 6f * WorldScale.Value;
 
     /// <summary>agent를 position 근처의 NavMesh 위에 올린다. 못 올리면 false.</summary>
     public static bool Place(NavMeshAgent agent, Vector3 position)

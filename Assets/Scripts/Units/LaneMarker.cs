@@ -17,11 +17,15 @@ public class LaneMarker : MonoBehaviour
     // 예전 UnitPenWidth 기본값(40)으로 동작해서, 배선이 안 바뀐 씬에서도 예외 없이 돈다.
     [SerializeField] float unitRowWidth = 40f;
 
-    // 한 줄의 칸 수는 이제 폭이 정하지 않는다 — 사장님이 직접 정한 개수로 고정한다(2026-09-02
-    // 최초 9 → 11로 조정, "칸 2개 더"). 흔함 종류 수(9)와 우연히 같았던 적이 있었을 뿐, 이 값
-    // 자체가 흔함 개수를 뜻하지는 않는다 — 다음에 또 바뀌어도 흔함 가짓수와 맞출 필요 없다.
-    // 폭이 나중에 또 바뀌어도 칸 수는 그대로고, 칸 하나하나가 넓어지거나 좁아질 뿐이다.
-    public const int CompartmentCount = 11;
+    // 한 줄의 칸 수는 폭이 정하지 않는다. 폭이 바뀌어도 칸 수는 그대로고, 칸 하나하나가
+    // 넓어지거나 좁아질 뿐이다.
+    //
+    // 이력: 9(2026-09-02 최초) → 11(사장님 "칸 2개 더") → **9(2026-09-23, 원작 실측)**.
+    // 원작은 흔함 줄 `1comZone`에 칸이 정확히 9개다(`1com1`~`1com9`, 각 64×64 간격 256,
+    // war3map_new.j:3234~3242). 흔함 유닛 가짓수(CommonUnitRoster 9종)와도 맞아떨어진다 —
+    // 예전 주석은 "우연히 같았을 뿐"이라고 했지만, 원작에서는 **칸 하나가 흔함 한 종류**다
+    // (`Common_Loc[포인트값 + 플레이어×10]`이 타입으로 칸을 고른다). 우연이 아니었다.
+    public const int CompartmentCount = 9;
 
     // 2026-09-03: 0으로 되돌렸다(원래 1 — 양 끝에 칸 하나만큼 여백을 남기려던 값). 바깥 칸막이를
     // 세워 여백을 눈에 보이게 했더니 우리 벽과 어긋나 1번·11번 칸만 두 배로 넓어지는 문제가
@@ -55,24 +59,9 @@ public class LaneMarker : MonoBehaviour
     // 이름 하나당 한 번만 남긴다. 로스터가 낡았다는 뜻이라 지우면 안 되는 경고다.
     static readonly HashSet<string> warnedMissingRosterNames = new HashSet<string>();
 
-    // 로스터 칸 안에서 같은 이름을 고리로 벌릴 때(2026-09-03, 사장님 지시: "V로 모으는 것처럼")
-    // 쓰는 값들. UnitCommands.Gather의 GatherSpacing(5)은 그대로 못 쓴다 — 거기는 열린 필드라
-    // 고리가 몇 겹이든 상관없지만, 여기는 벽으로 막힌 칸 하나 안에 갇혀야 한다.
-    //
-    // 우리 벽 두께(현재 1.4, MapGenerator.GateThickness)와 캐릭터 지름(현재 7.2)은 실제 값과
-    // 같아야 한다 — 둘 다 에디터 전용/프리팹 쪽 값이라 여기서 직접 못 읽는다. 둘 중 하나가
-    // 바뀌면 이 값도 같이 볼 것.
-    const float AssumedPenWallThickness = 1.4f;
-    const float AssumedCharacterDiameter = 7.2f;
-
-    // 고리 하나(가운데 1 + 첫 겹 6) 안에서만 벌린다 — 두 번째 겹부터는 반지름이 더 커져서
-    // 칸막이를 뚫을 수 있다. 그 이상은 조용히 겹치는 대신 같은 칸의 다음 줄로 넘긴다(기존
-    // SlotPosition의 행 계산을 그대로 재사용 — TakeFreeSlot이 남는 자리에서 하는 것과 같은 방식).
-    const int RingCapacity = 7;
-
-    // 몇 번째로 이 로스터 칸에 서는지 세는 카운터. 로스터 칸마다 따로 잰다 — 다른 이름끼리는
-    // 서로 간섭하지 않는다. FindRosterSlot(순수 조회)는 이 배열을 안 건드린다.
-    readonly int[] rosterOccupancy = new int[CommonUnitRoster.Length];
+    // (2026-09-23) 고리 분산에 쓰던 값 넷 — AssumedPenWallThickness·AssumedCharacterDiameter·
+    // RingCapacity·rosterOccupancy — 은 같은 이름을 겹쳐 세우기로 하면서 전부 지웠다.
+    // 쓰는 곳이 하나도 안 남았다(RosterSlotPosition 주석 참고).
 
     // 다음에 내줄 "남는 자리" 번호(로스터 밖 — 비흔함, 혹은 로스터에 없는 흔함). 유닛이
     // 떠나도 줄어들지 않는다(빈 자리 재사용은 안 함) — 지금은 필드에서 유닛이 사라지는 경로
@@ -109,7 +98,7 @@ public class LaneMarker : MonoBehaviour
         if (unit != null && unit.grade == UnitGrade.Common && !unit.isSystemUnit)
         {
             int rosterSlot = FindRosterSlot(unit.unitName);
-            if (rosterSlot >= 0) return TakeRosterRingSlot(rosterSlot);
+            if (rosterSlot >= 0) return RosterSlotPosition(rosterSlot);
 
             if (warnedMissingRosterNames.Add(unit.unitName))
                 Debug.LogWarning($"LaneMarker: 흔함 유닛 '{unit.unitName}'이 자리 배정표(CommonUnitRoster)에 없습니다 — " +
@@ -126,28 +115,20 @@ public class LaneMarker : MonoBehaviour
     }
 
     /// <summary>
-    /// 로스터 칸 안에서 몇 번째로 서는지 세고(카운터를 하나 태운다 — 여기서만 태운다) 고리
-    /// 위치를 계산한다. 고리 하나(RingCapacity=7)를 넘기면 같은 칸의 다음 줄로 넘어간다 —
-    /// SlotPosition의 행 계산에 (칸 수만큼 밀린 가짜 slot 번호)를 넣어서 그대로 재사용한다.
+    /// 이 이름이 쓰는 **고정 칸의 한가운데**. 같은 이름은 몇 기가 나오든 **같은 자리에 겹쳐 선다.**
+    ///
+    /// 2026-09-23에 고리 분산(TakeRosterRingSlot)을 걷어냈다. 근거 둘이 같은 곳을 가리킨다:
+    ///  · 사장님 지시 — "흔함 유닛 뽑았을 때 겹치게 해줘야 할 듯"
+    ///  · 원작 — 흔함 자리가 <c>Common_Loc[포인트값 + 플레이어×10]</c>, 즉 **유닛 타입으로만
+    ///    인덱싱되는 고정 슬롯**이라 같은 타입은 같은 점에 포개 선다(개체마다 자리를 벌리지 않는다).
+    /// 겹쳐도 서로 안 밀리는 건 UnitMover가 길찾기 회피를 꺼 두기 때문이다(Rigidbody는 원래 kinematic).
+    ///
+    /// 카운터(rosterOccupancy)도 같이 없앴다 — 몇 번째로 섰는지가 자리에 영향을 주지 않으므로
+    /// 셀 이유가 없다. 이제 이 함수는 순수 계산이다.
     /// </summary>
-    Vector3 TakeRosterRingSlot(int rosterSlot)
+    Vector3 RosterSlotPosition(int rosterSlot)
     {
-        int occurrence = rosterOccupancy[rosterSlot]++;
-        int extraRow = occurrence / RingCapacity;
-        int withinRing = occurrence % RingCapacity;
-
-        Vector3 compartmentCenter = SlotPosition(unitPen, unitRowWidth, rosterSlot + extraRow * CompartmentCount);
-        if (withinRing == 0) return compartmentCenter;
-
-        // 칸 내부 폭의 절반(간격의 절반에서 우리 벽 두께 절반을 뺀 값 — 칸막이(0.8)만 닿는
-        // 가운데 칸은 이보다 여유롭지만, 우리 벽(1.4)에 붙은 끝 칸 기준으로 잡아야 모든 칸에서
-        // 안전하다)에서 캐릭터 반지름을 뺀 만큼만 고리를 벌린다 — 첫 겹이 칸막이를 안 뚫는다.
-        float spacing = ResolveSlotSpacing(unitRowWidth);
-        float halfInterior = spacing * 0.5f - AssumedPenWallThickness * 0.5f;
-        float ringRadius = Mathf.Max(0f, halfInterior - AssumedCharacterDiameter * 0.5f);
-
-        float angle = 360f / 6f * (withinRing - 1);
-        return compartmentCenter + Quaternion.Euler(0f, angle, 0f) * unitPen.forward * ringRadius;
+        return SlotPosition(unitPen, unitRowWidth, rosterSlot);
     }
 
     /// <summary>로스터 밖 유닛에게 내줄 다음 남는 자리. 카운터를 하나 태운다 — 여기서만 태운다.</summary>

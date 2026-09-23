@@ -9,7 +9,21 @@ public class UnitMover : MonoBehaviour
     // NavMeshAgent 반지름 때문에 걸을 수 있는 면이 섬 물리 경계보다 이미 안쪽으로
     // 들어와 있어서, 눈으로 "섬 안"인 곳을 찍어도 실패하는 띠가 가장자리에 생긴다.
     // 너무 키우면 바다를 찍었는데 유닛이 근처 육지로 가버려 의도와 어긋나므로 8에서 멈춘다.
+    //
+    // 🔴 2026-09-23: 맵이 WorldScale.Value(4.167)배가 되면서 이 값이 옛 단위로 남아
+    //    "클릭한 곳에서 2 안에 걸어갈 수 있는 자리가 없습니다"가 떴다(사장님 스크린샷).
+    //    메시지의 "2"가 범인을 그대로 가리킨다 — 유닛 프리팹은 8인데 **위습 프리팹만 2**다.
     [SerializeField] float destinationSampleRadius = 8f;
+
+    /// <summary>
+    /// 실제로 쓰는 표본 반경. 프리팹에 직렬화된 값(유닛 8 · 위습 2 · 생성 프리팹 207개 전부 8)은
+    /// **맵이 커지기 전 단위**라 여기서 맵 배율을 곱한다.
+    ///
+    /// 프리팹 209개의 숫자를 직접 고치지 않는 이유: (1) 위습이 유닛보다 촘촘하다는 관계가
+    /// 곱셈으로 저절로 유지된다, (2) 배율을 또 바꿀 때 프리팹을 다시 전수로 손대지 않아도 된다,
+    /// (3) 생성 프리팹은 도구가 다시 만들면 되돌아가 버린다.
+    /// </summary>
+    float DestinationSampleRadius => destinationSampleRadius * WorldScale.Value;
 
     NavMeshAgent agent;
     Camera cam;
@@ -24,6 +38,19 @@ public class UnitMover : MonoBehaviour
         owner = GetComponent<OwnedByPlayer>();
         selectable = GetComponent<Selectable>();
         combat = GetComponent<UnitCombat>();
+
+        // 유닛끼리 겹쳐 설 수 있게 한다(사장님 지시 2026-09-23 "흔함 유닛 뽑았을 때 겹치게",
+        // 원작도 라운드몹 ucol=0·아군 15로 사실상 겹침 허용이고 같은 흔함 유닛은
+        // Common_Loc 고정 슬롯에 그대로 포개 선다).
+        //
+        // 미는 힘은 둘일 수 있는데 실제로 도는 건 하나뿐이다:
+        //  · 물리 — Rigidbody가 이미 isKinematic이라 콜라이더가 서로 밀지 않는다(확인함).
+        //  · 길찾기 회피 — 프리팹 209개 전부 ObstacleAvoidanceType이 1(Low)이라 **이쪽이 범인**이다.
+        // 그래서 회피만 끈다. **CapsuleCollider는 그대로 둔다** — 클릭 선택이 그 콜라이더를
+        // 레이캐스트로 맞히기 때문이고, 레이캐스트는 충돌 회피와 무관하다.
+        // 프리팹 209개를 고치지 않고 여기서 끄는 이유는 표본 반경 때와 같다(생성 프리팹은
+        // 도구가 다시 만들면 되돌아간다).
+        if (agent != null) agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
     }
 
     void Update()
@@ -56,10 +83,10 @@ public class UnitMover : MonoBehaviour
             return;
         }
 
-        if (!NavMesh.SamplePosition(hit.point, out NavMeshHit navHit, destinationSampleRadius, agent.areaMask))
+        if (!NavMesh.SamplePosition(hit.point, out NavMeshHit navHit, DestinationSampleRadius, agent.areaMask))
         {
             Debug.Log($"[이동] {name}: 클릭한 곳({hit.collider.name} {hit.point})에서 " +
-                      $"{destinationSampleRadius} 안에 걸어갈 수 있는 자리가 없습니다.", this);
+                      $"{DestinationSampleRadius} 안에 걸어갈 수 있는 자리가 없습니다.", this);
             return;
         }
 

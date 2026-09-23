@@ -85,6 +85,9 @@ public static class MapGenerator
         {
             GameObject laneObject = BuildIsland(root.transform, MapLayout.Lanes[i]);
             laneObject.AddComponent<LaneMarker>().SetLaneIndex(i);
+            // 앞치마(우리 줄 + 상점 줄) 지반. 6단계에서 레인 섬 = 필드가 되면서 이 땅이
+            // 섬 밖으로 나갔다 — 따로 안 깔면 우리와 상점이 바다 위에 뜬다.
+            BuildIsland(root.transform, MapLayout.LaneApron(MapLayout.Lanes[i]));
             DecorateLane(root.transform, MapLayout.Lanes[i]);
             BuildLaneShopStrip(root.transform, MapLayout.Lanes[i]);
             WireUnitPen(laneObject, BuildUnitPen(root.transform, MapLayout.Lanes[i], i), MapLayout.Lanes[i]);
@@ -565,15 +568,27 @@ public static class MapGenerator
     // 100인 동안에는 이 포탈에서 흔함 유닛이 하나도 안 나온다.
     const float RandomShipBonusChance = 0.24f;
 
-    const float TrackWidth = 12f;        // 흙길 폭
-    const float TrackInset = 14f;        // 섬 가장자리에서 흙길 중심까지 (순찰 경로와 같은 값)
+    // 흙길 폭은 **유닛 크기에 묶인 값이라 맵 배율(Scale)을 안 탄다.** 대신 유닛 크기가 바뀌면
+    // 같이 바뀐다 — ArtBinder.EnemyHeight 주석이 "지름 5.4니까 폭 12 길에 2.2마리가 나란히
+    // 선다"로 이 값을 직접 근거로 쓰기 때문이다.
+    // 2026-09-23 사장님 "유닛이 너무 작아서 안 보인다" → 적 키 15 → 22.5(1.5배)가 되면서
+    // 지름이 5.4 → 8.1이 됐다. 폭 12 그대로면 1.48마리밖에 안 들어간다 → **18로 올려
+    // 2.22마리를 유지**한다(1.5배, 같은 근거·같은 비율).
+    const float TrackWidth = 18f;
+
+    // 🔴 2026-09-23: 흙길 inset을 고정 상수로 두면 순찰 경로와 갈라진다. 실제로 1단계에서
+    //    MapLayout.LaneLoop의 기본 inset만 Scale을 태우고 여기(14f)를 안 고쳐서 58.3 대 14로
+    //    44만큼 어긋났고, 적이 흙길 한참 안쪽을 걸었다. 이제 **양쪽 다 MapLayout.LaneTrackInset
+    //    하나를 본다** — "순찰 경로와 같은 값"을 주석이 아니라 코드로 보장한다.
+    //    값 자체는 원작 실측 비율이다(MapLayout.TrackInsetRatioX/Z 주석 참고).
 
     static void DecorateLane(Transform parent, MapLayout.Island lane)
     {
         // 흙길은 적이 실제로 도는 자리다 — 상점 줄을 뺀 필드에서만 잡는다.
         MapLayout.Island field = MapLayout.LaneField(lane);
-        float halfX = field.size.x * 0.5f - TrackInset;
-        float halfZ = field.size.y * 0.5f - TrackInset;
+        Vector2 trackInset = MapLayout.LaneTrackInset(lane);
+        float halfX = field.size.x * 0.5f - trackInset.x;
+        float halfZ = field.size.y * 0.5f - trackInset.y;
         float x = field.center.x;
         float z = field.center.y;
         float y = MapLayout.IslandTop + 0.04f;   // 잔디 위에 살짝 얹어 z-fighting을 피한다
@@ -1186,9 +1201,38 @@ public static class MapGenerator
     // RecipeSlot·RecipeRowHeight)은 그 값÷Scale로 각각 새로 계산했고(축마다 원작 원본이
     // 달라 비율이 서로 다르다 — 레인 때와 같은 이유), 나머지는 "한 축만 키우면 글자·아이콘
     // 비례가 깨진다"는 PM 지시대로 SlotSpacing의 배율(약 ×10.24)을 그대로 물려받는다.
+    // 🔴 2026-09-23 정정: 4단계에서 "나머지는 전부 ×10.24"로 올렸더니 **원래 비율이 뒤집혔다.**
+    //    원작 소스가 있는 셋(SlotSpacing 256÷Scale · RecipeSlot 64÷Scale · RecipeRowHeight)은
+    //    배율이 서로 다른데(10.23 / 3.42 / 4.73), 나머지를 전부 SlotSpacing 배율로 올린 탓이다.
+    //    증상: 비용 아이콘이 유닛 칸의 **2.13배**가 됐다(원래 0.71배) — 사장님이 뽑기섬에서
+    //    "거대한 공"으로 보신 게 이것이고, 조합식 표에서도 같이 커져 있었다.
+    //    규칙을 바로잡는다: **각 상수는 "자기가 비율로 매달린 대상"의 배율을 따른다.**
+    //      · 유닛 칸(RecipeSlot)에 매달린 것 → ×3.422
+    //      · 줄 높이(RecipeRowHeight)에 매달린 것 → ×4.733
+    //      · 전시 격자(SlotSpacing)에 매달린 것 → ×10.233
+    /// <summary>
+    /// 뽑기섬 전시 격자 한 줄의 칸 수 — **6칸**(사장님 지시 2026-09-23: "랜덤유닛들 4개씩
+    /// 배치돼 있던데 간격 줄여서 6개씩 배치하자. 자리를 너무 잡아먹는다").
+    /// 랜덤유닛 14종 → 3줄, 다른세계 9종 → 2줄이 된다(예전 4칸일 땐 4줄·3줄이었다).
+    /// ⚠️ 원작 흔함 줄은 9칸(<c>1com1</c>~<c>1com9</c>, LaneMarker.CompartmentCount가 그 값이다)
+    /// 이지만, 여기는 원작에 대응물이 없는 **우리 전시 칸**이고 사장님이 6으로 정하셨다.
+    /// </summary>
+    const int DisplayColumns = 6;
+
+    /// <summary>
+    /// 전시 격자 칸 간격. **조합표 SlotSpacing(61.4)과 분리한다**(PM 지시 2026-09-23) —
+    /// 그 값은 원작 조합 슬롯 간격 256÷Scale이라 전시 칸에는 과하고, 줄당 4칸밖에 안 나와
+    /// 14종이 4줄로 흩어졌다.
+    ///
+    /// 28인 근거: 인형 키가 20(DisplayFigureHeight)이고 받침 지름이 7.8(PedestalWidth)이라,
+    /// 28이면 받침끼리 20 넘게 떨어져 안 겹치면서도 인형이 한 줄로 빽빽하게 읽힌다.
+    /// 6칸 × 28 = 168로 전시 칸 폭(약 281) 안에 여유 있게 들어간다.
+    /// </summary>
+    const float DisplaySlotSpacing = 28f;
+
     const float SlotSpacing = 61.4f;    // 원작 조합 슬롯 간격 256 ÷ Scale
-    const float SlotSize = 30.6f;       // 자리표시 큐브. ×10.2(SlotSpacing과 같은 배율)
-    const float SlotHeight = 34.816f;   // ×10.24
+    const float SlotSize = 30.7f;       // 자리표시 큐브(전시 격자 기준) 3.0 × 10.233
+    const float SlotHeight = 34.79f;    // 3.4 × 10.233
     const float PedestalDiameter = 6f;         // 받침_불멸 지름·받침_초월 모서리 지름(Blender 규격) — ⚠️ 모델 실측값, Scale 안 탄다
     const float CombinePedestalWidth = 5.98f;  // 받침_조합 한 변 — 위와 같은 이유로 그대로
 
@@ -1222,20 +1266,19 @@ public static class MapGenerator
     const float PedestalDiameterPerFigureHeight = 0.39f;
     const float PedestalWidth = DisplayFigureHeight * PedestalDiameterPerFigureHeight;   // 7.8
 
-    const float GradeWallGap = 81.92f; // 한 열 안에서 등급이 바뀔 때 두는 벽 자리. ×10.24
-    const int MaxRecipeRows = 25;      // 한 열에 넣을 최대 조합식 수. 넘으면 옆 열로 이어간다
+    const float GradeWallGap = 37.87f; // 등급이 바뀔 때 두는 벽 자리. 줄 높이 기준 8.0 × 4.733
     const float RecipeSlot = 15.4f;     // 유닛 한 칸. 원작 슬롯 한 변 64 ÷ Scale
-    const float RecipeGap = 14.336f;    // 재료 사이 간격. ×10.24
-    const float RecipeArrowGap = 40.96f; // 재료 묶음과 결과 사이. ×10.24
+    const float RecipeGap = 4.791f;     // 재료 사이 간격. 유닛 칸 기준 1.4 × 3.422
+    const float RecipeArrowGap = 13.689f; // 재료 묶음과 결과 사이. 4.0 × 3.422
     const float RecipeRowHeight = 28.4f; // 원작 조합표 줄 간격(별도 소스) ÷ Scale
-    const float RecipeSlotHeight = 32.768f; // ×10.24
+    const float RecipeSlotHeight = 10.951f; // 3.2 × 3.422
 
     // 조합 비용(코인·목재·행운토큰)을 줄 왼쪽에 세우는 아이콘.
     // 재료 칸보다 작게 둬야 "이건 유닛이 아니라 자원"으로 읽힌다.
-    const float CostSlot = 32.768f;    // ×10.24
-    const float CostGap = 12.288f;     // ×10.24
-    const float CostBlockGap = 20.48f; // 비용 묶음과 첫 재료 사이. ×10.24
-    const float ColumnPad = 20.48f;    // 열 바닥판 좌우 여백 — 열 사이 벽이 이 안에 선다. ×10.24
+    const float CostSlot = 10.951f;    // 3.2 × 3.422 — 유닛 칸(15.4)의 0.71배, 반드시 더 작아야 한다
+    const float CostGap = 4.107f;      // 1.2 × 3.422
+    const float CostBlockGap = 6.844f; // 비용 묶음과 첫 재료 사이. 2.0 × 3.422
+    const float ColumnPad = 6.844f;    // 열 바닥판 좌우 여백 — 열 사이 벽이 이 안에 선다. 2.0 × 3.422
 
     // 조합표 가로 축소율. 열을 자연 폭으로 늘어놓으면 섬 폭(274)을 50 넘겨서
     // 양쪽으로 25씩 삐져나온다(2026-09-06 사장님 스크린샷). 자연 폭을 먼저 재고
@@ -1268,35 +1311,47 @@ public static class MapGenerator
             new List<(UnitGrade, List<CombineRecipe>)>();
         float usedDepth = 0f;
 
-        bool columnLocked = false;   // 쪼개진 등급이 쓰는 열에는 다른 등급을 들이지 않는다
+        // 🔴 2026-09-23 사장님: "오른쪽 보면 밑에 너무 비잖아? 3번째 열로 본다면 그 밑에 바로
+        //    희귀함 와도 됨. 너비가 너무 길어지는 느낌이라."
+        // 예전 규칙은 등급을 MaxRecipeRows(25) 덩어리로 자른 뒤 **쪼개진 등급은 제 열을 통째로
+        // 차지**했다. 그래서 남은 2줄·11줄짜리 자투리가 각각 열 하나를 혼자 쓰고 그 아래가
+        // 텅 비었다 — 세로가 남는데 옆으로만 길어졌다.
+        //
+        // 이제 **열을 세로로 끝까지 채우고 넘치면 다음 열로 넘긴다.** 등급 경계는 어차피
+        // 구분벽(GradeWallGap)이 서므로, 한 열에 "특별함 17줄 + 희귀함 12줄"처럼 이어 담아도
+        // 읽는 데 문제가 없다. 한 열의 용량도 상수(25)가 아니라 **섬 깊이에서 유도**한다 —
+        // 섬 세로를 바꾸면 자동으로 따라간다.
+        float columnCapacity = island.size.y - RecipeRowHeight;   // 위쪽 한 줄은 여백
 
         foreach (UnitGrade grade in MapLayout.CombineTableGrades)
         {
             List<CombineRecipe> recipes = LoadRecipesProducing(grade);
-            bool splits = recipes.Count > MaxRecipeRows;
 
-            for (int i = 0; i < recipes.Count; i += MaxRecipeRows)
+            int taken = 0;
+            while (taken < recipes.Count)
             {
-                List<CombineRecipe> chunk = recipes.GetRange(i, Mathf.Min(MaxRecipeRows, recipes.Count - i));
-                float body = chunk.Count * RecipeRowHeight;
+                float wall = current.Count > 0 ? GradeWallGap : 0f;
+                int fits = Mathf.FloorToInt((columnCapacity - usedDepth - wall) / RecipeRowHeight);
 
-                // 25행을 넘겨 쪼개진 등급은 "끊어서 옆 열로 잇는다"는 규칙 그대로 항상 새 열에서 시작한다.
-                // 같은 등급을 한 열에 위아래로 쌓으면 끊은 의미가 없고, 사이에 서는 벽이
-                // 등급이 바뀐 것처럼 보인다. 열을 나눠 쓰는 건 통째로 들어가는 짧은 등급끼리뿐이다.
-                bool stack = current.Count > 0 && !splits && !columnLocked
-                             && usedDepth + GradeWallGap + body <= island.size.y;
-
-                if (!stack && current.Count > 0)
+                if (fits <= 0)
                 {
-                    columns.Add(current);
-                    current = new List<(UnitGrade, List<CombineRecipe>)>();
-                    usedDepth = 0f;
-                    columnLocked = false;
+                    // 이 열은 더 못 받는다 — 다음 열을 연다. (빈 열은 만들지 않는다)
+                    if (current.Count > 0)
+                    {
+                        columns.Add(current);
+                        current = new List<(UnitGrade, List<CombineRecipe>)>();
+                        usedDepth = 0f;
+                        continue;
+                    }
+                    // 열이 비었는데도 한 줄이 안 들어가면 섬이 너무 얕은 것이다 — 한 줄은 넣고
+                    // 넘긴다(무한 루프 방지). 보고문의 "깊이 모자람"이 이 상태를 알린다.
+                    fits = 1;
                 }
 
-                current.Add((grade, chunk));
-                usedDepth += body + (current.Count > 1 ? GradeWallGap : 0f);
-                columnLocked |= splits;
+                int take = Mathf.Min(fits, recipes.Count - taken);
+                current.Add((grade, recipes.GetRange(taken, take)));
+                usedDepth += wall + take * RecipeRowHeight;
+                taken += take;
             }
         }
 
@@ -1407,7 +1462,7 @@ public static class MapGenerator
             ? $"\n  가로 {usedScale:P0}로 줄여 섬(폭 {island.size.x:F0})에 맞췄습니다 — 자연 폭이 {totalWidth / usedScale:F0}였습니다."
             : "";
 
-        return fitNote + $"\n조합식 표: {placed}개 조합식, {columns.Count}열 (등급 블록 최대 {MaxRecipeRows}행)." +
+        return fitNote + $"\n조합식 표: {placed}개 조합식, {columns.Count}열 (열 용량 {Mathf.FloorToInt(columnCapacity / RecipeRowHeight)}행, 세로 먼저 채움)." +
                $"\n  깊이 {deepest:F0}/{available:F0} {verdict}\n  {fit}" +
                (sample != null ? $"\n  예시: {sample}" : "");
     }
@@ -1756,6 +1811,13 @@ public static class MapGenerator
     // 이걸 넘으면 누워 있는 것이다 — 그 짧은 세로에 키를 맞추면 전체가 폭주한다.
     const float MaxFigureSpread = 3f;
 
+    /// <summary>
+    /// 크기를 다 먹인 뒤 인형이 목표 키의 몇 배까지 커져도 봐줄지. 넘으면 색 큐브로 바꾼다
+    /// (TryPlaceUnitModel 아래쪽 "폭주 방어막" 참고). 넉넉하게 잡는 게 원칙이다 —
+    /// 좁히면 멀쩡한 유닛을 큐브로 만든다(edda60a8 전례).
+    /// </summary>
+    const float MaxFigureWorldSize = 5f;
+
     // 🔴 뼈와 메시가 어긋난 변환본 — 조합표·부스 인형으로 세우지 않고 색 큐브로 둔다(프리팹 이름에서 Unit_을 뗀 모델 이름).
     //    2026-09-13 사장님 「조합판 이상한 게 크게 있다」: 안흔함_김수빈 인형 넷이 350×41×112 흰 덩어리로 표를 덮었다.
     //    이 모델은 TryPlaceUnitModel이 믿는 메시 자산 경계와 실제 스킨 크기가 수백 배 달라 크기 맞추기가 폭주한다.
@@ -1876,6 +1938,42 @@ public static class MapGenerator
         // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발을 바닥에 붙인다.
         if (TryMeasureFigure(figure, out bounds))
             figure.transform.position += Vector3.up * (ground.y - bounds.min.y);
+
+        // ── 폭주 방어막 (2026-09-23, PM 승인) ──────────────────────────────
+        // ⚠️ **이건 방어막이지 수정이 아니다.** 원인은 모델 쪽(뼈/노드 배율)이고 blender 몫이다.
+        //
+        // 2026-09-23 사장님 「조합판에 이상한거 있는데 이거뭐야」 — 안흔함_박준희(사이렌헤드)의
+        // 팔 뼈가 원점에서 1,677.9까지 뻗어 조합판을 가로질렀다. 인형이 설 수 있는 가장 먼
+        // 자리가 약 1,320이니 판 **밖**이다.
+        //
+        // 위쪽 MaxFigureSpread 검사로는 못 잡는다. 이유 둘:
+        //  · 그 검사는 **납작한**(누운) 모델만 본다. 팔이 키 축으로 늘어나면 비율이 오히려
+        //    정상으로 보여 통과한다.
+        //  · 그 검사가 재는 건 **메시 자산 경계**인데, 이 모델은 노드에 배율이 걸려 있어
+        //    잣대 자체가 틀렸다(ArtBinder.cs:323의 "0.01 배율을 못 봐 12.29로 읽었다"와 같은 함정).
+        //    게다가 blender가 준 "뼈퍼짐:메시경계 0.794"는 **쉬는 자세** 값이고, 유니티가 공용
+        //    Idle을 리타게팅하는 순간 팔이 터진다 — 자산만 봐서는 원리적으로 못 본다.
+        //
+        // 그래서 자산이 아니라 **크기를 다 먹인 뒤의 실제 월드 경계**를 잰다. 화면에 그려질
+        // 바로 그 크기라 잣대가 틀릴 여지가 없고, 이름 블랙리스트(BrokenSkinDolls)처럼
+        // 새 모델이 들어올 때마다 사람이 갱신해야 하는 문제도 없다.
+        //
+        // 문턱 5배: 3배로 좁히면 멀쩡한 유닛을 큐브로 바꿀 위험이 있다 — 실제로 모든 인형을
+        // BakeMesh로 다시 재는 일반 검사를 넣었다가 **정상 유닛 수십 개를 큐브로 만들어**
+        // 되돌린 적이 있다(edda60a8). 놓치는 쪽이 멀쩡한 걸 죽이는 것보다 낫다(PM 지시).
+        if (TryMeasureFigure(figure, out Bounds finalBounds))
+        {
+            float longest = Mathf.Max(finalBounds.size.x, finalBounds.size.y, finalBounds.size.z);
+            if (longest > height * MaxFigureWorldSize)
+            {
+                Debug.LogWarning($"[맵] {unit.unitName}({modelName}): 크기를 맞춘 뒤 실제 크기가 " +
+                                 $"{longest:F0}으로 목표 키({height:F0})의 {longest / height:F0}배입니다 — " +
+                                 $"판을 덮으므로 색 큐브로 둡니다(경계 {finalBounds.size}). " +
+                                 "모델의 뼈/노드 배율 문제이니 blender 쪽에서 고쳐야 합니다.", figure);
+                Object.DestroyImmediate(figure);
+                return false;
+            }
+        }
 
         // 표를 보는 방향(위에서 남쪽을 향해)에서 얼굴이 보이게 돌린다.
         // 대입이 아니라 곱이다 — 앞 단계가 회전을 걸어 뒀다면 덮지 않는다.
@@ -2375,9 +2473,12 @@ public static class MapGenerator
         float rightColumnLeft = island.center.x - 4f;   // 등급 칸 열의 오른벽과 같은 자리
         float displayLeft = rightColumnLeft + 4f;
         float displayWidth = left + island.size.x - 2f - displayLeft;
-        int perRow = Mathf.Max(1, Mathf.FloorToInt(displayWidth / SlotSpacing));
+        // 전시 격자는 조합표와 분리된 제 간격을 쓴다(DisplaySlotSpacing 주석 참고).
+        // 줄당 6칸 고정 — 폭에서 칸 수를 유도하면 섬 크기가 바뀔 때마다 줄 수가 흔들린다.
+        float displaySpacing = DisplaySlotSpacing;
+        int perRow = DisplayColumns;
         // bandTop은 열 위벽이 서는 자리다. 거기서 바로 시작하면 첫 줄이 벽에 끼인다.
-        float displayZ = bandTop - SlotSpacing;
+        float displayZ = bandTop - displaySpacing;
         int displayed = 0;
 
         int recipeRows = 0;
@@ -2424,7 +2525,7 @@ public static class MapGenerator
                     recipeRows++;
                 }
 
-                displayZ -= SlotSpacing;
+                displayZ -= displaySpacing;
                 continue;
             }
 
@@ -2432,15 +2533,18 @@ public static class MapGenerator
 
             for (int i = 0; i < units.Count; i++)
             {
-                float x = displayLeft + (i % perRow) * SlotSpacing + SlotSpacing * 0.5f;
-                float z = displayZ - (i / perRow) * SlotSpacing;
+                float x = displayLeft + (i % perRow) * displaySpacing + displaySpacing * 0.5f;
+                float z = displayZ - (i / perRow) * displaySpacing;
+                // 스킨이 있으면 색 큐브 대신 인형을 세운다(2026-09-23 사장님 「랜덤유닛도 배치해」).
+                // 키는 레인 유닛과 같은 DisplayFigureHeight — 조합표·전시와 같은 규칙이다.
+                // 스킨이 아직 없는 종은 PlaceUnitMarker가 **같은 키의** 자리표시로 세운다.
                 PlaceUnitMarker(parent, $"{grade.KoreanName()}_{units[i].unitName}",
-                    new Vector3(x, 0f, z), grade);
+                    new Vector3(x, 0f, z), grade, units[i], DisplayFigureHeight);
                 displayed++;
             }
 
             // 다음 등급은 한 줄 띄고 이어서 — 등급 경계가 보이게 한다.
-            displayZ -= (Mathf.CeilToInt(units.Count / (float)perRow) + 1) * SlotSpacing;
+            displayZ -= (Mathf.CeilToInt(units.Count / (float)perRow) + 1) * displaySpacing;
         }
 
         float displayRight = left + island.size.x - 2f;
@@ -2656,7 +2760,7 @@ public static class MapGenerator
     {
         // 순찰 경로(LaneLoop)와 같은 계산식을 그대로 쓴다 — 따로 좌표를 잡으면 나중에
         // 레인 크기가 또 바뀔 때 순찰 경로와 포탈 자리가 어긋난다.
-        Vector3[] loop = MapLayout.LaneLoop(lane, TrackInset);
+        Vector3[] loop = MapLayout.LaneLoop(lane);
         Vector3 corner = loop[3]; // 오른쪽 위
         Vector3 lowerCorner = loop[2]; // 오른쪽 아래 — 내려가는 방향의 목표점
         float z = corner.z - StoryPortalDownwardFraction * (corner.z - lowerCorner.z);
@@ -3373,12 +3477,20 @@ public static class MapGenerator
                                  unit, figureHeight, yaw))
             return;
 
+        // 스킨이 아직 없는 유닛의 자리표시. **인형과 같은 키로 세운다**(사장님 지적 2026-09-23:
+        // "스킨 없는 유닛 기둥 크기가 인형과 달라 줄이 들쭉날쭉하다"). 스킨이 채워질수록
+        // 같은 격자·같은 키로 자연스럽게 메워진다.
+        // 폭은 사람 어깨폭 비율(키의 0.28, PedestalWidth 주석과 같은 근거)로 잡는다.
+        // figureHeight를 안 준 호출부(전시가 아닌 자리표시)는 예전처럼 SlotSize/SlotHeight를 쓴다.
+        float markerHeight = figureHeight > 0f ? figureHeight : SlotHeight;
+        float markerWidth = figureHeight > 0f ? figureHeight * 0.28f : SlotSize;
+
         GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
         marker.name = name;
         marker.transform.SetParent(parent, false);
         marker.transform.position = new Vector3(
-            groundPosition.x, MapLayout.IslandTop + lift + SlotHeight * 0.5f, groundPosition.z);
-        marker.transform.localScale = new Vector3(SlotSize, SlotHeight, SlotSize);
+            groundPosition.x, MapLayout.IslandTop + lift + markerHeight * 0.5f, groundPosition.z);
+        marker.transform.localScale = new Vector3(markerWidth, markerHeight, markerWidth);
         PaintSolid(marker, GradeColor(grade));
         Object.DestroyImmediate(marker.GetComponent<Collider>());
     }
@@ -3585,8 +3697,17 @@ public static class MapGenerator
 
     // 위습을 영혼처럼 보이게 하고 맵 크기에 맞춰 키운다.
     // 프리팹 기본 크기가 0.6이라 유닛(키 20) 옆에 두면 먼지처럼 보인다.
-    const float WispScale = 6f;
-    const float WispSpeed = 25f;
+    //
+    // 🔴 2026-09-23 사장님: "선택위습 속도가 너무 느리다, 크기도 키워야 할 듯".
+    // 둘 다 맵 배율을 안 타고 있었다.
+    //  · 속도: 위습은 플레이어가 포탈까지 **끌고 가는** 것이라, 걸어갈 거리가 4.167배면
+    //    속도도 4.167배여야 체감이 같다. 25 → 104.2.
+    //  · 크기: 6 → 25(몸 0.6×25 = 키 15). 유닛 키 20의 75%라 옆에 서면 확실히 보인다
+    //    (예전 3.6은 유닛의 18%였고, 카메라가 멀어지면서 점으로 보였다).
+    // ⚠️ 아래 agent.radius·height는 WispScale로 나눠서 넣으므로 월드 기준 값(0.28·2)은
+    //    그대로 유지된다 — 몸만 커지고 길찾기 판정은 안 커진다(좁은 데 못 들어가는 일 없음).
+    const float WispScale = 6f * MapLayout.Scale;
+    const float WispSpeed = 25f * MapLayout.Scale;
     const string WispPrefabPath = "Assets/Prefabs/WispPrefab.prefab";
 
     [MenuItem("Tools/맵/위습 모양 맞추기")]
