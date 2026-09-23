@@ -2559,6 +2559,22 @@ UNITS = {
                     no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
                     materials=dict(textures={"Material_0.003": [("DiffuseColor", "WillyTybur_Body.png")],
                                              "Material_0.006": [("DiffuseColor", "WillyTybur_Head.png")]})),
+    # 도로헤도로 교자맨(만두 머리 마스코트) → 히든_성탄(2026-09-23 히든, blender 세션).
+    # 표준 Mixamo 리그 그대로(뼈 65개가 이미 "mixamorig:Hips" 등 정확한 이름, 뿌리도
+    # mixamorig:Hips 직통 — 이름표·래퍼 정리가 아예 필요 없는 첫 사례) → rename_bones 없음.
+    # 🔴 메시에 재질이 0개(직접 확인, 부머/희귀함_이용민과 같은 증상) → mesh_material로
+    # 새 재질을 만들어 Base Color만 물림. DirectX 노멀맵은 PM 지시대로 안 씀(유니티 OpenGL
+    # 규약과 G가 반대).
+    # "default" 메시는 정점 0개(빈 껍데기) — 이 파이프라인이 안 읽음(Cube와 같은 증상).
+    # Mixamo에서 "Surprised" 동작을 붙여 받은 파일이라 애니가 하나 있음 → use_rest_pose로
+    # 결합 자세를 씀(PM 지시).
+    "히든_성탄": dict(path="Assets/Art/Units/히든_성탄/히든_성탄.fbx", kind="human", size=("height", 1.8),
+                   archive=(os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_성탄.zip"),
+                            "source/Surprised.fbx"),
+                   archive_rgb={"textures/lambert2SG_Base_Color.png": "gyozaman_baseColor.png"},
+                   use_rest_pose=True, no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
+                   materials=dict(mesh_material={"man": "gyozaman"},
+                                  textures={"gyozaman": [("DiffuseColor", "gyozaman_baseColor.png")]})),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")
