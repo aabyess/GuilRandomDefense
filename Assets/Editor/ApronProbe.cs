@@ -140,12 +140,107 @@ public static class ApronProbe
     [MenuItem("Tools/진단/픽셀이 무엇인지 찍기")]
     static void PickPixels()
     {
+        string report = Sweep();
+        Debug.Log("[픽셀 질의] " + report);
+        EditorGuards.Dialog(Title, report, "확인");
+    }
+
+    // ── 플레이해서 찍기 ───────────────────────────────────────────────────────
+    //
+    // 🔴 편집 모드에서 쏘면 **헛것을 쏜다.** 시작 구도는 `RtsCameraController.FrameLaneAndPen`이
+    //    플레이 시작 때 정하는데(그 함수 주석 :109 — 「계산이 맞는지 보기 전에 그 값이 실제로
+    //    쓰이는지 본다」), 편집 모드의 카메라는 MapGenerator가 적어 둔 다른 자리(높이 216.7·z 1432.4)에
+    //    있다. 거기서는 찾는 z 1278~1288이 **카메라 뒤**라 열한 점을 다 쏴도 못 맞힌다.
+    //
+    // 그렇다고 자세를 베껴 적으면 카메라 규칙이 바뀔 때 또 어긋난다. 그리고 브리지는 플레이 중에
+    // 명령을 안 집어서 사람이 플레이 중에 메뉴를 누를 수도 없다. 그래서 **진단이 스스로 플레이에
+    // 들어갔다 나온다** — gameshot과 같은 방식(SessionState는 도메인 리로드를 넘어 남는다).
+    // 그러면 카메라도 HUD도 화면 크기도 **사진과 똑같은 진짜 실행 상태**다. 베낄 숫자가 없다.
+
+    const string PlayKey = "ApronProbe.Play";
+    const double Settle = 1.5;          // Awake·Start와 시작 구도가 자리 잡을 시간
+    const double PlayTimeout = 90;
+
+    [MenuItem("Tools/진단/플레이해서 픽셀 찍기")]
+    static void PickPixelsInPlay()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode)
+        { EditorGuards.Dialog(Title, "이미 플레이 중입니다 — 멈추고 다시 부르세요.", "확인"); return; }
+        if (EditorUtility.scriptCompilationFailed)
+        { EditorGuards.Dialog(Title, "컴파일 오류가 있어 플레이 모드에 못 들어갑니다.", "확인"); return; }
+
+        SessionState.SetInt(PlayKey, 1);
+        SessionState.SetFloat(PlayKey + ".since", 0f);
+        EditorApplication.update += Tick;
+        EditorApplication.EnterPlaymode();
+    }
+
+    [InitializeOnLoadMethod]
+    static void Rehook()
+    {
+        // 플레이 모드 진입은 도메인을 다시 올린다. 그때 이 콜백을 다시 걸어야 이어진다.
+        if (SessionState.GetInt(PlayKey, 0) != 0) EditorApplication.update += Tick;
+    }
+
+    static void Tick()
+    {
+        int stage = SessionState.GetInt(PlayKey, 0);
+        if (stage == 0) { EditorApplication.update -= Tick; return; }
+
+        float since = SessionState.GetFloat(PlayKey + ".since", 0f);
+        double now = EditorApplication.timeSinceStartup;
+
+        if (stage == 1)
+        {
+            if (!Application.isPlaying)
+            {
+                if (since == 0f) SessionState.SetFloat(PlayKey + ".since", (float)now);
+                else if (now - since > PlayTimeout) Finish("❌ 플레이 모드에 못 들어갔습니다.");
+                return;
+            }
+            if (since == 0f || SessionState.GetInt(PlayKey + ".playing", 0) == 0)
+            {
+                SessionState.SetInt(PlayKey + ".playing", 1);
+                SessionState.SetFloat(PlayKey + ".since", (float)now);
+                return;
+            }
+            if (now - since < Settle) return;
+
+            Finish(Sweep());
+            return;
+        }
+    }
+
+    static void Finish(string report)
+    {
+        SessionState.SetInt(PlayKey, 0);
+        SessionState.SetInt(PlayKey + ".playing", 0);
+        EditorApplication.update -= Tick;
+
+        Debug.Log("[픽셀 질의] " + report);
+        try
+        {
+            string dir = System.IO.Path.Combine("ClaudeBridge", "outbox");
+            System.IO.Directory.CreateDirectory(dir);
+            System.IO.File.WriteAllText(System.IO.Path.Combine(dir, "probe.txt"), report,
+                new System.Text.UTF8Encoding(false));
+        }
+        catch (System.Exception e) { Debug.LogWarning("[픽셀 질의] 결과 파일을 못 썼습니다: " + e.Message); }
+
+        if (Application.isPlaying) EditorApplication.ExitPlaymode();
+    }
+
+    /// <summary>화면 가운데 세로선을 훑어 각 점이 무엇인지 돌려준다. 대화창을 안 띄운다(플레이 중에 막힌다).</summary>
+    static string Sweep()
+    {
         Camera cam = Camera.main ?? Object.FindFirstObjectByType<Camera>();
-        if (cam == null) { EditorGuards.Dialog(Title, "카메라를 못 찾았습니다.", "확인"); return; }
+        if (cam == null) return "카메라를 못 찾았습니다.";
 
         StringBuilder sb = new StringBuilder();
-        sb.AppendLine($"카메라 {cam.transform.position} / fov {cam.fieldOfView} / " +
-                      $"{cam.pixelWidth}×{cam.pixelHeight} / {(Application.isPlaying ? "플레이 중" : "편집 중")}");
+        // ⚠️ 「편집 중」이면 카메라가 시작 구도가 아니다 — 아래 좌표를 사진과 맞춰 보면 안 된다.
+        sb.AppendLine($"카메라 {cam.transform.position} 방향 {cam.transform.forward} / fov {cam.fieldOfView} / " +
+                      $"{cam.pixelWidth}×{cam.pixelHeight} / " +
+                      $"{(Application.isPlaying ? "플레이 중 ✅" : "🔴 편집 중 — 시작 구도가 아니라 사진과 다른 화면입니다")}");
 
         Renderer[] all = Object.FindObjectsByType<Renderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 
@@ -182,8 +277,7 @@ public static class ApronProbe
             }
         }
 
-        Debug.Log("[픽셀 질의] " + sb);
-        EditorGuards.Dialog(Title, sb.ToString(), "확인");
+        return sb.ToString();
     }
 
     /// <summary>읽을 수 있는 메시면 삼각형까지 맞혀 정확한 거리를 준다.</summary>
