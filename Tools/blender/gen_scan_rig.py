@@ -223,7 +223,8 @@ UNITS = {
         coat_hem=dict(hip_src=-0.02, hem_src=-0.73, band_src=0.05, center_x_src=0.05, split_src=0.15, share=0.3),
         strip_bones_nonskin=dict(texture="Naoya_baseColor.png", bones=["RightHand", "LeftHand"], z_src=(-0.35, 0.45)),
         arm_drop_deg=35,
-        delete_stretched_faces=dict(ratio=2.5, fill_holes=True, fill_max_sides=3000),
+        #   min_island 100 — 지운 뒤 손 옆에 남은 작은 천 조각(실 다발 찌꺼기)까지 없앤다. 눈·이빨·바지(644·247·655정점)는 그보다 커서 안 지워진다.
+        delete_stretched_faces=dict(ratio=2.5, fill_holes=True, fill_max_sides=3000, min_island=100),
         closeups=[("armpit", 1.35, 0.8), ("crotch", 0.85, 0.9)],
         textures=[("Base Color", 0, "Naoya_baseColor.png")]),
     # 체인소맨 덴지(사람 모습, Sketchfab-16.6 glb 뼈 없음) — 2026-09-16 희귀함. ※ 동명 여섯 중 희귀함. 메시 5 · 삼각형 28,293 · 이미지 6 · 키 74.6(cm 계열).
@@ -947,6 +948,50 @@ UNITS = {
         max_bone_share=0.9,
         materials={"Body": [("Base Color", "Orange_Color.png")],
                    "Accesories": [("Base Color", "Accesories.png")]}),
+    # 미래일기 가사이 유노 → 랜덤_가사이_유노(2026-09-23 랜덤유닛, blender 세션).
+    # 원본: zip 안 source/GasaiYuno_SketchFab_001.fbx + textures 7장.
+    # 🔴 **뼈·스킨·정점그룹·애니가 전부 0인 정적 FBX**(직접 확인) → gen_scan_rig.py로 새로 리깅.
+    # 🔴 PM이 걱정한 대로 도끼와 바닥판이 같이 들어 있었다 — 메시 16개 중:
+    #   Axe(도끼, 왼손에 쥔 것) · 平面(바닥 디오라마 판, 재질 Ground) · NURBSパス(옆에 선 가로등 같은 곡선, 재질 Ground) → 전부 뺐다.
+    # 🔴 Transparent 재질 셋(Hair_Shadow 284면 · TP_Expression 152면 · TP_Shadow 80면)은 얼굴 위에 겹쳐 그리는 **반투명 그림자·표정 오버레이**다
+    #   (위치: 앞머리 그림자 z 1.44~1.59 · 표정 z 1.34~1.56 · 그림자 z 1.37~1.47, 전부 얼굴 앞면 y −0.25~−0.07). 유니티 OPAQUE 원칙에선
+    #   불투명한 판때기로 얼굴을 덮으므로 뺐다. PM이 살리길 원하면 알파 컷아웃 재질이 필요하다.
+    # 🔴 툰 외곽선이 **따로 된 메시가 아니라 같은 메시 안의 재질 슬롯**(OH_Outline_Skin/Hair/Clothing)이고 실제 면이 본체와 같은 수만큼 있다
+    #   (Body 10,494 + OH_Outline_Skin 10,494 등, 직접 셈) → 이번에 넣은 drop_materials로 **면을 지운다**(메시로는 못 뺀다).
+    # 🔴 자세: T자가 아니라 **서서 한 발 뒤로 뺀 자세**(정규화 단면 실측 — 다리 둘이 x가 아니라 **y로** 갈린다: 앞발 cy −0.12 · 뒷발 cy +0.10).
+    #   오른팔은 옆·아래로 뻗었고(손 cx −0.28, z 0.50) 왼팔은 몸 옆에 내려 도끼를 쥐고 있었다(손 cx +0.115, z 0.49).
+    #   관절은 그 자세 그대로 심고 straighten으로 네 사슬을 T자로 편다(최동준 걷는 스캔과 같은 처리).
+    "랜덤_가사이_유노": dict(
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_가사이_유노.zip"), mesh_name="Yuno",
+        member=["source/GasaiYuno_SketchFab_001.fbx"],
+        height=1.8, center_band=(0.0, 0.06), decimate=1.0, rotate_z=0.0,
+        drop_meshes=["Axe", "平面", "NURBSパス", "Hair_Shadow", "TP_Expression", "TP_Shadow"],
+        drop_materials=["OH_Outline_Skin", "OH_Outline_Hair", "OH_Outline_Clothing"],
+        joints=dict(
+            Hips=(0.0090, -0.0062, 0.8587), Spine=(0.0090, -0.0062, 1.0092), Spine1=(0.0090, -0.0062, 1.1430),
+            Spine2=(0.0090, -0.0229, 1.2767), Neck=(0.0090, -0.0563, 1.3938), Head=(0.0090, -0.0730, 1.4606),
+            HeadTop=(0.0090, -0.0898, 1.6780), LeftShoulder=(0.0842, -0.0229, 1.3185), LeftArm=(0.1511, -0.0229, 1.3018),
+            LeftForeArm=(0.1846, -0.0396, 1.0594), LeftHand=(0.2013, -0.0563, 0.8253), LeftHandTip=(0.2063, -0.0563, 0.7250),
+            RightShoulder=(-0.0662, -0.0229, 1.3185), RightArm=(-0.1331, -0.0229, 1.3018), RightForeArm=(-0.2502, -0.0062, 1.0677),
+            RightHand=(-0.4006, 0.0106, 0.9005), RightHandTip=(-0.4842, 0.0106, 0.8504), LeftUpLeg=(0.0842, -0.0396, 0.8420),
+            # 발 두 짝은 신발 메시를 따로 재서 박았다(1차에 RightToeBase가 메시 밖으로 나가 가중치 0으로 멈췄다):
+            #   앞발(왼) x −0.006~0.094 · y −0.274(발끝)~−0.035(뒤꿈치) · z 0.006~0.091
+            #   뒷발(오른) x −0.076~0.079 · y 0.152(발끝)~0.362(뒤꿈치) · z 0.012~0.158 — **뒤꿈치가 들린 걸음 자세**
+            LeftLeg=(0.0550, -0.0600, 0.4742), LeftFoot=(0.0480, -0.0600, 0.0750), LeftToeBase=(0.0480, -0.2000, 0.0280),
+            LeftToeTip=(0.0480, -0.2620, 0.0220), RightUpLeg=(-0.0662, 0.0106, 0.8420), RightLeg=(-0.0300, 0.1500, 0.4742),
+            RightFoot=(-0.0090, 0.3000, 0.1000), RightToeBase=(-0.0090, 0.1900, 0.0300), RightToeTip=(-0.0090, 0.1500, 0.0220)),
+        # 🔴 외곽선 면을 지운 뒤 bone heat가 **전체 실패**했다(가중치 있는 정점 0). 얼굴 속 이빨·눈, 치마 속 바지 같은 겹친 부품이 많아
+        #   덴지·에이스와 같은 증상 → 복셀 대리 메시에서 heat를 풀고 데이터 전송으로 옮긴다.
+        heat_proxy=dict(voxel_m=0.015, keep_largest=True),
+        # 🔴 1차 T자 렌더: 왼팔(도끼 쥔 쪽, 몸 옆에 내려 있어 68° 돌려야 한다)이 **치마를 커튼처럼 끌고** 나왔다 —
+        #   팔이 치마 옆에 붙어 있어 heat가 치마 옆판에 팔 몫을 줬다. 팔 사슬 중심선 반지름 밖 정점의 팔 가중치를 뺀다(코알라·베르고 선례).
+        arm_capsule=dict(radius_src=(0.050, 0.045, 0.045), margin_src=0.015),
+        # 🔴 2차: 캡슐로 치마는 풀렸지만 **소맷부리↔치마 옆판이 면으로 붙어 있어** 팔을 펴면 그 면이 실 다발로 늘어났다(나오야와 같은 증상) →
+        #   펴기 전후로 2.5배 넘게 늘어난 면을 지우고 구멍을 메운다.
+        delete_stretched_faces=dict(ratio=2.5, fill_holes=True, fill_max_sides=3000),
+        closeups=[("armpit", 1.25, 0.8), ("crotch", 0.55, 0.9)],
+        materials={"Body": [("Base Color", "Body.png")], "Face": [("Base Color", "Face.png")],
+                   "Hair": [("Base Color", "Hair.png")], "Clothing": [("Base Color", "Clothing.png")]}),
 }
 
 # 🗑 폐기(2026-09-15 사장님 지시 — 특별함_강주혁 모델을 아이언맨으로 교체, fix_unit_fbx.py로): 코알라는 AI 메시가 닿은 곳마다 붙어 있어
@@ -2208,6 +2253,33 @@ def build(name, out_dir=None, render_dir=None):
         for o in gone:
             bpy.data.objects.remove(o, do_unlink=True)
         report["뺀 메시"] = sorted(drop)
+    if cfg.get("drop_materials"):
+        # 🔴 유노(랜덤_가사이_유노, 2026-09-23): 툰 외곽선이 **따로 된 메시가 아니라 같은 메시 안의 재질 슬롯**(OH_Outline_*)으로 들어 있고
+        #   그 슬롯에 실제 면이 본체와 같은 수만큼 있다(Body 10,494면 + OH_Outline_Skin 10,494면, 직접 셈). 메시로는 못 빼니 면으로 지운다.
+        drop_m = set(cfg["drop_materials"])
+        seen_m, gone_f = set(), 0
+        for o in meshes:
+            idx = {i for i, mt in enumerate(o.data.materials) if mt and mt.name in drop_m}
+            if not idx:
+                continue
+            seen_m |= {o.data.materials[i].name for i in idx}
+            bm = bmesh.new()
+            bm.from_mesh(o.data)
+            kill = [f for f in bm.faces if f.material_index in idx]
+            gone_f += len(kill)
+            bmesh.ops.delete(bm, geom=kill, context="FACES")
+            # 🔴 면만 지우면 그 면만 쓰던 정점이 **면 없는 떠돌이 정점**으로 남고, 그 상태로 bone heat를 돌리면 해가 아예 안 나온다
+            #   (유노 1차: 가중치 있는 정점이 0개가 되어 fill_unweighted에서 죽었다) → 면이 하나도 안 걸린 정점도 같이 지운다.
+            loose = [v for v in bm.verts if not v.link_faces]
+            if loose:
+                bmesh.ops.delete(bm, geom=loose, context="VERTS")
+            bm.to_mesh(o.data)
+            bm.free()
+            o.data.update()
+            for i in sorted(idx, reverse=True):          # 면을 지운 뒤 빈 재질 슬롯도 뺀다(안 그러면 「텍스처를 안 이은 재질」 검사에 걸린다)
+                o.data.materials.pop(index=i)
+        assert seen_m == drop_m, f"{name}: drop_materials에 없는 재질 {drop_m - seen_m}"
+        report["재질로 지운 면"] = {"재질": sorted(seen_m), "면": gone_f}
     for dp in cfg.get("drop_loose_parts", []):
         # 🔸 흰수염: 세워 든 대검(무라쿠모기리)이 몸과 **같은 메시**에 느슨한 조각 16개로 들어 있다 — 이음새 붙인 뒤 조각 중심이 x_max보다 왼쪽(−X)인 조각을 지운다
         # 🔸 콘(히든_솔, 2026-09-23): 머리 위에 **떠 있는** 의혼환(초록 알)도 같은 메시의 떨어진 조각이라 같은 방식으로 뺀다 — 다만 기준이 x가 아니라 z라
