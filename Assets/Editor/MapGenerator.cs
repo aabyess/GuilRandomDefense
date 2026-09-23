@@ -178,6 +178,11 @@ public static class MapGenerator
         // 맵 생성이 어차피 씬을 갈아엎으니 여기서 보장한다. ⚠️ 저장보다 먼저.
         string hudReport = HudWiring.EnsureAll();
 
+        // BindTextures가 고친 재질은 SetDirty만 걸려 있다 — 여기서 디스크에 남기지 않으면
+        // 다음에 열 때 도로 빈 채로 돌아온다.
+        AssetDatabase.SaveAssets();
+        string textureReport = SurfaceTextureReport();
+
         Selection.activeGameObject = root;
         EditorSceneManager.MarkSceneDirty(root.scene);
 
@@ -194,7 +199,8 @@ public static class MapGenerator
             $"레인 경로 {lanePaths.Count}개를 만들었습니다." + portalReport + natureReport +
             seaReport + dockReport + StructureDresser.Report() + "\n\n" +
             tableReport + displayReport + gateReport + storyReport + sealReport + seaKingReport + questReport +
-            chatUnlockReport + hiddenCombineReport + chatBoxReport + overlaps + navResult + oldGround + hudReport + rewire + saveNote;
+            chatUnlockReport + hiddenCombineReport + chatBoxReport + overlaps + navResult + oldGround +
+            textureReport + hudReport + rewire + saveNote;
         Debug.Log("[맵] " + message);
         EditorGuards.Dialog(Title, message, "확인");
     }
@@ -4979,7 +4985,11 @@ public static class MapGenerator
     {
         string path = $"{MaterialFolder}/{key}.mat";
         Material existing = AssetDatabase.LoadAssetAtPath<Material>(path);
-        if (existing != null) return existing;
+        if (existing != null)
+        {
+            BindTextures(existing, surface);
+            return existing;
+        }
 
         if (!AssetDatabase.IsValidFolder(MaterialFolder))
         {
@@ -4993,21 +5003,72 @@ public static class MapGenerator
         material.SetColor("_BaseColor", surface.tint);
         material.SetFloat("_Smoothness", surface.smoothness);
 
-        if (surface.texture != null)
-        {
-            material.SetTexture("_BaseMap",
-                AssetDatabase.LoadAssetAtPath<Texture2D>($"{TextureFolder}/{surface.texture}.png"));
-
-            Texture2D normal = AssetDatabase.LoadAssetAtPath<Texture2D>(
-                $"{TextureFolder}/{surface.texture}_normal.png");
-            if (normal != null)
-            {
-                material.SetTexture("_BumpMap", normal);
-                material.EnableKeyword("_NORMALMAP");   // 켜지 않으면 노멀맵이 무시된다
-            }
-        }
+        BindTextures(material, surface);
 
         AssetDatabase.CreateAsset(material, path);
         return material;
+    }
+
+    /// <summary>
+    /// 표가 가리키는 텍스처를 재질에 물린다. **이미 있는 재질에도 매번 다시 물린다.**
+    ///
+    /// 🔴 왜 매번인가: 예전에는 `.mat`이 있으면 그대로 돌려주고 끝이었다. 그래서
+    ///    `grass.png`가 프로젝트에 들어오기 **전에** 만들어진 `lane.mat`이 `_BaseMap`이 빈 채로
+    ///    영원히 남았고, 레인과 모든 섬 윗면이 **단색**으로 굴렀다. 사장님이 구해 주신 잔디
+    ///    텍스처가 화면에 한 번도 안 나온 것이다(2026-09-24에 발견). 갱신을 안 하면
+    ///    **다음에 텍스처를 넣어도 똑같이 조용히 안 붙는다.**
+    ///
+    /// ⚠️ 색·매끄러움은 일부러 안 건드린다 — 그쪽은 사람이 인스펙터에서 눈으로 맞춰 보는
+    ///    값이라 덮으면 남의 작업을 지운다. 반면 텍스처 경로는 `surface.texture`에서
+    ///    **코드로 정해지는 값**이라 사람이 따로 고를 여지가 없다. 그래서 텍스처만 맞춘다.
+    /// </summary>
+    static void BindTextures(Material material, Surface surface)
+    {
+        if (surface.texture == null) return;
+
+        Texture2D baseMap = AssetDatabase.LoadAssetAtPath<Texture2D>(
+            $"{TextureFolder}/{surface.texture}.png");
+        if (baseMap != null && material.GetTexture("_BaseMap") != baseMap)
+        {
+            material.SetTexture("_BaseMap", baseMap);
+            EditorUtility.SetDirty(material);
+        }
+
+        Texture2D normal = AssetDatabase.LoadAssetAtPath<Texture2D>(
+            $"{TextureFolder}/{surface.texture}_normal.png");
+        if (normal != null && material.GetTexture("_BumpMap") != normal)
+        {
+            material.SetTexture("_BumpMap", normal);
+            material.EnableKeyword("_NORMALMAP");   // 켜지 않으면 노멀맵이 무시된다
+            EditorUtility.SetDirty(material);
+        }
+    }
+
+    /// <summary>
+    /// 바닥 텍스처가 **실제로 붙었는지** 보고문 한 줄. 텍스처는 안 붙어도 아무 에러가 안 나고
+    /// 그냥 단색으로 굴러서, 이 줄이 없으면 또 몇 달을 모른 채 지나간다(위 주석 참고).
+    /// 같은 텍스처를 여러 재질이 나눠 쓰므로 "붙은 재질 수/전체"로 센다 — 하나만 빠져도 드러난다.
+    /// </summary>
+    static string SurfaceTextureReport()
+    {
+        Dictionary<string, int> total = new Dictionary<string, int>();
+        Dictionary<string, int> bound = new Dictionary<string, int>();
+        List<string> order = new List<string>();
+
+        foreach (KeyValuePair<string, Surface> entry in Surfaces)
+        {
+            string texture = entry.Value.texture;
+            if (texture == null) continue;              // 색만 쓰는 면(포탈)은 셀 것이 없다
+            if (!total.ContainsKey(texture)) { total[texture] = 0; bound[texture] = 0; order.Add(texture); }
+            total[texture]++;
+
+            Material material = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialFolder}/{entry.Key}.mat");
+            if (material != null && material.GetTexture("_BaseMap") != null) bound[texture]++;
+        }
+
+        List<string> parts = new List<string>();
+        foreach (string texture in order)
+            parts.Add($"{texture} {bound[texture]}/{total[texture]}{(bound[texture] == total[texture] ? " ✅" : " 🔴")}");
+        return "\n바닥 텍스처: " + string.Join(" · ", parts);
     }
 }
