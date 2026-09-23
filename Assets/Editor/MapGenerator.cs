@@ -1273,11 +1273,29 @@ public static class MapGenerator
     const float PedestalDiameterPerFigureHeight = 0.39f;
     const float PedestalWidth = DisplayFigureHeight * PedestalDiameterPerFigureHeight;   // 7.8
 
-    const float GradeWallGap = 37.87f; // 등급이 바뀔 때 두는 벽 자리. 줄 높이 기준 8.0 × 4.733
+    // 등급이 바뀔 때 두는 벽 자리. 줄 하나보다 조금 더 벌려 "여기서 등급이 바뀐다"가 읽히게 한다.
+    const float GradeWallGap = RecipeRowHeight * 1.3f;   // 60.1
     const float RecipeSlot = 15.4f;     // 유닛 한 칸. 원작 슬롯 한 변 64 ÷ Scale
-    const float RecipeGap = 4.791f;     // 재료 사이 간격. 유닛 칸 기준 1.4 × 3.422
+    // ── 조합식 표 간격 (2026-09-23 재설계) ────────────────────────────────
+    // 사장님 「조합판도 너무 붙어있으니깐 답답한 느낌이든다」.
+    //
+    // ⚠️ **이 간격에는 원작 근거가 없다.** 원작에 조합식 표 자체가 없기 때문이다 —
+    //    원문(war3map_new.j)의 조합 관련 rect는 `johab1`(256×160, 유닛을 끌어다 놓는
+    //    조합소) 하나뿐이고 표·목록류 rect는 0건이다. 표는 우리가 만든 것이다.
+    //    한때 "원작 256 ÷ 64 = 4배"를 근거로 삼으려 했으나, 그 256/64는 `1com1~9`
+    //    (흔함 유닛이 **서는 줄**, 1comZone)의 칸 피치라 **축이 다르다**
+    //    (war3map_new.j:3217~3225에서 확인). 다른 축의 숫자를 근거로 쓰면 안 된다.
+    //    그래서 아래는 **읽기 편함을 위한 우리 설계 판단**이고, 그렇게 적어 둔다.
+    //
+    // 규칙: **재료 간격 = 칸 한 변**("칸 하나 띄우고 칸"). 피치÷칸이 1.31 → 2.00이 된다.
+    //       칸 크기를 바꾸면 간격이 따라오므로 손으로 박은 수가 또 어긋나는 일이 없다.
+    //       가로는 이만큼만 벌린다 — 사장님이 앞서 「너비가 너무 길어지는 느낌」이라 하셔서
+    //       열 수(6)를 그대로 둔 채 여백만 준다. 답답함은 **세로로** 푼다(줄 높이·등급 벽).
+    const float RecipeGap = RecipeSlot;          // 15.4
     const float RecipeArrowGap = 13.689f; // 재료 묶음과 결과 사이. 4.0 × 3.422
-    const float RecipeRowHeight = 28.4f; // 원작 조합표 줄 간격(별도 소스) ÷ Scale
+    // 줄 높이 = 칸의 3배. 위 "원작 근거 없음"이 여기에도 그대로 적용된다 —
+    // 예전 값 28.4는 "원작 조합표 줄 간격"이라 적혀 있었지만 원작에 그 표가 없다.
+    const float RecipeRowHeight = RecipeSlot * 3f;   // 46.2
     const float RecipeSlotHeight = 10.951f; // 3.2 × 3.422
 
     // 조합 비용(코인·목재·행운토큰)을 줄 왼쪽에 세우는 아이콘.
