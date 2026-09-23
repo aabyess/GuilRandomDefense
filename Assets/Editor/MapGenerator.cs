@@ -608,7 +608,10 @@ public static class MapGenerator
     // 자리는 0 도박소 · 1 유닛강화 · 2 다른세계강화 · 3 영원함강화 · 4 도움소 ·
     //          5 해적단상점 · 6 공격타입강화 · 7 항해일지.
     const int LaneShopCount = 8;
-    const float LaneShopSize = 9f;
+    // 원작 비율 5단계(PM 지시 2026-09-23) — 실제 건물 모델이 있으면 StructureDresser.
+    // DressLaneShop이 클릭 상자를 모델 크기로 다시 맞추므로 이 값은 최종 크기를 안 정한다.
+    // 그래도 모델이 없을 때(자리표시 큐브)의 크기·판정이라 맵 배율과 같이 키운다.
+    const float LaneShopSize = 9f * MapLayout.Scale;
 
     // 상점 줄은 필드와 벽 하나로 갈린다 — 적이 도는 곳과 내가 쓰는 곳이 눈으로 구분돼야 한다.
     // 새 유닛이 처음 서는 우리. 상점 줄 바로 위, 벽으로 둘러싸여 있고 위쪽만 트여 있다 —
@@ -776,7 +779,7 @@ public static class MapGenerator
         shop.name = name;
         shop.transform.SetParent(parent, false);
         shop.transform.position = at;
-        shop.transform.localScale = new Vector3(LaneShopSize, 3f, LaneShopSize * 0.7f);
+        shop.transform.localScale = new Vector3(LaneShopSize, 3f * MapLayout.Scale, LaneShopSize * 0.7f);
         Paint(shop, surface, LaneShopSize, LaneShopSize * 0.7f);   // 임시 — 전용 모델이 없어 기존 텍스처를 쓴다
 
         shop.AddComponent<Selectable>();
@@ -1177,26 +1180,62 @@ public static class MapGenerator
     // 등급별로 유닛만 모아두면 "무엇으로 만드는지"를 알 수 없어서 표의 역할을 못 한다.
     // 전시용 자리 표시 기둥 (뽑기 섬 전시, 초월·불멸 전시에서 쓴다).
     // 조합식 표를 갈아엎을 때 같이 지워져서 컴파일이 깨졌었다 — 쓰는 곳이 여러 군데다.
-    const float SlotSpacing = 6f;
-    const float SlotSize = 3f;
-    const float SlotHeight = 3.4f;
-    const float PedestalDiameter = 6f;         // 받침_불멸 지름·받침_초월 모서리 지름(Blender 규격)
-    const float CombinePedestalWidth = 5.98f;  // 받침_조합 한 변
+    //
+    // (2026-09-23, 원작 비율 4단계, PM 지시) 섬(Zones)은 이미 Scale(4.167)을 탔는데 이 아래
+    // 값들은 그대로라 표·인형이 섬 안에서 성기게 떠 있었다. 원작 소스가 있는 셋(SlotSpacing·
+    // RecipeSlot·RecipeRowHeight)은 그 값÷Scale로 각각 새로 계산했고(축마다 원작 원본이
+    // 달라 비율이 서로 다르다 — 레인 때와 같은 이유), 나머지는 "한 축만 키우면 글자·아이콘
+    // 비례가 깨진다"는 PM 지시대로 SlotSpacing의 배율(약 ×10.24)을 그대로 물려받는다.
+    const float SlotSpacing = 61.4f;    // 원작 조합 슬롯 간격 256 ÷ Scale
+    const float SlotSize = 30.6f;       // 자리표시 큐브. ×10.2(SlotSpacing과 같은 배율)
+    const float SlotHeight = 34.816f;   // ×10.24
+    const float PedestalDiameter = 6f;         // 받침_불멸 지름·받침_초월 모서리 지름(Blender 규격) — ⚠️ 모델 실측값, Scale 안 탄다
+    const float CombinePedestalWidth = 5.98f;  // 받침_조합 한 변 — 위와 같은 이유로 그대로
 
-    const float GradeWallGap = 8f;     // 한 열 안에서 등급이 바뀔 때 두는 벽 자리
+    /// <summary>
+    /// 보여주기용 인형(조합표 칸·초월/불멸 전시·뽑기섬 흔함 선택)의 키.
+    /// **레인에 실제로 서는 유닛과 같은 키**를 쓴다(사장님 지시 2026-09-23:
+    /// "유닛크기 전부 선택위습 고르는 유닛크기에 맞춰줄래").
+    ///
+    /// 전에는 자리마다 기준이 달라서 같은 유닛이 화면마다 다른 크기로 섰다 —
+    /// 흔함 선택 51(섬 폭÷칸수×0.9) · 초월/불멸 전시 98(SlotSpacing×1.6) ·
+    /// 조합표 칸 13(RecipeRowHeight×0.9×축소율). 전부 칸 크기에서 유도한 값이라
+    /// 2단계에서 맵이 4.167배가 되자 같이 튀었다. 유닛 키는 맵 배율을 안 타므로
+    /// (ArtBinder.UnitHeight가 기준자) 인형도 그 값 하나로 고정한다.
+    /// </summary>
+    const float DisplayFigureHeight = ArtBinder.UnitHeight;
+
+    /// <summary>
+    /// 인형이 올라서는 받침의 지름(게임 단위). **칸 간격이 아니라 인형 키에서 유도한다**
+    /// (PM 지시 2026-09-23: "받침은 인형이 올라서는 판이지 주인공이 아니다").
+    ///
+    /// 예전에는 받침 배율이 칸 간격÷받침지름이라, 칸이 61.4로 커지자 받침_초월이 배율 9.21
+    /// (지름 55)까지 부풀어 키 20짜리 인형보다 훨씬 커졌다. 이제 칸이 아무리 넓어져도
+    /// 받침은 인형에 붙어 있는다.
+    ///
+    /// 0.39 = 받침 지름이 인형 어깨폭의 1.5~2배가 되는 값. 사람 어깨폭은 키의 0.25~0.28쯤이라
+    /// 키 20이면 5.0~5.6이고, 지름 7.8은 그 1.4~1.56배다. 받침_초월(모델 지름 6) 기준 배율
+    /// 1.3에 해당한다. **모델 실측 규격(PedestalDiameter 6·CombinePedestalWidth 5.98)은
+    /// 그대로 두고 여기서만 배율을 만든다** — 규격을 바꾸면 칸 폭 계산이 어긋난다.
+    /// 화면을 보고 조정할 값이다(PM이 맵 생성 뒤 확정).
+    /// </summary>
+    const float PedestalDiameterPerFigureHeight = 0.39f;
+    const float PedestalWidth = DisplayFigureHeight * PedestalDiameterPerFigureHeight;   // 7.8
+
+    const float GradeWallGap = 81.92f; // 한 열 안에서 등급이 바뀔 때 두는 벽 자리. ×10.24
     const int MaxRecipeRows = 25;      // 한 열에 넣을 최대 조합식 수. 넘으면 옆 열로 이어간다
-    const float RecipeSlot = 4.5f;      // 유닛 한 칸
-    const float RecipeGap = 1.4f;       // 재료 사이 간격
-    const float RecipeArrowGap = 4.0f;  // 재료 묶음과 결과 사이
-    const float RecipeRowHeight = 6.0f;
-    const float RecipeSlotHeight = 3.2f;
+    const float RecipeSlot = 15.4f;     // 유닛 한 칸. 원작 슬롯 한 변 64 ÷ Scale
+    const float RecipeGap = 14.336f;    // 재료 사이 간격. ×10.24
+    const float RecipeArrowGap = 40.96f; // 재료 묶음과 결과 사이. ×10.24
+    const float RecipeRowHeight = 28.4f; // 원작 조합표 줄 간격(별도 소스) ÷ Scale
+    const float RecipeSlotHeight = 32.768f; // ×10.24
 
     // 조합 비용(코인·목재·행운토큰)을 줄 왼쪽에 세우는 아이콘.
     // 재료 칸보다 작게 둬야 "이건 유닛이 아니라 자원"으로 읽힌다.
-    const float CostSlot = 3.2f;
-    const float CostGap = 1.2f;
-    const float CostBlockGap = 2.0f;   // 비용 묶음과 첫 재료 사이
-    const float ColumnPad = 2.0f;      // 열 바닥판 좌우 여백 — 열 사이 벽이 이 안에 선다
+    const float CostSlot = 32.768f;    // ×10.24
+    const float CostGap = 12.288f;     // ×10.24
+    const float CostBlockGap = 20.48f; // 비용 묶음과 첫 재료 사이. ×10.24
+    const float ColumnPad = 20.48f;    // 열 바닥판 좌우 여백 — 열 사이 벽이 이 안에 선다. ×10.24
 
     // 조합표 가로 축소율. 열을 자연 폭으로 늘어놓으면 섬 폭(274)을 50 넘겨서
     // 양쪽으로 25씩 삐져나온다(2026-09-06 사장님 스크린샷). 자연 폭을 먼저 재고
@@ -1583,14 +1622,19 @@ public static class MapGenerator
     {
         Vector3 ground = new Vector3(x, MapLayout.IslandTop, z);
 
-        // 칸마다 낮은 돌 받침(5.98×5.98, 2026-09-13 Blender)을 칸 폭에 맞춰 깔고 그 위에 세운다.
+        // 칸마다 낮은 돌 받침(5.98×5.98, 2026-09-13 Blender). 지름은 인형 기준(PedestalWidth,
+        // 전시 받침과 같은 규칙 — PM 지시 2026-09-23)이되, 칸 폭이 그보다 좁으면 칸에 맞춘다
+        // (옆 칸 받침과 맞닿지 않게).
         float lift = StructureDresser.PlacePedestal(parent, "받침_조합", $"{prefix}_{label}_받침",
-                                                    ground, 0f, SlotW / CombinePedestalWidth);
+                                                    ground, 0f, Mathf.Min(PedestalWidth, SlotW) / CombinePedestalWidth);
         ground.y += lift;
 
-        // ⚠️ 모델 크기도 가로 축소율을 탄다 — 칸 간격만 좁히고 모델을 그대로 두면 서로 겹친다.
-        if (TryPlaceUnitModel(parent, $"{prefix}_{label}", ground, unit,
-                              RecipeRowHeight * 0.9f * RecipeScale)) return;
+        // 인형 키는 레인 유닛과 같은 값으로 고정한다(사장님 지시 2026-09-23, DisplayFigureHeight).
+        // ⚠️ 예전 값(RecipeRowHeight×0.9×RecipeScale)은 "칸이 좁아지면 인형도 같이 줄여 겹침을
+        //    막는다"는 뜻이었다. 지금은 칸 쪽이 훨씬 커져서(줄 높이 28.4, 축소 후 칸 폭 8.1)
+        //    키 20짜리 인형이 가로·세로 모두 칸 안에 들어간다 — 겹침 조건이 사라졌다.
+        //    칸이 이보다 더 좁아지면 이 줄을 Mathf.Min으로 다시 묶어야 한다.
+        if (TryPlaceUnitModel(parent, $"{prefix}_{label}", ground, unit, DisplayFigureHeight)) return;
 
         GameObject slot = GameObject.CreatePrimitive(PrimitiveType.Cube);
         slot.name = $"{prefix}_{label}";
@@ -2147,8 +2191,11 @@ public static class MapGenerator
 
     // 뽑기 섬. 원작처럼 위쪽에 흔함 유닛을 가로로 늘어놓고, 그 아래에 등급별 랜덤 포탈을 둔다.
     // 흔함 위습은 "선택"이라 원하는 유닛 칸에 넣고, 그 위 등급은 칸 하나에서 등급 내 랜덤이 나온다.
-    const float PortalDiameter = 9f;
-    const float ChoicePortalDiameter = 6.5f;
+    // 원작 비율 5단계(PM 지시 2026-09-23) — DressPortal이 diameter÷모델크기로 배율을 구해서
+    // (StructureDresser.cs:229) 이 지름만 키우면 마법진이 같이 커진다. 포탈 배치 계산(armX 등)도
+    // 전부 이 상수를 직접 참조해 자동으로 따라간다.
+    const float PortalDiameter = 9f * MapLayout.Scale;
+    const float ChoicePortalDiameter = 6.5f * MapLayout.Scale;
 
     // 흔함 선택 칸은 원작처럼 칸마다 벽을 둘러 부스로 만든다.
     const float CommonAreaDepth = 18f;  // 흔함 포탈 줄에서 아래벽까지 — 위습이 생길 자리
@@ -2188,7 +2235,7 @@ public static class MapGenerator
 
             PlaceUnitMarker(parent, $"흔함선택_{unit.unitName}_표식",
                 new Vector3(x, 0f, rowZ + BoothDepth * 0.5f), UnitGrade.Common,
-                unit, step * 0.9f);
+                unit, DisplayFigureHeight);
         }
 
         // 부스를 하나씩 두르면 이웃끼리 옆벽이 겹친다. 뒷벽 한 장 + 칸막이 한 줄로 세운다.
@@ -2586,7 +2633,10 @@ public static class MapGenerator
     // 12라 거의 다 덮지만, 적은 WaypointMover가 transform.position을 그대로 옮길 뿐 물리/
     // NavMesh를 전혀 안 봐서(콜라이더가 있든 없든) 순찰이 막히지 않는다. 플레이어 유닛의
     // NavMesh는 NavMeshModifier.ignoreFromBuild로 이미 굽기에서 뺐으니 크기와 무관하게 안전하다.
-    const float StoryPortalDiameter = 15f;
+    // 원작 비율 5단계(PM 지시 2026-09-23) — 다른 포탈 지름과 같은 이유로 Scale을 태운다.
+    // TrackWidth(흙길 폭)는 이번 지시 범위 밖이라 그대로 뒀다 — 그래도 아래 식은 "지금
+    // TrackWidth 기준으로 포탈 가장자리가 길 안쪽 경계에 닿는다"는 관계라 자동으로 다시 맞는다.
+    const float StoryPortalDiameter = 15f * MapLayout.Scale;
 
     // "적 유닛 지나는 길이랑 딱 맞닿게, 넘지는 말고"(사장님, 2026-09-03) — 오른쪽 세로 흙길
     // (반폭 TrackWidth/2)의 안쪽 경계에 포탈 가장자리(반지름 StoryPortalDiameter/2)가 정확히
@@ -2675,7 +2725,8 @@ public static class MapGenerator
     }
 
     // 기존 최대(StoryPortalDiameter=15)보다 크게 — "크게 만들라"는 사장님 지시.
-    const float StoryReturnPortalDiameter = 24f;
+    // 원작 비율 5단계(PM 지시 2026-09-23) — 다른 포탈 지름과 같은 이유로 Scale을 태운다.
+    const float StoryReturnPortalDiameter = 24f * MapLayout.Scale;
 
     // 스토리존 → 레인 복귀. 레인마다가 아니라 존에 큰 포탈 하나(사장님 지시, 2026-09-05) —
     // StoryReturnPortal이 소유자별 목적지 4개를 들고 있다가 밟은 사람의 레인 한가운데로
@@ -2993,12 +3044,14 @@ public static class MapGenerator
         {
             Vector3 ground = new Vector3(startX + (i % perRow) * SlotSpacing, MapLayout.IslandTop,
                                          startZ - (i / perRow) * SlotSpacing);
-            // 팔각 받침(모서리 지름 6)이 칸 간격 6과 같아 맞닿는다 — 0.9배로 틈을 둔다.
+            // 받침 지름은 인형 기준(PedestalWidth)이다. 다만 칸 간격이 그보다 좁아지면 이웃
+            // 받침과 맞닿으므로 칸 쪽(0.9배로 틈을 둔 값)으로 한 번 더 잠근다 — 지금 간격은
+            // 61.4라 인형 기준이 이긴다.
             float lift = StructureDresser.PlacePedestal(parent, "받침_초월", $"초월_{units[i].unitName}_받침",
-                                                        ground, 0f, SlotSpacing * 0.9f / PedestalDiameter);
+                ground, 0f, Mathf.Min(PedestalWidth, SlotSpacing * 0.9f) / PedestalDiameter);
             // 스킨이 있으면 색 큐브 대신 인형을 세운다(2026-09-18 초월 25종 스킨 완성). 칸 간격보다 조금 작게.
             PlaceUnitMarker(parent, $"초월_{units[i].unitName}", new Vector3(ground.x, 0f, ground.z),
-                UnitGrade.Transcendent, units[i], SlotSpacing * 1.6f, lift);
+                UnitGrade.Transcendent, units[i], DisplayFigureHeight, lift);
         }
 
         return units.Count;
@@ -3016,9 +3069,12 @@ public static class MapGenerator
 
         // 화로에서 떨어져 둘러앉는 반지름 — 섬 밖으로 나가지 않는 선에서 가장 넓게 잡는다.
         float radius = Mathf.Min(island.size.x, island.size.y) * 0.5f - SlotSize * 2f;
-        // 받침(지름 6)이 둘레에 다 안 들어가면 줄인다 — 이웃과 닿지 않게 둘레 몫의 85%까지.
-        float pedestalScale = Mathf.Min(1f,
-            2f * Mathf.PI * radius / Mathf.Max(1, units.Count) * 0.85f / PedestalDiameter);
+        // 받침 지름은 인형 기준(PedestalWidth, 초월 전시와 같은 규칙 — PM 지시 2026-09-23).
+        // 다만 8명이 둘레에 다 안 들어가면 그쪽으로 줄인다 — 이웃과 닿지 않게 둘레 몫의 85%까지.
+        // (지금 둘레 몫은 넉넉해서 인형 기준이 이긴다. 예전엔 천장이 1f라 섬이 4.167배가 돼도
+        //  늘 1에서 잘려 받침이 하나도 안 커졌는데, 이제 기준 자체가 인형이라 그 문제도 없다.)
+        float pedestalScale = Mathf.Min(PedestalWidth,
+            2f * Mathf.PI * radius / Mathf.Max(1, units.Count) * 0.85f) / PedestalDiameter;
 
         for (int i = 0; i < units.Count; i++)
         {
@@ -3035,7 +3091,7 @@ public static class MapGenerator
             Vector3 toCenter = center - ground;
             float faceYaw = Mathf.Atan2(toCenter.x, toCenter.z) * Mathf.Rad2Deg - 180f;
             PlaceUnitMarker(parent, $"불멸_{units[i].unitName}", new Vector3(ground.x, 0f, ground.z),
-                UnitGrade.Immortal, units[i], SlotSpacing * 1.6f, lift, faceYaw);
+                UnitGrade.Immortal, units[i], DisplayFigureHeight, lift, faceYaw);
         }
 
         return units.Count;

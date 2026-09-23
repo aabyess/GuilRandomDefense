@@ -108,18 +108,37 @@ public static class MapLayout
     {
         // 이벤트 존이 위, 그 아래 불멸·초월 전시가 가로로 나란히.
         new Island("PunkHazard",         0f * Scale, 130f * Scale, 90f * Scale, 60f * Scale, "event"),
-        // 초월은 25종이 가로 14칸씩 두 줄로 서므로 세로가 그만큼만 있으면 된다.
-        // 불멸은 화로를 둘러싼 원형이라 지름이 필요해서 50을 유지한다.
-        // 둘 다 조합식 표 바로 위로 내려, 사이에 비던 자리를 없앴다.
-        new Island("ImmortalDisplay",  150f * Scale,  52f * Scale, 90f * Scale, 50f * Scale, "display"),
-        new Island("TranscendDisplay", 150f * Scale,   8f * Scale, 90f * Scale, 26f * Scale, "display"),
+        // (2026-09-23, 원작 비율 4단계, PM 지시) 옛 90×26/90×50은 SlotSpacing이 6이던 시절
+        // 기준이다 — SlotSpacing이 61.4로 커지면서 초월 25종이 한 줄에 6.1칸(가로 430)밖에
+        // 못 들어가 7종×4줄이 필요해졌고(세로 246+여유), 불멸 8종 원형도 반지름 최소 78.2
+        // (지름 230+여유)가 필요해졌다. PM이 준 목표(최종 크기, Scale 적용 후) 초월 460×280·
+        // 불멸 280×280을 이 리터럴(=목표÷Scale)로 옮겼다. z중심도 같이 옮겼다 — 커진 크기가
+        // 옛 z(52·8)를 그대로 쓰면 CombineTable과 겹친다. CombineTable 윗변(z=-70.8, Scale
+        // 후)에서 40 띄우고 쌓아 올렸고, MapGenerator.cs:3508 Overlaps()와 같은 식으로 다른
+        // 16개 섬 전부와 대조해 0건 확인했다(레인 때와 같은 방식, 별도 계산).
+        new Island("ImmortalDisplay",  150f * Scale, 102.990f * Scale, 67.195f * Scale, 67.195f * Scale, "display"),
+        new Island("TranscendDisplay", 150f * Scale,  26.197f * Scale, 110.391f * Scale, 67.195f * Scale, "display"),
         // 1.5배로 키운 값(원래 120x100). 여유가 빠듯하다 — 봉인섬과 z로 12,
         // 뽑기섬과 x로 10밖에 안 남으니 더 키우려면 이웃을 먼저 옮겨야 한다.
         new Island("StoryZone",       -290f * Scale, -80f * Scale, 180f * Scale, 150f * Scale, "story"),
         // 오른쪽 전시 칸이 다른세계 조합식 한 줄(재료 6칸 + 비용 3칸)을 담아야 해서 폭을 넓혔다.
-        new Island("GachaIsland",      -82f * Scale, -80f * Scale, 136f * Scale, 190f * Scale, "gacha"),
+        // (2026-09-23, 원작 비율 4단계) SlotSpacing 6→61.4로 오른쪽 전시 칸이 줄당 11칸에서
+        // 4칸으로 줄어, 랜덤유닛 14종이 2줄에서 4줄이 됐다. 그 아래 다른세계 조합식 14줄까지
+        // 더하면 깊이 827이 필요한데 예전 섬(깊이 752)으로는 75가 모자란다(생성 보고문의
+        // "⚠️ 모자람"이 뜨는 자리다). **위쪽은 안 건드리고 아래로만 160 늘렸다** — 위로 늘리면
+        // 바로 위 레인3·4(아래변 z=100)와 겹친다. 그래서 size_z는 +160/Scale, center_z는
+        // −80/Scale만큼 내렸다(윗변 z=62.5 고정). 새 여유는 85다.
+        new Island("GachaIsland",      -82f * Scale, -99.20f * Scale, 136f * Scale, 228.40f * Scale, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
-        new Island("CombineTable",     137f * Scale, -110f * Scale, 274f * Scale, 186f * Scale, "combine"),
+        // (2026-09-23, 원작 비율 4단계, PM 지시 "섬을 넓혀라 — 52% 축소는 받지 않는다")
+        // 새 칸 크기로 열을 자연 폭대로 늘어놓으면 2192가 필요한데 옛 폭은 1142라, 그대로 두면
+        // RecipeScale 자동 축소가 52%로 걸려 칸이 15.4가 아니라 8.0으로 그려진다(= 사장님이
+        // 지적하신 "조합판이 작다"가 절반만 해소된다). 폭 2250으로 넓혀 축소를 없앴다.
+        // 세로도 775→917로 키웠다 — 옛 깊이는 여유가 37뿐이었다(필요 738).
+        // ⚠️ 둘 다 **오른쪽·아래로만** 늘렸다: 왼쪽 끝은 x=0에 그대로 둬야 뽑기섬(오른쪽 끝
+        //    x=-58.3)과 안 붙고, 윗변은 z=-71에 그대로 둬야 초월 전시(아래변 z=-30.8)와 안 겹친다.
+        //    그래서 중심도 같이 옮겼다(폭 540·세로 220 리터럴 기준). 18개 섬 전수 대조 겹침 0건.
+        new Island("CombineTable",     270f * Scale, -127.03f * Scale, 540f * Scale, 220f * Scale, "combine"),
         // 도박소. StoryZone 서쪽, 같은 z대역이라 나란히 배치되고 40유닛 간격으로 안 겹친다.
     };
 

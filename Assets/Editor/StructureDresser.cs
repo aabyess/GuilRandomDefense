@@ -144,7 +144,9 @@ public static class StructureDresser
         if (model == null) return;
 
         Vector3 ground = new Vector3(body.transform.position.x, MapLayout.IslandTop, body.transform.position.z);
-        GameObject building = Place(body.transform.parent, model, body.name + "_모양", ground, 0f);
+        // 원작 비율 5단계(PM 지시 2026-09-23) — 모델은 실제 치수로 지어졌고 이 호출이 Scale을
+        // 안 넘기면 항상 1배(Blender 그대로)로 서서, 맵이 커진 만큼 건물이 상대적으로 쪼그라든다.
+        GameObject building = Place(body.transform.parent, model, body.name + "_모양", ground, 0f, MapLayout.Scale);
         if (building == null) return;
 
         // 상자의 부모는 Map 루트(배율 1)라 월드 크기 = 로컬 크기. 건물 어디를 눌러도 선택되게 맞춘다.
@@ -161,7 +163,7 @@ public static class StructureDresser
 
     public static bool PlaceCampfire(Transform parent, Vector3 ground)
     {
-        GameObject fire = Place(parent, "캠프파이어", "불멸전시_캠프파이어", ground, 0f);
+        GameObject fire = Place(parent, "캠프파이어", "불멸전시_캠프파이어", ground, 0f, MapLayout.Scale);
         if (fire == null) return false;
         EffectSockets.Attach(fire);   // 불_자리·연기_자리 → 불꽃·연기·깜빡이는 불빛
         return true;
@@ -180,29 +182,33 @@ public static class StructureDresser
 
     // ───────────────────────── 스토리존 ─────────────────────────
 
-    const float PlazaSurface = 1.0f;   // 광장 포석 윗면(Blender 치수) — 둘레돌 1.12는 가장자리뿐
+    const float PlazaSurface = 1.0f;   // 광장 포석 윗면(Blender 치수, 배율 1일 때) — 둘레돌 1.12는 가장자리뿐
 
     /// <summary>
     /// 스토리존 한가운데가 섬 윗면보다 얼마나 높은가 — 등장 지점·착지 지점을 광장 위로 올리는 데 쓴다.
     /// 착지 지점은 레인 포탈이 단상보다 **먼저** 지어질 때 정해지므로, 놓았는지가 아니라 모델이 있는지로 판단한다.
     /// 광장 가운데 45×45(스토리 적 건물 자리)도 포석이 윗면 높이로 깔려 있다(gen_story_platform.py).
+    /// ⚠️ PlaceStoryPlaza가 이제 모델을 MapLayout.Scale로 키워서 세우므로(원작 비율 5단계,
+    /// 2026-09-23), 실제 윗면 높이도 그만큼 커진다 — 여기서 곱하지 않으면 착지 지점이
+    /// 모델 표면 아래(땅속)에 박힌다.
     /// </summary>
     public static float StoryPlazaLift =>
-        AssetDatabase.LoadAssetAtPath<GameObject>(Folder + "스토리단상.fbx") != null ? PlazaSurface : 0f;
+        AssetDatabase.LoadAssetAtPath<GameObject>(Folder + "스토리단상.fbx") != null
+            ? PlazaSurface * MapLayout.Scale : 0f;
 
     /// <summary>
-    /// 스토리 단상(지름 66 광장). 윗면을 걸을 수 있게 메시 콜라이더를 달아 NavMesh가 굽게 한다.
+    /// 스토리 단상(지름 66 광장, 배율 1 기준). 윗면을 걸을 수 있게 메시 콜라이더를 달아 NavMesh가 굽게 한다.
     /// 반환: 윗면 높이 상승량, 모델이 없으면 −1(호출부가 옛 원기둥을 짓는다).
     /// </summary>
     public static float PlaceStoryPlaza(Transform parent, Vector3 ground)
     {
-        GameObject plaza = Place(parent, "스토리단상", "스토리_단상", ground, 0f);
+        GameObject plaza = Place(parent, "스토리단상", "스토리_단상", ground, 0f, MapLayout.Scale);
         if (plaza == null) return -1f;
 
         foreach (MeshFilter filter in plaza.GetComponentsInChildren<MeshFilter>(true))
             if (!filter.TryGetComponent(out MeshCollider _))
                 filter.gameObject.AddComponent<MeshCollider>().sharedMesh = filter.sharedMesh;
-        return PlazaSurface;
+        return PlazaSurface * MapLayout.Scale;
     }
 
     // ───────────────────────── 포탈 ─────────────────────────
@@ -291,9 +297,12 @@ public static class StructureDresser
         GameObject asset = Load(model);
         if (asset == null || !TryMeasure(asset, out Bounds size)) return;
 
+        // size는 아직 스케일 전(자산 원본) 치수라 배치 여백 계산에도 MapLayout.Scale을 곱해야
+        // 한다 — 안 곱하면 실제로 세워질(스케일된) 헛간이 이 여백보다 커서 섬 밖으로 걸친다
+        // (원작 비율 5단계, 2026-09-23).
         Vector3 ground = new Vector3(island.center.x, MapLayout.IslandTop,
-                                     island.center.y + island.size.y * 0.5f - size.size.z * 0.5f - 1.5f);
-        GameObject shed = Place(parent, model, $"{island.name}_창고헛간", ground, 0f);
+                                     island.center.y + island.size.y * 0.5f - size.size.z * 0.5f * MapLayout.Scale - 1.5f);
+        GameObject shed = Place(parent, model, $"{island.name}_창고헛간", ground, 0f, MapLayout.Scale);
         if (shed == null || !TryMeasure(shed, out Bounds bounds)) return;
 
         GameObject blocker = new GameObject($"{island.name}_창고헛간_막음");
@@ -337,7 +346,10 @@ public static class StructureDresser
             string model = models[index];
             GameObject asset = Load(model);
             if (asset == null || !TryMeasure(asset, out Bounds bounds)) continue;
-            float radius = Mathf.Max(bounds.size.x, bounds.size.z) * 0.5f;
+            // bounds는 자산 원본(배율 1) 치수다. 실제로 세울 인스턴스는 MapLayout.Scale로 키우므로
+            // 간격 계산용 radius도 같이 키워야 한다 — 안 그러면 간격 검사가 커진 실제 크기보다
+            // 좁게 잡혀 소품끼리 겹친다(원작 비율 5단계, 2026-09-23).
+            float radius = Mathf.Max(bounds.size.x, bounds.size.z) * 0.5f * MapLayout.Scale;
             if (zMax - zMin < radius * 2f) continue;
 
             for (int attempt = 0; attempt < 24; attempt++)
@@ -349,7 +361,7 @@ public static class StructureDresser
                     continue;
 
                 GameObject prop = Place(parent, model, $"펑크해저드_{label}_{spots.Count + 1:00}",
-                    new Vector3(x, MapLayout.IslandTop, z), (float)rng.NextDouble() * 360f);
+                    new Vector3(x, MapLayout.IslandTop, z), (float)rng.NextDouble() * 360f, MapLayout.Scale);
                 if (prop == null) break;
                 EffectSockets.Attach(prop);   // 용암바위_03 연기
                 spots.Add(new Vector3(x, z, radius));
@@ -388,21 +400,27 @@ public static class StructureDresser
             Vector3 root = center + d * halfAlong + perp * ((site.along - 0.5f) * 2f * halfPerp * 0.8f);
             float yaw = YawFacing(d);
 
+            // 원작 비율 5단계(PM 지시 2026-09-23) — 모델·간격 상수 전부 MapLayout.Scale을 곱한다.
+            // pierLength는 잔교의 실측 길이라, 곱하지 않으면 목선이 커진 잔교 옆이 아니라
+            // 갑판 한중간에 박힌다.
             string pierModel = site.longPier ? "부두_잔교_긴" : "부두_잔교_짧은";
-            float pierLength = site.longPier ? 24f : 14f;
+            float pierLength = (site.longPier ? 24f : 14f) * MapLayout.Scale;
             // 잔교 원점 = 섬 쪽 끝 갑판 윗면(z 0) → 섬 윗면에 그대로 둔다.
-            if (Place(parent, pierModel, $"{site.island}_잔교", root, yaw, 1f, snapBottom: false) == null) continue;
+            if (Place(parent, pierModel, $"{site.island}_잔교", root, yaw, MapLayout.Scale, snapBottom: false) == null) continue;
             piers++;
 
             // 목선 — 잔교 옆 물 위(원점 = 흘수선).
-            Vector3 boat = root + d * (pierLength * 0.55f) + perp * 5.5f;
+            Vector3 boat = root + d * (pierLength * 0.55f) + perp * (5.5f * MapLayout.Scale);
             Place(parent, i % 2 == 0 ? "부두_목선_01" : "부두_목선_02", $"{site.island}_목선",
-                  new Vector3(boat.x, SeaTop, boat.z), yaw, 1f, snapBottom: false);
+                  new Vector3(boat.x, SeaTop, boat.z), yaw, MapLayout.Scale, snapBottom: false);
 
-            // 섬 가장자리 소품 — 게임 카메라에서 점처럼 작아 배율을 키운다(MANIFEST).
+            // 섬 가장자리 소품 — 게임 카메라에서 점처럼 작아 배율을 키운다(MANIFEST). 그 2.5·2배
+            // 과장은 그대로 두고 MapLayout.Scale을 곱해서 얹는다 — 맵 배율과 같이 커진다.
             foreach (float side in new[] { -1f, 1f })
-                Place(parent, "부두_계선주", $"{site.island}_계선주", root - d * 2f + perp * (3.5f * side), yaw, 2.5f);
-            Place(parent, "부두_부표더미", $"{site.island}_부표더미", root - d * 4f + perp * 7f, yaw, 2f);
+                Place(parent, "부두_계선주", $"{site.island}_계선주",
+                      root - d * (2f * MapLayout.Scale) + perp * (3.5f * MapLayout.Scale * side), yaw, 2.5f * MapLayout.Scale);
+            Place(parent, "부두_부표더미", $"{site.island}_부표더미",
+                  root - d * (4f * MapLayout.Scale) + perp * (7f * MapLayout.Scale), yaw, 2f * MapLayout.Scale);
         }
         return piers > 0 ? $"\n부두: 잔교 {piers}곳(목선·계선주·부표 포함)." : "";
     }
