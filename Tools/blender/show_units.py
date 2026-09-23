@@ -22,6 +22,7 @@
 
 import math
 import os
+import re
 import sys
 
 import bpy
@@ -31,18 +32,18 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
+import retarget_idle
+
 PROJECT = os.path.abspath(os.path.join(HERE, "..", ".."))
 UNIT_DIR = os.path.join(PROJECT, "Assets", "Art", "Units")
 PER_ROW = 8                      # 한 줄에 여덟 — 25종짜리 초월이 가로로 너무 길어지지 않게
-IDLE = os.path.expanduser("~/Desktop/구랜디스킨모음/99_공용_애니메이션/idle.fbx")
+IDLE = retarget_idle.IDLE
 
 # 🔴 사장님 지시(2026-09-23): 「**서있는 모습으로** 배치」 — 쉬는 자세(T자) 그대로 세우면 안 된다.
 #   게임 안 조합판 인형이 공용 Idle을 먹고 자연스럽게 서 있으므로, 판도 같은 클립의 한 프레임으로 세운다.
 #   프레임은 **클립에서 가장 얌전한 자세**를 자동으로 고른다(뼈 회전량 합이 가장 작은 프레임) — 손을 든
 #   순간을 잡으면 비교가 안 되기 때문이다. 리타겟이 안 먹는 유닛(Generic·네발·소품)은 쉬는 자세 그대로 둔다.
-HUMAN_MIN = ["Hips", "Spine", "Head", "LeftArm", "LeftForeArm", "LeftHand",
-             "RightArm", "RightForeArm", "RightHand", "LeftUpLeg", "LeftLeg", "LeftFoot",
-             "RightUpLeg", "RightLeg", "RightFoot"]
+HUMAN_MIN = retarget_idle.HUMAN_MIN
 
 # 🔴 전시용으로만 줄이는 것(실측치는 결함 목록에 그대로 남긴다) — 배 둘이 22m라 다른 판을 전부 덮는다.
 DISPLAY_SCALE = {"해적선": 1.8 / 22.0, "고대의배": 1.8 / 22.0}
@@ -50,17 +51,18 @@ DISPLAY_SCALE = {"해적선": 1.8 / 22.0, "고대의배": 1.8 / 22.0}
 # 🔴 판에서 빼는 유닛(2026-09-23 blender 전수 실측 — 커밋된 FBX를 전부 재수입해 세계 좌표로 잼).
 #   유닛 규약은 「키(z) 1.8m」인데 이들은 자릿수가 다르다 — 한 판에 같이 놓으면 칸 너비가 이들 기준으로
 #   잡혀 나머지가 점으로 보인다(1차 렌더에서 실제로 그랬다). 판에서만 빼고, 목록은 리포트로 올린다.
-#   ⚠️ 이건 전시 문제가 아니라 **유닛 자체의 결함**이다 — 게임 안에서도 ArtBinder가 키로 맞추면서
-#   말도 안 되는 배율이 나온다(PM이 유니티에서 본 희귀함_김정래 0.16배와 같은 부류).
+#   ⚠️ **결함이라고 단정하면 안 된다**(2026-09-23 PM 유니티 전수 실측으로 정정): ArtBinder가 키를 맞춰 세우므로
+#   원본 키가 제각각이어도 게임에선 정상으로 보인다(김용태 22.99m → 유니티 30.00 · 박민수 0.027m → 25.50).
+#   진짜 결함은 **ArtBinder의 「1,000배 넘게 키워야 하면 잘못 잰 것으로 보고 건너뛴다」 안전장치에 걸리는 것**뿐이고,
+#   거기 걸렸던 셋(idle=흔함_최상호 · 특별함_임장혁 · 흔함_양재모)은 09-23에 1.8m로 다시 뽑아 목록에서 빠졌다.
+#   아래 넷은 「게임에선 멀쩡하지만 판에 같이 놓으면 칸 너비를 혼자 잡아먹는」 전시 사정으로만 뺀다.
 SKIP = {
-    # 키가 자릿수로 어긋나 판에 같이 놓으면 칸 너비가 이들 기준이 되어 나머지가 점으로 보인다(2026-09-23 재실측).
-    "안흔함_김용태": "키 22.99m(규약 1.8m의 12.8배)",
-    "안흔함_엄태웅": "키 18.83m(10.5배)",
-    "안흔함_이재윤": "키 4.47m(2.5배)",
-    "흔함_임장혁": "키 0.113m(1/16)",
-    "흔함_박민수": "키 0.027m(1/67)",
-    "흔함_양재모": "키 0.024m(1/75)",
-    "특별함_임장혁": "키 0.022m(1/82)",
+    "안흔함_김용태": "원본 키 22.99m(규약 1.8m의 12.8배) — 게임에선 정상(유니티 30.00)",
+    "안흔함_엄태웅": "원본 키 18.83m(10.5배) — 게임에선 정상(30.00)",
+    "안흔함_이재윤": "원본 키 4.47m(2.5배) — 게임에선 정상(30.00)",
+    "흔함_박민수": "원본 키 0.027m(1/67) — 게임에선 정상(25.50)",
+    # ※ 흔함_임장혁(0.113m)은 게임에서 정상(25.50)이고 판에서도 견딜 만해 다시 넣었다. 다만 가로가 키의 2.3배다
+    #    (프랑키의 벌린 팔 + 큰 아래팔. 등에 멘 무기는 가로에 0.02밖에 안 보탠다 — 직접 재서 확인).
     # ※ 안흔함_박준희는 09-23 재출력으로 1.8m가 되어 목록에서 빠졌다.
     # ※ 소품 유닛(특별함_김정래 노트북 · 히든_호치킨/이삭토스트/감탄떡볶이)은 「가장 긴 변 0.6m」가 규약이라 정상이다 — 안 뺀다.
 }
@@ -118,6 +120,30 @@ def label_of(unit):
     return " ".join(w for w in words if w)
 
 
+_GENERIC = None
+
+
+def generic_units():
+    """유니티가 **Generic으로 임포트하는** 유닛 이름들(UnitModelPostprocessor.GenericRigUnits를 그대로 읽는다).
+
+    🔴 2026-09-23: 영원_김영원은 뼈 이름이 mixamorig 21개라 **이름만 보는 우리 리타게터는 성공**한다.
+    그런데 유니티는 이 유닛을 Generic으로 세우고 **자기 웅크린 Idle**을 쓴다(09-22 PM 결정 — 두꺼비라
+    아바타가 안 섰다). 판이 사람 Idle을 입혀 세우면 **게임과 다른 모습**을 보여 주게 된다.
+    그래서 목록을 코드에서 직접 읽어 그 유닛들은 쉬는 자세 그대로 둔다. 목록이 바뀌면 판도 따라간다.
+    """
+    global _GENERIC
+    if _GENERIC is None:
+        src = os.path.join(PROJECT, "Assets", "Editor", "UnitModelPostprocessor.cs")
+        _GENERIC = set()
+        try:
+            txt = open(src, encoding="utf-8").read()
+            body = txt.split("GenericRigUnits", 1)[1].split("{", 1)[1].split("};", 1)[0]
+            _GENERIC = {m for m in re.findall(r'"([^"]+)"', body)}
+        except (OSError, IndexError):
+            pass
+    return _GENERIC
+
+
 def import_unit(collection, showcase, path, idle=None):
     """유닛 FBX 하나를 들여와 메시만 남기고 무리로 돌려준다.
 
@@ -140,7 +166,8 @@ def import_unit(collection, showcase, path, idle=None):
     meshes = [o for o in new if o.type == "MESH" and len(o.data.vertices)]
     arm = next((o for o in new if o.type == "ARMATURE"), None)
     posed = False
-    if idle is not None and arm is not None:
+    unit = os.path.splitext(os.path.basename(path))[0]
+    if idle is not None and arm is not None and unit not in generic_units():
         names = {b.name.split(":")[-1] for b in arm.pose.bones}
         if all(h in names for h in HUMAN_MIN) and any(b.name in idle["delta"] for b in arm.pose.bones):
             apply_idle(arm, idle)                       # 사람 필수 뼈가 다 있을 때만 옮겨 입힌다
@@ -173,65 +200,16 @@ def import_unit(collection, showcase, path, idle=None):
 
 
 def load_idle():
-    """공용 idle.fbx에서 **가장 얌전한 프레임**의 자세를 읽어 둔다(뼈 회전량 합이 최소인 프레임).
+    """공용 Idle에서 **가장 얌전한 프레임**의 자세를 읽어 둔다 — 정본은 retarget_idle.py(세계 변화량 방식).
 
-    🔴 뼈마다 「쿼터니언을 그대로 복사」하면 안 된다(1차에서 팔이 만세를 했다) — pose_bone.rotation_quaternion은
-    **그 뼈의 쉬는 방향(roll) 기준 로컬 회전**이라, 원본과 대상 리그의 뼈 방향이 다르면 엉뚱하게 돈다.
-    우리 유닛은 파이프라인마다 뼈 방향이 제각각이다. 그래서 **세계 좌표의 변화량**만 옮긴다:
-        Rd = (자세 때 세계 회전) × (쉬는 때 세계 회전)⁻¹
-    대상에서는 그 Rd를 제 쉬는 방향에 곱해 세계 회전을 만든다 — 리그가 달라도 같은 자세가 나온다.
-    파일이 없으면 None(그러면 판은 쉬는 자세 그대로).
+    🔴 뼈마다 「쿼터니언을 그대로 복사」하면 안 된다(1차에서 팔이 만세를 했다). 이유와 식은 retarget_idle.py에.
     """
-    if not os.path.exists(IDLE):
-        return None
-    from mathutils import Matrix
-    before = set(bpy.data.objects)
-    bpy.ops.import_scene.fbx(filepath=IDLE)
-    new_objs = [o for o in bpy.data.objects if o not in before]
-    arm = next(o for o in new_objs if o.type == "ARMATURE")
-    act = arm.animation_data.action
-    f0, f1 = int(act.frame_range[0]), int(act.frame_range[1])
-    scn = bpy.context.scene
-    best, best_fr = None, f0
-    for fr in range(f0, f1 + 1, 5):
-        scn.frame_set(fr)
-        tot = sum(abs(pb.matrix_basis.to_quaternion().angle) for pb in arm.pose.bones)
-        if best is None or tot < best:
-            best, best_fr = tot, fr
-    scn.frame_set(best_fr)
-    W = arm.matrix_world
-    delta, hips_off = {}, None
-    for pb in arm.pose.bones:
-        rest_w = (W @ pb.bone.matrix_local).to_3x3()
-        pose_w = (W @ pb.matrix).to_3x3()
-        delta[pb.name] = pose_w @ rest_w.inverted()
-        if pb.name.endswith("Hips"):
-            hips_off = (W @ pb.matrix).translation - (W @ pb.bone.matrix_local).translation
-    for o in new_objs:
-        bpy.data.objects.remove(o, do_unlink=True)
-    return {"delta": delta, "hips_off": hips_off, "frame": best_fr,
-            "회전량": round(float(best), 3), "뼈": len(delta)}
+    return retarget_idle.load_idle()
 
 
 def apply_idle(arm, idle):
-    """load_idle이 읽어 둔 세계 변화량을 이 뼈대에 입힌다(부모부터 차례로 — 자식 머리 자리가 부모 자세에 딸려 온다)."""
-    from mathutils import Matrix
-    W = arm.matrix_world
-    Wi = W.inverted()
-    order = sorted(arm.pose.bones, key=lambda pb: len(pb.parent_recursive))
-    for pb in order:
-        Rd = idle["delta"].get(pb.name)
-        if Rd is None:
-            continue
-        rest_w = W @ pb.bone.matrix_local
-        rot_w = (Rd @ rest_w.to_3x3()).to_4x4()
-        if pb.parent is not None:
-            p_rest_w = W @ pb.parent.bone.matrix_local
-            head_w = (W @ pb.parent.matrix) @ p_rest_w.inverted() @ rest_w.translation
-        else:
-            head_w = rest_w.translation + (idle["hips_off"] or Vector((0, 0, 0)))
-        pb.matrix = Wi @ (Matrix.Translation(head_w) @ rot_w)
-        bpy.context.view_layer.update()
+    """읽어 둔 세계 변화량을 이 뼈대에 입힌다(부모부터 차례로)."""
+    return retarget_idle.apply_idle(arm, idle)
 
 
 def units_of(grade):

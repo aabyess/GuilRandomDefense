@@ -916,7 +916,9 @@ UNITS = {
                       archive_rgb={"pl_kizaru_orig01/pl_kizaru_orig01_diff.png": "pl_kizaru_orig01_diff.png"},
                       drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_yasakani", "r_hand_yasakani", "r_hand_yubisashi",
                                    "l_light_leg", "r_light_leg", "l_light_shoes", "r_light_shoes", "open_watch"],
-                      drop_bones=["world_joint"],
+                      # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
+                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
+                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
                       rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
                       merge_bones=[dict(pattern=r"^(coat_root|c_coat0|[lr]_coat_kata|[lr]_arm0|[lr]_coat0)", into="mixamorig:Spine1"),   # Head 자손 없음(Head 병합 불필요)
                                    dict(pattern=r"^suso[AB]$", into="mixamorig:Hips")],
@@ -990,7 +992,9 @@ UNITS = {
                       archive=(os.path.join(SKINS, "06_전설적인/전설적인_신지우.zip"), "source/pl_bigmom_orig01.rar", "pl_bigmom_orig01/pl_bigmom_orig01.fbx"),
                       archive_rgb={"pl_bigmom_orig01/pl_bigmom_orig01_diff.png": "pl_bigmom_orig01_diff.png"},
                       drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_sp_open", "r_hand_sp_open"],
-                      drop_bones=["world_joint"],
+                      # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
+                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
+                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
                       rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
                       merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
                                    dict(pattern=r"^([bl]_cloak_0|r_croak_0)", into="mixamorig:Spine1"),
@@ -1011,13 +1015,32 @@ UNITS = {
                       no_nulls=True, orient_snap=True, head="Mouse", tail="Head",
                       drop_bones=["cha_menosgrande_R_6", "cha_menosgrande_R_6.001", "Point001"],
                       seed_zero_bones=0.001,
-                      synth_idle=dict(take="Idle", frames=72, step=3, bones={
-                          "spine": [((0, 1, 0), 1.5, 0.0), ((1, 0, 0), 0.8, 1.2)],
-                          "spine1": [((0, 1, 0), 1.5, -0.4)],
-                          "spine2": [((0, 1, 0), 1.5, -0.8), ((1, 0, 0), 0.8, 0.4)],
-                          "Head": [((1, 0, 0), 2.5, -1.2), ((0, 0, 1), 2.0, 0.6)],
-                          "Skirt": [((0, 1, 0), -0.8, -0.6)],
-                          "Skirt1": [((0, 1, 0), -1.0, -1.2)]}),   # 1회차 자락 −1.5·−2.0°는 옷단이 바닥 밑 2.4 cm로 내려감 → 절반
+                      # 🔴 걷기·공격 추가(2026-09-23 PM 요청). ⚠️ Idle(72)을 일부러 제일 길게 — 컨트롤러 고치기 전까지는 지금과 동일하게 돈다.
+                      #   ⚠️ 자락(Skirt·Skirt1)은 **좌우(Y축)로만** 흔든다 — 앞뒤(X)로 굽히면 옷단이 바닥 밑으로 내려간다(1회차 −1.5·−2.0°에서 2.4cm 관통).
+                      #   팔·다리가 없는 원추형 망토라 걷기는 「앞으로 기울며 자락이 흔들림」, 공격은 「몸을 젖혔다 머리를 앞으로 내지름」으로 낸다.
+                      synth_clips=[
+                          dict(take="Idle", ground=True, frames=72, step=3, bones={
+                              "spine": [((0, 1, 0), 1.5, 0.0), ((1, 0, 0), 0.8, 1.2)],
+                              "spine1": [((0, 1, 0), 1.5, -0.4)],
+                              "spine2": [((0, 1, 0), 1.5, -0.8), ((1, 0, 0), 0.8, 0.4)],
+                              "Head": [((1, 0, 0), 2.5, -1.2), ((0, 0, 1), 2.0, 0.6)],
+                              "Skirt": [((0, 1, 0), -0.8, -0.6)],
+                              "Skirt1": [((0, 1, 0), -1.0, -1.2)]}),   # 1회차 자락 −1.5·−2.0°는 옷단이 바닥 밑 2.4 cm로 내려감 → 절반
+                          dict(take="Move", ground=True, frames=48, step=2, bones={
+                              "spine": dict(rot=[((1, 0, 0), 3.0, -math.pi / 2)]),
+                              "spine1": dict(rot=[((1, 0, 0), 2.5, -math.pi / 2)]),
+                              "spine2": dict(rot=[((1, 0, 0), 2.0, -math.pi / 2)]),
+                              "Head": dict(rot=[((1, 0, 0), 2.0, -0.4)]),
+                              "Skirt": dict(rot=[((0, 1, 0), 3.0, 0.0)]),
+                              "Skirt1": dict(rot=[((0, 1, 0), 4.0, -0.5)])}),
+                          dict(take="Attack", ground=True, frames=30, step=2, bones={
+                              "spine": dict(rot=[((1, 0, 0), -8.0, 0.0)]),
+                              "spine1": dict(rot=[((1, 0, 0), -6.0, -0.2)]),
+                              "spine2": dict(rot=[((1, 0, 0), -5.0, -0.3)]),
+                              "Head": dict(rot=[((1, 0, 0), -12.0, -0.4)]),
+                              "Skirt": dict(rot=[((0, 1, 0), 2.0, 0.0)]),
+                              "Skirt1": dict(rot=[((0, 1, 0), 2.5, -0.3)])}),
+                      ],
                       materials=dict(textures={"cha_menosgrande_R_6": [("DiffuseColor", "cha_menosgrande_R_6.png")]})),
     # 원피스 바운티러시 바솔로뮤 쿠마(pl_bkuma_orig01) → 전설적인_박은석(2026-09-17 전설적인, ※ 동명 박은석 중 전설적인). 샹크스형 pl_ 리그(「Armature」·뿌리 pl_bkuma_orig01 → world_joint).
     #   zip 안 rar 안 FBX · 뼈 29 · 메시 14 · 재질 1 · ×0.01 · 이미 T자 · 🔸 거구(원시 몸 폭 ±0.045 · 키 0.07).
@@ -1132,7 +1155,9 @@ UNITS = {
                     archive=(os.path.join(SKINS, "07_제한됨/제한_최영민.zip"), "source/ichiji.rar", "ichiji/pl_ichiji_orig01 (merge).fbx"),
                     archive_rgb={"ichiji/pl_ichiji_orig01_diff.png": "pl_ichiji_orig01_diff.png"},
                     drop_meshes=["face_attack", "face_damage", "face_sp01", "l_hand_close", "r_hand_close", "l_hand_sp01", "r_hand_sp01", "l_hand_sp02", "r_hand_sp02"],
-                    drop_bones=["world_joint"],
+                    # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
+                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
+                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
                     rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
                     merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
                                  dict(pattern=r"^(coat_root|[bf]_c?_?[lr]?_?coat_0|f_coat_0|b_[clr]_coat_0|[lr]_coat_0|[lr]_coat_shoulder|[bflr]_collar|scarf_)", into="mixamorig:Spine1"),
@@ -1186,7 +1211,9 @@ UNITS = {
                              "pl_sengoku_orig02/pl_sengoku_orig02.fbx"),
                     archive_rgb={"pl_sengoku_orig02/pl_sengoku_orig02_diff.png": "pl_sengoku_orig02_diff.png"},
                     drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close"],
-                    drop_bones=["world_joint"],
+                    # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
+                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
+                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
                     rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
                     merge_bones=[dict(pattern=r"^(coat_root|c_coat\d*|c_collar|l_coat\d*|l_collar|l_coat_arm\d*|l_epaulette_0[12]_joint"
                                         r"|r_coat\d*|r_collar|r_coat_arm\d*|r_epaurette_0[12]_joint)$", into="mixamorig:Spine1"),
@@ -1269,7 +1296,9 @@ UNITS = {
                     drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close",
                                  "l_hand_close_magma", "r_hand_close_magma",
                                  "l_sp01_dog", "r_sp01_dog", "l_sp01_dog_eye", "r_sp01_dog_eye"],
-                    drop_bones=["world_joint"],
+                    # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
+                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
+                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
                     drop_bones_re=r"^[LR]Arm_(Upper_Magma|Upper_Fore_Magma|sp_joint0[12]|Upper_Palm_Magma)$"
                                   r"|^[LR]_sp_dog01_[LR]ear$|^[LR]sp_dog_jaw$",
                     rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
@@ -1706,17 +1735,42 @@ UNITS = {
                           "5_hair_1.0_0_0": [("DiffuseColor", "5_hair_baseColor.png")],
                           "5_noseline_1_0_0": [("DiffuseColor", "5_noseline_baseColor.png")],
                           "7_eyeshadow_1.0_0_0.001": [("DiffuseColor", "7_eyeshadow_baseColor.png")]})),
-    "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M"),
+    # 🔴 재규어(2026-09-23): 원본 클립이 「All Animations」 한 덩어리(353프레임)라 게임에서 그 전체가 Idle로 돌았다.
+    #   뼈 높이 곡선(Root_M z · Head_M z)과 10프레임 간격 렌더로 구간을 잡았다:
+    #     1~115   머리 0.801 → 0.865 → 0.805로 돌아오는 **서 있는 숨쉬기**(발은 안 움직인다) → Idle
+    #     121~230 머리가 0.805 → **0.542**까지 내려갔다 0.688로 올라오는 **웅크려 노리기** → Move(살금살금)
+    #     271~341 뿌리가 0.893 → **0.827**로 앉으며 앞발(Fingers1_L)이 z **0.75**까지 올라가는 **앞발 치기** → Attack
+    #   ⚠️ **원본에 걷기가 없다** — 네 발(Ankle_L/R·Fingers1_L/R)의 y가 클립 내내 거의 안 변한다(0.53/0.47 고정).
+    #     전부 제자리 동작이라 Move는 「웅크려 노리기」로 대신했다. 진짜 걷기가 필요하면 synth_clips로 지어야 한다.
+    "안흔함_강재규": dict(rev="e8236711", path="Assets/Art/Units/안흔함_강재규/안흔함_강재규.fbx", kind="beast", size=("length", 2.0), anim=True, head="Head_M", clip_ground=True,
+                      # loop=: Idle·Move는 계속 도는 클립이라 끝 12프레임을 첫 자세로 당겨 이음새를 없앴다.
+                      #   Attack은 한 번짜리(유니티가 트리거 뒤 Idle로 섞어 돌아간다)라 안 건다.
+                      split_clips=[dict(take="Idle", range=(1, 115), loop=12),
+                                   dict(take="Move", range=(121, 230), loop=12),
+                                   dict(take="Attack", range=(271, 341))]),
+    # 🔴 이호준(볼보이 좀비, 2026-09-23): 클립이 둘인데 하나는 **키 1개짜리 껍데기**(GLTF_created_0|Armature.001|mixamo.com|Layer0)이고
+    #   실제 동작은 96프레임 하나뿐이다. 그 하나 안에 「서서 흔들림 → 웅크림 → 앞으로 손 뻗기」가 이어져 있어,
+    #   ArtBinder가 그걸 통째로 Idle로 돌리면 **매 바퀴 팔이 앞(−0.45)에서 뒤(+0.11)로 튄다**(손 위치 곡선으로 확인).
+    #   → 뼈 높이·손 위치 곡선으로 잘라 Idle · Attack으로 나눈다. split_clips가 가장 긴 클립만 쓰므로 껍데기 클립도 같이 사라진다.
+    #     1~58   머리 0.907 → 1.001 → 0.856, 손은 +0.109 → 0.000 — **서서 흔들리다 웅크리는** 대기 → Idle
+    #     58~96  손이 y 0.000 → **−0.45**로 앞으로 뻗어 나가는 **움켜잡기** → Attack
+    #   ⚠️ 여기도 걷기가 없다(제자리 동작뿐) — Move는 없다.
     "안흔함_이호준": dict(rev="6b2afdbc", path="Assets/Art/Units/안흔함_이호준/안흔함_이호준.fbx", kind="human", size=("height", 1.2), anim=True,
-                      hips="Bone_61", head="Bone.004_3", source=os.path.join(SKINS, "02_안흔함/안흔함_이호준.glb"), recipe={}, clip_ground=True),
+                      # 🔴 generic=True를 새로 단다(2026-09-23): 이 유닛은 유니티에서 Generic이고(UnitModelPostprocessor.GenericRigUnits —
+                      #   09-08 아바타 검증 실패로 PM이 넣었다) 뼈 이름도 Bone.NNN이라 mixamorig 필수 15뼈 검사가 애초에 통과할 수 없다.
+                      #   그 검사가 생긴 뒤로 이 항목을 한 번도 안 돌렸던 것뿐이다 — 이번에 돌리자마자 걸렸다. 사실에 맞춘다.
+                      hips="Bone_61", head="Bone.004_3", source=os.path.join(SKINS, "02_안흔함/안흔함_이호준.glb"), recipe={}, clip_ground=True, generic=True,
+                      split_clips=[dict(take="Idle", range=(1, 58), loop=10),
+                                   dict(take="Attack", range=(58, 96))]),
     "안흔함_김경현": dict(rev="4c92dba1", path="Assets/Art/Units/안흔함_김경현/안흔함_김경현.fbx", kind="human", size=("height", 1.8)),
     "안흔함_김수빈": dict(rev="c6cc54d4", path="Assets/Art/Units/안흔함_김수빈/안흔함_김수빈.fbx", kind="human", size=("height", 1.8), hips="hips_112",
                       source=os.path.join(SKINS, "02_안흔함/안흔함_김수빈.glb"),
                       # Object_4 = 몸에서 멀리 떨어진 Rigify FK 위젯 조각(128정점) — 경계 상자를 3.3m로 부풀려 PM 승인으로 뺀다(2026-09-13)
                       recipe=dict(material_alias={"Baked_All.001": "Baked_All"}, drop_meshes=["Object_4"])),
     "안흔함_문필환": dict(rev="81a18fbb", path="Assets/Art/Units/안흔함_문필환/안흔함_문필환.fbx", kind="human", size=("height", 1.8)),
-    "안흔함_박준희": dict(path="Assets/Art/Units/안흔함_박준희/안흔함_박준희.fbx", kind="human", size=("height", 1.8),
-                      hold="원본 siren_head.glb 없음 — 블렌더 FBX 가져오기가 스킨 결합을 못 살려 파일을 건드리지 않음(PM이 유니티 쪽에서 맞춤)"),
+    # ※ "안흔함_박준희"(사이렌헤드)가 여기 hold= 항목으로 있었는데 **지웠다**(2026-09-23).
+    #   같은 UNITS 안 아래쪽(파일 끝 근처)에 09-23 재출력본이 같은 키로 또 있어서, 파이썬이 뒤엣것만 쓰고
+    #   이 줄은 아무 일도 안 하고 있었다 — 읽는 사람만 헷갈린다. 지금 쓰는 설정은 아래쪽 항목이다.
     "안흔함_신문철": dict(rev="483a35ec", path="Assets/Art/Units/안흔함_신문철/안흔함_신문철.fbx", kind="human", size=("height", 1.8),
                       materials=dict(face_runs={"Naruto.001_Naruto": NARUTO_FACE_RUNS},
                                      textures={"nrt_tex01": [("DiffuseColor", "nrt_tex01.png")], "nrt_tex02": [("DiffuseColor", "nrt_tex02.png")],
@@ -2169,11 +2223,47 @@ UNITS = {
                     # 전환 — tpose_arms·level_chains 다 빼고 원작의 웅크린 레스트를 그대로 씀
                     # (Idle이 아니라 레스트 자체가 웅크린 두꺼비 자세, 원작 그대로).
                     generic=True,
-                    synth_idle=dict(take="Idle", frames=72, step=3, bones={
-                        "mixamorig:Spine": [((1, 0, 0), 2.0, 0.0)],
-                        "mixamorig:Spine1": [((1, 0, 0), 1.5, -0.4)],
-                        "mixamorig:Head": [((1, 0, 0), 1.0, -0.6)]}),
+                    # 🔴 Generic 유닛은 「자체 클립」 한 벌로만 살았다(ArtBinder.GetOrCreateOwnClipController가 **가장 긴 클립 하나**를
+                    #   기본 상태로 놓는다). 2026-09-23 PM 요청으로 걷기·공격을 더 지었다 — 사람 클립을 두꺼비에 입히면 고개가
+                    #   꺾이고 몸이 기울기 때문이다(직접 렌더로 확인). 두꺼비다운 동작은 **도약**과 **몸통 내려찍기**다.
+                    #   ⚠️ Idle(72프레임)을 **일부러 제일 길게** 뒀다 — 유니티 쪽 컨트롤러가 아직 「가장 긴 클립」을 고르므로,
+                    #   PM이 Speed/Attack 파라미터를 쓰는 컨트롤러로 바꾸기 전까지는 지금과 똑같이 Idle만 돈다(안전).
+                    synth_clips=[
+                        # Idle — 숨 쉬는 흔들림(09-22 그대로. 접지 보정만 켰다 — PM 지시 2026-09-23:
+                        #   Move·Attack만 보정하면 클립마다 발 높이가 달라 전환할 때 튄다)
+                        dict(take="Idle", ground=True, frames=72, step=3, bones={
+                            "mixamorig:Spine": [((1, 0, 0), 2.0, 0.0)],
+                            "mixamorig:Spine1": [((1, 0, 0), 1.5, -0.4)],
+                            "mixamorig:Head": [((1, 0, 0), 1.0, -0.6)]}),
+                        # Move — 한 번 도약(위상 −π/2 = 혹 하나: 0에서 시작해 한가운데 최고, 끝에 0). 뿌리를 띄우고 뒷다리를 편다.
+                        dict(take="Move", ground=True, frames=48, step=2, bones={
+                            "mixamorig:Hips": dict(rot=[((1, 0, 0), 8.0, -math.pi / 2)], loc=[((0, 0, 1), 0.25, -math.pi / 2)]),
+                            "mixamorig:Spine": dict(rot=[((1, 0, 0), -10.0, -math.pi / 2)]),
+                            "mixamorig:LeftUpLeg": dict(rot=[((1, 0, 0), 25.0, -math.pi / 2)]),
+                            "mixamorig:RightUpLeg": dict(rot=[((1, 0, 0), 25.0, -math.pi / 2)]),
+                            "mixamorig:LeftLeg": dict(rot=[((1, 0, 0), -30.0, -math.pi / 2)]),
+                            "mixamorig:RightLeg": dict(rot=[((1, 0, 0), -30.0, -math.pi / 2)]),
+                            "mixamorig:LeftArm": dict(rot=[((1, 0, 0), 18.0, -math.pi / 2)]),
+                            "mixamorig:RightArm": dict(rot=[((1, 0, 0), 18.0, -math.pi / 2)]),
+                            "mixamorig:Head": dict(rot=[((1, 0, 0), -7.0, -math.pi / 2)])}),
+                        # Attack — 몸통 내려찍기(위상 0 = 온전한 사인: 앞절반 한쪽, 뒷절반 반대쪽).
+                        #   🔴 진폭 **부호를 음수로** 둔다 — 양수로 뒀더니 렌더에서 **먼저 내리치고 나중에 젖혔다**(순서가 거꾸로).
+                        #   이 모델은 세계 +X 회전이 「고개를 앞·아래로」다. 음수면 앞절반에 젖히고(준비) 뒷절반에 내리친다(타격).
+                        dict(take="Attack", ground=True, frames=30, step=2, bones={
+                            "mixamorig:Hips": dict(loc=[((0, 0, 1), 0.05, -math.pi / 2)]),
+                            "mixamorig:Spine": dict(rot=[((1, 0, 0), -9.0, 0.0)]),
+                            "mixamorig:Spine1": dict(rot=[((1, 0, 0), -6.0, -0.2)]),
+                            "mixamorig:Head": dict(rot=[((1, 0, 0), -11.0, -0.3)]),
+                            "mixamorig:LeftArm": dict(rot=[((1, 0, 0), -16.0, -0.2)]),
+                            "mixamorig:RightArm": dict(rot=[((1, 0, 0), -16.0, -0.2)])}),
+                    ],
                     seed_zero_bones=0.001, orient_snap=True),
+    # ※ "영원_김영원_후보"(휴머노이드 재시도 판)가 여기 있었는데 **지웠다**(2026-09-23, PM 판정으로 닫힘).
+    #   결론: **Generic 유지.** 뼈는 멀쩡했지만(mixamorig 21, 필수 15뼈 전부 가중치) 유니티 아바타 검증이 요구하는
+    #   「넓적다리 > 무릎 > 발목」 높이 순서를 개구리 쪼그림이 못 맞춘다(무릎이 넓적다리보다 13cm 위, 옆으로 87cm).
+    #   자세를 펴 보면 뼈는 제대로 서지만 **메시가 찢어진다**(넓적다리 살이 아예 없다 — 렌더로 확인).
+    #   ⚠️ 여기서 나온 일반 교훈 둘은 남겨 뒀다: drop_bones 주석의 「부모 없는 뼈가 둘이면 유니티가 뿌리를 잘못 고른다」와,
+    #   접지 보정의 「가중치 0인 둘째 뿌리(Point001)를 같이 올리면 겉은 그대로인데 첫↔끝 자세가 어긋난다」.
     # 블리치 히츠가야 토시로 만해(효린마루, 얼음 날개) glb → 영원_문필환(2026-09-22 영원,
     # blender 세션). 뼈 110(3ds Max Biped, "Bip001 X_NN" — 갑옷거인과 같은 계열) · 메시
     # 2(Object_9=415121 8,464정점 몸통 전체, Object_11=415121_body 492정점 — 헤드·척추만
@@ -2279,7 +2369,9 @@ UNITS = {
                     # 🔴 1차 배치는 통과했지만 재수입해서 확인하니 Hips 부모가 world_joint로
                     # 남아 있었음(다른 pl_ 유닛처럼 드롭을 깜빡함) — 오늘 교훈 그대로 적용해
                     # 드롭, Hips를 진짜 뿌리로.
-                    drop_bones=["world_joint"],
+                    # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
+                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
+                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
                     rename_bones=YORK_RENAME, no_nulls=True, orient_snap=True,
                     merge_bones=[dict(pattern=r"^(b_collar|f_collar|l_collar|r_collar)$", into="mixamorig:Spine1"),
                                  dict(pattern=r"^(b_l_skirt_01|b_r_skirt_01|f_l_skirt_01|f_r_skirt_01|s_l_skirt_01|s_r_skirt_01)$",
@@ -2421,7 +2513,9 @@ UNITS = {
                     archive_rgb={"pl_alvida_orig01/pl_alvida_orig01_diff.png": "pl_alvida_orig01_diff.png"},
                     drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close",
                                  "weapon_01", "weapon_02"],
-                    drop_bones=["world_joint"],
+                    # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
+                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
+                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
                     # 🔴 1차 배치: "기본 자세≠쉬는 자세" 2.1991(다른 pl_ 유닛은 0.0) — 렌더로
                     # 확인하니 몸 전체가 대각선으로 기울어진 채 굳어 있었음(가져온 기본 자세가
                     # 진짜 쉬는 자세가 아니라 애니메이션 중간 프레임으로 보임) → use_rest_pose로
@@ -2453,7 +2547,9 @@ UNITS = {
                     archive_rgb={"pl_jack/pl_jack_orig01_diff.tga": "pl_jack_orig01_diff.png"},
                     drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close",
                                  "l_weapon", "r_weapon"],
-                    drop_bones=["world_joint"],
+                    # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
+                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
+                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
                     rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
                     merge_bones=[dict(under="coat_root", into="mixamorig:Spine1", with_root=True),
                                  dict(under="l_horn_joint_01", into="mixamorig:Head", with_root=True),
@@ -2891,20 +2987,47 @@ UNITS = {
     #    world_joint 밑 pl_ 이름 리그라 아바타가 제대로 안 잡히는 것. 이름 바꾸기가 그 고침이다.
     "특별함_임장혁": dict(path="Assets/Art/Units/특별함_임장혁/특별함_임장혁.fbx", kind="human", size=("height", 1.8),
                       source=os.path.join(ROOT, "Assets/Art/Units/특별함_임장혁/특별함_임장혁.fbx"),
-                      # 표정 셋 중 face_normal만 · 주먹은 편 손만 · 연기팔 변형(l/r_smokehand_close)은 기본 손과 같은 자리라 뺀다
+                      # 표정 셋 중 face_normal만 · 주먹은 편 손만 · 연기팔 변형(l/r_smokehand_close)은 기본 손과 같은 자리라 뺀다.
+                      # 🔴 십수(十手)는 두 벌이다 — b_weapon = 등에 멘 기본 모습(키를 다 덮는 세로) · r_weapon = 오른손에 뽑아 **앞으로** 뻗은 것.
+                      #    r_weapon을 두면 깊이가 2.25m(키의 1.25배)로 불어 화면에서 유닛이 옆으로 누운 듯 보인다 → 로(특별함_양재모 weapon_01)와 같이 뺀다.
                       drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close",
-                                   "l_smokehand_close", "r_smokehand_close"],
+                                   "l_smokehand_close", "r_smokehand_close", "r_weapon"],
                       drop_bones=["pl_smoker_2yaf01", "world_joint", "HELPER_key",
                                   # 살린 Null 노드 중 뼈대 바깥 표식 넷(가중치 0) — 사람 뼈 위쪽에 안 붙어 merge_to_nearest가 막는다
                                   "model_root", "HELPER_name", "pre_flag", "post_flag"],
                       rename_bones=PL_RENAME, merge_to_nearest=True,
                       null_frames_from_node=True, orient_snap=True),
+    # 🔴 흔함_박민수(원피스 블루노, pl_blueno_orig01) — 2026-09-23 PM 요청 ④.
+    #   ArtBinder의 「1,000배 넘게 키워야 하면 잘못 잰 것」 문턱을 **경고만** 남기게 바꾼 뒤 처음 걸린 건이다:
+    #   「잰 높이 0.0266, 959배로 키웁니다」. 게임에선 정상으로 서지만(25.5) 959배는 1,000에 붙어 있어,
+    #   목표 키를 조금만 올리면 옛 방식에서는 점이 됐을 자리다 → 규약대로 1.8m로 다시 낸다.
+    #   나머지는 09-14 「pl_ 여섯」과 같은 처방(PL_RENAME · 겹친 표정·손 변형 메시 제거).
+    # 🔴 **전전무시(덴덴무시) 달팽이는 뺀다**(PM 승인). 이유: 뼈가 몸 바깥이다 —
+    #   denden_body가 Body_Pelvis가 아니라 **world_joint 밑**(= Hips보다 위)에 붙어 있고, 위치도 (0,0,0)으로
+    #   **두 발 사이 바닥**에 따로 서 있는 별개의 생물이다(직접 측정). 유니티 휴머노이드 뼈대로는 들고 갈 수 없고,
+    #   world_joint를 빼면 뿌리 없는 뼈로 남아 merge_to_nearest가 막는다. 안흔함_박민수(포치타) 선례와 같다.
     "흔함_양재모": dict(path="Assets/Art/Units/흔함_양재모/흔함_양재모.fbx", kind="human", size=("height", 1.8),
                     source=os.path.join(ROOT, "Assets/Art/Units/흔함_양재모/흔함_양재모.fbx"),
                     drop_meshes=["face_attack", "face_damage", "face_sp01",
                                  "l_hand_close", "l_hand_sp_01", "l_hand_sp_02",
                                  "r_hand_close", "r_hand_sp_01", "r_hand_sp_02"],
-                    drop_bones=["world_joint"],
+                    # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
+                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
+                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
+                    rename_bones=PL_RENAME, merge_to_nearest=True,
+                    null_frames_from_node=True, orient_snap=True),
+    "흔함_박민수": dict(path="Assets/Art/Units/흔함_박민수/흔함_박민수.fbx", kind="human", size=("height", 1.8),
+                    source=os.path.join(ROOT, "Assets/Art/Units/흔함_박민수/흔함_박민수.fbx"),
+                    drop_meshes=["face_attack", "face_damage", "face_sp01", "face_sp02",
+                                 "l_hand_close", "l_hand_sp01", "l_hand_sp02",
+                                 "r_hand_close", "r_hand_sp01", "r_hand_sp02",
+                                 "dendenmushi"],
+                    drop_bones=["pl_blueno_orig01", "world_joint",
+                                "denden_body", "denden_01", "denden_02", "denden_03",
+                                "denden_04", "denden_05", "denden_06", "denden_hand",
+                                # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 + 녹는 연출 판
+                                "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
+                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c", "melt_plane"],
                     rename_bones=PL_RENAME, merge_to_nearest=True,
                     null_frames_from_node=True, orient_snap=True),
     # 🔴 흔함_최상호 = Assets/Art/Characters/idle.fbx (폴더 이름이 유닛 이름이 아니라 전수 검수에서 통째로 빠졌다).
@@ -4074,6 +4197,42 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         if cfg.get("take_names"):                                       # 원본 테이크 이름 → 유니티 클립 이름(잉어 Scene → Idle)
             clips = [(cfg["take_names"].get(t, t), f0, fr) for t, f0, fr in clips]
             report["테이크 이름"] = [c[0] for c in clips]
+        if cfg.get("split_clips"):
+            # 🔴 안흔함_강재규(2026-09-23): 원본이 「All Animations」 한 테이크에 서 있기·웅크리기·앞발 치기를 **이어 붙여** 놨다.
+            #   ArtBinder.GetOrCreateOwnClipController는 **가장 긴 클립 하나**를 기본 상태로 놓으므로, 게임에서 재규어가
+            #   가만히 있어야 할 때 그 전체를 Idle로 무한 반복한다(주기적으로 웅크리고 앞발을 친다).
+            #   → 구간을 잘라 Idle · Move · Attack으로 나눈다. 이 파이프라인은 클립을 **프레임별 세계 행렬 목록**으로
+            #   들고 있으므로(sample_clips) 자르는 건 그 목록을 저미는 일이다 — 곡선을 손댈 필요가 없다.
+            #   ⚠️ 자동 컷 검출은 안 먹었다(프레임 사이 변화량이 안 튄다 — 원본이 전환을 블렌딩해 구웠다). 눈과 뼈 높이 곡선으로 잡았다.
+            #   ⚠️ Idle을 **가장 길게** 둘 것 — 컨트롤러를 고치기 전까지는 그 하나만 쓰이므로.
+            # 🔴 이음새 다듬기(loop=k): 잘라 낸 구간은 대개 **첫 자세로 안 돌아온다**(원본이 353프레임 내내 한 동작이라
+            #   첫 자세에 가까워지는 건 맨 끝뿐이다 — 뼈당 RMS 거리로 확인). 그대로 두면 Idle이 한 바퀴 돌 때마다 튄다.
+            #   → 끝 k프레임을 **첫 프레임 쪽으로 서서히 당겨** 마지막 프레임이 첫 프레임과 같아지게 한다(위치는 선형, 회전은 구면 보간).
+            def _blend(A, B, w):
+                la, qa, sa = A.decompose()
+                lb, qb, sb = B.decompose()
+                return (Matrix.Translation(la.lerp(lb, w)) @ qa.slerp(qb, w).to_matrix().to_4x4()
+                        @ Matrix.Diagonal(sa.lerp(sb, w)).to_4x4())
+
+            base = max(clips, key=lambda c: len(c[2]))
+            cut = []
+            for spec in cfg["split_clips"]:
+                s0, s1 = spec["range"]
+                i0, i1 = s0 - base[1], s1 - base[1]
+                assert 0 <= i0 < i1 < len(base[2]), f"{name}: 자를 구간이 클립 밖이다 {spec}"
+                seg = [dict(w) for w in base[2][i0:i1 + 1]]
+                k = int(spec.get("loop", 0))
+                if k:
+                    assert k < len(seg), f"{name}: loop가 구간보다 길다 {spec}"
+                    head = seg[0]
+                    for i in range(1, k + 1):
+                        j = len(seg) - 1 - k + i
+                        w = i / k
+                        seg[j] = {n2: _blend(M, head[n2], w) for n2, M in seg[j].items()}
+                cut.append((spec["take"], 1, seg))
+            report["자른 클립"] = [f"{t} {spec['range'][0]}~{spec['range'][1]} ({len(fr)}프레임)"
+                                for (t, _, fr), spec in zip(cut, cfg["split_clips"])]
+            clips = cut
     scene = bpy.context.scene
     if recipe is not None:
         report["텍스처"] = relink_textures(ref["textures"], tex_out_dir, os.path.join(os.path.dirname(dst_path), "Textures"))
@@ -4417,6 +4576,10 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 eb.use_connect = connect and (data.edit_bones[parent].tail - eb.head).length < 1e-6
         # drop_bones: 가중치 없는 중간 뼈를 빼고 자식을 그 부모에 잇는다(세계 위치 그대로) — 흔함_문필환 시험(2026-09-14):
         #   유니티 아바타가 Bip001(무게중심, 매핑 안 됨) 아래 Bip001 Pelvis(Hips)를 바닥 높이로 저장해 하반신이 묻혔다 — 김경현처럼 Hips를 루트 밑에
+        # 🔴 일반 교훈(2026-09-23, 영원_김영원 조사에서): **부모 없는 뼈가 둘 이상이면 유니티가 뿌리를 잘못 고를 수 있다.**
+        #   김영원은 mixamorig:Hips 말고 Point001(가중치 0, 살아난 Null)도 뿌리였고, 유니티는 「Hips를 최상위 오브젝트로 잡는다」는
+        #   증상을 보였다. Humanoid가 안 선다는 보고를 받으면 **뿌리 뼈부터 세어 보고**, 가중치 0짜리 둘째 뿌리는 여기(또는 no_nulls)로 뺄 것.
+        #   ⚠️ 다만 살아난 Null을 함부로 지우면 안 된다 — 문필환은 그걸 지웠다가 Thigh·UpperArm을 유니티가 못 찾았다(위 3차 기록).
         drop_list = list(cfg.get("drop_bones", ()))
         if cfg.get("drop_bones_re"):                                    # 🔸 에렌: glTF `_End` 끝점 뼈 수십 개 — 정규식으로(가중치 있으면 아래 assert가 막는다)
             rx = re.compile(cfg["drop_bones_re"])
@@ -4788,38 +4951,101 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 report.setdefault("클립 접지(m)", {})[take[-12:]] = (round(min(lifts), 3), round(max(lifts), 3))
         report["클립"] = [c[0] for c in clips]
 
-    if new_arm is not None and cfg.get("synth_idle") and not clips:
-        # 🔸 메노스 그란데(2026-09-17): 원본에 클립이 없는 Generic 유닛 — 뼈마다 「세계 축 · 진폭(°) · 위상」 사인 흔들림으로 Idle 루프를 짓는다.
+    if new_arm is not None and (cfg.get("synth_idle") or cfg.get("synth_clips")) and not clips:
+        # 🔸 메노스 그란데(2026-09-17): 원본에 클립이 없는 Generic 유닛 — 뼈마다 「세계 축 · 진폭(°) · 위상」 사인 흔들림으로 루프를 짓는다.
         #   각도 = 진폭 × (sin(2πt/N + 위상) − sin(위상)) → 0프레임·N프레임 모두 0이라 쉬는 자세에서 시작·끝(루프 이음새 없음, FBX 기본 자세 = 결합 자세).
         #   뼈 기본 회전 = 쉬는 행렬⁻¹ × 세계 축 회전 × 쉬는 행렬(부모 흔들림은 자식에 누적).
-        si = cfg["synth_idle"]
-        n = int(si.get("frames", 72))
-        step = int(si.get("step", 3))
+        # 🔴 여러 벌로 넓힘(2026-09-23, PM 요청 — 영원_김영원 걷기·공격): synth_clips=[사양, …]로 Idle 말고 Move·Attack도 짓는다.
+        #   · 뼈 값은 예전처럼 흔들림 리스트여도 되고, dict(rot=[…], loc=[…])이어도 된다. loc은 **미터**(뿌리 뼈를 띄우는 도약용).
+        #   · 위상 −π/2를 주면 sin이 아니라 **혹 하나**가 된다: amp×(1−cos) — 0에서 시작해 한가운데서 2×amp, 끝에서 0.
+        #     루프 걷기(도약)와 한 번짜리 공격 둘 다 이 모양이 자연스럽다.
+        #   · 클립마다 자세를 쉬는 자세로 되돌리고 시작한다 — 안 그러면 앞 클립의 마지막 자세가 새는 뼈가 생긴다.
+        specs = list(cfg.get("synth_clips") or [cfg["synth_idle"]])
         new_arm.animation_data_create()
-        act = bpy.data.actions.new(si.get("take", "Idle"))
-        act.use_fake_user = True
-        new_arm.animation_data.action = act
         for pb in new_arm.pose.bones:
             pb.rotation_mode = "QUATERNION"
-        keyed = []
-        for f in list(range(0, n, step)) + [n]:
-            for bname, waves in si["bones"].items():
-                pb = new_arm.pose.bones[bname]
-                R3 = pb.bone.matrix_local.to_3x3()
-                rot = Matrix.Identity(3)
-                for axis, deg, phase in waves:
-                    ang = math.radians(deg) * (math.sin(2 * math.pi * f / n + phase) - math.sin(phase))
-                    rot = Matrix.Rotation(ang, 3, Vector(axis).normalized()) @ rot
-                pb.rotation_quaternion = (R3.inverted() @ rot @ R3).to_quaternion()
-                pb.keyframe_insert("rotation_quaternion", frame=1 + f)
-            keyed.append(1 + f)
-        clips = [(act.name, 1, [None] * (n + 1))]
-        scene.frame_start, scene.frame_end = 1, 1 + n
+        made = []
+        for si in specs:
+            n = int(si.get("frames", 72))
+            step = int(si.get("step", 3))
+            for pb in new_arm.pose.bones:                   # 앞 클립 자세 지우기
+                pb.matrix_basis = Matrix.Identity(4)
+            act = bpy.data.actions.new(si.get("take", "Idle"))
+            act.use_fake_user = True
+            new_arm.animation_data.action = act
+            keyed = []
+            for f in list(range(0, n, step)) + [n]:
+                for bname, waves in si["bones"].items():
+                    pb = new_arm.pose.bones[bname]
+                    rot_waves = waves.get("rot", ()) if isinstance(waves, dict) else waves
+                    loc_waves = waves.get("loc", ()) if isinstance(waves, dict) else ()
+                    R3 = pb.bone.matrix_local.to_3x3()
+                    if rot_waves:
+                        rot = Matrix.Identity(3)
+                        for axis, deg, phase in rot_waves:
+                            ang = math.radians(deg) * (math.sin(2 * math.pi * f / n + phase) - math.sin(phase))
+                            rot = Matrix.Rotation(ang, 3, Vector(axis).normalized()) @ rot
+                        pb.rotation_quaternion = (R3.inverted() @ rot @ R3).to_quaternion()
+                        pb.keyframe_insert("rotation_quaternion", frame=1 + f)
+                    if loc_waves:
+                        off = Vector((0.0, 0.0, 0.0))
+                        for axis, amp, phase in loc_waves:
+                            off += Vector(axis).normalized() * (amp * (math.sin(2 * math.pi * f / n + phase) - math.sin(phase)))
+                        pb.location = R3.inverted() @ off    # 뼈 로컬 이동은 그 뼈의 쉬는 방향 기준이다
+                        pb.keyframe_insert("location", frame=1 + f)
+                keyed.append(1 + f)
+            lifted = 0.0
+            if si.get("ground"):
+                # 🔴 접지 보정(2026-09-23): 지어 낸 동작이 바닥을 뚫으면 그 프레임만 뿌리 뼈를 들어 올린다
+                #   (원본 클립에 쓰던 clip_ground와 같은 생각). Idle에는 안 건다 — 이미 승인된 것과 안 달라지게.
+                skinned = [o for o in meshes if any(m.type == "ARMATURE" and m.object == new_arm for m in o.modifiers)]
+                # 🔴 뿌리가 여럿일 수 있다(영원_김영원의 Point001 — 가중치 0인 둘째 뿌리). **살이 붙은 뿌리만** 들어 올린다.
+                weighted = {g.name for o in skinned for g in o.vertex_groups}
+                allroots = [pb for pb in new_arm.pose.bones if pb.parent is None]
+                roots = [pb for pb in allroots if pb.name in weighted] or allroots
+                # 🔴 이 클립이 뿌리 위치를 안 건드리면 r.location에 앞 클립 값이 남는다(곡선이 없어 frame_set이 안 되돌린다) → 0으로.
+                paths = {fc.data_path for lay in act.layers for st in lay.strips for bag in st.channelbags for fc in bag.fcurves}
+                for r in roots:
+                    if f'pose.bones["{r.name}"].location' not in paths:
+                        r.location = Vector((0.0, 0.0, 0.0))
+                # 🔴 두 번 훑는다(gen_scan_rig.py에 같은 주석): 한 번에 재고 바로 키를 넣으면 다음 프레임에서 잰 값에
+                #   이미 올려 둔 만큼이 섞여 프레임마다 기준이 달라진다. ① 원래 자세로 재 두고 ② 매 프레임 키를 넣는다.
+                gf = list(range(0, n, step)) + [n]
+                lows, base = {}, {}
+                for f in gf:
+                    scene.frame_set(1 + f)
+                    dg = bpy.context.evaluated_depsgraph_get()
+                    low = 9e9
+                    for o in skinned:
+                        ev = o.evaluated_get(dg)
+                        me = ev.to_mesh()
+                        if me.vertices:
+                            low = min(low, min((ev.matrix_world @ v.co).z for v in me.vertices))
+                        ev.to_mesh_clear()
+                    lows[f] = low
+                    base[f] = {r.name: r.location.copy() for r in roots}
+                for f in gf:
+                    lift = max(0.0, -lows[f])
+                    lifted = max(lifted, lift)
+                    scene.frame_set(1 + f)
+                    for r in roots:
+                        R3 = (new_arm.matrix_world.to_3x3() @ r.bone.matrix_local.to_3x3())
+                        r.location = base[f][r.name] + R3.inverted() @ Vector((0.0, 0.0, lift))
+                        r.keyframe_insert("location", frame=1 + f)
+            made.append((act.name, n, len(keyed), round(lifted, 3)))
+        # 첫 벌(= Idle)을 활성으로 두고 1프레임으로 — 내보내기의 기본 자세가 쉬는 자세가 되게
+        for pb in new_arm.pose.bones:
+            pb.matrix_basis = Matrix.Identity(4)
+        first = bpy.data.actions[specs[0].get("take", "Idle")]
+        new_arm.animation_data.action = first
+        n0 = int(specs[0].get("frames", 72))
+        clips = [(first.name, 1, [None] * (n0 + 1))]
+        scene.frame_start, scene.frame_end = 1, 1 + n0
         scene.frame_set(1)
-        report["지은 Idle"] = f"{act.name} {n}프레임(키 {len(keyed)}) · 뼈 {list(si['bones'])}"
+        report["지은 클립"] = [f"{t} {n}프레임(키 {k})" + (f" · 접지 보정 최대 {g}m" if g else "") for t, n, k, g in made]
 
     # ── 검사·내보내기
-    if new_arm is not None and clips and cfg.get("synth_idle"):
+    if new_arm is not None and clips and (cfg.get("synth_idle") or cfg.get("synth_clips")):
         scene.frame_set(1)
     if new_arm is not None and clips and cfg.get("clip_scene_basis"):
         # FBX 모델 Lcl(기본 자세)은 내보낼 때 현재 프레임 자세로 적힌다 — 첫 프레임(= 새 쉬는 자세)으로 두어 Lcl 전역 = Cluster TransformLink

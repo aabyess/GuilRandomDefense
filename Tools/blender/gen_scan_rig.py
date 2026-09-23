@@ -648,8 +648,25 @@ UNITS = {
         seed_zero_bones=0.001,
         # 호흡: Spine1이 살짝 뒤로 젖혀졌다 펴지고(숨 들이쉬기), Head가 반대로 살짝 끄덕여
         # 자연스럽게. 팔은 고정(원작 자세 그대로).
-        synth_idle=dict(take="Idle", frames=72, step=3, bones={
-            "Spine1": [((1, 0, 0), 2.0, 0.0)], "Head": [((1, 0, 0), 1.0, -0.5)]}),
+        # 🔴 Generic 유닛은 「자체 클립」한 벌로만 살았다(ArtBinder가 가장 긴 클립 하나를 기본 상태로 놓는다).
+        #   2026-09-23 PM 요청으로 걷기·공격을 더 지었다 — 사람 클립을 이 몸에 입히면 자세가 무너지기 때문이다.
+        #   ⚠️ Idle(72)을 **일부러 제일 길게** 뒀다: 유니티 컨트롤러를 고치기 전까지는 지금과 똑같이 Idle만 돈다(안전).
+        #   ⚠️ 테이크 이름은 반드시 Idle · Move · Attack — PM이 CharacterAnimator의 Speed/Attack에 그 이름으로 배선한다.
+        # 빅맘: 다리가 통 기모노에 덮여 뼈가 5개뿐이다 — 걷기는 **뒤뚱거림**(좌우 기울기 + 위아래)으로 낸다.
+        synth_clips=[
+            dict(take="Idle", ground=True, frames=72, step=3, bones={
+                "Spine1": [((1, 0, 0), 2.0, 0.0)], "Head": [((1, 0, 0), 1.0, -0.5)]}),
+            dict(take="Move", ground=True, frames=48, step=2, bones={
+                "Hips": [((0, 1, 0), 6.0, 0.0)],
+                "Spine1": [((0, 1, 0), -4.0, 0.0), ((1, 0, 0), 3.0, -math.pi / 2)],
+                "Head": [((0, 1, 0), -3.0, 0.3)],
+                "LeftShoulder": [((1, 0, 0), 5.0, 0.0)], "RightShoulder": [((1, 0, 0), -5.0, 0.0)]},
+                loc={"Hips": [((0, 0, 1), 0.035, -math.pi / 2)]}),
+            dict(take="Attack", ground=True, frames=30, step=2, bones={
+                "Spine1": [((1, 0, 0), -10.0, 0.0)], "Head": [((1, 0, 0), -12.0, -0.3)],
+                "LeftShoulder": [((1, 0, 0), -16.0, -0.2)], "RightShoulder": [((1, 0, 0), -16.0, -0.2)]},
+                loc={"Hips": [((0, 0, 1), 0.04, -math.pi / 2)]}),
+        ],
         closeups=[("armpit", 1.35, 0.8), ("crotch", 0.75, 0.9)],
         # 강체라 Head·Spine1·RightShoulder에 정점이 크게 몰림(의도한 것) — 기본 안전판 완화.
         max_bone_share=0.9,
@@ -729,13 +746,33 @@ UNITS = {
             ("Tail6", (0.0, 2.4, -3.0), (0.0, 3.25, -3.05), "Tail5")],
         straighten=[],
         seed_zero_bones=0.001,
-        synth_idle=dict(take="Idle", frames=72, step=3, bones={
-            "Spine1": [((1, 0, 0), 1.5, 0.0)], "Spine2": [((1, 0, 0), 1.5, -0.4)],
-            "Head": [((1, 0, 0), 3.0, -0.9), ((0, 0, 1), 2.5, 0.5)],
-            "LeftArm": [((0, 1, 0), 4.0, 0.3)], "RightArm": [((0, 1, 0), -4.0, 0.3)],
-            "LeftForeArm": [((0, 1, 0), 3.0, -0.3)], "RightForeArm": [((0, 1, 0), -3.0, -0.3)],
-            "Tail1": [((0, 1, 0), 2.0, 0.0)], "Tail2": [((0, 1, 0), 3.0, -0.7)], "Tail3": [((0, 0, 1), 4.0, -1.4)],
-            "Tail4": [((0, 0, 1), 6.0, -2.1)], "Tail5": [((0, 0, 1), 8.0, -2.8)], "Tail6": [((0, 0, 1), 10.0, -3.5)]}),
+        # 🔴 Generic 유닛은 「자체 클립」한 벌로만 살았다(ArtBinder가 가장 긴 클립 하나를 기본 상태로 놓는다).
+        #   2026-09-23 PM 요청으로 걷기·공격을 더 지었다 — 사람 클립을 이 몸에 입히면 자세가 무너지기 때문이다.
+        #   ⚠️ Idle(72)을 **일부러 제일 길게** 뒀다: 유니티 컨트롤러를 고치기 전까지는 지금과 똑같이 Idle만 돈다(안전).
+        #   ⚠️ 테이크 이름은 반드시 Idle · Move · Attack — PM이 CharacterAnimator의 Speed/Attack에 그 이름으로 배선한다.
+        # 리카: 허리 아래가 꼬리라 걷기는 **꼬리 물결**(Tail1→6으로 위상이 밀리는 진행파)과 앞으로 기울기로 낸다.
+        synth_clips=[
+            dict(take="Idle", ground=True, frames=72, step=3, bones={
+                "Spine1": [((1, 0, 0), 1.5, 0.0)], "Spine2": [((1, 0, 0), 1.5, -0.4)],
+                "Head": [((1, 0, 0), 3.0, -0.9), ((0, 0, 1), 2.5, 0.5)],
+                "LeftArm": [((0, 1, 0), 4.0, 0.3)], "RightArm": [((0, 1, 0), -4.0, 0.3)],
+                "LeftForeArm": [((0, 1, 0), 3.0, -0.3)], "RightForeArm": [((0, 1, 0), -3.0, -0.3)],
+                "Tail1": [((0, 1, 0), 2.0, 0.0)], "Tail2": [((0, 1, 0), 3.0, -0.7)], "Tail3": [((0, 0, 1), 4.0, -1.4)],
+                "Tail4": [((0, 0, 1), 6.0, -2.1)], "Tail5": [((0, 0, 1), 8.0, -2.8)], "Tail6": [((0, 0, 1), 10.0, -3.5)]}),
+            dict(take="Move", ground=True, frames=48, step=2, bones={
+                "Spine1": [((1, 0, 0), 4.0, -math.pi / 2)], "Spine2": [((1, 0, 0), 2.5, -math.pi / 2)],
+                "Head": [((1, 0, 0), -3.0, -0.3)],
+                "LeftArm": [((0, 1, 0), 6.0, 0.0)], "RightArm": [((0, 1, 0), -6.0, 0.0)],
+                "Tail1": [((0, 0, 1), 4.0, 0.0)], "Tail2": [((0, 0, 1), 6.0, -0.5)], "Tail3": [((0, 0, 1), 8.0, -1.0)],
+                "Tail4": [((0, 0, 1), 10.0, -1.5)], "Tail5": [((0, 0, 1), 12.0, -2.0)], "Tail6": [((0, 0, 1), 14.0, -2.5)]},
+                loc={"Hips": [((0, 0, 1), 0.04, -math.pi / 2)]}),
+            dict(take="Attack", ground=True, frames=30, step=2, bones={
+                "Spine1": [((1, 0, 0), -8.0, 0.0)], "Spine2": [((1, 0, 0), -6.0, -0.2)],
+                "Head": [((1, 0, 0), -10.0, -0.3)],
+                "LeftArm": [((1, 0, 0), -25.0, -0.2)], "RightArm": [((1, 0, 0), -25.0, -0.2)],
+                "LeftForeArm": [((1, 0, 0), -15.0, -0.35)], "RightForeArm": [((1, 0, 0), -15.0, -0.35)],
+                "Tail3": [((0, 0, 1), 6.0, 0.0)], "Tail5": [((0, 0, 1), 10.0, -0.6)]}),
+        ],
         glb_images={0: "rika_mouth_baseColor.png", 3: "rika_hair_baseColor.png", 6: "rika_body_baseColor.png"},
         materials={"Mouth": [("Base Color", "rika_mouth_baseColor.png")], "Hair": [("Base Color", "rika_hair_baseColor.png")],
                    "Body1": [("Base Color", "rika_body_baseColor.png")]}),
@@ -866,11 +903,27 @@ UNITS = {
         straighten=[],
         # 🔴 PM 지시(2026-09-22) — "위아래로 흔들리며 둥실"을 진짜 상하 이동으로: synth_idle에
         # 새로 추가한 loc(위치 파형)으로 Body가 세계 Z축 ±4cm, 72프레임 한 바퀴로 움직임.
-        synth_idle=dict(take="Idle", frames=72, step=3, bones={
-            "Body": [((1, 0, 0), 2.0, 0.0)], "Head": [((1, 0, 0), 1.0, -0.3)],
-            "Tail1": [((1, 0, 0), 3.0, -0.5)], "Tail2": [((1, 0, 0), 5.0, -1.0)],
-            "TailTip": [((1, 0, 0), 8.0, -1.5)]},
-            loc={"Body": [((0, 0, 1), 0.04, 0.0)]}),
+        # 🔴 Generic 유닛은 「자체 클립」한 벌로만 살았다(ArtBinder가 가장 긴 클립 하나를 기본 상태로 놓는다).
+        #   2026-09-23 PM 요청으로 걷기·공격을 더 지었다. ⚠️ Idle(72)을 **일부러 제일 길게** 뒀다(컨트롤러 고치기 전까지 지금과 동일).
+        #   ⚠️ 테이크 이름은 반드시 Idle · Move · Attack — PM이 CharacterAnimator의 Speed/Attack에 그 이름으로 배선한다.
+        # 라분: 헤엄이 곧 걷기다 — 꼬리 물결을 키우고 몸을 위아래로 더 크게(둥실). 공격은 꼬리 후려치기.
+        synth_clips=[
+            dict(take="Idle", ground=True, frames=72, step=3, bones={
+                "Body": [((1, 0, 0), 2.0, 0.0)], "Head": [((1, 0, 0), 1.0, -0.3)],
+                "Tail1": [((1, 0, 0), 3.0, -0.5)], "Tail2": [((1, 0, 0), 5.0, -1.0)],
+                "TailTip": [((1, 0, 0), 8.0, -1.5)]},
+                loc={"Body": [((0, 0, 1), 0.04, 0.0)]}),
+            dict(take="Move", ground=True, frames=48, step=2, bones={
+                "Body": [((1, 0, 0), 3.0, 0.0)], "Head": [((1, 0, 0), 2.0, -0.3)],
+                "Tail1": [((1, 0, 0), 8.0, -0.6)], "Tail2": [((1, 0, 0), 14.0, -1.2)],
+                "TailTip": [((1, 0, 0), 20.0, -1.8)]},
+                loc={"Body": [((0, 0, 1), 0.08, 0.0)]}),
+            dict(take="Attack", ground=True, frames=30, step=2, bones={
+                "Body": [((1, 0, 0), -8.0, 0.0)], "Head": [((1, 0, 0), -10.0, -0.3)],
+                "Tail1": [((1, 0, 0), 15.0, 0.0)], "Tail2": [((1, 0, 0), 25.0, -0.2)],
+                "TailTip": [((1, 0, 0), 35.0, -0.4)]},
+                loc={"Body": [((0, -1, 0), 0.15, -math.pi / 2)]}),
+        ],
         # 고래 머리가 몸통 대부분을 차지(원작 자체 비율 — Head 몫 85%, 정점 95개짜리
         # 저폴리라 더 그렇다) — bone heat 실패 증상 아님, 기본 안전판 완화.
         max_bone_share=0.9,
@@ -940,10 +993,29 @@ UNITS = {
         rigid_meshes={"Chainsaw": "Head"},                               # 코에 달린 체인소 날(따로 선 얇은 판) — heat에 맡기면 몸통에 끌려 휜다
         # 서 있는 짐승의 대기 동작: 몸통이 아주 작게 끄덕이고(숨), 머리가 그보다 크게, 뒤에 늘어진 시동줄이 꼬리 뼈를 따라 좌우로 흔들린다.
         # 발이 바닥에서 뜨면 안 되므로 라분처럼 위아래 이동(loc)은 안 준다.
-        synth_idle=dict(take="Idle", frames=72, step=3, bones={
-            "Body": [((1, 0, 0), 1.5, 0.0)],
-            "Head": [((1, 0, 0), 4.0, -0.4)],
-            "Tail": [((0, 0, 1), 10.0, -0.6)]}),
+        # 🔴 Generic 유닛은 「자체 클립」한 벌로만 살았다(ArtBinder가 가장 긴 클립 하나를 기본 상태로 놓는다).
+        #   2026-09-23 PM 요청으로 걷기·공격을 더 지었다. ⚠️ Idle(72)을 **일부러 제일 길게** 뒀다(컨트롤러 고치기 전까지 지금과 동일).
+        #   ⚠️ 테이크 이름은 반드시 Idle · Move · Attack — PM이 CharacterAnimator의 Speed/Attack에 그 이름으로 배선한다.
+        # 포치타: 네 발 종종걸음 — 대각선 짝(앞왼+뒤오른 / 앞오른+뒤왼)이 반대 위상으로 번갈아 나간다.
+        #   공격은 코의 체인소를 들이미는 앞으로 돌진(Body를 −Y로 12cm).
+        synth_clips=[
+            dict(take="Idle", ground=True, frames=72, step=3, bones={
+                "Body": [((1, 0, 0), 1.5, 0.0)],
+                "Head": [((1, 0, 0), 4.0, -0.4)],
+                "Tail": [((0, 0, 1), 10.0, -0.6)]}),
+            dict(take="Move", ground=True, frames=48, step=2, bones={
+                "Body": [((1, 0, 0), 2.0, 0.0)],
+                "Head": [((1, 0, 0), 3.0, -0.4)],
+                "Tail": [((0, 0, 1), 12.0, -0.6)],
+                "LegFrontL": [((1, 0, 0), 20.0, 0.0)], "LegBackR": [((1, 0, 0), 20.0, 0.0)],
+                "LegFrontR": [((1, 0, 0), 20.0, math.pi)], "LegBackL": [((1, 0, 0), 20.0, math.pi)]}),
+            dict(take="Attack", ground=True, frames=30, step=2, bones={
+                "Body": [((1, 0, 0), -10.0, 0.0)],
+                "Head": [((1, 0, 0), -15.0, -0.25)],
+                "Tail": [((0, 0, 1), 15.0, 0.0)],
+                "LegFrontL": [((1, 0, 0), -18.0, -0.2)], "LegFrontR": [((1, 0, 0), -18.0, -0.2)]},
+                loc={"Body": [((0, -1, 0), 0.12, -math.pi / 2)]}),
+        ],
         # 몸통 하나가 거의 전부를 먹는 통짜 짐승(라분과 같은 처리) — 머리·꼬리·다리 넷이 살아 있는지만 본다.
         max_bone_share=0.9,
         materials={"Body": [("Base Color", "Orange_Color.png")],
@@ -1055,10 +1127,32 @@ UNITS = {
         # 🔴 조각 53개가 겹쳐 있어 bone heat가 전체 실패했다(가중치 정점 0) → 복셀 대리 메시에서 풀고 옮긴다(덴지·에이스·유노 선례).
         heat_proxy=dict(voxel_m=0.015, keep_largest=True),
         # 서 있는 마법사의 대기 동작: 로브가 아주 작게 흔들리고 머리가 조금 더, 팔은 살짝.
-        synth_idle=dict(take="Idle", frames=72, step=3, bones={
-            "Body": [((1, 0, 0), 1.0, 0.0)], "Chest": [((1, 0, 0), 1.5, -0.2)],
-            "Head": [((1, 0, 0), 2.5, -0.4)],
-            "LeftArm": [((0, 1, 0), 2.0, -0.3)], "RightArm": [((0, 1, 0), 2.0, 0.3)]}),
+        # 🔴 Generic 유닛은 「자체 클립」한 벌로만 살았다(ArtBinder가 가장 긴 클립 하나를 기본 상태로 놓는다).
+        #   2026-09-23 PM 요청으로 걷기·공격을 더 지었다. ⚠️ Idle(72)을 **일부러 제일 길게** 뒀다(컨트롤러 고치기 전까지 지금과 동일).
+        #   ⚠️ 테이크 이름은 반드시 Idle · Move · Attack — PM이 CharacterAnimator의 Speed/Attack에 그 이름으로 배선한다.
+        # 아인즈: 다리가 로브에 덮인 마법사 — 걷기는 **떠서 미끄러짐**(위아래 5cm + 앞으로 기울기),
+        #   공격은 양팔을 들어 올리는 주문 시전.
+        synth_clips=[
+            dict(take="Idle", ground=True, frames=72, step=3, bones={
+                "Body": [((1, 0, 0), 1.0, 0.0)], "Chest": [((1, 0, 0), 1.5, -0.2)],
+                "Head": [((1, 0, 0), 2.5, -0.4)],
+                "LeftArm": [((0, 1, 0), 2.0, -0.3)], "RightArm": [((0, 1, 0), 2.0, 0.3)]}),
+            dict(take="Move", ground=True, frames=48, step=2, bones={
+                "Body": [((1, 0, 0), 3.0, -math.pi / 2)], "Chest": [((1, 0, 0), 2.0, -0.3)],
+                "Head": [((1, 0, 0), 2.0, -0.5)],
+                "LeftArm": [((0, 1, 0), 4.0, 0.0)], "RightArm": [((0, 1, 0), -4.0, 0.0)]},
+                loc={"Body": [((0, 0, 1), 0.05, 0.0)]}),
+            # 🔴 이 모델은 **큰 동작을 못 받는다**(렌더로 두 번 확인): 조각 53개를 복셀 대리 메시로 푼 가중치에
+            #   뼈가 다섯뿐이라, 팔을 30°(꼭대기 60°) 앞으로 접었더니 **로브가 찢어졌고**, 12°로 낮춰도
+            #   몸통이 접히며 망토가 구겨졌다. → 앞뒤로 접는 대신 **팔을 옆으로 벌리고(Y축) 몸이 떠오르는**
+            #   시전 동작으로 바꿨는데 **그래도 어깨 갑옷이 몸에서 떨어져 나왔다**(3차 렌더).
+            #   → 결론: **팔 뼈를 아예 안 쓴다.** 몸이 28cm 떠오르며 살짝 젖히는 「부양 시전」으로 냈다.
+            #   ⚠️ 이 모델은 팔 뼈를 건드리는 순간 망토·어깨 갑옷이 갈라진다 — 다음에 손댈 때도 같은 함정이다.
+            dict(take="Attack", ground=True, frames=30, step=2, bones={
+                "Body": [((1, 0, 0), -5.0, -math.pi / 2)], "Chest": [((1, 0, 0), 2.0, -math.pi / 2)],
+                "Head": [((1, 0, 0), -6.0, -math.pi / 2)]},
+                loc={"Body": [((0, 0, 1), 0.14, -math.pi / 2)]}),
+        ],
         max_bone_share=0.9,
         # 재질 19개 중 텍스처가 있는 건 다섯(로브 천 네 장 + Material.005)뿐이고 나머지는 전부 단색이다
         # (gold·bone·gelap·ball 계열 아홉·Material.004 — glTF baseColorFactor, 직접 확인) → keep_solid_materials로 기본색 그대로 둔다.
@@ -2136,9 +2230,11 @@ def synth_idle_scan(arm, spec):
     n, step = int(spec.get("frames", 72)), int(spec.get("step", 3))
     arm.animation_data_create()
     act = bpy.data.actions.new(spec.get("take", "Idle"))
+    act.use_fake_user = True                      # 🔸 여러 벌을 지을 때 활성 액션이 바뀌어도 안 지워지게(synth_clips)
     arm.animation_data.action = act
     for pb in arm.pose.bones:
         pb.rotation_mode = "QUATERNION"
+        pb.matrix_basis = Matrix.Identity(4)      # 🔸 앞 클립의 마지막 자세가 새지 않게 쉬는 자세에서 시작
     frames = list(range(0, n, step)) + [n]
     loc_spec = spec.get("loc", {})
     for f in frames:
@@ -2160,10 +2256,54 @@ def synth_idle_scan(arm, spec):
                 delta_world += Vector(axis).normalized() * (meters * t)
             pb.location = R3.inverted() @ delta_world
             pb.keyframe_insert("location", frame=1 + f)
+    lifted = 0.0
+    if spec.get("ground"):
+        # 🔴 접지 보정(2026-09-23): 지어 낸 동작이 바닥을 뚫으면 그 프레임만 뿌리 뼈를 들어 올린다.
+        #   (이호준 원본 좀비 클립에 쓰던 clip_ground와 같은 생각 — 유니티에서는 동작을 못 틀어 원천에서 맞춘다.)
+        #   Idle에는 안 건다(이미 승인된 것과 한 바이트도 안 달라지게) — 새 Move·Attack에만 ground=True.
+        skinned = [o for o in bpy.data.objects
+                   if o.type == "MESH" and any(m.type == "ARMATURE" and m.object == arm for m in o.modifiers)]
+        # 🔴 뿌리가 여럿일 수 있다(영원_김영원의 Point001 — 가중치 0인 둘째 뿌리). **살이 붙은 뿌리만** 들어 올린다 —
+        #   가중치 0 뼈를 같이 올리면 겉모습엔 영향이 없으면서 첫↔끝 자세가 달라져 「이음새」 검사가 헛돈다(09-23 실측 1.66m).
+        weighted = {g.name for o in skinned for g in o.vertex_groups}
+        allroots = [pb for pb in arm.pose.bones if pb.parent is None]
+        roots = [pb for pb in allroots if pb.name in weighted] or allroots
+        # 🔴 이 클립이 뿌리 위치를 안 건드리면(loc 파형 없음) r.location에 **앞 클립의 값이 남아 있다** —
+        #   곡선이 없으니 frame_set이 되돌려 주지 않는다. 그대로 더하면 첫 프레임만 오염돼 이음새가 생긴다(09-23 뻬꼼 0.030m).
+        paths = {fc.data_path for lay in act.layers for st in lay.strips for bag in st.channelbags for fc in bag.fcurves}
+        for r in roots:
+            if f'pose.bones["{r.name}"].location' not in paths:
+                r.location = Vector((0.0, 0.0, 0.0))
+        # 🔴 **두 번 훑는다.** 한 번에 재고 바로 키를 넣으면, 다음 프레임에서 잰 값이 **이미 올려 둔 만큼** 섞여 들어와
+        #   프레임마다 기준이 달라진다(첫↔끝 자세가 어긋나 Idle 이음새가 생긴다 — 09-23 실측 뻬꼼 0.030m).
+        #   ① 먼저 클립이 정한 자세 그대로 프레임마다 최저 z와 뿌리 위치를 적어 둔다.
+        #   ② 그 값에 필요한 만큼만 더해 **뚫든 안 뚫든 매 프레임** 키를 넣는다(키 없는 끝프레임이 끌려가지 않게).
+        lows, base = {}, {}
+        for f in frames:
+            scene.frame_set(1 + f)
+            dg = bpy.context.evaluated_depsgraph_get()
+            low = 9e9
+            for o in skinned:
+                ev = o.evaluated_get(dg)
+                me = ev.to_mesh()
+                if me.vertices:
+                    low = min(low, min((ev.matrix_world @ v.co).z for v in me.vertices))
+                ev.to_mesh_clear()
+            lows[f] = low
+            base[f] = {r.name: r.location.copy() for r in roots}
+        for f in frames:
+            lift = max(0.0, -lows[f])
+            lifted = max(lifted, lift)
+            scene.frame_set(1 + f)
+            for r in roots:
+                R3 = (arm.matrix_world.to_3x3() @ r.bone.matrix_local.to_3x3())
+                r.location = base[f][r.name] + R3.inverted() @ Vector((0.0, 0.0, lift))
+                r.keyframe_insert("location", frame=1 + f)
     scene.frame_start, scene.frame_end = 1, 1 + n
     scene.frame_set(1)
     bones = sorted(set(spec["bones"]) | set(loc_spec))
-    return f"{act.name} {n}프레임(키 {len(frames)}) · 뼈 {bones}"
+    tail = f" · 접지 보정 최대 {lifted:.3f}m" if lifted else ""
+    return f"{act.name} {n}프레임(키 {len(frames)}) · 뼈 {bones}{tail}"
 
 
 def coat_hem(body, G, spec):
@@ -2916,8 +3056,21 @@ def build(name, out_dir=None, render_dir=None):
     if not cfg.get("generic_bones"):
         report["휴머노이드 가중치"] = humanoid_weight_check(name, [body])
     clip = False
-    if cfg.get("synth_idle"):
-        report["지은 Idle"] = synth_idle_scan(arm, cfg["synth_idle"])
+    if cfg.get("synth_idle") or cfg.get("synth_clips"):
+        # 🔴 여러 벌로 넓힘(2026-09-23, PM 요청 — Generic 유닛에 걷기·공격을 지어 넣는다):
+        #   synth_clips=[사양, …]. 유니티 ArtBinder는 아직 **가장 긴 클립 하나**만 쓰므로 Idle을 제일 길게 둘 것
+        #   (그러면 컨트롤러를 안 고쳐도 지금과 똑같이 돌고, 고치면 Move·Attack이 살아난다).
+        #   클립 이름은 CharacterAnimator 파라미터에 맞춰 Idle · Move · Attack으로.
+        specs = list(cfg.get("synth_clips") or [cfg["synth_idle"]])
+        made = [synth_idle_scan(arm, si) for si in specs]
+        if len(specs) > 1:                        # 첫 벌(= Idle)을 활성으로 되돌린다 — 내보내기 기본 자세가 쉬는 자세가 되게
+            for pb in arm.pose.bones:
+                pb.matrix_basis = Matrix.Identity(4)
+            arm.animation_data.action = bpy.data.actions[specs[0].get("take", "Idle")]
+            bpy.context.scene.frame_start = 1
+            bpy.context.scene.frame_end = 1 + int(specs[0].get("frames", 72))
+            bpy.context.scene.frame_set(1)
+        report["지은 클립"] = made
         clip = True
     # 🔴 빅맘(2026-09-22, PM 유니티 URP 검수) — 여러 조각을 이어 붙인 static obj/glb는 노멀이
     # 안쪽으로 뒤집힌 면이 섞여 있을 수 있다(Sketchfab 합본 흔한 증상). 블렌더는 기본적으로
