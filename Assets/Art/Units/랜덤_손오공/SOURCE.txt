@@ -1,0 +1,43 @@
+랜덤_손오공(드래곤볼 손오공) — blender 세션(2026-09-23).
+fix_unit_fbx.py UNITS["랜덤_손오공"]로 처리.
+
+■ 원본 ⚠️ 파일명에 한자·괄호
+~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_손오공.zip
+ - source/"孫悟空(2025-09-19).fbx" (3.3MB) + textures/GOKU.png
+🔴 파이썬 zipfile로 푸니 한자 이름도 그대로 열린다(직접 확인 — PM이 걱정한 깨짐 없음).
+뼈 70 · 메시 1(GOKU, 4,107정점) · 재질 2 · 애니 8 · 아마추어 이름 "アーマチュア".
+
+■ 🔴 뼈 이름 — 일본어가 아니라 **VRM 계열 영문**이었다(PM 추정 정정)
+root > hips > spine > chest > neck > head, 어깨 shoulder.L이 **chest**에 붙고
+팔 upper_arm/lower_arm/hand · 다리 upper_leg/lower_leg/foot/toes · 손가락 thumb/index/middle/ring/
+little_proximal|intermediate|distal.L/R.
+일본어인 건 **머리카락(髪後/髪前 각 5쌍)과 허리띠(帯1~3.L/R)뿐**이다.
+척추가 hips/spine/chest 세 마디뿐이라 **chest = Spine1(Chest)**로 두고 Spine2(UpperChest)는 안 쓴다
+(바키·이이다와 같은 처리 — 유니티에서 UpperChest는 선택 항목).
+정리 결과 **70 → 21뼈**. merge_to_nearest가 48개를 합쳤다: Head 12(눈 둘 + 머리카락 열) ·
+LeftHand 15 · RightHand 15(손가락) · Spine 6(허리띠 帯1~3 좌우).
+
+■ 🔴 재질 LINE = 툰 외곽선 셸 → 면을 지웠다
+같은 메시 안에 재질이 둘(GOKU 3,761면 · LINE 3,651면)이고, LINE이 캐릭터를 통째로 덮어
+1차 렌더가 **새까만 실루엣**으로 나왔다(덴지·히소카·유노와 같은 증상).
+→ drop_material_faces=["LINE"]로 그 재질 면만 지웠다. 남는 재질은 GOKU 하나.
+
+■ 🔴 애니 8개 · 기본 자세 ≠ 쉬는 자세
+00-IDLE · 01-OSSU · 02-STANCE … 여덟 개가 들어 있고 기본 자세가 쉬는 자세와 1.383만큼 다르다
+(임포트 직후 실측) → PM 지시대로 **use_rest_pose로 결합 자세**를 썼다.
+그 결과 레스트가 **제대로 된 T자**로 나온다(기본 자세 그대로였으면 팔 내린 A자였다).
+
+■ 그 밖에
+- **꼬리 없음**(성인 오공) · **무기 없음**(PM 말대로 맨몸 격투가). 뺄 것이 없었다.
+- 텍스처는 GOKU.png 한 장 아틀라스가 맞다(PM 추정 확인).
+
+■ 검증
+- 배치 리포트: 뼈 21 · **휴머노이드 필수 15뼈 전부 가중치 있음** · 크기 (1.646, 0.465, 1.8)m · 최저 z 0.
+- 재수입: 최상위 오브젝트 "Armature" 하나 · mixamorig:Hips 부모 None ·
+  레스트 다리 수직(무릎에서 x 0.0825 → 0.1068로 2cm 바깥으로 벌어지는 원본 T자 그대로, 그 아래는 일정).
+- 공용 idle.fbx 리타겟 **21/21뼈** — 접힘·찢어짐 없음.
+- 뒷면 컬링 렌더 정상(주황 도복·亀 글자·파란 띠와 손목밴드·검은 머리 전부 제 색, 외곽선 셸 없음).
+
+■ 산출물(스크래치만, Assets 미반영)
+랜덤_손오공.fbx · Textures/GOKU.png ·
+cull_full.png · cull_head.png · verify_rest_front.png · verify_idle_front.png · verify_idle_side.png

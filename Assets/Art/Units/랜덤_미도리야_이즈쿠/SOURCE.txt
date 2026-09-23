@@ -1,0 +1,54 @@
+랜덤_미도리야_이즈쿠(나의 히어로 아카데미아 미도리야 이즈쿠, 히어로 코스튬) — blender 세션(2026-09-23).
+fix_unit_fbx.py UNITS["랜덤_미도리야_이즈쿠"]로 처리.
+
+■ 원본
+~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_미도리야_이즈쿠.zip
+ - source/"Izuku Midoriya (Hero Costume).fbx" (2.0MB, 파일명에 공백·괄호)
+ - textures/t_pl01_001_{body,eyea,face,hair,mask}_d.png 5장
+뼈 186 · 메시 1(SK_pl01_001, 27,303정점) · 재질 17 · 애니 0 · **이미 T자**(팔이 z 3.07~3.38에서 수평).
+
+■ 🔴 뼈 이름(PM이 직접 읽어 보고하라 한 것) — 게임 립 계열
+root > jointroot > COG > {hip, waist, grab}.
+**hip과 waist가 형제**다(둘 다 COG의 자식 — 직접 확인. 리바이와 같은 함정) →
+hip = Hips로 두고 reparent_bones로 waist(=Spine)를 hip 밑에 다시 붙였다.
+waist > chest > neck > head이고 어깨(L_collar)가 chest에 붙으므로 **chest = Spine1(Chest)**,
+Spine2(UpperChest)는 안 쓴다(바키·손오공과 같은 처리).
+팔 L_collar > L_arm > L_elbow > L_hand · 다리 hip > L_leg > L_knee > L_ankle > L_toe.
+root·jointroot·COG·grab은 Hips보다 위·옆이라 먼저 뺐다(가중치 없음).
+나머지 161개(얼굴 74 — 눈꺼풀·눈썹·볼·턱 등 · 손가락 22×2 · *_EX 보조 · BK_* 물리뼈)는
+merge_to_nearest가 가장 가까운 사람 뼈로 합쳤다 → **186 → 21뼈**.
+얼굴 뼈가 전부 Head로 가므로 아틀라스 교훈(3갈래 보조뼈 오매핑)도 자동 충족.
+
+■ 🔴 재질↔텍스처는 **이미지 묶음으로** 갈랐다(이름 짐작 금지 — 이이다 교훈)
+FBX가 텍스처 경로를 잃고 "Map #24~29"로만 남아 있는데, **같은 이미지를 쓰는 재질 묶음이 곧 부위**다:
+  #24 = body_GPA_TM · hood_hideC · Larm · Lhand · Rarm · Rhand  → t_pl01_001_body_d.png
+  #25 = eye_GPD · eyeshadow                                     → t_pl01_001_eyea_d.png
+  #26 = face_GPA_TM                                             → t_pl01_001_face_d.png
+  #27 = hair                                                    → t_pl01_001_hair_d.png
+  #28 = mask                                                    → t_pl01_001_mask_d.png
+  #29 = armbreak 넷                                             → **대응하는 png가 압축에 아예 없다**
+몸·후드·팔·손이 한 이미지를 같이 쓴다는 사실 자체가 그 이미지가 body_d임을 정해 준다.
+
+■ 🔴 뺀 면 둘(메시가 하나뿐이라 재질 칸 면으로 뺐다 — drop_material_faces)
+① **armbreak A/B 네 재질 = 부서진 팔 변형**. LarmbreakB가 x 0.64~2.16으로 정상 팔(0.60~1.44)과
+   손(1.38~2.15)이 있는 **같은 자리에 겹쳐** 있다(직접 측정). 텍스처(#29)도 없어 그대로 두면
+   정상 팔 위에 흰 껍데기가 겹친다.
+② **hair.001 · hood_hideC.001** — 각각 hair·hood_hideC와 **면 수도 경계도 완전히 같은 복제**
+   (4,438정점 x −0.46~+0.49 z 3.59~4.37로 동일, 352정점 쪽도 같음).
+
+■ 그 밖에
+- **무기 없음**(PM 말대로). 마스크(입가리개)·팔다리 서포트 장비는 코스튬이라 유지.
+- 초록 머리카락은 별도 메시가 아니라 한 메시의 재질 칸이라 강체로 못 뗀다 — 대신 머리카락 뼈가
+  전부 Head로 합쳐져 머리를 그대로 따라간다(PM 지시 「Head 강체」와 같은 결과).
+
+■ 검증
+- 배치 리포트: 뼈 21 · **휴머노이드 필수 15뼈 전부 가중치 있음** · 크기 (1.776, 0.452, 1.8)m · 최저 z 0.
+- 재수입: 최상위 오브젝트 "Armature" 하나 · mixamorig:Hips 부모 None ·
+  **레스트 다리 완전 수직**(양다리 UpLeg/Leg/Foot의 x가 ±0.0863로 사슬 안에서 일정).
+- 공용 idle.fbx 리타겟 **21/21뼈** — 접힘·찢어짐 없음.
+- 뒷면 컬링 렌더 정상(초록 코스튬·빨간 벨트와 부츠·흰 장갑·목 마스크·초록 머리 전부 제 색,
+  겹친 부서진 팔 껍데기 없음).
+
+■ 산출물(스크래치만, Assets 미반영)
+랜덤_미도리야_이즈쿠.fbx · Textures/Izuku_{body,eye,face,hair,mask}.png ·
+cull_full.png · cull_head.png · verify_rest_front.png · verify_idle_front.png · verify_idle_side.png
