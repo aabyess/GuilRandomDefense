@@ -698,7 +698,14 @@ public static class MapGenerator
         float vWallX = (leftColRightEdge + rightColLeftEdge) * 0.5f;
         float vGap = rightColLeftEdge - leftColRightEdge;
 
-        float topRowBottomEdge = topLeft.center.y - topLeft.size.y * 0.5f;
+        // 🔴 레인 섬은 6단계 이후 **필드만**이고, 앞치마(우리 줄 + 상점 줄)는 섬 밖 아래로
+        //    LaneApronDepth만큼 더 뻗는다. 섬 아래변끼리로 간격을 재면 그 앞치마가
+        //    「레인 사이 빈 땅」으로 잡혀서 벽이 통째로 덮어 버린다.
+        //    2026-09-24에 실제로 그랬다 — 가로벽(두께 338.9)이 앞치마 199.3을 **100%** 삼켰다.
+        //    벽은 렌더러만 떼고 **콜라이더를 남기므로**(BuildWall 주석) 보기 문제로 끝나지 않는다.
+        //    NavMesh가 콜라이더로 구워져 **우리와 상점 줄 전체가 걸을 수 없는 땅**이 됐었다.
+        //    설계(두께 = 레인 사이 간격)는 그대로다 — 기준선이 옮겨진 것이라 기준선을 고친다.
+        float topRowBottomEdge = topLeft.center.y - topLeft.size.y * 0.5f - MapLayout.LaneApronDepth;
         float bottomRowTopEdge = bottomLeft.center.y + bottomLeft.size.y * 0.5f;
         float hWallZ = (topRowBottomEdge + bottomRowTopEdge) * 0.5f;
         float hGap = topRowBottomEdge - bottomRowTopEdge;
@@ -715,6 +722,36 @@ public static class MapGenerator
         BuildWall(parent, "레인간_가로벽",
             new Vector3((overallMinX + overallMaxX) * 0.5f, MapLayout.IslandTop + WallHeight * 0.5f, hWallZ),
             new Vector3(overallMaxX - overallMinX, WallHeight, hGap + InterLaneWallMargin));
+    }
+
+    /// <summary>
+    /// 레인 사이 벽이 바닥에서 차지하는 자리. <see cref="BuildInterLaneWalls"/>와 **같은 식**으로
+    /// 낸다 — 겹침 검사가 벽을 보려면 자리가 필요한데, 따로 적으면 둘이 갈라져서 검사가
+    /// 거짓말을 한다. 계산이 한 군데 더 필요해지면 이 함수를 쓰고 식을 베끼지 말 것.
+    /// </summary>
+    static IEnumerable<MapLayout.Island> InterLaneWallFootprints()
+    {
+        MapLayout.Island topLeft = MapLayout.Lanes[0];
+        MapLayout.Island topRight = MapLayout.Lanes[1];
+        MapLayout.Island bottomLeft = MapLayout.Lanes[2];
+
+        float leftColRightEdge = topLeft.center.x + topLeft.size.x * 0.5f;
+        float rightColLeftEdge = topRight.center.x - topRight.size.x * 0.5f;
+        float topRowBottomEdge = topLeft.center.y - topLeft.size.y * 0.5f - MapLayout.LaneApronDepth;
+        float bottomRowTopEdge = bottomLeft.center.y + bottomLeft.size.y * 0.5f;
+
+        float overallMinX = topLeft.center.x - topLeft.size.x * 0.5f;
+        float overallMaxX = topRight.center.x + topRight.size.x * 0.5f;
+        float overallMinZ = bottomLeft.center.y - bottomLeft.size.y * 0.5f;
+        float overallMaxZ = topLeft.center.y + topLeft.size.y * 0.5f;
+
+        yield return new MapLayout.Island("레인간_세로벽",
+            (leftColRightEdge + rightColLeftEdge) * 0.5f, (overallMinZ + overallMaxZ) * 0.5f,
+            rightColLeftEdge - leftColRightEdge + InterLaneWallMargin, overallMaxZ - overallMinZ, "rock");
+
+        yield return new MapLayout.Island("레인간_가로벽",
+            (overallMinX + overallMaxX) * 0.5f, (topRowBottomEdge + bottomRowTopEdge) * 0.5f,
+            overallMaxX - overallMinX, topRowBottomEdge - bottomRowTopEdge + InterLaneWallMargin, "rock");
     }
 
     static Transform BuildUnitPen(Transform parent, MapLayout.Island lane, int laneIndex)
@@ -3746,31 +3783,55 @@ public static class MapGenerator
 
     // 좌표를 손으로 옮기다 보면 섬이 서로 올라타는 일이 생긴다(초월 전시가 조합식 표를 덮은 적 있음).
     // 눈으로는 위에서 봐야만 보이므로 생성할 때마다 검사한다.
+    //
+    // 🔴 2026-09-24: 이 검사가 `MapLayout.Lanes`만 봐서 **앞치마도 레인 사이 벽도 검사 밖**이었다.
+    //    그래서 가로벽이 앞치마를 100% 덮는 것을 아무도 못 봤고, 사진에서 「하얀 가시밭」으로
+    //    드러날 때까지 하루가 갔다. 목록에 없는 것은 검사가 못 본다 —
+    //    **땅을 차지하는 것은 전부 넣는다.**
     static string CheckOverlaps()
     {
-        List<MapLayout.Island> all = new List<MapLayout.Island>();
-        all.AddRange(MapLayout.Lanes);
-        all.AddRange(MapLayout.Warehouses);
-        all.AddRange(MapLayout.SealIslands);
-        all.AddRange(MapLayout.Zones);
+        List<MapLayout.Island> ground = new List<MapLayout.Island>();
+        ground.AddRange(MapLayout.Lanes);
+        foreach (MapLayout.Island lane in MapLayout.Lanes) ground.Add(MapLayout.LaneApron(lane));
+        ground.AddRange(MapLayout.Warehouses);
+        ground.AddRange(MapLayout.SealIslands);
+        ground.AddRange(MapLayout.Zones);
 
         List<string> hits = new List<string>();
-        for (int i = 0; i < all.Count; i++)
+        for (int i = 0; i < ground.Count; i++)
         {
-            for (int j = i + 1; j < all.Count; j++)
+            for (int j = i + 1; j < ground.Count; j++)
             {
-                if (Overlaps(all[i], all[j]))
-                    hits.Add($"{all[i].name} ↔ {all[j].name}");
+                if (!Overlaps(ground[i], ground[j], out float depth) || depth <= OverlapTolerance) continue;
+                hits.Add($"{ground[i].name} ↔ {ground[j].name} ({depth:0.#})");
             }
         }
 
-        return hits.Count == 0 ? "" : "\n⚠️ 섬이 겹칩니다: " + string.Join(", ", hits);
+        // 벽은 땅끼리와 따로 본다. 레인 사이 벽 둘은 십자로 **일부러 교차**해서 두 통로를 다
+        // 막으므로, 서로 견주면 늘 790쯤 겹쳤다고 나온다 — 그건 결함이 아니다.
+        foreach (MapLayout.Island wall in InterLaneWallFootprints())
+        {
+            foreach (MapLayout.Island land in ground)
+            {
+                if (!Overlaps(wall, land, out float depth) || depth <= OverlapTolerance) continue;
+                hits.Add($"{wall.name} ↔ {land.name} ({depth:0.#})");
+            }
+        }
+
+        return hits.Count == 0 ? "" : "\n⚠️ 겹칩니다: " + string.Join(", ", hits);
     }
 
-    static bool Overlaps(MapLayout.Island a, MapLayout.Island b)
+    // 레인 사이 벽은 틈을 확실히 메우려고 InterLaneWallMargin의 절반만큼 **일부러** 섬을 문다.
+    // 그만큼은 겹침이 아니다. 대신 얼마나 겹쳤는지를 같이 찍어서, 문턱 아래라고 조용히
+    // 넘어간 것인지 애초에 안 겹친 것인지 구별되게 한다.
+    const float OverlapTolerance = InterLaneWallMargin;
+
+    static bool Overlaps(MapLayout.Island a, MapLayout.Island b, out float depth)
     {
-        return Mathf.Abs(a.center.x - b.center.x) * 2f < a.size.x + b.size.x
-            && Mathf.Abs(a.center.y - b.center.y) * 2f < a.size.y + b.size.y;
+        float x = (a.size.x + b.size.x) * 0.5f - Mathf.Abs(a.center.x - b.center.x);
+        float z = (a.size.y + b.size.y) * 0.5f - Mathf.Abs(a.center.y - b.center.y);
+        depth = Mathf.Min(x, z);
+        return x > 0f && z > 0f;
     }
 
     // 기존 씬은 전부 원점 근처를 전제로 배치돼 있었다. 새 맵에서 원점은 바다 한가운데라,
