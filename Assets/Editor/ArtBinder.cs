@@ -405,7 +405,12 @@ public static class ArtBinder
     // 모델 이름은 확장자를 뺀 파일명, 유닛 이름은 로스터 에셋 이름이다.
     static readonly (string model, string unit)[] ModelOverrides =
     {
-        ("idle", "흔함_최상호"),   // 나루토 — Mixamo에서 With Skin으로 받은 파일이라 이름이 idle이다
+        // (09-23) ("idle", "흔함_최상호") 줄을 뺐다 — 이제 Assets/Art/Units/흔함_최상호/가 따로 있다.
+        // 그 전에는 **공용 Idle 클립 원본**(Assets/Art/Characters/idle.fbx)을 인형으로도 썼는데,
+        // 그 파일은 게임 안 크기가 0.022라 ArtBinder가 「1000배 넘게 키워야 한다」고 보고 건너뛰었다
+        // → 흔함_최상호가 화면에서 **점**이었다(09-23 units 실측: 키 0.02).
+        // blender가 원본은 한 바이트도 안 건드리고(211종의 자세가 다 거기서 나온다) 인형용 모델만
+        // 1.8m로 따로 내보냈다. 클립은 예전 그대로 idle.fbx에서 나온다.
         // 고대의 배(2026-09-13, Blender) — 로스터가 아니라 Special의 스토리7 보상 유닛이라 에셋 이름이 다르다.
         // 해적선은 로스터 에셋 이름(해적선)과 파일명이 같아 표 없이 붙는다.
         ("고대의배", "Unit_고대의배_h05Y"),

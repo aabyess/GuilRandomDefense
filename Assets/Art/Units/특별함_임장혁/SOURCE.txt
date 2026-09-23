@@ -1,21 +1,41 @@
-원본 파일명: Smoker New World by Annettlw.fbx
-받은 폴더:   /tmp/skins4/특별함_임장혁
-옮긴 날:     2026-09-09
-매칭:        특별함_임장혁 (unitName = 장애인) ← 스모커(신세계) — 사장님 지정
-리깅:        본·스킨 데이터 600 건
-애니메이션:  커브 12453 건
+특별함_임장혁(원피스 스모커, 바운티러시 pl_smoker_2yaf01) — blender 세션 **재출력**(2026-09-23).
+fix_unit_fbx.py UNITS["특별함_임장혁"]로 처리. 구현담당2 유니티 전수 실측 반려 건.
 
-⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
+■ 원본
+커밋된 FBX를 원본 삼았다: Assets/Art/Units/특별함_임장혁/특별함_임장혁.fbx
+텍스처도 커밋본 Textures/를 그대로 쓴다(내용 안 바뀜). 재질은 pl_smoker_2yaf01 하나, 실제로 쓰는 건
+pl_smoker_2yaf01_diff.png 한 장이다(matcap·ramp·abnormal_pattern·bayer_dither는 원본 게임의 셰이더용이라
+FBX 재질이 안 문다 — 이미 커밋된 특별함_양재모(로)도 똑같다).
 
-⚠️ 공용 텍스처 4장(abnormal_pattern·ramp·stg_common_bayer_dither·matcap)은 이 압축에
-   **원래 안 들어 있었다** — 스모커 팩만 fbx와 diff 두 개뿐이다. FBX는 그 넷을 부른다.
-   다른 바운티러시 팩 세 개(루치·로우·불릿)에서 그 파일들이 **바이트까지 동일**한 것을
-   확인하고(shasum 대조) 특별함_노태현에서 복사해 채웠다. 게임 공용 셰이더 텍스처다.
+■ 🔴 원인 — 키가 0.022m이라 유니티가 **크기 맞추기를 건너뛰었다**
+ArtBinder에 「키를 1,000배 넘게 키워야 하면 잘못 잰 것으로 보고 건너뛴다」는 안전장치가 있는데
+(옛날 어떤 모델이 7,062배로 폭주한 뒤 넣은 것), 이 파일은 **1,361배**가 필요해 문턱을 넘었다.
+그래서 게임에서 **점으로만** 보였다. 2026-09-14에 손본 「pl_ 여섯」에서 이 유닛이 빠져 있었던 것이다.
 
-── 원본 보관 기록 (2026-09-14, 다운로드 원본 삭제 전) ──
-사장님 결정: 정보만 여기 적고 다운로드 원본은 지운다. 전체 목록 Docs/ART_SOURCES_ARCHIVE.md
-- ~/Downloads/one-piece-bounty-rush-smoker-new-world.zip · 3.6MB · sha256 8504e84c17c4d077
-    source/Smoker New World.rar (2.4MB)
-      └ Smoker New World/pl_smoker_2yaf01_diff.png (1.3MB)
-      └ Smoker New World/Smoker New World by Annettlw.fbx (7.0MB)
-    textures/pl_smoker_2yaf01_diff.png (1.3MB)
+■ 고친 것
+- 키 **1.8m 규약**으로 정규화(발바닥 z=0 · Hips x·y 원점 · +Z 위 · 앞 −Y).
+- 뼈 이름을 **PL_RENAME**(모리아에서 유니티 통과가 확인된 표)으로 → mixamorig 21뼈.
+  뺀 뼈: pl_smoker_2yaf01 · world_joint(루트 둘) · HELPER_key · model_root · HELPER_name · pre_flag · post_flag
+  (전부 가중치 0인 표식. 살린 Null 노드가 사람 뼈 위쪽에 안 붙어 merge_to_nearest가 막아 준다).
+  나머지 52개(코트 자락 c_coat·l_coat·r_coat 계열, 자켓 소매, HELPER_Lsmokearm 1~3, RHand_Weapon 등)는
+  merge_to_nearest가 가장 가까운 사람 뼈로 합쳤다 — Spine1 28 · L/RShoulder 각 9 · RightHand 3 · 나머지.
+- **겹쳐 들어가 있던 변형 메시**를 뺐다(2026-09-14 pl_ 여섯과 같은 처방):
+  face_attack · face_damage(표정 셋 중 face_normal만 남김) · l_hand_close · r_hand_close(편 손만) ·
+  l_smokehand_close · r_smokehand_close(연기팔 변형 — 기본 손과 **같은 자리**에 겹쳐 있다. 직접 재서 확인).
+- 🔴 **십수(十手)는 두 벌**이었다: b_weapon = 등에 멘 기본 모습(키를 거의 다 덮는 세로),
+  r_weapon = 오른손에 뽑아 **앞으로** 뻗은 것. r_weapon을 두면 깊이가 **2.25m**(키의 1.25배)로 불어
+  화면에서 유닛이 옆으로 누운 듯 보인다 → **r_weapon만 뺐다**(로/특별함_양재모의 weapon_01과 같은 판단).
+  등에 멘 b_weapon은 그대로 있다 — 렌더에서 어깨 위로 나온 은색 봉이 그것이다.
+
+■ 검증(절차 넷)
+- 배치 리포트: 뼈 21 · **휴머노이드 필수 15뼈 전부 가중치 있음** · 크기 (1.625, 0.730, 1.8)m · 최저 z 0.
+- 재수입: 최상위 오브젝트 "Armature" 하나 · mixamorig:Hips 부모 None ·
+  레스트 다리 수직(양다리 UpLeg/Leg/Foot의 x가 ±0.0955로 사슬 안에서 일정).
+- 뒷면 컬링 렌더(cull_full.png · cull_head.png · cull_side.png) — 비쳐 보이는 면 없음.
+  흰 코트·초록 털깃·담배 두 개비·등의 십수·갈색 부츠 전부 제 색.
+- **clip_spread.py**(공용 Idle 리타겟 후 다섯 프레임, 세계 변화량 방식):
+      최댓값 **0.99** (기준 3.0 이하) → 통과.  대조군 랜덤_한마_바키 0.97 · 랜덤_손오공 0.97.
+
+■ 산출물(스크래치만, Assets 미반영)
+특별함_임장혁.fbx · Textures/(커밋본 5장 그대로 복사) ·
+cull_full.png · cull_head.png · cull_side.png · verify_rest_front.png

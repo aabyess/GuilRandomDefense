@@ -1,24 +1,46 @@
-출처: Sketchfab — Jabra CP9 by Annettlw
-원본 파일명: Jabra CP9 by Annettlw.fbx (source/Jabra CP9.rar 안)
-받은 날: 2026-09-07
+흔함_양재모(원피스 자브라, 바운티러시 pl_jabra_jinj01) — blender 세션 **재출력**(2026-09-23).
+fix_unit_fbx.py UNITS["흔함_양재모"]로 처리. 구현담당2 유니티 전수 실측 반려 건(둘 다 걸린 유일한 유닛).
 
-⚠️ 원피스 캐릭터(자브라, CP9) 모델입니다.
-   어긋납니다. 내부 테스트용 임시 모델로만 쓰고, 배포 전에 교체해야 합니다.
+■ 원본
+커밋된 FBX를 원본 삼았다: Assets/Art/Units/흔함_양재모/흔함_양재모.fbx
+텍스처는 커밋본 Textures/pl_jabra_jinj01_diff.png 한 장 그대로(내용 안 바뀜).
 
-리깅: 있음 (본·스킨 데이터 584건)
-애니메이션: 포함 (커브 14,337건, 클립 약 40종)
-  idle_a · run · combo_a~c · skill_a · skill_b · damage · down · stun 등
+■ 🔴 반려 사유 둘 — 「점으로 보인다」 + 「Idle 리타게팅 실패」
+① 키가 0.024m이라 ArtBinder의 「1,000배 넘게 키워야 하면 잘못 잰 것으로 보고 건너뛴다」 문턱에 걸렸다
+   (필요 배율 1,050배). 그래서 게임에서 점으로만 보였다.
+② 맵 생성에서 「Idle을 입히니 뼈가 사방으로 흩어졌습니다」 29건. 원인은 키가 아니라 **뼈 이름**이다 —
+   world_joint 밑 pl_ 이름 리그라 유니티 아바타가 제대로 안 잡혔다. 2026-09-14에 손본 「pl_ 여섯」에
+   이 유닛이 빠져 있었다.
 
-2026-09-07 사장님 확정: IP 제약 없음(상업적 사용 아님, 친구들과 재미로).
-이 모델을 그대로 써도 된다 — 이전 IP 경고는 철회됐다.
+■ 고친 것
+- 키 **1.8m 규약**으로 정규화(발바닥 z=0 · Hips x·y 원점 · +Z 위 · 앞 −Y).
+- 뼈 이름을 **PL_RENAME**으로 → mixamorig 21뼈. 이게 ②의 고침이다.
+  뺀 뼈: world_joint(루트) · model_root · HELPER_name · HELPER_key · pre_flag · post_flag ·
+         eff_muzzle_a/b/c(이펙트 자리) — 전부 가중치 0인 표식이고 사람 뼈 위쪽에 안 붙는다.
+  나머지 38개는 merge_to_nearest가 가장 가까운 사람 뼈로 합쳤다 —
+  **Head 18**(귀 둘 · 턱 · 수염 c/l/r_beard · 머리카락 c_hair_01~08) · **Hips 8**(꼬리 c_tail_01~05 · 허리띠 obi) ·
+  **Spine1 8**(코트 자락 b/f_l/r_coat) · L/RForeArm 각 1 · L/RToeBase 각 1(발끝 둘째 마디).
+- 겹쳐 들어가 있던 변형 메시를 뺐다: face_attack · face_damage · face_sp01(표정 넷 중 face_normal만) ·
+  l/r_hand_close · l/r_hand_sp_01 · l/r_hand_sp_02(손 넷 중 편 손만). 남은 메시 6개.
+- 꼬리(tail)·머리카락(hair)은 **남겼다** — 캐릭터의 일부다.
 
-── 원본 보관 기록 (2026-09-14, 다운로드 원본 삭제 전) ──
-사장님 결정: 정보만 여기 적고 다운로드 원본은 지운다. 전체 목록 Docs/ART_SOURCES_ARCHIVE.md
-- ~/.Trash/one-piece-bounty-rush-jabra-cp0.zip · 3.0MB · sha256 56f690781384f776
-    source/Jabra CP9.rar (2.3MB)
-      └ Jabra CP9/Jabra CP9 by Annettlw.fbx (8.4MB)
-      └ Jabra CP9/pl_jabra_jinj01_diff.png (0.7MB)
-    textures/pl_jabra_jinj01_diff.png (0.7MB)
-- ~/.Trash/흔함_양재모/ (풀어 둔 폴더 · 3.0MB · 파일 2개)
-    textures/pl_jabra_jinj01_diff.png (0.7MB)
-    source/Jabra CP9.rar (2.3MB)
+■ ⚠️ 보고할 수치 하나 — **깊이가 2.771m(키의 1.54배)**
+꼬리 때문이다. 원본에서 꼬리 메시가 y +0.001~+0.029(몸통은 −0.008~+0.004)로, **제 키보다 긴 꼬리가
+뒤로 곧게** 뻗어 있다. 원본 모델 그대로이고 뼈가 흩어지는 것과는 무관하다(꼬리 뼈는 전부 Hips에 합쳐
+강체로 따라온다). 다만 게임 화면에서 바닥을 넓게 차지한다 — 줄이거나 뺄지는 PM/사장님 판단.
+지금은 **원본 그대로 두었다**.
+
+■ 검증(절차 넷)
+- 배치 리포트: 뼈 21 · **휴머노이드 필수 15뼈 전부 가중치 있음** · 크기 (2.667, 2.771, 1.8)m · 최저 z 0.
+- 재수입: 최상위 오브젝트 "Armature" 하나 · mixamorig:Hips 부모 None ·
+  레스트 다리의 x가 ±0.1601로 사슬 안에서 일정(무릎이 앞으로 나온 **늑대 다리**라 y는 −0.032 → −0.253 → +0.010.
+  원본 그대로이고, 리타겟 뒤에도 안 터진다 — 아래 표).
+- 뒷면 컬링 렌더(cull_full.png · cull_head.png · cull_side.png) — 비쳐 보이는 면 없음.
+  검은 코트·흰 갈기·狼 문신·빨간 띠·늑대 귀와 눈가리개 전부 제 색.
+- **clip_spread.py**(공용 Idle 리타겟 후 다섯 프레임):
+      뼈 퍼짐/높이 0.72~0.74 · 메시/높이 1.50~1.77(꼬리 몫) → 최댓값 **1.77** (기준 3.0 이하) 통과.
+      대조군 랜덤_한마_바키 0.97 · 랜덤_손오공 0.97.
+
+■ 산출물(스크래치만, Assets 미반영)
+흔함_양재모.fbx · Textures/pl_jabra_jinj01_diff.png(커밋본 그대로) ·
+cull_full.png · cull_head.png · cull_side.png · verify_rest_front.png

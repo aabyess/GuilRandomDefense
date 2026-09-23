@@ -1,0 +1,43 @@
+흔함_최상호(나루토, Mixamo 오토리그) — blender 세션 **신규 분리 출력**(2026-09-23).
+fix_unit_fbx.py UNITS["흔함_최상호"]로 처리. 구현담당2 유니티 전수 실측 반려 건.
+
+■ 🔴 이 유닛이 검수에서 통째로 빠져 있었던 이유
+모델이 `Assets/Art/Units/흔함_최상호/`가 아니라 **`Assets/Art/Characters/idle.fbx`**에 있다.
+폴더 이름이 유닛 이름이 아니라 등급 접두어로 훑는 전시판·전수 검수에서 빠졌다.
+→ 앞으로 전수 검수는 폴더 이름이 아니라 `Assets/Data/Units/Roster/*.asset`이 가리키는 모델로 잡을 것.
+
+■ 🔴 원본 파일은 **손대지 않았다** — 공용 Idle 클립의 원본이기 때문
+`Assets/Art/Characters/idle.fbx`는 흔함_최상호의 모델이면서 동시에 **공용 Idle 클립의 원본**이다
+(`Assets/Prefabs/Generated/Character.controller`가 그 안의 클립 `Armature|mixamo.com|Layer0`(1~330프레임)를 쓴다.
+ `Unit_idle.prefab`·`SampleScene.unity`도 이 파일을 참조한다).
+그 파일의 키를 바꾸면 **211종 전부의 자세**가 걸린다. 그래서 원본은 **바이트 그대로 두고**
+모델만 유닛 폴더로 따로 내보냈다(애니메이션 없음, importAnimation 0으로 들어갈 것).
+  → 확인: `git status Assets/Art/Characters/idle.fbx` 변경 없음.
+  → 배선(로스터·프리팹이 새 모델을 보게)은 **PM이 한다.** 클립은 예전 그대로 idle.fbx에서 나온다.
+
+■ 🔴 왜 점으로 보였나
+원본은 Mixamo 리그(mixamorig 65뼈)인데 **아마추어 노드 배율이 0.01**이라 키가 **0.022m**으로 읽힌다.
+ArtBinder가 1,161배를 키워야 해서 「1,000배 넘으면 잘못 잰 것」 안전장치에 걸려 크기 맞추기를 건너뛰었다.
+
+■ 고친 것
+키 **1.8m 규약**으로 정규화(발바닥 z=0 · Hips x·y 원점 · +Z 위 · 앞 −Y) · 방향 스냅 · no_nulls.
+뼈 이름은 이미 mixamorig라 **바꾼 것이 없고, 65뼈를 그대로 뒀다**(손가락 네 줄 포함 — 합칠 이유가 없다).
+메시 5개(rdmobj00~04) · 재질 5개(face·hands·palms·tex01·tex02 .pngmat) 그대로.
+
+■ 텍스처
+원본이 `Assets/Art/Characters/`의 face.png · hands.png · palms.png · tex01.png · tex02.png를 쓴다.
+같은 다섯 장을 유닛 폴더 Textures/로 복사했다(내용 안 바뀜).
+같은 폴더의 59174 · hurt · serious · smiling.png는 이 모델의 재질이 안 문다(표정 교체용으로 보인다) —
+필요하면 PM이 같이 옮기면 된다.
+
+■ 검증(절차 넷)
+- 배치 리포트: 뼈 65 · **휴머노이드 필수 15뼈 전부 가중치 있음** · 크기 (1.694, 0.452, 1.8)m · 최저 z 0.
+- 재수입: 최상위 오브젝트 "Armature" 하나 · mixamorig:Hips 부모 None · 레스트 다리 수직.
+- 뒷면 컬링 렌더(cull_full.png · cull_head.png) — 비쳐 보이는 면 없음.
+  주황 상하의·파란 이마보호대(나뭇잎 문양)·노란 머리·수리검 파우치·파란 샌들 전부 제 색.
+- **clip_spread.py**(공용 Idle 리타겟 후 다섯 프레임): 최댓값 **0.98** (기준 3.0 이하) 통과.
+  대조군 랜덤_한마_바키 0.97 · 랜덤_손오공 0.97.
+  (자기 클립을 자기에게 입힌 셈이라 0.98이 나오는 게 맞다 — 리타게터가 제대로 도는지의 기준점이기도 하다.)
+
+■ 산출물(스크래치만, Assets 미반영)
+흔함_최상호.fbx · Textures/{face,hands,palms,tex01,tex02}.png · cull_full.png · cull_head.png
