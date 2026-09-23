@@ -32,7 +32,30 @@ public class DifficultyManager : MonoBehaviour
         // 다시 Awake될 때) 0(=오프셋 없음)으로 되돌려 선택 전에는 항상 기존과 동작이
         // 같도록 한다.
         EnemyDummy.DifficultyAegrLevelOffset = 0;
+
+        // 🔴 2026-09-24 사장님 「난이도 왜 자꾸 뜨는거야 / 계속 뜨는 버그도 수정해봐」
+        //    원작은 한 판 = 한 번 고르기라 판마다 묻는 게 맞다. 그런데 우리는 시험하느라
+        //    재생을 수십 번 누르고, 그때마다 창이 떠서 매번 같은 걸 눌러야 했다.
+        //    → **지난번에 고른 난이도를 기억해 그대로 시작한다.** 창은 기억이 없을 때만 뜬다.
+        //    바꾸려면 아래 ForgetSavedMode()를 부르면 된다(메뉴 Tools/게임/난이도 다시 묻기).
+        //    ⚠️ 기억은 이 기계 안에서만이다(PlayerPrefs) — 판 상태가 아니라 사람의 편의값이다.
+        if (GameAuthority.IsServer && PlayerPrefs.HasKey(SavedModeKey))
+        {
+            int saved = PlayerPrefs.GetInt(SavedModeKey);
+            if (System.Enum.IsDefined(typeof(DifficultyMode), saved))
+            {
+                ApplyMode((DifficultyMode)saved);
+                Debug.Log($"난이도 기억해서 시작: {current.Value.KoreanName()} " +
+                          "(다시 묻게 하려면 Tools/게임/난이도 다시 묻기)");
+            }
+            else
+            {
+                PlayerPrefs.DeleteKey(SavedModeKey);   // 값이 깨졌으면 버리고 다시 묻는다
+            }
+        }
     }
+
+    public const string SavedModeKey = "GuilRandomDefense.Difficulty";
 
     void OnDestroy()
     {
@@ -48,6 +71,14 @@ public class DifficultyManager : MonoBehaviour
         if (!GameAuthority.IsServer) return;
         if (current.HasValue) return;
 
+        ApplyMode(mode);
+        PlayerPrefs.SetInt(SavedModeKey, (int)mode);
+        PlayerPrefs.Save();
+    }
+
+    // 고른 값을 실제로 거는 부분. SelectMode(사람이 누름)와 Awake(기억해서 시작) 둘 다 쓴다.
+    void ApplyMode(DifficultyMode mode)
+    {
         current = mode;
 
         // Aegr(마법 피해)는 적마다 스폰 시점에 곱하는 게 아니라 전역 레벨 오프셋 하나로
