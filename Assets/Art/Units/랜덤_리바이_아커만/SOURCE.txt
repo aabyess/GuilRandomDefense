@@ -1,0 +1,52 @@
+랜덤_리바이_아커만(진격의 거인 리바이 아커만, 조사병단) — blender 세션(2026-09-23).
+fix_unit_fbx.py UNITS["랜덤_리바이_아커만"]로 처리.
+
+■ 원본
+~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_리바이_아커만.glb (3.2MB)
+뼈 105 · 메시 11(Object_7~25 + Icosphere) · 재질 10 · 이미지 4 · 애니 0 · 스킨 1.
+뼈대는 3ds Biped(Bip001) + 중국 모바일 립(role_liweier_diaocha_skin).
+
+■ 🔴 함정 — Spine이 Pelvis의 **자식이 아니라 형제**였다
+Bip001_102 밑에 Bip001 Pelvis_13과 Bip001 Spine_101이 **나란히** 달려 있다(직접 확인).
+그대로 두면 유니티가 Hips→Spine 사슬을 못 만든다 → reparent_bones로 Spine을 Hips 밑에 다시 붙였다.
+그 위의 GLTF_created_0_rootJoint · role_liweier_diaocha_skin_0 · "root ground_103" · Bip001_102는
+가중치가 없어 뺐다(merge_to_nearest는 「위쪽에 사람 뼈가 있는」 뼈만 처리하므로 Hips보다 위는 먼저 빼야 한다).
+어깨(Clavicle)는 Bip001 Spine2에 붙는다 → Spine2 = UpperChest 그대로 쓴다.
+
+■ 정리 결과
+105 → **22뼈**. merge_to_nearest가 79개를 합쳤다:
+  Head 25(Bone008~011과 그 "(mirrored)" 쌍 · BqBone/BqPoint · Point013/015) ·
+  손 17×2(손가락 30개 + L1/L2) · 아래팔 2×2(ForeTwist) · 넓적다리 1×2(Point006/002) ·
+  **Spine2 9(Point001 밑 Bone001~004와 그 mirrored 쌍 = 망토 뼈)** · Spine 2 · Spine1 1 · Hips 2.
+🔴 PM 지시 「망토는 Spine2 강체(크로커다일 교훈: 팔 몫 주지 말 것)」는 이걸로 충족된다 —
+  뼈를 합치면 그 뼈 하나만 따라가므로 팔 회전이 망토에 안 간다.
+🔴 PM이 말한 "(mirrored)" 보조뼈가 3갈래로 보일 위험도 전부 Head로 합쳐져 사라졌다(얼굴 뼈 겹침 점검 통과).
+
+■ 🔴 무기·장비(PM 지시)
+- **칼 두 자루를 뺐다**: 재질 5_-SwordL/5_-SwordR을 쓰는 **Object_13 · Object_15**
+  (⚠️ 블렌더 glTF 임포터가 붙이는 오브젝트 이름이 glTF 메시 번호와 다르다 — 1차에 Object_3/4로 적었다가
+   「뺄 메시가 없다」로 멈췄다. 직접 확인해 고쳤다.)
+- **입체기동장치(5_-ODM, Object_11)는 유지**(PM 지시 — 무기가 아니라 복장).
+  🔴 「칼집만 남고 칼날이 빠져 어색한지」 확인: **어색하지 않다.** 남은 것은 허리 양옆의 칼날 상자와
+  가스통·벨트 사슬이고, 뺀 것은 손에 들고 있던 칼날 두 자루뿐이다(렌더로 확인, cull_full.png).
+- Icosphere(스케치팹 조명 구)도 뺐다.
+
+■ 재질
+이미지 4장: 0=몸/망토/부츠/손 공용 · 1=ODM · 2=얼굴 · 3=머리카락.
+🔴 눈썹 재질(5_-Brows, Object_9 91정점)은 **텍스처도 기본색도 없다**(직접 확인) — 그냥 두면 흰 눈썹이
+된다 → solid_textures로 (0.02, 0.02, 0.02) 검게 굳혔다.
+
+■ 🔴 크기(PM 크기 표용)
+키 1.8m 기준 **가로 1.563 · 앞뒤 1.009m** — 망토가 뒤로 크게 퍼져 앞뒤가 1m나 된다
+(다른 사람형은 0.3~0.6). 맵에서 자리를 더 먹으니 감안할 것.
+
+■ 검증
+- 배치 리포트: 뼈 22 · **휴머노이드 필수 15뼈 전부 가중치 있음** · 크기 (1.563, 1.009, 1.8)m · 최저 z 0.
+- 재수입: 최상위 오브젝트 "Armature" 하나 · mixamorig:Hips 부모 None ·
+  레스트 다리 거의 수직(x 0.095→0.091→0.088, 4mm 안쪽으로 모임 — 원본 T자 그대로).
+- 공용 idle.fbx 리타겟 **22/22뼈** — 접힘·찢어짐 없음, 망토가 팔을 안 따라감.
+- 뒷면 컬링 렌더 정상(초록 망토·갈색 가죽 하네스·ODM 검은 상자·부츠 전부 제 색).
+
+■ 산출물(스크래치만, Assets 미반영)
+랜덤_리바이_아커만.fbx · Textures/Levi_{Body,ODM,Face,Hair}.png · 5_-Brows…png(단색) ·
+cull_full.png · cull_head.png · verify_rest_front.png · verify_idle_front.png · verify_idle_side.png

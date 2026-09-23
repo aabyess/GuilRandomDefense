@@ -1,0 +1,43 @@
+랜덤_한마_바키(그래플러 바키, 한마 바키) — blender 세션(2026-09-23).
+fix_unit_fbx.py UNITS["랜덤_한마_바키"]로 처리.
+※ 안흔함_엄태웅도 바키지만 **다른 원본**이다(그쪽은 키 18.83m로 깨져 있다 — 09-23 전수 실측 목록 참고).
+
+■ 원본
+~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_한마_바키.glb (2.2MB)
+뼈 81 · 메시 5(Object_87~90 + Icosphere) · 재질 4 · 이미지 2 · 애니 0 · 스킨 1.
+
+■ 🔴 뼈 이름 — MMD 일본식 영문(PM 사전조사대로, **이름에 공백이 들어간다**)
+_rootJoint > Hips_01 > Spine_03 > Chest_04, 그리고 **어깨와 목이 둘 다 Chest_04에 붙는다**(직접 확인).
+척추가 Hips/Spine/Chest 세 마디뿐이라 **Chest_04 = Spine1(Chest)**로 두고 **Spine2(UpperChest)는 안 쓴다**
+— 유니티에서 UpperChest는 선택 항목이다(전설적인_임채민·이이다와 같은 처리).
+MMD의 Upper_body2/3/4는 Chest_04에서 갈라지는 별도 사슬이라 merge_to_nearest가 Spine1로 접었다(3개).
+팔 "Left shoulder_08" > "Left arm_09" > "Left elbow_010" > "Left wrist_011",
+다리 "Left leg_072" > "Left knee_073" > "Left ankle_074" > "Left toe_075"(오른쪽은 027~030·076~079).
+
+■ 정리 결과
+81 → **21뼈**. merge_to_nearest가 59개를 합쳤다: Head 25(Brow·Cheek·Eye·Jaw·Mouth 얼굴 뼈 전부) ·
+LeftHand 15 · RightHand 15(손가락) · Spine1 3(Upper_body2/3/4) · Hips 1(All_parents).
+얼굴 뼈가 전부 Head로 가므로 아틀라스 교훈(3갈래 보조뼈 오매핑)도 자동으로 막힌다 —
+리포트 「얼굴 뼈 겹침 점검」도 위험 없음.
+
+■ 🔴 KHR_materials_unlit — 노바라와 다르다
+extensionsUsed에 KHR_materials_unlit이 있지만 이 원본은 **색이 텍스처에 들어 있다**
+(baseColorTexture 0·1이 있고 baseColorFactor는 아예 없다 — 직접 확인) → emissiveFactor 되찾기가
+필요 없었다. KHR_texture_transform(V 뒤집기)도 없다.
+이미지 두 장을 나눠 쓴다: Hair→이미지0 · Eyes/Body/Clothing→이미지1(셋이 같은 아틀라스).
+
+■ 그 밖에
+- Icosphere(스케치팹 조명 구, 42정점·재질 없음)를 뺐다 — 1차 렌더에서 발밑에 흰 공으로 보였다.
+- 무기 없음(맨몸 격투가, PM 말대로). Clothing은 붉은 트렁크 하나뿐이다.
+- 손가락 30개를 Hand로 합쳤으므로 손은 통짜로 움직인다(게임 유닛엔 충분).
+
+■ 검증
+- 배치 리포트: 뼈 21 · **휴머노이드 필수 15뼈 전부 가중치 있음** · 크기 (1.595, 0.311, 1.8)m · 최저 z 0.
+- 재수입: 최상위 오브젝트 "Armature" 하나 · mixamorig:Hips 부모 None ·
+  레스트 다리 완전 수직(양다리 UpLeg/Leg/Foot의 x·y가 사슬 안에서 일정, x ±0.0925).
+- 공용 idle.fbx 리타겟 **21/21뼈** — 접힘·찢어짐 없음.
+- 뒷면 컬링 렌더 정상(근육 음영·상처 자국·붉은 트렁크·머리카락 다 제 색).
+
+■ 산출물(스크래치만, Assets 미반영)
+랜덤_한마_바키.fbx · Textures/Baki_Hair.png · Baki_Body.png ·
+cull_full.png · cull_head.png · verify_rest_front.png · verify_idle_front.png · verify_idle_side.png

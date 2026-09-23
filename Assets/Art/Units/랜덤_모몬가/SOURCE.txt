@@ -1,0 +1,57 @@
+랜덤_모몬가(오버로드 아인즈 울 고운) — blender 세션(2026-09-23).
+gen_scan_rig.py UNITS["랜덤_모몬가"]로 처리. 🔴 **Generic 리그 + 합성 Idle**(사람형 불가).
+
+■ 원본
+~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_모몬가.glb (2.8MB)
+뼈 0 · 스킨 0 · 애니 0 · 메시 53 · 재질 19 · 이미지 7.
+
+■ 🔴 왜 Generic인가 — **다리 geometry가 아예 없다**
+로브가 바닥까지 닫힌 원뿔이라 다리가 통째로 안 보인다(렌더로 확인). 유니티 휴머노이드 필수 뼈
+LeftUpLeg/Leg/Foot에 실을 정점이 없으므로 빅맘과 같은 처리 — PM이 미리 짚은 경우 그대로였다.
+
+■ 🔴 뺀 것(PM 지시 「바닥 마법진·배경판이 있으면 뺄 것」)
+- Circle.001_0 (재질 Circle_1, 바닥 원판 33정점)
+- Circle.002_0 (재질 Aura, 바닥 마법진 34정점)
+- Cube.010_0 (재질 Aura, 바닥 고리 12정점)
+이 셋이 x·y로 0.26(몸 0.115의 **2.3배**)이라 그대로 두면 키 정규화가 바닥 원판 기준이 된다.
+
+■ 🔴 ball 계열 구슬 — **떠 있는 이펙트가 아니다**(PM이 확인하라 한 것)
+ball · ball_blue/blue_2/blue_3 · ball_orange/orange.001 · ball_green · ball_purple 아홉 재질을
+위치로 전부 재 보니 **몸 안**(x −3.29~−3.24 · z −1.38~−1.31)에 있다 — **지팡이 왕관의 보석 일곱**과
+**어깨의 붉은 구슬**이다. 주위를 도는 구슬은 없다 → 뺄 것도 강체로 묶을 것도 없었다.
+
+■ 🔴 지팡이(아인즈 울 고운의 지팡이) — **살려 뒀다**(PM 판단 필요)
+원작 상징이고, Generic이라 어차피 팔 뼈 하나에 통째로 따라가므로 흔들리다 실루엣이 깨지는 사고가
+없다(Idle 렌더로 확인 — 손에 붙어 같이 움직인다). 빼길 원하면 gold 재질 메시들을 drop_meshes에
+넣으면 된다. 렌더: cull_full.png · verify_idle_mid_side.png.
+
+■ 처리
+- 뼈 다섯: Body(뿌리, 로브) → Chest → Head · Chest 밑에 LeftArm · RightArm.
+- 🔴 조각 53개가 겹쳐 있어 **bone heat가 전체 실패**(가중치 정점 0) → heat_proxy(복셀 0.015m 대리
+  메시)에서 풀고 데이터 전송으로 옮겼다(덴지·에이스·유노 선례).
+- UV가 아예 없는 조각이 있어(Plane.001_0 등 단색 금장식) add_missing_uv로 빈 층을 만들었다(죠고 선례).
+- 재질 19개 중 텍스처가 있는 건 다섯(로브 천 네 장 + Material.005)뿐이고 나머지는 전부 단색이다
+  (gold·bone·gelap·ball 계열 아홉·Material.004 — glTF baseColorFactor, 직접 확인) →
+  keep_solid_materials로 기본색 그대로 뒀다. 이미지 0·1은 뺀 바닥 마법진 전용이라 안 뽑았다.
+- 합성 Idle: 로브 1.0° · 가슴 1.5° · 머리 2.5° · 팔 2.0°(좌우 반대 위상). 서 있는 마법사라 크게 안 움직인다.
+
+■ 🔴 크기(PM 크기 표용)
+키 1.8m로 맞추면 **가로 1.641 · 앞뒤 1.628m** — 로브가 바닥에서 크게 퍼져 거의 정사각형 바닥을
+차지한다(다른 사람형 유닛은 가로 1.3~1.9지만 앞뒤가 0.4~0.6이다). 맵에서 자리를 많이 먹을 것이니
+크기 표에서 감안할 것.
+
+■ PM 등록용(GenericRigUnits)
+- 뼈 5개(내보낸 이름 그대로): mixamorig:Body(뿌리) · mixamorig:Chest · mixamorig:Head ·
+  mixamorig:LeftArm · mixamorig:RightArm. 계층: Body > Chest > (Head · LeftArm · RightArm).
+- Idle 클립 이름: FBX take **"Idle"**(블렌더 재수입 시 "Armature|Idle"), 1~73프레임.
+
+■ 검증
+- 배치 리포트: 뼈 5 · 죽은 뼈 0 · 크기 (1.641, 1.628, 1.8)m · 최저 z 0 · 메시 44,396정점 · 87,845면.
+- 재수입: 최상위 오브젝트 "Armature" 하나 · 뿌리 뼈 mixamorig:Body 부모 None.
+- 내장 Idle 재생 렌더(레스트·중간·3/4, 측면·후면) — 접힘·찢어짐 없음, 지팡이가 손에 붙어 따라감.
+- 뒷면 컬링 렌더 정상(감청 로브·금 지팡이·해골 얼굴·보석 색 전부 제대로).
+
+■ 산출물(스크래치만, Assets 미반영)
+랜덤_모몬가.fbx · Textures/Ainz_{Jubah,Jubah1,Jubah2,Jubah3,Mat005}.png ·
+cull_full.png · cull_head.png · verify_rest_front.png · verify_rest_side.png ·
+verify_idle_mid_side.png · verify_idle_q3_side.png · verify_idle_mid_back.png

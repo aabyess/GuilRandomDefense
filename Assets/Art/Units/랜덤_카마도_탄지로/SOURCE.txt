@@ -1,0 +1,50 @@
+랜덤_카마도_탄지로(귀멸의 칼날 카마도 탄지로) — blender 세션(2026-09-23).
+fix_unit_fbx.py UNITS["랜덤_카마도_탄지로"]로 처리.
+
+■ 원본
+~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_카마도_탄지로.zip → source/Tanjiro.glb (3.4MB)
+뼈 567 · 메시 15 · 재질 12 · 이미지 8 · 애니 0 · 스킨 1.
+
+■ 🔴 뼈 이름 규칙 — 처음 보는 계열(PM 사전조사대로)
+Root > C_Hips_1 > C_Spine_1 > C_Spine_2 > C_Spine_3 > C_Neck_1 > C_Head_1(+C_Head_End).
+**어깨가 C_Spine_3에 붙는다**(직접 확인) → C_Spine_3 = Spine2(UpperChest), C_Spine_1/2 = Spine/Spine1.
+팔 L_Shoulder_1 > L_UpperArm_1 > L_Forearm_1 > L_Hand_1 · 다리 L_Thigh_1 > L_Calf_1 > L_Foot_1 > L_Toe_1.
+
+■ 🔴 나머지 545개를 어떻게 정리했나 — **merge_to_nearest를 새로 만들었다**
+남은 뼈가 얼굴(FaceRoot·FaceUpper·Brow·Eyelid·Cheek·Chin·Ear…)·머리카락(HairA~O)·트위스트
+(*Twist*_Spt)·옷 흔들림(CoatDynamics·CoatSleeve·Skirt·Neckerchief·LegClothFlap)·로케이터(*_Lct)로
+**부위마다 이름 규칙이 달라** 정규식을 수십 개 써야 했다. 계층이 멀쩡하므로 답은 하나뿐이었다 —
+각 뼈를 **자기 위쪽에서 제일 가까운 사람 뼈**에 합친다. fix_unit_fbx.py에 merge_to_nearest를 넣었다
+(merge_bones의 under=는 그 뼈의 자손을 통째로 먹어 어깨·손까지 삼키므로 몸통엔 못 쓴다).
+결과 **567 → 22뼈**, 갈래: Head 272 · Spine2 84 · Hips 36 · 손 27×2 · 위팔 13×2 · 아래팔 11×2 ·
+넓적다리 11×2 · 종아리 8×2 · Spine 6 · Spine1 2 · 발·발끝 1씩.
+얼굴 뼈가 전부 Head로 가므로 PM이 지시한 「얼굴 뼈는 전부 Head 병합」(아틀라스 교훈)도 자동 충족.
+리포트 「얼굴 뼈 겹침 점검」도 Head 자손 0 · 위험 없음.
+
+■ 🔴 무기·상자(PM이 확인하라 한 것)
+- **일륜도 없음**(정면·후면 렌더로 확인). 손에 든 것도 등에 멘 것도 없다.
+- **네즈코 상자도 없음** — Box · BoxRoot_ **뼈**는 있지만 그 자리에 메시가 없다(뼈만 남은 부착점).
+  PM이 상자일까 걱정한 재질 Back은 **하오리 안쪽 등판**(164정점 · x ±0.13 · y 0.03~0.11 · z 0.93~1.35)이다.
+  → 뺄 것도 살릴 것도 없었다. Box 뼈는 merge_to_nearest로 Spine2에 합쳐졌다.
+
+■ 🔴 「Hand·Hair 텍스처가 82바이트짜리 빈 파일」 — **빈 파일이 아니다**
+직접 픽셀을 열어 보니 **4×4 단색 PNG**다: Hair (129,65,73) 짙은 적갈색 · Hand (249,213,175) 살색.
+glb 안 이미지(78바이트)도 같은 4×4다. 크기가 작을 뿐 제 색이 들어 있어 **그대로 쓴다**(렌더에서
+머리카락·손 색 정상 확인). 바깥 textures/와 비교할 필요가 없었다.
+
+■ 그 밖에
+- APK_ToneControl_2Shade(재질 알파 0.068 · 눈 주위 128·86정점 두 조각)는 반투명 음영 오버레이라
+  유니티 OPAQUE 원칙대로 뺐다. Icosphere(조명 구)도 뺐다.
+- 재질 12개 중 Shoes(회색 0.281)·shoes_one(짙은 적색)은 원래 텍스처가 없고 기본색만 있다 — 그대로 둔다.
+- 다리는 원본 T자 자체가 살짝 벌어진 A 스탠스라(발 x ±0.238, 엉덩이 ±0.102) 뼈도 그 각도 그대로다.
+  원본 자세를 존중하는 쪽(fix_unit_fbx)이라 억지로 세우지 않았다 — 유니티 휴머노이드는 이 정도는 받는다.
+
+■ 검증
+- 배치 리포트: 뼈 22 · **휴머노이드 필수 15뼈 전부 가중치 있음** · 크기 (1.857, 0.476, 1.8)m · 최저 z 0.
+- 재수입: 최상위 오브젝트 "Armature" 하나 · mixamorig:Hips 부모 None.
+- 공용 idle.fbx 리타겟 **22/22뼈** — 접힘·찢어짐 없음, 하오리 자락이 자연스럽게 따라감.
+- 뒷면 컬링 렌더 정상(체크무늬 하오리·적갈색 머리·이마 흉터·귀걸이 다 제 색).
+
+■ 산출물(스크래치만, Assets 미반영)
+랜덤_카마도_탄지로.fbx · Textures/Tanjiro_{Earrings,Eye,Face,Hair,Hand,Body,Coat,Back}.png ·
+cull_full.png · cull_head.png · verify_rest_front.png · verify_idle_front.png · verify_idle_side.png

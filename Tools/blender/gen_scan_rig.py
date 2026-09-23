@@ -992,6 +992,85 @@ UNITS = {
         closeups=[("armpit", 1.25, 0.8), ("crotch", 0.55, 0.9)],
         materials={"Body": [("Base Color", "Body.png")], "Face": [("Base Color", "Face.png")],
                    "Hair": [("Base Color", "Hair.png")], "Clothing": [("Base Color", "Clothing.png")]}),
+    # 주술회전 이타도리 유지(시즌3 디자인) → 랜덤_이타도리_유지(2026-09-23 랜덤유닛, blender 세션).
+    # 원본: ~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_이타도리_유지.glb (11.3MB)
+    # 🔴 **뼈·스킨·애니가 전부 0인 정적 Sketchfab 모델**(PM 사전조사대로) → gen_scan_rig.py로 새로 리깅.
+    # 🔴 메시 4개(Object_2~5)는 부위가 아니라 **Sketchfab 65,532정점 한도로 잘린 조각**이다(앞 셋이 정확히 65,532,
+    #   마지막이 2,555 · 넷 다 재질 "Material" 하나 · bbox가 서로 거의 같음, 직접 확인). 배경판·받침은 없다 — 뺄 것이 없었다.
+    # 🔴 폴리곤 수(PM 요청): **삼각형 325,014 · 정점 199,151**. 다른 유닛(1~5만)보다 한 자릿수 많아 **감량한다**(0.12 → 약 3.9만).
+    # 재질 1개·이미지 1장(1.3MB PNG)이라 아틀라스 하나로 전신을 칠하는 구조가 맞다(PM 추정대로 확인).
+    # 자세는 T자가 아니라 **팔을 몸 옆에 내린 A 스탠스**(정규화 단면 실측: 어깨 z 0.79에서 손이 z 0.42까지 몸통 폭 안으로 내려옴,
+    #   다리는 z 0.28 아래에서만 갈리고 그 위는 통 넓은 바지가 붙어 한 덩이) → 관절을 그 자세대로 심고 straighten으로 T자로 편다.
+    #   팔이 몸에 붙어 있으니 유노와 같은 arm_capsule·delete_stretched_faces를 미리 건다.
+    "랜덤_이타도리_유지": dict(
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_이타도리_유지.glb"), mesh_name="Itadori",
+        height=1.8, center_band=(0.0, 0.05), decimate=0.12, rotate_z=0.0,
+        joints=dict(
+            Hips=(0.0103, 0.0124, 0.0365), Spine=(0.0103, 0.0124, 0.1883), Spine1=(0.0103, 0.0124, 0.3401),
+            Spine2=(0.0103, 0.0314, 0.4920), Neck=(0.0103, 0.0314, 0.6059), Head=(0.0103, 0.0314, 0.6818),
+            HeadTop=(0.0103, 0.0314, 0.9475), LeftShoulder=(0.0957, 0.0314, 0.5204), LeftArm=(0.1906, 0.0314, 0.5015),
+            # 팔은 몸통 폭 안으로 내려와 있다 — 1차에 손 관절을 메시 밖(x −0.14 정규화)에 박아 RightHand 가중치가 0으로 멈췄다.
+            # 단면 실측 최대 폭(z 0.45~0.50에서 x −0.119~+0.136)에 맞춰 안쪽으로 당겼다.
+            LeftForeArm=(0.2096, 0.0124, 0.2263), LeftHand=(0.2229, -0.0066, -0.0584), LeftHandTip=(0.2305, -0.0256, -0.1533),
+            RightShoulder=(-0.0751, 0.0314, 0.5204), RightArm=(-0.1700, 0.0314, 0.5015), RightForeArm=(-0.1985, 0.0124, 0.2263),
+            RightHand=(-0.2080, -0.0066, -0.0584), RightHandTip=(-0.2137, -0.0256, -0.1533), LeftUpLeg=(0.1052, 0.0314, -0.0015),
+            LeftLeg=(0.1147, 0.0503, -0.4380), LeftFoot=(0.1925, 0.0693, -0.8746), LeftToeBase=(0.1925, -0.0825, -0.9220),
+            LeftToeTip=(0.1925, -0.1774, -0.9277), RightUpLeg=(-0.0941, 0.0314, -0.0015), RightLeg=(-0.1814, 0.0314, -0.4380),
+            RightFoot=(-0.2402, -0.0066, -0.8746), RightToeBase=(-0.2402, -0.1584, -0.9220), RightToeTip=(-0.2402, -0.2533, -0.9277)),
+        # 🔴 **팔을 T자로 안 편다**(straighten=[]) — 두 판을 나란히 찍어 고른 결과다.
+        #   1차(팔 네 사슬 펴기 + arm_capsule + delete_stretched_faces): 팔이 몸통 폭 **안**으로 내려와 있어 팔 뼈가
+        #   진짜 팔 대신 후드 표면을 쥐었고, 80° 가까이 돌리자 **후드 조각이 좌우로 흩날리고 진짜 팔은 그대로 남았다**(렌더로 확인).
+        #   캡슐 반지름을 줄여도 소매와 후드가 표면째 붙어 있어 못 가른다(보디빌더·나오야와 같은 벽).
+        #   2차(안 폄): 메시가 온전하고 arms45/knees90 시험 자세에서도 안 찢어진다. **A 스탠스로 굳은 레스트**를 택했다 —
+        #   유니티 휴머노이드 아바타는 레스트 자세에서 만들어지고 뼈 이름이 이미 mixamorig라 이름으로 매핑되므로 문제없다.
+        #   나중에 T자가 꼭 필요하면 skin_arm/arm_split 계열로 소매와 후드를 먼저 가르는 작업이 따로 필요하다.
+        straighten=[],
+        closeups=[("armpit", 1.25, 0.8), ("crotch", 0.55, 0.9)],
+        glb_images={0: "Itadori_baseColor.png"},
+        materials={"Material": [("Base Color", "Itadori_baseColor.png")]}),
+    # 오버로드 아인즈 울 고운 → 랜덤_모몬가(2026-09-23 랜덤유닛, blender 세션).
+    # 원본: ~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_모몬가.glb — 뼈·스킨·애니 0의 정적 모델 · 메시 53 · 재질 19 · 이미지 7.
+    # 🔴 **Generic으로 간다** — 발목까지 닫힌 로브라 **다리 geometry가 아예 없다**(렌더로 확인: 로브가 바닥까지 원뿔로 닫힘).
+    #   유니티 휴머노이드 필수 뼈 LeftUpLeg/Leg/Foot에 실을 정점이 없으므로 빅맘과 같은 처리(PM이 미리 짚은 경우).
+    # 🔴 뺀 것(PM 지시 「바닥 마법진·배경판이 있으면」): Circle.001_0(재질 Circle_1, 바닥 원판 33정점) ·
+    #   Circle.002_0(재질 Aura, 바닥 마법진 34정점) · Cube.010_0(재질 Aura, 바닥 고리 12정점).
+    #   이 셋이 x·y로 0.26(몸 0.115의 2.3배)이라 그대로 두면 키 정규화가 바닥 원판 기준이 된다.
+    # 🔴 ball 계열 구슬(ball·ball_blue/orange/green/purple·ball_blue_3)은 **떠 있는 이펙트가 아니라 몸에 붙은 보석**이다
+    #   (직접 측정: 전부 몸 x −3.29~−3.24 · z −1.38~−1.31 안, 지팡이 왕관의 보석 일곱과 어깨의 붉은 구슬).
+    #   PM이 걱정한 「주위를 도는 구슬」은 없다 — 뺄 것도 강체로 묶을 것도 없었다.
+    # 🔴 손에 든 **지팡이(아인즈 울 고운의 지팡이)는 일단 살려 뒀다** — 원작 상징이고 Generic이라 어차피 팔 뼈 하나에
+    #   통째로 따라가므로 흔들리는 사고가 없다. 빼길 원하면 gold 재질 메시들을 drop_meshes에 넣으면 된다(PM 판단).
+    "랜덤_모몬가": dict(
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_모몬가.glb"), mesh_name="Ainz",
+        height=1.8, center_band=(0.0, 0.05), decimate=1.0, rotate_z=0.0,
+        drop_meshes=["Circle.001_0", "Circle.002_0", "Cube.010_0"],
+        add_missing_uv=True,        # UV가 아예 없는 조각이 몇 개 있다(Plane.001_0 등 단색 금장식) — 빈 층을 만들어 join이 UV 층을 어긋내지 않게(죠고 선례)
+        generic_bones=[
+            ("Body", (-3.2675, -0.1123, -1.3990), (-3.2675, -0.1123, -1.3459), None),
+            ("Chest", (-3.2675, -0.1123, -1.3459), (-3.2675, -0.1123, -1.3358), "Body"),
+            ("Head", (-3.2675, -0.1123, -1.3358), (-3.2675, -0.1123, -1.3104), "Chest"),
+            ("LeftArm", (-3.2548, -0.1186, -1.3383), (-3.2295, -0.1275, -1.3585), "Chest"),
+            ("RightArm", (-3.2802, -0.1186, -1.3383), (-3.3055, -0.1275, -1.3585), "Chest")],
+        straighten=[],
+        # 🔴 조각 53개가 겹쳐 있어 bone heat가 전체 실패했다(가중치 정점 0) → 복셀 대리 메시에서 풀고 옮긴다(덴지·에이스·유노 선례).
+        heat_proxy=dict(voxel_m=0.015, keep_largest=True),
+        # 서 있는 마법사의 대기 동작: 로브가 아주 작게 흔들리고 머리가 조금 더, 팔은 살짝.
+        synth_idle=dict(take="Idle", frames=72, step=3, bones={
+            "Body": [((1, 0, 0), 1.0, 0.0)], "Chest": [((1, 0, 0), 1.5, -0.2)],
+            "Head": [((1, 0, 0), 2.5, -0.4)],
+            "LeftArm": [((0, 1, 0), 2.0, -0.3)], "RightArm": [((0, 1, 0), 2.0, 0.3)]}),
+        max_bone_share=0.9,
+        # 재질 19개 중 텍스처가 있는 건 다섯(로브 천 네 장 + Material.005)뿐이고 나머지는 전부 단색이다
+        # (gold·bone·gelap·ball 계열 아홉·Material.004 — glTF baseColorFactor, 직접 확인) → keep_solid_materials로 기본색 그대로 둔다.
+        # 이미지 0·1(Aura·Circle_1)은 위에서 뺀 바닥 마법진 전용이라 안 뽑는다.
+        keep_solid_materials=True,
+        glb_images={2: "Ainz_Jubah2.png", 3: "Ainz_Jubah3.png", 4: "Ainz_Jubah1.png",
+                    5: "Ainz_Jubah.png", 6: "Ainz_Mat005.png"},
+        materials={"Jubah_2": [("Base Color", "Ainz_Jubah2.png")],
+                   "jubah_3": [("Base Color", "Ainz_Jubah3.png")],
+                   "jubah_1": [("Base Color", "Ainz_Jubah1.png")],
+                   "jubah": [("Base Color", "Ainz_Jubah.png")],
+                   "Material.005": [("Base Color", "Ainz_Mat005.png")]}),
 }
 
 # 🗑 폐기(2026-09-15 사장님 지시 — 특별함_강주혁 모델을 아이언맨으로 교체, fix_unit_fbx.py로): 코알라는 AI 메시가 닿은 곳마다 붙어 있어

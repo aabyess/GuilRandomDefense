@@ -2642,6 +2642,216 @@ UNITS = {
                                      dict(pattern=r"^DEF-(crystal|wing|wcloth|wcloth_up|wcloth-bow|tie|tie_master)(?:\.|_\d+$)", into="mixamorig:Spine2"),
                                      dict(pattern=r"^DEF-ocloth(?:\.|_\d+$)", into="mixamorig:Spine1"),
                                      dict(pattern=r"^DEF-(skirt_1|skirt_2|big-bow|big-bow-master|wcloth_end|pelvis)(?:\.|_\d+$)", into="mixamorig:Hips")]),
+    # 귀멸의 칼날 카마도 탄지로 → 랜덤_카마도_탄지로(2026-09-23 랜덤유닛, blender 세션).
+    # 원본: zip 안 source/Tanjiro.glb — 뼈 567 · 메시 15 · 재질 12 · 이미지 8 · 애니 0 · 스킨 1.
+    # 🔴 이름 규칙이 처음 보는 계열(PM 사전조사대로): Root > C_Hips_1 > C_Spine_1/2/3 > C_Neck_1 > C_Head_1.
+    #   **어깨가 C_Spine_3에 붙는다**(직접 확인) → C_Spine_3=Spine2(UpperChest)로 두고 1/2를 Spine/Spine1로.
+    #   팔은 L_Shoulder_1 > L_UpperArm_1 > L_Forearm_1 > L_Hand_1, 다리는 L_Thigh_1 > L_Calf_1 > L_Foot_1 > L_Toe_1.
+    # 🔴 나머지 545개가 얼굴·머리카락·트위스트(*Twist*_Spt)·옷 흔들림(CoatDynamics·CoatSleeve·Skirt·Neckerchief·LegClothFlap)·
+    #   로케이터(*_Lct)다. 이름 규칙이 부위마다 달라 정규식으론 감당이 안 돼 **merge_to_nearest**를 새로 넣었다 —
+    #   계층이 멀쩡하므로 각 뼈를 「자기 위쪽에서 제일 가까운 사람 뼈」에 합친다. 얼굴 뼈가 전부 Head로 가므로
+    #   PM이 지시한 「얼굴 뼈는 전부 Head 병합」(아틀라스 교훈)도 자동으로 충족된다.
+    # 🔴 무기(일륜도) **없음**(정면·후면 렌더로 확인). 등의 상자(네즈코 상자)도 **없음** — Box·BoxRoot_ **뼈**는 있지만
+    #   그 자리에 메시가 없다(재질 Back은 하오리 안쪽 등판 164정점, z 0.93~1.35). 뺄 것도 살릴 것도 없었다.
+    # 🔴 PM이 걱정한 「Hand·Hair 텍스처가 82바이트짜리 빈 파일」 — **빈 파일이 아니라 4×4 단색 PNG**다(직접 픽셀 확인:
+    #   Hair (129,65,73) 짙은 적갈색 · Hand (249,213,175) 살색). glb 안 이미지(78바이트)도 같은 4×4다. 그대로 쓴다.
+    # APK_ToneControl_2Shade(재질 알파 0.068, 눈 주위 128·86정점 두 조각)는 반투명 음영 오버레이 → 유니티 OPAQUE 원칙대로 뺀다.
+    "랜덤_카마도_탄지로": dict(path="Assets/Art/Units/랜덤_카마도_탄지로/랜덤_카마도_탄지로.fbx", kind="human", size=("height", 1.8),
+                        archive=(os.path.expanduser("~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_카마도_탄지로.zip"),
+                                 "source/Tanjiro.glb"),
+                        no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
+                        drop_meshes=["Icosphere", "SK_P0001_V00_C00.008", "SK_P0001_V00_C00.009"],
+                        glb_images={0: "Tanjiro_Earrings.png", 1: "Tanjiro_Eye.png", 2: "Tanjiro_Face.png",
+                                    3: "Tanjiro_Hair.png", 4: "Tanjiro_Hand.png", 5: "Tanjiro_Body.png",
+                                    6: "Tanjiro_Coat.png", 7: "Tanjiro_Back.png"},
+                        materials=dict(textures={
+                            "MI_P0001_V00_C00_0_Earrings": [("DiffuseColor", "Tanjiro_Earrings.png")],
+                            "MI_P0001_V00_C00_0_EyeL": [("DiffuseColor", "Tanjiro_Eye.png")],
+                            "MI_P0001_V00_C00_0_EyeR": [("DiffuseColor", "Tanjiro_Eye.png")],
+                            "MI_P0001_V00_C00_0_Face": [("DiffuseColor", "Tanjiro_Face.png")],
+                            "MI_P0001_V00_C00_0_Hair": [("DiffuseColor", "Tanjiro_Hair.png")],
+                            "MI_P0001_V00_C00_0_Hand": [("DiffuseColor", "Tanjiro_Hand.png")],
+                            "MI_P0001_V00_C00_0_Body": [("DiffuseColor", "Tanjiro_Body.png")],
+                            "MI_P0001_V00_C00_0_Coat": [("DiffuseColor", "Tanjiro_Coat.png")],
+                            "MI_P0001_V00_C00_0_Back": [("DiffuseColor", "Tanjiro_Back.png")]}),
+                        rename_bones={
+                            "C_Hips_1": "mixamorig:Hips", "C_Spine_1": "mixamorig:Spine",
+                            "C_Spine_2": "mixamorig:Spine1", "C_Spine_3": "mixamorig:Spine2",
+                            "C_Neck_1": "mixamorig:Neck", "C_Head_1": "mixamorig:Head",
+                            "L_Shoulder_1": "mixamorig:LeftShoulder", "L_UpperArm_1": "mixamorig:LeftArm",
+                            "L_Forearm_1": "mixamorig:LeftForeArm", "L_Hand_1": "mixamorig:LeftHand",
+                            "R_Shoulder_1": "mixamorig:RightShoulder", "R_UpperArm_1": "mixamorig:RightArm",
+                            "R_Forearm_1": "mixamorig:RightForeArm", "R_Hand_1": "mixamorig:RightHand",
+                            "L_Thigh_1": "mixamorig:LeftUpLeg", "L_Calf_1": "mixamorig:LeftLeg",
+                            "L_Foot_1": "mixamorig:LeftFoot", "L_Toe_1": "mixamorig:LeftToeBase",
+                            "R_Thigh_1": "mixamorig:RightUpLeg", "R_Calf_1": "mixamorig:RightLeg",
+                            "R_Foot_1": "mixamorig:RightFoot", "R_Toe_1": "mixamorig:RightToeBase"},
+                        drop_bones=["Root"],
+                        merge_to_nearest=True),
+    # 그래플러 바키 한마 바키 → 랜덤_한마_바키(2026-09-23 랜덤유닛, blender 세션).
+    #   ※ 안흔함_엄태웅도 바키지만 그건 다른 원본이다(그쪽은 키 18.8m로 깨져 있다 — 09-23 전수 실측 목록 참고).
+    # 원본: ~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_한마_바키.glb — 뼈 81 · 메시 4 · 재질 4 · 이미지 2 · 애니 0.
+    # 🔴 뼈 이름이 MMD 일본식 영문(PM 사전조사대로, **이름에 공백이 들어간다**): _rootJoint > Hips_01 >
+    #   Spine_03 > Chest_04, 그리고 **어깨와 목이 둘 다 Chest_04에 붙는다**(직접 확인).
+    #   척추가 Hips/Spine/Chest 세 마디뿐이라 Chest_04 = **Spine1**(Chest)로 두고 Spine2(UpperChest)는 안 쓴다
+    #   — 유니티에서 UpperChest는 선택 항목이다(전설적인_임채민·이이다와 같은 처리).
+    #   MMD의 Upper_body2/3/4는 Chest_04에서 갈라지는 별도 사슬이라 merge_to_nearest가 Spine1로 접는다.
+    # 🔴 나머지(All_parents·손가락 30개·얼굴 26개)는 merge_to_nearest로 가장 가까운 사람 뼈에 합친다 —
+    #   얼굴 뼈(Brow/Cheek/Eye/Jaw/Mouth)가 전부 Head로 가므로 아틀라스 교훈도 자동 충족.
+    # 🔴 extensionsUsed에 **KHR_materials_unlit**이 있지만 노바라와 달리 색이 **텍스처에 들어 있다**
+    #   (baseColorTexture 0·1, baseColorFactor 없음 — 직접 확인) → emissiveFactor 되찾기가 필요 없다.
+    #   KHR_texture_transform(V 뒤집기)도 없다. 이미지 두 장을 Hair·나머지 셋에 나눠 쓴다(Eyes·Body·Clothing이 같은 1번).
+    # 무기 없음(맨몸 격투가).
+    "랜덤_한마_바키": dict(path="Assets/Art/Units/랜덤_한마_바키/랜덤_한마_바키.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.expanduser("~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_한마_바키.glb"),
+                      no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
+                      drop_meshes=["Icosphere"],          # 스케치팹 조명 구(42정점·재질 없음) — 1차 렌더에서 발밑에 흰 공으로 보였다
+                      glb_images={0: "Baki_Hair.png", 1: "Baki_Body.png"},
+                      materials=dict(textures={"Hair": [("DiffuseColor", "Baki_Hair.png")],
+                                               "Eyes": [("DiffuseColor", "Baki_Body.png")],
+                                               "Body": [("DiffuseColor", "Baki_Body.png")],
+                                               "Clothing": [("DiffuseColor", "Baki_Body.png")]}),
+                      rename_bones={
+                          "Hips_01": "mixamorig:Hips", "Spine_03": "mixamorig:Spine", "Chest_04": "mixamorig:Spine1",
+                          "Neck_045": "mixamorig:Neck", "Head_046": "mixamorig:Head",
+                          "Left shoulder_08": "mixamorig:LeftShoulder", "Left arm_09": "mixamorig:LeftArm",
+                          "Left elbow_010": "mixamorig:LeftForeArm", "Left wrist_011": "mixamorig:LeftHand",
+                          "Right shoulder_027": "mixamorig:RightShoulder", "Right arm_028": "mixamorig:RightArm",
+                          "Right elbow_029": "mixamorig:RightForeArm", "Right wrist_030": "mixamorig:RightHand",
+                          "Left leg_072": "mixamorig:LeftUpLeg", "Left knee_073": "mixamorig:LeftLeg",
+                          "Left ankle_074": "mixamorig:LeftFoot", "Left toe_075": "mixamorig:LeftToeBase",
+                          "Right leg_076": "mixamorig:RightUpLeg", "Right knee_077": "mixamorig:RightLeg",
+                          "Right ankle_078": "mixamorig:RightFoot", "Right toe_079": "mixamorig:RightToeBase"},
+                      drop_bones=["_rootJoint"],
+                      merge_to_nearest=True),
+    # 진격의 거인 리바이 아커만(조사병단) → 랜덤_리바이_아커만(2026-09-23 랜덤유닛, blender 세션).
+    # 원본: ~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_리바이_아커만.glb — 뼈 105 · 메시 10 · 재질 10 · 이미지 4 · 애니 0.
+    # 🔴 뼈대는 3ds Biped(Bip001) + 중국 모바일 립(role_liweier_diaocha_skin). 어깨(Clavicle)가 Bip001 Spine2에 붙는다(직접 확인).
+    # 🔴 **Bip001 Spine이 Pelvis의 자식이 아니라 형제**다(둘 다 Bip001_102의 자식 — 직접 확인) → reparent_bones로 Spine을 Hips 밑에 다시 붙인다.
+    #   그 위의 GLTF_created_0_rootJoint · role_liweier_diaocha_skin_0 · "root ground_103" · Bip001_102는 가중치가 없어 뺀다
+    #   (merge_to_nearest는 「위쪽에 사람 뼈가 있는」 뼈만 처리하므로 Hips보다 위에 있는 이것들은 먼저 빼야 한다).
+    # 🔴 나머지 보조뼈는 merge_to_nearest가 정리한다 — PM이 말한 Bone00x·"(mirrored)"·Point·BqPoint가 전부 여기 걸린다:
+    #   머리 밑 20여 개 → Head · 손가락 30개와 L1/L2·ForeTwist → 손/아래팔 · **망토 뼈(Point001 밑 Bone001~004와 mirrored) → Spine2**
+    #   (PM 지시 「망토는 Spine2 강체」와 같은 결과다 — 뼈를 합치면 그 뼈 하나만 따라가므로 팔 몫이 안 간다. 크로커다일 교훈 충족).
+    # 🔴 무기: 재질 5_-SwordL/5_-SwordR을 쓰는 Object_3·Object_4를 **뺀다**(PM 지시, 무기 선례).
+    #   입체기동장치(5_-ODM, Object_2)는 **유지**(PM 지시 — 무기가 아니라 복장). 칼집만 남는 모양은 렌더로 확인해 보고한다.
+    # 🔴 눈썹 재질(5_-Brows)은 텍스처도 기본색도 없어(직접 확인) 그냥 두면 흰 눈썹이 된다 → solid_textures로 검게 굳힌다.
+    "랜덤_리바이_아커만": dict(path="Assets/Art/Units/랜덤_리바이_아커만/랜덤_리바이_아커만.fbx", kind="human", size=("height", 1.8),
+                        source=os.path.expanduser("~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_리바이_아커만.glb"),
+                        no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
+                        # ⚠️ 블렌더 glTF 임포터가 붙이는 오브젝트 이름은 glTF 메시 번호와 다르다(Object_13·15가 칼) — 직접 확인하고 적었다.
+                        drop_meshes=["Object_13", "Object_15", "Icosphere"],
+                        glb_images={0: "Levi_Body.png", 1: "Levi_ODM.png", 2: "Levi_Face.png", 3: "Levi_Hair.png"},
+                        solid_textures={"5_-Brows_1.0_0_0.002": (0.02, 0.02, 0.02)},
+                        materials=dict(textures={
+                            "5_Cloak_1.0_0_0.001": [("DiffuseColor", "Levi_Body.png")],
+                            "5_-ODM_1.0_0_0.003": [("DiffuseColor", "Levi_ODM.png")],
+                            "5_body_1.0_0_0.013": [("DiffuseColor", "Levi_Body.png")],
+                            "5_boots_1.0_0_0.003": [("DiffuseColor", "Levi_Body.png")],
+                            "5_face_1.0_0_0.012": [("DiffuseColor", "Levi_Face.png")],
+                            "5_hair_1.0_0_0.012": [("DiffuseColor", "Levi_Hair.png")],
+                            "5_hands_1.0_0_0.003": [("DiffuseColor", "Levi_Body.png")]}),
+                        rename_bones={
+                            "Bip001 Pelvis_13": "mixamorig:Hips", "Bip001 Spine_101": "mixamorig:Spine",
+                            "Bip001 Spine1_98": "mixamorig:Spine1", "Bip001 Spine2_96": "mixamorig:Spine2",
+                            "Bip001 Neck_40": "mixamorig:Neck", "Bip001 Head_39": "mixamorig:Head",
+                            "Bip001 L Clavicle_63": "mixamorig:LeftShoulder", "Bip001 L UpperArm_62": "mixamorig:LeftArm",
+                            "Bip001 L Forearm_61": "mixamorig:LeftForeArm", "Bip001 L Hand_58": "mixamorig:LeftHand",
+                            "Bip001 R Clavicle_86": "mixamorig:RightShoulder", "Bip001 R UpperArm_85": "mixamorig:RightArm",
+                            "Bip001 R Forearm_84": "mixamorig:RightForeArm", "Bip001 R Hand_81": "mixamorig:RightHand",
+                            "Bip001 L Thigh_7": "mixamorig:LeftUpLeg", "Bip001 L Calf_5": "mixamorig:LeftLeg",
+                            "Bip001 L Foot_4": "mixamorig:LeftFoot", "Bip001 L Toe0_3": "mixamorig:LeftToeBase",
+                            "Bip001 R Thigh_12": "mixamorig:RightUpLeg", "Bip001 R Calf_10": "mixamorig:RightLeg",
+                            "Bip001 R Foot_9": "mixamorig:RightFoot", "Bip001 R Toe0_8": "mixamorig:RightToeBase"},
+                        drop_bones=["GLTF_created_0_rootJoint", "role_liweier_diaocha_skin_0", "root ground_103", "Bip001_102"],
+                        reparent_bones={"mixamorig:Spine": "mixamorig:Hips"},
+                        merge_to_nearest=True),
+    # 드래곤볼 손오공 → 랜덤_손오공(2026-09-23 랜덤유닛, blender 세션).
+    # 원본: zip 안 source/"孫悟空(2025-09-19).fbx"(파일명에 한자·괄호) + textures/GOKU.png.
+    #   파이썬 zipfile로 푸니 한자 이름도 그대로 열린다(직접 확인 — PM이 걱정한 깨짐 없음).
+    # 🔴 뼈 이름은 일본어가 아니라 **VRM 계열 영문**이었다(PM 추정 정정): root > hips > spine > chest > neck > head,
+    #   어깨 shoulder.L이 chest에 붙고, 팔 upper_arm/lower_arm/hand · 다리 upper_leg/lower_leg/foot/toes.
+    #   일본어는 머리카락(髪後/髪前 각 5쌍)과 허리띠(帯1~3.L/R)뿐이다.
+    #   척추가 hips/spine/chest 세 마디뿐이라 **chest = Spine1(Chest)**로 두고 Spine2(UpperChest)는 안 쓴다(바키와 같은 처리).
+    # 🔴 재질 LINE(면 3,651개)은 툰 외곽선 셸이다 — 그대로 두면 캐릭터가 **통째로 검게** 나온다(1차 렌더로 확인) →
+    #   drop_material_faces로 그 재질 면만 지운다. 남는 재질은 GOKU 하나(면 3,761).
+    # 🔴 애니가 8개(00-IDLE·01-OSSU·02-STANCE …) 들어 있고 기본 자세가 쉬는 자세와 1.38만큼 다르다 →
+    #   PM 지시대로 use_rest_pose로 **결합 자세**를 쓴다.
+    # 꼬리 없음(성인 오공). 무기 없음. 나머지 보조뼈(눈·머리카락·허리띠·손가락 30개)는 merge_to_nearest가 정리한다.
+    "랜덤_손오공": dict(path="Assets/Art/Units/랜덤_손오공/랜덤_손오공.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.expanduser("~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_손오공.zip"),
+                             "source/孫悟空(2025-09-19).fbx"),
+                    archive_rgb={"textures/GOKU.png": "GOKU.png"},
+                    use_rest_pose=True, no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
+                    drop_material_faces=["LINE"],
+                    materials=dict(textures={"GOKU": [("DiffuseColor", "GOKU.png")]}),
+                    rename_bones={
+                        "hips": "mixamorig:Hips", "spine": "mixamorig:Spine", "chest": "mixamorig:Spine1",
+                        "neck": "mixamorig:Neck", "head": "mixamorig:Head",
+                        "shoulder.L": "mixamorig:LeftShoulder", "upper_arm.L": "mixamorig:LeftArm",
+                        "lower_arm.L": "mixamorig:LeftForeArm", "hand.L": "mixamorig:LeftHand",
+                        "shoulder.R": "mixamorig:RightShoulder", "upper_arm.R": "mixamorig:RightArm",
+                        "lower_arm.R": "mixamorig:RightForeArm", "hand.R": "mixamorig:RightHand",
+                        "upper_leg.L": "mixamorig:LeftUpLeg", "lower_leg.L": "mixamorig:LeftLeg",
+                        "foot.L": "mixamorig:LeftFoot", "toes.L": "mixamorig:LeftToeBase",
+                        "upper_leg.R": "mixamorig:RightUpLeg", "lower_leg.R": "mixamorig:RightLeg",
+                        "foot.R": "mixamorig:RightFoot", "toes.R": "mixamorig:RightToeBase"},
+                    drop_bones=["root"],
+                    merge_to_nearest=True),
+    # 나의 히어로 아카데미아 미도리야 이즈쿠(히어로 코스튬) → 랜덤_미도리야_이즈쿠(2026-09-23 랜덤유닛, blender 세션).
+    # 원본: zip 안 source/"Izuku Midoriya (Hero Costume).fbx"(공백·괄호) + textures/t_pl01_001_*.png 5장.
+    #   뼈 186 · 메시 1(SK_pl01_001, 27,303정점) · 재질 17 · 애니 0. 이미 T자(팔이 z 3.07~3.38에서 수평).
+    # 🔴 뼈 이름은 게임 립 계열: root > jointroot > COG > {hip, waist, grab}. **hip과 waist가 형제**다(둘 다 COG의 자식 — 직접 확인,
+    #   리바이와 같은 함정) → hip=Hips로 두고 reparent_bones로 waist(=Spine)를 hip 밑에 붙인다.
+    #   waist > chest > neck > head이고 어깨(L_collar)가 chest에 붙으므로 **chest = Spine1(Chest)**, Spine2는 안 쓴다.
+    #   팔 L_collar > L_arm > L_elbow > L_hand · 다리 hip > L_leg > L_knee > L_ankle > L_toe.
+    #   root·jointroot·COG·grab은 Hips보다 위·옆이라 먼저 뺀다(가중치 없음). 나머지(얼굴 100여·손가락·*_EX 보조·BK_* 물리뼈)는 merge_to_nearest.
+    # 🔴 재질 17개를 **이미지 묶음으로** 갈랐다(이름 짐작 금지 — 이이다 교훈): FBX가 텍스처 경로를 잃고 "Map #24~29"로만 남아 있는데,
+    #   같은 이미지를 쓰는 재질 묶음이 곧 부위다 — #24=몸·후드·팔·손(body_d) · #25=눈·눈그림자(eyea_d) · #26=얼굴(face_d) ·
+    #   #27=머리카락(hair_d) · #28=마스크(mask_d) · #29=armbreak 넷(**대응하는 png가 압축에 아예 없다**).
+    # 🔴 뺀 면 둘:
+    #   ① armbreak A/B 네 재질 — **부서진 팔 변형**이다(LarmbreakB가 x 0.64~2.16으로 정상 팔 0.60~1.44 + 손 1.38~2.15과 같은 자리에 겹침).
+    #      텍스처도 없으니 그대로 두면 정상 팔 위에 흰 껍데기가 겹친다.
+    #   ② hair.001 · hood_hideC.001 — 각각 hair·hood_hideC와 **면 수도 경계도 완전히 같은 복제**(4,438정점 x −0.46~+0.49 z 3.59~4.37 동일).
+    # 무기 없음. 마스크·팔다리 서포트 장비는 코스튬이라 유지(PM 지시).
+    "랜덤_미도리야_이즈쿠": dict(path="Assets/Art/Units/랜덤_미도리야_이즈쿠/랜덤_미도리야_이즈쿠.fbx", kind="human", size=("height", 1.8),
+                          archive=(os.path.expanduser("~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_미도리야_이즈쿠.zip"),
+                                   "source/Izuku Midoriya (Hero Costume).fbx"),
+                          archive_rgb={"textures/t_pl01_001_body_d.png": "Izuku_body.png",
+                                       "textures/t_pl01_001_eyea_d.png": "Izuku_eye.png",
+                                       "textures/t_pl01_001_face_d.png": "Izuku_face.png",
+                                       "textures/t_pl01_001_hair_d.png": "Izuku_hair.png",
+                                       "textures/t_pl01_001_mask_d.png": "Izuku_mask.png"},
+                          no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
+                          drop_material_faces=["MII_Pl01001_LarmbreakA_GPA_ShideB_TM", "MII_Pl01001_LarmbreakB_GPB_ShideB_TM",
+                                               "MII_Pl01001_RarmbreakA_GPA_ShideA_TM", "MII_Pl01001_RarmbreakB_GPC_ShideA_TM",
+                                               "MII_Pl01001_hair.001", "MII_Pl01001_hood_hideC.001"],
+                          materials=dict(textures={
+                              "MII_Pl01001_body_GPA_TM": [("DiffuseColor", "Izuku_body.png")],
+                              "MII_Pl01001_hood_hideC": [("DiffuseColor", "Izuku_body.png")],
+                              "MII_Pl01001_Larm_GPA_hideB_TM": [("DiffuseColor", "Izuku_body.png")],
+                              "MII_Pl01001_Lhand_GPB_hideB_TM": [("DiffuseColor", "Izuku_body.png")],
+                              "MII_Pl01001_Rarm_GPA_hideA_TM": [("DiffuseColor", "Izuku_body.png")],
+                              "MII_Pl01001_Rhand_GPC_hideA_TM": [("DiffuseColor", "Izuku_body.png")],
+                              "MII_Pl01001_eye_GPD": [("DiffuseColor", "Izuku_eye.png")],
+                              "MII_Pl01001_eyeshadow": [("DiffuseColor", "Izuku_eye.png")],
+                              "MII_Pl01001_face_GPA_TM": [("DiffuseColor", "Izuku_face.png")],
+                              "MII_Pl01001_hair": [("DiffuseColor", "Izuku_hair.png")],
+                              "MII_Pl01001_mask": [("DiffuseColor", "Izuku_mask.png")]}),
+                          rename_bones={
+                              "hip": "mixamorig:Hips", "waist": "mixamorig:Spine", "chest": "mixamorig:Spine1",
+                              "neck": "mixamorig:Neck", "head": "mixamorig:Head",
+                              "L_collar": "mixamorig:LeftShoulder", "L_arm": "mixamorig:LeftArm",
+                              "L_elbow": "mixamorig:LeftForeArm", "L_hand": "mixamorig:LeftHand",
+                              "R_collar": "mixamorig:RightShoulder", "R_arm": "mixamorig:RightArm",
+                              "R_elbow": "mixamorig:RightForeArm", "R_hand": "mixamorig:RightHand",
+                              "L_leg": "mixamorig:LeftUpLeg", "L_knee": "mixamorig:LeftLeg",
+                              "L_ankle": "mixamorig:LeftFoot", "L_toe": "mixamorig:LeftToeBase",
+                              "R_leg": "mixamorig:RightUpLeg", "R_knee": "mixamorig:RightLeg",
+                              "R_ankle": "mixamorig:RightFoot", "R_toe": "mixamorig:RightToeBase"},
+                          drop_bones=["grab", "COG", "jointroot", "root"],
+                          reparent_bones={"mixamorig:Spine": "mixamorig:Hips"},
+                          merge_to_nearest=True),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")
@@ -4163,6 +4373,41 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                     c.parent = eb.parent
                 data.edit_bones.remove(eb)
             report.setdefault("합친 뼈", []).append(f"{len(gone)}개 → {mb['into']} · 옮긴 정점 {moved}")
+        if cfg.get("merge_to_nearest"):
+            # 🔸 탄지로(랜덤_카마도_탄지로, 2026-09-23): 뼈 567개 중 사람 뼈가 22개뿐이고 나머지는 전부 얼굴·머리카락·트위스트·옷 흔들림이다.
+            #   이름 규칙이 부위마다 달라 정규식을 수십 개 써야 하는데, 계층이 멀쩡하면 답은 하나뿐이다 — **자기 위쪽에서 제일 가까운 사람 뼈에 합친다**.
+            #   (merge_bones의 under=는 그 뼈의 자손을 통째로 먹어 어깨·손까지 삼키므로 몸통엔 못 쓴다.)
+            keep = {eb.name for eb in data.edit_bones if eb.name.startswith("mixamorig:")}
+            assert keep, f"{name}: merge_to_nearest인데 mixamorig 뼈가 하나도 없다"
+            plan, orphan = {}, []
+            for eb in data.edit_bones:
+                if eb.name in keep:
+                    continue
+                anc = next((a.name for a in eb.parent_recursive if a.name in keep), None)
+                (plan.setdefault(anc, []).append(eb.name) if anc else orphan.append(eb.name))
+            assert not orphan, f"{name}: 위쪽에 사람 뼈가 없는 뼈 {sorted(orphan)[:8]}"
+            total = 0
+            for tgt, gone in plan.items():
+                for m in meshes:
+                    src = {m.vertex_groups[n].index for n in gone if n in m.vertex_groups}
+                    if not src:
+                        continue
+                    tg = m.vertex_groups.get(tgt) or m.vertex_groups.new(name=tgt)
+                    for v in m.data.vertices:
+                        add = sum(ge.weight for ge in v.groups if ge.group in src)
+                        if add > 0:
+                            cur = sum(ge.weight for ge in v.groups if ge.group == tg.index)
+                            tg.add([v.index], cur + add, "REPLACE")
+                    for gi in sorted(src, reverse=True):
+                        m.vertex_groups.remove(m.vertex_groups[gi])
+                for n in gone:
+                    eb = data.edit_bones[n]
+                    for c in list(eb.children):
+                        c.use_connect = False
+                        c.parent = eb.parent
+                    data.edit_bones.remove(eb)
+                total += len(gone)
+            report["가장 가까운 사람 뼈로 합침"] = {"뼈": total, "갈래": {k.split(":")[-1]: len(v) for k, v in sorted(plan.items())}}
         # 🔸 move_weights [{meshes, bones, into}]: 그 메시에서만 bones 가중치를 into 뼈로 옮긴다 — 유기(2026-09-17) 어깨에 걸친 재킷 망토가
         #   위팔(SHOULDER_L/R)에 실려 있어 T자·Idle에서 팔 따라 날개처럼 뜬다 → 망토의 위팔 몫을 같은 쪽 쇄골(Shoulder)로.
         for mw in cfg.get("move_weights", ()):
