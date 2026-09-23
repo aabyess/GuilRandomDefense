@@ -1,0 +1,50 @@
+히든_김영학(나의 히어로 아카데미아 이이다 텐야, 히어로 코스튬) — blender 세션(2026-09-23).
+fix_unit_fbx.py UNITS["히든_김영학"]로 처리.
+
+■ 원본 ⚠️ Collada(.dae) — 새 형식
+~/Desktop/구랜디스킨모음/05_히든/히든_김영학.zip
+ - source/ch04_c00_dammy.zip(zip 안 zip) 안 ch04_c00_dammy.dae + 텍스처 8장 + 21695.png
+   (어느 재질도 안 부름, 안 씀)
+ - textures/ch04_c00_*.png 8장(안쪽과 같은 세트)
+
+■ 🔴 .dae 지원을 새로 넣음
+블렌더 5.x는 Collada 애드온 자체가 빠져 있다(addon_utils로 직접 확인 — io_scene_collada
+모듈이 아예 없음, bpy.ops.wm.collada_import도 없음). 시스템에 있는 assimp CLI로 FBX로
+변환해 읽도록 fix()에 단계를 추가(멤버 파일이 .dae면 자동 변환, 다른 유닛엔 영향 없음).
+⚠️ assimp는 노드 "name"을 버리고 id(VisualSceneNodeN)만 남긴다 — 그래서 이름표는 .dae
+XML(Collada는 평문 XML)에서 직접 읽어 id↔이름을 1:1로 대조해 썼다:
+  뼈: node3=hips · 4~7=leg_L1/L2/foot_L/toe_L · 8~11=오른다리 · 12=spine · 13=chest ·
+      14=neck · 15=head · 16~19=shoulder_L/arm_L1/arm_L2/hand_L · 20~23=m_lhand00~03 ·
+      24~27=오른팔 · 28~31=m_rhand00~03. (node1=bone·node2=center는 변환 과정에서 뼈로
+      안 남고 node1이 아마추어 오브젝트 이름이 됨 — 드롭 불필요, 1차 배치에서 확인)
+  메시: 32=m_lhand00 · 33=m_lhand01 · 34=m_lhand02 · 35=m_rhand01 · 36=m_lhand03 ·
+      37=m_hand · 38=m_rhand00 · 39=m_rhand02 · 40=m_rhand03 · 41=m_hand · 42=m_chest ·
+      43=m_head1 · 44=m_head2 · 45=m_leg_l3 · 46=m_leg1 · 47=m_leg2 · 48/50=m_arm ·
+      49/51=m_tube1 · 52=m_chest.
+
+■ 확인
+- 손 변형(PM 지시 "한쪽에 하나씩 편 손만"): 00번만 남기고(32·38) 01~03 드롭. 남긴 00번을
+  손 확대 렌더로 직접 확인 — 손가락이 벌어진 편 손이 맞음.
+- 37·41은 이름이 둘 다 m_hand인데 37은 hand2_mat, 41은 chest1_mat를 씀(원본 이름·재질
+  불일치, 직접 확인) — 41은 사실상 가슴 부속이고 37은 작은 손 부속(246정점)이라 지우는
+  쪽이 더 위험하다고 판단해 둘 다 남김.
+- 다리 엔진(m_leg_l3·m_tube1×2)·헬멧(m_head2)은 PM 지시대로 신체라 유지. 손에 든 무기 없음.
+- 척추가 spine-chest 둘뿐이라 chest=Spine1로 두고 Spine2는 안 씀(유니티 UpperChest는 선택
+  항목이라 비워도 됨 — pl_ 계열과 같은 처리). 우루루처럼 자리표시를 끼울 필요 없음.
+- 🔴 재질↔텍스처는 .dae의 effect 선언 순서로 직접 확인(덴지 교훈): head1_mat이 head.png가
+  아니라 face.png를, head2_mat이 head.png를 쓴다 — 이름만 보고 짐작했으면 뒤바뀌었을 것.
+  hand1_mat은 드롭한 손 변형 전용이라 남는 메시엔 안 쓰여 표에서 뺐음(1차 배치 assert로
+  확인, 빅맘 Material.023과 같은 처리).
+- m_lhand01~03·m_rhand01~03용 뼈(node21~23·29~31)는 메시를 드롭해 가중치가 0이 됨 →
+  seed_zero_bones 안전판.
+
+■ 검증
+- 배치 리포트: 뼈 29개, 휴머노이드 필수 15뼈 전부 가중치 있음, 크기 (1.653, 0.609, 1.8)m,
+  최저 z 0.
+- 재수입 확인: 최상위 오브젝트 "Armature", Hips 부모 None, 다리 완전 수직(x·y 각 다리 안
+  에서 일정).
+- T자 렌더 · 손 확대 렌더 · Idle 리타겟(정면·측면) — 접힘·찢어짐 없음, 갑주 판·다리 엔진
+  다 자연스럽게 따라감.
+
+■ 산출물(스크래치만, Assets 미반영)
+히든_김영학.fbx · Textures/(8장) · front.png · idle_front.png · idle_side.png

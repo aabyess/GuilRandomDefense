@@ -2459,6 +2459,106 @@ UNITS = {
                                  dict(under="r_hair_01", into="mixamorig:Head", with_root=True),
                                  dict(pattern=r"^[bfs]_[lr]_skirt_01$", into="mixamorig:Hips")],
                     materials=dict(textures={"pl_jack_orig01": [("DiffuseColor", "pl_jack_orig01_diff.png")]})),
+    # 나의 히어로 아카데미아 이이다 텐야(히어로 코스튬) → 히든_김영학(2026-09-23 히든,
+    # blender 세션). ⚠️ 이번 원본은 Collada(.dae) — 블렌더 5.x는 Collada 애드온 자체가
+    # 빠져 있어(addon_utils로 직접 확인: io_scene_collada 모듈 없음) 바로 못 읽는다 →
+    # fix()에 assimp CLI 변환 단계를 새로 추가(멤버가 .dae면 자동으로 FBX로 바꿔 읽음).
+    # 🔴 assimp는 노드 "name"을 버리고 id(VisualSceneNodeN)만 남긴다 — 그래서 아래 표는
+    # .dae XML(Collada는 평문 XML)에서 직접 읽은 id↔이름 대응으로 씀(정확한 1:1 확인):
+    #   뼈 VisualSceneNode1=bone · 2=center(둘 다 hips 위 래퍼, 드롭) · 3=hips · 4~7=leg_L1/
+    #   L2/foot_L/toe_L · 8~11=오른다리 · 12=spine · 13=chest · 14=neck · 15=head ·
+    #   16~19=shoulder_L/arm_L1/arm_L2/hand_L · 20~23=m_lhand00~03 · 24~27=오른팔 ·
+    #   28~31=m_rhand00~03.
+    #   메시 32=m_lhand00 · 33=m_lhand01 · 34=m_lhand02 · 35=m_rhand01 · 36=m_lhand03 ·
+    #   37=m_hand · 38=m_rhand00 · 39=m_rhand02 · 40=m_rhand03 · 41=m_hand · 42=m_chest ·
+    #   43=m_head1 · 44=m_head2 · 45=m_leg_l3 · 46=m_leg1 · 47=m_leg2 · 48=m_arm ·
+    #   49=m_tube1 · 50=m_arm · 51=m_tube1 · 52=m_chest.
+    # 손 변형 정리(PM 지시 "한쪽에 하나씩 편 손만"): 00번만 남기고(32·38) 01~03 드롭
+    #   (33·34·36·35·39·40). 37·41은 이름이 m_hand인데 37은 hand2_mat, 41은 chest1_mat를
+    #   써서(원본 이름·재질 불일치, 직접 확인) 둘 다 남김 — 41은 사실상 가슴 부속이고 37은
+    #   작은 손 부속(246정점)으로 보여 지우는 쪽이 더 위험하다고 판단.
+    # 다리 엔진(m_leg_l3·m_tube1×2)·헬멧(m_head2)은 PM 지시대로 신체라 유지. 무기 없음.
+    # 척추가 spine-chest 둘뿐이라 chest=Spine1로 두고 Spine2는 안 씀(유니티 UpperChest는
+    # 선택 항목이라 비워도 됨 — pl_ 계열과 같은 처리).
+    # 재질↔텍스처는 .dae의 effect 선언 순서로 직접 확인(덴지 교훈): head1_mat이 head.png가
+    # 아니라 face.png를 쓰고 head2_mat이 head.png를 쓴다(이름만 보고 짐작하면 뒤바뀜).
+    "히든_김영학": dict(path="Assets/Art/Units/히든_김영학/히든_김영학.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_김영학.zip"),
+                             "source/ch04_c00_dammy.zip", "ch04_c00_dammy.dae"),
+                    archive_rgb={"ch04_c00_face.png": "ch04_c00_face.png", "ch04_c00_head.png": "ch04_c00_head.png",
+                                 "ch04_c00_chest.png": "ch04_c00_chest.png", "ch04_c00_arm.png": "ch04_c00_arm.png",
+                                 "ch04_c00_hand.png": "ch04_c00_hand.png", "ch04_c00_leg1.png": "ch04_c00_leg1.png",
+                                 "ch04_c00_leg2.png": "ch04_c00_leg2.png", "ch04_c00_shoes.png": "ch04_c00_shoes.png"},
+                    drop_meshes=["VisualSceneNode33", "VisualSceneNode34", "VisualSceneNode36",
+                                 "VisualSceneNode35", "VisualSceneNode39", "VisualSceneNode40"],
+                    # 🔸 bone(node1)·center(node2)는 assimp 변환에서 뼈로 안 남는다(node1은
+                    # 아마추어 오브젝트 이름이 되고 node2는 흡수됨, 1차 배치에서 확인) —
+                    # 드롭할 필요 없이 뼈 목록이 node3=hips부터 시작한다.
+                    rename_bones={
+                        "VisualSceneNode3": "mixamorig:Hips",
+                        "VisualSceneNode4": "mixamorig:LeftUpLeg", "VisualSceneNode5": "mixamorig:LeftLeg",
+                        "VisualSceneNode6": "mixamorig:LeftFoot", "VisualSceneNode7": "mixamorig:LeftToeBase",
+                        "VisualSceneNode8": "mixamorig:RightUpLeg", "VisualSceneNode9": "mixamorig:RightLeg",
+                        "VisualSceneNode10": "mixamorig:RightFoot", "VisualSceneNode11": "mixamorig:RightToeBase",
+                        "VisualSceneNode12": "mixamorig:Spine", "VisualSceneNode13": "mixamorig:Spine1",
+                        "VisualSceneNode14": "mixamorig:Neck", "VisualSceneNode15": "mixamorig:Head",
+                        "VisualSceneNode16": "mixamorig:LeftShoulder", "VisualSceneNode17": "mixamorig:LeftArm",
+                        "VisualSceneNode18": "mixamorig:LeftForeArm", "VisualSceneNode19": "mixamorig:LeftHand",
+                        "VisualSceneNode24": "mixamorig:RightShoulder", "VisualSceneNode25": "mixamorig:RightArm",
+                        "VisualSceneNode26": "mixamorig:RightForeArm", "VisualSceneNode27": "mixamorig:RightHand"},
+                    no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
+                    materials=dict(textures={
+                        # hand1_mat은 드롭한 손 변형 전용이라 남는 메시엔 안 쓰임(1차 배치
+                        # assert로 확인) — 표에서 뺀다(빅맘 Material.023과 같은 처리).
+                        "hand2_mat": [("DiffuseColor", "ch04_c00_hand.png")],
+                        "chest1_mat": [("DiffuseColor", "ch04_c00_chest.png")],
+                        "chest2_mat": [("DiffuseColor", "ch04_c00_chest.png")],
+                        "head1_mat": [("DiffuseColor", "ch04_c00_face.png")],
+                        "head2_mat": [("DiffuseColor", "ch04_c00_head.png")],
+                        "shoes1_mat": [("DiffuseColor", "ch04_c00_shoes.png")],
+                        "leg1_mat": [("DiffuseColor", "ch04_c00_leg1.png")],
+                        "leg2_mat": [("DiffuseColor", "ch04_c00_leg2.png")],
+                        "arm1_mat": [("DiffuseColor", "ch04_c00_arm.png")],
+                        "arm2_mat": [("DiffuseColor", "ch04_c00_arm.png")]})),
+    # 진격의 거인 빌리 타이버(마레 타이버 가문 당주, 연미복) → 영원_조세민(2026-09-23 영원,
+    # blender 세션). 🔴 파일명은 WillyTybur이고 다운로드 페이지 이름은 라이너였으나, 사장님이
+    # **빌리 타이버 그대로 쓰기로 확정**(2026-09-23). 1차 조사 때 렌더로 "라이너가 아니다"를
+    # 확인해 보류했다가 이 확정으로 풀림.
+    # 원본: zip 안 source/WillyTybur.fbx + textures/Head.png·Body.png.
+    # 🔴 뼈대가 블렌더 Rigify **metarig**(spine/spine.001~006·shoulder.L·upper_arm.L·
+    # forearm.L·hand.L·thigh.L·shin.L·foot.L·toe.L 등, 87뼈) — 이 계열은 처음이라 표를 새로
+    # 씀. 어깨가 spine.003에 붙어 있어 spine.003=Spine2(UpperChest)로 두고 위로 004=Neck·
+    # 005=Head로 맞춤(직접 확인한 부모 관계 기준).
+    # face·spine.006(머리 위 끝)·breast·pelvis·heel·손가락(palm/f_index/f_middle/f_ring/
+    # f_pinky/thumb)·*_end는 사람 필수 뼈가 아니라 이름 그대로 두고 타고 가게 함 — 갈래가
+    # 셋으로 갈리는 보조뼈(전주연 rocket_joint 교훈)는 없음(face는 face_end 하나만 달린
+    # 단일 사슬, 직접 확인).
+    # 🔴 재질↔텍스처는 면 z높이로 직접 확인(덴지 교훈): Material_0.003이 면수는 적지만
+    # (4,001) z 0.001~1.762로 **몸통**이고, Material_0.006이 면수가 많지만(17,595) z
+    # 1.657~2.0으로 **머리**다 — 면수로 짐작했으면 정반대로 걸 뻔했음.
+    "영원_조세민": dict(path="Assets/Art/Units/영원_조세민/영원_조세민.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.expanduser("~/Desktop/구랜디스킨모음/10_영원/영원_조세민.zip"),
+                             "source/WillyTybur.fbx"),
+                    archive_rgb={"textures/Body.png": "WillyTybur_Body.png",
+                                 "textures/Head.png": "WillyTybur_Head.png"},
+                    archive_rgb_outer=True,
+                    rename_bones={
+                        "spine": "mixamorig:Hips", "spine.001": "mixamorig:Spine",
+                        "spine.002": "mixamorig:Spine1", "spine.003": "mixamorig:Spine2",
+                        "spine.004": "mixamorig:Neck", "spine.005": "mixamorig:Head",
+                        "shoulder.L": "mixamorig:LeftShoulder", "upper_arm.L": "mixamorig:LeftArm",
+                        "forearm.L": "mixamorig:LeftForeArm", "hand.L": "mixamorig:LeftHand",
+                        "shoulder.R": "mixamorig:RightShoulder", "upper_arm.R": "mixamorig:RightArm",
+                        "forearm.R": "mixamorig:RightForeArm", "hand.R": "mixamorig:RightHand",
+                        "thigh.L": "mixamorig:LeftUpLeg", "shin.L": "mixamorig:LeftLeg",
+                        "foot.L": "mixamorig:LeftFoot", "toe.L": "mixamorig:LeftToeBase",
+                        "thigh.R": "mixamorig:RightUpLeg", "shin.R": "mixamorig:RightLeg",
+                        "foot.R": "mixamorig:RightFoot", "toe.R": "mixamorig:RightToeBase"},
+                    merge_bones=[dict(under="face", into="mixamorig:Head", with_root=True),
+                                 dict(pattern=r"^spine\.006$", into="mixamorig:Head")],
+                    no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
+                    materials=dict(textures={"Material_0.003": [("DiffuseColor", "WillyTybur_Body.png")],
+                                             "Material_0.006": [("DiffuseColor", "WillyTybur_Head.png")]})),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")
@@ -3318,6 +3418,14 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             arc = extract_archive(arc, [inner])[0]
         got = extract_archive(arc, [member] + list(cfg.get("archive_textures", ())))
         src, arc_textures = got[0], got[1:]
+        if src.lower().endswith(".dae"):
+            # 🔴 이이다(2026-09-23): 블렌더 5.x는 Collada 애드온 자체가 빠졌다(io_scene_
+            # collada 없음 — addon_utils로 직접 확인). assimp CLI로 FBX로 바꿔 읽는다.
+            # ⚠️ assimp는 노드 "name"을 버리고 id(VisualSceneNodeN)만 남긴다 — 그래서
+            # rename/drop 표는 .dae XML에서 읽은 id↔이름 대응으로 직접 써야 한다.
+            fbx_src = os.path.splitext(src)[0] + "_assimp.fbx"
+            subprocess.run(["assimp", "export", src, fbx_src], check=True, capture_output=True)
+            src = fbx_src
         if cfg.get("archive_rgb"):                                      # 압축 속 텍스처를 알파 뺀 RGB PNG로 유닛 Textures/에 새 이름으로(재질을 짜기 전에 — 재질 표가 이 파일을 부른다)
             tex_repo = tex_out_dir
             os.makedirs(tex_repo, exist_ok=True)
