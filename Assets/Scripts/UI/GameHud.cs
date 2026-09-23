@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
+using TMPro;
 
 // 화면 하단 상시 HUD (원랜디/워크래프트3 스타일). 좌: 미니맵 자리, 중앙: 선택 유닛 정보, 우: 명령 카드 그리드 자리.
 // 프리팹 루트에 이 스크립트 하나만 붙여두면 Awake에서 전체 uGUI 계층을 스스로 구성한다
@@ -14,8 +15,24 @@ public class GameHud : MonoBehaviour
 {
     // 12칸(공격/정지/모으기 + 조합·상점 9칸) 뒤에 정렬(C) 한 칸을 더 붙여 13칸.
     // 조합·상점 9칸(UnitCommandResultSlotOrder)은 도박소가 정확히 9칸을 쓰므로 하나도 못 줄인다.
-    const int CommandSlotCount = 13;
-    const int CommandColumns = 3;
+    // ── HUD 색·간격 규칙 (2026-09-23, 사장님 "하단이 UI적으로 너무 안 이쁜데") ──
+    // 값이 자리마다 제각각이던 걸 **세 단계**로 통일한다: 판 → 칸 → 버튼 순으로 밝아진다.
+    // 하단 바는 **불투명**이다. 반투명(옛 0.75)이면 나무 바닥·건물이 글자 뒤로 비쳐 안 읽힌다 —
+    // 원작(워크3)도 하단은 비치지 않는 판이다.
+    static readonly Color PanelColor = new Color(0.09f, 0.10f, 0.13f, 1f);   // 하단 바
+    static readonly Color SlotColor = new Color(0.16f, 0.18f, 0.23f, 1f);    // 칸(미니맵·정보·명령)
+    static readonly Color ButtonColor = new Color(0.25f, 0.28f, 0.35f, 1f);  // 버튼
+    static readonly Color BorderColor = new Color(1f, 1f, 1f, 0.22f);        // 칸 테두리
+    // 3D 화면과 하단 바를 가르는 선. 판보다 확실히 밝아야 경계로 읽힌다.
+    static readonly Color BarEdgeColor = new Color(0.62f, 0.70f, 0.88f, 1f);
+    const float BorderThickness = 1.5f;
+    const float BarEdgeThickness = 3f;
+
+    // 명령 격자: **4열**이라 공격·정지·모으기·정렬 넷이 첫 줄에 정확히 들어간다
+    // (예전엔 3열 13칸이라 정렬만 다섯째 줄에 혼자 떨어져 있었다 — 사장님 지적).
+    // 칸은 정사각 38 — 패널 높이(캔버스 기준 약 214)에 4줄(38×4 + 6×3 = 170)이 들어가는 크기다.
+    const int CommandSlotCount = 16;
+    const int CommandColumns = 4;
     const int TeamSlotCount = 4;
     const int MaxSelectionCards = 12;
     const int SelectionCardColumns = 4;   // 유닛 정보 칸이 좁아져 6열은 넘친다 (12칸 = 4열 3행)
@@ -24,19 +41,22 @@ public class GameHud : MonoBehaviour
 
     [SerializeField] SelectionManager selectionManager;
 
-    Text unitInfoText;
-    Text goldWoodText;
-    Text roundTimeText;
-    Text teamPanelText;
-    Text storyText;
-    Text inventoryText;
+    TMP_Text unitInfoText;
+    Image unitInfoPortrait;
+    TMP_Text unitInfoPortraitInitial;
+    GameObject unitInfoPortraitSlotObject;
+    TMP_Text goldWoodText;
+    TMP_Text roundTimeText;
+    TMP_Text teamPanelText;
+    TMP_Text storyText;
+    TMP_Text inventoryText;
     GameObject inventoryPanelObject;
 
     GameObject unitCardsPanel;
     readonly GameObject[] cardRoots = new GameObject[MaxSelectionCards];
     readonly Image[] cardBackgrounds = new Image[MaxSelectionCards];
-    readonly Text[] cardNames = new Text[MaxSelectionCards];
-    readonly Text[] cardOverflowTexts = new Text[MaxSelectionCards];
+    readonly TMP_Text[] cardNames = new TMP_Text[MaxSelectionCards];
+    readonly TMP_Text[] cardOverflowTexts = new TMP_Text[MaxSelectionCards];
     readonly Selectable[] lastCardTargets = new Selectable[MaxSelectionCards];
     int lastCardShownCount = -1;
     int lastOverflow = -1;
@@ -59,7 +79,7 @@ public class GameHud : MonoBehaviour
     // "그 유닛을 선택한 채로 버튼 하나"라(Trig_T_Ability_hero_Conditions), 명령 카드 그리드
     // (조합·상점 전용, 이미 13칸 다 참)와는 별개 자리에 둔다.
     GameObject traitButtonPanel;
-    Text traitButtonText;
+    TMP_Text traitButtonText;
     Button traitButtonComponent;
     UnitTraitData lastTraitButtonTrait;
     bool lastTraitButtonUnlocked;
@@ -80,7 +100,7 @@ public class GameHud : MonoBehaviour
     // (RewardDistributor.startingSpecialUnit과 같은 원칙).
     const int GambleButtonSlotCount = 3;
     readonly GameObject[] gambleButtonPanels = new GameObject[GambleButtonSlotCount];
-    readonly Text[] gambleButtonTexts = new Text[GambleButtonSlotCount];
+    readonly TMP_Text[] gambleButtonTexts = new TMP_Text[GambleButtonSlotCount];
     readonly Button[] gambleButtonComponents = new Button[GambleButtonSlotCount];
     readonly int[] lastGambleButtonWood = new int[GambleButtonSlotCount];
 
@@ -88,7 +108,7 @@ public class GameHud : MonoBehaviour
     // 아래. UnitData.sellRewardWisp/sellRewardTraitPoints 둘 다 비어있지 않을 때만 뜬다
     // (트레잇·고대의배 버튼과 같은 관례 — "보상이 없으면 버튼 자체가 없다").
     GameObject sellButtonPanel;
-    Text sellButtonText;
+    TMP_Text sellButtonText;
     Button sellButtonComponent;
     UnitData lastSellButtonUnit;
 
@@ -98,7 +118,7 @@ public class GameHud : MonoBehaviour
     // 특정 자산에 고정할 수 없다(GamblingShop.TryRollUnit 참고). 05번 열이 0.60~0.95를 이미
     // 다 채워서, 그 바로 아래 빈 자리(0.54~0.59)에 둔다.
     GameObject rerollButtonPanel;
-    Text rerollButtonText;
+    TMP_Text rerollButtonText;
     Button rerollButtonComponent;
     UniqueRerollAbility lastRerollButtonAbility;
 
@@ -130,15 +150,15 @@ public class GameHud : MonoBehaviour
     };
 
     GameObject navigationButtonPanel;
-    Text navigationButtonText;
+    TMP_Text navigationButtonText;
     bool navigationButtonTextInitialized;
     bool lastNavigationHasChosen;
     NavigationChoice lastNavigationChoice = NavigationChoice.None;
 
     GameObject navigationModalPanel;
-    readonly Text[] navigationRowTexts = new Text[5];
+    readonly TMP_Text[] navigationRowTexts = new TMP_Text[5];
     readonly Button[] navigationRowButtons = new Button[5];
-    readonly Text[] navigationRowButtonLabels = new Text[5];
+    readonly TMP_Text[] navigationRowButtonLabels = new TMP_Text[5];
 
     // 조합 카드(레시피) 12칸. 유닛 카드와 같은 패턴 — 미리 만들어두고 내용만 바꾼다.
     const float RecipeRefreshInterval = 0.4f;
@@ -148,7 +168,7 @@ public class GameHud : MonoBehaviour
     // 위치·내용만 바꾼다(두 번째를 만들면 캔버스 리빌드가 늘어난다).
     readonly StringBuilder tooltipBuilder = new StringBuilder(256);
     GameObject combineTooltipObject;
-    Text combineTooltipText;
+    TMP_Text combineTooltipText;
 
     // 호버 중인 칸의 툴팁은 마우스가 그 위에 머무는 동안 주기적으로 다시 그린다 —
     // 도움소 스킬의 "재사용까지 N초"처럼 시간이 지나면 바뀌는 값이 있어서다.
@@ -159,12 +179,16 @@ public class GameHud : MonoBehaviour
     // 유닛 명령 그리드(13칸). 0~2번은 공격/정지/모으기, 12번은 정렬(C) 고정 placeholder라 절대 안 건드림.
     // 나머지 칸(3~11) 중 맨 아랫줄부터 왼쪽→오른쪽, 넘치면 그 윗줄로 이어지는 순서로 "선택한 유닛이
     // 무엇이 되는가"(조합 결과)를 채운다. 한 유닛이 최대 4개 레시피의 첫 재료라 이 정도면 충분하다.
-    static readonly int[] UnitCommandResultSlotOrder = { 9, 10, 11, 6, 7, 8, 3, 4, 5 };
+    // 조합·상점 9칸을 4열 격자의 **아래 줄부터** 채운다. 12칸(4~15) 중 9칸만 쓰므로
+    // 남는 셋(4·5·6)은 둘째 줄 왼쪽에 빈칸으로 남는다 — 빈칸이 위쪽 한 곳에 모여야 격자가
+    // 덜 어수선하다.
+    static readonly int[] UnitCommandResultSlotOrder = { 12, 13, 14, 15, 8, 9, 10, 11, 7 };
 
     readonly GameObject[] unitCommandSlotRoots = new GameObject[CommandSlotCount];
     readonly Image[] unitCommandSlotBackgrounds = new Image[CommandSlotCount];
-    readonly Text[] unitCommandSlotNames = new Text[CommandSlotCount];
+    readonly TMP_Text[] unitCommandSlotNames = new TMP_Text[CommandSlotCount];
     readonly Button[] unitCommandSlotButtons = new Button[CommandSlotCount];
+    readonly TMP_Text[] unitCommandSlotHotkeys = new TMP_Text[CommandSlotCount];
     readonly CombineRecipe[] unitCommandRecipes = new CombineRecipe[CommandSlotCount];
 
     UnitData lastCommandUnitData;
@@ -186,6 +210,7 @@ public class GameHud : MonoBehaviour
     int lastWood = int.MinValue;
     int lastRound = int.MinValue;
     int lastTimeTenths = int.MinValue;
+    bool lastPreparing;
 
     // StoryManager.Instance는 씬에 없을 수도, 나중에 생길 수도 있어 캐시하지 않고 매번 읽는다.
     bool lastStoryVisible;
@@ -208,7 +233,7 @@ public class GameHud : MonoBehaviour
     // 고정 풀 관례와 같다 — 최대 개수만 미리 만들어두고 안 쓰는 칸은 숨긴다).
     GameObject itemInventoryTitleObject;
     readonly GameObject[] itemInventoryRowRoots = new GameObject[MaxItemInventorySlots];
-    readonly Text[] itemInventoryRowTexts = new Text[MaxItemInventorySlots];
+    readonly TMP_Text[] itemInventoryRowTexts = new TMP_Text[MaxItemInventorySlots];
     readonly ItemData[] itemInventoryRowItems = new ItemData[MaxItemInventorySlots];
     readonly Dictionary<ItemData, int> itemInventoryCounts = new Dictionary<ItemData, int>();
     readonly List<ItemData> itemInventoryKeys = new List<ItemData>();
@@ -323,28 +348,65 @@ public class GameHud : MonoBehaviour
         if (GetComponent<GraphicRaycaster>() == null)
             gameObject.AddComponent<GraphicRaycaster>();
 
-        RectTransform bar = CreatePanel(transform, "BottomBar", new Color(0f, 0f, 0f, 0.75f));
+        RectTransform bar = CreatePanel(transform, "BottomBar", PanelColor);
         SetAnchors(bar, new Vector2(0f, 0f), new Vector2(1f, 0.22f));
+
+        // 3D 화면과 갈리는 경계선. 판이 불투명해도 위쪽 경계가 밋밋하면 화면에 얹힌 게 아니라
+        // 잘린 것처럼 보인다 — 밝은 선 한 줄이 "여기부터 UI"를 읽히게 한다.
+        CreateBorderStrip(bar, BarEdgeColor, new Vector2(0f, 1f), new Vector2(1f, 1f),
+                          new Vector2(0f, -BarEdgeThickness), Vector2.zero);
 
         // 원작 배치: [미니맵] [조합 카드] [선택 유닛 정보] [유닛 명령(공격/정지/모으기/스킬)]
         // 미니맵 폭은 0.14 → 0.23으로 넓혔다(사장님 지시 2026-09-07: "미니맵이 가로로 너무 좁다").
         // 남는 폭은 오른쪽 명령 카드 그리드에서 뺐다 — 그쪽은 3열(90px + 간격 6px = 282px)만
         // 필요한데 634px을 쓰고 있어서 절반 이상이 빈 공간이었다.
-        RectTransform minimapPanel = CreatePanel(bar, "MinimapPanel", new Color(1f, 1f, 1f, 0.08f));
+        // 패널 배경 알파를 0.05~0.08로 두면 3D 화면 위에서 사실상 안 보여서, 선택 정보·명령
+        // 버튼이 "배경 없이 떠 있는" 것처럼 보였다(사장님 스크린샷, 2026-09-23). 세 칸 다
+        // BottomBar 자체(검정 0.75)보다는 옅되 눈에 들어오는 값으로 올린다.
+        RectTransform minimapPanel = CreatePanel(bar, "MinimapPanel", SlotColor);
         SetAnchors(minimapPanel, new Vector2(0.01f, 0.05f), new Vector2(0.24f, 0.95f));
         BuildMinimap(minimapPanel);
+        AddPanelBorder(minimapPanel, BorderColor, BorderThickness);
 
-        RectTransform infoPanel = CreatePanel(bar, "UnitInfoPanel", new Color(1f, 1f, 1f, 0.05f));
+        RectTransform infoPanel = CreatePanel(bar, "UnitInfoPanel", SlotColor);
         SetAnchors(infoPanel, new Vector2(0.25f, 0.05f), new Vector2(0.81f, 0.95f));
-        unitInfoText = CreateLabel(infoPanel, "UnitInfoText", "선택된 유닛 없음");
-        unitInfoText.alignment = TextAnchor.UpperLeft;
-        unitInfoText.fontSize = 30;
+
+        RectTransform portraitSlot = CreatePanel(infoPanel, "UnitInfoPortraitSlot", new Color(1f, 1f, 1f, 0.08f));
+        SetAnchors(portraitSlot, new Vector2(0f, 0f), new Vector2(0.22f, 1f));
+        AddPanelBorder(portraitSlot, BorderColor, BorderThickness);
+        unitInfoPortraitSlotObject = portraitSlot.gameObject;
+
+        GameObject portraitObj = new GameObject("Portrait", typeof(RectTransform), typeof(Image));
+        portraitObj.transform.SetParent(portraitSlot, false);
+        RectTransform portraitRect = portraitObj.GetComponent<RectTransform>();
+        portraitRect.anchorMin = new Vector2(0.08f, 0.08f);
+        portraitRect.anchorMax = new Vector2(0.92f, 0.92f);
+        portraitRect.offsetMin = Vector2.zero;
+        portraitRect.offsetMax = Vector2.zero;
+        unitInfoPortrait = portraitObj.GetComponent<Image>();
+        unitInfoPortrait.sprite = null;
+        unitInfoPortrait.color = SlotColor;
+        unitInfoPortrait.raycastTarget = false;
+
+        // 초상화 아트가 아직 없다. 빈 사각형으로 두면 "미완성"으로 보인다는 지적(사장님
+        // 2026-09-23)에 따라, 등급색 바탕 + 유닛 이름 첫 글자로 채워 최소한 "누구인지"가
+        // 읽히게 한다. 프리팹을 RenderTexture로 찍어 진짜 초상을 만드는 안은 PM 검토 중이다.
+        unitInfoPortraitInitial = CreateLabel(portraitObj.transform, "Initial", "");
+        unitInfoPortraitInitial.fontSize = 44;
+        unitInfoPortraitInitial.fontStyle = FontStyles.Bold;
+        unitInfoPortraitInitial.raycastTarget = false;
+
+        RectTransform infoTextSlot = CreatePanel(infoPanel, "UnitInfoTextSlot", Color.clear);
+        SetAnchors(infoTextSlot, new Vector2(0.24f, 0f), new Vector2(1f, 1f));
+        unitInfoText = CreateLabel(infoTextSlot, "UnitInfoText", "선택된 유닛 없음");
+        unitInfoText.alignment = TextAlignmentOptions.TopLeft;
+        unitInfoText.fontSize = 26;
         unitInfoText.lineSpacing = 1.15f;
-        unitInfoText.horizontalOverflow = HorizontalWrapMode.Wrap;
+        unitInfoText.textWrappingMode = TextWrappingModes.Normal;
 
         BuildSelectionCards(infoPanel);
 
-        RectTransform commandPanel = CreatePanel(bar, "UnitCommandPanel", new Color(1f, 1f, 1f, 0.05f));
+        RectTransform commandPanel = CreatePanel(bar, "UnitCommandPanel", SlotColor);
         // 0.33 → 0.17. 3열 그리드에 필요한 최소 폭은 282px(90×3 + 6×2)이고
         // 0.17 × 1920 = 326px이라 여유가 남는다. 열을 늘리면 이 값을 다시 봐야 한다.
         SetAnchors(commandPanel, new Vector2(0.82f, 0.05f), new Vector2(0.99f, 0.95f));
@@ -375,11 +437,11 @@ public class GameHud : MonoBehaviour
         inventoryPanelObject = panel.gameObject;
 
         inventoryText = CreateLabel(panel, "InventoryText", "");
-        inventoryText.alignment = TextAnchor.UpperLeft;
+        inventoryText.alignment = TextAlignmentOptions.TopLeft;
         inventoryText.fontSize = 18;
         inventoryText.lineSpacing = 1.1f;
-        inventoryText.horizontalOverflow = HorizontalWrapMode.Wrap;
-        inventoryText.verticalOverflow = VerticalWrapMode.Overflow;
+        inventoryText.textWrappingMode = TextWrappingModes.Normal;
+        inventoryText.overflowMode = TextOverflowModes.Overflow;
     }
 
     // 상단 바가 이미 골드·목재·라운드·타이머로 차 있어 그 아래 별도 줄로 뺀다.
@@ -390,7 +452,7 @@ public class GameHud : MonoBehaviour
         SetAnchors(storyPanel, new Vector2(0.01f, 0.90f), new Vector2(0.5f, 0.95f));
 
         storyText = CreateLabel(storyPanel, "StoryText", "");
-        storyText.alignment = TextAnchor.MiddleLeft;
+        storyText.alignment = TextAlignmentOptions.Left;
         storyText.fontSize = 20;
         storyText.gameObject.SetActive(false);
     }
@@ -403,7 +465,7 @@ public class GameHud : MonoBehaviour
         RectTransform resourcePanel = CreatePanel(topBar, "ResourcePanel", Color.clear);
         SetAnchors(resourcePanel, new Vector2(0.01f, 0f), new Vector2(0.35f, 1f));
         goldWoodText = CreateLabel(resourcePanel, "ResourceText", "골드 -   목재 -");
-        goldWoodText.alignment = TextAnchor.MiddleLeft;
+        goldWoodText.alignment = TextAlignmentOptions.Left;
         goldWoodText.fontSize = 22;
 
         RectTransform roundPanel = CreatePanel(topBar, "RoundPanel", Color.clear);
@@ -435,7 +497,7 @@ public class GameHud : MonoBehaviour
         obj.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.15f);
         obj.GetComponent<LayoutElement>().preferredWidth = 90f;
 
-        Text text = CreateLabel(obj.transform, name + "Label", label);
+        TMP_Text text = CreateLabel(obj.transform, name + "Label", label);
         text.fontSize = 18;
     }
 
@@ -552,7 +614,7 @@ public class GameHud : MonoBehaviour
             Button button = panel.gameObject.AddComponent<Button>();
             button.onClick.AddListener(() => OnGambleButtonClicked(index));
 
-            Text label = CreateLabel(panel, $"GambleButtonText{i}", "");
+            TMP_Text label = CreateLabel(panel, $"GambleButtonText{i}", "");
             label.fontSize = 16;
             label.raycastTarget = false;
 
@@ -913,7 +975,7 @@ public class GameHud : MonoBehaviour
         SetAnchors(title, new Vector2(0.71f, 0.65f), new Vector2(0.99f, 0.70f));
         itemInventoryTitleObject = title.gameObject;
 
-        Text titleText = CreateLabel(title, "ItemInventoryTitleText", "보유 아이템");
+        TMP_Text titleText = CreateLabel(title, "ItemInventoryTitleText", "보유 아이템");
         titleText.fontSize = 18;
         titleText.raycastTarget = false;
 
@@ -926,9 +988,9 @@ public class GameHud : MonoBehaviour
             SetAnchors(row, new Vector2(0.71f, bottom), new Vector2(0.99f, top));
             itemInventoryRowRoots[i] = row.gameObject;
 
-            Text label = CreateLabel(row, $"ItemInventoryRowText{i}", "");
+            TMP_Text label = CreateLabel(row, $"ItemInventoryRowText{i}", "");
             label.fontSize = 16;
-            label.alignment = TextAnchor.MiddleLeft;
+            label.alignment = TextAlignmentOptions.Left;
             label.raycastTarget = false;
             itemInventoryRowTexts[i] = label;
 
@@ -1102,14 +1164,14 @@ public class GameHud : MonoBehaviour
         SetAnchors(modal, new Vector2(0.20f, 0.12f), new Vector2(0.80f, 0.88f));
 
         RectTransform titleHolder = NewHolder(modal, "NavigationModalTitleHolder", new Vector2(0f, 0.90f), new Vector2(1f, 1f));
-        Text title = CreateLabel(titleHolder, "NavigationModalTitle",
+        TMP_Text title = CreateLabel(titleHolder, "NavigationModalTitle",
             "항법(진행 루트) 선택 — 플레이어당 평생 1회, 되돌릴 수 없습니다");
         title.fontSize = 20;
         title.color = new Color(1f, 0.55f, 0.35f);
         title.raycastTarget = false;
 
         RectTransform subtitleHolder = NewHolder(modal, "NavigationModalSubtitleHolder", new Vector2(0f, 0.84f), new Vector2(1f, 0.90f));
-        Text subtitle = CreateLabel(subtitleHolder, "NavigationModalSubtitle",
+        TMP_Text subtitle = CreateLabel(subtitleHolder, "NavigationModalSubtitle",
             "선택하지 않아도 진행할 수 있습니다 — 다섯 효과 모두 비활성 상태로 유지됩니다.");
         subtitle.fontSize = 15;
         subtitle.raycastTarget = false;
@@ -1123,10 +1185,10 @@ public class GameHud : MonoBehaviour
             SetAnchors(rowPanel, new Vector2(0.02f, bottom), new Vector2(0.98f, top));
 
             RectTransform textHolder = NewHolder(rowPanel, "Text", new Vector2(0f, 0f), new Vector2(0.72f, 1f));
-            Text label = CreateLabel(textHolder, "Label", "");
-            label.alignment = TextAnchor.MiddleLeft;
+            TMP_Text label = CreateLabel(textHolder, "Label", "");
+            label.alignment = TextAlignmentOptions.Left;
             label.fontSize = 15;
-            label.horizontalOverflow = HorizontalWrapMode.Wrap;
+            label.textWrappingMode = TextWrappingModes.Normal;
             label.raycastTarget = false;
 
             RectTransform buttonHolder = CreatePanel(rowPanel, "SelectButton", new Color(1f, 1f, 1f, 0.25f));
@@ -1134,7 +1196,7 @@ public class GameHud : MonoBehaviour
             Button rowButton = buttonHolder.gameObject.AddComponent<Button>();
             int capturedIndex = i;
             rowButton.onClick.AddListener(() => OnNavigationOptionClicked(capturedIndex));
-            Text buttonLabel = CreateLabel(buttonHolder, "SelectButtonLabel", "선택");
+            TMP_Text buttonLabel = CreateLabel(buttonHolder, "SelectButtonLabel", "선택");
             buttonLabel.fontSize = 16;
             buttonLabel.raycastTarget = false;
 
@@ -1147,7 +1209,7 @@ public class GameHud : MonoBehaviour
         SetAnchors(closeHolder, new Vector2(0.40f, 0.005f), new Vector2(0.60f, 0.055f));
         Button closeButton = closeHolder.gameObject.AddComponent<Button>();
         closeButton.onClick.AddListener(OnNavigationCloseClicked);
-        Text closeLabel = CreateLabel(closeHolder, "NavigationModalCloseLabel", "닫기");
+        TMP_Text closeLabel = CreateLabel(closeHolder, "NavigationModalCloseLabel", "닫기");
         closeLabel.fontSize = 16;
         closeLabel.raycastTarget = false;
 
@@ -1385,20 +1447,25 @@ public class GameHud : MonoBehaviour
 
     // CombineSystem.ResultSampleRadius와 같은 값·같은 이유 — 자리가 NavMesh 경계에 살짝
     // 걸쳐 있어도 실제로 밟을 수 있는 땅 근처로 붙인다.
-    const float TransformSampleRadius = 4f;
+    // 맵이 WorldScale.Value배가 됐으므로 이 표본 반경도 같이 커진다(2026-09-23) —
+    // 세계 좌표 거리라 유닛 크기가 아니라 맵 배율을 따라간다.
+    const float TransformSampleRadius = 4f * WorldScale.Value;
 
     void BuildTeamPanel()
     {
-        // 화면 좌측 위·우측 위는 DebugHud(OnGUI)가 쓰고 있어, 상단 바 바로 아래에서 시작한다.
+        // 원작 멀티보드다 — 원작에 있는 정보라 끄지 않는다([[follow-original-everywhere]]).
+        // 다만 내용은 4줄인데 상자가 화면 높이의 25%(0.70~0.95)를 먹어서 아래 「보유 아이템」과
+        // 겹쳤다(사장님 화면 2026-09-23). **끄지 말고 내용 높이에 맞춘다**(PM 지시) —
+        // 아래변을 0.70 → 0.86으로 올려 4줄 분량(화면 높이 9%)만 쓴다.
         RectTransform teamPanel = CreatePanel(transform, "TeamPanel", new Color(0f, 0f, 0f, 0.6f));
-        SetAnchors(teamPanel, new Vector2(0.71f, 0.70f), new Vector2(0.99f, 0.95f));
+        SetAnchors(teamPanel, new Vector2(0.71f, 0.86f), new Vector2(0.99f, 0.95f));
 
         teamPanelText = CreateLabel(teamPanel, "TeamPanelText", "");
-        teamPanelText.alignment = TextAnchor.UpperLeft;
+        teamPanelText.alignment = TextAlignmentOptions.TopLeft;
         teamPanelText.fontSize = 20;
         teamPanelText.lineSpacing = 1.1f;
-        teamPanelText.horizontalOverflow = HorizontalWrapMode.Overflow;
-        teamPanelText.verticalOverflow = VerticalWrapMode.Overflow;
+        teamPanelText.textWrappingMode = TextWrappingModes.NoWrap;
+        teamPanelText.overflowMode = TextOverflowModes.Overflow;
     }
 
     static void BuildMinimap(RectTransform parent)
@@ -1501,20 +1568,20 @@ public class GameHud : MonoBehaviour
         portrait.color = new Color(1f, 1f, 1f, 0.3f);
         portrait.raycastTarget = false;
 
-        Text nameText = CreateLabel(card.transform, "Name", "");
+        TMP_Text nameText = CreateLabel(card.transform, "Name", "");
         nameText.raycastTarget = false;
         nameText.fontSize = 11;
-        nameText.alignment = TextAnchor.UpperCenter;
+        nameText.alignment = TextAlignmentOptions.Top;
         RectTransform nameRect = nameText.rectTransform;
         nameRect.anchorMin = new Vector2(0f, 0f);
         nameRect.anchorMax = new Vector2(1f, 0.35f);
         nameRect.offsetMin = Vector2.zero;
         nameRect.offsetMax = Vector2.zero;
 
-        Text overflowText = CreateLabel(card.transform, "Overflow", "");
+        TMP_Text overflowText = CreateLabel(card.transform, "Overflow", "");
         overflowText.raycastTarget = false;
         overflowText.fontSize = 14;
-        overflowText.fontStyle = FontStyle.Bold;
+        overflowText.fontStyle = FontStyles.Bold;
         overflowText.color = Color.white;
         RectTransform overflowRect = overflowText.rectTransform;
         overflowRect.anchorMin = new Vector2(0.55f, 0.7f);
@@ -1733,8 +1800,8 @@ public class GameHud : MonoBehaviour
         combineTooltipText = CreateLabel(tooltipObj.transform, "TooltipText", "");
         combineTooltipText.raycastTarget = false;
         combineTooltipText.fontSize = 16;
-        combineTooltipText.alignment = TextAnchor.UpperLeft;
-        combineTooltipText.horizontalOverflow = HorizontalWrapMode.Wrap;
+        combineTooltipText.alignment = TextAlignmentOptions.TopLeft;
+        combineTooltipText.textWrappingMode = TextWrappingModes.Normal;
 
         combineTooltipObject = tooltipObj;
         combineTooltipObject.SetActive(false);
@@ -1742,15 +1809,18 @@ public class GameHud : MonoBehaviour
 
     // 유닛 명령 자리(공격/정지/모으기/정렬 + 맨 아랫줄은 조합 결과). 0~2번·12번은 고정
     // placeholder로 인터랙션을 꺼둔다(정지/모으기/정렬만 켜짐). 나머지는 RefreshUnitCommandCards가 채운다.
-    static readonly Color UnitCommandDefaultColor = new Color(1f, 1f, 1f, 0.12f);
+    // 알파 0.12는 UnitCommandPanel 배경(검정 0.35) 위에서 거의 안 보여 "버튼이 떠 있다"는
+    // 인상을 줬다(2026-09-23 사장님 지적) — 패널보다 밝게 올려 칸 경계가 보이게 한다.
+    static readonly Color UnitCommandDefaultColor = ButtonColor;
 
     void BuildUnitCommandGrid(RectTransform parent)
     {
         GridLayoutGroup grid = parent.gameObject.AddComponent<GridLayoutGroup>();
         // 4행(50) 높이 그대로 5행에 나눠 담느라 칸 높이를 줄인다: (50*4 + 6*3) / 5 - 6 = 38.8.
         // 패널 크기는 그대로 두면서 정렬(C) 칸 하나를 더 넣기 위한 계산이라 임의로 줄인 값이 아니다.
-        grid.cellSize = new Vector2(90f, 38.8f);
+        grid.cellSize = new Vector2(38f, 38f);   // 정사각 — 워크3식 명령 버튼
         grid.spacing = new Vector2(6f, 6f);
+        grid.padding = new RectOffset(6, 6, 6, 6);
         grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         grid.constraintCount = CommandColumns;
         grid.childAlignment = TextAnchor.MiddleCenter;
@@ -1762,12 +1832,14 @@ public class GameHud : MonoBehaviour
             if (i < UnitOnlyCommandLabels.Length)
             {
                 unitCommandSlotNames[i].text = UnitOnlyCommandLabels[i];
+                unitCommandSlotHotkeys[i].text = UnitOnlyCommandHotkeys[i];
                 // 정지·모으기는 동작이 붙었다. 공격은 아직 없어서 눌리지 않게 둔다.
                 unitCommandSlotButtons[i].interactable = i == HoldCommandSlot || i == GatherCommandSlot;
             }
             else if (i == AlignCommandSlot)
             {
                 unitCommandSlotNames[i].text = AlignCommandLabel;
+                unitCommandSlotHotkeys[i].text = AlignCommandHotkey;
                 unitCommandSlotButtons[i].interactable = true;
             }
             else
@@ -1784,12 +1856,14 @@ public class GameHud : MonoBehaviour
         for (int i = 0; i < UnitOnlyCommandLabels.Length; i++)
         {
             unitCommandSlotNames[i].text = visible ? UnitOnlyCommandLabels[i] : "";
+            unitCommandSlotHotkeys[i].text = visible ? UnitOnlyCommandHotkeys[i] : "";
             unitCommandSlotBackgrounds[i].color = visible ? UnitCommandDefaultColor : Color.clear;
             unitCommandSlotButtons[i].interactable =
                 visible && (i == HoldCommandSlot || i == GatherCommandSlot);
         }
 
         unitCommandSlotNames[AlignCommandSlot].text = visible ? AlignCommandLabel : "";
+        unitCommandSlotHotkeys[AlignCommandSlot].text = visible ? AlignCommandHotkey : "";
         unitCommandSlotBackgrounds[AlignCommandSlot].color = visible ? UnitCommandDefaultColor : Color.clear;
         unitCommandSlotButtons[AlignCommandSlot].interactable = visible;
     }
@@ -1811,10 +1885,34 @@ public class GameHud : MonoBehaviour
         AddTriggerEntry(trigger, EventTriggerType.PointerEnter, _ => OnUnitCommandSlotHoverEnter(capturedIndex));
         AddTriggerEntry(trigger, EventTriggerType.PointerExit, _ => OnCombineCardHoverExit());
 
-        Text nameText = CreateLabel(card.transform, "Name", "");
+        AddPanelBorder((RectTransform)card.transform, BorderColor, BorderThickness);
+
+        TMP_Text nameText = CreateLabel(card.transform, "Name", "");
         nameText.raycastTarget = false;
-        nameText.fontSize = 12;
-        nameText.horizontalOverflow = HorizontalWrapMode.Wrap;
+        // 🔴 접으면 안 된다 — 38짜리 정사각 버튼에서 "공/격" "모/으/기"처럼 세로로 쪼개진다
+        //    (사장님 화면 2026-09-23). 칸에 안 들어가면 **접지 말고 글씨를 줄인다.**
+        nameText.textWrappingMode = TextWrappingModes.NoWrap;
+        nameText.enableAutoSizing = true;
+        nameText.fontSizeMin = 8f;
+        nameText.fontSizeMax = 13f;
+        // 아래 30%는 단축키 라벨 자리라 이름이 거기까지 내려오지 않게 비운다.
+        nameText.rectTransform.anchorMin = new Vector2(0f, 0.3f);
+        nameText.rectTransform.anchorMax = Vector2.one;
+        nameText.rectTransform.offsetMin = new Vector2(2f, 0f);
+        nameText.rectTransform.offsetMax = new Vector2(-2f, -2f);
+
+        // 단축키는 오른쪽 아래 구석에 작게. 이름과 겹치지 않게 아래 30%만 쓴다.
+        TMP_Text hotkeyText = CreateLabel(card.transform, "Hotkey", "");
+        hotkeyText.raycastTarget = false;
+        hotkeyText.fontSize = 9;
+        hotkeyText.alignment = TextAlignmentOptions.BottomRight;
+        hotkeyText.color = new Color(1f, 1f, 1f, 0.7f);
+        hotkeyText.textWrappingMode = TextWrappingModes.NoWrap;
+        hotkeyText.rectTransform.anchorMin = Vector2.zero;
+        hotkeyText.rectTransform.anchorMax = new Vector2(1f, 0.3f);
+        hotkeyText.rectTransform.offsetMin = new Vector2(2f, 2f);
+        hotkeyText.rectTransform.offsetMax = new Vector2(-3f, 0f);
+        unitCommandSlotHotkeys[index] = hotkeyText;
 
         unitCommandSlotRoots[index] = card;
         unitCommandSlotBackgrounds[index] = background;
@@ -1823,15 +1921,19 @@ public class GameHud : MonoBehaviour
     }
 
     // 0 공격은 아직 없다. 1 정지 = 홀드(H), 2 모으기 = 같은 이름 불러모으기(V).
-    static readonly string[] UnitOnlyCommandLabels = { "공격", "정지 (H)", "모으기 (V)" };
+    // 이름과 단축키를 나눠 둔다 — 단축키는 버튼 오른쪽 아래 구석에 작게 따로 그린다
+    // (한 줄에 "정지 (H)"로 붙여 쓰면 38짜리 정사각 버튼에서 두 줄로 접혀 뭉개진다).
+    static readonly string[] UnitOnlyCommandLabels = { "공격", "정지", "모으기" };
+    static readonly string[] UnitOnlyCommandHotkeys = { "", "H", "V" };
 
     const int HoldCommandSlot = 1;
     const int GatherCommandSlot = 2;
 
     // 조합·상점 9칸(3~11) 뒤에 새로 붙은 13번째 칸(인덱스 12) — 정렬(C).
-    // 0~2번처럼 앞자리에 끼워 넣으면 UnitCommandResultSlotOrder가 이미 3~11을 전부 쓰고 있어 겹친다.
-    const int AlignCommandSlot = 12;
-    const string AlignCommandLabel = "정렬 (C)";
+    // 4열 격자의 첫 줄 네 번째 자리다. 조합·상점은 4~15를 쓰므로 안 겹친다.
+    const int AlignCommandSlot = 3;
+    const string AlignCommandLabel = "정렬";
+    const string AlignCommandHotkey = "C";
 
     void OnUnitCommandSlotClicked(int index)
     {
@@ -2251,10 +2353,12 @@ public class GameHud : MonoBehaviour
     {
         unitCardsPanel.SetActive(false);
         unitInfoText.gameObject.SetActive(true);
+        if (unitInfoPortraitSlotObject != null) unitInfoPortraitSlotObject.SetActive(true);
 
         if (count == 0)
         {
             unitInfoText.text = "선택된 유닛 없음";
+            SetUnitInfoPortrait(null);
             return;
         }
 
@@ -2262,24 +2366,54 @@ public class GameHud : MonoBehaviour
         if (first == null)
         {
             unitInfoText.text = "선택된 유닛 없음";
+            SetUnitInfoPortrait(null);
             return;
         }
 
         first.TryGetComponent(out UnitIdentity identity);
         first.TryGetComponent(out UnitAttacker attacker);
+        UnitData data = identity != null ? identity.Data : null;
 
-        string unitName = identity != null && identity.Data != null ? identity.Data.unitName : first.name;
-        string grade = identity != null && identity.Data != null ? identity.Data.grade.KoreanName() : "-";
+        SetUnitInfoPortrait(data);
+
+        string unitName = data != null ? data.unitName : first.name;
+        string grade = data != null ? data.grade.KoreanName() : "-";
+        string gradeColorHex = data != null ? ColorUtility.ToHtmlStringRGB(GetGradeColor(data.grade)) : "FFFFFF";
         // 플레이어 유닛에 아직 별도 체력 컴포넌트가 없어, UnitData의 기준 hp를 표시한다(실시간 값 아님).
-        string hp = identity != null && identity.Data != null ? identity.Data.hp.ToString("F0") : "-";
+        string hp = data != null ? data.hp.ToString("F0") : "-";
         string attackPower = attacker != null ? attacker.AttackDamage.ToString("F0") : "-";
         string attackRange = attacker != null ? attacker.AttackRange.ToString("F1") : "-";
         string attackSpeed = attacker != null && attacker.AttackInterval > 0f
             ? (1f / attacker.AttackInterval).ToString("F2")
             : "-";
 
+        // 마나·방어력은 PM 요청에 있었으나 UnitData/UnitAttacker에 그 필드 자체가 없다
+        // (플레이어 유닛은 마나를 소모하지 않고, 방어력 감폭은 EnemyDummy 전용 축이다) —
+        // 없는 값을 지어내지 않고 실제로 있는 축만 표시한다(2026-09-23, PM 보고 예정).
         unitInfoText.text =
-            $"{unitName}\n등급: {grade}\n체력: {hp}\n공격력: {attackPower}\n사거리: {attackRange}\n공격속도: {attackSpeed}/s";
+            $"<color=#{gradeColorHex}>{unitName}</color>\n등급: {grade}\n체력: {hp}\n공격력: {attackPower}\n사거리: {attackRange}\n공격속도: {attackSpeed}/s";
+    }
+
+    // 초상화 아트가 없으므로 등급 색 배경만 채운다 — BuildCard(다중 선택 카드)와 같은 관례.
+    void SetUnitInfoPortrait(UnitData data)
+    {
+        if (unitInfoPortrait == null) return;
+
+        if (data == null)
+        {
+            unitInfoPortrait.color = SlotColor;
+            if (unitInfoPortraitInitial != null) unitInfoPortraitInitial.text = "";
+            return;
+        }
+
+        Color grade = GetGradeColor(data.grade);
+        // 바탕은 등급색을 어둡게 깔고, 글자는 등급색 그대로 — 대비가 있어야 읽힌다.
+        unitInfoPortrait.color = new Color(grade.r * 0.35f, grade.g * 0.35f, grade.b * 0.35f, 1f);
+        if (unitInfoPortraitInitial == null) return;
+
+        unitInfoPortraitInitial.text = string.IsNullOrEmpty(data.unitName)
+            ? "" : data.unitName.Substring(0, 1);
+        unitInfoPortraitInitial.color = grade;
     }
 
     // 다중 선택. 카드 자체는 BuildSelectionCards에서 미리 만들어뒀고, 여기서는 내용과
@@ -2287,6 +2421,7 @@ public class GameHud : MonoBehaviour
     void ShowCardGrid(SelectionManager selection)
     {
         unitInfoText.gameObject.SetActive(false);
+        if (unitInfoPortraitSlotObject != null) unitInfoPortraitSlotObject.SetActive(false);
         unitCardsPanel.SetActive(true);
 
         IReadOnlyList<Selectable> selected = selection.Selected;
@@ -2351,15 +2486,24 @@ public class GameHud : MonoBehaviour
 
         RoundManager rm = RoundManagerRef;
         int round = rm != null ? rm.CurrentRound : 0;
-        int timeTenths = rm != null ? Mathf.RoundToInt(rm.RoundTimeLeft * 10f) : 0;
 
-        if (round != lastRound || timeTenths != lastTimeTenths)
+        // 🔴 라운드 사이 준비시간에는 roundTimer가 안 돌아서 계속 "남은시간 0.0s"로 보였다
+        //    (사장님 화면 2026-09-23). RoundManager.PreRoundTimeLeft가 이미 있었는데
+        //    **읽는 곳이 프로젝트에 한 군데도 없었다** — 값만 있고 화면에 닿질 않았다.
+        bool preparing = rm != null && rm.IsWaitingForNextRound;
+        float shown = rm == null ? 0f : (preparing ? rm.PreRoundTimeLeft : rm.RoundTimeLeft);
+        int timeTenths = Mathf.RoundToInt(shown * 10f);
+
+        if (round != lastRound || timeTenths != lastTimeTenths || preparing != lastPreparing)
         {
             lastRound = round;
             lastTimeTenths = timeTenths;
-            roundTimeText.text = rm != null
-                ? $"라운드 {round}   남은시간 {timeTenths / 10f:F1}s"
-                : "라운드 -   남은시간 -";
+            lastPreparing = preparing;
+            roundTimeText.text = rm == null
+                ? "라운드 -   남은시간 -"
+                : preparing
+                    ? $"라운드 {round}   준비 {timeTenths / 10f:F1}s"
+                    : $"라운드 {round}   남은시간 {timeTenths / 10f:F1}s";
         }
     }
 
@@ -2582,9 +2726,33 @@ public class GameHud : MonoBehaviour
         return obj.GetComponent<RectTransform>();
     }
 
-    static Text CreateLabel(Transform parent, string name, string content)
+    // 9-slice 스프라이트가 없어 모서리 4개를 얇은 Image 띠로 겹쳐 테두리처럼 보이게 한다.
+    // 미니맵·초상화 칸처럼 "이 영역이 하나의 칸"임을 배경 알파만으로는 못 알아볼 때 쓴다.
+    static void AddPanelBorder(RectTransform parent, Color color, float thickness)
     {
-        GameObject obj = new GameObject(name, typeof(RectTransform), typeof(Text));
+        CreateBorderStrip(parent, color, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, -thickness), Vector2.zero);
+        CreateBorderStrip(parent, color, new Vector2(0f, 0f), new Vector2(1f, 0f), Vector2.zero, new Vector2(0f, thickness));
+        CreateBorderStrip(parent, color, new Vector2(0f, 0f), new Vector2(0f, 1f), Vector2.zero, new Vector2(thickness, 0f));
+        CreateBorderStrip(parent, color, new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(-thickness, 0f), Vector2.zero);
+    }
+
+    static void CreateBorderStrip(RectTransform parent, Color color, Vector2 anchorMin, Vector2 anchorMax, Vector2 offsetMin, Vector2 offsetMax)
+    {
+        GameObject obj = new GameObject("Border", typeof(RectTransform), typeof(Image));
+        obj.transform.SetParent(parent, false);
+        obj.GetComponent<Image>().color = color;
+        obj.GetComponent<Image>().raycastTarget = false;
+
+        RectTransform rect = obj.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.offsetMin = offsetMin;
+        rect.offsetMax = offsetMax;
+    }
+
+    static TMP_Text CreateLabel(Transform parent, string name, string content)
+    {
+        GameObject obj = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         obj.transform.SetParent(parent, false);
 
         RectTransform rect = obj.GetComponent<RectTransform>();
@@ -2593,13 +2761,47 @@ public class GameHud : MonoBehaviour
         rect.offsetMin = new Vector2(8f, 4f);
         rect.offsetMax = new Vector2(-8f, -4f);
 
-        Text text = obj.GetComponent<Text>();
+        TMP_Text text = obj.GetComponent<TextMeshProUGUI>();
         text.text = content;
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        if (UiFont != null) text.font = UiFont;
         text.fontSize = 22;
         text.color = Color.white;
-        text.alignment = TextAnchor.MiddleCenter;
+        text.alignment = TextAlignmentOptions.Center;
         return text;
+    }
+
+    /// <summary>
+    /// HUD 글꼴 — 프리텐다드 TMP 에셋(SIL OFL, Assets/Fonts). 레거시 <c>Text</c>에서 TMP로
+    /// 옮긴 이유는 화질이다(사장님 지적 2026-09-23 "하단에 글씨 화질이 안 좋은데"):
+    /// 레거시는 fontSize별 비트맵을 구워 쓰므로 캔버스가 확대되면 그대로 늘어나 번지고,
+    /// TMP는 SDF라 배율과 무관하게 또렷하다.
+    ///
+    /// ⚠️ 에셋은 `Tools/HUD/한글 TMP 폰트 에셋 생성` 메뉴로 굽는다(KoreanFontAssetBuilder).
+    /// 아직 안 구웠으면 null이고, 그때는 TMP 기본 글꼴로 떨어져 **한글이 네모로 보인다** —
+    /// 조용히 넘어가면 원인을 못 찾으므로 경고를 한 번 남긴다.
+    /// Resources.Load를 쓰는 이유: GameHud는 런타임 코드라 AssetDatabase를 못 쓰고,
+    /// 씬은 맵 생성기가 다시 만들어서 인스펙터 참조도 못 건다.
+    /// </summary>
+    static TMP_FontAsset uiFont;
+    static bool uiFontChecked;
+
+    /// <summary>HUD 바깥(유닛 이름표 등)에서도 같은 글꼴을 쓰도록 연 접근자.</summary>
+    public static TMP_FontAsset UiFontAsset => UiFont;
+
+    static TMP_FontAsset UiFont
+    {
+        get
+        {
+            if (uiFontChecked) return uiFont;
+            uiFontChecked = true;
+
+            uiFont = Resources.Load<TMP_FontAsset>("Fonts/Pretendard-Regular SDF");
+            if (uiFont == null)
+                Debug.LogWarning("[HUD] 한글 TMP 폰트 에셋을 못 찾았습니다 — 메뉴 " +
+                                 "'Tools/HUD/한글 TMP 폰트 에셋 생성'을 한 번 실행하세요. " +
+                                 "그때까지 한글이 네모로 보입니다.");
+            return uiFont;
+        }
     }
 
     static void SetAnchors(RectTransform rect, Vector2 min, Vector2 max)

@@ -60,6 +60,30 @@ public static class HudWiring
             "Cmd+S 로 저장하세요.", "확인");
     }
 
+    // 플레이어 유닛 머리 위 이름표(PM 지시 2026-09-23) — HealthBarLayer와 똑같이
+    // GameObject 하나만 필요하고 Canvas·라벨 풀은 실행 시 스스로 만든다.
+    [MenuItem("Tools/HUD/씬에 유닛 이름표 추가")]
+    static void AddUnitNameplates()
+    {
+        if (!EditorGuards.RequireEditMode(Title)) return;
+
+        UnitNameplateLayer existing = Object.FindFirstObjectByType<UnitNameplateLayer>(FindObjectsInactive.Include);
+        if (existing != null)
+        {
+            Selection.activeGameObject = existing.gameObject;
+            EditorGuards.Dialog(Title, $"이미 씬에 있습니다: {existing.gameObject.name}", "확인");
+            return;
+        }
+
+        GameObject layer = new GameObject("UnitNameplateLayer", typeof(UnitNameplateLayer));
+        Undo.RegisterCreatedObjectUndo(layer, "Add UnitNameplateLayer");
+        Selection.activeGameObject = layer;
+
+        EditorSceneManager.MarkSceneDirty(layer.scene);
+        EditorGuards.Dialog(Title,
+            "유닛 이름표를 씬에 추가했습니다.\nCanvas와 라벨은 실행 시 자동 생성됩니다.\n\nCmd+S 로 저장하세요.", "확인");
+    }
+
     [MenuItem("Tools/HUD/씬에 하단 HUD 추가")]
     static void AddHud()
     {

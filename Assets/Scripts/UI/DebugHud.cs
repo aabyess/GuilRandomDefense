@@ -25,6 +25,72 @@ public class DebugHud : MonoBehaviour
     // 화면만 봐서는 알 수 없고, 실제로 이 패널로 여러 번 원인을 찾았다.
     bool visible = false;
 
+    // OnGUI는 화면 픽셀 좌표(원점 **좌상단**)이고 uGUI는 원점이 좌하단이라 좌표계가 뒤집혀 있다.
+    //
+    // 🔴 2026-09-23: 처음엔 "GameHud 상단 바가 화면 위 5%"라는 **숫자를 베껴 와서** 그 아래에
+    //    뒀는데 사장님 화면에서 여전히 겹쳤다. 베낀 숫자는 상대가 바뀌면 조용히 틀린다 —
+    //    그래서 이제 **GameHud의 실제 사각형을 런타임에 재서** 그 아래로 내려간다.
+    //    한 번 잰 값을 캐시하고, 처음 한 번은 두 사각형 수치를 로그로 남긴다(화면 캡처 없이
+    //    겹침 여부를 수치로 확인할 수 있게 — PM 지시).
+    const float LabelWidth = 200f;
+    const float LabelHeight = 20f;
+    const float Margin = 8f;
+
+    float cachedTopOffset = -1f;
+    int cachedForHeight = -1;
+
+    float TopOffset
+    {
+        get
+        {
+            if (cachedTopOffset >= 0f && cachedForHeight == Screen.height) return cachedTopOffset;
+            cachedForHeight = Screen.height;
+            cachedTopOffset = MeasureTopOffset();
+            return cachedTopOffset;
+        }
+    }
+
+    /// <summary>
+    /// 화면 왼쪽 위에서 GameHud가 차지한 맨 아래 지점(OnGUI 좌표) + 여백.
+    /// GameHud 캔버스의 자식 패널들을 실제로 재서, 내 라벨이 놓일 가로 띠와 겹치는 것만 본다.
+    /// </summary>
+    float MeasureTopOffset()
+    {
+        float bottom = 0f;
+        string hit = "없음";
+
+        GameHud hud = FindFirstObjectByType<GameHud>();
+        if (hud != null)
+        {
+            Vector3[] corners = new Vector3[4];
+            foreach (RectTransform panel in hud.GetComponentsInChildren<RectTransform>(false))
+            {
+                if (panel == hud.transform) continue;
+                panel.GetWorldCorners(corners);
+
+                // ScreenSpaceOverlay 캔버스는 월드 좌표가 곧 화면 픽셀이다. y만 뒤집어 맞춘다.
+                float left = corners[0].x;
+                float right = corners[2].x;
+                float guiTop = Screen.height - corners[1].y;
+                float guiBottom = Screen.height - corners[0].y;
+
+                // 내 라벨이 설 자리(왼쪽 위 가로 띠)와 x가 겹치는 것만 센다.
+                if (right < 0f || left > LabelWidth + Margin) continue;
+                if (guiBottom <= 0f) continue;
+                // 화면 위쪽 1/3 밖까지 내려가는 큰 패널(하단 바 등)은 대상이 아니다.
+                if (guiTop > Screen.height / 3f) continue;
+
+                if (guiBottom > bottom) { bottom = guiBottom; hit = panel.name; }
+            }
+        }
+
+        float offset = bottom + Margin;
+        Debug.Log($"[디버그HUD] 라벨 자리 계산: 화면 {Screen.width}×{Screen.height}, " +
+                  $"왼쪽 위에서 GameHud가 내려온 끝 {bottom:F1}px(가장 아래 패널 '{hit}') " +
+                  $"→ 라벨 y {offset:F1}~{offset + LabelHeight:F1}. 겹치면 이 값이 0에 가깝다.");
+        return offset;
+    }
+
     void Update()
     {
         if (Keyboard.current == null) return;
@@ -81,14 +147,14 @@ public class DebugHud : MonoBehaviour
     {
         if (!visible)
         {
-            GUI.Label(new Rect(10, 10, 200, 20), "F1: 디버그 정보");
+            GUI.Label(new Rect(10, TopOffset, LabelWidth, LabelHeight), "F1: 디버그 정보");
             return;
         }
 
         GoldWallet wallet = Wallet;
         UnitInventory inventory = Inventory;
 
-        GUILayout.BeginArea(new Rect(10, 10, 320, 400));
+        GUILayout.BeginArea(new Rect(10, TopOffset, 320, 400));
 
         GUILayout.Label($"골드: {(wallet != null ? wallet.Gold.ToString() : "-")}");
 
@@ -163,7 +229,7 @@ public class DebugHud : MonoBehaviour
     // 적이 안 죽는 경우를 화면에서 바로 구분하기 위한 임시 패널이다.
     void DrawSelectionPanel()
     {
-        GUILayout.BeginArea(new Rect(Screen.width - 330, 10, 320, 300));
+        GUILayout.BeginArea(new Rect(Screen.width - 330, TopOffset, 320, 300));
 
         SelectionManager selection = Selection;
         if (selection == null || selection.Selected.Count == 0)
