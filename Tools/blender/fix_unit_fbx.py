@@ -199,6 +199,10 @@ FIZZ_RENAME = {"Root": "mixamorig:Hips", "Spine": "mixamorig:Spine", "Chest": "m
 SASUKE_RENAME = {"pelvis": "mixamorig:Hips", "spine lower": "mixamorig:Spine", "spine upper": "mixamorig:Spine1", "head neck lower": "mixamorig:Neck", "head neck upper": "mixamorig:Head", "arm left shoulder 1": "mixamorig:LeftShoulder", "arm left shoulder 2": "mixamorig:LeftArm", "arm left elbow": "mixamorig:LeftForeArm", "arm left wrist": "mixamorig:LeftHand", "leg left thigh": "mixamorig:LeftUpLeg", "leg left knee": "mixamorig:LeftLeg", "leg left ankle": "mixamorig:LeftFoot", "leg left toes": "mixamorig:LeftToeBase", "arm left finger 1a": "mixamorig:LeftHandThumb1", "arm left finger 1b": "mixamorig:LeftHandThumb2", "arm left finger 1c": "mixamorig:LeftHandThumb3", "arm left finger 2a": "mixamorig:LeftHandIndex1", "arm left finger 2b": "mixamorig:LeftHandIndex2", "arm left finger 2c": "mixamorig:LeftHandIndex3", "arm left finger 3a": "mixamorig:LeftHandMiddle1", "arm left finger 3b": "mixamorig:LeftHandMiddle2", "arm left finger 3c": "mixamorig:LeftHandMiddle3", "arm left finger 4a": "mixamorig:LeftHandRing1", "arm left finger 4b": "mixamorig:LeftHandRing2", "arm left finger 4c": "mixamorig:LeftHandRing3", "arm left finger 5a": "mixamorig:LeftHandPinky1", "arm left finger 5b": "mixamorig:LeftHandPinky2", "arm left finger 5c": "mixamorig:LeftHandPinky3", "arm right shoulder 1": "mixamorig:RightShoulder", "arm right shoulder 2": "mixamorig:RightArm", "arm right elbow": "mixamorig:RightForeArm", "arm right wrist": "mixamorig:RightHand", "leg right thigh": "mixamorig:RightUpLeg", "leg right knee": "mixamorig:RightLeg", "leg right ankle": "mixamorig:RightFoot", "leg right toes": "mixamorig:RightToeBase", "arm right finger 1a": "mixamorig:RightHandThumb1", "arm right finger 1b": "mixamorig:RightHandThumb2", "arm right finger 1c": "mixamorig:RightHandThumb3", "arm right finger 2a": "mixamorig:RightHandIndex1", "arm right finger 2b": "mixamorig:RightHandIndex2", "arm right finger 2c": "mixamorig:RightHandIndex3", "arm right finger 3a": "mixamorig:RightHandMiddle1", "arm right finger 3b": "mixamorig:RightHandMiddle2", "arm right finger 3c": "mixamorig:RightHandMiddle3", "arm right finger 4a": "mixamorig:RightHandRing1", "arm right finger 4b": "mixamorig:RightHandRing2", "arm right finger 4c": "mixamorig:RightHandRing3", "arm right finger 5a": "mixamorig:RightHandPinky1", "arm right finger 5b": "mixamorig:RightHandPinky2", "arm right finger 5c": "mixamorig:RightHandPinky3"}
 # 오카베(Rigify DEF 뼈, 2026-09-16 희귀함_김정래): spine.004=목(005·006은 합침) · head · upper_arm/forearm/thigh/shin의 .001 분할 뼈는 합침 · palm은 Hand로.
 OKABE_RENAME = {"DEF-spine": "mixamorig:Hips", "DEF-spine.001": "mixamorig:Spine", "DEF-spine.002": "mixamorig:Spine1", "DEF-spine.003": "mixamorig:Spine2", "DEF-spine.004": "mixamorig:Neck", "DEF-head": "mixamorig:Head", "DEF-shoulder.L": "mixamorig:LeftShoulder", "DEF-upper_arm.L": "mixamorig:LeftArm", "DEF-forearm.L": "mixamorig:LeftForeArm", "DEF-hand.L": "mixamorig:LeftHand", "DEF-thigh.L": "mixamorig:LeftUpLeg", "DEF-shin.L": "mixamorig:LeftLeg", "DEF-foot.L": "mixamorig:LeftFoot", "DEF-toe.L": "mixamorig:LeftToeBase", "DEF-thumb.01.L": "mixamorig:LeftHandThumb1", "DEF-thumb.02.L": "mixamorig:LeftHandThumb2", "DEF-thumb.03.L": "mixamorig:LeftHandThumb3", "DEF-f_index.01.L": "mixamorig:LeftHandIndex1", "DEF-f_index.02.L": "mixamorig:LeftHandIndex2", "DEF-f_index.03.L": "mixamorig:LeftHandIndex3", "DEF-f_middle.01.L": "mixamorig:LeftHandMiddle1", "DEF-f_middle.02.L": "mixamorig:LeftHandMiddle2", "DEF-f_middle.03.L": "mixamorig:LeftHandMiddle3", "DEF-f_ring.01.L": "mixamorig:LeftHandRing1", "DEF-f_ring.02.L": "mixamorig:LeftHandRing2", "DEF-f_ring.03.L": "mixamorig:LeftHandRing3", "DEF-f_pinky.01.L": "mixamorig:LeftHandPinky1", "DEF-f_pinky.02.L": "mixamorig:LeftHandPinky2", "DEF-f_pinky.03.L": "mixamorig:LeftHandPinky3", "DEF-shoulder.R": "mixamorig:RightShoulder", "DEF-upper_arm.R": "mixamorig:RightArm", "DEF-forearm.R": "mixamorig:RightForeArm", "DEF-hand.R": "mixamorig:RightHand", "DEF-thigh.R": "mixamorig:RightUpLeg", "DEF-shin.R": "mixamorig:RightLeg", "DEF-foot.R": "mixamorig:RightFoot", "DEF-toe.R": "mixamorig:RightToeBase", "DEF-thumb.01.R": "mixamorig:RightHandThumb1", "DEF-thumb.02.R": "mixamorig:RightHandThumb2", "DEF-thumb.03.R": "mixamorig:RightHandThumb3", "DEF-f_index.01.R": "mixamorig:RightHandIndex1", "DEF-f_index.02.R": "mixamorig:RightHandIndex2", "DEF-f_index.03.R": "mixamorig:RightHandIndex3", "DEF-f_middle.01.R": "mixamorig:RightHandMiddle1", "DEF-f_middle.02.R": "mixamorig:RightHandMiddle2", "DEF-f_middle.03.R": "mixamorig:RightHandMiddle3", "DEF-f_ring.01.R": "mixamorig:RightHandRing1", "DEF-f_ring.02.R": "mixamorig:RightHandRing2", "DEF-f_ring.03.R": "mixamorig:RightHandRing3", "DEF-f_pinky.01.R": "mixamorig:RightHandPinky1", "DEF-f_pinky.02.R": "mixamorig:RightHandPinky2", "DEF-f_pinky.03.R": "mixamorig:RightHandPinky3"}
+
+# 플랑드르(랜덤_야사카_카나코, 2026-09-23): 같은 Rigify DEF- 계열이지만 이 원본엔 DEF-head가 없고 목·머리가 DEF-spine.004/.005다 —
+# 오카베 표에서 DEF-head만 빼고 spine.005를 Head로 끼운다.
+FLANDRE_RENAME = {k: v for k, v in OKABE_RENAME.items() if k != "DEF-head"} | {"DEF-spine.005": "mixamorig:Head"}
 # 에렌(진격의 거인 4기 SFM 계열 glb, 2026-09-16 희귀함_김기연): 번호 꼬리는 rename_strip. Chest=Spine1 · elbow=ForeArm · wrist=Hand · Little=Pinky · 왼다리는 허벅지뿐(절단).
 EREN_RENAME = {"Hips": "mixamorig:Hips", "Spine": "mixamorig:Spine", "Chest": "mixamorig:Spine1", "Neck": "mixamorig:Neck", "Head": "mixamorig:Head", "Right shoulder": "mixamorig:RightShoulder", "Right arm": "mixamorig:RightArm", "Right elbow": "mixamorig:RightForeArm", "Right wrist": "mixamorig:RightHand", "Right leg": "mixamorig:RightUpLeg", "Thumb0_R": "mixamorig:RightHandThumb1", "Thumb1_R": "mixamorig:RightHandThumb2", "Thumb2_R": "mixamorig:RightHandThumb3", "IndexFinger1_R": "mixamorig:RightHandIndex1", "IndexFinger2_R": "mixamorig:RightHandIndex2", "IndexFinger3_R": "mixamorig:RightHandIndex3", "MiddleFinger1_R": "mixamorig:RightHandMiddle1", "MiddleFinger2_R": "mixamorig:RightHandMiddle2", "MiddleFinger3_R": "mixamorig:RightHandMiddle3", "RingFinger1_R": "mixamorig:RightHandRing1", "RingFinger2_R": "mixamorig:RightHandRing2", "RingFinger3_R": "mixamorig:RightHandRing3", "LittleFinger1_R": "mixamorig:RightHandPinky1", "LittleFinger2_R": "mixamorig:RightHandPinky2", "LittleFinger3_R": "mixamorig:RightHandPinky3", "Left shoulder": "mixamorig:LeftShoulder", "Left arm": "mixamorig:LeftArm", "Left elbow": "mixamorig:LeftForeArm", "Left wrist": "mixamorig:LeftHand", "Left leg": "mixamorig:LeftUpLeg", "Thumb0_L": "mixamorig:LeftHandThumb1", "Thumb1_L": "mixamorig:LeftHandThumb2", "Thumb2_L": "mixamorig:LeftHandThumb3", "IndexFinger1_L": "mixamorig:LeftHandIndex1", "IndexFinger2_L": "mixamorig:LeftHandIndex2", "IndexFinger3_L": "mixamorig:LeftHandIndex3", "MiddleFinger1_L": "mixamorig:LeftHandMiddle1", "MiddleFinger2_L": "mixamorig:LeftHandMiddle2", "MiddleFinger3_L": "mixamorig:LeftHandMiddle3", "RingFinger1_L": "mixamorig:LeftHandRing1", "RingFinger2_L": "mixamorig:LeftHandRing2", "RingFinger3_L": "mixamorig:LeftHandRing3", "LittleFinger1_L": "mixamorig:LeftHandPinky1", "LittleFinger2_L": "mixamorig:LeftHandPinky2", "LittleFinger3_L": "mixamorig:LeftHandPinky3", "Right knee": "mixamorig:RightLeg", "Right ankle": "mixamorig:RightFoot"}
 # 죠타로(죠죠 3부 SFM ValveBiped 리그 glb, 2026-09-16 희귀함_배병규): 번호 꼬리는 rename_strip. Spine1=Spine · Spine2=Spine1(가슴) · Finger0~4 = 엄지~새끼.
@@ -2575,6 +2579,69 @@ UNITS = {
                    use_rest_pose=True, no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
                    materials=dict(mesh_material={"man": "gyozaman"},
                                   textures={"gyozaman": [("DiffuseColor", "gyozaman_baseColor.png")]})),
+    # 동방 프로젝트 플랑드르 스칼렛 → 랜덤_야사카_카나코(2026-09-23 랜덤유닛, blender 세션).
+    #   ※ 유닛 이름은 로스터 표기대로 「야사카_카나코」(사장님은 「카노코」라고 쓰셨지만 로스터는 카나코, PM 확인).
+    # 원본: ~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_야사카_카나코.glb — 뼈 598 · 메시 41 · 재질 12 · 이미지 11 · 애니 1.
+    # 🔴 뼈대는 Rigify **DEF-** 계열인데, glTF 내보내기가 **계층을 납작하게 눌러** 놨다(직접 확인) —
+    #   사슬 안쪽 부모만 남고 DEF-spine·DEF-thigh.L/R·DEF-shoulder.L/R·DEF-upper_arm.L/R을 비롯한
+    #   모든 사슬 뿌리가 GLTF_created_0_rootJoint에 바로 매달려 있다. 그래서 reparent_bones로 사람 뼈 계층을 다시 잇는다.
+    # 🔴 어깨가 어느 척추에 붙는지는 부모 관계로는 못 읽어(납작해져서) **높이로 쟀다**: 어깨 머리 z 1.145 · 위팔 z 1.177이
+    #   DEF-spine.003(1.034→1.217) 구간 안이다 → spine.003=Spine2(UpperChest) · 004=Neck · 005=Head · 006은 Head로 병합.
+    #   조세민(빌리 타이버) 표와 같은 대응이며, 이름표는 OKABE_RENAME(DEF- 계열)을 그대로 쓰되 DEF-head가 없으므로 spine.005로 바꿔 끼운다.
+    # 🔴 **FullBlack 재질 메시 10개는 툰 외곽선 껍데기**다(직접 확인 — 재질에 베이스 텍스처가 아예 없고, 보이는 메시마다
+    #   경계가 1mm 차이로 똑같은 쌍이 하나씩 있다: Object_7/8 · 24/25 · 27/28 · 32/33 · 35/36 · 46/47 · 51/52 · 54/55 · 59/60 · 70/71).
+    #   그대로 두면 캐릭터를 검게 덮는다(덴지·히소카 교훈) → 전부 뺀다.
+    # 🔴 Object_672(정점 4 · Material.002 · z 0 평면이 x·y ±1)는 **바닥판**이고 Icosphere(42정점·재질 없음)는 조명용 — 둘 다 뺀다.
+    # 등의 결정 날개(Crystal 재질 Object_73 + 뼈대 Material.001 Object_18, 둘 다 x ±0.58 · y +0.08~0.28로 등 뒤)는 원작 신체라 유지하고,
+    #   PM 지시대로 팔 회전을 안 받게 **Spine2로 병합**한다(뼈를 합치면 그 뼈 하나만 따라가므로 강체와 같은 효과).
+    # 나머지 뼈는 높이로 갈라 병합(실측): 머리(z≥1.17 — 눈·앞머리·옆머리·모자·모자리본·머리보정·mount) → Head ·
+    #   가슴 뒤(z 1.02~1.35 — 결정·날개·wcloth·wcloth_up·wcloth-bow·타이) → Spine2 · 허리(z 0.96~1.07 — ocloth) → Spine1 ·
+    #   엉덩이 아래(z 0.49~0.97 — 치마 두 겹 skirt_1/2·큰 리본·wcloth_end·pelvis) → Hips.
+    "랜덤_야사카_카나코": dict(path="Assets/Art/Units/랜덤_야사카_카나코/랜덤_야사카_카나코.fbx", kind="human", size=("height", 1.8),
+                        source=os.path.expanduser("~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_야사카_카나코.glb"),
+                        no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
+                        drop_meshes=["Icosphere", "Object_672",
+                                     "Object_8", "Object_25", "Object_28", "Object_33", "Object_36",
+                                     "Object_47", "Object_52", "Object_55", "Object_60", "Object_71"],
+                        # 🔴 재질↔텍스처는 glTF JSON에서 직접 읽었다(이름 짐작 금지, 덴지 교훈): 재질의 baseColorTexture 번호 →
+                        #   textures[i].source가 이 파일에선 전부 i와 같아 이미지 번호가 그대로다. 이미지 3번은 어느 재질도 안 쓴다.
+                        #   FullBlack(외곽선)·Crystal.003(머리 위 작은 보석)은 베이스 텍스처가 아예 없다 — 앞엣것은 메시째 뺐고 뒤엣것은 원본 기본색 그대로 둔다.
+                        glb_images={0: "Flandre_Body.png", 1: "Flandre_ICloth.png", 2: "Flandre_WingFrame.png",
+                                    4: "Flandre_Eye.png", 5: "Flandre_Hair.png", 6: "Flandre_Hat.png",
+                                    7: "Flandre_OCloth.png", 8: "Flandre_Shoes.png", 9: "Flandre_Crystal.png"},
+                        materials=dict(textures={"Body": [("DiffuseColor", "Flandre_Body.png")],
+                                                 "IClothAndBigBow": [("DiffuseColor", "Flandre_ICloth.png")],
+                                                 "Material.001": [("DiffuseColor", "Flandre_WingFrame.png")],
+                                                 "material": [("DiffuseColor", "Flandre_Eye.png")],
+                                                 "Hair": [("DiffuseColor", "Flandre_Hair.png")],
+                                                 "material_7": [("DiffuseColor", "Flandre_Hat.png")],
+                                                 "OCloth": [("DiffuseColor", "Flandre_OCloth.png")],
+                                                 "Shoes": [("DiffuseColor", "Flandre_Shoes.png")],
+                                                 "Crystal": [("DiffuseColor", "Flandre_Crystal.png")]}),
+                        rename_strip=r"_[0-9]+$",
+                        rename_bones=FLANDRE_RENAME,
+                        drop_bones=["GLTF_created_0_rootJoint"],
+                        reparent_bones={"mixamorig:LeftShoulder": "mixamorig:Spine2",
+                                        "mixamorig:RightShoulder": "mixamorig:Spine2",
+                                        "mixamorig:LeftArm": "mixamorig:LeftShoulder",
+                                        "mixamorig:RightArm": "mixamorig:RightShoulder",
+                                        "mixamorig:LeftUpLeg": "mixamorig:Hips",
+                                        "mixamorig:RightUpLeg": "mixamorig:Hips"},
+                        # ⚠️ rename_strip은 **이름표 짝짓기에만** 쓰이고 뼈 이름의 「_번호」 꼬리는 그대로 남는다(직접 확인) —
+                        #   그래서 아래 정규식은 전부 「점이 이어지거나(사슬 안쪽) 끝이 _숫자」를 받게 쓴다(1차에서 이걸 몰라 merge 대상 0으로 멈췄다).
+                        merge_bones=[dict(pattern=r"^DEF-spine\.006_\d+$", into="mixamorig:Head"),
+                                     dict(pattern=r"^DEF-upper_arm\.L\.001_\d+$", into="mixamorig:LeftArm"),
+                                     dict(pattern=r"^DEF-upper_arm\.R\.001_\d+$", into="mixamorig:RightArm"),
+                                     dict(pattern=r"^DEF-forearm\.L\.001_\d+$", into="mixamorig:LeftForeArm"),
+                                     dict(pattern=r"^DEF-forearm\.R\.001_\d+$", into="mixamorig:RightForeArm"),
+                                     dict(pattern=r"^DEF-thigh\.L\.001_\d+$", into="mixamorig:LeftUpLeg"),
+                                     dict(pattern=r"^DEF-thigh\.R\.001_\d+$", into="mixamorig:RightUpLeg"),
+                                     dict(pattern=r"^DEF-shin\.L\.001_\d+$", into="mixamorig:LeftLeg"),
+                                     dict(pattern=r"^DEF-shin\.R\.001_\d+$", into="mixamorig:RightLeg"),
+                                     dict(pattern=r"^DEF-(eye|eye_tweak|hair_forwardBone|hair_side|hat|hat_bow_root|hat_hair|head_correction|mount|bow_behind|bow_forward)(?:\.|_\d+$)", into="mixamorig:Head"),
+                                     dict(pattern=r"^DEF-(crystal|wing|wcloth|wcloth_up|wcloth-bow|tie|tie_master)(?:\.|_\d+$)", into="mixamorig:Spine2"),
+                                     dict(pattern=r"^DEF-ocloth(?:\.|_\d+$)", into="mixamorig:Spine1"),
+                                     dict(pattern=r"^DEF-(skirt_1|skirt_2|big-bow|big-bow-master|wcloth_end|pelvis)(?:\.|_\d+$)", into="mixamorig:Hips")]),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")
@@ -3748,11 +3815,36 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         gj = _json.loads(raw[20:20 + jlen])
         blen = _struct.unpack_from("<I", raw, 20 + jlen)[0]
         gbin = raw[20 + jlen + 8:20 + jlen + 8 + blen]
+        # 🔴 KHR_texture_transform(2026-09-23 blender, 플랑드르): glTF 재질이 baseColorTexture에 scale [1, −1]을 걸어
+        #   **V축을 뒤집어** 쓰는 원본이 있다(블렌더 glTF 임포터는 Mapping 노드로 재현하지만, 우리 relink_textures는 이미지 노드를
+        #   맨 UV로 다시 짜므로 그 뒤집기가 사라져 텍스처가 위아래로 뒤집힌 자리에서 샘플된다 — 치마가 흰색, 다리에 검은 얼룩,
+        #   눈에 검은 십자가 나왔다). 이미지 자체를 세로로 뒤집어 빼면 맨 UV로도 같은 그림이 나온다(v → 1−v로 같은 변환).
+        flip_v = set()
+        for gm in gj.get("materials", []):
+            for slot in ("baseColorTexture", "emissiveTexture"):
+                t = gm.get("pbrMetallicRoughness", {}).get(slot) or gm.get(slot)
+                if not t:
+                    continue
+                sc = (t.get("extensions", {}).get("KHR_texture_transform", {}) or {}).get("scale")
+                if sc and sc[1] < 0:
+                    flip_v.add(gj["textures"][t["index"]].get("source", t["index"]))
         for index, fname in cfg["glb_images"].items():
             bv = gj["bufferViews"][gj["images"][index]["bufferView"]]
-            with open(os.path.join(tex_repo, fname), "wb") as f:
+            out_png = os.path.join(tex_repo, fname)
+            with open(out_png, "wb") as f:
                 f.write(gbin[bv.get("byteOffset", 0):bv.get("byteOffset", 0) + bv["byteLength"]])
-            arc_textures.append(os.path.join(tex_repo, fname))
+            if index in flip_v:
+                import numpy as np
+                img = bpy.data.images.load(out_png)
+                w, h = img.size
+                px = np.asarray(img.pixels[:], dtype=np.float32).reshape(h, w, 4)[::-1]
+                img.pixels = px.ravel().tolist()
+                img.file_format = "PNG"
+                img.filepath_raw = out_png
+                img.save()
+                bpy.data.images.remove(img)
+                report.setdefault("V축 뒤집어 뺀 텍스처", []).append(fname)
+            arc_textures.append(out_png)
     if cfg.get("rename_regex"):                                         # 번호 꼬리 이름(Hips_01·LeftHandIndex1_022) → mixamorig 표준 이름, 가중치 그룹 같이
         pattern, repl = cfg["rename_regex"]
         arm0 = main_armature()

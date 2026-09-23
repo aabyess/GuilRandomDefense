@@ -1,0 +1,65 @@
+랜덤_야사카_카나코(동방 프로젝트 플랑드르 스칼렛) — blender 세션(2026-09-23).
+fix_unit_fbx.py UNITS["랜덤_야사카_카나코"]로 처리.
+※ 유닛 이름은 로스터 표기대로 「야사카_카나코」(사장님은 「카노코」라고 쓰셨지만 로스터는 카나코, PM 확인).
+
+■ 원본
+~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_야사카_카나코.glb (8.4MB)
+뼈 598 · 메시 41 · 재질 12 · 이미지 11 · 애니 1 · 스킨 1.
+
+■ 🔴 뼈대 — Rigify DEF- 계열인데 glTF가 **계층을 납작하게 눌러** 놨다
+사슬 안쪽 부모만 남고 DEF-spine · DEF-thigh.L/R · DEF-shoulder.L/R · DEF-upper_arm.L/R을 비롯한
+**모든 사슬 뿌리가 GLTF_created_0_rootJoint에 바로** 매달려 있다(직접 확인). 그래서
+reparent_bones로 사람 뼈 계층을 다시 이었다(어깨→Spine2, 위팔→어깨, 넓적다리→Hips).
+⚠️ 그래서 「어깨가 어느 척추에 붙었나」를 부모 관계로는 못 읽는다 → **높이로 쟀다**:
+  어깨 머리 z 1.145 · 위팔 z 1.177이 DEF-spine.003(1.034→1.217) 구간 안
+  → spine.003=Spine2(UpperChest) · 004=Neck · 005=Head · 006은 Head로 병합.
+  조세민(빌리 타이버)과 같은 대응. 이름표는 OKABE_RENAME(DEF- 계열)에서 DEF-head만 빼고
+  spine.005를 Head로 끼운 FLANDRE_RENAME.
+⚠️ rename_strip은 **이름표 짝짓기에만** 쓰이고 뼈 이름의 「_번호」 꼬리는 그대로 남는다(직접 확인)
+  — merge_bones 정규식을 `(?:\.|_\d+$)` 꼴로 써야 한다(1차에서 이걸 몰라 merge 대상 0으로 멈췄다).
+
+뼈 598 → **60**(사람 22 + 손가락·손바닥 38). 병합은 높이 실측으로 갈랐다:
+  머리(z≥1.17: 눈·앞머리·옆머리·모자·모자리본·머리보정·mount) → Head (185개)
+  가슴 뒤(z 1.02~1.35: 결정·날개·wcloth·wcloth_up·wcloth-bow·타이) → Spine2 (120개)
+  허리(z 0.96~1.07: ocloth) → Spine1 (24개)
+  엉덩이 아래(z 0.49~0.97: 치마 두 겹 skirt_1/2·큰 리본·wcloth_end·pelvis) → Hips (199개)
+🔴 등의 결정 날개는 PM 지시대로 유지하고 **Spine2로 병합** — 뼈를 합치면 그 뼈 하나만 따라가므로
+  강체와 같은 효과이고 팔 회전을 안 받는다(Idle 렌더에서 팔을 들어도 날개가 안 따라가는 것 확인).
+🔴 치마는 PM이 coat_hem(Hips와 넓적다리 반반)을 지시했으나, Hips 하나로 묶은 Idle 렌더에서
+  넓적다리가 치마를 뚫지 않고 자연스러워 hem_follow를 안 걸었다(조세민과 같은 판단).
+  유니티에서 다리 벌리는 동작에 문제가 보이면 그때 추가하면 된다.
+
+■ 🔴 뺀 메시 12개
+- **FullBlack 재질 메시 10개 = 툰 외곽선 껍데기**. 재질에 베이스 텍스처가 아예 없고(검정 단색),
+  보이는 메시마다 경계가 1mm 차이로 똑같은 쌍이 하나씩 있다(Object_7/8 · 24/25 · 27/28 · 32/33 ·
+  35/36 · 46/47 · 51/52 · 54/55 · 59/60 · 70/71). 그대로 두면 캐릭터를 검게 덮는다(덴지·히소카 교훈).
+  ※ 원본 그대로 렌더한 것과 이 열 개만 뺀 렌더를 나란히 찍어 **겉모습이 같은 것**을 확인하고 뺐다.
+- Object_672(정점 4 · Material.002 · z 0 평면이 x·y ±1) = **바닥판**, Icosphere(42정점·재질 없음) = 조명용.
+
+■ 🔴 재질↔텍스처 — glTF JSON에서 직접 읽음(덴지 교훈)
+재질의 baseColorTexture 번호 → textures[i].source가 이 파일에선 전부 i와 같아 이미지 번호가 그대로다:
+  Body=0 · IClothAndBigBow=1 · Material.001(날개 뼈대)=2 · material(눈)=4 · Hair=5 ·
+  material_7(모자)=6 · OCloth(겉옷·치마)=7 · Shoes=8 · Crystal(날개 보석)=9.
+  이미지 3번은 어느 재질도 안 쓴다. FullBlack(뺌)·Crystal.003(머리 위 작은 보석)은 베이스 텍스처가
+  없다 — 뒤엣것은 원본 기본색 그대로 뒀다.
+
+■ 🔴🔴 새 함정 — KHR_texture_transform(V축 뒤집기). 도구 보편 수정으로 해결
+이 glTF는 재질 10개가 baseColorTexture에 **scale [1, −1]** 을 걸어 **V축을 뒤집어** 쓴다
+(extensionsUsed에 KHR_texture_transform). 블렌더 glTF 임포터는 Mapping 노드로 재현하지만,
+우리 relink_textures는 이미지 노드를 맨 UV로 다시 짜므로 그 뒤집기가 사라진다 →
+1차 결과가 **치마가 흰색 · 다리에 검은 얼룩 · 눈에 검은 십자**로 나왔다(원본 렌더와 비교해 확인).
+→ fix_unit_fbx.py에 **glb 이미지를 뺄 때 그 텍스처에 V 뒤집기가 걸려 있으면 이미지 자체를 세로로
+  뒤집어 저장**하는 단계를 넣었다(v → 1−v로 같은 변환이라 맨 UV로도 같은 그림이 나온다).
+  다른 유닛에도 자동 적용되며, 사장님 원본 폴더의 .glb를 전부 훑어 보니 **이 뒤집기가 걸린 건
+  이 파일 하나뿐**이었다(그래서 기존 유닛을 다시 뽑을 필요는 없다).
+
+■ 검증
+- 배치 리포트: 뼈 60 · 휴머노이드 필수 15뼈 전부 가중치 · 얼굴 뼈 겹침 점검 「Head 자손 0 · 위험 없음」
+  · 크기 (1.37, 0.657, 1.8)m · 최저 z 0 · 기본 자세=쉬는 자세(0.0) · 메시 29.
+- 재수입: 최상위 오브젝트 "Armature" 하나 · mixamorig:Hips 부모 None.
+- 공용 idle.fbx 리타겟 52/60뼈 — 접힘·찢어짐 없음, 치마 자연스럽고 **날개가 팔을 안 따라감**.
+- 뒷면 컬링 렌더가 원본 glb 렌더와 색·무늬가 일치.
+
+■ 산출물(스크래치만, Assets 미반영)
+랜덤_야사카_카나코.fbx · Textures/Flandre_{Body,ICloth,WingFrame,Eye,Hair,Hat,OCloth,Shoes,Crystal}.png ·
+cull_full.png · cull_head.png · verify_rest_front.png · verify_idle_front.png · verify_idle_side.png
