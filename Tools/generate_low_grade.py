@@ -5,6 +5,13 @@
 같은 이름이 여러 등급에 존재하므로 별칭이 유일한 식별 수단이다.
 """
 import os, re, sys, uuid
+
+# 🔴 재실행 금지(2026-09-23, 구현담당2). 흔함~전설적인 UnitData·CombineRecipe를 **새 GUID로 새로 쓴다**(attackPower 0,
+# prefab 자리표시). 다시 돌리면 로스터 스탯·공격타입·스킬·특성·프리팹 연결이 전부 초기화되고, GUID가 바뀌어
+# 씬·조합식 참조가 끊긴다(2026-09-02 로스터 190개 덮어쓰기 사고와 같은 구조). 로스터를 처음 만드는 일회성 도구였다.
+if '--recreate-low-grade-roster' not in sys.argv:
+    sys.exit('❌ 재실행 금지: 하위 등급 로스터·조합식을 새 GUID로 다시 만들어 기존 값과 참조를 전부 지운다. '
+             '파일 맨 위 주석을 읽고, 정말 새로 만들 때만 --recreate-low-grade-roster 를 주세요.')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import low_grade_data as D
 

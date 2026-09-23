@@ -27,6 +27,8 @@ using UnityEngine.Animations;
 ///   shot &lt;파일&gt; px py pz tx ty tz [fov]       열린 씬을 (px,py,pz)에서 (tx,ty,tz)를 보고 찍는다
 ///   shotobj &lt;파일&gt; &lt;오브젝트 이름&gt; [거리배율]   씬에서 그 이름의 오브젝트를 비스듬히 위에서 찍는다
 ///   lineup &lt;파일&gt; [폴더] [시작] [개수]        생성된 유닛 프리팹을 격자로 세워 찍는다(누운 유닛 찾기). 칸↔이름 표는 결과에
+///   gameshot &lt;파일&gt; [초] [가로x세로] [super:N] [click:&lt;버튼&gt;]  플레이 모드로 들어가 버튼을 눌러 가며 **UI까지** 게임 화면을 찍고 나온다(아래 GameShot 절).
+///                                             글씨·UI 판정엔 해상도를 꼭 박는다: gameshot hud.png 3 1920x1080 click:쉬움
 /// 사진은 ClaudeBridge/shots/에 PNG로 남는다. 명령마다 그동안의 Debug 로그(경고·오류 포함)가 결과에 실린다.
 /// </summary>
 [InitializeOnLoad]
@@ -34,10 +36,17 @@ public static class ClaudeCommands
 {
     const string Folder = "ClaudeBridge";
     static double nextPoll;
+    static string currentId;   // Poll이 지금 돌리는 inbox 번호 — gameshot이 결과를 플레이 모드 뒤로 미룰 때 쓴다
 
     static ClaudeCommands()
     {
-        if (!Application.isBatchMode) EditorApplication.update += Poll;
+        if (Application.isBatchMode) return;
+        EditorApplication.update += Poll;
+        // gameshot은 플레이 모드를 오가며 도메인이 다시 로드된다(EnterPlayModeOptions에서 리로드를 안 껐다) —
+        // 그때마다 이 생성자가 다시 불리므로 진행 상태는 SessionState에 두고 여기서 이어 받는다.
+        EditorApplication.update += TickGameShot;
+        Application.logMessageReceived += CollectGameShotLog;
+        NoteMidPlayReload();
     }
 
     static void Poll()
@@ -55,7 +64,21 @@ public static class ClaudeCommands
         string[] commands = File.ReadAllLines(file);
         File.Delete(file);   // 명령이 컴파일·도메인 리로드를 부르면 이 함수가 다시 불린다 — 두 번 돌지 않게 먼저 지운다
 
-        WriteResult(id, RunAll(commands));
+        currentId = id;
+        string text;
+        try { text = RunAll(commands); }
+        finally { currentId = null; }
+
+        // gameshot이 플레이 모드를 예약했으면 결과는 찍고 나온 뒤 한꺼번에 쓴다. 지금 쓰면 기다리는 쪽이
+        // 「⏳ 진행 중」만 든 파일을 결과로 읽는다.
+        GameShotJob job = LoadGameShot();
+        if (job != null && job.id == id && job.prefix == null)
+        {
+            job.prefix = text;
+            SaveGameShot(job);
+            return;
+        }
+        WriteResult(id, text);
     }
 
     public static void RunBatch()
@@ -155,6 +178,9 @@ public static class ClaudeCommands
                               parts.Length > 2 ? int.Parse(parts[2]) : 0, parts.Length > 3 ? int.Parse(parts[3]) : 40);
 
             case "units":
+                // 둘째 인자가 숫자가 아니면 이름 거르개다 — units 사진 안흔함_박준희 → 이름에 그 글자가 든 것만(최대 [개수]).
+                if (parts.Length > 1 && !int.TryParse(parts[1], out _))
+                    return UnitLineup(parts[0], 0, parts.Length > 2 ? int.Parse(parts[2]) : 16, parts[1]);
                 return UnitLineup(parts[0], parts.Length > 1 ? int.Parse(parts[1]) : 0, parts.Length > 2 ? int.Parse(parts[2]) : 16);
 
             case "inspect":
@@ -190,6 +216,9 @@ public static class ClaudeCommands
             case "big":
                 return BigObjects(parts[0], parts.Length > 1 ? F(parts[1]) : 30f,
                                   parts.Length > 2 ? parts[2] : null);
+
+            case "gameshot":
+                return StartGameShot(parts);
 
             default:
                 return $"❌ 모르는 명령: {verb}";
@@ -725,16 +754,19 @@ public static class ClaudeCommands
 
     // 게임에서 보이는 모습 그대로: 생성된 Unit_ 프리팹만, 맵 생성기와 같은 방법(MapGenerator.PoseAsIdle)으로 Idle을 입혀
     // **세우기 보정 없이** 앞에서 찍는다. 칸마다 실제 크기와 몸의 위쪽(골반→머리) 방향을 같이 적는다 — 누움·극소형을 숫자로도 가른다.
-    static string UnitLineup(string file, int start, int count)
+    static string UnitLineup(string file, int start, int count, string nameFilter = null)
     {
         List<GameObject> prefabs = AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Prefabs/Generated" })
             .Select(AssetDatabase.GUIDToAssetPath)
             .Where(p => Path.GetFileNameWithoutExtension(p).StartsWith("Unit_"))
+            // 에셋 경로의 한글은 NFC가 아닐 수 있다(skin-import-traps ①-B) — 양쪽을 맞춘 뒤 견준다.
+            .Where(p => nameFilter == null || Path.GetFileNameWithoutExtension(p).Normalize(NormalizationForm.FormC)
+                                                  .Contains(nameFilter.Normalize(NormalizationForm.FormC)))
             .OrderBy(p => p, StringComparer.Ordinal)
             .Select(AssetDatabase.LoadAssetAtPath<GameObject>)
             .Where(p => p != null)
             .Skip(start).Take(count).ToList();
-        if (prefabs.Count == 0) return $"❌ Unit_ 프리팹 없음({start}번부터)";
+        if (prefabs.Count == 0) return nameFilter != null ? $"❌ 이름에 「{nameFilter}」가 든 Unit_ 프리팹 없음" : $"❌ Unit_ 프리팹 없음({start}번부터)";
 
         MethodInfo pose = typeof(MapGenerator).GetMethod("PoseAsIdle", BindingFlags.Static | BindingFlags.NonPublic);
         MethodInfo measure = typeof(MapGenerator).GetMethod("TryMeasureFigure", BindingFlags.Static | BindingFlags.NonPublic);
@@ -775,11 +807,20 @@ public static class ClaudeCommands
                 Animator animator = instance.GetComponentInChildren<Animator>(true);
                 if (animator != null && animator.isHuman)
                 {
+                    // 🔴 골반 자리는 Hips 뼈가 아니라 **양 허벅지 뿌리의 중점**으로 잡는다. Hips 뼈가 골반에서 떨어져 있는
+                    //    리그(바운티러시 pl_ 계열의 world_joint 원점)는 몸이 똑바로 서 있어도 기울어 보인다 —
+                    //    2026-09-23 히든_석성례: Hips→Head (0.25, 0.87, 0.42)였는데, 휴식 자세 사슬 계산도 (0.29, 0.82, 0.49)로 같았고
+                    //    실제 몸의 축(Spine→Head)은 (0, 0.97, 0.23), 정면 사진도 정상이었다(outbox 1261).
+                    //    허벅지가 없으면(매핑 실패) 예전처럼 Hips로 잰다.
+                    Transform leftLeg = animator.GetBoneTransform(HumanBodyBones.LeftUpperLeg);
+                    Transform rightLeg = animator.GetBoneTransform(HumanBodyBones.RightUpperLeg);
                     Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
                     Transform head = animator.GetBoneTransform(HumanBodyBones.Head);
-                    if (hips != null && head != null)
+                    Vector3? pelvis = leftLeg != null && rightLeg != null ? (leftLeg.position + rightLeg.position) * 0.5f
+                                    : hips != null ? hips.position : (Vector3?)null;
+                    if (pelvis != null && head != null)
                     {
-                        Vector3 v = (head.position - hips.position).normalized;
+                        Vector3 v = (head.position - pelvis.Value).normalized;
                         up = $"몸 위쪽 ({v.x:F2}, {v.y:F2}, {v.z:F2})" + (v.y > 0.8f ? " ✅" : v.y < 0.4f ? " 🔴 누움" : " 🟡 기울어짐");
                     }
                 }
@@ -843,6 +884,376 @@ public static class ClaudeCommands
             UnityEngine.Object.DestroyImmediate(cameraObject);
             UnityEngine.Object.DestroyImmediate(texture);
             UnityEngine.Object.DestroyImmediate(image);
+        }
+    }
+
+    // ───────────────────────────── GameShot ─────────────────────────────
+    // gameshot <파일> [초] [가로x세로] [super:N] [click:<버튼>]...
+    //   예) gameshot hud.png 3 click:쉬움
+    //       gameshot hud_tall.png 3 1080x1920 click:Button_Easy
+    //   · [초]         마지막 클릭 뒤 찍기 전까지 기다리는 시간(기본 3)
+    //   · 가로x세로    Game 뷰 해상도 고정(Game 뷰에 남는다 — 되돌리는 공개 API가 없다)
+    //   · super:N      N배로 키워 찍는다(기본 1). ⚠️ 오버레이 UI는 N배로 **다시 그려지지 않고 늘려 붙는다** — 글씨가 선명해지지 않는다.
+    //                  2026-09-23 실측: 779×536 Game 뷰 + super:2(1558폭)는 두 라벨 모두 계단, 1920x1080 + super:1은 매끄러웠다(outbox 1279).
+    //
+    // 🔴 **글씨·UI를 판정할 사진은 반드시 해상도를 박아서 찍는다**(예: 1920x1080 — HUD CanvasScaler 기준과 같다).
+    //    해상도를 안 주면 지금 Game 뷰 창 크기로 찍힌다. 창이 작으면 CanvasScaler가 UI를 줄여(779폭이면 0.45배) 글자가 9픽셀로 뭉개지고,
+    //    그걸 확대해 본 판정은 틀린다. 2026-09-23 하루에 두 번 틀렸다 — 「목재」가 「목제」로 보여 오타로 단정했고,
+    //    같은 뭉개짐을 「상단 라벨만 TMP 폰트가 안 붙었다」로 읽었다. 둘 다 1920x1080으로 다시 찍으니 사라졌다.
+    //    그래서 해상도 없이 찍으면 결과에 경고를 붙인다(아래 StartGameShot).
+    //   · click:<버튼>  플레이 모드에서 그 버튼을 누른다. **게임 오브젝트 이름**(Button_Easy) 또는 **버튼 글자**(쉬움)로 찾는다.
+    //                  여러 개 주면 적은 순서대로 1초 간격으로 누른다. 못 찾으면 그때 보이던 버튼 목록을 결과에 남긴다.
+    //                  글자에 공백이 있으면 게임 오브젝트 이름으로 준다.
+    //
+    // 왜 플레이 모드인가 — shot·shotobj·idleview는 카메라를 RenderTexture로 굽는다. ScreenSpaceOverlay 캔버스는 카메라를 안 거쳐서
+    // 거기 안 담긴다. 게다가 GameHud·DifficultySelectHud는 **실행 때 Awake에서 캔버스를 만든다** — 편집 모드의 Game 뷰엔 HUD가 아예 없다.
+    //
+    // 🔴 창 픽셀 읽기(InternalEditorUtility.ReadScreenPixel)는 시험 후 걷어냈다(2026-09-23 outbox 1264).
+    //    도킹된 Game 뷰의 EditorWindow.position이 Game 뷰가 아니라 **에디터 창 왼쪽 위**를 가리켜서, 제목 표시줄·Hierarchy·
+    //    「Importing assets」 진행 창까지 찍히고 정작 하단 바는 잘렸다. ScreenCapture 쪽은 Game 뷰 그대로(하단 바 포함)였다.
+    //
+    // 진행 — 명령 한 번이 여러 에디터 프레임과 도메인 리로드 두 번에 걸친다. 상태는 SessionState(에디터 세션 동안 리로드를
+    // 넘어 남는다)에 두고, 생성자가 다시 거는 TickGameShot이 이어 받는다.
+    //   entering → (플레이 모드 진입·도메인 리로드) → settling 1초(Awake·Start) → clicking → waiting [초]
+    //   → capturing(파일이 다 써질 때까지) → exiting → outbox에 결과
+    // 그동안 Poll은 isPlayingOrWillChangePlaymode라 다음 inbox를 안 집는다. 뒤에 넣은 명령은 찍고 나온 뒤에 차례로 돈다.
+
+    const string GameShotKey = "ClaudeCommands.GameShot";
+    const double GameShotEnterTimeout = 60, GameShotCaptureTimeout = 15, GameShotExitTimeout = 60;
+    const double GameShotSettle = 1.0, GameShotClickGap = 1.0, GameShotClickSearch = 5.0;
+    const int GameShotMaxLogKinds = 40;
+
+    [Serializable]
+    class GameShotJob
+    {
+        public string id;           // outbox 번호
+        public string file;         // ScreenCapture 결과(절대 경로)
+        public float seconds;
+        public int superSize = 1;
+        public List<string> clicks = new List<string>();
+        public int clickIndex;
+        public string stage;        // entering · settling · clicking · waiting · capturing · exiting
+        public double stageSince;   // EditorApplication.timeSinceStartup — 도메인 리로드를 넘어 이어진다
+        public long lastSize = -1;
+        public string prefix;       // 같은 inbox 파일에서 먼저 돈 명령들의 결과(Poll이 채운다)
+        public string report = "";  // 결과 본문
+        public List<GameShotLog> logs = new List<GameShotLog>();
+        public int droppedLogs;     // 종류 상한을 넘어 못 실은 로그 수
+        public bool failed;
+        public int midPlayReloads;  // 플레이 도중 도메인 리로드 횟수(아래 NoteMidPlayReload)
+        public int logsBeforeReload = -1;
+    }
+
+    // 같은 메시지 + 같은 스택은 한 줄로 묶어 횟수만 센다 — 똑같은 NRE 50줄이 결과를 다 먹어 다른 예외가 잘리던 것(outbox 1264)을 막는다.
+    [Serializable]
+    class GameShotLog
+    {
+        public string type;
+        public string message;
+        public string stack;        // 첫 몇 줄 + Assets/ 프레임
+        public int count;
+    }
+
+    static GameShotJob LoadGameShot()
+    {
+        string json = SessionState.GetString(GameShotKey, "");
+        return json.Length == 0 ? null : JsonUtility.FromJson<GameShotJob>(json);
+    }
+
+    static void SaveGameShot(GameShotJob job) => SessionState.SetString(GameShotKey, JsonUtility.ToJson(job));
+
+    static string StartGameShot(string[] parts)
+    {
+        if (parts.Length == 0) return "❌ 사용법: gameshot <파일> [초] [가로x세로] [super:N] [click:<버튼>]...";
+        if (Application.isBatchMode) return "❌ gameshot은 켜진 에디터에서만 된다(배치모드엔 Game 뷰가 없다)";
+        if (currentId == null) return "❌ gameshot은 inbox로만 받는다(결과를 플레이 모드 뒤에 그 번호로 쓴다)";
+        if (EditorApplication.isPlayingOrWillChangePlaymode) return "❌ 이미 플레이 모드다 — 멈춘 뒤 다시 보내세요";
+        if (EditorUtility.scriptCompilationFailed) return "❌ 컴파일 오류가 있어 플레이 모드에 못 들어간다(콘솔을 먼저 비우세요)";
+        if (LoadGameShot() != null) return "❌ 앞선 gameshot이 아직 안 끝났다";
+
+        string name = parts[0].EndsWith(".png") ? parts[0] : parts[0] + ".png";
+        GameShotJob job = new GameShotJob { id = currentId, seconds = 3f };
+        StringBuilder report = new StringBuilder();
+
+        // 인자는 모양으로 가른다 — 순서를 외울 필요가 없게.
+        foreach (string token in parts.Skip(1))
+        {
+            if (token.StartsWith("click:"))
+            {
+                if (token.Length == 6) return "❌ click: 뒤에 버튼 이름이나 글자를 주세요";
+                job.clicks.Add(token.Substring(6));
+            }
+            else if (token.StartsWith("super:"))
+            {
+                if (!int.TryParse(token.Substring(6), out job.superSize) || job.superSize < 1 || job.superSize > 4)
+                    return $"❌ super:는 1~4: {token}";
+            }
+            else if (token.ToLowerInvariant().Contains('x'))
+            {
+                string[] wh = token.ToLowerInvariant().Split('x');
+                if (wh.Length != 2 || !uint.TryParse(wh[0], out uint w) || !uint.TryParse(wh[1], out uint h) || w == 0 || h == 0)
+                    return $"❌ 해상도는 가로x세로로: {token}";
+                PlayModeWindow.SetViewType(PlayModeWindow.PlayModeViewTypes.GameView);
+                PlayModeWindow.SetCustomRenderingResolution(w, h, "Claude gameshot");
+                report.AppendLine($"   Game 뷰 해상도를 {w}×{h}로 고정했다(Game 뷰에 남는다)");
+            }
+            else if (float.TryParse(token, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float s) && s >= 0)
+                job.seconds = s;
+            else
+                return $"❌ 모르는 인자: {token}";
+        }
+
+        if (!parts.Skip(1).Any(t => !t.StartsWith("click:") && t.ToLowerInvariant().Contains('x')))
+        {
+            PlayModeWindow.GetRenderingResolution(out uint viewWidth, out uint viewHeight);
+            report.AppendLine($"   ⚠️ 해상도를 안 박았다 — 지금 Game 뷰 {viewWidth}×{viewHeight} 그대로 찍는다. " +
+                              "글씨·UI 판정용이면 1920x1080처럼 해상도를 주고 다시 찍을 것(작은 창에선 UI가 줄어 글자가 뭉개진다).");
+        }
+
+        job.file = Path.GetFullPath(Path.Combine(Folder, "shots", name));
+        Directory.CreateDirectory(Path.GetDirectoryName(job.file));
+        // 같은 이름의 옛 사진이 남아 있으면 「찍혔다」로 오판한다 — 먼저 지운다.
+        if (File.Exists(job.file)) File.Delete(job.file);
+
+        job.stage = "entering";
+        job.stageSince = EditorApplication.timeSinceStartup;
+        job.report = report.ToString();
+        SaveGameShot(job);
+        EditorApplication.isPlaying = true;   // 이 update가 끝난 뒤에 들어간다
+
+        string clicks = job.clicks.Count > 0 ? $" · 누를 버튼 {string.Join(" → ", job.clicks)}" : "";
+        return $"⏳ 플레이 모드로 들어가 찍는다(씬 {SceneManager.GetActiveScene().name}{clicks} · 마지막 뒤 {job.seconds:F1}초 · ×{job.superSize}) — 결과는 나온 뒤 이 파일에 이어 쓴다";
+    }
+
+    static double nextGameShotTick;
+
+    static void TickGameShot()
+    {
+        if (EditorApplication.timeSinceStartup < nextGameShotTick) return;
+        nextGameShotTick = EditorApplication.timeSinceStartup + 0.25;
+
+        GameShotJob job = LoadGameShot();
+        if (job == null || job.prefix == null) return;   // prefix가 비었으면 아직 Poll이 명령 파일을 다 안 돌렸다
+
+        double inStage = EditorApplication.timeSinceStartup - job.stageSince;
+        if (job.stage != "entering" && job.stage != "exiting" && !EditorApplication.isPlaying)
+        {
+            FailGameShot(job, $"{job.stage} 중에 플레이 모드가 끝났다(누가 멈췄거나 예외로 중단)");
+            return;
+        }
+
+        switch (job.stage)
+        {
+            case "entering":
+                if (EditorApplication.isPlaying && !EditorApplication.isPaused)
+                    Advance(job, "settling");
+                else if (!EditorApplication.isPlayingOrWillChangePlaymode && inStage > 2)
+                    FailGameShot(job, "플레이 모드 진입이 취소됐다(컴파일 오류·저장 대화상자 등). 콘솔을 보세요");
+                else if (inStage > GameShotEnterTimeout)
+                    FailGameShot(job, $"{GameShotEnterTimeout}초 안에 플레이 모드에 못 들어갔다");
+                break;
+
+            case "settling":
+                if (inStage >= GameShotSettle) Advance(job, job.clicks.Count > 0 ? "clicking" : "waiting");
+                break;
+
+            case "clicking":
+            {
+                if (job.clickIndex > 0 && inStage < GameShotClickGap) break;   // 앞 클릭의 결과가 화면에 반영될 틈
+                string target = job.clicks[job.clickIndex];
+                string clicked = ClickButton(target);
+                if (clicked != null)
+                {
+                    job.report += $"   🖱 {job.clickIndex + 1}번째 클릭: {clicked}\n";
+                    job.clickIndex++;
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : "waiting");
+                }
+                else if (inStage > GameShotClickSearch)
+                {
+                    FailGameShot(job, $"{GameShotClickSearch}초 동안 「{target}」 버튼을 못 찾았다. 그때 보이던 누를 수 있는 버튼:\n" + ListButtons());
+                }
+                break;
+            }
+
+            case "waiting":
+                if (inStage >= job.seconds)
+                {
+                    ScreenCapture.CaptureScreenshot(job.file, job.superSize);   // 이 프레임 끝에 Game 뷰(UI 포함)를 파일로 쓴다
+                    Advance(job, "capturing");
+                }
+                break;
+
+            case "capturing":
+            {
+                long size = File.Exists(job.file) ? new FileInfo(job.file).Length : -1;
+                if (size > 0 && size == job.lastSize)   // 두 번 연속 크기가 같으면 다 써진 것
+                {
+                    job.report += "   " + DescribePng("📷", job.file) + "\n";
+                    Advance(job, "exiting");
+                    EditorApplication.isPlaying = false;
+                }
+                else if (inStage > GameShotCaptureTimeout)
+                {
+                    FailGameShot(job, $"{GameShotCaptureTimeout}초 안에 캡처 파일이 안 생겼다 — Game 뷰 창이 닫혀 있거나 다른 탭 뒤에 숨어 있으면 " +
+                                      "ScreenCapture가 아무것도 안 쓴다. Game 뷰를 보이게 둔 채 다시 보내세요");
+                }
+                else
+                {
+                    job.lastSize = size;
+                    SaveGameShot(job);
+                }
+                break;
+            }
+
+            case "exiting":
+                if (!EditorApplication.isPlayingOrWillChangePlaymode)
+                    FinishGameShot(job);
+                else if (inStage > GameShotExitTimeout)
+                {
+                    job.report += $"   ⚠️ {GameShotExitTimeout}초가 지나도 플레이 모드가 안 끝났다 — 결과만 먼저 쓴다(에디터는 아직 플레이 중)\n";
+                    FinishGameShot(job);
+                }
+                break;
+        }
+    }
+
+    // 지금 화면에 켜져 있고 누를 수 있는 버튼 중 이름이나 글자가 target인 것을 누른다. 누른 버튼 설명을 돌려준다(못 찾으면 null).
+    // 실제 클릭과 같은 길(ExecuteEvents.pointerClickHandler → Button.OnPointerClick)로 보낸다 — interactable이 꺼져 있으면 안 눌린다.
+    static string ClickButton(string target)
+    {
+        foreach (UnityEngine.UI.Button button in UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        {
+            if (!button.IsActive() || !button.IsInteractable()) continue;
+            string label = ButtonLabel(button);
+            if (button.gameObject.name != target && label != target) continue;
+
+            var eventData = new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current);
+            UnityEngine.EventSystems.ExecuteEvents.Execute(button.gameObject, eventData, UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
+            return $"{button.gameObject.name}「{label}」";
+        }
+        return null;
+    }
+
+    static string ButtonLabel(UnityEngine.UI.Button button)
+    {
+        UnityEngine.UI.Text text = button.GetComponentInChildren<UnityEngine.UI.Text>();
+        if (text != null && !string.IsNullOrWhiteSpace(text.text)) return text.text.Trim();
+        TMPro.TMP_Text tmp = button.GetComponentInChildren<TMPro.TMP_Text>();
+        return tmp != null ? tmp.text.Trim() : "";
+    }
+
+    static string ListButtons()
+    {
+        var buttons = UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
+            .Where(b => b.IsActive() && b.IsInteractable())
+            .Select(b => $"      {b.gameObject.name}「{ButtonLabel(b)}」")
+            .Take(40).ToList();
+        return buttons.Count == 0 ? "      (없음)" : string.Join("\n", buttons);
+    }
+
+    // 생성자가 불렸다 = 도메인이 막 다시 로드됐다. 플레이 모드 진입 때의 리로드는 정상(stage가 아직 entering)이고,
+    // 그 뒤 단계에서 불렸다면 **플레이 도중** 리로드다 — 에셋 임포트(다른 세션이 파일을 넣음)나 스크립트 수정이 원인이다.
+    // 2026-09-23 outbox 1264: 박준희 FBX 복사가 플레이 중 임포트·리로드를 일으켜 InterludeGate.propertyBlock·
+    // PirateQuestShop.slotState(둘 다 Awake에서 만드는 비직렬화 필드)가 null이 되고 NRE 50여 건이 났다. 결과에 이 표시를 붙인다.
+    static void NoteMidPlayReload()
+    {
+        GameShotJob job = LoadGameShot();
+        if (job == null || job.stage == "entering" || job.stage == "exiting") return;
+        if (job.midPlayReloads == 0) job.logsBeforeReload = job.logs.Sum(l => l.count) + job.droppedLogs;
+        job.midPlayReloads++;
+        job.report += $"   ⚠️ {job.stage} 중에 도메인이 다시 로드됐다(플레이 도중 에셋 임포트·스크립트 변경)\n";
+        SaveGameShot(job);
+    }
+
+    static void Advance(GameShotJob job, string stage)
+    {
+        job.stage = stage;
+        job.stageSince = EditorApplication.timeSinceStartup;
+        job.lastSize = -1;
+        SaveGameShot(job);
+    }
+
+    // 실패도 반드시 outbox에 남긴다 — 빈 결과가 제일 나쁘다. 플레이 중이면 먼저 빠져나온 뒤 쓴다.
+    static void FailGameShot(GameShotJob job, string why)
+    {
+        job.failed = true;
+        job.report += $"   ❌ {why}\n";
+        if (EditorApplication.isPlaying)
+        {
+            Advance(job, "exiting");
+            EditorApplication.isPlaying = false;
+        }
+        else FinishGameShot(job);
+    }
+
+    static void FinishGameShot(GameShotJob job)
+    {
+        SessionState.EraseString(GameShotKey);
+        StringBuilder text = new StringBuilder(job.prefix);
+        string tainted = job.midPlayReloads > 0 ? $" (⚠️ 오염 — 플레이 도중 도메인 리로드 {job.midPlayReloads}번)" : "";
+        text.AppendLine((job.failed ? "▶ gameshot 결과: ❌ 실패" : "▶ gameshot 결과: ✅") + tainted);
+        text.Append(job.report);
+        if (job.midPlayReloads > 0)
+            text.AppendLine($"   ⚠️ 리로드 전까지 경고·오류 {job.logsBeforeReload}건. 리로드는 직렬화 안 된 필드(Awake에서 만든 것)를 null로 날리고 " +
+                            "Awake를 다시 안 부른다 — 그 뒤의 NullReference는 빌드에선 안 날 수 있다. 임포트가 끝난 조용한 에디터에서 다시 찍을 것.");
+        if (job.logs.Count > 0)
+        {
+            int total = job.logs.Sum(l => l.count) + job.droppedLogs;
+            text.AppendLine($"— 플레이 중 경고·오류 {total}건({job.logs.Count}종, 같은 메시지+스택은 묶음) —");
+            foreach (GameShotLog log in job.logs)
+            {
+                text.AppendLine($"[{log.type}] ×{log.count} {log.message}");
+                if (log.stack.Length > 0) text.Append(log.stack);
+            }
+            if (job.droppedLogs > 0) text.AppendLine($"   …종류 상한 {GameShotMaxLogKinds}을 넘은 {job.droppedLogs}건은 생략");
+        }
+        WriteResult(job.id, text.ToString());
+    }
+
+    // 플레이 중에 난 경고·오류를 결과에 싣는다(UI가 안 떴다면 이유가 대개 여기 있다). 일반 로그는 너무 많아 뺀다.
+    // Exception·Error·Assert는 스택 첫 4줄과, 그 안에 없으면 첫 Assets/ 프레임을 붙인다 — 「어디서 터지는지」가 보이게.
+    static void CollectGameShotLog(string message, string stack, LogType type)
+    {
+        if (type == LogType.Log) return;
+        GameShotJob job = LoadGameShot();
+        if (job == null) return;
+
+        string head = message.Length > 400 ? message.Substring(0, 400) + " …" : message;
+        string frames = "";
+        if (type != LogType.Warning && !string.IsNullOrEmpty(stack))
+        {
+            string[] lines = stack.Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0).ToArray();
+            List<string> keep = lines.Take(4).ToList();
+            string ours = lines.FirstOrDefault(l => l.Contains("Assets/"));
+            if (ours != null && !keep.Contains(ours)) keep.Add("… " + ours);
+            frames = string.Concat(keep.Select(l => $"      at {l}\n"));
+        }
+
+        GameShotLog same = job.logs.FirstOrDefault(l => l.type == type.ToString() && l.message == head && l.stack == frames);
+        if (same != null) same.count++;
+        else if (job.logs.Count < GameShotMaxLogKinds) job.logs.Add(new GameShotLog { type = type.ToString(), message = head, stack = frames, count = 1 });
+        else job.droppedLogs++;
+        SaveGameShot(job);
+    }
+
+    // PNG를 열어 크기를 읽고, 16×16 격자로 떠서 단색인지 본다 — 「파일은 있는데 까맣다」를 숫자로 가른다.
+    static string DescribePng(string label, string path)
+    {
+        byte[] bytes = File.ReadAllBytes(path);
+        Texture2D texture = new Texture2D(2, 2);
+        try
+        {
+            if (!texture.LoadImage(bytes)) return $"{label} ❌ PNG로 못 읽음: {path} ({bytes.Length}바이트)";
+            HashSet<Color32> colors = new HashSet<Color32>();
+            for (int y = 0; y < 16; y++)
+                for (int x = 0; x < 16; x++)
+                    colors.Add(texture.GetPixel(x * texture.width / 16, y * texture.height / 16));
+            string flat = colors.Count <= 1 ? " · ⚠️ 단색 — 화면이 안 그려졌을 수 있다" : $" · 표본 색 {colors.Count}가지";
+            return $"{label} {path} ({texture.width}×{texture.height}, {bytes.Length / 1024}KB{flat})";
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(texture);
         }
     }
 }

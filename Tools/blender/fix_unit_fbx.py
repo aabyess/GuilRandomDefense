@@ -2852,6 +2852,68 @@ UNITS = {
                           drop_bones=["grab", "COG", "jointroot", "root"],
                           reparent_bones={"mixamorig:Spine": "mixamorig:Hips"},
                           merge_to_nearest=True),
+    # 사이렌헤드 → 안흔함_박준희 **재출력**(2026-09-23 blender, 구현담당2 유니티 실측으로 반려).
+    #   glb 원본이 없어 **커밋된 FBX를 원본 삼아** 다시 만든다(Assets/Art/Units/안흔함_박준희/안흔함_박준희.fbx).
+    # 🔴 원인: **뼈대와 메시가 서로 다른 좌표계**. 임포트해 재 보면 메시 정점은 Y 위 12.25 크기인데 뼈 레스트는
+    #   Z 위 1,205 크기다(약 100배 + X −90°). 게다가 노드 계층이 root(0.01·X90) > GLTF_SceneRootNode(X90) >
+    #   Skeleton_58(0.01·X90) > 아마추어라 아마추어 matrix_world 배율이 0.0001까지 내려간다.
+    #   쉬는 자세에선 뼈가 안 움직여 멀쩡해 보이지만, 공용 Idle을 입히면 t=0에서 ×44로 터진다(구현담당2 실측).
+    # 고침: refit_armature_to_mesh — 뼈마다 그 뼈에 실린 정점의 무게중심을 구해 (뼈 머리 → 무게중심) 짝으로
+    #   닮음변환을 풀고 아마추어를 메시 좌표계로 옮긴다. 그 다음은 평소대로 키 1.8·Hips 원점·+Z 위로 맞춘다.
+    # ⚠️ 머리가 사이렌이라 사람 비율과 다르다 — PM 지시대로 **머리 모양은 원본 그대로** 두고 몸통·팔다리만 사람 골격에 맞춘다.
+    #   Siren_1_0 · Siren_2_1(머리 위 사이렌 나팔 둘)은 Head 밑 그대로 둔다(merge_to_nearest가 Head로 합친다).
+    "안흔함_박준희": dict(path="Assets/Art/Units/안흔함_박준희/안흔함_박준희.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(ROOT, "Assets/Art/Units/안흔함_박준희/안흔함_박준희.fbx"),
+                      refit_armature_to_mesh=True,
+                      no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
+                      rename_bones={
+                          "Hips_53": "mixamorig:Hips", "Spine_44": "mixamorig:Spine",
+                          "Spine1_43": "mixamorig:Spine1", "Spine2_42": "mixamorig:Spine2",
+                          "Neck_3": "mixamorig:Neck", "Head_2": "mixamorig:Head",
+                          "LeftShoulder_22": "mixamorig:LeftShoulder", "LeftArm_21": "mixamorig:LeftArm",
+                          "LeftForeArm_20": "mixamorig:LeftForeArm", "LeftHand_19": "mixamorig:LeftHand",
+                          "RightShoulder_41": "mixamorig:RightShoulder", "RightArm_40": "mixamorig:RightArm",
+                          "RightForeArm_39": "mixamorig:RightForeArm", "RightHand_38": "mixamorig:RightHand",
+                          "LeftUpLeg_48": "mixamorig:LeftUpLeg", "LeftLeg_47": "mixamorig:LeftLeg",
+                          "LeftFoot_46": "mixamorig:LeftFoot", "LeftToeBase_45": "mixamorig:LeftToeBase",
+                          "RightUpLeg_52": "mixamorig:RightUpLeg", "RightLeg_51": "mixamorig:RightLeg",
+                          "RightFoot_50": "mixamorig:RightFoot", "RightToeBase_49": "mixamorig:RightToeBase"},
+                      drop_bones=["GLTF_created_0_rootJoint"],
+                      merge_to_nearest=True),
+    # ── 2026-09-23 「게임에서 점으로만 보이는 셋」(구현담당2 유니티 전수 실측 → PM) ──────────────────────────
+    # 🔴 유니티 ArtBinder에는 「키를 1,000배 넘게 키워야 하면 잘못 잰 것으로 보고 크기 맞추기를 건너뛴다」는 안전장치가 있다
+    #    (옛날 어떤 모델이 7,062배로 폭주한 뒤 넣은 것). 원본 키가 0.022m인 아래 셋만 그 문턱을 넘어 **점으로 남았다**:
+    #    idle 1,161배 · 특별함_임장혁 1,361배 · 흔함_양재모 1,050배. 나머지 유닛은 원본 키가 제각각이어도
+    #    ArtBinder가 세워 주므로 손대지 않는다(김용태 22.99m·박민수 0.027m 등은 유니티에서 이미 정상 키다).
+    # 🔸 아래 둘은 2026-09-14에 손본 「pl_ 여섯」에서 빠져 있던 바운티러시 게임 립이다 — 그때와 같은 처방:
+    #    표정·손 변형 메시가 겹친 채 들어가 있으니 기본만 남기고, 뼈 이름을 PL_RENAME(모리아에서 유니티 통과)으로 바꾼다.
+    #    🔴 흔함_양재모는 유니티에서 **공용 Idle 리타게팅 자체가 실패**한다(맵 생성 29건) — 원인은 키가 아니라
+    #    world_joint 밑 pl_ 이름 리그라 아바타가 제대로 안 잡히는 것. 이름 바꾸기가 그 고침이다.
+    "특별함_임장혁": dict(path="Assets/Art/Units/특별함_임장혁/특별함_임장혁.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(ROOT, "Assets/Art/Units/특별함_임장혁/특별함_임장혁.fbx"),
+                      # 표정 셋 중 face_normal만 · 주먹은 편 손만 · 연기팔 변형(l/r_smokehand_close)은 기본 손과 같은 자리라 뺀다
+                      drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close",
+                                   "l_smokehand_close", "r_smokehand_close"],
+                      drop_bones=["pl_smoker_2yaf01", "world_joint", "HELPER_key",
+                                  # 살린 Null 노드 중 뼈대 바깥 표식 넷(가중치 0) — 사람 뼈 위쪽에 안 붙어 merge_to_nearest가 막는다
+                                  "model_root", "HELPER_name", "pre_flag", "post_flag"],
+                      rename_bones=PL_RENAME, merge_to_nearest=True,
+                      null_frames_from_node=True, orient_snap=True),
+    "흔함_양재모": dict(path="Assets/Art/Units/흔함_양재모/흔함_양재모.fbx", kind="human", size=("height", 1.8),
+                    source=os.path.join(ROOT, "Assets/Art/Units/흔함_양재모/흔함_양재모.fbx"),
+                    drop_meshes=["face_attack", "face_damage", "face_sp01",
+                                 "l_hand_close", "l_hand_sp_01", "l_hand_sp_02",
+                                 "r_hand_close", "r_hand_sp_01", "r_hand_sp_02"],
+                    drop_bones=["world_joint"],
+                    rename_bones=PL_RENAME, merge_to_nearest=True,
+                    null_frames_from_node=True, orient_snap=True),
+    # 🔴 흔함_최상호 = Assets/Art/Characters/idle.fbx (폴더 이름이 유닛 이름이 아니라 전수 검수에서 통째로 빠졌다).
+    #    그 파일은 **공용 Idle 클립의 원본이기도 하다**(Character.controller가 그 안의 클립을 쓴다) — 건드리면 211종 자세가 다 무너진다.
+    #    그래서 원본은 그대로 두고 **모델만 따로** 유닛 폴더로 내보낸다(애니 없음). 배선은 PM이 바꾼다.
+    #    원본은 Mixamo 리그(mixamorig 65뼈)인데 아마추어 노드 배율이 0.01이라 키가 0.022m으로 읽힌다.
+    "흔함_최상호": dict(path="Assets/Art/Units/흔함_최상호/흔함_최상호.fbx", kind="human", size=("height", 1.8),
+                    source=os.path.join(ROOT, "Assets/Art/Characters/idle.fbx"),
+                    no_nulls=True, orient_snap=True),
 }
 HIPS = re.compile(r"(?i)(^|[:_ .])(hips?|pelvis)($|[_ .0-9])")
 HEAD = re.compile(r"(?i)(^|[:_ .])head($|[_ .0-9])")
@@ -4136,6 +4198,61 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         bpy.context.view_layer.update()
         report["사슬 줄임"] = f"{chain[0]}~{chain[-1]} ×{f} · 정점 {moved}"
 
+    if cfg.get("refit_armature_to_mesh"):
+        # 🔴 사이렌헤드(안흔함_박준희, 2026-09-23 구현담당2 유니티 실측으로 확정): **뼈대와 메시가 서로 다른 좌표계에 있다.**
+        #   메시 정점은 Y 위 12.25 크기인데 뼈 레스트는 Z 위 1,205 크기다(약 100배 + X −90° 회전, 직접 실측).
+        #   쉬는 자세에서는 뼈가 안 움직이니 멀쩡해 보이지만, 아바타가 「누운 100배 뼈대」로 만들어져 어떤 사람형 클립도 못 입는다
+        #   (공용 Idle을 입히면 t=0에서 벌써 ×44로 터진다). 유니티 쪽 특례(배율 100·X180)는 쉬는 자세만 가리는 반창고였다.
+        # 고치는 법: **정점 그룹이 정답을 알고 있다** — 뼈마다 그 뼈에 실린 정점의 무게중심을 구하면
+        #   (뼈 머리 → 무게중심) 짝이 생기고, 거기서 닮음변환(균일 배율·회전·이동)을 최소제곱으로 푼다(Umeyama).
+        #   그 변환을 아마추어에 곱하면 뼈대가 메시 좌표계로 들어온다. 쉬는 자세 모습은 그대로고(포즈=레스트),
+        #   애니를 입혔을 때만 제대로 움직이게 된다.
+        arm_f = main_armature()
+        assert arm_f is not None, f"{name}: refit_armature_to_mesh인데 아마추어가 없다"
+        for m in meshes:                                                # 아마추어를 옮기면 자식 메시가 따라오므로 먼저 떼어 둔다(세계 자리는 유지)
+            if m.parent is arm_f:
+                Mw = m.matrix_world.copy()
+                m.parent = None
+                m.matrix_world = Mw
+        bpy.context.view_layer.update()
+        Wa = arm_f.matrix_world.copy()
+        X, Y, used = [], [], []
+        for b in arm_f.data.bones:
+            acc, wsum = Vector((0, 0, 0)), 0.0
+            for m in meshes:
+                g = m.vertex_groups.get(b.name)
+                if g is None:
+                    continue
+                Mw = m.matrix_world
+                for v in m.data.vertices:
+                    w = next((ge.weight for ge in v.groups if ge.group == g.index), 0.0)
+                    if w > 0.01:
+                        acc += (Mw @ v.co) * w
+                        wsum += w
+            if wsum > 20.0:                                             # 정점이 몇 개뿐인 뼈(손가락 끝)는 잡음이라 뺀다
+                X.append(list(Wa @ b.head_local))
+                Y.append(list(acc / wsum))
+                used.append(b.name)
+        assert len(X) >= 4, f"{name}: 닮음변환을 풀 짝이 모자라다({len(X)})"
+        import numpy as _np
+        Xa, Ya = _np.array(X), _np.array(Y)
+        mx, my = Xa.mean(0), Ya.mean(0)
+        Xc, Yc = Xa - mx, Ya - my
+        U, S, Vt = _np.linalg.svd(Xc.T @ Yc / len(Xa))
+        d = 1.0 if _np.linalg.det(Vt.T @ U.T) > 0 else -1.0
+        Rm = Vt.T @ _np.diag([1.0, 1.0, d]) @ U.T
+        sc = float((S * [1.0, 1.0, d]).sum() / (Xc ** 2).sum() * len(Xa))
+        tv = my - sc * (Rm @ mx)
+        T = Matrix([[*(sc * Rm[0]), tv[0]], [*(sc * Rm[1]), tv[1]], [*(sc * Rm[2]), tv[2]], [0, 0, 0, 1]])
+        res = _np.linalg.norm((sc * (Rm @ Xa.T)).T + tv - Ya, axis=1)
+        span = float(_np.linalg.norm(Ya.max(0) - Ya.min(0)))
+        arm_f.matrix_world = T @ Wa
+        bpy.context.view_layer.update()
+        report["뼈대 좌표계 맞춤"] = {"짝 뼈": len(X), "배율": round(sc, 4),
+                               "잔차 중앙/최대(모델 대비 %)": [round(float(_np.median(res) / span * 100), 2),
+                                                round(float(res.max() / span * 100), 2)]}
+        assert float(_np.median(res) / span) < 0.15, \
+            f"{name}: 뼈대↔메시 닮음변환이 안 맞는다(잔차 중앙 {float(_np.median(res) / span) * 100:.1f}%) {report['뼈대 좌표계 맞춤']}"
     # ── 기본 자세 그대로 붙잡기
     if arm is not None and cfg.get("pose_bones_world"):
         # 🔸 죠타로(2026-09-16): 옷깃 키체인 뼈가 쉬는 자세에서 수평(게임은 물리로 늘어뜨림) → 유니티에선 옆으로 막대처럼 뻗는다.
