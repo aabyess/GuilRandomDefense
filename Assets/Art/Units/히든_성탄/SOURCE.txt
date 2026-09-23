@@ -1,0 +1,40 @@
+히든_성탄(도로헤도로 교자맨, 만두 머리 마스코트) — blender 세션(2026-09-23).
+fix_unit_fbx.py UNITS["히든_성탄"]로 처리.
+
+■ 원본
+~/Desktop/구랜디스킨모음/05_히든/히든_성탄.zip
+ - source/Surprised.fbx (뼈 65 · 메시 3(man 1,373정점 · default 0정점 · Cube) · 재질 0 ·
+   애니 1)
+ - textures/lambert2SG_Base_Color.png · lambert2SG_Normal_DirectX.png
+
+■ 확인
+- 🔴 표준 Mixamo 리그 그대로 — 뼈 65개가 이미 "mixamorig:Hips" 등 정확한 이름이고 뿌리도
+  mixamorig:Hips 직통(래퍼 뼈 없음). 이 프로젝트에서 이름표·뿌리 정리가 **아예 필요 없던
+  첫 사례**(rename_bones·drop_bones 둘 다 안 씀).
+- 🔴 메시에 재질이 0개(직접 확인 — 부머/희귀함_이용민과 같은 증상) → mesh_material로 새
+  재질("gyozaman")을 만들어 man 메시에 붙이고 Base Color만 물림.
+- DirectX 노멀맵(lambert2SG_Normal_DirectX.png)은 PM 지시대로 안 씀(유니티 OpenGL 규약과
+  G 채널이 반대).
+- "default" 메시는 정점 0개(빈 껍데기), Cube는 면 없음 — 둘 다 이 파이프라인이 안 읽음.
+- Mixamo에서 "Surprised" 동작을 붙여 받은 파일이라 애니가 하나 있음 → use_rest_pose로
+  결합 자세를 씀(배치 리포트 "기본 자세 버림 결합 자세 사용" 확인).
+- 손가락 끝(4번)·HeadTop_End·Toe_End 13뼈가 가중치 0 → seed_zero_bones 안전판.
+
+■ 🔴 키 1.8 정규화 기준(PM 질문 답)
+만두 머리가 워낙 커서 비율이 특이함 — 1.8m로 맞춘 뒤 재수입해 실측:
+  엉덩이 z 0.463 · 목 z 1.215 · 머리(턱) z 1.302 · 정수리 1.8
+  → 머리 덩어리만 전체 키의 약 28%(0.498m), 다리는 26%(0.463m)뿐.
+즉 전신(머리 포함) 기준으로 1.8m를 맞췄기 때문에, 다른 유닛과 같은 1.8이어도 **몸통은
+훨씬 작아 보인다**(원작 마스코트 비율 그대로). 게임 안에서 다른 유닛과 나란히 세웠을 때
+머리만 크고 키가 작아 보이는 게 자연스러운지는 PM이 크기 표에서 판단할 것.
+
+■ 검증
+- 배치 리포트: 뼈 65개, 휴머노이드 필수 15뼈 전부 가중치 있음, 크기 (1.635, 0.601, 1.8)m,
+  최저 z 0.
+- 재수입 확인: 최상위 오브젝트 "Armature", Hips 부모 None, 다리 완전 수직.
+- Idle 리타겟(레스트·정면·측면 렌더) — 접힘·찢어짐 없음, 만두 머리·짧은 팔다리 다 자연
+  스럽게 따라감, 만두 주름(가장자리 crimp) 텍스처 정상.
+
+■ 산출물(스크래치만, Assets 미반영)
+히든_성탄.fbx · Textures/gyozaman_baseColor.png · rest_front.png · idle_front.png ·
+idle_side.png
