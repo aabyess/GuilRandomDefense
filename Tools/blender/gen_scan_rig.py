@@ -911,6 +911,42 @@ UNITS = {
         max_bone_share=0.7,
         texture_sources={"kon_baseColor.png": "monster_hun.png"},
         materials={"monster-hun": [("Base Color", "kon_baseColor.png")]}),
+    # 체인소맨 포치타(덴지의 체인소 악마 개) → 히든_뻬꼼(2026-09-22 히든, blender 세션).
+    # source/Pochita.fbx — 🔴 **뼈 0 · 애니 0 · 정점그룹 0의 완전 정적 FBX**(원본이 "Pochita Baked Textures.blend"에서 구운 것, 파일 안 경로 문자열로 확인).
+    #   메시 3: Body(12,706정점, 재질 Body) · Accesories(6,233, 재질 Accesories) · Chainsaw(1,967, 재질 Accesories). 합 20,906정점 · 20,676면(감량 불필요).
+    # 🔴 네발 짐승이라 사람형(Humanoid)이 원천적으로 불가 → PM 지시대로 Generic + 합성 Idle.
+    # 원본 Z 위 · 얼굴(체인소 날)이 −Y → rotate_z 불필요(look_negY.png로 확인).
+    # 🔴 재질↔텍스처는 이름이 아니라 **픽셀 내용으로** 확인했다(덴지 교훈): FBX에 텍스처 참조가 아예 없어(strings로 확인) 이름 말고는 단서가 없었는데,
+    #   Orange_Color.png(4096²)가 주황·살색 일색이고 Accesories.png(2048²)가 회색 금속 일색이라 Body=주황 / Accesories=금속이 확실하다.
+    #   Body_Normal_Map.jpg는 PM 지시대로 안 쓴다(거의 평면 (128,127,254) 일색이라 효과도 거의 없다 — 직접 확인).
+    # 🔴 크기: 「키 1.8」 관례를 그대로 쓰면 z(등에 선 손잡이 포함 2.86)가 1.8이 되어, 코~꼬리 길이 4.21이 2.65m가 된다(라분과 같은 문제).
+    #   실제 포치타는 40cm짜리라 게임 안 크기는 PM이 표에서 정할 것. 비율만 남긴다 — 길이:높이:폭 = 4.21 : 2.86 : 1.56 (≈ 2.7 : 1.8 : 1.0).
+    # 다리 넷은 걷는 자세로 엇갈려 있다(실측, z 0.05 단면 네 뭉치): 왼앞 (0.36, −0.65) · 오른앞 (−0.37, −0.16) · 왼뒤 (0.35, 0.60) · 오른뒤 (−0.38, 1.05).
+    #   z 0.45에서 배와 합쳐진다. 서 있는 유닛이라 Idle에서 발은 안 움직인다(다리 뼈엔 파형을 안 준다 — 발이 바닥에서 뜨면 안 됨).
+    "히든_뻬꼼": dict(
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_뻬꼼.zip"), mesh_name="Pochita",
+        member=["source/Pochita.fbx"],
+        height=1.8, center_band=(0.0, 0.05), decimate=1.0, rotate_z=0.0,
+        generic_bones=[
+            ("Body", (0.0, 0.1, 1.2), (0.0, -0.6, 1.25), None),
+            ("Head", (0.0, -0.6, 1.25), (0.0, -1.6, 1.3), "Body"),      # 얼굴~주둥이. 체인소 날은 아래 rigid_meshes로 통째로 이 뼈에.
+            ("Tail", (0.0, 0.1, 1.2), (0.0, 1.45, 1.15), "Body"),        # 엉덩이 쪽 — 꼬리 돌기와 뒤에 늘어진 시동줄·손잡이가 여기 붙는다.
+            ("LegFrontL", (0.36, -0.65, 0.5), (0.36, -0.65, 0.02), "Body"),
+            ("LegFrontR", (-0.37, -0.16, 0.5), (-0.37, -0.16, 0.02), "Body"),
+            ("LegBackL", (0.35, 0.6, 0.5), (0.35, 0.6, 0.02), "Body"),
+            ("LegBackR", (-0.38, 1.05, 0.5), (-0.38, 1.05, 0.02), "Body")],
+        straighten=[],
+        rigid_meshes={"Chainsaw": "Head"},                               # 코에 달린 체인소 날(따로 선 얇은 판) — heat에 맡기면 몸통에 끌려 휜다
+        # 서 있는 짐승의 대기 동작: 몸통이 아주 작게 끄덕이고(숨), 머리가 그보다 크게, 뒤에 늘어진 시동줄이 꼬리 뼈를 따라 좌우로 흔들린다.
+        # 발이 바닥에서 뜨면 안 되므로 라분처럼 위아래 이동(loc)은 안 준다.
+        synth_idle=dict(take="Idle", frames=72, step=3, bones={
+            "Body": [((1, 0, 0), 1.5, 0.0)],
+            "Head": [((1, 0, 0), 4.0, -0.4)],
+            "Tail": [((0, 0, 1), 10.0, -0.6)]}),
+        # 몸통 하나가 거의 전부를 먹는 통짜 짐승(라분과 같은 처리) — 머리·꼬리·다리 넷이 살아 있는지만 본다.
+        max_bone_share=0.9,
+        materials={"Body": [("Base Color", "Orange_Color.png")],
+                   "Accesories": [("Base Color", "Accesories.png")]}),
 }
 
 # 🗑 폐기(2026-09-15 사장님 지시 — 특별함_강주혁 모델을 아이언맨으로 교체, fix_unit_fbx.py로): 코알라는 AI 메시가 닿은 곳마다 붙어 있어
@@ -2762,7 +2798,8 @@ def build(name, out_dir=None, render_dir=None):
     finally:
         fbx_bin.get_blenderID_name = name_of
     report["출력"] = dst
-    if render_dir:
+    if render_dir and not cfg.get("generic_bones"):
+        # 🔸 judge()/확대 렌더는 사람 뼈 이름(LeftArm 등)으로 자세를 잡는다 — Generic 리그(라분·포치타)엔 그 뼈가 없어 건너뛴다(그쪽은 합성 Idle 렌더로 본다).
         report["판정"] = judge(name, arm, body, render_dir)
         report["옆구리·가랑이 확대"] = armpit_crotch_renders(name, arm, body, render_dir, cfg.get("closeups"))
     return report

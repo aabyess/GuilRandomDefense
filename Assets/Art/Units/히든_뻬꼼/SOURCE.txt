@@ -1,0 +1,73 @@
+히든_뻬꼼(체인소맨 포치타 — 덴지의 체인소 악마 개) — blender 세션(2026-09-23).
+gen_scan_rig.py UNITS["히든_뻬꼼"]로 처리. 🔴 **Generic 리그 + 합성 Idle**(사람형 불가).
+
+■ 원본
+~/Desktop/구랜디스킨모음/05_히든/히든_뻬꼼.zip
+ - source/Pochita.fbx (1.0MB)
+ - textures/Orange_Color.png(4096²) · Accesories.png(2048²) · Body_Normal_Map.jpg(2048²)
+
+■ 🔴 리그 유무(PM 질문 답) — **없다**
+뼈 0 · 스킨 0 · 정점그룹 0 · 애니 0의 완전 정적 FBX. 원본이 "C:\Users\Sam\Desktop\Pochita\
+Pochita Baked Textures.blend"에서 구운 것이라는 경로 문자열만 파일 안에 남아 있다(직접 확인).
+→ 원본 뼈·클립을 쓸 수 없으므로 PM 지시대로 새로 Generic 리그를 짜고 Idle을 합성했다.
+메시 3 · 재질 2:
+  Body(12,706정점, 재질 Body) · Accesories(6,233, 재질 Accesories) · Chainsaw(1,967, 재질
+  Accesories). 합 20,906정점 · 20,676면 — 감량 불필요(decimate=1.0).
+
+■ 🔴 몸길이·키(PM 요청)
+원본(블렌더 가져오기 좌표, Z 위·정면 −Y):
+  길이 y −2.743 ~ 1.462 = **4.21**(체인소 날 끝 ~ 뒤 시동줄 손잡이)
+  높이 z 0 ~ 2.862 = **2.86**(등에 선 손잡이 포함. 살덩이 Body만은 2.25)
+  폭   x ±0.78 = **1.56**
+「키 1.8」 관례를 그대로 적용한 결과(배율 0.629):
+  **폭 0.983 · 길이 2.585 · 높이 1.8 m**, 최저 z 0.
+  → 비율 길이:높이:폭 ≈ **2.6 : 1.8 : 1.0**. 라분과 같은 문제로, 네발 짐승에 「키 1.8」을 쓰면
+    코~꼬리가 2.6m나 되는 큰 짐승이 된다(실제 포치타는 40cm짜리 소품 크기). 게임 안 크기는
+    PM이 표에서 정할 것 — 이 파일은 비율만 맞다.
+
+■ 🔴 재질↔텍스처 — 이름이 아니라 픽셀 내용으로 확인(덴지 교훈)
+FBX에 텍스처 참조가 **아예 없다**(strings로 파일 안을 훑어 확인 — 재질 이름 말고는 단서
+없음). 그래서 이미지 자체를 샘플해서 갈랐다:
+  Orange_Color.png = 주황·살색 일색 → 재질 "Body"
+  Accesories.png  = 회색 금속 일색 → 재질 "Accesories"(체인소 날·목 고리·등 손잡이·시동줄)
+Body_Normal_Map.jpg는 PM 지시대로 안 씀(거의 (128,127,254) 평면 일색이라 효과도 거의 없다).
+
+■ 처리
+- Generic 뼈 7개(아래 「PM 등록용」 참고). 체인소 날은 몸에서 떨어진 얇은 판이라 heat에 맡기면
+  휘어서 rigid_meshes로 **Chainsaw 메시 통째를 Head 100%**로 붙였다.
+- 다리 넷은 원본이 걷는 자세로 엇갈려 있다(z 0.05 단면 네 뭉치 실측): 왼앞 (0.36, −0.65) ·
+  오른앞 (−0.37, −0.16) · 왼뒤 (0.35, 0.60) · 오른뒤 (−0.38, 1.05). z 0.45에서 배와 합쳐진다.
+  뼈는 그 자리에 수직으로 박았고, **Idle에서 다리엔 파형을 안 준다** — 서 있는 유닛이라 발이
+  바닥에서 뜨면 안 된다(라분은 떠다니는 고래라 상하 이동을 줬지만 여기선 금물).
+- 합성 Idle(72프레임 · 키 25): 몸통 끄덕임 1.5°(숨) · 머리 4°(위상 −0.4) · 꼬리 좌우 10°
+  (위상 −0.6). 꼬리 뼈가 엉덩이 쪽 살과 **뒤에 늘어진 시동줄·손잡이**를 같이 물고 있어,
+  꼬리를 흔들면 줄이 같이 흔들린다(렌더로 확인 — 이게 제일 눈에 띄는 움직임이다).
+- 뼈 7개 전부 가중치 있음(죽은 뼈 0) · 빈 정점 0 · 최대 몫 Head 45.5%(체인소 강체 1,967 포함).
+  max_bone_share=0.9는 통짜 짐승이라 걸어 둔 여유값이지 실제로는 45%로 여유 있게 통과.
+
+■ 🔸 도구 보편 수정(gen_scan_rig.py)
+--render를 주면 돌던 judge()/겨드랑이·가랑이 확대 렌더가 사람 뼈 이름(LeftArm 등)으로 자세를
+잡아서 Generic 리그에선 KeyError로 죽었다(라분·신지우는 --render 없이 돌려 안 걸렸던 것) →
+generic_bones인 유닛에선 건너뛰게 했다. 그쪽은 합성 Idle 렌더로 본다.
+
+■ PM 등록용(GenericRigUnits)
+- 뼈 7개(내보낸 이름 그대로): mixamorig:Body(뿌리) · mixamorig:Head · mixamorig:Tail ·
+  mixamorig:LegFrontL · mixamorig:LegFrontR · mixamorig:LegBackL · mixamorig:LegBackR
+  계층: Body 밑에 나머지 여섯이 전부 직접 매달림(1단).
+- Idle 클립 이름: FBX take 이름 **"Idle"**(블렌더로 재수입하면 "Armature|Idle"로 읽힘),
+  1~73프레임.
+
+■ 검증
+- 배치 리포트: 뼈 7 · 죽은 뼈 0 · 빈 정점 0 · 크기 (0.983, 2.585, 1.8)m · 최저 z 0 ·
+  정점 20,906 그대로.
+- 재수입 확인: 최상위 오브젝트가 "Armature" 하나, 뿌리 뼈 mixamorig:Body 부모 None.
+  (사람형이 아니라 Hips·다리 수직 검증은 해당 없음 — 대신 네 다리 뼈가 전부 수직인 것,
+   즉 머리·꼬리의 x·y가 같은 것을 좌표로 확인했다.)
+- 내장 Idle 클립을 그대로 재생해 레스트·중간·3/4 프레임을 측면·후면으로 렌더 — 목·꼬리
+  경계에서 접힘·찢어짐 없음, 체인소 날이 머리에 딱 붙어 따라감, 발이 바닥에서 안 뜸.
+- 정적 리깅이라 노멀 재계산(상시) + 뒷면 컬링 렌더 — 비쳐 보이는 면 없음.
+
+■ 산출물(스크래치만, Assets 미반영)
+히든_뻬꼼.fbx · Textures/Orange_Color.png · Textures/Accesories.png ·
+verify_rest_front.png · verify_rest_side.png · verify_idle_mid_side.png ·
+verify_idle_q3_side.png · verify_idle_mid_back.png
