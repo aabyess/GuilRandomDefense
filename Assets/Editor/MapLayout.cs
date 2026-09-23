@@ -167,7 +167,7 @@ public static class MapLayout
         // 섬은 1150×1625. 세로 여유가 27뿐인 건 **세로 채우기 구조상 정상**이다 —
         // 각 열을 줄이 더 안 들어갈 때까지 채우므로 남는 건 언제나 줄 높이(46.2)보다 작다.
         // 왼쪽 끝 x=0·윗변 z=-71 고정은 그대로(뽑기섬·초월 전시와의 경계). 겹침 전수 0건.
-        new Island("CombineTable",     137.99f * Scale, -212.03f * Scale, 275.98f * Scale, 390f * Scale, "combine"),
+        new Island("CombineTable",     137.99f * Scale, -197.54f * Scale, 275.98f * Scale, 361f * Scale, "combine"),
         // 도박소. StoryZone 서쪽, 같은 z대역이라 나란히 배치되고 40유닛 간격으로 안 겹친다.
     };
 

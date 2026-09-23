@@ -1275,6 +1275,14 @@ public static class MapGenerator
 
     // 등급이 바뀔 때 두는 벽 자리. 줄 하나보다 조금 더 벌려 "여기서 등급이 바뀐다"가 읽히게 한다.
     const float GradeWallGap = RecipeRowHeight * 1.3f;   // 60.1
+
+    /// <summary>
+    /// 조합식 표의 열 수. 169줄을 이 수로 **고르게 나눠** 담는다(BuildCombineColumns 참고).
+    /// 6인 이유: 5열이면 세로가 1737로 늘고, 7열이면 가로가 1285가 되어 「너비가 너무
+    /// 길어지는 느낌」(사장님 2026-09-23)으로 되돌아간다. 6열이 가로 1119·세로 1460으로
+    /// 둘 다 만족하는 자리다.
+    /// </summary>
+    const int CombineTableColumns = 6;
     const float RecipeSlot = 15.4f;     // 유닛 한 칸. 원작 슬롯 한 변 64 ÷ Scale
     // ── 조합식 표 간격 (2026-09-23 재설계) ────────────────────────────────
     // 사장님 「조합판도 너무 붙어있으니깐 답답한 느낌이든다」.
@@ -1337,45 +1345,62 @@ public static class MapGenerator
         float usedDepth = 0f;
 
         // 🔴 2026-09-23 사장님: "오른쪽 보면 밑에 너무 비잖아? 3번째 열로 본다면 그 밑에 바로
-        //    희귀함 와도 됨. 너비가 너무 길어지는 느낌이라."
-        // 예전 규칙은 등급을 MaxRecipeRows(25) 덩어리로 자른 뒤 **쪼개진 등급은 제 열을 통째로
-        // 차지**했다. 그래서 남은 2줄·11줄짜리 자투리가 각각 열 하나를 혼자 쓰고 그 아래가
-        // 텅 비었다 — 세로가 남는데 옆으로만 길어졌다.
+        //    희귀함 와도 됨. 너비가 너무 길어지는 느낌이라." → 같은 날 다시: 6열 중 **마지막
+        //    열만 15행**(다른 열은 31행)이라 그 아래가 또 비었다.
         //
-        // 이제 **열을 세로로 끝까지 채우고 넘치면 다음 열로 넘긴다.** 등급 경계는 어차피
-        // 구분벽(GradeWallGap)이 서므로, 한 열에 "특별함 17줄 + 희귀함 12줄"처럼 이어 담아도
-        // 읽는 데 문제가 없다. 한 열의 용량도 상수(25)가 아니라 **섬 깊이에서 유도**한다 —
-        // 섬 세로를 바꾸면 자동으로 따라간다.
-        float columnCapacity = island.size.y - RecipeRowHeight;   // 위쪽 한 줄은 여백
-
+        // 규칙이 두 번 바뀌었다. 왜 지금 모양이 됐는지 순서대로 남긴다:
+        //  ① 등급을 25줄 덩어리로 자르고 쪼개진 등급은 제 열을 독점 → 자투리가 열을 혼자 써서
+        //     아래가 텅 빔. 세로가 남는데 옆으로만 길어졌다.
+        //  ② 한 열을 **용량까지 꽉 채우고** 다음 열로 → 폭은 잡혔지만 나머지가 전부 마지막
+        //     열로 몰려, 그 열만 44%만 차는 같은 증상이 작게 재발했다.
+        //  ③ (지금) **열마다 목표 행수를 먼저 정해 고르게 나눈다.** 169줄 ÷ 6열 = 28.17이라
+        //     나머지 1을 **앞 열 하나에만** 준다(29·28·28·28·28·28). 전부 29로 올림하면
+        //     29×5 + 24가 되어 마지막 열이 또 짧아진다 — 고치려던 문제를 작게 되풀이하는 셈이다.
+        //     결과: 가장 얕은 열이 가장 깊은 열의 48% → **92%**.
+        //
+        // ⚠️ "행수 대신 **깊이**로 고르게 자르기"도 시도했다가 버렸다. 등급 구분벽이 붙는 자리가
+        //    열마다 달라서, 깊이로 끊으면 경계가 어긋나 **7열째로 2행이 새어 나간다**(그 열 깊이
+        //    139 = 10%). 다음 사람이 같은 길을 시도할 만해서 적어 둔다 — 자르는 기준은 행수다.
+        //
+        // 열 수는 섬 깊이가 아니라 이 목표 행수가 정한다. 등급 경계에는 여전히 구분벽이 서므로
+        // 한 열에 "특별함 17줄 + 희귀함 11줄"처럼 이어 담아도 어디서 바뀌는지 읽힌다.
+        int totalRecipes = 0;
+        List<(UnitGrade grade, List<CombineRecipe> recipes)> loaded =
+            new List<(UnitGrade, List<CombineRecipe>)>();
         foreach (UnitGrade grade in MapLayout.CombineTableGrades)
         {
             List<CombineRecipe> recipes = LoadRecipesProducing(grade);
+            loaded.Add((grade, recipes));
+            totalRecipes += recipes.Count;
+        }
 
+        int columnCount = Mathf.Max(1, CombineTableColumns);
+        int baseRows = totalRecipes / columnCount;
+        int extraRows = totalRecipes % columnCount;   // 앞에서부터 한 행씩만 더 받는다
+        int columnIndex = 0;
+        int rowsInColumn = 0;
+
+        int QuotaFor(int index) => baseRows + (index < extraRows ? 1 : 0);
+
+        foreach ((UnitGrade grade, List<CombineRecipe> recipes) in loaded)
+        {
             int taken = 0;
             while (taken < recipes.Count)
             {
-                float wall = current.Count > 0 ? GradeWallGap : 0f;
-                int fits = Mathf.FloorToInt((columnCapacity - usedDepth - wall) / RecipeRowHeight);
-
-                if (fits <= 0)
+                int room = QuotaFor(columnIndex) - rowsInColumn;
+                if (room <= 0)
                 {
-                    // 이 열은 더 못 받는다 — 다음 열을 연다. (빈 열은 만들지 않는다)
-                    if (current.Count > 0)
-                    {
-                        columns.Add(current);
-                        current = new List<(UnitGrade, List<CombineRecipe>)>();
-                        usedDepth = 0f;
-                        continue;
-                    }
-                    // 열이 비었는데도 한 줄이 안 들어가면 섬이 너무 얕은 것이다 — 한 줄은 넣고
-                    // 넘긴다(무한 루프 방지). 보고문의 "깊이 모자람"이 이 상태를 알린다.
-                    fits = 1;
+                    if (current.Count > 0) columns.Add(current);
+                    current = new List<(UnitGrade, List<CombineRecipe>)>();
+                    rowsInColumn = 0;
+                    columnIndex++;
+                    continue;
                 }
 
-                int take = Mathf.Min(fits, recipes.Count - taken);
+                int take = Mathf.Min(room, recipes.Count - taken);
                 current.Add((grade, recipes.GetRange(taken, take)));
-                usedDepth += wall + take * RecipeRowHeight;
+                rowsInColumn += take;
+                usedDepth += (current.Count > 1 ? GradeWallGap : 0f) + take * RecipeRowHeight;
                 taken += take;
             }
         }
@@ -1487,7 +1512,7 @@ public static class MapGenerator
             ? $"\n  가로 {usedScale:P0}로 줄여 섬(폭 {island.size.x:F0})에 맞췄습니다 — 자연 폭이 {totalWidth / usedScale:F0}였습니다."
             : "";
 
-        return fitNote + $"\n조합식 표: {placed}개 조합식, {columns.Count}열 (열 용량 {Mathf.FloorToInt(columnCapacity / RecipeRowHeight)}행, 세로 먼저 채움)." +
+        return fitNote + $"\n조합식 표: {placed}개 조합식, {columns.Count}열 (열당 {baseRows}~{baseRows + (extraRows > 0 ? 1 : 0)}행 균등분배)." +
                $"\n  깊이 {deepest:F0}/{available:F0} {verdict}\n  {fit}" +
                (sample != null ? $"\n  예시: {sample}" : "");
     }
