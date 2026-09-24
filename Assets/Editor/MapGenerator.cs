@@ -190,7 +190,7 @@ public static class MapGenerator
 
         string sweep = SweepTiledMaterials();
         AssetDatabase.SaveAssets();
-        string textureReport = SurfaceTextureReport() + sweep + SurfaceDriftReport();
+        string textureReport = SurfaceTextureReport() + sweep + SurfaceDriftReport() + WispCellClearanceReport();
 
         Selection.activeGameObject = root;
         EditorSceneManager.MarkSceneDirty(root.scene);
@@ -2437,20 +2437,30 @@ public static class MapGenerator
 
     // 흔함 선택 칸은 원작처럼 칸마다 벽을 둘러 부스로 만든다.
     /// <summary>
-    /// 위습 몸 지름. 프리팹 기본 몸이 0.6이라 WispScale을 곱한 것이 실제 지름이다.
-    /// **위습이 들어갈 자리는 전부 이 값에서 유도한다** — 맵 배율이 아니라 위습 크기에 묶인
-    /// 값이기 때문이다(흙길 폭 TrackWidth가 적 지름에 묶인 것과 같은 규칙).
+    /// 위습이 **판정으로 차지하는** 반지름. `WispPrefab`의 `SphereCollider.radius 0.5` ×
+    /// 루트 배율(`WispScale`)이다. **위습이 들어갈 자리는 전부 이 값에서 유도한다** —
+    /// 맵 배율이 아니라 위습 크기에 묶인 값이기 때문이다(흙길 폭이 적 지름에 묶인 것과 같은 규칙).
     ///
-    /// 🔴 2026-09-23: 위습을 유닛과 같은 키(30)로 키우자 지름이 칸 깊이(옛 18)를 **1.7배**
-    ///    넘겼다. 옛 값들은 위습이 3.6이던 시절에 손으로 박은 수라, 위습이 커질 때마다
-    ///    같이 안 커져서 조용히 넘친다. 그래서 상수를 지우고 관계식으로 바꿨다.
+    /// 🔴 2026-09-24 정정: 예전엔 `WispDiameter = 0.6 × WispScale`(=30)을 썼고 주석에
+    ///    「프리팹 기본 몸이 0.6」이라고 적혀 있었다. **프리팹을 열어 보니 아니다** —
+    ///    몸 메시가 루트에 붙어 있고 루트 배율이 50이라 **보이는 지름도 콜라이더 지름도 50**이다.
+    ///    그래서 자리 계산이 전부 **반지름을 10씩 적게** 잡고 있었고, 위습이 생기자마자
+    ///    포탈 트리거에 닿아 **먹혔다**(흔함 선택 위습이 10턴 중 9턴 0기).
+    ///    그 전까지 안 터진 이유는 **포탈 트리거 높이가 모자라서**였다 — 높이를 고치자(4c8ab5ff)
+    ///    가로 거리 결함이 드러났다. **하나를 고치니 그 뒤에 있던 게 나왔다.**
     /// </summary>
-    const float WispDiameter = 0.6f * WispScale;
+    const float WispColliderRadius = 0.5f * WispScale;
 
-    // 포탈 원반과 위습이 서로 안 겹치게: 두 반지름 합 + 여유 3.
-    const float WispSpawnGap = ChoicePortalDiameter * 0.5f + WispDiameter * 0.5f + 3f;
+    /// <summary>
+    /// 위습 생성 자리와 포탈 사이 최소 거리. **두 반지름 합 + 여유**다.
+    /// ⚠️ 포탈마다 지름이 달라서 **포탈 종류별로 따로 둔다.** 하나로 뭉치면 큰 포탈 쪽이 모자란다.
+    /// </summary>
+    const float WispCellMargin = 3f;
+    const float ChoiceWispGap = ChoicePortalDiameter * 0.5f + WispColliderRadius + WispCellMargin;
+    const float BandWispGap = PortalDiameter * 0.5f + WispColliderRadius + WispCellMargin;
+
     // 위습이 생겨 머무는 칸. 생성 지점에서 위습 반지름만큼 더 내려가도 칸 안이어야 한다(여유 5).
-    const float CommonAreaDepth = WispSpawnGap + WispDiameter * 0.5f + 5f;
+    const float CommonAreaDepth = ChoiceWispGap + WispColliderRadius + 5f;
 
     const float PortalInset = 9f;       // 칸 위벽에서 포탈까지
     const float BoothDepth = 14f;        // 포탈 앞부터 뒷벽까지
@@ -2505,8 +2515,12 @@ public static class MapGenerator
         // 흔함 선택 위습은 부스 줄 앞, 막힌 구역 안에서 생긴다 — 어느 부스로 갈지는 플레이어가 고른다.
         GameObject commonCell = new GameObject("위습칸_흔함선택");
         commonCell.transform.SetParent(parent, false);
+        // 🔴 예전엔 포탈 줄과 아래벽의 **한가운데**(rowZ − 25.8)에 뒀다. 그 자리가 포탈에
+        //    너무 가까워, 트리거 높이를 고치자마자(4c8ab5ff) 위습이 **생기자마자 먹혔다**.
+        //    한가운데는 「칸 안에 있다」는 뜻일 뿐 **포탈과의 거리를 보장하지 않는다.**
+        //    필요 거리에서 유도한다 — 위습이나 포탈 크기가 바뀌어도 따라온다.
         commonCell.transform.position = new Vector3(
-            island.center.x, MapLayout.IslandTop, (rowZ + commonFloorZ) * 0.5f);
+            island.center.x, MapLayout.IslandTop, rowZ - ChoiceWispGap);
         commonCell.AddComponent<WispCell>().SetGrade(UnitGrade.Common);
 
         // --- 왼쪽: 벽으로 나뉜 칸 5줄 ---
@@ -2542,8 +2556,10 @@ public static class MapGenerator
             // 그 위습이 여기 생겨야 플레이어가 셋 중 하나로 끌고 갈 수 있다.
             GameObject cell = new GameObject($"위습칸_{band.label}");
             cell.transform.SetParent(parent, false);
+            // ⚠️ 이 줄의 포탈은 PortalDiameter(큰 것)라 BandWispGap을 쓴다. 흔함선택 쪽과 값이 다르다 —
+            //    하나로 뭉치면 큰 포탈 쪽이 모자라서 위습이 생기자마자 먹힌다(2026-09-24).
             cell.transform.position = new Vector3((columnLeft + columnRight) * 0.5f,
-                                                  MapLayout.IslandTop, portalZ - WispSpawnGap);
+                                                  MapLayout.IslandTop, portalZ - BandWispGap);
             cell.AddComponent<WispCell>().SetGrade(
                 band.specialSlots == null ? band.grade : InterludeChoiceGrade);
 
@@ -5331,6 +5347,45 @@ public static class MapGenerator
     /// ⚠️ **텍스처가 있는 면은 여기 안 뜬다** — 그쪽은 색조가 코드 것이라 <see cref="BindTextures"/>가
     ///    이미 맞췄다. 여기 뜨는 것은 **텍스처 없는 단색 면**뿐이고, 그건 사람이 맞춘 값일 수 있다.
     /// </summary>
+    /// <summary>
+    /// 위습 생성 자리가 포탈 트리거에 **닿는지** 검사한다. 닿으면 위습이 생기자마자 먹혀서
+    /// 플레이어가 고를 기회조차 없다 — 2026-09-24에 흔함 선택 위습이 10턴 중 9턴 0기였다.
+    ///
+    /// 🔴 왜 검사가 필요한가: 이건 **두 곳을 따로 만지면 조용히 생긴다.** 위습 크기를 키우거나
+    ///    포탈 지름을 늘리거나 뽑기섬 배치를 옮기면 그때마다 다시 난다. 그리고 **아무 에러도
+    ///    안 난다** — 위습이 사라지는 것뿐이라 「원래 그런가 보다」로 지나간다.
+    ///    실제로 포탈 트리거 높이가 모자라던 동안에는 이 결함이 **가려져 있었다**(4c8ab5ff 참고).
+    /// </summary>
+    static string WispCellClearanceReport()
+    {
+        List<string> hits = new List<string>();
+        WispCell[] cells = Object.FindObjectsByType<WispCell>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        UnitPortal[] portals = Object.FindObjectsByType<UnitPortal>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        foreach (WispCell cell in cells)
+        {
+            float closest = float.MaxValue, need = 0f;
+            string who = "";
+            foreach (UnitPortal portal in portals)
+            {
+                Vector3 a = cell.transform.position, b = portal.transform.position;
+                float flat = Vector2.Distance(new Vector2(a.x, a.z), new Vector2(b.x, b.z));
+                if (flat >= closest) continue;
+                closest = flat;
+                who = portal.gameObject.name;
+                // 포탈 원반의 **실제** 반지름은 그 오브젝트의 가로 배율 절반이다 — 종류마다 지름이 다르다.
+                need = portal.transform.localScale.x * 0.5f + WispColliderRadius + WispCellMargin;
+            }
+            if (portals.Length == 0 || closest >= need) continue;
+            hits.Add($"\n    🔴 {cell.gameObject.name} ↔ {who} {closest:0.#} < 필요 {need:0.#}");
+        }
+        return hits.Count == 0
+            ? $"\n위습 자리: {cells.Length}칸 전부 포탈과 떨어져 있습니다(위습 반지름 {WispColliderRadius:0.#})."
+            : $"\n⚠️ 위습이 생기자마자 포탈에 먹히는 자리 {hits.Count}곳 — **플레이어가 고를 기회가 없습니다.**" +
+              $"(필요 = 포탈 반지름 + 위습 반지름 {WispColliderRadius:0.#} + 여유 {WispCellMargin:0.#})" +
+              string.Join("", hits);
+    }
+
     static string SurfaceDriftReport()
     {
         List<string> drift = new List<string>();
