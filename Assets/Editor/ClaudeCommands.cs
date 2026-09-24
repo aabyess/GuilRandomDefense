@@ -935,6 +935,8 @@ public static class ClaudeCommands
     //                  에디터 입력이 Game 뷰 포커스를 따지지 않게 그동안만 editorInputBehaviorInPlayMode를 바꾸고 끝나면 되돌린다.
     //   · boxselect:<이름>  내 유닛 중 이름에 그 글자가 든 것 **전부를 드래그 박스로** 고른다(누름 → 끌기 → 뗌, SelectionManager.SelectInBox 경로).
     //   · wait:<초>      다음 동작 전에 기다린다(위습이 걸어가 포탈에 들어갈 시간, 라운드가 넘어갈 시간 등).
+    //   · call:<형.함수>  플레이 도중 그 자리에서 인자 없는 정적 함수를 불러, 돌려준 문자열을 결과에 싣는다(다른 사람 진단을 판 안에서 돌릴 때 —
+    //                  예: call:ApronProbe.AgentAudit. 그 진단의 메뉴는 스스로 플레이에 들어가서 이미 플레이 중인 판에선 못 쓴다, 09-24).
     //   · cardpair       여럿 고른 상태에서 같은 종류가 2기 이상인 유닛의 카드를 누른다(한 기 선택 → 그 유닛의 조합 버튼이 뜬다).
     //   · buttons        지금 떠 있는 누를 수 있는 버튼 목록(이름「글자」)을 결과에 남긴다 — 판을 끝내지 않는다.
     //   · snap:<파일>    그 순간을 한 장 더 찍는다(해상도는 이 판의 Game 뷰 그대로).
@@ -1037,6 +1039,7 @@ public static class ClaudeCommands
             }
             else if (token == "buttons") job.clicks.Add("@buttons");
             else if (token == "cardpair") job.clicks.Add("@cardpair");
+            else if (token.StartsWith("call:")) job.clicks.Add("@call:" + token.Substring(5));
             else if (token.StartsWith("snap:")) job.clicks.Add("@snap:" + token.Substring(5));
             else if (token.StartsWith("select:") || token.StartsWith("rclick:"))
             {
@@ -1153,6 +1156,16 @@ public static class ClaudeCommands
             {
                 if (job.clickIndex > 0 && inStage < GameShotClickGap) break;   // 앞 클릭의 결과가 화면에 반영될 틈
                 string target = job.clicks[job.clickIndex];
+                if (target.StartsWith("@call:"))
+                {
+                    string callResult;
+                    try { callResult = Call(target.Substring(6)); }
+                    catch (Exception e) { callResult = $"❌ 호출 중 예외: {e.InnerException?.Message ?? e.Message}"; }
+                    job.report += $"   📞 call {target.Substring(6)}:\n{callResult}\n";
+                    job.clickIndex++;
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
+                    break;
+                }
                 if (target == "@cardpair")
                 {
                     // 여럿 고른 상태에서 같은 종류가 2기 이상인 카드를 누른다 — 사람이 겹치는 카드를 보고 누르는 것과 같다(같은 흔함 둘이 흔한 조합 재료).
@@ -1268,6 +1281,15 @@ public static class ClaudeCommands
                         int wispsNow = CountMyWisps();
                         (string slotText, int slotTotal) = ReadWispSlots();
                         job.report += $"   🔢 위습 칸 「{slotText}」 합계 {slotTotal} · 실제 내 위습 {wispsNow}{(slotTotal == wispsNow ? " ✅ 일치" : " ⚠️ 다름(칸은 주기적으로 갱신)")}\n";
+                        // 적과 아군 크기 비교(렌더러 경계 — 적 자리표시 상자엔 어깨가 없어 키·폭으로 잰다). 09-24 PM: 「적 상자가 유닛보다 커 보인다」.
+                        EnemyDummy sampleEnemy = EnemyDummy.Active.FirstOrDefault(e => e != null && e.LaneIndex == 0)
+                                                 ?? EnemyDummy.Active.FirstOrDefault(e => e != null);
+                        job.report += $"   👾 그 순간 적 전체 {EnemyDummy.Active.Count(e => e != null)} · 0번 레인 {EnemyDummy.CountInLane(0)}" +
+                                      (sampleEnemy != null ? $" · 잰 적의 레인 {sampleEnemy.LaneIndex}" : "") + "\n";
+                        UnitIdentity sampleUnit = UnityEngine.Object.FindObjectsByType<UnitIdentity>(FindObjectsSortMode.None)
+                            .FirstOrDefault(u => u != null && u.Data != null && u.GetComponent<Wisp>() == null &&
+                                                 (!u.TryGetComponent(out OwnedByPlayer uo) || uo.OwnerId == LocalPlayer.LocalPlayerId));
+                        job.report += $"   📏 크기(렌더러 경계): 적 {DescribeBody(sampleEnemy != null ? sampleEnemy.gameObject : null)} · 아군 {DescribeBody(sampleUnit != null ? sampleUnit.gameObject : null)}\n";
                         // 흔함보다 높은 등급(조합 결과)의 자리 — 조합 결과가 레인 가운데 서는지(CombineSystem → LaneCenter) 실제 경로로 본다.
                         LaneMarker laneForResult = LaneMarker.Get(0);
                         foreach (UnitIdentity higher in UnityEngine.Object.FindObjectsByType<UnitIdentity>(FindObjectsSortMode.None)
@@ -2040,6 +2062,28 @@ public static class ClaudeCommands
                 return true;
             }
         }
+    }
+
+    static string DescribeBody(GameObject go)
+    {
+        if (go == null) return "(없음)";
+        Bounds? b = null;
+        foreach (Renderer r in go.GetComponentsInChildren<Renderer>())
+        {
+            if (r is ParticleSystemRenderer || r is LineRenderer || r is TrailRenderer) continue;
+            if (b == null) b = r.bounds; else { Bounds x = b.Value; x.Encapsulate(r.bounds); b = x; }
+        }
+        if (b == null) return $"{go.name}(렌더러 없음)";
+        float ground = go.transform.position.y;
+        // 사람형이면 어깨 높이도 잰다 — 경계 상자는 꼬리·무기로 부푼다(09-24 PM·blender 꼬리 사례). 어깨가 몸집 비교의 기준이다.
+        string shoulder = "";
+        Animator anim = go.GetComponentInChildren<Animator>();
+        if (anim != null && anim.isHuman)
+        {
+            Transform l = anim.GetBoneTransform(HumanBodyBones.LeftUpperArm), r = anim.GetBoneTransform(HumanBodyBones.RightUpperArm);
+            if (l != null && r != null) shoulder = $" · 어깨 높이 {(l.position.y + r.position.y) * 0.5f - ground:F1} · 어깨 너비 {Vector3.Distance(l.position, r.position):F1}";
+        }
+        return $"{go.name} 키 {b.Value.max.y - ground:F1}(땅 위, 렌더러 경계 윗면){shoulder} · 경계 폭 {b.Value.size.x:F1}×{b.Value.size.z:F1} · 바닥 {b.Value.min.y - ground:F1}(음수면 땅속)";
     }
 
     static int CountMyWisps() => UnityEngine.Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None)
