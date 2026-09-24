@@ -831,7 +831,12 @@ public static class ClaudeCommands
                     // 🔴 골반 자리는 Hips 뼈가 아니라 **양 허벅지 뿌리의 중점**으로 잡는다. Hips 뼈가 골반에서 떨어져 있는
                     //    리그(바운티러시 pl_ 계열의 world_joint 원점)는 몸이 똑바로 서 있어도 기울어 보인다 —
                     //    2026-09-23 히든_석성례: Hips→Head (0.25, 0.87, 0.42)였는데, 휴식 자세 사슬 계산도 (0.29, 0.82, 0.49)로 같았고
-                    //    실제 몸의 축(Spine→Head)은 (0, 0.97, 0.23), 정면 사진도 정상이었다(outbox 1261).
+                    //    실제 몸의 축(Spine→Head)은 (0, 0.97, 0.23)이었다.
+                    //    🔴 2026-09-24 정정: 그때 「정면 사진도 정상이었다(outbox 1261)」로 닫았는데 **그건 뒷면 사진이었다**
+                    //       (이 도구의 카메라가 반대편이었다 — 위 주석 참고). 그리고 결론도 틀렸다:
+                    //       **Hips는 진짜로 몸 밖에 있었다**(z −1.17m, 메시는 0~1.8m). 원본 리그 자체가 그랬고,
+                    //       blender가 `fit_hips`로 고쳤다(f7e1a07d). 즉 **사진도 결론도 둘 다 틀렸다.**
+                    //       여기서 허벅지 중점을 쓰는 것 자체는 그대로 옳다 — 오히려 그 리그가 그 근거다.
                     //    허벅지가 없으면(매핑 실패) 예전처럼 Hips로 잰다.
                     Transform leftLeg = animator.GetBoneTransform(HumanBodyBones.LeftUpperLeg);
                     Transform rightLeg = animator.GetBoneTransform(HumanBodyBones.RightUpperLeg);
