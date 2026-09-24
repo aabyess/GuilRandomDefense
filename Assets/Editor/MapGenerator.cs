@@ -3967,16 +3967,27 @@ public static class MapGenerator
     static readonly Color WispSoulColor = new Color(0.55f, 0.85f, 1f);
 
     // 반투명 발광. URP/Lit의 Surface Type을 Transparent로 돌려야 알파가 먹는다.
+    //
+    // 🔴 2026-09-24: 발광이 4배라 화면에서 **형체 없는 흰 덩어리**로 나왔다(플레이 캡처).
+    //    색이 (2.2, 3.4, 4.0)이면 세 채널이 다 1을 한참 넘겨 흰색으로 잘리고, 그러면
+    //    파란 기도 없고 구의 명암도 없다 — 「반쯤 비치는 영혼」이 아니라 흰 공이 된다.
+    //    1.1배로 낮춘다. 그래도 어두운 데서 스스로 빛나되, 색과 둥근 티가 남는다.
+    const float WispEmissionBoost = 1.1f;
+
     static Material WispSoulMaterial()
     {
         const string path = MaterialFolder + "/wisp_soul.mat";
         Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
-        if (material != null) return material;
+        bool isNew = material == null;
 
+        // ⚠️ 예전엔 **있으면 그대로 돌려줬다.** 그래서 위 값을 고쳐도 이미 만들어진 에셋엔
+        //    영영 안 닿았다 — 바닥 텍스처가 `_BaseMap` 빈 채로 남아 있던 것과 같은 병이다
+        //    (f3da5f93). 있으면 값을 **다시 써 넣는다.**
         Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-        material = new Material(shader);
+        if (isNew) material = new Material(shader);
+
         material.SetColor("_BaseColor", new Color(WispSoulColor.r, WispSoulColor.g, WispSoulColor.b, 0.55f));
-        material.SetColor("_EmissionColor", WispSoulColor * 4f);
+        material.SetColor("_EmissionColor", WispSoulColor * WispEmissionBoost);
         material.EnableKeyword("_EMISSION");
         material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
 
@@ -3986,7 +3997,17 @@ public static class MapGenerator
         material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
         material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
 
-        AssetDatabase.CreateAsset(material, path);
+        if (isNew)
+        {
+            AssetDatabase.CreateAsset(material, path);
+        }
+        else
+        {
+            // SetDirty만으로는 **디스크에 안 써진다.** 다음 리로드 때 옛 값이 그대로 돌아온다
+            // (09-24에 실제로 그랬다 — 코드는 1.1배인데 .mat은 4배 그대로였다).
+            EditorUtility.SetDirty(material);
+            AssetDatabase.SaveAssetIfDirty(material);
+        }
         return material;
     }
 
