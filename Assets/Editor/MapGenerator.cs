@@ -1464,7 +1464,18 @@ public static class MapGenerator
             [UnitGrade.Eternal] = new[] { 0 },           // 1열 안흔함 밑
         };
 
-        int columnCount = CombineTableColumns;
+        // 🔴 배정표가 쓰는 열 수와 CombineTableColumns가 어긋나면 **마지막 열이 통째로 사라진다.**
+        //    주석으로 「같아야 한다」고 적어 뒀지만 주석은 사람이 읽어야 아는 자리다(PM 지시 09-24).
+        //    코드가 스스로 세게 한다.
+        int neededColumns = 0;
+        foreach (int[] targets in spread.Values)
+            foreach (int t in targets) neededColumns = Mathf.Max(neededColumns, t + 1);
+        if (neededColumns > CombineTableColumns)
+            Debug.LogError($"[맵] 조합표: 배정표가 {neededColumns}열을 쓰는데 CombineTableColumns가 " +
+                           $"{CombineTableColumns}입니다 — **{neededColumns - CombineTableColumns}열이 통째로 사라집니다.** " +
+                           "둘을 같이 고쳐야 합니다.");
+
+        int columnCount = Mathf.Max(CombineTableColumns, neededColumns);
         List<(UnitGrade, List<CombineRecipe>)>[] byColumn =
             new List<(UnitGrade, List<CombineRecipe>)>[columnCount];
         for (int c = 0; c < columnCount; c++) byColumn[c] = new List<(UnitGrade, List<CombineRecipe>)>();
