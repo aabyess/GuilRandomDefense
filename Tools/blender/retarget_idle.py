@@ -25,7 +25,12 @@ import re
 import bpy
 from mathutils import Matrix, Vector
 
-IDLE = os.path.expanduser("~/Desktop/구랜디스킨모음/99_공용_애니메이션/idle.fbx")
+CLIPS_DIR = os.path.expanduser("~/Desktop/구랜디스킨모음/99_공용_애니메이션")
+IDLE = os.path.join(CLIPS_DIR, "idle.fbx")
+# 🔴 공용 클립은 **셋**이다(2026-09-24에 알았다) — Character.controller가 셋을 다 쓴다.
+#   idle만 입혀 보고 「움직일 때 멀쩡하다」고 하면 **팔이 몸을 가로지르는 동작은 못 본다.**
+#   그건 걷기·공격에서 난다. 검사할 때 셋 다 돌릴 것.
+SHARED = {"idle": IDLE, "walk": os.path.join(CLIPS_DIR, "walk.fbx"), "attack": os.path.join(CLIPS_DIR, "attack.fbx")}
 
 # 유니티 휴머노이드 필수 15뼈(UpperChest·Neck·어깨·발끝은 선택) — 이게 다 있어야 리타겟을 시도한다.
 HUMAN_MIN = ["Hips", "Spine", "Head", "LeftArm", "LeftForeArm", "LeftHand",
@@ -33,12 +38,13 @@ HUMAN_MIN = ["Hips", "Spine", "Head", "LeftArm", "LeftForeArm", "LeftHand",
              "RightUpLeg", "RightLeg", "RightFoot"]
 
 
-def _import_idle():
-    """공용 idle.fbx를 들여와 (아마추어, 새로 생긴 오브젝트들)을 준다. 파일이 없으면 (None, [])."""
-    if not os.path.exists(IDLE):
+def _import_idle(path=None):
+    """공용 클립을 들여와 (아마추어, 새로 생긴 오브젝트들)을 준다. 파일이 없으면 (None, [])."""
+    path = path or IDLE
+    if not os.path.exists(path):
         return None, []
     before = set(bpy.data.objects)
-    bpy.ops.import_scene.fbx(filepath=IDLE)
+    bpy.ops.import_scene.fbx(filepath=path)
     new_objs = [o for o in bpy.data.objects if o not in before]
     return next(o for o in new_objs if o.type == "ARMATURE"), new_objs
 
@@ -70,14 +76,14 @@ def calmest_frame(arm):
     return best_fr, round(float(best), 3)
 
 
-def load_idle(frames=None):
-    """idle.fbx에서 자세를 읽어 둔다.
+def load_idle(frames=None, clip=None):
+    """공용 클립에서 자세를 읽어 둔다(clip 없으면 idle).
 
     frames 없음 → 가장 얌전한 프레임 하나를 dict로 준다(전시판용).
     frames = [비율…] 또는 [프레임 번호…] → 그 프레임들의 dict를 **차례대로 리스트**로 준다(검수표용).
     파일이 없으면 None.
     """
-    arm, new_objs = _import_idle()
+    arm, new_objs = _import_idle(SHARED.get(clip) if clip else None)
     if arm is None:
         return None
     act = arm.animation_data.action
