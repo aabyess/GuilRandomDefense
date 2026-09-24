@@ -2006,6 +2006,13 @@ public static class MapGenerator
 
         figure.transform.position = ground;
 
+        // 🔴 재기 **전에** 배율을 프리팹 값으로 되돌린다. 아래에서 잰 크기로 배율을 정하는데,
+        //    이미 배율이 먹은 몸을 재면 그 배율이 한 번 더 곱해진다 — 두 번 돌리면 두 번 커진다.
+        //    적 자리표시 상자가 그렇게 키 15에 폭 25가 됐다(PM 17eb0034). 지금은 `figure`가
+        //    바로 위에서 만든 새 인스턴스라 이 줄이 아무것도 안 바꾸지만, **안전의 근거가
+        //    「호출자가 새것을 준다」는 우연이면 안 된다.** 여기서 출발점을 고정한다.
+        figure.transform.localScale = unit.prefab.transform.localScale;
+
         if (!TryMeasureFigure(figure, out Bounds bounds) || bounds.size.y < 0.001f)
         {
             Object.DestroyImmediate(figure);
@@ -2049,9 +2056,13 @@ public static class MapGenerator
         // 쓴다 — 여기서는 프리팹 크기를 안 쓰고 칸 폭에 맞춰 다시 재우기 때문에 따로 먹여야 한다.
         // 프리팹 이름은 "Unit_<모델명>"이라 접두사만 떼면 ArtBinder의 표 열쇠가 된다.
         string modelName = unit.prefab.name.StartsWith("Unit_") ? unit.prefab.name.Substring(5) : unit.prefab.name;
-        figure.transform.localScale *= height * ArtBinder.FigureScaleFor(modelName) / fit;
+        // 출발점(프리팹 배율)에 **절대값으로** 쓴다. `*=`로 쌓으면 두 번 돌릴 때 두 번 커진다.
+        figure.transform.localScale =
+            unit.prefab.transform.localScale * (height * ArtBinder.FigureScaleFor(modelName) / fit);
 
         // 스케일을 바꾸면 경계도 바뀐다. 다시 재서 발을 바닥에 붙인다.
+        // (여기 `+=`는 쌓이지 않는다 — 바꾼 배율로 **다시 재서** 절대 목표 `ground.y`로 보정하므로,
+        //  두 번 돌려도 같은 높이에서 멈춘다. 자기교정이라 `=`로 바꿀 수 없다.)
         if (TryMeasureFigure(figure, out bounds))
             figure.transform.position += Vector3.up * (ground.y - bounds.min.y);
 

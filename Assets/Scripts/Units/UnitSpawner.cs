@@ -46,6 +46,14 @@ public class UnitSpawner : MonoBehaviour
             //    **회피 원 0.28이 몸(≈14)의 2%**라서 서로를 거의 못 느끼기 때문이다.
             //    즉 지금의 겹침은 의도가 아니라 **두 숫자가 어긋나서 생긴 결과**다.
             //    「이동 명령 뒤에도 겹치는 게 맞나」는 사장님 답 대기 — 답이 오면 이 두 줄만 바꾸면 된다.
+            //
+            // ⚠️ 이 `radius`를 키울 때 **다시 구울 필요 없다.** 이름이 같은 두 숫자가 서로 다른 일을 한다:
+            //      굽기   `NavMeshBuildSettings.agentRadius`(0.5) — NavMesh가 벽에서 물러나는 폭 = **통로 폭**.
+            //                                                       키우면 다시 구워야 하고 걸을 수 있는 면이 줄어든다.
+            //      런타임 `NavMeshAgent.radius`(여기)            — 회피 계산의 제 몸 크기. **통로를 안 좁힌다.**
+            //                                                       키운 유닛은 좁은 데를 **벽에 파묻히며 지나간다.**
+            //    실측(09-24): 앞치마의 6%가 통로 반폭 2 미만(우리 칸막이)이다. 그 6%는 **굽기**를 키울 때
+            //    막히는 것이지 이 값과는 무관하다. 대신 이 값을 키우면 좁은 데서 유닛끼리 밀린다 — 그건 재 봐야 안다.
             agent.obstacleAvoidanceType = ObstacleAvoidanceType.LowQualityObstacleAvoidance;
             agent.radius = 0.28f;
 
