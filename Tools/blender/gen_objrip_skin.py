@@ -981,6 +981,13 @@ def build(name, cfg, out_dir=None, render_dir=None):
             # 대로 단일 png_path를 쓴다.
             src_name = cfg.get("texture_files", {}).get(mat.name)
             src_path = all_images.get(src_name) if src_name else png_path
+            # 🔴 glb 원본의 **단색 재질**은 그대로 둔다(2026-09-24, 희귀함_박도진).
+            #   .glb는 텍스처가 파일로 안 풀려 있어 png_path가 None이다. 그런 소스에서 텍스처 노드가 없는 재질은
+            #   「못 찾은」 게 아니라 **원래 단색**이다(박도진 katana_hair — 나머지 재질 아홉은 전부 이미지가 붙어 있다).
+            #   예전엔 여기서 죽어 **항목 전체가 안 돌았다**(181개 실행 검사에서 잡힘). glTF 임포터가 만든 단색을 그대로 쓴다.
+            if src_path is None and png_path is None:
+                report.setdefault("단색 재질 유지", []).append(mat.name)
+                continue
             assert src_path, f"{mat.name}: 텍스처를 못 찾음(texture_files 확인)"
             dst_name = os.path.basename(src_path).lstrip("$") or mat.name + ".png"
             tex_dst = os.path.join(tex_dir, dst_name)
