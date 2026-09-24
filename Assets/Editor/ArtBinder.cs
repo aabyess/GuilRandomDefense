@@ -20,6 +20,15 @@ public static class ArtBinder
     const string MonsterFolder = "Assets/Art/Monsters";
     const string CreatureFolder = "Assets/Art/Creatures";   // Blender로 지은 물범·노루·양(2026-09-12)
     const string BuildingFolder = "Assets/Art/Buildings";   // Blender로 지은 스토리 건물 13채(2026-09-12)
+
+    /// <summary>
+    /// 라운드 적 78종(Enemy_R01~R75 계열). 2026-09-24에 사장님이 스킨을 주기 시작해 만들었다.
+    ///
+    /// ⚠️ 왜 Monsters·Creatures에 안 넣고 따로 두나 — 그 둘은 **이미 뜻이 있는 칸**이다.
+    /// Monsters는 거대 해왕류 하나, Creatures는 물범·노루·양(중립 생물)이다.
+    /// 78종을 거기 쏟으면 「해왕류 폴더에 크리링이 있다」가 되고, 다음 사람이 범주를 못 읽는다.
+    /// </summary>
+    const string EnemyFolder = "Assets/Art/Enemies";
     const string CharacterFolder = "Assets/Art/Characters";
     // 스킨 한 종당 폴더 하나 — Assets/Art/Units/<유닛이름>/<유닛이름>.fbx + Textures/ + SOURCE.txt.
     // Tools/import_skin.sh 가 이 모양으로 넣는다. 파일명이 로스터 에셋 이름과 같아서
@@ -709,6 +718,7 @@ public static class ArtBinder
         List<GameObject> monsters = LoadModels(MonsterFolder);
         monsters.AddRange(LoadModels(CreatureFolder));
         monsters.AddRange(LoadModels(BuildingFolder));
+        monsters.AddRange(LoadModels(EnemyFolder));   // 라운드 적 78종 (2026-09-24)
         List<GameObject> characters = LoadModels(CharacterFolder);
         characters.AddRange(LoadModels(UnitFolder));
 
@@ -746,32 +756,57 @@ public static class ArtBinder
     //
     // 예전엔 Monsters 폴더 모델을 적 전체에 돌려가며 나눠줬다. 지금 Monsters에는 거대 해왕류 하나뿐이라
     // 그대로 두면 **적 전부가 해왕류**가 된다. 해왕류를 게임에 붙이는 건 사장님이 정할 일이라 표에 없다.
-    // 키는 게임 단위(사람 20 = 1.75m) — Blender가 실제 치수로 지어 FBX를 다시 읽어 잰 값이다.
-    static readonly (string model, string enemyAsset, float height)[] EnemyModels =
+    // 키는 **미터**다 — Blender가 실제 치수로 지어 FBX를 다시 읽어 잰 값이다(아래 요약 참고).
+    /// <summary>
+    /// 🔴 2026-09-24 — **세 번째 값의 단위를 「게임 단위」에서 「미터」로 바꿨다.**
+    ///
+    /// 예전엔 게임 단위로 적혀 있었고 주석이 「사람 20 = 1.75m」라고 말했다. 그런데 09-23에
+    /// 사장님 「유닛 크기 좀 더 키워야 할 듯」으로 `UnitHeight`가 **20 → 30**(적 15 → 22.5)이
+    /// 됐는데, **이 표 17줄은 2026-09-12 값 그대로 남았다**(99e9d155 이후 한 번도 안 만짐).
+    /// 그래서 물범·노루·양·스토리 건물 13채·거대 해왕류가 **유닛 대비 1.5배 작아진 채**로
+    /// 돌고 있었다 — 스토리 건물이 사람의 4.1배로 적혀 있는데 화면에선 2.7배로 보였다.
+    ///
+    /// 기준이 움직였는데 박아 둔 절대값이 안 따라간 것이다([[thresholds-must-be-proportional]]).
+    /// **미터로 적고 `UnitHeight`에서 유도**하면 다음에 사장님이 유닛 크기를 또 바꾸셔도 따라온다.
+    /// blender가 실제 치수(미터)로 지어 FBX를 다시 읽어 재는 값이므로, **미터가 원래 단위**이기도 하다.
+    ///
+    /// ⚠️ 키는 언제나 **「머리끝까지(메시 경계 높이)」**다. 적 경로의 `FitToHeight`는 무조건
+    /// 메시 경계의 Y에 맞추고, 유닛처럼 「사람 아니면 가장 긴 축」으로 갈라지지 않는다.
+    /// 그래서 노루 줄의 「뿔 끝까지(어깨 …)」 같은 주석이 필요하다 — **무엇을 잰 값인지**를 남긴다.
+    ///
+    /// 🔴 네 번째 값 `lane` — **흙길을 줄지어 걷는 라운드 적인가**(R01~R75). 이 줄만 `LaneShrink`가 걸린다.
+    /// 왜 필요한가: 미터 → 게임 단위는 세상 배율 하나(`UnitHeight`/1.75)여야 하는데, 그러면 사람 크기
+    /// 적이 **30**이 된다. 그런데 자리표시 적은 `EnemyHeight` = **22.5**로 이미 레인을 걷고 있다.
+    /// 스킨 9종만 먼저 들어오면 같은 줄에서 **걔들만 33% 크다.** 22.5는 임의값이 아니라
+    /// 「흙길 폭 18에 두 마리가 나란히 선다」에서 나온 값이라 낮은 쪽이 옳다.
+    /// → 미터 칸은 **진짜 미터로 정직하게** 두고, 레인 사정은 이름 붙인 배율로 따로 건다.
+    ///   물범·노루·양은 웨이브에 없고 씬에 세워 둔 중립 생물이라(GUID로 확인) `false`다.
+    /// </summary>
+    static readonly (string model, string enemyAsset, float meters, bool lane)[] EnemyModels =
     {
-        ("물범", "Enemy_Seal", 4.6f),          // 몸길이 17.2
-        ("노루", "Enemy_Creep2_노루", 12.0f),   // 뿔 끝까지(어깨 8.0)
-        ("양", "Enemy_Creep3_양", 9.4f),        // 어깨 9.2
+        ("물범", "Enemy_Seal", 0.4025f, false),          // 몸길이 17.2
+        ("노루", "Enemy_Creep2_노루", 1.0500f, false),   // 뿔 끝까지(어깨 8.0)
+        ("양", "Enemy_Creep3_양", 0.8225f, false),        // 어깨 9.2
 
         // 스토리 적 = 건물 13채. 바닥은 전부 45×45 안이고 원점은 바닥 가운데다.
-        ("Story01_하이츠", "Enemy_Story01_하이츠", 81.8f),
-        ("Story02_큰소망유치원", "Enemy_Story02_큰소망유치원", 52.0f),
-        ("Story03_한양영어유치원", "Enemy_Story03_한양영어유치원", 58.8f),
-        ("Story04_구일초등학교", "Enemy_Story04_구일초등학교", 75.0f),
-        ("Story05_구일중학교", "Enemy_Story05_구일중학교", 71.6f),
-        ("Story06_구일고등학교", "Enemy_Story06_구일고등학교", 87.4f),
-        ("Story07_메가스터디", "Enemy_Story07_메가스터디", 89.0f),
-        ("Story08_사이버넷", "Enemy_Story08_사이버넷", 59.8f),
-        ("Story09_7탄약창", "Enemy_Story09_7탄약창", 44.1f),
-        ("Story10_동양미래대학교", "Enemy_Story10_동양미래대학교", 58.0f),
-        ("Story11_日本", "Enemy_Story11_日本", 41.3f),
-        ("Story12_코드잇", "Enemy_Story12_코드잇", 88.8f),
-        ("Story13_쉬었음", "Enemy_Story13_쉬었음", 56.5f),
+        ("Story01_하이츠", "Enemy_Story01_하이츠", 7.1575f, false),
+        ("Story02_큰소망유치원", "Enemy_Story02_큰소망유치원", 4.5500f, false),
+        ("Story03_한양영어유치원", "Enemy_Story03_한양영어유치원", 5.1450f, false),
+        ("Story04_구일초등학교", "Enemy_Story04_구일초등학교", 6.5625f, false),
+        ("Story05_구일중학교", "Enemy_Story05_구일중학교", 6.2650f, false),
+        ("Story06_구일고등학교", "Enemy_Story06_구일고등학교", 7.6475f, false),
+        ("Story07_메가스터디", "Enemy_Story07_메가스터디", 7.7875f, false),
+        ("Story08_사이버넷", "Enemy_Story08_사이버넷", 5.2325f, false),
+        ("Story09_7탄약창", "Enemy_Story09_7탄약창", 3.8587f, false),
+        ("Story10_동양미래대학교", "Enemy_Story10_동양미래대학교", 5.0750f, false),
+        ("Story11_日本", "Enemy_Story11_日本", 3.6137f, false),
+        ("Story12_코드잇", "Enemy_Story12_코드잇", 7.7700f, false),
+        ("Story13_쉬었음", "Enemy_Story13_쉬었음", 4.9437f, false),
 
         // 원작 [퀘스트] 거대 해왕류(o02N) — 사장님 09-13 「원랜디 참고해서 해왕류 바다에 넣어줄래?」로 표에 넣었다.
         // 바다뱀형, Blender 원본은 몸길이 350·높이 195.5(수면 위 121 + 물속 74). 사장님 09-13 「크기도 반으로」 →
         // 높이 97.75로 맞춰 절반(몸길이 175)으로 줄인다. 원점 = 수면이라 WaterlineModels에도 있다(수면을 축으로 줄어든다).
-        ("거대해왕류", "Enemy_거대해왕류", 97.75f),
+        ("거대해왕류", "Enemy_거대해왕류", 8.5531f, false),
     };
 
     // 원점이 **수면**인 모델 — 발바닥을 바닥에 맞추지 않는다(맞추면 물속 부분이 수면 위로 솟는다).
@@ -789,15 +824,24 @@ public static class ArtBinder
         Dictionary<GameObject, GameObject> cache = new Dictionary<GameObject, GameObject>();
         List<string> bound = new List<string>();
 
-        foreach ((string modelName, string enemyAsset, float height) in EnemyModels)
+        // 미터 → 게임 단위. 사람 1.75m가 UnitHeight다. 표가 미터인 이유는 EnemyModels 주석 참고.
+        const float HumanMeters = 1.75f;
+        float metersToUnits = UnitHeight / HumanMeters;
+
+        // 흙길을 줄지어 걷는 적만 줄인다. 자리표시 적이 쓰는 EnemyHeight와 같은 비여서,
+        // 사람 크기 적(1.75m)이 정확히 22.5로 떨어진다 — 스킨이 붙은 적과 안 붙은 적이 같은 키다.
+        float laneShrink = EnemyHeight / UnitHeight;
+
+        foreach ((string modelName, string enemyAsset, float meters, bool lane) in EnemyModels)
         {
             GameObject model = models.FirstOrDefault(m => Nfc(m.name) == Nfc(modelName));
             EnemyData enemy = enemies.FirstOrDefault(e => Nfc(e.name) == Nfc(enemyAsset));
             if (model == null || enemy == null) continue;
 
-            enemy.prefab = GetOrCreate(cache, template, model, "Mob", ref made, height);
+            float units = meters * metersToUnits * (lane ? laneShrink : 1f);
+            enemy.prefab = GetOrCreate(cache, template, model, "Mob", ref made, units);
             EditorUtility.SetDirty(enemy);
-            bound.Add($"{modelName} → {enemy.enemyName}");
+            bound.Add($"{modelName} → {enemy.enemyName} ({meters:F2}m = {units:F1}{(lane ? ", 레인" : "")})");
         }
 
         // Bind가 Generated 폴더를 통째로 지운 뒤라, 거기 물려 있던 적은 참조가 비었다 — 자리표시 프리팹으로 되돌린다.
