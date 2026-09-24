@@ -31,9 +31,19 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT = os.path.abspath(os.path.join(HERE, "..", ".."))
 OUT = os.path.join(PROJECT, ".check_entries_out")
+# 🔴 이 목록이 **곧 「전부」의 정의**다. 여기 없는 생성기는 관문이 영영 안 본다.
+#   2026-09-24: 「181개 전부 돌렸다」고 보고했는데 **181은 전부가 아니었다.**
+#   Tools/blender에 유닛을 만드는 생성기가 넷 더 있었고(아래 넷, 32항목) 관문 밖이었다.
+#   👉 **gen_*.py를 새로 만들면 여기 추가할 것.** 아래 한 줄로 빠진 게 있는지 셀 수 있다:
+#      python3 -c "import ast,glob;[print(f,t.id,len(n.value.keys)) for f in glob.glob('Tools/blender/gen_*.py')
+#                  for n in ast.parse(open(f).read()).body if isinstance(n,ast.Assign) and isinstance(n.value,ast.Dict)
+#                  for t in n.targets if getattr(t,'id','') in ('UNITS','SKINS')]"
+#   ⚠️ gen_creatures.py(물범·노루·양)는 `--out <폴더> <이름>` 꼴이 아니라 여기 못 넣는다 — **따로 볼 것.**
 GENERATORS = [("fix_unit_fbx.py", "UNITS"), ("gen_scan_rig.py", "UNITS"),
               ("gen_objrip_skin.py", "SKINS"), ("gen_rigify_skin.py", "SKINS"),
-              ("gen_prop_unit.py", "UNITS")]
+              ("gen_prop_unit.py", "UNITS"),
+              ("gen_biped_skin.py", "SKINS"), ("gen_skin_rig.py", "SKINS"),
+              ("gen_valvebiped_skin.py", "SKINS"), ("gen_mmd_skin.py", "SKINS")]
 ERR = re.compile(r"(AssertionError|KeyError|ValueError|TypeError|RuntimeError|FileNotFoundError|"
                  r"IndexError|AttributeError|OSError): .*")
 

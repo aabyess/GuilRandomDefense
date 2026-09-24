@@ -4,6 +4,11 @@
 좌표계라 쉬는 자세에선 멀쩡했는데 클립을 먹이자 유니티에서 ×44로 터졌다. 그래서 **클립을 실제로
 입혀 본 뒤** 프레임마다 (뼈 최대 퍼짐 ÷ 쉬는 자세 메시 높이)를 잰다.
 
+🔴 **공용 클립 셋을 다 먹인다**(idle·walk·attack, 2026-09-24 정정). 그전까지는 idle 하나만 먹였는데,
+   게임은 셋을 다 쓴다 — 그리고 **팔이 몸을 가로지르는 동작은 걷기·공격에서 난다.** idle은 팔을 옆에
+   내리고 있어 가장 안 터지는 클립이다. **가장 안전한 클립 하나로 전부를 판정하고 있었다.**
+   👉 클립 목록을 늘리면 이 표는 **다시 돌려야 한다.** 옛 표의 「통과」는 idle만 통과한 것이다.
+
 🔴 리타겟은 retarget_idle.py(세계 변화량 방식)를 쓴다 — 쿼터니언을 그대로 복사하면 리그마다 뼈 방향이
    달라 팔이 만세를 하고, 그 만세가 「퍼짐」으로 잡혀 멀쩡한 유닛이 실패로 나온다.
 
@@ -72,11 +77,14 @@ def main():
     targets = list(args)
     if len(args) == 1:
         targets += [os.path.join(PROJECT, "Assets/Art/Units", n, n + ".fbx") for n in CONTROLS]
-    idles = R.load_idle(frames=FRACS)
-    assert idles, f"공용 Idle이 없다: {R.IDLE}"
-    print("공용 Idle %s · 프레임 %s" % (os.path.basename(R.IDLE), [i["frame"] for i in idles]))
-    for t in targets:
-        measure(t, idles)
+    for clip in ("idle", "walk", "attack"):
+        idles = R.load_idle(frames=FRACS, clip=clip)
+        if not idles:
+            print("[%s] 공용 클립이 없다 — 건너뜀" % clip)
+            continue
+        print("── 공용 %s · 프레임 %s" % (clip, [i["frame"] for i in idles]))
+        for t in targets:
+            measure(t, idles)
 
 
 main()
