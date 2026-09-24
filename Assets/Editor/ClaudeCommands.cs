@@ -1002,11 +1002,15 @@ public static class ClaudeCommands
         public int superSize = 1;
         public int watchRounds;          // rounds:N — 0이면 끄기
         public bool autoLoop;
+        public bool storySent;           // autoloop: 안흔함을 스토리존에 보냈나 — 스토리가 깨지면 복귀포탈로 되돌린다
+        public int storyFinishedAtSend;
+        public bool shopTried;           // autoloop: 도박소 한 번 눌러 봤나
         public int lastRoundSeen = -1;
         public int logKindsAtRound;      // 라운드 바뀔 때의 예외 종류 수 — 새로 생긴 종류만 그 라운드 줄에 적는다
         public int logCountAtRound;
         public double watchDeadline;
         public bool finishNow;
+        public bool overLogged;          // 끝(패배·게임오버) 줄을 한 번 찍었나 — finishNow 뒤에 난 패배도 찍으려고 따로 둔다
         public int pointerPhase;   // select:/rclick: 한 동작 안의 단계(0 조준·카메라 → 1 누름 → 2 뗌 → 3 결과)
         public float pointerX, pointerY;
         public List<string> clicks = new List<string>();
@@ -1255,6 +1259,7 @@ public static class ClaudeCommands
                     if (!StepPointer(job, target, inStage)) break;   // 아직 진행 중
                     job.clickIndex++;
                     job.pointerPhase = 0;
+                    SkipIfSelectionWrong(job, target);
                     Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
                     break;
                 }
@@ -1263,8 +1268,18 @@ public static class ClaudeCommands
                 string clicked = ClickButton(target);
                 if (clicked == null && optional && inStage > GameShotOptionalClickSearch)
                 {
-                    job.report += $"   🖱 {job.clickIndex + 1}번째 클릭: 「{target}」 없음 — 선택 클릭이라 건너뜀\n";
+                    // 「없음」과 「있지만 꺼짐·못 누름」을 가른다(도박소 첫 칸이 「없음」으로만 나와 이름이 틀렸는지 흐린 건지 몰랐다, outbox 2109).
+                    string why = string.Join(", ", UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                        .Where(b => b.gameObject.name == target || ButtonLabel(b) == target).Take(3)
+                        .Select(b => $"{b.gameObject.name}「{ButtonLabel(b)}」 켜짐 {b.IsActive()} · 누를 수 있음 {b.IsInteractable()}"));
+                    job.report += $"   🖱 {job.clickIndex + 1}번째 클릭: 「{target}」 없음{(why.Length > 0 ? $"(있긴 함: {why})" : "")} — 선택 클릭이라 건너뜀\n";
                     job.clickIndex++;
+                    // 위습 칸을 못 눌렀으면 바로 뒤의 우클릭도 버린다 — 안 버리면 그때 선택돼 있던 **유닛**이 포탈로 걸어갔다(outbox 2109: 노태현·강재규·황정기가 가챠섬으로).
+                    if (job.clickIndex < job.clicks.Count && job.clicks[job.clickIndex].StartsWith("@rc:"))
+                    {
+                        job.report += $"   🖱 {job.clickIndex + 1}번째: 앞 클릭을 건너뛰어 「{job.clicks[job.clickIndex]}」도 건너뜀\n";
+                        job.clickIndex++;
+                    }
                     Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
                     break;
                 }
@@ -1975,6 +1990,24 @@ public static class ClaudeCommands
     }
 
     // 한 틱에 한 단계씩. 끝나면 true.
+    // 좌클릭·박스 선택 뒤 선택이 뜻과 다르면 그 선택에 기대는 다음 동작(우클릭·명령칸)을 버린다.
+    //    outbox 2111: 도박소 좌클릭이 안 먹어 유닛 5기가 선택된 채 남았고, 안흔함 박스가 안 먹어 스토리포탈 우클릭이 5기 전부를 보냈다.
+    static void SkipIfSelectionWrong(GameShotJob job, string spec)
+    {
+        bool isSelect = spec.StartsWith("@sel:"), isBox = spec.StartsWith("@box:");
+        if (!isSelect && !isBox) return;
+        string want = spec.Substring(5).Normalize(NormalizationForm.FormC);
+        SelectionManager selection = UnityEngine.Object.FindFirstObjectByType<SelectionManager>();
+        var names = selection != null ? selection.Selected.Where(x => x != null).Select(x => x.gameObject.name.Normalize(NormalizationForm.FormC)).ToList() : new List<string>();
+        bool ok = isSelect ? names.Any(n => n.Contains(want)) : names.Count > 0 && names.All(n => n.Contains(want));
+        if (ok || job.clickIndex >= job.clicks.Count) return;
+        string next = job.clicks[job.clickIndex];
+        bool dependent = next.StartsWith("@rc:") || (isSelect && next.StartsWith("?UnitCommandSlot"));
+        if (!dependent) return;
+        job.report += $"   ⛔ 「{spec}」 뒤 선택이 뜻과 다름({(names.Count > 0 ? string.Join(", ", names.Take(5)) : "없음")}) — 이 선택에 기대는 「{next}」를 버림\n";
+        job.clickIndex++;
+    }
+
     static bool StepPointer(GameShotJob job, string spec, double inStage)
     {
         if (spec.StartsWith("@box:")) return StepBox(job, spec.Substring(5), inStage);
@@ -2049,29 +2082,120 @@ public static class ClaudeCommands
     static float frameSum, frameMax;
     static int frameN;
 
+    // 가동률 — 레인에 적이 있는 동안, 내 유닛 하나하나가 ① 사거리 안에 0번 레인 적을 하나라도 둔 시간 ② 실제 표적(CurrentTarget)을 가진 시간.
+    //    분모는 「레인에 적이 있던 유닛·초」(09-23 ⚔️ 줄의 「레인에 적이 있던 초」와 같은 기준). 게임 시간(Time.time)으로 적분한다.
+    //    등급별로 따로 — 스토리존에 가 있는 안흔함이 흔함 값을 흐리지 않게.
+    static readonly Dictionary<UnitGrade, float[]> uptime = new Dictionary<UnitGrade, float[]>();   // [분모, 사거리 안, 표적 있음, 사거리 안·표적 없음, 그때 사거리 안 적 수×초]
+    static readonly Dictionary<string, float> noTargetStates = new Dictionary<string, float>();
+    static readonly System.Reflection.FieldInfo CombatStateField = typeof(UnitCombat).GetField("state", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+    static float lastUptimeTime = -1f;
+
+    static void SampleUptime()
+    {
+        float now = Time.time;
+        float dt = lastUptimeTime < 0f || now < lastUptimeTime ? 0f : now - lastUptimeTime;
+        lastUptimeTime = now;
+        if (dt <= 0f || dt > 1f || EnemyDummy.CountInLane(0) == 0) return;
+        List<Vector3> enemies = EnemyDummy.Active.Where(e => e != null && e.LaneIndex == 0).Select(e => e.transform.position).ToList();
+        foreach (UnitIdentity unit in MyUnits())
+        {
+            if (!unit.TryGetComponent(out UnitCombat combat) || !unit.TryGetComponent(out UnitAttacker attacker)) continue;
+            if (!uptime.TryGetValue(unit.Data.grade, out float[] acc)) uptime[unit.Data.grade] = acc = new float[5];
+            acc[0] += dt;
+            float r2 = attacker.AttackRange * attacker.AttackRange;
+            Vector3 me = unit.transform.position;
+            int inRange = enemies.Count(e => (e - me).sqrMagnitude <= r2);
+            bool hasTarget = combat.CurrentTarget != null;
+            if (inRange > 0) acc[1] += dt;
+            if (hasTarget) acc[2] += dt;
+            if (inRange > 0 && !hasTarget)
+            {
+                // 「사거리 안인데 표적 없음」 — 그때 사거리 안 적 수와 전투 상태(구현담당1 요청, 09-24). 0마리면 사거리 계산, 여럿이면 탐색·상태 문제.
+                acc[3] += dt;
+                acc[4] += inRange * dt;
+                string st = CombatStateField?.GetValue(combat)?.ToString() ?? "?";
+                noTargetStates[st] = (noTargetStates.TryGetValue(st, out float had) ? had : 0f) + dt;
+            }
+        }
+    }
+
+    static string UptimeText()
+    {
+        if (uptime.Count == 0) return "가동률 -";
+        string text = "가동률(사거리 안/표적 있음, 유닛·초) " + string.Join(", ", uptime.OrderBy(k => k.Key).Select(k =>
+            $"{k.Key} {100f * k.Value[1] / k.Value[0]:F0}%/{100f * k.Value[2] / k.Value[0]:F0}% ({k.Value[0]:F0})" +
+            (k.Value[3] > 0f ? $"[사거리 안·표적 없음 {k.Value[3]:F0}초, 그때 사거리 안 적 평균 {k.Value[4] / k.Value[3]:F1}]" : "")));
+        float noTargetTotal = noTargetStates.Values.Sum();
+        if (noTargetTotal > 0f)
+            text += " · 표적 없을 때 상태 " + string.Join(", ", noTargetStates.OrderByDescending(k => k.Value).Select(k => $"{k.Key} {100f * k.Value / noTargetTotal:F0}%"));
+        uptime.Clear();
+        noTargetStates.Clear();
+        return text;
+    }
+
+    // 흔함 선택 위습이 포탈에 왜 안 들어가나 — 위습마다 위치·목적지·길 상태·남은 거리·속도, 그리고 가장 가까운 흔함선택 포탈까지 거리.
+    static string ChoiceWispText()
+    {
+        var portalObjs = UnityEngine.Object.FindObjectsByType<UnitPortal>(FindObjectsSortMode.None)
+            .Where(p => p.gameObject.name.StartsWith("흔함선택_")).ToList();
+        var portals = portalObjs.Select(p => p.transform.position).ToList();
+        var wisps = UnityEngine.Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None)
+            .Where(w => w != null && w.Data != null && (w.Data.wispName ?? "").Contains("흔함 선택") &&
+                        (!w.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0)).Take(6).ToList();
+        if (wisps.Count == 0) return "";
+        return "      🧭 흔함 선택 위습(최대 6): " + string.Join(" | ", wisps.Select(w =>
+        {
+            Vector3 p = w.transform.position;
+            float near = portals.Count > 0 ? portals.Min(q => Vector2.Distance(new Vector2(p.x, p.z), new Vector2(q.x, q.z))) : -1f;
+            if (!w.TryGetComponent(out UnityEngine.AI.NavMeshAgent a)) return $"{p.ToString("F0")} 에이전트 없음 · 포탈까지 {near:F0}";
+            string path = a.isOnNavMesh ? $"{a.pathStatus} 남은 {(a.hasPath ? a.remainingDistance : -1f):F0} 목적지 {a.destination.ToString("F0")}" : "NavMesh 밖";
+            // 트리거가 왜 안 켜지나 — 가장 가까운 포탈의 트리거 경계와 위습 콜라이더 경계가 겹치는지, 위습에 Rigidbody가 있는지.
+            UnitPortal np = portalObjs.OrderBy(q => (q.transform.position - p).sqrMagnitude).FirstOrDefault();
+            Collider pc = np != null ? np.GetComponent<Collider>() : null;
+            Collider wc = w.GetComponent<Collider>();
+            string overlap = pc == null || wc == null ? "콜라이더 없음" :
+                $"{np.gameObject.name} 트리거 y {pc.bounds.min.y:F1}~{pc.bounds.max.y:F1} 반폭 {pc.bounds.extents.x:F1} · 위습 y {wc.bounds.min.y:F1}~{wc.bounds.max.y:F1} 반폭 {wc.bounds.extents.x:F1}(켜짐 {wc.enabled}·트리거 {wc.isTrigger}) · 겹침 {pc.bounds.Intersects(wc.bounds)} · Rigidbody 위습 {w.GetComponent<Rigidbody>() != null}/포탈 {np.GetComponent<Rigidbody>() != null}";
+            return $"{p.ToString("F0")} · {path} · 속도 {a.velocity.magnitude:F1}/{a.speed:F1} · 가장 가까운 흔함선택 포탈까지 {near:F0} · {overlap}";
+        })) + "\n";
+    }
+
+    static bool DefeatShown()
+    {
+        GameObject dim = GameObject.Find("DefeatDim");   // PM 9ad8d522 패배 화면 — 켜져 있을 때만 Find에 잡힌다
+        return dim != null && dim.activeInHierarchy;
+    }
+
     static void RoundWatch(GameShotJob job)
     {
         float dt = Time.unscaledDeltaTime;
         if (dt > 0f) { frameSum += dt; frameMax = Mathf.Max(frameMax, dt); frameN++; }
+        SampleUptime();
 
         RoundManager rm = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
         if (rm == null) return;
         PlayerContext me = PlayerContext.GetOccupied(0);
         bool dead = me != null && me.IsDead;
-        bool over = rm.IsGameOver || dead;
+        bool defeatUi = DefeatShown();
+        bool over = rm.IsGameOver || dead || defeatUi;
         int round = rm.CurrentRound;
 
-        if (round != job.lastRoundSeen || (over && !job.finishNow))
+        if (round != job.lastRoundSeen || (over && !job.overLogged))
         {
-            string head = over ? (dead ? "💀 패배(플레이어 1 IsDead)" : "🏁 게임오버(IsGameOver)") : $"🏁 라운드 {job.lastRoundSeen}→{round}";
-            job.report += $"   {head}: {RoundMetrics(job, rm)}\n";
+            string head = over ? $"💀 끝 — IsDead {dead} · IsGameOver {rm.IsGameOver} · 패배화면 {defeatUi}" : $"🏁 라운드 {job.lastRoundSeen}→{round}";
+            job.report += $"   {head}: {RoundMetrics(job, rm)}\n" + ChoiceWispText();
             string snapPath = Path.GetFullPath(Path.Combine(Folder, "shots", over ? "round_end.png" : $"round_{round:00}.png"));
             ScreenCapture.CaptureScreenshot(snapPath);
             job.report += $"      📸 {snapPath}\n";
             job.lastRoundSeen = round;
             frameSum = frameMax = 0f; frameN = 0;
 
-            if (over || round > job.watchRounds) job.finishNow = true;
+            if (over) job.overLogged = true;
+            if (over || round > job.watchRounds)
+            {
+                job.finishNow = true;
+                // 남은 예약 동작을 버린다 — 안 버리면 수십 동작을 다 소화하는 동안 판이 계속 흘러 「끝」 뒤의 일이 섞였다(09-24 outbox 2109: R10 뒤 R12 패배까지 흘렀다).
+                if (job.clickIndex + 1 < job.clicks.Count) job.clicks.RemoveRange(job.clickIndex + 1, job.clicks.Count - job.clickIndex - 1);
+            }
             else if (job.autoLoop && round >= 1) QueueTurn(job);
         }
         if (!job.finishNow && EditorApplication.timeSinceStartup > job.watchDeadline)
@@ -2082,14 +2206,16 @@ public static class ClaudeCommands
         SaveGameShot(job);
     }
 
+    static IEnumerable<UnitIdentity> MyUnits() =>
+        UnityEngine.Object.FindObjectsByType<UnitIdentity>(FindObjectsSortMode.None)
+            .Where(u => u != null && u.Data != null && u.GetComponent<Wisp>() == null && (!u.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0));
+
     static string RoundMetrics(GameShotJob job, RoundManager rm)
     {
         PlayerContext me = PlayerContext.GetOccupied(0);
         int gold = me?.GoldWallet?.Gold ?? -1;
         int wood = me?.ResourceWallet != null ? me.ResourceWallet.Get(ResourceType.Wood) : -1;
-        var mine = UnityEngine.Object.FindObjectsByType<UnitIdentity>(FindObjectsSortMode.None)
-            .Where(u => u != null && u.Data != null && u.GetComponent<Wisp>() == null && (!u.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0))
-            .GroupBy(u => u.Data.grade).Select(g => $"{g.Key} {g.Count()}");
+        var mine = MyUnits().GroupBy(u => u.Data.grade).Select(g => $"{g.Key} {g.Count()}");
         (string slots, int slotTotal) = ReadWispSlots();
         string story = "";
         GameObject storyPanel = GameObject.Find("StoryPanel");
@@ -2097,22 +2223,22 @@ public static class ClaudeCommands
             story = string.Join(" / ", storyPanel.GetComponentsInChildren<TMPro.TMP_Text>().Select(t => t.text.Trim()).Where(t => t.Length > 0));
         int bosses = EnemyDummy.Active.Count(e => e != null && e.IsBoss);
         string frames = frameN > 0 ? $"{1000f * frameSum / frameN:F1}ms 평균 · {1000f * frameMax:F0}ms 최대" : "-";
-        var newKinds = job.logs.Skip(job.logKindsAtRound).Select(l => $"[{l.type}] {(l.message.Length > 60 ? l.message.Substring(0, 60) + "…" : l.message)}");
-        int logTotal = job.logs.Sum(l => l.count);
+        var newKinds = job.logs.Skip(job.logKindsAtRound).Where(l => l.type != "Log").Select(l => $"[{l.type}] {(l.message.Length > 60 ? l.message.Substring(0, 60) + "…" : l.message)}");
+        int logTotal = job.logs.Where(l => l.type != "Log").Sum(l => l.count);   // 태그 달린 일반 로그([이동] 등)는 경고·오류가 아니다
         string logs = $"경고·오류 +{logTotal - job.logCountAtRound}건" + (newKinds.Any() ? $"(새 종류: {string.Join(" | ", newKinds)})" : "");
         job.logKindsAtRound = job.logs.Count;
         job.logCountAtRound = logTotal;
         return $"적 레인 {EnemyDummy.CountInLane(0)}/전체 {EnemyDummy.Active.Count(e => e != null)} · 데스카운트 {rm.DeathCountFor(0)} · " +
                $"골드 {gold} · 목재 {wood} · 내 유닛 {(mine.Any() ? string.Join(", ", mine) : "0")} · 위습 칸 「{slots}」 · " +
-               $"스토리 「{story}」 · 보스 적 {bosses} · 남은시간 {rm.RoundTimeLeft:F1}/준비 {rm.PreRoundTimeLeft:F1} · 프레임 {frames} · {logs}";
+               $"스토리 「{story}」(매니저 「{StoryManager.Instance?.StatusLabel}」 깸 {StoryManager.Instance?.FinishedCount}) · 보스 적 {bosses} · 남은시간 {rm.RoundTimeLeft:F1}/준비 {rm.PreRoundTimeLeft:F1} · 프레임 {frames} · {UptimeText()} · {logs}";
     }
 
     // 사람의 한 턴 — 랜덤유닛 위습을 하나씩 포탈로, 카드별 조합 시도, 전부 모서리로.
     static void QueueTurn(GameShotJob job)
     {
-        int randomWisps = UnityEngine.Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None)
-            .Count(w => w != null && w.Data != null && (!w.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0) &&
-                        (w.Data.wispName ?? "").Contains("랜덤유닛"));
+        var myWisps = UnityEngine.Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None)
+            .Where(w => w != null && w.Data != null && (!w.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0)).ToList();
+        int randomWisps = myWisps.Count(w => (w.Data.wispName ?? "").Contains("랜덤유닛"));
         List<string> turn = new List<string>();
         for (int i = 0; i < randomWisps; i++) { turn.Add("click?:랜덤유닛".Replace("click?:", "?")); turn.Add("@rc:Portal_유닛랜덤"); }
         if (randomWisps > 0) turn.Add("@wait:12");
@@ -2125,8 +2251,58 @@ public static class ClaudeCommands
         }
         turn.Add("@box:Unit_");
         turn.Add("@rcpt:corner");
+        // 흔함 선택 위습 — 「흔함선택_<이름>」 포탈에 넣어 그 유닛을 고른다(isPlayerChoice를 읽는 코드는 없고, 포탈 specificUnit이 길이다).
+        //    짝이 안 맞는(홀수) 흔함이 있으면 그 이름을 골라 조합 재료를 채우고, 없으면 돌아가며 고른다.
+        int choiceWisps = myWisps.Count(w => (w.Data.wispName ?? "").Contains("흔함 선택"));
+        List<string> choicePortals = UnityEngine.Object.FindObjectsByType<UnitPortal>(FindObjectsSortMode.None)
+            .Select(p => p.gameObject.name).Where(n => n.StartsWith("흔함선택_")).Distinct().OrderBy(n => n).ToList();
+        var myCommonCounts = MyUnits().Where(u => u.Data.grade == UnitGrade.Common)
+            .GroupBy(u => u.Data.unitName).ToDictionary(g => g.Key ?? "", g => g.Count());
+        List<string> picked = new List<string>();
+        for (int i = 0; i < choiceWisps && choicePortals.Count > 0; i++)
+        {
+            string odd = choicePortals.FirstOrDefault(n => myCommonCounts.TryGetValue(n.Substring(5), out int c) && c % 2 == 1);
+            string portal = odd ?? choicePortals[(job.lastRoundSeen + i) % choicePortals.Count];
+            string unit = portal.Substring(5);
+            myCommonCounts[unit] = (myCommonCounts.TryGetValue(unit, out int had) ? had : 0) + 1;
+            turn.Insert(0, "@rc:" + portal);
+            turn.Insert(0, "?흔함 선택");
+            picked.Add(unit);
+        }
+        if (picked.Count > 0) turn.Insert(2 * picked.Count, "@wait:12");
+
+        // 상점 — 라운드 2에 도박소(레인 0 = Lane1)를 골라 첫 칸을 한 번 누른다. 결과는 [도박] 로그와 골드 차이로 본다.
+        StoryManager story = StoryManager.Instance;
+        if (!job.shopTried && job.lastRoundSeen >= 2)
+        {
+            job.shopTried = true;
+            turn.Add("@sel:Lane1_도박소");
+            turn.Add("?UnitCommandSlot0");
+        }
+
+        // 스토리 — 진행 중이면 안흔함을 스토리 포탈로 보내고, 그 스토리가 깨지면 복귀포탈로 되돌린다.
+        string storyPlan = "";
+        if (story != null && !job.storySent && story.Running != null && MyUnits().Any(u => u.Data.grade == UnitGrade.Uncommon))
+        {
+            job.storySent = true;
+            job.storyFinishedAtSend = story.FinishedCount;
+            turn.Add("@box:Unit_안흔함");
+            turn.Add("@rc:Lane1_스토리포탈");
+            storyPlan = $" · 안흔함 → 스토리존(「{story.StatusLabel}」)";
+        }
+        else if (story != null && job.storySent && story.FinishedCount > job.storyFinishedAtSend)
+        {
+            job.storySent = false;
+            turn.Add("@box:Unit_안흔함");
+            turn.Add("@rc:스토리_복귀포탈");
+            storyPlan = $" · 스토리 {story.FinishedCount - job.storyFinishedAtSend}개 깸 → 안흔함 복귀";
+        }
+        // 스토리존에 가 있는 동안엔 안흔함을 다시 끌어내지 않도록 흔함만 모서리로 보낸다.
+        turn.Add(job.storySent ? "@box:Unit_흔함" : "@box:Unit_");
+        turn.Add("@rcpt:corner");
+
         job.clicks.AddRange(turn);
-        job.report += $"   🔁 한 턴 예약: 랜덤유닛 위습 {randomWisps}기 → 포탈 · 조합 시도 · 모서리로 이동({turn.Count}동작)\n";
+        job.report += $"   🔁 한 턴 예약: 흔함 선택 {picked.Count}기({string.Join(", ", picked)}) · 랜덤유닛 위습 {randomWisps}기 → 포탈 · 조합 시도{storyPlan} · 모서리로 이동({turn.Count}동작)\n";
         if (job.stage == "waiting") { job.stage = "clicking"; job.stageSince = EditorApplication.timeSinceStartup; }
     }
 
@@ -2395,6 +2571,15 @@ public static class ClaudeCommands
         if (type == LogType.Log && !message.StartsWith("[")) return;   // 태그 달린 일반 로그([이동]·[선택]·[명령]·[도박] 등)는 싣는다 — 같은 줄은 묶인다
         GameShotJob job = LoadGameShot();
         if (job == null) return;
+
+        // [데스] 한 줄마다 시각과 함께 본문에 바로 적는다 — 0.65초 간격·9부터 줄어드는지 보려면 묶으면 안 된다.
+        if (type == LogType.Log && message.StartsWith("[데스]"))
+        {
+            RoundManager rm = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
+            job.report += $"   ☠️ t={Time.time:F2} 라운드 {rm?.CurrentRound} · {message.Substring(5).Trim()}\n";
+            SaveGameShot(job);
+            return;
+        }
 
         string head = message.Length > 400 ? message.Substring(0, 400) + " …" : message;
         string frames = "";
