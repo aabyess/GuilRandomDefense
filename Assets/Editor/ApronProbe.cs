@@ -174,6 +174,10 @@ public static class ApronProbe
     [MenuItem("Tools/진단/플레이해서 앞치마 NavMesh 구멍 찍기")]
     static void NavHolesInPlay() => RunInPlay("navholes");
 
+    /// <summary>길찾기 기준값이 서로 맞는지 잰다(PM 지시 2026-09-24). 값은 아무것도 안 바꾼다.</summary>
+    [MenuItem("Tools/진단/플레이해서 길찾기 기준값 재기")]
+    static void AgentAuditInPlay() => RunInPlay("agent");
+
     static void RunInPlay(string job)
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode)
@@ -219,7 +223,8 @@ public static class ApronProbe
             }
             if (now - since < Settle) return;
 
-            Finish(SessionState.GetString(JobKey, "pixels") == "navholes" ? NavHoles() : Sweep());
+            string job = SessionState.GetString(JobKey, "pixels");
+            Finish(job == "navholes" ? NavHoles() : job == "agent" ? AgentAudit() : Sweep());
             return;
         }
     }
@@ -319,6 +324,104 @@ public static class ApronProbe
         sb.AppendLine("구멍 칸 몇 개 (좌표 → 그 자리 콜라이더 전부):");
         foreach (string line in firstFew) sb.AppendLine(line);
         return sb.ToString();
+    }
+
+    // ── 길찾기 기준값 재기 ────────────────────────────────────────────────────
+    //
+    // 세 값이 서로 다른 것을 잰다(PM 지시 2026-09-24). **축이 둘이라 섞으면 안 된다:**
+    //  · 굽기 `agentRadius` — NavMesh가 벽에서 물러나는 폭. **통로 폭을 정한다.** 바꾸면 다시 구워야 한다.
+    //  · 런타임 `NavMeshAgent.radius` — 회피 계산의 제 몸 크기. 통로를 안 좁힌다.
+    //    ⚠️ UnitMover가 회피를 **끄므로**(사장님 지시 「겹치게」) 지금은 이 값이 작동할 자리가 없다.
+    //
+    // 통로 여유는 다시 굽지 않고 잰다: `FindClosestEdge`가 주는 가장자리까지 거리에 **지금 굽기
+    // 반지름을 더하면** 그 자리의 진짜 통로 반폭이다. 가장 좁은 곳이 굽기 반지름의 상한이다.
+
+    const float AuditStep = 12f;
+    const float BodyHeightForOverhead = 30f;   // 유닛 키 상한. 이만큼 위에 뭐가 있으면 뚫고 지나간다
+
+    static string AgentAudit()
+    {
+        StringBuilder sb = new StringBuilder();
+        NavMeshBuildSettings bake = NavMesh.GetSettingsByIndex(0);
+
+        sb.AppendLine("■ 기준값 셋");
+        sb.AppendLine($"  굽기   반지름 {bake.agentRadius:0.##} · 높이 {bake.agentHeight:0.##} · " +
+                      $"오르기 {bake.agentClimb:0.##} · 복셀 {MapLayout.NavMeshVoxelSize:0.##}");
+
+        // 실제로 돌고 있는 에이전트에서 읽는다 — 프리팹 값이 아니라 **지금 화면의 값**이다.
+        NavMeshAgent[] agents = Object.FindObjectsByType<NavMeshAgent>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        if (agents.Length == 0) sb.AppendLine("  런타임 에이전트 0기 — 유닛이 아직 없다");
+        else
+        {
+            NavMeshAgent a = agents[0];
+            int avoiding = agents.Count(g => g.obstacleAvoidanceType != ObstacleAvoidanceType.NoObstacleAvoidance);
+            sb.AppendLine($"  런타임 {agents.Length}기 · 반지름 {a.radius:0.##} · 높이 {a.height:0.##} · " +
+                          $"회피 켜진 것 {avoiding}/{agents.Length}  {(avoiding == 0 ? "🔴 전부 꺼짐 — 반지름이 작동할 자리가 없다" : "")}");
+
+            Renderer r = a.GetComponentInChildren<Renderer>();
+            if (r != null)
+            {
+                Bounds b = r.bounds;
+                sb.AppendLine($"  몸    렌더러 {b.size.x:0.##}×{b.size.y:0.##}×{b.size.z:0.##} → " +
+                              $"충돌 반지름 ≈ {Mathf.Max(b.size.x, b.size.z) * 0.5f:0.##}");
+            }
+        }
+
+        // ── 통로 여유: 굽기 반지름을 얼마까지 올릴 수 있나
+        sb.AppendLine("■ 통로 여유 (가장자리까지 거리 + 지금 굽기 반지름 = 진짜 통로 반폭)");
+        List<(float half, Vector3 at)> tight = new List<(float, Vector3)>();
+        int onMesh = 0;
+        float[] buckets = new float[6];   // <2, <5, <10, <20, <40, 그 이상
+        foreach (Vector3 p in AuditSamples())
+        {
+            if (!NavMesh.SamplePosition(p, out NavMeshHit snap, AuditStep, NavMesh.AllAreas)) continue;
+            if (!NavMesh.FindClosestEdge(snap.position, out NavMeshHit edge, NavMesh.AllAreas)) continue;
+            onMesh++;
+            float half = edge.distance + bake.agentRadius;
+            int b = half < 2f ? 0 : half < 5f ? 1 : half < 10f ? 2 : half < 20f ? 3 : half < 40f ? 4 : 5;
+            buckets[b]++;
+            tight.Add((half, snap.position));
+        }
+        sb.AppendLine($"  NavMesh 위 표본 {onMesh}개 (칸 {AuditStep:0.#})");
+        string[] names = { "<2", "2~5", "5~10", "10~20", "20~40", "40 이상" };
+        for (int i = 0; i < buckets.Length; i++)
+            sb.AppendLine($"    통로 반폭 {names[i],-7} {buckets[i],6}개 ({(onMesh == 0 ? 0 : 100f * buckets[i] / onMesh):0.#}%)");
+        sb.AppendLine("  가장 좁은 자리 8곳:");
+        foreach ((float half, Vector3 at) in tight.OrderBy(t => t.half).Take(8))
+            sb.AppendLine($"    반폭 {half:0.##}  x {at.x:0.#} z {at.z:0.#}");
+
+        // ── 머리 위: 굽기 높이 2로 깔린 NavMesh 밑에 낮은 지붕이 있나
+        sb.AppendLine($"■ 머리 위 (NavMesh 위 {BodyHeightForOverhead:0.#} 안에 뭐가 있나 = 키 {BodyHeightForOverhead:0.#}짜리가 뚫고 지나간다)");
+        Dictionary<string, int> overhead = new Dictionary<string, int>();
+        int checkedPoints = 0;
+        foreach (Vector3 p in AuditSamples())
+        {
+            if (!NavMesh.SamplePosition(p, out NavMeshHit snap, AuditStep, NavMesh.AllAreas)) continue;
+            checkedPoints++;
+            if (!Physics.Raycast(snap.position + Vector3.up * 0.5f, Vector3.up,
+                                 out RaycastHit hit, BodyHeightForOverhead)) continue;
+            string key = System.Text.RegularExpressions.Regex.Replace(hit.collider.gameObject.name, @"\d+", "#");
+            overhead.TryGetValue(key, out int k);
+            overhead[key] = k + 1;
+        }
+        sb.AppendLine($"  표본 {checkedPoints}개 중 머리 위에 뭔가 있는 칸 {overhead.Values.Sum()}개");
+        foreach (KeyValuePair<string, int> e in overhead.OrderByDescending(e => e.Value).Take(10))
+            sb.AppendLine($"    {e.Value,5}칸  {e.Key}");
+        if (overhead.Count == 0) sb.AppendLine("    없음");
+
+        return sb.ToString();
+    }
+
+    /// <summary>레인1 섬 + 앞치마를 격자로 훑는다. 두 검사가 같은 표본을 써야 견줄 수 있다.</summary>
+    static IEnumerable<Vector3> AuditSamples()
+    {
+        MapLayout.Island lane = MapLayout.Lanes[0];
+        Rect field = Rect.MinMaxRect(lane.center.x - lane.size.x * 0.5f, lane.center.y - lane.size.y * 0.5f,
+                                     lane.center.x + lane.size.x * 0.5f, lane.center.y + lane.size.y * 0.5f);
+        foreach (Rect area in new[] { field, Apron })
+            for (float x = area.xMin + AuditStep * 0.5f; x < area.xMax; x += AuditStep)
+                for (float z = area.yMin + AuditStep * 0.5f; z < area.yMax; z += AuditStep)
+                    yield return new Vector3(x, MapLayout.IslandTop, z);
     }
 
     /// <summary>화면 가운데 세로선을 훑어 각 점이 무엇인지 돌려준다. 대화창을 안 띄운다(플레이 중에 막힌다).</summary>
