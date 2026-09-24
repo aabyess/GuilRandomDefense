@@ -1570,7 +1570,14 @@ public static class MapGenerator
 
         float tableLeft = island.center.x - island.size.x * 0.5f;
         float tableTop = island.center.y + island.size.y * 0.5f;
-        float cursorX = tableLeft + (island.size.x - totalWidth) * 0.5f;   // 표 안에서 가운데 정렬
+        // 🔴 2026-09-24 사장님 「흔함은 맨 왼쪽에 붙게 해줘」 → **왼쪽 정렬**이다.
+        //    예전에는 `tableLeft + (island.size.x - totalWidth) * 0.5f`로 가운데 정렬했는데,
+        //    섬(1700)이 표(1461)보다 넓어 좌우에 119.35씩 잔디가 보였다 — 그게 사장님이
+        //    「양 여백」이라 하신 것이다. 섬 가로를 표에 맞추는 것(MapLayout.CombineSizeX)만으로도
+        //    여백은 사라지지만, 그건 **리터럴이 맞는 동안만** 그렇다. 왼쪽 정렬로 두면
+        //    조합식이 늘거나 줄어 자연 폭이 달라져도 **흔함 열은 늘 왼쪽 끝에 붙는다.**
+        //    (남는 폭이 있으면 그만큼 오른쪽에 모인다 — 왼쪽에 반쪽씩 벌어지는 것보다 낫다.)
+        float cursorX = tableLeft;
 
         int placed = 0;
         float deepest = 0f;
