@@ -262,12 +262,25 @@ public static class EffectSockets
         smoke = LoadOrCreateParticleMaterial(SmokeMaterialPath, dot, additive: false);
     }
 
+    /// <summary>
+    /// 「사장님이 만진 값을 지킨다」와 「코드가 정본이다」는 **둘 다 맞다 — 다른 것에 대해 맞다.**
+    /// 그래서 갈라 쓴다(PM 판정 2026-09-24):
+    ///
+    ///  · **다시 쓴다(코드 것)** — 셰이더, `_BaseMap`, `_Surface`·`_Blend`·`_ZWrite`, 키워드,
+    ///    블렌드 모드. 「이 재질이 **어떻게 그려지는가**」다. 사람이 인스펙터에서 만질 값이 아니고,
+    ///    틀리면 불씨가 아예 안 보이거나 검은 사각형으로 뜬다.
+    ///  · **안 건드린다(사장님 것)** — 색과 세기(`_BaseColor` 등). 눈으로 맞추는 값이라
+    ///    덮어쓰면 맞춰 놓은 것이 소리 없이 사라진다. 이 함수는 그 값을 **한 번도 안 쓴다.**
+    ///
+    /// 🔴 예전엔 「있으면 그대로 돌려준다」였다. 그래서 위 설정 열두 개가 두 번째부터 한 번도
+    ///    안 돌았고, 코드를 고쳐도 말없이 안 먹었다 — 09-24에 세 번 당한 그 병이다.
+    /// </summary>
     static Material LoadOrCreateParticleMaterial(string path, Texture2D texture, bool additive)
     {
         Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
-        if (material != null) return material;   // 사장님이 만진 값은 지킨다
+        bool isNew = material == null;
+        if (isNew) material = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
 
-        material = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
         material.SetTexture("_BaseMap", texture);
         material.SetFloat("_Surface", 1f);                        // 투명
         material.SetFloat("_Blend", additive ? 2f : 0f);          // 2 = Additive, 0 = Alpha
@@ -278,7 +291,17 @@ public static class EffectSockets
         if (additive) material.EnableKeyword("_BLENDMODE_ADD");
         material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
         material.SetInt("_DstBlend", additive ? (int)BlendMode.One : (int)BlendMode.OneMinusSrcAlpha);
-        AssetDatabase.CreateAsset(material, path);
+
+        if (isNew)
+        {
+            AssetDatabase.CreateAsset(material, path);
+        }
+        else
+        {
+            // SetDirty만으로는 디스크에 안 써진다 — 다음 리로드 때 옛 값이 돌아온다.
+            EditorUtility.SetDirty(material);
+            AssetDatabase.SaveAssetIfDirty(material);
+        }
         return material;
     }
 }

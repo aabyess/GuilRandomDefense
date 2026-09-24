@@ -185,7 +185,7 @@ public static class MapGenerator
         // 다음에 열 때 도로 빈 채로 돌아온다.
         string sweep = SweepTiledMaterials();
         AssetDatabase.SaveAssets();
-        string textureReport = SurfaceTextureReport() + sweep;
+        string textureReport = SurfaceTextureReport() + sweep + SurfaceDriftReport();
 
         Selection.activeGameObject = root;
         EditorSceneManager.MarkSceneDirty(root.scene);
@@ -2334,18 +2334,25 @@ public static class MapGenerator
     // 색 정의는 UnitGradeExtensions 한 곳에만 있다 — 하단 명령 그리드도 같은 것을 쓴다.
     static Color GradeColor(UnitGrade grade) => grade.Color();
 
+    const float SlotSmoothness = 0.2f;
+
+    /// <summary>PaintGlow와 같은 이유로 가져온 뒤에도 다시 쓴다 — 매끄러움은 이름에 안 들어간다.</summary>
     static void PaintSolid(GameObject obj, Color color)
     {
         string path = $"{MaterialFolder}/slot_{ColorUtility.ToHtmlStringRGB(color)}.mat";
         Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
-        if (material == null)
+        bool isNew = material == null;
+        if (isNew)
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
             material = new Material(shader);
-            material.SetColor("_BaseColor", color);
-            material.SetFloat("_Smoothness", 0.2f);
-            AssetDatabase.CreateAsset(material, path);
         }
+
+        material.SetColor("_BaseColor", color);
+        material.SetFloat("_Smoothness", SlotSmoothness);
+
+        if (isNew) AssetDatabase.CreateAsset(material, path);
+        else SaveChanged(material);
 
         obj.GetComponent<Renderer>().sharedMaterial = material;
     }
@@ -3372,22 +3379,44 @@ public static class MapGenerator
         light.intensity = 3.5f;
     }
 
+    const float GlowEmissionBoost = 3f;
+
+    /// <summary>
+    /// 🔴 이름에 **색만** 들어간다. 색을 바꾸면 새 파일이 나서 멀쩡해 보이지만,
+    ///    <see cref="GlowEmissionBoost"/>만 바꾸면 이미 만들어진 `glow_*.mat`에 영영 안 닿았다 —
+    ///    위습 발광이 코드는 1.1배인데 `.mat`은 4배로 남아 있던 것과 **같은 모양**이다(09-24).
+    ///    **가장 나쁜 결함은 틀렸다고 말해 주지 않는 결함이다.** 그래서 가져온 뒤에도 다시 쓴다.
+    /// </summary>
     static void PaintGlow(GameObject obj, Color color)
     {
         string path = $"{MaterialFolder}/glow_{ColorUtility.ToHtmlStringRGB(color)}.mat";
         Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
-        if (material == null)
+        bool isNew = material == null;
+        if (isNew)
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
             material = new Material(shader);
-            material.SetColor("_BaseColor", color);
-            material.SetColor("_EmissionColor", color * 3f);
-            material.EnableKeyword("_EMISSION");
-            material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-            AssetDatabase.CreateAsset(material, path);
         }
 
+        material.SetColor("_BaseColor", color);
+        material.SetColor("_EmissionColor", color * GlowEmissionBoost);
+        material.EnableKeyword("_EMISSION");
+        material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+
+        if (isNew) AssetDatabase.CreateAsset(material, path);
+        else SaveChanged(material);
+
         obj.GetComponent<Renderer>().sharedMaterial = material;
+    }
+
+    /// <summary>
+    /// 이미 있는 에셋에 값을 다시 쓴 뒤 부른다. `SetDirty`만으로는 **디스크에 안 써지고**,
+    /// 다음 리로드 때 옛 값이 그대로 돌아온다(09-24에 실제로 그랬다).
+    /// </summary>
+    static void SaveChanged(Object asset)
+    {
+        EditorUtility.SetDirty(asset);
+        AssetDatabase.SaveAssetIfDirty(asset);
     }
 
     // 부스 줄. 앞쪽(포탈 방향)은 열어 두고 뒤와 칸막이만 세운다.
@@ -4450,7 +4479,8 @@ public static class MapGenerator
              + (created > 0 ? $" (새로 만든 슬롯 {created}개)" : "")
              + (repaired > 0 ? $"\n기존 플레이어 {repaired}명에게 빠져 있던 조각을 채웠습니다." : "")
              + (unionWispFixed ? "\n연합세력 항법 위습(RewardDistributor.unionWisp)을 채웠습니다." : "")
-             + (rerollFixed > 0 ? $"\n희귀함 리롤(고유 재추첨)을 {rerollFixed}곳에 배선했습니다." : "");
+             + (rerollFixed > 0 ? $"\n희귀함 리롤(고유 재추첨)을 {rerollFixed}곳에 배선했습니다." : "")
+             + WiringReport();
     }
 
     // 2026-09-07 추가(연합세력 항법 훅) — RewardDistributor는 PlayerContext와 달리 씬에
@@ -4473,9 +4503,18 @@ public static class MapGenerator
         return EnsureAssetRef(distributor, "unionWisp", unionWisp);
     }
 
+    /// <summary>이미 물려 있던 참조 중 **남의 오브젝트를 가리키는 것**만 한 줄로. 없으면 빈 문자열.</summary>
+    static string WiringReport()
+    {
+        return WiringKept.Count == 0 ? ""
+            : "\n⚠️ 이미 물려 있어 안 건드린 참조 중 이상한 것 " + WiringKept.Count + "건: " +
+              string.Join(", ", WiringKept.Distinct());
+    }
+
     static int RepairPlayerParts()
     {
         int repaired = 0;
+        WiringKept.Clear();
 
         foreach (PlayerContext context in Object.FindObjectsByType<PlayerContext>(
                      FindObjectsInactive.Include, FindObjectsSortMode.None))
@@ -4541,13 +4580,26 @@ public static class MapGenerator
         return repaired;
     }
 
+    // 이미 물려 있는 참조를 본 기록. 09-24 PM 지시 — 지금은 **고치지 않고 눈에만 띄게** 한다.
+    // 「빈 것만 채운다」는 「맞는지 본다」가 아니다. 참조가 **틀려 있어도** 생성기는 안 고친다.
+    // 그래서 남의 오브젝트를 가리키는 것만 골라 보고문에 올린다 — 고치는 건 나중 판단이다.
+    static readonly List<string> WiringKept = new List<string>();
+
     // 컴포넌트가 없으면 붙이고, 참조가 비어 있으면 걸어준다. 둘은 따로 어긋날 수 있다 —
     // 컴포넌트만 있고 참조가 빈 경우가 실제로 있었다.
     static bool EnsurePart<T>(PlayerContext context, SerializedObject so, string field) where T : Component
     {
         SerializedProperty property = so.FindProperty(field);
         if (property == null) return false;
-        if (property.objectReferenceValue != null) return false;
+        if (property.objectReferenceValue != null)
+        {
+            // 같은 오브젝트의 부품을 가리켜야 정상이다. 남을 가리키면 그건 섞인 것이다.
+            if (property.objectReferenceValue is Component held && held.gameObject != context.gameObject)
+                WiringKept.Add($"🔴 {context.gameObject.name}.{field} → **{held.gameObject.name}**의 {held.GetType().Name}");
+            else if (!(property.objectReferenceValue is T))
+                WiringKept.Add($"🔴 {context.gameObject.name}.{field} → {property.objectReferenceValue.GetType().Name}(형이 다름)");
+            return false;
+        }
 
         T part = context.GetComponent<T>();
         if (part == null) part = context.gameObject.AddComponent<T>();
@@ -5198,6 +5250,40 @@ public static class MapGenerator
     /// 그냥 단색으로 굴러서, 이 줄이 없으면 또 몇 달을 모른 채 지나간다(위 주석 참고).
     /// 같은 텍스처를 여러 재질이 나눠 쓰므로 "붙은 재질 수/전체"로 센다 — 하나만 빠져도 드러난다.
     /// </summary>
+    /// <summary>
+    /// 표의 색·매끄러움과 실제 `.mat`이 **다르면 한 줄 찍는다.** 덮지는 않는다 — 그쪽은 사람이
+    /// 인스펙터에서 눈으로 맞추는 값이라 덮으면 맞춰 놓은 게 소리 없이 사라진다.
+    ///
+    /// 🔴 그러나 **말없이 안 먹는 것**이 09-24에 우리를 세 번 죽인 병이다. 덮지 않되
+    ///    숨기지도 않는다 — 표를 고쳤는데 화면이 안 바뀌면 이 줄이 이유를 바로 말해 준다.
+    ///    첫 손님은 `lane.mat`이다(표는 흰색인데 에셋은 초록 0.55/0.60/0.44).
+    ///    ⚠️ 어느 쪽이 맞는 값인지는 이 코드가 정하지 않는다. 사람이 보고 정한다.
+    /// </summary>
+    static string SurfaceDriftReport()
+    {
+        List<string> drift = new List<string>();
+        foreach (KeyValuePair<string, Surface> entry in Surfaces)
+        {
+            Material material = AssetDatabase.LoadAssetAtPath<Material>($"{MaterialFolder}/{entry.Key}.mat");
+            if (material == null) continue;
+
+            List<string> parts = new List<string>();
+            Color want = entry.Value.tint, have = material.GetColor("_BaseColor");
+            if (Vector4.Distance(want, have) > 0.01f)
+                parts.Add($"색 {have.r:0.##}/{have.g:0.##}/{have.b:0.##} ≠ 표 {want.r:0.##}/{want.g:0.##}/{want.b:0.##}");
+
+            float wantS = entry.Value.smoothness, haveS = material.GetFloat("_Smoothness");
+            if (Mathf.Abs(wantS - haveS) > 0.005f)
+                parts.Add($"매끄러움 {haveS:0.##} ≠ 표 {wantS:0.##}");
+
+            if (parts.Count > 0) drift.Add($"\n    {entry.Key}.mat  {string.Join(" · ", parts)}");
+        }
+        return drift.Count == 0 ? ""
+            : $"\n⚠️ 표와 다른 재질 {drift.Count}장 — **덮지 않습니다.** 표를 고쳐도 화면은 안 바뀝니다." +
+              string.Join("", drift) +
+              "\n    (어느 쪽이 맞는 값인지는 코드가 안 정합니다. 화면 색을 표에 맞추려면 그 .mat을 지우고 다시 생성하세요.)";
+    }
+
     static string SurfaceTextureReport()
     {
         Dictionary<string, int> total = new Dictionary<string, int>();
