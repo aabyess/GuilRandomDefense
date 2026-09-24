@@ -427,9 +427,19 @@ public static class MapGenerator
         others.AddRange(MapLayout.SealIslands);
         others.AddRange(MapLayout.Zones);
 
+
         int smallCount = 0, bigCount = 0;
+        List<string> skipped = new List<string>();
         foreach (MapLayout.Island island in others)
         {
+            // 🔴 사장님 지시 2026-09-24 「조합판에는 풀,돌 조형물들 없애줘 초월,불멸판에도」 —
+            //    이 셋은 **읽는 섬**이다(조합식 표·전시 인형). 테두리 장식이 글씨와 인형을 가린다.
+            if (System.Array.IndexOf(BareIslands, island.name) >= 0)
+            {
+                skipped.Add(island.name);
+                continue;
+            }
+
             float minSide = Mathf.Min(island.size.x, island.size.y);
             if (minSide < 60f)
                 smallCount += ScatterBorder(container.transform, island, NatureSmall, Mathf.Min(6f, minSide * 0.2f),
@@ -439,13 +449,43 @@ public static class MapGenerator
                     1f, 8f, -1f, assets, obstacles, placed, ref blocked);
         }
 
+        // 📌 **뺀 섬도 보여야 한다.** 안 찍으면 다음에 「왜 저 섬만 휑하지」가 되고,
+        //    그때 결함을 찾다가 지시였다는 것을 모른다.
         string report = $"\n섬 테두리 자연물: {laneCount + smallCount + bigCount}개 — 레인 {laneCount} · 작은 섬 {smallCount} · " +
-                        $"큰 섬 {bigCount} (건물·인형과 겹쳐 뺀 자리 {blocked}).";
+                        $"큰 섬 {bigCount} (건물·인형과 겹쳐 뺀 자리 {blocked})" +
+                        (skipped.Count > 0
+                            ? $"\n  제외(사장님 지시로 풀·돌 없음): {string.Join(" · ", skipped)}" +
+                              " — 캠프파이어·받침은 다른 경로라 그대로 있습니다"
+                            : "") + ".";
         if (missing.Count > 0)
             report += $"\n  ⚠️ 못 읽은 자연물 {missing.Count}종: {string.Join(", ", missing)} — " +
                       "유니티가 아직 임포트를 안 했으면 창에 한 번 포커스를 준 뒤 다시 생성하세요.";
         return report;
     }
+
+    /// <summary>
+    /// 테두리 자연물(풀·돌)을 **깔지 않는** 섬. 사장님 지시 2026-09-24
+    /// 「조합판에는 풀,돌 조형물들 없애줘 초월,불멸판에도」 — 셋 다 **읽는 섬**이라
+    /// (조합식 표의 글씨·전시 인형) 테두리 장식이 그것을 가린다.
+    ///
+    /// ⚠️ **빼는 것은 이 경로(ScatterBorder)의 풀·돌뿐이다.** 같은 섬 위의 다른 것들은
+    ///    경로가 달라 그대로 남고, 남아야 한다 — 사장님이 「불멸 가운데 캠프파이어는 놔두고」라고
+    ///    덧붙이셨다:
+    /// <code>
+    ///   풀·돌          ScatterBorder            ← 여기서 뺀다
+    ///   캠프파이어 ×1   StructureDresser 구조물   ← 남는다
+    ///   받침_불멸 ×8    StructureDresser 구조물   ← 남는다
+    ///   받침_초월 ×25   전시 배치                 ← 남는다
+    /// </code>
+    ///    다음에 「불멸판 장식 다 빼라」가 오면 **캠프파이어까지 지울 자리다.** 경로가 다르다는
+    ///    것만 믿지 말고, 구운 보고문에 「캠프파이어×1」이 그대로 있는지 눈으로 볼 것.
+    ///
+    /// 이름 배열로 두는 이유: 사장님이 「저 섬도 빼라 / 다시 넣어라」 하실 자리이고,
+    /// 2026-09-24에 이 근처 표가 네 번 바뀌었다. 조건문에 섞어 박으면 다음에 또 찾아 헤맨다.
+    /// ⚠️ 펑크해저드는 여기 넣지 않는다 — 사장님이 말씀하지 않으셨고, 그 섬의 얼음가시·용암바위는
+    ///    `StructureDresser.ScatterPunkHazard`라 애초에 이 경로가 아니다.
+    /// </summary>
+    static readonly string[] BareIslands = { "CombineTable", "TranscendDisplay", "ImmortalDisplay" };
 
     // 섬 한 개의 테두리를 변마다 걸으며 소품을 놓는다. bottomApron이 0 이상이면(레인) 아래 변을 빼고,
     // 왼쪽·오른쪽 변도 아래에서 그만큼 올라간 데서 시작한다.
