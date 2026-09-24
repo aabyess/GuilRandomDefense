@@ -36,7 +36,11 @@ public static class WorldPick
         hit = default;
         if (cam == null) return false;
 
-        int count = Physics.RaycastNonAlloc(cam.ScreenPointToRay(screenPosition), hits, Mathf.Infinity);
+        // 🔴 트리거는 땅이 아니다 — 무시한다(2026-09-24). 포탈은 isTrigger 상자라, 예전엔 광선이 그 **윗면**(y 20.54)에 먼저 맞아
+        //    목적지가 공중이 됐고, UnitMover가 거기서 반경 8.3 안에 NavMesh(섬 윗면 y 8)를 못 찾아 **이동 명령을 버렸다.**
+        //    위습을 포탈 원 위에 우클릭하면 안 가고 옆 땅을 찍어야 가던 원인이다(gameshot select:/rclick: 재현, outbox 2060).
+        //    트리거를 건너뛰면 광선이 포탈 밑 실제 바닥에 닿아 목적지가 원 한가운데가 되고, 걸어 들어가 트리거가 발동한다.
+        int count = Physics.RaycastNonAlloc(cam.ScreenPointToRay(screenPosition), hits, Mathf.Infinity, ~0, QueryTriggerInteraction.Ignore);
         if (count == 0) return false;
 
         bool found = false;

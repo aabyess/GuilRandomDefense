@@ -11,6 +11,8 @@ using UnityEngine.SceneManagement;
 using UnityEngine.Playables;
 using UnityEngine.Animations;
 using UnityEngine.AI;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 
 /// <summary>
 /// Claude가 사장님 대신 유니티 메뉴를 돌리고 화면을 찍어 결과를 읽는 창구(2026-09-13, 사장님: 「모델배선·맵생성 아직도 내가 해줘야 하냐」).
@@ -923,6 +925,13 @@ public static class ClaudeCommands
     //                  우리에 생겨 사장님 화면에선 여전히 안 보였다 — 시험 자리가 보는 사람 자리와 달랐다. 그래서 둘 다 화면 좌표를 찍는다.
     //                  같은 날 교훈 하나 더: **계산이 맞는지 전에 그 값이 실제로 쓰이는지 본다** — 씬에 적힌 편집 시점 카메라 값으로
     //                  계산했는데 실행하면 RtsCameraController.FocusOnLocalLane이 덮어써 헛계산이 됐다. 판정은 이 명령의 👁 줄(실행 중 실측)로.
+    //   · select:<이름>  **내 유닛**(Selectable, 주인 = 나) 중 이름에 그 글자가 든 첫 것을 **좌클릭**한다.
+    //   · rclick:<이름>  이름에 그 글자가 든 오브젝트(포탈 등) 자리를 **우클릭**한다(선택한 유닛에 이동 명령).
+    //                  둘 다 **게임의 실제 입력 경로**를 탄다 — 가상 마우스 장치(Input System)에 누르기·떼기 이벤트를 넣어
+    //                  SelectionManager·UnitMover가 평소처럼 Mouse.current를 읽고 WorldPick으로 레이캐스트한다. 내부 상태를 직접 안 만진다
+    //                  (spawn:처럼 상태를 직접 만들면 실제와 갈라진다 — 09-24 Warp 결함). click:과 한 줄에 섞어 적은 순서대로 돈다.
+    //                  대상이 화면 밖이거나 하단 HUD 뒤면 미니맵 클릭과 같은 RtsCameraController.MoveTo로 카메라를 먼저 옮긴다.
+    //                  에디터 입력이 Game 뷰 포커스를 따지지 않게 그동안만 editorInputBehaviorInPlayMode를 바꾸고 끝나면 되돌린다.
     //   · combine:<레시피>  레시피(에셋 이름 「안흔함_박민수_조합」 또는 결과 유닛 이름 「안흔함_박민수」)의 재료를 **우리**에 세우고
     //                  1초 뒤 CombineSystem.TryCombine을 불러 조합한다 — 결과 유닛의 자리·레인 중심까지 거리·화면 안인지를 찍는다.
     //                  (2026-09-24 PM: 조합 결과를 레인 가운데로 옮긴 코드를 눈으로 확인할 길이 없었다.) 재료가 특정 유닛뿐인 레시피만 된다.
@@ -956,6 +965,8 @@ public static class ClaudeCommands
         public string file;         // ScreenCapture 결과(절대 경로)
         public float seconds;
         public int superSize = 1;
+        public int pointerPhase;   // select:/rclick: 한 동작 안의 단계(0 조준·카메라 → 1 누름 → 2 뗌 → 3 결과)
+        public float pointerX, pointerY;
         public List<string> clicks = new List<string>();
         public List<string> spawns = new List<string>();
         public List<string> combines = new List<string>();
@@ -1010,7 +1021,14 @@ public static class ClaudeCommands
         // 인자는 모양으로 가른다 — 순서를 외울 필요가 없게.
         foreach (string token in parts.Skip(1))
         {
-            if (token.StartsWith("click?:"))
+            if (token.StartsWith("select:") || token.StartsWith("rclick:"))
+            {
+                bool left = token.StartsWith("select:");
+                string target = token.Substring(left ? 7 : 7);
+                if (target.Length == 0) return $"❌ {token}: 대상 이름을 주세요";
+                job.clicks.Add((left ? "@sel:" : "@rc:") + target);
+            }
+            else if (token.StartsWith("click?:"))
             {
                 if (token.Length == 7) return "❌ click?: 뒤에 버튼 이름이나 글자를 주세요";
                 job.clicks.Add("?" + token.Substring(7));   // 앞의 ?가 「없으면 건너뜀」 표시
@@ -1112,6 +1130,14 @@ public static class ClaudeCommands
             {
                 if (job.clickIndex > 0 && inStage < GameShotClickGap) break;   // 앞 클릭의 결과가 화면에 반영될 틈
                 string target = job.clicks[job.clickIndex];
+                if (target.StartsWith("@sel:") || target.StartsWith("@rc:"))
+                {
+                    if (!StepPointer(job, target, inStage)) break;   // 아직 진행 중
+                    job.clickIndex++;
+                    job.pointerPhase = 0;
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
+                    break;
+                }
                 bool optional = target.StartsWith("?");
                 if (optional) target = target.Substring(1);
                 string clicked = ClickButton(target);
@@ -1172,6 +1198,24 @@ public static class ClaudeCommands
                 if (job.spawns.Count + job.combines.Count > 0) WatchLaneHits();
                 if (inStage >= job.seconds)
                 {
+                    if (job.clicks.Any(c => c.StartsWith("@")))
+                    {
+                        // select:/rclick:을 쓴 판은 끝에 내 유닛 목록을 남긴다 — 위습이 포탈에 들어가 뽑기가 됐는지 여기서 본다.
+                        var mine = Selectable.All.Where(x => x != null && (!x.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == LocalPlayer.LocalPlayerId))
+                            .GroupBy(x => x.name).Select(g => g.Count() > 1 ? $"{g.Key}×{g.Count()}" : g.Key);
+                        job.report += $"   🧾 찍는 순간 내 유닛: {string.Join(", ", mine)}\n";
+                        SelectionManager selectionNow = UnityEngine.Object.FindFirstObjectByType<SelectionManager>();
+                        if (selectionNow != null)
+                            foreach (Selectable chosen in selectionNow.Selected.Where(x => x != null))
+                            {
+                                Vector3 at = chosen.transform.position;
+                                string toTarget = lastPointerTarget != null
+                                    ? $" · 마지막 대상 {lastPointerTarget.name}까지 수평 {Vector2.Distance(new Vector2(at.x, at.z), new Vector2(lastPointerTarget.transform.position.x, lastPointerTarget.transform.position.z)):F1}"
+                                    : "";
+                                string moving = chosen.TryGetComponent(out NavMeshAgent a) && a.isOnNavMesh ? $" · 남은 길 {a.remainingDistance:F1} · 속도 {a.velocity.magnitude:F1}" : "";
+                                job.report += $"   📍 선택 유닛 {chosen.name} 위치 {at.ToString("F0")}{toTarget}{moving}\n";
+                            }
+                    }
                     if (job.spawns.Count + job.combines.Count > 0)
                     {
                         if (job.spawns.Count > 0) job.report += DescribeLaneHits(job, inStage);
@@ -1189,6 +1233,7 @@ public static class ClaudeCommands
                 if (size > 0 && size == job.lastSize)   // 두 번 연속 크기가 같으면 다 써진 것
                 {
                     job.report += "   " + DescribePng("📷", job.file) + "\n";
+                    ReleaseShotMouse();   // 플레이 모드를 나가기 전에 — 가상 장치가 에디터에 남지 않게
                     Advance(job, "exiting");
                     EditorApplication.isPlaying = false;
                 }
@@ -1705,6 +1750,151 @@ public static class ClaudeCommands
         SaveGameShot(job);
     }
 
+    // ── select: / rclick: — 가상 마우스로 실제 입력 경로를 탄다 ──
+    static Mouse shotMouse;
+    static GameObject lastPointerTarget;   // 마지막 select:/rclick: 대상 — 찍는 순간 선택 유닛이 거기까지 얼마나 남았는지 잰다
+    static Mouse previousMouse;
+    static InputSettings.EditorInputBehaviorInPlayMode? previousBehavior;
+    const string ShotMouseName = "ClaudeGameShotMouse";
+
+    static void EnsureShotMouse()
+    {
+        if (shotMouse == null || !shotMouse.added)
+        {
+            shotMouse = InputSystem.devices.OfType<Mouse>().FirstOrDefault(m => m.name == ShotMouseName)
+                        ?? InputSystem.AddDevice<Mouse>(ShotMouseName);
+        }
+        if (Mouse.current != shotMouse) { previousMouse = Mouse.current; shotMouse.MakeCurrent(); }
+        if (previousBehavior == null)
+        {
+            previousBehavior = InputSystem.settings.editorInputBehaviorInPlayMode;
+            InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+        }
+    }
+
+    // 끝날 때 반드시 부른다 — 가상 마우스가 남으면 사람의 실제 마우스 대신 그게 Mouse.current로 남는다.
+    static void ReleaseShotMouse()
+    {
+        foreach (Mouse m in InputSystem.devices.OfType<Mouse>().Where(m => m.name == ShotMouseName).ToList())
+            InputSystem.RemoveDevice(m);
+        shotMouse = null;
+        if (previousMouse != null && previousMouse.added) previousMouse.MakeCurrent();
+        previousMouse = null;
+        if (previousBehavior != null) InputSystem.settings.editorInputBehaviorInPlayMode = previousBehavior.Value;
+        previousBehavior = null;
+    }
+
+    static void QueueMouse(Vector2 position, MouseButton button, bool down)
+    {
+        MouseState state = new MouseState { position = position };
+        if (down) state = state.WithButton(button, true);
+        InputSystem.QueueStateEvent(shotMouse, state);
+    }
+
+    static GameObject FindPointerTarget(string spec, out string candidates)
+    {
+        bool left = spec.StartsWith("@sel:");
+        string name = spec.Substring(left ? 5 : 4).Normalize(NormalizationForm.FormC);
+        candidates = "";
+        if (left)
+        {
+            List<Selectable> mine = Selectable.All.Where(x => x != null &&
+                (!x.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == LocalPlayer.LocalPlayerId)).ToList();
+            Selectable hit = mine.FirstOrDefault(x => x.name.Normalize(NormalizationForm.FormC).Contains(name));
+            if (hit == null) candidates = string.Join(", ", mine.Select(x => x.name).Distinct().Take(20));
+            return hit != null ? hit.gameObject : null;
+        }
+        GameObject found = UnityEngine.Object.FindObjectsByType<Collider>(FindObjectsSortMode.None)
+            .Where(c => c.enabled && c.gameObject.activeInHierarchy && c.name.Normalize(NormalizationForm.FormC).Contains(name))
+            .Select(c => c.gameObject).FirstOrDefault();
+        return found;
+    }
+
+    // 한 틱에 한 단계씩. 끝나면 true.
+    static bool StepPointer(GameShotJob job, string spec, double inStage)
+    {
+        bool left = spec.StartsWith("@sel:");
+        string label = left ? "좌클릭 select" : "우클릭 rclick";
+        Camera cam = Camera.main;
+        switch (job.pointerPhase)
+        {
+            case 0:
+            {
+                GameObject target = FindPointerTarget(spec, out string candidates);
+                if (target == null || cam == null)
+                {
+                    if (inStage < GameShotClickSearch) return false;
+                    // 꺼진 오브젝트까지 뒤져 「없다」와 「있지만 꺼져 있다(해금 전 등)」를 가른다.
+                    string wanted = spec.Substring(left ? 5 : 4).Normalize(NormalizationForm.FormC);
+                    var hidden = Resources.FindObjectsOfTypeAll<GameObject>()
+                        .Where(g => g.scene.IsValid() && g.name.Normalize(NormalizationForm.FormC).Contains(wanted))
+                        .Select(g => $"{g.name}(켜짐 {g.activeInHierarchy} · 콜라이더 {(g.TryGetComponent(out Collider c) ? (c.enabled ? "켜짐" : "꺼짐") : "없음")})")
+                        .Take(5).ToList();
+                    FailGameShot(job, $"{label}: 「{wanted}」 대상을 못 찾음" + (candidates.Length > 0 ? $" — 내 유닛: {candidates}" : "") +
+                                      (hidden.Count > 0 ? $" — 씬에는 있음: {string.Join(", ", hidden)}" : " — 씬 어디에도 그 이름이 없다"));
+                    return false;
+                }
+                lastPointerTarget = target;
+                Vector3 aim = target.TryGetComponent(out Collider col) ? col.bounds.center : target.transform.position;
+                Vector3 sp = cam.WorldToScreenPoint(aim);
+                (float bandBottom, float bandTop) = PointerBand();
+                bool visible = sp.z > 0f && sp.x > 20f && sp.x < cam.pixelWidth - 20f && sp.y > bandBottom * cam.pixelHeight + 10f && sp.y < bandTop * cam.pixelHeight - 10f;
+                if (!visible)
+                {
+                    RtsCameraController rts = cam.GetComponent<RtsCameraController>();
+                    if (rts == null) { FailGameShot(job, $"{label}: {target.name}이 화면 밖인데 카메라를 옮길 RtsCameraController가 없음"); return false; }
+                    if (job.pointerX < 0f) { FailGameShot(job, $"{label}: 카메라를 옮겨도 {target.name}이 화면 안(HUD 사이)에 안 들어옴 — 화면 좌표 {sp}"); return false; }
+                    rts.MoveTo(new Vector3(aim.x, 0f, aim.z));   // 미니맵 클릭과 같은 경로
+                    job.report += $"   🎥 {target.name}이 화면 밖이라 카메라를 옮김(MoveTo {aim.ToString("F0")})\n";
+                    job.pointerX = -1f;   // 한 번만 옮긴다 — 다음 틱에도 안 보이면 실패
+                    SaveGameShot(job);
+                    return false;
+                }
+                EnsureShotMouse();
+                job.pointerX = sp.x; job.pointerY = sp.y;
+                QueueMouse(new Vector2(sp.x, sp.y), left ? MouseButton.Left : MouseButton.Right, false);   // 먼저 그 자리로 옮기고
+                job.pointerPhase = 1;
+                SaveGameShot(job);
+                return false;
+            }
+            case 1:
+                QueueMouse(new Vector2(job.pointerX, job.pointerY), left ? MouseButton.Left : MouseButton.Right, true);   // 누름
+                job.pointerPhase = 2;
+                SaveGameShot(job);
+                return false;
+            case 2:
+                QueueMouse(new Vector2(job.pointerX, job.pointerY), left ? MouseButton.Left : MouseButton.Right, false);  // 뗌
+                job.pointerPhase = 3;
+                SaveGameShot(job);
+                return false;
+            default:
+            {
+                SelectionManager selection = UnityEngine.Object.FindFirstObjectByType<SelectionManager>();
+                string selected = selection != null ? string.Join(", ", selection.Selected.Where(x => x != null).Select(x => x.name)) : "(SelectionManager 없음)";
+                job.report += $"   🖱 {label} 「{spec.Substring(left ? 5 : 4)}」 @ 화면 ({job.pointerX:F0}, {job.pointerY:F0}) → 지금 선택: {(selected.Length > 0 ? selected : "없음")}\n";
+                job.pointerX = 0f;
+                return true;
+            }
+        }
+    }
+
+    // 클릭해도 되는 세로 띠 — 하단 바 위·상단 바 아래(카메라 구도와 같은 HUD 실측). 못 찾으면 화면 전체.
+    static (float bottom, float top) PointerBand()
+    {
+        Canvas.ForceUpdateCanvases();
+        float bottom = 0f, top = 1f;
+        foreach ((string objName, bool isBottom) in new[] { ("BottomBar", true), ("TopBar", false) })
+        {
+            GameObject found = GameObject.Find(objName);
+            if (found == null || !(found.transform is RectTransform rect) || Screen.height <= 0) continue;
+            Vector3[] corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            if (isBottom) bottom = Mathf.Max(corners[0].y, corners[2].y) / Screen.height;
+            else top = Mathf.Min(corners[0].y, corners[2].y) / Screen.height;
+        }
+        return (bottom, top);
+    }
+
     static void Advance(GameShotJob job, string stage)
     {
         job.stage = stage;
@@ -1728,6 +1918,7 @@ public static class ClaudeCommands
 
     static void FinishGameShot(GameShotJob job)
     {
+        ReleaseShotMouse();
         SessionState.EraseString(GameShotKey);
         StringBuilder text = new StringBuilder(job.prefix);
         string tainted = job.midPlayReloads > 0 ? $" (⚠️ 오염 — 플레이 도중 도메인 리로드 {job.midPlayReloads}번)" : "";
@@ -1754,7 +1945,8 @@ public static class ClaudeCommands
     // Exception·Error·Assert는 스택 첫 4줄과, 그 안에 없으면 첫 Assets/ 프레임을 붙인다 — 「어디서 터지는지」가 보이게.
     static void CollectGameShotLog(string message, string stack, LogType type)
     {
-        if (type == LogType.Log) return;
+        // 일반 로그는 너무 많아 버리되, 입력 경로가 「왜 안 먹었는지」 말하는 태그 줄은 싣는다(select:/rclick: 판정용, 09-24).
+        if (type == LogType.Log && !(message.StartsWith("[이동]") || message.StartsWith("[선택]") || message.StartsWith("[명령]"))) return;
         GameShotJob job = LoadGameShot();
         if (job == null) return;
 
