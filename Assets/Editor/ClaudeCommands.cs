@@ -927,11 +927,18 @@ public static class ClaudeCommands
     //                  계산했는데 실행하면 RtsCameraController.FocusOnLocalLane이 덮어써 헛계산이 됐다. 판정은 이 명령의 👁 줄(실행 중 실측)로.
     //   · select:<이름>  **내 유닛**(Selectable, 주인 = 나) 중 이름에 그 글자가 든 첫 것을 **좌클릭**한다.
     //   · rclick:<이름>  이름에 그 글자가 든 오브젝트(포탈 등) 자리를 **우클릭**한다(선택한 유닛에 이동 명령).
+    //                  select:·rclick: 모두 「=이름」이면 정확히 그 이름만 고른다(rclick:=Lane1 → Lane1_앞치마가 아니라 레인 섬 판).
     //                  둘 다 **게임의 실제 입력 경로**를 탄다 — 가상 마우스 장치(Input System)에 누르기·떼기 이벤트를 넣어
     //                  SelectionManager·UnitMover가 평소처럼 Mouse.current를 읽고 WorldPick으로 레이캐스트한다. 내부 상태를 직접 안 만진다
     //                  (spawn:처럼 상태를 직접 만들면 실제와 갈라진다 — 09-24 Warp 결함). click:과 한 줄에 섞어 적은 순서대로 돈다.
     //                  대상이 화면 밖이거나 하단 HUD 뒤면 미니맵 클릭과 같은 RtsCameraController.MoveTo로 카메라를 먼저 옮긴다.
     //                  에디터 입력이 Game 뷰 포커스를 따지지 않게 그동안만 editorInputBehaviorInPlayMode를 바꾸고 끝나면 되돌린다.
+    //   · boxselect:<이름>  내 유닛 중 이름에 그 글자가 든 것 **전부를 드래그 박스로** 고른다(누름 → 끌기 → 뗌, SelectionManager.SelectInBox 경로).
+    //   · wait:<초>      다음 동작 전에 기다린다(위습이 걸어가 포탈에 들어갈 시간, 라운드가 넘어갈 시간 등).
+    //   · cardpair       여럿 고른 상태에서 같은 종류가 2기 이상인 유닛의 카드를 누른다(한 기 선택 → 그 유닛의 조합 버튼이 뜬다).
+    //   · buttons        지금 떠 있는 누를 수 있는 버튼 목록(이름「글자」)을 결과에 남긴다 — 판을 끝내지 않는다.
+    //   · snap:<파일>    그 순간을 한 장 더 찍는다(해상도는 이 판의 Game 뷰 그대로).
+    //                  select·rclick·boxselect·wait·buttons·snap·click은 적은 순서대로 한 줄로 돈다 — 사장님 한 판을 그대로 흉내 낼 수 있다.
     //   · combine:<레시피>  레시피(에셋 이름 「안흔함_박민수_조합」 또는 결과 유닛 이름 「안흔함_박민수」)의 재료를 **우리**에 세우고
     //                  1초 뒤 CombineSystem.TryCombine을 불러 조합한다 — 결과 유닛의 자리·레인 중심까지 거리·화면 안인지를 찍는다.
     //                  (2026-09-24 PM: 조합 결과를 레인 가운데로 옮긴 코드를 눈으로 확인할 길이 없었다.) 재료가 특정 유닛뿐인 레시피만 된다.
@@ -1021,7 +1028,17 @@ public static class ClaudeCommands
         // 인자는 모양으로 가른다 — 순서를 외울 필요가 없게.
         foreach (string token in parts.Skip(1))
         {
-            if (token.StartsWith("select:") || token.StartsWith("rclick:"))
+            if (token.StartsWith("boxselect:")) job.clicks.Add("@box:" + token.Substring(10));
+            else if (token.StartsWith("wait:"))
+            {
+                if (!float.TryParse(token.Substring(5), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float w) || w < 0f)
+                    return $"❌ wait: 뒤엔 초: {token}";
+                job.clicks.Add("@wait:" + token.Substring(5));
+            }
+            else if (token == "buttons") job.clicks.Add("@buttons");
+            else if (token == "cardpair") job.clicks.Add("@cardpair");
+            else if (token.StartsWith("snap:")) job.clicks.Add("@snap:" + token.Substring(5));
+            else if (token.StartsWith("select:") || token.StartsWith("rclick:"))
             {
                 bool left = token.StartsWith("select:");
                 string target = token.Substring(left ? 7 : 7);
@@ -1105,6 +1122,12 @@ public static class ClaudeCommands
         if (job == null || !job.prefixReady) return;   // 아직 Poll이 명령 파일을 다 안 돌렸다
 
         double inStage = EditorApplication.timeSinceStartup - job.stageSince;
+        // 플레이 도중 리로드가 났으면 그 판은 더 돌려도 믿을 수 없다(가상 마우스·정적 기록도 날아간다) — 바로 끝낸다(09-24 loop6).
+        if (job.midPlayReloads > 0 && !job.failed && job.stage != "entering" && job.stage != "exiting")
+        {
+            FailGameShot(job, $"플레이 도중 도메인 리로드({job.stage} 단계) — 이 판은 무효라 여기서 끝낸다. 다른 세션이 Assets를 안 건드릴 때 다시 보낼 것");
+            return;
+        }
         if (job.stage != "entering" && job.stage != "exiting" && !EditorApplication.isPlaying)
         {
             FailGameShot(job, $"{job.stage} 중에 플레이 모드가 끝났다(누가 멈췄거나 예외로 중단)");
@@ -1130,7 +1153,45 @@ public static class ClaudeCommands
             {
                 if (job.clickIndex > 0 && inStage < GameShotClickGap) break;   // 앞 클릭의 결과가 화면에 반영될 틈
                 string target = job.clicks[job.clickIndex];
-                if (target.StartsWith("@sel:") || target.StartsWith("@rc:"))
+                if (target == "@cardpair")
+                {
+                    // 여럿 고른 상태에서 같은 종류가 2기 이상인 카드를 누른다 — 사람이 겹치는 카드를 보고 누르는 것과 같다(같은 흔함 둘이 흔한 조합 재료).
+                    SelectionManager pairSel = UnityEngine.Object.FindFirstObjectByType<SelectionManager>();
+                    var pair = pairSel == null ? null : pairSel.Selected.Where(x => x != null && x.TryGetComponent(out UnitIdentity _))
+                        .GroupBy(x => x.GetComponent<UnitIdentity>().Data?.unitName).FirstOrDefault(g => g.Key != null && g.Count() >= 2);
+                    if (pair == null) job.report += "   🃏 cardpair: 지금 선택에 같은 종류 2기 이상이 없다 — 건너뜀\n";
+                    else
+                    {
+                        string pressed = ClickButton(pair.Key);   // 카드 글자 = 유닛 이름(Card0「임장혁」)
+                        job.report += pressed != null ? $"   🃏 cardpair: 「{pair.Key}」×{pair.Count()} 카드를 누름 → {pressed}\n" : $"   🃏 cardpair: 「{pair.Key}」 카드를 못 찾음\n";
+                    }
+                    job.clickIndex++;
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
+                    break;
+                }
+                if (target.StartsWith("@wait:") || target == "@buttons" || target.StartsWith("@snap:"))
+                {
+                    if (target.StartsWith("@wait:"))
+                    {
+                        if (inStage < float.Parse(target.Substring(6), System.Globalization.CultureInfo.InvariantCulture)) break;
+                        job.report += $"   ⏱ {target.Substring(6)}초 기다림\n";
+                    }
+                    else if (target == "@buttons")
+                        job.report += "   🔘 지금 누를 수 있는 버튼:\n" + ListButtons() + "\n";
+                    else
+                    {
+                        string snapName = target.Substring(6);
+                        string snapPath = Path.GetFullPath(Path.Combine(Folder, "shots", snapName.EndsWith(".png") ? snapName : snapName + ".png"));
+                        ScreenCapture.CaptureScreenshot(snapPath);   // 프레임 끝에 비동기로 써진다 — 판이 끝날 즈음엔 파일이 있다
+                        (string snapSlots, int snapTotal) = ReadWispSlots();
+                        RoundManager snapRound = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
+                        job.report += $"   📸 중간 캡처 {snapPath}(라운드 {snapRound?.CurrentRound} · 위습 칸 「{snapSlots}」 합계 {snapTotal} · 실제 내 위습 {CountMyWisps()})\n";
+                    }
+                    job.clickIndex++;
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
+                    break;
+                }
+                if (target.StartsWith("@sel:") || target.StartsWith("@rc:") || target.StartsWith("@box:"))
                 {
                     if (!StepPointer(job, target, inStage)) break;   // 아직 진행 중
                     job.clickIndex++;
@@ -1204,6 +1265,19 @@ public static class ClaudeCommands
                         var mine = Selectable.All.Where(x => x != null && (!x.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == LocalPlayer.LocalPlayerId))
                             .GroupBy(x => x.name).Select(g => g.Count() > 1 ? $"{g.Key}×{g.Count()}" : g.Key);
                         job.report += $"   🧾 찍는 순간 내 유닛: {string.Join(", ", mine)}\n";
+                        int wispsNow = CountMyWisps();
+                        (string slotText, int slotTotal) = ReadWispSlots();
+                        job.report += $"   🔢 위습 칸 「{slotText}」 합계 {slotTotal} · 실제 내 위습 {wispsNow}{(slotTotal == wispsNow ? " ✅ 일치" : " ⚠️ 다름(칸은 주기적으로 갱신)")}\n";
+                        // 흔함보다 높은 등급(조합 결과)의 자리 — 조합 결과가 레인 가운데 서는지(CombineSystem → LaneCenter) 실제 경로로 본다.
+                        LaneMarker laneForResult = LaneMarker.Get(0);
+                        foreach (UnitIdentity higher in UnityEngine.Object.FindObjectsByType<UnitIdentity>(FindObjectsSortMode.None)
+                                     .Where(u => u != null && u.Data != null && u.Data.grade != UnitGrade.Common &&
+                                                 (!u.TryGetComponent(out OwnedByPlayer ow) || ow.OwnerId == LocalPlayer.LocalPlayerId) && u.GetComponent<Wisp>() == null))
+                        {
+                            Vector3 hp = higher.transform.position;
+                            float fromCenter = laneForResult != null ? Vector2.Distance(new Vector2(hp.x, hp.z), new Vector2(laneForResult.LaneCenter.x, laneForResult.LaneCenter.z)) : -1f;
+                            job.report += $"   🏅 흔함 위 유닛 {higher.name}({higher.Data.grade}) 위치 {hp.ToString("F0")} · 레인 중심에서 수평 {fromCenter:F1}\n";
+                        }
                         SelectionManager selectionNow = UnityEngine.Object.FindFirstObjectByType<SelectionManager>();
                         if (selectionNow != null)
                             foreach (Selectable chosen in selectionNow.Selected.Where(x => x != null))
@@ -1213,7 +1287,17 @@ public static class ClaudeCommands
                                     ? $" · 마지막 대상 {lastPointerTarget.name}까지 수평 {Vector2.Distance(new Vector2(at.x, at.z), new Vector2(lastPointerTarget.transform.position.x, lastPointerTarget.transform.position.z)):F1}"
                                     : "";
                                 string moving = chosen.TryGetComponent(out NavMeshAgent a) && a.isOnNavMesh ? $" · 남은 길 {a.remainingDistance:F1} · 속도 {a.velocity.magnitude:F1}" : "";
-                                job.report += $"   📍 선택 유닛 {chosen.name} 위치 {at.ToString("F0")}{toTarget}{moving}\n";
+                                // 싸울 수 있는 자리인가 — 0번 레인 적 경로(가장 가까운 변)까지 거리와 그 유닛 사거리.
+                                string reach = "";
+                                LaneMarker laneNow = LaneMarker.Get(0);
+                                WaypointPath pathNow = laneNow != null ? LanePathNear(laneNow.LaneCenter) : null;
+                                if (pathNow != null && pathNow.PointCount > 1 && chosen.TryGetComponent(out UnitAttacker atk))
+                                {
+                                    float toPath = float.MaxValue;
+                                    for (int i = 0; i + 1 < pathNow.PointCount; i++) toPath = Mathf.Min(toPath, DistanceToSegmentXZ(at, pathNow.GetPoint(i), pathNow.GetPoint(i + 1)));
+                                    reach = $" · 적 경로까지 {toPath:F0} / 사거리 {atk.AttackRange:F0}{(toPath <= atk.AttackRange ? " ✅ 닿음" : " ❌ 안 닿음")}";
+                                }
+                                job.report += $"   📍 선택 유닛 {chosen.name} 위치 {at.ToString("F0")}{toTarget}{moving}{reach}\n";
                             }
                     }
                     if (job.spawns.Count + job.combines.Count > 0)
@@ -1784,6 +1868,14 @@ public static class ClaudeCommands
         previousBehavior = null;
     }
 
+    // 동작이 끝나면 가상 마우스를 화면 한가운데(월드 위, HUD·가장자리 스크롤 영역 밖)로 치운다 — UI 위에 남으면 툴팁이 떠서
+    // 다음 캡처를 가린다(09-24 loop3: 「판매」 툴팁이 화면 가운데 떠 있었다).
+    static void ParkShotMouse(Camera cam)
+    {
+        if (shotMouse == null || cam == null) return;
+        QueueMouse(new Vector2(cam.pixelWidth * 0.5f, cam.pixelHeight * 0.55f), MouseButton.Left, false);
+    }
+
     static void QueueMouse(Vector2 position, MouseButton button, bool down)
     {
         MouseState state = new MouseState { position = position };
@@ -1795,17 +1887,21 @@ public static class ClaudeCommands
     {
         bool left = spec.StartsWith("@sel:");
         string name = spec.Substring(left ? 5 : 4).Normalize(NormalizationForm.FormC);
+        // 「=이름」이면 정확히 그 이름만(Lane1처럼 Lane1_앞치마·Lane1_Cliff와 앞부분이 겹치는 것을 가른다).
+        bool exact = name.StartsWith("=");
+        if (exact) name = name.Substring(1);
+        bool Matches(string candidate) => exact ? candidate.Normalize(NormalizationForm.FormC) == name : candidate.Normalize(NormalizationForm.FormC).Contains(name);
         candidates = "";
         if (left)
         {
             List<Selectable> mine = Selectable.All.Where(x => x != null &&
                 (!x.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == LocalPlayer.LocalPlayerId)).ToList();
-            Selectable hit = mine.FirstOrDefault(x => x.name.Normalize(NormalizationForm.FormC).Contains(name));
+            Selectable hit = mine.FirstOrDefault(x => Matches(x.name));
             if (hit == null) candidates = string.Join(", ", mine.Select(x => x.name).Distinct().Take(20));
             return hit != null ? hit.gameObject : null;
         }
         GameObject found = UnityEngine.Object.FindObjectsByType<Collider>(FindObjectsSortMode.None)
-            .Where(c => c.enabled && c.gameObject.activeInHierarchy && c.name.Normalize(NormalizationForm.FormC).Contains(name))
+            .Where(c => c.enabled && c.gameObject.activeInHierarchy && Matches(c.name))
             .Select(c => c.gameObject).FirstOrDefault();
         return found;
     }
@@ -1813,6 +1909,7 @@ public static class ClaudeCommands
     // 한 틱에 한 단계씩. 끝나면 true.
     static bool StepPointer(GameShotJob job, string spec, double inStage)
     {
+        if (spec.StartsWith("@box:")) return StepBox(job, spec.Substring(5), inStage);
         bool left = spec.StartsWith("@sel:");
         string label = left ? "좌클릭 select" : "우클릭 rclick";
         Camera cam = Camera.main;
@@ -1872,11 +1969,105 @@ public static class ClaudeCommands
                 SelectionManager selection = UnityEngine.Object.FindFirstObjectByType<SelectionManager>();
                 string selected = selection != null ? string.Join(", ", selection.Selected.Where(x => x != null).Select(x => x.name)) : "(SelectionManager 없음)";
                 job.report += $"   🖱 {label} 「{spec.Substring(left ? 5 : 4)}」 @ 화면 ({job.pointerX:F0}, {job.pointerY:F0}) → 지금 선택: {(selected.Length > 0 ? selected : "없음")}\n";
+                ParkShotMouse(cam);
                 job.pointerX = 0f;
                 return true;
             }
         }
     }
+
+    // boxselect: — 그 이름 내 유닛들을 화면에서 감싸는 사각형을 드래그한다. 0 조준(필요하면 카메라) → 1 누름 → 2 끌기 → 3 뗌 → 결과.
+    static Vector2 boxStart, boxEnd;
+    static bool StepBox(GameShotJob job, string name, double inStage)
+    {
+        Camera cam = Camera.main;
+        string wanted = name.Normalize(NormalizationForm.FormC);
+        switch (job.pointerPhase)
+        {
+            case 0:
+            {
+                List<Selectable> targets = Selectable.All.Where(x => x != null && x.name.Normalize(NormalizationForm.FormC).Contains(wanted) &&
+                    (!x.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == LocalPlayer.LocalPlayerId)).ToList();
+                if (targets.Count == 0 || cam == null)
+                {
+                    if (inStage < GameShotOptionalClickSearch) return false;
+                    // 판을 끝내지 않는다 — 조합으로 재료가 다 쓰이면 정상적으로 0기가 된다(09-24 loop7: 여기서 끝나 결과 🏅 줄을 못 찍었다).
+                    job.report += $"   🖱 드래그 boxselect 「{wanted}」: 내 유닛이 0기라 건너뜀\n";
+                    job.pointerX = 0f;
+                    return true;
+                }
+                (float bandBottom, float bandTop) = PointerBand();
+                Vector3 min = new Vector3(float.MaxValue, float.MaxValue), max = new Vector3(float.MinValue, float.MinValue);
+                bool allVisible = true;
+                foreach (Selectable t in targets)
+                {
+                    Vector3 sp = cam.WorldToScreenPoint(t.transform.position);
+                    allVisible &= sp.z > 0f && sp.x > 20f && sp.x < cam.pixelWidth - 20f && sp.y > bandBottom * cam.pixelHeight + 10f && sp.y < bandTop * cam.pixelHeight - 10f;
+                    min = Vector3.Min(min, sp); max = Vector3.Max(max, sp);
+                }
+                if (!allVisible)
+                {
+                    RtsCameraController rts = cam.GetComponent<RtsCameraController>();
+                    if (rts == null || job.pointerX < 0f) { FailGameShot(job, $"boxselect: 「{wanted}」 {targets.Count}기가 한 화면(HUD 사이)에 다 안 들어온다"); return false; }
+                    Vector3 centroid = targets.Aggregate(Vector3.zero, (acc, t) => acc + t.transform.position) / targets.Count;
+                    rts.MoveTo(new Vector3(centroid.x, 0f, centroid.z));
+                    job.report += $"   🎥 「{wanted}」 {targets.Count}기가 다 안 보여 카메라를 옮김(MoveTo {centroid.ToString("F0")})\n";
+                    job.pointerX = -1f;
+                    SaveGameShot(job);
+                    return false;
+                }
+                const float pad = 40f;
+                float bottomLimit = bandBottom * cam.pixelHeight + 2f, topLimit = bandTop * cam.pixelHeight - 2f;
+                boxStart = new Vector2(Mathf.Max(1f, min.x - pad), Mathf.Clamp(min.y - pad, bottomLimit, topLimit));
+                boxEnd = new Vector2(Mathf.Min(cam.pixelWidth - 1f, max.x + pad), Mathf.Clamp(max.y + pad * 2f, bottomLimit, topLimit));
+                EnsureShotMouse();
+                QueueMouse(boxStart, MouseButton.Left, false);
+                job.pointerX = 1f;
+                job.pointerPhase = 1;
+                SaveGameShot(job);
+                return false;
+            }
+            case 1: QueueMouse(boxStart, MouseButton.Left, true); job.pointerPhase = 2; SaveGameShot(job); return false;
+            case 2: QueueMouse(boxEnd, MouseButton.Left, true); job.pointerPhase = 3; SaveGameShot(job); return false;   // 누른 채 끌기
+            case 3: QueueMouse(boxEnd, MouseButton.Left, false); job.pointerPhase = 4; SaveGameShot(job); return false;  // 뗌
+            default:
+            {
+                SelectionManager selection = UnityEngine.Object.FindFirstObjectByType<SelectionManager>();
+                var chosen = selection != null ? selection.Selected.Where(x => x != null).GroupBy(x => x.name).Select(g => g.Count() > 1 ? $"{g.Key}×{g.Count()}" : g.Key) : Enumerable.Empty<string>();
+                job.report += $"   🖱 드래그 boxselect 「{wanted}」 ({boxStart.x:F0},{boxStart.y:F0})→({boxEnd.x:F0},{boxEnd.y:F0}) → 지금 선택: {string.Join(", ", chosen)}\n";
+                ParkShotMouse(cam);
+                job.pointerX = 0f;
+                return true;
+            }
+        }
+    }
+
+    static int CountMyWisps() => UnityEngine.Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None)
+        .Count(w => w != null && w.Data != null && (!w.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == LocalPlayer.LocalPlayerId));
+
+    // HUD가 실제로 보여 주는 위습 칸(GameHud WispSlot0~17 — 종류마다 한 칸, 자식 Name·Count TMP, 0개인 종류는 칸이 꺼짐).
+    // 09-24 PM이 「위습 N」 글자(WispCountText)를 이 칸 줄로 바꿨다. 반환: ("랜덤유닛 5 · …", 합계). 칸을 못 찾으면 합계 −1.
+    static (string text, int total) ReadWispSlots()
+    {
+        List<string> parts = new List<string>();
+        int total = 0;
+        bool any = false;
+        // 꺼진 칸도 찾는다 — 위습이 다 빠지면 칸이 전부 꺼져 「칸을 못 찾음」으로 나왔다(09-24 loop5). 꺼진 칸은 0으로 친다.
+        foreach (TMPro.TMP_Text count in UnityEngine.Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (count.name != "Count" || count.transform.parent == null || !count.transform.parent.name.StartsWith("WispSlot")) continue;
+            any = true;
+            if (!count.gameObject.activeInHierarchy) continue;
+            Transform nameNode = count.transform.parent.Find("Name");
+            string label = nameNode != null && nameNode.TryGetComponent(out TMPro.TMP_Text n) ? n.text : count.transform.parent.name;
+            if (int.TryParse(count.text.Trim(), out int value)) total += value;
+            parts.Add($"{label} {count.text.Trim()}");
+        }
+        if (!any) return ("(WispSlot 칸을 못 찾음)", -1);
+        return (parts.Count > 0 ? string.Join(" · ", parts) : "(켜진 칸 없음)", total);
+    }
+
+    static string ReadWispCounter() => ReadWispSlots().text;
 
     // 클릭해도 되는 세로 띠 — 하단 바 위·상단 바 아래(카메라 구도와 같은 HUD 실측). 못 찾으면 화면 전체.
     static (float bottom, float top) PointerBand()
@@ -1946,7 +2137,7 @@ public static class ClaudeCommands
     static void CollectGameShotLog(string message, string stack, LogType type)
     {
         // 일반 로그는 너무 많아 버리되, 입력 경로가 「왜 안 먹었는지」 말하는 태그 줄은 싣는다(select:/rclick: 판정용, 09-24).
-        if (type == LogType.Log && !(message.StartsWith("[이동]") || message.StartsWith("[선택]") || message.StartsWith("[명령]"))) return;
+        if (type == LogType.Log && !message.StartsWith("[")) return;   // 태그 달린 일반 로그([이동]·[선택]·[명령]·[도박] 등)는 싣는다 — 같은 줄은 묶인다
         GameShotJob job = LoadGameShot();
         if (job == null) return;
 

@@ -172,6 +172,25 @@ public class EnemyDummy : MonoBehaviour
     }
 
     /// <summary>
+    /// 레인에 선 적의 총합 — 곧 화면의 「유닛 카운트」다.
+    ///
+    /// ⚠️ <see cref="Active"/>.Count와 다르다. 물범·거대 해왕류·해적단 미니보스·스토리 보스는
+    /// 전부 <c>SetLane(-1)</c>이라 레인 카운트와 패배 판정에서 빠진다. 그런데 머리글만
+    /// Active를 통째로 세고 있어서, **판 시작에 적이 하나도 없는데 「유닛 카운트 5」**가 떴다
+    /// (물범 4 + 해왕류 1. 2026-09-24 플레이 캡처). 바로 아랫줄은 「플레이어 1 | 적 0」이라
+    /// 같은 화면에서 두 숫자가 서로를 부정했다.
+    /// 「유닛 카운트」는 패배로 이어지는 수라서, 틀리면 **안 보여주는 것보다 나쁘다.**
+    /// </summary>
+    public static int CountInLanes()
+    {
+        int count = 0;
+        foreach (EnemyDummy enemy in Active)
+            if (enemy.LaneIndex >= 0)
+                count++;
+        return count;
+    }
+
+    /// <summary>
     /// caster와 "같은 편"인 적들 — 우리는 적끼리 진영을 안 가르니 caster를 뺀 Active 전체다.
     /// 원작 오라의 atar가 "friend"(캐스터 편)를 뜻하지 플레이어 편을 뜻하지 않는다는 점이
     /// 중요하다 — 보스가 캐스터인 오라는 이걸로, 플레이어 유닛이 캐스터면

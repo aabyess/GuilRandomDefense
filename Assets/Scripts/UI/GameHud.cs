@@ -2799,7 +2799,9 @@ public class GameHud : MonoBehaviour
     {
         if (teamPanelText == null) return;
 
-        int totalEnemies = EnemyDummy.Active.Count;
+        // Active.Count가 아니라 CountInLanes()다 — 물범·해왕류처럼 레인 밖에 선 것들을 빼야
+        // 아랫줄의 「플레이어 N | 적 M」들과 합이 맞는다. 자세한 사고 경위는 CountInLanes 주석.
+        int totalEnemies = EnemyDummy.CountInLanes();
 
         // 데스카운트는 이제 레인마다 따로 돌아서 대표할 수 있는 전역 숫자가 하나가 아니다
         // (2026-09-03) — 그 값을 헤더에서 뺐다. 그대로 두면 레인 하나의 값만 보이는데
