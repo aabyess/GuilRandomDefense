@@ -3,13 +3,13 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 
 /// <summary>
-/// HUD 네 가지(적 체력바·사이드보스 바·유닛 이름표·하단 HUD)는 전부 같은 모양이다 —
+/// HUD 다섯 가지(적 체력바·사이드보스 바·유닛 이름표·하단 HUD·패배 알림)는 전부 같은 모양이다 —
 /// Awake에서 uGUI 계층을 스스로 만들기 때문에 프리팹이 필요 없고, 씬에 GameObject 하나 +
 /// 컴포넌트 하나만 있으면 된다.
 ///
 /// 🔴 메뉴만 두면 "아무도 안 돌려서 씬에 0개"가 된다 — 2026-09-24, 이름표가 만든 뒤 한 번도
 ///    화면에 안 나온 첫 번째 이유가 그거였다. 그래서 만드는 판단을 <see cref="Ensure{T}"/> 하나로
-///    모으고, 맵 생성이 끝날 때 <see cref="EnsureAll"/>로 넷을 **보장**한다. 메뉴는 남겨두되
+///    모으고, 맵 생성이 끝날 때 <see cref="EnsureAll"/>로 다섯을 **보장**한다. 메뉴는 남겨두되
 ///    같은 함수를 쓰므로 이미 있으면 절대 두 번 만들지 않는다.
 /// </summary>
 public static class HudWiring
@@ -37,7 +37,7 @@ public static class HudWiring
     }
 
     /// <summary>
-    /// 맵 생성이 끝날 때 호출한다. 넷을 보장하고 보고문 한 줄을 돌려준다.
+    /// 맵 생성이 끝날 때 호출한다. 다섯을 보장하고 보고문 한 줄을 돌려준다.
     /// ⚠️ 씬 저장보다 **먼저** 불러야 새로 만든 게 같이 저장된다.
     /// </summary>
     public static string EnsureAll()
@@ -46,7 +46,9 @@ public static class HudWiring
             Ensured<HealthBarLayer>("체력바", "HealthBarLayer") + " · " +
             Ensured<SideBossBarLayer>("보스바", "SideBossBarLayer") + " · " +
             Ensured<UnitNameplateLayer>("이름표", "UnitNameplateLayer") + " · " +
-            Ensured<GameHud>("하단", "GameHud");
+            Ensured<GameHud>("하단", "GameHud") + " · " +
+            // 2026-09-24 추가 — 졌는데 진 줄 모르는 상태였다(DefeatOverlay 주석 참고).
+            Ensured<DefeatOverlay>("패배", "DefeatOverlay");
         return "\nHUD: " + report;
     }
 
@@ -55,7 +57,11 @@ public static class HudWiring
         return label + (Ensure<T>(objectName, out _) ? " ➕새로 만듦" : " ✅");
     }
 
-    /// <summary>메뉴 네 개가 공유하는 껍데기. 판단은 <see cref="Ensure{T}"/>에만 있다.</summary>
+    /// <summary>
+    /// 메뉴 네 개가 공유하는 껍데기. 판단은 <see cref="Ensure{T}"/>에만 있다.
+    /// (다섯째 <see cref="DefeatOverlay"/>는 메뉴가 없다 — 맵 생성이 보장하면 충분해서
+    ///  일부러 안 만들었다. 그래서 여기는 「넷」이 맞다.)
+    /// </summary>
     static void AddViaMenu<T>(string objectName, string createdMessage) where T : Component
     {
         if (!EditorGuards.RequireEditMode(Title)) return;
