@@ -2984,6 +2984,11 @@ UNITS = {
     # ⚠️ 머리가 사이렌이라 사람 비율과 다르다 — PM 지시대로 **머리 모양은 원본 그대로** 두고 몸통·팔다리만 사람 골격에 맞춘다.
     #   Siren_1_0 · Siren_2_1(머리 위 사이렌 나팔 둘)은 Head 밑 그대로 둔다(merge_to_nearest가 Head로 합친다).
     "안흔함_박준희": dict(path="Assets/Art/Units/안흔함_박준희/안흔함_박준희.fbx", kind="human", size=("height", 1.8),
+                    # 🔴 재생성 표식(2026-09-24) — **기계가 읽는다.** 사람이 머리말을 읽어야만 아는 사실로 두지 않는다.
+                    #   source가 **이 항목의 커밋 산출물 자신**이다. 한 번 고쳐 커밋하면 그 파일엔 이미 손질이 끝나 있어
+                    #   두 번째 실행은 「뺄 메시가 없다」·「이름 바꿀 뼈가 없다」로 죽는다. 설정이 썩은 게 아니라 **구조가 그렇다.**
+                    #   다시 뽑아야 하면 원본(사장님 바탕화면 구랜디스킨모음)을 source로 바꿔 놓고 돌릴 것.
+                    rebuild="원본에서만",
                       source=os.path.join(ROOT, "Assets/Art/Units/안흔함_박준희/안흔함_박준희.fbx"),
                       refit_armature_to_mesh=True,
                       no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
@@ -3011,6 +3016,11 @@ UNITS = {
     #    🔴 흔함_양재모는 유니티에서 **공용 Idle 리타게팅 자체가 실패**한다(맵 생성 29건) — 원인은 키가 아니라
     #    world_joint 밑 pl_ 이름 리그라 아바타가 제대로 안 잡히는 것. 이름 바꾸기가 그 고침이다.
     "특별함_임장혁": dict(path="Assets/Art/Units/특별함_임장혁/특별함_임장혁.fbx", kind="human", size=("height", 1.8),
+                    # 🔴 재생성 표식(2026-09-24) — **기계가 읽는다.** 사람이 머리말을 읽어야만 아는 사실로 두지 않는다.
+                    #   source가 **이 항목의 커밋 산출물 자신**이다. 한 번 고쳐 커밋하면 그 파일엔 이미 손질이 끝나 있어
+                    #   두 번째 실행은 「뺄 메시가 없다」·「이름 바꿀 뼈가 없다」로 죽는다. 설정이 썩은 게 아니라 **구조가 그렇다.**
+                    #   다시 뽑아야 하면 원본(사장님 바탕화면 구랜디스킨모음)을 source로 바꿔 놓고 돌릴 것.
+                    rebuild="원본에서만",
                       source=os.path.join(ROOT, "Assets/Art/Units/특별함_임장혁/특별함_임장혁.fbx"),
                       # 표정 셋 중 face_normal만 · 주먹은 편 손만 · 연기팔 변형(l/r_smokehand_close)은 기본 손과 같은 자리라 뺀다.
                       # 🔴 십수(十手)는 두 벌이다 — b_weapon = 등에 멘 기본 모습(키를 다 덮는 세로) · r_weapon = 오른손에 뽑아 **앞으로** 뻗은 것.
@@ -3032,6 +3042,11 @@ UNITS = {
     #   **두 발 사이 바닥**에 따로 서 있는 별개의 생물이다(직접 측정). 유니티 휴머노이드 뼈대로는 들고 갈 수 없고,
     #   world_joint를 빼면 뿌리 없는 뼈로 남아 merge_to_nearest가 막는다. 안흔함_박민수(포치타) 선례와 같다.
     "흔함_양재모": dict(path="Assets/Art/Units/흔함_양재모/흔함_양재모.fbx", kind="human", size=("height", 1.8),
+                    # 🔴 재생성 표식(2026-09-24) — **기계가 읽는다.** 사람이 머리말을 읽어야만 아는 사실로 두지 않는다.
+                    #   source가 **이 항목의 커밋 산출물 자신**이다. 한 번 고쳐 커밋하면 그 파일엔 이미 손질이 끝나 있어
+                    #   두 번째 실행은 「뺄 메시가 없다」·「이름 바꿀 뼈가 없다」로 죽는다. 설정이 썩은 게 아니라 **구조가 그렇다.**
+                    #   다시 뽑아야 하면 원본(사장님 바탕화면 구랜디스킨모음)을 source로 바꿔 놓고 돌릴 것.
+                    rebuild="원본에서만",
                     source=os.path.join(ROOT, "Assets/Art/Units/흔함_양재모/흔함_양재모.fbx"),
                     drop_meshes=["face_attack", "face_damage", "face_sp01",
                                  "l_hand_close", "l_hand_sp_01", "l_hand_sp_02",
@@ -3042,6 +3057,11 @@ UNITS = {
                     rename_bones=PL_RENAME, merge_to_nearest=True,
                     null_frames_from_node=True, orient_snap=True),
     "흔함_박민수": dict(path="Assets/Art/Units/흔함_박민수/흔함_박민수.fbx", kind="human", size=("height", 1.8),
+                    # 🔴 재생성 표식(2026-09-24) — **기계가 읽는다.** 사람이 머리말을 읽어야만 아는 사실로 두지 않는다.
+                    #   source가 **이 항목의 커밋 산출물 자신**이다. 한 번 고쳐 커밋하면 그 파일엔 이미 손질이 끝나 있어
+                    #   두 번째 실행은 「뺄 메시가 없다」·「이름 바꿀 뼈가 없다」로 죽는다. 설정이 썩은 게 아니라 **구조가 그렇다.**
+                    #   다시 뽑아야 하면 원본(사장님 바탕화면 구랜디스킨모음)을 source로 바꿔 놓고 돌릴 것.
+                    rebuild="원본에서만",
                     source=os.path.join(ROOT, "Assets/Art/Units/흔함_박민수/흔함_박민수.fbx"),
                     drop_meshes=["face_attack", "face_damage", "face_sp01", "face_sp02",
                                  "l_hand_close", "l_hand_sp01", "l_hand_sp02",

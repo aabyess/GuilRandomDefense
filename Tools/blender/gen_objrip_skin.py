@@ -39,6 +39,17 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 PREFIX = "mixamorig:"
 
+# 🔴 **여기 다섯 종은 「옛 시도」다 — 다시 뽑지 말 것**(2026-09-24, 181개 설정 실행 검사에서 드러남).
+#   희귀함_박도진 · 희귀함_선효진 · 전설적인_엄태웅 · 초월_박민수_AD · 초월_엄태웅_AD —
+#   **같은 이름이 gen_scan_rig.py에도 있고, 커밋된 FBX를 만든 것은 그쪽이다.**
+#   근거(직접 재서 대조): 희귀함_박도진
+#       커밋본            정점 20,562 · 삼각형 39,577 · 뼈 22(Spine1·Spine2)
+#       gen_scan_rig 산출 정점 20,562 · 삼각형 39,577 · 뼈 22(Spine1·Spine2)  ← **한 개도 안 다름**
+#       이 파일 산출      정점 25,857 · 삼각형 49,369 · 뼈 21(Chest)          ← 26% 더 많음
+#   그리고 커밋된 objrip 산출 21종 중 **Spine1/Spine2를 가진 것이 정확히 이 다섯**이다(나머지 16종은 Chest).
+#   → 이 다섯을 이 파일로 다시 뽑으면 **다른 모델이 조용히 들어간다.** rebuild="금지"로 막아 두고,
+#     지운 게 아니라 남겨 둔 이유는 「왜 금지인지」가 여기 있어야 다음 사람이 안 되돌리기 때문이다.
+#   ⚠️ 커밋본들은 게임에서 멀쩡하다. **고칠 게 있어서 금지가 아니라, 바꾸면 안 되니까 금지다.**
 SKINS = {
     # 조셉 죠스타 — 키 2.010(원본), 팔이 0.81H에서 수평, 폭÷키 0.956. 스카프가 앞으로 두껍게
     # 튀어나와(앞뒤 0.958) 몸 뼈(Spine·Chest)를 잘 따라가는지 렌더로 확인 필요.
@@ -173,6 +184,7 @@ SKINS = {
     # straighten_arms=True로 다 지은 뒤 수평 T로 편다(희귀함_유재헌과 같은 처리).
     # 크로치(다리 갈라지는 높이) 직접 스캔 실측: 키의 37% 지점.
     "희귀함_선효진": dict(
+        rebuild="금지",   # ← 위 「옛 시도 다섯」 참고. 커밋본은 gen_scan_rig.py가 만든다.
         source="~/Desktop/구랜디스킨모음/04_희귀함/희귀함_선효진.glb",
         mesh_name="Bodybuilder",
         path="Assets/Art/Units/희귀함_선효진/희귀함_선효진.fbx",
@@ -195,6 +207,7 @@ SKINS = {
     # 키의 0.51(양쪽 합 1.02, 정상 인체 비율), 긴 트렌치코트가 발목까지 내려와 사타구니 틈이
     # 옷으로 가려짐(따로 크로치 높이를 재지 못해 표준 비율 사용).
     "희귀함_박도진": dict(
+        rebuild="금지",   # ← 아래 「옛 시도 다섯」 참고. 이 유닛의 커밋본은 gen_scan_rig.py가 만든다.
         source="~/Desktop/구랜디스킨모음/04_희귀함/희귀함_박도진.glb",
         mesh_name="SamuraiSword",
         path="Assets/Art/Units/희귀함_박도진/희귀함_박도진.fbx",
@@ -218,6 +231,7 @@ SKINS = {
     # detalles=자잘한 장식 아틀라스(하트·줄무늬·눈 모양, $_13), ropa=주황+파랑 큰 덩어리($_1),
     # bolas=진한 적갈색 구슬($_기본), cinturones=거의 검정에 가까운 남색 단색($_19).
     "전설적인_엄태웅": dict(
+        rebuild="금지",   # ← 위 「옛 시도 다섯」 참고. 커밋본은 gen_scan_rig.py가 만든다.
         source="~/Desktop/구랜디스킨모음/06_전설적인/전설적인_엄태웅.zip",
         mesh_name="Ace",
         path="Assets/Art/Units/전설적인_엄태웅/전설적인_엄태웅.fbx",
@@ -430,6 +444,7 @@ SKINS = {
     # 직접 닿게 함(geodesic_bone_weights() 자체를 이 캐릭터로 일반화, cloth_radius 없는 다른
     # 캐릭터는 기존과 동일).
     "초월_박민수_AD": dict(
+        rebuild="금지",   # ← 위 「옛 시도 다섯」 참고. 커밋본은 gen_scan_rig.py가 만든다.
         source="~/Desktop/구랜디스킨모음/08_초월/초월_박민수_AD.zip",
         mesh_name="Toji",
         path="Assets/Art/Units/초월_박민수_AD/초월_박민수_AD.fbx",
@@ -452,6 +467,7 @@ SKINS = {
     # x반폭 0.869)·좌우 대칭 96.8%. MTL Kd 0.64 틴트 무시, 텍스처 직결(already_linked).
     # 저폴리라 감량 금지(decimate_ratio 기본 1.0 유지).
     "초월_엄태웅_AD": dict(
+        rebuild="금지",   # ← 위 「옛 시도 다섯」 참고. 커밋본은 gen_scan_rig.py가 만든다.
         source="~/Desktop/구랜디스킨모음/08_초월/초월_엄태웅_AD.zip",
         mesh_name="Okuyasu",
         path="Assets/Art/Units/초월_엄태웅_AD/초월_엄태웅_AD.fbx",
