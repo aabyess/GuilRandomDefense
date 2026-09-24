@@ -427,6 +427,31 @@ HINATA_SWAP.update({f"mixamorig:Right{p}": f"mixamorig:Left{p}" for p in _HINATA
 HINATA_SWAP.update({f"__swapL_{p}": f"mixamorig:Right{p}" for p in _HINATA_PARTS})
 
 UNITS = {
+    # ══════════════════════════════════════════════════════════════════════════════════════
+    # 🔴 **다시 못 만드는 다섯**(2026-09-24, 관문 ③ 대조로 드러남 — 그전엔 이 사실조차 없었다).
+    #
+    #   다섯 다 2026-09-07에 사장님 Downloads에서 **직접 들여온 것**이다(생성기 파이프라인이 생기기 전).
+    #   2026-09-14 사장님 결정으로 다운로드 원본을 지웠고(Docs/ART_SOURCES_ARCHIVE.md에 정보만 남김),
+    #   그래서 **설정도 원본도 없다.** 커밋된 FBX만 있다.
+    #
+    #   ⚠️ **설정을 새로 쓰지 말 것.** 이름이 비슷한 다른 원본이 조용히 들어간다 —
+    #      `00_다운로드원본/`에 `tony-tony-chopper-monster-point.zip`·`spec-baki.glb`가 있지만
+    #      **둘 다 아니다**(SOURCE.txt에 적힌 sha256 일곱 개를 그 폴더 106개와 전부 대조했고 하나도 안 맞았다).
+    #      이름으로 짐작했으면 **다른 모델을 넣고 「복구했다」고 적었을 것이다.**
+    #
+    #   여기 항목은 **「만드는 법」이 아니라 「못 만든다는 기록」**이다. rebuild 표식이 관문을 막는다.
+    #   원본을 다시 구하면 그때 진짜 설정으로 바꿀 것.
+    # ══════════════════════════════════════════════════════════════════════════════════════
+    "안흔함_김용태": dict(path="Assets/Art/Units/안흔함_김용태/안흔함_김용태.fbx",
+                    rebuild="불가 — 설정도 원본도 없음(원본 Yujiro Hanma.fbx, ~/.Trash/yujiro-hanma-v10.zip sha256 4b5ec7b0… 삭제됨)"),
+    "안흔함_엄태웅": dict(path="Assets/Art/Units/안흔함_엄태웅/안흔함_엄태웅.fbx",
+                    rebuild="불가 — 설정도 원본도 없음(원본 Baki.fbx, sha256 b804a941… 삭제됨. 김용태와 같은 리그)"),
+    "안흔함_이재윤": dict(path="Assets/Art/Units/안흔함_이재윤/안흔함_이재윤.fbx",
+                    rebuild="불가 — 설정도 원본도 없음(원본 monkey.FBX, sha256 2bb3f398… 삭제됨)"),
+    "흔함_강재규": dict(path="Assets/Art/Units/흔함_강재규/흔함_강재규.fbx",
+                   rebuild="불가 — 설정도 원본도 없음(원본 Chopper.FBX + Mixamo 오토리깅, sha256 63c48f53… 삭제됨)"),
+    "흔함_임장혁": dict(path="Assets/Art/Units/흔함_임장혁/흔함_임장혁.fbx",
+                   rebuild="불가 — 설정도 원본도 없음(원본 pl_franky_punk01 (merge).fbx, sha256 c6129ce0… 삭제됨)"),
     # 바운티러시 시류 → 희귀함_노수신(2026-09-16 희귀함 9호). 마르코·후즈후와 같은 (merge) pl_ 리그(뼈 81 · 배율 0.01 · 재질 1 · 빈 오브젝트 15).
     #   실측: **이미 T자**(Upper ±0.0046 → Fore ±0.0107 → Palm ±0.0157이 전부 z 0.0266) · 기본 자세 = 쉬는 자세(어긋난 뼈 0) → tpose_arms 불필요.
     #   겹친 변형: 표정 4벌 → face_normal · 손 5벌 → l/r_hand_open · 담배 2벌 → 입에 문 cigarette_mouth · 무기 5벌 → **weapon_01 한 자루**(오른손 r_weapon_joint에 434정점으로 제대로 실림).
@@ -890,6 +915,27 @@ UNITS = {
     #   🔴 _diff 알파는 음영 마스크(최소 0.05 · 평균 0.755 · 100%가 0.98 미만), _dyanagan_diff도(0.61~1) → archive_rgb 둘 다.
     "전설적인_이시원": dict(path="Assets/Art/Units/전설적인_이시원/전설적인_이시원.fbx", kind="human", size=("height", 1.8),
                       archive=(os.path.join(SKINS, "06_전설적인/전설적인_이시원.zip"), "source/zephyr.rar", "zephyr/pl_zephyr_orig01 (merge).fbx"),
+                      archive_rgb={"zephyr/pl_zephyr_orig01_diff.png": "pl_zephyr_orig01_diff.png",
+                                   "zephyr/pl_zephyr_orig01_dyanagan_diff.png": "pl_zephyr_orig01_dyanagan_diff.png"},
+                      drop_meshes=["face_attack", "face_damage", "face_sp", "l_hand_close", "battlesmasher_open", "dynagan_glass", "cartridge"],
+                      drop_bones=["cartridge_joint", "world_joint"],
+                      rename_bones=dict({k: v for k, v in PL_RENAME.items() if k != "RHand_Palm"}, weapon_root="mixamorig:RightHand"),
+                      reparent_bones={"dynagan_joint": "mixamorig:RightHand"},
+                      no_nulls=True, orient_snap=True,
+                      merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                                   dict(pattern=r"^(weapon_|dynagan_)", into="mixamorig:RightHand"),
+                                   dict(pattern=r"^(coat_root|b_c_coat_|c_collar|f_l_coat_|b_l_coat_|l_coat_arm_|l_collar|bodyparts_)", into="mixamorig:Spine1"),
+                                   dict(pattern=r"^(f_r_coat_|r_coat_arm_|r_collar)", into="mixamorig:RightShoulder"),
+                                   dict(pattern=r"^LHand_Fore_sup$", into="mixamorig:LeftForeArm"),
+                                   dict(pattern=r"^RHand_Fore_sup$", into="mixamorig:RightForeArm")],
+                      materials=dict(textures={"pl_zephyr_orig01": [("DiffuseColor", "pl_zephyr_orig01_diff.png")],
+                                               "pl_zephyr_orig01_dyanagan": [("DiffuseColor", "pl_zephyr_orig01_dyanagan_diff.png")]})),
+    # 🔴 전설적인_김건(YM파행동대장) — 사장님이 **제파와 같은 원본**을 보내셨다(2026-09-17).
+    #   `06_전설적인/전설적인_김건.zip`은 이시원 zip과 **sha256이 같고**, 커밋본 FBX도 이시원 것과 **바이트까지 같다**
+    #   (abf9a27d65d691c7…). 그래서 바로 위 이시원 항목과 **설정이 글자 하나까지 같다 — 한쪽을 고치면 반드시 둘 다 고칠 것.**
+    #   ⚠️ 2026-09-24까지 이 유닛은 **설정이 아예 없었다**(관문 ③ 대조로 드러남). 커밋본만 있고 만드는 법이 없던 상태였다.
+    "전설적인_김건": dict(path="Assets/Art/Units/전설적인_김건/전설적인_김건.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(SKINS, "06_전설적인/전설적인_김건.zip"), "source/zephyr.rar", "zephyr/pl_zephyr_orig01 (merge).fbx"),
                       archive_rgb={"zephyr/pl_zephyr_orig01_diff.png": "pl_zephyr_orig01_diff.png",
                                    "zephyr/pl_zephyr_orig01_dyanagan_diff.png": "pl_zephyr_orig01_dyanagan_diff.png"},
                       drop_meshes=["face_attack", "face_damage", "face_sp", "l_hand_close", "battlesmasher_open", "dynagan_glass", "cartridge"],
@@ -1586,6 +1632,28 @@ UNITS = {
     #   Head 밑 얼굴 뼈(눈·눈썹·눈꺼풀·콧구멍·이빨·혀·턱·머리카락) → Head로. 가중치 0 `_End` 뼈는 정규식으로 뺌.
     "희귀함_김기연": dict(path="Assets/Art/Units/희귀함_김기연/희귀함_김기연.fbx", kind="human", size=("height", 1.8),
                       source=os.path.join(SKINS, "04_희귀함/희귀함_김기연.glb"), gltf_guess_bind=False,
+                      no_nulls=True, orient_snap=True, drop_meshes=["Icosphere", "Object_226"],
+                      rename_bones=EREN_RENAME, rename_strip=r"_[0-9]+$",
+                      drop_bones=["_rootJoint", "Crutches_Root_0123", "Part_Hand_0124", "Crutches_Length_1_0125", "Crutches_Length_2_0126",
+                                  "Crutches_Length_3_0127", "Crutches_Length_4_0128"],
+                      drop_bones_re=r"(?i)_end(_|$)",
+                      add_bones=[dict(name="mixamorig:LeftLeg", mirror_of="mixamorig:RightLeg", parent="mixamorig:LeftUpLeg", seed_group="mixamorig:LeftUpLeg"),
+                                 dict(name="mixamorig:LeftFoot", mirror_of="mixamorig:RightFoot", parent="mixamorig:LeftLeg", seed_group="mixamorig:LeftUpLeg")],
+                      merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                                   dict(pattern=r"^ZArmTwist_L", into="mixamorig:LeftArm"), dict(pattern=r"^ZArmTwist_R", into="mixamorig:RightArm"),
+                                   dict(pattern=r"^ZHandTwist_L", into="mixamorig:LeftForeArm"), dict(pattern=r"^ZHandTwist_R", into="mixamorig:RightForeArm")],
+                      tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                                      "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                                  for s, side in (("L", "Left"), ("R", "Right"))},
+                      glb_images={0: 'Buttons_B_baseColor.png', 1: 'Shoes_baseColor.png', 2: 'Buttons_C_baseColor.png', 3: 'Head_baseColor.png', 4: 'Face_baseColor.png', 5: 'Gloves_baseColor.png', 6: 'Armband_baseColor.png', 7: 'Bandage_baseColor.png', 8: 'Nail_Finger_baseColor.png', 10: 'Buttons_A_baseColor.png'},
+                      materials=dict(textures={m: [("DiffuseColor", f"{m}_baseColor.png")] for m in ('Buttons_B', 'Shoes', 'Buttons_C', 'Head', 'Face', 'Gloves', 'Armband', 'Bandage', 'Nail_Finger', 'Buttons_A')})),
+    # 🔴 희귀함_김청운(애국보수) — 사장님 지시(2026-09-17)로 **시조의게이와 같은 원본**을 쓴다.
+    #   `04_희귀함/희귀함_김청운.glb`는 김기연 glb와 **sha256이 같고**(872f5a287f104b88…), 커밋본 FBX도 김기연 것과
+    #   **바이트까지 같다**(06320209c0ffce11…). 그래서 바로 위 김기연 항목과 **설정이 글자 하나까지 같다 —
+    #   한쪽을 고치면 반드시 둘 다 고칠 것.**
+    #   ⚠️ 2026-09-24까지 이 유닛은 **설정이 아예 없었다**(관문 ③ 대조로 드러남).
+    "희귀함_김청운": dict(path="Assets/Art/Units/희귀함_김청운/희귀함_김청운.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(SKINS, "04_희귀함/희귀함_김청운.glb"), gltf_guess_bind=False,
                       no_nulls=True, orient_snap=True, drop_meshes=["Icosphere", "Object_226"],
                       rename_bones=EREN_RENAME, rename_strip=r"_[0-9]+$",
                       drop_bones=["_rootJoint", "Crutches_Root_0123", "Part_Hand_0124", "Crutches_Length_1_0125", "Crutches_Length_2_0126",

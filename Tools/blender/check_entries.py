@@ -56,7 +56,6 @@ DICT_NAMES = ("UNITS", "SKINS", "ANIMALS")            # 항목 표로 인정하�
 # 유닛을 만들지만 **키가 유닛 이름이 아니라** 이 관문에 못 넣는 것. 비워 두지 말고 이유를 적을 것 —
 # 빈칸으로 두면 다음 사람이 「없다」로 읽는다.
 KNOWN_ODD = {
-    "gen_ships.py": "키가 ancient·pirate라 유닛 이름(고대의배·해적선)과 다르다. 따로 볼 것",
     "gen_creatures.py": "적(물범·노루·양)을 만든다. `--out <폴더> <이름>` 꼴이 아니다. 따로 볼 것",
 }
 
@@ -80,9 +79,15 @@ def unit_generators():
         except SyntaxError as e:
             bad_files.append((base, "구문 오류: %s" % e))
             continue
-        dicts = [n for n in tree.body
-                 if isinstance(n, ast.Assign) and isinstance(n.value, ast.Dict)
+        named = [n for n in tree.body if isinstance(n, ast.Assign)
                  and any(getattr(t, "id", None) in DICT_NAMES for t in n.targets)]
+        dicts = [n for n in named if isinstance(n.value, ast.Dict)]
+        if named and not dicts:
+            # 🔴 이름은 맞는데 **글자 그대로의 dict가 아니다**(내포 표기·함수 반환 등). 관문은 못 읽는다.
+            #    조용히 「표가 없다」로 넘기면 그 생성기가 통째로 빠진다 — gen_ships에서 실제로 그랬다.
+            bad_files.append((base, "🔴 %s는 있는데 **글자 그대로의 dict가 아니라** 못 읽는다(내포 표기?) — 리터럴로 바꿀 것"
+                              % "·".join(sorted({t.id for n in named for t in n.targets if getattr(t, "id", None) in DICT_NAMES}))))
+            continue
         if not dicts:
             bad_files.append((base, KNOWN_ODD.get(base, "🔴 항목 표(%s)를 못 찾았다 — 이름이 다르거나 새 꼴이다"
                                                    % "·".join(DICT_NAMES))))
@@ -121,23 +126,30 @@ def cross_check(rows):
     """
     have = {os.path.basename(os.path.dirname(f))
             for f in glob.glob(os.path.join(UNITS_DIR, "*", "*.fbx"))}
-    mine, missing = set(), []
-    for _, name, _, decl in rows:
+    mine, missing, noted = set(), [], []
+    for _, name, mark, decl in rows:
         mine.add(name)
         want = decl or os.path.join("Assets", "Art", "Units", name, name + ".fbx")
-        if not os.path.exists(os.path.join(PROJECT, want)):
-            missing.append((name, want))
+        if os.path.exists(os.path.join(PROJECT, want)):
+            continue
+        # 표식으로 이유를 적어 둔 것은 🔴이 아니라 **적힌 대로** 보여 준다 — 안 그러면 경고가 무뎌진다.
+        (noted if mark else missing).append((name, mark or want))
     print("── ③ 대조: 설정 %d이름 · Art/Units FBX %d이름" % (len(mine), len(have)))
     only_fbx = sorted(have - mine)
+    if noted:
+        print("   · 파일이 없지만 **표식에 이유가 적힌 것**(%d):" % len(noted))
+        for n, w in sorted(set(noted)):
+            print("      %-22s %s" % (n, w))
     if missing:
-        print("   🔴 설정은 있는데 **그 파일이 없다**(%d):" % len(missing))
+        print("   🔴 설정은 있는데 **그 파일이 없고 이유도 안 적혔다**(%d):" % len(missing))
         for n, w in sorted(set(missing)):
             print("      %-22s %s" % (n, w))
     if only_fbx:
         print("   🔴 파일은 있는데 **설정이 없다**(%d) — 이건 아무도 다시 못 만든다:" % len(only_fbx))
         print("      " + ", ".join(only_fbx))
     if not missing and not only_fbx:
-        print("   ✅ 양쪽이 같다")
+        print("   ✅ 설명 안 되는 차이 없음 (수가 달라도 위 두 줄이 비었으면 맞는 것 — "
+              "설정 쪽엔 Art/Units 밖에 나가는 항목도 있다)")
     return missing, only_fbx
 
 

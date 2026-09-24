@@ -1074,7 +1074,10 @@ UNITS = {
     # 자세는 T자가 아니라 **팔을 몸 옆에 내린 A 스탠스**(정규화 단면 실측: 어깨 z 0.79에서 손이 z 0.42까지 몸통 폭 안으로 내려옴,
     #   다리는 z 0.28 아래에서만 갈리고 그 위는 통 넓은 바지가 붙어 한 덩이) → 관절을 그 자세대로 심고 straighten으로 T자로 편다.
     #   팔이 몸에 붙어 있으니 유노와 같은 arm_capsule·delete_stretched_faces를 미리 건다.
+    # ⚠️ 2026-09-24 관문 ③: 설정은 있는데 **모델 파일이 없다**(Assets/Art/Units/랜덤_이타도리_유지/…fbx).
+    #   스킬 에셋은 이미 들어가 있다. 사장님이 들고 계신 건이라 **대기**로 둔다 — 돌리지 않는다.
     "랜덤_이타도리_유지": dict(
+        rebuild="사장님 대기 — 모델 파일이 아직 없다(설정·스킬 에셋만 있음)",
         source=os.path.expanduser("~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_이타도리_유지.glb"), mesh_name="Itadori",
         height=1.8, center_band=(0.0, 0.05), decimate=0.12, rotate_z=0.0,
         joints=dict(

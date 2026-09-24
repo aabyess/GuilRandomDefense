@@ -36,7 +36,19 @@ import gen_punk  # noqa: E402  (PNG 저장·그린 재질)
 from gen_docks import box, cyl, lathe, prism  # noqa: E402
 from shops_common import _link, _live_objects, _math, _mix, _node, _noise, _ramp, _select_only  # noqa: E402
 
-SHIP_NAMES = {"ancient": "고대의배", "pirate": "해적선"}      # 🔴 잠정 파일명 — 여기만 바꾼다
+# 🔴 관문(check_entries.py)이 읽는 항목 표(2026-09-24). **이 표가 없으면 이 생성기는 관문 밖에 있다** —
+#   실제로 09-24까지 그랬고, `고대의배·해적선`이 「파일은 있는데 설정이 없다」로 잡혔다.
+#   이 생성기는 원본 파일이 없는 **절차적 형상**이라 언제든 그대로 다시 나온다(다른 모델이 들어올 위험이 없다).
+#   ⚠️ 관문은 이 표를 **글자 그대로의 dict**로 읽는다(ast). 내포 표기로 만들면 **안 보인다** —
+#      처음에 그렇게 썼다가 관문이 그대로 「설정 없음」으로 찍었다. 파일명은 여기 한 곳만 바꾼다.
+#   ⚠️ 이름은 `SKINS`다 — 이 파일엔 이미 **`UNITS = 11.4`(내보내기 배율)** 가 있다.
+#      처음에 표를 `UNITS`로 지었다가 배율을 덮어써 `TypeError: argument of type 'float' is not iterable`로 죽었다.
+#      관문이 그 자리에서 잡았다(관문을 고치고 바로 돌려 본 덕이다).
+SKINS = {
+    "고대의배": dict(path="Assets/Art/Units/고대의배/고대의배.fbx", key="ancient"),
+    "해적선": dict(path="Assets/Art/Units/해적선/해적선.fbx", key="pirate"),
+}
+SHIP_NAMES = {v["key"]: k for k, v in SKINS.items()}     # {"ancient": "고대의배", "pirate": "해적선"}
 
 UNITS = 11.4
 OUT = os.path.join(HERE, "..", "..", "Assets", "Art", "Units")   # 배마다 Units/<이름>/ 폴더(main 참고)
@@ -767,14 +779,26 @@ def build_in_window(key, collection, folder):
 
 
 def main():
-    picked = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else list(SHIP_NAMES)
+    # 관문과 같은 꼴을 받는다: `-- [--out <폴더>] [유닛이름|키 …]`. 유닛 이름(고대의배)도 키(ancient)도 된다.
+    args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    out_root = OUT
+    picked = []
+    i = 0
+    while i < len(args):
+        if args[i] == "--out":
+            out_root = args[i + 1]
+            i += 2
+            continue
+        picked.append(SKINS[args[i]]["key"] if args[i] in SKINS else args[i])
+        i += 1
+    picked = picked or list(SHIP_NAMES)
     for key in picked:
         bpy.ops.wm.read_factory_settings(use_empty=True)
         col = bpy.data.collections.new("판_유닛")
         bpy.context.scene.collection.children.link(col)
         name = SHIP_NAMES[key]
         # 유닛 스킨 규칙: Assets/Art/Units/<이름>/<이름>.fbx + 그 폴더의 Textures/(2026-09-13 저장소 통합)
-        unit_dir = os.path.join(OUT, name)
+        unit_dir = out_root if out_root != OUT else os.path.join(OUT, name)
         os.makedirs(os.path.join(unit_dir, "Textures"), exist_ok=True)
         arm, obj, info = build_in_window(key, col, os.path.join(unit_dir, "Textures"))
         for o in _live_objects():

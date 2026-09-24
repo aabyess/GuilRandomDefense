@@ -305,6 +305,42 @@ SKINS = {
     #    맞바꿨고(fix_unit_fbx.py 1289행), 커밋본은 아카이누(pl_akainu_gens01)다. 이 설정은 **맞바꾸기 전 가프**를
     #    가리킨다. 게다가 오늘 돌려 보니 rar가 안 풀려 CalledProcessError로 죽는다 — 그런데 **옛 관문은 OK로 찍었다**
     #    (예외 이름 목록에 CalledProcessError가 없었다). 관문은 이제 산출 파일 존재로 판정한다.
+    # 🔴 불멸_박은석(박은석) = 몽키 D. 가프(OPFP XPS 12002). **설정이 아예 없던 유닛**(관문 ③, 2026-09-24).
+    #   2026-09-22 사장님 지시로 초월_양재모_AD와 스킨을 맞바꿨고(29862932), 그때 **모델만 옮기고 설정은 안 옮겼다.**
+    #   바로 아래 초월_양재모_AD 항목이 가프를 가리킨 채 남아 있었던 것이 그 흔적이다(지금은 rebuild="금지").
+    #   원본도 09_불멸/불멸_박은석.zip으로 같이 옮겨져 있어, source만 그리로 돌리면 그대로 나온다.
+    "불멸_박은석": dict(
+        source="~/Desktop/구랜디스킨모음/09_불멸/불멸_박은석.zip",
+        glb_member="source/opfp___monkey_d__garp_xps_fbx_by_o_dv89_o_dfocdty.rar",
+        inner_gltf="OPFP - Monkey D. Garp/12002.fbx",
+        source_format="fbx",
+        body_tex_member="textures/12002_D.png",
+        coat_tex_member="textures/12002B_D.png",
+        path="Assets/Art/Units/불멸_박은석/불멸_박은석.fbx",
+        mesh_name="Garp",
+        height=1.8,
+        biped_prefix="Bip001",
+        rename={k: v for k, v in dict(biped_rename_table("Bip001"), **{"Bip001 Spine1": "Spine2"}).items()
+                if k != "Bip001 Spine2"},
+        fold={"Bip001": "Hips"},
+        fold_subtree={
+            "Facebone": "Head",
+            "Bone006": "LeftShoulder", "Bone015": "LeftShoulder",
+            "Bone001": "RightShoulder", "Bone018": "RightShoulder",
+            "Bone000": "Spine2",
+        },
+        bone_position_override={"Spine1": ("Bip001 Spine", "tail")},
+        allow_dead_bones={"Spine1"},
+        materials={
+            "12002_Body": ("texture_file", "body_tex_member"),
+            "12002_Face": ("texture_file", "body_tex_member"),
+            "12002_B": ("texture_file", "coat_tex_member"),
+        },
+        level_arms=True,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
+
     "초월_양재모_AD": dict(
         rebuild="금지",
         source="~/Desktop/구랜디스킨모음/08_초월/초월_양재모_AD.zip",

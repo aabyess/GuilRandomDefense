@@ -160,26 +160,46 @@ public class UnitCombat : MonoBehaviour
 
     void UpdateChasing()
     {
-        // 살아있는지·사거리 안인지도 스캔 주기에 맞춰서만 재확인한다 — 매 프레임 검사하지 않는다.
-        if (Time.time < nextScanTime) return;
-        nextScanTime = Time.time + scanInterval;
-
-        if (currentTarget == null)
+        // 🔴 2026-09-24 — **표적을 잃었는지는 매 프레임 본다. 스캔 주기를 기다리지 않는다.**
+        //    예전엔 이 검사까지 0.25초마다 했다. 그래서 적이 죽을 때마다:
+        //      0.25초(죽은 걸 알아채기) + 0.25초(다음 표적 찾기) = **0.5초를 논다.**
+        //    실측(09-24, outbox 2111): R2에서 **사거리 안에 적이 평균 8.4마리 있는데
+        //    표적 없는 시간이 40초**였고 그동안 상태가 **Idle 50% · Chasing 49%**였다.
+        //    적이 줄줄이 오는 게임에서 1초에 한 마리를 잡으면 **가동률의 절반을 여기서 잃는다.**
+        //
+        //    비싼 것과 싼 것을 갈랐다:
+        //      싼 것(매 프레임)  — 내 표적이 죽었나 · 사거리 밖으로 나갔나. null 검사 + 거리 하나
+        //      비싼 것(0.25초)   — 적 전체를 훑어 새 표적 찾기(FindClosestEnemyInAggro)
+        //    표적을 잃은 **그 프레임에** 다음 스캔이 돌도록 nextScanTime을 푼다 —
+        //    잃은 직후가 바로 다시 찾아야 하는 순간이고, 거기서 기다리면 안 된다.
+        bool lostTarget = currentTarget == null;
+        if (!lostTarget)
         {
-            BeginReturning();
-            return;
+            float sqrToTarget = (currentTarget.transform.position - transform.position).sqrMagnitude;
+            if (sqrToTarget > SearchRange() * SearchRange())
+            {
+                currentTarget = null;
+                lostTarget = true;
+            }
+            else
+            {
+                // 표적이 살아 있고 사거리 판정이 필요한 동안에도 경로 갱신은 주기대로만 한다 —
+                // 매 프레임 SetDestination을 부르면 경로를 계속 다시 계산한다.
+                if (Time.time < nextScanTime) return;
+                nextScanTime = Time.time + scanInterval;
+
+                SetDestination(sqrToTarget <= AttackRangeSqr() ? transform.position : currentTarget.transform.position);
+                return;
+            }
         }
 
-        float sqrDistance = (currentTarget.transform.position - transform.position).sqrMagnitude;
-        if (sqrDistance > SearchRange() * SearchRange())
-        {
-            currentTarget = null;
-            BeginReturning();
-            return;
-        }
+        // 잃은 **그 프레임에** 다시 찾는다. 찾으면 복귀조차 안 한다 —
+        // 복귀를 먼저 시키면 제자리로 한 걸음 갔다가 다시 나오는 왕복이 생긴다.
+        nextScanTime = 0f;
+        TryScan();
+        if (state == CombatState.Chasing) return;
 
-        float attackRangeSqr = AttackRangeSqr();
-        SetDestination(sqrDistance <= attackRangeSqr ? transform.position : currentTarget.transform.position);
+        BeginReturning();
     }
 
     void BeginReturning()
