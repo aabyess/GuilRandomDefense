@@ -747,14 +747,15 @@ public static class ClaudeCommands
             {
                 int row = i / perRow, column = i % perRow;
                 GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefabs[i], preview);
-                // 앞줄이 카메라에 가깝게: 0행이 맨 뒤(위쪽)
-                instance.transform.position = new Vector3(column * cell, 0f, (rows - 1 - row) * cell);
+                // 앞줄이 카메라에 가깝게: 0행이 맨 뒤(위쪽). 얼굴이 보이도록 카메라를 +Z로 두므로
+                // 자리도 −X·−Z로 늘린다(위 UnitLineup 주석 참고 — 같은 이유다).
+                instance.transform.position = new Vector3(-column * cell, 0f, -(rows - 1 - row) * cell);
                 table.AppendLine($"   {row + 1}행 {column + 1}열 = {prefabs[i].name}");
             }
 
-            Vector3 center = new Vector3((perRow - 1) * cell * 0.5f, 8f, (rows - 1) * cell * 0.5f);
+            Vector3 center = new Vector3(-(perRow - 1) * cell * 0.5f, 8f, -(rows - 1) * cell * 0.5f);
             float span = Mathf.Max(perRow, rows) * cell;
-            string shot = Render(file, center + new Vector3(0f, span * 0.55f, -span * 0.85f), center, 50f, preview);
+            string shot = Render(file, center + new Vector3(0f, span * 0.55f, span * 0.85f), center, 50f, preview);
             return shot + $"\n   {folder} {start}번부터 {prefabs.Count}개(위에서 본 격자, 1행이 맨 뒤):\n" + table;
         }
         finally
@@ -800,7 +801,16 @@ public static class ClaudeCommands
             {
                 int row = i / perRow, column = i % perRow;
                 GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefabs[i], preview);
-                instance.transform.position = new Vector3(column * cell, 0f, row * cell);   // 1행이 맨 앞
+                // 🔴 2026-09-24: **이 도구는 「앞에서 봄」이라고 찍으면서 뒤를 보여 주고 있었다.**
+                //    유니티 캐릭터는 +Z를 본다(`ArtBinder.AutoUpright`가 그렇게 맞춘다). 그런데
+                //    카메라도 −Z에 서서 +Z를 봤다 — **둘이 같은 쪽을 보니 등만 나온다.**
+                //    유닛 프리팹 213개의 요 각을 전부 읽어 봐도 180°가 **하나도 없다**(구현담당1).
+                //    즉 모델이 아니라 보는 쪽 하나가 틀렸다. 「전부 똑같이 틀린 것」이 그 단서였다.
+                //    ⚠️ 이 도구로 한 「정면 사진」 판정은 **전부 뒷면을 본 것**이다(MapGenerator.cs:819 등).
+                //
+                //    카메라를 +Z로 옮기면서 자리도 같이 뒤집는다 — 카메라만 옮기면 라벨이 거짓말이 된다.
+                //    카메라가 −Z를 보므로 **보는 사람의 오른쪽은 −X**다. 그래서 열도 −X로 늘린다.
+                instance.transform.position = new Vector3(-column * cell, 0f, -row * cell);   // 1행이 맨 앞·1열이 왼쪽
                 pose?.Invoke(null, new object[] { instance });
 
                 string size = "크기 못 잼";
@@ -838,9 +848,14 @@ public static class ClaudeCommands
                 table.AppendLine($"   {row + 1}행 {column + 1}열 {prefabs[i].name}: {size} · {up}");
             }
 
-            Vector3 center = new Vector3((perRow - 1) * cell * 0.5f, 8f, (rows - 1) * cell * 0.5f);
-            float span = perRow * cell;
-            string shot = Render(file, center + new Vector3(0f, span * 0.3f, -span * 0.95f), center, 45f, preview);
+            // 🔴 틀을 **실제로 놓인 개수**에 맞춘다. perRow(8)로 잡으면 한 기만 찍을 때
+            //    화면의 1/8에 콩알만 하게 나와서 얼굴도 텍스처도 못 본다 — 그 상태로
+            //    「눈으로 확인했다」를 하면 아무것도 확인한 게 아니다(09-24에 실제로 그랬다).
+            //    최소 2칸은 둬서 키 30짜리가 세로로 잘리지 않게 한다.
+            int usedColumns = Mathf.Min(prefabs.Count, perRow);
+            Vector3 center = new Vector3(-(usedColumns - 1) * cell * 0.5f, 8f, -(rows - 1) * cell * 0.5f);
+            float span = Mathf.Max(Mathf.Max(usedColumns, rows), 2) * cell;
+            string shot = Render(file, center + new Vector3(0f, span * 0.3f, span * 0.95f), center, 45f, preview);
             return shot + $"\n   Unit_ {start}번부터 {prefabs.Count}개(앞에서 봄, 1행이 맨 앞·1열이 왼쪽):\n" + table;
         }
         finally
