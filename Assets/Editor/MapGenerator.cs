@@ -4206,7 +4206,8 @@ public static class MapGenerator
             }
         }
 
-        return (hits.Count == 0 ? "" : "\n⚠️ 겹칩니다: " + string.Join(", ", hits)) + SpacingReport();
+        return (hits.Count == 0 ? "" : "\n⚠️ 겹칩니다: " + string.Join(", ", hits))
+               + SpacingReport() + PenReachReport();
     }
 
     // 사장님이 「더 벌려라 / 좁혀라」로 말씀하시는 간격들을 숫자로 찍는다(PM 요청 2026-09-24).
@@ -4215,6 +4216,61 @@ public static class MapGenerator
     // 여기서 찍는 값은 MapLayout의 목표 상수가 아니라 **섬 정의에서 재서 낸 것**이다 —
     // 유도식(DownShift·GachaCenterX)이 섬 정의와 어긋나면 목표에서 벗어나고, 그러면 아래
     // 경고가 뜬다. 목표를 그대로 다시 찍으면 어긋난 날에도 "500"이라고 나와 아무 도움이 안 된다.
+    /// <summary>
+    /// 우리에 선 유닛이 순찰 경로의 적에게 **실제로 닿는지**를 로스터 실값으로 검증한다.
+    ///
+    /// 2026-09-24에 가동률이 0%/0%(201 유닛·초)로 나왔고, 원인은 우리가 너무 남쪽이라
+    /// 거리 128.76 &gt; 흔함 최소 사거리 101.75였다. 그때 아무 경고도 없었다 —
+    /// **닿지 않는 배치는 화면에서 「유닛이 가만히 있다」로만 보인다.**
+    /// 그래서 배치 단계에서 숫자로 찍는다.
+    /// </summary>
+    static string PenReachReport()
+    {
+        List<UnitData> commons = LoadUnitsOfGrade(UnitGrade.Common);
+        if (commons.Count == 0) return "";
+
+        float minRange = float.MaxValue;
+        string minName = "?";
+        int unreachable = 0;
+        float distance = MapLayout.TrackSouthInsetZ + MapLayout.ApronGap + MapLayout.UnitPenDepth * 0.5f;
+
+        foreach (UnitData unit in commons)
+        {
+            if (unit.attackRange < minRange) { minRange = unit.attackRange; minName = unit.unitName; }
+            if (unit.attackRange < distance) unreachable++;
+        }
+
+        // 사거리 판정은 중심거리라, 경로(직선)를 따라 사거리 안에 있는 구간은 2√(R²−D²)다.
+        // 이 길이가 순찰 둘레에서 차지하는 비율이 「적 하나가 그 구간에 있을 확률」의 뿌리다.
+        MapLayout.Island lane = MapLayout.Lanes[0];
+        Vector2 inset = MapLayout.LaneTrackInset(lane);
+        float perimeter = 2f * ((lane.size.x - inset.x * 2f) + (lane.size.y - inset.y * 2f));
+        float chord = minRange > distance ? 2f * Mathf.Sqrt(minRange * minRange - distance * distance) : 0f;
+
+        string report =
+            $"\n우리→적 사거리: 거리 {distance:0.0} (순찰 inset {MapLayout.TrackSouthInsetZ:0.0} + 틈 " +
+            $"{MapLayout.ApronGap:0.0} + 우리 깊이 {MapLayout.UnitPenDepth:0.0}의 절반)" +
+            $"\n  흔함 {commons.Count}종 최소 사거리 {minRange:0.00}({minName}) · **못 닿는 종 {unreachable}개**" +
+            $"\n  최악 종이 경로에서 사거리 안인 구간 {chord:0.0} / 둘레 {perimeter:0.0} = {chord / perimeter:P1}";
+
+        // 리터럴 CommonMinAttackRange가 로스터와 어긋나면 유도식이 통째로 헛돈다.
+        // 문턱은 절대값이 아니라 사거리에 대한 비례로.
+        if (Mathf.Abs(minRange - MapLayout.CommonMinAttackRange) > minRange * 0.01f)
+            report += $"\n  ⚠️ MapLayout.CommonMinAttackRange({MapLayout.CommonMinAttackRange:0.00})가 " +
+                      $"로스터 실값({minRange:0.00})과 다릅니다 — 그 값에서 우리 깊이를 유도하므로 " +
+                      $"{minRange:0.00}으로 고쳐야 합니다.";
+
+        if (unreachable > 0)
+            report += $"\n  ⚠️ 흔함 {unreachable}종이 우리에서 적에게 **안 닿습니다** — 뽑아도 가만히 서 있습니다. " +
+                      $"MapLayout.PenToTrackRatio를 내리거나(지금 {MapLayout.PenToTrackRatio:0.00}) " +
+                      "사거리를 올려야 합니다.";
+        else if (chord / perimeter < 0.02f)
+            report += $"\n  ⚠️ 닿기는 하지만 구간이 둘레의 {chord / perimeter:P1}뿐입니다 — " +
+                      "가동률이 한 자릿수로 나옵니다. 거리를 더 줄이는 쪽을 보십시오.";
+
+        return report;
+    }
+
     static string SpacingReport()
     {
         MapLayout.SpacingReadout s = MapLayout.MeasureSpacing();

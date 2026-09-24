@@ -599,8 +599,53 @@ public static class MapLayout
     /// </summary>
     public const float ShopStripDepth = 26f * Scale;
 
-    /// <summary>상점 줄 바로 위, 새 유닛이 처음 서는 우리가 놓이는 줄.</summary>
-    public const float UnitPenDepth = 20f * Scale;
+    /// <summary>
+    /// 순찰 경로 남쪽 변이 필드 밑변에서 얼마나 위인지. **우리 유닛이 적까지 재는 거리의 뿌리다** —
+    /// 유닛은 필드 밑변 아래에 서고 적은 이만큼 안쪽을 돈다.
+    /// ⚠️ <see cref="TrackInsetRatioZ"/>는 원작 순찰 4지점 실측이라 못 줄인다(랩 29.94초 = 원작 29.87초).
+    ///    즉 이 79.4는 **깎을 수 없는 몫**이고, 흔함 최소 사거리 101.75의 78%를 이미 먹는다.
+    /// </summary>
+    public const float TrackSouthInsetZ = LaneFieldSizeZ * TrackInsetRatioZ;   // 79.41
+
+    /// <summary>
+    /// 흔함 유닛의 **최소** 사거리. 2026-09-24 로스터 실값 — 9종 중 4종(강재규·강주혁·노태현·문필환)이
+    /// 이 값이고, 나머지는 109.05·133.24·145.52·145.52·320.23이다.
+    /// ⚠️ **리터럴이다** — MapLayout은 에셋을 못 읽는다. MapGenerator가 로스터를 읽어 실값과
+    ///    견주고 어긋나면 고발한다(그 줄이 이 수의 근거다).
+    /// </summary>
+    public const float CommonMinAttackRange = 101.75f;
+
+    /// <summary>
+    /// 우리 자리 ↔ 순찰 경로 거리를 최소 사거리의 몇 배로 둘지.
+    /// ⚠️ **1.0으로 두면 안 된다.** 사거리 판정은 중심거리 비교(UnitAttacker.FindClosestEnemyInRange)라
+    ///    거리 = 사거리면 **접점 한 순간만** 사거리 안이고 가동률이 0에 가깝다. 경로를 따라 잡히는
+    ///    구간은 2√(사거리² − 거리²)이므로, 0.95면 최악 종도 63.6(둘레 2156의 3.0%)을 얻는다.
+    /// </summary>
+    public const float PenToTrackRatio = 0.95f;
+
+    /// <summary>우리 유닛 자리에서 순찰 경로 남쪽 변까지의 목표 거리.</summary>
+    public const float PenToTrackDistance = CommonMinAttackRange * PenToTrackRatio;   // 96.66
+
+    /// <summary>
+    /// 상점 줄 바로 위, 새 유닛이 처음 서는 우리가 놓이는 줄.
+    ///
+    /// 🔴 2026-09-24 사장님 지시 「흔함을 뽑으면 해당 위치에서 공격 사거리가 닿아야 하니깐 …
+    ///    하단 길이 줄여줘 봐 공격 닿게」 → **83.3에서 유도값으로 바꿨다.**
+    ///
+    /// 유닛은 이 줄 **한가운데**에 선다(LaneMarker.SlotPosition의 첫 줄 = unitPen.position).
+    /// 그래서 적까지의 거리는 `TrackSouthInsetZ + ApronGap + 이 값의 절반`이고,
+    /// 역으로 목표 거리에서 이 값을 유도한다 — 사거리도 필드 크기도 앞으로 또 바뀐다.
+    ///
+    /// 옛 83.3에서는 거리가 **128.76**이라 흔함 9종 중 **5종이 사거리 밖**이었고,
+    /// 2026-09-24 실측에서 가동률이 **0%/0%**(201 유닛·초)로 나왔다.
+    ///
+    /// ⚠️ **줄일 수 있는 폭이 작다.** 이 값을 0으로 해도 거리는 87.09까지밖에 안 내려간다
+    ///    (TrackSouthInsetZ 79.41 + ApronGap 7.68이 남으므로). 즉 **앞치마로 살 수 있는 거리는
+    ///    128.76 → 87.09의 41.7뿐**이고, 그 이상은 사거리나 순찰 inset을 건드려야 한다.
+    /// ⚠️ 유닛 몸은 맵 배율을 타지 않는다(「인형은 전부 레인 유닛과 같은 키」, 발자국 지름 ≈ 12).
+    ///    그래서 옛 `20 × Scale`은 유닛 일곱 줄이 들어갈 깊이였다 — 줄여도 한 줄은 넉넉히 선다.
+    /// </summary>
+    public const float UnitPenDepth = 2f * (PenToTrackDistance - TrackSouthInsetZ - ApronGap);
 
     /// <summary>
     /// 흔함 줄이 필드 바닥에서 떨어져 있는 간격. 원작 <c>1comZone</c>이 필드(p1_life_zone)
