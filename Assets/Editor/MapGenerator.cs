@@ -1423,6 +1423,12 @@ public static class MapGenerator
         //     나머지 1을 **앞 열 하나에만** 준다(29·28·28·28·28·28). 전부 29로 올림하면
         //     29×5 + 24가 되어 마지막 열이 또 짧아진다 — 고치려던 문제를 작게 되풀이하는 셈이다.
         //     결과: 가장 얕은 열이 가장 깊은 열의 48% → **92%**.
+        //  ④ (2026-09-24, 지금) **사장님이 열마다 어느 등급인지를 직접 정하셨다.**
+        //     「1열 안흔함 2열 특별함 … 2,3열 특별함 4,5열 희귀함 6,7열 전설 7열 전설 밑에
+        //      제한됨 8열 히든」. 그래서 ③의 「고르게 나누기」는 더 이상 안 쓴다 —
+        //     **지시가 배정을 정하고, 코드는 등급 안에서 행만 나눈다.**
+        //     ⚠️ ①②③을 지우지 않는 이유: 이 배정이 **결함을 고쳐서 바뀐 게 아니라 지시로
+        //        바뀐 것**이라, 다음에 자동 분배로 돌아갈 일이 생기면 ①②③이 그대로 값한다.
         //
         // ⚠️ "행수 대신 **깊이**로 고르게 자르기"도 시도했다가 버렸다. 등급 구분벽이 붙는 자리가
         //    열마다 달라서, 깊이로 끊으면 경계가 어긋나 **7열째로 2행이 새어 나간다**(그 열 깊이
@@ -1440,38 +1446,55 @@ public static class MapGenerator
             totalRecipes += recipes.Count;
         }
 
-        int columnCount = Mathf.Max(1, CombineTableColumns);
-        int baseRows = totalRecipes / columnCount;
-        int extraRows = totalRecipes % columnCount;   // 앞에서부터 한 행씩만 더 받는다
-        int columnIndex = 0;
-        int rowsInColumn = 0;
+        // 등급 → 어느 열에 몇 개로 나눠 담을지. 사장님 지시를 그대로 옮긴 표다.
+        // 한 등급이 여러 열에 걸치면 **앞 열이 한 행 더** 받는다(33 → 17/16).
+        Dictionary<UnitGrade, int[]> spread = new Dictionary<UnitGrade, int[]>
+        {
+            [UnitGrade.Uncommon] = new[] { 0 },          // 1열
+            [UnitGrade.Special] = new[] { 1, 2 },        // 2·3열
+            [UnitGrade.Rare] = new[] { 3, 4 },           // 4·5열
+            [UnitGrade.Legendary] = new[] { 5, 6 },      // 6·7열
+            [UnitGrade.Limited] = new[] { 6 },           // 7열 전설 밑
+            [UnitGrade.Hidden] = new[] { 7 },            // 8열
+            // ⚠️ 영원을 1열에 둔 것은 **PM 판단**이다(사장님이 자리를 안 짚으셨다).
+            //    1열이 13행으로 가장 얕아서 골랐다. 폭으로는 가장 비싼 선택이지만
+            //    (안흔함 재료 2칸 → 영원 8칸), 7열에 두면 34행이 되어 **깊이가 먼저 터진다**.
+            [UnitGrade.Eternal] = new[] { 0 },           // 1열 안흔함 밑
+        };
 
-        int QuotaFor(int index) => baseRows + (index < extraRows ? 1 : 0);
+        int columnCount = 8;
+        List<(UnitGrade, List<CombineRecipe>)>[] byColumn =
+            new List<(UnitGrade, List<CombineRecipe>)>[columnCount];
+        for (int c = 0; c < columnCount; c++) byColumn[c] = new List<(UnitGrade, List<CombineRecipe>)>();
 
         foreach ((UnitGrade grade, List<CombineRecipe> recipes) in loaded)
         {
-            int taken = 0;
-            while (taken < recipes.Count)
+            if (!spread.TryGetValue(grade, out int[] targets) || targets.Length == 0)
             {
-                int room = QuotaFor(columnIndex) - rowsInColumn;
-                if (room <= 0)
-                {
-                    if (current.Count > 0) columns.Add(current);
-                    current = new List<(UnitGrade, List<CombineRecipe>)>();
-                    rowsInColumn = 0;
-                    columnIndex++;
-                    continue;
-                }
+                Debug.LogWarning($"[맵] 조합표: {grade.KoreanName()} 등급의 열 배정이 표에 없습니다 — " +
+                                 $"{recipes.Count}줄을 못 싣습니다. MapLayout.CombineTableGrades에 등급을 " +
+                                 "더했으면 위 spread에도 자리를 정해 줘야 합니다.");
+                continue;
+            }
 
-                int take = Mathf.Min(room, recipes.Count - taken);
-                current.Add((grade, recipes.GetRange(taken, take)));
-                rowsInColumn += take;
-                usedDepth += (current.Count > 1 ? GradeWallGap : 0f) + take * RecipeRowHeight;
-                taken += take;
+            int given = 0;
+            for (int t = 0; t < targets.Length; t++)
+            {
+                // 앞 열이 한 행 더: 33을 둘로 나누면 17·16.
+                int take = recipes.Count / targets.Length + (t < recipes.Count % targets.Length ? 1 : 0);
+                if (take <= 0) continue;
+                byColumn[targets[t]].Add((grade, recipes.GetRange(given, take)));
+                given += take;
             }
         }
 
-        if (current.Count > 0) columns.Add(current);
+        foreach (List<(UnitGrade, List<CombineRecipe>)> column in byColumn)
+        {
+            if (column.Count == 0) continue;
+            foreach ((UnitGrade _, List<CombineRecipe> chunk) in column)
+                usedDepth += (column.Count > 1 ? GradeWallGap : 0f) + chunk.Count * RecipeRowHeight;
+            columns.Add(column);
+        }
 
         if (columns.Count == 0) return "";
 
@@ -1578,8 +1601,27 @@ public static class MapGenerator
             ? $"\n  가로 {usedScale:P0}로 줄여 섬(폭 {island.size.x:F0})에 맞췄습니다 — 자연 폭이 {totalWidth / usedScale:F0}였습니다."
             : "";
 
-        return fitNote + $"\n조합식 표: {placed}개 조합식, {columns.Count}열 (열당 {baseRows}~{baseRows + (extraRows > 0 ? 1 : 0)}행 균등분배)." +
+        // 열마다 「무엇이 몇 행, 폭 얼마」를 찍는다 — 사장님 지시대로 배정됐는지 눈으로 세려면
+        // 이게 있어야 한다. 그리고 다음에 누가 등급을 더하거나 섬 크기를 만질 때 **어느 열이
+        // 먼저 터지는지**가 한눈에 보인다(깊이는 행수, 폭은 최대 재료칸이 정한다 — 축이 둘이다).
+        List<string> perColumn = new List<string>();
+        for (int c = 0; c < columns.Count; c++)
+        {
+            int rows = 0;
+            List<string> parts = new List<string>();
+            foreach ((UnitGrade g, List<CombineRecipe> chunk) in columns[c])
+            {
+                rows += chunk.Count;
+                parts.Add($"{g.KoreanName()}{chunk.Count}");
+            }
+            float depth = rows * RecipeRowHeight + (columns[c].Count - 1) * GradeWallGap;
+            perColumn.Add($"\n    {c + 1}열 {string.Join("+", parts),-22} {rows,3}행 · 깊이 {depth:F0} · " +
+                          $"폭 {columnWidths[c]:F0}(재료 {columnMaxSlots[c]}칸)");
+        }
+
+        return fitNote + $"\n조합식 표: {placed}개 조합식, {columns.Count}열 (사장님 지시 배정)." +
                $"\n  깊이 {deepest:F0}/{available:F0} {verdict}\n  {fit}" +
+               string.Join("", perColumn) +
                (sample != null ? $"\n  예시: {sample}" : "");
     }
 
