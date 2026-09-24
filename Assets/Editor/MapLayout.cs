@@ -71,7 +71,13 @@ public static class MapLayout
     /// </summary>
     public struct SpacingReadout
     {
-        public float laneToIsland;      // 레인 무리 남쪽 끝 ↔ 옮긴 섬 무리 북쪽 끝
+        // 🔴 예전에는 `laneToIsland` 하나가 **두 관계를 같이** 재고 있었다 — 무리 최북단이
+        //    전시 섬이 되자 「레인과의 거리」라는 이름으로 「레인 오른쪽에 있는 섬과의 z 차」를
+        //    쟀고, −216 같은 음수가 나오는데 결함이 아니었다. 이름 하나로 두 관계를 재면
+        //    **사장님이 어느 쪽을 말씀하시는지 가릴 수 없다.** 그래서 둘로 나눴다(PM 지시 09-24).
+        public float punkToDisplay;     // 펑크해저드 아래변 ↔ 불멸 전시 윗변 (무리 높이를 정하는 기준)
+        public float laneToIsland;      // 레인 남쪽 끝 ↔ **x가 레인과 겹치는** 옮긴 섬의 최북단
+        public string laneToIslandBy;   // 그 최북단이 어느 섬인지 — 기준이 바뀌면 숫자보다 이게 먼저 보인다
         public float storyToGacha;      // 스토리존 ↔ 뽑기섬
         public float gachaToCombine;    // 뽑기섬 ↔ 조합판
         public float combineToTranscend;   // 조합판 윗변 ↔ 아래 전시 섬(초월)
@@ -106,18 +112,38 @@ public static class MapLayout
         Island transcend = Zone("TranscendDisplay");
         Island immortal = Zone("ImmortalDisplay");
 
-        float north = float.MinValue;
-        foreach (Island island in SealIslands)
-            north = Mathf.Max(north, island.center.y + island.size.y * 0.5f);
-        foreach (string name in MovedZoneNames)
+        // 레인 무리가 x로 차지하는 띠. 앞치마는 레인 폭의 74%라 레인이 바깥을 정한다.
+        float laneMinX = float.MaxValue, laneMaxX = float.MinValue;
+        foreach (Island lane in Lanes)
         {
-            Island island = Zone(name);
-            north = Mathf.Max(north, island.center.y + island.size.y * 0.5f);
+            laneMinX = Mathf.Min(laneMinX, lane.center.x - lane.size.x * 0.5f);
+            laneMaxX = Mathf.Max(laneMaxX, lane.center.x + lane.size.x * 0.5f);
         }
+
+        // 옮긴 섬 중 **레인 아래에 실제로 놓인 것**만 골라 최북단을 잡는다.
+        // ⚠️ x가 안 겹치는 섬(전시 둘)을 섞으면 「레인과의 거리」가 레인 옆 섬의 z 차가 되어
+        //    음수가 나오고, 그걸 띄우려다 레인 아래 섬까지 밀려난다. 오늘 그 일이 났다.
+        float north = float.MinValue;
+        string northBy = "없음";
+        void Consider(Island island)
+        {
+            float x0 = island.center.x - island.size.x * 0.5f;
+            float x1 = island.center.x + island.size.x * 0.5f;
+            if (x1 <= laneMinX || x0 >= laneMaxX) return;   // 레인 띠와 x가 안 겹친다
+            float top = island.center.y + island.size.y * 0.5f;
+            if (top <= north) return;
+            north = top;
+            northBy = island.name;
+        }
+        foreach (Island island in SealIslands) Consider(island);
+        foreach (string name in MovedZoneNames) Consider(Zone(name));
         north += CliffMargin;
 
         return new SpacingReadout
         {
+            punkToDisplay = (PunkHazardBottomZ - CliffMargin)
+                            - (immortal.center.y + immortal.size.y * 0.5f + CliffMargin),
+            laneToIslandBy = northBy,
             combineToTranscend = (transcend.center.y - transcend.size.y * 0.5f - CliffMargin)
                                  - (combine.center.y + combine.size.y * 0.5f + CliffMargin),
             transcendToImmortal = (immortal.center.y - immortal.size.y * 0.5f - CliffMargin)
@@ -270,18 +296,26 @@ public static class MapLayout
     // 무리 중 가장 북쪽은 뽑기섬(윗변 z=62.5)이라 그것을 기준으로 내린다. 일곱이 같은 양만큼
     // 내려가므로 서로의 간격은 그대로다. **달성된 간격은 MapGenerator 보고문이 매번 찍는다** —
     // 이 유도식이 섬 정의와 어긋나면 그 줄에서 드러난다(박아 둔 문턱을 믿지 않는다).
-    // 🔴 이 값은 2026-09-24 하루에 **세 번** 움직였다. 그 이력이 값이다:
+    // 🔴 남쪽 무리의 높이를 정하는 기준이 2026-09-24에 **레인에서 펑크해저드로 바뀌었다.**
+    //
+    // 왜: 무리의 최북단은 전시 섬(초월·불멸)인데 그것은 레인 **아래가 아니라 오른쪽**에 있다
+    //     (레인 x −2013~−220 vs 전시 x −111~349 — x가 안 겹친다). 그걸 레인에서 띄우려고
+    //     조합판까지 밀면 **안 보이는 것 때문에 보이는 것을 미는** 꼴이 된다.
+    //     실제로 전시 섬이 부딪히는 이웃은 **펑크해저드**다(z 416.7~666.7 · x −187.5~187.5).
+    //     그래서 「펑크해저드와 얼마」로 잡는다 — 사장님이 보시는 거리가 1169.9 → 753.8이 된다.
+    //
+    // 이 값이 오늘 지나온 길(전부 「레인과 얼마」로 재던 시절):
     //    ① 34.6  — 아무도 정한 적 없는 값(앞치마를 안 센 채 237로 알고 있었다)
     //    ② 500   — 사장님 「간격도 벌려줘」에 PM이 정함
     //    ③ 200   — 사장님 「너무 멀어졌는데 레인이랑 위에 레인이랑 좀 붙여봐」
-    //    ②→③은 결함 수정이 아니다. **500이 정답이었던 적이 없고, 200도 그렇다** —
-    //    사장님이 화면을 보고 정하시는 값이니 **이 상수 하나만 고치면 움직이게** 둔 것이 요점이다.
-    //    ⚠️ 그래서 여기에 기대는 수를 어디에도 박지 않는다(DownShift가 이 값에서 유도된다).
-    //
-    // ⚠️ 그리고 이 지표는 **z만 비교한다.** 전시 섬 둘은 레인 아래가 아니라 **오른쪽**에 있는데
-    //    (레인 x −2013~−220 vs 전시 x −111~349) 무리 최북단이라 기준이 된다 — 즉 지금 이 값은
-    //    「레인과 전시 섬의 z 차」다. 「x가 겹치는 섬만」으로 재는 안을 PM에게 숫자로 냈다(09-24).
-    public const float LaneToIslandGapZ = 200f;
+    //    ④ 기준 자체를 펑크해저드로 (지금)
+    //    ⚠️ ②→③→④는 **결함 수정이 아니다.** 500이 정답이었던 적이 없고 200도 그렇다 —
+    //       사장님이 화면을 보고 정하시는 값이다. 다음 사람이 「뭐가 틀렸었나」를 찾지 않게 적는다.
+    //       요점은 **상수 하나로 움직인다**는 것이고, 그래서 여기 기대는 수를 어디에도 박지 않는다.
+    public const float PunkHazardToDisplayGapZ = 100f;
+
+    /// <summary>펑크해저드 아래변. 옮기지 않는 섬이라 Zones 정의와 같은 수에서 유도한다.</summary>
+    const float PunkHazardBottomZ = (130f - 60f * 0.5f) * Scale;   // 416.7
 
     /// <summary>레인 무리의 실제 남쪽 끝 — 앞치마와 치마까지 포함한다.</summary>
     public const float LaneClusterSouthEdgeZ = LaneFieldBottomZ - LaneApronDepth - CliffMargin;
@@ -309,11 +343,15 @@ public static class MapLayout
     const float ImmortalBottomBeforeShift = TranscendBottomBeforeShift + DisplaySizeZ
                                           + DisplayStackGap + CliffOverhang;
 
-    // 내리기 전 무리의 북쪽 끝 = **불멸 전시 윗변 + 치마**.
+    // 내리기 전 무리의 북쪽 끝 = **불멸 전시 윗변**(치마 제외한 섬 변).
     // ⚠️ 예전에는 뽑기섬 윗변이었다. 무리에 더 북쪽 섬이 들어오면 **이 줄을 같이 고쳐야 한다** —
-    //    안 고치면 보고문의 「레인↔섬」이 500에서 벗어나고, 그 줄이 그것을 고발한다.
-    const float MovedClusterNorthEdgeBeforeShift = ImmortalBottomBeforeShift + DisplaySizeZ + CliffMargin;
-    const float DownShift = LaneClusterSouthEdgeZ - LaneToIslandGapZ - MovedClusterNorthEdgeBeforeShift;
+    //    안 고치면 아래 DownShift가 엉뚱한 섬을 기준으로 재고, 보고문이 목표값이라고 거짓말한다.
+    const float MovedClusterNorthEdgeBeforeShift = ImmortalBottomBeforeShift + DisplaySizeZ;
+
+    // 불멸 전시 윗변이 가야 할 자리 — 펑크해저드 아래변에서 치마 양쪽 몫을 빼고 간격만큼.
+    // (다른 간격들과 같은 자다: 치마끼리가 PunkHazardToDisplayGapZ가 된다.)
+    const float ImmortalTopTargetZ = PunkHazardBottomZ - CliffOverhang - PunkHazardToDisplayGapZ;
+    const float DownShift = ImmortalTopTargetZ - MovedClusterNorthEdgeBeforeShift;
 
     // 옮기는 셋의 x 중심 — StoryZone은 앞서 정한 자리 그대로, 나머지는 간격에서 유도한다.
     const float StoryZoneSizeX = 180f * Scale;

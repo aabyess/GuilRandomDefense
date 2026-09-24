@@ -4179,9 +4179,16 @@ public static class MapGenerator
     {
         MapLayout.SpacingReadout s = MapLayout.MeasureSpacing();
 
+        // 🔴 두 줄로 나란히 찍는다 — **한 이름이 두 관계를 재고 있던 것**이 09-24의 혼선이었다.
+        //    남쪽 무리의 높이를 정하는 것은 이제 펑크해저드↔전시이고, 레인↔섬은 그 결과로
+        //    따라 나오는 값이다(목표가 없다). 사장님이 「붙여라」 하실 때 어느 쪽을 말씀하시는지
+        //    가려야 하므로 **둘 다 보여야** 한다.
         string report =
-            $"\n간격(치마 기준): 레인 남쪽 끝 {MapLayout.LaneClusterSouthEdgeZ:0.0} ↔ 섬 무리 윗변 " +
-            $"{s.islandClusterNorthZ:0.0} = **{s.laneToIsland:0.0}** (목표 {MapLayout.LaneToIslandGapZ:0.0})" +
+            $"\n간격(치마 기준): 펑크해저드↔불멸 전시 **{s.punkToDisplay:0.0}** " +
+            $"(목표 {MapLayout.PunkHazardToDisplayGapZ:0.0} — 남쪽 무리 높이를 정하는 기준)" +
+            $"\n  레인↔섬(x 겹치는 것만) {s.laneToIsland:0.0} — 기준 섬 {s.laneToIslandBy}" +
+            $" (레인 남쪽 끝 {MapLayout.LaneClusterSouthEdgeZ:0.0} ↔ {s.islandClusterNorthZ:0.0}," +
+            " 목표 없음 · 위 기준에서 따라 나오는 값입니다)" +
             $"\n  스토리존↔뽑기섬 {s.storyToGacha:0.0} · 뽑기섬↔조합판 {s.gachaToCombine:0.0} " +
             $"(목표 {MapLayout.IslandGapX:0.0})" +
             // 위아래로 얹은 전시 섬은 나란한 섬과 **다른 간격**을 쓴다(사장님 「전설 위에 오게끔」).
@@ -4191,11 +4198,18 @@ public static class MapGenerator
             $"{MapLayout.IslandGapX:0.0}과 다릅니다)";
 
         // 문턱은 절대값이 아니라 비례로 — 간격 목표가 바뀌어도 같이 따라오게 한다.
-        float tolerance = Mathf.Max(1f, MapLayout.LaneToIslandGapZ * 0.01f);
-        if (Mathf.Abs(s.laneToIsland - MapLayout.LaneToIslandGapZ) > tolerance)
-            report += $"\n  ⚠️ 레인↔섬 간격이 목표에서 {s.laneToIsland - MapLayout.LaneToIslandGapZ:+0.0;-0.0} " +
-                      "벗어났습니다 — MapLayout.DownShift의 유도식이 섬 정의와 어긋났습니다 " +
-                      "(가장 북쪽 섬이 뽑기섬이 아니게 됐거나, 뽑기섬 z가 바뀌었습니다).";
+        // ⚠️ 경고는 **목표가 있는 쪽에만** 붙인다. 레인↔섬은 이제 유도 결과라 「어긋났다」가 없다 —
+        //    거기에 문턱을 두면 아무도 정하지 않은 값을 놓고 경고가 울린다.
+        float tolerance = Mathf.Max(1f, MapLayout.PunkHazardToDisplayGapZ * 0.01f);
+        if (Mathf.Abs(s.punkToDisplay - MapLayout.PunkHazardToDisplayGapZ) > tolerance)
+            report += $"\n  ⚠️ 펑크해저드↔전시 간격이 목표에서 " +
+                      $"{s.punkToDisplay - MapLayout.PunkHazardToDisplayGapZ:+0.0;-0.0} 벗어났습니다 — " +
+                      "MapLayout.DownShift의 유도식이 섬 정의와 어긋났습니다 (무리의 가장 북쪽이 " +
+                      "불멸 전시가 아니게 됐거나, 전시 섬 깊이·펑크해저드 z가 바뀌었습니다).";
+
+        if (s.laneToIsland < 0f)
+            report += $"\n  ⚠️ 레인↔섬이 음수입니다({s.laneToIsland:0.0}) — x가 레인과 겹치는 섬이 " +
+                      "레인보다 북쪽에 있다는 뜻이라 실제로 닿습니다. 전수 겹침 줄을 같이 보십시오.";
 
         float gapTolerance = Mathf.Max(1f, MapLayout.IslandGapX * 0.01f);
         if (Mathf.Abs(s.storyToGacha - MapLayout.IslandGapX) > gapTolerance ||
