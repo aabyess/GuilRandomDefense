@@ -923,6 +923,9 @@ public static class ClaudeCommands
     //                  우리에 생겨 사장님 화면에선 여전히 안 보였다 — 시험 자리가 보는 사람 자리와 달랐다. 그래서 둘 다 화면 좌표를 찍는다.
     //                  같은 날 교훈 하나 더: **계산이 맞는지 전에 그 값이 실제로 쓰이는지 본다** — 씬에 적힌 편집 시점 카메라 값으로
     //                  계산했는데 실행하면 RtsCameraController.FocusOnLocalLane이 덮어써 헛계산이 됐다. 판정은 이 명령의 👁 줄(실행 중 실측)로.
+    //   · combine:<레시피>  레시피(에셋 이름 「안흔함_박민수_조합」 또는 결과 유닛 이름 「안흔함_박민수」)의 재료를 **우리**에 세우고
+    //                  1초 뒤 CombineSystem.TryCombine을 불러 조합한다 — 결과 유닛의 자리·레인 중심까지 거리·화면 안인지를 찍는다.
+    //                  (2026-09-24 PM: 조합 결과를 레인 가운데로 옮긴 코드를 눈으로 확인할 길이 없었다.) 재료가 특정 유닛뿐인 레시피만 된다.
     //                  `spawn:<유닛>@corner`면 레인 안쪽 **모서리**(경로가 두 변으로 지나는 자리)에 대각선으로 세운다 —
     //                  원작 플레이어가 실제로 서는 자리. 모서리가 여러 개면 돌아가며 쓴다.
     //                  🔴 **에디터 촬영 전용.** 뽑기·골드를 거치지 않고 유닛을 만든다 — 게임 코드(Assets/Scripts)로 옮기면 치트가 된다.
@@ -955,6 +958,7 @@ public static class ClaudeCommands
         public int superSize = 1;
         public List<string> clicks = new List<string>();
         public List<string> spawns = new List<string>();
+        public List<string> combines = new List<string>();
         public int goldAtSpawn = -1;
         public int clickIndex;
         public string stage;        // entering · settling · clicking · waiting · capturing · exiting
@@ -1015,6 +1019,12 @@ public static class ClaudeCommands
             {
                 if (token.Length == 6) return "❌ click: 뒤에 버튼 이름이나 글자를 주세요";
                 job.clicks.Add(token.Substring(6));
+            }
+            else if (token.StartsWith("combine:"))
+            {
+                string recipeName = token.Substring(8);
+                if (FindRecipe(recipeName) == null) return $"❌ 레시피를 못 찾음: {recipeName}(Assets/Data/Recipes의 에셋 이름이나 결과 유닛 이름)";
+                job.combines.Add(recipeName);
             }
             else if (token.StartsWith("spawn:"))
             {
@@ -1095,7 +1105,7 @@ public static class ClaudeCommands
                 break;
 
             case "settling":
-                if (inStage >= GameShotSettle) Advance(job, job.clicks.Count > 0 ? "clicking" : job.spawns.Count > 0 ? "spawning" : "waiting");
+                if (inStage >= GameShotSettle) Advance(job, job.clicks.Count > 0 ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
                 break;
 
             case "clicking":
@@ -1109,14 +1119,14 @@ public static class ClaudeCommands
                 {
                     job.report += $"   🖱 {job.clickIndex + 1}번째 클릭: 「{target}」 없음 — 선택 클릭이라 건너뜀\n";
                     job.clickIndex++;
-                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count > 0 ? "spawning" : "waiting");
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
                     break;
                 }
                 if (clicked != null)
                 {
                     job.report += $"   🖱 {job.clickIndex + 1}번째 클릭: {clicked}\n";
                     job.clickIndex++;
-                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count > 0 ? "spawning" : "waiting");
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
                 }
                 else if (inStage > GameShotClickSearch)
                 {
@@ -1129,6 +1139,7 @@ public static class ClaudeCommands
                 if (job.clickIndex > 0 && inStage < GameShotClickGap) break;   // 마지막 클릭(난이도 등)이 반영될 틈
                 spawnedUnits.Clear();
                 shotUnits.Clear();
+                combineBefore.Clear();
                 theoreticalDps = 0f;
                 enemyPresentSeconds = 0f;
                 lastWatchTime = watchStartTime = EditorApplication.timeSinceStartup;
@@ -1136,7 +1147,10 @@ public static class ClaudeCommands
                 eventLog.Clear();
                 for (int i = 0; i < job.spawns.Count; i++)
                     job.report += "   " + SpawnForShot(job.spawns[i], i, job.spawns.Count) + "\n";
+                foreach (string recipeName in job.combines)
+                    job.report += SpawnCombineMaterials(recipeName);
                 int good = spawnedUnits.Count(u => u.onMesh && u.inRange);
+                if (job.spawns.Count > 0)   // 조합 재료만 세운 판에선 배치 유효성을 따지지 않는다(「2/0기」가 찍혔다, 09-24 outbox 2054)
                 job.report += $"   {(good == job.spawns.Count ? "✅" : "⚠️")} 배치 {good}/{job.spawns.Count}기가 NavMesh 위 + 경로가 사거리 안" +
                               (good == job.spawns.Count ? "" : $" — 어긋난 유닛: {string.Join(", ", spawnedUnits.Where(u => !(u.onMesh && u.inRange)).Select(u => $"{u.name}({(u.onMesh ? "" : "NavMesh 밖 ")}{(u.inRange ? "" : "사거리 밖")})"))} → **이 판의 처치·골드는 유닛 수만큼 믿으면 안 된다**") + "\n";
                 job.goldAtSpawn = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
@@ -1144,16 +1158,23 @@ public static class ClaudeCommands
                 roundLog.Clear();
                 watchedRound = -1;
                 maxLaneEnemies = 0;
+                Advance(job, job.combines.Count > 0 ? "combining" : "waiting");
+                break;
+
+            case "combining":
+                if (inStage < GameShotClickGap) break;   // 재료가 인벤토리에 올라가고 한 프레임 이상 지나게
+                foreach (string recipeName in job.combines)
+                    job.report += RunCombine(recipeName);
                 Advance(job, "waiting");
                 break;
 
             case "waiting":
-                if (job.spawns.Count > 0) WatchLaneHits();
+                if (job.spawns.Count + job.combines.Count > 0) WatchLaneHits();
                 if (inStage >= job.seconds)
                 {
-                    if (job.spawns.Count > 0)
+                    if (job.spawns.Count + job.combines.Count > 0)
                     {
-                        job.report += DescribeLaneHits(job, inStage);
+                        if (job.spawns.Count > 0) job.report += DescribeLaneHits(job, inStage);
                         foreach (GameObject shotUnit in shotUnits)
                             job.report += $"   👁 찍는 순간 {(shotUnit != null ? shotUnit.name : "(사라짐)")} 위치 {(shotUnit != null ? shotUnit.transform.position.ToString("F0") : "-")}: {DescribeOnScreen(shotUnit)}\n";
                     }
@@ -1310,6 +1331,8 @@ public static class ClaudeCommands
         sb.AppendLine($"   높이 차: {gap} · 설계값 MapLayout.IslandTop {MapLayout.IslandTop:F2}" +
                       (Mathf.Abs(islandTop - MapLayout.IslandTop) > 0.5f ? " ⚠️ 잰 섬 윗면과 설계값이 다르다 — 재는 자리(광선이 맞힌 것)를 의심할 것" : ""));
         int outLand = outWalk + outSea + outNone;
+        if (hasPen && step > 20f)
+            sb.AppendLine($"   ⚠️ 칸 간격 {step:F1} — 앞치마·우리처럼 좁은 구역은 벽 칸 비중이 커져 %가 낮게 나온다(09-24: 30칸 45% · 60칸 69%, 같은 땅). 판정은 `navlane {laneIndex} 60`으로.");
         sb.AppendLine(hasPen
             ? $"   섬 밖 앞치마·우리 구역(z {area.min.z:F0}~{apronMaxZ:F0}, 섬 가로폭 안): 칸 {outLand}개 중 걸을 수 있음 {outWalk}({(outLand > 0 ? 100f * outWalk / outLand : 0):F0}%) · 바다 영역 {outSea} · NavMesh 없음 {outNone}"
             : "   ⚠️ 우리(UnitPen)를 못 찾아 섬 필드만 쟀다 — 앞치마·우리는 측정 밖");
@@ -1331,6 +1354,64 @@ public static class ClaudeCommands
         Vector2 AB = B - A;
         float t = AB.sqrMagnitude > 0f ? Mathf.Clamp01(Vector2.Dot(P - A, AB) / AB.sqrMagnitude) : 0f;
         return Vector2.Distance(P, A + AB * t);
+    }
+
+    // ── combine: (에디터 촬영 전용) ──
+    static readonly HashSet<UnitIdentity> combineBefore = new HashSet<UnitIdentity>();
+
+    static CombineRecipe FindRecipe(string name)
+    {
+        string nfc = name.Normalize(NormalizationForm.FormC);
+        foreach (string guid in AssetDatabase.FindAssets("t:CombineRecipe", new[] { "Assets/Data/Recipes" }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            CombineRecipe recipe = AssetDatabase.LoadAssetAtPath<CombineRecipe>(path);
+            if (recipe == null) continue;
+            if (Path.GetFileNameWithoutExtension(path).Normalize(NormalizationForm.FormC) == nfc) return recipe;
+            if (recipe.result != null && recipe.result.name.Normalize(NormalizationForm.FormC) == nfc) return recipe;
+        }
+        return null;
+    }
+
+    // 재료를 실제 뽑기 자리(우리)에 세운다 — 플레이어가 조합하는 재료도 거기서 온다.
+    static string SpawnCombineMaterials(string recipeName)
+    {
+        CombineRecipe recipe = FindRecipe(recipeName);
+        StringBuilder sb = new StringBuilder($"   🧪 조합 준비 {recipeName} → 결과 {recipe.result?.name}\n");
+        foreach (RecipeIngredient ingredient in recipe.ingredients ?? new List<RecipeIngredient>())
+        {
+            if (ingredient.kind != IngredientKind.SpecificUnit || ingredient.unit == null)
+            {
+                sb.AppendLine($"      ⚠️ 재료 {ingredient.kind}는 세울 수 없다(특정 유닛만 지원) — 조합이 실패할 수 있다");
+                continue;
+            }
+            for (int n = 0; n < Mathf.Max(1, ingredient.count); n++)
+                sb.AppendLine("      " + SpawnForShot(ingredient.unit.name + "@pen", 0, 1).Replace("\n", "\n      "));
+        }
+        foreach (UnitIdentity unit in UnityEngine.Object.FindObjectsByType<UnitIdentity>(FindObjectsSortMode.None)) combineBefore.Add(unit);
+        return sb.ToString();
+    }
+
+    static string RunCombine(string recipeName)
+    {
+        CombineRecipe recipe = FindRecipe(recipeName);
+        CombineSystem system = UnityEngine.Object.FindFirstObjectByType<CombineSystem>();
+        if (system == null) return "   ❌ 씬에 CombineSystem 없음\n";
+        bool can = system.CanCombineNow(recipe);
+        bool done = system.TryCombine(recipe);
+        if (!done) return $"   ❌ 조합 실패 {recipeName}(CanCombineNow {can}) — 재료·골드·라운드 조건을 볼 것\n";
+
+        UnitIdentity made = UnityEngine.Object.FindObjectsByType<UnitIdentity>(FindObjectsSortMode.None)
+            .FirstOrDefault(u => !combineBefore.Contains(u) && u.Data == recipe.result);
+        if (made == null) return $"   ⚠️ 조합은 성공했는데 결과 유닛({recipe.result?.name})을 못 찾음\n";
+        shotUnits.Add(made.gameObject);
+
+        LaneMarker lane = LaneMarker.Get(0);
+        Vector3 center = lane != null ? lane.LaneCenter : Vector3.zero;
+        Vector3 flat = made.transform.position - center;
+        flat.y = 0f;
+        return $"   ✅ 조합 {recipeName} → {made.name} 위치 {made.transform.position.ToString("F1")} · 레인 중심 {center.ToString("F1")}에서 수평 {flat.magnitude:F1}" +
+               $"{(flat.magnitude < 20f ? " ✅ 가운데" : " ⚠️ 가운데 아님")}\n      조합 직후 {DescribeOnScreen(made.gameObject)}\n";
     }
 
     // ── spawn: (에디터 촬영 전용 — 위 GameShot 절 🔴) ──
