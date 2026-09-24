@@ -1371,15 +1371,26 @@ public static class MapGenerator
     const float GradeWallGap = RecipeRowHeight * 1.3f;   // 60.1
 
     /// <summary>
+    /// 등급 무리 사이에 두는 가로 간격(사장님 2026-09-24 「각 등급마다 오른쪽 약간씩 띄워줄래?」).
+    /// 칸 한 변에서 유도한다 — 「약간」에 맞고, 칸 크기를 바꾸면 따라온다.
+    ///
+    /// ⚠️ <see cref="GradeWallGap"/>과 **다른 축이다.** 저건 한 열 **안에서** 등급이 바뀔 때의
+    ///    세로 틈(지금 8열 전설↕제한됨 한 자리)이고, 이건 열 **사이**의 가로 틈이다.
+    ///    같은 등급이 두 열에 걸친 자리에는 넣지 않는다 — 붙어 있어야 한 등급으로 읽힌다.
+    /// </summary>
+    const float GradeGroupGap = RecipeSlot;   // 15.4
+
+    /// <summary>
     /// 조합식 표의 열 수. 169줄을 이 수로 **고르게 나눠** 담는다(BuildCombineColumns 참고).
     /// 6인 이유: 5열이면 세로가 1737로 늘고, 7열이면 가로가 1285가 되어 「너비가 너무
     /// 길어지는 느낌」(사장님 2026-09-23)으로 되돌아간다. 6열이 가로 1119·세로 1460으로
     /// 둘 다 만족하는 자리다.
     /// </summary>
-    // 사장님이 직접 정하신 열 수(2026-09-24: 9열 → 흔함 열이 앞에 붙어 **10열**).
-    // 아래 `spread` 표와 **반드시 같아야 한다** — 표에 10열을 쓰는데 여기가 9면 마지막 열이
-    // 통째로 사라진다. `neededColumns` 검사가 그걸 잡지만, 걸리기 전에 같이 올리는 게 맞다.
-    const int CombineTableColumns = 10;
+    // 사장님이 직접 정하신 열 수. 2026-09-24 하루에 **네 번 바뀌었다** —
+    // 6열 → 8열 → 9열 → (흔함 열이 앞에 붙어) 10열 → (히든을 한 열로 합쳐) **9열**.
+    // 아래 `spread` 표와 **반드시 같아야 한다** — 표에 9열을 쓰는데 여기가 8이면 마지막 열이
+    // 통째로 사라진다. `neededColumns` 검사가 그걸 잡지만, 걸리기 전에 같이 고치는 게 맞다.
+    const int CombineTableColumns = 9;
     const float RecipeSlot = 15.4f;     // 유닛 한 칸. 원작 슬롯 한 변 64 ÷ Scale
     // ── 조합식 표 간격 (2026-09-23 재설계) ────────────────────────────────
     // 사장님 「조합판도 너무 붙어있으니깐 답답한 느낌이든다」.
@@ -1491,7 +1502,12 @@ public static class MapGenerator
             [UnitGrade.Rare] = new[] { 4, 5 },           // 5·6열
             [UnitGrade.Legendary] = new[] { 6, 7 },      // 7·8열
             [UnitGrade.Limited] = new[] { 7 },           // 8열 전설 밑 「남는 공간에」
-            [UnitGrade.Hidden] = new[] { 8, 9 },         // 9·10열 (2026-09-24 사장님이 둘로 가르셨다)
+            // 🔴 히든은 09-24에 **둘로 갈랐다가 같은 날 다시 합쳤다.** 사장님이 맨 오른쪽을 보시고
+            //    「뭐임?」 → 11행이라 옆 열(21·25행)의 절반도 안 돼 성기게 보였다 → 「히든 한 열로
+            //    합쳐줘」. 합치면 22행이 되어 8열(25행)과 비슷해진다.
+            //    ⚠️ 등급 간격(GradeGroupGap)이 들어가는 곳은 **여섯 무리의 경계 5곳으로 그대로**다 —
+            //       히든이 한 열이 되어도 무리 수는 안 바뀐다.
+            [UnitGrade.Hidden] = new[] { 8 },            // 9열
             // 🔴 영원은 09-24에 사장님이 거두셨다(「안흔함 밑에 영원함 조합식 빼줘」) — 그래서
             //    1열은 안흔함 13식만이다. MapLayout.CombineTableGrades에서 빠졌으니 여기 항이
             //    남아 있어도 실려 올 게 없지만, **둘을 같이 지운다** — 불멸 때와 같은 방식이다.
@@ -1585,11 +1601,39 @@ public static class MapGenerator
             totalWidth += columnWidths[c];
         }
 
+        // 🔴 2026-09-24 사장님 「각 등급마다 오른쪽 약간씩 띄워줄래?」 → **등급이 바뀌는 열
+        //    경계에만** 간격을 둔다. 같은 등급이 두 열에 걸친 자리(특별함 3·4열, 희귀함 5·6열,
+        //    전설 7·8열, 히든 9·10열)는 **붙여 둬야** 「이 둘은 한 등급」이 읽힌다.
+        //    전설+제한됨은 **한 열 안**이라 해당 없다 — 거기는 등급 구분벽이 이미 갈라 준다.
+        //
+        // ⚠️ 경계를 손으로 세지 않는다. 「앞 열의 마지막 등급 ≠ 뒤 열의 첫 등급」으로 **판정**하게
+        //    했다 — 사장님이 배정을 또 바꾸시면(오늘만 세 번 바뀌었다) 간격이 저절로 따라간다.
+        //    손으로 「5곳」을 박아 두면 그때 조용히 엉뚱한 자리에 남는다.
+        UnitGrade FirstGrade(int c) =>
+            columnUnits[c] != null ? UnitGrade.Common : columns[c][0].grade;
+        UnitGrade LastGrade(int c) =>
+            columnUnits[c] != null ? UnitGrade.Common : columns[c][columns[c].Count - 1].grade;
+
+        float[] gapAfter = new float[columns.Count];
+        float gapTotal = 0f;
+        int gapCount = 0;
+        for (int c = 0; c < columns.Count - 1; c++)
+        {
+            if (FirstGrade(c + 1) == LastGrade(c)) continue;
+            gapAfter[c] = GradeGroupGap;
+            gapTotal += GradeGroupGap;
+            gapCount++;
+        }
+        totalWidth += gapTotal;
+
         // 자연 폭이 섬을 넘으면 가로만 줄여 맞춘다. 넘치지 않으면 그대로 둔다.
         RecipeScale = totalWidth > island.size.x ? island.size.x / totalWidth : 1f;
         if (RecipeScale < 1f)
         {
             for (int c = 0; c < columnWidths.Length; c++) columnWidths[c] *= RecipeScale;
+            // 등급 간격도 같이 줄인다 — 안 줄이면 축소 뒤 총 폭이 섬을 다시 넘는다.
+            for (int c = 0; c < gapAfter.Length; c++) gapAfter[c] *= RecipeScale;
+            gapTotal *= RecipeScale;   // 보고문이 실제로 들어간 값을 찍게
             totalWidth *= RecipeScale;
         }
 
@@ -1612,7 +1656,9 @@ public static class MapGenerator
         {
             float columnWidth = columnWidths[c];
             float columnLeft = cursorX;
-            cursorX += columnWidth;
+            // 등급 간격은 **그 열 오른쪽**에 붙는다(사장님 「오른쪽 약간씩 띄워줄래?」).
+            // 마지막 열은 gapAfter가 0이라 아래 "끝" 칸벽 자리가 밀리지 않는다.
+            cursorX += columnWidth + gapAfter[c];
             float rowZ = tableTop - RecipeRowHeight;
             float rowLeftX = columnLeft + PadW + SlotW * 0.5f;
             float resultX = rowLeftX + columnMaxSlots[c] * (SlotW + GapW) + ArrowW;
@@ -1743,7 +1789,10 @@ public static class MapGenerator
             float depth = rows * RecipeRowHeight + (columns[c].Count - 1) * GradeWallGap;
             perColumn.Add($"\n    {c + 1}열 {string.Join("+", parts),-22} {rows,3}행 · 글씨깊이 {depth:F0} · " +
                           $"폭 {columnWidths[c]:F0}(" +
-                          (columnUnits[c] != null ? "결과칸만" : $"재료 {columnMaxSlots[c]}칸") + ")");
+                          (columnUnits[c] != null ? "결과칸만" : $"재료 {columnMaxSlots[c]}칸") + ")" +
+                          // 등급이 바뀌는 자리에만 찍힌다 — 「같은 등급 안에는 안 들어갔다」를
+                          // 보고문만 보고 셀 수 있게 한다.
+                          (gapAfter[c] > 0f ? $" ┤등급 간격 {gapAfter[c]:F0}" : ""));
         }
 
         int displayed = 0;
@@ -1754,6 +1803,8 @@ public static class MapGenerator
                $", {columns.Count}열 (사장님 지시 배정)." +
                $"\n  섬깊이 필요 {deepest:F0}/{available:F0} {verdict}" +
                $" — 아래 열별 「글씨깊이」보다 한 행({RecipeRowHeight:F0}) 큰 것이 정상입니다\n  {fit}" +
+               $"\n  등급 간격 {GradeGroupGap:F0} × {gapCount}곳 = {gapTotal:F0}" +
+               " (등급이 바뀌는 열 경계에만 — 같은 등급이 걸친 열끼리는 붙여 둡니다)" +
                string.Join("", perColumn) +
                (sample != null ? $"\n  예시: {sample}" : "");
     }
