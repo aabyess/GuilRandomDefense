@@ -1461,10 +1461,12 @@ public static class MapGenerator
             [UnitGrade.Legendary] = new[] { 5, 6 },      // 6·7열
             [UnitGrade.Limited] = new[] { 6 },           // 7열 전설 밑 「남는 공간에」
             [UnitGrade.Hidden] = new[] { 7, 8 },         // 8·9열 (2026-09-24 사장님이 둘로 가르셨다)
-            // ⚠️ 영원을 1열에 둔 것은 **PM 판단**이다(사장님이 자리를 안 짚으셨다).
-            //    1열이 13행으로 가장 얕아서 골랐다. 폭으로는 가장 비싼 선택이지만
-            //    (안흔함 재료 2칸 → 영원 8칸), 7열에 두면 34행이 되어 **깊이가 먼저 터진다**.
-            [UnitGrade.Eternal] = new[] { 0 },           // 1열 안흔함 밑
+            // 🔴 영원은 09-24에 사장님이 거두셨다(「안흔함 밑에 영원함 조합식 빼줘」) — 그래서
+            //    1열은 안흔함 13식만이다. MapLayout.CombineTableGrades에서 빠졌으니 여기 항이
+            //    남아 있어도 실려 올 게 없지만, **둘을 같이 지운다** — 불멸 때와 같은 방식이다.
+            //    되살릴 때는 `[UnitGrade.Eternal] = new[] { 0 }`을 여기에, 등급을 저쪽에 같이 넣는다.
+            //    (영원을 1열에 둔 것은 PM 판단이었다 — 1열이 가장 얕아서였고, 7열에 두면 34행이
+            //     되어 깊이가 먼저 터진다. 폭은 반대로 가장 비싸다: 안흔함 2칸 → 영원 8칸.)
         };
 
         // 🔴 배정표가 쓰는 열 수와 CombineTableColumns가 어긋나면 **마지막 열이 통째로 사라진다.**
@@ -1600,10 +1602,23 @@ public static class MapGenerator
             deepest = Mathf.Max(deepest, tableTop - rowZ);
         }
 
+        // ⚠️ 여기 `deepest`는 아래 열별 줄의 「깊이」와 **다른 수**다. 커서(rowZ)가 마지막 줄
+        //    아래로 한 행 더 내려가 있어 딱 RecipeRowHeight만큼 크다(열 1215.1 vs 여기 1261.3).
+        //    2026-09-24에 PM이 열 쪽 숫자로 섬 세로를 1260으로 잡았다가 1.3이 모자랄 뻔했다 —
+        //    **같은 것을 가리키는 두 이름은 둘 다 이름을 달고 나와야 한다.**
         float available = island.size.y;
         string verdict = deepest <= available
             ? $"여유 {available - deepest:F0}"
             : $"⚠️ {deepest - available:F0} 모자람 — CombineTable 세로를 {Mathf.CeilToInt(deepest) + 8}으로";
+
+        // 보고문의 ⚠️는 스크롤에 묻힌다. 잘린 표는 사장님 화면에서 「글씨가 없다」로만 보이므로
+        // 콘솔에도 소리를 낸다(PM 요청 09-24). 섬 세로는 순환 때문에 리터럴이라 자동 교정이
+        // 안 되니, **고칠 값까지 적어 준다.**
+        if (deepest > available)
+            Debug.LogWarning($"[맵] 조합표가 섬보다 깊습니다 — 필요 {deepest:F0} / 섬 {available:F0} " +
+                             $"({deepest - available:F0} 넘침). MapLayout.CombineSizeZ를 " +
+                             $"{Mathf.CeilToInt(deepest) + Mathf.CeilToInt(RecipeRowHeight)}으로 올려야 " +
+                             "마지막 줄이 안 잘립니다.");
 
         string fit = totalWidth <= island.size.x
             ? $"가로 {totalWidth:F0}/{island.size.x:F0} 여유 {island.size.x - totalWidth:F0}"
@@ -1631,12 +1646,13 @@ public static class MapGenerator
                 parts.Add($"{g.KoreanName()}{chunk.Count}");
             }
             float depth = rows * RecipeRowHeight + (columns[c].Count - 1) * GradeWallGap;
-            perColumn.Add($"\n    {c + 1}열 {string.Join("+", parts),-22} {rows,3}행 · 깊이 {depth:F0} · " +
+            perColumn.Add($"\n    {c + 1}열 {string.Join("+", parts),-22} {rows,3}행 · 글씨깊이 {depth:F0} · " +
                           $"폭 {columnWidths[c]:F0}(재료 {columnMaxSlots[c]}칸)");
         }
 
         return fitNote + $"\n조합식 표: {placed}개 조합식, {columns.Count}열 (사장님 지시 배정)." +
-               $"\n  깊이 {deepest:F0}/{available:F0} {verdict}\n  {fit}" +
+               $"\n  섬깊이 필요 {deepest:F0}/{available:F0} {verdict}" +
+               $" — 아래 열별 「글씨깊이」보다 한 행({RecipeRowHeight:F0}) 큰 것이 정상입니다\n  {fit}" +
                string.Join("", perColumn) +
                (sample != null ? $"\n  예시: {sample}" : "");
     }
