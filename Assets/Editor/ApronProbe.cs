@@ -310,14 +310,18 @@ public static class ApronProbe
             }
         }
 
-        sb.AppendLine($"땅 {land}칸 중 NavMesh 없음 {holes}칸 ({(land == 0 ? 0f : 100f * holes / land):0.#}%)");
+        // ⚠️ 「몇 칸」은 칸 크기 없이는 뜻이 없다. 09-24에 같은 NavMesh를 두고 「14칸」과 「2칸」이
+        //    나왔고, 갈린 것은 결함이 아니라 **해상도**였다. 그래서 개수마다 기준과 비율을 붙인다.
+        string basis = $"칸 {HoleStep:0.#} 기준";
+        sb.AppendLine($"땅 {land}칸({basis}) 중 NavMesh 없음 {holes}칸 = 앞치마의 {(land == 0 ? 0f : 100f * holes / land):0.##}%");
         sb.AppendLine("구멍을 덮는 **서 있는** 콜라이더 (많은 순):");
         if (blamed.Count == 0) sb.AppendLine("  없음 — 서 있는 것이 아니라 다른 이유다");
         foreach (KeyValuePair<string, int> e in blamed.OrderByDescending(e => e.Value))
         {
             Vector3 s = blamedSize[e.Key];
             float thin = Mathf.Min(s.x, s.z);
-            sb.AppendLine($"  {e.Value,4}칸  {e.Key}  크기 {s.x:0.##}×{s.y:0.##}×{s.z:0.##}" +
+            sb.AppendLine($"  {e.Value,4}칸({basis}, 앞치마의 {100f * e.Value / Mathf.Max(1, land):0.##}%)  {e.Key}" +
+                          $"  크기 {s.x:0.##}×{s.y:0.##}×{s.z:0.##}" +
                           $"  얇은 쪽 {thin:0.##} = 복셀 {thin / MapLayout.NavMeshVoxelSize:0.##}칸" +
                           $"  (반지름 {agent.agentRadius:0.##} 침식까지 치면 길이 {thin + agent.agentRadius * 2f:0.##} 만큼 막힌다)");
         }
@@ -404,9 +408,10 @@ public static class ApronProbe
             overhead.TryGetValue(key, out int k);
             overhead[key] = k + 1;
         }
-        sb.AppendLine($"  표본 {checkedPoints}개 중 머리 위에 뭔가 있는 칸 {overhead.Values.Sum()}개");
+        sb.AppendLine($"  표본 {checkedPoints}개(칸 {AuditStep:0.#} 기준) 중 머리 위에 뭔가 있는 칸 " +
+                      $"{overhead.Values.Sum()}개 = {(checkedPoints == 0 ? 0f : 100f * overhead.Values.Sum() / checkedPoints):0.##}%");
         foreach (KeyValuePair<string, int> e in overhead.OrderByDescending(e => e.Value).Take(10))
-            sb.AppendLine($"    {e.Value,5}칸  {e.Key}");
+            sb.AppendLine($"    {e.Value,5}칸 ({100f * e.Value / Mathf.Max(1, checkedPoints):0.##}%)  {e.Key}");
         if (overhead.Count == 0) sb.AppendLine("    없음");
 
         return sb.ToString();
