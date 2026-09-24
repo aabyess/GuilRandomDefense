@@ -25,7 +25,10 @@ public static class MapGenerator
     // 2026-09-23에 IslandTop이 1 → 8이 되면서(NavMeshVoxelSize 주석 참고) 2.2로는 섬이 공중에
     // 떴다 — 치마가 수면까지 못 닿았다. 8.65가 최소고 여유를 둬 10으로 잡는다.
     const float CliffHeight = 10f;
-    const float CliffOverhang = 3.5f;     // 잔디보다 얼마나 넓게 나올지
+    // 잔디보다 얼마나 넓게 나올지. **섬의 진짜 바깥 끝은 잔디가 아니라 이 치마다** —
+    // 그래서 MapLayout으로 옮겼다(2026-09-24). 섬 사이 간격을 재는 쪽이 이 값을 알아야
+    // 「섬변끼리 38.1」과 「보이는 끝끼리 34.6」이 갈리는 것을 셀 수 있다.
+    const float CliffOverhang = MapLayout.CliffOverhang;
 
     // 구역을 색으로만 구분하면 원랜디 느낌이 안 난다. 잔디/물/바위 텍스처를 깔고
     // 구역 구분은 잔디에 옅은 색조를 얹는 정도로만 한다.
@@ -3967,7 +3970,39 @@ public static class MapGenerator
             }
         }
 
-        return hits.Count == 0 ? "" : "\n⚠️ 겹칩니다: " + string.Join(", ", hits);
+        return (hits.Count == 0 ? "" : "\n⚠️ 겹칩니다: " + string.Join(", ", hits)) + SpacingReport();
+    }
+
+    // 사장님이 「더 벌려라 / 좁혀라」로 말씀하시는 간격들을 숫자로 찍는다(PM 요청 2026-09-24).
+    // 다음에 그 지시가 올 때 **지금이 얼마인지**를 알아야 얼마나 움직일지 정할 수 있다.
+    //
+    // 여기서 찍는 값은 MapLayout의 목표 상수가 아니라 **섬 정의에서 재서 낸 것**이다 —
+    // 유도식(DownShift·GachaCenterX)이 섬 정의와 어긋나면 목표에서 벗어나고, 그러면 아래
+    // 경고가 뜬다. 목표를 그대로 다시 찍으면 어긋난 날에도 "500"이라고 나와 아무 도움이 안 된다.
+    static string SpacingReport()
+    {
+        MapLayout.SpacingReadout s = MapLayout.MeasureSpacing();
+
+        string report =
+            $"\n간격(치마 기준): 레인 남쪽 끝 {MapLayout.LaneClusterSouthEdgeZ:0.0} ↔ 섬 무리 윗변 " +
+            $"{s.islandClusterNorthZ:0.0} = **{s.laneToIsland:0.0}** (목표 {MapLayout.LaneToIslandGapZ:0.0})" +
+            $"\n  스토리존↔뽑기섬 {s.storyToGacha:0.0} · 뽑기섬↔조합판 {s.gachaToCombine:0.0} " +
+            $"(목표 {MapLayout.IslandGapX:0.0})";
+
+        // 문턱은 절대값이 아니라 비례로 — 간격 목표가 바뀌어도 같이 따라오게 한다.
+        float tolerance = Mathf.Max(1f, MapLayout.LaneToIslandGapZ * 0.01f);
+        if (Mathf.Abs(s.laneToIsland - MapLayout.LaneToIslandGapZ) > tolerance)
+            report += $"\n  ⚠️ 레인↔섬 간격이 목표에서 {s.laneToIsland - MapLayout.LaneToIslandGapZ:+0.0;-0.0} " +
+                      "벗어났습니다 — MapLayout.DownShift의 유도식이 섬 정의와 어긋났습니다 " +
+                      "(가장 북쪽 섬이 뽑기섬이 아니게 됐거나, 뽑기섬 z가 바뀌었습니다).";
+
+        float gapTolerance = Mathf.Max(1f, MapLayout.IslandGapX * 0.01f);
+        if (Mathf.Abs(s.storyToGacha - MapLayout.IslandGapX) > gapTolerance ||
+            Mathf.Abs(s.gachaToCombine - MapLayout.IslandGapX) > gapTolerance)
+            report += "\n  ⚠️ 섬 사이 x 간격이 목표와 다릅니다 — 섬 중심을 간격에서 유도하지 않고 " +
+                      "손으로 박은 자리가 있습니다.";
+
+        return report;
     }
 
     // 레인 사이 벽은 틈을 확실히 메우려고 InterLaneWallMargin의 절반만큼 **일부러** 섬을 문다.
@@ -4907,7 +4942,15 @@ public static class MapGenerator
         // farClipPlane도 세계 좌표 거리라 같이 늘려야 한다 — 안 그러면 맵 먼 쪽이 잘려 보인다.
         camera.farClipPlane = Mathf.Max(camera.farClipPlane, 1000f * MapLayout.Scale);
 
-        return "\n카메라에 RTS 조작(가장자리 밀기·WASD·휠 확대)을 붙이고 메인 필드 위로 옮겼습니다.";
+        // 경계를 숫자로 찍는다(PM 요청 2026-09-24). 섬을 옮길 때마다 "따라올 것이다"까지만
+        // 알고 넘어가면, 안 따라온 날에는 **사장님이 그 섬까지 화면을 못 움직이는 것**으로만
+        // 드러난다. 섬 무리의 실제 끝과 나란히 찍어야 "여유가 CameraMargin뿐인지"가 보인다.
+        Vector2 min = cameraSo.FindProperty("boundsMin").vector2Value;
+        Vector2 max = cameraSo.FindProperty("boundsMax").vector2Value;
+        return "\n카메라에 RTS 조작(가장자리 밀기·WASD·휠 확대)을 붙이고 메인 필드 위로 옮겼습니다." +
+               $"\n  경계 X {min.x:0.0}~{max.x:0.0} · Z {min.y:0.0}~{max.y:0.0}" +
+               $" (섬 무리 X {bounds.minX:0.0}~{bounds.maxX:0.0} · Z {bounds.minZ:0.0}~{bounds.maxZ:0.0}" +
+               $", 여유 {CameraMargin:0.0})";
     }
 
     // 섬 끝을 화면 가운데 두고도 주변이 보이도록. 세계 좌표 단위라 맵 배율과 같이 커진다.

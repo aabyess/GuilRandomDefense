@@ -26,6 +26,17 @@ public static class MapLayout
     public const float SeaSize = 1600f * Scale;
 
     /// <summary>
+    /// 바위 치마가 잔디보다 넓게 나오는 양(양변 합). **섬의 보이는 바깥 끝은 잔디가 아니라 이 치마다.**
+    /// MapGenerator가 그리고(<c>island.size + CliffOverhang</c>), 여기서는 간격을 잴 때 쓴다 —
+    /// 같은 두 섬이 「섬변끼리 38.1 / 보이는 끝끼리 34.6」으로 갈리는 이유가 이 값이다.
+    /// 사람 눈에 보이는 간격을 말할 때는 **치마 기준**이 맞다.
+    /// </summary>
+    public const float CliffOverhang = 3.5f;
+
+    /// <summary>치마가 한쪽 변으로 더 나오는 양.</summary>
+    public const float CliffMargin = CliffOverhang * 0.5f;
+
+    /// <summary>
     /// NavMesh 굽기 복셀 크기. MapGenerator.BuildNavMesh가 이 값을 쓴다.
     ///
     /// 🔴 **이 값과 <see cref="IslandTop"/>은 한 쌍이다. 하나만 바꾸면 조용히 깨진다.**
@@ -51,6 +62,54 @@ public static class MapLayout
 
     public const float IslandThickness = 1f;
     public const int SeaAreaIndex = 3;      // ProjectSettings/NavMeshAreas.asset 3번 = Sea
+
+    /// <summary>
+    /// 사장님이 「더 벌려라 / 좁혀라」로 말씀하시는 그 간격들. **박아 둔 목표값이 아니라
+    /// 섬 정의에서 재서 낸다** — 유도식(<see cref="DownShift"/>·<see cref="GachaCenterX"/>)이
+    /// 섬 정의와 어긋나면 이 숫자가 목표에서 벗어나고, MapGenerator 보고문이 그것을 찍는다.
+    /// 간격은 **치마(<see cref="CliffMargin"/>) 기준** — 사람 눈에 보이는 끝이 잔디가 아니라 치마다.
+    /// </summary>
+    public struct SpacingReadout
+    {
+        public float laneToIsland;      // 레인 무리 남쪽 끝 ↔ 옮긴 섬 무리 북쪽 끝
+        public float storyToGacha;      // 스토리존 ↔ 뽑기섬
+        public float gachaToCombine;    // 뽑기섬 ↔ 조합판
+        public float islandClusterNorthZ;
+    }
+
+    static Island Find(Island[] set, string name)
+    {
+        foreach (Island island in set)
+            if (island.name == name) return island;
+        return default;
+    }
+
+    static Island Zone(string name) => Find(Zones, name);
+
+    /// <summary>간격을 실제 섬 정의에서 재서 돌려준다.</summary>
+    public static SpacingReadout MeasureSpacing()
+    {
+        Island story = Zone("StoryZone");
+        Island gacha = Zone("GachaIsland");
+        Island combine = Zone("CombineTable");
+
+        float north = float.MinValue;
+        foreach (Island island in SealIslands)
+            north = Mathf.Max(north, island.center.y + island.size.y * 0.5f);
+        foreach (Island island in new[] { story, gacha, combine })
+            north = Mathf.Max(north, island.center.y + island.size.y * 0.5f);
+        north += CliffMargin;
+
+        return new SpacingReadout
+        {
+            laneToIsland = LaneClusterSouthEdgeZ - north,
+            storyToGacha = (gacha.center.x - gacha.size.x * 0.5f - CliffMargin)
+                           - (story.center.x + story.size.x * 0.5f + CliffMargin),
+            gachaToCombine = (combine.center.x - combine.size.x * 0.5f - CliffMargin)
+                             - (gacha.center.x + gacha.size.x * 0.5f + CliffMargin),
+            islandClusterNorthZ = north,
+        };
+    }
 
     public struct Island
     {
@@ -101,16 +160,19 @@ public static class MapLayout
 
     // 오른쪽 열(레인2·4)의 오른쪽 끝을 -220에 둔다 — Scale=4.167 기준 PunkHazard 오른쪽 끝이
     // x=187.5라 32.5 여유를 두고 확실히 비껴간다(사장님 지시 "오른쪽에 펑크해저드·창고가
-    // 있어 레인은 왼쪽으로 펼치는 쪽이 낫다"). 아래로는 GachaIsland·StoryZone이 전부 z<63에
-    // 있어 필드 바닥을 z=100에서 시작하면 안 걸린다. MapGenerator.cs:3508 Overlaps()와 같은
-    // 식으로 Warehouses·SealIslands·Zones 전체와 대조해 0건 확인했다(2026-09-23, 별도 계산).
+    // 있어 레인은 왼쪽으로 펼치는 쪽이 낫다"). 아래쪽 섬들(GachaIsland·StoryZone·CombineTable·
+    // 봉인섬)은 2026-09-24에 왼쪽 1200·아래 465를 먹어 전부 z<-402로 내려갔으니 더 멀어졌다.
+    // MapGenerator.cs의 Overlaps()로 Warehouses·SealIslands·Zones 전체와 대조해 0건 확인했고,
+    // 앞치마까지 넣은 22개 231쌍으로도 0건이다(2026-09-24 재확인, 별도 계산).
     const float LaneRightEdgeX = -220f;
     const float LaneRightColumnX = LaneRightEdgeX - LaneSizeX * 0.5f;   // -610.7
     const float LaneLeftColumnX = LaneRightColumnX - LaneSpacingX;     // -1622.5
     // ⚠️ 앞치마는 필드 **아래로** 199.4만큼 뻗는다(ApronGap 7.7 + 우리 83.3 + 상점 108.3).
     // 겹침 검사(MapGenerator.CheckOverlaps)는 Lanes 배열 = 필드만 보므로 앞치마는 손으로
-    // 확인해야 한다. 아래 줄 레인의 앞치마 바닥이 뽑기섬 윗변(z=62.5)을 안 넘게 필드 아래변을
-    // z=300에 둔다 → 앞치마 바닥 z=100.6, 뽑기섬과 38.1 여유(2026-09-23 계산 확인).
+    // 확인해야 한다. 필드 아래변을 z=300에 두면 앞치마 바닥이 z=100.6, 치마까지 98.9다 —
+    // 이것이 **레인 무리의 진짜 남쪽 끝**이고 LaneClusterSouthEdgeZ가 그 값이다.
+    // 아래쪽 섬들과의 간격은 이제 그 끝에서 LaneToIslandGapZ(500)로 유도한다(사장님 09-24
+    // 「간격도 벌려줘」) — 예전의 「뽑기섬과 38.1 여유」는 그 지시로 없어진 값이다.
     // 위쪽은 레인1·2 꼭대기까지 아무것도 없다(바다 반폭 3334).
     const float LaneFieldBottomZ = 300f;
     const float LaneBottomRowZ = LaneFieldBottomZ + LaneSizeZ * 0.5f;  // 625.45
@@ -162,11 +224,54 @@ public static class MapLayout
     //    조합표 받침·칸벽·글씨 · 위습 생성 5칸(포탈 상대 거리라 상대값 불변).
     //    보물찾기 구역은 **레인 필드 넷** 기준이라 원래 이 이동과 무관하다(따라오지 않는 게 정상).
     //
-    // ⚠️ 아래 주석에 적힌 **절대 x는 이 이동 전 값이다**(예: "조합판 왼쪽 끝 x=0", "뽑기섬 오른쪽
-    //    끝 x=-58.3", "넓힌 구간 x 1150~1700"). 일곱이 **같이** 움직이므로 그 주석들이 지키려던
-    //    **간격은 그대로**다(조합판↔뽑기섬 58.3 등) — 틀린 건 절대값뿐이다. 읽을 때 1200을 빼라.
-    //    스무 개 숫자를 손으로 고치면 그 과정에서 또 어긋나므로 여기 한 번만 적는다.
+    // ⚠️ 아래 주석에 적힌 **절대 좌표는 이 이동 전 값이다**(예: "조합판 왼쪽 끝 x=0", "뽑기섬
+    //    오른쪽 끝 x=-58.3", "윗변 z=62.5 고정", "넓힌 구간 x 1150~1700"). 스무 개 숫자를 손으로
+    //    고치면 그 과정에서 또 어긋나므로 여기 한 번만 적는다: **x는 −1200 뒤 간격 유도로 다시
+    //    잡혔고(IslandGapX), z는 −465 내려갔다(DownShift).**
+    //    그 주석들이 지키려던 **제약 자체는 살아 있다** — 다만 이제 그것을 지키는 것이 박아 둔
+    //    좌표가 아니라 유도식이고, 지켜졌는지는 보고문의 간격 줄이 말한다.
     const float LeftShift = -1200f;
+
+    // 🔴 2026-09-24 사장님 추가 지시 「레인이랑 스토리존·선택위습(=뽑기섬)·조합판 간격도 벌려줘」.
+    //
+    // ■ x — 섬 사이를 IslandGapX로 벌린다. **왼쪽 끝을 고정하고 오른쪽으로** 벌린다:
+    //   StoryZone 왼쪽 끝의 바다 여유가 548뿐이라 왼쪽으로는 갈 데가 없다.
+    //   아래 중심 좌표는 **간격에서 유도**한다 — 박아 둔 좌표로 두면 섬 폭이 바뀔 때
+    //   간격이 조용히 어긋난다(조합판은 조합식이 열을 하나 더 먹으면 폭이 커진다).
+    public const float IslandGapX = 300f;
+
+    // ■ z — 레인 무리와 섬 무리를 LaneToIslandGapZ만큼 띄운다.
+    //
+    // ⚠️ **「레인 밑변」으로 재면 안 된다.** 레인 섬 밑변은 z=300인데 앞치마(우리 줄 + 상점 줄)가
+    //    거기서 199.4 더 남쪽으로 뻗고, 치마가 1.75 더 나온다 → 레인 무리의 **실제 남쪽 끝은 98.9**다.
+    //    섬 밑변으로 재면 237.5로 보이지만 실제 틈은 **34.6**이었다 — 7배 차이다.
+    //    (씬 실측으로 확인: Lane#_상점바닥 중심 z 154.8 − 깊이 108.3/2 = 100.6 = 앞치마 밑변.)
+    //
+    // 무리 중 가장 북쪽은 뽑기섬(윗변 z=62.5)이라 그것을 기준으로 내린다. 일곱이 같은 양만큼
+    // 내려가므로 서로의 간격은 그대로다. **달성된 간격은 MapGenerator 보고문이 매번 찍는다** —
+    // 이 유도식이 섬 정의와 어긋나면 그 줄에서 드러난다(박아 둔 문턱을 믿지 않는다).
+    public const float LaneToIslandGapZ = 500f;
+
+    /// <summary>레인 무리의 실제 남쪽 끝 — 앞치마와 치마까지 포함한다.</summary>
+    public const float LaneClusterSouthEdgeZ = LaneFieldBottomZ - LaneApronDepth - CliffMargin;
+
+    // 내리기 전 무리의 북쪽 끝(뽑기섬 윗변 + 치마). 아래 GachaIsland 정의와 같은 수를 쓴다 —
+    // 뽑기섬 z를 고치면 이 줄도 같이 고쳐야 하고, 안 고치면 보고문의 간격이 500에서 벗어난다.
+    const float MovedClusterNorthEdgeBeforeShift = -99.20f * Scale + 228.40f * Scale * 0.5f + CliffMargin;
+    const float DownShift = LaneClusterSouthEdgeZ - LaneToIslandGapZ - MovedClusterNorthEdgeBeforeShift;
+
+    // 옮기는 셋의 x 중심 — StoryZone은 앞서 정한 자리 그대로, 나머지는 간격에서 유도한다.
+    const float StoryZoneSizeX = 180f * Scale;
+    const float GachaSizeX = 136f * Scale;
+    const float CombineSizeX = 407.97f * Scale;
+    // ⚠️ 두 간격(x·z)은 **같은 자**를 써야 한다 — 둘 다 치마 기준이다. 안 그러면 보고문의
+    //    「300」과 「500」이 서로 다른 뜻이 되고, 「x를 z만큼 벌려라」가 어긋난다.
+    //    그래서 치마 양쪽 몫(CliffOverhang)을 더한다.
+    const float StoryZoneCenterX = -290f * Scale + LeftShift;
+    const float GachaCenterX = StoryZoneCenterX + StoryZoneSizeX * 0.5f
+                             + IslandGapX + CliffOverhang + GachaSizeX * 0.5f;
+    const float CombineCenterX = GachaCenterX + GachaSizeX * 0.5f
+                               + IslandGapX + CliffOverhang + CombineSizeX * 0.5f;
 
     // 물범 섬 — 4개. 물범을 잡으면 전체 플레이어에게 목재 1개씩.
     // 중심 간격을 34→40으로 넓혔다(사장님 지시, 2026-09-03: "너무 따닥 붙어있음") — 빈틈이
@@ -175,10 +280,10 @@ public static class MapLayout
     // 180 기준)를 넘어간다. 이 배치는 양옆 다 17만큼 여유를 두고 안에 들어간다.
     public static readonly Island[] SealIslands =
     {
-        new Island("SealIsland1", -362f * Scale + LeftShift, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
-        new Island("SealIsland2", -314f * Scale + LeftShift, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
-        new Island("SealIsland3", -266f * Scale + LeftShift, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
-        new Island("SealIsland4", -218f * Scale + LeftShift, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
+        new Island("SealIsland1", -362f * Scale + LeftShift, -180f * Scale + DownShift, 26f * Scale, 26f * Scale, "seal"),
+        new Island("SealIsland2", -314f * Scale + LeftShift, -180f * Scale + DownShift, 26f * Scale, 26f * Scale, "seal"),
+        new Island("SealIsland3", -266f * Scale + LeftShift, -180f * Scale + DownShift, 26f * Scale, 26f * Scale, "seal"),
+        new Island("SealIsland4", -218f * Scale + LeftShift, -180f * Scale + DownShift, 26f * Scale, 26f * Scale, "seal"),
     };
 
     public static readonly Island[] Zones =
@@ -197,7 +302,7 @@ public static class MapLayout
         new Island("TranscendDisplay", 150f * Scale,  26.197f * Scale, 110.391f * Scale, 67.195f * Scale, "display"),
         // 1.5배로 키운 값(원래 120x100). 여유가 빠듯하다 — 봉인섬과 z로 12,
         // 뽑기섬과 x로 10밖에 안 남으니 더 키우려면 이웃을 먼저 옮겨야 한다.
-        new Island("StoryZone",       -290f * Scale + LeftShift, -80f * Scale, 180f * Scale, 150f * Scale, "story"),
+        new Island("StoryZone",       StoryZoneCenterX, -80f * Scale + DownShift, StoryZoneSizeX, 150f * Scale, "story"),
         // 오른쪽 전시 칸이 다른세계 조합식 한 줄(재료 6칸 + 비용 3칸)을 담아야 해서 폭을 넓혔다.
         // (2026-09-23, 원작 비율 4단계) SlotSpacing 6→61.4로 오른쪽 전시 칸이 줄당 11칸에서
         // 4칸으로 줄어, 랜덤유닛 14종이 2줄에서 4줄이 됐다. 그 아래 다른세계 조합식 14줄까지
@@ -205,7 +310,10 @@ public static class MapLayout
         // "⚠️ 모자람"이 뜨는 자리다). **위쪽은 안 건드리고 아래로만 160 늘렸다** — 위로 늘리면
         // 바로 위 레인3·4(아래변 z=100)와 겹친다. 그래서 size_z는 +160/Scale, center_z는
         // −80/Scale만큼 내렸다(윗변 z=62.5 고정). 새 여유는 85다.
-        new Island("GachaIsland",      -82f * Scale + LeftShift, -99.20f * Scale, 136f * Scale, 228.40f * Scale, "gacha"),
+        // ⚠️ 2026-09-24부터 **윗변 z=62.5는 더 이상 고정이 아니다** — DownShift가 −465를 얹어
+        //    실제 윗변은 −402.9다. 위로 늘려도 레인과 500 떨어져 있으니 그 제약은 풀렸지만,
+        //    늘릴 땐 LaneToIslandGapZ가 줄어드는 것이므로 보고문의 간격 줄을 같이 봐야 한다.
+        new Island("GachaIsland",      GachaCenterX, -99.20f * Scale + DownShift, GachaSizeX, 228.40f * Scale, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
         // (2026-09-23, 원작 비율 4단계, PM 지시 "섬을 넓혀라 — 52% 축소는 받지 않는다")
         // 새 칸 크기로 열을 자연 폭대로 늘어놓으면 2192가 필요한데 옛 폭은 1142라, 그대로 두면
@@ -236,7 +344,7 @@ public static class MapLayout
         //    표 안의 것(받침 747개·칸벽·글씨)은 전부 섬 좌표에서 유도되므로 **저절로 따라온다.**
         //    여유를 83(4.9%) 남겼다 — 사장님이 「간격·크기는 앞으로 수정한다」고 하셨고,
         //    조합식 하나가 재료를 하나 더 받으면 그 열이 30.8 넓어지기 때문이다.
-        new Island("CombineTable",     203.98f * Scale + LeftShift, -197.54f * Scale, 407.97f * Scale, 361f * Scale, "combine"),
+        new Island("CombineTable",     CombineCenterX, -197.54f * Scale + DownShift, CombineSizeX, 361f * Scale, "combine"),
         // 도박소. StoryZone 서쪽, 같은 z대역이라 나란히 배치되고 40유닛 간격으로 안 겹친다.
     };
 
