@@ -5219,9 +5219,18 @@ public static class MapGenerator
     ///    텍스처가 화면에 한 번도 안 나온 것이다(2026-09-24에 발견). 갱신을 안 하면
     ///    **다음에 텍스처를 넣어도 똑같이 조용히 안 붙는다.**
     ///
-    /// ⚠️ 색·매끄러움은 일부러 안 건드린다 — 그쪽은 사람이 인스펙터에서 눈으로 맞춰 보는
-    ///    값이라 덮으면 남의 작업을 지운다. 반면 텍스처 경로는 `surface.texture`에서
-    ///    **코드로 정해지는 값**이라 사람이 따로 고를 여지가 없다. 그래서 텍스처만 맞춘다.
+    /// ⚠️ 색·매끄러움은 **텍스처가 있는 면에서만** 맞춘다. 기준은 「사람이 눈으로 고를 값인가」다:
+    ///
+    ///  · **텍스처가 있으면** 표의 색은 색이 아니라 **텍스처에 곱하는 색조**다. 그래서 표가
+    ///    흰색 쪽인 것이고, 그건 「텍스처가 제 색을 내게 비켜 준다」는 뜻이다. 거기에 옛 단색
+    ///    팔레트(0.55/0.60/0.44)가 남아 있으면 **텍스처 색 × 어두운 색조**로 두 번 어두워진다 —
+    ///    취향이 아니라 같은 값을 두 번 먹인 것이다. 코드 것이므로 맞춘다.
+    ///  · **텍스처가 없으면** 그 단색이 곧 그 물건의 색이다. 사람이 눈으로 맞춘 값일 수 있으니
+    ///    **안 건드린다.** 표와 달라도 보고문에만 올린다(<see cref="SurfaceDriftReport"/>).
+    ///
+    /// 🔴 왜 이 구분이 필요했나: 09-24에 재질 열 장이 표와 다른 채로 발견됐다. 전부 매끄러움이
+    ///    URP 기본값 0.50이었다 — 표가 그 열 장을 **한 번도 만든 적이 없다**는 뜻이다. 표를
+    ///    「텍스처 + 옅은 색조」로 바꿨을 때 다시 만들어진 건 rock·dirt 둘뿐이었다.
     /// </summary>
     static void BindTextures(Material material, Surface surface)
     {
@@ -5243,6 +5252,18 @@ public static class MapGenerator
             material.EnableKeyword("_NORMALMAP");   // 켜지 않으면 노멀맵이 무시된다
             EditorUtility.SetDirty(material);
         }
+
+        if (Vector4.Distance(material.GetColor("_BaseColor"), surface.tint) > 0.01f)
+        {
+            material.SetColor("_BaseColor", surface.tint);
+            EditorUtility.SetDirty(material);
+        }
+
+        if (Mathf.Abs(material.GetFloat("_Smoothness") - surface.smoothness) > 0.005f)
+        {
+            material.SetFloat("_Smoothness", surface.smoothness);
+            EditorUtility.SetDirty(material);
+        }
     }
 
     /// <summary>
@@ -5256,8 +5277,10 @@ public static class MapGenerator
     ///
     /// 🔴 그러나 **말없이 안 먹는 것**이 09-24에 우리를 세 번 죽인 병이다. 덮지 않되
     ///    숨기지도 않는다 — 표를 고쳤는데 화면이 안 바뀌면 이 줄이 이유를 바로 말해 준다.
-    ///    첫 손님은 `lane.mat`이다(표는 흰색인데 에셋은 초록 0.55/0.60/0.44).
     ///    ⚠️ 어느 쪽이 맞는 값인지는 이 코드가 정하지 않는다. 사람이 보고 정한다.
+    ///
+    /// ⚠️ **텍스처가 있는 면은 여기 안 뜬다** — 그쪽은 색조가 코드 것이라 <see cref="BindTextures"/>가
+    ///    이미 맞췄다. 여기 뜨는 것은 **텍스처 없는 단색 면**뿐이고, 그건 사람이 맞춘 값일 수 있다.
     /// </summary>
     static string SurfaceDriftReport()
     {
