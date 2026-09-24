@@ -2753,13 +2753,49 @@ def build(name, out_dir=None, render_dir=None):
         o.select_set(o == arm)
     bpy.context.view_layer.objects.active = arm
     bpy.ops.object.mode_set(mode="EDIT")
-    for bname, h, t, parent in table:
+    # 🔴 팔 뼈를 **메시 안으로 끌어들인다**(2026-09-24, PM 요청 — 전수 검사 A군).
+    #   joints 표는 손으로 적은 숫자라 팔이 메시보다 넓게 적히는 일이 있었다: 초월_엄태웅_AD는 손 뼈가 x ±1.35인데
+    #   팔 메시는 ±0.88(**팔 끝보다 47cm 바깥 허공**), 전설적인_김민규(팔 없는 원추 로브)는 손이 0.80인데 메시는 0.49까지다.
+    #   쉬는 자세에선 안 보이고, 클립을 먹이면 몸 밖 지점을 축으로 살이 끌려간다.
+    #   재는 법: 그 뼈 높이(z) 언저리 띠에서 그쪽 메시가 x로 어디까지 가는지 보고, 그 **85% 안쪽**으로 당긴다.
+    #   ⚠️ 바깥에 있을 때만 당긴다 — 이미 안에 있으면 손대지 않는다(제대로 적힌 표를 망치지 않게).
+    #   ⚠️ **기본은 꺼 둔다(opt-in).** 2026-09-24 전수 검사에서 팔 뼈가 몸 밖이던 셋을 끝까지 파 보니 **쓸 데가 없었다**:
+    #      초월_엄태웅_AD는 지금 파이프라인으로 **다시 뽑기만 해도** 들어왔고(커밋본이 옛 산출물이었다),
+    #      전설적인_김민규(팔 없는 로브)·전설적인_이일중(외팔 샹크스)은 유니티 필수 15뼈를 채우려고 세워 둔
+    #      **허깨비 팔**이라 가중치가 씨앗(무게합 0.003, 중앙값의 0.002%)뿐이다 — 아무것도 안 움직인다.
+    #      필요한 유닛이 나오면 그때 fit_arms=True를 켠다. 안 쓰는 기계를 기본으로 돌리지 않는다.
+    if cfg.get("fit_arms") and not cfg.get("generic_bones"):
+        wv = np.array([(G @ v.co)[:] for v in body.data.vertices])
+        Hh = float(wv[:, 2].max() - wv[:, 2].min())
+        pulled, tbl2 = {}, []
+        for bname, h, t, parent in table:
+            hw, tw = G @ Vector(h), G @ Vector(t)
+            side = 1.0 if bname.startswith("Left") else (-1.0 if bname.startswith("Right") else 0.0)
+            part = bname[4:] if side > 0 else bname[5:]
+            if side and part in ("Arm", "ForeArm", "Hand"):
+                band = wv[np.abs(wv[:, 2] - hw.z) <= Hh * 0.08]
+                # 그 높이에 살이 없으면(팔 없는 로브의 손 높이 등) **메시 전체 경계**를 상한으로 쓴다 —
+                # 어떤 팔 뼈도 메시 밖으로는 못 나간다. 전설적인_김민규는 이게 없으면 손이 13% 밖에 남았다.
+                edge = float(wv[:, 0].max() if side > 0 else wv[:, 0].min())
+                if len(band) >= 20:
+                    e2 = float(band[:, 0].max() if side > 0 else band[:, 0].min())
+                    edge = e2 if abs(e2) < abs(edge) else edge
+                if abs(hw.x) > abs(edge) * 0.85:
+                    pulled[bname] = (round(hw.x, 4), round(edge * 0.85, 4))
+                    hw = Vector((edge * 0.85, hw.y, hw.z))
+            tbl2.append((bname, hw, tw, parent))
+        if pulled:
+            report["팔 뼈 당김"] = {k: "%.3f → %.3f" % v for k, v in pulled.items()}
+        table2 = tbl2
+    else:
+        table2 = [(bname, G @ Vector(h), G @ Vector(t), parent) for bname, h, t, parent in table]
+    for bname, h, t, parent in table2:
         eb = data.edit_bones.new(PREFIX + bname)
-        eb.head = G @ Vector(h)
-        eb.tail = G @ Vector(t)
+        eb.head = Vector(h)
+        eb.tail = Vector(t)
         d = (eb.tail - eb.head).normalized()
         eb.align_roll(Vector((0, 0, 1)) if abs(d.y) > 0.7 else Vector((0, -1, 0)))
-    for bname, h, t, parent in table:
+    for bname, h, t, parent in table2:
         if parent:
             data.edit_bones[PREFIX + bname].parent = data.edit_bones[PREFIX + parent]
     bpy.ops.object.mode_set(mode="OBJECT")

@@ -917,8 +917,11 @@ UNITS = {
                       drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_yasakani", "r_hand_yasakani", "r_hand_yubisashi",
                                    "l_light_leg", "r_light_leg", "l_light_shoes", "r_light_shoes", "open_watch"],
                       # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
-                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
-                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
+                      # ⚠️ 2026-09-24: 표식 여덟(model_root·HELPER_*·pre/post_flag·eff_muzzle_*)을 drop_bones에서 **뺐다**.
+                      #   이 항목은 no_nulls=True라 Null 노드가 뼈로 안 살아나는데 drop_bones는 없는 뼈에 assert를 건다 —
+                      #   **그대로 두면 오늘 돌릴 때 그 자리에서 죽는다**(「뺄 뼈가 없다 model_root」). 181개 항목을 한 번씩
+                      #   돌려 보는 검사에서 히든_석성례 포함 여덟 종이 같은 이유로 걸렸다. 실제 뼈인 world_joint만 남긴다.
+                    drop_bones=["world_joint"],
                       rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
                       merge_bones=[dict(pattern=r"^(coat_root|c_coat0|[lr]_coat_kata|[lr]_arm0|[lr]_coat0)", into="mixamorig:Spine1"),   # Head 자손 없음(Head 병합 불필요)
                                    dict(pattern=r"^suso[AB]$", into="mixamorig:Hips")],
@@ -993,8 +996,11 @@ UNITS = {
                       archive_rgb={"pl_bigmom_orig01/pl_bigmom_orig01_diff.png": "pl_bigmom_orig01_diff.png"},
                       drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_sp_open", "r_hand_sp_open"],
                       # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
-                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
-                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
+                      # ⚠️ 2026-09-24: 표식 여덟(model_root·HELPER_*·pre/post_flag·eff_muzzle_*)을 drop_bones에서 **뺐다**.
+                      #   이 항목은 no_nulls=True라 Null 노드가 뼈로 안 살아나는데 drop_bones는 없는 뼈에 assert를 건다 —
+                      #   **그대로 두면 오늘 돌릴 때 그 자리에서 죽는다**(「뺄 뼈가 없다 model_root」). 181개 항목을 한 번씩
+                      #   돌려 보는 검사에서 히든_석성례 포함 여덟 종이 같은 이유로 걸렸다. 실제 뼈인 world_joint만 남긴다.
+                    drop_bones=["world_joint"],
                       rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
                       merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
                                    dict(pattern=r"^([bl]_cloak_0|r_croak_0)", into="mixamorig:Spine1"),
@@ -1156,8 +1162,11 @@ UNITS = {
                     archive_rgb={"ichiji/pl_ichiji_orig01_diff.png": "pl_ichiji_orig01_diff.png"},
                     drop_meshes=["face_attack", "face_damage", "face_sp01", "l_hand_close", "r_hand_close", "l_hand_sp01", "r_hand_sp01", "l_hand_sp02", "r_hand_sp02"],
                     # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
-                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
-                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
+                      # ⚠️ 2026-09-24: 표식 여덟(model_root·HELPER_*·pre/post_flag·eff_muzzle_*)을 drop_bones에서 **뺐다**.
+                      #   이 항목은 no_nulls=True라 Null 노드가 뼈로 안 살아나는데 drop_bones는 없는 뼈에 assert를 건다 —
+                      #   **그대로 두면 오늘 돌릴 때 그 자리에서 죽는다**(「뺄 뼈가 없다 model_root」). 181개 항목을 한 번씩
+                      #   돌려 보는 검사에서 히든_석성례 포함 여덟 종이 같은 이유로 걸렸다. 실제 뼈인 world_joint만 남긴다.
+                    drop_bones=["world_joint"],
                     rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
                     merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
                                  dict(pattern=r"^(coat_root|[bf]_c?_?[lr]?_?coat_0|f_coat_0|b_[clr]_coat_0|[lr]_coat_0|[lr]_coat_shoulder|[bflr]_collar|scarf_)", into="mixamorig:Spine1"),
@@ -1212,8 +1221,11 @@ UNITS = {
                     archive_rgb={"pl_sengoku_orig02/pl_sengoku_orig02_diff.png": "pl_sengoku_orig02_diff.png"},
                     drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close"],
                     # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
-                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
-                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
+                      # ⚠️ 2026-09-24: 표식 여덟(model_root·HELPER_*·pre/post_flag·eff_muzzle_*)을 drop_bones에서 **뺐다**.
+                      #   이 항목은 no_nulls=True라 Null 노드가 뼈로 안 살아나는데 drop_bones는 없는 뼈에 assert를 건다 —
+                      #   **그대로 두면 오늘 돌릴 때 그 자리에서 죽는다**(「뺄 뼈가 없다 model_root」). 181개 항목을 한 번씩
+                      #   돌려 보는 검사에서 히든_석성례 포함 여덟 종이 같은 이유로 걸렸다. 실제 뼈인 world_joint만 남긴다.
+                    drop_bones=["world_joint"],
                     rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
                     merge_bones=[dict(pattern=r"^(coat_root|c_coat\d*|c_collar|l_coat\d*|l_collar|l_coat_arm\d*|l_epaulette_0[12]_joint"
                                         r"|r_coat\d*|r_collar|r_coat_arm\d*|r_epaurette_0[12]_joint)$", into="mixamorig:Spine1"),
@@ -1297,8 +1309,11 @@ UNITS = {
                                  "l_hand_close_magma", "r_hand_close_magma",
                                  "l_sp01_dog", "r_sp01_dog", "l_sp01_dog_eye", "r_sp01_dog_eye"],
                     # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
-                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
-                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
+                      # ⚠️ 2026-09-24: 표식 여덟(model_root·HELPER_*·pre/post_flag·eff_muzzle_*)을 drop_bones에서 **뺐다**.
+                      #   이 항목은 no_nulls=True라 Null 노드가 뼈로 안 살아나는데 drop_bones는 없는 뼈에 assert를 건다 —
+                      #   **그대로 두면 오늘 돌릴 때 그 자리에서 죽는다**(「뺄 뼈가 없다 model_root」). 181개 항목을 한 번씩
+                      #   돌려 보는 검사에서 히든_석성례 포함 여덟 종이 같은 이유로 걸렸다. 실제 뼈인 world_joint만 남긴다.
+                    drop_bones=["world_joint"],
                     drop_bones_re=r"^[LR]Arm_(Upper_Magma|Upper_Fore_Magma|sp_joint0[12]|Upper_Palm_Magma)$"
                                   r"|^[LR]_sp_dog01_[LR]ear$|^[LR]sp_dog_jaw$",
                     rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
@@ -2370,8 +2385,11 @@ UNITS = {
                     # 남아 있었음(다른 pl_ 유닛처럼 드롭을 깜빡함) — 오늘 교훈 그대로 적용해
                     # 드롭, Hips를 진짜 뿌리로.
                     # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
-                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
-                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
+                      # ⚠️ 2026-09-24: 표식 여덟(model_root·HELPER_*·pre/post_flag·eff_muzzle_*)을 drop_bones에서 **뺐다**.
+                      #   이 항목은 no_nulls=True라 Null 노드가 뼈로 안 살아나는데 drop_bones는 없는 뼈에 assert를 건다 —
+                      #   **그대로 두면 오늘 돌릴 때 그 자리에서 죽는다**(「뺄 뼈가 없다 model_root」). 181개 항목을 한 번씩
+                      #   돌려 보는 검사에서 히든_석성례 포함 여덟 종이 같은 이유로 걸렸다. 실제 뼈인 world_joint만 남긴다.
+                    drop_bones=["world_joint"],
                     rename_bones=YORK_RENAME, no_nulls=True, orient_snap=True,
                     merge_bones=[dict(pattern=r"^(b_collar|f_collar|l_collar|r_collar)$", into="mixamorig:Spine1"),
                                  dict(pattern=r"^(b_l_skirt_01|b_r_skirt_01|f_l_skirt_01|f_r_skirt_01|s_l_skirt_01|s_r_skirt_01)$",
@@ -2513,14 +2531,18 @@ UNITS = {
                     archive_rgb={"pl_alvida_orig01/pl_alvida_orig01_diff.png": "pl_alvida_orig01_diff.png"},
                     drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close",
                                  "weapon_01", "weapon_02"],
-                    # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
-                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
-                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
+                    # ⚠️ 2026-09-24: 표식 이름 여덟(model_root·HELPER_*·pre/post_flag·eff_muzzle_*)을 drop_bones에서 **뺐다**.
+                    #   이 항목은 no_nulls=True라 Null 노드가 애초에 뼈로 안 살아난다 — 그런데 drop_bones는 없는 뼈에 assert를 건다.
+                    #   그래서 **이 항목은 오늘 돌리면 그대로 멈췄다**(「뺄 뼈가 없다 model_root」). 커밋된 FBX는 그 전에 나온 것이라
+                    #   지금 설정과 어긋나 있었다. 실제 뼈인 world_joint만 남긴다.
+                    drop_bones=["world_joint"],
                     # 🔴 1차 배치: "기본 자세≠쉬는 자세" 2.1991(다른 pl_ 유닛은 0.0) — 렌더로
                     # 확인하니 몸 전체가 대각선으로 기울어진 채 굳어 있었음(가져온 기본 자세가
                     # 진짜 쉬는 자세가 아니라 애니메이션 중간 프레임으로 보임) → use_rest_pose로
                     # 진짜 결합 자세를 씀.
                     use_rest_pose=True,
+                    # 🔴 원본 리그가 골반 뼈(Body_Pelvis)를 몸에서 떼어 놓았다 — 위 fit_hips 주석 참고. 양 넓적다리 한가운데로 옮긴다.
+                    fit_hips=True,
                     rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
                     merge_bones=[dict(under="Bellyband", into="mixamorig:Hips", with_root=True),
                                  dict(under="Body_Bust", into="mixamorig:Spine1", with_root=True),
@@ -2548,8 +2570,11 @@ UNITS = {
                     drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close",
                                  "l_weapon", "r_weapon"],
                     # world_joint 밑 표식 뼈(가중치 0): 살린 Null 넷 + 이펙트 자리 eff_muzzle_a~c — 사람 뼈 위쪽에 안 붙는다
-                    drop_bones=["world_joint", "model_root", "HELPER_name", "HELPER_key", "pre_flag", "post_flag",
-                                "eff_muzzle_a", "eff_muzzle_b", "eff_muzzle_c"],
+                      # ⚠️ 2026-09-24: 표식 여덟(model_root·HELPER_*·pre/post_flag·eff_muzzle_*)을 drop_bones에서 **뺐다**.
+                      #   이 항목은 no_nulls=True라 Null 노드가 뼈로 안 살아나는데 drop_bones는 없는 뼈에 assert를 건다 —
+                      #   **그대로 두면 오늘 돌릴 때 그 자리에서 죽는다**(「뺄 뼈가 없다 model_root」). 181개 항목을 한 번씩
+                      #   돌려 보는 검사에서 히든_석성례 포함 여덟 종이 같은 이유로 걸렸다. 실제 뼈인 world_joint만 남긴다.
+                    drop_bones=["world_joint"],
                     rename_bones=PL_RENAME, no_nulls=True, orient_snap=True,
                     merge_bones=[dict(under="coat_root", into="mixamorig:Spine1", with_root=True),
                                  dict(under="l_horn_joint_01", into="mixamorig:Head", with_root=True),
@@ -4509,7 +4534,22 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     cx, cy = (lo.x + hi.x) / 2, (lo.y + hi.y) / 2
     if cfg["kind"] == "human" and arm is not None:
         hips = pick(arm, cfg.get("hips"), HIPS)
-        if hips is not None:
+        if cfg.get("fit_hips"):
+            # 🔴 fit_hips 유닛은 **골반 뼈를 기준으로 가운데를 잡으면 안 된다** — 그 뼈가 몸 밖에 있는 게 문제였으니까.
+            #   양 넓적다리 머리의 한가운데가 진짜 골반 자리다(아래 edit 단계에서 뼈도 거기로 옮긴다).
+            #   원본은 아직 이름을 안 바꿨으므로 rename_bones 표를 거꾸로 찾아 원본 이름을 얻는다.
+            inv = {v: k for k, v in (cfg.get("rename_bones") or {}).items()}
+            got = []
+            for t in ("mixamorig:LeftUpLeg", "mixamorig:RightUpLeg"):
+                b = arm.data.bones.get(t) or arm.data.bones.get(inv.get(t, ""))   # 이름을 이미 바꿨을 수도, 아닐 수도
+                if b is not None:
+                    got.append(pose_head(arm, b))
+            assert len(got) == 2, (f"{name}: fit_hips인데 원본에서 양 넓적다리를 못 찾았다 "
+                                   f"(찾은 이름 {[inv.get(t, t) for t in ('mixamorig:LeftUpLeg', 'mixamorig:RightUpLeg')]}, "
+                                   f"원본 뼈 예시 {[b.name for b in list(arm.data.bones)[:6]]})")
+            h = R @ ((got[0] + got[1]) / 2.0)
+            cx, cy = h.x, h.y
+        elif hips is not None:
             h = R @ pose_head(arm, hips)
             cx, cy = h.x, h.y
     G = Matrix.Scale(s, 4) @ Matrix.Translation((-cx, -cy, -lo.z)) @ R.to_4x4()
@@ -4607,6 +4647,25 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             eb.parent = data.edit_bones[ab["parent"]]
             eb.use_connect = False
             report.setdefault("거울로 만든 뼈", []).append(ab["name"])
+        if cfg.get("fit_hips"):
+            # 🔴 원본 리그가 **골반 뼈를 몸 밖에 세워 둔** 경우(히든_석성례/알비다, 2026-09-24 전수 검사 A군).
+            #   원본 실측: Body_Pelvis가 (0.0101, 0.0163, −0.0130)인데 자식인 양 넓적다리·배는 (0, 0, +0.007) 언저리다 —
+            #   모델 크기가 0.035밖에 안 되니 **모델 절반만큼 떨어져** 있는 것이고, 키 1.8로 키우면 0.8m가 된다.
+            #   쉬는 자세에선 뼈가 안 움직이니 멀쩡해 보이지만, 클립을 먹이면 그 먼 지점을 축으로 몸이 돌아간다.
+            #   고침: **골반은 양 넓적다리 머리의 한가운데**다. 거기로 옮긴다(자식은 연결돼 있지 않아 안 따라온다 — 그게 맞다).
+            hb = data.edit_bones.get("mixamorig:Hips")
+            lu = data.edit_bones.get("mixamorig:LeftUpLeg")
+            ru = data.edit_bones.get("mixamorig:RightUpLeg")
+            assert hb and lu and ru, f"{name}: fit_hips인데 Hips·LeftUpLeg·RightUpLeg가 다 있지 않다"
+            before_h = hb.head.copy()
+            mid = (lu.head + ru.head) / 2.0
+            sp = data.edit_bones.get("mixamorig:Spine")
+            hb.head = mid
+            hb.tail = sp.head if sp is not None else mid + (hb.tail - before_h)
+            if (hb.tail - hb.head).length < 1e-5:
+                hb.tail = mid + Vector((0.0, 0.0, 0.05))
+            report["골반 옮김"] = {"전": [round(c, 4) for c in before_h], "후": [round(c, 4) for c in hb.head],
+                                "옮긴 거리": round((hb.head - before_h).length, 4)}
         for child_name, parent_name in cfg.get("reparent_bones", {}).items():
             eb, par = data.edit_bones.get(child_name), data.edit_bones.get(parent_name)
             assert eb is not None and par is not None, f"{name}: 다시 붙일 뼈가 없다 {child_name} → {parent_name}"

@@ -40,8 +40,9 @@ def measure(fbx, idles):
     V0 = np.concatenate([np.array([(o.matrix_world @ v.co)[:] for v in o.data.vertices]) for o in ms])
     H = float(V0[:, 2].max() - V0[:, 2].min())
     name = os.path.splitext(os.path.basename(fbx))[0]
-    if not R.can_retarget(arm, idles):
-        print(f"  {name}: 사람 필수 뼈가 없어 리타겟 안 함(Generic·네발·소품) — 쉬는 자세 높이 {H:.3f}")
+    mapping = R.bone_map(arm, idles)
+    if mapping is None:
+        print(f"  {name}: 사람 뼈대를 못 짜 맞춰 리타겟 안 함(Generic·네발·소품) — 쉬는 자세 높이 {H:.3f}")
         return None
     print(f"  {name}: 쉬는 자세 높이 {H:.4f} · 뼈 {len(arm.pose.bones)}")
     print("  %6s | %-26s | %-26s | %7s | %7s" % ("프레임", "뼈 퍼짐(x,y,z)", "메시 크기(x,y,z)", "뼈/높이", "메시/높이"))
@@ -51,7 +52,7 @@ def measure(fbx, idles):
         for pb in arm.pose.bones:
             pb.matrix_basis.identity()
         bpy.context.view_layer.update()
-        R.apply_idle(arm, idle)
+        R.apply_idle(arm, idle, mapping)
         B = np.array([(arm.matrix_world @ pb.head)[:] for pb in arm.pose.bones])
         bs = B.max(0) - B.min(0)
         dg = bpy.context.evaluated_depsgraph_get()

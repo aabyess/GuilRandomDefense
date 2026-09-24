@@ -1051,6 +1051,33 @@ def build(name, cfg, out_dir=None, render_dir=None):
 
     Hf = cfg["height"]
     table = bone_table(cfg["joints"])
+    # 🔴 발끝 뼈는 **표를 믿지 않고 메시에서 잰다**(2026-09-24, PM 요청 — 전수 검사 C군).
+    #   이 파일의 joints 표들은 ToeBase y를 −0.14로 **복붙**해 왔다. 그런데 신발 앞끝은 모델마다 다르다 —
+    #   제한_강보명·희귀함_유재헌·전설적인_이재윤·희귀함_윤현모·초월_박민석_ADAP **다섯 종의 발끝 좌표가
+    #   ±0.16, −0.25까지 똑같았다.** 결함 다섯이 아니라 복붙 한 줄이었다.
+    #   한 종씩 고치면 여섯 번째가 또 같은 값으로 태어나므로 **여기서** 고친다.
+    #   재는 법: 발목(Foot) 높이 아래·그쪽 발 x 둘레의 정점이 신발이다. 그 앞끝(y 최소)과 뒤끝(y 최대)을 재서
+    #   ToeBase는 앞에서 35% 되는 자리, ToeTip은 앞끝 바로 안쪽에 둔다. x·z는 표 그대로 둔다(그쪽은 안 틀렸다).
+    if cfg.get("fit_toes", True) and "ToeBase" in cfg["joints"]:
+        vz = np.array([v.co[:] for v in body.data.vertices])
+        fx, fy, fz = (c * Hf for c in cfg["joints"]["Foot"])
+        fitted, tbl = {}, []
+        for side, sx in (("Left", 1.0), ("Right", -1.0)):
+            sel = vz[(vz[:, 2] <= fz * 1.6) & (np.abs(vz[:, 0] - sx * fx) <= max(fx, Hf * 0.06) * 1.8)]
+            if len(sel) < 20:
+                continue
+            y0, y1 = float(sel[:, 1].min()), float(sel[:, 1].max())
+            fitted[side + "ToeBase"] = y0 + 0.35 * (y1 - y0)
+            fitted[side + "ToeTip"] = y0 + 0.05 * (y1 - y0)
+        for bname, h, t, parent in table:
+            h = (h[0], fitted[bname] / Hf, h[2]) if bname in fitted else h
+            tn = bname.replace("ToeBase", "ToeTip")
+            t = (t[0], fitted[tn] / Hf, t[2]) if tn in fitted and bname.endswith("ToeBase") else t
+            tbl.append((bname, h, t, parent))
+        if fitted:
+            table = tbl
+            report["발끝 다시 잼"] = {k: round(v, 4) for k, v in fitted.items()}
+            report["발끝 표값"] = round(cfg["joints"]["ToeBase"][1] * Hf, 4)
     data = bpy.data.armatures.new("Armature")
     arm = bpy.data.objects.new("Armature", data)
     scene.collection.objects.link(arm)
