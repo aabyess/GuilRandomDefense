@@ -56,6 +56,9 @@ public static class ClaudeCommands
         if (EditorApplication.timeSinceStartup < nextPoll) return;
         nextPoll = EditorApplication.timeSinceStartup + 1.0;
         if (EditorApplication.isCompiling || EditorApplication.isUpdating || EditorApplication.isPlayingOrWillChangePlaymode) return;
+        // gameshot이 플레이에서 막 나와 결과를 아직 안 썼으면 다음 명령을 집지 않는다 — 같은 프레임에 Poll이 먼저 돌면
+        // 다음 gameshot이 「앞선 gameshot이 아직 안 끝났다」로 거절됐다(2026-09-24 outbox 2048).
+        if (LoadGameShot() != null) return;
 
         string inbox = Path.Combine(Folder, "inbox");
         if (!Directory.Exists(inbox)) return;
@@ -1152,7 +1155,7 @@ public static class ClaudeCommands
                     {
                         job.report += DescribeLaneHits(job, inStage);
                         foreach (GameObject shotUnit in shotUnits)
-                            job.report += $"   👁 찍는 순간 {(shotUnit != null ? shotUnit.name : "(사라짐)")}: {DescribeOnScreen(shotUnit)}\n";
+                            job.report += $"   👁 찍는 순간 {(shotUnit != null ? shotUnit.name : "(사라짐)")} 위치 {(shotUnit != null ? shotUnit.transform.position.ToString("F0") : "-")}: {DescribeOnScreen(shotUnit)}\n";
                     }
                     ScreenCapture.CaptureScreenshot(job.file, job.superSize);   // 이 프레임 끝에 Game 뷰(UI 포함)를 파일로 쓴다
                     Advance(job, "capturing");
@@ -1228,7 +1231,17 @@ public static class ClaudeCommands
             return $"❌ {lane.name}(레인 {laneIndex})의 섬 경계를 못 잡았다 — {(island == null ? "렌더러 없음" : $"크기 {island.Value.size}")}. " +
                    $"LaneMarker 위치 {lane.LaneCenter}. 숫자를 내지 않고 끝낸다(빈 경계로 재면 「0%」 같은 거짓 숫자가 나온다).";
 
-        Bounds area = island.Value;
+        // 🔴 앞치마·우리도 잰다(2026-09-24 PM). 레인 섬이 「필드만」이 된 뒤 새 유닛이 생기는 우리와 그 앞 앞치마는 **섬 밖**인데,
+        //    예전 navlane은 섬 경계만 찍어서 앞치마를 레인간 가로벽이 통째로 덮은 사고(cc002dea, z 1089.5~1288.8 100%)를 못 봤다.
+        //    이제 우리 경계(렌더러 + 첫 줄 칸 자리)까지 넓혀 찍고, 섬 안과 섬 밖(앞치마·우리)을 따로 센다.
+        Bounds field = island.Value;
+        Bounds area = field;
+        bool hasPen = false;
+        if (lane.UnitPen != null)
+        {
+            foreach (Renderer penRenderer in lane.UnitPen.GetComponentsInChildren<Renderer>()) { area.Encapsulate(penRenderer.bounds); hasPen = true; }
+            foreach (Vector3 slot in lane.FirstRowSlotPositions()) { area.Encapsulate(slot); hasPen = true; }
+        }
         area.Expand(new Vector3(area.size.x * 0.15f, 0f, area.size.z * 0.15f));   // 섬 바깥 경로까지 보이게 여유
         float step = area.size.x / columns;
         int rows = Mathf.CeilToInt(area.size.z / step);
@@ -1237,6 +1250,8 @@ public static class ClaudeCommands
         WaypointPath path = LanePathNear(lane.LaneCenter);
         int seaArea = NavMesh.GetAreaFromName("Sea");
         int walk = 0, sea = 0, none = 0, air = 0;
+        int outWalk = 0, outSea = 0, outNone = 0;   // 섬 밖이면서 앞치마·우리 쪽(섬과 우리 사이 z)인 칸
+        float apronMinZ = Mathf.Min(area.min.z, field.min.z), apronMaxZ = field.min.z;
         Dictionary<string, int> blockers = new Dictionary<string, int>();
         StringBuilder map = new StringBuilder();
         for (int row = rows - 1; row >= 0; row--)   // 위(+z)가 윗줄
@@ -1257,16 +1272,18 @@ public static class ClaudeCommands
                     continue;
                 }
                 char mark;
+                bool apron = hasPen && z < apronMaxZ && x >= field.min.x && x <= field.max.x;
                 if (NavMesh.SamplePosition(ground.point, out NavMeshHit hit, step * 0.5f, NavMesh.AllAreas)
                     && Mathf.Abs(hit.position.y - ground.point.y) < 6f)
                 {
-                    if (hit.mask == 1 << seaArea) { mark = '~'; sea++; }
-                    else { mark = '#'; walk++; }
+                    if (hit.mask == 1 << seaArea) { mark = '~'; sea++; if (apron) outSea++; }
+                    else { mark = '#'; walk++; if (apron) outWalk++; }
                 }
                 else
                 {
                     mark = '.';
                     none++;
+                    if (apron) outNone++;
                     string key = ground.collider.name;
                     blockers[key] = blockers.TryGetValue(key, out int n) ? n + 1 : 1;
                 }
@@ -1292,7 +1309,11 @@ public static class ClaudeCommands
         StringBuilder sb = new StringBuilder($"🗺 {lane.name}(레인 {laneIndex}) 섬 경계 x {island.Value.min.x:F0}~{island.Value.max.x:F0} · z {island.Value.min.z:F0}~{island.Value.max.z:F0} · 칸 {step:F1}\n");
         sb.AppendLine($"   높이 차: {gap} · 설계값 MapLayout.IslandTop {MapLayout.IslandTop:F2}" +
                       (Mathf.Abs(islandTop - MapLayout.IslandTop) > 0.5f ? " ⚠️ 잰 섬 윗면과 설계값이 다르다 — 재는 자리(광선이 맞힌 것)를 의심할 것" : ""));
-        sb.AppendLine($"   땅 칸 {land}개 중 걸을 수 있음 {walk}({(land > 0 ? 100f * walk / land : 0):F0}%) · 바다 영역 {sea} · NavMesh 없음 {none}({(land > 0 ? 100f * none / land : 0):F0}%) · 콜라이더 없음 {air}");
+        int outLand = outWalk + outSea + outNone;
+        sb.AppendLine(hasPen
+            ? $"   섬 밖 앞치마·우리 구역(z {area.min.z:F0}~{apronMaxZ:F0}, 섬 가로폭 안): 칸 {outLand}개 중 걸을 수 있음 {outWalk}({(outLand > 0 ? 100f * outWalk / outLand : 0):F0}%) · 바다 영역 {outSea} · NavMesh 없음 {outNone}"
+            : "   ⚠️ 우리(UnitPen)를 못 찾아 섬 필드만 쟀다 — 앞치마·우리는 측정 밖");
+        sb.AppendLine($"   (전체) 땅 칸 {land}개 중 걸을 수 있음 {walk}({(land > 0 ? 100f * walk / land : 0):F0}%) · 바다 영역 {sea} · NavMesh 없음 {none}({(land > 0 ? 100f * none / land : 0):F0}%) · 콜라이더 없음 {air}");
         sb.AppendLine($"   굽기 설정(에이전트 0): 반경 {settings.agentRadius} · 높이 {settings.agentHeight} · 오르기 {settings.agentClimb} · 경사 {settings.agentSlope}°");
         foreach (var surface in UnityEngine.Object.FindObjectsByType<Unity.AI.Navigation.NavMeshSurface>(FindObjectsSortMode.None))
             sb.AppendLine($"   NavMeshSurface {surface.name}: 에이전트 {surface.agentTypeID} · 수집 {surface.collectObjects} · 기하 {surface.useGeometry} · 레이어 {surface.layerMask.value} · " +
@@ -1422,8 +1443,13 @@ public static class ClaudeCommands
         // 🔴 Warp는 **항상** 한다. 레인 가운데(첫 소환 자리)는 NavMesh 위가 아닐 수 있어 isOnNavMesh가 거짓인데, 그때 transform만 옮기면
         //    에이전트가 NavMesh 밖에 남아 UnitCombat의 추격·복귀가 「active agent … placed on a NavMesh」 오류로 멎는다
         //    (2026-09-23 outbox 2016: 641건, 유닛이 제자리에서만 때렸다). Warp는 에이전트를 새 자리의 NavMesh에 올린다.
+        // 🔴 옮기는 건 게임의 「모으기(V)」 경로(UnitCombat.SnapTo)로 한다 — 복귀 지점(commandedPosition)까지 같이 옮긴다.
+        //    예전엔 agent.Warp만 해서 복귀 지점이 **처음 소환한 레인 가운데**에 남았고, 유닛이 적을 쫓은 뒤 전부 레인 가운데로 돌아가
+        //    한 점에 모였다(2026-09-24 outbox 2049: 모서리 5기가 찍는 순간 전부 화면 (1005, 826)). 09-23의 변·모서리 판도 같은 영향을 받았다.
         bool onMesh = false;
-        if (unit.TryGetComponent(out NavMeshAgent agent)) onMesh = agent.Warp(target) && agent.isOnNavMesh;
+        if (unit.TryGetComponent(out UnitCombat combat) && unit.TryGetComponent(out NavMeshAgent agent))
+            onMesh = combat.SnapTo(target) && agent.isOnNavMesh;
+        else if (unit.TryGetComponent(out NavMeshAgent bareAgent)) onMesh = bareAgent.Warp(target) && bareAgent.isOnNavMesh;
         else unit.transform.position = target;
 
         // 경로까지 거리 = 경로의 모든 변 중 가장 가까운 것(모서리 배치에선 두 변 모두 가깝다).
