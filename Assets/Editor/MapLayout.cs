@@ -74,8 +74,19 @@ public static class MapLayout
         public float laneToIsland;      // 레인 무리 남쪽 끝 ↔ 옮긴 섬 무리 북쪽 끝
         public float storyToGacha;      // 스토리존 ↔ 뽑기섬
         public float gachaToCombine;    // 뽑기섬 ↔ 조합판
+        public float combineToTranscend;   // 조합판 윗변 ↔ 아래 전시 섬(초월)
+        public float transcendToImmortal;  // 초월 전시 ↔ 불멸 전시
         public float islandClusterNorthZ;
     }
+
+    /// <summary>
+    /// 한 덩어리로 움직이는 섬들. LeftShift·DownShift를 타는 것이 곧 이 목록이다.
+    /// ⚠️ 섬을 이 무리에 넣거나 빼면 **여기도 같이 고쳐야 한다** — 안 고치면 보고문의
+    ///    「레인↔섬」이 엉뚱한 섬을 기준으로 재서 500이라고 거짓말한다.
+    ///    2026-09-24에 전시 둘이 무리 밖에 있어 「저것만 안 따라왔다」가 났다.
+    /// </summary>
+    static readonly string[] MovedZoneNames =
+        { "StoryZone", "GachaIsland", "CombineTable", "TranscendDisplay", "ImmortalDisplay" };
 
     static Island Find(Island[] set, string name)
     {
@@ -92,16 +103,25 @@ public static class MapLayout
         Island story = Zone("StoryZone");
         Island gacha = Zone("GachaIsland");
         Island combine = Zone("CombineTable");
+        Island transcend = Zone("TranscendDisplay");
+        Island immortal = Zone("ImmortalDisplay");
 
         float north = float.MinValue;
         foreach (Island island in SealIslands)
             north = Mathf.Max(north, island.center.y + island.size.y * 0.5f);
-        foreach (Island island in new[] { story, gacha, combine })
+        foreach (string name in MovedZoneNames)
+        {
+            Island island = Zone(name);
             north = Mathf.Max(north, island.center.y + island.size.y * 0.5f);
+        }
         north += CliffMargin;
 
         return new SpacingReadout
         {
+            combineToTranscend = (transcend.center.y - transcend.size.y * 0.5f - CliffMargin)
+                                 - (combine.center.y + combine.size.y * 0.5f + CliffMargin),
+            transcendToImmortal = (immortal.center.y - immortal.size.y * 0.5f - CliffMargin)
+                                  - (transcend.center.y + transcend.size.y * 0.5f + CliffMargin),
             laneToIsland = LaneClusterSouthEdgeZ - north,
             storyToGacha = (gacha.center.x - gacha.size.x * 0.5f - CliffMargin)
                            - (story.center.x + story.size.x * 0.5f + CliffMargin),
@@ -250,14 +270,49 @@ public static class MapLayout
     // 무리 중 가장 북쪽은 뽑기섬(윗변 z=62.5)이라 그것을 기준으로 내린다. 일곱이 같은 양만큼
     // 내려가므로 서로의 간격은 그대로다. **달성된 간격은 MapGenerator 보고문이 매번 찍는다** —
     // 이 유도식이 섬 정의와 어긋나면 그 줄에서 드러난다(박아 둔 문턱을 믿지 않는다).
-    public const float LaneToIslandGapZ = 500f;
+    // 🔴 이 값은 2026-09-24 하루에 **세 번** 움직였다. 그 이력이 값이다:
+    //    ① 34.6  — 아무도 정한 적 없는 값(앞치마를 안 센 채 237로 알고 있었다)
+    //    ② 500   — 사장님 「간격도 벌려줘」에 PM이 정함
+    //    ③ 200   — 사장님 「너무 멀어졌는데 레인이랑 위에 레인이랑 좀 붙여봐」
+    //    ②→③은 결함 수정이 아니다. **500이 정답이었던 적이 없고, 200도 그렇다** —
+    //    사장님이 화면을 보고 정하시는 값이니 **이 상수 하나만 고치면 움직이게** 둔 것이 요점이다.
+    //    ⚠️ 그래서 여기에 기대는 수를 어디에도 박지 않는다(DownShift가 이 값에서 유도된다).
+    //
+    // ⚠️ 그리고 이 지표는 **z만 비교한다.** 전시 섬 둘은 레인 아래가 아니라 **오른쪽**에 있는데
+    //    (레인 x −2013~−220 vs 전시 x −111~349) 무리 최북단이라 기준이 된다 — 즉 지금 이 값은
+    //    「레인과 전시 섬의 z 차」다. 「x가 겹치는 섬만」으로 재는 안을 PM에게 숫자로 냈다(09-24).
+    public const float LaneToIslandGapZ = 200f;
 
     /// <summary>레인 무리의 실제 남쪽 끝 — 앞치마와 치마까지 포함한다.</summary>
     public const float LaneClusterSouthEdgeZ = LaneFieldBottomZ - LaneApronDepth - CliffMargin;
 
-    // 내리기 전 무리의 북쪽 끝(뽑기섬 윗변 + 치마). 아래 GachaIsland 정의와 같은 수를 쓴다 —
-    // 뽑기섬 z를 고치면 이 줄도 같이 고쳐야 하고, 안 고치면 보고문의 간격이 500에서 벗어난다.
-    const float MovedClusterNorthEdgeBeforeShift = -99.20f * Scale + 228.40f * Scale * 0.5f + CliffMargin;
+    // 🔴 2026-09-24 사장님 지시 「초월, 불멸은 조합판 전설 위에 오게끔 해줄래?」 →
+    //    두 전시 섬이 조합판 위로 쌓여 **무리의 북쪽 끝이 뽑기섬에서 불멸 전시로 바뀐다.**
+    //    (그래서 아래 DownShift가 −465.4 → −1098.9로 커진다. 그 차 633.5가 「추가 하강」이다.)
+    //
+    // 간격 100인 근거(PM 확정): IslandGapX 300은 **나란히 놓인 섬 사이**에 정한 값이다.
+    // 위아래로 얹는 것은 다른 관계이고, 사장님 말씀이 「조합판 전설 **위에** 오게끔」이라
+    // **붙어 보여야** 그 말이 맞다. 300이면 떨어진 섬 셋으로 보이고 100이면 얹힌 것으로 읽힌다.
+    // 그리고 하강량의 절반이 이 간격 두 겹이다 — 300이면 하강이 1033.5, 100이면 633.5다.
+    public const float DisplayStackGap = 100f;
+
+    // 위아래 순서: **불멸이 위, 초월이 아래.** 사다리대로다 —
+    // UnitGradeExtensions.Tier()가 초월 9 · 제한됨 10 · **불멸 11**이다(초월이 위가 아니다).
+    // 지금 씬 순서와도 같으므로, 뒤집으면 사장님이 안 시킨 변화가 화면에 난다.
+    const float DisplaySizeZ = 67.195f * Scale;        // 280.0 — 두 섬 깊이가 같다
+    const float TranscendSizeX = 110.391f * Scale;     // 460.0
+    const float ImmortalSizeX = 67.195f * Scale;       // 280.0
+    const float CombineTopZBeforeShift = -17.04f * Scale;   // −71.0 (「윗변 z=−71」)
+
+    // 치마끼리 DisplayStackGap이 되게 양쪽 치마 몫(CliffOverhang)을 더한다 — x 간격과 같은 자다.
+    const float TranscendBottomBeforeShift = CombineTopZBeforeShift + DisplayStackGap + CliffOverhang;
+    const float ImmortalBottomBeforeShift = TranscendBottomBeforeShift + DisplaySizeZ
+                                          + DisplayStackGap + CliffOverhang;
+
+    // 내리기 전 무리의 북쪽 끝 = **불멸 전시 윗변 + 치마**.
+    // ⚠️ 예전에는 뽑기섬 윗변이었다. 무리에 더 북쪽 섬이 들어오면 **이 줄을 같이 고쳐야 한다** —
+    //    안 고치면 보고문의 「레인↔섬」이 500에서 벗어나고, 그 줄이 그것을 고발한다.
+    const float MovedClusterNorthEdgeBeforeShift = ImmortalBottomBeforeShift + DisplaySizeZ + CliffMargin;
     const float DownShift = LaneClusterSouthEdgeZ - LaneToIslandGapZ - MovedClusterNorthEdgeBeforeShift;
 
     // 옮기는 셋의 x 중심 — StoryZone은 앞서 정한 자리 그대로, 나머지는 간격에서 유도한다.
@@ -308,9 +363,12 @@ public static class MapLayout
 
     // 조합판 윗변 — 예전 주석들이 말하는 「윗변 z=−71」이 이 값이다(초월 전시 아래변과의 경계).
     // 🔴 **세로를 줄일 때 윗변은 그대로 두고 밑변만 올린다.** 윗변을 내리면 표 머리가 같이
-    //    내려가 사장님이 보시는 자리가 바뀌고, 올리면 레인↔섬 간격을 정하는 섬이 뽑기섬에서
-    //    조합판으로 바뀐다(지금 뽑기섬 윗변 −402.9 · 조합판 −536.4).
-    const float CombineTopZ = -17.04f * Scale + DownShift;
+    //    내려가 사장님이 보시는 자리가 바뀐다.
+    // ⚠️ 2026-09-24부터 윗변은 **전시 섬 둘을 떠받치는 바닥**이기도 하다 — 초월·불멸이 여기서
+    //    DisplayStackGap씩 쌓여 올라가므로, 윗변을 움직이면 전시 섬도 같이 움직이고
+    //    무리의 북쪽 끝(=레인↔섬 500을 정하는 자리)까지 따라 바뀐다. DownShift가 유도식이라
+    //    500은 저절로 지켜지지만, **남쪽 무리 전체가 그만큼 더 내려간다**(바다 여유를 볼 것).
+    const float CombineTopZ = CombineTopZBeforeShift + DownShift;
     const float CombineCenterZ = CombineTopZ - CombineSizeZ * 0.5f;
     // ⚠️ 두 간격(x·z)은 **같은 자**를 써야 한다 — 둘 다 치마 기준이다. 안 그러면 보고문의
     //    「300」과 「500」이 서로 다른 뜻이 되고, 「x를 z만큼 벌려라」가 어긋난다.
@@ -320,6 +378,26 @@ public static class MapLayout
                              + IslandGapX + CliffOverhang + GachaSizeX * 0.5f;
     const float CombineCenterX = GachaCenterX + GachaSizeX * 0.5f
                                + IslandGapX + CliffOverhang + CombineSizeX * 0.5f;
+
+    /// <summary>조합판 왼쪽 변 — 표가 왼쪽 정렬이라 1열(흔함) 왼쪽 끝과 같은 자리다.</summary>
+    public const float CombineTableLeftX = CombineCenterX - CombineSizeX * 0.5f;
+
+    /// <summary>
+    /// 전설 열(7·8) 중심이 조합판 **왼쪽 변에서** 얼마나 오른쪽인지. 전시 섬 x가 여기 매달린다.
+    ///
+    /// ⚠️ **리터럴일 수밖에 없다** — 열 폭은 「그 열에 실제로 담긴 조합식의 최대 재료칸」이 정하고
+    ///    그건 에셋을 읽어야 안다. 섬 정의는 그 전에 정해진다(세로·가로와 같은 순환이다).
+    ///
+    /// 📌 그런데 **세계 좌표로 박지 않고 「왼쪽 변 기준 오프셋」으로 둔 이유**가 있다:
+    ///    이렇게 두면 조합판이 LeftShift로 움직이거나 폭이 바뀌어도 전시 섬이 **저절로 따라온다.**
+    ///    119.06 같은 절대값으로 박으면 다음 이동에서 「저것만 안 따라왔다」가 또 난다 —
+    ///    2026-09-24에 정확히 이 두 전시 섬에서 그 일이 났다(LeftShift에 안 들어가 남겨졌다).
+    ///    오프셋이 어긋나면 BuildCombineColumns 보고문이 실측값과 나란히 찍어 고발한다.
+    /// </summary>
+    public const float LegendColumnCenterOffset = 978.75f;
+
+    /// <summary>전시 섬 x 중심 — 전설 열 중심에 맞춘다(사장님 「전설 위에 오게끔」).</summary>
+    public const float DisplayCenterX = CombineTableLeftX + LegendColumnCenterOffset;
 
     // 물범 섬 — 4개. 물범을 잡으면 전체 플레이어에게 목재 1개씩.
     // 중심 간격을 34→40으로 넓혔다(사장님 지시, 2026-09-03: "너무 따닥 붙어있음") — 빈틈이
@@ -346,8 +424,24 @@ public static class MapLayout
         // 옛 z(52·8)를 그대로 쓰면 CombineTable과 겹친다. CombineTable 윗변(z=-70.8, Scale
         // 후)에서 40 띄우고 쌓아 올렸고, MapGenerator.cs:3508 Overlaps()와 같은 식으로 다른
         // 16개 섬 전부와 대조해 0건 확인했다(레인 때와 같은 방식, 별도 계산).
-        new Island("ImmortalDisplay",  150f * Scale, 102.990f * Scale, 67.195f * Scale, 67.195f * Scale, "display"),
-        new Island("TranscendDisplay", 150f * Scale,  26.197f * Scale, 110.391f * Scale, 67.195f * Scale, "display"),
+        // 🔴 2026-09-24 사장님 「초월, 불멸은 조합판 전설 위에 오게끔 해줄래?」 →
+        //    조합판 위로 옮겼다. 옛 자리(x 625.1 · z 429.2/109.2)는 **LeftShift에 안 들어가
+        //    남겨진 자리**였다 — 남쪽 무리가 왼쪽·아래로 가는데 이 둘만 제자리에 있었다.
+        //    이제 x는 DisplayCenterX(조합판 왼쪽 변 + 오프셋), z는 DownShift를 타므로
+        //    **다음 이동에도 저절로 따라온다.**
+        //
+        //    불멸이 **위**, 초월이 **아래**다 — Tier()가 초월 9 · 불멸 11이라 사다리대로이고,
+        //    지금 씬 순서와도 같다. 뒤집으면 사장님이 안 시킨 변화가 화면에 난다.
+        //    ⚠️ 초월 폭 460은 전설 열 폭 362.8보다 **97.2 넓다.** 줄일 수 없으니(초월 25종이
+        //       들어가야 한다) 「전설 위」는 **중심을 맞추는 것**으로 잡았다.
+        //    ⚠️ **전시 모양은 그대로다** — 초월은 가로줄, 불멸은 화로 원형. 사장님이 「초월은
+        //       제단 느낌」이라 하셨지만 그건 모양 판단이라 자리만 먼저 닫는다(PM 지시).
+        new Island("ImmortalDisplay",  DisplayCenterX,
+                   ImmortalBottomBeforeShift + DisplaySizeZ * 0.5f + DownShift,
+                   ImmortalSizeX, DisplaySizeZ, "display"),
+        new Island("TranscendDisplay", DisplayCenterX,
+                   TranscendBottomBeforeShift + DisplaySizeZ * 0.5f + DownShift,
+                   TranscendSizeX, DisplaySizeZ, "display"),
         // 1.5배로 키운 값(원래 120x100). 여유가 빠듯하다 — 봉인섬과 z로 12,
         // 뽑기섬과 x로 10밖에 안 남으니 더 키우려면 이웃을 먼저 옮겨야 한다.
         new Island("StoryZone",       StoryZoneCenterX, -80f * Scale + DownShift, StoryZoneSizeX, 150f * Scale, "story"),

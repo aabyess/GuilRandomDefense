@@ -1651,6 +1651,8 @@ public static class MapGenerator
         int placed = 0;
         float deepest = 0f;
         string sample = null;
+        float legendLeft = float.MaxValue;
+        float legendRight = float.MinValue;
 
         for (int c = 0; c < columns.Count; c++)
         {
@@ -1732,6 +1734,16 @@ public static class MapGenerator
                 }
             }
 
+            // 전시 섬(초월·불멸)이 이 열 위에 얹히므로, 실제 전설 열이 어디인지 재 둔다.
+            // MapLayout.LegendColumnCenterOffset은 리터럴이라 조합식이 늘거나 배정이 바뀌면
+            // 조용히 어긋난다 — 그러면 전시 섬이 전설 열 위가 아닌 데 서게 된다.
+            foreach ((UnitGrade g, List<CombineRecipe> _) in columns[c])
+            {
+                if (g != UnitGrade.Legendary) continue;
+                legendLeft = Mathf.Min(legendLeft, columnLeft);
+                legendRight = Mathf.Max(legendRight, columnLeft + columnWidth);
+            }
+
             deepest = Mathf.Max(deepest, tableTop - rowZ);
         }
 
@@ -1798,6 +1810,21 @@ public static class MapGenerator
         int displayed = 0;
         foreach (List<UnitData> units in columnUnits) if (units != null) displayed += units.Count;
 
+        // 전설 열 실측 vs MapLayout의 리터럴 오프셋. 전시 섬 둘이 이 값에 매달려 있으므로
+        // 어긋나면 **전시 섬이 전설 열 위가 아닌 데 선다** — 화면에서는 「좀 비껴 있네」로만 보인다.
+        string legendLine = "";
+        if (legendRight > legendLeft)
+        {
+            float measured = (legendLeft + legendRight) * 0.5f - MapLayout.CombineTableLeftX;
+            float drift = measured - MapLayout.LegendColumnCenterOffset;
+            legendLine = $"\n  전설 열 x {legendLeft:F1}~{legendRight:F1} (중심 {(legendLeft + legendRight) * 0.5f:F1}" +
+                         $", 왼쪽 변에서 {measured:F1}) — 전시 섬이 여기 얹힙니다";
+            // 문턱은 절대값이 아니라 전설 열 폭의 비례로 — 열 폭이 바뀌면 같이 따라온다.
+            if (Mathf.Abs(drift) > (legendRight - legendLeft) * 0.02f)
+                legendLine += $"\n  ⚠️ MapLayout.LegendColumnCenterOffset이 {drift:+0.0;-0.0} 어긋났습니다 " +
+                              $"— {measured:F2}로 고쳐야 초월·불멸 전시가 전설 열 위에 섭니다.";
+        }
+
         return fitNote + $"\n조합식 표: {placed}개 조합식" +
                (displayed > 0 ? $" + 흔함 {displayed}종 전시" : "") +
                $", {columns.Count}열 (사장님 지시 배정)." +
@@ -1805,6 +1832,7 @@ public static class MapGenerator
                $" — 아래 열별 「글씨깊이」보다 한 행({RecipeRowHeight:F0}) 큰 것이 정상입니다\n  {fit}" +
                $"\n  등급 간격 {GradeGroupGap:F0} × {gapCount}곳 = {gapTotal:F0}" +
                " (등급이 바뀌는 열 경계에만 — 같은 등급이 걸친 열끼리는 붙여 둡니다)" +
+               legendLine +
                string.Join("", perColumn) +
                (sample != null ? $"\n  예시: {sample}" : "");
     }
@@ -4155,7 +4183,12 @@ public static class MapGenerator
             $"\n간격(치마 기준): 레인 남쪽 끝 {MapLayout.LaneClusterSouthEdgeZ:0.0} ↔ 섬 무리 윗변 " +
             $"{s.islandClusterNorthZ:0.0} = **{s.laneToIsland:0.0}** (목표 {MapLayout.LaneToIslandGapZ:0.0})" +
             $"\n  스토리존↔뽑기섬 {s.storyToGacha:0.0} · 뽑기섬↔조합판 {s.gachaToCombine:0.0} " +
-            $"(목표 {MapLayout.IslandGapX:0.0})";
+            $"(목표 {MapLayout.IslandGapX:0.0})" +
+            // 위아래로 얹은 전시 섬은 나란한 섬과 **다른 간격**을 쓴다(사장님 「전설 위에 오게끔」).
+            // 사장님이 「더 붙여라/띄워라」 하실 때 지금이 얼마인지 보여야 한다.
+            $"\n  조합판↔초월 전시 {s.combineToTranscend:0.0} · 초월↔불멸 전시 {s.transcendToImmortal:0.0} " +
+            $"(목표 {MapLayout.DisplayStackGap:0.0} — 위로 쌓는 간격은 나란한 섬의 " +
+            $"{MapLayout.IslandGapX:0.0}과 다릅니다)";
 
         // 문턱은 절대값이 아니라 비례로 — 간격 목표가 바뀌어도 같이 따라오게 한다.
         float tolerance = Mathf.Max(1f, MapLayout.LaneToIslandGapZ * 0.01f);
@@ -4169,6 +4202,12 @@ public static class MapGenerator
             Mathf.Abs(s.gachaToCombine - MapLayout.IslandGapX) > gapTolerance)
             report += "\n  ⚠️ 섬 사이 x 간격이 목표와 다릅니다 — 섬 중심을 간격에서 유도하지 않고 " +
                       "손으로 박은 자리가 있습니다.";
+
+        float stackTolerance = Mathf.Max(1f, MapLayout.DisplayStackGap * 0.01f);
+        if (Mathf.Abs(s.combineToTranscend - MapLayout.DisplayStackGap) > stackTolerance ||
+            Mathf.Abs(s.transcendToImmortal - MapLayout.DisplayStackGap) > stackTolerance)
+            report += "\n  ⚠️ 전시 섬 쌓기 간격이 목표와 다릅니다 — 위아래 순서가 뒤집혔거나 " +
+                      "(불멸이 위여야 합니다) 전시 섬 깊이가 서로 달라졌습니다.";
 
         return report;
     }
