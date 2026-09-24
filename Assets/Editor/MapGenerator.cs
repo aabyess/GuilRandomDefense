@@ -1348,7 +1348,9 @@ public static class MapGenerator
     /// 길어지는 느낌」(사장님 2026-09-23)으로 되돌아간다. 6열이 가로 1119·세로 1460으로
     /// 둘 다 만족하는 자리다.
     /// </summary>
-    const int CombineTableColumns = 6;
+    // 사장님이 직접 정하신 열 수(2026-09-24: 9열). 아래 `spread` 표와 **반드시 같아야 한다** —
+    // 표에 9열을 쓰는데 여기가 8이면 마지막 열이 통째로 사라진다.
+    const int CombineTableColumns = 9;
     const float RecipeSlot = 15.4f;     // 유닛 한 칸. 원작 슬롯 한 변 64 ÷ Scale
     // ── 조합식 표 간격 (2026-09-23 재설계) ────────────────────────────────
     // 사장님 「조합판도 너무 붙어있으니깐 답답한 느낌이든다」.
@@ -1454,15 +1456,15 @@ public static class MapGenerator
             [UnitGrade.Special] = new[] { 1, 2 },        // 2·3열
             [UnitGrade.Rare] = new[] { 3, 4 },           // 4·5열
             [UnitGrade.Legendary] = new[] { 5, 6 },      // 6·7열
-            [UnitGrade.Limited] = new[] { 6 },           // 7열 전설 밑
-            [UnitGrade.Hidden] = new[] { 7 },            // 8열
+            [UnitGrade.Limited] = new[] { 6 },           // 7열 전설 밑 「남는 공간에」
+            [UnitGrade.Hidden] = new[] { 7, 8 },         // 8·9열 (2026-09-24 사장님이 둘로 가르셨다)
             // ⚠️ 영원을 1열에 둔 것은 **PM 판단**이다(사장님이 자리를 안 짚으셨다).
             //    1열이 13행으로 가장 얕아서 골랐다. 폭으로는 가장 비싼 선택이지만
             //    (안흔함 재료 2칸 → 영원 8칸), 7열에 두면 34행이 되어 **깊이가 먼저 터진다**.
             [UnitGrade.Eternal] = new[] { 0 },           // 1열 안흔함 밑
         };
 
-        int columnCount = 8;
+        int columnCount = CombineTableColumns;
         List<(UnitGrade, List<CombineRecipe>)>[] byColumn =
             new List<(UnitGrade, List<CombineRecipe>)>[columnCount];
         for (int c = 0; c < columnCount; c++) byColumn[c] = new List<(UnitGrade, List<CombineRecipe>)>();
