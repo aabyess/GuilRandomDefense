@@ -133,6 +133,41 @@ public static class MapLayout
         new Island("Warehouse4", 146f * Scale, 214f * Scale, 44f * Scale, 44f * Scale, "warehouse"),
     };
 
+    // 🔴 2026-09-24 사장님 지시 「레인 밑에 스토리존·위습뽑기섬·조합판 왼쪽으로 좀 이동좀하자,
+    //    3레인보다 왼쪽으로 가게」 → 왼쪽으로 1200(세계 좌표).
+    //
+    // 1200은 임의의 값이 아니다. 3번 레인 왼쪽 끝이 x=-2013.2인데, **StoryZone을 그보다 완전히
+    // 왼쪽에 놓으려면 -1179.8이 필요**하다 → 1200이 그걸 넘기는 가장 단순한 값이다(여유 20).
+    // ⚠️ 그런데 **나머지 둘은 「3레인보다 왼쪽」이 될 수 없다.** 셋을 한 덩어리로 옮기는 한
+    //    바다가 허락하는 최대 이동이 -1699.5(StoryZone 왼쪽 끝이 바다 -3333에 50 남기는 값)인데,
+    //      뽑기섬   이 필요한 이동 -1954.9  →  255 모자라다
+    //      조합판   이 필요한 이동 -3713.2  →  폭이 1700이라 **바다 폭 자체가 모자라다**
+    //    즉 지시의 문자 그대로는 **기하적으로 불가능**하고, 달성되는 것은 StoryZone(+봉인섬)이다.
+    //    뽑기섬은 3번 레인 **아래**에, 조합판은 그 오른쪽에 남는다 — 이동 후에도 그렇다.
+    //    (2026-09-24 측정 후 PM에게 보고. 「셋 다 왼쪽」을 원하시면 이동이 아니라 **재배치**다.)
+    //
+    // ⚠️ **옮기는 것은 셋이 아니라 일곱이다.** 세 섬만 옮기면 제자리에 남은 봉인섬 넷과 부딪힌다:
+    //    SealIsland1·2 ↔ GachaIsland(193·104), SealIsland3·4 ↔ CombineTable(146·346).
+    //    겹치는 것을 집합에 넣고 그 집합으로 다시 검사하기를 **더 안 늘 때까지** 돌려 구한 최소
+    //    집합이 이 일곱이다(2차에서 안 늘었다). 일곱을 다 옮기면 18개 섬 전수 겹침 0,
+    //    바다 왼쪽 끝(-3333)까지 여유는 최소 550(StoryZone). 도착 구역 씬 렌더러 243개는
+    //    전부 이 일곱 섬의 내용물이었다 — 부두·펑크해저드·해왕류 같은 외부 구조물은 없다.
+    //
+    // 세계 좌표 그대로 더한다(리터럴÷Scale로 나누지 않는다) — 「1200 옮긴다」가 코드에 그 숫자로
+    // 남아야 다음 사람이 「왜 -287.98인가」를 되짚지 않는다. 섬 **크기**는 안 건드린다.
+    //
+    // 📌 섬 좌표에서 유도되는 것들은 저절로 따라온다(읽어서 확인, 2026-09-24):
+    //    카메라 경계(SetUpCamera → MeasureIslands가 Zones·SealIslands를 훑는다) ·
+    //    스토리_등장지점·스토리존 도착지점·복귀포탈(전부 StoryZone.center 기준) ·
+    //    조합표 받침·칸벽·글씨 · 위습 생성 5칸(포탈 상대 거리라 상대값 불변).
+    //    보물찾기 구역은 **레인 필드 넷** 기준이라 원래 이 이동과 무관하다(따라오지 않는 게 정상).
+    //
+    // ⚠️ 아래 주석에 적힌 **절대 x는 이 이동 전 값이다**(예: "조합판 왼쪽 끝 x=0", "뽑기섬 오른쪽
+    //    끝 x=-58.3", "넓힌 구간 x 1150~1700"). 일곱이 **같이** 움직이므로 그 주석들이 지키려던
+    //    **간격은 그대로**다(조합판↔뽑기섬 58.3 등) — 틀린 건 절대값뿐이다. 읽을 때 1200을 빼라.
+    //    스무 개 숫자를 손으로 고치면 그 과정에서 또 어긋나므로 여기 한 번만 적는다.
+    const float LeftShift = -1200f;
+
     // 물범 섬 — 4개. 물범을 잡으면 전체 플레이어에게 목재 1개씩.
     // 중심 간격을 34→40으로 넓혔다(사장님 지시, 2026-09-03: "너무 따닥 붙어있음") — 빈틈이
     // 8이던 게 14(섬 크기 26의 절반쯤)가 된다. StoryZone 중심(-250)에 맞춰 다시 배치했다 —
@@ -140,10 +175,10 @@ public static class MapLayout
     // 180 기준)를 넘어간다. 이 배치는 양옆 다 17만큼 여유를 두고 안에 들어간다.
     public static readonly Island[] SealIslands =
     {
-        new Island("SealIsland1", -362f * Scale, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
-        new Island("SealIsland2", -314f * Scale, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
-        new Island("SealIsland3", -266f * Scale, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
-        new Island("SealIsland4", -218f * Scale, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
+        new Island("SealIsland1", -362f * Scale + LeftShift, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
+        new Island("SealIsland2", -314f * Scale + LeftShift, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
+        new Island("SealIsland3", -266f * Scale + LeftShift, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
+        new Island("SealIsland4", -218f * Scale + LeftShift, -180f * Scale, 26f * Scale, 26f * Scale, "seal"),
     };
 
     public static readonly Island[] Zones =
@@ -162,7 +197,7 @@ public static class MapLayout
         new Island("TranscendDisplay", 150f * Scale,  26.197f * Scale, 110.391f * Scale, 67.195f * Scale, "display"),
         // 1.5배로 키운 값(원래 120x100). 여유가 빠듯하다 — 봉인섬과 z로 12,
         // 뽑기섬과 x로 10밖에 안 남으니 더 키우려면 이웃을 먼저 옮겨야 한다.
-        new Island("StoryZone",       -290f * Scale, -80f * Scale, 180f * Scale, 150f * Scale, "story"),
+        new Island("StoryZone",       -290f * Scale + LeftShift, -80f * Scale, 180f * Scale, 150f * Scale, "story"),
         // 오른쪽 전시 칸이 다른세계 조합식 한 줄(재료 6칸 + 비용 3칸)을 담아야 해서 폭을 넓혔다.
         // (2026-09-23, 원작 비율 4단계) SlotSpacing 6→61.4로 오른쪽 전시 칸이 줄당 11칸에서
         // 4칸으로 줄어, 랜덤유닛 14종이 2줄에서 4줄이 됐다. 그 아래 다른세계 조합식 14줄까지
@@ -170,7 +205,7 @@ public static class MapLayout
         // "⚠️ 모자람"이 뜨는 자리다). **위쪽은 안 건드리고 아래로만 160 늘렸다** — 위로 늘리면
         // 바로 위 레인3·4(아래변 z=100)와 겹친다. 그래서 size_z는 +160/Scale, center_z는
         // −80/Scale만큼 내렸다(윗변 z=62.5 고정). 새 여유는 85다.
-        new Island("GachaIsland",      -82f * Scale, -99.20f * Scale, 136f * Scale, 228.40f * Scale, "gacha"),
+        new Island("GachaIsland",      -82f * Scale + LeftShift, -99.20f * Scale, 136f * Scale, 228.40f * Scale, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
         // (2026-09-23, 원작 비율 4단계, PM 지시 "섬을 넓혀라 — 52% 축소는 받지 않는다")
         // 새 칸 크기로 열을 자연 폭대로 늘어놓으면 2192가 필요한데 옛 폭은 1142라, 그대로 두면
@@ -201,7 +236,7 @@ public static class MapLayout
         //    표 안의 것(받침 747개·칸벽·글씨)은 전부 섬 좌표에서 유도되므로 **저절로 따라온다.**
         //    여유를 83(4.9%) 남겼다 — 사장님이 「간격·크기는 앞으로 수정한다」고 하셨고,
         //    조합식 하나가 재료를 하나 더 받으면 그 열이 30.8 넓어지기 때문이다.
-        new Island("CombineTable",     203.98f * Scale, -197.54f * Scale, 407.97f * Scale, 361f * Scale, "combine"),
+        new Island("CombineTable",     203.98f * Scale + LeftShift, -197.54f * Scale, 407.97f * Scale, 361f * Scale, "combine"),
         // 도박소. StoryZone 서쪽, 같은 z대역이라 나란히 배치되고 40유닛 간격으로 안 겹친다.
     };
 
