@@ -353,57 +353,68 @@ public static class ApronProbe
                       $"오르기 {bake.agentClimb:0.##} · 복셀 {MapLayout.NavMeshVoxelSize:0.##}");
 
         // 실제로 돌고 있는 에이전트에서 읽는다 — 프리팹 값이 아니라 **지금 화면의 값**이다.
+        //
+        // 🔴 단위 함정(09-24 PM 지적): `NavMeshAgent.radius/height`는 **로컬값**이고, 에이전트는
+        //    트랜스폼 배율을 그대로 탄다. 위습은 프리팹이 `0.28f / WispScale`로 적혀 있어서
+        //    로컬 0.0056이 찍히는데, 배율 50을 타서 **월드에선 0.28**이다. 그걸 굽기 반지름 0.5
+        //    옆에 나란히 찍으면 「유닛이 굽기의 1/50이다」라는 틀린 결론이 나온다.
+        //    → **월드값(로컬값)** 순서로 찍는다. 기준이 다른 두 숫자를 나란히 두지 않는다.
+        //
+        // 그리고 유닛과 위습은 **아예 다른 물건**이라 갈라서 찍는다. 09-24에 씬에 유닛이 0기이고
+        // 위습만 5기였는데 한 줄로 합쳐 찍어서, 위습 수치가 유닛 수치로 읽혔다.
         NavMeshAgent[] agents = Object.FindObjectsByType<NavMeshAgent>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-        if (agents.Length == 0) sb.AppendLine("  런타임 에이전트 0기 — 유닛이 아직 없다");
-        else
-        {
-            NavMeshAgent a = agents[0];
-            int avoiding = agents.Count(g => g.obstacleAvoidanceType != ObstacleAvoidanceType.NoObstacleAvoidance);
-            sb.AppendLine($"  런타임 {agents.Length}기 · 반지름 {a.radius:0.##} · 높이 {a.height:0.##} · " +
-                          $"회피 켜진 것 {avoiding}/{agents.Length}  {(avoiding == 0 ? "🔴 전부 꺼짐 — 반지름이 작동할 자리가 없다" : "")}");
+        NavMeshAgent[] wisps = agents.Where(a => a.GetComponentInParent<Wisp>() != null).ToArray();
+        NavMeshAgent[] units = agents.Except(wisps).ToArray();
 
-            Renderer r = a.GetComponentInChildren<Renderer>();
-            if (r != null)
-            {
-                Bounds b = r.bounds;
-                sb.AppendLine($"  몸    렌더러 {b.size.x:0.##}×{b.size.y:0.##}×{b.size.z:0.##} → " +
-                              $"충돌 반지름 ≈ {Mathf.Max(b.size.x, b.size.z) * 0.5f:0.##}");
-            }
-        }
+        AppendAgents(sb, "유닛", units);
+        AppendAgents(sb, "위습", wisps);
+        if (units.Length == 0)
+            sb.AppendLine("  🔴 유닛 0기 — 유닛에 대한 반지름·회피는 이번 판에서 **확인되지 않았습니다.**");
 
         // ── 통로 여유: 굽기 반지름을 얼마까지 올릴 수 있나
+        //    필드와 앞치마를 **갈라서** 낸다. 09-24에 최소 반폭 0.7이 전부 z 1143~1275(우리
+        //    칸막이)에서 나왔다 — 칸막이 하나가 맵 전체의 상한을 정하고 있는지 보려면 갈라야 한다.
         sb.AppendLine("■ 통로 여유 (가장자리까지 거리 + 지금 굽기 반지름 = 진짜 통로 반폭)");
-        List<(float half, Vector3 at)> tight = new List<(float, Vector3)>();
-        int onMesh = 0;
-        float[] buckets = new float[6];   // <2, <5, <10, <20, <40, 그 이상
-        foreach (Vector3 p in AuditSamples())
+        Dictionary<string, List<(float half, Vector3 at)>> byArea =
+            new Dictionary<string, List<(float, Vector3)>> { ["필드"] = new List<(float, Vector3)>(), ["앞치마"] = new List<(float, Vector3)>() };
+
+        foreach ((string area, Vector3 p) in AuditSamples())
         {
-            if (!NavMesh.SamplePosition(p, out NavMeshHit snap, AuditStep, NavMesh.AllAreas)) continue;
-            if (!NavMesh.FindClosestEdge(snap.position, out NavMeshHit edge, NavMesh.AllAreas)) continue;
-            onMesh++;
-            float half = edge.distance + bake.agentRadius;
-            int b = half < 2f ? 0 : half < 5f ? 1 : half < 10f ? 2 : half < 20f ? 3 : half < 40f ? 4 : 5;
-            buckets[b]++;
-            tight.Add((half, snap.position));
+            if (!TryGround(p, out Vector3 at)) continue;
+            if (!NavMesh.FindClosestEdge(at, out NavMeshHit edge, NavMesh.AllAreas)) continue;
+            byArea[area].Add((edge.distance + bake.agentRadius, at));
         }
-        sb.AppendLine($"  NavMesh 위 표본 {onMesh}개 (칸 {AuditStep:0.#})");
+
         string[] names = { "<2", "2~5", "5~10", "10~20", "20~40", "40 이상" };
-        for (int i = 0; i < buckets.Length; i++)
-            sb.AppendLine($"    통로 반폭 {names[i],-7} {buckets[i],6}개 ({(onMesh == 0 ? 0 : 100f * buckets[i] / onMesh):0.#}%)");
-        sb.AppendLine("  가장 좁은 자리 8곳:");
-        foreach ((float half, Vector3 at) in tight.OrderBy(t => t.half).Take(8))
-            sb.AppendLine($"    반폭 {half:0.##}  x {at.x:0.#} z {at.z:0.#}");
+        foreach (KeyValuePair<string, List<(float half, Vector3 at)>> area in byArea)
+        {
+            List<(float half, Vector3 at)> list = area.Value;
+            sb.AppendLine($"  [{area.Key}] NavMesh 위 표본 {list.Count}개 (칸 {AuditStep:0.#} 기준)");
+            if (list.Count == 0) continue;
+
+            float[] buckets = new float[6];
+            foreach ((float half, Vector3 _) in list)
+                buckets[half < 2f ? 0 : half < 5f ? 1 : half < 10f ? 2 : half < 20f ? 3 : half < 40f ? 4 : 5]++;
+            for (int i = 0; i < buckets.Length; i++)
+                sb.AppendLine($"      반폭 {names[i],-7} {buckets[i],6}개 ({100f * buckets[i] / list.Count:0.#}%)");
+            sb.AppendLine($"      **최소 반폭 {list.Min(t => t.half):0.##}** = 이 구역만 보면 굽기 반지름 상한");
+            foreach ((float half, Vector3 at) in list.OrderBy(t => t.half).Take(5))
+                sb.AppendLine($"        {half:0.##}  x {at.x:0.#} z {at.z:0.#}");
+        }
 
         // ── 머리 위: 굽기 높이 2로 깔린 NavMesh 밑에 낮은 지붕이 있나
         sb.AppendLine($"■ 머리 위 (NavMesh 위 {BodyHeightForOverhead:0.#} 안에 뭐가 있나 = 키 {BodyHeightForOverhead:0.#}짜리가 뚫고 지나간다)");
         Dictionary<string, int> overhead = new Dictionary<string, int>();
         int checkedPoints = 0;
-        foreach (Vector3 p in AuditSamples())
+        foreach ((string _, Vector3 p) in AuditSamples())
         {
-            if (!NavMesh.SamplePosition(p, out NavMeshHit snap, AuditStep, NavMesh.AllAreas)) continue;
+            if (!TryGround(p, out Vector3 at)) continue;
             checkedPoints++;
-            if (!Physics.Raycast(snap.position + Vector3.up * 0.5f, Vector3.up,
-                                 out RaycastHit hit, BodyHeightForOverhead)) continue;
+            // 🔴 바닥 판 윗면(8.0)보다 **확실히 위**에서 쏜다. 09-24에 0.5만 띄우고 쐈더니
+            //    바다로 스냅된 표본(y≈0)에서 광선이 앞치마 **아랫면**을 맞혀, 바닥이 범인으로
+            //    찍혔다. TryGround가 그 표본을 걸러내지만 시작 높이도 같이 올려 둔다.
+            Vector3 from = new Vector3(at.x, MapLayout.IslandTop + 1f, at.z);
+            if (!Physics.Raycast(from, Vector3.up, out RaycastHit hit, BodyHeightForOverhead)) continue;
             string key = System.Text.RegularExpressions.Regex.Replace(hit.collider.gameObject.name, @"\d+", "#");
             overhead.TryGetValue(key, out int k);
             overhead[key] = k + 1;
@@ -417,16 +428,56 @@ public static class ApronProbe
         return sb.ToString();
     }
 
+    /// <summary>한 무리의 에이전트를 **월드 단위로** 찍는다. 로컬값은 괄호에 같이 둔다.</summary>
+    static void AppendAgents(StringBuilder sb, string label, NavMeshAgent[] group)
+    {
+        if (group.Length == 0) { sb.AppendLine($"  {label} 0기"); return; }
+
+        NavMeshAgent a = group[0];
+        float scale = Mathf.Max(a.transform.lossyScale.x, a.transform.lossyScale.z);
+        int avoiding = group.Count(g => g.obstacleAvoidanceType != ObstacleAvoidanceType.NoObstacleAvoidance);
+
+        string body = "";
+        Renderer r = a.GetComponentInChildren<Renderer>();
+        if (r != null)
+        {
+            Bounds b = r.bounds;   // bounds는 이미 월드다
+            body = $" · 몸 {b.size.x:0.##}×{b.size.y:0.##}×{b.size.z:0.##} → 충돌 반지름 ≈ {Mathf.Max(b.size.x, b.size.z) * 0.5f:0.##}";
+        }
+
+        sb.AppendLine($"  {label} {group.Length}기 · 반지름 **{a.radius * scale:0.##}**(로컬 {a.radius:0.####} × 배율 {scale:0.##})" +
+                      $" · 높이 **{a.height * scale:0.##}**(로컬 {a.height:0.####})" +
+                      $" · 회피 켜진 것 {avoiding}/{group.Length}" +
+                      $"{(avoiding == 0 ? " 🔴 전부 꺼짐 — 반지름이 작동할 자리가 없다" : "")}{body}");
+    }
+
     /// <summary>레인1 섬 + 앞치마를 격자로 훑는다. 두 검사가 같은 표본을 써야 견줄 수 있다.</summary>
-    static IEnumerable<Vector3> AuditSamples()
+    static IEnumerable<(string area, Vector3 at)> AuditSamples()
     {
         MapLayout.Island lane = MapLayout.Lanes[0];
         Rect field = Rect.MinMaxRect(lane.center.x - lane.size.x * 0.5f, lane.center.y - lane.size.y * 0.5f,
                                      lane.center.x + lane.size.x * 0.5f, lane.center.y + lane.size.y * 0.5f);
-        foreach (Rect area in new[] { field, Apron })
+        foreach ((string name, Rect area) in new[] { ("필드", field), ("앞치마", Apron) })
             for (float x = area.xMin + AuditStep * 0.5f; x < area.xMax; x += AuditStep)
                 for (float z = area.yMin + AuditStep * 0.5f; z < area.yMax; z += AuditStep)
-                    yield return new Vector3(x, MapLayout.IslandTop, z);
+                    yield return (name, new Vector3(x, MapLayout.IslandTop, z));
+    }
+
+    /// <summary>
+    /// **섬 높이의** NavMesh로만 스냅한다.
+    ///
+    /// 🔴 `SamplePosition`은 반경 안에서 가장 가까운 것을 준다. 섬 윗면이 8이고 바다가 0이라
+    ///    반경 12로 부르면 섬에 NavMesh가 없는 칸이 **바다로 스냅된다**(8 떨어져 있으니 들어온다).
+    ///    09-24에 머리 위 검사가 바다로 스냅된 자리에서 위로 쏴, 앞치마 **아랫면**을 맞히고
+    ///    「바닥이 머리 위에 있다」는 읽을 수 없는 답을 냈다. 통로 여유 분포도 같이 오염됐다.
+    /// </summary>
+    static bool TryGround(Vector3 p, out Vector3 at)
+    {
+        at = p;
+        if (!NavMesh.SamplePosition(p, out NavMeshHit hit, AuditStep, NavMesh.AllAreas)) return false;
+        if (Mathf.Abs(hit.position.y - MapLayout.IslandTop) > 2f) return false;
+        at = hit.position;
+        return true;
     }
 
     /// <summary>화면 가운데 세로선을 훑어 각 점이 무엇인지 돌려준다. 대화창을 안 띄운다(플레이 중에 막힌다).</summary>

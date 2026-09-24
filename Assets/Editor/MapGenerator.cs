@@ -183,6 +183,11 @@ public static class MapGenerator
 
         // BindTextures가 고친 재질은 SetDirty만 걸려 있다 — 여기서 디스크에 남기지 않으면
         // 다음에 열 때 도로 빈 채로 돌아온다.
+        // 🔴 기본 재질은 **크기별 변종이 새로 필요할 때만** 손이 닿는다. 변종 55종이 이미 다 있으면
+        //    GetOrCreateMaterial이 한 번도 안 불려서, 화면은 맞는데 기본 재질만 옛 값으로 남는다
+        //    (09-24에 「표와 다른 재질 10장」이 그렇게 떴다). 판마다 한 번 표에 맞춰 둔다.
+        foreach (KeyValuePair<string, Surface> entry in Surfaces) GetOrCreateMaterial(entry.Key, entry.Value);
+
         string sweep = SweepTiledMaterials();
         AssetDatabase.SaveAssets();
         string textureReport = SurfaceTextureReport() + sweep + SurfaceDriftReport();
@@ -5302,9 +5307,11 @@ public static class MapGenerator
             if (parts.Count > 0) drift.Add($"\n    {entry.Key}.mat  {string.Join(" · ", parts)}");
         }
         return drift.Count == 0 ? ""
-            : $"\n⚠️ 표와 다른 재질 {drift.Count}장 — **덮지 않습니다.** 표를 고쳐도 화면은 안 바뀝니다." +
+            : $"\n⚠️ 표와 다른 **기본 재질** {drift.Count}장 — 덮지 않습니다." +
               string.Join("", drift) +
-              "\n    (어느 쪽이 맞는 값인지는 코드가 안 정합니다. 화면 색을 표에 맞추려면 그 .mat을 지우고 다시 생성하세요.)";
+              "\n    ⚠️ 이건 **화면이 틀렸다는 뜻이 아닙니다.** 텍스처가 있는 면은 크기별 변종이 그려지고" +
+              "\n       그쪽은 표에 맞춰져 있습니다. 여기 뜨는 것은 텍스처 없는 단색 면뿐이고," +
+              "\n       그 단색은 사람이 눈으로 맞춘 값일 수 있어 코드가 안 정합니다.";
     }
 
     static string SurfaceTextureReport()
