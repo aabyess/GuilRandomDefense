@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.AI;
 
 /// <summary>
 /// 「앞치마 위 하얀 가시밭」 진단(2026-09-24, 구현담당1).
@@ -158,17 +160,28 @@ public static class ApronProbe
     // 그러면 카메라도 HUD도 화면 크기도 **사진과 똑같은 진짜 실행 상태**다. 베낄 숫자가 없다.
 
     const string PlayKey = "ApronProbe.Play";
+    const string JobKey = PlayKey + ".job";
     const double Settle = 1.5;          // Awake·Start와 시작 구도가 자리 잡을 시간
     const double PlayTimeout = 90;
 
     [MenuItem("Tools/진단/플레이해서 픽셀 찍기")]
-    static void PickPixelsInPlay()
+    static void PickPixelsInPlay() => RunInPlay("pixels");
+
+    /// <summary>
+    /// NavMesh 질의(<see cref="NavMesh.SamplePosition"/>)는 **플레이 중에만** 뜻이 있다 —
+    /// 편집 모드에서는 NavMeshSurface가 자기 데이터를 아직 안 얹었다. 그래서 이것도 플레이로 돈다.
+    /// </summary>
+    [MenuItem("Tools/진단/플레이해서 앞치마 NavMesh 구멍 찍기")]
+    static void NavHolesInPlay() => RunInPlay("navholes");
+
+    static void RunInPlay(string job)
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode)
         { EditorGuards.Dialog(Title, "이미 플레이 중입니다 — 멈추고 다시 부르세요.", "확인"); return; }
         if (EditorUtility.scriptCompilationFailed)
         { EditorGuards.Dialog(Title, "컴파일 오류가 있어 플레이 모드에 못 들어갑니다.", "확인"); return; }
 
+        SessionState.SetString(JobKey, job);
         SessionState.SetInt(PlayKey, 1);
         SessionState.SetFloat(PlayKey + ".since", 0f);
         EditorApplication.update += Tick;
@@ -206,7 +219,7 @@ public static class ApronProbe
             }
             if (now - since < Settle) return;
 
-            Finish(Sweep());
+            Finish(SessionState.GetString(JobKey, "pixels") == "navholes" ? NavHoles() : Sweep());
             return;
         }
     }
@@ -228,6 +241,84 @@ public static class ApronProbe
         catch (System.Exception e) { Debug.LogWarning("[픽셀 질의] 결과 파일을 못 썼습니다: " + e.Message); }
 
         if (Application.isPlaying) EditorApplication.ExitPlaymode();
+    }
+
+    // ── 앞치마 NavMesh 구멍 ──────────────────────────────────────────────────
+    //
+    // navlane은 구멍 칸의 **맨 위 콜라이더 하나**만 찍는다. 그래서 09-24에 「구멍의 맨 위가
+    // 앞치마 바닥」이라는, 그 자체로는 아무것도 못 가리는 답이 나왔다 — 바닥이 맨 위라는 건
+    // 그 광선이 벽을 안 스쳤다는 뜻일 뿐, 벽이 없다는 뜻이 아니다.
+    // 그래서 여기서는 **칸을 덮는 콜라이더를 전부** 센다. 얇은 것도 상자로 훑으면 걸린다.
+    //
+    // 그리고 판정을 NavMesh에 직접 묻는다(`SamplePosition`). 「걸을 수 있나」는 굽힌 결과가
+    // 정답이고, 콜라이더를 보고 추론하면 침식(에이전트 반지름)을 빼먹는다.
+
+    const float HoleStep = 10f;             // 칸 한 변. 앞치마 578×199 → 58×20칸
+    const float HoleProbeHeight = 6f;       // 바닥 위로 이만큼까지 훑는다(벽 높이 5.5를 덮는다)
+
+    static string NavHoles()
+    {
+        StringBuilder sb = new StringBuilder();
+        NavMeshBuildSettings agent = NavMesh.GetSettingsByIndex(0);
+        sb.AppendLine($"앞치마 x {Apron.xMin:0.#}~{Apron.xMax:0.#} · z {Apron.yMin:0.#}~{Apron.yMax:0.#} · " +
+                      $"칸 {HoleStep:0.#} · 복셀 {MapLayout.NavMeshVoxelSize:0.#} · " +
+                      $"에이전트 반지름 {agent.agentRadius:0.##} 높이 {agent.agentHeight:0.##}");
+
+        Dictionary<string, int> blamed = new Dictionary<string, int>();
+        Dictionary<string, Vector3> blamedSize = new Dictionary<string, Vector3>();
+        List<string> firstFew = new List<string>();
+        int land = 0, holes = 0;
+        Collider[] found = new Collider[32];
+
+        for (float x = Apron.xMin + HoleStep * 0.5f; x < Apron.xMax; x += HoleStep)
+        {
+            for (float z = Apron.yMin + HoleStep * 0.5f; z < Apron.yMax; z += HoleStep)
+            {
+                land++;
+                Vector3 p = new Vector3(x, MapLayout.IslandTop, z);
+                if (NavMesh.SamplePosition(p, out NavMeshHit hit, HoleStep * 0.5f, NavMesh.AllAreas) &&
+                    Mathf.Abs(hit.position.y - p.y) < 3f)
+                    continue;
+
+                holes++;
+                // 칸을 덮는 콜라이더 **전부**. 맨 위 하나만 보면 얇은 벽을 놓친다.
+                int n = Physics.OverlapBoxNonAlloc(
+                    p + Vector3.up * (HoleProbeHeight * 0.5f),
+                    new Vector3(HoleStep * 0.5f, HoleProbeHeight * 0.5f, HoleStep * 0.5f),
+                    found, Quaternion.identity, ~0, QueryTriggerInteraction.Collide);
+
+                List<string> names = new List<string>();
+                for (int i = 0; i < n; i++)
+                {
+                    Collider c = found[i];
+                    // 바닥 판은 구멍의 원인이 아니라 바닥이다. 서 있는 것만 범인 후보로 센다.
+                    bool standing = c.bounds.max.y > MapLayout.IslandTop + 0.5f;
+                    string key = System.Text.RegularExpressions.Regex.Replace(c.gameObject.name, @"\d+", "#");
+                    names.Add(standing ? key : "(바닥)" + key);
+                    if (!standing) continue;
+                    blamed.TryGetValue(key, out int k);
+                    blamed[key] = k + 1;
+                    blamedSize[key] = c.transform.lossyScale;
+                }
+                if (firstFew.Count < 12)
+                    firstFew.Add($"  x {x:0.#} z {z:0.#} → {(names.Count == 0 ? "콜라이더 없음" : string.Join(", ", names))}");
+            }
+        }
+
+        sb.AppendLine($"땅 {land}칸 중 NavMesh 없음 {holes}칸 ({(land == 0 ? 0f : 100f * holes / land):0.#}%)");
+        sb.AppendLine("구멍을 덮는 **서 있는** 콜라이더 (많은 순):");
+        if (blamed.Count == 0) sb.AppendLine("  없음 — 서 있는 것이 아니라 다른 이유다");
+        foreach (KeyValuePair<string, int> e in blamed.OrderByDescending(e => e.Value))
+        {
+            Vector3 s = blamedSize[e.Key];
+            float thin = Mathf.Min(s.x, s.z);
+            sb.AppendLine($"  {e.Value,4}칸  {e.Key}  크기 {s.x:0.##}×{s.y:0.##}×{s.z:0.##}" +
+                          $"  얇은 쪽 {thin:0.##} = 복셀 {thin / MapLayout.NavMeshVoxelSize:0.##}칸" +
+                          $"  (반지름 {agent.agentRadius:0.##} 침식까지 치면 길이 {thin + agent.agentRadius * 2f:0.##} 만큼 막힌다)");
+        }
+        sb.AppendLine("구멍 칸 몇 개 (좌표 → 그 자리 콜라이더 전부):");
+        foreach (string line in firstFew) sb.AppendLine(line);
+        return sb.ToString();
     }
 
     /// <summary>화면 가운데 세로선을 훑어 각 점이 무엇인지 돌려준다. 대화창을 안 띄운다(플레이 중에 막힌다).</summary>
