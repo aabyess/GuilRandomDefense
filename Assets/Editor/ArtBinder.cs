@@ -479,16 +479,34 @@ public static class ArtBinder
         }
 
         // 원본 메시 높이(캡슐 2, 큐브 1)에 맞춰 키를 낸다.
-        Renderer bodyRenderer = body.GetComponent<Renderer>();
-        float rawHeight = bodyRenderer != null ? bodyRenderer.bounds.size.y : 1f;
+        //
+        // 🔴 예전엔 `bodyRenderer.bounds.size.y`로 쟀다. 그건 **이미 배율이 먹은 월드 경계**라
+        //    돌릴 때마다 배율이 누적된다. 09-09에 목표 키 15를 넣었는데 그때 몸이 0.6배여서
+        //    `15 / 0.6 = 25`가 나왔고, 정육면체 25가 그대로 박혔다(c529331c).
+        //    그래서 라운드 적이 **키 20 · 폭 25**인 덩어리로 서 있었다 — 아군 어깨 너비 7.3의
+        //    3.4배다(2026-09-24 실측). 캡처에서 「상자가 유닛보다 커 보인다」의 정체가 이것이다.
+        //    메시 원본 높이로 재면 **몇 번을 돌려도 같은 값**이 나온다.
+        MeshFilter bodyFilter = body.GetComponent<MeshFilter>();
+        float rawHeight = bodyFilter != null && bodyFilter.sharedMesh != null
+            ? bodyFilter.sharedMesh.bounds.size.y
+            : 1f;
         if (rawHeight < 0.001f) rawHeight = 1f;
 
         float height = HeightFor(root);
-        float scale = height / rawHeight;
-        body.localScale = Vector3.one * scale;
-        body.localPosition = new Vector3(0f, height * 0.5f, 0f);   // 발을 바닥에
-
         float radius = height * 0.18f;
+
+        // 🔴 균등 배율이 아니다. 균등이면 키 22.5짜리가 **폭도 22.5**인 정육면체가 되는데,
+        //    콜라이더는 지름 8.1(= 키 × 0.36)이라 **보이는 몸과 맞는 몸이 다르다.**
+        //    맞으러 가서 안 맞고, 안 맞을 것 같은데 맞는다. 자리표시라도 그러면 안 된다.
+        //    보이는 몸을 콜라이더에 맞춘다 — 사람 유닛 비율에도 가깝다.
+        float rawWidth = bodyFilter != null && bodyFilter.sharedMesh != null
+            ? Mathf.Max(bodyFilter.sharedMesh.bounds.size.x, bodyFilter.sharedMesh.bounds.size.z)
+            : 1f;
+        if (rawWidth < 0.001f) rawWidth = 1f;
+
+        float widthScale = radius * 2f / rawWidth;
+        body.localScale = new Vector3(widthScale, height / rawHeight, widthScale);
+        body.localPosition = new Vector3(0f, height * 0.5f, 0f);   // 발을 바닥에
 
         if (root.TryGetComponent(out CapsuleCollider capsule))
         {
