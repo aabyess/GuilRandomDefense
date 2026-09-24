@@ -145,7 +145,11 @@ SKINS = {
     # 1.46만 — 감량 불필요. 재질 4개(Material.009~012) 텍스처가 소스 안에서 이미 깨진 경로
     # (공백 이름 "bottom hhhh.tga")를 가리켜서 zip의 실제 파일(밑줄 이름 .png)로 재연결.
     # 손 높이(3.94)가 엉덩이(3.88)와 같고 손 X ±1.44 → A자에 가까움 — level_arms로 편다.
+    # 🔴 rebuild="금지"(2026-09-24) — **커밋본을 만든 건 fix_unit_fbx.py다.** 같은 원본(hinata skin.fbx)을
+    #    쓰지만 나오는 물건이 다르다: 커밋본 메시 5·뼈 52 ↔ 이 설정 메시 1·뼈 22(정점·면은 9,770/14,360으로 같다).
+    #    **정점이 같다고 같은 파일이 아니다** — 메시와 뼈를 같이 볼 것.
     "전설적인_이현주": dict(
+        rebuild="금지",
         source="~/Desktop/구랜디스킨모음/06_전설적인/전설적인_이현주.zip",
         glb_member="source/hinata skin.fbx",
         source_format="fbx",
@@ -297,7 +301,12 @@ SKINS = {
     # + Spine1→Spine2 재배정. Facebone(68개 서브트리, Head 자식)→Head.
     # 코트 자락 뼈 3갈래(Bone006·Bone015 — L Clavicle 자식 2뿌리, Bone001·Bone018 — R Clavicle
     # 자식 2뿌리, Bone000 — Spine1 자식 1뿌리) → 어깨·척추로 접어 날개처럼 안 뜨게(PM·유기 교훈).
+    # 🔴 rebuild="금지"(2026-09-24) — **다른 사람이 들어간다.** 2026-09-22 사장님 지시로 가프↔아카이누를
+    #    맞바꿨고(fix_unit_fbx.py 1289행), 커밋본은 아카이누(pl_akainu_gens01)다. 이 설정은 **맞바꾸기 전 가프**를
+    #    가리킨다. 게다가 오늘 돌려 보니 rar가 안 풀려 CalledProcessError로 죽는다 — 그런데 **옛 관문은 OK로 찍었다**
+    #    (예외 이름 목록에 CalledProcessError가 없었다). 관문은 이제 산출 파일 존재로 판정한다.
     "초월_양재모_AD": dict(
+        rebuild="금지",
         source="~/Desktop/구랜디스킨모음/08_초월/초월_양재모_AD.zip",
         glb_member="source/opfp___monkey_d__garp_xps_fbx_by_o_dv89_o_dfocdty.rar",
         inner_gltf="OPFP - Monkey D. Garp/12002.fbx",
