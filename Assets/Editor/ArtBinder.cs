@@ -701,9 +701,17 @@ public static class ArtBinder
     // 🔴 스킨 폴더(Characters·Units)만 본다(2026-09-12). 예전엔 Assets/Art 전체였다 — Blender로 지은
     //    자연물·벽·건물·해왕류·짐승이 들어오면서 그대로 두면 MakeHumanoid가 나무·바위·물범까지 Humanoid로
     //    바꿔 재임포트하고, LinkTextures가 NatureMaterialPostprocessor가 입힌 재질(잎 알파 컷)을 갈아 끼운다.
+    //
+    // 🔴 2026-09-24 Enemies를 다시 넣었다. 사장님 「걷는 애니메이션도 추가해줘」 —
+    //    적 FBX 다섯을 열어 보니 **애니메이션 클립이 한 개도 없다**(유닛 쪽 히든_뻬꼼에는
+    //    Idle·Move·Attack이 들어 있다). 클립을 78번 새로 만드는 대신 Humanoid로 맞춰
+    //    공용 Character.controller(이미 있는 Mixamo 걷기)를 그대로 태운다.
+    //    ⚠️ 위 단락이 막은 것은 **나무·바위·건물**이다. Enemies에는 사람 모양만 들어온다
+    //    (건물은 Buildings, 짐승은 Creatures에 따로 있다). 사람이 아닌 적이 생기면 그때 다시 좁힐 것 —
+    //    MakeHumanoid는 못 바꾼 모델을 이름까지 찍어 주므로 조용히 지나가지는 않는다.
     static IEnumerable<string> ModelPaths()
     {
-        string[] folders = new[] { CharacterFolder, UnitFolder }.Where(AssetDatabase.IsValidFolder).ToArray();
+        string[] folders = new[] { CharacterFolder, UnitFolder, EnemyFolder }.Where(AssetDatabase.IsValidFolder).ToArray();
         if (folders.Length == 0) return Enumerable.Empty<string>();
 
         return AssetDatabase.FindAssets("t:GameObject", folders)
@@ -807,6 +815,18 @@ public static class ArtBinder
         // 바다뱀형, Blender 원본은 몸길이 350·높이 195.5(수면 위 121 + 물속 74). 사장님 09-13 「크기도 반으로」 →
         // 높이 97.75로 맞춰 절반(몸길이 175)으로 줄인다. 원점 = 수면이라 WaterlineModels에도 있다(수면을 축으로 줄어든다).
         ("거대해왕류", "Enemy_거대해왕류", 8.5531f, false),
+
+        // ── 라운드 적(사장님이 09-24부터 스킨을 주기 시작) ─────────────────────────
+        // 🔴 여기 미터는 **거의 다 측정이 아니라 결정**이다. blender가 갈라 준 대로 적는다 —
+        //    립마다 내보내기 배율이 제각각이라(OBJ는 서로도 못 견준다, glb↔FBX는 208배 차이가
+        //    배율 차지 키 차가 아니다) **같은 게임·같은 배율의 FBX 둘 사이 비율만 근거**가 된다.
+        //    그래서 기준을 「보통 성인 1.75m」 하나로 박고 나머지를 거기 건다.
+        //    ⚠️ 이 줄을 고칠 땐 「이게 잰 값인가 정한 값인가」를 주석에 남길 것.
+        ("반항아_이승우", "Enemy_R03_반항아_이승우", 1.7500f, true),   // 결정: 보통 성인(사무라이, 크단 근거 없음)
+        ("배병욱", "Enemy_R04_배병욱", 4.6375f, true),                 // 🔵 측정: 류마 × 2.65 (blender, 같은 배율 FBX 둘)
+        ("왕승환", "Enemy_R05_왕승환", 1.7500f, true),                 // 결정: 보통 성인(바운티러시 일반 몹)
+        ("주영호", "Enemy_R10_주영호", 2.0700f, true),                 // 원작 설정 키 207cm(와폴). R10 보스
+        ("김만경", "Enemy_R30_김만경", 1.7500f, true),                 // 결정: 근거 없음 → 보통 성인. R30 보스
     };
 
     // 원점이 **수면**인 모델 — 발바닥을 바닥에 맞추지 않는다(맞추면 물속 부분이 수면 위로 솟는다).
