@@ -1351,9 +1351,10 @@ public static class MapGenerator
     /// 길어지는 느낌」(사장님 2026-09-23)으로 되돌아간다. 6열이 가로 1119·세로 1460으로
     /// 둘 다 만족하는 자리다.
     /// </summary>
-    // 사장님이 직접 정하신 열 수(2026-09-24: 9열). 아래 `spread` 표와 **반드시 같아야 한다** —
-    // 표에 9열을 쓰는데 여기가 8이면 마지막 열이 통째로 사라진다.
-    const int CombineTableColumns = 9;
+    // 사장님이 직접 정하신 열 수(2026-09-24: 9열 → 흔함 열이 앞에 붙어 **10열**).
+    // 아래 `spread` 표와 **반드시 같아야 한다** — 표에 10열을 쓰는데 여기가 9면 마지막 열이
+    // 통째로 사라진다. `neededColumns` 검사가 그걸 잡지만, 걸리기 전에 같이 올리는 게 맞다.
+    const int CombineTableColumns = 10;
     const float RecipeSlot = 15.4f;     // 유닛 한 칸. 원작 슬롯 한 변 64 ÷ Scale
     // ── 조합식 표 간격 (2026-09-23 재설계) ────────────────────────────────
     // 사장님 「조합판도 너무 붙어있으니깐 답답한 느낌이든다」.
@@ -1411,9 +1412,11 @@ public static class MapGenerator
         // 제한됨 9행이 열 하나를 통째로 쓰면 옆이 비어 보인다.
         List<List<(UnitGrade grade, List<CombineRecipe> chunk)>> columns =
             new List<List<(UnitGrade, List<CombineRecipe>)>>();
-        List<(UnitGrade grade, List<CombineRecipe> chunk)> current =
-            new List<(UnitGrade, List<CombineRecipe>)>();
-        float usedDepth = 0f;
+
+        // 열마다 「유닛만 세우는 열」인지. 흔함 열은 여기에 유닛 목록이 들어오고 columns의
+        // 같은 자리는 비어 있다. 두 배열은 **항상 같은 길이로 나란히 움직인다** — 아래
+        // 압축 루프에서 한쪽만 넣으면 열이 어긋나므로 반드시 짝으로 Add한다.
+        List<List<UnitData>> columnUnits = new List<List<UnitData>>();
 
         // 🔴 2026-09-23 사장님: "오른쪽 보면 밑에 너무 비잖아? 3번째 열로 본다면 그 밑에 바로
         //    희귀함 와도 됨. 너비가 너무 길어지는 느낌이라." → 같은 날 다시: 6열 중 **마지막
@@ -1453,14 +1456,17 @@ public static class MapGenerator
 
         // 등급 → 어느 열에 몇 개로 나눠 담을지. 사장님 지시를 그대로 옮긴 표다.
         // 한 등급이 여러 열에 걸치면 **앞 열이 한 행 더** 받는다(33 → 17/16).
+        // 🔴 2026-09-24 사장님 「안흔함 왼쪽에 비는 거 같은데 여기에 흔함 배치하자」 →
+        //    **0열이 흔함 전시로 들어가고 나머지가 한 칸씩 밀렸다.** 흔함은 조합식이 0개라
+        //    이 표에 안 실린다(아래 commonUnits가 따로 담당한다) — 그래서 여기 항이 없다.
         Dictionary<UnitGrade, int[]> spread = new Dictionary<UnitGrade, int[]>
         {
-            [UnitGrade.Uncommon] = new[] { 0 },          // 1열
-            [UnitGrade.Special] = new[] { 1, 2 },        // 2·3열
-            [UnitGrade.Rare] = new[] { 3, 4 },           // 4·5열
-            [UnitGrade.Legendary] = new[] { 5, 6 },      // 6·7열
-            [UnitGrade.Limited] = new[] { 6 },           // 7열 전설 밑 「남는 공간에」
-            [UnitGrade.Hidden] = new[] { 7, 8 },         // 8·9열 (2026-09-24 사장님이 둘로 가르셨다)
+            [UnitGrade.Uncommon] = new[] { 1 },          // 2열
+            [UnitGrade.Special] = new[] { 2, 3 },        // 3·4열
+            [UnitGrade.Rare] = new[] { 4, 5 },           // 5·6열
+            [UnitGrade.Legendary] = new[] { 6, 7 },      // 7·8열
+            [UnitGrade.Limited] = new[] { 7 },           // 8열 전설 밑 「남는 공간에」
+            [UnitGrade.Hidden] = new[] { 8, 9 },         // 9·10열 (2026-09-24 사장님이 둘로 가르셨다)
             // 🔴 영원은 09-24에 사장님이 거두셨다(「안흔함 밑에 영원함 조합식 빼줘」) — 그래서
             //    1열은 안흔함 13식만이다. MapLayout.CombineTableGrades에서 빠졌으니 여기 항이
             //    남아 있어도 실려 올 게 없지만, **둘을 같이 지운다** — 불멸 때와 같은 방식이다.
@@ -1485,6 +1491,19 @@ public static class MapGenerator
             new List<(UnitGrade, List<CombineRecipe>)>[columnCount];
         for (int c = 0; c < columnCount; c++) byColumn[c] = new List<(UnitGrade, List<CombineRecipe>)>();
 
+        // 🔴 흔함 열(0열) — 사장님 09-24 「안흔함 왼쪽에 비는 거 같은데 여기에 흔함 배치하자」.
+        //
+        // ⚠️ **흔함은 조합식이 0개다.** 위습으로만 얻는 시작 등급이라 만드는 법이 아예 없다
+        //    (LoadRecipesProducing(Common)은 빈 목록이다). 그래서 다른 아홉 열과 **모양이 다르다** —
+        //    재료·화살표 없이 **결과 칸만** 세운다.
+        //    빈 재료 칸을 두면 「재료가 없는 조합식」으로 읽혀 오히려 더 헷갈린다. 이 열이 말해야
+        //    하는 것은 「이 등급은 여기서 시작한다」 하나다.
+        List<UnitData>[] unitsByColumn = new List<UnitData>[columnCount];
+        unitsByColumn[0] = LoadUnitsOfGrade(UnitGrade.Common);
+        if (unitsByColumn[0].Count == 0)
+            Debug.LogWarning("[맵] 조합표: 흔함 유닛이 0종이라 0열이 빈 칸으로 남습니다 — " +
+                             "로스터에 grade==Common이 있는지 보십시오.");
+
         foreach ((UnitGrade grade, List<CombineRecipe> recipes) in loaded)
         {
             if (!spread.TryGetValue(grade, out int[] targets) || targets.Length == 0)
@@ -1506,12 +1525,15 @@ public static class MapGenerator
             }
         }
 
-        foreach (List<(UnitGrade, List<CombineRecipe>)> column in byColumn)
+        // 빈 열은 버리고 남은 것만 이어 붙인다. ⚠️ 유닛 열은 조합식이 0개라도 **비어 있지 않다** —
+        //    `column.Count == 0`만 보면 흔함 열이 통째로 사라진다.
+        for (int c = 0; c < columnCount; c++)
         {
-            if (column.Count == 0) continue;
-            foreach ((UnitGrade _, List<CombineRecipe> chunk) in column)
-                usedDepth += (column.Count > 1 ? GradeWallGap : 0f) + chunk.Count * RecipeRowHeight;
-            columns.Add(column);
+            List<UnitData> units = unitsByColumn[c];
+            bool hasUnits = units != null && units.Count > 0;
+            if (byColumn[c].Count == 0 && !hasUnits) continue;
+            columns.Add(byColumn[c]);
+            columnUnits.Add(hasUnits ? units : null);
         }
 
         if (columns.Count == 0) return "";
@@ -1529,8 +1551,12 @@ public static class MapGenerator
                 foreach (CombineRecipe recipe in chunk)
                     columnMaxSlots[c] = Mathf.Max(columnMaxSlots[c], RecipeSlotCount(recipe));
 
-            columnWidths[c] = columnMaxSlots[c] * (RecipeSlot + RecipeGap) + RecipeArrowGap + RecipeSlot
-                              + ColumnPad * 2f;
+            // 유닛 열은 재료 칸도 화살표도 없다 — 결과 칸 하나 + 좌우 여백뿐(약 29).
+            // 조합식 열 식에 재료칸 0을 넣으면 화살표 몫(13.7)이 남아 칸보다 넓어진다.
+            columnWidths[c] = columnUnits[c] != null
+                ? RecipeSlot + ColumnPad * 2f
+                : columnMaxSlots[c] * (RecipeSlot + RecipeGap) + RecipeArrowGap + RecipeSlot
+                  + ColumnPad * 2f;
             totalWidth += columnWidths[c];
         }
 
@@ -1563,6 +1589,35 @@ public static class MapGenerator
             BuildColumnWall(parent, $"조합표_칸벽_{c}", columnLeft, island.center.y, island.size.y);
             if (c == columns.Count - 1)
                 BuildColumnWall(parent, "조합표_칸벽_끝", cursorX, island.center.y, island.size.y);
+
+            // 유닛 열(흔함) — 결과 칸만 세로로. 등급이 하나뿐이라 등급 구분벽도 없다.
+            // ⚠️ 흔함↔안흔함 경계는 **열 경계**이므로 바로 위 칸벽이 이미 가른다. 여기에 등급
+            //    구분벽을 또 세우면 다른 열 경계(안흔함↔특별함 등)와 달라져 오히려 튄다 —
+            //    등급 구분벽은 **한 열 안에서** 등급이 바뀔 때만 쓰는 것이다.
+            if (columnUnits[c] != null)
+            {
+                GameObject unitStrip = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                unitStrip.name = "조합표_흔함";
+                unitStrip.transform.SetParent(parent, false);
+                float unitDepth = columnUnits[c].Count * RecipeRowHeight;
+                unitStrip.transform.position = new Vector3(columnLeft + columnWidth * 0.5f,
+                    MapLayout.IslandTop + 0.06f, rowZ + RecipeRowHeight * 0.5f - unitDepth * 0.5f);
+                unitStrip.transform.localScale = new Vector3(columnWidth, 0.12f, unitDepth);
+                Paint(unitStrip, "combine", columnWidth, unitDepth);
+                Object.DestroyImmediate(unitStrip.GetComponent<Collider>());
+
+                foreach (UnitData unit in columnUnits[c])
+                {
+                    // 재료가 없으니 결과 칸 자리(resultX)가 아니라 **첫 칸 자리**에 세운다 —
+                    // resultX는 재료 묶음 + 화살표만큼 오른쪽이라 이 좁은 열 밖으로 나간다.
+                    PlaceRecipeSlot(parent, rowLeftX, rowZ, unit.unitName,
+                                    GradeColor(unit.grade), $"흔함_{unit.unitName}", unit);
+                    rowZ -= RecipeRowHeight;
+                }
+
+                deepest = Mathf.Max(deepest, tableTop - rowZ);
+                continue;
+            }
 
             for (int b = 0; b < columns[c].Count; b++)
             {
@@ -1640,6 +1695,14 @@ public static class MapGenerator
         {
             int rows = 0;
             List<string> parts = new List<string>();
+
+            // 유닛 열은 조합식이 0이라 조합식 쪽 루프로는 「0행」으로 찍힌다 — 따로 센다.
+            if (columnUnits[c] != null)
+            {
+                rows = columnUnits[c].Count;
+                parts.Add($"흔함{rows}종(전시)");
+            }
+
             foreach ((UnitGrade g, List<CombineRecipe> chunk) in columns[c])
             {
                 rows += chunk.Count;
@@ -1647,10 +1710,16 @@ public static class MapGenerator
             }
             float depth = rows * RecipeRowHeight + (columns[c].Count - 1) * GradeWallGap;
             perColumn.Add($"\n    {c + 1}열 {string.Join("+", parts),-22} {rows,3}행 · 글씨깊이 {depth:F0} · " +
-                          $"폭 {columnWidths[c]:F0}(재료 {columnMaxSlots[c]}칸)");
+                          $"폭 {columnWidths[c]:F0}(" +
+                          (columnUnits[c] != null ? "결과칸만" : $"재료 {columnMaxSlots[c]}칸") + ")");
         }
 
-        return fitNote + $"\n조합식 표: {placed}개 조합식, {columns.Count}열 (사장님 지시 배정)." +
+        int displayed = 0;
+        foreach (List<UnitData> units in columnUnits) if (units != null) displayed += units.Count;
+
+        return fitNote + $"\n조합식 표: {placed}개 조합식" +
+               (displayed > 0 ? $" + 흔함 {displayed}종 전시" : "") +
+               $", {columns.Count}열 (사장님 지시 배정)." +
                $"\n  섬깊이 필요 {deepest:F0}/{available:F0} {verdict}" +
                $" — 아래 열별 「글씨깊이」보다 한 행({RecipeRowHeight:F0}) 큰 것이 정상입니다\n  {fit}" +
                string.Join("", perColumn) +
