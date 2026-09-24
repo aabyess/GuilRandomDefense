@@ -955,6 +955,12 @@ public static class ClaudeCommands
     //                  에디터 입력이 Game 뷰 포커스를 따지지 않게 그동안만 editorInputBehaviorInPlayMode를 바꾸고 끝나면 되돌린다.
     //   · boxselect:<이름>  내 유닛 중 이름에 그 글자가 든 것 **전부를 드래그 박스로** 고른다(누름 → 끌기 → 뗌, SelectionManager.SelectInBox 경로).
     //   · wait:<초>      다음 동작 전에 기다린다(위습이 걸어가 포탈에 들어갈 시간, 라운드가 넘어갈 시간 등).
+    //   · rounds:<N>     긴 판 — 라운드 N이 끝나거나(=N+1 시작) 패배·게임오버·시간 초과까지 판을 이어 가며, **라운드가 바뀔 때마다**
+    //                  🏁 지표 한 줄(적 레인/전체 · 데스카운트 · 골드 · 목재 · 내 유닛 · 위습 칸 · 스토리 · 보스 적 · 프레임 · 새 예외)과
+    //                  캡처 round_NN.png를 남긴다. [초]는 무시된다(끝날 때 찍는다).
+    //   · autoloop       rounds:와 함께 — 라운드가 바뀔 때마다 사람의 한 턴을 목록에 덧붙인다: 랜덤유닛 위습을 위습 칸 클릭으로 하나씩
+    //                  Portal_유닛랜덤에 보냄 → 카드별 조합 버튼 시도 → 모든 유닛을 흙길 옆 모서리로(rclickpt:corner).
+    //   · rclickpt:corner  0번 레인 적 경로의 안쪽 모서리(경로에서 약 50 안) **땅**을 우클릭한다 — 유닛이 실제로 싸우는 자리.
     //   · call:<형.함수>  플레이 도중 그 자리에서 인자 없는 정적 함수를 불러, 돌려준 문자열을 결과에 싣는다(다른 사람 진단을 판 안에서 돌릴 때 —
     //                  예: call:ApronProbe.AgentAudit. 그 진단의 메뉴는 스스로 플레이에 들어가서 이미 플레이 중인 판에선 못 쓴다, 09-24).
     //   · cardpair       여럿 고른 상태에서 같은 종류가 2기 이상인 유닛의 카드를 누른다(한 기 선택 → 그 유닛의 조합 버튼이 뜬다).
@@ -984,7 +990,7 @@ public static class ClaudeCommands
 
     const string GameShotKey = "ClaudeCommands.GameShot";
     const double GameShotEnterTimeout = 60, GameShotCaptureTimeout = 15, GameShotExitTimeout = 60;
-    const double GameShotSettle = 1.0, GameShotClickGap = 1.0, GameShotClickSearch = 5.0, GameShotOptionalClickSearch = 2.0;
+    const double GameShotSettle = 1.0, GameShotClickGap = 0.5, GameShotClickSearch = 5.0, GameShotOptionalClickSearch = 2.0;
     const int GameShotMaxLogKinds = 40;
 
     [Serializable]
@@ -994,6 +1000,13 @@ public static class ClaudeCommands
         public string file;         // ScreenCapture 결과(절대 경로)
         public float seconds;
         public int superSize = 1;
+        public int watchRounds;          // rounds:N — 0이면 끄기
+        public bool autoLoop;
+        public int lastRoundSeen = -1;
+        public int logKindsAtRound;      // 라운드 바뀔 때의 예외 종류 수 — 새로 생긴 종류만 그 라운드 줄에 적는다
+        public int logCountAtRound;
+        public double watchDeadline;
+        public bool finishNow;
         public int pointerPhase;   // select:/rclick: 한 동작 안의 단계(0 조준·카메라 → 1 누름 → 2 뗌 → 3 결과)
         public float pointerX, pointerY;
         public List<string> clicks = new List<string>();
@@ -1060,6 +1073,12 @@ public static class ClaudeCommands
             else if (token == "buttons") job.clicks.Add("@buttons");
             else if (token == "cardpair") job.clicks.Add("@cardpair");
             else if (token.StartsWith("call:")) job.clicks.Add("@call:" + token.Substring(5));
+            else if (token.StartsWith("rclickpt:")) job.clicks.Add("@rcpt:" + token.Substring(9));
+            else if (token == "autoloop") job.autoLoop = true;
+            else if (token.StartsWith("rounds:"))
+            {
+                if (!int.TryParse(token.Substring(7), out job.watchRounds) || job.watchRounds < 1) return $"❌ rounds: 뒤엔 1 이상 정수: {token}";
+            }
             else if (token.StartsWith("snap:")) job.clicks.Add("@snap:" + token.Substring(5));
             else if (token.StartsWith("select:") || token.StartsWith("rclick:"))
             {
@@ -1125,6 +1144,7 @@ public static class ClaudeCommands
 
         job.stage = "entering";
         job.stageSince = EditorApplication.timeSinceStartup;
+        if (job.watchRounds > 0) job.watchDeadline = EditorApplication.timeSinceStartup + 90 + job.watchRounds * 85;
         job.report = report.ToString();
         SaveGameShot(job);
         EditorApplication.isPlaying = true;   // 이 update가 끝난 뒤에 들어간다
@@ -1150,6 +1170,12 @@ public static class ClaudeCommands
         {
             FailGameShot(job, $"플레이 도중 도메인 리로드({job.stage} 단계) — 이 판은 무효라 여기서 끝낸다. 다른 세션이 Assets를 안 건드릴 때 다시 보낼 것");
             return;
+        }
+        if (job.watchRounds > 0 && EditorApplication.isPlaying && job.stage != "entering" && job.stage != "exiting" && job.stage != "capturing")
+        {
+            RoundWatch(job);
+            job = LoadGameShot();
+            if (job == null) return;
         }
         if (job.stage != "entering" && job.stage != "exiting" && !EditorApplication.isPlaying)
         {
@@ -1224,7 +1250,7 @@ public static class ClaudeCommands
                     Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
                     break;
                 }
-                if (target.StartsWith("@sel:") || target.StartsWith("@rc:") || target.StartsWith("@box:"))
+                if (target.StartsWith("@sel:") || target.StartsWith("@rc:") || target.StartsWith("@box:") || target.StartsWith("@rcpt:"))
                 {
                     if (!StepPointer(job, target, inStage)) break;   // 아직 진행 중
                     job.clickIndex++;
@@ -1290,7 +1316,7 @@ public static class ClaudeCommands
 
             case "waiting":
                 if (job.spawns.Count + job.combines.Count > 0) WatchLaneHits();
-                if (inStage >= job.seconds)
+                if (job.watchRounds > 0 ? job.finishNow : inStage >= job.seconds)
                 {
                     if (job.clicks.Any(c => c.StartsWith("@")))
                     {
@@ -1952,6 +1978,7 @@ public static class ClaudeCommands
     static bool StepPointer(GameShotJob job, string spec, double inStage)
     {
         if (spec.StartsWith("@box:")) return StepBox(job, spec.Substring(5), inStage);
+        if (spec.StartsWith("@rcpt:")) return StepPointAt(job, spec.Substring(6), inStage);
         bool left = spec.StartsWith("@sel:");
         string label = left ? "좌클릭 select" : "우클릭 rclick";
         Camera cam = Camera.main;
@@ -2018,6 +2045,155 @@ public static class ClaudeCommands
         }
     }
 
+    // ── rounds:/autoloop — 긴 판 ──
+    static float frameSum, frameMax;
+    static int frameN;
+
+    static void RoundWatch(GameShotJob job)
+    {
+        float dt = Time.unscaledDeltaTime;
+        if (dt > 0f) { frameSum += dt; frameMax = Mathf.Max(frameMax, dt); frameN++; }
+
+        RoundManager rm = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
+        if (rm == null) return;
+        PlayerContext me = PlayerContext.GetOccupied(0);
+        bool dead = me != null && me.IsDead;
+        bool over = rm.IsGameOver || dead;
+        int round = rm.CurrentRound;
+
+        if (round != job.lastRoundSeen || (over && !job.finishNow))
+        {
+            string head = over ? (dead ? "💀 패배(플레이어 1 IsDead)" : "🏁 게임오버(IsGameOver)") : $"🏁 라운드 {job.lastRoundSeen}→{round}";
+            job.report += $"   {head}: {RoundMetrics(job, rm)}\n";
+            string snapPath = Path.GetFullPath(Path.Combine(Folder, "shots", over ? "round_end.png" : $"round_{round:00}.png"));
+            ScreenCapture.CaptureScreenshot(snapPath);
+            job.report += $"      📸 {snapPath}\n";
+            job.lastRoundSeen = round;
+            frameSum = frameMax = 0f; frameN = 0;
+
+            if (over || round > job.watchRounds) job.finishNow = true;
+            else if (job.autoLoop && round >= 1) QueueTurn(job);
+        }
+        if (!job.finishNow && EditorApplication.timeSinceStartup > job.watchDeadline)
+        {
+            job.report += $"   ⏰ 시간 상한에 닿아 여기서 끝낸다(라운드 {round}): {RoundMetrics(job, rm)}\n";
+            job.finishNow = true;
+        }
+        SaveGameShot(job);
+    }
+
+    static string RoundMetrics(GameShotJob job, RoundManager rm)
+    {
+        PlayerContext me = PlayerContext.GetOccupied(0);
+        int gold = me?.GoldWallet?.Gold ?? -1;
+        int wood = me?.ResourceWallet != null ? me.ResourceWallet.Get(ResourceType.Wood) : -1;
+        var mine = UnityEngine.Object.FindObjectsByType<UnitIdentity>(FindObjectsSortMode.None)
+            .Where(u => u != null && u.Data != null && u.GetComponent<Wisp>() == null && (!u.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0))
+            .GroupBy(u => u.Data.grade).Select(g => $"{g.Key} {g.Count()}");
+        (string slots, int slotTotal) = ReadWispSlots();
+        string story = "";
+        GameObject storyPanel = GameObject.Find("StoryPanel");
+        if (storyPanel != null)
+            story = string.Join(" / ", storyPanel.GetComponentsInChildren<TMPro.TMP_Text>().Select(t => t.text.Trim()).Where(t => t.Length > 0));
+        int bosses = EnemyDummy.Active.Count(e => e != null && e.IsBoss);
+        string frames = frameN > 0 ? $"{1000f * frameSum / frameN:F1}ms 평균 · {1000f * frameMax:F0}ms 최대" : "-";
+        var newKinds = job.logs.Skip(job.logKindsAtRound).Select(l => $"[{l.type}] {(l.message.Length > 60 ? l.message.Substring(0, 60) + "…" : l.message)}");
+        int logTotal = job.logs.Sum(l => l.count);
+        string logs = $"경고·오류 +{logTotal - job.logCountAtRound}건" + (newKinds.Any() ? $"(새 종류: {string.Join(" | ", newKinds)})" : "");
+        job.logKindsAtRound = job.logs.Count;
+        job.logCountAtRound = logTotal;
+        return $"적 레인 {EnemyDummy.CountInLane(0)}/전체 {EnemyDummy.Active.Count(e => e != null)} · 데스카운트 {rm.DeathCountFor(0)} · " +
+               $"골드 {gold} · 목재 {wood} · 내 유닛 {(mine.Any() ? string.Join(", ", mine) : "0")} · 위습 칸 「{slots}」 · " +
+               $"스토리 「{story}」 · 보스 적 {bosses} · 남은시간 {rm.RoundTimeLeft:F1}/준비 {rm.PreRoundTimeLeft:F1} · 프레임 {frames} · {logs}";
+    }
+
+    // 사람의 한 턴 — 랜덤유닛 위습을 하나씩 포탈로, 카드별 조합 시도, 전부 모서리로.
+    static void QueueTurn(GameShotJob job)
+    {
+        int randomWisps = UnityEngine.Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None)
+            .Count(w => w != null && w.Data != null && (!w.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0) &&
+                        (w.Data.wispName ?? "").Contains("랜덤유닛"));
+        List<string> turn = new List<string>();
+        for (int i = 0; i < randomWisps; i++) { turn.Add("click?:랜덤유닛".Replace("click?:", "?")); turn.Add("@rc:Portal_유닛랜덤"); }
+        if (randomWisps > 0) turn.Add("@wait:12");
+        for (int k = 0; k < 3; k++)
+        {
+            turn.Add("@box:Unit_흔함");
+            turn.Add($"?Card{k}");
+            turn.Add("?UnitCommandSlot12");
+            turn.Add("?UnitCommandSlot13");
+        }
+        turn.Add("@box:Unit_");
+        turn.Add("@rcpt:corner");
+        job.clicks.AddRange(turn);
+        job.report += $"   🔁 한 턴 예약: 랜덤유닛 위습 {randomWisps}기 → 포탈 · 조합 시도 · 모서리로 이동({turn.Count}동작)\n";
+        if (job.stage == "waiting") { job.stage = "clicking"; job.stageSince = EditorApplication.timeSinceStartup; }
+    }
+
+    // 0번 레인 적 경로의 안쪽 모서리 지점 — 두 변이 만나는 곳이라 한 자리에서 두 변을 친다. inset = 경로에서 떨어질 거리.
+    static bool TryCornerTarget(float inset, out Vector3 target)
+    {
+        target = Vector3.zero;
+        LaneMarker lane = LaneMarker.Get(0);
+        WaypointPath path = lane != null ? LanePathNear(lane.LaneCenter) : null;
+        if (path == null || path.PointCount < 3) return false;
+        for (int i = 1; i + 1 < path.PointCount; i++)
+        {
+            Vector3 before = path.GetPoint(i) - path.GetPoint(i - 1), after = path.GetPoint(i + 1) - path.GetPoint(i);
+            before.y = after.y = 0f;
+            if (before.sqrMagnitude < 1f || after.sqrMagnitude < 1f || Vector3.Angle(before, after) <= 45f) continue;
+            Vector3 corner = path.GetPoint(i);
+            Vector3 diagonal = lane.LaneCenter - corner;
+            diagonal.y = 0f;
+            target = corner + diagonal.normalized * inset * 1.4142f;
+            target.y = lane.LaneCenter.y;
+            return true;
+        }
+        return false;
+    }
+
+    // rclickpt: — 월드 지점 하나를 우클릭한다(대상 오브젝트 없이 땅). 0 조준(필요하면 카메라) → 1 누름 → 2 뗌 → 결과.
+    static bool StepPointAt(GameShotJob job, string which, double inStage)
+    {
+        Camera cam = Camera.main;
+        switch (job.pointerPhase)
+        {
+            case 0:
+            {
+                if (which != "corner" || !TryCornerTarget(50f, out Vector3 aim)) { job.report += $"   🖱 rclickpt:{which}: 지점을 못 정함 — 건너뜀\n"; return true; }
+                Vector3 sp = cam.WorldToScreenPoint(aim);
+                (float bandBottom, float bandTop) = PointerBand();
+                bool visible = sp.z > 0f && sp.x > 20f && sp.x < cam.pixelWidth - 20f && sp.y > bandBottom * cam.pixelHeight + 10f && sp.y < bandTop * cam.pixelHeight - 10f;
+                if (!visible)
+                {
+                    RtsCameraController rts = cam.GetComponent<RtsCameraController>();
+                    if (rts == null || job.pointerX < 0f) { job.report += $"   🖱 rclickpt:{which}: {aim.ToString("F0")}이 화면에 안 들어와 건너뜀\n"; job.pointerX = 0f; return true; }
+                    rts.MoveTo(new Vector3(aim.x, 0f, aim.z));
+                    job.pointerX = -1f;
+                    SaveGameShot(job);
+                    return false;
+                }
+                EnsureShotMouse();
+                job.pointerX = sp.x; job.pointerY = sp.y;
+                QueueMouse(new Vector2(sp.x, sp.y), MouseButton.Right, false);
+                job.pointerPhase = 1;
+                SaveGameShot(job);
+                return false;
+            }
+            case 1: QueueMouse(new Vector2(job.pointerX, job.pointerY), MouseButton.Right, true); job.pointerPhase = 2; SaveGameShot(job); return false;
+            case 2: QueueMouse(new Vector2(job.pointerX, job.pointerY), MouseButton.Right, false); job.pointerPhase = 3; SaveGameShot(job); return false;
+            default:
+            {
+                SelectionManager selection = UnityEngine.Object.FindFirstObjectByType<SelectionManager>();
+                int n = selection != null ? selection.Selected.Count(x => x != null) : 0;
+                job.report += $"   🖱 우클릭 rclickpt:{which} @ 화면 ({job.pointerX:F0}, {job.pointerY:F0}) → 선택 {n}기에 이동 명령\n";
+                job.pointerX = 0f;
+                ParkShotMouse(cam);
+                return true;
+            }
+        }
+    }
+
     // boxselect: — 그 이름 내 유닛들을 화면에서 감싸는 사각형을 드래그한다. 0 조준(필요하면 카메라) → 1 누름 → 2 끌기 → 3 뗌 → 결과.
     static Vector2 boxStart, boxEnd;
     static bool StepBox(GameShotJob job, string name, double inStage)
@@ -2050,7 +2226,22 @@ public static class ClaudeCommands
                 if (!allVisible)
                 {
                     RtsCameraController rts = cam.GetComponent<RtsCameraController>();
-                    if (rts == null || job.pointerX < 0f) { FailGameShot(job, $"boxselect: 「{wanted}」 {targets.Count}기가 한 화면(HUD 사이)에 다 안 들어온다"); return false; }
+                    if (rts == null) { FailGameShot(job, $"boxselect: 「{wanted}」 {targets.Count}기가 화면 밖인데 카메라를 옮길 수 없다"); return false; }
+                    if (job.pointerX < 0f)
+                    {
+                        // 카메라를 한 번 옮겨도 다 안 들어오면 **보이는 것만** 고른다(판을 끝내지 않는다 — 긴 판에서 유닛이 우리·가운데·모서리로 흩어진다).
+                        List<Selectable> visibleOnes = targets.Where(t => { Vector3 v = cam.WorldToScreenPoint(t.transform.position);
+                            return v.z > 0f && v.x > 20f && v.x < cam.pixelWidth - 20f && v.y > bandBottom * cam.pixelHeight + 10f && v.y < bandTop * cam.pixelHeight - 10f; }).ToList();
+                        if (visibleOnes.Count == 0) { job.report += $"   🖱 드래그 boxselect 「{wanted}」: {targets.Count}기가 한 화면에 없어 건너뜀\n"; job.pointerX = 0f; return true; }
+                        job.report += $"   🖱 드래그 boxselect 「{wanted}」: {targets.Count}기 중 한 화면에 든 {visibleOnes.Count}기만 고름\n";
+                        min = new Vector3(float.MaxValue, float.MaxValue); max = new Vector3(float.MinValue, float.MinValue);
+                        foreach (Selectable t in visibleOnes) { Vector3 v = cam.WorldToScreenPoint(t.transform.position); min = Vector3.Min(min, v); max = Vector3.Max(max, v); }
+                        allVisible = true;
+                    }
+                }
+                if (!allVisible)
+                {
+                    RtsCameraController rts = cam.GetComponent<RtsCameraController>();
                     Vector3 centroid = targets.Aggregate(Vector3.zero, (acc, t) => acc + t.transform.position) / targets.Count;
                     rts.MoveTo(new Vector3(centroid.x, 0f, centroid.z));
                     job.report += $"   🎥 「{wanted}」 {targets.Count}기가 다 안 보여 카메라를 옮김(MoveTo {centroid.ToString("F0")})\n";
