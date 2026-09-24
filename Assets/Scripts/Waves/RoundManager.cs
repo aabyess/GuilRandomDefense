@@ -11,8 +11,12 @@ public class RoundManager : MonoBehaviour
     // 전용값과 정확히 같아서 그대로 둬도 맞다(필드명·기본값 둘 다 안 건드림).
     [SerializeField] float roundDuration = 40.65f;
     // R2~R39. 예전엔 roundDuration 하나로 R1까지 같이 썼는데(40.65) 원작은 R2부터
-    // 40.67로 미세하게 다르다 — 새 필드라 씬엔 아직 없다(추가해도 씬 덮어쓰기 문제가
-    // 없다, 기존 필드는 안 건드렸다).
+    // 40.67로 미세하게 다르다.
+    // ⚠️ 2026-09-24 정정: 「새 필드라 씬엔 아직 없다」고 적혀 있었는데 **씬에 있다**
+    //    (SampleScene의 RoundManager에 normalRoundDuration 40.67 · bossRoundDuration 75.4로
+    //    직렬화돼 있다). 값이 기본값과 같아서 결과가 안 바뀐다 — **그래서 더 위험하다.**
+    //    안 바뀌면 아무도 안 보고, 다음 사람이 이 주석을 믿고 「기본값만 고치면 된다」고 한다.
+    //    씬 값이 기본값과 갈리는 순간 씬이 이긴다.
     [SerializeField] float normalRoundDuration = 40.67f;
     // 원작은 보스 라운드가 훨씬 길다("제한시간내에 처치하세요" 메시지까지 뜬다) — 일반
     // 라운드의 2.7배가 아니라 보스 자체가 75.4초짜리다. WaveData.IsBossRound로 가른다.
@@ -224,7 +228,7 @@ public class RoundManager : MonoBehaviour
 
             laneDeathTimer[playerId] = deathCountTickInterval;
             laneDeathCount[playerId]--;
-            Debug.Log($"플레이어 {playerId + 1} 데스카운트: {laneDeathCount[playerId]}");
+            Debug.Log($"[데스] 플레이어 {playerId + 1} 데스카운트: {laneDeathCount[playerId]} (레인 적 {laneCounts[playerId]})");
 
             if (laneDeathCount[playerId] <= 0)
             {
