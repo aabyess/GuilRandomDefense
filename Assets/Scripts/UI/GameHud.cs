@@ -61,9 +61,31 @@ public class GameHud : MonoBehaviour
     TMP_Text unitInfoPortraitInitial;
     GameObject unitInfoPortraitSlotObject;
     TMP_Text goldWoodText;
-    TMP_Text wispCountText;
-    int lastWispCount = -1;
+
+    // 미니맵 위 위습 칸 — 왜 이 모양인지는 BuildWispSlots 주석에 있다.
+    // 52px인 이유: 44px로 처음 찍었더니 「랜덤유닛」이 칸을 넘쳐 **화면 왼쪽 끝에서 잘렸다**
+    // (1920×1080 플레이 캡처). 자동 축소는 최소 글자 크기까지만 줄어들지, 칸에 맞춰 잘라 주지 않는다.
+    const float WispSlotSize = 52f;      // 정사각형 한 변(픽셀). 가로·세로에 같은 값을 넣는 것이 정사각형의 근거다
+    const float WispSlotGap = 3f;
+    const int WispSlotsPerRow = 9;       // Assets/Data/Wisps 종류 수(9)와 같다 — 오늘은 늘 한 줄이다
+    const int MaxWispSlots = 18;         // 종류가 늘면 위로 한 줄 더. 그보다 늘면 경고를 찍는다
+    readonly List<WispSlot> wispSlots = new List<WispSlot>();
+    readonly Dictionary<WispData, List<Wisp>> wispsByType = new Dictionary<WispData, List<Wisp>>();
+    readonly List<WispData> wispTypeOrder = new List<WispData>();
+    readonly Dictionary<WispData, int> wispCycle = new Dictionary<WispData, int>();
+    RtsCameraController wispCamera;
+    bool warnedWispOverflow;
     float nextWispCountTime;
+
+    /// <summary>위습 칸 하나. 가리키는 종류는 위습이 늘고 줄 때마다 다시 배정된다.</summary>
+    class WispSlot
+    {
+        public GameObject root;
+        public Image background;
+        public TMP_Text nameText;
+        public TMP_Text countText;
+        public WispData data;
+    }
     TMP_Text roundTimeText;
     TMP_Text teamPanelText;
     RectTransform rightColumn;   // 팀 패널 + 보유 아이템을 위에서부터 쌓는 오른쪽 열(RightColumn())
@@ -399,12 +421,7 @@ public class GameHud : MonoBehaviour
         //    지금은 맵을 훑어 세야만 알 수 있었다.
         //    ⚠️ 하단 바가 아니라 HUD 루트에 붙인다 — 미니맵 칸 높이(MinimapTop)를 바꿔도 따라오게
         //    아래변을 MinimapTop에 맞춘다. 숫자를 박으면 오늘처럼 미니맵을 옮길 때 어긋난다.
-        RectTransform wispPanel = CreatePanel(transform, "WispCountPanel", SlotColor);
-        SetAnchors(wispPanel, new Vector2(0.01f, MinimapTop), new Vector2(0.24f, MinimapTop + 0.035f));
-        AddPanelBorder(wispPanel, BorderColor, BorderThickness);
-        wispCountText = CreateLabel(wispPanel, "WispCountText", "위습 0");
-        SetAnchors((RectTransform)wispCountText.transform, new Vector2(0.04f, 0f), new Vector2(0.96f, 1f));
-        wispCountText.alignment = TextAlignmentOptions.Left;
+        BuildWispSlots();
 
         RectTransform infoPanel = CreatePanel(bar, "UnitInfoPanel", SlotColor);
         SetAnchors(infoPanel, new Vector2(0.25f, 0.05f), new Vector2(0.81f, 0.95f));
@@ -2460,9 +2477,22 @@ public class GameHud : MonoBehaviour
 
         SetUnitInfoPortrait(data);
 
-        string unitName = data != null ? data.unitName : first.name;
-        string grade = data != null ? data.grade.KoreanName() : "-";
-        string gradeColorHex = data != null ? ColorUtility.ToHtmlStringRGB(GetGradeColor(data.grade)) : "FFFFFF";
+        // 위습은 UnitIdentity가 없어서 예전엔 오브젝트 이름이 그대로 떴다 — 화면에
+        // **「WispPrefab(Clone)」**이라고 나왔다(2026-09-24 플레이 캡처). 사장님이 보는 이름은
+        // 위습 에셋의 이름이어야 하고, 등급색도 그 위습이 뽑는 등급을 따라야 한다.
+        first.TryGetComponent(out Wisp selectedWisp);
+        WispData wispData = selectedWisp != null ? selectedWisp.Data : null;
+
+        string unitName = data != null ? data.unitName
+                        : wispData != null ? wispData.wispName
+                        : first.name;
+        string grade = data != null ? data.grade.KoreanName()
+                     : wispData != null ? $"{wispData.targetGrade.KoreanName()} 뽑기"
+                     : "-";
+        string gradeColorHex = ColorUtility.ToHtmlStringRGB(
+            data != null ? GetGradeColor(data.grade)
+            : wispData != null ? GetGradeColor(wispData.targetGrade)
+            : Color.white);
         // 플레이어 유닛에 아직 별도 체력 컴포넌트가 없어, UnitData의 기준 hp를 표시한다(실시간 값 아님).
         string hp = data != null ? data.hp.ToString("F0") : "-";
         string attackPower = attacker != null ? attacker.AttackDamage.ToString("F0") : "-";
@@ -2593,27 +2623,174 @@ public class GameHud : MonoBehaviour
         RefreshWispCount();
     }
 
-    // 미니맵 위 위습 개수. 매 프레임 맵을 훑으면 비싸니 0.5초에 한 번만 센다 —
+    /// <summary>
+    /// 미니맵 바로 위에 위습 종류별 정사각형 칸을 만든다.
+    /// 사장님 지시 2026-09-24: 「래덤위습 뜨는것도 정사각형으로 해주고 왼쪽 미니맵 위에 배치해줘
+    /// 그리고 클릭하면 해당위치로 이동하게해주고」.
+    ///
+    /// ⚠️ 정사각형은 **비율 앵커로는 못 만든다.** anchorMin/Max를 0.01~0.05 같은 화면 비율로
+    /// 주면 창이 넓어질 때 가로만 늘어나 직사각형이 된다(처음 만든 「위습 N」 띠가 그랬다).
+    /// 그래서 한 점(0.01, MinimapTop)에 고정하고 **픽셀 크기를 직접** 준다 —
+    /// sizeDelta에 가로·세로 같은 값을 넣는 것이 정사각형의 근거다.
+    /// 붙는 자리는 여전히 MinimapTop이라 미니맵을 옮기면 같이 따라온다.
+    ///
+    /// 왜 종류별 한 칸인가: 위습은 종류에 따라 나오는 것이 다르다(랜덤유닛·흔함 선택·초월…).
+    /// 개수만 「위습 5」로 합치면 **무엇이 5개인지 모른다.** 배경은 그 위습이 뽑는 등급색이라
+    /// 조합판·이름표에서 쓰는 색과 같은 뜻으로 읽힌다.
+    /// </summary>
+    void BuildWispSlots()
+    {
+        for (int i = 0; i < MaxWispSlots; i++)
+        {
+            int row = i / WispSlotsPerRow;
+            int col = i % WispSlotsPerRow;
+
+            RectTransform slot = CreatePanel(transform, $"WispSlot{i}", SlotColor);
+            slot.anchorMin = slot.anchorMax = new Vector2(0.01f, MinimapTop);
+            slot.pivot = Vector2.zero;   // 왼쪽 아래 모서리 기준 — 칸이 미니맵 위로 쌓인다
+            slot.anchoredPosition = new Vector2(col * (WispSlotSize + WispSlotGap),
+                                                row * (WispSlotSize + WispSlotGap));
+            slot.sizeDelta = new Vector2(WispSlotSize, WispSlotSize);
+            AddPanelBorder(slot, BorderColor, BorderThickness);
+
+            // 이름은 글자 수가 종류마다 달라(「초월」 2자 ~ 「백수생활선택」 6자) 자동 축소를 켠다.
+            // 44px 칸에 고정 크기를 쓰면 긴 이름이 잘려 무슨 위습인지 알 수 없다.
+            TMP_Text nameText = CreateLabel(slot, "Name", "");
+            SetAnchors((RectTransform)nameText.transform, new Vector2(0.06f, 0.44f), new Vector2(0.94f, 0.98f));
+            nameText.enableAutoSizing = true;
+            nameText.fontSizeMin = 7f;
+            nameText.fontSizeMax = 12f;
+            // 줄바꿈을 **켠다.** NoWrap이면 「백수생활선택」 같은 긴 이름이 한 줄로 뻗어
+            // 칸 밖으로 나가고, 왼쪽 끝 칸은 화면 밖으로 잘린다(44px 판에서 실제로 그랬다).
+            nameText.textWrappingMode = TextWrappingModes.Normal;
+            nameText.overflowMode = TextOverflowModes.Truncate;
+            nameText.color = Color.black;   // 배경이 등급색(밝은 편)이라 검정이 읽힌다
+            nameText.raycastTarget = false;
+
+            TMP_Text countText = CreateLabel(slot, "Count", "");
+            SetAnchors((RectTransform)countText.transform, new Vector2(0.06f, 0.02f), new Vector2(0.94f, 0.44f));
+            countText.fontSize = 19f;
+            countText.fontStyle = FontStyles.Bold;
+            countText.color = Color.black;
+            countText.raycastTarget = false;
+
+            int index = i;
+            slot.gameObject.AddComponent<Button>().onClick.AddListener(() => OnWispSlotClicked(index));
+            slot.gameObject.SetActive(false);   // 그 종류가 하나도 없으면 칸을 아예 안 보인다
+
+            wispSlots.Add(new WispSlot
+            {
+                root = slot.gameObject,
+                background = slot.GetComponent<Image>(),
+                nameText = nameText,
+                countText = countText,
+            });
+        }
+    }
+
+    // 위습 칸 갱신. 매 프레임 맵을 훑으면 비싸니 0.5초에 한 번만 센다 —
     // 위습은 라운드 보상으로 늘고 포탈에 넣으면 줄어드는, 초 단위로 안 바뀌는 값이다
     // (DebugHud.CountOwnedWisps와 같은 주기·같은 방식).
     void RefreshWispCount()
     {
-        if (wispCountText == null) return;
+        if (wispSlots.Count == 0) return;
         if (Time.unscaledTime < nextWispCountTime) return;
         nextWispCountTime = Time.unscaledTime + 0.5f;
 
         int localPlayerId = LocalPlayer.LocalPlayerId;
-        int count = 0;
+        foreach (List<Wisp> bucket in wispsByType.Values) bucket.Clear();
+        wispTypeOrder.Clear();
+
         foreach (Wisp wisp in FindObjectsByType<Wisp>(FindObjectsSortMode.None))
         {
-            if (wisp == null || wisp.Data == null) continue;
+            // IsConsumed를 빼는 이유: Destroy는 프레임 끝에야 처리돼서, 포탈에 들어간 위습이
+            // 한 프레임 더 잡힌다. 그걸 세면 개수가 잠깐 하나 많게 보인다.
+            if (wisp == null || wisp.Data == null || wisp.IsConsumed) continue;
             if (wisp.TryGetComponent(out OwnedByPlayer owner) && owner.OwnerId != localPlayerId) continue;
-            count++;
+
+            if (!wispsByType.TryGetValue(wisp.Data, out List<Wisp> bucket))
+            {
+                bucket = new List<Wisp>();
+                wispsByType[wisp.Data] = bucket;
+            }
+            bucket.Add(wisp);
         }
 
-        if (count == lastWispCount) return;
-        lastWispCount = count;
-        wispCountText.text = $"위습 {count}";
+        foreach (KeyValuePair<WispData, List<Wisp>> pair in wispsByType)
+            if (pair.Value.Count > 0) wispTypeOrder.Add(pair.Key);
+
+        // 칸 자리가 0.5초마다 바뀌면 누르려던 칸이 손가락 아래에서 도망간다. 등급 순으로 고정한다.
+        wispTypeOrder.Sort(CompareWispTypes);
+
+        for (int i = 0; i < wispSlots.Count; i++)
+        {
+            WispSlot slot = wispSlots[i];
+            if (i >= wispTypeOrder.Count)
+            {
+                slot.data = null;
+                if (slot.root.activeSelf) slot.root.SetActive(false);
+                continue;
+            }
+
+            WispData data = wispTypeOrder[i];
+            slot.data = data;
+            slot.background.color = data.targetGrade.Color();
+            slot.nameText.text = ShortWispName(data.wispName);
+            slot.countText.text = wispsByType[data].Count.ToString();
+            if (!slot.root.activeSelf) slot.root.SetActive(true);
+        }
+
+        // 칸보다 종류가 많으면 남는 종류는 **화면에 아예 안 나온다.** 조용히 넘기면
+        // 「내 위습이 사라졌다」로 보이므로 한 번은 찍는다.
+        if (wispTypeOrder.Count > wispSlots.Count && !warnedWispOverflow)
+        {
+            warnedWispOverflow = true;
+            Debug.LogWarning($"[HUD] 위습 종류가 {wispTypeOrder.Count}가지인데 칸은 {wispSlots.Count}개뿐입니다 — " +
+                             $"{wispTypeOrder.Count - wispSlots.Count}가지가 미니맵 위에 안 보입니다. " +
+                             "GameHud.MaxWispSlots를 늘리세요.");
+        }
+    }
+
+    static int CompareWispTypes(WispData a, WispData b)
+    {
+        int tierCompare = a.targetGrade.Tier().CompareTo(b.targetGrade.Tier());
+        return tierCompare != 0 ? tierCompare : string.CompareOrdinal(a.wispName, b.wispName);
+    }
+
+    // 「랜덤유닛 위습」→「랜덤유닛」. 44px 칸에 「위습」을 아홉 번 쓰는 건 자리 낭비다.
+    static string ShortWispName(string wispName)
+    {
+        if (string.IsNullOrEmpty(wispName)) return "위습";
+        string name = wispName.Replace("위습", "").Trim();
+        return name.Length == 0 ? "위습" : name;
+    }
+
+    /// <summary>
+    /// 위습 칸 클릭 — 그 위습이 있는 곳으로 화면을 옮기고 그 위습을 선택한다.
+    /// 선택까지 하는 이유: 화면만 옮기면 사장님이 위습을 또 찾아 클릭해야 한다. 원작도
+    /// 아이콘을 누르면 선택된다. 선택돼 있으면 곧바로 포탈에 우클릭할 수 있다.
+    /// </summary>
+    void OnWispSlotClicked(int index)
+    {
+        if (index < 0 || index >= wispSlots.Count) return;
+        WispData data = wispSlots[index].data;
+        if (data == null || !wispsByType.TryGetValue(data, out List<Wisp> bucket) || bucket.Count == 0) return;
+
+        // 같은 종류가 여럿이면 누를 때마다 다음 위습으로 간다. 늘 첫 번째만 보여주면
+        // 포탈에 하나씩 넣는 동안 나머지를 찾을 길이 없다.
+        // ⚠️ 셀 때마다 접는다 — 위습이 소모돼 목록이 줄면 저장해 둔 번호가 범위를 넘는다.
+        wispCycle.TryGetValue(data, out int cycle);
+        cycle %= bucket.Count;
+        wispCycle[data] = (cycle + 1) % bucket.Count;
+
+        Wisp wisp = bucket[cycle];
+        if (wisp == null) return;
+
+        if (wispCamera == null) wispCamera = FindFirstObjectByType<RtsCameraController>();
+        if (wispCamera != null) wispCamera.MoveTo(wisp.transform.position);
+
+        if (selectionManager != null && wisp.TryGetComponent(out Selectable selectable))
+            selectionManager.SelectOnly(selectable);
     }
 
     // 팀 현황판 값은 자주 안 바뀌므로(적/골드/목재), 이전 프레임과 비교해 실제로 바뀐 경우에만
