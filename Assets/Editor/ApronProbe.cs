@@ -343,7 +343,12 @@ public static class ApronProbe
     const float AuditStep = 12f;
     const float BodyHeightForOverhead = 30f;   // 유닛 키 상한. 이만큼 위에 뭐가 있으면 뚫고 지나간다
 
-    static string AgentAudit()
+    /// <summary>
+    /// 부작용 없는 **순수 측정**이다. 플레이 중 아무 때나 불러도 된다 — 씬도 에셋도 안 건드리고,
+    /// 플레이 모드를 나가지도 않는다(그건 <see cref="Tick"/>·<see cref="Finish"/> 쪽 일이다).
+    /// 그래서 다른 세션의 판 **안에서** 불러 결과 문자열만 받아 가도 된다(구현담당2, 09-24).
+    /// </summary>
+    public static string AgentAudit()
     {
         StringBuilder sb = new StringBuilder();
         NavMeshBuildSettings bake = NavMesh.GetSettingsByIndex(0);
@@ -437,18 +442,45 @@ public static class ApronProbe
         float scale = Mathf.Max(a.transform.lossyScale.x, a.transform.lossyScale.z);
         int avoiding = group.Count(g => g.obstacleAvoidanceType != ObstacleAvoidanceType.NoObstacleAvoidance);
 
+        float bodyRadius = 0f;
         string body = "";
         Renderer r = a.GetComponentInChildren<Renderer>();
         if (r != null)
         {
             Bounds b = r.bounds;   // bounds는 이미 월드다
-            body = $" · 몸 {b.size.x:0.##}×{b.size.y:0.##}×{b.size.z:0.##} → 충돌 반지름 ≈ {Mathf.Max(b.size.x, b.size.z) * 0.5f:0.##}";
+            bodyRadius = Mathf.Max(b.size.x, b.size.z) * 0.5f;
+            body = $" · 몸 {b.size.x:0.##}×{b.size.y:0.##}×{b.size.z:0.##} → 충돌 반지름 ≈ {bodyRadius:0.##}";
         }
+
+        int offMesh = group.Count(g => !g.isOnNavMesh);
 
         sb.AppendLine($"  {label} {group.Length}기 · 반지름 **{a.radius * scale:0.##}**(로컬 {a.radius:0.####} × 배율 {scale:0.##})" +
                       $" · 높이 **{a.height * scale:0.##}**(로컬 {a.height:0.####})" +
+                      $" · 종류ID {a.agentTypeID}" +
                       $" · 회피 켜진 것 {avoiding}/{group.Length}" +
                       $"{(avoiding == 0 ? " 🔴 전부 꺼짐 — 반지름이 작동할 자리가 없다" : "")}{body}");
+        if (offMesh > 0)
+            sb.AppendLine($"      🔴 NavMesh 밖에 있는 것 {offMesh}/{group.Length} — 이 기수는 움직이지 못합니다");
+
+        // 「한 몸처럼 보인다」를 숫자로. 가장 가까운 두 기의 거리가 몸 지름보다 작으면 겹친 것이다.
+        // 회피 판정에 필요한 게 이 값이라, 우리에 선 상태와 이동 뒤 상태를 각각 재면 갈린다.
+        if (group.Length >= 2)
+        {
+            float closest = float.MaxValue, farthest = 0f;
+            int overlapping = 0;
+            for (int i = 0; i < group.Length; i++)
+                for (int j = i + 1; j < group.Length; j++)
+                {
+                    float d = Vector3.Distance(group[i].transform.position, group[j].transform.position);
+                    closest = Mathf.Min(closest, d);
+                    farthest = Mathf.Max(farthest, d);
+                    if (bodyRadius > 0f && d < bodyRadius * 2f) overlapping++;
+                }
+            int pairs = group.Length * (group.Length - 1) / 2;
+            sb.AppendLine($"      퍼짐: 가장 가까운 두 기 {closest:0.##} · 가장 먼 두 기 {farthest:0.##}" +
+                          $" · 몸이 겹친 짝 {overlapping}/{pairs}" +
+                          $"{(bodyRadius > 0f ? $" (몸 지름 {bodyRadius * 2f:0.##} 기준)" : "")}");
+        }
     }
 
     /// <summary>레인1 섬 + 앞치마를 격자로 훑는다. 두 검사가 같은 표본을 써야 견줄 수 있다.</summary>
