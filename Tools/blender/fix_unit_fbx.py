@@ -346,6 +346,18 @@ for _s, _side in (("L", "Left"), ("R", "Right")):
 # 버기(R18): Spine2·Toe0이 없는 Bip001. 있는 것만 남긴다.
 BIP001_NO_SPINE2_NO_TOE = {k: v for k, v in BIP001_RENAME.items()
                            if not k.endswith("Spine2") and not k.endswith("Toe0")}
+# 원피스 버닝 윌 아프로 루피(R22 이호준, 2026-09-25) — Bip001인데 **팔이 고무 사슬**이다: UpperArm에 살 0, 팔 살은
+#   UpperArm 밑 Point006~011 여섯 마디 + 손 Point018(오른쪽 Point012~017 + Point029)에 있고 Bip001 Forearm·Hand가 **아예 없다.**
+#   그래서 BIP001 표를 못 쓴다(없는 뼈가 있으면 rename_bones가 죽는다). 어깨→손목 x 0.0015→0.0053의 한가운데(0.0034)에
+#   가장 가까운 마디 Point009(0.0039)/Point015를 팔꿈치로 잡고, 앞 셋은 위팔·뒤 둘은 아래팔로 merge한다.
+LUFFY_AFRO_RENAME = {"Bip001 Pelvis": "mixamorig:Hips", "Bip001 Spine": "mixamorig:Spine", "Bip001 Spine1": "mixamorig:Spine1",
+                     "Bip001 Neck": "mixamorig:Neck", "Bip001 Head": "mixamorig:Head",
+                     "Point009": "mixamorig:LeftForeArm", "Point018": "mixamorig:LeftHand",
+                     "Point015": "mixamorig:RightForeArm", "Point029": "mixamorig:RightHand"}
+for _s, _side in (("L", "Left"), ("R", "Right")):
+    LUFFY_AFRO_RENAME.update({f"Bip001 {_s} Clavicle": f"mixamorig:{_side}Shoulder", f"Bip001 {_s} UpperArm": f"mixamorig:{_side}Arm",
+                              f"Bip001 {_s} Thigh": f"mixamorig:{_side}UpLeg", f"Bip001 {_s} Calf": f"mixamorig:{_side}Leg",
+                              f"Bip001 {_s} Foot": f"mixamorig:{_side}Foot", f"Bip001 {_s} Toe0": f"mixamorig:{_side}ToeBase"})
 IRONMAN_RENAME = {"Bip01 Pelvis": "mixamorig:Hips", "Bip01 Spine": "mixamorig:Spine", "Bip01 Spine1": "mixamorig:Spine1", "Bip01 Spine3": "mixamorig:Spine2",
                   "Bip01 Neck": "mixamorig:Neck", "Bip01 Head": "mixamorig:Head"}
 for _s, _side in (("L", "Left"), ("R", "Right")):
@@ -530,6 +542,73 @@ UNITS = {
                             dict(pattern=r"^(l_weapon_joint|LHand_Fore_sup)", into="mixamorig:LeftHand"),
                             dict(pattern=r"^(r_weapon_joint|RHand_Fore_sup)", into="mixamorig:RightHand")],
                materials=dict(textures={"pl_oven_orig01": [("DiffuseColor", "pl_oven_orig01_diff.png")]})),
+    # 원피스 파이팅 패스 오즈(Oars, XPS 립, o_dv89_o) → R23 구주호. zip = source/*.rar(29009.fbx · xps.xps · 29009_X.png) + textures/29009_X.png.
+    #   메시 1(Body, 정점 19,514 · 삼각형 27,787) · 재질 1(29009) · 그림 1(29009_X.png 1024² 컬러 — zip·rar 픽셀 같음) · 뼈 82 · 클립 0.
+    #   🔴 원본 재질이 컬러 그림을 **노멀맵에도** 꽂고 있다(모모우와 같은 립 계열) → materials=로 컬러만 새로 짓는다.
+    #   표준 Bip001(Spine2·Toe0·손가락·비틀림 뼈) → BIP001_RENAME 그대로. 거인 체형: 골반 z 0.22/0.668(33%) — 다리가 짧고,
+    #   팔이 길게 처져 손이 z 0.32(A자 약 50°) → tpose_arms. 등 뒤 긴 머리카락 사슬 셋(Bone001~004 · 010~013 · 017~020, z 0.33까지)은
+    #   Head 밑이라 under=Head로 머리에 붙는다(머리와 같이 돈다).
+    #   보조: 비틀림 뼈 → 해당 팔 · Bone023(목 밑) → Neck · Bone007 → Spine1 · Bone014 → Spine · Bone008/009/015/016(골반 밑 허리 천) → Hips.
+    #   손가락은 Hand로 합친다(tpose_arms 손바닥 굴리기는 건너뛴다 — 유니티 Humanoid는 손가락이 선택이다).
+    "구주호": dict(path="Assets/Art/Enemies/구주호/구주호.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R21-R30/R23_구주호.zip"),
+                        "source/opfp___oars_xps_fbx_by_o_dv89_o_dfrdyml.rar", "OPFP - Oars/29009.fbx"),
+               archive_rgb={"OPFP - Oars/29009_X.png": "29009.png"},
+               skip_shapes=True,
+               drop_bones=["29009", "Bip001"],
+               rename_bones=BIP001_RENAME,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(under="mixamorig:LeftHand", into="mixamorig:LeftHand"),
+                            dict(under="mixamorig:RightHand", into="mixamorig:RightHand"),
+                            dict(pattern=r"^Bip001 LUpArmTwist$", into="mixamorig:LeftArm"),
+                            dict(pattern=r"^Bip001 RUpArmTwist$", into="mixamorig:RightArm"),
+                            dict(pattern=r"^Bip001 L ForeTwist$", into="mixamorig:LeftForeArm"),
+                            dict(pattern=r"^Bip001 R ForeTwist$", into="mixamorig:RightForeArm"),
+                            dict(pattern=r"^Bone023$", into="mixamorig:Neck"),
+                            dict(pattern=r"^Bone007$", into="mixamorig:Spine1"),
+                            dict(pattern=r"^Bone014$", into="mixamorig:Spine"),
+                            dict(pattern=r"^Bone0(08|09|15|16)$", into="mixamorig:Hips")],
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               materials=dict(textures={"29009": [("DiffuseColor", "29009.png")]})),
+    # 원피스 버닝 윌 아프로 루피(XPS 립, o_dv89_o) → R22 이호준. zip = source/*.rar(FBX·XPS·PNG 넷) + textures/luffy003_body_d.png.
+    #   메시 2(몸 luffy003_body_d_0 정점 10,794 · 얼굴 luffy001_face_d_0 928) · 재질 1(luffy003_body_d, 둘이 같이 씀) · 뼈 74 · 클립 0.
+    #   그림 넷: _d(1024² 컬러) · _n(256² 노멀) · _col(128² 톤 램프) · _line(64² 외곽선 램프) — 적 규약대로 **컬러만** 쓴다.
+    #   zip의 textures/luffy003_body_d.png와 rar 안 것은 픽셀이 같다.
+    #   🔴 skip_shapes — in-between 셰이프(표정 모프) 때문에 Blender가 파일째 못 연다.
+    #   🔴 팔이 고무 사슬이다 → LUFFY_AFRO_RENAME(표 머리말). 다리도 Calf엔 살 17뿐, 정강이 살은 Thigh 밑 **평행 사슬** Point040~048에,
+    #      발은 Point080(464)·발끝은 Point082(198)에 있다. 발목 높이(z 0.0013 = Foot 머리)인 Point048은 Foot으로.
+    #   뿌리 위 노드 다섯(luffy003_body·root·Bip001·luffy001_face_d·luffy003_body_d)은 전부 살 0 → 뺀다(Hips가 뿌리).
+    "이호준": dict(path="Assets/Art/Enemies/이호준/이호준.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R21-R30/R22_이호준.zip"),
+                        "source/one_piece_burning_will___luffy__afro__for_xps_by_o_dv89_o_desmb7.rar",
+                        "One Piece Burning Will - Luffy (Afro)/luffy003_body.fbx"),
+               archive_rgb={"One Piece Burning Will - Luffy (Afro)/luffy003_body_d.png": "luffy003_body_d.png"},
+               skip_shapes=True,
+               drop_bones=["luffy003_body", "root", "Bip001", "luffy001_face_d", "luffy003_body_d"],
+               rename_bones=LUFFY_AFRO_RENAME,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(under="mixamorig:LeftHand", into="mixamorig:LeftHand"),
+                            dict(under="mixamorig:RightHand", into="mixamorig:RightHand"),
+                            dict(pattern=r"^Point00[678]$", into="mixamorig:LeftArm"),
+                            dict(pattern=r"^Point01[01]$", into="mixamorig:LeftForeArm"),
+                            dict(pattern=r"^Point01[234]$", into="mixamorig:RightArm"),
+                            dict(pattern=r"^Point01[67]$", into="mixamorig:RightForeArm"),
+                            dict(pattern=r"^(Point040|Point043|Point044|Point046)$", into="mixamorig:LeftLeg"),
+                            dict(pattern=r"^(Point041|Point042|Point045|Point047)$", into="mixamorig:RightLeg"),
+                            dict(pattern=r"^(Point048|Point080)$", into="mixamorig:LeftFoot"),
+                            dict(pattern=r"^(Point049|Point081)$", into="mixamorig:RightFoot"),
+                            dict(pattern=r"^(Point082|Point084)$", into="mixamorig:LeftToeBase"),
+                            dict(pattern=r"^Point083$", into="mixamorig:RightToeBase"),
+                            dict(pattern=r"^Bone001$", into="mixamorig:LeftUpLeg"),
+                            dict(pattern=r"^Bone001\(mirrored\)$", into="mixamorig:RightUpLeg")],
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               materials=dict(textures={"luffy003_body_d": [("DiffuseColor", "luffy003_body_d.png")]})),
     # 원피스 조로(Zoro) → R19 김태영. **glb 단일 파일**, 나미와 같은 마야 `_jnt_skin` 계열 + **번호 꼬리**.
     #   뼈 135 · 메시 5(+Icosphere) · 나미와 똑같이 **5_ / 7_ 두 벌**이라 `7_`(외곽선 껍데기)을 뺀다.
     "김태영": dict(path="Assets/Art/Enemies/김태영/김태영.fbx", kind="human", size=("height", 1.8),
@@ -3518,6 +3597,9 @@ RIGHT = re.compile(r"(?i)(right|(^|[:_ ])r([:_ ]|$)|\.r($|_)|_r($|_)|^r(arm|leg)
 SKIP = ("end", "top", "tweak", "mch", "org", "pole", "widget", "adj", "vis_")
 
 
+_SKIP_SHAPES = False                                                    # fix()가 항목의 skip_shapes로 켠다(load()가 읽는다)
+
+
 def load(path, anim, guess_bind=True):
     if path.lower().endswith((".blend", ".blend1")):                   # 🔸 오카베(2026-09-16): 원본 블렌더 파일을 그대로 연다(FBX보다 Rigify·수정자 정보가 온전)
         bpy.ops.wm.open_mainfile(filepath=path, load_ui=False)
@@ -3537,6 +3619,17 @@ def load(path, anim, guess_bind=True):
                         pb.matrix_basis = Matrix.Identity(4)
             for act in list(bpy.data.actions):
                 bpy.data.actions.remove(act)
+    elif _SKIP_SHAPES:
+        # 🔸 skip_shapes(2026-09-25 R22 아프로 루피): XPS 계열 FBX에 **in-between 셰이프**(표정 모프)가 있으면 Blender 임포터가
+        #   「FBX in-between Shapes are not currently supported」로 **파일째 못 연다.** 적·유닛은 표정 모프를 안 쓰니
+        #   셰이프 읽기만 이 한 번 건너뛴다(메시·뼈·가중치·UV는 그대로). 끝나면 원래 함수로 되돌린다.
+        import io_scene_fbx.import_fbx as _imf
+        _orig = _imf.blen_read_shapes
+        _imf.blen_read_shapes = lambda *a, **k: {}
+        try:
+            bpy.ops.import_scene.fbx(filepath=path, use_anim=anim)
+        finally:
+            _imf.blen_read_shapes = _orig
     else:
         bpy.ops.import_scene.fbx(filepath=path, use_anim=anim)
     bpy.context.view_layer.update()
@@ -4217,6 +4310,9 @@ def extract_archive(archive, members):
     out = [os.path.join(tmp, m) for m in members]
     for f in out:
         assert os.path.isfile(f), f"압축에서 못 꺼냈다: {f}"
+        # 🔴 7z는 RAR5를 **0바이트 파일로 에러 없이** 푼다(2026-09-25 PM이 opfp 임펠다운 묶음에서 겪음). 여기는 bsdtar지만
+        #   풀기 도구가 바뀌어도 조용히 빈 파일로 넘어가지 않게 크기까지 본다.
+        assert os.path.getsize(f) > 0, f"압축에서 꺼낸 파일이 0바이트다(RAR5를 못 읽는 도구?): {f}"
     return out
 
 
@@ -4343,6 +4439,8 @@ def humanoid_weight_check(name, meshes):
 
 
 def fix(name, cfg, out_dir=None, save_blend=False):
+    global _SKIP_SHAPES
+    _SKIP_SHAPES = bool(cfg.get("skip_shapes"))
     if cfg.get("hold"):
         return {"이름": name, "보류": cfg["hold"]}
     dst_path = os.path.join(ROOT, cfg["path"])
