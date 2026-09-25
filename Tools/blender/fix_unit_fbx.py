@@ -388,6 +388,14 @@ for _s, _side in (("L", "Left"), ("R", "Right")):
     KKR_RENAME.update({f"G_uparm_{_s}": f"mixamorig:{_side}Arm", f"G_lowarm_{_s}": f"mixamorig:{_side}ForeArm", f"GD_hand_{_s}": f"mixamorig:{_side}Hand",
                        f"G_thigh_{_s}": f"mixamorig:{_side}UpLeg", f"G_calf_{_s}": f"mixamorig:{_side}Leg",
                        f"GD_foot_{_s}": f"mixamorig:{_side}Foot", f"GD_toe_{_s}": f"mixamorig:{_side}ToeBase"})
+# 마시라(R37, 2026-09-25) — 「biped_…_skin」 리그(원피스 해적무쌍 계열 추정). 번호 꼬리는 rename_strip으로.
+MASIRA_RENAME = {"biped_torso_base_skin": "mixamorig:Hips", "biped_torso_1_skin": "mixamorig:Spine", "biped_torso_2_skin": "mixamorig:Spine1",
+                 "biped_torso_end_skin": "mixamorig:Spine2", "biped_neck_base_skin": "mixamorig:Neck", "biped_head_skin": "mixamorig:Head"}
+for _s, _side in (("l", "Left"), ("r", "Right")):
+    MASIRA_RENAME.update({f"biped_{_s}_shoulder_skin": f"mixamorig:{_side}Shoulder", f"biped_{_s}_upArm_base_skin": f"mixamorig:{_side}Arm",
+                          f"biped_{_s}_lowArm_base_skin": f"mixamorig:{_side}ForeArm", f"biped_{_s}_hand_base_skin": f"mixamorig:{_side}Hand",
+                          f"biped_{_s}_upLeg_1_skin": f"mixamorig:{_side}UpLeg", f"biped_{_s}_lowLeg_1_skin": f"mixamorig:{_side}Leg",
+                          f"biped_{_s}_foot_skin": f"mixamorig:{_side}Foot", f"biped_{_s}_toe_skin": f"mixamorig:{_side}ToeBase"})
 # 빈스모크 저지(R24): Spine2만 없고 Toe0은 있는 Bip001.
 BIP001_NO_SPINE2 = {k: v for k, v in BIP001_RENAME.items() if not k.endswith("Spine2")}
 # 버기(R18): Spine2·Toe0이 없는 Bip001. 있는 것만 남긴다.
@@ -865,6 +873,37 @@ UNITS = {
                                "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
                            for s, side in (("L", "Left"), ("R", "Right"))},
                materials=dict(textures={"34051_Show": [("DiffuseColor", "34051_Show.png")]})),
+    # 원피스 마시라(원숭이 인양, Sketchfab glb) → R37 조성진. 메시 2(몸 13,375 · 얼굴 1,725 **스킨 없음**) · 재질 2 · 그림 2 · 관절 73 · 클립 0.
+    #   두 발로 선 사람형(팔이 길고 몸집이 큼) → Humanoid. biped_* 리그 → MASIRA_RENAME. 얼굴은 rigid_meshes로 Head.
+    #   꼬리(tail01~03) · 바나나 · 바지 · 팔꿈치·손 보조 → merge_to_nearest. 카메라·표식 노드(살 0)와 뿌리 위 노드는 뺀다. A자 → tpose_arms.
+    "조성진": dict(path="Assets/Art/Enemies/조성진/조성진.fbx", kind="human", size=("height", 1.8),
+               source=os.path.join(SKINS, "90_적유닛/R31-R40/R37_조성진.glb"), gltf_guess_bind=False,
+               drop_meshes=["Icosphere"],
+               rigid_meshes={"Masira_Face_Masira_Face_H_0": "mixamorig:Head"},
+               rename_bones=MASIRA_RENAME, rename_strip=r"_[0-9]+$",
+               drop_bones=["_rootJoint", "Masira_H_00", "biped_root_01", "biped_root2_02", "camera_follow_069",
+                           "camera_target_070", "Masira_Mod_071"],
+               no_nulls=True, orient_snap=True,
+               merge_to_nearest=True,
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               glb_images={0: "Masira_Body_H.png", 1: "Masira_Face_H.png"},
+               materials=dict(textures={"Masira_Body_H": [("DiffuseColor", "Masira_Body_H.png")],
+                                        "Masira_Face_H": [("DiffuseColor", "Masira_Face_H.png")]})),
+    # 원피스 파울리(갈레라 컴퍼니, Sketchfab glb, 카쿠·에넬과 같은 CH_ 리그) → R38 선효진. 메시 7(몸 8,334 + 얼굴 세 벌 × 2조각) · 재질 2 · 그림 1.
+    #   얼굴은 나란히 렌더해 골랐다: 00 = 평상시(담배 문 찡그림) 남김 · 01 = 눈 감고 웃음 · 02 = 이 악문 얼굴 → 뺀다.
+    #   밧줄 소품은 이 모델에 **없다**(몸 폭 ±0.975는 T자 팔). 이미 T자 → tpose 불필요.
+    "선효진": dict(path="Assets/Art/Enemies/선효진/선효진.fbx", kind="human", size=("height", 1.8),
+               source=os.path.join(SKINS, "90_적유닛/R31-R40/R38_선효진.glb"), gltf_guess_bind=False,
+               drop_meshes=["Icosphere", "Object_12", "Object_13", "Object_15", "Object_16"],
+               rename_bones=CH_RENAME, rename_strip=r"_[0-9]+$",
+               drop_bones=["_rootJoint", "CH_Reference_01"],
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head")],
+               glb_images={0: "Cha_9011_00.png"},
+               materials=dict(textures={"Cha_9011_00": [("DiffuseColor", "Cha_9011_00.png")],
+                                        "Cha_9011_01": [("DiffuseColor", "Cha_9011_00.png")]})),
     # 원피스 카쿠(CP9, Sketchfab glb, 뼈 있음) → R25 이정범. 그림 둘이 박혀 있다(0 = 컬러 1024² RGB · 1 = 스페큘러 LA → 컬러만).
     #   메시 4(몸 5,254 + 얼굴 세 벌 face_5201_00/01/02 = 1,136/1,467/1,353, **경계가 똑같이 겹친 표정 변형**) + Icosphere · 재질 1 · 관절 48 · 클립 0.
     #   얼굴은 세 벌을 나란히 렌더해 골랐다: 00(Object_9) = 눈 뜨고 입 다문 평상시 · 01(Object_11) = 웃음 · 02(Object_13) = 눈 감음 → 00만 남긴다.
