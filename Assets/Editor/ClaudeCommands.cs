@@ -1034,6 +1034,8 @@ public static class ClaudeCommands
         public int droppedLogs;     // 종류 상한을 넘어 못 실은 로그 수
         public bool failed;
         public int midPlayReloads;  // 플레이 도중 도메인 리로드 횟수(아래 NoteMidPlayReload)
+        public int mode = (int)DifficultyMode.Normal;   // mode:<난이도> — 기본 보통(09-25 PM 지시: 기억값이 쉬움이라 판 B~F가 전부 쉬움이었다)
+        public int prevSavedMode = int.MinValue;         // 사장님 기억값 — 판이 끝나면 되돌린다(MinValue = 원래 없었음)
         public int logsBeforeReload = -1;
     }
 
@@ -1088,6 +1090,15 @@ public static class ClaudeCommands
             else if (token.StartsWith("call:")) job.clicks.Add("@call:" + token.Substring(5));
             else if (token.StartsWith("rclickpt:")) job.clicks.Add("@rcpt:" + token.Substring(9));
             else if (token == "autoloop") job.autoLoop = true;
+            else if (token.StartsWith("mode:"))
+            {
+                string want = token.Substring(5);
+                DifficultyMode? found = null;
+                foreach (DifficultyMode m in Enum.GetValues(typeof(DifficultyMode)))
+                    if (m.KoreanName() == want || m.ToString().Equals(want, StringComparison.OrdinalIgnoreCase)) found = m;
+                if (found == null) return $"❌ mode: 뒤엔 난이도(쉬움·보통·어려움·지옥·신·악몽): {token}";
+                job.mode = (int)found.Value;
+            }
             else if (token.StartsWith("rounds:"))
             {
                 if (!int.TryParse(token.Substring(7), out job.watchRounds) || job.watchRounds < 1) return $"❌ rounds: 뒤엔 1 이상 정수: {token}";
@@ -1159,6 +1170,12 @@ public static class ClaudeCommands
         job.stageSince = EditorApplication.timeSinceStartup;
         if (job.watchRounds > 0) job.watchDeadline = EditorApplication.timeSinceStartup + 90 + job.watchRounds * 85;
         job.report = report.ToString();
+        SaveGameShot(job);
+        // 난이도를 명시적으로 — DifficultyManager.Awake가 PlayerPrefs 기억값을 자동으로 건다(판 B~F가 전부 쉬움이었다, PM 09-25).
+        //    게임의 실제 경로(기억해서 시작)를 타도록 기억값을 이 판의 난이도로 써 두고, 판이 끝나면 사장님 원래 값으로 되돌린다.
+        job.prevSavedMode = PlayerPrefs.HasKey(DifficultyManager.SavedModeKey) ? PlayerPrefs.GetInt(DifficultyManager.SavedModeKey) : int.MinValue;
+        PlayerPrefs.SetInt(DifficultyManager.SavedModeKey, job.mode);
+        PlayerPrefs.Save();
         SaveGameShot(job);
         EditorApplication.isPlaying = true;   // 이 update가 끝난 뒤에 들어간다
 
@@ -2373,6 +2390,11 @@ public static class ClaudeCommands
         if (round != job.lastRoundSeen || (over && !job.overLogged))
         {
             string head = over ? $"💀 끝 — IsDead {dead} · IsGameOver {rm.IsGameOver} · 패배화면 {defeatUi}" : $"🏁 라운드 {job.lastRoundSeen}→{round}";
+            if (job.lastRoundSeen == -1 && !over)
+            {
+                DifficultyManager dm = DifficultyManager.Instance;
+                job.report += $"   🎚 난이도 {(dm != null ? $"{dm.Current.KoreanName()}(고름 {dm.IsModeSelected})" : "매니저 없음")} · 이 판이 건 값 {((DifficultyMode)job.mode).KoreanName()}\n";
+            }
             job.report += $"   {head}: {RoundMetrics(job, rm)}\n" + ChoiceWispText() + OffGroundUnits();
             string snapPath = Path.GetFullPath(Path.Combine(Folder, "shots", over ? "round_end.png" : $"round_{round:00}.png"));
             ScreenCapture.CaptureScreenshot(snapPath);
@@ -2881,6 +2903,10 @@ public static class ClaudeCommands
     static void FinishGameShot(GameShotJob job)
     {
         ReleaseShotMouse();
+        // 사장님 기억 난이도를 되돌린다(판이 바꿔 둔 것).
+        if (job.prevSavedMode == int.MinValue) PlayerPrefs.DeleteKey(DifficultyManager.SavedModeKey);
+        else PlayerPrefs.SetInt(DifficultyManager.SavedModeKey, job.prevSavedMode);
+        PlayerPrefs.Save();
         SessionState.EraseString(GameShotKey);
         StringBuilder text = new StringBuilder(job.prefix);
         string tainted = job.midPlayReloads > 0 ? $" (⚠️ 오염 — 플레이 도중 도메인 리로드 {job.midPlayReloads}번)" : "";
