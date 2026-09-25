@@ -2430,6 +2430,16 @@ public static class ClaudeCommands
     // 사람의 한 턴 — 랜덤유닛 위습을 하나씩 포탈로, 카드별 조합 시도, 전부 모서리로.
     static void QueueTurn(GameShotJob job)
     {
+        // 🔴 앞 턴이 아직 안 끝났으면 **시작 안 한 동작은 버리고** 지금 상태로 다시 짠다(09-25 판 D 재시도).
+        //    한 턴(위습·조합 카드·모서리·상점 셋, 36동작 + 12초 대기)이 라운드 40초 안에 다 못 끝나 다음 턴과 겹쳤다 —
+        //    앞 턴이 센 위습은 이미 쓰였고(「안흔함 없음」), 새로 받은 랜덤유닛 위습은 뒤로 밀려 칸에 4 → 8로 쌓였다.
+        //    지금 하던 동작(clickIndex) 하나는 끝까지 둔다 — 누른 채 버리면 마우스가 눌린 채 남는다.
+        if (job.clickIndex + 1 < job.clicks.Count)
+        {
+            int dropped = job.clicks.Count - job.clickIndex - 1;
+            job.clicks.RemoveRange(job.clickIndex + 1, dropped);
+            job.report += $"   ⏭ 앞 턴이 안 끝나 남은 {dropped}동작을 버리고 새로 짬\n";
+        }
         var myWisps = UnityEngine.Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None)
             .Where(w => w != null && w.Data != null && (!w.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0)).ToList();
         int randomWisps = myWisps.Count(w => (w.Data.wispName ?? "").Contains("랜덤유닛"));
@@ -2481,15 +2491,6 @@ public static class ClaudeCommands
         //    등급 강화소 → 공격타입 강화소 → 도박소 순으로 골라, 골드가 실제로 줄어드는 칸을 몇 번씩 누른다(@shopspend).
         //    ⚠️ 무엇을 사야 이득인지는 판단하지 않는다 — 「사람이 남는 돈을 상점에 쓴다」의 근사다. 결과는 🏪 줄의 골드 차이로 본다.
         StoryManager story = StoryManager.Instance;
-        if (job.lastRoundSeen >= 2)
-        {
-            job.shopTried = true;
-            foreach (string shop in SpendShops)
-            {
-                turn.Add("@sel:" + shop);
-                turn.Add("?@shopspend");
-            }
-        }
 
         // 스토리 — 진행 중이면 안흔함을 스토리 포탈로 보내고, 그 스토리가 깨지면 복귀포탈로 되돌린다.
         string storyPlan = "";
@@ -2516,6 +2517,16 @@ public static class ClaudeCommands
         turn.Add(sweep);
         turn.Add("@rcpt:corner");
         for (int k = 0; k < 2; k++) { turn.Add(sweep + "|far"); turn.Add("@rcpt:corner"); }
+        // 상점은 **맨 뒤** — 턴이 라운드 안에 못 끝나 다음 턴이 남은 동작을 버릴 때, 싸우는 자리로 옮기기보다 상점이 먼저 빠지게.
+        if (job.lastRoundSeen >= 2)
+        {
+            job.shopTried = true;
+            foreach (string shop in SpendShops)
+            {
+                turn.Add("@sel:" + shop);
+                turn.Add("?@shopspend");
+            }
+        }
 
         job.clicks.AddRange(turn);
         job.report += $"   🔁 한 턴 예약: 흔함 선택 {picked.Count}기({string.Join(", ", picked)}) · 랜덤유닛 위습 {randomWisps}기 → 포탈 · 조합 시도{storyPlan} · 모서리로 이동({turn.Count}동작)\n";
