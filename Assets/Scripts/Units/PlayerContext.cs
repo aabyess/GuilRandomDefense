@@ -125,6 +125,14 @@ public class PlayerContext : MonoBehaviour
     public UniqueRerollState UniqueRerollState => uniqueRerollState;
     public ItemInventory ItemInventory => itemInventory;
 
+    // MP: 네트 판이면 접속자 좌석(MatchConfig)이 occupied를 정한다. RewardDistributor.Start가
+    //     씬 로드 즉시 Occupied에 위습을 뿌리므로 Start보다 앞선 Awake여야 한다.
+    //     싱글(러너 없음 → MatchConfig.Active false)이면 씬에 직렬화된 값 그대로 — 무동작.
+    void Awake()
+    {
+        if (MatchConfig.Active) occupied = MatchConfig.IsOccupied(playerId);
+    }
+
     void OnEnable()
     {
         registry.Add(this);
