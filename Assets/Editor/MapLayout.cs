@@ -251,12 +251,26 @@ public static class MapLayout
     };
 
     // 창고 — 플레이어별 개인 섬 (C키로 유닛을 보냄)
+    //
+    // 🔴 2026-09-25 원작화: 44×Scale(183×183) → **원작 rect 그대로**(war3map warehouse1~4, ÷Scale). 원작은 한 변이
+    //    430×307~322로 우리의 2.3배·1.7배였다(PM 원작 대조, map_side_by_side). 네 개의 **상대 배치(간격 77·61)도 원작**이고,
+    //    묶음의 왼쪽 위 모서리만 옛 자리(x 72×Scale, z 288×Scale)에 맞춰 평행이동한다 — 다른 섬과의 거리를 새로 만들지 않으려고.
+    //    ⚠️ 원작 네 칸은 크기가 조금씩 다르다(1번 437.7×307.2, 2·3번 430.0×322.5, 4번 414.7×322.5). 평균으로 뭉개지 않는다.
+    static Island OriginalWarehouse(string name, float minX, float minY, float maxX, float maxY)
+    {
+        const float originalLeft = 3488f, originalTop = 4768f;          // 원작 네 rect의 묶음 왼쪽 위
+        const float left = 72f * Scale, top = 288f * Scale;              // 옛 묶음 왼쪽 위(= 94−22, 266+22)
+        float cx = (minX + maxX) * 0.5f, cy = (minY + maxY) * 0.5f;
+        return new Island(name, left + (cx - originalLeft) / Scale, top + (cy - originalTop) / Scale,
+                          (maxX - minX) / Scale, (maxY - minY) / Scale, "warehouse");
+    }
+
     public static readonly Island[] Warehouses =
     {
-        new Island("Warehouse1",  94f * Scale, 266f * Scale, 44f * Scale, 44f * Scale, "warehouse"),
-        new Island("Warehouse2", 146f * Scale, 266f * Scale, 44f * Scale, 44f * Scale, "warehouse"),
-        new Island("Warehouse3",  94f * Scale, 214f * Scale, 44f * Scale, 44f * Scale, "warehouse"),
-        new Island("Warehouse4", 146f * Scale, 214f * Scale, 44f * Scale, 44f * Scale, "warehouse"),
+        OriginalWarehouse("Warehouse1", 3488f, 3456f, 5312f, 4736f),
+        OriginalWarehouse("Warehouse2", 5632f, 3424f, 7424f, 4768f),
+        OriginalWarehouse("Warehouse3", 3584f, 1824f, 5376f, 3168f),
+        OriginalWarehouse("Warehouse4", 5632f, 1824f, 7360f, 3168f),
     };
 
     // 🔴 2026-09-24 사장님 지시 「레인 밑에 스토리존·위습뽑기섬·조합판 왼쪽으로 좀 이동좀하자,
