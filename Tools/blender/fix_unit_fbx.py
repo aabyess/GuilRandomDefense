@@ -550,6 +550,27 @@ UNITS = {
                             dict(pattern=r"^(l_weapon_joint|LHand_Fore_sup)", into="mixamorig:LeftHand"),
                             dict(pattern=r"^(r_weapon_joint|RHand_Fore_sup)", into="mixamorig:RightHand")],
                materials=dict(textures={"pl_oven_orig01": [("DiffuseColor", "pl_oven_orig01_diff.png")]})),
+    # 원피스 파이팅 패스 봉쿠레(임펠다운, XPS 립) → R27 장명자. PM이 임펠다운 묶음에서 캐릭터별로 다시 묶은 zip — rar 없이 바로
+    #   31701.fbx · xps.xps · 31701_X.png(512²). 메시 1(2,969정점 · 4,086삼각형) · 재질 1(31701) · 그림 1 · 뼈 49 · 클립 0.
+    #   표준 Bip001(Spine2·Toe0)인데 **UpperArm·Forearm에 살이 0** — 팔 살은 비틀림 뼈 넷(UpArmTwist·1 · ForeTwist·1)에 있다 → 해당 팔로 합친다.
+    #   A자 → tpose_arms. 원본 재질이 컬러 그림을 노멀맵에도 꽂는다 → 재질 새로.
+    "장명자": dict(path="Assets/Art/Enemies/장명자/장명자.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R21-R30/R27_장명자_봉쿠레.zip"), "31701.fbx"),
+               archive_rgb={"31701_X.png": "31701.png"},
+               skip_shapes=True,
+               drop_bones=["Bip001"],
+               rename_bones=BIP001_RENAME,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:LeftHand", into="mixamorig:LeftHand"),
+                            dict(under="mixamorig:RightHand", into="mixamorig:RightHand"),
+                            dict(pattern=r"^Bip001 LUpArmTwist1?$", into="mixamorig:LeftArm"),
+                            dict(pattern=r"^Bip001 RUpArmTwist1?$", into="mixamorig:RightArm"),
+                            dict(pattern=r"^Bip001 L ForeTwist1?$", into="mixamorig:LeftForeArm"),
+                            dict(pattern=r"^Bip001 R ForeTwist1?$", into="mixamorig:RightForeArm")],
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               materials=dict(textures={"31701": [("DiffuseColor", "31701.png")]})),
     # 원피스 파이팅 패스 어린 상디(바라티에 요리사, XPS 립 o_dv89_o) → R26 임채준. zip = source/*.rar(34051_Show.fbx · xps · .blend · 34051_SD.png)
     #   + textures/34051_SD.png(rar 판과 픽셀 같음, RGB↔RGBA). 메시 1(34051, 정점 5,478 · 삼각형 7,410) · 재질 1(34051_Show) · 그림 1(512²) · 뼈 59 · 클립 0.
     #   표준 Bip001(Spine2·Toe0) → BIP001_RENAME. A자 → tpose_arms. 원본 재질이 컬러 그림을 노멀맵에도 꽂는다 → 재질 새로.
