@@ -1,5 +1,8 @@
 """거대 해왕류(바다뱀형, 사실적) — 메시 + 구운 질감 + 뼈대 + 숨쉬기 동작을 만들어 FBX로 내보낸다.
 
+⚠️ 2026-09-25 사장님 지시로 **모모우 스킨으로 교체됐다** — 지금 커밋본 Assets/Art/Monsters/거대해왕류.fbx는
+Tools/blender/gen_monster_skin.py가 만든다. 이 파일은 옛 바다뱀을 되살릴 때만 쓴다(같은 파일 이름으로 **덮어쓴다**).
+
 화면 없이 돈다(내보내기):
     blender --background --factory-startup --python Tools/blender/gen_seaking.py
 사장님 창에서는 이 파일을 exec해 build_live(collection)만 부른다 — 창에 보이는 것과 내보내는 것이 같다.

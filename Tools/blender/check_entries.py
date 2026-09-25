@@ -57,6 +57,8 @@ DICT_NAMES = ("UNITS", "SKINS", "ANIMALS")            # 항목 표로 인정하�
 # 빈칸으로 두면 다음 사람이 「없다」로 읽는다.
 KNOWN_ODD = {
     "gen_creatures.py": "적(물범·노루·양)을 만든다. `--out <폴더> <이름>` 꼴이 아니다. 따로 볼 것",
+    "gen_seaking.py": "옛 거대 해왕류(직접 지은 바다뱀, 2026-09-12). 항목 표가 없는 단일 생성기다. "
+                      "09-25 모모우로 교체돼 커밋본 거대해왕류.fbx는 gen_monster_skin이 만든다 — 이걸 돌리면 옛 뱀으로 덮어쓴다",
 }
 
 
@@ -72,7 +74,8 @@ def unit_generators():
         except OSError as e:
             bad_files.append((base, "못 읽음: %s" % e))
             continue
-        if "Art/Units" not in src:
+        # 🔴 2026-09-25: 바다 괴수(Assets/Art/Monsters, gen_monster_skin)도 관문에 넣는다 — 「Art/Units」만 보면 조용히 빠진다.
+        if "Art/Units" not in src and "Art/Monsters" not in src:
             continue                                   # 건물·자연·구조물 생성기 — 유닛이 아니다
         try:
             tree = ast.parse(src)
