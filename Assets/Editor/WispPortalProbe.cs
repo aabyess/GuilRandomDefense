@@ -161,6 +161,40 @@ public static class WispPortalProbe
         return $"화면 ({sp.x:F0},{sp.y:F0}){(onScreen ? "" : " 화면밖")} → 땅 {hit.collider.name} {hit.point:F1} · 원 중심에서 수평 {off:F1}(반지름 {r:F1}) · 목적지 {(sampled ? navOff.ToString("F1") : "NavMesh 없음")} → {(sampled && navOff < r ? "✅ 원 안" : "❌ 원 밖")}";
     }
 
+    // 좌클릭·드래그가 왜 안 먹는지 — SelectionManager 내부 상태, 가상 마우스, 화면 몇 점의 uGUI 적중.
+    public static string InputDiag()
+    {
+        StringBuilder sb = new StringBuilder("   🧪 입력 진단\n");
+        SelectionManager sel = Object.FindFirstObjectByType<SelectionManager>();
+        if (sel != null)
+        {
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+            foreach (string f in new[] { "leftButtonHeld", "isDragging", "ignoreCurrentPress", "dragStart", "dragThreshold", "maxSelection", "cam" })
+            {
+                var fi = typeof(SelectionManager).GetField(f, flags);
+                sb.AppendLine($"      SelectionManager.{f} = {(fi != null ? fi.GetValue(sel) : "(필드 없음)")}");
+            }
+            sb.AppendLine($"      선택 {sel.Selected.Count(x => x != null)}기: {string.Join(", ", sel.Selected.Where(x => x != null).Select(x => x.name).Take(6))} · 켜짐 {sel.isActiveAndEnabled}");
+        }
+        var mouse = UnityEngine.InputSystem.Mouse.current;
+        sb.AppendLine($"      Mouse.current {(mouse != null ? $"{mouse.name}#{mouse.deviceId} 위치 {mouse.position.ReadValue()} 왼쪽 눌림 {mouse.leftButton.isPressed} 오른쪽 눌림 {mouse.rightButton.isPressed}" : "없음")} · 장치 {string.Join(", ", UnityEngine.InputSystem.InputSystem.devices.OfType<UnityEngine.InputSystem.Mouse>().Select(m => $"{m.name}#{m.deviceId}"))}");
+        var es = UnityEngine.EventSystems.EventSystem.current;
+        sb.AppendLine($"      EventSystem {(es != null ? es.name + " 모듈 " + es.currentInputModule?.GetType().Name : "없음")} · 포인터가 UI 위(IsPointerOverGameObject) {(es != null && es.IsPointerOverGameObject())}");
+        Camera cam = Camera.main;
+        if (es != null && cam != null)
+        {
+            var hits = new List<UnityEngine.EventSystems.RaycastResult>();
+            foreach (Vector2 p in new[] { new Vector2(0.2f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.8f, 0.5f), new Vector2(0.35f, 0.47f), new Vector2(0.65f, 0.6f) })
+            {
+                Vector2 s = new Vector2(p.x * cam.pixelWidth, p.y * cam.pixelHeight);
+                hits.Clear();
+                es.RaycastAll(new UnityEngine.EventSystems.PointerEventData(es) { position = s }, hits);
+                sb.AppendLine($"      화면 ({s.x:F0},{s.y:F0}) UI 적중 {hits.Count}: {string.Join(", ", hits.Take(4).Select(h => $"{h.gameObject.name}(캔버스 {h.gameObject.GetComponentInParent<Canvas>()?.name})"))}");
+            }
+        }
+        return sb.ToString().TrimEnd();
+    }
+
     public static string Report()
     {
         StringBuilder sb = new StringBuilder();

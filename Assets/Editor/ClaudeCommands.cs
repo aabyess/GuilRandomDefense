@@ -1063,6 +1063,9 @@ public static class ClaudeCommands
         if (EditorApplication.isPlayingOrWillChangePlaymode) return "❌ 이미 플레이 모드다 — 멈춘 뒤 다시 보내세요";
         if (EditorUtility.scriptCompilationFailed) return "❌ 컴파일 오류가 있어 플레이 모드에 못 들어간다(콘솔을 먼저 비우세요)";
         if (LoadGameShot() != null) return "❌ 앞선 gameshot이 아직 안 끝났다";
+        // 앞 판이 중간에 죽어 실제 마우스를 끈 채 남겼을 수 있다(EnsureShotMouse) — 켜 두고 시작한다.
+        foreach (Mouse m in InputSystem.devices.OfType<Mouse>().Where(m => m.name != ShotMouseName && !m.enabled).ToList())
+            InputSystem.EnableDevice(m);
 
         string name = parts[0].EndsWith(".png") ? parts[0] : parts[0] + ".png";
         GameShotJob job = new GameShotJob { id = currentId, seconds = 3f };
@@ -1957,6 +1960,14 @@ public static class ClaudeCommands
                         ?? InputSystem.AddDevice<Mouse>(ShotMouseName);
         }
         if (Mouse.current != shotMouse) { previousMouse = Mouse.current; shotMouse.MakeCurrent(); }
+        // 🔴 실제 마우스는 판 동안 끈다(2026-09-25 i1_14). AllDeviceInputAlwaysGoesToGameView라 사람이 에디터에서 마우스를 쓰면
+        //    그 이벤트가 매 프레임 Mouse.current를 빼앗아, 게임이 가상 마우스의 누름·뗌을 못 읽었다 — R1은 되고 R2부터 좌·우클릭이
+        //    **전부** 안 먹었다(따로 떼어 돌린 짧은 판은 다 됐다). 에디터 창 조작은 Input System을 안 거치므로 영향이 없다.
+        foreach (Mouse m in InputSystem.devices.OfType<Mouse>().Where(m => m != shotMouse && m.enabled).ToList())
+        {
+            InputSystem.DisableDevice(m);
+            disabledMice.Add(m.deviceId);
+        }
         if (previousBehavior == null)
         {
             previousBehavior = InputSystem.settings.editorInputBehaviorInPlayMode;
@@ -1965,8 +1976,14 @@ public static class ClaudeCommands
     }
 
     // 끝날 때 반드시 부른다 — 가상 마우스가 남으면 사람의 실제 마우스 대신 그게 Mouse.current로 남는다.
+    static readonly List<int> disabledMice = new List<int>();
+
     static void ReleaseShotMouse()
     {
+        // 판 동안 끈 실제 마우스를 되켠다 — 도메인 리로드로 목록을 잃었을 때를 대비해 꺼진 마우스는 전부 켠다.
+        foreach (Mouse m in InputSystem.devices.OfType<Mouse>().Where(m => m.name != ShotMouseName && !m.enabled).ToList())
+            InputSystem.EnableDevice(m);
+        disabledMice.Clear();
         foreach (Mouse m in InputSystem.devices.OfType<Mouse>().Where(m => m.name == ShotMouseName).ToList())
             InputSystem.RemoveDevice(m);
         shotMouse = null;
@@ -1984,11 +2001,21 @@ public static class ClaudeCommands
         QueueMouse(new Vector2(cam.pixelWidth * 0.5f, cam.pixelHeight * 0.55f), MouseButton.Left, false);
     }
 
+    // 🔴 두 가지를 막는다(2026-09-25 i1_09 — autoloop 판에서 좌클릭·드래그가 전부 안 먹었다. 따로 떼어 돌린 판에선 다 됐다).
+    //    ① 느린 판(프레임 23ms)에선 에디터 틱이 게임 프레임보다 잦아서 누름·끌기·뗌이 **한 프레임에 몰린다** →
+    //       SelectionManager가 드래그를 못 보고 클릭으로 읽는다. 이벤트 사이에 게임 프레임이 하나 이상 지나게 한다(PointerFramePassed).
+    //    ② AllDeviceInputAlwaysGoesToGameView라 **실제 마우스가 조금만 움직여도** Mouse.current가 그쪽으로 넘어간다 —
+    //       그러면 게임은 가상 마우스의 누름을 안 읽는다. 넣을 때마다 가상 마우스를 current로 되돌린다.
+    static int lastMouseQueueFrame = -1;
+    static bool PointerFramePassed() => Time.frameCount > lastMouseQueueFrame;
+
     static void QueueMouse(Vector2 position, MouseButton button, bool down)
     {
+        if (Mouse.current != shotMouse) shotMouse.MakeCurrent();
         MouseState state = new MouseState { position = position };
         if (down) state = state.WithButton(button, true);
         InputSystem.QueueStateEvent(shotMouse, state);
+        lastMouseQueueFrame = Time.frameCount;
     }
 
     static GameObject FindPointerTarget(string spec, out string candidates)
@@ -2042,6 +2069,7 @@ public static class ClaudeCommands
     {
         if (spec.StartsWith("@box:")) return StepBox(job, spec.Substring(5), inStage);
         if (spec.StartsWith("@rcpt:")) return StepPointAt(job, spec.Substring(6), inStage);
+        if (job.pointerPhase > 0 && !PointerFramePassed()) return false;   // 앞 마우스 이벤트가 게임 프레임에 먹히기 전(QueueMouse 주석)
         bool left = spec.StartsWith("@sel:");
         string label = left ? "좌클릭 select" : "우클릭 rclick";
         Camera cam = Camera.main;
@@ -2078,10 +2106,17 @@ public static class ClaudeCommands
                 {
                     RtsCameraController rts = cam.GetComponent<RtsCameraController>();
                     if (rts == null) { FailGameShot(job, $"{label}: {target.name}이 화면 밖인데 카메라를 옮길 RtsCameraController가 없음"); return false; }
-                    if (job.pointerX < 0f) { FailGameShot(job, $"{label}: 카메라를 옮겨도 {target.name}이 화면 안(HUD 사이)에 안 들어옴 — 화면 좌표 {sp}"); return false; }
+                    // 옮긴 뒤에도 카메라가 더 움직일 수 있다(감쇠 관성·가장자리 밀기) — 세 번까지 다시 옮긴다.
+                    //    그래도 안 들어오면 **이 동작만** 건너뛴다. 긴 판 하나가 우클릭 하나 때문에 통째로 죽었다(09-25 i1_16, R3).
+                    if (job.pointerX <= -3f)
+                    {
+                        job.report += $"   ⚠️ {label}: 카메라를 세 번 옮겨도 {target.name}이 화면 안(HUD 사이)에 안 들어옴 — 화면 좌표 {sp} · 이 동작을 건너뜀\n";
+                        job.pointerX = 0f;
+                        return true;
+                    }
                     rts.MoveTo(new Vector3(aim.x, 0f, aim.z));   // 미니맵 클릭과 같은 경로
                     job.report += $"   🎥 {target.name}이 화면 밖이라 카메라를 옮김(MoveTo {aim.ToString("F0")})\n";
-                    job.pointerX = -1f;   // 한 번만 옮긴다 — 다음 틱에도 안 보이면 실패
+                    job.pointerX = Mathf.Min(job.pointerX, 0f) - 1f;
                     SaveGameShot(job);
                     return false;
                 }
@@ -2280,6 +2315,8 @@ public static class ClaudeCommands
             .Where(w => w != null && w.Data != null && (!w.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0)).ToList();
         int randomWisps = myWisps.Count(w => (w.Data.wispName ?? "").Contains("랜덤유닛"));
         List<string> turn = new List<string>();
+        // 라운드가 바뀌는 순간 받은 위습은 위습 칸에 바로 안 켜진다(칸은 주기적으로 갱신) — 첫 칸을 「없음」으로 건너뛰었다(09-25 i1_16).
+        if (randomWisps > 0) turn.Add("@wait:2");
         for (int i = 0; i < randomWisps; i++) { turn.Add("click?:랜덤유닛".Replace("click?:", "?")); turn.Add("@rc:Portal_유닛랜덤"); }
         if (randomWisps > 0) turn.Add("@wait:12");
         for (int k = 0; k < 3; k++)
@@ -2377,6 +2414,7 @@ public static class ClaudeCommands
     // rclickpt: — 월드 지점 하나를 우클릭한다(대상 오브젝트 없이 땅). 0 조준(필요하면 카메라) → 1 누름 → 2 뗌 → 결과.
     static bool StepPointAt(GameShotJob job, string which, double inStage)
     {
+        if (job.pointerPhase > 0 && !PointerFramePassed()) return false;   // 앞 마우스 이벤트가 게임 프레임에 먹히기 전(QueueMouse 주석)
         Camera cam = Camera.main;
         switch (job.pointerPhase)
         {
@@ -2446,6 +2484,7 @@ public static class ClaudeCommands
 
     static bool StepBox(GameShotJob job, string name, double inStage)
     {
+        if (job.pointerPhase > 0 && !PointerFramePassed()) return false;   // 앞 마우스 이벤트가 게임 프레임에 먹히기 전(QueueMouse 주석)
         Camera cam = Camera.main;
         bool farOnly = name.EndsWith("|far");
         string wanted = (farOnly ? name.Substring(0, name.Length - 4) : name).Normalize(NormalizationForm.FormC);
