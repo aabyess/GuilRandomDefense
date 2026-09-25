@@ -1006,6 +1006,7 @@ public static class ClaudeCommands
         public int watchRounds;          // rounds:N — 0이면 끄기
         public bool autoLoop;
         public bool storySent;           // autoloop: 안흔함을 스토리존에 보냈나 — 스토리가 깨지면 복귀포탈로 되돌린다
+        public int storySentRound;       // 마지막으로 보낸(보강한) 라운드 — 2라운드 못 깨면 더 보낸다
         public int storyFinishedAtSend;
         public bool shopTried;           // autoloop: 도박소 한 번 눌러 봤나
         public List<string> choicePicks = new List<string>();   // 도구가 흔함선택 포탈로 보낸 이름 누계 — 실제 흔함 이름 분포와 견준다(포탈이 먹으면 한 이름에 몰린다, outbox 2112)
@@ -2099,6 +2100,11 @@ public static class ClaudeCommands
     {
         bool left = spec.StartsWith("@sel:");
         string name = spec.Substring(left ? 5 : 4).Normalize(NormalizationForm.FormC);
+        // 「|lane」 — 0번 레인 근처(섬 + 앞치마) 것만. 스토리존에 이미 간 유닛을 또 고르지 않으려고(09-25 스토리 보강).
+        bool laneOnly = name.EndsWith("|lane");
+        if (laneOnly) name = name.Substring(0, name.Length - 5);
+        LaneMarker lane0 = laneOnly ? LaneMarker.Get(0) : null;
+        bool NearLane(Component c) => lane0 == null || Vector2.Distance(new Vector2(c.transform.position.x, c.transform.position.z), new Vector2(lane0.LaneCenter.x, lane0.LaneCenter.z)) < 700f;
         // 「=이름」이면 정확히 그 이름만(Lane1처럼 Lane1_앞치마·Lane1_Cliff와 앞부분이 겹치는 것을 가른다).
         bool exact = name.StartsWith("=");
         if (exact) name = name.Substring(1);
@@ -2108,7 +2114,7 @@ public static class ClaudeCommands
         {
             List<Selectable> mine = Selectable.All.Where(x => x != null &&
                 (!x.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == LocalPlayer.LocalPlayerId)).ToList();
-            Selectable hit = mine.FirstOrDefault(x => Matches(x.name));
+            Selectable hit = mine.FirstOrDefault(x => Matches(x.name) && NearLane(x));
             if (hit == null) candidates = string.Join(", ", mine.Select(x => x.name).Distinct().Take(20));
             return hit != null ? hit.gameObject : null;
         }
@@ -2129,6 +2135,7 @@ public static class ClaudeCommands
         SelectionManager selection = UnityEngine.Object.FindFirstObjectByType<SelectionManager>();
         var names = selection != null ? selection.Selected.Where(x => x != null).Select(x => x.gameObject.name.Normalize(NormalizationForm.FormC)).ToList() : new List<string>();
         if (isBox && want.EndsWith("|far")) want = want.Substring(0, want.Length - 4);
+        if (isSelect && want.EndsWith("|lane")) want = want.Substring(0, want.Length - 5);
         if (job.clickIndex >= job.clicks.Count) return;
         string next = job.clicks[job.clickIndex];
         // 박스는 먼저 「드래그가 먹었나」(lastBoxPicked). 모서리 땅 우클릭(@rcpt:)은 박스에 건물(Lane1_*)이 섞여도 해가 없어
@@ -2653,10 +2660,21 @@ public static class ClaudeCommands
         {
             job.storySent = true;
             job.storyFinishedAtSend = story.FinishedCount;
+            job.storySentRound = job.lastRoundSeen;
             // 박스는 모서리에 뭉친 흔함까지 같이 잡혀 실패했다(outbox 2112 ⛔) — 안흔함 한 기를 좌클릭으로 고른다. 사슬 시험엔 한 기면 된다.
-            turn.Add("@sel:Unit_안흔함");
+            turn.Add("@sel:Unit_안흔함|lane");
             turn.Add("@rc:Lane1_스토리포탈");
             storyPlan = $" · 안흔함 → 스토리존(「{story.StatusLabel}」)";
+        }
+        else if (story != null && job.storySent && story.FinishedCount == job.storyFinishedAtSend && story.Running != null
+                 && job.lastRoundSeen - job.storySentRound >= 2)
+        {
+            // 보강 — 보낸 뒤 2라운드 동안 못 깨면 레인의 특별함·안흔함 한 기씩 더 보낸다(09-25 PM 지시). 판 C는 안흔함 한 기가
+            //    하이츠를 R12까지 못 깨 스토리 0개, 판 J는 R7부터 4개에 멈춰 스토리 보상(위 등급 위습)이 끊겼다.
+            job.storySentRound = job.lastRoundSeen;
+            turn.Add("@sel:Unit_특별함|lane"); turn.Add("@rc:Lane1_스토리포탈");
+            turn.Add("@sel:Unit_안흔함|lane"); turn.Add("@rc:Lane1_스토리포탈");
+            storyPlan = $" · 스토리 「{story.StatusLabel}」 2라운드째 못 깸 → 특별함·안흔함 한 기씩 더";
         }
         else if (story != null && job.storySent && story.FinishedCount > job.storyFinishedAtSend)
         {
