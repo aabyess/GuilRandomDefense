@@ -550,6 +550,21 @@ UNITS = {
                             dict(pattern=r"^(l_weapon_joint|LHand_Fore_sup)", into="mixamorig:LeftHand"),
                             dict(pattern=r"^(r_weapon_joint|RHand_Fore_sup)", into="mixamorig:RightHand")],
                materials=dict(textures={"pl_oven_orig01": [("DiffuseColor", "pl_oven_orig01_diff.png")]})),
+    # 원피스 에넬(Sketchfab glb, 카쿠와 **같은 CH_ 리그** 계열 — Cha_3300) → R28 송형성. 그림 둘 박힘(0 = 컬러 · 1 = 스페큘러), 재질 둘 다 컬러로 0을 쓴다.
+    #   메시 5(몸 00 7,136 · 겉치마 01 1,017(재질 01) · 얼굴 세 벌 2,082/2,245/2,450) + Icosphere · 관절 48 · 클립 0. 이미 T자.
+    #   얼굴은 나란히 렌더해 골랐다: Object_10 = 무표정(남김) · Object_12 = 웃음 · Object_14 = 놀람(뺌).
+    #   🔴 등 뒤 천둥북 링은 몸 메시의 일부이고 **이미 Spine1에 실려 있다**(링 정점 373 중 Spine1 373) → 강체 고정 따로 안 함.
+    #      링 꼭대기가 머리꼭대기보다 13.5% 높다(원본 2.346 vs 2.067) — 경계 상자 키에 링이 들어간다(PM 표 값에서 감안).
+    "송형성": dict(path="Assets/Art/Enemies/송형성/송형성.fbx", kind="human", size=("height", 1.8),
+               source=os.path.join(SKINS, "90_적유닛/R21-R30/R28_송형성.glb"), gltf_guess_bind=False,
+               drop_meshes=["Icosphere", "Object_12", "Object_14"],
+               rename_bones=CH_RENAME, rename_strip=r"_[0-9]+$",
+               drop_bones=["_rootJoint", "CH_Reference_01"],
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head")],
+               glb_images={0: "Cha_3300_00.png"},
+               materials=dict(textures={"Cha_3300_00": [("DiffuseColor", "Cha_3300_00.png")],
+                                        "Cha_3300_01": [("DiffuseColor", "Cha_3300_00.png")]})),
     # 원피스 파이팅 패스 봉쿠레(임펠다운, XPS 립) → R27 장명자. PM이 임펠다운 묶음에서 캐릭터별로 다시 묶은 zip — rar 없이 바로
     #   31701.fbx · xps.xps · 31701_X.png(512²). 메시 1(2,969정점 · 4,086삼각형) · 재질 1(31701) · 그림 1 · 뼈 49 · 클립 0.
     #   표준 Bip001(Spine2·Toe0)인데 **UpperArm·Forearm에 살이 0** — 팔 살은 비틀림 뼈 넷(UpArmTwist·1 · ForeTwist·1)에 있다 → 해당 팔로 합친다.
