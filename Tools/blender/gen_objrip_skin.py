@@ -51,6 +51,45 @@ PREFIX = "mixamorig:"
 #     지운 게 아니라 남겨 둔 이유는 「왜 금지인지」가 여기 있어야 다음 사람이 안 되돌리기 때문이다.
 #   ⚠️ 커밋본들은 게임에서 멀쩡하다. **고칠 게 있어서 금지가 아니라, 바꾸면 안 되니까 금지다.**
 SKINS = {
+    # ══════════════ 적 유닛(Enemy) — 2026-09-24. 산출만 Assets/Art/Enemies로 나간다.
+    # 드래곤볼 부도카이3 크리링 립 → R01 박진웅. **뼈 0인 정적 OBJ**라 새로 리깅한다.
+    #   정점 1,396 · 면 2,504 · 재질 19(텍스처 10장) · **이미 T자**라 이 파이프라인이 그대로 맞는다.
+    #   🔴 관절 자리는 **손으로 안 지었다** — 높이 1로 정규화해 층마다 폭을 재서 뽑았다:
+    #        z 0.65~0.80에서 x폭이 0.94로 튄다 → **팔 높이 0.72**(그 위 0.80~1.00이 머리)
+    #        z 0.45~0.50이 가장 좁다(0.157) → **허리/엉덩이 0.50**
+    #        z 0.15~0.30이 가장 넓다(0.30) → 두 다리, 각 다리 중심 x ±0.075
+    #      크리링은 **키가 작고 머리가 크다**(머리가 위 20%를 차지한다) — 다른 유닛 표를 베끼면 안 맞는다.
+    # 드래곤볼 천진반 립 → R02 김갑식. **뼈 0인 정적 OBJ**, 크리링과 같은 립 계열이지만 **T자가 아니다**
+    #   (팔이 옆으로 늘어진 선 자세) → `straighten_arms=True`로 편다. 희귀함_유재헌과 같은 길이다.
+    #   정점 2,580 · 면 4,943 · 재질 3(Tien.png·face·eyes·bottom).
+    #   ⚠️ zip 안에 `Tien.blend`도 있지만 **리그가 없다**(메시·카메라·조명뿐, 정점그룹 0·액션 0. 직접 열어 확인).
+    #   🔴 관절은 **처진 자세 그대로** 넣는다(가중치가 실제 메시와 맞아야 한다) — 펴는 건 straighten_arms가 나중에 한다.
+    #   관절 자리 근거(높이 1 정규화 · 층마다 XY 뭉치를 세어 뽑음, 몸 중심 x=0.221):
+    #     z 0.86~1.00 뭉치 하나(머리) · z 0.74~0.78 하나(가슴, 팔이 아직 몸에 붙음)
+    #     z 0.66부터 좌우 대칭 두 뭉치가 갈림(팔) → 0.66에서 ±0.169 · 0.50에서 ±0.194가 가장 멀다(손)
+    #     z 0.44 아래로 옆 뭉치가 사라진다 → **손끝 0.44**
+    #     다리는 z 0.22에서 ±0.074인데 z 0.02(발)에서 ±0.165 → **아래로 벌어진다**(차렷이 아니라 벌린 자세)
+    "김갑식": dict(source="~/Desktop/구랜디스킨모음/90_적유닛/R01-R10/R02_김갑식.zip",
+               mesh_name="Tien",
+               path="Assets/Art/Enemies/김갑식/김갑식.fbx", height=1.8,
+               center_band=(0.02, 0.06), chest_ratio=0.75,
+               straighten_arms=True,
+               joints=dict(Hips=(0, 0, 0.53), Spine=(0, 0, 0.63), Chest=(0, 0, 0.75),
+                           Neck=(0, 0, 0.84), Head=(0, 0, 0.88), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.055, 0, 0.80), Arm=(0.085, 0, 0.78), ForeArm=(0.160, 0, 0.62),
+                           Hand=(0.185, 0, 0.48), HandTip=(0.190, 0, 0.44),
+                           UpLeg=(0.070, 0, 0.47), Leg=(0.100, 0, 0.26), Foot=(0.150, -0.01, 0.045),
+                           ToeBase=(0.150, -0.10, 0.02), ToeTip=(0.150, -0.15, 0.015))),
+    "박진웅": dict(source="~/Desktop/구랜디스킨모음/90_적유닛/R01-R10/R01_박진웅.zip",
+               mesh_name="Krillin_Budokai_3",
+               path="Assets/Art/Enemies/박진웅/박진웅.fbx", height=1.8,
+               center_band=(0.02, 0.06), chest_ratio=0.70,
+               joints=dict(Hips=(0, 0, 0.50), Spine=(0, 0, 0.58), Chest=(0, 0, 0.70),
+                           Neck=(0, 0, 0.79), Head=(0, 0, 0.83), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.06, 0, 0.72), Arm=(0.11, 0, 0.72), ForeArm=(0.26, 0, 0.72),
+                           Hand=(0.40, 0, 0.72), HandTip=(0.46, 0, 0.72),
+                           UpLeg=(0.075, 0, 0.48), Leg=(0.075, 0, 0.26), Foot=(0.075, -0.01, 0.04),
+                           ToeBase=(0.075, -0.06, 0.02), ToeTip=(0.075, -0.09, 0.015))),
     # 조셉 죠스타 — 키 2.010(원본), 팔이 0.81H에서 수평, 폭÷키 0.956. 스카프가 앞으로 두껍게
     # 튀어나와(앞뒤 0.958) 몸 뼈(Spine·Chest)를 잘 따라가는지 렌더로 확인 필요.
     "희귀함_윤현모": dict(
@@ -815,6 +854,16 @@ def straighten_arms(arm, body):
     return turned
 
 
+def _copy_unless_same(src, dst):
+    """🔴 이미 그 자리에 있는 파일을 자기 자신에 복사하면 `shutil.SameFileError`로 **항목 전체가 죽는다**
+    (2026-09-24 R01 박진웅: 재질 19개가 텍스처 10장을 나눠 쓰는데, 앞 재질이 tex_dir에 넣어 둔 것을
+    뒤 재질이 원본으로 잡아 src == dst가 됐다. 텍스처만 남고 FBX가 안 나왔다).
+    ⚠️ 복사하는 자리가 **세 군데**다 — 한 군데만 막으면 다음 재질에서 또 죽는다. 그래서 여기로 모았다."""
+    if os.path.exists(dst) and os.path.samefile(src, dst):
+        return
+    shutil.copy2(src, dst)
+
+
 def build(name, cfg, out_dir=None, render_dir=None):
     src = os.path.expanduser(cfg["source"])
     dst = os.path.join(out_dir, os.path.basename(cfg["path"])) if out_dir else os.path.join(ROOT, cfg["path"])
@@ -969,7 +1018,7 @@ def build(name, cfg, out_dir=None, render_dir=None):
             src_on_disk = bpy.path.abspath(img.filepath) if img.filepath else None
             if png_path and len(body.data.materials) == 1:
                 tex_dst = os.path.join(tex_dir, os.path.basename(png_path))
-                shutil.copy2(png_path, tex_dst)
+                _copy_unless_same(png_path, tex_dst)
             elif src_on_disk and os.path.isfile(src_on_disk):
                 # 🔴 PM 실측(제한_강보명/암부 카카시) — OBJ+MTL 다중 재질 소스는 이미지 노드가
                 # 원본 파일 경로만 갖고 있고 픽셀 데이터를 메모리에 안 읽어 둘 때가 있다
@@ -977,7 +1026,7 @@ def build(name, cfg, out_dir=None, render_dir=None):
                 # 원본 파일이 디스크에 실제로 있으면 그냥 그 파일을 그대로 복사한다(더 튼튼함).
                 safe = os.path.basename(src_on_disk)
                 tex_dst = os.path.join(tex_dir, safe)
-                shutil.copy2(src_on_disk, tex_dst)
+                _copy_unless_same(src_on_disk, tex_dst)
             else:
                 safe = "".join(c for c in img.name if c.isalnum() or c in "._-") or mat.name
                 if not safe.lower().endswith((".png", ".jpg", ".jpeg")):
@@ -1007,7 +1056,10 @@ def build(name, cfg, out_dir=None, render_dir=None):
             assert src_path, f"{mat.name}: 텍스처를 못 찾음(texture_files 확인)"
             dst_name = os.path.basename(src_path).lstrip("$") or mat.name + ".png"
             tex_dst = os.path.join(tex_dir, dst_name)
-            shutil.copy2(src_path, tex_dst)
+            # 🔴 같은 파일을 자기 자신에 복사하면 shutil이 SameFileError로 죽는다(2026-09-24 R01 박진웅).
+            #   재질 19개가 텍스처 10장을 나눠 쓰는데, 앞 재질이 이미 tex_dir에 넣어 둔 것을 뒤 재질이
+            #   src로 잡으면 src == dst가 된다. **이미 그 자리에 있는 것**이니 복사만 건너뛰면 된다.
+            _copy_unless_same(src_path, tex_dst)
             mat.use_nodes = True
             nt = mat.node_tree
             for n in [n for n in nt.nodes if n.type not in ("BSDF_PRINCIPLED", "OUTPUT_MATERIAL")]:

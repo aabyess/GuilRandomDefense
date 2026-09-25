@@ -312,6 +312,40 @@ for _s, _side, _n in (("R", "Right", (39, 40, 42, 44, 76, 78, 80, 82)), ("L", "L
                         f"leg_{_s}0_foot_Jnt_0{_n[6]}": f"mixamorig:{_side}Foot", f"foot_{_s}0_ball_Jnt_0{_n[7]}": f"mixamorig:{_side}ToeBase"})
 # 아이언맨(3ds Max 2020 Biped FBX, 2026-09-15): Bip01 이름 → mixamorig. 척추 넷 중 Spine3가 목·쇄골의 부모라 Spine2(UpperChest), Spine2는 중간 뼈.
 #   Twist 뼈·무게중심 뼈 없음(Pelvis가 뿌리). 손가락 다섯 × 세 마디 → HandThumb/Index/Middle/Ring/Pinky 1~3(tpose_arms 손바닥 굴리기에 쓴다).
+# 3ds Max Biped 「Bip001」(0이 **둘**) 계열 — 우타·버기(2026-09-25 적 스킨). 기존 IRONMAN_RENAME은
+#   `Bip01`(0 하나)이라 **한 개도 안 걸린다.** 이름이 비슷해 보여도 다른 표다.
+#   🔴 `rename_bones`는 **표에 있는데 모델에 없는 뼈가 있으면 죽는다**(「이름 바꿀 뼈가 없다」).
+#      버기는 `Spine2`도 `Toe0`도 없고 우타는 둘 다 있다 → **표를 하나로 못 쓴다.** 아래서 버기용을 따로 깎는다.
+#      (같은 이유로 발끝 없는 pl_ 리그는 PL_RENAME이 아니라 YORK_RENAME을 쓴다.)
+# 마야 「_jnt_skin」 계열 — 나미(R08)·조로(R19), 2026-09-25. 이름만 봐선 어느 관절인지 모르고
+#   **계층과 높이로 갈랐다**(spline1 z1.118 → Arm1 z1.509 → Arm6 z1.381 → Arm9 z1.267 …):
+#     spline1=엉덩이 · spline2=허리 · spline3=가슴 · spline5=윗가슴 · neck1_jnt1=목 · head_jnt=머리
+#     Arm1=위팔 · Arm6=팔꿈치 · Arm9=손목      Leg1=허벅지 · Leg6=무릎 · Leg9=발목 · foot_drv=발끝
+#   ⚠️ `Arm3`·`Arm7`·`Leg3`·`Leg7`은 **비틀림 보조 뼈**(가지로 갈라져 나온다) — 관절이 아니라 merge로 넘긴다.
+#   ⚠️ 조로는 같은 이름에 **번호 꼬리**가 붙어 있다(`spline1_jnt_skin_134`) → rename_strip으로 뗀다.
+JNTSKIN_RENAME = {"spline1_jnt_skin": "mixamorig:Hips", "spline2_jnt_skin": "mixamorig:Spine",
+                  "spline3_jnt_skin": "mixamorig:Spine1", "spline5_jnt_skin": "mixamorig:Spine2",
+                  "neck1_jnt1_skin": "mixamorig:Neck", "head_jnt_skin": "mixamorig:Head"}
+for _s, _side in (("Lf", "Left"), ("Rt", "Right")):
+    JNTSKIN_RENAME.update({f"{_s}_clavicle1_jnt_skin": f"mixamorig:{_side}Shoulder",
+                           f"{_s}_Arm1_jnt_skin": f"mixamorig:{_side}Arm",
+                           f"{_s}_Arm6_jnt_skin": f"mixamorig:{_side}ForeArm",
+                           f"{_s}_Arm9_jnt_skin": f"mixamorig:{_side}Hand",
+                           f"{_s}_Leg1_jnt_skin": f"mixamorig:{_side}UpLeg",
+                           f"{_s}_Leg6_jnt_skin": f"mixamorig:{_side}Leg",
+                           f"{_s}_Leg9_jnt_skin": f"mixamorig:{_side}Foot",
+                           f"{_s}_foot_drv_skin": f"mixamorig:{_side}ToeBase"})
+BIP001_RENAME = {"Bip001 Pelvis": "mixamorig:Hips", "Bip001 Spine": "mixamorig:Spine",
+                 "Bip001 Spine1": "mixamorig:Spine1", "Bip001 Spine2": "mixamorig:Spine2",
+                 "Bip001 Neck": "mixamorig:Neck", "Bip001 Head": "mixamorig:Head"}
+for _s, _side in (("L", "Left"), ("R", "Right")):
+    BIP001_RENAME.update({f"Bip001 {_s} Clavicle": f"mixamorig:{_side}Shoulder", f"Bip001 {_s} UpperArm": f"mixamorig:{_side}Arm",
+                          f"Bip001 {_s} Forearm": f"mixamorig:{_side}ForeArm", f"Bip001 {_s} Hand": f"mixamorig:{_side}Hand",
+                          f"Bip001 {_s} Thigh": f"mixamorig:{_side}UpLeg", f"Bip001 {_s} Calf": f"mixamorig:{_side}Leg",
+                          f"Bip001 {_s} Foot": f"mixamorig:{_side}Foot", f"Bip001 {_s} Toe0": f"mixamorig:{_side}ToeBase"})
+# 버기(R18): Spine2·Toe0이 없는 Bip001. 있는 것만 남긴다.
+BIP001_NO_SPINE2_NO_TOE = {k: v for k, v in BIP001_RENAME.items()
+                           if not k.endswith("Spine2") and not k.endswith("Toe0")}
 IRONMAN_RENAME = {"Bip01 Pelvis": "mixamorig:Hips", "Bip01 Spine": "mixamorig:Spine", "Bip01 Spine1": "mixamorig:Spine1", "Bip01 Spine3": "mixamorig:Spine2",
                   "Bip01 Neck": "mixamorig:Neck", "Bip01 Head": "mixamorig:Head"}
 for _s, _side in (("L", "Left"), ("R", "Right")):
@@ -427,6 +461,331 @@ HINATA_SWAP.update({f"mixamorig:Right{p}": f"mixamorig:Left{p}" for p in _HINATA
 HINATA_SWAP.update({f"__swapL_{p}": f"mixamorig:Right{p}" for p in _HINATA_PARTS})
 
 UNITS = {
+    # ══════════════ 적 유닛(Enemy) — 2026-09-24 시작. 유닛과 다른 점은 **나가는 폴더와 키 표**뿐이다.
+    #   산출: Assets/Art/Enemies/<이름>/<이름>.fbx  (⚠️ ArtBinder가 이 폴더를 아직 안 읽는다 — PM이 추가해야 붙는다)
+    #   키: ArtBinder.EnemyModels 표에 따로 적는다. 여기 size=("height", 1.8)은 **블렌더 쪽 규약**이고,
+    #       게임 크기는 그 표의 값이 정한다(적 경로는 FitToHeight가 **메시 경계 Y**에 맞춘다 = 머리끝까지).
+    # 원피스 바운티러시 와폴(pl_wapol_orig01) → R10 주영호 ★보스. **glb 단일 파일**, 해병과 같은 번호 꼬리 pl_ 리그.
+    #   메시 18(+Icosphere) · 뼈 63 · 재질 1 · 액션 다수(안 씀).
+    #   🔴 **조명용 Icosphere가 경계를 2.0m로 부풀린다** — 빼기 전에는 몸이 전부 「키의 51%」로 찍혀 비율을 못 읽는다
+    #      (왕승환 glb도 같았다. glb에 Icosphere가 들어 있으면 **재기 전에 먼저 뺀다**).
+    #   🔴 폭탄 Object_21·22는 `bomb_joint_056`(원점, world_joint 직속)에 실려 **발밑 원점에 따로 떠 있다** → 뺀다.
+    #      길을 걸어오는 적이라 바닥에 폭탄이 딸려 다니면 안 된다.
+    #   🔴 `LArm_Fore_042_0`·`LHand_Palm_043_0` 같은 **`_0` 겹친 뼈에 실제로 살이 붙어 있다**(무게 43.7·6.3) —
+    #      빼면 살이 사라진다. rename_strip이 꼬리를 하나만 떼므로 남는 이름을 merge로 받아 준다.
+    "주영호": dict(path="Assets/Art/Enemies/주영호/주영호.fbx", kind="human", size=("height", 1.8),
+              source=os.path.join(SKINS, "90_적유닛/R01-R10/R10_주영호_보스.glb"), gltf_guess_bind=False,
+              no_nulls=True, orient_snap=True,
+              drop_meshes=["Icosphere", "Object_21", "Object_22"],
+              rename_bones=PL_RENAME, rename_strip=r"_[0-9]+$",
+              drop_bones=["_rootJoint", "world_joint_00", "bomb_joint_056"],
+              merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                           dict(pattern=r"^(Belt|Cloth_L|Cloth_R|Fur_)", into="mixamorig:Spine1"),
+                           dict(pattern=r"^LArm_Fore", into="mixamorig:LeftForeArm"),
+                           dict(pattern=r"^RArm_Fore", into="mixamorig:RightForeArm"),
+                           dict(pattern=r"^LHand_Palm", into="mixamorig:LeftHand"),
+                           dict(pattern=r"^RHand_Palm", into="mixamorig:RightHand")],
+              glb_images={0: "pl_wapol_orig01.png"},
+              materials=dict(textures={"pl_wapol_orig01": [("DiffuseColor", "pl_wapol_orig01.png")]})),
+    # 원피스 바운티러시 해병 머스킷병(pl_mb_marine01_musk01) → R05 왕승환. **glb 단일 파일**(zip이 아니다).
+    #   메시 2(+조명용 Icosphere) · 뼈 32(전부 살 붙음) · 재질 1 · 액션 19(안 씀).
+    #   🔴 뼈 이름이 pl_ 계열인데 **번호 꼬리**가 붙어 있다(`Body_Pelvis_01`) → PL_RENAME + rename_strip으로 뗀다.
+    #      김기연(에렌)에서 쓴 것과 같은 수법이다. 꼬리를 안 떼면 PL_RENAME이 한 개도 안 걸린다.
+    #   보조 뼈: 목도리(C/L/R_scarf) → Spine1 · 총(RHand_weapon1·wepon_control·wepon_attach, 원본 철자 그대로) → 오른손.
+    "왕승환": dict(path="Assets/Art/Enemies/왕승환/왕승환.fbx", kind="human", size=("height", 1.8),
+              source=os.path.join(SKINS, "90_적유닛/R01-R10/R05_왕승환.glb"), gltf_guess_bind=False,
+              no_nulls=True, orient_snap=True, drop_meshes=["Icosphere"],
+              rename_bones=PL_RENAME, rename_strip=r"_[0-9]+$",
+              # ⚠️ 뺄 뼈는 **번호 꼬리가 붙은 원래 이름**으로 적는다 — rename_strip보다 먼저 본다(`world_joint`로 쓰면 죽는다).
+              drop_bones=["_rootJoint", "world_joint_00"],
+              # ⚠️ `under="Head"`를 **안 쓴다** — 이 리그는 Head_Face 밑에 자식 뼈가 없어 대상 0으로 죽는다.
+              #    머리 밑 얼굴 뼈가 있는 리그(오븐·류마)에서만 쓸 것. 있다/없다를 **먼저 세어 보고** 쓴다.
+              merge_bones=[dict(pattern=r"^(C_scarf|L_scarf|R_scarf)", into="mixamorig:Spine1"),
+                           dict(pattern=r"^(RHand_weapon|wepon_control|wepon_attach)", into="mixamorig:RightHand")],
+              # 🔴 glb는 텍스처가 **파일이 아니라 안에 박혀** 있다(Image_0, 1024²). glb_images로 꺼내 이름을 주지 않으면
+              #    재질만 남고 **텍스처가 안 따라 나간다** — 2026-09-24에 실제로 회색으로 나왔다(Textures/에 아무것도 안 생김).
+              glb_images={0: "pl_mb_marine01_musk01.png"},
+              materials=dict(textures={"pl_mb_marine01_musk01": [("DiffuseColor", "pl_mb_marine01_musk01.png")]})),
+    # 원피스 바운티러시 샬롯 오븐(pl_oven_orig01) → R04 배병욱. 이시원·류마와 같은 pl_ 리그.
+    #   메시 17 · 뼈 67(살 붙은 63) · 재질 2 · 액션 96(안 씀) · 배율 ×0.01.
+    #   겹친 변형(중심 좌표로 갈랐다): 얼굴 3벌 → face_normal · 손 open/close/sp01/sp02 → **open** ·
+    #   🔴 **오른팔이 세 벌**이다(arm·arm_sp01·arm_sp02, 셋 다 키의 73%·RArm_Upper 주뼈) → 기본 `arm`만.
+    #   무기 l_weapon·r_weapon은 **변형이 아니라 양손에 하나씩**이라 둘 다 남긴다(x가 +0.0255/−0.0255로 갈린다).
+    #   보조 뼈: 코트·깃·리본 사슬 → Spine1 · weapon_joint·Fore_sup → 해당 손.
+    #   ⚠️ 머리카락·수염(c_hair_01·beard_joint)은 **따로 쓰면 안 된다** — Head 자식이라 위의 `under="Head"`가
+    #      이미 가져가고, 뒤 규칙은 대상이 0이 되어 `merge_bones 대상 없음`으로 죽는다(2026-09-24에 걸렸다).
+    "배병욱": dict(path="Assets/Art/Enemies/배병욱/배병욱.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R01-R10/R04_배병욱.zip"), "source/Charlotte Oven.rar",
+                        "Charlotte Oven/Charlotte Oven by Annettlw.fbx"),
+               archive_rgb={"Charlotte Oven/pl_oven_orig01_diff.png": "pl_oven_orig01_diff.png"},
+               drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close",
+                            "r_hand_sp01", "r_hand_sp02", "arm_sp01", "arm_sp02"],
+               drop_bones=["world_joint"],
+               rename_bones=PL_RENAME,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(pattern=r"^(coat_root|c_coat_|c_collar|c_l_coat_|c_r_coat_|c_ribbon|l_ribbon|r_ribbon)", into="mixamorig:Spine1"),
+                            dict(pattern=r"^(l_coat_shoulder|f_l_coat_|l_coat_|l_collar)", into="mixamorig:LeftShoulder"),
+                            dict(pattern=r"^(r_coat_shoulder|f_r_coat_|r_coat_|r_collar)", into="mixamorig:RightShoulder"),
+                            dict(pattern=r"^(l_weapon_joint|LHand_Fore_sup)", into="mixamorig:LeftHand"),
+                            dict(pattern=r"^(r_weapon_joint|RHand_Fore_sup)", into="mixamorig:RightHand")],
+               materials=dict(textures={"pl_oven_orig01": [("DiffuseColor", "pl_oven_orig01_diff.png")]})),
+    # 원피스 조로(Zoro) → R19 김태영. **glb 단일 파일**, 나미와 같은 마야 `_jnt_skin` 계열 + **번호 꼬리**.
+    #   뼈 135 · 메시 5(+Icosphere) · 나미와 똑같이 **5_ / 7_ 두 벌**이라 `7_`(외곽선 껍데기)을 뺀다.
+    "김태영": dict(path="Assets/Art/Enemies/김태영/김태영.fbx", kind="human", size=("height", 1.8),
+               source=os.path.join(SKINS, "90_적유닛/R11-R20/R19_김태영.glb"), gltf_guess_bind=False,
+               drop_meshes=["Icosphere", "Object_11", "Object_13"],
+               rename_bones=JNTSKIN_RENAME, rename_strip=r"_[0-9]+$",
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(pattern=r"^Lf_(Arm3|Arm7|Arm8|clavicle1_cj)", into="mixamorig:LeftForeArm"),
+                            dict(pattern=r"^Rt_(Arm3|Arm7|Arm8|clavicle1_cj)", into="mixamorig:RightForeArm"),
+                            dict(pattern=r"^Lf_(Leg3|Leg7)", into="mixamorig:LeftLeg"),
+                            dict(pattern=r"^Rt_(Leg3|Leg7)", into="mixamorig:RightLeg"),
+                            dict(pattern=r"^lf_(hand|leg)_ctrl", into="mixamorig:LeftHand"),
+                            dict(pattern=r"^rt_(hand|leg)_ctrl", into="mixamorig:RightHand"),
+                            # 🔴 조로는 **`_dn` 쪽에 살이 붙어 있다** — 관절 이름을 단 `spline1/2/3_jnt_skin`은
+                            #    가중치가 0이고, `spline1_jnt_dn_skin`(1236) `spline2_jnt_dn_skin`(1291)이 진짜다.
+                            #    그래서 `_dn`을 **한 군데로 몰면 Hips·Spine이 빈다**(「휴머노이드 필수 뼈에 가중치가 없다」).
+                            #    번호대로 제 짝에 넣는다. (나미에는 `_dn`이 아예 없다 — 같은 계열이어도 다르다.)
+                            dict(pattern=r"^spline1_jnt_dn", into="mixamorig:Hips"),
+                            dict(pattern=r"^spline2_jnt_dn", into="mixamorig:Spine"),
+                            dict(pattern=r"^spline3_jnt_dn", into="mixamorig:Spine1"),
+                            dict(pattern=r"^spline5_jnt_dn", into="mixamorig:Spine2")],
+               # 그림은 glb 안에 박혀 있다(Image_0 몸 1024² · Image_1 얼굴 512²). `7_` 재질이 쓰던 Image_2는
+               # 그 메시를 뺐으니 안 꺼낸다.
+               glb_images={0: "zoro_body.png", 1: "zoro_face.png"},
+               materials=dict(textures={"5_Body_1.0_0_0": [("DiffuseColor", "zoro_body.png")],
+                                        "5_Face_1.0_0_0": [("DiffuseColor", "zoro_face.png")]})),
+    # 블리치 쿠치키 뱌쿠야 → R09 김민준안경. **zip 안에 glb가 그대로** 들어 있다(중첩 zip이 아니다 —
+    #   `archive`를 두 칸으로 쓴다). 우타·버기와 **같은 Bip001 계열**이고 Spine2·Toe0 둘 다 있다.
+    #   메시 7(+Icosphere) · 뼈 65 · 재질 6(몸·얼굴·머리카락·양눈·입) · 액션 21(안 씀).
+    #   그림은 **glb 안에 박혀** 있다(바깥 textures/에도 같은 것이 있지만 박힌 쪽을 쓴다 — 이름이 재질과 맞는다).
+    "김민준안경": dict(path="Assets/Art/Enemies/김민준안경/김민준안경.fbx", kind="human", size=("height", 1.8),
+                 archive=(os.path.join(SKINS, "90_적유닛/R01-R10/R09_김민준안경.zip"),
+                          "source/baizai1wanjie_0_battleout.glb"),
+                 gltf_guess_bind=False,
+                 drop_meshes=["Icosphere"],
+                 rename_bones=BIP001_RENAME,
+                 no_nulls=True, orient_snap=True,
+                 merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head")],
+                 glb_images={0: 'baizai_body.png', 1: 'baizai_face.png', 2: 'baizai_hair.png', 3: 'baizai_leye.png', 4: 'baizai_mouth.png', 5: 'baizai_reye.png'},
+                 materials=dict(textures={'baizai_body_1': [('DiffuseColor', 'baizai_body.png')], 'baizai_face_1': [('DiffuseColor', 'baizai_face.png')], 'baizai_hair_1': [('DiffuseColor', 'baizai_hair.png')], 'baizai_leye_1': [('DiffuseColor', 'baizai_leye.png')], 'baizai_mouth_1': [('DiffuseColor', 'baizai_mouth.png')], 'baizai_reye_1': [('DiffuseColor', 'baizai_reye.png')]})),
+    # 원피스 나미(Nami) → R08 문필환. zip 안 zip 안 .gltf(+ .bin + png 3장) — 버기와 같은 꼴.
+    #   뼈 122(마야 `_jnt_skin` 계열) · 메시 7.
+    #   🔴 **메시가 두 벌이다**: `5_body/5_face/5_-staff`와 `7_BodyDetail/7_FaceDetail/7_-staff.2`.
+    #      정점 수가 거의 같고 경계도 같다 — **겹쳐 그리는 외곽선용 껍데기**다. 둘 다 두면 폴리곤이 두 배가 되고
+    #      같은 자리에 두 면이 겹쳐 z 다툼이 난다. **`7_` 쪽을 뺀다.**
+    #   무기(weapon_Jnt1~3, 클리마 택트)는 오른손에 붙어 있다 → RightHand로 합친다.
+    "문필환": dict(path="Assets/Art/Enemies/문필환/문필환.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R01-R10/R08_문필환.zip"), "source/Nami - One Piece.zip",
+                        "Nami - One Piece.gltf"),
+               # 🔴 png는 `archive_textures`가 아니라 **`archive_rgb`**로 꺼낸다 — `archive_textures`는
+               #    맨 끝에 복사하는데 `materials=`는 그 전에 그 파일을 찾는다. 처음엔 통과하는 것처럼
+               #    보였는데 **지난 실행이 남긴 파일 때문**이었다(Textures/를 지우고 돌리니 바로 죽었다).
+               #    `archive_textures`에는 **혼자 못 사는 곁딸린 파일(.bin)만** 남긴다.
+               archive_textures=["Nami - One Piece.bin"],
+               archive_rgb={"T_Nami01_St_body_BaseX.png": "T_Nami01_St_body_BaseX.png",
+                            "T_Nami01_St_face_Base.png": "T_Nami01_St_face_Base.png",
+                            "T_CHR_LineX1.png": "T_CHR_LineX1.png"},
+               gltf_guess_bind=False,
+               # 🔴 **지팡이(클리마 택트)를 뺀다.** 결합 자세에서 길이 2m짜리 막대가 **허리를 가로질러 꿰뚫고**
+               #    누워 있다(옆에서 렌더해서 확인 — 앞에서 보면 손 옆 작은 고리로만 보여 안 보인다).
+               #    손에 쥔 자세가 아니라 애니메이션이 옮겨 놓는 자리라, 걸어오는 적에겐 막대만 남는다.
+               #    ⚠️ 앞모습만 봤으면 못 봤다 — **깊이(y)가 2.05m로 키보다 길면 옆에서 볼 것.**
+               drop_meshes=["Icosphere", "7_BodyDetail_1.0_0_0.006", "7_FaceDetail_1.0_0_0.006",
+                            "7_-staff.2_1.0_0_0.002", "5_-staff.1_1.0_0_0.002"],
+               rename_bones=JNTSKIN_RENAME,
+               drop_bones=["root"],
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(pattern=r"^Lf_(Arm3|Arm7)", into="mixamorig:LeftForeArm"),
+                            dict(pattern=r"^Rt_(Arm3|Arm7)", into="mixamorig:RightForeArm"),
+                            dict(pattern=r"^Lf_(Leg3|Leg7)", into="mixamorig:LeftLeg"),
+                            dict(pattern=r"^Rt_(Leg3|Leg7)", into="mixamorig:RightLeg"),
+                            dict(pattern=r"^Lf_mid", into="mixamorig:LeftHand"),
+                            dict(pattern=r"^Rt_mid", into="mixamorig:RightHand")],
+               materials=dict(textures={"5_body_1.0_0_0.006": [("DiffuseColor", "T_Nami01_St_body_BaseX.png")],
+                                        "5_face_1.0_0_0.006": [("DiffuseColor", "T_Nami01_St_face_Base.png")],
+                                        })),
+    # 원피스 우타(Uta) → R16 이하림. 버기와 **같은 Bip001 계열**이지만 이쪽은 Spine2·Toe0이 **있다**(그래서 표가 다르다).
+    #   zip 안 zip 안 .gltf — 버기와 같은 꼴이라 `archive_textures`로 `.bin`을 같이 꺼낸다.
+    #   메시 1(+Icosphere) · 뼈 91 · 겹친 변형 없음.
+    "이하림": dict(path="Assets/Art/Enemies/이하림/이하림.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R11-R20/R16_이하림.zip"), "source/Uta - One Piece.zip",
+                        "Uta - One Piece.gltf"),
+               # 🔴 png는 `archive_textures`가 아니라 **`archive_rgb`**로 꺼낸다 — `archive_textures`는
+               #    맨 끝에 복사하는데 `materials=`는 그 전에 그 파일을 찾는다. 처음엔 통과하는 것처럼
+               #    보였는데 **지난 실행이 남긴 파일 때문**이었다(Textures/를 지우고 돌리니 바로 죽었다).
+               #    `archive_textures`에는 **혼자 못 사는 곁딸린 파일(.bin)만** 남긴다.
+               archive_textures=["Uta - One Piece.bin"],
+               archive_rgb={"tex_role_wuta.png": "tex_role_wuta.png"},
+               gltf_guess_bind=False,
+               drop_meshes=["Icosphere"],
+               rename_bones=BIP001_RENAME,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head")],
+               materials=dict(textures={"5_Uta_1.0_0_0": [("DiffuseColor", "tex_role_wuta.png")]})),
+    # 원피스 버기(Buggy) → R18 박기찬. **zip 안 zip 안 .gltf**(+ Buggy.bin + 14001_D.png).
+    #   🔴 .gltf는 **혼자 못 산다** — 기하는 `.bin`에, 그림은 `.png`에 따로 있다. `archive_textures`로
+    #      **같은 임시 폴더에 함께 꺼내야** 한다(그 셋이 나란히 있어야 gltf가 제 파일을 찾는다).
+    #      source에 gltf 하나만 주면 「버퍼를 못 읽는다」로 깨진다.
+    #   뼈 119(3ds Max Biped `Bip001`, 0이 **둘**) · 메시 8 · 겹친 변형 없음(몸·얼굴·손발이 따로 난 것뿐).
+    #   🔴 조명용 Icosphere를 뺀다 — 안 빼면 경계가 2.0m로 잡혀 비율을 못 읽는다.
+    "박기찬": dict(path="Assets/Art/Enemies/박기찬/박기찬.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R11-R20/R18_박기찬.zip"), "source/Buggy.zip", "Buggy.gltf"),
+               # 🔴 png는 `archive_textures`가 아니라 **`archive_rgb`**로 꺼낸다 — `archive_textures`는
+               #    맨 끝에 복사하는데 `materials=`는 그 전에 그 파일을 찾는다. 처음엔 통과하는 것처럼
+               #    보였는데 **지난 실행이 남긴 파일 때문**이었다(Textures/를 지우고 돌리니 바로 죽었다).
+               #    `archive_textures`에는 **혼자 못 사는 곁딸린 파일(.bin)만** 남긴다.
+               archive_textures=["Buggy.bin"],
+               archive_rgb={"14001_D.png": "14001_D.png"},
+               gltf_guess_bind=False,
+               drop_meshes=["Icosphere"],
+               rename_bones=BIP001_NO_SPINE2_NO_TOE,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head")],
+               # 재질 일곱이 **아틀라스 한 장**을 나눠 쓴다. 안 물리면 통째로 회색으로 나간다(위 검사가 잡는다).
+               materials=dict(textures={m: [("DiffuseColor", "14001_D.png")] for m in
+                                        ("5_body_1.0_0_0", "5_face_1.0_0_0", "5_legs_1.0_0_0",
+                                         "5_HandL_1.0_0_0", "5_HandR_1.0_0_0",
+                                         "5_FootL_1.0_0_0", "5_FootR_1.0_0_0")})),
+    # 원피스 바운티러시 S-스네이크(S-Snake) → R17 문채홍. 메시 24 · 뼈 55 · 재질 1 · 액션 192(안 씀).
+    #   🔴 **발끝 뼈(L/RFoot_Toe)가 없다** → PL_RENAME이 아니라 **YORK_RENAME**(요크에서 만든, 발끝 뺀 표)를 쓴다.
+    #      PL_RENAME을 그대로 쓰면 없는 뼈를 찾다 죽는다.
+    #   겹친 변형이 이 배치에서 가장 많다: **얼굴 7벌**(normal·attack·damage·sp01~04) → face_normal ·
+    #      손 여섯 벌(open·close·close_02·open_02·sp_01·thumb·domshoes) → **open**.
+    #   📌 `domshoes`(키의 12%, 종아리에 실림)는 **신고 있는 구두**라 남기고, `l/r_hand_domshoes`(구두를 든 손)는 뺀다.
+    #      날개는 접힌 것(wing_close)만 있다 — 그대로 남긴다.
+    "문채홍": dict(path="Assets/Art/Enemies/문채홍/문채홍.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R11-R20/R17_문채홍.zip"), "source/S-Snake.rar",
+                        "S-Snake/S-Snake by Annettlw.fbx"),
+               archive_rgb={"textures/pl_ssnake_orig01_diff.png": "pl_ssnake_orig01_diff.png"},
+               archive_rgb_outer=True,
+               drop_meshes=["face_attack", "face_damage", "face_sp01", "face_sp02", "face_sp03", "face_sp04",
+                            "l_hand_close", "l_hand_close_02", "l_hand_domshoes", "l_hand_sp_01", "l_hand_thumb",
+                            "r_hand_close", "r_hand_domshoes", "r_hand_open_02", "r_hand_sp_01", "r_hand_thumb"],
+               drop_bones=["world_joint"],
+               rename_bones=YORK_RENAME,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(pattern=r"^(b_l_skirt_|b_r_skirt_|f_l_skirt_|f_r_skirt_|s_l_skirt_|s_r_skirt_|l_wing_close_|r_wing_close_)", into="mixamorig:Spine1"),
+                            dict(pattern=r"^(LArm_elbow_sup|LArm_Upper_sup)", into="mixamorig:LeftArm"),
+                            dict(pattern=r"^(RArm_elbow_sup|RArm_Upper_sup)", into="mixamorig:RightArm"),
+                            dict(pattern=r"^LHand_Fore_sup", into="mixamorig:LeftHand"),
+                            dict(pattern=r"^RHand_Fore_sup", into="mixamorig:RightHand"),
+                            dict(pattern=r"^l_domshoes_", into="mixamorig:LeftLeg"),
+                            dict(pattern=r"^r_domshoes_", into="mixamorig:RightLeg")],
+               materials=dict(textures={"pl_ssnake_orig01": [("DiffuseColor", "pl_ssnake_orig01_diff.png")]})),
+    # 원피스 바운티러시 이조(pl_izo_orig01) → R06 이재윤. **원본이 7z**다(zip 안 source/pl_izo.7z — bsdtar가 푼다).
+    #   메시 20 · 뼈 86 · 재질 1 · 액션 0.
+    #   🔴 **칼 두 자루를 오비(허리띠)에 꽂은 채로 둔다** — 중심 높이로 갈렸다: weapon_01·02는 키의 77%(손에 뽑은 것),
+    #      weapon_03·04는 63%(오비에 꽂힌 것). 오비도 네 벌(obi·obi_l_weapon·obi_r_weapon·obi_weapon)이라
+    #      **칼 둘이 꽂힌 obi_weapon**만 남긴다. 손은 open(칼을 안 쥔 손).
+    "이재윤": dict(path="Assets/Art/Enemies/이재윤/이재윤.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R01-R10/R06_이재윤.zip"), "source/pl_izo.7z",
+                        "pl_izo/pl_izo_orig01.fbx"),
+               # ⚠️ 7z 안에는 **.tga**뿐이다(pl_izo_orig01_diff.tga). 쓸 png는 **바깥 zip의 textures/**에 있다 —
+               #    그래서 `archive_rgb_outer=True`(젊은 오비토에서 만든 그 깃발)를 켠다. 안 켜면 안쪽에서 찾다 죽는다.
+               archive_rgb={"textures/pl_izo_orig01_diff.png": "pl_izo_orig01_diff.png"},
+               archive_rgb_outer=True,
+               drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close",
+                            "l_hand_weapon", "r_hand_weapon", "weapon_01", "weapon_02",
+                            "obi", "obi_l_weapon", "obi_r_weapon"],
+               drop_bones=["world_joint"],
+               rename_bones=PL_RENAME,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(pattern=r"^(coat_root|c_coat_|c_collar|b_l_skirt_|b_r_skirt_|f_l_skirt_|f_r_skirt_|s_l_skirt_|s_r_skirt_)", into="mixamorig:Spine1"),
+                            dict(pattern=r"^(l_coat|l_collar|l_sode_)", into="mixamorig:LeftShoulder"),
+                            dict(pattern=r"^(r_coat|r_collar|r_sode_)", into="mixamorig:RightShoulder"),
+                            dict(pattern=r"^(l_weapon_pelvis_joint|l_weapon_handle_joint|r_weapon_pelvis_joint|r_weapon_handle_joint)", into="mixamorig:Hips"),
+                            dict(pattern=r"^(l_weapon_joint|LHand_Fore_sup)", into="mixamorig:LeftHand"),
+                            dict(pattern=r"^(r_weapon_joint|RHand_Fore_sup)", into="mixamorig:RightHand")],
+               materials=dict(textures={"pl_izo_orig01": [("DiffuseColor", "pl_izo_orig01_diff.png")]})),
+    # 원피스 바운티러시 페이지원(pl_pageone_orig01) → R07 인홍진. 메시 13 · 뼈 65 · 재질 1 · 액션 90(안 씀).
+    #   📌 zip 안에 **공룡 형태(spino/pl_pageone_orig02)도 들어 있다** — 길을 걸어오는 적이라 **사람 형태**를 쓴다.
+    #      효과용 obj 셋(Mesh/mdl_ef_*)도 안 쓴다.
+    #   겹친 변형: 얼굴 3벌 → face_normal · 손 close/open/sp → open. 무기 없음. 모자(hat)는 Head에 붙어 있어 남긴다.
+    "인홍진": dict(path="Assets/Art/Enemies/인홍진/인홍진.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R01-R10/R07_인홍진.zip"), "source/page one.rar",
+                        "page one/pl_pageone_orig01 (merge).fbx"),
+               archive_rgb={"page one/pl_pageone_orig01_diff.png": "pl_pageone_orig01_diff.png"},
+               drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close",
+                            "l_hand_sp", "r_hand_sp"],
+               drop_bones=["world_joint"],
+               rename_bones=PL_RENAME,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(pattern=r"^(coat_root|c_coat_|c_collar|himo_joint|tie_|b_l_skirt_|b_r_skirt_|f_l_skirt_|f_r_skirt_|s_l_skirt_|s_r_skirt_)", into="mixamorig:Spine1"),
+                            dict(pattern=r"^(l_coat|l_collar|l_himo_joint)", into="mixamorig:LeftShoulder"),
+                            dict(pattern=r"^(r_coat|r_collar|r_himo_joint)", into="mixamorig:RightShoulder"),
+                            dict(pattern=r"^LHand_Fore_sup", into="mixamorig:LeftHand"),
+                            dict(pattern=r"^RHand_Fore_sup", into="mixamorig:RightHand")],
+               materials=dict(textures={"pl_pageone_orig01": [("DiffuseColor", "pl_pageone_orig01_diff.png")]})),
+    # 원피스 바운티러시 아수라 도지(pl_ashuradoji_orig01) → R13 조도연. 메시 14 · 뼈 67 · 재질 1 · 액션 31(안 씀).
+    #   🔴 칼은 **칼집에 꽂은 채**로 둔다: r_weapon_01은 키의 69%(손에 든 것) → 빼고,
+    #      r_weapon_02(sheath 25%)·r_weapon_03(handle_sheath 48%)를 남긴다. 표주박(gourd)은 늘 차고 있으니 남긴다.
+    #   ⚠️ 원본 뼈 이름에 **오타가 있다**: `l_coat_sholder`(u 빠짐). 원본 철자 그대로 써야 걸린다.
+    "조도연": dict(path="Assets/Art/Enemies/조도연/조도연.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R11-R20/R13_조도연.zip"), "source/ashura.rar",
+                        "ashura/pl_ashuradoji_orig01 (merge).fbx"),
+               archive_rgb={"ashura/pl_ashuradoji_orig01_diff.png": "pl_ashuradoji_orig01_diff.png"},
+               drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "r_weapon_01"],
+               drop_bones=["world_joint"],
+               rename_bones=PL_RENAME,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(pattern=r"^(coat_root|c_coat_|c_skirt|b_l_skirt_|b_r_skirt_|f_l_skirt_|f_r_skirt_|s_l_skirt_|s_r_skirt_|sheath|handle_sheath)", into="mixamorig:Spine1"),
+                            dict(pattern=r"^(l_coat_sholder|l_coat_arm_|l_cort_)", into="mixamorig:LeftShoulder"),
+                            dict(pattern=r"^(r_coat_sholder|r_coat_arm_|r_cort_)", into="mixamorig:RightShoulder"),
+                            dict(pattern=r"^LHand_Fore_sup", into="mixamorig:LeftHand"),
+                            dict(pattern=r"^(gourd_joint|weapon_01_joint|RHand_Fore_sup)", into="mixamorig:RightHand")],
+               materials=dict(textures={"pl_ashuradoji_orig01": [("DiffuseColor", "pl_ashuradoji_orig01_diff.png")]})),
+    # 🔴 원피스 바운티러시 제파(pl_zephyr_orig01) → R30 김만경 ★보스. **원본이 전설적인_이시원·전설적인_김건과 같은 파일이다**
+    #   (sha256 810c78364077fcfc…, 세 zip이 바이트까지 같다). 그래서 **설정도 그 둘과 글자 하나까지 같다 —
+    #   하나를 고치면 반드시 셋 다 고칠 것.** (같은 원본을 쓰는 항목이 이제 셋이다.)
+    #   📌 R58 「돌아온_김만경」은 같은 사람이라 이 산출물 하나로 쓴다 — 따로 만들지 말 것(PM 2026-09-24).
+    "김만경": dict(path="Assets/Art/Enemies/김만경/김만경.fbx", kind="human", size=("height", 1.8),
+              archive=(os.path.join(SKINS, "90_적유닛/R21-R30/R30_김만경_보스.zip"), "source/zephyr.rar",
+                       "zephyr/pl_zephyr_orig01 (merge).fbx"),
+              archive_rgb={"zephyr/pl_zephyr_orig01_diff.png": "pl_zephyr_orig01_diff.png",
+                           "zephyr/pl_zephyr_orig01_dyanagan_diff.png": "pl_zephyr_orig01_dyanagan_diff.png"},
+              drop_meshes=["face_attack", "face_damage", "face_sp", "l_hand_close", "battlesmasher_open", "dynagan_glass", "cartridge"],
+              drop_bones=["cartridge_joint", "world_joint"],
+              rename_bones=dict({k: v for k, v in PL_RENAME.items() if k != "RHand_Palm"}, weapon_root="mixamorig:RightHand"),
+              reparent_bones={"dynagan_joint": "mixamorig:RightHand"},
+              no_nulls=True, orient_snap=True,
+              merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                           dict(pattern=r"^(weapon_|dynagan_)", into="mixamorig:RightHand"),
+                           dict(pattern=r"^(coat_root|b_c_coat_|c_collar|f_l_coat_|b_l_coat_|l_coat_arm_|l_collar|bodyparts_)", into="mixamorig:Spine1"),
+                           dict(pattern=r"^(f_r_coat_|r_coat_arm_|r_collar)", into="mixamorig:RightShoulder"),
+                           dict(pattern=r"^LHand_Fore_sup$", into="mixamorig:LeftForeArm"),
+                           dict(pattern=r"^RHand_Fore_sup$", into="mixamorig:RightForeArm")],
+              materials=dict(textures={"pl_zephyr_orig01": [("DiffuseColor", "pl_zephyr_orig01_diff.png")],
+                                       "pl_zephyr_orig01_dyanagan": [("DiffuseColor", "pl_zephyr_orig01_dyanagan_diff.png")]})),
+    # 원피스 바운티러시 류마(pl_ryuma_orig01) → R03 반항아_이승우. 이시원(제파)·요크와 같은 pl_ 리그.
+    #   메시 11 · 뼈 62(살 붙은 55) · 재질 1 · 액션 90(안 씀, 결합 자세 기준) · 배율 ×0.01.
+    #   겹친 변형(직접 재서 갈랐다): 얼굴은 face_normal 하나뿐 · 손 open/close → **open** ·
+    #   🔴 칼이 **세 벌**이다 — 중심 높이로 갈렸다: waist_blade·waist_sheath는 키의 57~58%(허리에 찬 것),
+    #      l/r_blade·l_sheath는 75%(손에 뽑아 든 것). **허리에 찬 한 벌만 남긴다**(길을 걸어오는 적이라).
+    "반항아_이승우": dict(path="Assets/Art/Enemies/반항아_이승우/반항아_이승우.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.join(SKINS, "90_적유닛/R01-R10/R03_반항아_이승우.zip"), "source/pl_ryuma_orig01.rar",
+                             "pl_ryuma_orig01/pl_ryuma_orig01.fbx"),
+                    archive_rgb={"pl_ryuma_orig01/pl_ryuma_orig01_diff.png": "pl_ryuma_orig01_diff.png"},
+                    drop_meshes=["l_blade", "r_blade", "l_sheath", "l_hand_close", "r_hand_close"],
+                    drop_bones=["world_joint"],
+                    rename_bones=PL_RENAME,
+                    no_nulls=True, orient_snap=True,
+                    merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                                 dict(pattern=r"^(BMuffler_|FMuffler_)", into="mixamorig:Spine1"),
+                                 dict(pattern=r"^LSode_", into="mixamorig:LeftShoulder"),
+                                 dict(pattern=r"^RSode_", into="mixamorig:RightShoulder"),
+                                 dict(pattern=r"^Skirt_", into="mixamorig:Hips"),
+                                 dict(pattern=r"^(Weapon_Sheath|Weapon_Blade)", into="mixamorig:Hips"),
+                                 dict(pattern=r"^(LHand_Weapon|HELPER_Weapon02)", into="mixamorig:LeftHand"),
+                                 dict(pattern=r"^(RHand_Weapon|HELPER_Weapon01)", into="mixamorig:RightHand")],
+                    materials=dict(textures={"pl_ryuma_orig01": [("DiffuseColor", "pl_ryuma_orig01_diff.png")]})),
     # ══════════════════════════════════════════════════════════════════════════════════════
     # 🔴 **다시 못 만드는 다섯**(2026-09-24, 관문 ③ 대조로 드러남 — 그전엔 이 사실조차 없었다).
     #
@@ -4349,6 +4708,26 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     scene = bpy.context.scene
     if recipe is not None:
         report["텍스처"] = relink_textures(ref["textures"], tex_out_dir, os.path.join(os.path.dirname(dst_path), "Textures"))
+    # 🔴 **조용히 지나가던 실패를 막는다**(2026-09-24, PM 지시). glb는 텍스처가 파일이 아니라 **안에 박혀** 있어서,
+    #    `glb_images`를 안 적으면 오류도 경고도 없이 **재질만 남고 회색으로 나간다**(R05 왕승환이 실제로 그랬다 —
+    #    Textures/에 아무것도 안 생겼을 뿐이라 로그만 봐선 모른다). 안 적었는데 박힌 그림이 있으면 **이름을 찍고 멈춘다.**
+    #    ⚠️ **`recipe`를 쓰는 항목은 빼야 한다** — 그쪽은 relink_textures가 박힌 그림을 `0.png·1.png…`로 따로 빼낸다
+    #       (안흔함_이호준·김수빈·특별함_최상호·안흔함_박민수 넷이 그 길이다. 안 빼면 **멀쩡한 넷이 죽는다** —
+    #        처음에 그렇게 짰다가 관문이 바로 잡았다. 「설정 모양」이 아니라 **그림이 실제로 나오느냐**가 기준이다).
+    if src.lower().endswith((".glb", ".gltf")) and not cfg.get("glb_images") and not cfg.get("recipe"):
+        try:
+            import json as _j, struct as _s
+            _raw = open(src, "rb").read()
+            _emb = _j.loads(_raw[20:20 + _s.unpack_from("<I", _raw, 12)[0]]).get("images", [])
+        except Exception:
+            _emb = []
+        # 이름이 없는 그림이 흔하다(왕승환이 그랬다) — 그럴 땐 재질 이름을 준다. 이름을 짓는 건 사람 몫이라 힌트만 준다.
+        _mats = [m.get("name") for m in _j.loads(_raw[20:20 + _s.unpack_from("<I", _raw, 12)[0]]).get("materials", [])] if _emb else []
+        _emb = [(i, im.get("name") or (_mats[0] if len(_mats) == 1 else "이름없음%d" % i))
+                for i, im in enumerate(_emb) if "bufferView" in im]
+        assert not _emb, (f"{name}: glb 안에 박힌 그림이 {len(_emb)}장인데 glb_images를 안 적었다 — "
+                          f"그대로 두면 **텍스처 없이 회색으로 나간다**. 적을 것: " +
+                          ", ".join(f"{i}: \"{n}.png\"" for i, n in _emb))
     if cfg.get("glb_images"):                                           # glb 내장 이미지를 원본 바이트 그대로 재질 이름 기준 파일로(재질을 짜기 전에)
         import json as _json
         import struct as _struct
@@ -5210,6 +5589,12 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     if arc_textures:
         tex_out = os.path.join(os.path.dirname(dst), "Textures")
         os.makedirs(tex_out, exist_ok=True)
+        # 🔴 `archive_textures`는 두 가지 일을 한다: ① 원본이 혼자 못 사는 경우 **곁딸린 파일을 같이 꺼내기**
+        #    (.gltf의 `.bin` — 안 꺼내면 「버퍼를 못 읽는다」로 깨진다) ② 텍스처를 Textures/에 넣기.
+        #    ①로 꺼낸 `.bin`까지 Textures/에 복사하면 **유니티가 그걸 에셋으로 물고** 폴더가 지저분해진다
+        #    (2026-09-25 R18 버기: 953KB짜리 Buggy.bin이 Textures/에 들어갔다). **그림만 복사한다.**
+        arc_textures = [t for t in arc_textures
+                        if os.path.splitext(t)[1].lower() in (".png", ".jpg", ".jpeg", ".tga", ".bmp", ".tif", ".tiff")]
         for t in arc_textures:
             out_t = os.path.join(tex_out, os.path.basename(t))
             if os.path.basename(t) in set(cfg.get("rgb_textures", ())):         # 알파(명암 마스크) 뺀 RGB로
@@ -5279,6 +5664,33 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     # 아니라 그 오브젝트 이름으로 잡는다(뼈대 자체는 정상 — Hips는 부모 없는 진짜 뿌리
     # 뼈였다, 재수입해서 직접 확인). 다른 유닛은 원본 아마추어 오브젝트 이름이 우연히
     # "Armature"였을 뿐이라 안 드러났던 문제 — 내보내기 직전에 무조건 통일한다.
+    # 🔴 **텍스처가 안 붙은 채로 나가는 것을 여기서 막는다**(2026-09-25, PM 지시 「조용히 지나가는 실패를 검사로」).
+    #    R18 버기·R16 우타가 그랬다: 텍스처 파일은 Textures/에 잘 들어갔는데 **재질에 안 물려** 통째로 회색으로
+    #    나갔다. 오류도 경고도 없었고, 회색 렌더를 눈으로 보고서야 알았다. 앞서 만든 glb 검사는 **박힌 그림**만
+    #    보기 때문에 이렇게 **바깥 png를 쓰는 gltf**는 못 걸렀다.
+    #    → 「설정이 어떻게 생겼나」가 아니라 **「그려질 재질에 그림이 물려 있나」**로 본다.
+    #    ⚠️ 정말 단색이어야 하는 재질이 있으면 `solid_materials=[이름 …]`로 **이름을 적어** 빼 둘 것(빈칸으로 두지 말 것).
+    #    🔴 「이미지 노드가 있나」로는 **못 잡는다** — 임포터가 만든 노드는 임시 폴더를 가리키고 있어서
+    #       검사는 통과하는데 내보내면 사라진다(R18 버기가 정확히 그랬다: 검사 통과 → 결과물은 재질 7개 전부 그림 없음).
+    #       그래서 **그 그림이 이 유닛의 Textures/ 안에 있는 파일인지**를 본다. 그게 내보내기에서 살아남는 조건이다.
+    solid_ok = set(cfg.get("solid_materials", ()))
+    want_dir = os.path.abspath(tex_out_dir)
+
+    def wired(m):
+        if not (m.use_nodes and m.node_tree):
+            return False
+        for n in m.node_tree.nodes:
+            if n.type == "TEX_IMAGE" and n.image and n.image.filepath:
+                if os.path.abspath(bpy.path.abspath(n.image.filepath)).startswith(want_dir):
+                    return True
+        return False
+
+    bare = sorted({m.name for o in bpy.context.scene.objects if o.type == "MESH" and len(o.data.vertices)
+                   for m in [s.material for s in o.material_slots]
+                   if m is not None and m.name not in solid_ok and not wired(m)})
+    assert not bare, (f"{name}: 유닛 Textures/의 그림이 안 물린 재질 {len(bare)}개 — 이대로 나가면 **회색으로 보인다**. "
+                      f"`materials=dict(textures={{…}})`로 물리거나, 정말 단색이면 solid_materials에 적을 것: "
+                      + ", ".join(bare[:8]))
     arm_obj = main_armature()
     if arm_obj is not None:
         arm_obj.name = "Armature"
