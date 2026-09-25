@@ -343,6 +343,8 @@ for _s, _side in (("L", "Left"), ("R", "Right")):
                           f"Bip001 {_s} Forearm": f"mixamorig:{_side}ForeArm", f"Bip001 {_s} Hand": f"mixamorig:{_side}Hand",
                           f"Bip001 {_s} Thigh": f"mixamorig:{_side}UpLeg", f"Bip001 {_s} Calf": f"mixamorig:{_side}Leg",
                           f"Bip001 {_s} Foot": f"mixamorig:{_side}Foot", f"Bip001 {_s} Toe0": f"mixamorig:{_side}ToeBase"})
+# 빈스모크 저지(R24): Spine2만 없고 Toe0은 있는 Bip001.
+BIP001_NO_SPINE2 = {k: v for k, v in BIP001_RENAME.items() if not k.endswith("Spine2")}
 # 버기(R18): Spine2·Toe0이 없는 Bip001. 있는 것만 남긴다.
 BIP001_NO_SPINE2_NO_TOE = {k: v for k, v in BIP001_RENAME.items()
                            if not k.endswith("Spine2") and not k.endswith("Toe0")}
@@ -542,6 +544,40 @@ UNITS = {
                             dict(pattern=r"^(l_weapon_joint|LHand_Fore_sup)", into="mixamorig:LeftHand"),
                             dict(pattern=r"^(r_weapon_joint|RHand_Fore_sup)", into="mixamorig:RightHand")],
                materials=dict(textures={"pl_oven_orig01": [("DiffuseColor", "pl_oven_orig01_diff.png")]})),
+    # 원피스 빈스모크 저지(Sketchfab glb, 뼈 있음) → R24 최준우. 그림 둘이 glb 안에 박혀 있다(Image_0 몸 · Image_1 망토, 1024²).
+    #   메시 3(몸 11,970 · 망토 pifeng 3,066 · 「0」 2,213 — 머리 앞 부품, **스킨 없이** 빈 노드 밑) + 조명용 Icosphere · 재질 2 · 관절 144 · 클립 0.
+    #   뼈: Bip001(Spine2 없음 · Toe0 있음, 번호 꼬리 `_07` → rename_strip) + 등 망토 사슬 셋(Bone001~017, Spine1 밑, 바닥까지)
+    #       + 허리 아래 코트 자락 사슬 여덟(Bone029~053, 골반 밑) + 머리 뒤 사슬(Bone025~028) + 오른손 창(judge001_weapon001).
+    #   🔴 창을 뺀다 — 키보다 길다(창끝 z 0.040 · 정수리 약 0.029). 유니티가 경계 상자로 키를 맞추니 두면 몸이 약 70%로 작아진다
+    #      (주영호 폭탄과 같은 판단. 되살리려면 drop_verts_of_bones 한 줄을 지우고 merge로 오른손에 붙인다).
+    #   망토는 Spine1(가슴)에 통째로 — 대장 코트와 같은 이유(사슬 가중치가 뼈마다 20~80정점뿐이라 따로 흔들 게 없다).
+    #   코트 자락은 대장 코트와 달리 **다리를 감싼다** → 왼쪽 사슬은 왼허벅지·오른쪽은 오른허벅지에 반, 골반에 반(아이젠 천년혈전 share 방식),
+    #   뒤 가운데(Bone044~048)는 골반.
+    "최준우": dict(path="Assets/Art/Enemies/최준우/최준우.fbx", kind="human", size=("height", 1.8),
+               source=os.path.join(SKINS, "90_적유닛/R21-R30/R24_최준우.glb"), gltf_guess_bind=False,
+               drop_meshes=["Icosphere"],
+               rigid_meshes={"0": "mixamorig:Head"},              # 머리 앞 부품(스킨 없음, 뼈대 밖 빈 노드 밑)
+               drop_verts_of_bones=["judge001_weapon001_054"],
+               # ⚠️ rename_strip은 **표 이름과 짝지을 때만** 꼬리를 뗀다 — 표 밖 뼈(Bone0xx)는 꼬리를 단 채 남으니 merge 패턴에 `_[0-9]+`를 붙인다.
+               rename_bones=BIP001_NO_SPINE2, rename_strip=r"_[0-9]+$",
+               drop_bones=["_rootJoint", "Bip001_00", "Bip001 Footsteps_01", "judge001_weapon001_054"],
+               drop_bones_re=r"Nub_[0-9]+$",
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(under="mixamorig:LeftHand", into="mixamorig:LeftHand"),
+                            dict(under="mixamorig:RightHand", into="mixamorig:RightHand"),
+                            dict(pattern=r"^Bone0(0[1-9]|1[0-7])(\(mirrored\))?_[0-9]+$", into="mixamorig:Spine1"),
+                            dict(pattern=r"^(Bone0(29|3[0-3])\(mirrored\)|Bone0(39|4[0-3]|49|5[0-3]|3[4-8]))_[0-9]+$",
+                                 into="mixamorig:LeftUpLeg", share=0.5, rest="mixamorig:Hips"),
+                            dict(pattern=r"^(Bone0(29|3[0-3])|Bone0(39|4[0-3]|49|5[0-3]|3[4-8])\(mirrored\))_[0-9]+$",
+                                 into="mixamorig:RightUpLeg", share=0.5, rest="mixamorig:Hips"),
+                            dict(pattern=r"^Bone04[4-8]_[0-9]+$", into="mixamorig:Hips")],
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               glb_images={0: "judge001_body_d.png", 1: "judge001_pifeng_d.png"},
+               materials=dict(textures={"judge001_body_d": [("DiffuseColor", "judge001_body_d.png")],
+                                        "judge001_pifeng_d": [("DiffuseColor", "judge001_pifeng_d.png")]})),
     # 원피스 파이팅 패스 오즈(Oars, XPS 립, o_dv89_o) → R23 구주호. zip = source/*.rar(29009.fbx · xps.xps · 29009_X.png) + textures/29009_X.png.
     #   메시 1(Body, 정점 19,514 · 삼각형 27,787) · 재질 1(29009) · 그림 1(29009_X.png 1024² 컬러 — zip·rar 픽셀 같음) · 뼈 82 · 클립 0.
     #   🔴 원본 재질이 컬러 그림을 **노멀맵에도** 꽂고 있다(모모우와 같은 립 계열) → materials=로 컬러만 새로 짓는다.
@@ -5160,6 +5196,11 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         if ref is not None and ref["empties"] - extra_names:
             report["기준에만 있는 Null"] = sorted(ref["empties"] - extra_names)
         rigid = {m.name: (bone_above(m, arm, extra_names) if skinned_to(m) is None else None) for m in meshes}
+        # 🔸 rigid_meshes {메시: 뼈}(2026-09-25 R24 저지): 스킨 없는 메시가 **뼈대 밖 빈 노드** 밑에 있으면 bone_above가 못 찾아
+        #   가중치 그룹 없이 뼈대 오브젝트에만 붙어 나간다(유니티에서 머리를 안 따라감). 이름으로 뼈를 직접 준다.
+        for rm_name, rm_bone in cfg.get("rigid_meshes", {}).items():
+            assert rm_name in rigid, f"{name}: rigid_meshes 메시가 없다 {rm_name} {sorted(rigid)}"
+            rigid[rm_name] = rm_bone
         root_bone = next(b.name for b in arm.data.bones if b.parent is None)
         data = bpy.data.armatures.new(arm.data.name)
         bpy.data.objects.remove(arm, do_unlink=True)
