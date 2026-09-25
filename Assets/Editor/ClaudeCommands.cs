@@ -1312,9 +1312,9 @@ public static class ClaudeCommands
                 }
                 bool optional = target.StartsWith("?");
                 if (optional) target = target.Substring(1);
-                if (target == "@shopspend")
+                if (target.StartsWith("@shopspend"))
                 {
-                    job.report += SpendAtShop(job);
+                    job.report += SpendAtShop(job, target.Length > 11 ? target.Substring(11) : "");
                     job.clickIndex++;
                     Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
                     break;
@@ -2120,7 +2120,7 @@ public static class ClaudeCommands
         bool ok = isSelect ? names.Any(n => n.Contains(want))
                 : lastBoxPicked > 0 && (next.StartsWith("@rcpt:") || names.All(n => n.Contains(want)));
         if (ok) return;
-        bool dependent = next.StartsWith("@rc:") || next.StartsWith("@rcpt:") || (isSelect && (next.StartsWith("?UnitCommandSlot") || next == "?@shopany" || next == "?@shopspend"));
+        bool dependent = next.StartsWith("@rc:") || next.StartsWith("@rcpt:") || (isSelect && (next.StartsWith("?UnitCommandSlot") || next == "?@shopany" || next.StartsWith("?@shopspend")));
         if (!dependent) return;
         job.report += $"   ⛔ 「{spec}」 뒤 선택이 뜻과 다름({(names.Count > 0 ? string.Join(", ", names.Take(5)) : "없음")}) — 이 선택에 기대는 「{next}」를 버림\n";
         job.clickIndex++;
@@ -2488,11 +2488,36 @@ public static class ClaudeCommands
     const int ShopSpendClicks = 6;
 
     // 고른 상점에서 누를 수 있는 칸을 차례로 눌러, **골드가 줄어든 클릭만** 산 것으로 센다. 줄지 않은 칸은 한 번 누르고 넘어간다.
-    static string SpendAtShop(GameShotJob job)
+    // 공격타입 강화가 공격력을 더해 주는 등급(PM 0e0bfcc5 — 흔함~희귀는 0).
+    static readonly UnitGrade[] AttackTypeUpgradeGrades =
     {
-        var slots = UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
+        UnitGrade.Legendary, UnitGrade.Hidden, UnitGrade.RandomUnit, UnitGrade.OtherWorld,
+        UnitGrade.Limited, UnitGrade.Superior, UnitGrade.Transformed,
+        UnitGrade.Transcendent, UnitGrade.Immortal, UnitGrade.Eternal,
+    };
+
+    // 사람이라면 **가진 유닛에 듣는 강화만** 산다(09-25 PM 지시 — 판 D·G는 랜덤유닛·전설적인 강화를 가진 것 없이 샀다).
+    //    유닛강화소: 칸 글자 첫 말(「랜덤유닛 강화」의 「랜덤유닛」)이 지금 가진 유닛 등급일 때만.
+    //    공격타입강화소: 그 강화가 듣는 등급 묶음의 유닛을 하나라도 가졌을 때만. 도박소: 거르지 않는다.
+    static bool WorthBuying(string shop, string label, HashSet<UnitGrade> owned)
+    {
+        if (shop.Contains("유닛강화소"))
+        {
+            string first = label.Split(new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+            return owned.Any(g => g.KoreanName() == first);
+        }
+        if (shop.Contains("공격타입강화소")) return owned.Any(g => AttackTypeUpgradeGrades.Contains(g));
+        return true;
+    }
+
+    static string SpendAtShop(GameShotJob job, string shop)
+    {
+        var owned = new HashSet<UnitGrade>(MyUnits().Select(u => u.Data.grade));
+        var all = UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
             .Where(b => b.gameObject.name.StartsWith("UnitCommandSlot") && b.IsActive() && ButtonLabel(b).Length > 0 && !UnitCommandLabels.Contains(ButtonLabel(b)))
             .OrderBy(b => int.TryParse(b.gameObject.name.Substring("UnitCommandSlot".Length), out int n) ? n : 99).ToList();
+        var slots = all.Where(b => WorthBuying(shop, ButtonLabel(b), owned)).ToList();
+        int skipped = all.Count - slots.Count;
         int start = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
         var bought = new List<string>();
         int clicks = 0;
@@ -2511,7 +2536,7 @@ public static class ClaudeCommands
             }
         }
         int end = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
-        return $"   🏪 {(bought.Count > 0 ? $"{bought.Count}번 삼: {string.Join(", ", bought.GroupBy(x => x.Split(' ')[0]).Select(g => $"{g.Key}×{g.Count()}"))}" : "산 것 없음")} · 골드 {start} → {end} · 칸 {string.Join(" · ", slots.Select(b => $"「{ButtonLabel(b)}」{(b.IsInteractable() ? "" : "(흐림)")}"))}\n";
+        return $"   🏪 {shop} {(bought.Count > 0 ? $"{bought.Count}번 삼: {string.Join(", ", bought.GroupBy(x => x.Split(' ')[0]).Select(g => $"{g.Key}×{g.Count()}"))}" : "산 것 없음")} · 골드 {start} → {end} · 가진 등급에 안 듣는 칸 {skipped}개 건너뜀 · 칸 {string.Join(" · ", slots.Select(b => $"「{ButtonLabel(b).Replace("\n", " ")}」{(b.IsInteractable() ? "" : "(흐림)")}"))}\n";
     }
 
     // 사람의 한 턴 — 랜덤유닛 위습을 하나씩 포탈로, 카드별 조합 시도, 전부 모서리로.
@@ -2609,6 +2634,15 @@ public static class ClaudeCommands
             job.report += "   🧪 bossaway: R10 — 유닛을 스토리존으로 치운다\n";
             for (int k = 0; k < 3; k++) { turn.Add("@box:Unit_"); turn.Add("@rc:Lane1_스토리포탈"); }
         }
+        else if (rmTurn != null && rmTurn.CurrentRound % 10 == 0 && !job.storySent)
+        {
+            // 보스 라운드 — 등급별로 **다른 모서리**에 나눠 세운다(09-25 PM 지시). 한 모서리에 몰면 보스를 31~36초마다
+            //    지나갈 때만 몇 초씩 때려 처치가 세 번째 통과(≈72초)로 밀렸다(판 B·D·G). 흔함 → 모서리 0, 안흔함 → 맞은편(2),
+            //    특별함 → 1, 그 위 → 3. 한 박스는 선택 상한 12기라 흔함은 한 번 더 쓸어 보낸다.
+            job.report += "   🧪 보스 라운드: 등급별로 모서리 넷에 나눠 세운다\n";
+            (string box, string corner)[] split = { ("@box:Unit_흔함", "corner"), ("@box:Unit_흔함|far", "corner"), ("@box:Unit_안흔함", "corner2"), ("@box:Unit_특별함", "corner1"), ("@box:Unit_희귀함", "corner3"), ("@box:Unit_히든", "corner3") };
+            foreach ((string box, string corner) in split) { turn.Add(box); turn.Add("@rcpt:" + corner); }
+        }
         else
         {
             turn.Add(sweep);
@@ -2622,7 +2656,7 @@ public static class ClaudeCommands
             foreach (string shop in SpendShops)
             {
                 turn.Add("@sel:" + shop);
-                turn.Add("?@shopspend");
+                turn.Add("?@shopspend:" + shop);
             }
         }
 
@@ -2632,8 +2666,29 @@ public static class ClaudeCommands
     }
 
     // 0번 레인 적 경로의 안쪽 모서리 지점 — 두 변이 만나는 곳이라 한 자리에서 두 변을 친다. inset = 경로에서 떨어질 거리.
-    static bool TryCornerTarget(float inset, out Vector3 target)
+    static bool TryCornerTarget(float inset, out Vector3 target) => TryCornerTarget(inset, 0, out target);
+
+    // which번째 모서리(경로를 도는 순서). 모서리가 which보다 적으면 돌아가며 쓴다.
+    static bool TryCornerTarget(float inset, int which, out Vector3 target)
     {
+        target = Vector3.zero;
+        LaneMarker laneW = LaneMarker.Get(0);
+        WaypointPath pathW = laneW != null ? LanePathNear(laneW.LaneCenter) : null;
+        if (pathW == null || pathW.PointCount < 3) return false;
+        var corners = new List<Vector3>();
+        for (int i = 0; i < pathW.PointCount; i++)
+        {
+            Vector3 prev = pathW.GetPoint((i - 1 + pathW.PointCount) % pathW.PointCount), here = pathW.GetPoint(i), nextP = pathW.GetPoint((i + 1) % pathW.PointCount);
+            Vector3 before = here - prev, after = nextP - here;
+            before.y = after.y = 0f;
+            if (before.sqrMagnitude < 1f || after.sqrMagnitude < 1f || Vector3.Angle(before, after) <= 45f) continue;
+            Vector3 diag = laneW.LaneCenter - here;
+            diag.y = 0f;
+            Vector3 t = here + diag.normalized * inset * 1.4142f;
+            t.y = laneW.LaneCenter.y;
+            corners.Add(t);
+        }
+        if (which > 0 && corners.Count > 0) { target = corners[which % corners.Count]; return true; }
         target = Vector3.zero;
         LaneMarker lane = LaneMarker.Get(0);
         WaypointPath path = lane != null ? LanePathNear(lane.LaneCenter) : null;
@@ -2662,7 +2717,8 @@ public static class ClaudeCommands
         {
             case 0:
             {
-                if (which != "corner" || !TryCornerTarget(50f, out Vector3 aim)) { job.report += $"   🖱 rclickpt:{which}: 지점을 못 정함 — 건너뜀\n"; return true; }
+                int cornerIndex = which == "corner" ? 0 : which.StartsWith("corner") && int.TryParse(which.Substring(6), out int ci) ? ci : -1;
+                if (cornerIndex < 0 || !TryCornerTarget(50f, cornerIndex, out Vector3 aim)) { job.report += $"   🖱 rclickpt:{which}: 지점을 못 정함 — 건너뜀\n"; return true; }
                 Vector3 sp = cam.WorldToScreenPoint(aim);
                 (float bandBottom, float bandTop) = PointerBand();
                 bool visible = sp.z > 0f && sp.x > 20f && sp.x < cam.pixelWidth - 20f && sp.y > bandBottom * cam.pixelHeight + 10f && sp.y < bandTop * cam.pixelHeight - 10f;
