@@ -2651,10 +2651,14 @@ public static class ClaudeCommands
                 bool InRect(Selectable x) { Vector3 v = cam.WorldToScreenPoint(x.transform.position); return v.z > 0f && rect.Contains(new Vector2(v.x, v.y)); }
                 var picked = selection != null ? selection.Selected.Where(x => x != null).ToList() : new List<Selectable>();
                 var mineInRect = Selectable.All.Where(x => x != null && (!x.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == LocalPlayer.LocalPlayerId) && InRect(x)).ToList();
-                bool dragTook = picked.Count > 0 && picked.All(InRect) && mineInRect.All(picked.Contains);
+                // ⚠️ SelectionManager.maxSelection(12)에 닿으면 사각형 안이 12기를 넘어도 12기만 골린다 — 그때 「사각형 안 = 선택」을
+                //    요구하면 **먹은 드래그를 안 먹었다고** 판정한다(09-25 판 B: R5부터 전부 ⚠️, 그 탓에 모서리 이동까지 버렸다).
+                int cap = selection != null && typeof(SelectionManager).GetField("maxSelection", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)?.GetValue(selection) is int m ? m : 0;
+                bool full = cap > 0 && picked.Count >= cap;
+                bool dragTook = picked.Count > 0 && picked.All(InRect) && (full || mineInRect.All(picked.Contains));
                 lastBoxPicked = dragTook ? picked.Count(x => x.name.Normalize(NormalizationForm.FormC).Contains(wanted)) : 0;
                 job.report += $"   🖱 드래그 boxselect 「{wanted}{(farOnly ? "」(모서리 밖만)" : "」")} ({boxStart.x:F0},{boxStart.y:F0})→({boxEnd.x:F0},{boxEnd.y:F0}) → 지금 선택: {string.Join(", ", chosen)}" +
-                              (dragTook ? "" : " ⚠️ 드래그가 안 먹음(누른 자리가 UI 위?) — 앞 선택이 남은 것") + "\n";
+                              (dragTook ? (full ? $" (선택 상한 {cap}기에 닿음 — 사각형 안 {mineInRect.Count}기)" : "") : " ⚠️ 드래그가 안 먹음(누른 자리가 UI 위?) — 앞 선택이 남은 것") + "\n";
                 ParkShotMouse(cam);
                 job.pointerX = 0f;
                 return true;
