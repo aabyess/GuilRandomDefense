@@ -550,6 +550,47 @@ UNITS = {
                             dict(pattern=r"^(l_weapon_joint|LHand_Fore_sup)", into="mixamorig:LeftHand"),
                             dict(pattern=r"^(r_weapon_joint|RHand_Fore_sup)", into="mixamorig:RightHand")],
                materials=dict(textures={"pl_oven_orig01": [("DiffuseColor", "pl_oven_orig01_diff.png")]})),
+    # 원피스 세라핌 S-호크(Sketchfab glb, 뼈 있음) → R30 김만경 ★보스 **교체**(2026-09-25, 옛 제피로스는 「김만경_옛제피로스」 rebuild 금지).
+    #   ⚠️ 옛 산출물은 R58 「돌아온_김만경」도 같이 쓰기로 돼 있었다 — 이 교체로 R58도 S-호크가 된다(PM 판단).
+    #   메시 13 + Icosphere · 재질 4(unlit) · 그림 2 · 관절 172 · 클립 0. 부위별로 렌더해 갈랐다:
+    #     팔 두 벌 — arm01(평범한 아래팔·손) 남김 · arm02(손에 칼날) 뺌 / 다리 두 벌 — leg_L·R(검은 부츠) 남김 · arm002(이름과 달리 맨정강이+신발) 뺌
+    #     뺌: 발목 높이에 앞뒤로 누운 대검 weapon_d(키의 60%↑, 저지 창과 같은 기준) · 발밑으로 삐져나온 칼날 ren01 · 몸 뒤 1.4 떨어져 뜬
+    #     불꽃 fire · 오른손 녹색 발광 조각 셋(gr). 등의 검은 날개(chi 사슬)·비스듬히 멘 칼(weapon005~007)은 몸 메시라 남기고 Spine1에 통째로.
+    #   뼈: Bip001(Spine2 없음) + glTF 이름 겹침으로 생긴 **`_0`·`_1` 겹친 뼈**(Hand_09_0 등)에 살이 있다 → 제짝 뼈로 합친다(주영호와 같은 부류).
+    #   🔴 머리 부품 「0」은 저지처럼 **스킨 없이 빈 노드 밑** → rigid_meshes로 Head.
+    "김만경": dict(path="Assets/Art/Enemies/김만경/김만경.fbx", kind="human", size=("height", 1.8),
+              source=os.path.join(SKINS, "90_적유닛/R21-R30/R30_김만경_보스_s-hawk.glb"), gltf_guess_bind=False,
+              drop_meshes=["Icosphere", "Object_183", "Object_193", "Object_203", "egle001_fire_d_egle001_fire_d_0",
+                           "egle001_ren01_d_egle001_body_d_0", "egle001_arm01_gr_egle001_arm01_gr_0",
+                           "egle001_arm02_gr_egle001_arm02_gr_0", "egle001_arm03_gr_egle001_arm01_gr_0"],
+              rigid_meshes={"0": "mixamorig:Head"},
+              # ⚠️ rename_strip은 표 이름 짝짓기에만 꼬리를 뗀다 — 표 밖 뼈의 merge 패턴에는 꼬리를 붙인다.
+              rename_bones=BIP001_NO_SPINE2, rename_strip=r"_[0-9]+$",
+              drop_bones=["_rootJoint", "Bip001_02", "Bip001 Footsteps_03", "s_green_066", "Bone_fire001_095"],
+              drop_bones_re=r"Nub_[0-9]+$",
+              no_nulls=True, orient_snap=True,
+              merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                           dict(under="mixamorig:LeftHand", into="mixamorig:LeftHand"),
+                           dict(under="mixamorig:RightHand", into="mixamorig:RightHand"),
+                           dict(pattern=r"^(Bip001 L UpperArm_[0-9]+_0|bone_armL001_[0-9]+)$", into="mixamorig:LeftArm"),
+                           dict(pattern=r"^(Bip001 R UpperArm_[0-9]+_0|bone_armR001_[0-9]+)$", into="mixamorig:RightArm"),
+                           dict(pattern=r"^(Bip001 L Forearm_[0-9]+_0|Bip001 L ForeTwist_[0-9]+(_0)?|bone_armL002_[0-9]+)$", into="mixamorig:LeftForeArm"),
+                           dict(pattern=r"^(Bip001 R Forearm_[0-9]+_0|Bip001 R ForeTwist_[0-9]+(_0)?|bone_armR002_[0-9]+)$", into="mixamorig:RightForeArm"),
+                           # d_ren 이름이 d_ren01 · d_ren002 · d_ren003처럼 자릿수가 섞여 있다(1차에서 d_ren01 하나가 남았다).
+                           dict(pattern=r"^(Bone_ren01_[0-9]+|d_ren(01|002|003)_[0-9]+)$", into="mixamorig:LeftForeArm"),
+                           dict(pattern=r"^(Bone_ren02_[0-9]+|d_ren00[456]_[0-9]+)$", into="mixamorig:RightForeArm"),
+                           dict(pattern=r"^(bone_chi|bone_lin|bone_weapon00[567])", into="mixamorig:Spine1"),
+                           dict(pattern=r"^(Bip001 L Thigh_[0-9]+_[01]|bone_ku001_[0-9]+)$", into="mixamorig:LeftUpLeg"),
+                           dict(pattern=r"^(Bip001 R Thigh_[0-9]+_[01]|bone_ku002_[0-9]+|Bone_ren03_[0-9]+)$", into="mixamorig:RightUpLeg"),
+                           dict(pattern=r"^Bip001 L Calf_[0-9]+_0$", into="mixamorig:LeftLeg"),
+                           dict(pattern=r"^Bip001 R Calf_[0-9]+_0$", into="mixamorig:RightLeg"),
+                           dict(pattern=r"^Bip001 L Foot_[0-9]+_0$", into="mixamorig:LeftFoot"),
+                           dict(pattern=r"^Bip001 R Foot_[0-9]+_0$", into="mixamorig:RightFoot")],
+              tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                              "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                          for s, side in (("L", "Left"), ("R", "Right"))},
+              glb_images={0: "egle001_body_d.png"},
+              materials=dict(textures={"egle001_body_d": [("DiffuseColor", "egle001_body_d.png")]})),
     # 원피스 바운티러시 **어른** 모모노스케(쇼군, pl_momonosuke_orig01) → R29 박민수. zip = source/*.rar(strifffe 판: momonosuke.fbx ·
     #   momonosuke animations.fbx · 미리보기 png 1920×1080 · _diff.jpeg) + textures/_diff.jpeg(rar 판과 픽셀 같음).
     #   ⚠️ 류마·오븐(Annettlw 판)과 **제작자가 다르다** — 이 판은 뼈대 노드 배율 0.01이 없다(1.0). 메시 로컬 단위는 같은 게임 단위로 보여
@@ -975,7 +1016,10 @@ UNITS = {
     #   (sha256 810c78364077fcfc…, 세 zip이 바이트까지 같다). 그래서 **설정도 그 둘과 글자 하나까지 같다 —
     #   하나를 고치면 반드시 셋 다 고칠 것.** (같은 원본을 쓰는 항목이 이제 셋이다.)
     #   📌 R58 「돌아온_김만경」은 같은 사람이라 이 산출물 하나로 쓴다 — 따로 만들지 말 것(PM 2026-09-24).
-    "김만경": dict(path="Assets/Art/Enemies/김만경/김만경.fbx", kind="human", size=("height", 1.8),
+    #   🔴 2026-09-25 사장님 지시로 **세라핌 S-호크로 교체** — 새 항목 「김만경」(아래 S-호크)이 같은 파일을 만든다.
+    #      이 옛 설정은 지우지 않고 키만 바꿔 rebuild="금지"로 묶는다(돌리면 제피로스가 S-호크를 덮어쓴다).
+    "김만경_옛제피로스": dict(path="Assets/Art/Enemies/김만경/김만경.fbx", kind="human", size=("height", 1.8),
+              rebuild="금지",
               archive=(os.path.join(SKINS, "90_적유닛/R21-R30/R30_김만경_보스.zip"), "source/zephyr.rar",
                        "zephyr/pl_zephyr_orig01 (merge).fbx"),
               archive_rgb={"zephyr/pl_zephyr_orig01_diff.png": "pl_zephyr_orig01_diff.png",
