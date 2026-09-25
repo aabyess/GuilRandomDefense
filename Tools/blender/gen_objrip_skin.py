@@ -160,6 +160,23 @@ SKINS = {
                            Hand=(0.43, 0, 0.63), HandTip=(0.50, 0, 0.63),
                            UpLeg=(0.12, 0, 0.19), Leg=(0.12, 0, 0.10), Foot=(0.12, 0.01, 0.03),
                            ToeBase=(0.12, -0.04, 0.012), ToeTip=(0.12, -0.07, 0.008))),
+    # 드래곤볼 어린 손오공(OBJ 립) → R55 박병규. zip = source/Kid_Goku.zip(obj · mtl · Kid_Goku.png · Power_Pole.png · 21984.png · Kid_Goku_Happy.png)
+    #   + textures/ 둘(안쪽과 픽셀 같음). 오브젝트 4(몸 907 · 머리 291 · 여의봉 두 벌 각 8) · 재질 4(몸·머리 = Kid_Goku.png) · 정점 1,214. **이미 T자**.
+    #   여의봉은 몸을 앞뒤로 꿰뚫는 긴 막대 두 벌 → drop_objects로 뺀다(길을 걷는 적이라 무기는 안 든다 — 류마 칼과 같은 기준).
+    #   21984.png · Kid_Goku_Happy.png(웃는 얼굴 변형)는 mtl이 안 가리킨다 → 안 쓴다.
+    #   관절 근거(키 1 정규화, 여의봉 뺀 층 실측): 팔 z 0.42~0.44(T자), 손끝 x 0.35 · 목 0.50(가장 좁음) · 머리 0.52~1.0(큰 머리 + 머리카락)
+    #   · 다리는 z 0.23 아래로 갈리고 중심 x ±0.07~0.09 — 아이 체형이라 다리가 짧다.
+    "박병규": dict(source="~/Desktop/구랜디스킨모음/90_적유닛/R51-R60/R55_박병규.zip",
+               mesh_name="KidGoku",
+               path="Assets/Art/Enemies/박병규/박병규.fbx", height=1.8,
+               center_band=(0.02, 0.06),
+               drop_objects=["Power_Pole"], join_all=True, keep_fused_faces=True, texture_by_material=True,
+               joints=dict(Hips=(0, 0, 0.27), Spine=(0, 0, 0.33), Chest=(0, 0, 0.40),
+                           Neck=(0, 0, 0.48), Head=(0, 0, 0.51), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.04, 0, 0.445), Arm=(0.09, 0, 0.44), ForeArm=(0.18, 0, 0.435),
+                           Hand=(0.28, 0, 0.43), HandTip=(0.35, 0, 0.42),
+                           UpLeg=(0.07, 0, 0.23), Leg=(0.08, 0, 0.12), Foot=(0.09, 0.01, 0.035),
+                           ToeBase=(0.09, -0.04, 0.012), ToeTip=(0.09, -0.07, 0.008))),
     # 드래곤볼 부도카이3 크리링 립 → R01 박진웅. **뼈 0인 정적 OBJ**라 새로 리깅한다.
     #   정점 1,396 · 면 2,504 · 재질 19(텍스처 10장) · **이미 T자**라 이 파이프라인이 그대로 맞는다.
     #   🔴 관절 자리는 **손으로 안 지었다** — 높이 1로 정규화해 층마다 폭을 재서 뽑았다:
@@ -990,6 +1007,14 @@ def build(name, cfg, out_dir=None, render_dir=None):
     else:
         bpy.ops.wm.obj_import(filepath=mesh_path)
     scene = bpy.context.scene
+    # 🔸 drop_objects [이름 조각](2026-09-25 R55 어린 손오공 여의봉): 합치기 **전에** 이름에 그 조각이 든 오브젝트를 뺀다.
+    #   여의봉 두 벌(펼친 것·등에 멘 것, 각 8정점)이 몸을 앞뒤로 꿰뚫는 긴 막대라 거리 판정으로는 몸에 붙어 버린다.
+    for part in cfg.get("drop_objects", ()):
+        gone = [o for o in scene.objects if o.type == "MESH" and part in o.name]
+        assert gone, f"{name}: drop_objects '{part}'에 맞는 오브젝트가 없다"
+        for o in gone:
+            report.setdefault("뺀 오브젝트", []).append((o.name, len(o.data.vertices)))
+            bpy.data.meshes.remove(o.data)
     meshes = [o for o in scene.objects if o.type == "MESH"]
     # 🔴 PM 실측(전설적인_박민수/체인소맨) — 이 OBJ는 raw v.co만 보면 Y가 키처럼 보이지만(Y폭
     # 1.7726), 이건 착각이다 — wm.obj_import는 축 변환을 메시 데이터가 아니라 오브젝트의
