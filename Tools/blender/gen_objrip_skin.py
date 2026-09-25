@@ -160,6 +160,22 @@ SKINS = {
                            Hand=(0.43, 0, 0.63), HandTip=(0.50, 0, 0.63),
                            UpLeg=(0.12, 0, 0.19), Leg=(0.12, 0, 0.10), Foot=(0.12, 0.01, 0.03),
                            ToeBase=(0.12, -0.04, 0.012), ToeTip=(0.12, -0.07, 0.008))),
+    # 드래곤볼 부도카이3 고텐크스(OBJ 립, 크리링과 같은 계열) → R56 박찬형. zip = source/Gotenks_Budokai_3.zip(obj · mtl · 그림 17)
+    #   + textures/ 13장(안쪽과 같음). 오브젝트 1(1,306정점) · 재질 17(그림 13장을 나눠 씀, 1~3KB 단색 조각) · **이미 T자**.
+    #   안 쓴 그림: face_facial·2·3(표정 변형) · 28252.png — mtl이 안 가리킨다.
+    #   관절 근거(키 1 정규화 층 실측): 팔 z 0.63~0.69(중심 0.66), 손끝 x 0.42 · 목 0.73(폭 ±0.07) · 머리 0.75~1.0(큰 머리카락)
+    #   · 가랑이 ≈0.47 · 다리 중심 x ±0.065.
+    "박찬형": dict(source="~/Desktop/구랜디스킨모음/90_적유닛/R51-R60/R56_박찬형.zip",
+               mesh_name="Gotenks",
+               path="Assets/Art/Enemies/박찬형/박찬형.fbx", height=1.8,
+               center_band=(0.02, 0.06),
+               join_all=True, keep_fused_faces=True, texture_by_material=True,
+               joints=dict(Hips=(0, 0, 0.51), Spine=(0, 0, 0.57), Chest=(0, 0, 0.63),
+                           Neck=(0, 0, 0.71), Head=(0, 0, 0.745), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.05, 0, 0.665), Arm=(0.10, 0, 0.66), ForeArm=(0.23, 0, 0.66),
+                           Hand=(0.35, 0, 0.655), HandTip=(0.42, 0, 0.65),
+                           UpLeg=(0.065, 0, 0.47), Leg=(0.065, 0, 0.26), Foot=(0.06, 0.01, 0.05),
+                           ToeBase=(0.06, -0.04, 0.02), ToeTip=(0.06, -0.07, 0.015))),
     # 드래곤볼 어린 손오공(OBJ 립) → R55 박병규. zip = source/Kid_Goku.zip(obj · mtl · Kid_Goku.png · Power_Pole.png · 21984.png · Kid_Goku_Happy.png)
     #   + textures/ 둘(안쪽과 픽셀 같음). 오브젝트 4(몸 907 · 머리 291 · 여의봉 두 벌 각 8) · 재질 4(몸·머리 = Kid_Goku.png) · 정점 1,214. **이미 T자**.
     #   여의봉은 몸을 앞뒤로 꿰뚫는 긴 막대 두 벌 → drop_objects로 뺀다(길을 걷는 적이라 무기는 안 든다 — 류마 칼과 같은 기준).
