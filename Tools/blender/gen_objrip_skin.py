@@ -211,6 +211,22 @@ SKINS = {
                            Hand=(0.165, 0, 0.495), HandTip=(0.18, 0, 0.435),
                            UpLeg=(0.07, 0, 0.43), Leg=(0.12, 0, 0.25), Foot=(0.145, 0.01, 0.05),
                            ToeBase=(0.145, -0.04, 0.02), ToeTip=(0.145, -0.07, 0.015))),
+    # 원피스 쿠로(2014 저폴리 OBJ 립) → R14 이상혁. 사장님 결정(2026-09-25): **이 원본 그대로**, 각진 건 받아들이고 뼈만 심는다.
+    #   zip = source/<hash>.zip(obj · mtl · BODYKURO · FACEKURO) + textures/ 둘. 오브젝트 2(몸 Cylinder01 348 · 얼굴 Object01 77) · **정점 425** · 재질 2.
+    #   🔴 손끝의 **고양이 손톱 칼**(열 가닥, x ±0.84까지)은 몸 메시의 일부다 — 키를 늘리지 않으니 남기고 손에 실린다.
+    #   관절 근거(키 1 정규화, x띠 실측): 어깨 x0.11 z0.81 → x0.20 0.745 → 팔꿈치 ≈x0.29 0.68 → 손목 x0.44 0.646(약 26° A자) · 손톱 끝 0.84
+    #   · 머리 0.87~1.0 · 두 다리는 z 0.60 아래로 갈림 · 무릎 0.32 · 발목 x ±0.054.
+    "이상혁": dict(source="~/Desktop/구랜디스킨모음/90_적유닛/R11-R20/R14_이상혁.zip",
+               mesh_name="Kuro",
+               path="Assets/Art/Enemies/이상혁/이상혁.fbx", height=1.8,
+               center_band=(0.02, 0.06),
+               force_geodesic=True, straighten_arms=True, join_all=True, keep_fused_faces=True, texture_by_material=True,
+               joints=dict(Hips=(0, 0, 0.63), Spine=(0, 0, 0.69), Chest=(0, 0, 0.76),
+                           Neck=(0, 0, 0.845), Head=(0, 0, 0.87), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.04, 0, 0.82), Arm=(0.11, 0, 0.81), ForeArm=(0.285, 0, 0.70),
+                           Hand=(0.45, 0, 0.645), HandTip=(0.52, 0, 0.62),
+                           UpLeg=(0.045, 0, 0.60), Leg=(0.05, 0, 0.32), Foot=(0.054, 0.01, 0.05),
+                           ToeBase=(0.054, -0.04, 0.02), ToeTip=(0.054, -0.07, 0.015))),
     # 드래곤볼 어린 손오공(OBJ 립) → R55 박병규. zip = source/Kid_Goku.zip(obj · mtl · Kid_Goku.png · Power_Pole.png · 21984.png · Kid_Goku_Happy.png)
     #   + textures/ 둘(안쪽과 픽셀 같음). 오브젝트 4(몸 907 · 머리 291 · 여의봉 두 벌 각 8) · 재질 4(몸·머리 = Kid_Goku.png) · 정점 1,214. **이미 T자**.
     #   여의봉은 몸을 앞뒤로 꿰뚫는 긴 막대 두 벌 → drop_objects로 뺀다(길을 걷는 적이라 무기는 안 든다 — 류마 칼과 같은 기준).
