@@ -1005,6 +1005,7 @@ public static class ClaudeCommands
         public bool storySent;           // autoloop: 안흔함을 스토리존에 보냈나 — 스토리가 깨지면 복귀포탈로 되돌린다
         public int storyFinishedAtSend;
         public bool shopTried;           // autoloop: 도박소 한 번 눌러 봤나
+        public List<string> choicePicks = new List<string>();   // 도구가 흔함선택 포탈로 보낸 이름 누계 — 실제 흔함 이름 분포와 견준다(포탈이 먹으면 한 이름에 몰린다, outbox 2112)
         public int lastRoundSeen = -1;
         public int logKindsAtRound;      // 라운드 바뀔 때의 예외 종류 수 — 새로 생긴 종류만 그 라운드 줄에 적는다
         public int logCountAtRound;
@@ -1265,7 +1266,7 @@ public static class ClaudeCommands
                 }
                 bool optional = target.StartsWith("?");
                 if (optional) target = target.Substring(1);
-                string clicked = ClickButton(target);
+                string clicked = target == "@shopany" ? ClickFirstShopSlot(job) : ClickButton(target);
                 if (clicked == null && optional && inStage > GameShotOptionalClickSearch)
                 {
                     // 「없음」과 「있지만 꺼짐·못 누름」을 가른다(도박소 첫 칸이 「없음」으로만 나와 이름이 틀렸는지 흐린 건지 몰랐다, outbox 2109).
@@ -1886,6 +1887,27 @@ public static class ClaudeCommands
         return null;
     }
 
+    // 상점을 고른 뒤 명령칸 12개 중 글자가 있고 누를 수 있는 첫 칸을 누른다. 못 찾으면 칸마다 「글자·누를 수 있음」을 적는다(골드 부족으로 흐린지 가르려고).
+    static readonly string[] UnitCommandLabels = { "공격", "정지", "모으기", "정렬" };
+    static string ClickFirstShopSlot(GameShotJob job)
+    {
+        var slots = UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
+            .Where(b => b.gameObject.name.StartsWith("UnitCommandSlot"))
+            .OrderBy(b => int.TryParse(b.gameObject.name.Substring("UnitCommandSlot".Length), out int n) ? n : 99).ToList();
+        UnityEngine.UI.Button pick = slots.FirstOrDefault(b => b.IsActive() && b.IsInteractable() && ButtonLabel(b).Length > 0 && !UnitCommandLabels.Contains(ButtonLabel(b)));
+        if (pick == null)
+        {
+            string listing = string.Join(" · ", slots.Select(b => $"{b.gameObject.name.Substring("UnitCommandSlot".Length)}「{ButtonLabel(b)}」{(b.IsInteractable() ? "" : "(흐림)")}"));
+            if (!job.report.EndsWith(listing + "\n")) job.report += $"   🏪 상점 칸: {listing}\n";
+            return null;
+        }
+        int goldBefore = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
+        var eventData = new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current);
+        UnityEngine.EventSystems.ExecuteEvents.Execute(pick.gameObject, eventData, UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
+        int goldAfter = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
+        return $"{pick.gameObject.name}「{ButtonLabel(pick)}」(골드 {goldBefore} → {goldAfter})";
+    }
+
     static string ButtonLabel(UnityEngine.UI.Button button)
     {
         UnityEngine.UI.Text text = button.GetComponentInChildren<UnityEngine.UI.Text>();
@@ -2002,7 +2024,7 @@ public static class ClaudeCommands
         bool ok = isSelect ? names.Any(n => n.Contains(want)) : names.Count > 0 && names.All(n => n.Contains(want));
         if (ok || job.clickIndex >= job.clicks.Count) return;
         string next = job.clicks[job.clickIndex];
-        bool dependent = next.StartsWith("@rc:") || (isSelect && next.StartsWith("?UnitCommandSlot"));
+        bool dependent = next.StartsWith("@rc:") || (isSelect && (next.StartsWith("?UnitCommandSlot") || next == "?@shopany"));
         if (!dependent) return;
         job.report += $"   ⛔ 「{spec}」 뒤 선택이 뜻과 다름({(names.Count > 0 ? string.Join(", ", names.Take(5)) : "없음")}) — 이 선택에 기대는 「{next}」를 버림\n";
         job.clickIndex++;
@@ -2216,6 +2238,9 @@ public static class ClaudeCommands
         int gold = me?.GoldWallet?.Gold ?? -1;
         int wood = me?.ResourceWallet != null ? me.ResourceWallet.Get(ResourceType.Wood) : -1;
         var mine = MyUnits().GroupBy(u => u.Data.grade).Select(g => $"{g.Key} {g.Count()}");
+        string commonNames = string.Join(" ", MyUnits().Where(u => u.Data.grade == UnitGrade.Common).GroupBy(u => u.Data.unitName)
+            .OrderByDescending(g => g.Count()).Select(g => $"{g.Key}{g.Count()}"));
+        string pickNames = string.Join(" ", job.choicePicks.GroupBy(n => n).OrderByDescending(g => g.Count()).Select(g => $"{g.Key}{g.Count()}"));
         (string slots, int slotTotal) = ReadWispSlots();
         string story = "";
         GameObject storyPanel = GameObject.Find("StoryPanel");
@@ -2230,7 +2255,8 @@ public static class ClaudeCommands
         job.logCountAtRound = logTotal;
         return $"적 레인 {EnemyDummy.CountInLane(0)}/전체 {EnemyDummy.Active.Count(e => e != null)} · 데스카운트 {rm.DeathCountFor(0)} · " +
                $"골드 {gold} · 목재 {wood} · 내 유닛 {(mine.Any() ? string.Join(", ", mine) : "0")} · 위습 칸 「{slots}」 · " +
-               $"스토리 「{story}」(매니저 「{StoryManager.Instance?.StatusLabel}」 깸 {StoryManager.Instance?.FinishedCount}) · 보스 적 {bosses} · 남은시간 {rm.RoundTimeLeft:F1}/준비 {rm.PreRoundTimeLeft:F1} · 프레임 {frames} · {UptimeText()} · {logs}";
+               $"스토리 「{story}」(매니저 「{StoryManager.Instance?.StatusLabel}」 깸 {StoryManager.Instance?.FinishedCount}) · 보스 적 {bosses} · 남은시간 {rm.RoundTimeLeft:F1}/준비 {rm.PreRoundTimeLeft:F1} · 프레임 {frames} · {UptimeText()} · {logs}" +
+               $"\n      🎯 흔함 이름(지금) {(commonNames.Length > 0 ? commonNames : "-")} · 도구가 흔함선택으로 보낸 누계 {(pickNames.Length > 0 ? pickNames : "0")}";
     }
 
     // 사람의 한 턴 — 랜덤유닛 위습을 하나씩 포탈로, 카드별 조합 시도, 전부 모서리로.
@@ -2268,6 +2294,7 @@ public static class ClaudeCommands
             turn.Insert(0, "@rc:" + portal);
             turn.Insert(0, "?흔함 선택");
             picked.Add(unit);
+            job.choicePicks.Add(unit);
         }
         if (picked.Count > 0) turn.Insert(2 * picked.Count, "@wait:12");
 
@@ -2277,7 +2304,7 @@ public static class ClaudeCommands
         {
             job.shopTried = true;
             turn.Add("@sel:Lane1_도박소");
-            turn.Add("?UnitCommandSlot0");
+            turn.Add("?@shopany");   // 상점 칸의 화면 번호≠상점 칸 번호(GameHud.shopLogicalSlotIndex) — 번호로 찍지 않고 누를 수 있는 첫 칸을 누른다
         }
 
         // 스토리 — 진행 중이면 안흔함을 스토리 포탈로 보내고, 그 스토리가 깨지면 복귀포탈로 되돌린다.
@@ -2286,14 +2313,15 @@ public static class ClaudeCommands
         {
             job.storySent = true;
             job.storyFinishedAtSend = story.FinishedCount;
-            turn.Add("@box:Unit_안흔함");
+            // 박스는 모서리에 뭉친 흔함까지 같이 잡혀 실패했다(outbox 2112 ⛔) — 안흔함 한 기를 좌클릭으로 고른다. 사슬 시험엔 한 기면 된다.
+            turn.Add("@sel:Unit_안흔함");
             turn.Add("@rc:Lane1_스토리포탈");
             storyPlan = $" · 안흔함 → 스토리존(「{story.StatusLabel}」)";
         }
         else if (story != null && job.storySent && story.FinishedCount > job.storyFinishedAtSend)
         {
             job.storySent = false;
-            turn.Add("@box:Unit_안흔함");
+            turn.Add("@sel:Unit_안흔함");
             turn.Add("@rc:스토리_복귀포탈");
             storyPlan = $" · 스토리 {story.FinishedCount - job.storyFinishedAtSend}개 깸 → 안흔함 복귀";
         }
