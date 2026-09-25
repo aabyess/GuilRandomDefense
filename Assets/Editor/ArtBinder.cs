@@ -748,7 +748,11 @@ public static class ArtBinder
 
         string report = MakeHumanoid();
         report += BuildController();
-        if (monsters.Count > 0) report += BindEnemies(monsters);
+        // 2026-09-25: 적 표가 유닛 모델을 가리킬 수 있다(R70 신지우 = 불멸_신지우 빅맘, R71 = 랜덤_주호페이크).
+        //   표에 이름이 있는 유닛 모델만 적 목록에 더해 준다 — 안 그러면 조용히 못 찾고 넘어간다.
+        List<GameObject> enemyModels = new List<GameObject>(monsters);
+        enemyModels.AddRange(characters.Where(m => EnemyModels.Any(e => Nfc(e.model) == Nfc(m.name))));
+        if (enemyModels.Count > 0) report += BindEnemies(enemyModels);
         if (characters.Count > 0) report += BindUnits(characters);
 
         AssetDatabase.SaveAssets();
@@ -881,6 +885,13 @@ public static class ArtBinder
         ("정윤식", "Enemy_R60_정윤식", 1.9000f, true),                 // 결정: 오공 175cm + 초사이어인 머리 — SSJ5는 팬 디자인이라 공표 키 없음. R60 보스
         ("이현주", "Enemy_R49_이현주", 1.6300f, true),                 // 츠나데 163cm — 나루토 공식 데이터북 값으로 널리 인용
         ("돌아온_이태훈", "Enemy_R59_돌아온_이태훈", 2.1300f, true),    // 퍼펙트 셀 213cm — 널리 인용되는 값(원출처 미확인), 머리 볏 포함
+        ("조성진", "Enemy_R37_조성진", 3.0000f, true),                 // 결정: 마시라 — 거구 원숭이 인양, 공표 키 확인 못 함 → 대장급(3.0)
+        ("선효진", "Enemy_R38_선효진", 1.8500f, true),                 // 결정: 파울리 — 공표 키 확인 못 함 → 큰 성인
+        // 사장님 09-25: R70 신지우 보스 = 불멸_신지우 유닛과 같은 스킨(빅맘), R71 주호페이크 = 랜덤_주호페이크 유닛과 같은 스킨(죠타로).
+        //   유닛 FBX를 적 표에서도 그대로 쓴다(프리팹은 Mob_ 접두로 따로 생긴다).
+        ("불멸_신지우", "Enemy_R70_신지우", 6.0000f, true),            // 결정: 빅맘 원작 880cm는 못 넣음 — 오즈(6.0)와 같은 거인 급. R70 보스
+        ("랜덤_주호페이크", "Enemy_R71_주호페이크", 1.9500f, true),    // 쿠죠 죠타로 195cm(JoJo 4부 설정)
+        ("전설적인_김용태", "Enemy_R75_이이삭", 6.5000f, true),        // 사장님 09-25: R75 최종 보스 = 전설적인_김용태 유닛의 카이도 스킨. 원작 710cm → 결정 6.5(거인 중 가장 크게)
         ("주영호", "Enemy_R10_주영호", 2.0700f, true),                 // 원작 설정 키 207cm(와폴). R10 보스
         // 09-25 사장님: 김만경(R30)을 제피로스 → 세라핌 S-호크로 교체. R58 돌아온_김만경은 사장님이 따로 스킨을 주신다.
         //   몸은 「보통 성인」 앵커 1.75 그대로(S-호크 공표 키 없음) × 등에 멘 칼자루 1.146
