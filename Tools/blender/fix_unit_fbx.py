@@ -638,6 +638,36 @@ UNITS = {
                glb_images={0: "Cha_3300_00.png"},
                materials=dict(textures={"Cha_3300_00": [("DiffuseColor", "Cha_3300_00.png")],
                                         "Cha_3300_01": [("DiffuseColor", "Cha_3300_00.png")]})),
+    # 원피스 바운티러시 쥬얼리 보니 **아이**(pl_bonie_orig02) → R33 서희원 · **어른**(pl_bonie_orig01) → R47 정다희. 류마·오븐과 같은
+    #   Annettlw 판(뼈대 노드 0.01)이라 비율이 측정 근거다: 전체 키 ÷ 류마 2.019 → **아이 × 0.611 · 어른 × 0.882**(둘 다 모자 포함).
+    #   zip 바로 안에 fbx · xps · _diff.png + 셰이더 보조 그림(ramp·matcap·abnormal_pattern·bayer_dither — 적 규약대로 컬러만 씀).
+    #   아이: 메시 7(겹친 변형 없음) · 어른: 메시 14 → 표정 둘·쥔 손 둘·음식 든 손(l_hand_meal)·**손에 든 고기·피자** 뺌(들고 다니는 소품).
+    #   pl_ 리그 → PL_RENAME. 머리 밑(머리카락·입·볼) → Head · 재킷·가슴 보조 → Spine1 · 손목 보조 → 아래팔 · HELPER·_end 끝점 → 뺌.
+    "서희원": dict(path="Assets/Art/Enemies/서희원/서희원.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R31-R40/R33_서희원_아이보니.zip"), "pl_bonie_orig02.fbx"),
+               archive_rgb={"pl_bonie_orig02_diff.png": "pl_bonie_orig02_diff.png"},
+               drop_bones=["pl_bonie_orig02", "world_joint"],
+               drop_bones_re=r"(_end(_end)?$|^HELPER)",
+               rename_bones=PL_RENAME,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(pattern=r"^[blr]_jacket$", into="mixamorig:Spine1"),
+                            dict(pattern=r"^LHand_Fore_sup$", into="mixamorig:LeftForeArm"),
+                            dict(pattern=r"^RHand_Fore_sup$", into="mixamorig:RightForeArm")],
+               materials=dict(textures={"pl_bonie_orig02": [("DiffuseColor", "pl_bonie_orig02_diff.png")]})),
+    "정다희": dict(path="Assets/Art/Enemies/정다희/정다희.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R41-R50/R47_정다희_어른보니.zip"), "pl_bonie_orig01.fbx"),
+               archive_rgb={"pl_bonie_orig01_diff.png": "pl_bonie_orig01_diff.png"},
+               drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_hand_meal", "meat", "pizza"],
+               drop_bones=["world_joint"],
+               drop_bones_re=r"(_end(_end)?$|^HELPER)",
+               rename_bones=PL_RENAME,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(pattern=r"^([blr]_jacket|[lr]_breast_0[12])$", into="mixamorig:Spine1"),
+                            dict(pattern=r"^(LHand_Fore_sup|pizza_joint)$", into="mixamorig:LeftForeArm"),
+                            dict(pattern=r"^(RHand_Fore_sup|meat_joint)$", into="mixamorig:RightForeArm")],
+               materials=dict(textures={"pl_bonie_orig01": [("DiffuseColor", "pl_bonie_orig01_diff.png")]})),
     # 블리치 호로(Hollow, Noesis 립을 Blender glTF로 다시 뽑은 것) → R21 박도진. zip = source/doll_001out.glb + textures/doll_001out0_tex00_0.png.
     #   메시 1(Box001, **정점 341 · 삼각형 406** — 쿠로보다 적다) · 재질 1(ZK_0001_body_o) · 그림 1(박힘 256²) · 뼈 22(Bip001) · 클립 2(idle·attack1, 적 규약상 안 씀).
     #   사장님 답(2026-09-25): 이 원본으로 진행 · **쉬는 자세를 곧게 편다**. 원본 쉬는 자세는 등이 앞으로 굽고 무릎이 굽은 T자다.
