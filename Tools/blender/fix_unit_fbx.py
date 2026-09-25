@@ -638,6 +638,54 @@ UNITS = {
                glb_images={0: "Cha_3300_00.png"},
                materials=dict(textures={"Cha_3300_00": [("DiffuseColor", "Cha_3300_00.png")],
                                         "Cha_3300_01": [("DiffuseColor", "Cha_3300_00.png")]})),
+    # 원피스 파이팅 패스 버기(임펠다운, XPS 립) → R32 이수은. 다시 묶은 zip 바로 안에 31703.fbx · xps · 31703_X.png.
+    #   메시 1(2,694정점 · 3,901삼각형) · 재질 1 · 그림 1 · 클립 0. 봉쿠레·Mr.3와 같은 리그(Spine2 없음 · 위팔·아래팔 살 0 → 비틀림 뼈로).
+    #   머리 밑 Bone001~005(뒤로 늘어진 머리·두건 사슬) → Head · 골반 밑 Bone007/009/010/011(허리천 앞뒤·옆, 살 11~33) → Hips.
+    "이수은": dict(path="Assets/Art/Enemies/이수은/이수은.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R31-R40/R32_이수은.zip"), "31703.fbx"),
+               archive_rgb={"31703_X.png": "31703.png"},
+               skip_shapes=True,
+               drop_bones=["Bip001"],
+               rename_bones=BIP001_NO_SPINE2,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(under="mixamorig:LeftHand", into="mixamorig:LeftHand"),
+                            dict(under="mixamorig:RightHand", into="mixamorig:RightHand"),
+                            dict(pattern=r"^Bip001 LUpArmTwist1?$", into="mixamorig:LeftArm"),
+                            dict(pattern=r"^Bip001 RUpArmTwist1?$", into="mixamorig:RightArm"),
+                            dict(pattern=r"^Bip001 L ForeTwist1?$", into="mixamorig:LeftForeArm"),
+                            dict(pattern=r"^Bip001 R ForeTwist1?$", into="mixamorig:RightForeArm"),
+                            dict(pattern=r"^Bone0(07|09|10|11)$", into="mixamorig:Hips")],
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               materials=dict(textures={"31703": [("DiffuseColor", "31703.png")]})),
+    # 원피스 파이팅 패스 Mr.3(임펠다운, XPS 립) → R31 어철승. 다시 묶은 zip 바로 안에 31702.fbx · xps · 그림 둘.
+    #   메시 2(몸 3,641 · Glass 34 = 안경 알) · 재질 2 · 뼈 56 · 클립 0. 봉쿠레와 같은 리그(위팔·아래팔 살 0 → 비틀림 뼈로).
+    #   그림 둘은 거의 같다: 몸 재질 31702 → **31702_X.png**(불투명) · 안경 재질 31702a → 31702.png(알파 125~255 — 반투명 안경 알,
+    #   선 몇 군데 다름 8,230px). 재질 이름에 맞춰 31702.png(←_X) · 31702a.png(←31702.png)로 둔다. 파이프라인이 불투명으로 두니 안경 알은 불투명.
+    #   머리 밑 Bone001~004(머리카락 「3」자 뿔 사슬) · Bone006/007 → Head. Toe0Nub에 살이 있다(13) → drop 안 하고 발끝으로 합친다.
+    "어철승": dict(path="Assets/Art/Enemies/어철승/어철승.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R31-R40/R31_어철승.zip"), "31702.fbx"),
+               archive_rgb={"31702_X.png": "31702.png", "31702.png": "31702a.png"},
+               skip_shapes=True,
+               drop_bones=["Bip001"],
+               rename_bones=BIP001_NO_SPINE2,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(under="mixamorig:LeftHand", into="mixamorig:LeftHand"),
+                            dict(under="mixamorig:RightHand", into="mixamorig:RightHand"),
+                            dict(pattern=r"^Bip001 LUpArmTwist1?$", into="mixamorig:LeftArm"),
+                            dict(pattern=r"^Bip001 RUpArmTwist1?$", into="mixamorig:RightArm"),
+                            dict(pattern=r"^Bip001 L ForeTwist1?$", into="mixamorig:LeftForeArm"),
+                            dict(pattern=r"^Bip001 R ForeTwist1?$", into="mixamorig:RightForeArm"),
+                            dict(pattern=r"^Bip001 L Toe0Nub$", into="mixamorig:LeftToeBase"),
+                            dict(pattern=r"^Bip001 R Toe0Nub$", into="mixamorig:RightToeBase")],
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               materials=dict(textures={"31702": [("DiffuseColor", "31702.png")],
+                                        "31702a": [("DiffuseColor", "31702a.png")]})),
     # 원피스 파이팅 패스 봉쿠레(임펠다운, XPS 립) → R27 장명자. PM이 임펠다운 묶음에서 캐릭터별로 다시 묶은 zip — rar 없이 바로
     #   31701.fbx · xps.xps · 31701_X.png(512²). 메시 1(2,969정점 · 4,086삼각형) · 재질 1(31701) · 그림 1 · 뼈 49 · 클립 0.
     #   표준 Bip001(Spine2·Toe0)인데 **UpperArm·Forearm에 살이 0** — 팔 살은 비틀림 뼈 넷(UpArmTwist·1 · ForeTwist·1)에 있다 → 해당 팔로 합친다.
