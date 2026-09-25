@@ -2139,8 +2139,12 @@ public static class ClaudeCommands
                         job.pointerX = 0f;
                         return true;
                     }
+                    // 다시 옮기는 거면(앞 틱에 옮겼는데 또 밖) 카메라가 옮긴 뒤 **스스로 움직인 것**이다 — 원인 후보(키보드·가장자리 밀기)를 같이 찍는다(09-25 판 E).
+                    string drift = job.pointerX < 0f
+                        ? $" · 앞 이동 뒤 카메라 {cam.transform.position:F0} · 키보드축 {rts.KeyboardAxis} · 가장자리축 {rts.EdgeAxis} · 마우스 {(Mouse.current != null ? Mouse.current.position.ReadValue().ToString("F0") + " " + Mouse.current.name : "-")} · 화면 {sp:F0}"
+                        : "";
                     rts.MoveTo(new Vector3(aim.x, 0f, aim.z));   // 미니맵 클릭과 같은 경로
-                    job.report += $"   🎥 {target.name}이 화면 밖이라 카메라를 옮김(MoveTo {aim.ToString("F0")})\n";
+                    job.report += $"   🎥 {target.name}이 화면 밖이라 카메라를 옮김(MoveTo {aim.ToString("F0")}){drift}\n";
                     job.pointerX = Mathf.Min(job.pointerX, 0f) - 1f;
                     SaveGameShot(job);
                     return false;
@@ -2166,7 +2170,10 @@ public static class ClaudeCommands
             {
                 SelectionManager selection = UnityEngine.Object.FindFirstObjectByType<SelectionManager>();
                 string selected = selection != null ? string.Join(", ", selection.Selected.Where(x => x != null).Select(x => x.name)) : "(SelectionManager 없음)";
-                job.report += $"   🖱 {label} 「{spec.Substring(left ? 5 : 4)}」 @ 화면 ({job.pointerX:F0}, {job.pointerY:F0}) → 지금 선택: {(selected.Length > 0 ? selected : "없음")}\n";
+                RtsCameraController camCtl = cam != null ? cam.GetComponent<RtsCameraController>() : null;
+                string axes = camCtl != null && (camCtl.KeyboardAxis != Vector2.zero || camCtl.EdgeAxis != Vector2.zero)
+                    ? $" · ⚠️ 카메라 입력 중(키보드축 {camCtl.KeyboardAxis} · 가장자리축 {camCtl.EdgeAxis})" : "";
+                job.report += $"   🖱 {label} 「{spec.Substring(left ? 5 : 4)}」 @ 화면 ({job.pointerX:F0}, {job.pointerY:F0}) → 지금 선택: {(selected.Length > 0 ? selected : "없음")}{axes}\n";
                 ParkShotMouse(cam);
                 job.pointerX = 0f;
                 return true;
@@ -2264,10 +2271,11 @@ public static class ClaudeCommands
     // 👑 0번 레인 보스 — 등장·처치를 따로 찍는다(2026-09-25 PM 지시). 🏁 줄의 「보스 적」은 **전 레인 합계**라 R10 뒤로도 숫자가
     //    그대로여서 잡았는지 확정할 수 없었다(i1_18). 개체를 붙잡아 두고, 사라질 때 OnBossKilled가 그 라운드로 떴는지 맞춘다 —
     //    신호 없이 사라졌으면 「처치」가 아니라 「사라짐」이다(판 끝·도움소 흡수 등).
-    class BossTrack { public EnemyDummy boss; public string name; public int round; public float bornAt; }
+    class BossTrack { public EnemyDummy boss; public string name; public int round; public float bornAt; public float nextSample; public float lastHp = 1f; public string lastSample = ""; }
     static readonly List<BossTrack> bossTracks = new List<BossTrack>();
     static readonly List<(int round, float at)> bossKillSignals = new List<(int, float)>();
     static bool bossSignalHooked;
+    static int bossWatchRound = -1;
     static void OnBossKilledSignal(int round) => bossKillSignals.Add((round, Time.time));
 
     static void WatchLaneBoss(GameShotJob job)
@@ -2279,18 +2287,41 @@ public static class ClaudeCommands
             bossTracks.Add(new BossTrack { boss = e, name = e.name, round = e.SpawnRound, bornAt = Time.time });
             job.report += $"   👑 R{e.SpawnRound} 0번 레인 보스 {e.name} 등장 t={Time.time:F1} · 체력 {e.HpRatio:P0}\n";
         }
+        RoundManager rmNow = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
+        // 라운드 전환 시각 — 보스 처치가 전환과 겹치는지 보려고(09-25 PM: 판 B 73.5초·D 73.1초가 군대 세기와 무관하게 같았다).
+        if (rmNow != null && rmNow.CurrentRound != bossWatchRound)
+        {
+            if (bossTracks.Count > 0) job.report += $"   👑 라운드 전환 R{bossWatchRound}→R{rmNow.CurrentRound} t={Time.time:F1}\n";
+            bossWatchRound = rmNow.CurrentRound;
+        }
         for (int i = bossTracks.Count - 1; i >= 0; i--)
         {
             BossTrack t = bossTracks[i];
-            if (t.boss != null) continue;   // 유니티 null — 파괴됨
+            if (t.boss != null)
+            {
+                // 5초마다 체력 · 그때 보스를 사거리 안에 둔 내 유닛(공격자 후보 — EnemyDummy에 마지막 공격자 기록이 없다).
+                if (Time.time >= t.nextSample)
+                {
+                    t.nextSample = Time.time + 5f;
+                    t.lastHp = t.boss.HpRatio;
+                    Vector3 bp = t.boss.transform.position;
+                    var shooters = MyUnits().Where(u => u.TryGetComponent(out UnitAttacker at) && (u.transform.position - bp).sqrMagnitude <= at.AttackRange * at.AttackRange)
+                        .GroupBy(u => u.Data.grade).Select(g => $"{g.Key} {g.Count()}");
+                    t.lastSample = $"t={Time.time:F1}(등장 뒤 {Time.time - t.bornAt:F0}초) 체력 {t.lastHp:P0} · 사거리 안 내 유닛 {string.Join(", ", shooters)}";
+                    job.report += $"   👑 R{t.round} 보스 {t.lastSample}{(rmNow != null ? $" · 라운드 남은 {rmNow.RoundTimeLeft:F1}" : "")}\n";
+                }
+                continue;
+            }
             int signal = bossKillSignals.FindIndex(k => k.round == t.round);
             if (signal >= 0)
             {
                 float at = bossKillSignals[signal].at;
                 bossKillSignals.RemoveAt(signal);
-                job.report += $"   👑 R{t.round} 보스 {t.name} **처치** t={at:F1} · 등장 뒤 {at - t.bornAt:F1}초(구세계 제한 75.3)\n";
+                job.report += $"   👑 R{t.round} 보스 {t.name} **처치**(TakeDamage 사망 경로 — OnBossKilled 뜸) t={at:F1} · 등장 뒤 {at - t.bornAt:F1}초(구세계 제한 75.3)" +
+                              $" · 그때 라운드 R{rmNow?.CurrentRound} 남은 {rmNow?.RoundTimeLeft:F1} · 마지막 표본 {t.lastSample}\n";
             }
-            else job.report += $"   👑 R{t.round} 보스 {t.name} 사라짐(처치 신호 없음) t={Time.time:F1} · 등장 뒤 {Time.time - t.bornAt:F1}초\n";
+            else job.report += $"   👑 R{t.round} 보스 {t.name} **사라짐**(처치 신호 없음 — TakeDamage 밖 경로: 즉시 제거·Destroy) t={Time.time:F1} · 등장 뒤 {Time.time - t.bornAt:F1}초" +
+                               $" · 라운드 R{rmNow?.CurrentRound} 남은 {rmNow?.RoundTimeLeft:F1} · 마지막 표본 {t.lastSample}\n";
             bossTracks.RemoveAt(i);
         }
     }
