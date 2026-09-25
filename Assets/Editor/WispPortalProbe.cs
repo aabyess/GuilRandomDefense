@@ -205,3 +205,23 @@ public static class WispPortalProbe
         return sb.ToString().TrimEnd() + "\n" + Snapshot();
     }
 }
+
+/// <summary>섬(MapLayout.Island) 안에 들어와 있는 남의 물건 — 섬을 키운 뒤 고정 좌표 물건이 먹히는지 본다(2026-09-25 창고 원작화).</summary>
+public static class IslandIntruderProbe
+{
+    public static string Warehouses()
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (MapLayout.Island island in MapLayout.Warehouses)
+        {
+            Rect r = new Rect(island.center.x - island.size.x * 0.5f, island.center.y - island.size.y * 0.5f, island.size.x, island.size.y);
+            var found = Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None)
+                .Where(x => x != null && r.Contains(new Vector2(x.bounds.center.x, x.bounds.center.z)))
+                .Select(x => x.transform.root == x.transform ? x.name : $"{x.transform.parent?.name}/{x.name}")
+                .Where(n => !n.Contains(island.name) && !n.StartsWith("Nature/"))
+                .GroupBy(n => n).Select(g => g.Count() > 1 ? $"{g.Key}×{g.Count()}" : g.Key).Take(15).ToList();
+            sb.AppendLine($"{island.name} x {r.xMin:F0}~{r.xMax:F0} z {r.yMin:F0}~{r.yMax:F0}: {(found.Count > 0 ? string.Join(", ", found) : "남의 물건 없음")}");
+        }
+        return sb.ToString().TrimEnd();
+    }
+}
