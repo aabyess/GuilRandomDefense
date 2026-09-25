@@ -550,6 +550,33 @@ UNITS = {
                             dict(pattern=r"^(l_weapon_joint|LHand_Fore_sup)", into="mixamorig:LeftHand"),
                             dict(pattern=r"^(r_weapon_joint|RHand_Fore_sup)", into="mixamorig:RightHand")],
                materials=dict(textures={"pl_oven_orig01": [("DiffuseColor", "pl_oven_orig01_diff.png")]})),
+    # 원피스 파이팅 패스 어린 상디(바라티에 요리사, XPS 립 o_dv89_o) → R26 임채준. zip = source/*.rar(34051_Show.fbx · xps · .blend · 34051_SD.png)
+    #   + textures/34051_SD.png(rar 판과 픽셀 같음, RGB↔RGBA). 메시 1(34051, 정점 5,478 · 삼각형 7,410) · 재질 1(34051_Show) · 그림 1(512²) · 뼈 59 · 클립 0.
+    #   표준 Bip001(Spine2·Toe0) → BIP001_RENAME. A자 → tpose_arms. 원본 재질이 컬러 그림을 노멀맵에도 꽂는다 → 재질 새로.
+    #   🔴 뿌리에 따로 붙은 Bone001·Bone043(각 82정점)은 **기본 자세에서 크기 0.001로 숨긴 소품**이다(자세를 입히면 골반 한 점에 뭉침,
+    #      쉬는 자세 좌표로는 오른손 바깥에 손~머리 높이로 선다). 컬링을 끄고 렌더해도 안 보인다 → 정점째 뺀다.
+    #   앞치마 두 자락(Bone014/015 · mirrored)은 골반에 통째로(아래 merge 주석 — 허벅지로 나누면 가운데가 찢어진다).
+    "임채준": dict(path="Assets/Art/Enemies/임채준/임채준.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R21-R30/R26_임채준.zip"),
+                        "source/opfp___sanji__kid__by_o_dv89_o_dk2f5g4.rar", "OPFP - Sanji (Kid)/34051_Show.fbx"),
+               archive_rgb={"OPFP - Sanji (Kid)/34051_SD.png": "34051_Show.png"},
+               skip_shapes=True,
+               drop_verts_of_bones=["Bone001", "Bone043"],
+               drop_bones=["Bip001", "Bone001", "Bone043"],
+               rename_bones=BIP001_RENAME,
+               no_nulls=True, orient_snap=True,
+               # ⚠️ under=Head를 안 쓴다 — 이 리그는 Head 밑에 자식 뼈가 없다(쓰면 「대상 없음」으로 멈춘다).
+               merge_bones=[dict(under="mixamorig:LeftHand", into="mixamorig:LeftHand"),
+                            dict(under="mixamorig:RightHand", into="mixamorig:RightHand"),
+                            # 1차는 저지처럼 좌우 허벅지 반·골반 반으로 나눴다 → **한 장짜리 앞치마 가운데가 찢어져** 다리가 비쳤다
+                            #   (저지 코트는 앞이 트여 있어 괜찮았다). 앞치마는 골반에 통째로.
+                            #   2차: 골반에 통째로 → 걸을 때 허벅지가 굳은 앞치마를 앞으로 뚫었다. 3차(지금): split_x로 x에 따라 좌우 허벅지를 섞는다.
+                            dict(pattern=r"^Bone01[45](\(mirrored\))?$", into="mixamorig:Hips", share=0.6, rest="mixamorig:Hips",
+                                 split_x=dict(left="mixamorig:LeftUpLeg", right="mixamorig:RightUpLeg", half=0.0012))],
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               materials=dict(textures={"34051_Show": [("DiffuseColor", "34051_Show.png")]})),
     # 원피스 카쿠(CP9, Sketchfab glb, 뼈 있음) → R25 이정범. 그림 둘이 박혀 있다(0 = 컬러 1024² RGB · 1 = 스페큘러 LA → 컬러만).
     #   메시 4(몸 5,254 + 얼굴 세 벌 face_5201_00/01/02 = 1,136/1,467/1,353, **경계가 똑같이 겹친 표정 변형**) + Icosphere · 재질 1 · 관절 48 · 클립 0.
     #   얼굴은 세 벌을 나란히 렌더해 골랐다: 00(Object_9) = 눈 뜨고 입 다문 평상시 · 01(Object_11) = 웃음 · 02(Object_13) = 눈 감음 → 00만 남긴다.
@@ -5312,6 +5339,10 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 gone = [eb.name for eb in data.edit_bones if re.search(mb["pattern"], eb.name)]
             assert gone and mb["into"] in data.edit_bones, f"{name}: merge_bones 대상 없음"
             moved = 0
+            # 🔸 split_x {left, right, half}(2026-09-25 R26 어린 상디 앞치마): 한 장짜리 앞치마를 좌우 사슬 → 좌우 허벅지로 나누면
+            #   **가운데 솔기가 찢어져** 다리가 비치고, 골반에 통째로 두면 걸을 때 허벅지가 앞치마를 뚫는다. 정점의 x 위치로
+            #   좌 몫을 0.5 + 0.5·x/half(0~1로 자름)로 정해 가운데는 양쪽 50:50 — 솔기 없이 좌우로 서서히 넘어간다. into는 assert용 이름.
+            sx = mb.get("split_x")
             share = mb.get("share", 1.0)                                # 🔸 아이젠 천년혈전: 코트 자락 뼈 몫을 넓적다리 share · 나머지 rest(Hips)로 나눠 합친다(전부 다리면 찢기고 전부 Hips면 다리가 뚫고 나옴)
             for m in meshes:
                 src = {m.vertex_groups[n].index for n in gone if n in m.vertex_groups}
@@ -5319,8 +5350,22 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                     continue
                 tg = m.vertex_groups.get(mb["into"]) or m.vertex_groups.new(name=mb["into"])
                 rg = (m.vertex_groups.get(mb["rest"]) or m.vertex_groups.new(name=mb["rest"])) if share < 1.0 else None
+                lg = (m.vertex_groups.get(sx["left"]) or m.vertex_groups.new(name=sx["left"])) if sx else None
+                rtg = (m.vertex_groups.get(sx["right"]) or m.vertex_groups.new(name=sx["right"])) if sx else None
                 for v in m.data.vertices:
                     add = sum(ge.weight for ge in v.groups if ge.group in src)
+                    if add > 0 and sx:
+                        xw = (m.matrix_world @ v.co).x
+                        fl = min(1.0, max(0.0, 0.5 + 0.5 * xw / sx["half"]))
+                        for grp, part in ((lg, fl), (rtg, 1.0 - fl)):
+                            if part > 0:
+                                cur = sum(ge.weight for ge in v.groups if ge.group == grp.index)
+                                grp.add([v.index], cur + add * share * part, "REPLACE")
+                        if rg is not None:
+                            cur_r = sum(ge.weight for ge in v.groups if ge.group == rg.index)
+                            rg.add([v.index], cur_r + add * (1.0 - share), "REPLACE")
+                        moved += 1
+                        continue
                     if add > 0:
                         cur = sum(ge.weight for ge in v.groups if ge.group == tg.index)
                         tg.add([v.index], cur + add * share, "REPLACE")
