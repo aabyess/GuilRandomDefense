@@ -638,6 +638,30 @@ UNITS = {
                glb_images={0: "Cha_3300_00.png"},
                materials=dict(textures={"Cha_3300_00": [("DiffuseColor", "Cha_3300_00.png")],
                                         "Cha_3300_01": [("DiffuseColor", "Cha_3300_00.png")]})),
+    # 블리치 호로(Hollow, Noesis 립을 Blender glTF로 다시 뽑은 것) → R21 박도진. zip = source/doll_001out.glb + textures/doll_001out0_tex00_0.png.
+    #   메시 1(Box001, **정점 341 · 삼각형 406** — 쿠로보다 적다) · 재질 1(ZK_0001_body_o) · 그림 1(박힘 256²) · 뼈 22(Bip001) · 클립 2(idle·attack1, 적 규약상 안 씀).
+    #   사장님 답(2026-09-25): 이 원본으로 진행 · **쉬는 자세를 곧게 편다**. 원본 쉬는 자세는 등이 앞으로 굽고 무릎이 굽은 T자다.
+    #   → level_chains로 척추(골반→머리)는 위로, 두 다리(허벅지→발)는 아래로 편 뒤 tpose_arms가 그 자세를 쉬는 자세로 굽는다.
+    #   🔴 zip의 textures/ 그림은 **박힌 그림을 위아래로 뒤집은 것**(평균 같고 모양 상하 반전) — glb UV에 맞는 건 박힌 쪽이라 그걸 쓴다.
+    "박도진": dict(path="Assets/Art/Enemies/박도진/박도진.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R21-R30/R21_박도진.zip"), "source/doll_001out.glb"),
+               gltf_guess_bind=False,
+               drop_meshes=["Icosphere"],                     # glTF 임포터가 뼈 표시용으로 만드는 구(1차에서 몸을 덮은 큰 구로 나갔다)
+               rename_bones=BIP001_NO_SPINE2,
+               drop_bones=["Bip001"],
+               no_nulls=True, orient_snap=True,
+               # 발자국 뼈(Footsteps, 바닥)에 발바닥 정점 6개가 최대 0.28로 실려 있다 → 골반이 아니라 x 부호대로 왼발·오른발로(split_x).
+               merge_bones=[dict(pattern=r"^Bip001 Footsteps$", into="mixamorig:LeftFoot",
+                                 split_x=dict(left="mixamorig:LeftFoot", right="mixamorig:RightFoot", half=0.001))],
+               level_chains=[dict(chain=["mixamorig:Hips", "mixamorig:Spine", "mixamorig:Spine1", "mixamorig:Neck", "mixamorig:Head"],
+                                  target=(0, 0, 1)),
+                             dict(chain=["mixamorig:LeftUpLeg", "mixamorig:LeftLeg", "mixamorig:LeftFoot"], target=(0, 0, -1)),
+                             dict(chain=["mixamorig:RightUpLeg", "mixamorig:RightLeg", "mixamorig:RightFoot"], target=(0, 0, -1))],
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               glb_images={0: "ZK_0001_body_o.png"},
+               materials=dict(textures={"ZK_0001_body_o": [("DiffuseColor", "ZK_0001_body_o.png")]})),
     # 원피스 파이팅 패스 버기(임펠다운, XPS 립) → R32 이수은. 다시 묶은 zip 바로 안에 31703.fbx · xps · 31703_X.png.
     #   메시 1(2,694정점 · 3,901삼각형) · 재질 1 · 그림 1 · 클립 0. 봉쿠레·Mr.3와 같은 리그(Spine2 없음 · 위팔·아래팔 살 0 → 비틀림 뼈로).
     #   머리 밑 Bone001~005(뒤로 늘어진 머리·두건 사슬) → Head · 골반 밑 Bone007/009/010/011(허리천 앞뒤·옆, 살 11~33) → Hips.
