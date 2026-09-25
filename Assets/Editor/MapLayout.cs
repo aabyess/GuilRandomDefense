@@ -896,6 +896,19 @@ public static class MapLayout
         }
     }
 
+    /// <summary>
+    /// 스토리 입장 포탈 자리 — 오른쪽 위 ┐ 벽의 **오목한 안쪽 한가운데**(원작 Go_story, 2026-09-25 사장님 (가)).
+    /// 원작 Go_story 중심은 순찰 모서리에서 (132.5, 126.7) 안쪽이고, 오목한 자리(92×61.5)의 한가운데는 (163.2, 136.3)이다.
+    /// 포탈 지름(62.5)이 오목한 자리 세로(61.5)와 거의 같아서 **벽에 안 박히는 쪽**인 한가운데를 쓴다.
+    /// </summary>
+    public static Vector3 LaneStoryPortalSpot(Island lane)
+    {
+        Rect track = LaneTrackRect(lane);
+        float x = track.xMax - CornerWallOffsetX - (CornerWallLength + CornerWallThickness) * 0.5f;
+        float z = track.yMax - CornerWallOffsetZ - CornerWallThickness * 1.5f;
+        return new Vector3(x, IslandTop, z);
+    }
+
     static Rect MinMax(float x0, float z0, float x1, float z1) =>
         Rect.MinMaxRect(Mathf.Min(x0, x1), Mathf.Min(z0, z1), Mathf.Max(x0, x1), Mathf.Max(z0, z1));
 

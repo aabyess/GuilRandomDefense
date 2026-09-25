@@ -680,10 +680,20 @@ public static class MapGenerator
                    new Vector3(TrackWidth, 0.08f, halfZ * 2f - TrackWidth), "dirt");
 
         // 레인 안 ㄱ자 벽 넷(원작 레인 안쪽 모서리, MapLayout.LaneCornerWalls — 2026-09-25 원작화 ③).
+        //    ⚠️ 두께 61 × 높이 5.5짜리 판이라 그냥 두면 **벽 윗면에 NavMesh가 따로 구워진다**(navlane에서 벽이 한 줄 선으로만
+        //    보였다, 09-25). 올라갈 수는 없지만 우클릭 목적지(SamplePosition)가 벽 윗면에 붙어 유닛이 못 가는 곳을 향한다.
+        //    원작 벽은 보행 불가 칸이다 — 굽기에서 Not Walkable로 칠한다(콜라이더는 그대로 막는다).
         foreach ((string wallName, Rect r) in MapLayout.LaneCornerWalls(lane))
+        {
             BuildWall(parent, wallName,
                 new Vector3(r.center.x, MapLayout.IslandTop + WallHeight * 0.5f, r.center.y),
                 new Vector3(r.width, WallHeight, r.height));
+            GameObject wall = parent.Find(wallName)?.gameObject;
+            if (wall == null) continue;
+            NavMeshModifier notWalkable = wall.AddComponent<NavMeshModifier>();
+            notWalkable.overrideArea = true;
+            notWalkable.area = NavMesh.GetAreaFromName("Not Walkable");
+        }
 
     }
 
@@ -3224,6 +3234,7 @@ public static class MapGenerator
     // 닿는 값. 상수 두 개를 따로 손으로 맞추면 지름이 또 바뀔 때 반드시 어긋나므로, 두 값의
     // 관계 자체를 식으로 남겨 지름이 바뀌어도 자동으로 다시 맞는다(둘 다 const라 컴파일 타임에
     // 계산된다 — 여전히 "상수 하나"다, 그 값이 다른 상수에서 유도될 뿐).
+    // ⚠️ 2026-09-25부터 쓰지 않는다 — 아래 StoryPortalDownwardFraction 주석 참고.
     const float StoryPortalInwardShift = StoryPortalDiameter * 0.5f + TrackWidth * 0.5f;
 
     // "아래로 내려봐"(사장님, 2026-09-03) — 순찰 경로 오른쪽 위 꼭짓점에서 오른쪽 아래
@@ -3231,17 +3242,17 @@ public static class MapGenerator
     // 몇 번 왔다 갔다 할 값이라 상수 하나로 뺐다 — 조정은 이 줄 하나만 고치면 된다.
     // 한계: 1.0을 넘기면 순찰 경로의 세로 구간(오른쪽 줄) 자체를 벗어나 필드 아래쪽 가장자리
     // 쪽으로 다가가기 시작한다 — 그 너머엔 유닛 우리·상점 줄이 있으니 1.0을 넘기지 말 것.
+    // ⚠️ 2026-09-25부터 쓰지 않는다 — 스토리 포탈은 원작 자리(┐ 벽 오목한 안쪽, MapLayout.LaneStoryPortalSpot)로 옮겼다(사장님 (가)).
     const float StoryPortalDownwardFraction = 0.08f;
 
     static void BuildStoryZonePortal(Transform parent, MapLayout.Island lane, int laneIndex)
     {
         // 순찰 경로(LaneLoop)와 같은 계산식을 그대로 쓴다 — 따로 좌표를 잡으면 나중에
         // 레인 크기가 또 바뀔 때 순찰 경로와 포탈 자리가 어긋난다.
-        Vector3[] loop = MapLayout.LaneLoop(lane);
-        Vector3 corner = loop[3]; // 오른쪽 위
-        Vector3 lowerCorner = loop[2]; // 오른쪽 아래 — 내려가는 방향의 목표점
-        float z = corner.z - StoryPortalDownwardFraction * (corner.z - lowerCorner.z);
-        Vector3 ground = new Vector3(corner.x - StoryPortalInwardShift, corner.y, z);
+        // 🔴 2026-09-25: 사장님 (가) — 원작대로 오른쪽 위 ┐ 벽(MapLayout.LaneCornerWalls)의 **오목한 안쪽**으로 옮겼다
+        //    (원작 Go_story). 벽을 세우자 옛 자리(아래 두 상수, 09-03 사장님 지시)가 벽 바깥 모서리와 16×26 겹쳤다.
+        //    옛 두 상수와 그 지시 주석은 기록으로 남긴다 — 지금은 쓰지 않는다.
+        Vector3 ground = MapLayout.LaneStoryPortalSpot(lane);
 
         GameObject portal = CreatePortalObject(parent, $"{lane.name}_스토리포탈",
             new Vector3(ground.x, MapLayout.IslandTop + 0.25f, ground.z), StoryPortalDiameter);
