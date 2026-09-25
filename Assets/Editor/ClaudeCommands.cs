@@ -2040,6 +2040,10 @@ public static class ClaudeCommands
         {
             previousBackground = InputSystem.settings.backgroundBehavior;
             InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+            // ⚠️ 설정을 바꾸면 장치 상태가 초기화돼 가상 마우스가 (0,0) 구석으로 돌아간다(09-25 판 J: 가장자리축 (−1,−1)로
+            //    카메라가 계속 밀려 R1 위습 5개를 하나도 못 보냈다). 바꾼 뒤 가운데로 다시 옮긴다.
+            Camera c0 = Camera.main;
+            InputSystem.QueueStateEvent(shotMouse, new MouseState { position = c0 != null ? new Vector2(c0.pixelWidth * 0.5f, c0.pixelHeight * 0.55f) : new Vector2(Screen.width * 0.5f, Screen.height * 0.5f) });
         }
         if (!shotMouse.enabled) InputSystem.EnableDevice(shotMouse);
     }
@@ -2145,6 +2149,17 @@ public static class ClaudeCommands
         //    RtsCameraController가 그 (0,0)을 읽고 가장자리 밀기(축 0,−1)로 카메라를 계속 끌어내렸다 — 옮긴 대상이 매번 화면 밖으로
         //    밀려 「세 번 옮겨도 안 들어옴」. 판 E의 (+220,+130) 밀림도 같은 원인이다(그때 기록: 마우스 (0,0) · 가장자리축 (0,−1)).
         EnsureShotMouse();
+        // 누르기 전에 카메라 가장자리 밀기가 돌고 있으면(가상 마우스가 화면 가장자리) 가운데로 옮기고 한 틱 기다린다 —
+        //    그 상태로 카메라를 옮기면 옮긴 자리에서 계속 밀려 조준이 빗나간다(판 E·H1·J).
+        if (job.pointerPhase == 0)
+        {
+            RtsCameraController edgeRts = Camera.main != null ? Camera.main.GetComponent<RtsCameraController>() : null;
+            if (edgeRts != null && edgeRts.EdgeAxis != Vector2.zero && PointerFramePassed())
+            {
+                ParkShotMouse(Camera.main);
+                return false;
+            }
+        }
         if (spec.StartsWith("@box:")) return StepBox(job, spec.Substring(5), inStage);
         if (spec.StartsWith("@rcpt:")) return StepPointAt(job, spec.Substring(6), inStage);
         if (job.pointerPhase > 0 && !PointerFramePassed()) return false;   // 앞 마우스 이벤트가 게임 프레임에 먹히기 전(QueueMouse 주석)
