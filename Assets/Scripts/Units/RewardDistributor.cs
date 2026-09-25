@@ -238,28 +238,10 @@ public class RewardDistributor : MonoBehaviour
         context.GoldWallet.Add(Mathf.FloorToInt(goldMath * (2f + goldPlus)));
     }
 
-    // 원작 Trig_Enemy_Boss_create/Trig_Enemy_Boss_sinsekai: 보스 라운드 진입 시
-    // 전원 SetPlayerStateBJ(플레이어, GOLD, 0) — "보스 전에 다 써라"는 설계다(2026-09-06
-    // PM 확인). 원작엔 없는 R65/70/75(신세계 보스)도 우리가 만든 보스 라운드이므로
-    // 같은 규칙을 그대로 적용한다(PM 지시) — 특정 라운드 번호를 하드코딩하지 않고
-    // 호출부(RoundManager.StartRound)가 이미 갖고 있는 WaveData.IsBossRound 판정을
-    // 그대로 받는다. 호출부는 RoundManager.StartRound()의 IsBossRound 분기(PM이
-    // 구현담당3 무응답으로 RoundManager.cs를 이 세션에 임시 이관, 2026-09-06) —
-    // AdvanceRound가 직전 라운드 보상을 이미 지급한 뒤에 StartRound가 불리므로
-    // "방금 받은 보상을 뺏는" 순서 역전은 없다.
-    public void ConfiscateGoldOnBossRoundStart()
-    {
-        if (!GameAuthority.IsServer) return;
-
-        foreach (PlayerContext context in PlayerContext.Occupied)
-        {
-            context.GoldWallet?.ZeroOut();
-        }
-    }
-
-    // 원작 udg_PlayerDeath[i]=1 분기의 같은 SetPlayerStateBJ(플레이어, GOLD, 0) —
-    // 탈락한 플레이어의 골드도 몰수한다(2026-09-06 PM 확인). 호출부는
-    // RoundManager.HandlePlayerDefeated(마찬가지로 임시 이관).
+    // 원작 udg_PlayerDeath[i]=1 분기의 SetPlayerStateBJ(플레이어, GOLD, 0) — 탈락한
+    // 플레이어의 골드를 몰수한다. 호출부는 RoundManager.HandlePlayerDefeated.
+    // ⚠️ 2026-09-25: 원작에서 골드를 0으로 만드는 곳은 이 패배 분기뿐이다. 「보스 라운드
+    // 시작에 전원 몰수」(ConfiscateGoldOnBossRoundStart)는 이 분기를 잘못 읽은 것이라 지웠다.
     public void ConfiscateGoldOnPlayerDefeated(PlayerContext context)
     {
         if (!GameAuthority.IsServer) return;

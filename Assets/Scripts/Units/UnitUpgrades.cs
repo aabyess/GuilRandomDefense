@@ -309,6 +309,18 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
         return 0;
     }
 
+    // 2026-09-25 — 공격타입 강화의 평타 공격력 가산(자식 업그레이드 ratx). 이 유닛의 공격타입을
+    // 맡은 트랙의 레벨 × 등급 묶음 값. 없거나 레벨 0이면 0.
+    public float AttackBonusForAttackType(AttackType attackType, UnitGrade grade)
+    {
+        foreach (KeyValuePair<AttackTypeUpgradeTrackData, int> entry in attackTypeLevels)
+        {
+            if (entry.Key != null && entry.Key.attackType == attackType)
+                return entry.Key.AttackBonusForLevel(grade, entry.Value);
+        }
+        return 0f;
+    }
+
     // 2026-09-07 신설(PM 지시, "필드만·아직 없다" 뼈대 구멍 전수 점검) — SpeedMultiplierForGrade
     // 와 같은 자리·같은 관례, UnitAttacker.AttackSpeedMultiplier가 곱한다. 대응 트랙이
     // 없거나 아직 레벨 0이면 1(무영향)을 돌려준다.

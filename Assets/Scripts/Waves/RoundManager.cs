@@ -53,18 +53,16 @@ public class RoundManager : MonoBehaviour
     // 기본값일 뿐이다.
     [SerializeField] int totalRounds = 75;
 
-    [Header("41라운드 게이트 — [미확인] 원작 스토리11(드레스로사)/12(홀케이크섬) 대응 확정 안 됨")]
-    // 2026-09-11(PM 지시 F) — 지옥은 원작 스토리11, 신·악몽은 스토리12 클리어 여부로 41라운드에
-    // 전멸/유닛수한계변경이 갈린다. 그런데 우리 스토리 13개는 원작과 번호·내용이 무관한 창작
-    // 콘텐츠고(story-numbering-is-ours), Docs/reference/DIFFICULTY_RESEARCH.md가 제안한
-    // "우리 11번째(日本)=원작 스토리11· 우리 12번째(코드잇)=원작 스토리12" 매핑은 그 문서
-    // 자신이 "[제안] — 순서만 맞춘 것이고 원작 근거는 아니다"라고 명시한 미확정 값이다.
-    // 지어낸 매핑으로 전멸시키는 건 안 하는 게 안전하다(PM: "훅만 두고 [미확인] 꼬리표 +
-    // 보고") — 그래서 여기는 "StoryManager.FinishedCount가 이 값 이상이어야 통과"라는 값을
-    // 담는 빈 슬롯만 두고 기본값 0(=검사 비활성, 통과 취급)으로 둔다. 매핑이 확정되면
-    // 사장님/PM이 인스펙터에서 11·12를 채우면 그걸로 끝난다 — 코드 변경이 필요 없다.
-    [SerializeField] int hellRound41ClearGateOrder;      // 지옥 — [미확인], 0=검사 안 함
-    [SerializeField] int godNightmareRound41ClearGateOrder; // 신·악몽 — [미확인], 0=검사 안 함
+    // 41라운드 게이트 — 원작 Round_10ver 41R 분기: 지옥은 `Story_Logic2`(드레스로사 격파),
+    // 신·악몽은 `Story_Logic3`(홀케이크 격파)가 false면 전원 CustomDefeat, 통과하면 유닛수
+    // 한계를 60/55/50으로 내린다.
+    // 2026-09-25 확정: 우리 스토리는 이름·내용은 창작이지만 **순서 자리는 원작과 1:1**이다 —
+    // 완료 골드가 1번부터 180·800·1000·2000·3000·4000·6000·8000·9000·10000·10000·10000·5000으로
+    // 원작 Story_reward1~13(로그타운…드레스로사 11번째·홀케이크 12번째·와노쿠니 13번째)과
+    // 한 칸도 안 어긋난다. 그래서 「11번째를 깼나 / 12번째를 깼나」로 원작 조건을 그대로 건다.
+    // (예전엔 [SerializeField] 0 = 검사 꺼짐이었다. 씬에 남은 0이 덮어쓰지 않게 상수로 바꿨다.)
+    const int HellRound41ClearGateOrder = 11;        // 지옥 — 원작 드레스로사
+    const int GodNightmareRound41ClearGateOrder = 12; // 신·악몽 — 원작 홀케이크
 
     // 보스 타임리밋 패배(2단계 A, 원작 Trig_Enemy_Boss_create/sinsekai의 SleepForStageAdd).
     // 구세계 보스(R10~60)는 스폰 후 75.30초, 신세계 보스(R65/70/75)는 34.80초 지나도 살아
@@ -404,10 +402,8 @@ public class RoundManager : MonoBehaviour
     // 라운드 진행을 멈춘다). 쉬움·보통·어려움이거나 DifficultyManager가 없으면(맵 생성 전
     // 등) 항상 false — 이 라운드는 평범하게 지나간다.
     //
-    // [미확인] — hellRound41ClearGateOrder/godNightmareRound41ClearGateOrder는 기본값 0이라
-    // 클리어 검사 자체가 꺼져 있다(원작 스토리11/12에 대응하는 우리 자산이 확정되지 않아서,
-    // 지어낸 매핑으로 전멸시키지 않는다 — PM 지시). 검사가 꺼져 있어도 유닛수 한계(지옥60·
-    // 신55·악몽50)는 그대로 적용한다 — F의 그 절반은 스토리 매핑과 무관하게 확정된 값이다.
+    // 지옥은 11번째, 신·악몽은 12번째 스토리를 깼어야 통과한다(위 상수 주석 — 순서 자리 대응 근거).
+    // 통과하면 유닛수 한계를 지옥60·신55·악몽50으로 내린다.
     bool ApplyRound41DifficultyGate()
     {
         if (DifficultyManager.Instance == null || !DifficultyManager.Instance.IsModeSelected) return false;
@@ -415,7 +411,7 @@ public class RoundManager : MonoBehaviour
         DifficultyMode mode = DifficultyManager.Instance.Current;
         if (mode != DifficultyMode.Hell && mode != DifficultyMode.God && mode != DifficultyMode.Nightmare) return false;
 
-        int gateOrder = mode == DifficultyMode.Hell ? hellRound41ClearGateOrder : godNightmareRound41ClearGateOrder;
+        int gateOrder = mode == DifficultyMode.Hell ? HellRound41ClearGateOrder : GodNightmareRound41ClearGateOrder;
         if (gateOrder > 0 && (StoryManager.Instance == null || StoryManager.Instance.FinishedCount < gateOrder))
         {
             Debug.Log($"41라운드 게이트 — {mode.KoreanName()} 모드, 대응 스토리 미클리어(FinishedCount<{gateOrder})로 전멸 처리합니다.");
@@ -534,11 +530,11 @@ public class RoundManager : MonoBehaviour
         {
             Debug.Log($"보스 라운드! (라운드 {roundNumber})");
 
-            // 원작 Trig_Enemy_Boss_create/sinsekai: 보스 스폰 시점에 전원 골드 몰수
-            // ("보스 전에 다 써라"는 설계). 여기서 부르면 직전 라운드의 클리어 위습·
-            // 처치 보상(AdvanceRound가 StartRound보다 먼저 지급)은 이미 들어간 뒤라
-            // 순서가 원작과 같다 — 방금 받은 보상을 뺏는 게 아니다.
-            RewardDistributor.Instance?.ConfiscateGoldOnBossRoundStart();
+            // ⚠️ 2026-09-25 정정 — 보스 라운드 시작에 엔을 뺏지 않는다. 09-06엔 원작
+            // Trig_Enemy_Boss_create/sinsekai가 「보스 스폰 때 전원 골드 0」이라고 읽었는데,
+            // 원문의 골드 0 네 곳(war3map.j 14789 · 30009 · 30038 · 30169)은 전부
+            // `PlayerDeath=1` 바로 뒤, 즉 **패배 분기 안**이다. 패배 몰수는
+            // HandlePlayerDefeated → ConfiscateGoldOnPlayerDefeated가 이미 한다.
         }
 
         // 원작 Trig_Round_10ver: 10·20·…·60라운드가 시작되면 보스 생성 직전에 보물상자를 숨긴다

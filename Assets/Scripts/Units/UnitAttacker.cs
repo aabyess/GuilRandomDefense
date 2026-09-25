@@ -186,7 +186,7 @@ public class UnitAttacker : MonoBehaviour
     // `ATTACKTYPE_UPGRADE_RAW_DUMP.md` 이후) — 비용·구조가 나와서 지어낼 게
     // 없어졌다. 정체가 확정됐다: 원작 "강화소 3"(우리 등급트랙 "강화소 1"과 다른
     // 건물) 하나가 공격타입 4종(일반`R00G`·공성`R00H`·관통`R01Q`·패기`R01V`, 각
-    // 골드3000+목재500, 최대 3레벨)을 판다 — 사면 트리거가 자식 3개(버킷값 고정)를
+    // 3000엔·목재1부터 레벨마다 +500엔·+목재1, 최대 3레벨 — 09-25 정정)을 판다 — 사면 트리거가 자식 3개(버킷값 고정)를
     // 그 자리에서 공짜로 준다. **자식의 절대값은 안 옮긴다** — 이 basis를 쓰는
     // 스킬들이 이미 자기 `multiplier`/`bonus`를 갖고 있어서, 필요한 건 "몇 번
     // 샀는가"(레벨, 0~3)뿐이다(옮기면 이중 계상).
@@ -1680,8 +1680,9 @@ public class UnitAttacker : MonoBehaviour
 
         // 절대 가산치 — 전설·히든·불멸·초월·제한됨 5개 트랙만 0이 아니다. 대응 트랙이 없거나
         // 레벨 0이면 BonusForGrade가 0을 돌려준다.
+        // 2026-09-25: 공격타입 강화(「강화소 3」)의 공격력 가산도 같은 연구 절대 가산이라 여기 더한다.
         cachedResearchBonus = source != null && unitData != null
-            ? source.BonusForGrade(unitData.grade)
+            ? source.BonusForGrade(unitData.grade) + source.AttackBonusForAttackType(unitData.attackType, unitData.grade)
             : 0f;
 
         // 연구소 등급 공속(gba1/gmo1, 2026-09-06 신규 연결) — 유닛 종의 등급이 담당 트랙에

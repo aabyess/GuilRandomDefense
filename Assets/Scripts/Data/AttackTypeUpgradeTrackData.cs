@@ -32,12 +32,14 @@ public class AttackTypeUpgradeTrackData : ScriptableObject
 
     public int maxLevel = 3;
 
-    // 비용 — 마스터 버튼 4개 전부 골드3000+목재500, 매 레벨(구매 시도) 동일하다
-    // (등급트랙처럼 "레벨1만 다르다"가 아니다 — war3map.w3q gglb/gglm 원문 확인,
-    // ATTACKTYPE_UPGRADE_RAW_DUMP.md ④). "강화소 3" 건물 자체의 건설 비용은
-    // [미확인](원문에서 못 찾음, 리서치담당).
+    // 비용 — 2026-09-25 정정(war3map.w3q 직접 디코드): R00G/R00H/R00I/R01V 모두
+    // gglb 3000 · gglm 500 · glmb 1 · glmm 1. 워크3 연구 비용은 「기본 + 증가×(지금 레벨)」이라
+    // 0→1 3000엔·목재1, 1→2 3500엔·목재2, 2→3 4000엔·목재3이다.
+    // ⚠️ 09-06엔 gglm(골드 증가 500)을 목재로 읽어 「매 레벨 목재 500」이 들어가 있었다 — 사실상 못 샀다.
     public int costGold = 3000;
-    public int costWood = 500;
+    public int costGoldPerLevel = 500;
+    public int costWood = 1;
+    public int costWoodPerLevel = 1;
 
     // 공속 증가율(gba1=gmo1) — 일반·공성·관통 3%, 패기 4%. 2026-09-07 연결 완료(PM 지시,
     // "필드만·아직 없다"류 뼈대 구멍 전수 점검) — UnitUpgrades.SpeedMultiplierForAttackType이
@@ -48,8 +50,45 @@ public class AttackTypeUpgradeTrackData : ScriptableObject
     // 다룬다 — 레벨 0은 자연히 배수 1(무영향).
     public float speedPercentPerLevel;
 
-    public int CostForLevel(int level) => Mathf.Max(0, costGold);
-    public int WoodCostForLevel(int level) => Mathf.Max(0, costWood);
+    // level = 지금 레벨(0부터). 다음 레벨로 올리는 값이다.
+    public int CostForLevel(int level) => Mathf.Max(0, costGold + costGoldPerLevel * Mathf.Max(0, level));
+    public int WoodCostForLevel(int level) => Mathf.Max(0, costWood + costWoodPerLevel * Mathf.Max(0, level));
+
+    // 공격력 가산 — 2026-09-25 신설(war3map.w3q 자식 업그레이드 디코드). 마스터를 사면 트리거가
+    // 자식 셋(등급 묶음별)을 같은 레벨로 올리고, 자식은 `ratx`(공격력 +gba2, 레벨당 +gmo2)다:
+    //   일반 R01K/L/M · 공성 R01O/P/N · 관통 R01S/R/Q = 1500 · 2000 · 3000 (레벨당 같은 값)
+    //   패기 R01W/U/T = 2000 · 3000 · 4000
+    // 어느 유닛이 어느 자식을 받는지는 원작 w3u `upgr` 배정 분포로 묶었다:
+    //   전설·히든(칭호형)·랜덤전용 → 첫째 묶음 / 제한됨·특수함·변화된 → 둘째 / 초월·불멸·영원 → 셋째.
+    //   흔함~희귀함은 어느 자식에도 없다(0).
+    // 예전엔 자식 절대값을 「스킬이 ResearchLevel로 이미 가진다」며 안 옮겼는데, 그건 스킬 쪽
+    // 얘기고 평타 공격력 가산(ratx)은 어디에도 없었다.
+    public int attackBonusTier1 = 1500;
+    public int attackBonusTier2 = 2000;
+    public int attackBonusTier3 = 3000;
+
+    public float AttackBonusForLevel(UnitGrade grade, int level)
+    {
+        if (level <= 0) return 0f;
+        switch (grade)
+        {
+            case UnitGrade.Legendary:
+            case UnitGrade.Hidden:
+            case UnitGrade.RandomUnit:
+            case UnitGrade.OtherWorld:
+                return attackBonusTier1 * level;
+            case UnitGrade.Limited:
+            case UnitGrade.Superior:
+            case UnitGrade.Transformed:
+                return attackBonusTier2 * level;
+            case UnitGrade.Transcendent:
+            case UnitGrade.Immortal:
+            case UnitGrade.Eternal:
+                return attackBonusTier3 * level;
+            default:
+                return 0f;
+        }
+    }
 
     // 2026-09-07 신설(PM 지시) — 등급트랙 SpeedMultiplierForLevel과 같은 자리·같은 관례.
     public float SpeedMultiplierForLevel(int level) => 1f + speedPercentPerLevel * level;
