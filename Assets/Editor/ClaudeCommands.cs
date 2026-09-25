@@ -2102,8 +2102,13 @@ public static class ClaudeCommands
                         .Where(g => g.scene.IsValid() && g.name.Normalize(NormalizationForm.FormC).Contains(wanted))
                         .Select(g => $"{g.name}(켜짐 {g.activeInHierarchy} · 콜라이더 {(g.TryGetComponent(out Collider c) ? (c.enabled ? "켜짐" : "꺼짐") : "없음")})")
                         .Take(5).ToList();
-                    FailGameShot(job, $"{label}: 「{wanted}」 대상을 못 찾음" + (candidates.Length > 0 ? $" — 내 유닛: {candidates}" : "") +
-                                      (hidden.Count > 0 ? $" — 씬에는 있음: {string.Join(", ", hidden)}" : " — 씬 어디에도 그 이름이 없다"));
+                    // 긴 판(rounds:)에선 판을 죽이지 않고 이 동작만 건너뛴다 — 같은 턴의 조합이 대상을 먼저 없앨 수 있다
+                    //    (09-25 판 D: 스토리로 보낼 안흔함이 그 턴 조합으로 특별함이 돼 「못 찾음」으로 판 전체가 끝났다).
+                    //    뒤따르는 선택 의존 동작(@rc·상점)은 SkipIfSelectionWrong이 버린다.
+                    string why = $"{label}: 「{wanted}」 대상을 못 찾음" + (candidates.Length > 0 ? $" — 내 유닛: {candidates}" : "") +
+                                 (hidden.Count > 0 ? $" — 씬에는 있음: {string.Join(", ", hidden)}" : " — 씬 어디에도 그 이름이 없다");
+                    if (job.watchRounds > 0) { job.report += $"   ⚠️ {why} — 이 동작을 건너뜀\n"; job.pointerX = 0f; return true; }
+                    FailGameShot(job, why);
                     return false;
                 }
                 lastPointerTarget = target;
@@ -2117,6 +2122,11 @@ public static class ClaudeCommands
                 Vector3 sp = cam.WorldToScreenPoint(aim);
                 (float bandBottom, float bandTop) = PointerBand();
                 bool visible = sp.z > 0f && sp.x > 20f && sp.x < cam.pixelWidth - 20f && sp.y > bandBottom * cam.pixelHeight + 10f && sp.y < bandTop * cam.pixelHeight - 10f;
+                // 🔴 좌클릭(건물·유닛 고르기)은 **화면 가운데 영역**에 들 때만 누른다(09-25 판 D). 강화소·도박소를 y≈188에서 눌렀는데
+                //    그 자리가 하단 HUD 위라 선택이 안 됐다 — 띠 판정(bandBottom)은 통과했으니 판정 기준이 화면 배율과 어긋난 것이다.
+                //    원인을 쫓기보다 가운데로 카메라를 옮겨 누르는 쪽이 사람 조작과도 같다.
+                if (left && visible && job.pointerX >= 0f)
+                    visible = sp.x > cam.pixelWidth * 0.2f && sp.x < cam.pixelWidth * 0.8f && sp.y > cam.pixelHeight * 0.35f && sp.y < cam.pixelHeight * 0.8f;
                 if (!visible)
                 {
                     RtsCameraController rts = cam.GetComponent<RtsCameraController>();

@@ -2460,7 +2460,7 @@ public static class MapGenerator
         spawner.AddDoll(new RecipeDollSpawner.Doll
         {
             name = figure.name,
-            prefab = unit.prefab,
+            unit = unit,
             position = figure.transform.position,
             rotation = figure.transform.rotation,
             // 부모(holder)가 배율 1이라 월드 배율 = 이 값. 인형이 parent 바로 아래였으니 parent 배율도 1이어야 한다 — 아래 검사.

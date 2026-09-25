@@ -19,7 +19,11 @@ public class RecipeDollSpawner : MonoBehaviour
     public class Doll
     {
         public string name;
-        public GameObject prefab;
+        // 🔴 프리팹이 아니라 **UnitData**를 가리킨다(2026-09-25 판 D: 668기 중 15기만 섰다). 「모델 배선」은 Assets/Prefabs/Generated를
+        //    지우고 다시 지어 GUID는 같아도 **프리팹 안쪽 fileID가 바뀐다** — 씬에 적어 둔 프리팹 참조가 전부 끊긴다.
+        //    UnitData 에셋은 안 바뀌고, 배선이 매번 그 prefab 필드를 새 프리팹으로 고쳐 쓴다 → 실행 때 unit.prefab을 읽으면 늘 산다.
+        public UnitData unit;
+        public GameObject prefab;   // 옛 목록 호환용 — unit이 비었을 때만 쓴다
         public Vector3 position;
         public Quaternion rotation = Quaternion.identity;
         public Vector3 scale = Vector3.one;
@@ -57,8 +61,9 @@ public class RecipeDollSpawner : MonoBehaviour
         {
             foreach (Doll doll in list)
             {
-                if (doll == null || doll.prefab == null) continue;
-                GameObject figure = Instantiate(doll.prefab, staging.transform);
+                GameObject source = doll == null ? null : doll.unit != null && doll.unit.prefab != null ? doll.unit.prefab : doll.prefab;
+                if (source == null) continue;
+                GameObject figure = Instantiate(source, staging.transform);
                 figure.name = doll.name;
                 StripToDoll(figure);
                 figure.transform.SetParent(parent, false);
