@@ -550,6 +550,38 @@ UNITS = {
                             dict(pattern=r"^(l_weapon_joint|LHand_Fore_sup)", into="mixamorig:LeftHand"),
                             dict(pattern=r"^(r_weapon_joint|RHand_Fore_sup)", into="mixamorig:RightHand")],
                materials=dict(textures={"pl_oven_orig01": [("DiffuseColor", "pl_oven_orig01_diff.png")]})),
+    # 원피스 바운티러시 **어른** 모모노스케(쇼군, pl_momonosuke_orig01) → R29 박민수. zip = source/*.rar(strifffe 판: momonosuke.fbx ·
+    #   momonosuke animations.fbx · 미리보기 png 1920×1080 · _diff.jpeg) + textures/_diff.jpeg(rar 판과 픽셀 같음).
+    #   ⚠️ 류마·오븐(Annettlw 판)과 **제작자가 다르다** — 이 판은 뼈대 노드 배율 0.01이 없다(1.0). 메시 로컬 단위는 같은 게임 단위로 보여
+    #      (류마 몸 2.019 · 오븐 4.560 · 이 몸 2.821) 비율을 쟀지만 확증은 아니다: 전체 키 3.134 ÷ 류마 2.019 = **류마 × 1.55**.
+    #   메시 16 · **재질 0**(→ mesh_material) · 뼈 pl_ 계열 + glTF식 `_end` 끝점. 겹친 변형: 얼굴 넷(normal·attack·damage·sp01) → normal ·
+    #   손 open/close → open · 손에 든 칼 셋(r_weapon_01·r_weapon_02·l_weapon_02, l_weapon_02는 앞으로 1.8 뻗음) → 전부 뺌,
+    #   **허리에 찬 한 벌(l_sheath·l_handle_sheath)만 남긴다**(류마와 같은 기준).
+    #   기모노 자락 사슬 여섯(앞·뒤·옆 × 좌우)은 같은 쪽 허벅지 반·골반 반(저지 코트 방식 — 앞이 트인 옷이라 찢어짐 없음).
+    "박민수": dict(path="Assets/Art/Enemies/박민수/박민수.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R21-R30/R29_박민수.zip"),
+                        "source/momonosuke_fbx_one_piece_bounty_rush_by_strifffe_dgsi6sr.rar", "momonosuke.fbx"),
+               archive_rgb={"pl_momonosuke_orig01_diff.jpeg": "pl_momonosuke_orig01.png"},
+               drop_meshes=["face_attack", "face_damage", "face_sp01", "l_hand_close", "r_hand_close",
+                            "r_weapon_01", "r_weapon_02", "l_weapon_02"],
+               drop_bones=["world_joint"],
+               # 손에 든 칼 관절도 뺀다 — 칼 메시를 뺐으니 남은 살이 없고, 두면 앞으로 1.8 뻗은 관절이 뼈 경계를 부풀린다.
+               drop_bones_re=r"(_end(_end)?|_weapon_0[12](_0[12])?_joint)$",
+               rename_bones=PL_RENAME,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(pattern=r"^(coat_root|b_c_coat_|b_l_coat_|b_r_coat_)", into="mixamorig:Spine1"),
+                            dict(pattern=r"^(l_coat_shoulder|l_coat_)", into="mixamorig:LeftShoulder"),
+                            dict(pattern=r"^(r_coat_shoulder|r_coat_)", into="mixamorig:RightShoulder"),
+                            dict(pattern=r"^(l_sode_|LHand_Fore_sup)", into="mixamorig:LeftForeArm"),
+                            dict(pattern=r"^(r_sode_|RHand_Fore_sup)", into="mixamorig:RightForeArm"),
+                            dict(pattern=r"^(l_band|l_sheath_|l_handle_sheath_)", into="mixamorig:Hips"),
+                            dict(pattern=r"^[fbs]_l_skirt_", into="mixamorig:LeftUpLeg", share=0.5, rest="mixamorig:Hips"),
+                            dict(pattern=r"^[fbs]_r_skirt_", into="mixamorig:RightUpLeg", share=0.5, rest="mixamorig:Hips")],
+               materials=dict(mesh_material={n: "pl_momonosuke_orig01" for n in
+                                             ("body", "coat", "face_normal", "hair", "l_hand_open", "r_hand_open",
+                                              "l_handle_sheath", "l_sheath")},
+                              textures={"pl_momonosuke_orig01": [("DiffuseColor", "pl_momonosuke_orig01.png")]})),
     # 원피스 에넬(Sketchfab glb, 카쿠와 **같은 CH_ 리그** 계열 — Cha_3300) → R28 송형성. 그림 둘 박힘(0 = 컬러 · 1 = 스페큘러), 재질 둘 다 컬러로 0을 쓴다.
     #   메시 5(몸 00 7,136 · 겉치마 01 1,017(재질 01) · 얼굴 세 벌 2,082/2,245/2,450) + Icosphere · 관절 48 · 클립 0. 이미 T자.
     #   얼굴은 나란히 렌더해 골랐다: Object_10 = 무표정(남김) · Object_12 = 웃음 · Object_14 = 놀람(뺌).
@@ -5161,7 +5193,11 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 m.data = baked
         # 🛡 뼈와 메시가 같은 자리에 있는지
         mp = [o.matrix_world @ v.co for o in meshes for v in o.data.vertices]
-        bp = [arm.matrix_world @ pb.head for pb in arm.pose.bones if pb.name not in set(cfg.get("drop_bones", ()))]   # 뺄 뼈(빈 무기 뼈 등)는 대조에서 제외
+        # 뺄 뼈(빈 무기 뼈 등)는 대조에서 제외. 🔸 2026-09-25 R29: drop_bones_re로 빼는 뼈(glTF `_end` 끝점 · 빈 무기 관절)도 뺀다 —
+        #   안 빼면 곧 지워질 끝점(z 6.17)이 뼈 경계를 두 배로 부풀려 「뼈와 메시가 어긋난다」로 멈춘다.
+        _drop_rx = re.compile(cfg["drop_bones_re"]) if cfg.get("drop_bones_re") else None
+        bp = [arm.matrix_world @ pb.head for pb in arm.pose.bones
+              if pb.name not in set(cfg.get("drop_bones", ())) and not (_drop_rx and _drop_rx.search(pb.name))]
         mlo = Vector((min(p.x for p in mp), min(p.y for p in mp), min(p.z for p in mp)))
         mhi = Vector((max(p.x for p in mp), max(p.y for p in mp), max(p.z for p in mp)))
         blo = Vector((min(p.x for p in bp), min(p.y for p in bp), min(p.z for p in bp)))
