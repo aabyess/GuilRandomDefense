@@ -878,6 +878,41 @@ UNITS = {
                merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head")],
                glb_images={0: "Cha_5201_00.png"},
                materials=dict(textures={"Cha_5201_00": [("DiffuseColor", "Cha_5201_00.png")]})),
+    # 원피스 빈스모크 욘지 → R35 서승혁 · 니지 → R36 최혜륜. 저지(R24)와 같은 Sketchfab 판 계열: 몸 · 망토(pifeng) · 스킨 없는 머리 부품 「0」.
+    #   Bip001(Spine2 없음, 번호 꼬리) → BIP001_NO_SPINE2. 망토·머리·손 보조 사슬은 merge_to_nearest(망토는 Spine1 밑이라 가슴에 통째로 — 저지와 같은 결과).
+    #   머리 부품 「0」은 저지처럼 rigid_meshes로 Head. A자 → tpose_arms.
+    #   니지: 오른손 무기(landrieu001_weapon001)가 앞으로 1.27 뻗는다 → 저지 창과 같은 기준으로 정점째 뺀다.
+    "서승혁": dict(path="Assets/Art/Enemies/서승혁/서승혁.fbx", kind="human", size=("height", 1.8),
+               source=os.path.join(SKINS, "90_적유닛/R31-R40/R35_서승혁.glb"), gltf_guess_bind=False,
+               drop_meshes=["Icosphere"],
+               rigid_meshes={"0": "mixamorig:Head"},
+               rename_bones=BIP001_NO_SPINE2, rename_strip=r"_[0-9]+$",
+               drop_bones=["_rootJoint", "Bip001_00"],
+               drop_bones_re=r"Nub_[0-9]+$",
+               no_nulls=True, orient_snap=True,
+               merge_to_nearest=True,
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               glb_images={0: "yongji001_pifeng_d.png", 1: "yongji001_body_d.png"},
+               materials=dict(textures={"yongji001_pifeng_d": [("DiffuseColor", "yongji001_pifeng_d.png")],
+                                        "yongji001_body_d": [("DiffuseColor", "yongji001_body_d.png")]})),
+    "최혜륜": dict(path="Assets/Art/Enemies/최혜륜/최혜륜.fbx", kind="human", size=("height", 1.8),
+               source=os.path.join(SKINS, "90_적유닛/R31-R40/R36_최혜륜.glb"), gltf_guess_bind=False,
+               drop_meshes=["Icosphere"],
+               rigid_meshes={"0": "mixamorig:Head"},
+               drop_verts_of_bones=["landrieu001_weapon001_055"],
+               rename_bones=BIP001_NO_SPINE2, rename_strip=r"_[0-9]+$",
+               drop_bones=["_rootJoint", "Bip001_02", "landrieu001_weapon001_055"],
+               drop_bones_re=r"Nub_[0-9]+$",
+               no_nulls=True, orient_snap=True,
+               merge_to_nearest=True,
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               glb_images={0: "niji001_body_d.png", 1: "niji001_pifeng_d.png"},
+               materials=dict(textures={"niji001_body_d": [("DiffuseColor", "niji001_body_d.png")],
+                                        "niji001_pifeng_d": [("DiffuseColor", "niji001_pifeng_d.png")]})),
     # 원피스 빈스모크 저지(Sketchfab glb, 뼈 있음) → R24 최준우. 그림 둘이 glb 안에 박혀 있다(Image_0 몸 · Image_1 망토, 1024²).
     #   메시 3(몸 11,970 · 망토 pifeng 3,066 · 「0」 2,213 — 머리 앞 부품, **스킨 없이** 빈 노드 밑) + 조명용 Icosphere · 재질 2 · 관절 144 · 클립 0.
     #   뼈: Bip001(Spine2 없음 · Toe0 있음, 번호 꼬리 `_07` → rename_strip) + 등 망토 사슬 셋(Bone001~017, Spine1 밑, 바닥까지)
