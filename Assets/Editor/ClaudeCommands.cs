@@ -1034,6 +1034,7 @@ public static class ClaudeCommands
         public int droppedLogs;     // 종류 상한을 넘어 못 실은 로그 수
         public bool failed;
         public int midPlayReloads;  // 플레이 도중 도메인 리로드 횟수(아래 NoteMidPlayReload)
+        public bool noCombine, noShop;   // autoloop에서 조합·상점을 뺀다 — 일부러 약한 판(보스 제한 패배 확인용)
         public int mode = (int)DifficultyMode.Normal;   // mode:<난이도> — 기본 보통(09-25 PM 지시: 기억값이 쉬움이라 판 B~F가 전부 쉬움이었다)
         public int prevSavedMode = int.MinValue;         // 사장님 기억값 — 판이 끝나면 되돌린다(MinValue = 원래 없었음)
         public int logsBeforeReload = -1;
@@ -1090,6 +1091,8 @@ public static class ClaudeCommands
             else if (token.StartsWith("call:")) job.clicks.Add("@call:" + token.Substring(5));
             else if (token.StartsWith("rclickpt:")) job.clicks.Add("@rcpt:" + token.Substring(9));
             else if (token == "autoloop") job.autoLoop = true;
+            else if (token == "nocombine") job.noCombine = true;
+            else if (token == "noshop") job.noShop = true;
             else if (token.StartsWith("mode:"))
             {
                 string want = token.Substring(5);
@@ -2518,7 +2521,7 @@ public static class ClaudeCommands
             gradeWisps += n;
         }
         if (randomWisps + gradeWisps > 0) turn.Add("@wait:12");
-        for (int k = 0; k < 3; k++)
+        for (int k = 0; k < (job.noCombine ? 0 : 3); k++)   // nocombine — 일부러 약한 판(보스 제한 패배 확인용, 09-25)
         {
             turn.Add("@box:Unit_흔함");
             turn.Add($"?Card{k}");
@@ -2579,7 +2582,7 @@ public static class ClaudeCommands
         turn.Add("@rcpt:corner");
         for (int k = 0; k < 2; k++) { turn.Add(sweep + "|far"); turn.Add("@rcpt:corner"); }
         // 상점은 **맨 뒤** — 턴이 라운드 안에 못 끝나 다음 턴이 남은 동작을 버릴 때, 싸우는 자리로 옮기기보다 상점이 먼저 빠지게.
-        if (job.lastRoundSeen >= 2)
+        if (job.lastRoundSeen >= 2 && !job.noShop)   // noshop — 일부러 약한 판
         {
             job.shopTried = true;
             foreach (string shop in SpendShops)
