@@ -176,6 +176,22 @@ SKINS = {
                            Hand=(0.35, 0, 0.655), HandTip=(0.42, 0, 0.65),
                            UpLeg=(0.065, 0, 0.47), Leg=(0.065, 0, 0.26), Foot=(0.06, 0.01, 0.05),
                            ToeBase=(0.06, -0.04, 0.02), ToeTip=(0.06, -0.07, 0.015))),
+    # 드래곤볼Z 신부도카이 어나더 로드(PSP) 프리저 최종형(OBJ 립) → R58 돌아온_김만경. zip = source/<PSP…Frieza Final F>.zip(obj · mtl · 그림 셋)
+    #   + textures/ 셋(안쪽과 같음). 오브젝트 1 · **정점 820**(PSP 저폴리, 쿠로 425의 두 배) · 재질 8(그림 3장을 나눠 씀) · **이미 T자**.
+    #   🔴 꼬리가 등 뒤로 곧게 뻗어 있다(원본 y 84까지, 몸 깊이의 네 배). 꼬리 뼈는 따로 안 만들고 가중치로 골반을 따르게 둔다.
+    #   관절 근거(키 1 정규화 층 실측): 팔 z 0.73~0.75, 손끝 x 0.48 · 어깨 보호대 폭 ±0.156(z 0.80) · 머리 0.83~1.0(폭 ±0.08)
+    #   · 가랑이 ≈0.47(0.45에서 두 다리가 갈라짐) · 다리 중심 x ±0.05.
+    "돌아온_김만경": dict(source="~/Desktop/구랜디스킨모음/90_적유닛/R51-R60/R58_돌아온_김만경.zip",
+               mesh_name="FriezaFinal",
+               path="Assets/Art/Enemies/돌아온_김만경/돌아온_김만경.fbx", height=1.8,
+               center_band=(0.02, 0.06),
+               join_all=True, keep_fused_faces=True, texture_by_material=True,
+               joints=dict(Hips=(0, 0, 0.49), Spine=(0, 0, 0.57), Chest=(0, 0, 0.66),
+                           Neck=(0, 0, 0.80), Head=(0, 0, 0.83), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.05, 0, 0.755), Arm=(0.12, 0, 0.75), ForeArm=(0.26, 0, 0.745),
+                           Hand=(0.40, 0, 0.74), HandTip=(0.48, 0, 0.735),
+                           UpLeg=(0.05, 0, 0.46), Leg=(0.055, 0, 0.26), Foot=(0.06, 0.01, 0.05),
+                           ToeBase=(0.06, -0.04, 0.02), ToeTip=(0.06, -0.07, 0.015))),
     # 드래곤볼 트랭크스(OBJ 립, 사이어인 전투복) → R57 서한빈. zip = source/Trunks.zip(obj · mtl · 그림 5) + textures/ 넷(안쪽과 같음).
     #   오브젝트 1(2,521정점) · 재질 4(clothes_1·clothes_2·face·wound — 재질 이름이 파일 이름 그대로) · 등에 멘 검 **없음**.
     #   Trunks.png는 mtl이 안 가리킨다 → 안 쓴다. A자(팔이 몸 옆으로 내려옴) · 다리를 벌린 자세.
