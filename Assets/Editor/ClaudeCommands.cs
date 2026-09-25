@@ -1089,6 +1089,11 @@ public static class ClaudeCommands
             else if (token == "buttons") job.clicks.Add("@buttons");
             else if (token == "cardpair") job.clicks.Add("@cardpair");
             else if (token.StartsWith("call:")) job.clicks.Add("@call:" + token.Substring(5));
+            else if (token.StartsWith("jump:"))
+            {
+                if (!int.TryParse(token.Substring(5), out int jr) || jr < 1) return $"❌ jump: 뒤엔 라운드 번호: {token}";
+                job.clicks.Add("@jump:" + jr);
+            }
             else if (token.StartsWith("rclickpt:")) job.clicks.Add("@rcpt:" + token.Substring(9));
             else if (token == "autoloop") job.autoLoop = true;
             else if (token == "nocombine") job.noCombine = true;
@@ -1242,6 +1247,18 @@ public static class ClaudeCommands
                     try { callResult = Call(target.Substring(6)); }
                     catch (Exception e) { callResult = $"❌ 호출 중 예외: {e.InnerException?.Message ?? e.Message}"; }
                     job.report += $"   📞 call {target.Substring(6)}:\n{callResult}\n";
+                    job.clickIndex++;
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
+                    break;
+                }
+                if (target.StartsWith("@jump:"))
+                {
+                    // 에디터 전용 라운드 점프(PM 훅 RoundManager.DebugJumpToRound — 보상·스토리·41R 게이트를 건너뛰고 그 라운드를 바로 시작).
+                    //    보스 제한 판정처럼 「그 라운드까지 살아남기」와 떼어 재야 할 때만 쓴다(09-25 bossonly 판).
+                    int jr = int.Parse(target.Substring(6));
+                    RoundManager jrm = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
+                    object ok = jrm == null ? null : typeof(RoundManager).GetMethod("DebugJumpToRound", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.Invoke(jrm, new object[] { jr });
+                    job.report += $"   ⏩ R{jr}로 점프: {(ok == null ? "❌ RoundManager.DebugJumpToRound 없음" : ok is bool b && b ? "✅" : $"❌ 거부({ok})")} · t={Time.time:F1}\n";
                     job.clickIndex++;
                     Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
                     break;
