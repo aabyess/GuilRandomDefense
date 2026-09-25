@@ -357,6 +357,13 @@ KID_RENAME = {"bone_2": "mixamorig:Hips", "bone_3": "mixamorig:Spine", "bone_4":
               "bone_17": "mixamorig:RightShoulder", "bone_19": "mixamorig:RightArm", "bone_21": "mixamorig:RightForeArm", "bone_23": "mixamorig:RightHand",
               "bone_8": "mixamorig:LeftUpLeg", "bone_10": "mixamorig:LeftLeg", "bone_12": "mixamorig:LeftFoot",
               "bone_9": "mixamorig:RightUpLeg", "bone_11": "mixamorig:RightLeg", "bone_13": "mixamorig:RightFoot"}
+# 「Left arm / Left elbow / Left wrist」 영어 낱말 리그(R54 셀레스티아, 2026-09-25) — elbow가 아래팔 머리, wrist가 손, knee가 정강이, ankle이 발.
+WORDS_RENAME = {"Hips": "mixamorig:Hips", "Spine": "mixamorig:Spine", "Chest": "mixamorig:Spine1", "Neck": "mixamorig:Neck", "Head": "mixamorig:Head"}
+for _side in ("Left", "Right"):
+    WORDS_RENAME.update({f"{_side} shoulder": f"mixamorig:{_side}Shoulder", f"{_side} arm": f"mixamorig:{_side}Arm",
+                         f"{_side} elbow": f"mixamorig:{_side}ForeArm", f"{_side} wrist": f"mixamorig:{_side}Hand",
+                         f"{_side} leg": f"mixamorig:{_side}UpLeg", f"{_side} knee": f"mixamorig:{_side}Leg",
+                         f"{_side} ankle": f"mixamorig:{_side}Foot", f"{_side} toe": f"mixamorig:{_side}ToeBase"})
 # 빈스모크 저지(R24): Spine2만 없고 Toe0은 있는 Bip001.
 BIP001_NO_SPINE2 = {k: v for k, v in BIP001_RENAME.items() if not k.endswith("Spine2")}
 # 버기(R18): Spine2·Toe0이 없는 Bip001. 있는 것만 남긴다.
@@ -646,6 +653,27 @@ UNITS = {
                glb_images={0: "Cha_3300_00.png"},
                materials=dict(textures={"Cha_3300_00": [("DiffuseColor", "Cha_3300_00.png")],
                                         "Cha_3300_01": [("DiffuseColor", "Cha_3300_00.png")]})),
+    # 단간론파 셀레스티아 루덴베르크(Sketchfab glb, 아틀라스 1장) → R54 지성현. 메시 1(23,161정점) · 재질 1 · 그림 1 · 관절 155 · 클립 0.
+    #   영어 낱말 리그 → WORDS_RENAME. A자(손목 z 1.01 · 어깨 1.33) → tpose_arms.
+    #   트윈 드릴 머리(Hair1~8 좌우, 손목 높이 0.95까지 내려옴)·리본·귀걸이·혀 → merge_to_nearest가 Head로(머리와 같이 돈다).
+    #   소매(Sleeve0, 살 650대) → 아래팔(부모가 elbow라 merge_to_nearest가 그리로). 손가락 → 손.
+    #   🔴 치마: 둘레 10갈래 × 두 마디(윗단 Skirt_0 z 1.04 · 아랫단 Skirt_2 z 0.79, 무릎 0.56 위). 윗단은 골반에,
+    #      아랫단은 R26 앞치마처럼 **split_x로 좌우 허벅지를 x에 따라 섞는다**(골반 통째면 허벅지가 뚫고, 좌우로 딱 나누면 찢어진다).
+    "지성현": dict(path="Assets/Art/Enemies/지성현/지성현.fbx", kind="human", size=("height", 1.8),
+               source=os.path.join(SKINS, "90_적유닛/R51-R60/R54_지성현.glb"), gltf_guess_bind=False,
+               drop_meshes=["Icosphere"],
+               rename_bones=WORDS_RENAME, rename_strip=r"_[0-9]+$",
+               drop_bones=["_rootJoint"],
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(pattern=r"^(Root_Skirt_0_0|Skirt_0_[0-9])_[0-9]+$", into="mixamorig:Hips"),
+                            dict(pattern=r"^Skirt_2_[0-9]_[0-9]+$", into="mixamorig:Hips", share=0.6, rest="mixamorig:Hips",
+                                 split_x=dict(left="mixamorig:LeftUpLeg", right="mixamorig:RightUpLeg", half=0.0012))],
+               merge_to_nearest=True,
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               glb_images={0: "AtlasBakedMat5087761001.png"},
+               materials=dict(textures={"AtlasBakedMat5087761001": [("DiffuseColor", "AtlasBakedMat5087761001.png")]})),
     # 원피스 유스타스 키드(Sketchfab glb, Noesis 립, 뼈 이름 번호뿐) → R34 장하민. 메시 15 + Icosphere · 재질 7(컬러+노멀 짝) · 그림 14 · 관절 781 · 클립 1(안 씀).
     #   🔴 장면 자세는 **싸움 자세**(오른팔 앞으로 듦 · 몸이 z로 45° 돎) — 결합 자세 추정(gltf_guess_bind 기본값 켬)으로 읽으면 깨끗한 T자다.
     #   얼굴은 나란히 렌더해 골랐다: submesh_0·1 = **똑같은 머리 두 벌** → 0만 · 14·15(벌린 입의 이)·6(작은 눈·입)은 표정 덧붙임 → 뺌.
