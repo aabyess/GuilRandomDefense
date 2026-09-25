@@ -396,6 +396,14 @@ for _s, _side in (("l", "Left"), ("r", "Right")):
                           f"biped_{_s}_lowArm_base_skin": f"mixamorig:{_side}ForeArm", f"biped_{_s}_hand_base_skin": f"mixamorig:{_side}Hand",
                           f"biped_{_s}_upLeg_1_skin": f"mixamorig:{_side}UpLeg", f"biped_{_s}_lowLeg_1_skin": f"mixamorig:{_side}Leg",
                           f"biped_{_s}_foot_skin": f"mixamorig:{_side}Foot", f"biped_{_s}_toe_skin": f"mixamorig:{_side}ToeBase"})
+# 센토마루(R40, 2026-09-25) — 뼈 이름이 「jnt NN」 번호뿐. 위치·계층으로 가렸다(+x = 왼쪽).
+#   Root 밑에 **다리 뭉치(jnt 01)와 척추 뭉치(jnt 02)가 형제**라 jnt 01을 Hips로 두고 척추를 그 밑으로 다시 붙인다.
+SENTO_RENAME = {"jnt 01": "mixamorig:Hips", "jnt 02": "mixamorig:Spine", "jnt 03": "mixamorig:Spine1", "jnt 04": "mixamorig:Spine2",
+                "jnt 05": "mixamorig:Neck", "Head": "mixamorig:Head",
+                "jnt 15": "mixamorig:LeftShoulder", "jnt 17": "mixamorig:LeftArm", "jnt 19": "mixamorig:LeftForeArm", "jnt 21": "mixamorig:LeftHand",
+                "jnt 16": "mixamorig:RightShoulder", "jnt 18": "mixamorig:RightArm", "jnt 20": "mixamorig:RightForeArm", "jnt 22": "mixamorig:RightHand",
+                "jnt 07": "mixamorig:LeftUpLeg", "jnt 09": "mixamorig:LeftLeg", "jnt 11": "mixamorig:LeftFoot", "jnt 13": "mixamorig:LeftToeBase",
+                "jnt 08": "mixamorig:RightUpLeg", "jnt 10": "mixamorig:RightLeg", "jnt 12": "mixamorig:RightFoot", "jnt 14": "mixamorig:RightToeBase"}
 # 빈스모크 저지(R24): Spine2만 없고 Toe0은 있는 Bip001.
 BIP001_NO_SPINE2 = {k: v for k, v in BIP001_RENAME.items() if not k.endswith("Spine2")}
 # 버기(R18): Spine2·Toe0이 없는 Bip001. 있는 것만 남긴다.
@@ -892,6 +900,27 @@ UNITS = {
                                "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
                            for s, side in (("L", "Left"), ("R", "Right"))},
                materials=dict(textures={"34051_Show": [("DiffuseColor", "34051_Show.png")]})),
+    # 원피스 센토마루(Sketchfab glb) → R40 김용태 ★보스. 메시 12(얼굴·눈·이·머리카락 둘·몸·손 둘·옷·멜빵·손목띠·해군 코트) · 재질 12(그림 6장을 나눠 씀) · 관절 224.
+    #   🔴 장면 자세가 **위아래가 뒤집혀** 있다(Root z −0.64, 머리 −2.02) — orient_snap이 세운다.
+    #   뼈 이름이 번호뿐 → SENTO_RENAME(위치로 가림), 다리 뭉치 jnt 01을 Hips로, 척추 jnt 02를 그 밑으로. 코트·깃·어깨 받침·얼굴 → merge_to_nearest.
+    #   이미 T자. 큰 도끼는 이 모델에 **없다**. 재질 여럿이 그림을 나눠 써서 texture_by_material.
+    "김용태": dict(path="Assets/Art/Enemies/김용태/김용태.fbx", kind="human", size=("height", 1.8),
+               source=os.path.join(SKINS, "90_적유닛/R31-R40/R40_김용태_보스.glb"), gltf_guess_bind=False,
+               drop_meshes=["Icosphere"],
+               rename_bones=SENTO_RENAME, rename_strip=r"_[0-9]+$",
+               drop_bones=["_rootJoint", "Center_02", "Root_03"],
+               drop_bones_re=r"_end_[0-9]+$",
+               reparent_bones={"mixamorig:Hips": None, "mixamorig:Spine": "mixamorig:Hips"},
+               no_nulls=True, orient_snap=True,
+               merge_to_nearest=True,
+               texture_by_material=True,
+               glb_images={i: f"sentomaru_{i}.png" for i in range(6)},
+               materials=dict(textures={"Face": [("DiffuseColor", "sentomaru_0.png")], "Eyes": [("DiffuseColor", "sentomaru_0.png")],
+                                        "Teeth": [("DiffuseColor", "sentomaru_1.png")], "Hair1": [("DiffuseColor", "sentomaru_2.png")],
+                                        "Hair2": [("DiffuseColor", "sentomaru_2.png")], "Body": [("DiffuseColor", "sentomaru_3.png")],
+                                        "Hand1": [("DiffuseColor", "sentomaru_3.png")], "Hand2": [("DiffuseColor", "sentomaru_3.png")],
+                                        "Cloth": [("DiffuseColor", "sentomaru_4.png")], "Straps": [("DiffuseColor", "sentomaru_4.png")],
+                                        "Handband": [("DiffuseColor", "sentomaru_4.png")], "Coat": [("DiffuseColor", "sentomaru_5.png")]})),
     # 원피스 마시라(원숭이 인양, Sketchfab glb) → R37 조성진. 메시 2(몸 13,375 · 얼굴 1,725 **스킨 없음**) · 재질 2 · 그림 2 · 관절 73 · 클립 0.
     #   두 발로 선 사람형(팔이 길고 몸집이 큼) → Humanoid. biped_* 리그 → MASIRA_RENAME. 얼굴은 rigid_meshes로 Head.
     #   꼬리(tail01~03) · 바나나 · 바지 · 팔꿈치·손 보조 → merge_to_nearest. 카메라·표식 노드(살 0)와 뿌리 위 노드는 뺀다. A자 → tpose_arms.
