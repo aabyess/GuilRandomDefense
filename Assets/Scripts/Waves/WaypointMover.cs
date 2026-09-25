@@ -9,6 +9,9 @@ public class WaypointMover : MonoBehaviour
     [SerializeField] private WaypointPath path;
     [SerializeField] private float moveSpeed = 3f;
     [SerializeField] private float arrivalThreshold = 0.05f;
+    // 2026-09-25 사장님 「진행방향으로 보면서 걷게」 — 초당 이 각도(도)까지 돈다. 모서리에서 확 꺾이지 않게.
+    // 모델의 앞(−Y로 만들어 ArtBinder가 +Z로 세운 것)이 transform.forward라서 이동 방향을 forward로 맞추면 된다.
+    [SerializeField] private float turnDegreesPerSecond = 540f;
 
     private int currentIndex;
 
@@ -43,6 +46,10 @@ public class WaypointMover : MonoBehaviour
 
         transform.position = path.GetPoint(0);
         currentIndex = path.PointCount > 1 ? 1 : 0;
+
+        Vector3 first = path.GetPoint(currentIndex) - transform.position;
+        first.y = 0f;
+        if (first.sqrMagnitude > 1e-8f) transform.rotation = Quaternion.LookRotation(first.normalized, Vector3.up);
     }
 
     private void Update()
@@ -50,7 +57,17 @@ public class WaypointMover : MonoBehaviour
         if (path == null || path.PointCount == 0) return;
 
         Vector3 target = path.GetPoint(currentIndex);
-        transform.position = Vector3.MoveTowards(transform.position, target, moveSpeed * slowMultiplier * Time.deltaTime);
+        Vector3 before = transform.position;
+        transform.position = Vector3.MoveTowards(before, target, moveSpeed * slowMultiplier * Time.deltaTime);
+
+        // 진행 방향(수평)을 본다. 멈춰 있으면(빙결 등) 방향을 그대로 둔다.
+        Vector3 step = transform.position - before;
+        step.y = 0f;
+        if (step.sqrMagnitude > 1e-8f)
+        {
+            Quaternion want = Quaternion.LookRotation(step.normalized, Vector3.up);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, want, turnDegreesPerSecond * Time.deltaTime);
+        }
 
         if (Vector3.Distance(transform.position, target) <= arrivalThreshold)
         {
