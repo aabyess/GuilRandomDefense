@@ -2110,6 +2110,11 @@ public static class ClaudeCommands
 
     static bool StepPointer(GameShotJob job, string spec, double inStage)
     {
+        // 🔴 가상 마우스를 **맨 먼저** current로 — 카메라를 옮기고 대상이 보이는지 판정하기 전에(09-25 판 H).
+        //    실제 마우스를 끄면 그 장치의 위치가 (0,0) = 화면 구석으로 돌아가는데, 가상 마우스가 아직 current가 아니면
+        //    RtsCameraController가 그 (0,0)을 읽고 가장자리 밀기(축 0,−1)로 카메라를 계속 끌어내렸다 — 옮긴 대상이 매번 화면 밖으로
+        //    밀려 「세 번 옮겨도 안 들어옴」. 판 E의 (+220,+130) 밀림도 같은 원인이다(그때 기록: 마우스 (0,0) · 가장자리축 (0,−1)).
+        EnsureShotMouse();
         if (spec.StartsWith("@box:")) return StepBox(job, spec.Substring(5), inStage);
         if (spec.StartsWith("@rcpt:")) return StepPointAt(job, spec.Substring(6), inStage);
         if (job.pointerPhase > 0 && !PointerFramePassed()) return false;   // 앞 마우스 이벤트가 게임 프레임에 먹히기 전(QueueMouse 주석)
