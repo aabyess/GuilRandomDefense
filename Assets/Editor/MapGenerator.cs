@@ -679,6 +679,12 @@ public static class MapGenerator
         BuildDecor(parent, $"{lane.name}_흙길_오른", new Vector3(x + halfX, y, z),
                    new Vector3(TrackWidth, 0.08f, halfZ * 2f - TrackWidth), "dirt");
 
+        // 레인 안 ㄱ자 벽 넷(원작 레인 안쪽 모서리, MapLayout.LaneCornerWalls — 2026-09-25 원작화 ③).
+        foreach ((string wallName, Rect r) in MapLayout.LaneCornerWalls(lane))
+            BuildWall(parent, wallName,
+                new Vector3(r.center.x, MapLayout.IslandTop + WallHeight * 0.5f, r.center.y),
+                new Vector3(r.width, WallHeight, r.height));
+
     }
 
     const string SupportSkillFolder = "Assets/Data/SupportSkills";

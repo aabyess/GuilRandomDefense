@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -863,6 +864,40 @@ public static class MapLayout
     //    ⚠️ **주석은 사람을 막지만 이미 있는 호출은 못 막는다.** 그래서 부를 수 없게 지웠다 —
     //       inset이 필요하면 <see cref="LaneTrackRect"/>와 섬 변의 차로 내면 되고, 그러면
     //       얼린 사각형과 어긋날 수가 없다. **하나뿐인 진실을 두 곳에서 만들 수 있게 두지 않는다.**
+
+    /// <summary>
+    /// 레인 안 **ㄱ자 벽 넷**(원작 레인 안쪽 모서리). 2026-09-25 원작화 ③ — PM 원작 대조(war3map.wpm 보행맵, 칸 32).
+    ///
+    /// 원작 p1_life_zone(3200×2752) 안의 막힌 칸을 그대로 읽은 모양이다:
+    /// <code>
+    ///   ┌ 긴 막대 640×256 + 다리 256×256 (전체 640 × 512)   네 모서리에 하나씩, 꺾인 곳이 레인 모서리(바깥)를 향한다
+    ///   바깥 꺾인 점 ↔ 순찰 사각형 모서리:  가로 232(좌우 똑같다) · 세로 위 176 / 아래 192 → 184로 대칭</code>
+    /// 순찰 사각형(<see cref="LaneTrackRect"/>)에 매단다 — 경로와 벽 사이 거리가 원작과 같아야 「경로를 가르고 설 자리를 나누는」
+    /// 역할이 같다. 값은 전부 원작 ÷ Scale이다. 우리 순찰 사각형(586×492)에서 벽 사이 틈은 가로 167 · 세로 158(원작 153.6).
+    /// ⚠️ 두께 61이라 NavMesh 굽기 반지름 상한 문제(칸막이 1.4, navmesh-bake-radius-ceiling)와는 무관하다.
+    /// </summary>
+    public const float CornerWallOffsetX = 232f / Scale;     // 55.7
+    public const float CornerWallOffsetZ = 184f / Scale;     // 44.2
+    public const float CornerWallLength = 640f / Scale;      // 153.6
+    public const float CornerWallThickness = 256f / Scale;   // 61.4
+
+    public static IEnumerable<(string name, Rect rect)> LaneCornerWalls(Island lane)
+    {
+        Rect track = LaneTrackRect(lane);
+        foreach ((string tag, int sx, int sz) in new[] { ("왼위", -1, 1), ("오른위", 1, 1), ("왼아래", -1, -1), ("오른아래", 1, -1) })
+        {
+            // 바깥 꺾인 점 — 순찰 모서리에서 안쪽으로.
+            float ox = (sx < 0 ? track.xMin + CornerWallOffsetX : track.xMax - CornerWallOffsetX);
+            float oz = (sz > 0 ? track.yMax - CornerWallOffsetZ : track.yMin + CornerWallOffsetZ);
+            // 긴 막대 — 위·아래 변을 따라 안쪽(가로)으로 뻗는다.
+            yield return ($"{lane.name}_ㄱ벽_{tag}_막대", MinMax(ox, oz, ox - sx * CornerWallLength, oz - sz * CornerWallThickness));
+            // 다리 — 막대 끝(바깥 쪽)에서 안쪽(세로)으로 한 번 더.
+            yield return ($"{lane.name}_ㄱ벽_{tag}_다리", MinMax(ox, oz - sz * CornerWallThickness, ox - sx * CornerWallThickness, oz - sz * CornerWallThickness * 2f));
+        }
+    }
+
+    static Rect MinMax(float x0, float z0, float x1, float z1) =>
+        Rect.MinMaxRect(Mathf.Min(x0, x1), Mathf.Min(z0, z1), Mathf.Max(x0, x1), Mathf.Max(z0, z1));
 
     public static Vector3[] LaneLoop(Island lane)
     {
