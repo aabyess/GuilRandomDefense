@@ -338,6 +338,7 @@ public class RoundManager : MonoBehaviour
 
         if (!isNewWorldBoss && isEasy)
         {
+            Debug.Log($"[보스제한] 레인 {laneIndex} R{roundNumber} — 쉬움 모드라 면제(보스 체력 {boss.HpRatio:P0})");
             PlayerNotification.Show(laneIndex, "쉬움 모드는 보스를 잡지 않아도 패배하지 않습니다.");
             yield break;
         }
