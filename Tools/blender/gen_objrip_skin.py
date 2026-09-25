@@ -126,6 +126,24 @@ SKINS = {
                            Hand=(0.625, 0, 0.43), HandTip=(0.75, 0, 0.33),
                            UpLeg=(0.055, 0, 0.38), Leg=(0.055, 0, 0.20), Foot=(0.055, 0.01, 0.045),
                            ToeBase=(0.055, -0.05, 0.02), ToeTip=(0.055, -0.08, 0.015))),
+    # 나루토 페인 천도(프리파이어 콜라보 모바일 립) → R48 진연서. zip = source/<번들>.zip(pain.obj · .mtl · 그림 셋) + textures/ 셋(번들 것과 픽셀 같음, RGB↔RGBA).
+    #   **뼈 0인 정적 OBJ** · 오브젝트 4(top2 5,534 = 상체+팔+**정강이까지 내려오는 코트 자락** · bottom2 1,968 = 바지·발 · head2 1,692 · hair2 1,581)
+    #   · 재질 3(Material.001 = pain_top · .002 = pain_bottom · .004 = pain_tex1 머리·얼굴) · 정점 10,775. A자(팔 약 45°) → straighten_arms.
+    #   관절 근거(키 1 정규화, 층·x띠 실측): 머리 0.844~0.942(머리카락 1.0까지) · 팔 중심선 x0.10 z0.80 → x0.20 z0.61 → x0.30 z0.51 → 손끝 x0.33 z0.48
+    #   · 바지 윗단 0.582 · 발 x ±0.07~0.14 · 무릎 높이 다리 중심 x ±0.06~0.07.
+    #   🔴 코트 자락이 다리 앞을 덮는다 → hem_follow(허리 아래로 갈수록 같은 쪽 허벅지로, 가운데는 좌우 섞음). 대장 코트처럼 통째로 고정하면 다리가 뚫는다.
+    "진연서": dict(source="~/Desktop/구랜디스킨모음/90_적유닛/R41-R50/R48_진연서.zip",
+               mesh_name="Pain",
+               path="Assets/Art/Enemies/진연서/진연서.fbx", height=1.8,
+               center_band=(0.02, 0.06),
+               straighten_arms=True, join_all=True, keep_fused_faces=True, texture_by_material=True,
+               hem_follow=dict(material="Material.001", top=0.55, share=0.6, half=0.06),
+               joints=dict(Hips=(0, 0, 0.56), Spine=(0, 0, 0.65), Chest=(0, 0, 0.74),
+                           Neck=(0, 0, 0.83), Head=(0, 0, 0.855), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.03, 0, 0.81), Arm=(0.10, 0.01, 0.80), ForeArm=(0.19, 0.02, 0.655),
+                           Hand=(0.29, 0.02, 0.52), HandTip=(0.34, 0.02, 0.48),
+                           UpLeg=(0.06, 0, 0.54), Leg=(0.07, 0, 0.30), Foot=(0.09, 0.01, 0.05),
+                           ToeBase=(0.09, -0.04, 0.02), ToeTip=(0.09, -0.07, 0.015))),
     # 드래곤볼 부도카이3 크리링 립 → R01 박진웅. **뼈 0인 정적 OBJ**라 새로 리깅한다.
     #   정점 1,396 · 면 2,504 · 재질 19(텍스처 10장) · **이미 T자**라 이 파이프라인이 그대로 맞는다.
     #   🔴 관절 자리는 **손으로 안 지었다** — 높이 1로 정규화해 층마다 폭을 재서 뽑았다:
@@ -1099,6 +1117,8 @@ def build(name, cfg, out_dir=None, render_dir=None):
                 # (has_data=False) — 이때 img.save()는 "이미지 데이터가 없다"는 에러로 죽는다.
                 # 원본 파일이 디스크에 실제로 있으면 그냥 그 파일을 그대로 복사한다(더 튼튼함).
                 safe = os.path.basename(src_on_disk)
+                if cfg.get("texture_by_material"):              # 🔸 R48: OBJ는 디스크 그림이라 이 갈래로 온다 — 여기서도 재질 이름으로
+                    safe = "".join(c for c in mat.name if c.isalnum() or c in "._-") + os.path.splitext(safe)[1]
                 tex_dst = os.path.join(tex_dir, safe)
                 _copy_unless_same(src_on_disk, tex_dst)
             else:
@@ -1411,6 +1431,33 @@ def build(name, cfg, out_dir=None, render_dir=None):
         dead, counts = dead_bones()
         report["뼈별 정점(w>0.01)"] = counts
         assert not dead, f"{name}: 가중치 없는 뼈(재질 고정 뒤) {dead}"
+
+    # 🔴 cfg["hem_follow"] = dict(material, top, share, half) — 다리 앞을 덮는 긴 자락(2026-09-25 R48 페인 아카츠키 코트).
+    #   대장 코트처럼 골반에 통째로 두면 걸을 때 다리가 자락을 앞으로 뚫고, 좌우 허벅지로 딱 나누면 가운데가 찢어진다.
+    #   그 재질 면의 정점 중 **몸통 뼈가 우세하고 z < top(키 비율)**인 것만: 허리에서 멀수록 s = share·(top−z)/top(0~share)만큼
+    #   같은 쪽 허벅지로 넘기고, 좌 몫은 0.5 + 0.5·x/half(가운데 50:50)로 섞는다(fix_unit_fbx의 hem_follow·split_x와 같은 생각).
+    if cfg.get("hem_follow"):
+        hf = cfg["hem_follow"]
+        mats = {i for i, m in enumerate(body.data.materials) if m and hf["material"] in m.name}
+        assert mats, f"{name}: hem_follow 재질이 없다 {hf['material']}"
+        vids = {vi for p in body.data.polygons if p.material_index in mats for vi in p.vertices}
+        torso = {PREFIX + n for n in ("Hips", "Spine", "Chest")}
+        lg, rg = body.vertex_groups[PREFIX + "LeftUpLeg"], body.vertex_groups[PREFIX + "RightUpLeg"]
+        moved = 0
+        for vi in vids:
+            v = body.data.vertices[vi]
+            if v.co.z >= hf["top"] * Hf or not v.groups:
+                continue
+            if body.vertex_groups[max(v.groups, key=lambda g: g.weight).group].name not in torso:
+                continue
+            sft = hf["share"] * min(1.0, (hf["top"] * Hf - v.co.z) / (hf["top"] * Hf))
+            fl = min(1.0, max(0.0, 0.5 + 0.5 * v.co.x / (hf["half"] * Hf)))
+            for g in list(v.groups):
+                body.vertex_groups[g.group].add([vi], g.weight * (1.0 - sft), "REPLACE")
+            lg.add([vi], sum(g.weight for g in v.groups if g.group == lg.index) + sft * fl, "REPLACE")
+            rg.add([vi], sum(g.weight for g in v.groups if g.group == rg.index) + sft * (1.0 - fl), "REPLACE")
+            moved += 1
+        report["자락 허벅지 따라가기"] = moved
 
     # 🔴 cfg["reassign_above"] = [dict(src=(뼈…), dst=뼈, z=높이비)] — src가 우세한 정점 중 z(키 비율) 이상을 dst 1.0으로 옮긴다
     #   (2026-09-25 R20 버지스). 다리가 짧아(가랑이 0.34) 벨트(0.42~0.48)가 UpLeg 씨앗에 더 가까워 **벨트가 허벅지를 따라 휘었다**
