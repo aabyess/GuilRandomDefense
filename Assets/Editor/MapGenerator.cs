@@ -833,9 +833,12 @@ public static class MapGenerator
 
         BuildUnitPenPartitions(parent, lane, unitPenWidth, penDepth, centerX, centerZ);
 
+        // 기준점(LaneMarker.SlotPosition의 첫 줄)은 칸 한가운데가 아니라 **칸 위 225(원작)** — 레인 아래 끝이다.
+        //    원작은 칸이 벽 뒤에 파여 있고 유닛은 거기로 꺼내져 선다(MapLayout.CommonStandOffset, 2026-09-25).
+        //    칸막이는 칸 한가운데(centerZ)에 그대로 서고, 유닛은 그 열린 위쪽 앞에 칸마다 한 줄로 선다.
         GameObject anchor = new GameObject($"{lane.name}_유닛우리");
         anchor.transform.SetParent(parent, false);
-        anchor.transform.position = new Vector3(centerX, MapLayout.IslandTop, centerZ);
+        anchor.transform.position = new Vector3(centerX, MapLayout.IslandTop, centerZ + MapLayout.CommonStandOffset);
         return anchor.transform;
     }
 
@@ -4260,7 +4263,7 @@ public static class MapGenerator
         float minRange = float.MaxValue;
         string minName = "?";
         int unreachable = 0;
-        float distance = MapLayout.SouthGreenZ + MapLayout.ApronGap + MapLayout.UnitPenDepth * 0.5f;
+        float distance = MapLayout.SouthGreenZ + MapLayout.StandAboveFieldBottom;
 
         foreach (UnitData unit in commons)
         {
@@ -4295,8 +4298,8 @@ public static class MapGenerator
         float sideSlack = (field.center.x + field.size.x * 0.5f) - (track.xMax + roadHalf);
 
         string report =
-            $"\n우리→적 사거리: 거리 {distance:0.0} (남쪽 초록 {MapLayout.SouthGreenZ:0.0} + 틈 " +
-            $"{MapLayout.ApronGap:0.0} + 우리 깊이 {MapLayout.UnitPenDepth:0.0}의 절반)" +
+            $"\n우리→적 사거리: 거리 {distance:0.0} (남쪽 초록 {MapLayout.SouthGreenZ:0.0} + 서는 점이 필드 아래 끝보다 " +
+            $"{MapLayout.StandAboveFieldBottom:0.0} 위 — 칸 위 {MapLayout.CommonStandOffset:0.0}, 원작 225) · 최소 사거리 대비 여유 {minRange - distance:0.0}" +
             // 아래 「구간 / 둘레」와 **같은 변수**를 쓴다. 식을 두 번 쓰면 그 둘이 갈리는데,
             // 이번 결함이 정확히 그것이었다(한 줄은 얼린 값, 한 줄은 비율 재계산).
             $"\n  순찰 사각형 {track.width:0.0}×{track.height:0.0} · 둘레 {perimeter:0.0} " +
@@ -5387,8 +5390,13 @@ public static class MapGenerator
             points.Add((cell.name, cell.transform.position));
 
         for (int i = 0; i < MapLayout.Lanes.Length; i++)
+        {
             points.Add(($"{MapLayout.Lanes[i].name} 유닛우리",
                         MapLayout.LaneUnitPenRow(MapLayout.Lanes[i]).Center3));
+            // 유닛이 실제로 서는 점(칸 위 225) — 칸 한가운데가 구워져 있어도 여기가 안 구워지면 뽑은 유닛이 못 움직인다.
+            points.Add(($"{MapLayout.Lanes[i].name} 흔함 서는 점",
+                        MapLayout.LaneUnitPenRow(MapLayout.Lanes[i]).Center3 + Vector3.forward * MapLayout.CommonStandOffset));
+        }
 
         // 스토리존 도착 지점 — 지금까지 아무도 서본 적 없는 자리라 안 구워졌을 수 있다.
         for (int i = 0; i < MapLayout.Lanes.Length; i++)

@@ -640,10 +640,30 @@ public static class MapLayout
     ///      ③ 아래 한계에 닿지 않는다 — 흙길 반폭 9가 초록 37.1 안에 들어가므로
     ///         **경로가 섬 밖으로 안 나간다**(28.1 여유). 이 검사는 보고문이 매번 찍는다.
     /// </summary>
-    public const float PenToTrackRatio = 0.85f;
+    ///
+    /// 🔴 2026-09-25 원작 대조로 **0.85 → 0.60**(거리 86.5 → 61.05). PM이 원작 보행맵(wpm)과 좌표로 잰 값:
+    ///    원작 흔함 선 자리 → 순찰 경로가 평균 약 61(54~69), 최소 사거리 대비 여유 약 40.
+    ///    우리는 86.5라 여유가 15뿐이었다. 0.60 × 101.75 = 61.05 → 여유 40.7로 원작과 같다.
+    ///    거리가 짧아지니 최악 종의 사거리 안 구간이 107 → 163으로 늘고 가동률은 나빠질 수 없다.
+    ///    ⚠️ 이 거리는 이제 **우리 한가운데가 아니라 유닛이 실제로 서는 점**(<see cref="CommonStandOffset"/>)에서 잰다.
+    /// </summary>
+    public const float PenToTrackRatio = 0.60f;
 
     /// <summary>우리 유닛 자리에서 순찰 경로 남쪽 변까지의 목표 거리.</summary>
-    public const float PenToTrackDistance = CommonMinAttackRange * PenToTrackRatio;   // 96.66
+    public const float PenToTrackDistance = CommonMinAttackRange * PenToTrackRatio;   // 61.05
+
+    /// <summary>
+    /// 흔함 유닛이 **서는 점**이 칸(우리 줄) 한가운데에서 위로(필드 쪽으로) 떨어진 거리. 원작 225 ÷ Scale = 54.0.
+    ///
+    /// 원작은 칸이 레인 벽 뒤에 파여 있고, 뽑힌 유닛은 칸 위 225 지점 — **레인 아래 끝** — 으로 꺼내져 선다
+    /// (PM 원작 대조 2026-09-25). 우리는 그동안 칸 한가운데에 세워서, 경로까지 거리를 맞추려면 초록 여백을
+    /// 37로 깎아야 했다(원작 54~69). 선 자리를 원작처럼 올리면 **거리와 여백이 동시에 원작 값**이 된다.
+    /// ⚠️ 칸 깊이(<see cref="UnitPenDepth"/>)는 원작 상수 그대로다 — 칸은 안 바뀌고 서는 점만 올라간다.
+    /// </summary>
+    public const float CommonStandOffset = 225f / Scale;
+
+    /// <summary>유닛이 서는 점이 필드 아래 끝보다 얼마나 위인가(음수면 필드 밖 = 앞치마 위). 지금 +4.65.</summary>
+    public const float StandAboveFieldBottom = CommonStandOffset - ApronGap - UnitPenDepth * 0.5f;
 
     /// <summary>
     /// 상점 줄 바로 위, 새 유닛이 처음 서는 우리가 놓이는 줄.
@@ -794,7 +814,13 @@ public static class MapLayout
     /// 우리 깊이를 되돌려도 거리가 유지된다 — 실제로 2026-09-24에 우리 깊이를 19.15로 줄였다가
     /// 사장님 정정으로 83.34로 되돌렸는데, 이 식이면 그 되돌림이 초록 쪽으로 옮겨 간다.
     /// </summary>
-    public const float SouthGreenZ = PenToTrackDistance - ApronGap - UnitPenDepth * 0.5f;
+    ///
+    /// 🔴 2026-09-25: 서는 점이 칸 한가운데 → 칸 위 225(<see cref="CommonStandOffset"/>)로 바뀌어 식도 바뀌었다:
+    /// <code>
+    ///   서는 점 → 순찰 경로 = SouthGreenZ + StandAboveFieldBottom      → 초록 = 61.05 − 4.65 = 56.4 (원작 54~69)
+    /// </code>
+    /// </summary>
+    public const float SouthGreenZ = PenToTrackDistance - StandAboveFieldBottom;
 
     /// <summary>
     /// 순찰 사각형(= 흙길 중심선). **경로와 흙길이 이 하나를 본다.**

@@ -148,8 +148,8 @@ public class LaneMarker : MonoBehaviour
     ///
     /// 한 줄은 CompartmentCount 칸 고정이다 — 넘치면(로스터 밖 자리가 남는 칸 수를 넘거나,
     /// 같은 로스터 칸에 여러 마리가 몰리는 게 아니라 남는 자리 쪽에서 실제로 넘칠 때) 조용히
-    /// 사라지는 대신 한 칸 폭만큼 더 앞(+Z, 우리가 열린 쪽)으로 다음 줄을 놓는다. 뒷줄은 필드
-    /// 쪽으로 넘어가는 열린 공간이라 칸막이가 없다.
+    /// 사라지는 대신 한 칸 폭만큼 **뒤(칸 안)**에 다음 줄을 놓고, 그 뒤로는 두 줄을 번갈아 쓴다
+    /// (2026-09-25 — 기준점이 레인 아래 끝으로 올라가 앞줄이 적 경로 위가 됐다. SlotPosition 본문 주석).
     /// </summary>
     public static Vector3 SlotPosition(Transform unitPen, float rowWidth, int slot)
     {
@@ -159,7 +159,11 @@ public class LaneMarker : MonoBehaviour
         int row = slot / CompartmentCount;
 
         float x = (column - (CompartmentCount - 1) * 0.5f) * spacing;
-        float z = row * spacing;
+        // 🔴 2026-09-25: 다음 줄은 앞(+Z, 필드 쪽)이 아니라 **뒤 — 칸 안**으로 놓는다. 기준점(unitPen)이 원작처럼 칸 위 225
+        //    (레인 아래 끝)로 올라가서(MapLayout.CommonStandOffset), 한 칸 폭(≈63) 앞은 **적 경로(56.4) 너머 흙길 위**다.
+        //    칸이 9개·로스터가 9명이라 로스터 밖 유닛은 처음부터 이 줄을 쓴다. 칸 안은 한 줄 깊이뿐이라 두 줄을 번갈아 쓴다 —
+        //    같은 이름 흔함도 겹쳐 서므로(RosterSlotPosition) 겹침은 이 게임의 규칙 안이다.
+        float z = -(row % 2) * spacing;
 
         return unitPen.position + unitPen.right * x + unitPen.forward * z;
     }
