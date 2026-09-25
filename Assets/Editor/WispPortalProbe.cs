@@ -178,6 +178,11 @@ public static class WispPortalProbe
         }
         var mouse = UnityEngine.InputSystem.Mouse.current;
         sb.AppendLine($"      Mouse.current {(mouse != null ? $"{mouse.name}#{mouse.deviceId} 위치 {mouse.position.ReadValue()} 왼쪽 눌림 {mouse.leftButton.isPressed} 오른쪽 눌림 {mouse.rightButton.isPressed}" : "없음")} · 장치 {string.Join(", ", UnityEngine.InputSystem.InputSystem.devices.OfType<UnityEngine.InputSystem.Mouse>().Select(m => $"{m.name}#{m.deviceId}"))}");
+        // 입력 멈춤 단서(09-25 판 F·H3: 게임이 가상 마우스 누름을 못 받았다) — 창 포커스·배경 동작·장치 마지막 갱신 시각.
+        var settings = UnityEngine.InputSystem.InputSystem.settings;
+        sb.AppendLine($"      포커스 Application.isFocused {Application.isFocused} · runInBackground {Application.runInBackground} · 배경 동작 {settings.backgroundBehavior} · 에디터 플레이 입력 {settings.editorInputBehaviorInPlayMode} · 갱신 방식 {settings.updateMode}");
+        foreach (var m in UnityEngine.InputSystem.InputSystem.devices.OfType<UnityEngine.InputSystem.Mouse>())
+            sb.AppendLine($"      장치 {m.name}#{m.deviceId} 켜짐 {m.enabled} · 마지막 갱신 {m.lastUpdateTime:F1}초(지금 {UnityEngine.InputSystem.LowLevel.InputState.currentTime:F1}) · 추가됨 {m.added}");
         var es = UnityEngine.EventSystems.EventSystem.current;
         sb.AppendLine($"      EventSystem {(es != null ? es.name + " 모듈 " + es.currentInputModule?.GetType().Name : "없음")} · 포인터가 UI 위(IsPointerOverGameObject) {(es != null && es.IsPointerOverGameObject())}");
         Camera cam = Camera.main;
