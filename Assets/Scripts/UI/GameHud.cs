@@ -2064,7 +2064,13 @@ public class GameHud : MonoBehaviour
         CombineSystem system = CombineSystemRef;
         if (system == null || !system.CanCombineNow(recipe)) return; // 흐린 상태면 눌러도 아무 일 없음
 
-        if (system.TryCombine(recipe))
+        // 원작 [조합]은 유닛 능력 — 결과가 누른 유닛 자리에 나온다. 선택 첫 유닛을 시전 유닛으로 본다.
+        SelectionManager casterSelection = Selection;
+        Vector3? casterPosition = casterSelection != null && casterSelection.Selected.Count > 0 && casterSelection.Selected[0] != null
+            ? casterSelection.Selected[0].transform.position
+            : (Vector3?)null;
+
+        if (system.TryCombine(recipe, casterPosition))
         {
             // 인벤토리가 바뀌어 흐림 상태가 달라졌을 것 — 다음 정기 갱신까지 안 기다리고 바로 반영.
             RefreshUnitCommandAffordability();

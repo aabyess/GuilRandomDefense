@@ -290,6 +290,16 @@ public class RoundManager : MonoBehaviour
         CheckAllDefeated();
     }
 
+    // 전원 패배(원작 CustomDefeatBJ를 모두에게) — 41R 스토리 게이트·와노쿠니 제한시간 초과가 쓴다.
+    public void DefeatAllPlayers(string reason)
+    {
+        Debug.Log($"전원 패배 — {reason}");
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            if (!context.IsDead) HandlePlayerDefeated(context.PlayerId, context);
+        }
+    }
+
     // 보스 타임리밋 패배(2단계 A) — 원작 Trig_Enemy_Boss_create(구세계)/Trig_Enemy_Boss_sinsekai
     // (신세계)의 SleepForStageAdd 뒤 생존 판정. WaveSpawner.OnRoundBossSpawned는 일반
     // 스폰목록을 타는 라운드보스가 뜰 때만 쏜다(사이드보스 62/66/71·광폭화 소환 몹은

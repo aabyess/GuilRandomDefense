@@ -20,6 +20,13 @@ public class StoryData : ScriptableObject
     [Tooltip("기다리는 동안 표시할 이름 (예: 백수생활). 대기가 없으면 비워 둔다")]
     public string interludeName;
 
+    [Tooltip("신·악몽에서만 나온다(원작 13번 와노쿠니 kingnokuni). 다른 난이도에선 건너뛴다")]
+    public bool godNightmareOnly;
+
+    [Header("제한시간 — 원작 13번: 285초 안에 못 깨면 전원 패배")]
+    [Tooltip("0이면 제한 없음")]
+    public float timeLimitSeconds;
+
     [Header("건물 → 보스")]
     [Tooltip("스토리존에 서 있는 건물. 비어 있으면 이 스토리는 아직 생성할 수 없다")]
     public EnemyData building;

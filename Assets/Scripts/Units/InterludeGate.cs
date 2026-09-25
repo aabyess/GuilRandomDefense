@@ -16,6 +16,12 @@ public class InterludeGate : MonoBehaviour
     [SerializeField] string interludeName = "백수생활";
     [SerializeField] float checkInterval = 0.5f;
 
+    // 2026-09-25 사장님 「특별지급 기능 추가해줘」 — 스토리를 원작대로 바꾸며 8번 뒤 대기가 300초 → 60초로
+    // 줄었다. 구간이 끝나면 닫히는 옛 방식이면 선택 위습을 60초 안에 못 옮기면 그냥 버려진다.
+    // 그래서 **구간이 한 번 시작되면 그 뒤로 계속 열어 둔다.** 선택 위습은 한 번만 나오니 「한 번만 고른다」는
+    // 규칙은 그대로 지켜진다(61d872a3 — 위습 하나를 세 포탈이 나눠 쓴다).
+    [SerializeField] bool stayOpenOnceStarted = true;
+
     [Header("닫혔을 때 색 — MaterialPropertyBlock으로 덮어쓴다(배칭 안 깨짐)")]
     [SerializeField] Color closedColor = new Color(0.3f, 0.3f, 0.3f, 0.6f);
 
@@ -65,7 +71,8 @@ public class InterludeGate : MonoBehaviour
         if (Time.time < nextCheckTime) return;
         nextCheckTime = Time.time + checkInterval;
 
-        interludeOpen = StoryManager.Instance != null && StoryManager.Instance.IsInterlude(interludeName);
+        bool inInterlude = StoryManager.Instance != null && StoryManager.Instance.IsInterlude(interludeName);
+        interludeOpen = inInterlude || (stayOpenOnceStarted && interludeOpen);
         hasInterludeState = true;
 
         RefreshVisual();

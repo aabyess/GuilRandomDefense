@@ -54,7 +54,9 @@ public class UnitSpawner : MonoBehaviour
             //                                                       키운 유닛은 좁은 데를 **벽에 파묻히며 지나간다.**
             //    실측(09-24): 앞치마의 6%가 통로 반폭 2 미만(우리 칸막이)이다. 그 6%는 **굽기**를 키울 때
             //    막히는 것이지 이 값과는 무관하다. 대신 이 값을 키우면 좁은 데서 유닛끼리 밀린다 — 그건 재 봐야 안다.
-            agent.obstacleAvoidanceType = ObstacleAvoidanceType.LowQualityObstacleAvoidance;
+            // ✅ 2026-09-25 사장님 「아군 유닛들은 겹치게 해줘도 될듯」 — 답이 와서 회피를 끈다.
+            //    이제 겹침은 우연(회피 원이 몸의 2%)이 아니라 의도다. UnitMover.Awake와 같은 값이다.
+            agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
             agent.radius = 0.28f;
 
             // areaMask를 정한 뒤에 올려야 한다 — 지상 유닛을 바다 위에 붙여놓으면 안 된다.

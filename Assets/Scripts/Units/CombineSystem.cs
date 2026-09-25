@@ -140,7 +140,9 @@ public class CombineSystem : MonoBehaviour
         return availableBuffer;
     }
 
-    public bool TryCombine(CombineRecipe recipe)
+    // casterPosition: 조합 버튼을 누른 유닛(선택된 유닛)의 자리. 원작 [조합]은 유닛의 능력이라 결과가
+    // 그 시전 유닛 자리에 나온다(war3map.j L15134). 없으면(디버그 F2 등) 레인 가운데.
+    public bool TryCombine(CombineRecipe recipe, Vector3? casterPosition = null)
     {
         if (!GameAuthority.IsServer) return false;
         if (recipe == null) return false;
@@ -172,7 +174,7 @@ public class CombineSystem : MonoBehaviour
 
         int ownerId = ResolveOwnerId();
         // 재료를 없애기 전에 읽어야 한다 — 자리를 재료들이 서 있던 곳에서 정하기 때문이다.
-        Vector3 resultPosition = ResolveResultPosition(unitsToRemove, recipe.result, ownerId);
+        Vector3 resultPosition = ResolveResultPosition(casterPosition, recipe.result, ownerId);
 
         // 재료는 인벤토리에서 빼는 것으로 끝나지 않는다. 필드에 서 있는 그 개체를 없애야
         // 인벤토리와 필드가 어긋나지 않는다 — 예전엔 이걸 안 해서 조합할수록 필드에 재료가 쌓였다.
@@ -228,7 +230,12 @@ public class CombineSystem : MonoBehaviour
         return context != null ? context.PlayerId : LocalPlayer.LocalPlayerId;
     }
 
-    // 🔴 조합 결과는 **그 플레이어 레인의 한가운데**에 나온다 (사장님 지시 2026-09-24:
+    // ✅ 2026-09-25 원작화(사장님 「1번이랑 3번 원작대로」): 결과는 **[조합]을 누른 유닛 자리**에 나온다.
+    //    원작 [조합]은 유닛 능력이고 결과를 시전 유닛 위치에 만든다(war3map.j L15134). 조합한 자리에서
+    //    바로 싸우니, 레인 가운데에 생겨 매번 옮겨야 하던 문제(구현담당1 i1_07: 가운데 방치 → R3 패배)가 없다.
+    //    누른 유닛 정보가 없을 때(디버그 F2)만 아래 옛 규칙(레인 가운데)으로 간다.
+    //
+    // (옛 규칙) 조합 결과는 **그 플레이어 레인의 한가운데**에 나온다 (사장님 지시 2026-09-24:
     //    「흔함 조합해서 나오는것들은 각 레인의 맵 가운데에 배치하게해야하지」).
     //
     //    그 전에는 **재료가 서 있던 자리의 평균**이었다. 그러면 조합할 때마다 결과가 우리 근처나
@@ -238,8 +245,13 @@ public class CombineSystem : MonoBehaviour
     //    LaneCenter는 레인 섬 오브젝트 자신의 위치라 곧 기하학적 한가운데다(LaneMarker 주석).
     //    옛 평균 방식이 신경 쓰던 「창고 개체는 바다 건너에 있어 같이 평균 내면 바다가 나온다」는
     //    문제도 같이 사라진다 — 재료 위치를 아예 안 본다.
-    Vector3 ResolveResultPosition(List<UnitIdentity> materials, UnitData result, int ownerId)
+    Vector3 ResolveResultPosition(Vector3? casterPosition, UnitData result, int ownerId)
     {
+        int casterMask = UnitSpawner.ComputeAreaMask(result.movementAbility);
+        if (casterPosition.HasValue
+            && NavMesh.SamplePosition(casterPosition.Value, out NavMeshHit casterHit, ResultSampleRadius, casterMask))
+            return casterHit.position;
+
         LaneMarker lane = LaneMarker.Get(ownerId);
         if (lane == null) return transform.position;
 
