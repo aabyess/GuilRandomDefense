@@ -1958,6 +1958,12 @@ public static class ClaudeCommands
         {
             shotMouse = InputSystem.devices.OfType<Mouse>().FirstOrDefault(m => m.name == ShotMouseName)
                         ?? InputSystem.AddDevice<Mouse>(ShotMouseName);
+            // 🔴 새 장치는 (0,0) — 화면 왼쪽 아래 **구석**에서 시작한다. 실제 마우스를 끄고 이게 current가 된 뒤로(아래),
+            //    RtsCameraController의 가장자리 밀기가 그 구석을 읽어 카메라를 계속 밀었다 — 옮긴 카메라가 다시 밀려 대상이
+            //    화면 밖으로 나가고 조준이 빗나갔다(09-25 i1_23: 🎥 두 번, 조준 (1053,650)). 만들자마자 가운데로 둔다.
+            Camera cam = Camera.main;
+            Vector2 center = cam != null ? new Vector2(cam.pixelWidth * 0.5f, cam.pixelHeight * 0.55f) : new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            InputSystem.QueueStateEvent(shotMouse, new MouseState { position = center });
         }
         if (Mouse.current != shotMouse) { previousMouse = Mouse.current; shotMouse.MakeCurrent(); }
         // 🔴 실제 마우스는 판 동안 끈다(2026-09-25 i1_14). AllDeviceInputAlwaysGoesToGameView라 사람이 에디터에서 마우스를 쓰면
