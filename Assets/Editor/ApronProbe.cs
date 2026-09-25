@@ -189,6 +189,14 @@ public static class ApronProbe
     /// <summary>
     /// NavMesh 질의(<see cref="NavMesh.SamplePosition"/>)는 **플레이 중에만** 뜻이 있다 —
     /// 편집 모드에서는 NavMeshSurface가 자기 데이터를 아직 안 얹었다. 그래서 이것도 플레이로 돈다.
+    ///
+    /// 🔴 **앞치마 판정은 `navlane`이 아니라 이쪽으로 한다**(2026-09-24 PM과 합의).
+    ///    `ClaudeCommands`의 `navlane`은 표본 사각형을 「필드 + 우리 렌더러 + 15%」로 잡고
+    ///    칸 간격을 `가로 ÷ 칸수`로 낸다 — 즉 **우리가 깊어지면 격자 전체가 남쪽으로 내려간다.**
+    ///    그래서 판이 다른 두 번의 「걸을 수 있음 N칸」은 **같은 자리를 잰 수가 아니고 뺄 수 없다.**
+    ///    실제로 09-24에 우리 깊이를 19 → 83으로 되돌렸을 때 navlane이 「없음 3 → 39칸」으로
+    ///    찍혔는데, 이 도구로 재니 **2칸(0.17%)**이었다 — 늘어난 36칸은 새로 창에 들어온 자리였다.
+    ///    이쪽은 칸 10 고정이고 사각형을 MapLayout에서 유도하므로 판 사이 비교가 된다.
     /// </summary>
     [MenuItem("Tools/진단/플레이해서 앞치마 NavMesh 구멍 찍기")]
     static void NavHolesInPlay() => RunInPlay("navholes");
