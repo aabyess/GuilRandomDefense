@@ -29,7 +29,7 @@ public static class NetSetup
         if (!AssetDatabase.IsValidFolder(NetFolder)) AssetDatabase.CreateFolder("Assets", "Net");
 
         GameObject playerPrefab = BuildPlayerPrefab();
-        BuildBootScene(playerPrefab.GetComponent<NetworkObject>());
+        BuildBootScene();
         SetBuildScenes();
 
         AssetDatabase.SaveAssets();
@@ -49,19 +49,23 @@ public static class NetSetup
             AssetDatabase.SetLabels(prefab, labels.Append(FusionPrefabLabel).ToArray());
 
         AssetDatabase.ImportAsset(PlayerPrefabPath, ImportAssetOptions.ForceUpdate);
-        return prefab;
+        // 강제 재임포트 뒤에는 위의 prefab 참조가 죽은 객체다 — 그걸로 씬에 넣으면 {fileID: 0}이 저장된다(09-25 실측).
+        return AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath);
     }
 
-    static void BuildBootScene(NetworkObject playerPrefab)
+    static void BuildBootScene()
     {
         var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+        // ⚠️ 프리팹은 NewScene **뒤에** 불러온다. NewScene(Single)이 안 쓰는 에셋을 내리면서 앞서 불러 둔
+        //    프리팹 참조를 죽인다 — SerializedProperty로도, 직접 대입으로도 {fileID: 0}이 저장됐다(09-25 실측).
+        NetworkObject playerPrefab = AssetDatabase.LoadAssetAtPath<NetworkObject>(PlayerPrefabPath);
 
         GameObject launcherGo = new GameObject("NetLauncher");
         NetLauncher launcher = launcherGo.AddComponent<NetLauncher>();
-        SerializedObject so = new SerializedObject(launcher);
-        so.FindProperty("playerPrefab").objectReferenceValue = playerPrefab;
-        so.FindProperty("gameSceneBuildIndex").intValue = 1;
-        so.ApplyModifiedPropertiesWithoutUndo();
+        launcher.EditorSetup(playerPrefab, 1);
+        EditorUtility.SetDirty(launcher);
+        if (launcher.PlayerPrefab == null)
+            throw new System.InvalidOperationException("[MP] NetBoot: NetPlayer 프리팹 참조가 비었습니다 — 씬을 저장하지 않습니다.");
 
         EditorSceneManager.SaveScene(scene, BootScenePath);
     }

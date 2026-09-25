@@ -40,6 +40,17 @@ public class NetLauncher : MonoBehaviour
 
     public static NetLauncher Instance { get; private set; }
 
+    public NetworkObject PlayerPrefab => playerPrefab;
+
+#if UNITY_EDITOR
+    /// <summary>NetSetup(에디터 도구) 전용.</summary>
+    public void EditorSetup(NetworkObject prefab, int gameSceneIndex)
+    {
+        playerPrefab = prefab;
+        gameSceneBuildIndex = gameSceneIndex;
+    }
+#endif
+
     void Awake()
     {
         if (Instance != null && Instance != this)
