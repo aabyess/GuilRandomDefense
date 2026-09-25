@@ -550,8 +550,8 @@ UNITS = {
                             dict(pattern=r"^(l_weapon_joint|LHand_Fore_sup)", into="mixamorig:LeftHand"),
                             dict(pattern=r"^(r_weapon_joint|RHand_Fore_sup)", into="mixamorig:RightHand")],
                materials=dict(textures={"pl_oven_orig01": [("DiffuseColor", "pl_oven_orig01_diff.png")]})),
-    # 원피스 세라핌 S-호크(Sketchfab glb, 뼈 있음) → R30 김만경 ★보스 **교체**(2026-09-25, 옛 제피로스는 「김만경_옛제피로스」 rebuild 금지).
-    #   ⚠️ 옛 산출물은 R58 「돌아온_김만경」도 같이 쓰기로 돼 있었다 — 이 교체로 R58도 S-호크가 된다(PM 판단).
+    # 원피스 세라핌 S-호크(Sketchfab glb, 뼈 있음) → R30 김만경 ★보스 **교체**(2026-09-25, 옛 제피로스는 R51 「최수지」로 옮겼다).
+    #   R58 돌아온_김만경은 이 산출물을 쓰지 않는다(사장님 결정 — 따로 스킨).
     #   메시 13 + Icosphere · 재질 4(unlit) · 그림 2 · 관절 172 · 클립 0. 부위별로 렌더해 갈랐다:
     #     팔 두 벌 — arm01(평범한 아래팔·손) 남김 · arm02(손에 칼날) 뺌 / 다리 두 벌 — leg_L·R(검은 부츠) 남김 · arm002(이름과 달리 맨정강이+신발) 뺌
     #     뺌: 발목 높이에 앞뒤로 누운 대검 weapon_d(키의 60%↑, 저지 창과 같은 기준) · 발밑으로 삐져나온 칼날 ren01 · 몸 뒤 1.4 떨어져 뜬
@@ -1088,11 +1088,11 @@ UNITS = {
     #   (sha256 810c78364077fcfc…, 세 zip이 바이트까지 같다). 그래서 **설정도 그 둘과 글자 하나까지 같다 —
     #   하나를 고치면 반드시 셋 다 고칠 것.** (같은 원본을 쓰는 항목이 이제 셋이다.)
     #   📌 R58 「돌아온_김만경」은 같은 사람이라 이 산출물 하나로 쓴다 — 따로 만들지 말 것(PM 2026-09-24).
-    #   🔴 2026-09-25 사장님 지시로 **세라핌 S-호크로 교체** — 새 항목 「김만경」(아래 S-호크)이 같은 파일을 만든다.
-    #      이 옛 설정은 지우지 않고 키만 바꿔 rebuild="금지"로 묶는다(돌리면 제피로스가 S-호크를 덮어쓴다).
-    "김만경_옛제피로스": dict(path="Assets/Art/Enemies/김만경/김만경.fbx", kind="human", size=("height", 1.8),
-              rebuild="금지",
-              archive=(os.path.join(SKINS, "90_적유닛/R21-R30/R30_김만경_보스.zip"), "source/zephyr.rar",
+    #   🔴 2026-09-25 사장님 지시로 R30 김만경은 **세라핌 S-호크로 교체**(새 항목 「김만경」), 제피로스는 **R51 최수지**로 옮겼다.
+    #      원본 zip도 PM이 90_적유닛/R51-R60/R51_최수지_제피로스.zip으로 옮겼다(바이트 같음). 설정은 그대로, 키·산출·원본 경로만 바꿨다.
+    #      📌 R58 돌아온_김만경은 S-호크도 제피로스도 쓰지 않고 따로 스킨을 받는다(사장님 결정).
+    "최수지": dict(path="Assets/Art/Enemies/최수지/최수지.fbx", kind="human", size=("height", 1.8),
+              archive=(os.path.join(SKINS, "90_적유닛/R51-R60/R51_최수지_제피로스.zip"), "source/zephyr.rar",
                        "zephyr/pl_zephyr_orig01 (merge).fbx"),
               archive_rgb={"zephyr/pl_zephyr_orig01_diff.png": "pl_zephyr_orig01_diff.png",
                            "zephyr/pl_zephyr_orig01_dyanagan_diff.png": "pl_zephyr_orig01_dyanagan_diff.png"},
