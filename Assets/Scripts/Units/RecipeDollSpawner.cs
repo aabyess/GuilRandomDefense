@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 /// <summary>
@@ -46,6 +47,16 @@ public class RecipeDollSpawner : MonoBehaviour
         LastSpawnCount = made;
         LastSpawnMs = watch.Elapsed.TotalMilliseconds;
         Debug.Log($"[조합표 인형] {made}/{dolls.Count}기를 {LastSpawnMs:F0}ms에 세웠습니다({name}).");
+        // 🔴 조용히 사라지지 않게 — 목록은 있는데 못 세운 칸을 경고로 남긴다(09-25 판 D: 15/668기였는데 로그 한 줄로만 보였다).
+        if (made < dolls.Count)
+        {
+            var broken = dolls.Where(d => d == null || ((d.unit == null || d.unit.prefab == null) && d.prefab == null)).ToList();
+            int noUnit = broken.Count(d => d == null || d.unit == null);
+            Debug.LogWarning($"[조합표 인형] 인형 {made}/{dolls.Count} — 못 세운 칸 {dolls.Count - made}개 " +
+                             $"(프리팹 없는 UnitData {broken.Count - noUnit}개 · UnitData 없음 {noUnit}개). 예: " +
+                             string.Join(", ", broken.Take(5).Select(d => d == null ? "(빈 칸)" : $"{d.name}({(d.unit != null ? d.unit.name : "UnitData 없음")})")) +
+                             " — 로스터에 프리팹이 안 배선됐거나 맵 생성 뒤 목록이 낡았다(맵을 다시 생성).", this);
+        }
     }
 
     /// <summary>목록대로 인형을 세운다. 프리팹이 비어 있는 칸은 건너뛰고 수를 돌려준다.</summary>
