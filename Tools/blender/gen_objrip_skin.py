@@ -144,6 +144,22 @@ SKINS = {
                            Hand=(0.29, 0.02, 0.52), HandTip=(0.34, 0.02, 0.48),
                            UpLeg=(0.06, 0, 0.54), Leg=(0.07, 0, 0.30), Foot=(0.09, 0.01, 0.05),
                            ToeBase=(0.09, -0.04, 0.02), ToeTip=(0.09, -0.07, 0.015))),
+    # 단간론파 모노쿠마(FBX, **뼈 0 · 그림 0**) → R53 이진수. zip = source/Danganronpa_Monokuma_2_21.fbx 하나.
+    #   메시 5(Body 6,676 · Ears 642 · Eye 257 · Nose 435 · Teeth 249) · 재질 6(**색만**: 검정 · 흰색(0.8) · 빨강 눈) · UV 있음.
+    #   곰 인형 체형이지만 두 다리·두 팔이 갈라진 **T자** → Humanoid 된다. 머리와 몸이 한 덩어리(콩 모양)라 목·가슴 경계는 뼈 높이로만 정한다.
+    #   관절 근거(키 1 = 귀 끝 1.807, Body 층 실측): 다리는 z 0.17 아래로 갈리고 중심 x ±0.12 · 팔은 z 0.58~0.68(중심 0.63), 몸 옆 x 0.22에서
+    #   나와 손끝 x 0.50 · 몸 폭 최대 ±0.22 · 귀 0.89~1.0. solid_to_png로 재질 색을 그림으로 굽는다.
+    "이진수": dict(source="~/Desktop/구랜디스킨모음/90_적유닛/R51-R60/R53_이진수.zip",
+               mesh_name="Monokuma",
+               path="Assets/Art/Enemies/이진수/이진수.fbx", height=1.8,
+               center_band=(0.02, 0.06),
+               join_all=True, keep_fused_faces=True, texture_by_material=True, solid_to_png=True,
+               joints=dict(Hips=(0, 0, 0.24), Spine=(0, 0, 0.40), Chest=(0, 0, 0.55),
+                           Neck=(0, 0, 0.70), Head=(0, 0, 0.72), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.08, 0, 0.63), Arm=(0.20, 0, 0.63), ForeArm=(0.32, 0, 0.63),
+                           Hand=(0.43, 0, 0.63), HandTip=(0.50, 0, 0.63),
+                           UpLeg=(0.12, 0, 0.19), Leg=(0.12, 0, 0.10), Foot=(0.12, 0.01, 0.03),
+                           ToeBase=(0.12, -0.04, 0.012), ToeTip=(0.12, -0.07, 0.008))),
     # 드래곤볼 부도카이3 크리링 립 → R01 박진웅. **뼈 0인 정적 OBJ**라 새로 리깅한다.
     #   정점 1,396 · 면 2,504 · 재질 19(텍스처 10장) · **이미 T자**라 이 파이프라인이 그대로 맞는다.
     #   🔴 관절 자리는 **손으로 안 지었다** — 높이 1로 정규화해 층마다 폭을 재서 뽑았다:
@@ -758,7 +774,8 @@ def extract_source(src):
                     p = os.path.join(root, f)
                     png = png or p
                     all_images[f] = p
-    assert mesh and png, f"메시/텍스처를 못 찾음: {search_root}"
+    # 🔸 2026-09-25 R53 모노쿠마: 그림이 **하나도 없는** 원본(재질 색만)도 있다 — 메시는 반드시, 그림은 build()가 cfg로 판단한다.
+    assert mesh, f"메시를 못 찾음: {search_root}"
     return mesh, mtl, png, outer, inner, all_images
 
 
@@ -963,6 +980,8 @@ def build(name, cfg, out_dir=None, render_dir=None):
     report = {"이름": name, "원본": src, "sha256": hashlib.sha256(open(src, "rb").read()).hexdigest()}
 
     mesh_path, mtl_path, png_path, outer_dir, inner_dir, all_images = extract_source(src)
+    assert png_path or cfg.get("solid_to_png") or mesh_path.lower().endswith((".glb", ".gltf")), \
+        f"{name}: 원본에 그림이 없다 — 재질 색만 쓰는 원본이면 solid_to_png=True"
     bpy.ops.wm.read_factory_settings(use_empty=True)
     if mesh_path.lower().endswith((".glb", ".gltf")):
         bpy.ops.import_scene.gltf(filepath=mesh_path)
@@ -1149,7 +1168,25 @@ def build(name, cfg, out_dir=None, render_dir=None):
             #   .glb는 텍스처가 파일로 안 풀려 있어 png_path가 None이다. 그런 소스에서 텍스처 노드가 없는 재질은
             #   「못 찾은」 게 아니라 **원래 단색**이다(박도진 katana_hair — 나머지 재질 아홉은 전부 이미지가 붙어 있다).
             #   예전엔 여기서 죽어 **항목 전체가 안 돌았다**(181개 실행 검사에서 잡힘). glTF 임포터가 만든 단색을 그대로 쓴다.
-            if src_path is None and png_path is None:
+            if src_path is None and png_path is None and cfg.get("solid_to_png"):
+                # 🔸 solid_to_png(2026-09-25 R53 모노쿠마): 그림 없이 **재질 색만** 있는 원본. 유니티 ArtBinder는 재질 이름으로 Textures/의
+                #   그림을 찾아 붙이므로 단색 재질을 그대로 두면 회색으로 나갈 수 있다 → 재질 색을 4×4 PNG로 구워 <재질이름>.png로 둔다
+                #   (fix_unit_fbx의 solid_textures와 같은 방식).
+                bsdf0 = next((n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None) if mat.node_tree else None
+                col = tuple(bsdf0.inputs["Base Color"].default_value) if bsdf0 else tuple(mat.diffuse_color)
+                safe = "".join(c for c in mat.name if c.isalnum() or c in "._-") + ".png"
+                tex_dst = os.path.join(tex_dir, safe)
+                # ⚠️ 재질 색은 **선형**이다. PNG(sRGB)에 그대로 적으면 흰색 0.8이 204로 어두워진다(1차에서 그랬다) → sRGB로 바꿔 적는다(0.8 → 231).
+                srgb = [12.92 * c if c <= 0.0031308 else 1.055 * c ** (1 / 2.4) - 0.055 for c in col[:3]]
+                im = bpy.data.images.new(safe, 4, 4, alpha=False)
+                im.colorspace_settings.name = "Non-Color"            # 적은 값이 그대로 파일에 가게(변환은 위에서 했다)
+                im.pixels = [c for _ in range(16) for c in (srgb[0], srgb[1], srgb[2], 1.0)]
+                im.filepath_raw = tex_dst
+                im.file_format = "PNG"
+                im.save()
+                src_path = tex_dst
+                report.setdefault("단색 → PNG", []).append(f"{mat.name}={tuple(round(c, 3) for c in col[:3])}")
+            elif src_path is None and png_path is None:
                 report.setdefault("단색 재질 유지", []).append(mat.name)
                 continue
             assert src_path, f"{mat.name}: 텍스처를 못 찾음(texture_files 확인)"
