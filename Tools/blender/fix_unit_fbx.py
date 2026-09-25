@@ -3089,6 +3089,10 @@ UNITS = {
                     drop_meshes=["Object_10", "Object_12", "Object_20", "Object_22",
                                  "Object_34", "Object_36", "Object_40", "Object_42", "Icosphere"],
                     drop_bones=["_rootJoint"],
+                    # 🔴 2026-09-25 bind_check 전수에서 잡힘: 얼굴 앞 Plug01~03(코·입 부품, glb에서 **스킨 없는** 노드 24·26·28)이
+                    #   가중치 0 정점 224·24·24로 나가 있었다(유니티가 첫 뼈에 강제로 붙여 몸을 따라가지 않음). 가장 가까운 뼈는
+                    #   얼굴 보조뼈(E_Nose·E_mouth)지만 Humanoid는 그걸 안 움직이니 Head에 통째로 고정한다.
+                    rigid_meshes={f"HERO_GENOS01_Plug0{i}_MAT_HERO_GENOS01_Face_0": "mixamorig:Head" for i in (1, 2, 3)},
                     rename_regex=(r"([A-Za-z][A-Za-z0-9_]*?)_[0-9]+", r"mixamorig:\1"),
                     # Hips_00 자체는 가중치 0(자식 Hipsd_01이 실제 엉덩이 가중치를 쥠, 린의
                     # bone_Hips_Dummy와 같은 패턴) → 안전판.
@@ -3270,6 +3274,7 @@ UNITS = {
                     merge_bones=[dict(under="face", into="mixamorig:Head", with_root=True),
                                  dict(pattern=r"^spine\.006$", into="mixamorig:Head")],
                     no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
+                    fill_zero_weights=True,                     # 2026-09-25 bind_check: geometry_0.003의 가중치 0 정점 5개
                     materials=dict(textures={"Material_0.003": [("DiffuseColor", "WillyTybur_Body.png")],
                                              "Material_0.006": [("DiffuseColor", "WillyTybur_Head.png")]})),
     # 도로헤도로 교자맨(만두 머리 마스코트) → 히든_성탄(2026-09-23 히든, blender 세션).
@@ -5537,6 +5542,32 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     if new_arm is not None and cfg.get("level_chains"):
         for i, lc in enumerate(cfg["level_chains"]):
             level_chain(new_arm, lc["chain"], lc["target"], report, f"곧게 편 사슬 {i}")
+    if new_arm is not None and cfg.get("fill_zero_weights"):
+        # 🔸 fill_zero_weights(2026-09-25 bind_check 전수 — 영원_조세민 5정점): 스킨된 메시에서 **그 뼈대 뼈들의 가중치 합이 0**인 정점을
+        #   가장 가까운 「가중치 있는」 정점의 값으로 채운다(유니티는 그런 정점을 첫 뼈에 강제로 붙여 늘어난다). gen_objrip_skin과 같은 방식.
+        from mathutils.kdtree import KDTree as _KD
+        bone_names = {b.name for b in new_arm.data.bones}
+        filled = {}
+        for m in meshes:
+            if skinned_to(m) != new_arm:
+                continue
+            gi = {g.index: g.name for g in m.vertex_groups}
+            tot = [sum(ge.weight for ge in v.groups if gi.get(ge.group) in bone_names) for v in m.data.vertices]
+            have = [i for i, t in enumerate(tot) if t > 1e-6]
+            zero = [i for i, t in enumerate(tot) if t <= 1e-6]
+            if not zero or not have:
+                continue
+            kd = _KD(len(have))
+            for k, i in enumerate(have):
+                kd.insert(m.data.vertices[i].co, k)
+            kd.balance()
+            for i in zero:
+                src = m.data.vertices[have[kd.find(m.data.vertices[i].co)[1]]]
+                for ge in src.groups:
+                    if gi.get(ge.group) in bone_names and ge.weight > 1e-4:
+                        m.vertex_groups[ge.group].add([i], ge.weight, "REPLACE")
+            filled[m.name] = len(zero)
+        report["가중치 0 정점 채움"] = filled
     if new_arm is not None and cfg.get("tpose_arms"):
         tpose_arms(new_arm, meshes, report, cfg["tpose_arms"] if isinstance(cfg["tpose_arms"], dict) else None)
     if new_arm is not None and cfg.get("level_chains"):
