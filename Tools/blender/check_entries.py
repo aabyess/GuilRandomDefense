@@ -25,6 +25,8 @@
 읽는 법 — 실패는 세 종류이고 **뜻이 다릅니다. 안 가르고 「N종이 죽는다」로 보고하지 마십시오.**
   ③ 진짜 썩음    설정이 오늘 못 돈다(예: no_nulls=True인데 drop_bones에 Null 이름). **고칠 것.**
   ② 구조상 못 돎  source가 자기 산출물이라 두 번째 실행이 죽는다. `rebuild="원본에서만"` 표식으로 걸러진다.
+  ④ 뼈에 안 붙음  파일은 나왔는데 메시가 스킨 없이 떠 있거나 가중치 0 정점이 있다(bind_check.py, 2026-09-25).
+                  유니티가 그 정점을 첫 뼈에 강제로 붙인다. **고칠 것** — 다만 커밋본이 이미 그러면 ①처럼 「원래 그랬다」다.
   ① 검사가 늦음   assert가 그 항목보다 나중에 들어왔다. **커밋본을 열어 재 보면 산출물과 같은 상태다.**
                   (2026-09-24 실측: 특별함_박진웅·희귀함_양재모·희귀함_박기찬 등 열한 종이 여기였다)
 
@@ -186,6 +188,15 @@ def main():
         p = subprocess.run(["blender", "-b", "--factory-startup", "--python", path, "--", "--out", OUT, name],
                            capture_output=True, text=True)
         if os.path.exists(fbx):
+            # 🔴 2026-09-25: 「파일이 나왔다」 다음 층 — **메시가 뼈에 붙었나**(bind_check.py). R24 저지 머리 부품이
+            #   스킨·그룹 없이 뼈대에만 붙어 나갈 뻔했다. 렌더로는 안 보이고 유니티에서 몸이 움직이면 제자리에 남는다.
+            bc = subprocess.run(["blender", "-b", "--factory-startup", "--python", os.path.join(HERE, "bind_check.py"), "--", fbx],
+                                capture_output=True, text=True)
+            fails = [L.split("\t", 3)[-1] for L in bc.stdout.splitlines() if L.startswith("BIND\tFAIL")]
+            if fails:
+                bad.append((name, base, "뼈에 안 붙은 메시: " + " · ".join(fails)[:160]))
+                print("FAIL\t%-24s %s\t뼈에 안 붙은 메시: %s" % (name, base, " · ".join(fails)[:160]))
+                continue
             ok += 1
             print("OK\t%-24s %s" % (name, base))
             continue
