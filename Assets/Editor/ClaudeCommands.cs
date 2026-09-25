@@ -1324,6 +1324,8 @@ public static class ClaudeCommands
                 job.goldAtSpawn = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
                 hitWatch.Clear();
                 roundLog.Clear();
+                bossTracks.Clear();
+                bossKillSignals.Clear();
                 watchedRound = -1;
                 maxLaneEnemies = 0;
                 Advance(job, job.combines.Count > 0 ? "combining" : "waiting");
@@ -2242,11 +2244,67 @@ public static class ClaudeCommands
         return dim != null && dim.activeInHierarchy;
     }
 
+    // 👑 0번 레인 보스 — 등장·처치를 따로 찍는다(2026-09-25 PM 지시). 🏁 줄의 「보스 적」은 **전 레인 합계**라 R10 뒤로도 숫자가
+    //    그대로여서 잡았는지 확정할 수 없었다(i1_18). 개체를 붙잡아 두고, 사라질 때 OnBossKilled가 그 라운드로 떴는지 맞춘다 —
+    //    신호 없이 사라졌으면 「처치」가 아니라 「사라짐」이다(판 끝·도움소 흡수 등).
+    class BossTrack { public EnemyDummy boss; public string name; public int round; public float bornAt; }
+    static readonly List<BossTrack> bossTracks = new List<BossTrack>();
+    static readonly List<(int round, float at)> bossKillSignals = new List<(int, float)>();
+    static bool bossSignalHooked;
+    static void OnBossKilledSignal(int round) => bossKillSignals.Add((round, Time.time));
+
+    static void WatchLaneBoss(GameShotJob job)
+    {
+        if (!bossSignalHooked) { EnemyDummy.OnBossKilled += OnBossKilledSignal; bossSignalHooked = true; }
+        foreach (EnemyDummy e in EnemyDummy.Active)
+        {
+            if (e == null || !e.IsBoss || e.LaneIndex != 0 || bossTracks.Any(t => t.boss == e)) continue;
+            bossTracks.Add(new BossTrack { boss = e, name = e.name, round = e.SpawnRound, bornAt = Time.time });
+            job.report += $"   👑 R{e.SpawnRound} 0번 레인 보스 {e.name} 등장 t={Time.time:F1} · 체력 {e.HpRatio:P0}\n";
+        }
+        for (int i = bossTracks.Count - 1; i >= 0; i--)
+        {
+            BossTrack t = bossTracks[i];
+            if (t.boss != null) continue;   // 유니티 null — 파괴됨
+            int signal = bossKillSignals.FindIndex(k => k.round == t.round);
+            if (signal >= 0)
+            {
+                float at = bossKillSignals[signal].at;
+                bossKillSignals.RemoveAt(signal);
+                job.report += $"   👑 R{t.round} 보스 {t.name} **처치** t={at:F1} · 등장 뒤 {at - t.bornAt:F1}초(구세계 제한 75.3)\n";
+            }
+            else job.report += $"   👑 R{t.round} 보스 {t.name} 사라짐(처치 신호 없음) t={Time.time:F1} · 등장 뒤 {Time.time - t.bornAt:F1}초\n";
+            bossTracks.RemoveAt(i);
+        }
+    }
+
+    static string LaneBossesAlive() => bossTracks.Count == 0 ? "" :
+        "   👑 끝날 때 살아 있는 0번 레인 보스: " + string.Join(", ", bossTracks.Where(t => t.boss != null)
+            .Select(t => $"R{t.round} {t.name} 체력 {t.boss.HpRatio:P0} · 등장 뒤 {Time.time - t.bornAt:F1}초")) + "\n";
+
+    // 🌊 걷는 땅(Walkable) 밖에 선 내 지상 유닛 — 09-25 step3_corner에서 박민석이 섬 왼쪽 절벽 언저리에 서 있었다(재현 안 됨).
+    //    재현되면 원인을 가르려고 목적지와 발밑을 같이 찍는다: 목적지가 섬 밖이면 우클릭 지점 탓, 목적지는 섬 안인데 발밑이 아니면 길찾기·밀림 탓.
+    static string OffGroundUnits()
+    {
+        int walkable = 1 << NavMesh.GetAreaFromName("Walkable");
+        var off = MyUnits().Where(u => u.Data.movementAbility == MovementAbility.Ground).Select(u =>
+        {
+            bool ok = NavMesh.SamplePosition(u.transform.position, out NavMeshHit h, 3f, NavMesh.AllAreas) && (h.mask & walkable) != 0;
+            if (ok) return null;
+            string dest = u.TryGetComponent(out NavMeshAgent a) && a.isOnNavMesh && a.hasPath
+                ? $"목적지 {a.destination:F0}({(NavMesh.SamplePosition(a.destination, out NavMeshHit d, 3f, walkable) ? "걷는 땅" : "걷는 땅 아님")}) · 경로 {a.pathStatus}"
+                : "목적지 없음";
+            return $"{u.name} {u.transform.position:F0} 발밑 {(NavMesh.SamplePosition(u.transform.position, out NavMeshHit f, 3f, NavMesh.AllAreas) ? $"영역마스크 {f.mask}" : "NavMesh 없음")} · {dest}";
+        }).Where(x => x != null).ToList();
+        return off.Count == 0 ? "" : $"      🌊 걷는 땅 밖에 선 내 지상 유닛 {off.Count}기: {string.Join(" | ", off.Take(5))}\n";
+    }
+
     static void RoundWatch(GameShotJob job)
     {
         float dt = Time.unscaledDeltaTime;
         if (dt > 0f) { frameSum += dt; frameMax = Mathf.Max(frameMax, dt); frameN++; }
         SampleUptime();
+        WatchLaneBoss(job);
 
         RoundManager rm = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
         if (rm == null) return;
@@ -2259,7 +2317,7 @@ public static class ClaudeCommands
         if (round != job.lastRoundSeen || (over && !job.overLogged))
         {
             string head = over ? $"💀 끝 — IsDead {dead} · IsGameOver {rm.IsGameOver} · 패배화면 {defeatUi}" : $"🏁 라운드 {job.lastRoundSeen}→{round}";
-            job.report += $"   {head}: {RoundMetrics(job, rm)}\n" + ChoiceWispText();
+            job.report += $"   {head}: {RoundMetrics(job, rm)}\n" + ChoiceWispText() + OffGroundUnits();
             string snapPath = Path.GetFullPath(Path.Combine(Folder, "shots", over ? "round_end.png" : $"round_{round:00}.png"));
             ScreenCapture.CaptureScreenshot(snapPath);
             job.report += $"      📸 {snapPath}\n";
@@ -2269,6 +2327,7 @@ public static class ClaudeCommands
             if (over) job.overLogged = true;
             if (over || round > job.watchRounds)
             {
+                job.report += LaneBossesAlive();
                 job.finishNow = true;
                 // 남은 예약 동작을 버린다 — 안 버리면 수십 동작을 다 소화하는 동안 판이 계속 흘러 「끝」 뒤의 일이 섞였다(09-24 outbox 2109: R10 뒤 R12 패배까지 흘렀다).
                 if (job.clickIndex + 1 < job.clicks.Count) job.clicks.RemoveRange(job.clickIndex + 1, job.clicks.Count - job.clickIndex - 1);
