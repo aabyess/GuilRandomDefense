@@ -349,6 +349,14 @@ CH_RENAME = {f"CH_{n}": f"mixamorig:{n}" for n in
              [f"{side}{p}" for side in ("Left", "Right") for p in
               ["Shoulder", "Arm", "ForeArm", "Hand", "UpLeg", "Leg", "Foot", "ToeBase"] +
               [f"Hand{f}{i}" for f in ("Index", "Middle", "Ring", "Thumb") for i in (1, 2, 3)]]}
+# 유스타스 키드(R34, Noesis 립 → Sketchfab glb) — 뼈 이름이 **번호뿐**(bone_1…bone_781). 결합 자세 추정(glTF guess_bind)으로
+#   T자를 읽어 계층·위치로 사람 뼈를 가렸다. +x = 캐릭터 왼쪽(기계팔). 나머지 700여 개는 merge_to_nearest로 가장 가까운 위쪽 사람 뼈에.
+KID_RENAME = {"bone_2": "mixamorig:Hips", "bone_3": "mixamorig:Spine", "bone_4": "mixamorig:Spine1", "bone_5": "mixamorig:Spine2",
+              "bone_6": "mixamorig:Neck", "bone_7": "mixamorig:Head",
+              "bone_16": "mixamorig:LeftShoulder", "bone_18": "mixamorig:LeftArm", "bone_20": "mixamorig:LeftForeArm", "bone_22": "mixamorig:LeftHand",
+              "bone_17": "mixamorig:RightShoulder", "bone_19": "mixamorig:RightArm", "bone_21": "mixamorig:RightForeArm", "bone_23": "mixamorig:RightHand",
+              "bone_8": "mixamorig:LeftUpLeg", "bone_10": "mixamorig:LeftLeg", "bone_12": "mixamorig:LeftFoot",
+              "bone_9": "mixamorig:RightUpLeg", "bone_11": "mixamorig:RightLeg", "bone_13": "mixamorig:RightFoot"}
 # 빈스모크 저지(R24): Spine2만 없고 Toe0은 있는 Bip001.
 BIP001_NO_SPINE2 = {k: v for k, v in BIP001_RENAME.items() if not k.endswith("Spine2")}
 # 버기(R18): Spine2·Toe0이 없는 Bip001. 있는 것만 남긴다.
@@ -638,6 +646,23 @@ UNITS = {
                glb_images={0: "Cha_3300_00.png"},
                materials=dict(textures={"Cha_3300_00": [("DiffuseColor", "Cha_3300_00.png")],
                                         "Cha_3300_01": [("DiffuseColor", "Cha_3300_00.png")]})),
+    # 원피스 유스타스 키드(Sketchfab glb, Noesis 립, 뼈 이름 번호뿐) → R34 장하민. 메시 15 + Icosphere · 재질 7(컬러+노멀 짝) · 그림 14 · 관절 781 · 클립 1(안 씀).
+    #   🔴 장면 자세는 **싸움 자세**(오른팔 앞으로 듦 · 몸이 z로 45° 돎) — 결합 자세 추정(gltf_guess_bind 기본값 켬)으로 읽으면 깨끗한 T자다.
+    #   얼굴은 나란히 렌더해 골랐다: submesh_0·1 = **똑같은 머리 두 벌** → 0만 · 14·15(벌린 입의 이)·6(작은 눈·입)은 표정 덧붙임 → 뺌.
+    #   10 = 고글 · 7 = 목·가슴 살 · 거대한 털코트(3·4·5·9)는 Spine2 밑 사슬에 실려 merge_to_nearest로 가슴에 통째로(대장 코트와 같은 효과).
+    #   왼팔(기계팔, submesh_2)은 T자에서 x 1.40까지 뻗는다 — 폭이 크다.
+    "장하민": dict(path="Assets/Art/Enemies/장하민/장하민.fbx", kind="human", size=("height", 1.8),
+               source=os.path.join(SKINS, "90_적유닛/R31-R40/R34_장하민.glb"),
+               drop_meshes=["Icosphere", "Object_788", "Object_800", "Object_808", "Object_816"],
+               rename_bones=KID_RENAME, rename_strip=r"_[0-9]+$",
+               drop_bones=["_rootJoint", "bone_1_07", "bone_26_0591"],   # bone_26: 원점 · 살 0 · 끝점만 매단 빈 뼈(사람 뼈 밖이라 merge_to_nearest가 멈췄다)
+               drop_bones_re=r"_end_[0-9]+$",
+               no_nulls=True, orient_snap=True,
+               merge_to_nearest=True,
+               glb_images={0: "face.png", 2: "coat.png", 4: "skin.png", 6: "hair.png", 8: "material.png", 10: "cloth.png",
+                           12: "model_0_mat_10.png"},
+               materials=dict(textures={m: [("DiffuseColor", m + ".png")] for m in
+                                        ("face", "coat", "skin", "hair", "material", "cloth", "model_0_mat_10")})),
     # 원피스 바운티러시 쥬얼리 보니 **아이**(pl_bonie_orig02) → R33 서희원 · **어른**(pl_bonie_orig01) → R47 정다희. 류마·오븐과 같은
     #   Annettlw 판(뼈대 노드 0.01)이라 비율이 측정 근거다: 전체 키 ÷ 류마 2.019 → **아이 × 0.611 · 어른 × 0.882**(둘 다 모자 포함).
     #   zip 바로 안에 fbx · xps · _diff.png + 셰이더 보조 그림(ramp·matcap·abnormal_pattern·bayer_dither — 적 규약대로 컬러만 씀).
