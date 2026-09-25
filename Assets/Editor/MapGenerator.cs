@@ -657,12 +657,14 @@ public static class MapGenerator
     static void DecorateLane(Transform parent, MapLayout.Island lane)
     {
         // 흙길은 적이 실제로 도는 자리다 — 상점 줄을 뺀 필드에서만 잡는다.
-        MapLayout.Island field = MapLayout.LaneField(lane);
-        Vector2 trackInset = MapLayout.LaneTrackInset(lane);
-        float halfX = field.size.x * 0.5f - trackInset.x;
-        float halfZ = field.size.y * 0.5f - trackInset.y;
-        float x = field.center.x;
-        float z = field.center.y;
+        // 🔴 순찰 사각형을 여기서 다시 계산하지 않는다 — MapLayout.LaneTrackRect 하나를 본다.
+        //    예전에 같은 식을 양쪽이 따로 갖고 있어서 한쪽만 고쳤을 때 44만큼 어긋났다.
+        //    2026-09-24에 z쪽이 「얼린 값」으로 바뀌었으니 더더욱 한 곳이어야 한다.
+        Rect track = MapLayout.LaneTrackRect(lane);
+        float halfX = track.width * 0.5f;
+        float halfZ = track.height * 0.5f;
+        float x = track.center.x;
+        float z = track.center.y;
         float y = MapLayout.IslandTop + 0.04f;   // 잔디 위에 살짝 얹어 z-fighting을 피한다
 
         // 순찰 경로를 따라 도는 흙길 — 적이 실제로 지나는 자리다.
@@ -4256,7 +4258,7 @@ public static class MapGenerator
         float minRange = float.MaxValue;
         string minName = "?";
         int unreachable = 0;
-        float distance = MapLayout.TrackSouthInsetZ + MapLayout.ApronGap + MapLayout.UnitPenDepth * 0.5f;
+        float distance = MapLayout.SouthGreenZ + MapLayout.ApronGap + MapLayout.UnitPenDepth * 0.5f;
 
         foreach (UnitData unit in commons)
         {
@@ -4271,9 +4273,25 @@ public static class MapGenerator
         float perimeter = 2f * ((lane.size.x - inset.x * 2f) + (lane.size.y - inset.y * 2f));
         float chord = minRange > distance ? 2f * Mathf.Sqrt(minRange * minRange - distance * distance) : 0f;
 
+        // 🔴 경로를 얼려 두고 섬 남쪽을 자르는 구조라, 초록을 너무 줄이면 **흙길이 섬 밖으로
+        //    나간다**(경로는 안 움직이고 섬만 올라오므로). 사거리와 별개 축이라 따로 본다.
+        MapLayout.Island field = MapLayout.LaneField(lane);
+        Rect track = MapLayout.LaneTrackRect(lane);
+        //    ⚠️ 셋 다 **「여유」**로 잡는다(양수 = 섬 안, 음수 = 밖). 한때 남쪽만 부호를 반대로
+        //       써서, 28 여유가 있는데도 경고가 뜨는 검사를 만들 뻔했다 — 같은 뜻의 수는
+        //       같은 방향으로 재야 한다.
+        float roadHalf = TrackWidth * 0.5f;
+        float southSlack = (track.yMin - roadHalf) - (field.center.y - field.size.y * 0.5f);
+        float northSlack = (field.center.y + field.size.y * 0.5f) - (track.yMax + roadHalf);
+        float sideSlack = (field.center.x + field.size.x * 0.5f) - (track.xMax + roadHalf);
+
         string report =
-            $"\n우리→적 사거리: 거리 {distance:0.0} (순찰 inset {MapLayout.TrackSouthInsetZ:0.0} + 틈 " +
+            $"\n우리→적 사거리: 거리 {distance:0.0} (남쪽 초록 {MapLayout.SouthGreenZ:0.0} + 틈 " +
             $"{MapLayout.ApronGap:0.0} + 우리 깊이 {MapLayout.UnitPenDepth:0.0}의 절반)" +
+            $"\n  순찰 사각형 {track.width:0.0}×{track.height:0.0} · 둘레 " +
+            $"{2f * (track.width + track.height):0.0} (얼린 값 — 랩 시간의 근거)" +
+            $"\n  흙길이 섬 안에 있는 여유: 남 {southSlack:0.0} · 북 {northSlack:0.0} · " +
+            $"옆 {sideSlack:0.0}" +
             $"\n  흔함 {commons.Count}종 최소 사거리 {minRange:0.00}({minName}) · **못 닿는 종 {unreachable}개**" +
             $"\n  최악 종이 경로에서 사거리 안인 구간 {chord:0.0} / 둘레 {perimeter:0.0} = {chord / perimeter:P1}";
 
@@ -4283,6 +4301,12 @@ public static class MapGenerator
             report += $"\n  ⚠️ MapLayout.CommonMinAttackRange({MapLayout.CommonMinAttackRange:0.00})가 " +
                       $"로스터 실값({minRange:0.00})과 다릅니다 — 그 값에서 우리 깊이를 유도하므로 " +
                       $"{minRange:0.00}으로 고쳐야 합니다.";
+
+        if (southSlack < 0f || northSlack < 0f || sideSlack < 0f)
+            report += $"\n  ⚠️ 흙길이 섬 밖으로 나갑니다 (음수인 쪽: 남 {southSlack:0.0} · " +
+                      $"북 {northSlack:0.0} · 옆 {sideSlack:0.0}) — 남쪽이면 " +
+                      "MapLayout.PenToTrackRatio를 **올려** 초록을 남기십시오. " +
+                      "경로는 얼려 둔 값이라 안 움직입니다.";
 
         if (unreachable > 0)
             report += $"\n  ⚠️ 흔함 {unreachable}종이 우리에서 적에게 **안 닿습니다** — 뽑아도 가만히 서 있습니다. " +

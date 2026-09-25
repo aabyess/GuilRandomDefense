@@ -193,7 +193,21 @@ public static class MapLayout
     // 넣어 두고 그 **전체**를 3256×2712에 맞췄던 탓에, 정작 필드가 781.4×459.2(비 1.70)로
     // 납작해져 있었다. 필드 쪽을 781.4×650.9(비 1.20)로 놓고 앞치마를 그 아래에 덧붙인다.
     const float LaneFieldSizeX = 781.4f;               // 원작 3256 ÷ Scale
-    const float LaneFieldSizeZ = 650.9f;               // 원작 2712 ÷ Scale — 비 1.20
+    /// <summary>
+    /// 원작 비례 필드 세로. **순찰 사각형을 이 값으로 한 번 계산한 뒤 얼린다**(TrackHalfZ).
+    /// 2026-09-24부터 실제 필드 세로는 이것이 아니다 — 아래 <see cref="LaneFieldSizeZ"/> 참고.
+    /// </summary>
+    const float LaneFieldSizeZOriginal = 650.9f;        // 원작 2712 ÷ Scale — 비 1.20
+
+    /// <summary>
+    /// 실제 필드 세로 = 북쪽 inset + 순찰 깊이 + **남쪽 초록 여백**.
+    ///
+    /// 🔴 2026-09-24 사장님 정정 「내가 줄이라고 한 건 흔함 들어가는 칸을 줄이는 게 아니라
+    ///    **레인 하단 초록색 부분의 길이**를 줄이라고 한 거임」 → 남쪽 여백만 79.41 → SouthGreenZ로
+    ///    줄인다. 북쪽 변은 고정이고(LaneFieldTopZ) 남쪽 변만 올라간다 — 앞치마가 그 변에
+    ///    매달려 있으므로 상점·우리도 같이 올라온다.
+    /// </summary>
+    const float LaneFieldSizeZ = TrackInsetZ + TrackHalfZ * 2f + SouthGreenZ;
     // 2026-09-23 (6단계): **레인 섬 = 필드**다. 앞치마는 섬 밖 아래로 내려갔다(LaneUnitPenRow·
     // LaneShopStrip 참고) — 원작 1comZone이 필드 밖에 있는 구조를 그대로 따른 것이다.
     const float LaneSizeX = LaneFieldSizeX;
@@ -215,12 +229,16 @@ public static class MapLayout
     const float LaneLeftColumnX = LaneRightColumnX - LaneSpacingX;     // -1622.5
     // ⚠️ 앞치마는 필드 **아래로** 199.4만큼 뻗는다(ApronGap 7.7 + 우리 83.3 + 상점 108.3).
     // 겹침 검사(MapGenerator.CheckOverlaps)는 Lanes 배열 = 필드만 보므로 앞치마는 손으로
-    // 확인해야 한다. 필드 아래변을 z=300에 두면 앞치마 바닥이 z=100.6, 치마까지 98.9다 —
-    // 이것이 **레인 무리의 진짜 남쪽 끝**이고 LaneClusterSouthEdgeZ가 그 값이다.
-    // 아래쪽 섬들과의 간격은 이제 그 끝에서 LaneToIslandGapZ(500)로 유도한다(사장님 09-24
-    // 「간격도 벌려줘」) — 예전의 「뽑기섬과 38.1 여유」는 그 지시로 없어진 값이다.
+    // 확인해야 한다. 앞치마 밑면에 치마 1.75를 더한 자리가 **레인 무리의 진짜 남쪽 끝**이고
+    // LaneClusterSouthEdgeZ가 그 값이다.
     // 위쪽은 레인1·2 꼭대기까지 아무것도 없다(바다 반폭 3334).
-    const float LaneFieldBottomZ = 300f;
+    //
+    // 🔴 2026-09-24 초록 줄이기 — **북쪽 변을 고정하고 남쪽 변만 올린다.**
+    //    사장님이 줄이라 하신 것은 하단 초록이고, 위쪽은 말씀하지 않으셨다. 그래서 기준을
+    //    「아래변 z=300」에서 **「윗변 z=950.9」**로 옮겼다(= 옛 300 + 원작 비례 세로 650.9).
+    //    남쪽 변은 필드 세로에서 따라 나온다 — 초록을 줄이면 그만큼 올라오고, 앞치마도 같이 온다.
+    const float LaneFieldTopZ = 300f + LaneFieldSizeZOriginal;   // 950.9 — 고정
+    const float LaneFieldBottomZ = LaneFieldTopZ - LaneFieldSizeZ;
     const float LaneBottomRowZ = LaneFieldBottomZ + LaneSizeZ * 0.5f;  // 625.45
     const float LaneTopRowZ = LaneBottomRowZ + LaneSpacingZ;           // 1614.25
 
@@ -600,14 +618,6 @@ public static class MapLayout
     public const float ShopStripDepth = 26f * Scale;
 
     /// <summary>
-    /// 순찰 경로 남쪽 변이 필드 밑변에서 얼마나 위인지. **우리 유닛이 적까지 재는 거리의 뿌리다** —
-    /// 유닛은 필드 밑변 아래에 서고 적은 이만큼 안쪽을 돈다.
-    /// ⚠️ <see cref="TrackInsetRatioZ"/>는 원작 순찰 4지점 실측이라 못 줄인다(랩 29.94초 = 원작 29.87초).
-    ///    즉 이 79.4는 **깎을 수 없는 몫**이고, 흔함 최소 사거리 101.75의 78%를 이미 먹는다.
-    /// </summary>
-    public const float TrackSouthInsetZ = LaneFieldSizeZ * TrackInsetRatioZ;   // 79.41
-
-    /// <summary>
     /// 흔함 유닛의 **최소** 사거리. 2026-09-24 로스터 실값 — 9종 중 4종(강재규·강주혁·노태현·문필환)이
     /// 이 값이고, 나머지는 109.05·133.24·145.52·145.52·320.23이다.
     /// ⚠️ **리터럴이다** — MapLayout은 에셋을 못 읽는다. MapGenerator가 로스터를 읽어 실값과
@@ -619,9 +629,18 @@ public static class MapLayout
     /// 우리 자리 ↔ 순찰 경로 거리를 최소 사거리의 몇 배로 둘지.
     /// ⚠️ **1.0으로 두면 안 된다.** 사거리 판정은 중심거리 비교(UnitAttacker.FindClosestEnemyInRange)라
     ///    거리 = 사거리면 **접점 한 순간만** 사거리 안이고 가동률이 0에 가깝다. 경로를 따라 잡히는
-    ///    구간은 2√(사거리² − 거리²)이므로, 0.95면 최악 종도 63.6(둘레 2156의 3.0%)을 얻는다.
+    ///    구간은 2√(사거리² − 거리²)이므로, 0.85면 최악 종도 107.2(둘레 2156의 5.0%)을 얻는다.
+    ///
+    /// 🔴 2026-09-24에 0.95 → **0.85**로 내렸다. 거리를 버는 일이 우리 깊이에서 초록 땅으로
+    ///    옮겨 가면서(<see cref="SouthGreenZ"/>) 더 내릴 여지가 생겼기 때문이다.
+    ///    0.85를 고른 근거 셋:
+    ///      ① 사장님이 보시는 것은 「하단 초록이 길다」다. 0.95면 초록이 79.4 → 47.3(−40%)인데
+    ///         0.85면 **37.1(−53%)로 절반**이라 눈에 띈다.
+    ///      ② 거리가 96.7 → 86.5로 **줄어드니 가동률이 나빠질 수 없다**(지금 R1 61%가 기준선).
+    ///      ③ 아래 한계에 닿지 않는다 — 흙길 반폭 9가 초록 37.1 안에 들어가므로
+    ///         **경로가 섬 밖으로 안 나간다**(28.1 여유). 이 검사는 보고문이 매번 찍는다.
     /// </summary>
-    public const float PenToTrackRatio = 0.95f;
+    public const float PenToTrackRatio = 0.85f;
 
     /// <summary>우리 유닛 자리에서 순찰 경로 남쪽 변까지의 목표 거리.</summary>
     public const float PenToTrackDistance = CommonMinAttackRange * PenToTrackRatio;   // 96.66
@@ -629,23 +648,26 @@ public static class MapLayout
     /// <summary>
     /// 상점 줄 바로 위, 새 유닛이 처음 서는 우리가 놓이는 줄.
     ///
-    /// 🔴 2026-09-24 사장님 지시 「흔함을 뽑으면 해당 위치에서 공격 사거리가 닿아야 하니깐 …
-    ///    하단 길이 줄여줘 봐 공격 닿게」 → **83.3에서 유도값으로 바꿨다.**
-    ///
     /// 유닛은 이 줄 **한가운데**에 선다(LaneMarker.SlotPosition의 첫 줄 = unitPen.position).
-    /// 그래서 적까지의 거리는 `TrackSouthInsetZ + ApronGap + 이 값의 절반`이고,
-    /// 역으로 목표 거리에서 이 값을 유도한다 — 사거리도 필드 크기도 앞으로 또 바뀐다.
+    /// 그래서 적까지의 거리는 `SouthGreenZ + ApronGap + 이 값의 절반`이다.
     ///
-    /// 옛 83.3에서는 거리가 **128.76**이라 흔함 9종 중 **5종이 사거리 밖**이었고,
-    /// 2026-09-24 실측에서 가동률이 **0%/0%**(201 유닛·초)로 나왔다.
-    ///
-    /// ⚠️ **줄일 수 있는 폭이 작다.** 이 값을 0으로 해도 거리는 87.09까지밖에 안 내려간다
-    ///    (TrackSouthInsetZ 79.41 + ApronGap 7.68이 남으므로). 즉 **앞치마로 살 수 있는 거리는
-    ///    128.76 → 87.09의 41.7뿐**이고, 그 이상은 사거리나 순찰 inset을 건드려야 한다.
+    /// 🔴 2026-09-24에 그 거리가 **128.76**이었고, 흔함 9종 중 **5종이 사거리 밖**이라
+    ///    가동률이 **0%/0%**(201 유닛·초)로 나왔다. 그때 이 값을 19.15로 줄여 고쳤고
+    ///    가동률이 61~97%가 됐다 — 고침은 통했지만 **자리가 틀렸다**(아래 정정 참고).
+    /// ⚠️ 그 시절 거리 128.76은 **남쪽 초록이 79.41이던 때**의 값이다. 그때는 초록이
+    ///    「깎을 수 없는 몫」이라 앞치마로 살 수 있는 거리가 41.7뿐이었는데,
+    ///    경로를 얼리면서 초록 자체가 깎을 수 있는 값이 됐다.
     /// ⚠️ 유닛 몸은 맵 배율을 타지 않는다(「인형은 전부 레인 유닛과 같은 키」, 발자국 지름 ≈ 12).
-    ///    그래서 옛 `20 × Scale`은 유닛 일곱 줄이 들어갈 깊이였다 — 줄여도 한 줄은 넉넉히 선다.
+    ///
+    /// 🔴 **같은 날 사장님이 정정하셨다** — 「내가 줄이라고 한 건 흔함 들어가는 칸을 줄이는 게
+    ///    아니라 레인 하단 초록색 부분의 길이를 줄이라고 한 거임」. 우리가 선처럼 얇아져(19.15)
+    ///    유닛 넷이 좁은 띠에 붙어 서 있던 화면을 보신 것이다. **원작 20 × Scale로 되돌린다.**
+    ///    거리를 버는 일은 이제 <see cref="SouthGreenZ"/>가 한다 — 같은 목표 거리를
+    ///    **버려지는 초록 땅**에서 빼는 것이라, 우리를 좁히지 않고 같은 값을 얻는다.
+    ///    ⚠️ 그래서 이 값은 다시 **원작 상수**이고, 유도되는 쪽은 초록이다. 두 개를 동시에
+    ///       유도하면 순환이 된다(둘 다 목표 거리에 매달려 있다).
     /// </summary>
-    public const float UnitPenDepth = 2f * (PenToTrackDistance - TrackSouthInsetZ - ApronGap);
+    public const float UnitPenDepth = 20f * Scale;
 
     /// <summary>
     /// 흔함 줄이 필드 바닥에서 떨어져 있는 간격. 원작 <c>1comZone</c>이 필드(p1_life_zone)
@@ -741,28 +763,74 @@ public static class MapLayout
     public const float TrackInsetRatioX = 0.125f;
     public const float TrackInsetRatioZ = 0.122f;
 
-    /// <summary>이 레인의 순찰 경로·흙길 inset(x, z). 둘이 같은 값을 봐야 적이 흙길 위를 걷는다.</summary>
+    /// <summary>
+    /// 순찰 사각형의 z쪽 치수. **비율로 매번 계산하지 않고 얼린 값이다**(PM 결정 2026-09-24).
+    ///
+    /// 🔴 왜 얼리나: 위 비율이 하던 일은 「원작 랩 시간을 재현하는 것」이고, 그 비율이 뜻을
+    ///    가지려면 **우리 필드가 원작 비례여야** 한다. 남쪽 초록을 잘라내는 순간 우리 필드는
+    ///    더 이상 원작 비례가 아니다 → 그때부터 비율을 다시 곱하면 **아무것도 재현하지 않고**
+    ///    랩만 어긋난다(세로가 650.9 → 611.5면 둘레 2156 → 2077, 랩 29.94 → 28.8초).
+    ///    그래서 원작 비례 세로(<see cref="LaneFieldSizeZOriginal"/>)로 한 번 계산해 **얼린다.**
+    ///
+    /// ⚠️ **비율을 다시 곱하지 말 것.** <see cref="TrackInsetRatioZ"/>는 지우지 않고 **이 값의
+    ///    유도 근거로** 남겨 둔다 — 원작 순찰 4지점 실측이라, 지우면 다음 사람이 「왜 79.41인가」
+    ///    에서 막힌다. x쪽은 필드 가로를 안 건드리므로 여전히 비율로 계산한다(그쪽은 뜻이 살아 있다).
+    /// </summary>
+    public const float TrackInsetZ = LaneFieldSizeZOriginal * TrackInsetRatioZ;              // 79.41
+
+    /// <summary>순찰 사각형의 반깊이 — 얼린 값. 둘레(2156.3)와 랩 29.94초가 이 값에 달려 있다.</summary>
+    public const float TrackHalfZ = LaneFieldSizeZOriginal * 0.5f - TrackInsetZ;             // 246.04
+
+    /// <summary>
+    /// 순찰 경로 남쪽 변 아래로 남기는 초록 여백. 사장님 「레인 하단 초록색 부분의 길이를 줄여라」.
+    ///
+    /// 옛 값은 79.41(= 얼리기 전 남쪽 inset)이었고, 그게 그냥 버려지는 땅이었다.
+    /// **절대값으로 박지 않고 사거리에서 유도한다** — 우리에 선 유닛이 적에게 닿는 거리가
+    /// 이 값에 그대로 실린다:
+    /// <code>
+    ///   우리 자리 → 순찰 경로 = SouthGreenZ + ApronGap + UnitPenDepth/2
+    /// </code>
+    /// 그래서 목표 거리(<see cref="PenToTrackDistance"/>)에서 역으로 뺀다. 사거리가 바뀌거나
+    /// 우리 깊이를 되돌려도 거리가 유지된다 — 실제로 2026-09-24에 우리 깊이를 19.15로 줄였다가
+    /// 사장님 정정으로 83.34로 되돌렸는데, 이 식이면 그 되돌림이 초록 쪽으로 옮겨 간다.
+    /// </summary>
+    public const float SouthGreenZ = PenToTrackDistance - ApronGap - UnitPenDepth * 0.5f;
+
+    /// <summary>
+    /// 순찰 사각형(= 흙길 중심선). **경로와 흙길이 이 하나를 본다.**
+    /// ⚠️ 예전에는 MapLayout.LaneLoop과 MapGenerator.DecorateLane이 같은 식을 **따로** 갖고 있어서,
+    ///    한쪽만 고쳤을 때 58.3 대 14로 44만큼 어긋났다(적이 흙길 한참 안쪽을 걸었다).
+    ///    같은 일이 또 나지 않게 사각형 자체를 여기서 한 번만 만든다.
+    ///
+    /// z는 **필드 북쪽 변에 매달린다** — 남쪽 초록을 자르면서도 사각형 크기가 안 변해야 하므로,
+    /// 남쪽 변이 아니라 북쪽 변을 기준으로 잡는다.
+    /// </summary>
+    public static Rect LaneTrackRect(Island lane)
+    {
+        Island field = LaneField(lane);
+        float halfX = field.size.x * 0.5f - field.size.x * TrackInsetRatioX;
+        float topZ = field.center.y + field.size.y * 0.5f - TrackInsetZ;
+        return Rect.MinMaxRect(field.center.x - halfX, topZ - TrackHalfZ * 2f,
+                               field.center.x + halfX, topZ);
+    }
+
+    /// <summary>이 레인의 흙길 inset(x, z) — 필드 변에서 순찰 사각형까지. 보고·검사용.</summary>
     public static Vector2 LaneTrackInset(Island lane)
     {
         Island field = LaneField(lane);
-        return new Vector2(field.size.x * TrackInsetRatioX, field.size.y * TrackInsetRatioZ);
+        return new Vector2(field.size.x * TrackInsetRatioX, TrackInsetZ);
     }
 
     public static Vector3[] LaneLoop(Island lane)
     {
-        Island field = LaneField(lane);
-        Vector2 inset = LaneTrackInset(lane);
-        float halfX = field.size.x * 0.5f - inset.x;
-        float halfZ = field.size.y * 0.5f - inset.y;
-        float x = field.center.x;
-        float z = field.center.y;
+        Rect track = LaneTrackRect(lane);
 
         return new[]
         {
-            new Vector3(x - halfX, IslandTop, z + halfZ),   // 왼쪽 위 — 출발
-            new Vector3(x - halfX, IslandTop, z - halfZ),   // 왼쪽 아래
-            new Vector3(x + halfX, IslandTop, z - halfZ),   // 오른쪽 아래
-            new Vector3(x + halfX, IslandTop, z + halfZ),   // 오른쪽 위
+            new Vector3(track.xMin, IslandTop, track.yMax),   // 왼쪽 위 — 출발
+            new Vector3(track.xMin, IslandTop, track.yMin),   // 왼쪽 아래
+            new Vector3(track.xMax, IslandTop, track.yMin),   // 오른쪽 아래
+            new Vector3(track.xMax, IslandTop, track.yMax),   // 오른쪽 위
         };
     }
 }
