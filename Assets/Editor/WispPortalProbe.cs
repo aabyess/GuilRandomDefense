@@ -247,3 +247,20 @@ public static class UnitWhereProbe
         return sb.ToString().TrimEnd();
     }
 }
+
+/// <summary>조합표 인형 수 — 씬 축소 전후 비교(2026-09-25). 이름이 재료_/결과_/흔함_이고 렌더러가 있는 것(받침·색 큐브 구분).</summary>
+public static class RecipeDollProbe
+{
+    public static string Count()
+    {
+        var all = Resources.FindObjectsOfTypeAll<Transform>().Where(t => t != null && t.gameObject.scene.IsValid()).Select(t => t.gameObject).ToList();
+        bool IsSlot(GameObject g) => (g.name.StartsWith("재료_") || g.name.StartsWith("결과_") || g.name.StartsWith("흔함_")) && !g.name.EndsWith("_받침");
+        var slots = all.Where(IsSlot).ToList();
+        int skinned = slots.Count(g => g.GetComponentInChildren<SkinnedMeshRenderer>(true) != null || g.GetComponentsInChildren<MeshRenderer>(true).Length > 1);
+        int cubes = slots.Count(g => g.GetComponent<MeshFilter>() != null && g.transform.childCount == 0);
+        int pedestals = all.Count(g => g.name.EndsWith("_받침") && (g.name.StartsWith("재료_") || g.name.StartsWith("결과_") || g.name.StartsWith("흔함_")));
+        var spawners = Object.FindObjectsByType<RecipeDollSpawner>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        string spawn = string.Join(", ", spawners.Select(s => $"{s.transform.parent?.name}/{s.name} 목록 {s.Dolls.Count}"));
+        return $"조합표 칸 {slots.Count}개(인형 {skinned} · 색 큐브 {cubes}) · 받침 {pedestals} · 스포너 {spawners.Length}개({spawn}) · 마지막 실행 세우기 {RecipeDollSpawner.LastSpawnCount}기 {RecipeDollSpawner.LastSpawnMs:F0}ms";
+    }
+}

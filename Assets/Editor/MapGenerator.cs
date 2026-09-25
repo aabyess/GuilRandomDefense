@@ -2122,7 +2122,11 @@ public static class MapGenerator
         //    막는다"는 뜻이었다. 지금은 칸 쪽이 훨씬 커져서(줄 높이 28.4, 축소 후 칸 폭 8.1)
         //    키 20짜리 인형이 가로·세로 모두 칸 안에 들어간다 — 겹침 조건이 사라졌다.
         //    칸이 이보다 더 좁아지면 이 줄을 Mathf.Min으로 다시 묶어야 한다.
-        if (TryPlaceUnitModel(parent, $"{prefix}_{label}", ground, unit, DisplayFigureHeight)) return;
+        if (TryPlaceUnitModel(parent, $"{prefix}_{label}", ground, unit, DisplayFigureHeight, out GameObject figure))
+        {
+            RecordRecipeDoll(parent, figure, unit);
+            return;
+        }
 
         GameObject slot = GameObject.CreatePrimitive(PrimitiveType.Cube);
         slot.name = $"{prefix}_{label}";
@@ -2150,7 +2154,7 @@ public static class MapGenerator
     /// 회전이 그렇게 분해되지 않아 오히려 눕는다(2026-09-08 박준희 실측).
     /// 서 있는 인형은 회전이 identity로 나와 아무것도 안 한다 — 회귀 없음.
     /// </summary>
-    static void StandFigureUpright(GameObject figure)
+    internal static void StandFigureUpright(GameObject figure)
     {
         Animator animator = figure.GetComponentInChildren<Animator>(true);
         if (animator == null || !animator.isHuman || animator.avatar == null || !animator.avatar.isValid) return;
@@ -2264,8 +2268,12 @@ public static class MapGenerator
 
     // 유닛 프리팹에서 보이는 부분만 떼어 세운다. 프리팹을 통째로 놓으면 조합표 위에
     // 진짜 유닛이 살아 움직이게 된다 — 이건 보여주기용 인형이라 부품을 전부 걷어낸다.
-    static bool TryPlaceUnitModel(Transform parent, string name, Vector3 ground, UnitData unit, float height, float yaw = 0f)
+    static bool TryPlaceUnitModel(Transform parent, string name, Vector3 ground, UnitData unit, float height, float yaw = 0f) =>
+        TryPlaceUnitModel(parent, name, ground, unit, height, out _, yaw);
+
+    static bool TryPlaceUnitModel(Transform parent, string name, Vector3 ground, UnitData unit, float height, out GameObject placed, float yaw = 0f)
     {
+        placed = null;
         if (unit == null || unit.prefab == null) return false;
         string brokenCheck = unit.prefab.name.StartsWith("Unit_") ? unit.prefab.name.Substring(5) : unit.prefab.name;
         if (BrokenSkinDolls.Contains(brokenCheck)) return false;   // 색 큐브로 — 위 표 주석 참고
@@ -2430,7 +2438,38 @@ public static class MapGenerator
         //    지금은 앞에서 회전을 안 걸므로 identity라 예전과 결과가 같다.
         // yaw는 그 기본 방향에서 더 돌릴 각이다(불멸 전시: 화로를 바라보게 — 사장님 지시 2026-09-23).
         figure.transform.rotation = Quaternion.Euler(0f, 180f + yaw, 0f) * figure.transform.rotation;
+        placed = figure;
         return true;
+    }
+
+    // 조합표 인형은 씬에 굽지 않는다(2026-09-25, 씬 89.5MB 중 56.5MB가 이 인형들이었다 — 뼈마다 자세가 적힌다).
+    // 위에서 크기·회전·자리를 전부 맞춘 **결과만** RecipeDollSpawner 목록에 적고 인형은 지운다. 실행 때 그 목록대로 다시 세운다.
+    // 판단(BrokenSkinDolls·폭주 방어막·짐승 배수)은 전부 위에서 이미 끝났다 — 목록엔 통과한 인형만 들어간다.
+    const string RecipeDollHolderName = "조합표_인형";
+
+    static void RecordRecipeDoll(Transform parent, GameObject figure, UnitData unit)
+    {
+        Transform holder = parent.Find(RecipeDollHolderName);
+        if (holder == null)
+        {
+            holder = new GameObject(RecipeDollHolderName).transform;
+            holder.SetParent(parent, false);   // 원점·회전 0·배율 1 — 인형의 월드 값을 그대로 되살리려면 이래야 한다
+        }
+        RecipeDollSpawner spawner = holder.GetComponent<RecipeDollSpawner>();   // ??는 유니티 가짜 null을 통과시킨다 — == 비교로
+        if (spawner == null) spawner = holder.gameObject.AddComponent<RecipeDollSpawner>();
+        spawner.AddDoll(new RecipeDollSpawner.Doll
+        {
+            name = figure.name,
+            prefab = unit.prefab,
+            position = figure.transform.position,
+            rotation = figure.transform.rotation,
+            // 부모(holder)가 배율 1이라 월드 배율 = 이 값. 인형이 parent 바로 아래였으니 parent 배율도 1이어야 한다 — 아래 검사.
+            scale = figure.transform.lossyScale,
+        });
+        if (parent.lossyScale != Vector3.one)
+            Debug.LogWarning($"[맵] 조합표 인형 부모 {parent.name}의 배율이 {parent.lossyScale}라 되살린 인형 크기가 어긋날 수 있습니다.");
+        EditorUtility.SetDirty(spawner);
+        Object.DestroyImmediate(figure);
     }
 
 
@@ -2469,7 +2508,7 @@ public static class MapGenerator
     //    스크린샷 — Rebind+Update 두 번으로 바꾼 뒤에도 전부 T자였다). 에디터에서 Humanoid
     //    클립을 실제로 뼈에 쓰는 검증된 길은 PlayableGraph다 — 타임라인 미리보기가 쓰는 것과
     //    같은 경로라 아바타 리타게팅까지 탄다. 평가 뒤 그래프를 지워도 뼈에 쓰인 값은 남는다.
-    static void PoseAsIdle(GameObject figure)
+    internal static void PoseAsIdle(GameObject figure)
     {
         Animator animator = figure.GetComponentInChildren<Animator>(true);
         if (animator == null || animator.runtimeAnimatorController == null) return;
