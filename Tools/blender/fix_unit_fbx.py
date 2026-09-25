@@ -799,6 +799,25 @@ UNITS = {
                                "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
                            for s, side in (("L", "Left"), ("R", "Right"))},
                materials=dict(textures={"31703": [("DiffuseColor", "31703.png")]})),
+    # 원피스 버닝 윌 호디 존스(OPBW XPS 립, o_dv89_o) → R39 고어진. zip = source/*.rar(hordy001_body.fbx · xps · 그림 넷) + textures/ 둘(안쪽과 같음).
+    #   메시 3(몸 13,074 · 얼굴 2,932 · **hordy001_body_d02 363**) · 재질 2 · 뼈 Bip001(Spine2 없음) + 보조 사슬.
+    #   🔴 그림 둘은 **같은 모델의 다른 색이 아니다**: hoss001_body_d는 전혀 다른 아틀라스이고, 그 그림을 쓰는 건 363정점 조각 하나뿐이다.
+    #      그 조각은 왼손 밑 Point001(원점)에 실린 **손에 드는 소품**이라 뺀다 → 몸은 hordy001_body_d만 쓴다.
+    #   보조 사슬(가슴·등 지느러미·코트 자락 Bone06~39) → merge_to_nearest. A자 → tpose_arms. 원본 재질이 노멀맵에도 컬러를 꽂는다 → 재질 새로.
+    "고어진": dict(path="Assets/Art/Enemies/고어진/고어진.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R31-R40/R39_고어진.zip"),
+                        "source/opbw___hody_jones_xps_fbx_by_o_dv89_o_df2x7qa.rar", "OPBW - Hody Jones/hordy001_body.fbx"),
+               archive_rgb={"OPBW - Hody Jones/hordy001_body_d.png": "hordy001_body_d.png"},
+               skip_shapes=True,
+               drop_meshes=["hordy001_body_d02"],
+               drop_bones=["Bip001", "Point001"],
+               rename_bones=BIP001_NO_SPINE2,
+               no_nulls=True, orient_snap=True,
+               merge_to_nearest=True,
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               materials=dict(textures={"hordy001_body_d": [("DiffuseColor", "hordy001_body_d.png")]})),
     # 원피스 파이팅 패스 Mr.3(임펠다운, XPS 립) → R31 어철승. 다시 묶은 zip 바로 안에 31702.fbx · xps · 그림 둘.
     #   메시 2(몸 3,641 · Glass 34 = 안경 알) · 재질 2 · 뼈 56 · 클립 0. 봉쿠레와 같은 리그(위팔·아래팔 살 0 → 비틀림 뼈로).
     #   그림 둘은 거의 같다: 몸 재질 31702 → **31702_X.png**(불투명) · 안경 재질 31702a → 31702.png(알파 125~255 — 반투명 안경 알,
