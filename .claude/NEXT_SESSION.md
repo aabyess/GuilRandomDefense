@@ -115,6 +115,19 @@ npm    latest 2.1.282 · next 2.1.282      네이티브 latest 2.1.282 · stable
 
 ---
 
+## 5-1. ⚠️ 남의 작업이 커밋 안 된 채 남아 있다 (건드리지 말 것)
+
+```
+Assets/Editor/ClaudeCommands.cs   구현담당2 — 상점 칸 클릭·스토리 보내기·🎯 이름 분포 줄
+Tools/blender/*.py (3개)          blender  — bone_bind · fix_unit_fbx · gen_objrip_skin
+Assets/Resources/Fonts/…SDF.asset  누구 것인지 확인 안 됨
+```
+내 것(로스터 213개 · 씬 · NavMesh · 재질 21개 · 위습 프리팹)은 `0d7926c6`으로 커밋했다.
+
+📌 **「모델 배선」을 돌리면 `Assets/Prefabs/Generated`가 통째로 지워지고 다시 만들어진다.**
+GUID는 그대로인데 **내부 fileID가 바뀌어** 로스터 213개가 한 줄씩 달라진다.
+**Generated만 커밋하고 로스터를 빼면 참조가 어긋난 채 남는다 — 둘은 같이 커밋한다.**
+
 ## 6. 세션 상태 ⚠️
 
 `ListAgents`를 보면 **로컬 구현담당1·blender 세션이 목록에서 사라졌다**(10:28 기준).
