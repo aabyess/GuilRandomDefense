@@ -225,3 +225,25 @@ public static class IslandIntruderProbe
         return sb.ToString().TrimEnd();
     }
 }
+
+/// <summary>내 유닛 전부의 자리·목적지·경로 상태·발밑 NavMesh 영역(2026-09-25 — 지상 유닛이 바다 위에 서 있었다).</summary>
+public static class UnitWhereProbe
+{
+    public static string Mine()
+    {
+        var sb = new System.Text.StringBuilder("   🧪 내 유닛 자리\n");
+        int sea = NavMesh.GetAreaFromName("Sea");
+        foreach (UnitIdentity u in Object.FindObjectsByType<UnitIdentity>(FindObjectsSortMode.None))
+        {
+            if (u == null || (u.TryGetComponent(out OwnedByPlayer o) && o.OwnerId != 0)) continue;
+            string area = NavMesh.SamplePosition(u.transform.position, out NavMeshHit h, 3f, NavMesh.AllAreas)
+                ? (h.mask == (1 << sea) ? "바다(Sea)" : $"영역마스크 {h.mask}") + $" 거리 {Vector3.Distance(h.position, u.transform.position):F1}"
+                : "NavMesh 없음(3 안)";
+            string agent = u.TryGetComponent(out NavMeshAgent a)
+                ? $"에이전트 켜짐 {a.enabled} · NavMesh 위 {a.isOnNavMesh} · 마스크 {a.areaMask} · 목적지 {(a.isOnNavMesh && a.hasPath ? a.destination.ToString("F0") : "-")} · 경로 {(a.isOnNavMesh ? a.pathStatus.ToString() : "-")}"
+                : "에이전트 없음";
+            sb.AppendLine($"      {u.name} {u.transform.position:F0} · 발밑 {area} · {agent}");
+        }
+        return sb.ToString().TrimEnd();
+    }
+}
