@@ -343,6 +343,12 @@ for _s, _side in (("L", "Left"), ("R", "Right")):
                           f"Bip001 {_s} Forearm": f"mixamorig:{_side}ForeArm", f"Bip001 {_s} Hand": f"mixamorig:{_side}Hand",
                           f"Bip001 {_s} Thigh": f"mixamorig:{_side}UpLeg", f"Bip001 {_s} Calf": f"mixamorig:{_side}Leg",
                           f"Bip001 {_s} Foot": f"mixamorig:{_side}Foot", f"Bip001 {_s} Toe0": f"mixamorig:{_side}ToeBase"})
+# 「CH_」 접두 Mixamo형 리그(R25 카쿠, 2026-09-25) — 이름이 이미 Mixamo 관절명이라 접두어만 바꾼다. 손가락은 Index·Middle·Ring·Thumb(새끼 없음).
+CH_RENAME = {f"CH_{n}": f"mixamorig:{n}" for n in
+             ["Hips", "Spine", "Spine1", "Neck", "Head"] +
+             [f"{side}{p}" for side in ("Left", "Right") for p in
+              ["Shoulder", "Arm", "ForeArm", "Hand", "UpLeg", "Leg", "Foot", "ToeBase"] +
+              [f"Hand{f}{i}" for f in ("Index", "Middle", "Ring", "Thumb") for i in (1, 2, 3)]]}
 # 빈스모크 저지(R24): Spine2만 없고 Toe0은 있는 Bip001.
 BIP001_NO_SPINE2 = {k: v for k, v in BIP001_RENAME.items() if not k.endswith("Spine2")}
 # 버기(R18): Spine2·Toe0이 없는 Bip001. 있는 것만 남긴다.
@@ -544,6 +550,19 @@ UNITS = {
                             dict(pattern=r"^(l_weapon_joint|LHand_Fore_sup)", into="mixamorig:LeftHand"),
                             dict(pattern=r"^(r_weapon_joint|RHand_Fore_sup)", into="mixamorig:RightHand")],
                materials=dict(textures={"pl_oven_orig01": [("DiffuseColor", "pl_oven_orig01_diff.png")]})),
+    # 원피스 카쿠(CP9, Sketchfab glb, 뼈 있음) → R25 이정범. 그림 둘이 박혀 있다(0 = 컬러 1024² RGB · 1 = 스페큘러 LA → 컬러만).
+    #   메시 4(몸 5,254 + 얼굴 세 벌 face_5201_00/01/02 = 1,136/1,467/1,353, **경계가 똑같이 겹친 표정 변형**) + Icosphere · 재질 1 · 관절 48 · 클립 0.
+    #   얼굴은 세 벌을 나란히 렌더해 골랐다: 00(Object_9) = 눈 뜨고 입 다문 평상시 · 01(Object_11) = 웃음 · 02(Object_13) = 눈 감음 → 00만 남긴다.
+    #   리그가 이미 Mixamo 관절명(CH_ 접두)이고 **이미 T자** → CH_RENAME, tpose 불필요. eye(머리 밑) → Head.
+    "이정범": dict(path="Assets/Art/Enemies/이정범/이정범.fbx", kind="human", size=("height", 1.8),
+               source=os.path.join(SKINS, "90_적유닛/R21-R30/R25_이정범.glb"), gltf_guess_bind=False,
+               drop_meshes=["Icosphere", "Object_11", "Object_13"],
+               rename_bones=CH_RENAME, rename_strip=r"_[0-9]+$",
+               drop_bones=["_rootJoint", "CH_Reference_01"],
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head")],
+               glb_images={0: "Cha_5201_00.png"},
+               materials=dict(textures={"Cha_5201_00": [("DiffuseColor", "Cha_5201_00.png")]})),
     # 원피스 빈스모크 저지(Sketchfab glb, 뼈 있음) → R24 최준우. 그림 둘이 glb 안에 박혀 있다(Image_0 몸 · Image_1 망토, 1024²).
     #   메시 3(몸 11,970 · 망토 pifeng 3,066 · 「0」 2,213 — 머리 앞 부품, **스킨 없이** 빈 노드 밑) + 조명용 Icosphere · 재질 2 · 관절 144 · 클립 0.
     #   뼈: Bip001(Spine2 없음 · Toe0 있음, 번호 꼬리 `_07` → rename_strip) + 등 망토 사슬 셋(Bone001~017, Spine1 밑, 바닥까지)
