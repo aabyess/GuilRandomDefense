@@ -380,6 +380,20 @@ public class RoundManager : MonoBehaviour
         }
     }
 
+#if UNITY_EDITOR
+    // 에디터 전용 진단 훅(2026-09-25) — gameshot `bossonly` 같은 판이 특정 라운드부터 곧바로 시작하게 한다.
+    // 보상·스토리·41R 게이트는 건너뛴다(그 사이 라운드를 「지나온」 게 아니라 순간이동한 것). 빌드엔 없다.
+    public bool DebugJumpToRound(int roundNumber)
+    {
+        if (!roundsStarted || isGameOver || roundNumber < 1 || roundNumber > totalRounds) return false;
+        currentRound = roundNumber;
+        waitingForNextRound = false;
+        StartRound(roundNumber);
+        Debug.Log($"[진단] 라운드 {roundNumber}로 건너뜀");
+        return true;
+    }
+#endif
+
     void AdvanceRound()
     {
         GrantRoundClearWisps(currentRound);
