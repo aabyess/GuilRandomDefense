@@ -1066,6 +1066,8 @@ public static class ClaudeCommands
         // 앞 판이 중간에 죽어 실제 마우스를 끈 채 남겼을 수 있다(EnsureShotMouse) — 켜 두고 시작한다.
         foreach (Mouse m in InputSystem.devices.OfType<Mouse>().Where(m => m.name != ShotMouseName && !m.enabled).ToList())
             InputSystem.EnableDevice(m);
+        foreach (Keyboard k in InputSystem.devices.OfType<Keyboard>().Where(k => !k.enabled).ToList())
+            InputSystem.EnableDevice(k);
 
         string name = parts[0].EndsWith(".png") ? parts[0] : parts[0] + ".png";
         GameShotJob job = new GameShotJob { id = currentId, seconds = 3f };
@@ -1983,6 +1985,10 @@ public static class ClaudeCommands
             InputSystem.DisableDevice(m);
             disabledMice.Add(m.deviceId);
         }
+        // 실제 키보드도 끈다(09-25 판 E — 카메라가 옮긴 자리에서 (+220,+130)px 밀렸다. 사람이 WASD·방향키를 눌렀을 수 있다, PM 지시).
+        //    도구는 키보드를 안 쓴다. 에디터 창 조작은 Input System을 안 거치므로 영향이 없다.
+        foreach (Keyboard k in InputSystem.devices.OfType<Keyboard>().Where(k => k.enabled).ToList())
+            InputSystem.DisableDevice(k);
         if (previousBehavior == null)
         {
             previousBehavior = InputSystem.settings.editorInputBehaviorInPlayMode;
@@ -1998,6 +2004,8 @@ public static class ClaudeCommands
         // 판 동안 끈 실제 마우스를 되켠다 — 도메인 리로드로 목록을 잃었을 때를 대비해 꺼진 마우스는 전부 켠다.
         foreach (Mouse m in InputSystem.devices.OfType<Mouse>().Where(m => m.name != ShotMouseName && !m.enabled).ToList())
             InputSystem.EnableDevice(m);
+        foreach (Keyboard k in InputSystem.devices.OfType<Keyboard>().Where(k => !k.enabled).ToList())
+            InputSystem.EnableDevice(k);
         disabledMice.Clear();
         foreach (Mouse m in InputSystem.devices.OfType<Mouse>().Where(m => m.name == ShotMouseName).ToList())
             InputSystem.RemoveDevice(m);
