@@ -650,8 +650,10 @@ public static class MapGenerator
 
     // 🔴 2026-09-23: 흙길 inset을 고정 상수로 두면 순찰 경로와 갈라진다. 실제로 1단계에서
     //    MapLayout.LaneLoop의 기본 inset만 Scale을 태우고 여기(14f)를 안 고쳐서 58.3 대 14로
-    //    44만큼 어긋났고, 적이 흙길 한참 안쪽을 걸었다. 이제 **양쪽 다 MapLayout.LaneTrackInset
+    //    44만큼 어긋났고, 적이 흙길 한참 안쪽을 걸었다. 이제 **양쪽 다 MapLayout.LaneTrackRect
     //    하나를 본다** — "순찰 경로와 같은 값"을 주석이 아니라 코드로 보장한다.
+    //    (한때 inset을 돌려주는 함수를 같이 뒀는데, 2026-09-24에 그것이 둘레를 따로 계산하는
+    //     자리를 만들어 결국 지웠다 — 사각형을 만드는 길은 하나여야 한다.)
     //    값 자체는 원작 실측 비율이다(MapLayout.TrackInsetRatioX/Z 주석 참고).
 
     static void DecorateLane(Transform parent, MapLayout.Island lane)
@@ -4266,17 +4268,24 @@ public static class MapGenerator
             if (unit.attackRange < distance) unreachable++;
         }
 
+        MapLayout.Island lane = MapLayout.Lanes[0];
+        MapLayout.Island field = MapLayout.LaneField(lane);
+
+        // 🔴 둘레는 **얼린 사각형에서만** 낸다(2026-09-24 정정). 예전에는 여기서 inset을 받아
+        //    `섬 세로 − inset×2`로 다시 계산했는데, 남쪽 초록을 잘라 섬 세로가 650.9 → 608.6이
+        //    된 뒤로 그 식이 2071.7을 냈다 — **같은 보고문 안에 둘레가 2156.3과 2071.7로 둘**이었다.
+        //    「비율을 다시 곱하지 말 것」이라고 주석에 적은 그 커밋에서 일어났다.
+        //    ⚠️ 그래서 MapLayout.LaneTrackInset을 **지웠다.** 주석은 사람을 막지만 이미 있는
+        //       호출은 못 막는다 — 부를 수 없게 만드는 것이 주석보다 세다.
+        Rect track = MapLayout.LaneTrackRect(lane);
+        float perimeter = 2f * (track.width + track.height);
+
         // 사거리 판정은 중심거리라, 경로(직선)를 따라 사거리 안에 있는 구간은 2√(R²−D²)다.
         // 이 길이가 순찰 둘레에서 차지하는 비율이 「적 하나가 그 구간에 있을 확률」의 뿌리다.
-        MapLayout.Island lane = MapLayout.Lanes[0];
-        Vector2 inset = MapLayout.LaneTrackInset(lane);
-        float perimeter = 2f * ((lane.size.x - inset.x * 2f) + (lane.size.y - inset.y * 2f));
         float chord = minRange > distance ? 2f * Mathf.Sqrt(minRange * minRange - distance * distance) : 0f;
 
-        // 🔴 경로를 얼려 두고 섬 남쪽을 자르는 구조라, 초록을 너무 줄이면 **흙길이 섬 밖으로
-        //    나간다**(경로는 안 움직이고 섬만 올라오므로). 사거리와 별개 축이라 따로 본다.
-        MapLayout.Island field = MapLayout.LaneField(lane);
-        Rect track = MapLayout.LaneTrackRect(lane);
+        // 경로를 얼려 두고 섬 남쪽을 자르는 구조라, 초록을 너무 줄이면 **흙길이 섬 밖으로
+        // 나간다**(경로는 안 움직이고 섬만 올라오므로). 사거리와 별개 축이라 따로 본다.
         //    ⚠️ 셋 다 **「여유」**로 잡는다(양수 = 섬 안, 음수 = 밖). 한때 남쪽만 부호를 반대로
         //       써서, 28 여유가 있는데도 경고가 뜨는 검사를 만들 뻔했다 — 같은 뜻의 수는
         //       같은 방향으로 재야 한다.
@@ -4288,8 +4297,10 @@ public static class MapGenerator
         string report =
             $"\n우리→적 사거리: 거리 {distance:0.0} (남쪽 초록 {MapLayout.SouthGreenZ:0.0} + 틈 " +
             $"{MapLayout.ApronGap:0.0} + 우리 깊이 {MapLayout.UnitPenDepth:0.0}의 절반)" +
-            $"\n  순찰 사각형 {track.width:0.0}×{track.height:0.0} · 둘레 " +
-            $"{2f * (track.width + track.height):0.0} (얼린 값 — 랩 시간의 근거)" +
+            // 아래 「구간 / 둘레」와 **같은 변수**를 쓴다. 식을 두 번 쓰면 그 둘이 갈리는데,
+            // 이번 결함이 정확히 그것이었다(한 줄은 얼린 값, 한 줄은 비율 재계산).
+            $"\n  순찰 사각형 {track.width:0.0}×{track.height:0.0} · 둘레 {perimeter:0.0} " +
+            "(얼린 값 — 랩 시간의 근거)" +
             $"\n  흙길이 섬 안에 있는 여유: 남 {southSlack:0.0} · 북 {northSlack:0.0} · " +
             $"옆 {sideSlack:0.0}" +
             $"\n  흔함 {commons.Count}종 최소 사거리 {minRange:0.00}({minName}) · **못 닿는 종 {unreachable}개**" +

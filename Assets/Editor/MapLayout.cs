@@ -814,12 +814,15 @@ public static class MapLayout
                                field.center.x + halfX, topZ);
     }
 
-    /// <summary>이 레인의 흙길 inset(x, z) — 필드 변에서 순찰 사각형까지. 보고·검사용.</summary>
-    public static Vector2 LaneTrackInset(Island lane)
-    {
-        Island field = LaneField(lane);
-        return new Vector2(field.size.x * TrackInsetRatioX, TrackInsetZ);
-    }
+    // 🔴 `LaneTrackInset`은 **지웠다**(2026-09-24). 남겨 두는 것 자체가 결함이었다.
+    //
+    //    경로를 얼린 그 커밋 안에서, 유일하게 남은 호출부(PenReachReport)가 **inset을 받아
+    //    둘레를 다시 계산**하고 있었다 — 그래서 같은 보고문 네 줄 안에 둘레가 2156.3과
+    //    2071.7로 **두 값**이 찍혔다. 주석에 「비율을 다시 곱하지 말 것」이라고 적은 커밋에서다.
+    //
+    //    ⚠️ **주석은 사람을 막지만 이미 있는 호출은 못 막는다.** 그래서 부를 수 없게 지웠다 —
+    //       inset이 필요하면 <see cref="LaneTrackRect"/>와 섬 변의 차로 내면 되고, 그러면
+    //       얼린 사각형과 어긋날 수가 없다. **하나뿐인 진실을 두 곳에서 만들 수 있게 두지 않는다.**
 
     public static Vector3[] LaneLoop(Island lane)
     {
