@@ -585,7 +585,8 @@ UNITS = {
     #   메시 17 · 뼈 67(살 붙은 63) · 재질 2 · 액션 96(안 씀) · 배율 ×0.01.
     #   겹친 변형(중심 좌표로 갈랐다): 얼굴 3벌 → face_normal · 손 open/close/sp01/sp02 → **open** ·
     #   🔴 **오른팔이 세 벌**이다(arm·arm_sp01·arm_sp02, 셋 다 키의 73%·RArm_Upper 주뼈) → 기본 `arm`만.
-    #   무기 l_weapon·r_weapon은 **변형이 아니라 양손에 하나씩**이라 둘 다 남긴다(x가 +0.0255/−0.0255로 갈린다).
+    #   무기 l_weapon·r_weapon은 변형이 아니라 양손에 하나씩(x가 +0.0255/−0.0255로 갈린다) — 처음엔 남겼으나
+    #   🔸 2026-09-25 사장님 요청으로 **둘 다 뺀다**(저지 창·센토마루와 같은 기준: 무기 메시 제거, 몸은 그대로). weapon_joint 합치기는 뼈가 남아 그대로 둔다.
     #   보조 뼈: 코트·깃·리본 사슬 → Spine1 · weapon_joint·Fore_sup → 해당 손.
     #   ⚠️ 머리카락·수염(c_hair_01·beard_joint)은 **따로 쓰면 안 된다** — Head 자식이라 위의 `under="Head"`가
     #      이미 가져가고, 뒤 규칙은 대상이 0이 되어 `merge_bones 대상 없음`으로 죽는다(2026-09-24에 걸렸다).
@@ -594,7 +595,7 @@ UNITS = {
                         "Charlotte Oven/Charlotte Oven by Annettlw.fbx"),
                archive_rgb={"Charlotte Oven/pl_oven_orig01_diff.png": "pl_oven_orig01_diff.png"},
                drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close",
-                            "r_hand_sp01", "r_hand_sp02", "arm_sp01", "arm_sp02"],
+                            "r_hand_sp01", "r_hand_sp02", "arm_sp01", "arm_sp02", "l_weapon", "r_weapon"],
                drop_bones=["world_joint"],
                rename_bones=PL_RENAME,
                no_nulls=True, orient_snap=True,
