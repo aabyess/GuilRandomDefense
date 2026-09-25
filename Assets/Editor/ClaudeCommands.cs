@@ -2561,7 +2561,9 @@ public static class ClaudeCommands
                 // 도박소는 이기면 골드가 **늘어난다**(500엔 도박) — 골드로 「샀나」를 가르면 첫 승리에서 멈췄다(판 I). 칸이 눌리는 동안 계속 누른다.
                 bool gamble = shop.Contains("도박소");
                 if (!gamble && after >= before) break;          // 안 샀다(잠김·목재 부족·이미 최대) — 다음 칸
-                if (gamble && after == before && !b.IsInteractable()) break;
+                // ⚠️ 골드가 그대로면 안 산 것이다 — 중급·고급 도박은 목재를 쓰는데 목재가 없으면 눌려도 아무 일이 없다.
+                //    그걸 「눌림」으로 세니 칸 상한 12번을 거기서 다 써서 500엔 도박·특성포인트까지 못 갔다(판 J 재시도, 골드 ≈5,000 남음).
+                if (gamble && after == before) break;
                 bought.Add($"{ButtonLabel(b).Split('\n')[0]} {(after <= before ? "−" : "+")}{Mathf.Abs(before - after)}");
             }
         }
