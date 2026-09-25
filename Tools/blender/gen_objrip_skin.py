@@ -52,6 +52,80 @@ PREFIX = "mixamorig:"
 #   ⚠️ 커밋본들은 게임에서 멀쩡하다. **고칠 게 있어서 금지가 아니라, 바꾸면 안 되니까 금지다.**
 SKINS = {
     # ══════════════ 적 유닛(Enemy) — 2026-09-24. 산출만 Assets/Art/Enemies로 나간다.
+    # 원피스 해적무쌍 계열 립(Sketchfab glb, 재질 MI_N1xx_E001_*) → R11·R12·R15. **뼈 0인 정적 glb**.
+    #   세 대장이 **같은 Mantle(해군 코트) 메시**를 쓴다 — rigid_materials로 코트를 Chest에 못박는다(build() 주석).
+    #   A자(팔 약 40° 처짐) → straighten_arms. 원본 키 3.38~3.39(단위 없음, 머리카락까지).
+    # R11 김정래 = 키자루. 정점 23,672 · 재질 7. 관절 근거(높이 1 정규화, 코트 뺀 몸만 층마다 잼):
+    #   z 0.90 위 폭 ±0.034 = 머리 · 0.875 깃 · 팔 중심선 x0.10 z0.835 → x0.22 z0.74 → x0.34 z0.628 → 손끝 x0.40 z0.607
+    #   z 0.55부터 아래로 두 다리가 갈린다(0.575엔 틈 없음) → 가랑이 ≈0.56 · 다리 중심 x ±0.05(틈 ±0.028·바깥 ±0.071)
+    "김정래": dict(source="~/Desktop/구랜디스킨모음/90_적유닛/R11-R20/R11_김정래.glb",
+               mesh_name="Kizaru",
+               path="Assets/Art/Enemies/김정래/김정래.fbx", height=1.8,
+               center_band=(0.02, 0.06),
+               straighten_arms=True,
+               rigid_materials={"Mantle": "Chest"}, texture_by_material=True,
+               joints=dict(Hips=(0, 0, 0.58), Spine=(0, 0, 0.67), Chest=(0, 0, 0.78),
+                           Neck=(0, 0, 0.875), Head=(0, 0, 0.905), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.03, 0.01, 0.84), Arm=(0.11, 0.02, 0.83), ForeArm=(0.22, 0.02, 0.735),
+                           Hand=(0.33, 0.02, 0.64), HandTip=(0.40, 0.02, 0.607),
+                           UpLeg=(0.05, 0, 0.555), Leg=(0.05, 0, 0.30), Foot=(0.052, 0.01, 0.045),
+                           ToeBase=(0.052, -0.05, 0.02), ToeTip=(0.052, -0.075, 0.015))),
+    # R12 박예원 = 아오키지. 정점 26,639 · 재질 6. 키자루와 비율이 거의 같다(같은 게임 리그). 관절 근거:
+    #   머리 z 0.90 위(폭 ±0.05) · 팔 중심선 x0.09 z0.815 → x0.21 z0.748 → x0.30 z0.63 → 손끝 x0.38 z0.615
+    #   z 0.525에서 가운데 틈이 처음 열린다(0.55엔 없음) → 가랑이 ≈0.54 · 다리 중심 x ±0.05
+    "박예원": dict(source="~/Desktop/구랜디스킨모음/90_적유닛/R11-R20/R12_박예원.glb",
+               mesh_name="Aokiji",
+               path="Assets/Art/Enemies/박예원/박예원.fbx", height=1.8,
+               center_band=(0.02, 0.06),
+               straighten_arms=True,
+               rigid_materials={"Mantle": "Chest"}, texture_by_material=True,
+               joints=dict(Hips=(0, 0, 0.565), Spine=(0, 0, 0.66), Chest=(0, 0, 0.77),
+                           Neck=(0, 0, 0.875), Head=(0, 0, 0.905), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.03, 0.01, 0.835), Arm=(0.10, 0.03, 0.82), ForeArm=(0.21, 0.03, 0.74),
+                           Hand=(0.31, 0.03, 0.64), HandTip=(0.38, 0.03, 0.615),
+                           UpLeg=(0.05, 0, 0.54), Leg=(0.05, 0, 0.29), Foot=(0.05, 0.01, 0.045),
+                           ToeBase=(0.05, -0.05, 0.02), ToeTip=(0.05, -0.075, 0.015))),
+    # R15 유재헌 = 아카이누. 정점 21,770 · 재질 6(Met=모자). 팔이 셋 중 가장 길다(손끝 x 0.44). 관절 근거:
+    #   머리 z 0.90 위 · 팔 중심선 x0.12 z0.815 → x0.24 z0.742 → x0.33 z0.643 → 손끝 x0.44 z0.587
+    #   z 0.525에서 가운데 틈이 열린다(0.55엔 없음) → 가랑이 ≈0.54 · 다리 중심 x ±0.05
+    "유재헌": dict(source="~/Desktop/구랜디스킨모음/90_적유닛/R11-R20/R15_유재헌.glb",
+               mesh_name="Akainu",
+               path="Assets/Art/Enemies/유재헌/유재헌.fbx", height=1.8,
+               center_band=(0.02, 0.06),
+               straighten_arms=True,
+               # 🔴 join_all — 없으면 **모자(Met)·눈동자(Iris)가 「떨어진 조각」으로 버려진다**(1차 빌드: 원본 키 3.384→3.307,
+               #   텍스처 6→4장). 본체가 몸통 옷(Wear)이라 얼굴 위 모자까지 거리가 문턱(키의 5%)을 넘는다. 여섯 조각 전부 몸에 붙은 것(화면 확인).
+               join_all=True, keep_fused_faces=True,
+               rigid_materials={"Mantle": "Chest"}, texture_by_material=True,
+               joints=dict(Hips=(0, 0, 0.56), Spine=(0, 0, 0.66), Chest=(0, 0, 0.77),
+                           Neck=(0, 0, 0.875), Head=(0, 0, 0.905), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.035, 0.0, 0.83), Arm=(0.12, 0.01, 0.815), ForeArm=(0.235, 0.01, 0.73),
+                           Hand=(0.35, 0.01, 0.63), HandTip=(0.44, 0.01, 0.587),
+                           UpLeg=(0.05, 0, 0.535), Leg=(0.05, 0, 0.29), Foot=(0.052, 0.01, 0.045),
+                           ToeBase=(0.052, -0.05, 0.02), ToeTip=(0.052, -0.075, 0.015))),
+    # R20 박은석 = 제저스 버지스 ★보스. 같은 해적무쌍 립이지만 **코트가 없고 체형이 완전히 다르다** — 표를 베끼지 말 것.
+    #   정점 24,050 · 재질 6(Met=머리 장식). 다리가 짧고(가랑이 ≈0.34) 몸통·팔이 거대하며 머리가 어깨에 파묻혔다.
+    #   관절 근거(높이 1 정규화 · 층 측정 + 정면 화면 픽셀 대조):
+    #     팔꿈치 검은 띠 중심 x0.43 z0.605 · 장갑 시작(손목) x0.625 z0.43 · 손끝 x0.74 z0.335 (층: x0.62 z0.40 · x0.74 z0.334)
+    #     벨트 z≈0.45 · 청바지 두 다리가 z≈0.34 아래로 갈린다 · 다리 중심 x ±0.055(바깥 ±0.084)
+    #     수염 아래끝 z≈0.80 · 얼굴 0.80~0.99 — 목이 거의 없다(Neck 짧게)
+    "박은석": dict(source="~/Desktop/구랜디스킨모음/90_적유닛/R11-R20/R20_박은석_보스.glb",
+               mesh_name="Burgess",
+               path="Assets/Art/Enemies/박은석/박은석.fbx", height=1.8,
+               center_band=(0.02, 0.06),
+               straighten_arms=True, texture_by_material=True,
+               # 🔴 join_all — 없으면 머리 장식(Met)이 버려진다(1차 빌드: 원본 키 3.446→3.362). 유재헌과 같은 이유.
+               # 🔴 force_geodesic — bone heat가 「뼈가 다 살아 있다」로 통과했지만 **전신에 번졌다**(1차: Hand 15,829 · Foot 12,908
+               #   · Hips 14,179정점이 w>0.01 — 전체 16,915). 거대한 팔이 몸통에 닿을 듯 붙어 열이 샌다. 이어서 팔↔다리 융착 면
+               #   219개가 **지워지고** 키가 1.705로 줄었다. 죽은 뼈 검사는 이 번짐을 못 본다 — 뼈별 정점 수를 보고 잡았다.
+               join_all=True, force_geodesic=True, keep_fused_faces=True,
+               reassign_above=[dict(src=("LeftUpLeg", "RightUpLeg"), dst="Hips", z=0.41)],
+               joints=dict(Hips=(0, 0, 0.42), Spine=(0, 0, 0.56), Chest=(0, 0, 0.70),
+                           Neck=(0, 0, 0.83), Head=(0, 0, 0.86), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.08, 0, 0.80), Arm=(0.24, 0, 0.79), ForeArm=(0.43, 0, 0.605),
+                           Hand=(0.625, 0, 0.43), HandTip=(0.75, 0, 0.33),
+                           UpLeg=(0.055, 0, 0.38), Leg=(0.055, 0, 0.20), Foot=(0.055, 0.01, 0.045),
+                           ToeBase=(0.055, -0.05, 0.02), ToeTip=(0.055, -0.08, 0.015))),
     # 드래곤볼 부도카이3 크리링 립 → R01 박진웅. **뼈 0인 정적 OBJ**라 새로 리깅한다.
     #   정점 1,396 · 면 2,504 · 재질 19(텍스처 10장) · **이미 T자**라 이 파이프라인이 그대로 맞는다.
     #   🔴 관절 자리는 **손으로 안 지었다** — 높이 1로 정규화해 층마다 폭을 재서 뽑았다:
@@ -1028,7 +1102,12 @@ def build(name, cfg, out_dir=None, render_dir=None):
                 tex_dst = os.path.join(tex_dir, safe)
                 _copy_unless_same(src_on_disk, tex_dst)
             else:
-                safe = "".join(c for c in img.name if c.isalnum() or c in "._-") or mat.name
+                # 🔴 cfg["texture_by_material"] — Sketchfab glb는 박힌 그림 이름이 `Image_0`~`Image_6`뿐이다(2026-09-25 R11).
+                #   유니티 ArtBinder.MatchTexture는 **재질 이름으로** 폴더 안 텍스처를 찾으므로(정확일치 → 부분일치 → 한 장뿐이면 그것)
+                #   `MI_N110_E001_Body_CS01` ↔ `Image_0`은 안 맞고, 장수가 여럿이라 폴백도 없어 **전부 회색**으로 나간다.
+                #   그래서 파일 이름을 재질 이름으로 짓는다. 옛 항목(희귀함_박도진 등 Image_N 커밋본)은 안 바꾸려고 켜는 항목만.
+                src_img_name = mat.name if cfg.get("texture_by_material") else img.name
+                safe = "".join(c for c in src_img_name if c.isalnum() or c in "._-") or mat.name
                 if not safe.lower().endswith((".png", ".jpg", ".jpeg")):
                     safe += ".png"
                 tex_dst = os.path.join(tex_dir, safe)
@@ -1313,6 +1392,47 @@ def build(name, cfg, out_dir=None, render_dir=None):
             report["뼈별 정점(w>0.01)"] = counts
             assert not dead, f"{name}: 가중치 없는 뼈(소매 재배정 뒤) {dead}"
 
+    # 🔴 어깨에 걸친 해군 코트(2026-09-25 R11 키자루·R12 아오키지·R15 아카이누 — 셋이 **같은 Mantle 메시**,
+    #   정점 6,549~6,551·경계 똑같음). 코트는 팔을 안 끼고 어깨에 얹혀 있고, 빈 소매가 **등 뒤로 수평으로** 뻗어 있다
+    #   (게임에서 천 뼈가 잡던 자세가 립에 그대로 굳었다). 팔 뼈 근처라 가중치를 자동에 맡기면 소매·어깨가 팔을 따라가
+    #   걷기에서 찢어진다. cfg["rigid_materials"] = {"재질 이름 조각": "뼈"} — 그 재질 면의 정점을 **그 뼈 하나에 1.0**으로 못박는다.
+    #   straighten_arms보다 **먼저** 해야 한다(팔을 펼 때 코트가 따라 올라가면 안 된다).
+    if cfg.get("rigid_materials"):
+        pinned = {}
+        for part, bone in cfg["rigid_materials"].items():
+            mats = {i for i, m in enumerate(body.data.materials) if m and part in m.name}
+            assert mats, f"{name}: rigid_materials '{part}'에 맞는 재질이 없다 {[m.name for m in body.data.materials]}"
+            vids = sorted({vi for p in body.data.polygons if p.material_index in mats for vi in p.vertices})
+            for vg in body.vertex_groups:
+                vg.remove(vids)
+            body.vertex_groups[PREFIX + bone].add(vids, 1.0, "REPLACE")
+            pinned[part + "→" + bone] = len(vids)
+        report["재질 통째 고정"] = pinned
+        dead, counts = dead_bones()
+        report["뼈별 정점(w>0.01)"] = counts
+        assert not dead, f"{name}: 가중치 없는 뼈(재질 고정 뒤) {dead}"
+
+    # 🔴 cfg["reassign_above"] = [dict(src=(뼈…), dst=뼈, z=높이비)] — src가 우세한 정점 중 z(키 비율) 이상을 dst 1.0으로 옮긴다
+    #   (2026-09-25 R20 버지스). 다리가 짧아(가랑이 0.34) 벨트(0.42~0.48)가 UpLeg 씨앗에 더 가까워 **벨트가 허벅지를 따라 휘었다**
+    #   (걷기 8프레임 라이브 창에서 확인). 벨트 아래끝 위로는 골반에 붙인다.
+    for rule in cfg.get("reassign_above", []):
+        src = {PREFIX + b for b in rule["src"]}
+        dst_vg = body.vertex_groups[PREFIX + rule["dst"]]
+        moved = []
+        for v in body.data.vertices:
+            if v.co.z < rule["z"] * Hf or not v.groups:
+                continue
+            if body.vertex_groups[max(v.groups, key=lambda g: g.weight).group].name in src:
+                moved.append(v.index)
+        for vg in body.vertex_groups:
+            vg.remove(moved)
+        dst_vg.add(moved, 1.0, "REPLACE")
+        report.setdefault("높이 위 재배정", {})["→".join(rule["src"]) + "→" + rule["dst"] + f"@{rule['z']}"] = len(moved)
+    if cfg.get("reassign_above"):
+        dead, counts = dead_bones()
+        report["뼈별 정점(w>0.01)"] = counts
+        assert not dead, f"{name}: 가중치 없는 뼈(높이 재배정 뒤) {dead}"
+
     # 🔴 PM 실측(희귀함_선효진/보디빌더) — 이 소스는 65,536정점(16비트 인덱스 한계) 단위로 잘려
     # 나온 조각 셋을 합친 거라(Object_4·5·6, 위 복제 정점 병합으로 다시 1개 표면으로 붙음) 진짜
     # 원본 메시 그대로인데, "차렷" 자세에서 손이 허벅지 옆에 거의 닿아 원본 자체에 손에서 허벅지
@@ -1347,6 +1467,13 @@ def build(name, cfg, out_dir=None, render_dir=None):
         names = {dom.get(v.index) for v in f.verts}
         if (names & ARM_STRICT_NAMES) and (names - ARM_NAMES):
             to_delete.append(f)
+    # 🔴 cfg["keep_fused_faces"] — 이 삭제는 **스캔 결함용**인데 무조건 돈다(2026-09-25 R15 아카이누 81면 · R20 버지스 58면).
+    #   게임 립은 소매가 몸통에 정상으로 이어져 있어, 지오데식 경계가 겨드랑이에서 Shoulder를 건너뛰면
+    #   Arm↔Chest가 한 면을 나눠 갖게 되고 **그 면이 지워져 옆구리에 구멍이 뚫린다**(리타게팅 옆모습 렌더로 발견 —
+    #   정면 T자에선 팔에 가려 안 보인다). 원본에 막이 없는 게임 립은 이걸 켜서 삭제를 건너뛴다.
+    if cfg.get("keep_fused_faces"):
+        report["팔↔다리 융착 면(삭제 안 함 — keep_fused_faces)"] = len(to_delete)
+        to_delete = []
     report["팔↔다리 융착 면 제거(원본 스캔 결함)"] = len(to_delete)
     if to_delete:
         bmesh.ops.delete(bm, geom=to_delete, context="FACES_ONLY")
