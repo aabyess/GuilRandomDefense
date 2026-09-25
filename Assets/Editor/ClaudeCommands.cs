@@ -1034,7 +1034,7 @@ public static class ClaudeCommands
         public int droppedLogs;     // 종류 상한을 넘어 못 실은 로그 수
         public bool failed;
         public int midPlayReloads;  // 플레이 도중 도메인 리로드 횟수(아래 NoteMidPlayReload)
-        public bool noCombine, noShop;   // autoloop에서 조합·상점을 뺀다 — 일부러 약한 판(보스 제한 패배 확인용)
+        public bool noCombine, noShop, bossAway;   // autoloop에서 조합·상점을 뺀다 — 일부러 약한 판(보스 제한 패배 확인용)
         public int mode = (int)DifficultyMode.Normal;   // mode:<난이도> — 기본 보통(09-25 PM 지시: 기억값이 쉬움이라 판 B~F가 전부 쉬움이었다)
         public int prevSavedMode = int.MinValue;         // 사장님 기억값 — 판이 끝나면 되돌린다(MinValue = 원래 없었음)
         public int logsBeforeReload = -1;
@@ -1093,6 +1093,7 @@ public static class ClaudeCommands
             else if (token == "autoloop") job.autoLoop = true;
             else if (token == "nocombine") job.noCombine = true;
             else if (token == "noshop") job.noShop = true;
+            else if (token == "bossaway") job.bossAway = true;
             else if (token.StartsWith("mode:"))
             {
                 string want = token.Substring(5);
@@ -2583,9 +2584,20 @@ public static class ClaudeCommands
         // 한 화면에 안 들어오는 무리(우리·레인 가운데의 조합 결과·모서리)는 첫 박스가 일부만 잡는다 —
         //    원작도 흔함만 고정 칸이고 조합 결과는 레인 가운데에 나와 사람이 옮긴다. 모서리 밖에 남은 것만 두 번 더 쓸어 보낸다.
         string sweep = job.storySent ? "@box:Unit_흔함" : "@box:Unit_";
-        turn.Add(sweep);
-        turn.Add("@rcpt:corner");
-        for (int k = 0; k < 2; k++) { turn.Add(sweep + "|far"); turn.Add("@rcpt:corner"); }
+        RoundManager rmTurn = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
+        if (job.bossAway && rmTurn != null && rmTurn.CurrentRound == 10)
+        {
+            // bossaway — 보스 라운드에 유닛을 전부 스토리존으로 치워 **아무도 보스를 안 때리게** 한다(보스 제한 패배 확인용, 09-25 판 H).
+            //    선택 상한 12기라 세 번 나눠 보낸다. 레인엔 보스만 있으니 누적 패배(70)와 섞이지 않는다.
+            job.report += "   🧪 bossaway: R10 — 유닛을 스토리존으로 치운다\n";
+            for (int k = 0; k < 3; k++) { turn.Add("@box:Unit_"); turn.Add("@rc:Lane1_스토리포탈"); }
+        }
+        else
+        {
+            turn.Add(sweep);
+            turn.Add("@rcpt:corner");
+            for (int k = 0; k < 2; k++) { turn.Add(sweep + "|far"); turn.Add("@rcpt:corner"); }
+        }
         // 상점은 **맨 뒤** — 턴이 라운드 안에 못 끝나 다음 턴이 남은 동작을 버릴 때, 싸우는 자리로 옮기기보다 상점이 먼저 빠지게.
         if (job.lastRoundSeen >= 2 && !job.noShop)   // noshop — 일부러 약한 판
         {
