@@ -99,8 +99,15 @@ def write(path, body, guid):
         "  userData: \n  assetBundleName: \n  assetBundleVariant: \n")
 
 def wisp_rewards(rnd, boss):
-    """라운드 클리어 위습. 보스 라운드에는 한 단계 위 위습을 얹어준다."""
-    rewards = [('흔함', 2 if rnd <= 20 else 3)]
+    """라운드 클리어 위습. **보스 라운드에만** 한 단계 위 위습을 얹어준다.
+
+    🔴 2026-09-25 사장님: 「라운드 넘어갈 때 랜덤유닛 2개만 주는 거임, 선택유닛은 주는 게 아니라」
+    예전엔 여기서 매 라운드 흔함선택 위습을 2~3개 줬는데, 그러면 라운드 보상이 **두 겹**이었다 —
+    RoundManager.roundRewardWisp(랜덤유닛 2개, MapGenerator.WireRoundRewardWisp가 배선)가 따로 있고,
+    그 위에 이 표가 흔함선택을 또 얹었다. 실제로 판에서 「랜덤유닛 2 · 흔함 선택 2」로 같이 쌓였다.
+    → 매 라운드 몫은 랜덤유닛 2개 하나뿐이다. 여기서는 **보스 몫만** 준다.
+    """
+    rewards = []
     if boss:
         if   rnd <= 20: rewards.append(('안흔함', 1))
         elif rnd <= 40: rewards.append(('특별함', 1))
