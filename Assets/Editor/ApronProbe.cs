@@ -21,8 +21,27 @@ public static class ApronProbe
 {
     const string Title = "앞치마 진단";
 
-    // 씬에서 잰 레인1 앞치마(578.2 × 199.4). 윗면은 IslandTop = 8.
-    static readonly Rect Apron = Rect.MinMaxRect(-1911.6f, 1089.4f, -1333.4f, 1288.8f);
+    /// <summary>
+    /// 레인1 앞치마. 윗면은 IslandTop = 8.
+    ///
+    /// 🔴 2026-09-24 — **박아 둔 값이었다.** `Rect.MinMaxRect(-1911.6, 1089.4, -1333.4, 1288.8)`로
+    ///    씬에서 한 번 재서 넣어 뒀는데, 같은 날 앞치마 깊이가 199.4 → 135.2로 줄었을 때
+    ///    이 사각형은 그대로여서 **바다 64를 앞치마로 세고 있었다.** 그 상태로 「NavMesh 없음」을
+    ///    세면 구멍이 아닌 것이 구멍으로 나온다 — 도구가 제 기준으로 거짓말하는 자리다.
+    ///    (그 뒤 깊이가 199.4로 되돌아와 지금은 우연히 맞는다. 우연히 맞는 것이 더 위험하다.)
+    ///    ⚠️ 그래서 MapLayout에서 유도한다 — 앞치마가 움직이면 이 사각형도 따라온다.
+    /// </summary>
+    static Rect Apron
+    {
+        get
+        {
+            MapLayout.Island apron = MapLayout.LaneApron(MapLayout.Lanes[0]);
+            return Rect.MinMaxRect(apron.center.x - apron.size.x * 0.5f,
+                                   apron.center.y - apron.size.y * 0.5f,
+                                   apron.center.x + apron.size.x * 0.5f,
+                                   apron.center.y + apron.size.y * 0.5f);
+        }
+    }
 
     // 🔴 처음엔 8.3으로 뒀다가 크게 헤맸다. 「서 있는 것만 보겠다」고 8.3을 넘겼더니
     //    앞치마 바로 위에 깔린 바닥(윗면 8.1)이 통째로 빠졌고, 「위에 아무것도 없다」는
