@@ -2543,8 +2543,11 @@ public static class ClaudeCommands
                 UnityEngine.EventSystems.ExecuteEvents.Execute(b.gameObject, eventData, UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
                 clicks++;
                 int after = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
-                if (after >= before) break;          // 안 샀다(잠김·목재 부족·이미 최대) — 다음 칸
-                bought.Add($"{ButtonLabel(b)} −{before - after}");
+                // 도박소는 이기면 골드가 **늘어난다**(500엔 도박) — 골드로 「샀나」를 가르면 첫 승리에서 멈췄다(판 I). 칸이 눌리는 동안 계속 누른다.
+                bool gamble = shop.Contains("도박소");
+                if (!gamble && after >= before) break;          // 안 샀다(잠김·목재 부족·이미 최대) — 다음 칸
+                if (gamble && after == before && !b.IsInteractable()) break;
+                bought.Add($"{ButtonLabel(b).Split('\n')[0]} {(after <= before ? "−" : "+")}{Mathf.Abs(before - after)}");
             }
         }
         int end = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
@@ -2581,6 +2584,17 @@ public static class ClaudeCommands
             gradeWisps += n;
         }
         if (randomWisps + gradeWisps > 0) turn.Add("@wait:12");
+        // 상점은 위습 바로 뒤(09-25 판 I 뒤 옮김) — 맨 뒤에 두니 턴이 밀릴 때마다 버려져 도박소를 12라운드에 두 번만 들렀고
+        //    골드가 8,713 남았다. 맵 원작화 뒤로 새 유닛은 이미 사거리 안(레인 아래 끝)에 서서, 모서리 쓸기가 버려져도 덜 치명적이다.
+        if (job.lastRoundSeen >= 2 && !job.noShop)   // noshop — 일부러 약한 판
+        {
+            job.shopTried = true;
+            foreach (string shop in SpendShops)
+            {
+                turn.Add("@sel:" + shop);
+                turn.Add("?@shopspend:" + shop);
+            }
+        }
         for (int k = 0; k < (job.noCombine ? 0 : 3); k++)   // nocombine — 일부러 약한 판(보스 제한 패배 확인용, 09-25)
         {
             turn.Add("@box:Unit_흔함");
@@ -2660,16 +2674,6 @@ public static class ClaudeCommands
             turn.Add(sweep);
             turn.Add("@rcpt:corner");
             for (int k = 0; k < 2; k++) { turn.Add(sweep + "|far"); turn.Add("@rcpt:corner"); }
-        }
-        // 상점은 **맨 뒤** — 턴이 라운드 안에 못 끝나 다음 턴이 남은 동작을 버릴 때, 싸우는 자리로 옮기기보다 상점이 먼저 빠지게.
-        if (job.lastRoundSeen >= 2 && !job.noShop)   // noshop — 일부러 약한 판
-        {
-            job.shopTried = true;
-            foreach (string shop in SpendShops)
-            {
-                turn.Add("@sel:" + shop);
-                turn.Add("?@shopspend:" + shop);
-            }
         }
 
         job.clicks.AddRange(turn);
