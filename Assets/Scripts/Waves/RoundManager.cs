@@ -314,16 +314,21 @@ public class RoundManager : MonoBehaviour
         bool isNewWorldBoss = roundNumber >= 65; // R65/70/75. 구세계는 R10/20/30/40/50/60.
         float timeLimit = isNewWorldBoss ? newWorldBossTimeLimit : oldWorldBossTimeLimit;
 
+        Debug.Log($"[보스제한] 레인 {laneIndex} R{roundNumber} 보스 {(boss != null ? boss.name + "#" + boss.GetInstanceID() : "null")} — {timeLimit:F1}초 재기 시작");
         yield return new WaitForSeconds(timeLimit);
 
         // 판이 이미 끝났으면(전멸·마지막 라운드 클리어) 판정하지 않는다 — 클리어한 사람을
         // 뒤늦게 탈락시키면 안 된다.
-        if (isGameOver) yield break;
+        if (isGameOver) { Debug.Log($"[보스제한] 레인 {laneIndex} R{roundNumber} — 판이 끝나 판정 안 함"); yield break; }
 
-        if (boss == null) yield break; // 이미 잡았다 — 유니티 오버로드 null이라 파괴된 개체를 정확히 건진다.
+        if (boss == null) { Debug.Log($"[보스제한] 레인 {laneIndex} R{roundNumber} — 제한 안에 잡음(개체 없음)"); yield break; } // 이미 잡았다 — 유니티 오버로드 null이라 파괴된 개체를 정확히 건진다.
 
         PlayerContext context = PlayerContext.Get(laneIndex);
-        if (context == null || !context.IsOccupied || context.IsDead) yield break;
+        if (context == null || !context.IsOccupied || context.IsDead)
+        {
+            Debug.Log($"[보스제한] 레인 {laneIndex} R{roundNumber} — 판정 건너뜀(context {(context == null ? "null" : $"occupied={context.IsOccupied} dead={context.IsDead}")})");
+            yield break;
+        }
 
         // 쉬움은 구세계 보스만 면제(원작 문구, TRIGSTR 미확인 — PM이 준 원문 그대로 인용).
         // 신세계는 PM 지시대로 모드 예외 없이 균일 적용(쉬움이 50R에서 끝나 실질적으로
@@ -338,6 +343,7 @@ public class RoundManager : MonoBehaviour
         }
 
         // 원문 TRIGSTR_10804.
+        Debug.Log($"[보스제한] 레인 {laneIndex} R{roundNumber} — 제한 초과, 패배 처리 (보스 {boss.name}#{boss.GetInstanceID()} 체력 {boss.Hp:F0})");
         PlayerNotification.Show(laneIndex, "제한시간안에 보스를 잡지 못해 패배하였습니다.");
         HandlePlayerDefeated(laneIndex, context);
     }
