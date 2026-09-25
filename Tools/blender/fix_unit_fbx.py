@@ -773,6 +773,43 @@ UNITS = {
                texture_by_material=True,
                materials=dict(textures={"pl_apoo_2yaf01": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")],
                                         "pl_apoo_2yaf01_trans": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")]})),
+    # 원피스 파이팅 패스 라팡 **어른**(XPS 립 35103) → R45 이현빈 · **새끼**(25015) → R46 노수신. zip 바로 안에 fbx · xps · _D.png(256²).
+    #   메시 1 · 재질 1 · 클립 0. 뚱뚱한 토끼지만 뼈는 표준 Bip001(Spine2 없음 · Toe0 있음) → BIP001_NO_SPINE2. 원본 높이 어른 0.0257 · 새끼 0.0113(어른의 44%).
+    #   팔이 A자(어른 약 33° 처짐) → tpose_arms. 손가락(Finger0 하나)은 손에 · 귀·수염 사슬(Head 밑)은 머리에.
+    #   새끼만: 비틀림 뼈(UpArmTwist_bone) → 위팔 · 골반 밑 bone01(뒤 +y = 꼬리)은 골반 · Bone15(앞 배)는 Spine.
+    #   🔸 첫 확인 렌더에서 몸이 속 빈 것처럼 보였는데 **카메라 가까운 면(0.1)이 1cm 모델을 자른 것**이었다 — 모델 결함 아님.
+    "이현빈": dict(path="Assets/Art/Enemies/이현빈/이현빈.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R41-R50/R45_이현빈_어른라팡.zip"), "35103.fbx"),
+               archive_rgb={"35103_D.png": "35103.png"},
+               skip_shapes=True,
+               drop_bones=["Bip001"],
+               rename_bones=BIP001_NO_SPINE2,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(under="mixamorig:LeftHand", into="mixamorig:LeftHand"),
+                            dict(under="mixamorig:RightHand", into="mixamorig:RightHand")],
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               materials=dict(textures={"35103": [("DiffuseColor", "35103.png")]})),
+    "노수신": dict(path="Assets/Art/Enemies/노수신/노수신.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R41-R50/R46_노수신_새끼라팡.zip"), "25015.fbx"),
+               archive_rgb={"25015_D.png": "25015.png"},
+               skip_shapes=True,
+               drop_bones=["Bip001"],
+               rename_bones=BIP001_NO_SPINE2,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(under="mixamorig:LeftHand", into="mixamorig:LeftHand"),
+                            dict(under="mixamorig:RightHand", into="mixamorig:RightHand"),
+                            dict(pattern=r"^Bip001 LUpArmTwist_bone$", into="mixamorig:LeftArm"),
+                            dict(pattern=r"^Bip001 RUpArmTwist_bone$", into="mixamorig:RightArm"),
+                            dict(pattern=r"^bone01$", into="mixamorig:Hips"),
+                            dict(pattern=r"^Bone15$", into="mixamorig:Spine")],
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               materials=dict(textures={"25015": [("DiffuseColor", "25015.png")]})),
     # 원피스 바운티러시 쥬얼리 보니 **아이**(pl_bonie_orig02) → R33 서희원 · **어른**(pl_bonie_orig01) → R47 정다희. 류마·오븐과 같은
     #   Annettlw 판(뼈대 노드 0.01)이라 비율이 측정 근거다: 전체 키 ÷ 류마 2.019 → **아이 × 0.611 · 어른 × 0.882**(둘 다 모자 포함).
     #   zip 바로 안에 fbx · xps · _diff.png + 셰이더 보조 그림(ramp·matcap·abnormal_pattern·bayer_dither — 적 규약대로 컬러만 씀).
