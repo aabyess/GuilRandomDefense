@@ -373,6 +373,14 @@ for _s, _side in (("l", "Left"), ("r", "Right")):
                       f"lowerarm {_s}": f"mixamorig:{_side}ForeArm", f"hand {_s}": f"mixamorig:{_side}Hand",
                       f"thigh {_s}": f"mixamorig:{_side}UpLeg", f"calf {_s}": f"mixamorig:{_side}Leg",
                       f"foot {_s}": f"mixamorig:{_side}Foot", f"ball {_s}": f"mixamorig:{_side}ToeBase"})
+# 츠나데(R49, 2026-09-25) — 「arm left shoulder 1/2 · elbow · wrist」「leg left thigh · knee · ankle · toes」 낱말 리그(glTF 번호 꼬리).
+TSUNADE_RENAME = {"pelvis": "mixamorig:Hips", "spine lower": "mixamorig:Spine", "spine upper": "mixamorig:Spine1",
+                  "head neck lower": "mixamorig:Neck", "head neck upper": "mixamorig:Head"}
+for _s, _side in (("left", "Left"), ("right", "Right")):
+    TSUNADE_RENAME.update({f"arm {_s} shoulder 1": f"mixamorig:{_side}Shoulder", f"arm {_s} shoulder 2": f"mixamorig:{_side}Arm",
+                           f"arm {_s} elbow": f"mixamorig:{_side}ForeArm", f"arm {_s} wrist": f"mixamorig:{_side}Hand",
+                           f"leg {_s} thigh": f"mixamorig:{_side}UpLeg", f"leg {_s} knee": f"mixamorig:{_side}Leg",
+                           f"leg {_s} ankle": f"mixamorig:{_side}Foot", f"leg {_s} toes": f"mixamorig:{_side}ToeBase"})
 # 빈스모크 저지(R24): Spine2만 없고 Toe0은 있는 Bip001.
 BIP001_NO_SPINE2 = {k: v for k, v in BIP001_RENAME.items() if not k.endswith("Spine2")}
 # 버기(R18): Spine2·Toe0이 없는 Bip001. 있는 것만 남긴다.
@@ -1045,6 +1053,31 @@ UNITS = {
     # 원피스 우타(Uta) → R16 이하림. 버기와 **같은 Bip001 계열**이지만 이쪽은 Spine2·Toe0이 **있다**(그래서 표가 다르다).
     #   zip 안 zip 안 .gltf — 버기와 같은 꼴이라 `archive_textures`로 `.bin`을 같이 꺼낸다.
     #   메시 1(+Icosphere) · 뼈 91 · 겹친 변형 없음.
+    # 나루토 츠나데(Sketchfab glb, 뼈 있음) → R49 이현주(나가토에서 교체, 사장님 2026-09-25). 메시 11 · 재질 11(그림 2장을 여덟이 나눠 씀,
+    #   셋은 단색: 목걸이·58·59) · 관절 217 · 클립 0. 낱말 리그 → TSUNADE_RENAME.
+    #   🔴 **glTF 계층이 꼬였다**: 오른발 끝(leg right toes)이 뿌리 바로 밑이고 그 밑에 root ground → pelvis가 매달려 있다(오른발 발목엔 발끝이 없다).
+    #      → 뿌리 둘을 빼고 reparent_bones로 Hips를 뿌리로 떼고(None) 오른발 끝을 오른발목 밑으로 옮긴다.
+    #   pelvis는 살 0(허리 살은 spine lower) → seed_zero_bones. 머리카락·호카게 모자 사슬·망토 사슬(살 0)·가슴·목걸이·치마 짧은 사슬·얼굴 → merge_to_nearest.
+    #   A자(손목 z 1.02 · 어깨 1.34) → tpose_arms. 재질 여럿이 그림을 나눠 써서 texture_by_material, 단색 셋은 solid_textures.
+    "이현주": dict(path="Assets/Art/Enemies/이현주/이현주.fbx", kind="human", size=("height", 1.8),
+               source=os.path.join(SKINS, "90_적유닛/R41-R50/R49_이현주.glb"), gltf_guess_bind=False,
+               drop_meshes=["Icosphere"],
+               rename_bones=TSUNADE_RENAME, rename_strip=r"_[0-9]+$",
+               drop_bones=["GLTF_created_0_rootJoint", "root ground_214"],
+               # ⚠️ 순서가 중요하다(dict 순서대로 돈다): 허벅지는 원래 pelvis가 아니라 root ground의 자식이라, root ground를 빼면
+               #    발끝 밑으로 간다 → 먼저 허벅지를 Hips로, 그다음 Hips를 뿌리로, 마지막에 발끝을 발목으로(먼저 하면 고리가 생겨 무시된다).
+               reparent_bones={"mixamorig:LeftUpLeg": "mixamorig:Hips", "mixamorig:RightUpLeg": "mixamorig:Hips",
+                               "mixamorig:Hips": None, "mixamorig:RightToeBase": "mixamorig:RightFoot"},
+               no_nulls=True, orient_snap=True, seed_zero_bones=0.001,
+               merge_to_nearest=True,
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               texture_by_material=True,
+               glb_images={0: "tsunade_0.png", 1: "tsunade_1.png"},
+               solid_textures={"5_-Pendant_1_0_0": None, "5_Material58_1_0_0": None, "5_Material59_1_0_0": None},
+               materials=dict(textures={**{f"5_Material{n}_1_0_0": [("DiffuseColor", "tsunade_0.png")] for n in (50, 51, 52, 53, 54, 57)},
+                                        **{f"5_Material{n}_1_0_0": [("DiffuseColor", "tsunade_1.png")] for n in (55, 56)}})),
     # 드래곤볼 퍼펙트 셀(업로드용 glTF, 게임 추출 Cpl034) → R59 돌아온_이태훈. zip = source/Cell Perfect.zip(.gltf · .bin · 그림 9) + textures/ 9.
     #   🔴 **바깥 textures/ 그림 8장이 안쪽 그림의 상하 반전**(R21·R51과 같은 함정, 세 번째) — .gltf가 가리키는 안쪽 것을 쓴다.
     #   메시 14 = 몸·팔(0000) · 날개 껍데기·머리 볏(0002 hardparts) · 얼굴(0004) · 머리(0006) · 하체(0008) · 입(0014) · 눈 넷
@@ -5691,8 +5724,10 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             report["골반 옮김"] = {"전": [round(c, 4) for c in before_h], "후": [round(c, 4) for c in hb.head],
                                 "옮긴 거리": round((hb.head - before_h).length, 4)}
         for child_name, parent_name in cfg.get("reparent_bones", {}).items():
-            eb, par = data.edit_bones.get(child_name), data.edit_bones.get(parent_name)
-            assert eb is not None and par is not None, f"{name}: 다시 붙일 뼈가 없다 {child_name} → {parent_name}"
+            # 🔸 parent_name=None이면 뿌리로 뗀다(2026-09-25 R49 츠나데: glTF 계층이 꼬여 오른발 끝 뼈 밑에 골반이 매달려 있었다).
+            eb = data.edit_bones.get(child_name)
+            par = data.edit_bones.get(parent_name) if parent_name is not None else None
+            assert eb is not None and (parent_name is None or par is not None), f"{name}: 다시 붙일 뼈가 없다 {child_name} → {parent_name}"
             eb.use_connect = False
             eb.parent = par
         if cfg.get("reparent_bones"):
