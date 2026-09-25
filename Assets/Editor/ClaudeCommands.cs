@@ -960,6 +960,9 @@ public static class ClaudeCommands
     //                  캡처 round_NN.png를 남긴다. [초]는 무시된다(끝날 때 찍는다).
     //   · autoloop       rounds:와 함께 — 라운드가 바뀔 때마다 사람의 한 턴을 목록에 덧붙인다: 랜덤유닛 위습을 위습 칸 클릭으로 하나씩
     //                  Portal_유닛랜덤에 보냄 → 카드별 조합 버튼 시도 → 모든 유닛을 흙길 옆 모서리로(rclickpt:corner).
+    //                  모서리 이동은 한 번 + 「boxselect:Unit_|far」(모서리 밖에 남은 것만) 두 번 — 레인 가운데에 생긴 조합 결과가
+    //                  우리와 한 화면에 안 들어와 첫 박스에서 빠진다(09-25 i1_07: 안흔함 가동률 0%로 R3 패배).
+    //                  🔴 「rounds:」만 주면 도구는 플레이하지 않는다(🖱 0줄). 사람의 한 턴은 autoloop이 붙인다.
     //   · rclickpt:corner  0번 레인 적 경로의 안쪽 모서리(경로에서 약 50 안) **땅**을 우클릭한다 — 유닛이 실제로 싸우는 자리.
     //   · call:<형.함수>  플레이 도중 그 자리에서 인자 없는 정적 함수를 불러, 돌려준 문자열을 결과에 싣는다(다른 사람 진단을 판 안에서 돌릴 때 —
     //                  예: call:ApronProbe.AgentAudit. 그 진단의 메뉴는 스스로 플레이에 들어가서 이미 플레이 중인 판에선 못 쓴다, 09-24).
@@ -2021,10 +2024,15 @@ public static class ClaudeCommands
         string want = spec.Substring(5).Normalize(NormalizationForm.FormC);
         SelectionManager selection = UnityEngine.Object.FindFirstObjectByType<SelectionManager>();
         var names = selection != null ? selection.Selected.Where(x => x != null).Select(x => x.gameObject.name.Normalize(NormalizationForm.FormC)).ToList() : new List<string>();
-        bool ok = isSelect ? names.Any(n => n.Contains(want)) : names.Count > 0 && names.All(n => n.Contains(want));
-        if (ok || job.clickIndex >= job.clicks.Count) return;
+        if (isBox && want.EndsWith("|far")) want = want.Substring(0, want.Length - 4);
+        if (job.clickIndex >= job.clicks.Count) return;
         string next = job.clicks[job.clickIndex];
-        bool dependent = next.StartsWith("@rc:") || (isSelect && (next.StartsWith("?UnitCommandSlot") || next == "?@shopany"));
+        // 박스는 먼저 「드래그가 먹었나」(lastBoxPicked). 모서리 땅 우클릭(@rcpt:)은 박스에 건물(Lane1_*)이 섞여도 해가 없어
+        //    대상이 한 기라도 골렸으면 보낸다 — 포탈 우클릭(@rc:)은 섞인 게 같이 가면 안 되니 전부 맞아야 한다.
+        bool ok = isSelect ? names.Any(n => n.Contains(want))
+                : lastBoxPicked > 0 && (next.StartsWith("@rcpt:") || names.All(n => n.Contains(want)));
+        if (ok) return;
+        bool dependent = next.StartsWith("@rc:") || next.StartsWith("@rcpt:") || (isSelect && (next.StartsWith("?UnitCommandSlot") || next == "?@shopany"));
         if (!dependent) return;
         job.report += $"   ⛔ 「{spec}」 뒤 선택이 뜻과 다름({(names.Count > 0 ? string.Join(", ", names.Take(5)) : "없음")}) — 이 선택에 기대는 「{next}」를 버림\n";
         job.clickIndex++;
@@ -2056,7 +2064,13 @@ public static class ClaudeCommands
                     return false;
                 }
                 lastPointerTarget = target;
-                Vector3 aim = target.TryGetComponent(out Collider col) ? col.bounds.center : target.transform.position;
+                // 🔴 우클릭으로 트리거(포탈)를 겨눌 땐 bounds.center가 아니라 **원판**(transform.position)을 찍는다 — 사람이 찍는 자리다.
+                //    트리거는 위습을 받으려고 키 150으로 세워 둬서 bounds.center가 공중(y 82.8)에 뜬다. 비스듬한 카메라에선 그 화면점이
+                //    포탈 **뒤쪽 땅**을 찍어, 목적지가 원 가장자리(17.4/18.8)에 겨우 걸리거나 구도에 따라 원 밖 29~295로 빠졌다
+                //    (2026-09-25 WispPortalProbe, outbox i1_03). 좌클릭(select:)은 몸을 맞혀야 해서 그대로 bounds.center다.
+                Vector3 aim = target.TryGetComponent(out Collider col)
+                    ? (!left && col.isTrigger ? target.transform.position : col.bounds.center)
+                    : target.transform.position;
                 Vector3 sp = cam.WorldToScreenPoint(aim);
                 (float bandBottom, float bandTop) = PointerBand();
                 bool visible = sp.z > 0f && sp.x > 20f && sp.x < cam.pixelWidth - 20f && sp.y > bandBottom * cam.pixelHeight + 10f && sp.y < bandTop * cam.pixelHeight - 10f;
@@ -2326,8 +2340,12 @@ public static class ClaudeCommands
             storyPlan = $" · 스토리 {story.FinishedCount - job.storyFinishedAtSend}개 깸 → 안흔함 복귀";
         }
         // 스토리존에 가 있는 동안엔 안흔함을 다시 끌어내지 않도록 흔함만 모서리로 보낸다.
-        turn.Add(job.storySent ? "@box:Unit_흔함" : "@box:Unit_");
+        // 한 화면에 안 들어오는 무리(우리·레인 가운데의 조합 결과·모서리)는 첫 박스가 일부만 잡는다 —
+        //    원작도 흔함만 고정 칸이고 조합 결과는 레인 가운데에 나와 사람이 옮긴다. 모서리 밖에 남은 것만 두 번 더 쓸어 보낸다.
+        string sweep = job.storySent ? "@box:Unit_흔함" : "@box:Unit_";
+        turn.Add(sweep);
         turn.Add("@rcpt:corner");
+        for (int k = 0; k < 2; k++) { turn.Add(sweep + "|far"); turn.Add("@rcpt:corner"); }
 
         job.clicks.AddRange(turn);
         job.report += $"   🔁 한 턴 예약: 흔함 선택 {picked.Count}기({string.Join(", ", picked)}) · 랜덤유닛 위습 {randomWisps}기 → 포탈 · 조합 시도{storyPlan} · 모서리로 이동({turn.Count}동작)\n";
@@ -2400,21 +2418,61 @@ public static class ClaudeCommands
 
     // boxselect: — 그 이름 내 유닛들을 화면에서 감싸는 사각형을 드래그한다. 0 조준(필요하면 카메라) → 1 누름 → 2 끌기 → 3 뗌 → 결과.
     static Vector2 boxStart, boxEnd;
+    // 마지막 boxselect가 **실제로** 고른 대상 수. 0이면 드래그가 안 먹은 것이다 — SelectionManager는 누른 자리가 uGUI 위면
+    //    드래그를 통째로 버리고, 그러면 앞 동작의 선택이 그대로 남는다. 09-25 i1_07: 「Unit_」 박스가 안 먹었는데 앞의 「Unit_흔함」
+    //    선택(흔함 2기)이 남아 「지금 선택」에 찍혀 성공처럼 보였고, 레인 가운데의 조합 결과는 끝까지 안 움직여 R3에 졌다.
+    static int lastBoxPicked;
+    static readonly List<UnityEngine.EventSystems.RaycastResult> uiHits = new List<UnityEngine.EventSystems.RaycastResult>();
+
+    static bool OverUi(Vector2 screen)
+    {
+        UnityEngine.EventSystems.EventSystem es = UnityEngine.EventSystems.EventSystem.current;
+        if (es == null) return false;
+        uiHits.Clear();
+        es.RaycastAll(new UnityEngine.EventSystems.PointerEventData(es) { position = screen }, uiHits);
+        return uiHits.Count > 0;
+    }
+
+    // 「|far」 — 이미 모서리에 있거나 모서리로 가는 중인 유닛은 뺀다. 유닛이 우리·레인 가운데·모서리로 흩어져 한 화면에 안 들어올 때
+    //    남은 무리만 다시 골라 보내는 데 쓴다(QueueTurn이 두 번 더 부른다).
+    const float CornerNearRadius = 100f;
+    static bool AtOrHeadingToCorner(Selectable s, Vector3 corner)
+    {
+        Vector2 c = new Vector2(corner.x, corner.z);
+        if (Vector2.Distance(new Vector2(s.transform.position.x, s.transform.position.z), c) <= CornerNearRadius) return true;
+        return s.TryGetComponent(out NavMeshAgent agent) && agent.isOnNavMesh && agent.hasPath &&
+               Vector2.Distance(new Vector2(agent.destination.x, agent.destination.z), c) <= CornerNearRadius;
+    }
+
     static bool StepBox(GameShotJob job, string name, double inStage)
     {
         Camera cam = Camera.main;
-        string wanted = name.Normalize(NormalizationForm.FormC);
+        bool farOnly = name.EndsWith("|far");
+        string wanted = (farOnly ? name.Substring(0, name.Length - 4) : name).Normalize(NormalizationForm.FormC);
         switch (job.pointerPhase)
         {
             case 0:
             {
                 List<Selectable> targets = Selectable.All.Where(x => x != null && x.name.Normalize(NormalizationForm.FormC).Contains(wanted) &&
                     (!x.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == LocalPlayer.LocalPlayerId)).ToList();
+                if (farOnly)
+                {
+                    if (!TryCornerTarget(50f, out Vector3 corner)) targets.Clear();
+                    else targets = targets.Where(t => !AtOrHeadingToCorner(t, corner)).ToList();
+                    if (targets.Count == 0)
+                    {
+                        job.report += $"   🖱 드래그 boxselect 「{wanted}」(모서리 밖만): 남은 유닛 없음 — 건너뜀\n";
+                        lastBoxPicked = 0;
+                        job.pointerX = 0f;
+                        return true;
+                    }
+                }
                 if (targets.Count == 0 || cam == null)
                 {
                     if (inStage < GameShotOptionalClickSearch) return false;
                     // 판을 끝내지 않는다 — 조합으로 재료가 다 쓰이면 정상적으로 0기가 된다(09-24 loop7: 여기서 끝나 결과 🏅 줄을 못 찍었다).
                     job.report += $"   🖱 드래그 boxselect 「{wanted}」: 내 유닛이 0기라 건너뜀\n";
+                    lastBoxPicked = 0;
                     job.pointerX = 0f;
                     return true;
                 }
@@ -2436,7 +2494,7 @@ public static class ClaudeCommands
                         // 카메라를 한 번 옮겨도 다 안 들어오면 **보이는 것만** 고른다(판을 끝내지 않는다 — 긴 판에서 유닛이 우리·가운데·모서리로 흩어진다).
                         List<Selectable> visibleOnes = targets.Where(t => { Vector3 v = cam.WorldToScreenPoint(t.transform.position);
                             return v.z > 0f && v.x > 20f && v.x < cam.pixelWidth - 20f && v.y > bandBottom * cam.pixelHeight + 10f && v.y < bandTop * cam.pixelHeight - 10f; }).ToList();
-                        if (visibleOnes.Count == 0) { job.report += $"   🖱 드래그 boxselect 「{wanted}」: {targets.Count}기가 한 화면에 없어 건너뜀\n"; job.pointerX = 0f; return true; }
+                        if (visibleOnes.Count == 0) { job.report += $"   🖱 드래그 boxselect 「{wanted}」: {targets.Count}기가 한 화면에 없어 건너뜀\n"; lastBoxPicked = 0; job.pointerX = 0f; return true; }
                         job.report += $"   🖱 드래그 boxselect 「{wanted}」: {targets.Count}기 중 한 화면에 든 {visibleOnes.Count}기만 고름\n";
                         min = new Vector3(float.MaxValue, float.MaxValue); max = new Vector3(float.MinValue, float.MinValue);
                         foreach (Selectable t in visibleOnes) { Vector3 v = cam.WorldToScreenPoint(t.transform.position); min = Vector3.Min(min, v); max = Vector3.Max(max, v); }
@@ -2455,8 +2513,19 @@ public static class ClaudeCommands
                 }
                 const float pad = 40f;
                 float bottomLimit = bandBottom * cam.pixelHeight + 2f, topLimit = bandTop * cam.pixelHeight - 2f;
-                boxStart = new Vector2(Mathf.Max(1f, min.x - pad), Mathf.Clamp(min.y - pad, bottomLimit, topLimit));
-                boxEnd = new Vector2(Mathf.Min(cam.pixelWidth - 1f, max.x + pad), Mathf.Clamp(max.y + pad * 2f, bottomLimit, topLimit));
+                float x0 = Mathf.Max(1f, min.x - pad), x1 = Mathf.Min(cam.pixelWidth - 1f, max.x + pad);
+                float y0 = Mathf.Clamp(min.y - pad, bottomLimit, topLimit), y1 = Mathf.Clamp(max.y + pad * 2f, bottomLimit, topLimit);
+                // 드래그는 **누른 자리**가 uGUI(이름표·체력바·HUD) 위면 통째로 버려진다(SelectionManager.ignoreCurrentPress).
+                //    네 귀퉁이 중 UI가 없는 곳에서 시작한다 — 사각형은 같고 끌어가는 방향만 바뀐다.
+                Vector2[] corners4 = { new Vector2(x0, y0), new Vector2(x1, y1), new Vector2(x0, y1), new Vector2(x1, y0) };
+                int startIndex = Array.FindIndex(corners4, c => !OverUi(c));
+                if (startIndex < 0)
+                {
+                    job.report += $"   ⚠️ boxselect 「{wanted}」: 사각형 네 귀퉁이가 전부 UI 위라 드래그가 안 먹을 수 있다(그래도 시도)\n";
+                    startIndex = 0;
+                }
+                boxStart = corners4[startIndex];
+                boxEnd = new Vector2(boxStart.x == x0 ? x1 : x0, boxStart.y == y0 ? y1 : y0);
                 EnsureShotMouse();
                 QueueMouse(boxStart, MouseButton.Left, false);
                 job.pointerX = 1f;
@@ -2471,7 +2540,17 @@ public static class ClaudeCommands
             {
                 SelectionManager selection = UnityEngine.Object.FindFirstObjectByType<SelectionManager>();
                 var chosen = selection != null ? selection.Selected.Where(x => x != null).GroupBy(x => x.name).Select(g => g.Count() > 1 ? $"{g.Key}×{g.Count()}" : g.Key) : Enumerable.Empty<string>();
-                job.report += $"   🖱 드래그 boxselect 「{wanted}」 ({boxStart.x:F0},{boxStart.y:F0})→({boxEnd.x:F0},{boxEnd.y:F0}) → 지금 선택: {string.Join(", ", chosen)}\n";
+                // 「지금 선택」은 앞 동작이 남긴 것일 수 있다 — 이 드래그가 **바꾼** 선택인지 따로 센다.
+                //    SelectInBox는 선택을 비우고 사각형 안의 내 것을 전부 담는다 → 먹었다면 「선택 = 사각형 안의 내 것」이다.
+                //    어긋나면(사각형 안인데 안 골림, 사각형 밖인데 골려 있음) 드래그가 버려지고 앞 선택이 남은 것이다.
+                Rect rect = Rect.MinMaxRect(Mathf.Min(boxStart.x, boxEnd.x), Mathf.Min(boxStart.y, boxEnd.y), Mathf.Max(boxStart.x, boxEnd.x), Mathf.Max(boxStart.y, boxEnd.y));
+                bool InRect(Selectable x) { Vector3 v = cam.WorldToScreenPoint(x.transform.position); return v.z > 0f && rect.Contains(new Vector2(v.x, v.y)); }
+                var picked = selection != null ? selection.Selected.Where(x => x != null).ToList() : new List<Selectable>();
+                var mineInRect = Selectable.All.Where(x => x != null && (!x.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == LocalPlayer.LocalPlayerId) && InRect(x)).ToList();
+                bool dragTook = picked.Count > 0 && picked.All(InRect) && mineInRect.All(picked.Contains);
+                lastBoxPicked = dragTook ? picked.Count(x => x.name.Normalize(NormalizationForm.FormC).Contains(wanted)) : 0;
+                job.report += $"   🖱 드래그 boxselect 「{wanted}{(farOnly ? "」(모서리 밖만)" : "」")} ({boxStart.x:F0},{boxStart.y:F0})→({boxEnd.x:F0},{boxEnd.y:F0}) → 지금 선택: {string.Join(", ", chosen)}" +
+                              (dragTook ? "" : " ⚠️ 드래그가 안 먹음(누른 자리가 UI 위?) — 앞 선택이 남은 것") + "\n";
                 ParkShotMouse(cam);
                 job.pointerX = 0f;
                 return true;
