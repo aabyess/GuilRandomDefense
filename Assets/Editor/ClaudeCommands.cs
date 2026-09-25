@@ -2643,6 +2643,7 @@ public static class ClaudeCommands
     //    드래그를 통째로 버리고, 그러면 앞 동작의 선택이 그대로 남는다. 09-25 i1_07: 「Unit_」 박스가 안 먹었는데 앞의 「Unit_흔함」
     //    선택(흔함 2기)이 남아 「지금 선택」에 찍혀 성공처럼 보였고, 레인 가운데의 조합 결과는 끝까지 안 움직여 R3에 졌다.
     static int lastBoxPicked;
+    static int dragFailDiags;   // 판마다 0부터 — 도메인 리로드(플레이 진입)가 정적 값을 되돌린다
     static readonly List<UnityEngine.EventSystems.RaycastResult> uiHits = new List<UnityEngine.EventSystems.RaycastResult>();
 
     static bool OverUi(Vector2 screen)
@@ -2777,6 +2778,12 @@ public static class ClaudeCommands
                 lastBoxPicked = dragTook ? picked.Count(x => x.name.Normalize(NormalizationForm.FormC).Contains(wanted)) : 0;
                 job.report += $"   🖱 드래그 boxselect 「{wanted}{(farOnly ? "」(모서리 밖만)" : "」")} ({boxStart.x:F0},{boxStart.y:F0})→({boxEnd.x:F0},{boxEnd.y:F0}) → 지금 선택: {string.Join(", ", chosen)}" +
                               (dragTook ? (full ? $" (선택 상한 {cap}기에 닿음 — 사각형 안 {mineInRect.Count}기)" : "") : " ⚠️ 드래그가 안 먹음(누른 자리가 UI 위?) — 앞 선택이 남은 것") + "\n";
+                // 안 먹은 첫 두 번은 입력 상태를 통째로 싣는다(09-25 판 F: R6부터 드래그·우클릭이 전부 안 먹었는데 원인을 못 가렸다).
+                if (!dragTook && dragFailDiags < 2)
+                {
+                    dragFailDiags++;
+                    job.report += WispPortalProbe.InputDiag() + "\n";
+                }
                 ParkShotMouse(cam);
                 job.pointerX = 0f;
                 return true;
