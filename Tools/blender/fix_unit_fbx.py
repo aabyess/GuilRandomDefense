@@ -364,6 +364,15 @@ for _side in ("Left", "Right"):
                          f"{_side} elbow": f"mixamorig:{_side}ForeArm", f"{_side} wrist": f"mixamorig:{_side}Hand",
                          f"{_side} leg": f"mixamorig:{_side}UpLeg", f"{_side} knee": f"mixamorig:{_side}Leg",
                          f"{_side} ankle": f"mixamorig:{_side}Foot", f"{_side} toe": f"mixamorig:{_side}ToeBase"})
+# 언리얼식 리그(R59 퍼펙트 셀, 2026-09-25): pelvis · spine 01~03 · neck 01 · head · clavicle · upperarm · lowerarm · hand · thigh · calf · foot · ball.
+#   살은 비틀림 뼈(upperarm twist 0x 등)에 있다 → merge_to_nearest가 제 사람 뼈로 모은다.
+UE_RENAME = {"pelvis": "mixamorig:Hips", "spine 01": "mixamorig:Spine", "spine 02": "mixamorig:Spine1", "spine 03": "mixamorig:Spine2",
+             "neck 01": "mixamorig:Neck", "head": "mixamorig:Head"}
+for _s, _side in (("l", "Left"), ("r", "Right")):
+    UE_RENAME.update({f"clavicle {_s}": f"mixamorig:{_side}Shoulder", f"upperarm {_s}": f"mixamorig:{_side}Arm",
+                      f"lowerarm {_s}": f"mixamorig:{_side}ForeArm", f"hand {_s}": f"mixamorig:{_side}Hand",
+                      f"thigh {_s}": f"mixamorig:{_side}UpLeg", f"calf {_s}": f"mixamorig:{_side}Leg",
+                      f"foot {_s}": f"mixamorig:{_side}Foot", f"ball {_s}": f"mixamorig:{_side}ToeBase"})
 # 빈스모크 저지(R24): Spine2만 없고 Toe0은 있는 Bip001.
 BIP001_NO_SPINE2 = {k: v for k, v in BIP001_RENAME.items() if not k.endswith("Spine2")}
 # 버기(R18): Spine2·Toe0이 없는 Bip001. 있는 것만 남긴다.
@@ -1036,6 +1045,42 @@ UNITS = {
     # 원피스 우타(Uta) → R16 이하림. 버기와 **같은 Bip001 계열**이지만 이쪽은 Spine2·Toe0이 **있다**(그래서 표가 다르다).
     #   zip 안 zip 안 .gltf — 버기와 같은 꼴이라 `archive_textures`로 `.bin`을 같이 꺼낸다.
     #   메시 1(+Icosphere) · 뼈 91 · 겹친 변형 없음.
+    # 드래곤볼 퍼펙트 셀(업로드용 glTF, 게임 추출 Cpl034) → R59 돌아온_이태훈. zip = source/Cell Perfect.zip(.gltf · .bin · 그림 9) + textures/ 9.
+    #   🔴 **바깥 textures/ 그림 8장이 안쪽 그림의 상하 반전**(R21·R51과 같은 함정, 세 번째) — .gltf가 가리키는 안쪽 것을 쓴다.
+    #   메시 14 = 몸·팔(0000) · 날개 껍데기·머리 볏(0002 hardparts) · 얼굴(0004) · 머리(0006) · 하체(0008) · 입(0014) · 눈 넷
+    #   + **외곽선 껍데기(OUTLINE) 넷** → 뺀다(나미 7_과 같은 뒤집힌 껍데기). 재질 10(BLEND 알파 → 불투명으로 고침) · 그림 9 · 관절 239.
+    #   언리얼식 리그 → UE_RENAME. 등 날개(wing 01~06 좌우) · 꼬리(sp3tail)는 spine 03 밑 → merge_to_nearest가 **Spine2에 통째로**
+    #   (사장님 「몸에 붙은 것이면 Spine에 고정」). 얼굴 뼈 수십 → Head · 비틀림·팔꿈치·무릎 → 제 팔다리 · 손가락 → 손.
+    #   A자(손 z 1.16 · 어깨 1.63) → tpose_arms. 다리를 벌린 자세(발 x ±0.31).
+    #   재질 10개가 이름이 전혀 다른 그림 9장을 나눠 쓴다 → texture_by_material(유니티 이름 매칭용으로 재질 이름으로 복사).
+    "돌아온_이태훈": dict(path="Assets/Art/Enemies/돌아온_이태훈/돌아온_이태훈.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R51-R60/R59_돌아온_이태훈.zip"), "source/Cell Perfect.zip", "Cell Perfect.gltf"),
+               archive_textures=["Cell Perfect.bin"],
+               archive_rgb={f: f for f in ("Cpl034p5c01s1_upperbody_di.png", "Cpl034p4c01s1_hardparts_di.png", "Cpl034p3c01s1_face_di.png",
+                                           "Cpl034p3c01s1_head_di.png", "Cpl034p5c01s1_lowerbody_di.png", "Cpl034p3c01s1_eye_di2.png",
+                                           "Cpl034p3c01s1_eye_di.png")},
+               gltf_guess_bind=False,
+               drop_meshes=["Icosphere", "7_0001-OUTLINE_0.1_16_16", "7_0005-OUTLINE_0.1_16_16",
+                            "7_0007-OUTLINE_0.1_16_16", "7_0009-OUTLINE_0.1_16_16"],
+               rename_bones=UE_RENAME,
+               drop_bones=["root", "AttachPoint"],                  # 뿌리 옆 빈 부착점(살 0, 사람 뼈 밖이라 merge_to_nearest가 멈췄다)
+               no_nulls=True, orient_snap=True,
+               merge_to_nearest=True,
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               texture_by_material=True,
+               materials=dict(textures={
+                   "7_0000-Cpl034p3c01s1d1_0.1_16_16": [("DiffuseColor", "Cpl034p5c01s1_upperbody_di.png")],
+                   "7_0002-Cpl034p3c01s1d1_0.1_16_16": [("DiffuseColor", "Cpl034p4c01s1_hardparts_di.png")],
+                   "7_0004-Cpl034p3c01s1d1_0.1_16_16": [("DiffuseColor", "Cpl034p3c01s1_face_di.png")],
+                   "7_0006-Cpl034p3c01s1d1_0.1_16_16": [("DiffuseColor", "Cpl034p3c01s1_head_di.png")],
+                   "7_0008-Cpl034p3c01s1d1_0.1_16_16": [("DiffuseColor", "Cpl034p5c01s1_lowerbody_di.png")],
+                   "7_0014-Cpl034p3c01s1d1_0.1_16_16": [("DiffuseColor", "Cpl034p3c01s1_face_di.png")],
+                   "7_EyeLB_0.1_16_16": [("DiffuseColor", "Cpl034p3c01s1_eye_di2.png")],
+                   "7_EyeLW_0.1_16_16": [("DiffuseColor", "Cpl034p3c01s1_eye_di.png")],
+                   "7_EyeRB_0.1_16_16": [("DiffuseColor", "Cpl034p3c01s1_eye_di2.png")],
+                   "7_EyeRW_0.1_16_16": [("DiffuseColor", "Cpl034p3c01s1_eye_di.png")]})),
     # 주술회전 츠쿠모 유키(업로드용 glTF, 우타·버기와 같은 「5_…_1.0_0_0」 재질 계열) → R51 최수지. zip = source/Yuki Tsukumo.zip(.gltf · .bin · png)
     #   + textures/png. 🔴 **바깥 textures/ 그림은 안쪽 그림의 상하 반전**(R21 호로와 같은 함정) — .gltf가 가리키는 안쪽 것을 쓴다.
     #   메시 5(부츠 794 · 머리카락 2,446 · 바지 1,769 · 피부 5,019 · 상의 765) · 재질 5 · 그림 1(재질 다섯이 한 장을 나눠 씀) · 관절 103 · 클립 0.
@@ -3982,6 +4027,8 @@ SKIP = ("end", "top", "tweak", "mch", "org", "pole", "widget", "adj", "vis_")
 
 
 _SKIP_SHAPES = False                                                    # fix()가 항목의 skip_shapes로 켠다(load()가 읽는다)
+_TEX_BY_MAT = False                                                     # fix()가 항목의 texture_by_material로 켠다(relink_textures가 읽는다)
+_TEX_BY_MAT_SRC, _TEX_BY_MAT_DST = set(), set()
 
 
 def load(path, anim, guess_bind=True):
@@ -4097,8 +4144,24 @@ def relink_textures(table, tex_dir, fallback_dir=None):
             assert prop in FBX_TEX_SLOT, f"{mat_name}: 옮길 줄 모르는 텍스처 속성 {prop}"
             file = _find_texture(tex_dir, fallback_dir, fn)
             assert os.path.isfile(file), f"{mat_name}: 텍스처 파일이 없다 {file}"
+            if _TEX_BY_MAT and prop == "DiffuseColor":
+                # 🔸 texture_by_material(2026-09-25 R59 퍼펙트 셀): 유니티 ArtBinder.MatchTexture는 **재질 이름**으로 폴더의 그림을 찾고,
+                #   못 찾으면 폴더에 그림이 한 장뿐일 때만 그걸 쓴다. 재질 10개가 이름이 전혀 다른 그림 9장을 나눠 쓰면 전부 회색이 된다
+                #   → 색 그림을 <재질이름>.<확장자>로 복사해 그걸 건다. 원래 이름 파일은 끝에 지운다(아무도 안 쓰면).
+                safe = "".join(c for c in mat_name if c.isalnum() or c in "._-") + os.path.splitext(file)[1]
+                dst = os.path.join(tex_dir, safe)
+                if os.path.abspath(dst) != os.path.abspath(file):
+                    shutil.copy2(file, dst)
+                    _TEX_BY_MAT_SRC.add(os.path.abspath(file))
+                _TEX_BY_MAT_DST.add(os.path.abspath(dst))
+                file = dst
             getattr(new, FBX_TEX_SLOT[prop]).image = bpy.data.images.load(file, check_existing=True)
             done.append(f"{mat_name}.{prop}={fn}")
+    if _TEX_BY_MAT:
+        for src in sorted(_TEX_BY_MAT_SRC - _TEX_BY_MAT_DST):
+            if os.path.dirname(src) == os.path.abspath(tex_dir) and os.path.isfile(src):
+                os.remove(src)
+                done.append(f"원래 이름 지움 {os.path.basename(src)}")
     return done
 
 
@@ -4823,8 +4886,11 @@ def humanoid_weight_check(name, meshes):
 
 
 def fix(name, cfg, out_dir=None, save_blend=False):
-    global _SKIP_SHAPES
+    global _SKIP_SHAPES, _TEX_BY_MAT
     _SKIP_SHAPES = bool(cfg.get("skip_shapes"))
+    _TEX_BY_MAT = bool(cfg.get("texture_by_material"))
+    _TEX_BY_MAT_SRC.clear()
+    _TEX_BY_MAT_DST.clear()
     if cfg.get("hold"):
         return {"이름": name, "보류": cfg["hold"]}
     dst_path = os.path.join(ROOT, cfg["path"])
