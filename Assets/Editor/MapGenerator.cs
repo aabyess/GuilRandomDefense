@@ -4062,9 +4062,33 @@ public static class MapGenerator
     ///    이 값이 **가장 큰 포탈 반지름의 2배보다 작으면 엔진이 다시 부풀린다.**
     ///    지금 가장 큰 것은 스토리 복귀(지름 100 → 반지름 50)라 하한이 **100**이다.
     ///    100으로 잡으면 딱 걸쳐서, 포탈을 조금만 키워도 조용히 옛 병으로 돌아간다.
-    ///    150이면 반지름 75짜리 포탈까지 견딘다. **줄이지 말 것** — 줄이면 그 하한부터 확인해야 한다.
+    ///    150이면 반지름 75짜리 포탈까지 견딘다.
+    ///
+    /// 🔴 2026-09-24 — **이 값을 위습만 보고 유도하면 안 된다는 것이 증명됐다.**
+    ///    사장님이 위습을 절반으로 줄이라고 하셔서 WispScale이 50 → 25가 됐는데, 옛 식
+    ///    `3 × WispScale`은 그대로 **150 → 75**가 된다. 캡슐 하한 100은 **위습이 아니라 포탈
+    ///    지름**이 정하므로 안 줄어든다 → 75 &lt; 100이라 **엔진이 다시 구로 부풀린다.**
+    ///    즉 옛 식은 「위습이 바뀌면 조용히 깨지는」 식이었고, 위습이 커지는 동안엔 우연히 안전했다.
+    ///    그래서 **두 하한의 큰 쪽**으로 바꾼다 — 어느 쪽이 커져도 따라온다.
+    ///      · 위습 꼭대기(1.35 × WispScale)의 두 배
+    ///      · 가장 큰 포탈 지름(= 캡슐 하한)의 1.5배
     /// </summary>
-    const float PortalTriggerHeight = 3f * WispScale;   // 150 — 위습 꼭대기 67.5 + 캡슐 하한 100 둘 다 넘긴다
+    /// <summary>위습 콜라이더 꼭대기 = (떠 있는 높이 0.85 + 반지름 0.5) × 배율.</summary>
+    const float WispColliderTop = (WispFloatHeight + 0.5f) * WispScale;
+
+    /// <summary>
+    /// 이 함수를 거쳐 만들어지는 포탈 중 가장 큰 지름. **캡슐 높이의 하한을 이 값이 정한다**
+    /// (유니티 캡슐은 높이 &lt; 2×반지름이면 높이를 무시한다).
+    /// ⚠️ 포탈 종류를 더하면 여기도 넣어야 한다 — 빠뜨리면 그 포탈만 조용히 구가 된다.
+    /// ⚠️ **PortalTriggerHeight보다 먼저 선언해야 한다.** 정적 필드 초기화는 **글 순서**로
+    ///    도므로, 뒤에 두면 그 식이 0을 읽어 트리거 높이가 위습 몫만 남는다(= 옛 결함 재발).
+    /// </summary>
+    static readonly float LargestPortalDiameter = Mathf.Max(
+        Mathf.Max(PortalDiameter, ChoicePortalDiameter),
+        Mathf.Max(StoryPortalDiameter, StoryReturnPortalDiameter));
+
+    static readonly float PortalTriggerHeight = Mathf.Max(
+        WispColliderTop * 2f, LargestPortalDiameter * 1.5f);
 
     static GameObject CreatePortalObject(Transform parent, string name, Vector3 position, float diameter)
     {
@@ -4364,7 +4388,16 @@ public static class MapGenerator
     //    작을 이유가 없다. 프리팹 기본 몸이 0.6이므로 배율 12×Scale이 몸 키 30이다.
     // ⚠️ 아래 agent.radius·height는 WispScale로 나눠서 넣으므로 월드 기준 값(0.28·2)은
     //    그대로 유지된다 — 몸만 커지고 길찾기 판정은 안 커진다(좁은 데 못 들어가는 일 없음).
-    const float WispScale = 12f * MapLayout.Scale;
+    // 🔴 2026-09-24 사장님 지시 「랜덤유닛, 선택유닛 영혼처럼 보이는 거 구체 이거 크기 절반으로
+    //    줄여줘」 → 12 → **6**(몸 키 50 → 25, 유닛 키의 절반).
+    //    위 「유닛과 같은 키」는 사장님이 두 번 작다고 하셔서 올린 값인데, 이번엔 반대로
+    //    거두셨다. **결함 수정이 아니라 취향이 정해진 것**이다 — 다음 사람이 「왜 내렸나,
+    //    뭐가 틀렸었나」를 찾지 않게 적는다.
+    // ⚠️ 이 값을 만지면 **포탈 트리거 높이와 위습 자리 간격이 같이 움직인다.** 그 둘은
+    //    아래에서 유도되므로 저절로 따라오지만, 트리거 높이는 캡슐 하한(=가장 큰 포탈 지름)이
+    //    따로 있어서 **위습만 보고 줄이면 09-24에 고친 「납작 원기둥이 구가 된다」가 되살아난다.**
+    //    그래서 PortalTriggerHeight를 둘 중 큰 쪽으로 바꿨다(그 주석 참고).
+    const float WispScale = 6f * MapLayout.Scale;
     const float WispSpeed = 25f * MapLayout.Scale;
     const string WispPrefabPath = "Assets/Prefabs/WispPrefab.prefab";
 
@@ -5777,9 +5810,18 @@ public static class MapGenerator
         WispCell[] cells = Object.FindObjectsByType<WispCell>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         UnitPortal[] portals = Object.FindObjectsByType<UnitPortal>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
+        // 🔴 2026-09-24 정정 — 예전에는 `need`에 WispCellMargin을 넣고, 칸 자리(ChoiceWispGap)도
+        //    같은 여유를 넣어 만들었다. 그래서 **설계상 거리와 필요값이 정확히 같았고**,
+        //    `<` 비교가 부동소수 한 자리에서 갈려 「41.5 < 필요 41.5」라는 읽을 수 없는 경고가 났다.
+        //    필요값은 **닿는 거리(두 반지름 합)** 로 두고, 여유는 **남은 값으로 보여 준다** —
+        //    그래야 「여유 3.0」이 눈에 보이고, 걸릴 때만 걸린다.
+        //    (같은 병을 조합판 섬 폭에서도 당했다: 자연 폭에 딱 맞추면 「100%로 줄여 맞췄습니다」가
+        //     거짓으로 떴다. 유도식이 문턱과 같은 값을 내면 비교가 뜻을 잃는다.)
+        float tightest = float.MaxValue;
+        string tightestWho = "";
         foreach (WispCell cell in cells)
         {
-            float closest = float.MaxValue, need = 0f;
+            float closest = float.MaxValue, contact = 0f;
             string who = "";
             foreach (UnitPortal portal in portals)
             {
@@ -5789,15 +5831,27 @@ public static class MapGenerator
                 closest = flat;
                 who = portal.gameObject.name;
                 // 포탈 원반의 **실제** 반지름은 그 오브젝트의 가로 배율 절반이다 — 종류마다 지름이 다르다.
-                need = portal.transform.localScale.x * 0.5f + WispColliderRadius + WispCellMargin;
+                contact = portal.transform.localScale.x * 0.5f + WispColliderRadius;
             }
-            if (portals.Length == 0 || closest >= need) continue;
-            hits.Add($"\n    🔴 {cell.gameObject.name} ↔ {who} {closest:0.#} < 필요 {need:0.#}");
+            if (portals.Length == 0) continue;
+
+            float slack = closest - contact;
+            if (slack < tightest) { tightest = slack; tightestWho = $"{cell.gameObject.name} ↔ {who}"; }
+            if (slack >= 0f) continue;
+            hits.Add($"\n    🔴 {cell.gameObject.name} ↔ {who} {closest:0.#} — 닿는 거리 {contact:0.#}를 " +
+                     $"{-slack:0.#} 파고듭니다");
         }
         return hits.Count == 0
-            ? $"\n위습 자리: {cells.Length}칸 전부 포탈과 떨어져 있습니다(위습 반지름 {WispColliderRadius:0.#})."
+            ? $"\n위습 자리: {cells.Length}칸 전부 포탈과 떨어져 있습니다 — 가장 빠듯한 곳 여유 " +
+              $"**{tightest:0.#}** ({tightestWho}, 위습 반지름 {WispColliderRadius:0.#} · 설계 여유 " +
+              $"{WispCellMargin:0.#})." +
+              // 위습 크기를 바꿀 때 **같이 움직여야 하는 짝**이다. 트리거가 캡슐 하한
+              // (= 가장 큰 포탈 지름) 아래로 내려가면 엔진이 구로 부풀려 포탈이 조용히 죽는다.
+              $"\n  포탈 트리거 높이 {PortalTriggerHeight:0.#} (위습 꼭대기 {WispColliderTop:0.#}의 2배 " +
+              $"{WispColliderTop * 2f:0.#} vs 캡슐 하한 {LargestPortalDiameter:0.#}의 1.5배 " +
+              $"{LargestPortalDiameter * 1.5f:0.#} 중 큰 쪽)"
             : $"\n⚠️ 위습이 생기자마자 포탈에 먹히는 자리 {hits.Count}곳 — **플레이어가 고를 기회가 없습니다.**" +
-              $"(필요 = 포탈 반지름 + 위습 반지름 {WispColliderRadius:0.#} + 여유 {WispCellMargin:0.#})" +
+              $"(닿는 거리 = 포탈 반지름 + 위습 반지름 {WispColliderRadius:0.#})" +
               string.Join("", hits);
     }
 
