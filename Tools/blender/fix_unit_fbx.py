@@ -381,6 +381,13 @@ for _s, _side in (("left", "Left"), ("right", "Right")):
                            f"arm {_s} elbow": f"mixamorig:{_side}ForeArm", f"arm {_s} wrist": f"mixamorig:{_side}Hand",
                            f"leg {_s} thigh": f"mixamorig:{_side}UpLeg", f"leg {_s} knee": f"mixamorig:{_side}Leg",
                            f"leg {_s} ankle": f"mixamorig:{_side}Foot", f"leg {_s} toes": f"mixamorig:{_side}ToeBase"})
+# 드래곤볼 카카로트식 게임 리그(R60 초사이어인5, 2026-09-25): G_ 뼈대 + GD_/GP_/GDU_ 보조 수백. 쇄골이 팔 사슬 밖(목 밑)이라 Shoulder는 없다.
+KKR_RENAME = {"G_pelvis": "mixamorig:Hips", "G_waist": "mixamorig:Spine", "G_stomach": "mixamorig:Spine1", "G_chest": "mixamorig:Spine2",
+              "G_neck": "mixamorig:Neck", "G_head": "mixamorig:Head"}
+for _s, _side in (("L", "Left"), ("R", "Right")):
+    KKR_RENAME.update({f"G_uparm_{_s}": f"mixamorig:{_side}Arm", f"G_lowarm_{_s}": f"mixamorig:{_side}ForeArm", f"GD_hand_{_s}": f"mixamorig:{_side}Hand",
+                       f"G_thigh_{_s}": f"mixamorig:{_side}UpLeg", f"G_calf_{_s}": f"mixamorig:{_side}Leg",
+                       f"GD_foot_{_s}": f"mixamorig:{_side}Foot", f"GD_toe_{_s}": f"mixamorig:{_side}ToeBase"})
 # 빈스모크 저지(R24): Spine2만 없고 Toe0은 있는 Bip001.
 BIP001_NO_SPINE2 = {k: v for k, v in BIP001_RENAME.items() if not k.endswith("Spine2")}
 # 버기(R18): Spine2·Toe0이 없는 Bip001. 있는 것만 남긴다.
@@ -1053,6 +1060,23 @@ UNITS = {
     # 원피스 우타(Uta) → R16 이하림. 버기와 **같은 Bip001 계열**이지만 이쪽은 Spine2·Toe0이 **있다**(그래서 표가 다르다).
     #   zip 안 zip 안 .gltf — 버기와 같은 꼴이라 `archive_textures`로 `.bin`을 같이 꺼낸다.
     #   메시 1(+Icosphere) · 뼈 91 · 겹친 변형 없음.
+    # 드래곤볼 AF 손오공 초사이어인5(팬 디자인, Sketchfab glb, **이미 리깅** — 카카로트식 게임 리그) → R60 정윤식 ★보스.
+    #   메시 2(몸 51,404 · **외곽선 껍데기 47,877** → 뺀다) + Icosphere · 재질 2(몸 · outline) · 그림 1 · 관절 340 · 클립 0.
+    #   리그를 살린다: G_ 뼈대 → KKR_RENAME. 쇄골(GD/GP_clavicle, 살 6,847·8,155)은 팔 사슬 밖(목 밑)이라 **가슴(Spine2)**에 합친다
+    #   (목에 두면 고개를 돌릴 때 어깨가 따라 돈다). 꼬리(GD_tail 1~5) → 골반 · 머리카락 31 · 얼굴 → Head · 비틀림·바지·셔츠 보조 → merge_to_nearest.
+    #   A자(위팔 z 1.44 → 아래팔 1.21) → tpose_arms(쇄골 없이 위팔부터).
+    "정윤식": dict(path="Assets/Art/Enemies/정윤식/정윤식.fbx", kind="human", size=("height", 1.8),
+               source=os.path.join(SKINS, "90_적유닛/R51-R60/R60_정윤식_보스.glb"), gltf_guess_bind=False,
+               drop_meshes=["Icosphere", "Object_9"],
+               rename_bones=KKR_RENAME, rename_strip=r"_[0-9]+_?$",
+               drop_bones=["GLTF_created_0_rootJoint", "G_root_338"],
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(pattern=r"^G[DP]U?_(shirt_)?clavicle_[LR]_[0-9]+$", into="mixamorig:Spine2")],
+               merge_to_nearest=True,
+               tpose_arms={s: {"UpperArm": f"mixamorig:{side}Arm", "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               glb_images={0: "42_part1-Body_A_1_0_0.png"},
+               materials=dict(textures={"42_part1-Body_A_1_0_0": [("DiffuseColor", "42_part1-Body_A_1_0_0.png")]})),
     # 나루토 츠나데(Sketchfab glb, 뼈 있음) → R49 이현주(나가토에서 교체, 사장님 2026-09-25). 메시 11 · 재질 11(그림 2장을 여덟이 나눠 씀,
     #   셋은 단색: 목걸이·58·59) · 관절 217 · 클립 0. 낱말 리그 → TSUNADE_RENAME.
     #   🔴 **glTF 계층이 꼬였다**: 오른발 끝(leg right toes)이 뿌리 바로 밑이고 그 밑에 root ground → pelvis가 매달려 있다(오른발 발목엔 발끝이 없다).
