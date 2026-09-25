@@ -1272,6 +1272,13 @@ public static class ClaudeCommands
                 }
                 bool optional = target.StartsWith("?");
                 if (optional) target = target.Substring(1);
+                if (target == "@shopspend")
+                {
+                    job.report += SpendAtShop(job);
+                    job.clickIndex++;
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
+                    break;
+                }
                 string clicked = target == "@shopany" ? ClickFirstShopSlot(job) : ClickButton(target);
                 if (clicked == null && optional && inStage > GameShotOptionalClickSearch)
                 {
@@ -2067,7 +2074,7 @@ public static class ClaudeCommands
         bool ok = isSelect ? names.Any(n => n.Contains(want))
                 : lastBoxPicked > 0 && (next.StartsWith("@rcpt:") || names.All(n => n.Contains(want)));
         if (ok) return;
-        bool dependent = next.StartsWith("@rc:") || next.StartsWith("@rcpt:") || (isSelect && (next.StartsWith("?UnitCommandSlot") || next == "?@shopany"));
+        bool dependent = next.StartsWith("@rc:") || next.StartsWith("@rcpt:") || (isSelect && (next.StartsWith("?UnitCommandSlot") || next == "?@shopany" || next == "?@shopspend"));
         if (!dependent) return;
         job.report += $"   ⛔ 「{spec}」 뒤 선택이 뜻과 다름({(names.Count > 0 ? string.Join(", ", names.Take(5)) : "없음")}) — 이 선택에 기대는 「{next}」를 버림\n";
         job.clickIndex++;
@@ -2373,6 +2380,43 @@ public static class ClaudeCommands
                $"\n      🎯 흔함 이름(지금) {(commonNames.Length > 0 ? commonNames : "-")} · 도구가 흔함선택으로 보낸 누계 {(pickNames.Length > 0 ? pickNames : "0")}";
     }
 
+    static readonly (string slot, string wispName, string portal)[] GradeWispRoutes =
+    {
+        ("안흔함", "안흔함 위습", "Portal_안흔함"),
+        ("특별함", "특별함 위습", "Portal_특별함"),
+        ("희귀함", "희귀함 위습", "Portal_희귀함·특수함"),
+        ("전설·히든", "전설·히든 위습", "Portal_전설·히든"),
+    };
+    static readonly string[] SpendShops = { "Lane1_유닛강화소", "Lane1_공격타입강화소", "Lane1_도박소" };
+    const int ShopSpendClicks = 6;
+
+    // 고른 상점에서 누를 수 있는 칸을 차례로 눌러, **골드가 줄어든 클릭만** 산 것으로 센다. 줄지 않은 칸은 한 번 누르고 넘어간다.
+    static string SpendAtShop(GameShotJob job)
+    {
+        var slots = UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
+            .Where(b => b.gameObject.name.StartsWith("UnitCommandSlot") && b.IsActive() && ButtonLabel(b).Length > 0 && !UnitCommandLabels.Contains(ButtonLabel(b)))
+            .OrderBy(b => int.TryParse(b.gameObject.name.Substring("UnitCommandSlot".Length), out int n) ? n : 99).ToList();
+        int start = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
+        var bought = new List<string>();
+        int clicks = 0;
+        foreach (UnityEngine.UI.Button b in slots)
+        {
+            for (int k = 0; k < ShopSpendClicks && clicks < ShopSpendClicks * 2; k++)
+            {
+                if (!b.IsActive() || !b.IsInteractable()) break;
+                int before = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
+                var eventData = new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current);
+                UnityEngine.EventSystems.ExecuteEvents.Execute(b.gameObject, eventData, UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
+                clicks++;
+                int after = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
+                if (after >= before) break;          // 안 샀다(잠김·목재 부족·이미 최대) — 다음 칸
+                bought.Add($"{ButtonLabel(b)} −{before - after}");
+            }
+        }
+        int end = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
+        return $"   🏪 {(bought.Count > 0 ? $"{bought.Count}번 삼: {string.Join(", ", bought.GroupBy(x => x.Split(' ')[0]).Select(g => $"{g.Key}×{g.Count()}"))}" : "산 것 없음")} · 골드 {start} → {end} · 칸 {string.Join(" · ", slots.Select(b => $"「{ButtonLabel(b)}」{(b.IsInteractable() ? "" : "(흐림)")}"))}\n";
+    }
+
     // 사람의 한 턴 — 랜덤유닛 위습을 하나씩 포탈로, 카드별 조합 시도, 전부 모서리로.
     static void QueueTurn(GameShotJob job)
     {
@@ -2383,7 +2427,16 @@ public static class ClaudeCommands
         // 라운드가 바뀌는 순간 받은 위습은 위습 칸에 바로 안 켜진다(칸은 주기적으로 갱신) — 첫 칸을 「없음」으로 건너뛰었다(09-25 i1_16).
         if (randomWisps > 0) turn.Add("@wait:2");
         for (int i = 0; i < randomWisps; i++) { turn.Add("click?:랜덤유닛".Replace("click?:", "?")); turn.Add("@rc:Portal_유닛랜덤"); }
-        if (randomWisps > 0) turn.Add("@wait:12");
+        // 위 등급 위습(보스·스토리 보상) — 각자의 등급 포탈로(09-25 PM 지시). 판 B는 R12에 안흔함 9·특별함 7이 칸에 쌓인 채 끝났다.
+        //    칸 글자(위습 칸 표시 「안흔함 9」의 앞말)와 포탈 이름. 칸 수만큼 보낸다 — 랜덤유닛 위습과 같은 「칸 클릭 → 포탈 우클릭」.
+        int gradeWisps = 0;
+        foreach ((string slot, string wispName, string portal) in GradeWispRoutes)
+        {
+            int n = myWisps.Count(w => (w.Data.wispName ?? "") == wispName);
+            for (int i = 0; i < n; i++) { turn.Add("?" + slot); turn.Add("@rc:" + portal); }
+            gradeWisps += n;
+        }
+        if (randomWisps + gradeWisps > 0) turn.Add("@wait:12");
         for (int k = 0; k < 3; k++)
         {
             turn.Add("@box:Unit_흔함");
@@ -2414,13 +2467,18 @@ public static class ClaudeCommands
         }
         if (picked.Count > 0) turn.Insert(2 * picked.Count, "@wait:12");
 
-        // 상점 — 라운드 2에 도박소(레인 0 = Lane1)를 골라 첫 칸을 한 번 누른다. 결과는 [도박] 로그와 골드 차이로 본다.
+        // 상점 — 라운드 2부터 **매 턴** 남는 골드를 쓴다(09-25 PM 지시 — 판 B는 R12에 골드 18,422를 안 쓰고 끝났다).
+        //    등급 강화소 → 공격타입 강화소 → 도박소 순으로 골라, 골드가 실제로 줄어드는 칸을 몇 번씩 누른다(@shopspend).
+        //    ⚠️ 무엇을 사야 이득인지는 판단하지 않는다 — 「사람이 남는 돈을 상점에 쓴다」의 근사다. 결과는 🏪 줄의 골드 차이로 본다.
         StoryManager story = StoryManager.Instance;
-        if (!job.shopTried && job.lastRoundSeen >= 2)
+        if (job.lastRoundSeen >= 2)
         {
             job.shopTried = true;
-            turn.Add("@sel:Lane1_도박소");
-            turn.Add("?@shopany");   // 상점 칸의 화면 번호≠상점 칸 번호(GameHud.shopLogicalSlotIndex) — 번호로 찍지 않고 누를 수 있는 첫 칸을 누른다
+            foreach (string shop in SpendShops)
+            {
+                turn.Add("@sel:" + shop);
+                turn.Add("?@shopspend");
+            }
         }
 
         // 스토리 — 진행 중이면 안흔함을 스토리 포탈로 보내고, 그 스토리가 깨지면 복귀포탈로 되돌린다.
