@@ -731,6 +731,48 @@ UNITS = {
                            12: "model_0_mat_10.png"},
                materials=dict(textures={m: [("DiffuseColor", m + ".png")] for m in
                                         ("face", "coat", "skin", "hair", "material", "cloth", "model_0_mat_10")})),
+    # 원피스 바운티러시 츄(아론 일당, pl_choo_orig01) → R41 엄태웅. zip = source/Choo - Arlong Pirates.7z(fbx · _diff) + textures/_diff(안쪽과 같음).
+    #   뼈대 노드 0.01 · 메시 로컬 단위가 류마와 같다 → **류마 × 1.054**(0.02129 ÷ 0.02019). 메시 8 · 재질 8(이름만 .1~.7로 다르고 그림은 하나).
+    #   겹친 변형: 얼굴 셋(attack·demage·normal) → normal · 손 open/close → open. 코트 자락(B/F/L/Rcoat, 골반 밑) · 머리카락 → merge_to_nearest.
+    #   뿌리 위 노드·표식(eff_muzzle·model_root·pre/post_flag·HELPER*)은 뺀다. A자 → tpose_arms.
+    "엄태웅": dict(path="Assets/Art/Enemies/엄태웅/엄태웅.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R41-R50/R41_엄태웅.zip"), "source/Choo - Arlong Pirates.7z",
+                        "Choo Arlong Pirates/pl_choo_orig01.fbx"),
+               archive_rgb={"Choo Arlong Pirates/pl_choo_orig01_diff.png": "pl_choo_orig01_diff.png"},
+               drop_meshes=["face_attack", "face_demage", "l_hand_close", "r_hand_close"],
+               drop_bones=["pl_choo_orig01", "pl_choo_orig01_2", "world_joint", "eff_muzzle_a", "model_root", "post_flag", "pre_flag",
+                           "HELPER", "HELPER_key", "HELPER_name"],
+               drop_bones_re=r"_end(_end)?$",
+               rename_bones=PL_RENAME,
+               orient_snap=True,
+               merge_to_nearest=True,
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               texture_by_material=True,
+               materials=dict(textures={m: [("DiffuseColor", "pl_choo_orig01_diff.png")] for m in
+                                        ("pl_choo_orig01", "pl_choo_orig01.3", "pl_choo_orig01.5", "pl_choo_orig01.7")})),
+    # 원피스 바운티러시 스크래치멘 아푸(pl_apoo_2yaf01, XPS용 o_dv89_o 판) → R42 유시은. zip = source/*.rar(fbx · _diff · 셰이더 보조 그림) + textures/_diff.
+    #   뼈대 노드 0.01 · 메시 로컬 단위가 류마와 같다 → **류마 × 1.344**(0.02714 ÷ 0.02019, 뺀 것 제외). 메시 21 · 재질 2(몸 · 안경알 trans).
+    #   겹친 변형: 얼굴 여섯(attack·clarinet·cymbal·damage·normal·piano) → normal · 팔 두 벌(clarinet·normal) → normal
+    #   · 손 넷(chekera·close·open·other) → open. 안경(glass · glass_lenz)은 남긴다. 이미 T자(팔이 아주 길다).
+    #   아래팔이 두 마디(Fore_01 · Fore_02) → Fore_01을 ForeArm, Fore_02는 merge_to_nearest가 그리로. 치마 자락 여섯 사슬 · 소매 · 모자 · 턱 → merge_to_nearest.
+    "유시은": dict(path="Assets/Art/Enemies/유시은/유시은.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R41-R50/R42_유시은.zip"),
+                        "source/one_piece_bounty_rush___scratchmen_apoo_for_xps_by_o_dv89_o_desd.rar",
+                        "One Piece Bounty Rush - Scratchmen Apoo/pl_apoo_2yaf01.fbx"),
+               archive_rgb={"One Piece Bounty Rush - Scratchmen Apoo/pl_apoo_2yaf01_diff.png": "pl_apoo_2yaf01_diff.png"},
+               drop_meshes=["face_attack", "face_clarinet", "face_cymbal", "face_damage", "face_piano", "l_arm_clarinet", "r_arm_clarinet",
+                            "l_hand_chekera", "r_hand_chekera", "l_hand_close", "r_hand_close", "l_hand_other", "r_hand_other"],
+               drop_bones=["pl_apoo_2yaf01", "world_joint", "post_flag", "pre_flag", "HELPER_key", "HELPER_name", "model_root"],
+               drop_bones_re=r"_end(_end)?$",
+               rename_bones=dict({k: v for k, v in PL_RENAME.items() if not k.endswith("Arm_Fore")},
+                                 LArm_Fore_01="mixamorig:LeftForeArm", RArm_Fore_01="mixamorig:RightForeArm"),
+               orient_snap=True,
+               merge_to_nearest=True,
+               texture_by_material=True,
+               materials=dict(textures={"pl_apoo_2yaf01": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")],
+                                        "pl_apoo_2yaf01_trans": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")]})),
     # 원피스 바운티러시 쥬얼리 보니 **아이**(pl_bonie_orig02) → R33 서희원 · **어른**(pl_bonie_orig01) → R47 정다희. 류마·오븐과 같은
     #   Annettlw 판(뼈대 노드 0.01)이라 비율이 측정 근거다: 전체 키 ÷ 류마 2.019 → **아이 × 0.611 · 어른 × 0.882**(둘 다 모자 포함).
     #   zip 바로 안에 fbx · xps · _diff.png + 셰이더 보조 그림(ramp·matcap·abnormal_pattern·bayer_dither — 적 규약대로 컬러만 씀).
