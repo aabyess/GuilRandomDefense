@@ -176,6 +176,25 @@ SKINS = {
                            Hand=(0.35, 0, 0.655), HandTip=(0.42, 0, 0.65),
                            UpLeg=(0.065, 0, 0.47), Leg=(0.065, 0, 0.26), Foot=(0.06, 0.01, 0.05),
                            ToeBase=(0.06, -0.04, 0.02), ToeTip=(0.06, -0.07, 0.015))),
+    # 드래곤볼 트랭크스(OBJ 립, 사이어인 전투복) → R57 서한빈. zip = source/Trunks.zip(obj · mtl · 그림 5) + textures/ 넷(안쪽과 같음).
+    #   오브젝트 1(2,521정점) · 재질 4(clothes_1·clothes_2·face·wound — 재질 이름이 파일 이름 그대로) · 등에 멘 검 **없음**.
+    #   Trunks.png는 mtl이 안 가리킨다 → 안 쓴다. A자(팔이 몸 옆으로 내려옴) · 다리를 벌린 자세.
+    #   관절 근거(키 1 정규화 층 실측): 어깨 폭 ±0.15(z 0.80) · 팔은 몸통과의 틈으로 가렸다 — z 0.65에서 x 0.12 · 0.55에서 0.14 · 0.45에서 0.16(손)
+    #   · 목 0.84~0.86(폭 ±0.036) · 가랑이 ≈0.43 · 무릎 x 0.12(z 0.25) · 발목 x 0.145(z 0.05).
+    "서한빈": dict(source="~/Desktop/구랜디스킨모음/90_적유닛/R51-R60/R57_서한빈.zip",
+               mesh_name="Trunks",
+               path="Assets/Art/Enemies/서한빈/서한빈.fbx", height=1.8,
+               center_band=(0.02, 0.06),
+               # 🔴 force_geodesic — 1차 bone heat는 「뼈 다 살아 있음」으로 통과했지만 팔이 몸 옆에 붙은 A자라 **팔 뼈가 바지를 물어**
+               #    팔을 펴자 바지가 팔을 따라 찢겨 올라갔다(LeftArm 594·ForeArm 639정점, 다리는 148). 표면 경로(지오데식)로 간다.
+               force_geodesic=True,
+               straighten_arms=True, join_all=True, keep_fused_faces=True, texture_by_material=True,
+               joints=dict(Hips=(0, 0, 0.47), Spine=(0, 0, 0.55), Chest=(0, 0, 0.66),
+                           Neck=(0, 0, 0.84), Head=(0, 0, 0.87), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.04, 0, 0.80), Arm=(0.13, 0, 0.78), ForeArm=(0.15, 0, 0.625),
+                           Hand=(0.165, 0, 0.495), HandTip=(0.18, 0, 0.435),
+                           UpLeg=(0.07, 0, 0.43), Leg=(0.12, 0, 0.25), Foot=(0.145, 0.01, 0.05),
+                           ToeBase=(0.145, -0.04, 0.02), ToeTip=(0.145, -0.07, 0.015))),
     # 드래곤볼 어린 손오공(OBJ 립) → R55 박병규. zip = source/Kid_Goku.zip(obj · mtl · Kid_Goku.png · Power_Pole.png · 21984.png · Kid_Goku_Happy.png)
     #   + textures/ 둘(안쪽과 픽셀 같음). 오브젝트 4(몸 907 · 머리 291 · 여의봉 두 벌 각 8) · 재질 4(몸·머리 = Kid_Goku.png) · 정점 1,214. **이미 T자**.
     #   여의봉은 몸을 앞뒤로 꿰뚫는 긴 막대 두 벌 → drop_objects로 뺀다(길을 걷는 적이라 무기는 안 든다 — 류마 칼과 같은 기준).
