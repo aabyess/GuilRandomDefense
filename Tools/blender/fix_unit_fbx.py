@@ -558,7 +558,7 @@ UNITS = {
                             dict(pattern=r"^(l_weapon_joint|LHand_Fore_sup)", into="mixamorig:LeftHand"),
                             dict(pattern=r"^(r_weapon_joint|RHand_Fore_sup)", into="mixamorig:RightHand")],
                materials=dict(textures={"pl_oven_orig01": [("DiffuseColor", "pl_oven_orig01_diff.png")]})),
-    # 원피스 세라핌 S-호크(Sketchfab glb, 뼈 있음) → R30 김만경 ★보스 **교체**(2026-09-25, 옛 제피로스는 R51 「최수지」로 옮겼다).
+    # 원피스 세라핌 S-호크(Sketchfab glb, 뼈 있음) → R30 김만경 ★보스 **교체**(2026-09-25, 옛 제피로스는 R52 「임준성」으로 옮겼다).
     #   R58 돌아온_김만경은 이 산출물을 쓰지 않는다(사장님 결정 — 따로 스킨).
     #   메시 13 + Icosphere · 재질 4(unlit) · 그림 2 · 관절 172 · 클립 0. 부위별로 렌더해 갈랐다:
     #     팔 두 벌 — arm01(평범한 아래팔·손) 남김 · arm02(손에 칼날) 뺌 / 다리 두 벌 — leg_L·R(검은 부츠) 남김 · arm002(이름과 달리 맨정강이+신발) 뺌
@@ -1008,6 +1008,35 @@ UNITS = {
     # 원피스 우타(Uta) → R16 이하림. 버기와 **같은 Bip001 계열**이지만 이쪽은 Spine2·Toe0이 **있다**(그래서 표가 다르다).
     #   zip 안 zip 안 .gltf — 버기와 같은 꼴이라 `archive_textures`로 `.bin`을 같이 꺼낸다.
     #   메시 1(+Icosphere) · 뼈 91 · 겹친 변형 없음.
+    # 주술회전 츠쿠모 유키(업로드용 glTF, 우타·버기와 같은 「5_…_1.0_0_0」 재질 계열) → R51 최수지. zip = source/Yuki Tsukumo.zip(.gltf · .bin · png)
+    #   + textures/png. 🔴 **바깥 textures/ 그림은 안쪽 그림의 상하 반전**(R21 호로와 같은 함정) — .gltf가 가리키는 안쪽 것을 쓴다.
+    #   메시 5(부츠 794 · 머리카락 2,446 · 바지 1,769 · 피부 5,019 · 상의 765) · 재질 5 · 그림 1(재질 다섯이 한 장을 나눠 씀) · 관절 103 · 클립 0.
+    #   Bip001(Spine2·Toe0 있음) → BIP001_RENAME. 위·아래팔 살 0, 비틀림(ForeTwist·1)과 소매(bone001_*_tis_01/02)·팔꿈치 보조로.
+    #   머리 밑 보조(앞머리·긴 뒷머리 Bone030~035 등) → Head · 가슴 옆 Bone003 → Spine2 · 골반 옆 Bone001 → 같은 쪽 허벅지.
+    "최수지": dict(path="Assets/Art/Enemies/최수지/최수지.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R51-R60/R51_최수지.zip"), "source/Yuki Tsukumo.zip", "Yuki Tsukumo.gltf"),
+               archive_textures=["Yuki Tsukumo.bin"],
+               archive_rgb={"tex_role_jiushijiuyoujiX.png": "tex_role_jiushijiuyoujiX.png"},
+               gltf_guess_bind=False,
+               drop_meshes=["Icosphere"],
+               drop_bones=["root", "Bip001"],
+               rename_bones=BIP001_RENAME,
+               no_nulls=True, orient_snap=True,
+               merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                            dict(under="mixamorig:LeftHand", into="mixamorig:LeftHand"),
+                            dict(under="mixamorig:RightHand", into="mixamorig:RightHand"),
+                            dict(pattern=r"^bone001_L_tis_0[12]$", into="mixamorig:LeftArm"),
+                            dict(pattern=r"^bone001_R_tis_0[12]$", into="mixamorig:RightArm"),
+                            dict(pattern=r"^(Bip001 L ForeTwist1?|Bone_L_elbow)$", into="mixamorig:LeftForeArm"),
+                            dict(pattern=r"^(Bip001 R ForeTwist1?|Bone_R_elbow)$", into="mixamorig:RightForeArm"),
+                            dict(pattern=r"^Bone003(\(mirrored\))?$", into="mixamorig:Spine2"),
+                            dict(pattern=r"^Bone001$", into="mixamorig:LeftUpLeg"),
+                            dict(pattern=r"^Bone001\(mirrored\)$", into="mixamorig:RightUpLeg")],
+               tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                               "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                           for s, side in (("L", "Left"), ("R", "Right"))},
+               materials=dict(textures={m: [("DiffuseColor", "tex_role_jiushijiuyoujiX.png")] for m in
+                                        ("5_Boots_1.0_0_0", "5_Hair_1.0_0_0", "5_Pants_1.0_0_0", "5_Skin_1.0_0_0", "5_Top_1.0_0_0")})),
     "이하림": dict(path="Assets/Art/Enemies/이하림/이하림.fbx", kind="human", size=("height", 1.8),
                archive=(os.path.join(SKINS, "90_적유닛/R11-R20/R16_이하림.zip"), "source/Uta - One Piece.zip",
                         "Uta - One Piece.gltf"),
@@ -1143,11 +1172,12 @@ UNITS = {
     #   (sha256 810c78364077fcfc…, 세 zip이 바이트까지 같다). 그래서 **설정도 그 둘과 글자 하나까지 같다 —
     #   하나를 고치면 반드시 셋 다 고칠 것.** (같은 원본을 쓰는 항목이 이제 셋이다.)
     #   📌 R58 「돌아온_김만경」은 같은 사람이라 이 산출물 하나로 쓴다 — 따로 만들지 말 것(PM 2026-09-24).
-    #   🔴 2026-09-25 사장님 지시로 R30 김만경은 **세라핌 S-호크로 교체**(새 항목 「김만경」), 제피로스는 **R51 최수지**로 옮겼다.
-    #      원본 zip도 PM이 90_적유닛/R51-R60/R51_최수지_제피로스.zip으로 옮겼다(바이트 같음). 설정은 그대로, 키·산출·원본 경로만 바꿨다.
+    #   🔴 2026-09-25 사장님 지시로 R30 김만경은 **세라핌 S-호크로 교체**(새 항목 「김만경」), 제피로스는 **R52 임준성**으로 옮겼다
+    #      (처음엔 R51 최수지였다가 같은 날 R52로 다시 바뀜 — R51은 츠쿠모 유키). 원본 zip도 PM이
+    #      90_적유닛/R51-R60/R52_임준성_제피로스.zip으로 옮겼다(바이트 같음). 설정은 그대로, 키·산출·원본 경로만 바꿨다.
     #      📌 R58 돌아온_김만경은 S-호크도 제피로스도 쓰지 않고 따로 스킨을 받는다(사장님 결정).
-    "최수지": dict(path="Assets/Art/Enemies/최수지/최수지.fbx", kind="human", size=("height", 1.8),
-              archive=(os.path.join(SKINS, "90_적유닛/R51-R60/R51_최수지_제피로스.zip"), "source/zephyr.rar",
+    "임준성": dict(path="Assets/Art/Enemies/임준성/임준성.fbx", kind="human", size=("height", 1.8),
+              archive=(os.path.join(SKINS, "90_적유닛/R51-R60/R52_임준성_제피로스.zip"), "source/zephyr.rar",
                        "zephyr/pl_zephyr_orig01 (merge).fbx"),
               archive_rgb={"zephyr/pl_zephyr_orig01_diff.png": "pl_zephyr_orig01_diff.png",
                            "zephyr/pl_zephyr_orig01_dyanagan_diff.png": "pl_zephyr_orig01_dyanagan_diff.png"},
