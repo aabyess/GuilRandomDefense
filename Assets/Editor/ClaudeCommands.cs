@@ -1999,6 +1999,7 @@ public static class ClaudeCommands
     static GameObject lastPointerTarget;   // 마지막 select:/rclick: 대상 — 찍는 순간 선택 유닛이 거기까지 얼마나 남았는지 잰다
     static Mouse previousMouse;
     static InputSettings.EditorInputBehaviorInPlayMode? previousBehavior;
+    static InputSettings.BackgroundBehavior? previousBackground;
     const string ShotMouseName = "ClaudeGameShotMouse";
 
     static void EnsureShotMouse()
@@ -2032,6 +2033,15 @@ public static class ClaudeCommands
             previousBehavior = InputSystem.settings.editorInputBehaviorInPlayMode;
             InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
         }
+        // 🔴 창 포커스를 잃어도 장치를 끄지 않게 한다(09-25 판 F R6·판 H3 R4 — 판 중간부터 가상 마우스 누름이 게임에 안 들어갔다).
+        //    이 프로젝트엔 Input System 설정 에셋이 없어 기본값 ResetAndDisableNonBackgroundDevices가 쓰인다 — 사람이 다른 앱을 쓰면
+        //    유니티가 포커스를 잃고, 그 순간 가상 마우스까지 초기화·비활성된다(위치 (0,0)으로 돌아가는 것도 이것). 판 동안만 IgnoreFocus.
+        if (previousBackground == null)
+        {
+            previousBackground = InputSystem.settings.backgroundBehavior;
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+        }
+        if (!shotMouse.enabled) InputSystem.EnableDevice(shotMouse);
     }
 
     // 끝날 때 반드시 부른다 — 가상 마우스가 남으면 사람의 실제 마우스 대신 그게 Mouse.current로 남는다.
@@ -2052,6 +2062,8 @@ public static class ClaudeCommands
         previousMouse = null;
         if (previousBehavior != null) InputSystem.settings.editorInputBehaviorInPlayMode = previousBehavior.Value;
         previousBehavior = null;
+        if (previousBackground != null) InputSystem.settings.backgroundBehavior = previousBackground.Value;
+        previousBackground = null;
     }
 
     // 동작이 끝나면 가상 마우스를 화면 한가운데(월드 위, HUD·가장자리 스크롤 영역 밖)로 치운다 — UI 위에 남으면 툴팁이 떠서
