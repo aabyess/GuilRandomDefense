@@ -214,6 +214,14 @@ public class LaneMarker : MonoBehaviour
     /// 벽으로 막힌 첫 줄(칸막이가 실제로 세워진 CompartmentCount칸)의 자리들. 소모하지 않는다 —
     /// NavMesh가 실제로 이 칸들에 깔렸는지 확인할 때만 쓴다.
     /// </summary>
+    public IEnumerable<Vector3> FreeRowSlotPositions()
+    {
+        // 흔함 아닌 유닛이 서는 칸 안 줄(FreeSlotPosition) — 시작 카메라가 이 줄까지 담는다(RtsCameraController.TryGetPenBounds).
+        if (unitPen == null) yield break;
+        for (int i = 0; i < CompartmentCount; i++)
+            yield return FreeSlotPosition(i);
+    }
+
     public IEnumerable<Vector3> FirstRowSlotPositions()
     {
         if (unitPen == null) yield break;

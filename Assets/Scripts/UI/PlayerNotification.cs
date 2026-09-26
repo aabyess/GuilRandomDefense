@@ -81,17 +81,32 @@ public class PlayerNotificationHud : MonoBehaviour
         list.Add(new Entry { message = message, expiresAt = Time.unscaledTime + Mathf.Max(0.1f, duration) });
     }
 
+    // 2026-09-26 사장님 「획득으로 유닛이나 돈 가운데에 글이 뜨던데 미니맵 위에 텍스트 나오게 해줘」 — 원작 워크래프트 글자
+    // 알림 자리(왼쪽 아래, 명령 콘솔 바로 위)로 옮겼다. 전엔 화면 가운데 위 1/4에서 아래로 쌓여 전장을 가렸다.
+    // 왼쪽 정렬 · **새 줄이 맨 아래**, 옛 줄은 위로 밀린다(워크래프트와 같다). 바닥선은 하단 바 윗선인데, 미니맵 위
+    // 위습 칸(GameHud.BuildWispSlots)이 떠 있으면 그 위로 올린다 — 칸은 위습이 있을 때만 켜지므로 매 프레임 본다.
     static readonly GUIStyle Style = new GUIStyle
     {
         fontSize = 20,
-        alignment = TextAnchor.MiddleCenter,
+        alignment = TextAnchor.MiddleLeft,
         richText = true,   // 유닛 획득 알림이 등급색(<color>)을 쓴다(2026-09-26). 기존 알림엔 태그가 없어 그대로다.
         normal = { textColor = Color.white },
     };
+    static readonly GUIStyle ShadowStyle = new GUIStyle(Style) { normal = { textColor = new Color(0f, 0f, 0f, 0.85f) } };
+    static readonly System.Text.RegularExpressions.Regex ColorTag = new System.Text.RegularExpressions.Regex("</?color[^>]*>");
 
-    const float BoxWidth = 520f;
+    const float BoxWidth = 760f;
     const float BoxHeight = 30f;
-    const float Spacing = 4f;
+    const float Spacing = 2f;
+    const float LeftMargin = 20f;
+    const float BottomGap = 8f;
+    // 하단 바를 못 찾을 때의 예비값 — GameHud 하단 바가 화면 아래 22%다(GameChatBox와 같은 값).
+    const float FallbackBottomHudFraction = 0.22f;
+    // 채팅 상태줄(GameChatBox — 하단 바 바로 위 28px)을 비워 둔다.
+    const float ChatLineReserve = 32f;
+
+    RectTransform bottomBar;
+    RectTransform[] wispRows;   // 위습 칸 줄마다 첫 칸(WispSlot0·WispSlot9)
 
     void OnGUI()
     {
@@ -108,14 +123,47 @@ public class PlayerNotificationHud : MonoBehaviour
 
         if (list.Count == 0) return;
 
-        // 화면 위쪽 1/4 지점부터 아래로 쌓는다 — GameHud 하단 바, GameChatBox 상태줄
-        // (하단 바 바로 위)과 안 겹치는 자리다.
-        float y = Screen.height * 0.25f;
-        for (int i = 0; i < list.Count; i++)
+        // 글자 크기는 1080 기준 20 — IMGUI는 CanvasScaler를 안 타서 작은 창에서 글자가 상대적으로 커진다.
+        float scale = Mathf.Clamp(Screen.height / 1080f, 0.7f, 2f);
+        Style.fontSize = ShadowStyle.fontSize = Mathf.RoundToInt(20f * scale);
+        float lineHeight = BoxHeight * scale;
+
+        float y = BaselineY() - lineHeight;
+        for (int i = list.Count - 1; i >= 0 && y > 0f; i--)
         {
-            Rect rect = new Rect(Screen.width * 0.5f - BoxWidth * 0.5f, y, BoxWidth, BoxHeight);
+            Rect rect = new Rect(LeftMargin * scale, y, BoxWidth * scale, lineHeight);
+            // 전장 위에 바로 쓰이므로 그림자를 깐다(색 태그를 뗀 검정 글자를 1px 어긋나게).
+            GUI.Label(new Rect(rect.x + 1.5f, rect.y + 1.5f, rect.width, rect.height), ColorTag.Replace(list[i].message, ""), ShadowStyle);
             GUI.Label(rect, list[i].message, Style);
-            y += BoxHeight + Spacing;
+            y -= lineHeight + Spacing;
         }
+    }
+
+    /// <summary>알림 맨 아래 줄의 바닥(GUI 좌표, 위가 0). 하단 바 윗선 − 채팅줄, 위습 칸이 떠 있으면 그 윗선.</summary>
+    float BaselineY()
+    {
+        if (bottomBar == null)
+        {
+            GameObject found = GameObject.Find("BottomBar");
+            bottomBar = found != null ? found.transform as RectTransform : null;
+            if (bottomBar != null && bottomBar.parent != null)
+                wispRows = new[] { bottomBar.parent.Find("WispSlot0") as RectTransform, bottomBar.parent.Find("WispSlot9") as RectTransform };
+        }
+
+        float baseline = Screen.height * (1f - FallbackBottomHudFraction);
+        if (bottomBar != null) baseline = Mathf.Min(baseline, TopEdgeGuiY(bottomBar));
+        baseline -= ChatLineReserve;
+        if (wispRows != null)
+            foreach (RectTransform row in wispRows)
+                if (row != null && row.gameObject.activeInHierarchy) baseline = Mathf.Min(baseline, TopEdgeGuiY(row));
+        return baseline - BottomGap;
+    }
+
+    // 오버레이 캔버스라 월드 모서리 = 화면 픽셀(아래가 0). GUI는 위가 0이라 뒤집는다.
+    static readonly Vector3[] corners = new Vector3[4];
+    static float TopEdgeGuiY(RectTransform rect)
+    {
+        rect.GetWorldCorners(corners);
+        return Screen.height - corners[1].y;
     }
 }
