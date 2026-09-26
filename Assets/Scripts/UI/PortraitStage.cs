@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -17,8 +18,11 @@ public class PortraitStage : MonoBehaviour
     public const int Layer = 31;
     const int TextureSize = 256;
     static readonly Vector3 StageOrigin = new Vector3(0f, -10000f, 0f);
-    // 정면에서 오른쪽으로 25°, 위에서 10° — 워크3 초상화처럼 살짝 비스듬하게
-    static readonly Vector3 ViewDirection = Quaternion.Euler(10f, 25f, 0f) * Vector3.forward;
+    // 모델에서 카메라 쪽으로 가는 방향: 정면(+Z)에서 오른쪽으로 25°, **위로** 12° — 워크3 초상화처럼 살짝 위에서 비스듬히.
+    // (처음엔 Euler(10, …)라 x가 양수 = 아래쪽이었다 — 카메라가 모델 밑에서 올려다봤다. 09-26 정정)
+    static readonly Vector3 ViewDirection = Quaternion.Euler(-12f, 25f, 0f) * Vector3.forward;
+    // 모델의 높이와 폭 중 큰 쪽이 칸의 이만큼을 채운다(PM 09-26: 약 90%).
+    const float FillFraction = 0.9f;
     const float FieldOfView = 28f;
 
     static PortraitStage instance;
@@ -117,6 +121,8 @@ public class PortraitStage : MonoBehaviour
         t.localScale = source.transform.lossyScale;   // 실물과 같은 크기(ArtBinder가 맞춘 키) — 구도는 경계로 다시 맞춘다
 
         Frame();
+        StopAllCoroutines();
+        StartCoroutine(RefineByPixels(clone));
         return true;
     }
 
@@ -158,6 +164,16 @@ public class PortraitStage : MonoBehaviour
         foreach (Transform t in root.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = layer;
     }
 
+    // 구도 두 단계.
+    //  1. Frame: 렌더러 경계 상자로 **넉넉하게**(모델이 절대 안 잘리게) 세운다. 스킨 메시 경계는 느슨해서(임포트 때 잡힌 범위)
+    //     이것만으론 사람형 ~60%, 노가리는 점처럼 작다(09-26 캡처).
+    //  2. RefineByPixels: 실제로 찍힌 칸을 읽어 모델 픽셀의 상자를 재고, 큰 쪽이 FillFraction이 되게 거리·중심을 고친다(두 번).
+    //     정점·경계로 짐작하지 않고 **보이는 그대로** 맞춘다 — BakeMesh 정점은 부모 스케일이 빠져 너무 가까이 붙었다(09-26 시도).
+    Vector3 aim;
+    float distance;
+    float clipRadius;
+    Texture2D readback;
+
     void Frame()
     {
         Renderer[] renderers = clone.GetComponentsInChildren<Renderer>();
@@ -165,19 +181,72 @@ public class PortraitStage : MonoBehaviour
         Bounds bounds = renderers[0].bounds;
         for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
 
-        // 전신이 칸에 꽉 차게: 경계 구로 맞추면 대각선까지 넣느라 모델이 칸의 절반만 찼다(09-26 캡처).
-        // 세로 반높이·가로 반폭(비스듬히 보니 x·z 중 큰 쪽) 중 큰 것을 시야각에 맞추고, 카메라 쪽으로 튀어나온 깊이만큼 더 물러난다.
-        float halfHeight = bounds.extents.y;
-        float halfWidth = Mathf.Max(bounds.extents.x, bounds.extents.z);
-        float half = Mathf.Max(halfHeight, halfWidth, 0.01f);
-        float depth = Mathf.Max(bounds.extents.x, bounds.extents.z);
-        float distance = half / Mathf.Tan(FieldOfView * 0.5f * Mathf.Deg2Rad) * 1.08f + depth;
-        float radius = bounds.extents.magnitude;
+        clipRadius = bounds.extents.magnitude;
+        float t = Mathf.Tan(FieldOfView * 0.5f * Mathf.Deg2Rad) * FillFraction;
+        aim = bounds.center;
+        distance = clipRadius / t + clipRadius;   // 구(球)로 감싸 어느 방향이든 칸 안
+        ApplyCamera();
+    }
+
+    void ApplyCamera()
+    {
         Transform cam = stageCamera.transform;
-        cam.position = bounds.center + ViewDirection * distance;
-        cam.LookAt(bounds.center);
-        stageCamera.farClipPlane = distance + radius * 2f + 1f;
-        stageCamera.nearClipPlane = Mathf.Max(0.01f, distance - radius * 2f);
+        cam.rotation = Quaternion.LookRotation(-ViewDirection, Vector3.up);
+        cam.position = aim + ViewDirection * distance;
+        stageCamera.nearClipPlane = Mathf.Max(0.01f, distance - clipRadius * 1.5f);
+        stageCamera.farClipPlane = distance + clipRadius * 1.5f + 1f;
+    }
+
+    IEnumerator RefineByPixels(GameObject target)
+    {
+        var endOfFrame = new WaitForEndOfFrame();
+        yield return null;                     // Idle 자세가 한 번 적용되게(바인드 자세면 팔 폭이 끼어든다)
+        for (int pass = 0; pass < 2; pass++)
+        {
+            yield return endOfFrame;           // 무대 카메라가 이번 프레임을 찍은 뒤
+            if (clone != target || clone == null) yield break;
+            if (!MeasureModel(out float x0, out float y0, out float x1, out float y1)) yield break;
+
+            // 픽셀 상자(0~1) → 지금 거리에서의 화면 크기. 큰 쪽이 FillFraction이 되게 거리를 비례로, 상자 가운데를 칸 가운데로.
+            float fraction = Mathf.Max(x1 - x0, y1 - y0);
+            float halfView = distance * Mathf.Tan(FieldOfView * 0.5f * Mathf.Deg2Rad);
+            Transform cam = stageCamera.transform;
+            aim += cam.right * ((x0 + x1 - 1f) * halfView) + cam.up * ((y0 + y1 - 1f) * halfView);
+            distance = Mathf.Max(0.05f, distance * fraction / FillFraction);
+            ApplyCamera();
+            if (Debug.isDebugBuild || Application.isEditor)
+                Debug.Log($"[초상] {clone.name} {pass + 1}차: 채움 {fraction:P0} → 거리 {distance:0.00}");
+        }
+    }
+
+    // 칸에서 배경색과 다른 픽셀의 상자(0~1, 아래 왼쪽 원점). 모델이 없거나 가장자리에 닿아 잘렸으면 false.
+    bool MeasureModel(out float x0, out float y0, out float x1, out float y1)
+    {
+        x0 = y0 = x1 = y1 = 0f;
+        int size = texture.width;
+        if (readback == null) readback = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        RenderTexture previous = RenderTexture.active;
+        RenderTexture.active = texture;
+        readback.ReadPixels(new Rect(0, 0, size, size), 0, 0, false);
+        RenderTexture.active = previous;
+
+        Color32[] pixels = readback.GetPixels32();
+        Color32 bg = pixels[0];                // 모서리 = 배경(1단계가 넉넉하니 모델이 모서리엔 없다)
+        int minX = size, minY = size, maxX = -1, maxY = -1;
+        for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                Color32 p = pixels[y * size + x];
+                if (Mathf.Abs(p.r - bg.r) + Mathf.Abs(p.g - bg.g) + Mathf.Abs(p.b - bg.b) <= 12) continue;
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+            }
+        if (maxX < 0) return false;
+        x0 = minX / (float)size; x1 = (maxX + 1) / (float)size;
+        y0 = minY / (float)size; y1 = (maxY + 1) / (float)size;
+        return true;
     }
 
     // 메인·미니맵 카메라가 무대(레이어 31)를 찍지 않게. 미니맵 카메라는 평소 꺼져 있어 allCameras에 안 잡혀서 전부 찾는다.
@@ -189,6 +258,7 @@ public class PortraitStage : MonoBehaviour
 
     void OnDestroy()
     {
+        if (readback != null) Destroy(readback);
         if (texture != null) texture.Release();
         if (instance == this) instance = null;
     }

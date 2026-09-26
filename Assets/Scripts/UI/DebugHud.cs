@@ -147,6 +147,9 @@ public class DebugHud : MonoBehaviour
 
     void OnGUI()
     {
+        // 릴리스에서 안 먹는 키 안내(「F1: 디버그 정보」)가 보이던 것 — Update의 막기와 같은 조건을 OnGUI에도(PM 09-26, v1.1.0 캡처).
+        if (!Application.isEditor && !Debug.isDebugBuild) return;
+
         if (!visible)
         {
             GUI.Label(new Rect(10, TopOffset, LabelWidth, LabelHeight), "F1: 디버그 정보");
