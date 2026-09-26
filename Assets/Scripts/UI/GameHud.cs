@@ -497,6 +497,104 @@ public class GameHud : MonoBehaviour
 
         // 툴팁은 맨 마지막에 만들어야 형제 순서상 가장 나중에 그려져서(항상 위) 다른 패널에 안 가려진다.
         BuildCombineTooltip();
+        BuildGameMenu();   // 메뉴 창은 툴팁보다도 위(화면 전체를 덮는다)
+    }
+
+    // ───────────── 「메뉴」(PM 09-26: 혼자 하기에도 판을 그만둘 길 · 네트 판은 재접속 B안의 [나가기] 확인 창과 합침) ─────────────
+    //   메뉴:   [계속하기] / [처음 화면으로]
+    //   확인:   싱글 「처음 화면으로 돌아가면 이번 판은 끝납니다. 돌아갈까요?」
+    //           친구 「나가면 유닛이 모두 사라집니다. 나갈까요?」(PM 확정 — [나가기]는 원작 Gone 즉시, 끊김 유예 없음)
+    //           방장 「방장이 나가면 모두의 판이 끝납니다. 나갈까요?」
+    //   게임은 멈추지 않는다(워크3 같이 하기처럼 — 이 게임엔 일시정지 자체가 없다).
+
+    GameObject gameMenu;
+    TMP_Text gameMenuMessage;
+    GameObject gameMenuMainButtons;
+    GameObject gameMenuConfirmButtons;
+    TMP_Text gameMenuConfirmLabel;
+
+    void BuildGameMenu()
+    {
+        RectTransform dim = CreatePanel(transform, "GameMenu", new Color(0f, 0f, 0f, 0.55f));
+        SetAnchors(dim, Vector2.zero, Vector2.one);
+        gameMenu = dim.gameObject;
+
+        RectTransform card = CreatePanel(dim, "Card", new Color(0.13f, 0.16f, 0.23f, 0.97f));
+        SetAnchors(card, new Vector2(0.29f, 0.38f), new Vector2(0.71f, 0.64f));   // 가장 긴 문구가 한 줄에 들어가는 폭
+        AddPanelBorder(card, BorderColor, BorderThickness);
+
+        gameMenuMessage = CreateLabel(card, "Message", "메뉴");
+        SetAnchors((RectTransform)gameMenuMessage.transform, new Vector2(0.05f, 0.52f), new Vector2(0.95f, 0.95f));
+        gameMenuMessage.fontSize = 26;
+
+        gameMenuMainButtons = CreateRow(card, "MainButtons");
+        CreateMenuButton(gameMenuMainButtons.transform, "ContinueButton", "계속하기", new Color(0.20f, 0.52f, 0.86f, 1f), new Vector2(0.05f, 0f), new Vector2(0.48f, 1f), CloseGameMenu);
+        CreateMenuButton(gameMenuMainButtons.transform, "HomeButton", "처음 화면으로", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.52f, 0f), new Vector2(0.95f, 1f), ShowGameMenuConfirm);
+
+        gameMenuConfirmButtons = CreateRow(card, "ConfirmButtons");
+        gameMenuConfirmLabel = CreateMenuButton(gameMenuConfirmButtons.transform, "ConfirmButton", "나가기", new Color(0.55f, 0.22f, 0.24f, 1f), new Vector2(0.05f, 0f), new Vector2(0.48f, 1f), ConfirmLeaveGame);
+        CreateMenuButton(gameMenuConfirmButtons.transform, "CancelButton", "취소", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.52f, 0f), new Vector2(0.95f, 1f), CloseGameMenu);
+
+        gameMenu.SetActive(false);
+    }
+
+    static GameObject CreateRow(RectTransform card, string name)
+    {
+        GameObject row = new GameObject(name, typeof(RectTransform));
+        row.transform.SetParent(card, false);
+        SetAnchors((RectTransform)row.transform, new Vector2(0f, 0.12f), new Vector2(1f, 0.42f));
+        return row;
+    }
+
+    static TMP_Text CreateMenuButton(Transform parent, string name, string label, Color color, Vector2 min, Vector2 max, UnityEngine.Events.UnityAction onClick)
+    {
+        RectTransform rect = CreatePanel(parent, name, color);
+        SetAnchors(rect, min, max);
+        rect.gameObject.AddComponent<Button>().onClick.AddListener(onClick);
+        TMP_Text text = CreateLabel(rect, name + "Label", label);
+        text.fontSize = 24;
+        text.raycastTarget = false;
+        return text;
+    }
+
+    public void OpenGameMenu()
+    {
+        gameMenuMessage.text = "메뉴";
+        gameMenuMainButtons.SetActive(true);
+        gameMenuConfirmButtons.SetActive(false);
+        gameMenu.SetActive(true);
+        gameMenu.transform.SetAsLastSibling();
+    }
+
+    void CloseGameMenu() => gameMenu.SetActive(false);
+
+    public void ShowGameMenuConfirm()
+    {
+        if (!gameMenu.activeSelf) OpenGameMenu();
+        NetLauncher launcher = NetLauncher.Instance;   // MP: 네트 판이면 창구가 있다(혼자 하기는 창구를 없애고 시작한다)
+        bool online = launcher != null && launcher.InRoom;
+        gameMenuMessage.text = !online ? "처음 화면으로 돌아가면 이번 판은 끝납니다. 돌아갈까요?"
+            : launcher.IsHost ? "방장이 나가면 모두의 판이 끝납니다. 나갈까요?"
+            : "나가면 유닛이 모두 사라집니다. 나갈까요?";
+        gameMenuConfirmLabel.text = online ? "나가기" : "처음 화면으로";
+        gameMenuMainButtons.SetActive(false);
+        gameMenuConfirmButtons.SetActive(true);
+    }
+
+    void ConfirmLeaveGame()
+    {
+        gameMenu.SetActive(false);
+        NetLauncher launcher = NetLauncher.Instance;
+        if (launcher != null && launcher.InRoom)
+        {
+            launcher.Leave();   // MP: 방장은 방을 닫고, 친구는 [나가기] 예고 뒤 나간다 — 둘 다 첫 화면으로
+            return;
+        }
+        // 혼자 하기: 첫 화면(빌드의 0번 씬 NetBoot)으로. 게임 씬만 있는 빌드(에디터에서 게임 씬을 바로 켠 경우 등)면 이 판을 다시 시작한다.
+        int current = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
+        int target = current != 0 && UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings > 1 ? 0 : current;
+        Debug.Log($"[HUD] 메뉴: 처음 화면으로 — 씬 {target}");
+        UnityEngine.SceneManagement.SceneManager.LoadScene(target);
     }
 
     // 좌측 세로 패널. 하단 HUD(y 0~0.22)·상단 바(0.95~1)·스토리 줄(0.90~0.95)을 피해서
@@ -556,8 +654,9 @@ public class GameHud : MonoBehaviour
         layout.childForceExpandWidth = false;
         layout.childForceExpandHeight = true;
 
-        // 동작 없음 — 메뉴/동맹/대화 기능이 아직 없어 원작 배치만 재현한다.
-        CreateTopBarButton(menuButtonsPanel, "MenuButton", "메뉴");
+        // 동맹/대화는 동작 없음 — 원작 배치만 재현한다. 메뉴는 [계속하기]/[처음 화면으로](BuildGameMenu).
+        TMP_Text menuLabel = CreateTopBarButton(menuButtonsPanel, "MenuButton", "메뉴");
+        menuLabel.transform.parent.GetComponent<Button>().onClick.AddListener(OpenGameMenu);
         CreateTopBarButton(menuButtonsPanel, "AllianceButton", "동맹");
         CreateTopBarButton(menuButtonsPanel, "ChatButton", "대화");
     }

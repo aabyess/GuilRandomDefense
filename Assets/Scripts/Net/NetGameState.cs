@@ -17,6 +17,10 @@ public class NetGameState : NetworkBehaviour
 
     [Networked] public NetworkBool Started { get; set; }
 
+    /// <summary>판 도중 원작 Gone으로 나간 슬롯(비트). 재접속한 사람 화면은 그 사람 NetPlayer를 못 봐 좌석을 몰라
+    /// 「비어있음」으로 떴다 — 이걸로 앉히고 사망 표식을 건다(PM 09-26 ③).</summary>
+    [Networked] public int DepartedMask { get; set; }
+
     /// <summary>호스트 빌드의 NetCatalog 지문. 클라가 자기 것과 대 본다(다르면 유닛 번호가 어긋난다).</summary>
     [Networked] public int CatalogFingerprint { get; set; }
 
@@ -111,6 +115,16 @@ public class NetGameState : NetworkBehaviour
         // 게임 씬의 DifficultyManager.Awake가 읽는다(호스트·클라 모두). 씬 로드 전에 이미 채워져 있어야 해서
         // 값이 바뀔 때만이 아니라 매 프레임 옮겨 둔다(싼 대입 하나).
         MatchConfig.Difficulty = SelectedDifficulty;
+
+        if (!HasStateAuthority && DepartedMask != 0)
+            for (int slot = 0; slot < NetSession.MaxSlots; slot++)
+            {
+                if ((DepartedMask & (1 << slot)) == 0) continue;
+                PlayerContext gone = PlayerContext.Get(slot);
+                if (gone == null) continue;
+                if (!gone.IsOccupied) gone.SetOccupied(true);
+                if (!gone.IsDead) gone.MarkDead();
+            }
 
         // 재접속: 게임 씬이 이 오브젝트보다 먼저 떠서 DifficultyManager.Awake가 난이도를 못 봤으면 지금 건다
         // (안 걸면 클라가 「방장이 모드를 선택하고 있습니다」 창에 멈춘다).

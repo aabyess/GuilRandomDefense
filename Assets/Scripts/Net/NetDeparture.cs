@@ -47,6 +47,7 @@ public static class NetDeparture
 
         // 4. 패배와 같은 표식.
         context.MarkDead();
+        if (NetGameState.Instance != null) NetGameState.Instance.DepartedMask |= 1 << slot;   // 늦게 들어온 사람 화면도 「사망」
 
         // 5. R01G +1(원작은 Player(5)에 업그레이드 — 대상 = 스토리·퀘스트 미니보스·크립, 서 있는 것도 즉시).
         var before = new List<(EnemyDummy enemy, float max, float hp)>();

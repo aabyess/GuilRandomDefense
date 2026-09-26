@@ -82,6 +82,10 @@ public class NetLauncher : MonoBehaviour
     float rejoinAfter = -1f;
     float rejoinAtTime = -1f;
     float testMenuDelay = -1f;
+    float soloMenuAt = -1f;
+    string soloMenuShot;
+    float soloHomeAt = -1f;
+    static bool soloTestsScheduled;   // 혼자 하기 → 처음 화면 → 다시 혼자 하기에서 새 창구가 같은 명령줄을 또 읽는다 — 테스트 예약은 한 번만
     string testMenuShot;
 
     /// <summary>판 도중 예고 없이 끊겼을 때 기억해 둔 방 코드 — 첫 화면의 [다시 참가]가 쓴다(성공하면 비운다).</summary>
@@ -191,6 +195,8 @@ public class NetLauncher : MonoBehaviour
                 case "-mpTestFinishRun": testFinishRunDelay = Seconds(i + 1); break;
                 case "-mpCamWisp": camWispDelay = Seconds(i + 1); break;
                 case "-mpToken": cliToken = Arg(i + 1); break;
+                case "-mpSoloMenuAt": soloMenuAt = Seconds(i + 1); soloMenuShot = Arg(i + 2); break;
+                case "-mpSoloHomeAt": soloHomeAt = Seconds(i + 1); break;
                 case "-mpTestMenu": testMenuDelay = Seconds(i + 1); testMenuShot = Arg(i + 2); break;
                 case "-mpDropAt": dropAt = Seconds(i + 1); break;
                 case "-mpRejoinAfter": rejoinAfter = Seconds(i + 1); break;
@@ -247,11 +253,13 @@ public class NetLauncher : MonoBehaviour
         LocalPlayer.LocalPlayerId = 0;
         NetLoadingHook.Show("혼자 하기");
         // 테스트 전용: 이 창구는 곧 사라지니 남은 -mpShotAt 캡처는 씬을 넘어 사는 작은 오브젝트에 넘긴다(로딩 화면 확인용).
-        if (shotAts.Count > 0)
+        if (!soloTestsScheduled && (shotAts.Count > 0 || soloMenuAt >= 0f || soloHomeAt >= 0f || exitAt >= 0f))
         {
+            soloTestsScheduled = true;
             var survivor = new GameObject("[MP] 캡처(혼자 하기)").AddComponent<NetShotHelper>();
             DontDestroyOnLoad(survivor.gameObject);
             survivor.Schedule(shotAts);
+            survivor.ScheduleMenu(soloMenuAt, soloMenuShot, soloHomeAt, exitAt);
         }
         Destroy(gameObject);
         SceneManager.LoadScene(scene);
@@ -1095,7 +1103,8 @@ public class NetLauncher : MonoBehaviour
     IEnumerator TestMenuAfter(float seconds, string path)
     {
         yield return new WaitForSecondsRealtime(seconds);
-        if (TryGetComponent(out NetLobbyUi ui)) ui.OpenGameMenuForTest();
+        GameHud hud = FindFirstObjectByType<GameHud>();
+        if (hud != null) hud.ShowGameMenuConfirm();
         yield return new WaitForSecondsRealtime(0.5f);
         yield return new WaitForEndOfFrame();
         if (!string.IsNullOrEmpty(path)) ScreenCapture.CaptureScreenshot(path);

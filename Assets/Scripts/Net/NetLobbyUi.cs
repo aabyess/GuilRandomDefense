@@ -49,14 +49,6 @@ public class NetLobbyUi : MonoBehaviour
     TMP_Text mainStatus;
     Button rejoinButton;
 
-    // 게임 중 메뉴(재접속 B안 §7-4): 원작 배치만 있던 「메뉴」 버튼(GameHud, 동작 없음)에 네트 판에서만 [나가기] 확인 창을 단다.
-    // 친구: 「나가면 유닛이 모두 사라집니다. 나갈까요?」(PM 확정 문구) — [나가기]는 원작 Gone 즉시(끊김 유예 없음).
-    GameObject lobbyBackdrop;
-    GameObject lobbyTitle;
-    GameObject gameMenu;
-    TMP_Text gameMenuText;
-    bool gameMenuOpen;
-    Button hookedMenuButton;
 
     TMP_Text roomCodeText;
     readonly TMP_Text[] slotNumbers = new TMP_Text[NetSession.MaxSlots];
@@ -84,13 +76,7 @@ public class NetLobbyUi : MonoBehaviour
     void Update()
     {
         bool inGame = launcher != null && SceneManager.GetActiveScene().buildIndex == launcher.GameSceneBuildIndex;
-        if (inGame && !launcher.InRoom) gameMenuOpen = false;
-        if (inGame) HookGameMenuButton();
-        else gameMenuOpen = false;
-        bool wantCanvas = !inGame || gameMenuOpen;
-        if (canvas.enabled != wantCanvas) canvas.enabled = wantCanvas;
-        SetLobbyVisible(!inGame);
-        if (gameMenu.activeSelf != (inGame && gameMenuOpen)) gameMenu.SetActive(inGame && gameMenuOpen);
+        if (canvas.enabled == inGame) canvas.enabled = !inGame;   // 게임 중 [나가기]는 GameHud 「메뉴」가 맡는다
         if (inGame) return;
 
         EnsureEventSystem();
@@ -138,72 +124,6 @@ public class NetLobbyUi : MonoBehaviour
         bool canRejoin = !string.IsNullOrEmpty(launcher.RejoinCode);
         if (rejoinButton.gameObject.activeSelf != canRejoin) rejoinButton.gameObject.SetActive(canRejoin);
         rejoinButton.interactable = idle;
-    }
-
-    // ───────────── 게임 중 메뉴 ─────────────
-
-    void HookGameMenuButton()
-    {
-        if (hookedMenuButton != null) return;   // 씬이 바뀌면 버튼이 사라져 null이 된다 — 새 씬에서 다시 단다
-        GameObject menu = GameObject.Find("MenuButton");
-        if (menu == null || !menu.TryGetComponent(out Button button)) return;
-        hookedMenuButton = button;
-        button.onClick.AddListener(() =>
-        {
-            if (launcher == null || !launcher.InRoom) return;
-            gameMenuText.text = launcher.IsHost
-                ? "방장이 나가면 모두의 판이 끝납니다. 나갈까요?"
-                : "나가면 유닛이 모두 사라집니다. 나갈까요?";
-            gameMenuOpen = true;
-        });
-    }
-
-    void SetLobbyVisible(bool visible)
-    {
-        if (lobbyBackdrop.activeSelf != visible) lobbyBackdrop.SetActive(visible);
-        if (lobbyTitle.activeSelf != visible) lobbyTitle.SetActive(visible);
-        if (subtitle.gameObject.activeSelf != visible) subtitle.gameObject.SetActive(visible);
-        if (!visible)
-        {
-            if (modePanel.activeSelf) modePanel.SetActive(false);
-            if (mainPanel.activeSelf) mainPanel.SetActive(false);
-            if (roomPanel.activeSelf) roomPanel.SetActive(false);
-        }
-    }
-
-    void BuildGameMenu(RectTransform root)
-    {
-        Image dim = CreateImage(root, "GameMenu", new Color(0f, 0f, 0f, 0.55f));
-        Stretch(dim.rectTransform);
-        gameMenu = dim.gameObject;
-
-        Image card = CreateImage(dim.rectTransform, "Card", Card);
-        Place(card.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(680f, 300f));
-        RectTransform c = card.rectTransform;
-
-        gameMenuText = CreateText(c, "Message", "", 30, font, TextMain, TextAlignmentOptions.Center);
-        Place(gameMenuText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 55f), new Vector2(600f, 110f));
-
-        Button leave = CreateButton(c, "LeaveButton", "나가기", ButtonDanger, 28);
-        Place((RectTransform)leave.transform, new Vector2(0.5f, 0.5f), new Vector2(-150f, -80f), new Vector2(240f, 72f));
-        leave.onClick.AddListener(() =>
-        {
-            gameMenuOpen = false;
-            if (launcher != null) launcher.Leave();
-        });
-
-        Button cancel = CreateButton(c, "CancelButton", "취소", ButtonNormal, 28);
-        Place((RectTransform)cancel.transform, new Vector2(0.5f, 0.5f), new Vector2(150f, -80f), new Vector2(240f, 72f));
-        cancel.onClick.AddListener(() => gameMenuOpen = false);
-
-        gameMenu.SetActive(false);
-    }
-
-    /// <summary>테스트용(-mpTestMenu): 메뉴 버튼을 누른 것과 같다.</summary>
-    public void OpenGameMenuForTest()
-    {
-        HookGameMenuButton();
-        if (hookedMenuButton != null) hookedMenuButton.onClick.Invoke();
     }
 
     void RefreshRoom()
@@ -276,18 +196,15 @@ public class NetLobbyUi : MonoBehaviour
         RectTransform root = (RectTransform)transform;
         Image backdrop = CreateImage(root, "Backdrop", Backdrop);
         Stretch(backdrop.rectTransform);
-        lobbyBackdrop = backdrop.gameObject;
 
         TMP_Text title = CreateText(root, "Title", "구 랜 디", 72, boldFont, TextMain, TextAlignmentOptions.Center);
         Place(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -110f), new Vector2(900f, 110f));
-        lobbyTitle = title.gameObject;
         subtitle = CreateText(root, "Subtitle", "", 28, font, TextDim, TextAlignmentOptions.Center);
         Place(subtitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -185f), new Vector2(900f, 40f));
 
         BuildModePanel(root);
         BuildMainPanel(root);
         BuildRoomPanel(root);
-        BuildGameMenu(root);
         mainPanel.SetActive(false);
         roomPanel.SetActive(false);
     }
