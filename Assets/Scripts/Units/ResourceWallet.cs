@@ -115,6 +115,15 @@ public class ResourceWallet : MonoBehaviour
         return true;
     }
 
+    /// <summary>MP: 멀티 클라가 호스트의 값을 받아 적는다(NetPlayer). 표시용 복제 — 상한 검사 없이 그대로.
+    /// 싱글·호스트는 부르지 않는다.</summary>
+    public void ApplyReplicated(ResourceType type, int amount)
+    {
+        if (Get(type) == amount) return;
+        amounts[type] = amount;
+        OnResourceChanged?.Invoke(type, amount);
+    }
+
     public void Add(ResourceType type, int amount)
     {
         if (amount <= 0) return;

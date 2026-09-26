@@ -202,6 +202,7 @@ public class NetLauncher : MonoBehaviour
         session = go.AddComponent<NetSession>();
         session.SetPlayerPrefab(playerPrefab);
         go.AddComponent<NetMirrorHost>().Setup(entityPrefab, catalog);
+        go.AddComponent<NetDiagnostics>().Attach(runner);
         NetworkSceneManagerDefault sceneManager = go.AddComponent<NetworkSceneManagerDefault>();
 
         // 좌석은 NetPlayer가 생길 때 채워진다. 러너를 띄우는 순간부터 「네트 판」이다.

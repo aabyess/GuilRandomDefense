@@ -43,6 +43,15 @@ public class GoldWallet : MonoBehaviour
         return true;
     }
 
+    /// <summary>MP: 멀티 클라가 호스트의 값을 받아 적는다(NetPlayer). 판정이 아니라 표시용 복제 —
+    /// 이벤트는 그대로 쏴서 HUD가 지금처럼 갱신된다. 싱글·호스트는 부르지 않는다.</summary>
+    public void ApplyReplicated(int gold)
+    {
+        if (Gold == gold) return;
+        Gold = gold;
+        OnGoldChanged?.Invoke(Gold);
+    }
+
     public void Add(int amount)
     {
         if (amount <= 0) return;

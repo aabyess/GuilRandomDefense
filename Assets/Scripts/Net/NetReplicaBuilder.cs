@@ -73,6 +73,12 @@ public static class NetReplicaBuilder
             owner.SetOwner(entity.Owner);
         }
 
+        // 유닛 프리팹에는 UnitIdentity가 없다 — UnitSpawner.Spawn이 소환할 때 붙인다(프리팹 전수 0/200, 09-26 실측).
+        // 겉모습도 같이 붙여야 이름표(UnitNameplateLayer)·클라 인벤토리 등록이 된다. 위습의 Wisp도 같은 관례
+        // (RewardDistributor.SpawnWisp가 없으면 붙인다).
+        if (entity.EntityKind == NetEntityKind.Unit && !visual.TryGetComponent(out UnitIdentity _)) visual.AddComponent<UnitIdentity>();
+        if (entity.EntityKind == NetEntityKind.Wisp && !visual.TryGetComponent(out Wisp _)) visual.AddComponent<Wisp>();
+
         // 거울 루트(NetEntity)가 위치·회전·스케일을 싣는다 — 겉모습은 그 자식으로 제자리에.
         Transform t = visual.transform;
         t.SetParent(entity.transform, false);
@@ -93,7 +99,11 @@ public static class NetReplicaBuilder
                 }
                 break;
             case NetEntityKind.Enemy:
-                if (visual.TryGetComponent(out EnemyDummy enemy)) enemy.InitializeReplica(enemyData, entity.Hp, entity.MaxHp);
+                if (visual.TryGetComponent(out EnemyDummy enemy))
+                {
+                    enemy.InitializeReplica(enemyData, entity.Hp, entity.MaxHp);
+                    enemy.SetLane(entity.Owner);   // 적의 Owner 칸 = 레인 번호(NetMirrorHost)
+                }
                 break;
             case NetEntityKind.Wisp:
                 if (visual.TryGetComponent(out Wisp wisp)) wisp.SetData(wispData);

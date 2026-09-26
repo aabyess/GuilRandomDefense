@@ -53,7 +53,8 @@ public class NetMirrorHost : SimulationBehaviour
         foreach (GameObject go in pending)
         {
             EnemyDummy enemy = go.GetComponent<EnemyDummy>();
-            if (Mirror(go, NetEntityKind.Enemy, enemy.Data, -1)) created++;
+            // 적은 소유자 대신 레인 번호를 싣는다 — 클라 HUD의 「플레이어 N | 적 M」이 레인별로 센다.
+            if (Mirror(go, NetEntityKind.Enemy, enemy.Data, enemy.LaneIndex)) created++;
         }
 
         pending.Clear();

@@ -11,6 +11,8 @@ public class DebugWispTrigger : MonoBehaviour
     void Update()
     {
         if (Keyboard.current == null || !Keyboard.current.gKey.wasPressedThisFrame) return;
+        // MP: 멀티 클라에서 누르면 호스트 모르게 진짜 위습이 생긴다(GrantWisps에 가드가 없다) — 디버그 키는 호스트만.
+        if (!GameAuthority.IsServer) return;
 
         RewardDistributor distributor = rewardDistributor != null ? rewardDistributor : RewardDistributor.Instance;
         PlayerContext localContext = PlayerContext.Local;

@@ -24,6 +24,13 @@ public class NetPlayer : NetworkBehaviour
 
     [Networked] public NetworkBool Ready { get; set; }
 
+    // ───── 게임 중 복제(1-d): 호스트가 PlayerContext에서 읽어 쓰고, 클라가 자기 쪽 같은 컴포넌트에 적는다 ─────
+    // 클라 GameHud는 지금처럼 PlayerContext의 지갑을 읽으면 된다(파일 무수정).
+    public const int ResourceSlots = 8;
+    [Networked] public int Gold { get; set; }
+    [Networked, Capacity(ResourceSlots)] public NetworkArray<int> Resources => default;
+    [Networked] public NetworkBool Dead { get; set; }
+
     public bool IsReadyForStart => IsHost || Ready;
 
     public string DisplayName
@@ -62,6 +69,34 @@ public class NetPlayer : NetworkBehaviour
         Debug.Log($"[MP] NetPlayer 생성: 슬롯 {Slot} (접속자 {Object.InputAuthority}, 내 것 {HasInputAuthority}, 호스트 {IsHost}) · 현재 슬롯 {{{string.Join(",", MatchConfig.OccupiedSlots)}}}");
     }
 
+    public override void FixedUpdateNetwork()
+    {
+        if (!HasStateAuthority) return;
+
+        PlayerContext context = PlayerContext.Get(Slot);
+        if (context == null) return;   // 대기실(게임 씬 전)
+
+        if (context.GoldWallet != null) Gold = context.GoldWallet.Gold;
+        if (context.ResourceWallet != null)
+            foreach (ResourceType type in System.Enum.GetValues(typeof(ResourceType)))
+                if ((int)type < ResourceSlots) Resources.Set((int)type, context.ResourceWallet.Get(type));
+        Dead = context.IsDead;
+    }
+
+    public override void Render()
+    {
+        if (HasStateAuthority) return;   // 호스트는 실물이 곧 값이다
+
+        PlayerContext context = PlayerContext.Get(Slot);
+        if (context == null) return;
+
+        if (context.GoldWallet != null) context.GoldWallet.ApplyReplicated(Gold);
+        if (context.ResourceWallet != null)
+            foreach (ResourceType type in System.Enum.GetValues(typeof(ResourceType)))
+                if ((int)type < ResourceSlots) context.ResourceWallet.ApplyReplicated(type, Resources[(int)type]);
+        if (Dead && !context.IsDead) context.MarkDead();
+    }
+
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
         all.Remove(this);
@@ -92,6 +127,16 @@ public class NetPlayer : NetworkBehaviour
     {
         NetCommands.ExecuteMove(this, target, groundPoint);
     }
+
+    /// <summary>호스트 → 이 접속자: 그 사람 앞으로 온 안내(PlayerNotification)를 넘긴다. 등급색 태그 그대로.</summary>
+    [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
+    public void RPC_Notify(string message, float duration)
+    {
+        PlayerNotification.Show(LocalPlayer.LocalPlayerId, message, duration);
+        if (notificationsLogged++ < 10) Debug.Log($"[MP] 알림 받음: {message}");
+    }
+
+    static int notificationsLogged;
 
     public static string LoadNickname()
     {

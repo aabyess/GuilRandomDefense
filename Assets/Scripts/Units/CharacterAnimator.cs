@@ -88,7 +88,12 @@ public class CharacterAnimator : MonoBehaviour
     public void PlayAttack()
     {
         if (animator != null && hasAttack) animator.SetTrigger(AttackHash);
+        AttackPlayed?.Invoke(); // MP
     }
+
+    // MP: 멀티 호스트의 거울(NetEntity)이 구독해 공격 횟수를 클라로 보낸다 — 클라 겉모습이 PlayAttack을 다시 부른다.
+    //     싱글에선 구독자가 없다.
+    public event System.Action AttackPlayed;
 
     /// <summary>죽을 때 부른다. 오브젝트가 바로 파괴되면 재생될 틈이 없으니, 죽음 처리보다 먼저 부를 것.</summary>
     public void PlayDeath()

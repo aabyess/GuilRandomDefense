@@ -20,6 +20,14 @@ public class NetGameState : NetworkBehaviour
     /// <summary>호스트 빌드의 NetCatalog 지문. 클라가 자기 것과 대 본다(다르면 유닛 번호가 어긋난다).</summary>
     [Networked] public int CatalogFingerprint { get; set; }
 
+    // ───── 게임 중(1-d): 호스트가 RoundManager를 읽어 쓴다. 클라 HUD가 이걸 읽는다(RoundManager는 안 건드린다, PM 결정 (b)) ─────
+    [Networked] public int Round { get; set; }
+    [Networked] public NetworkBool Preparing { get; set; }
+    [Networked] public float TimeLeft { get; set; }
+
+    RoundManager roundManager;
+    int notificationsLogged;
+
     public DifficultyMode? SelectedDifficulty =>
         Difficulty >= 0 && System.Enum.IsDefined(typeof(DifficultyMode), Difficulty) ? (DifficultyMode)Difficulty : (DifficultyMode?)null;
 
@@ -27,6 +35,9 @@ public class NetGameState : NetworkBehaviour
     {
         Instance = this;
         Runner.MakeDontDestroyOnLoad(gameObject);
+
+        // 호스트: 원격 슬롯 앞으로 온 안내를 그 클라에 넘긴다(자기 것은 자기 화면에 이미 떴다).
+        if (HasStateAuthority) PlayerNotification.Shown += RouteNotification;
 
         if (!HasStateAuthority)
         {
@@ -38,7 +49,34 @@ public class NetGameState : NetworkBehaviour
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
+        PlayerNotification.Shown -= RouteNotification;
         if (Instance == this) Instance = null;
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (!HasStateAuthority || !Started) return;
+
+        if (roundManager == null) roundManager = FindFirstObjectByType<RoundManager>();
+        if (roundManager == null) return;
+
+        Round = roundManager.CurrentRound;
+        Preparing = roundManager.IsWaitingForNextRound;
+        TimeLeft = Preparing ? roundManager.PreRoundTimeLeft : roundManager.RoundTimeLeft;
+    }
+
+    void RouteNotification(int playerId, string message, float duration)
+    {
+        if (playerId == LocalPlayer.LocalPlayerId) return;
+        foreach (NetPlayer player in NetPlayer.All)
+        {
+            if (player != null && player.Slot == playerId && !player.HasInputAuthority)
+            {
+                player.RPC_Notify(message, duration);
+                if (notificationsLogged++ < 10) Debug.Log($"[MP] 알림 넘김 → 슬롯 {playerId}: {message}");
+                return;
+            }
+        }
     }
 
     public override void Render()

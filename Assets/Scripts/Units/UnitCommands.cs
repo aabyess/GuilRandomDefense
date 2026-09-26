@@ -17,6 +17,9 @@ public static class UnitCommands
     /// </summary>
     public static int Gather(IReadOnlyList<Selectable> selection)
     {
+        // MP: 멀티 클라는 겉모습만 가져서 여기서 옮기면 로컬 화면만 어긋난다(모으기는 거울 자식의 위치를 영구히 틀어 놓는다).
+        //     요청 RPC가 붙을 때까지 클라에선 아무 일도 안 한다. 싱글·호스트는 지나친다.
+        if (!GameAuthority.IsServer) return 0;
         UnitIdentity anchor = FirstIdentity(selection);
         if (anchor == null || anchor.Data == null) return 0;
 
@@ -80,6 +83,9 @@ public static class UnitCommands
     /// </summary>
     public static int SendToPen(IReadOnlyList<Selectable> selection)
     {
+        // MP: 멀티 클라는 겉모습만 가져서 여기서 옮기면 로컬 화면만 어긋난다(모으기는 거울 자식의 위치를 영구히 틀어 놓는다).
+        //     요청 RPC가 붙을 때까지 클라에선 아무 일도 안 한다. 싱글·호스트는 지나친다.
+        if (!GameAuthority.IsServer) return 0;
         int moved = 0;
         int attempted = 0;
         int lastFailedOwner = -1;
@@ -114,6 +120,9 @@ public static class UnitCommands
     /// <summary>H 키. 선택한 유닛들을 그 자리에 못박거나, 이미 박혀 있으면 푼다.</summary>
     public static int ToggleHold(IReadOnlyList<Selectable> selection)
     {
+        // MP: 멀티 클라는 겉모습만 가져서 여기서 옮기면 로컬 화면만 어긋난다(모으기는 거울 자식의 위치를 영구히 틀어 놓는다).
+        //     요청 RPC가 붙을 때까지 클라에선 아무 일도 안 한다. 싱글·호스트는 지나친다.
+        if (!GameAuthority.IsServer) return 0;
         List<UnitCombat> units = new List<UnitCombat>();
         foreach (Selectable selected in selection)
             if (selected != null && selected.TryGetComponent(out UnitCombat combat))

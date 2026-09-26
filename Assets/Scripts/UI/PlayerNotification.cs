@@ -16,9 +16,13 @@ public static class PlayerNotification
 {
     /// <summary>playerId에게만 보이는 알림을 띄운다. duration은 원작 관례대로 대개
     /// 3~6초, 중요한 건 10초.</summary>
+    // MP: 멀티 호스트가 원격 슬롯 앞으로 온 안내를 그 클라에 넘기려고 구독한다(NetPlayer). 싱글에선 구독자가 없다.
+    public static event System.Action<int, string, float> Shown;
+
     public static void Show(int playerId, string message, float duration = 4f)
     {
         PlayerNotificationHud.EnsureInstance().Enqueue(playerId, message, duration);
+        Shown?.Invoke(playerId, message, duration); // MP
     }
 }
 

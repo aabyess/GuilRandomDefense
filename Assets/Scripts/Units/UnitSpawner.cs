@@ -8,6 +8,10 @@ public class UnitSpawner : MonoBehaviour
     // TODO(멀티): 이 메서드 내부를 서버 권위 호출로 교체하면 됨 — MULTIPLAYER_MIGRATION.md "전환 순서" 4번 참고.
     public GameObject Spawn(UnitData data, Vector3 position, int ownerId)
     {
+        // MP: 플레이어 유닛은 호스트만 만든다(클라에서 만들면 호스트가 모르는 유닛이 생긴다). 지금 호출부는 전부
+        //     가드돼 있지만 여기가 유일한 생성 지점이라 한 번 더 막는다. 싱글·호스트는 지나친다.
+        if (!GameAuthority.IsServer) return null;
+
         if (data == null || data.prefab == null)
         {
             Debug.LogWarning("UnitSpawner: UnitData 또는 prefab이 비어있어 소환할 수 없습니다.");

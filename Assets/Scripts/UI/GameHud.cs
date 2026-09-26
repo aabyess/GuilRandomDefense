@@ -743,6 +743,7 @@ public class GameHud : MonoBehaviour
     // "조건 미달"과 "도박 실패"를 같은 경로로 처리하면 안 된다는 사양 경고 그대로).
     void OnGambleButtonClicked(int index)
     {
+        if (BlockedOnMultiplayerClient()) return; // MP
         SelectionManager selection = Selection;
         if (selection == null || selection.Selected.Count != 1) return;
 
@@ -880,6 +881,7 @@ public class GameHud : MonoBehaviour
     // 뜬 시점에 이미 보상이 확정돼 있다.
     void OnSellButtonClicked()
     {
+        if (BlockedOnMultiplayerClient()) return; // MP
         SelectionManager selection = Selection;
         if (selection == null || selection.Selected.Count != 1) return;
 
@@ -1011,6 +1013,7 @@ public class GameHud : MonoBehaviour
     // 그대로 유효하다 — Consume은 성공 분기에서만 일어난다.
     void OnRerollButtonClicked()
     {
+        if (BlockedOnMultiplayerClient()) return; // MP
         SelectionManager selection = Selection;
         if (selection == null || selection.Selected.Count != 1) return;
 
@@ -1305,6 +1308,7 @@ public class GameHud : MonoBehaviour
     // 실제 방지는 TrySelect가 한다(코드 경로로도 재선택 불가).
     void OnNavigationOptionClicked(int index)
     {
+        if (BlockedOnMultiplayerClient()) return; // MP
         NavigationState state = PlayerContext.Local?.NavigationState;
         if (state == null || state.HasChosen) return;
 
@@ -1338,6 +1342,7 @@ public class GameHud : MonoBehaviour
     // TrySpendTraitPoints가 확인+차감을 한 호출로 묶어서 그 사이 다른 소비가 못 끼어든다.
     void OnTraitButtonClicked()
     {
+        if (BlockedOnMultiplayerClient()) return; // MP
         SelectionManager selection = Selection;
         if (selection == null || selection.Selected.Count != 1) return;
 
@@ -2036,8 +2041,18 @@ public class GameHud : MonoBehaviour
     const string AlignCommandLabel = "정렬";
     const string AlignCommandHotkey = "C";
 
+    // MP: 멀티 클라에서 호스트 판정이 필요한 버튼은 요청 RPC가 생길 때까지 막는다 — 누르면 클라 로컬 상태만
+    //     바뀌어 화면이 거짓말을 한다(설계 §6). 싱글·호스트는 IsServer라 항상 false.
+    static bool BlockedOnMultiplayerClient()
+    {
+        if (GameAuthority.IsServer) return false;
+        PlayerNotification.Show(LocalPlayer.LocalPlayerId, "같이 하기에서는 아직 쓸 수 없습니다(다음 단계에서 열립니다).");
+        return true;
+    }
+
     void OnUnitCommandSlotClicked(int index)
     {
+        if (BlockedOnMultiplayerClient()) return; // MP
         // 단축키와 같은 함수를 부른다 — 두 곳에 따로 구현하면 한쪽만 고쳐진다.
         if (index == HoldCommandSlot || index == GatherCommandSlot || index == AlignCommandSlot)
         {
@@ -2612,6 +2627,15 @@ public class GameHud : MonoBehaviour
         //    **읽는 곳이 프로젝트에 한 군데도 없었다** — 값만 있고 화면에 닿질 않았다.
         bool preparing = rm != null && rm.IsWaitingForNextRound;
         float shown = rm == null ? 0f : (preparing ? rm.PreRoundTimeLeft : rm.RoundTimeLeft);
+
+        // MP: 멀티 클라의 RoundManager는 멈춰 있다(판정은 호스트) — 호스트가 NetGameState에 실어 보낸 값을 쓴다
+        //     (PM 결정 (b): RoundManager는 안 건드린다). 싱글·호스트는 IsServer라 이 블록을 지나친다.
+        if (!GameAuthority.IsServer && NetGameState.Instance != null)
+        {
+            round = NetGameState.Instance.Round;
+            preparing = NetGameState.Instance.Preparing;
+            shown = NetGameState.Instance.TimeLeft;
+        }
         int timeTenths = Mathf.RoundToInt(shown * 10f);
 
         if (round != lastRound || timeTenths != lastTimeTenths || preparing != lastPreparing)

@@ -19,6 +19,12 @@ public class WarehouseController : MonoBehaviour
     void Update()
     {
         if (Keyboard.current == null || !Keyboard.current.bKey.wasPressedThisFrame) return;
+        // MP: 멀티 클라는 겉모습만 가져서 창고 넣기/빼기가 로컬 화면만 바꾼다 — 요청 RPC가 붙을 때까지 클라에선 막는다.
+        if (!GameAuthority.IsServer)
+        {
+            PlayerNotification.Show(LocalPlayer.LocalPlayerId, "같이 하기에서는 아직 쓸 수 없습니다(다음 단계에서 열립니다).");
+            return;
+        }
         if (selectionManager == null) return;
 
         Warehouse target = TargetWarehouse;

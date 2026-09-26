@@ -22,6 +22,8 @@ public class NetEntity : NetworkBehaviour
     [Networked] public sbyte Owner { get; set; }
     [Networked] public float Hp { get; set; }
     [Networked] public float MaxHp { get; set; }
+    /// <summary>호스트 실물이 공격 모션을 낼 때마다 +1. 클라는 바뀌면 겉모습에 PlayAttack.</summary>
+    [Networked] public int AttackSeq { get; set; }
 
     public NetEntityKind EntityKind => (NetEntityKind)Kind;
 
@@ -33,6 +35,9 @@ public class NetEntity : NetworkBehaviour
 
     EnemyDummy replicaEnemy;
     EnemyDummy realEnemy;
+    CharacterAnimator realAnimator;
+    CharacterAnimator visualAnimator;
+    int seenAttackSeq;
 
     public static int ClientVisualCount { get; private set; }
 
@@ -40,15 +45,23 @@ public class NetEntity : NetworkBehaviour
     {
         if (HasStateAuthority)
         {
-            if (Real != null) Real.TryGetComponent(out realEnemy);
+            if (Real != null)
+            {
+                Real.TryGetComponent(out realEnemy);
+                realAnimator = Real.GetComponentInChildren<CharacterAnimator>();
+                if (realAnimator != null) realAnimator.AttackPlayed += OnRealAttack;
+            }
             return;
         }
+
+        seenAttackSeq = AttackSeq;
 
         Visual = NetReplicaBuilder.Build(this);
         if (Visual != null)
         {
             ClientVisualCount++;
             if (EntityKind == NetEntityKind.Enemy) Visual.TryGetComponent(out replicaEnemy);
+            visualAnimator = Visual.GetComponentInChildren<CharacterAnimator>();
         }
     }
 
@@ -76,10 +89,20 @@ public class NetEntity : NetworkBehaviour
     public override void Render()
     {
         if (replicaEnemy != null) replicaEnemy.SetReplicaHp(Hp, MaxHp);
+
+        if (!HasStateAuthority && AttackSeq != seenAttackSeq)
+        {
+            seenAttackSeq = AttackSeq;
+            if (visualAnimator != null) visualAnimator.PlayAttack();
+        }
     }
+
+    void OnRealAttack() => AttackSeq++;
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
+        if (realAnimator != null) realAnimator.AttackPlayed -= OnRealAttack;
+
         if (Visual != null)
         {
             Destroy(Visual);
