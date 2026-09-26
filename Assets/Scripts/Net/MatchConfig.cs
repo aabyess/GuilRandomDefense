@@ -13,6 +13,11 @@ using System.Collections.Generic;
 public static class MatchConfig
 {
     static readonly HashSet<int> occupiedSlots = new HashSet<int>();
+    static readonly Dictionary<int, PlayerSaveData> submittedSaves = new Dictionary<int, PlayerSaveData>();
+
+    /// <summary>호스트: 그 슬롯 친구가 대기실에서 제출한 세이브(없으면 null). PersistentSave.Awake가 읽는다.</summary>
+    public static PlayerSaveData SubmittedSave(int slot) => submittedSaves.TryGetValue(slot, out PlayerSaveData data) ? data : null;
+    public static void SetSubmittedSave(int slot, PlayerSaveData data) => submittedSaves[slot] = data;
 
     public static bool Active { get; set; }
 
@@ -32,5 +37,6 @@ public static class MatchConfig
         Active = false;
         Difficulty = null;
         occupiedSlots.Clear();
+        submittedSaves.Clear();
     }
 }

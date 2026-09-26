@@ -83,6 +83,7 @@ public class NetPlayer : NetworkBehaviour
             Local = this;
             LocalPlayer.LocalPlayerId = Slot;
             RPC_SetNickname(NetLauncher.Instance != null ? NetLauncher.Instance.InitialNickname : LoadNickname());
+            if (!Runner.IsServer) NetSaves.SubmitOwn(this);   // 호스트 자신은 자기 파일을 그대로 읽는다
         }
 
         Debug.Log($"[MP] NetPlayer 생성: 슬롯 {Slot} (접속자 {Object.InputAuthority}, 내 것 {HasInputAuthority}, 호스트 {IsHost}) · 현재 슬롯 {{{string.Join(",", MatchConfig.OccupiedSlots)}}}");
@@ -258,6 +259,18 @@ public class NetPlayer : NetworkBehaviour
     public void RPC_TraitTarget(short trait, NetworkId target)
     {
         NetCommands.ExecuteTraitTarget(this, trait, target);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_SubmitSave(int point, int clear, int best, int level)
+    {
+        NetSaves.Receive(this, point, clear, best, level);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
+    public void RPC_SaveResult(int point, int clear, int best, int level)
+    {
+        NetSaves.WriteResult(point, clear, best, level);
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]

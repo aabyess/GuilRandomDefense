@@ -17,6 +17,8 @@ using UnityEngine.SceneManagement;
 /// 명령줄(빌드 두 개를 사람 손 없이 붙여 보는 용도):
 ///   -mpHost | -mpJoin        바로 방 만들기/참가
 ///   -mpSolo                  바로 「혼자 하기」
+///   -mpSaveDir 폴더           세이브 폴더(같은 PC 두 창이 같은 player_0.json을 안 쓰게) — 테스트용
+///   -mpTestFinishRun 초      (호스트) 그 초에 살아 있는 전원 +5점 뒤 FinishRun(클리어 아님) — 판 끝 세이브 경로 확인용
 ///   -mpSession 코드           방 코드(호스트는 발급 대신 이 코드로 연다)
 ///   -mpRegion 지역            Photon 지역(기본 kr) — 방장과 친구가 같아야 서로 보인다
 ///   -mpNick 이름              닉네임(기억값보다 우선, 기억은 안 바꾼다)
@@ -85,6 +87,7 @@ public class NetLauncher : MonoBehaviour
     float testMoveUnitsDelay = -1f;
     float testCommandsDelay = -1f;
     float testEconomyDelay = -1f;
+    float testFinishRunDelay = -1f;
     float testPhase3Delay = -1f;
     bool testTraitUnits;
     float testTraitDelay = -1f;
@@ -158,6 +161,8 @@ public class NetLauncher : MonoBehaviour
             {
                 case "-mpHost": host = true; break;
                 case "-mpSolo": solo = true; break;
+                case "-mpSaveDir": PersistentSave.SaveRootOverride = Arg(i + 1); break;
+                case "-mpTestFinishRun": testFinishRunDelay = Seconds(i + 1); break;
                 case "-mpJoin": join = true; break;
                 case "-mpSession": cliSession = Arg(i + 1); break;
                 case "-mpRegion": region = Arg(i + 1) ?? region; break;
@@ -528,6 +533,7 @@ public class NetLauncher : MonoBehaviour
         if (testMoveUnitsDelay >= 0f) StartCoroutine(TestMoveAfter(testMoveUnitsDelay, NetEntityKind.Unit));
         if (testCommandsDelay >= 0f) StartCoroutine(TestCommandsAfter(testCommandsDelay));
         if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
+        if (testFinishRunDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestFinishRunAfter(testFinishRunDelay));
         if (testPhase3Delay >= 0f) StartCoroutine(TestPhase3After(testPhase3Delay));
         if (testTraitUnits && GameAuthority.IsServer) SpawnTraitTestUnits();
         if (testTraitDelay >= 0f) StartCoroutine(TestTraitAfter(testTraitDelay));
@@ -776,6 +782,19 @@ public class NetLauncher : MonoBehaviour
                 if (!string.IsNullOrEmpty(view.label)) labels.Add($"[{i}]{view.label.Replace("\n", " / ")}{(view.available ? "" : "(흐림)")}");
             }
             Debug.Log($"[MP] 도박소 칸({(GameAuthority.IsServer ? "호스트" : "클라")} 슬롯 {owner.OwnerId}): " + string.Join(" | ", labels));
+        }
+    }
+
+    // 테스트 전용: 판 끝 세이브(RoundManager.FinishPersistentSave와 같은 호출)를 지금 돌린다.
+    IEnumerator TestFinishRunAfter(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            if (context.IsDead || context.PersistentSave == null) continue;
+            context.PersistentSave.AddSessionPoints(5);
+            context.PersistentSave.FinishRun(false);
+            Debug.Log($"[MP] 테스트 판 끝: 슬롯 {context.PlayerId} +5점 FinishRun");
         }
     }
 

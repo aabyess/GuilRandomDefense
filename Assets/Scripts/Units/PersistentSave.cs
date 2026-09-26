@@ -23,10 +23,58 @@ public class PersistentSave : MonoBehaviour
     // FinishRun 때 Data.cumulativePlayPoint에 합산되고 나면 사라져도 되는 값이다.
     public int SessionPoints { get; private set; }
 
-    string SavePath => Path.Combine(Application.persistentDataPath, "Save", $"player_{playerId}.json");
+    string SavePath => PathFor(playerId);
+
+    // MP: 멀티 세이브(A안, PM 09-26) — 「내 세이브 = 내 PC의 player_0.json」. 호스트에서 원격 슬롯은 파일 대신
+    //     그 친구가 대기실에서 제출한 값(MatchConfig)을 쓰고, 판 끝 결과는 파일에 안 쓰고 그 친구에게 돌려보낸다.
+    //     멀티 클라에선 이 컴포넌트가 아무것도 안 한다(판정·저장은 호스트). 싱글(MatchConfig 꺼짐)은 무동작.
+    bool remote;
+
+    /// <summary>MP: 테스트용 저장 폴더(같은 PC 두 창이 같은 파일을 쓰지 않게, -mpSaveDir). 비면 기본 경로.</summary>
+    public static string SaveRootOverride;
+
+    public static string PathFor(int slot) => Path.Combine(
+        string.IsNullOrEmpty(SaveRootOverride) ? Path.Combine(Application.persistentDataPath, "Save") : SaveRootOverride,
+        $"player_{slot}.json");
+
+    /// <summary>MP: 내 PC의 내 세이브(player_0.json)를 읽는다 — 클라가 대기실에서 제출할 때.</summary>
+    public static PlayerSaveData ReadOwnSave()
+    {
+        try
+        {
+            string path = PathFor(0);
+            return File.Exists(path) ? JsonUtility.FromJson<PlayerSaveData>(File.ReadAllText(path)) ?? new PlayerSaveData() : new PlayerSaveData();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"PersistentSave: 내 세이브 읽기 실패 — 0으로 제출합니다. {e.Message}");
+            return new PlayerSaveData();
+        }
+    }
+
+    /// <summary>MP: 호스트가 돌려준 판 결과를 내 PC의 내 세이브(player_0.json)에 쓴다.</summary>
+    public static void WriteOwnSave(PlayerSaveData data)
+    {
+        string path = PathFor(0);
+        string dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
+        File.WriteAllText(path, JsonUtility.ToJson(data, prettyPrint: true));
+    }
 
     void Awake()
     {
+        // MP: 멀티 — 클라는 손대지 않고, 호스트의 원격 슬롯은 제출값으로(위 주석).
+        if (MatchConfig.Active)
+        {
+            if (!GameAuthority.IsServer) { remote = true; return; }
+            if (playerId != LocalPlayer.LocalPlayerId)
+            {
+                remote = true;
+                Data = MatchConfig.SubmittedSave(playerId) ?? new PlayerSaveData();
+                Debug.Log($"[MP] 세이브: 슬롯 {playerId}은 제출값 사용 — 누적 {Data.cumulativePlayPoint}점 · 클리어 {Data.cumulativeClearCount}회");
+                return;
+            }
+        }
         Load();
     }
 
@@ -48,6 +96,13 @@ public class PersistentSave : MonoBehaviour
 
     void WriteToDisk()
     {
+        // MP: 원격 슬롯은 호스트 PC에 쓰지 않고 그 친구에게 돌려보낸다 — 친구가 자기 player_0.json에 쓴다.
+        if (remote)
+        {
+            if (GameAuthority.IsServer) NetSaves.SendResult(playerId, Data);
+            return;
+        }
+
         string dir = Path.GetDirectoryName(SavePath);
         if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
         File.WriteAllText(SavePath, JsonUtility.ToJson(Data, prettyPrint: true));
