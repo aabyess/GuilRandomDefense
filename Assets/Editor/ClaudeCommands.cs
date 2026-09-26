@@ -1114,6 +1114,12 @@ public static class ClaudeCommands
                 if (!int.TryParse(token.Substring(7), out job.watchRounds) || job.watchRounds < 1) return $"❌ rounds: 뒤엔 1 이상 정수: {token}";
             }
             else if (token.StartsWith("snap:")) job.clicks.Add("@snap:" + token.Substring(5));
+            else if (token.StartsWith("lclick:"))
+            {
+                // 아무 오브젝트나 좌클릭(select:는 내 유닛만 고른다) — 적·조합표 인형 살펴보기 확인용(09-26 ⑤).
+                if (token.Length == 7) return $"❌ {token}: 대상 이름을 주세요";
+                job.clicks.Add("@lc:" + token.Substring(7));
+            }
             else if (token.StartsWith("select:") || token.StartsWith("rclick:"))
             {
                 bool left = token.StartsWith("select:");
@@ -1302,7 +1308,7 @@ public static class ClaudeCommands
                     Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
                     break;
                 }
-                if (target.StartsWith("@sel:") || target.StartsWith("@rc:") || target.StartsWith("@box:") || target.StartsWith("@rcpt:"))
+                if (target.StartsWith("@sel:") || target.StartsWith("@rc:") || target.StartsWith("@box:") || target.StartsWith("@rcpt:") || target.StartsWith("@lc:"))
                 {
                     if (!StepPointer(job, target, inStage)) break;   // 아직 진행 중
                     job.clickIndex++;
@@ -1944,7 +1950,7 @@ public static class ClaudeCommands
     }
 
     // 상점을 고른 뒤 명령칸 12개 중 글자가 있고 누를 수 있는 첫 칸을 누른다. 못 찾으면 칸마다 「글자·누를 수 있음」을 적는다(골드 부족으로 흐린지 가르려고).
-    static readonly string[] UnitCommandLabels = { "공격", "정지", "모으기", "정렬" };
+    static readonly string[] UnitCommandLabels = { "공격", "정지", "홀드", "모으기", "정렬" };   // 09-26 PM bdd0f875 — 명령칸에 홀드(H)가 들어왔다
     static string ClickFirstShopSlot(GameShotJob job)
     {
         var slots = UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
@@ -2170,8 +2176,9 @@ public static class ClaudeCommands
         if (spec.StartsWith("@box:")) return StepBox(job, spec.Substring(5), inStage);
         if (spec.StartsWith("@rcpt:")) return StepPointAt(job, spec.Substring(6), inStage);
         if (job.pointerPhase > 0 && !PointerFramePassed()) return false;   // 앞 마우스 이벤트가 게임 프레임에 먹히기 전(QueueMouse 주석)
-        bool left = spec.StartsWith("@sel:");
-        string label = left ? "좌클릭 select" : "우클릭 rclick";
+        bool anyLeft = spec.StartsWith("@lc:");
+        bool left = spec.StartsWith("@sel:") || anyLeft;
+        string label = anyLeft ? "좌클릭 lclick" : left ? "좌클릭 select" : "우클릭 rclick";
         Camera cam = Camera.main;
         switch (job.pointerPhase)
         {
@@ -2182,7 +2189,7 @@ public static class ClaudeCommands
                 {
                     if (inStage < GameShotClickSearch) return false;
                     // 꺼진 오브젝트까지 뒤져 「없다」와 「있지만 꺼져 있다(해금 전 등)」를 가른다.
-                    string wanted = spec.Substring(left ? 5 : 4).Normalize(NormalizationForm.FormC);
+                    string wanted = spec.Substring(spec.IndexOf(':') + 1).Normalize(NormalizationForm.FormC);
                     var hidden = Resources.FindObjectsOfTypeAll<GameObject>()
                         .Where(g => g.scene.IsValid() && g.name.Normalize(NormalizationForm.FormC).Contains(wanted))
                         .Select(g => $"{g.name}(켜짐 {g.activeInHierarchy} · 콜라이더 {(g.TryGetComponent(out Collider c) ? (c.enabled ? "켜짐" : "꺼짐") : "없음")})")
@@ -2258,7 +2265,7 @@ public static class ClaudeCommands
                 RtsCameraController camCtl = cam != null ? cam.GetComponent<RtsCameraController>() : null;
                 string axes = camCtl != null && (camCtl.KeyboardAxis != Vector2.zero || camCtl.EdgeAxis != Vector2.zero)
                     ? $" · ⚠️ 카메라 입력 중(키보드축 {camCtl.KeyboardAxis} · 가장자리축 {camCtl.EdgeAxis})" : "";
-                job.report += $"   🖱 {label} 「{spec.Substring(left ? 5 : 4)}」 @ 화면 ({job.pointerX:F0}, {job.pointerY:F0}) → 지금 선택: {(selected.Length > 0 ? selected : "없음")}{axes}\n";
+                job.report += $"   🖱 {label} 「{spec.Substring(spec.IndexOf(':') + 1)}」 @ 화면 ({job.pointerX:F0}, {job.pointerY:F0}) → 지금 선택: {(selected.Length > 0 ? selected : "없음")}{axes}\n";
                 ParkShotMouse(cam);
                 job.pointerX = 0f;
                 return true;

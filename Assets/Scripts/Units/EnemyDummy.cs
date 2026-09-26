@@ -34,8 +34,7 @@ public class EnemyDummy : MonoBehaviour
     public int SpawnRound { get; private set; }
 
     public float Hp => hp;
-
-    // MP: 멀티 거울(클라 겉모습)용. 호스트가 이 적의 종류를 카탈로그 번호로 보내려면 데이터를 읽어야 한다.
+    /// <summary>이 적의 데이터 — HUD 살펴보기(이름·방어)가 읽는다(2026-09-26).</summary>
     public EnemyData Data => data;
 
     // MP: 클라 겉모습이면 true — 판정(회복·오라)을 안 돌리고 체력은 호스트 값을 받아 적기만 한다.
