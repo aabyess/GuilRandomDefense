@@ -79,6 +79,17 @@ public class UnitMover : MonoBehaviour
             return;
         }
 
+        // MP: 멀티 클라는 땅 좌표만 호스트로 보낸다 — 실제 이동은 호스트의 실물이 아래 MoveToGroundPoint로 한다.
+        //     싱글·호스트(IsServer)는 이 줄을 지나쳐 지금과 똑같이 움직인다.
+        if (!GameAuthority.IsServer) { NetCommands.RequestMove(this, hit.point); return; }
+
+        MoveToGroundPoint(hit.point, hit.collider.name);
+    }
+
+    // MP: 우클릭 경로(위)와 멀티 호스트가 받은 클라 요청(NetCommands.ExecuteMove)이 같이 쓰는 이동 본체.
+    //     복사본을 두지 않으려고 TryMoveToCursor에서 떼어 냈다 — 줄 내용은 그대로다.
+    public void MoveToGroundPoint(Vector3 point, string clickedName = "요청")
+    {
         if (!agent.isActiveAndEnabled || !agent.isOnNavMesh)
         {
             Debug.Log($"[이동] {name}: NavMesh 위에 서 있지 않아 움직일 수 없습니다 " +
@@ -86,9 +97,9 @@ public class UnitMover : MonoBehaviour
             return;
         }
 
-        if (!NavMesh.SamplePosition(hit.point, out NavMeshHit navHit, DestinationSampleRadius, agent.areaMask))
+        if (!NavMesh.SamplePosition(point, out NavMeshHit navHit, DestinationSampleRadius, agent.areaMask))
         {
-            Debug.Log($"[이동] {name}: 클릭한 곳({hit.collider.name} {hit.point})에서 " +
+            Debug.Log($"[이동] {name}: 클릭한 곳({clickedName} {point})에서 " +
                       $"{DestinationSampleRadius} 안에 걸어갈 수 있는 자리가 없습니다.", this);
             return;
         }

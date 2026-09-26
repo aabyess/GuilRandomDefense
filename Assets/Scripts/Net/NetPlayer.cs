@@ -85,6 +85,14 @@ public class NetPlayer : NetworkBehaviour
         Ready = ready;
     }
 
+    // ───────────── 게임 중 요청(1-c~) ─────────────
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_Move(NetworkId target, Vector3 groundPoint)
+    {
+        NetCommands.ExecuteMove(this, target, groundPoint);
+    }
+
     public static string LoadNickname()
     {
         try { return PlayerPrefs.GetString(NicknamePrefsKey, ""); }

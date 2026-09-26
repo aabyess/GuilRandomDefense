@@ -28,7 +28,9 @@ using UnityEngine.SceneManagement;
 ///   -mpLeave 초              실행 뒤 그 초에 [나가기](호스트면 방 닫기 알림 포함)
 ///   -mpExitAt 초             실행 뒤 그 초에 종료
 ///   -mpTestUnits N           (호스트) 게임 씬 진입 뒤 슬롯마다 흔함 유닛 N기를 우리에 세운다 — 거울 확인용
-///   -mpDump 초               게임 씬 진입 뒤 그 초에 거울 목록(종류·카탈로그·소유자·좌표)을 로그로 — 호스트·클라 대조용
+///   -mpDump 초               게임 씬 진입 뒤 그 초에 거울 목록(종류·카탈로그·소유자·좌표·회전)을 로그로 — 여러 번 줄 수 있다
+///   -mpTestWisps 초          게임 씬 진입 뒤 그 초에 내 위습 전부를 가장 가까운 유닛 포탈로 보낸다(클라=이동 요청 RPC)
+///   -mpTestMoveUnits 초      게임 씬 진입 뒤 그 초에 내 유닛 전부를 레인 가운데로 보낸다(클라=이동 요청 RPC)
 /// </summary>
 public class NetLauncher : MonoBehaviour
 {
@@ -63,7 +65,9 @@ public class NetLauncher : MonoBehaviour
     float leaveAt = -1f;
     float exitAt = -1f;
     int testUnits;
-    float dumpDelay = -1f;
+    readonly System.Collections.Generic.List<float> dumpDelays = new System.Collections.Generic.List<float>();
+    float testWispsDelay = -1f;
+    float testMoveUnitsDelay = -1f;
 
     public static NetLauncher Instance { get; private set; }
 
@@ -145,7 +149,9 @@ public class NetLauncher : MonoBehaviour
                 case "-mpLeave": leaveAt = Seconds(i + 1); break;
                 case "-mpExitAt": exitAt = Seconds(i + 1); break;
                 case "-mpTestUnits": int.TryParse(Arg(i + 1), out testUnits); break;
-                case "-mpDump": dumpDelay = Seconds(i + 1); break;
+                case "-mpDump": dumpDelays.Add(Seconds(i + 1)); break;
+                case "-mpTestWisps": testWispsDelay = Seconds(i + 1); break;
+                case "-mpTestMoveUnits": testMoveUnitsDelay = Seconds(i + 1); break;
             }
         }
 
@@ -456,7 +462,9 @@ public class NetLauncher : MonoBehaviour
         if (shotDelay >= 0f && !string.IsNullOrEmpty(shotPath)) StartCoroutine(ShotAfter(shotDelay, shotPath));
         if (quitDelay >= 0f) StartCoroutine(QuitAfter(quitDelay));
         if (testUnits > 0 && GameAuthority.IsServer) SpawnTestUnits(testUnits);
-        if (dumpDelay >= 0f) StartCoroutine(DumpAfter(dumpDelay));
+        foreach (float delay in dumpDelays) if (delay >= 0f) StartCoroutine(DumpAfter(delay));
+        if (testWispsDelay >= 0f) StartCoroutine(TestMoveAfter(testWispsDelay, NetEntityKind.Wisp));
+        if (testMoveUnitsDelay >= 0f) StartCoroutine(TestMoveAfter(testMoveUnitsDelay, NetEntityKind.Unit));
     }
 
     // 테스트 전용(-mpTestUnits): 흔함 유닛을 슬롯마다 N기, 실제 소환 경로(UnitSpawner.Spawn → 우리 칸)로 세운다.
@@ -484,6 +492,46 @@ public class NetLauncher : MonoBehaviour
         Debug.Log($"[MP] -mpTestUnits: 유닛 {spawned}기 소환");
     }
 
+    // 테스트 전용: 사람이 우클릭하는 대신, 내 위습/유닛을 목적지로 보낸다. 클라는 우클릭과 같은 요청 RPC를 탄다.
+    IEnumerator TestMoveAfter(float seconds, NetEntityKind kind)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+
+        UnitPortal[] portals = FindObjectsByType<UnitPortal>(FindObjectsSortMode.None);
+        LaneMarker lane = LaneMarker.Get(LocalPlayer.LocalPlayerId);
+        int sent = 0;
+        foreach (NetEntity e in FindObjectsByType<NetEntity>(FindObjectsSortMode.None))
+        {
+            if (e.EntityKind != kind || e.Owner != LocalPlayer.LocalPlayerId) continue;
+            Transform body = GameAuthority.IsServer ? (e.Real != null ? e.Real.transform : null) : (e.Visual != null ? e.Visual.transform : null);
+            if (body == null) continue;
+
+            Vector3 target;
+            if (kind == NetEntityKind.Wisp)
+            {
+                UnitPortal nearest = portals.OrderBy(pt => (pt.transform.position - body.position).sqrMagnitude).FirstOrDefault();
+                if (nearest == null) continue;
+                target = nearest.transform.position;
+            }
+            else
+            {
+                if (lane == null) continue;
+                target = lane.LaneCenter;
+            }
+
+            if (GameAuthority.IsServer)
+            {
+                if (body.TryGetComponent(out UnitMover mover)) { mover.MoveToGroundPoint(target, "테스트"); sent++; }
+            }
+            else
+            {
+                NetCommands.RequestMove(body, target);
+                sent++;
+            }
+        }
+        Debug.Log($"[MP] 테스트 이동({kind}): {sent}개 보냄 ({(GameAuthority.IsServer ? "직접" : "요청 RPC")})");
+    }
+
     IEnumerator DumpAfter(float seconds)
     {
         yield return new WaitForSecondsRealtime(seconds);
@@ -495,7 +543,7 @@ public class NetLauncher : MonoBehaviour
         {
             Vector3 p = e.transform.position;
             string visual = GameAuthority.IsServer ? "실물" : (e.Visual != null ? "겉모습" : "겉모습없음");
-            return $"{e.Object.Id.Raw}:{e.EntityKind}#{e.CatalogIndex}/p{e.Owner} ({p.x:F1},{p.z:F1}) {visual}";
+            return $"{e.Object.Id.Raw}:{e.EntityKind}#{e.CatalogIndex}/p{e.Owner} ({p.x:F1},{p.z:F1}) r{e.transform.eulerAngles.y:F0} {visual}";
         });
         Debug.Log($"[MP] 거울 목록({(GameAuthority.IsServer ? "호스트" : "클라")}, {entities.Count}개): " + string.Join(" | ", lines));
     }
