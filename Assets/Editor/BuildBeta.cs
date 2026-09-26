@@ -26,11 +26,13 @@ public static class BuildBeta
         // 유니버설(인텔+애플실리콘). OSXStandalone 네임스페이스는 맥 빌드 모듈이 있을 때만 생겨서 직접 쓰면
         // 모듈 없는 환경(compile_check 포함)에서 컴파일이 깨진다 — 문자열 설정으로 넣는다.
         EditorUserBuildSettings.SetPlatformSettings(BuildPipeline.GetBuildTargetName(BuildTarget.StandaloneOSX), "Architecture", "x64ARM64");
-        Build(BuildTarget.StandaloneOSX, Path.Combine("Builds", "Mac"), "GuilRandomDefense.app");
+        Build(BuildTarget.StandaloneOSX, Path.Combine("Builds", "Mac"), $"구랜디 {GameVersion.Label}.app");
     }
 
     [MenuItem("Tools/빌드/윈도우 베타 빌드")]
-    public static void Windows() => Build(BuildTarget.StandaloneWindows64, Path.Combine("Builds", "Windows"), "GuilRandomDefense.exe");
+    // 파일 이름에 버전을 넣는다(09-26 사장님 「구랜디2 이런 식 말고 1.1.0v 이런 식으로」 — 같은 zip을 두 번 풀면 맥이 「GuilRandomDefense 2.app」을 만들어
+    //    어느 게 새 판인지 몰랐다). ⚠️ productName(GuilRandomDefense)은 그대로 둔다 — 세이브 폴더(persistentDataPath)가 그 이름이라 바꾸면 기록이 사라진다.
+    public static void Windows() => Build(BuildTarget.StandaloneWindows64, Path.Combine("Builds", "Windows", $"구랜디 {GameVersion.Label}"), "구랜디.exe");
 
     static void Build(BuildTarget target, string relDir, string fileName)
     {
