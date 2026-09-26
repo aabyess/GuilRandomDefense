@@ -58,6 +58,13 @@ public class UnitNameplateLayer : MonoBehaviour
     RectTransform canvasRect;
     readonly List<Label> pool = new List<Label>();
 
+    // 겹쳐 선 같은 유닛 묶음(2026-09-26 사장님 「완전 겹치게 하니까 흔함 유닛들이 몇 개 있는지 모르겠음」 → 「둘 다 ㄱㄱ」).
+    //    흔함은 자기 칸 한 점에 포개 서서(원작도 충돌 0) 이름표 N장이 한 자리에 겹쳤다 — 같은 종류·같은 주인·같은 자리(StackCell 칸)면
+    //    이름표를 하나만 그리고 「강주혁 ×3」으로 개수를 붙인다. 원작엔 없는 표시다(원작은 더블클릭 선택으로 셌다 — SelectionManager).
+    const float StackCell = 6f;
+    readonly Dictionary<(UnitData, int, int, int), int> stackIndex = new Dictionary<(UnitData, int, int, int), int>();
+    readonly List<(UnitIdentity rep, int count)> stacks = new List<(UnitIdentity, int)>();
+
     void Awake()
     {
         cam = Camera.main;
@@ -153,13 +160,22 @@ public class UnitNameplateLayer : MonoBehaviour
         float maxDistance = camAboveGround * maxHeights;
         float fadeStartDistance = camAboveGround * fadeStartHeights;
 
+        stackIndex.Clear();
+        stacks.Clear();
         foreach (UnitIdentity identity in UnitIdentity.Active)
         {
-            if (used >= maxLabels) break;
-            if (identity == null) continue;
+            if (identity == null || identity.Data == null) continue;
+            Vector3 p = identity.transform.position;
+            int owner = identity.TryGetComponent(out OwnedByPlayer ownedBy) ? ownedBy.OwnerId : -1;
+            var key = (identity.Data, owner, Mathf.RoundToInt(p.x / StackCell), Mathf.RoundToInt(p.z / StackCell));
+            if (stackIndex.TryGetValue(key, out int at)) stacks[at] = (stacks[at].rep, stacks[at].count + 1);
+            else { stackIndex[key] = stacks.Count; stacks.Add((identity, 1)); }
+        }
 
+        foreach ((UnitIdentity identity, int count) in stacks)
+        {
+            if (used >= maxLabels) break;
             UnitData data = identity.Data;
-            if (data == null) continue;
 
             float distance = Vector3.Distance(camPos, identity.transform.position);
             if (distance >= maxDistance) continue;
@@ -174,7 +190,8 @@ public class UnitNameplateLayer : MonoBehaviour
             label.root.gameObject.SetActive(true);
             label.root.position = new Vector3(screenPos.x, screenPos.y, 0f);
 
-            if (label.text.text != data.unitName) label.text.text = data.unitName;
+            string caption = count > 1 ? $"{data.unitName} ×{count}" : data.unitName;
+            if (label.text.text != caption) label.text.text = caption;
 
             Color gradeColor = data.grade.Color();
             float alpha = distance <= fadeStartDistance

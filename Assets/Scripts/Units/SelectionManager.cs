@@ -29,6 +29,15 @@ public class SelectionManager : MonoBehaviour
     const float InspectPickTolerancePixels = 56f;
     bool leftButtonHeld;
     bool ignoreCurrentPress;
+
+    // 더블클릭 / Ctrl(맥 Cmd)+클릭 = 화면 안 같은 종류 전부 선택 — 워크3 기본 조작(2026-09-26 사장님 「둘 다 ㄱㄱ」).
+    //    흔함은 한 점에 완전히 겹쳐 서서(원작도 충돌 0) 몇 기인지 안 보였다. 같은 종류를 다 고르면 아래 카드가 개수만큼 뜬다.
+    //    더블클릭은 **같은 개체**가 아니라 **같은 종류**로 본다 — 겹친 무더기는 두 번째 클릭이 다른 개체에 맞기 쉽다.
+    const float DoubleClickSeconds = 0.35f;
+    const float DoubleClickPixels = 8f;
+    Object lastClickType;
+    float lastClickTime = -1f;
+    Vector2 lastClickScreen;
     Texture2D boxTexture;
 
     void Awake()
@@ -218,7 +227,48 @@ public class SelectionManager : MonoBehaviour
             return;
         }
 
+        Vector2 clickScreen = Mouse.current.position.ReadValue();
+        Object type = TypeKey(hitSelectable);
+        bool ctrl = Keyboard.current != null && (Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.rightCtrlKey.isPressed
+                                                 || Keyboard.current.leftCommandKey.isPressed || Keyboard.current.rightCommandKey.isPressed);
+        bool doubleClick = type != null && type == lastClickType && Time.unscaledTime - lastClickTime <= DoubleClickSeconds
+                           && Vector2.Distance(clickScreen, lastClickScreen) <= DoubleClickPixels;
+        lastClickType = type;
+        lastClickTime = Time.unscaledTime;
+        lastClickScreen = clickScreen;
+
+        if (type != null && (ctrl || doubleClick))
+        {
+            SelectSameTypeOnScreen(hitSelectable, type);
+            lastClickType = null;   // 세 번째 클릭이 또 「더블클릭」이 되지 않게
+            return;
+        }
+
         AddToSelection(hitSelectable);
+    }
+
+    // 같은 종류의 기준 — 유닛은 UnitData, 위습은 WispData. 둘 다 아니면 null(종류 선택 안 함).
+    static Object TypeKey(Selectable s)
+    {
+        if (s == null) return null;
+        if (s.TryGetComponent(out UnitIdentity identity) && identity.Data != null) return identity.Data;
+        if (s.TryGetComponent(out Wisp wisp) && wisp.Data != null) return wisp.Data;
+        return null;
+    }
+
+    void SelectSameTypeOnScreen(Selectable seed, Object type)
+    {
+        ClearSelection();
+        InspectTarget.Clear();
+        AddToSelection(seed);   // 누른 개체가 첫 카드(초상화·정보칸 대상)
+        foreach (Selectable candidate in Selectable.All)
+        {
+            if (candidate == null || candidate == seed || !IsSelectableByLocalPlayer(candidate)) continue;
+            if (TypeKey(candidate) != type) continue;
+            Vector3 viewport = cam.WorldToViewportPoint(candidate.transform.position);
+            if (viewport.z <= 0f || viewport.x < 0f || viewport.x > 1f || viewport.y < 0f || viewport.y > 1f) continue;
+            AddToSelection(candidate);
+        }
     }
 
     void SelectInBox(Vector2 screenStart, Vector2 screenEnd)

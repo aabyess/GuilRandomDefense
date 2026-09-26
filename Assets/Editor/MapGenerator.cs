@@ -1335,7 +1335,10 @@ public static class MapGenerator
     /// ⚠️ 원작 흔함 줄은 9칸(<c>1com1</c>~<c>1com9</c>, LaneMarker.CompartmentCount가 그 값이다)
     /// 이지만, 여기는 원작에 대응물이 없는 **우리 전시 칸**이고 사장님이 6으로 정하셨다.
     /// </summary>
-    const int DisplayColumns = 6;
+    // 🔴 2026-09-26 사장님 「랜덤 유닛들 가로로 넓게 서 있게 해」(사진: 격자가 전시 칸 왼쪽 절반에 몰려 있었다 — 6칸 × 24 = 144, 칸 폭 약 281).
+    //    한 줄 7칸(랜덤 14종 = 딱 2줄)으로 하고, **가로 간격만** 전시 칸 폭을 7로 나눈 값으로 벌린다(DisplayRowSpacingX).
+    //    세로 간격(DisplaySlotSpacing)은 그대로 둔다 — 세로로 벌리면 아래 자원 칸과 조합식 줄이 밀린다.
+    const int DisplayColumns = 7;
 
     /// <summary>
     /// 전시 격자 칸 간격. **조합표 SlotSpacing(61.4)과 분리한다**(PM 지시 2026-09-23) —
@@ -3043,9 +3046,11 @@ public static class MapGenerator
 
             List<UnitData> units = LoadUnitsOfGrade(grade);
 
+            // 가로 간격: 전시 칸 폭을 한 줄 칸 수로 나눠 칸 전체를 쓴다(세로 간격 displaySpacing보다 좁아지지는 않게).
+            float spacingX = Mathf.Max(displaySpacing, displayWidth / perRow);
             for (int i = 0; i < units.Count; i++)
             {
-                float x = displayLeft + (i % perRow) * displaySpacing + displaySpacing * 0.5f;
+                float x = displayLeft + (i % perRow) * spacingX + spacingX * 0.5f;
                 float z = displayZ - (i / perRow) * displaySpacing;
                 // 스킨이 있으면 색 큐브 대신 인형을 세운다(2026-09-23 사장님 「랜덤유닛도 배치해」).
                 // 키는 레인 유닛과 같은 DisplayFigureHeight — 조합표·전시와 같은 규칙이다.
