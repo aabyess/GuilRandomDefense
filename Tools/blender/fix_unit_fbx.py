@@ -811,6 +811,77 @@ UNITS = {
                                "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
                            for s, side in (("L", "Left"), ("R", "Right"))},
                materials=dict(textures={"25015": [("DiffuseColor", "25015.png")]})),
+    # 원피스 바운티러시 가뭄의 잭 **맘모스 짐승형**(pl_jack_orig02) → R43 양문호. 🔸 **네발짐승 → Generic**(PM 승인 2026-09-25).
+    #   zip 바로 안에 fbx · _diff.tga + 툰 셰이더 보조 그림(ramp·matcap·abnormal_pattern·bayer_dither — 안 씀).
+    #   메시 6(body·fur 등 털·l/r_armor 어깨 갑옷·l/r_horn 상아) · 재질 1 · 뼈 44 · 클립 0 · 뼈대 0.01(류마와 같은 구성 → **류마 × 6.44**, 키는 PM이 정함).
+    #   사람 이름 표가 아니라 원본 뼈 이름 그대로 둔다: 앞다리 l/r_arm·fore_arm·hand · 뒷다리 l/r_leg·foot·toe · 코 Head_nose_01~05 ·
+    #   귀 L/R_Head_ear_01~02 · 꼬리 tail_01~02 · 머리털 c/l/r_hair. 뿌리 world_joint · HELPER_key/name(가중치 0)만 뺀다 → 뿌리 = Body_Pelvis.
+    #   이미 정면 −Y(코 y −0.06 · 꼬리 +0.057). 클립은 synth_clips로 짓는다(Idle 5초 · Move 2초 한 걸음 주기 · Attack 1.5초).
+    #   축은 세계 축: X = 앞뒤로 흔들기(+면 아래로 뻗은 뼈가 뒤로) · Y = 좌우로 흔들기(아래로 뻗은 코·꼬리) · Z = 귀 펄럭.
+    #   Move는 대각선 걸음(왼앞·오른뒤 한 쌍 ↔ 오른앞·왼뒤) — 두 쌍의 무릎 굽힘 정점이 반 주기 어긋나야 해서 absolute=True
+    #   (첫 프레임이 쉬는 자세가 아니다. 이음새는 0). 굽힘 = 발을 앞으로 내딛는 동안 아랫마디를 뒤로 접어 발을 든다.
+    "양문호": dict(path="Assets/Art/Enemies/양문호/양문호.fbx", kind="beast", generic=True, size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R41-R50/R43_양문호_잭매머드.zip"), "pl_jack_orig02.fbx"),
+               archive_rgb={"pl_jack_orig02_diff.tga": "pl_jack_orig02_diff.png"},
+               no_nulls=True, orient_snap=True, head="Head_Face", tail="Body_Pelvis",
+               drop_bones=["world_joint", "HELPER_key", "HELPER_name"],
+               synth_clips=[
+                   # ⚠️ Idle을 제일 길게(규약) — 숨쉬기 · 머리 끄덕 · 코 좌우로 천천히 · 귀 펄럭 · 꼬리.
+                   #   ⚠️ 머리 앞뒤 끄덕임은 뺐다 — 코끝이 쉬는 자세에서 이미 바닥에 닿아 있어 1회차(머리 X 1.5°·숨 0.8°)에 1.9cm 뚫었다.
+                   #   Idle엔 접지 보정을 안 걸므로(규약) 숨쉬기도 가슴 좌우 기울임으로만 낸다.
+                   dict(take="Idle", frames=120, step=3, bones={
+                       "Body_Belly": [((0, 1, 0), 0.6, 0.0)],
+                       "Body_Chest": [((0, 1, 0), 0.6, -0.3)],
+                       "Head_Face": [((0, 0, 1), 1.5, 0.8)],
+                       "Head_nose_01": [((0, 1, 0), 3.0, 0.0), ((1, 0, 0), 2.0, 1.0)],
+                       "Head_nose_02": [((0, 1, 0), 4.0, -0.4)],
+                       "Head_nose_03": [((0, 1, 0), 5.0, -0.8)],
+                       "Head_nose_04": [((0, 1, 0), 6.0, -1.2)],
+                       "L_Head_ear_01": [((0, 0, 1), 8.0, 0.0)],
+                       "R_Head_ear_01": [((0, 0, 1), -8.0, 0.0)],
+                       "tail_01": [((0, 1, 0), 8.0, 0.5)],
+                       "tail_02": [((0, 1, 0), 10.0, 0.0)]}),
+                   dict(take="Move", ground=True, absolute=True, frames=48, step=2, bones={
+                       # 윗마디: 왼앞·오른뒤 = +sin · 오른앞·왼뒤 = −sin(±12°)
+                       "l_arm": [((1, 0, 0), 12.0, 0.0)],
+                       "r_leg": [((1, 0, 0), 12.0, 0.0)],
+                       "r_arm": [((1, 0, 0), -12.0, 0.0)],
+                       "l_leg": [((1, 0, 0), -12.0, 0.0)],
+                       # 아랫마디 굽힘 — 0~18° 혹. 왼앞·오른뒤는 한가운데(π), 오른앞·왼뒤는 처음·끝(0)이 정점.
+                       "l_fore_arm": [((1, 0, 0), -9.0, math.pi / 2, 9.0)],
+                       "r_foot": [((1, 0, 0), -9.0, math.pi / 2, 9.0)],
+                       "r_fore_arm": [((1, 0, 0), 9.0, math.pi / 2, 9.0)],
+                       "l_foot": [((1, 0, 0), 9.0, math.pi / 2, 9.0)],
+                       "Body_Pelvis": [((0, 1, 0), 1.5, 0.0)],
+                       "Body_Chest": [((0, 1, 0), -1.5, 0.0)],
+                       "Head_Face": [((1, 0, 0), 2.0, 0.0), ((0, 0, 1), 2.0, math.pi / 2)],
+                       "Head_nose_01": [((0, 1, 0), 5.0, -0.3), ((1, 0, 0), 4.0, 0.0)],
+                       "Head_nose_02": [((0, 1, 0), 6.0, -0.7)],
+                       "Head_nose_03": [((0, 1, 0), 7.0, -1.1)],
+                       "Head_nose_04": [((0, 1, 0), 8.0, -1.5)],
+                       "L_Head_ear_01": [((0, 0, 1), 6.0, 0.0)],
+                       "R_Head_ear_01": [((0, 0, 1), -6.0, 0.0)],
+                       "tail_01": [((0, 1, 0), 10.0, 0.0)],
+                       "tail_02": [((0, 1, 0), 12.0, -0.5)]}),
+                   # 한 번짜리: 머리·코를 치켜들고 몸 앞을 들었다가(한가운데 정점) 상아를 앞으로 내리며 제자리로. 기본식 위상 −π/2 = 혹 하나.
+                   #   ⚠️ 1회차는 온전한 사인(들었다 → 쉬는 자세 **아래로** 내리찍기)이었는데, 코끝이 쉬는 자세에서 이미 바닥에 닿아 있어
+                   #   내리찍는 절반에 코가 바닥을 뚫었다 → 접지 보정이 몸 전체를 0.121m 띄웠다(발이 뜸). 쉬는 자세 아래로는 안 내린다.
+                   #   X −면 앞을 보는 머리가 위로. 코는 뒤 마디일수록 늦게(위상 −π/2 − 지연).
+                   dict(take="Attack", ground=True, frames=36, step=2, bones={
+                       "Body_Pelvis": [((1, 0, 0), -2.0, -math.pi / 2)],
+                       "Body_Chest": [((1, 0, 0), -2.0, -math.pi / 2 - 0.2)],
+                       "Head_Face": [((1, 0, 0), -7.0, -math.pi / 2 - 0.3)],
+                       "Head_nose_01": [((1, 0, 0), -7.0, -math.pi / 2 - 0.4)],
+                       "Head_nose_02": [((1, 0, 0), -8.0, -math.pi / 2 - 0.5)],
+                       "Head_nose_03": [((1, 0, 0), -9.0, -math.pi / 2 - 0.6)],
+                       "Head_nose_04": [((1, 0, 0), -9.0, -math.pi / 2 - 0.7)],
+                       "l_arm": [((1, 0, 0), -3.0, -math.pi / 2)],
+                       "r_arm": [((1, 0, 0), -3.0, -math.pi / 2)],
+                       "L_Head_ear_01": [((0, 0, 1), 5.0, -math.pi / 2)],
+                       "R_Head_ear_01": [((0, 0, 1), -5.0, -math.pi / 2)],
+                       "tail_01": [((1, 0, 0), -4.0, -math.pi / 2)]}),
+               ],
+               materials=dict(textures={"pl_jack_orig02": [("DiffuseColor", "pl_jack_orig02_diff.png")]})),
     # 원피스 바운티러시 쥬얼리 보니 **아이**(pl_bonie_orig02) → R33 서희원 · **어른**(pl_bonie_orig01) → R47 정다희. 류마·오븐과 같은
     #   Annettlw 판(뼈대 노드 0.01)이라 비율이 측정 근거다: 전체 키 ÷ 류마 2.019 → **아이 × 0.611 · 어른 × 0.882**(둘 다 모자 포함).
     #   zip 바로 안에 fbx · xps · _diff.png + 셰이더 보조 그림(ramp·matcap·abnormal_pattern·bayer_dither — 적 규약대로 컬러만 씀).
@@ -6370,8 +6441,15 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                     R3 = pb.bone.matrix_local.to_3x3()
                     if rot_waves:
                         rot = Matrix.Identity(3)
-                        for axis, deg, phase in rot_waves:
-                            ang = math.radians(deg) * (math.sin(2 * math.pi * f / n + phase) - math.sin(phase))
+                        for w in rot_waves:
+                            axis, deg, phase = w[:3]
+                            if si.get("absolute"):
+                                # 🔸 absolute=True(2026-09-25, 매머드 네발 걷기): 첫 프레임을 쉬는 자세에 묶지 않는다 —
+                                #   각도 = 진폭 × sin(2πt/N + 위상) + 치우침(넷째 값, 도). 대각선 걸음은 한 쌍의 무릎 굽힘이 **0프레임에서**
+                                #   최대여야 하는데, 기본식은 모든 항이 0프레임에서 0이라 못 만든다. 이음새는 sin 주기라 그대로 0.
+                                ang = math.radians(deg * math.sin(2 * math.pi * f / n + phase) + (w[3] if len(w) > 3 else 0.0))
+                            else:
+                                ang = math.radians(deg) * (math.sin(2 * math.pi * f / n + phase) - math.sin(phase))
                             rot = Matrix.Rotation(ang, 3, Vector(axis).normalized()) @ rot
                         pb.rotation_quaternion = (R3.inverted() @ rot @ R3).to_quaternion()
                         pb.keyframe_insert("rotation_quaternion", frame=1 + f)
