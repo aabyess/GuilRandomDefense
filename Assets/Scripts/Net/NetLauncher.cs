@@ -215,6 +215,7 @@ public class NetLauncher : MonoBehaviour
         GameAuthority.Provider = null;
         MatchConfig.Reset();
         LocalPlayer.LocalPlayerId = 0;
+        NetLoadingHook.Show("혼자 하기");
         Destroy(gameObject);
         SceneManager.LoadScene(scene);
     }
@@ -499,6 +500,7 @@ public class NetLauncher : MonoBehaviour
         runner.SessionInfo.IsOpen = false;
 
         Debug.Log($"[MP] 판 시작: 좌석 {{{string.Join(",", MatchConfig.OccupiedSlots.OrderBy(s => s))}}}, 난이도 {MatchConfig.Difficulty} → 씬 {gameSceneBuildIndex}");
+        NetLoadingHook.Show("방장 시작");
         runner.LoadScene(SceneRef.FromIndex(gameSceneBuildIndex), LoadSceneMode.Single);
     }
 

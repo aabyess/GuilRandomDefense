@@ -71,5 +71,6 @@ public class NetDiagnostics : MonoBehaviour, INetworkRunnerCallbacks
     public void OnReliableDataReceived(NetworkRunner r, PlayerRef player, ReliableKey key, ReadOnlySpan<byte> data) { }
     public void OnReliableDataProgress(NetworkRunner r, PlayerRef player, ReliableKey key, float progress) { }
     public void OnSceneLoadDone(NetworkRunner r) { }
-    public void OnSceneLoadStart(NetworkRunner r) { }
+    // 클라는 호스트가 씬을 바꾸면 여기로 먼저 안다 — 씬이 뜨기 전에 로딩 화면(방장과 같은 화면). 방장도 오지만 NetLoadingHook이 한 번만 띄운다.
+    public void OnSceneLoadStart(NetworkRunner r) => NetLoadingHook.Show(r.IsServer ? "방장 씬 전환" : "클라 씬 전환");
 }
