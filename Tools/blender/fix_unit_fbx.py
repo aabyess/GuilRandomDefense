@@ -774,6 +774,27 @@ UNITS = {
                texture_by_material=True,
                materials=dict(textures={"pl_apoo_2yaf01": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")],
                                         "pl_apoo_2yaf01_trans": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")]})),
+    # 원피스 바운티러시 스모커 스탬피드판(pl_smoker_stam01, XPS용 o_dv89_o 판) → R50 이태훈 ★보스. zip = source/*.rar(fbx · _diff · 셰이더 보조) + textures/_diff(안쪽과 픽셀 같음).
+    #   뼈대 노드 0.01 · 메시 로컬 단위가 류마와 같다 → **류마 × 0.961**(머리카락 끝 0.0194 ÷ 0.02019, 무기 뺀 몸). 메시 22 · 재질 1 · 뼈 71.
+    #   겹친 변형: 얼굴 셋 → normal · 손 open/close/smokehand_close(연기 주먹) → open. 입에 문 시가(hamaki)·선글라스·허리 천은 남긴다.
+    #   🔴 무기 둘 다 뺀다(몸 키보다 긺 — 저지 창 기준): 등에 멘 짓테 b_weapon(세로 0.022 > 키 0.0194) · 오른손 앞으로 뻗은 막대 r_weapon(앞으로 0.0234).
+    #     그 뼈 Bweapon · RHand_Weapon · RHand_jutte도 뺀다. HELPER*(연기 팔 사슬 · 표식, 연기 주먹을 빼면 가중치 0)는 통째로 뺀다.
+    #   코트(coat_root 밑 뒤·좌·우 자락 + 빈 소매 l/r_coat_arm — 어깨에 걸친 코트)는 merge_to_nearest가 Spine1로 → **강체**(사장님 지시).
+    #   허리 천 waist_01~02 → Hips · Fore_sup → ForeArm · 선글라스 → Head. 이미 T자.
+    "이태훈": dict(path="Assets/Art/Enemies/이태훈/이태훈.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R41-R50/R50_이태훈_보스.zip"),
+                        "source/one_piece_bounty_rush___smoker__stampede__xps_by_o_dv89_o_desmbi.rar",
+                        "One Piece Bounty Rush - Smoker (Stampede)/pl_smoker_stam01.fbx"),
+               archive_rgb={"One Piece Bounty Rush - Smoker (Stampede)/pl_smoker_stam01_diff.png": "pl_smoker_stam01_diff.png"},
+               drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_smokehand_close", "r_smokehand_close",
+                            "b_weapon", "r_weapon"],
+               drop_bones=["pl_smoker_stam01", "world_joint", "Bweapon", "RHand_jutte", "RHand_Weapon", "model_root", "post_flag", "pre_flag"],
+               drop_bones_re=r"^HELPER",
+               rename_bones=PL_RENAME,
+               orient_snap=True,
+               merge_to_nearest=True,
+               texture_by_material=True,
+               materials=dict(textures={"pl_smoker_stam01": [("DiffuseColor", "pl_smoker_stam01_diff.png")]})),
     # 원피스 파이팅 패스 라팡 **어른**(XPS 립 35103) → R45 이현빈 · **새끼**(25015) → R46 노수신. zip 바로 안에 fbx · xps · _D.png(256²).
     #   메시 1 · 재질 1 · 클립 0. 뚱뚱한 토끼지만 뼈는 표준 Bip001(Spine2 없음 · Toe0 있음) → BIP001_NO_SPINE2. 원본 높이 어른 0.0257 · 새끼 0.0113(어른의 44%).
     #   팔이 A자(어른 약 33° 처짐) → tpose_arms. 손가락(Finger0 하나)은 손에 · 귀·수염 사슬(Head 밑)은 머리에.
