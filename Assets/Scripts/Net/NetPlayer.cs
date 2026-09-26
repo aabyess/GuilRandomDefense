@@ -4,15 +4,36 @@ using UnityEngine;
 
 /// <summary>
 /// 접속자 한 명당 하나. 호스트가 스폰하고 그 접속자에게 입력 권한을 준다.
-/// 1-a에서는 「몇 번 슬롯에 앉았나」만 싣는다. 뒤 단계에서 요청 RPC 창구와
+/// 싣는 것: 슬롯(레인) · 대기실 정보(닉네임·준비). 뒤 단계에서 요청 RPC 창구와
 /// 플레이어별 [Networked] 상태(골드·목재 등)가 여기에 붙는다.
 ///
 /// 로비(NetBoot)에서 생겨 게임 씬으로 넘어가야 하므로 씬 전환에서 살아남게 한다.
 /// </summary>
 public class NetPlayer : NetworkBehaviour
 {
+    public const int MaxNicknameLength = 12;
+    public const string NicknamePrefsKey = "GuilRandomDefense.Nickname";
+
     /// <summary>레인 번호 = PlayerContext.playerId. 호스트가 스폰 직전에 정한다(NetSession).</summary>
     [Networked] public int Slot { get; set; }
+
+    /// <summary>방을 연 사람의 것인가. 호스트는 [준비] 없이 늘 준비된 것으로 본다.</summary>
+    [Networked] public NetworkBool IsHost { get; set; }
+
+    [Networked] public NetworkString<_16> Nickname { get; set; }
+
+    [Networked] public NetworkBool Ready { get; set; }
+
+    public bool IsReadyForStart => IsHost || Ready;
+
+    public string DisplayName
+    {
+        get
+        {
+            string nick = Nickname.ToString();
+            return string.IsNullOrWhiteSpace(nick) ? $"플레이어 {Slot + 1}" : nick;
+        }
+    }
 
     static readonly List<NetPlayer> all = new List<NetPlayer>();
 
@@ -35,9 +56,10 @@ public class NetPlayer : NetworkBehaviour
         {
             Local = this;
             LocalPlayer.LocalPlayerId = Slot;
+            RPC_SetNickname(NetLauncher.Instance != null ? NetLauncher.Instance.InitialNickname : LoadNickname());
         }
 
-        Debug.Log($"[MP] NetPlayer 생성: 슬롯 {Slot} (접속자 {Object.InputAuthority}, 내 것 {HasInputAuthority}) · 현재 슬롯 {{{string.Join(",", MatchConfig.OccupiedSlots)}}}");
+        Debug.Log($"[MP] NetPlayer 생성: 슬롯 {Slot} (접속자 {Object.InputAuthority}, 내 것 {HasInputAuthority}, 호스트 {IsHost}) · 현재 슬롯 {{{string.Join(",", MatchConfig.OccupiedSlots)}}}");
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
@@ -47,5 +69,41 @@ public class NetPlayer : NetworkBehaviour
         if (Local == this) Local = null;
 
         Debug.Log($"[MP] NetPlayer 제거: 슬롯 {cachedSlot}");
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_SetNickname(string nickname)
+    {
+        Nickname = SanitizeNickname(nickname);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_SetReady(NetworkBool ready)
+    {
+        // 판이 시작된 뒤엔 준비 상태를 바꿀 일이 없다.
+        if (NetGameState.Instance != null && NetGameState.Instance.Started) return;
+        Ready = ready;
+    }
+
+    public static string LoadNickname()
+    {
+        try { return PlayerPrefs.GetString(NicknamePrefsKey, ""); }
+        catch { return ""; }
+    }
+
+    public static void SaveNickname(string nickname)
+    {
+        try
+        {
+            PlayerPrefs.SetString(NicknamePrefsKey, SanitizeNickname(nickname));
+            PlayerPrefs.Save();
+        }
+        catch { /* 편의값이라 못 저장해도 판에는 영향 없다 */ }
+    }
+
+    public static string SanitizeNickname(string nickname)
+    {
+        string trimmed = (nickname ?? "").Trim().Replace("\n", "").Replace("\r", "");
+        return trimmed.Length > MaxNicknameLength ? trimmed.Substring(0, MaxNicknameLength) : trimmed;
     }
 }

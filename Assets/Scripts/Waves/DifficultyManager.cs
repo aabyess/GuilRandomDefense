@@ -33,6 +33,15 @@ public class DifficultyManager : MonoBehaviour
         // 같도록 한다.
         EnemyDummy.DifficultyAegrLevelOffset = 0;
 
+        // MP: 네트 판이면 대기실에서 호스트가 고른 난이도로 시작한다(호스트·클라 모두 — 클라는 이게 없으면
+        //     「방장이 모드를 선택하고 있습니다」에서 영원히 멈춘다). 기억값·선택 창 둘 다 건너뛴다.
+        //     싱글(MatchConfig.Active false)이면 아래 기존 흐름 그대로 — 무동작.
+        if (MatchConfig.Active && MatchConfig.Difficulty.HasValue)
+        {
+            ApplyMode(MatchConfig.Difficulty.Value);
+            return;
+        }
+
         // 🔴 2026-09-24 사장님 「난이도 왜 자꾸 뜨는거야 / 계속 뜨는 버그도 수정해봐」
         //    원작은 한 판 = 한 번 고르기라 판마다 묻는 게 맞다. 그런데 우리는 시험하느라
         //    재생을 수십 번 누르고, 그때마다 창이 떠서 매번 같은 걸 눌러야 했다.

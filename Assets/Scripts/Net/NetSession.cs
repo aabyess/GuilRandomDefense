@@ -49,7 +49,12 @@ public class NetSession : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 
         slots[player] = slot;
         NetworkObject obj = Runner.Spawn(playerPrefab, Vector3.zero, Quaternion.identity, player,
-            (runner, spawned) => spawned.GetComponent<NetPlayer>().Slot = slot);
+            (runner, spawned) =>
+            {
+                NetPlayer netPlayer = spawned.GetComponent<NetPlayer>();
+                netPlayer.Slot = slot;
+                netPlayer.IsHost = player == runner.LocalPlayer;
+            });
         players[player] = obj;
         Runner.SetPlayerObject(player, obj);
 

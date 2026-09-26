@@ -16,6 +16,9 @@ public static class MatchConfig
 
     public static bool Active { get; set; }
 
+    /// <summary>대기실에서 호스트가 고른 난이도(NetGameState가 옮겨 둔다). DifficultyManager.Awake가 읽는다.</summary>
+    public static DifficultyMode? Difficulty { get; set; }
+
     public static IReadOnlyCollection<int> OccupiedSlots => occupiedSlots;
 
     public static bool IsOccupied(int slot) => occupiedSlots.Contains(slot);
@@ -27,6 +30,7 @@ public static class MatchConfig
     public static void Reset()
     {
         Active = false;
+        Difficulty = null;
         occupiedSlots.Clear();
     }
 }

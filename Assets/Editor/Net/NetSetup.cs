@@ -19,6 +19,7 @@ public static class NetSetup
 {
     const string NetFolder = "Assets/Net";
     const string PlayerPrefabPath = NetFolder + "/NetPlayer.prefab";
+    const string GameStatePrefabPath = NetFolder + "/NetGameState.prefab";
     const string BootScenePath = "Assets/Scenes/NetBoot.unity";
     const string GameScenePath = "Assets/Scenes/SampleScene.unity";
     const string FusionPrefabLabel = "FusionPrefab";
@@ -28,7 +29,8 @@ public static class NetSetup
     {
         if (!AssetDatabase.IsValidFolder(NetFolder)) AssetDatabase.CreateFolder("Assets", "Net");
 
-        GameObject playerPrefab = BuildPlayerPrefab();
+        BuildNetworkPrefab<NetPlayer>(PlayerPrefabPath);
+        BuildNetworkPrefab<NetGameState>(GameStatePrefabPath);
         BuildBootScene();
         SetBuildScenes();
 
@@ -36,21 +38,19 @@ public static class NetSetup
         Debug.Log("[MP] NetSetup.Build 완료");
     }
 
-    static GameObject BuildPlayerPrefab()
+    static void BuildNetworkPrefab<T>(string path) where T : NetworkBehaviour
     {
-        GameObject temp = new GameObject("NetPlayer");
+        GameObject temp = new GameObject(typeof(T).Name);
         temp.AddComponent<NetworkObject>();
-        temp.AddComponent<NetPlayer>();
-        GameObject prefab = PrefabUtility.SaveAsPrefabAsset(temp, PlayerPrefabPath);
+        temp.AddComponent<T>();
+        GameObject prefab = PrefabUtility.SaveAsPrefabAsset(temp, path);
         Object.DestroyImmediate(temp);
 
         string[] labels = AssetDatabase.GetLabels(prefab);
         if (!labels.Contains(FusionPrefabLabel))
             AssetDatabase.SetLabels(prefab, labels.Append(FusionPrefabLabel).ToArray());
 
-        AssetDatabase.ImportAsset(PlayerPrefabPath, ImportAssetOptions.ForceUpdate);
-        // 강제 재임포트 뒤에는 위의 prefab 참조가 죽은 객체다 — 그걸로 씬에 넣으면 {fileID: 0}이 저장된다(09-25 실측).
-        return AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath);
+        AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
     }
 
     static void BuildBootScene()
@@ -59,12 +59,13 @@ public static class NetSetup
         // ⚠️ 프리팹은 NewScene **뒤에** 불러온다. NewScene(Single)이 안 쓰는 에셋을 내리면서 앞서 불러 둔
         //    프리팹 참조를 죽인다 — SerializedProperty로도, 직접 대입으로도 {fileID: 0}이 저장됐다(09-25 실측).
         NetworkObject playerPrefab = AssetDatabase.LoadAssetAtPath<NetworkObject>(PlayerPrefabPath);
+        NetworkObject gameStatePrefab = AssetDatabase.LoadAssetAtPath<NetworkObject>(GameStatePrefabPath);
 
         GameObject launcherGo = new GameObject("NetLauncher");
         NetLauncher launcher = launcherGo.AddComponent<NetLauncher>();
-        launcher.EditorSetup(playerPrefab, 1);
+        launcher.EditorSetup(playerPrefab, gameStatePrefab, 1);
         EditorUtility.SetDirty(launcher);
-        if (launcher.PlayerPrefab == null)
+        if (playerPrefab == null || gameStatePrefab == null)
             throw new System.InvalidOperationException("[MP] NetBoot: NetPlayer 프리팹 참조가 비었습니다 — 씬을 저장하지 않습니다.");
 
         EditorSceneManager.SaveScene(scene, BootScenePath);

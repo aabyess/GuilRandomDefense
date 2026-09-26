@@ -7,46 +7,74 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// NetBoot 씬의 접속 창구. [호스트 만들기]/[참가] → 로비 → 호스트 [시작] → 게임 씬.
+/// NetBoot 씬의 접속 창구(로직). 화면은 NetLobbyUi가 그린다.
+///   [방 만들기] → 방 코드 발급 → 대기실(닉네임·슬롯·준비·호스트 난이도) → 전원 준비 → 호스트 [시작] → 게임 씬
+///   [참가] ← 방 코드
 ///
 /// ⚠️ 게임 씬(SampleScene)을 직접 Play하면 이 오브젝트가 없다 → 러너 없음 → GameAuthority.Provider null
 ///    → 지금과 똑같은 싱글. 멀티 설계의 제1 조건이다(gameshot·ClaudeBridge·판 측정 무영향).
 ///
 /// 명령줄(빌드 두 개를 사람 손 없이 붙여 보는 용도):
-///   -mpHost | -mpJoin        바로 호스트/참가
-///   -mpSession 이름           방 이름(기본 "grd-test")
-///   -mpAutoStart N           호스트가 N명이 모이면 스스로 시작
+///   -mpHost | -mpJoin        바로 방 만들기/참가
+///   -mpSession 코드           방 코드(호스트는 발급 대신 이 코드로 연다)
+///   -mpNick 이름              닉네임(기억값보다 우선, 기억은 안 바꾼다)
+///   -mpReady                 참가하면 바로 [준비]
+///   -mpDifficulty 이름        호스트가 대기실에서 고를 난이도(Easy·Normal·Hard·Hell·God·Nightmare)
+///   -mpAutoStart N           호스트가 N명이 모이고 전원 준비면 스스로 시작
+///   -mpLobbyShot 초 경로      대기실에 들어간 뒤 그 초에 화면 캡처
 ///   -mpShot 초 경로           게임 씬 진입 뒤 그 초에 화면 캡처
 ///   -mpQuit 초               게임 씬 진입 뒤 그 초에 종료
+///   -mpShotAt 초 경로         실행 뒤 그 초에 캡처(여러 번 줄 수 있다 — 대기실·나간 뒤 화면용)
+///   -mpLeave 초              실행 뒤 그 초에 [나가기](호스트면 방 닫기 알림 포함)
+///   -mpExitAt 초             실행 뒤 그 초에 종료
 /// </summary>
 public class NetLauncher : MonoBehaviour
 {
-    const string DefaultSession = "grd-test";
+    // 헷갈리는 글자(0/O, 1/I/L)를 뺀 방 코드 글자.
+    const string RoomCodeAlphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+    const int RoomCodeLength = 5;
 
     [SerializeField] NetworkObject playerPrefab;
+    [SerializeField] NetworkObject gameStatePrefab;
     [SerializeField] int gameSceneBuildIndex = 1;
 
     NetworkRunner runner;
     NetSession session;
-    string sessionName = DefaultSession;
-    string status = "";
     bool starting;
     bool wasRunning;
+    bool leavingOnPurpose;
+    bool hostClosed;
 
+    // 명령줄
+    string cliSession;
+    string cliNick;
+    bool cliReady;
+    int cliDifficulty = NetGameState.NoDifficulty;
     int autoStartCount;
+    float lobbyShotDelay = -1f;
+    string lobbyShotPath;
     float shotDelay = -1f;
     string shotPath;
     float quitDelay = -1f;
+    float leaveAt = -1f;
+    float exitAt = -1f;
 
     public static NetLauncher Instance { get; private set; }
 
     public NetworkObject PlayerPrefab => playerPrefab;
+    public string RoomCode { get; private set; } = "";
+    public string Status { get; private set; } = "";
+    public bool IsBusy => starting;
+    public bool InRoom => runner != null && runner.IsRunning;
+    public bool IsHost => InRoom && runner.IsServer;
+    public int GameSceneBuildIndex => gameSceneBuildIndex;
 
 #if UNITY_EDITOR
     /// <summary>NetSetup(에디터 도구) 전용.</summary>
-    public void EditorSetup(NetworkObject prefab, int gameSceneIndex)
+    public void EditorSetup(NetworkObject player, NetworkObject gameState, int gameSceneIndex)
     {
-        playerPrefab = prefab;
+        playerPrefab = player;
+        gameStatePrefab = gameState;
         gameSceneBuildIndex = gameSceneIndex;
     }
 #endif
@@ -63,6 +91,9 @@ public class NetLauncher : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += OnSceneLoaded;
+
+        if (!TryGetComponent(out NetLobbyUi _)) gameObject.AddComponent<NetLobbyUi>();
+
         ReadCommandLine();
     }
 
@@ -73,10 +104,14 @@ public class NetLauncher : MonoBehaviour
         Instance = null;
     }
 
+    // ───────────── 명령줄 ─────────────
+
     void ReadCommandLine()
     {
         string[] args = Environment.GetCommandLineArgs();
-        string Next(int i) => i + 1 < args.Length ? args[i + 1] : null;
+        string Arg(int i) => i < args.Length ? args[i] : null;
+        float Seconds(int i) => float.TryParse(Arg(i), System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out float v) ? v : -1f;
 
         bool host = false, join = false;
         for (int i = 0; i < args.Length; i++)
@@ -85,27 +120,61 @@ public class NetLauncher : MonoBehaviour
             {
                 case "-mpHost": host = true; break;
                 case "-mpJoin": join = true; break;
-                case "-mpSession": sessionName = Next(i) ?? sessionName; break;
-                case "-mpAutoStart": int.TryParse(Next(i), out autoStartCount); break;
-                case "-mpShot":
-                    float.TryParse(Next(i), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out shotDelay);
-                    shotPath = i + 2 < args.Length ? args[i + 2] : null;
+                case "-mpSession": cliSession = Arg(i + 1); break;
+                case "-mpNick": cliNick = Arg(i + 1); break;
+                case "-mpReady": cliReady = true; break;
+                case "-mpDifficulty":
+                    if (Enum.TryParse(Arg(i + 1), true, out DifficultyMode mode)) cliDifficulty = (int)mode;
                     break;
-                case "-mpQuit":
-                    float.TryParse(Next(i), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out quitDelay);
-                    break;
+                case "-mpAutoStart": int.TryParse(Arg(i + 1), out autoStartCount); break;
+                case "-mpLobbyShot": lobbyShotDelay = Seconds(i + 1); lobbyShotPath = Arg(i + 2); break;
+                case "-mpShot": shotDelay = Seconds(i + 1); shotPath = Arg(i + 2); break;
+                case "-mpQuit": quitDelay = Seconds(i + 1); break;
+                case "-mpShotAt": StartCoroutine(ShotAfter(Seconds(i + 1), Arg(i + 2))); break;
+                case "-mpLeave": leaveAt = Seconds(i + 1); break;
+                case "-mpExitAt": exitAt = Seconds(i + 1); break;
             }
         }
 
-        if (host) _ = StartRunner(GameMode.Host);
-        else if (join) _ = StartRunner(GameMode.Client);
+        if (host) CreateRoom();
+        else if (join) JoinRoom(cliSession);
     }
 
-    async Task StartRunner(GameMode mode)
+    // ───────────── 방 만들기 / 참가 / 나가기 ─────────────
+
+    public void CreateRoom()
+    {
+        string code = !string.IsNullOrWhiteSpace(cliSession) ? cliSession.Trim().ToUpperInvariant() : NewRoomCode();
+        _ = StartRunner(GameMode.Host, code);
+    }
+
+    public void JoinRoom(string code)
+    {
+        code = (code ?? "").Trim().ToUpperInvariant();
+        if (code.Length == 0)
+        {
+            Status = "방 코드를 입력하세요.";
+            return;
+        }
+        _ = StartRunner(GameMode.Client, code);
+    }
+
+    static string NewRoomCode()
+    {
+        var random = new System.Random();
+        char[] code = new char[RoomCodeLength];
+        for (int i = 0; i < code.Length; i++) code[i] = RoomCodeAlphabet[random.Next(RoomCodeAlphabet.Length)];
+        return new string(code);
+    }
+
+    async Task StartRunner(GameMode mode, string code)
     {
         if (starting || runner != null) return;
         starting = true;
-        status = mode == GameMode.Host ? "방을 만드는 중…" : "참가하는 중…";
+        hostClosed = false;
+        leavingOnPurpose = false;
+        RoomCode = code;
+        Status = mode == GameMode.Host ? "방을 만드는 중…" : $"{code} 방에 들어가는 중…";
 
         GameObject go = new GameObject("NetworkRunner");
         DontDestroyOnLoad(go);
@@ -122,67 +191,202 @@ public class NetLauncher : MonoBehaviour
         StartGameResult result = await runner.StartGame(new StartGameArgs
         {
             GameMode = mode,
-            SessionName = sessionName,
+            SessionName = code,
             PlayerCount = NetSession.MaxSlots,
             SceneManager = sceneManager,
+            // 방 목록에 안 띄운다 — 코드를 아는 친구만 들어온다.
+            IsVisible = false,
         });
 
         starting = false;
 
         if (!result.Ok)
         {
-            status = $"실패: {result.ShutdownReason} {result.ErrorMessage}";
-            Debug.LogWarning($"[MP] StartGame 실패({mode}, 방 {sessionName}): {result.ShutdownReason} {result.ErrorMessage}");
+            Status = mode == GameMode.Client
+                ? $"{code} 방을 찾지 못했습니다. 코드를 확인하세요. ({result.ShutdownReason})"
+                : $"방을 만들지 못했습니다. ({result.ShutdownReason} {result.ErrorMessage})";
+            Debug.LogWarning($"[MP] StartGame 실패({mode}, 방 {code}): {result.ShutdownReason} {result.ErrorMessage}");
             Cleanup();
             return;
         }
 
         GameAuthority.Provider = new FusionAuthorityProvider(runner);
         wasRunning = true;
-        status = mode == GameMode.Host ? "방을 열었습니다. 친구를 기다리는 중" : "참가했습니다. 호스트의 시작을 기다리는 중";
-        Debug.Log($"[MP] StartGame 성공: {mode}, 방 {sessionName}, IsServer={runner.IsServer}, 지역 {runner.SessionInfo.Region}");
+
+        if (runner.IsServer && gameStatePrefab != null)
+        {
+            int difficulty = cliDifficulty != NetGameState.NoDifficulty ? cliDifficulty : SavedDifficulty();
+            runner.Spawn(gameStatePrefab, Vector3.zero, Quaternion.identity, null,
+                (r, spawned) =>
+                {
+                    NetGameState state = spawned.GetComponent<NetGameState>();
+                    state.Difficulty = difficulty;
+                    state.Started = false;
+                });
+        }
+
+        Status = mode == GameMode.Host ? "방을 열었습니다. 친구에게 방 코드를 알려 주세요." : "들어왔습니다. 준비를 누르고 호스트를 기다리세요.";
+        Debug.Log($"[MP] StartGame 성공: {mode}, 방 {code}, IsServer={runner.IsServer}, 지역 {runner.SessionInfo.Region}");
+
+        if (lobbyShotDelay >= 0f && !string.IsNullOrEmpty(lobbyShotPath)) StartCoroutine(ShotAfter(lobbyShotDelay, lobbyShotPath));
+    }
+
+    // 싱글에서 마지막으로 고른 난이도(DifficultyManager가 기억해 둔 값)를 대기실 기본값으로 쓴다.
+    static int SavedDifficulty()
+    {
+        try
+        {
+            if (!PlayerPrefs.HasKey(DifficultyManager.SavedModeKey)) return NetGameState.NoDifficulty;
+            int saved = PlayerPrefs.GetInt(DifficultyManager.SavedModeKey);
+            return Enum.IsDefined(typeof(DifficultyMode), saved) ? saved : NetGameState.NoDifficulty;
+        }
+        catch { return NetGameState.NoDifficulty; }
+    }
+
+    public void Leave()
+    {
+        if (runner == null) return;
+        StartCoroutine(LeaveRoutine());
+    }
+
+    IEnumerator LeaveRoutine()
+    {
+        leavingOnPurpose = true;
+
+        // 호스트가 나가면 방이 없어진다 — 그냥 끊으면 친구들은 「연결 끊김」만 본다. 먼저 알리고 잠깐 기다린다.
+        if (IsHost && NetGameState.Instance != null)
+        {
+            NetGameState.Instance.RPC_HostClosing();
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+
+        Cleanup();
+        Status = "방에서 나왔습니다.";
+        ReturnToBoot();
+    }
+
+    /// <summary>NetGameState.RPC_HostClosing이 부른다(클라에서).</summary>
+    public void OnHostClosing()
+    {
+        if (IsHost) return;
+        hostClosed = true;
+        Debug.Log("[MP] 호스트가 방을 닫는다고 알려 왔습니다.");
     }
 
     void Update()
     {
-        // 호스트가 나가거나 연결이 끊기면 러너가 스스로 멈춘다 — 싱글 상태로 되돌리고 NetBoot로.
-        if (wasRunning && (runner == null || !runner.IsRunning))
+        if (leaveAt >= 0f && Time.realtimeSinceStartup >= leaveAt)
         {
-            Debug.Log("[MP] 러너가 멈췄습니다 — 싱글 상태로 되돌리고 NetBoot로 돌아갑니다.");
+            leaveAt = -1f;
+            Debug.Log("[MP] -mpLeave 시간이 되어 나갑니다.");
+            Leave();
+        }
+
+        if (exitAt >= 0f && Time.realtimeSinceStartup >= exitAt)
+        {
+            exitAt = -1f;
+            Debug.Log("[MP] -mpExitAt 시간이 되어 종료합니다.");
+            leavingOnPurpose = true;
             Cleanup();
-            status = "연결이 끊겼습니다.";
-            if (SceneManager.GetActiveScene().buildIndex != 0) SceneManager.LoadScene(0);
+            Application.Quit();
             return;
         }
 
-        if (autoStartCount > 0 && CanStartMatch && session.PlayerCount >= autoStartCount)
+        // 호스트가 나가거나 연결이 끊기면 러너가 스스로 멈춘다 — 싱글 상태로 되돌리고 NetBoot로.
+        if (wasRunning && !leavingOnPurpose && (runner == null || !runner.IsRunning))
         {
-            // 방금 들어온 접속자의 NetPlayer 복제가 클라에 닿을 틈을 준다(DontDestroyOnLoad라 늦어도 살아남지만,
-            // 좌석이 씬 로드 전에 채워져 있어야 PlayerContext.Awake가 본다).
+            string message = hostClosed ? "호스트가 방을 닫았습니다." : "호스트와 연결이 끊겼습니다.";
+            Debug.Log($"[MP] 러너가 멈췄습니다 — {message} 싱글 상태로 되돌리고 NetBoot로 돌아갑니다.");
+            Cleanup();
+            Status = message;
+            ReturnToBoot();
+            return;
+        }
+
+        if (cliReady && NetPlayer.Local != null && !NetPlayer.Local.IsHost && !NetPlayer.Local.Ready)
+        {
+            cliReady = false;
+            SetReady(true);
+        }
+
+        if (autoStartCount > 0 && CanStartMatch && NetPlayer.All.Count >= autoStartCount)
+        {
+            // 좌석·닉네임 복제가 클라에 닿을 틈을 준다(좌석이 씬 로드 전에 채워져 있어야 PlayerContext.Awake가 본다).
             autoStartCount = 0;
             StartCoroutine(StartMatchAfter(1f));
         }
     }
 
-    bool CanStartMatch => runner != null && runner.IsRunning && runner.IsServer && session != null && !session.MatchStarted;
+    // ───────────── 대기실 조작 ─────────────
+
+    public void SetReady(bool ready)
+    {
+        if (NetPlayer.Local != null) NetPlayer.Local.RPC_SetReady(ready);
+    }
+
+    public void SetNickname(string nickname)
+    {
+        NetPlayer.SaveNickname(nickname);
+        if (NetPlayer.Local != null) NetPlayer.Local.RPC_SetNickname(nickname);
+    }
+
+    /// <summary>시작 전에 쓸 닉네임 — 명령줄이 있으면 그것, 없으면 기억값.</summary>
+    public string InitialNickname => !string.IsNullOrWhiteSpace(cliNick) ? cliNick : NetPlayer.LoadNickname();
+
+    public void SetDifficulty(DifficultyMode mode)
+    {
+        if (!IsHost || NetGameState.Instance == null || NetGameState.Instance.Started) return;
+        NetGameState.Instance.Difficulty = (int)mode;
+        try
+        {
+            // 싱글과 같은 기억값을 쓴다 — 다음에 방을 열 때 기본값이 된다.
+            PlayerPrefs.SetInt(DifficultyManager.SavedModeKey, (int)mode);
+            PlayerPrefs.Save();
+        }
+        catch { }
+    }
+
+    public bool AllReady => NetPlayer.All.Count > 0 && NetPlayer.All.All(p => p.IsReadyForStart);
+
+    public bool CanStartMatch =>
+        IsHost && session != null && !session.MatchStarted
+        && NetGameState.Instance != null && NetGameState.Instance.SelectedDifficulty.HasValue
+        && AllReady;
+
+    /// <summary>시작 버튼이 왜 꺼져 있는지 — 버튼 아래에 그대로 보여 준다.</summary>
+    public string StartBlockedReason
+    {
+        get
+        {
+            if (!IsHost) return "";
+            if (NetGameState.Instance == null || !NetGameState.Instance.SelectedDifficulty.HasValue) return "난이도를 고르세요.";
+            int notReady = NetPlayer.All.Count(p => !p.IsReadyForStart);
+            if (notReady > 0) return $"{notReady}명이 아직 준비하지 않았습니다.";
+            return "";
+        }
+    }
 
     IEnumerator StartMatchAfter(float seconds)
     {
-        yield return new WaitForSeconds(seconds);
+        yield return new WaitForSecondsRealtime(seconds);
         StartMatch();
     }
 
-    void StartMatch()
+    public void StartMatch()
     {
         if (!CanStartMatch) return;
 
         session.MatchStarted = true;
+        NetGameState.Instance.Started = true;
+        // 게임 씬 로드 전에 호스트 쪽 값도 확정해 둔다(Render가 다음 프레임에 옮기기 전에 씬이 먼저 뜰 수 있다).
+        MatchConfig.Difficulty = NetGameState.Instance.SelectedDifficulty;
         runner.SessionInfo.IsOpen = false;
-        runner.SessionInfo.IsVisible = false;
 
-        Debug.Log($"[MP] 판 시작: 좌석 {{{string.Join(",", MatchConfig.OccupiedSlots.OrderBy(s => s))}}} → 씬 {gameSceneBuildIndex}");
+        Debug.Log($"[MP] 판 시작: 좌석 {{{string.Join(",", MatchConfig.OccupiedSlots.OrderBy(s => s))}}}, 난이도 {MatchConfig.Difficulty} → 씬 {gameSceneBuildIndex}");
         runner.LoadScene(SceneRef.FromIndex(gameSceneBuildIndex), LoadSceneMode.Single);
     }
+
+    // ───────────── 정리 ─────────────
 
     void Cleanup()
     {
@@ -198,6 +402,12 @@ public class NetLauncher : MonoBehaviour
         }
         runner = null;
         session = null;
+        RoomCode = "";
+    }
+
+    void ReturnToBoot()
+    {
+        if (SceneManager.GetActiveScene().buildIndex != 0) SceneManager.LoadScene(0);
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -213,8 +423,10 @@ public class NetLauncher : MonoBehaviour
 
         string contexts = string.Join(" ", PlayerContext.All.OrderBy(c => c.PlayerId)
             .Select(c => $"{c.PlayerId}:{(c.IsOccupied ? "앉음" : "빔")}"));
+        string difficulty = DifficultyManager.Instance != null && DifficultyManager.Instance.IsModeSelected
+            ? DifficultyManager.Instance.Current.ToString() : "미선택";
         Debug.Log($"[MP] 게임 씬 진입: IsServer={GameAuthority.IsServer}, LocalPlayerId={LocalPlayer.LocalPlayerId}, " +
-                  $"좌석 {{{string.Join(",", MatchConfig.OccupiedSlots.OrderBy(s => s))}}}, PlayerContext {contexts}");
+                  $"좌석 {{{string.Join(",", MatchConfig.OccupiedSlots.OrderBy(s => s))}}}, 난이도 {difficulty}, PlayerContext {contexts}");
 
         if (shotDelay >= 0f && !string.IsNullOrEmpty(shotPath)) StartCoroutine(ShotAfter(shotDelay, shotPath));
         if (quitDelay >= 0f) StartCoroutine(QuitAfter(quitDelay));
@@ -232,41 +444,8 @@ public class NetLauncher : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(seconds);
         Debug.Log("[MP] -mpQuit 시간이 되어 종료합니다.");
+        leavingOnPurpose = true;
         Cleanup();
         Application.Quit();
-    }
-
-    void OnGUI()
-    {
-        // 게임 씬에선 창구를 안 그린다 — 게임 HUD와 겹친다.
-        if (SceneManager.GetActiveScene().buildIndex == gameSceneBuildIndex) return;
-
-        GUILayout.BeginArea(new Rect(20, 20, 360, 400), GUI.skin.box);
-        GUILayout.Label("길랜디 멀티 (시제품)");
-
-        bool idle = runner == null && !starting;
-        GUI.enabled = idle;
-        GUILayout.Label("방 이름");
-        sessionName = GUILayout.TextField(sessionName);
-        if (GUILayout.Button("호스트 만들기")) _ = StartRunner(GameMode.Host);
-        if (GUILayout.Button("참가")) _ = StartRunner(GameMode.Client);
-        GUI.enabled = true;
-
-        GUILayout.Space(8);
-        GUILayout.Label(status);
-
-        if (runner != null && runner.IsRunning)
-        {
-            GUILayout.Label("좌석: " + string.Join(", ", NetPlayer.All.OrderBy(p => p.Slot)
-                .Select(p => $"{p.Slot}{(p.HasInputAuthority ? "(나)" : "")}")));
-
-            GUI.enabled = CanStartMatch;
-            if (runner.IsServer && GUILayout.Button("시작")) StartMatch();
-            GUI.enabled = true;
-
-            if (GUILayout.Button("나가기")) { Cleanup(); status = "나왔습니다."; }
-        }
-
-        GUILayout.EndArea();
     }
 }
