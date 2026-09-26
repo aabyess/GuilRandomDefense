@@ -1951,8 +1951,11 @@ public class GameHud : MonoBehaviour
     }
 
     // 공격·정지·모으기·정렬 네 칸. 유닛에게만 의미가 있어서 건물을 고르면 통째로 감춘다.
+    bool unitOnlyCommandsShown = true;
+
     void SetUnitOnlyCommandsVisible(bool visible)
     {
+        unitOnlyCommandsShown = visible;
         for (int i = 0; i < UnitOnlyCommandLabels.Length; i++)
         {
             unitCommandSlotNames[i].text = visible ? UnitOnlyCommandLabels[i] : "";
@@ -2297,6 +2300,15 @@ public class GameHud : MonoBehaviour
                 lastCommandUnitData = null;
                 unitCommandSlotCount = 0;
             }
+        }
+
+        // 2026-09-26: 아무것도 안 골랐으면(살펴보기 중 포함) 공격·정지·홀드·모으기·정렬을 감춘다 —
+        // 누를 대상이 없는데 떠 있으면 헷갈린다(워크3도 선택이 없으면 명령 카드가 빈다).
+        bool wantUnitCommands = shop == null && count > 0;
+        if (wantUnitCommands != unitOnlyCommandsShown)
+        {
+            unitOnlyCommandsShown = wantUnitCommands;
+            SetUnitOnlyCommandsVisible(wantUnitCommands);
         }
 
         if (shop != null)
