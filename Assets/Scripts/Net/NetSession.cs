@@ -67,6 +67,9 @@ public class NetSession : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 
         if (players.TryGetValue(player, out NetworkObject obj))
         {
+            // 판 도중이면 원작 Gone1~4대로 뒷정리한다(유닛·레인 적 제거, 사망 표식). 이름·슬롯은 거두기 전에 읽는다.
+            if (MatchStarted && obj != null && obj.TryGetComponent(out NetPlayer leaving))
+                NetDeparture.Apply(leaving.Slot, leaving.DisplayName);
             if (obj != null) Runner.Despawn(obj);
             players.Remove(player);
         }
