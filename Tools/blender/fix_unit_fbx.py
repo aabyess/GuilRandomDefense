@@ -774,6 +774,36 @@ UNITS = {
                texture_by_material=True,
                materials=dict(textures={"pl_apoo_2yaf01": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")],
                                         "pl_apoo_2yaf01_trans": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")]})),
+    # 원피스 알베르 킹(Sketchfab glb, 3ds Max Bip001 · 중국 모바일 게임 립) → R65 **이승우_라인몹**(라인몹 판 — 같은 라운드 보스 「이승우」는 베지터 SSJ3).
+    #   메시 4 + Icosphere · 재질 1(Scene_-_Root, HASHED · 그림 1장 Image_0) · 뼈 158 · 애니 0. 팔 내린 A자 → tpose_arms.
+    #   부품(경계로 가림): Object_12 몸(정점 10,125) · Object_8 날개(Bone_chibang 사슬) · Object_10 등 불꽃(bone_fire 사슬, 루나리아 불 — 몸으로 남김) · 얼굴.
+    #   🔴 등에 멘 칼·칼집·술 장식은 **몸 메시(Object_12) 안**에 있고 Bip001 Prop2 밑 Bone_dao*·daoqiao·daosui* 뼈 100% → drop_verts_of_bones로 정점째 뺀다
+    #     (가져오면 머리 위 0.066 높이에 가로로 떠 있다 — 게임 소품 자리. 칼 길이가 키를 넘는다).
+    #   🔴 뼈 표시용 Icosphere(±1.0 — 몸 0.068의 30배) → 뺀다.
+    #   뼈: BIP001(Spine2 없음 · Toe0 있음 · 번호 꼬리) → BIP001_NO_SPINE2 + rename_strip. 날개·불꽃·Dummy001 → Spine1 · 치마 Bone_qunbai → Hips ·
+    #     손가락 → Hand · 비틀림 → ForeArm · 머리 장식 Bone_tou → Head: 전부 merge_to_nearest(가장 가까운 위쪽 사람 뼈). 날개는 강체.
+    "이승우_라인몹": dict(path="Assets/Art/Enemies/이승우_라인몹/이승우_라인몹.fbx", kind="human", size=("height", 1.8),
+                   source=os.path.join(SKINS, "90_적유닛/R61-R70/R65_이승우_라인몹_킹.glb"), gltf_guess_bind=False,
+                   no_nulls=True, orient_snap=True,
+                   drop_meshes=["Icosphere"],
+                   # 🔴 얼굴 판(King001_face_d__0, 390정점)은 스킨이 있는데 가중치가 **전부 0**이다 — 1회차 bind_check ②에서 걸림(유니티는 첫 뼈에 붙여 몸이 가면 얼굴이 남는다).
+                   rigid_meshes={"King001_face_d__0": "mixamorig:Head"},
+                   drop_verts_of_bones=["Bone_daoqiao_0148", "Bone_daosui005_0149", "Bone_daosui006_0150", "Bone_daosui007_0151",
+                                        "Bone_daosui001_0153", "Bone_daosui002_0154", "Bone_daosui003_0155",
+                                        "Bone_dao_0137", "Bone_daowei_0138", "Bone_daobing_0157"],
+                   rename_bones=BIP001_NO_SPINE2, rename_strip=r"_[0-9]+$",
+                   drop_bones=["_rootJoint", "Bip001_02", "Bip001 Footsteps_03", "Bip001 Prop1_0158", "Bip001 Prop2_0147",
+                               "Bone_daoqiao_0148", "Bone_daosui005_0149", "Bone_daosui006_0150", "Bone_daosui007_0151", "Bone_daosui008_0152",
+                               "Bone_daosui001_0153", "Bone_daosui002_0154", "Bone_daosui003_0155", "Bone_daosui004_0156",
+                               "Bone_dao_0137", "Bone_daowei_0138", "Bone_daobing_0157"],
+                   drop_bones_re=r"Nub_[0-9]+$",
+                   merge_to_nearest=True,
+                   tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                                   "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                               for s, side in (("L", "Left"), ("R", "Right"))},
+                   glb_images={0: "King001_d.png"},
+                   texture_by_material=True,
+                   materials=dict(textures={"Scene_-_Root": [("DiffuseColor", "King001_d.png")]})),
     # 체인소맨 레제(Sketchfab glb, Mixamo 리그) → R63 긁힌_김민준. 뼈 이름이 이미 mixamorig + 번호 꼬리(Hips_01 …) → rename_regex로 꼬리만 뗀다(희귀함_배성령과 같은 길).
     #   메시 9 · 재질 4(body1 · body2SG2 · body2SG4 · Dress, 전부 HASHED) · 그림 2(Image_0 = Dress · Image_1 = body 셋) · 애니 1(안 씀 → use_rest_pose, 이미 T자).
     #   🔴 glTF 이름 겹침으로 생긴 **겹친 뼈 `_0`~`_3`**(Head·Neck·Spine2·Left/RightShoulder)에 살이 있다(Head_06_1 4,547 등) — 김만경(S-호크)과 같은 부류.
