@@ -333,3 +333,19 @@ public static class BetaFeedbackProbe
         return $"지정한 적 {(targeted != null ? $"살아 있음 체력 {targeted.Hp:F0}" : "죽음")} · 지금 표적 {cur} · 지정 적 유지 {same}";
     }
 }
+
+/// <summary>도박 옵션 에셋 점검(2026-09-26 충전식 재고) — 새 필드가 에셋에서 제대로 읽히는지.</summary>
+public static class GambleAssetProbe
+{
+    public static string List()
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (string guid in UnityEditor.AssetDatabase.FindAssets("t:GamblingOptionData", new[] { "Assets/Data/Gambling" }))
+        {
+            var o = UnityEditor.AssetDatabase.LoadAssetAtPath<GamblingOptionData>(UnityEditor.AssetDatabase.GUIDToAssetPath(guid));
+            if (o == null) continue;
+            sb.AppendLine($"{o.optionName} · 재고 {o.stockMax}/{o.stockRegenSeconds}초/시작 {o.stockInitial} · 졸업 {o.graduateAtCumulative} · 졸업시 사라짐 {o.retiredOnGraduation} · 졸업 뒤 {o.requiresGraduation} · 지급 자원 {o.payoutResourceAmount} · 둘째확률 {o.secondaryChancePercent} · 스토리 {o.requiresStoriesCleared} · 보너스 {(o.bonusUnit != null ? o.bonusUnit.unitName : "-")} {o.bonusChancePercent}% · 실패환급 {o.failureGoldMin}~{o.failureGoldMax} · 횟수 {o.maxUses}");
+        }
+        return sb.ToString().TrimEnd();
+    }
+}

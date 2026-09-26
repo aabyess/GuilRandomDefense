@@ -106,11 +106,14 @@ public class GamblingShop : MonoBehaviour, ILaneShop
             return new LaneShopSlotView(slotCache[index].label, slotCache[index].color,
                 CanPurchaseTraitPoint(), LaneShopTargetKind.None);
 
+        VisibleMoney();   // 졸업하면 칸이 바뀐다 — 캐시를 무효화할 기회를 먼저 준다
+        if (!slotCacheBuilt) BuildSlotCache();
         SlotCache cache = slotCache[index];
         if (!cache.hasOption) return LaneShopSlotView.Empty;
 
-        bool available = CanRoll(OptionAt(index));
-        return new LaneShopSlotView(cache.label, cache.color, available, LaneShopTargetKind.None);
+        GamblingOptionData opt = OptionAt(index);
+        bool available = CanRoll(opt);
+        return new LaneShopSlotView(cache.label + StockSuffix(opt), cache.color, available, LaneShopTargetKind.None);
     }
 
     // 호버할 때만 불린다 — 문자열 조립은 여기서만 한다(GetSlotView는 캐시된 값만 돌려준다).
@@ -133,10 +136,34 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         return option != null && TryRoll(option, out failReason);
     }
 
+    // 돈 도박 줄(0·1)에 보이는 옵션 — 졸업 전: 졸업 조건이 없는 것(10엔·500엔), 졸업 뒤: 졸업해서 없어지지 않는 것
+    //    (원작 h062 → h08C: 돈도박 초급·고급이 빠지고 고급 유닛 생성·목재 구입이 들어온다). 2번은 특성포인트 고정.
+    readonly List<GamblingOptionData> visibleMoney = new List<GamblingOptionData>();
+    bool visibleGraduated = false;
+    bool visibleBuilt;
+
+    List<GamblingOptionData> VisibleMoney()
+    {
+        bool graduated = OwnerContext?.GamblingProgress != null && OwnerContext.GamblingProgress.Graduated;
+        if (!visibleBuilt || graduated != visibleGraduated)
+        {
+            visibleBuilt = true;
+            visibleGraduated = graduated;
+            visibleMoney.Clear();
+            foreach (GamblingOptionData o in moneyOptions)
+                if (o != null && (graduated ? !o.retiredOnGraduation : !o.requiresGraduation)) visibleMoney.Add(o);
+            slotCacheBuilt = false;   // 칸 글자·색도 다시
+        }
+        return visibleMoney;
+    }
+
     GamblingOptionData OptionAt(int index)
     {
-        if (index >= 0 && index <= 2)
-            return index < moneyOptions.Count ? moneyOptions[index] : null;
+        if (index >= 0 && index <= 1)
+        {
+            List<GamblingOptionData> money = VisibleMoney();
+            return index < money.Count ? money[index] : null;
+        }
 
         if (index >= 3 && index <= 5)
         {
@@ -149,6 +176,20 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 
         return null; // 7, 8은 줄을 맞추기 위한 항상 빈 칸.
     }
+
+    // 「남은 개수/최대 · 다음 충전까지 초」 — 워크3 상점의 재고 숫자·충전 원과 같은 정보(친구 베타 「왜 안 눌리지」 방지, PM 09-26).
+    string StockSuffix(GamblingOptionData option)
+    {
+        GamblingProgress progress = OwnerContext?.GamblingProgress;
+        if (option == null || option.stockMax <= 0 || progress == null) return "";
+        if (option.requiresUnlock && !progress.IsUnlocked(option)) return "\n(잠김)";
+        int n = progress.Stock(option);
+        float next = progress.SecondsToNextStock(option);
+        return n >= option.stockMax ? $"\n{n}/{option.stockMax}" : $"\n{n}/{option.stockMax} · {Mathf.CeilToInt(next)}초";
+    }
+
+    bool StoryRequirementMet(GamblingOptionData option) =>
+        option.requiresStoriesCleared <= 0 || (StoryManager.Instance != null && StoryManager.Instance.FinishedCount >= option.requiresStoriesCleared);
 
     void BuildSlotCache()
     {
@@ -234,6 +275,8 @@ public class GamblingShop : MonoBehaviour, ILaneShop
     string MoneyUnavailableReason(GamblingOptionData option)
     {
         GamblingProgress progress = OwnerContext?.GamblingProgress;
+        string stock = StockReason(option, progress);
+        if (stock != null) return stock;
 
         if (option.requiresUnlock && (progress == null || !progress.IsUnlocked(option)))
             return string.IsNullOrEmpty(option.unlockHint) ? "아직 해금되지 않음" : option.unlockHint;
@@ -242,6 +285,15 @@ public class GamblingShop : MonoBehaviour, ILaneShop
             return $"{option.maxUses}회 모두 사용함";
 
         return null;
+    }
+
+    string StockReason(GamblingOptionData option, GamblingProgress progress)
+    {
+        if (!StoryRequirementMet(option)) return $"스토리를 {option.requiresStoriesCleared}개 깨야 합니다";
+        if (option.stockMax <= 0 || progress == null) return null;
+        if (option.requiresUnlock && !progress.IsUnlocked(option)) return null;   // 잠김 이유는 아래 해금 문구가 말한다
+        if (progress.Stock(option) > 0) return null;
+        return $"재고 없음 — {Mathf.CeilToInt(progress.SecondsToNextStock(option))}초 뒤 1개 충전(최대 {option.stockMax})";
     }
 
     string BuildUnitTooltip(GamblingOptionData option)
@@ -290,6 +342,9 @@ public class GamblingShop : MonoBehaviour, ILaneShop
     public bool CanRoll(GamblingOptionData option)
     {
         if (option == null) return false;
+        GamblingProgress stockProgress = OwnerContext?.GamblingProgress;
+        if (option.stockMax > 0 && (stockProgress == null || stockProgress.Stock(option) <= 0)) return false;
+        if (!StoryRequirementMet(option)) return false;
         if (option.category == GamblingCategory.Unit && (unitSpawner == null || gachaTable == null)) return false;
 
         PlayerContext context = OwnerContext;
@@ -345,6 +400,8 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         if (option.category == GamblingCategory.Money)
             return MoneyUnavailableReason(option);
 
+        string stock = StockReason(option, context.GamblingProgress);
+        if (stock != null) return stock;
         if (context.ResourceWallet == null) return null;
         if (context.ResourceWallet.Get(option.costResourceType) < option.cost)
             return $"{ResourceLabel(option.costResourceType)}이(가) 부족합니다.";
@@ -368,6 +425,17 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         bool success = option.successChancePercent <= 0f
                        || Random.Range(0f, 100f) < option.successChancePercent;
 
+        context.GamblingProgress?.ConsumeStock(option);
+
+        // 목재 구입(원작 h0AK 10,000골드 → 목재 1) — 골드 대신 자원을 준다.
+        if (option.payoutResourceAmount > 0)
+        {
+            context.ResourceWallet?.Add(option.payoutResourceType, option.payoutResourceAmount);
+            context.GamblingProgress?.RecordUse(option);
+            PlayerNotification.Show(context.PlayerId, $"<color=#32CD32>{ResourceLabel(option.payoutResourceType)} {option.payoutResourceAmount} 획득!</color>");
+            return true;
+        }
+
         int amount = success
             ? Random.Range(option.successGoldMin, option.successGoldMax + 1)
             : Random.Range(option.failureGoldMin, option.failureGoldMax + 1);
@@ -375,16 +443,29 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 
         context.GamblingProgress?.RecordUse(option);
 
+        // 졸업(원작 Trig_Money_Gemble_3): 당첨금·실패 환급을 **둘 다** 누적하고, **당첨 때만** 누적 ≥ 35,000을 본다.
+        if (option.graduateAtCumulative > 0 && context.GamblingProgress != null)
+        {
+            context.GamblingProgress.AddPayout(option, amount);
+            if (success && !context.GamblingProgress.Graduated && context.GamblingProgress.CumulativePayout(option) >= option.graduateAtCumulative)
+            {
+                context.GamblingProgress.Graduate();
+                PlayerNotification.Show(context.PlayerId, "<color=#32CD32>돈도박 골드획득 한계에 도달하여 돈도박-고급을 졸업합니다!</color>", 10f);
+                Debug.Log($"[도박] 졸업: {option.optionName} 누적 {context.GamblingProgress.CumulativePayout(option)}엔 — 도박소 칸이 바뀐다(원작 h062 → h08C).");
+            }
+        }
+
         // 결과를 말해주지 않으면 눌러도 아무 일도 안 일어난 것처럼 보인다 — 0엔이 나오는
         // 판이 있어서 더 그렇다. 남은 횟수까지 같이 알려준다.
         // ⚠️ 2026-09-05 정정: 이 주석이 스스로 문제를 지적해놓고 Debug.Log로만 고쳐뒀었다 —
         // 콘솔은 플레이어가 안 본다. PlayerNotification으로 화면에 띄운다(구현담당3 정리,
         // "조용한 실패" #13).
         int used = context.GamblingProgress != null ? context.GamblingProgress.UsesSoFar(option) : 0;
-        string left = option.maxUses > 0 ? $", 남은 횟수 {option.maxUses - used}" : "";
-        PlayerNotification.Show(context.PlayerId,
-            $"{option.optionName}: {option.cost}엔 걸어 {amount}엔 " +
-            $"({(amount >= option.cost ? "이득" : "손해")}) 보유 {context.GoldWallet.Gold}엔{left}");
+        string left = option.maxUses > 0 ? $", 남은 횟수 {option.maxUses - used}"
+                    : option.stockMax > 0 && context.GamblingProgress != null ? $", 재고 {context.GamblingProgress.Stock(option)}/{option.stockMax}" : "";
+        // 원작 문구: 당첨 「N원 획득 !」 · 실패 「돈도박에 실패하여 N원을 되돌려받습니다.」(Trig_Money_Gemble_3)
+        string result = success ? $"<color=#52E252>{amount}원 획득 !</color>" : $"<color=#FF8200>돈도박에 실패하여 {amount}원을 되돌려받습니다.</color>";
+        PlayerNotification.Show(context.PlayerId, $"{option.optionName}: {result} 보유 {context.GoldWallet.Gold}엔{left}");
 
         return true;
     }
@@ -442,6 +523,8 @@ public class GamblingShop : MonoBehaviour, ILaneShop
             return false;
         }
 
+        context.GamblingProgress?.ConsumeStock(option);
+
         if (success)
         {
             UnitData reward = bonusHit ? option.bonusUnit : gachaTable.RollFromGrade(resultGrade);
@@ -479,6 +562,9 @@ public class GamblingShop : MonoBehaviour, ILaneShop
     UnitGrade PickResultGrade(GamblingOptionData option)
     {
         if (!option.useSecondaryGrade) return option.primaryResultGrade;
+        // 정확한 확률이 적혀 있으면 그대로(원작 H0B0: 보너스 미적중 뒤 1/38로 특수함).
+        if (option.secondaryChancePercent > 0f)
+            return Random.Range(0f, 100f) < option.secondaryChancePercent ? option.secondaryResultGrade : option.primaryResultGrade;
 
         float primaryWeight = FindWeight(option.primaryResultGrade);
         float secondaryWeight = FindWeight(option.secondaryResultGrade);

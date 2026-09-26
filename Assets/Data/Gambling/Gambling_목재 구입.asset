@@ -10,35 +10,35 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e38dcfb2166e0425695e116cb8b725bc, type: 3}
-  m_Name: Gambling_10엔 도박
+  m_Name: Gambling_목재 구입
   m_EditorClassIdentifier:
-  optionName: 10엔 도박
-  description: 10엔을 걸고 64% 확률로 7~50엔을 받는다. 실패해도 3~5엔은 돌려받는다. 최대 5개까지 쌓이고 14초마다 1개씩 충전된다(원작 재고 3 — 사장님 확인 중). 돈도박을 졸업하면 사라진다.
+  optionName: 목재 구입
+  description: 10000엔으로 목재 1개를 산다. 돈도박 졸업 후 최대 5번.
   category: 0
   costResourceType: 0
-  cost: 10
-  successChancePercent: 64
+  cost: 10000
+  successChancePercent: 100
   primaryResultGrade: 0
   useSecondaryGrade: 0
   secondaryResultGrade: 0
-  successGoldMin: 7
-  successGoldMax: 50
+  successGoldMin: 0
+  successGoldMax: 0
+  failureGoldMin: 0
+  failureGoldMax: 0
   grantFailureReward: 0
   failureLuckyTokens: 0
   failureWood: 0
   maxUses: 0
   requiresUnlock: 0
-  unlockHint:
+  unlockHint: 
   unlockRound: 0
-  failureGoldMin: 3
-  failureGoldMax: 5
   stockMax: 5
-  stockRegenSeconds: 14
-  stockInitial: 0
+  stockRegenSeconds: 3600
+  stockInitial: 5
   graduateAtCumulative: 0
-  retiredOnGraduation: 1
-  requiresGraduation: 0
+  retiredOnGraduation: 0
+  requiresGraduation: 1
   payoutResourceType: 0
-  payoutResourceAmount: 0
+  payoutResourceAmount: 1
   secondaryChancePercent: 0
   requiresStoriesCleared: 0

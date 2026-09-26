@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Gambling_500엔 도박
   m_EditorClassIdentifier:
   optionName: 500엔 도박
-  description: 500엔을 걸고 59% 확률로 500~4500엔을 받는다. 10라운드 보스를 처치해야 열린다.
+  description: 500엔을 걸고 59% 확률로 500~4500엔을 받는다. 실패해도 300~400엔을 돌려받는다. 최대 7개 · 12초마다 1개 충전. 10라운드 보스를 처치해야 열리고, 받은 돈이 35,000엔에 닿으면 졸업한다.
   category: 0
   costResourceType: 0
   cost: 500
@@ -30,5 +30,15 @@ MonoBehaviour:
   requiresUnlock: 1
   unlockHint: 10라운드 보스 처치 후 해금
   unlockRound: 10
-  failureGoldMin: 0
-  failureGoldMax: 0
+  failureGoldMin: 300
+  failureGoldMax: 400
+  stockMax: 7
+  stockRegenSeconds: 12
+  stockInitial: 0
+  graduateAtCumulative: 35000
+  retiredOnGraduation: 1
+  requiresGraduation: 0
+  payoutResourceType: 0
+  payoutResourceAmount: 0
+  secondaryChancePercent: 0
+  requiresStoriesCleared: 0
