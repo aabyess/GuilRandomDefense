@@ -1057,6 +1057,7 @@ public static class ClaudeCommands
         public int superSize = 1;
         public int watchRounds;          // rounds:N — 0이면 끄기
         public bool autoLoop;
+        public bool bossChase;           // autoloop: 보스 라운드엔 레인의 흔함 아닌 유닛 전부 보스 공격(AttackTarget), 흔함은 칸에(09-26 PM 지시 — R30 벽이 배치냐 화력이냐)
         public bool storyPlus;           // autoloop: 스토리 보강 — 막히면 가장 센 유닛 둘씩, 깨면 약한 하나만 남기고 C로 복귀(09-26 PM 지시)
         public bool targetMode;          // autoloop: 희귀함 식 하나를 목표로 — 흔함선택·조합·판매를 그 식의 모자란 재료 쪽으로(09-26 PM 지시)
         public bool combineAll;          // autoloop: 지금 만들 수 있는 조합식을 전부 만든다(결과 등급 높은 것부터, 09-26 R20 벽 ③)
@@ -1160,6 +1161,7 @@ public static class ClaudeCommands
             else if (token == "keeppen") job.keepPen = true;
             else if (token == "combineall") job.combineAll = true;
             else if (token == "storyplus") job.storyPlus = true;
+            else if (token == "bosschase") job.bossChase = true;
             else if (token == "target") { job.targetMode = true; job.combineAll = true; }
             else if (token == "bossaway") job.bossAway = true;
             else if (token.StartsWith("mode:"))
@@ -1381,6 +1383,15 @@ public static class ClaudeCommands
                 }
                 bool optional = target.StartsWith("?");
                 if (optional) target = target.Substring(1);
+                if (target == "@bosschase")
+                {
+                    string chase = BossChase();
+                    if (chase == null && inStage < 15.0) break;   // 보스가 아직 안 나왔다 — 15초까지 기다린다
+                    job.report += chase ?? "   👑 보스 공격: 15초 안에 0번 레인 보스를 못 찾음 — 건너뜀\n";
+                    job.clickIndex++;
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
+                    break;
+                }
                 if (target.StartsWith("@storysend:") || target == "@storyreturn")
                 {
                     job.report += target == "@storyreturn" ? StoryReturn(job) : StorySend(job, int.Parse(target.Substring(11)));
@@ -2480,9 +2491,10 @@ public static class ClaudeCommands
                     t.nextSample = Time.time + 5f;
                     t.lastHp = t.boss.HpRatio;
                     Vector3 bp = t.boss.transform.position;
-                    var shooters = MyUnits().Where(u => u.TryGetComponent(out UnitAttacker at) && (u.transform.position - bp).sqrMagnitude <= at.AttackRange * at.AttackRange)
-                        .GroupBy(u => u.Data.grade).Select(g => $"{g.Key} {g.Count()}");
-                    t.lastSample = $"t={Time.time:F1}(등장 뒤 {Time.time - t.bornAt:F0}초) 체력 {t.lastHp:P0} · 사거리 안 내 유닛 {string.Join(", ", shooters)}";
+                    var inRange = MyUnits().Where(u => u.TryGetComponent(out UnitAttacker at) && (u.transform.position - bp).sqrMagnitude <= at.AttackRange * at.AttackRange).ToList();
+                    var shooters = inRange.GroupBy(u => u.Data.grade).Select(g => $"{g.Key} {g.Count()}");
+                    float nominalDps = inRange.Sum(u => u.Data.attackPower / Mathf.Max(0.1f, u.Data.attackSpeed));   // 09-26 PM 지시 — 명목(공격력÷간격, 방어·상성 전)
+                    t.lastSample = $"t={Time.time:F1}(등장 뒤 {Time.time - t.bornAt:F0}초) 체력 {t.lastHp:P0} · 사거리 안 내 유닛 {string.Join(", ", shooters)} · 명목 DPS 합 {nominalDps:F0}";
                     job.report += $"   👑 R{t.round} 보스 {t.lastSample}{(rmNow != null ? $" · 라운드 남은 {rmNow.RoundTimeLeft:F1}" : "")}\n";
                 }
                 continue;
@@ -2668,6 +2680,19 @@ public static class ClaudeCommands
         }
         int end = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
         return $"   🏪 {shop} {(bought.Count > 0 ? $"{bought.Count}번 삼: {string.Join(", ", bought.GroupBy(x => x.Split(' ')[0]).Select(g => $"{g.Key}×{g.Count()}"))}" : "산 것 없음")} · 골드 {start} → {end} · 가진 등급에 안 듣는 칸 {skipped}개 건너뜀 · 칸 {string.Join(" · ", slots.Select(b => $"「{ButtonLabel(b).Replace("\n", " ")}」{(b.IsInteractable() ? "" : "(흐림)")}"))}\n";
+    }
+
+    // bosschase — 0번 레인 보스를 레인 근처(700)의 흔함 아닌 내 유닛 전부에게 공격 명령(UnitCommands.AttackTarget = 사람이 보스를 우클릭).
+    static string BossChase()
+    {
+        EnemyDummy boss = EnemyDummy.Active.FirstOrDefault(e => e != null && e.IsBoss && e.LaneIndex == 0);
+        if (boss == null) return null;
+        LaneMarker lane = LaneMarker.Get(0);
+        var units = MyUnits().Where(u => u.Data.grade != UnitGrade.Common && lane != null &&
+                Vector2.Distance(new Vector2(u.transform.position.x, u.transform.position.z), new Vector2(lane.LaneCenter.x, lane.LaneCenter.z)) < 700f)
+            .Select(u => u.GetComponent<Selectable>()).Where(x => x != null).ToList();
+        int n = UnitCommands.AttackTarget(units, boss);
+        return $"   👑 보스 공격 명령 {n}/{units.Count}기 → {boss.name}\n";
     }
 
     // ── 스토리 보강(storyplus, 09-26) ──
@@ -3080,7 +3105,10 @@ public static class ClaudeCommands
         }
         if (job.combineAll) turn.Add("@combineall");   // 카드 조합 뒤 — 카드 길이 못 여는 식(첫 재료가 흔함이 아닌 식)까지
         if (job.sellSpare) turn.Add("@sellspare");   // 조합 시도 뒤 — 조합에 먼저 쓰고 남는 것만 판다
-        if (job.keepPen) foreach (string box in NonCommonBoxes) { turn.Add(box); turn.Add("@rcpt:corner"); }
+        RoundManager rmChase = job.bossChase ? UnityEngine.Object.FindFirstObjectByType<RoundManager>() : null;
+        bool chasingBoss = rmChase != null && rmChase.CurrentRound % 10 == 0;   // bosschase 보스 라운드엔 모서리 쓸기를 안 한다 — 보스 공격 명령을 덮어쓴다
+        if (chasingBoss) { }
+        else if (job.keepPen) foreach (string box in NonCommonBoxes) { turn.Add(box); turn.Add("@rcpt:corner"); }
         else { turn.Add("@box:Unit_"); turn.Add("@rcpt:corner"); }
         // 흔함 선택 위습 — 「흔함선택_<이름>」 포탈에 넣어 그 유닛을 고른다(isPlayerChoice를 읽는 코드는 없고, 포탈 specificUnit이 길이다).
         //    짝이 안 맞는(홀수) 흔함이 있으면 그 이름을 골라 조합 재료를 채우고, 없으면 돌아가며 고른다.
@@ -3168,7 +3196,13 @@ public static class ClaudeCommands
         //    원작도 흔함만 고정 칸이고 조합 결과는 레인 가운데에 나와 사람이 옮긴다. 모서리 밖에 남은 것만 두 번 더 쓸어 보낸다.
         string sweep = job.storySent ? "@box:Unit_흔함" : "@box:Unit_";
         RoundManager rmTurn = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
-        if (job.bossAway && rmTurn != null && rmTurn.CurrentRound == 10)
+        if (job.bossChase && rmTurn != null && rmTurn.CurrentRound % 10 == 0)
+        {
+            // bosschase — 모서리 쓸기 대신 보스를 찍어 따라가며 친다(사람의 「보스 찍기」). 흔함은 칸에 둔다. 턴 맨 앞(밀려도 안 버려지게).
+            turn.Insert(0, "@bosschase");
+            job.report += "   🧪 보스 라운드: 흔함 아닌 유닛 전부 보스 공격\n";
+        }
+        else if (job.bossAway && rmTurn != null && rmTurn.CurrentRound == 10)
         {
             // bossaway — 보스 라운드에 유닛을 전부 스토리존으로 치워 **아무도 보스를 안 때리게** 한다(보스 제한 패배 확인용, 09-25 판 H).
             //    선택 상한 12기라 세 번 나눠 보낸다. 레인엔 보스만 있으니 누적 패배(70)와 섞이지 않는다.
