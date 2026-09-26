@@ -404,3 +404,47 @@ public static class GambleStockProbe
         return $"칸1 누름 → {(ok ? "굴림" : "실패 " + reason)} · 골드 {before} → {ctx.GoldWallet.Gold} · 졸업 {ctx.GamblingProgress.Graduated}";
     }
 }
+
+/// <summary>조합식 에셋의 재료가 유니티에 실제로 몇 개로 읽혔나(2026-09-26 — `ingredients:  - kind` 한 줄 붙음 YAML 네 개).</summary>
+public static class RecipeIngredientProbe
+{
+    public static string Check()
+    {
+        var sb = new System.Text.StringBuilder();
+        int empty = 0, total = 0;
+        foreach (string guid in AssetDatabase.FindAssets("t:CombineRecipe"))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            CombineRecipe r = AssetDatabase.LoadAssetAtPath<CombineRecipe>(path);
+            if (r == null) continue;
+            total++;
+            int n = r.ingredients?.Count ?? 0;
+            int nullUnits = r.ingredients?.Count(i => i != null && i.kind == IngredientKind.SpecificUnit && i.unit == null) ?? 0;
+            if (nullUnits > 0) sb.AppendLine($"   재료 유닛 참조 빈 칸 {nullUnits}/{n}: {path} → 결과 {(r.result != null ? r.result.name : "없음")}");
+            if (n == 0) { empty++; sb.AppendLine($"   재료 0개: {path} → 결과 {(r.result != null ? r.result.name : "없음")} · 골드 {r.goldCost} · 자원 {r.resourceCosts?.Count ?? 0}종"); }
+        }
+        return $"조합식 {total}개 중 재료 0개 {empty}개\n" + sb.ToString().TrimEnd();
+    }
+}
+
+/// <summary>판 안: 플레이어 0 인벤토리에 초월 강재규 재료(신지우·전유라·변화됨 강재규·초월위습 박은석)로 잡히는 개체가 무엇인가(2026-09-26 무한 조합).</summary>
+public static class TranscendIngredientProbe
+{
+    public static string List()
+    {
+        var ctx = PlayerContext.Get(0);
+        UnitInventory inv = ctx != null ? ctx.GetComponent<UnitInventory>() ?? ctx.GetComponentInChildren<UnitInventory>() : null;
+        if (inv == null) inv = Object.FindObjectsByType<UnitInventory>(FindObjectsSortMode.None).FirstOrDefault();
+        if (inv == null) return "인벤토리 없음";
+        string[] want = { "전설적인_신지우", "히든_전유라", "변화됨_강재규", "초월위습_박은석" };
+        var sb = new System.Text.StringBuilder($"인벤토리 {inv.name} 개체 {inv.Members.Count}\n");
+        foreach (UnitIdentity u in inv.Members)
+        {
+            if (u == null || u.Data == null || !want.Contains(u.Data.name)) continue;
+            Transform t = u.transform;
+            string path = t.name; for (Transform p = t.parent; p != null; p = p.parent) path = p.name + "/" + path;
+            sb.AppendLine($"   {u.Data.name} ← {path} @ {t.position} · 켜짐 {u.gameObject.activeInHierarchy} · Wisp {u.GetComponent<Wisp>() != null}");
+        }
+        return sb.ToString().TrimEnd();
+    }
+}
