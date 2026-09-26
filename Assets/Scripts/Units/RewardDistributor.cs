@@ -417,6 +417,7 @@ public class RewardDistributor : MonoBehaviour
                 owner = instance.AddComponent<OwnedByPlayer>();
             }
             owner.SetOwner(context.PlayerId);
+            wisp.ApplyOwnerColor(context.PlayerId);
         }
     }
 }

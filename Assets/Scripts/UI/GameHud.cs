@@ -284,6 +284,7 @@ public class GameHud : MonoBehaviour
 
     bool teamPanelInitialized;
     int lastTotalEnemyCount = int.MinValue;
+    string lastDifficultyLabel;   // 팀 현황판 머리 줄의 난이도 — 고르기 전엔 null(안 보임)
     readonly int[] lastSlotEnemyCount = new int[TeamSlotCount];
     readonly int[] lastSlotGold = new int[TeamSlotCount];
     readonly int[] lastSlotWood = new int[TeamSlotCount];
@@ -2869,7 +2870,12 @@ public class GameHud : MonoBehaviour
         // 데스카운트는 이제 레인마다 따로 돌아서 대표할 수 있는 전역 숫자가 하나가 아니다
         // (2026-09-03) — 그 값을 헤더에서 뺐다. 그대로 두면 레인 하나의 값만 보이는데
         // 다른 레인 것처럼 읽혀서, 안 보여주는 것보다 더 나쁜 잘못된 정보가 된다.
-        bool changed = !teamPanelInitialized || totalEnemies != lastTotalEnemyCount;
+        // 난이도(2026-09-26 사장님 「난이도 선택하고 쉬움인지 어려움인지 유닛카운트 있는 쪽에 표시」) — 고른 뒤에만.
+        //    같은 줄에 붙인다: 판 높이가 줄 수에서 유도되므로(BuildTeamPanel 주석) 줄을 늘리지 않는다.
+        DifficultyManager difficulty = DifficultyManager.Instance;
+        string difficultyLabel = difficulty != null && difficulty.IsModeSelected ? difficulty.Current.KoreanName() : null;
+
+        bool changed = !teamPanelInitialized || totalEnemies != lastTotalEnemyCount || difficultyLabel != lastDifficultyLabel;
 
         for (int i = 0; i < TeamSlotCount; i++)
         {
@@ -2894,9 +2900,11 @@ public class GameHud : MonoBehaviour
 
         teamPanelInitialized = true;
         lastTotalEnemyCount = totalEnemies;
+        lastDifficultyLabel = difficultyLabel;
 
         teamPanelBuilder.Clear();
         teamPanelBuilder.Append("유닛 카운트 ").Append(totalEnemies);
+        if (difficultyLabel != null) teamPanelBuilder.Append("   |   난이도 ").Append(difficultyLabel);
 
         for (int i = 0; i < TeamSlotCount; i++)
         {
