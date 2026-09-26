@@ -85,6 +85,12 @@ public class DifficultyManager : MonoBehaviour
         PlayerPrefs.Save();
     }
 
+    // MP: 판 도중 재접속한 클라 — 게임 씬이 NetGameState보다 먼저 떠 Awake가 난이도를 못 봤을 때 NetGameState가 늦게 건다.
+    public void ApplyReplicatedMode(DifficultyMode mode)
+    {
+        if (!current.HasValue) ApplyMode(mode);
+    }
+
     // 고른 값을 실제로 거는 부분. SelectMode(사람이 누름)와 Awake(기억해서 시작) 둘 다 쓴다.
     void ApplyMode(DifficultyMode mode)
     {

@@ -43,6 +43,9 @@ using UnityEngine.SceneManagement;
 ///   -mpLobbyChat 초 문장     방에 들어간 뒤 그 초에 대기실 채팅 한 줄
 ///   -mpTestGambleLabels 초   그 초에 (호스트·클라 각자) 내 도박소 칸 글자 전부 로그 — 재고 「남은/최대 · N초」 복제 확인
 ///   -mpCamWisp 초            그 초에 카메라를 위습 쪽으로(주인 색 캡처용)
+///   -mpToken 문자열          접속 식별값(재접속 때 같은 사람 알아보기)을 이 값으로 — 한 기계 두 창 테스트용(기본은 설치마다 GUID)
+///   -mpDropAt 초             (클라) 그 초(실행 뒤 절대 시간)에 [나가기] 예고 없이 러너를 끊는다 — 망 끊김 흉내
+///   -mpRejoinAfter 초        (클라) 끊겨서 첫 화면으로 돌아온 뒤 그 초에 [다시 참가]를 누른다
 ///   -mpTestSelect 초 폴더     (양쪽, 클라 확인용) 슬롯 1(친구) 유닛 최대 4기와 레인 1 적 둘을 **거울 ID 순**으로 골라 캡처 —
 ///                             방장·친구가 같은 개체를 고르므로 파일 이름(id)으로 나란히 비교한다. 소환 없이 있는 것만
 ///   -mpTestPortraits 초 폴더  (호스트) 흔함·특별함·재규어·적·매머드·보스를 차례로 골라 초상화 캡처 + 초상 켬/끔 FPS
@@ -70,6 +73,19 @@ public class NetLauncher : MonoBehaviour
     bool wasRunning;
     bool leavingOnPurpose;
     bool hostClosed;
+    bool sawMatchStarted;
+    bool startedAsHost;   // 러너가 멈춘 뒤엔 runner.IsServer를 못 믿는다 — 띄울 때 모드를 기억
+
+    const string ConnectionTokenPrefsKey = "GuilRandomDefense.ConnectionToken";
+    string cliToken;
+    float dropAt = -1f;
+    float rejoinAfter = -1f;
+    float rejoinAtTime = -1f;
+    float testMenuDelay = -1f;
+    string testMenuShot;
+
+    /// <summary>판 도중 예고 없이 끊겼을 때 기억해 둔 방 코드 — 첫 화면의 [다시 참가]가 쓴다(성공하면 비운다).</summary>
+    public string RejoinCode { get; private set; } = "";
 
     // 명령줄
     string cliSession;
@@ -174,6 +190,10 @@ public class NetLauncher : MonoBehaviour
                 case "-mpSaveDir": PersistentSave.SaveRootOverride = Arg(i + 1); break;
                 case "-mpTestFinishRun": testFinishRunDelay = Seconds(i + 1); break;
                 case "-mpCamWisp": camWispDelay = Seconds(i + 1); break;
+                case "-mpToken": cliToken = Arg(i + 1); break;
+                case "-mpTestMenu": testMenuDelay = Seconds(i + 1); testMenuShot = Arg(i + 2); break;
+                case "-mpDropAt": dropAt = Seconds(i + 1); break;
+                case "-mpRejoinAfter": rejoinAfter = Seconds(i + 1); break;
                 case "-mpTestSelect": testSelectDelay = Seconds(i + 1); testSelectDir = Arg(i + 2); break;
                 case "-mpTestPortraits": testPortraitsDelay = Seconds(i + 1); testPortraitsDir = Arg(i + 2); break;
                 case "-mpJoin": join = true; break;
@@ -284,6 +304,11 @@ public class NetLauncher : MonoBehaviour
         // 좌석은 NetPlayer가 생길 때 채워진다. 러너를 띄우는 순간부터 「네트 판」이다.
         MatchConfig.Reset();
         MatchConfig.Active = true;
+        // 권한 판정도 러너를 띄우는 순간부터 — 판 도중 재접속하면 StartGame이 끝나기 전에 게임 씬이 뜰 수 있고,
+        // Provider가 비어 있으면 GameAuthority.IsServer가 true(싱글)라 클라가 호스트 일(위습 뿌리기 등)을 해 버린다.
+        GameAuthority.Provider = new FusionAuthorityProvider(runner);
+        sawMatchStarted = false;
+        startedAsHost = mode == GameMode.Host;
 
         StartGameResult result = await runner.StartGame(new StartGameArgs
         {
@@ -294,6 +319,8 @@ public class NetLauncher : MonoBehaviour
             // 방 목록에 안 띄운다 — 코드를 아는 친구만 들어온다.
             IsVisible = false,
             CustomPhotonAppSettings = RegionSettings(),
+            // 같은 사람 알아보기(재접속) — 호스트가 PlayerJoined에서 읽는다. 닉네임은 겹칠 수 있어 안 쓴다.
+            ConnectionToken = System.Text.Encoding.UTF8.GetBytes(ConnectionToken()),
         });
 
         starting = false;
@@ -328,8 +355,8 @@ public class NetLauncher : MonoBehaviour
             return;
         }
 
-        GameAuthority.Provider = new FusionAuthorityProvider(runner);
         wasRunning = true;
+        if (mode == GameMode.Client) RejoinCode = "";
 
         if (runner.IsServer && gameStatePrefab != null)
         {
@@ -351,6 +378,31 @@ public class NetLauncher : MonoBehaviour
 
         if (lobbyShotDelay >= 0f && !string.IsNullOrEmpty(lobbyShotPath)) StartCoroutine(ShotAfter(lobbyShotDelay, lobbyShotPath));
         foreach (var (delay, text) in lobbyChatTests) if (delay >= 0f && !string.IsNullOrEmpty(text)) StartCoroutine(TestChatAfter(delay, text));
+    }
+
+    string ConnectionToken()
+    {
+        if (!string.IsNullOrWhiteSpace(cliToken)) return cliToken.Trim();
+        try
+        {
+            string token = PlayerPrefs.GetString(ConnectionTokenPrefsKey, "");
+            if (string.IsNullOrEmpty(token))
+            {
+                token = Guid.NewGuid().ToString("N");
+                PlayerPrefs.SetString(ConnectionTokenPrefsKey, token);
+                PlayerPrefs.Save();
+            }
+            return token;
+        }
+        catch { return Guid.NewGuid().ToString("N"); }   // 못 저장하면 이번 실행만의 값(재접속은 같은 실행 안에서만)
+    }
+
+    /// <summary>첫 화면 [다시 참가].</summary>
+    public void Rejoin()
+    {
+        if (string.IsNullOrEmpty(RejoinCode) || IsBusy || InRoom) return;
+        Debug.Log($"[MP] 다시 참가: 방 {RejoinCode}");
+        JoinRoom(RejoinCode);
     }
 
     Fusion.Photon.Realtime.FusionAppSettings RegionSettings()
@@ -396,6 +448,14 @@ public class NetLauncher : MonoBehaviour
     IEnumerator LeaveRoutine()
     {
         leavingOnPurpose = true;
+        RejoinCode = "";
+
+        // 판 도중 친구의 [나가기] — 호스트가 끊김(60초 유예)으로 보지 않고 바로 원작대로 정리하게 먼저 알린다.
+        if (!IsHost && sawMatchStarted && NetPlayer.Local != null)
+        {
+            NetPlayer.Local.RPC_LeavingOnPurpose();
+            yield return new WaitForSecondsRealtime(0.4f);
+        }
 
         // 호스트가 나가면 방이 없어진다 — 그냥 끊으면 친구들은 「연결 끊김」만 본다. 먼저 알리고 잠깐 기다린다.
         if (IsHost && NetGameState.Instance != null)
@@ -446,15 +506,37 @@ public class NetLauncher : MonoBehaviour
             return;
         }
 
+        if (NetGameState.Instance != null && NetGameState.Instance.Started) sawMatchStarted = true;
+
+        if (dropAt >= 0f && Time.realtimeSinceStartup >= dropAt && runner != null && runner.IsRunning)
+        {
+            dropAt = -1f;
+            Debug.Log("[MP] -mpDropAt: [나가기] 예고 없이 러너를 끊습니다(망 끊김 흉내).");
+            _ = runner.Shutdown();
+        }
+
         // 호스트가 나가거나 연결이 끊기면 러너가 스스로 멈춘다 — 싱글 상태로 되돌리고 NetBoot로.
         if (wasRunning && !leavingOnPurpose && (runner == null || !runner.IsRunning))
         {
-            string message = hostClosed ? "호스트가 방을 닫았습니다." : "호스트와 연결이 끊겼습니다.";
+            // 판 도중 친구 쪽 끊김이면 방 코드를 기억해 [다시 참가]를 띄운다(방장은 60초 동안 자리를 붙잡고 있다).
+            bool canRejoin = !startedAsHost && sawMatchStarted && !hostClosed && !string.IsNullOrEmpty(RoomCode);
+            if (canRejoin) RejoinCode = RoomCode;
+            string message = hostClosed ? "호스트가 방을 닫았습니다."
+                : canRejoin ? $"호스트와 연결이 끊겼습니다. {NetSession.GraceSeconds:F0}초 안에 [다시 참가]를 누르면 이어서 할 수 있습니다."
+                : "호스트와 연결이 끊겼습니다.";
             Debug.Log($"[MP] 러너가 멈췄습니다 — {message} 싱글 상태로 되돌리고 NetBoot로 돌아갑니다.");
             Cleanup();
             Status = message;
             ReturnToBoot();
+            if (canRejoin && rejoinAfter >= 0f) { rejoinAtTime = Time.realtimeSinceStartup + rejoinAfter; rejoinAfter = -1f; }   // 테스트 자동 재참가는 한 번만
             return;
+        }
+
+        if (rejoinAtTime >= 0f && Time.realtimeSinceStartup >= rejoinAtTime)
+        {
+            rejoinAtTime = -1f;
+            Debug.Log("[MP] -mpRejoinAfter: [다시 참가]");
+            Rejoin();
         }
 
         if (cliReady && NetPlayer.Local != null && !NetPlayer.Local.IsHost && !NetPlayer.Local.Ready)
@@ -594,6 +676,7 @@ public class NetLauncher : MonoBehaviour
         if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
         if (testFinishRunDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestFinishRunAfter(testFinishRunDelay));
         if (camWispDelay >= 0f) StartCoroutine(CamWispAfter(camWispDelay));
+        if (testMenuDelay >= 0f) StartCoroutine(TestMenuAfter(testMenuDelay, testMenuShot));
         if (testSelectDelay >= 0f) StartCoroutine(TestSelectAfter(testSelectDelay, testSelectDir));
         if (testPortraitsDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestPortraitsAfter(testPortraitsDelay, testPortraitsDir));
         if (testPhase3Delay >= 0f) StartCoroutine(TestPhase3After(testPhase3Delay));
@@ -1006,6 +1089,17 @@ public class NetLauncher : MonoBehaviour
         }
         InspectTarget.Clear();
         selection.ClearSelection();
+    }
+
+    // 게임 중 [메뉴] → 나가기 확인 창을 띄우고 찍는다(누르지는 않는다 — 나가기는 -mpLeave로 따로).
+    IEnumerator TestMenuAfter(float seconds, string path)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        if (TryGetComponent(out NetLobbyUi ui)) ui.OpenGameMenuForTest();
+        yield return new WaitForSecondsRealtime(0.5f);
+        yield return new WaitForEndOfFrame();
+        if (!string.IsNullOrEmpty(path)) ScreenCapture.CaptureScreenshot(path);
+        Debug.Log($"[MP] 메뉴 테스트: 확인 창 열고 캡처 → {path}");
     }
 
     IEnumerator DumpAfter(float seconds)

@@ -289,6 +289,8 @@ public class GameHud : MonoBehaviour
     readonly int[] lastSlotEnemyCount = new int[TeamSlotCount];
     readonly int[] lastSlotGold = new int[TeamSlotCount];
     readonly int[] lastSlotWood = new int[TeamSlotCount];
+    readonly int[] slotGrace = new int[TeamSlotCount];       // MP: 끊김 유예 남은 초(0 = 연결됨)
+    readonly int[] lastSlotGrace = new int[TeamSlotCount];
     readonly bool[] lastSlotHasContext = new bool[TeamSlotCount];
     readonly bool[] lastSlotDead = new bool[TeamSlotCount];
 
@@ -3010,7 +3012,9 @@ public class GameHud : MonoBehaviour
             slotEnemy[i] = context != null ? EnemyDummy.CountInLane(context.PlayerId) : 0;
             slotGold[i] = context != null && context.GoldWallet != null ? context.GoldWallet.Gold : 0;
             slotWood[i] = context != null && context.ResourceWallet != null ? context.ResourceWallet.Get(ResourceType.Wood) : 0;
+            slotGrace[i] = MatchConfig.Active ? NetPlayer.GraceSecondsFor(i) : 0;   // MP: 재접속 유예 「연결 끊김 57초」
 
+            if (slotGrace[i] != lastSlotGrace[i]) changed = true;
             if (slotHas[i] != lastSlotHasContext[i]
                 || slotDead[i] != lastSlotDead[i]
                 || slotEnemy[i] != lastSlotEnemyCount[i]
@@ -3038,6 +3042,7 @@ public class GameHud : MonoBehaviour
             lastSlotEnemyCount[i] = slotEnemy[i];
             lastSlotGold[i] = slotGold[i];
             lastSlotWood[i] = slotWood[i];
+            lastSlotGrace[i] = slotGrace[i];
 
             teamPanelBuilder.Append('\n');
 
@@ -3045,7 +3050,11 @@ public class GameHud : MonoBehaviour
             if (isLocal) teamPanelBuilder.Append("<b><color=#FFD54A>");
 
             teamPanelBuilder.Append("플레이어 ").Append(i + 1);
-            if (slotDead[i])
+            if (slotGrace[i] > 0 && !slotDead[i])
+            {
+                teamPanelBuilder.Append(" | <color=#FF8A65>연결 끊김 ").Append(slotGrace[i]).Append("초</color>");   // MP
+            }
+            else if (slotDead[i])
             {
                 teamPanelBuilder.Append(" | 사망");
             }

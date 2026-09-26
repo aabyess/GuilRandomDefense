@@ -111,6 +111,12 @@ public class NetGameState : NetworkBehaviour
         // 게임 씬의 DifficultyManager.Awake가 읽는다(호스트·클라 모두). 씬 로드 전에 이미 채워져 있어야 해서
         // 값이 바뀔 때만이 아니라 매 프레임 옮겨 둔다(싼 대입 하나).
         MatchConfig.Difficulty = SelectedDifficulty;
+
+        // 재접속: 게임 씬이 이 오브젝트보다 먼저 떠서 DifficultyManager.Awake가 난이도를 못 봤으면 지금 건다
+        // (안 걸면 클라가 「방장이 모드를 선택하고 있습니다」 창에 멈춘다).
+        if (!HasStateAuthority && Started && SelectedDifficulty.HasValue
+            && DifficultyManager.Instance != null && !DifficultyManager.Instance.IsModeSelected)
+            DifficultyManager.Instance.ApplyReplicatedMode(SelectedDifficulty.Value);
     }
 
     /// <summary>호스트가 방을 닫기 직전에 모두에게 알린다 — 그냥 끊기면 클라는 「연결 끊김」밖에 모른다.</summary>

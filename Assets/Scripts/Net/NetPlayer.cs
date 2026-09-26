@@ -50,7 +50,18 @@ public class NetPlayer : NetworkBehaviour
     [Networked, Capacity(16)] public NetworkArray<byte> GradeLevels => default;
     [Networked, Capacity(8)] public NetworkArray<byte> AttackTypeLevels => default;
 
+    /// <summary>끊김 유예 남은 초(0 = 연결돼 있음). 호스트 NetSession이 쓴다 — 팀판 「연결 끊김 N초」.</summary>
+    [Networked] public float GraceLeft { get; set; }
+
     public bool IsReadyForStart => IsHost || Ready;
+
+    /// <summary>그 슬롯이 끊김 유예 중이면 남은 초(올림), 아니면 0. GameHud 팀판이 읽는다.</summary>
+    public static int GraceSecondsFor(int slot)
+    {
+        foreach (NetPlayer player in all)
+            if (player != null && player.Slot == slot && player.GraceLeft > 0f) return Mathf.CeilToInt(player.GraceLeft);
+        return 0;
+    }
 
     public string DisplayName
     {
@@ -78,12 +89,27 @@ public class NetPlayer : NetworkBehaviour
         Runner.MakeDontDestroyOnLoad(gameObject);
         MatchConfig.AddSlot(Slot);
 
+        // 재접속(판 도중에 들어옴): 게임 씬이 먼저 떠서 PlayerContext.Awake가 이 좌석을 비어 있다고 봤다 — 지금 앉힌다.
+        // 판정은 둘 중 하나로: 게임 씬이 이미 있거나(PlayerContext가 있음) 판이 시작됐다고 복제돼 있거나 — 생성 순서가 어느 쪽이어도.
+        PlayerContext seat = PlayerContext.Get(Slot);
+        bool lateJoin = seat != null || (NetGameState.Instance != null && NetGameState.Instance.Started);
+        if (seat != null && !seat.IsOccupied) seat.SetOccupied(true);
+
         if (HasInputAuthority)
         {
             Local = this;
             LocalPlayer.LocalPlayerId = Slot;
-            RPC_SetNickname(NetLauncher.Instance != null ? NetLauncher.Instance.InitialNickname : LoadNickname());
-            if (!Runner.IsServer) NetSaves.SubmitOwn(this);   // 호스트 자신은 자기 파일을 그대로 읽는다
+            if (!lateJoin)
+            {
+                RPC_SetNickname(NetLauncher.Instance != null ? NetLauncher.Instance.InitialNickname : LoadNickname());
+                if (!Runner.IsServer) NetSaves.SubmitOwn(this);   // 호스트 자신은 자기 파일을 그대로 읽는다
+            }
+            else
+            {
+                // 이름·세이브 제출값은 호스트가 이미 들고 있다. 카메라는 씬이 뜰 때 슬롯 0 레인을 봤다 — 내 레인으로.
+                RtsCameraController cam = FindFirstObjectByType<RtsCameraController>();
+                if (cam != null) cam.FocusOnLocalLane();
+            }
         }
 
         Debug.Log($"[MP] NetPlayer 생성: 슬롯 {Slot} (접속자 {Object.InputAuthority}, 내 것 {HasInputAuthority}, 호스트 {IsHost}) · 현재 슬롯 {{{string.Join(",", MatchConfig.OccupiedSlots)}}}");
@@ -203,6 +229,13 @@ public class NetPlayer : NetworkBehaviour
     public void RPC_SetNickname(string nickname)
     {
         Nickname = SanitizeNickname(nickname);
+    }
+
+    /// <summary>[나가기] 직전에 클라가 보낸다 — 호스트는 이 사람의 퇴장을 끊김이 아닌 나감으로 보고 바로 정리한다.</summary>
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_LeavingOnPurpose()
+    {
+        if (Runner.TryGetComponent(out NetSession session)) session.MarkLeavingOnPurpose(Object.InputAuthority);
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
