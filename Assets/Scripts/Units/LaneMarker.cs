@@ -138,7 +138,49 @@ public class LaneMarker : MonoBehaviour
     /// <summary>로스터 밖 유닛에게 내줄 다음 남는 자리. 카운터를 하나 태운다 — 여기서만 태운다.</summary>
     Vector3 TakeFreeSlot()
     {
-        return SlotPosition(unitPen, unitRowWidth, CommonUnitRoster.Length + nextFreeSlot++);
+        return FreeSlotPosition(nextFreeSlot++);
+    }
+
+    // 2026-09-26 베타 피드백 「C 누르면 위치가 이상해진다」 — 정렬(C)이 누를 때마다 남는 자리 카운터를 태워서
+    // 같은 유닛이 **누를 때마다 다른 칸**으로 갔고, SlotPosition의 줄 번갈이(칸 안 ↔ 레인 아래 끝) 때문에
+    // 앞줄(적 경로 쪽)과 칸 안을 오갔다. 이제 ① 남는 자리는 **늘 칸 안 한 줄**(9칸을 돌아가며, 넘치면 겹쳐 선다 —
+    // 같은 이름 흔함도 겹쳐 서는 이 게임의 규칙 안) ② 한 번 받은 자리는 그 유닛이 계속 쓴다.
+    readonly Dictionary<UnitIdentity, int> assignedFreeSlots = new Dictionary<UnitIdentity, int>();
+
+    Vector3 FreeSlotPosition(int freeIndex)
+    {
+        // 칸 안 줄(row 1)만 쓴다 — 로스터 9칸 바로 뒤. 앞줄(row 0)은 흔함 고정 칸이라 비운다.
+        return SlotPosition(unitPen, unitRowWidth, CompartmentCount + (freeIndex % CompartmentCount));
+    }
+
+    /// <summary>정렬(C)이 보낼 자리. 흔함(로스터 이름)은 자기 고정 칸, 그 외는 이 유닛이 처음 받은 남는 자리를 계속 쓴다.</summary>
+    public Vector3 PenPositionFor(UnitIdentity unit)
+    {
+        if (unitPen == null) return transform.position;
+
+        UnitData data = unit != null ? unit.Data : null;
+        if (data != null && data.grade == UnitGrade.Common && !data.isSystemUnit)
+        {
+            int rosterSlot = FindRosterSlot(data.unitName);
+            if (rosterSlot >= 0) return RosterSlotPosition(rosterSlot);
+        }
+
+        if (unit == null) return TakeFreeSlot();
+
+        // 파괴된 유닛 열쇠는 가끔 치운다(Unity null이라 == null이 참).
+        if (assignedFreeSlots.Count > 64)
+        {
+            List<UnitIdentity> dead = new List<UnitIdentity>();
+            foreach (UnitIdentity key in assignedFreeSlots.Keys) if (key == null) dead.Add(key);
+            foreach (UnitIdentity key in dead) assignedFreeSlots.Remove(key);
+        }
+
+        if (!assignedFreeSlots.TryGetValue(unit, out int index))
+        {
+            index = nextFreeSlot++;
+            assignedFreeSlots[unit] = index;
+        }
+        return FreeSlotPosition(index);
     }
 
     /// <summary>

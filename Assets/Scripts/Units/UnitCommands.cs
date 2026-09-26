@@ -101,12 +101,14 @@ public static class UnitCommands
             LaneMarker lane = LaneMarker.Get(owner);
             if (lane == null) continue;
 
-            UnitData unitData = selected.TryGetComponent(out UnitIdentity identity) ? identity.Data : null;
+            selected.TryGetComponent(out UnitIdentity identity);
 
             attempted++;
             // SnapTo가 NavMesh에 못 올리면 조용히 false만 돌려준다 — Gather와 같은 이유로
             // 실제 성공 개수만 센다(PM 지시, 2026-09-05, 버그 #8).
-            if (combat.SnapTo(lane.TakeSpawnPosition(unitData))) moved++;
+            // 2026-09-26: TakeSpawnPosition은 누를 때마다 남는 자리 카운터를 태워 같은 유닛이 매번 다른 칸으로 갔다 →
+            // PenPositionFor(흔함은 고정 칸, 그 외는 처음 받은 자리를 계속)로.
+            if (combat.SnapTo(lane.PenPositionFor(identity))) moved++;
             else lastFailedOwner = owner;
         }
 
