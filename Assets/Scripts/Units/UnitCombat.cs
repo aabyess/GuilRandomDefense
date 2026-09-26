@@ -10,7 +10,10 @@ public class UnitCombat : MonoBehaviour
 {
     // Holding은 플레이어가 H로 걸어두는 상태다. 적이 눈앞에 와도 자리를 뜨지 않는다 —
     // 문 앞이나 길목을 지켜야 할 때 유닛이 적을 쫓아 흩어지는 걸 막는 용도다.
-    enum CombatState { Idle, Chasing, Returning, PlayerMoving, Holding }
+    // ✅ 2026-09-26 베타 피드백 「H가 홀드가 아니라 정지」: 예전 홀드는 **공격도 안 했다.** 이제 워크3 홀드처럼
+    //    자리는 안 뜨되 **사거리 안의 적은 친다.** 정지(S)는 따로 있다(Stop).
+    // AttackMoving은 A+땅 클릭(공격 이동) — 목적지로 가면서 만나는 적을 치고, 다 치면 다시 목적지로 간다.
+    enum CombatState { Idle, Chasing, Returning, PlayerMoving, Holding, AttackMoving }
 
     // ⚠️ 지금은 사실상 안 쓰인다(2026-09-05 확인). SearchRange()가 max(aggroRange, attackRange)를
     // 쓰는데, 전투 유닛 최소 사거리가 30(로스터 239종 실측, 0인 건 초월위습 재료 1종뿐 — 안 싸움)
@@ -33,6 +36,12 @@ public class UnitCombat : MonoBehaviour
     Vector3 lastSetDestination;
     bool hasDestination;
     float nextScanTime;
+
+    // A+적 클릭으로 찍은 표적. 이 적은 탐색 범위를 벗어나도 끝까지 쫓는다(죽거나 다른 명령이 올 때까지).
+    EnemyDummy forcedTarget;
+    // A+땅 클릭(공격 이동) 중인가, 그 목적지.
+    bool attackMoving;
+    Vector3 attackMoveDestination;
 
     // 사거리 안에 있을 때만 넘겨준다 — UnitAttacker가 "때릴 수 있는 대상"만 받도록.
     public EnemyDummy CurrentTarget
@@ -59,11 +68,12 @@ public class UnitCombat : MonoBehaviour
 
     public bool IsHolding => state == CombatState.Holding;
 
-    /// <summary>H 키. 켜면 그 자리에 못박히고, 끄면 원래대로 적을 쫓는다.</summary>
+    /// <summary>H 키. 켜면 그 자리에 못박히고(사거리 안의 적은 친다), 끄면 원래대로 적을 쫓는다.</summary>
     public void SetHold(bool hold)
     {
         if (hold)
         {
+            ClearOrders();
             currentTarget = null;
             commandedPosition = transform.position;
             state = CombatState.Holding;
@@ -99,6 +109,7 @@ public class UnitCombat : MonoBehaviour
         }
 
         // 옮겨놓기만 하면 복귀 지점이 예전 자리로 남아, 적을 쫓고 나서 다시 흩어진다.
+        ClearOrders();
         commandedPosition = agent.transform.position;
         currentTarget = null;
         state = CombatState.Idle;
@@ -106,9 +117,63 @@ public class UnitCombat : MonoBehaviour
         return true;
     }
 
+    /// <summary>S 키(정지). 하던 이동·추적을 끊고 그 자리에 선다. 홀드와 달리 적이 오면 다시 쫓는다.</summary>
+    public void Stop()
+    {
+        ClearOrders();
+        currentTarget = null;
+        commandedPosition = transform.position;
+        state = CombatState.Idle;
+
+        if (agent.isActiveAndEnabled && agent.isOnNavMesh)
+        {
+            agent.ResetPath();
+            agent.velocity = Vector3.zero;
+        }
+        hasDestination = false;
+        nextScanTime = Time.time + scanInterval;   // 선 그 프레임에 바로 다시 뛰어나가지 않게 한 박자 쉰다
+    }
+
+    /// <summary>A + 적 클릭(또는 적에게 우클릭). 이 적을 끝까지 쫓아 친다.</summary>
+    public void AttackTarget(EnemyDummy enemy)
+    {
+        if (enemy == null) return;
+
+        ClearOrders();
+        forcedTarget = enemy;
+        currentTarget = enemy;
+        state = CombatState.Chasing;
+
+        float sqrDistance = (enemy.transform.position - transform.position).sqrMagnitude;
+        hasDestination = false;
+        SetDestination(sqrDistance <= AttackRangeSqr() ? transform.position : enemy.transform.position);
+        nextScanTime = Time.time + scanInterval;
+    }
+
+    /// <summary>A + 땅 클릭(공격 이동). 목적지로 가면서 만나는 적을 치고, 끝나면 다시 목적지로 간다.</summary>
+    public void AttackMove(Vector3 destination)
+    {
+        ClearOrders();
+        currentTarget = null;
+        attackMoving = true;
+        attackMoveDestination = destination;
+        commandedPosition = destination;
+        state = CombatState.AttackMoving;
+        hasDestination = false;
+        SetDestination(destination);
+        nextScanTime = 0f;
+    }
+
+    void ClearOrders()
+    {
+        forcedTarget = null;
+        attackMoving = false;
+    }
+
     // UnitMover가 우클릭 이동 명령을 받으면 이걸 부른다. 도착할 때까지 자동 추적을 멈춘다.
     public void IssueMoveCommand(Vector3 destination)
     {
+        ClearOrders();
         commandedPosition = destination;
         currentTarget = null;
         state = CombatState.PlayerMoving;
@@ -120,7 +185,17 @@ public class UnitCombat : MonoBehaviour
         switch (state)
         {
             case CombatState.Holding:
-                break;   // 아무것도 안 한다 — 그게 홀딩이다
+                UpdateHolding();   // 자리는 안 뜨고, 사거리 안의 적만 친다
+                break;
+
+            case CombatState.AttackMoving:
+                TryScan();         // 적을 찾으면 Chasing으로 바뀐다(공격 이동은 표시로 남는다)
+                if (state == CombatState.AttackMoving && HasArrived())
+                {
+                    attackMoving = false;
+                    state = CombatState.Idle;
+                }
+                break;
 
             case CombatState.PlayerMoving:
                 if (HasArrived()) state = CombatState.Idle;
@@ -143,19 +218,37 @@ public class UnitCombat : MonoBehaviour
         }
     }
 
-    void TryScan()
+    // 표적을 새로 잡았으면 true.
+    bool TryScan()
     {
-        if (Time.time < nextScanTime) return;
+        if (Time.time < nextScanTime) return false;
         nextScanTime = Time.time + scanInterval;
 
         EnemyDummy target = FindClosestEnemyInAggro();
-        if (target == null) return;
+        if (target == null) return false;
 
         currentTarget = target;
         state = CombatState.Chasing;
 
         float sqrDistance = (target.transform.position - transform.position).sqrMagnitude;
         SetDestination(sqrDistance <= AttackRangeSqr() ? transform.position : target.transform.position);
+        return true;
+    }
+
+    // 홀드: 움직이지 않는다. 지금 표적이 사거리 밖으로 나가면 놓고, 주기마다 사거리 안에서 가장 가까운 적을 잡는다.
+    void UpdateHolding()
+    {
+        if (currentTarget != null)
+        {
+            float sqrToTarget = (currentTarget.transform.position - transform.position).sqrMagnitude;
+            if (sqrToTarget <= AttackRangeSqr()) return;
+            currentTarget = null;
+            nextScanTime = 0f;
+        }
+
+        if (Time.time < nextScanTime) return;
+        nextScanTime = Time.time + scanInterval;
+        currentTarget = FindClosestEnemyWithin(attacker != null ? attacker.AttackRange : 0f);
     }
 
     void UpdateChasing()
@@ -176,7 +269,9 @@ public class UnitCombat : MonoBehaviour
         if (!lostTarget)
         {
             float sqrToTarget = (currentTarget.transform.position - transform.position).sqrMagnitude;
-            if (sqrToTarget > SearchRange() * SearchRange())
+            // A로 찍은 표적은 탐색 범위를 벗어나도 놓지 않는다 — 그걸 치라고 찍은 것이다.
+            bool forced = forcedTarget != null && currentTarget == forcedTarget;
+            if (!forced && sqrToTarget > SearchRange() * SearchRange())
             {
                 currentTarget = null;
                 lostTarget = true;
@@ -195,9 +290,21 @@ public class UnitCombat : MonoBehaviour
 
         // 잃은 **그 프레임에** 다시 찾는다. 찾으면 복귀조차 안 한다 —
         // 복귀를 먼저 시키면 제자리로 한 걸음 갔다가 다시 나오는 왕복이 생긴다.
+        // ⚠️ 2026-09-26: 예전엔 `TryScan(); if (state == Chasing) return;`이었는데, 이 함수 안에서는 state가
+        //    **이미 Chasing**이라 못 찾아도 늘 return했다 — 유닛이 복귀하지 않고 매 프레임 전체 탐색만 돌았다.
+        //    이제 TryScan이 「새로 잡았나」를 돌려준다.
+        forcedTarget = null;
         nextScanTime = 0f;
-        TryScan();
-        if (state == CombatState.Chasing) return;
+        if (TryScan()) return;
+
+        if (attackMoving)
+        {
+            // 공격 이동 중이었으면 다시 목적지로 간다.
+            state = CombatState.AttackMoving;
+            hasDestination = false;
+            SetDestination(attackMoveDestination);
+            return;
+        }
 
         BeginReturning();
     }
@@ -262,10 +369,11 @@ public class UnitCombat : MonoBehaviour
     /// 조합 결과가 나오는 자리가 거기다. 미니보스가 있는 동안 그 유닛들은 레인 적을 안 본다.
     /// 미니보스는 체력 12,000이고 **죽는다** — 영영 물고 있지는 않다.
     /// </summary>
-    EnemyDummy FindClosestEnemyInAggro()
+    EnemyDummy FindClosestEnemyInAggro() => FindClosestEnemyWithin(SearchRange());
+
+    EnemyDummy FindClosestEnemyWithin(float search)
     {
         EnemyDummy closest = null;
-        float search = SearchRange();
         float closestSqrDistance = search * search;
 
         foreach (EnemyDummy enemy in EnemyDummy.Active)

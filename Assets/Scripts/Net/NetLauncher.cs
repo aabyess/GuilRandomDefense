@@ -31,6 +31,7 @@ using UnityEngine.SceneManagement;
 ///   -mpDump 초               게임 씬 진입 뒤 그 초에 거울 목록(종류·카탈로그·소유자·좌표·회전)을 로그로 — 여러 번 줄 수 있다
 ///   -mpTestWisps 초          게임 씬 진입 뒤 그 초에 내 위습 전부를 가장 가까운 유닛 포탈로 보낸다(클라=이동 요청 RPC)
 ///   -mpTestMoveUnits 초      게임 씬 진입 뒤 그 초에 내 유닛 전부를 레인 가운데로 보낸다(클라=이동 요청 RPC)
+///   -mpTestCommands 초       그 초부터 2초 간격으로 UnitCommands 공격이동→정지→홀드→적공격→모으기→우리로(클라=명령 요청 RPC)
 /// </summary>
 public class NetLauncher : MonoBehaviour
 {
@@ -68,6 +69,7 @@ public class NetLauncher : MonoBehaviour
     readonly System.Collections.Generic.List<float> dumpDelays = new System.Collections.Generic.List<float>();
     float testWispsDelay = -1f;
     float testMoveUnitsDelay = -1f;
+    float testCommandsDelay = -1f;
 
     public static NetLauncher Instance { get; private set; }
 
@@ -152,6 +154,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpDump": dumpDelays.Add(Seconds(i + 1)); break;
                 case "-mpTestWisps": testWispsDelay = Seconds(i + 1); break;
                 case "-mpTestMoveUnits": testMoveUnitsDelay = Seconds(i + 1); break;
+                case "-mpTestCommands": testCommandsDelay = Seconds(i + 1); break;
             }
         }
 
@@ -466,6 +469,7 @@ public class NetLauncher : MonoBehaviour
         foreach (float delay in dumpDelays) if (delay >= 0f) StartCoroutine(DumpAfter(delay));
         if (testWispsDelay >= 0f) StartCoroutine(TestMoveAfter(testWispsDelay, NetEntityKind.Wisp));
         if (testMoveUnitsDelay >= 0f) StartCoroutine(TestMoveAfter(testMoveUnitsDelay, NetEntityKind.Unit));
+        if (testCommandsDelay >= 0f) StartCoroutine(TestCommandsAfter(testCommandsDelay));
     }
 
     // 테스트 전용(-mpTestUnits): 흔함 유닛을 슬롯마다 N기, 실제 소환 경로(UnitSpawner.Spawn → 우리 칸)로 세운다.
@@ -531,6 +535,44 @@ public class NetLauncher : MonoBehaviour
             }
         }
         Debug.Log($"[MP] 테스트 이동({kind}): {sent}개 보냄 ({(GameAuthority.IsServer ? "직접" : "요청 RPC")})");
+    }
+
+    // 테스트 전용: 사람이 단축키를 누르는 대신 UnitCommands를 직접 부른다 — 클라에선 그 안의 // MP: 분기가 요청 RPC를 보낸다.
+    IEnumerator TestCommandsAfter(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+
+        var mine = new System.Collections.Generic.List<Selectable>();
+        foreach (NetEntity e in FindObjectsByType<NetEntity>(FindObjectsSortMode.None))
+        {
+            if (e.EntityKind != NetEntityKind.Unit || e.Owner != LocalPlayer.LocalPlayerId) continue;
+            GameObject body = GameAuthority.IsServer ? e.Real : e.Visual;
+            if (body != null && body.TryGetComponent(out Selectable s)) mine.Add(s);
+        }
+
+        LaneMarker lane = LaneMarker.Get(LocalPlayer.LocalPlayerId);
+        Vector3 center = lane != null ? lane.LaneCenter : Vector3.zero;
+        Debug.Log($"[MP] 테스트 명령: 내 유닛 {mine.Count}기");
+
+        Debug.Log($"[MP] 테스트 명령 공격이동 → {UnitCommands.AttackMove(mine, center)}");
+        yield return new WaitForSecondsRealtime(2f);
+        Debug.Log($"[MP] 테스트 명령 정지 → {UnitCommands.Stop(mine)}");
+        yield return new WaitForSecondsRealtime(2f);
+        Debug.Log($"[MP] 테스트 명령 홀드 → {UnitCommands.Hold(mine)}");
+        yield return new WaitForSecondsRealtime(2f);
+        EnemyDummy nearest = null;
+        float best = float.MaxValue;
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+        {
+            if (enemy == null || enemy.LaneIndex != LocalPlayer.LocalPlayerId) continue;
+            float d = (enemy.transform.position - center).sqrMagnitude;
+            if (d < best) { best = d; nearest = enemy; }
+        }
+        Debug.Log($"[MP] 테스트 명령 적공격({(nearest != null ? nearest.name : "없음")}) → {UnitCommands.AttackTarget(mine, nearest)}");
+        yield return new WaitForSecondsRealtime(3f);
+        Debug.Log($"[MP] 테스트 명령 모으기 → {UnitCommands.Gather(mine)}");
+        yield return new WaitForSecondsRealtime(2f);
+        Debug.Log($"[MP] 테스트 명령 우리로 → {UnitCommands.SendToPen(mine)}");
     }
 
     IEnumerator DumpAfter(float seconds)

@@ -12,6 +12,39 @@ using UnityEngine;
 /// </summary>
 public static class WorldPick
 {
+    /// <summary>
+    /// 커서 아래의 적. 먼저 광선으로 적 콜라이더를 찾고, 없으면 화면에서 <paramref name="tolerancePixels"/> 안에
+    /// 가장 가까운 적(몸 가운데 기준)을 준다 — 레인 적은 화면에서 작아서 정확히 찍기 어렵다(2026-09-26 A 공격).
+    /// 우클릭 공격처럼 이동과 헷갈리면 안 되는 곳은 0을 줘서 콜라이더에 맞을 때만 고른다.
+    /// </summary>
+    public static EnemyDummy TryPickEnemy(Camera cam, Vector2 screenPosition, float tolerancePixels)
+    {
+        if (cam == null) return null;
+
+        if (TryHit(cam, screenPosition, out RaycastHit hit))
+        {
+            EnemyDummy direct = hit.collider.GetComponentInParent<EnemyDummy>();
+            if (direct != null) return direct;
+        }
+
+        if (tolerancePixels <= 0f) return null;
+
+        EnemyDummy best = null;
+        float bestSqr = tolerancePixels * tolerancePixels;
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+        {
+            if (enemy == null) continue;
+            Vector3 center = enemy.TryGetComponent(out Collider col) ? col.bounds.center : enemy.transform.position;
+            Vector3 sp = cam.WorldToScreenPoint(center);
+            if (sp.z <= 0f) continue;
+            float sqr = ((Vector2)sp - screenPosition).sqrMagnitude;
+            if (sqr >= bestSqr) continue;
+            bestSqr = sqr;
+            best = enemy;
+        }
+        return best;
+    }
+
     public static bool TryHit(Camera cam, Vector2 screenPosition, out RaycastHit hit)
     {
         hit = default;

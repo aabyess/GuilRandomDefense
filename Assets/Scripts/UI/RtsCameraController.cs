@@ -371,11 +371,13 @@ public class RtsCameraController : MonoBehaviour
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null) return Vector2.zero;
 
+        // 2026-09-26 베타 피드백: WASD는 뺀다 — A(공격)·S(정지)·H(홀드) 같은 유닛 명령과 겹치고,
+        // 방향키로 이미 움직인다. 원작(워크3)도 방향키·가장자리 밀기만 쓴다.
         Vector2 input = Vector2.zero;
-        if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed) input.x -= 1f;
-        if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed) input.x += 1f;
-        if (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed) input.y -= 1f;
-        if (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed) input.y += 1f;
+        if (keyboard.leftArrowKey.isPressed) input.x -= 1f;
+        if (keyboard.rightArrowKey.isPressed) input.x += 1f;
+        if (keyboard.downArrowKey.isPressed) input.y -= 1f;
+        if (keyboard.upArrowKey.isPressed) input.y += 1f;
         return input;
     }
 

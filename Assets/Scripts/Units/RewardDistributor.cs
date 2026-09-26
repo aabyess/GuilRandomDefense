@@ -337,6 +337,10 @@ public class RewardDistributor : MonoBehaviour
 
     public void GrantWisps(PlayerContext context, List<WispReward> wispRewards)
     {
+        // MP: 위습(실물)은 호스트만 만든다 — 클라에서 불리면 호스트가 모르는 위습이 생긴다(09-26 클라 G키 사고).
+        //     지금 호출부는 전부 가드돼 있지만 여기가 지급 관문이라 한 번 더 막는다. 싱글·호스트는 지나친다.
+        if (!GameAuthority.IsServer) return;
+
         if (context == null || wispRewards == null) return;
 
         foreach (WispReward reward in wispRewards)

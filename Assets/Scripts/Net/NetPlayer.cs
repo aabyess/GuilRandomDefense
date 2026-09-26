@@ -138,6 +138,12 @@ public class NetPlayer : NetworkBehaviour
 
     static int notificationsLogged;
 
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_UnitCommand(NetworkId unit, byte command, NetworkId enemy, Vector3 point)
+    {
+        NetCommands.ExecuteUnitCommand(this, unit, (NetUnitCommand)command, enemy, point);
+    }
+
     public static string LoadNickname()
     {
         try { return PlayerPrefs.GetString(NicknamePrefsKey, ""); }

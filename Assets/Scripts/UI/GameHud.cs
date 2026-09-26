@@ -1939,8 +1939,7 @@ public class GameHud : MonoBehaviour
             {
                 unitCommandSlotNames[i].text = UnitOnlyCommandLabels[i];
                 unitCommandSlotHotkeys[i].text = UnitOnlyCommandHotkeys[i];
-                // 정지·모으기는 동작이 붙었다. 공격은 아직 없어서 눌리지 않게 둔다.
-                unitCommandSlotButtons[i].interactable = i == HoldCommandSlot || i == GatherCommandSlot;
+                unitCommandSlotButtons[i].interactable = true;
             }
             else if (i == AlignCommandSlot)
             {
@@ -1964,8 +1963,7 @@ public class GameHud : MonoBehaviour
             unitCommandSlotNames[i].text = visible ? UnitOnlyCommandLabels[i] : "";
             unitCommandSlotHotkeys[i].text = visible ? UnitOnlyCommandHotkeys[i] : "";
             unitCommandSlotBackgrounds[i].color = visible ? UnitCommandDefaultColor : Color.clear;
-            unitCommandSlotButtons[i].interactable =
-                visible && (i == HoldCommandSlot || i == GatherCommandSlot);
+            unitCommandSlotButtons[i].interactable = visible;
         }
 
         unitCommandSlotNames[AlignCommandSlot].text = visible ? AlignCommandLabel : "";
@@ -2026,18 +2024,18 @@ public class GameHud : MonoBehaviour
         unitCommandSlotButtons[index] = button;
     }
 
-    // 0 공격은 아직 없다. 1 정지 = 홀드(H), 2 모으기 = 같은 이름 불러모으기(V).
+    // 2026-09-26 베타 피드백으로 워크3 배치: 0 공격(A — 다음 클릭이 대상) · 1 정지(S) · 2 홀드(H — 자리 지키며
+    // 사거리 안 적은 친다) · 3 모으기(V) · 4 정렬(C). 조합·상점은 7~15(UnitCommandResultSlotOrder)라 4~6은 비어 있었다.
     // 이름과 단축키를 나눠 둔다 — 단축키는 버튼 오른쪽 아래 구석에 작게 따로 그린다
     // (한 줄에 "정지 (H)"로 붙여 쓰면 38짜리 정사각 버튼에서 두 줄로 접혀 뭉개진다).
-    static readonly string[] UnitOnlyCommandLabels = { "공격", "정지", "모으기" };
-    static readonly string[] UnitOnlyCommandHotkeys = { "", "H", "V" };
+    static readonly string[] UnitOnlyCommandLabels = { "공격", "정지", "홀드", "모으기" };
+    static readonly string[] UnitOnlyCommandHotkeys = { "A", "S", "H", "V" };
 
-    const int HoldCommandSlot = 1;
-    const int GatherCommandSlot = 2;
-
-    // 조합·상점 9칸(3~11) 뒤에 새로 붙은 13번째 칸(인덱스 12) — 정렬(C).
-    // 4열 격자의 첫 줄 네 번째 자리다. 조합·상점은 4~15를 쓰므로 안 겹친다.
-    const int AlignCommandSlot = 3;
+    const int AttackCommandSlot = 0;
+    const int StopCommandSlot = 1;
+    const int HoldCommandSlot = 2;
+    const int GatherCommandSlot = 3;
+    const int AlignCommandSlot = 4;
     const string AlignCommandLabel = "정렬";
     const string AlignCommandHotkey = "C";
 
@@ -2052,18 +2050,23 @@ public class GameHud : MonoBehaviour
 
     void OnUnitCommandSlotClicked(int index)
     {
-        if (BlockedOnMultiplayerClient()) return; // MP
         // 단축키와 같은 함수를 부른다 — 두 곳에 따로 구현하면 한쪽만 고쳐진다.
-        if (index == HoldCommandSlot || index == GatherCommandSlot || index == AlignCommandSlot)
+        if (index >= AttackCommandSlot && index <= AlignCommandSlot && currentShop as Object == null)
         {
             SelectionManager selection = Selection;
             if (selection == null || selection.Selected.Count == 0) return;
 
-            if (index == HoldCommandSlot) UnitCommands.ToggleHold(selection.Selected);
+            if (index == AttackCommandSlot) selection.BeginAttackTargeting();
+            else if (index == StopCommandSlot) UnitCommands.Stop(selection.Selected);
+            else if (index == HoldCommandSlot) UnitCommands.Hold(selection.Selected);
             else if (index == GatherCommandSlot) UnitCommands.Gather(selection.Selected);
             else UnitCommands.SendToPen(selection.Selected);
             return;
         }
+
+        // MP: 위 유닛 명령(공격·정지·홀드·모으기·정렬)은 UnitCommands가 클라면 요청 RPC로 보낸다.
+        //     상점·조합은 아직 RPC가 없어 클라에선 막는다.
+        if (BlockedOnMultiplayerClient()) return;
 
         if (currentShop as Object != null)
         {
@@ -2354,7 +2357,8 @@ public class GameHud : MonoBehaviour
         // 0~2·12번(공격/정지/모으기/정렬)은 상점 칸이 아니다 — 기본값 0이 "논리 슬롯 0"으로
         // 읽히지 않게 여기서도 -1로 씻어둔다. 안 씻으면 그 칸에 마우스를 올렸을 때
         // 상점의 0번 슬롯 툴팁이 엉뚱하게 뜬다.
-        shopLogicalSlotIndex[0] = -1;
+        shopLogicalSlotIndex[AttackCommandSlot] = -1;
+        shopLogicalSlotIndex[StopCommandSlot] = -1;
         shopLogicalSlotIndex[HoldCommandSlot] = -1;
         shopLogicalSlotIndex[GatherCommandSlot] = -1;
         shopLogicalSlotIndex[AlignCommandSlot] = -1;

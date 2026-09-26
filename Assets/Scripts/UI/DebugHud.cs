@@ -94,6 +94,8 @@ public class DebugHud : MonoBehaviour
     void Update()
     {
         if (Keyboard.current == null) return;
+        // 2026-09-25 베타 빌드: 디버그 창(F1)과 첫 조합 치트(F2)는 에디터·개발 빌드에서만.
+        if (!Application.isEditor && !Debug.isDebugBuild) { visible = false; return; }
 
         // 정식 HUD가 골드·라운드·적 수를 이미 보여준다. 화면을 덮는 게 거슬릴 때 F1로 접는다.
         if (Keyboard.current.f1Key.wasPressedThisFrame)

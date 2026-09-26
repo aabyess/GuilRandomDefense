@@ -17,9 +17,9 @@ public static class UnitCommands
     /// </summary>
     public static int Gather(IReadOnlyList<Selectable> selection)
     {
-        // MP: 멀티 클라는 겉모습만 가져서 여기서 옮기면 로컬 화면만 어긋난다(모으기는 거울 자식의 위치를 영구히 틀어 놓는다).
-        //     요청 RPC가 붙을 때까지 클라에선 아무 일도 안 한다. 싱글·호스트는 지나친다.
-        if (!GameAuthority.IsServer) return 0;
+        // MP: 멀티 클라는 겉모습만 가졌다 — 호스트에 요청만 보낸다(모으기는 기준 유닛 하나만 보낸다, 뜻이 「그 유닛 자리로」라서).
+        //     싱글·호스트는 지나친다.
+        if (!GameAuthority.IsServer) return NetCommands.RequestUnitCommand(NetUnitCommand.Gather, selection);
         UnitIdentity anchor = FirstIdentity(selection);
         if (anchor == null || anchor.Data == null) return 0;
 
@@ -83,9 +83,8 @@ public static class UnitCommands
     /// </summary>
     public static int SendToPen(IReadOnlyList<Selectable> selection)
     {
-        // MP: 멀티 클라는 겉모습만 가져서 여기서 옮기면 로컬 화면만 어긋난다(모으기는 거울 자식의 위치를 영구히 틀어 놓는다).
-        //     요청 RPC가 붙을 때까지 클라에선 아무 일도 안 한다. 싱글·호스트는 지나친다.
-        if (!GameAuthority.IsServer) return 0;
+        // MP: 멀티 클라는 호스트에 요청만 보낸다. 싱글·호스트는 지나친다.
+        if (!GameAuthority.IsServer) return NetCommands.RequestUnitCommand(NetUnitCommand.SendToPen, selection);
         int moved = 0;
         int attempted = 0;
         int lastFailedOwner = -1;
@@ -120,9 +119,9 @@ public static class UnitCommands
     /// <summary>H 키. 선택한 유닛들을 그 자리에 못박거나, 이미 박혀 있으면 푼다.</summary>
     public static int ToggleHold(IReadOnlyList<Selectable> selection)
     {
-        // MP: 멀티 클라는 겉모습만 가져서 여기서 옮기면 로컬 화면만 어긋난다(모으기는 거울 자식의 위치를 영구히 틀어 놓는다).
-        //     요청 RPC가 붙을 때까지 클라에선 아무 일도 안 한다. 싱글·호스트는 지나친다.
-        if (!GameAuthority.IsServer) return 0;
+        // MP: 「섞여 있으면 전부 박기」는 선택 전체를 봐야 하는 판정이라 유닛별 요청으로 못 옮긴다 — 클라에선 Hold로 보낸다
+        //     (09-26부터 단축키·명령칸은 Hold를 쓴다). 싱글·호스트는 지나친다.
+        if (!GameAuthority.IsServer) return NetCommands.RequestUnitCommand(NetUnitCommand.Hold, selection);
         List<UnitCombat> units = new List<UnitCombat>();
         foreach (Selectable selected in selection)
             if (selected != null && selected.TryGetComponent(out UnitCombat combat))
@@ -138,6 +137,60 @@ public static class UnitCommands
 
         foreach (UnitCombat combat in units) combat.SetHold(hold);
         return units.Count;
+    }
+
+    // ── 2026-09-26 베타 피드백: 워크3 명령 — A 공격 · S 정지 · H 홀드 ──
+
+    static List<UnitCombat> Fighters(IReadOnlyList<Selectable> selection)
+    {
+        List<UnitCombat> units = new List<UnitCombat>();
+        foreach (Selectable selected in selection)
+            if (selected != null && selected.TryGetComponent(out UnitCombat combat))
+                units.Add(combat);
+        return units;
+    }
+
+    /// <summary>S 키. 하던 일을 끊고 그 자리에 선다(적이 오면 다시 친다).</summary>
+    public static int Stop(IReadOnlyList<Selectable> selection)
+    {
+        if (!GameAuthority.IsServer) return NetCommands.RequestUnitCommand(NetUnitCommand.Stop, selection); // MP: 클라=요청
+        List<UnitCombat> units = Fighters(selection);
+        foreach (UnitCombat combat in units) combat.Stop();
+        return units.Count;
+    }
+
+    /// <summary>H 키. 그 자리에 못박는다(사거리 안의 적은 친다). 워크3처럼 누를 때마다 켠다 — 풀려면 이동·정지.</summary>
+    public static int Hold(IReadOnlyList<Selectable> selection)
+    {
+        if (!GameAuthority.IsServer) return NetCommands.RequestUnitCommand(NetUnitCommand.Hold, selection); // MP: 클라=요청
+        List<UnitCombat> units = Fighters(selection);
+        foreach (UnitCombat combat in units) combat.SetHold(true);
+        return units.Count;
+    }
+
+    /// <summary>A + 적 클릭. 모두 그 적을 친다.</summary>
+    public static int AttackTarget(IReadOnlyList<Selectable> selection, EnemyDummy enemy)
+    {
+        if (enemy == null) return 0;
+        if (!GameAuthority.IsServer) return NetCommands.RequestUnitCommand(NetUnitCommand.AttackTarget, selection, enemy); // MP: 클라=요청(적은 거울 번호로)
+        List<UnitCombat> units = Fighters(selection);
+        foreach (UnitCombat combat in units) combat.AttackTarget(enemy);
+        return units.Count;
+    }
+
+    /// <summary>A + 땅 클릭(공격 이동). 각자 그 근처 걸을 수 있는 자리로 가면서 만나는 적을 친다.</summary>
+    public static int AttackMove(IReadOnlyList<Selectable> selection, Vector3 point)
+    {
+        if (!GameAuthority.IsServer) return NetCommands.RequestUnitCommand(NetUnitCommand.AttackMove, selection, null, point); // MP: 클라=요청
+        int count = 0;
+        foreach (UnitCombat combat in Fighters(selection))
+        {
+            if (!combat.TryGetComponent(out UnityEngine.AI.NavMeshAgent agent)) continue;
+            if (!UnityEngine.AI.NavMesh.SamplePosition(point, out UnityEngine.AI.NavMeshHit hit, 8f * WorldScale.Value, agent.areaMask)) continue;
+            combat.AttackMove(hit.position);
+            count++;
+        }
+        return count;
     }
 
     static UnitIdentity FirstIdentity(IReadOnlyList<Selectable> selection)
