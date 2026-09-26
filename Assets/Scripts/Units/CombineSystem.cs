@@ -285,6 +285,7 @@ public class CombineSystem : MonoBehaviour
         unitsToRemove = null;
         itemsToRemove = null;
 
+        if (IsBroken(recipe)) return false;
         if (!RoundConditionMet(recipe)) return false;
 
         UnitInventory targetInventory = Inventory;
@@ -322,6 +323,57 @@ public class CombineSystem : MonoBehaviour
 
         return true;
     }
+
+    // ── 깨진 조합식 막기(2026-09-26, PM 지시) ──
+    //    09-02 aac69e98에서 네 식(초월 강재규·김건·최상호 AP, 제한 최영민)의 YAML 줄바꿈이 빠져 재료가 「unit null 하나」로 읽혔다.
+    //    TryPlanUnits는 null 재료를 건너뛰어서 CanAfford가 늘 참 → **재료 없이 무한 조합**이 됐다(구현담당1 combineall 판: 초월 360기).
+    //    데이터가 또 깨져도 공짜 조합이 되지 않게, 재료가 비었거나 참조가 빈 식은 **아예 못 쓰게** 한다(한 번 LogError).
+    //    판 시작 때(Start) 전체를 한 번 훑어 깨진 식 이름을 경고로 남긴다.
+    HashSet<CombineRecipe> brokenRecipes;
+    readonly HashSet<CombineRecipe> loggedBrokenFor = new HashSet<CombineRecipe>();
+
+    static string BrokenReason(CombineRecipe recipe)
+    {
+        if (recipe.ingredients == null || recipe.ingredients.Count == 0) return "재료 목록이 비었다";
+        for (int i = 0; i < recipe.ingredients.Count; i++)
+        {
+            RecipeIngredient ing = recipe.ingredients[i];
+            if (ing == null) return $"{i + 1}번째 재료가 null";
+            if (ing.kind == IngredientKind.SpecificUnit && ing.unit == null) return $"{i + 1}번째 재료(유닛) 참조가 비었다";
+            if (ing.kind == IngredientKind.SpecificItem && ing.item == null) return $"{i + 1}번째 재료(아이템) 참조가 비었다";
+        }
+        return null;
+    }
+
+    HashSet<CombineRecipe> BrokenRecipes()
+    {
+        if (brokenRecipes != null) return brokenRecipes;
+        brokenRecipes = new HashSet<CombineRecipe>();
+        var names = new List<string>();
+        if (recipes != null)
+            foreach (CombineRecipe recipe in recipes)
+            {
+                if (recipe == null) continue;
+                string why = BrokenReason(recipe);
+                if (why == null) continue;
+                brokenRecipes.Add(recipe);
+                names.Add($"{recipe.name}({why})");
+            }
+        if (names.Count > 0)
+            Debug.LogWarning($"CombineSystem: 깨진 조합식 {names.Count}개는 쓸 수 없게 막았습니다 — {string.Join(", ", names)}. " +
+                             "에셋 YAML(특히 「ingredients:」 줄)을 확인하세요.", this);
+        return brokenRecipes;
+    }
+
+    bool IsBroken(CombineRecipe recipe)
+    {
+        if (!BrokenRecipes().Contains(recipe)) return false;
+        if (loggedBrokenFor.Add(recipe))
+            Debug.LogError($"CombineSystem: {recipe.name}({recipe.commandId})은 재료가 깨져 조합을 막았습니다 — {BrokenReason(recipe)}.", this);
+        return true;
+    }
+
+    void Start() => BrokenRecipes();
 
     // 영원 등급 전용(CombineRecipe.requiredSaveCount 참고). PersistentSave가 없으면(씬 배선
     // 누락 등) 잠가둔다 — 조건을 못 재는 상태에서 통과시키면 조건 자체가 없는 것과 같아진다.
