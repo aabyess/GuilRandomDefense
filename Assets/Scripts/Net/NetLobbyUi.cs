@@ -35,8 +35,12 @@ public class NetLobbyUi : MonoBehaviour
     TMP_FontAsset font;
     TMP_FontAsset boldFont;
 
-    GameObject mainPanel;
-    GameObject roomPanel;
+    GameObject modePanel;   // 첫 화면: 혼자 하기 / 같이 하기
+    GameObject mainPanel;   // 같이 하기: 닉네임 · 방 만들기 · 코드로 참가
+    GameObject roomPanel;   // 대기실
+    TMP_Text subtitle;
+    bool multiplayerChosen;
+    string lastSeenStatus = "";
 
     TMP_InputField nicknameInput;
     TMP_InputField codeInput;
@@ -75,8 +79,22 @@ public class NetLobbyUi : MonoBehaviour
         EnsureEventSystem();
 
         bool inRoom = launcher.InRoom;
-        if (mainPanel.activeSelf == inRoom) mainPanel.SetActive(!inRoom);
+        // 연결이 끊겨 돌아왔거나 방에 있으면 「같이 하기」 쪽 화면이다(모드 화면으로 되돌리지 않는다 — 끊긴 이유를 봐야 한다).
+        // 상태 문구가 새로 바뀐 순간에만 따진다 — 계속 따지면 「뒤로」를 눌러도 남아 있는 문구 때문에 되돌아온다.
+        if (launcher.Status != lastSeenStatus)
+        {
+            lastSeenStatus = launcher.Status;
+            if (!string.IsNullOrEmpty(lastSeenStatus)) multiplayerChosen = true;
+        }
+        if (inRoom) multiplayerChosen = true;
+        bool showMode = !multiplayerChosen;
+        bool showMain = multiplayerChosen && !inRoom;
+        if (modePanel.activeSelf != showMode) modePanel.SetActive(showMode);
+        if (mainPanel.activeSelf != showMain) mainPanel.SetActive(showMain);
         if (roomPanel.activeSelf != inRoom) roomPanel.SetActive(inRoom);
+        string wantedSubtitle = multiplayerChosen ? "같이 하기" : "";
+        if (subtitle.text != wantedSubtitle) subtitle.text = wantedSubtitle;
+        if (showMode) return;
 
         if (inRoom) RefreshRoom();
         else RefreshMain();
@@ -175,12 +193,30 @@ public class NetLobbyUi : MonoBehaviour
 
         TMP_Text title = CreateText(root, "Title", "구 랜 디", 72, boldFont, TextMain, TextAlignmentOptions.Center);
         Place(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -110f), new Vector2(900f, 110f));
-        TMP_Text subtitle = CreateText(root, "Subtitle", "같이 하기", 28, font, TextDim, TextAlignmentOptions.Center);
+        subtitle = CreateText(root, "Subtitle", "", 28, font, TextDim, TextAlignmentOptions.Center);
         Place(subtitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -185f), new Vector2(900f, 40f));
 
+        BuildModePanel(root);
         BuildMainPanel(root);
         BuildRoomPanel(root);
+        mainPanel.SetActive(false);
         roomPanel.SetActive(false);
+    }
+
+    void BuildModePanel(RectTransform root)
+    {
+        Image card = CreateImage(root, "ModePanel", Card);
+        Place(card.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -60f), new Vector2(620f, 380f));
+        modePanel = card.gameObject;
+        RectTransform c = card.rectTransform;
+
+        Button solo = CreateButton(c, "SoloButton", "혼자 하기", ButtonNormal, 36);
+        Place((RectTransform)solo.transform, new Vector2(0.5f, 0.5f), new Vector2(0f, 75f), new Vector2(480f, 100f));
+        solo.onClick.AddListener(() => launcher.PlaySolo());
+
+        Button together = CreateButton(c, "TogetherButton", "같이 하기", ButtonAccent, 36);
+        Place((RectTransform)together.transform, new Vector2(0.5f, 0.5f), new Vector2(0f, -65f), new Vector2(480f, 100f));
+        together.onClick.AddListener(() => multiplayerChosen = true);
     }
 
     void BuildMainPanel(RectTransform root)
@@ -219,6 +255,10 @@ public class NetLobbyUi : MonoBehaviour
             NetPlayer.SaveNickname(nicknameInput.text);
             launcher.JoinRoom(codeInput.text);
         });
+
+        Button back = CreateButton(c, "BackButton", "뒤로", ButtonNormal, 22);
+        Place((RectTransform)back.transform, new Vector2(0f, 1f), new Vector2(70f, -34f), new Vector2(100f, 44f));
+        back.onClick.AddListener(() => { if (!launcher.IsBusy) multiplayerChosen = false; });
 
         mainStatus = CreateText(c, "Status", "", 22, font, TextDim, TextAlignmentOptions.Center);
         Place(mainStatus.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -200f), new Vector2(640f, 70f));

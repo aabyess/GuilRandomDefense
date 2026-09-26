@@ -16,6 +16,7 @@ using UnityEngine.SceneManagement;
 ///
 /// 명령줄(빌드 두 개를 사람 손 없이 붙여 보는 용도):
 ///   -mpHost | -mpJoin        바로 방 만들기/참가
+///   -mpSolo                  바로 「혼자 하기」
 ///   -mpSession 코드           방 코드(호스트는 발급 대신 이 코드로 연다)
 ///   -mpRegion 지역            Photon 지역(기본 kr) — 방장과 친구가 같아야 서로 보인다
 ///   -mpNick 이름              닉네임(기억값보다 우선, 기억은 안 바꾼다)
@@ -147,12 +148,13 @@ public class NetLauncher : MonoBehaviour
         float Seconds(int i) => float.TryParse(Arg(i), System.Globalization.NumberStyles.Float,
             System.Globalization.CultureInfo.InvariantCulture, out float v) ? v : -1f;
 
-        bool host = false, join = false;
+        bool host = false, join = false, solo = false;
         for (int i = 0; i < args.Length; i++)
         {
             switch (args[i])
             {
                 case "-mpHost": host = true; break;
+                case "-mpSolo": solo = true; break;
                 case "-mpJoin": join = true; break;
                 case "-mpSession": cliSession = Arg(i + 1); break;
                 case "-mpRegion": region = Arg(i + 1) ?? region; break;
@@ -181,11 +183,28 @@ public class NetLauncher : MonoBehaviour
             }
         }
 
+        if (solo) { PlaySolo(); return; }
         if (host) CreateRoom();
         else if (join) JoinRoom(cliSession);
     }
 
     // ───────────── 방 만들기 / 참가 / 나가기 ─────────────
+
+    /// <summary>
+    /// 「혼자 하기」 — 이 창구(와 대기실 UI)를 통째로 없애고 게임 씬만 연다. 러너·Provider·MatchConfig가 하나도 안 남아서
+    /// 게임은 SampleScene을 직접 연 것과 한 줄도 다르지 않다(Fusion을 전혀 안 거친다). PM 조건(09-26).
+    /// </summary>
+    public void PlaySolo()
+    {
+        if (runner != null || starting) return;
+        Debug.Log("[MP] 혼자 하기 — 창구를 없애고 게임 씬을 연다(네트 없음)");
+        int scene = gameSceneBuildIndex;
+        GameAuthority.Provider = null;
+        MatchConfig.Reset();
+        LocalPlayer.LocalPlayerId = 0;
+        Destroy(gameObject);
+        SceneManager.LoadScene(scene);
+    }
 
     public void CreateRoom()
     {
