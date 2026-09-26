@@ -1675,6 +1675,29 @@ UNITS = {
                            dict(pattern=r"^RHand_Fore_sup$", into="mixamorig:RightForeArm")],
               materials=dict(textures={"pl_zephyr_orig01": [("DiffuseColor", "pl_zephyr_orig01_diff.png")],
                                        "pl_zephyr_orig01_dyanagan": [("DiffuseColor", "pl_zephyr_orig01_dyanagan_diff.png")]})),
+    # 원피스 바운티러시 제파 **두 번째 판**(josoukitsune 7z 립) → R61 간보는_김용태. 사장님·PM: 「R52와 중복이어도 된다, 따로 산출」(2026-09-25).
+    #   R52 임준성과 **같은 모델**이다 — 부품 18개 이름·경계가 소수 넷째 자리까지 같고, _diff는 2.2% 픽셀이 압축 가장자리에서만 다르다(평균 2/255).
+    #   그래서 설정을 임준성 것 그대로 옮기고 원본 경로만 바꿨다. 7z 안에 pl_zephyr_orig01.fbx(13MB, 액션 포함) · …out.fbx(0.9MB) 두 벌.
+    #   🔴 out은 **정점이 용접돼 있다**(body 2193→2123 등 부품마다 조금씩 적음 — UV 이음새가 붙는다). 큰 쪽은 R52 (merge)판과 부품별 정점 수가 똑같다 → 큰 쪽을 쓴다.
+    #   ⚠️ 임준성·전설적인_이시원·전설적인_김건과 같은 설정 — 하나를 고치면 넷 다 볼 것.
+    "간보는_김용태": dict(path="Assets/Art/Enemies/간보는_김용태/간보는_김용태.fbx", kind="human", size=("height", 1.8),
+              archive=(os.path.join(SKINS, "90_적유닛/R61-R70/R61_간보는_김용태.zip"), "source/zephyr___bounty_rush_by_josoukitsune_dfawydu.7z",
+                       "pl_zephyr_orig01/pl_zephyr_orig01.fbx"),
+              archive_rgb={"pl_zephyr_orig01/pl_zephyr_orig01_diff.png": "pl_zephyr_orig01_diff.png",
+                           "pl_zephyr_orig01/pl_zephyr_orig01_dyanagan_diff.png": "pl_zephyr_orig01_dyanagan_diff.png"},
+              drop_meshes=["face_attack", "face_damage", "face_sp", "l_hand_close", "battlesmasher_open", "dynagan_glass", "cartridge"],
+              drop_bones=["cartridge_joint", "world_joint"],
+              rename_bones=dict({k: v for k, v in PL_RENAME.items() if k != "RHand_Palm"}, weapon_root="mixamorig:RightHand"),
+              reparent_bones={"dynagan_joint": "mixamorig:RightHand"},
+              no_nulls=True, orient_snap=True,
+              merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                           dict(pattern=r"^(weapon_|dynagan_)", into="mixamorig:RightHand"),
+                           dict(pattern=r"^(coat_root|b_c_coat_|c_collar|f_l_coat_|b_l_coat_|l_coat_arm_|l_collar|bodyparts_)", into="mixamorig:Spine1"),
+                           dict(pattern=r"^(f_r_coat_|r_coat_arm_|r_collar)", into="mixamorig:RightShoulder"),
+                           dict(pattern=r"^LHand_Fore_sup$", into="mixamorig:LeftForeArm"),
+                           dict(pattern=r"^RHand_Fore_sup$", into="mixamorig:RightForeArm")],
+              materials=dict(textures={"pl_zephyr_orig01": [("DiffuseColor", "pl_zephyr_orig01_diff.png")],
+                                       "pl_zephyr_orig01_dyanagan": [("DiffuseColor", "pl_zephyr_orig01_dyanagan_diff.png")]})),
     # 원피스 바운티러시 류마(pl_ryuma_orig01) → R03 반항아_이승우. 이시원(제파)·요크와 같은 pl_ 리그.
     #   메시 11 · 뼈 62(살 붙은 55) · 재질 1 · 액션 90(안 씀, 결합 자세 기준) · 배율 ×0.01.
     #   겹친 변형(직접 재서 갈랐다): 얼굴은 face_normal 하나뿐 · 손 open/close → **open** ·
