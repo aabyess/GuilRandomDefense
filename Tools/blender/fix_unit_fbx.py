@@ -774,6 +774,26 @@ UNITS = {
                texture_by_material=True,
                materials=dict(textures={"pl_apoo_2yaf01": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")],
                                         "pl_apoo_2yaf01_trans": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")]})),
+    # 원피스 바운티러시 샬롯 카타쿠리(pl_katakuri_orig01, strifffe 립) → R62 울부짖는_노태현. zip = source/*.rar(fbx 두 벌 · _diff.jpeg · 홍보 그림) + textures/_diff.jpeg(안쪽과 픽셀 같음).
+    #   rar 안 FBX 두 벌: 「katakuri.fbx」는 뼈대 배율 1.0(100배)에 **재질 칸이 비어 있다** → 안 쓴다. 「katakuri animations.fbx」가 뼈대 0.01(류마와 같은 구성) · 재질 있음 · 액션 66(안 씀).
+    #   메시 18 · 재질 1 · 뼈 54. 몸 키(머리카락 끝) 0.0518 → **류마 × 2.57**.
+    #   뺀 것(렌더로 봄): 표정 둘 · 쥔 손 · 삼지창 spear_01/02(길이 0.061 > 키 0.052 — 저지 창 기준) · 양쪽 모찌 도넛 l/r_donut ·
+    #     팔 밖으로 6.4배 뻗는 모찌 주먹 l/r_power_mochi(공격 연출) · 오른팔 모찌 드릴 r_mochizuki(평소 팔 r_arm과 겹친 변형).
+    #     그 부품만 쓰는 뼈(도넛·파워 사슬·모찌즈키 사슬·창 뼈)도 뺀다. 왼팔은 body 안에 있고 오른팔은 r_arm 따로(원본 구성).
+    #   목도리(b/f/l/r_eri)·재킷 자락 → merge_to_nearest가 Spine1로(강체) · Fore_sup → ForeArm. 이미 T자.
+    "울부짖는_노태현": dict(path="Assets/Art/Enemies/울부짖는_노태현/울부짖는_노태현.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.join(SKINS, "90_적유닛/R61-R70/R62_울부짖는_노태현.zip"),
+                             "source/katakuri_fbx_one_piece_bounty_rush_by_strifffe_dg6viq3.rar", "katakuri animations.fbx"),
+                    archive_rgb={"pl_katakuri_orig01_diff.jpeg": "pl_katakuri_orig01_diff.png"},
+                    drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "spear_01", "spear_02",
+                                 "l_donut", "r_donut", "l_power_mochi", "r_power_mochi", "r_mochizuki"],
+                    drop_bones=["world_joint", "HELPER_key", "l_donut_joint", "r_donut_joint", "r_mochiduki_01", "spear_01_joint"],
+                    drop_bones_re=r"^([lr]_power_0[1-5]|r_mochiduki_0[23]|spear_02_joint)$",
+                    rename_bones=PL_RENAME,
+                    no_nulls=True, orient_snap=True,
+                    merge_to_nearest=True,
+                    texture_by_material=True,
+                    materials=dict(textures={"pl_katakuri_orig01": [("DiffuseColor", "pl_katakuri_orig01_diff.png")]})),
     # 원피스 바운티러시 스모커 스탬피드판(pl_smoker_stam01, XPS용 o_dv89_o 판) → R50 이태훈 ★보스. zip = source/*.rar(fbx · _diff · 셰이더 보조) + textures/_diff(안쪽과 픽셀 같음).
     #   뼈대 노드 0.01 · 메시 로컬 단위가 류마와 같다 → **류마 × 0.961**(머리카락 끝 0.0194 ÷ 0.02019, 무기 뺀 몸). 메시 22 · 재질 1 · 뼈 71.
     #   겹친 변형: 얼굴 셋 → normal · 손 open/close/smokehand_close(연기 주먹) → open. 입에 문 시가(hamaki)·선글라스·허리 천은 남긴다.
