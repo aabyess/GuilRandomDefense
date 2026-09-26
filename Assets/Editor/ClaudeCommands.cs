@@ -3135,7 +3135,7 @@ public static class ClaudeCommands
         {
             // storyplus — 막히면 레인의 흔함 아닌 유닛 중 **가장 센 둘**(목표 식 재료는 빼고)을 보낸다. 사람이 「안 깨지면 센 걸 더 보낸다」.
             job.storySentRound = job.lastRoundSeen;
-            turn.Add("@storysend:2");
+            turn.Insert(0, "@storysend:2");   // 앞에 — 턴이 밀리면 뒤 동작이 버려진다(i1_153: 보강 3번·복귀 1번만 돎). 즉시 동작이라 앞에 둬도 된다
             storyPlan = $" · 스토리 「{story.StatusLabel}」 2라운드째 못 깸 → 가장 센 둘 보강";
         }
         else if (job.storyPlus && story != null && job.storySent && story.FinishedCount > job.storyFinishedAtSend)
@@ -3143,7 +3143,7 @@ public static class ClaudeCommands
             // storyplus — 깨면 스토리존에서 가장 약한 하나만 남기고 C(UnitCommands.SendToPen)로 레인에 돌려보낸다. 남은 하나가 다음 스토리를 시작한다.
             job.storyFinishedAtSend = story.FinishedCount;
             job.storySentRound = job.lastRoundSeen;
-            turn.Add("@storyreturn");
+            turn.Insert(0, "@storyreturn");
             storyPlan = $" · 스토리 깸(누계 {story.FinishedCount}) → 약한 하나 남기고 복귀";
         }
         else if (story != null && job.storySent && story.FinishedCount == job.storyFinishedAtSend && story.Running != null
