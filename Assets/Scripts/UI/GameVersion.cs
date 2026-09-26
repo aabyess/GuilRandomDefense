@@ -15,7 +15,7 @@ public class GameVersion : MonoBehaviour
 
     static readonly GUIStyle Style = new GUIStyle
     {
-        fontSize = 12,
+        fontSize = 14,
         alignment = TextAnchor.LowerRight,
         normal = { textColor = new Color(1f, 1f, 1f, 0.55f) },
     };
@@ -31,8 +31,9 @@ public class GameVersion : MonoBehaviour
 
     void OnGUI()
     {
-        float scale = Mathf.Clamp(Screen.height / 1080f, 0.7f, 2f);
-        Style.fontSize = Mathf.RoundToInt(12f * scale);
-        GUI.Label(new Rect(0f, 0f, Screen.width - 6f * scale, Screen.height - 3f * scale), Label, Style);
+        // 1280×720 창에서 12 × 0.67 = 8px라 겨우 읽혔다(09-26 구현담당2) → 14px 밑으로는 안 줄인다.
+        float scale = Mathf.Max(1f, Screen.height / 1080f);
+        Style.fontSize = Mathf.RoundToInt(14f * scale);
+        GUI.Label(new Rect(0f, 0f, Screen.width - 8f * scale, Screen.height - 4f * scale), Label, Style);
     }
 }

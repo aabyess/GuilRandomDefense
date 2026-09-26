@@ -774,6 +774,55 @@ UNITS = {
                texture_by_material=True,
                materials=dict(textures={"pl_apoo_2yaf01": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")],
                                         "pl_apoo_2yaf01_trans": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")]})),
+    # 원피스 알베르 킹(Sketchfab glb, 3ds Max Bip001 · 중국 모바일 게임 립) → R65 **이승우_라인몹**(라인몹 판 — 같은 라운드 보스 「이승우」는 베지터 SSJ3).
+    #   메시 4 + Icosphere · 재질 1(Scene_-_Root, HASHED · 그림 1장 Image_0) · 뼈 158 · 애니 0. 팔 내린 A자 → tpose_arms.
+    #   부품(경계로 가림): Object_12 몸(정점 10,125) · Object_8 날개(Bone_chibang 사슬) · Object_10 등 불꽃(bone_fire 사슬, 루나리아 불 — 몸으로 남김) · 얼굴.
+    #   🔴 등에 멘 칼·칼집·술 장식은 **몸 메시(Object_12) 안**에 있고 Bip001 Prop2 밑 Bone_dao*·daoqiao·daosui* 뼈 100% → drop_verts_of_bones로 정점째 뺀다
+    #     (가져오면 머리 위 0.066 높이에 가로로 떠 있다 — 게임 소품 자리. 칼 길이가 키를 넘는다).
+    #   🔴 뼈 표시용 Icosphere(±1.0 — 몸 0.068의 30배) → 뺀다.
+    #   뼈: BIP001(Spine2 없음 · Toe0 있음 · 번호 꼬리) → BIP001_NO_SPINE2 + rename_strip. 날개·불꽃·Dummy001 → Spine1 · 치마 Bone_qunbai → Hips ·
+    #     손가락 → Hand · 비틀림 → ForeArm · 머리 장식 Bone_tou → Head: 전부 merge_to_nearest(가장 가까운 위쪽 사람 뼈). 날개는 강체.
+    "이승우_라인몹": dict(path="Assets/Art/Enemies/이승우_라인몹/이승우_라인몹.fbx", kind="human", size=("height", 1.8),
+                   source=os.path.join(SKINS, "90_적유닛/R61-R70/R65_이승우_라인몹_킹.glb"), gltf_guess_bind=False,
+                   no_nulls=True, orient_snap=True,
+                   drop_meshes=["Icosphere"],
+                   # 🔴 얼굴 판(King001_face_d__0, 390정점)은 스킨이 있는데 가중치가 **전부 0**이다 — 1회차 bind_check ②에서 걸림(유니티는 첫 뼈에 붙여 몸이 가면 얼굴이 남는다).
+                   rigid_meshes={"King001_face_d__0": "mixamorig:Head"},
+                   drop_verts_of_bones=["Bone_daoqiao_0148", "Bone_daosui005_0149", "Bone_daosui006_0150", "Bone_daosui007_0151",
+                                        "Bone_daosui001_0153", "Bone_daosui002_0154", "Bone_daosui003_0155",
+                                        "Bone_dao_0137", "Bone_daowei_0138", "Bone_daobing_0157"],
+                   rename_bones=BIP001_NO_SPINE2, rename_strip=r"_[0-9]+$",
+                   drop_bones=["_rootJoint", "Bip001_02", "Bip001 Footsteps_03", "Bip001 Prop1_0158", "Bip001 Prop2_0147",
+                               "Bone_daoqiao_0148", "Bone_daosui005_0149", "Bone_daosui006_0150", "Bone_daosui007_0151", "Bone_daosui008_0152",
+                               "Bone_daosui001_0153", "Bone_daosui002_0154", "Bone_daosui003_0155", "Bone_daosui004_0156",
+                               "Bone_dao_0137", "Bone_daowei_0138", "Bone_daobing_0157"],
+                   drop_bones_re=r"Nub_[0-9]+$",
+                   merge_to_nearest=True,
+                   tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                                   "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                               for s, side in (("L", "Left"), ("R", "Right"))},
+                   glb_images={0: "King001_d.png"},
+                   texture_by_material=True,
+                   materials=dict(textures={"Scene_-_Root": [("DiffuseColor", "King001_d.png")]})),
+    # 체인소맨 레제(Sketchfab glb, Mixamo 리그) → R63 긁힌_김민준. 뼈 이름이 이미 mixamorig + 번호 꼬리(Hips_01 …) → rename_regex로 꼬리만 뗀다(희귀함_배성령과 같은 길).
+    #   메시 9 · 재질 4(body1 · body2SG2 · body2SG4 · Dress, 전부 HASHED) · 그림 2(Image_0 = Dress · Image_1 = body 셋) · 애니 1(안 씀 → use_rest_pose, 이미 T자).
+    #   🔴 glTF 이름 겹침으로 생긴 **겹친 뼈 `_0`~`_3`**(Head·Neck·Spine2·Left/RightShoulder)에 살이 있다(Head_06_1 4,547 등) — 김만경(S-호크)과 같은 부류.
+    #     rename_regex는 **통째 일치**라 이들(Head_06_0)은 이름이 안 바뀌고 그대로 남는다. 각자 **제짝 뼈의 자식**이다(Head_06_0의 부모 = Head)
+    #     → Head 쪽은 under=Head가 머리카락과 함께 가져가고, 나머지 넷은 패턴으로 제짝에 합친다(Head 패턴을 따로 두면 대상 0으로 죽는다).
+    #   HeadTop_End에 살 4,724(머리카락) · 그 밑 머리카락 사슬 joint1~24(앞머리 · 뒤 묶음) → under=Head로 머리에. 손가락은 그대로(Humanoid 선택 뼈).
+    "긁힌_김민준": dict(path="Assets/Art/Enemies/긁힌_김민준/긁힌_김민준.fbx", kind="human", size=("height", 1.8),
+                  source=os.path.join(SKINS, "90_적유닛/R61-R70/R63_긁힌_김민준.glb"), gltf_guess_bind=False, use_rest_pose=True,
+                  no_nulls=True, orient_snap=True,
+                  drop_meshes=["Icosphere"],   # 🔴 1회차에 빠뜨렸다 — 뼈 표시용 공이 경계를 키웠고 다리가 그 속에 묻혀 렌더에 공만 보였다(주영호·왕승환과 같은 함정)
+                  rename_regex=(r"(mixamorig:[A-Za-z0-9]+?)_[0-9]+", r"\1"),
+                  drop_bones=["_rootJoint"],
+                  merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head")] +
+                              [dict(pattern=rf"^mixamorig:{b}_[0-9]+_[0-9]$", into=f"mixamorig:{b}")
+                               for b in ("Neck", "Spine2", "LeftShoulder", "RightShoulder")],
+                  glb_images={0: "Dress.png", 1: "body1.png"},
+                  texture_by_material=True,
+                  materials=dict(textures={"Dress": [("DiffuseColor", "Dress.png")],
+                                           **{m: [("DiffuseColor", "body1.png")] for m in ("body1", "body2SG2", "body2SG4")}})),
     # 원피스 바운티러시 샬롯 카타쿠리(pl_katakuri_orig01, strifffe 립) → R62 울부짖는_노태현. zip = source/*.rar(fbx 두 벌 · _diff.jpeg · 홍보 그림) + textures/_diff.jpeg(안쪽과 픽셀 같음).
     #   rar 안 FBX 두 벌: 「katakuri.fbx」는 뼈대 배율 1.0(100배)에 **재질 칸이 비어 있다** → 안 쓴다. 「katakuri animations.fbx」가 뼈대 0.01(류마와 같은 구성) · 재질 있음 · 액션 66(안 씀).
     #   메시 18 · 재질 1 · 뼈 54. 몸 키(머리카락 끝) 0.0518 → **류마 × 2.57**.
@@ -6162,7 +6211,7 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 gone = [eb.name for eb in data.edit_bones if root_eb in eb.parent_recursive or (mb.get("with_root") and eb == root_eb)]
             else:
                 gone = [eb.name for eb in data.edit_bones if re.search(mb["pattern"], eb.name)]
-            assert gone and mb["into"] in data.edit_bones, f"{name}: merge_bones 대상 없음"
+            assert gone and mb["into"] in data.edit_bones, f"{name}: merge_bones 대상 없음 {mb.get('under') or mb.get('pattern')} → {mb['into']}(맞은 뼈 {len(gone)})"
             moved = 0
             # 🔸 split_x {left, right, half}(2026-09-25 R26 어린 상디 앞치마): 한 장짜리 앞치마를 좌우 사슬 → 좌우 허벅지로 나누면
             #   **가운데 솔기가 찢어져** 다리가 비치고, 골반에 통째로 두면 걸을 때 허벅지가 앞치마를 뚫는다. 정점의 x 위치로

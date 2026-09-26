@@ -782,6 +782,27 @@ SKINS = {
             ToeBase=(0.052, -0.05, 0.018), ToeTip=(0.052, -0.075, 0.014),
         ),
     ),
+    # 드래곤볼 베지터 초사이어인3(Sketchfab glb, **뼈 0인 정적 메시**) → R65 이승우 ★보스(같은 라운드 라인몹 「이승우_라인몹」은 킹).
+    #   메시 3(몸 Object_2 5,368 · 얼굴 Object_3 1,511 · 머리카락 Object_4 2,100) · 재질 3(이름에 .png가 붙어 있음) · 그림 3(Image_0~2) · 애니 0 · **이미 T자** · 정면 −Y.
+    #   원본 키 1.768(머리카락 끝) · 몸 메시 끝 1.301 · 얼굴 1.222~1.384 — SSJ3 긴 머리가 키의 35%를 차지한다(머리카락 0.646~1.0, 등 뒤 y +0.53까지).
+    #   관절 근거(키 1 정규화, landmarks 층 실측): 팔 z 0.63~0.64 수평 · 손끝 x 0.42 · 가랑이 0.35(그 아래 다리 중심 x ±0.045) · 턱 0.69 · 몸 메시 끝 0.736.
+    #   🔴 머리카락·얼굴은 rigid_materials로 Head에 못박는다(PM 「머리카락 → Head」 — 등 뒤로 긴 머리가 지오데식이면 등·어깨로 번진다).
+    "이승우": dict(
+        source="~/Desktop/구랜디스킨모음/90_적유닛/R61-R70/R65_이승우_보스_베지터SSJ3.glb",
+        mesh_name="VegetaSSJ3",
+        path="Assets/Art/Enemies/이승우/이승우.fbx",
+        height=1.8,
+        center_band=(0.02, 0.06),
+        rigid_materials={"Vtt_Hair_ID": "Head", "Vtt_Face_ID": "Head"}, texture_by_material=True,
+        joints=dict(
+            Hips=(0, 0, 0.38), Spine=(0, 0, 0.45), Chest=(0, 0, 0.55),
+            Neck=(0, 0, 0.675), Head=(0, 0, 0.70), HeadTop=(0, 0, 1.0),
+            Shoulder=(0.03, 0, 0.66), Arm=(0.10, 0, 0.64), ForeArm=(0.215, 0, 0.632),
+            Hand=(0.33, 0, 0.632), HandTip=(0.42, 0, 0.636),
+            UpLeg=(0.045, 0, 0.35), Leg=(0.045, 0, 0.19), Foot=(0.045, 0.01, 0.04),
+            ToeBase=(0.045, -0.04, 0.015), ToeTip=(0.045, -0.07, 0.01),
+        ),
+    ),
 }
 
 SPINE = [("Hips", "Hips", "Spine", None), ("Spine", "Spine", "Chest", "Hips"),
