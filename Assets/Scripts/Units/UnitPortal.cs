@@ -180,7 +180,8 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
         if (spawnPoint != null) return spawnPoint.position;
 
         LaneMarker lane = LaneMarker.Get(ownerId);
-        if (lane != null) return isBonus ? lane.LaneCenter : lane.TakeSpawnPosition(reward);
+        // 2026-09-26: 흔함 아닌 유닛은 전부 레인 가운데로 가므로(LaneMarker.TakeSpawnPosition) 보너스도 같은 길 — 한가운데 한 점에 포개지 않고 고리 자리를 받는다.
+        if (lane != null) return lane.TakeSpawnPosition(reward);
 
         Debug.LogWarning($"UnitPortal: 플레이어 {ownerId}의 레인을 찾지 못해 포탈 자리에 소환합니다.", this);
         return transform.position;

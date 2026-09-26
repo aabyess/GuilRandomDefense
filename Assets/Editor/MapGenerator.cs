@@ -679,21 +679,7 @@ public static class MapGenerator
         BuildDecor(parent, $"{lane.name}_흙길_오른", new Vector3(x + halfX, y, z),
                    new Vector3(TrackWidth, 0.08f, halfZ * 2f - TrackWidth), "dirt");
 
-        // 레인 안 ㄱ자 벽 넷(원작 레인 안쪽 모서리, MapLayout.LaneCornerWalls — 2026-09-25 원작화 ③).
-        //    ⚠️ 두께 61 × 높이 5.5짜리 판이라 그냥 두면 **벽 윗면에 NavMesh가 따로 구워진다**(navlane에서 벽이 한 줄 선으로만
-        //    보였다, 09-25). 올라갈 수는 없지만 우클릭 목적지(SamplePosition)가 벽 윗면에 붙어 유닛이 못 가는 곳을 향한다.
-        //    원작 벽은 보행 불가 칸이다 — 굽기에서 Not Walkable로 칠한다(콜라이더는 그대로 막는다).
-        foreach ((string wallName, Rect r) in MapLayout.LaneCornerWalls(lane))
-        {
-            BuildWall(parent, wallName,
-                new Vector3(r.center.x, MapLayout.IslandTop + WallHeight * 0.5f, r.center.y),
-                new Vector3(r.width, WallHeight, r.height));
-            GameObject wall = parent.Find(wallName)?.gameObject;
-            if (wall == null) continue;
-            NavMeshModifier notWalkable = wall.AddComponent<NavMeshModifier>();
-            notWalkable.overrideArea = true;
-            notWalkable.area = NavMesh.GetAreaFromName("Not Walkable");
-        }
+        // (레인 안 ㄱ자 벽 넷은 2026-09-26 사장님 지시로 지웠다 — MapLayout.CornerWallOffsetX 주석.)
 
     }
 
@@ -849,9 +835,8 @@ public static class MapGenerator
 
         BuildUnitPenPartitions(parent, lane, unitPenWidth, penDepth, centerX, centerZ);
 
-        // 기준점(LaneMarker.SlotPosition의 첫 줄)은 칸 한가운데가 아니라 **칸 위 225(원작)** — 레인 아래 끝이다.
-        //    원작은 칸이 벽 뒤에 파여 있고 유닛은 거기로 꺼내져 선다(MapLayout.CommonStandOffset, 2026-09-25).
-        //    칸막이는 칸 한가운데(centerZ)에 그대로 서고, 유닛은 그 열린 위쪽 앞에 칸마다 한 줄로 선다.
+        // 기준점(LaneMarker.SlotPosition의 첫 줄) = 칸 한가운데 + MapLayout.CommonStandOffset.
+        //    09-25엔 원작 기본(칸 위 225, 레인 아래 끝)이었고, 2026-09-26 사장님 지시로 **칸 안**(오프셋 0)이다 — 흔함이 제 칸 안에 선다.
         GameObject anchor = new GameObject($"{lane.name}_유닛우리");
         anchor.transform.SetParent(parent, false);
         anchor.transform.position = new Vector3(centerX, MapLayout.IslandTop, centerZ + MapLayout.CommonStandOffset);
@@ -4320,7 +4305,11 @@ public static class MapGenerator
         float minRange = float.MaxValue;
         string minName = "?";
         int unreachable = 0;
-        float distance = MapLayout.SouthGreenZ + MapLayout.StandAboveFieldBottom;
+        // 🔴 2026-09-26: 식이 아니라 **좌표에서** 잰다 — 09-25엔 부호가 뒤집힌 식(SouthGreenZ + StandAboveFieldBottom)을 그대로 찍어
+        //    실제 51.75를 61.05로 보고했다. 서는 점 = 우리 줄 한가운데 + CommonStandOffset, 경로 = 순찰 사각형 아래 변.
+        MapLayout.Island reachLane = MapLayout.Lanes[0];
+        float standZ = MapLayout.LaneUnitPenRow(reachLane).center.y + MapLayout.CommonStandOffset;
+        float distance = MapLayout.LaneTrackRect(reachLane).yMin - standZ;
 
         foreach (UnitData unit in commons)
         {
@@ -4355,8 +4344,9 @@ public static class MapGenerator
         float sideSlack = (field.center.x + field.size.x * 0.5f) - (track.xMax + roadHalf);
 
         string report =
-            $"\n우리→적 사거리: 거리 {distance:0.0} (남쪽 초록 {MapLayout.SouthGreenZ:0.0} + 서는 점이 필드 아래 끝보다 " +
-            $"{MapLayout.StandAboveFieldBottom:0.0} 위 — 칸 위 {MapLayout.CommonStandOffset:0.0}, 원작 225) · 최소 사거리 대비 여유 {minRange - distance:0.0}" +
+            $"\n우리→적 사거리: 거리 {distance:0.0}(좌표 실측 · 목표 {MapLayout.PenToTrackDistance:0.0}) (남쪽 초록 {MapLayout.SouthGreenZ:0.0} − 서는 점이 필드 아래 끝보다 " +
+            $"{MapLayout.StandAboveFieldBottom:0.0} 위 — 칸 한가운데에서 {MapLayout.CommonStandOffset:0.0}, 사장님 09-26 칸 안) · 최소 사거리 대비 여유 {minRange - distance:0.0}" +
+            $"\n  흙길 아래 끝 ↔ 칸 벽 윗변: {(MapLayout.LaneTrackRect(reachLane).yMin - TrackWidth * 0.5f) - (MapLayout.LaneUnitPenRow(reachLane).center.y + MapLayout.UnitPenDepth * 0.5f):0.0}(양수 = 안 겹침)" +
             // 아래 「구간 / 둘레」와 **같은 변수**를 쓴다. 식을 두 번 쓰면 그 둘이 갈리는데,
             // 이번 결함이 정확히 그것이었다(한 줄은 얼린 값, 한 줄은 비율 재계산).
             $"\n  순찰 사각형 {track.width:0.0}×{track.height:0.0} · 둘레 {perimeter:0.0} " +

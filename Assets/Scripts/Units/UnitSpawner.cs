@@ -27,6 +27,8 @@ public class UnitSpawner : MonoBehaviour
         if (!instance.TryGetComponent(out UnitIdentity identity))
             identity = instance.AddComponent<UnitIdentity>();
         identity.SetData(data);
+        // 레인 가운데 자리 예약(LaneMarker.TakeSpawnPosition)에 이 개체를 붙인다 — 그래야 C 정렬이 같은 자리로 돌려보낸다(2026-09-26).
+        LaneMarker.Get(ownerId)?.ClaimSpawnSlot(identity, position);
 
         if (instance.TryGetComponent(out UnitAttacker attacker))
             attacker.ApplyStats(data.attackPower, data.attackRange, data.attackSpeed);

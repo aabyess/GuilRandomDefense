@@ -261,13 +261,11 @@ public class CombineSystem : MonoBehaviour
     //    LaneCenter는 레인 섬 오브젝트 자신의 위치라 곧 기하학적 한가운데다(LaneMarker 주석).
     //    옛 평균 방식이 신경 쓰던 「창고 개체는 바다 건너에 있어 같이 평균 내면 바다가 나온다」는
     //    문제도 같이 사라진다 — 재료 위치를 아예 안 본다.
+    // 🔴 2026-09-26 사장님 「조합하거나 흔함 제외 뽑기로 나온 유닛들은 레인 가운데에 배치」 — 09-25의 「[조합]을 누른 자리」를 버린다.
+    //    결과는 새로 뽑은 유닛과 같은 길(LaneMarker.TakeSpawnPosition): 흔함 아니면 레인 가운데 고리 자리. casterPosition은 이제 안 본다
+    //    (호출부 GameHud·멀티 RPC의 서명을 안 바꾸려고 인자는 남겼다).
     Vector3 ResolveResultPosition(Vector3? casterPosition, UnitData result, int ownerId)
     {
-        int casterMask = UnitSpawner.ComputeAreaMask(result.movementAbility);
-        if (casterPosition.HasValue
-            && NavMesh.SamplePosition(casterPosition.Value, out NavMeshHit casterHit, ResultSampleRadius, casterMask))
-            return casterHit.position;
-
         LaneMarker lane = LaneMarker.Get(ownerId);
         if (lane == null) return transform.position;
 
@@ -276,9 +274,8 @@ public class CombineSystem : MonoBehaviour
         // UnitMover.TryMoveToCursor가 이동 목적지에 같은 검사를 한다.
         // 지상 유닛 자리를 바다에서 찾지 않도록 그 유닛이 실제로 쓸 areaMask로 본다.
         int areaMask = UnitSpawner.ComputeAreaMask(result.movementAbility);
-        return NavMesh.SamplePosition(lane.LaneCenter, out NavMeshHit hit, ResultSampleRadius, areaMask)
-            ? hit.position
-            : lane.TakeSpawnPosition(result);   // 가운데를 못 쓰면 예전대로 빈 자리로
+        Vector3 slot = lane.TakeSpawnPosition(result);
+        return NavMesh.SamplePosition(slot, out NavMeshHit hit, ResultSampleRadius, areaMask) ? hit.position : slot;
     }
 
     bool CanAfford(CombineRecipe recipe, bool pickForExecution,

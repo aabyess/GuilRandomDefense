@@ -668,16 +668,24 @@ public static class MapLayout
     public const float PenToTrackDistance = CommonMinAttackRange * PenToTrackRatio;   // 61.05
 
     /// <summary>
-    /// 흔함 유닛이 **서는 점**이 칸(우리 줄) 한가운데에서 위로(필드 쪽으로) 떨어진 거리. 원작 225 ÷ Scale = 54.0.
+    /// 흔함 유닛이 **서는 점**이 칸(우리 줄) 한가운데에서 위로(필드 쪽으로) 떨어진 거리. **지금 0 — 칸 한가운데.**
+    ///
+    /// 🔴 2026-09-26: 원작 기본은 칸 위 225(아래 09-25 설명), **사장님 09-26 지시로 칸 안 + 경로 당김**.
+    ///    사장님 「흔함만 저기 안에 들어가게」 → 「칸 안 + 적 길 당기기」. 원작에도 칸 안 상태가 있다 — 「흔함자동꺼내기」를 끄거나
+    ///    유닛 버튼 A07Y로 넣으면 Common_Loc(칸 한가운데)에 선다(Trig_Random_Base1 · Trig_house, war3map_new.j).
+    ///    원작은 칸 안에서 경로까지 108~121이라 거의 못 닿지만, 우리는 **경로를 칸 쪽으로 당겨** 거리를 칸 위 225 때와 같은
+    ///    <see cref="PenToTrackDistance"/>로 맞춘다 — <see cref="SouthGreenZ"/>가 유도식이라 이 값 하나로 따라온다.
+    ///
+    /// ── 아래는 09-25 기록(원작 기본 = 칸 위 225, 원작 225 ÷ Scale = 54.0) ──
     ///
     /// 원작은 칸이 레인 벽 뒤에 파여 있고, 뽑힌 유닛은 칸 위 225 지점 — **레인 아래 끝** — 으로 꺼내져 선다
     /// (PM 원작 대조 2026-09-25). 우리는 그동안 칸 한가운데에 세워서, 경로까지 거리를 맞추려면 초록 여백을
     /// 37로 깎아야 했다(원작 54~69). 선 자리를 원작처럼 올리면 **거리와 여백이 동시에 원작 값**이 된다.
     /// ⚠️ 칸 깊이(<see cref="UnitPenDepth"/>)는 원작 상수 그대로다 — 칸은 안 바뀌고 서는 점만 올라간다.
     /// </summary>
-    public const float CommonStandOffset = 225f / Scale;
+    public const float CommonStandOffset = 0f;
 
-    /// <summary>유닛이 서는 점이 필드 아래 끝보다 얼마나 위인가(음수면 필드 밖 = 앞치마 위). 지금 +4.65.</summary>
+    /// <summary>유닛이 서는 점이 필드 아래 끝보다 얼마나 위인가(음수면 필드 밖 = 앞치마 위). 지금 −49.35(칸 한가운데).</summary>
     public const float StandAboveFieldBottom = CommonStandOffset - ApronGap - UnitPenDepth * 0.5f;
 
     /// <summary>
@@ -830,12 +838,14 @@ public static class MapLayout
     /// 사장님 정정으로 83.34로 되돌렸는데, 이 식이면 그 되돌림이 초록 쪽으로 옮겨 간다.
     /// </summary>
     ///
-    /// 🔴 2026-09-25: 서는 점이 칸 한가운데 → 칸 위 225(<see cref="CommonStandOffset"/>)로 바뀌어 식도 바뀌었다:
+    /// 🔴 2026-09-26 **부호 정정**(구현담당1). 09-25 식 `서는 점 → 경로 = SouthGreenZ + StandAboveFieldBottom`은 거꾸로였다 —
+    ///    서는 점이 필드 아래 끝보다 **위**(+)면 경로까지는 그만큼 **가깝다**. 그래서 09-25 칸 위 225 배치의 실제 거리는
+    ///    61.05가 아니라 56.4 − 4.65 = **51.75**였다(보고문 「거리」도 같은 식으로 계산한 값이라 못 잡았다). 바른 식:
     /// <code>
-    ///   서는 점 → 순찰 경로 = SouthGreenZ + StandAboveFieldBottom      → 초록 = 61.05 − 4.65 = 56.4 (원작 54~69)
-    /// </code>
+    ///   서는 점 → 순찰 경로 = SouthGreenZ − StandAboveFieldBottom
+    ///   칸 한가운데(StandAboveFieldBottom −49.35) → 초록 = 61.05 − 49.35 = 11.7 · 흙길 반폭 9를 빼도 필드 안 2.7 + 앞치마 7.68</code>
     /// </summary>
-    public const float SouthGreenZ = PenToTrackDistance - StandAboveFieldBottom;
+    public const float SouthGreenZ = PenToTrackDistance + StandAboveFieldBottom;
 
     /// <summary>
     /// 순찰 사각형(= 흙길 중심선). **경로와 흙길이 이 하나를 본다.**
@@ -866,7 +876,10 @@ public static class MapLayout
     //       얼린 사각형과 어긋날 수가 없다. **하나뿐인 진실을 두 곳에서 만들 수 있게 두지 않는다.**
 
     /// <summary>
-    /// 레인 안 **ㄱ자 벽 넷**(원작 레인 안쪽 모서리). 2026-09-25 원작화 ③ — PM 원작 대조(war3map.wpm 보행맵, 칸 32).
+    /// ⚠️ 2026-09-26 사장님 「ㄱ·ㄴ 섬 같은 거 레인에 걸리적거린다, 그냥 지워」 — **벽 넷은 지웠다**(LaneCornerWalls 함수째).
+    ///    아래 상수들은 스토리 포탈 자리(<see cref="LaneStoryPortalSpot"/>, 원작 Go_story)가 아직 쓴다 — 포탈은 원작 자리 그대로다.
+    ///
+    /// (09-25 기록) 레인 안 **ㄱ자 벽 넷**(원작 레인 안쪽 모서리). 2026-09-25 원작화 ③ — PM 원작 대조(war3map.wpm 보행맵, 칸 32).
     ///
     /// 원작 p1_life_zone(3200×2752) 안의 막힌 칸을 그대로 읽은 모양이다:
     /// <code>
@@ -880,21 +893,6 @@ public static class MapLayout
     public const float CornerWallOffsetZ = 184f / Scale;     // 44.2
     public const float CornerWallLength = 640f / Scale;      // 153.6
     public const float CornerWallThickness = 256f / Scale;   // 61.4
-
-    public static IEnumerable<(string name, Rect rect)> LaneCornerWalls(Island lane)
-    {
-        Rect track = LaneTrackRect(lane);
-        foreach ((string tag, int sx, int sz) in new[] { ("왼위", -1, 1), ("오른위", 1, 1), ("왼아래", -1, -1), ("오른아래", 1, -1) })
-        {
-            // 바깥 꺾인 점 — 순찰 모서리에서 안쪽으로.
-            float ox = (sx < 0 ? track.xMin + CornerWallOffsetX : track.xMax - CornerWallOffsetX);
-            float oz = (sz > 0 ? track.yMax - CornerWallOffsetZ : track.yMin + CornerWallOffsetZ);
-            // 긴 막대 — 위·아래 변을 따라 안쪽(가로)으로 뻗는다.
-            yield return ($"{lane.name}_ㄱ벽_{tag}_막대", MinMax(ox, oz, ox - sx * CornerWallLength, oz - sz * CornerWallThickness));
-            // 다리 — 막대 끝(바깥 쪽)에서 안쪽(세로)으로 한 번 더.
-            yield return ($"{lane.name}_ㄱ벽_{tag}_다리", MinMax(ox, oz - sz * CornerWallThickness, ox - sx * CornerWallThickness, oz - sz * CornerWallThickness * 2f));
-        }
-    }
 
     /// <summary>
     /// 스토리 입장 포탈 자리 — 오른쪽 위 ┐ 벽의 **오목한 안쪽 한가운데**(원작 Go_story, 2026-09-25 사장님 (가)).

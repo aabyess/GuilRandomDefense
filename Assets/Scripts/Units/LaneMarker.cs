@@ -9,8 +9,8 @@ public class LaneMarker : MonoBehaviour
 {
     [SerializeField] int laneIndex;
 
-    // 새로 만들어진 유닛이 처음 서는 자리. 레인 아래 상점 줄 위의 우리다 —
-    // 레인 한가운데에 떨어뜨리면 적 한복판에 나오고, 플레이어가 손쓸 새 없이 맞는다.
+    // 흔함이 서는 우리(칸 아홉 줄)의 기준점 = 칸 한가운데 줄(2026-09-26, MapLayout.CommonStandOffset 0).
+    //    흔함 아닌 유닛은 여기가 아니라 레인 가운데에 선다(CenterSlotPosition).
     [SerializeField] Transform unitPen;
 
     // MapGenerator의 BuildUnitPen이 실제로 지은 우리 폭. SetUnitRowWidth로 안 채워지면
@@ -63,12 +63,8 @@ public class LaneMarker : MonoBehaviour
     // RingCapacity·rosterOccupancy — 은 같은 이름을 겹쳐 세우기로 하면서 전부 지웠다.
     // 쓰는 곳이 하나도 안 남았다(RosterSlotPosition 주석 참고).
 
-    // 다음에 내줄 "남는 자리" 번호(로스터 밖 — 비흔함, 혹은 로스터에 없는 흔함). 유닛이
-    // 떠나도 줄어들지 않는다(빈 자리 재사용은 안 함) — 지금은 필드에서 유닛이 사라지는 경로
-    // (연금술 분해 등)가 이 카운터를 모르기 때문에, 안전한 쪽(자리가 늘 새것)으로 단순하게 갔다.
-    // 로스터 조회(FindRosterSlot)는 이 카운터를 절대 건드리지 않는다 — 건드리면 흔함을 몇 번
-    // 뽑았느냐에 따라 남는자리 배정이 밀리는, 한참 지나야 드러나는 버그가 된다(PM 지시).
-    int nextFreeSlot;
+    // 로스터 조회(FindRosterSlot)는 레인 가운데 자리 배정을 절대 건드리지 않는다 — 건드리면 흔함을 몇 번
+    // 뽑았느냐에 따라 흔함 아닌 유닛 자리가 밀리는, 한참 지나야 드러나는 버그가 된다(PM 지시).
 
     static readonly List<LaneMarker> registry = new List<LaneMarker>();
 
@@ -89,17 +85,16 @@ public class LaneMarker : MonoBehaviour
     /// (2026-09-23 사장님 「겹치게 해줘야 할 듯」 + 원작 Common_Loc이 유닛 타입으로만 인덱싱, 7525cacc — 아래 RosterSlotPosition 주석).
     /// ⚠️ 예전엔 여기에 「육각 고리로 벌어져 선다」고 적혀 있었는데 고리 분산을 걷어낸 뒤에도 이 요약만 남아 있었다(09-24 실측으로 발견:
     ///    흔함_박민수 2기가 둘 다 (−1432.42, 1239.45)).
-    /// 그 외(비흔함, 또는 흔함인데 배정표에 없는 이름 — 로스터가 낡았을 때)는 남는 자리
-    /// (10·11번칸부터, 넘치면 다음 줄)로 간다.
+    /// 그 외(비흔함, 또는 흔함인데 배정표에 없는 이름 — 로스터가 낡았을 때)는 **레인 가운데**(CenterSlotPosition)로 간다
+    /// (2026-09-26 사장님 「조합하거나 흔함 제외 뽑기로 나온 유닛들은 레인 가운데에 배치」 — 원작도 PlayZoneLOC = 순찰 사각형 한가운데).
     /// </summary>
     public Vector3 TakeSpawnPosition(UnitData unit)
     {
-        if (unitPen == null) return transform.position;
 
         // 시스템 유닛(해적단 퀘스트 토큰 등)은 grade가 흔함이어도 로스터 배정표에 있을 리
         // 없다 — 걸러두지 않으면 매번 "로스터가 낡았다"는 진짜 경고와 구분 안 되는 가짜
         // 경고가 찍힌다(WIRING_AUDIT.md §⑧). 남는 자리로 보내는 동작 자체는 그대로 맞다.
-        if (unit != null && unit.grade == UnitGrade.Common && !unit.isSystemUnit)
+        if (unitPen != null && unit != null && unit.grade == UnitGrade.Common && !unit.isSystemUnit)
         {
             int rosterSlot = FindRosterSlot(unit.unitName);
             if (rosterSlot >= 0) return RosterSlotPosition(rosterSlot);
@@ -135,31 +130,91 @@ public class LaneMarker : MonoBehaviour
         return SlotPosition(unitPen, unitRowWidth, rosterSlot);
     }
 
-    /// <summary>로스터 밖 유닛에게 내줄 다음 남는 자리. 카운터를 하나 태운다 — 여기서만 태운다.</summary>
+    // ── 흔함 아닌 유닛 = 레인 가운데(2026-09-26 사장님) ──
+    //    한 점에 포개면 하나씩 클릭하기 어려워 **육각 고리**로 몸 하나 간격(CenterSpacing)씩 퍼뜨린다 — 0번 = 한가운데,
+    //    1고리 6자리, 2고리 12자리 …. 한 번 받은 자리는 그 유닛이 계속 쓴다(C 정렬 베타 피드백 fa25e228과 같은 규칙).
+    //    ① 새로 나올 때: TakeSpawnPosition이 빈 자리를 **예약**(reserved)하고, UnitSpawner가 그 자리에 세운 개체를
+    //       ClaimSpawnSlot으로 붙인다(자리로 짝짓는다 — 호출부 열 곳을 안 고쳐도 된다).
+    //    ② 유닛이 죽거나 조합 재료로 사라지면(Unity null) 그 자리를 다시 쓴다 — 안 그러면 한 판에 수백 기가 나와 고리가 레인 밖까지 커진다.
+    //       예약만 되고 30초 안에 아무도 안 붙은 자리(소환 실패·NavMesh 보정으로 딴 데 섰을 때)도 풀어 준다.
+    public const float CenterSpacing = 14f;   // 유닛 몸 ≈ 14(UnitSpawner 회피 주석 실측)
+    const float ReservationSeconds = 30f;
+
+    readonly Dictionary<UnitIdentity, int> assignedFreeSlots = new Dictionary<UnitIdentity, int>();
+    readonly Dictionary<int, float> reservedSlots = new Dictionary<int, float>();   // 자리 번호 → 예약 시각
+
+    /// <summary>육각 격자 고리 index번째 점의 가운데로부터 오프셋(xz). 0 = 가운데, 1~6 = 첫 고리, 7~18 = 둘째 고리 ….</summary>
+    public static Vector3 HexRingOffset(int index, float spacing)
+    {
+        if (index <= 0) return Vector3.zero;
+        int ring = 1, first = 1;
+        while (index >= first + 6 * ring) { first += 6 * ring; ring++; }
+        int k = index - first;
+        int side = k / ring, step = k % ring;
+        float a0 = side * 60f * Mathf.Deg2Rad, a1 = (side + 1) * 60f * Mathf.Deg2Rad;
+        Vector3 c0 = new Vector3(Mathf.Cos(a0), 0f, Mathf.Sin(a0)) * (ring * spacing);
+        Vector3 c1 = new Vector3(Mathf.Cos(a1), 0f, Mathf.Sin(a1)) * (ring * spacing);
+        return Vector3.Lerp(c0, c1, (float)step / ring);
+    }
+
+    /// <summary>레인 가운데 index번째 자리. 높이는 우리 기준점(섬 윗면)에 맞춘다 — 섬 오브젝트 중심은 윗면보다 낮다.</summary>
+    public Vector3 CenterSlotPosition(int index)
+    {
+        Vector3 p = LaneCenter + HexRingOffset(index, CenterSpacing);
+        if (unitPen != null) p.y = unitPen.position.y;
+        return p;
+    }
+
+    int LowestFreeCenterIndex()
+    {
+        var used = new HashSet<int>();
+        var dead = new List<UnitIdentity>();
+        foreach (KeyValuePair<UnitIdentity, int> kv in assignedFreeSlots)
+        {
+            if (kv.Key == null) dead.Add(kv.Key); else used.Add(kv.Value);
+        }
+        foreach (UnitIdentity key in dead) assignedFreeSlots.Remove(key);
+        var expired = new List<int>();
+        foreach (KeyValuePair<int, float> kv in reservedSlots)
+        {
+            if (Time.time - kv.Value > ReservationSeconds) expired.Add(kv.Key); else used.Add(kv.Key);
+        }
+        foreach (int i in expired) reservedSlots.Remove(i);
+        int index = 0;
+        while (used.Contains(index)) index++;
+        return index;
+    }
+
+    /// <summary>흔함 아닌 유닛에게 내줄 레인 가운데 빈 자리를 예약하고 돌려준다.</summary>
     Vector3 TakeFreeSlot()
     {
-        return FreeSlotPosition(nextFreeSlot++);
+        int index = LowestFreeCenterIndex();
+        reservedSlots[index] = Time.time;
+        return CenterSlotPosition(index);
     }
 
-    // 2026-09-26 베타 피드백 「C 누르면 위치가 이상해진다」 — 정렬(C)이 누를 때마다 남는 자리 카운터를 태워서
-    // 같은 유닛이 **누를 때마다 다른 칸**으로 갔고, SlotPosition의 줄 번갈이(칸 안 ↔ 레인 아래 끝) 때문에
-    // 앞줄(적 경로 쪽)과 칸 안을 오갔다. 이제 ① 남는 자리는 **늘 칸 안 한 줄**(9칸을 돌아가며, 넘치면 겹쳐 선다 —
-    // 같은 이름 흔함도 겹쳐 서는 이 게임의 규칙 안) ② 한 번 받은 자리는 그 유닛이 계속 쓴다.
-    readonly Dictionary<UnitIdentity, int> assignedFreeSlots = new Dictionary<UnitIdentity, int>();
-
-    Vector3 FreeSlotPosition(int freeIndex)
+    /// <summary>UnitSpawner가 방금 세운 개체를 그 자리의 예약에 붙인다. 예약된 자리 근처(몸 반 개)가 아니면 아무것도 안 한다.</summary>
+    public void ClaimSpawnSlot(UnitIdentity unit, Vector3 spawnedAt)
     {
-        // 칸 안 줄(row 1)만 쓴다 — 로스터 9칸 바로 뒤. 앞줄(row 0)은 흔함 고정 칸이라 비운다.
-        return SlotPosition(unitPen, unitRowWidth, CompartmentCount + (freeIndex % CompartmentCount));
+        if (unit == null || assignedFreeSlots.ContainsKey(unit) || reservedSlots.Count == 0) return;
+        int best = -1;
+        float bestDistance = CenterSpacing * 0.5f;
+        foreach (int index in reservedSlots.Keys)
+        {
+            Vector3 p = CenterSlotPosition(index);
+            float d = Vector2.Distance(new Vector2(p.x, p.z), new Vector2(spawnedAt.x, spawnedAt.z));
+            if (d < bestDistance) { bestDistance = d; best = index; }
+        }
+        if (best < 0) return;
+        reservedSlots.Remove(best);
+        assignedFreeSlots[unit] = best;
     }
 
-    /// <summary>정렬(C)이 보낼 자리. 흔함(로스터 이름)은 자기 고정 칸, 그 외는 이 유닛이 처음 받은 남는 자리를 계속 쓴다.</summary>
+    /// <summary>정렬(C)이 보낼 자리. 흔함(로스터 이름)은 자기 고정 칸, 그 외는 이 유닛이 처음 받은 레인 가운데 자리를 계속 쓴다.</summary>
     public Vector3 PenPositionFor(UnitIdentity unit)
     {
-        if (unitPen == null) return transform.position;
-
         UnitData data = unit != null ? unit.Data : null;
-        if (data != null && data.grade == UnitGrade.Common && !data.isSystemUnit)
+        if (unitPen != null && data != null && data.grade == UnitGrade.Common && !data.isSystemUnit)
         {
             int rosterSlot = FindRosterSlot(data.unitName);
             if (rosterSlot >= 0) return RosterSlotPosition(rosterSlot);
@@ -167,20 +222,12 @@ public class LaneMarker : MonoBehaviour
 
         if (unit == null) return TakeFreeSlot();
 
-        // 파괴된 유닛 열쇠는 가끔 치운다(Unity null이라 == null이 참).
-        if (assignedFreeSlots.Count > 64)
-        {
-            List<UnitIdentity> dead = new List<UnitIdentity>();
-            foreach (UnitIdentity key in assignedFreeSlots.Keys) if (key == null) dead.Add(key);
-            foreach (UnitIdentity key in dead) assignedFreeSlots.Remove(key);
-        }
-
         if (!assignedFreeSlots.TryGetValue(unit, out int index))
         {
-            index = nextFreeSlot++;
+            index = LowestFreeCenterIndex();
             assignedFreeSlots[unit] = index;
         }
-        return FreeSlotPosition(index);
+        return CenterSlotPosition(index);
     }
 
     /// <summary>
@@ -188,10 +235,8 @@ public class LaneMarker : MonoBehaviour
     /// 감싸서 쓴다 — 자리를 소모하지 않고 미리 봐야 하는 곳(맵 생성기의 NavMesh 커버리지 확인
     /// 등)은 이쪽을 바로 쓴다.
     ///
-    /// 한 줄은 CompartmentCount 칸 고정이다 — 넘치면(로스터 밖 자리가 남는 칸 수를 넘거나,
-    /// 같은 로스터 칸에 여러 마리가 몰리는 게 아니라 남는 자리 쪽에서 실제로 넘칠 때) 조용히
-    /// 사라지는 대신 한 칸 폭만큼 **뒤(칸 안)**에 다음 줄을 놓고, 그 뒤로는 두 줄을 번갈아 쓴다
-    /// (2026-09-25 — 기준점이 레인 아래 끝으로 올라가 앞줄이 적 경로 위가 됐다. SlotPosition 본문 주석).
+    /// 한 줄은 CompartmentCount 칸 고정이다. 2026-09-26부터 흔함 아닌 유닛은 레인 가운데로 가서 이 줄을 안 쓰고,
+    /// 흔함은 로스터 9칸(slot 0~8)만 쓴다 — slot 9 이상(둘째 줄)은 이제 부르는 곳이 없다.
     /// </summary>
     public static Vector3 SlotPosition(Transform unitPen, float rowWidth, int slot)
     {
@@ -201,10 +246,7 @@ public class LaneMarker : MonoBehaviour
         int row = slot / CompartmentCount;
 
         float x = (column - (CompartmentCount - 1) * 0.5f) * spacing;
-        // 🔴 2026-09-25: 다음 줄은 앞(+Z, 필드 쪽)이 아니라 **뒤 — 칸 안**으로 놓는다. 기준점(unitPen)이 원작처럼 칸 위 225
-        //    (레인 아래 끝)로 올라가서(MapLayout.CommonStandOffset), 한 칸 폭(≈63) 앞은 **적 경로(56.4) 너머 흙길 위**다.
-        //    칸이 9개·로스터가 9명이라 로스터 밖 유닛은 처음부터 이 줄을 쓴다. 칸 안은 한 줄 깊이뿐이라 두 줄을 번갈아 쓴다 —
-        //    같은 이름 흔함도 겹쳐 서므로(RosterSlotPosition) 겹침은 이 게임의 규칙 안이다.
+        // 넘치는 줄은 뒤(−Z)로 번갈아 놓는다(2026-09-25). 09-26부터 기준점이 칸 한가운데라 slot 9 이상은 쓰지 않는다(위 주석).
         float z = -(row % 2) * spacing;
 
         return unitPen.position + unitPen.right * x + unitPen.forward * z;
@@ -216,10 +258,9 @@ public class LaneMarker : MonoBehaviour
     /// </summary>
     public IEnumerable<Vector3> FreeRowSlotPositions()
     {
-        // 흔함 아닌 유닛이 서는 칸 안 줄(FreeSlotPosition) — 시작 카메라가 이 줄까지 담는다(RtsCameraController.TryGetPenBounds).
-        if (unitPen == null) yield break;
-        for (int i = 0; i < CompartmentCount; i++)
-            yield return FreeSlotPosition(i);
+        // 흔함 아닌 유닛이 서는 레인 가운데 자리(가운데 + 첫 고리 6) — 시작 카메라가 이 자리까지 담는다(RtsCameraController.TryGetPenBounds).
+        for (int i = 0; i < 7; i++)
+            yield return CenterSlotPosition(i);
     }
 
     public IEnumerable<Vector3> FirstRowSlotPositions()
