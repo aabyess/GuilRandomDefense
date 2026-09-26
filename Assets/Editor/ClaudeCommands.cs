@@ -3454,6 +3454,8 @@ public static class ClaudeCommands
         StringBuilder text = new StringBuilder(job.prefix);
         string tainted = job.midPlayReloads > 0 ? $" (⚠️ 오염 — 플레이 도중 도메인 리로드 {job.midPlayReloads}번)" : "";
         text.AppendLine((job.failed ? "▶ gameshot 결과: ❌ 실패" : "▶ gameshot 결과: ✅") + tainted);
+        // 09-26 PM 지시 — 에디터 프레임은 Unity 창이 앞인지·Scene 뷰가 보이는지로 크게 달라진다(i1_148: R1부터 52~78ms). 밸런스 판단은 게임 시간(초)만.
+        text.AppendLine("   ⚠️ 이 판 프레임은 에디터 창 상태에 따라 튄다 — 게임 성능 지표 아님(밸런스는 게임 시간 초로만 본다)");
         text.Append(job.report);
         if (job.midPlayReloads > 0)
             text.AppendLine($"   ⚠️ 리로드 전까지 경고·오류 {job.logsBeforeReload}건. 리로드는 직렬화 안 된 필드(Awake에서 만든 것)를 null로 날리고 " +
