@@ -35,6 +35,11 @@ public class NetPlayer : NetworkBehaviour
     [Networked] public byte Navigation { get; set; }
     [Networked] public int GambleUnlockedMask { get; set; }
     [Networked, Capacity(16)] public NetworkArray<short> GambleUses => default;
+    // 돈 도박 충전식 재고·누적 지급·졸업(구현담당1 a9b6a7c3). 재고 -1 = 재고 없는 옵션, 충전은 「다음까지 남은 초」.
+    [Networked, Capacity(16)] public NetworkArray<short> GambleStock => default;
+    [Networked, Capacity(16)] public NetworkArray<float> GambleNextSeconds => default;
+    [Networked, Capacity(16)] public NetworkArray<int> GamblePayout => default;
+    [Networked] public NetworkBool GambleGraduated { get; set; }
 
     // UnitUpgrades(특성 포인트·해금 특성·강화 레벨) — 특성 버튼·강화소 칸 표시용. 특성은 카탈로그 번호+1(0=빈칸).
     public const int MaxReplicatedTraits = 32;
@@ -107,8 +112,12 @@ public class NetPlayer : NetworkBehaviour
                 GamblingOptionData option = catalog.gamblingOptions[i];
                 if (context.GamblingProgress.IsUnlocked(option)) mask |= 1 << i;
                 GambleUses.Set(i, (short)context.GamblingProgress.UsesSoFar(option));
+                GambleStock.Set(i, (short)(option.stockMax > 0 ? Mathf.Min(short.MaxValue, context.GamblingProgress.Stock(option)) : -1));
+                GambleNextSeconds.Set(i, context.GamblingProgress.SecondsToNextStock(option));
+                GamblePayout.Set(i, context.GamblingProgress.CumulativePayout(option));
             }
             GambleUnlockedMask = mask;
+            GambleGraduated = context.GamblingProgress.Graduated;
         }
 
         UnitUpgrades upgrades = context.UnitUpgrades;
@@ -152,7 +161,11 @@ public class NetPlayer : NetworkBehaviour
         NetCatalog catalog = NetLauncher.Catalog;
         if (catalog != null && context.GamblingProgress != null)
             for (int i = 0; i < catalog.gamblingOptions.Count && i < 16; i++)
-                context.GamblingProgress.ApplyReplicated(catalog.gamblingOptions[i], GambleUses[i], (GambleUnlockedMask & (1 << i)) != 0);
+                context.GamblingProgress.ApplyReplicated(catalog.gamblingOptions[i], GambleUses[i], (GambleUnlockedMask & (1 << i)) != 0,
+                    GambleStock[i], GambleNextSeconds[i], GamblePayout[i]);
+        // 졸업은 한 번 — Graduate()를 불러야 도박소가 돈 칸 캐시를 바꾼다(구현담당1 안내).
+        if (GambleGraduated && context.GamblingProgress != null && !context.GamblingProgress.Graduated)
+            context.GamblingProgress.Graduate();
 
         UnitUpgrades upgrades = context.UnitUpgrades;
         if (catalog != null && upgrades != null)

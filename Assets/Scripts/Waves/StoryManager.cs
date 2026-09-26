@@ -37,6 +37,10 @@ public class StoryManager : MonoBehaviour
     float replicaSeconds;
     string replicaLabel = "";
     string replicaInterlude = "";
+    int replicaFinished;
+
+    /// <summary>MP: 멀티 클라가 호스트의 「끝낸 스토리 수」를 적는다(도박소 고급 유닛 생성의 스토리 5 조건 표시).</summary>
+    public void ApplyReplicatedFinished(int count) { replica = true; replicaFinished = count; }
 
     /// <summary>MP: 지금 진행 중인 스토리가 있는가(HUD). 클라는 호스트 값.</summary>
     public bool HasRunningStory => replica ? replicaRunning : running != null;
@@ -54,7 +58,7 @@ public class StoryManager : MonoBehaviour
         replicaSeconds = seconds;
         replicaInterlude = interlude ?? "";
     }
-    public int FinishedCount => finished;
+    public int FinishedCount => replica ? replicaFinished : finished; // MP: 클라는 호스트 값(도박소 「스토리 N/5」 조건)
 
     /// <summary>
     /// 지금 대기 중인 구간의 이름이 이것과 같은가(예: "백수생활"). 스토리가 진행 중이거나

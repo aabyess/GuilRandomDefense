@@ -31,6 +31,7 @@ public class NetGameState : NetworkBehaviour
     [Networked] public NetworkString<_32> StoryLabel { get; set; }
     [Networked] public float StorySeconds { get; set; }
     [Networked] public NetworkString<_16> StoryInterlude { get; set; }
+    [Networked] public int StoryFinished { get; set; }
 
     RoundManager roundManager;
     int notificationsLogged;
@@ -79,6 +80,7 @@ public class NetGameState : NetworkBehaviour
             StoryLabel = Clip(story.StatusLabel, 31);
             StorySeconds = story.SecondsUntilNext;
             StoryInterlude = Clip(story.CurrentInterludeName, 15);
+            StoryFinished = story.FinishedCount;
         }
     }
 
@@ -101,7 +103,10 @@ public class NetGameState : NetworkBehaviour
     public override void Render()
     {
         if (!HasStateAuthority && Started && StoryManager.Instance != null)
+        {
             StoryManager.Instance.ApplyReplicated(StoryRunning, StoryWaiting, StoryLabel.ToString(), StorySeconds, StoryInterlude.ToString());
+            StoryManager.Instance.ApplyReplicatedFinished(StoryFinished);
+        }
 
         // 게임 씬의 DifficultyManager.Awake가 읽는다(호스트·클라 모두). 씬 로드 전에 이미 채워져 있어야 해서
         // 값이 바뀔 때만이 아니라 매 프레임 옮겨 둔다(싼 대입 하나).

@@ -38,6 +38,7 @@ using UnityEngine.SceneManagement;
 ///   -mpTestTraitUnits        (호스트) 슬롯마다 즉시형 특성(대상 지정 아님, 비용 1 이하)을 가진 유닛 1기
 ///   -mpTestTrait 초          (클라) 그 초에 특성 버튼 요청 — 복제된 특성 포인트·해금 전후 로그
 ///   -mpTestChat 초 코드      (클라) 그 초에 채팅 코드 요청
+///   -mpTestGambleLabels 초   그 초에 (호스트·클라 각자) 내 도박소 칸 글자 전부 로그 — 재고 「남은/최대 · N초」 복제 확인
 ///   -mpTestCommands 초       그 초부터 2초 간격으로 UnitCommands 공격이동→정지→홀드→적공격→모으기→우리로(클라=명령 요청 RPC)
 /// </summary>
 public class NetLauncher : MonoBehaviour
@@ -87,6 +88,7 @@ public class NetLauncher : MonoBehaviour
     bool testTraitUnits;
     float testTraitDelay = -1f;
     float testChatDelay = -1f;
+    readonly System.Collections.Generic.List<float> gambleLabelDelays = new System.Collections.Generic.List<float>();
     string testChatCode;
 
     public static NetLauncher Instance { get; private set; }
@@ -180,6 +182,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpTestTraitUnits": testTraitUnits = true; break;
                 case "-mpTestTrait": testTraitDelay = Seconds(i + 1); break;
                 case "-mpTestChat": testChatDelay = Seconds(i + 1); testChatCode = Arg(i + 2); break;
+                case "-mpTestGambleLabels": gambleLabelDelays.Add(Seconds(i + 1)); break;
             }
         }
 
@@ -526,6 +529,7 @@ public class NetLauncher : MonoBehaviour
         if (testTraitUnits && GameAuthority.IsServer) SpawnTraitTestUnits();
         if (testTraitDelay >= 0f) StartCoroutine(TestTraitAfter(testTraitDelay));
         if (testChatDelay >= 0f && !string.IsNullOrEmpty(testChatCode)) StartCoroutine(TestChatAfter(testChatDelay, testChatCode));
+        foreach (float delay in gambleLabelDelays) if (delay >= 0f) StartCoroutine(GambleLabelsAfter(delay));
     }
 
     // 테스트 전용(-mpTestUnits): 흔함 유닛을 슬롯마다 N기, 실제 소환 경로(UnitSpawner.Spawn → 우리 칸)로 세운다.
@@ -752,6 +756,23 @@ public class NetLauncher : MonoBehaviour
         yield return new WaitForSecondsRealtime(seconds);
         NetCommands.RequestChatCode(code);
         Debug.Log($"[MP] 테스트 채팅 코드 「{code}」 보냄");
+    }
+
+    IEnumerator GambleLabelsAfter(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        foreach (GamblingShop shop in FindObjectsByType<GamblingShop>(FindObjectsSortMode.None))
+        {
+            if (!shop.TryGetComponent(out OwnedByPlayer owner) || !PlayerContext.GetOccupied(owner.OwnerId)) continue;
+            if (!GameAuthority.IsServer && owner.OwnerId != LocalPlayer.LocalPlayerId) continue;   // 호스트는 앉은 슬롯 전부, 클라는 내 것
+            var labels = new System.Collections.Generic.List<string>();
+            for (int i = 0; i < shop.SlotCount; i++)
+            {
+                LaneShopSlotView view = shop.GetSlotView(i);
+                if (!string.IsNullOrEmpty(view.label)) labels.Add($"[{i}]{view.label.Replace("\n", " / ")}{(view.available ? "" : "(흐림)")}");
+            }
+            Debug.Log($"[MP] 도박소 칸({(GameAuthority.IsServer ? "호스트" : "클라")} 슬롯 {owner.OwnerId}): " + string.Join(" | ", labels));
+        }
     }
 
     IEnumerator DumpAfter(float seconds)

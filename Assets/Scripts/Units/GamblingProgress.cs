@@ -108,12 +108,19 @@ public class GamblingProgress : MonoBehaviour
         OnGraduated?.Invoke();
     }
 
-    /// <summary>MP: 멀티 클라가 호스트의 값을 받아 적는다(NetPlayer) — 도박소 칸의 해금·남은 횟수 표시용 복제.
-    /// 싱글·호스트는 부르지 않는다.</summary>
-    public void ApplyReplicated(GamblingOptionData option, int uses, bool unlocked)
+    /// <summary>MP: 멀티 클라가 호스트의 값을 받아 적는다(NetPlayer) — 도박소 칸의 해금·남은 횟수·재고·충전 시계·
+    /// 누적 지급·졸업 표시용 복제. 재고 충전 시계는 호스트와 클라의 Time.time이 달라서 「다음 충전까지 남은 초」로 받아
+    /// 여기서 lastCharge를 되짚는다. stock<0이면 재고 없는 옵션. 판정은 호스트에서만. 싱글·호스트는 부르지 않는다.</summary>
+    public void ApplyReplicated(GamblingOptionData option, int uses, bool unlocked, int stock, float secondsToNext, int payout)
     {
         if (option == null) return;
         usesSoFar[option] = uses;
         if (unlocked) unlockedOptions.Add(option); else unlockedOptions.Remove(option);
+        if (stock >= 0)
+        {
+            float elapsed = option.stockRegenSeconds > 0f && stock < option.stockMax ? option.stockRegenSeconds - secondsToNext : 0f;
+            stocks[option] = new StockState { count = stock, lastCharge = Time.time - Mathf.Max(0f, elapsed) };
+        }
+        cumulativePayout[option] = payout;
     }
 }
