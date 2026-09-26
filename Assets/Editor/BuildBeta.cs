@@ -10,6 +10,10 @@ using UnityEngine;
 ///   Unity -batchmode -quit -projectPath <사본> -buildTarget Win64 -executeMethod BuildBeta.Windows -logFile <로그>
 /// 결과: <프로젝트>/Builds/Windows/GuilRandomDefense.exe (+ _Data 폴더). 친구에게는 Builds/Windows 폴더를 통째로 압축해 준다.
 /// 개발 빌드가 아니므로 G(위습)·F1/F2(디버그 창·조합 치트)가 꺼진다.
+///
+/// 버전(2026-09-26 사장님 「배포할 때마다 1.1.0v 이런 식으로」): 배포 전에 <see cref="GameVersion.Number"/>를 올린다 —
+/// 기능이 늘면 가운데 자리, 고치기만 했으면 끝자리. 빌드가 그 값을 PlayerSettings.bundleVersion(= Application.version)에 넣고,
+/// 친구에게 줄 압축 파일 이름을 로그에 찍는다(맥 .app은 실행 권한이 깨지지 않게 ditto로 손으로 압축한다).
 /// </summary>
 public static class BuildBeta
 {
@@ -30,6 +34,7 @@ public static class BuildBeta
 
     static void Build(BuildTarget target, string relDir, string fileName)
     {
+        PlayerSettings.bundleVersion = GameVersion.Number;
         string[] scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
         string outDir = Path.Combine(Directory.GetCurrentDirectory(), relDir);
         Directory.CreateDirectory(outDir);
@@ -44,6 +49,8 @@ public static class BuildBeta
 
         BuildReport report = BuildPipeline.BuildPlayer(options);
         BuildSummary summary = report.summary;
+        string platform = target == BuildTarget.StandaloneOSX ? "맥" : "윈도우";
+        Debug.Log($"[베타 빌드] {GameVersion.Label} · 압축 이름 구랜디_베타_{platform}_{GameVersion.Label}.zip");
         Debug.Log($"[베타 빌드] {target} {summary.result} · {summary.totalSize / (1024 * 1024)}MB · 오류 {summary.totalErrors} · 경고 {summary.totalWarnings} · {summary.totalTime}");
         if (Application.isBatchMode) EditorApplication.Exit(summary.result == BuildResult.Succeeded ? 0 : 1);
     }
