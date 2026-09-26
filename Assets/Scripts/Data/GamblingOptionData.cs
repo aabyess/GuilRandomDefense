@@ -90,7 +90,7 @@ public class GamblingOptionData : ScriptableObject
 
     // ⚠️ 맨 뒤에 추가(2026-09-26, 사장님 지시 「원랜디처럼 최대 N개까지 쌓이고 쿨타임마다 1개씩 충전」) —
     //    워크3 상점 재고(usma 최대 · usrg 충전 간격 · usin 시작 재고)를 그대로 옮긴다. 원작 w3u 직접 디코드:
-    //      h06F 돈도박 초급  usrg 14 · usin 0 · usma 비어 있음 → hfoo 기본 3(UnitBalance.slk) — 사장님 지시로 5(원작 3, PM이 여쭘)
+    //      h06F 돈도박 초급  usrg 14 · usin 0 · usma 비어 있음 → hfoo 기본 3(UnitBalance.slk) — 원작 3(사장님 09-26 확정)
     //      H0AZ 돈도박 고급  usma 7 · usrg 12 · usin 0 · Rhse(R10 보스) 해금
     //      h0AK 목재 구입    usma 5 · usrg 3600 · usin 0 / H0B0 고급 유닛 생성 usma 1 · usrg 3600 · usin 0
     //    stockMax 0이면 재고를 안 쓴다(유닛 도박 등 — 예전과 같다). 해금 옵션은 해금 순간부터 stockInitial에서 충전을 시작한다.

@@ -183,6 +183,9 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         GamblingProgress progress = OwnerContext?.GamblingProgress;
         if (option == null || option.stockMax <= 0 || progress == null) return "";
         if (option.requiresUnlock && !progress.IsUnlocked(option)) return "\n(잠김)";
+        // 재고가 있어도 스토리 조건에 막히면 「1/1」만 보고 「왜 안 눌리지」가 된다(09-26 확인 판) — 막는 조건을 칸에 쓴다.
+        if (!StoryRequirementMet(option))
+            return $"\n스토리 {(StoryManager.Instance != null ? StoryManager.Instance.FinishedCount : 0)}/{option.requiresStoriesCleared}";
         int n = progress.Stock(option);
         float next = progress.SecondsToNextStock(option);
         return n >= option.stockMax ? $"\n{n}/{option.stockMax}" : $"\n{n}/{option.stockMax} · {Mathf.CeilToInt(next)}초";

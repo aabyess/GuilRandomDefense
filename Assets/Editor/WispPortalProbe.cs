@@ -349,3 +349,58 @@ public static class GambleAssetProbe
         return sb.ToString().TrimEnd();
     }
 }
+
+/// <summary>돈 도박 재고·졸업 판 안 점검(2026-09-26). 졸업 누적만 당기고(에디터 전용), 칸은 GamblingShop.TryUse로 실제로 누른다.</summary>
+public static class GambleStockProbe
+{
+    static GamblingShop Shop() => Object.FindObjectsByType<GamblingShop>(FindObjectsSortMode.None)
+        .FirstOrDefault(g => g.TryGetComponent(out OwnedByPlayer o) && o.OwnerId == 0);
+
+    public static string State()
+    {
+        GamblingShop shop = Shop();
+        if (shop == null) return "도박소 없음";
+        var ctx = PlayerContext.Get(0);
+        var sb = new System.Text.StringBuilder($"t={Time.time:F1} 골드 {ctx?.GoldWallet?.Gold} · 목재 {ctx?.ResourceWallet?.Get(ResourceType.Wood)} · 졸업 {ctx?.GamblingProgress?.Graduated}\n");
+        for (int i = 0; i < shop.SlotCount; i++)
+        {
+            var v = shop.GetSlotView(i);
+            if (string.IsNullOrEmpty(v.label)) continue;
+            string tip = shop.GetSlotTooltip(i);
+            string why = tip != null && tip.Contains("⚠️") ? " · " + tip.Substring(tip.IndexOf("⚠️")).Replace("\n", " ") : "";
+            sb.AppendLine($"   칸{i} 「{v.label.Replace("\n", " / ")}」 누를 수 있음 {v.available}{why}");
+        }
+        return sb.ToString().TrimEnd();
+    }
+
+    // 500엔 해금 + 골드 + 누적을 졸업 직전(34,600)으로 — 다음 당첨(최소 500)이면 35,100으로 졸업.
+    public static string Prime()
+    {
+        GamblingShop shop = Shop();
+        var ctx = PlayerContext.Get(0);
+        if (shop == null || ctx?.GamblingProgress == null) return "준비 실패";
+        var money = typeof(GamblingShop).GetField("moneyOptions", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(shop) as List<GamblingOptionData>;
+        GamblingOptionData high = money.First(o => o != null && o.graduateAtCumulative > 0);
+        ctx.GamblingProgress.Unlock(high);
+        ctx.GamblingProgress.AddPayout(high, 34600 - ctx.GamblingProgress.CumulativePayout(high));
+        ctx.GoldWallet.Add(60000);
+        return $"500엔 해금 · 누적 {ctx.GamblingProgress.CumulativePayout(high)} · 골드 {ctx.GoldWallet.Gold}";
+    }
+
+    // 졸업만 바로 — 칸 교체 뒤 라벨(스토리 조건 표시) 확인용. 졸업 경로 자체는 Roll500으로 판 안에서 확인했다.
+    public static string ForceGraduate()
+    {
+        PlayerContext.Get(0).GamblingProgress.Graduate();
+        return State();
+    }
+
+    // 500엔 칸(졸업 전 칸1)을 실제로 누른다.
+    public static string Roll500()
+    {
+        GamblingShop shop = Shop();
+        var ctx = PlayerContext.Get(0);
+        int before = ctx.GoldWallet.Gold;
+        bool ok = shop.TryUse(1, default, out string reason);
+        return $"칸1 누름 → {(ok ? "굴림" : "실패 " + reason)} · 골드 {before} → {ctx.GoldWallet.Gold} · 졸업 {ctx.GamblingProgress.Graduated}";
+    }
+}
