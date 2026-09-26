@@ -1057,6 +1057,7 @@ public static class ClaudeCommands
         public int superSize = 1;
         public int watchRounds;          // rounds:N — 0이면 끄기
         public bool autoLoop;
+        public bool combineAll;          // autoloop: 지금 만들 수 있는 조합식을 전부 만든다(결과 등급 높은 것부터, 09-26 R20 벽 ③)
         public bool keepPen;             // autoloop: 흔함은 제 칸에 둔다 — 모서리 쓸기에서 흔함을 뺀다(09-26 칸 안 흔함 가동률 판)
         public bool sellSpare;           // autoloop: 조합표가 못 쓸 만큼 남는 유닛을 판다(09-26 PM 지시 — 목재·위습 경로)
         public bool storySent;           // autoloop: 안흔함을 스토리존에 보냈나 — 스토리가 깨지면 복귀포탈로 되돌린다
@@ -1155,6 +1156,7 @@ public static class ClaudeCommands
             else if (token == "noshop") job.noShop = true;
             else if (token == "sell") job.sellSpare = true;
             else if (token == "keeppen") job.keepPen = true;
+            else if (token == "combineall") job.combineAll = true;
             else if (token == "bossaway") job.bossAway = true;
             else if (token.StartsWith("mode:"))
             {
@@ -1375,6 +1377,13 @@ public static class ClaudeCommands
                 }
                 bool optional = target.StartsWith("?");
                 if (optional) target = target.Substring(1);
+                if (target == "@combineall")
+                {
+                    job.report += CombineAllAffordable(job);
+                    job.clickIndex++;
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
+                    break;
+                }
                 if (target == "@sellspare")
                 {
                     job.report += SellSpareUnits(job);
@@ -2578,7 +2587,7 @@ public static class ClaudeCommands
         return $"적 레인 {EnemyDummy.CountInLane(0)}/전체 {EnemyDummy.Active.Count(e => e != null)} · 데스카운트 {rm.DeathCountFor(0)} · " +
                $"골드 {gold} · 목재 {wood} · 내 유닛 {(mine.Any() ? string.Join(", ", mine) : "0")} · 위습 칸 「{slots}」 · " +
                $"스토리 「{story}」(매니저 「{StoryManager.Instance?.StatusLabel}」 깸 {StoryManager.Instance?.FinishedCount}) · 보스 적 {bosses} · 남은시간 {rm.RoundTimeLeft:F1}/준비 {rm.PreRoundTimeLeft:F1} · 프레임 {frames} · {UptimeText()} · {logs}" +
-               WoodRoundText() + PenCommonText() +
+               WoodRoundText() + PenCommonText() + CombineRoundText() +
                $"\n      🎯 흔함 이름(지금) {(commonNames.Length > 0 ? commonNames : "-")} · 도구가 흔함선택으로 보낸 누계 {(pickNames.Length > 0 ? pickNames : "0")}";
     }
 
@@ -2648,6 +2657,48 @@ public static class ClaudeCommands
         }
         int end = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
         return $"   🏪 {shop} {(bought.Count > 0 ? $"{bought.Count}번 삼: {string.Join(", ", bought.GroupBy(x => x.Split(' ')[0]).Select(g => $"{g.Key}×{g.Count()}"))}" : "산 것 없음")} · 골드 {start} → {end} · 가진 등급에 안 듣는 칸 {skipped}개 건너뜀 · 칸 {string.Join(" · ", slots.Select(b => $"「{ButtonLabel(b).Replace("\n", " ")}」{(b.IsInteractable() ? "" : "(흐림)")}"))}\n";
+    }
+
+    // ── 조합 전부(combineall, 09-26 PM 지시 — R20 벽 ③ 「특별함→희귀함 조합이 왜 안 이어지나」) ──
+    //    카드 길(@box:Unit_흔함 → Card0~2 → 칸 12·13)은 **고른 유닛이 첫 재료인 식**만 보여 준다(GameHud.RebuildUnitCommandSlots →
+    //    CombineSystem.GetRecipesStartingWith). 도구는 흔함만 골라서, 첫 재료가 특별함인 희귀함 식 42개는 **한 번도 안 보였다**.
+    //    여기선 CombineSystem.GetAvailableRecipes(재료가 갖춰진 식)를 결과 등급 높은 것부터 TryCombine한다 — 조합 버튼이 부르는 것과 같은 함수다
+    //    (GameHud 칸 클릭 → system.TryCombine(recipe, casterPosition), 자리는 09-26부터 casterPosition을 안 본다).
+    //    매 턴 조합 **전** 「만들 수 있는 식」을 결과 등급별로 세어 둔다 — 재료가 모이는지(가능 식 수)와 실제로 만들었는지(조합 수)를 가른다.
+    static readonly Dictionary<string, int> combineAvailRound = new Dictionary<string, int>(), combineDoneRound = new Dictionary<string, int>();
+    static readonly Dictionary<string, int> combineDoneTotal = new Dictionary<string, int>();
+
+    static string CombineAllAffordable(GameShotJob job)
+    {
+        CombineSystem system = UnityEngine.Object.FindFirstObjectByType<CombineSystem>();
+        if (system == null) return "   🧪 조합 전부: CombineSystem 없음\n";
+        var before = system.GetAvailableRecipes().Where(r => r != null && r.result != null).ToList();
+        foreach (var g in before.GroupBy(r => r.result.grade.KoreanName()))
+            combineAvailRound[g.Key] = Math.Max(combineAvailRound.TryGetValue(g.Key, out int a) ? a : 0, g.Count());
+        var made = new List<string>();
+        for (int guard = 0; guard < 24; guard++)
+        {
+            CombineRecipe next = system.GetAvailableRecipes().Where(r => r != null && r.result != null)
+                .OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault();
+            if (next == null || !system.TryCombine(next)) break;
+            string key = next.result.grade.KoreanName();
+            combineDoneRound[key] = (combineDoneRound.TryGetValue(key, out int d) ? d : 0) + 1;
+            combineDoneTotal[key] = (combineDoneTotal.TryGetValue(key, out int t) ? t : 0) + 1;
+            made.Add($"{key} {next.result.unitName}");
+        }
+        string avail = before.Count == 0 ? "0" : string.Join(" ", before.GroupBy(r => r.result.grade.KoreanName()).Select(g => $"{g.Key}{g.Count()}"));
+        return $"   🧪 조합 전부: 만들 수 있던 식 [{avail}] → 만듦 {made.Count}: {(made.Count > 0 ? string.Join(", ", made) : "-")}\n";
+    }
+
+    // 라운드 줄 끝 — 이번 라운드 턴들에서 본 「만들 수 있던 식」 최대치 / 실제 조합 수(결과 등급별), 판 누계. 부를 때마다 라운드 몫을 비운다.
+    static string CombineRoundText()
+    {
+        string Book(Dictionary<string, int> b) => b.Count == 0 ? "0" : string.Join(" ", b.Select(kv => $"{kv.Key}{kv.Value}"));
+        string rareAvail = combineAvailRound.TryGetValue(UnitGrade.Rare.KoreanName(), out int ra) ? ra.ToString() : "0";
+        string rareDone = combineDoneRound.TryGetValue(UnitGrade.Rare.KoreanName(), out int rd) ? rd.ToString() : "0";
+        string text = $"\n      🧪 희귀함 조합 가능 식 {rareAvail} / 실제 조합 {rareDone} · 가능 식(등급별 최대) [{Book(combineAvailRound)}] · 조합 [{Book(combineDoneRound)}] · 판 누계 [{Book(combineDoneTotal)}]";
+        combineAvailRound.Clear(); combineDoneRound.Clear();
+        return text;
     }
 
     // ── 남는 유닛 판매(sell, 09-26 PM 지시) ──
@@ -2742,6 +2793,7 @@ public static class ClaudeCommands
         woodWatched = wallet;   // 판마다 새 지갑 — 장부도 새로
         woodLast = wallet.Get(ResourceType.Wood);
         woodIn.Clear(); woodOut.Clear(); woodInRound.Clear(); woodOutRound.Clear(); soldTotals.Clear();
+        combineAvailRound.Clear(); combineDoneRound.Clear(); combineDoneTotal.Clear();
         wallet.OnResourceChanged += OnWoodChanged;
     }
 
@@ -2825,6 +2877,7 @@ public static class ClaudeCommands
             turn.Add("?UnitCommandSlot12");
             turn.Add("?UnitCommandSlot13");
         }
+        if (job.combineAll) turn.Add("@combineall");   // 카드 조합 뒤 — 카드 길이 못 여는 식(첫 재료가 흔함이 아닌 식)까지
         if (job.sellSpare) turn.Add("@sellspare");   // 조합 시도 뒤 — 조합에 먼저 쓰고 남는 것만 판다
         if (job.keepPen) foreach (string box in NonCommonBoxes) { turn.Add(box); turn.Add("@rcpt:corner"); }
         else { turn.Add("@box:Unit_"); turn.Add("@rcpt:corner"); }
