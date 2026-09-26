@@ -43,6 +43,7 @@ using UnityEngine.SceneManagement;
 ///   -mpLobbyChat 초 문장     방에 들어간 뒤 그 초에 대기실 채팅 한 줄
 ///   -mpTestGambleLabels 초   그 초에 (호스트·클라 각자) 내 도박소 칸 글자 전부 로그 — 재고 「남은/최대 · N초」 복제 확인
 ///   -mpCamWisp 초            그 초에 카메라를 위습 쪽으로(주인 색 캡처용)
+///   -mpTestPortraits 초 폴더  (호스트) 흔함·특별함·재규어·적·매머드·보스를 차례로 골라 초상화 캡처 + 초상 켬/끔 FPS
 ///   -mpTestCommands 초       그 초부터 2초 간격으로 UnitCommands 공격이동→정지→홀드→적공격→모으기→우리로(클라=명령 요청 RPC)
 /// </summary>
 public class NetLauncher : MonoBehaviour
@@ -90,6 +91,8 @@ public class NetLauncher : MonoBehaviour
     float testEconomyDelay = -1f;
     float testFinishRunDelay = -1f;
     float camWispDelay = -1f;
+    float testPortraitsDelay = -1f;
+    string testPortraitsDir;
     readonly System.Collections.Generic.List<(float, string)> shotAts = new System.Collections.Generic.List<(float, string)>();
     float testPhase3Delay = -1f;
     bool testTraitUnits;
@@ -167,6 +170,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpSaveDir": PersistentSave.SaveRootOverride = Arg(i + 1); break;
                 case "-mpTestFinishRun": testFinishRunDelay = Seconds(i + 1); break;
                 case "-mpCamWisp": camWispDelay = Seconds(i + 1); break;
+                case "-mpTestPortraits": testPortraitsDelay = Seconds(i + 1); testPortraitsDir = Arg(i + 2); break;
                 case "-mpJoin": join = true; break;
                 case "-mpSession": cliSession = Arg(i + 1); break;
                 case "-mpRegion": region = Arg(i + 1) ?? region; break;
@@ -585,6 +589,7 @@ public class NetLauncher : MonoBehaviour
         if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
         if (testFinishRunDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestFinishRunAfter(testFinishRunDelay));
         if (camWispDelay >= 0f) StartCoroutine(CamWispAfter(camWispDelay));
+        if (testPortraitsDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestPortraitsAfter(testPortraitsDelay, testPortraitsDir));
         if (testPhase3Delay >= 0f) StartCoroutine(TestPhase3After(testPhase3Delay));
         if (testTraitUnits && GameAuthority.IsServer) SpawnTraitTestUnits();
         if (testTraitDelay >= 0f) StartCoroutine(TestTraitAfter(testTraitDelay));
@@ -886,6 +891,67 @@ public class NetLauncher : MonoBehaviour
             Debug.Log($"[MP] 카메라 → 위습 {e.transform.position}");
             yield break;
         }
+    }
+
+    // 테스트 전용: 초상화(PortraitStage) 확인 — 유닛은 선택, 적은 살펴보기로 정보칸에 띄우고 캡처한다.
+    IEnumerator TestPortraitsAfter(float seconds, string dir)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        UnitSpawner spawner = FindFirstObjectByType<UnitSpawner>();
+        SelectionManager selection = FindFirstObjectByType<SelectionManager>();
+        LaneMarker lane = LaneMarker.Get(0);
+        if (spawner == null || selection == null || lane == null || catalog == null) { Debug.LogWarning("[MP] 초상 테스트: 준비물 없음"); yield break; }
+
+        var targets = new System.Collections.Generic.List<(string label, GameObject go, bool isEnemy)>();
+        UnitData Find(System.Func<UnitData, bool> pick) => catalog.units.FirstOrDefault(u => u != null && u.prefab != null && pick(u));
+        void AddUnit(string label, UnitData data)
+        {
+            if (data == null) { Debug.LogWarning($"[MP] 초상 테스트: {label} 유닛 없음"); return; }
+            GameObject go = spawner.Spawn(data, lane.TakeSpawnPosition(data), 0);
+            if (go != null) targets.Add(($"{label}_{data.name}", go, false));
+        }
+        AddUnit("1흔함", Find(u => u.grade == UnitGrade.Common));
+        AddUnit("2특별함", Find(u => u.name.Contains("특별함_노건완")) ?? Find(u => u.grade == UnitGrade.Special));
+        AddUnit("3재규어", Find(u => u.name.Contains("안흔함_강재규")));
+
+        void AddEnemy(string label, EnemyData data, float dx)
+        {
+            if (data == null || data.prefab == null) { Debug.LogWarning($"[MP] 초상 테스트: {label} 적 없음"); return; }
+            GameObject go = Instantiate(data.prefab, lane.LaneCenter + new Vector3(dx, 0f, 0f), Quaternion.identity);
+            if (go.TryGetComponent(out WaypointMover mover)) mover.enabled = false;
+            if (go.TryGetComponent(out EnemyDummy dummy)) dummy.Initialize(data);
+            targets.Add(($"{label}_{data.name}", go, true));
+        }
+        AddEnemy("4적", catalog.enemies.FirstOrDefault(e => e != null && !e.isBoss && e.prefab != null && e.name.Contains("R01")), -60f);
+        AddEnemy("5매머드", catalog.enemies.FirstOrDefault(e => e != null && e.name.Contains("양문호") && !e.isBoss), 0f);
+        AddEnemy("6보스", catalog.enemies.FirstOrDefault(e => e != null && e.isBoss && e.prefab != null && e.name.Contains("R10")), 60f);
+
+        yield return new WaitForSecondsRealtime(1f);
+        foreach (var (label, go, isEnemy) in targets)
+        {
+            if (go == null) continue;
+            if (isEnemy) { selection.ClearSelection(); InspectTarget.Set(go); }
+            else { InspectTarget.Clear(); if (go.TryGetComponent(out Selectable s)) selection.SelectOnly(s); }
+            yield return new WaitForSecondsRealtime(1.5f);
+            yield return new WaitForEndOfFrame();
+            string path = System.IO.Path.Combine(dir, $"portrait_{label}.png");
+            ScreenCapture.CaptureScreenshot(path);
+            Debug.Log($"[MP] 초상 캡처: {label} → {path}");
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+
+        // 프레임 영향: 초상 켬(유닛 하나 선택) 8초 평균 vs 끔(선택 없음) 8초 평균
+        InspectTarget.Clear();
+        GameObject any = targets.Count > 0 ? targets[0].go : null;
+        if (any != null && any.TryGetComponent(out Selectable sel)) selection.SelectOnly(sel);
+        float t0 = Time.realtimeSinceStartup; int f0 = Time.frameCount;
+        yield return new WaitForSecondsRealtime(8f);
+        float onFps = (Time.frameCount - f0) / (Time.realtimeSinceStartup - t0);
+        selection.ClearSelection();
+        t0 = Time.realtimeSinceStartup; f0 = Time.frameCount;
+        yield return new WaitForSecondsRealtime(8f);
+        float offFps = (Time.frameCount - f0) / (Time.realtimeSinceStartup - t0);
+        Debug.Log($"[MP] 초상 FPS: 켬 {onFps:F1} · 끔 {offFps:F1}");
     }
 
     IEnumerator DumpAfter(float seconds)

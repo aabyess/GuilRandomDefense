@@ -59,6 +59,7 @@ public class GameHud : MonoBehaviour
     TMP_Text unitInfoText;
     Image unitInfoPortrait;
     TMP_Text unitInfoPortraitInitial;
+    RawImage unitInfoPortraitModel;   // 초상화(09-26 사장님 요청): 실제 모델이 Idle로 서 있는 RenderTexture(PortraitStage)
     GameObject unitInfoPortraitSlotObject;
     TMP_Text goldWoodText;
 
@@ -451,6 +452,18 @@ public class GameHud : MonoBehaviour
         unitInfoPortraitInitial.fontSize = 44;
         unitInfoPortraitInitial.fontStyle = FontStyles.Bold;
         unitInfoPortraitInitial.raycastTarget = false;
+
+        // 초상화(09-26 사장님 「원랜디처럼 유닛 서 있는 거」): 모델이 있으면 글자 대신 이 칸에 실제 모델(Idle)을 찍어 보인다.
+        GameObject modelObj = new GameObject("PortraitModel", typeof(RectTransform), typeof(RawImage));
+        modelObj.transform.SetParent(portraitObj.transform, false);
+        RectTransform modelRect = modelObj.GetComponent<RectTransform>();
+        modelRect.anchorMin = Vector2.zero;
+        modelRect.anchorMax = Vector2.one;
+        modelRect.offsetMin = Vector2.zero;
+        modelRect.offsetMax = Vector2.zero;
+        unitInfoPortraitModel = modelObj.GetComponent<RawImage>();
+        unitInfoPortraitModel.raycastTarget = false;
+        modelObj.SetActive(false);
 
         RectTransform infoTextSlot = CreatePanel(infoPanel, "UnitInfoTextSlot", Color.clear);
         SetAnchors(infoTextSlot, new Vector2(0.24f, 0f), new Vector2(1f, 1f));
@@ -2564,6 +2577,7 @@ public class GameHud : MonoBehaviour
             if (inspect != null && ShowInspectInfo(inspect)) return;
             unitInfoText.text = "선택된 유닛 없음";
             SetUnitInfoPortrait(null);
+            SetPortraitModel(null); // 초상화
             return;
         }
 
@@ -2572,6 +2586,7 @@ public class GameHud : MonoBehaviour
         {
             unitInfoText.text = "선택된 유닛 없음";
             SetUnitInfoPortrait(null);
+            SetPortraitModel(null); // 초상화
             return;
         }
 
@@ -2580,6 +2595,7 @@ public class GameHud : MonoBehaviour
         UnitData data = identity != null ? identity.Data : null;
 
         SetUnitInfoPortrait(data);
+        SetPortraitModel(first.gameObject); // 초상화: 선택 첫 유닛(클라는 거울 겉모습)
 
         // 위습은 UnitIdentity가 없어서 예전엔 오브젝트 이름이 그대로 떴다 — 화면에
         // **「WispPrefab(Clone)」**이라고 나왔다(2026-09-24 플레이 캡처). 사장님이 보는 이름은
@@ -2630,6 +2646,7 @@ public class GameHud : MonoBehaviour
         if (target.TryGetComponent(out EnemyDummy enemy))
         {
             SetUnitInfoPortrait(null);
+            SetPortraitModel(target); // 초상화: 살펴보는 적
             string enemyName = enemy.Data != null && !string.IsNullOrEmpty(enemy.Data.enemyName) ? enemy.Data.enemyName : enemy.name;
             string tag = enemy.IsBoss ? "보스" : "적";
             unitInfoText.text =
@@ -2643,6 +2660,7 @@ public class GameHud : MonoBehaviour
         {
             UnitData data = doll.Unit;
             SetUnitInfoPortrait(data);
+            SetPortraitModel(target); // 초상화: 조합표 인형
             string hex = ColorUtility.ToHtmlStringRGB(GetGradeColor(data.grade));
             unitInfoText.text =
                 $"<color=#{hex}>{data.unitName}</color>  <size=80%>(조합표 · 조작 불가)</size>\n등급: {data.grade.KoreanName()}\n체력: {data.hp:F0}\n" +
@@ -2650,6 +2668,17 @@ public class GameHud : MonoBehaviour
             return true;
         }
         return false;
+    }
+
+    // 초상화(09-26): 대상의 실제 모델을 PortraitStage에 세워 RawImage로 보인다. 모델이 없으면(자리표시) 글자 칸 그대로.
+    // 매 프레임 불려도 PortraitStage.Show가 같은 대상이면 바로 돌아간다.
+    void SetPortraitModel(GameObject target)
+    {
+        if (unitInfoPortraitModel == null) return;
+        bool shown = PortraitStage.Show(target);
+        if (shown && unitInfoPortraitModel.texture == null) unitInfoPortraitModel.texture = PortraitStage.Texture;
+        if (unitInfoPortraitModel.gameObject.activeSelf != shown) unitInfoPortraitModel.gameObject.SetActive(shown);
+        if (unitInfoPortraitInitial != null) unitInfoPortraitInitial.enabled = !shown;
     }
 
     // 초상화 아트가 없으므로 등급 색 배경만 채운다 — BuildCard(다중 선택 카드)와 같은 관례.
@@ -2680,6 +2709,7 @@ public class GameHud : MonoBehaviour
     {
         unitInfoText.gameObject.SetActive(false);
         if (unitInfoPortraitSlotObject != null) unitInfoPortraitSlotObject.SetActive(false);
+        SetPortraitModel(null); // 초상화: 카드 격자에선 칸이 숨어 있으니 무대 카메라도 끈다
         unitCardsPanel.SetActive(true);
 
         IReadOnlyList<Selectable> selected = selection.Selected;
