@@ -34,6 +34,8 @@ using UnityEngine.SceneManagement;
 ///   -mpTestMoveUnits 초      게임 씬 진입 뒤 그 초에 내 유닛 전부를 레인 가운데로 보낸다(클라=이동 요청 RPC)
 ///   -mpTestEconomy 초        그 초에 (클라) 내 상점마다 0번 칸 사용 · 지금 되는 조합 전부 · 판매 보상 있는 유닛 하나 판매 — 요청 RPC 확인용
 ///   -mpTestPhase3 초         그 초에 (클라) 내 유닛 하나 창고 보관→4초 뒤 회수 · 항법 선택 · 복제된 스토리/도박/항법 상태 로그
+///   -mpTestTraitUnits        (호스트) 슬롯마다 즉시형 특성(대상 지정 아님, 비용 1 이하)을 가진 유닛 1기
+///   -mpTestTrait 초          (클라) 그 초에 특성 버튼 요청 — 복제된 특성 포인트·해금 전후 로그
 ///   -mpTestCommands 초       그 초부터 2초 간격으로 UnitCommands 공격이동→정지→홀드→적공격→모으기→우리로(클라=명령 요청 RPC)
 /// </summary>
 public class NetLauncher : MonoBehaviour
@@ -80,6 +82,8 @@ public class NetLauncher : MonoBehaviour
     float testCommandsDelay = -1f;
     float testEconomyDelay = -1f;
     float testPhase3Delay = -1f;
+    bool testTraitUnits;
+    float testTraitDelay = -1f;
 
     public static NetLauncher Instance { get; private set; }
 
@@ -168,6 +172,8 @@ public class NetLauncher : MonoBehaviour
                 case "-mpTestCommands": testCommandsDelay = Seconds(i + 1); break;
                 case "-mpTestEconomy": testEconomyDelay = Seconds(i + 1); break;
                 case "-mpTestPhase3": testPhase3Delay = Seconds(i + 1); break;
+                case "-mpTestTraitUnits": testTraitUnits = true; break;
+                case "-mpTestTrait": testTraitDelay = Seconds(i + 1); break;
             }
         }
 
@@ -494,6 +500,8 @@ public class NetLauncher : MonoBehaviour
         if (testCommandsDelay >= 0f) StartCoroutine(TestCommandsAfter(testCommandsDelay));
         if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
         if (testPhase3Delay >= 0f) StartCoroutine(TestPhase3After(testPhase3Delay));
+        if (testTraitUnits && GameAuthority.IsServer) SpawnTraitTestUnits();
+        if (testTraitDelay >= 0f) StartCoroutine(TestTraitAfter(testTraitDelay));
     }
 
     // 테스트 전용(-mpTestUnits): 흔함 유닛을 슬롯마다 N기, 실제 소환 경로(UnitSpawner.Spawn → 우리 칸)로 세운다.
@@ -680,6 +688,38 @@ public class NetLauncher : MonoBehaviour
             foreach (GamblingOptionData option in catalog.gamblingOptions)
                 gamble += $"{option.name}:{(context.GamblingProgress.IsUnlocked(option) ? "해금" : "잠김")}/{context.GamblingProgress.UsesSoFar(option)}회 ";
         Debug.Log($"[MP] 테스트 상태(클라): 항법 {context?.NavigationState?.Choice} · 스토리 진행 {story?.HasRunningStory} 대기 {story?.IsWaiting} 「{story?.StatusLabel}」 {story?.SecondsUntilNext:F0}초 · 도박 {gamble}");
+    }
+
+    void SpawnTraitTestUnits()
+    {
+        UnitSpawner spawner = FindFirstObjectByType<UnitSpawner>();
+        UnitData withTrait = catalog != null ? catalog.units.FirstOrDefault(u => u != null && u.prefab != null && u.trait != null
+            && !u.trait.targetsOtherUnit && !u.trait.isTransformType && u.trait.costTraitPoints <= 1) : null;
+        if (spawner == null || withTrait == null) { Debug.LogWarning("[MP] -mpTestTraitUnits: 조건에 맞는 유닛이 없습니다."); return; }
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            LaneMarker lane = LaneMarker.Get(context.PlayerId);
+            spawner.Spawn(withTrait, lane != null ? lane.TakeSpawnPosition(withTrait) : context.transform.position, context.PlayerId);
+        }
+        Debug.Log($"[MP] -mpTestTraitUnits: {withTrait.unitName}(특성 {withTrait.trait.name}, 비용 {withTrait.trait.costTraitPoints}) 슬롯마다 1기");
+    }
+
+    IEnumerator TestTraitAfter(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        UnitUpgrades upgrades = PlayerContext.Local != null ? PlayerContext.Local.UnitUpgrades : null;
+        foreach (NetEntity e in FindObjectsByType<NetEntity>(FindObjectsSortMode.None))
+        {
+            if (e.EntityKind != NetEntityKind.Unit || e.Owner != LocalPlayer.LocalPlayerId || e.Visual == null) continue;
+            if (!e.Visual.TryGetComponent(out UnitIdentity id) || id.Data == null || id.Data.trait == null || id.Data.trait.targetsOtherUnit) continue;
+            UnitTraitData trait = id.Data.trait;
+            Debug.Log($"[MP] 테스트 특성: {id.Data.unitName} {trait.name} — 요청 전 포인트 {upgrades?.TraitPoints} 해금 {upgrades?.IsUnlocked(trait)}");
+            NetCommands.RequestHudUnitAction(NetHudAction.Trait, e.Visual.GetComponent<Selectable>(), 0);
+            yield return new WaitForSecondsRealtime(2f);
+            Debug.Log($"[MP] 테스트 특성: 요청 뒤 포인트 {upgrades?.TraitPoints} 해금 {upgrades?.IsUnlocked(trait)}");
+            yield break;
+        }
+        Debug.Log($"[MP] 테스트 특성: 특성 있는 내 유닛이 없습니다(포인트 {upgrades?.TraitPoints}).");
     }
 
     IEnumerator DumpAfter(float seconds)

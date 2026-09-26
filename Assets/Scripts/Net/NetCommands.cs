@@ -7,6 +7,7 @@ public enum NetHudAction : byte
 {
     Gamble = 0,
     Sell = 1,
+    Trait = 2,
 }
 
 /// <summary>클라 → 호스트로 보내는 유닛 명령 종류(UnitCommands의 함수와 1:1). 직렬화되니 맨 뒤에만 추가.</summary>
@@ -216,8 +217,31 @@ public static class NetCommands
         {
             case NetHudAction.Gamble: hud.ExecuteGambleOn(selectable, argument); break;
             case NetHudAction.Sell: hud.ExecuteSellOn(selectable); break;
+            case NetHudAction.Trait: hud.ExecuteTraitOn(selectable); break;
         }
         if (commandsLogged++ < 30) Debug.Log($"[MP] 유닛 버튼 요청 수행: 슬롯 {sender.Slot} {action}({argument}) → {real.name}");
+    }
+
+    public static void RequestTraitTarget(UnitTraitData trait, UnitIdentity target)
+    {
+        int traitIndex = NetLauncher.Catalog != null ? NetLauncher.Catalog.IndexOf(trait) : -1;
+        NetEntity entity = target != null ? target.GetComponentInParent<NetEntity>() : null;
+        if (traitIndex < 0 || entity == null || entity.Object == null || !entity.Object.IsValid || NetPlayer.Local == null) return;
+        NetPlayer.Local.RPC_TraitTarget((short)traitIndex, entity.Object.Id);
+    }
+
+    /// <summary>호스트: 대상 지정 특성(로빈 등). 특성 포인트는 요청자 슬롯 것, 대상은 요청자 소유 유닛만.</summary>
+    public static void ExecuteTraitTarget(NetPlayer sender, int traitIndex, NetworkId target)
+    {
+        NetCatalog catalog = NetLauncher.Catalog;
+        UnitTraitData trait = catalog != null && traitIndex >= 0 && traitIndex < catalog.traits.Count ? catalog.traits[traitIndex] : null;
+        if (trait == null || !trait.targetsOtherUnit) return;
+        if (!TryGetOwnedReal(sender, target, "특성 대상", out GameObject real) || !real.TryGetComponent(out UnitIdentity identity)) return;
+
+        GameHud hud = Object.FindFirstObjectByType<GameHud>();
+        if (hud == null) return;
+        hud.ExecuteTraitTargetOn(trait, PlayerContext.Get(sender.Slot), identity, sender.Slot);
+        if (commandsLogged++ < 30) Debug.Log($"[MP] 특성 대상 요청 수행: 슬롯 {sender.Slot} {trait.name} → {real.name}");
     }
 
     // ───────────── 창고 · 항법(2단계 ③) ─────────────

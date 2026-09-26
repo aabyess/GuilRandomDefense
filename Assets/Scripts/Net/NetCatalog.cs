@@ -13,6 +13,9 @@ public class NetCatalog : ScriptableObject
     public List<EnemyData> enemies = new List<EnemyData>();
     public List<WispData> wisps = new List<WispData>();
     public List<GamblingOptionData> gamblingOptions = new List<GamblingOptionData>();
+    public List<UnitTraitData> traits = new List<UnitTraitData>();
+    public List<UnitUpgradeTrackData> gradeTracks = new List<UnitUpgradeTrackData>();
+    public List<AttackTypeUpgradeTrackData> attackTypeTracks = new List<AttackTypeUpgradeTrackData>();
 
     Dictionary<Object, int> index;
 
@@ -34,6 +37,9 @@ public class NetCatalog : ScriptableObject
                 foreach (EnemyData e in enemies) Add(e != null ? e.name : "-");
                 foreach (WispData w in wisps) Add(w != null ? w.name : "-");
                 foreach (GamblingOptionData g in gamblingOptions) Add(g != null ? g.name : "-");
+                foreach (UnitTraitData t in traits) Add(t != null ? t.name : "-");
+                foreach (UnitUpgradeTrackData t in gradeTracks) Add(t != null ? t.name : "-");
+                foreach (AttackTypeUpgradeTrackData t in attackTypeTracks) Add(t != null ? t.name : "-");
                 return (int)hash;
             }
         }
@@ -48,6 +54,7 @@ public class NetCatalog : ScriptableObject
             for (int i = 0; i < units.Count; i++) if (units[i] != null) index[units[i]] = i;
             for (int i = 0; i < enemies.Count; i++) if (enemies[i] != null) index[enemies[i]] = i;
             for (int i = 0; i < wisps.Count; i++) if (wisps[i] != null) index[wisps[i]] = i;
+            for (int i = 0; i < traits.Count; i++) if (traits[i] != null) index[traits[i]] = i;
         }
         return index.TryGetValue(data, out int i2) ? i2 : -1;
     }

@@ -1368,11 +1368,23 @@ public class GameHud : MonoBehaviour
     // TrySpendTraitPoints가 확인+차감을 한 호출로 묶어서 그 사이 다른 소비가 못 끼어든다.
     void OnTraitButtonClicked()
     {
-        if (BlockedOnMultiplayerClient()) return; // MP
         SelectionManager selection = Selection;
         if (selection == null || selection.Selected.Count != 1) return;
 
         Selectable single = selection.Selected[0];
+
+        // MP: 멀티 클라 — 대상을 찍는 특성(로빈)은 「대상 클릭 대기」만 여기서(복제된 포인트로 검사) 하고 실행은
+        //     RefreshTraitTargeting이 요청으로 보낸다. 그 밖의 특성은 호스트에 요청만. 싱글·호스트는 아래 본체 그대로.
+        bool mpTargeted = single != null && single.TryGetComponent(out UnitIdentity mpIdentity)
+            && mpIdentity.Data != null && mpIdentity.Data.trait != null && mpIdentity.Data.trait.targetsOtherUnit;
+        if (!GameAuthority.IsServer && !mpTargeted) { NetCommands.RequestHudUnitAction(NetHudAction.Trait, single, 0); return; }
+
+        ExecuteTraitOn(single);
+    }
+
+    // MP: 버튼(위)과 멀티 호스트가 받은 클라 요청(NetCommands)이 같이 쓰는 본체 — 줄 내용은 그대로다.
+    public void ExecuteTraitOn(Selectable single)
+    {
         if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null) return;
 
         UnitTraitData trait = identity.Data.trait;
@@ -2294,6 +2306,15 @@ public class GameHud : MonoBehaviour
             return;
         }
 
+        // MP: 멀티 클라는 대상까지 골랐으면 호스트에 요청(호스트가 요청자 슬롯의 특성 포인트로 아래 본체를 돈다).
+        if (!GameAuthority.IsServer) { NetCommands.RequestTraitTarget(trait, targetIdentity); lastTraitButtonPoints = int.MinValue; return; }
+
+        ExecuteTraitTargetOn(trait, context, targetIdentity, notifyPlayerId);
+    }
+
+    // MP: 대상 지정 특성의 실행 본체 — 로컬 클릭(위)과 멀티 호스트가 받은 요청이 같이 쓴다. 줄 내용은 그대로다.
+    public void ExecuteTraitTargetOn(UnitTraitData trait, PlayerContext context, UnitIdentity targetIdentity, int notifyPlayerId)
+    {
         UnitUpgrades upgrades = context != null ? context.UnitUpgrades : null;
         if (upgrades == null || upgrades.IsUnlocked(trait)) return;
 

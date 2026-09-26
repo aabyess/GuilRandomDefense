@@ -53,6 +53,43 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
     public bool HasStoryPoint => storyPointGranted;
     public bool HasPirateQuestPoint => pirateQuestPointGranted;
 
+    // ───── MP: 멀티 클라가 호스트의 값을 받아 적는다(NetPlayer) — 특성 버튼 포인트·강화소 「Lv N」 표시용 복제.
+    //       판정(구매·해금)은 호스트에서만 일어난다. 싱글·호스트는 부르지 않는다. ─────
+    public int GrantedPointMask => (startingPointGranted ? 1 : 0) | (purchasedPointGranted ? 2 : 0) | (storyPointGranted ? 4 : 0) | (pirateQuestPointGranted ? 8 : 0);
+    public IReadOnlyCollection<UnitTraitData> UnlockedTraits => unlockedTraits;
+
+    public void ApplyReplicatedPoints(int points, int grantedMask)
+    {
+        startingPointGranted = (grantedMask & 1) != 0;
+        purchasedPointGranted = (grantedMask & 2) != 0;
+        storyPointGranted = (grantedMask & 4) != 0;
+        pirateQuestPointGranted = (grantedMask & 8) != 0;
+        if (TraitPoints == points) return;
+        TraitPoints = points;
+        OnTraitPointsChanged?.Invoke();
+    }
+
+    public void ApplyReplicatedTrait(UnitTraitData trait, bool unlocked, int repeatCount)
+    {
+        if (trait == null) return;
+        if (unlocked) unlockedTraits.Add(trait); else unlockedTraits.Remove(trait);
+        if (repeatCount > 0) repeatablePurchaseCounts[trait] = repeatCount; else repeatablePurchaseCounts.Remove(trait);
+    }
+
+    public void ApplyReplicatedLevel(UnitUpgradeTrackData track, int level)
+    {
+        if (track == null || Level(track) == level) return;
+        legacyGradeLevels[track] = level;
+        OnLevelChanged?.Invoke();
+    }
+
+    public void ApplyReplicatedLevel(AttackTypeUpgradeTrackData track, int level)
+    {
+        if (track == null || Level(track) == level) return;
+        attackTypeLevels[track] = level;
+        OnLevelChanged?.Invoke();
+    }
+
     // 게임 시작 시 1개. RewardDistributor.GrantStartingTraitPoints가 부른다.
     public void GrantStartingPoint()
     {

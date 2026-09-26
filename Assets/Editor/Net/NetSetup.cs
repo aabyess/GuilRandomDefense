@@ -98,9 +98,12 @@ public static class NetSetup
         catalog.enemies = LoadAllSorted<EnemyData>();
         catalog.wisps = LoadAllSorted<WispData>();
         catalog.gamblingOptions = LoadAllSorted<GamblingOptionData>();
+        catalog.traits = LoadAllSorted<UnitTraitData>();
+        catalog.gradeTracks = LoadAllSorted<UnitUpgradeTrackData>();
+        catalog.attackTypeTracks = LoadAllSorted<AttackTypeUpgradeTrackData>();
         EditorUtility.SetDirty(catalog);
         AssetDatabase.SaveAssets();
-        Debug.Log($"[MP] 카탈로그: 유닛 {catalog.units.Count} · 적 {catalog.enemies.Count} · 위습 {catalog.wisps.Count} · 도박 {catalog.gamblingOptions.Count} · 지문 {catalog.Fingerprint}");
+        Debug.Log($"[MP] 카탈로그: 유닛 {catalog.units.Count} · 적 {catalog.enemies.Count} · 위습 {catalog.wisps.Count} · 도박 {catalog.gamblingOptions.Count} · 특성 {catalog.traits.Count} · 강화 {catalog.gradeTracks.Count}+{catalog.attackTypeTracks.Count} · 지문 {catalog.Fingerprint}");
     }
 
     static System.Collections.Generic.List<T> LoadAllSorted<T>() where T : ScriptableObject

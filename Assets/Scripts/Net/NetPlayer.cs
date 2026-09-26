@@ -36,6 +36,15 @@ public class NetPlayer : NetworkBehaviour
     [Networked] public int GambleUnlockedMask { get; set; }
     [Networked, Capacity(16)] public NetworkArray<short> GambleUses => default;
 
+    // UnitUpgrades(특성 포인트·해금 특성·강화 레벨) — 특성 버튼·강화소 칸 표시용. 특성은 카탈로그 번호+1(0=빈칸).
+    public const int MaxReplicatedTraits = 32;
+    [Networked] public int TraitPoints { get; set; }
+    [Networked] public int TraitGrantMask { get; set; }
+    [Networked, Capacity(MaxReplicatedTraits)] public NetworkArray<short> UnlockedTraits => default;
+    [Networked, Capacity(MaxReplicatedTraits)] public NetworkArray<byte> TraitRepeats => default;
+    [Networked, Capacity(16)] public NetworkArray<byte> GradeLevels => default;
+    [Networked, Capacity(8)] public NetworkArray<byte> AttackTypeLevels => default;
+
     public bool IsReadyForStart => IsHost || Ready;
 
     public string DisplayName
@@ -101,6 +110,26 @@ public class NetPlayer : NetworkBehaviour
             }
             GambleUnlockedMask = mask;
         }
+
+        UnitUpgrades upgrades = context.UnitUpgrades;
+        if (catalog != null && upgrades != null)
+        {
+            TraitPoints = upgrades.TraitPoints;
+            TraitGrantMask = upgrades.GrantedPointMask;
+            int n = 0;
+            foreach (UnitTraitData trait in upgrades.UnlockedTraits)
+            {
+                if (n >= MaxReplicatedTraits) break;
+                int index = catalog.IndexOf(trait);
+                if (index < 0) continue;
+                UnlockedTraits.Set(n, (short)(index + 1));
+                TraitRepeats.Set(n, (byte)Mathf.Min(255, upgrades.RepeatablePurchaseCount(trait)));
+                n++;
+            }
+            for (; n < MaxReplicatedTraits; n++) { UnlockedTraits.Set(n, 0); TraitRepeats.Set(n, 0); }
+            for (int i = 0; i < catalog.gradeTracks.Count && i < 16; i++) GradeLevels.Set(i, (byte)upgrades.Level(catalog.gradeTracks[i]));
+            for (int i = 0; i < catalog.attackTypeTracks.Count && i < 8; i++) AttackTypeLevels.Set(i, (byte)upgrades.Level(catalog.attackTypeTracks[i]));
+        }
     }
 
     public override void Render()
@@ -124,7 +153,28 @@ public class NetPlayer : NetworkBehaviour
         if (catalog != null && context.GamblingProgress != null)
             for (int i = 0; i < catalog.gamblingOptions.Count && i < 16; i++)
                 context.GamblingProgress.ApplyReplicated(catalog.gamblingOptions[i], GambleUses[i], (GambleUnlockedMask & (1 << i)) != 0);
+
+        UnitUpgrades upgrades = context.UnitUpgrades;
+        if (catalog != null && upgrades != null)
+        {
+            upgrades.ApplyReplicatedPoints(TraitPoints, TraitGrantMask);
+            // 해금 특성: 호스트 목록에 있는 것만 켜고, 전에 켰는데 빠진 것은 끈다(해금은 되돌리지 않지만 안전하게).
+            replicatedTraitBuffer.Clear();
+            for (int n = 0; n < MaxReplicatedTraits; n++)
+            {
+                int stored = UnlockedTraits[n];
+                if (stored <= 0) continue;
+                UnitTraitData trait = stored - 1 < catalog.traits.Count ? catalog.traits[stored - 1] : null;
+                if (trait == null) continue;
+                replicatedTraitBuffer.Add(trait);
+                upgrades.ApplyReplicatedTrait(trait, true, TraitRepeats[n]);
+            }
+            for (int i = 0; i < catalog.gradeTracks.Count && i < 16; i++) upgrades.ApplyReplicatedLevel(catalog.gradeTracks[i], GradeLevels[i]);
+            for (int i = 0; i < catalog.attackTypeTracks.Count && i < 8; i++) upgrades.ApplyReplicatedLevel(catalog.attackTypeTracks[i], AttackTypeLevels[i]);
+        }
     }
+
+    readonly List<UnitTraitData> replicatedTraitBuffer = new List<UnitTraitData>();
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
@@ -189,6 +239,12 @@ public class NetPlayer : NetworkBehaviour
     public void RPC_HudUnitAction(NetworkId unit, byte action, byte argument)
     {
         NetCommands.ExecuteHudUnitAction(this, unit, (NetHudAction)action, argument);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_TraitTarget(short trait, NetworkId target)
+    {
+        NetCommands.ExecuteTraitTarget(this, trait, target);
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
