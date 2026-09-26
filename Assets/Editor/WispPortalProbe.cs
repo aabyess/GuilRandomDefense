@@ -448,3 +448,29 @@ public static class TranscendIngredientProbe
         return sb.ToString().TrimEnd();
     }
 }
+
+/// <summary>깨진 조합식 막기 점검(2026-09-26): 임시 CombineSystem에 재료 참조가 빈 식 하나를 넣고 IsBroken·CanCombineNow를 본다.</summary>
+public static class BrokenRecipeGuardProbe
+{
+    public static string Run()
+    {
+        var go = new GameObject("임시_조합기_점검") { hideFlags = HideFlags.HideAndDontSave };
+        try
+        {
+            CombineSystem system = go.AddComponent<CombineSystem>();
+            CombineRecipe broken = ScriptableObject.CreateInstance<CombineRecipe>();
+            broken.name = "점검_깨진식";
+            broken.ingredients = new List<RecipeIngredient> { new RecipeIngredient { kind = IngredientKind.SpecificUnit, unit = null, count = 1 } };
+            CombineRecipe good = AssetDatabase.LoadAssetAtPath<CombineRecipe>("Assets/Data/Recipes/초월_강재규_AP.asset");
+            typeof(CombineSystem).GetField("recipes", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .SetValue(system, new List<CombineRecipe> { broken, good });
+            var isBroken = typeof(CombineSystem).GetMethod("IsBroken", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            bool b1 = (bool)isBroken.Invoke(system, new object[] { broken });
+            bool b2 = good != null && (bool)isBroken.Invoke(system, new object[] { good });
+            bool can = system.CanCombineNow(broken);
+            Object.DestroyImmediate(broken);
+            return $"깨진 식 IsBroken {b1}(기대 True) · 정상 식(초월_강재규_AP) IsBroken {b2}(기대 False) · 깨진 식 CanCombineNow {can}(기대 False)";
+        }
+        finally { Object.DestroyImmediate(go); }
+    }
+}
