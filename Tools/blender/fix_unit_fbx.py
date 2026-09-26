@@ -774,6 +774,47 @@ UNITS = {
                texture_by_material=True,
                materials=dict(textures={"pl_apoo_2yaf01": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")],
                                         "pl_apoo_2yaf01_trans": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")]})),
+    # 원피스 바운티러시 샬롯 카타쿠리(pl_katakuri_orig01, strifffe 립) → R62 울부짖는_노태현. zip = source/*.rar(fbx 두 벌 · _diff.jpeg · 홍보 그림) + textures/_diff.jpeg(안쪽과 픽셀 같음).
+    #   rar 안 FBX 두 벌: 「katakuri.fbx」는 뼈대 배율 1.0(100배)에 **재질 칸이 비어 있다** → 안 쓴다. 「katakuri animations.fbx」가 뼈대 0.01(류마와 같은 구성) · 재질 있음 · 액션 66(안 씀).
+    #   메시 18 · 재질 1 · 뼈 54. 몸 키(머리카락 끝) 0.0518 → **류마 × 2.57**.
+    #   뺀 것(렌더로 봄): 표정 둘 · 쥔 손 · 삼지창 spear_01/02(길이 0.061 > 키 0.052 — 저지 창 기준) · 양쪽 모찌 도넛 l/r_donut ·
+    #     팔 밖으로 6.4배 뻗는 모찌 주먹 l/r_power_mochi(공격 연출) · 오른팔 모찌 드릴 r_mochizuki(평소 팔 r_arm과 겹친 변형).
+    #     그 부품만 쓰는 뼈(도넛·파워 사슬·모찌즈키 사슬·창 뼈)도 뺀다. 왼팔은 body 안에 있고 오른팔은 r_arm 따로(원본 구성).
+    #   목도리(b/f/l/r_eri)·재킷 자락 → merge_to_nearest가 Spine1로(강체) · Fore_sup → ForeArm. 이미 T자.
+    "울부짖는_노태현": dict(path="Assets/Art/Enemies/울부짖는_노태현/울부짖는_노태현.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.join(SKINS, "90_적유닛/R61-R70/R62_울부짖는_노태현.zip"),
+                             "source/katakuri_fbx_one_piece_bounty_rush_by_strifffe_dg6viq3.rar", "katakuri animations.fbx"),
+                    archive_rgb={"pl_katakuri_orig01_diff.jpeg": "pl_katakuri_orig01_diff.png"},
+                    drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "spear_01", "spear_02",
+                                 "l_donut", "r_donut", "l_power_mochi", "r_power_mochi", "r_mochizuki"],
+                    drop_bones=["world_joint", "HELPER_key", "l_donut_joint", "r_donut_joint", "r_mochiduki_01", "spear_01_joint"],
+                    drop_bones_re=r"^([lr]_power_0[1-5]|r_mochiduki_0[23]|spear_02_joint)$",
+                    rename_bones=PL_RENAME,
+                    no_nulls=True, orient_snap=True,
+                    merge_to_nearest=True,
+                    texture_by_material=True,
+                    materials=dict(textures={"pl_katakuri_orig01": [("DiffuseColor", "pl_katakuri_orig01_diff.png")]})),
+    # 원피스 바운티러시 스모커 스탬피드판(pl_smoker_stam01, XPS용 o_dv89_o 판) → R50 이태훈 ★보스. zip = source/*.rar(fbx · _diff · 셰이더 보조) + textures/_diff(안쪽과 픽셀 같음).
+    #   뼈대 노드 0.01 · 메시 로컬 단위가 류마와 같다 → **류마 × 0.961**(머리카락 끝 0.0194 ÷ 0.02019, 무기 뺀 몸). 메시 22 · 재질 1 · 뼈 71.
+    #   겹친 변형: 얼굴 셋 → normal · 손 open/close/smokehand_close(연기 주먹) → open. 입에 문 시가(hamaki)·선글라스·허리 천은 남긴다.
+    #   🔴 무기 둘 다 뺀다(몸 키보다 긺 — 저지 창 기준): 등에 멘 짓테 b_weapon(세로 0.022 > 키 0.0194) · 오른손 앞으로 뻗은 막대 r_weapon(앞으로 0.0234).
+    #     그 뼈 Bweapon · RHand_Weapon · RHand_jutte도 뺀다. HELPER*(연기 팔 사슬 · 표식, 연기 주먹을 빼면 가중치 0)는 통째로 뺀다.
+    #   코트(coat_root 밑 뒤·좌·우 자락 + 빈 소매 l/r_coat_arm — 어깨에 걸친 코트)는 merge_to_nearest가 Spine1로 → **강체**(사장님 지시).
+    #   허리 천 waist_01~02 → Hips · Fore_sup → ForeArm · 선글라스 → Head. 이미 T자.
+    "이태훈": dict(path="Assets/Art/Enemies/이태훈/이태훈.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R41-R50/R50_이태훈_보스.zip"),
+                        "source/one_piece_bounty_rush___smoker__stampede__xps_by_o_dv89_o_desmbi.rar",
+                        "One Piece Bounty Rush - Smoker (Stampede)/pl_smoker_stam01.fbx"),
+               archive_rgb={"One Piece Bounty Rush - Smoker (Stampede)/pl_smoker_stam01_diff.png": "pl_smoker_stam01_diff.png"},
+               drop_meshes=["face_attack", "face_damage", "l_hand_close", "r_hand_close", "l_smokehand_close", "r_smokehand_close",
+                            "b_weapon", "r_weapon"],
+               drop_bones=["pl_smoker_stam01", "world_joint", "Bweapon", "RHand_jutte", "RHand_Weapon", "model_root", "post_flag", "pre_flag"],
+               drop_bones_re=r"^HELPER",
+               rename_bones=PL_RENAME,
+               orient_snap=True,
+               merge_to_nearest=True,
+               texture_by_material=True,
+               materials=dict(textures={"pl_smoker_stam01": [("DiffuseColor", "pl_smoker_stam01_diff.png")]})),
     # 원피스 파이팅 패스 라팡 **어른**(XPS 립 35103) → R45 이현빈 · **새끼**(25015) → R46 노수신. zip 바로 안에 fbx · xps · _D.png(256²).
     #   메시 1 · 재질 1 · 클립 0. 뚱뚱한 토끼지만 뼈는 표준 Bip001(Spine2 없음 · Toe0 있음) → BIP001_NO_SPINE2. 원본 높이 어른 0.0257 · 새끼 0.0113(어른의 44%).
     #   팔이 A자(어른 약 33° 처짐) → tpose_arms. 손가락(Finger0 하나)은 손에 · 귀·수염 사슬(Head 밑)은 머리에.
@@ -811,6 +852,134 @@ UNITS = {
                                "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
                            for s, side in (("L", "Left"), ("R", "Right"))},
                materials=dict(textures={"25015": [("DiffuseColor", "25015.png")]})),
+    # 원피스 바운티러시 가뭄의 잭 **맘모스 짐승형**(pl_jack_orig02) → R43 양문호. 🔸 **네발짐승 → Generic**(PM 승인 2026-09-25).
+    #   zip 바로 안에 fbx · _diff.tga + 툰 셰이더 보조 그림(ramp·matcap·abnormal_pattern·bayer_dither — 안 씀).
+    #   메시 6(body·fur 등 털·l/r_armor 어깨 갑옷·l/r_horn 상아) · 재질 1 · 뼈 44 · 클립 0 · 뼈대 0.01(류마와 같은 구성 → **류마 × 6.44**, 키는 PM이 정함).
+    #   사람 이름 표가 아니라 원본 뼈 이름 그대로 둔다: 앞다리 l/r_arm·fore_arm·hand · 뒷다리 l/r_leg·foot·toe · 코 Head_nose_01~05 ·
+    #   귀 L/R_Head_ear_01~02 · 꼬리 tail_01~02 · 머리털 c/l/r_hair. 뿌리 world_joint · HELPER_key/name(가중치 0)만 뺀다 → 뿌리 = Body_Pelvis.
+    #   이미 정면 −Y(코 y −0.06 · 꼬리 +0.057). 클립은 synth_clips로 짓는다(Idle 5초 · Move 2초 한 걸음 주기 · Attack 1.5초).
+    #   축은 세계 축: X = 앞뒤로 흔들기(+면 아래로 뻗은 뼈가 뒤로) · Y = 좌우로 흔들기(아래로 뻗은 코·꼬리) · Z = 귀 펄럭.
+    #   Move는 대각선 걸음(왼앞·오른뒤 한 쌍 ↔ 오른앞·왼뒤) — 두 쌍의 무릎 굽힘 정점이 반 주기 어긋나야 해서 absolute=True
+    #   (첫 프레임이 쉬는 자세가 아니다. 이음새는 0). 굽힘 = 발을 앞으로 내딛는 동안 아랫마디를 뒤로 접어 발을 든다.
+    "양문호": dict(path="Assets/Art/Enemies/양문호/양문호.fbx", kind="beast", generic=True, size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R41-R50/R43_양문호_잭매머드.zip"), "pl_jack_orig02.fbx"),
+               archive_rgb={"pl_jack_orig02_diff.tga": "pl_jack_orig02_diff.png"},
+               no_nulls=True, orient_snap=True, head="Head_Face", tail="Body_Pelvis",
+               drop_bones=["world_joint", "HELPER_key", "HELPER_name"],
+               synth_clips=[
+                   # ⚠️ Idle을 제일 길게(규약) — 숨쉬기 · 머리 끄덕 · 코 좌우로 천천히 · 귀 펄럭 · 꼬리.
+                   #   ⚠️ 머리 앞뒤 끄덕임은 뺐다 — 코끝이 쉬는 자세에서 이미 바닥에 닿아 있어 1회차(머리 X 1.5°·숨 0.8°)에 1.9cm 뚫었다.
+                   #   Idle엔 접지 보정을 안 걸므로(규약) 숨쉬기도 가슴 좌우 기울임으로만 낸다.
+                   dict(take="Idle", frames=120, step=3, bones={
+                       "Body_Belly": [((0, 1, 0), 0.6, 0.0)],
+                       "Body_Chest": [((0, 1, 0), 0.6, -0.3)],
+                       "Head_Face": [((0, 0, 1), 1.5, 0.8)],
+                       "Head_nose_01": [((0, 1, 0), 3.0, 0.0), ((1, 0, 0), 2.0, 1.0)],
+                       "Head_nose_02": [((0, 1, 0), 4.0, -0.4)],
+                       "Head_nose_03": [((0, 1, 0), 5.0, -0.8)],
+                       "Head_nose_04": [((0, 1, 0), 6.0, -1.2)],
+                       "L_Head_ear_01": [((0, 0, 1), 8.0, 0.0)],
+                       "R_Head_ear_01": [((0, 0, 1), -8.0, 0.0)],
+                       "tail_01": [((0, 1, 0), 8.0, 0.5)],
+                       "tail_02": [((0, 1, 0), 10.0, 0.0)]}),
+                   dict(take="Move", ground=True, absolute=True, frames=48, step=2, bones={
+                       # 윗마디: 왼앞·오른뒤 = +sin · 오른앞·왼뒤 = −sin(±12°)
+                       "l_arm": [((1, 0, 0), 12.0, 0.0)],
+                       "r_leg": [((1, 0, 0), 12.0, 0.0)],
+                       "r_arm": [((1, 0, 0), -12.0, 0.0)],
+                       "l_leg": [((1, 0, 0), -12.0, 0.0)],
+                       # 아랫마디 굽힘 — 0~18° 혹. 왼앞·오른뒤는 한가운데(π), 오른앞·왼뒤는 처음·끝(0)이 정점.
+                       "l_fore_arm": [((1, 0, 0), -9.0, math.pi / 2, 9.0)],
+                       "r_foot": [((1, 0, 0), -9.0, math.pi / 2, 9.0)],
+                       "r_fore_arm": [((1, 0, 0), 9.0, math.pi / 2, 9.0)],
+                       "l_foot": [((1, 0, 0), 9.0, math.pi / 2, 9.0)],
+                       "Body_Pelvis": [((0, 1, 0), 1.5, 0.0)],
+                       "Body_Chest": [((0, 1, 0), -1.5, 0.0)],
+                       "Head_Face": [((1, 0, 0), 2.0, 0.0), ((0, 0, 1), 2.0, math.pi / 2)],
+                       "Head_nose_01": [((0, 1, 0), 5.0, -0.3), ((1, 0, 0), 4.0, 0.0)],
+                       "Head_nose_02": [((0, 1, 0), 6.0, -0.7)],
+                       "Head_nose_03": [((0, 1, 0), 7.0, -1.1)],
+                       "Head_nose_04": [((0, 1, 0), 8.0, -1.5)],
+                       "L_Head_ear_01": [((0, 0, 1), 6.0, 0.0)],
+                       "R_Head_ear_01": [((0, 0, 1), -6.0, 0.0)],
+                       "tail_01": [((0, 1, 0), 10.0, 0.0)],
+                       "tail_02": [((0, 1, 0), 12.0, -0.5)]}),
+                   # 한 번짜리: 머리·코를 치켜들고 몸 앞을 들었다가(한가운데 정점) 상아를 앞으로 내리며 제자리로. 기본식 위상 −π/2 = 혹 하나.
+                   #   ⚠️ 1회차는 온전한 사인(들었다 → 쉬는 자세 **아래로** 내리찍기)이었는데, 코끝이 쉬는 자세에서 이미 바닥에 닿아 있어
+                   #   내리찍는 절반에 코가 바닥을 뚫었다 → 접지 보정이 몸 전체를 0.121m 띄웠다(발이 뜸). 쉬는 자세 아래로는 안 내린다.
+                   #   X −면 앞을 보는 머리가 위로. 코는 뒤 마디일수록 늦게(위상 −π/2 − 지연).
+                   dict(take="Attack", ground=True, frames=36, step=2, bones={
+                       "Body_Pelvis": [((1, 0, 0), -2.0, -math.pi / 2)],
+                       "Body_Chest": [((1, 0, 0), -2.0, -math.pi / 2 - 0.2)],
+                       "Head_Face": [((1, 0, 0), -7.0, -math.pi / 2 - 0.3)],
+                       "Head_nose_01": [((1, 0, 0), -7.0, -math.pi / 2 - 0.4)],
+                       "Head_nose_02": [((1, 0, 0), -8.0, -math.pi / 2 - 0.5)],
+                       "Head_nose_03": [((1, 0, 0), -9.0, -math.pi / 2 - 0.6)],
+                       "Head_nose_04": [((1, 0, 0), -9.0, -math.pi / 2 - 0.7)],
+                       "l_arm": [((1, 0, 0), -3.0, -math.pi / 2)],
+                       "r_arm": [((1, 0, 0), -3.0, -math.pi / 2)],
+                       "L_Head_ear_01": [((0, 0, 1), 5.0, -math.pi / 2)],
+                       "R_Head_ear_01": [((0, 0, 1), -5.0, -math.pi / 2)],
+                       "tail_01": [((1, 0, 0), -4.0, -math.pi / 2)]}),
+               ],
+               materials=dict(textures={"pl_jack_orig02": [("DiffuseColor", "pl_jack_orig02_diff.png")]})),
+    # 원피스 바운티러시 페이지원 **스피노 짐승형**(pl_pageone_orig02 「(merge)」) → R44 강민호. 🔸 **수평 두발 공룡 → Generic**(PM 승인 2026-09-25).
+    #   zip 바로 안에 fbx · _diff.png · bayer_dither(안 씀). 메시 2(body · hair) · 재질 1 · 뼈 51 · 클립 0.
+    #   ⚠️ 이 「merge」판은 뼈대 배율이 1.0이다(류마·매머드는 0.01) — 누가 다시 내보낸 판이라 류마 비율(높이 × 2.13)은 참고값뿐.
+    #   척추가 **수평**(Pelvis→Chest→Neck→Face가 모두 z 0.0211, −y로 뻗음), 꼬리 tail_01~05도 수평 +y. 이미 정면 −Y.
+    #   원본 뼈 이름 그대로: 다리 l_upleg·l_leg·l_foot01·02·toe / **오른쪽은 원본 오타 r_upreg·r_reg** · 짧은 팔 l/r_arm~finger ·
+    #   등 돛 hire_01(가슴)·hire_02(배) · 입 mouth·tongue · 치마 b/f/s_l/r_skirt. 뿌리 world_joint만 뺀다 → 뿌리 = Body_Pelvis.
+    #   축(세계): X = 아래로 뻗은 다리를 앞뒤로(+면 뒤로) · 수평 꼬리는 X +면 위로 · 앞을 보는 머리·입은 X +면 아래로 · Z = 꼬리·머리 좌우.
+    #   Move는 두 다리가 반 주기 어긋난 걸음 — 매머드와 같은 이유로 absolute=True(무릎 굽힘 정점이 한쪽은 0프레임).
+    "강민호": dict(path="Assets/Art/Enemies/강민호/강민호.fbx", kind="beast", generic=True, size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R41-R50/R44_강민호_페이지원스피노.zip"), "pl_pageone_orig02 (merge).fbx"),
+               archive_rgb={"pl_pageone_orig02_diff.png": "pl_pageone_orig02_diff.png"},
+               no_nulls=True, orient_snap=True, head="Head_Face", tail="Body_Pelvis",
+               drop_bones=["world_joint"],
+               synth_clips=[
+                   dict(take="Idle", frames=120, step=3, bones={
+                       "Body_Chest": [((1, 0, 0), 1.0, 0.0)],
+                       "Head_Neck": [((0, 0, 1), 3.0, 0.6)],
+                       "Head_Face": [((1, 0, 0), 2.0, -0.4), ((0, 0, 1), 3.0, 0.3)],
+                       "mouth": [((1, 0, 0), 4.0, -math.pi / 2)],
+                       "l_arm": [((1, 0, 0), 4.0, 0.0)],
+                       "r_arm": [((1, 0, 0), 4.0, 0.3)],
+                       "tail_01": [((0, 0, 1), 3.0, 0.0), ((1, 0, 0), 1.5, 0.8)],
+                       "tail_02": [((0, 0, 1), 4.0, -0.4)],
+                       "tail_03": [((0, 0, 1), 5.0, -0.8)],
+                       "tail_04": [((0, 0, 1), 6.0, -1.2)],
+                       "tail_05": [((0, 0, 1), 7.0, -1.6)]}),
+                   dict(take="Move", ground=True, absolute=True, frames=36, step=2, bones={
+                       "l_upleg": [((1, 0, 0), 18.0, 0.0)],
+                       "r_upreg": [((1, 0, 0), -18.0, 0.0)],
+                       # 아랫다리 굽힘 0~24° 혹 — 다리를 앞으로 내딛는 동안(왼쪽은 π, 오른쪽은 0이 정점)
+                       "l_leg": [((1, 0, 0), -12.0, math.pi / 2, 12.0)],
+                       "r_reg": [((1, 0, 0), 12.0, math.pi / 2, 12.0)],
+                       "l_foot02": [((1, 0, 0), 8.0, 0.0)],
+                       "r_foot02": [((1, 0, 0), -8.0, 0.0)],
+                       "Body_Pelvis": [((0, 0, 1), 3.0, 0.0), ((0, 1, 0), 2.0, 0.0)],
+                       "Body_Chest": [((0, 0, 1), -3.0, 0.0)],
+                       "Head_Face": [((0, 0, 1), -2.0, 0.0)],
+                       "l_arm": [((1, 0, 0), -6.0, 0.0)],
+                       "r_arm": [((1, 0, 0), 6.0, 0.0)],
+                       "tail_01": [((0, 0, 1), -4.0, -0.3)],
+                       "tail_02": [((0, 0, 1), -5.0, -0.7)],
+                       "tail_03": [((0, 0, 1), -6.0, -1.1)],
+                       "tail_04": [((0, 0, 1), -7.0, -1.5)],
+                       "tail_05": [((0, 0, 1), -8.0, -1.9)]}),
+                   # 한 번짜리 물기: 목·머리를 앞아래로 내밀며 입을 크게 벌렸다 닫고 제자리. 꼬리는 반대로 들어 균형. 기본식 위상 −π/2 = 혹.
+                   dict(take="Attack", ground=True, frames=30, step=2, bones={
+                       "Body_Chest": [((1, 0, 0), 3.0, -math.pi / 2)],
+                       "Head_Neck": [((1, 0, 0), 4.0, -math.pi / 2 - 0.2)],
+                       "Head_Face": [((1, 0, 0), 4.0, -math.pi / 2 - 0.3)],
+                       "mouth": [((1, 0, 0), 14.0, -math.pi / 2 - 0.3)],
+                       "l_arm": [((1, 0, 0), -8.0, -math.pi / 2)],
+                       "r_arm": [((1, 0, 0), -8.0, -math.pi / 2)],
+                       "tail_01": [((1, 0, 0), 3.0, -math.pi / 2)],
+                       "tail_02": [((1, 0, 0), 3.0, -math.pi / 2 - 0.2)],
+                       "tail_03": [((1, 0, 0), 3.0, -math.pi / 2 - 0.4)]}),
+               ],
+               materials=dict(textures={"pl_pageone_orig02": [("DiffuseColor", "pl_pageone_orig02_diff.png")]})),
     # 원피스 바운티러시 쥬얼리 보니 **아이**(pl_bonie_orig02) → R33 서희원 · **어른**(pl_bonie_orig01) → R47 정다희. 류마·오븐과 같은
     #   Annettlw 판(뼈대 노드 0.01)이라 비율이 측정 근거다: 전체 키 ÷ 류마 2.019 → **아이 × 0.611 · 어른 × 0.882**(둘 다 모자 포함).
     #   zip 바로 안에 fbx · xps · _diff.png + 셰이더 보조 그림(ramp·matcap·abnormal_pattern·bayer_dither — 적 규약대로 컬러만 씀).
@@ -1513,6 +1682,29 @@ UNITS = {
                        "zephyr/pl_zephyr_orig01 (merge).fbx"),
               archive_rgb={"zephyr/pl_zephyr_orig01_diff.png": "pl_zephyr_orig01_diff.png",
                            "zephyr/pl_zephyr_orig01_dyanagan_diff.png": "pl_zephyr_orig01_dyanagan_diff.png"},
+              drop_meshes=["face_attack", "face_damage", "face_sp", "l_hand_close", "battlesmasher_open", "dynagan_glass", "cartridge"],
+              drop_bones=["cartridge_joint", "world_joint"],
+              rename_bones=dict({k: v for k, v in PL_RENAME.items() if k != "RHand_Palm"}, weapon_root="mixamorig:RightHand"),
+              reparent_bones={"dynagan_joint": "mixamorig:RightHand"},
+              no_nulls=True, orient_snap=True,
+              merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                           dict(pattern=r"^(weapon_|dynagan_)", into="mixamorig:RightHand"),
+                           dict(pattern=r"^(coat_root|b_c_coat_|c_collar|f_l_coat_|b_l_coat_|l_coat_arm_|l_collar|bodyparts_)", into="mixamorig:Spine1"),
+                           dict(pattern=r"^(f_r_coat_|r_coat_arm_|r_collar)", into="mixamorig:RightShoulder"),
+                           dict(pattern=r"^LHand_Fore_sup$", into="mixamorig:LeftForeArm"),
+                           dict(pattern=r"^RHand_Fore_sup$", into="mixamorig:RightForeArm")],
+              materials=dict(textures={"pl_zephyr_orig01": [("DiffuseColor", "pl_zephyr_orig01_diff.png")],
+                                       "pl_zephyr_orig01_dyanagan": [("DiffuseColor", "pl_zephyr_orig01_dyanagan_diff.png")]})),
+    # 원피스 바운티러시 제파 **두 번째 판**(josoukitsune 7z 립) → R61 간보는_김용태. 사장님·PM: 「R52와 중복이어도 된다, 따로 산출」(2026-09-25).
+    #   R52 임준성과 **같은 모델**이다 — 부품 18개 이름·경계가 소수 넷째 자리까지 같고, _diff는 2.2% 픽셀이 압축 가장자리에서만 다르다(평균 2/255).
+    #   그래서 설정을 임준성 것 그대로 옮기고 원본 경로만 바꿨다. 7z 안에 pl_zephyr_orig01.fbx(13MB, 액션 포함) · …out.fbx(0.9MB) 두 벌.
+    #   🔴 out은 **정점이 용접돼 있다**(body 2193→2123 등 부품마다 조금씩 적음 — UV 이음새가 붙는다). 큰 쪽은 R52 (merge)판과 부품별 정점 수가 똑같다 → 큰 쪽을 쓴다.
+    #   ⚠️ 임준성·전설적인_이시원·전설적인_김건과 같은 설정 — 하나를 고치면 넷 다 볼 것.
+    "간보는_김용태": dict(path="Assets/Art/Enemies/간보는_김용태/간보는_김용태.fbx", kind="human", size=("height", 1.8),
+              archive=(os.path.join(SKINS, "90_적유닛/R61-R70/R61_간보는_김용태.zip"), "source/zephyr___bounty_rush_by_josoukitsune_dfawydu.7z",
+                       "pl_zephyr_orig01/pl_zephyr_orig01.fbx"),
+              archive_rgb={"pl_zephyr_orig01/pl_zephyr_orig01_diff.png": "pl_zephyr_orig01_diff.png",
+                           "pl_zephyr_orig01/pl_zephyr_orig01_dyanagan_diff.png": "pl_zephyr_orig01_dyanagan_diff.png"},
               drop_meshes=["face_attack", "face_damage", "face_sp", "l_hand_close", "battlesmasher_open", "dynagan_glass", "cartridge"],
               drop_bones=["cartridge_joint", "world_joint"],
               rename_bones=dict({k: v for k, v in PL_RENAME.items() if k != "RHand_Palm"}, weapon_root="mixamorig:RightHand"),
@@ -6370,8 +6562,15 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                     R3 = pb.bone.matrix_local.to_3x3()
                     if rot_waves:
                         rot = Matrix.Identity(3)
-                        for axis, deg, phase in rot_waves:
-                            ang = math.radians(deg) * (math.sin(2 * math.pi * f / n + phase) - math.sin(phase))
+                        for w in rot_waves:
+                            axis, deg, phase = w[:3]
+                            if si.get("absolute"):
+                                # 🔸 absolute=True(2026-09-25, 매머드 네발 걷기): 첫 프레임을 쉬는 자세에 묶지 않는다 —
+                                #   각도 = 진폭 × sin(2πt/N + 위상) + 치우침(넷째 값, 도). 대각선 걸음은 한 쌍의 무릎 굽힘이 **0프레임에서**
+                                #   최대여야 하는데, 기본식은 모든 항이 0프레임에서 0이라 못 만든다. 이음새는 sin 주기라 그대로 0.
+                                ang = math.radians(deg * math.sin(2 * math.pi * f / n + phase) + (w[3] if len(w) > 3 else 0.0))
+                            else:
+                                ang = math.radians(deg) * (math.sin(2 * math.pi * f / n + phase) - math.sin(phase))
                             rot = Matrix.Rotation(ang, 3, Vector(axis).normalized()) @ rot
                         pb.rotation_quaternion = (R3.inverted() @ rot @ R3).to_quaternion()
                         pb.keyframe_insert("rotation_quaternion", frame=1 + f)
