@@ -30,6 +30,12 @@ public class UnitSpawner : MonoBehaviour
         if (instance.TryGetComponent(out NavMeshAgent agent))
         {
             agent.speed = data.moveSpeed;
+            // 2026-09-26 베타 피드백 「빙판 미끄러지듯 이동」: 가속·회전이 유니티 기본값(8 · 120°/s)인데
+            // 속도는 100 안팎이라, 최고 속도까지 10초 넘게 걸리고 멈출 때도 한참 미끄러졌다.
+            // 워크3처럼 거의 즉시 서고 즉시 돈다 — 0.05초 만에 최고 속도, 초당 1080° 회전.
+            agent.acceleration = Mathf.Max(agent.acceleration, data.moveSpeed * 20f);
+            agent.angularSpeed = Mathf.Max(agent.angularSpeed, 1080f);
+            agent.autoBraking = true;
             agent.areaMask = ComputeAreaMask(data.movementAbility);
             // 아군끼리 완전히 겹치면 몇 마리인지 안 보이고, 제대로 밀어내면 뭉치질 못한다.
             // 반경을 작게(0.28) 두고 회피는 가장 싼 단계만 켜서 '살짝 비켜주는' 정도로 맞춘다.

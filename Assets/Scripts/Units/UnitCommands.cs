@@ -131,6 +131,56 @@ public static class UnitCommands
         return units.Count;
     }
 
+    // ── 2026-09-26 베타 피드백: 워크3 명령 — A 공격 · S 정지 · H 홀드 ──
+
+    static List<UnitCombat> Fighters(IReadOnlyList<Selectable> selection)
+    {
+        List<UnitCombat> units = new List<UnitCombat>();
+        foreach (Selectable selected in selection)
+            if (selected != null && selected.TryGetComponent(out UnitCombat combat))
+                units.Add(combat);
+        return units;
+    }
+
+    /// <summary>S 키. 하던 일을 끊고 그 자리에 선다(적이 오면 다시 친다).</summary>
+    public static int Stop(IReadOnlyList<Selectable> selection)
+    {
+        List<UnitCombat> units = Fighters(selection);
+        foreach (UnitCombat combat in units) combat.Stop();
+        return units.Count;
+    }
+
+    /// <summary>H 키. 그 자리에 못박는다(사거리 안의 적은 친다). 워크3처럼 누를 때마다 켠다 — 풀려면 이동·정지.</summary>
+    public static int Hold(IReadOnlyList<Selectable> selection)
+    {
+        List<UnitCombat> units = Fighters(selection);
+        foreach (UnitCombat combat in units) combat.SetHold(true);
+        return units.Count;
+    }
+
+    /// <summary>A + 적 클릭. 모두 그 적을 친다.</summary>
+    public static int AttackTarget(IReadOnlyList<Selectable> selection, EnemyDummy enemy)
+    {
+        if (enemy == null) return 0;
+        List<UnitCombat> units = Fighters(selection);
+        foreach (UnitCombat combat in units) combat.AttackTarget(enemy);
+        return units.Count;
+    }
+
+    /// <summary>A + 땅 클릭(공격 이동). 각자 그 근처 걸을 수 있는 자리로 가면서 만나는 적을 친다.</summary>
+    public static int AttackMove(IReadOnlyList<Selectable> selection, Vector3 point)
+    {
+        int count = 0;
+        foreach (UnitCombat combat in Fighters(selection))
+        {
+            if (!combat.TryGetComponent(out UnityEngine.AI.NavMeshAgent agent)) continue;
+            if (!UnityEngine.AI.NavMesh.SamplePosition(point, out UnityEngine.AI.NavMeshHit hit, 8f * WorldScale.Value, agent.areaMask)) continue;
+            combat.AttackMove(hit.position);
+            count++;
+        }
+        return count;
+    }
+
     static UnitIdentity FirstIdentity(IReadOnlyList<Selectable> selection)
     {
         foreach (Selectable selected in selection)

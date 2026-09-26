@@ -17,6 +17,14 @@ public class SelectionManager : MonoBehaviour
 
     Vector2 dragStart;
     bool isDragging;
+
+    // 2026-09-26 A 공격: A(또는 명령칸 「공격」)를 누르면 다음 좌클릭이 공격 대상이 된다.
+    // 적을 찍으면 그 적을 치고, 땅을 찍으면 공격 이동. 우클릭·Esc로 취소.
+    bool attackTargeting;
+    int attackCancelFrame = -1;
+    // 우클릭 취소는 같은 프레임의 우클릭 이동(UnitMover)도 막아야 한다 — 스크립트 실행 순서와 상관없이.
+    public bool IsAttackTargeting => attackTargeting || attackCancelFrame == Time.frameCount;
+    const float AttackPickTolerancePixels = 36f;
     bool leftButtonHeld;
     bool ignoreCurrentPress;
     Texture2D boxTexture;
@@ -39,6 +47,8 @@ public class SelectionManager : MonoBehaviour
         HandleCommandKeys();
 
         if (Mouse.current == null || cam == null) return;
+
+        if (attackTargeting && HandleAttackTargeting()) return;
 
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
@@ -76,11 +86,70 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
+    /// <summary>A 키·명령칸 「공격」. 싸울 수 있는 유닛이 선택돼 있을 때만 들어간다.</summary>
+    public void BeginAttackTargeting()
+    {
+        foreach (Selectable s in selected)
+        {
+            if (s != null && s.GetComponent<UnitCombat>() != null)
+            {
+                attackTargeting = true;
+                return;
+            }
+        }
+    }
+
+    // 공격 대상 고르는 중. 이번 프레임 입력을 여기서 다 썼으면 true(선택·드래그로 넘기지 않는다).
+    bool HandleAttackTargeting()
+    {
+        if (selected.Count == 0 || (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            || Mouse.current.rightButton.wasPressedThisFrame)
+        {
+            attackTargeting = false;
+            attackCancelFrame = Time.frameCount;
+            return false;
+        }
+
+        if (!Mouse.current.leftButton.wasPressedThisFrame) return false;
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return false;
+
+        Vector2 screen = Mouse.current.position.ReadValue();
+        EnemyDummy enemy = WorldPick.TryPickEnemy(cam, screen, AttackPickTolerancePixels);
+        if (enemy != null)
+        {
+            int n = UnitCommands.AttackTarget(selected, enemy);
+            Debug.Log($"[명령] 공격 — 유닛 {n}기가 {enemy.name}을(를) 칩니다.");
+        }
+        else if (WorldPick.TryHitGround(cam, screen, out RaycastHit hit))
+        {
+            int n = UnitCommands.AttackMove(selected, hit.point);
+            Debug.Log($"[명령] 공격 이동 — 유닛 {n}기가 {hit.point}로 가며 싸웁니다.");
+        }
+
+        attackTargeting = false;
+        // 이 누름은 명령으로 썼다 — 뗄 때 선택이 바뀌지 않게 막는다.
+        ignoreCurrentPress = true;
+        leftButtonHeld = false;
+        isDragging = false;
+        return true;
+    }
+
     // 명령 단축키. 선택 목록을 들고 있는 쪽에서 받는 게 자연스럽다 —
     // 우하단 명령 카드도 같은 UnitCommands를 부른다.
+    // 2026-09-26: 워크3 배치 — A 공격 · S 정지 · H 홀드 · V 모으기 · C 정렬.
     void HandleCommandKeys()
     {
         if (Keyboard.current == null || selected.Count == 0) return;
+
+        if (Keyboard.current.aKey.wasPressedThisFrame)
+            BeginAttackTargeting();
+
+        if (Keyboard.current.sKey.wasPressedThisFrame)
+        {
+            attackTargeting = false;
+            int stopped = UnitCommands.Stop(selected);
+            if (stopped > 0) Debug.Log($"[명령] 정지 — 유닛 {stopped}기가 멈췄습니다.");
+        }
 
         if (Keyboard.current.vKey.wasPressedThisFrame)
         {
@@ -90,8 +159,9 @@ public class SelectionManager : MonoBehaviour
 
         if (Keyboard.current.hKey.wasPressedThisFrame)
         {
-            int held = UnitCommands.ToggleHold(selected);
-            if (held > 0) Debug.Log($"[명령] 홀드 — 유닛 {held}기의 홀드를 전환했습니다.");
+            attackTargeting = false;
+            int held = UnitCommands.Hold(selected);
+            if (held > 0) Debug.Log($"[명령] 홀드 — 유닛 {held}기가 자리를 지킵니다(사거리 안의 적은 칩니다).");
         }
 
         if (Keyboard.current.cKey.wasPressedThisFrame)
@@ -195,6 +265,15 @@ public class SelectionManager : MonoBehaviour
 
     void OnGUI()
     {
+        if (attackTargeting && Mouse.current != null)
+        {
+            // 커서 옆에 지금 무엇을 고르는지 알려 준다(워크3의 공격 커서 대신).
+            Vector2 m = Mouse.current.position.ReadValue();
+            GUIStyle style = new GUIStyle(GUI.skin.label) { fontSize = 16, fontStyle = FontStyle.Bold };
+            style.normal.textColor = new Color(1f, 0.35f, 0.3f);
+            GUI.Label(new Rect(m.x + 18, Screen.height - m.y - 8, 320, 24), "공격 — 적 또는 땅을 클릭 (우클릭 취소)", style);
+        }
+
         if (!isDragging) return;
 
         Vector2 current = Mouse.current.position.ReadValue();

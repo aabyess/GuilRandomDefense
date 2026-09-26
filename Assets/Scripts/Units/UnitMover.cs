@@ -71,6 +71,21 @@ public class UnitMover : MonoBehaviour
 
     void TryMoveToCursor()
     {
+        // 2026-09-26: 적 몸에 우클릭하면 이동이 아니라 공격(워크3와 같다). 적 콜라이더에 정확히 맞을 때만 —
+        // 레인 근처 땅을 찍으려다 적으로 빨려 들지 않게 화면 여유(허용 픽셀)는 0으로 둔다.
+        // A 공격 대상 고르는 중이면 우클릭은 「취소」라 여기서도 움직이지 않는다.
+        SelectionManager selection = FindFirstObjectByType<SelectionManager>();
+        if (selection != null && selection.IsAttackTargeting) return;
+        if (combat != null)
+        {
+            EnemyDummy enemy = WorldPick.TryPickEnemy(cam, Mouse.current.position.ReadValue(), 0f);
+            if (enemy != null)
+            {
+                combat.AttackTarget(enemy);
+                return;
+            }
+        }
+
         // 이동 명령이 조용히 실패하면 "클릭이 안 먹는다"로만 보인다. 막힌 지점을 말하게 한다.
         // 땅만 본다. 사이에 낀 아군을 클릭 대상으로 삼으면 그 몸통 위가 목적지가 된다.
         if (!WorldPick.TryHitGround(cam, Mouse.current.position.ReadValue(), out RaycastHit hit))

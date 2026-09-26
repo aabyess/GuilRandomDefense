@@ -21,6 +21,14 @@ public class CharacterAnimator : MonoBehaviour
     // 프레임마다 값이 튀면 걷기와 대기를 오간다. 조금 눅여서 넘긴다.
     [SerializeField] float speedSmoothing = 10f;
 
+    // 2026-09-26 베타 피드백 「빙판 미끄러지듯」 — 걷기 클립 하나(Mixamo walk, 사람 1.75m가 초속 약 1.4m =
+    // 초당 키의 0.8배를 간다)로 모두 걷는데, 실제 이동은 초당 키의 3~6배라 **발이 땅 위를 미끄러졌다.**
+    // 걷는 동안만 재생 속도를 「실제 속도 ÷ 걷기 속도」로 올려 발과 땅을 맞춘다. 키는 몸 경계로 잰다 —
+    // 거인은 보폭이 길어서 같은 속도라도 천천히 걷는다. 너무 빠르면 발놀림이 우스워지니 상한을 둔다.
+    [SerializeField] float walkClipHeightsPerSecond = 0.8f;
+    [SerializeField] float maxWalkPlaybackSpeed = 3f;
+    float bodyHeight;
+
     NavMeshAgent agent;
     WaypointMover mover;
     Vector3 lastPosition;
@@ -40,6 +48,7 @@ public class CharacterAnimator : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         mover = GetComponent<WaypointMover>();
         lastPosition = transform.position;
+        bodyHeight = MeasureBodyHeight();
 
         CacheParameters();
     }
@@ -61,7 +70,29 @@ public class CharacterAnimator : MonoBehaviour
     {
         if (animator == null || !hasSpeed) return;
 
-        animator.SetFloat(SpeedHash, Mathf.Clamp01(CurrentSpeed() / Mathf.Max(0.01f, runSpeed)));
+        float speed = CurrentSpeed();
+        animator.SetFloat(SpeedHash, Mathf.Clamp01(speed / Mathf.Max(0.01f, runSpeed)));
+
+        // 걷는 중(Move 상태)일 때만 재생 속도를 맞춘다. 서 있거나 공격할 때는 원래 속도.
+        bool walking = speed / Mathf.Max(0.01f, runSpeed) > 0.15f;
+        animator.speed = walking && bodyHeight > 0.01f
+            ? Mathf.Clamp(speed / bodyHeight / walkClipHeightsPerSecond, 1f, maxWalkPlaybackSpeed)
+            : 1f;
+    }
+
+    // 몸 키(월드 단위). 스폰 직후 T자·대기 자세 경계라 조금 오차가 있어도 재생 속도에는 충분하다.
+    float MeasureBodyHeight()
+    {
+        Renderer[] renderers = GetComponentsInChildren<Renderer>();
+        bool any = false;
+        Bounds bounds = default;
+        foreach (Renderer r in renderers)
+        {
+            if (!(r is SkinnedMeshRenderer) && !(r is MeshRenderer)) continue;
+            if (!any) { bounds = r.bounds; any = true; }
+            else bounds.Encapsulate(r.bounds);
+        }
+        return any ? bounds.size.y : 0f;
     }
 
     float CurrentSpeed()
