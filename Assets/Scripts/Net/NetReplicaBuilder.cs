@@ -107,7 +107,11 @@ public static class NetReplicaBuilder
                 }
                 break;
             case NetEntityKind.Wisp:
-                if (visual.TryGetComponent(out Wisp wisp)) wisp.SetData(wispData);
+                if (visual.TryGetComponent(out Wisp wisp))
+                {
+                    wisp.SetData(wispData);
+                    wisp.ApplyOwnerColor(entity.Owner);   // 호스트는 RewardDistributor.SpawnWisp가 칠한다 — 거울도 같은 주인 색
+                }
                 break;
         }
 

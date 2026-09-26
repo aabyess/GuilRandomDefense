@@ -42,6 +42,7 @@ using UnityEngine.SceneManagement;
 ///   -mpTestChat 초 코드      그 초에 채팅 한 줄(게임 씬, 여러 번 가능)
 ///   -mpLobbyChat 초 문장     방에 들어간 뒤 그 초에 대기실 채팅 한 줄
 ///   -mpTestGambleLabels 초   그 초에 (호스트·클라 각자) 내 도박소 칸 글자 전부 로그 — 재고 「남은/최대 · N초」 복제 확인
+///   -mpCamWisp 초            그 초에 카메라를 위습 쪽으로(주인 색 캡처용)
 ///   -mpTestCommands 초       그 초부터 2초 간격으로 UnitCommands 공격이동→정지→홀드→적공격→모으기→우리로(클라=명령 요청 RPC)
 /// </summary>
 public class NetLauncher : MonoBehaviour
@@ -88,6 +89,7 @@ public class NetLauncher : MonoBehaviour
     float testCommandsDelay = -1f;
     float testEconomyDelay = -1f;
     float testFinishRunDelay = -1f;
+    float camWispDelay = -1f;
     float testPhase3Delay = -1f;
     bool testTraitUnits;
     float testTraitDelay = -1f;
@@ -163,6 +165,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpSolo": solo = true; break;
                 case "-mpSaveDir": PersistentSave.SaveRootOverride = Arg(i + 1); break;
                 case "-mpTestFinishRun": testFinishRunDelay = Seconds(i + 1); break;
+                case "-mpCamWisp": camWispDelay = Seconds(i + 1); break;
                 case "-mpJoin": join = true; break;
                 case "-mpSession": cliSession = Arg(i + 1); break;
                 case "-mpRegion": region = Arg(i + 1) ?? region; break;
@@ -551,6 +554,7 @@ public class NetLauncher : MonoBehaviour
         if (testCommandsDelay >= 0f) StartCoroutine(TestCommandsAfter(testCommandsDelay));
         if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
         if (testFinishRunDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestFinishRunAfter(testFinishRunDelay));
+        if (camWispDelay >= 0f) StartCoroutine(CamWispAfter(camWispDelay));
         if (testPhase3Delay >= 0f) StartCoroutine(TestPhase3After(testPhase3Delay));
         if (testTraitUnits && GameAuthority.IsServer) SpawnTraitTestUnits();
         if (testTraitDelay >= 0f) StartCoroutine(TestTraitAfter(testTraitDelay));
@@ -838,6 +842,19 @@ public class NetLauncher : MonoBehaviour
             context.PersistentSave.AddSessionPoints(5);
             context.PersistentSave.FinishRun(false);
             Debug.Log($"[MP] 테스트 판 끝: 슬롯 {context.PlayerId} +5점 FinishRun");
+        }
+    }
+
+    IEnumerator CamWispAfter(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        RtsCameraController cam = FindFirstObjectByType<RtsCameraController>();
+        foreach (NetEntity e in FindObjectsByType<NetEntity>(FindObjectsSortMode.None))
+        {
+            if (e == null || e.Object == null || !e.Object.IsValid || e.EntityKind != NetEntityKind.Wisp) continue;
+            if (cam != null) cam.MoveTo(e.transform.position);
+            Debug.Log($"[MP] 카메라 → 위습 {e.transform.position}");
+            yield break;
         }
     }
 
