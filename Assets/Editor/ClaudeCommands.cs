@@ -1057,6 +1057,7 @@ public static class ClaudeCommands
         public int superSize = 1;
         public int watchRounds;          // rounds:N — 0이면 끄기
         public bool autoLoop;
+        public bool targetMode;          // autoloop: 희귀함 식 하나를 목표로 — 흔함선택·조합·판매를 그 식의 모자란 재료 쪽으로(09-26 PM 지시)
         public bool combineAll;          // autoloop: 지금 만들 수 있는 조합식을 전부 만든다(결과 등급 높은 것부터, 09-26 R20 벽 ③)
         public bool keepPen;             // autoloop: 흔함은 제 칸에 둔다 — 모서리 쓸기에서 흔함을 뺀다(09-26 칸 안 흔함 가동률 판)
         public bool sellSpare;           // autoloop: 조합표가 못 쓸 만큼 남는 유닛을 판다(09-26 PM 지시 — 목재·위습 경로)
@@ -1157,6 +1158,7 @@ public static class ClaudeCommands
             else if (token == "sell") job.sellSpare = true;
             else if (token == "keeppen") job.keepPen = true;
             else if (token == "combineall") job.combineAll = true;
+            else if (token == "target") { job.targetMode = true; job.combineAll = true; }
             else if (token == "bossaway") job.bossAway = true;
             else if (token.StartsWith("mode:"))
             {
@@ -2587,7 +2589,7 @@ public static class ClaudeCommands
         return $"적 레인 {EnemyDummy.CountInLane(0)}/전체 {EnemyDummy.Active.Count(e => e != null)} · 데스카운트 {rm.DeathCountFor(0)} · " +
                $"골드 {gold} · 목재 {wood} · 내 유닛 {(mine.Any() ? string.Join(", ", mine) : "0")} · 위습 칸 「{slots}」 · " +
                $"스토리 「{story}」(매니저 「{StoryManager.Instance?.StatusLabel}」 깸 {StoryManager.Instance?.FinishedCount}) · 보스 적 {bosses} · 남은시간 {rm.RoundTimeLeft:F1}/준비 {rm.PreRoundTimeLeft:F1} · 프레임 {frames} · {UptimeText()} · {logs}" +
-               WoodRoundText() + PenCommonText() + CombineRoundText() +
+               WoodRoundText() + PenCommonText() + CombineRoundText() + (job.targetMode ? TargetRoundText(job) : "") +
                $"\n      🎯 흔함 이름(지금) {(commonNames.Length > 0 ? commonNames : "-")} · 도구가 흔함선택으로 보낸 누계 {(pickNames.Length > 0 ? pickNames : "0")}";
     }
 
@@ -2678,9 +2680,18 @@ public static class ClaudeCommands
         var made = new List<string>();
         for (int guard = 0; guard < 24; guard++)
         {
-            CombineRecipe next = system.GetAvailableRecipes().Where(r => r != null && r.result != null)
-                .OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault();
+            List<CombineRecipe> ready = system.GetAvailableRecipes().Where(r => r != null && r.result != null).ToList();
+            CombineRecipe next;
+            if (job.targetMode)
+            {
+                // 목표 식 나무의 식을 먼저(위 등급부터) — 그다음 남는 재료만 쓰는 딴 식.
+                TargetPlan plan = RefreshTargetPlan(job);
+                next = ready.Where(r => plan != null && plan.treeRecipes.Contains(r)).OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault()
+                       ?? ready.Where(r => plan == null || UsesOnlySurplus(r, plan)).OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault();
+            }
+            else next = ready.OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault();
             if (next == null || !system.TryCombine(next)) break;
+            OnCombined(job, next);
             string key = next.result.grade.KoreanName();
             combineDoneRound[key] = (combineDoneRound.TryGetValue(key, out int d) ? d : 0) + 1;
             combineDoneTotal[key] = (combineDoneTotal.TryGetValue(key, out int t) ? t : 0) + 1;
@@ -2698,6 +2709,118 @@ public static class ClaudeCommands
         string rareDone = combineDoneRound.TryGetValue(UnitGrade.Rare.KoreanName(), out int rd) ? rd.ToString() : "0";
         string text = $"\n      🧪 희귀함 조합 가능 식 {rareAvail} / 실제 조합 {rareDone} · 가능 식(등급별 최대) [{Book(combineAvailRound)}] · 조합 [{Book(combineDoneRound)}] · 판 누계 [{Book(combineDoneTotal)}]";
         combineAvailRound.Clear(); combineDoneRound.Clear();
+        return text;
+    }
+
+    // ── 목표 식(target, 09-26 PM 지시) — 사람처럼 희귀함 식 하나를 정해 놓고 그쪽으로 모은다 ──
+    //    희귀함 식 42개는 전부 흔함 11~17기로 풀린다(특별함 식 = 흔함 3~5, 안흔함 식 = 흔함 2). 목표의 재료 나무를 **가진 것부터 채워**
+    //    내려가고(가진 중간 유닛은 그대로 쓴다), 못 채운 잎(흔함)이 「모자란 재료」다. 흔함선택 위습은 가장 많이 모자란 이름으로,
+    //    조합은 목표 나무 식을 먼저, 딴 식은 목표에 잡아 둔 유닛(reserved)을 안 건드릴 때만, 판매는 reserved를 남긴다.
+    //    목표는 매 턴 「모자란 잎이 가장 적은 희귀함 식」으로 다시 고르되, 지금 목표보다 3 넘게 가깝지 않으면 안 바꾼다(흔들리지 않게).
+    //    ⚠️ 유닛 도박(상점)은 무작위라 목표 쪽으로 못 돌린다 — 그대로 둔다. 조합식 데이터는 사장님 콘텐츠라 손대지 않는다.
+    class TargetPlan
+    {
+        public CombineRecipe target;
+        public Dictionary<UnitData, int> reserved = new Dictionary<UnitData, int>();
+        public Dictionary<UnitData, int> missing = new Dictionary<UnitData, int>();
+        public HashSet<CombineRecipe> treeRecipes = new HashSet<CombineRecipe>();
+        public int MissingCount => missing.Values.Sum();
+    }
+    static TargetPlan currentPlan;
+    static Dictionary<UnitData, List<CombineRecipe>> recipesByResult;
+    static readonly List<string> targetLog = new List<string>();
+
+    static Dictionary<UnitData, List<CombineRecipe>> RecipesByResult()
+    {
+        if (recipesByResult != null) return recipesByResult;
+        recipesByResult = new Dictionary<UnitData, List<CombineRecipe>>();
+        CombineSystem system = UnityEngine.Object.FindFirstObjectByType<CombineSystem>();
+        var list = system == null ? null : typeof(CombineSystem).GetField("recipes", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(system) as List<CombineRecipe>;
+        foreach (CombineRecipe r in list ?? new List<CombineRecipe>())
+        {
+            if (r?.result == null || r.ingredients == null || r.ingredients.Any(i => i == null || i.kind != IngredientKind.SpecificUnit || i.unit == null)) continue;   // 유닛만 쓰는 식만 푼다
+            if (!recipesByResult.TryGetValue(r.result, out var rs)) recipesByResult[r.result] = rs = new List<CombineRecipe>();
+            rs.Add(r);
+        }
+        return recipesByResult;
+    }
+
+    static TargetPlan PlanFor(CombineRecipe target, Dictionary<UnitData, int> owned)
+    {
+        var plan = new TargetPlan { target = target };
+        var pool = new Dictionary<UnitData, int>(owned);
+        var byResult = RecipesByResult();
+        void Need(UnitData u, int n, int depth)
+        {
+            int have = pool.TryGetValue(u, out int h) ? h : 0;
+            int take = Math.Min(have, n);
+            if (take > 0) { pool[u] = have - take; plan.reserved[u] = (plan.reserved.TryGetValue(u, out int r) ? r : 0) + take; }
+            int rest = n - take;
+            if (rest <= 0) return;
+            if (depth < 8 && byResult.TryGetValue(u, out var rs) && rs.Count > 0)
+            {
+                CombineRecipe r = rs[0];
+                plan.treeRecipes.Add(r);
+                for (int k = 0; k < rest; k++) foreach (RecipeIngredient ing in r.ingredients) Need(ing.unit, Mathf.Max(1, ing.count), depth + 1);
+            }
+            else plan.missing[u] = (plan.missing.TryGetValue(u, out int m) ? m : 0) + rest;
+        }
+        plan.treeRecipes.Add(target);
+        foreach (RecipeIngredient ing in target.ingredients) Need(ing.unit, Mathf.Max(1, ing.count), 1);
+        return plan;
+    }
+
+    static TargetPlan RefreshTargetPlan(GameShotJob job)
+    {
+        var owned = MyUnits().GroupBy(u => u.Data).ToDictionary(g => g.Key, g => g.Count());
+        var byResult = RecipesByResult();
+        var candidates = byResult.Where(kv => kv.Key.grade == UnitGrade.Rare).SelectMany(kv => kv.Value).ToList();
+        if (candidates.Count == 0) return currentPlan = null;
+        TargetPlan best = candidates.Select(r => PlanFor(r, owned)).OrderBy(p => p.MissingCount).First();
+        if (currentPlan == null || currentPlan.target == null) { targetLog.Add($"R{job.lastRoundSeen} 목표 → {best.target.result.unitName}(모자람 {best.MissingCount})"); return currentPlan = best; }
+        TargetPlan keep = PlanFor(currentPlan.target, owned);
+        if (best.target != keep.target && best.MissingCount + 3 < keep.MissingCount)
+        {
+            targetLog.Add($"R{job.lastRoundSeen} 목표 바꿈 {keep.target.result.unitName}(모자람 {keep.MissingCount}) → {best.target.result.unitName}(모자람 {best.MissingCount})");
+            return currentPlan = best;
+        }
+        return currentPlan = keep;
+    }
+
+    // 목표를 만들었으면(조합 뒤 그 식의 결과가 새로 생김) 다음 목표로 — CombineAllAffordable이 부른다.
+    static void OnCombined(GameShotJob job, CombineRecipe made)
+    {
+        if (!job.targetMode || currentPlan == null || made != currentPlan.target) return;
+        targetLog.Add($"R{job.lastRoundSeen} 목표 완성 ✅ {made.result.unitName}");
+        currentPlan = null;
+    }
+
+    static bool UsesOnlySurplus(CombineRecipe r, TargetPlan plan)
+    {
+        var owned = MyUnits().GroupBy(u => u.Data).ToDictionary(g => g.Key, g => g.Count());
+        foreach (var g in r.ingredients.Where(i => i != null && i.kind == IngredientKind.SpecificUnit && i.unit != null).GroupBy(i => i.unit))
+        {
+            int need = g.Sum(i => Mathf.Max(1, i.count));
+            int have = owned.TryGetValue(g.Key, out int h) ? h : 0;
+            int held = plan.reserved.TryGetValue(g.Key, out int rv) ? rv : 0;
+            if (have - held < need) return false;
+        }
+        return true;
+    }
+
+    static Dictionary<string, int> TargetMissingCommons()
+    {
+        if (currentPlan == null) return new Dictionary<string, int>();
+        return currentPlan.missing.Where(kv => kv.Key.grade == UnitGrade.Common).GroupBy(kv => kv.Key.unitName ?? "")
+            .ToDictionary(g => g.Key, g => g.Sum(kv => kv.Value));
+    }
+
+    static string TargetRoundText(GameShotJob job)
+    {
+        TargetPlan plan = RefreshTargetPlan(job);
+        string miss = plan == null ? "-" : string.Join(" ", plan.missing.OrderByDescending(kv => kv.Value).Select(kv => $"{kv.Key.unitName}{kv.Value}"));
+        string text = $"\n      🎯 목표 {(plan?.target?.result != null ? plan.target.result.unitName : "-")} · 모자란 잎 {plan?.MissingCount ?? 0}({miss}) · 기록 {(targetLog.Count > 0 ? string.Join(" | ", targetLog) : "-")}";
+        targetLog.Clear();
         return text;
     }
 
@@ -2741,6 +2864,7 @@ public static class ClaudeCommands
         foreach (var group in MyUnits().Where(u => SellGrades.Contains(u.Data.grade) && NearLane(u)).GroupBy(u => u.Data))
         {
             int keep = 2 * (demand.TryGetValue(group.Key, out int d) ? d : 0);
+            if (job.targetMode && currentPlan != null && currentPlan.reserved.TryGetValue(group.Key, out int held)) keep = Math.Max(keep, held);   // 목표 식 재료는 안 판다
             spare.AddRange(group.Skip(keep));
         }
         spare = spare.OrderBy(u => u.Data.grade.Tier()).Take(SellPerTurn).ToList();   // 싼 것부터
@@ -2794,6 +2918,7 @@ public static class ClaudeCommands
         woodLast = wallet.Get(ResourceType.Wood);
         woodIn.Clear(); woodOut.Clear(); woodInRound.Clear(); woodOutRound.Clear(); soldTotals.Clear();
         combineAvailRound.Clear(); combineDoneRound.Clear(); combineDoneTotal.Clear();
+        currentPlan = null; recipesByResult = null; targetLog.Clear();
         wallet.OnResourceChanged += OnWoodChanged;
     }
 
@@ -2870,7 +2995,7 @@ public static class ClaudeCommands
                 turn.Add("?@shopspend:" + shop);
             }
         }
-        for (int k = 0; k < (job.noCombine ? 0 : 3); k++)   // nocombine — 일부러 약한 판(보스 제한 패배 확인용, 09-25)
+        for (int k = 0; k < (job.noCombine || job.targetMode ? 0 : 3); k++)   // target — 카드 조합은 목표 재료를 가리지 않아 끈다(@combineall이 대신)   // nocombine — 일부러 약한 판(보스 제한 패배 확인용, 09-25)
         {
             turn.Add("@box:Unit_흔함");
             turn.Add($"?Card{k}");
@@ -2889,10 +3014,15 @@ public static class ClaudeCommands
         var myCommonCounts = MyUnits().Where(u => u.Data.grade == UnitGrade.Common)
             .GroupBy(u => u.Data.unitName).ToDictionary(g => g.Key ?? "", g => g.Count());
         List<string> picked = new List<string>();
+        Dictionary<string, int> targetMissing = job.targetMode && RefreshTargetPlan(job) != null ? TargetMissingCommons() : null;
         for (int i = 0; i < choiceWisps && choicePortals.Count > 0; i++)
         {
+            // target — 목표 식에 가장 많이 모자란 흔함 이름을 고른다(다 채웠으면 옛 규칙).
+            string wanted = targetMissing?.Where(kv => kv.Value > 0 && choicePortals.Contains("흔함선택_" + kv.Key))
+                .OrderByDescending(kv => kv.Value).Select(kv => "흔함선택_" + kv.Key).FirstOrDefault();
+            if (wanted != null) targetMissing[wanted.Substring(5)]--;
             string odd = choicePortals.FirstOrDefault(n => myCommonCounts.TryGetValue(n.Substring(5), out int c) && c % 2 == 1);
-            string portal = odd ?? choicePortals[(job.lastRoundSeen + i) % choicePortals.Count];
+            string portal = wanted ?? odd ?? choicePortals[(job.lastRoundSeen + i) % choicePortals.Count];
             string unit = portal.Substring(5);
             myCommonCounts[unit] = (myCommonCounts.TryGetValue(unit, out int had) ? had : 0) + 1;
             turn.Insert(0, "@rc:" + portal);
