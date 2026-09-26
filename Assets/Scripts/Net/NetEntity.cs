@@ -41,6 +41,9 @@ public class NetEntity : NetworkBehaviour
 
     public static int ClientVisualCount { get; private set; }
 
+    // 한 틱에 이만큼 넘게 움직이면 걸은 게 아니라 옮긴 것이다(가장 빠른 유닛도 한 틱에 몇 단위).
+    static float TeleportThreshold => 20f * WorldScale.Value;
+
     public override void Spawned()
     {
         if (HasStateAuthority)
@@ -76,7 +79,12 @@ public class NetEntity : NetworkBehaviour
         }
 
         Transform real = Real.transform;
-        transform.SetPositionAndRotation(real.position, real.rotation);
+        // 창고·스토리 포탈·모으기·우리로는 실물을 순간이동시킨다. 그대로 적으면 클라가 보간해서 맵을 가로질러
+        // 미끄러지는 게 보인다 — 한 틱에 크게 뛰면 Teleport로 알려 클라가 끊어서 옮기게 한다.
+        if ((real.position - transform.position).sqrMagnitude > TeleportThreshold * TeleportThreshold && TryGetComponent(out NetworkTransform nt))
+            nt.Teleport(real.position, real.rotation);
+        else
+            transform.SetPositionAndRotation(real.position, real.rotation);
         transform.localScale = real.localScale;
 
         if (realEnemy != null)

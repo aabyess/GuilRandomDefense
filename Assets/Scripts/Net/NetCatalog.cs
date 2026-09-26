@@ -12,6 +12,7 @@ public class NetCatalog : ScriptableObject
     public List<UnitData> units = new List<UnitData>();
     public List<EnemyData> enemies = new List<EnemyData>();
     public List<WispData> wisps = new List<WispData>();
+    public List<GamblingOptionData> gamblingOptions = new List<GamblingOptionData>();
 
     Dictionary<Object, int> index;
 
@@ -32,6 +33,7 @@ public class NetCatalog : ScriptableObject
                 foreach (UnitData u in units) Add(u != null ? u.name : "-");
                 foreach (EnemyData e in enemies) Add(e != null ? e.name : "-");
                 foreach (WispData w in wisps) Add(w != null ? w.name : "-");
+                foreach (GamblingOptionData g in gamblingOptions) Add(g != null ? g.name : "-");
                 return (int)hash;
             }
         }

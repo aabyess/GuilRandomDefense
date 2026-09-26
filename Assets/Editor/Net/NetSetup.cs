@@ -97,9 +97,10 @@ public static class NetSetup
         catalog.units = LoadAllSorted<UnitData>();
         catalog.enemies = LoadAllSorted<EnemyData>();
         catalog.wisps = LoadAllSorted<WispData>();
+        catalog.gamblingOptions = LoadAllSorted<GamblingOptionData>();
         EditorUtility.SetDirty(catalog);
         AssetDatabase.SaveAssets();
-        Debug.Log($"[MP] 카탈로그: 유닛 {catalog.units.Count} · 적 {catalog.enemies.Count} · 위습 {catalog.wisps.Count} · 지문 {catalog.Fingerprint}");
+        Debug.Log($"[MP] 카탈로그: 유닛 {catalog.units.Count} · 적 {catalog.enemies.Count} · 위습 {catalog.wisps.Count} · 도박 {catalog.gamblingOptions.Count} · 지문 {catalog.Fingerprint}");
     }
 
     static System.Collections.Generic.List<T> LoadAllSorted<T>() where T : ScriptableObject

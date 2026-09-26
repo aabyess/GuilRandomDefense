@@ -220,6 +220,55 @@ public static class NetCommands
         if (commandsLogged++ < 30) Debug.Log($"[MP] 유닛 버튼 요청 수행: 슬롯 {sender.Slot} {action}({argument}) → {real.name}");
     }
 
+    // ───────────── 창고 · 항법(2단계 ③) ─────────────
+
+    public static bool RequestWarehouse(Selectable unit)
+    {
+        NetEntity entity = unit != null ? unit.GetComponentInParent<NetEntity>() : null;
+        if (entity == null || entity.Object == null || !entity.Object.IsValid || NetPlayer.Local == null) return false;
+        if (entity.EntityKind != NetEntityKind.Unit || entity.Owner != LocalPlayer.LocalPlayerId) return false;
+        NetPlayer.Local.RPC_Warehouse(entity.Object.Id);
+        return true;
+    }
+
+    /// <summary>호스트: 요청자 슬롯의 창고·레인으로(WarehouseController는 씬에 하나라 Local 창고를 잡는다 — 여기선 안 쓴다).</summary>
+    public static void ExecuteWarehouse(NetPlayer sender, NetworkId unit)
+    {
+        if (!TryGetOwnedReal(sender, unit, "창고", out GameObject real)) return;
+        PlayerContext context = PlayerContext.Get(sender.Slot);
+        Warehouse warehouse = context != null ? context.Warehouse : null;
+        if (warehouse == null) return;
+
+        bool ok;
+        string what;
+        if (warehouse.Contains(real))
+        {
+            LaneMarker lane = LaneMarker.Get(sender.Slot);
+            ok = warehouse.Retrieve(real, lane != null ? lane.transform.position : real.transform.position);
+            what = "회수";
+        }
+        else
+        {
+            ok = warehouse.Store(real);
+            what = "보관";
+        }
+
+        if (ok) PlayerNotification.Show(sender.Slot, $"창고: {what} (보관 중 {warehouse.Stored.Count}기)");
+        if (commandsLogged++ < 30) Debug.Log($"[MP] 창고 요청 수행: 슬롯 {sender.Slot} {real.name} {what} → {(ok ? "성공" : "실패")}");
+    }
+
+    public static void RequestNavigation(NavigationChoice choice)
+    {
+        if (NetPlayer.Local != null) NetPlayer.Local.RPC_Navigation((byte)choice);
+    }
+
+    public static void ExecuteNavigation(NetPlayer sender, NavigationChoice choice)
+    {
+        NavigationState state = PlayerContext.Get(sender.Slot)?.NavigationState;
+        bool ok = state != null && state.TrySelect(choice);
+        if (commandsLogged++ < 30) Debug.Log($"[MP] 항법 요청 수행: 슬롯 {sender.Slot} {choice} → {(ok ? "성공" : "실패(이미 고름)")}");
+    }
+
     static bool TryGetOwnedReal(NetPlayer sender, NetworkId target, string what, out GameObject real)
     {
         real = null;

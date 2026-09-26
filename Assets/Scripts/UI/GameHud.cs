@@ -1326,9 +1326,17 @@ public class GameHud : MonoBehaviour
     // 실제 방지는 TrySelect가 한다(코드 경로로도 재선택 불가).
     void OnNavigationOptionClicked(int index)
     {
-        if (BlockedOnMultiplayerClient()) return; // MP
         NavigationState state = PlayerContext.Local?.NavigationState;
         if (state == null || state.HasChosen) return;
+
+        // MP: 멀티 클라는 호스트에 요청만(호스트가 요청자 슬롯의 NavigationState로 고른다 — 여기 Local을 그대로 쓰면
+        //     방장 것이 된다). 고른 결과는 NetPlayer.Navigation으로 돌아와 이 창이 갱신된다.
+        if (!GameAuthority.IsServer)
+        {
+            NetCommands.RequestNavigation(NavigationOptionOrder[index]);
+            navigationModalPanel.SetActive(false);
+            return;
+        }
 
         state.TrySelect(NavigationOptionOrder[index]);
         RefreshNavigationModalContent();
@@ -3001,7 +3009,7 @@ public class GameHud : MonoBehaviour
         StoryManager story = StoryManager.Instance;
 
         bool hasStory = story != null;
-        bool running = hasStory && story.Running != null;
+        bool running = hasStory && story.HasRunningStory; // MP: 클라는 호스트 값(StoryManager.HasRunningStory)
         bool waiting = hasStory && !running && story.IsWaiting;
         string label = hasStory ? story.StatusLabel : null;
         int seconds = waiting ? Mathf.CeilToInt(story.SecondsUntilNext) : 0;

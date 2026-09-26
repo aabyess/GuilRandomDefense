@@ -31,6 +31,11 @@ public class NetPlayer : NetworkBehaviour
     [Networked, Capacity(ResourceSlots)] public NetworkArray<int> Resources => default;
     [Networked] public NetworkBool Dead { get; set; }
 
+    // 2단계 ③: 항법 선택 · 도박 해금/사용 횟수(도박소 칸 표시). 도박 선택지는 NetCatalog.gamblingOptions 순서.
+    [Networked] public byte Navigation { get; set; }
+    [Networked] public int GambleUnlockedMask { get; set; }
+    [Networked, Capacity(16)] public NetworkArray<short> GambleUses => default;
+
     public bool IsReadyForStart => IsHost || Ready;
 
     public string DisplayName
@@ -81,6 +86,21 @@ public class NetPlayer : NetworkBehaviour
             foreach (ResourceType type in System.Enum.GetValues(typeof(ResourceType)))
                 if ((int)type < ResourceSlots) Resources.Set((int)type, context.ResourceWallet.Get(type));
         Dead = context.IsDead;
+
+        if (context.NavigationState != null) Navigation = (byte)context.NavigationState.Choice;
+
+        NetCatalog catalog = NetLauncher.Catalog;
+        if (catalog != null && context.GamblingProgress != null)
+        {
+            int mask = 0;
+            for (int i = 0; i < catalog.gamblingOptions.Count && i < 16; i++)
+            {
+                GamblingOptionData option = catalog.gamblingOptions[i];
+                if (context.GamblingProgress.IsUnlocked(option)) mask |= 1 << i;
+                GambleUses.Set(i, (short)context.GamblingProgress.UsesSoFar(option));
+            }
+            GambleUnlockedMask = mask;
+        }
     }
 
     public override void Render()
@@ -95,6 +115,15 @@ public class NetPlayer : NetworkBehaviour
             foreach (ResourceType type in System.Enum.GetValues(typeof(ResourceType)))
                 if ((int)type < ResourceSlots) context.ResourceWallet.ApplyReplicated(type, Resources[(int)type]);
         if (Dead && !context.IsDead) context.MarkDead();
+
+        // 항법은 한 번 고르면 끝 — 클라 쪽 상태에도 같은 선택을 걸어 모달·표시가 맞게 한다(효과는 호스트에서만 의미).
+        if (Navigation != 0 && context.NavigationState != null && !context.NavigationState.HasChosen)
+            context.NavigationState.TrySelect((NavigationChoice)Navigation);
+
+        NetCatalog catalog = NetLauncher.Catalog;
+        if (catalog != null && context.GamblingProgress != null)
+            for (int i = 0; i < catalog.gamblingOptions.Count && i < 16; i++)
+                context.GamblingProgress.ApplyReplicated(catalog.gamblingOptions[i], GambleUses[i], (GambleUnlockedMask & (1 << i)) != 0);
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
@@ -160,6 +189,18 @@ public class NetPlayer : NetworkBehaviour
     public void RPC_HudUnitAction(NetworkId unit, byte action, byte argument)
     {
         NetCommands.ExecuteHudUnitAction(this, unit, (NetHudAction)action, argument);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_Warehouse(NetworkId unit)
+    {
+        NetCommands.ExecuteWarehouse(this, unit);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_Navigation(byte choice)
+    {
+        NetCommands.ExecuteNavigation(this, (NavigationChoice)choice);
     }
 
     public static string LoadNickname()

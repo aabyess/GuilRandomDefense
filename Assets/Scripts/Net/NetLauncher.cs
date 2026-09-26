@@ -33,6 +33,7 @@ using UnityEngine.SceneManagement;
 ///   -mpTestWisps 초          게임 씬 진입 뒤 그 초에 내 위습 전부를 가장 가까운 유닛 포탈로 보낸다(클라=이동 요청 RPC)
 ///   -mpTestMoveUnits 초      게임 씬 진입 뒤 그 초에 내 유닛 전부를 레인 가운데로 보낸다(클라=이동 요청 RPC)
 ///   -mpTestEconomy 초        그 초에 (클라) 내 상점마다 0번 칸 사용 · 지금 되는 조합 전부 · 판매 보상 있는 유닛 하나 판매 — 요청 RPC 확인용
+///   -mpTestPhase3 초         그 초에 (클라) 내 유닛 하나 창고 보관→4초 뒤 회수 · 항법 선택 · 복제된 스토리/도박/항법 상태 로그
 ///   -mpTestCommands 초       그 초부터 2초 간격으로 UnitCommands 공격이동→정지→홀드→적공격→모으기→우리로(클라=명령 요청 RPC)
 /// </summary>
 public class NetLauncher : MonoBehaviour
@@ -78,6 +79,7 @@ public class NetLauncher : MonoBehaviour
     float testMoveUnitsDelay = -1f;
     float testCommandsDelay = -1f;
     float testEconomyDelay = -1f;
+    float testPhase3Delay = -1f;
 
     public static NetLauncher Instance { get; private set; }
 
@@ -165,6 +167,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpTestMoveUnits": testMoveUnitsDelay = Seconds(i + 1); break;
                 case "-mpTestCommands": testCommandsDelay = Seconds(i + 1); break;
                 case "-mpTestEconomy": testEconomyDelay = Seconds(i + 1); break;
+                case "-mpTestPhase3": testPhase3Delay = Seconds(i + 1); break;
             }
         }
 
@@ -489,6 +492,7 @@ public class NetLauncher : MonoBehaviour
         if (testMoveUnitsDelay >= 0f) StartCoroutine(TestMoveAfter(testMoveUnitsDelay, NetEntityKind.Unit));
         if (testCommandsDelay >= 0f) StartCoroutine(TestCommandsAfter(testCommandsDelay));
         if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
+        if (testPhase3Delay >= 0f) StartCoroutine(TestPhase3After(testPhase3Delay));
     }
 
     // 테스트 전용(-mpTestUnits): 흔함 유닛을 슬롯마다 N기, 실제 소환 경로(UnitSpawner.Spawn → 우리 칸)로 세운다.
@@ -641,6 +645,40 @@ public class NetLauncher : MonoBehaviour
             Debug.Log($"[MP] 테스트 판매: {d.unitName} 요청");
             break;
         }
+    }
+
+    IEnumerator TestPhase3After(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        int me = LocalPlayer.LocalPlayerId;
+
+        Selectable unit = null;
+        foreach (NetEntity e in FindObjectsByType<NetEntity>(FindObjectsSortMode.None))
+            if (e.EntityKind == NetEntityKind.Unit && e.Owner == me && e.Visual != null && e.Visual.TryGetComponent(out unit)) break;
+
+        if (unit != null)
+        {
+            Vector3 before = unit.transform.position;
+            Debug.Log($"[MP] 테스트 창고 보관 요청 → {NetCommands.RequestWarehouse(unit)} (위치 {before.x:F0},{before.z:F0})");
+            yield return new WaitForSecondsRealtime(4f);
+            Vector3 stored = unit.transform.position;
+            Debug.Log($"[MP] 테스트 창고: 보관 뒤 위치 {stored.x:F0},{stored.z:F0} · 회수 요청 → {NetCommands.RequestWarehouse(unit)}");
+            yield return new WaitForSecondsRealtime(4f);
+            Vector3 back = unit.transform.position;
+            Debug.Log($"[MP] 테스트 창고: 회수 뒤 위치 {back.x:F0},{back.z:F0}");
+        }
+
+        NetCommands.RequestNavigation(NavigationChoice.Hegemon);
+        yield return new WaitForSecondsRealtime(2f);
+
+        PlayerContext context = PlayerContext.Local;
+        StoryManager story = StoryManager.Instance;
+        string gamble = "";
+        NetCatalog catalog = Catalog;
+        if (catalog != null && context != null && context.GamblingProgress != null)
+            foreach (GamblingOptionData option in catalog.gamblingOptions)
+                gamble += $"{option.name}:{(context.GamblingProgress.IsUnlocked(option) ? "해금" : "잠김")}/{context.GamblingProgress.UsesSoFar(option)}회 ";
+        Debug.Log($"[MP] 테스트 상태(클라): 항법 {context?.NavigationState?.Choice} · 스토리 진행 {story?.HasRunningStory} 대기 {story?.IsWaiting} 「{story?.StatusLabel}」 {story?.SecondsUntilNext:F0}초 · 도박 {gamble}");
     }
 
     IEnumerator DumpAfter(float seconds)

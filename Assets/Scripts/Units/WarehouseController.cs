@@ -20,12 +20,17 @@ public class WarehouseController : MonoBehaviour
     {
         if (Keyboard.current == null || !Keyboard.current.bKey.wasPressedThisFrame) return;
         // MP: 멀티 클라는 겉모습만 가져서 창고 넣기/빼기가 로컬 화면만 바꾼다 — 요청 RPC가 붙을 때까지 클라에선 막는다.
+        if (selectionManager == null) return;
+        // MP: 멀티 클라는 선택한 내 유닛마다 호스트에 창고 요청을 보낸다(호스트가 요청자 슬롯의 창고·레인으로 넣고 뺀다).
+        //     이 컨트롤러는 씬에 하나라 Local 창고를 잡는데, 호스트에서 그걸 쓰면 방장 창고가 된다 — 그래서 여기서 갈라 보낸다.
         if (!GameAuthority.IsServer)
         {
-            PlayerNotification.Show(LocalPlayer.LocalPlayerId, "같이 하기에서는 아직 쓸 수 없습니다(다음 단계에서 열립니다).");
+            int requested = 0;
+            foreach (Selectable selectable in selectionManager.Selected)
+                if (NetCommands.RequestWarehouse(selectable)) requested++;
+            if (requested > 0) selectionManager.ClearSelection();
             return;
         }
-        if (selectionManager == null) return;
 
         Warehouse target = TargetWarehouse;
         if (target == null)

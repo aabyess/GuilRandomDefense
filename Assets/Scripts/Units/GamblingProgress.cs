@@ -33,4 +33,13 @@ public class GamblingProgress : MonoBehaviour
     {
         if (option != null) unlockedOptions.Add(option);
     }
+
+    /// <summary>MP: 멀티 클라가 호스트의 값을 받아 적는다(NetPlayer) — 도박소 칸의 해금·남은 횟수 표시용 복제.
+    /// 싱글·호스트는 부르지 않는다.</summary>
+    public void ApplyReplicated(GamblingOptionData option, int uses, bool unlocked)
+    {
+        if (option == null) return;
+        usesSoFar[option] = uses;
+        if (unlocked) unlockedOptions.Add(option); else unlockedOptions.Remove(option);
+    }
 }
