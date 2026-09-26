@@ -80,6 +80,7 @@ public class RecipeDollSpawner : MonoBehaviour
                 figure.transform.SetParent(parent, false);
                 figure.transform.SetPositionAndRotation(doll.position, doll.rotation);
                 figure.transform.localScale = doll.scale;
+                AttachInspectCollider(figure, doll.unit);
                 if (flags != HideFlags.None)
                     foreach (Transform t in figure.GetComponentsInChildren<Transform>(true)) t.gameObject.hideFlags = flags;
                 made.Add(figure);
@@ -90,6 +91,22 @@ public class RecipeDollSpawner : MonoBehaviour
             if (Application.isPlaying) Destroy(staging); else DestroyImmediate(staging);
         }
         return made;
+    }
+
+    // 클릭하면 어떤 유닛인지 보이게(친구 베타 피드백 ⑤, 2026-09-26) — 렌더러 경계 크기의 **트리거** 상자 + 표지.
+    //    트리거라 이동 광선(WorldPick.TryHitGround)은 지나치고, 실행 때 붙여서 굽힌 NavMesh와도 무관하다.
+    static void AttachInspectCollider(GameObject figure, UnitData unit)
+    {
+        Renderer[] renderers = figure.GetComponentsInChildren<Renderer>(true);
+        if (renderers.Length == 0) return;
+        Bounds b = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++) b.Encapsulate(renderers[i].bounds);
+        BoxCollider box = figure.AddComponent<BoxCollider>();
+        box.isTrigger = true;
+        Vector3 s = figure.transform.lossyScale;
+        box.center = figure.transform.InverseTransformPoint(b.center);
+        box.size = new Vector3(b.size.x / Mathf.Max(Mathf.Abs(s.x), 1e-4f), b.size.y / Mathf.Max(Mathf.Abs(s.y), 1e-4f), b.size.z / Mathf.Max(Mathf.Abs(s.z), 1e-4f));
+        figure.AddComponent<DollInfo>().SetUnit(unit);
     }
 
     // MapGenerator.TryPlaceUnitModel이 인형에서 걷어내던 것과 같은 규칙: 보이는 것(Transform·Renderer·MeshFilter)과

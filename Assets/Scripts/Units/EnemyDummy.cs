@@ -34,6 +34,8 @@ public class EnemyDummy : MonoBehaviour
     public int SpawnRound { get; private set; }
 
     public float Hp => hp;
+    /// <summary>이 적의 데이터 — HUD 살펴보기(이름·방어)가 읽는다(2026-09-26).</summary>
+    public EnemyData Data => data;
     public float MaxHp { get; private set; }
 
     // 대상 이동속도 — SkillEffectBasis.TargetMoveSpeed가 읽는다(2026-09-06). data가 private

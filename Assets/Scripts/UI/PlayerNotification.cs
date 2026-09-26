@@ -81,6 +81,7 @@ public class PlayerNotificationHud : MonoBehaviour
     {
         fontSize = 20,
         alignment = TextAnchor.MiddleCenter,
+        richText = true,   // 유닛 획득 알림이 등급색(<color>)을 쓴다(2026-09-26). 기존 알림엔 태그가 없어 그대로다.
         normal = { textColor = Color.white },
     };
 

@@ -187,9 +187,13 @@ public class SelectionManager : MonoBehaviour
             hit.collider.TryGetComponent(out hitSelectable);
 
         ClearSelection();
+        InspectTarget.Clear();
 
         if (hitSelectable == null)
         {
+            // 적·조합표 인형은 조작은 못 해도 정보는 보인다(친구 베타 피드백 ⑤, 2026-09-26) — 선택이 아니라 「살펴보기」로 둔다.
+            GameObject inspect = InspectTarget.FindFrom(hit.collider);
+            if (inspect != null) { InspectTarget.Set(inspect); return; }
             if (hit.collider != null)
                 Debug.Log($"[선택] {hit.collider.name} 을(를) 눌렀지만 선택할 수 있는 대상이 아닙니다.");
             return;
@@ -212,6 +216,7 @@ public class SelectionManager : MonoBehaviour
         Rect box = GetScreenRect(screenStart, screenEnd);
 
         ClearSelection();
+        InspectTarget.Clear();
         foreach (Selectable candidate in Selectable.All)
         {
             if (!IsSelectableByLocalPlayer(candidate)) continue;

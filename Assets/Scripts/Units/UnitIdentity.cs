@@ -100,12 +100,21 @@ public class UnitIdentity : MonoBehaviour
     {
         if (inventory == owner) return;
 
+        bool firstOwner = inventory == null;
         if (inventory != null) inventory.Unregister(this);
 
         inventory = owner;
 
         if (inventory != null) inventory.Register(this);
+
+        // 유닛 획득 알림(친구 베타 피드백 ④, 2026-09-26) — 원작 「000 획득!」. 플레이어 유닛은 UnitSpawner.Spawn → 여기
+        //    한 길로만 생기므로(포탈·도박·조합·보상 전부) 여기서 한 번 쏘면 모든 획득 경로를 덮는다.
+        //    처음 주인이 생길 때만 — 창고 이동 같은 재등록은 획득이 아니다. 문구는 UnitAcquireNotice가 만든다.
+        if (firstOwner && inventory != null) OnAcquired?.Invoke(this, inventory);
     }
+
+    /// <summary>유닛이 처음 주인의 인벤토리에 들어갔다(= 획득). 인자: 유닛, 그 인벤토리.</summary>
+    public static event System.Action<UnitIdentity, UnitInventory> OnAcquired;
 
     /// <summary>
     /// 이 유닛을 소모한다 — 인벤토리에서 빼고 필드에서도 없앤다.

@@ -269,3 +269,67 @@ public static class RecipeDollProbe
         return $"조합표 칸 {slots.Count}개(인형 {skinned} · 색 큐브 {cubes}) · 받침 {pedestals} · 스포너 {spawners.Length}개({spawn}) · 마지막 실행 세우기 {RecipeDollSpawner.LastSpawnCount}기 {RecipeDollSpawner.LastSpawnMs:F0}ms";
     }
 }
+
+/// <summary>친구 베타 피드백 확인(2026-09-26) — HUD 정보칸 글자 · 살펴보기 대상 · PM ③ 명령(홀드·정지·공격).</summary>
+public static class BetaFeedbackProbe
+{
+    public static string HudInfo()
+    {
+        var hud = Object.FindFirstObjectByType<GameHud>();
+        var f = typeof(GameHud).GetField("unitInfoText", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        var text = hud != null && f != null ? f.GetValue(hud) as TMPro.TMP_Text : null;
+        GameObject t = InspectTarget.Current;
+        return $"살펴보기 대상 {(t != null ? t.name : "없음")} · 정보칸 「{(text != null ? text.text.Replace("\n", " / ") : "(없음)")}」";
+    }
+
+    static EnemyDummy targeted;
+    static Vector3 holdPos;
+    static Selectable subject;
+
+    // 1단계: 내 흔함 1기를 골라 홀드 — 위치를 기억한다.
+    public static string Hold()
+    {
+        subject = Selectable.All.FirstOrDefault(x => x != null && x.name.Contains("Unit_흔함") && (!x.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0));
+        if (subject == null) return "흔함 없음";
+        holdPos = subject.transform.position;
+        int n = UnitCommands.Hold(new List<Selectable> { subject });
+        subject.TryGetComponent(out UnitCombat c);
+        return $"홀드 {n}기({subject.name}) · IsHolding {c?.IsHolding} · 위치 {holdPos:F0}";
+    }
+
+    // 2단계: 몇 초 뒤 — 위치가 그대로이고 사거리 안 적을 치는지(표적 있음).
+    public static string HoldCheck()
+    {
+        if (subject == null) return "대상 없음";
+        subject.TryGetComponent(out UnitCombat c);
+        float moved = Vector3.Distance(subject.transform.position, holdPos);
+        return $"홀드 뒤 이동 {moved:F1} · IsHolding {c?.IsHolding} · 표적 {(c != null && c.CurrentTarget != null ? c.CurrentTarget.name : "없음")}";
+    }
+
+    public static string Stop()
+    {
+        if (subject == null) return "대상 없음";
+        int n = UnitCommands.Stop(new List<Selectable> { subject });
+        subject.TryGetComponent(out UnitCombat c);
+        return $"정지 {n}기 · IsHolding {c?.IsHolding} · 표적 {(c != null && c.CurrentTarget != null ? c.CurrentTarget.name : "없음")}";
+    }
+
+    // 3단계: 레인의 적 하나를 공격 대상으로 — 그 적이 죽을 때까지 표적이 유지되는지.
+    public static string Attack()
+    {
+        if (subject == null) return "대상 없음";
+        targeted = EnemyDummy.Active.Where(e => e != null && e.LaneIndex == 0).OrderBy(e => (e.transform.position - subject.transform.position).sqrMagnitude).FirstOrDefault();
+        if (targeted == null) return "레인 적 없음";
+        int n = UnitCommands.AttackTarget(new List<Selectable> { subject }, targeted);
+        return $"공격 대상 {n}기 → {targeted.name}(체력 {targeted.Hp:F0})";
+    }
+
+    public static string AttackCheck()
+    {
+        if (subject == null) return "대상 없음";
+        subject.TryGetComponent(out UnitCombat c);
+        string cur = c != null && c.CurrentTarget != null ? c.CurrentTarget.name : "없음";
+        bool same = c != null && targeted != null && c.CurrentTarget == targeted;
+        return $"지정한 적 {(targeted != null ? $"살아 있음 체력 {targeted.Hp:F0}" : "죽음")} · 지금 표적 {cur} · 지정 적 유지 {same}";
+    }
+}

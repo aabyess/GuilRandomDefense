@@ -2466,6 +2466,9 @@ public class GameHud : MonoBehaviour
 
         if (count == 0)
         {
+            // 살펴보기(적·조합표 인형 — 조작 불가, 정보만). 친구 베타 피드백 ⑤(2026-09-26).
+            GameObject inspect = InspectTarget.Current;
+            if (inspect != null && ShowInspectInfo(inspect)) return;
             unitInfoText.text = "선택된 유닛 없음";
             SetUnitInfoPortrait(null);
             return;
@@ -2514,6 +2517,46 @@ public class GameHud : MonoBehaviour
         // 없는 값을 지어내지 않고 실제로 있는 축만 표시한다(2026-09-23, PM 보고 예정).
         unitInfoText.text =
             $"<color=#{gradeColorHex}>{unitName}</color>\n등급: {grade}\n체력: {hp}\n공격력: {attackPower}\n사거리: {attackRange}\n공격속도: {attackSpeed}/s";
+    }
+
+    static string ArmorTypeName(ArmorType type)
+    {
+        switch (type)
+        {
+            case ArmorType.Normal: return "일반";
+            case ArmorType.Large: return "대형";
+            case ArmorType.Fort: return "요새";
+            case ArmorType.Hero: return "영웅";
+            default: return "-";
+        }
+    }
+
+    // 살펴보기 정보 — 적은 실시간 체력·방어, 조합표 인형은 그 유닛의 기준 스탯. 둘 다 「조작 불가」를 밝힌다.
+    bool ShowInspectInfo(GameObject target)
+    {
+        if (target.TryGetComponent(out EnemyDummy enemy))
+        {
+            SetUnitInfoPortrait(null);
+            string enemyName = enemy.Data != null && !string.IsNullOrEmpty(enemy.Data.enemyName) ? enemy.Data.enemyName : enemy.name;
+            string tag = enemy.IsBoss ? "보스" : "적";
+            unitInfoText.text =
+                $"<color=#FF6B6B>{enemyName}</color>  <size=80%>({tag} · 조작 불가)</size>\n" +
+                $"체력: {Mathf.Max(0f, enemy.Hp):F0} / {enemy.MaxHp:F0}\n" +
+                $"방어력: {enemy.EffectiveArmor:F1} ({ArmorTypeName(enemy.ArmorType)})\n" +
+                $"이동속도: {enemy.MoveSpeed:F0}";
+            return true;
+        }
+        if (target.TryGetComponent(out DollInfo doll) && doll.Unit != null)
+        {
+            UnitData data = doll.Unit;
+            SetUnitInfoPortrait(data);
+            string hex = ColorUtility.ToHtmlStringRGB(GetGradeColor(data.grade));
+            unitInfoText.text =
+                $"<color=#{hex}>{data.unitName}</color>  <size=80%>(조합표 · 조작 불가)</size>\n등급: {data.grade.KoreanName()}\n체력: {data.hp:F0}\n" +
+                $"공격력: {data.attackPower:F0}\n사거리: {data.attackRange:F1}\n공격속도: {data.attackSpeed:F2}/s";
+            return true;
+        }
+        return false;
     }
 
     // 초상화 아트가 없으므로 등급 색 배경만 채운다 — BuildCard(다중 선택 카드)와 같은 관례.
