@@ -34,12 +34,18 @@ trap 'rm -rf "$WORK"' EXIT
   ls "$U/Managed/UnityEngine/"*.dll
   echo "$U/Managed/UnityEditor.dll"
   ls Library/ScriptAssemblies/*.dll
+  # Photon Fusion(멀티, Assets/Scripts/Net): 미리 빌드된 DLL이라 ScriptAssemblies에 없다 — 빠지면 Net 파일에서 CS0246이 수백 줄.
+  ls Assets/Photon/Fusion/Assemblies/*.dll 2>/dev/null || true
+  ls Assets/Photon/PhotonLibs/netstandard2.0/release/*.dll 2>/dev/null || true
 } | sort -u | sed 's/^/-r:/' > "$WORK/refs.rsp"
 
 find Assets/Scripts Assets/Editor -name '*.cs' > "$WORK/sources.txt"
 
+# UNITY_EDITOR: 에디터에서 Unity가 붙이는 기호. 없으면 `#if UNITY_EDITOR` 안의 에디터 전용 코드(NetLauncher.EditorSetup 등)를
+# 부르는 Assets/Editor 쪽이 없는 멤버로 잡힌다.
+
 "$U/NetCoreRuntime/dotnet" "$U/DotNetSdkRoslyn/csc.dll" \
-  -target:library -nologo -noconfig -nostdlib -langversion:9 \
+  -target:library -nologo -noconfig -nostdlib -langversion:9 -define:UNITY_EDITOR \
   -nowarn:CS0169,CS0414,CS0649,CS0436,CS8032 \
   -out:"$WORK/check.dll" "@$WORK/refs.rsp" $(cat "$WORK/sources.txt") 2>&1 | grep -E "error" && exit 1
 
