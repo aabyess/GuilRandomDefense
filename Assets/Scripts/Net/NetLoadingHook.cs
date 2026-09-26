@@ -15,6 +15,6 @@ public static class NetLoadingHook
         if (Time.unscaledTime - lastShownAt < 2f) return;   // 같은 전환에서 두 번째 호출(방장 ②+③)
         lastShownAt = Time.unscaledTime;
         Debug.Log($"[MP] 로딩 화면({from})");
-        // LoadingScreen(main)이 들어오면 여기 한 줄: LoadingScreen.Show();
+        LoadingScreen.Show();
     }
 }

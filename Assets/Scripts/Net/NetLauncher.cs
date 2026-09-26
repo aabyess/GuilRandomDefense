@@ -90,6 +90,7 @@ public class NetLauncher : MonoBehaviour
     float testEconomyDelay = -1f;
     float testFinishRunDelay = -1f;
     float camWispDelay = -1f;
+    readonly System.Collections.Generic.List<(float, string)> shotAts = new System.Collections.Generic.List<(float, string)>();
     float testPhase3Delay = -1f;
     bool testTraitUnits;
     float testTraitDelay = -1f;
@@ -178,7 +179,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpLobbyShot": lobbyShotDelay = Seconds(i + 1); lobbyShotPath = Arg(i + 2); break;
                 case "-mpShot": shotDelay = Seconds(i + 1); shotPath = Arg(i + 2); break;
                 case "-mpQuit": quitDelay = Seconds(i + 1); break;
-                case "-mpShotAt": StartCoroutine(ShotAfter(Seconds(i + 1), Arg(i + 2))); break;
+                case "-mpShotAt": shotAts.Add((Seconds(i + 1), Arg(i + 2))); StartCoroutine(ShotAfter(Seconds(i + 1), Arg(i + 2))); break;
                 case "-mpLeave": leaveAt = Seconds(i + 1); break;
                 case "-mpExitAt": exitAt = Seconds(i + 1); break;
                 case "-mpTestUnits": int.TryParse(Arg(i + 1), out testUnits); break;
@@ -216,6 +217,13 @@ public class NetLauncher : MonoBehaviour
         MatchConfig.Reset();
         LocalPlayer.LocalPlayerId = 0;
         NetLoadingHook.Show("혼자 하기");
+        // 테스트 전용: 이 창구는 곧 사라지니 남은 -mpShotAt 캡처는 씬을 넘어 사는 작은 오브젝트에 넘긴다(로딩 화면 확인용).
+        if (shotAts.Count > 0)
+        {
+            var survivor = new GameObject("[MP] 캡처(혼자 하기)").AddComponent<NetShotHelper>();
+            DontDestroyOnLoad(survivor.gameObject);
+            survivor.Schedule(shotAts);
+        }
         Destroy(gameObject);
         SceneManager.LoadScene(scene);
     }
