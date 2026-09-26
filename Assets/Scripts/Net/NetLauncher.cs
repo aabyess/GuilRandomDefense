@@ -303,6 +303,8 @@ public class NetLauncher : MonoBehaviour
                 });
         }
 
+        if (runner.IsServer && entityPrefab != null) StartCoroutine(PrewarmEntityPrefab());
+
         Status = mode == GameMode.Host ? "방을 열었습니다. 친구에게 방 코드를 알려 주세요." : "들어왔습니다. 준비를 누르고 호스트를 기다리세요.";
         Debug.Log($"[MP] StartGame 성공: {mode}, 방 {code}, IsServer={runner.IsServer}, 지역 {runner.SessionInfo.Region}");
 
@@ -315,6 +317,21 @@ public class NetLauncher : MonoBehaviour
         var settings = Fusion.Photon.Realtime.PhotonAppSettings.Global.AppSettings.GetCopy();
         settings.FixedRegion = region;
         return settings;
+    }
+
+    // NetEntity 프리팹은 처음 한 번 지연 로드된다 — 게임 첫 틱에 거울 수십 개가 한꺼번에 「Failed to load prefab synchronously」로
+    // 한 번씩 실패하고 다음 틱에 다시 섰다(09-26 회귀에서 15건). 대기실에서 빈 거울 하나를 미리 세워 로드를 끝내 둔다 —
+    // 실물이 없는 거울이라 NetEntity가 다음 틱에 스스로 거둔다.
+    IEnumerator PrewarmEntityPrefab()
+    {
+        for (int attempt = 0; attempt < 20 && runner != null && runner.IsRunning; attempt++)
+        {
+            bool ok;
+            try { ok = runner.Spawn(entityPrefab, Vector3.zero, Quaternion.identity) != null; }
+            catch (Exception) { ok = false; }
+            if (ok) { Debug.Log($"[MP] 거울 프리팹 미리 로드 완료({attempt + 1}번째)"); yield break; }
+            yield return new WaitForSecondsRealtime(0.25f);
+        }
     }
 
     // 싱글에서 마지막으로 고른 난이도(DifficultyManager가 기억해 둔 값)를 대기실 기본값으로 쓴다.

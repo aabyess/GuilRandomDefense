@@ -38,6 +38,7 @@ public static class NetReplicaBuilder
 
     public static GameObject Build(NetEntity entity)
     {
+        if (entity.EntityKind == NetEntityKind.None) return null;   // 대기실에서 프리팹 미리 로드용으로 세운 빈 거울
         NetCatalog catalog = NetLauncher.Catalog;
         if (catalog == null)
         {
