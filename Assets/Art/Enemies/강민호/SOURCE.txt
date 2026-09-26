@@ -1,0 +1,11 @@
+출처: 원피스 바운티러시 페이지원 스피노 짐승형(pl_pageone_orig02 「(merge)」) — ~/Desktop/구랜디스킨모음/90_적유닛/R41-R50/R44_강민호_페이지원스피노.zip
+생성: Tools/blender/fix_unit_fbx.py 항목 「강민호」 (kind=beast, generic=True)
+만든 날: 2026-09-26, blender 세션.
+
+🔴 Generic 리그 — Humanoid로 바꾸지 말 것. 몸을 수평으로 눕힌 두발 공룡(척추·꼬리가 수평)이라 Mixamo 걷기가 맞지 않는다.
+  원본 뼈 이름 그대로(뿌리 Body_Pelvis, 뼈 50 — 오른다리는 원본 오타 r_upreg·r_reg).
+클립(모델 안): Idle 120프레임 · Move 36프레임(두 다리 한 걸음 주기) · Attack 30프레임(목 내밀어 물기). 24fps, 제자리(루트 이동 없음),
+  Idle·Move는 첫 = 끝. Move는 첫 프레임이 쉬는 자세가 아니다(걸음 중간에서 시작) — 이음새 0. Move 접지 보정 최대 0.046(몸 오르내림).
+정면 −Y. 크기: 높이 1.8로 정규화(길이 4.052 · 폭 0.859 — 꼬리가 몸 길이의 절반 이상). 게임 키는 PM이 EnemyModels 표에서 정한다.
+  원본 비율 참고: 원본 높이 0.043 · 길이 0.096. ⚠️ 이 판은 뼈대 배율이 1.0(류마 0.01과 구성이 다름)이라 류마 × 2.13은 참고값뿐.
+재질: pl_pageone_orig02 하나 — 텍스처 Textures/pl_pageone_orig02_diff.png(원본과 RGB 픽셀 동일).
