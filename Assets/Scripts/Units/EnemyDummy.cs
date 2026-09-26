@@ -42,11 +42,16 @@ public class EnemyDummy : MonoBehaviour
     public bool IsReplica { get; private set; }
 
     /// <summary>MP: 클라 겉모습 초기화 — Initialize의 모습 부분(시각 배율)만 하고 오라·라운드 기록은 안 한다.</summary>
+    // MP: 클라 겉모습의 정보칸 숫자 — 방깎·이감·난이도는 호스트에만 있어서 실효값을 받아 둔다(NetEntity.Render가 매 프레임).
+    float replicaArmor, replicaMoveSpeed;
+    public void SetReplicaStats(float armor, float moveSpeed) { replicaArmor = armor; replicaMoveSpeed = moveSpeed; }
+
     public void InitializeReplica(EnemyData enemyData, float currentHp, float maxHp)
     {
         IsReplica = true;
         data = enemyData;
         SetReplicaHp(currentHp, maxHp);
+        if (enemyData != null) SetReplicaStats(enemyData.armor, enemyData.moveSpeed);   // 첫 Render 전 자리값
         if (enemyData != null && visualRoot != null)
             visualRoot.localScale = baseVisualScale * Mathf.Max(0.01f, enemyData.visualScale);
     }
@@ -110,7 +115,8 @@ public class EnemyDummy : MonoBehaviour
     // 만 가져온다 — 단위가 달라도 비율은 그대로 옮겨쓸 수 있다. shred=0이면
     // `Max(MoveSpeedFloorRatio, 1)=1`이라 `data.moveSpeed` 그대로(진짜 회귀 없음),
     // moveSpeed=0(고정형 20종)도 0×무엇=0으로 그대로 유지된다.
-    public float MoveSpeed => data != null
+    public float MoveSpeed => IsReplica ? replicaMoveSpeed   // MP: 클라 겉모습은 호스트 실효값
+        : data != null
         ? data.moveSpeed * Mathf.Max(MoveSpeedFloorRatio, 1f - moveSpeedShredPercent)
         : 0f;
 
@@ -554,7 +560,7 @@ public class EnemyDummy : MonoBehaviour
     }
 
     /// <summary>방깎을 적용한 실효 방어력. 하한 -20.</summary>
-    public float EffectiveArmor =>
+    public float EffectiveArmor => IsReplica ? replicaArmor :   // MP: 클라 겉모습은 호스트 실효값
         Mathf.Max(ArmorFloor, (data != null ? data.armor : 0f) - armorShred + TableStackedArmorShred());
 
     public ArmorType ArmorType => data != null ? data.armorType : ArmorType.Normal;

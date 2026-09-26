@@ -26,6 +26,14 @@ public class NetEntity : NetworkBehaviour
     [Networked] public int AttackSeq { get; set; }
     /// <summary>실물에 붙은 희귀함 리롤 능력(카탈로그 번호+1, 0=없음). 도박 성공 때 런타임에 붙어서 매 틱 본다.</summary>
     [Networked] public short RerollAbility { get; set; }
+    // 정보칸 숫자(PM 09-26: 친구 화면에 공격력·사거리·공격속도가 「-」였다 — 겉모습은 UnitAttacker를 떼어 낸다).
+    // 호스트 실물의 **실제 값**(강화·특성 반영)을 싣는다. 바뀔 때만 쓴다.
+    [Networked] public float AttackDamage { get; set; }
+    [Networked] public float AttackRange { get; set; }
+    [Networked] public float AttackInterval { get; set; }
+    // 적: 방깎·이감·난이도가 반영된 실효 방어력과 이동속도(겉모습은 에셋 기준값밖에 모른다).
+    [Networked] public float EnemyArmor { get; set; }
+    [Networked] public float EnemyMoveSpeed { get; set; }
 
     public NetEntityKind EntityKind => (NetEntityKind)Kind;
 
@@ -37,6 +45,7 @@ public class NetEntity : NetworkBehaviour
 
     EnemyDummy replicaEnemy;
     EnemyDummy realEnemy;
+    UnitAttacker realAttacker;
     CharacterAnimator realAnimator;
     CharacterAnimator visualAnimator;
     int seenAttackSeq;
@@ -53,6 +62,7 @@ public class NetEntity : NetworkBehaviour
             if (Real != null)
             {
                 Real.TryGetComponent(out realEnemy);
+                Real.TryGetComponent(out realAttacker);
                 realAnimator = Real.GetComponentInChildren<CharacterAnimator>();
                 if (realAnimator != null) realAnimator.AttackPlayed += OnRealAttack;
             }
@@ -93,6 +103,15 @@ public class NetEntity : NetworkBehaviour
         {
             Hp = realEnemy.Hp;
             MaxHp = realEnemy.MaxHp;
+            if (EnemyArmor != realEnemy.EffectiveArmor) EnemyArmor = realEnemy.EffectiveArmor;
+            if (EnemyMoveSpeed != realEnemy.MoveSpeed) EnemyMoveSpeed = realEnemy.MoveSpeed;
+        }
+
+        if (realAttacker != null)
+        {
+            if (AttackDamage != realAttacker.AttackDamage) AttackDamage = realAttacker.AttackDamage;
+            if (AttackRange != realAttacker.AttackRange) AttackRange = realAttacker.AttackRange;
+            if (AttackInterval != realAttacker.AttackInterval) AttackInterval = realAttacker.AttackInterval;
         }
 
         if (RerollAbility == 0 && EntityKind == NetEntityKind.Unit && Real.TryGetComponent(out UniqueRerollAbility reroll) && NetLauncher.Catalog != null)
@@ -101,7 +120,11 @@ public class NetEntity : NetworkBehaviour
 
     public override void Render()
     {
-        if (replicaEnemy != null) replicaEnemy.SetReplicaHp(Hp, MaxHp);
+        if (replicaEnemy != null)
+        {
+            replicaEnemy.SetReplicaHp(Hp, MaxHp);
+            replicaEnemy.SetReplicaStats(EnemyArmor, EnemyMoveSpeed);
+        }
 
         // 호스트 실물에 리롤 능력이 붙었으면 겉모습에도 붙인다 — GameHud가 그 컴포넌트로 리롤 버튼을 띄운다(실행은 요청).
         if (!HasStateAuthority && RerollAbility > 0 && Visual != null && !Visual.TryGetComponent(out UniqueRerollAbility _) && NetLauncher.Catalog != null

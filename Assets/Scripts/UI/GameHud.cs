@@ -2615,10 +2615,16 @@ public class GameHud : MonoBehaviour
             : Color.white);
         // 플레이어 유닛에 아직 별도 체력 컴포넌트가 없어, UnitData의 기준 hp를 표시한다(실시간 값 아님).
         string hp = data != null ? data.hp.ToString("F0") : "-";
-        string attackPower = attacker != null ? attacker.AttackDamage.ToString("F0") : "-";
-        string attackRange = attacker != null ? attacker.AttackRange.ToString("F1") : "-";
-        string attackSpeed = attacker != null && attacker.AttackInterval > 0f
-            ? (1f / attacker.AttackInterval).ToString("F2")
+        // MP: 클라 겉모습엔 UnitAttacker가 없다 — 거울(NetEntity, 겉모습의 부모)이 싣고 온 호스트 실제 값을 쓴다.
+        NetEntity mirror = attacker == null && data != null ? first.GetComponentInParent<NetEntity>() : null;
+        bool hasStats = attacker != null || mirror != null;
+        float damage = attacker != null ? attacker.AttackDamage : mirror != null ? mirror.AttackDamage : 0f;
+        float range = attacker != null ? attacker.AttackRange : mirror != null ? mirror.AttackRange : 0f;
+        float interval = attacker != null ? attacker.AttackInterval : mirror != null ? mirror.AttackInterval : 0f;
+        string attackPower = hasStats ? damage.ToString("F0") : "-";
+        string attackRange = hasStats ? range.ToString("F1") : "-";
+        string attackSpeed = hasStats && interval > 0f
+            ? (1f / interval).ToString("F2")
             : "-";
 
         // 마나·방어력은 PM 요청에 있었으나 UnitData/UnitAttacker에 그 필드 자체가 없다

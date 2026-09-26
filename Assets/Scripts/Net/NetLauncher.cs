@@ -43,7 +43,8 @@ using UnityEngine.SceneManagement;
 ///   -mpLobbyChat 초 문장     방에 들어간 뒤 그 초에 대기실 채팅 한 줄
 ///   -mpTestGambleLabels 초   그 초에 (호스트·클라 각자) 내 도박소 칸 글자 전부 로그 — 재고 「남은/최대 · N초」 복제 확인
 ///   -mpCamWisp 초            그 초에 카메라를 위습 쪽으로(주인 색 캡처용)
-///   -mpTestSelect 초 폴더     (양쪽, 클라 확인용) 내 유닛 최대 4기와 내 레인 적 하나를 차례로 골라 초상화 캡처 — 소환 없이 있는 것만
+///   -mpTestSelect 초 폴더     (양쪽, 클라 확인용) 슬롯 1(친구) 유닛 최대 4기와 레인 1 적 둘을 **거울 ID 순**으로 골라 캡처 —
+///                             방장·친구가 같은 개체를 고르므로 파일 이름(id)으로 나란히 비교한다. 소환 없이 있는 것만
 ///   -mpTestPortraits 초 폴더  (호스트) 흔함·특별함·재규어·적·매머드·보스를 차례로 골라 초상화 캡처 + 초상 켬/끔 FPS
 ///   -mpTestCommands 초       그 초부터 2초 간격으로 UnitCommands 공격이동→정지→홀드→적공격→모으기→우리로(클라=명령 요청 RPC)
 /// </summary>
@@ -967,21 +968,34 @@ public class NetLauncher : MonoBehaviour
         if (selection == null) { Debug.LogWarning("[MP] 선택 테스트: SelectionManager 없음"); yield break; }
 
         var targets = new System.Collections.Generic.List<(string label, GameObject go, bool isEnemy)>();
-        foreach (NetEntity e in FindObjectsByType<NetEntity>(FindObjectsSortMode.None))
+        var entities = FindObjectsByType<NetEntity>(FindObjectsSortMode.None).OrderBy(e => e.Object.Id.Raw).ToList();
+        int units = 0, enemies = 0;
+        foreach (NetEntity e in entities)
         {
-            if (e.EntityKind != NetEntityKind.Unit || e.Owner != LocalPlayer.LocalPlayerId) continue;
+            if (e.Owner != 1) continue;
             GameObject body = GameAuthority.IsServer ? e.Real : e.Visual;
-            if (body != null && targets.Count < 4) targets.Add(($"unit{targets.Count + 1}_{body.name}", body, false));
+            if (body == null) continue;
+            if (e.EntityKind == NetEntityKind.Unit && units < 4) { units++; targets.Add(($"id{e.Object.Id.Raw}_{body.name}", body, false)); }
+            else if (e.EntityKind == NetEntityKind.Enemy && enemies < 2) { enemies++; targets.Add(($"id{e.Object.Id.Raw}_{body.name}", body, true)); }
         }
-        foreach (EnemyDummy enemy in EnemyDummy.Active)
-            if (enemy != null && enemy.LaneIndex == LocalPlayer.LocalPlayerId) { targets.Add(($"enemy_{enemy.name}", enemy.gameObject, true)); break; }
+        targets = targets.OrderBy(t => t.isEnemy ? 0 : 1).ToList();   // 적 먼저 — 유닛은 우리에 있어 안 죽지만 적은 곧 죽는다
         Debug.Log($"[MP] 선택 테스트: 슬롯 {LocalPlayer.LocalPlayerId}, 대상 {targets.Count}개(IsServer={GameAuthority.IsServer})");
 
         foreach (var (label, go, isEnemy) in targets)
         {
             if (go == null) continue;
             if (isEnemy) { selection.ClearSelection(); InspectTarget.Set(go); }
-            else { InspectTarget.Clear(); if (go.TryGetComponent(out Selectable s)) selection.SelectOnly(s); }
+            else
+            {
+                InspectTarget.Clear();
+                if (go.TryGetComponent(out Selectable s)) selection.SelectOnly(s);
+                // 방장은 남의 유닛을 못 고른다(정보칸 빈칸) — 같은 개체의 값을 로그로 나란히 남긴다: 방장=실물 UnitAttacker, 친구=거울이 받은 값.
+                NetEntity m = go.GetComponentInParent<NetEntity>();
+                if (go.TryGetComponent(out UnitAttacker a))
+                    Debug.Log($"[MP] 선택 값 {label}: 공격력 {a.AttackDamage:F0} · 사거리 {a.AttackRange:F1} · 공격속도 {(a.AttackInterval > 0f ? 1f / a.AttackInterval : 0f):F2}/s (실물)");
+                else if (m != null)
+                    Debug.Log($"[MP] 선택 값 {label}: 공격력 {m.AttackDamage:F0} · 사거리 {m.AttackRange:F1} · 공격속도 {(m.AttackInterval > 0f ? 1f / m.AttackInterval : 0f):F2}/s (거울)");
+            }
             yield return new WaitForSecondsRealtime(1.5f);
             yield return new WaitForEndOfFrame();
             string safe = string.Concat(label.Split(System.IO.Path.GetInvalidFileNameChars()));
