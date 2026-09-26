@@ -253,9 +253,9 @@ public class NetLauncher : MonoBehaviour
         return new string(code);
     }
 
-    async Task StartRunner(GameMode mode, string code)
+    async Task StartRunner(GameMode mode, string code, bool isRetry = false)
     {
-        if (starting || runner != null) return;
+        if ((starting && !isRetry) || runner != null) return;
         starting = true;
         hostClosed = false;
         leavingOnPurpose = false;
@@ -291,6 +291,26 @@ public class NetLauncher : MonoBehaviour
 
         if (!result.Ok)
         {
+            // 한 번만 자동으로 다시(PM 09-26) — 이 맥에서도 하루 세 번, 첫 접속이 Photon에 안 닿고 바로 다시 하면 붙었다.
+            // 방장: 접속 자체 실패(ExceptionOnConnect·시간 초과) / 친구: 방이 없음(방장이 재시도 중일 수 있다).
+            bool connectFailure = result.ShutdownReason == ShutdownReason.ConnectionTimeout
+                || result.ShutdownReason == ShutdownReason.PhotonCloudTimeout
+                || (result.ErrorMessage ?? "").Contains("ExceptionOnConnect");
+            bool retryable = connectFailure || (mode == GameMode.Client && result.ShutdownReason == ShutdownReason.GameNotFound);
+            if (!isRetry && retryable)
+            {
+                Debug.LogWarning($"[MP] 진단: 연결 재시도 — {mode}, 방 {code}, 첫 시도 {result.ShutdownReason} {result.ErrorMessage}");
+                Cleanup();
+                starting = true;   // 기다리는 2초 동안 버튼이 다시 안 눌리게
+                Status = "연결을 다시 시도합니다…";
+                await Task.Delay(2000);
+                starting = false;
+                if (this == null) return;   // 그 사이 창구가 사라졌으면(혼자 하기 등) 그만
+                await StartRunner(mode, code, isRetry: true);
+                return;
+            }
+            if (isRetry) Debug.LogWarning($"[MP] 진단: 재시도도 실패 — {mode}, 방 {code}: {result.ShutdownReason} {result.ErrorMessage}");
+
             Status = mode == GameMode.Client
                 ? $"{code} 방을 찾지 못했습니다. 코드를 확인하세요. ({result.ShutdownReason})"
                 : $"방을 만들지 못했습니다. ({result.ShutdownReason} {result.ErrorMessage})";
@@ -318,7 +338,7 @@ public class NetLauncher : MonoBehaviour
         if (runner.IsServer && entityPrefab != null) StartCoroutine(PrewarmEntityPrefab());
 
         Status = mode == GameMode.Host ? "방을 열었습니다. 친구에게 방 코드를 알려 주세요." : "들어왔습니다. 준비를 누르고 호스트를 기다리세요.";
-        Debug.Log($"[MP] StartGame 성공: {mode}, 방 {code}, IsServer={runner.IsServer}, 지역 {runner.SessionInfo.Region}");
+        Debug.Log($"[MP] StartGame 성공: {mode}, 방 {code}, IsServer={runner.IsServer}, 지역 {runner.SessionInfo.Region}{(isRetry ? " (재시도로 성공)" : "")}");
 
         if (lobbyShotDelay >= 0f && !string.IsNullOrEmpty(lobbyShotPath)) StartCoroutine(ShotAfter(lobbyShotDelay, lobbyShotPath));
         foreach (var (delay, text) in lobbyChatTests) if (delay >= 0f && !string.IsNullOrEmpty(text)) StartCoroutine(TestChatAfter(delay, text));
