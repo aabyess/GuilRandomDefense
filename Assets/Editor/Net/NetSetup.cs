@@ -20,6 +20,8 @@ public static class NetSetup
     const string NetFolder = "Assets/Net";
     const string PlayerPrefabPath = NetFolder + "/NetPlayer.prefab";
     const string GameStatePrefabPath = NetFolder + "/NetGameState.prefab";
+    const string EntityPrefabPath = NetFolder + "/NetEntity.prefab";
+    const string CatalogPath = NetFolder + "/NetCatalog.asset";
     const string BootScenePath = "Assets/Scenes/NetBoot.unity";
     const string GameScenePath = "Assets/Scenes/SampleScene.unity";
     const string FusionPrefabLabel = "FusionPrefab";
@@ -31,6 +33,13 @@ public static class NetSetup
 
         BuildNetworkPrefab<NetPlayer>(PlayerPrefabPath);
         BuildNetworkPrefab<NetGameState>(GameStatePrefabPath);
+        BuildNetworkPrefab<NetEntity>(EntityPrefabPath, go =>
+        {
+            // 거울은 위치·회전에 스케일까지 싣는다(보스 등 실물 루트 스케일이 다르다).
+            NetworkTransform nt = go.AddComponent<NetworkTransform>();
+            nt.SyncScale = true;
+        });
+        BuildCatalog();
         BuildBootScene();
         SetBuildScenes();
 
@@ -38,10 +47,11 @@ public static class NetSetup
         Debug.Log("[MP] NetSetup.Build 완료");
     }
 
-    static void BuildNetworkPrefab<T>(string path) where T : NetworkBehaviour
+    static void BuildNetworkPrefab<T>(string path, System.Action<GameObject> extra = null) where T : NetworkBehaviour
     {
         GameObject temp = new GameObject(typeof(T).Name);
         temp.AddComponent<NetworkObject>();
+        extra?.Invoke(temp);
         temp.AddComponent<T>();
         GameObject prefab = PrefabUtility.SaveAsPrefabAsset(temp, path);
         Object.DestroyImmediate(temp);
@@ -60,15 +70,45 @@ public static class NetSetup
         //    프리팹 참조를 죽인다 — SerializedProperty로도, 직접 대입으로도 {fileID: 0}이 저장됐다(09-25 실측).
         NetworkObject playerPrefab = AssetDatabase.LoadAssetAtPath<NetworkObject>(PlayerPrefabPath);
         NetworkObject gameStatePrefab = AssetDatabase.LoadAssetAtPath<NetworkObject>(GameStatePrefabPath);
+        NetworkObject entityPrefab = AssetDatabase.LoadAssetAtPath<NetworkObject>(EntityPrefabPath);
+        NetCatalog catalog = AssetDatabase.LoadAssetAtPath<NetCatalog>(CatalogPath);
 
         GameObject launcherGo = new GameObject("NetLauncher");
         NetLauncher launcher = launcherGo.AddComponent<NetLauncher>();
-        launcher.EditorSetup(playerPrefab, gameStatePrefab, 1);
+        launcher.EditorSetup(playerPrefab, gameStatePrefab, entityPrefab, catalog, 1);
         EditorUtility.SetDirty(launcher);
-        if (playerPrefab == null || gameStatePrefab == null)
+        if (playerPrefab == null || gameStatePrefab == null || entityPrefab == null || catalog == null)
             throw new System.InvalidOperationException("[MP] NetBoot: NetPlayer 프리팹 참조가 비었습니다 — 씬을 저장하지 않습니다.");
 
         EditorSceneManager.SaveScene(scene, BootScenePath);
+    }
+
+    /// <summary>UnitData·EnemyData·WispData 전부를 GUID 순으로 카탈로그에 적는다. 로스터 에셋은 안 건드린다.</summary>
+    [MenuItem("Tools/Net/카탈로그 다시 만들기")]
+    public static void BuildCatalog()
+    {
+        NetCatalog catalog = AssetDatabase.LoadAssetAtPath<NetCatalog>(CatalogPath);
+        if (catalog == null)
+        {
+            catalog = ScriptableObject.CreateInstance<NetCatalog>();
+            AssetDatabase.CreateAsset(catalog, CatalogPath);
+        }
+
+        catalog.units = LoadAllSorted<UnitData>();
+        catalog.enemies = LoadAllSorted<EnemyData>();
+        catalog.wisps = LoadAllSorted<WispData>();
+        EditorUtility.SetDirty(catalog);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"[MP] 카탈로그: 유닛 {catalog.units.Count} · 적 {catalog.enemies.Count} · 위습 {catalog.wisps.Count} · 지문 {catalog.Fingerprint}");
+    }
+
+    static System.Collections.Generic.List<T> LoadAllSorted<T>() where T : ScriptableObject
+    {
+        return AssetDatabase.FindAssets($"t:{typeof(T).Name}")
+            .OrderBy(guid => guid, System.StringComparer.Ordinal)
+            .Select(guid => AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guid)))
+            .Where(asset => asset != null)
+            .ToList();
     }
 
     static void SetBuildScenes()

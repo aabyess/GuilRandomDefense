@@ -27,6 +27,8 @@ using UnityEngine.SceneManagement;
 ///   -mpShotAt 초 경로         실행 뒤 그 초에 캡처(여러 번 줄 수 있다 — 대기실·나간 뒤 화면용)
 ///   -mpLeave 초              실행 뒤 그 초에 [나가기](호스트면 방 닫기 알림 포함)
 ///   -mpExitAt 초             실행 뒤 그 초에 종료
+///   -mpTestUnits N           (호스트) 게임 씬 진입 뒤 슬롯마다 흔함 유닛 N기를 우리에 세운다 — 거울 확인용
+///   -mpDump 초               게임 씬 진입 뒤 그 초에 거울 목록(종류·카탈로그·소유자·좌표)을 로그로 — 호스트·클라 대조용
 /// </summary>
 public class NetLauncher : MonoBehaviour
 {
@@ -36,6 +38,8 @@ public class NetLauncher : MonoBehaviour
 
     [SerializeField] NetworkObject playerPrefab;
     [SerializeField] NetworkObject gameStatePrefab;
+    [SerializeField] NetworkObject entityPrefab;
+    [SerializeField] NetCatalog catalog;
     [SerializeField] int gameSceneBuildIndex = 1;
 
     NetworkRunner runner;
@@ -58,10 +62,15 @@ public class NetLauncher : MonoBehaviour
     float quitDelay = -1f;
     float leaveAt = -1f;
     float exitAt = -1f;
+    int testUnits;
+    float dumpDelay = -1f;
 
     public static NetLauncher Instance { get; private set; }
 
     public NetworkObject PlayerPrefab => playerPrefab;
+
+    /// <summary>유닛·적·위습을 번호로 가리키는 목록(호스트·클라 같은 빌드면 같은 순서).</summary>
+    public static NetCatalog Catalog => Instance != null ? Instance.catalog : null;
     public string RoomCode { get; private set; } = "";
     public string Status { get; private set; } = "";
     public bool IsBusy => starting;
@@ -71,10 +80,12 @@ public class NetLauncher : MonoBehaviour
 
 #if UNITY_EDITOR
     /// <summary>NetSetup(에디터 도구) 전용.</summary>
-    public void EditorSetup(NetworkObject player, NetworkObject gameState, int gameSceneIndex)
+    public void EditorSetup(NetworkObject player, NetworkObject gameState, NetworkObject entity, NetCatalog netCatalog, int gameSceneIndex)
     {
         playerPrefab = player;
         gameStatePrefab = gameState;
+        entityPrefab = entity;
+        catalog = netCatalog;
         gameSceneBuildIndex = gameSceneIndex;
     }
 #endif
@@ -133,6 +144,8 @@ public class NetLauncher : MonoBehaviour
                 case "-mpShotAt": StartCoroutine(ShotAfter(Seconds(i + 1), Arg(i + 2))); break;
                 case "-mpLeave": leaveAt = Seconds(i + 1); break;
                 case "-mpExitAt": exitAt = Seconds(i + 1); break;
+                case "-mpTestUnits": int.TryParse(Arg(i + 1), out testUnits); break;
+                case "-mpDump": dumpDelay = Seconds(i + 1); break;
             }
         }
 
@@ -182,6 +195,7 @@ public class NetLauncher : MonoBehaviour
         runner.ProvideInput = false;
         session = go.AddComponent<NetSession>();
         session.SetPlayerPrefab(playerPrefab);
+        go.AddComponent<NetMirrorHost>().Setup(entityPrefab, catalog);
         NetworkSceneManagerDefault sceneManager = go.AddComponent<NetworkSceneManagerDefault>();
 
         // 좌석은 NetPlayer가 생길 때 채워진다. 러너를 띄우는 순간부터 「네트 판」이다.
@@ -222,6 +236,7 @@ public class NetLauncher : MonoBehaviour
                     NetGameState state = spawned.GetComponent<NetGameState>();
                     state.Difficulty = difficulty;
                     state.Started = false;
+                    state.CatalogFingerprint = catalog != null ? catalog.Fingerprint : 0;
                 });
         }
 
@@ -266,6 +281,16 @@ public class NetLauncher : MonoBehaviour
     }
 
     /// <summary>NetGameState.RPC_HostClosing이 부른다(클라에서).</summary>
+    /// <summary>NetGameState가 부른다(클라): 호스트와 빌드가 달라 유닛 번호가 어긋나면 들어가지 않는다.</summary>
+    public void OnBuildMismatch()
+    {
+        Debug.LogWarning("[MP] 호스트와 빌드가 다릅니다(카탈로그 지문 불일치) — 방에서 나옵니다.");
+        leavingOnPurpose = true;
+        Cleanup();
+        Status = "방장과 게임 버전이 다릅니다. 같은 빌드로 다시 시도하세요.";
+        ReturnToBoot();
+    }
+
     public void OnHostClosing()
     {
         if (IsHost) return;
@@ -430,6 +455,49 @@ public class NetLauncher : MonoBehaviour
 
         if (shotDelay >= 0f && !string.IsNullOrEmpty(shotPath)) StartCoroutine(ShotAfter(shotDelay, shotPath));
         if (quitDelay >= 0f) StartCoroutine(QuitAfter(quitDelay));
+        if (testUnits > 0 && GameAuthority.IsServer) SpawnTestUnits(testUnits);
+        if (dumpDelay >= 0f) StartCoroutine(DumpAfter(dumpDelay));
+    }
+
+    // 테스트 전용(-mpTestUnits): 흔함 유닛을 슬롯마다 N기, 실제 소환 경로(UnitSpawner.Spawn → 우리 칸)로 세운다.
+    void SpawnTestUnits(int perSlot)
+    {
+        UnitSpawner spawner = FindFirstObjectByType<UnitSpawner>();
+        var commons = catalog != null ? catalog.units.Where(u => u != null && u.prefab != null && u.grade == UnitGrade.Common).ToList() : null;
+        if (spawner == null || commons == null || commons.Count == 0)
+        {
+            Debug.LogWarning("[MP] -mpTestUnits: UnitSpawner나 흔함 유닛을 못 찾았습니다.");
+            return;
+        }
+
+        int spawned = 0;
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            LaneMarker lane = LaneMarker.Get(context.PlayerId);
+            for (int i = 0; i < perSlot; i++)
+            {
+                UnitData data = commons[(context.PlayerId * perSlot + i) % commons.Count];
+                Vector3 position = lane != null ? lane.TakeSpawnPosition(data) : context.transform.position;
+                if (spawner.Spawn(data, position, context.PlayerId) != null) spawned++;
+            }
+        }
+        Debug.Log($"[MP] -mpTestUnits: 유닛 {spawned}기 소환");
+    }
+
+    IEnumerator DumpAfter(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        var entities = FindObjectsByType<NetEntity>(FindObjectsSortMode.None)
+            .Where(e => e.Object != null && e.Object.IsValid)
+            .OrderBy(e => e.Object.Id.Raw)
+            .ToList();
+        var lines = entities.Select(e =>
+        {
+            Vector3 p = e.transform.position;
+            string visual = GameAuthority.IsServer ? "실물" : (e.Visual != null ? "겉모습" : "겉모습없음");
+            return $"{e.Object.Id.Raw}:{e.EntityKind}#{e.CatalogIndex}/p{e.Owner} ({p.x:F1},{p.z:F1}) {visual}";
+        });
+        Debug.Log($"[MP] 거울 목록({(GameAuthority.IsServer ? "호스트" : "클라")}, {entities.Count}개): " + string.Join(" | ", lines));
     }
 
     IEnumerator ShotAfter(float seconds, string path)

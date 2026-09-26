@@ -34,6 +34,30 @@ public class EnemyDummy : MonoBehaviour
     public int SpawnRound { get; private set; }
 
     public float Hp => hp;
+
+    // MP: 멀티 거울(클라 겉모습)용. 호스트가 이 적의 종류를 카탈로그 번호로 보내려면 데이터를 읽어야 한다.
+    public EnemyData Data => data;
+
+    // MP: 클라 겉모습이면 true — 판정(회복·오라)을 안 돌리고 체력은 호스트 값을 받아 적기만 한다.
+    //     Active 등록은 그대로 둔다(체력바·미니맵이 그걸 돈다). 싱글·호스트에선 항상 false라 무동작.
+    public bool IsReplica { get; private set; }
+
+    /// <summary>MP: 클라 겉모습 초기화 — Initialize의 모습 부분(시각 배율)만 하고 오라·라운드 기록은 안 한다.</summary>
+    public void InitializeReplica(EnemyData enemyData, float currentHp, float maxHp)
+    {
+        IsReplica = true;
+        data = enemyData;
+        SetReplicaHp(currentHp, maxHp);
+        if (enemyData != null && visualRoot != null)
+            visualRoot.localScale = baseVisualScale * Mathf.Max(0.01f, enemyData.visualScale);
+    }
+
+    /// <summary>MP: 호스트가 보낸 체력을 적는다(체력바가 읽는다).</summary>
+    public void SetReplicaHp(float currentHp, float maxHp)
+    {
+        hp = currentHp;
+        MaxHp = maxHp;
+    }
     public float MaxHp { get; private set; }
 
     // 대상 이동속도 — SkillEffectBasis.TargetMoveSpeed가 읽는다(2026-09-06). data가 private
@@ -296,6 +320,7 @@ public class EnemyDummy : MonoBehaviour
     // 누적 피해를 그대로 보존해야 하는데, 회복이 끼면 그 누적이 깎여나간다.
     void Update()
     {
+        if (IsReplica) return; // MP: 클라 겉모습은 회복을 안 돌린다(체력은 호스트 값).
         if (isDead || invulnerable) return;
 
         float regen = (data != null ? data.hpRegenPerSecond : 0f) + regenBonus;

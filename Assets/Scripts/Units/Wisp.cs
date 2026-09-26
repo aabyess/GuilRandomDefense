@@ -7,6 +7,14 @@ public class Wisp : MonoBehaviour
 
     public WispData Data => data;
 
+    // MP: 필드에 나와 있는 위습 등록부(UnitIdentity.Active·EnemyDummy.Active와 같은 관례). 멀티 호스트가
+    //     이걸 훑어 클라에 거울을 세운다(NetMirrorHost). 싱글에선 읽는 곳이 없다 — 등록만 하는 무동작.
+    public static readonly System.Collections.Generic.List<Wisp> Active = new System.Collections.Generic.List<Wisp>();
+
+    void OnEnable() => Active.Add(this);
+
+    void OnDisable() => Active.Remove(this);
+
     // Destroy는 프레임 끝에야 처리되므로, 같은 프레임에 여러 트리거에 겹쳐 들어가도
     // 중복 소모되지 않도록 확정 시점에 바로 마킹한다 (EnemyDummy.isDead와 같은 패턴).
     public bool IsConsumed { get; private set; }

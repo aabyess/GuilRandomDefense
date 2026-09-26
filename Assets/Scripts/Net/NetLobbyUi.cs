@@ -173,7 +173,7 @@ public class NetLobbyUi : MonoBehaviour
         Image backdrop = CreateImage(root, "Backdrop", Backdrop);
         Stretch(backdrop.rectTransform);
 
-        TMP_Text title = CreateText(root, "Title", "길 랜 디", 72, boldFont, TextMain, TextAlignmentOptions.Center);
+        TMP_Text title = CreateText(root, "Title", "구 랜 디", 72, boldFont, TextMain, TextAlignmentOptions.Center);
         Place(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -110f), new Vector2(900f, 110f));
         TMP_Text subtitle = CreateText(root, "Subtitle", "같이 하기", 28, font, TextDim, TextAlignmentOptions.Center);
         Place(subtitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -185f), new Vector2(900f, 40f));

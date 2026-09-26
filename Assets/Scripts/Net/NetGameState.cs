@@ -17,6 +17,9 @@ public class NetGameState : NetworkBehaviour
 
     [Networked] public NetworkBool Started { get; set; }
 
+    /// <summary>호스트 빌드의 NetCatalog 지문. 클라가 자기 것과 대 본다(다르면 유닛 번호가 어긋난다).</summary>
+    [Networked] public int CatalogFingerprint { get; set; }
+
     public DifficultyMode? SelectedDifficulty =>
         Difficulty >= 0 && System.Enum.IsDefined(typeof(DifficultyMode), Difficulty) ? (DifficultyMode)Difficulty : (DifficultyMode?)null;
 
@@ -24,6 +27,13 @@ public class NetGameState : NetworkBehaviour
     {
         Instance = this;
         Runner.MakeDontDestroyOnLoad(gameObject);
+
+        if (!HasStateAuthority)
+        {
+            int mine = NetLauncher.Catalog != null ? NetLauncher.Catalog.Fingerprint : 0;
+            Debug.Log($"[MP] 카탈로그 지문: 호스트 {CatalogFingerprint} · 나 {mine}");
+            if (mine != CatalogFingerprint && NetLauncher.Instance != null) NetLauncher.Instance.OnBuildMismatch();
+        }
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
