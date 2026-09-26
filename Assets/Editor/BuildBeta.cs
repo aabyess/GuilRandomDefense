@@ -19,7 +19,9 @@ public static class BuildBeta
     [MenuItem("Tools/빌드/맥 베타 빌드")]
     public static void Mac()
     {
-        UnityEditor.OSXStandalone.UserBuildSettings.architecture = UnityEditor.Build.OSArchitecture.x64ARM64;
+        // 유니버설(인텔+애플실리콘). OSXStandalone 네임스페이스는 맥 빌드 모듈이 있을 때만 생겨서 직접 쓰면
+        // 모듈 없는 환경(compile_check 포함)에서 컴파일이 깨진다 — 문자열 설정으로 넣는다.
+        EditorUserBuildSettings.SetPlatformSettings(BuildPipeline.GetBuildTargetName(BuildTarget.StandaloneOSX), "Architecture", "x64ARM64");
         Build(BuildTarget.StandaloneOSX, Path.Combine("Builds", "Mac"), "GuilRandomDefense.app");
     }
 
