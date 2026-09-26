@@ -882,6 +882,63 @@ UNITS = {
                        "tail_01": [((1, 0, 0), -4.0, -math.pi / 2)]}),
                ],
                materials=dict(textures={"pl_jack_orig02": [("DiffuseColor", "pl_jack_orig02_diff.png")]})),
+    # 원피스 바운티러시 페이지원 **스피노 짐승형**(pl_pageone_orig02 「(merge)」) → R44 강민호. 🔸 **수평 두발 공룡 → Generic**(PM 승인 2026-09-25).
+    #   zip 바로 안에 fbx · _diff.png · bayer_dither(안 씀). 메시 2(body · hair) · 재질 1 · 뼈 51 · 클립 0.
+    #   ⚠️ 이 「merge」판은 뼈대 배율이 1.0이다(류마·매머드는 0.01) — 누가 다시 내보낸 판이라 류마 비율(높이 × 2.13)은 참고값뿐.
+    #   척추가 **수평**(Pelvis→Chest→Neck→Face가 모두 z 0.0211, −y로 뻗음), 꼬리 tail_01~05도 수평 +y. 이미 정면 −Y.
+    #   원본 뼈 이름 그대로: 다리 l_upleg·l_leg·l_foot01·02·toe / **오른쪽은 원본 오타 r_upreg·r_reg** · 짧은 팔 l/r_arm~finger ·
+    #   등 돛 hire_01(가슴)·hire_02(배) · 입 mouth·tongue · 치마 b/f/s_l/r_skirt. 뿌리 world_joint만 뺀다 → 뿌리 = Body_Pelvis.
+    #   축(세계): X = 아래로 뻗은 다리를 앞뒤로(+면 뒤로) · 수평 꼬리는 X +면 위로 · 앞을 보는 머리·입은 X +면 아래로 · Z = 꼬리·머리 좌우.
+    #   Move는 두 다리가 반 주기 어긋난 걸음 — 매머드와 같은 이유로 absolute=True(무릎 굽힘 정점이 한쪽은 0프레임).
+    "강민호": dict(path="Assets/Art/Enemies/강민호/강민호.fbx", kind="beast", generic=True, size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R41-R50/R44_강민호_페이지원스피노.zip"), "pl_pageone_orig02 (merge).fbx"),
+               archive_rgb={"pl_pageone_orig02_diff.png": "pl_pageone_orig02_diff.png"},
+               no_nulls=True, orient_snap=True, head="Head_Face", tail="Body_Pelvis",
+               drop_bones=["world_joint"],
+               synth_clips=[
+                   dict(take="Idle", frames=120, step=3, bones={
+                       "Body_Chest": [((1, 0, 0), 1.0, 0.0)],
+                       "Head_Neck": [((0, 0, 1), 3.0, 0.6)],
+                       "Head_Face": [((1, 0, 0), 2.0, -0.4), ((0, 0, 1), 3.0, 0.3)],
+                       "mouth": [((1, 0, 0), 4.0, -math.pi / 2)],
+                       "l_arm": [((1, 0, 0), 4.0, 0.0)],
+                       "r_arm": [((1, 0, 0), 4.0, 0.3)],
+                       "tail_01": [((0, 0, 1), 3.0, 0.0), ((1, 0, 0), 1.5, 0.8)],
+                       "tail_02": [((0, 0, 1), 4.0, -0.4)],
+                       "tail_03": [((0, 0, 1), 5.0, -0.8)],
+                       "tail_04": [((0, 0, 1), 6.0, -1.2)],
+                       "tail_05": [((0, 0, 1), 7.0, -1.6)]}),
+                   dict(take="Move", ground=True, absolute=True, frames=36, step=2, bones={
+                       "l_upleg": [((1, 0, 0), 18.0, 0.0)],
+                       "r_upreg": [((1, 0, 0), -18.0, 0.0)],
+                       # 아랫다리 굽힘 0~24° 혹 — 다리를 앞으로 내딛는 동안(왼쪽은 π, 오른쪽은 0이 정점)
+                       "l_leg": [((1, 0, 0), -12.0, math.pi / 2, 12.0)],
+                       "r_reg": [((1, 0, 0), 12.0, math.pi / 2, 12.0)],
+                       "l_foot02": [((1, 0, 0), 8.0, 0.0)],
+                       "r_foot02": [((1, 0, 0), -8.0, 0.0)],
+                       "Body_Pelvis": [((0, 0, 1), 3.0, 0.0), ((0, 1, 0), 2.0, 0.0)],
+                       "Body_Chest": [((0, 0, 1), -3.0, 0.0)],
+                       "Head_Face": [((0, 0, 1), -2.0, 0.0)],
+                       "l_arm": [((1, 0, 0), -6.0, 0.0)],
+                       "r_arm": [((1, 0, 0), 6.0, 0.0)],
+                       "tail_01": [((0, 0, 1), -4.0, -0.3)],
+                       "tail_02": [((0, 0, 1), -5.0, -0.7)],
+                       "tail_03": [((0, 0, 1), -6.0, -1.1)],
+                       "tail_04": [((0, 0, 1), -7.0, -1.5)],
+                       "tail_05": [((0, 0, 1), -8.0, -1.9)]}),
+                   # 한 번짜리 물기: 목·머리를 앞아래로 내밀며 입을 크게 벌렸다 닫고 제자리. 꼬리는 반대로 들어 균형. 기본식 위상 −π/2 = 혹.
+                   dict(take="Attack", ground=True, frames=30, step=2, bones={
+                       "Body_Chest": [((1, 0, 0), 3.0, -math.pi / 2)],
+                       "Head_Neck": [((1, 0, 0), 4.0, -math.pi / 2 - 0.2)],
+                       "Head_Face": [((1, 0, 0), 4.0, -math.pi / 2 - 0.3)],
+                       "mouth": [((1, 0, 0), 14.0, -math.pi / 2 - 0.3)],
+                       "l_arm": [((1, 0, 0), -8.0, -math.pi / 2)],
+                       "r_arm": [((1, 0, 0), -8.0, -math.pi / 2)],
+                       "tail_01": [((1, 0, 0), 3.0, -math.pi / 2)],
+                       "tail_02": [((1, 0, 0), 3.0, -math.pi / 2 - 0.2)],
+                       "tail_03": [((1, 0, 0), 3.0, -math.pi / 2 - 0.4)]}),
+               ],
+               materials=dict(textures={"pl_pageone_orig02": [("DiffuseColor", "pl_pageone_orig02_diff.png")]})),
     # 원피스 바운티러시 쥬얼리 보니 **아이**(pl_bonie_orig02) → R33 서희원 · **어른**(pl_bonie_orig01) → R47 정다희. 류마·오븐과 같은
     #   Annettlw 판(뼈대 노드 0.01)이라 비율이 측정 근거다: 전체 키 ÷ 류마 2.019 → **아이 × 0.611 · 어른 × 0.882**(둘 다 모자 포함).
     #   zip 바로 안에 fbx · xps · _diff.png + 셰이더 보조 그림(ramp·matcap·abnormal_pattern·bayer_dither — 적 규약대로 컬러만 씀).
