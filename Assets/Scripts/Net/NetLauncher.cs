@@ -43,6 +43,7 @@ using UnityEngine.SceneManagement;
 ///   -mpLobbyChat 초 문장     방에 들어간 뒤 그 초에 대기실 채팅 한 줄
 ///   -mpTestGambleLabels 초   그 초에 (호스트·클라 각자) 내 도박소 칸 글자 전부 로그 — 재고 「남은/최대 · N초」 복제 확인
 ///   -mpCamWisp 초            그 초에 카메라를 위습 쪽으로(주인 색 캡처용)
+///   -mpTestSelect 초 폴더     (양쪽, 클라 확인용) 내 유닛 최대 4기와 내 레인 적 하나를 차례로 골라 초상화 캡처 — 소환 없이 있는 것만
 ///   -mpTestPortraits 초 폴더  (호스트) 흔함·특별함·재규어·적·매머드·보스를 차례로 골라 초상화 캡처 + 초상 켬/끔 FPS
 ///   -mpTestCommands 초       그 초부터 2초 간격으로 UnitCommands 공격이동→정지→홀드→적공격→모으기→우리로(클라=명령 요청 RPC)
 /// </summary>
@@ -93,6 +94,8 @@ public class NetLauncher : MonoBehaviour
     float camWispDelay = -1f;
     float testPortraitsDelay = -1f;
     string testPortraitsDir;
+    float testSelectDelay = -1f;
+    string testSelectDir;
     readonly System.Collections.Generic.List<(float, string)> shotAts = new System.Collections.Generic.List<(float, string)>();
     float testPhase3Delay = -1f;
     bool testTraitUnits;
@@ -170,6 +173,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpSaveDir": PersistentSave.SaveRootOverride = Arg(i + 1); break;
                 case "-mpTestFinishRun": testFinishRunDelay = Seconds(i + 1); break;
                 case "-mpCamWisp": camWispDelay = Seconds(i + 1); break;
+                case "-mpTestSelect": testSelectDelay = Seconds(i + 1); testSelectDir = Arg(i + 2); break;
                 case "-mpTestPortraits": testPortraitsDelay = Seconds(i + 1); testPortraitsDir = Arg(i + 2); break;
                 case "-mpJoin": join = true; break;
                 case "-mpSession": cliSession = Arg(i + 1); break;
@@ -589,6 +593,7 @@ public class NetLauncher : MonoBehaviour
         if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
         if (testFinishRunDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestFinishRunAfter(testFinishRunDelay));
         if (camWispDelay >= 0f) StartCoroutine(CamWispAfter(camWispDelay));
+        if (testSelectDelay >= 0f) StartCoroutine(TestSelectAfter(testSelectDelay, testSelectDir));
         if (testPortraitsDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestPortraitsAfter(testPortraitsDelay, testPortraitsDir));
         if (testPhase3Delay >= 0f) StartCoroutine(TestPhase3After(testPhase3Delay));
         if (testTraitUnits && GameAuthority.IsServer) SpawnTraitTestUnits();
@@ -952,6 +957,41 @@ public class NetLauncher : MonoBehaviour
         yield return new WaitForSecondsRealtime(8f);
         float offFps = (Time.frameCount - f0) / (Time.realtimeSinceStartup - t0);
         Debug.Log($"[MP] 초상 FPS: 켬 {onFps:F1} · 끔 {offFps:F1}");
+    }
+
+    // 친구 화면 초상 확인(PM 09-26): 클라는 겉모습(거울)을, 호스트는 실물을 고른다 — 사람이 클릭한 것과 같은 SelectOnly·InspectTarget 길.
+    IEnumerator TestSelectAfter(float seconds, string dir)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        SelectionManager selection = FindFirstObjectByType<SelectionManager>();
+        if (selection == null) { Debug.LogWarning("[MP] 선택 테스트: SelectionManager 없음"); yield break; }
+
+        var targets = new System.Collections.Generic.List<(string label, GameObject go, bool isEnemy)>();
+        foreach (NetEntity e in FindObjectsByType<NetEntity>(FindObjectsSortMode.None))
+        {
+            if (e.EntityKind != NetEntityKind.Unit || e.Owner != LocalPlayer.LocalPlayerId) continue;
+            GameObject body = GameAuthority.IsServer ? e.Real : e.Visual;
+            if (body != null && targets.Count < 4) targets.Add(($"unit{targets.Count + 1}_{body.name}", body, false));
+        }
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+            if (enemy != null && enemy.LaneIndex == LocalPlayer.LocalPlayerId) { targets.Add(($"enemy_{enemy.name}", enemy.gameObject, true)); break; }
+        Debug.Log($"[MP] 선택 테스트: 슬롯 {LocalPlayer.LocalPlayerId}, 대상 {targets.Count}개(IsServer={GameAuthority.IsServer})");
+
+        foreach (var (label, go, isEnemy) in targets)
+        {
+            if (go == null) continue;
+            if (isEnemy) { selection.ClearSelection(); InspectTarget.Set(go); }
+            else { InspectTarget.Clear(); if (go.TryGetComponent(out Selectable s)) selection.SelectOnly(s); }
+            yield return new WaitForSecondsRealtime(1.5f);
+            yield return new WaitForEndOfFrame();
+            string safe = string.Concat(label.Split(System.IO.Path.GetInvalidFileNameChars()));
+            string path = System.IO.Path.Combine(dir, $"select_{safe}.png");
+            ScreenCapture.CaptureScreenshot(path);
+            Debug.Log($"[MP] 선택 캡처: {label} → {path}");
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+        InspectTarget.Clear();
+        selection.ClearSelection();
     }
 
     IEnumerator DumpAfter(float seconds)
