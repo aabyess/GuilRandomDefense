@@ -388,6 +388,10 @@ public class RtsCameraController : MonoBehaviour
     {
         if (!edgeScrollEnabled || Mouse.current == null) return Vector2.zero;
 
+        // 창이 포커스를 잃었으면 밀지 않는다(워크래프트와 같다). 멀티 두 창을 한 화면에 띄우면 포커스 없는 창의 커서 좌표가
+        // 가장자리로 읽혀 그 창 카메라가 혼자 흘러갔다(09-26 구현담당2 캡처 — 호스트 창이 시작 직후 바다로).
+        if (!Application.isFocused) return Vector2.zero;
+
         Vector2 position = Mouse.current.position.ReadValue();
 
         // 커서가 창 밖으로 나가면 좌표가 화면 범위를 벗어난다. 그대로 두면 다른 창을 보는 동안
