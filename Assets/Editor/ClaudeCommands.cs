@@ -2686,7 +2686,9 @@ public static class ClaudeCommands
             {
                 // 목표 식 나무의 식을 먼저(위 등급부터) — 그다음 남는 재료만 쓰는 딴 식.
                 TargetPlan plan = RefreshTargetPlan(job);
-                next = ready.Where(r => plan != null && plan.treeRecipes.Contains(r)).OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault()
+                // 희귀함 이상은 목표가 아니어도 먼저 만든다 — 지금 손에 든 희귀함이 나중 목표보다 낫다(i1_143 R15·R17: 가능했는데 목표 재료라 안 만듦).
+                next = ready.Where(r => r.result.grade.Tier() >= UnitGrade.Rare.Tier()).OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault()
+                       ?? ready.Where(r => plan != null && plan.treeRecipes.Contains(r)).OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault()
                        ?? ready.Where(r => plan == null || UsesOnlySurplus(r, plan)).OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault();
             }
             else next = ready.OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault();
@@ -3015,7 +3017,9 @@ public static class ClaudeCommands
             .GroupBy(u => u.Data.unitName).ToDictionary(g => g.Key ?? "", g => g.Count());
         List<string> picked = new List<string>();
         Dictionary<string, int> targetMissing = job.targetMode && RefreshTargetPlan(job) != null ? TargetMissingCommons() : null;
-        for (int i = 0; i < choiceWisps && choicePortals.Count > 0; i++)
+        // target — 흔함 위습(흔함 3번 판매 보상 A09G 등)도 흔함선택 포탈이 받는다(둘 다 targetGrade 흔함) — 옛 도구는 이 위습을 칸에 버려 뒀다(i1_143 R14~R21 「흔함 1」).
+        int plainCommonWisps = job.targetMode ? myWisps.Count(w => (w.Data.wispName ?? "") == "흔함 위습") : 0;
+        for (int i = 0; i < choiceWisps + plainCommonWisps && choicePortals.Count > 0; i++)
         {
             // target — 목표 식에 가장 많이 모자란 흔함 이름을 고른다(다 채웠으면 옛 규칙).
             string wanted = targetMissing?.Where(kv => kv.Value > 0 && choicePortals.Contains("흔함선택_" + kv.Key))
@@ -3026,11 +3030,14 @@ public static class ClaudeCommands
             string unit = portal.Substring(5);
             myCommonCounts[unit] = (myCommonCounts.TryGetValue(unit, out int had) ? had : 0) + 1;
             turn.Insert(0, "@rc:" + portal);
-            turn.Insert(0, "?흔함 선택");
+            turn.Insert(0, i < choiceWisps ? "?흔함 선택" : "?흔함");
             picked.Add(unit);
             job.choicePicks.Add(unit);
         }
         if (picked.Count > 0) turn.Insert(2 * picked.Count, "@wait:12");
+        // target — 《백수생활》 선택 위습은 박은석 초월위습으로(특수 칸은 백수생활 5분에만 열린다 — 닫혀 있으면 선택 클릭이라 건너뛴다).
+        if (job.targetMode)
+            for (int i = myWisps.Count(w => (w.Data.wispName ?? "").Contains("백수생활 선택")); i > 0; i--) { turn.Add("?백수생활 선택"); turn.Add("@rc:Portal_박은석초월위습"); }
 
         // 상점 — 라운드 2부터 **매 턴** 남는 골드를 쓴다(09-25 PM 지시 — 판 B는 R12에 골드 18,422를 안 쓰고 끝났다).
         //    등급 강화소 → 공격타입 강화소 → 도박소 순으로 골라, 골드가 실제로 줄어드는 칸을 몇 번씩 누른다(@shopspend).
