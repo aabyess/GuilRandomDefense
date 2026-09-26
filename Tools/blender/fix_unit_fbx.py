@@ -774,6 +774,23 @@ UNITS = {
                texture_by_material=True,
                materials=dict(textures={"pl_apoo_2yaf01": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")],
                                         "pl_apoo_2yaf01_trans": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")]})),
+    # 원피스 바운티러시 빈스모크 이치지(pl_ichiji_orig01 「(merge)」) → R66 윤현모. zip = source/ichiji.rar(fbx · _diff) + textures/_diff(안쪽과 바이트까지 같음).
+    #   메시 16 · 재질 1 · 뼈 71 · 액션 102(안 씀) · 이미 T자. 몸 키(머리카락 끝) 0.0196 → **류마 × 0.971**
+    #   (⚠️ 「merge」판이라 뼈대 배율이 1.0 — 류마 0.01과 구성이 다르다. 다만 메시 세계 키 자릿수가 류마와 같아 비율은 쓸 만하다고 본다. R44 스피노 판단과 같은 단서).
+    #   겹친 변형: 얼굴 넷 → normal · 손 넷(open·close·sp01·sp02) → open. 안경은 남긴다.
+    #   망토(coat_root 밑 앞·뒤·좌·우 자락·깃) · 목도리 scarf → merge_to_nearest가 Spine1로(강체) · 바지 자락 suso · 벨트 → Hips · Fore_sup → ForeArm · 머리카락 → Head.
+    #   🔴 _diff 알파는 음영 마스크(100%가 250 미만) → archive_rgb로 뗀다.
+    "윤현모": dict(path="Assets/Art/Enemies/윤현모/윤현모.fbx", kind="human", size=("height", 1.8),
+               archive=(os.path.join(SKINS, "90_적유닛/R61-R70/R66_윤현모.zip"), "source/ichiji.rar", "ichiji/pl_ichiji_orig01 (merge).fbx"),
+               archive_rgb={"ichiji/pl_ichiji_orig01_diff.png": "pl_ichiji_orig01_diff.png"},
+               drop_meshes=["face_attack", "face_damage", "face_sp01", "l_hand_close", "r_hand_close",
+                            "l_hand_sp01", "r_hand_sp01", "l_hand_sp02", "r_hand_sp02"],
+               drop_bones=["world_joint"],
+               rename_bones=PL_RENAME,
+               no_nulls=True, orient_snap=True,
+               merge_to_nearest=True,
+               texture_by_material=True,
+               materials=dict(textures={"pl_ichiji_orig01": [("DiffuseColor", "pl_ichiji_orig01_diff.png")]})),
     # 원피스 알베르 킹(Sketchfab glb, 3ds Max Bip001 · 중국 모바일 게임 립) → R65 **이승우_라인몹**(라인몹 판 — 같은 라운드 보스 「이승우」는 베지터 SSJ3).
     #   메시 4 + Icosphere · 재질 1(Scene_-_Root, HASHED · 그림 1장 Image_0) · 뼈 158 · 애니 0. 팔 내린 A자 → tpose_arms.
     #   부품(경계로 가림): Object_12 몸(정점 10,125) · Object_8 날개(Bone_chibang 사슬) · Object_10 등 불꽃(bone_fire 사슬, 루나리아 불 — 몸으로 남김) · 얼굴.
