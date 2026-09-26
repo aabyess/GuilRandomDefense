@@ -25,6 +25,8 @@ public class SelectionManager : MonoBehaviour
     // 우클릭 취소는 같은 프레임의 우클릭 이동(UnitMover)도 막아야 한다 — 스크립트 실행 순서와 상관없이.
     public bool IsAttackTargeting => attackTargeting || attackCancelFrame == Time.frameCount;
     const float AttackPickTolerancePixels = 36f;
+    // 좌클릭 살펴보기(적 정보)용 — 공격 대상 고르기보다 넉넉히. 1080 기준 픽셀, 화면 높이에 비례해 늘린다.
+    const float InspectPickTolerancePixels = 56f;
     bool leftButtonHeld;
     bool ignoreCurrentPress;
     Texture2D boxTexture;
@@ -193,6 +195,14 @@ public class SelectionManager : MonoBehaviour
         {
             // 적·조합표 인형은 조작은 못 해도 정보는 보인다(친구 베타 피드백 ⑤, 2026-09-26) — 선택이 아니라 「살펴보기」로 둔다.
             GameObject inspect = InspectTarget.FindFrom(hit.collider);
+            // 적은 화면에서 작고 콜라이더가 몸보다 가늘어 정확히 찍기 어렵다(09-26 사장님 「적 유닛 클릭할 수 있는 범위가 적은 듯, 키워 줘」).
+            //    콜라이더에 안 맞았으면 커서 둘레의 가장 가까운 적을 살펴본다 — A 공격 대상 고르기(TryPickEnemy)와 같은 방식, 범위만 넉넉히.
+            if (inspect == null)
+            {
+                float tolerance = InspectPickTolerancePixels * Mathf.Max(1f, Screen.height / 1080f);
+                EnemyDummy near = WorldPick.TryPickEnemy(cam, Mouse.current.position.ReadValue(), tolerance);
+                if (near != null) inspect = near.gameObject;
+            }
             if (inspect != null) { InspectTarget.Set(inspect); return; }
             if (hit.collider != null)
                 Debug.Log($"[선택] {hit.collider.name} 을(를) 눌렀지만 선택할 수 있는 대상이 아닙니다.");
