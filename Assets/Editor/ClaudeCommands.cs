@@ -1057,6 +1057,7 @@ public static class ClaudeCommands
         public int superSize = 1;
         public int watchRounds;          // rounds:N — 0이면 끄기
         public bool autoLoop;
+        public bool sellSpare;           // autoloop: 조합표가 못 쓸 만큼 남는 유닛을 판다(09-26 PM 지시 — 목재·위습 경로)
         public bool storySent;           // autoloop: 안흔함을 스토리존에 보냈나 — 스토리가 깨지면 복귀포탈로 되돌린다
         public int storySentRound;       // 마지막으로 보낸(보강한) 라운드 — 2라운드 못 깨면 더 보낸다
         public int storyFinishedAtSend;
@@ -1151,6 +1152,7 @@ public static class ClaudeCommands
             else if (token == "autoloop") job.autoLoop = true;
             else if (token == "nocombine") job.noCombine = true;
             else if (token == "noshop") job.noShop = true;
+            else if (token == "sell") job.sellSpare = true;
             else if (token == "bossaway") job.bossAway = true;
             else if (token.StartsWith("mode:"))
             {
@@ -1371,6 +1373,13 @@ public static class ClaudeCommands
                 }
                 bool optional = target.StartsWith("?");
                 if (optional) target = target.Substring(1);
+                if (target == "@sellspare")
+                {
+                    job.report += SellSpareUnits(job);
+                    job.clickIndex++;
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
+                    break;
+                }
                 if (target.StartsWith("@shopspend"))
                 {
                     job.report += SpendAtShop(job, target.Length > 11 ? target.Substring(11) : "");
@@ -2567,6 +2576,7 @@ public static class ClaudeCommands
         return $"적 레인 {EnemyDummy.CountInLane(0)}/전체 {EnemyDummy.Active.Count(e => e != null)} · 데스카운트 {rm.DeathCountFor(0)} · " +
                $"골드 {gold} · 목재 {wood} · 내 유닛 {(mine.Any() ? string.Join(", ", mine) : "0")} · 위습 칸 「{slots}」 · " +
                $"스토리 「{story}」(매니저 「{StoryManager.Instance?.StatusLabel}」 깸 {StoryManager.Instance?.FinishedCount}) · 보스 적 {bosses} · 남은시간 {rm.RoundTimeLeft:F1}/준비 {rm.PreRoundTimeLeft:F1} · 프레임 {frames} · {UptimeText()} · {logs}" +
+               WoodRoundText() +
                $"\n      🎯 흔함 이름(지금) {(commonNames.Length > 0 ? commonNames : "-")} · 도구가 흔함선택으로 보낸 누계 {(pickNames.Length > 0 ? pickNames : "0")}";
     }
 
@@ -2637,6 +2647,119 @@ public static class ClaudeCommands
         return $"   🏪 {shop} {(bought.Count > 0 ? $"{bought.Count}번 삼: {string.Join(", ", bought.GroupBy(x => x.Split(' ')[0]).Select(g => $"{g.Key}×{g.Count()}"))}" : "산 것 없음")} · 골드 {start} → {end} · 가진 등급에 안 듣는 칸 {skipped}개 건너뜀 · 칸 {string.Join(" · ", slots.Select(b => $"「{ButtonLabel(b).Replace("\n", " ")}」{(b.IsInteractable() ? "" : "(흐림)")}"))}\n";
     }
 
+    // ── 남는 유닛 판매(sell, 09-26 PM 지시) ──
+    //    원작은 유닛을 팔아 목재·위습을 얻는데 도구가 안 팔아서, R20 보스 벽이 목재 부족 탓인지 가를 수 없었다.
+    //    판매 보상은 UnitData 값(GameHud.OnSellButtonClicked가 지급): 흔함 = 3번 팔 때마다 흔함 위습 1(A09G, 플레이어 공유 누적) ·
+    //    안흔함 = 흔함 위습 50% · 특별함 = 흔함 위습 1 + 목재 1(35%) · 희귀함 = 흔함 위습 2 + 목재 1. **흔함·안흔함은 목재를 안 준다.**
+    //    「남는 것」 = 같은 유닛이 조합식 한 개가 그 유닛을 가장 많이 요구하는 수(maxDemand, 1~3)의 두 배를 넘는 몫.
+    //    ⚠️ 「조합 재료로 전혀 안 쓰이는 것」은 흔함~희귀함에 0종이다(조합식 207개가 전부 쓴다) — 그래서 몫으로 가른다.
+    //    레인 가까이(700) 있는 것만 판다 — 스토리존에 가 있는 유닛은 건드리지 않는다. 한 턴에 최대 SellPerTurn기.
+    static readonly UnitGrade[] SellGrades = { UnitGrade.Common, UnitGrade.Uncommon, UnitGrade.Special, UnitGrade.Rare };
+    const int SellPerTurn = 12;
+    static Dictionary<UnitData, int> recipeMaxDemand;
+    static readonly Dictionary<string, int> soldTotals = new Dictionary<string, int>();
+
+    static Dictionary<UnitData, int> RecipeMaxDemand()
+    {
+        if (recipeMaxDemand != null) return recipeMaxDemand;
+        recipeMaxDemand = new Dictionary<UnitData, int>();
+        foreach (string guid in AssetDatabase.FindAssets("t:CombineRecipe"))
+        {
+            CombineRecipe r = AssetDatabase.LoadAssetAtPath<CombineRecipe>(AssetDatabase.GUIDToAssetPath(guid));
+            if (r?.ingredients == null) continue;
+            foreach (RecipeIngredient ing in r.ingredients)
+                if (ing != null && ing.kind == IngredientKind.SpecificUnit && ing.unit != null)
+                    recipeMaxDemand[ing.unit] = Mathf.Max(recipeMaxDemand.TryGetValue(ing.unit, out int had) ? had : 0, ing.count);
+        }
+        return recipeMaxDemand;
+    }
+
+    static string SellSpareUnits(GameShotJob job)
+    {
+        GameHud hud = UnityEngine.Object.FindFirstObjectByType<GameHud>();
+        SelectionManager selection = UnityEngine.Object.FindFirstObjectByType<SelectionManager>();
+        MethodInfo sell = typeof(GameHud).GetMethod("OnSellButtonClicked", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+        if (hud == null || selection == null || sell == null) return "   💰 판매: GameHud·SelectionManager·OnSellButtonClicked 중 없는 것이 있어 건너뜀\n";
+        LaneMarker lane0 = LaneMarker.Get(0);
+        bool NearLane(Component c) => lane0 == null || Vector2.Distance(new Vector2(c.transform.position.x, c.transform.position.z), new Vector2(lane0.LaneCenter.x, lane0.LaneCenter.z)) < 700f;
+        Dictionary<UnitData, int> demand = RecipeMaxDemand();
+        var spare = new List<UnitIdentity>();
+        foreach (var group in MyUnits().Where(u => SellGrades.Contains(u.Data.grade) && NearLane(u)).GroupBy(u => u.Data))
+        {
+            int keep = 2 * (demand.TryGetValue(group.Key, out int d) ? d : 0);
+            spare.AddRange(group.Skip(keep));
+        }
+        spare = spare.OrderBy(u => u.Data.grade.Tier()).Take(SellPerTurn).ToList();   // 싼 것부터
+        if (spare.Count == 0) return "   💰 판매: 남는 유닛 없음\n";
+        PlayerContext me = PlayerContext.GetOccupied(0);
+        int woodBefore = me?.ResourceWallet?.Get(ResourceType.Wood) ?? 0;
+        int wispBefore = UnityEngine.Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None).Count(w => w != null && (!w.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0));
+        var sold = new List<string>();
+        foreach (UnitIdentity u in spare)
+        {
+            if (u == null || !u.TryGetComponent(out Selectable sel)) continue;
+            selection.SelectOnly(sel);
+            if (selection.Selected.Count != 1 || selection.Selected[0] != sel) continue;
+            string label = $"{u.Data.grade.KoreanName()} {u.Data.unitName}";
+            sell.Invoke(hud, null);   // 판매 버튼과 같은 코드(보상 지급 → Consume)
+            sold.Add(label);
+            string key = u.Data.grade.KoreanName();
+            soldTotals[key] = (soldTotals.TryGetValue(key, out int t) ? t : 0) + 1;
+        }
+        selection.ClearSelection();
+        int woodAfter = me?.ResourceWallet?.Get(ResourceType.Wood) ?? 0;
+        int wispAfter = UnityEngine.Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None).Count(w => w != null && (!w.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0));
+        return $"   💰 판매 {sold.Count}기: {string.Join(", ", sold.GroupBy(x => x).Select(g => g.Count() > 1 ? $"{g.Key}×{g.Count()}" : g.Key))} → 목재 {woodBefore}→{woodAfter} · 위습 {wispBefore}→{wispAfter}" +
+               $" · 누계 {string.Join(" ", soldTotals.Select(kv => $"{kv.Key}{kv.Value}"))}\n";
+    }
+
+    // ── 목재 장부 — 목재가 어디서 들어와 어디에 쓰였나(09-26 PM 지시). ResourceWallet 변화 이벤트를 받아 부른 쪽 메서드로 묶는다. ──
+    static ResourceWallet woodWatched;
+    static int woodLast;
+    static readonly Dictionary<string, int> woodIn = new Dictionary<string, int>(), woodOut = new Dictionary<string, int>();
+    static readonly Dictionary<string, int> woodInRound = new Dictionary<string, int>(), woodOutRound = new Dictionary<string, int>();
+
+    static void EnsureWoodWatch()
+    {
+        ResourceWallet wallet = PlayerContext.GetOccupied(0)?.ResourceWallet;
+        if (wallet == null || wallet == woodWatched) return;
+        woodWatched = wallet;   // 판마다 새 지갑 — 장부도 새로
+        woodLast = wallet.Get(ResourceType.Wood);
+        woodIn.Clear(); woodOut.Clear(); woodInRound.Clear(); woodOutRound.Clear(); soldTotals.Clear();
+        wallet.OnResourceChanged += OnWoodChanged;
+    }
+
+    static void OnWoodChanged(ResourceType type, int value)
+    {
+        if (type != ResourceType.Wood) return;
+        int delta = value - woodLast;
+        woodLast = value;
+        if (delta == 0) return;
+        string who = "?";
+        foreach (System.Diagnostics.StackFrame f in new System.Diagnostics.StackTrace(1).GetFrames() ?? Array.Empty<System.Diagnostics.StackFrame>())
+        {
+            MethodBase m = f.GetMethod();
+            Type t = m?.DeclaringType;
+            while (t != null && t.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute), false)) t = t.DeclaringType;
+            if (t == null || t == typeof(ResourceWallet) || t == typeof(ClaudeCommands) || t.Namespace?.StartsWith("System") == true) continue;
+            who = $"{t.Name}.{m.Name}";
+            break;
+        }
+        foreach (var book in delta > 0 ? new[] { woodIn, woodInRound } : new[] { woodOut, woodOutRound })
+            book[who] = (book.TryGetValue(who, out int had) ? had : 0) + Mathf.Abs(delta);
+    }
+
+    static string Ledger(Dictionary<string, int> book) => book.Count == 0 ? "0" : string.Join(" ", book.OrderByDescending(kv => kv.Value).Select(kv => $"{kv.Key} {kv.Value}"));
+
+    // 라운드 줄 끝에 붙는다 — 이번 라운드 들어온 곳·쓴 곳 + 판 누계. 부를 때마다 라운드 몫을 비운다.
+    static string WoodRoundText()
+    {
+        EnsureWoodWatch();
+        string text = $"\n      🪵 목재 이번 라운드 +[{Ledger(woodInRound)}] −[{Ledger(woodOutRound)}] · 판 누계 +[{Ledger(woodIn)}] −[{Ledger(woodOut)}]";
+        woodInRound.Clear(); woodOutRound.Clear();
+        return text;
+    }
+
     // 사람의 한 턴 — 랜덤유닛 위습을 하나씩 포탈로, 카드별 조합 시도, 전부 모서리로.
     static void QueueTurn(GameShotJob job)
     {
@@ -2650,6 +2773,7 @@ public static class ClaudeCommands
             job.clicks.RemoveRange(job.clickIndex + 1, dropped);
             job.report += $"   ⏭ 앞 턴이 안 끝나 남은 {dropped}동작을 버리고 새로 짬\n";
         }
+        EnsureWoodWatch();
         var myWisps = UnityEngine.Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None)
             .Where(w => w != null && w.Data != null && (!w.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0)).ToList();
         int randomWisps = myWisps.Count(w => (w.Data.wispName ?? "").Contains("랜덤유닛"));
@@ -2685,6 +2809,7 @@ public static class ClaudeCommands
             turn.Add("?UnitCommandSlot12");
             turn.Add("?UnitCommandSlot13");
         }
+        if (job.sellSpare) turn.Add("@sellspare");   // 조합 시도 뒤 — 조합에 먼저 쓰고 남는 것만 판다
         turn.Add("@box:Unit_");
         turn.Add("@rcpt:corner");
         // 흔함 선택 위습 — 「흔함선택_<이름>」 포탈에 넣어 그 유닛을 고른다(isPlayerChoice를 읽는 코드는 없고, 포탈 specificUnit이 길이다).
