@@ -18,9 +18,24 @@ public class CombineSystem : MonoBehaviour
     [SerializeField] UnitSpawner unitSpawner;
     [SerializeField] List<CombineRecipe> recipes;
 
-    UnitInventory Inventory => inventory != null ? inventory : PlayerContext.Local != null ? PlayerContext.Local.UnitInventory : null;
-    GoldWallet Wallet => goldWallet != null ? goldWallet : PlayerContext.Local != null ? PlayerContext.Local.GoldWallet : null;
-    ResourceWallet Resources => resourceWallet != null ? resourceWallet : PlayerContext.Local != null ? PlayerContext.Local.ResourceWallet : null;
+    // MP: 씬은 이 조합기 하나에 플레이어 0의 인벤토리·지갑을 직접 물려 둔다(싱글엔 그게 맞다). 멀티에선
+    //     「누가 조합하나」가 바뀐다 — 호스트가 클라 요청을 수행하는 동안은 그 슬롯(ActingPlayerOverride),
+    //     그 밖엔 이 PC의 로컬 플레이어(클라의 흐림 계산 포함). 직렬화 배선보다 앞선다. 싱글(MatchConfig 꺼짐)은 무동작.
+    public static int ActingPlayerOverride = -1;
+    static PlayerContext MultiplayerActingContext => ActingPlayerOverride >= 0
+        ? PlayerContext.Get(ActingPlayerOverride)
+        : MatchConfig.Active ? PlayerContext.Local : null;
+
+    UnitInventory Inventory => MultiplayerActingContext != null ? MultiplayerActingContext.UnitInventory // MP
+        : inventory != null ? inventory : PlayerContext.Local != null ? PlayerContext.Local.UnitInventory : null;
+    GoldWallet Wallet => MultiplayerActingContext != null ? MultiplayerActingContext.GoldWallet // MP
+        : goldWallet != null ? goldWallet : PlayerContext.Local != null ? PlayerContext.Local.GoldWallet : null;
+    ResourceWallet Resources => MultiplayerActingContext != null ? MultiplayerActingContext.ResourceWallet // MP
+        : resourceWallet != null ? resourceWallet : PlayerContext.Local != null ? PlayerContext.Local.ResourceWallet : null;
+
+    /// <summary>MP: 조합식을 네트워크로 가리킬 번호(이 조합기의 recipes 목록 순서 — 호스트·클라 같은 씬).</summary>
+    public int IndexOfRecipe(CombineRecipe recipe) => recipes != null ? recipes.IndexOf(recipe) : -1;
+    public CombineRecipe RecipeAt(int index) => recipes != null && index >= 0 && index < recipes.Count ? recipes[index] : null;
 
     // 조합 결과를 필드에 내보내야 해서 스포너가 필요하다. 씬 배선을 늘리지 않으려고 지연 조회로 잡는다.
     // Awake에서만 잡으면 그 시점에 스포너가 아직 없을 때 영영 null로 남는다.
@@ -51,7 +66,8 @@ public class CombineSystem : MonoBehaviour
     //    ItemGambleState가 4개인 것과 어긋난다 — 원작은 습득·보관·해금이 전부 pid로 갈린다.
     //    OwnerContext를 거치게 해서 위 셋과 같은 결로 맞춘다(인스펙터 값이 있으면 그게 우선 —
     //    다른 플레이어 것에 일부러 물려 놓은 배선을 덮지 않는다).
-    ItemInventory OwnerItems => itemInventory != null
+    ItemInventory OwnerItems => MultiplayerActingContext != null ? MultiplayerActingContext.ItemInventory // MP
+        : itemInventory != null
         ? itemInventory
         : OwnerContext != null ? OwnerContext.ItemInventory : null;
 

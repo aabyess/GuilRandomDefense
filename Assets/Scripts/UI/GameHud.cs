@@ -743,11 +743,20 @@ public class GameHud : MonoBehaviour
     // "조건 미달"과 "도박 실패"를 같은 경로로 처리하면 안 된다는 사양 경고 그대로).
     void OnGambleButtonClicked(int index)
     {
-        if (BlockedOnMultiplayerClient()) return; // MP
         SelectionManager selection = Selection;
         if (selection == null || selection.Selected.Count != 1) return;
 
         Selectable single = selection.Selected[0];
+
+        // MP: 멀티 클라는 호스트에 요청만 보낸다(목재·확률·소모·소환은 호스트가). 싱글·호스트는 아래 본체 그대로.
+        if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.Gamble, single, index); return; }
+
+        ExecuteGambleOn(single, index);
+    }
+
+    // MP: 버튼(위)과 멀티 호스트가 받은 클라 요청(NetCommands)이 같이 쓰는 본체 — 줄 내용은 그대로다.
+    public void ExecuteGambleOn(Selectable single, int index)
+    {
         if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null) return;
 
         List<UnitGambleOption> options = identity.Data.gambleOptions;
@@ -881,11 +890,20 @@ public class GameHud : MonoBehaviour
     // 뜬 시점에 이미 보상이 확정돼 있다.
     void OnSellButtonClicked()
     {
-        if (BlockedOnMultiplayerClient()) return; // MP
         SelectionManager selection = Selection;
         if (selection == null || selection.Selected.Count != 1) return;
 
         Selectable single = selection.Selected[0];
+
+        // MP: 멀티 클라는 호스트에 요청만 보낸다. 싱글·호스트는 아래 본체 그대로.
+        if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.Sell, single, 0); return; }
+
+        ExecuteSellOn(single);
+    }
+
+    // MP: 버튼(위)과 멀티 호스트가 받은 클라 요청(NetCommands)이 같이 쓰는 본체 — 줄 내용은 그대로다.
+    public void ExecuteSellOn(Selectable single)
+    {
         if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null ||
             (identity.Data.sellRewardWisp == null && identity.Data.sellRewardTraitPoints <= 0 &&
              identity.Data.sellRewardWood <= 0 && identity.Data.sellTriggersItemGamblePool == null &&
@@ -2067,9 +2085,7 @@ public class GameHud : MonoBehaviour
             return;
         }
 
-        // MP: 위 유닛 명령(공격·정지·홀드·모으기·정렬)은 UnitCommands가 클라면 요청 RPC로 보낸다.
-        //     상점·조합은 아직 RPC가 없어 클라에선 막는다.
-        if (BlockedOnMultiplayerClient()) return;
+        // MP: 위 유닛 명령은 UnitCommands가, 아래 상점은 UseShop이, 조합은 아래 분기가 클라면 호스트에 요청을 보낸다.
 
         if (currentShop as Object != null)
         {
@@ -2090,6 +2106,14 @@ public class GameHud : MonoBehaviour
         Vector3? casterPosition = casterSelection != null && casterSelection.Selected.Count > 0 && casterSelection.Selected[0] != null
             ? casterSelection.Selected[0].transform.position
             : (Vector3?)null;
+
+        // MP: 멀티 클라는 조합을 호스트에 요청만 한다(재료 소모·결과 소환은 호스트, 결과는 거울로 돌아온다).
+        if (!GameAuthority.IsServer)
+        {
+            NetCommands.RequestCombine(system, recipe, casterPosition);
+            HideCombineTooltip();
+            return;
+        }
 
         if (system.TryCombine(recipe, casterPosition))
         {
@@ -2113,6 +2137,14 @@ public class GameHud : MonoBehaviour
     // 없어 그 자리에서 바로 실행하고, 나머지는 커서로 지점/유닛을 찍을 때까지 기다린다
     // (RefreshShopTargeting). "대상이 필요한가"는 상점이 GetSlotView로 스스로 답한다 —
     // GameHud는 어떤 상점·어떤 칸인지 몰라도 된다.
+    // MP: 상점 실행은 여기 한 곳으로 모은다. 멀티 클라는 호스트에 요청만 보내고 보낸 것으로 성공 처리한다 —
+    //     실패 사유는 호스트가 TryUse를 돌린 뒤 알림으로 돌려준다. 싱글·호스트는 그대로 TryUse.
+    static bool UseShop(ILaneShop shop, int index, LaneShopTarget target, out string reason)
+    {
+        if (!GameAuthority.IsServer) { reason = null; return NetCommands.RequestShopUse(shop, index, target); }
+        return shop.TryUse(index, target, out reason);
+    }
+
     void OnShopSlotClicked(int visualIndex)
     {
         if (currentShop as Object == null) return;
@@ -2130,7 +2162,7 @@ public class GameHud : MonoBehaviour
             // 안 일어난 것처럼 보였다("조용한 실패" #10). ILaneShop.TryUse가 이제 실패
             // 사유를 out으로 돌려준다(상점 4곳이 이미 알고 있던 사유를 그대로 올려보낸다) —
             // 사유가 없으면(배선 오류 등, 플레이어가 봐도 못 고침) 일반 문구로 대신한다.
-            if (currentShop.TryUse(logicalIndex, default, out string reason)) RefreshShopAffordability();
+            if (UseShop(currentShop, logicalIndex, default, out string reason)) RefreshShopAffordability(); // MP: UseShop
             else PlayerNotification.Show(LocalPlayer.LocalPlayerId, reason ?? "지금은 사용할 수 없습니다.");
             return;
         }
@@ -2198,11 +2230,11 @@ public class GameHud : MonoBehaviour
                 return;
             }
 
-            used = shop.TryUse(index, LaneShopTarget.OnUnit(targetObject), out reason);
+            used = UseShop(shop, index, LaneShopTarget.OnUnit(targetObject), out reason); // MP: UseShop
         }
         else
         {
-            used = shop.TryUse(index, LaneShopTarget.AtPoint(hit.point), out reason);
+            used = UseShop(shop, index, LaneShopTarget.AtPoint(hit.point), out reason); // MP: UseShop
         }
 
         if (used) RefreshShopAffordability();

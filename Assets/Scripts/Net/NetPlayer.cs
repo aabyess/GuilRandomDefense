@@ -144,6 +144,24 @@ public class NetPlayer : NetworkBehaviour
         NetCommands.ExecuteUnitCommand(this, unit, (NetUnitCommand)command, enemy, point);
     }
 
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_Combine(short recipe, NetworkBool hasCaster, Vector3 caster)
+    {
+        NetCommands.ExecuteCombine(this, recipe, hasCaster, caster);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_ShopUse(short shop, byte slot, byte targetKind, Vector3 point, NetworkId target)
+    {
+        NetCommands.ExecuteShopUse(this, shop, slot, targetKind, point, target);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_HudUnitAction(NetworkId unit, byte action, byte argument)
+    {
+        NetCommands.ExecuteHudUnitAction(this, unit, (NetHudAction)action, argument);
+    }
+
     public static string LoadNickname()
     {
         try { return PlayerPrefs.GetString(NicknamePrefsKey, ""); }

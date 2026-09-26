@@ -32,6 +32,7 @@ using UnityEngine.SceneManagement;
 ///   -mpDump 초               게임 씬 진입 뒤 그 초에 거울 목록(종류·카탈로그·소유자·좌표·회전)을 로그로 — 여러 번 줄 수 있다
 ///   -mpTestWisps 초          게임 씬 진입 뒤 그 초에 내 위습 전부를 가장 가까운 유닛 포탈로 보낸다(클라=이동 요청 RPC)
 ///   -mpTestMoveUnits 초      게임 씬 진입 뒤 그 초에 내 유닛 전부를 레인 가운데로 보낸다(클라=이동 요청 RPC)
+///   -mpTestEconomy 초        그 초에 (클라) 내 상점마다 0번 칸 사용 · 지금 되는 조합 전부 · 판매 보상 있는 유닛 하나 판매 — 요청 RPC 확인용
 ///   -mpTestCommands 초       그 초부터 2초 간격으로 UnitCommands 공격이동→정지→홀드→적공격→모으기→우리로(클라=명령 요청 RPC)
 /// </summary>
 public class NetLauncher : MonoBehaviour
@@ -76,6 +77,7 @@ public class NetLauncher : MonoBehaviour
     float testWispsDelay = -1f;
     float testMoveUnitsDelay = -1f;
     float testCommandsDelay = -1f;
+    float testEconomyDelay = -1f;
 
     public static NetLauncher Instance { get; private set; }
 
@@ -162,6 +164,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpTestWisps": testWispsDelay = Seconds(i + 1); break;
                 case "-mpTestMoveUnits": testMoveUnitsDelay = Seconds(i + 1); break;
                 case "-mpTestCommands": testCommandsDelay = Seconds(i + 1); break;
+                case "-mpTestEconomy": testEconomyDelay = Seconds(i + 1); break;
             }
         }
 
@@ -485,6 +488,7 @@ public class NetLauncher : MonoBehaviour
         if (testWispsDelay >= 0f) StartCoroutine(TestMoveAfter(testWispsDelay, NetEntityKind.Wisp));
         if (testMoveUnitsDelay >= 0f) StartCoroutine(TestMoveAfter(testMoveUnitsDelay, NetEntityKind.Unit));
         if (testCommandsDelay >= 0f) StartCoroutine(TestCommandsAfter(testCommandsDelay));
+        if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
     }
 
     // 테스트 전용(-mpTestUnits): 흔함 유닛을 슬롯마다 N기, 실제 소환 경로(UnitSpawner.Spawn → 우리 칸)로 세운다.
@@ -588,6 +592,55 @@ public class NetLauncher : MonoBehaviour
         Debug.Log($"[MP] 테스트 명령 모으기 → {UnitCommands.Gather(mine)}");
         yield return new WaitForSecondsRealtime(2f);
         Debug.Log($"[MP] 테스트 명령 우리로 → {UnitCommands.SendToPen(mine)}");
+    }
+
+    IEnumerator TestEconomyAfter(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        int me = LocalPlayer.LocalPlayerId;
+
+        int shopsTried = 0;
+        foreach (MonoBehaviour behaviour in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+        {
+            if (!(behaviour is ILaneShop shop)) continue;
+            if (!behaviour.TryGetComponent(out OwnedByPlayer owner) || owner.OwnerId != me) continue;
+            LaneShopSlotView view = shop.GetSlotView(0);
+            if (string.IsNullOrEmpty(view.label) || view.targetKind != LaneShopTargetKind.None) continue;
+            bool sent = NetCommands.RequestShopUse(shop, 0, default);
+            Debug.Log($"[MP] 테스트 상점: {behaviour.name}({behaviour.GetType().Name}) 0번 「{view.label}」 사용가능 {view.available} → 보냄 {sent}");
+            shopsTried++;
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+        Debug.Log($"[MP] 테스트 상점: {shopsTried}곳");
+
+        CombineSystem system = FindFirstObjectByType<CombineSystem>();
+        int combos = 0;
+        if (system != null)
+        {
+            for (int i = 0; system.RecipeAt(i) != null; i++)
+            {
+                CombineRecipe recipe = system.RecipeAt(i);
+                if (!system.CanCombineNow(recipe)) continue;
+                NetCommands.RequestCombine(system, recipe, null);
+                Debug.Log($"[MP] 테스트 조합: 조합식 {i} 요청");
+                combos++;
+                yield return new WaitForSecondsRealtime(1f);
+                if (combos >= 3) break;
+            }
+        }
+        Debug.Log($"[MP] 테스트 조합: {combos}건 요청");
+
+        foreach (NetEntity e in FindObjectsByType<NetEntity>(FindObjectsSortMode.None))
+        {
+            if (e.EntityKind != NetEntityKind.Unit || e.Owner != me || e.Visual == null) continue;
+            if (!e.Visual.TryGetComponent(out UnitIdentity id) || id.Data == null) continue;
+            UnitData d = id.Data;
+            bool sellable = d.sellRewardWisp != null || d.sellRewardTraitPoints > 0 || d.sellRewardWood > 0 || d.sellTriggersItemGamblePool != null || d.sellRewardEveryNSells > 0;
+            if (!sellable || !e.Visual.TryGetComponent(out Selectable s)) continue;
+            NetCommands.RequestHudUnitAction(NetHudAction.Sell, s, 0);
+            Debug.Log($"[MP] 테스트 판매: {d.unitName} 요청");
+            break;
+        }
     }
 
     IEnumerator DumpAfter(float seconds)

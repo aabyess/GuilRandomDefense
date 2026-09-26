@@ -2,6 +2,13 @@ using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
+/// <summary>GameHud 버튼 중 「선택한 유닛 하나」에 거는 것. 직렬화되니 맨 뒤에만 추가.</summary>
+public enum NetHudAction : byte
+{
+    Gamble = 0,
+    Sell = 1,
+}
+
 /// <summary>클라 → 호스트로 보내는 유닛 명령 종류(UnitCommands의 함수와 1:1). 직렬화되니 맨 뒤에만 추가.</summary>
 public enum NetUnitCommand : byte
 {
@@ -114,6 +121,103 @@ public static class NetCommands
         }
 
         if (commandsLogged++ < 30) Debug.Log($"[MP] 명령 요청 수행: 슬롯 {sender.Slot} {command} → {real.name} (결과 {done})");
+    }
+
+    // ───────────── 조합 · 상점 · HUD 유닛 버튼(2단계 ①) ─────────────
+
+    public static void RequestCombine(CombineSystem system, CombineRecipe recipe, Vector3? casterPosition)
+    {
+        int index = system != null ? system.IndexOfRecipe(recipe) : -1;
+        if (index < 0 || NetPlayer.Local == null) return;
+        NetPlayer.Local.RPC_Combine((short)index, casterPosition.HasValue, casterPosition ?? default);
+    }
+
+    public static void ExecuteCombine(NetPlayer sender, int recipeIndex, bool hasCaster, Vector3 caster)
+    {
+        CombineSystem system = Object.FindFirstObjectByType<CombineSystem>();
+        CombineRecipe recipe = system != null ? system.RecipeAt(recipeIndex) : null;
+        if (recipe == null) return;
+
+        // 조합기는 씬에 하나 — 이 요청 동안만 「조합하는 사람 = 요청자」로 세운다(CombineSystem.ActingPlayerOverride).
+        CombineSystem.ActingPlayerOverride = sender.Slot;
+        bool ok;
+        try { ok = system.TryCombine(recipe, hasCaster ? caster : (Vector3?)null); }
+        finally { CombineSystem.ActingPlayerOverride = -1; }
+
+        if (!ok) PlayerNotification.Show(sender.Slot, "지금은 조합할 수 없습니다.");
+        if (commandsLogged++ < 30) Debug.Log($"[MP] 조합 요청 수행: 슬롯 {sender.Slot} 조합식 {recipeIndex} → {(ok ? "성공" : "실패")}");
+    }
+
+    public static bool RequestShopUse(ILaneShop shop, int slot, LaneShopTarget target)
+    {
+        int shopId = NetShops.IdOf(shop);
+        if (shopId < 0 || NetPlayer.Local == null) return false;
+
+        NetworkId targetId = default;
+        byte kind = 0;
+        if (target.unit != null)
+        {
+            NetEntity entity = target.unit.GetComponentInParent<NetEntity>();
+            if (entity == null || entity.Object == null || !entity.Object.IsValid) return false;
+            targetId = entity.Object.Id;
+            kind = 2;
+        }
+        else if (target.point != default) kind = 1;
+
+        NetPlayer.Local.RPC_ShopUse((short)shopId, (byte)slot, kind, target.point, targetId);
+        return true;
+    }
+
+    public static void ExecuteShopUse(NetPlayer sender, int shopId, int slot, byte kind, Vector3 point, NetworkId targetId)
+    {
+        ILaneShop shop = NetShops.Get(shopId);
+        if (shop == null) return;
+
+        int owner = ((Component)shop).TryGetComponent(out OwnedByPlayer ownedBy) ? ownedBy.OwnerId : -1;
+        if (owner != sender.Slot)
+        {
+            Debug.LogWarning($"[MP] 상점 거절: 슬롯 {sender.Slot}이 슬롯 {owner}의 {((Component)shop).name}을(를) 쓰려 했습니다.");
+            return;
+        }
+
+        LaneShopTarget target = default;
+        if (kind == 1) target = LaneShopTarget.AtPoint(point);
+        else if (kind == 2)
+        {
+            if (!sender.Runner.TryFindObject(targetId, out NetworkObject obj) || !obj.TryGetComponent(out NetEntity entity) || entity.Real == null)
+            {
+                PlayerNotification.Show(sender.Slot, "대상을 찾을 수 없습니다.");
+                return;
+            }
+            target = LaneShopTarget.OnUnit(entity.Real);
+        }
+
+        bool used = shop.TryUse(slot, target, out string reason);
+        if (!used) PlayerNotification.Show(sender.Slot, reason ?? "지금은 사용할 수 없습니다.");
+        if (commandsLogged++ < 30) Debug.Log($"[MP] 상점 요청 수행: 슬롯 {sender.Slot} {((Component)shop).name} 칸 {slot} → {(used ? "성공" : "실패: " + reason)}");
+    }
+
+    public static void RequestHudUnitAction(NetHudAction action, Selectable unit, int argument)
+    {
+        NetEntity entity = unit != null ? unit.GetComponentInParent<NetEntity>() : null;
+        if (entity == null || entity.Object == null || !entity.Object.IsValid || NetPlayer.Local == null) return;
+        NetPlayer.Local.RPC_HudUnitAction(entity.Object.Id, (byte)action, (byte)argument);
+    }
+
+    public static void ExecuteHudUnitAction(NetPlayer sender, NetworkId unit, NetHudAction action, int argument)
+    {
+        if (!TryGetOwnedReal(sender, unit, action.ToString(), out GameObject real)) return;
+        if (!real.TryGetComponent(out Selectable selectable)) return;
+
+        GameHud hud = Object.FindFirstObjectByType<GameHud>();
+        if (hud == null) return;
+
+        switch (action)
+        {
+            case NetHudAction.Gamble: hud.ExecuteGambleOn(selectable, argument); break;
+            case NetHudAction.Sell: hud.ExecuteSellOn(selectable); break;
+        }
+        if (commandsLogged++ < 30) Debug.Log($"[MP] 유닛 버튼 요청 수행: 슬롯 {sender.Slot} {action}({argument}) → {real.name}");
     }
 
     static bool TryGetOwnedReal(NetPlayer sender, NetworkId target, string what, out GameObject real)
