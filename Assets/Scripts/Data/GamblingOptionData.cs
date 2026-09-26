@@ -87,4 +87,40 @@ public class GamblingOptionData : ScriptableObject
     [Tooltip("이 라운드의 보스(EnemyData.isBoss)가 죽으면 해금된다. 0이면 보스 해금 대상이 아니다 " +
              "(다른 방식으로 해금하려면 requiresUnlock만 켜고 이건 0으로 둔 채 Unlock을 직접 부른다)")]
     public int unlockRound;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-26, 사장님 지시 「원랜디처럼 최대 N개까지 쌓이고 쿨타임마다 1개씩 충전」) —
+    //    워크3 상점 재고(usma 최대 · usrg 충전 간격 · usin 시작 재고)를 그대로 옮긴다. 원작 w3u 직접 디코드:
+    //      h06F 돈도박 초급  usrg 14 · usin 0 · usma 비어 있음 → hfoo 기본 3(UnitBalance.slk) — 원작 3(사장님 09-26 확정)
+    //      H0AZ 돈도박 고급  usma 7 · usrg 12 · usin 0 · Rhse(R10 보스) 해금
+    //      h0AK 목재 구입    usma 5 · usrg 3600 · usin 0 / H0B0 고급 유닛 생성 usma 1 · usrg 3600 · usin 0
+    //    stockMax 0이면 재고를 안 쓴다(유닛 도박 등 — 예전과 같다). 해금 옵션은 해금 순간부터 stockInitial에서 충전을 시작한다.
+    [Header("상점 재고 — 워크3 usma/usrg/usin. stockMax 0이면 재고 없음(무제한)")]
+    public int stockMax;
+    public float stockRegenSeconds;
+    public int stockInitial;
+
+    // 원작 돈도박 고급(Trig_Money_Gemble_3): 받은 돈(당첨 500~4500 · 실패 환급 300~400)을 누적해 **당첨 때** 35,000 이상이면
+    //    「돈도박 골드획득 한계에 도달하여 돈도박-고급을 졸업합니다!」 — 도박소가 h08C(돈도박 초급·고급·물품지원 없음 ·
+    //    특성 포인트 구매 · 고급 유닛 생성 · 목재 구입 · 다른세계)로 바뀐다. 0이면 졸업과 무관.
+    [Header("졸업 — 원작 돈도박 고급 누적 35,000")]
+    public int graduateAtCumulative;
+    [Tooltip("졸업하면 이 칸이 사라진다(원작 h08C에 없는 것: 돈도박 초급·고급)")]
+    public bool retiredOnGraduation;
+    [Tooltip("졸업해야 나타난다(원작 h08C에만 있는 것: 목재 구입·고급 유닛 생성)")]
+    public bool requiresGraduation;
+
+    // 원작 h0AK 목재 구입: 10,000골드 → 목재 1(Trig_Money_trade). Money 카테고리에서 0보다 크면 골드 대신 이 자원을 준다.
+    [Header("Money 카테고리 — 골드 대신 자원 지급(목재 구입)")]
+    public ResourceType payoutResourceType = ResourceType.Wood;
+    public int payoutResourceAmount;
+
+    // 원작 H0B0 고급 유닛 생성: 4% h05X → 아니면 1/38로 특수함(UniqueSpecial) → 아니면 희귀함(Random4) + 희귀함 리롤.
+    //    useSecondaryGrade의 표 가중치 대신 **정확한 확률**이 필요해 둔다. 0이면 예전처럼 GachaTable 가중치.
+    [Header("둘째 등급 확률 — 0이면 GachaTable 가중치")]
+    [Range(0f, 100f)] public float secondaryChancePercent;
+
+    // 원작 H0B0 요구 연구 R02F는 Story_reward5가 준다. 우리 스토리 번호는 원작과 별개라(story-numbering-is-ours)
+    //    「스토리를 N개 깼다」로 근사한다. 0이면 조건 없음.
+    [Tooltip("스토리를 이만큼 깨야 굴릴 수 있다(원작 R02F 근사). 0이면 조건 없음")]
+    public int requiresStoriesCleared;
 }

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Gambling_10엔 도박
   m_EditorClassIdentifier:
   optionName: 10엔 도박
-  description: 10엔을 걸고 64% 확률로 7~50엔을 받는다. 실패해도 3~5엔은 돌려받는다. 평생 10번만 돌릴 수 있다.
+  description: 10엔을 걸고 64% 확률로 7~50엔을 받는다. 실패해도 3~5엔은 돌려받는다. 최대 3개까지 쌓이고 14초마다 1개씩 충전된다(원작 3, 사장님 09-26 확정). 돈도박을 졸업하면 사라진다.
   category: 0
   costResourceType: 0
   cost: 10
@@ -26,9 +26,19 @@ MonoBehaviour:
   grantFailureReward: 0
   failureLuckyTokens: 0
   failureWood: 0
-  maxUses: 10
+  maxUses: 0
   requiresUnlock: 0
   unlockHint:
   unlockRound: 0
   failureGoldMin: 3
   failureGoldMax: 5
+  stockMax: 3
+  stockRegenSeconds: 14
+  stockInitial: 0
+  graduateAtCumulative: 0
+  retiredOnGraduation: 1
+  requiresGraduation: 0
+  payoutResourceType: 0
+  payoutResourceAmount: 0
+  secondaryChancePercent: 0
+  requiresStoriesCleared: 0

@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e38dcfb2166e0425695e116cb8b725bc, type: 3}
+  m_Name: Gambling_고급 유닛 생성
+  m_EditorClassIdentifier:
+  optionName: 고급 유닛 생성
+  description: 5000엔으로 희귀함 유닛을 확정으로 뽑는다(4% 레일리 · 약 2.5% 특수함 · 나머지 희귀함 + 희귀함 리롤). 돈도박 졸업 후 1회, 스토리 5개를 깨야 한다.
+  category: 1
+  costResourceType: 0
+  cost: 0
+  successChancePercent: 100
+  primaryResultGrade: 3
+  useSecondaryGrade: 1
+  secondaryResultGrade: 12
+  bonusUnit: {fileID: 11400000, guid: 23c784b755224cb7aa09733afd310fc7, type: 2}
+  bonusChancePercent: 4
+  successGoldMin: 0
+  successGoldMax: 0
+  failureGoldMin: 0
+  failureGoldMax: 0
+  grantFailureReward: 0
+  failureLuckyTokens: 0
+  failureWood: 0
+  scalesWithGamblerNavigation: 0
+  grantsUniqueRerollOnGenericSuccess: 1
+  maxUses: 0
+  requiresUnlock: 0
+  unlockHint: 
+  unlockRound: 0
+  goldCost: 5000
+  stockMax: 1
+  stockRegenSeconds: 3600
+  stockInitial: 1
+  graduateAtCumulative: 0
+  retiredOnGraduation: 0
+  requiresGraduation: 1
+  payoutResourceType: 0
+  payoutResourceAmount: 0
+  secondaryChancePercent: 2.6315789
+  requiresStoriesCleared: 5
