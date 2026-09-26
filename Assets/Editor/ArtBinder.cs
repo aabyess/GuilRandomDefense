@@ -901,6 +901,12 @@ public static class ArtBinder
         ("이상혁", "Enemy_R14_이상혁", 1.8900f, true),                 // 쿠로 189cm(인용, 원출처 미확인) — 425정점 저폴리 원본 그대로(사장님 09-25)
         ("이현빈", "Enemy_R45_이현빈", 3.0000f, true),                 // 결정: 어른 라팡(설원 거대 토끼) — 공표 키 없음, 거구 → 대장급
         ("노수신", "Enemy_R46_노수신", 1.3200f, true),                 // 새끼 라팡 = 어른의 44%(같은 립 원본 비율, blender 실측)
+        // 09-26 네발·꼬리 짐승 둘 — Generic(자기 클립 Idle·Move·Attack, GenericEnemyModels). 키는 **높이** 기준이다.
+        ("양문호", "Enemy_R43_양문호", 4.5000f, true),                 // 결정: 잭 매머드 — 거인급(PM 09-25 「약 4.5m」). 몸길이 = 키 × 1.18 ≈ 5.3
+        ("강민호", "Enemy_R44_강민호", 2.4000f, true),                 // 결정: 페이지원 스피노 — 눕힌 몸이라 길이 = 키 × 2.25 ≈ 5.4(매머드 몸길이와 비슷하게)
+        ("이태훈", "Enemy_R50_이태훈", 2.0900f, true),                 // 스모커 209cm(원피스 공식 설정으로 널리 인용) — 무기(짓테·막대) 뺀 몸. 🔵 측정 참고: 류마 × 0.961(바운티러시 같은 판). R50 보스
+        ("간보는_김용태", "Enemy_R61_간보는_김용태", 1.7500f, true),       // R52 임준성과 같은 제피로스 모델(부품·정점·뼈 좌표 동일, blender 대조) → R52 값 그대로. 사장님 09-25 「제피로스 중복도 괜찮아」
+        ("울부짖는_노태현", "Enemy_R62_울부짖는_노태현", 3.0000f, true),   // 결정: 카타쿠리 — 🔵 측정 류마 × 2.57 ≈ 4.5 · 설정 509cm지만 라인몹(여러 마리)이라 대장급 3.0에서 자른다(카이도 라인몹 규칙과 같은 이유 — 레인이 막힌다)
         ("주영호", "Enemy_R10_주영호", 2.0700f, true),                 // 원작 설정 키 207cm(와폴). R10 보스
         // 09-25 사장님: 김만경(R30)을 제피로스 → 세라핌 S-호크로 교체. R58 돌아온_김만경은 사장님이 따로 스킨을 주신다.
         //   몸은 「보통 성인」 앵커 1.75 그대로(S-호크 공표 키 없음) × 등에 멘 칼자루 1.146
@@ -1077,6 +1083,17 @@ public static class ArtBinder
     // 모델을 Humanoid로 임포트한다. 이게 이 파이프라인의 핵심이다 —
     // Humanoid끼리는 뼈대 이름이 달라도 애니메이션이 통하므로, 클립 한 세트를 234종이 같이 쓴다.
     // Generic으로 들어오면 그 모델 전용 클립만 재생돼서, 캐릭터마다 애니메이션을 따로 받아야 한다.
+    // 사람 골격이 아닌 **적** 모델 — Humanoid로 바꾸지 않고 Generic(자기 클립)으로 둔다(유닛은 UnitModelPostprocessor.GenericRigUnits).
+    // 🔴 09-25에 R43 양문호(매머드)가 이 목록 없이 MakeHumanoid를 타서 Humanoid로 들어가 있었다(.meta animationType 3) —
+    //    네발짐승 41뼈가 사람 골격으로 잘못 매핑돼 공용 걷기 클립을 탔다. 폴더 이름(= 모델 파일 이름)으로 거른다.
+    static readonly string[] GenericEnemyModels = { "양문호", "강민호" };
+
+    static bool IsGenericEnemyModel(string path)
+    {
+        string nfc = path.Normalize(System.Text.NormalizationForm.FormC);   // macOS 한글 경로 NFD 함정(UnitModelPostprocessor.IsGenericRigUnit)
+        return GenericEnemyModels.Any(n => nfc.StartsWith($"{EnemyFolder}/{n}/".Normalize(System.Text.NormalizationForm.FormC)));
+    }
+
     static string MakeHumanoid()
     {
         int converted = 0;
@@ -1085,7 +1102,22 @@ public static class ArtBinder
         foreach (string path in ModelPaths())
         {
             ModelImporter importer = AssetImporter.GetAtPath(path) as ModelImporter;
-            if (importer == null || importer.animationType == ModelImporterAnimationType.Human) continue;
+            if (importer == null) continue;
+            if (IsGenericEnemyModel(path))
+            {
+                // avatarSetup도 본다 — 새 파일은 Generic·No Avatar로 들어와 Animator가 안 생기고, 그러면 자기 클립 컨트롤러를
+                // 물릴 곳이 없어 바인드 포즈로 미끄러진다(09-26 R44 강민호 첫 배선).
+                if (importer.animationType != ModelImporterAnimationType.Generic || !importer.importAnimation
+                    || importer.avatarSetup != ModelImporterAvatarSetup.CreateFromThisModel)
+                {
+                    importer.animationType = ModelImporterAnimationType.Generic;
+                    importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+                    importer.importAnimation = true;
+                    importer.SaveAndReimport();
+                }
+                continue;
+            }
+            if (importer.animationType == ModelImporterAnimationType.Human) continue;
 
             importer.animationType = ModelImporterAnimationType.Human;
             importer.SaveAndReimport();

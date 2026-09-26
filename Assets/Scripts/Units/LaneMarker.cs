@@ -137,7 +137,8 @@ public class LaneMarker : MonoBehaviour
     //       ClaimSpawnSlot으로 붙인다(자리로 짝짓는다 — 호출부 열 곳을 안 고쳐도 된다).
     //    ② 유닛이 죽거나 조합 재료로 사라지면(Unity null) 그 자리를 다시 쓴다 — 안 그러면 한 판에 수백 기가 나와 고리가 레인 밖까지 커진다.
     //       예약만 되고 30초 안에 아무도 안 붙은 자리(소환 실패·NavMesh 보정으로 딴 데 섰을 때)도 풀어 준다.
-    public const float CenterSpacing = 14f;   // 유닛 몸 ≈ 14(UnitSpawner 회피 주석 실측)
+    // 유닛 몸 ≈ 14(UnitSpawner 회피 주석 실측). 처음엔 14(몸 하나)였는데 이름표가 서로 겹쳐 읽히지 않았다(09-26 사진) → 몸 둘.
+    public const float CenterSpacing = 28f;
     const float ReservationSeconds = 30f;
 
     readonly Dictionary<UnitIdentity, int> assignedFreeSlots = new Dictionary<UnitIdentity, int>();

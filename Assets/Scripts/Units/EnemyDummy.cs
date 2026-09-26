@@ -836,7 +836,10 @@ public class EnemyDummy : MonoBehaviour
             UnitAttacker.GrantHeroKillExperienceToLane(LaneIndex);
 
             // 신호만 보낸다 — 실제 처리(도박소 해금 등)는 구독하는 쪽 몫이다.
-            if (data != null && data.isBoss)
+            // 🔴 레인 보스만(LaneIndex ≥ 0). 스토리 보스·사이드 보스(Enemy_Story*·SideBoss*)도 isBoss라서 예전엔 이것들이
+            //    죽어도 「그 라운드 보스 처치」로 떴다 — R10에 스토리 보스를 잡으면 R10 보스를 안 잡아도 500엔 도박이 열렸다
+            //    (09-26 구현담당1 판: 보스는 제한 초과로 패배했는데 도구가 「처치」로 찍음).
+            if (data != null && data.isBoss && LaneIndex >= 0)
             {
                 OnBossKilled?.Invoke(SpawnRound);
             }
