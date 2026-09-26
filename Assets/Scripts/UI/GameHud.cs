@@ -2132,7 +2132,7 @@ public class GameHud : MonoBehaviour
         // MP: 멀티 클라는 조합을 호스트에 요청만 한다(재료 소모·결과 소환은 호스트, 결과는 거울로 돌아온다).
         if (!GameAuthority.IsServer)
         {
-            NetCommands.RequestCombine(system, recipe, casterPosition);
+            NetCommands.RequestCombine(system, recipe, casterSelection != null && casterSelection.Selected.Count > 0 ? casterSelection.Selected[0] : null);
             HideCombineTooltip();
             return;
         }

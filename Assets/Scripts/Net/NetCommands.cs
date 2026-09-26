@@ -127,27 +127,47 @@ public static class NetCommands
 
     // ───────────── 조합 · 상점 · HUD 유닛 버튼(2단계 ①) ─────────────
 
-    public static void RequestCombine(CombineSystem system, CombineRecipe recipe, Vector3? casterPosition)
+    /// <summary>클라: [조합]을 누른 유닛(caster)과 조합식 번호를 보낸다 — 호스트가 그 유닛 기준으로 검증한다.</summary>
+    public static void RequestCombine(CombineSystem system, CombineRecipe recipe, Selectable caster)
     {
         int index = system != null ? system.IndexOfRecipe(recipe) : -1;
-        if (index < 0 || NetPlayer.Local == null) return;
-        NetPlayer.Local.RPC_Combine((short)index, casterPosition.HasValue, casterPosition ?? default);
+        NetEntity entity = caster != null ? caster.GetComponentInParent<NetEntity>() : null;
+        if (index < 0 || NetPlayer.Local == null || entity == null || entity.Object == null || !entity.Object.IsValid) return;
+        NetPlayer.Local.RPC_Combine((short)index, entity.Object.Id);
     }
 
-    public static void ExecuteCombine(NetPlayer sender, int recipeIndex, bool hasCaster, Vector3 caster)
+    /// <summary>
+    /// 호스트: 클라가 보낸 식 번호를 그대로 믿지 않는다(PM 09-26). 조합은 다음을 모두 만족할 때만 —
+    ///   ① [조합]을 누른 유닛이 요청자 소유 ② 그 식이 그 유닛의 GetRecipesStartingWith 안 ③ 요청자 기준 CanCombineNow.
+    /// 결과 자리는 원작처럼 누른 유닛 자리(호스트 실물 위치)를 넘긴다(CombineSystem이 자리를 어떻게 쓰는지는 그쪽 몫).
+    /// </summary>
+    public static void ExecuteCombine(NetPlayer sender, int recipeIndex, NetworkId casterId)
     {
         CombineSystem system = Object.FindFirstObjectByType<CombineSystem>();
         CombineRecipe recipe = system != null ? system.RecipeAt(recipeIndex) : null;
-        if (recipe == null) return;
+        if (recipe == null) { PlayerNotification.Show(sender.Slot, "지금은 조합할 수 없습니다."); return; }
+
+        if (!TryGetOwnedReal(sender, casterId, "조합", out GameObject caster) || !caster.TryGetComponent(out UnitIdentity identity) || identity.Data == null)
+        {
+            PlayerNotification.Show(sender.Slot, "조합할 유닛을 찾을 수 없습니다.");
+            return;
+        }
 
         // 조합기는 씬에 하나 — 이 요청 동안만 「조합하는 사람 = 요청자」로 세운다(CombineSystem.ActingPlayerOverride).
         CombineSystem.ActingPlayerOverride = sender.Slot;
         bool ok;
-        try { ok = system.TryCombine(recipe, hasCaster ? caster : (Vector3?)null); }
+        string rejected = null;
+        try
+        {
+            List<CombineRecipe> allowed = system.GetRecipesStartingWith(identity.Data);
+            if (allowed == null || !allowed.Contains(recipe)) rejected = "이 유닛으로는 그 조합을 할 수 없습니다.";
+            else if (!system.CanCombineNow(recipe)) rejected = "재료가 부족합니다.";
+            ok = rejected == null && system.TryCombine(recipe, caster.transform.position);
+        }
         finally { CombineSystem.ActingPlayerOverride = -1; }
 
-        if (!ok) PlayerNotification.Show(sender.Slot, "지금은 조합할 수 없습니다.");
-        if (commandsLogged++ < 30) Debug.Log($"[MP] 조합 요청 수행: 슬롯 {sender.Slot} 조합식 {recipeIndex} → {(ok ? "성공" : "실패")}");
+        if (!ok) PlayerNotification.Show(sender.Slot, rejected ?? "지금은 조합할 수 없습니다.");
+        if (commandsLogged++ < 30) Debug.Log($"[MP] 조합 요청 수행: 슬롯 {sender.Slot} 조합식 {recipeIndex}({identity.Data.unitName}) → {(ok ? "성공" : "거절: " + (rejected ?? "TryCombine 실패"))}");
     }
 
     public static bool RequestShopUse(ILaneShop shop, int slot, LaneShopTarget target)

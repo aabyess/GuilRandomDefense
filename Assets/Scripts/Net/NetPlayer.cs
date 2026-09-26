@@ -238,9 +238,9 @@ public class NetPlayer : NetworkBehaviour
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    public void RPC_Combine(short recipe, NetworkBool hasCaster, Vector3 caster)
+    public void RPC_Combine(short recipe, NetworkId caster)
     {
-        NetCommands.ExecuteCombine(this, recipe, hasCaster, caster);
+        NetCommands.ExecuteCombine(this, recipe, caster);
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]

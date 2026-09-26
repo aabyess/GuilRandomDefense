@@ -680,19 +680,45 @@ public class NetLauncher : MonoBehaviour
         }
         Debug.Log($"[MP] 테스트 상점: {shopsTried}곳");
 
+        // 조합: 내 겉모습 유닛마다 그 유닛으로 시작하는 식 중 지금 되는 것을 요청(실제 [조합] 버튼과 같은 조건). 마지막에 일부러
+        // 틀린 요청(그 유닛으로 시작하지 않는 식) 하나를 보내 호스트 검증이 거절하는지도 본다.
         CombineSystem system = FindFirstObjectByType<CombineSystem>();
         int combos = 0;
+        Selectable anyUnit = null;
         if (system != null)
         {
-            for (int i = 0; system.RecipeAt(i) != null; i++)
+            foreach (NetEntity e in FindObjectsByType<NetEntity>(FindObjectsSortMode.None))
             {
-                CombineRecipe recipe = system.RecipeAt(i);
-                if (!system.CanCombineNow(recipe)) continue;
-                NetCommands.RequestCombine(system, recipe, null);
-                Debug.Log($"[MP] 테스트 조합: 조합식 {i} 요청");
-                combos++;
-                yield return new WaitForSecondsRealtime(1f);
                 if (combos >= 3) break;
+                if (e == null || e.Object == null || !e.Object.IsValid) continue;   // 앞 조합에 재료로 쓰여 사라진 거울
+                if (e.EntityKind != NetEntityKind.Unit || e.Owner != me || e.Visual == null) continue;
+                if (!e.Visual.TryGetComponent(out UnitIdentity uid) || uid.Data == null || !e.Visual.TryGetComponent(out Selectable sel)) continue;
+                anyUnit = sel;
+                foreach (CombineRecipe recipe in system.GetRecipesStartingWith(uid.Data))
+                {
+                    if (!system.CanCombineNow(recipe)) continue;
+                    NetCommands.RequestCombine(system, recipe, sel);
+                    Debug.Log($"[MP] 테스트 조합: {uid.Data.unitName}로 조합식 {system.IndexOfRecipe(recipe)} 요청");
+                    combos++;
+                    yield return new WaitForSecondsRealtime(1f);
+                    break;
+                }
+            }
+            anyUnit = null;   // 앞 조합에 재료로 쓰였을 수 있다 — 지금 살아 있는 내 유닛을 새로 고른다
+            foreach (NetEntity e in FindObjectsByType<NetEntity>(FindObjectsSortMode.None))
+                if (e != null && e.Object != null && e.Object.IsValid && e.EntityKind == NetEntityKind.Unit && e.Owner == me
+                    && e.Visual != null && e.Visual.TryGetComponent(out anyUnit)) break;
+            if (anyUnit != null && anyUnit.TryGetComponent(out UnitIdentity anyId))
+            {
+                var ownList = system.GetRecipesStartingWith(anyId.Data);
+                for (int i = 0; system.RecipeAt(i) != null; i++)
+                {
+                    if (ownList != null && ownList.Contains(system.RecipeAt(i))) continue;
+                    NetCommands.RequestCombine(system, system.RecipeAt(i), anyUnit);
+                    Debug.Log($"[MP] 테스트 조합(틀린 요청): {anyId.Data.unitName}로 조합식 {i} — 거절되어야 함");
+                    break;
+                }
+                yield return new WaitForSecondsRealtime(1f);
             }
         }
         Debug.Log($"[MP] 테스트 조합: {combos}건 요청");
