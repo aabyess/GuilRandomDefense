@@ -1057,6 +1057,7 @@ public static class ClaudeCommands
         public int superSize = 1;
         public int watchRounds;          // rounds:N — 0이면 끄기
         public bool autoLoop;
+        public bool keepPen;             // autoloop: 흔함은 제 칸에 둔다 — 모서리 쓸기에서 흔함을 뺀다(09-26 칸 안 흔함 가동률 판)
         public bool sellSpare;           // autoloop: 조합표가 못 쓸 만큼 남는 유닛을 판다(09-26 PM 지시 — 목재·위습 경로)
         public bool storySent;           // autoloop: 안흔함을 스토리존에 보냈나 — 스토리가 깨지면 복귀포탈로 되돌린다
         public int storySentRound;       // 마지막으로 보낸(보강한) 라운드 — 2라운드 못 깨면 더 보낸다
@@ -1153,6 +1154,7 @@ public static class ClaudeCommands
             else if (token == "nocombine") job.noCombine = true;
             else if (token == "noshop") job.noShop = true;
             else if (token == "sell") job.sellSpare = true;
+            else if (token == "keeppen") job.keepPen = true;
             else if (token == "bossaway") job.bossAway = true;
             else if (token.StartsWith("mode:"))
             {
@@ -2576,7 +2578,7 @@ public static class ClaudeCommands
         return $"적 레인 {EnemyDummy.CountInLane(0)}/전체 {EnemyDummy.Active.Count(e => e != null)} · 데스카운트 {rm.DeathCountFor(0)} · " +
                $"골드 {gold} · 목재 {wood} · 내 유닛 {(mine.Any() ? string.Join(", ", mine) : "0")} · 위습 칸 「{slots}」 · " +
                $"스토리 「{story}」(매니저 「{StoryManager.Instance?.StatusLabel}」 깸 {StoryManager.Instance?.FinishedCount}) · 보스 적 {bosses} · 남은시간 {rm.RoundTimeLeft:F1}/준비 {rm.PreRoundTimeLeft:F1} · 프레임 {frames} · {UptimeText()} · {logs}" +
-               WoodRoundText() +
+               WoodRoundText() + PenCommonText() +
                $"\n      🎯 흔함 이름(지금) {(commonNames.Length > 0 ? commonNames : "-")} · 도구가 흔함선택으로 보낸 누계 {(pickNames.Length > 0 ? pickNames : "0")}";
     }
 
@@ -2587,6 +2589,7 @@ public static class ClaudeCommands
         ("희귀함", "희귀함 위습", "Portal_희귀함·특수함"),
         ("전설·히든", "전설·히든 위습", "Portal_전설·히든"),
     };
+    static readonly string[] NonCommonBoxes = { "@box:Unit_안흔함", "@box:Unit_특별함", "@box:Unit_희귀함", "@box:Unit_히든" };
     static readonly string[] SpendShops = { "Lane1_유닛강화소", "Lane1_공격타입강화소", "Lane1_도박소" };
     const int ShopSpendClicks = 6;
 
@@ -2713,6 +2716,19 @@ public static class ClaudeCommands
                $" · 누계 {string.Join(" ", soldTotals.Select(kv => $"{kv.Key}{kv.Value}"))}\n";
     }
 
+    // 흔함이 제 칸 안(칸 한가운데에서 칸 폭 절반 안)에 몇 기 있나 — keeppen 판에서 박스 쓸기에 딸려 나간 흔함을 센다(09-26).
+    static string PenCommonText()
+    {
+        LaneMarker lane = LaneMarker.Get(0);
+        if (lane == null || lane.UnitPen == null) return "";
+        var commons = MyUnits().Where(u => u.Data.grade == UnitGrade.Common).ToList();
+        if (commons.Count == 0) return "";
+        List<Vector3> slots = lane.FirstRowSlotPositions().ToList();
+        float half = slots.Count > 1 ? Vector3.Distance(slots[0], slots[1]) * 0.5f : 30f;
+        int inPen = commons.Count(u => slots.Any(p => Vector2.Distance(new Vector2(p.x, p.z), new Vector2(u.transform.position.x, u.transform.position.z)) <= half));
+        return $"\n      📦 흔함 칸 안 {inPen}/{commons.Count}기";
+    }
+
     // ── 목재 장부 — 목재가 어디서 들어와 어디에 쓰였나(09-26 PM 지시). ResourceWallet 변화 이벤트를 받아 부른 쪽 메서드로 묶는다. ──
     static ResourceWallet woodWatched;
     static int woodLast;
@@ -2810,8 +2826,8 @@ public static class ClaudeCommands
             turn.Add("?UnitCommandSlot13");
         }
         if (job.sellSpare) turn.Add("@sellspare");   // 조합 시도 뒤 — 조합에 먼저 쓰고 남는 것만 판다
-        turn.Add("@box:Unit_");
-        turn.Add("@rcpt:corner");
+        if (job.keepPen) foreach (string box in NonCommonBoxes) { turn.Add(box); turn.Add("@rcpt:corner"); }
+        else { turn.Add("@box:Unit_"); turn.Add("@rcpt:corner"); }
         // 흔함 선택 위습 — 「흔함선택_<이름>」 포탈에 넣어 그 유닛을 고른다(isPlayerChoice를 읽는 코드는 없고, 포탈 specificUnit이 길이다).
         //    짝이 안 맞는(홀수) 흔함이 있으면 그 이름을 골라 조합 재료를 채우고, 없으면 돌아가며 고른다.
         int choiceWisps = myWisps.Count(w => (w.Data.wispName ?? "").Contains("흔함 선택"));
@@ -2886,7 +2902,16 @@ public static class ClaudeCommands
             //    특별함 → 1, 그 위 → 3. 한 박스는 선택 상한 12기라 흔함은 한 번 더 쓸어 보낸다.
             job.report += "   🧪 보스 라운드: 등급별로 모서리 넷에 나눠 세운다\n";
             (string box, string corner)[] split = { ("@box:Unit_흔함", "corner"), ("@box:Unit_흔함|far", "corner"), ("@box:Unit_안흔함", "corner2"), ("@box:Unit_특별함", "corner1"), ("@box:Unit_희귀함", "corner3"), ("@box:Unit_히든", "corner3") };
-            foreach ((string box, string corner) in split) { turn.Add(box); turn.Add("@rcpt:" + corner); }
+            foreach ((string box, string corner) in split)
+            {
+                if (job.keepPen && box.StartsWith("@box:Unit_흔함")) continue;   // keeppen — 흔함은 칸에 남긴다
+                turn.Add(box); turn.Add("@rcpt:" + corner);
+            }
+        }
+        else if (job.keepPen)
+        {
+            // keeppen — 흔함 아닌 등급만 이름으로 골라 모서리로. ⚠️ 박스는 사각형 안 전부를 잡아서, 칸 근처 모서리면 흔함이 딸려 갈 수 있다(끝 줄 「칸 밖 흔함」으로 센다).
+            foreach (string box in NonCommonBoxes) { turn.Add(box); turn.Add("@rcpt:corner"); }
         }
         else
         {
