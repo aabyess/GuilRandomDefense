@@ -774,6 +774,25 @@ UNITS = {
                texture_by_material=True,
                materials=dict(textures={"pl_apoo_2yaf01": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")],
                                         "pl_apoo_2yaf01_trans": [("DiffuseColor", "pl_apoo_2yaf01_diff.png")]})),
+    # 체인소맨 레제(Sketchfab glb, Mixamo 리그) → R63 긁힌_김민준. 뼈 이름이 이미 mixamorig + 번호 꼬리(Hips_01 …) → rename_regex로 꼬리만 뗀다(희귀함_배성령과 같은 길).
+    #   메시 9 · 재질 4(body1 · body2SG2 · body2SG4 · Dress, 전부 HASHED) · 그림 2(Image_0 = Dress · Image_1 = body 셋) · 애니 1(안 씀 → use_rest_pose, 이미 T자).
+    #   🔴 glTF 이름 겹침으로 생긴 **겹친 뼈 `_0`~`_3`**(Head·Neck·Spine2·Left/RightShoulder)에 살이 있다(Head_06_1 4,547 등) — 김만경(S-호크)과 같은 부류.
+    #     rename_regex는 **통째 일치**라 이들(Head_06_0)은 이름이 안 바뀌고 그대로 남는다. 각자 **제짝 뼈의 자식**이다(Head_06_0의 부모 = Head)
+    #     → Head 쪽은 under=Head가 머리카락과 함께 가져가고, 나머지 넷은 패턴으로 제짝에 합친다(Head 패턴을 따로 두면 대상 0으로 죽는다).
+    #   HeadTop_End에 살 4,724(머리카락) · 그 밑 머리카락 사슬 joint1~24(앞머리 · 뒤 묶음) → under=Head로 머리에. 손가락은 그대로(Humanoid 선택 뼈).
+    "긁힌_김민준": dict(path="Assets/Art/Enemies/긁힌_김민준/긁힌_김민준.fbx", kind="human", size=("height", 1.8),
+                  source=os.path.join(SKINS, "90_적유닛/R61-R70/R63_긁힌_김민준.glb"), gltf_guess_bind=False, use_rest_pose=True,
+                  no_nulls=True, orient_snap=True,
+                  drop_meshes=["Icosphere"],   # 🔴 1회차에 빠뜨렸다 — 뼈 표시용 공이 경계를 키웠고 다리가 그 속에 묻혀 렌더에 공만 보였다(주영호·왕승환과 같은 함정)
+                  rename_regex=(r"(mixamorig:[A-Za-z0-9]+?)_[0-9]+", r"\1"),
+                  drop_bones=["_rootJoint"],
+                  merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head")] +
+                              [dict(pattern=rf"^mixamorig:{b}_[0-9]+_[0-9]$", into=f"mixamorig:{b}")
+                               for b in ("Neck", "Spine2", "LeftShoulder", "RightShoulder")],
+                  glb_images={0: "Dress.png", 1: "body1.png"},
+                  texture_by_material=True,
+                  materials=dict(textures={"Dress": [("DiffuseColor", "Dress.png")],
+                                           **{m: [("DiffuseColor", "body1.png")] for m in ("body1", "body2SG2", "body2SG4")}})),
     # 원피스 바운티러시 샬롯 카타쿠리(pl_katakuri_orig01, strifffe 립) → R62 울부짖는_노태현. zip = source/*.rar(fbx 두 벌 · _diff.jpeg · 홍보 그림) + textures/_diff.jpeg(안쪽과 픽셀 같음).
     #   rar 안 FBX 두 벌: 「katakuri.fbx」는 뼈대 배율 1.0(100배)에 **재질 칸이 비어 있다** → 안 쓴다. 「katakuri animations.fbx」가 뼈대 0.01(류마와 같은 구성) · 재질 있음 · 액션 66(안 씀).
     #   메시 18 · 재질 1 · 뼈 54. 몸 키(머리카락 끝) 0.0518 → **류마 × 2.57**.
@@ -6162,7 +6181,7 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 gone = [eb.name for eb in data.edit_bones if root_eb in eb.parent_recursive or (mb.get("with_root") and eb == root_eb)]
             else:
                 gone = [eb.name for eb in data.edit_bones if re.search(mb["pattern"], eb.name)]
-            assert gone and mb["into"] in data.edit_bones, f"{name}: merge_bones 대상 없음"
+            assert gone and mb["into"] in data.edit_bones, f"{name}: merge_bones 대상 없음 {mb.get('under') or mb.get('pattern')} → {mb['into']}(맞은 뼈 {len(gone)})"
             moved = 0
             # 🔸 split_x {left, right, half}(2026-09-25 R26 어린 상디 앞치마): 한 장짜리 앞치마를 좌우 사슬 → 좌우 허벅지로 나누면
             #   **가운데 솔기가 찢어져** 다리가 비치고, 골반에 통째로 두면 걸을 때 허벅지가 앞치마를 뚫는다. 정점의 x 위치로
