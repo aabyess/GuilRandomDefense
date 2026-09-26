@@ -252,19 +252,20 @@ public static class NetCommands
         if (commandsLogged++ < 30) Debug.Log($"[MP] 특성 대상 요청 수행: 슬롯 {sender.Slot} {trait.name} → {real.name}");
     }
 
-    public static void RequestChatCode(string text)
+    /// <summary>클라: 채팅 한 줄을 호스트로(대기실·게임 모두). 연타는 보내는 쪽(PlayerChat.AllowLocalSend)에서 먼저 막는다.</summary>
+    public static void RequestChat(string text)
     {
-        if (NetPlayer.Local == null || string.IsNullOrWhiteSpace(text)) return;
-        NetPlayer.Local.RPC_ChatCode(text.Length > 64 ? text.Substring(0, 64) : text);
+        string clean = PlayerChat.Sanitize(text);
+        if (NetPlayer.Local == null || clean.Length == 0) return;
+        NetPlayer.Local.RPC_Chat(clean);
     }
 
-    public static void ExecuteChatCode(NetPlayer sender, string text)
+    /// <summary>호스트: 코드 시도(결과는 보낸 사람에게) + 채팅 줄을 전원에게. 이름은 호스트가 아는 닉네임(클라가 이름을 못 속인다).</summary>
+    public static void ExecuteChat(NetPlayer sender, string text)
     {
-        GameChatBox box = Object.FindFirstObjectByType<GameChatBox>();
-        if (box == null) return;
-        string message = box.ExecuteCode(sender.Slot, text);
-        PlayerNotification.Show(sender.Slot, message);
-        if (commandsLogged++ < 30) Debug.Log($"[MP] 채팅 코드 요청 수행: 슬롯 {sender.Slot} 「{text}」 → {message}");
+        string codeResult = PlayerChat.HandleOnAuthority(sender.Slot, sender.DisplayName, text, out bool accepted);
+        if (codeResult != null) PlayerNotification.Show(sender.Slot, codeResult);
+        if (accepted && commandsLogged++ < 30) Debug.Log($"[MP] 채팅: 슬롯 {sender.Slot} 「{PlayerChat.Sanitize(text)}」{(codeResult != null ? " → 코드: " + codeResult : "")}");
     }
 
     // ───────────── 창고 · 항법(2단계 ③) ─────────────

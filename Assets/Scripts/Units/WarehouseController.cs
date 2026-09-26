@@ -19,6 +19,7 @@ public class WarehouseController : MonoBehaviour
     void Update()
     {
         if (Keyboard.current == null || !Keyboard.current.bKey.wasPressedThisFrame) return;
+        if (ChatInputGate.IsOpen) return; // MP: 채팅 입력 중 「b」를 치면 창고가 열리던 것(SelectionManager·카메라와 같은 가드)
         // MP: 멀티 클라는 겉모습만 가져서 창고 넣기/빼기가 로컬 화면만 바꾼다 — 요청 RPC가 붙을 때까지 클라에선 막는다.
         if (selectionManager == null) return;
         // MP: 멀티 클라는 선택한 내 유닛마다 호스트에 창고 요청을 보낸다(호스트가 요청자 슬롯의 창고·레인으로 넣고 뺀다).

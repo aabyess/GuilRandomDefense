@@ -261,9 +261,9 @@ public class NetPlayer : NetworkBehaviour
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    public void RPC_ChatCode(string text)
+    public void RPC_Chat(string text)
     {
-        NetCommands.ExecuteChatCode(this, text);
+        NetCommands.ExecuteChat(this, text);
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]

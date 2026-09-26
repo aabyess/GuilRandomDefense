@@ -82,20 +82,30 @@ public class GameChatBox : MonoBehaviour
 
         if (local == null || string.IsNullOrWhiteSpace(text)) return;
 
-        // MP: 멀티 클라는 코드를 호스트에 보낸다 — 해금·조합(재료 소모·소환)은 호스트가 요청자 슬롯으로 하고,
-        //     결과 문구는 알림으로 돌아온다. 싱글·호스트는 아래 본체 그대로.
+        // MP: 채팅 한 줄이 곧 코드 입력(원작 워크3). 판정은 PlayerChat이 한다 — 코드면 실행, 말은 전원(싱글은 나)에게 한 줄.
+        //     멀티 클라는 호스트에 보내기만 한다(코드 결과는 알림으로, 채팅 줄은 전원에게 돌아온다).
+        if (!PlayerChat.AllowLocalSend()) return;
         if (!GameAuthority.IsServer)
         {
-            NetCommands.RequestChatCode(text);
-            ShowStatus("코드를 보냈습니다.");
+            NetCommands.RequestChat(text);
             return;
         }
 
-        ShowStatus(ExecuteCode(local.PlayerId, text));
+        string name = MatchConfig.Active && NetPlayer.Local != null ? NetPlayer.Local.DisplayName : LocalName();
+        string codeResult = PlayerChat.HandleOnAuthority(local.PlayerId, name, text, out _);
+        if (codeResult != null) ShowStatus(codeResult);   // 코드 결과는 지금처럼 입력창 자리에(보낸 사람만)
     }
 
-    // MP: 입력창(위)과 멀티 호스트가 받은 클라 요청(NetCommands)이 같이 쓰는 본체 — 결과 문구를 돌려준다.
-    public string ExecuteCode(int playerId, string text)
+    // 싱글에서 채팅 줄 앞에 붙일 이름 — 같이 하기에서 쓰던 닉네임 기억값, 없으면 「나」.
+    static string LocalName()
+    {
+        string nick = NetPlayer.LoadNickname();
+        return string.IsNullOrWhiteSpace(nick) ? "나" : nick;
+    }
+
+    // MP: 입력창·멀티 호스트(PlayerChat)가 같이 쓰는 코드 판정 — 코드가 아니면 null(일반 말에
+    //     「인식할 수 없는 코드입니다」가 뜨지 않게, PM 09-26). 결과 문구가 있으면 코드로 인식된 것이다.
+    public string TryExecuteCode(int playerId, string text)
     {
         if (chatUnlockManager != null)
         {
@@ -109,7 +119,7 @@ public class GameChatBox : MonoBehaviour
             if (hiddenMessage != null) return hiddenMessage;
         }
 
-        return "인식할 수 없는 코드입니다.";
+        return null;
     }
 
     void ShowStatus(string message)

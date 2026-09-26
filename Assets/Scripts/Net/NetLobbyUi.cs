@@ -61,6 +61,7 @@ public class NetLobbyUi : MonoBehaviour
     Button startButton;
     TMP_Text startHint;
     TMP_Text roomStatus;
+    TMP_InputField chatInput;
 
     void Awake()
     {
@@ -334,8 +335,33 @@ public class NetLobbyUi : MonoBehaviour
         Place((RectTransform)leave.transform, new Vector2(0.5f, 0.5f), new Vector2(-330f, -300f), new Vector2(240f, 84f));
         leave.onClick.AddListener(() => launcher.Leave());
 
+        // 대기실 채팅 — 게임 안 채팅과 같은 길(PlayerChat). 줄은 알림 자리(왼쪽 아래)에 쌓인다.
+        chatInput = CreateInput(root, "LobbyChatInput", "친구에게 할 말 (Enter로 보내기)", PlayerChat.MaxLength);
+        Place((RectTransform)chatInput.transform, new Vector2(0.5f, 0.5f), new Vector2(-90f, -475f), new Vector2(940f, 60f));
+        chatInput.onSubmit.AddListener(_ => SendLobbyChat());
+        Button send = CreateButton(root, "LobbyChatSend", "보내기", ButtonNormal, 24);
+        Place((RectTransform)send.transform, new Vector2(0.5f, 0.5f), new Vector2(470f, -475f), new Vector2(160f, 60f));
+        send.onClick.AddListener(SendLobbyChat);
+        chatInput.transform.SetParent(card.transform, true);
+        send.transform.SetParent(card.transform, true);
+
         roomStatus = CreateText(c, "Status", "", 20, font, TextDim, TextAlignmentOptions.Right);
         Place(roomStatus.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(360f, 285f), new Vector2(340f, 64f));
+    }
+
+    void SendLobbyChat()
+    {
+        string text = chatInput.text;
+        chatInput.text = "";
+        chatInput.ActivateInputField();   // 이어서 칠 수 있게 포커스 유지
+        if (string.IsNullOrWhiteSpace(text) || !PlayerChat.AllowLocalSend()) return;
+
+        if (launcher.IsHost)
+        {
+            string name = NetPlayer.Local != null ? NetPlayer.Local.DisplayName : "방장";
+            PlayerChat.HandleOnAuthority(LocalPlayer.LocalPlayerId, name, text, out _);
+        }
+        else NetCommands.RequestChat(text);
     }
 
     // ───────────── 부품 ─────────────

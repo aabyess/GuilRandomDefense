@@ -37,7 +37,8 @@ using UnityEngine.SceneManagement;
 ///   -mpTestPhase3 초         그 초에 (클라) 내 유닛 하나 창고 보관→4초 뒤 회수 · 항법 선택 · 복제된 스토리/도박/항법 상태 로그
 ///   -mpTestTraitUnits        (호스트) 슬롯마다 즉시형 특성(대상 지정 아님, 비용 1 이하)을 가진 유닛 1기
 ///   -mpTestTrait 초          (클라) 그 초에 특성 버튼 요청 — 복제된 특성 포인트·해금 전후 로그
-///   -mpTestChat 초 코드      (클라) 그 초에 채팅 코드 요청
+///   -mpTestChat 초 코드      그 초에 채팅 한 줄(게임 씬, 여러 번 가능)
+///   -mpLobbyChat 초 문장     방에 들어간 뒤 그 초에 대기실 채팅 한 줄
 ///   -mpTestGambleLabels 초   그 초에 (호스트·클라 각자) 내 도박소 칸 글자 전부 로그 — 재고 「남은/최대 · N초」 복제 확인
 ///   -mpTestCommands 초       그 초부터 2초 간격으로 UnitCommands 공격이동→정지→홀드→적공격→모으기→우리로(클라=명령 요청 RPC)
 /// </summary>
@@ -87,9 +88,9 @@ public class NetLauncher : MonoBehaviour
     float testPhase3Delay = -1f;
     bool testTraitUnits;
     float testTraitDelay = -1f;
-    float testChatDelay = -1f;
+    readonly System.Collections.Generic.List<(float, string)> chatTests = new System.Collections.Generic.List<(float, string)>();
+    readonly System.Collections.Generic.List<(float, string)> lobbyChatTests = new System.Collections.Generic.List<(float, string)>();
     readonly System.Collections.Generic.List<float> gambleLabelDelays = new System.Collections.Generic.List<float>();
-    string testChatCode;
 
     public static NetLauncher Instance { get; private set; }
 
@@ -181,7 +182,8 @@ public class NetLauncher : MonoBehaviour
                 case "-mpTestPhase3": testPhase3Delay = Seconds(i + 1); break;
                 case "-mpTestTraitUnits": testTraitUnits = true; break;
                 case "-mpTestTrait": testTraitDelay = Seconds(i + 1); break;
-                case "-mpTestChat": testChatDelay = Seconds(i + 1); testChatCode = Arg(i + 2); break;
+                case "-mpTestChat": chatTests.Add((Seconds(i + 1), Arg(i + 2))); break;
+                case "-mpLobbyChat": lobbyChatTests.Add((Seconds(i + 1), Arg(i + 2))); break;
                 case "-mpTestGambleLabels": gambleLabelDelays.Add(Seconds(i + 1)); break;
             }
         }
@@ -300,6 +302,7 @@ public class NetLauncher : MonoBehaviour
         Debug.Log($"[MP] StartGame 성공: {mode}, 방 {code}, IsServer={runner.IsServer}, 지역 {runner.SessionInfo.Region}");
 
         if (lobbyShotDelay >= 0f && !string.IsNullOrEmpty(lobbyShotPath)) StartCoroutine(ShotAfter(lobbyShotDelay, lobbyShotPath));
+        foreach (var (delay, text) in lobbyChatTests) if (delay >= 0f && !string.IsNullOrEmpty(text)) StartCoroutine(TestChatAfter(delay, text));
     }
 
     Fusion.Photon.Realtime.FusionAppSettings RegionSettings()
@@ -528,7 +531,7 @@ public class NetLauncher : MonoBehaviour
         if (testPhase3Delay >= 0f) StartCoroutine(TestPhase3After(testPhase3Delay));
         if (testTraitUnits && GameAuthority.IsServer) SpawnTraitTestUnits();
         if (testTraitDelay >= 0f) StartCoroutine(TestTraitAfter(testTraitDelay));
-        if (testChatDelay >= 0f && !string.IsNullOrEmpty(testChatCode)) StartCoroutine(TestChatAfter(testChatDelay, testChatCode));
+        foreach (var (delay, text) in chatTests) if (delay >= 0f && !string.IsNullOrEmpty(text)) StartCoroutine(TestChatAfter(delay, text));
         foreach (float delay in gambleLabelDelays) if (delay >= 0f) StartCoroutine(GambleLabelsAfter(delay));
     }
 
@@ -754,8 +757,9 @@ public class NetLauncher : MonoBehaviour
     IEnumerator TestChatAfter(float seconds, string code)
     {
         yield return new WaitForSecondsRealtime(seconds);
-        NetCommands.RequestChatCode(code);
-        Debug.Log($"[MP] 테스트 채팅 코드 「{code}」 보냄");
+        if (GameAuthority.IsServer) PlayerChat.HandleOnAuthority(LocalPlayer.LocalPlayerId, NetPlayer.Local != null ? NetPlayer.Local.DisplayName : "나", code, out _);
+        else NetCommands.RequestChat(code);
+        Debug.Log($"[MP] 테스트 채팅 「{code}」 보냄");
     }
 
     IEnumerator GambleLabelsAfter(float seconds)
