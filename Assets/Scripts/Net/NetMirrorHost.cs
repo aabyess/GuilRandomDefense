@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// 호스트 전용. 매 틱 필드 등록부(UnitIdentity.Active · EnemyDummy.Active · Wisp.Active)를 훑어
@@ -17,6 +18,8 @@ public class NetMirrorHost : SimulationBehaviour
     readonly HashSet<Object> warnedMissing = new HashSet<Object>();
     readonly List<GameObject> pending = new List<GameObject>();
     float nextReport;
+    int warmedScene = -1;   // 이 씬에서 NetEntity 프리팹이 스폰되는 걸 확인했나(씬 handle)
+    int warmAttempts;
 
     public void Setup(NetworkObject prefab, NetCatalog netCatalog)
     {
@@ -28,6 +31,7 @@ public class NetMirrorHost : SimulationBehaviour
     {
         if (!Runner.IsServer || entityPrefab == null || catalog == null) return;
         if (NetGameState.Instance == null || !NetGameState.Instance.Started) return;
+        if (!EnsurePrefabWarm()) return;
 
         int created = 0;
 
@@ -75,6 +79,28 @@ public class NetMirrorHost : SimulationBehaviour
             nextReport = Time.realtimeSinceStartup + 5f;
             Debug.Log($"[MP] 거울(호스트): 유닛 {UnitIdentity.Active.Count} · 적 {EnemyDummy.Active.Count} · 위습 {Wisp.Active.Count} · 이번 틱 새로 {created}");
         }
+    }
+
+    // 대기실에서 미리 로드해도 게임 씬으로 넘어갈 때 「Unloading Unused Serialized files」로 풀릴 때가 있다(1.1.2 릴리스 판에서
+    // 첫 틱 해왕류·물범·위습 15개가 한 번씩 실패 — 다섯 판 중 두 판, PM 09-26). 씬마다 빈 거울 하나를 먼저 세워 보고,
+    // 실패하면 이번 틱은 훑지 않는다(로드가 시작됐으니 다음 틱엔 선다). 빈 거울은 실물이 없어 다음 틱에 스스로 거둔다.
+    bool EnsurePrefabWarm()
+    {
+        int scene = SceneManager.GetActiveScene().handle;
+        if (warmedScene == scene) return true;
+        try
+        {
+            if (Runner.Spawn(entityPrefab, Vector3.zero, Quaternion.identity) == null) return false;
+        }
+        catch (System.Exception)
+        {
+            warmAttempts++;
+            return false;
+        }
+        Debug.Log($"[MP] 거울 프리팹 확인(게임 씬, {warmAttempts + 1}번째 틱에) — 이제 훑습니다.");
+        warmedScene = scene;
+        warmAttempts = 0;
+        return true;
     }
 
     bool Mirror(GameObject real, NetEntityKind kind, Object data, int owner)
