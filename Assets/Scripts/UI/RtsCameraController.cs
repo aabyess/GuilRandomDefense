@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -208,7 +209,9 @@ public class RtsCameraController : MonoBehaviour
             if (!any) { bounds = r.bounds; any = true; }
             else bounds.Encapsulate(r.bounds);
         }
-        foreach (Vector3 slot in lane.FirstRowSlotPositions())
+        // 흔함 줄(첫 줄)만 담으면 그 뒤 칸 안 줄 — 흔함 아닌 유닛이 새로 나오거나 정렬(C)로 가는 자리 — 이 하단 바에 가려졌다
+        // (2026-09-26 C 점검 사진: 이름표만 바 위로 보임). 두 줄 다 담는다.
+        foreach (Vector3 slot in lane.FirstRowSlotPositions().Concat(lane.FreeRowSlotPositions()))
         {
             if (!any) { bounds = new Bounds(slot, Vector3.zero); any = true; }
             else bounds.Encapsulate(slot);

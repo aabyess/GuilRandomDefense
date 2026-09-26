@@ -250,6 +250,58 @@ public static class ClaudeCommands
         return $"✅ 호출: {target}" + (value != null ? $" → {value}" : "");
     }
 
+    // 정렬(C) 점검(09-26 베타 피드백 「C 누르면 위치가 이상해진다」) — 플레이 중 gameshot의 call:로 부른다.
+    // 0번 레인 가운데(필드)에 흔함 2 + 흔함 아닌 것 4를 세우고 → C → 필드로 되돌림 → C를 한 번 더.
+    // 두 번의 자리가 같고, 흔함 아닌 것이 칸 안 줄(우리 기준점에서 뒤로 한 칸)에 서면 통과.
+    static string PenSortProbe()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        UnitSpawner spawner = UnityEngine.Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        if (spawner == null || lane == null || lane.UnitPen == null) return "❌ UnitSpawner·0번 레인·우리 중 없음";
+
+        List<UnitData> picks = new List<UnitData>();
+        List<UnitData> all = AssetDatabase.FindAssets("t:UnitData", new[] { "Assets/Data/Units/Roster" })
+            .Select(g => AssetDatabase.LoadAssetAtPath<UnitData>(AssetDatabase.GUIDToAssetPath(g)))
+            .Where(d => d != null && !d.isSystemUnit).OrderBy(d => d.name).ToList();
+        string[] roster = (string[])typeof(LaneMarker).GetField("CommonUnitRoster", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+        picks.AddRange(all.Where(d => d.grade == UnitGrade.Common && Array.IndexOf(roster, d.unitName) >= 0).Take(2));
+        picks.AddRange(all.Where(d => d.grade != UnitGrade.Common).Take(4));
+
+        List<Selectable> selection = new List<Selectable>();
+        foreach (UnitData d in picks)
+        {
+            GameObject go = spawner.Spawn(d, lane.LaneCenter, 0);
+            if (go != null && go.TryGetComponent(out Selectable s)) selection.Add(s);
+        }
+
+        Transform pen = lane.UnitPen;
+        string Where(Selectable s)
+        {
+            Vector3 local = pen.InverseTransformPoint(s.transform.position);
+            return $"({local.x:F0}, {local.z:F0})";
+        }
+
+        int moved1 = UnitCommands.SendToPen(selection);
+        List<Vector3> first = selection.Select(s => s.transform.position).ToList();
+        List<string> firstLocal = selection.Select(Where).ToList();
+        foreach (Selectable s in selection) if (s.TryGetComponent(out UnitCombat c)) c.SnapTo(lane.LaneCenter);
+        int moved2 = UnitCommands.SendToPen(selection);
+
+        StringBuilder sb = new StringBuilder($"   정렬(C) 두 번 — 옮김 {moved1}/{selection.Count} · {moved2}/{selection.Count}\n");
+        sb.AppendLine("   (우리 기준점 기준 x=좌우, z=앞(+)/칸 안(−))");
+        bool allSame = true;
+        for (int i = 0; i < selection.Count; i++)
+        {
+            UnitData d = selection[i].GetComponent<UnitIdentity>()?.Data;
+            float drift = Vector3.Distance(first[i], selection[i].transform.position);
+            if (drift > 1f) allSame = false;
+            sb.AppendLine($"   {(drift <= 1f ? "✅" : "❌")} {d?.unitName}({d?.grade}) 1번째 {firstLocal[i]} → 2번째 {Where(selection[i])} · 차이 {drift:F1}");
+        }
+        sb.Append(allSame ? "   ✅ 두 번 누른 자리가 전부 같다" : "   ❌ 누를 때마다 자리가 바뀐다");
+        return sb.ToString();
+    }
+
     static string ShootObject(string file, string objectName, float distanceScale)
     {
         GameObject found = FindInOpenScenes(objectName);
