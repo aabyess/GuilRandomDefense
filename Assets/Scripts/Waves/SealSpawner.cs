@@ -76,6 +76,7 @@ public class SealSpawner : MonoBehaviour
         if (current.TryGetComponent(out EnemyDummy dummy))
         {
             dummy.Initialize(data);
+            dummy.MarkStoryHpTarget(); // MP: 원작 R01G 대상(크립 = Player(5))
             // 크립은 레인 몹이 아니다 — 레인 번호가 붙으면 패배 판정(가장 붐비는 레인 기준)에
             // 섞여 들어간다. 그래서 보상도 레인 주인이 아니라 처치자에게 간다
             // (EnemyData.rewardsKillerOnly).

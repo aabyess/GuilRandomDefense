@@ -7,8 +7,7 @@ using UnityEngine;
 ///   2. 그 플레이어 소유 유닛을 맵 전체에서 제거(RemoveUnit — 킬이 아니라 보상 없음)
 ///   3. 그 플레이어 레인(life_zone) 안의 적 제거
 ///   4. udg_PlayerDeath[n] += 1 — 우리 쪽은 PlayerContext.MarkDead(패배와 같은 표식: 그 레인은 더 스폰·보상 안 함)
-///   ⚠️ 원작 5번 `R01G`+1(스토리 체력을 인원수에 맞게 감소)은 **우리에 그 체계가 없다**(코드 전체 R01G 0건) —
-///      없는 효과를 알리지 않으려고 문구에서도 그 절을 뺐다. 체계가 생기면 여기서 부른다.
+///   5. R01G +1 — 스토리·퀘스트 미니보스·크립 최대 체력 −10%/레벨(최대 5). EnemyDummy.RaiseStoryHpReduction
 /// </summary>
 public static class NetDeparture
 {
@@ -24,7 +23,7 @@ public static class NetDeparture
         }
 
         // 1. 알림 — 원작 색(주황 이름 · 빨강 문구). 남은 사람에게만 뜬다(나간 사람 알림은 넘길 곳이 없다).
-        string message = $"<color=#FF8200>{displayName}</color> <color=#FF0000>님이 게임에서 나가셨습니다.</color>";
+        string message = $"<color=#FF8200>{displayName}</color> <color=#FF0000>님이 게임에서 나가셨습니다. 스토리 체력이 인원수에 맞게 감소합니다.</color>";
         foreach (PlayerContext other in PlayerContext.Occupied)
             if (other.PlayerId != slot) PlayerNotification.Show(other.PlayerId, message, 5f);
 
@@ -49,6 +48,15 @@ public static class NetDeparture
         // 4. 패배와 같은 표식.
         context.MarkDead();
 
-        Debug.Log($"[MP] 퇴장 정리: 슬롯 {slot}({displayName}) — 유닛 {units} · 위습 {wisps} · 레인 적 {enemies} 제거, 사망 표식");
+        // 5. R01G +1(원작은 Player(5)에 업그레이드 — 대상 = 스토리·퀘스트 미니보스·크립, 서 있는 것도 즉시).
+        var before = new List<(EnemyDummy enemy, float max, float hp)>();
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+            if (enemy != null && enemy.IsStoryHpTarget) before.Add((enemy, enemy.MaxHp, enemy.Hp));
+        EnemyDummy.RaiseStoryHpReduction();
+        foreach (var entry in before)
+            if (entry.enemy != null)
+                Debug.Log($"[MP] 스토리 체력 감소: {entry.enemy.name} 최대 {entry.max:F0}→{entry.enemy.MaxHp:F0}, 현재 {entry.hp:F0}→{entry.enemy.Hp:F0}");
+
+        Debug.Log($"[MP] 퇴장 정리: 슬롯 {slot}({displayName}) — 유닛 {units} · 위습 {wisps} · 레인 적 {enemies} 제거, 사망 표식, 스토리 체력 감소 레벨 {EnemyDummy.StoryHpReductionLevel}");
     }
 }

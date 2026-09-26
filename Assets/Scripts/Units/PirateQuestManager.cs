@@ -126,6 +126,7 @@ public class PirateQuestManager : MonoBehaviour
             float hp = quest.miniboss.hp * (1f + (attempt - 1) * quest.hpIncreasePerAttempt);
             dummy.Initialize(hp); // data는 그대로 두고 hp/MaxHp만 덮어쓴다
         }
+        dummy.MarkStoryHpTarget(); // MP: 원작 R01G 대상(퀘스트 미니보스 = Player(5)) — 체력을 다 정한 뒤에
 
         if (instance.TryGetComponent(out NavMeshAgent agent))
         {

@@ -474,6 +474,7 @@ public class NetLauncher : MonoBehaviour
 
     IEnumerator AfterGameSceneLoaded()
     {
+        EnemyDummy.ResetStoryHpReduction(); // 새 판 — R01G 퇴장 누적은 판마다 0부터
         // Start들이 한 번 돈 뒤에 좌석 상태를 찍는다(RewardDistributor.Start가 위습을 뿌린 뒤).
         yield return null;
 

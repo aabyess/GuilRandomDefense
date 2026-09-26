@@ -51,6 +51,47 @@ public class EnemyDummy : MonoBehaviour
             visualRoot.localScale = baseVisualScale * Mathf.Max(0.01f, enemyData.visualScale);
     }
 
+    // MP: 원작 R01G — 판 도중 누가 나갈 때마다(Gone1~4) Player(5) 계열(스토리·퀘스트 미니보스·크립)의 최대 체력
+    //     −10%/레벨, 최대 5레벨(w3q R01G rhpo, PM 원작 확인 2026-09-26). 처음부터 빈 슬롯엔 안 건다(퇴장 때만 +1).
+    //     서 있는 대상은 현재 체력 비율을 지킨 채 줄이고(워크3 rhpo는 즉시 먹는다), 새 대상은 스폰 때 곱한다.
+    //     레인 적·라운드 보스는 대상이 아니다. 싱글엔 퇴장이 없어 레벨 0 = 무동작.
+    public const int MaxStoryHpReductionLevel = 5;
+    public static int StoryHpReductionLevel { get; private set; }
+    static float StoryHpFactor => 1f - 0.1f * StoryHpReductionLevel;
+
+    bool storyHpTarget;
+    public bool IsStoryHpTarget => storyHpTarget; // MP: 검증 로그용
+    float appliedStoryHpFactor = 1f;
+
+    /// <summary>MP: 스토리·퀘스트 미니보스·크립 스폰 직후(체력을 다 정한 뒤) 부른다 — 지금 레벨의 감소를 건다.</summary>
+    public void MarkStoryHpTarget()
+    {
+        storyHpTarget = true;
+        RescaleStoryHp();
+    }
+
+    void RescaleStoryHp()
+    {
+        float factor = StoryHpFactor;
+        if (Mathf.Approximately(factor, appliedStoryHpFactor) || MaxHp <= 0f) return;
+        float ratio = Mathf.Clamp01(hp / MaxHp);
+        MaxHp = MaxHp / appliedStoryHpFactor * factor;
+        hp = MaxHp * ratio;
+        appliedStoryHpFactor = factor;
+    }
+
+    /// <summary>MP: 누가 나갔다(NetDeparture) — 레벨 +1(최대 5), 서 있는 대상 전부 즉시 다시 맞춘다.</summary>
+    public static void RaiseStoryHpReduction()
+    {
+        if (StoryHpReductionLevel >= MaxStoryHpReductionLevel) return;
+        StoryHpReductionLevel++;
+        foreach (EnemyDummy enemy in Active)
+            if (enemy != null && enemy.storyHpTarget && !enemy.IsReplica) enemy.RescaleStoryHp();
+    }
+
+    /// <summary>MP: 새 판이 시작될 때(static이라 씬을 다시 불러도 남는다 — DifficultyAegrLevelOffset과 같은 이유).</summary>
+    public static void ResetStoryHpReduction() => StoryHpReductionLevel = 0;
+
     /// <summary>MP: 호스트가 보낸 체력을 적는다(체력바가 읽는다).</summary>
     public void SetReplicaHp(float currentHp, float maxHp)
     {
