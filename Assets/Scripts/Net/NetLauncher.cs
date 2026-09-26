@@ -17,6 +17,7 @@ using UnityEngine.SceneManagement;
 /// 명령줄(빌드 두 개를 사람 손 없이 붙여 보는 용도):
 ///   -mpHost | -mpJoin        바로 방 만들기/참가
 ///   -mpSession 코드           방 코드(호스트는 발급 대신 이 코드로 연다)
+///   -mpRegion 지역            Photon 지역(기본 kr) — 방장과 친구가 같아야 서로 보인다
 ///   -mpNick 이름              닉네임(기억값보다 우선, 기억은 안 바꾼다)
 ///   -mpReady                 참가하면 바로 [준비]
 ///   -mpDifficulty 이름        호스트가 대기실에서 고를 난이도(Easy·Normal·Hard·Hell·God·Nightmare)
@@ -39,6 +40,10 @@ public class NetLauncher : MonoBehaviour
     const string RoomCodeAlphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
     const int RoomCodeLength = 5;
 
+    // 지역을 고정한다. 안 하면 각자 핑이 가장 좋은 지역으로 붙어서, 방장은 jp·친구는 kr에 들어가
+    // 「방을 찾지 못했습니다(GameNotFound)」가 난다(09-26 실측 — 같은 기계 두 판도 갈렸다). 친구들이 한국이라 kr.
+    const string DefaultRegion = "kr";
+
     [SerializeField] NetworkObject playerPrefab;
     [SerializeField] NetworkObject gameStatePrefab;
     [SerializeField] NetworkObject entityPrefab;
@@ -54,6 +59,7 @@ public class NetLauncher : MonoBehaviour
 
     // 명령줄
     string cliSession;
+    string region = DefaultRegion;
     string cliNick;
     bool cliReady;
     int cliDifficulty = NetGameState.NoDifficulty;
@@ -138,6 +144,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpHost": host = true; break;
                 case "-mpJoin": join = true; break;
                 case "-mpSession": cliSession = Arg(i + 1); break;
+                case "-mpRegion": region = Arg(i + 1) ?? region; break;
                 case "-mpNick": cliNick = Arg(i + 1); break;
                 case "-mpReady": cliReady = true; break;
                 case "-mpDifficulty":
@@ -220,6 +227,7 @@ public class NetLauncher : MonoBehaviour
             SceneManager = sceneManager,
             // 방 목록에 안 띄운다 — 코드를 아는 친구만 들어온다.
             IsVisible = false,
+            CustomPhotonAppSettings = RegionSettings(),
         });
 
         starting = false;
@@ -254,6 +262,13 @@ public class NetLauncher : MonoBehaviour
         Debug.Log($"[MP] StartGame 성공: {mode}, 방 {code}, IsServer={runner.IsServer}, 지역 {runner.SessionInfo.Region}");
 
         if (lobbyShotDelay >= 0f && !string.IsNullOrEmpty(lobbyShotPath)) StartCoroutine(ShotAfter(lobbyShotDelay, lobbyShotPath));
+    }
+
+    Fusion.Photon.Realtime.FusionAppSettings RegionSettings()
+    {
+        var settings = Fusion.Photon.Realtime.PhotonAppSettings.Global.AppSettings.GetCopy();
+        settings.FixedRegion = region;
+        return settings;
     }
 
     // 싱글에서 마지막으로 고른 난이도(DifficultyManager가 기억해 둔 값)를 대기실 기본값으로 쓴다.
