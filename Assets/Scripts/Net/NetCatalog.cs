@@ -16,6 +16,7 @@ public class NetCatalog : ScriptableObject
     public List<UnitTraitData> traits = new List<UnitTraitData>();
     public List<UnitUpgradeTrackData> gradeTracks = new List<UnitUpgradeTrackData>();
     public List<AttackTypeUpgradeTrackData> attackTypeTracks = new List<AttackTypeUpgradeTrackData>();
+    public List<UniqueRerollAbilityData> rerollAbilities = new List<UniqueRerollAbilityData>();
 
     Dictionary<Object, int> index;
 
@@ -40,6 +41,7 @@ public class NetCatalog : ScriptableObject
                 foreach (UnitTraitData t in traits) Add(t != null ? t.name : "-");
                 foreach (UnitUpgradeTrackData t in gradeTracks) Add(t != null ? t.name : "-");
                 foreach (AttackTypeUpgradeTrackData t in attackTypeTracks) Add(t != null ? t.name : "-");
+                foreach (UniqueRerollAbilityData r in rerollAbilities) Add(r != null ? r.name : "-");
                 return (int)hash;
             }
         }

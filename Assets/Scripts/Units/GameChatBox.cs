@@ -82,19 +82,34 @@ public class GameChatBox : MonoBehaviour
 
         if (local == null || string.IsNullOrWhiteSpace(text)) return;
 
+        // MP: 멀티 클라는 코드를 호스트에 보낸다 — 해금·조합(재료 소모·소환)은 호스트가 요청자 슬롯으로 하고,
+        //     결과 문구는 알림으로 돌아온다. 싱글·호스트는 아래 본체 그대로.
+        if (!GameAuthority.IsServer)
+        {
+            NetCommands.RequestChatCode(text);
+            ShowStatus("코드를 보냈습니다.");
+            return;
+        }
+
+        ShowStatus(ExecuteCode(local.PlayerId, text));
+    }
+
+    // MP: 입력창(위)과 멀티 호스트가 받은 클라 요청(NetCommands)이 같이 쓰는 본체 — 결과 문구를 돌려준다.
+    public string ExecuteCode(int playerId, string text)
+    {
         if (chatUnlockManager != null)
         {
-            chatUnlockManager.TryUnlockByPhrase(local.PlayerId, text, out string chatMessage);
-            if (chatMessage != null) { ShowStatus(chatMessage); return; }
+            chatUnlockManager.TryUnlockByPhrase(playerId, text, out string chatMessage);
+            if (chatMessage != null) return chatMessage;
         }
 
         if (hiddenCombineManager != null)
         {
-            hiddenCombineManager.TryUnlockByPhrase(local.PlayerId, text, out string hiddenMessage);
-            if (hiddenMessage != null) { ShowStatus(hiddenMessage); return; }
+            hiddenCombineManager.TryUnlockByPhrase(playerId, text, out string hiddenMessage);
+            if (hiddenMessage != null) return hiddenMessage;
         }
 
-        ShowStatus("인식할 수 없는 코드입니다.");
+        return "인식할 수 없는 코드입니다.";
     }
 
     void ShowStatus(string message)

@@ -248,6 +248,12 @@ public class NetPlayer : NetworkBehaviour
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_ChatCode(string text)
+    {
+        NetCommands.ExecuteChatCode(this, text);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     public void RPC_Warehouse(NetworkId unit)
     {
         NetCommands.ExecuteWarehouse(this, unit);

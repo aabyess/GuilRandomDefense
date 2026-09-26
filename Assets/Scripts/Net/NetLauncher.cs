@@ -36,6 +36,7 @@ using UnityEngine.SceneManagement;
 ///   -mpTestPhase3 초         그 초에 (클라) 내 유닛 하나 창고 보관→4초 뒤 회수 · 항법 선택 · 복제된 스토리/도박/항법 상태 로그
 ///   -mpTestTraitUnits        (호스트) 슬롯마다 즉시형 특성(대상 지정 아님, 비용 1 이하)을 가진 유닛 1기
 ///   -mpTestTrait 초          (클라) 그 초에 특성 버튼 요청 — 복제된 특성 포인트·해금 전후 로그
+///   -mpTestChat 초 코드      (클라) 그 초에 채팅 코드 요청
 ///   -mpTestCommands 초       그 초부터 2초 간격으로 UnitCommands 공격이동→정지→홀드→적공격→모으기→우리로(클라=명령 요청 RPC)
 /// </summary>
 public class NetLauncher : MonoBehaviour
@@ -84,6 +85,8 @@ public class NetLauncher : MonoBehaviour
     float testPhase3Delay = -1f;
     bool testTraitUnits;
     float testTraitDelay = -1f;
+    float testChatDelay = -1f;
+    string testChatCode;
 
     public static NetLauncher Instance { get; private set; }
 
@@ -174,6 +177,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpTestPhase3": testPhase3Delay = Seconds(i + 1); break;
                 case "-mpTestTraitUnits": testTraitUnits = true; break;
                 case "-mpTestTrait": testTraitDelay = Seconds(i + 1); break;
+                case "-mpTestChat": testChatDelay = Seconds(i + 1); testChatCode = Arg(i + 2); break;
             }
         }
 
@@ -502,6 +506,7 @@ public class NetLauncher : MonoBehaviour
         if (testPhase3Delay >= 0f) StartCoroutine(TestPhase3After(testPhase3Delay));
         if (testTraitUnits && GameAuthority.IsServer) SpawnTraitTestUnits();
         if (testTraitDelay >= 0f) StartCoroutine(TestTraitAfter(testTraitDelay));
+        if (testChatDelay >= 0f && !string.IsNullOrEmpty(testChatCode)) StartCoroutine(TestChatAfter(testChatDelay, testChatCode));
     }
 
     // 테스트 전용(-mpTestUnits): 흔함 유닛을 슬롯마다 N기, 실제 소환 경로(UnitSpawner.Spawn → 우리 칸)로 세운다.
@@ -720,6 +725,14 @@ public class NetLauncher : MonoBehaviour
             yield break;
         }
         Debug.Log($"[MP] 테스트 특성: 특성 있는 내 유닛이 없습니다(포인트 {upgrades?.TraitPoints}).");
+    }
+
+    // 테스트 전용(-mpTestChat 초 코드): 채팅 코드를 요청으로 보낸다.
+    IEnumerator TestChatAfter(float seconds, string code)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        NetCommands.RequestChatCode(code);
+        Debug.Log($"[MP] 테스트 채팅 코드 「{code}」 보냄");
     }
 
     IEnumerator DumpAfter(float seconds)

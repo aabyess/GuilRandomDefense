@@ -1031,13 +1031,15 @@ public class GameHud : MonoBehaviour
     // 그대로 유효하다 — Consume은 성공 분기에서만 일어난다.
     void OnRerollButtonClicked()
     {
-        if (BlockedOnMultiplayerClient()) return; // MP
         SelectionManager selection = Selection;
         if (selection == null || selection.Selected.Count != 1) return;
 
         Selectable single = selection.Selected[0];
         if (single == null || !single.TryGetComponent(out UniqueRerollAbility reroll) ||
             !single.TryGetComponent(out OwnedByPlayer owner)) return;
+
+        // MP: 멀티 클라는 호스트에 요청만(목재·확률·교체는 호스트 실물의 리롤 능력이). 결과 문구는 알림으로 돌아온다.
+        if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.Reroll, single, 0); return; }
 
         reroll.TryCast(out string message);
         if (message != null) PlayerNotification.Show(owner.OwnerId, message);

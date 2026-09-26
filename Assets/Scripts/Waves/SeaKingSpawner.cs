@@ -82,6 +82,7 @@ public class SeaKingSpawner : MonoBehaviour
         if (current.TryGetComponent(out EnemyDummy dummy))
         {
             dummy.Initialize(seaKingData, HpMultiplier);
+            dummy.MarkStoryHpTarget(); // MP: 원작 R01G 대상 — 해왕류는 CreateUnit(Player(5), 'o02N')(j 13380·13387, PM 확인)
             // 퀘스트류라 레인 소속이 없다 — 크립·해적단 미니보스와 같은 이유
             // (레인 카운트·패배판정에 안 섞이게, 보상도 레인 주인이 아니라 이 스크립트가 직접).
             dummy.SetLane(-1);

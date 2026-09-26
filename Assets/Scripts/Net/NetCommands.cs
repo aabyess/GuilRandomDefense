@@ -8,6 +8,7 @@ public enum NetHudAction : byte
     Gamble = 0,
     Sell = 1,
     Trait = 2,
+    Reroll = 3,
 }
 
 /// <summary>클라 → 호스트로 보내는 유닛 명령 종류(UnitCommands의 함수와 1:1). 직렬화되니 맨 뒤에만 추가.</summary>
@@ -218,6 +219,13 @@ public static class NetCommands
             case NetHudAction.Gamble: hud.ExecuteGambleOn(selectable, argument); break;
             case NetHudAction.Sell: hud.ExecuteSellOn(selectable); break;
             case NetHudAction.Trait: hud.ExecuteTraitOn(selectable); break;
+            case NetHudAction.Reroll:
+                if (real.TryGetComponent(out UniqueRerollAbility reroll))
+                {
+                    reroll.TryCast(out string message);
+                    if (message != null) PlayerNotification.Show(sender.Slot, message);
+                }
+                break;
         }
         if (commandsLogged++ < 30) Debug.Log($"[MP] 유닛 버튼 요청 수행: 슬롯 {sender.Slot} {action}({argument}) → {real.name}");
     }
@@ -242,6 +250,21 @@ public static class NetCommands
         if (hud == null) return;
         hud.ExecuteTraitTargetOn(trait, PlayerContext.Get(sender.Slot), identity, sender.Slot);
         if (commandsLogged++ < 30) Debug.Log($"[MP] 특성 대상 요청 수행: 슬롯 {sender.Slot} {trait.name} → {real.name}");
+    }
+
+    public static void RequestChatCode(string text)
+    {
+        if (NetPlayer.Local == null || string.IsNullOrWhiteSpace(text)) return;
+        NetPlayer.Local.RPC_ChatCode(text.Length > 64 ? text.Substring(0, 64) : text);
+    }
+
+    public static void ExecuteChatCode(NetPlayer sender, string text)
+    {
+        GameChatBox box = Object.FindFirstObjectByType<GameChatBox>();
+        if (box == null) return;
+        string message = box.ExecuteCode(sender.Slot, text);
+        PlayerNotification.Show(sender.Slot, message);
+        if (commandsLogged++ < 30) Debug.Log($"[MP] 채팅 코드 요청 수행: 슬롯 {sender.Slot} 「{text}」 → {message}");
     }
 
     // ───────────── 창고 · 항법(2단계 ③) ─────────────

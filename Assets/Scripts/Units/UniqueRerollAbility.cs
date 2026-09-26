@@ -20,6 +20,9 @@ public class UniqueRerollAbility : MonoBehaviour
     /// <summary>GameHud 버튼 툴팁 표시용 — 실제 차감은 TryCast 내부에서 한다.</summary>
     public int WoodCost => data != null ? data.woodCost : 0;
 
+    // MP: 멀티 호스트가 이 유닛이 어떤 리롤 능력을 가졌는지 클라 겉모습에 알리려고 읽는다(NetEntity).
+    public UniqueRerollAbilityData Data => data;
+
     /// <summary>도박 성공 스폰 직후 그 인스턴스에 붙일 때만 쓴다 — 자산에 미리 박아두는
     /// 방식이 아니다(위 클래스 주석 참고).</summary>
     public static UniqueRerollAbility Attach(GameObject unitInstance, UniqueRerollAbilityData data, UnitSpawner spawner)
