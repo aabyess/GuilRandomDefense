@@ -1057,6 +1057,7 @@ public static class ClaudeCommands
         public int superSize = 1;
         public int watchRounds;          // rounds:N — 0이면 끄기
         public bool autoLoop;
+        public bool storyPlus;           // autoloop: 스토리 보강 — 막히면 가장 센 유닛 둘씩, 깨면 약한 하나만 남기고 C로 복귀(09-26 PM 지시)
         public bool targetMode;          // autoloop: 희귀함 식 하나를 목표로 — 흔함선택·조합·판매를 그 식의 모자란 재료 쪽으로(09-26 PM 지시)
         public bool combineAll;          // autoloop: 지금 만들 수 있는 조합식을 전부 만든다(결과 등급 높은 것부터, 09-26 R20 벽 ③)
         public bool keepPen;             // autoloop: 흔함은 제 칸에 둔다 — 모서리 쓸기에서 흔함을 뺀다(09-26 칸 안 흔함 가동률 판)
@@ -1158,6 +1159,7 @@ public static class ClaudeCommands
             else if (token == "sell") job.sellSpare = true;
             else if (token == "keeppen") job.keepPen = true;
             else if (token == "combineall") job.combineAll = true;
+            else if (token == "storyplus") job.storyPlus = true;
             else if (token == "target") { job.targetMode = true; job.combineAll = true; }
             else if (token == "bossaway") job.bossAway = true;
             else if (token.StartsWith("mode:"))
@@ -1379,6 +1381,13 @@ public static class ClaudeCommands
                 }
                 bool optional = target.StartsWith("?");
                 if (optional) target = target.Substring(1);
+                if (target.StartsWith("@storysend:") || target == "@storyreturn")
+                {
+                    job.report += target == "@storyreturn" ? StoryReturn(job) : StorySend(job, int.Parse(target.Substring(11)));
+                    job.clickIndex++;
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
+                    break;
+                }
                 if (target == "@combineall")
                 {
                     job.report += CombineAllAffordable(job);
@@ -2589,7 +2598,7 @@ public static class ClaudeCommands
         return $"적 레인 {EnemyDummy.CountInLane(0)}/전체 {EnemyDummy.Active.Count(e => e != null)} · 데스카운트 {rm.DeathCountFor(0)} · " +
                $"골드 {gold} · 목재 {wood} · 내 유닛 {(mine.Any() ? string.Join(", ", mine) : "0")} · 위습 칸 「{slots}」 · " +
                $"스토리 「{story}」(매니저 「{StoryManager.Instance?.StatusLabel}」 깸 {StoryManager.Instance?.FinishedCount}) · 보스 적 {bosses} · 남은시간 {rm.RoundTimeLeft:F1}/준비 {rm.PreRoundTimeLeft:F1} · 프레임 {frames} · {UptimeText()} · {logs}" +
-               WoodRoundText() + PenCommonText() + CombineRoundText() + (job.targetMode ? TargetRoundText(job) : "") +
+               WoodRoundText() + PenCommonText() + CombineRoundText() + StoryRoundText() + (job.targetMode ? TargetRoundText(job) : "") +
                $"\n      🎯 흔함 이름(지금) {(commonNames.Length > 0 ? commonNames : "-")} · 도구가 흔함선택으로 보낸 누계 {(pickNames.Length > 0 ? pickNames : "0")}";
     }
 
@@ -2600,7 +2609,7 @@ public static class ClaudeCommands
         ("희귀함", "희귀함 위습", "Portal_희귀함·특수함"),
         ("전설·히든", "전설·히든 위습", "Portal_전설·히든"),
     };
-    static readonly string[] NonCommonBoxes = { "@box:Unit_안흔함", "@box:Unit_특별함", "@box:Unit_희귀함", "@box:Unit_히든" };
+    static readonly string[] NonCommonBoxes = { "@box:Unit_안흔함|lane", "@box:Unit_특별함|lane", "@box:Unit_희귀함|lane", "@box:Unit_히든|lane" };
     static readonly string[] SpendShops = { "Lane1_유닛강화소", "Lane1_공격타입강화소", "Lane1_도박소" };
     const int ShopSpendClicks = 6;
 
@@ -2659,6 +2668,71 @@ public static class ClaudeCommands
         }
         int end = PlayerContext.GetOccupied(0)?.GoldWallet?.Gold ?? -1;
         return $"   🏪 {shop} {(bought.Count > 0 ? $"{bought.Count}번 삼: {string.Join(", ", bought.GroupBy(x => x.Split(' ')[0]).Select(g => $"{g.Key}×{g.Count()}"))}" : "산 것 없음")} · 골드 {start} → {end} · 가진 등급에 안 듣는 칸 {skipped}개 건너뜀 · 칸 {string.Join(" · ", slots.Select(b => $"「{ButtonLabel(b).Replace("\n", " ")}」{(b.IsInteractable() ? "" : "(흐림)")}"))}\n";
+    }
+
+    // ── 스토리 보강(storyplus, 09-26) ──
+    static Vector3? StoryCenter()
+    {
+        StoryManager sm = StoryManager.Instance;
+        if (sm == null) return null;
+        Transform sp = typeof(StoryManager).GetField("spawnPoint", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(sm) as Transform;
+        return sp != null ? sp.position : sm.transform.position;
+    }
+    const float StoryZoneRadius = 500f;
+    static List<UnitIdentity> StoryZoneUnits()
+    {
+        Vector3? c = StoryCenter();
+        if (c == null) return new List<UnitIdentity>();
+        return MyUnits().Where(u => Vector2.Distance(new Vector2(u.transform.position.x, u.transform.position.z), new Vector2(c.Value.x, c.Value.z)) < StoryZoneRadius).ToList();
+    }
+    static float Strength(UnitIdentity u) => u.Data.grade.Tier() * 100000f + u.Data.attackPower / Mathf.Max(0.1f, u.Data.attackSpeed);
+
+    static string StorySend(GameShotJob job, int n)
+    {
+        LaneMarker lane = LaneMarker.Get(0);
+        GameObject portal = GameObject.Find("Lane1_스토리포탈");
+        if (lane == null || portal == null) return "   📚 스토리 보강: 레인·스토리포탈 없음\n";
+        var reserved = job.targetMode && currentPlan != null ? new Dictionary<UnitData, int>(currentPlan.reserved) : new Dictionary<UnitData, int>();
+        var picks = new List<UnitIdentity>();
+        foreach (UnitIdentity u in MyUnits().Where(u => u.Data.grade != UnitGrade.Common &&
+                     Vector2.Distance(new Vector2(u.transform.position.x, u.transform.position.z), new Vector2(lane.LaneCenter.x, lane.LaneCenter.z)) < 700f)
+                     .OrderByDescending(Strength))
+        {
+            if (reserved.TryGetValue(u.Data, out int r) && r > 0) { reserved[u.Data] = r - 1; continue; }   // 목표 식 재료는 남긴다
+            picks.Add(u);
+            if (picks.Count >= n) break;
+        }
+        foreach (UnitIdentity u in picks) if (u.TryGetComponent(out UnitCombat combat)) combat.IssueMoveCommand(portal.transform.position);
+        return $"   📚 스토리 보강 {picks.Count}기 → 스토리포탈: {string.Join(", ", picks.Select(u => $"{u.Data.grade.KoreanName()} {u.Data.unitName}"))}\n";
+    }
+
+    static string StoryReturn(GameShotJob job)
+    {
+        var zone = StoryZoneUnits().OrderBy(Strength).ToList();
+        if (zone.Count <= 1) return $"   📚 스토리 복귀: 존에 {zone.Count}기 — 그대로 둠\n";
+        var back = zone.Skip(1).Select(u => u.GetComponent<Selectable>()).Where(x => x != null).ToList();
+        int moved = UnitCommands.SendToPen(back);
+        return $"   📚 스토리 복귀 {moved}/{back.Count}기(C 정렬 경로) · 남김 {zone[0].Data.grade.KoreanName()} {zone[0].Data.unitName}\n";
+    }
+
+    static float lastStoryHp = -1f;
+    static string StoryRoundText()
+    {
+        StoryManager sm = StoryManager.Instance;
+        if (sm == null) return "";
+        EnemyDummy e = typeof(StoryManager).GetField("activeEnemy", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(sm) as EnemyDummy;
+        var zone = StoryZoneUnits();
+        string units = zone.Count == 0 ? "0" : string.Join(" ", zone.GroupBy(u => u.Data.grade.KoreanName()).Select(g => $"{g.Key}{g.Count()}"));
+        float atk = zone.Sum(u => u.Data.attackPower / Mathf.Max(0.1f, u.Data.attackSpeed));
+        string hp = "-";
+        if (e != null)
+        {
+            float cur = e.Hp;
+            hp = $"{cur:F0}/{e.MaxHp:F0}({100f * cur / Mathf.Max(1f, e.MaxHp):F0}%)" + (lastStoryHp >= 0f && lastStoryHp >= cur ? $" · 이번 라운드 깎음 {lastStoryHp - cur:F0}" : "");
+            lastStoryHp = cur;
+        }
+        else lastStoryHp = -1f;
+        return $"\n      📚 스토리 적 {hp} · 존 유닛 {units} · 존 명목 DPS 합 {atk:F0}(공격력÷간격, 방어·상성 전)";
     }
 
     // ── 조합 전부(combineall, 09-26 PM 지시 — R20 벽 ③ 「특별함→희귀함 조합이 왜 안 이어지나」) ──
@@ -2920,7 +2994,7 @@ public static class ClaudeCommands
         woodLast = wallet.Get(ResourceType.Wood);
         woodIn.Clear(); woodOut.Clear(); woodInRound.Clear(); woodOutRound.Clear(); soldTotals.Clear();
         combineAvailRound.Clear(); combineDoneRound.Clear(); combineDoneTotal.Clear();
-        currentPlan = null; recipesByResult = null; targetLog.Clear();
+        currentPlan = null; recipesByResult = null; targetLog.Clear(); lastStoryHp = -1f;
         wallet.OnResourceChanged += OnWoodChanged;
     }
 
@@ -3055,6 +3129,22 @@ public static class ClaudeCommands
             turn.Add("@sel:Unit_안흔함|lane");
             turn.Add("@rc:Lane1_스토리포탈");
             storyPlan = $" · 안흔함 → 스토리존(「{story.StatusLabel}」)";
+        }
+        else if (job.storyPlus && story != null && job.storySent && story.FinishedCount == job.storyFinishedAtSend && story.Running != null
+                 && job.lastRoundSeen - job.storySentRound >= 2)
+        {
+            // storyplus — 막히면 레인의 흔함 아닌 유닛 중 **가장 센 둘**(목표 식 재료는 빼고)을 보낸다. 사람이 「안 깨지면 센 걸 더 보낸다」.
+            job.storySentRound = job.lastRoundSeen;
+            turn.Add("@storysend:2");
+            storyPlan = $" · 스토리 「{story.StatusLabel}」 2라운드째 못 깸 → 가장 센 둘 보강";
+        }
+        else if (job.storyPlus && story != null && job.storySent && story.FinishedCount > job.storyFinishedAtSend)
+        {
+            // storyplus — 깨면 스토리존에서 가장 약한 하나만 남기고 C(UnitCommands.SendToPen)로 레인에 돌려보낸다. 남은 하나가 다음 스토리를 시작한다.
+            job.storyFinishedAtSend = story.FinishedCount;
+            job.storySentRound = job.lastRoundSeen;
+            turn.Add("@storyreturn");
+            storyPlan = $" · 스토리 깸(누계 {story.FinishedCount}) → 약한 하나 남기고 복귀";
         }
         else if (story != null && job.storySent && story.FinishedCount == job.storyFinishedAtSend && story.Running != null
                  && job.lastRoundSeen - job.storySentRound >= 2)
@@ -3235,14 +3325,19 @@ public static class ClaudeCommands
     {
         if (job.pointerPhase > 0 && !PointerFramePassed()) return false;   // 앞 마우스 이벤트가 게임 프레임에 먹히기 전(QueueMouse 주석)
         Camera cam = Camera.main;
+        // 「|lane」 — 0번 레인 근처(700) 것만(09-26: keeppen 쓸기가 스토리존에 보낸 유닛까지 이름으로 잡아 레인 모서리로 끌어냈다 — 스토리가 안 깨지던 원인 후보).
+        bool laneOnly = name.Contains("|lane");
+        if (laneOnly) name = name.Replace("|lane", "");
         bool farOnly = name.EndsWith("|far");
         string wanted = (farOnly ? name.Substring(0, name.Length - 4) : name).Normalize(NormalizationForm.FormC);
         switch (job.pointerPhase)
         {
             case 0:
             {
+                LaneMarker boxLane = laneOnly ? LaneMarker.Get(0) : null;
                 List<Selectable> targets = Selectable.All.Where(x => x != null && x.name.Normalize(NormalizationForm.FormC).Contains(wanted) &&
-                    (!x.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == LocalPlayer.LocalPlayerId)).ToList();
+                    (!x.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == LocalPlayer.LocalPlayerId) &&
+                    (boxLane == null || Vector2.Distance(new Vector2(x.transform.position.x, x.transform.position.z), new Vector2(boxLane.LaneCenter.x, boxLane.LaneCenter.z)) < 700f)).ToList();
                 if (farOnly)
                 {
                     if (!TryCornerTarget(50f, out Vector3 corner)) targets.Clear();
