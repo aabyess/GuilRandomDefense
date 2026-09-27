@@ -161,7 +161,13 @@ public static class NetCommands
         {
             List<CombineRecipe> allowed = system.GetRecipesStartingWith(identity.Data);
             if (allowed == null || !allowed.Contains(recipe)) rejected = "이 유닛으로는 그 조합을 할 수 없습니다.";
-            else if (!system.CanCombineNow(recipe)) rejected = "재료가 부족합니다.";
+            else if (!system.CanCombineNow(recipe))
+            {
+                // 원작 문구(알림 묶음 5) — 요청한 친구에게 모자란 것마다 한 줄.
+                List<string> shortage = system.DescribeShortage(recipe);
+                for (int i = 1; i < shortage.Count; i++) PlayerNotification.Show(sender.Slot, shortage[i], 5f);
+                rejected = shortage.Count > 0 ? shortage[0] : "지금은 조합할 수 없습니다.";
+            }
             ok = rejected == null && system.TryCombine(recipe, caster.transform.position);
         }
         finally { CombineSystem.ActingPlayerOverride = -1; }

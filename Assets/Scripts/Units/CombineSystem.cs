@@ -279,6 +279,63 @@ public class CombineSystem : MonoBehaviour
         return NavMesh.SamplePosition(slot, out NavMeshHit hit, ResultSampleRadius, areaMask) ? hit.position : slot;
     }
 
+    /// <summary>
+    /// 왜 못 만드는지 — 원작 Fusion3___Action(war3map_new.j:3441~3449) 문구 그대로. 모자란 재료마다 「재료 부족 : 이름 N개」,
+    /// 재료가 다 있으면 「골드가 부족 합니다!: N」 또는 「목재가 부족합니다!:N」(원작도 첫 모자람에서 멈춘다). 빈 목록이면 재료·돈은 된다
+    /// (원딜·라운드 조건 등 다른 이유). 읽기만 한다(알림 묶음 5/13, GAP 65).
+    /// </summary>
+    public List<string> DescribeShortage(CombineRecipe recipe)
+    {
+        var lines = new List<string>();
+        if (recipe == null) return lines;
+        // 재료 부족이 아닌 「잠김」은 따로(구현담당1 제안) — 원작엔 문구가 없다(버튼이 사라짐). 문구는 우리 것.
+        if (IsBroken(recipe)) { lines.Add("이 조합식은 지금 쓸 수 없습니다(잠김)."); return lines; }
+        if (recipe.result != null && NavigationState.IsOneDealGrade(recipe.result.grade) && OwnerContext?.NavigationState != null &&
+            OwnerContext.NavigationState.OneDealLocked)
+        {
+            lines.Add("원딜 잠김 — 패왕의길로 이미 한 기를 얻어 제한됨·초월·불멸·영원은 더 만들 수 없습니다.");
+            return lines;
+        }
+        UnitInventory inventory = Inventory;
+        if (recipe.ingredients != null && inventory != null)
+        {
+            foreach (RecipeIngredient ingredient in recipe.ingredients)
+            {
+                if (ingredient == null) continue;
+                int need = Mathf.Max(1, ingredient.count);
+                int have = 0;
+                foreach (UnitIdentity member in inventory.Members)
+                {
+                    if (member == null || member.Data == null) continue;
+                    if (ingredient.kind == IngredientKind.SpecificUnit ? member.Data == ingredient.unit
+                        : ingredient.kind == IngredientKind.UnitGradeWildcard && member.Data.grade == ingredient.wildcardGrade) have++;
+                }
+                if (have >= need) continue;
+                string name = ingredient.kind == IngredientKind.SpecificUnit
+                    ? (ingredient.unit != null ? ingredient.unit.unitName : "?")
+                    : $"{ingredient.wildcardGrade.KoreanName()} 등급";
+                lines.Add($"재료 부족 : {name} {need - have}개");
+            }
+        }
+        if (lines.Count > 0) return lines;
+
+        GoldWallet wallet = Wallet;
+        if (recipe.goldCost > 0 && wallet != null && wallet.Gold < recipe.goldCost)
+        {
+            lines.Add($"골드가 부족 합니다!: {recipe.goldCost - wallet.Gold}");
+            return lines;
+        }
+        ResourceWallet resources = Resources;
+        if (recipe.resourceCosts != null && resources != null)
+            foreach (RecipeResourceCost cost in recipe.resourceCosts)
+                if (cost.type == ResourceType.Wood && resources.Get(cost.type) < cost.amount)
+                {
+                    lines.Add($"목재가 부족합니다!:{cost.amount - resources.Get(cost.type)}");
+                    return lines;
+                }
+        return lines;
+    }
+
     bool CanAfford(CombineRecipe recipe, bool pickForExecution,
                    out List<UnitIdentity> unitsToRemove, out List<ItemData> itemsToRemove)
     {

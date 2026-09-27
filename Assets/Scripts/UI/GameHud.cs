@@ -2257,7 +2257,16 @@ public class GameHud : MonoBehaviour
         if (recipe == null) return;
 
         CombineSystem system = CombineSystemRef;
-        if (system == null || !system.CanCombineNow(recipe)) return; // 흐린 상태면 눌러도 아무 일 없음
+        if (system == null) return;
+        if (!system.CanCombineNow(recipe))
+        {
+            // 원작 [조합]은 흐려지지 않고 눌러 보면 모자란 것을 말해 준다(j:3444~3449, 그 플레이어에게만 5초) — 알림 묶음 5.
+            //    흐린 버튼은 그대로 두되, 누르면 이유를 띄운다. 재료·돈이 다 있는데 안 되면(원딜·라운드 조건 등) 짧게.
+            List<string> shortage = system.DescribeShortage(recipe);
+            if (shortage.Count == 0) PlayerNotification.Show(LocalPlayer.LocalPlayerId, "지금은 조합할 수 없습니다.", 5f);
+            foreach (string line in shortage) PlayerNotification.Show(LocalPlayer.LocalPlayerId, line, 5f);
+            return;
+        }
 
         // 원작 [조합]은 유닛 능력 — 결과가 누른 유닛 자리에 나온다. 선택 첫 유닛을 시전 유닛으로 본다.
         SelectionManager casterSelection = Selection;
