@@ -518,3 +518,25 @@ public static class Gap46Probe
         return sb.ToString().TrimEnd();
     }
 }
+
+/// <summary>GAP 3 점검(2026-09-27): 「Portal_전설·히든」의 RollReward를 400번 불러 등급 비율을 센다(원작 1/2 전설 · 1/2 히든).</summary>
+public static class LegendHiddenPortalProbe
+{
+    public static string Roll()
+    {
+        UnitPortal portal = Object.FindObjectsByType<UnitPortal>(FindObjectsSortMode.None).FirstOrDefault(p => p.name == "Portal_전설·히든");
+        if (portal == null) return "Portal_전설·히든 없음";
+        var roll = typeof(UnitPortal).GetMethod("RollReward", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        var counts = new Dictionary<UnitGrade, int>();
+        var kinds = new HashSet<string>();
+        for (int i = 0; i < 400; i++)
+        {
+            object[] args = { UnitGrade.Legendary, 0, false };
+            UnitData u = roll.Invoke(portal, args) as UnitData;
+            if (u == null) continue;
+            counts[u.grade] = (counts.TryGetValue(u.grade, out int c) ? c : 0) + 1;
+            if (u.grade == UnitGrade.Hidden) kinds.Add(u.unitName);
+        }
+        return string.Join(" · ", counts.Select(kv => $"{kv.Key} {kv.Value}")) + $" (400번) · 히든 종류 {kinds.Count}";
+    }
+}
