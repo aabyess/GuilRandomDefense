@@ -819,6 +819,54 @@ public class NetLauncher : MonoBehaviour
 
         // 2. 승리 문구.
         typeof(RoundManager).GetMethod("AnnounceClear", Any).Invoke(round, null);
+        yield return new WaitForSecondsRealtime(0.5f);
+
+        // 7. 제한시간 스토리(원작 와노쿠니 = Story13) — 바로 세워 경고 문구와 타이머 칸을 본다.
+        StoryManager stories = StoryManager.Instance;
+        StoryData limited = null;
+        for (int i = 0; stories != null && stories.StoryAt(i) != null; i++) if (stories.StoryAt(i).timeLimitSeconds > 0f) { limited = stories.StoryAt(i); break; }
+        if (limited != null)
+        {
+            typeof(StoryManager).GetMethod("Spawn", Any).Invoke(stories, new object[] { limited });
+            Debug.Log($"[알림테스트] 7. 제한시간 스토리 {limited.storyName} 세움 — 남은 {stories.SecondsLeftInLimit:F0}초");
+        }
+        yield return new WaitForSecondsRealtime(1.5f);
+        yield return new WaitForEndOfFrame();
+        if (!string.IsNullOrEmpty(shot)) ScreenCapture.CaptureScreenshot(shot.Replace(".png", "_story.png"));
+
+        // 8. 스토리 완료 공지(첫 스토리 보상) · 1단계/3단계 크립(처치자 슬롯 1).
+        RewardDistributor rewards = RewardDistributor.Instance;
+        if (stories != null && stories.StoryAt(0) != null) rewards.GrantStoryReward(stories.StoryAt(0));
+        foreach (EnemyData creep in catalog.enemies.Where(e => e != null && !string.IsNullOrEmpty(e.killAnnounceLabel)))
+            rewards.GrantKillReward(creep, -1, round.CurrentRound, 1);
+        // 11. 보스 처치(레인 0, 10라운드 보상).
+        EnemyData boss10 = catalog.enemies.FirstOrDefault(e => e != null && e.isBoss && e.name.Contains("R10"));
+        if (boss10 != null) rewards.GrantKillReward(boss10, 0, 10, 0);
+        // 9. 퇴치 퀘스트 성공(슬롯 0).
+        PirateQuestManager pirates = FindFirstObjectByType<PirateQuestManager>();
+        var quest = ScriptableObject.CreateInstance<PirateQuestData>();
+        quest.questName = "신림패거리"; quest.successGold = 1500;
+        quest.successResources = new System.Collections.Generic.List<EnemyResourceReward> { new EnemyResourceReward { type = ResourceType.Wood, amount = 1 } };
+        if (pirates != null) typeof(PirateQuestManager).GetMethod("HandleSuccess", Any).Invoke(pirates, new object[] { quest, 0 });
+        // 10. 세이브 포인트(슬롯 1, 친구 화면).
+        PlayerContext.Get(1)?.PersistentSave?.AddSessionPoints(2);
+        // 12. 팁 — 네 번 불러 네 번째에 한 줄.
+        var tip = typeof(RoundManager).GetMethod("MaybeShowTip", Any);
+        for (int i = 0; i < 4; i++) tip.Invoke(round, null);
+        // 13. 판매: 흔함 누적(3번) · 안흔함 두 번.
+        UnitSpawner spawner = FindFirstObjectByType<UnitSpawner>();
+        GameHud hudRef = FindFirstObjectByType<GameHud>();
+        LaneMarker lane0 = LaneMarker.Get(0);
+        UnitData commonSell = catalog.units.FirstOrDefault(u => u != null && u.prefab != null && u.sellRewardEveryNSells > 0);
+        UnitData uncommonSell = catalog.units.FirstOrDefault(u => u != null && u.prefab != null && u.sellRewardWisp != null && u.sellRewardWispChance < 1f);
+        if (spawner != null && hudRef != null && lane0 != null)
+        {
+            for (int i = 0; commonSell != null && i < 3; i++)
+                hudRef.ExecuteSellOn(spawner.Spawn(commonSell, lane0.TakeSpawnPosition(commonSell), 0).GetComponent<Selectable>());
+            for (int i = 0; uncommonSell != null && i < 2; i++)
+                hudRef.ExecuteSellOn(spawner.Spawn(uncommonSell, lane0.TakeSpawnPosition(uncommonSell), 0).GetComponent<Selectable>());
+        }
+        Debug.Log($"[알림테스트] 13. 판매 — 흔함 {(commonSell != null ? commonSell.unitName : "없음")}×3 · 안흔함 {(uncommonSell != null ? uncommonSell.unitName : "없음")}×2");
         Debug.Log("[알림테스트] 끝");
     }
 
