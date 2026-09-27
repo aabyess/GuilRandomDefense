@@ -212,7 +212,8 @@ public class StoryManager : MonoBehaviour
         }
 
         dummy.Initialize(story.building);
-        dummy.MarkStoryHpTarget(); // MP: 원작 R01G(퇴장 시 Player(5) 계열 최대 체력 감소) 대상
+        // MP: 원작 R01G(퇴장 시 Player(5) 계열 최대 체력 감소) 대상 + GAP 4 난이도·파티·솔로 가산(DifficultyManager.StoryHpBonus).
+        dummy.MarkStoryHpTarget(DifficultyManager.StoryHpBonus(story.order));
         dummy.SetLane(-1);          // 레인 몹이 아니다. 패배 판정(가장 붐비는 레인)에 섞이면 안 된다.
         // 원작: 나오자마자 잡을 수 있다(무적 없음, 변신 없음).
 
