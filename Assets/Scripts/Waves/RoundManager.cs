@@ -397,6 +397,31 @@ public class RoundManager : MonoBehaviour
     // war3map.j Trig_Save_sido3(신세계 클리어) 대응 — 원작은 여기서 유닛카운트 보너스를
     // 계산하고 SavePlayer를 직접 부른다. 죽은 플레이어는 여기서 걸러진다 — PersistentSave는
     // 자기 컨텍스트를 안 들고 있어서(IsDead를 스스로 못 본다) 호출부가 반드시 걸러야 한다.
+    // 원작 클리어 문구는 100000000초(= 판이 끝날 때까지). 우리 알림 칸에선 한 시간이면 같다.
+    const float VictoryNoticeSeconds = 3600f;
+
+    // 원작 j:5738/5740(전원): 「{모드}모드를클리어하셨습니다 ! 축하드립니다 !」, 신세계(61R~)까지 간 판은 「{모드}모드 신세계를…」.
+    //    모드 이름은 원작 udg_Mode 색 그대로(쉬움 00BFFF · 보통 EE82EE · 어려움 FF0000 · 지옥 9400D3 · 신 FFD700 · 악몽 530080).
+    void AnnounceClear()
+    {
+        DifficultyManager difficulty = DifficultyManager.Instance;
+        if (difficulty == null || !difficulty.IsModeSelected) return;
+        DifficultyMode mode = difficulty.Current;
+        string color = mode switch
+        {
+            DifficultyMode.Easy => "00BFFF",
+            DifficultyMode.Normal => "EE82EE",
+            DifficultyMode.Hard => "FF0000",
+            DifficultyMode.Hell => "9400D3",
+            DifficultyMode.God => "FFD700",
+            _ => "530080",
+        };
+        string world = totalRounds > 60 ? "모드 신세계를" : "모드를";
+        string line = $"<color=#{color}>{mode.KoreanName()}</color><color=#52E252>{world}클리어하셨습니다 ! 축하드립니다 !</color>";
+        foreach (PlayerContext context in PlayerContext.Occupied)
+            PlayerNotification.Show(context.PlayerId, line, VictoryNoticeSeconds);
+    }
+
     void FinishPersistentSave(bool cleared)
     {
         foreach (PlayerContext context in PlayerContext.Occupied)
@@ -406,7 +431,9 @@ public class RoundManager : MonoBehaviour
             if (cleared)
             {
                 int alive = PersistentSave.CountAliveInLane(context.PlayerId);
-                context.PersistentSave.AddClearBonus(alive);
+                int bonus = context.PersistentSave.AddClearBonus(alive);
+                // 원작 j:5747(그 플레이어에게만, 사실상 계속): 「유닛카운트 점수 보너스:N점!」
+                PlayerNotification.Show(context.PlayerId, $"<color=#52E252>유닛카운트 점수 보너스:{bonus}점!</color>", VictoryNoticeSeconds);
             }
 
             context.PersistentSave.FinishRun(cleared);
@@ -437,6 +464,7 @@ public class RoundManager : MonoBehaviour
         {
             Debug.Log("모든 라운드 클리어!");
             isGameOver = true;
+            AnnounceClear();
             FinishPersistentSave(cleared: true);
             return;
         }
