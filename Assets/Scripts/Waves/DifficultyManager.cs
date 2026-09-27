@@ -32,6 +32,9 @@ public class DifficultyManager : MonoBehaviour
         // 다시 Awake될 때) 0(=오프셋 없음)으로 되돌려 선택 전에는 항상 기존과 동작이
         // 같도록 한다.
         EnemyDummy.DifficultyAegrLevelOffset = 0;
+        // static이라 씬을 다시 불러도 남는다 — 새 판마다 비운다(GAP 4 파티·솔로).
+        StoryPartyPlayers = 0;
+        IsSolo = false;
 
         // MP: 네트 판이면 대기실에서 호스트가 고른 난이도로 시작한다(호스트·클라 모두 — 클라는 이게 없으면
         //     「방장이 모드를 선택하고 있습니다」에서 영원히 멈춘다). 기억값·선택 창 둘 다 건너뛴다.
@@ -91,10 +94,79 @@ public class DifficultyManager : MonoBehaviour
         if (!current.HasValue) ApplyMode(mode);
     }
 
+    // ── 파티·솔로 보정(2026-09-27 GAP 4) — 원작 solo_1~4는 난이도 다이얼로그가 눌린 순간 PLAYING 슬롯을 센다 ──
+    //    ⚠️ 인원은 Awake에서 안 센다(구현담당2): 멀티는 PlayerContext.Awake가 MatchConfig로 occupied를 정하는데 Awake 순서가 보장되지 않는다.
+    //       씬 진입 1.5초 뒤에 세고, 네트 판이면 MatchConfig.OccupiedSlots를 쓴다. 안내도 그때 띄운다(친구가 씬을 다 불러온 뒤).
+    //    첫 스토리는 10초에 나와 그 전에 정해진다. 그래도 먼저 불리면 StoryHpBonus가 그 자리에서 센다.
+    public static int StoryPartyPlayers { get; private set; }
+    public static bool IsSolo { get; private set; }
+    bool partyCounted;
+    const float PartyCountDelay = 1.5f;
+
+    System.Collections.IEnumerator CountPartyLater()
+    {
+        yield return new WaitForSecondsRealtime(PartyCountDelay);
+        CountParty(announce: true);
+    }
+
+    void CountParty(bool announce)
+    {
+        if (partyCounted || !current.HasValue) return;
+        partyCounted = true;
+        StoryPartyPlayers = Mathf.Max(1, MatchConfig.Active ? MatchConfig.OccupiedSlots.Count : PlayerContext.OccupiedCount);
+        DifficultyMode mode = current.Value;
+        if (!DifficultyTable.HasPartySoloAdjust(mode)) return;
+        IsSolo = StoryPartyPlayers == 1;
+        if (!announce || !GameAuthority.IsServer) return;
+        if (IsSolo)
+        {
+            // 원작: AdjustPlayerStateBJ(10, Player(0), GOLD) — 솔로 = 그 한 명.
+            PlayerContext solo = PlayerContext.GetOccupied(0) ?? PlayerContext.Get(LocalPlayer.LocalPlayerId);
+            solo?.GoldWallet?.Add(10);
+        }
+        string text = SoloPartyNotice(mode, IsSolo);
+        for (int slot = 0; slot < 4; slot++)
+            if (PlayerContext.Get(slot) != null && PlayerContext.Get(slot).IsOccupied) PlayerNotification.Show(slot, text);
+        Debug.Log($"[난이도] {mode.KoreanName()} · 인원 {StoryPartyPlayers} · {(IsSolo ? "솔로(스토리 체력 감소, +10엔)" : "파티(스토리 체력 인원만큼 증가)")}");
+    }
+
+    // 원작 안내문 그대로(solo_1~4, war3map_new.j 3576~3596).
+    static string SoloPartyNotice(DifficultyMode mode, bool solo)
+    {
+        switch (mode)
+        {
+            case DifficultyMode.Hard:  return solo ? "하드모드 솔로 플레이 모드입니다. 스토리의 체력 및 방어력이 감소합니다.10골드 추가 획득!" : "어려움 파티 플레이 모드입니다. 스토리 특정 구간의 체력이 파티플레이어 수만큼 증가합니다.";
+            case DifficultyMode.Hell:  return solo ? "지옥모드 솔로 플레이 모드입니다. 스토리의 체력 및 방어력이 감소합니다.10골드 추가 획득!" : "지옥모드 파티 플레이 모드입니다. 스토리 특정 구간의 체력이 파티플레이어 수만큼 증가합니다.";
+            case DifficultyMode.God:   return solo ? "신모드 솔로 플레이 모드입니다. 스토리의 체력 및 방어력이 감소합니다. 10골드 추가 획득!" : "신 모드 파티 플레이 모드입니다. 스토리의 체력이 파티플레이어 수만큼 증가합니다.";
+            default:                   return solo ? "악몽모드 솔로 플레이 모드입니다. 스토리의 체력 및 방어력이 감소합니다. 10골드 추가 획득!" : "악몽 모드 파티 플레이 모드입니다. 스토리의 체력이 파티플레이어 수만큼 증가합니다.";
+        }
+    }
+
+    /// <summary>스토리 order(1~)의 최대 체력 가산(합, 0.15 = +15%). StoryManager가 스폰 때 EnemyDummy.MarkStoryHpTarget에 넘긴다.</summary>
+    public static float StoryHpBonus(int storyOrder)
+    {
+        DifficultyManager dm = Instance;
+        if (dm == null || !dm.current.HasValue) return 0f;
+        dm.CountParty(announce: false);   // 1.5초 전에 스토리가 나오면 여기서 센다(안내는 코루틴이 이미 못 띄움 — 첫 스토리는 10초라 실제론 안 걸린다)
+        DifficultyMode mode = dm.current.Value;
+        int percent = DifficultyTable.StoryHpPercent(mode);
+        if (DifficultyTable.HasPartySoloAdjust(mode))
+        {
+            percent += DifficultyTable.StoryPartyPercent(mode) * StoryPartyPlayers;
+            if (IsSolo)
+            {
+                percent += DifficultyTable.StorySoloPercent;
+                if (storyOrder == DifficultyTable.StoryWanoOrder) percent += DifficultyTable.StorySoloExtraPercentWano;
+            }
+        }
+        return percent / 100f;
+    }
+
     // 고른 값을 실제로 거는 부분. SelectMode(사람이 누름)와 Awake(기억해서 시작) 둘 다 쓴다.
     void ApplyMode(DifficultyMode mode)
     {
         current = mode;
+        if (isActiveAndEnabled) StartCoroutine(CountPartyLater());
 
         // Aegr(마법 피해)는 적마다 스폰 시점에 곱하는 게 아니라 전역 레벨 오프셋 하나로
         // 둔다(EnemyDummy.EffectiveMagicMultiplier/AegrBaseLevel 참고) — 원작도 마스터

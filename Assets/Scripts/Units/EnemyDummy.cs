@@ -62,16 +62,19 @@ public class EnemyDummy : MonoBehaviour
     //     레인 적·라운드 보스는 대상이 아니다. 싱글엔 퇴장이 없어 레벨 0 = 무동작.
     public const int MaxStoryHpReductionLevel = 5;
     public static int StoryHpReductionLevel { get; private set; }
-    static float StoryHpFactor => 1f - 0.1f * StoryHpReductionLevel;
+    // 2026-09-27 GAP 4: 스토리는 난이도·파티·솔로 가산(storyHpBonus)도 함께 — 워크3 rhpo는 합산이라 1 + 가산 − 0.1×퇴장레벨.
+    float StoryHpFactor => Mathf.Max(0.05f, 1f + storyHpBonus - 0.1f * StoryHpReductionLevel);
+    float storyHpBonus;
 
     bool storyHpTarget;
     public bool IsStoryHpTarget => storyHpTarget; // MP: 검증 로그용
     float appliedStoryHpFactor = 1f;
 
     /// <summary>MP: 스토리·퀘스트 미니보스·크립 스폰 직후(체력을 다 정한 뒤) 부른다 — 지금 레벨의 감소를 건다.</summary>
-    public void MarkStoryHpTarget()
+    public void MarkStoryHpTarget(float extraHpBonus = 0f)
     {
         storyHpTarget = true;
+        storyHpBonus = extraHpBonus;
         RescaleStoryHp();
     }
 

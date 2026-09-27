@@ -132,6 +132,22 @@ public static class DifficultyTable
 
     public static DifficultyModeData Get(DifficultyMode mode) => Table[(int)mode];
 
+    // ── 스토리 최대 체력 가산(2026-09-27 GAP 4, 구현담당1 w3q 재디코드) — 전부 rhpo(최대 체력 %), 워크3는 가산이 합산된다 ──
+    //    난이도(Trig_Select_effect, Player(5) 1레벨): 쉬움 R00Y −15 · 보통 R00Z −5 · 어려움 R010 +15 · 지옥 R011 +48 · 신·악몽 R012 +58.
+    //    파티(solo_1~4, 어려움 이상만): 난이도를 고를 때 PLAYING 슬롯 수만큼 +1레벨 — 어려움 R01H +3 · 지옥 R01I +8 · 신 R01F +14 · 악몽 R02N +15(%/명).
+    //    솔로(그 인원이 1명, 어려움 이상): R021 −40, 13번 스토리(원작 와노쿠니 n00B)만 R02I −25 더. R02Y(방어 rarm −0.05 평탄)는 사실상 무효라 안 넣었다.
+    //    적용 범위(w3u upgr): 원작 스토리 1~13 전부 난이도·파티·솔로(R02I는 13만). 해적 함대·에그헤드는 난이도뿐인데 우리엔 대응 스토리가 없다.
+    static readonly int[] StoryHpPercentTable = { -15, -5, 15, 48, 58, 58 };
+    static readonly int[] StoryPartyPercentPerPlayer = { 0, 0, 3, 8, 14, 15 };
+    public const int StorySoloPercent = -40;
+    public const int StorySoloExtraPercentWano = -25;
+    public const int StoryWanoOrder = 13;
+
+    public static int StoryHpPercent(DifficultyMode mode) => StoryHpPercentTable[(int)mode];
+    public static int StoryPartyPercent(DifficultyMode mode) => StoryPartyPercentPerPlayer[(int)mode];
+    /// <summary>파티·솔로 보정이 켜지는 난이도(원작 solo_1~4 = Mode_select[3~6]).</summary>
+    public static bool HasPartySoloAdjust(DifficultyMode mode) => mode >= DifficultyMode.Hard;
+
     // 일반 몹(보스 아님) 최종 HP 배율. 가산 후 1회 곱(엔진표준, PM §4 판정 그대로).
     //
     // ⚠️ R39는 전 모드 공통으로 R00A조차 안 받는다(PM 지시 원문: "R39 제외 — R39는 R00A도

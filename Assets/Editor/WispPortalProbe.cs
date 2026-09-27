@@ -474,3 +474,33 @@ public static class BrokenRecipeGuardProbe
         finally { Object.DestroyImmediate(go); }
     }
 }
+
+/// <summary>GAP 4·6 판 안 점검(2026-09-27): 원딜 잠금 전후 CanCombineNow · 난이도 스토리 체력 가산.</summary>
+public static class Gap46Probe
+{
+    // gameshot combine:<식> 으로 재료를 세운 뒤 부른다 — 잠금 전 만들 수 있나 → 패왕의길 + 원딜 한 기 등록 → 잠금 뒤.
+    public static string OneDeal(string recipeName)
+    {
+        var ctx = PlayerContext.Get(0);
+        CombineSystem system = Object.FindFirstObjectByType<CombineSystem>();
+        CombineRecipe recipe = AssetDatabase.FindAssets("t:CombineRecipe").Select(g => AssetDatabase.LoadAssetAtPath<CombineRecipe>(AssetDatabase.GUIDToAssetPath(g))).FirstOrDefault(r => r != null && r.name == recipeName);
+        if (ctx?.NavigationState == null || system == null || recipe == null) return "준비 실패(NavigationState·CombineSystem·식)";
+        ctx.GoldWallet?.Add(100000);
+        ctx.ResourceWallet?.Add(ResourceType.Wood, 100);
+        bool before = system.CanCombineNow(recipe);
+        bool chose = ctx.NavigationState.TrySelect(NavigationChoice.Hegemon);
+        bool lockedByOther = ctx.NavigationState.RegisterAcquired(AssetDatabase.FindAssets("t:UnitData").Select(g => AssetDatabase.LoadAssetAtPath<UnitData>(AssetDatabase.GUIDToAssetPath(g))).First(u => u != null && u.grade == UnitGrade.Transcendent && !u.isSystemUnit));
+        bool after = system.CanCombineNow(recipe);
+        return $"{recipeName}(결과 {recipe.result?.grade}) · 잠금 전 만들 수 있음 {before} · 패왕의길 선택 {chose} · 초월 한 기 등록 → 잠김 {lockedByOther}(OneDealLocked {ctx.NavigationState.OneDealLocked}) · 잠금 뒤 만들 수 있음 {after}(기대 False)";
+    }
+
+    public static string StoryHp()
+    {
+        var dm = DifficultyManager.Instance;
+        var sb = new System.Text.StringBuilder($"난이도 {(dm != null && dm.IsModeSelected ? dm.Current.KoreanName() : "미선택")} · 인원 {DifficultyManager.StoryPartyPlayers} · 솔로 {DifficultyManager.IsSolo}\n");
+        foreach (int order in new[] { 1, 4, 12, 13 }) sb.Append($"   스토리 {order}번 가산 {DifficultyManager.StoryHpBonus(order):+0.00;-0.00;0}\n");
+        EnemyDummy story = EnemyDummy.Active.FirstOrDefault(e => e != null && e.IsStoryHpTarget && e.LaneIndex < 0);
+        if (story != null) sb.Append($"   지금 스토리 {story.name} 최대 체력 {story.MaxHp:F1}");
+        return sb.ToString().TrimEnd();
+    }
+}

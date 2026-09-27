@@ -36,6 +36,24 @@ public class NavigationState : MonoBehaviour
     [SerializeField] DamageLevelFixedState damageLevelFixedState;
 
     public NavigationChoice Choice => choice;
+
+    // ── 원딜(2026-09-27 GAP 6) — 원작 udg_Tech_Onedill ──
+    //    「패왕의길」(udg_Tech_Onedill_int=1)을 고른 플레이어가 제한됨(point 106~110, Trig_UnitJohabCounter)·초월(Eternal_*)·
+    //    불멸(IM_*)·영원(Forever_*) 중 **한 기**를 얻으면 Tech_Onedill=true — 제한됨 [조합] 9개(A02O·A10A·A01Y·A0S0·A0RP·A007·A0UH·A022·A011)를 끄고,
+    //    초월·불멸·영원 채팅 조합 45개는 조건이 `Tech_Onedill==false`라 전부 막힌다. 즉 첫 한 기 뒤 네 등급 조합이 잠긴다.
+    //    한 판짜리(직렬화 안 함 — 씬을 다시 불러오면 컴포넌트가 새로 생긴다).
+    public bool OneDealLocked { get; private set; }
+
+    public static bool IsOneDealGrade(UnitGrade grade) =>
+        grade == UnitGrade.Limited || grade == UnitGrade.Transcendent || grade == UnitGrade.Immortal || grade == UnitGrade.Eternal;
+
+    /// <summary>이 플레이어가 유닛을 새로 얻었다(UnitSpawner.Spawn) — 패왕의길이고 원딜 등급이면 잠근다. 처음 잠긴 순간 true.</summary>
+    public bool RegisterAcquired(UnitData unit)
+    {
+        if (OneDealLocked || choice != NavigationChoice.Hegemon || unit == null || unit.isSystemUnit || !IsOneDealGrade(unit.grade)) return false;
+        OneDealLocked = true;
+        return true;
+    }
     public bool HasChosen => choice != NavigationChoice.None;
 
     /// <summary>

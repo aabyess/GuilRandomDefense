@@ -286,6 +286,9 @@ public class CombineSystem : MonoBehaviour
         itemsToRemove = null;
 
         if (IsBroken(recipe)) return false;
+        // 원딜(GAP 6, NavigationState.OneDealLocked) — 잠긴 플레이어는 네 등급(제한됨·초월·불멸·영원) 결과 식을 못 만든다.
+        if (recipe.result != null && NavigationState.IsOneDealGrade(recipe.result.grade) && OwnerContext?.NavigationState != null &&
+            OwnerContext.NavigationState.OneDealLocked) return false;
         if (!RoundConditionMet(recipe)) return false;
 
         UnitInventory targetInventory = Inventory;

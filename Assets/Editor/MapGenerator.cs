@@ -2769,7 +2769,8 @@ public static class MapGenerator
             SpecialSlot.Resources("돈+목재"),
             SpecialSlot.Units("박은석 초월위습", "초월위습_박은석"),
             SpecialSlot.Units("레일리+배", "희귀함_이승우", "안흔함_상붕카")),
-        GachaBand.Random("전설·히든", UnitGrade.Legendary),
+        // 원작 Tier6_Legend: 전설·히든 위습 = 1/2 전설 · 1/2 히든(21종) — 2026-09-27 GAP 3(전엔 전설만 나왔다).
+        GachaBand.RandomWithBonus("전설·히든", UnitGrade.Legendary, UnitGrade.Hidden, 50f),
     };
 
     // 뽑기 섬. 원작처럼 위쪽에 흔함 유닛을 가로로 늘어놓고, 그 아래에 등급별 랜덤 포탈을 둔다.
