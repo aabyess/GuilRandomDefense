@@ -149,6 +149,8 @@ public class RewardDistributor : MonoBehaviour
         if (!GameAuthority.IsServer) return;
         if (data == null) return;
 
+        AnnounceKill(data, killerPlayerId);
+
         if (data.rewardsAllPlayers)
         {
             // 빈 슬롯은 건너뛴다 — 스토리·라운드 보상이 이미 같은 규칙이다.
@@ -176,6 +178,47 @@ public class RewardDistributor : MonoBehaviour
         GrantResources(owner, data);
 
         if (data.isBoss) GrantBossReward(owner, round);
+    }
+
+    // 원작 문구의 보상 부분 — 「N골드와 나무 N개」(우리 데이터 그대로).
+    static string RewardPhrase(int gold, List<EnemyResourceReward> resources)
+    {
+        var parts = new List<string>();
+        if (gold > 0) parts.Add($"<color=#FFD700>{gold}골드</color>");
+        if (resources != null)
+            foreach (EnemyResourceReward r in resources)
+                if (r != null && r.amount > 0) parts.Add(r.type == ResourceType.Wood ? $"<color=#20B2AA>나무 {r.amount}개</color>" : $"{r.type} {r.amount}");
+        return string.Join("<color=#FF8200>와</color> ", parts);
+    }
+
+    void AnnounceKill(EnemyData data, int killerPlayerId)
+    {
+        if (string.IsNullOrEmpty(data.killAnnounceLabel)) return;
+        string reward = RewardPhrase(data.goldReward, data.resourceRewards);
+        string label = $"<color=#FF0000>{data.killAnnounceLabel}</color>";
+        string particle = RoundManager.ObjectParticle(data.killAnnounceLabel);
+        if (data.rewardsAllPlayers)
+        {
+            string line = $"<color=#FF8200>{PlayerDisplayName.Of(Mathf.Max(0, killerPlayerId))}</color> <color=#FF8200>님이</color> {label}<color=#FF8200>{particle} 사냥하여 모든플레이어에게</color> {reward} <color=#FF8200>를 지급합니다.</color>";
+            foreach (PlayerContext context in PlayerContext.Occupied) PlayerNotification.Show(context.PlayerId, line, 10f);
+        }
+        else if (killerPlayerId >= 0)
+            PlayerNotification.Show(killerPlayerId, $"{label}<color=#FF8200>{particle} 사냥하여</color> {reward} <color=#FF8200>를 지급합니다.</color>", 10f);
+    }
+
+    // 원작 스토리 완료 공지(j:13499~13632, 스토리마다 한 줄, 전원 10초) — 틀 「{스토리}까지의 스토리 진행완료 모든플레이어에게 … 를 지급합니다.」.
+    //    보상 부분은 원작 문장을 옮기지 않고 **우리 StoryData 보상 그대로** 적는다(원작 값과 다르면 거짓말이 된다). 알림 묶음 8/13.
+    void AnnounceStoryReward(StoryData story)
+    {
+        var parts = new List<string>();
+        string resources = RewardPhrase(story.goldReward, story.resourceRewards);
+        if (resources.Length > 0) parts.Add(resources);
+        if (story.wispRewards != null)
+            foreach (WispReward w in story.wispRewards)
+                if (w != null && w.wisp != null && w.count > 0) parts.Add($"<color=#FF8200>{w.wisp.wispName} {w.count}기</color>");
+        string rewardText = parts.Count > 0 ? string.Join(" ", parts) + " <color=#FF8200>를 지급합니다.</color>" : "";
+        string line = $"<color=#FF0000>{story.storyName}</color><color=#FF8200>까지의 스토리 진행완료 모든플레이어에게</color> {rewardText}";
+        foreach (PlayerContext context in PlayerContext.Occupied) PlayerNotification.Show(context.PlayerId, line, 10f);
     }
 
     // rewardsKillerOnly 전용 — 마지막 타격을 넣은 플레이어에게만.
@@ -264,6 +307,7 @@ public class RewardDistributor : MonoBehaviour
     {
         if (!GameAuthority.IsServer) return;
         if (storyReward == null) return;
+        AnnounceStoryReward(storyReward);
 
         foreach (PlayerContext context in PlayerContext.All)
         {

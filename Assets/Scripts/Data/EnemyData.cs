@@ -81,6 +81,11 @@ public class EnemyData : ScriptableObject
     // `rewardsAllPlayers`가 켜져 있으면 그쪽이 이긴다(크립 1단계가 그렇다).
     public bool rewardsKillerOnly;
 
+    // 원작 크립 공지(j:13954 1단계 전원 · j:13967 3단계 처치자만) — 비어 있으면 공지 없음. 예: 「1단계 크립」.
+    //    전원 지급(rewardsAllPlayers)이면 「{닉네임} 님이 {라벨}을 사냥하여 모든플레이어에게 N골드와 나무 N개 를 지급합니다.」,
+    //    처치자 지급이면 처치자에게만 「{라벨}을 사냥하여 N골드와 나무 N개 를 지급합니다.」(알림 묶음 8/13, GAP 82).
+    public string killAnnounceLabel;
+
     public bool isBoss;
 
     // ⚠️ 2026-09-05까지는 "AP는 방어력을 무시한다"고 적혀 있었는데, 사장님 확정(02번)으로
