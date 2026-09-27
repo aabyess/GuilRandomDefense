@@ -485,6 +485,11 @@ public static class Gap46Probe
         CombineSystem system = Object.FindFirstObjectByType<CombineSystem>();
         CombineRecipe recipe = AssetDatabase.FindAssets("t:CombineRecipe").Select(g => AssetDatabase.LoadAssetAtPath<CombineRecipe>(AssetDatabase.GUIDToAssetPath(g))).FirstOrDefault(r => r != null && r.name == recipeName);
         if (ctx?.NavigationState == null || system == null || recipe == null) return "준비 실패(NavigationState·CombineSystem·식)";
+        UnitSpawner spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        foreach (RecipeIngredient ing in recipe.ingredients)
+            if (ing?.unit != null && spawner != null && lane != null)
+                for (int k = 0; k < Mathf.Max(1, ing.count); k++) spawner.Spawn(ing.unit, lane.TakeSpawnPosition(ing.unit), 0);
         ctx.GoldWallet?.Add(100000);
         ctx.ResourceWallet?.Add(ResourceType.Wood, 100);
         bool before = system.CanCombineNow(recipe);
@@ -494,12 +499,21 @@ public static class Gap46Probe
         return $"{recipeName}(결과 {recipe.result?.grade}) · 잠금 전 만들 수 있음 {before} · 패왕의길 선택 {chose} · 초월 한 기 등록 → 잠김 {lockedByOther}(OneDealLocked {ctx.NavigationState.OneDealLocked}) · 잠금 뒤 만들 수 있음 {after}(기대 False)";
     }
 
+    // call:는 인자를 못 받는다 — 재료가 유닛뿐인 첫 제한됨 식으로 OneDeal을 돈다.
+    public static string OneDealAuto()
+    {
+        CombineRecipe pick = AssetDatabase.FindAssets("t:CombineRecipe").Select(g => AssetDatabase.LoadAssetAtPath<CombineRecipe>(AssetDatabase.GUIDToAssetPath(g)))
+            .FirstOrDefault(r => r != null && r.result != null && r.result.grade == UnitGrade.Limited && r.ingredients != null &&
+                                 r.ingredients.All(i => i != null && i.kind == IngredientKind.SpecificUnit && i.unit != null) && r.maxRound == 0 && r.minRound == 0);
+        return pick == null ? "재료가 유닛뿐인 제한됨 식 없음" : OneDeal(pick.name);
+    }
+
     public static string StoryHp()
     {
         var dm = DifficultyManager.Instance;
         var sb = new System.Text.StringBuilder($"난이도 {(dm != null && dm.IsModeSelected ? dm.Current.KoreanName() : "미선택")} · 인원 {DifficultyManager.StoryPartyPlayers} · 솔로 {DifficultyManager.IsSolo}\n");
         foreach (int order in new[] { 1, 4, 12, 13 }) sb.Append($"   스토리 {order}번 가산 {DifficultyManager.StoryHpBonus(order):+0.00;-0.00;0}\n");
-        EnemyDummy story = EnemyDummy.Active.FirstOrDefault(e => e != null && e.IsStoryHpTarget && e.LaneIndex < 0);
+        EnemyDummy story = EnemyDummy.Active.FirstOrDefault(e => e != null && e.IsStoryHpTarget && e.LaneIndex < 0 && e.name.Contains("Story"));
         if (story != null) sb.Append($"   지금 스토리 {story.name} 최대 체력 {story.MaxHp:F1}");
         return sb.ToString().TrimEnd();
     }
