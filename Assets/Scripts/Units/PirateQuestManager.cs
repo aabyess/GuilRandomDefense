@@ -196,6 +196,17 @@ public class PirateQuestManager : MonoBehaviour
             StoryManager.Instance.ApplyQuestDamage(quest.storyDamage, playerId);
         }
 
+        // 원작 성공 문구(j:13776~13930, 그 플레이어에게만) — 틀 「(!) {이름}을 퇴치하여 {보상} 획득!」, 보상은 우리 데이터 그대로(알림 묶음 9/13, GAP 83).
+        var parts = new List<string>();
+        if (quest.successGold > 0) parts.Add($"{quest.successGold}골드");
+        if (quest.successResources != null)
+            foreach (EnemyResourceReward r in quest.successResources)
+                if (r != null && r.amount > 0) parts.Add(r.type == ResourceType.Wood ? $"목재 {r.amount}" : $"{r.type} {r.amount}");
+        if (quest.successWisp != null && quest.successWispCount > 0) parts.Add($"{quest.successWisp.wispName} {quest.successWispCount}기");
+        if (quest.successTraitPoints > 0) parts.Add($"특성포인트 {quest.successTraitPoints}개");
+        string rewardText = parts.Count > 0 ? string.Join("와 ", parts) + " 획득!" : "성공!";
+        PlayerNotification.Show(playerId,
+            $"<color=#FFD700>(!)</color> <color=#FF0000>{quest.questName}{RoundManager.ObjectParticle(quest.questName)} 퇴치하여 {rewardText}</color>", 5f);
         Debug.Log($"[해적단] {quest.questName} 성공! 플레이어 {playerId + 1} 보상 지급.");
     }
 
