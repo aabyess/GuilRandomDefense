@@ -226,6 +226,13 @@ public class StoryManager : MonoBehaviour
 
         Debug.Log($"스토리 등장: {story.storyName} (체력 {dummy.MaxHp:F0})" +
                   (story.timeLimitSeconds > 0f ? $" — 제한 {story.timeLimitSeconds:F0}초, 못 깨면 전원 패배" : ""));
+        // 원작 j:13753(전원): 「와노쿠니를 제한시간내에 클리어하지 못하면 전원 패배합니다.」 — 이름 자리에 우리 스토리 이름(알림 묶음 7/13, GAP 81).
+        //    남은 시간은 HUD 타이머 칸(「{이름} 남은 시간:」, 원작 j:13754 타이머 창 제목)이 SecondsLeftInLimit로 보여 준다.
+        if (story.timeLimitSeconds > 0f)
+        {
+            string warn = $"<color=#FF0000>{story.storyName}{RoundManager.ObjectParticle(story.storyName)} 제한시간내에 클리어하지 못하면 전원 패배합니다.</color>";
+            foreach (PlayerContext context in PlayerContext.Occupied) PlayerNotification.Show(context.PlayerId, warn, 10f);
+        }
     }
 
     static bool IsGodOrNightmare()

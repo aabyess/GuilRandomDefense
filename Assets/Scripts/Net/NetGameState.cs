@@ -17,6 +17,9 @@ public class NetGameState : NetworkBehaviour
 
     [Networked] public NetworkBool Started { get; set; }
     [Networked] public byte ExtraTimerKind { get; set; }
+    /// <summary>제한시간 스토리(원작 와노쿠니) 남은 초, 없으면 -1 · 그 스토리 이름 — HUD 「{이름} 남은 시간:」.</summary>
+    [Networked] public float StoryLimitLeft { get; set; }
+    [Networked] public NetworkString<_16> StoryLimitName { get; set; }
     [Networked] public float ExtraTimerLeft { get; set; }
 
     /// <summary>판 도중 원작 Gone으로 나간 슬롯(비트). 재접속한 사람 화면은 그 사람 NetPlayer를 못 봐 좌석을 몰라
@@ -94,6 +97,9 @@ public class NetGameState : NetworkBehaviour
             StoryWaiting = story.IsWaiting;
             StoryLabel = Clip(story.StatusLabel, 31);
             StorySeconds = story.SecondsUntilNext;
+            StoryLimitLeft = story.SecondsLeftInLimit;
+            string limitName = story.SecondsLeftInLimit >= 0f && story.Running != null ? Clip(story.Running.storyName, 15) : "";
+            if (StoryLimitName.ToString() != limitName) StoryLimitName = limitName;
             StoryInterlude = Clip(story.CurrentInterludeName, 15);
             StoryFinished = story.FinishedCount;
         }
