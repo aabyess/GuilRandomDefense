@@ -492,10 +492,15 @@ public class RoundManager : MonoBehaviour
 
         foreach (PlayerContext context in PlayerContext.Occupied)
         {
+            // 원작 Trig_Round_boolean_Trigger(war3map_new.j:5671~5677): PlayerDeath==0인 사람만 — 죽은 사람은 위습도 페널티 차감도 없다.
+            if (context.IsDead) continue;
+
             int playerId = context.PlayerId;
             if (playerId >= 0 && playerId < MaxTrackedLanes && wispBlockRoundsRemaining[playerId] > 0)
             {
                 wispBlockRoundsRemaining[playerId]--;
+                // 원작 문구 그대로, 그 플레이어에게만 30초.
+                PlayerNotification.Show(playerId, "<color=#FFD700>(!)</color> <color=#FF0000>페널티로 인해 위습을 받지 못합니다!</color>", 30f);
                 Debug.Log($"플레이어 {playerId + 1}: 해적단 퀘스트 실패 페널티로 이번 라운드 위습을 받지 못했습니다 " +
                           $"(남은 차단 {wispBlockRoundsRemaining[playerId]}라운드).");
                 continue;
@@ -507,15 +512,19 @@ public class RoundManager : MonoBehaviour
 
     /// <summary>
     /// 해적단 퀘스트 실패 페널티. 다음 <paramref name="rounds"/>라운드 동안 그 플레이어는
-    /// 라운드 클리어 위습(GrantFlatRoundReward)을 못 받는다. 이미 남아있는 차단과는
-    /// 더하지 않고 더 큰 쪽을 취한다 — 같은 퀘스트를 연속으로 실패해도 무한히 안 쌓인다.
+    /// 라운드 클리어 위습(GrantFlatRoundReward)을 못 받는다. 원작처럼 **더한다**(Quest_FailPoint = FailPoint + 2,
+    /// war3map_new.j:13779 외 퀘스트마다) — 🔴 09-27 정정(GAP 8번): 전엔 Max라 두 번 실패해도 2라운드였다.
     /// </summary>
     public void BlockRoundRewardWisp(int playerId, int rounds)
     {
         if (playerId < 0 || playerId >= MaxTrackedLanes || rounds <= 0) return;
 
-        wispBlockRoundsRemaining[playerId] = Mathf.Max(wispBlockRoundsRemaining[playerId], rounds);
+        wispBlockRoundsRemaining[playerId] += rounds;
     }
+
+    /// <summary>테스트·표시용: 남은 위습 차단 라운드.</summary>
+    public int WispBlockRoundsRemaining(int playerId) =>
+        playerId >= 0 && playerId < MaxTrackedLanes ? wispBlockRoundsRemaining[playerId] : 0;
 
     // 방금 끝난 라운드(roundNumber)의 위습 보상을 전체 플레이어에게 지급한다.
     // AdvanceRound()는 Update() 안에서만 호출되고, Update()는 최상단에서 GameAuthority.IsServer를 확인하므로

@@ -204,6 +204,9 @@ public class PirateQuestManager : MonoBehaviour
         if (quest.failWispBlockRounds > 0 && RoundManagerRef != null)
         {
             RoundManagerRef.BlockRoundRewardWisp(playerId, quest.failWispBlockRounds);
+            // 원작 문구(war3map_new.j:13779 외): 그 플레이어에게만 5초. 「2기」는 라운드 위습 수(원작 e0IX 2).
+            PlayerNotification.Show(playerId,
+                $"<color=#FFD700>(!)</color> <color=#FF0000>해적단 퇴치에 실패하여 다음 {quest.failWispBlockRounds}라운드동안 랜덤위습2기를 받지 못합니다 !</color>", 5f);
         }
 
         Debug.Log($"[해적단] {quest.questName} 실패. 플레이어 {playerId + 1}: 다음 {quest.failWispBlockRounds}라운드 동안 랜덤위습을 받지 못합니다.");
