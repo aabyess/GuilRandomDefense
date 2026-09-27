@@ -78,7 +78,18 @@ public class PlayerNotificationHud : MonoBehaviour
             list = new List<Entry>();
             queues[playerId] = list;
         }
-        list.Add(new Entry { message = message, expiresAt = Time.unscaledTime + Mathf.Max(0.1f, duration) });
+        float expiresAt = Time.unscaledTime + Mathf.Max(0.1f, duration);
+        // 같은 문구가 이미 떠 있으면 새 줄을 쌓지 않고 남은 시간만 늘린다(PM 09-27) — 원작 데스 경고처럼 0.65초마다
+        // 같은 줄이 오는 알림이 미니맵 위를 채우지 않게. 줄 순서(가장 새 것이 맨 아래)는 그대로 둔다.
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (list[i].message != message || list[i].expiresAt <= Time.unscaledTime) continue;
+            Entry existing = list[i];
+            existing.expiresAt = Mathf.Max(existing.expiresAt, expiresAt);
+            list[i] = existing;
+            return;
+        }
+        list.Add(new Entry { message = message, expiresAt = expiresAt });
     }
 
     // 2026-09-26 사장님 「획득으로 유닛이나 돈 가운데에 글이 뜨던데 미니맵 위에 텍스트 나오게 해줘」 — 원작 워크래프트 글자
