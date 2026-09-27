@@ -5080,21 +5080,31 @@ public static class MapGenerator
 
     // 2026-09-07 추가(연합세력 항법 훅) — RewardDistributor는 PlayerContext와 달리 씬에
     // 하나뿐인 매니저(Instance 싱글턴)라 RepairPlayerParts의 플레이어별 루프 밖에서 한 번만
-    // 검사한다. unionWisp가 비어 있으면 Wisp_흔함.asset(e0IX)을 꽂는다 — 이미 값이 있으면
-    // 안 건드리고, 자산 자체가 없으면(경로가 바뀌었거나 지워졌으면) 경고만 남기고 넘어간다.
+    // 검사한다. unionWisp는 원작 e0IX(랜덤위습, war3map_new.j:6445) = Wisp_랜덤유닛.asset — 라운드 보상 위습과 같은 것.
+    // 🔴 09-27 정정(GAP 5번): 전엔 Wisp_흔함.asset을 꽂았다 — 그 위습은 흔함 선택 칸으로 가서 원작의 「랜덤위습(아무 포탈)」이
+    //    아니었다. 비어 있거나 **옛 틀린 값(Wisp_흔함)이면** 바꾸고, 다른 값이면(사람이 일부러 넣은 것) 안 건드린다.
     static bool RepairRewardDistributorUnionWisp()
     {
         RewardDistributor distributor = Object.FindFirstObjectByType<RewardDistributor>(FindObjectsInactive.Include);
         if (distributor == null) return false;
 
-        WispData unionWisp = AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_흔함.asset");
+        WispData unionWisp = AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_랜덤유닛.asset");
         if (unionWisp == null)
         {
-            Debug.LogWarning("MapGenerator: Assets/Data/Wisps/Wisp_흔함.asset을 찾지 못해 " +
+            Debug.LogWarning("MapGenerator: Assets/Data/Wisps/Wisp_랜덤유닛.asset을 찾지 못해 " +
                               "RewardDistributor.unionWisp를 채우지 못했습니다(연합세력 항법 위습 지급 불가).");
             return false;
         }
 
+        WispData oldWrong = AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_흔함.asset");
+        SerializedObject so = new SerializedObject(distributor);
+        SerializedProperty property = so.FindProperty("unionWisp");
+        if (property != null && oldWrong != null && property.objectReferenceValue == oldWrong)
+        {
+            property.objectReferenceValue = unionWisp;
+            so.ApplyModifiedProperties();
+            return true;
+        }
         return EnsureAssetRef(distributor, "unionWisp", unionWisp);
     }
 

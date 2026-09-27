@@ -18,8 +18,8 @@ public enum NavigationChoice
     // 연합세력 — 2026-09-07 배선 완료(PM 지시). RewardDistributor.GrantUnionWispIfEligible
     // (UnitSpawner.Spawn에서 호출)이 원작 Trig_UnitJohabCounter_Actions를 재현한다 —
     // 유닛 등급 Tier()>=Superior(포인트값>100 근사) + 이 항법 선택 시 랜덤위습(e0IX,
-    // Wisp_흔함.asset) 1기. ⚠️ RewardDistributor 씬 컴포넌트의 unionWisp 필드에 실제로
-    // Wisp_흔함.asset을 꽂아야 동작한다(씬 배선은 이 점검 범위 밖 — PM/씬 담당 확인).
+    // Wisp_랜덤유닛.asset — 라운드 보상 위습과 같은 것) 1기. RewardDistributor.unionWisp는 MapGenerator가 배선한다.
+    // 🔴 09-27 정정(GAP 5번): 예전엔 e0IX를 Wisp_흔함.asset으로 적었는데 그건 흔함 선택 칸으로 가는 다른 위습이다.
     Union,
     Gambler,       // 도박광 — 다른세계 도박 실패 시 럭키토큰 +1
     SupportBoost,  // 도움소 강화 — 해루석/버스터콜 레벨2 수치
