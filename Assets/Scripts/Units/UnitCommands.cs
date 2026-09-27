@@ -41,7 +41,12 @@ public static class UnitCommands
 
         int moved = 0;
         for (int i = 0; i < crowd.Count; i++)
-            if (Place(crowd[i], center, i, crowd.Count)) moved++;
+        {
+            if (!Place(crowd[i], center, i, crowd.Count)) continue;
+            moved++;
+            // 모으는 자리가 창고 섬이 아니면 창고 목록에서 뺀다(창고 섬 위 유닛을 기준으로 모았으면 그대로 창고에 있다).
+            if (!IsOnWarehouseIsland(crowd[i].gameObject, owner)) Warehouse.Forget(crowd[i].gameObject);
+        }
 
         // SnapTo가 NavMesh에 못 올리면 조용히 false만 돌려준다 — 예전엔 이 값을 안 봐서
         // 일부가 못 옮겨져도 "전원 모음 성공"으로 보였다. 실제 성공 개수를 돌려줘야
@@ -51,6 +56,14 @@ public static class UnitCommands
             PlayerNotification.Show(owner, $"{crowd.Count - moved}기는 자리가 없어 모이지 못했습니다.");
 
         return moved;
+    }
+
+    // 모은 자리가 그 주인 창고 섬 위인가 — 창고 유닛끼리 창고 안에서 모았으면 여전히 창고에 있다.
+    static bool IsOnWarehouseIsland(GameObject unit, int owner)
+    {
+        Warehouse warehouse = PlayerContext.Get(owner)?.Warehouse;
+        if (warehouse == null || !warehouse.Contains(unit)) return false;
+        return warehouse.IsNearIsland(unit.transform.position);
     }
 
     // 가운데부터 바깥으로 고리를 넓혀가며 세운다. 한 고리에 여섯씩 — 육각형으로 채우면
@@ -108,7 +121,11 @@ public static class UnitCommands
             // 실제 성공 개수만 센다(PM 지시, 2026-09-05, 버그 #8).
             // 2026-09-26: TakeSpawnPosition은 누를 때마다 남는 자리 카운터를 태워 같은 유닛이 매번 다른 칸으로 갔다 →
             // PenPositionFor(흔함은 고정 칸, 그 외는 처음 받은 자리를 계속)로.
-            if (combat.SnapTo(lane.PenPositionFor(identity))) moved++;
+            if (combat.SnapTo(lane.PenPositionFor(identity)))
+            {
+                moved++;
+                Warehouse.Forget(selected.gameObject);   // 우리로 갔으면 더는 창고에 없다(GAP 09-27 7번)
+            }
             else lastFailedOwner = owner;
         }
 

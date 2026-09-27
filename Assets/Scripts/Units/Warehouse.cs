@@ -63,6 +63,13 @@ public class Warehouse : MonoBehaviour
             return false;
         }
 
+        // 원작 창고(A07Y)는 희귀함 이하 유닛에만 붙어 있다 — 그보다 위 등급은 창고 버튼 자체가 없다(GAP 09-27 7번).
+        if (unit.TryGetComponent(out UnitIdentity identity) && identity.Data != null && identity.Data.grade > UnitGrade.Rare)
+        {
+            PlayerNotification.Show(ownerPlayerId, "희귀함 이하 유닛만 창고에 보낼 수 있습니다.");
+            return false;
+        }
+
         if (capacity > 0 && stored.Count >= capacity)
         {
             // 플레이어가 보고 다른 유닛을 고를 수 있는 실패라 화면에도 알린다(PM 지시, 2026-09-05).
@@ -87,6 +94,18 @@ public class Warehouse : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// 창고 밖으로 옮겨진 유닛을 목록에서 뺀다(순간이동은 부른 쪽이 이미 했다). V(모으기)·C(우리로)가 창고 섬의 유닛을
+    /// 끌어내도 목록에 남아 있어 B(회수)가 그걸 다시 「창고에서 꺼내기」로 다루고, 조합이 「창고 유닛 먼저 소모」로
+    /// 필드 유닛보다 앞세웠다(GAP 09-27 7번).
+    /// </summary>
+    public static void Forget(GameObject unit)
+    {
+        if (unit == null || !unit.TryGetComponent(out OwnedByPlayer owner)) return;
+        Warehouse warehouse = PlayerContext.Get(owner.OwnerId)?.Warehouse;
+        if (warehouse != null) warehouse.stored.Remove(unit);
+    }
+
     // 창고 섬은 바다로 둘러싸여 있어 지상 유닛은 걸어서 오갈 수 없다. 순간이동이 유일한 방법이다.
     static void Teleport(GameObject unit, Vector3 destination)
     {
@@ -101,6 +120,14 @@ public class Warehouse : MonoBehaviour
         {
             unit.transform.position = destination;
         }
+    }
+
+    /// <summary>그 점이 창고 섬 위인가(흩어 놓는 반경의 두 배 안).</summary>
+    public bool IsNearIsland(Vector3 position)
+    {
+        Vector3 d = position - transform.position;
+        d.y = 0f;
+        return d.magnitude <= placementRadius * 2f;
     }
 
     // 한 점에 몰아 놓으면 서로 밀어내느라 흩어진다. 나선으로 자리를 벌려 놓는다.
