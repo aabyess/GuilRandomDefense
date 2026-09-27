@@ -66,6 +66,13 @@ public class GamblingOptionData : ScriptableObject
     [Header("항법 '도박광' 연동 — 원작이 이 필드를 통해 확인된 옵션만 켠다(추측 금지)")]
     public bool scalesWithGamblerNavigation;
 
+    // 원작 유닛도박 공지(Trig_Unit_Gemble_2/3/4, j:13081~13132) — 비어 있으면(하급) 본인에게만 「실패 !」·「이름 획득 !」.
+    //    채워져 있으면 전원 10초: 실패 「{닉네임}님이 {announceFailLabel} 도박을 실패 하셨습니다!」,
+    //    당첨 「{닉네임}님이 {announceSuccessLabel} 도박으로 {유닛} 획득 !」.
+    [Header("공지 — 원작 유닛도박 전원 문구")]
+    public string announceFailLabel;
+    public string announceSuccessLabel;
+
     // ⚠️ 맨 뒤에 추가(2026-09-07, "희귀함 리롤" A0VX, UNIQUE_REROLE_AND_SELL_FAMILY.md ⑦) —
     // A0VX는 원작에서 정확히 3곳(H0B0판매·h06D 고급유닛도박·스토리Tier4)의 "최종 폴백
     // 분기"(지정된 특별 결과가 아닌 일반 랜덤풀 결과)에서만 붙는다. 우리 도박소 옵션 중

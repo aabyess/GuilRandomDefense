@@ -544,11 +544,19 @@ public class GamblingShop : MonoBehaviour, ILaneShop
             // 특정 자산 하나로 고정이 안 됨, UniqueRerollAbility 클래스 주석 참고).
             if (!bonusHit && option.grantsUniqueRerollOnGenericSuccess)
                 UniqueRerollAbility.Attach(spawned, uniqueRerollAbilityData, unitSpawner);
+            AnnounceUnitGamble(option, owner.OwnerId, reward);
         }
-        else if (option.grantFailureReward)
+        else
         {
-            context.ResourceWallet.Add(ResourceType.LuckyToken, FailureLuckyTokens(option, context));
-            context.ResourceWallet.Add(ResourceType.Wood, option.failureWood);
+            if (option.grantFailureReward)
+            {
+                context.ResourceWallet.Add(ResourceType.LuckyToken, FailureLuckyTokens(option, context));
+                context.ResourceWallet.Add(ResourceType.Wood, option.failureWood);
+                // 원작 j:13103/13131(본인 10초): 도박광 항법 보너스가 붙었을 때만.
+                if (option.scalesWithGamblerNavigation && context.NavigationState != null && context.NavigationState.Choice == NavigationChoice.Gambler)
+                    PlayerNotification.Show(owner.OwnerId, "<color=#FFD700>항법효과:</color> + <color=#20B2AA>나무 1개</color> <color=#FF8200>+행운의 토큰 1개</color>를 돌려받습니다!", 10f);
+            }
+            AnnounceUnitGamble(option, owner.OwnerId, null);
         }
 
         return true;
@@ -556,6 +564,23 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 
     // ⚠️ 2026-09-06 신설("항법" 5택1 연결) — 원작 다른세계 도박 실패 시 럭키토큰 공식
     // "1+Dobak_Tech_int"(항법 "도박광" 선택 시 1, 아니면 0)을 그대로 옮긴다.
+    // 원작 유닛도박 결과 문구(알림 묶음 6/13, GAP 71). 하급(라벨 없음)은 본인만 — 당첨은 UnitAcquireNotice가 이미 「이름 - 등급 획득!」을 띄워 실패만.
+    static void AnnounceUnitGamble(GamblingOptionData option, int ownerId, UnitData reward)
+    {
+        string label = reward != null ? option.announceSuccessLabel : option.announceFailLabel;
+        if (string.IsNullOrEmpty(label))
+        {
+            if (reward == null) PlayerNotification.Show(ownerId, "<color=#FF0000>실패 !</color>", 10f);   // j:13064
+            return;
+        }
+        string who = $"<color=#FF8200>{PlayerDisplayName.Of(ownerId)}</color>";
+        string line = reward != null
+            ? $"{who} <color=#FF8200>님이 {label} 도박으로</color> <color=#FF0000>{reward.unitName} 획득 !</color>"
+            : $"{who} <color=#FF8200>님이 {label} 도박을</color> <color=#FF0000>실패 하셨습니다!</color>";
+        foreach (PlayerContext context in PlayerContext.Occupied)
+            PlayerNotification.Show(context.PlayerId, line, 10f);
+    }
+
     // scalesWithGamblerNavigation이 꺼진 옵션(고급도박 등)은 기존 그대로
     // failureLuckyTokens만 돌려준다 — 회귀 없음.
     static int FailureLuckyTokens(GamblingOptionData option, PlayerContext context)
