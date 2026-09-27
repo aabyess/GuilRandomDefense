@@ -177,7 +177,7 @@ public class RewardDistributor : MonoBehaviour
         GrantKillGold(owner, round);
         GrantResources(owner, data);
 
-        if (data.isBoss) GrantBossReward(owner, round);
+        if (data.isBoss) GrantBossReward(owner, round, data);
     }
 
     // 원작 문구의 보상 부분 — 「N골드와 나무 N개」(우리 데이터 그대로).
@@ -236,7 +236,7 @@ public class RewardDistributor : MonoBehaviour
         if (data.goldReward > 0) killer.GoldWallet?.Add(data.goldReward);
         GrantResources(killer, data);
         if (data.savePointReward > 0) killer.PersistentSave?.AddSessionPoints(data.savePointReward);
-        if (data.isBoss) GrantBossReward(killer, round);
+        if (data.isBoss) GrantBossReward(killer, round, data);
     }
 
     // rewardsAllPlayers 전용(물범류) — 확정 지급, 원작 별개 축이라 그대로 둔다.
@@ -293,12 +293,18 @@ public class RewardDistributor : MonoBehaviour
         context.GoldWallet?.ZeroOut();
     }
 
-    void GrantBossReward(PlayerContext context, int round)
+    void GrantBossReward(PlayerContext context, int round, EnemyData boss)
     {
         if (!BossRewardByRound.TryGetValue(round, out (int gold, int wood) reward)) return;
 
         context.GoldWallet?.Add(reward.gold);
         context.ResourceWallet?.Add(ResourceType.Wood, reward.wood);
+
+        // 원작 Trig_BossReward(j:13456~13480, 레인 주인에게만): 「{보스}  처치!」(7초) + 「N골드 + 나무 N개 를 획득!」(10초) — 알림 묶음 11/13, GAP 102.
+        //    패왕의길 「항법효과: + 나무 1개 를 추가로 획득!」은 그 보상 자체가 아직 없어(GAP 59) 띄우지 않는다.
+        string name = boss != null && !string.IsNullOrEmpty(boss.enemyName) ? boss.enemyName : "보스";
+        PlayerNotification.Show(context.PlayerId, $"{name}  <color=#FF8200>처치!</color>", 7f);
+        PlayerNotification.Show(context.PlayerId, $"<color=#FFD700>{reward.gold}골드</color> + <color=#20B2AA>나무 {reward.wood}개</color> <color=#FF8200>를 획득!</color>", 10f);
     }
 
     // 스토리 클리어 보상: 전체 플레이어에게 골드 + 자원 + 위습 지급.
