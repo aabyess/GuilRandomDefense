@@ -687,15 +687,65 @@ public class RoundManager : MonoBehaviour
     //   DifficultyManager는 안 건드리고 여기서 IsModeSelected를 본다(구현담당1 GAP 4와 겹치지 않게). 씬 진입 2초 뒤부터 —
     //   멀티 친구가 아직 씬을 불러오는 중이면 알림이 사라진다. 판 도중 다시 들어온 사람은 이미 지나가서 안 받는다(원작도 없음).
     bool difficultyAnnounced;
-    static readonly System.Collections.Generic.Dictionary<DifficultyMode, string> DifficultyIntro = new System.Collections.Generic.Dictionary<DifficultyMode, string>
+
+    // 원작 안내문(wts TRIGSTR 8904·8914·8912·8910·8908·8906)의 **틀**에 우리 값(DifficultyTable·RoundManager)을 넣는다(PM 09-27).
+    //   원작 수치(보스 40%·이속 30% 등)는 우리 값과 다르다 — 우리 값이 들어간다. 원작 스토리 이름(어인섬) 자리에는 그 순서의 우리 이름.
+    //   우리에 없는 규칙을 말하는 줄은 뺀다: 모드별 유닛카운트 감소(41R 전엔 모든 모드 70), 악몽 조합 불가 30%(밴 시스템 없음), 0%인 변화.
+    List<string> BuildDifficultyIntro(DifficultyMode mode)
     {
-        { DifficultyMode.Easy, "|cff5f9ea0쉬움 모드가 선택되었습니다.\n보스를 죽이지 못해도 패배하지않으며,\n스토리의 체력이 20% 감소합니다.\n모든 라운드 유닛들의 체력이 15% 감소합니다.|r\n|cffffd70051라운드 진입시 클리어합니다.|r" },
-        { DifficultyMode.Normal, "|cff5f9ea0보통 모드가 선택되었습니다.\n60라운드 센고쿠 처치시 클리어합니다.|r" },
-        { DifficultyMode.Hard, "|cff5f9ea0어려움 모드가 선택되었습니다.\n유닛카운트가 80마리로 줄어듭니다.\n모든 적들의 체력이 증가하며\n보스유닛들의 체력이 40% 증가합니다.\n모든 적유닛들이 이동속도 30%증가오라를 받습니다.|r\n|cffffd70051라운드까지 어인섬을 파괴하지 못하면 패배합니다.|r" },
-        { DifficultyMode.Hell, "|cff5f9ea0지옥 모드가 선택되었습니다.\n유닛카운트가 80으로 줄어듭니다!\n적 유닛들의 체력이 대폭 증가합니다.\n보스유닛들의 체력이 125% 증가합니다..\n모든 적유닛들이 이동속도 30%증가오라를 받습니다." },
-        { DifficultyMode.God, "|cff5f9ea0신 모드가 선택되었습니다.\n모든 적유닛들의 체력이 감당할 수 없을 정도로 많아집니다.\n보스유닛들의 체력이 200% 증가합니다.\n모든 적유닛들이 이동속도 50%증가오라를 받습니다.\n41라운드부터 유닛카운트가 65로 감소합니다." },
-        { DifficultyMode.Nightmare, "|cff530080악몽 모드가 선택되었습니다.|r\n|cff5f9ea0상위테크 유닛의 30%가 조합이 불가능해집니다.\n마법 방어력이 15% 증가합니다.\n이동속도가 60% 증가합니다.\n41라운드부터 유닛카운트가 60으로 감소합니다." },
-    };
+        DifficultyModeData d = DifficultyTable.Get(mode);
+        var lines = new List<string>();
+        string Head(string name) => $"|cff5f9ea0{name} 모드가 선택되었습니다.";
+        int boss = d.bossPercent;
+        int move = Mathf.RoundToInt((d.moveSpeedMultiplier - 1f) * 100f);
+        int story = DifficultyTable.StoryHpPercent(mode);
+        string storyName(int order, string original) => StoryManager.Instance?.StoryAt(order - 1)?.storyName ?? original;
+        switch (mode)
+        {
+            case DifficultyMode.Easy:
+                lines.Add(Head("쉬움"));
+                lines.Add("보스를 죽이지 못해도 패배하지않으며,");
+                if (story < 0) lines.Add($"스토리의 체력이 {-story}% 감소합니다.");
+                if (d.mobCommonPercent < 0) lines.Add($"모든 라운드 유닛들의 체력이 {-d.mobCommonPercent}% 감소합니다.");
+                if (boss < 0) lines.Add($"보스유닛들의 체력이 {-boss}% 감소합니다.");
+                lines.Add($"|r|cffffd700{d.totalRounds + 1}라운드 진입시 클리어합니다.|r");
+                break;
+            case DifficultyMode.Normal:
+                lines.Add(Head("보통"));
+                lines.Add($"{d.totalRounds}라운드 보스 처치시 클리어합니다.|r");
+                break;
+            case DifficultyMode.Hard:
+                lines.Add(Head("어려움"));
+                if (d.mobCommonPercent > 0) lines.Add("모든 적들의 체력이 증가하며");
+                if (boss > 0) lines.Add($"보스유닛들의 체력이 {boss}% 증가합니다.");
+                if (move > 0) lines.Add($"모든 적유닛들이 이동속도 {move}%증가오라를 받습니다.");
+                string s9 = storyName(9, "어인섬");
+                lines.Add($"|r|cffffd70051라운드까지 {s9}{ObjectParticle(s9)} 파괴하지 못하면 패배합니다.|r");
+                break;
+            case DifficultyMode.Hell:
+                lines.Add(Head("지옥"));
+                if (d.mobCommonPercent > 0) lines.Add("적 유닛들의 체력이 대폭 증가합니다.");
+                if (boss > 0) lines.Add($"보스유닛들의 체력이 {boss}% 증가합니다..");
+                if (move > 0) lines.Add($"모든 적유닛들이 이동속도 {move}%증가오라를 받습니다.");
+                break;
+            case DifficultyMode.God:
+                lines.Add(Head("신"));
+                if (d.mobCommonPercent > 0) lines.Add("모든 적유닛들의 체력이 감당할 수 없을 정도로 많아집니다.");
+                if (boss > 0) lines.Add($"보스유닛들의 체력이 {boss}% 증가합니다.");
+                if (move > 0) lines.Add($"모든 적유닛들이 이동속도 {move}%증가오라를 받습니다.");
+                if (d.round41UnitCountLimit > 0) lines.Add($"41라운드부터 유닛카운트가 {d.round41UnitCountLimit}로 감소합니다.");
+                break;
+            default:
+                lines.Add("|cff530080악몽 모드가 선택되었습니다.|r");
+                lines.Add("|cff5f9ea0");
+                int magic = Mathf.RoundToInt((1f - d.magicMultiplier) * 100f);
+                if (magic > 0) lines.Add($"마법 방어력이 {magic}% 증가합니다.");
+                if (move > 0) lines.Add($"이동속도가 {move}% 증가합니다.");
+                if (d.round41UnitCountLimit > 0) lines.Add($"41라운드부터 유닛카운트가 {d.round41UnitCountLimit}으로 감소합니다.");
+                break;
+        }
+        return Wc3Text.ToRichLines(string.Join("\n", lines));
+    }
 
     void AnnounceDifficultyOnce()
     {
@@ -703,8 +753,7 @@ public class RoundManager : MonoBehaviour
         DifficultyManager difficulty = DifficultyManager.Instance;
         if (difficulty == null || !difficulty.IsModeSelected) return;
         difficultyAnnounced = true;
-        if (!DifficultyIntro.TryGetValue(difficulty.Current, out string text)) return;
-        foreach (string line in Wc3Text.ToRichLines(text)) AnnounceAll(line, 30f);
+        foreach (string line in BuildDifficultyIntro(difficulty.Current)) AnnounceAll(line, 30f);
         if (difficulty.Current == DifficultyMode.Easy)
             AnnounceAll("<color=#FF4500>스토리 존에 진입하여 스토리 격파시 클리어에 용이합니다.</color>", 10f);
     }
