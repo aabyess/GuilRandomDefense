@@ -52,6 +52,7 @@ using UnityEngine.SceneManagement;
 ///   -mpSoloMenuMainAt 초 경로 (혼자 하기) 그 초에 「메뉴」 첫 화면([계속하기]·[소리 끄기]·[처음 화면으로])을 열고 캡처
 ///   -mpSoloShopSoundAt 초     (혼자 하기) 돈을 채워 500엔 도박(해금·재고 7로)을 7번 · 특성 포인트 구매 · 졸업 뒤 목재 구입 — 결과마다 소리 여부
 ///   -mpSoloCoinAt 초          (혼자 하기) 그 초에 10엔 도박 → 소리 끔 → 10엔 도박 → 소리 켬(끈 동안 안 나는지)
+///   -mpTestGap 초             (호스트) GAP 09-27 다섯 항목 확인 — 데스 경고·위습 페널티·패배 세이브(슬롯 1)·창고·판매 위습
 ///   -mpTestSelect 초 폴더     (양쪽, 클라 확인용) 슬롯 1(친구) 유닛 최대 4기와 레인 1 적 둘을 **거울 ID 순**으로 골라 캡처 —
 ///                             방장·친구가 같은 개체를 고르므로 파일 이름(id)으로 나란히 비교한다. 소환 없이 있는 것만
 ///   -mpTestPortraits 초 폴더  (호스트) 흔함·특별함·재규어·적·매머드·보스를 차례로 골라 초상화 캡처 + 초상 켬/끔 FPS
@@ -89,6 +90,7 @@ public class NetLauncher : MonoBehaviour
     float rejoinAtTime = -1f;
     float testMenuDelay = -1f;
     int testDupes;
+    float testGapDelay = -1f;
     float testCoinDelay = -1f;
     int testCoinCount;
     float soloCoinAt = -1f;
@@ -210,6 +212,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpTestFinishRun": testFinishRunDelay = Seconds(i + 1); break;
                 case "-mpCamWisp": camWispDelay = Seconds(i + 1); break;
                 case "-mpToken": cliToken = Arg(i + 1); break;
+                case "-mpTestGap": testGapDelay = Seconds(i + 1); break;
                 case "-mpTestCoin": testCoinDelay = Seconds(i + 1); int.TryParse(Arg(i + 2), out testCoinCount); break;
                 case "-mpSoloCoinAt": soloCoinAt = Seconds(i + 1); break;
                 case "-mpSoloShopSoundAt": soloShopSoundAt = Seconds(i + 1); break;
@@ -708,6 +711,7 @@ public class NetLauncher : MonoBehaviour
         if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
         if (testFinishRunDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestFinishRunAfter(testFinishRunDelay));
         if (camWispDelay >= 0f) StartCoroutine(CamWispAfter(camWispDelay));
+        if (testGapDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestGapAfter(testGapDelay));
         if (testCoinDelay >= 0f) StartCoroutine(TestCoinAfter(testCoinDelay, Mathf.Max(1, testCoinCount)));
         if (testDupes > 0 && GameAuthority.IsServer) SpawnDuplicateUnits(testDupes);
         if (testSameTypeDelay >= 0f) StartCoroutine(TestSameTypeAfter(testSameTypeDelay, testSameTypeShot));
@@ -758,6 +762,97 @@ public class NetLauncher : MonoBehaviour
             Debug.Log($"[MP] 동전 테스트 {i + 1}/{count}: 슬롯 {LocalPlayer.LocalPlayerId} 「{shop.GetSlotView(0).label.Replace('\n', ' ')}」 → 보냄 {sent}");
             yield return new WaitForSecondsRealtime(0.8f);
         }
+    }
+
+    // GAP 09-27 1·2·5·7·8 확인(호스트). 사사로운 필드·메서드는 리플렉션으로 — 테스트 전용, 게임 코드는 안 바꾼다.
+    IEnumerator TestGapAfter(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        const System.Reflection.BindingFlags Any = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+        RoundManager round = FindFirstObjectByType<RoundManager>();
+        PlayerContext me = PlayerContext.Get(0), friend = PlayerContext.Get(1);
+        if (round == null || me == null || friend == null) { Debug.LogWarning("[GAP테스트] 준비물 없음"); yield break; }
+        int shown = 0;
+        System.Action<int, string, float> spy = (slot, msg, dur) => { if (shown++ < 40) Debug.Log($"[GAP테스트] 알림 → 슬롯 {slot}({dur:0}초): {msg}"); };
+        PlayerNotification.Shown += spy;
+
+        // 2. 데스 경고: 한계를 레인 0 적 수 근처로 잠깐 낮춘다.
+        var threshold = typeof(RoundManager).GetField("enemyCountThreshold", Any);
+        int original = (int)threshold.GetValue(round);
+        int lane0 = EnemyDummy.CountInLane(0);
+        Debug.Log($"[GAP테스트] 2. 데스 경고 — 레인0 적 {lane0}, 레인1 적 {EnemyDummy.CountInLane(1)}, 원래 한계 {original}");
+        threshold.SetValue(round, lane0 + 4);   // 한계−8 이상 · 한계 미만 → 「위험」
+        yield return new WaitForSecondsRealtime(1.5f);
+        threshold.SetValue(round, Mathf.Max(1, lane0));   // 한계 이상 → 「N회 남음」
+        yield return new WaitForSecondsRealtime(1.5f);
+        threshold.SetValue(round, original);
+        yield return new WaitForSecondsRealtime(0.5f);
+
+        // 8. 위습 페널티: += 누적 · 차단 라운드 문구 · 해적단 실패 문구.
+        round.BlockRoundRewardWisp(0, 2);
+        round.BlockRoundRewardWisp(0, 2);
+        Debug.Log($"[GAP테스트] 8. 차단 2+2 → 남은 {round.WispBlockRoundsRemaining(0)}(4여야 함)");
+        var grant = typeof(RoundManager).GetMethod("GrantFlatRoundReward", Any);
+        grant.Invoke(round, null);
+        Debug.Log($"[GAP테스트] 8. 라운드 위습 한 번 → 슬롯0 남은 차단 {round.WispBlockRoundsRemaining(0)}(3이어야 함)");
+        PirateQuestManager pirates = FindFirstObjectByType<PirateQuestManager>();
+        var quest = ScriptableObject.CreateInstance<PirateQuestData>();
+        quest.questName = "테스트 해적단";
+        quest.failWispBlockRounds = 2;
+        if (pirates != null) typeof(PirateQuestManager).GetMethod("HandleFailure", Any).Invoke(pirates, new object[] { quest, 1 });
+        Debug.Log($"[GAP테스트] 8. 해적단 실패(슬롯 1) → 슬롯1 남은 차단 {round.WispBlockRoundsRemaining(1)}(2여야 함)");
+        yield return new WaitForSecondsRealtime(0.5f);
+
+        // 1. 패배 세이브 + 8의 「죽은 사람 제외」: 슬롯 1을 패배시키고 라운드 위습을 한 번 더.
+        int points = friend.PersistentSave != null ? friend.PersistentSave.SessionPoints : -1;
+        typeof(RoundManager).GetMethod("HandlePlayerDefeated", Any).Invoke(round, new object[] { 1, friend });
+        Debug.Log($"[GAP테스트] 1. 슬롯 1 패배(세션 포인트 {points}) → 사망 {friend.IsDead}");
+        int friendWisps = Wisp.Active.Count(w => w != null && w.TryGetComponent(out OwnedByPlayer o) && o.OwnerId == 1);
+        int blockedBefore = round.WispBlockRoundsRemaining(1);
+        grant.Invoke(round, null);
+        int friendWispsAfter = Wisp.Active.Count(w => w != null && w.TryGetComponent(out OwnedByPlayer o) && o.OwnerId == 1);
+        Debug.Log($"[GAP테스트] 8. 죽은 슬롯1 라운드 위습 {friendWisps}→{friendWispsAfter}(같아야 함) · 차단 {blockedBefore}→{round.WispBlockRoundsRemaining(1)}(같아야 함)");
+        yield return new WaitForSecondsRealtime(0.5f);
+
+        // 7. 창고: 희귀함 초과 거절 · C/V로 옮기면 목록에서 빠짐.
+        UnitSpawner spawner = FindFirstObjectByType<UnitSpawner>();
+        Warehouse house = me.Warehouse;
+        LaneMarker lane = LaneMarker.Get(0);
+        UnitData legend = catalog.units.FirstOrDefault(u => u != null && u.prefab != null && u.grade == UnitGrade.Legendary);
+        UnitData uncommon = catalog.units.FirstOrDefault(u => u != null && u.prefab != null && u.grade == UnitGrade.Uncommon);
+        if (spawner != null && house != null && lane != null && legend != null && uncommon != null)
+        {
+            GameObject big = spawner.Spawn(legend, lane.TakeSpawnPosition(legend), 0);
+            Debug.Log($"[GAP테스트] 7. 전설 {legend.unitName} 창고 → {house.Store(big)}(false여야 함)");
+            GameObject a = spawner.Spawn(uncommon, lane.TakeSpawnPosition(uncommon), 0);
+            GameObject b = spawner.Spawn(uncommon, lane.TakeSpawnPosition(uncommon), 0);
+            Debug.Log($"[GAP테스트] 7. 안흔함 {uncommon.unitName} 창고 → {house.Store(a)} · 들고 있음 {house.Contains(a)}");
+            UnitCommands.SendToPen(new System.Collections.Generic.List<Selectable> { a.GetComponent<Selectable>() });
+            Debug.Log($"[GAP테스트] 7. C(우리로) 뒤 창고에 남음 {house.Contains(a)}(false여야 함)");
+            house.Store(a);
+            UnitCommands.Gather(new System.Collections.Generic.List<Selectable> { b.GetComponent<Selectable>() });   // 필드의 b 자리로 같은 이름 전부
+            Debug.Log($"[GAP테스트] 7. V(필드로 모으기) 뒤 창고에 남음 {house.Contains(a)}(false여야 함)");
+        }
+        else Debug.LogWarning("[GAP테스트] 7. 준비물 없음");
+        yield return new WaitForSecondsRealtime(0.5f);
+
+        // 5. 판매 위습 종류: 판매 위습 확률 1인 유닛을 팔아 새로 생긴 위습 이름을 본다 · 씬 unionWisp 현재값.
+        UnitData seller = catalog.units.FirstOrDefault(u => u != null && u.prefab != null && u.sellRewardWisp != null && u.sellRewardWispChance >= 1f && u.grade != UnitGrade.Common);
+        GameHud hud = FindFirstObjectByType<GameHud>();
+        if (seller != null && spawner != null && hud != null)
+        {
+            var before = new System.Collections.Generic.HashSet<Wisp>(Wisp.Active);
+            GameObject s = spawner.Spawn(seller, lane.TakeSpawnPosition(seller), 0);
+            hud.ExecuteSellOn(s.GetComponent<Selectable>());
+            yield return null;
+            var fresh = Wisp.Active.Where(w => w != null && !before.Contains(w)).Select(w => w.Data != null ? w.Data.name : "?");
+            Debug.Log($"[GAP테스트] 5. {seller.unitName}({seller.grade}) 판매 → 에셋 {seller.sellRewardWisp.name} · 새 위습 [{string.Join(", ", fresh)}]");
+        }
+        var union = typeof(RewardDistributor).GetField("unionWisp", Any)?.GetValue(RewardDistributor.Instance) as WispData;
+        Debug.Log($"[GAP테스트] 5. 씬 RewardDistributor.unionWisp = {(union != null ? union.name : "없음")}(맵 재생성 전이면 Wisp_흔함)");
+
+        PlayerNotification.Shown -= spy;
+        Debug.Log("[GAP테스트] 끝");
     }
 
     void SpawnDuplicateUnits(int copies)
