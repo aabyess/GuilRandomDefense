@@ -161,6 +161,9 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
     /// 코드에 안 박고 자산에서 읽는다)에 도달하면 카운터를 0으로 리셋하고 true를 돌려준다
     /// (그 순간 위습을 지급하라는 신호 — 실제 지급은 호출부 몫). everyN<=0이면 카운터 자체를
     /// 안 건드리고 항상 false(안전한 무동작).</summary>
+    /// <summary>흔함 판매 누적(A09G) 지금 몇 번째인가 — 「N 포인트 적립!」 문구용.</summary>
+    public int CommonSellCount => commonSellCount;
+
     public bool RegisterCommonSell(int everyN)
     {
         if (everyN <= 0) return false;

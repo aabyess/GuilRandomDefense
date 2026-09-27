@@ -1055,6 +1055,8 @@ public class GameHud : MonoBehaviour
 
             // 등급별 판매보상 4단계(UNIQUE_SELL_6TIER_FULL.md) — 위습·목재 각각 독립
             // 확률(둘 다 기본값 1=확정이라 기존 h05X류는 항상 나가던 대로 그대로 나간다).
+            int seller = owner.OwnerId;
+            bool chancy = identity.Data.sellRewardWispChance < 1f;   // 안흔함(A0B8) — 원작 50% 성공/실패 문구가 있다
             if (identity.Data.sellRewardWisp != null && RewardDistributor.Instance != null &&
                 Random.value < identity.Data.sellRewardWispChance)
             {
@@ -1063,26 +1065,38 @@ public class GameHud : MonoBehaviour
                     new WispReward { wisp = identity.Data.sellRewardWisp, count = identity.Data.sellRewardWispCount }
                 };
                 RewardDistributor.Instance.GrantWisps(context, reward);
+                // 원작 j:13162(본인 4초) — 알림 묶음 13/13, GAP 109
+                if (chancy) PlayerNotification.Show(seller, "<color=#FF8200>안흔함 판매성공!</color>     <color=#FFD700>1기의 랜덤위습 획득!</color>", 4f);
             }
+            else if (chancy && identity.Data.sellRewardWisp != null)
+                PlayerNotification.Show(seller, "<color=#FF0000>안흔함 판매실패! ㅠㅠ</color>", 4f);   // j:13164
 
             if (identity.Data.sellRewardWood > 0 && context.ResourceWallet != null &&
                 Random.value < identity.Data.sellRewardWoodChance)
             {
                 context.ResourceWallet.Add(ResourceType.Wood, identity.Data.sellRewardWood);
+                PlayerNotification.Show(seller, $"<color=#20B2AA>{identity.Data.sellRewardWood}개의 추가목재 획득!</color>", 4f);   // j:13153/13165
             }
 
             // 흔함 9종 판매 누적(A09G) — 플레이어 전체 공유 카운터가 N번째에 도달할 때만
             // 위습을 준다(UnitUpgrades.RegisterCommonSell 참고). RewardDistributor.
             // GrantWisps는 count를 1로 고정 — 이 보상은 항상 위습 1기다.
             if (identity.Data.sellRewardEveryNSells > 0 && identity.Data.sellRewardEveryNWisp != null &&
-                RewardDistributor.Instance != null &&
-                (context.UnitUpgrades?.RegisterCommonSell(identity.Data.sellRewardEveryNSells) ?? false))
+                RewardDistributor.Instance != null && context.UnitUpgrades != null)
             {
-                List<WispReward> reward = new List<WispReward>
+                int everyN = identity.Data.sellRewardEveryNSells;
+                if (context.UnitUpgrades.RegisterCommonSell(everyN))
                 {
-                    new WispReward { wisp = identity.Data.sellRewardEveryNWisp, count = 1 }
-                };
-                RewardDistributor.Instance.GrantWisps(context, reward);
+                    List<WispReward> reward = new List<WispReward>
+                    {
+                        new WispReward { wisp = identity.Data.sellRewardEveryNWisp, count = 1 }
+                    };
+                    RewardDistributor.Instance.GrantWisps(context, reward);
+                    // 원작 j:13152(본인 4초) — 알림 묶음 13/13, GAP 108
+                    PlayerNotification.Show(seller, $"누적 {everyN}포인트<color=#FF8200>를 획득하여</color> <color=#FFD700> 1기의 랜덤위습 획득!</color>", 4f);
+                }
+                else
+                    PlayerNotification.Show(seller, $"{context.UnitUpgrades.CommonSellCount}<color=#FF8200> 포인트 적립!</color>", 4f);   // j:13155
             }
 
             // h0BS(메타몽) 전용 — 재고(ItemGambleState.stock) 차감·도박·풀 제외 등록은
