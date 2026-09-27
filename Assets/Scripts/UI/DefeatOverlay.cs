@@ -54,6 +54,7 @@ public class DefeatOverlay : MonoBehaviour
         // RoundManager는 싱글턴이 아니라 씬 오브젝트다. 패배는 한 판에 한 번이라
         // 그때 한 번만 찾으면 된다(매 프레임 찾지 않는다).
         RoundManager rounds = FindFirstObjectByType<RoundManager>(FindObjectsInactive.Include);
+        PlayerContext local = PlayerContext.Local;   // 사유(원작 패배 문구) — 없으면(옛 경로) 데스카운트 문구
         int round = rounds != null ? rounds.CurrentRound : 0;
         bool allDead = rounds != null && rounds.IsGameOver;
 
@@ -63,7 +64,7 @@ public class DefeatOverlay : MonoBehaviour
         //    「유닛을 잃었습니다」라고 써 놓고 안 잃으면 그 화면이 거짓말을 한다.
         detailText.text =
             $"라운드 {round}\n\n" +
-            "레인에 적이 너무 많아 데스카운트가 0이 됐습니다.\n" +
+            $"{(string.IsNullOrEmpty(local?.DefeatMessage) ? "레인에 적이 너무 많아 데스카운트가 0이 됐습니다." : local.DefeatMessage)}\n" +
             "골드를 잃고, 레인의 내 유닛과 적이 사라졌습니다.\n" +
             "<color=#9FD5FF>위습은 그대로 남아 있습니다.</color>\n\n" +
             (allDead

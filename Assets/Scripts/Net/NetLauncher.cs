@@ -805,7 +805,7 @@ public class NetLauncher : MonoBehaviour
 
         // 1. 패배 세이브 + 8의 「죽은 사람 제외」: 슬롯 1을 패배시키고 라운드 위습을 한 번 더.
         int points = friend.PersistentSave != null ? friend.PersistentSave.SessionPoints : -1;
-        typeof(RoundManager).GetMethod("HandlePlayerDefeated", Any).Invoke(round, new object[] { 1, friend });
+        typeof(RoundManager).GetMethod("HandlePlayerDefeated", Any).Invoke(round, new object[] { 1, friend, "제한시간안에 보스를 잡지 못해 패배하였습니다.", 10f });
         Debug.Log($"[GAP테스트] 1. 슬롯 1 패배(세션 포인트 {points}) → 사망 {friend.IsDead}");
         int friendWisps = Wisp.Active.Count(w => w != null && w.TryGetComponent(out OwnedByPlayer o) && o.OwnerId == 1);
         int blockedBefore = round.WispBlockRoundsRemaining(1);

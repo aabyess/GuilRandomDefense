@@ -249,7 +249,8 @@ public class RoundManager : MonoBehaviour
 
             if (laneDeathCount[playerId] <= 0)
             {
-                HandlePlayerDefeated(playerId, context);
+                // 원작 j:3385(5초): 「라인의 유닛이{한계}마리가 되어 패배하셨습니다 !」
+                HandlePlayerDefeated(playerId, context, $"라인의 유닛이{enemyCountThreshold}마리가 되어 패배하셨습니다 !", 5f);
             }
         }
     }
@@ -273,14 +274,26 @@ public class RoundManager : MonoBehaviour
     // 적까지 사라지면 그건 보상이 된다). PM 승인 완료(2026-09-03) — 사장님 확인은 PM이 진행.
     // 위습·상점 건물은 안 건드린다 — 사장님 원문("유닛들"·"적유닛")에 없고, 특히 건물을
     // 부수면 되돌릴 방법이 없어진다.
-    void HandlePlayerDefeated(int playerId, PlayerContext context)
+    // 원작 패배 문구 뒤에 붙는 줄(TRIGSTR_10804 등). 뒤의 공식채널·카페 광고 두 줄은 뺀다(GAP 알림 묶음, PM 09-27).
+    const string DefeatFarewell = "다음번엔 꼭 클리어 하시길 기원하겠습니다.";
+
+    /// <summary>
+    /// 패배 처리. <paramref name="reason"/>은 원작 문구(색 없이) — 그 플레이어에게만 알림으로 띄우고(원작 DisplayTimedTextToForce·
+    /// CustomDefeatBJ) 패배 화면에도 쓴다. 전엔 사유가 없어 패배 화면이 늘 「데스카운트 0」이었다(GAP 09-27 46).
+    /// </summary>
+    void HandlePlayerDefeated(int playerId, PlayerContext context, string reason, float seconds)
     {
+        if (!context.IsDead && !string.IsNullOrEmpty(reason))
+        {
+            PlayerNotification.Show(playerId, $"<color=#00CED1>{reason}</color>", seconds);
+            PlayerNotification.Show(playerId, $"<color=#1E90FF>{DefeatFarewell}</color>", seconds);
+        }
         // 원작 패배 분기: SavePlayer(p)를 **먼저** 부르고 그다음 udg_Save_Death=1(war3map_new.j:3388 데스카운트 한계,
         // 5588/5629 보스 타임리밋). 그래서 그 판의 플레이포인트·최고점은 저장되고, 클리어 횟수는 안 오른다(Clear_Game=0).
         // 그 뒤로만 「패배한 상태에선 더이상 세이브가 불가능합니다」다(GAP 09-27 1번). 멀티 원격 슬롯은 FinishRun →
         // WriteToDisk가 NetSaves로 그 친구에게 돌려보낸다.
         if (!context.IsDead && context.PersistentSave != null) context.PersistentSave.FinishRun(false);
-        context.MarkDead();
+        context.MarkDead(reason);
         Debug.Log($"플레이어 {playerId + 1} 사망");
 
         // 원작 udg_PlayerDeath[i]=1 분기의 같은 SetPlayerStateBJ(플레이어, GOLD, 0).
@@ -303,13 +316,23 @@ public class RoundManager : MonoBehaviour
     }
 
     // 전원 패배(원작 CustomDefeatBJ를 모두에게) — 41R 스토리 게이트·와노쿠니 제한시간 초과가 쓴다.
+    // reason은 원작 패배 문구(화면에 그대로 뜬다).
     public void DefeatAllPlayers(string reason)
     {
         Debug.Log($"전원 패배 — {reason}");
         foreach (PlayerContext context in PlayerContext.Occupied)
         {
-            if (!context.IsDead) HandlePlayerDefeated(context.PlayerId, context);
+            if (!context.IsDead) HandlePlayerDefeated(context.PlayerId, context, reason, 10f);
         }
+    }
+
+    /// <summary>한국어 목적격 조사 — 받침 있으면 「을」, 없으면 「를」, 한글이 아니면(예: 日本) 「을(를)」.</summary>
+    public static string ObjectParticle(string word)
+    {
+        if (string.IsNullOrEmpty(word)) return "을(를)";
+        char last = word[word.Length - 1];
+        if (last < 0xAC00 || last > 0xD7A3) return "을(를)";
+        return (last - 0xAC00) % 28 != 0 ? "을" : "를";
     }
 
     // 보스 타임리밋 패배(2단계 A) — 원작 Trig_Enemy_Boss_create(구세계)/Trig_Enemy_Boss_sinsekai
@@ -355,10 +378,9 @@ public class RoundManager : MonoBehaviour
             yield break;
         }
 
-        // 원문 TRIGSTR_10804.
+        // 원문 TRIGSTR_10804·11584·15026(구세계·신세계 같은 문구, 10초).
         Debug.Log($"[보스제한] 레인 {laneIndex} R{roundNumber} — 제한 초과, 패배 처리 (보스 {boss.name}#{boss.GetInstanceID()} 체력 {boss.Hp:F0})");
-        PlayerNotification.Show(laneIndex, "제한시간안에 보스를 잡지 못해 패배하였습니다.");
-        HandlePlayerDefeated(laneIndex, context);
+        HandlePlayerDefeated(laneIndex, context, "제한시간안에 보스를 잡지 못해 패배하였습니다.", 10f);
     }
 
     void CheckAllDefeated()
@@ -457,9 +479,14 @@ public class RoundManager : MonoBehaviour
         if (gateOrder > 0 && (StoryManager.Instance == null || StoryManager.Instance.FinishedCount < gateOrder))
         {
             Debug.Log($"41라운드 게이트 — {mode.KoreanName()} 모드, 대응 스토리 미클리어(FinishedCount<{gateOrder})로 전멸 처리합니다.");
+            // 원작 CustomDefeatBJ: 지옥 「드레스로사를…」, 신·악몽 「홀케이크섬을 클리어하지 못하여 41라운드 이후를 진행하지 못했습니다.」
+            //    — 원작 이름 자리에 그 순서의 우리 스토리 이름을 넣는다(스토리 번호·이름은 우리 것, 09-05 메모).
+            string storyName = StoryManager.Instance != null ? StoryManager.Instance.StoryAt(gateOrder - 1)?.storyName : null;
+            if (string.IsNullOrEmpty(storyName)) storyName = mode == DifficultyMode.Hell ? "드레스로사" : "홀케이크섬";
+            string gateReason = $"{storyName}{ObjectParticle(storyName)} 클리어하지 못하여 41라운드 이후를 진행하지 못했습니다.";
             foreach (PlayerContext context in PlayerContext.Occupied)
             {
-                if (!context.IsDead) HandlePlayerDefeated(context.PlayerId, context);
+                if (!context.IsDead) HandlePlayerDefeated(context.PlayerId, context, gateReason, 10f);
             }
             return true;
         }

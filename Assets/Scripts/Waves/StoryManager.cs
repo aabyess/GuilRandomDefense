@@ -26,6 +26,9 @@ public class StoryManager : MonoBehaviour
     int finished;
 
     public StoryData Running => running;
+
+    /// <summary>순서(0부터)의 스토리 — 41R 게이트 패배 문구가 원작 이름 자리에 우리 이름을 넣는다.</summary>
+    public StoryData StoryAt(int index) => index >= 0 && index < stories.Count ? stories[index] : null;
     public bool IsWaiting => replica ? replicaWaiting : running == null && pending != null; // MP: 클라는 호스트 값
     public float SecondsUntilNext => replica ? replicaSeconds : Mathf.Max(0f, pendingTime - Time.time); // MP
 
@@ -144,7 +147,8 @@ public class StoryManager : MonoBehaviour
         running = null;
         activeEnemy = null;
         pending = null;
-        FindFirstObjectByType<RoundManager>()?.DefeatAllPlayers($"스토리 {story.storyName} 제한시간 초과");
+        // 원작 j:13758 「와노쿠니 격파에 실패하여 패배합니다.」 — 제한시간 스토리는 원작에 와노쿠니 하나. 이름 자리에 우리 스토리 이름.
+        FindFirstObjectByType<RoundManager>()?.DefeatAllPlayers($"{story.storyName} 격파에 실패하여 패배합니다.");
     }
 
     void Finish(StoryData story)
