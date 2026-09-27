@@ -227,16 +227,23 @@ public class RoundManager : MonoBehaviour
             // 원작 Trig_DeathTimer5: 유닛 수가 한계 **이상**이면 깎고, 아래로 내려가도 **되돌리지
             // 않는다** — Counter_death_amount를 올리는 자리가 원문 전체에 없다(판 전체 누적).
             // 2026-09-03엔 사장님 지시로 회복식이었는데 2026-09-11 「원작대로 바꾸자」로 누적식.
+            // 원작은 0.65초 타이머 하나가 계속 돌며 매 틱 판정한다(war3map_new.j:3386~3389) — 경고 문구도 그 틱마다
+            // 그 플레이어에게만 3초(GAP 09-27 2번). 한계−8 미만이면 아무 일도 없다.
+            laneDeathTimer[playerId] -= Time.deltaTime;
+            if (laneDeathTimer[playerId] > 0f) continue;
+            laneDeathTimer[playerId] = deathCountTickInterval;
+
             if (laneCounts[playerId] < enemyCountThreshold)
             {
-                laneDeathTimer[playerId] = deathCountTickInterval;
+                // 원작 elseif P_Counter >= ModeEnemyInt-8: 「(!)유닛 카운트가 위험합니다!」 + gg_snd_Hint(소리는 다음 단계).
+                if (laneCounts[playerId] >= enemyCountThreshold - 8)
+                    PlayerNotification.Show(playerId, "<color=#FFD700>(!)</color><color=#FF0000>유닛 카운트가 위험합니다!</color>", 3f);
                 continue;
             }
 
-            laneDeathTimer[playerId] -= Time.deltaTime;
-            if (laneDeathTimer[playerId] > 0f) continue;
-
-            laneDeathTimer[playerId] = deathCountTickInterval;
+            // 원작: 깎기 **전** 남은 횟수로 「N회 남음」을 띄우고 그다음 1 뺀다.
+            PlayerNotification.Show(playerId,
+                $"<color=#FFD700>(!)</color><color=#FF0000>데스 카운트에 도달합니다! {laneDeathCount[playerId]}회 남음! 0이 될 경우 패배합니다!</color>", 3f);
             laneDeathCount[playerId]--;
             Debug.Log($"[데스] 플레이어 {playerId + 1} 데스카운트: {laneDeathCount[playerId]} (레인 적 {laneCounts[playerId]})");
 
