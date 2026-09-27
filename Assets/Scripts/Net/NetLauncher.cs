@@ -46,6 +46,8 @@ using UnityEngine.SceneManagement;
 ///   -mpToken 문자열          접속 식별값(재접속 때 같은 사람 알아보기)을 이 값으로 — 한 기계 두 창 테스트용(기본은 설치마다 GUID)
 ///   -mpDropAt 초             (클라) 그 초(실행 뒤 절대 시간)에 [나가기] 예고 없이 러너를 끊는다 — 망 끊김 흉내
 ///   -mpRejoinAfter 초        (클라) 끊겨서 첫 화면으로 돌아온 뒤 그 초에 [다시 참가]를 누른다
+///   -mpTestDupes N           (호스트) 게임 씬 진입 뒤 슬롯마다 같은 흔함 N기 두 종류를 우리에 — 이름표 「×N」 확인용
+///   -mpTestSameType 초 경로   그 초에 내 유닛 하나로 「같은 종류 전부 선택」(더블클릭·Ctrl+클릭과 같은 함수)을 부르고 캡처
 ///   -mpTestSelect 초 폴더     (양쪽, 클라 확인용) 슬롯 1(친구) 유닛 최대 4기와 레인 1 적 둘을 **거울 ID 순**으로 골라 캡처 —
 ///                             방장·친구가 같은 개체를 고르므로 파일 이름(id)으로 나란히 비교한다. 소환 없이 있는 것만
 ///   -mpTestPortraits 초 폴더  (호스트) 흔함·특별함·재규어·적·매머드·보스를 차례로 골라 초상화 캡처 + 초상 켬/끔 FPS
@@ -82,6 +84,9 @@ public class NetLauncher : MonoBehaviour
     float rejoinAfter = -1f;
     float rejoinAtTime = -1f;
     float testMenuDelay = -1f;
+    int testDupes;
+    float testSameTypeDelay = -1f;
+    string testSameTypeShot;
     float soloMenuAt = -1f;
     string soloMenuShot;
     float soloHomeAt = -1f;
@@ -195,6 +200,8 @@ public class NetLauncher : MonoBehaviour
                 case "-mpTestFinishRun": testFinishRunDelay = Seconds(i + 1); break;
                 case "-mpCamWisp": camWispDelay = Seconds(i + 1); break;
                 case "-mpToken": cliToken = Arg(i + 1); break;
+                case "-mpTestDupes": int.TryParse(Arg(i + 1), out testDupes); break;
+                case "-mpTestSameType": testSameTypeDelay = Seconds(i + 1); testSameTypeShot = Arg(i + 2); break;
                 case "-mpSoloMenuAt": soloMenuAt = Seconds(i + 1); soloMenuShot = Arg(i + 2); break;
                 case "-mpSoloHomeAt": soloHomeAt = Seconds(i + 1); break;
                 case "-mpTestMenu": testMenuDelay = Seconds(i + 1); testMenuShot = Arg(i + 2); break;
@@ -684,6 +691,8 @@ public class NetLauncher : MonoBehaviour
         if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
         if (testFinishRunDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestFinishRunAfter(testFinishRunDelay));
         if (camWispDelay >= 0f) StartCoroutine(CamWispAfter(camWispDelay));
+        if (testDupes > 0 && GameAuthority.IsServer) SpawnDuplicateUnits(testDupes);
+        if (testSameTypeDelay >= 0f) StartCoroutine(TestSameTypeAfter(testSameTypeDelay, testSameTypeShot));
         if (testMenuDelay >= 0f) StartCoroutine(TestMenuAfter(testMenuDelay, testMenuShot));
         if (testSelectDelay >= 0f) StartCoroutine(TestSelectAfter(testSelectDelay, testSelectDir));
         if (testPortraitsDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestPortraitsAfter(testPortraitsDelay, testPortraitsDir));
@@ -717,6 +726,52 @@ public class NetLauncher : MonoBehaviour
             }
         }
         Debug.Log($"[MP] -mpTestUnits: 유닛 {spawned}기 소환");
+    }
+
+    void SpawnDuplicateUnits(int copies)
+    {
+        UnitSpawner spawner = FindFirstObjectByType<UnitSpawner>();
+        var commons = catalog != null ? catalog.units.Where(u => u != null && u.prefab != null && u.grade == UnitGrade.Common).ToList() : null;
+        if (spawner == null || commons == null || commons.Count < 2) return;
+        int spawned = 0;
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            LaneMarker lane = LaneMarker.Get(context.PlayerId);
+            for (int kind = 0; kind < 2; kind++)
+            {
+                UnitData data = commons[(context.PlayerId * 2 + kind) % commons.Count];
+                for (int i = 0; i < copies; i++)
+                {
+                    Vector3 position = lane != null ? lane.TakeSpawnPosition(data) : context.transform.position;
+                    if (spawner.Spawn(data, position, context.PlayerId) != null) spawned++;
+                }
+            }
+        }
+        Debug.Log($"[MP] -mpTestDupes: 같은 유닛 {copies}기씩 두 종류, 모두 {spawned}기");
+    }
+
+    // 클라 확인(PM 09-26): 겉모습(거울)에도 UnitIdentity·OwnedByPlayer·Selectable이 있어 같은 종류 선택이 되는가.
+    // 마우스를 흉내 내지 않고 SelectionManager의 같은 함수(더블클릭·Ctrl+클릭이 부르는 SelectSameTypeOnScreen)를 직접 부른다.
+    IEnumerator TestSameTypeAfter(float seconds, string path)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        SelectionManager selection = FindFirstObjectByType<SelectionManager>();
+        var mine = UnitIdentity.Active.Where(u => u != null && u.Data != null && u.OwnerId == LocalPlayer.LocalPlayerId).ToList();
+        var seedIdentity = mine.GroupBy(u => u.Data).OrderByDescending(g => g.Count()).Select(g => g.First()).FirstOrDefault();
+        if (selection == null || seedIdentity == null || !seedIdentity.TryGetComponent(out Selectable seed))
+        {
+            Debug.LogWarning($"[MP] 같은 종류 선택 테스트: 준비물 없음(선택기 {selection != null}, 내 유닛 {mine.Count})");
+            yield break;
+        }
+        int sameOwned = mine.Count(u => u.Data == seedIdentity.Data);
+        var method = typeof(SelectionManager).GetMethod("SelectSameTypeOnScreen", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        if (method == null) { Debug.LogWarning("[MP] 같은 종류 선택 테스트: SelectSameTypeOnScreen을 못 찾음"); yield break; }
+        method.Invoke(selection, new object[] { seed, seedIdentity.Data });
+        Debug.Log($"[MP] 같은 종류 선택 테스트(IsServer={GameAuthority.IsServer}, 슬롯 {LocalPlayer.LocalPlayerId}): {seedIdentity.Data.unitName} — " +
+                  $"내 것 {sameOwned}기 중 {selection.Selected.Count}기 선택{(seed.name.Contains("거울") ? " (거울)" : "")}");
+        yield return new WaitForSecondsRealtime(1f);
+        yield return new WaitForEndOfFrame();
+        if (!string.IsNullOrEmpty(path)) ScreenCapture.CaptureScreenshot(path);
     }
 
     // 테스트 전용: 사람이 우클릭하는 대신, 내 위습/유닛을 목적지로 보낸다. 클라는 우클릭과 같은 요청 RPC를 탄다.
