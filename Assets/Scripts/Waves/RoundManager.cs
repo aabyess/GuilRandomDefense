@@ -165,6 +165,7 @@ public class RoundManager : MonoBehaviour
     void Update()
     {
         if (!GameAuthority.IsServer) return;
+        AnnounceDifficultyOnce();
         if (isGameOver) return;
 
         if (!roundsStarted)
@@ -678,6 +679,33 @@ public class RoundManager : MonoBehaviour
         DifficultyMode? mode = difficulty != null && difficulty.IsModeSelected ? difficulty.Current : (DifficultyMode?)null;
         if ((roundNumber == 51 && mode != DifficultyMode.Easy) || (roundNumber == 61 && mode != DifficultyMode.Normal))
             AnnounceAll("61라운드부터 신세계에 돌입합니다. 신세계를 준비하세요!", 10f);
+    }
+
+    // ── 난이도 안내문(알림 묶음 4/13, GAP 54) — 원작 j:3496~3555: 모드가 정해지는 순간 전원에게 30초 ──
+    //   wts TRIGSTR 8904(쉬움)·8914(보통)·8912(어려움)·8910(지옥)·8908(신)·8906(악몽) 원문 그대로. 쉬움은 j:3497 한 줄(10초)이 더 있다.
+    //   DifficultyManager는 안 건드리고 여기서 IsModeSelected를 본다(구현담당1 GAP 4와 겹치지 않게). 씬 진입 2초 뒤부터 —
+    //   멀티 친구가 아직 씬을 불러오는 중이면 알림이 사라진다. 판 도중 다시 들어온 사람은 이미 지나가서 안 받는다(원작도 없음).
+    bool difficultyAnnounced;
+    static readonly System.Collections.Generic.Dictionary<DifficultyMode, string> DifficultyIntro = new System.Collections.Generic.Dictionary<DifficultyMode, string>
+    {
+        { DifficultyMode.Easy, "|cff5f9ea0쉬움 모드가 선택되었습니다.\n보스를 죽이지 못해도 패배하지않으며,\n스토리의 체력이 20% 감소합니다.\n모든 라운드 유닛들의 체력이 15% 감소합니다.|r\n|cffffd70051라운드 진입시 클리어합니다.|r" },
+        { DifficultyMode.Normal, "|cff5f9ea0보통 모드가 선택되었습니다.\n60라운드 센고쿠 처치시 클리어합니다.|r" },
+        { DifficultyMode.Hard, "|cff5f9ea0어려움 모드가 선택되었습니다.\n유닛카운트가 80마리로 줄어듭니다.\n모든 적들의 체력이 증가하며\n보스유닛들의 체력이 40% 증가합니다.\n모든 적유닛들이 이동속도 30%증가오라를 받습니다.|r\n|cffffd70051라운드까지 어인섬을 파괴하지 못하면 패배합니다.|r" },
+        { DifficultyMode.Hell, "|cff5f9ea0지옥 모드가 선택되었습니다.\n유닛카운트가 80으로 줄어듭니다!\n적 유닛들의 체력이 대폭 증가합니다.\n보스유닛들의 체력이 125% 증가합니다..\n모든 적유닛들이 이동속도 30%증가오라를 받습니다." },
+        { DifficultyMode.God, "|cff5f9ea0신 모드가 선택되었습니다.\n모든 적유닛들의 체력이 감당할 수 없을 정도로 많아집니다.\n보스유닛들의 체력이 200% 증가합니다.\n모든 적유닛들이 이동속도 50%증가오라를 받습니다.\n41라운드부터 유닛카운트가 65로 감소합니다." },
+        { DifficultyMode.Nightmare, "|cff530080악몽 모드가 선택되었습니다.|r\n|cff5f9ea0상위테크 유닛의 30%가 조합이 불가능해집니다.\n마법 방어력이 15% 증가합니다.\n이동속도가 60% 증가합니다.\n41라운드부터 유닛카운트가 60으로 감소합니다." },
+    };
+
+    void AnnounceDifficultyOnce()
+    {
+        if (difficultyAnnounced || Time.timeSinceLevelLoad < 2f) return;
+        DifficultyManager difficulty = DifficultyManager.Instance;
+        if (difficulty == null || !difficulty.IsModeSelected) return;
+        difficultyAnnounced = true;
+        if (!DifficultyIntro.TryGetValue(difficulty.Current, out string text)) return;
+        foreach (string line in Wc3Text.ToRichLines(text)) AnnounceAll(line, 30f);
+        if (difficulty.Current == DifficultyMode.Easy)
+            AnnounceAll("<color=#FF4500>스토리 존에 진입하여 스토리 격파시 클리어에 용이합니다.</color>", 10f);
     }
 
     static void AnnounceAll(string message, float seconds)
