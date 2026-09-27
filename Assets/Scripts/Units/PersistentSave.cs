@@ -129,10 +129,13 @@ public class PersistentSave : MonoBehaviour
     // 0건이다(2026-09-05 확인 — Story는 13개 있지만 "Story2"가 우리 스토리 몇 번에
     // 대응하는지는 원작-우리 스토리 번호가 아예 별개라 결정할 근거가 없다). 각 시스템이
     // 실제로 만들어질 때 그 트리거가 이 메서드를 부르면 된다.
-    public void AddSessionPoints(int amount)
+    public void AddSessionPoints(int amount, bool announce = true)
     {
         if (amount <= 0) return;
         SessionPoints += amount;
+        // 원작 j:13678~13679 외(그 플레이어에게만): 「◎세이브_플레이포인트 N 획득!」 — 얻는 곳이 여럿이라 여기 한 곳에서(알림 묶음 10/13, GAP 85).
+        //    클리어 보너스는 원작도 「유닛카운트 점수 보너스:N점!」을 따로 띄워 이 줄을 안 낸다(announce=false).
+        if (announce) PlayerNotification.Show(playerId, $"<color=#32CD32>◎세이브_플레이포인트 {amount} 획득!</color>", 10f);
     }
 
     // 신세계(75라운드) 완주 보너스 — war3map.j Trig_Save_sido3, 원문 그대로:
@@ -143,7 +146,7 @@ public class PersistentSave : MonoBehaviour
     {
         int p = Mathf.Max(0, aliveEnemyCount);
         int bonus = 10 - ((p / 10) * 10) / 5;
-        AddSessionPoints(bonus);
+        AddSessionPoints(bonus, announce: false);
         return bonus;
     }
 
@@ -179,9 +182,16 @@ public class PersistentSave : MonoBehaviour
     // Save_playcount를 올리는 것과 같다(중도 이탈은 클리어 횟수에 안 들어간다).
     public void FinishRun(bool cleared)
     {
+        int gained = SessionPoints;
         Data.cumulativePlayPoint += SessionPoints;
         if (cleared) Data.cumulativeClearCount += 1;
         if (SessionPoints > Data.bestRunPoint) Data.bestRunPoint = SessionPoints;
+
+        // 원작 SavePlayer 요약(j:3282~3286, 그 플레이어에게만) — 세이브 코드 줄은 우리에 없다(파일 저장).
+        PlayerNotification.Show(playerId, $" 클리어 회수 = {Data.cumulativeClearCount}", 10f);
+        PlayerNotification.Show(playerId, $" 누적 플레이 포인트 = {Data.cumulativePlayPoint}", 10f);
+        PlayerNotification.Show(playerId, $" 포인트 획득량 = {gained}점", 10f);
+        PlayerNotification.Show(playerId, "진행 게임 결과를 세이브합니다.", 10f);
 
         SessionPoints = 0;
         WriteToDisk();

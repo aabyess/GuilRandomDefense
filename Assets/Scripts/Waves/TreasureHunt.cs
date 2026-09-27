@@ -225,10 +225,10 @@ public class TreasureHunt : MonoBehaviour
         foreach (PlayerContext context in PlayerContext.Occupied)
         {
             context.ResourceWallet?.Add(ResourceType.Wood, questWood);
-            context.PersistentSave?.AddSessionPoints(questSavePoints);
+            // 「◎세이브_플레이포인트 N 획득!」은 AddSessionPoints가 띄운다(알림 묶음 10, 한 곳에서) — 원작 순서대로 완수 문구 다음에.
             PlayerNotification.Show(context.PlayerId,
-                $"도전과제-트레저헌터를 완수하여 모든 플레이어가 목재 {questWood}개를 획득합니다!\n" +
-                $"◎세이브_플레이포인트 {questSavePoints} 획득!", 6f);
+                $"도전과제-트레저헌터를 완수하여 모든 플레이어가 목재 {questWood}개를 획득합니다!", 6f);
+            context.PersistentSave?.AddSessionPoints(questSavePoints);
         }
     }
 
