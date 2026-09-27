@@ -35,6 +35,8 @@ public class NetPlayer : NetworkBehaviour
 
     // 2단계 ③: 항법 선택 · 도박 해금/사용 횟수(도박소 칸 표시). 도박 선택지는 NetCatalog.gamblingOptions 순서.
     [Networked] public byte Navigation { get; set; }
+    /// <summary>원딜 잠금(GAP 6, 패왕의길 — 네 등급 한 기 뒤 잠김). 클라 HUD 표시용.</summary>
+    [Networked] public NetworkBool OneDealLocked { get; set; }
     [Networked] public int GambleUnlockedMask { get; set; }
     [Networked, Capacity(16)] public NetworkArray<short> GambleUses => default;
     // 돈 도박 충전식 재고·누적 지급·졸업(구현담당1 a9b6a7c3). 재고 -1 = 재고 없는 옵션, 충전은 「다음까지 남은 초」.
@@ -132,7 +134,11 @@ public class NetPlayer : NetworkBehaviour
         string reason = context.DefeatMessage ?? "";
         if (DefeatMessage.ToString() != reason) DefeatMessage = reason;
 
-        if (context.NavigationState != null) Navigation = (byte)context.NavigationState.Choice;
+        if (context.NavigationState != null)
+        {
+            Navigation = (byte)context.NavigationState.Choice;
+            if (OneDealLocked != context.NavigationState.OneDealLocked) OneDealLocked = context.NavigationState.OneDealLocked;
+        }
 
         NetCatalog catalog = NetLauncher.Catalog;
         if (catalog != null && context.GamblingProgress != null)
@@ -188,6 +194,8 @@ public class NetPlayer : NetworkBehaviour
         // 항법은 한 번 고르면 끝 — 클라 쪽 상태에도 같은 선택을 걸어 모달·표시가 맞게 한다(효과는 호스트에서만 의미).
         if (Navigation != 0 && context.NavigationState != null && !context.NavigationState.HasChosen)
             context.NavigationState.TrySelect((NavigationChoice)Navigation);
+        if (OneDealLocked && context.NavigationState != null && !context.NavigationState.OneDealLocked)
+            context.NavigationState.ApplyReplicatedOneDeal(true);
 
         NetCatalog catalog = NetLauncher.Catalog;
         if (catalog != null && context.GamblingProgress != null)

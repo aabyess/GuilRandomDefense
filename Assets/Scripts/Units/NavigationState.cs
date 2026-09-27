@@ -56,6 +56,9 @@ public class NavigationState : MonoBehaviour
     }
     public bool HasChosen => choice != NavigationChoice.None;
 
+    // MP: 클라 HUD용 — 원딜 잠금은 호스트에서 정해지고(CanAfford도 호스트) 클라는 NetPlayer가 옮겨 적는다.
+    public void ApplyReplicatedOneDeal(bool locked) { if (locked) OneDealLocked = true; }
+
     /// <summary>
     /// 항법 선택 — 플레이어당 평생 1회, 되돌릴 수 없다(원작 add→remove 패턴, 재선택
     /// 자체가 불가능하다는 뜻이지 "무를 수 있다"가 아니다). 이미 골랐거나
