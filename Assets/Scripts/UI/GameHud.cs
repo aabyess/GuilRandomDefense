@@ -655,6 +655,14 @@ public class GameHud : MonoBehaviour
         roundTimeText = CreateLabel(roundPanel, "RoundTimeText", "라운드 -   남은시간 -");
         roundTimeText.fontSize = 22;
 
+        // 보스 제한시간·신세계 대기 타이머(원작 타이머 창 제목, 알림 묶음 3) — 상단 바 **아래** 가운데. 라운드 시간(바 안 가운데)과 안 겹친다(PM 09-27).
+        RectTransform extraTimerPanel = CreatePanel(transform, "ExtraTimerPanel", new Color(0f, 0f, 0f, 0.6f));
+        SetAnchors(extraTimerPanel, new Vector2(0.42f, 0.912f), new Vector2(0.58f, 0.948f));
+        extraTimerText = CreateLabel(extraTimerPanel, "ExtraTimerText", "");
+        extraTimerText.fontSize = 20;
+        extraTimerObject = extraTimerPanel.gameObject;
+        extraTimerObject.SetActive(false);
+
         RectTransform menuButtonsPanel = CreatePanel(topBar, "TopBarButtons", Color.clear);
         topBarButtons = menuButtonsPanel;
         SetAnchors(menuButtonsPanel, new Vector2(0.66f, 0.08f), new Vector2(0.99f, 0.92f));
@@ -2923,7 +2931,37 @@ public class GameHud : MonoBehaviour
                     : $"라운드 {round}   남은시간 {timeTenths / 10f:F1}s";
         }
 
+        RefreshExtraTimer(rm);
         RefreshWispCount();
+    }
+
+    TMP_Text extraTimerText;
+    GameObject extraTimerObject;
+    int lastExtraTimerKey = int.MinValue;
+
+    void RefreshExtraTimer(RoundManager rm)
+    {
+        if (extraTimerObject == null) return;
+        bool has;
+        bool newWorldWait = false;
+        float seconds = 0f;
+        if (!GameAuthority.IsServer && NetGameState.Instance != null)   // MP: 클라는 호스트 값
+        {
+            has = NetGameState.Instance.ExtraTimerKind != 0;
+            newWorldWait = NetGameState.Instance.ExtraTimerKind == 2;
+            seconds = NetGameState.Instance.ExtraTimerLeft;
+        }
+        else has = rm != null && rm.TryGetExtraTimer(out newWorldWait, out seconds);
+        if (!has) { newWorldWait = false; seconds = 0f; }
+
+        int key = has ? (newWorldWait ? 100000 : 0) + Mathf.CeilToInt(seconds) : -1;
+        if (key == lastExtraTimerKey) return;
+        lastExtraTimerKey = key;
+        if (extraTimerObject.activeSelf != has) extraTimerObject.SetActive(has);
+        if (!has) return;
+        int s = Mathf.CeilToInt(seconds);
+        string clock = $"{s / 60}:{s % 60:00}";
+        extraTimerText.text = newWorldWait ? $"60라운드-신세계 대기중  {clock}" : $"<color=#FF0000>보스 제한시간-></color>  {clock}";
     }
 
     /// <summary>

@@ -16,6 +16,8 @@ public class NetGameState : NetworkBehaviour
     [Networked] public int Difficulty { get; set; }
 
     [Networked] public NetworkBool Started { get; set; }
+    [Networked] public byte ExtraTimerKind { get; set; }
+    [Networked] public float ExtraTimerLeft { get; set; }
 
     /// <summary>판 도중 원작 Gone으로 나간 슬롯(비트). 재접속한 사람 화면은 그 사람 NetPlayer를 못 봐 좌석을 몰라
     /// 「비어있음」으로 떴다 — 이걸로 앉히고 사망 표식을 건다(PM 09-26 ③).</summary>
@@ -77,6 +79,13 @@ public class NetGameState : NetworkBehaviour
         Round = roundManager.CurrentRound;
         Preparing = roundManager.IsWaitingForNextRound;
         TimeLeft = Preparing ? roundManager.PreRoundTimeLeft : roundManager.RoundTimeLeft;
+        // 보스 제한시간·신세계 대기 타이머(알림 묶음 3). 0 = 없음, 1 = 보스, 2 = 60라운드 신세계 대기.
+        if (roundManager.TryGetExtraTimer(out bool newWorldWait, out float extraSeconds))
+        {
+            ExtraTimerKind = (byte)(newWorldWait ? 2 : 1);
+            ExtraTimerLeft = extraSeconds;
+        }
+        else if (ExtraTimerKind != 0) ExtraTimerKind = 0;
 
         StoryManager story = StoryManager.Instance;
         if (story != null)

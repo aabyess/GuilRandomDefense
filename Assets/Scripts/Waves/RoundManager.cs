@@ -350,6 +350,12 @@ public class RoundManager : MonoBehaviour
         float timeLimit = isNewWorldBoss ? newWorldBossTimeLimit : oldWorldBossTimeLimit;
 
         Debug.Log($"[보스제한] 레인 {laneIndex} R{roundNumber} 보스 {(boss != null ? boss.name + "#" + boss.GetInstanceID() : "null")} — {timeLimit:F1}초 재기 시작");
+        bossLimitEndsAt = Mathf.Max(bossLimitEndsAt, Time.time + timeLimit);   // 원작 타이머 창은 하나(레인 공통)
+        if (isNewWorldBoss && lastAnnouncedNewWorldBossRound != roundNumber)
+        {
+            lastAnnouncedNewWorldBossRound = roundNumber;
+            AnnounceAll("<color=#00CED1>보스가 등장하였습니다. 이번라운드에 처치하지 못하면 패배합니다.</color>", 5f);
+        }
         yield return new WaitForSeconds(timeLimit);
 
         // 판이 이미 끝났으면(전멸·마지막 라운드 클리어) 판정하지 않는다 — 클리어한 사람을
@@ -487,6 +493,10 @@ public class RoundManager : MonoBehaviour
             for (int i = 0; i < MaxTrackedLanes; i++)
                 laneDeathCount[i] = NewWorldDeathCount;
         }
+        if (currentRound == 60 && round60Delay > 0f)
+            AnnounceAll("<color=#FF8200>미지의 바다인 신세계로 출항합니다. 40초의 대기시간을 가집니다.</color>", 5f);   // TRIGSTR_15735 1줄
+        if (currentRound == 60 && round60Delay > 0f)
+            AnnounceAll("<color=#FF8200>신세계는 라운드 타이머가 더욱 빨라집니다.</color>", 5f);                      // TRIGSTR_15735 2줄
         BeginPreRoundWait(currentRound, currentRound == 60 ? round60Delay : 0f);
     }
 
@@ -631,6 +641,7 @@ public class RoundManager : MonoBehaviour
         WaveData waveData = GetWaveData(roundNumber);
 
         roundTimer = ResolveRoundDuration(roundNumber, waveData);
+        AnnounceRoundStart(roundNumber, waveData);
 
         if (waveData != null && waveData.IsBossRound)
         {
@@ -651,6 +662,53 @@ public class RoundManager : MonoBehaviour
         {
             waveSpawner.SpawnRound(waveData);
         }
+    }
+
+    // ── 라운드·보스 알림(알림 묶음 3/13, GAP 48) — 원작 Trig_Round_boolean_Trigger·Trig_Enemy_Boss_sinsekai 문구, 전원 ──
+    //   구세계 보스 라운드 j:5479 「보스전입니다. 제한시간내에 처치하세요!」 · 그 밖 j:5482 「라운드가 시작됩니다.」(5초, 00CED1)
+    //   51R(쉬움 아닐 때)·61R(보통 아닐 때) j:5707/5718 「61라운드부터 신세계에 돌입합니다. 신세계를 준비하세요!」(10초)
+    //   신세계 보스 j:5623 「보스가 등장하였습니다. 이번라운드에 처치하지 못하면 패배합니다.」(보스가 설 때 한 번)
+    //   60라운드 대기 j:5502 TRIGSTR_15735(5초)
+    void AnnounceRoundStart(int roundNumber, WaveData waveData)
+    {
+        bool oldWorldBoss = waveData != null && waveData.IsBossRound && roundNumber < newWorldStartRound;
+        AnnounceAll(oldWorldBoss ? "<color=#00CED1>보스전입니다. 제한시간내에 처치하세요!</color>" : "<color=#00CED1>라운드가 시작됩니다.</color>", 5f);
+
+        DifficultyManager difficulty = DifficultyManager.Instance;
+        DifficultyMode? mode = difficulty != null && difficulty.IsModeSelected ? difficulty.Current : (DifficultyMode?)null;
+        if ((roundNumber == 51 && mode != DifficultyMode.Easy) || (roundNumber == 61 && mode != DifficultyMode.Normal))
+            AnnounceAll("61라운드부터 신세계에 돌입합니다. 신세계를 준비하세요!", 10f);
+    }
+
+    static void AnnounceAll(string message, float seconds)
+    {
+        foreach (PlayerContext context in PlayerContext.Occupied)
+            PlayerNotification.Show(context.PlayerId, message, seconds);
+    }
+
+    int lastAnnouncedNewWorldBossRound = -1;
+    float bossLimitEndsAt = -1f;
+
+    /// <summary>
+    /// 라운드 시간 옆의 별도 타이머(원작 타이머 창 제목) — 구세계 보스 「보스 제한시간->」, 신세계 보스 창, 60라운드 「60라운드-신세계 대기중」.
+    /// HUD가 라운드 시간과 겹치지 않는 자리에 띄운다(PM 09-27). 없으면 false.
+    /// </summary>
+    public bool TryGetExtraTimer(out bool newWorldWait, out float seconds)
+    {
+        newWorldWait = false;
+        seconds = 0f;
+        if (waitingForNextRound && pendingRoundNumber == 60 && preRoundTimer > 0f)
+        {
+            newWorldWait = true;
+            seconds = preRoundTimer;
+            return true;
+        }
+        if (bossLimitEndsAt > Time.time && !isGameOver)
+        {
+            seconds = bossLimitEndsAt - Time.time;
+            return true;
+        }
+        return false;
     }
 
     // 라운드 길이 — 원작 레지스터를 직접 읽어 구간을 나눴다(리서치담당, 2026-09-06,
