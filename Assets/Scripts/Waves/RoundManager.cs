@@ -268,6 +268,11 @@ public class RoundManager : MonoBehaviour
     // 부수면 되돌릴 방법이 없어진다.
     void HandlePlayerDefeated(int playerId, PlayerContext context)
     {
+        // 원작 패배 분기: SavePlayer(p)를 **먼저** 부르고 그다음 udg_Save_Death=1(war3map_new.j:3388 데스카운트 한계,
+        // 5588/5629 보스 타임리밋). 그래서 그 판의 플레이포인트·최고점은 저장되고, 클리어 횟수는 안 오른다(Clear_Game=0).
+        // 그 뒤로만 「패배한 상태에선 더이상 세이브가 불가능합니다」다(GAP 09-27 1번). 멀티 원격 슬롯은 FinishRun →
+        // WriteToDisk가 NetSaves로 그 친구에게 돌려보낸다.
+        if (!context.IsDead && context.PersistentSave != null) context.PersistentSave.FinishRun(false);
         context.MarkDead();
         Debug.Log($"플레이어 {playerId + 1} 사망");
 
@@ -356,9 +361,8 @@ public class RoundManager : MonoBehaviour
 
         Debug.Log("전멸 — 게임 오버");
         isGameOver = true;
-        // 저장 안 함 — 여기 도달했다는 건 Occupied 전원이 IsDead라는 뜻이라(위 루프 조건),
-        // 원작(SavePlayer: "패배한 상태에선 더이상 세이브가 불가능합니다")대로 저장할 대상이
-        // 애초에 없다.
+        // 여기서 따로 저장하지 않는다 — 각자 패배한 순간 HandlePlayerDefeated가 이미 한 번 저장했다(원작 SavePlayer →
+        // Save_Death=1 순서). 그 뒤의 저장 시도는 원작도 「패배한 상태에선 더이상 세이브가 불가능합니다」로 막는다.
     }
 
     // war3map.j Trig_Save_sido3(신세계 클리어) 대응 — 원작은 여기서 유닛카운트 보너스를

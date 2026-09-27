@@ -172,9 +172,9 @@ public class PersistentSave : MonoBehaviour
         if (p >= 900) upgrades?.AddTraitPoints(1);
     }
 
-    // 게임 종료(신세계 완주 또는 중도 종료) 시점에 부른다. 원작 SavePlayer 그대로: 죽은
-    // 플레이어는 저장하지 않는다("패배한 상태에선 더이상 세이브가 불가능합니다") — 호출부
-    // (RoundManager.FinishPersistentSave)가 IsDead를 먼저 걸러서 여기까지 안 보낸다.
+    // 원작 SavePlayer 대응. 부르는 곳 둘: ① 패배한 순간(RoundManager.HandlePlayerDefeated, cleared=false —
+    // 원작 패배 분기가 SavePlayer를 먼저 부르고 Save_Death=1을 세운다) ② 신세계 완주(FinishPersistentSave).
+    // 이미 죽은 플레이어는 다시 저장하지 않는다(「패배한 상태에선 더이상 세이브가 불가능합니다」) — 호출부가 IsDead를 거른다.
     // cleared가 true일 때만 누적 클리어 횟수를 올린다 — 원작이 udg_Clear_Game==1일 때만
     // Save_playcount를 올리는 것과 같다(중도 이탈은 클리어 횟수에 안 들어간다).
     public void FinishRun(bool cleared)
