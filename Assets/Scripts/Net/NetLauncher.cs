@@ -52,6 +52,7 @@ using UnityEngine.SceneManagement;
 ///   -mpSoloMenuMainAt 초 경로 (혼자 하기) 그 초에 「메뉴」 첫 화면([계속하기]·[소리 끄기]·[처음 화면으로])을 열고 캡처
 ///   -mpSoloShopSoundAt 초     (혼자 하기) 돈을 채워 500엔 도박(해금·재고 7로)을 7번 · 특성 포인트 구매 · 졸업 뒤 목재 구입 — 결과마다 소리 여부
 ///   -mpSoloCoinAt 초          (혼자 하기) 그 초에 10엔 도박 → 소리 끔 → 10엔 도박 → 소리 켬(끈 동안 안 나는지)
+///   -mpTestNotices 초 경로    (호스트) 알림 묶음 확인 — 보스 타이머 칸(캡처)·조합 부족·유닛도박 공지·승리 문구, 알림을 로그로
 ///   -mpTestGap 초             (호스트) GAP 09-27 다섯 항목 확인 — 데스 경고·위습 페널티·패배 세이브(슬롯 1)·창고·판매 위습
 ///   -mpTestSelect 초 폴더     (양쪽, 클라 확인용) 슬롯 1(친구) 유닛 최대 4기와 레인 1 적 둘을 **거울 ID 순**으로 골라 캡처 —
 ///                             방장·친구가 같은 개체를 고르므로 파일 이름(id)으로 나란히 비교한다. 소환 없이 있는 것만
@@ -91,6 +92,9 @@ public class NetLauncher : MonoBehaviour
     float testMenuDelay = -1f;
     int testDupes;
     float testGapDelay = -1f;
+    float testNoticesDelay = -1f;
+    string testNoticesShot;
+    int noticesLogged;
     float testCoinDelay = -1f;
     int testCoinCount;
     float soloCoinAt = -1f;
@@ -213,6 +217,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpCamWisp": camWispDelay = Seconds(i + 1); break;
                 case "-mpToken": cliToken = Arg(i + 1); break;
                 case "-mpTestGap": testGapDelay = Seconds(i + 1); break;
+                case "-mpTestNotices": testNoticesDelay = Seconds(i + 1); testNoticesShot = Arg(i + 2); break;
                 case "-mpTestCoin": testCoinDelay = Seconds(i + 1); int.TryParse(Arg(i + 2), out testCoinCount); break;
                 case "-mpSoloCoinAt": soloCoinAt = Seconds(i + 1); break;
                 case "-mpSoloShopSoundAt": soloShopSoundAt = Seconds(i + 1); break;
@@ -711,6 +716,9 @@ public class NetLauncher : MonoBehaviour
         if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
         if (testFinishRunDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestFinishRunAfter(testFinishRunDelay));
         if (camWispDelay >= 0f) StartCoroutine(CamWispAfter(camWispDelay));
+        if (GameAuthority.IsServer && (testNoticesDelay >= 0f || testGapDelay >= 0f))
+            PlayerNotification.Shown += (slot, msg, dur) => { if (noticesLogged++ < 80) Debug.Log($"[알림로그] → 슬롯 {slot}({dur:0}초): {msg}"); };
+        if (testNoticesDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestNoticesAfter(testNoticesDelay, testNoticesShot));
         if (testGapDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestGapAfter(testGapDelay));
         if (testCoinDelay >= 0f) StartCoroutine(TestCoinAfter(testCoinDelay, Mathf.Max(1, testCoinCount)));
         if (testDupes > 0 && GameAuthority.IsServer) SpawnDuplicateUnits(testDupes);
@@ -762,6 +770,56 @@ public class NetLauncher : MonoBehaviour
             Debug.Log($"[MP] 동전 테스트 {i + 1}/{count}: 슬롯 {LocalPlayer.LocalPlayerId} 「{shop.GetSlotView(0).label.Replace('\n', ' ')}」 → 보냄 {sent}");
             yield return new WaitForSecondsRealtime(0.8f);
         }
+    }
+
+    // 알림 묶음 확인(호스트). 알림 자체는 위 [알림로그] 구독이 전부 남긴다.
+    IEnumerator TestNoticesAfter(float seconds, string shot)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        const System.Reflection.BindingFlags Any = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+        RoundManager round = FindFirstObjectByType<RoundManager>();
+        // 3. 보스 제한시간 칸 — 제한 끝 시각만 넣어 칸을 띄우고 찍는다(방장·친구 둘 다 -mpShotAt으로).
+        typeof(RoundManager).GetField("bossLimitEndsAt", Any).SetValue(round, Time.time + 75.3f);
+        Debug.Log("[알림테스트] 3. 보스 제한시간 칸 켬(75.3초)");
+        yield return new WaitForSecondsRealtime(1.5f);
+        yield return new WaitForEndOfFrame();
+        if (!string.IsNullOrEmpty(shot)) ScreenCapture.CaptureScreenshot(shot);
+
+        // 5. 조합 부족 — 지금 못 만드는 식 하나의 부족 목록.
+        CombineSystem combine = FindFirstObjectByType<CombineSystem>();
+        if (combine != null)
+            for (int i = 0; combine.RecipeAt(i) != null; i++)
+            {
+                CombineRecipe recipe = combine.RecipeAt(i);
+                if (combine.CanCombineNow(recipe)) continue;
+                var lines = combine.DescribeShortage(recipe);
+                Debug.Log($"[알림테스트] 5. 조합식 {i}({(recipe.result != null ? recipe.result.unitName : "?")}) 부족: {string.Join(" / ", lines)}");
+                break;
+            }
+
+        // 6. 유닛도박 공지 — 중급도박을 자원 채워 실패·당첨이 둘 다 나올 때까지(최대 12번).
+        GamblingShop shop = FindObjectsByType<GamblingShop>(FindObjectsSortMode.None).FirstOrDefault(s => s.TryGetComponent(out OwnedByPlayer o) && o.OwnerId == 0);
+        var field = typeof(GamblingShop).GetField("unitOptions", Any);
+        var options = shop != null && field != null ? field.GetValue(shop) as System.Collections.Generic.List<GamblingOptionData> : null;
+        GamblingOptionData mid = options?.FirstOrDefault(o => o != null && o.optionName == "중급도박");
+        PlayerContext me = PlayerContext.Get(0);
+        if (mid != null && me != null)
+        {
+            for (int i = 0; i < 12; i++)
+            {
+                me.ResourceWallet.Add(mid.costResourceType, mid.cost);
+                if (mid.goldCost > 0) me.GoldWallet.Add(mid.goldCost);
+                me.GamblingProgress?.ApplyReplicated(mid, 0, true, Mathf.Max(1, mid.stockMax), 0f, 0);
+                bool ok = shop.TryRoll(mid, out string reason);
+                if (!ok) { Debug.Log($"[알림테스트] 6. 중급도박 안 됨: {reason}"); break; }
+                yield return new WaitForSecondsRealtime(0.3f);
+            }
+        }
+        else Debug.LogWarning("[알림테스트] 6. 중급도박 없음");
+
+        // 2. 승리 문구.
+        typeof(RoundManager).GetMethod("AnnounceClear", Any).Invoke(round, null);
+        Debug.Log("[알림테스트] 끝");
     }
 
     // GAP 09-27 1·2·5·7·8 확인(호스트). 사사로운 필드·메서드는 리플렉션으로 — 테스트 전용, 게임 코드는 안 바꾼다.
