@@ -50,6 +50,7 @@ public class NetGameState : NetworkBehaviour
 
         // 호스트: 원격 슬롯 앞으로 온 안내를 그 클라에 넘긴다(자기 것은 자기 화면에 이미 떴다).
         if (HasStateAuthority) PlayerNotification.Shown += RouteNotification;
+        if (HasStateAuthority) GameSound.RemoteRouted += RouteSound;
 
         if (!HasStateAuthority)
         {
@@ -62,6 +63,7 @@ public class NetGameState : NetworkBehaviour
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
         PlayerNotification.Shown -= RouteNotification;
+        GameSound.RemoteRouted -= RouteSound;
         if (Instance == this) Instance = null;
     }
 
@@ -89,6 +91,20 @@ public class NetGameState : NetworkBehaviour
     }
 
     static string Clip(string text, int max) => string.IsNullOrEmpty(text) ? "" : text.Length > max ? text.Substring(0, max) : text;
+
+    static int soundsLogged;
+
+    // 친구 앞으로 난 소리(원작 GetLocalPlayer()==주인일 때만)는 그 친구 PC에서만 — 방장 PC에선 GameSound.PlayFor가 이미 안 냈다.
+    void RouteSound(int playerId, GameSoundId id)
+    {
+        foreach (NetPlayer player in NetPlayer.All)
+            if (player != null && player.Slot == playerId && !player.HasInputAuthority)
+            {
+                player.RPC_PlaySound((byte)id);
+                if (soundsLogged++ < 10) Debug.Log($"[MP] 소리 넘김 → 슬롯 {playerId}: {id}(방장 PC에선 안 냄)");
+                return;
+            }
+    }
 
     void RouteNotification(int playerId, string message, float duration)
     {

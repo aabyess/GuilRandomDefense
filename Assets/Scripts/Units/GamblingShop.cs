@@ -253,6 +253,7 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         if (bought)
         {
             Debug.Log($"[도박] 특성포인트 구매: {traitPointPurchaseCost}엔 → 특성포인트 1개. 보유 {context.UnitUpgrades.TraitPoints}개.");
+            GameSound.PlayFor(context.PlayerId, GameSoundId.Coin);   // 원작 Money_trade2(h0AL 특성 포인트)
         }
         else
         {
@@ -436,6 +437,7 @@ public class GamblingShop : MonoBehaviour, ILaneShop
             context.ResourceWallet?.Add(option.payoutResourceType, option.payoutResourceAmount);
             context.GamblingProgress?.RecordUse(option);
             PlayerNotification.Show(context.PlayerId, $"<color=#32CD32>{ResourceLabel(option.payoutResourceType)} {option.payoutResourceAmount} 획득!</color>");
+            if (option.coinSoundOnSuccess) GameSound.PlayFor(context.PlayerId, GameSoundId.Coin);   // 원작 Money_trade
             return true;
         }
 
@@ -469,6 +471,8 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         // 원작 문구: 당첨 「N원 획득 !」 · 실패 「돈도박에 실패하여 N원을 되돌려받습니다.」(Trig_Money_Gemble_3)
         string result = success ? $"<color=#52E252>{amount}원 획득 !</color>" : $"<color=#FF8200>돈도박에 실패하여 {amount}원을 되돌려받습니다.</color>";
         PlayerNotification.Show(context.PlayerId, $"{option.optionName}: {result} 보유 {context.GoldWallet.Gold}엔{left}");
+        if (success ? option.coinSoundOnSuccess : option.coinSoundOnFailure)
+            GameSound.PlayFor(context.PlayerId, GameSoundId.Coin);   // 원작 Money_Gemble_1_re(둘 다) · Money_Gemble_3(당첨만)
 
         return true;
     }

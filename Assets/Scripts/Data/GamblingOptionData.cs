@@ -102,6 +102,12 @@ public class GamblingOptionData : ScriptableObject
     // 원작 돈도박 고급(Trig_Money_Gemble_3): 받은 돈(당첨 500~4500 · 실패 환급 300~400)을 누적해 **당첨 때** 35,000 이상이면
     //    「돈도박 골드획득 한계에 도달하여 돈도박-고급을 졸업합니다!」 — 도박소가 h08C(돈도박 초급·고급·물품지원 없음 ·
     //    특성 포인트 구매 · 고급 유닛 생성 · 목재 구입 · 다른세계)로 바뀐다. 0이면 졸업과 무관.
+    // 원작 coinsound(war3map_new.j, 주인에게만): 돈도박 초급 Money_Gemble_1_re는 당첨·실패 **둘 다**(if 밖),
+    //    고급 Money_Gemble_3은 **당첨 때만**(당첨 분기 안), 목재 구입 Money_trade는 항상. 30원+유닛(Money_Gemble_2)은 없음.
+    [Header("소리 — 원작 PlaySoundBJ(gg_snd_coinsound)")]
+    public bool coinSoundOnSuccess;
+    public bool coinSoundOnFailure;
+
     [Header("졸업 — 원작 돈도박 고급 누적 35,000")]
     public int graduateAtCumulative;
     [Tooltip("졸업하면 이 칸이 사라진다(원작 h08C에 없는 것: 돈도박 초급·고급)")]

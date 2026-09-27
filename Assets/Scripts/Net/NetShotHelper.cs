@@ -25,6 +25,43 @@ public class NetShotHelper : MonoBehaviour
         if (exitAt >= 0f) StartCoroutine(At(exitAt, () => { Debug.Log("[MP] -mpExitAt(혼자 하기) 종료"); Application.Quit(); }));
     }
 
+    // 혼자 하기 coinsound: 10엔 도박(소리 남) → 메뉴 소리 끔 → 10엔 도박(안 남) → 소리 켬(기억값 되돌림).
+    public void ScheduleCoin(float at)
+    {
+        if (at < 0f) return;
+        StartCoroutine(At(at, () => Gamble("소리 켠 채")));
+        StartCoroutine(At(at + 2f, () => FindFirstObjectByType<GameHud>()?.ToggleSound()));
+        StartCoroutine(At(at + 3f, () =>
+        {
+            Gamble("소리 끈 채");
+            // 도박이 재고로 막혀도 음소거 자체를 본다 — 끈 동안엔 「[소리] … 재생」 줄이 없어야 한다.
+            Debug.Log("[MP] 혼자 하기 동전 테스트: 소리 끈 채 GameSound.PlayFor 직접 호출");
+            GameSound.PlayFor(LocalPlayer.LocalPlayerId, GameSoundId.Coin);
+        }));
+        StartCoroutine(At(at + 4f, () =>
+        {
+            Debug.Log("[MP] 혼자 하기 동전 테스트: 다시 켜고 직접 호출");
+            if (!GameSound.Enabled) FindFirstObjectByType<GameHud>()?.ToggleSound();
+            GameSound.PlayFor(LocalPlayer.LocalPlayerId, GameSoundId.Coin);
+        }));
+    }
+
+    public void ScheduleMenuMain(float at, string shot)
+    {
+        if (at < 0f) return;
+        StartCoroutine(At(at, () => FindFirstObjectByType<GameHud>()?.OpenGameMenu()));
+        if (!string.IsNullOrEmpty(shot)) StartCoroutine(ShotAt(at + 0.5f, shot));
+    }
+
+    static void Gamble(string label)
+    {
+        GamblingShop shop = null;
+        foreach (GamblingShop s in FindObjectsByType<GamblingShop>(FindObjectsSortMode.None))
+            if (s.TryGetComponent(out OwnedByPlayer o) && o.OwnerId == LocalPlayer.LocalPlayerId) { shop = s; break; }
+        bool ok = shop != null && shop.TryUse(0, default, out string reason);
+        Debug.Log($"[MP] 혼자 하기 동전 테스트({label}): 10엔 도박 → {(ok ? "됨" : "안 됨")}");
+    }
+
     IEnumerator At(float secondsSinceStart, System.Action action)
     {
         while (Time.realtimeSinceStartup < secondsSinceStart) yield return null;

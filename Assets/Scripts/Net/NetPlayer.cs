@@ -264,6 +264,13 @@ public class NetPlayer : NetworkBehaviour
 
     static int notificationsLogged;
 
+    /// <summary>호스트 → 이 접속자: 그 사람에게만 나는 소리(GameSound.PlayFor가 원격 슬롯이면 여기로).</summary>
+    [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
+    public void RPC_PlaySound(byte id)
+    {
+        GameSound.Play((GameSoundId)id);
+    }
+
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     public void RPC_UnitCommand(NetworkId unit, byte command, NetworkId enemy, Vector3 point)
     {

@@ -512,6 +512,16 @@ public class GameHud : MonoBehaviour
     GameObject gameMenuMainButtons;
     GameObject gameMenuConfirmButtons;
     TMP_Text gameMenuConfirmLabel;
+    TMP_Text gameMenuSoundLabel;
+
+    void RefreshSoundLabel() => gameMenuSoundLabel.text = GameSound.Enabled ? "소리 끄기" : "소리 켜기";
+
+    public void ToggleSound()
+    {
+        GameSound.Enabled = !GameSound.Enabled;
+        RefreshSoundLabel();
+        Debug.Log($"[HUD] 메뉴: 소리 {(GameSound.Enabled ? "켬" : "끔")}");
+    }
 
     void BuildGameMenu()
     {
@@ -528,8 +538,10 @@ public class GameHud : MonoBehaviour
         gameMenuMessage.fontSize = 26;
 
         gameMenuMainButtons = CreateRow(card, "MainButtons");
-        CreateMenuButton(gameMenuMainButtons.transform, "ContinueButton", "계속하기", new Color(0.20f, 0.52f, 0.86f, 1f), new Vector2(0.05f, 0f), new Vector2(0.48f, 1f), CloseGameMenu);
-        CreateMenuButton(gameMenuMainButtons.transform, "HomeButton", "처음 화면으로", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.52f, 0f), new Vector2(0.95f, 1f), ShowGameMenuConfirm);
+        CreateMenuButton(gameMenuMainButtons.transform, "ContinueButton", "계속하기", new Color(0.20f, 0.52f, 0.86f, 1f), new Vector2(0.04f, 0f), new Vector2(0.33f, 1f), CloseGameMenu);
+        // 소리 켜기/끄기(PM 09-27 — 설정 창이 없어 메뉴 한 줄. GameSound가 PlayerPrefs로 기억한다)
+        gameMenuSoundLabel = CreateMenuButton(gameMenuMainButtons.transform, "SoundButton", "", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.355f, 0f), new Vector2(0.645f, 1f), ToggleSound);
+        CreateMenuButton(gameMenuMainButtons.transform, "HomeButton", "처음 화면으로", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.67f, 0f), new Vector2(0.96f, 1f), ShowGameMenuConfirm);
 
         gameMenuConfirmButtons = CreateRow(card, "ConfirmButtons");
         gameMenuConfirmLabel = CreateMenuButton(gameMenuConfirmButtons.transform, "ConfirmButton", "나가기", new Color(0.55f, 0.22f, 0.24f, 1f), new Vector2(0.05f, 0f), new Vector2(0.48f, 1f), ConfirmLeaveGame);
@@ -560,6 +572,7 @@ public class GameHud : MonoBehaviour
     public void OpenGameMenu()
     {
         gameMenuMessage.text = "메뉴";
+        RefreshSoundLabel();
         gameMenuMainButtons.SetActive(true);
         gameMenuConfirmButtons.SetActive(false);
         gameMenu.SetActive(true);

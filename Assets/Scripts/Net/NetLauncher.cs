@@ -48,6 +48,9 @@ using UnityEngine.SceneManagement;
 ///   -mpRejoinAfter 초        (클라) 끊겨서 첫 화면으로 돌아온 뒤 그 초에 [다시 참가]를 누른다
 ///   -mpTestDupes N           (호스트) 게임 씬 진입 뒤 슬롯마다 같은 흔함 N기 두 종류를 우리에 — 이름표 「×N」 확인용
 ///   -mpTestSameType 초 경로   그 초에 내 유닛 하나로 「같은 종류 전부 선택」(더블클릭·Ctrl+클릭과 같은 함수)을 부르고 캡처
+///   -mpTestCoin 초 N          그 초부터 내 도박소 0번 칸(10엔 도박)을 N번 누른다(클라=요청 RPC) — coinsound 확인
+///   -mpSoloMenuMainAt 초 경로 (혼자 하기) 그 초에 「메뉴」 첫 화면([계속하기]·[소리 끄기]·[처음 화면으로])을 열고 캡처
+///   -mpSoloCoinAt 초          (혼자 하기) 그 초에 10엔 도박 → 소리 끔 → 10엔 도박 → 소리 켬(끈 동안 안 나는지)
 ///   -mpTestSelect 초 폴더     (양쪽, 클라 확인용) 슬롯 1(친구) 유닛 최대 4기와 레인 1 적 둘을 **거울 ID 순**으로 골라 캡처 —
 ///                             방장·친구가 같은 개체를 고르므로 파일 이름(id)으로 나란히 비교한다. 소환 없이 있는 것만
 ///   -mpTestPortraits 초 폴더  (호스트) 흔함·특별함·재규어·적·매머드·보스를 차례로 골라 초상화 캡처 + 초상 켬/끔 FPS
@@ -85,6 +88,11 @@ public class NetLauncher : MonoBehaviour
     float rejoinAtTime = -1f;
     float testMenuDelay = -1f;
     int testDupes;
+    float testCoinDelay = -1f;
+    int testCoinCount;
+    float soloCoinAt = -1f;
+    float soloMenuMainAt = -1f;
+    string soloMenuMainShot;
     float testSameTypeDelay = -1f;
     string testSameTypeShot;
     float soloMenuAt = -1f;
@@ -200,6 +208,9 @@ public class NetLauncher : MonoBehaviour
                 case "-mpTestFinishRun": testFinishRunDelay = Seconds(i + 1); break;
                 case "-mpCamWisp": camWispDelay = Seconds(i + 1); break;
                 case "-mpToken": cliToken = Arg(i + 1); break;
+                case "-mpTestCoin": testCoinDelay = Seconds(i + 1); int.TryParse(Arg(i + 2), out testCoinCount); break;
+                case "-mpSoloCoinAt": soloCoinAt = Seconds(i + 1); break;
+                case "-mpSoloMenuMainAt": soloMenuMainAt = Seconds(i + 1); soloMenuMainShot = Arg(i + 2); break;
                 case "-mpTestDupes": int.TryParse(Arg(i + 1), out testDupes); break;
                 case "-mpTestSameType": testSameTypeDelay = Seconds(i + 1); testSameTypeShot = Arg(i + 2); break;
                 case "-mpSoloMenuAt": soloMenuAt = Seconds(i + 1); soloMenuShot = Arg(i + 2); break;
@@ -260,13 +271,15 @@ public class NetLauncher : MonoBehaviour
         LocalPlayer.LocalPlayerId = 0;
         NetLoadingHook.Show("혼자 하기");
         // 테스트 전용: 이 창구는 곧 사라지니 남은 -mpShotAt 캡처는 씬을 넘어 사는 작은 오브젝트에 넘긴다(로딩 화면 확인용).
-        if (!soloTestsScheduled && (shotAts.Count > 0 || soloMenuAt >= 0f || soloHomeAt >= 0f || exitAt >= 0f))
+        if (!soloTestsScheduled && (shotAts.Count > 0 || soloMenuAt >= 0f || soloHomeAt >= 0f || exitAt >= 0f || soloCoinAt >= 0f || soloMenuMainAt >= 0f))
         {
             soloTestsScheduled = true;
             var survivor = new GameObject("[MP] 캡처(혼자 하기)").AddComponent<NetShotHelper>();
             DontDestroyOnLoad(survivor.gameObject);
             survivor.Schedule(shotAts);
             survivor.ScheduleMenu(soloMenuAt, soloMenuShot, soloHomeAt, exitAt);
+            survivor.ScheduleCoin(soloCoinAt);
+            survivor.ScheduleMenuMain(soloMenuMainAt, soloMenuMainShot);
         }
         Destroy(gameObject);
         SceneManager.LoadScene(scene);
@@ -691,6 +704,7 @@ public class NetLauncher : MonoBehaviour
         if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
         if (testFinishRunDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestFinishRunAfter(testFinishRunDelay));
         if (camWispDelay >= 0f) StartCoroutine(CamWispAfter(camWispDelay));
+        if (testCoinDelay >= 0f) StartCoroutine(TestCoinAfter(testCoinDelay, Mathf.Max(1, testCoinCount)));
         if (testDupes > 0 && GameAuthority.IsServer) SpawnDuplicateUnits(testDupes);
         if (testSameTypeDelay >= 0f) StartCoroutine(TestSameTypeAfter(testSameTypeDelay, testSameTypeShot));
         if (testMenuDelay >= 0f) StartCoroutine(TestMenuAfter(testMenuDelay, testMenuShot));
@@ -726,6 +740,20 @@ public class NetLauncher : MonoBehaviour
             }
         }
         Debug.Log($"[MP] -mpTestUnits: 유닛 {spawned}기 소환");
+    }
+
+    IEnumerator TestCoinAfter(float seconds, int count)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        GamblingShop shop = FindObjectsByType<GamblingShop>(FindObjectsSortMode.None)
+            .FirstOrDefault(s => s.TryGetComponent(out OwnedByPlayer o) && o.OwnerId == LocalPlayer.LocalPlayerId);
+        if (shop == null) { Debug.LogWarning("[MP] 동전 테스트: 내 도박소 없음"); yield break; }
+        for (int i = 0; i < count; i++)
+        {
+            bool sent = NetCommands.RequestShopUse(shop, 0, default);
+            Debug.Log($"[MP] 동전 테스트 {i + 1}/{count}: 슬롯 {LocalPlayer.LocalPlayerId} 「{shop.GetSlotView(0).label.Replace('\n', ' ')}」 → 보냄 {sent}");
+            yield return new WaitForSecondsRealtime(0.8f);
+        }
     }
 
     void SpawnDuplicateUnits(int copies)
