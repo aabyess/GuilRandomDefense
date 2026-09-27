@@ -65,10 +65,14 @@ public static class GameSound
         if (source == null || source.clip == null) return;
         source.Stop();
         source.Play();
+        PlayCount++;
         if (playsLogged++ < 20) Debug.Log($"[소리] {id} 재생(볼륨 {source.volume:0.0})");
     }
 
     static int playsLogged;
+
+    /// <summary>이 PC에서 실제로 낸 횟수(테스트가 「이 결과에 소리가 났나」를 짝지어 본다).</summary>
+    public static int PlayCount { get; private set; }
 
     static AudioSource SourceFor(GameSoundId id)
     {

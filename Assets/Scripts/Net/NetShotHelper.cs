@@ -53,6 +53,56 @@ public class NetShotHelper : MonoBehaviour
         if (!string.IsNullOrEmpty(shot)) StartCoroutine(ShotAt(at + 0.5f, shot));
     }
 
+    // 확인 못 한 세 길(PM 09-27): 500엔 당첨만 소리 · 특성 포인트 구매 · 목재 구입. 테스트 전용으로 돈·해금·재고·졸업을 채운다.
+    public void ScheduleShopSounds(float at)
+    {
+        if (at >= 0f) StartCoroutine(ShopSoundsAt(at));
+    }
+
+    IEnumerator ShopSoundsAt(float at)
+    {
+        while (Time.realtimeSinceStartup < at) yield return null;
+        PlayerContext context = PlayerContext.Get(LocalPlayer.LocalPlayerId);
+        GamblingShop shop = null;
+        foreach (GamblingShop s in FindObjectsByType<GamblingShop>(FindObjectsSortMode.None))
+            if (s.TryGetComponent(out OwnedByPlayer o) && o.OwnerId == LocalPlayer.LocalPlayerId) { shop = s; break; }
+        var field = typeof(GamblingShop).GetField("moneyOptions", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        var options = shop != null && field != null ? field.GetValue(shop) as List<GamblingOptionData> : null;
+        if (context == null || shop == null || options == null) { Debug.LogWarning("[MP] 상점 소리 테스트: 준비물 없음"); yield break; }
+        GamblingOptionData high = options.Find(o => o != null && o.optionName == "500엔 도박");
+        GamblingOptionData wood = options.Find(o => o != null && o.optionName == "목재 구입");
+        context.GoldWallet.Add(60000);
+
+        // 1. 500엔: 해금 + 재고 7. 당첨(받은 돈 ≥ 500 → 순이익 ≥ 0)이면 소리, 실패(환급 300~400)면 없어야 한다.
+        context.GamblingProgress.ApplyReplicated(high, 0, true, high.stockMax, 0f, 0);
+        int wins = 0, winSounds = 0, fails = 0, failSounds = 0;
+        for (int i = 0; i < high.stockMax; i++)
+        {
+            int gold = context.GoldWallet.Gold, plays = GameSound.PlayCount;
+            bool ok = shop.TryRoll(high, out string reason);
+            int net = context.GoldWallet.Gold - gold;
+            bool sounded = GameSound.PlayCount > plays;
+            bool win = net >= 0;
+            if (ok) { if (win) { wins++; if (sounded) winSounds++; } else { fails++; if (sounded) failSounds++; } }
+            Debug.Log($"[MP] 상점 소리 테스트 500엔 {i + 1}: {(ok ? (win ? "당첨" : "실패") : "안 됨 " + reason)} 순이익 {net}엔 · 소리 {(sounded ? "남" : "없음")}");
+            yield return new WaitForSecondsRealtime(0.4f);
+        }
+        Debug.Log($"[MP] 상점 소리 테스트 500엔 합계: 당첨 {wins}번 중 소리 {winSounds} · 실패 {fails}번 중 소리 {failSounds}(0이어야 함)");
+
+        // 2. 특성 포인트 구매(칸 2).
+        int before = GameSound.PlayCount;
+        bool bought = shop.TryUse(2, default, out string traitReason);
+        Debug.Log($"[MP] 상점 소리 테스트 특성 포인트: {(bought ? "구매" : "안 됨 " + traitReason)} · 소리 {(GameSound.PlayCount > before ? "남" : "없음")}");
+        yield return new WaitForSecondsRealtime(0.4f);
+
+        // 3. 졸업 뒤 목재 구입.
+        context.GamblingProgress.Graduate();
+        int woodBefore = context.ResourceWallet.Get(ResourceType.Wood);
+        before = GameSound.PlayCount;
+        bool bought2 = wood != null && shop.TryRoll(wood, out string woodReason);
+        Debug.Log($"[MP] 상점 소리 테스트 목재 구입: {(bought2 ? "구매" : "안 됨")} 목재 {woodBefore}→{context.ResourceWallet.Get(ResourceType.Wood)} · 소리 {(GameSound.PlayCount > before ? "남" : "없음")}");
+    }
+
     static void Gamble(string label)
     {
         GamblingShop shop = null;

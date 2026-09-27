@@ -50,6 +50,7 @@ using UnityEngine.SceneManagement;
 ///   -mpTestSameType 초 경로   그 초에 내 유닛 하나로 「같은 종류 전부 선택」(더블클릭·Ctrl+클릭과 같은 함수)을 부르고 캡처
 ///   -mpTestCoin 초 N          그 초부터 내 도박소 0번 칸(10엔 도박)을 N번 누른다(클라=요청 RPC) — coinsound 확인
 ///   -mpSoloMenuMainAt 초 경로 (혼자 하기) 그 초에 「메뉴」 첫 화면([계속하기]·[소리 끄기]·[처음 화면으로])을 열고 캡처
+///   -mpSoloShopSoundAt 초     (혼자 하기) 돈을 채워 500엔 도박(해금·재고 7로)을 7번 · 특성 포인트 구매 · 졸업 뒤 목재 구입 — 결과마다 소리 여부
 ///   -mpSoloCoinAt 초          (혼자 하기) 그 초에 10엔 도박 → 소리 끔 → 10엔 도박 → 소리 켬(끈 동안 안 나는지)
 ///   -mpTestSelect 초 폴더     (양쪽, 클라 확인용) 슬롯 1(친구) 유닛 최대 4기와 레인 1 적 둘을 **거울 ID 순**으로 골라 캡처 —
 ///                             방장·친구가 같은 개체를 고르므로 파일 이름(id)으로 나란히 비교한다. 소환 없이 있는 것만
@@ -91,6 +92,7 @@ public class NetLauncher : MonoBehaviour
     float testCoinDelay = -1f;
     int testCoinCount;
     float soloCoinAt = -1f;
+    float soloShopSoundAt = -1f;
     float soloMenuMainAt = -1f;
     string soloMenuMainShot;
     float testSameTypeDelay = -1f;
@@ -210,6 +212,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpToken": cliToken = Arg(i + 1); break;
                 case "-mpTestCoin": testCoinDelay = Seconds(i + 1); int.TryParse(Arg(i + 2), out testCoinCount); break;
                 case "-mpSoloCoinAt": soloCoinAt = Seconds(i + 1); break;
+                case "-mpSoloShopSoundAt": soloShopSoundAt = Seconds(i + 1); break;
                 case "-mpSoloMenuMainAt": soloMenuMainAt = Seconds(i + 1); soloMenuMainShot = Arg(i + 2); break;
                 case "-mpTestDupes": int.TryParse(Arg(i + 1), out testDupes); break;
                 case "-mpTestSameType": testSameTypeDelay = Seconds(i + 1); testSameTypeShot = Arg(i + 2); break;
@@ -271,7 +274,7 @@ public class NetLauncher : MonoBehaviour
         LocalPlayer.LocalPlayerId = 0;
         NetLoadingHook.Show("혼자 하기");
         // 테스트 전용: 이 창구는 곧 사라지니 남은 -mpShotAt 캡처는 씬을 넘어 사는 작은 오브젝트에 넘긴다(로딩 화면 확인용).
-        if (!soloTestsScheduled && (shotAts.Count > 0 || soloMenuAt >= 0f || soloHomeAt >= 0f || exitAt >= 0f || soloCoinAt >= 0f || soloMenuMainAt >= 0f))
+        if (!soloTestsScheduled && (shotAts.Count > 0 || soloMenuAt >= 0f || soloHomeAt >= 0f || exitAt >= 0f || soloCoinAt >= 0f || soloMenuMainAt >= 0f || soloShopSoundAt >= 0f))
         {
             soloTestsScheduled = true;
             var survivor = new GameObject("[MP] 캡처(혼자 하기)").AddComponent<NetShotHelper>();
@@ -279,6 +282,7 @@ public class NetLauncher : MonoBehaviour
             survivor.Schedule(shotAts);
             survivor.ScheduleMenu(soloMenuAt, soloMenuShot, soloHomeAt, exitAt);
             survivor.ScheduleCoin(soloCoinAt);
+            survivor.ScheduleShopSounds(soloShopSoundAt);
             survivor.ScheduleMenuMain(soloMenuMainAt, soloMenuMainShot);
         }
         Destroy(gameObject);
