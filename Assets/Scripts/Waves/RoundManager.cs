@@ -486,6 +486,7 @@ public class RoundManager : MonoBehaviour
         // 게임이 끝나는 경로로 빠지면 여기까지 안 온다. 1라운드 시작(Start())에서는 이 메서드
         // 자체가 안 불리므로 시작 위습(RewardDistributor.GrantStartingWisps)과도 안 겹친다.
         GrantFlatRoundReward();
+        MaybeShowTip();
 
         // 60라운드(신세계 진입) 전에만 원작대로 대기시간을 둔다. 나머지는 예전처럼 바로 이어진다.
         // 원작은 같은 블록에서 데스카운트를 전원 1로 덮어쓴다 — 신세계부턴 한 번 넘치면 끝이다.
@@ -706,6 +707,29 @@ public class RoundManager : MonoBehaviour
         foreach (string line in Wc3Text.ToRichLines(text)) AnnounceAll(line, 30f);
         if (difficulty.Current == DifficultyMode.Easy)
             AnnounceAll("<color=#FF4500>스토리 존에 진입하여 스토리 격파시 클리어에 용이합니다.</color>", 10f);
+    }
+
+    // ── 팁(알림 묶음 12/13, GAP 104) — 원작 Trig_Round_boolean_Trigger: 51라운드 전까지 라운드마다 세다가 4번째에 TipText 12개 중 하나를 전원에게 ──
+    //   우리 게임에 **실제로 있는 규칙**을 말하는 팁만 둔다(없는 규칙을 말하면 거짓말): 3·4(41R 게이트 — 원작 스토리 이름 자리에 그 순서의 우리 이름),
+    //   8(도움소 불비). 뺀 것: 1 진동 명령·6·7 광고(PM), 2 어려움 51R 게이트·5 크립 이동 제한·9 변화됨 2기·11 회복 오라·12 스턴 저항(우리에 없음),
+    //   10 광폭화 25%(확인 못 함).
+    int tipCount;
+
+    void MaybeShowTip()
+    {
+        if (currentRound >= 51) return;
+        if (tipCount < 3) { tipCount++; return; }
+        tipCount = 0;
+        StoryManager story = StoryManager.Instance;
+        string hellStory = story?.StoryAt(HellRound41ClearGateOrder - 1)?.storyName ?? "드레스로사";
+        string godStory = story?.StoryAt(GodNightmareRound41ClearGateOrder - 1)?.storyName ?? "홀케이크섬";
+        string[] tips =
+        {
+            $"|c00ffff00*Tip|r - |cffff8200지옥모드는 41라운드까지 |r|cffff0000{HellRound41ClearGateOrder}. {hellStory}|r|cffff8200{ObjectParticle(hellStory)} 격파하지 못하면|r |cffff0000패배|r|cffff8200합니다.|r",
+            $"|c00ffff00*Tip|r - |cffff8200신 모드는 41라운드까지 |r|cffff0000{GodNightmareRound41ClearGateOrder}. {godStory}|r|cffff8200{ObjectParticle(godStory)} 격파하지 못하면|r |cffff0000패배|r|cffff8200합니다.|r",
+            "|c00ffff00*Tip|r - |cffff8200초반 위습을 도움소 마나에 넣으셔서 불비 스킬을 사용하신다면 20라운드까지 보스를 잡기 수월합니다|r",
+        };
+        foreach (string line in Wc3Text.ToRichLines(tips[Random.Range(0, tips.Length)])) AnnounceAll(line, 10f);
     }
 
     static void AnnounceAll(string message, float seconds)
