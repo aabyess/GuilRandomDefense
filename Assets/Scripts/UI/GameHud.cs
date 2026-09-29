@@ -508,6 +508,9 @@ public class GameHud : MonoBehaviour
     //   게임은 멈추지 않는다(워크3 같이 하기처럼 — 이 게임엔 일시정지 자체가 없다).
 
     GameObject gameMenu;
+    // 패배 창(DefeatOverlay)이 메뉴와 겹치지 않게 메뉴가 열렸는지 알려 준다(09-29 배포판 피드백). 창 여닫는 길이 여럿이라 상태를 따로 들지 않고 창을 본다.
+    static GameObject openableGameMenu;
+    public static bool IsGameMenuOpen => openableGameMenu != null && openableGameMenu.activeInHierarchy;
     TMP_Text gameMenuMessage;
     GameObject gameMenuMainButtons;
     GameObject gameMenuConfirmButtons;
@@ -528,6 +531,7 @@ public class GameHud : MonoBehaviour
         RectTransform dim = CreatePanel(transform, "GameMenu", new Color(0f, 0f, 0f, 0.55f));
         SetAnchors(dim, Vector2.zero, Vector2.one);
         gameMenu = dim.gameObject;
+        openableGameMenu = gameMenu;
 
         RectTransform card = CreatePanel(dim, "Card", new Color(0.13f, 0.16f, 0.23f, 0.97f));
         SetAnchors(card, new Vector2(0.29f, 0.38f), new Vector2(0.71f, 0.64f));   // 가장 긴 문구가 한 줄에 들어가는 폭
