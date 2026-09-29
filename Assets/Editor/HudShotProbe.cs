@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.EventSystems;
 using System.Reflection;
 using UnityEngine;
 
@@ -8,6 +10,7 @@ using UnityEngine;
 ///   call:HudShotProbe.SelectAllMine   내 유닛 전부(최대 12) — 여러 기 카드 격자
 ///   call:HudShotProbe.SelectCombiner  조합식이 있는 내 유닛 한 기 — 초상화·정보·조합 결과 칸
 ///   call:HudShotProbe.SelectGamble    내 도박소 — 상점 9칸
+///   call:HudShotProbe.MinimapClickCheck  미니맵에서 「내 도박소」 자리를 실제 UI 레이캐스트로 찾아 클릭 → 카메라 화면 중앙 땅이 거기로 왔나
 /// 가상 마우스 select:는 하단 바 가장자리 유닛에서 빗나가서(09-29 두 번) 입력 경로 검증이 아닌 **화면 배치 사진**에만 이걸 쓴다.
 /// </summary>
 public static class HudShotProbe
@@ -72,5 +75,35 @@ public static class HudShotProbe
         if (pick == null) return "❌ 도박소 없음";
         selection.SelectOnly(pick);
         return $"선택 {pick.name}";
+    }
+
+    // 미니맵 클릭 이동 실측(09-29 미니맵 폭 변경). 가상 마우스가 아니라 EventSystem.RaycastAll → 맨 위 대상에 클릭 이벤트
+    // (EventSystem이 실제 클릭 때 하는 것과 같은 길). 맨 위가 미니맵(또는 그 자식)이 아니면 그것부터 적는다.
+    public static string MinimapClickCheck()
+    {
+        MinimapCamera minimap = Object.FindFirstObjectByType<MinimapCamera>();
+        Camera cam = Camera.main;
+        Selectable shop = Selectable.All.Where(Mine).FirstOrDefault(s => s.name.Contains("도박소"));
+        if (minimap == null || cam == null || shop == null || EventSystem.current == null) return "❌ 미니맵/카메라/도박소/EventSystem 없음";
+
+        Vector3 target = shop.transform.position;
+        RectTransform rect = (RectTransform)minimap.transform;
+        Vector2 screen = RectTransformUtility.WorldToScreenPoint(null, rect.TransformPoint(minimap.WorldToMinimapLocal(target)));
+        PointerEventData ped = new PointerEventData(EventSystem.current) { position = screen, button = PointerEventData.InputButton.Left };
+        List<RaycastResult> hits = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(ped, hits);
+        if (hits.Count == 0) return $"❌ 화면 {screen}에 UI가 없음";
+        GameObject top = hits[0].gameObject;
+        ped.pointerPressRaycast = hits[0];
+        ped.pointerCurrentRaycast = hits[0];
+        GameObject handled = ExecuteEvents.ExecuteHierarchy(top, ped, ExecuteEvents.pointerClickHandler);
+
+        Vector3 origin = cam.transform.position, forward = cam.transform.forward;
+        float t = -origin.y / forward.y;   // RtsCameraController.FocusOffset과 같은 기준(y=0 평면)
+        Vector3 focus = origin + forward * t;
+        float miss = new Vector2(focus.x - target.x, focus.z - target.z).magnitude;
+        Rect r = rect.rect;
+        return $"미니맵 칸 {r.width:F0}×{r.height:F0}(캔버스) · 클릭 화면점 {screen} · 맨 위 UI {top.name} → 처리 {(handled != null ? handled.name : "없음")} · " +
+               $"목표 도박소 ({target.x:F0}, {target.z:F0}) · 화면 중앙 땅 ({focus.x:F0}, {focus.z:F0}) · 어긋남 {miss:F1} {(miss < 20f ? "✅" : "❌")}";
     }
 }

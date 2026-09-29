@@ -27,6 +27,9 @@ public class MinimapCamera : MonoBehaviour, IPointerClickHandler
     // 땅이 차지하는 반폭(가로 x·세로 z) — FitToMap이 잰 값. 화면 칸 비율에 맞춰 늘린 값이 halfX/halfZ다.
     Vector2 groundHalf;
     float halfX, halfZ;
+
+    /// <summary>땅(여백 포함) 가로 ÷ 세로 — GameHud가 미니맵 칸 폭을 이 비율로 맞춘다(09-29, 칸 = 그림). 재기 전이면 0.</summary>
+    public float GroundAspect => groundHalf.y > 0f ? groundHalf.x / groundHalf.y : 0f;
     float appliedAspect;
 
     // 맵이 커지거나 섬이 옮겨질 때마다 값을 손으로 맞추면 언젠가 어긋난다 —

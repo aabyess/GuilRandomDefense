@@ -42,7 +42,12 @@ public class GameHud : MonoBehaviour
     const float ConsoleMargin = 8f;
     const float CommandPanelWidth = 460f;
     const float ItemPanelWidth = 170f;
-    const float PortraitLeft = 0.246f, PortraitRight = 0.350f, InfoLeft = 0.354f;
+    // 09-29 사장님 「미니맵 양옆 검은 여백 없애고 가운데를 넓혀」: 왼쪽 세 칸(미니맵·초상·정보)은 ConsoleLeft의 가로 레이아웃이 줄 세운다.
+    //   미니맵 칸 폭 = 칸 높이 × 땅 비율(MinimapCamera.GroundAspect) — 칸이 곧 그림이라 검은 띠가 없다. 초상은 높이 × PortraitAspect.
+    //   남는 폭은 정보·카드 칸이 받는다. 폭은 땅을 잰 뒤·칸 높이가 바뀔 때 RefreshConsoleLayout이 다시 잡는다(첫 그림 전 Update에서).
+    const float PortraitAspect = 0.94f;   // 200 × 213(1920 기준) — 워크3 초상 비율
+    const float MinimapInset = 5f;        // 금테 안쪽 여백(BuildUI의 MinimapArea)
+    const float ConsoleGap = 8f;
 
     // 하단 바 높이(화면 비율)와 미니맵 칸 윗변(화면 비율). 미니맵만 하단 바 위로 솟는다(BuildUI의 MinimapPanel 주석).
     // MinimapTop 고르는 법 — 1920×1080 기준:
@@ -80,7 +85,8 @@ public class GameHud : MonoBehaviour
     // (1920×1080 플레이 캡처). 자동 축소는 최소 글자 크기까지만 줄어들지, 칸에 맞춰 잘라 주지 않는다.
     const float WispSlotSize = 52f;      // 정사각형 한 변(픽셀). 가로·세로에 같은 값을 넣는 것이 정사각형의 근거다
     const float WispSlotGap = 3f;
-    const int WispSlotsPerRow = 9;       // Assets/Data/Wisps 종류 수(9)와 같다 — 오늘은 늘 한 줄이다
+    // 한 줄 칸 수는 미니맵 칸 폭에 맞춘다(09-29 — 미니맵이 땅 비율로 좁아져 9칸 한 줄이 초상 위까지 넘었다). LayoutWispSlots 참고.
+    const int WispSlotsPerRow = 9;       // 첫 배치값(Assets/Data/Wisps 종류 수 9). 실제 줄 폭은 LayoutWispSlots가 다시 정한다
     const int MaxWispSlots = 18;         // 종류가 늘면 위로 한 줄 더. 그보다 늘면 경고를 찍는다
     readonly List<WispSlot> wispSlots = new List<WispSlot>();
     readonly Dictionary<WispData, List<Wisp>> wispsByType = new Dictionary<WispData, List<Wisp>>();
@@ -358,6 +364,7 @@ public class GameHud : MonoBehaviour
 
     void Update()
     {
+        RefreshConsoleLayout();
         RefreshFitGrids();
         RefreshSelectionPanel();
         RefreshTopBar();
@@ -435,15 +442,33 @@ public class GameHud : MonoBehaviour
         //    옛 칸은 HUD 루트에 붙어 윗변이 바 윗선(0.22)과 같아 선 위로 삐져나와 보였다. MinimapTop(0.22)은 이제 위습 칸 바닥만 정한다.
         //    그림은 칸에 늘려 채우지 않고 **땅 비율 그대로 가운데**(BuildMinimap의 AspectRatioFitter) — 늘려 채우면 모자란 축을
         //    카메라가 땅 밖까지 찍어 왼쪽에 빈 남색 띠(바다 판 밖 배경)가 생겼다.
-        RectTransform minimapPanel = CreatePanel(bar, "MinimapPanel", SlotColor);
-        SetAnchors(minimapPanel, new Vector2(0.01f, 0.05f), new Vector2(0.24f, 0.95f));
+        float commandRight = ConsoleMargin;
+        float commandLeft = commandRight + CommandPanelWidth;
+        float itemRight = commandLeft + ConsoleMargin;
+        float itemLeft = itemRight + ItemPanelWidth;
+        float infoRight = itemLeft + ConsoleMargin;
+
+        consoleLeft = (RectTransform)new GameObject("ConsoleLeft", typeof(RectTransform)).transform;
+        consoleLeft.SetParent(bar, false);
+        SetRightAnchored(consoleLeft, 0.01f, infoRight);
+        HorizontalLayoutGroup row = consoleLeft.gameObject.AddComponent<HorizontalLayoutGroup>();
+        row.spacing = ConsoleGap;
+        row.childControlWidth = true;
+        row.childControlHeight = true;
+        row.childForceExpandWidth = false;
+        row.childForceExpandHeight = true;
+
+        RectTransform minimapPanel = CreatePanel(consoleLeft, "MinimapPanel", SlotColor);
+        minimapLayout = minimapPanel.gameObject.AddComponent<LayoutElement>();
+        minimapLayout.preferredWidth = 442f;   // 땅을 재기 전 자리값(옛 폭) — RefreshConsoleLayout이 곧 덮는다
+        minimapLayout.flexibleWidth = 0f;
         AddConsoleFrame(minimapPanel);
         RectTransform minimapArea = CreatePanel(minimapPanel, "MinimapArea", Color.clear);
         minimapArea.GetComponent<Image>().raycastTarget = false;
         SetAnchors(minimapArea, Vector2.zero, Vector2.one);
-        minimapArea.offsetMin = new Vector2(5f, 5f);
-        minimapArea.offsetMax = new Vector2(-5f, -5f);
-        BuildMinimap(minimapArea);
+        minimapArea.offsetMin = new Vector2(MinimapInset, MinimapInset);
+        minimapArea.offsetMax = new Vector2(-MinimapInset, -MinimapInset);
+        minimapCamera = BuildMinimap(minimapArea);
 
         // 🔴 미니맵 바로 위 위습 개수 (사장님 지시 2026-09-24: 「랜덤위습도 시간지나서 추가되면
         //    미니맵 위쪽에 위습 몇개 있는지 뜨게 해주고 원랜디처럼」).
@@ -454,8 +479,10 @@ public class GameHud : MonoBehaviour
         BuildWispSlots();
 
         // 09-29 워크3 콘솔: [미니맵] [초상화] [정보·카드] [아이템 2×4] [명령 4×3]. 오른쪽 두 칸은 고정 폭(ConsoleMargin 주석).
-        RectTransform portraitSlot = CreatePanel(bar, "UnitInfoPortraitSlot", SlotColor);
-        SetAnchors(portraitSlot, new Vector2(PortraitLeft, 0.05f), new Vector2(PortraitRight, 0.95f));
+        RectTransform portraitSlot = CreatePanel(consoleLeft, "UnitInfoPortraitSlot", SlotColor);
+        portraitLayout = portraitSlot.gameObject.AddComponent<LayoutElement>();
+        portraitLayout.preferredWidth = 200f;
+        portraitLayout.flexibleWidth = 0f;
         AddConsoleFrame(portraitSlot);
         unitInfoPortraitSlotObject = portraitSlot.gameObject;
 
@@ -491,14 +518,10 @@ public class GameHud : MonoBehaviour
         unitInfoPortraitModel.raycastTarget = false;
         modelObj.SetActive(false);
 
-        float commandRight = ConsoleMargin;
-        float commandLeft = commandRight + CommandPanelWidth;
-        float itemRight = commandLeft + ConsoleMargin;
-        float itemLeft = itemRight + ItemPanelWidth;
-        float infoRight = itemLeft + ConsoleMargin;
-
-        RectTransform infoPanel = CreatePanel(bar, "UnitInfoPanel", SlotColor);
-        SetRightAnchored(infoPanel, InfoLeft, infoRight);
+        RectTransform infoPanel = CreatePanel(consoleLeft, "UnitInfoPanel", SlotColor);
+        LayoutElement infoLayout = infoPanel.gameObject.AddComponent<LayoutElement>();
+        infoLayout.minWidth = 0f;
+        infoLayout.flexibleWidth = 1f;   // 미니맵·초상이 가져가고 남는 폭 전부
         AddConsoleFrame(infoPanel);
 
         RectTransform infoTextSlot = CreatePanel(infoPanel, "UnitInfoTextSlot", Color.clear);
@@ -1801,7 +1824,7 @@ public class GameHud : MonoBehaviour
         teamPanelText.overflowMode = TextOverflowModes.Overflow;
     }
 
-    static void BuildMinimap(RectTransform parent)
+    static MinimapCamera BuildMinimap(RectTransform parent)
     {
         GameObject obj = new GameObject("Minimap", typeof(RectTransform), typeof(RawImage), typeof(MinimapCamera), typeof(RectMask2D));
         obj.transform.SetParent(parent, false);
@@ -1849,6 +1872,33 @@ public class GameHud : MonoBehaviour
         blipsRect.offsetMax = Vector2.zero;
 
         blipsObj.GetComponent<MinimapBlips>().SetMinimap(obj.GetComponent<MinimapCamera>());
+        return obj.GetComponent<MinimapCamera>();
+    }
+
+    RectTransform consoleLeft;
+    LayoutElement minimapLayout;
+    LayoutElement portraitLayout;
+    MinimapCamera minimapCamera;
+    Vector2 appliedConsoleLayout;   // (칸 높이, 땅 비율) — 둘 중 하나라도 바뀌면 다시 잡는다
+
+    // 미니맵 칸 = 그림(09-29). 땅 비율은 MinimapCamera가 Awake에서 재고 Start에서 한 번 더 잰다 — 둘 다 첫 그림보다 앞이라
+    //   첫 프레임 Update에서 잡으면 화면에 옛 폭이 한 번도 안 나온다. 칸 높이는 해상도가 바뀌면 달라진다.
+    void RefreshConsoleLayout()
+    {
+        if (consoleLeft == null || minimapCamera == null) return;
+        float height = consoleLeft.rect.height;
+        float aspect = minimapCamera.GroundAspect;
+        if (height <= 1f || aspect <= 0f) return;
+        Vector2 key = new Vector2(height, aspect);
+        if (key == appliedConsoleLayout) return;
+        appliedConsoleLayout = key;
+
+        float minimapWidth = Mathf.Round((height - 2f * MinimapInset) * aspect + 2f * MinimapInset);
+        minimapLayout.preferredWidth = minimapWidth;
+        portraitLayout.preferredWidth = Mathf.Round(height * PortraitAspect);
+        if (minimapCamera.TryGetComponent(out AspectRatioFitter fitter)) fitter.aspectRatio = aspect;
+        LayoutRebuilder.MarkLayoutForRebuild(consoleLeft);
+        LayoutWispSlots(minimapWidth);
     }
 
     // 카드 12개를 미리 만들어두고 선택이 바뀔 때만 켜고 끈다 — 매 프레임 새로 만들지 않는다.
@@ -3070,6 +3120,17 @@ public class GameHud : MonoBehaviour
     /// 개수만 「위습 5」로 합치면 **무엇이 5개인지 모른다.** 배경은 그 위습이 뽑는 등급색이라
     /// 조합판·이름표에서 쓰는 색과 같은 뜻으로 읽힌다.
     /// </summary>
+    // 위습 칸을 미니맵 칸 폭 안에 줄 세운다 — 넘치면 위로 한 줄 더(아래 줄부터). PlayerNotification은 켜진 칸 전부의 윗선을 본다.
+    void LayoutWispSlots(float rowWidth)
+    {
+        int perRow = Mathf.Max(1, Mathf.FloorToInt((rowWidth + WispSlotGap) / (WispSlotSize + WispSlotGap)));
+        for (int i = 0; i < wispSlots.Count; i++)
+        {
+            RectTransform slot = (RectTransform)wispSlots[i].root.transform;
+            slot.anchoredPosition = new Vector2((i % perRow) * (WispSlotSize + WispSlotGap), (i / perRow) * (WispSlotSize + WispSlotGap));
+        }
+    }
+
     void BuildWispSlots()
     {
         for (int i = 0; i < MaxWispSlots; i++)

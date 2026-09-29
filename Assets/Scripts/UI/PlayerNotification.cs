@@ -158,7 +158,17 @@ public class PlayerNotificationHud : MonoBehaviour
             GameObject found = GameObject.Find("BottomBar");
             bottomBar = found != null ? found.transform as RectTransform : null;
             if (bottomBar != null && bottomBar.parent != null)
-                wispRows = new[] { bottomBar.parent.Find("WispSlot0") as RectTransform, bottomBar.parent.Find("WispSlot9") as RectTransform };
+            {
+                // 09-29: 위습 칸 줄 수가 미니맵 폭에 따라 바뀐다(GameHud.LayoutWispSlots) — 줄 첫 칸 둘만 보면 셋째 줄 위로 알림이 겹친다. 칸 전부를 본다.
+                var slots = new System.Collections.Generic.List<RectTransform>();
+                for (int i = 0; ; i++)
+                {
+                    RectTransform slot = bottomBar.parent.Find("WispSlot" + i) as RectTransform;
+                    if (slot == null) break;
+                    slots.Add(slot);
+                }
+                wispRows = slots.ToArray();
+            }
         }
 
         float baseline = Screen.height * (1f - FallbackBottomHudFraction);

@@ -220,6 +220,12 @@ public enum SkillEffectKind
     // 동일. AttackSpeedMultiplier 체인에 배율로 곱해진다(HeroAttackSpeedMultiplier와
     // 같은 성격 — 공속은 애초에 배율 축이다, AttackDamage의 가산 축과 다르다).
     AttackSpeedBuffPercent,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-29, 「스킬 전체 살리기」 2단계) — 적 이동속도 감소(이감·둔화).
+    // 원작 「기본둔화」 등은 피해만 옮겨지고 둔화가 빠져 있었다(이 kind가 없었다).
+    // multiplier = 남는 이동속도 비율(0.5 = 50% 속도, 원작 「이속 −50%」). duration초 뒤 되돌린다(0이면 건너뜀).
+    // EnemyDummy.AddSlow/RemoveSlow — 여러 개가 겹치면 가장 강한 하나만(워크3 규칙).
+    Slow,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
