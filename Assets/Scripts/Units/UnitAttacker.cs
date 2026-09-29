@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool;
 
 public class UnitAttacker : MonoBehaviour
 {
@@ -1268,12 +1269,20 @@ public class UnitAttacker : MonoBehaviour
         switch (effect.target)
         {
             case SkillTargetKind.Enemies:
+                // 🔴 2026-09-29 — EnemyDummy.Active를 그대로 돌면 피해로 적이 죽는 순간 목록이 바뀌어
+                //    InvalidOperationException(Collection was modified)이 났다(스킬 계측 판 127회). 예외는 이 시전의 남은 적·남은 효과를
+                //    건너뛰고, 위로 올라가 TryCastOnHitSkill의 게이지 리셋·평타 N회 버프 차감까지 끊었다 → 게이지 스킬이
+                //    처치 뒤 몇 타마다 계속 터졌다(진연서 LIFE33이 172타에 48번 — 정상 5번). 사거리 안 적을 먼저 모아 두고 돈다.
+                List<EnemyDummy> inRange = ListPool<EnemyDummy>.Get();
                 foreach (EnemyDummy enemy in EnemyDummy.Active)
                 {
                     if (enemy == null) continue;
                     if (range > 0f && Vector3.Distance(enemy.transform.position, transform.position) > range) continue;
-                    ApplyToEnemy(effect, enemy, recentAttackDamage, firedCascadeGroups);
+                    inRange.Add(enemy);
                 }
+                foreach (EnemyDummy enemy in inRange)
+                    if (enemy != null) ApplyToEnemy(effect, enemy, recentAttackDamage, firedCascadeGroups);
+                ListPool<EnemyDummy>.Release(inRange);
                 break;
 
             case SkillTargetKind.SingleTarget:
