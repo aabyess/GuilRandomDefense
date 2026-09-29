@@ -29,6 +29,13 @@ public class ShopNameplateLayer : MonoBehaviour
 
     static readonly Regex LanePrefix = new Regex(@"^Lane\d+_");
 
+    /// <summary>건물 오브젝트 이름(「Lane1_도박소」) → 한 줄 표시 이름(「도박소」). 하단 정보칸(GameHud)이 같은 표를 쓴다(09-29 PM).</summary>
+    public static string DisplayNameOf(string objectName)
+    {
+        string key = LanePrefix.Replace(objectName ?? "", "");
+        return (DisplayNames.TryGetValue(key, out string display) ? display : key).Replace("\n", "");
+    }
+
     // 유닛 이름표(-95)보다 아래 — 상점은 레인 뒤편에 서 있어 유닛 이름표와 겹치면 유닛 쪽이 위여야 한다.
     // GameHud(0)보다 아래라 하단 바·팀 패널 뒤로 숨는다.
     const int SortingOrder = -97;

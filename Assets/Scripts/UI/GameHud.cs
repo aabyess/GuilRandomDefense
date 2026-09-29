@@ -31,7 +31,7 @@ public class GameHud : MonoBehaviour
     const float BarEdgeThickness = 3f;
 
     // 명령 격자: 워크3 명령 카드 **4열 × 3줄 = 12칸**(09-29 콘솔 개편).
-    //   1줄 이동 M · 정지 S · 홀드 H · 공격 A / 2줄 모으기 V · 정렬 C · 판매 · (빈칸) / 3줄 조합 결과 4칸.
+    //   1줄 이동 M · 정지 S · 홀드 H · 공격 A / 2줄 모으기 V · 정렬 C · (빈칸) · 판매 / 3줄 조합 결과 4칸.
     //   조합식 207개를 첫 재료별로 세면 한 유닛 결과는 최대 4개(09-29 실측)라 3줄 4칸에 다 들어간다.
     //   칸 크기는 박지 않는다 — 패널 크기에서 계산한다(FitGrid). 38px 칸이 패널 가운데 작게 몰려 글씨가 안 보였다(사장님 09-29).
     const int CommandSlotCount = 12;
@@ -2227,7 +2227,7 @@ public class GameHud : MonoBehaviour
     const int AlignCommandSlot = 5;
     // 판매(09-29 사장님 — 떠 있던 버튼을 옮김). 원작 판매 능력(A09G·A0B8·A0BA·A0B9·A0BB·A080·A0OE, war3map_new.w3a)은
     // 단축키(ahky)가 전부 빈 문자열이라 단축키를 안 붙인다. 원작 버튼 자리는 abpy 1(가운데 줄) · abpx 3(5종)/2(2종).
-    const int SellCommandSlot = 6;
+    const int SellCommandSlot = 7;   // 09-29 PM: 원작처럼 가운데 줄 오른쪽 끝(abpx 3) — 6번은 빈칸
 
     // MP: 멀티 클라에서 호스트 판정이 필요한 버튼은 요청 RPC가 생길 때까지 막는다 — 누르면 클라 로컬 상태만
     //     바뀌어 화면이 거짓말을 한다(설계 §6). 싱글·호스트는 IsServer라 항상 false.
@@ -2733,6 +2733,15 @@ public class GameHud : MonoBehaviour
             unitInfoText.text = "선택된 유닛 없음";
             SetUnitInfoPortrait(null);
             SetPortraitModel(null); // 초상화
+            return;
+        }
+
+        // 상점 건물(09-29 PM): 「Lane1_도박소 - -」와 「-」 스탯 줄 대신 표시 이름 한 줄(상점 이름표와 같은 표).
+        if (first.TryGetComponent(out ILaneShop _))
+        {
+            SetUnitInfoPortrait(null);
+            SetPortraitModel(null);
+            unitInfoText.text = $"<size=115%>{ShopNameplateLayer.DisplayNameOf(first.name)}</size>";
             return;
         }
 
