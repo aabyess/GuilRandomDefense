@@ -26,9 +26,30 @@ public class UnitAttacker : MonoBehaviour
             return anim;
         }
     }
-    OwnedByPlayer owner;
+    // 🔴 2026-09-29 — identity와 같은 사고. OwnedByPlayer도 UnitSpawner가 Instantiate 뒤에 붙여서 Awake에선 null이었다
+    //    → 등급 강화(UnitUpgrades)를 못 찾고, 피해의 처치자 번호가 −1로 나갔다. 붙을 때까지 다시 찾는다.
+    OwnedByPlayer ownerCached;
+    OwnedByPlayer owner
+    {
+        get
+        {
+            if (ownerCached == null && TryGetComponent(out ownerCached)) { upgradesResolveAttempted = false; upgradeMultiplierDirty = true; }
+            return ownerCached;
+        }
+    }
     UnitCombat combat;
-    UnitIdentity identity;
+    // 🔴 2026-09-29 — 유닛 프리팹 214개 전부 UnitIdentity가 없다. UnitSpawner가 Instantiate **뒤에** 붙이므로
+    //    Awake에서 한 번 찾으면 영원히 null이었다 → 이 유닛의 데이터(등급·피해 타입·스킬·특성·등급 강화)를 못 봤다.
+    //    붙을 때까지 매번 다시 찾고, 찾는 순간 강화 캐시를 무효화한다(null로 한 번 계산된 값이 굳지 않게).
+    UnitIdentity identityCached;
+    UnitIdentity identity
+    {
+        get
+        {
+            if (identityCached == null && TryGetComponent(out identityCached)) upgradeMultiplierDirty = true;
+            return identityCached;
+        }
+    }
 
     // 원작 비비 A0LZ류 자가시전 영구 강화(A0LZ_CASTER_STACK_INVESTIGATION.md/7703d2c) — 유닛
     // 인스턴스마다 따로 쌓인다(WC3 GetUnitAbilityLevelSwapped가 유닛 핸들 단위이듯, 비비가
@@ -1802,9 +1823,7 @@ public class UnitAttacker : MonoBehaviour
 
     void Awake()
     {
-        owner = GetComponent<OwnedByPlayer>();
         combat = GetComponent<UnitCombat>();
-        identity = GetComponent<UnitIdentity>();
     }
 
     void OnDestroy()
