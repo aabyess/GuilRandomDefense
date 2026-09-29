@@ -829,13 +829,13 @@ public class UnitAttacker : MonoBehaviour
                 continue;
 
             SkillLevel level = CurrentSkillLevel(skill);
-            if (level == null) continue;
+            if (level == null) { SkillTelemetry.Gate(unitData, skill, "레벨없음"); continue; }
 
             // 06번① 순위배정으로 13기의 UnitData.skill이 null이 아니게 됐지만 levels의
             // effects는 전부 빈 배열이다(수치 미상, 자리만 있음) — 여기서 걸러서 쿨다운
             // 타이머 자체가 돌지 않게 한다. 안 그러면 "숫자만 없다"가 아니라 "빈 채로 계속
             // 돌고 있다"가 된다(PM 지시, 2026-09-05).
-            if (level.effects == null || level.effects.Count == 0) continue;
+            if (level.effects == null || level.effects.Count == 0) { SkillTelemetry.Gate(unitData, skill, "효과0(쿨·오라)"); continue; }
 
             SkillRuntimeState state = GetRuntimeState(skill);
 
@@ -872,7 +872,7 @@ public class UnitAttacker : MonoBehaviour
             // forbiddenTargetBuffId가 채워져 있으면 PassesBuffGate가 target==null을 보고
             // 무조건 막는다 — 대상 버프 게이트를 가진 스킬은 CooldownAutoCast로는 못
             // 쓴다는 뜻이고, 지금은 그런 자산이 없어 회귀 없다.
-            if (!PassesBuffGate(level, null)) continue;
+            if (!PassesBuffGate(level, null)) { SkillTelemetry.Gate(unitData, skill, "버프게이트(쿨)"); continue; }
 
             state.cooldownTimer = Mathf.Max(0.01f, level.cooldown);
             // recentAttackDamage: 0 — CooldownAutoCast는 "방금 맞은 평타"라는 문맥 자체가
@@ -1045,9 +1045,10 @@ public class UnitAttacker : MonoBehaviour
     {
         UnitData unitData = identity != null ? identity.Data : null;
         if (unitData == null) return;
+        SkillTelemetry.Hit(unitData);
 
         int count = EffectiveSkillCount(unitData);
-        if (count == 0) return;
+        if (count == 0) { SkillTelemetry.Gate(unitData, null, "스킬수0"); return; }
 
         // 공유 게이지(OnHitCount)는 이 평타 한 번에 게이지 종류당 최대 한 번만 올린다 —
         // 스킬마다 올리면 스킬이 많은 유닛일수록 게이지가 그만큼 빨리 차서, 원작의 "유닛
@@ -1074,12 +1075,12 @@ public class UnitAttacker : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             SkillData skill = ResolveSkillAt(unitData, i);
-            if (skill == null) continue;
+            if (skill == null) { SkillTelemetry.Gate(unitData, null, "슬롯 비어 있음"); continue; }
             if (skill.triggerType != SkillTriggerType.OnHitChance && skill.triggerType != SkillTriggerType.OnHitCount)
                 continue;
 
             SkillLevel level = CurrentSkillLevel(skill);
-            if (level == null || level.effects == null || level.effects.Count == 0) continue;
+            if (level == null || level.effects == null || level.effects.Count == 0) { SkillTelemetry.Gate(unitData, skill, "효과0"); continue; }
 
             // 버프 게이트(requiredBuffId/forbiddenBuffId, 2026-09-06) — OnHitChance·
             // OnHitCount 둘 다 판정 시작 전에 먼저 걸린다. 원작 예: 드래곤 "B00J 미보유",
@@ -1088,7 +1089,7 @@ public class UnitAttacker : MonoBehaviour
             // forbiddenTargetBuffId(대상의 버프)도 같이 판정한다. 원작 예: B06B(신세계
             // 광폭화 몬스터 전용) — "대상이 이 상태일 때만 발동"은 캐스터가 아니라
             // attackedTarget의 버프를 봐야 한다.
-            if (!PassesBuffGate(level, attackedTarget)) continue;
+            if (!PassesBuffGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "버프게이트"); continue; }
 
             if (skill.triggerType == SkillTriggerType.OnHitChance)
             {
@@ -1096,9 +1097,9 @@ public class UnitAttacker : MonoBehaviour
                 // 검사가 바깥 if라서, 잠긴 동안은 확률 판정까지 안 간다. cooldown<=0이면 이
                 // 줄이 항상 통과해 기존 동작과 완전히 같다(회귀 없음).
                 SkillRuntimeState state = GetRuntimeState(skill);
-                if (level.cooldown > 0f && Time.time < state.onHitChanceLockedUntil) continue;
+                if (level.cooldown > 0f && Time.time < state.onHitChanceLockedUntil) { SkillTelemetry.Gate(unitData, skill, "절대쿨"); continue; }
 
-                if (Random.value >= level.triggerChance) continue;
+                if (Random.value >= level.triggerChance) { SkillTelemetry.Gate(unitData, skill, "확률실패"); continue; }
 
                 if (level.cooldown > 0f)
                 {
@@ -1124,16 +1125,16 @@ public class UnitAttacker : MonoBehaviour
                 {
                     if (!manaGaugeInitialized) { manaGaugeCounter = level.resetTo; manaGaugeInitialized = true; }
                     if (!manaIncremented) { manaGaugeCounter++; manaIncremented = true; }
-                    if (manaGaugeCounter <= level.hitCountFloor) continue;
+                    if (manaGaugeCounter <= level.hitCountFloor) { SkillTelemetry.Gate(unitData, skill, "게이지바닥미달"); continue; }
                 }
                 else
                 {
                     if (!lifeGaugeInitialized) { lifeGaugeCounter = level.resetTo; lifeGaugeInitialized = true; }
                     if (!lifeIncremented) { lifeGaugeCounter++; lifeIncremented = true; }
-                    if (lifeGaugeCounter <= level.hitCountFloor) continue;
+                    if (lifeGaugeCounter <= level.hitCountFloor) { SkillTelemetry.Gate(unitData, skill, "게이지바닥미달"); continue; }
                 }
 
-                if (Random.value >= level.triggerChance) continue;
+                if (Random.value >= level.triggerChance) { SkillTelemetry.Gate(unitData, skill, "바닥후확률실패"); continue; }
 
                 // "발동 시에만" 차감 — 위 hitCountThreshold 경로의 resetTo(확률과 무관하게
                 // 항상 적용)와 다르다, 여기까지 왔다는 건 이미 확률까지 통과했다는 뜻이라
@@ -1158,7 +1159,7 @@ public class UnitAttacker : MonoBehaviour
                 {
                     if (!manaGaugeInitialized) { manaGaugeCounter = level.resetTo; manaGaugeInitialized = true; }
                     if (!manaIncremented) { manaGaugeCounter++; manaIncremented = true; }
-                    if (manaGaugeCounter < level.hitCountThreshold) continue;
+                    if (manaGaugeCounter < level.hitCountThreshold) { SkillTelemetry.Gate(unitData, skill, "게이지미달(마나)"); continue; }
                     manaShouldReset = true;
                     manaResetValue = level.resetTo;
                 }
@@ -1166,7 +1167,7 @@ public class UnitAttacker : MonoBehaviour
                 {
                     if (!lifeGaugeInitialized) { lifeGaugeCounter = level.resetTo; lifeGaugeInitialized = true; }
                     if (!lifeIncremented) { lifeGaugeCounter++; lifeIncremented = true; }
-                    if (lifeGaugeCounter < level.hitCountThreshold) continue;
+                    if (lifeGaugeCounter < level.hitCountThreshold) { SkillTelemetry.Gate(unitData, skill, "게이지미달(생명)"); continue; }
                     lifeShouldReset = true;
                     lifeResetValue = level.resetTo;
                 }
@@ -1178,7 +1179,7 @@ public class UnitAttacker : MonoBehaviour
                 // (원작도 그렇다) — 위에서 이미 manaShouldReset/lifeShouldReset을 세팅한
                 // *뒤에* 이 판정을 하므로, 확률에 실패해 여기서 continue해도 리셋 예약은
                 // 그대로 살아서 루프 끝에 적용된다. 발동(CastSkillLevel)만 건너뛴다.
-                if (Random.value >= level.triggerChance) continue;
+                if (Random.value >= level.triggerChance) { SkillTelemetry.Gate(unitData, skill, "게이지후확률실패"); continue; }
             }
 
             // recentAttackDamage: 방금 이 평타로 실제로 나간 피해량(AttackDamage) — 원작

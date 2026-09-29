@@ -14,6 +14,9 @@ public static class SkillTelemetry
     {
         public readonly Dictionary<string, int> casts = new Dictionary<string, int>();
         public readonly Dictionary<string, float> damage = new Dictionary<string, float>();
+        // 시전까지 못 간 판정이 어느 자리에서 빠졌나(「스킬이름: 사유」 → 횟수). 2026-09-29 미발동 원인 규명.
+        public readonly Dictionary<string, int> gates = new Dictionary<string, int>();
+        public int hits;   // 평타가 맞아 스킬 판정(TryCastOnHitSkill)에 들어간 횟수 — 게이지·저확률 판정의 표본 수
     }
 
     static readonly Dictionary<UnitData, UnitStats> stats = new Dictionary<UnitData, UnitStats>();
@@ -33,6 +36,22 @@ public static class SkillTelemetry
         Dictionary<string, int> casts = For(unit).casts;
         casts.TryGetValue(key, out int n);
         casts[key] = n + 1;
+    }
+
+    public static void Hit(UnitData unit)
+    {
+        if (!Enabled || unit == null) return;
+        For(unit).hits++;
+    }
+
+    /// <summary>스킬 판정이 시전 전에 빠진 자리를 센다(UnitAttacker의 continue·return마다 한 줄). skill이 null이면 유닛 단위 사유.</summary>
+    public static void Gate(UnitData unit, SkillData skill, string reason)
+    {
+        if (!Enabled || unit == null) return;
+        string key = (skill != null ? (string.IsNullOrEmpty(skill.skillName) ? skill.name : skill.skillName) : "(유닛)") + ": " + reason;
+        Dictionary<string, int> gates = For(unit).gates;
+        gates.TryGetValue(key, out int n);
+        gates[key] = n + 1;
     }
 
     // hpBefore는 TakeDamage 직전의 적 체력 — 실제로 깎인 양만 센다(넘친 피해는 안 셈).
@@ -63,7 +82,9 @@ public static class SkillTelemetry
             if (casts > 0) fired++;
             string castText = s != null && s.casts.Count > 0 ? string.Join(", ", s.casts.Select(kv => $"{kv.Key}×{kv.Value}")) : "—";
             float share = basic + skill > 0f ? skill / (basic + skill) : 0f;
-            sb.AppendLine($"   {(casts > 0 ? "✅" : "❌")} [{u.grade.KoreanName()}] {u.name} · 시전 {casts} ({castText}) · 평타 {basic:F0} · 스킬 {skill:F0} ({share:P0})");
+            sb.AppendLine($"   {(casts > 0 ? "✅" : "❌")} [{u.grade.KoreanName()}] {u.name} · 시전 {casts} ({castText}) · 판정 {(s != null ? s.hits : 0)}타 · 평타 {basic:F0} · 스킬 {skill:F0} ({share:P0})");
+            if (s != null && s.gates.Count > 0)
+                sb.AppendLine("        ↳ 빠진 자리: " + string.Join(" · ", s.gates.OrderByDescending(kv => kv.Value).Select(kv => $"{kv.Key}×{kv.Value}")));
         }
         float totalShare = totalBasic + totalSkill > 0f ? totalSkill / (totalBasic + totalSkill) : 0f;
         return $"   스킬 가진 유닛 {withSkill.Count}종 중 발동 {fired}종 · 전체 피해 중 스킬 {totalShare:P1} (평타 {totalBasic:F0} / 스킬 {totalSkill:F0})\n" + sb;
