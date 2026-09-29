@@ -20,10 +20,13 @@ public class SelectionManager : MonoBehaviour
 
     // 2026-09-26 A 공격: A(또는 명령칸 「공격」)를 누르면 다음 좌클릭이 공격 대상이 된다.
     // 적을 찍으면 그 적을 치고, 땅을 찍으면 공격 이동. 우클릭·Esc로 취소.
-    bool attackTargeting;
+    // 2026-09-29 M 이동(워크3 콘솔 개편): 같은 틀로 다음 좌클릭 땅이 이동 목적지. 커서만 초록 화살표.
+    enum TargetMode { None, Attack, Move }
+    TargetMode targeting;
     int attackCancelFrame = -1;
     // 우클릭 취소는 같은 프레임의 우클릭 이동(UnitMover)도 막아야 한다 — 스크립트 실행 순서와 상관없이.
-    public bool IsAttackTargeting => attackTargeting || attackCancelFrame == Time.frameCount;
+    //    이름은 옛것 그대로지만 M 이동 대기도 포함한다(둘 다 우클릭 = 취소).
+    public bool IsAttackTargeting => targeting != TargetMode.None || attackCancelFrame == Time.frameCount;
     const float AttackPickTolerancePixels = 36f;
     // 좌클릭 살펴보기(적 정보)용 — 공격 대상 고르기보다 넉넉히. 1080 기준 픽셀, 화면 높이에 비례해 늘린다.
     const float InspectPickTolerancePixels = 56f;
@@ -53,13 +56,13 @@ public class SelectionManager : MonoBehaviour
         // 채팅 입력 중엔 클릭·드래그·명령 단축키를 전부 죽인다 — Input System은 텍스트
         // 필드 포커스와 무관하게 Keyboard.current를 그대로 읽어서, 안 막으면 채팅으로
         // "v"를 치는 순간 유닛이 모인다(ChatInputGate.cs 참고, 사장님 지시 2026-09-05).
-        if (ChatInputGate.IsOpen) { attackTargeting = false; return; }
+        if (ChatInputGate.IsOpen) { targeting = TargetMode.None; return; }
 
         HandleCommandKeys();
 
         if (Mouse.current == null || cam == null) return;
 
-        if (attackTargeting && HandleAttackTargeting()) return;
+        if (targeting != TargetMode.None && HandleAttackTargeting()) return;
 
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
@@ -104,7 +107,20 @@ public class SelectionManager : MonoBehaviour
         {
             if (s != null && s.GetComponent<UnitCombat>() != null)
             {
-                attackTargeting = true;
+                targeting = TargetMode.Attack;
+                return;
+            }
+        }
+    }
+
+    /// <summary>M 키·명령칸 「이동」. 움직일 수 있는 유닛(UnitMover)이 선택돼 있을 때만 들어간다.</summary>
+    public void BeginMoveTargeting()
+    {
+        foreach (Selectable s in selected)
+        {
+            if (s != null && s.GetComponent<UnitMover>() != null)
+            {
+                targeting = TargetMode.Move;
                 return;
             }
         }
@@ -116,7 +132,7 @@ public class SelectionManager : MonoBehaviour
         if (selected.Count == 0 || (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             || Mouse.current.rightButton.wasPressedThisFrame)
         {
-            attackTargeting = false;
+            targeting = TargetMode.None;
             attackCancelFrame = Time.frameCount;
             return false;
         }
@@ -125,24 +141,43 @@ public class SelectionManager : MonoBehaviour
         // HUD를 누르면 대기를 푼다(롤처럼) — 명령칸 다른 명령·메뉴 버튼은 그대로 눌린다. 「공격」칸은 떼는 순간 다시 들어온다.
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
-            attackTargeting = false;
+            targeting = TargetMode.None;
             return false;
         }
 
         Vector2 screen = Mouse.current.position.ReadValue();
-        EnemyDummy enemy = WorldPick.TryPickEnemy(cam, screen, AttackPickTolerancePixels);
-        if (enemy != null)
+        if (targeting == TargetMode.Move)
         {
-            int n = UnitCommands.AttackTarget(selected, enemy);
-            Debug.Log($"[명령] 공격 — 유닛 {n}기가 {enemy.name}을(를) 칩니다.");
+            // 우클릭 이동(UnitMover.TryMoveToCursor)과 같은 본체를 탄다 — 적 위를 찍어도 공격이 아니라 그 자리로 간다(워크3 이동).
+            if (WorldPick.TryHitGround(cam, screen, out RaycastHit moveHit))
+            {
+                int moved = 0;
+                foreach (Selectable s in selected)
+                {
+                    if (s == null || !s.TryGetComponent(out UnitMover mover)) continue;
+                    if (!GameAuthority.IsServer) NetCommands.RequestMove(mover, moveHit.point);   // MP: 클라=요청
+                    else mover.MoveToGroundPoint(moveHit.point, moveHit.collider.name);
+                    moved++;
+                }
+                Debug.Log($"[명령] 이동 — 유닛 {moved}기가 {moveHit.point}로 갑니다.");
+            }
         }
-        else if (WorldPick.TryHitGround(cam, screen, out RaycastHit hit))
+        else
         {
-            int n = UnitCommands.AttackMove(selected, hit.point);
-            Debug.Log($"[명령] 공격 이동 — 유닛 {n}기가 {hit.point}로 가며 싸웁니다.");
+            EnemyDummy enemy = WorldPick.TryPickEnemy(cam, screen, AttackPickTolerancePixels);
+            if (enemy != null)
+            {
+                int n = UnitCommands.AttackTarget(selected, enemy);
+                Debug.Log($"[명령] 공격 — 유닛 {n}기가 {enemy.name}을(를) 칩니다.");
+            }
+            else if (WorldPick.TryHitGround(cam, screen, out RaycastHit hit))
+            {
+                int n = UnitCommands.AttackMove(selected, hit.point);
+                Debug.Log($"[명령] 공격 이동 — 유닛 {n}기가 {hit.point}로 가며 싸웁니다.");
+            }
         }
 
-        attackTargeting = false;
+        targeting = TargetMode.None;
         // 이 누름은 명령으로 썼다 — 뗄 때 선택이 바뀌지 않게 막는다.
         ignoreCurrentPress = true;
         leftButtonHeld = false;
@@ -160,9 +195,12 @@ public class SelectionManager : MonoBehaviour
         if (Keyboard.current.aKey.wasPressedThisFrame)
             BeginAttackTargeting();
 
+        if (Keyboard.current.mKey.wasPressedThisFrame)
+            BeginMoveTargeting();
+
         if (Keyboard.current.sKey.wasPressedThisFrame)
         {
-            attackTargeting = false;
+            targeting = TargetMode.None;
             int stopped = UnitCommands.Stop(selected);
             if (stopped > 0) Debug.Log($"[명령] 정지 — 유닛 {stopped}기가 멈췄습니다.");
         }
@@ -175,7 +213,7 @@ public class SelectionManager : MonoBehaviour
 
         if (Keyboard.current.hKey.wasPressedThisFrame)
         {
-            attackTargeting = false;
+            targeting = TargetMode.None;
             int held = UnitCommands.Hold(selected);
             if (held > 0) Debug.Log($"[명령] 홀드 — 유닛 {held}기가 자리를 지킵니다(사거리 안의 적은 칩니다).");
         }
@@ -310,7 +348,7 @@ public class SelectionManager : MonoBehaviour
 
     public void ClearSelection()
     {
-        attackTargeting = false;   // 고를 유닛이 없어졌다 — 공격 대기도 끝
+        targeting = TargetMode.None;   // 고를 유닛이 없어졌다 — 공격 대기도 끝
         foreach (Selectable s in selected)
             if (s != null)
                 s.SetSelected(false);
@@ -327,26 +365,75 @@ public class SelectionManager : MonoBehaviour
 
     // ── 2026-09-29 배포판 피드백: A 공격 대기 중엔 커서를 빨간 칼로(롤처럼) ──
     //    대기가 풀리는 길(적·땅 클릭·우클릭·Esc·S/H·선택 해제·HUD 클릭·채팅·이 컴포넌트 꺼짐)이 여럿이라
-    //    길마다 커서를 되돌리지 않는다. 매 프레임 끝에 attackTargeting 하나만 보고 맞춘다.
-    bool attackCursorShown;
+    //    길마다 커서를 되돌리지 않는다. 매 프레임 끝에 targeting 하나만 보고 맞춘다.
+    //    09-29 M 이동도 같은 틀 — 초록 화살표.
+    TargetMode cursorShown;
     static Texture2D attackCursorTexture;
+    static Texture2D moveCursorTexture;
 
-    void LateUpdate() => SyncAttackCursor(attackTargeting);
-    void OnDisable() => SyncAttackCursor(false);
+    void LateUpdate() => SyncAttackCursor(targeting);
+    void OnDisable() => SyncAttackCursor(TargetMode.None);
 
-    void SyncAttackCursor(bool want)
+    void SyncAttackCursor(TargetMode want)
     {
-        if (want == attackCursorShown) return;
-        attackCursorShown = want;
-        if (want)
+        if (want == cursorShown) return;
+        cursorShown = want;
+        if (want == TargetMode.Attack)
         {
             if (attackCursorTexture == null) attackCursorTexture = BuildAttackCursorTexture();
             Cursor.SetCursor(attackCursorTexture, new Vector2(1f, 1f), CursorMode.Auto);   // 칼끝(왼쪽 위)이 클릭 점
+        }
+        else if (want == TargetMode.Move)
+        {
+            if (moveCursorTexture == null) moveCursorTexture = BuildMoveCursorTexture();
+            Cursor.SetCursor(moveCursorTexture, new Vector2(1f, 1f), CursorMode.Auto);     // 화살 끝(왼쪽 위)이 클릭 점
         }
         else
         {
             Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
         }
+    }
+
+    // 32×32 초록 화살표 — 끝이 왼쪽 위. 칼 커서와 같은 그리기(선분 두께 + 어두운 테두리 1px)로 삼각 머리 + 꼬리.
+    static Texture2D BuildMoveCursorTexture()
+    {
+        const int size = 32;
+        Color fill = new Color(0.35f, 0.95f, 0.35f, 1f);
+        Color outline = new Color(0f, 0.12f, 0f, 1f);
+        Color[] px = new Color[size * size];
+        bool[] filled = new bool[size * size];
+        for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                Vector2 p = new Vector2(x + 0.5f, y + 0.5f);   // 커서 기준(왼쪽 위 원점, 아래로 +y)
+                // 머리: (1,1)·(1,20)·(20,1) 삼각형 / 꼬리: (8,8)→(26,26) 두께 3
+                bool head = p.x >= 1f && p.y >= 1f && p.x + p.y <= 21f;
+                Vector2 a = new Vector2(8f, 8f), ab = new Vector2(18f, 18f);
+                float t = Mathf.Clamp01(Vector2.Dot(p - a, ab) / ab.sqrMagnitude);
+                bool tail = Vector2.Distance(p, a + ab * t) <= 3f;
+                if (!head && !tail) continue;
+                int i = (size - 1 - y) * size + x;
+                px[i] = fill;
+                filled[i] = true;
+            }
+        for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                int i = y * size + x;
+                if (filled[i]) continue;
+                for (int dy = -1; dy <= 1 && !filled[i] && px[i].a == 0f; dy++)
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+                        int nx = x + dx, ny = y + dy;
+                        if (nx < 0 || ny < 0 || nx >= size || ny >= size || !filled[ny * size + nx]) continue;
+                        px[i] = outline;
+                        break;
+                    }
+            }
+        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { name = "MoveCursor", filterMode = FilterMode.Point };
+        tex.SetPixels(px);
+        tex.Apply();
+        return tex;
     }
 
     // 32×32 빨간 칼 — 칼끝이 왼쪽 위. 좌표는 커서 기준(왼쪽 위 원점, 아래로 +y), 어두운 테두리 1px.
@@ -412,13 +499,15 @@ public class SelectionManager : MonoBehaviour
 
     void OnGUI()
     {
-        if (attackTargeting && Mouse.current != null)
+        if (targeting != TargetMode.None && Mouse.current != null)
         {
             // 커서 옆에 지금 무엇을 고르는지 알려 준다(워크3의 공격 커서 대신).
             Vector2 m = Mouse.current.position.ReadValue();
             GUIStyle style = new GUIStyle(GUI.skin.label) { fontSize = 16, fontStyle = FontStyle.Bold };
-            style.normal.textColor = new Color(1f, 0.35f, 0.3f);
-            GUI.Label(new Rect(m.x + 18, Screen.height - m.y - 8, 320, 24), "공격 — 적 또는 땅을 클릭 (우클릭 취소)", style);
+            bool move = targeting == TargetMode.Move;
+            style.normal.textColor = move ? new Color(0.45f, 1f, 0.45f) : new Color(1f, 0.35f, 0.3f);
+            GUI.Label(new Rect(m.x + 18, Screen.height - m.y - 8, 320, 24),
+                      move ? "이동 — 땅을 클릭 (우클릭 취소)" : "공격 — 적 또는 땅을 클릭 (우클릭 취소)", style);
         }
 
         if (!isDragging) return;

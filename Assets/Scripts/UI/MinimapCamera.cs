@@ -186,6 +186,14 @@ public class MinimapCamera : MonoBehaviour, IPointerClickHandler
     {
         FitToMap();
         minimapCam.transform.position = new Vector3(mapCenter.x, mapCenter.y + cameraHeight, mapCenter.z);
+        // 09-29: 칸(RawImage)을 땅 비율에 맞춘다(GameHud.BuildMinimap이 붙인 AspectRatioFitter) — 칸을 늘려 채우면
+        //    모자란 축을 땅 밖까지 찍어 빈 배경 띠가 생긴다. 비율이 같아지면 아래 ApplyAspect가 땅 범위를 그대로 쓴다.
+        //    시야 사각형·클릭 좌표는 둘 다 이 칸의 rect로 변환하므로(WorldToMinimapLocal·MinimapLocalToWorld) 따로 안 고친다.
+        if (TryGetComponent(out AspectRatioFitter fitter) && groundHalf.y > 0f)
+        {
+            fitter.aspectRatio = groundHalf.x / groundHalf.y;
+            Canvas.ForceUpdateCanvases();
+        }
         appliedAspect = 0f;   // 같은 비율이어도 새 경계로 다시 계산하게
         ApplyAspect(CurrentAspect());
     }
