@@ -322,6 +322,62 @@ public static class ClaudeCommands
         return $"카메라 → 0번 레인 가운데 · 표적 {near.Count}에 스턴·이감·방깎 · 재질 {(mats ? "있음" : "없음")}";
     }
 
+    // 이펙트 진열(09-29) — 유닛 없이 0번 레인 가운데에 표적 넷을 한 줄로 세우고 ①스턴 ②이감 ③방깎+마법 적중 ④스킬 적중을 건다.
+    // 부를 때마다 ③④의 한 번 터지는 것을 다시 터뜨린다 — gameshot에서 call 뒤 wait:0.1 snap: 으로 찍는다.
+    static readonly List<EnemyDummy> showcase = new List<EnemyDummy>();
+    static float showcaseSecondCallAfter;
+    static string VfxShowcase()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        LaneMarker lane = LaneMarker.Get(0);
+        RtsCameraController cam = UnityEngine.Object.FindFirstObjectByType<RtsCameraController>();
+        EnemyData data = AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/Data/Enemies" }).Select(g => AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(g))).FirstOrDefault(e => e != null && !e.isBoss && e.prefab != null && e.name.Contains("R2"));
+        if (lane == null || cam == null || data == null) return "❌ 레인·카메라·적 없음";
+        showcase.RemoveAll(e => e == null);
+        if (showcase.Count == 0)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                GameObject go = UnityEngine.Object.Instantiate(data.prefab, lane.LaneCenter + new Vector3((i - 1.5f) * 40f, 0f, 0f), Quaternion.Euler(0f, 180f, 0f));
+                if (go.TryGetComponent(out WaypointMover mover)) mover.enabled = false;
+                if (go.TryGetComponent(out EnemyDummy d)) { d.Initialize(data, 1e6f); d.SetLane(-1); showcase.Add(d); }
+            }
+            showcaseSecondCallAfter = Time.timeSinceLevelLoad + 0.5f;
+            showcase[0].AddFreeze();
+            showcase[1].AddSlow(0.5f);
+            FieldInfo target = typeof(RtsCameraController).GetField("targetHeight", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (target != null) target.SetValue(cam, 220f);
+            Vector3 p = cam.transform.position; p.y = 220f; cam.transform.position = p;
+            cam.MoveTo(lane.LaneCenter);
+        }
+        if (showcase.Count >= 4)
+        {
+            showcase[2].AddArmorShred(1f);
+            showcase[2].TakeDamage(1f, DamageType.AP, AttackType.Magic, 0);
+            showcase[3].TakeDamage(1f, DamageType.AD, AttackType.Normal, 0);
+        }
+        bool firstCall = Time.timeSinceLevelLoad < showcaseSecondCallAfter;
+        Time.timeScale = firstCall ? 1f : 0.04f;   // 촬영용(두 번째 호출부터) — 한 번 터지는 이펙트가 찍히기 전에 사라지지 않게 거의 멈춘다(에디터 프레임이 튀어도)
+        return $"진열 표적 {showcase.Count} · 스턴/이감/방깎+마법/적중";
+    }
+
+    static string VfxDiag()
+    {
+        StringBuilder sb = new StringBuilder();
+        foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
+        {
+            if (!ps.name.StartsWith("Vfx_") && ps.transform.parent != null && !ps.transform.parent.name.StartsWith("Vfx_")) continue;
+            ParticleSystemRenderer r = ps.GetComponent<ParticleSystemRenderer>();
+            ParticleSystem.Particle[] parts = new ParticleSystem.Particle[ps.main.maxParticles];
+            int n = ps.GetParticles(parts);
+            string sizes = n > 0 ? string.Join(",", parts.Take(Math.Min(n, 3)).Select(q => q.GetCurrentSize(ps).ToString("F1"))) : "-";
+            sb.AppendLine($"   {ps.name} · 재생 {ps.isPlaying} · 입자 {n} · 크기 {sizes} · startSize {ps.main.startSize.constantMin:F1}~{ps.main.startSize.constantMax:F1} · 렌더경계 {r.bounds.size.x:F1}×{r.bounds.size.y:F1} · 위치 {ps.transform.position:F0} · 배율 {ps.transform.lossyScale.x:F3} · 재질 {(r.sharedMaterial != null ? r.sharedMaterial.name : "없음")} · 모드 {ps.main.scalingMode}/{ps.main.simulationSpace}");
+        }
+        sb.AppendLine($"   CasterAllowsVfx={SkillVfx.CasterAllowsVfx} · timeScale={Time.timeScale}");
+        foreach (EnemyDummy e in showcase) if (e != null) sb.AppendLine($"   표적 {e.name} 스턴 {e.IsStunned} · 자식 {string.Join(",", e.GetComponentsInChildren<ParticleSystem>(true).Select(p => p.name + (p.gameObject.activeInHierarchy ? "" : "(꺼짐)")))}");
+        return sb.Length > 0 ? sb.ToString() : "   Vfx 없음";
+    }
+
     static string SkillProbeReport()
     {
         Time.timeScale = 1f;

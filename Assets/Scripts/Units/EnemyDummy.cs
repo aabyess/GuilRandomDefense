@@ -234,7 +234,7 @@ public class EnemyDummy : MonoBehaviour
     {
         slowMultipliers.Add(Mathf.Clamp(multiplier, WaypointMover.MinSlowMultiplier, 1f));
         ApplySlow();
-        if (slowMultipliers.Count == 1 && slowVfx == null) slowVfx = SkillVfx.Attach(SkillVfx.Kind.Slow, transform, 1f);
+        if (slowMultipliers.Count == 1 && slowVfx == null) slowVfx = SkillVfx.Attach(SkillVfx.Kind.Slow, transform, 3f);   // 땅(발)보다 조금 위 — 1이면 풀밭에 묻혔다(09-29 실측)
     }
 
     /// <summary>이감을 되돌린다. AddSlow에 넣은 것과 같은 값을 넣어야 그 인스턴스가 빠진다.</summary>

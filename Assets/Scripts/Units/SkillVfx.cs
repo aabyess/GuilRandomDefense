@@ -69,6 +69,9 @@ public static class SkillVfx
             if (free == null) return;
             pool.Add(free);
         }
+        // 적 몸 가운데서 터지면 몸이 앞을 가린다 — 카메라 쪽으로 반 몸만큼 당긴다(워크3 이펙트처럼 몸 앞에 보이게).
+        Camera cam = Camera.main;
+        if (cam != null) position += (cam.transform.position - position).normalized * (0.5f * Unit);
         free.transform.position = position;
         free.Play(true);
     }
@@ -101,26 +104,28 @@ public static class SkillVfx
             case Kind.Hit:
                 // 금빛 번쩍 + 흩어지는 별 조각
                 return Layered(parent, loop, "Hit",
-                    Layer("star_09", new Color(1f, 0.8f, 0.35f), 0.25f, 0.9f * Unit, 1, 0f, Shape.None),
-                    Layer("star_07", new Color(1f, 0.9f, 0.6f), 0.45f, 0.3f * Unit, 6, 1.6f * Unit, Shape.Sphere));
+                    Layer("star_09", new Color(1f, 0.8f, 0.35f), 0.45f, 1.1f * Unit, 1, 0f, Shape.None),
+                    Layer("star_07", new Color(1f, 0.9f, 0.6f), 0.7f, 0.5f * Unit, 6, 1.6f * Unit, Shape.Sphere));
             case Kind.SpellHit:
                 // 마법(AP) — 푸른 번쩍 + 번개
                 return Layered(parent, loop, "SpellHit",
-                    Layer("star_09", new Color(0.45f, 0.7f, 1f), 0.25f, 0.9f * Unit, 1, 0f, Shape.None),
-                    Layer("spark_05", new Color(0.7f, 0.85f, 1f), 0.3f, 0.8f * Unit, 2, 0f, Shape.None, randomRotation: true));
+                    Layer("star_09", new Color(0.45f, 0.7f, 1f), 0.45f, 1.1f * Unit, 1, 0f, Shape.None),
+                    Layer("spark_05", new Color(0.7f, 0.85f, 1f), 0.5f, 1.1f * Unit, 2, 0f, Shape.None, randomRotation: true));
             case Kind.ArmorBreak:
                 // 붉은 할퀸 자국 + 퍼지는 붉은 고리
                 return Layered(parent, loop, "ArmorBreak",
-                    Layer("scratch_01", new Color(1f, 0.25f, 0.2f), 0.4f, 1.0f * Unit, 1, 0f, Shape.None, randomRotation: true),
-                    Layer("circle_02", new Color(1f, 0.3f, 0.2f), 0.4f, 0.4f * Unit, 1, 0f, Shape.None, grow: 3f));
+                    Layer("scratch_01", new Color(1f, 0.25f, 0.2f), 0.7f, 1.2f * Unit, 1, 0f, Shape.None, randomRotation: true),
+                    Layer("circle_02", new Color(1f, 0.3f, 0.2f), 0.7f, 0.5f * Unit, 1, 0f, Shape.None, grow: 3f));
             case Kind.Stun:
                 // 머리 위를 도는 노란 별 셋
                 return Layered(parent, loop, "Stun",
-                    Layer("symbol_02", new Color(1f, 0.9f, 0.2f), 0.9f, 0.3f * Unit, loop ? 0 : 3, 0f, Shape.Ring, rate: loop ? 3.5f : 0f, orbit: 5f));
+                    Layer("symbol_02", new Color(1f, 1f, 0.45f), 0.9f, 0.9f * Unit, loop ? 0 : 3, 0f, Shape.Ring, rate: loop ? 3.5f : 0f, orbit: 5f),
+                    Layer("star_07", new Color(1f, 0.95f, 0.5f), 0.5f, 0.6f * Unit, 0, 0f, Shape.Ring, rate: loop ? 4f : 0f));
             case Kind.Slow:
                 // 발밑 푸른 마법진 + 떨어지는 서리
                 return Layered(parent, loop, "Slow",
-                    Layer("magic_01", new Color(0.4f, 0.75f, 1f, 0.8f), 1.0f, 1.6f * Unit, 0, 0f, Shape.None, rate: loop ? 1.2f : 0f, ground: true),
+                    Layer("circle_03", new Color(0.3f, 0.7f, 1f, 1f), 1.0f, 1.8f * Unit, 0, 0f, Shape.None, rate: loop ? 1.5f : 0f, ground: true),
+                    Layer("magic_01", new Color(0.5f, 0.85f, 1f, 1f), 1.0f, 1.8f * Unit, 0, 0f, Shape.None, rate: loop ? 1.2f : 0f, ground: true),
                     Layer("trace_06", new Color(0.6f, 0.85f, 1f), 0.6f, 0.35f * Unit, 0, -0.8f * Unit, Shape.Ring, rate: loop ? 6f : 0f));
             case Kind.Buff:
                 // 몸을 감고 오르는 초록·금빛 소용돌이
@@ -181,7 +186,7 @@ public static class SkillVfx
             ParticleSystem.ShapeModule shape = ps.shape;
             shape.enabled = spec.shape != Shape.None;
             if (spec.shape == Shape.Sphere) { shape.shapeType = ParticleSystemShapeType.Sphere; shape.radius = 0.1f * Unit; }
-            if (spec.shape == Shape.Ring) { shape.shapeType = ParticleSystemShapeType.Circle; shape.radius = 0.3f * Unit; shape.rotation = new Vector3(90f, 0f, 0f); shape.radiusThickness = 0f; }
+            if (spec.shape == Shape.Ring) { shape.shapeType = ParticleSystemShapeType.Circle; shape.radius = 0.45f * Unit; shape.rotation = new Vector3(90f, 0f, 0f); shape.radiusThickness = 0f; }
 
             if (spec.orbit > 0f)
             {
