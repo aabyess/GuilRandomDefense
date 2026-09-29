@@ -179,12 +179,38 @@ public class EnemyDummy : MonoBehaviour
     {
         freezeCount++;
         ApplyFreeze();
+        if (freezeCount == 1 && stunVfx == null) stunVfx = SkillVfx.Attach(SkillVfx.Kind.Stun, transform, VfxTop + 4f);
     }
 
     public void RemoveFreeze()
     {
         freezeCount = Mathf.Max(0, freezeCount - 1);
         ApplyFreeze();
+        if (freezeCount == 0 && stunVfx != null) { SkillVfx.Stop(stunVfx); stunVfx = null; }
+    }
+
+    // ── 스킬 이펙트(SkillVfx, 2026-09-29) — 받는 쪽에서 띄운다. 등급 게이트·재질 유무는 SkillVfx가 판단한다. ──
+    GameObject stunVfx;
+    GameObject slowVfx;
+    float nextHitVfxTime;
+    float nextArmorVfxTime;
+    float vfxTop = -1f;
+
+    // 머리 높이(땅 기준) — 렌더러 경계로 한 번 잰다. 못 재면 레인 적 키 22.5.
+    float VfxTop
+    {
+        get
+        {
+            if (vfxTop < 0f)
+            {
+                Renderer[] renderers = GetComponentsInChildren<Renderer>();
+                float top = float.MinValue;
+                foreach (Renderer r in renderers)
+                    if (!(r is ParticleSystemRenderer)) top = Mathf.Max(top, r.bounds.max.y);
+                vfxTop = top > float.MinValue ? Mathf.Max(1f, top - transform.position.y) : 22.5f;
+            }
+            return vfxTop;
+        }
     }
 
     void ApplyFreeze()
@@ -208,6 +234,7 @@ public class EnemyDummy : MonoBehaviour
     {
         slowMultipliers.Add(Mathf.Clamp(multiplier, WaypointMover.MinSlowMultiplier, 1f));
         ApplySlow();
+        if (slowMultipliers.Count == 1 && slowVfx == null) slowVfx = SkillVfx.Attach(SkillVfx.Kind.Slow, transform, 1f);
     }
 
     /// <summary>이감을 되돌린다. AddSlow에 넣은 것과 같은 값을 넣어야 그 인스턴스가 빠진다.</summary>
@@ -215,6 +242,7 @@ public class EnemyDummy : MonoBehaviour
     {
         slowMultipliers.Remove(Mathf.Clamp(multiplier, WaypointMover.MinSlowMultiplier, 1f));
         ApplySlow();
+        if (slowMultipliers.Count == 0 && slowVfx != null) { SkillVfx.Stop(slowVfx); slowVfx = null; }
     }
 
     void ApplySlow()
@@ -724,7 +752,15 @@ public class EnemyDummy : MonoBehaviour
     public void AddMagicArmorShred(float amount) => magicArmorShred += amount;
 
     /// <summary>방깎을 건다. 음수를 넣으면 되돌린다(지속시간 있는 방깎이 생기면 그렇게 쓴다).</summary>
-    public void AddArmorShred(float amount) => armorShred += amount;
+    public void AddArmorShred(float amount)
+    {
+        armorShred += amount;
+        if (amount > 0f && Time.time >= nextArmorVfxTime)
+        {
+            nextArmorVfxTime = Time.time + 0.4f;
+            SkillVfx.Burst(SkillVfx.Kind.ArmorBreak, transform.position + Vector3.up * VfxTop * 0.6f);
+        }
+    }
 
     /// <summary>
     /// 워크래프트3 방어력 공식. 원작이 워크3 시스템을 쓰되 <b>상수만 바꿔놨다</b> —
@@ -865,6 +901,14 @@ public class EnemyDummy : MonoBehaviour
         if (trueInvulnerable) return;
 
         hp -= MitigatedDamage(amount, type, attackType, armorIgnoreRatio, isAbilityDamage);
+
+        // 스킬 피해만(평타·치명은 isAbilityDamage=false). 같은 적에 몰려도 0.12초에 한 번.
+        if (isAbilityDamage && amount > 0f && Time.time >= nextHitVfxTime)
+        {
+            nextHitVfxTime = Time.time + 0.12f;
+            SkillVfx.Burst(type == DamageType.AP ? SkillVfx.Kind.SpellHit : SkillVfx.Kind.Hit,
+                           transform.position + Vector3.up * VfxTop * 0.6f);
+        }
 
         if (invulnerable)
         {

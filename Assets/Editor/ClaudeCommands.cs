@@ -302,6 +302,26 @@ public static class ClaudeCommands
         return $"표적 12 · 스킬 유닛 {n}/{units.Count}기 · 4배속";
     }
 
+    // 스킬 이펙트 촬영(09-29) — 0번 레인 가운데로 카메라를 가장 낮게 내리고, 표적 셋에 스턴·이감·방깎을 직접 걸어 모양을 본다.
+    static string VfxCloseup()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        RtsCameraController cam = UnityEngine.Object.FindFirstObjectByType<RtsCameraController>();
+        LaneMarker lane = LaneMarker.Get(0);
+        if (cam == null || lane == null) return "❌ 카메라·레인 없음";
+        // 높이를 먼저 바로 내린다 — MoveTo는 지금 높이로 기울기 거리를 재므로, 높이가 나중에 스르르 내려가면 과녁이 화면 위로 밀려난다.
+        FieldInfo target = typeof(RtsCameraController).GetField("targetHeight", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (target != null) target.SetValue(cam, 150f);
+        Vector3 p = cam.transform.position; p.y = 150f; cam.transform.position = p;
+        cam.MoveTo(lane.LaneCenter);
+        List<EnemyDummy> near = EnemyDummy.Active.Where(e => e != null && Vector3.Distance(e.transform.position, lane.LaneCenter) < 30f).Take(3).ToList();
+        if (near.Count > 0) near[0].AddFreeze();
+        if (near.Count > 1) near[1].AddSlow(0.5f);
+        if (near.Count > 2) near[2].AddArmorShred(5f);
+        bool mats = Resources.Load<Material>("Effects/Skill_star_09") != null;
+        return $"카메라 → 0번 레인 가운데 · 표적 {near.Count}에 스턴·이감·방깎 · 재질 {(mats ? "있음" : "없음")}";
+    }
+
     static string SkillProbeReport()
     {
         Time.timeScale = 1f;

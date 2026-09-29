@@ -879,7 +879,9 @@ public class UnitAttacker : MonoBehaviour
             // 없다(TryCastOnHitSkill 쪽만 있음, 아래 참고). ReceivedDamage basis를 쓰는
             // 효과가 이 경로를 타면 0(적용 안 함)으로 안전하게 빠진다.
             SkillTelemetry.Cast(identity != null ? identity.Data : null, skill);
+            bool vfxBefore = SkillVfx.BeginCast(identity != null ? identity.Data : null);
             CastSkillLevel(level, level.range, null, 0f);
+            SkillVfx.EndCast(vfxBefore);
         }
     }
 
@@ -1187,7 +1189,9 @@ public class UnitAttacker : MonoBehaviour
             // 도는 경로라 이 값이 항상 뜻이 통한다(아래 ResolveSkillEffectValue.
             // ReceivedDamage 참고, 2026-09-06 PM 지시로 연결).
             SkillTelemetry.Cast(unitData, skill);
+            bool vfxBefore = SkillVfx.BeginCast(unitData);
             CastSkillLevel(level, level.range, attackedTarget, AttackDamage);
+            SkillVfx.EndCast(vfxBefore);
         }
 
         // 루프가 다 끝난 뒤에 한 번만 리셋한다 — 위 주석 참고.
@@ -1330,6 +1334,10 @@ public class UnitAttacker : MonoBehaviour
             allyAttacker.RemoveBuff(effect.buffId);
             return;
         }
+
+        // 눈에 보이는 버프는 공격력·공속 둘뿐 — ApplyBuff는 대부분 게이트용 내부 표식(B03Z 등)이라 이펙트를 안 띄운다.
+        if (effect.kind == SkillEffectKind.AttackPowerBuffFlat || effect.kind == SkillEffectKind.AttackSpeedBuffPercent)
+            SkillVfx.Burst(SkillVfx.Kind.Buff, ally.transform.position + Vector3.up * 3f);
 
         if (effect.kind == SkillEffectKind.AttackPowerBuffFlat)
         {
@@ -1621,10 +1629,10 @@ public class UnitAttacker : MonoBehaviour
         }
 
         // SupportSkillData.waveCount/duration과 같은 관례 — duration에 걸쳐 나눠 때린다.
-        StartCoroutine(SkillMultiHitRoutine(target, amount, effect.damageType, effect.attackType, hits, effect.duration));
+        StartCoroutine(SkillMultiHitRoutine(target, amount, effect.damageType, effect.attackType, hits, effect.duration, SkillVfx.CasterAllowsVfx));
     }
 
-    IEnumerator SkillMultiHitRoutine(EnemyDummy target, float amountPerHit, DamageType damageType, AttackType attackType, int hits, float duration)
+    IEnumerator SkillMultiHitRoutine(EnemyDummy target, float amountPerHit, DamageType damageType, AttackType attackType, int hits, float duration, bool vfxAllowed = true)
     {
         float interval = duration > 0f ? duration / hits : 0f;
         for (int i = 0; i < hits; i++)
@@ -1632,7 +1640,10 @@ public class UnitAttacker : MonoBehaviour
             if (target != null)
             {
                 float hitHpBefore = target.Hp;
+                bool vfxBefore = SkillVfx.CasterAllowsVfx;
+                SkillVfx.EndCast(vfxAllowed);   // 여러 번 때리기는 시전 문맥 밖(코루틴)이라 시작 때 등급 판정을 싣고 온다
                 target.TakeDamage(amountPerHit, damageType, attackType, owner != null ? owner.OwnerId : -1);
+                SkillVfx.EndCast(vfxBefore);
                 SkillTelemetry.Damage(identity != null ? identity.Data : null, "스킬", target, hitHpBefore);
             }
             if (i < hits - 1 && interval > 0f) yield return new WaitForSeconds(interval);
