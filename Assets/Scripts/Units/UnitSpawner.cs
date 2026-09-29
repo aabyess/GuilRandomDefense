@@ -29,7 +29,7 @@ public class UnitSpawner : MonoBehaviour
         identity.SetData(data);
         // 원딜(GAP 6) — 패왕의길 플레이어가 제한됨·초월·불멸·영원을 처음 얻으면 그 네 등급 조합을 잠근다. 조합·도박·보상이 전부 여기를 지난다.
         if (PlayerContext.Get(ownerId)?.NavigationState?.RegisterAcquired(data) == true)
-            PlayerNotification.Show(ownerId, $"패왕의길: {data.unitName} 획득 — 이제 제한됨·초월·불멸·영원 조합을 더 할 수 없습니다(원딜).", 6f);
+            PlayerNotification.Show(ownerId, $"패왕의길: {data.DisplayName} 획득 — 이제 제한됨·초월·불멸·영원 조합을 더 할 수 없습니다(원딜).", 6f);
         // 레인 가운데 자리 예약(LaneMarker.TakeSpawnPosition)에 이 개체를 붙인다 — 그래야 C 정렬이 같은 자리로 돌려보낸다(2026-09-26).
         LaneMarker.Get(ownerId)?.ClaimSpawnSlot(identity, position);
 

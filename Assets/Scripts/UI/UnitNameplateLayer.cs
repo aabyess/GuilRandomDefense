@@ -190,7 +190,7 @@ public class UnitNameplateLayer : MonoBehaviour
             label.root.gameObject.SetActive(true);
             label.root.position = new Vector3(screenPos.x, screenPos.y, 0f);
 
-            string caption = count > 1 ? $"{data.unitName} ×{count}" : data.unitName;
+            string caption = count > 1 ? $"{data.DisplayName} ×{count}" : data.DisplayName;
             if (label.text.text != caption) label.text.text = caption;
 
             Color gradeColor = data.grade.Color();

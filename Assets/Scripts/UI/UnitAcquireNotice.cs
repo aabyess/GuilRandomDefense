@@ -68,7 +68,7 @@ public class UnitAcquireNotice : MonoBehaviour
     {
         int named = units.Count <= MaxLines ? units.Count : MaxLines - 1;
         List<string> lines = units.Take(named)
-            .Select(u => Tint(u.grade, $"{u.unitName} - {u.grade.KoreanName()}") + " 획득!").ToList();
+            .Select(u => Tint(u.grade, $"{u.DisplayName} - {u.grade.KoreanName()}") + " 획득!").ToList();
         if (units.Count > named)
             lines.Add("외 " + string.Join(" · ", units.Skip(named).GroupBy(u => u.grade).OrderByDescending(g => g.Key.Tier())
                           .Select(g => Tint(g.Key, $"{g.Key.KoreanName()} {g.Count()}기"))) + " 획득!");

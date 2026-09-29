@@ -48,6 +48,7 @@ public class RewardDistributor : MonoBehaviour
     {
         GrantStartingWisps();
         GrantStartingSpecialUnits();
+        GrantStartingSpecialGradeUnit();
         GrantStartingTraitPoints();
         GrantSaveThresholdRewards();
     }
@@ -84,6 +85,36 @@ public class RewardDistributor : MonoBehaviour
         {
             Vector3 position = context.Warehouse != null ? context.Warehouse.transform.position : context.transform.position;
             spawner.Spawn(startingSpecialUnit, position, context.PlayerId);
+        }
+    }
+
+    // 시작 특별함 1기(2026-09-29 유저 피드백 「원랜디처럼 특별함 하나 주면 진입장벽이 낮아진다 — 상위 조합에도,
+    // 초반 버티기에도」). 원작 근거 없는 우리 결정이다. 포탈과 같은 뽑기표(MainGachaTable)의 특별함 풀에서
+    // 한 기를 뽑아 포탈이 소환하는 자리(흔함 아닌 유닛 = 레인 가운데 고리)에 세운다.
+    void GrantStartingSpecialGradeUnit()
+    {
+        if (!GameAuthority.IsServer) return;
+
+        UnitSpawner spawner = SpawnerRef;
+        GachaTable table = null;
+        foreach (UnitPortal portal in FindObjectsByType<UnitPortal>(FindObjectsSortMode.None))
+            if (portal.Table != null && portal.Table.entries != null
+                && portal.Table.entries.Exists(e => e != null && e.grade == UnitGrade.Special && e.pool != null && e.pool.Count > 0))
+            { table = portal.Table; break; }
+        if (spawner == null || table == null)
+        {
+            Debug.LogWarning("RewardDistributor: UnitSpawner나 뽑기표를 찾지 못해 시작 특별함을 지급하지 못했습니다.", this);
+            return;
+        }
+
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            UnitData unit = table.RollFromGrade(UnitGrade.Special);
+            if (unit == null || unit.prefab == null) continue;
+            LaneMarker lane = LaneMarker.Get(context.PlayerId);
+            Vector3 position = lane != null ? lane.TakeSpawnPosition(unit)
+                             : context.Warehouse != null ? context.Warehouse.transform.position : context.transform.position;
+            spawner.Spawn(unit, position, context.PlayerId);
         }
     }
 

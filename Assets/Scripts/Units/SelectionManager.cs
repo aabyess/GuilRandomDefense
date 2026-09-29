@@ -53,7 +53,7 @@ public class SelectionManager : MonoBehaviour
         // 채팅 입력 중엔 클릭·드래그·명령 단축키를 전부 죽인다 — Input System은 텍스트
         // 필드 포커스와 무관하게 Keyboard.current를 그대로 읽어서, 안 막으면 채팅으로
         // "v"를 치는 순간 유닛이 모인다(ChatInputGate.cs 참고, 사장님 지시 2026-09-05).
-        if (ChatInputGate.IsOpen) return;
+        if (ChatInputGate.IsOpen) { attackTargeting = false; return; }
 
         HandleCommandKeys();
 
@@ -122,7 +122,12 @@ public class SelectionManager : MonoBehaviour
         }
 
         if (!Mouse.current.leftButton.wasPressedThisFrame) return false;
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return false;
+        // HUD를 누르면 대기를 푼다(롤처럼) — 명령칸 다른 명령·메뉴 버튼은 그대로 눌린다. 「공격」칸은 떼는 순간 다시 들어온다.
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            attackTargeting = false;
+            return false;
+        }
 
         Vector2 screen = Mouse.current.position.ReadValue();
         EnemyDummy enemy = WorldPick.TryPickEnemy(cam, screen, AttackPickTolerancePixels);
@@ -305,6 +310,7 @@ public class SelectionManager : MonoBehaviour
 
     public void ClearSelection()
     {
+        attackTargeting = false;   // 고를 유닛이 없어졌다 — 공격 대기도 끝
         foreach (Selectable s in selected)
             if (s != null)
                 s.SetSelected(false);
@@ -317,6 +323,82 @@ public class SelectionManager : MonoBehaviour
         ClearSelection();
         if (target != null && IsSelectableByLocalPlayer(target))
             AddToSelection(target);
+    }
+
+    // ── 2026-09-29 배포판 피드백: A 공격 대기 중엔 커서를 빨간 칼로(롤처럼) ──
+    //    대기가 풀리는 길(적·땅 클릭·우클릭·Esc·S/H·선택 해제·HUD 클릭·채팅·이 컴포넌트 꺼짐)이 여럿이라
+    //    길마다 커서를 되돌리지 않는다. 매 프레임 끝에 attackTargeting 하나만 보고 맞춘다.
+    bool attackCursorShown;
+    static Texture2D attackCursorTexture;
+
+    void LateUpdate() => SyncAttackCursor(attackTargeting);
+    void OnDisable() => SyncAttackCursor(false);
+
+    void SyncAttackCursor(bool want)
+    {
+        if (want == attackCursorShown) return;
+        attackCursorShown = want;
+        if (want)
+        {
+            if (attackCursorTexture == null) attackCursorTexture = BuildAttackCursorTexture();
+            Cursor.SetCursor(attackCursorTexture, new Vector2(1f, 1f), CursorMode.Auto);   // 칼끝(왼쪽 위)이 클릭 점
+        }
+        else
+        {
+            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+        }
+    }
+
+    // 32×32 빨간 칼 — 칼끝이 왼쪽 위. 좌표는 커서 기준(왼쪽 위 원점, 아래로 +y), 어두운 테두리 1px.
+    static Texture2D BuildAttackCursorTexture()
+    {
+        const int size = 32;
+        Color blade = new Color(1f, 0.22f, 0.18f, 1f);
+        Color guard = new Color(0.75f, 0.08f, 0.06f, 1f);
+        Color grip = new Color(0.45f, 0.05f, 0.04f, 1f);
+        Color outline = new Color(0.08f, 0f, 0f, 1f);
+        Color[] px = new Color[size * size];
+        bool[] filled = new bool[size * size];
+
+        void Stroke(Vector2 a, Vector2 b, float halfWidth, Color c)
+        {
+            for (int y = 0; y < size; y++)
+                for (int x = 0; x < size; x++)
+                {
+                    Vector2 p = new Vector2(x + 0.5f, y + 0.5f);
+                    Vector2 ab = b - a;
+                    float t = Mathf.Clamp01(Vector2.Dot(p - a, ab) / ab.sqrMagnitude);
+                    if (Vector2.Distance(p, a + ab * t) > halfWidth) continue;
+                    int i = (size - 1 - y) * size + x;   // 텍스처는 아래쪽이 y=0
+                    px[i] = c;
+                    filled[i] = true;
+                }
+        }
+
+        Stroke(new Vector2(1.5f, 1.5f), new Vector2(19f, 19f), 1.6f, blade);     // 날
+        Stroke(new Vector2(14f, 24f), new Vector2(24f, 14f), 1.5f, guard);       // 코등이
+        Stroke(new Vector2(20f, 20f), new Vector2(26.5f, 26.5f), 1.3f, grip);    // 손잡이
+        Stroke(new Vector2(27.5f, 27.5f), new Vector2(28.5f, 28.5f), 1.8f, guard); // 폼멜(두 점이 같으면 0으로 나눈다)
+
+        for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                int i = y * size + x;
+                if (filled[i]) continue;
+                for (int dy = -1; dy <= 1 && !filled[i]; dy++)
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+                        int nx = x + dx, ny = y + dy;
+                        if (nx < 0 || ny < 0 || nx >= size || ny >= size || !filled[ny * size + nx]) continue;
+                        px[i] = outline;
+                        break;
+                    }
+            }
+
+        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { name = "AttackCursor", filterMode = FilterMode.Point };
+        tex.SetPixels(px);
+        tex.Apply();
+        return tex;
     }
 
     static Rect GetScreenRect(Vector2 a, Vector2 b)

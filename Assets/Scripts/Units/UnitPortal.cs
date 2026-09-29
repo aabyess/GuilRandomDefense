@@ -24,6 +24,7 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
     [SerializeField, Range(0f, 100f)] float bonusChancePercent;
 
     [SerializeField] GachaTable gachaTable;
+    public GachaTable Table => gachaTable;   // RewardDistributor 시작 특별함 지급이 같은 뽑기표를 쓴다
     [SerializeField] UnitSpawner unitSpawner;
 
     // 비워두면 위습 주인의 레인 한가운데에 소환한다.

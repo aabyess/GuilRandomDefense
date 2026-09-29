@@ -286,6 +286,32 @@ public class UnitData : ScriptableObject
     public string unitName;
     public UnitGrade grade;
 
+    // 화면에 보이는 이름(2026-09-29 유저 피드백 「‘성대결절’이 아니라 ‘박예원 성대결절’이어야」).
+    // 특별함 이상 164종은 unitName에 별명만 있고 사람 이름은 에셋 이름(「특별함_박예원」)에만 있다.
+    // unitName은 인벤토리 묶음·자리 배정표·같은 종류 선택의 키라 그대로 두고, 보여줄 때만 앞에 붙인다.
+    // 에셋 이름이 「접두어_이름」 두 토막이고 unitName에 그 이름이 없을 때만 — 랜덤_가사이_유노·Unit_메타몽 등은 그대로.
+    [System.NonSerialized] string displayPerson;
+    [System.NonSerialized] bool displayPersonResolved;
+
+    string DisplayPerson
+    {
+        get
+        {
+            if (displayPersonResolved) return displayPerson;
+            displayPersonResolved = true;
+            string[] parts = name.Split('_');
+            if (parts.Length == 2 && parts[0] != "Unit" && parts[1].Length > 0
+                && !string.IsNullOrEmpty(unitName) && !unitName.Contains(parts[1]))
+                displayPerson = parts[1];
+            return displayPerson;
+        }
+    }
+
+    public string DisplayName => DisplayPerson != null ? $"{DisplayPerson} {unitName}" : unitName;
+
+    // 좁은 칸(명령칸·선택 카드)용 — 사람 이름과 별명을 두 줄로.
+    public string DisplayNameTwoLines => DisplayPerson != null ? $"{DisplayPerson}\n{unitName}" : unitName;
+
     // ⚠️ 평타 전용 필드로 못박는다(2026-09-05, PM/사장님 B안 확정) — 원작 플레이어 유닛
     // 431종의 평타 공격타입을 전수조사하면 normal 127·siege 89·hero 28·pierce 25·chaos 1·
     // **magic 0건**이다. 즉 **원작에서 평타는 항상 물리다.** 마법은 스킬(트리거) 피해에만

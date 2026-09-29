@@ -42,11 +42,15 @@ public class DefeatOverlay : MonoBehaviour
 
         // 이미 띄웠으면 다시 만들지 않는다 — 패배는 되돌아오지 않는다(데스카운트는 누적식이라
         // 70 아래로 내려가도 회복하지 않는다. RoundManager 주석 참고).
-        if (!dead || shown) return;
+        if (dead && !shown)
+        {
+            shown = true;
+            Fill();
+        }
 
-        shown = true;
-        Fill();
-        panel.SetActive(true);
+        // 메뉴가 열려 있는 동안만 비킨다(09-29 배포판 피드백 「게임오버 창과 메뉴 창이 겹친다」).
+        //    [계속하기]로 닫으면 다시 뜬다 — 진 사실은 그대로고, 둘러보다 메뉴를 한 번 연 것뿐이다.
+        if (shown) panel.SetActive(!GameHud.IsGameMenuOpen);
     }
 
     void Fill()

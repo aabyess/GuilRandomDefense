@@ -507,7 +507,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
             // ⚠️ 원작 문구 없음 — 그 문구("보스,스토리, 특수유닛에게는 사용불가합니다!")는
             // war3map.j Trig_Absolb1_Actions(흡수) 소속이었다(PM 재확인, 2026-09-05).
             // 연금술 쪽 원작 거부 문구는 못 찾아서 우리 문구를 쓴다.
-            failReason = $"{skill.skillName}: {identity.Data.unitName}은(는) 분해할 수 있는 유닛이 아닙니다.";
+            failReason = $"{skill.skillName}: {identity.Data.DisplayName}은(는) 분해할 수 있는 유닛이 아닙니다.";
             return false;
         }
 
@@ -519,7 +519,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
         {
             // 잘못된 대상 — "등가교환" 실패. 분해하지 않고 마나만 그대로 돌려준다.
             context.ResourceWallet?.Add(ResourceType.Mana, skill.EffectiveManaCost(IsBoosted(context, skill)));
-            failReason = $"{skill.skillName}: {identity.Data.unitName}은(는) 분해할 수 없는 등급이라 마나를 돌려받았습니다.";
+            failReason = $"{skill.skillName}: {identity.Data.DisplayName}은(는) 분해할 수 없는 등급이라 마나를 돌려받았습니다.";
             StartCooldown(skill);
             return false;
         }

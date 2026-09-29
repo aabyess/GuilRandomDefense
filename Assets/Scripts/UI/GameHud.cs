@@ -508,6 +508,9 @@ public class GameHud : MonoBehaviour
     //   게임은 멈추지 않는다(워크3 같이 하기처럼 — 이 게임엔 일시정지 자체가 없다).
 
     GameObject gameMenu;
+    // 패배 창(DefeatOverlay)이 메뉴와 겹치지 않게 메뉴가 열렸는지 알려 준다(09-29 배포판 피드백). 창 여닫는 길이 여럿이라 상태를 따로 들지 않고 창을 본다.
+    static GameObject openableGameMenu;
+    public static bool IsGameMenuOpen => openableGameMenu != null && openableGameMenu.activeInHierarchy;
     TMP_Text gameMenuMessage;
     GameObject gameMenuMainButtons;
     GameObject gameMenuConfirmButtons;
@@ -528,6 +531,7 @@ public class GameHud : MonoBehaviour
         RectTransform dim = CreatePanel(transform, "GameMenu", new Color(0f, 0f, 0f, 0.55f));
         SetAnchors(dim, Vector2.zero, Vector2.one);
         gameMenu = dim.gameObject;
+        openableGameMenu = gameMenu;
 
         RectTransform card = CreatePanel(dim, "Card", new Color(0.13f, 0.16f, 0.23f, 0.97f));
         SetAnchors(card, new Vector2(0.29f, 0.38f), new Vector2(0.71f, 0.64f));   // 가장 긴 문구가 한 줄에 들어가는 폭
@@ -862,7 +866,7 @@ public class GameHud : MonoBehaviour
             if (wood == lastGambleButtonWood[i]) continue;
             lastGambleButtonWood[i] = wood;
 
-            gambleButtonTexts[i].text = $"{data.unitName} 시전({option.abilityId})\n(목재 {option.woodCost} 소모, 보유 {wood}, 성공 {option.successChance:P0})";
+            gambleButtonTexts[i].text = $"{data.DisplayName} 시전({option.abilityId})\n(목재 {option.woodCost} 소모, 보유 {wood}, 성공 {option.successChance:P0})";
         }
     }
 
@@ -2014,7 +2018,7 @@ public class GameHud : MonoBehaviour
             }
         }
 
-        string resultName = recipe.result != null ? recipe.result.unitName : "?";
+        string resultName = recipe.result != null ? recipe.result.DisplayName : "?";
         tooltipBuilder.Append(" = ").Append(resultName);
 
         bool firstCost = true;
@@ -2058,7 +2062,7 @@ public class GameHud : MonoBehaviour
         switch (ingredient.kind)
         {
             case IngredientKind.SpecificUnit:
-                return ingredient.unit != null ? ingredient.unit.unitName : null;
+                return ingredient.unit != null ? ingredient.unit.DisplayName : null;
             case IngredientKind.SpecificItem:
                 return ingredient.item != null ? ingredient.item.itemName : null;
             case IngredientKind.UnitGradeWildcard:
@@ -2671,7 +2675,7 @@ public class GameHud : MonoBehaviour
 
             int slot = UnitCommandResultSlotOrder[i];
             unitCommandRecipes[slot] = recipe;
-            unitCommandSlotNames[slot].text = recipe.result.unitName;
+            unitCommandSlotNames[slot].text = recipe.result.DisplayNameTwoLines;
         }
 
         unitCommandSlotCount = shown;
@@ -2748,7 +2752,7 @@ public class GameHud : MonoBehaviour
         first.TryGetComponent(out Wisp selectedWisp);
         WispData wispData = selectedWisp != null ? selectedWisp.Data : null;
 
-        string unitName = data != null ? data.unitName
+        string unitName = data != null ? data.DisplayName
                         : wispData != null ? wispData.wispName
                         : first.name;
         string grade = data != null ? data.grade.KoreanName()
@@ -2776,7 +2780,7 @@ public class GameHud : MonoBehaviour
         // (플레이어 유닛은 마나를 소모하지 않고, 방어력 감폭은 EnemyDummy 전용 축이다) —
         // 없는 값을 지어내지 않고 실제로 있는 축만 표시한다(2026-09-23, PM 보고 예정).
         unitInfoText.text =
-            $"<color=#{gradeColorHex}>{unitName}</color>\n등급: {grade}\n체력: {hp}\n공격력: {attackPower}\n사거리: {attackRange}\n공격속도: {attackSpeed}/s";
+            $"<color=#{gradeColorHex}>{unitName} - {grade}</color>\n체력: {hp}\n공격력: {attackPower}\n사거리: {attackRange}\n공격속도: {attackSpeed}/s";
     }
 
     static string ArmorTypeName(ArmorType type)
@@ -2814,7 +2818,7 @@ public class GameHud : MonoBehaviour
             SetPortraitModel(target); // 초상화: 조합표 인형
             string hex = ColorUtility.ToHtmlStringRGB(GetGradeColor(data.grade));
             unitInfoText.text =
-                $"<color=#{hex}>{data.unitName}</color>  <size=80%>(조합표 · 조작 불가)</size>\n등급: {data.grade.KoreanName()}\n체력: {data.hp:F0}\n" +
+                $"<color=#{hex}>{data.DisplayName} - {data.grade.KoreanName()}</color>  <size=80%>(조합표 · 조작 불가)</size>\n체력: {data.hp:F0}\n" +
                 $"공격력: {data.attackPower:F0}\n사거리: {data.attackRange:F1}\n공격속도: {data.attackSpeed:F2}/s";
             return true;
         }
@@ -2889,7 +2893,7 @@ public class GameHud : MonoBehaviour
             UnitData data = identity != null ? identity.Data : null;
 
             cardBackgrounds[i].color = data != null ? GetGradeColor(data.grade) : UnidentifiedCardColor;
-            cardNames[i].text = data != null ? data.unitName : target.name;
+            cardNames[i].text = data != null ? data.DisplayNameTwoLines : target.name;
 
             bool showOverflow = overflow > 0 && i == MaxSelectionCards - 1;
             cardOverflowTexts[i].text = showOverflow ? $"+{overflow}" : "";
@@ -3384,7 +3388,7 @@ public class GameHud : MonoBehaviour
             string colorHex = ColorUtility.ToHtmlStringRGB(GetGradeColor(unit.grade));
 
             inventoryBuilder.Append("<color=#").Append(colorHex).Append(">■</color> ")
-                .Append(unit.unitName).Append(" x").Append(inventoryCounts[unit]);
+                .Append(unit.DisplayName).Append(" x").Append(inventoryCounts[unit]);
         }
 
         int remaining = inventoryKeys.Count - shown;
