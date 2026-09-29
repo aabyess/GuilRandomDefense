@@ -137,6 +137,7 @@ public class NetLauncher : MonoBehaviour
     float testPortraitsDelay = -1f;
     string testPortraitsDir;
     float testSelectDelay = -1f;
+    float test0929Delay = -1f; string test0929Dir;
     string testSelectDir;
     readonly System.Collections.Generic.List<(float, string)> shotAts = new System.Collections.Generic.List<(float, string)>();
     float testPhase3Delay = -1f;
@@ -229,6 +230,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpTestMenu": testMenuDelay = Seconds(i + 1); testMenuShot = Arg(i + 2); break;
                 case "-mpDropAt": dropAt = Seconds(i + 1); break;
                 case "-mpRejoinAfter": rejoinAfter = Seconds(i + 1); break;
+                case "-mpTest0929": test0929Delay = Seconds(i + 1); test0929Dir = Arg(i + 2); break;
                 case "-mpTestSelect": testSelectDelay = Seconds(i + 1); testSelectDir = Arg(i + 2); break;
                 case "-mpTestPortraits": testPortraitsDelay = Seconds(i + 1); testPortraitsDir = Arg(i + 2); break;
                 case "-mpJoin": join = true; break;
@@ -725,6 +727,7 @@ public class NetLauncher : MonoBehaviour
         if (testSameTypeDelay >= 0f) StartCoroutine(TestSameTypeAfter(testSameTypeDelay, testSameTypeShot));
         if (testMenuDelay >= 0f) StartCoroutine(TestMenuAfter(testMenuDelay, testMenuShot));
         if (testSelectDelay >= 0f) StartCoroutine(TestSelectAfter(testSelectDelay, testSelectDir));
+        if (test0929Delay >= 0f) StartCoroutine(Test0929After(test0929Delay, test0929Dir));
         if (testPortraitsDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestPortraitsAfter(testPortraitsDelay, testPortraitsDir));
         if (testPhase3Delay >= 0f) StartCoroutine(TestPhase3After(testPhase3Delay));
         if (testTraitUnits && GameAuthority.IsServer) SpawnTraitTestUnits();
@@ -1421,6 +1424,117 @@ public class NetLauncher : MonoBehaviour
         yield return new WaitForEndOfFrame();
         ScreenCapture.CaptureScreenshot(path);
         Debug.Log($"[MP] 캡처: {path}");
+    }
+
+    // 테스트 전용(-mpTest0929 <초> <폴더>): 09-29 배포판 피드백 넷을 두 창에서 확인한다.
+    //   ① 시작 특별함 1기(내 것 이름·표시 이름) ② 친구가 「흔함」 강화 2번 → 친구 흔함 유닛 공격력(거울 값) 전후
+    //   ③ 방장이 보스 한 마리를 친구 레인에 세움 → 양쪽 스케일 ④ 친구 A 공격 대기 → 커서 상태(캡처엔 커서가 안 찍혀 로그로).
+    IEnumerator Test0929After(float seconds, string dir)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        int me = LocalPlayer.LocalPlayerId;
+        string side = GameAuthority.IsServer ? "host" : "client";
+        RtsCameraController cam = FindFirstObjectByType<RtsCameraController>();
+        SelectionManager selection = FindFirstObjectByType<SelectionManager>();
+        GameObject Body(NetEntity e) => GameAuthority.IsServer ? e.Real : e.Visual;
+        System.Collections.Generic.List<NetEntity> Live() => FindObjectsByType<NetEntity>(FindObjectsSortMode.None)
+            .Where(e => e != null && e.Object != null && e.Object.IsValid).OrderBy(e => e.Object.Id.Raw).ToList();
+        IEnumerator Shot(string name)
+        {
+            yield return new WaitForSecondsRealtime(1f);
+            yield return new WaitForEndOfFrame();
+            string path = System.IO.Path.Combine(dir, $"{side}_{name}.png");
+            ScreenCapture.CaptureScreenshot(path);
+            Debug.Log($"[0929] 캡처 {path}");
+        }
+
+        // ① 시작 특별함
+        NetEntity mySpecial = null;
+        foreach (NetEntity e in Live())
+        {
+            if (e.EntityKind != NetEntityKind.Unit || Body(e) == null || !Body(e).TryGetComponent(out UnitIdentity id) || id.Data == null) continue;
+            if (id.Data.grade != UnitGrade.Special) continue;
+            Debug.Log($"[0929] ① 특별함 p{e.Owner}: {id.Data.unitName} → 표시 「{id.Data.DisplayName}」 ({side})");
+            if (e.Owner == me && mySpecial == null) mySpecial = e;
+        }
+        if (mySpecial != null)
+        {
+            if (cam != null) cam.MoveTo(mySpecial.transform.position);
+            if (selection != null && Body(mySpecial).TryGetComponent(out Selectable ss)) selection.SelectOnly(ss);
+            yield return Shot("1_special");
+        }
+        else Debug.LogWarning($"[0929] ① 내(p{me}) 특별함이 없다 ({side})");
+
+        // ② 흔함 강화 — 친구 흔함 유닛 하나를 정해 양쪽이 같은 개체 값을 찍는다
+        NetEntity common = Live().FirstOrDefault(e => e.EntityKind == NetEntityKind.Unit && e.Owner == 1 && Body(e) != null
+            && Body(e).TryGetComponent(out UnitIdentity cid) && cid.Data != null && cid.Data.grade == UnitGrade.Common);
+        float Dmg(NetEntity e) => e == null ? -1f : (GameAuthority.IsServer && e.Real != null && e.Real.TryGetComponent(out UnitAttacker ra) ? ra.AttackDamage : e.AttackDamage);
+        Debug.Log($"[0929] ② 전: 친구 흔함 {(common != null ? common.Object.Id.Raw.ToString() : "없음")} 공격력 {Dmg(common):F0} ({side})");
+        if (!GameAuthority.IsServer && me == 1)
+        {
+            bool bought = false;
+            foreach (UnitUpgradeShop shop in FindObjectsByType<UnitUpgradeShop>(FindObjectsSortMode.None))
+            {
+                if (!shop.TryGetComponent(out OwnedByPlayer so) || so.OwnerId != me) continue;
+                for (int s = 0; s < shop.SlotCount; s++)
+                {
+                    LaneShopSlotView v = shop.GetSlotView(s);
+                    if (string.IsNullOrEmpty(v.label) || !v.label.Contains("흔함")) continue;
+                    for (int k = 0; k < 2; k++)
+                    {
+                        bool sent = NetCommands.RequestShopUse(shop, s, default);
+                        Debug.Log($"[0929] ② 친구 강화 요청 {k + 1}: {shop.name} {s}번 「{v.label.Replace('\n', ' ')}」 → 보냄 {sent}");
+                        yield return new WaitForSecondsRealtime(1f);
+                    }
+                    Debug.Log($"[0929] ② 강화 후 라벨: 「{shop.GetSlotView(s).label.Replace('\n', ' ')}」");
+                    bought = true;
+                    break;
+                }
+                if (bought) break;
+            }
+            if (!bought) Debug.LogWarning("[0929] ② 친구 「흔함」 강화 칸을 못 찾았다");
+        }
+        else yield return new WaitForSecondsRealtime(2f);
+        yield return new WaitForSecondsRealtime(1.5f);
+        Debug.Log($"[0929] ② 후: 친구 흔함 공격력 {Dmg(common):F0} ({side})");
+        if (common != null && me == 1 && selection != null && Body(common).TryGetComponent(out Selectable cs))
+        {
+            if (cam != null) cam.MoveTo(common.transform.position);
+            selection.SelectOnly(cs);
+            yield return Shot("2_common_info");
+        }
+
+        // ③ 보스 스케일 — 방장이 친구 레인(1)에 보스를 세운다(SpawnSideBoss도 SpawnEnemyInternal을 지나 1.6배가 걸린다)
+        if (GameAuthority.IsServer && catalog != null)
+        {
+            EnemyData boss = catalog.enemies.FirstOrDefault(d => d != null && d.isBoss && d.prefab != null);
+            WaveSpawner spawner = FindFirstObjectByType<WaveSpawner>();
+            GameObject b = spawner != null && boss != null ? spawner.SpawnSideBoss(boss, 1) : null;
+            Debug.Log($"[0929] ③ 방장 보스 소환 {(boss != null ? boss.enemyName : "없음")} → {(b != null ? b.transform.localScale.ToString("F2") : "실패")} (프리팹 {(boss != null ? boss.prefab.transform.localScale.ToString("F2") : "-")})");
+        }
+        yield return new WaitForSecondsRealtime(3f);
+        NetEntity bossEntity = null;
+        foreach (NetEntity e in Live())
+        {
+            if (e.EntityKind != NetEntityKind.Enemy || Body(e) == null || !Body(e).TryGetComponent(out EnemyDummy ed) || ed.Data == null) continue;
+            Renderer r = Body(e).GetComponentInChildren<Renderer>();
+            string h = r != null ? r.bounds.size.y.ToString("F2") : "-";
+            if (ed.Data.isBoss) { bossEntity = e; Debug.Log($"[0929] ③ 보스 {ed.Data.enemyName}: 루트 {e.transform.localScale:F2} · 월드 {Body(e).transform.lossyScale:F2} · 렌더 키 {h} · 프리팹 {ed.Data.prefab.transform.localScale:F2} ({side})"); }
+        }
+        if (bossEntity != null) { if (cam != null) cam.MoveTo(bossEntity.transform.position); yield return Shot("3_boss"); }
+        else Debug.LogWarning($"[0929] ③ 보스가 안 보인다 ({side})");
+
+        // ④ A 공격 대기 커서(친구만)
+        if (!GameAuthority.IsServer && selection != null && common != null && Body(common) != null && Body(common).TryGetComponent(out Selectable ac))
+        {
+            selection.SelectOnly(ac);
+            selection.BeginAttackTargeting();
+            yield return null; yield return null;
+            var f = typeof(SelectionManager).GetField("attackCursorShown", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            Debug.Log($"[0929] ④ 친구 A 대기: IsAttackTargeting {selection.IsAttackTargeting} · 빨간 칼 커서 {(f != null ? f.GetValue(selection) : "필드없음")}");
+            yield return Shot("4_attack_wait");
+        }
+        Debug.Log($"[0929] 끝 ({side})");
     }
 
     IEnumerator QuitAfter(float seconds)

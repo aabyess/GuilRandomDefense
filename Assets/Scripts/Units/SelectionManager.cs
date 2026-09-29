@@ -102,7 +102,10 @@ public class SelectionManager : MonoBehaviour
     {
         foreach (Selectable s in selected)
         {
-            if (s != null && s.GetComponent<UnitCombat>() != null)
+            // MP: 클라의 유닛 겉모습은 UnitCombat을 떼고 UnitIdentity만 남긴다(NetReplicaBuilder.KeepTypes) — 그것도 싸우는 유닛이다.
+            //     이게 없으면 친구는 A·「공격」 칸으로 대기에 못 들어갔다(09-29 두 창 실측). 명령은 UnitCommands가 호스트로 보낸다.
+            if (s != null && (s.GetComponent<UnitCombat>() != null
+                              || (!GameAuthority.IsServer && s.GetComponent<UnitIdentity>() != null)))
             {
                 attackTargeting = true;
                 return;

@@ -2766,6 +2766,8 @@ public class GameHud : MonoBehaviour
         string hp = data != null ? data.hp.ToString("F0") : "-";
         // MP: 클라 겉모습엔 UnitAttacker가 없다 — 거울(NetEntity, 겉모습의 부모)이 싣고 온 호스트 실제 값을 쓴다.
         NetEntity mirror = attacker == null && data != null ? first.GetComponentInParent<NetEntity>() : null;
+        // MP: 거울이 방금 사라진 프레임(판 끝·조합 재료)엔 [Networked] 값을 읽으면 예외다(09-29 두 창 실측).
+        if (mirror != null && (mirror.Object == null || !mirror.Object.IsValid)) mirror = null;
         bool hasStats = attacker != null || mirror != null;
         float damage = attacker != null ? attacker.AttackDamage : mirror != null ? mirror.AttackDamage : 0f;
         float range = attacker != null ? attacker.AttackRange : mirror != null ? mirror.AttackRange : 0f;
