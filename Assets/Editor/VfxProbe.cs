@@ -8,6 +8,7 @@ using UnityEngine;
 /// 스킬 이펙트 다듬기 점검(09-29 구현담당1) — gameshot의 call:로 판 안에서 부른다.
 ///   call:VfxProbe.ShowcaseDefault   PM의 ClaudeCommands.VfxShowcase(표적 넷: 스턴·이감·방깎+마법·적중)를 부른 뒤
 ///                                   카메라를 **판 시작 기본 높이**(약 374)로 되돌린다 — 실제 게임에서 읽히는지 본다. 두 번 부르는 것까지 같다.
+///   call:VfxProbe.RestunShowcase     진열 첫 표적 스턴을 다시 걸어 발구르기를 찍는다(두 번째 ShowcaseDefault 뒤 = 거의 멈춘 시간)
 ///   call:VfxProbe.ArenaStart         ClaudeCommands.SkillProbeArena(스킬 유닛 전원 교전, 4배속) + 프레임·입자 기록 시작
 ///   call:VfxProbe.ArenaStartNoVfx    같은 아레나를 이펙트 끄고(SkillVfx.Enabled=false) — 프레임 비교 기준
 ///   call:VfxProbe.ArenaReport        그 사이 프레임 시간(평균·95%·최대, 실시간 ms) · 살아 있는 이펙트 입자 수 · 화면을 덮은 비율(최대)
@@ -37,6 +38,17 @@ public static class VfxProbe
         Vector3 p = cam.transform.position; p.y = h; cam.transform.position = p;
         cam.MoveTo(lane.LaneCenter);
         return $"{result} · 카메라 높이 {h:F0}(기본)";
+    }
+
+    /// <summary>진열 첫 표적의 스턴을 풀었다 다시 건다 — 걸리는 순간의 발구르기(StunImpact, 0.6초)를 거의 멈춘 시간(두 번째 진열 호출 뒤)에 찍으려고.
+    /// 첫 진열 호출 때 걸린 발구르기는 적 소환 프레임이 길어 찍기 전에 끝난다(09-29 VfxDiag: 재생 False).</summary>
+    public static string RestunShowcase()
+    {
+        FieldInfo field = typeof(ClaudeCommands).GetField("showcase", BindingFlags.Static | BindingFlags.NonPublic);
+        if (!(field?.GetValue(null) is List<EnemyDummy> list) || list.Count == 0 || list[0] == null) return "❌ 진열 표적 없음(ShowcaseDefault 먼저)";
+        list[0].RemoveFreeze();
+        list[0].AddFreeze();
+        return "스턴 다시 걸음 — 발구르기";
     }
 
     // ── 아레나 기록 ─────────────────────────────────────────────
@@ -100,6 +112,10 @@ public static class VfxProbe
     {
         if (!Application.isPlaying) return "❌ 플레이 중에만";
         object result = CallClaudeCommand("SkillProbeArena");
+        // 카메라를 싸움 한가운데(0번 레인 가운데)로 — 가상 마우스 가장자리 밀기로 카메라가 조합표 판까지 흘러간 적이 있다(09-29).
+        RtsCameraController cam = Object.FindFirstObjectByType<RtsCameraController>();
+        LaneMarker lane = LaneMarker.Get(0);
+        if (cam != null && lane != null) { cam.enabled = false; cam.MoveTo(lane.LaneCenter); }
         if (recorder != null) Object.Destroy(recorder.gameObject);
         recorder = new GameObject("VfxProbeRecorder").AddComponent<Recorder>();
         return $"{result} · 기록 시작";
