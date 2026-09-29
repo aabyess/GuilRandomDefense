@@ -27,7 +27,18 @@ public class UnitMover : MonoBehaviour
 
     NavMeshAgent agent;
     Camera cam;
-    OwnedByPlayer owner;
+    // 🔴 2026-09-29 — 유닛 프리팹엔 OwnedByPlayer가 없다(UnitSpawner가 Instantiate **뒤에** 붙인다).
+    //    Awake에서 한 번 찾으면 유닛은 영원히 null이라 아래 「내 유닛만」 가드가 죽어 있었다
+    //    (SelectionManager가 남의 유닛 선택을 막아 줘서 겉으로는 안 드러났다). UnitAttacker.identity와 같은 방식.
+    OwnedByPlayer ownerCached;
+    OwnedByPlayer owner
+    {
+        get
+        {
+            if (ownerCached == null) TryGetComponent(out ownerCached);
+            return ownerCached;
+        }
+    }
     Selectable selectable;
     UnitCombat combat;
 
@@ -35,7 +46,6 @@ public class UnitMover : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         cam = Camera.main;
-        owner = GetComponent<OwnedByPlayer>();
         selectable = GetComponent<Selectable>();
         combat = GetComponent<UnitCombat>();
 
