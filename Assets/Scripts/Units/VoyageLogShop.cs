@@ -127,11 +127,11 @@ public class VoyageLogShop : MonoBehaviour, ILaneShop
         {
             // "왜 없는지"를 알려준다 — 6라운드 전까지는 아예 안 열린다는 게 원작 규칙이라,
             // 그걸 모르면 고장으로 보인다.
-            return $"{gambleUnit.unitName}\n남은 도박 횟수가 없습니다.\n"
+            return $"{gambleUnit.DisplayName}\n남은 도박 횟수가 없습니다.\n"
                  + "도박 횟수는 6라운드·9라운드 스토리를 깨면 1회씩 늘어납니다.";
         }
 
-        return $"{gambleUnit.unitName}\n{goldCost}엔 + 목재{woodCost} — 남은 횟수 {stock}\n"
+        return $"{gambleUnit.DisplayName}\n{goldCost}엔 + 목재{woodCost} — 남은 횟수 {stock}\n"
              + "사서 **판매**하면 아이템을 하나 뽑습니다.";
     }
 

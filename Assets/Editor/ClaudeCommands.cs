@@ -250,6 +250,51 @@ public static class ClaudeCommands
         return $"✅ 호출: {target}" + (value != null ? $" → {value}" : "");
     }
 
+    // 09-29 배포판 피드백 점검 — ① 시작 특별함 1기 ② 흔함·안흔함 강화 구매 후 흔함 공격력·공속 ③ 표시 이름 ④ 보스 배율.
+    static string Feedback0929Probe()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        StringBuilder sb = new StringBuilder();
+        PlayerContext ctx = PlayerContext.Get(0);
+        if (ctx == null || ctx.UnitInventory == null) return "❌ 0번 플레이어 없음";
+
+        List<UnitIdentity> members = ctx.UnitInventory.Members.Where(m => m != null && m.Data != null).ToList();
+        sb.AppendLine($"   ① 0번 보유 {members.Count}기: " + string.Join(", ", members.Select(m => $"{m.Data.DisplayName} - {m.Data.grade.KoreanName()}")));
+        int specials = members.Count(m => m.Data.grade == UnitGrade.Special);
+        sb.AppendLine($"   {(specials >= 1 ? "✅" : "❌")} 특별함 {specials}기");
+
+        UnitSpawner spawner = UnityEngine.Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        UnitData common = AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/흔함_강재규.asset");
+        GameObject go = spawner != null && lane != null && common != null ? spawner.Spawn(common, lane.LaneCenter, 0) : null;
+        UnitAttacker atk = go != null ? go.GetComponent<UnitAttacker>() : null;
+        UnitUpgradeShop shop = UnityEngine.Object.FindObjectsByType<UnitUpgradeShop>(FindObjectsSortMode.None)
+            .FirstOrDefault(x => x.GetComponent<OwnedByPlayer>().OwnerId == 0 && x.SlotCount > 1);
+        if (atk == null || shop == null) sb.AppendLine("   ❌ 흔함 소환 또는 0번 강화소 없음");
+        else
+        {
+            int slot = -1;
+            for (int i = 0; i < shop.SlotCount; i++) if (shop.GetSlotView(i).label != null && shop.GetSlotView(i).label.StartsWith("흔함")) slot = i;
+            float d0 = atk.AttackDamage, i0 = atk.AttackInterval;
+            ctx.GoldWallet.Add(1000);
+            bool ok1 = shop.TryUse(slot, default, out string r1);
+            bool ok2 = shop.TryUse(slot, default, out string r2);
+            float d1 = atk.AttackDamage, i1 = atk.AttackInterval;
+            sb.AppendLine($"   ② 강화 슬롯 {slot} 구매 {ok1}/{ok2} {r1}{r2} · 공격력 {d0:F1}→{d1:F1} · 공격간격 {i0:F3}→{i1:F3}");
+            sb.AppendLine($"   {(d1 > d0 && i1 < i0 ? "✅" : "❌")} 흔함 강화 반영");
+            object F(string n) => typeof(UnitAttacker).GetField(n, BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(atk);
+            sb.AppendLine($"   진단: identityCached={F("identityCached")} · upgrades={F("upgrades")} · dirty={F("upgradeMultiplierDirty")} · cachedBonus={F("cachedResearchBonus")} · ctx레벨(흔함)={ctx.UnitUpgrades.LevelForGrade(UnitGrade.Common)} · Bonus={ctx.UnitUpgrades.BonusForGrade(UnitGrade.Common)} · owner={go.GetComponent<OwnedByPlayer>().OwnerId} · 같은객체={ReferenceEquals(F("upgrades"), ctx.UnitUpgrades)}");
+            sb.AppendLine("   툴팁: " + shop.GetSlotTooltip(slot)?.Replace("\n", " / "));
+        }
+
+        UnitData yewon = AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/특별함_박예원.asset");
+        UnitData yuno = AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/랜덤_가사이_유노.asset");
+        UnitData ship = AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Special/Unit_고대의배_h05Y.asset");
+        sb.AppendLine($"   ③ 이름: {yewon?.DisplayName} · {yuno?.DisplayName} · {ship?.DisplayName} · {common?.DisplayName}");
+        sb.AppendLine($"   ④ 보스 배율 {WaveSpawner.BossScale}");
+        return sb.ToString();
+    }
+
     // 정렬(C) 점검(09-26 베타 피드백 「C 누르면 위치가 이상해진다」) — 플레이 중 gameshot의 call:로 부른다.
     // 0번 레인 가운데(필드)에 흔함 2 + 흔함 아닌 것 4를 세우고 → C → 필드로 되돌림 → C를 한 번 더.
     // 두 번의 자리가 같고, 흔함 아닌 것이 칸 안 줄(우리 기준점에서 뒤로 한 칸)에 서면 통과.

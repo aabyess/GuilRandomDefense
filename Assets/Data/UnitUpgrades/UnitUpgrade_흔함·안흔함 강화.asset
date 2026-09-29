@@ -13,14 +13,16 @@ MonoBehaviour:
   m_Name: UnitUpgrade_흔함·안흔함 강화
   m_EditorClassIdentifier:
   trackName: 흔함·안흔함 강화
-  description: 흔함·안흔함 강화 — 원작에 대응하는 연구소가 없는 등급입니다. 잠겨 있습니다. ⚠️ 2026-09-06 추가(영원함 강화 조사 중 같이 확인) — **이 트랙의 현재 값(maxLevel=10·costBase=100·costGrowthPerLevel=1.5·statLevel1Multiplier=1·statGrowthPerLevel=1.1 전부)은 원작 값이 아니라 자리표시자다** — 원작 대응 연구소를 아직 못 찾았다(찾으면 hasOriginalResearch를 풀 것). 이미 원작 대응이 확정된 트랙(불멸 2.10/0.06·전설적인 1.95/0.05·히든 1.60/0.05 등, 소수점 있는 특정값)과 헷갈리지 말 것.
+  description: 흔함·안흔함 유닛 전체의 공격력과 공격속도를 영구히 올립니다.
   targetGrades:
   - 0
   - 1
-  maxLevel: 10
-  costBase: 100
-  costGrowthPerLevel: 1.5
-  statLevel1Multiplier: 1
-  statGrowthPerLevel: 1.1
+  maxLevel: 20
+  costBase: 10
+  costGrowthPerLevel: 10
+  statLevel1Multiplier: 0.05
+  statGrowthPerLevel: 0.05
   slotColor: {r: 0.3, g: 0.7, b: 0.35, a: 1}
-  hasOriginalResearch: 0
+  hasOriginalResearch: 1
+  statLevel1Bonus: 3
+  statBonusGrowthPerLevel: 3

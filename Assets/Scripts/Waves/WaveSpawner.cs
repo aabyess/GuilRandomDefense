@@ -126,9 +126,15 @@ public class WaveSpawner : MonoBehaviour
         }
     }
 
+    // 보스는 같은 줄의 일반 적보다 크게(2026-09-29 유저 피드백 「보스유닛은 일반유닛들보다 사이즈 크게」).
+    // 모델 키는 ArtBinder가 실제 키(미터)로 맞춰 두어 와폴(2.07m)이 라인몹과 거의 같은 크기였다 — 여기서 한 배율을 더 건다.
+    // MP: 거울 루트(NetEntity)가 호스트의 스케일을 실어 가므로 클라도 같다.
+    public const float BossScale = 1.6f;
+
     GameObject SpawnEnemyInternal(EnemyData enemyData, int laneIndex, WaypointPath lanePath, float startHpMultiplier = 1f)
     {
         GameObject instance = Instantiate(enemyData.prefab);
+        if (enemyData.isBoss) instance.transform.localScale *= BossScale;
 
         if (instance.TryGetComponent(out WaypointMover mover))
         {
