@@ -34,6 +34,9 @@ public class NetEntity : NetworkBehaviour
     // 적: 방깎·이감·난이도가 반영된 실효 방어력과 이동속도(겉모습은 에셋 기준값밖에 모른다).
     [Networked] public float EnemyArmor { get; set; }
     [Networked] public float EnemyMoveSpeed { get; set; }
+    // 적: 호스트 실물에 스턴·이감 이펙트가 붙어 있나(SkillVfx 등급 게이트까지 반영된 결과) — 클라가 겉모습에 같은 걸 붙였다 뗀다.
+    [Networked] public NetworkBool StunVfx { get; set; }
+    [Networked] public NetworkBool SlowVfx { get; set; }
 
     public NetEntityKind EntityKind => (NetEntityKind)Kind;
 
@@ -49,6 +52,8 @@ public class NetEntity : NetworkBehaviour
     CharacterAnimator realAnimator;
     CharacterAnimator visualAnimator;
     int seenAttackSeq;
+    GameObject clientStunVfx;
+    GameObject clientSlowVfx;
 
     public static int ClientVisualCount { get; private set; }
 
@@ -105,6 +110,8 @@ public class NetEntity : NetworkBehaviour
             MaxHp = realEnemy.MaxHp;
             if (EnemyArmor != realEnemy.EffectiveArmor) EnemyArmor = realEnemy.EffectiveArmor;
             if (EnemyMoveSpeed != realEnemy.MoveSpeed) EnemyMoveSpeed = realEnemy.MoveSpeed;
+            if (StunVfx != realEnemy.HasStunVfx) StunVfx = realEnemy.HasStunVfx;
+            if (SlowVfx != realEnemy.HasSlowVfx) SlowVfx = realEnemy.HasSlowVfx;
         }
 
         if (realAttacker != null)
@@ -118,12 +125,22 @@ public class NetEntity : NetworkBehaviour
             RerollAbility = (short)(NetLauncher.Catalog.rerollAbilities.IndexOf(reroll.Data) + 1);
     }
 
+    GameObject SyncStateVfx(bool want, GameObject attached, SkillVfx.Kind kind, float height)
+    {
+        if (want && attached == null && Visual != null) return SkillVfx.Attach(kind, Visual.transform, height);
+        if (!want && attached != null) { SkillVfx.Stop(attached); return null; }
+        return attached;
+    }
+
     public override void Render()
     {
         if (replicaEnemy != null)
         {
             replicaEnemy.SetReplicaHp(Hp, MaxHp);
             replicaEnemy.SetReplicaStats(EnemyArmor, EnemyMoveSpeed);
+            // 높이는 EnemyDummy.AddFreeze·AddSlow와 같은 값(머리 위 +4 · 발밑 3)
+            clientStunVfx = SyncStateVfx(StunVfx, clientStunVfx, SkillVfx.Kind.Stun, replicaEnemy.VfxTop + 4f);
+            clientSlowVfx = SyncStateVfx(SlowVfx, clientSlowVfx, SkillVfx.Kind.Slow, 3f);
         }
 
         // 호스트 실물에 리롤 능력이 붙었으면 겉모습에도 붙인다 — GameHud가 그 컴포넌트로 리롤 버튼을 띄운다(실행은 요청).

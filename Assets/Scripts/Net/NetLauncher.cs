@@ -138,6 +138,7 @@ public class NetLauncher : MonoBehaviour
     string testPortraitsDir;
     float testSelectDelay = -1f;
     float test0929Delay = -1f; string test0929Dir;
+    float testVfxDelay = -1f; string testVfxDir;
     string testSelectDir;
     readonly System.Collections.Generic.List<(float, string)> shotAts = new System.Collections.Generic.List<(float, string)>();
     float testPhase3Delay = -1f;
@@ -230,6 +231,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpTestMenu": testMenuDelay = Seconds(i + 1); testMenuShot = Arg(i + 2); break;
                 case "-mpDropAt": dropAt = Seconds(i + 1); break;
                 case "-mpRejoinAfter": rejoinAfter = Seconds(i + 1); break;
+                case "-mpTestVfx": testVfxDelay = Seconds(i + 1); testVfxDir = Arg(i + 2); break;
                 case "-mpTest0929": test0929Delay = Seconds(i + 1); test0929Dir = Arg(i + 2); break;
                 case "-mpTestSelect": testSelectDelay = Seconds(i + 1); testSelectDir = Arg(i + 2); break;
                 case "-mpTestPortraits": testPortraitsDelay = Seconds(i + 1); testPortraitsDir = Arg(i + 2); break;
@@ -728,6 +730,7 @@ public class NetLauncher : MonoBehaviour
         if (testMenuDelay >= 0f) StartCoroutine(TestMenuAfter(testMenuDelay, testMenuShot));
         if (testSelectDelay >= 0f) StartCoroutine(TestSelectAfter(testSelectDelay, testSelectDir));
         if (test0929Delay >= 0f) StartCoroutine(Test0929After(test0929Delay, test0929Dir));
+        if (testVfxDelay >= 0f) StartCoroutine(TestVfxAfter(testVfxDelay, testVfxDir));
         if (testPortraitsDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestPortraitsAfter(testPortraitsDelay, testPortraitsDir));
         if (testPhase3Delay >= 0f) StartCoroutine(TestPhase3After(testPhase3Delay));
         if (testTraitUnits && GameAuthority.IsServer) SpawnTraitTestUnits();
@@ -1535,6 +1538,62 @@ public class NetLauncher : MonoBehaviour
             yield return Shot("4_attack_wait");
         }
         Debug.Log($"[0929] 끝 ({side})");
+    }
+
+    // 테스트 전용(-mpTestVfx <초> <폴더>): 스킬 이펙트 복제(09-29). 방장이 친구 레인(1)의 적 하나에 차례로
+    //   ① 흔함 시전자로 스킬 피해·스턴(등급 게이트 — 양쪽 다 안 떠야 함) ② 특별함 이상(게이트 없음)으로 스킬 피해·마법 피해·방깎·스턴·이감을 건다.
+    // 양쪽이 같은 적의 스턴·이감 이펙트 유무와 받은 한 번짜리 이펙트 수를 찍고, 친구는 그 적을 보고 캡처한다.
+    IEnumerator TestVfxAfter(float seconds, string dir)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        string side = GameAuthority.IsServer ? "host" : "client";
+        NetEntity PickEnemy() => FindObjectsByType<NetEntity>(FindObjectsSortMode.None)
+            .Where(e => e != null && e.Object != null && e.Object.IsValid && e.EntityKind == NetEntityKind.Enemy)
+            .OrderBy(e => e.Object.Id.Raw).FirstOrDefault(e => (GameAuthority.IsServer ? e.Real : e.Visual) != null
+                && (GameAuthority.IsServer ? e.Real : e.Visual).TryGetComponent(out EnemyDummy d) && d.LaneIndex == 1);
+        NetEntity target = PickEnemy();
+        if (target == null) { Debug.LogWarning($"[VFX테스트] 친구 레인 적이 없다 ({side})"); yield break; }
+        uint id = target.Object.Id.Raw;
+        RtsCameraController cam = FindFirstObjectByType<RtsCameraController>();
+        if (cam != null) cam.MoveTo(target.transform.position);
+        string State() => $"StunVfx {target.StunVfx} · SlowVfx {target.SlowVfx} · 클라가 받은 이펙트 {NetGameState.ReceivedVfx} · 겉모습 파티클 {(target.Visual != null ? target.Visual.GetComponentsInChildren<ParticleSystem>().Length : -1)}";
+
+        if (GameAuthority.IsServer && target.Real.TryGetComponent(out EnemyDummy real))
+        {
+            UnitData common = catalog != null ? catalog.units.FirstOrDefault(u => u != null && u.grade == UnitGrade.Common) : null;
+            bool before = SkillVfx.BeginCast(common);
+            real.TakeDamage(1f, DamageType.AD, AttackType.Normal, 0, 0f, true);
+            real.AddFreeze();
+            SkillVfx.EndCast(before);
+            Debug.Log($"[VFX테스트] ① 흔함 시전(게이트) 적 {id}: 스턴 붙음 {real.HasStunVfx}(False여야)");
+            yield return new WaitForSecondsRealtime(2f);
+            real.RemoveFreeze();
+            yield return new WaitForSecondsRealtime(0.5f);
+
+            real.TakeDamage(1f, DamageType.AD, AttackType.Normal, 0, 0f, true);
+            yield return new WaitForSecondsRealtime(0.3f);
+            real.TakeDamage(1f, DamageType.AP, AttackType.Spells, 0, 0f, true);
+            real.AddArmorShred(1f);
+            real.AddFreeze();
+            real.AddSlow(0.5f);
+            Debug.Log($"[VFX테스트] ② 특별함 이상 시전 적 {id}: 스턴 {real.HasStunVfx} · 이감 {real.HasSlowVfx}(둘 다 True)");
+            yield return new WaitForSecondsRealtime(4f);
+            real.RemoveFreeze();
+            real.RemoveSlow(0.5f);
+            Debug.Log($"[VFX테스트] ③ 해제 적 {id}: 스턴 {real.HasStunVfx} · 이감 {real.HasSlowVfx}(둘 다 False)");
+        }
+        else
+        {
+            // 방장 순서에 맞춰 찍는다: ① 게이트 1초 뒤 · ② 1초 뒤(붙어 있어야) · ③ 해제 1.5초 뒤
+            yield return new WaitForSecondsRealtime(1f);
+            Debug.Log($"[VFX테스트] ① 게이트 중 친구 적 {id}: {State()} (Stun False·받은 0이어야)");
+            yield return new WaitForSecondsRealtime(2.8f);
+            Debug.Log($"[VFX테스트] ② 친구 적 {id}: {State()} (Stun·Slow True, 받은 ≥3)");
+            yield return new WaitForEndOfFrame();
+            ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "client_vfx_stun_slow.png"));
+            yield return new WaitForSecondsRealtime(4.5f);
+            Debug.Log($"[VFX테스트] ③ 해제 뒤 친구 적 {id}: {State()} (Stun·Slow False)");
+        }
     }
 
     IEnumerator QuitAfter(float seconds)

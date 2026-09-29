@@ -29,6 +29,10 @@ public static class SkillVfx
 
     public static void EndCast(bool previous) => CasterAllowsVfx = previous;
 
+    // MP: 한 번 터지는 이펙트를 실제로 띄울 때 알린다(등급 게이트·스로틀·풀을 다 지난 뒤) — 호스트의 NetGameState가 받아
+    //     친구 화면으로 넘긴다. 위치는 카메라 쪽으로 당기기 전 값이다(당기기는 보는 사람 카메라 기준이라 받는 쪽이 한다).
+    public static event System.Action<Kind, Vector3> Played;
+
     static readonly Dictionary<Kind, List<ParticleSystem>> pools = new Dictionary<Kind, List<ParticleSystem>>();
     static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
     static Transform root;
@@ -69,6 +73,7 @@ public static class SkillVfx
             if (free == null) return;
             pool.Add(free);
         }
+        Played?.Invoke(kind, position);
         // 적 몸 가운데서 터지면 몸이 앞을 가린다 — 카메라 쪽으로 반 몸만큼 당긴다(워크3 이펙트처럼 몸 앞에 보이게).
         Camera cam = Camera.main;
         if (cam != null) position += (cam.transform.position - position).normalized * (0.5f * Unit);

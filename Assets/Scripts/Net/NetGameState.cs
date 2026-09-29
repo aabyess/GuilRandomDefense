@@ -56,6 +56,7 @@ public class NetGameState : NetworkBehaviour
         // 호스트: 원격 슬롯 앞으로 온 안내를 그 클라에 넘긴다(자기 것은 자기 화면에 이미 떴다).
         if (HasStateAuthority) PlayerNotification.Shown += RouteNotification;
         if (HasStateAuthority) GameSound.RemoteRouted += RouteSound;
+        if (HasStateAuthority) SkillVfx.Played += RouteVfx;
 
         if (!HasStateAuthority)
         {
@@ -69,6 +70,7 @@ public class NetGameState : NetworkBehaviour
     {
         PlayerNotification.Shown -= RouteNotification;
         GameSound.RemoteRouted -= RouteSound;
+        SkillVfx.Played -= RouteVfx;
         if (Instance == this) Instance = null;
     }
 
@@ -165,6 +167,20 @@ public class NetGameState : NetworkBehaviour
     }
 
     /// <summary>호스트가 방을 닫기 직전에 모두에게 알린다 — 그냥 끊기면 클라는 「연결 끊김」밖에 모른다.</summary>
+    // 스킬 이펙트(적중·마법 적중·방깎·버프) — 호스트에서 한 번 터진 것을 친구 화면에도(09-29 PM). 스턴·이감처럼 붙어 있는 것은
+    // NetEntity의 상태 플래그로 따로 간다. 이펙트는 놓쳐도 되는 것이라 비신뢰 채널 — 밀린 패킷을 다시 보내느라 늦게 터지는 것보다 낫다.
+    void RouteVfx(SkillVfx.Kind kind, Vector3 position) => RPC_SkillVfx((byte)kind, position);
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies, Channel = RpcChannel.Unreliable)]
+    public void RPC_SkillVfx(byte kind, Vector3 position)
+    {
+        ReceivedVfx++;
+        SkillVfx.Burst((SkillVfx.Kind)kind, position);
+    }
+
+    /// <summary>클라가 받은 한 번짜리 이펙트 수(두 창 확인용 로그).</summary>
+    public static int ReceivedVfx;
+
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     public void RPC_HostClosing()
     {

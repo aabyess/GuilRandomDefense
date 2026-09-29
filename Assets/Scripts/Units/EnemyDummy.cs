@@ -196,8 +196,12 @@ public class EnemyDummy : MonoBehaviour
     float nextArmorVfxTime;
     float vfxTop = -1f;
 
+    // MP: 스턴·이감 이펙트가 지금 붙어 있나 — 적 거울(NetEntity)이 실어 가서 친구 화면에서도 같은 걸 붙인다(등급 게이트 반영).
+    public bool HasStunVfx => stunVfx != null;
+    public bool HasSlowVfx => slowVfx != null;
+
     // 머리 높이(땅 기준) — 렌더러 경계로 한 번 잰다. 못 재면 레인 적 키 22.5.
-    float VfxTop
+    public float VfxTop
     {
         get
         {
