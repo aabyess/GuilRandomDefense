@@ -95,6 +95,14 @@ BASIS_DISPATCH = {
 A11S_MEMO_RE = re.compile(r'계수 ([\d.]+)\+([\d.]+)×레벨')
 
 
+
+def yaml_scalar(value):
+    """YAML 한 줄 값. 「[히든조합]…」처럼 [ { | > 등으로 시작하면 유니티가 흐름 목록 등으로 읽다 깨져서
+    뒤 필드(triggerType·levels)가 전부 기본값이 된다(2026-09-29 히든 3종 스킬 5개 미발동). 그럴 땐 작은따옴표로 감싼다."""
+    if value and (value[0] in "[]{}|>&*!%@`'\"#,?:-" or ': ' in value or ' #' in value):
+        return "'" + value.replace("'", "''") + "'"
+    return value
+
 def a11s_level1_baseline(memo):
     m = A11S_MEMO_RE.match(memo.strip())
     assert m, f"A11S 계수 메모 파싱 실패: {memo!r}"
@@ -304,7 +312,7 @@ def build_skill_asset(name, gate_str, gate_resolved, dropped, rows, unit_name, u
 
     body = (
         HEAD.replace('__SCRIPT__', SKILL_SCRIPT_GUID).replace('__NAME__', name)
-        + f"  skillName: {unit_name} — {gate_str}\n"
+        + f"  skillName: {yaml_scalar(f'{unit_name} — {gate_str}')}\n"
         + f"  description: {description}\n"
         + f"  triggerType: {trigger_type}\n"
         + "  levels:\n"
