@@ -250,6 +250,67 @@ public static class ClaudeCommands
         return $"✅ 호출: {target}" + (value != null ? $" → {value}" : "");
     }
 
+    // 09-29 스킬 발동 측정 — 스킬 가진 로스터 유닛을 0번 레인에 한 기씩 세우고 계측을 켠다. 몇 초 뒤 SkillProbeReport.
+    static string SkillProbeSpawn()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        UnitSpawner spawner = UnityEngine.Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        if (spawner == null || lane == null) return "❌ UnitSpawner·0번 레인 없음";
+        List<UnitData> units = AssetDatabase.FindAssets("t:UnitData", new[] { "Assets/Data/Units/Roster" })
+            .Select(g => AssetDatabase.LoadAssetAtPath<UnitData>(AssetDatabase.GUIDToAssetPath(g)))
+            .Where(d => d != null && d.prefab != null && (d.skill != null || (d.skills != null && d.skills.Any(x => x != null))))
+            .OrderBy(d => d.name).ToList();
+        SkillTelemetry.Reset();
+        SkillTelemetry.Enabled = true;
+        int n = 0;
+        foreach (UnitData d in units)
+            if (spawner.Spawn(d, lane.TakeSpawnPosition(d), 0) != null) n++;
+        return $"스킬 유닛 {n}/{units.Count}기 세움, 계측 켬";
+    }
+
+    // 전원 교전판 — 0번 레인 가운데에 죽지 않는 표적 12마리(움직이지 않음)를 세우고, 스킬 유닛 전원을 그 둘레 반지름 40 안에 세운다.
+    // 게임 속도 4배. 적 배치·사거리 운에 안 걸리고 「붙여 놓으면 스킬이 나가나」만 본다.
+    static string SkillProbeArena()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        UnitSpawner spawner = UnityEngine.Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        EnemyData dummyData = AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/Data/Enemies" }).Select(g => AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(g))).FirstOrDefault(e => e != null && !e.isBoss && e.prefab != null && e.name.Contains("R2"));
+        if (spawner == null || lane == null || dummyData == null) return "❌ UnitSpawner·레인·표적 적 없음";
+        Vector3 c = lane.LaneCenter;
+        for (int i = 0; i < 12; i++)
+        {
+            Vector3 at = c + Quaternion.Euler(0f, i * 30f, 0f) * Vector3.forward * 8f;
+            GameObject go = UnityEngine.Object.Instantiate(dummyData.prefab, at, Quaternion.identity);
+            if (go.TryGetComponent(out WaypointMover mover)) mover.enabled = false;
+            if (go.TryGetComponent(out EnemyDummy dummy)) { dummy.Initialize(dummyData, 1e6f); dummy.SetLane(-1); }
+        }
+        List<UnitData> units = AssetDatabase.FindAssets("t:UnitData", new[] { "Assets/Data/Units/Roster" })
+            .Select(g => AssetDatabase.LoadAssetAtPath<UnitData>(AssetDatabase.GUIDToAssetPath(g)))
+            .Where(d => d != null && d.prefab != null && (d.skill != null || (d.skills != null && d.skills.Any(x => x != null))))
+            .OrderBy(d => d.name).ToList();
+        SkillTelemetry.Reset();
+        SkillTelemetry.Enabled = true;
+        int n = 0;
+        foreach (UnitData d in units)
+        {
+            Vector2 r = UnityEngine.Random.insideUnitCircle.normalized * UnityEngine.Random.Range(20f, 40f);
+            if (spawner.Spawn(d, c + new Vector3(r.x, 0f, r.y), 0) != null) n++;
+        }
+        Time.timeScale = 4f;
+        return $"표적 12 · 스킬 유닛 {n}/{units.Count}기 · 4배속";
+    }
+
+    static string SkillProbeReport()
+    {
+        Time.timeScale = 1f;
+        List<UnitData> fielded = UnitIdentity.Active.Where(i => i != null && i.OwnerId == 0).Select(i => i.Data).ToList();
+        string report = SkillTelemetry.Report(fielded);
+        System.IO.File.WriteAllText(System.IO.Path.Combine(Application.dataPath, "../ClaudeBridge/shots/skill_report.txt"), report);
+        return report;
+    }
+
     // 09-29 배포판 피드백 점검 — ① 시작 특별함 1기 ② 흔함·안흔함 강화 구매 후 흔함 공격력·공속 ③ 표시 이름 ④ 보스 배율.
     static string Feedback0929Probe()
     {

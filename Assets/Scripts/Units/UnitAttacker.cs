@@ -461,8 +461,10 @@ public class UnitAttacker : MonoBehaviour
         // isAbilityDamage: false — Bash도 평타와 같은 DamageType/AttackType을 써서 방어력·
         // 상성표를 평타와 똑같이 통과시키는 게 설계 의도다(위 메서드 주석). UNIVERSAL 무시도
         // 평타와 동일하게 적용 안 한다.
+        float critHpBefore = target.Hp;
         target.TakeDamage(bonus, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
                           armorIgnoreRatio: 0f, isAbilityDamage: false);
+        SkillTelemetry.Damage(unitData, "치명", target, critHpBefore);
 
         if (unitData.critStunDuration > 0f) StartCoroutine(CritStunRoutine(target, unitData.critStunDuration));
     }
@@ -876,6 +878,7 @@ public class UnitAttacker : MonoBehaviour
             // recentAttackDamage: 0 — CooldownAutoCast는 "방금 맞은 평타"라는 문맥 자체가
             // 없다(TryCastOnHitSkill 쪽만 있음, 아래 참고). ReceivedDamage basis를 쓰는
             // 효과가 이 경로를 타면 0(적용 안 함)으로 안전하게 빠진다.
+            SkillTelemetry.Cast(identity != null ? identity.Data : null, skill);
             CastSkillLevel(level, level.range, null, 0f);
         }
     }
@@ -1182,6 +1185,7 @@ public class UnitAttacker : MonoBehaviour
             // GetEventDamage()에 대응한다. OnHitChance/OnHitCount는 "평타가 맞았을 때"만
             // 도는 경로라 이 값이 항상 뜻이 통한다(아래 ResolveSkillEffectValue.
             // ReceivedDamage 참고, 2026-09-06 PM 지시로 연결).
+            SkillTelemetry.Cast(unitData, skill);
             CastSkillLevel(level, level.range, attackedTarget, AttackDamage);
         }
 
@@ -1609,7 +1613,9 @@ public class UnitAttacker : MonoBehaviour
         int hits = Mathf.Max(1, effect.hitCount);
         if (hits <= 1)
         {
+            float skillHpBefore = target.Hp;
             target.TakeDamage(amount, effect.damageType, effect.attackType, owner != null ? owner.OwnerId : -1);
+            SkillTelemetry.Damage(identity != null ? identity.Data : null, "스킬", target, skillHpBefore);
             return;
         }
 
@@ -1623,7 +1629,11 @@ public class UnitAttacker : MonoBehaviour
         for (int i = 0; i < hits; i++)
         {
             if (target != null)
+            {
+                float hitHpBefore = target.Hp;
                 target.TakeDamage(amountPerHit, damageType, attackType, owner != null ? owner.OwnerId : -1);
+                SkillTelemetry.Damage(identity != null ? identity.Data : null, "스킬", target, hitHpBefore);
+            }
             if (i < hits - 1 && interval > 0f) yield return new WaitForSeconds(interval);
         }
     }
@@ -1871,8 +1881,10 @@ public class UnitAttacker : MonoBehaviour
             ApplyArmorShred(target);
             // isAbilityDamage: false — 평타는 원작에 UNIVERSAL이 없다(EnemyDummy.TakeDamage
             // 문서 참고). 로스터 damageType이 AP인 유닛이라도 평타로 방어를 무시하면 안 된다.
+            float basicHpBefore = target.Hp;
             target.TakeDamage(AttackDamage, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
                               armorIgnoreRatio: 0f, isAbilityDamage: false);
+            SkillTelemetry.Damage(identity != null ? identity.Data : null, "평타", target, basicHpBefore);
             ApplyCritIfTriggered(target);
             TryCastOnHitSkill(target);
             return;
