@@ -10,7 +10,7 @@ using UnityEngine;
 /// </summary>
 public class GameVersion : MonoBehaviour
 {
-    public const string Number = "1.2.0";
+    public const string Number = "1.2.1";
     // 사장님 표기 그대로 「1.1.0v」(09-26 두 번 — 「1.1.0v 이런식으로」). 앱·압축 파일 이름에도 이 글자를 쓴다(BuildBeta).
     public static string Label => Number + "v";
 
@@ -35,6 +35,23 @@ public class GameVersion : MonoBehaviour
         // 1280×720 창에서 12 × 0.67 = 8px라 겨우 읽혔다(09-26 구현담당2) → 14px 밑으로는 안 줄인다.
         float scale = Mathf.Max(1f, Screen.height / 1080f);
         Style.fontSize = Mathf.RoundToInt(14f * scale);
-        GUI.Label(new Rect(0f, 0f, Screen.width - 8f * scale, Screen.height - 4f * scale), Label, Style);
+        // 게임 화면에선 하단 바 윗선 바로 위 오른쪽 구석(09-29 — 바 안 구석은 명령 카드 금테와 겹쳤다). 첫 화면처럼 바가 없으면 화면 구석.
+        float bottom = HasBottomBar() ? Screen.height * (1f - BottomBarFraction) : Screen.height;
+        GUI.Label(new Rect(0f, 0f, Screen.width - 8f * scale, bottom - 4f * scale), Label, Style);
+    }
+
+    // GameHud 하단 바 높이(화면 비율) — GameChatBox·PlayerNotification과 같은 값.
+    const float BottomBarFraction = 0.22f;
+    GameObject bottomBar;
+    float nextBarLookup;
+
+    bool HasBottomBar()
+    {
+        if (bottomBar == null && Time.unscaledTime >= nextBarLookup)
+        {
+            nextBarLookup = Time.unscaledTime + 1f;   // 씬이 바뀌면 다시 찾는다(초당 한 번만)
+            bottomBar = GameObject.Find("BottomBar");
+        }
+        return bottomBar != null && bottomBar.activeInHierarchy;
     }
 }

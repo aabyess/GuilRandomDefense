@@ -250,6 +250,143 @@ public static class ClaudeCommands
         return $"✅ 호출: {target}" + (value != null ? $" → {value}" : "");
     }
 
+    // 09-29 스킬 발동 측정 — 스킬 가진 로스터 유닛을 0번 레인에 한 기씩 세우고 계측을 켠다. 몇 초 뒤 SkillProbeReport.
+    static string SkillProbeSpawn()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        UnitSpawner spawner = UnityEngine.Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        if (spawner == null || lane == null) return "❌ UnitSpawner·0번 레인 없음";
+        List<UnitData> units = AssetDatabase.FindAssets("t:UnitData", new[] { "Assets/Data/Units/Roster" })
+            .Select(g => AssetDatabase.LoadAssetAtPath<UnitData>(AssetDatabase.GUIDToAssetPath(g)))
+            .Where(d => d != null && d.prefab != null && (d.skill != null || (d.skills != null && d.skills.Any(x => x != null))))
+            .OrderBy(d => d.name).ToList();
+        SkillTelemetry.Reset();
+        SkillTelemetry.Enabled = true;
+        int n = 0;
+        foreach (UnitData d in units)
+            if (spawner.Spawn(d, lane.TakeSpawnPosition(d), 0) != null) n++;
+        return $"스킬 유닛 {n}/{units.Count}기 세움, 계측 켬";
+    }
+
+    // 전원 교전판 — 0번 레인 가운데에 죽지 않는 표적 12마리(움직이지 않음)를 세우고, 스킬 유닛 전원을 그 둘레 반지름 40 안에 세운다.
+    // 게임 속도 4배. 적 배치·사거리 운에 안 걸리고 「붙여 놓으면 스킬이 나가나」만 본다.
+    static string SkillProbeArena()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        UnitSpawner spawner = UnityEngine.Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        EnemyData dummyData = AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/Data/Enemies" }).Select(g => AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(g))).FirstOrDefault(e => e != null && !e.isBoss && e.prefab != null && e.name.Contains("R2"));
+        if (spawner == null || lane == null || dummyData == null) return "❌ UnitSpawner·레인·표적 적 없음";
+        Vector3 c = lane.LaneCenter;
+        for (int i = 0; i < 12; i++)
+        {
+            Vector3 at = c + Quaternion.Euler(0f, i * 30f, 0f) * Vector3.forward * 8f;
+            GameObject go = UnityEngine.Object.Instantiate(dummyData.prefab, at, Quaternion.identity);
+            if (go.TryGetComponent(out WaypointMover mover)) mover.enabled = false;
+            if (go.TryGetComponent(out EnemyDummy dummy)) { dummy.Initialize(dummyData, 1e6f); dummy.SetLane(-1); }
+        }
+        List<UnitData> units = AssetDatabase.FindAssets("t:UnitData", new[] { "Assets/Data/Units/Roster" })
+            .Select(g => AssetDatabase.LoadAssetAtPath<UnitData>(AssetDatabase.GUIDToAssetPath(g)))
+            .Where(d => d != null && d.prefab != null && (d.skill != null || (d.skills != null && d.skills.Any(x => x != null))))
+            .OrderBy(d => d.name).ToList();
+        SkillTelemetry.Reset();
+        SkillTelemetry.Enabled = true;
+        int n = 0;
+        foreach (UnitData d in units)
+        {
+            Vector2 r = UnityEngine.Random.insideUnitCircle.normalized * UnityEngine.Random.Range(20f, 40f);
+            if (spawner.Spawn(d, c + new Vector3(r.x, 0f, r.y), 0) != null) n++;
+        }
+        Time.timeScale = 4f;
+        return $"표적 12 · 스킬 유닛 {n}/{units.Count}기 · 4배속";
+    }
+
+    // 스킬 이펙트 촬영(09-29) — 0번 레인 가운데로 카메라를 가장 낮게 내리고, 표적 셋에 스턴·이감·방깎을 직접 걸어 모양을 본다.
+    static string VfxCloseup()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        RtsCameraController cam = UnityEngine.Object.FindFirstObjectByType<RtsCameraController>();
+        LaneMarker lane = LaneMarker.Get(0);
+        if (cam == null || lane == null) return "❌ 카메라·레인 없음";
+        // 높이를 먼저 바로 내린다 — MoveTo는 지금 높이로 기울기 거리를 재므로, 높이가 나중에 스르르 내려가면 과녁이 화면 위로 밀려난다.
+        FieldInfo target = typeof(RtsCameraController).GetField("targetHeight", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (target != null) target.SetValue(cam, 150f);
+        Vector3 p = cam.transform.position; p.y = 150f; cam.transform.position = p;
+        cam.MoveTo(lane.LaneCenter);
+        List<EnemyDummy> near = EnemyDummy.Active.Where(e => e != null && Vector3.Distance(e.transform.position, lane.LaneCenter) < 30f).Take(3).ToList();
+        if (near.Count > 0) near[0].AddFreeze();
+        if (near.Count > 1) near[1].AddSlow(0.5f);
+        if (near.Count > 2) near[2].AddArmorShred(5f);
+        bool mats = Resources.Load<Material>("Effects/Skill_star_09") != null;
+        return $"카메라 → 0번 레인 가운데 · 표적 {near.Count}에 스턴·이감·방깎 · 재질 {(mats ? "있음" : "없음")}";
+    }
+
+    // 이펙트 진열(09-29) — 유닛 없이 0번 레인 가운데에 표적 넷을 한 줄로 세우고 ①스턴 ②이감 ③방깎+마법 적중 ④스킬 적중을 건다.
+    // 부를 때마다 ③④의 한 번 터지는 것을 다시 터뜨린다 — gameshot에서 call 뒤 wait:0.1 snap: 으로 찍는다.
+    static readonly List<EnemyDummy> showcase = new List<EnemyDummy>();
+    static float showcaseSecondCallAfter;
+    static string VfxShowcase()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        LaneMarker lane = LaneMarker.Get(0);
+        RtsCameraController cam = UnityEngine.Object.FindFirstObjectByType<RtsCameraController>();
+        EnemyData data = AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/Data/Enemies" }).Select(g => AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(g))).FirstOrDefault(e => e != null && !e.isBoss && e.prefab != null && e.name.Contains("R2"));
+        if (lane == null || cam == null || data == null) return "❌ 레인·카메라·적 없음";
+        showcase.RemoveAll(e => e == null);
+        if (showcase.Count == 0)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                GameObject go = UnityEngine.Object.Instantiate(data.prefab, lane.LaneCenter + new Vector3((i - 1.5f) * 40f, 0f, 0f), Quaternion.Euler(0f, 180f, 0f));
+                if (go.TryGetComponent(out WaypointMover mover)) mover.enabled = false;
+                if (go.TryGetComponent(out EnemyDummy d)) { d.Initialize(data, 1e6f); d.SetLane(-1); showcase.Add(d); }
+            }
+            showcaseSecondCallAfter = Time.timeSinceLevelLoad + 0.5f;
+            showcase[0].AddFreeze();
+            showcase[1].AddSlow(0.5f);
+            FieldInfo target = typeof(RtsCameraController).GetField("targetHeight", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (target != null) target.SetValue(cam, 220f);
+            Vector3 p = cam.transform.position; p.y = 220f; cam.transform.position = p;
+            cam.MoveTo(lane.LaneCenter);
+        }
+        if (showcase.Count >= 4)
+        {
+            showcase[2].AddArmorShred(1f);
+            showcase[2].TakeDamage(1f, DamageType.AP, AttackType.Magic, 0);
+            showcase[3].TakeDamage(1f, DamageType.AD, AttackType.Normal, 0);
+        }
+        bool firstCall = Time.timeSinceLevelLoad < showcaseSecondCallAfter;
+        Time.timeScale = firstCall ? 1f : 0.04f;   // 촬영용(두 번째 호출부터) — 한 번 터지는 이펙트가 찍히기 전에 사라지지 않게 거의 멈춘다(에디터 프레임이 튀어도)
+        return $"진열 표적 {showcase.Count} · 스턴/이감/방깎+마법/적중";
+    }
+
+    static string VfxDiag()
+    {
+        StringBuilder sb = new StringBuilder();
+        foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
+        {
+            if (!ps.name.StartsWith("Vfx_") && ps.transform.parent != null && !ps.transform.parent.name.StartsWith("Vfx_")) continue;
+            ParticleSystemRenderer r = ps.GetComponent<ParticleSystemRenderer>();
+            ParticleSystem.Particle[] parts = new ParticleSystem.Particle[ps.main.maxParticles];
+            int n = ps.GetParticles(parts);
+            string sizes = n > 0 ? string.Join(",", parts.Take(Math.Min(n, 3)).Select(q => q.GetCurrentSize(ps).ToString("F1"))) : "-";
+            sb.AppendLine($"   {ps.name} · 재생 {ps.isPlaying} · 입자 {n} · 크기 {sizes} · startSize {ps.main.startSize.constantMin:F1}~{ps.main.startSize.constantMax:F1} · 렌더경계 {r.bounds.size.x:F1}×{r.bounds.size.y:F1} · 위치 {ps.transform.position:F0} · 배율 {ps.transform.lossyScale.x:F3} · 재질 {(r.sharedMaterial != null ? r.sharedMaterial.name : "없음")} · 모드 {ps.main.scalingMode}/{ps.main.simulationSpace}");
+        }
+        sb.AppendLine($"   CasterAllowsVfx={SkillVfx.CasterAllowsVfx} · timeScale={Time.timeScale}");
+        foreach (EnemyDummy e in showcase) if (e != null) sb.AppendLine($"   표적 {e.name} 스턴 {e.IsStunned} · 자식 {string.Join(",", e.GetComponentsInChildren<ParticleSystem>(true).Select(p => p.name + (p.gameObject.activeInHierarchy ? "" : "(꺼짐)")))}");
+        return sb.Length > 0 ? sb.ToString() : "   Vfx 없음";
+    }
+
+    static string SkillProbeReport()
+    {
+        Time.timeScale = 1f;
+        List<UnitData> fielded = UnitIdentity.Active.Where(i => i != null && i.OwnerId == 0).Select(i => i.Data).ToList();
+        string report = SkillTelemetry.Report(fielded);
+        System.IO.File.WriteAllText(System.IO.Path.Combine(Application.dataPath, "../ClaudeBridge/shots/skill_report.txt"), report);
+        return report;
+    }
+
     // 09-29 배포판 피드백 점검 — ① 시작 특별함 1기 ② 흔함·안흔함 강화 구매 후 흔함 공격력·공속 ③ 표시 이름 ④ 보스 배율.
     static string Feedback0929Probe()
     {

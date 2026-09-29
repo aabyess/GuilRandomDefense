@@ -1,0 +1,222 @@
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Rendering;
+
+// 스킬 기본 이펙트(2026-09-29, 「스킬 전체 살리기」) — 스킬마다 이펙트를 따로 달지 않고 **효과 종류별 공용 이펙트**를
+// 코드로 만든다. 텍스처는 Kenney Particle Pack(CC0, Assets/Art/Effects/Kenney), 재질은 Resources/Effects/Skill_*.mat
+// (에디터 SkillVfxMaterials.Build가 만든다). 재질이 없으면 조용히 아무것도 안 한다 — 게임 동작엔 영향 없다.
+//
+// 붙는 자리는 EnemyDummy(받는 쪽)다: 스킬 피해·스턴·이감·방깎. 누가 걸었든(유닛 스킬·도움소) 같은 모양이 뜬다.
+// ⚠️ MP: 이 함수들은 판정이 도는 호스트에서만 불린다 — 친구 화면엔 아직 안 뜬다(거울에 신호를 실어야 함).
+public static class SkillVfx
+{
+    public enum Kind { Hit, SpellHit, ArmorBreak, Stun, Slow, Buff }
+
+    // 세계 단위 크기 기준 — 사람 키(유닛) 30, 레인 적 22.5(ArtBinder).
+    const float Unit = 22.5f;
+    const int PoolPerKind = 24;
+
+    // 사장님(09-29): 「원랜디는 특별함 정도부터 스킬 임팩트가 있다」 — 시전자 등급이 특별함 미만이면 이펙트를 안 띄운다.
+    // UnitAttacker가 시전 앞뒤로 BeginCast/EndCast를 부른다. 시전 문맥 밖(도움소 주문 등)은 늘 띄운다.
+    public static bool CasterAllowsVfx { get; private set; } = true;
+
+    public static bool BeginCast(UnitData caster)
+    {
+        bool previous = CasterAllowsVfx;
+        CasterAllowsVfx = caster == null || caster.grade >= UnitGrade.Special;
+        return previous;
+    }
+
+    public static void EndCast(bool previous) => CasterAllowsVfx = previous;
+
+    static readonly Dictionary<Kind, List<ParticleSystem>> pools = new Dictionary<Kind, List<ParticleSystem>>();
+    static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
+    static Transform root;
+
+    static Material Mat(string texture)
+    {
+        if (!materials.TryGetValue(texture, out Material m))
+        {
+            m = Resources.Load<Material>("Effects/Skill_" + texture);
+            materials[texture] = m;
+        }
+        return m;
+    }
+
+    static Transform Root
+    {
+        get
+        {
+            if (root == null) root = new GameObject("SkillVfx").transform;
+            return root;
+        }
+    }
+
+    /// <summary>한 번 터지고 끝나는 이펙트(적중·방깎). 풀이 다 차 있으면 건너뛴다 — 수십 기가 한꺼번에 때려도 안 쌓인다.</summary>
+    public static void Burst(Kind kind, Vector3 position)
+    {
+        if (!CasterAllowsVfx) return;
+        if (!pools.TryGetValue(kind, out List<ParticleSystem> pool)) pools[kind] = pool = new List<ParticleSystem>();
+        pool.RemoveAll(p => p == null);
+
+        ParticleSystem free = null;
+        foreach (ParticleSystem p in pool)
+            if (!p.IsAlive(true)) { free = p; break; }
+        if (free == null)
+        {
+            if (pool.Count >= PoolPerKind) return;
+            free = Build(kind, Root, loop: false);
+            if (free == null) return;
+            pool.Add(free);
+        }
+        // 적 몸 가운데서 터지면 몸이 앞을 가린다 — 카메라 쪽으로 반 몸만큼 당긴다(워크3 이펙트처럼 몸 앞에 보이게).
+        Camera cam = Camera.main;
+        if (cam != null) position += (cam.transform.position - position).normalized * (0.5f * Unit);
+        free.transform.position = position;
+        free.Play(true);
+    }
+
+    /// <summary>켜져 있는 동안 따라다니는 이펙트(스턴·이감·버프). 돌려받은 것을 Stop으로 끈다.</summary>
+    public static GameObject Attach(Kind kind, Transform target, float height)
+    {
+        if (target == null || !CasterAllowsVfx) return null;
+        ParticleSystem ps = Build(kind, target, loop: true);
+        if (ps == null) return null;
+        ps.transform.localPosition = Vector3.up * height / Mathf.Max(0.0001f, target.lossyScale.y);
+        ps.Play(true);
+        return ps.gameObject;
+    }
+
+    public static void Stop(GameObject attached)
+    {
+        if (attached == null) return;
+        foreach (ParticleSystem ps in attached.GetComponentsInChildren<ParticleSystem>())
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        Object.Destroy(attached, 1.5f);
+    }
+
+    // ── 모양 ─────────────────────────────────────────────────────────────
+
+    static ParticleSystem Build(Kind kind, Transform parent, bool loop)
+    {
+        switch (kind)
+        {
+            case Kind.Hit:
+                // 금빛 번쩍 + 흩어지는 별 조각
+                return Layered(parent, loop, "Hit",
+                    Layer("star_09", new Color(1f, 0.8f, 0.35f), 0.45f, 1.1f * Unit, 1, 0f, Shape.None),
+                    Layer("star_07", new Color(1f, 0.9f, 0.6f), 0.7f, 0.5f * Unit, 6, 1.6f * Unit, Shape.Sphere));
+            case Kind.SpellHit:
+                // 마법(AP) — 푸른 번쩍 + 번개
+                return Layered(parent, loop, "SpellHit",
+                    Layer("star_09", new Color(0.45f, 0.7f, 1f), 0.45f, 1.1f * Unit, 1, 0f, Shape.None),
+                    Layer("spark_05", new Color(0.7f, 0.85f, 1f), 0.5f, 1.1f * Unit, 2, 0f, Shape.None, randomRotation: true));
+            case Kind.ArmorBreak:
+                // 붉은 할퀸 자국 + 퍼지는 붉은 고리
+                return Layered(parent, loop, "ArmorBreak",
+                    Layer("scratch_01", new Color(1f, 0.25f, 0.2f), 0.7f, 1.2f * Unit, 1, 0f, Shape.None, randomRotation: true),
+                    Layer("circle_02", new Color(1f, 0.3f, 0.2f), 0.7f, 0.5f * Unit, 1, 0f, Shape.None, grow: 3f));
+            case Kind.Stun:
+                // 머리 위를 도는 노란 별 셋
+                return Layered(parent, loop, "Stun",
+                    Layer("symbol_02", new Color(1f, 1f, 0.45f), 0.9f, 0.9f * Unit, loop ? 0 : 3, 0f, Shape.Ring, rate: loop ? 3.5f : 0f, orbit: 5f),
+                    Layer("star_07", new Color(1f, 0.95f, 0.5f), 0.5f, 0.6f * Unit, 0, 0f, Shape.Ring, rate: loop ? 4f : 0f));
+            case Kind.Slow:
+                // 발밑 푸른 마법진 + 떨어지는 서리
+                return Layered(parent, loop, "Slow",
+                    Layer("circle_03", new Color(0.3f, 0.7f, 1f, 1f), 1.0f, 1.8f * Unit, 0, 0f, Shape.None, rate: loop ? 1.5f : 0f, ground: true),
+                    Layer("magic_01", new Color(0.5f, 0.85f, 1f, 1f), 1.0f, 1.8f * Unit, 0, 0f, Shape.None, rate: loop ? 1.2f : 0f, ground: true),
+                    Layer("trace_06", new Color(0.6f, 0.85f, 1f), 0.6f, 0.35f * Unit, 0, -0.8f * Unit, Shape.Ring, rate: loop ? 6f : 0f));
+            case Kind.Buff:
+                // 몸을 감고 오르는 초록·금빛 소용돌이
+                return Layered(parent, loop, "Buff",
+                    Layer("twirl_01", new Color(0.5f, 1f, 0.45f, 0.8f), 0.8f, 0.9f * Unit, loop ? 0 : 2, 0.6f * Unit, Shape.None, rate: loop ? 2f : 0f, randomRotation: true),
+                    Layer("circle_03", new Color(1f, 0.85f, 0.3f, 0.6f), 1.0f, 1.3f * Unit, loop ? 0 : 1, 0f, Shape.None, rate: loop ? 1f : 0f, ground: true));
+        }
+        return null;
+    }
+
+    enum Shape { None, Sphere, Ring }
+
+    struct LayerSpec
+    {
+        public string texture; public Color color; public float lifetime; public float size; public int burst;
+        public float speed; public Shape shape; public float rate; public bool ground; public bool randomRotation;
+        public float grow; public float orbit;
+    }
+
+    static LayerSpec Layer(string texture, Color color, float lifetime, float size, int burst, float speed, Shape shape,
+                           float rate = 0f, bool ground = false, bool randomRotation = false, float grow = 0f, float orbit = 0f) =>
+        new LayerSpec { texture = texture, color = color, lifetime = lifetime, size = size, burst = burst, speed = speed,
+                        shape = shape, rate = rate, ground = ground, randomRotation = randomRotation, grow = grow, orbit = orbit };
+
+    static ParticleSystem Layered(Transform parent, bool loop, string name, params LayerSpec[] layers)
+    {
+        ParticleSystem first = null;
+        Transform holder = null;
+        foreach (LayerSpec spec in layers)
+        {
+            Material mat = Mat(spec.texture);
+            if (mat == null) return null;   // 재질이 아직 안 만들어졌다 — 이펙트 없이 게임은 그대로.
+
+            GameObject go = new GameObject(first == null ? "Vfx_" + name : spec.texture);
+            if (first == null) go.transform.SetParent(parent, false);
+            else go.transform.SetParent(holder, false);
+            // 부모(적)의 배율에 안 끌려가게 월드 크기로 산다.
+            ParticleSystem ps = go.AddComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            ParticleSystem.MainModule main = ps.main;
+            main.playOnAwake = false;
+            main.loop = loop;
+            main.duration = loop ? 1f : Mathf.Max(0.1f, spec.lifetime);
+            main.startLifetime = spec.lifetime;
+            main.startSpeed = spec.speed;
+            main.startSize = new ParticleSystem.MinMaxCurve(spec.size * 0.85f, spec.size * 1.15f);
+            main.startColor = spec.color;
+            main.startRotation = spec.randomRotation ? new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f) : 0f;
+            main.simulationSpace = spec.orbit > 0f ? ParticleSystemSimulationSpace.Local : ParticleSystemSimulationSpace.World;
+            main.scalingMode = ParticleSystemScalingMode.Shape;
+            main.maxParticles = 32;
+
+            ParticleSystem.EmissionModule emission = ps.emission;
+            emission.rateOverTime = spec.rate;
+            if (spec.burst > 0) emission.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)spec.burst) });
+
+            ParticleSystem.ShapeModule shape = ps.shape;
+            shape.enabled = spec.shape != Shape.None;
+            if (spec.shape == Shape.Sphere) { shape.shapeType = ParticleSystemShapeType.Sphere; shape.radius = 0.1f * Unit; }
+            if (spec.shape == Shape.Ring) { shape.shapeType = ParticleSystemShapeType.Circle; shape.radius = 0.45f * Unit; shape.rotation = new Vector3(90f, 0f, 0f); shape.radiusThickness = 0f; }
+
+            if (spec.orbit > 0f)
+            {
+                ParticleSystem.VelocityOverLifetimeModule vel = ps.velocityOverLifetime;
+                vel.enabled = true;
+                vel.orbitalY = spec.orbit;
+            }
+
+            ParticleSystem.ColorOverLifetimeModule col = ps.colorOverLifetime;
+            col.enabled = true;
+            Gradient g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                      new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.1f), new GradientAlphaKey(1f, 0.6f), new GradientAlphaKey(0f, 1f) });
+            col.color = g;
+
+            if (spec.grow > 0f)
+            {
+                ParticleSystem.SizeOverLifetimeModule size = ps.sizeOverLifetime;
+                size.enabled = true;
+                size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 1f, 1f, spec.grow));
+            }
+
+            ParticleSystemRenderer r = go.GetComponent<ParticleSystemRenderer>();
+            r.sharedMaterial = mat;
+            r.shadowCastingMode = ShadowCastingMode.Off;
+            r.receiveShadows = false;
+            r.renderMode = spec.ground ? ParticleSystemRenderMode.HorizontalBillboard : ParticleSystemRenderMode.Billboard;
+
+            if (first == null) { first = ps; holder = go.transform; }
+        }
+        return first;
+    }
+}
