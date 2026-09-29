@@ -1534,6 +1534,12 @@ public class UnitAttacker : MonoBehaviour
                 if (effect.duration > 0f) StartCoroutine(SkillStunRoutine(target, effect.duration));
                 break;
 
+            // 이감(2026-09-29) — multiplier = 남는 속도 비율. AddSlow/RemoveSlow는 같은 값으로 짝을 맞춰야 빠진다.
+            case SkillEffectKind.Slow:
+                if (effect.duration > 0f && effect.multiplier > 0f && effect.multiplier < 1f)
+                    StartCoroutine(SkillSlowRoutine(target, effect.multiplier, effect.duration));
+                break;
+
             // 방깎 — 부호 없는 감소값(effect.multiplier 그대로가 곧 깎는 양, ArmorBonus와
             // 달리 뒤집지 않는다). 레일리(2026-09-05, 구현담당1)가 값을 채웠는데 여기가
             // 안 읽어서 "값은 있는데 아무 일도 안 난다"였다(PM 지시로 정정). duration>0이면
@@ -1586,6 +1592,13 @@ public class UnitAttacker : MonoBehaviour
 
             // ExtraProjectile은 아직 값 의미가 없다(이번 작업 범위 밖) — 조용히 무시.
         }
+    }
+
+    IEnumerator SkillSlowRoutine(EnemyDummy target, float remainingSpeed, float duration)
+    {
+        target.AddSlow(remainingSpeed);
+        yield return new WaitForSeconds(duration);
+        if (target != null) target.RemoveSlow(remainingSpeed);
     }
 
     IEnumerator SkillStunRoutine(EnemyDummy target, float duration)
