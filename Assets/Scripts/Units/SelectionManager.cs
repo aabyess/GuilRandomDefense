@@ -326,6 +326,8 @@ public class SelectionManager : MonoBehaviour
         foreach (Selectable candidate in Selectable.All)
         {
             if (!IsSelectableByLocalPlayer(candidate)) continue;
+            // 사장님 09-29: 드래그는 유닛(·위습)만 — 건물(상점)은 클릭 한 번으로만 고른다.
+            if (!candidate.TryGetComponent(out UnitIdentity _) && !candidate.TryGetComponent(out Wisp _)) continue;
 
             Vector3 screenPos = cam.WorldToScreenPoint(candidate.transform.position);
             if (screenPos.z < 0f) continue;

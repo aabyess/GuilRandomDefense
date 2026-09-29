@@ -42,7 +42,8 @@ public class RecipeDollSpawner : MonoBehaviour
     void Awake()
     {
         var watch = System.Diagnostics.Stopwatch.StartNew();
-        int made = Spawn(transform, dolls, HideFlags.None).Count;
+        spawned = Spawn(transform, dolls, HideFlags.None);
+        int made = spawned.Count;
         watch.Stop();
         LastSpawnCount = made;
         LastSpawnMs = watch.Elapsed.TotalMilliseconds;
@@ -56,6 +57,26 @@ public class RecipeDollSpawner : MonoBehaviour
                              $"(프리팹 없는 UnitData {broken.Count - noUnit}개 · UnitData 없음 {noUnit}개). 예: " +
                              string.Join(", ", broken.Take(5).Select(d => d == null ? "(빈 칸)" : $"{d.name}({(d.unit != null ? d.unit.name : "UnitData 없음")})")) +
                              " — 로스터에 프리팹이 안 배선됐거나 맵 생성 뒤 목록이 낡았다(맵을 다시 생성).", this);
+        }
+    }
+
+    List<GameObject> spawned;
+
+    // 사장님 09-29 「조합판 애들 팔이 움직이는데 그냥 서 있는 게 낫지 않아?」 — 673기가 보일 때마다 Idle을 돌렸다.
+    // 첫 프레임에 Idle 자세를 한 번 잡고(Update(0)) Animator를 끈다 — 뼈는 마지막 자세 그대로 남는다(T자로 안 돌아감).
+    void Start()
+    {
+        if (spawned == null) return;
+        foreach (GameObject figure in spawned)
+        {
+            if (figure == null) continue;
+            foreach (Animator animator in figure.GetComponentsInChildren<Animator>())
+            {
+                if (!animator.enabled) continue;
+                animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;   // 화면 밖이어도 한 번은 평가되게
+                animator.Update(0f);
+                animator.enabled = false;
+            }
         }
     }
 
