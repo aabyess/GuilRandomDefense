@@ -57,6 +57,7 @@ public class NetGameState : NetworkBehaviour
         if (HasStateAuthority) PlayerNotification.Shown += RouteNotification;
         if (HasStateAuthority) GameSound.RemoteRouted += RouteSound;
         if (HasStateAuthority) SummonVoice.Broadcast += RouteSummonVoice;
+        if (HasStateAuthority) SkillSfx.Broadcast += RouteSkillSfx;
         if (HasStateAuthority) { SkillVfx.Played += RouteVfx; SkillVfx.PlayedPrefab += RoutePrefabVfx; }
 
         if (!HasStateAuthority)
@@ -72,6 +73,7 @@ public class NetGameState : NetworkBehaviour
         PlayerNotification.Shown -= RouteNotification;
         GameSound.RemoteRouted -= RouteSound;
         SummonVoice.Broadcast -= RouteSummonVoice;
+        SkillSfx.Broadcast -= RouteSkillSfx;
         SkillVfx.Played -= RouteVfx;
         SkillVfx.PlayedPrefab -= RoutePrefabVfx;
         if (Instance == this) Instance = null;
@@ -179,6 +181,16 @@ public class NetGameState : NetworkBehaviour
     public void RPC_SummonVoice(short clipIndex)
     {
         SummonVoice.Play(clipIndex);
+    }
+
+    // 스킬 효과음(09-30) — 표 번호(SkillSfxTable.txt의 C줄 순서)·볼륨 배수·자리. 거리 감쇠는 받는 쪽 화면 기준으로 SkillSfx가 센다.
+    // 놓쳐도 되는 것이라 이펙트와 같은 비신뢰 채널.
+    void RouteSkillSfx(int clip, float volume, Vector3 position) => RPC_SkillSfx((short)clip, (byte)Mathf.RoundToInt(Mathf.Clamp01(volume) * 255f), position);
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies, Channel = RpcChannel.Unreliable)]
+    public void RPC_SkillSfx(short clip, byte volume, Vector3 position)
+    {
+        SkillSfx.Play(clip, volume / 255f, position);
     }
 
     void RouteVfx(SkillVfx.Kind kind, Vector3 position) => RPC_SkillVfx((byte)kind, position);
