@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_특별함_최동준_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_특별함_최동준_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 특별함_최동준.  · Trig_Speical9 → e0E6(안흔함 더미2 에이스) → A0BI: 850
+  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 특별함_최동준.  · Trig_Speical9 → e0E6(안흔함 더미2 에이스) → A0BI: 850 [직선 09-30] 직선: A0BI 피해 850 · 길이 925 · 반경 215→400 — 전에는 단일 대상(Tools/apply_line_skills.py)'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -25,7 +25,7 @@ MonoBehaviour:
     effects:
     - kind: 0
       basis: 0
-      target: 3
+      target: 2
       damageType: 1
       attackType: 3
       multiplier: 850.0
@@ -34,3 +34,6 @@ MonoBehaviour:
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      lineLength: 925.0
+      lineStartRadius: 215.0
+      lineEndRadius: 400.0

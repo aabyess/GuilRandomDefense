@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_초월_임장혁_AD_Luchi_Skill_1_Kick2
   m_EditorClassIdentifier:
   skillName: CP.Zero — Real<=7.25 AND 특성(A0R2)
-  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_Luchi_Attack(HashAttack H08W) `GetRandomReal(1,100)<=7.25(+플레이횟수 미소항)` AND udg_bool_lucchi_tr(특성 A0R2 구매 때 true, Trig_T_Ability_hero) → Trig_Luchi_Skill_1_Kick2: Stage1 주 대상 495 적 전원 400000(MAGIC/UNIVERSAL→AP) + PV<200이면 주 대상 MAX_LIFE×0.04(CHAOS/UNIVERSAL), Stage3 585 적 전원 400000. 레벨1(특성 전)은 원작이 대신 Luchi_Skill_1_Kick으로 가는데 그 트리거엔 직접 피해 호출이 없어 비워 뒀다(레벨2 = 특성 구매 뒤, 원작004_H08W의 A0R2와 같은 인덱스). ⚠️ 두 번째 광역 반경 585는 레벨 range 하나(495)로 근사.'
+  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_Luchi_Attack(HashAttack H08W) `GetRandomReal(1,100)<=7.25(+플레이횟수 미소항)` AND udg_bool_lucchi_tr(특성 A0R2 구매 때 true, Trig_T_Ability_hero) → Trig_Luchi_Skill_1_Kick2: Stage1 주 대상 495 적 전원 400000(MAGIC/UNIVERSAL→AP) + PV<200이면 주 대상 MAX_LIFE×0.04(CHAOS/UNIVERSAL), Stage3 585 적 전원 400000. 레벨1(특성 전)은 원작이 대신 Luchi_Skill_1_Kick으로 가는데 그 트리거엔 직접 피해 호출이 없어 비워 뒀다(레벨2 = 특성 구매 뒤, 원작004_H08W의 A0R2와 같은 인덱스). ⚠️ 두 번째 광역 반경 585는 레벨 range 하나(495)로 근사. [직선 09-30] 직선: L0 A0R6 피해 600000 · 길이 1100 · 반경 225→450 — 루치 Luchi_Skill_1_Kick(T특성 없을 때 갈래): 더미 e0F4가 carrionswarm A0R6 — 레벨 1 자리가 비어 있었다(Tools/apply_line_skills.py)'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -25,7 +25,39 @@ MonoBehaviour:
     requiredBuffId:
     forbiddenBuffId:
     selfBuffId:
-    effects: []
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 600000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 0.0
+      maxTargets: 0
+      chainDamageStep: 0.0
+      zoneTickInterval: 0.0
+      zoneRadius: 0.0
+      zoneSpacing: 0.0
+      zoneAtCaster: 0
+      lineLength: 1100.0
+      lineStartRadius: 225.0
+      lineEndRadius: 450.0
     requiredTargetBuffId:
     forbiddenTargetBuffId:
     hitCountFloor: 0

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_영원_윤현모_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_영원_윤현모_1
-  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 영원_윤현모. 정정(2026-09-06, GATE_FIX_6/b0661f9): 원작 버프 B017 미보유 게이트 = 5절대쿨 에이스영원 4.25초 — ORIGINAL_ABSOLUTE_COOLDOWN.csv에 이미 있던 값이라 새 축 없이 SkillLevel.cooldown으로 그대로 표현한다.  · Trig_Ace_Attack → e0AB(E영원 에이스 특대화권 더미1) → A0BL: 1150000. 정정(2026-09-06, 리서치담당 c00f472 오더 감사): e0AI(A0OH, 120000)를 제거했다 — 오더 없음, 생성 후 RemoveLocation+루프뿐이라 순수 연출. 지어내지 않고 값 기록만 남긴다. | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Ace_Attack(h059/h05B)의 `B017 없을 때` 갈래 = e0D8 firebolt(A14K 피해 0·스턴3.5) + 시전자 frostarmor(A0CB B017 4.25초 = 이 cooldown) + e0AB carrionswarm(A0BL 1150000, 끝 폭 460) + e0AI 셋 phoenix(A0OH Eim1 120000, 360). 장풍을 대상 위치 460 광역으로(직선 근사), 스턴 3.5 추가, 불사조 화염 120000 한 번(셋 중 대상에 닿는 하나로 근사). 이전: 단일 1150000뿐. [지대 09-30] 지대: L0 e0AI×3(A0OH 120000/0.20초·반경 360·수명 1.595초 = 7틱, 지대당 840,000) — Ace_Attack: 시전자 앞 340·680·1020에 e0AI 셋 — 옛 근사(460 범위 120000 한 번)를 지대로 바꿈(Tools/apply_damage_zones.py)'
+  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 영원_윤현모. 정정(2026-09-06, GATE_FIX_6/b0661f9): 원작 버프 B017 미보유 게이트 = 5절대쿨 에이스영원 4.25초 — ORIGINAL_ABSOLUTE_COOLDOWN.csv에 이미 있던 값이라 새 축 없이 SkillLevel.cooldown으로 그대로 표현한다.  · Trig_Ace_Attack → e0AB(E영원 에이스 특대화권 더미1) → A0BL: 1150000. 정정(2026-09-06, 리서치담당 c00f472 오더 감사): e0AI(A0OH, 120000)를 제거했다 — 오더 없음, 생성 후 RemoveLocation+루프뿐이라 순수 연출. 지어내지 않고 값 기록만 남긴다. | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Ace_Attack(h059/h05B)의 `B017 없을 때` 갈래 = e0D8 firebolt(A14K 피해 0·스턴3.5) + 시전자 frostarmor(A0CB B017 4.25초 = 이 cooldown) + e0AB carrionswarm(A0BL 1150000, 끝 폭 460) + e0AI 셋 phoenix(A0OH Eim1 120000, 360). 장풍을 대상 위치 460 광역으로(직선 근사), 스턴 3.5 추가, 불사조 화염 120000 한 번(셋 중 대상에 닿는 하나로 근사). 이전: 단일 1150000뿐. [지대 09-30] 지대: L0 e0AI×3(A0OH 120000/0.20초·반경 360·수명 1.595초 = 7틱, 지대당 840,000) — Ace_Attack: 시전자 앞 340·680·1020에 e0AI 셋 — 옛 근사(460 범위 120000 한 번)를 지대로 바꿈(Tools/apply_damage_zones.py) [직선 09-30] 직선: A0BL 피해 1.15e+06 · 길이 950 · 반경 210→460 — 전에는 대상 중심 원(Tools/apply_line_skills.py)'
   triggerType: 0
   levels:
   - cooldown: 4.25
@@ -45,6 +45,9 @@ MonoBehaviour:
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0.0
+      lineLength: 950.0
+      lineStartRadius: 210.0
+      lineEndRadius: 460.0
     - kind: 1
       basis: 0
       target: 3

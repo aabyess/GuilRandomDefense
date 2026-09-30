@@ -1480,6 +1480,29 @@ public class UnitAttacker : MonoBehaviour
     void ApplySkillEffect(SkillEffect effect, float range, Vector3 aoeCenter, EnemyDummy primaryTarget, float recentAttackDamage,
         Dictionary<object, HashSet<int>> firedCascadeGroups)
     {
+        // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
+        if (effect.lineLength > 0f && effect.zoneTickInterval <= 0f)
+        {
+            Vector3 dir = aoeCenter - transform.position; dir.y = 0f;
+            dir = dir.sqrMagnitude > 0.0001f ? dir.normalized : transform.forward;
+            float length = effect.lineLength / WorldScale.Value;
+            float startRadius = effect.lineStartRadius / WorldScale.Value, endRadius = effect.lineEndRadius / WorldScale.Value;
+            List<EnemyDummy> inLine = ListPool<EnemyDummy>.Get();
+            foreach (EnemyDummy enemy in EnemyDummy.Active)
+            {
+                if (enemy == null) continue;
+                Vector3 to = enemy.transform.position - transform.position; to.y = 0f;
+                float along = Vector3.Dot(to, dir);
+                if (along < 0f || along > length) continue;
+                float across = (to - dir * along).magnitude;
+                if (across <= Mathf.Lerp(startRadius, endRadius, along / length)) inLine.Add(enemy);
+            }
+            foreach (EnemyDummy enemy in inLine)
+                if (enemy != null) ApplyToEnemy(effect, enemy, recentAttackDamage, firedCascadeGroups);
+            ListPool<EnemyDummy>.Release(inLine);
+            return;
+        }
+
         if (range <= 0f &&
             (effect.target == SkillTargetKind.Enemies || effect.target == SkillTargetKind.Allies))
         {

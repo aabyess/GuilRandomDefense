@@ -421,6 +421,10 @@ def unbounded_range_danger(text):
         for effect_body in re.split(r"\n    - kind: ", effects_body)[1:]:
             target_match = re.search(r"\n {6}target: (\d+)", effect_body)
             target = target_match.group(1) if target_match else "2"  # 없으면 기본값 Enemies(2)
+            # 장풍 직선(lineLength > 0)은 제 길이·반경을 따로 가진다 — range를 안 본다(2026-09-30).
+            own = re.search(r"\n {6}lineLength: (-?[\d.]+)", effect_body)
+            if own and float(own.group(1)) > 0.0:
+                continue
             if target in ("1", "2"):  # Allies, Enemies
                 return True
     return False

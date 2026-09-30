@@ -472,6 +472,14 @@ public class SkillEffect
     public float zoneSpacing;
     // 지대를 범위 중심이 아니라 시전자 자리에 세운다(원작 더미가 GetUnitLoc(시전자)에 서는 것 — 에이스 염제·뱌쿠야 천본앵).
     public bool zoneAtCaster;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, 구조 칸 백로그 5번) — 장풍 직선(원작 carrionswarm 더미, ACca). lineLength > 0이면 이 효과는
+    // target·SkillLevel.range와 무관하게 **시전자에서 범위 중심(대상) 방향으로 뻗는 사다리꼴** 안의 적 모두에게 걸린다:
+    // 길이 lineLength(원작 Ucs3), 폭(반경)은 시전자 쪽 lineStartRadius(aare)에서 끝 lineEndRadius(Ucs4)까지 곧게 넓어진다. 전부 원작 단위.
+    // 대상이 없으면(쿨 자동 시전) 시전자가 보는 방향.
+    public float lineLength;
+    public float lineStartRadius;
+    public float lineEndRadius;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에

@@ -32,7 +32,8 @@ EFFECT_FIELDS = ['kind', 'basis', 'target', 'damageType', 'attackType', 'multipl
                  'hitCount', 'duration', 'casterBuffCountFactor', 'buffId', 'randMin', 'randMax',
                  'buffHitCharges', 'requiredTargetBuffId', 'forbiddenTargetBuffId', 'targetCondition',
                  'targetConditionValue', 'cascadeGroup', 'skipDamageTakenMultiplier', 'triggerDamageAbove', 'heroDuration', 'maxTargets', 'chainDamageStep',
-                 'zoneTickInterval', 'zoneRadius', 'zoneSpacing', 'zoneAtCaster']
+                 'zoneTickInterval', 'zoneRadius', 'zoneSpacing', 'zoneAtCaster',
+                 'lineLength', 'lineStartRadius', 'lineEndRadius']
 STRING_FIELDS = {'requiredBuffId', 'forbiddenBuffId', 'selfBuffId', 'requiredTargetBuffId',
                  'forbiddenTargetBuffId', 'buffId'}
 
@@ -131,7 +132,8 @@ def effect(**kw):
              hitCount=1, duration=0.0, casterBuffCountFactor=0.0, buffId='', randMin=1.0, randMax=1.0,
              buffHitCharges=0, requiredTargetBuffId='', forbiddenTargetBuffId='', targetCondition=0,
              targetConditionValue=0.0, cascadeGroup=0, skipDamageTakenMultiplier=0, triggerDamageAbove=0.0, heroDuration=0.0, maxTargets=0, chainDamageStep=0.0,
-             zoneTickInterval=0.0, zoneRadius=0.0, zoneSpacing=0.0, zoneAtCaster=0)
+             zoneTickInterval=0.0, zoneRadius=0.0, zoneSpacing=0.0, zoneAtCaster=0,
+             lineLength=0.0, lineStartRadius=0.0, lineEndRadius=0.0)
     unknown = set(kw) - set(e)
     assert not unknown, unknown
     e.update(kw)

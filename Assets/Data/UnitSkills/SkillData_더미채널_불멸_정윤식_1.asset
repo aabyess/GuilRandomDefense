@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_불멸_정윤식_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_불멸_정윤식_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 불멸_정윤식.  · Trig_LaillySkill → e003(#불멸 레일리웨이브4) → A002: 300000
+  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 불멸_정윤식.  · Trig_LaillySkill → e003(#불멸 레일리웨이브4) → A002: 300000 [직선 09-30] 직선: A002 피해 300000 · 길이 1100 · 반경 226→487 — 전에는 단일 대상(Tools/apply_line_skills.py)'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -25,7 +25,7 @@ MonoBehaviour:
     effects:
     - kind: 0
       basis: 0
-      target: 3
+      target: 2
       damageType: 1
       attackType: 4
       multiplier: 300000.0
@@ -34,3 +34,6 @@ MonoBehaviour:
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      lineLength: 1100.0
+      lineStartRadius: 226.0
+      lineEndRadius: 487.0
