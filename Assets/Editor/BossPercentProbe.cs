@@ -52,6 +52,7 @@ static class BossPercentProbe
             slots[units[i]] = slot;
             if (spawner.Spawn(units[i], home + Vector3.back * 40f, 0) != null) spawned++;
         }
+        SetDeathCount(false);   // 탐침은 레인 적을 안 막는다 — 판 도중 데스카운트 0(게임오버)이 나지 않게(PM, 09-30)
         startTime = Time.time;
         EditorApplication.update -= Watch;
         EditorApplication.update += Watch;
@@ -102,9 +103,19 @@ static class BossPercentProbe
         return false;
     }
 
+    static readonly System.Reflection.FieldInfo DeathCountField =
+        typeof(RoundManager).GetField("deathCountEnabled", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+    static void SetDeathCount(bool enabled)
+    {
+        RoundManager rm = Object.FindFirstObjectByType<RoundManager>();
+        if (rm != null && DeathCountField != null) DeathCountField.SetValue(rm, enabled);
+    }
+
     static string Report()
     {
         EditorApplication.update -= Watch;
+        SetDeathCount(true);
         Time.timeScale = 1f;
         float elapsed = Mathf.Max(0.01f, Time.time - startTime);
         float maxHp = bossData != null ? bossData.hp : 1f;
