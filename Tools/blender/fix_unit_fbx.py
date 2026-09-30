@@ -5499,6 +5499,8 @@ HUMANOID_REQUIRED = ["Hips", "Spine", "Head", "LeftArm", "LeftForeArm", "LeftHan
 VERIFIED_IN_UNITY = {
     "특별함_최상호": "2026-09-30 PM units 사진 — Idle 자세로 정상(팔 내림)",
     "특별함_조도연": "2026-09-30 PM units 사진 — Idle 자세로 정상",
+    **{n: "2026-09-30 PM units 사진 — 키 30·몸 위쪽·Idle로 서 있음·텍스처 정상"
+       for n in ("희귀함_박기찬", "희귀함_최상호_오타쿠의길", "안흔함_김수빈", "흔함_문필환", "특별함_박진웅", "특별함_황정기")},
 }
 
 
@@ -7293,10 +7295,11 @@ for _n, _solid in {
     "안흔함_상붕카": ["Material.001", "Material.002", "Material.003", "Material.004", "Material.005", "Material.010", "Material.012", "Material.013"],   # glb에 그림 0장 — 전부 색
     "안흔함_강재규": ["dientes"],                                               # 이빨만 색. 🔴 Lengua·Ojos는 원본이 lengua.jpeg·ojos.jpeg를 가리키는데 그 파일이 원본 묶음에도 없다 — 실제 결함, 그대로 걸리게 둔다
     "특별함_최상호": ["Pupil", "hair", "Sandals.001", "shock", "tongue", "material", "material_5", "Teeth", "Gum.001"],   # glb가 색만 준 아홉(material_colors로 되살린 것)
+    "희귀함_최상호_오타쿠의길": ["5_eyeshine_1.0_0_0.001", "5_eyewhite_1.0_0_0.001", "5_tongue_1.0_0_0.001"],   # 원본 흰색, 그림 없음(가중치 관문에 가려 있던 것)
 }.items():
     UNITS[_n]["solid_materials"] = _solid
-# 탄지로 신발 둘: glb는 색(baseColorFactor)을 줬는데 커밋본은 기본 회색 0.8 — 루피와 같은 증상. 「랜덤_카마도_탄지로@수정」으로 Assets 밖에 뽑는다.
-UNITS["랜덤_카마도_탄지로"].setdefault("variants", {})["수정"] = dict(
+# 탄지로 신발 둘: glb는 색(baseColorFactor)을 줬는데 옛 커밋본은 기본 회색 0.8 — 루피와 같은 증상. 09-30 밤 PM이 수정본을 Assets에 반영(끈 검붉게 확인) → 기본으로.
+UNITS["랜덤_카마도_탄지로"].update(
     material_colors={"MI_P0001_V00_C00_0_Shoes": (0.281, 0.281, 0.281), "shoes_one": (0.139, 0.0044, 0.0)},
     solid_materials=["MI_P0001_V00_C00_0_Shoes", "shoes_one"])
 
