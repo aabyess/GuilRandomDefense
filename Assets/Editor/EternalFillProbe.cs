@@ -24,6 +24,10 @@ static class EternalFillProbe
     static readonly string[] Transcend = { "초월_두유찬_AD", "초월_양재모_AD", "초월_신문철_AP", "초월_최상호_AP", "초월_황준석_ADAP", "초월_구주호_AD",
                                            "제한_강보명", "제한_김민규", "제한_이충민", "제한_박성호" };
     static string ArenaTranscend() { Units = Transcend; return Arena(); }
+    // 히든·전설·희귀·특별 정정(2026-09-30) — call:EternalFillProbe.ArenaLower.
+    static readonly string[] Lower = { "히든_최윤서", "히든_황정기", "전설적인_신지우", "전설적인_이현주", "전설적인_임건웅", "전설적인_홍인창", "전설적인_박성호",
+                                       "전설적인_이재윤", "희귀함_서민성", "희귀함_엄태웅", "희귀함_조현규", "특별함_조도연" };
+    static string ArenaLower() { Units = Lower; return Arena(); }
 
     class Track { public Vector3 at; public string unit; public float stunStart = -1f; public readonly List<float> stuns = new List<float>(); }
     static readonly Dictionary<EnemyDummy, Track> tracks = new Dictionary<EnemyDummy, Track>();
