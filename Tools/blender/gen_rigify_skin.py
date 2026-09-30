@@ -304,6 +304,100 @@ SKINS = {
         decimate_ratio=0.17,
         bake_size=2048,
     ),
+    # 다른세계_무면허_라이더(원펀맨 무면허 라이더, Sketchfab glb — 사장님 지정 2026-09-30). 게임 립 계열.
+    # 🔴 PM 걱정한 자전거·배경 없음 — 메시 7개 전부 인물(몸·입속·얼굴·갑옷·벨트·고글·머리카락, 전부 105뼈 가중치) + 조명 구.
+    # 텍스처 이름은 Image_0~6(립 함정)이지만 재질 이름이 멀쩡해 재질 이름으로 저장한다. 원본 키 1.74, 이미 T자.
+    "다른세계_무면허_라이더": dict(
+        source="~/Desktop/구랜디스킨모음/12_다른세계/다른세계_무면허_라이더.glb",
+        path="Assets/Art/Units/다른세계_무면허_라이더/다른세계_무면허_라이더.fbx",
+        mesh_name="MumenRider",
+        height=1.8,
+        root_rotate_x=90.0,
+        chain_tails=True,
+        drop_meshes={"Icosphere"},
+        rigid={},
+        rename={
+            "WAIST_02": "Hips", "SPINE1_03": "Spine", "SPINE2_04": "Spine1", "SPINE3_05": "Spine2",
+            "NECK_06": "Neck", "HEAD_07": "Head",
+            "SHOULDER_L_048": "LeftShoulder", "ARM_L_049": "LeftArm", "ELBOW_L_051": "LeftForeArm", "WRIST_L_053": "LeftHand",
+            "SHOULDER_R_071": "RightShoulder", "ARM_R_072": "RightArm", "ELBOW_R_074": "RightForeArm", "WRIST_R_076": "RightHand",
+            "THIGH_L_094": "LeftUpLeg", "KNEE_L_095": "LeftLeg", "ANKLE_L_096": "LeftFoot", "TOE_L_097": "LeftToeBase",
+            "THIGH_R_099": "RightUpLeg", "KNEE_R_0100": "RightLeg", "ANKLE_R_0101": "RightFoot", "TOE_R_0102": "RightToeBase",
+        },
+        fold={
+            "_rootJoint": "Hips", "ROOT_GROUND_01": "Hips",
+            # 비틀림 보조뼈 — 본체와 가중치를 나눠 가진다(ARMROLL 473·ARM_EX 368·ELBOWROLL 326·KNEEROLL 323정점).
+            "ARM_EX_L_050": "LeftArm", "ARMROLL_L_070": "LeftArm", "ELBOWROLL_L_052": "LeftForeArm", "EFFECT_L_054": "LeftHand",
+            "ARM_EX_R_073": "RightArm", "ARMROLL_R_093": "RightArm", "ELBOWROLL_R_075": "RightForeArm", "EFFECT_R_077": "RightHand",
+            "KNEEROLL_L_098": "LeftLeg", "KNEEROLL_R_0103": "RightLeg",
+            **{n: "LeftHand" for n in ("F_FORE1_L_055", "F_FORE2_L_056", "F_FORE3_L_057", "F_MIDDLE1_L_058", "F_MIDDLE2_L_059",
+                                       "F_MIDDLE3_L_060", "F_MEDICINAL1_L_061", "F_MEDICINAL2_L_062", "F_MEDICINAL3_L_063",
+                                       "F_LITTLE1_L_064", "F_LITTLE2_L_065", "F_LITTLE3_L_066", "F_THUMB1_L_067",
+                                       "F_THUMB2_L_068", "F_THUMB3_L_069")},
+            **{n: "RightHand" for n in ("F_FORE1_R_078", "F_FORE2_R_079", "F_FORE3_R_080", "F_MIDDLE1_R_081", "F_MIDDLE2_R_082",
+                                        "F_MIDDLE3_R_083", "F_MEDICINAL1_R_084", "F_MEDICINAL2_R_085", "F_MEDICINAL3_R_086",
+                                        "F_LITTLE1_R_087", "F_LITTLE2_R_088", "F_LITTLE3_R_089", "F_THUMB1_R_090",
+                                        "F_THUMB2_R_091", "F_THUMB3_R_092")},
+        },
+        fold_subtree={"FACE_08": "Head"},                     # 입·이·볼·코·턱 38뼈
+        materials={n: ("emission_texture", None) for n in (
+            "bodyShape2C_BODY", "C_inmouthShapeS_SKIN", "A_faceShapeS_FACE", "armorShapeA_EQUIP_A",
+            "armorShapeA_BELT", "goggle1ShapeA_GLASS", "hairShapeH_HAIR")},
+        zero_emission=True,
+        rotate_z=0.0,
+        level_arms=False,                                     # 이미 T자(ARM y 1.366 → WRIST 1.377)
+        decimate_ratio=1.0,
+        bake_size=1024,
+    ),
+    # 랜덤_호시노_아이(최애의 아이, Sketchfab .blend — 사장님 확정 2026-09-30). 아마추어 "AiRig" 75뼈(자체 이름:
+    # hips·spine·chest·neck·head / shoulder·bicep·forearm·hand / thigh·shin·foot·toes + 머리카락 10·치마 12·눈 2·손가락 30).
+    # 메시 Ai 하나(재질 AiBody·hair·AiClothes, Outline 슬롯 면 0) + 마이크 Cylinder(부모·가중치 없음, 재질 3 단색).
+    # BaseRig(숨김, 가중치 없음)는 armature_name으로 비켜 간다.
+    "랜덤_호시노_아이": dict(
+        source="~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_호시노_아이.zip",
+        source_type="blend",
+        blend_member="source/Sketchfab_2023_05_21_21_58_53.blend",
+        armature_name="AiRig",
+        path="Assets/Art/Units/랜덤_호시노_아이/랜덤_호시노_아이.fbx",
+        mesh_name="Ai",
+        height=1.8,
+        drop_meshes=set(),
+        # 마이크 — 저장된 포즈에서 오른손(hand.R 포즈 머리 −0.43,−0.38,3.69)에 쥐여 있다(마이크 중심 −0.27,−0.59,3.63).
+        carry_to_rest={"Cylinder": "hand.R"},
+        rigid={"Cylinder": "RightHand"},
+        apply_shape_mix=True,
+        rename={
+            "hips": "Hips", "spine": "Spine", "chest": "Spine2", "neck": "Neck", "head": "Head",
+            "shoulder.L": "LeftShoulder", "bicep.L": "LeftArm", "forearm.L": "LeftForeArm", "hand.L": "LeftHand",
+            "shoulder.R": "RightShoulder", "bicep.R": "RightArm", "forearm.R": "RightForeArm", "hand.R": "RightHand",
+            "thigh.L": "LeftUpLeg", "shin.L": "LeftLeg", "foot.L": "LeftFoot", "toes.L": "LeftToeBase",
+            "thigh.R": "RightUpLeg", "shin.R": "RightLeg", "foot.R": "RightFoot", "toes.R": "RightToeBase",
+        },
+        fold={
+            "eye.L": "Head", "eye.R": "Head",
+            **{f"Hair{p}.{s}": "Head" for p in ("Front.R", "Front.L", "Back", "Back.L", "Back.R") for s in ("001", "002")},
+            **{f"Skirt{p}.{s}": "Hips" for p in ("Front", "Back", "Front.L", "Back.L", "Front.R", "Back.R") for s in ("001", "002")},
+            **{f"{f}.{side}.{s}": ("Left" if side == "L" else "Right") + "Hand"
+               for f in ("index", "middle", "ring", "pinky", "thumb") for side in ("L", "R") for s in ("001", "002", "003")},
+        },
+        # 손가락은 이름 가운데에 쪽 표시가 있어(index.L.001) finger_prefixes의 「끝이 .L」 판정에 안 걸린다 — fold에 직접 넣었다.
+        # 척추가 spine·chest 두 마디 — Spine1은 chest 머리의 0-길이 자리표시(가중치 없음이 정상).
+        bone_position_override={"Spine1": ("chest", "head")},
+        allow_dead_bones={"Spine1"},
+        # 재질마다 Albedo(→발광색, 실제 색)와 LightRig(→Base Color, 흑백 명암 마스크)가 같이 물려 있다.
+        # 색은 Albedo가 다 갖고 있어 Albedo만 쓴다(LightRig는 「빛 받는 곳=흰, 안 받는 곳=검」 마스크라 색이 아니다).
+        texture_image={"AiBody": "AiBodyAlbedo", "hair": "AiHairAlbedo", "AiClothes": "AiClothesAlbedo"},
+        materials={
+            "AiBody": ("emission_texture", None), "hair": ("emission_texture", None), "AiClothes": ("emission_texture", None),
+            # 마이크 — 원본 BSDF 색(머리 0·손잡이 0·링 0.045, 링 발광 0.25)을 게임에서 형체가 보이게 조금 밝힌 단색.
+            "Mic": ("solid", (0.08, 0.08, 0.09, 1.0)), "Michandle": ("solid", (0.05, 0.05, 0.05, 1.0)),
+            "MicRing": ("solid", (0.30, 0.30, 0.30, 1.0)),
+        },
+        rotate_z=0.0,
+        level_arms=True,                                          # A자(bicep 머리 z 1.354 → hand 0.882, 약 25°)
+        decimate_ratio=1.0,
+        bake_size=1024,
+    ),
     # 초월_두유찬_AD(게토 스구루/켄자쿠, Jujutsu Kaisen Sketchfab) — 유타와 같은 제작자
     # .blend(SOURCE.txt 참고). 아마추어 "Kenjaku Rig" 159뼈(별도 무기 리그 없음), 메시 5
     # (feet·hair·hands·head·robe) 전부 SUBSURF+SOLIDIFY+ARMATURE, 비-얼굴 뼈 25개가
@@ -616,6 +710,14 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
     else:
         bpy.ops.import_scene.gltf(filepath=glb_path)
     scene = bpy.context.scene
+    # 🔴 무면허 라이더(2026-09-30) — Sketchfab 뿌리 빈 오브젝트 둘(Sketchfab_model·Armature)에 −90° X가 겹쳐 걸려
+    # 들여오면 키가 월드 +Y, 얼굴이 +Z로 눕는다. cfg["root_rotate_x"](도)만큼 부모 없는 오브젝트 전부를 X축으로 돌려
+    # 키 +Z·정면 −Y로 세운다(아래 단계는 전부 월드 좌표로 굽기 때문에 뿌리만 돌리면 된다).
+    if cfg.get("root_rotate_x"):
+        Rx = Matrix.Rotation(math.radians(cfg["root_rotate_x"]), 4, "X")
+        for o in [o for o in scene.objects if o.parent is None]:
+            o.matrix_world = Rx @ o.matrix_world
+        bpy.context.view_layer.update()
 
     # 🔴 고죠(2026-09-30) — 소스 재질 이름 끝이 ".002"라 FBX 재질 이름엔 점이 남고 텍스처 파일은
     # safe_filename으로 "_002"가 된다. ArtBinder.MatchTexture는 완전일치·부분일치로만 찾아서
@@ -643,6 +745,23 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
     # next()로 아무 ARMATURE나 집으면 안 된다 — armature_name이 있으면 그걸로 직접 찾는다.
     arm_obj = bpy.data.objects[cfg["armature_name"]] if cfg.get("armature_name") else next(
         o for o in scene.objects if o.type == "ARMATURE")
+    # 🔴 호시노 아이(2026-09-30) — 소스 리그가 포즈를 잡은 채 저장돼 있고(쉬는 자세는 A자), 마이크(부모 없는
+    # 따로 메시)는 그 포즈의 오른손 위치에 놓여 있다. 메시·뼈는 쉬는 자세로 나가므로 마이크만 허공에 뜬다.
+    # cfg["carry_to_rest"]={메시: 뼈}면 그 뼈의 「포즈→쉬는 자세」 변환을 메시에 걸어 손과 함께 쉬는 자세로 옮긴다
+    # (그다음 rigid로 그 뼈에 묶는다).
+    for mesh_name, bone_name in cfg.get("carry_to_rest", {}).items():
+        o = bpy.data.objects[mesh_name]
+        rest = arm_obj.matrix_world @ arm_obj.data.bones[bone_name].matrix_local
+        posed = arm_obj.matrix_world @ arm_obj.pose.bones[bone_name].matrix
+        o.matrix_world = rest @ posed.inverted() @ o.matrix_world
+        report.setdefault("쉬는 자세로 옮긴 소품", {})[mesh_name] = bone_name
+    # 🔴 호시노 아이 — 얼굴 모양 키 "Key 1"이 1.0으로 켜진 채다(소스가 보여 주는 얼굴 = 섞인 모양). 유니티는
+    # 블렌드셰이프를 0으로 시작하므로 켠 유닛만 지금 섞인 모양을 메시에 굽고 키를 지운다.
+    if cfg.get("apply_shape_mix"):
+        for o in [o for o in scene.objects if o.type == "MESH" and o.data.shape_keys]:
+            report.setdefault("구운 모양 키", {})[o.name] = [(k.name, round(k.value, 3)) for k in o.data.shape_keys.key_blocks]
+            bpy.context.view_layer.objects.active = o
+            bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
     all_meshes = [o for o in scene.objects if o.type == "MESH"]
     keep = [o for o in all_meshes if o.name not in cfg.get("drop_meshes", set())]
     report["뺀 메시"] = sorted(cfg.get("drop_meshes", set()))
@@ -801,6 +920,11 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
             # 그대로 Base Color로 재배선. 이미지가 없는 재질(정점색도 텍스처도 없는 경우)은
             # Emission 기본색으로 무난한 단색을 만든다.
             tex_node = next((n for n in m.node_tree.nodes if n.type == "TEX_IMAGE" and n.image), None)
+            # 🔴 호시노 아이(2026-09-30) — 재질 하나에 이미지 노드가 둘(Albedo→발광색, LightRig→Base Color)이고
+            # 노드 순서상 LightRig(명암 마스크, 흑백)가 먼저 잡힌다. cfg["texture_image"]로 이미지 이름을 지정한다.
+            want = cfg.get("texture_image", {}).get(mat_name)
+            if want:
+                tex_node = next(n for n in m.node_tree.nodes if n.type == "TEX_IMAGE" and n.image and n.image.name == want)
             if tex_node:
                 img = tex_node.image
                 # 🔴 산타나 — open_mainfile 직후엔 has_data=True였는데 이후 파이프라인 단계를
@@ -1049,6 +1173,22 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
                         "UpLeg": "Hips", "Leg": side + "UpLeg", "Foot": side + "Leg", "ToeBase": side + "Foot"}[limb]
             eb.parent = eb_by_name[parent_t]
             eb_by_name[tname] = eb
+    # 🔴 무면허 라이더(2026-09-30) — glTF엔 뼈 꼬리가 없어 임포터가 짐작한 꼬리를 그대로 쓰면 다리 뼈가 위(+Z)를 향한다
+    # (THIGH 머리 z 0.97 → 꼬리 1.36, 무릎은 0.58 — bone_bind ② 15.7%). cfg["chain_tails"]면 꼬리를 체인 다음 뼈 머리로
+    # 잇고, 끝 뼈(Head·Hand·ToeBase)는 부모 방향을 이어 받는다(gen_biped_skin과 같은 방식).
+    if cfg.get("chain_tails"):
+        nxt = {"Hips": "Spine", "Spine": "Spine1", "Spine1": "Spine2", "Spine2": "Neck", "Neck": "Head"}
+        for side in ("Left", "Right"):
+            nxt.update({side + "Shoulder": side + "Arm", side + "Arm": side + "ForeArm", side + "ForeArm": side + "Hand",
+                        side + "UpLeg": side + "Leg", side + "Leg": side + "Foot", side + "Foot": side + "ToeBase"})
+        for tname, child in nxt.items():
+            eb, ec = eb_by_name[tname], eb_by_name[child]
+            if (ec.head - eb.head).length > 1e-4:
+                eb.tail = ec.head.copy()
+        for tname in ("Head", "LeftHand", "RightHand", "LeftToeBase", "RightToeBase"):
+            eb = eb_by_name[tname]
+            d = eb.head - eb.parent.head
+            eb.tail = eb.head + d.normalized() * max(d.length * 0.5, 0.02) if tname != "Head" else eb.head + Vector((0, 0, max(d.length, 0.05)))
     for eb in new_arm_data.edit_bones:
         d = (eb.tail - eb.head)
         if d.length > 1e-6:

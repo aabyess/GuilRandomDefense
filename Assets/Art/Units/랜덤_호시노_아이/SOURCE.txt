@@ -1,0 +1,27 @@
+랜덤_호시노_아이 (Hoshino Ai, 최애의 아이) 스킨 출처
+
+원본: ~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_호시노_아이.zip
+  sha256: aa83b3fc25198d6df48ce16c3522de2c4c8a3016d7cca73bc09187076efe3cec
+  내용물: source/Sketchfab_2023_05_21_21_58_53.blend(텍스처 6장 팩) + textures/ 6장(Albedo 3 · LightRig 3)
+
+라이선스: ⚠️ 미확인 — zip에 license.txt가 없다. 사장님께 Sketchfab 페이지의 라이선스 확인 필요.
+
+빌드 스크립트: Tools/blender/gen_rigify_skin.py (SKINS["랜덤_호시노_아이"])
+  실행: blender -b --factory-startup --python Tools/blender/gen_rigify_skin.py -- 랜덤_호시노_아이
+
+처리 요약(2026-09-30, blender 세션):
+- 아마추어 AiRig 75뼈(자체 이름) → mixamorig 22뼈. hips·spine·chest·neck·head → Hips·Spine·Spine2·Neck·Head,
+  Spine1은 chest 머리의 0-길이 자리표시(가중치 없음이 정상 — bone_bind 21/22). 머리카락 10·눈 2 → Head,
+  치마 12 → Hips, 손가락 30 → 각 손. BaseRig(숨김·가중치 없음)는 안 씀. 무가중치 정점 0.
+- 마이크(Cylinder, 부모·가중치 없는 따로 메시): 소스는 리그를 포즈 잡은 채 저장했고 마이크는 그 포즈의 오른손에 있다.
+  쉬는 자세로 내보내면 허공에 뜨므로 hand.R의 「포즈→쉬는 자세」 변환을 걸어 손으로 옮긴 뒤 RightHand에 강체로 묶었다.
+  재질 3(Mic·Michandle·MicRing)은 원본 BSDF 색(거의 검정·링 회색)을 형체가 보이게 조금 밝힌 단색.
+  공격 클립에서 마이크가 얼굴 앞에 오는 것까지 렌더 확인. 손가락은 22뼈 규약상 펴진 채라 「쥐었다」기보다 손바닥에 붙어 있다.
+- 텍스처: 재질마다 Albedo(→발광색)와 LightRig(→Base Color)가 같이 물려 있다. LightRig는 흑백 명암 마스크
+  (빛 받는 곳=흰, 안 받는 곳=검 — 얼굴·피부·옷 일부는 검정으로 칠해 늘 밝게)라 색이 아니다. 색은 Albedo가 다 가져
+  Albedo만 쓴다(AiBody·hair·AiClothes.png, 1024/2048/2048). LightRig 3장은 버렸다.
+- 얼굴 모양 키 "Key 1"(363정점, 최대 0.049 원본 단위)이 1.0으로 켜진 채 — 소스가 보여 주는 얼굴 그대로 메시에 굽고 키 삭제.
+- Outline 재질 슬롯은 면 0 — 자동 제거. 감량 없음(30,638삼각형). 팔 A자 약 28° → 수평.
+- 재수입 검사: 최상위 Armature 하나 · 22뼈 · 키 1.8 · bbox 1.48×0.73×1.8 · 텍스처 6장 전부 내용 있음.
+  공용 idle·walk·attack 22뼈 리타겟, 뒷면 컬링 렌더에서 구멍 없음.
+- clip_spread 최대 0.98(기준 3.0) · bone_bind 21/22(Spine1 자리표시) · mesh_clash idle +2.7% · walk +2.8% · check_entries 통과.

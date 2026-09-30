@@ -538,6 +538,22 @@ public static class ArtBinder
         return $"\n{System.IO.Path.GetFileNameWithoutExtension(path)}: 키 {height:F0}으로 맞췄습니다.";
     }
 
+    // 알파 컷 유닛(2026-09-30) — 눈·눈썹·리본·칼 같은 부위가 **이진 알파 판자**인 모델. 불투명 Lit로 지으면
+    //   투명 칸(RGB 검정)이 검은 네모로 나온다(blender 세션 요우무 비교 렌더 youmu_face_clip_vs_opaque.png).
+    //   텍스처 알파만 보고 자동으로 켜지 않는다 — 알파 채널에 거칠기 등 다른 값을 담은 텍스처가 있으면 구멍이 난다. 확인된 유닛만 이름으로.
+    //   컬은 그대로(끄지 않는다) — 판자 뒷면이 필요하면 그때 유닛별로.
+    static readonly HashSet<string> AlphaCutUnits = new HashSet<string> { "다른세계_모리야_스와코" };
+
+    static void MakeAlphaCut(Material material)
+    {
+        material.SetFloat("_Surface", 0f);
+        material.SetFloat("_AlphaClip", 1f);
+        material.SetFloat("_Cutoff", 0.5f);
+        material.EnableKeyword("_ALPHATEST_ON");
+        material.SetOverrideTag("RenderType", "TransparentCutout");
+        material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+    }
+
     [MenuItem("Tools/아트/텍스처 연결")]
     public static void LinkTextures()
     {
@@ -610,6 +626,7 @@ public static class ArtBinder
                 material.shader = shader;
                 material.SetTexture("_BaseMap", texture);
                 material.SetTexture("_MainTex", texture);   // Standard 폴백
+                if (AlphaCutUnits.Contains(unitName)) MakeAlphaCut(material);
                 EditorUtility.SetDirty(material);
 
                 importer.AddRemap(slot, material);
