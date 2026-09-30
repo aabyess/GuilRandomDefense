@@ -896,7 +896,7 @@ public class UnitAttacker : MonoBehaviour
             // 없다(TryCastOnHitSkill 쪽만 있음, 아래 참고). ReceivedDamage basis를 쓰는
             // 효과가 이 경로를 타면 0(적용 안 함)으로 안전하게 빠진다.
             SkillTelemetry.Cast(identity != null ? identity.Data : null, skill);
-            bool vfxBefore = SkillVfx.BeginCast(identity != null ? identity.Data : null);
+            bool vfxBefore = SkillVfx.BeginCast(identity != null ? identity.Data : null, skill);
             CastSkillLevel(level, level.WorldRange, null, 0f);
             SkillVfx.EndCast(vfxBefore);
         }
@@ -1214,7 +1214,7 @@ public class UnitAttacker : MonoBehaviour
             // 도는 경로라 이 값이 항상 뜻이 통한다(아래 ResolveSkillEffectValue.
             // ReceivedDamage 참고, 2026-09-06 PM 지시로 연결).
             SkillTelemetry.Cast(unitData, skill);
-            bool vfxBefore = SkillVfx.BeginCast(unitData);
+            bool vfxBefore = SkillVfx.BeginCast(unitData, skill);
             CastSkillLevel(level, level.WorldRange, attackedTarget, AttackDamage);
             SkillVfx.EndCast(vfxBefore);
         }
@@ -1250,6 +1250,8 @@ public class UnitAttacker : MonoBehaviour
         Vector3 aoeCenter = level.aoeCenter == SkillAoeCenter.Target && primaryTarget != null
             ? primaryTarget.transform.position
             : transform.position;
+        // 스킬별 이펙트(09-30): 범위 중심 땅·시전자 발밑에 한 번 — 적중 이펙트는 피해마다 EnemyDummy 쪽에서 바뀐다.
+        SkillVfx.CastAt(aoeCenter, transform.position, range);
 
         foreach (SkillEffect effect in level.effects)
         {
@@ -1695,10 +1697,11 @@ public class UnitAttacker : MonoBehaviour
             if (target != null)
             {
                 float hitHpBefore = target.Hp;
-                bool vfxBefore = SkillVfx.CasterAllowsVfx;
-                SkillVfx.EndCast(vfxAllowed);   // 여러 번 때리기는 시전 문맥 밖(코루틴)이라 시작 때 등급 판정을 싣고 온다
+                // 여러 번 때리기는 시전 문맥 밖(코루틴)이라 시작 때 등급 판정을 싣고 온다. 첫 타는 시전 안에서 동기로 돌므로
+                // 스킬 이펙트 칸을 지우지 않는 SetCasterGate로(09-30).
+                bool vfxBefore = SkillVfx.SetCasterGate(vfxAllowed);
                 target.TakeDamage(amountPerHit, damageType, attackType, owner != null ? owner.OwnerId : -1);
-                SkillVfx.EndCast(vfxBefore);
+                SkillVfx.SetCasterGate(vfxBefore);
                 SkillTelemetry.Damage(identity != null ? identity.Data : null, "스킬", target, hitHpBefore);
             }
             if (i < hits - 1 && interval > 0f) yield return new WaitForSeconds(interval);

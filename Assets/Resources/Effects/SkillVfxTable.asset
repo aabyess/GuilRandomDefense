@@ -1,0 +1,3831 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f631bf49ac6f644f49fa604a870af22c, type: 3}
+  m_Name: SkillVfxTable
+  m_EditorClassIdentifier: 
+  prefabs:
+  - {fileID: 6263782476919498309, guid: 1fd2749f2a4056446881dce86ed70c39, type: 3}
+  - {fileID: 689667626583958020, guid: 1336648bc1d8baf46a4515860950c9d4, type: 3}
+  - {fileID: 2360655870356088562, guid: 57a776ff377f3c44e8403e2067a4d41f, type: 3}
+  - {fileID: 4021103657954561961, guid: 5c755f9bc5253ea418e919994537dcc7, type: 3}
+  - {fileID: 4924508274929071776, guid: 0edef91621bb6b34384ccc9dbb98729c, type: 3}
+  - {fileID: 1429954232896169633, guid: 83036083a4ebcd34f98131bd3cf6f4d2, type: 3}
+  - {fileID: 5880797563127281583, guid: 265d3a5ba69981a4698ceabcedf368b0, type: 3}
+  - {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
+  - {fileID: 8771972552311404799, guid: bbf9e36a48d6c5648a13889afab076fd, type: 3}
+  - {fileID: 8525990746615576120, guid: b85d21f3b8fed714bacf0c4fd50fa512, type: 3}
+  - {fileID: 7155335147208632822, guid: 97c43495f80a3244fad1301dfafbe252, type: 3}
+  - {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
+  - {fileID: 7131401307255788800, guid: 4d9a3b35b3bc07649b697df7fb497b6d, type: 3}
+  - {fileID: 1141330259687333427, guid: 6718dc24203da53468af9ada8fef7d6d, type: 3}
+  - {fileID: 4535006216103734310, guid: 98c4704d0fd7211449bcf5c451095a60, type: 3}
+  - {fileID: 6710139492206580332, guid: 95b8d3d65b5d7f1409c4ed1723887826, type: 3}
+  - {fileID: 2708598583397607911, guid: 6398d43fe79ea0140913dc5530c646af, type: 3}
+  - {fileID: 4593184484909914552, guid: 2e1e9506f5904a64b81744324fb7cd50, type: 3}
+  - {fileID: 2504214343621411470, guid: 3ed0d324122d7b24eaec75c55c74aafc, type: 3}
+  - {fileID: 8194992990867289339, guid: 99bc28c0d45f51c4fbac01080b73edc7, type: 3}
+  - {fileID: 7957833072274404953, guid: 3355f6bfa6db8b24281b827de929694c, type: 3}
+  - {fileID: 7177991128484655659, guid: 59a35ab9f68edff40b6e5332bed330f5, type: 3}
+  - {fileID: 8378648546881499446, guid: 867c572a5be680d42a042d2349f10143, type: 3}
+  - {fileID: 9157105887711914197, guid: c4f829cb7dd4b864caf8832ec5b1ee55, type: 3}
+  - {fileID: 3280519133390621005, guid: a71be3e7990efb040a07565c43cbb198, type: 3}
+  - {fileID: 3432958286849152088, guid: 87ee7299dd44ed747af24dbb91bcd33b, type: 3}
+  - {fileID: 7305185502956871417, guid: 85b062a5517cf8345bb6784ffbed4877, type: 3}
+  - {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}
+  - {fileID: 8172849020266659018, guid: 2af5562ce69fc2d448481a1587a352a5, type: 3}
+  - {fileID: 1289543790355709915, guid: b99922c2f59b1a542bdd06ae8bee47ae, type: 3}
+  - {fileID: 7647375919561907788, guid: 035ce8c9cfc34104991ce416daf8aebe, type: 3}
+  - {fileID: 358637981425055526, guid: 8eb503696b886e04faff8fc0f480d473, type: 3}
+  - {fileID: 3367314013316085171, guid: 8b20002c2b69a9d44ab5bae8e1d923cd, type: 3}
+  - {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
+  - {fileID: 1171201465392465800, guid: 4aa9f30a28a77224ba84b2a2c334c71b, type: 3}
+  - {fileID: 4932088507883938021, guid: 0e5709a7ddb77924090c112cf73bb98a, type: 3}
+  - {fileID: 7053385775836331393, guid: 354b6251e950209409c75ab984acf000, type: 3}
+  - {fileID: 2433282508537954060, guid: 3ef3ae421f71c5c4e97fe12dc2fc6312, type: 3}
+  - {fileID: 161766660727748596, guid: 05ce920d629922a4eb4795ef7494ce5c, type: 3}
+  - {fileID: 5034656251238326012, guid: 9de2fa19f0390d44491264d9cab8cec5, type: 3}
+  - {fileID: 3377181292992421420, guid: 48c5715f9603c3842a353516a8baefbb, type: 3}
+  - {fileID: 888444077320411739, guid: 0c2509361b13505428ce788b7f846686, type: 3}
+  nativeSizes:
+  - 3.8703432
+  - 8.520202
+  - 2.84
+  - 10.182001
+  - 4.1788254
+  - 3.135405
+  - 12.5762
+  - 15.486639
+  - 3.9603052
+  - 1
+  - 6.4200006
+  - 3.6616516
+  - 5.044235
+  - 21.813
+  - 3.3936486
+  - 2.84
+  - 21.3
+  - 20.625206
+  - 9.4202
+  - 11.422059
+  - 14.4291525
+  - 8.930056
+  - 9.9402
+  - 5.4124737
+  - 3.1130002
+  - 1
+  - 8.878523
+  - 8.034635
+  - 10.1
+  - 3.9761999
+  - 8.520202
+  - 8.263078
+  - 7.1002
+  - 4.7682123
+  - 2.4623928
+  - 14.4291525
+  - 4.8400006
+  - 9.216237
+  - 14.4291525
+  - 15.486639
+  - 14.4291525
+  - 4.8549757
+  entries:
+  - skill: {fileID: 11400000, guid: 17942c83b308dec180b8137540a0cc9f, type: 2}
+    hit:
+      prefab: 0
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: 2
+      kind: -1
+  - skill: {fileID: 11400000, guid: d723f82b13bdec93e6770a643b6a1d2b, type: 2}
+    hit:
+      prefab: 3
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: b0f1adb2909bf20a0e544b77e4e0ea44, type: 2}
+    hit:
+      prefab: 4
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 8555d6d5ec377c1a35b707a6671a374b, type: 2}
+    hit:
+      prefab: 5
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 76c12283384c751c907050c647e5f838, type: 2}
+    hit:
+      prefab: 6
+      kind: -1
+    area:
+      prefab: 7
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 0d107ec418c7c3c64a6d99f81e26d9c4, type: 2}
+    hit:
+      prefab: 8
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 6036f4ad1077ced8ca445dba202a2601, type: 2}
+    hit:
+      prefab: 9
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 10
+      kind: -1
+  - skill: {fileID: 11400000, guid: 799b043346bf27bd2c4cf2441c6ddffe, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 02557239043d7b3ebb632ec9f06ae67a, type: 2}
+    hit:
+      prefab: 11
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 12
+      kind: -1
+  - skill: {fileID: 11400000, guid: 5df2a2aaddafbb07d0f20c311c3b878c, type: 2}
+    hit:
+      prefab: 13
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 68de13b0af0016713a5d9e7676b13c53, type: 2}
+    hit:
+      prefab: 11
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 12
+      kind: -1
+  - skill: {fileID: 11400000, guid: aa3b03a3505e7a729d02a43b31032d47, type: 2}
+    hit:
+      prefab: 14
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 15
+      kind: -1
+  - skill: {fileID: 11400000, guid: ccb898302c18eaaaf5a83750786b8a58, type: 2}
+    hit:
+      prefab: 8
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: a8f2fbf0ddde561a01dcc2bde1416668, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 35cb8c7dc75ad29b04a6f07b0c84fc61, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 769e3bdb93b55d7a07447ec3fe6603c8, type: 2}
+    hit:
+      prefab: 6
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 7e823f2cb08527979a11c3c02610ad40, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 15
+      kind: -1
+  - skill: {fileID: 11400000, guid: e1289ee07f819a732f9fbe035b538e72, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 262f40b5816821c4bf3ddcd921a41244, type: 2}
+    hit:
+      prefab: 11
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 03661ad82b08fdb5235ef63ab9f5a53d, type: 2}
+    hit:
+      prefab: 11
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 1d07709049141889759940b1428d898c, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: ea1fdb5034b0bc0d696877f3a79b2e67, type: 2}
+    hit:
+      prefab: -1
+      kind: 7
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: c5ea7c5f73f00590c59f15f9986fd9a3, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 27433e92266fcab9d64e3f8841df3fa5, type: 2}
+    hit:
+      prefab: 19
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: 001d0d6ef6c90c80720309ea2a5e0662, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: e21886896452b36c9635c82af9ef03bb, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 2aa646ed70067def823a34f5fa06a2f7, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: c95d60e51e3607ef6691ee5a1ee1f39e, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: 07d9fd5efb54a7972749080c324d8a2d, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: dd4b386bdba7f637cc007c936525f0ae, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 12
+      kind: -1
+  - skill: {fileID: 11400000, guid: 0ccb316285c7b72bb54db111121cf228, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 28acb4edaf6b5a5e091f533a398930ac, type: 2}
+    hit:
+      prefab: 9
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: d8e44c4807fe2221069fcda1a9370654, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 7
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: e35787c92bbf84622308edd34d5326db, type: 2}
+    hit:
+      prefab: 6
+      kind: -1
+    area:
+      prefab: 24
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: d94501d7563a64e21446caaad6f52450, type: 2}
+    hit:
+      prefab: 25
+      kind: -1
+    area:
+      prefab: 26
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 9d9b354d28c6ab7dfa18d57187f8af7a, type: 2}
+    hit:
+      prefab: 27
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 8e7b450de2d0956c3954a887e98e596d, type: 2}
+    hit:
+      prefab: 9
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 7148f9dd573af3b47681c4fb4509edf3, type: 2}
+    hit:
+      prefab: 0
+      kind: -1
+    area:
+      prefab: 26
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: aeb188c7fa917d4ce1266304cc15c846, type: 2}
+    hit:
+      prefab: 19
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 9f45c6bf58c78c834b02b96a15a16d39, type: 2}
+    hit:
+      prefab: -1
+      kind: 7
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: d7a346f58d5984ffe194afd10498381d, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 9fef9e67992b600223be96d136160304, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: ec028fedc9702f080faa01b0f645ca7f, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 7950e24ce4321f6b230ede2b18852c63, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 28
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: f37b784709f7570c4a3782e96f0d2f0e, type: 2}
+    hit:
+      prefab: 14
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: d889a16d77ccbf23ce70268eaf4afe26, type: 2}
+    hit:
+      prefab: 6
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 63d028959750401f031c4d458a635b4a, type: 2}
+    hit:
+      prefab: 6
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 9c4b6695041a4f2dfb4aa9fa700fa8e4, type: 2}
+    hit:
+      prefab: 11
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 8a28ed2859c585273b5476db70dad40c, type: 2}
+    hit:
+      prefab: 4
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 29
+      kind: -1
+  - skill: {fileID: 11400000, guid: 51758b8b3722a3f35e763c26eb2646eb, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 0c18ff72d3e49a6a2031a003cb78af40, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 40978dea4161ce3340dd434a74fd21e4, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 12
+      kind: -1
+  - skill: {fileID: 11400000, guid: d8cb06e91746f0eb3b44c07692331e02, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 208d834a9f59b0e257795b9a60101454, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 30
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 502f15c8398115e2f3647f087ef9fa77, type: 2}
+    hit:
+      prefab: 31
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: 5679f6c711e9c5dd6d4e4a6da2925dbc, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 44fda607293a2f816d039a47857d58dc, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: c8637cecb8ee1e4d20a041f25718991e, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: bc2ba22b2c8ad938216e567577688bfd, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 12
+      kind: -1
+  - skill: {fileID: 11400000, guid: 4d500a94cf8e5d82338c5cb5f14188b6, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 25cdb44bae50d62e3ecb1d492fa7db44, type: 2}
+    hit:
+      prefab: 32
+      kind: -1
+    area:
+      prefab: 7
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 10c7530abbfee6962732399d43cb5608, type: 2}
+    hit:
+      prefab: 33
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 0cc1b5bf57dcc4f1376f9f959cdf9ab7, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 1ecf4900e8d4218fceea4f0ca22fb331, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: ca71f56a2031797f66391e3c3387aef1, type: 2}
+    hit:
+      prefab: 34
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: c360fb79250125f4bd821a181d52de2e, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 796d3e3f93db41643d16bda0dc4f0fc5, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: d88bb93f16fde69a709542513e838267, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 0f91ec26e1927eab626bc8045d53e201, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 26
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: c39c8b6753bc215acaee671e2f6603ab, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 35
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: f47436c9340ed8d9ff12ce76b12f1b3e, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: d9012f9324c7c2acb88847e11aa1f691, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 36d497762ca784ae925c1aac34340feb, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: 30
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: fb74a3a64ce99a309e7abe4eaa8b4d25, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 30
+      kind: -1
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: ed2782e4a0ae140d29eca491a91efcb1, type: 2}
+    hit:
+      prefab: 6
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 36b5e0b1564075cef80fc8ed8267ce30, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: 15
+      kind: -1
+  - skill: {fileID: 11400000, guid: d182d8cbdc958a06015d4cf182980deb, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 24
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 646a175b9e9a1d4b5b68300f0e35dced, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 24
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 068df330eeac84ba1f84a62821849043, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 26
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 54418a4764142eddb47de816f4715ad3, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: b3ea98873f4ea6c4f787d399340111f0, type: 2}
+    hit:
+      prefab: 19
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 5ddc886465af48b200f88f8c9819fa7e, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 5c2a34aad78ea62ef224896ccc029f78, type: 2}
+    hit:
+      prefab: 0
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 2
+      kind: -1
+  - skill: {fileID: 11400000, guid: 792ffa97a652f02d426b45458560b601, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 80bfcd654144e8ea93ce0fe459c01589, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: 3007783bde1747bedf0fd27d52254aa6, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: 5210c3b326867c28dbdc6b627d6cad07, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: 5ab5b198e00630b2287d9791c04db278, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: b6ad3226a5d002f903ea6570576c1aac, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: 10
+      kind: -1
+  - skill: {fileID: 11400000, guid: 81928db70081077573f5655d025b1e25, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 019054c74bc08817ce166a7b6d4760fd, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: 35
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: d9a138308d25036229ce09052dcc9064, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 56b10310b5d1fad766b584daf63b6c41, type: 2}
+    hit:
+      prefab: 3
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 10
+      kind: -1
+  - skill: {fileID: 11400000, guid: 0336b018db3263472a7850e1e7bc7d42, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 80e30c07c24a88e0f065a0017ed77a28, type: 2}
+    hit:
+      prefab: 33
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: c1f7b29f80f4ae74a95a3f06dbe1289a, type: 2}
+    hit:
+      prefab: 33
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: 6d36c081c8ad68bca247685057670b91, type: 2}
+    hit:
+      prefab: 31
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: e8a6a7d07a8822719ed09949df64884c, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 80b19512c56e0d2781726ce3e4de611f, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 485050dc231079a7cb2d58a3e04512ea, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: aa2145c61f1829371a4f22193fff096e, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 55075be6a8d950d4b1654fc7cb9dd037, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 30
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: f139cc7b42a126cf8dc48b15369f699e, type: 2}
+    hit:
+      prefab: -1
+      kind: 7
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 53ae542edf555fdcf9a4eb38716a6321, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 1409d19a347de330efe7348f37659417, type: 2}
+    hit:
+      prefab: 31
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: 9d2a0a0b835161d995424404e3316d83, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: f7cbaf5a55f727d86a4b0f1334722281, type: 2}
+    hit:
+      prefab: 19
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: bd1af2f5aa3e156679e7645d0f46b4a7, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: 26b8044b28d05d2919ddeef82717b79d, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 35
+      kind: -1
+    caster:
+      prefab: 29
+      kind: -1
+  - skill: {fileID: 11400000, guid: 225ed2dcb0e3669f845099fb31a9b28d, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: e5c4d59a14731d720c94172cce949453, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 4a29c189981dc0b1d0682036953c5bce, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 8d715a60f425df0812b88046fb576edb, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: c859211417edd0b3afa245bfebba45d5, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 36
+      kind: -1
+  - skill: {fileID: 11400000, guid: 9e61c04c4b778b89f028365ffa96cb5d, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: d8895de7212c640f3a48613435026bcd, type: 2}
+    hit:
+      prefab: 6
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: 15
+      kind: -1
+  - skill: {fileID: 11400000, guid: 2b15a6797ec575a62aac152dadac79f1, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: 30
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: b441b3ab9194c68ab463bb8f19b93e11, type: 2}
+    hit:
+      prefab: 6
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: 15
+      kind: -1
+  - skill: {fileID: 11400000, guid: 0c6b41b8295c4d22ea7576ea943adffb, type: 2}
+    hit:
+      prefab: 27
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 67b05a0db6b3901778cbdbd0fd7b6b8d, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: cb35f2fa330dddc5d985b18618bad9c8, type: 2}
+    hit:
+      prefab: 19
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 1b7e1380c9f597ab17c1420aa4aa4b85, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: 12
+      kind: -1
+  - skill: {fileID: 11400000, guid: 09186d1a68b44c0d4d7711fbc22bca72, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 1eb1f94e1c5bdf07973f9309bae53959, type: 2}
+    hit:
+      prefab: 37
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: 12
+      kind: -1
+  - skill: {fileID: 11400000, guid: c3e73a3f62bc786d77d22ee265df420c, type: 2}
+    hit:
+      prefab: 37
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: 12
+      kind: -1
+  - skill: {fileID: 11400000, guid: 300900520a39cfcc1f91b0aa71db9d53, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 10a04df68f59029381ae8a42973844b5, type: 2}
+    hit:
+      prefab: 6
+      kind: -1
+    area:
+      prefab: 24
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: e002f92f2da72090d9bed654670401fa, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 36
+      kind: -1
+  - skill: {fileID: 11400000, guid: faa7b3fd9c1144b829ecac093e762693, type: 2}
+    hit:
+      prefab: 19
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: b3b8a351f55c8b22062a83189971faad, type: 2}
+    hit:
+      prefab: 9
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 55c743e9d70f016165a022295854807f, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 28
+      kind: -1
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: a1a82ed9e37b6299e5ad4d7cb976fefa, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 041d6fbdeafbc44d8e12cbdc09e861cb, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 685e36852dbf96eb6366b62e40723d21, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: 38
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: cf48878d1106b451ce896fab97978a21, type: 2}
+    hit:
+      prefab: 19
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: b3f2a29f76d7ef0ab439b96323125849, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: 967544d6c0e4d6ce5bd99da426d712be, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 39
+      kind: -1
+    caster:
+      prefab: 15
+      kind: -1
+  - skill: {fileID: 11400000, guid: f548f7abbb79a316f8cdbacfcc6c6af3, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 9599bfa95cd5ac3b379da711476d5a3a, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 14862b0c82e9172143c7730665e60359, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 7
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 84aade1aaf55951d7bc6d497ba86beab, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 1f6ff3d4e1f593dea07f7ee5bd31aab5, type: 2}
+    hit:
+      prefab: 31
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: 2
+      kind: -1
+  - skill: {fileID: 11400000, guid: ddd393cfb6d3caa5f89208ef9708fcdf, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 21e8e2a3ea0456002d5399fe4e27a7a9, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 6567baff136b1d78ad333fb0bfa02d3a, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 964c9fc7395d9808ac903c518525d1b5, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: 586f37091ac1dd35ff2e652a1e8effd4, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: a9b3c22d6d1536ade478165a71696c93, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: d06b69516d741244f90176ddf39825ec, type: 2}
+    hit:
+      prefab: 33
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: bb579a5cd3fbab377e26d428e5248bbf, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 30
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 7fa6e6bb58b3f682028d2e0d4f4898f4, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 81923f2c7ae6bbdf241e32e9fd78e26b, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 2241d2f036a8b9542df87cf2cdfb427d, type: 2}
+    hit:
+      prefab: 13
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 895c5ae88bea8cd972057c35d7099b62, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: ed33766884b0e525dfbf7637b8f3299c, type: 2}
+    hit:
+      prefab: 19
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 6c25230749112afc39a81c650e78eca6, type: 2}
+    hit:
+      prefab: 11
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 77ba42a424d270a871f96688fa519a9a, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 2be1f17bba3a1f42ad5c56e5c4c13791, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 8095ec25c45cdc444c3837237839708d, type: 2}
+    hit:
+      prefab: 13
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 6f11d5463de887b6c85167abd3f1be2b, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 882f8c989a21650c0e95843ab38d10d6, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 8468e49d2fe19b79f11ec9ebf21e6cb7, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: b99c494d9170b01d3db212f7da175a78, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 35
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: d9ecd95118526351b013708f7b3f600f, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 19182e2ed8f2aa703d7c9fac89ca76b7, type: 2}
+    hit:
+      prefab: 11
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 38e4b2d33179d515c2c10363bd0c1dd1, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 40
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 1b6996d9f6ffac000308ffdd1988e61f, type: 2}
+    hit:
+      prefab: 0
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 154083fe95626520fcf1bd278bdc930c, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: a69a95d7d8f568431e074117aed91f97, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 7b76e3442374421fb4cdbedcef9aa36b, type: 2}
+    hit:
+      prefab: -1
+      kind: 5
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: bcf499722b71436788d1b92bc3e049b5, type: 2}
+    hit:
+      prefab: -1
+      kind: 5
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 525c38cd0f0c44a98a05443f3e4d63fe, type: 2}
+    hit:
+      prefab: -1
+      kind: 5
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 79d4ef9c639a481ea78e084eec46de09, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 576a0efc35bf439f8590d85d23fb222b, type: 2}
+    hit:
+      prefab: -1
+      kind: 5
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: c9485299999d47c9bac0ff3cd90b8fc8, type: 2}
+    hit:
+      prefab: -1
+      kind: 5
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 4c3ef094a96a47109d8ac0170510e5ef, type: 2}
+    hit:
+      prefab: 33
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: 5ac1d59a0b514c559f193564feca65bb, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: e619720732a242b88cfed1c85fced4dd, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: d73a922c7d1141fdb952c14d95192253, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 926d2702c88645828a769f4edabfff00, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: 10
+      kind: -1
+  - skill: {fileID: 11400000, guid: 6c57a69a64e04e65aba06c8816e6f935, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: 35
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: e97065a4fca642419a2ebeb09e611354, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 30
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: a6a859064c224ad8bb0a8fe2cdf27f48, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: 3536028f4288455480f46c84c3191976, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: f02c3b46945047de953187c20f06b650, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 3f142aec670d4d4f83bec79a3f71236a, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 633fa86bb60b4698a3930d2eecb5e899, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 7
+      kind: -1
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: 4f7afe08d6f942bba3a9a32785f74d23, type: 2}
+    hit:
+      prefab: 6
+      kind: -1
+    area:
+      prefab: 7
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 33a0a7695f3341348f3ca607c77ba938, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 24
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 206f5df7d6e349e0ad453cc1f63455d9, type: 2}
+    hit:
+      prefab: 37
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: 12
+      kind: -1
+  - skill: {fileID: 11400000, guid: 3e548ce131ab45f48510edb56b6a3ba6, type: 2}
+    hit:
+      prefab: 9
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 375ca6508dd95944d686b7a15e910b85, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 85109c42e6b74f9aad03da457e23f74b, type: 2}
+    hit:
+      prefab: 34
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 90d9061c36a6f1bbb39a08302275aa04, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 33b15fe5ea58745e373a4c1ba0453d59, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 4f7fdec6d548d9bd6a4bd96711cba75f, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: e1ecf9772b8d439f8260608e510ed6ed, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 6b45e49bd861048bfc9806f6214e7c73, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: c930a6dcdc5ed7bce676aefad9b3748a, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 0
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 4fb394bb5deb47c58174c35e5f6ea4ec, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: a786c13180f4294bd6cf2dbe8591b686, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 471bde54029352df3726255c55bb96ec, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 36
+      kind: -1
+  - skill: {fileID: 11400000, guid: ee63a26707c34a2b81ef1298812a5498, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: c2221b42240ad0282ae51ecca0374a00, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: 8143e3102857c7d329f2be1811c965d6, type: 2}
+    hit:
+      prefab: 14
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: bad65a2e5c9c649dfe27933785a66edf, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: e5ce924e65381dac5cedf002e1e46df7, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: aabf3b053be0f44839984eb8fe04b7db, type: 2}
+    hit:
+      prefab: 6
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: 15
+      kind: -1
+  - skill: {fileID: 11400000, guid: 174ffb09a6ef28b20c6f6425127fc26c, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: 9f1fbb1875f34b83adbf6b7ac0ff0efb, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 19f6cefb394b483b84610664078a84aa, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: e5229080452a526c9e1a719030caebcb, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: beb55a8b5ebe33f764ea0d371eceecea, type: 2}
+    hit:
+      prefab: 19
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: 12
+      kind: -1
+  - skill: {fileID: 11400000, guid: fd599f36bbc9457fd2bd8e808021f313, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 3d195391242f945cc7525854895c50d4, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 2008c25584034958ffa7f6c429fc0e92, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: e46e0ea3e8b25844ebcd9a044035ad9c, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 469dbd6c913b56326f5f419bf5221472, type: 2}
+    hit:
+      prefab: 9
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: a307004d4917804d6893d1bc02fc7a53, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: d19173a409eed98d3fa0a866aeb728ef, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 82268def6a40546caab59c1bb4bb12c9, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 39dc94e83e2851ad26f93c085d0c7f21, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 85393b37324adc3761f1a10a4ec207d3, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 34eadbfcd372148a4d0495c8a230ee1b, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: c2ede0675bdae79241fc6a385ce3eb73, type: 2}
+    hit:
+      prefab: 27
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 05ee3478b84424d1b87e35a3073985a4, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: e5491849820fc79c97053de4e55131f2, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 82a28702c5386b48d379c78fc04c32b0, type: 2}
+    hit:
+      prefab: 9
+      kind: -1
+    area:
+      prefab: 28
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: 4a242de3bebc74225035d51a17baebef, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 36
+      kind: -1
+  - skill: {fileID: 11400000, guid: 760760596171b85fe321426c174f5bfe, type: 2}
+    hit:
+      prefab: 6
+      kind: -1
+    area:
+      prefab: 24
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: e05608a887df44bbb3124c57228dc71e, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 69a87953a6f845d3872f318010f0a354, type: 2}
+    hit:
+      prefab: 6
+      kind: -1
+    area:
+      prefab: 24
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 3c959d0264c1529eb4f8ec26428a8bba, type: 2}
+    hit:
+      prefab: 9
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 676dd652440f5a0f977252faa66bf30d, type: 2}
+    hit:
+      prefab: 19
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: 4cc59d71c2d48ecccf19700cbc889924, type: 2}
+    hit:
+      prefab: 19
+      kind: -1
+    area:
+      prefab: 26
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 7e8a6ae30147aa8e806cb57872932c01, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: cf3896d951806045a275825ddb3a5cc5, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 28
+      kind: -1
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: 31dd0a906b6e433389608245314e3139, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 69b84daa6d3b4a0886fb88ec1b0f7fa2, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 2a4dc4c7938328d15cac03484566505b, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 25b9e1cf0d6c08b8643cdd4a553a077a, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 1119704d95aa23c0fc4f9144089142eb, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: f9c63a969135f0bf63819093062e2491, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 6bcee6d4fd773d4d29005f73d5fbb2df, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: 58252e6a92f3b470115efece24ac4188, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: c3ff9df98f64b69d966c5a594f560b09, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 30
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: d6c2b0587282dfe5755666bf3b80d763, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 05fd7be2240ddb19b83751f7437a3bac, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 941a23fa2004b49079bf87b6f73a96b1, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: febe14ecd0f423b0100267ea0d05dee5, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 6196e84858c2d394923b9e3a37ebe26b, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 56aaee53a9098504b093c2ffb40ace28, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: d94ba6c10a7807d0ad75777e05a95ea7, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 30
+      kind: -1
+    caster:
+      prefab: 15
+      kind: -1
+  - skill: {fileID: 11400000, guid: 9478f0ed658c9038aa50de21d6f95ae7, type: 2}
+    hit:
+      prefab: 31
+      kind: -1
+    area:
+      prefab: 7
+      kind: -1
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: 9e97756f6038abb53154ba4cd3f627ba, type: 2}
+    hit:
+      prefab: 31
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: 23
+      kind: -1
+  - skill: {fileID: 11400000, guid: 2183405b2115d20cf912f34788b4287b, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 9f26837072a47d748691748a1188f832, type: 2}
+    hit:
+      prefab: 19
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: 3ad13fe8d24d8b0af4e882c6a5dba6b0, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 589ded5a07e84cc18380f5da62fa68ce, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: b271fd06e3a84b98977ec5d158f5d755, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 7a18d1325f686b8786c6ecf9e5d5e71e, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 39
+      kind: -1
+    caster:
+      prefab: 15
+      kind: -1
+  - skill: {fileID: 11400000, guid: 21e4bc12399b2b8ee45cdbc59b9eebbe, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 97709e0c6666ab0ffa7a7383b0027bbf, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 618b470b3be24ab4a1bd1543766f589f, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 278e14ecd0f94d45a4de91d47ee7427c, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: fdb5d735eb8747e3ba7c7af29f049baa, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 6a9317a88032604f5649c5d45d4531b2, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: 38
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: d6db3e5c134f49ea96cc46170400f315, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 0e2e5d1152bce47857b3135cc9aed664, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 738b7a5286407ab78d04c24b62bd90a0, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 28
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: fae6aee6d7ecaf24a655421342d77389, type: 2}
+    hit:
+      prefab: 31
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 83895b1ad76d858dd95fc12113385ac6, type: 2}
+    hit:
+      prefab: 31
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: a453f712b2b80fd6d497d8c5807bcc48, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 097bb86ff789484e8e8937bf75b8aae4, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 6f29ec766680427f5e91b3cf17907c88, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: dccdea30b56440f321450d8bd8f4243c, type: 2}
+    hit:
+      prefab: 34
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 586c43cc51cacd362c938354b7126399, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 84eaed7ad3e2c521bbd10753f4e4a781, type: 2}
+    hit:
+      prefab: 32
+      kind: -1
+    area:
+      prefab: 30
+      kind: -1
+    caster:
+      prefab: 21
+      kind: -1
+  - skill: {fileID: 11400000, guid: d451427c2903549e05f47ca80c755608, type: 2}
+    hit:
+      prefab: 27
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: bd3cdc8a6ada8aae6b4c92d863285c7a, type: 2}
+    hit:
+      prefab: 31
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: 2
+      kind: -1
+  - skill: {fileID: 11400000, guid: 33035b6adbaa4218a155ef1fb09d3025, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 83d867ba343245cb87ab817a7cc1628b, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 4294c8bb3099f0baa2921f059043ece5, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 65aaa6d0cf93aa9dceb81bf4533f85d7, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: dc7165e7d0e6eabfb6a665f652e21580, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 91f875a8092db0f4a820b33a05d198ba, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: d26557fe632fbdf52ecd02b37289c8d4, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: a0558bb14ab1bcdeec08c7a9896f0edd, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: c4b44adecf2146cd60cd0b61c86533db, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: e7b482e1834892fafc6e656b61f13150, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: e07218bfca60c599c1ab18544de6ee45, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 14b5ce2d59b4772c57291765f25b1d98, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 775d10e097cdcad5eca52375f66e845c, type: 2}
+    hit:
+      prefab: 9
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: a277d35231ad975a8b17ab3d096e22d5, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: fbf3304b517bde430e5b8506a1853df4, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 9bc91c3caef69f11f589ff51504fa7fe, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 7e244654670a4c65d28704e3f8cde7b7, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: b09c8499557ae5df3e237dedfe8cc366, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 65f81ca0b5e97b5b3b7cc8e47b587d67, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 5c52741be07c0676f1d89697db700c20, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: aced970b14177896e7b07b8947766052, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 437d1d44c9e7eaebf51ba9682959c8ba, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 9a8856be88da9a1084329e485654549b, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: ea840a5ecbb94b85482cc55071b4ce79, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: a2d372e6b5de5950aba98d80895fd95c, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 432e2c929a7805ad73c74f0c0ef3e37a, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: ba40f663f06266db78b2be3935843814, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: bcdcdb932bc472c6506c63b1000cc4b8, type: 2}
+    hit:
+      prefab: 18
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 5588a7412867b2f193bc7e989ecd2178, type: 2}
+    hit:
+      prefab: 13
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 1a041feece50f817680ccd92c78d80df, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 24
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: f95f00cda6104e2b950a526cc69dc9bf, type: 2}
+    hit:
+      prefab: 19
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 8ca7c411952524c82dec359590f5a64a, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 0
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 7d0c942b9d8bffd1cc7d7c1d1b0545ba, type: 2}
+    hit:
+      prefab: 11
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 3769f158a37f7b40f0c95c86cc2580d8, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: f30cb944018dabc57e61d09f40669213, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 3fff3c52cc0f7f1382a57e0fd0ef3476, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 32e1244041d812a3a85e0ed9f6e55023, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 7a754b2962de2073645ed16f3ebf7859, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 1121d47d33a448531e66697b063bb046, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 2b51599d9ebd590658b3c87773cefdf1, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 88fd4b0b1de9557ec43a6649ecd053c5, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: df273c26fe0e20e7fde887c584050e0e, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: f2798e8c1d18747245484c133811f086, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: a749822a238ac2c559e9162d18d71f98, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 84116ea122acd7a508b923fcd2edaa91, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 8a5d1e29d36fe0103f03b09fe42260e0, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 4f7190f6be5a5f1396aaeadb92c6949d, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 41815844a17ae64082cce7e0a277ef23, type: 2}
+    hit:
+      prefab: -1
+      kind: 1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 5894db4991196bdd21747ba6665a4814, type: 2}
+    hit:
+      prefab: 13
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 3d0b81181b07c99a5f05576fd01217dd, type: 2}
+    hit:
+      prefab: 33
+      kind: -1
+    area:
+      prefab: 24
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 805145464803c6805b11be68e176ad79, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 7c57ef20fcb45835cbb673e49760aa87, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: ab10d5ceaa34e4648f2851676b9d73b2, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 35
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 6d63b675145b20006392460bcce53b66, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 236d645469d6949fb613fe798e65d781, type: 2}
+    hit:
+      prefab: 11
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 5a13b9473b8edac2f6264fea09cb7be9, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 30
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: fd5a9076c7deab2d79cd385a32be6606, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 40
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 2b8f7a097359fcb46699d909cb8d0923, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 19bd4ef7e81b45629d1c831bc123ec33, type: 2}
+    hit:
+      prefab: 0
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 3827d9385946546dfe579a48e4c5dea2, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: a5fe3ac3e6b662c8a915690db95376f4, type: 2}
+    hit:
+      prefab: 6
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 3971656e68f4af31643857a0571e8f65, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 441f193a5f028c85ba60015a8489a3a1, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 7a3eb5c994c7bb164062b03920c02928, type: 2}
+    hit:
+      prefab: 16
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 58cb07a9c68b98bf06b2b21c41df04f6, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 24
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 84e472200809178a09b63263945552ad, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 0
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 19d2b75a9ec4439e28e1ad7d69ccf12c, type: 2}
+    hit:
+      prefab: 9
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 542b90e5b5f768bab09c5a536eff1337, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 5076bf6e90d9605d3ec6910b6513d442, type: 2}
+    hit:
+      prefab: 27
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 0f5b76256c9273bcc4bf979b4472196b, type: 2}
+    hit:
+      prefab: 37
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 12
+      kind: -1
+  - skill: {fileID: 11400000, guid: be3c111fda813c140146486100c820d8, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: e230756070bb7d040aefb62ffab66efa, type: 2}
+    hit:
+      prefab: 14
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: 1992bbd1bfc127db573928fd0ba80933, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 26
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: a1a531c5f28b53e8eaa921beb7b4a236, type: 2}
+    hit:
+      prefab: -1
+      kind: 6
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: df110f12d7513236abd501462ae22343, type: 2}
+    hit:
+      prefab: 19
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: d4f73c617d4d1d6225ac2f78d8d5b205, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: b9a9b3b31d16d5162346aa8bc6011dc0, type: 2}
+    hit:
+      prefab: 19
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 9750e3ce088fdaaa677032e254929c86, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: c883da6367250ec60b6fa546612374fa, type: 2}
+    hit:
+      prefab: 6
+      kind: -1
+    area:
+      prefab: 7
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 3bd114b16a51b8c6d0cae415640122c8, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: 15
+      kind: -1
+  - skill: {fileID: 11400000, guid: 9f158b87bec55e8d33cb628b7e7f06ec, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 39
+      kind: -1
+    caster:
+      prefab: -1
+      kind: 6
+  - skill: {fileID: 11400000, guid: 8271999c05a3d27b87b73725882c5de8, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: fdaf4bbfe88ef2d72cb016f083cb8b54, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 9e8908443f911274684f9d65e1261266, type: 2}
+    hit:
+      prefab: -1
+      kind: 7
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 547821d628921be3dc6e4af2a036df13, type: 2}
+    hit:
+      prefab: 14
+      kind: -1
+    area:
+      prefab: 20
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: a14b58b1cdb44785a4a0e50fdf7d429d, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 22
+      kind: -1
+    caster:
+      prefab: 2
+      kind: -1
+  - skill: {fileID: 11400000, guid: 56011635c162f2fed287704fd80d7e9a, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 30
+      kind: -1
+    caster:
+      prefab: 15
+      kind: -1
+  - skill: {fileID: 11400000, guid: f09510672d8c195e6e71966879e8b0e5, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 7ab373df43ec88184dfa5f57dc1f45a8, type: 2}
+    hit:
+      prefab: 41
+      kind: -1
+    area:
+      prefab: -1
+      kind: 6
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: dfcb6f9eb53ceac4f1c5d6d7935bec23, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: -1
+      kind: 7
+    caster:
+      prefab: 17
+      kind: -1
+  - skill: {fileID: 11400000, guid: 52c1cd05236593699e05007d11d1ab8c, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 24
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 5ee0b31deda217e8a98953dd478b627e, type: 2}
+    hit:
+      prefab: -1
+      kind: -1
+    area:
+      prefab: 30
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1
+  - skill: {fileID: 11400000, guid: 77f23cd7b587bd9e9170af80da0cb185, type: 2}
+    hit:
+      prefab: -1
+      kind: 7
+    area:
+      prefab: -1
+      kind: -1
+    caster:
+      prefab: -1
+      kind: -1

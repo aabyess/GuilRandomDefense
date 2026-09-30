@@ -30,10 +30,126 @@ public static class SkillVfx
     {
         bool previous = CasterAllowsVfx;
         CasterAllowsVfx = caster == null || caster.grade >= UnitGrade.Special;
+        currentEntry = null;
         return previous;
     }
 
-    public static void EndCast(bool previous) => CasterAllowsVfx = previous;
+    /// <summary>스킬 시전 문맥(09-30): 등급 게이트 + 이 스킬의 이펙트 표 칸(SkillVfxTable) — EndCast까지 적중 이펙트를 그 스킬 것으로 바꾼다.</summary>
+    public static bool BeginCast(UnitData caster, SkillData skill)
+    {
+        bool previous = BeginCast(caster);
+        currentEntry = CasterAllowsVfx ? Table?.Find(skill) : null;
+        return previous;
+    }
+
+    public static void EndCast(bool previous) { CasterAllowsVfx = previous; currentEntry = null; }
+
+    /// <summary>등급 게이트만 잠깐 바꾼다(스킬 표 칸은 그대로) — 시전 안에서 동기로 도는 여러 번 때리기 첫 타가 EndCast로 칸을 지우지 않게.</summary>
+    public static bool SetCasterGate(bool allowed) { bool previous = CasterAllowsVfx; CasterAllowsVfx = allowed; return previous; }
+
+    // ── 스킬별 이펙트(09-30, 무료 팩 Assets/ThirdParty + Docs/research/SKILL_VFX_MAPPING.csv) ──────────────
+    static SkillVfxTable table;
+    static bool tableLoaded;
+    static SkillVfxTable.Entry currentEntry;
+
+    static SkillVfxTable Table
+    {
+        get
+        {
+            if (!tableLoaded) { table = Resources.Load<SkillVfxTable>("Effects/SkillVfxTable"); tableLoaded = true; }
+            return table;
+        }
+    }
+
+    // 크기 기준(세계 단위 지름): 적중은 적 몸보다 조금 크게, 시전자는 사람 키 둘, 범위는 반경×2(너무 작으면 사람 키 둘).
+    const float HitDiameter = 1.4f * Unit;
+    const float CasterDiameter = 2f * Unit;
+    const float MinAreaDiameter = 2f * Unit;
+    const int PrefabPoolCap = 16;
+
+    /// <summary>MP: 팩 프리팹 이펙트를 실제로 띄울 때(번호·위치·지름) — 호스트의 NetGameState가 친구 화면으로 넘긴다.</summary>
+    public static event System.Action<int, Vector3, float, bool> PlayedPrefab;
+
+    static readonly Dictionary<int, List<GameObject>> prefabPools = new Dictionary<int, List<GameObject>>();
+
+    /// <summary>시전 한 번에 한 번: 범위 중심 땅 위(반경에 맞춰)와 시전자 발밑. UnitAttacker.CastSkillLevel이 부른다.</summary>
+    public static void CastAt(Vector3 aoeCenter, Vector3 casterPosition, float worldRange)
+    {
+        if (!Enabled || !CasterAllowsVfx || currentEntry == null) return;
+        if (currentEntry.area.IsSet)
+            PlaySlot(currentEntry.area, aoeCenter, Mathf.Max(MinAreaDiameter, worldRange * 2f), ground: true);
+        if (currentEntry.caster.IsSet)
+            PlaySlot(currentEntry.caster, casterPosition, CasterDiameter, ground: true);
+    }
+
+    static void PlaySlot(SkillVfxTable.Slot slot, Vector3 position, float diameter, bool ground)
+    {
+        if (slot.prefab >= 0) PlayPrefab(slot.prefab, position, diameter, ground, notify: true);
+        else if (slot.kind >= 0) Burst((Kind)slot.kind, ground ? position + Vector3.up * (0.6f * Unit) : position, notify: true);
+    }
+
+    /// <summary>팩 프리팹 하나를 띄운다(풀). NetGameState가 친구 화면에서도 부른다(notify 끔).</summary>
+    public static void PlayPrefab(int index, Vector3 position, float diameter, bool ground, bool notify)
+    {
+        if (!Enabled) return;
+        SkillVfxTable t = Table;
+        if (t == null || index < 0 || index >= t.prefabs.Count || t.prefabs[index] == null) return;
+        if (!prefabPools.TryGetValue(index, out List<GameObject> pool)) prefabPools[index] = pool = new List<GameObject>();
+        pool.RemoveAll(g => g == null);
+
+        GameObject free = null;
+        foreach (GameObject g in pool)
+            if (!g.activeSelf || !AnyAlive(g)) { free = g; break; }
+        if (free == null)
+        {
+            if (pool.Count >= PrefabPoolCap) return;
+            free = MakePrefabInstance(t.prefabs[index]);
+            pool.Add(free);
+        }
+        if (notify) PlayedPrefab?.Invoke(index, position, diameter, ground);
+
+        Vector3 at = position;
+        if (ground) at = FeetBelow(position + Vector3.up * (0.6f * Unit)) + Vector3.up * 0.5f;
+        else
+        {
+            Camera cam = Camera.main;
+            if (cam != null) at += (cam.transform.position - at).normalized * (0.5f * Unit);
+        }
+        float native = index < t.nativeSizes.Count && t.nativeSizes[index] > 0.05f ? t.nativeSizes[index] : 1f;
+        free.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
+        free.transform.localScale = Vector3.one * (diameter / native * ZoomScale());
+        free.SetActive(true);
+        foreach (ParticleSystem ps in free.GetComponentsInChildren<ParticleSystem>(true))
+            ps.Clear(false);
+        foreach (ParticleSystem ps in free.GetComponentsInChildren<ParticleSystem>(true))
+            if (ps.transform == free.transform || ps.transform.parent.GetComponentInParent<ParticleSystem>() == null) ps.Play(true);
+    }
+
+    static bool AnyAlive(GameObject g)
+    {
+        foreach (ParticleSystem ps in g.GetComponentsInChildren<ParticleSystem>(true))
+            if (ps.IsAlive(false)) return true;
+        return false;
+    }
+
+    // 팩 프리팹 사본: 끝나도 스스로 지우거나 끄지 않게(풀에서 다시 쓴다), 크기는 부모 배율을 따르게, 반복은 끔.
+    //   Cartoon FX의 CFXR_Effect(카메라 흔들기·빛·자동 삭제)는 뗀다 — 우리 카메라를 흔들면 안 된다.
+    static GameObject MakePrefabInstance(GameObject prefab)
+    {
+        GameObject g = Object.Instantiate(prefab, Root);
+        foreach (MonoBehaviour mb in g.GetComponentsInChildren<MonoBehaviour>(true))
+            if (mb != null && mb.GetType().Name.StartsWith("CFXR")) Object.Destroy(mb);
+        foreach (Light l in g.GetComponentsInChildren<Light>(true)) l.enabled = false;
+        foreach (ParticleSystem ps in g.GetComponentsInChildren<ParticleSystem>(true))
+        {
+            ParticleSystem.MainModule main = ps.main;
+            main.stopAction = ParticleSystemStopAction.None;
+            main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            main.loop = false;
+            main.playOnAwake = false;
+        }
+        return g;
+    }
 
     // MP: 한 번 터지는 이펙트를 실제로 띄울 때 알린다(등급 게이트·스로틀·풀을 다 지난 뒤) — 호스트의 NetGameState가 받아
     //     친구 화면으로 넘긴다. 위치는 카메라 쪽으로 당기기 전 값이다(당기기는 보는 사람 카메라 기준이라 받는 쪽이 한다).
@@ -157,6 +273,12 @@ public static class SkillVfx
     static void Burst(Kind kind, Vector3 position, bool notify)
     {
         if (!Enabled || !CasterAllowsVfx) return;
+        // 스킬 시전 중의 적중(EnemyDummy가 피해마다 Hit/SpellHit를 부른다) — 이 스킬 표의 적중 칸으로 바꾼다.
+        if ((kind == Kind.Hit || kind == Kind.SpellHit) && currentEntry != null && currentEntry.hit.IsSet)
+        {
+            if (currentEntry.hit.prefab >= 0) { PlayPrefab(currentEntry.hit.prefab, position, HitDiameter, ground: false, notify: notify); return; }
+            if (currentEntry.hit.kind != (int)kind) kind = (Kind)currentEntry.hit.kind;
+        }
         if (!pools.TryGetValue(kind, out List<ParticleSystem> pool)) pools[kind] = pool = new List<ParticleSystem>();
         pool.RemoveAll(p => p == null);
 
