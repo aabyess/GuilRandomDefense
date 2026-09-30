@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_전설적인_엄태웅
   m_EditorClassIdentifier:
-  skillName: A0O7 !그림자 일격-일도양단
-  description: 원작 전설적인 나미 도둑 고양이 - 전설적인(Trig_Legend25). | 2차 배정(트리거·더미 채널): 원작 전설적인 나미 도둑 고양이 - 전설적인(더미 경로 Trig_Legend25 → e0NR(!전설 나미 더미3) → A0W6). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다.
+  skillName: Legend25 915/10000 (나미 도둑 고양이)
+  description: '원작 전설적인 나미 도둑 고양이 - 전설적인(Trig_Legend25). | 2차 배정(트리거·더미 채널): 원작 전설적인 나미 도둑 고양이 - 전설적인(더미 경로 Trig_Legend25 → e0NR(!전설 나미 더미3) → A0W6). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 정정(2026-09-30 구현담당1, PM 지시): 이 번들은 A0O7(h02Y 루피 나이트메어 강타 18%·스턴3 = 원작능력_전설적인_홍인창_A0O7) 이름·게이트에 h02P 나미 값을 얹은 것이었다. 원문 Trig_Legend25(h02P = 전설적인_엄태웅) = `GetRandomInt(1,10000)<916 → 대상 위치 475 광역 325000×1~1.5 MAGIC/UNIVERSAL + 각 대상 AIsr +1` → 확률 0.0915·광역 475·한 벌, 스턴 3 제거. e0NR 더미(A0W6 이감 오라)는 더미 이감 오라 목록.'
   정정(2026-09-06, 판정 d5f72d5): A0W6의 -0.42 효과를 제거했다 — base AOae의 Oae1은 이동속도 감소율(음수)이라 피해가 아니다. 같은 파일의 다른 효과들(325000×2, Trig_Legend25 확정 대응)은 그대로 둔다. (판정 불일치는 음수값을 못 잡는 정규식 버그가 원인이었음이 밝혀져 해소됐다.)
   배선(2026-09-06, STACK_AXES_INCREMENT_LIST.md, HashAttack 확인): 이 파일 전체가 h02P 나미의
   Trig_Legend25 하나로만 배정돼 있어 쪼갤 필요 없이 AisrStack +1을 새 효과로 얹었다
@@ -21,48 +21,50 @@ MonoBehaviour:
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.18
-    range: 0
+    triggerChance: 0.0915
+    range: 475.0
     effects:
     - kind: 0
       basis: 0
-      target: 3
+      target: 2
       damageType: 2
       attackType: 6
       multiplier: 325000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 2
-      attackType: 6
-      multiplier: 325000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      randMin: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
       randMax: 1.5
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     - kind: 9
       basis: 0
-      target: 3
+      target: 2
       damageType: 2
       attackType: 6
       multiplier: 1
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
-    - kind: 1
-      basis: 0
-      target: 3
-      damageType: 0
-      attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 3.0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
