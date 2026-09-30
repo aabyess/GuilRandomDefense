@@ -36,6 +36,9 @@ static class EternalFillProbe
     static readonly string[] Passives = { "초월_강재규_AP", "초월_최상호_AD", "초월_조성진_AD", "초월_박민수_AD", "초월_배성령_AD", "초월_노태현_AP", "초월_강주혁_AP",
                                           "영원_이지원", "제한_김강민", "랜덤_이민형", "전설적인_임채현", "전설적인_임채민", "전설적인_이유선", "변화됨_박은석" };
     static string ArenaPassives() { Units = Passives; return Arena(); }
+    // 제한 나머지(2026-09-30) — call:EternalFillProbe.ArenaLimited.
+    static readonly string[] Limited = { "제한_강보명", "제한_최영민", "제한_전법규", "제한_이충민", "제한_이유범", "제한_임준성", "제한_김민규", "제한_박성호", "제한_김강민" };
+    static string ArenaLimited() { Units = Limited; return Arena(); }
 
     class Track { public Vector3 at; public string unit; public float stunStart = -1f; public readonly List<float> stuns = new List<float>(); }
     static readonly Dictionary<EnemyDummy, Track> tracks = new Dictionary<EnemyDummy, Track>();

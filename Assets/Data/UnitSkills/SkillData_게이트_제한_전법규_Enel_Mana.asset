@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_제한_전법규_Enel_Mana
   m_EditorClassIdentifier:
   skillName: 에넬 G.O.D - 제한됨 — MANA게이지145
-  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_EnelAttack `UNIT_STATE_MANA==145` → Trig_Enel_Mana Stage3: 주 대상 위치 800 적 전원 Aegr 레벨 +18 + UnitDamageTargetBJ(0.02×주 대상 MAX_LIFE, NORMAL→Spells/UNIVERSAL→AP). ⚠️ 원작 체력 항은 각 적이 아니라 주 대상(unitB) 최대체력 기준(§3-4 축 차이) — 우리는 맞는 적 각자. e07N stomp(A0PN, adur 빈칸=기반 기본값 미확인) 스턴은 뺐다.'
+  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_EnelAttack `UNIT_STATE_MANA==145` → Trig_Enel_Mana Stage3: 주 대상 위치 800 적 전원 Aegr 레벨 +18 + UnitDamageTargetBJ(0.02×주 대상 MAX_LIFE, NORMAL→Spells/UNIVERSAL→AP). ⚠️ 원작 체력 항은 각 적이 아니라 주 대상(unitB) 최대체력 기준(§3-4 축 차이) — 우리는 맞는 적 각자. e07N stomp(A0PN, adur 빈칸=기반 기본값 미확인) 스턴은 뺐다. [제한 나머지 09-30] L-11: stomp A0PN(시전자 주인 더미, 대상 중심 800 범위, Wrs1 4500000, adur 빈칸 = 스톡 3.0 · ahdu 0.45) 추가 — 고정 피해 450만이 통째로 빠져 있었다. (Tools/apply_limited_rest.py)'
   triggerType: 3
   levels:
   - cooldown: 0
@@ -67,6 +67,50 @@ MonoBehaviour:
       targetConditionValue: 0.0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 1
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 4500000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 3.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     requiredTargetBuffId:
     forbiddenTargetBuffId:
     hitCountFloor: 0
