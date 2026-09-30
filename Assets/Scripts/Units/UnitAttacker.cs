@@ -562,16 +562,8 @@ public class UnitAttacker : MonoBehaviour
                           armorIgnoreRatio: 0f, isAbilityDamage: false);
         SkillTelemetry.Damage(unitData, "치명", target, critHpBefore);
 
-        if (unitData.critStunDuration > 0f) StartCoroutine(CritStunRoutine(target, unitData.critStunDuration));
-    }
-
-    // SupportShop.StunRoutine과 같은 패턴 — AddFreeze/RemoveFreeze는 겹침 횟수를 세므로
-    // 다른 스턴원과 동시에 걸려도 서로를 밀어내지 않는다.
-    IEnumerator CritStunRoutine(EnemyDummy target, float duration)
-    {
-        target.AddFreeze();
-        yield return new WaitForSeconds(duration);
-        if (target != null) target.RemoveFreeze();
+        // 스턴 시간은 걸린 적이 센다(EnemyDummy.FreezeFor) — 이 유닛이 사라져도 풀린다.
+        if (unitData.critStunDuration > 0f) target.FreezeFor(unitData.critStunDuration);
     }
 
     // ---- 유닛 능력(스킬) — 평타·Bash와 별개 축이다(PM 지시, 2026-09-05). 기존 attackTimer·
@@ -1773,18 +1765,19 @@ public class UnitAttacker : MonoBehaviour
                 break;
 
             // 일반 행동정지 스턴만이다 — 원작의 "게이지를 미는 스턴"(신세계 사이드보스
-            // 전용, 우리에 그 시스템 자체가 없다)은 안 만든다. SupportShop.StunRoutine·
-            // UnitAttacker.CritStunRoutine과 같은 패턴: AddFreeze/RemoveFreeze는 겹침
+            // 전용, 우리에 그 시스템 자체가 없다)은 안 만든다. AddFreeze/RemoveFreeze는 겹침
             // 횟수를 세므로 다른 스턴원과 동시에 걸려도 서로를 밀어내지 않는다.
+            // 시한 효과(스턴·이감·방깎·ArmorBonus/HealOverTime)는 전부 걸린 적이 센다(EnemyDummy.*For, 2026-09-30) —
+            // 여기서 코루틴으로 세면 이 유닛이 조합·판매로 사라질 때 영영 안 풀린다.
             case SkillEffectKind.Stun:
-                if (effect.duration > 0f) StartCoroutine(SkillStunRoutine(target, effect.duration));
+                if (effect.duration > 0f) target.FreezeFor(effect.duration);
                 break;
 
             // 이감(2026-09-29) — multiplier = 남는 속도 비율. AddSlow/RemoveSlow는 같은 값으로 짝을 맞춰야 빠진다.
             // multiplier 0 = 「최저 이속까지」(원작 Htc3·Ctc3 ≥ 1) — EnemyDummy가 원작 MinUnitSpeed 하한으로 올린다.
             case SkillEffectKind.Slow:
                 if (effect.duration > 0f && effect.multiplier >= 0f && effect.multiplier < 1f)
-                    StartCoroutine(SkillSlowRoutine(target, effect.multiplier, effect.duration));
+                    target.SlowFor(effect.multiplier, effect.duration);
                 break;
 
             // 방깎 — 부호 없는 감소값(effect.multiplier 그대로가 곧 깎는 양, ArmorBonus와
@@ -1794,8 +1787,8 @@ public class UnitAttacker : MonoBehaviour
             // 누적한다(원작 방깎은 대개 지속시간이 없다, war3map.w3h 버프 311개 전수 확인).
             // 원작에선 트리거가 AId1 레벨을 올리는 것이라 합계 −75에서 멈춘다(EnemyDummy.Aid1ShredCap).
             case SkillEffectKind.ArmorBreak:
-                target.AddAid1ArmorShred(effect.multiplier);
-                if (effect.duration > 0f) StartCoroutine(RevertArmorShredRoutine(target, effect.multiplier, effect.duration));
+                if (effect.duration > 0f) target.Aid1ArmorShredFor(effect.multiplier, effect.duration);
+                else target.AddAid1ArmorShred(effect.multiplier);
                 break;
 
             // ArmorBonus·HealOverTime — EnemyDummy.ApplyAllyAuraEffect/RemoveAllyAuraEffect가
@@ -1807,8 +1800,8 @@ public class UnitAttacker : MonoBehaviour
             // 때까진 실질적으로 안 씀).
             case SkillEffectKind.ArmorBonus:
             case SkillEffectKind.HealOverTime:
-                target.ApplyAllyAuraEffect(effect);
-                if (effect.duration > 0f) StartCoroutine(RevertAllyAuraEffectRoutine(target, effect, effect.duration));
+                if (effect.duration > 0f) target.AllyAuraEffectFor(effect, effect.duration);
+                else target.ApplyAllyAuraEffect(effect);
                 break;
 
             // 버프 부여(2026-09-06, PM 지시 — "버프를 실제로 걸 때만 게이트로 쓰라") — 원작
@@ -1840,32 +1833,6 @@ public class UnitAttacker : MonoBehaviour
 
             // ExtraProjectile은 아직 값 의미가 없다(이번 작업 범위 밖) — 조용히 무시.
         }
-    }
-
-    IEnumerator SkillSlowRoutine(EnemyDummy target, float remainingSpeed, float duration)
-    {
-        target.AddSlow(remainingSpeed);
-        yield return new WaitForSeconds(duration);
-        if (target != null) target.RemoveSlow(remainingSpeed);
-    }
-
-    IEnumerator SkillStunRoutine(EnemyDummy target, float duration)
-    {
-        target.AddFreeze();
-        yield return new WaitForSeconds(duration);
-        if (target != null) target.RemoveFreeze();
-    }
-
-    IEnumerator RevertArmorShredRoutine(EnemyDummy target, float amount, float duration)
-    {
-        yield return new WaitForSeconds(duration);
-        if (target != null) target.AddAid1ArmorShred(-amount);
-    }
-
-    IEnumerator RevertAllyAuraEffectRoutine(EnemyDummy target, SkillEffect effect, float duration)
-    {
-        yield return new WaitForSeconds(duration);
-        if (target != null) target.RemoveAllyAuraEffect(effect);
     }
 
     // 계측 채널 — %체력 세 basis는 「스킬%HP」로 따로 센다(보스 %HP 게이트 제거 효과를 재려고, 2026-09-30).

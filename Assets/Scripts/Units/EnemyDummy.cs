@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -187,6 +188,41 @@ public class EnemyDummy : MonoBehaviour
         freezeCount = Mathf.Max(0, freezeCount - 1);
         ApplyFreeze();
         if (freezeCount == 0 && stunVfx != null) { SkillVfx.Stop(stunVfx); stunVfx = null; }
+    }
+
+    // ── 시한 효과(2026-09-30) — 걸린 쪽(이 적)이 스스로 세고 푼다. 건 유닛의 코루틴으로 세면 그 유닛이 조합·판매로
+    // 사라질 때 되돌리기도 같이 죽어 스턴·이감·방깎이 영영 남는다(CasterVanishProbe: 1.2초 스턴이 시전자 Destroy 6초 뒤에도 남음).
+    public void FreezeFor(float duration) { if (isActiveAndEnabled) StartCoroutine(FreezeRoutine(duration)); }
+    public void SlowFor(float multiplier, float duration) { if (isActiveAndEnabled) StartCoroutine(SlowRoutine(multiplier, duration)); }
+    public void Aid1ArmorShredFor(float amount, float duration) { if (isActiveAndEnabled) StartCoroutine(Aid1ArmorShredRoutine(amount, duration)); }
+    public void AllyAuraEffectFor(SkillEffect effect, float duration) { if (isActiveAndEnabled) StartCoroutine(AllyAuraEffectRoutine(effect, duration)); }
+
+    IEnumerator FreezeRoutine(float duration)
+    {
+        AddFreeze();
+        yield return new WaitForSeconds(duration);
+        RemoveFreeze();
+    }
+
+    IEnumerator SlowRoutine(float multiplier, float duration)
+    {
+        AddSlow(multiplier);
+        yield return new WaitForSeconds(duration);
+        RemoveSlow(multiplier);
+    }
+
+    IEnumerator Aid1ArmorShredRoutine(float amount, float duration)
+    {
+        AddAid1ArmorShred(amount);
+        yield return new WaitForSeconds(duration);
+        AddAid1ArmorShred(-amount);
+    }
+
+    IEnumerator AllyAuraEffectRoutine(SkillEffect effect, float duration)
+    {
+        ApplyAllyAuraEffect(effect);
+        yield return new WaitForSeconds(duration);
+        RemoveAllyAuraEffect(effect);
     }
 
     // ── 스킬 이펙트(SkillVfx, 2026-09-29) — 받는 쪽에서 띄운다. 등급 게이트·재질 유무는 SkillVfx가 판단한다. ──

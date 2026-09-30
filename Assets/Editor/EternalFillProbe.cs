@@ -101,6 +101,8 @@ static class EternalFillProbe
         {
             List<float> stuns = g.SelectMany(t => t.stuns).OrderBy(x => x).ToList();
             sb.Append($"\n{g.Key} 표적 스턴 {stuns.Count}회" + (stuns.Count > 0 ? $" (최소 {stuns[0]:0.00} · 중앙 {stuns[stuns.Count / 2]:0.00} · 최대 {stuns[stuns.Count - 1]:0.00}초) 전부: {string.Join(" ", stuns.Select(x => x.ToString("0.00")))}" : ""));
+            // 표적별 — 평타 대상이 아닌 표적이 걸린 스턴은 무작위 대상(RandomEnemyInRange) 효과만 낼 수 있다(비비 더블샷 둘째 발).
+            sb.Append($" · 표적별 {string.Join("/", g.Select(t => t.stuns.Count + (t.stunStart >= 0f ? 1 : 0)))}");
         }
         return sb.ToString();
     }
