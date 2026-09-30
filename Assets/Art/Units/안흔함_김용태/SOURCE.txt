@@ -1,32 +1,28 @@
-원본 파일명: Yujiro Hanma.fbx
-받은 폴더:   /var/folders/xg/fb93t40j38j8b2swdmjblvp00000gn/T/tmp.WlRViwC9Qy/안흔함_김용태
-옮긴 날:     2026-09-07
-리깅:        본·스킨 데이터 1283 건
-애니메이션:  커브 0 건
+안흔함_김용태 ← 바솔로뮤 쿠마 PX(원피스) 스킨 출처 — 2026-09-30 교체
 
-⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
+🔴 교체 기록: 옛 모델(Yujiro Hanma)은 사장님 지시로 다른세계_한마_유지로로 옮겼다(PM 복사, FBX·텍스처 SHA-1 같음 확인).
+   옛 FBX·.fbx.meta·Textures는 지우고 새로 썼다(옛 .meta의 humanDescription이 남으면 T자가 된다 — skin-import-traps ①).
 
-출처·크레딧 (원본 Read Me!.txt):
-  캐릭터: BAKI (유지로 한마)
-  3D 모델: Fist of the North Star Legends Revive (게임 추출)
-  HD 텍스처·포팅: Omega Slender
-  이용 조건: 크레딧 표기만 요구한다.
+원본: ~/Desktop/구랜디스킨모음/02_안흔함/안흔함_김용태.zip
+  sha256: 81c814cc8e0802829992690b60f1030d13aa73e1807bcb205d4acd1925e5e04b
+  내용물: source/KUMAEXPORT.fbx(2019) + textures/ 5장(TEXTURE·TEXTURE-bump·PANTS-DIFFUSE·PANTS-BUMP·CAP .jpg)
 
-사장님 확정 2026-09-07: IP 제약 없음(상업적 사용 아님, 친구들과 재미로).
+라이선스: ⚠️ 미확인 — zip에 license 파일이 없다(원본 경로 B:\WAWASCHOOLFILES\… — 학교 과제물로 보인다). 사장님 확인 필요.
 
-── 원본 보관 기록 (2026-09-14, 다운로드 원본 삭제 전) ──
-사장님 결정: 정보만 여기 적고 다운로드 원본은 지운다. 전체 목록 Docs/ART_SOURCES_ARCHIVE.md
-- ~/.Trash/yujiro-hanma-v10.zip · 11.9MB · sha256 4b5ec7b039bafdc2
-    source/Yujiro Hanma v1_0 by Omega Slender.zip (8.3MB)
-    textures/Hair.png (0.5MB)
-    textures/Body.png (3.0MB)
-- ~/.Trash/yujiro-hanma-v10/ (풀어 둔 폴더 · 20.6MB · 파일 9개)
-    textures/Hair.png (0.5MB)
-    textures/Body.png (3.0MB)
-    source/Yujiro Hanma v1_0 by Omega Slender.zip (8.3MB)
-    source/Yujiro Hanma v1.0 by Omega Slender/Read Me!.txt (0.0MB)
-    source/Yujiro Hanma v1.0 by Omega Slender/Yujiro Hanma.fbx (4.8MB)
-    source/Yujiro Hanma v1.0 by Omega Slender/Yujiro Hanma.fbm/Hair.png (0.8MB)
-    source/Yujiro Hanma v1.0 by Omega Slender/Yujiro Hanma.fbm/Body.png (3.0MB)
-    source/Yujiro Hanma v1.0 by Omega Slender/Yujiro Hanma.fbm/Body_Normal.png (0.1MB)
-    source/Yujiro Hanma v1.0 by Omega Slender/Yujiro Hanma.fbm/Hair_Normal.png (0.0MB)
+빌드 스크립트: Tools/blender/gen_biped_skin.py (SKINS["안흔함_김용태"])
+  실행: blender -b --factory-startup --python Tools/blender/gen_biped_skin.py -- 안흔함_김용태
+
+처리 요약(2026-09-30, blender 세션):
+- Mixamo 오토리깅(mixamorig 65뼈, A자, 배율 0.01·X 90°) → 22뼈(손가락·HeadTop_End·Toe_End 접음), 팔 A자 약 36° → 수평.
+  원본 액션 1개(mixamo Layer0)는 안 씀. 메시 8개 전부 사용(셔츠·바지·몸·모자·머리카락·신발·안경(HAT)·빨간 눈빛(Cylinder001)).
+- 🔴 면 방향: 모자(CAP)가 대부분 안쪽으로 뒤집혀 있어 뒷면 컬링에서 모자가 사라지고 이마가 띠처럼 비쳤다(컬링 끈 렌더는 멀쩡).
+  8개 메시 전부 면 방향을 바깥으로 다시 맞춤(recalc_normals). 전후: ClaudeBridge/shots/kuma_cap_normals_before_after.png.
+- 재질: 원본 이름이 "09___Defaultmat" 꼴이라 ArtBinder가 못 찾는다 → 텍스처 있는 셋은 텍스처 파일 이름으로(TEXTURE·
+  PANTS-DIFFUSE·CAP — 원본 모자는 cap.psd를 가리켰지만 zip엔 CAP.jpg), 단색 다섯은 뜻 있는 이름 + 64² 단색 PNG
+  (KumaSkin·KumaHair·KumaShoes·KumaRedPin·KumaHatBand — 원본 Base Color를 sRGB로).
+- bump 두 장(TEXTURE-bump·PANTS-BUMP)은 흑백 높이맵(원본이 노멀맵 노드에 잘못 꽂음) — 기본색 우선이라 안 씀.
+  쓰려면 유니티 텍스처 임포트 「Create from Grayscale」로 노멀맵을 만들 수 있다.
+- UV0 범위 V 2.59(타일링) — 유니티 기본 Wrap=Repeat면 원본대로 보인다.
+- 재수입 검사: 22뼈(22/22) · 키 1.8 · 무가중치 0 · 53,940삼각형 · idle·walk·attack 정상 · clip_spread 최대 0.97 · check_entries 통과.
+- ⚠️ mesh_clash idle +13.8% · walk +9.0% — 팔을 내리면 위팔 소매가 거대한 재킷 어깨 속에 묻힌다(몸집 설계 탓, 렌더에서
+  찢김·튀어나옴은 없고 아래팔부터 재킷 밖으로 나온다).

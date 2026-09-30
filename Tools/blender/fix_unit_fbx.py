@@ -1821,8 +1821,9 @@ UNITS = {
     #   여기 항목은 **「만드는 법」이 아니라 「못 만든다는 기록」**이다. rebuild 표식이 관문을 막는다.
     #   원본을 다시 구하면 그때 진짜 설정으로 바꿀 것.
     # ══════════════════════════════════════════════════════════════════════════════════════
-    "안흔함_김용태": dict(path="Assets/Art/Units/안흔함_김용태/안흔함_김용태.fbx",
-                    rebuild="불가 — 설정도 원본도 없음(원본 Yujiro Hanma.fbx, ~/.Trash/yujiro-hanma-v10.zip sha256 4b5ec7b0… 삭제됨)"),
+    # 🔴 2026-09-30 교체: 옛 안흔함_김용태(Yujiro Hanma)는 사장님 지시로 다른세계_한마_유지로로 옮겼다(PM 복사 — FBX·텍스처 SHA-1 전부 같음 확인, FBX 5b548f33…). 안흔함_김용태는 이제 쿠마 — gen_biped_skin.py SKINS["안흔함_김용태"]가 짓는다.
+    "다른세계_한마_유지로": dict(path="Assets/Art/Units/다른세계_한마_유지로/다른세계_한마_유지로.fbx",
+                    rebuild="불가 — 설정도 원본도 없음(옛 안흔함_김용태를 옮긴 것. 원본 Yujiro Hanma.fbx, ~/.Trash/yujiro-hanma-v10.zip sha256 4b5ec7b0… 삭제됨)"),
     "안흔함_엄태웅": dict(path="Assets/Art/Units/안흔함_엄태웅/안흔함_엄태웅.fbx",
                     rebuild="불가 — 설정도 원본도 없음(원본 Baki.fbx, sha256 b804a941… 삭제됨. 김용태와 같은 리그)"),
     "안흔함_이재윤": dict(path="Assets/Art/Units/안흔함_이재윤/안흔함_이재윤.fbx",

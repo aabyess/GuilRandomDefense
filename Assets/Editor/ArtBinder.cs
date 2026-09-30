@@ -555,7 +555,23 @@ public static class ArtBinder
     }
 
     [MenuItem("Tools/아트/텍스처 연결")]
-    public static void LinkTextures()
+    public static void LinkTextures() => LinkTexturesWhere(null);
+
+    // 유닛 하나만(2026-09-30): 전체 「텍스처 연결」은 적 모델·다른 유닛 .meta까지 다시 리맵해 재질 수백 개를 새로 만든다.
+    //   새 스킨 하나를 넣을 땐 이것만. ClaudeBridge `call ArtBinder.LinkTexturesFor` 는 인자가 없어서 LinkTexturesUnits(아래 목록)로.
+    public static void LinkTexturesFor(string unitFolder) =>
+        LinkTexturesWhere(p => Nfc(System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(p))) == Nfc(unitFolder));
+
+    public static string LinkTexturesUnits()
+    {
+        foreach (string u in PendingLinkUnits) LinkTexturesFor(u);
+        return "텍스처 연결(유닛만): " + string.Join(", ", PendingLinkUnits);
+    }
+
+    // 이번에 새로 넣은 스킨 — LinkTexturesUnits가 도는 목록. 새 스킨을 넣을 때 여기에 이름을 더한다.
+    static readonly string[] PendingLinkUnits = { "다른세계_무면허_라이더", "안흔함_김용태", "초월위습_박은석" };
+
+    static void LinkTexturesWhere(System.Func<string, bool> modelFilter)
     {
         List<Texture2D> textures = LoadTexturesUnder("Assets/Art");
 
@@ -575,6 +591,7 @@ public static class ArtBinder
 
         foreach (string modelPath in ModelPaths())
         {
+            if (modelFilter != null && !modelFilter(modelPath)) continue;
             ModelImporter importer = AssetImporter.GetAtPath(modelPath) as ModelImporter;
             if (importer == null) continue;
 

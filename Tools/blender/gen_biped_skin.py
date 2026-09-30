@@ -876,6 +876,7 @@ SKINS = {
         mesh_name="Kuma",
         height=1.8,
         drop_meshes=set(),
+        recalc_normals=("BODY_FINAL", "CAP", "Cylinder001", "HAIR", "HAT", "KUMA_SHIRT_FINAL", "PANTS_FINAL001", "SHOES"),
         material_rename={"KUMA_SHIRT_FINAL": "TEXTURE", "PANTS_FINAL001": "PANTS-DIFFUSE", "CAP": "CAP",
                          "BODY_FINAL": "KumaSkin", "HAIR": "KumaHair", "SHOES": "KumaShoes",
                          "Cylinder001": "KumaRedPin", "HAT": "KumaHatBand"},
@@ -898,6 +899,37 @@ SKINS = {
             "KumaShoes": ("solid", (0.16, 0.13, 0.15, 1.0)), "KumaRedPin": ("solid", (1.0, 0.0, 0.0, 1.0)),
             "KumaHatBand": ("solid", (0.79, 0.79, 0.79, 1.0)),
         },
+        level_arms=True,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
+    # 초월위습_박은석 ← 「Kuma Slave」(원피스, 노예가 된 바솔로뮤 쿠마) — 사장님 지정 2026-09-30(「초월 쿠마 위습」).
+    # 원본: zip 안 source/kuma_slave_fbx_opvc_by_strifffe_djzlovi.rar(RAR5 — bsdtar로 풀림, unar와 바이트 같음 확인)
+    #   → mesh.fbx · daxiong.jpeg(1024², zip의 textures/daxiong.jpeg와 픽셀 같음) · kuma slave.png(1920×1080 미리보기, 안 씀).
+    #   작성자 표기 「OPVC by strifffe」(파일 이름). 메시 daxiong 하나(6,042정점) · 재질 슬롯 0 · UV 2장(UV0 사용) · 3ds Biped 80뼈.
+    #   등의 칼 세 자루는 몸에 꽂힌 설계(Spine2 가중치, 미리보기와 같음) — 떠 있지 않아 유지.
+    #   팔이 아래로 약 60° 처진 자세 → level_arms. 쇄골 부모가 Neck(보통은 Spine2)이지만 22뼈 새 계층이 Spine2로 잇는다.
+    "초월위습_박은석": dict(
+        source="~/Desktop/구랜디스킨모음/14_초월위습/초월위습_박은석.zip",
+        glb_member="source/kuma_slave_fbx_opvc_by_strifffe_djzlovi.rar",
+        inner_gltf="mesh.fbx",
+        source_format="fbx",
+        path="Assets/Art/Units/초월위습_박은석/초월위습_박은석.fbx",
+        mesh_name="KumaSlave",
+        height=1.8,
+        biped_prefix="Bip001",
+        drop_meshes=set(),
+        assign_material={"daxiong": "daxiong"},
+        fold={"Bip001": "Hips", "Bip001 L Toe0_end": "LeftToeBase", "Bip001 R Toe0_end": "RightToeBase",
+              # 머리 보조뼈 — 옆머리(Bone001·002 좌우)·뒷머리(Bone004·005)·얼굴(Bone016·018), 목 앞 Bone007.
+              **{n: "Head" for n in ("Bone001", "Bone002", "Bone002_end", "Bone001(mirrored)", "Bone002(mirrored)",
+                                     "Bone002(mirrored)_end", "Bone004", "Bone005", "Bone005_end",
+                                     "Bone016", "Bone016_end", "Bone018", "Bone018_end")},
+              "Bone007": "Neck", "Bone007_end": "Neck",
+              **{f"Bip001 {s} Finger{i}{j}_end": ("Left" if s == "L" else "Right") + "Hand"
+                 for s in ("L", "R") for i in range(5) for j in ("2",)}},
+        tex_member="textures/daxiong.jpeg",
+        materials={"daxiong": ("texture_file", "tex_member")},
         level_arms=True,
         decimate_ratio=1.0,
         uv_layers=1,
@@ -931,6 +963,8 @@ def find_glb_and_extras(cfg, workdir):
             os.makedirs(inner_dir, exist_ok=True)
             subprocess.run(["bsdtar", "-xf", glb_path, "-C", inner_dir], check=True)
             glb_path = os.path.join(inner_dir, cfg["inner_gltf"])
+            # 🔴 7z는 RAR5를 0바이트로 푸는 일이 있었다(메모리) — 풀린 파일이 비었으면 여기서 멈춘다.
+            assert os.path.getsize(glb_path) > 0, f"RAR에서 풀린 {glb_path}가 0바이트"
         # 히나타 — 곁텍스처(밑줄 이름 png)가 소스 FBX 안 깨진 경로(공백 이름 tga) 대신
         # 실제로 필요한 경우, "_member"로 끝나는 cfg 키를 전부 workdir 기준 경로로 돌려준다
         # (gen_rigify_skin.py의 texture_file kind와 같은 장치).
@@ -1117,6 +1151,30 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
             bm.free()
             o.data.update()
         report["뼈 기준 정점 삭제"] = {b: 0 for b in target_bones}  # 개수는 실측 로그로 대체(아래)
+
+    # 🔴 노예 쿠마(2026-09-30) — 메시에 재질 슬롯이 아예 없다(텍스처 한 장만 곁에 있음). cfg["assign_material"]=
+    # {메시: 재질 이름}이면 새 재질을 만들어 모든 면에 건다(그다음 materials 표가 그 이름으로 텍스처를 잇는다).
+    for mesh_name, mat_name in cfg.get("assign_material", {}).items():
+        o = bpy.data.objects[mesh_name]
+        mat = bpy.data.materials.new(mat_name)
+        mat.use_nodes = True
+        o.data.materials.clear()
+        o.data.materials.append(mat)
+        for poly in o.data.polygons:
+            poly.material_index = 0
+
+    # 🔴 쿠마(2026-09-30) — 모자(CAP) 면 방향이 대부분 안쪽으로 뒤집혀 있어 뒷면 컬링(유니티 URP Lit 기본)에서 모자가
+    # 사라지고 이마가 띠처럼 비친다(컬링 끈 렌더에선 멀쩡 — 확인). cfg["recalc_normals"]의 메시만 면 방향을 바깥으로 다시 맞춘다.
+    for mesh_name in cfg.get("recalc_normals", ()):
+        import bmesh as _bmesh
+        o = bpy.data.objects[mesh_name]
+        bm = _bmesh.new()
+        bm.from_mesh(o.data)
+        _bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        bm.to_mesh(o.data)
+        bm.free()
+        o.data.update()
+        report.setdefault("면 방향 다시 맞춤", []).append(mesh_name)
 
     # UV 층을 첫 장만 남기고 통일(히소카 사고 재발 방지 — 이 소스는 UV1이 범위 1.9×2.0으로
     # 퇴화가 아니라 오히려 "너무 큰" 비정상 라이트맵이라 반드시 첫 장만 남겨야 한다).
