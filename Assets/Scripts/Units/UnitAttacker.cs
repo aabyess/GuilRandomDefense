@@ -599,6 +599,14 @@ public class UnitAttacker : MonoBehaviour
 
     public void GainKillExperience() => AddHeroXp(1);
 
+    /// <summary>캐릭터 레벨 characterLevel(1~24)에 닿는 누적 경험치(=누적 킬 수). 탐침이 영웅을 그 레벨로 세울 때 쓴다.</summary>
+    public static int HeroXpToReach(int characterLevel)
+    {
+        if (characterLevel <= 1) return 0;
+        int index = Mathf.Min(characterLevel - 2, HeroXpThresholds.Length - 1);
+        return (int)System.Math.Ceiling(HeroXpThresholds[index]);
+    }
+
     // ⚠️ 아직 안 잇는다 — "어느 유닛의 주스탯이 무엇인가"(STR/AGI/INT 중 무엇이 그 유닛의
     // 성장 축인가) 대응표가 없다(PM 지시 2026-09-06). 대응이 오면 각 유닛의 UnitData에서
     // 주스탯 쪽 xPerLevel엔 0.85f, 나머지 둘엔 0.21f를 채운다 — 코드는 이미 그 값을

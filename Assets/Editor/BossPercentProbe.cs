@@ -12,6 +12,8 @@ using UnityEngine;
 // gameshot:
 //   gameshot x.png 1 1920x1080 click?:보통 wait:2 call:BossPercentProbe.ArenaR50 wait:60 call:BossPercentProbe.Report
 //   gameshot x.png 1 1920x1080 click?:보통 wait:2 call:BossPercentProbe.ArenaR10 wait:20 call:BossPercentProbe.Report
+// 영웅 레벨 지정(스탯 비례 스킬 실측, PM 09-30): ArenaR50Lv10 · ArenaR50Lv20 — 세운 유닛에 그 레벨 누적 경험치를 준다
+// (UnitAttacker.HeroXpToReach, 원작 NeedHeroXP 곡선). 스탯 성장은 초월·영원(영웅)만 있어 나머지는 변화 없다.
 static class BossPercentProbe
 {
     const float RingRadius = 2000f;   // 이웃 간격 ≈ 2π·2000/38 ≈ 330 > 최대 사거리 240(월드 단위)
@@ -21,9 +23,13 @@ static class BossPercentProbe
     static readonly Dictionary<UnitData, Slot> slots = new Dictionary<UnitData, Slot>();
     static EnemyData bossData;
     static float startTime;
+    static int arenaHeroLevel = 1;
+    static int lastHeroLevel = 1;
 
     static string ArenaR50() => Arena("Assets/Data/Enemies/Enemy_R50_이태훈.asset");
     static string ArenaR10() => Arena("Assets/Data/Enemies/Enemy_R10_주영호.asset");
+    static string ArenaR50Lv10() { arenaHeroLevel = 10; return ArenaR50(); }
+    static string ArenaR50Lv20() { arenaHeroLevel = 20; return ArenaR50(); }
 
     static string Arena(string bossPath)
     {
@@ -50,14 +56,20 @@ static class BossPercentProbe
             Vector3 home = c + Quaternion.Euler(0f, i * 360f / units.Count, 0f) * Vector3.forward * RingRadius;
             var slot = new Slot { home = home, boss = SpawnBoss(home) };
             slots[units[i]] = slot;
-            if (spawner.Spawn(units[i], home + Vector3.back * 40f, 0) != null) spawned++;
+            GameObject go = spawner.Spawn(units[i], home + Vector3.back * 40f, 0);
+            if (go == null) continue;
+            spawned++;
+            if (arenaHeroLevel > 1 && go.TryGetComponent(out UnitAttacker attacker))
+                attacker.AddHeroXp(UnitAttacker.HeroXpToReach(arenaHeroLevel));
         }
+        lastHeroLevel = arenaHeroLevel;
+        arenaHeroLevel = 1;   // 다음 ArenaR50/R10은 다시 레벨 1
         SetDeathCount(false);   // 탐침은 레인 적을 안 막는다 — 판 도중 데스카운트 0(게임오버)이 나지 않게(PM, 09-30)
         startTime = Time.time;
         EditorApplication.update -= Watch;
         EditorApplication.update += Watch;
         Time.timeScale = 2f;
-        return $"{source.name}(hp {source.hp}, PV {source.pointValue}, 방어 {source.armor}) · 유닛 {spawned}/{units.Count} · 원래 체력·죽으면 다시 세움 · 2배속";
+        return $"{source.name}(hp {source.hp}, PV {source.pointValue}, 방어 {source.armor}) · 유닛 {spawned}/{units.Count} · 영웅 레벨 {lastHeroLevel} · 원래 체력·죽으면 다시 세움 · 2배속";
     }
 
     static EnemyDummy SpawnBoss(Vector3 at)
@@ -119,7 +131,7 @@ static class BossPercentProbe
         Time.timeScale = 1f;
         float elapsed = Mathf.Max(0.01f, Time.time - startTime);
         float maxHp = bossData != null ? bossData.hp : 1f;
-        var sb = new StringBuilder($"\n{(bossData != null ? bossData.name : "?")} hp {maxHp} · 게임 시간 {elapsed:0.0}초 · 비율 = 그 유닛 총피해 중 몫 · 처치시간 = 총피해 속도로 한 마리");
+        var sb = new StringBuilder($"\n{(bossData != null ? bossData.name : "?")} hp {maxHp} · 영웅 레벨 {lastHeroLevel} · 게임 시간 {elapsed:0.0}초 · 비율 = 그 유닛 총피해 중 몫 · 처치시간 = 총피해 속도로 한 마리");
         foreach (var kv in slots.OrderByDescending(kv => SkillTelemetry.DamageOf(kv.Key, "스킬%HP")))
         {
             UnitData u = kv.Key;
