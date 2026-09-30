@@ -261,6 +261,25 @@ public static class SkillVfx
         ReclaimAttached();
     }
 
+    // MP: 테스트 판정용 — target을 따라가는 러너 수와 그 러너(겹 전부)의 재생 중인 겹 수·살아 있는 입자 수.
+    //   1.2.2부터 붙는 이펙트는 대상의 자식이 아니라 Root 밑에 있으므로 대상 자식을 세면 늘 0이다.
+    public static (int runners, int playing, int particles) AttachedTo(Transform target)
+    {
+        int runners = 0, playing = 0, particles = 0;
+        if (target == null) return (0, 0, 0);
+        foreach ((ParticleSystem ps, Transform t, float _) in attachFollow)
+        {
+            if (ps == null || t != target) continue;
+            runners++;
+            foreach (ParticleSystem layer in ps.GetComponentsInChildren<ParticleSystem>())
+            {
+                if (layer.isPlaying) playing++;
+                particles += layer.particleCount;
+            }
+        }
+        return (runners, playing, particles);
+    }
+
     // 흐려지기가 끝난 것을 빈 풀로 — MonoBehaviour 없이 다음 Attach 때 걷는다.
     static void ReclaimAttached()
     {
