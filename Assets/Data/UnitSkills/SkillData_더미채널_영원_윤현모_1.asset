@@ -13,24 +13,79 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_영원_윤현모_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_영원_윤현모_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 영원_윤현모. 정정(2026-09-06, GATE_FIX_6/b0661f9): 원작 버프 B017 미보유 게이트 = 5절대쿨 에이스영원 4.25초 — ORIGINAL_ABSOLUTE_COOLDOWN.csv에 이미 있던 값이라 새 축 없이 SkillLevel.cooldown으로 그대로 표현한다.  · Trig_Ace_Attack → e0AB(E영원 에이스 특대화권 더미1) → A0BL: 1150000. 정정(2026-09-06, 리서치담당 c00f472 오더 감사): e0AI(A0OH, 120000)를 제거했다 — 오더 없음, 생성 후 RemoveLocation+루프뿐이라 순수 연출. 지어내지 않고 값 기록만 남긴다.
+  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 영원_윤현모. 정정(2026-09-06, GATE_FIX_6/b0661f9): 원작 버프 B017 미보유 게이트 = 5절대쿨 에이스영원 4.25초 — ORIGINAL_ABSOLUTE_COOLDOWN.csv에 이미 있던 값이라 새 축 없이 SkillLevel.cooldown으로 그대로 표현한다.  · Trig_Ace_Attack → e0AB(E영원 에이스 특대화권 더미1) → A0BL: 1150000. 정정(2026-09-06, 리서치담당 c00f472 오더 감사): e0AI(A0OH, 120000)를 제거했다 — 오더 없음, 생성 후 RemoveLocation+루프뿐이라 순수 연출. 지어내지 않고 값 기록만 남긴다. | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Ace_Attack(h059/h05B)의 `B017 없을 때` 갈래 = e0D8 firebolt(A14K 피해 0·스턴3.5) + 시전자 frostarmor(A0CB B017 4.25초 = 이 cooldown) + e0AB carrionswarm(A0BL 1150000, 끝 폭 460) + e0AI 셋 phoenix(A0OH Eim1 120000, 360). 장풍을 대상 위치 460 광역으로(직선 근사), 스턴 3.5 추가, 불사조 화염 120000 한 번(셋 중 대상에 닿는 하나로 근사). 이전: 단일 1150000뿐.'
   triggerType: 0
   levels:
   - cooldown: 4.25
     triggerChance: 1.0
-    range: 0
+    range: 460.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
     effects:
     - kind: 0
       basis: 0
-      target: 3
-      damageType: 1
-      attackType: 3
+      target: 2
+      damageType: 2
+      attackType: 7
       multiplier: 1150000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 1
+      basis: 0
+      target: 3
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 3.5
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 120000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
