@@ -144,7 +144,7 @@ public enum SkillEffectBasis
     // ×0.12 · Legend6 ×0.04 등). 전엔 TargetMaxHpPercent(+k)와 TargetCurrentHpPercent(−k) 두 효과로
     // 나눠 담았는데, DealSkillDamage가 0 이하 피해를 버려서(amount<=0 → return) 음수 쪽이 통째로
     // 사라지고 최대체력×k가 그대로 나갔다. 한 효과 안에서 (MaxHp − Hp)×m + b로 계산한다.
-    // %체력 두 종과 같은 게이트(TakesPercentDamage)를 탄다.
+    // 보스 분기는 %체력 두 종과 같이 효과별 targetCondition으로 건다(2026-09-30 전역 게이트 제거).
     TargetMissingHpPercent,
 }
 

@@ -735,6 +735,7 @@ public class EnemyDummy : MonoBehaviour
     /// 받는가 — 원작 GetUnitPointValue(대상)&lt;200 게이트(리서치담당 재조사, 2026-09-05).
     /// 보스(라운드보스·신세계사이드보스·거대해왕류, 원작 포인트값 200 이상)는 이 분기를
     /// 아예 안 탄다. EnemyData.takesPercentDamage 참고.</summary>
+    // ⚠️ 2026-09-30부터 스킬 피해 계산은 이 값을 안 읽는다(효과별 targetCondition으로 옮김) — 데이터 표시·도구용으로만 남는다.
     public bool TakesPercentDamage => data == null || data.takesPercentDamage;
 
     /// <summary>원작 GetUnitPointValue(이 적). 2026-09-06 신설(PM 지시, "대상 조건 게이트") —

@@ -1445,18 +1445,20 @@ public class UnitAttacker : MonoBehaviour
             // 터지는데, 누가 채우면 조용히 사라진다 — 코드가 아니라
             // check_required_fields.py(#13, basis=Flat인데 bonus≠0)로 막는다.
             case SkillEffectBasis.Flat: return effect.multiplier;
-            // %체력 분기는 "이 대상이 %체력기를 타는가" 게이트가 먼저다(원작
-            // GetUnitPointValue(대상)<200 — 보스는 200 이상이라 이 분기 자체를 건너뛰고 별도
-            // 고정값 분기로 간다). bonus는 **게이트 안쪽**이다 — 게이트에 막히면 상수항도 같이
-            // 0이어야 한다(상수항만 나가면 원작과 다르다). EnemyData.takesPercentDamage 참고.
+            // %체력 세 basis — 2026-09-30부터 보스 게이트가 없다(구현담당1, PM 5번). 전엔
+            // EnemyData.takesPercentDamage=false(보스 36종)면 상수항까지 0이었는데, 원작은 보스를
+            // 막는 전역 장치가 없고(SKILL_BOSS_BRANCH.md §5) 트리거마다 GetUnitPointValue 분기로
+            // 보스에게 다른 식을 준다(173건 중 114건은 보스도 %HP를 받는다). 그 분기는 이제 효과별
+            // SkillEffect.targetCondition(PV <200 / ==200 / ≥200 / ≥300)이 맡는다 — 조건 없는
+            // %체력 효과는 원작처럼 보스도 맞는다.
             // 감수성 계수(PercentDamageTakenMultiplier)는 여기서 안 곱한다 — 아래
             // DealSkillDamage에서 스킬 피해 전반에 곱한다.
             case SkillEffectBasis.TargetMaxHpPercent:
-                return target.TakesPercentDamage ? target.MaxHp * effect.multiplier + effect.bonus : 0f;
+                return target.MaxHp * effect.multiplier + effect.bonus;
             case SkillEffectBasis.TargetCurrentHpPercent:
-                return target.TakesPercentDamage ? target.Hp * effect.multiplier + effect.bonus : 0f;
+                return target.Hp * effect.multiplier + effect.bonus;
             case SkillEffectBasis.TargetMissingHpPercent:
-                return target.TakesPercentDamage ? Mathf.Max(0f, target.MaxHp - target.Hp) * effect.multiplier + effect.bonus : 0f;
+                return Mathf.Max(0f, target.MaxHp - target.Hp) * effect.multiplier + effect.bonus;
             case SkillEffectBasis.CasterAttackPower: return AttackDamage * effect.multiplier + effect.bonus;
             // 연구단계 × multiplier + bonus 꼴을 명시적으로 쓴다(원작 예: 핸콕 "연구횟수×
             // 30,000+360,000") — 이 "연구단계"는 타입 업그레이드(원작 "강화소 3",
@@ -1661,7 +1663,7 @@ public class UnitAttacker : MonoBehaviour
         // 감수성"이 아니라 "이 대상이 스킬 피해를 얼마나 받는가" 계수다 — 원작에 게이트 없이
         // 고정 피해에도 같은 계수가 곱는 사례가 43곳 중 7곳 있다(리서치담당 재조사). 그래서
         // basis를 안 가리고 스킬 피해 전반에 곱한다. %체력 분기 자체를 타는지는 별개 축
-        // (target.TakesPercentDamage, ResolveSkillEffectValue에서 이미 갈랐다)이다.
+        // (2026-09-30부터 효과별 targetCondition — 전역 TakesPercentDamage 게이트는 걷었다)이다.
         float amount = ResolveSkillEffectValue(effect, target, recentAttackDamage) * target.PercentDamageTakenMultiplier;
         // 원작 realD = 0.03×버프개수(SkillEffect.casterBuffCountFactor 주석 참고). 기존
         // 227개 효과는 이 필드가 직렬화에 없어 C# 기본값 0f로 읽힌다 — (1+0×count)=1이라
