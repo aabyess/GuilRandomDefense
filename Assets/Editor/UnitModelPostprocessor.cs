@@ -66,6 +66,11 @@ public class UnitModelPostprocessor : AssetPostprocessor
         "고대의배",
         "해적선",
 
+        // 히든 배 둘(2026-09-30, 써니호·메리호 — gen_prop_unit rig_clips) — 뼈 Root → Hull 둘뿐. 자기 클립 Idle·Move·Attack.
+        // 버전은 안 올렸다 — 두 파일만 .fbx.meta를 지워 새로 읽혔다(올리면 400개를 전부 다시 읽는다).
+        "히든_맥주만땅",
+        "히든_미소야",
+
         // 특별함_노건완(노가리, 잉어 — 2026-09-14) — 물고기라 사람 골격이 없다. 자기 Idle 클립(헤엄·꼬리짓)만 쓴다.
         "특별함_노건완",
 

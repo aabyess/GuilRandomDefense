@@ -142,6 +142,9 @@ public static class ArtBinder
         // 1.0 = 가장 긴 축(이물 돛대 포함 약 29)을 기준 키 20에 맞춘다.
         ("고대의배", 1.0f),
         ("해적선", 1.0f),
+        // 히든 배 둘(2026-09-30, 써니호·메리호 — gen_prop_unit rig_clips, Generic 자체 클립 Idle·Move·Attack). 위 두 척과 같은 자.
+        ("히든_맥주만땅", 1.0f),
+        ("히든_미소야", 1.0f),
         // 특별함_노건완(노가리, 잉어 — 2026-09-14): 몸길이 기준, 재규어와 같은 0.45(몸길이 약 9). 사장님 보고 조정.
         // 🔴 (09-23) 0.45 → 0.66. 어깨(몸)높이 기준으로는 4.2가 나오는데, 그러면 화면에서 안 보인다.
         //    **보이기 바닥선 8**(사람 30의 27%)을 두고 거기에 맞춘 값이다. 재규어 > 잉어 순서는 유지된다.
@@ -569,7 +572,7 @@ public static class ArtBinder
     }
 
     // 이번에 새로 넣은 스킨 — LinkTexturesUnits가 도는 목록. 새 스킨을 넣을 때 여기에 이름을 더한다.
-    static readonly string[] PendingLinkUnits = { "다른세계_올마이트", "다른세계_브로리", "다른세계_김건부" };
+    static readonly string[] PendingLinkUnits = { "히든_맥주만땅", "히든_미소야" };
 
     static void LinkTexturesWhere(System.Func<string, bool> modelFilter)
     {

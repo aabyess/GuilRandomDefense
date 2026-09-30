@@ -1,0 +1,17 @@
+히든_미소야 ← 고잉 메리호(원피스) 스킨 출처 — 2026-09-30 새로 넣음. 🔸 사람형이 아닌 배 — Generic 리그 + 자체 클립.
+
+원본: ~/Desktop/구랜디스킨모음/05_히든/히든_미소야.glb (Sketchfab 「one_piece_-going_merry」, 4.4MB)
+  sha256: 819264a0400a88a13e7e747753b408aaff4cb74b971f63f483b47de41dc95b13
+라이선스: 🔴 미확인 — 사장님 Sketchfab 확인 대기.
+
+빌드 스크립트: Tools/blender/gen_prop_unit.py (UNITS["히든_미소야"], rig_clips="ship" — 히든_맥주만땅과 클립·축·원점 규칙을 같이 쓴다)
+  실행: blender -b --factory-startup --python Tools/blender/gen_prop_unit.py -- 히든_미소야
+
+처리 요약(2026-09-30, Blender 세션):
+- 메시 29 전부 씀(버린 조각 없음) · 뼈 0인 정적 glb.
+- 🔴 원본 86,589삼각형 중 69,120이 난간 살 24묶음(묶음마다 정점 2,490·삼각형 2,880) — 그 묶음만 25%로 감량해 17,280.
+  선체·돛·깃발은 그대로. 합계 34,749삼각형.
+- 재질 1(원본 이름이 글자 그대로 "None" → GoingMerry) · 텍스처 1(1024², Image_0 → GoingMerry_baseColor.png). 알파 전부 1.0.
+- 🔴 뱃머리(양 머리)가 원본에서 −X → Z축 +90° 돌려 −Y. 원점 = 전체 bbox 바닥 가운데 · 가장 긴 변(선체 길이) 2.0m → 1.485 × 2.0 × 1.978.
+- 뼈 2(Root → Hull) · 클립 Idle 240 · Move 60 · Attack 30프레임 — 값은 히든_맥주만땅과 같다(SHIP_CLIPS).
+- 검사: bind_check OK · clip_check 최저 z −0.004 · clip_table 이음새 0.0000 · check_entries 통과.

@@ -82,7 +82,119 @@ UNITS = {
         materials={"kongdao_obj_409a": ("kongdao_obj_409a.png", None),
                    "kongdao_obj_409b": ("kongdao_obj_409b.png", None)},
     ),
+    # ══════════════ 배 두 척(2026-09-30, 사장님 지정) — 사람형이 아니라 **Generic 리그 + 자체 클립 Idle·Move·Attack**(generic-unit-clips 규약).
+    #   이 생성기를 고른 이유: 둘 다 Sketchfab 정적 glb 한 덩이(아틀라스 1장)라 「겉싸개 행렬을 구워 하나로 합치고 바닥 가운데에 놓는」
+    #   이 파일의 길이 그대로이고, 거기에 뼈 둘(Root → Hull)과 지은 클립만 얹으면 된다(rig_clips). gen_scan_rig는 사람형 가중치 길이라 과하고,
+    #   gen_ships는 원본 없이 형상을 짓는 절차형이라 안 맞는다.
+    #   🔴 **두 배는 SHIP_CLIPS·SHIP_PIVOT·length를 같이 쓴다** — 나란히 섰을 때 흔들림·전방·원점이 서로 같아야 한다. 한쪽만 고치지 말 것.
+    #   규칙: 뱃머리 −Y · 원점 = 전체 bbox 바닥 가운데 · 가장 긴 변 2.0m · 메시 전부 Hull에 가중치 1(강체).
+    # 히든_맥주만땅 ← 사우전드 써니호(원피스, Sketchfab 「thusand_sunny」). 메시 2(Object_9 22,560삼각 · Object_10 5,503삼각) + 조명 구 Icosphere(뺌) ·
+    #   재질 1(material_atlas_63275_1) · 이미지 1(1024², 알파 전부 1.0 → 알파 컷 불필요) · 원본에 뼈 2개짜리 아마추어(가중치 있으나 클립 0 — 버리고 새로 짓는다).
+    #   뱃머리(사자)가 이미 −Y. 원본 원점이 선체 가운데 높이라 바닥으로 내린다.
+    #   🔴 원본 아마추어가 메시를 세워 보여 주므로 그 변형을 구운 뒤 버린다(build()의 「원본 아마추어 변형 구움」).
+    "히든_맥주만땅": dict(
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_맥주만땅.glb"),
+        path="Assets/Art/Units/히든_맥주만땅/히든_맥주만땅.fbx",
+        length=2.0, rotate_z=0.0, center="all",
+        drop_meshes=["Icosphere"],
+        materials={"material_atlas_63275_1": (0, None)},
+        rig_clips="ship",
+    ),
+    # 히든_미소야 ← 고잉 메리호(원피스, Sketchfab 「one_piece_-going_merry」). 메시 29 · 재질 1(이름이 글자 그대로 "None" → GoingMerry로 개명) ·
+    #   이미지 1(1024², 알파 전부 1.0) · 뼈 0. 🔴 뱃머리(양 머리)가 −X를 본다 → rotate_z +90°로 −Y.
+    #   🔴 86,589삼각형 중 69,120이 **난간 살 24묶음**(묶음마다 정점 2,490·삼각형 2,880으로 똑같다 — 가는 기둥 하나하나가 고폴리).
+    #   게임 거리에선 점으로 보이는 부품이라 그 묶음만 25%로 감량한다(decimate_by_verts). 선체·돛·깃발은 안 건드린다.
+    "히든_미소야": dict(
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_미소야.glb"),
+        path="Assets/Art/Units/히든_미소야/히든_미소야.fbx",
+        length=2.0, rotate_z=90.0, center="all",
+        material_rename={"None": "GoingMerry"},
+        materials={"GoingMerry": (0, None)},
+        decimate_by_verts={2490: 0.25},
+        rig_clips="ship",
+    ),
 }
+
+# 🔴 배 공용 클립(써니호·메리호가 **같은 값**을 쓴다). 파형은 gen_scan_rig.synth_idle_scan과 같은 식:
+#   각도 = 진폭 × (sin(2πt/N + 위상) − sin(위상)) → 첫·끝 프레임이 쉬는 자세(이음새 0). 축은 세계 축(뱃머리 −Y라 X = 앞뒤 끄덕임, Y = 좌우 기울기).
+#   Idle을 일부러 제일 길게 둔다(ArtBinder가 가장 긴 클립을 기본 상태로 쓰던 때와 같은 동작 — generic-unit-clips).
+#   크기는 기존 배(gen_ships Idle_Bob: 8초·각 2° 이내)와 같은 급. loc는 미터(길이 2.0 기준). ⚠️ 위상 −π/2는 0 → 2×진폭 → 0이라 실제 최대는 적힌 값의 두 배다(Idle 들썩 2cm · Move 4cm · Attack 뒤로 5cm·4°).
+SHIP_PIVOT = 0.12                      # Hull 뼈 머리 높이 = 길이의 12%(물에 잠긴 선이 도는 축)
+SHIP_CLIPS = [
+    dict(take="Idle", frames=240, step=4,
+         bones={"Hull": [((0, 1, 0), 2.0, 0.0), ((1, 0, 0), 1.2, 0.9)]},
+         loc={"Root": [((0, 0, 1), 0.01, -math.pi / 2)]}),
+    dict(take="Move", frames=60, step=2,
+         bones={"Hull": [((1, 0, 0), 3.5, 0.0), ((0, 1, 0), 1.5, 0.6)]},
+         loc={"Root": [((0, 0, 1), 0.02, -math.pi / 2)]}),
+    # 짧은 반동: 뱃머리가 들렸다(+X 회전 = 뒤로 젖힘) 돌아온다 — 위상 −π/2는 혹 하나(0 → 최대 → 0).
+    dict(take="Attack", frames=30, step=1,
+         bones={"Hull": [((1, 0, 0), -2.0, -math.pi / 2)]},
+         loc={"Root": [((0, 1, 0), 0.025, -math.pi / 2)]}),
+]
+RIG_CLIPS = {"ship": (SHIP_PIVOT, SHIP_CLIPS)}
+
+
+def rig_and_clips(obj, length, kind, report):
+    """소품 하나를 뼈 둘(Root → Hull)에 강체로 물리고 클립을 짓는다. (아마추어, 클립 설명들)을 돌려준다."""
+    pivot, specs = RIG_CLIPS[kind]
+    scene = bpy.context.scene
+    data = bpy.data.armatures.new("Armature")
+    arm = bpy.data.objects.new("Armature", data)
+    scene.collection.objects.link(arm)
+    for o in scene.objects:
+        o.select_set(o == arm)
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.mode_set(mode="EDIT")
+    root = data.edit_bones.new("Root")
+    # 🔴 위치 키는 Hull이 아니라 **Root**에 준다(SHIP_CLIPS의 loc) — FBX엔 꼬리가 없어 재수입 때 Blender가 외자식 Hull을
+    #   「이어진 뼈」로 읽고 위치 키를 무시한다(1차 산출에서 clip_table 「첫자세에서 최대」가 0.000으로 나와 알았다). 회전은 Hull(축 높이), 이동은 Root.
+    root.head, root.tail = (0, 0, 0), (0, 0, length * pivot * 0.5)
+    hull = data.edit_bones.new("Hull")
+    hull.head, hull.tail = (0, 0, length * pivot), (0, 0, length * pivot * 2)
+    hull.parent = root
+    bpy.ops.object.mode_set(mode="OBJECT")
+    for vg in list(obj.vertex_groups):
+        obj.vertex_groups.remove(vg)
+    obj.vertex_groups.new(name="Hull").add(list(range(len(obj.data.vertices))), 1.0, "REPLACE")
+    for m in list(obj.modifiers):
+        obj.modifiers.remove(m)
+    obj.modifiers.new("Armature", "ARMATURE").object = arm
+    obj.parent = arm
+    arm.animation_data_create()
+    made = []
+    for spec in specs:
+        n, step = int(spec["frames"]), int(spec["step"])
+        act = bpy.data.actions.new(spec["take"])
+        act.use_fake_user = True
+        arm.animation_data.action = act
+        for pb in arm.pose.bones:
+            pb.rotation_mode = "QUATERNION"
+            pb.matrix_basis = Matrix.Identity(4)
+        frames = list(range(0, n, step)) + [n]
+        for f in frames:
+            for bname in sorted(set(spec["bones"]) | set(spec.get("loc", {}))):
+                pb = arm.pose.bones[bname]
+                R3 = arm.matrix_world.to_3x3() @ pb.bone.matrix_local.to_3x3()
+                rot = Matrix.Identity(3)
+                for axis, deg, phase in spec["bones"].get(bname, ()):
+                    ang = math.radians(deg) * (math.sin(2 * math.pi * f / n + phase) - math.sin(phase))
+                    rot = Matrix.Rotation(ang, 3, Vector(axis).normalized()) @ rot
+                pb.rotation_quaternion = (R3.inverted() @ rot @ R3).to_quaternion()
+                pb.keyframe_insert("rotation_quaternion", frame=1 + f)
+                delta = Vector((0.0, 0.0, 0.0))
+                for axis, meters, phase in spec.get("loc", {}).get(bname, ()):
+                    delta += Vector(axis).normalized() * (meters * (math.sin(2 * math.pi * f / n + phase) - math.sin(phase)))
+                pb.location = R3.inverted() @ delta
+                pb.keyframe_insert("location", frame=1 + f)
+        made.append(f"{act.name} {n}프레임(키 {len(frames)})")
+    for pb in arm.pose.bones:
+        pb.matrix_basis = Matrix.Identity(4)
+    arm.animation_data.action = bpy.data.actions[specs[0]["take"]]
+    scene.frame_start, scene.frame_end = 1, 1 + int(specs[0]["frames"])
+    scene.frame_set(1)
+    report["지은 클립"] = made
+    return arm
 
 
 def glb(path):
@@ -176,6 +288,26 @@ def build(name, cfg, out_dir=None, render_dir=None):
             bpy.data.objects.remove(o, do_unlink=True)
         report["뺀 메시"] = sorted(drop)
 
+    for old, new in cfg.get("material_rename", {}).items():    # 🔸 메리호: 재질 이름이 글자 그대로 "None"
+        bpy.data.materials[old].name = new
+    for nverts, ratio in cfg.get("decimate_by_verts", {}).items():   # 🔸 메리호: 정점 수가 그 값인 메시(난간 살 묶음)만 감량
+        hit = [o for o in meshes if len(o.data.vertices) == nverts]
+        assert hit, f"{name}: decimate_by_verts {nverts}에 맞는 메시가 없다"
+        before = sum(len(p.vertices) - 2 for o in hit for p in o.data.polygons)
+        for o in hit:
+            for m in list(o.modifiers):
+                o.modifiers.remove(m)
+            mod = o.modifiers.new("decimate", "DECIMATE")
+            mod.ratio = ratio
+            dg = bpy.context.evaluated_depsgraph_get()
+            new_mesh = bpy.data.meshes.new_from_object(o.evaluated_get(dg), preserve_all_data_layers=True, depsgraph=dg)
+            o.modifiers.remove(mod)
+            old_mesh = o.data
+            o.data = new_mesh
+            bpy.data.meshes.remove(old_mesh)
+        report.setdefault("메시별 감량", []).append(
+            {"정점": nverts, "메시": len(hit), "전": before, "후": sum(len(p.vertices) - 2 for o in hit for p in o.data.polygons)})
+
     # ── 텍스처: 원본 바이트 그대로(재인코딩 금지), 재질 이름 기준 파일명.
     #   값이 정수면 glb 내장 이미지 번호, 문자열이면 압축 안 textures/의 파일 이름(FBX 원본은 텍스처가 바깥에 있다).
     os.makedirs(tex_dir, exist_ok=True)
@@ -204,6 +336,17 @@ def build(name, cfg, out_dir=None, render_dir=None):
     # .fbx 노드 축 회전·부품 ×100이 몇 겹이든 matrix_world 하나로 이미 다 곱해져 있다.
     Rz = math.radians(cfg.get("rotate_z", 0.0))
     for o in meshes:
+        if cfg.get("rig_clips") and any(m.type == "ARMATURE" for m in o.modifiers):
+            # 🔴 써니호: 원본 2뼈 아마추어가 메시를 90° 세워서 보여 준다(쉬는 메시 데이터는 뱃머리가 하늘을 본다 — 1차 산출이 코로 섰다).
+            #   **보이는 모양**(수정자 적용 결과)을 메시에 구운 뒤 수정자를 뗀다.
+            dg = bpy.context.evaluated_depsgraph_get()
+            baked = bpy.data.meshes.new_from_object(o.evaluated_get(dg), preserve_all_data_layers=True, depsgraph=dg)
+            old = o.data
+            for m in list(o.modifiers):
+                o.modifiers.remove(m)
+            o.data = baked
+            bpy.data.meshes.remove(old)
+            report.setdefault("원본 아마추어 변형 구움", []).append(o.name)
         M = o.matrix_world.copy()
         o.parent = None                    # 🔴 이걸 안 하면 부모(Frame·Screen 겉싸개 노드)의 ×100·회전이
         o.data.transform(M)                # 남아 있어 데이터에 구운 뒤에도 내보낼 때 한 번 더 곱혀(실측:
@@ -246,6 +389,31 @@ def build(name, cfg, out_dir=None, render_dir=None):
     report["삼각형"] = sum(len(p.vertices) - 2 for p in obj.data.polygons)
 
     os.makedirs(os.path.dirname(dst), exist_ok=True)
+    if cfg.get("rig_clips"):
+        # 🔸 배(2026-09-30): Generic 리그 + 지은 클립. 원본에서 딸려 온 빈 오브젝트·아마추어는 지우고 새 뼈대와 메시만 내보낸다.
+        for o in [o for o in scene.objects if o is not obj]:
+            bpy.data.objects.remove(o, do_unlink=True)
+        arm = rig_and_clips(obj, cfg["length"], cfg["rig_clips"], report)
+        import io_scene_fbx.export_fbx_bin as fbx_bin          # 테이크 이름 = 액션 이름(gen_scan_rig.py와 같은 처리)
+        name_of = fbx_bin.get_blenderID_name
+
+        def take_name(bid):
+            if isinstance(bid, tuple) and len(bid) == 2 and isinstance(bid[1], bpy.types.Action):
+                return bid[1].name
+            return name_of(bid)
+
+        fbx_bin.get_blenderID_name = take_name
+        try:
+            bpy.ops.export_scene.fbx(filepath=dst, use_selection=False, object_types={"ARMATURE", "MESH"}, apply_unit_scale=True,
+                                     apply_scale_options="FBX_SCALE_UNITS", axis_forward="-Z", axis_up="Y", add_leaf_bones=False,
+                                     primary_bone_axis="Y", secondary_bone_axis="X", use_armature_deform_only=False,
+                                     mesh_smooth_type="FACE", path_mode="STRIP", embed_textures=False, bake_anim=True,
+                                     bake_anim_use_all_actions=True, bake_anim_use_nla_strips=False,
+                                     bake_anim_force_startend_keying=True, bake_anim_simplify_factor=0.0)
+        finally:
+            fbx_bin.get_blenderID_name = name_of
+        report["출력"] = dst
+        return report
     # 🔴 PM 실측(유니티) — 뼈 없는 단일 메시라 축 변환(블렌더 Z위→Y위)이 메시 노드 자체의
     # Lcl Rotation(−90,0,0)으로 남는다. 뼈 있는 유닛은 이 회전이 아마추어(자식) 노드에 걸려서
     # 안 드러났는데, 노트북은 노드가 메시 하나뿐이라 ArtBinder가 모델 루트 회전을 항등으로

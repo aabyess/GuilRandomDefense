@@ -15,7 +15,11 @@ public class BlenderClipPostprocessor : AssetPostprocessor
 {
     // 배 유닛(Units/고대의배·해적선, 2026-09-13)도 Blender 클립 「…|Idle_Bob」이라 같은 규칙을 탄다.
     static readonly string[] Roots = { "Assets/Art/Monsters/", "Assets/Art/Creatures/", "Assets/Art/Props/",
-                                       "Assets/Art/Units/고대의배/", "Assets/Art/Units/해적선/" };
+                                       "Assets/Art/Units/고대의배/", "Assets/Art/Units/해적선/",
+                                       // 히든 배 둘(2026-09-30) — Idle·Move 반복(MoveLoopRoots). 버전은 안 올림: 새 파일 둘뿐.
+                                       "Assets/Art/Units/히든_맥주만땅/", "Assets/Art/Units/히든_미소야/" };
+
+    static readonly string[] MoveLoopRoots = { "Assets/Art/Units/히든_맥주만땅/", "Assets/Art/Units/히든_미소야/" };
 
     // 규칙을 바꾸면 올린다 — 올려야 이미 임포트된 FBX도 다시 돈다.
     // 1 → 2 (2026-09-13): 배 유닛 폴더 추가.
@@ -33,8 +37,11 @@ public class BlenderClipPostprocessor : AssetPostprocessor
         if (clips == null || clips.Length == 0) clips = importer.defaultClipAnimations;
         if (clips == null || clips.Length == 0) return;
 
+        // 히든 배 둘은 Move 클립(끄덕임 60프레임)도 가졌다 — 이동하는 내내 돌아야 하니 같이 반복한다.
+        bool loopMove = MoveLoopRoots.Any(root => path.StartsWith(root, StringComparison.Ordinal));
         foreach (ModelImporterClipAnimation clip in clips)
-            clip.loopTime = clip.name.IndexOf("Idle", StringComparison.OrdinalIgnoreCase) >= 0;
+            clip.loopTime = clip.name.IndexOf("Idle", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                            (loopMove && clip.name.IndexOf("Move", StringComparison.OrdinalIgnoreCase) >= 0);
 
         importer.clipAnimations = clips;
     }
