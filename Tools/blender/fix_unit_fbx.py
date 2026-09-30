@@ -174,6 +174,32 @@ for _s, _side in (("L", "Left"), ("R", "Right")):
                         f"TOE1_{_s}": f"mixamorig:{_side}Foot", f"TOE2_{_s}": f"mixamorig:{_side}ToeBase"})
     for _f, _n in (("THUMB", "Thumb"), ("FORE", "Index"), ("MIDDLE", "Middle"), ("MEDICINAL", "Ring"), ("LITTLE", "Pinky")):
         KIRI_RENAME.update({f"F_{_f}{_i}_{_s}": f"mixamorig:{_side}Hand{_n}{_i}" for _i in (1, 2, 3)})
+# 푸치(죠죠 스톤오션 엔리코 푸치 저폴리 .blend, Rigify 닮은 이름·IK 제어 뼈 포함, 2026-10-01 특수함_장명자). pelvis=Hips · spine.02=Spine · spine.04=Spine1 · neck_base=Neck · neck.03=Head.
+PUCCI_RENAME = {"pelvis": "mixamorig:Hips", "spine.02": "mixamorig:Spine", "spine.04": "mixamorig:Spine1", "neck_base": "mixamorig:Neck", "neck.03": "mixamorig:Head"}
+for _s, _side in (("L", "Left"), ("R", "Right")):
+    PUCCI_RENAME.update({f"shoulder.{_s}": f"mixamorig:{_side}Shoulder", f"upper_arm.{_s}": f"mixamorig:{_side}Arm", f"forearm.{_s}": f"mixamorig:{_side}ForeArm",
+                         f"hand.{_s}": f"mixamorig:{_side}Hand", f"thigh.{_s}": f"mixamorig:{_side}UpLeg", f"shin.{_s}": f"mixamorig:{_side}Leg",
+                         f"foot.{_s}": f"mixamorig:{_side}Foot", f"toe.{_s}": f"mixamorig:{_side}ToeBase"})
+    for _f, _n in (("index", "Index"), ("middle", "Middle"), ("ring", "Ring"), ("pinky", "Pinky")):
+        PUCCI_RENAME.update({f"finger_{_f}.0{_i}.{_s}": f"mixamorig:{_side}Hand{_n}{_i}" for _i in (1, 2, 3)})
+    PUCCI_RENAME.update({f"thumb.0{_i}.{_s}": f"mixamorig:{_side}HandThumb{_i}" for _i in (1, 2, 3)})
+# 코퀴토스(오버로드 게임 추출 FBX 「unit_pre_00050101」, 팔 넷 곤충 무인, 2026-10-01 특수함_BJ_율희): **위쪽 팔 한 쌍(High)**을 Humanoid 팔로 매핑하고 아래쪽 팔 한 쌍(Low)은 보조 뼈로 둔다.
+#   Collar=Shoulder(쇄골) · Shoulder=Arm(위팔) · ElbowRoll=ForeArm(팔꿈치) · Wrist=Hand. Root=Hips · Spine1=Spine · Spine2=Spine1 · Hip/Knee/Ankle=UpLeg/Leg/Foot(발끝 뼈 없음).
+COCYTUS_RENAME = {"Root": "mixamorig:Hips", "Spine1": "mixamorig:Spine", "Spine2": "mixamorig:Spine1", "Neck": "mixamorig:Neck", "Head": "mixamorig:Head"}
+for _s in ("Left", "Right"):
+    COCYTUS_RENAME.update({f"{_s}HighCollar": f"mixamorig:{_s}Shoulder", f"{_s}HighShoulder": f"mixamorig:{_s}Arm", f"{_s}HighElbowRoll": f"mixamorig:{_s}ForeArm",
+                           f"{_s}HighWrist": f"mixamorig:{_s}Hand", f"{_s}Hip": f"mixamorig:{_s}UpLeg", f"{_s}Knee": f"mixamorig:{_s}Leg", f"{_s}Ankle": f"mixamorig:{_s}Foot"})
+    for _f, _n in (("Index", "Index"), ("Ring", "Ring")):
+        COCYTUS_RENAME.update({f"{_s}High{_f}{_c}": f"mixamorig:{_s}Hand{_n}{_i}" for _i, _c in ((1, "A"), (2, "B"), (3, "C"))})
+    COCYTUS_RENAME.update({f"{_s}HighThumbA": f"mixamorig:{_s}HandThumb1", f"{_s}HighThumbB": f"mixamorig:{_s}HandThumb2"})
+# 알베도(오버로드 「DVL」 게임 추출 FBX scale.fbx, 날개·뿔·긴 드레스, 2026-10-01 특수함_황길라): j_ 접두 사람형 뼈 → mixamorig. 손가락 00~02 = 1~3마디, little = Pinky.
+ALBEDO_RENAME = {"j_hips": "mixamorig:Hips", "j_spine": "mixamorig:Spine", "j_chest": "mixamorig:Spine1", "j_neck": "mixamorig:Neck", "j_head": "mixamorig:Head"}
+for _s, _side in (("l", "Left"), ("r", "Right")):
+    ALBEDO_RENAME.update({f"j_shoulder_{_s}": f"mixamorig:{_side}Shoulder", f"j_arm_{_s}": f"mixamorig:{_side}Arm", f"j_forearm_{_s}": f"mixamorig:{_side}ForeArm",
+                          f"j_hand_{_s}": f"mixamorig:{_side}Hand", f"j_upleg_{_s}": f"mixamorig:{_side}UpLeg", f"j_leg_{_s}": f"mixamorig:{_side}Leg",
+                          f"j_foot_{_s}": f"mixamorig:{_side}Foot", f"j_toe_{_s}": f"mixamorig:{_side}ToeBase"})
+    for _f, _n in (("thumb", "Thumb"), ("index", "Index"), ("middle", "Middle"), ("ring", "Ring"), ("little", "Pinky")):
+        ALBEDO_RENAME.update({f"j_{_f}_0{_i - 1}_{_s}": f"mixamorig:{_side}Hand{_n}{_i}" for _i in (1, 2, 3)})
 # 3ds Max Biped 사람형 뼈 → mixamorig(2026-09-16 토지·하나타로): prefix "Bip001"/"Bip01". 손가락 Finger0=엄지·1=검지·2=중지·3=약지·4=새끼, 마디 ""·"1"·"2".
 #   이름을 바꾸면 idle_stretch 판정(mixamorig 사슬)이 실제로 움직이고, 유니티 자동 매핑의 모호함도 없다. tpose_arms에는 biped_tpose_names(prefix)를 같이 준다.
 _BIPED_FINGERS = ("Thumb", "Index", "Middle", "Ring", "Pinky")
@@ -3702,6 +3728,99 @@ UNITS = {
                                  dict(pattern=r"^[BLR]M?Cloth0", into="mixamorig:Hips")],
                     tpose_arms=biped_tpose_names(fingers=3, joints=2),
                     materials=dict(textures={"cha_urahara_sihae": [("DiffuseColor", "cha_urahara_sihae.png")]})),
+    # 특수함_헬로우먼 ← 진격의 거인 케니 아커만(중국 모바일 게임 립 role_kenni_xianbing, Sketchfab 「Aotwa kenny ackerman」, 2026-10-01).
+    #   작성자 Prime Slayer3D(sketchfab.com/ianadrielbravo) · CC-BY-4.0 · https://sketchfab.com/3d-models/aotwa-kenny-ackerman-a105fdb205e74d18b98b952c94e3a2eb (glb asset.extras).
+    #   3ds Max Biped Bip001(glTF 번호 꼬리) · 뼈 121 · 메시 6 + 조명 Icosphere · 재질 6 · 그림 5 · 클립 0(원본 고유 동작 없음). 손가락 5×3.
+    #   보조 뼈: 얼굴(meimao·tongkong·yanpi·zui·zuichun·head_bar) → Head · ForeTwist → ForeArm · gun_L/R(+Point*)은 손에 쥔 총 부품(각 1,8천 정점) → 그 손 · 이펙트 뼈(eff_·glow·smoke·qi·ci·lizi·baodian·mesh_*, 가중치 0)는 지운다. 🔴 손가락 뼈도 Hand 밑이라 「Hand 밑 전부 → Hand」로 합치면 손가락이 사라진다 — gun만 합친다.
+    "특수함_헬로우먼": dict(path="Assets/Art/Units/특수함_헬로우먼/특수함_헬로우먼.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(SKINS, "13_특수함/특수함_헬로우먼.glb"), gltf_guess_bind=False, no_nulls=True, orient_snap=True, drop_meshes=["Icosphere"],
+                      rename_bones=biped_rename("Bip001", fingers=5, joints=3, spine2="Spine2"), rename_strip=r"_[0-9]+$",
+                      drop_bones=["_rootJoint", "Bip001_02"],
+                      merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                                   dict(pattern=r"^Bip001 L ForeTwist", into="mixamorig:LeftForeArm"), dict(pattern=r"^Bip001 R ForeTwist", into="mixamorig:RightForeArm"),
+                                   dict(under="gun_L_060", with_root=True, into="mixamorig:LeftHand"), dict(under="gun_R_097", with_root=True, into="mixamorig:RightHand")],
+                      drop_bones_re=r"^(eff_kenni|eff_0|1_0|glow_|ci_|lizi|smoke|qi_|baodian|mesh_alp|mesh_feng)",   # 이펙트 뼈 가중치 0 — 손·뿌리에 매달린 스킬 이펙트 사슬
+                      tpose_arms=biped_tpose_names(fingers=5, joints=3),
+                      glb_images={0: "kenni_body.png", 1: "kenni_wuqi.png", 2: "kenni_extra.png", 3: "kenni_face.png", 4: "kenni_hair.png"},
+                      materials=dict(textures={"role_kenni_xianbing_body_mat_01": [("DiffuseColor", "kenni_body.png")], "role_kenni_xianbing_skin_mat_01": [("DiffuseColor", "kenni_body.png")],
+                                               "role_kenni_xianbing_foot_mat_01": [("DiffuseColor", "kenni_body.png")], "role_kenni_xianbing_wuqi_mat_01": [("DiffuseColor", "kenni_wuqi.png")],
+                                               "role_kenni_xianbing_face_mat_01": [("DiffuseColor", "kenni_face.png")], "role_kenni_xianbing_hair_mat_01": [("DiffuseColor", "kenni_hair.png")]})),
+    # 특수함_장명자 ← 죠죠 스톤오션 엔리코 푸치(저폴리 원본 .blend, 사장님이 준 pucci-rig-jojos-bizarre-adventure.zip, 2026-10-01).
+    #   Blender 3.0.42 파일 · 메시 char.008 하나(1,496정점·재질 6, 전부 단색 노드 — UV·그림 0) · 뼈 72(변형 65 + IK·뒤꿈치 제어) · A자(팔 25° 아래) · −Y 정면 · 키 1.87.
+    #   🔴 재질은 Principled 기본색(뷰포트 색은 딴 값이라 파랗게 보인다)이 진짜: boots 검정 · pants.001(코트 537면) 거의 검정 · skin 갈색 · Material.003 붉은 주황 · .002 주황 · .005 회색.
+    #   🔴 foot 뼈가 역발 리그라 발볼→발목으로 뒤집혀 있고 부모가 제어 뼈 heel → bone_ends로 head = 발목(shin tail), tail = 발볼(toe head), 부모는 shin으로.
+    #   hand·knee 가중치 0 → palm.* 합침으로 hand에 가중치가 생기고 knee는 뺀다. DLT-upper_arm·shoulder.?.001은 팔·Spine1로 합침. 무가중치 정점 65(가슴판)는 가까운 정점 가중치 복사.
+    "특수함_장명자": dict(path="Assets/Art/Units/특수함_장명자/특수함_장명자.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(SKINS, "13_특수함/특수함_장명자.zip"), "source/PUCCI.blend"),
+                      no_nulls=True, orient_snap=True,
+                      blend_prep=dict(parents={"foot.L": "shin.L", "foot.R": "shin.R", "toe.L": "foot.L", "toe.R": "foot.R"},
+                                      bone_ends={"foot.L": dict(head="shin.L:tail", tail="toe.L:head"), "foot.R": dict(head="shin.R:tail", tail="toe.R:head")},
+                                      fallback_bone="pelvis"),
+                      solid_textures={"boots": None, "Material.003": None, "pants.001": None, "Material.002": None, "skin": None, "Material.005": None},
+                      rename_bones=PUCCI_RENAME, drop_bones=["knee.L", "knee.R"],
+                      merge_bones=[dict(pattern=r"^DLT-upper_arm\.L$", into="mixamorig:LeftArm"), dict(pattern=r"^DLT-upper_arm\.R$", into="mixamorig:RightArm"),
+                                   dict(pattern=r"^palm\.0[1-4]\.L$", into="mixamorig:LeftHand"), dict(pattern=r"^palm\.0[1-4]\.R$", into="mixamorig:RightHand"),
+                                   dict(pattern=r"^shoulder\.[LR]\.001$", into="mixamorig:Spine1")],
+                      tpose_arms=biped_tpose_names(fingers=0)),
+    # 특수함_임재현 ← 블리치 쿄라쿠 슌스이(모바일 게임 립 cha_shunsui_hat.fbx, 3ds Max Biped Bip01, 사장님이 준 shunsui-kyoraku.zip, 2026-10-01). 영원_김정래(우라하라)와 같은 cha_ 형식.
+    #   뼈 63 · 메시 3(몸 5,275정점 + 칼 둘 481정점씩) · 재질 1(cha_shunsui_hat.png 32KB) · 손가락 3×2 · Toe0 있음 · **클립 0**(원본 고유 동작 없음).
+    #   🔴 칼 둘은 **따로 된 메시**(wp1_0 x 0.85~1.32 · wp2_0 x 1.12~1.59, 몸 밖 오른쪽에 나란히 세워 둠) → 메시·뼈(Weapon_L/R + acc · 껍데기 뼈 G_6_wp1/2) 째 뺀다.
+    #   Head 밑 eye·hair_B/F → Head · 옷자락 dress_·skirt_ → Hips · tie(끈) → Spine1. 뿌리 cha_shunsui_hat·Bip01·.001(가중치 0) 뺌.
+    "특수함_임재현": dict(path="Assets/Art/Units/특수함_임재현/특수함_임재현.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.join(SKINS, "13_특수함/특수함_임재현.zip"), "source/cha_shunsui_hat.fbx"),
+                    archive_rgb={"textures/cha_shunsui_hat.png": "cha_shunsui_hat.png"},
+                    no_nulls=True, orient_snap=True, use_rest_pose=True,
+                    drop_meshes=["cha_shunsui_G_6_wp1_0", "cha_shunsui_G_6_wp2_0"],
+                    rename_bones=biped_rename("Bip01", fingers=3, joints=2),
+                    drop_bones=["cha_shunsui_hat", "Bip01", "cha_shunsui_hat.001", "cha_shunsui_G_6_wp1", "cha_shunsui_G_6_wp2",
+                                "Weapon_L", "Weapon_L_acc01", "Weapon_L_acc02", "Weapon_R", "Weapon_R_acc01", "Weapon_R_acc02"],
+                    merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                                 dict(pattern=r"^(dress_|skirt_)", into="mixamorig:Hips"), dict(pattern=r"^tie0", into="mixamorig:Spine1")],
+                    tpose_arms=biped_tpose_names(fingers=3, joints=2),
+                    materials=dict(textures={"cha_shunsui_hat": [("DiffuseColor", "cha_shunsui_hat.png")]})),
+    # 특수함_BJ_율희 ← 오버로드 코퀴토스(게임 추출 FBX unit_pre_00050101, 사장님이 준 cocytus.zip, 2026-10-01). zip 안 zip 안 zip(source/cocytus-overlord.zip > source/Cocytus.zip > Cocytus/*.fbx).
+    #   뼈 76 · 메시 2(몸 7,114 + 얼굴 859) · 재질 2(그림 2장, 512²급) · **클립 0** · ×0.01 · 키 약 1.6(뿔 포함) · **팔이 넷**(위 High 한 쌍 + 아래 Low 한 쌍) · 꼬리 11마디(뒤로 1.1배 키) · 미사용 「WeaponAx·WeaponKatana」.
+    #   팔: High를 Humanoid 팔로, Low는 보조 뼈(Spine1 자식)로 그대로 둔다 — 공용 클립은 High만 돌려 Low는 몸통에 고정. 🔸 A자 그대로(T자로 안 편다 — 위 팔을 펴면 아래 팔과 겹친다).
+    #   도끼창(WeaponAx 675정점)·카타나(WeaponKatana 139정점)는 몸 뼈 아닌 원점 뼈에 실려 몸 옆에 세워 둔 모습 → 정점째 뺀다. 꼬리·HipTwist → Hips · 턱 → Head · 어깨 패드 → 그쪽 Shoulder.
+    "특수함_BJ_율희": dict(path="Assets/Art/Units/특수함_BJ_율희/특수함_BJ_율희.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(SKINS, "13_특수함/특수함_BJ_율희.zip"), "source/cocytus-overlord.zip", "source/Cocytus.zip", "Cocytus/unit_pre_00050101.fbx"),
+                      archive_textures=["Cocytus/unit_tex_00050101.png", "Cocytus/unit_tex_face_00050101_00.png"],
+                      no_nulls=True, orient_snap=True, use_rest_pose=True,    # 기본 자세≠쉬는 자세 1.44(FBX가 포즈 저장) → 결합 자세
+                      drop_verts_of_bones=["WeaponAx", "WeaponKatana"],
+                      rename_bones=COCYTUS_RENAME,
+                      drop_bones=["unit_pre_00050101", "Cocytus_geo", "body", "face", "unit000501", "WeaponAx", "WeaponKatana"],
+                      merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"), dict(pattern=r"^(HipTwist|Tail[0-9]+)$", into="mixamorig:Hips"),
+                                   dict(pattern=r"^LeftShoulderPad$", into="mixamorig:LeftShoulder"), dict(pattern=r"^RightShoulderPad$", into="mixamorig:RightShoulder")]),
+    # 특수함_황길라 ← 오버로드 알베도(게임 추출 FBX scale.fbx, 사장님이 준 albedo.zip, 2026-10-01). zip 안 source/Albedo.zip 안 Albedo/scale.fbx(+ 그림 5장).
+    #   뼈 211 · 메시 1(mdoel 14,605정점·재질 2 — 몸·눈) · 원본 클립 7(attack·damage·dead·idle_00·idle_01·skill·spskill_00, 25fps — 이동 없음) · ×0.01 · 날개 34마디(허리) · 치마·머리털·리본·가슴 뼈.
+    #   🔴 도끼(j_axe 1,174정점)는 뿌리 뼈 밑에 따로 매달려 몸 옆에 세워 둔 모습 → 기본판은 정점째 뺀다(원본 클립에선 이 뼈가 손을 따라 움직인다 — 동작판에서 살림).
+    #   합침(기본판): 팔 트위스트·프릴·어깨 천 → 팔/아래팔 · 가슴 → Spine1 · 날개·리본 → Hips · 치마(허벅지 밑 → UpLeg, 무릎 밑 → Leg) · Head 밑(얼굴·머리털·턱) → Head. 스킬 이펙트 뼈(깃털·오라, 가중치 0)·scale·root는 뺀다.
+    "특수함_황길라": dict(path="Assets/Art/Units/특수함_황길라/특수함_황길라.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(SKINS, "13_특수함/특수함_황길라.zip"), "source/Albedo.zip", "Albedo/scale.fbx"),
+                      archive_textures=["Albedo/tex_dvl_mdl_albedo_alb_cnv.png", "Albedo/tex_dvl_mdl_albedo_nor.png"],
+                      no_nulls=True, orient_snap=True, use_rest_pose=True,
+                      drop_verts_of_bones=["j_axe"],
+                      rename_bones=ALBEDO_RENAME,
+                      drop_bones=["scale", "root", "eff_skill_lbd_spskill_00_feather", "feather_00", "j_axe", "eff_skill_lbd_spskill_00_axe_aura",
+                                  "aura_00_purple", "aura_01_orange", "aura_01_orange_world", "aura_00_purple _world"],
+                      merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                                   dict(pattern=r"^j_(arm_twist|shoulder_cloth_0[0-2])_l$", into="mixamorig:LeftArm"), dict(pattern=r"^j_(arm_twist|shoulder_cloth_0[0-2])_r$", into="mixamorig:RightArm"),
+                                   dict(pattern=r"^j_(forearm_twist|arm_frills)_l$", into="mixamorig:LeftForeArm"), dict(pattern=r"^j_(forearm_twist|arm_frills)_r$", into="mixamorig:RightForeArm"),
+                                   dict(pattern=r"^j_breast_[lr]$", into="mixamorig:Spine1"),
+                                   dict(pattern=r"^j_(wing_|ribbon)", into="mixamorig:Hips"),
+                                   dict(pattern=r"^j_skirt_(twist_00|sub)_l$", into="mixamorig:LeftUpLeg"), dict(pattern=r"^j_skirt_(twist_00|sub)_r$", into="mixamorig:RightUpLeg"),
+                                   dict(pattern=r"^j_skirt_(twist_01|0[0-2]_0[0-2])_l$", into="mixamorig:LeftLeg"), dict(pattern=r"^j_skirt_(twist_01|0[0-2]_0[0-2])_r$", into="mixamorig:RightLeg")]),
+    # 특수함_장진희 ← 오버로드 샤르티아 블러드폴른(Mixamo로 리깅한 FBX 「Shalltear top half」, 사장님이 준 shalltear-bloodfallen.zip, 2026-10-01). zip 안 source/Shalltear.zip 안 FBX + jpg 한 장.
+    #   뼈 65(이미 mixamorig 표준 이름 · 이미 T자) · 메시 5(모자 21,093 · 몸 14,749 · 신발 5,016 · 머리 30,448 · 치마 프릴 14,745) · 재질 5 · **그림 1장(1366×1230 jpg) = 공식 캐릭터 일러스트 한 장을 UV로 오려 붙인 것** — 미리보기가 아니라 진짜 텍스처다(UV가 그림 안 작은 조각들을 가리킨다).
+    #   🔴 프릴(フリル.002)은 **스킨도 부모도 없는** 큰 치마 공(x ±0.72 · y ±0.75, 키의 절반) → rigid_meshes로 Hips에 통째 묶는다(안 묶으면 유니티가 첫 뼈에 강제로 붙여 몸이 움직일 때 튄다).
+    #   가중치 0 끝 뼈(HeadTop_End·손가락 4·Toe_End) 뺌. 원본 클립은 1프레임 포즈 하나(mixamo.com)라 동작 없음.
+    "특수함_장진희": dict(path="Assets/Art/Units/특수함_장진희/특수함_장진희.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(SKINS, "13_특수함/특수함_장진희.zip"), "source/Shalltear.zip", "Shalltear top half.fbx"),
+                      archive_textures=["87c1bc634db3d91f9761ae894fa64f22.jpg"],
+                      no_nulls=True, orient_snap=True,
+                      use_rest_pose=True,                                     # 기본 자세≠쉬는 자세 1.45 — FBX가 딴 포즈를 저장(결합 자세가 진짜)
+                      rigid_meshes={"フリル.002": "mixamorig:Hips"},
+                      drop_bones_re=r"^mixamorig:.*(HeadTop_End|Thumb4|Index4|Middle4|Ring4|Pinky4|Toe_End)$"),
     "특별함_조도연": dict(path="Assets/Art/Units/특별함_조도연/특별함_조도연.fbx", kind="human", size=("height", 1.8),
                       source=os.path.join(SKINS, "03_특별함/특별함_조도연.glb"), glb_fix_identity_ibm=True, no_nulls=True, drop_meshes=["Icosphere"],
                       squash_chain=dict(bones=[f"thongue_C0_{i}_Jnt_0{26 + i}" for i in range(5)], factor=0.285),
@@ -5523,6 +5642,16 @@ def blend_prep(cfg, report):
                 p = p.parent
             b.parent = p
         b.use_connect = False
+    for name, spec in bp.get("bone_ends", {}).items():
+        # 🔸 bone_ends(2026-10-01 특수함_장명자 푸치): 뼈 머리·꼬리를 다른 뼈의 머리·꼬리 자리로 옮긴다("이름:head|tail"). 역발 리그의 foot 뼈는 발볼(head)→발목(tail)로 뒤집혀 있어
+        #   유니티 Humanoid의 Foot(발목 피벗)이 안 맞는다 → head = shin의 tail(발목), tail = toe의 head(발볼).
+        #   🔴 머리를 먼저 옮기면 꼬리 기준 뼈 자리가 바뀔 수 있어 **두 기준점을 먼저 읽고** 나서 같이 쓴다.
+        def _pt(ref):
+            bn, which = ref.split(":")
+            return eb[bn].head.copy() if which == "head" else eb[bn].tail.copy()
+        h = _pt(spec["head"]) if spec.get("head") else eb[name].head.copy()
+        tl = _pt(spec["tail"]) if spec.get("tail") else eb[name].tail.copy()
+        eb[name].head, eb[name].tail = h, tl
     for b in [b for b in eb if b.name not in deform]:
         eb.remove(b)
     bpy.ops.object.mode_set(mode="OBJECT")
@@ -6203,9 +6332,16 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         assert float(_np.median(res) / span) < 0.15, \
             f"{name}: 뼈대↔메시 닮음변환이 안 맞는다(잔차 중앙 {float(_np.median(res) / span) * 100:.1f}%) {report['뼈대 좌표계 맞춤']}"
     # ── 기본 자세 그대로 붙잡기
+    if arm is not None and cfg.get("use_rest_pose"):
+        # 🔸 토지(2026-09-16): FBX 기본 자세가 전투 자세(몸이 +X로 73° 돌고 한 주먹을 든 채)인데 결합 자세는 −Y를 본 깨끗한 A자 → 기본 자세를 버리고 결합 자세로
+        for pb in arm.pose.bones:
+            pb.matrix_basis = Matrix.Identity(4)
+        bpy.context.view_layer.update()
+        report["기본 자세 버림"] = "결합 자세 사용"
     if arm is not None and cfg.get("pose_bones_world"):
         # 🔸 죠타로(2026-09-16): 옷깃 키체인 뼈가 쉬는 자세에서 수평(게임은 물리로 늘어뜨림) → 유니티에선 옆으로 막대처럼 뻗는다.
         #   세계 축 기준으로 뼈 머리를 중심으로 돌려 두고(자식 따라감) 아래 「기본 자세 그대로 붙잡기」가 굽는다.
+        # 🔸 (2026-10-01) use_rest_pose의 자세 초기화 **뒤에** 돌린다 — 앞에 있으면 초기화가 돌린 자세를 지웠다(특수함_BJ_율희 꼬리 곡선)
         Mw3 = arm.matrix_world.to_3x3().normalized()
         for bname, (axis, deg) in cfg["pose_bones_world"].items():
             pb = arm.pose.bones[bname]
@@ -6214,12 +6350,6 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             pb.matrix = Matrix.Translation(pivot) @ Matrix.Rotation(math.radians(deg), 4, ax) @ Matrix.Translation(-pivot) @ pb.matrix
             bpy.context.view_layer.update()
         report["돌린 뼈"] = list(cfg["pose_bones_world"])
-    if arm is not None and cfg.get("use_rest_pose"):
-        # 🔸 토지(2026-09-16): FBX 기본 자세가 전투 자세(몸이 +X로 73° 돌고 한 주먹을 든 채)인데 결합 자세는 −Y를 본 깨끗한 A자 → 기본 자세를 버리고 결합 자세로
-        for pb in arm.pose.bones:
-            pb.matrix_basis = Matrix.Identity(4)
-        bpy.context.view_layer.update()
-        report["기본 자세 버림"] = "결합 자세 사용"
     if arm is not None:
         arm.data.pose_position = "POSE"
         bpy.context.view_layer.update()
@@ -7382,6 +7512,31 @@ UNITS["특별함_황정기"]["variants"] = {
     # 등: 가방 뒤에 25° 비스듬히(새총 쪽이 위·왼쪽 어깨 너머), Spine2에 붙인다.
     "등": dict(prop_attach=dict(bone="Bone001", parent="Bip001 Spine2", pivot=(0.92, -0.01, 0.95), rot=("Y", 25), to=(0.0, 0.27, 1.10))),
 }
+
+
+# 🔸 황길라(알베도) 동작판(2026-10-01, Assets 밖 시범): 원본 클립 7개(attack·damage·dead·idle_00·idle_01·skill·spskill_00)를 테이크로. 날개·치마·리본·머리털 뼈는 **클립이 움직이므로 합치지 않고 남긴다**.
+#   도끼(j_axe)도 클립에서 손을 따라 움직이니 메시·뼈를 살려 Hips 밑으로(클립은 세계 행렬로 읽어 새 부모 기준으로 다시 굽는다). 원본에 **걷기·달리기가 없다** → Move 없음(공용 클립을 쓰거나 Idle을 대신).
+_alb = dict(UNITS["특수함_황길라"])
+UNITS["특수함_황길라"]["variants"] = {"동작": dict(
+    anim=True, anim_drop_ok=True, takes_only=True, drop_verts_of_bones=[],
+    take_names={"dvl_mdl_albedo_idle_00|Base Layer": "Idle", "dvl_mdl_albedo_idle_01|Base Layer": "Idle2", "dvl_mdl_albedo_attack|Base Layer": "Attack",
+                "dvl_mdl_albedo_damage|Base Layer": "Hit", "dvl_mdl_albedo_dead|Base Layer": "Die", "dvl_mdl_albedo_skill|Base Layer": "Skill1",
+                "dvl_mdl_albedo_spskill_00|Base Layer": "Skill2"},
+    clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
+    clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle", takes=["Attack", "Die", "Skill1", "Skill2", "Hit"]),
+    reparent_bones={"j_axe": "mixamorig:Hips"},
+    drop_bones=["scale", "root", "eff_skill_lbd_spskill_00_feather", "feather_00", "eff_skill_lbd_spskill_00_axe_aura",
+                "aura_00_purple", "aura_01_orange", "aura_01_orange_world", "aura_00_purple _world"],
+    merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                 dict(pattern=r"^j_(arm_twist|shoulder_cloth_0[0-2])_l$", into="mixamorig:LeftArm"), dict(pattern=r"^j_(arm_twist|shoulder_cloth_0[0-2])_r$", into="mixamorig:RightArm"),
+                 dict(pattern=r"^j_(forearm_twist|arm_frills)_l$", into="mixamorig:LeftForeArm"), dict(pattern=r"^j_(forearm_twist|arm_frills)_r$", into="mixamorig:RightForeArm"),
+                 dict(pattern=r"^j_breast_[lr]$", into="mixamorig:Spine1")])}
+
+
+# 🔸 BJ_율희(코퀴토스) 꼬리 판(2026-10-01, PM 지시): 꼬리 11마디가 뒤로 수평 막대처럼 굳는 게 어색 → 엉덩이에서 **뒤·아래로 휘어 끝이 땅 근처에서 말리는 곡선**으로 포즈를 잡아 그 자세를 쉬는 자세로 굽고 Hips에 합친다.
+#   세계 X축 기준 마디별 회전(머리 중심, 아래 마디가 따라감). 값은 마디 **증가분**(도) — 합이 휘는 각. 앞 7마디는 완만히 아래로, 뒤 4마디는 끝이 말리도록(반대로) 더 세게.
+_TAIL = {f"Tail{i}": ((1, 0, 0), d) for i, d in enumerate([-8, -9, -10, -10, -10, -11, -11, -11, -10, -4, 10], start=1)}
+UNITS["특수함_BJ_율희"]["variants"] = {"꼬리": dict(pose_bones_world=_TAIL)}
 
 
 def main():
