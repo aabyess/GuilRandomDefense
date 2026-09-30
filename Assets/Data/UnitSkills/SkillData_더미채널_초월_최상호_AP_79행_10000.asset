@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_초월_최상호_AP_79행_10000
   m_EditorClassIdentifier:
   skillName: A0PI 3범위 도플초월 오색실1
-  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다. | 정정(2026-09-30, 구현담당1 — 과다발동 정리): 원문 Trig_DP_Attack `GetRandomInt(1,7)==4` → e06K thunderclap A0PI(Htc1 205000·aare 525·Htc3 2.5=최저 이속까지·adur 4.5). triggerChance 1.0→1/7, 범위 525 Enemies, Slow(0=하한) 4.5초. 같이 있던 150000(A0AM, e0IW)은 각성 모드 트리거 Trig_DP_Attack_gaksung의 1/5 분기라 뺐다 — 우리엔 각성(metamorphosis) 모드가 없다.'
+  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다. | 정정(2026-09-30, 구현담당1 — 과다발동 정리): 원문 Trig_DP_Attack `GetRandomInt(1,7)==4` → e06K thunderclap A0PI(Htc1 205000·aare 525·Htc3 2.5=최저 이속까지·adur 4.5). triggerChance 1.0→1/7, 범위 525 Enemies, Slow(0=하한) 4.5초. 같이 있던 150000(A0AM, e0IW)은 각성 모드 트리거 Trig_DP_Attack_gaksung의 1/5 분기라 뺐다 — 우리엔 각성(metamorphosis) 모드가 없다. [초월·제한 블록 09-30] 거미줄 1/7은 일반형(DP_Attack) 블록 — forbiddenBuffId B00X. (Tools/apply_transcend_limited_blocks.py)'
   · e06K(@초월 도플 거미줄) A0PI 3범위 도플초월 오색실1 [천둥소리 피해]: 205000 (원작 도플·초월함) 진입게이트: Trig_DP_Attack_Actions[이벤트직결]: (조건없음)
   · e0IW(@초월 도플 새장) A0AM 3범위 도플각성흉탄 [천둥소리 피해]: 150000 (원작 도플·초월함) 진입게이트: Trig_DP_Attack_gaksung_Actions[이벤트직결]: (조건없음)
   제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e06H(@초월 도플 할퀴기) A0PI 3범위 도플초월 오색실1: 205000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지) / e06R(@초월 도플 흉탄더미) A0AM 3범위 도플각성흉탄: 150000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지)
@@ -25,6 +25,7 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    forbiddenBuffId: B00X
     effects:
     - kind: 0
       basis: 0

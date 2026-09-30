@@ -20,6 +20,10 @@ static class EternalFillProbe
     static readonly Dictionary<string, UnitAttacker> attackers = new Dictionary<string, UnitAttacker>();
 
     static string ArenaImmortal() { Units = Immortal; return Arena(); }
+    // 초월·제한 큰 어긋남 정정(2026-09-30) — call:EternalFillProbe.ArenaTranscend. 황준석의 맵 전체 오라(방어 −8 · 이속 −5%)가 모든 표적에 실린다.
+    static readonly string[] Transcend = { "초월_두유찬_AD", "초월_양재모_AD", "초월_신문철_AP", "초월_최상호_AP", "초월_황준석_ADAP", "초월_구주호_AD",
+                                           "제한_강보명", "제한_김민규", "제한_이충민", "제한_박성호" };
+    static string ArenaTranscend() { Units = Transcend; return Arena(); }
 
     class Track { public Vector3 at; public string unit; public float stunStart = -1f; public readonly List<float> stuns = new List<float>(); }
     static readonly Dictionary<EnemyDummy, Track> tracks = new Dictionary<EnemyDummy, Track>();

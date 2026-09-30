@@ -12,16 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_절대쿨_초월_두유찬_AD_3
   m_EditorClassIdentifier:
-  skillName: 사보 — 게이지+확률(Sabo_Skill_3)
-  description: 5절대쿨 계열(ORIGINAL_GATED_SKILLS_14.csv, 우리표커버=미수록) 신규 배정 — 원작 H092 사보(Sabo_Skill_3), 버프 B00N. 게이트=MANA게이지==125.00 AND GetRandomInt(1,10)==5. ⚠️ 절대쿨 생략 근거는 SkillData_절대쿨_초월_두유찬_AD_1 참고(게이지 주기(≥31초) > 절대쿨(12.5초), 사실상 무효). OnHitCount(마나125)+triggerChance=1/10. Flat 1,150,000(Enemies range 415, CHAOS 그대로/NORMAL(damage)→AD).
-  triggerType: 3
+  skillName: 사보 — Sabo_Skill_3 화권(B00N 동안 1/10)
+  description: '5절대쿨 계열(ORIGINAL_GATED_SKILLS_14.csv, 우리표커버=미수록) 신규 배정 — 원작 H092 사보(Sabo_Skill_3), 버프 B00N. 게이트=MANA게이지==125.00 AND GetRandomInt(1,10)==5. ⚠️ 절대쿨 생략 근거는 SkillData_절대쿨_초월_두유찬_AD_1 참고(게이지 주기(≥31초) > 절대쿨(12.5초), 사실상 무효). OnHitCount(마나125)+triggerChance=1/10. Flat 1,150,000(Enemies range 415, CHAOS 그대로/NORMAL(damage)→AD). [초월·제한 블록 09-30] Sabo_Skill_3: 「마나 125 AND 1/10」 → B00N 동안 1/10(≈125배 과소였다). 천둥박수 A0PT 이감 30%(Htc3 0.3) 2.5초 추가(원문 500 범위 — 415로). (Tools/apply_transcend_limited_blocks.py)'
+  triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
     range: 415
-    hitCountThreshold: 125
+    hitCountThreshold: 0
     resetTo: 1
     gaugeKind: 0
+    requiredBuffId: B00N
     effects:
     - kind: 0
       basis: 0
@@ -34,3 +35,25 @@ MonoBehaviour:
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+    - kind: 13
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.7
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 2.5
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
