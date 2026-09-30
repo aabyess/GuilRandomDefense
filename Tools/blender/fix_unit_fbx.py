@@ -5493,6 +5493,15 @@ HUMANOID_REQUIRED = ["Hips", "Spine", "Head", "LeftArm", "LeftForeArm", "LeftHan
                      "LeftUpLeg", "LeftLeg", "LeftFoot", "RightUpLeg", "RightLeg", "RightFoot"]
 
 
+# 🔸 verified_in_unity(2026-09-30, PM 결정): 필수 칸에 매핑된 뼈에 가중치가 없어도(살이 보조 뼈에 붙은 리그) **유니티에서 Humanoid로
+#   정상 동작하는 것을 실제로 본** 유닛만 여기 적는다 — 이름 → 확인 날짜·근거. 안 적힌 유닛은 예전처럼 멈춘다.
+#   ⚠️ 짐작으로 넣지 말 것. PM이 units 사진 등으로 본 것만.
+VERIFIED_IN_UNITY = {
+    "특별함_최상호": "2026-09-30 PM units 사진 — Idle 자세로 정상(팔 내림)",
+    "특별함_조도연": "2026-09-30 PM units 사진 — Idle 자세로 정상",
+}
+
+
 def humanoid_weight_check(name, meshes, names=None):
     """🔴 오비토(2026-09-17 PM 유니티 isHuman False): 가중치 0 매핑 뼈는 FBX 스킨 뼈 목록에서 빠져 유니티 휴머노이드 매핑 후보가 안 된다 →
     필수 15뼈(mixamorig: 이름)가 전부 어떤 메시에든 가중치 > 0이어야 통과."""
@@ -5509,6 +5518,8 @@ def humanoid_weight_check(name, meshes, names=None):
     missing = [b for b in HUMANOID_REQUIRED if names.get(b, "mixamorig:" + b) not in got]
     if os.environ.get("GRD_GATE_REPORT"):                               # 진단 전용 — 아래 _gate 주석
         return f"GATE 가중치 없음 {missing}" if missing else "필수 15뼈 가중치 있음"
+    if missing and name in VERIFIED_IN_UNITY:
+        return f"매핑 뼈 가중치 없음 {missing} — 유니티에서 확인됨({VERIFIED_IN_UNITY[name]})"
     assert not missing, f"{name}: 휴머노이드 필수 뼈에 가중치가 없다(유니티 매핑 실패) {missing}"
     return "필수 15뼈 가중치 있음"
 
@@ -7266,6 +7277,28 @@ for _n, _w, _img in (("초월_강주혁_AP", "bocun", 5), ("전설적인_이승�
     _v["glb_images"] = {**UNITS[_n]["glb_images"], _img: f"{_w}_weapon_baseColor.png"}
     _v["materials"] = dict(textures={**UNITS[_n]["materials"]["textures"], f"{_w}_weapon_0": [("DiffuseColor", f"{_w}_weapon_baseColor.png")]})
     UNITS[_n]["variants"]["동작무기"] = _v
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 🔸 「그림 없는 재질」 따라잡기(2026-09-30 밤, PM 결정 — CHECK_ENTRIES_FAILURES.md 7절). 원본(glb/fbx)을 열어 그 재질이
+#   **원래 그림 없이 색만** 준 것임을 확인한 것만 solid_materials에 적는다(산출물은 안 바뀐다 — 관문이 단색을 인정할 뿐).
+for _n, _solid in {
+    "제한_임준성": ["MI_chr0400_simulation"],                                  # 원본 색 0.59 회색, 그림 없음
+    "희귀함_김정래": ["Skin", "hair"],                                          # 원본 .blend — 그림 없는 색 재질(살색·검정)
+    "희귀함_배병규": ["JotaroKujoPart3_LowerTeeth", "JotaroKujoPart3_Tongue", "JotaroKujoPart3_UpperTeeth"],   # 원본 흰색, 그림 없음(혀도 흰색이 원본)
+    "희귀함_박수찬": ["Glasses", "glass"],                                      # 원본 0.09 검정(glass는 알파 0.1)
+    "특별함_이병준": ["AvatarEyelashes"],                                       # 원본 검정
+    "특별함_박기찬": ["Mihawk_Beard", "Mihawk_Hair", "Mihawk_Plume"],            # 원본에 없는 재질 — 설정(BaseColor)으로 색을 준 것
+    "랜덤_야사카_카나코": ["Crystal.003"],                                       # 원본 색 재질(1.0, 0.57, 0.49)
+    "안흔함_상붕카": ["Material.001", "Material.002", "Material.003", "Material.004", "Material.005", "Material.010", "Material.012", "Material.013"],   # glb에 그림 0장 — 전부 색
+    "안흔함_강재규": ["dientes"],                                               # 이빨만 색. 🔴 Lengua·Ojos는 원본이 lengua.jpeg·ojos.jpeg를 가리키는데 그 파일이 원본 묶음에도 없다 — 실제 결함, 그대로 걸리게 둔다
+    "특별함_최상호": ["Pupil", "hair", "Sandals.001", "shock", "tongue", "material", "material_5", "Teeth", "Gum.001"],   # glb가 색만 준 아홉(material_colors로 되살린 것)
+}.items():
+    UNITS[_n]["solid_materials"] = _solid
+# 탄지로 신발 둘: glb는 색(baseColorFactor)을 줬는데 커밋본은 기본 회색 0.8 — 루피와 같은 증상. 「랜덤_카마도_탄지로@수정」으로 Assets 밖에 뽑는다.
+UNITS["랜덤_카마도_탄지로"].setdefault("variants", {})["수정"] = dict(
+    material_colors={"MI_P0001_V00_C00_0_Shoes": (0.281, 0.281, 0.281), "shoes_one": (0.139, 0.0044, 0.0)},
+    solid_materials=["MI_P0001_V00_C00_0_Shoes", "shoes_one"])
 
 
 def main():
