@@ -442,6 +442,11 @@ public class SkillEffect
     // 비교 값은 이 발동을 일으킨 평타의 피해량(recentAttackDamage = AttackDamage, 방어 적용 전)이다 —
     // 원작은 방어 적용 후 값이라 우리가 조금 더 자주 통과한다(방어 전 ≥ 방어 후). 2026-09-30 구현담당1.
     public float triggerDamageAbove;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, PM 지시) — 스턴의 영웅 지속(원작 ahdu). 저항 피부 적(EnemyData.resistantSkin)에게는
+    // duration 대신 이 값으로 건다. 0이면 「모름」 — duration × HeroDurationFallbackRatio로 떨어진다(UnitAttacker).
+    // 값은 Tools/sync_stun_hero_duration_from_w3a.py가 그 스턴을 낸 원작 능력의 ahdu에서 채운다. Stun 말고는 안 읽는다.
+    public float heroDuration;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에

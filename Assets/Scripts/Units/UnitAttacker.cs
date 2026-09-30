@@ -1772,7 +1772,7 @@ public class UnitAttacker : MonoBehaviour
             // 시한 효과(스턴·이감·방깎·ArmorBonus/HealOverTime)는 전부 걸린 적이 센다(EnemyDummy.*For, 2026-09-30) —
             // 여기서 코루틴으로 세면 이 유닛이 조합·판매로 사라질 때 영영 안 풀린다.
             case SkillEffectKind.Stun:
-                if (effect.duration > 0f) target.FreezeFor(effect.duration);
+                if (effect.duration > 0f) target.FreezeFor(StunDurationOn(target, effect));
                 break;
 
             // 이감(2026-09-29) — multiplier = 남는 속도 비율. AddSlow/RemoveSlow는 같은 값으로 짝을 맞춰야 빠진다.
@@ -1835,6 +1835,17 @@ public class UnitAttacker : MonoBehaviour
 
             // ExtraProjectile은 아직 값 의미가 없다(이번 작업 범위 밖) — 조용히 무시.
         }
+    }
+
+    // 저항 피부(원작 ACrk) 적에게는 스턴이 영웅 지속(ahdu)으로 걸린다(EnemyData.resistantSkin · SkillEffect.heroDuration 주석).
+    // heroDuration이 0(모름)이면 일반 지속 × 이 비율 — 맵의 스턴 능력 가운데 adur·ahdu가 둘 다 적힌 것의 분포가
+    // 두 무리(stomp 계열 ≈0.15 · 강타/파이어볼트 계열 ≈0.5)라 덜 깎는 쪽 0.5를 쓴다(값을 모를 때 보스 스턴을 과하게 줄이지 않게).
+    public const float HeroDurationFallbackRatio = 0.5f;
+
+    static float StunDurationOn(EnemyDummy target, SkillEffect effect)
+    {
+        if (target == null || !target.HasResistantSkin) return effect.duration;
+        return effect.heroDuration > 0f ? effect.heroDuration : effect.duration * HeroDurationFallbackRatio;
     }
 
     // 계측 채널 — %체력 세 basis는 「스킬%HP」로 따로 센다(보스 %HP 게이트 제거 효과를 재려고, 2026-09-30).

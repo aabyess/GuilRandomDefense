@@ -20,6 +20,12 @@ static class EternalFillProbe
     static readonly Dictionary<string, UnitAttacker> attackers = new Dictionary<string, UnitAttacker>();
 
     static string ArenaImmortal() { Units = Immortal; return Arena(); }
+    // 보스 스턴 단축 축(2026-09-30) — 「영구 스턴」 여섯을 일반 적(R21)과 저항 피부 보스(R60, PV 200)에 각각.
+    // Report의 「스턴 가동률」 = 표적이 스턴으로 멈춰 있던 시간 ÷ 판 시간(표적 셋 중 최대 = 주 대상).
+    static string dummyOverride;
+    static readonly string[] StunSix = { "초월_황준석_ADAP", "제한_최영민", "불멸_정준영", "불멸_신지우", "불멸_고도현", "초월_조성진_AD" };
+    static string ArenaStunSix() { Units = StunSix; return Arena(); }
+    static string ArenaStunSixBoss() { Units = StunSix; dummyOverride = "Enemy_R60_정윤식"; return Arena(); }
     // 초월·제한 큰 어긋남 정정(2026-09-30) — call:EternalFillProbe.ArenaTranscend. 황준석의 맵 전체 오라(방어 −8 · 이속 −5%)가 모든 표적에 실린다.
     static readonly string[] Transcend = { "초월_두유찬_AD", "초월_양재모_AD", "초월_신문철_AP", "초월_최상호_AP", "초월_황준석_ADAP", "초월_구주호_AD",
                                            "제한_강보명", "제한_김민규", "제한_이충민", "제한_박성호" };
@@ -60,9 +66,12 @@ static class EternalFillProbe
         if (!Application.isPlaying) return "❌ 플레이 중에만";
         UnitSpawner spawner = Object.FindFirstObjectByType<UnitSpawner>();
         LaneMarker lane = LaneMarker.Get(0);
-        dummyData = AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/Data/Enemies" })
-            .Select(g => AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(g)))
-            .FirstOrDefault(e => e != null && !e.isBoss && e.prefab != null && e.moveSpeed > 0f && e.name.Contains("R2"));
+        dummyData = dummyOverride != null
+            ? AssetDatabase.LoadAssetAtPath<EnemyData>($"Assets/Data/Enemies/{dummyOverride}.asset")
+            : AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/Data/Enemies" })
+                .Select(g => AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(g)))
+                .FirstOrDefault(e => e != null && !e.isBoss && e.prefab != null && e.moveSpeed > 0f && e.name.Contains("R2"));
+        dummyOverride = null;
         if (spawner == null || lane == null || dummyData == null) return "❌ UnitSpawner·레인·표적 적 없음";
         tracks.Clear(); fielded.Clear(); attackers.Clear();
         SkillTelemetry.Reset();
@@ -88,7 +97,7 @@ static class EternalFillProbe
         EditorApplication.update -= Sample;
         EditorApplication.update += Sample;
         Time.timeScale = 2f;
-        return $"유닛 {fielded.Count}/{Units.Length} · 표적 {dummyData.name}(PV {dummyData.pointValue}) · 2배속";
+        return $"유닛 {fielded.Count}/{Units.Length} · 표적 {dummyData.name}(PV {dummyData.pointValue} · 저항 피부 {dummyData.resistantSkin}) · 2배속";
     }
 
     static EnemyData dummyData;
@@ -147,6 +156,8 @@ static class EternalFillProbe
             sb.Append($"\n{g.Key} 표적 스턴 {stuns.Count}회" + (stuns.Count > 0 ? $" (최소 {stuns[0]:0.00} · 중앙 {stuns[stuns.Count / 2]:0.00} · 최대 {stuns[stuns.Count - 1]:0.00}초) 전부: {string.Join(" ", stuns.Select(x => x.ToString("0.00")))}" : ""));
             // 표적별 — 평타 대상이 아닌 표적이 걸린 스턴은 무작위 대상(RandomEnemyInRange) 효과만 낼 수 있다(비비 더블샷 둘째 발).
             sb.Append($" · 표적별 {string.Join("/", g.Select(t => t.stuns.Count + (t.stunStart >= 0f ? 1 : 0)))}");
+            float uptime = g.Max(t => (t.stuns.Sum() + (t.stunStart >= 0f ? Time.time - t.stunStart : 0f)) / Mathf.Max(0.01f, elapsed));
+            sb.Append($" · 스턴 가동률 {uptime:P0}");
         }
         return sb.ToString();
     }

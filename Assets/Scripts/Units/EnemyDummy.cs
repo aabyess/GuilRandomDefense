@@ -37,6 +37,7 @@ public class EnemyDummy : MonoBehaviour
     public float Hp => hp;
     /// <summary>이 적의 데이터 — HUD 살펴보기(이름·방어)가 읽는다(2026-09-26).</summary>
     public EnemyData Data => data;
+    public bool HasResistantSkin => data != null && data.resistantSkin;
 
     // MP: 클라 겉모습이면 true — 판정(회복·오라)을 안 돌리고 체력은 호스트 값을 받아 적기만 한다.
     //     Active 등록은 그대로 둔다(체력바·미니맵이 그걸 돈다). 싱글·호스트에선 항상 false라 무동작.
