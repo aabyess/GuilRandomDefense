@@ -234,6 +234,12 @@ public enum SkillEffectKind
     // multiplier = 남는 이동속도 비율(0.5 = 50% 속도, 원작 「이속 −50%」). duration초 뒤 되돌린다(0이면 건너뜀).
     // EnemyDummy.AddSlow/RemoveSlow — 여러 개가 겹치면 가장 강한 하나만(워크3 규칙).
     Slow,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, PM 승인) — 공격력 % 증가(원작 ACac 지휘 오라 퍼센트형 Cac1 0.5 = +50%,
+    // ANht 음수 Roa1을 아군에 건 것 등). multiplier = raw 퍼센트(0.5 = +50%). **기본 공격력(로스터 공격력 + 주스탯 몫)에만**
+    // 곱해 고정 가산으로 들어간다 — 워크3 % 공격력 오라가 흰 숫자(기본 피해)에만 걸리는 것(엔진 지식, 맵 미확정).
+    // 자리: UnitAttacker.AttackDamage의 괄호 안(FlatAttackPowerBonus 옆). 오라(Aura)와 시간제(duration) 둘 다 받는다.
+    AttackPowerBuffPercent,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,

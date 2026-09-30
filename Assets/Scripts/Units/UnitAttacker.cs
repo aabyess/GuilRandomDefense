@@ -96,7 +96,10 @@ public class UnitAttacker : MonoBehaviour
     // 원작 ANbr(배틀로어) 계열의 임시 "공격력 +N" 버프다. 바로 위 PrimaryStatAttackBonus와
     // 정확히 같은 근거(Nbr1이 그 필드 자체다 — 네이티브 버프, 현재 공격력 전체에 곱해지는
     // 배율 안쪽)라 같은 자리에 더한다.
-    public float AttackDamage => (attackDamage + PrimaryStatAttackBonus + FlatAttackPowerBonus) * UpgradeMultiplier * AttackPowerMultiplier + ResearchBonus;
+    // ⚠️ 2026-09-30 추가(PM 승인) — 오라 고정 가산(AuraFlatAttackPower)과 공격력 %(PercentAttackPowerBonus, 기본 공격력 =
+    // attackDamage + 주스탯 몫에만 곱한 값)도 같은 괄호 안에 더한다. 둘 다 0이면 예전 식 그대로.
+    public float AttackDamage => (attackDamage + PrimaryStatAttackBonus + FlatAttackPowerBonus + AuraFlatAttackPower
+                                  + (attackDamage + PrimaryStatAttackBonus) * PercentAttackPowerBonus) * UpgradeMultiplier * AttackPowerMultiplier + ResearchBonus;
     public float AttackRange => attackRange;
     public float AttackInterval => attackInterval / AttackSpeedMultiplier;
 
@@ -122,7 +125,7 @@ public class UnitAttacker : MonoBehaviour
             // SkillAttackSpeedBuffMultiplier는 ActiveBuff 레지스트리 기반(자동 만료)이라
             // 기존 attackSpeedBuffs(수동 Add/Remove, SupportShop 전용)와 별도 축이다 — 곱은
             // 순서 무관이라 그냥 같이 곱한다.
-            float product = ResearchSpeedMultiplier * HeroAttackSpeedMultiplier * SkillAttackSpeedBuffMultiplier;
+            float product = ResearchSpeedMultiplier * HeroAttackSpeedMultiplier * SkillAttackSpeedBuffMultiplier * AuraAttackSpeedMultiplier;
             foreach (float buff in attackSpeedBuffs) product *= buff;
             return product > 0f ? product : 1f;
         }
@@ -262,6 +265,82 @@ public class UnitAttacker : MonoBehaviour
         // 1f(배율 항등원 — 곱해도 무효과, 회귀 없음). 1이 아니면 이 버프가 살아있는 동안
         // SkillAttackSpeedBuffMultiplier에 이 배율이 곱해진다(1+원작 raw퍼센트로 변환된 값).
         public float attackSpeedMultiplierAmount = 1f;
+
+        // 2026-09-30 추가(SkillEffectKind.AttackPowerBuffPercent 시간제) — 0이면 없음. 살아 있는 동안 PercentAttackPowerBonus에 더해진다.
+        public float attackPowerPercentAmount;
+    }
+
+    // ---- 오라 수치 레지스트리(2026-09-30, PM 승인) — 오라(Aura 발동방식)가 아군·자기에게 주는 수치(공속 %·공격력 고정·공격력 %).
+    // 원작 오라는 같은 버프 ID끼리 안 겹치고(가장 큰 것 하나) 다른 버프 ID끼리는 겹친다 — 엔진 지식, 맵 미확정(마나 재생 오라와 같은 규칙).
+    // 예전 오라 경로는 버프 항목을 그냥 붙여서, 같은 오라 유닛이 둘이면 배율이 곱으로 쌓였고 하나가 범위를 벗어나면
+    // RemoveBuff(id)가 남의 몫을 지웠다. 여기서는 준 쪽(source)별로 기록하고 버프 ID별 최댓값만 읽는다.
+    class AuraBonus { public Object source; public SkillEffectKind kind; public string id; public float value; }
+    readonly List<AuraBonus> auraBonuses = new List<AuraBonus>();
+    static readonly Dictionary<string, float> auraBonusScratch = new Dictionary<string, float>();
+
+    public void AddAuraBonus(Object source, SkillEffectKind kind, string id, float value)
+    {
+        if (value == 0f) return;
+        auraBonuses.Add(new AuraBonus { source = source, kind = kind, id = id ?? "", value = value });
+    }
+
+    public void RemoveAuraBonus(Object source, SkillEffectKind kind, string id)
+    {
+        id ??= "";
+        for (int i = 0; i < auraBonuses.Count; i++)
+            if (auraBonuses[i].source == source && auraBonuses[i].kind == kind && auraBonuses[i].id == id) { auraBonuses.RemoveAt(i); return; }
+    }
+
+    // 버프 ID별 최댓값을 모아 합(product=false) 또는 (1+값)의 곱(product=true). 준 쪽이 사라진 항목은 버린다.
+    float AuraBonusTotal(SkillEffectKind kind, bool product)
+    {
+        if (auraBonuses.Count == 0) return product ? 1f : 0f;
+        auraBonusScratch.Clear();
+        for (int i = auraBonuses.Count - 1; i >= 0; i--)
+        {
+            AuraBonus b = auraBonuses[i];
+            if (b.source == null) { auraBonuses.RemoveAt(i); continue; }
+            if (b.kind != kind) continue;
+            if (!auraBonusScratch.TryGetValue(b.id, out float best) || b.value > best) auraBonusScratch[b.id] = b.value;
+        }
+        float total = product ? 1f : 0f;
+        foreach (float v in auraBonusScratch.Values) total = product ? total * (1f + v) : total + v;
+        return total;
+    }
+
+    float AuraAttackSpeedMultiplier => AuraBonusTotal(SkillEffectKind.AttackSpeedBuffPercent, true);
+    float AuraFlatAttackPower => AuraBonusTotal(SkillEffectKind.AttackPowerBuffFlat, false);
+
+    /// <summary>공격력 % 증가 합(오라 + 시간제 버프). 기본 공격력에만 곱해진다(AttackDamage 참고).</summary>
+    public float PercentAttackPowerBonus
+    {
+        get
+        {
+            float sum = AuraBonusTotal(SkillEffectKind.AttackPowerBuffPercent, false);
+            if (activeBuffs.Count > 0)
+            {
+                PruneExpiredBuffs();
+                foreach (ActiveBuff b in activeBuffs) sum += b.attackPowerPercentAmount;
+            }
+            return sum;
+        }
+    }
+
+    // 시간제 공격력 % 버프 — 같은 id가 다시 걸리면 만료만 갱신한다(AddAttackSpeedBuffPercent와 같은 규칙).
+    public void AddAttackPowerBuffPercent(string id, float percent, float duration, int hitCharges)
+    {
+        if (percent == 0f) return;
+        if (hitCharges > 0)
+        {
+            activeBuffs.Add(new ActiveBuff { id = id, expiresAt = -1f, hitsRemaining = hitCharges, skipNextTick = true, attackPowerPercentAmount = percent });
+            return;
+        }
+        if (duration <= 0f) return;   // 영구는 오라 레지스트리로만
+        PruneExpiredBuffs();
+        ActiveBuff existing = string.IsNullOrEmpty(id) ? null
+            : activeBuffs.Find(b => b.id == id && b.hitsRemaining <= 0 && b.expiresAt > 0f && b.attackPowerPercentAmount != 0f);
+        if (existing != null) { existing.expiresAt = Time.time + duration; existing.attackPowerPercentAmount = percent; return; }
+        activeBuffs.Add(new ActiveBuff { id = id, expiresAt = Time.time + duration, attackPowerPercentAmount = percent });
     }
 
     readonly List<ActiveBuff> activeBuffs = new List<ActiveBuff>();
@@ -996,6 +1075,9 @@ public class UnitAttacker : MonoBehaviour
     // 전제로 Allies-target 외엔 아예 안 본다). 나중에 즉발형을 Aura에 쓸 사례가 생기면
     // 그때 이 전제를 다시 봐야 한다.
 
+    static bool IsAuraStatKind(SkillEffectKind kind) =>
+        kind == SkillEffectKind.AttackSpeedBuffPercent || kind == SkillEffectKind.AttackPowerBuffFlat || kind == SkillEffectKind.AttackPowerBuffPercent;
+
     void UpdateAuraTick(SkillLevel level, SkillRuntimeState state, bool gatePasses)
     {
         state.auraAffectedEnemies ??= new List<EnemyDummy>();
@@ -1012,20 +1094,21 @@ public class UnitAttacker : MonoBehaviour
         foreach (SkillEffect effect in level.effects)
         {
             if (effect.target != SkillTargetKind.Self) continue;
-            if (effect.kind != SkillEffectKind.ApplyBuff && effect.kind != SkillEffectKind.AttackSpeedBuffPercent) continue;
+            if (effect.kind != SkillEffectKind.ApplyBuff && !IsAuraStatKind(effect.kind)) continue;
             if (string.IsNullOrEmpty(effect.buffId)) continue;
 
+            // 수치 오라(공속 %·공격력 고정·%)는 레지스트리로(2026-09-30) — 같은 오라 유닛이 곁에 있어도 버프 ID가 같으면 안 겹친다.
+            // 이름표(HasBuff 게이트용)는 예전처럼 같이 건다.
             bool alreadyApplied = state.auraSelfAppliedBuffIds.Contains(effect.buffId);
             if (gatePasses && !alreadyApplied)
             {
-                if (effect.kind == SkillEffectKind.AttackSpeedBuffPercent)
-                    AddAttackSpeedBuffPercent(effect.buffId, effect.multiplier, 0f, 0);
-                else
-                    AddBuff(effect.buffId, 0f);
+                if (IsAuraStatKind(effect.kind)) AddAuraBonus(this, effect.kind, effect.buffId, effect.multiplier);
+                AddBuff(effect.buffId, 0f);
                 state.auraSelfAppliedBuffIds.Add(effect.buffId);
             }
             else if (!gatePasses && alreadyApplied)
             {
+                if (IsAuraStatKind(effect.kind)) RemoveAuraBonus(this, effect.kind, effect.buffId);
                 RemoveBuff(effect.buffId);
                 state.auraSelfAppliedBuffIds.Remove(effect.buffId);
             }
@@ -1135,8 +1218,9 @@ public class UnitAttacker : MonoBehaviour
             // 경로를 실제로 쓰는 자산은 없다(H09I/A0QZ가 후보였으나 "소환된 더미가 지속
             // 오라를 낸다"를 표현할 방법이 없어 여전히 미완성) — RemoveBuff를 Enemies
             // 타겟에도 미리 만들어둔 것과 같은 이유로, 대칭을 미리 갖춰둔다.
-            if (effect.kind == SkillEffectKind.AttackSpeedBuffPercent)
-                allyAttacker.AddAttackSpeedBuffPercent(effect.buffId, effect.multiplier, 0f, 0);
+            // 2026-09-30 — 수치 오라는 받는 쪽 레지스트리에 「누가 줬나」와 함께 적는다(버프 ID별 최댓값, AddAuraBonus 주석).
+            if (IsAuraStatKind(effect.kind))
+                allyAttacker.AddAuraBonus(this, effect.kind, effect.buffId, effect.multiplier);
             else if (effect.kind == SkillEffectKind.ApplyBuff)
                 allyAttacker.AddBuff(effect.buffId, 0f);
         }
@@ -1149,8 +1233,8 @@ public class UnitAttacker : MonoBehaviour
         foreach (SkillEffect effect in level.effects)
         {
             if (effect.target != SkillTargetKind.Allies) continue;
-            if (effect.kind != SkillEffectKind.ApplyBuff && effect.kind != SkillEffectKind.AttackSpeedBuffPercent) continue;
-            allyAttacker.RemoveBuff(effect.buffId);
+            if (IsAuraStatKind(effect.kind)) allyAttacker.RemoveAuraBonus(this, effect.kind, effect.buffId);
+            else if (effect.kind == SkillEffectKind.ApplyBuff) allyAttacker.RemoveBuff(effect.buffId);
         }
     }
 
@@ -1452,7 +1536,8 @@ public class UnitAttacker : MonoBehaviour
 
         if (effect.kind != SkillEffectKind.ApplyBuff && effect.kind != SkillEffectKind.RemoveBuff
             && effect.kind != SkillEffectKind.AttackPowerBuffFlat
-            && effect.kind != SkillEffectKind.AttackSpeedBuffPercent) return;
+            && effect.kind != SkillEffectKind.AttackSpeedBuffPercent
+            && effect.kind != SkillEffectKind.AttackPowerBuffPercent) return;
 
         UnitAttacker allyAttacker = ally != null ? ally.GetComponent<UnitAttacker>() : null;
         if (allyAttacker == null) return;
@@ -1467,7 +1552,8 @@ public class UnitAttacker : MonoBehaviour
         }
 
         // 눈에 보이는 버프는 공격력·공속 둘뿐 — ApplyBuff는 대부분 게이트용 내부 표식(B03Z 등)이라 이펙트를 안 띄운다.
-        if (effect.kind == SkillEffectKind.AttackPowerBuffFlat || effect.kind == SkillEffectKind.AttackSpeedBuffPercent)
+        if (effect.kind == SkillEffectKind.AttackPowerBuffFlat || effect.kind == SkillEffectKind.AttackSpeedBuffPercent
+            || effect.kind == SkillEffectKind.AttackPowerBuffPercent)
             SkillVfx.Burst(SkillVfx.Kind.Buff, ally.transform.position + Vector3.up * 3f);
 
         if (effect.kind == SkillEffectKind.AttackPowerBuffFlat)
@@ -1475,6 +1561,12 @@ public class UnitAttacker : MonoBehaviour
             // 2026-09-07 추가(PM 지시) — ApplyBuff와 같은 자리, multiplier가 더할 고정
             // 공격력 값이다(buffHitCharges/duration 관례도 ApplyBuff와 동일).
             allyAttacker.AddFlatAttackPowerBuff(effect.buffId, effect.multiplier, effect.duration, effect.buffHitCharges);
+            return;
+        }
+
+        if (effect.kind == SkillEffectKind.AttackPowerBuffPercent)
+        {
+            allyAttacker.AddAttackPowerBuffPercent(effect.buffId, effect.multiplier, effect.duration, effect.buffHitCharges);
             return;
         }
 
