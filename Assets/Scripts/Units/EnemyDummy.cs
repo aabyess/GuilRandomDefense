@@ -555,6 +555,14 @@ public class EnemyDummy : MonoBehaviour
     // 레벨"이다. EffectiveArmor에서 둘 다 뺀다.
     float armorShred;
 
+    // 스킬 방깎 — 원작 트리거 31곳이 적의 AId1(「방어력 감소」, 맵이 원본 표를 덮어씀) 레벨을 +1~+15씩
+    // 올린다. AId1은 alev 76·Idef 레벨 n = −(n−1)이라 **누적 합계가 −75에서 멈춘다**(방어 최소값이
+    // 아니라 깎는 양의 상한 — 방어 70인 적은 −5까지). 적 119종 전부 AId1을 달고 있고, 레벨을 내리거나
+    // 없애는 트리거는 없다(영구). 위 armorShred(특성·오라 = 원작 AHad 음수 오라, 상한 없음)와 다른 축이다.
+    // 원본: war3map_new.w3a 원본 표 AId1 (2026-09-30 구현담당1).
+    public const float Aid1ShredCap = 75f;
+    float aid1Shred;
+
     // ⚠️ 2026-09-05 정정(2차): 처음엔 이 셋을 "우리 유닛의 방깎 트레잇이 범용으로 올리는
     // 표"로 오해했다(1차 정정, 04③ 최초 커밋). PM이 트리거를 다시 뒤져 **레벨을 올리는
     // 곳이 캐릭터 딱 둘뿐**이라는 걸 확인했다 — 능력 이름 자체가 그렇게 말하고 있었다
@@ -572,7 +580,8 @@ public class EnemyDummy : MonoBehaviour
     // (-70, 그 뒤로는 -5씩). 등간격으로 보간하면 안 되는 이유가 그거다.
     static readonly float[] ArmorShredLevelsA0TK = { 0f, -70f, -75f, -80f, -85f, -90f, -95f, -100f, -105f, -110f, -115f };
     static readonly float[] ArmorShredLevelsA0VI = { 0f, -3f, -6f, -9f, -12f, -15f, -18f, -21f, -24f, -27f, -30f };
-    static readonly float[] ArmorShredLevelsA0VJ = { 0f, -5f, -10f, -15f, -20f, -25f, -30f, -35f, -40f };
+    // A0VJ는 Idef가 9레벨까지 적혀 있지만 alev가 3이라 레벨 3(−10)이 끝이다(원본 w3a, 09-30 정정).
+    static readonly float[] ArmorShredLevelsA0VJ = { 0f, -5f, -10f };
 
     // 표별 독립 스택. 카이도 평타는 tk/vi를 같이 올리고(같은 트리거), 카이도의 전용 스킬은
     // vi만, 핸콕의 석화는 vj만 올린다 — 그래서 세 카운터가 서로 따로 논다.
@@ -616,7 +625,7 @@ public class EnemyDummy : MonoBehaviour
 
     /// <summary>방깎을 적용한 실효 방어력. 하한 -20.</summary>
     public float EffectiveArmor => IsReplica ? replicaArmor :   // MP: 클라 겉모습은 호스트 실효값
-        Mathf.Max(ArmorFloor, (data != null ? data.armor : 0f) - armorShred + TableStackedArmorShred());
+        Mathf.Max(ArmorFloor, (data != null ? data.armor : 0f) - armorShred - aid1Shred + TableStackedArmorShred());
 
     public ArmorType ArmorType => data != null ? data.armorType : ArmorType.Normal;
 
@@ -780,11 +789,22 @@ public class EnemyDummy : MonoBehaviour
     public void AddArmorShred(float amount)
     {
         armorShred += amount;
-        if (amount > 0f && Time.time >= nextArmorVfxTime)
-        {
-            nextArmorVfxTime = Time.time + 0.4f;
-            SkillVfx.Burst(SkillVfx.Kind.ArmorBreak, transform.position + Vector3.up * VfxTop * 0.6f);
-        }
+        if (amount > 0f) ArmorBreakVfx();
+    }
+
+    /// <summary>스킬 방깎(원작 트리거가 적의 AId1 레벨을 +N 하는 것)을 건다. 합계가
+    /// <see cref="Aid1ShredCap"/>에서 멈춘다 — 음수를 넣으면 되돌린다(duration 있는 효과).</summary>
+    public void AddAid1ArmorShred(float amount)
+    {
+        aid1Shred = Mathf.Clamp(aid1Shred + amount, 0f, Aid1ShredCap);
+        if (amount > 0f) ArmorBreakVfx();
+    }
+
+    void ArmorBreakVfx()
+    {
+        if (Time.time < nextArmorVfxTime) return;
+        nextArmorVfxTime = Time.time + 0.4f;
+        SkillVfx.Burst(SkillVfx.Kind.ArmorBreak, transform.position + Vector3.up * VfxTop * 0.6f);
     }
 
     /// <summary>

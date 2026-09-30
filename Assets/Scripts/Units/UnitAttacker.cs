@@ -1582,8 +1582,9 @@ public class UnitAttacker : MonoBehaviour
             // 안 읽어서 "값은 있는데 아무 일도 안 난다"였다(PM 지시로 정정). duration>0이면
             // 그 시간 뒤에 되돌린다 — 0(기본)이면 SupportShop 독약과 같은 관례로 영구
             // 누적한다(원작 방깎은 대개 지속시간이 없다, war3map.w3h 버프 311개 전수 확인).
+            // 원작에선 트리거가 AId1 레벨을 올리는 것이라 합계 −75에서 멈춘다(EnemyDummy.Aid1ShredCap).
             case SkillEffectKind.ArmorBreak:
-                target.AddArmorShred(effect.multiplier);
+                target.AddAid1ArmorShred(effect.multiplier);
                 if (effect.duration > 0f) StartCoroutine(RevertArmorShredRoutine(target, effect.multiplier, effect.duration));
                 break;
 
@@ -1648,7 +1649,7 @@ public class UnitAttacker : MonoBehaviour
     IEnumerator RevertArmorShredRoutine(EnemyDummy target, float amount, float duration)
     {
         yield return new WaitForSeconds(duration);
-        if (target != null) target.AddArmorShred(-amount);
+        if (target != null) target.AddAid1ArmorShred(-amount);
     }
 
     IEnumerator RevertAllyAuraEffectRoutine(EnemyDummy target, SkillEffect effect, float duration)
