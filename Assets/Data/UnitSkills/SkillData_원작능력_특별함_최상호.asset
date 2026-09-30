@@ -13,16 +13,16 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_특별함_최상호
   m_EditorClassIdentifier:
   skillName: A0MK !창검술-x드레이크1
-  description: 원작 특별함 롤로노아 조로 귀기 - 특별함(Trig_Speical12).
+  description: '원작 특별함 롤로노아 조로 귀기 - 특별함(Trig_Speical12). [범위화 09-30] 조로 Speical12: 1/7 · 대상 중심 400 범위 1000 — 확률 0.1·단일이었다. (Tools/apply_rare_special_ranges.py)'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.1
-    range: 0
+    triggerChance: 0.142857
+    range: 400.0
     effects:
     - kind: 0
       basis: 0
-      target: 3
+      target: 2
       damageType: 1
       attackType: 1
       multiplier: 1000.0

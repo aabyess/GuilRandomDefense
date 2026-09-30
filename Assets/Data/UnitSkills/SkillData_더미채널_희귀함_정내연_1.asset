@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_희귀함_정내연_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_희귀함_정내연_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 희귀함_정내연.  · Trig_Unique33 → e0BT(U희귀함 조로 더미 2) → A0QH: 50000 [추정: 자릿수 판정]
+  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 희귀함_정내연.  · Trig_Unique33 → e0BT(U희귀함 조로 더미 2) → A0QH: 50000 [추정: 자릿수 판정] [범위화 09-30] 조로 Unique33 1/15: 대상 중심 375 범위 16000 추가(대상 50000·스턴 2.0초는 있던 것). (Tools/apply_rare_special_ranges.py)'
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.066667
-    range: 0
+    range: 375.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
@@ -44,3 +44,26 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 2.0
+      heroDuration: 1.0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 16000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0

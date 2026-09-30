@@ -66,6 +66,17 @@ public class UnitModelPostprocessor : AssetPostprocessor
         "고대의배",
         "해적선",
 
+        // 히든 배 둘(2026-09-30, 써니호·메리호 — gen_prop_unit rig_clips) — 뼈 Root → Hull 둘뿐. 자기 클립 Idle·Move·Attack.
+        // 버전은 안 올렸다 — 두 파일만 .fbx.meta를 지워 새로 읽혔다(올리면 400개를 전부 다시 읽는다).
+        "히든_맥주만땅",
+        "히든_미소야",
+        // 영원_서민성(복마어주자 사당, 2026-09-30) — 뼈 Root → Body. 같은 방식(.fbx.meta만 새로 읽힘).
+        "영원_서민성",
+        // 영원_최상호(2026-09-30, 고유 동작 시범 — 사장님 「스킨 원본에 든 고유 동작을 살려 쓴다」) — 원본 뼈대 117 + 원본 클립을
+        // 같은 FBX 테이크로(Idle·Move·Attack·Attack_Lunge·Hit·Die·Skill1·Skill2, fix_unit_fbx 「영원_최상호@동작」).
+        // Humanoid로 읽으면 날개·갈래머리·코트 보조 뼈 곡선이 빠진다 → Generic 자체 클립.
+        "영원_최상호",
+
         // 특별함_노건완(노가리, 잉어 — 2026-09-14) — 물고기라 사람 골격이 없다. 자기 Idle 클립(헤엄·꼬리짓)만 쓴다.
         "특별함_노건완",
 

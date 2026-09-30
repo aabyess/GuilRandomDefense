@@ -12,21 +12,77 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_희귀함_엄태웅
   m_EditorClassIdentifier:
-  skillName: Trig_Unique35
-  description: 원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 희귀함 모몬가 G1 지부의 수장 - 희귀함(Trig_Unique35)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 유닛 하나(행 1개)를 통째로 이 유닛에 배정했다(2026-09-06 유닛 단위 재배정, TEAM_RULES 뿌리 ⑮). | 2차 배정(트리거·더미 채널): 원작 희귀함 모몬가 G1 지부의 수장 - 희귀함(Trig_Unique35).
+  skillName: Unique35 1/8 — 375 범위 7000 + 대상 10000~100000 · 스턴 1.5초
+  description: '원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 희귀함 모몬가 G1 지부의 수장 - 희귀함(Trig_Unique35)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 유닛 하나(행 1개)를 통째로 이 유닛에 배정했다(2026-09-06 유닛 단위 재배정, TEAM_RULES 뿌리 ⑮). | 2차 배정(트리거·더미 채널): 원작 희귀함 모몬가 G1 지부의 수장 - 희귀함(Trig_Unique35). [하위 등급 블록 09-30] §0-2: 확률 1.0 · 단일 7000(8배 과다) → 1/8: 375 범위 7000 NORMAL/UNIVERSAL + 대상 GetRandomInt(10000,100000) + thunderbolt 스턴 1.5초. (Tools/apply_lower_grade_blocks.py)'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 0
+    triggerChance: 0.125
+    range: 375.0
     effects:
     - kind: 0
       basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
+      target: 2
+      damageType: 2
+      attackType: 7
       multiplier: 7000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 10000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 10.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 1
+      basis: 0
+      target: 3
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 1.5
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0

@@ -1,0 +1,124 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작트리거_영원_문필환_vivi_Skill_Double
+  m_EditorClassIdentifier:
+  skillName: vivi_Skill_Double — 더블샷 1/4(절대쿨 B034 중)
+  description: '원작 비비 h057 Trig_ViVi_Attack → vivi_Skill_Double: 버프 B034가 있는 동안(3연사 창이 아닐 때) 1/4로 대상에게 폭풍망치 더미 e0CW(A0LV AHtb) 750000 + 스턴 1초. 둘째 발: 시전자 기준 912 안 무작위 적 하나(첫 대상도 뽑힐 수 있음 — 원문에 제외 없음)에게 같은 폭풍망치 A0LW 750000 + 스턴 1초(원작은 0.15초 뒤, 우리는 같은 순간). Player(4) 더미가 쏘는 것 — 기존 더미채널 규칙대로 도는 것으로 봄. 2026-09-30 구현담당1(ETERNAL_FILL_LIST §2).'
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 0.25
+    range: 912.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: B034
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 750000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 1
+      basis: 0
+      target: 3
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 1.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 1.0
+    - kind: 0
+      basis: 0
+      target: 4
+      damageType: 2
+      attackType: 7
+      multiplier: 750000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 1
+      basis: 0
+      target: 4
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 1.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 1.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 1
+    targetArmorBreakAbove: 0.0

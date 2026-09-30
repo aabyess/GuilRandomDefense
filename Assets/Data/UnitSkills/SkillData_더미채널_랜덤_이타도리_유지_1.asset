@@ -12,42 +12,42 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_더미채널_랜덤_이타도리_유지_1
   m_EditorClassIdentifier:
-  skillName: SkillData_더미채널_랜덤_이타도리_유지_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 랜덤_이타도리_유지. ⚠️ 축 밖이라 뺀 조건: 능력레벨 부정 조건, 능력레벨 조건 — 실제보다 자주 발동할 수 있다.  · Trig_cat1 → e0CF(R랜유 츠바사 더미1) → A0LD: 150000 [추정: 자릿수 판정]  · Trig_cat1 → e0CG(R랜유 츠바사 더미2) → A0LE: 350000 [추정: 자릿수 판정]
+  skillName: cat1 할퀴기 — 1/10(500 범위 150000 · 이속 −70% 3초)
+  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 랜덤_이타도리_유지. ⚠️ 축 밖이라 뺀 조건: 능력레벨 부정 조건, 능력레벨 조건 — 실제보다 자주 발동할 수 있다.  · Trig_cat1 → e0CF(R랜유 츠바사 더미1) → A0LD: 150000 [추정: 자릿수 판정]  · Trig_cat1 → e0CG(R랜유 츠바사 더미2) → A0LE: 350000 [추정: 자릿수 판정] [랜덤 나머지 09-30] §0-11 cat1: A0L8 보유(uabi 기본) 갈래만 — 500 범위 150000 · 이속 −70% 3초. 단일에 두 갈래(150000 + 350000, 이감 둘)가 같이 들어 있었다. (Tools/apply_random_rest.py)'
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 0
+    range: 500.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
     effects:
     - kind: 0
       basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
+      target: 2
+      damageType: 2
+      attackType: 7
       multiplier: 150000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 350000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     - kind: 13
       basis: 0
-      target: 3
+      target: 2
       damageType: 0
       attackType: 0
       multiplier: 0.3
@@ -55,13 +55,16 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 3.0
-    - kind: 13
-      basis: 0
-      target: 3
-      damageType: 0
-      attackType: 0
-      multiplier: 0.15
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 3.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 1.5

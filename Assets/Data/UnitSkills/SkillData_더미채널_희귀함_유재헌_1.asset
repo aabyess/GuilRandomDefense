@@ -13,19 +13,19 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_희귀함_유재헌_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_희귀함_유재헌_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 희귀함_유재헌.  · Trig_Unique23 → e0AT(U희귀함 우솝 더미) → A0EL: 7000
+  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 희귀함_유재헌.  · Trig_Unique23 → e0AT(U희귀함 우솝 더미) → A0EL: 7000 [범위화 09-30] 우솝 stomp A0EL은 485 범위 7000·스턴 1.15초 — 단일이었다. (Tools/apply_rare_special_ranges.py)'
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 0
+    range: 485.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
     effects:
     - kind: 0
       basis: 0
-      target: 3
+      target: 2
       damageType: 1
       attackType: 1
       multiplier: 7000.0
@@ -36,7 +36,7 @@ MonoBehaviour:
       casterBuffCountFactor: 0
     - kind: 1
       basis: 0
-      target: 3
+      target: 2
       damageType: 0
       attackType: 0
       multiplier: 0.0
@@ -44,3 +44,4 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 1.15
+      heroDuration: 0.18

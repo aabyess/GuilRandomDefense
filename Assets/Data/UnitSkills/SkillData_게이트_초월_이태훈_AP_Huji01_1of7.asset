@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_초월_이태훈_AP_Huji01_1of7
   m_EditorClassIdentifier:
   skillName: 후지토라 — 1/7 (Huji01 중력 베기)
-  description: '원작 Trig_Huji_Attack(H08X 후지토라 = 초월_이태훈_AP, MASTER_UID_ROSTER_MAP) MANA≠140 평타마다 Trig_Huji01: `GetRandomInt(1,7)==4` → 피해 이벤트 뒤 Stage2: 대상 위치 485 광역 (피해×2.5+250000) CHAOS/NORMAL + AId1 +2 + 대상 350000 MAGIC/UNIVERSAL. 이전엔 게이트_초월_양재모_AD_29846395(양재모_AD = H096 Law 몫 로스터)에 마나 게이지 하나로 Huji_03·Huji01 두 갈래(배타)가 같이 들어 있었다 — 주인과 게이트를 바로잡음. 2026-09-30 구현담당1.'
+  description: '원작 Trig_Huji_Attack(H08X 후지토라 = 초월_이태훈_AP, MASTER_UID_ROSTER_MAP) MANA≠140 평타마다 Trig_Huji01: `GetRandomInt(1,7)==4` → 피해 이벤트 뒤 Stage2: 대상 위치 485 광역 (피해×2.5+250000) CHAOS/NORMAL + AId1 +2 + 대상 350000 MAGIC/UNIVERSAL. 이전엔 게이트_초월_양재모_AD_29846395(양재모_AD = H096 Law 몫 로스터)에 마나 게이지 하나로 Huji_03·Huji01 두 갈래(배타)가 같이 들어 있었다 — 주인과 게이트를 바로잡음. 2026-09-30 구현담당1. [초월 나머지 09-30] Huji01 1/7: stomp A0OW(475 범위, 피해 0) 스턴 adur 2.59초 추가(485로). (Tools/apply_transcend_rest.py)'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -92,6 +92,29 @@ MonoBehaviour:
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0.0
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 2.59
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 0.39
     requiredTargetBuffId:
     forbiddenTargetBuffId:
     hitCountFloor: 0

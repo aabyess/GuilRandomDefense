@@ -1076,33 +1076,46 @@ UNITS = {
     #   팔이 몸에 붙어 있으니 유노와 같은 arm_capsule·delete_stretched_faces를 미리 건다.
     # ⚠️ 2026-09-24 관문 ③: 설정은 있는데 **모델 파일이 없다**(Assets/Art/Units/랜덤_이타도리_유지/…fbx).
     #   스킬 에셋은 이미 들어가 있다. 사장님이 들고 계신 건이라 **대기**로 둔다 — 돌리지 않는다.
-    "랜덤_이타도리_유지": dict(
-        rebuild="사장님 대기 — 모델 파일이 아직 없다(설정·스킬 에셋만 있음)",
-        source=os.path.expanduser("~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_이타도리_유지.glb"), mesh_name="Itadori",
-        height=1.8, center_band=(0.0, 0.05), decimate=0.12, rotate_z=0.0,
+    # 불꽃 소방대 신몬 베니마루 → 랜덤_이즈미_신이치(2026-09-30 사장님 지정, 새 유닛). Sketchfab 「Benimaru Shinmon」 by tuananhrobert,
+    #   🔴 **CC-BY-4.0**(glb asset 메타에 명시 — 크레딧 표기 필요) https://sketchfab.com/3d-models/benimaru-shinmon-aa4d497e0ae240b9a13f6c53d33e51a4
+    #   뼈·스킨·애니 0의 정적 glb · 메시 5 · 재질 4 · 이미지 4(0 몸 기본색 jpeg · 1 몸 발광 · 2 불꽃 png · 3 머리카락 jpeg) · 원본 키 108(단위 없음) · 정면 −Y.
+    #   뺀 것: Object_2(재질 Fire — 몸 둘레를 도는 불꽃 판자 230정점, 알파 블렌드 이펙트) · Object_6(재질 outliner — 몸을 부풀려 뒤집은 외곽선 껍데기,
+    #     몸 Object_3과 정점 수 8,150이 같다. 같이 합치면 노멀 재계산이 껍데기를 뒤집어 온몸을 검게 덮는다).
+    #   남긴 것: Object_3(몸·옷 전부, 14,094삼각) · Object_4·Object_5(머리카락 두 겹 — 둘 다 검은 텍스처, 안겹은 면이 뒤집혀 있다 → Head 강체).
+    #   🔴 비대칭 선 자세: 오른팔(−X)은 옆으로 48° 벌려 내리고(맨팔), 왼팔은 통 넓은 핫피 소매 안에서 몸 옆에 늘어뜨림. 두 발도 벌어져 있다(왼발 x+15 · 오른발 x−7).
+    #   관절은 원본 좌표 실측(몸 메시 z 4단위 층의 x 구간 · 오른팔 x 2단위 띠): 목 z 90~94(폭 ±3.5) · 어깨 z 82~86(폭 −16~+17) · 허리띠 z 62 ·
+    #     가랑이 z 48(그 아래로 두 다리가 갈린다) · 오른팔 중심선 (−17,74)→(−20.4,70)→(−22.8,66)→(−26.2,62)→(−28.8,58)→(−30,50) ·
+    #     왼쪽 소매·팔 x 9~22(z 48~84), 손 z 46~50 · 발목 z 10: 오른 x −9.4~−3.9 · 왼 x 12.4~18.0.
+    "랜덤_이즈미_신이치": dict(
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_이즈미_신이치.glb"), mesh_name="Benimaru",
+        height=1.8, center_band=(0.02, 0.08), decimate=1.0, rotate_z=0.0,
+        drop_meshes=["Object_2", "Object_6"],
+        rigid_meshes={"Object_4": "Head", "Object_5": "Head"},
+        max_bone_share=0.7,                                             # 머리카락 두 겹 12,991정점이 Head 강체라 Head 몫 63%(heat 실패 아님 — 22뼈 전부 가중치)
         joints=dict(
-            Hips=(0.0103, 0.0124, 0.0365), Spine=(0.0103, 0.0124, 0.1883), Spine1=(0.0103, 0.0124, 0.3401),
-            Spine2=(0.0103, 0.0314, 0.4920), Neck=(0.0103, 0.0314, 0.6059), Head=(0.0103, 0.0314, 0.6818),
-            HeadTop=(0.0103, 0.0314, 0.9475), LeftShoulder=(0.0957, 0.0314, 0.5204), LeftArm=(0.1906, 0.0314, 0.5015),
-            # 팔은 몸통 폭 안으로 내려와 있다 — 1차에 손 관절을 메시 밖(x −0.14 정규화)에 박아 RightHand 가중치가 0으로 멈췄다.
-            # 단면 실측 최대 폭(z 0.45~0.50에서 x −0.119~+0.136)에 맞춰 안쪽으로 당겼다.
-            LeftForeArm=(0.2096, 0.0124, 0.2263), LeftHand=(0.2229, -0.0066, -0.0584), LeftHandTip=(0.2305, -0.0256, -0.1533),
-            RightShoulder=(-0.0751, 0.0314, 0.5204), RightArm=(-0.1700, 0.0314, 0.5015), RightForeArm=(-0.1985, 0.0124, 0.2263),
-            RightHand=(-0.2080, -0.0066, -0.0584), RightHandTip=(-0.2137, -0.0256, -0.1533), LeftUpLeg=(0.1052, 0.0314, -0.0015),
-            LeftLeg=(0.1147, 0.0503, -0.4380), LeftFoot=(0.1925, 0.0693, -0.8746), LeftToeBase=(0.1925, -0.0825, -0.9220),
-            LeftToeTip=(0.1925, -0.1774, -0.9277), RightUpLeg=(-0.0941, 0.0314, -0.0015), RightLeg=(-0.1814, 0.0314, -0.4380),
-            RightFoot=(-0.2402, -0.0066, -0.8746), RightToeBase=(-0.2402, -0.1584, -0.9220), RightToeTip=(-0.2402, -0.2533, -0.9277)),
-        # 🔴 **팔을 T자로 안 편다**(straighten=[]) — 두 판을 나란히 찍어 고른 결과다.
-        #   1차(팔 네 사슬 펴기 + arm_capsule + delete_stretched_faces): 팔이 몸통 폭 **안**으로 내려와 있어 팔 뼈가
-        #   진짜 팔 대신 후드 표면을 쥐었고, 80° 가까이 돌리자 **후드 조각이 좌우로 흩날리고 진짜 팔은 그대로 남았다**(렌더로 확인).
-        #   캡슐 반지름을 줄여도 소매와 후드가 표면째 붙어 있어 못 가른다(보디빌더·나오야와 같은 벽).
-        #   2차(안 폄): 메시가 온전하고 arms45/knees90 시험 자세에서도 안 찢어진다. **A 스탠스로 굳은 레스트**를 택했다 —
-        #   유니티 휴머노이드 아바타는 레스트 자세에서 만들어지고 뼈 이름이 이미 mixamorig라 이름으로 매핑되므로 문제없다.
-        #   나중에 T자가 꼭 필요하면 skin_arm/arm_split 계열로 소매와 후드를 먼저 가르는 작업이 따로 필요하다.
-        straighten=[],
-        closeups=[("armpit", 1.25, 0.8), ("crotch", 0.55, 0.9)],
-        glb_images={0: "Itadori_baseColor.png"},
-        materials={"Material": [("Base Color", "Itadori_baseColor.png")]}),
+            Hips=(0.0, 2.0, 54.0), Spine=(0.0, 2.0, 62.0), Spine1=(0.0, 2.0, 70.0), Spine2=(0.0, 2.5, 79.0),
+            Neck=(0.0, 2.5, 90.0), Head=(0.0, 1.0, 94.0), HeadTop=(0.0, 0.0, 108.0),
+            LeftShoulder=(4.0, 3.0, 85.0), LeftArm=(13.5, 4.0, 84.0), LeftForeArm=(17.0, 3.0, 67.0),
+            LeftHand=(16.5, 0.0, 53.0), LeftHandTip=(16.5, -1.0, 47.0),
+            RightShoulder=(-4.0, 3.0, 85.0), RightArm=(-12.5, 5.0, 84.0), RightForeArm=(-22.0, 9.0, 68.0),
+            RightHand=(-28.5, 10.5, 57.0), RightHandTip=(-30.5, 11.0, 50.0),
+            LeftUpLeg=(7.0, 2.0, 52.0), LeftLeg=(11.0, 2.0, 30.0), LeftFoot=(15.2, 2.5, 9.0),
+            LeftToeBase=(16.5, -4.0, 3.0), LeftToeTip=(17.5, -8.5, 2.0),
+            RightUpLeg=(-7.0, 2.0, 52.0), RightLeg=(-8.0, 2.0, 30.0), RightFoot=(-6.6, 2.5, 9.0),
+            RightToeBase=(-9.0, -4.0, 3.0), RightToeTip=(-11.0, -8.5, 2.0)),
+        straighten=["LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand", "RightShoulder", "RightArm", "RightForeArm", "RightHand"],
+        # 🔴 1차(캡슐 없음): 왼손이 바지 옆 주머니 바로 위에 있어 주머니가 LeftHand를 따라 T자에서 허공으로 날아갔고, 조끼·핫피가
+        #   팔 가중치를 받아 가슴·허리에서 톱니로 찢어졌다(렌더). → 팔 중심선에서 반지름 밖 정점은 팔 가중치를 뺀다(원본 단위, 키 108).
+        arm_capsule=dict(radius_src=(5.5, 5.0, 3.0), margin_src=1.0),   # 손 구간 3.0: 4.5면 주머니 윗단이 아직 손에 딸려 회색 띠로 늘어났다(2차 렌더)
+        closeups=[("armpit", 1.35, 0.8), ("crotch", 0.85, 0.9)],
+        glb_images={0: "Body_baseColor.jpg", 3: "Hair_baseColor.jpg"},
+        materials={"Body": [("Base Color", "Body_baseColor.jpg")], "Hair": [("Base Color", "Hair_baseColor.jpg")]}),
+    # 랜덤_이타도리_유지 ← 원본 glb가 **희귀함_김경현과 바이트가 같다**(sha256 f730b24e…5b2 · 11,620,720바이트 — 같은 Sketchfab 이타도리 유지 파일, 2026-10-01 대조).
+    #   09-23에 여기 따로 적은 설정(팔을 안 펴는 A 스탠스, 캡슐·피부색 가름 없음)은 공용 Idle·Walk·Attack을 입히면 **손이 닿은 바지·후드 밑단이 손/UpLeg 섞인 가중치
+    #   (UpLeg 0.5~0.8 + Hand 0.2~0.3)로 얇은 검은 판 모양으로 길게 늘어난다**(2026-10-01 렌더·변 늘어남 실측: 변 비율 >6이 85개, 최대 20배) — 보류 사유였다.
+    #   희귀함_김경현 항목(팔 T자 + 캡슐 + 소매·코트 가름 + 피부색 가름)은 같은 문제를 이미 풀어 유니티에 들어가 있으므로 **그 설정 그대로** 쓴다(아래 UNITS 뒤 복사).
+    "랜덤_이타도리_유지": dict(
+        path="Assets/Art/Units/랜덤_이타도리_유지/랜덤_이타도리_유지.fbx"),
     # 오버로드 아인즈 울 고운 → 랜덤_모몬가(2026-09-23 랜덤유닛, blender 세션).
     # 원본: ~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_모몬가.glb — 뼈·스킨·애니 0의 정적 모델 · 메시 53 · 재질 19 · 이미지 7.
     # 🔴 **Generic으로 간다** — 발목까지 닫힌 로브라 **다리 geometry가 아예 없다**(렌더로 확인: 로브가 바닥까지 원뿔로 닫힘).
@@ -1169,6 +1182,7 @@ UNITS = {
                    "jubah": [("Base Color", "Ainz_Jubah.png")],
                    "Material.005": [("Base Color", "Ainz_Mat005.png")]}),
 }
+UNITS["랜덤_이타도리_유지"] = dict(UNITS["희귀함_김경현"], source=os.path.expanduser("~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_이타도리_유지.glb"))
 
 # 🗑 폐기(2026-09-15 사장님 지시 — 특별함_강주혁 모델을 아이언맨으로 교체, fix_unit_fbx.py로): 코알라는 AI 메시가 닿은 곳마다 붙어 있어
 #   T자·Idle에서 찢겨 6회 만에 멈췄다(Mixamo 업로드본 ~/Desktop/구랜디스킨모음/99_폐기_교체된원본/특별함_강주혁_이전_코알라_mixamo업로드.fbx, 안 기다림). 설정은 기록용으로만 남긴다 — 빌드 대상 아님.

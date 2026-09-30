@@ -13,41 +13,41 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_초월_임채민_AP_79행_01000
   m_EditorClassIdentifier:
   skillName: A13V 3범위 검수초 지진
-  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.1000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.  · e066(@초월 검은수염지진) A13V 3범위 검수초 지진 [천둥소리 피해]: 400000 (원작 검은수염·초월함) 진입게이트: Trig_Tichi_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==5 AND GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3 | Trig_Tichi_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==5 AND NOT(GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3)  · e0PH(@초월 검은수염지진2) A0Q6 3범위 검수초 지진-강진 [천둥소리 피해]: 400000 (원작 검은수염·초월함) 진입게이트: Trig_Tichi_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==5 AND GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3 | Trig_Tichi_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==5 AND NOT(GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3)
+  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.1000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.  · e066(@초월 검은수염지진) A13V 3범위 검수초 지진 [천둥소리 피해]: 400000 (원작 검은수염·초월함) 진입게이트: Trig_Tichi_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==5 AND GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3 | Trig_Tichi_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==5 AND NOT(GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3)  · e0PH(@초월 검은수염지진2) A0Q6 3범위 검수초 지진-강진 [천둥소리 피해]: 400000 (원작 검은수염·초월함) 진입게이트: Trig_Tichi_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==5 AND GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3 | Trig_Tichi_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==5 AND NOT(GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3) [중복 점검 09-30] Tichi_skill_4 지진(기본 갈래 A13V): 대상 중심 650 범위 400000 · 이감 70% 3초 한 벌 — 단일 400000 ×2 + 이감 둘(두 갈래 A13V·A0Q6을 같이)이었다. (Tools/apply_audit_dupes.py) [초월 나머지 09-30] Tichi_skill_4(지진)는 1/10 중 5/6(나머지 1/6은 강진 Tichi_skill_4_tr) — 확률 0.1 → 0.0833. (Tools/apply_transcend_rest.py)'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.1
-    range: 0
+    triggerChance: 0.083333
+    range: 650.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
     effects:
     - kind: 0
       basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
+      target: 2
+      damageType: 2
+      attackType: 7
       multiplier: 400000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 400000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     - kind: 13
       basis: 0
-      target: 3
+      target: 2
       damageType: 0
       attackType: 0
       multiplier: 0.3
@@ -55,13 +55,16 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 3.0
-    - kind: 13
-      basis: 0
-      target: 3
-      damageType: 0
-      attackType: 0
-      multiplier: 0.25
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 3.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 1.5

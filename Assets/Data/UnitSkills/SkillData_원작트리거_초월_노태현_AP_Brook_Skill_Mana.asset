@@ -1,0 +1,101 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작트리거_초월_노태현_AP_Brook_Skill_Mana
+  m_EditorClassIdentifier:
+  skillName: 브룩 — MANA게이지115(600 범위 3000000·스턴 + AIsr +10)
+  description: '원작 브룩 H09I BrookAttack: 마나==115 → Brook_Skill_Mana: 시전자 주인 더미 e06V의 stomp A0AO(AOws, Wrs1 3000000, aare 600, adur 빈칸 = 스톡 3.0 · ahdu 0.45) + 대상 중심 525 적 AIsr +10(600으로). 음표 더미(A0R1 보유 시 아군 공속 오라)는 미반영. 2026-09-30 구현담당1.'
+  triggerType: 3
+  levels:
+  - cooldown: 0
+    triggerChance: 1.0
+    range: 600.0
+    hitCountThreshold: 115
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 9
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 10.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 3000000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 3.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 0.45
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0.0

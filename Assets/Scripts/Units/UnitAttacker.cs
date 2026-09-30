@@ -96,7 +96,10 @@ public class UnitAttacker : MonoBehaviour
     // 원작 ANbr(배틀로어) 계열의 임시 "공격력 +N" 버프다. 바로 위 PrimaryStatAttackBonus와
     // 정확히 같은 근거(Nbr1이 그 필드 자체다 — 네이티브 버프, 현재 공격력 전체에 곱해지는
     // 배율 안쪽)라 같은 자리에 더한다.
-    public float AttackDamage => (attackDamage + PrimaryStatAttackBonus + FlatAttackPowerBonus) * UpgradeMultiplier * AttackPowerMultiplier + ResearchBonus;
+    // ⚠️ 2026-09-30 추가(PM 승인) — 오라 고정 가산(AuraFlatAttackPower)과 공격력 %(PercentAttackPowerBonus, 기본 공격력 =
+    // attackDamage + 주스탯 몫에만 곱한 값)도 같은 괄호 안에 더한다. 둘 다 0이면 예전 식 그대로.
+    public float AttackDamage => (attackDamage + PrimaryStatAttackBonus + FlatAttackPowerBonus + AuraFlatAttackPower
+                                  + (attackDamage + PrimaryStatAttackBonus) * PercentAttackPowerBonus) * UpgradeMultiplier * AttackPowerMultiplier + ResearchBonus;
     public float AttackRange => attackRange;
     public float AttackInterval => attackInterval / AttackSpeedMultiplier;
 
@@ -122,7 +125,7 @@ public class UnitAttacker : MonoBehaviour
             // SkillAttackSpeedBuffMultiplier는 ActiveBuff 레지스트리 기반(자동 만료)이라
             // 기존 attackSpeedBuffs(수동 Add/Remove, SupportShop 전용)와 별도 축이다 — 곱은
             // 순서 무관이라 그냥 같이 곱한다.
-            float product = ResearchSpeedMultiplier * HeroAttackSpeedMultiplier * SkillAttackSpeedBuffMultiplier;
+            float product = ResearchSpeedMultiplier * HeroAttackSpeedMultiplier * SkillAttackSpeedBuffMultiplier * AuraAttackSpeedMultiplier;
             foreach (float buff in attackSpeedBuffs) product *= buff;
             return product > 0f ? product : 1f;
         }
@@ -262,6 +265,82 @@ public class UnitAttacker : MonoBehaviour
         // 1f(배율 항등원 — 곱해도 무효과, 회귀 없음). 1이 아니면 이 버프가 살아있는 동안
         // SkillAttackSpeedBuffMultiplier에 이 배율이 곱해진다(1+원작 raw퍼센트로 변환된 값).
         public float attackSpeedMultiplierAmount = 1f;
+
+        // 2026-09-30 추가(SkillEffectKind.AttackPowerBuffPercent 시간제) — 0이면 없음. 살아 있는 동안 PercentAttackPowerBonus에 더해진다.
+        public float attackPowerPercentAmount;
+    }
+
+    // ---- 오라 수치 레지스트리(2026-09-30, PM 승인) — 오라(Aura 발동방식)가 아군·자기에게 주는 수치(공속 %·공격력 고정·공격력 %).
+    // 원작 오라는 같은 버프 ID끼리 안 겹치고(가장 큰 것 하나) 다른 버프 ID끼리는 겹친다 — 엔진 지식, 맵 미확정(마나 재생 오라와 같은 규칙).
+    // 예전 오라 경로는 버프 항목을 그냥 붙여서, 같은 오라 유닛이 둘이면 배율이 곱으로 쌓였고 하나가 범위를 벗어나면
+    // RemoveBuff(id)가 남의 몫을 지웠다. 여기서는 준 쪽(source)별로 기록하고 버프 ID별 최댓값만 읽는다.
+    class AuraBonus { public Object source; public SkillEffectKind kind; public string id; public float value; }
+    readonly List<AuraBonus> auraBonuses = new List<AuraBonus>();
+    static readonly Dictionary<string, float> auraBonusScratch = new Dictionary<string, float>();
+
+    public void AddAuraBonus(Object source, SkillEffectKind kind, string id, float value)
+    {
+        if (value == 0f) return;
+        auraBonuses.Add(new AuraBonus { source = source, kind = kind, id = id ?? "", value = value });
+    }
+
+    public void RemoveAuraBonus(Object source, SkillEffectKind kind, string id)
+    {
+        id ??= "";
+        for (int i = 0; i < auraBonuses.Count; i++)
+            if (auraBonuses[i].source == source && auraBonuses[i].kind == kind && auraBonuses[i].id == id) { auraBonuses.RemoveAt(i); return; }
+    }
+
+    // 버프 ID별 최댓값을 모아 합(product=false) 또는 (1+값)의 곱(product=true). 준 쪽이 사라진 항목은 버린다.
+    float AuraBonusTotal(SkillEffectKind kind, bool product)
+    {
+        if (auraBonuses.Count == 0) return product ? 1f : 0f;
+        auraBonusScratch.Clear();
+        for (int i = auraBonuses.Count - 1; i >= 0; i--)
+        {
+            AuraBonus b = auraBonuses[i];
+            if (b.source == null) { auraBonuses.RemoveAt(i); continue; }
+            if (b.kind != kind) continue;
+            if (!auraBonusScratch.TryGetValue(b.id, out float best) || b.value > best) auraBonusScratch[b.id] = b.value;
+        }
+        float total = product ? 1f : 0f;
+        foreach (float v in auraBonusScratch.Values) total = product ? total * (1f + v) : total + v;
+        return total;
+    }
+
+    float AuraAttackSpeedMultiplier => AuraBonusTotal(SkillEffectKind.AttackSpeedBuffPercent, true);
+    float AuraFlatAttackPower => AuraBonusTotal(SkillEffectKind.AttackPowerBuffFlat, false);
+
+    /// <summary>공격력 % 증가 합(오라 + 시간제 버프). 기본 공격력에만 곱해진다(AttackDamage 참고).</summary>
+    public float PercentAttackPowerBonus
+    {
+        get
+        {
+            float sum = AuraBonusTotal(SkillEffectKind.AttackPowerBuffPercent, false);
+            if (activeBuffs.Count > 0)
+            {
+                PruneExpiredBuffs();
+                foreach (ActiveBuff b in activeBuffs) sum += b.attackPowerPercentAmount;
+            }
+            return sum;
+        }
+    }
+
+    // 시간제 공격력 % 버프 — 같은 id가 다시 걸리면 만료만 갱신한다(AddAttackSpeedBuffPercent와 같은 규칙).
+    public void AddAttackPowerBuffPercent(string id, float percent, float duration, int hitCharges)
+    {
+        if (percent == 0f) return;
+        if (hitCharges > 0)
+        {
+            activeBuffs.Add(new ActiveBuff { id = id, expiresAt = -1f, hitsRemaining = hitCharges, skipNextTick = true, attackPowerPercentAmount = percent });
+            return;
+        }
+        if (duration <= 0f) return;   // 영구는 오라 레지스트리로만
+        PruneExpiredBuffs();
+        ActiveBuff existing = string.IsNullOrEmpty(id) ? null
+            : activeBuffs.Find(b => b.id == id && b.hitsRemaining <= 0 && b.expiresAt > 0f && b.attackPowerPercentAmount != 0f);
+        if (existing != null) { existing.expiresAt = Time.time + duration; existing.attackPowerPercentAmount = percent; return; }
+        activeBuffs.Add(new ActiveBuff { id = id, expiresAt = Time.time + duration, attackPowerPercentAmount = percent });
     }
 
     readonly List<ActiveBuff> activeBuffs = new List<ActiveBuff>();
@@ -483,16 +562,8 @@ public class UnitAttacker : MonoBehaviour
                           armorIgnoreRatio: 0f, isAbilityDamage: false);
         SkillTelemetry.Damage(unitData, "치명", target, critHpBefore);
 
-        if (unitData.critStunDuration > 0f) StartCoroutine(CritStunRoutine(target, unitData.critStunDuration));
-    }
-
-    // SupportShop.StunRoutine과 같은 패턴 — AddFreeze/RemoveFreeze는 겹침 횟수를 세므로
-    // 다른 스턴원과 동시에 걸려도 서로를 밀어내지 않는다.
-    IEnumerator CritStunRoutine(EnemyDummy target, float duration)
-    {
-        target.AddFreeze();
-        yield return new WaitForSeconds(duration);
-        if (target != null) target.RemoveFreeze();
+        // 스턴 시간은 걸린 적이 센다(EnemyDummy.FreezeFor) — 이 유닛이 사라져도 풀린다.
+        if (unitData.critStunDuration > 0f) target.FreezeFor(unitData.critStunDuration);
     }
 
     // ---- 유닛 능력(스킬) — 평타·Bash와 별개 축이다(PM 지시, 2026-09-05). 기존 attackTimer·
@@ -553,13 +624,52 @@ public class UnitAttacker : MonoBehaviour
     int ManaGaugeCap(UnitData d) => d != null && d.manaMax > 0f ? Mathf.RoundToInt(d.manaMax * Mathf.Max(d.manaGaugePerMana, 0.0001f)) : int.MaxValue;
     int LifeGaugeCap(UnitData d) => d != null && d.lifeGaugeMax > 0f ? Mathf.RoundToInt(d.lifeGaugeMax) : int.MaxValue;
 
+    // 게이지 시작값(UnitData.manaGaugeStart·lifeGaugeStart 주석 참고) — 0이면 지금처럼 스킬의 resetTo.
+    static int ManaGaugeStart(UnitData d, SkillLevel level) => d != null && d.manaGaugeStart > 0f ? Mathf.RoundToInt(d.manaGaugeStart) : level.resetTo;
+    static int LifeGaugeStart(UnitData d, SkillLevel level) => d != null && d.lifeGaugeStart > 0f ? Mathf.RoundToInt(d.lifeGaugeStart) : level.resetTo;
+    // 평타당 체력 게이지 증가 — 기본 +1, lifeGaugeCustomHitGain이면 lifeGaugeHitGain 확률로 +1(0이면 재생으로만 찬다).
+    static int LifeGaugeHitGain(UnitData d) => d == null || !d.lifeGaugeCustomHitGain ? 1 : (Random.value < d.lifeGaugeHitGain ? 1 : 0);
+
+    // 마나 재생 오라(UnitData.manaAuraRegenPerSecond 주석 참고) — 주변 같은 주인 유닛의 오라를 0.25초마다 모은다.
+    // 같은 버프 ID는 최댓값만, 다른 버프 ID는 합. 멀티에선 진짜 유닛(UnitAttacker)이 호스트에만 있어 호스트에서만 더해진다.
+    const float ManaAuraScanInterval = 0.25f;
+    float manaAuraTimer, manaAuraBonus;
+    static readonly Dictionary<string, float> manaAuraScratch = new Dictionary<string, float>();
+
+    float ScanManaAuraBonus()
+    {
+        if (identity == null) return 0f;
+        int ownerId = identity.OwnerId;
+        Vector3 here = transform.position;
+        manaAuraScratch.Clear();
+        foreach (UnitIdentity other in UnitIdentity.Active)
+        {
+            if (other == null) continue;
+            UnitData od = other.Data;
+            if (od == null || od.manaAuraRegenPerSecond <= 0f || other.OwnerId != ownerId) continue;
+            if (other == identity) { if (!od.manaAuraIncludesSelf) continue; }
+            else
+            {
+                float worldRange = od.manaAuraRange / WorldScale.Value;
+                if ((other.transform.position - here).sqrMagnitude > worldRange * worldRange) continue;
+            }
+            string key = od.manaAuraBuffId ?? "";
+            if (!manaAuraScratch.TryGetValue(key, out float best) || od.manaAuraRegenPerSecond > best) manaAuraScratch[key] = od.manaAuraRegenPerSecond;
+        }
+        float sum = 0f;
+        foreach (float v in manaAuraScratch.Values) sum += v;
+        return sum;
+    }
+
     void TickGaugeRegen()
     {
         UnitData d = identity != null ? identity.Data : null;
         if (d == null) return;
         if (manaGaugeInitialized && d.manaGaugePerMana > 0f)
         {
-            manaRegenCarry += (d.manaRegenPerSecond + IntRegenBonus * CurrentIntelligence) * d.manaGaugePerMana * Time.deltaTime;
+            manaAuraTimer -= Time.deltaTime;
+            if (manaAuraTimer <= 0f) { manaAuraTimer = ManaAuraScanInterval; manaAuraBonus = ScanManaAuraBonus(); }
+            manaRegenCarry += (d.manaRegenPerSecond + IntRegenBonus * CurrentIntelligence + manaAuraBonus) * d.manaGaugePerMana * Time.deltaTime;
             if (manaRegenCarry >= 1f)
             {
                 int n = Mathf.FloorToInt(manaRegenCarry);
@@ -859,6 +969,21 @@ public class UnitAttacker : MonoBehaviour
     // 두면 오라가 조건 없이 나가버린다(SkillData.cs SkillLevel 주석 참고). target이
     // null이어도 두 필드가 전부 비어있으면(기존 전 자산) 이 분기 자체를 안 타 회귀 없다.
     // SkillLevel.targetArmorBreakAbove — 주 대상 스킬 방깎 누적 > N(원작 AId1 레벨 비교). 0이면 통과.
+    internal static bool PassesPointValueCondition(SkillEffectTargetCondition condition, float value, EnemyDummy target)
+    {
+        if (condition == SkillEffectTargetCondition.None) return true;
+        if (target == null) return false;
+        float pointValue = target.PointValue;
+        return condition switch
+        {
+            SkillEffectTargetCondition.TargetPointValueLessThan => pointValue < value,
+            SkillEffectTargetCondition.TargetPointValueEqual => pointValue == value,
+            SkillEffectTargetCondition.TargetPointValueAtLeast => pointValue >= value,
+            SkillEffectTargetCondition.TargetPointValueNotEqual => pointValue != value,
+            _ => true,
+        };
+    }
+
     static bool PassesArmorBreakGate(SkillLevel level, EnemyDummy target) =>
         level.targetArmorBreakAbove <= 0f || (target != null && target.Aid1Shred > level.targetArmorBreakAbove);
 
@@ -875,6 +1000,71 @@ public class UnitAttacker : MonoBehaviour
             if (!string.IsNullOrEmpty(level.forbiddenTargetBuffId) && target.HasBuff(level.forbiddenTargetBuffId)) return false;
         }
         return true;
+    }
+
+    // 「적이 근처에 오면」(SkillTriggerType.OnEnemyEnterRange 주석) — 0.1초마다 감지 반경 안의 표식 없는 적을 하나씩 판정한다.
+    // 한 적에 대해 이 유닛의 근접 스킬을 전부 본 뒤에 표식을 남긴다(갈래가 여러 에셋이라 먼저 남기면 뒤 갈래가 그 적을 못 본다).
+    const float EnterRangeScanInterval = 0.1f;
+    float enterRangeScanTimer;
+    readonly List<SkillData> enterRangeSkills = new List<SkillData>();
+    readonly List<string> enterRangeMarks = new List<string>();
+
+    void TickEnterRangeSkills()
+    {
+        enterRangeScanTimer -= Time.deltaTime;
+        if (enterRangeScanTimer > 0f) return;
+        enterRangeScanTimer = EnterRangeScanInterval;
+
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null) return;
+        enterRangeSkills.Clear();
+        int count = EffectiveSkillCount(unitData);
+        for (int i = 0; i < count; i++)
+        {
+            SkillData skill = ResolveSkillAt(unitData, i);
+            if (skill != null && skill.triggerType == SkillTriggerType.OnEnemyEnterRange) enterRangeSkills.Add(skill);
+        }
+        if (enterRangeSkills.Count == 0) return;
+
+        // 피해로 적이 죽으면 EnemyDummy.Active가 바뀐다 — 먼저 모아 두고 돈다.
+        List<EnemyDummy> enemies = ListPool<EnemyDummy>.Get();
+        foreach (EnemyDummy enemy in EnemyDummy.Active) if (enemy != null) enemies.Add(enemy);
+        foreach (EnemyDummy enemy in enemies)
+        {
+            if (enemy == null || enemy.IsDead) continue;
+            float sqr = (enemy.transform.position - transform.position).sqrMagnitude;
+            firedExclusiveGroups.Clear();
+            enterRangeMarks.Clear();
+            foreach (SkillData skill in enterRangeSkills)
+            {
+                SkillLevel level = CurrentSkillLevel(skill);
+                if (level == null || level.effects == null || level.effects.Count == 0 || level.enterRange <= 0f) continue;
+                float reach = level.enterRange / WorldScale.Value;
+                if (sqr > reach * reach) continue;
+                // 표식이 이미 있으면 끝. 표식만 없고 다른 버프 게이트(B06B 등)에 걸린 갈래도 표식은 남긴다.
+                if (!string.IsNullOrEmpty(level.forbiddenTargetBuffId))
+                {
+                    if (enemy.HasBuff(level.forbiddenTargetBuffId)) continue;
+                    if (!enterRangeMarks.Contains(level.forbiddenTargetBuffId)) enterRangeMarks.Add(level.forbiddenTargetBuffId);
+                }
+                if (!PassesBuffGate(level, enemy)) { SkillTelemetry.Gate(unitData, skill, "버프게이트"); continue; }
+                if (!PassesPointValueCondition(level.primaryTargetCondition, level.primaryTargetConditionValue, enemy))
+                { SkillTelemetry.Gate(unitData, skill, "대상조건"); continue; }
+                if (level.exclusiveGroup != 0 && firedExclusiveGroups.Contains(level.exclusiveGroup)) { SkillTelemetry.Gate(unitData, skill, "배타"); continue; }
+                if (Random.value >= level.triggerChance) { SkillTelemetry.Gate(unitData, skill, "확률실패"); continue; }
+                if (level.exclusiveGroup != 0) firedExclusiveGroups.Add(level.exclusiveGroup);
+
+                SkillTelemetry.Cast(unitData, skill);
+                SkillSfx.Cast(unitData, skill, transform.position);
+                bool vfxBefore = SkillVfx.BeginCast(unitData, skill);
+                CastSkillLevel(level, level.WorldRange, enemy, 0f);
+                SkillVfx.EndCast(vfxBefore);
+                if (enemy == null || enemy.IsDead) break;
+            }
+            if (enemy != null && !enemy.IsDead)
+                foreach (string mark in enterRangeMarks) enemy.AddBuff(mark, 0f);
+        }
+        ListPool<EnemyDummy>.Release(enemies);
     }
 
     // CooldownAutoCast·Aura 전용 — OnHitChance·OnHitCount는 평타가 실제로 맞았을 때만
@@ -943,6 +1133,7 @@ public class UnitAttacker : MonoBehaviour
             // 없다(TryCastOnHitSkill 쪽만 있음, 아래 참고). ReceivedDamage basis를 쓰는
             // 효과가 이 경로를 타면 0(적용 안 함)으로 안전하게 빠진다.
             SkillTelemetry.Cast(identity != null ? identity.Data : null, skill);
+            SkillSfx.Cast(identity != null ? identity.Data : null, skill, transform.position);
             bool vfxBefore = SkillVfx.BeginCast(identity != null ? identity.Data : null, skill);
             CastSkillLevel(level, level.WorldRange, null, 0f);
             SkillVfx.EndCast(vfxBefore);
@@ -956,6 +1147,9 @@ public class UnitAttacker : MonoBehaviour
     // ArmorBonus뿐이라 즉발형이 Aura에 실제로 쓰인 사례가 없다 — EnemyAuraCaster도 같은
     // 전제로 Allies-target 외엔 아예 안 본다). 나중에 즉발형을 Aura에 쓸 사례가 생기면
     // 그때 이 전제를 다시 봐야 한다.
+
+    static bool IsAuraStatKind(SkillEffectKind kind) =>
+        kind == SkillEffectKind.AttackSpeedBuffPercent || kind == SkillEffectKind.AttackPowerBuffFlat || kind == SkillEffectKind.AttackPowerBuffPercent;
 
     void UpdateAuraTick(SkillLevel level, SkillRuntimeState state, bool gatePasses)
     {
@@ -973,20 +1167,21 @@ public class UnitAttacker : MonoBehaviour
         foreach (SkillEffect effect in level.effects)
         {
             if (effect.target != SkillTargetKind.Self) continue;
-            if (effect.kind != SkillEffectKind.ApplyBuff && effect.kind != SkillEffectKind.AttackSpeedBuffPercent) continue;
+            if (effect.kind != SkillEffectKind.ApplyBuff && !IsAuraStatKind(effect.kind)) continue;
             if (string.IsNullOrEmpty(effect.buffId)) continue;
 
+            // 수치 오라(공속 %·공격력 고정·%)는 레지스트리로(2026-09-30) — 같은 오라 유닛이 곁에 있어도 버프 ID가 같으면 안 겹친다.
+            // 이름표(HasBuff 게이트용)는 예전처럼 같이 건다.
             bool alreadyApplied = state.auraSelfAppliedBuffIds.Contains(effect.buffId);
             if (gatePasses && !alreadyApplied)
             {
-                if (effect.kind == SkillEffectKind.AttackSpeedBuffPercent)
-                    AddAttackSpeedBuffPercent(effect.buffId, effect.multiplier, 0f, 0);
-                else
-                    AddBuff(effect.buffId, 0f);
+                if (IsAuraStatKind(effect.kind)) AddAuraBonus(this, effect.kind, effect.buffId, effect.multiplier);
+                AddBuff(effect.buffId, 0f);
                 state.auraSelfAppliedBuffIds.Add(effect.buffId);
             }
             else if (!gatePasses && alreadyApplied)
             {
+                if (IsAuraStatKind(effect.kind)) RemoveAuraBonus(this, effect.kind, effect.buffId);
                 RemoveBuff(effect.buffId);
                 state.auraSelfAppliedBuffIds.Remove(effect.buffId);
             }
@@ -1096,8 +1291,9 @@ public class UnitAttacker : MonoBehaviour
             // 경로를 실제로 쓰는 자산은 없다(H09I/A0QZ가 후보였으나 "소환된 더미가 지속
             // 오라를 낸다"를 표현할 방법이 없어 여전히 미완성) — RemoveBuff를 Enemies
             // 타겟에도 미리 만들어둔 것과 같은 이유로, 대칭을 미리 갖춰둔다.
-            if (effect.kind == SkillEffectKind.AttackSpeedBuffPercent)
-                allyAttacker.AddAttackSpeedBuffPercent(effect.buffId, effect.multiplier, 0f, 0);
+            // 2026-09-30 — 수치 오라는 받는 쪽 레지스트리에 「누가 줬나」와 함께 적는다(버프 ID별 최댓값, AddAuraBonus 주석).
+            if (IsAuraStatKind(effect.kind))
+                allyAttacker.AddAuraBonus(this, effect.kind, effect.buffId, effect.multiplier);
             else if (effect.kind == SkillEffectKind.ApplyBuff)
                 allyAttacker.AddBuff(effect.buffId, 0f);
         }
@@ -1110,10 +1306,13 @@ public class UnitAttacker : MonoBehaviour
         foreach (SkillEffect effect in level.effects)
         {
             if (effect.target != SkillTargetKind.Allies) continue;
-            if (effect.kind != SkillEffectKind.ApplyBuff && effect.kind != SkillEffectKind.AttackSpeedBuffPercent) continue;
-            allyAttacker.RemoveBuff(effect.buffId);
+            if (IsAuraStatKind(effect.kind)) allyAttacker.RemoveAuraBonus(this, effect.kind, effect.buffId);
+            else if (effect.kind == SkillEffectKind.ApplyBuff) allyAttacker.RemoveBuff(effect.buffId);
         }
     }
+
+    // 이번 평타에서 굴림을 맞힌 배타 묶음(SkillLevel.exclusiveGroup) — TryCastOnHitSkill이 평타마다 비운다.
+    readonly HashSet<int> firedExclusiveGroups = new HashSet<int>();
 
     void TryCastOnHitSkill(EnemyDummy attackedTarget)
     {
@@ -1146,6 +1345,7 @@ public class UnitAttacker : MonoBehaviour
         bool lifeShouldReset = false;
         int lifeResetValue = 0;
 
+        firedExclusiveGroups.Clear();
         for (int i = 0; i < count; i++)
         {
             SkillData skill = ResolveSkillAt(unitData, i);
@@ -1164,6 +1364,9 @@ public class UnitAttacker : MonoBehaviour
             // 광폭화 몬스터 전용) — "대상이 이 상태일 때만 발동"은 캐스터가 아니라
             // attackedTarget의 버프를 봐야 한다.
             if (!PassesBuffGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "버프게이트"); continue; }
+            // 스킬 단위 대상 조건(SkillLevel.primaryTargetCondition) — 못 채우면 확률·게이지를 건드리지 않고 건너뛴다.
+            if (!PassesPointValueCondition(level.primaryTargetCondition, level.primaryTargetConditionValue, attackedTarget))
+            { SkillTelemetry.Gate(unitData, skill, "대상조건"); continue; }
 
             if (skill.triggerType == SkillTriggerType.OnHitChance)
             {
@@ -1174,7 +1377,10 @@ public class UnitAttacker : MonoBehaviour
                 if (level.cooldown > 0f && Time.time < state.onHitChanceLockedUntil) { SkillTelemetry.Gate(unitData, skill, "절대쿨"); continue; }
 
                 if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
+                // 배타 분기(SkillLevel.exclusiveGroup) — 같은 묶음의 앞선 스킬이 이번 평타에 굴림을 맞혔으면 굴리지도 않는다.
+                if (level.exclusiveGroup != 0 && firedExclusiveGroups.Contains(level.exclusiveGroup)) { SkillTelemetry.Gate(unitData, skill, "배타"); continue; }
                 if (Random.value >= level.triggerChance) { SkillTelemetry.Gate(unitData, skill, "확률실패"); continue; }
+                if (level.exclusiveGroup != 0) firedExclusiveGroups.Add(level.exclusiveGroup);
 
                 if (level.cooldown > 0f)
                 {
@@ -1198,14 +1404,14 @@ public class UnitAttacker : MonoBehaviour
                 // 여기는 애초에 자동 리셋 개념이 없다).
                 if (level.gaugeKind == SkillGaugeKind.Mana)
                 {
-                    if (!manaGaugeInitialized) { manaGaugeCounter = level.resetTo; manaGaugeInitialized = true; }
+                    if (!manaGaugeInitialized) { manaGaugeCounter = ManaGaugeStart(unitData, level); manaGaugeInitialized = true; }
                     if (!manaIncremented) { manaGaugeCounter = Mathf.Min(manaGaugeCounter + 1, ManaGaugeCap(unitData)); manaIncremented = true; }
                     if (manaGaugeCounter <= level.hitCountFloor) { SkillTelemetry.Gate(unitData, skill, "게이지바닥미달"); continue; }
                 }
                 else
                 {
-                    if (!lifeGaugeInitialized) { lifeGaugeCounter = level.resetTo; lifeGaugeInitialized = true; }
-                    if (!lifeIncremented) { lifeGaugeCounter = Mathf.Min(lifeGaugeCounter + 1, LifeGaugeCap(unitData)); lifeIncremented = true; }
+                    if (!lifeGaugeInitialized) { lifeGaugeCounter = LifeGaugeStart(unitData, level); lifeGaugeInitialized = true; }
+                    if (!lifeIncremented) { lifeGaugeCounter = Mathf.Min(lifeGaugeCounter + LifeGaugeHitGain(unitData), LifeGaugeCap(unitData)); lifeIncremented = true; }
                     if (lifeGaugeCounter <= level.hitCountFloor) { SkillTelemetry.Gate(unitData, skill, "게이지바닥미달"); continue; }
                 }
 
@@ -1233,7 +1439,7 @@ public class UnitAttacker : MonoBehaviour
                 // 같은 길이가 된다).
                 if (level.gaugeKind == SkillGaugeKind.Mana)
                 {
-                    if (!manaGaugeInitialized) { manaGaugeCounter = level.resetTo; manaGaugeInitialized = true; }
+                    if (!manaGaugeInitialized) { manaGaugeCounter = ManaGaugeStart(unitData, level); manaGaugeInitialized = true; }
                     if (!manaIncremented) { manaGaugeCounter = Mathf.Min(manaGaugeCounter + 1, ManaGaugeCap(unitData)); manaIncremented = true; }
                     if (manaGaugeCounter < level.hitCountThreshold) { SkillTelemetry.Gate(unitData, skill, "게이지미달(마나)"); continue; }
                     if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
@@ -1242,8 +1448,8 @@ public class UnitAttacker : MonoBehaviour
                 }
                 else
                 {
-                    if (!lifeGaugeInitialized) { lifeGaugeCounter = level.resetTo; lifeGaugeInitialized = true; }
-                    if (!lifeIncremented) { lifeGaugeCounter = Mathf.Min(lifeGaugeCounter + 1, LifeGaugeCap(unitData)); lifeIncremented = true; }
+                    if (!lifeGaugeInitialized) { lifeGaugeCounter = LifeGaugeStart(unitData, level); lifeGaugeInitialized = true; }
+                    if (!lifeIncremented) { lifeGaugeCounter = Mathf.Min(lifeGaugeCounter + LifeGaugeHitGain(unitData), LifeGaugeCap(unitData)); lifeIncremented = true; }
                     if (lifeGaugeCounter < level.hitCountThreshold) { SkillTelemetry.Gate(unitData, skill, "게이지미달(생명)"); continue; }
                     if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
                     lifeShouldReset = true;
@@ -1265,6 +1471,7 @@ public class UnitAttacker : MonoBehaviour
             // 도는 경로라 이 값이 항상 뜻이 통한다(아래 ResolveSkillEffectValue.
             // ReceivedDamage 참고, 2026-09-06 PM 지시로 연결).
             SkillTelemetry.Cast(unitData, skill);
+            SkillSfx.Cast(unitData, skill, transform.position);
             bool vfxBefore = SkillVfx.BeginCast(unitData, skill);
             CastSkillLevel(level, level.WorldRange, attackedTarget, AttackDamage);
             SkillVfx.EndCast(vfxBefore);
@@ -1304,6 +1511,8 @@ public class UnitAttacker : MonoBehaviour
         // 스킬별 이펙트(09-30): 범위 중심 땅·시전자 발밑에 한 번 — 적중 이펙트는 피해마다 EnemyDummy 쪽에서 바뀐다.
         SkillVfx.CastAt(aoeCenter, transform.position, range);
 
+        randomEnemyPicked = false;
+        randomEnemyPick = null;
         foreach (SkillEffect effect in level.effects)
         {
             if (effect == null) continue;
@@ -1334,9 +1543,38 @@ public class UnitAttacker : MonoBehaviour
     // (2026-09-05, PM 지시로 런타임에도 가드 추가). 콘솔이 도배되지 않게 한 번만 찍는다.
     static bool loggedUnboundedRange;
 
+    // 이번 시전에서 뽑은 무작위 적(RandomEnemyInRange) — CastSkillLevel이 시전마다 비운다.
+    bool randomEnemyPicked;
+    EnemyDummy randomEnemyPick;
+    // 연쇄(ChainEnemies)가 지금 몇 번째 적을 치고 있나에 따른 피해 배수 — 연쇄 밖에선 늘 1.
+    float chainDamageScale = 1f;
+
     void ApplySkillEffect(SkillEffect effect, float range, Vector3 aoeCenter, EnemyDummy primaryTarget, float recentAttackDamage,
         Dictionary<object, HashSet<int>> firedCascadeGroups)
     {
+        // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
+        if (effect.lineLength > 0f && effect.zoneTickInterval <= 0f)
+        {
+            Vector3 dir = aoeCenter - transform.position; dir.y = 0f;
+            dir = dir.sqrMagnitude > 0.0001f ? dir.normalized : transform.forward;
+            float length = effect.lineLength / WorldScale.Value;
+            float startRadius = effect.lineStartRadius / WorldScale.Value, endRadius = effect.lineEndRadius / WorldScale.Value;
+            List<EnemyDummy> inLine = ListPool<EnemyDummy>.Get();
+            foreach (EnemyDummy enemy in EnemyDummy.Active)
+            {
+                if (enemy == null) continue;
+                Vector3 to = enemy.transform.position - transform.position; to.y = 0f;
+                float along = Vector3.Dot(to, dir);
+                if (along < 0f || along > length) continue;
+                float across = (to - dir * along).magnitude;
+                if (across <= Mathf.Lerp(startRadius, endRadius, along / length)) inLine.Add(enemy);
+            }
+            foreach (EnemyDummy enemy in inLine)
+                if (enemy != null) ApplyToEnemy(effect, enemy, recentAttackDamage, firedCascadeGroups);
+            ListPool<EnemyDummy>.Release(inLine);
+            return;
+        }
+
         if (range <= 0f &&
             (effect.target == SkillTargetKind.Enemies || effect.target == SkillTargetKind.Allies))
         {
@@ -1345,6 +1583,23 @@ public class UnitAttacker : MonoBehaviour
                 loggedUnboundedRange = true;
                 Debug.LogWarning($"{name}: {effect.target} 효과의 range가 {range}(<=0)라 시전을 " +
                                  "건너뛴다 — 데이터 확인 필요(SkillLevel.range).", this);
+            }
+            return;
+        }
+
+        // 주기 피해 지대(SkillEffect.zoneTickInterval 주석) — 대상 종류와 무관하게 범위 중심에 세우고 끝. 틱은 SkillDamageZone이 센다.
+        if (effect.kind == SkillEffectKind.Damage && effect.zoneTickInterval > 0f)
+        {
+            if (effect.duration <= 0f) return;
+            int zones = Mathf.Max(1, effect.hitCount);
+            Vector3 forward = aoeCenter - transform.position; forward.y = 0f;
+            forward = forward.sqrMagnitude > 0.0001f ? forward.normalized : transform.forward;
+            float radius = effect.zoneRadius > 0f ? effect.zoneRadius / WorldScale.Value : range;
+            for (int i = 0; i < zones; i++)
+            {
+                Vector3 at = effect.zoneSpacing > 0f ? transform.position + forward * (effect.zoneSpacing / WorldScale.Value * (i + 1))
+                    : effect.zoneAtCaster ? transform.position : aoeCenter;
+                SkillDamageZone.Spawn(at, radius, effect, identity != null ? identity.Data : null, owner != null ? owner.OwnerId : -1, SkillVfx.CasterAllowsVfx);
             }
             return;
         }
@@ -1363,9 +1618,64 @@ public class UnitAttacker : MonoBehaviour
                     if (range > 0f && Vector3.Distance(enemy.transform.position, aoeCenter) > range) continue;
                     inRange.Add(enemy);
                 }
+                // 맞는 수 상한(SkillEffect.maxTargets) — 범위 중심에서 가까운 순으로.
+                if (effect.maxTargets > 0 && inRange.Count > effect.maxTargets)
+                {
+                    inRange.Sort((a, b) => (a.transform.position - aoeCenter).sqrMagnitude.CompareTo((b.transform.position - aoeCenter).sqrMagnitude));
+                    inRange.RemoveRange(effect.maxTargets, inRange.Count - effect.maxTargets);
+                }
                 foreach (EnemyDummy enemy in inRange)
                     if (enemy != null) ApplyToEnemy(effect, enemy, recentAttackDamage, firedCascadeGroups);
                 ListPool<EnemyDummy>.Release(inRange);
+                break;
+
+            // 연쇄(SkillTargetKind.ChainEnemies 주석) — 주 대상에서 시작해 방금 맞은 적에서 range 안의 안 맞은 가장 가까운 적으로.
+            case SkillTargetKind.ChainEnemies:
+            {
+                EnemyDummy current = primaryTarget != null ? primaryTarget : FindClosestEnemyWithin(range);
+                if (current == null) break;
+                List<EnemyDummy> chain = ListPool<EnemyDummy>.Get();
+                int limit = Mathf.Max(1, effect.maxTargets);
+                while (current != null && chain.Count < limit)
+                {
+                    chain.Add(current);
+                    EnemyDummy next = null;
+                    float best = range > 0f ? range * range : float.MaxValue;
+                    foreach (EnemyDummy enemy in EnemyDummy.Active)
+                    {
+                        if (enemy == null || enemy.IsDead || chain.Contains(enemy)) continue;
+                        float sqr = (enemy.transform.position - current.transform.position).sqrMagnitude;
+                        if (sqr <= best) { best = sqr; next = enemy; }
+                    }
+                    current = next;
+                }
+                chainDamageScale = 1f;
+                foreach (EnemyDummy enemy in chain)
+                {
+                    if (enemy != null) ApplyToEnemy(effect, enemy, recentAttackDamage, firedCascadeGroups);
+                    chainDamageScale *= 1f + effect.chainDamageStep;
+                }
+                chainDamageScale = 1f;
+                ListPool<EnemyDummy>.Release(chain);
+                break;
+            }
+
+            // 반경 안 무작위 적 하나(SkillTargetKind.RandomEnemyInRange 주석) — 시전마다 한 번만 뽑아 그 시전의 효과들이 같이 쓴다.
+            case SkillTargetKind.RandomEnemyInRange:
+                if (!randomEnemyPicked)
+                {
+                    randomEnemyPicked = true;
+                    List<EnemyDummy> pool = ListPool<EnemyDummy>.Get();
+                    foreach (EnemyDummy enemy in EnemyDummy.Active)
+                    {
+                        if (enemy == null || enemy.IsDead) continue;
+                        if (range > 0f && Vector3.Distance(enemy.transform.position, aoeCenter) > range) continue;
+                        pool.Add(enemy);
+                    }
+                    randomEnemyPick = pool.Count > 0 ? pool[Random.Range(0, pool.Count)] : null;
+                    ListPool<EnemyDummy>.Release(pool);
+                }
+                if (randomEnemyPick != null) ApplyToEnemy(effect, randomEnemyPick, recentAttackDamage, firedCascadeGroups);
                 break;
 
             case SkillTargetKind.SingleTarget:
@@ -1413,7 +1723,8 @@ public class UnitAttacker : MonoBehaviour
 
         if (effect.kind != SkillEffectKind.ApplyBuff && effect.kind != SkillEffectKind.RemoveBuff
             && effect.kind != SkillEffectKind.AttackPowerBuffFlat
-            && effect.kind != SkillEffectKind.AttackSpeedBuffPercent) return;
+            && effect.kind != SkillEffectKind.AttackSpeedBuffPercent
+            && effect.kind != SkillEffectKind.AttackPowerBuffPercent) return;
 
         UnitAttacker allyAttacker = ally != null ? ally.GetComponent<UnitAttacker>() : null;
         if (allyAttacker == null) return;
@@ -1428,7 +1739,8 @@ public class UnitAttacker : MonoBehaviour
         }
 
         // 눈에 보이는 버프는 공격력·공속 둘뿐 — ApplyBuff는 대부분 게이트용 내부 표식(B03Z 등)이라 이펙트를 안 띄운다.
-        if (effect.kind == SkillEffectKind.AttackPowerBuffFlat || effect.kind == SkillEffectKind.AttackSpeedBuffPercent)
+        if (effect.kind == SkillEffectKind.AttackPowerBuffFlat || effect.kind == SkillEffectKind.AttackSpeedBuffPercent
+            || effect.kind == SkillEffectKind.AttackPowerBuffPercent)
             SkillVfx.Burst(SkillVfx.Kind.Buff, ally.transform.position + Vector3.up * 3f);
 
         if (effect.kind == SkillEffectKind.AttackPowerBuffFlat)
@@ -1436,6 +1748,12 @@ public class UnitAttacker : MonoBehaviour
             // 2026-09-07 추가(PM 지시) — ApplyBuff와 같은 자리, multiplier가 더할 고정
             // 공격력 값이다(buffHitCharges/duration 관례도 ApplyBuff와 동일).
             allyAttacker.AddFlatAttackPowerBuff(effect.buffId, effect.multiplier, effect.duration, effect.buffHitCharges);
+            return;
+        }
+
+        if (effect.kind == SkillEffectKind.AttackPowerBuffPercent)
+        {
+            allyAttacker.AddAttackPowerBuffPercent(effect.buffId, effect.multiplier, effect.duration, effect.buffHitCharges);
             return;
         }
 
@@ -1593,20 +1911,7 @@ public class UnitAttacker : MonoBehaviour
         // 필드가 없어 회귀 없다. target==null(Aura/CooldownAutoCast가 대상 없이 도는 경로)
         // 이면 위 버프 게이트와 같은 원칙으로 조건이 걸려 있는 한 항상 막는다(대상이 없는데
         // "대상이 조건을 만족한다"고 통과시키면 안전하지 않다).
-        if (effect.targetCondition != SkillEffectTargetCondition.None)
-        {
-            if (target == null) return;
-            float pointValue = target.PointValue;
-            bool passes = effect.targetCondition switch
-            {
-                SkillEffectTargetCondition.TargetPointValueLessThan => pointValue < effect.targetConditionValue,
-                SkillEffectTargetCondition.TargetPointValueEqual => pointValue == effect.targetConditionValue,
-                SkillEffectTargetCondition.TargetPointValueAtLeast => pointValue >= effect.targetConditionValue,
-                SkillEffectTargetCondition.TargetPointValueNotEqual => pointValue != effect.targetConditionValue,
-                _ => true,
-            };
-            if (!passes) return;
-        }
+        if (!PassesPointValueCondition(effect.targetCondition, effect.targetConditionValue, target)) return;
 
         // 평타 피해 문턱(원작 GetEventDamage() > X) — SkillEffect.triggerDamageAbove 주석 참고. 0이면 통과.
         if (effect.triggerDamageAbove > 0f && recentAttackDamage <= effect.triggerDamageAbove) return;
@@ -1618,18 +1923,19 @@ public class UnitAttacker : MonoBehaviour
                 break;
 
             // 일반 행동정지 스턴만이다 — 원작의 "게이지를 미는 스턴"(신세계 사이드보스
-            // 전용, 우리에 그 시스템 자체가 없다)은 안 만든다. SupportShop.StunRoutine·
-            // UnitAttacker.CritStunRoutine과 같은 패턴: AddFreeze/RemoveFreeze는 겹침
+            // 전용, 우리에 그 시스템 자체가 없다)은 안 만든다. AddFreeze/RemoveFreeze는 겹침
             // 횟수를 세므로 다른 스턴원과 동시에 걸려도 서로를 밀어내지 않는다.
+            // 시한 효과(스턴·이감·방깎·ArmorBonus/HealOverTime)는 전부 걸린 적이 센다(EnemyDummy.*For, 2026-09-30) —
+            // 여기서 코루틴으로 세면 이 유닛이 조합·판매로 사라질 때 영영 안 풀린다.
             case SkillEffectKind.Stun:
-                if (effect.duration > 0f) StartCoroutine(SkillStunRoutine(target, effect.duration));
+                if (effect.duration > 0f) target.FreezeFor(StunDurationOn(target, effect));
                 break;
 
             // 이감(2026-09-29) — multiplier = 남는 속도 비율. AddSlow/RemoveSlow는 같은 값으로 짝을 맞춰야 빠진다.
             // multiplier 0 = 「최저 이속까지」(원작 Htc3·Ctc3 ≥ 1) — EnemyDummy가 원작 MinUnitSpeed 하한으로 올린다.
             case SkillEffectKind.Slow:
                 if (effect.duration > 0f && effect.multiplier >= 0f && effect.multiplier < 1f)
-                    StartCoroutine(SkillSlowRoutine(target, effect.multiplier, effect.duration));
+                    target.SlowFor(effect.multiplier, StunDurationOn(target, effect));
                 break;
 
             // 방깎 — 부호 없는 감소값(effect.multiplier 그대로가 곧 깎는 양, ArmorBonus와
@@ -1639,8 +1945,8 @@ public class UnitAttacker : MonoBehaviour
             // 누적한다(원작 방깎은 대개 지속시간이 없다, war3map.w3h 버프 311개 전수 확인).
             // 원작에선 트리거가 AId1 레벨을 올리는 것이라 합계 −75에서 멈춘다(EnemyDummy.Aid1ShredCap).
             case SkillEffectKind.ArmorBreak:
-                target.AddAid1ArmorShred(effect.multiplier);
-                if (effect.duration > 0f) StartCoroutine(RevertArmorShredRoutine(target, effect.multiplier, effect.duration));
+                if (effect.duration > 0f) target.Aid1ArmorShredFor(effect.multiplier, effect.duration);
+                else target.AddAid1ArmorShred(effect.multiplier);
                 break;
 
             // ArmorBonus·HealOverTime — EnemyDummy.ApplyAllyAuraEffect/RemoveAllyAuraEffect가
@@ -1652,8 +1958,8 @@ public class UnitAttacker : MonoBehaviour
             // 때까진 실질적으로 안 씀).
             case SkillEffectKind.ArmorBonus:
             case SkillEffectKind.HealOverTime:
-                target.ApplyAllyAuraEffect(effect);
-                if (effect.duration > 0f) StartCoroutine(RevertAllyAuraEffectRoutine(target, effect, effect.duration));
+                if (effect.duration > 0f) target.AllyAuraEffectFor(effect, effect.duration);
+                else target.ApplyAllyAuraEffect(effect);
                 break;
 
             // 버프 부여(2026-09-06, PM 지시 — "버프를 실제로 걸 때만 게이트로 쓰라") — 원작
@@ -1683,34 +1989,24 @@ public class UnitAttacker : MonoBehaviour
                 target.AddA11SStack((int)effect.multiplier);
                 break;
 
+            // 핸콕 석화 방어 감소 표(A0VJ) — 표 길이에서 절로 멈춘다.
+            case SkillEffectKind.A0VJStack:
+                for (int i = 0; i < (int)effect.multiplier; i++) target.AddHancockPetrificationStack();
+                break;
+
             // ExtraProjectile은 아직 값 의미가 없다(이번 작업 범위 밖) — 조용히 무시.
         }
     }
 
-    IEnumerator SkillSlowRoutine(EnemyDummy target, float remainingSpeed, float duration)
-    {
-        target.AddSlow(remainingSpeed);
-        yield return new WaitForSeconds(duration);
-        if (target != null) target.RemoveSlow(remainingSpeed);
-    }
+    // 저항 피부(원작 ACrk) 적에게는 스턴·시한 이감이 영웅 지속(ahdu)으로 걸린다(EnemyData.resistantSkin · SkillEffect.heroDuration 주석).
+    // heroDuration이 0(모름)이면 일반 지속 × 이 비율 — 맵의 스턴 능력 가운데 adur·ahdu가 둘 다 적힌 것의 분포가
+    // 두 무리(stomp 계열 ≈0.15 · 강타/파이어볼트 계열 ≈0.5)라 덜 깎는 쪽 0.5를 쓴다(값을 모를 때 보스 스턴을 과하게 줄이지 않게).
+    public const float HeroDurationFallbackRatio = 0.5f;
 
-    IEnumerator SkillStunRoutine(EnemyDummy target, float duration)
+    static float StunDurationOn(EnemyDummy target, SkillEffect effect)
     {
-        target.AddFreeze();
-        yield return new WaitForSeconds(duration);
-        if (target != null) target.RemoveFreeze();
-    }
-
-    IEnumerator RevertArmorShredRoutine(EnemyDummy target, float amount, float duration)
-    {
-        yield return new WaitForSeconds(duration);
-        if (target != null) target.AddAid1ArmorShred(-amount);
-    }
-
-    IEnumerator RevertAllyAuraEffectRoutine(EnemyDummy target, SkillEffect effect, float duration)
-    {
-        yield return new WaitForSeconds(duration);
-        if (target != null) target.RemoveAllyAuraEffect(effect);
+        if (target == null || !target.HasResistantSkin) return effect.duration;
+        return effect.heroDuration > 0f ? effect.heroDuration : effect.duration * HeroDurationFallbackRatio;
     }
 
     // 계측 채널 — %체력 세 basis는 「스킬%HP」로 따로 센다(보스 %HP 게이트 제거 효과를 재려고, 2026-09-30).
@@ -1726,7 +2022,7 @@ public class UnitAttacker : MonoBehaviour
         // basis를 안 가리고 스킬 피해 전반에 곱한다. %체력 분기 자체를 타는지는 별개 축
         // (2026-09-30부터 효과별 targetCondition — 전역 TakesPercentDamage 게이트는 걷었다)이다.
         // 원작 식에 A11S 인자가 없는 효과는 감수성 계수를 안 곱한다(SkillEffect.skipDamageTakenMultiplier).
-        float amount = ResolveSkillEffectValue(effect, target, recentAttackDamage)
+        float amount = ResolveSkillEffectValue(effect, target, recentAttackDamage) * chainDamageScale
             * (effect.skipDamageTakenMultiplier ? 1f : target.PercentDamageTakenMultiplier);
         // 원작 realD = 0.03×버프개수(SkillEffect.casterBuffCountFactor 주석 참고). 기존
         // 227개 효과는 이 필드가 직렬화에 없어 C# 기본값 0f로 읽힌다 — (1+0×count)=1이라
@@ -2004,15 +2300,27 @@ public class UnitAttacker : MonoBehaviour
     {
         TickGaugeRegen();
         UpdateSkillCooldown();
+        TickEnterRangeSkills();
 
-        attackTimer -= Time.deltaTime;
-        if (attackTimer > 0f) return;
+        // ⚠️ 2026-09-30(PM 승인) — 예전엔 `attackTimer = AttackInterval`이라 프레임이 넘긴 시간을 버렸다: 평타 주기가
+        // 프레임에 매여 설정보다 길었다(1배속 0.38→0.391 +2.8%, 2배속 +5.4%). 이제 넘친 시간(≤0)을 다음 주기에서 뺀다.
+        // · 한 프레임에 한 번만 쏜다 — 주기가 프레임보다 짧으면 남는 시간은 버린다(폭주 없음).
+        // · 대상이 없는 동안은 0에서 멈춘다 — 음수로 쌓였다가 적이 오면 몰아 쏘지 않는다. 적이 오면 바로 쏜다
+        //   (예전엔 대상이 없어도 한 주기를 통째로 기다렸다).
+        if (attackTimer > 0f)
+        {
+            attackTimer -= Time.deltaTime;
+            if (attackTimer > 0f) return;
+        }
 
-        attackTimer = AttackInterval;
+        // UnitCombat의 목표는 읽기만 하면 돼서 매 프레임 본다. 직접 훑는 탐색(UnitCombat 없는 유닛·문)은 비싸서 띄엄띄엄.
+        bool canScan = true;
+        if (idleScanTimer > 0f) { idleScanTimer -= Time.deltaTime; canScan = idleScanTimer <= 0f; }
 
-        EnemyDummy target = ResolveTarget();
+        EnemyDummy target = combat != null ? combat.CurrentTarget : (canScan ? FindClosestEnemyInRange() : null);
         if (target != null)
         {
+            attackTimer = Mathf.Max(0f, attackTimer + AttackInterval);
             Anim?.PlayAttack();
             ApplyArmorShred(target);
             // isAbilityDamage: false — 평타는 원작에 UNIVERSAL이 없다(EnemyDummy.TakeDamage
@@ -2021,29 +2329,95 @@ public class UnitAttacker : MonoBehaviour
             target.TakeDamage(AttackDamage, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
                               armorIgnoreRatio: 0f, isAbilityDamage: false);
             SkillTelemetry.Damage(identity != null ? identity.Data : null, "평타", target, basicHpBefore);
+            ApplyAttackSplash(target);
+            ApplyAttackMultishot(target);
             ApplyCritIfTriggered(target);
             TryCastOnHitSkill(target);
             return;
         }
 
+        attackTimer = 0f;
+        if (!canScan) return;
+
         // 적이 없을 때만 문을 친다. 문이 우선이면 적이 몰려와도 문만 때리고 있게 된다.
         DestructibleGate gate = FindClosestGateInRange();
         if (gate != null)
         {
+            attackTimer = AttackInterval;
             Anim?.PlayAttack();
             gate.TakeDamage(AttackDamage);
+            return;
         }
+        idleScanTimer = IdleScanInterval;
     }
 
-    // UnitCombat이 있으면 그쪽이 이미 골라둔 목표(사거리 안에 있을 때만 넘겨줌)를 그대로 쓴다 —
-    // 둘 다 EnemyDummy.Active를 훑으면 유닛 수만큼 중복 탐색이 된다. UnitCombat이 없는
-    // 오브젝트(구버전 프리팹 등)를 위해 예전처럼 스스로 찾는 경로도 남겨둔다.
-    EnemyDummy ResolveTarget()
+    // 평타 광역(UnitData.attackSplashRadius·attackCleave* 주석) — 주 대상은 이미 맞았으니 건너뛴다(이중 타격 없음).
+    // 같은 레인 적만(멀티에서 남의 레인 적을 안 때리게, PM 결정). 계측은 「평타광역」 채널로 따로.
+    // 평타 다중 대상(UnitData.attackExtraTargets 주석) — 공격자에서 가까운 순으로 다른 적 N마리에게 평타와 같은 피해.
+    void ApplyAttackMultishot(EnemyDummy primary)
     {
-        if (combat != null) return combat.CurrentTarget;
-
-        return FindClosestEnemyInRange();
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null || unitData.attackExtraTargets <= 0 || unitData.attackExtraTargetRadius <= 0f) return;
+        float reach = unitData.attackExtraTargetRadius / WorldScale.Value;
+        Vector3 center = transform.position;
+        List<EnemyDummy> inRange = ListPool<EnemyDummy>.Get();
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+        {
+            if (enemy == null || enemy == primary || enemy.IsDead || enemy.LaneIndex != primary.LaneIndex) continue;
+            if ((enemy.transform.position - center).sqrMagnitude <= reach * reach) inRange.Add(enemy);
+        }
+        if (inRange.Count > unitData.attackExtraTargets)
+        {
+            inRange.Sort((a, b) => (a.transform.position - center).sqrMagnitude.CompareTo((b.transform.position - center).sqrMagnitude));
+            inRange.RemoveRange(unitData.attackExtraTargets, inRange.Count - unitData.attackExtraTargets);
+        }
+        int ownerId = owner != null ? owner.OwnerId : -1;
+        float damage = AttackDamage;
+        foreach (EnemyDummy enemy in inRange)
+        {
+            float hpBefore = enemy.Hp;
+            enemy.TakeDamage(damage, DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false);
+            SkillTelemetry.Damage(unitData, "평타다중", enemy, hpBefore);
+        }
+        ListPool<EnemyDummy>.Release(inRange);
     }
+
+    void ApplyAttackSplash(EnemyDummy primary)
+    {
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null) return;
+        float splash = unitData.attackSplashRadius / WorldScale.Value;
+        float cleave = unitData.attackCleaveFactor > 0f ? unitData.attackCleaveRadius / WorldScale.Value : 0f;
+        float reach = Mathf.Max(splash, cleave);
+        if (reach <= 0f) return;
+
+        // 피해로 적이 죽으면 EnemyDummy.Active가 바뀐다 — 먼저 모아 두고 돈다(스킬 Enemies 갈래와 같은 이유).
+        Vector3 center = primary.transform.position;
+        List<EnemyDummy> inRange = ListPool<EnemyDummy>.Get();
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+        {
+            if (enemy == null || enemy == primary || enemy.IsDead || enemy.LaneIndex != primary.LaneIndex) continue;
+            if (Vector3.Distance(enemy.transform.position, center) <= reach) inRange.Add(enemy);
+        }
+        int ownerId = owner != null ? owner.OwnerId : -1;
+        float damage = AttackDamage;
+        foreach (EnemyDummy enemy in inRange)
+        {
+            float distance = Vector3.Distance(enemy.transform.position, center);
+            float hpBefore = enemy.Hp;
+            if (distance <= splash)
+                enemy.TakeDamage(damage, DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false);
+            if (distance <= cleave)
+                enemy.TakeDamage(damage * unitData.attackCleaveFactor, DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 1f, isAbilityDamage: false);
+            SkillTelemetry.Damage(unitData, "평타광역", enemy, hpBefore);
+            SkillTelemetry.SplashHit(unitData);
+        }
+        ListPool<EnemyDummy>.Release(inRange);
+    }
+
+    // 대상이 없을 때 비싼 탐색(전체 적 훑기·문)을 다시 하기까지의 간격.
+    const float IdleScanInterval = 0.2f;
+    float idleScanTimer;
 
     DestructibleGate FindClosestGateInRange()
     {

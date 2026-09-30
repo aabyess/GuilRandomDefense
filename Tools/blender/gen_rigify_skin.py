@@ -407,55 +407,6 @@ SKINS = {
         decimate_ratio=1.0,
         bake_size=1024,
     ),
-    # 랜덤_호시노_아이(최애의 아이, Sketchfab .blend — 사장님 확정 2026-09-30). 아마추어 "AiRig" 75뼈(자체 이름:
-    # hips·spine·chest·neck·head / shoulder·bicep·forearm·hand / thigh·shin·foot·toes + 머리카락 10·치마 12·눈 2·손가락 30).
-    # 메시 Ai 하나(재질 AiBody·hair·AiClothes, Outline 슬롯 면 0) + 마이크 Cylinder(부모·가중치 없음, 재질 3 단색).
-    # BaseRig(숨김, 가중치 없음)는 armature_name으로 비켜 간다.
-    "랜덤_호시노_아이": dict(
-        source="~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_호시노_아이.zip",
-        source_type="blend",
-        blend_member="source/Sketchfab_2023_05_21_21_58_53.blend",
-        armature_name="AiRig",
-        path="Assets/Art/Units/랜덤_호시노_아이/랜덤_호시노_아이.fbx",
-        mesh_name="Ai",
-        height=1.8,
-        drop_meshes=set(),
-        # 마이크 — 저장된 포즈에서 오른손(hand.R 포즈 머리 −0.43,−0.38,3.69)에 쥐여 있다(마이크 중심 −0.27,−0.59,3.63).
-        carry_to_rest={"Cylinder": "hand.R"},
-        rigid={"Cylinder": "RightHand"},
-        apply_shape_mix=True,
-        rename={
-            "hips": "Hips", "spine": "Spine", "chest": "Spine2", "neck": "Neck", "head": "Head",
-            "shoulder.L": "LeftShoulder", "bicep.L": "LeftArm", "forearm.L": "LeftForeArm", "hand.L": "LeftHand",
-            "shoulder.R": "RightShoulder", "bicep.R": "RightArm", "forearm.R": "RightForeArm", "hand.R": "RightHand",
-            "thigh.L": "LeftUpLeg", "shin.L": "LeftLeg", "foot.L": "LeftFoot", "toes.L": "LeftToeBase",
-            "thigh.R": "RightUpLeg", "shin.R": "RightLeg", "foot.R": "RightFoot", "toes.R": "RightToeBase",
-        },
-        fold={
-            "eye.L": "Head", "eye.R": "Head",
-            **{f"Hair{p}.{s}": "Head" for p in ("Front.R", "Front.L", "Back", "Back.L", "Back.R") for s in ("001", "002")},
-            **{f"Skirt{p}.{s}": "Hips" for p in ("Front", "Back", "Front.L", "Back.L", "Front.R", "Back.R") for s in ("001", "002")},
-            **{f"{f}.{side}.{s}": ("Left" if side == "L" else "Right") + "Hand"
-               for f in ("index", "middle", "ring", "pinky", "thumb") for side in ("L", "R") for s in ("001", "002", "003")},
-        },
-        # 손가락은 이름 가운데에 쪽 표시가 있어(index.L.001) finger_prefixes의 「끝이 .L」 판정에 안 걸린다 — fold에 직접 넣었다.
-        # 척추가 spine·chest 두 마디 — Spine1은 chest 머리의 0-길이 자리표시(가중치 없음이 정상).
-        bone_position_override={"Spine1": ("chest", "head")},
-        allow_dead_bones={"Spine1"},
-        # 재질마다 Albedo(→발광색, 실제 색)와 LightRig(→Base Color, 흑백 명암 마스크)가 같이 물려 있다.
-        # 색은 Albedo가 다 갖고 있어 Albedo만 쓴다(LightRig는 「빛 받는 곳=흰, 안 받는 곳=검」 마스크라 색이 아니다).
-        texture_image={"AiBody": "AiBodyAlbedo", "hair": "AiHairAlbedo", "AiClothes": "AiClothesAlbedo"},
-        materials={
-            "AiBody": ("emission_texture", None), "hair": ("emission_texture", None), "AiClothes": ("emission_texture", None),
-            # 마이크 — 원본 BSDF 색(머리 0·손잡이 0·링 0.045, 링 발광 0.25)을 게임에서 형체가 보이게 조금 밝힌 단색.
-            "Mic": ("solid", (0.08, 0.08, 0.09, 1.0)), "Michandle": ("solid", (0.05, 0.05, 0.05, 1.0)),
-            "MicRing": ("solid", (0.30, 0.30, 0.30, 1.0)),
-        },
-        rotate_z=0.0,
-        level_arms=True,                                          # A자(bicep 머리 z 1.354 → hand 0.882, 약 25°)
-        decimate_ratio=1.0,
-        bake_size=1024,
-    ),
     # 초월_두유찬_AD(게토 스구루/켄자쿠, Jujutsu Kaisen Sketchfab) — 유타와 같은 제작자
     # .blend(SOURCE.txt 참고). 아마추어 "Kenjaku Rig" 159뼈(별도 무기 리그 없음), 메시 5
     # (feet·hair·hands·head·robe) 전부 SUBSURF+SOLIDIFY+ARMATURE, 비-얼굴 뼈 25개가
@@ -685,6 +636,63 @@ SKINS = {
         level_arms=True,                                          # 직접 확인: upper_arm.L z 5.306 → hand.L z 3.73 = A자(팔 아래로)
         decimate_ratio=1.0,                                       # 합쳐서 약 2.4만 면 — 감량 불필요
         bake_size=2048,
+    ),
+}
+
+# 🔴 폐기(2026-09-30 사장님 교체) — 한 번 짓고 Assets에 넣었다가 다른 모델로 바뀐 설정. SKINS 밖이라 main()·check_entries가 안 본다
+# (gen_biped_skin.py RETIRED_SKINS와 같은 규칙). 나중에 다른 유닛에 쓰려면 SKINS로 옮기고 이름·path를 그 유닛으로 바꾼다.
+RETIRED_SKINS = {
+    # 랜덤_호시노_아이의 첫 판(진짜 호시노 아이 모습 — 보라 긴 머리·분홍 무대 의상·마이크). 09-30 같은 날 사장님이
+    # 「oshi-no-ko-arima-kana」 모델로 교체 지시 → 새 항목은 gen_objrip_skin.py SKINS["랜덤_호시노_아이"]. 원본 zip은 99_폐기_교체된원본/로 옮겨졌다.
+    # ⚠️ 이 판은 Spine1이 chest 머리의 0-길이 자리표시였다(유니티에서 이상하면 3항 override로 — NEXT_SESSION 09-30 메모).
+    # 랜덤_호시노_아이(최애의 아이, Sketchfab .blend — 사장님 확정 2026-09-30). 아마추어 "AiRig" 75뼈(자체 이름:
+    # hips·spine·chest·neck·head / shoulder·bicep·forearm·hand / thigh·shin·foot·toes + 머리카락 10·치마 12·눈 2·손가락 30).
+    # 메시 Ai 하나(재질 AiBody·hair·AiClothes, Outline 슬롯 면 0) + 마이크 Cylinder(부모·가중치 없음, 재질 3 단색).
+    # BaseRig(숨김, 가중치 없음)는 armature_name으로 비켜 간다.
+    "호시노_아이_최애의아이판": dict(
+        source="~/Desktop/구랜디스킨모음/99_폐기_교체된원본/랜덤_호시노_아이_0930_최애의아이판.zip",
+        source_type="blend",
+        blend_member="source/Sketchfab_2023_05_21_21_58_53.blend",
+        armature_name="AiRig",
+        path="Assets/Art/Units/호시노_아이_최애의아이판/호시노_아이_최애의아이판.fbx",   # ⚠️ 다시 쓸 때 유닛 이름으로 바꿀 것
+        mesh_name="Ai",
+        height=1.8,
+        drop_meshes=set(),
+        # 마이크 — 저장된 포즈에서 오른손(hand.R 포즈 머리 −0.43,−0.38,3.69)에 쥐여 있다(마이크 중심 −0.27,−0.59,3.63).
+        carry_to_rest={"Cylinder": "hand.R"},
+        rigid={"Cylinder": "RightHand"},
+        apply_shape_mix=True,
+        rename={
+            "hips": "Hips", "spine": "Spine", "chest": "Spine2", "neck": "Neck", "head": "Head",
+            "shoulder.L": "LeftShoulder", "bicep.L": "LeftArm", "forearm.L": "LeftForeArm", "hand.L": "LeftHand",
+            "shoulder.R": "RightShoulder", "bicep.R": "RightArm", "forearm.R": "RightForeArm", "hand.R": "RightHand",
+            "thigh.L": "LeftUpLeg", "shin.L": "LeftLeg", "foot.L": "LeftFoot", "toes.L": "LeftToeBase",
+            "thigh.R": "RightUpLeg", "shin.R": "RightLeg", "foot.R": "RightFoot", "toes.R": "RightToeBase",
+        },
+        fold={
+            "eye.L": "Head", "eye.R": "Head",
+            **{f"Hair{p}.{s}": "Head" for p in ("Front.R", "Front.L", "Back", "Back.L", "Back.R") for s in ("001", "002")},
+            **{f"Skirt{p}.{s}": "Hips" for p in ("Front", "Back", "Front.L", "Back.L", "Front.R", "Back.R") for s in ("001", "002")},
+            **{f"{f}.{side}.{s}": ("Left" if side == "L" else "Right") + "Hand"
+               for f in ("index", "middle", "ring", "pinky", "thumb") for side in ("L", "R") for s in ("001", "002", "003")},
+        },
+        # 손가락은 이름 가운데에 쪽 표시가 있어(index.L.001) finger_prefixes의 「끝이 .L」 판정에 안 걸린다 — fold에 직접 넣었다.
+        # 척추가 spine·chest 두 마디 — Spine1은 chest 머리의 0-길이 자리표시(가중치 없음이 정상).
+        bone_position_override={"Spine1": ("chest", "head")},
+        allow_dead_bones={"Spine1"},
+        # 재질마다 Albedo(→발광색, 실제 색)와 LightRig(→Base Color, 흑백 명암 마스크)가 같이 물려 있다.
+        # 색은 Albedo가 다 갖고 있어 Albedo만 쓴다(LightRig는 「빛 받는 곳=흰, 안 받는 곳=검」 마스크라 색이 아니다).
+        texture_image={"AiBody": "AiBodyAlbedo", "hair": "AiHairAlbedo", "AiClothes": "AiClothesAlbedo"},
+        materials={
+            "AiBody": ("emission_texture", None), "hair": ("emission_texture", None), "AiClothes": ("emission_texture", None),
+            # 마이크 — 원본 BSDF 색(머리 0·손잡이 0·링 0.045, 링 발광 0.25)을 게임에서 형체가 보이게 조금 밝힌 단색.
+            "Mic": ("solid", (0.08, 0.08, 0.09, 1.0)), "Michandle": ("solid", (0.05, 0.05, 0.05, 1.0)),
+            "MicRing": ("solid", (0.30, 0.30, 0.30, 1.0)),
+        },
+        rotate_z=0.0,
+        level_arms=True,                                          # A자(bicep 머리 z 1.354 → hand 0.882, 약 25°)
+        decimate_ratio=1.0,
+        bake_size=1024,
     ),
 }
 

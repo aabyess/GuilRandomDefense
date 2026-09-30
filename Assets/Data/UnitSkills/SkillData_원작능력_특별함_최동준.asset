@@ -13,20 +13,10 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_특별함_최동준
   m_EditorClassIdentifier:
   skillName: A045 !육식
-  description: 원작 특별함 포트거스.D.에이스 흰수염 해적단 2번대대장 - 특별함(더미 경로 Trig_Speical9 → e0E6(안흔함 더미2 에이스) → A0BI). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다.
+  description: '원작 특별함 포트거스.D.에이스 흰수염 해적단 2번대대장 - 특별함(더미 경로 Trig_Speical9 → e0E6(안흔함 더미2 에이스) → A0BI). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. [하위 등급 블록 09-30] §0-1: 925는 원문에 없는 값(장풍 A0BI의 Ucs3 거리 필드를 피해로 읽은 것) — 매 타 925를 뺌(효과 0). 진짜 블록(1/7 장풍 850)은 더미채널 에셋에 있다. (Tools/apply_lower_grade_blocks.py)'
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 1.0
     range: 0
-    effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 3
-      multiplier: 925.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
+    effects: []

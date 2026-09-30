@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_초월_강재규_AP_fcba0856
   m_EditorClassIdentifier:
   skillName: 오하라의 마지막 생존자 — LIFE게이지40.00 AND 1/20
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 오하라의 마지막 생존자(H098)의 게이트 "LIFE게이지40.00 AND 1/20" 능력 1개를 이 SkillData 하나로 묶었다.   · Robine_skill_3#1: 계산식 600000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. | 정정(2026-09-30, 구현담당1): 게이트 라벨 「LIFE게이지40 AND …」는 틀렸다 — 원문 Trig_Robin_Attack에서 LIFE==40 블록은 endif로 닫히고 1/20 → Robine_skill_3는 별도 if다. OnHitCount(생명 40)에서 OnHitChance(확률 그대로)로 바꿨다.'
+  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 오하라의 마지막 생존자(H098)의 게이트 "LIFE게이지40.00 AND 1/20" 능력 1개를 이 SkillData 하나로 묶었다.   · Robine_skill_3#1: 계산식 600000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. | 정정(2026-09-30, 구현담당1): 게이트 라벨 「LIFE게이지40 AND …」는 틀렸다 — 원문 Trig_Robin_Attack에서 LIFE==40 블록은 endif로 닫히고 1/20 → Robine_skill_3는 별도 if다. OnHitCount(생명 40)에서 OnHitChance(확률 그대로)로 바꿨다. [초월 나머지 09-30] Robine_skill_3: 대상 파이어볼트 A0V9 120000·스턴 3.0초 추가. (Tools/apply_transcend_rest.py)'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -34,3 +34,48 @@ MonoBehaviour:
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 120000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 1
+      basis: 0
+      target: 3
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 3.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 3.0

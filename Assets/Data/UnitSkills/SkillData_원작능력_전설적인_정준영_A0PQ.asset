@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_전설적인_정준영_A0PQ
   m_EditorClassIdentifier:
   skillName: A0PQ !강철을 벤 사나이
-  description: 쪼개기 실행(2026-09-06, PHASE2_FINAL_TALLY_2026-09-06.md/08e21d6, PHASE2_39_RESOLVED.csv/f18af68): 원작 전설적인 롤로노아 조로 죽음의경지'사자의노래' - 전설적인(h02S)의 능력. 1채널표(ORIGINAL_UNIT_ABILITIES.csv) 확정값 발동30%·추가피해500,000. SkillData_원작능력_전설적인_정준영.asset이 이 능력 하나로 triggerChance를 공유하기엔 다른 능력(A0IS·A06M·A16L 및 A0QL 자체 배정분)이 섞여 있어(PM 설계 결정 — 능력 하나에 파일 하나) 별도 파일로 뗐다. 공격타입 원본 [미확인]이라 이 유닛 자신의 평타 타입을 그대로 썼다.
+  description: '쪼개기 실행(2026-09-06, PHASE2_FINAL_TALLY_2026-09-06.md/08e21d6, PHASE2_39_RESOLVED.csv/f18af68): 원작 전설적인 롤로노아 조로 죽음의경지''사자의노래'' - 전설적인(h02S)의 능력. 1채널표(ORIGINAL_UNIT_ABILITIES.csv) 확정값 발동30%·추가피해500,000. SkillData_원작능력_전설적인_정준영.asset이 이 능력 하나로 triggerChance를 공유하기엔 다른 능력(A0IS·A06M·A16L 및 A0QL 자체 배정분)이 섞여 있어(PM 설계 결정 — 능력 하나에 파일 하나) 별도 파일로 뗐다. 공격타입 원본 [미확인]이라 이 유닛 자신의 평타 타입을 그대로 썼다. [전설 범위화 09-30] A0PQ atar air,ancient,sapper,… — ancient(= PV 200) 대상만. 일반 몹에 30% +500000·스턴 1.0초가 걸리고 있었다. (Tools/apply_legend_rest2.py)'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -33,6 +33,8 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0
+      targetCondition: 2
+      targetConditionValue: 200.0
     - kind: 1
       basis: 0
       target: 3
@@ -43,3 +45,6 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 1.0
+      targetCondition: 2
+      targetConditionValue: 200.0
+      heroDuration: 0.5

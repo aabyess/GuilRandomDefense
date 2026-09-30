@@ -1,0 +1,124 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작트리거_전설적인_박민수_Legend15_배리어
+  m_EditorClassIdentifier:
+  skillName: 바르토로메오 — 배리어 1/10(550 범위 스턴 2.75초 + 225 범위 150000 + 1500×PV)
+  description: '원작 바르토로메오 h02Z Legend15 GetRandomInt(1,10)==3: stomp A096(550 범위, 피해 0, adur 2.75) + 대상 중심 225 범위 (150000 + 1500×맞는 적 PV) NORMAL/UNIVERSAL. 한 레벨에 반경이 하나라 550으로(피해 범위 225가 넓어진다 — 피해는 작은 쪽). PV 항은 <200은 100 · 200 · ≥300으로. 2026-09-30 구현담당1. [배타 09-30] 배타 묶음 1의 앞 스킬 — Legend15: if (1,10)==3 stomp elseif (1,30)==3(Tools/apply_exclusive_groups.py)'
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 0.1
+    range: 550.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 2.75
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 0.41
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 300000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 1
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 450000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 2
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 600000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 3
+      targetConditionValue: 300.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0.0
+    exclusiveGroup: 1

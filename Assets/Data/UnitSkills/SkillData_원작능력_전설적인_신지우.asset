@@ -12,22 +12,67 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_전설적인_신지우
   m_EditorClassIdentifier:
-  skillName: A0T0 !바닷물 가두기
-  description: 원작 전설적인 트라팔가 로우 하트 해적단 선장 - 전설적인(Trig_Legend16sc).
+  skillName: 로우(전설) — 인젝션 샷 1/8(400 범위 + 대상 B06B면 현재체력 15% + 10000)
+  description: '원작 전설적인 트라팔가 로우 하트 해적단 선장 - 전설적인(Trig_Legend16sc). [하위 등급 블록 09-30] §0-1 Legend16sc 인젝션 샷: 「20% · 조건 없음」 → 1/8 · 현재체력 15% + 10000은 **대상이 B06B일 때만**(모든 적에게 상시 %피해였다). 같은 블록의 400 범위 (182500 + 현재체력 0.35%)×(100/PV) CHAOS/UNIVERSAL 추가 — PV<200은 ×1, PV 200은 ×0.5로(PV 300대는 미반영, 원문은 주 대상 체력 기준 — 맞는 적마다 제 체력으로 근사). (Tools/apply_lower_grade_blocks.py)'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.2
-    range: 0
+    triggerChance: 0.125
+    range: 400.0
     effects:
     - kind: 0
       basis: 2
       target: 3
-      damageType: 1
-      attackType: 1
+      damageType: 2
+      attackType: 7
       multiplier: 0.15
       bonus: 10000.0
       chance: 1
       hitCount: 1
       duration: 0
       skipDamageTakenMultiplier: 1
+      requiredTargetBuffId: B06B
+    - kind: 0
+      basis: 2
+      target: 2
+      damageType: 2
+      attackType: 5
+      multiplier: 0.0035
+      bonus: 182500.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 1
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 1
+      triggerDamageAbove: 0.0
+    - kind: 0
+      basis: 2
+      target: 2
+      damageType: 2
+      attackType: 5
+      multiplier: 0.00175
+      bonus: 91250.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 2
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 1
+      triggerDamageAbove: 0.0

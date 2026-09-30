@@ -1,0 +1,134 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작트리거_제한_김민규_kata_04_pegi_PV200
+  m_EditorClassIdentifier:
+  skillName: 카타쿠리 패왕색 — 근접 850(PV 200 이상)
+  description: '원작 카타쿠리 h07I kata_04_pegi: 적이 850 안에 들어오면(PropWindow 65일 때 한 번) PV≥200 or B06B, 아니면 1/5로 → 500 범위 500000 + 대상 4500000 + AId1 +6. [근접 09-30] 2026-09-30 구현담당1(Tools/apply_enter_range_skills.py).'
+  triggerType: 4
+  levels:
+  - cooldown: 0
+    triggerChance: 1.0
+    range: 500.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 6
+      multiplier: 500000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 0.0
+      maxTargets: 0
+      chainDamageStep: 0.0
+      zoneTickInterval: 0.0
+      zoneRadius: 0.0
+      zoneSpacing: 0.0
+      zoneAtCaster: 0
+      lineLength: 0.0
+      lineStartRadius: 0.0
+      lineEndRadius: 0.0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 6
+      multiplier: 4500000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 0.0
+      maxTargets: 0
+      chainDamageStep: 0.0
+      zoneTickInterval: 0.0
+      zoneRadius: 0.0
+      zoneSpacing: 0.0
+      zoneAtCaster: 0
+      lineLength: 0.0
+      lineStartRadius: 0.0
+      lineEndRadius: 0.0
+    - kind: 2
+      basis: 0
+      target: 3
+      damageType: 0
+      attackType: 0
+      multiplier: 6.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 0.0
+      maxTargets: 0
+      chainDamageStep: 0.0
+      zoneTickInterval: 0.0
+      zoneRadius: 0.0
+      zoneSpacing: 0.0
+      zoneAtCaster: 0
+      lineLength: 0.0
+      lineStartRadius: 0.0
+      lineEndRadius: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId: 표식_PropWindow
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0.0
+    primaryTargetCondition: 3
+    primaryTargetConditionValue: 200.0
+    exclusiveGroup: 1
+    enterRange: 850.0

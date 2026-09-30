@@ -186,4 +186,11 @@ public class EnemyData : ScriptableObject
     // 조건 게이트를 쓰는 SkillEffect가 하나도 없어(targetCondition 전부 None) 이 필드가
     // 0이어도 회귀 없다 — 값을 채우는 건 62파일 배선(구현담당2) 작업의 일부다.
     public float pointValue;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, PM 지시) — 원작 저항 피부(ACrk, Resistant Skin)를 가진 적. 이런 적에게는 스턴이
+    // 능력의 영웅 지속(ahdu)으로 걸린다(SkillEffect.heroDuration) — 제작자는 ahdu를 일반 지속(adur)의 15%·50~55%로 적어
+    // 보스·스토리 건물의 스턴을 짧게 했다. 원작 32종: 라운드 보스 50·60·65·70·75 · 스토리 13 · 신세계 사이드보스 셋 ·
+    // [퀘스트] 피카·모리아·대장 셋 · 해적 함대 · 에그헤드 · 고런트-보스 · 메타몽(라운드 보스 10~40은 없다).
+    // 값은 Tools/sync_enemy_resistant_from_w3u.py가 w3u uabi에서 유도한다. false면 지금 동작(일반 지속).
+    public bool resistantSkin;
 }

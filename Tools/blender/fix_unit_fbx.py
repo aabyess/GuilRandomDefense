@@ -164,6 +164,42 @@ for _side, _ids in (("Left", dict(CLAVICLE="CLAVICLE_L_069", SHOULDER="SHOULDER_
                          _ids["TOE1"]: f"mixamorig:{_side}Foot", _ids["TOE2"]: f"mixamorig:{_side}ToeBase"})
     for _finger, _chain in _ids["fingers"].items():
         GAROU_RENAME.update({_bone: f"mixamorig:{_side}Hand{_finger}{_i}" for _i, _bone in enumerate(_chain, start=1)})
+# 키리기리 쿄코(단간론파 VR 추출 FBX, Fighting Path 계열 리그 — 가로우 GAROU_RENAME과 같은 뼈 이름에서 번호 꼬리만 없다, 2026-10-01 호시노_루비 자리).
+#   CLANK = 종아리, TOE1 = 발, TOE2 = 발끝. ROLL(트위스트)·EFFECT는 팔 뼈의 자식이라 이름을 안 바꾼다. 머리카락(LB_/LF_/LS_/BL_/BR_/BS_kami*)·얼굴(BROW/EYELID/MOUTH…)·치마(SKIRT*) 뼈는 그대로 보조 뼈로 둔다.
+KIRI_RENAME = {"WAIST": "mixamorig:Hips", "SPINE1": "mixamorig:Spine", "SPINE2": "mixamorig:Spine1", "SPINE3": "mixamorig:Spine2",
+               "NECK": "mixamorig:Neck", "HEAD": "mixamorig:Head"}
+for _s, _side in (("L", "Left"), ("R", "Right")):
+    KIRI_RENAME.update({f"CLAVICLE_{_s}": f"mixamorig:{_side}Shoulder", f"SHOULDER_{_s}": f"mixamorig:{_side}Arm", f"ELBOW_{_s}": f"mixamorig:{_side}ForeArm",
+                        f"WRIST_{_s}": f"mixamorig:{_side}Hand", f"THIGH_{_s}": f"mixamorig:{_side}UpLeg", f"CLANK_{_s}": f"mixamorig:{_side}Leg",
+                        f"TOE1_{_s}": f"mixamorig:{_side}Foot", f"TOE2_{_s}": f"mixamorig:{_side}ToeBase"})
+    for _f, _n in (("THUMB", "Thumb"), ("FORE", "Index"), ("MIDDLE", "Middle"), ("MEDICINAL", "Ring"), ("LITTLE", "Pinky")):
+        KIRI_RENAME.update({f"F_{_f}{_i}_{_s}": f"mixamorig:{_side}Hand{_n}{_i}" for _i in (1, 2, 3)})
+# 푸치(죠죠 스톤오션 엔리코 푸치 저폴리 .blend, Rigify 닮은 이름·IK 제어 뼈 포함, 2026-10-01 특수함_장명자). pelvis=Hips · spine.02=Spine · spine.04=Spine1 · neck_base=Neck · neck.03=Head.
+PUCCI_RENAME = {"pelvis": "mixamorig:Hips", "spine.02": "mixamorig:Spine", "spine.04": "mixamorig:Spine1", "neck_base": "mixamorig:Neck", "neck.03": "mixamorig:Head"}
+for _s, _side in (("L", "Left"), ("R", "Right")):
+    PUCCI_RENAME.update({f"shoulder.{_s}": f"mixamorig:{_side}Shoulder", f"upper_arm.{_s}": f"mixamorig:{_side}Arm", f"forearm.{_s}": f"mixamorig:{_side}ForeArm",
+                         f"hand.{_s}": f"mixamorig:{_side}Hand", f"thigh.{_s}": f"mixamorig:{_side}UpLeg", f"shin.{_s}": f"mixamorig:{_side}Leg",
+                         f"foot.{_s}": f"mixamorig:{_side}Foot", f"toe.{_s}": f"mixamorig:{_side}ToeBase"})
+    for _f, _n in (("index", "Index"), ("middle", "Middle"), ("ring", "Ring"), ("pinky", "Pinky")):
+        PUCCI_RENAME.update({f"finger_{_f}.0{_i}.{_s}": f"mixamorig:{_side}Hand{_n}{_i}" for _i in (1, 2, 3)})
+    PUCCI_RENAME.update({f"thumb.0{_i}.{_s}": f"mixamorig:{_side}HandThumb{_i}" for _i in (1, 2, 3)})
+# 코퀴토스(오버로드 게임 추출 FBX 「unit_pre_00050101」, 팔 넷 곤충 무인, 2026-10-01 특수함_BJ_율희): **위쪽 팔 한 쌍(High)**을 Humanoid 팔로 매핑하고 아래쪽 팔 한 쌍(Low)은 보조 뼈로 둔다.
+#   Collar=Shoulder(쇄골) · Shoulder=Arm(위팔) · ElbowRoll=ForeArm(팔꿈치) · Wrist=Hand. Root=Hips · Spine1=Spine · Spine2=Spine1 · Hip/Knee/Ankle=UpLeg/Leg/Foot(발끝 뼈 없음).
+COCYTUS_RENAME = {"Root": "mixamorig:Hips", "Spine1": "mixamorig:Spine", "Spine2": "mixamorig:Spine1", "Neck": "mixamorig:Neck", "Head": "mixamorig:Head"}
+for _s in ("Left", "Right"):
+    COCYTUS_RENAME.update({f"{_s}HighCollar": f"mixamorig:{_s}Shoulder", f"{_s}HighShoulder": f"mixamorig:{_s}Arm", f"{_s}HighElbowRoll": f"mixamorig:{_s}ForeArm",
+                           f"{_s}HighWrist": f"mixamorig:{_s}Hand", f"{_s}Hip": f"mixamorig:{_s}UpLeg", f"{_s}Knee": f"mixamorig:{_s}Leg", f"{_s}Ankle": f"mixamorig:{_s}Foot"})
+    for _f, _n in (("Index", "Index"), ("Ring", "Ring")):
+        COCYTUS_RENAME.update({f"{_s}High{_f}{_c}": f"mixamorig:{_s}Hand{_n}{_i}" for _i, _c in ((1, "A"), (2, "B"), (3, "C"))})
+    COCYTUS_RENAME.update({f"{_s}HighThumbA": f"mixamorig:{_s}HandThumb1", f"{_s}HighThumbB": f"mixamorig:{_s}HandThumb2"})
+# 알베도(오버로드 「DVL」 게임 추출 FBX scale.fbx, 날개·뿔·긴 드레스, 2026-10-01 특수함_황길라): j_ 접두 사람형 뼈 → mixamorig. 손가락 00~02 = 1~3마디, little = Pinky.
+ALBEDO_RENAME = {"j_hips": "mixamorig:Hips", "j_spine": "mixamorig:Spine", "j_chest": "mixamorig:Spine1", "j_neck": "mixamorig:Neck", "j_head": "mixamorig:Head"}
+for _s, _side in (("l", "Left"), ("r", "Right")):
+    ALBEDO_RENAME.update({f"j_shoulder_{_s}": f"mixamorig:{_side}Shoulder", f"j_arm_{_s}": f"mixamorig:{_side}Arm", f"j_forearm_{_s}": f"mixamorig:{_side}ForeArm",
+                          f"j_hand_{_s}": f"mixamorig:{_side}Hand", f"j_upleg_{_s}": f"mixamorig:{_side}UpLeg", f"j_leg_{_s}": f"mixamorig:{_side}Leg",
+                          f"j_foot_{_s}": f"mixamorig:{_side}Foot", f"j_toe_{_s}": f"mixamorig:{_side}ToeBase"})
+    for _f, _n in (("thumb", "Thumb"), ("index", "Index"), ("middle", "Middle"), ("ring", "Ring"), ("little", "Pinky")):
+        ALBEDO_RENAME.update({f"j_{_f}_0{_i - 1}_{_s}": f"mixamorig:{_side}Hand{_n}{_i}" for _i in (1, 2, 3)})
 # 3ds Max Biped 사람형 뼈 → mixamorig(2026-09-16 토지·하나타로): prefix "Bip001"/"Bip01". 손가락 Finger0=엄지·1=검지·2=중지·3=약지·4=새끼, 마디 ""·"1"·"2".
 #   이름을 바꾸면 idle_stretch 판정(mixamorig 사슬)이 실제로 움직이고, 유니티 자동 매핑의 모호함도 없다. tpose_arms에는 biped_tpose_names(prefix)를 같이 준다.
 _BIPED_FINGERS = ("Thumb", "Index", "Middle", "Ring", "Pinky")
@@ -1970,6 +2006,19 @@ UNITS = {
                                    dict(pattern=r"^Bone(29|31|33|35|37|39)$", into="mixamorig:LeftUpLeg", share=0.5, rest="mixamorig:Hips"),
                                    dict(pattern=r"^Bone(30|32|34|36|38|40)$", into="mixamorig:RightUpLeg", share=0.5, rest="mixamorig:Hips")],
                       tpose_arms=biped_tpose_names(), seed_zero_bones=0.001,
+                      # 🔸 「초월_김건_AP@동작」(2026-09-30 밤, 동작 넓히기 준비 — Assets 밖 시범). 원본 12클립, 중복 없음 — 전부 다른 동작.
+                      #   idle(전투 서기)·normal_idle(평상 서기)·move·attack(2.75초, 0.49 나갔다 돌아옴)·hurt·dead·skill1(3.21초)·skill2(9.04초)·
+                      #   xuanyun(기절)·jifei(날아감)·fukong(공중)·qishen(일어남).
+                      variants={"동작": dict(
+                          anim=True, anim_drop_ok=True, takes_only=True,
+                          take_names={"idle": "Idle", "move": "Move", "attack": "Attack", "hurt": "Hit", "dead": "Die",
+                                      "skill1": "Skill1", "skill2": "Skill2", "normal_idle": "Idle_Calm", "xuanyun": "Stun",
+                                      "jifei": "KnockUp", "fukong": "Air", "qishen": "GetUp"},
+                          clip_trim_tail=True,
+                          clip_copy={"Attack_Lunge": "Attack"},
+                          clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
+                          clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle",
+                                            takes=["Attack", "Die", "Skill1", "Skill2", "KnockUp", "Air", "GetUp"]))},
                       glb_images={0: "heihuzi_pifeng.png", 1: "heihuzi_shenti.png"},
                       materials=dict(textures={"Material.002": [("DiffuseColor", "heihuzi_pifeng.png")],
                                                "Material.001": [("DiffuseColor", "heihuzi_shenti.png")]})),
@@ -2046,6 +2095,14 @@ UNITS = {
                       # 1회차 Idle 상위1% 1.54(최대 14.3) — 털 옷깃 짧은 변에 Spine2·Shoulder 몫이 0.25/0.75로 뚝 끊김 → 이웃 평균 3회
                       smooth_weights={"bailegangwanjie_body_0_noesis_meshnode_0000": 3},
                       tpose_arms=biped_tpose_names(fingers=2, joints=2), seed_zero_bones=0.001,
+                      # 🔸 「초월_임장혁_AD@동작」(2026-09-30 밤, 동작 넓히기 준비 — Assets 밖 시범). 원본 19클립, 중복 없음. 길이가 42·58프레임으로 채워져 있다 → clip_trim_tail.
+                      #   attack2_1~ = 평타 연속기(한 타씩 따로 낸다) · skillN_2 = 스킬 본동작, _loop = 그 스킬의 유지 자세 · hit* = 피격 다섯 가지 · dizzy = 기절.
+                      variants={"동작": dict(
+                          anim=True, anim_drop_ok=True, takes_only=True,
+                          take_names={'idle': 'Idle', 'move': 'Move', 'attack2_1': 'Attack', 'attack2_2': 'Attack2', 'attack2_3': 'Attack3', 'hit': 'Hit', 'die': 'Die', 'skill1_2': 'Skill1', 'skill1_2_loop': 'Skill1_Loop', 'skill2_2': 'Skill2', 'skill2_2_loop': 'Skill2_Loop', 'skill3_2': 'Skill3', 'skill6_2': 'Skill6', 'skill6_2_loop': 'Skill6_Loop', 'dizzy': 'Stun', 'hitback': 'HitBack', 'hitdown': 'HitDown', 'hitfly': 'HitFly', 'hitkneel': 'HitKneel'},
+                          clip_trim_tail=True,
+                          clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
+                          clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle", takes=['Attack', 'Attack2', 'Attack3', 'Hit', 'Die', 'Skill1', 'Skill1_Loop', 'Skill2', 'Skill2_Loop', 'Skill3', 'Skill6', 'Skill6_Loop', 'HitBack', 'HitDown', 'HitFly', 'HitKneel']))},
                       glb_images={0: "bailegang_body_baseColor.png", 1: "bailegang_face_baseColor.png", 2: "bailegang_hair_baseColor.png",
                                   3: "bailegang_leye_baseColor.png", 4: "bailegang_mouth_baseColor.png", 5: "bailegang_reye_baseColor.png"},
                       materials=dict(textures={f"bailegangwanjie_{k}_0": [("DiffuseColor", f"bailegang_{k}_baseColor.png")]
@@ -2099,6 +2156,14 @@ UNITS = {
                       # 1회차 Idle 상위1% 1.52 — 찢김이 아니라 저폴리(3.5천 정점) 목깃·어깨 굵은 변에 반반 가중치 경계가 퍼져 2~2.8배 → 이웃 평균 2회
                       smooth_weights={"bocun_body_0_noesis_meshnode_0004": 2, "bocun_body_0_c_noesis_meshnode_0005": 2},
                       tpose_arms=biped_tpose_names(fingers=2, joints=2), seed_zero_bones=0.001,
+                      # 🔸 「초월_강주혁_AP@동작」(2026-09-30 밤, 동작 넓히기 준비 — Assets 밖 시범). 원본 22클립, 중복 없음. 18개가 66프레임으로 채워져 있다(끝 자세로 멈춤) → clip_trim_tail.
+                      #   attack2_1~ = 평타 연속기(한 타씩 따로 낸다) · skillN_2 = 스킬 본동작, _loop = 그 스킬의 유지 자세 · hit* = 피격 다섯 가지 · dizzy = 기절.
+                      variants={"동작": dict(
+                          anim=True, anim_drop_ok=True, takes_only=True,
+                          take_names={'idle': 'Idle', 'move': 'Move', 'attack2_1': 'Attack', 'attack2_2': 'Attack2', 'attack2_3': 'Attack3', 'hit': 'Hit', 'die': 'Die', 'skill1_2': 'Skill1', 'skill1_2_loop': 'Skill1_Loop', 'skill2_2': 'Skill2', 'skill2_2_loop': 'Skill2_Loop', 'skill3_2': 'Skill3', 'skill6_2': 'Skill6', 'skill6_2_loop': 'Skill6_Loop', 'dizzy': 'Stun', 'hitback': 'HitBack', 'hitdown': 'HitDown', 'hitfly': 'HitFly', 'hitkneel': 'HitKneel', 'skill4': 'Skill4', 'skill5_2': 'Skill5', 'win': 'Win'},
+                          clip_trim_tail=True,
+                          clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
+                          clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle", takes=['Attack', 'Attack2', 'Attack3', 'Hit', 'Die', 'Skill1', 'Skill1_Loop', 'Skill2', 'Skill2_Loop', 'Skill3', 'Skill6', 'Skill6_Loop', 'HitBack', 'HitDown', 'HitFly', 'HitKneel', 'Skill4', 'Skill5', 'Win']))},
                       glb_images={0: "bocun_body_baseColor.png", 1: "bocun_face_baseColor.png", 2: "bocun_leye_baseColor.png",
                                   3: "bocun_mouth_baseColor.png", 4: "bocun_reye_baseColor.png"},
                       materials=dict(textures={f"bocun_{k}_0": [("DiffuseColor", f"bocun_{k}_baseColor.png")]
@@ -2537,6 +2602,14 @@ UNITS = {
                       merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
                                    dict(pattern=r"^Bone00[1-4]$", into="mixamorig:Hips")],
                       tpose_arms=biped_tpose_names(fingers=2, joints=2), seed_zero_bones=0.001,
+                      # 🔸 「전설적인_이승우@동작」(2026-09-30 밤, 동작 넓히기 준비 — Assets 밖 시범). 원본 22클립, 중복 없음. 길이가 45·53프레임으로 채워져 있다 → clip_trim_tail.
+                      #   attack2_1~ = 평타 연속기(한 타씩 따로 낸다) · skillN_2 = 스킬 본동작, _loop = 그 스킬의 유지 자세 · hit* = 피격 다섯 가지 · dizzy = 기절.
+                      variants={"동작": dict(
+                          anim=True, anim_drop_ok=True, takes_only=True,
+                          take_names={'idle': 'Idle', 'move': 'Move', 'attack2_1': 'Attack', 'attack2_2': 'Attack2', 'attack2_3': 'Attack3', 'hit': 'Hit', 'die': 'Die', 'skill1_2': 'Skill1', 'skill1_2_loop': 'Skill1_Loop', 'skill2_2': 'Skill2', 'skill2_2_loop': 'Skill2_Loop', 'skill3_2': 'Skill3', 'skill6_2': 'Skill6', 'skill6_2_loop': 'Skill6_Loop', 'dizzy': 'Stun', 'hitback': 'HitBack', 'hitdown': 'HitDown', 'hitfly': 'HitFly', 'hitkneel': 'HitKneel', 'attack2_4': 'Attack4', 'skill4': 'Skill4', 'win': 'Win'},
+                          clip_trim_tail=True,
+                          clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
+                          clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle", takes=['Attack', 'Attack2', 'Attack3', 'Hit', 'Die', 'Skill1', 'Skill1_Loop', 'Skill2', 'Skill2_Loop', 'Skill3', 'Skill6', 'Skill6_Loop', 'HitBack', 'HitDown', 'HitFly', 'HitKneel', 'Attack4', 'Skill4', 'Win']))},
                       glb_images={0: "yin_body_baseColor.png", 1: "yin_face_baseColor.png", 2: "yin_hair_baseColor.png",
                                   3: "yin_leye_baseColor.png", 4: "yin_mouth_baseColor.png", 5: "yin_reye_baseColor.png"},
                       materials=dict(textures={f"yin_{k}_0": [("DiffuseColor", f"yin_{k}_baseColor.png")]
@@ -3261,7 +3334,12 @@ UNITS = {
     "특별함_최상호": dict(rev="b037f72d", path="Assets/Art/Units/특별함_최상호/특별함_최상호.fbx", kind="human", size=("height", 1.8),
                       source=os.path.join(SKINS, "03_특별함/특별함_최상호.glb"),
                       # mesh_0(Pupil 582정점·모양 키 3) = Object_7, mesh_0.001(shock 60정점·모양 키 3) = Object_8
-                      recipe=dict(rename=LUFFY_RENAME, mesh_alias={"mesh_0": "Object_7", "mesh_0.001": "Object_8"})),
+                      recipe=dict(rename=LUFFY_RENAME, mesh_alias={"mesh_0": "Object_7", "mesh_0.001": "Object_8"}),
+                      # 🔸 원본 glb의 재질 색 되살리기(2026-09-30, PM이 Assets에 반영 — 눈동자·샌들 끈 검정 확인) — 기본 회색으로 나가던 9개.
+                      #   glb 값: Pupil (0.07,0.05,0.05) · hair·Sandals.001 검정 · 나머지 여섯(shock·tongue·material·material_5·Teeth·Gum.001)은 색 지정 없음 = 흰색.
+                      material_colors={"Pupil": (0.07, 0.05, 0.05), "hair": (0.0, 0.0, 0.0), "Sandals.001": (0.0, 0.0, 0.0),
+                                       "shock": (1.0, 1.0, 1.0), "tongue": (1.0, 1.0, 1.0), "material": (1.0, 1.0, 1.0),
+                                       "material_5": (1.0, 1.0, 1.0), "Teeth": (1.0, 1.0, 1.0), "Gum.001": (1.0, 1.0, 1.0)}),
     # 🔴 원인 3겹(2026-09-14 PM 유니티 확인): ①Biped 무게중심 Bip001이 Hips 위에 끼어 엉덩이 높이가 바닥으로 저장 ②팔·다리 메시를 BN_ 보조 뼈가
     #    Pelvis/Clavicle에 나란히 붙어 몰았다 ③살린 Null 뼈 틀 규약이 Biped와 섞여 아바타 skeleton 90° + A자 쉬는 자세 → 넷을 다 켠다(outT3와 같은 설정)
     "흔함_문필환": dict(rev="01d46427", path="Assets/Art/Units/흔함_문필환/흔함_문필환.fbx", kind="human", size=("height", 1.8),
@@ -3618,6 +3696,131 @@ UNITS = {
                       drop_bones=["_rootJoint"], reparent_bones={"Bone.001_010": "Bone_00"},
                       glb_images={0: "carp_baseColor.png", 2: "carp_normal.png"},
                       materials=dict(textures={"carp": [("DiffuseColor", "carp_baseColor.png"), ("NormalMap", "carp_normal.png")]})),
+    # 다른세계_호시노_루비 ← 키리기리 쿄코(단간론파 VR, 사장님이 준 kyoko-kirigiri.zip, 2026-10-01 「그 모습 그대로 호시노_루비 자리에」).
+    #   zip(+textures/ 셋) 안 source/…Cyber Danganronpa VR….zip 안 Kyoko Kirigiri.FBX. 뼈 204 · 메시 1(25,937정점·재질 3) · 키 기록 없음(사람형) · 이미 T자(팔 같은 높이).
+    #   뿌리 NULL > RESERVE(가중치 0 중간 뼈)가 WAIST(Hips) 위에 끼어 있다 → 뺀다(가로우·흔함_문필환 교훈).
+    "다른세계_호시노_루비": dict(path="Assets/Art/Units/다른세계_호시노_루비/다른세계_호시노_루비.fbx", kind="human", size=("height", 1.8),
+                        archive=(os.path.join(SKINS, "12_다른세계/다른세계_호시노_루비.zip"), "source/PlayStation%204%20-%20Cyber%20Danganronpa%20VR%20The%20Class%20T.zip",
+                                 "Kyoko Kirigiri/Kyoko Kirigiri.FBX"),
+                        archive_textures=["Kyoko Kirigiri/Textures/08_Kirigiri_face_D.png", "Kyoko Kirigiri/Textures/08_Kirigiri_hair_D.png",
+                                          "Kyoko Kirigiri/Textures/08_Kirigiri_cloth_D.png"],
+                        rename_bones=KIRI_RENAME, drop_bones=["RESERVE", "NULL"], orient_snap=True, no_nulls=True,
+                        # 🔸 보조 뼈 정리(2026-10-01): 공용 Idle·Move는 이 뼈들을 안 돌리므로 합쳐도 동작은 같고, 얼굴 뼈 111이 유니티 아바타 매핑을 헷갈리게 할 위험(얼굴 뼈 겹침 점검 ⚠️)이 없어진다.
+                        #   머리털·얼굴 → Head · 치마 → Hips · 위팔·팔꿈치 롤 → 그 팔(가중치 0이던 위팔 뼈에 살이 붙는다 — 가중치 관문이 잡은 결함) · EFFECT → 손
+                        merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                                     dict(pattern=r"^SHOULDERROLL[12]_L$", into="mixamorig:LeftArm"), dict(pattern=r"^SHOULDERROLL[12]_R$", into="mixamorig:RightArm"),
+                                     dict(pattern=r"^ELBOWROLL[12]_L$", into="mixamorig:LeftForeArm"), dict(pattern=r"^ELBOWROLL[12]_R$", into="mixamorig:RightForeArm"),
+                                     dict(pattern=r"^EFFECT_L$", into="mixamorig:LeftHand"), dict(pattern=r"^EFFECT_R$", into="mixamorig:RightHand"),
+                                     dict(pattern=r"^SKIRT", into="mixamorig:Hips")]),
+    # 영원_김정래 ← 블리치 우라하라 키스케(모바일 게임 립 cha_urahara_sihae.fbx, 3ds Max Biped Bip01, 사장님이 준 kisuke-urahara.zip, 2026-10-01). 켄파치·하나타로와 같은 cha_ 형식.
+    #   뼈 50 · 메시 1(4,951정점·재질 1) · 텍스처 cha_urahara_sihae.png(14KB) · FBX ×0.01(세계 키 0.022) · 손가락 3×2 · **클립 0**(원본 고유 동작 없음).
+    #   🔴 칼(wp1 489정점 + Bone_swordtrail 82정점)이 몸 메시 **안에** 들어 있고 몸 옆 x −1.0(키 2.2의 절반)에 세워 둔 모습(하나타로·켄파치와 같다) → drop_verts_of_bones로 정점째 뺀다.
+    #   Head 밑 Eye·FHair·Hair·Hat → Head · 옷자락 B/L/LM/R/RM Cloth → Hips(유니티에선 안 돌아 합쳐도 같다). 뿌리 cha_urahara_sihae·Bip01·.001(가중치 0) 뺌.
+    "영원_김정래": dict(path="Assets/Art/Units/영원_김정래/영원_김정래.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.join(SKINS, "10_영원/영원_김정래.zip"), "source/cha_urahara_sihae.fbx"),
+                    archive_rgb={"textures/cha_urahara_sihae.png": "cha_urahara_sihae.png"},
+                    no_nulls=True, orient_snap=True, use_rest_pose=True,
+                    drop_verts_of_bones=["wp1", "Bone_swordtrail"],
+                    # Toe0 뼈가 없는 Bip01(발이 끝) → 표에서 ToeBase 줄을 뺀다
+                    rename_bones={k: v for k, v in biped_rename("Bip01", fingers=3, joints=2).items() if "Toe0" not in k},
+                    drop_bones=["cha_urahara_sihae", "Bip01", "cha_urahara_sihae.001", "wp1", "Bone_swordtrail"],
+                    merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                                 dict(pattern=r"^[BLR]M?Cloth0", into="mixamorig:Hips")],
+                    tpose_arms=biped_tpose_names(fingers=3, joints=2),
+                    materials=dict(textures={"cha_urahara_sihae": [("DiffuseColor", "cha_urahara_sihae.png")]})),
+    # 특수함_헬로우먼 ← 진격의 거인 케니 아커만(중국 모바일 게임 립 role_kenni_xianbing, Sketchfab 「Aotwa kenny ackerman」, 2026-10-01).
+    #   작성자 Prime Slayer3D(sketchfab.com/ianadrielbravo) · CC-BY-4.0 · https://sketchfab.com/3d-models/aotwa-kenny-ackerman-a105fdb205e74d18b98b952c94e3a2eb (glb asset.extras).
+    #   3ds Max Biped Bip001(glTF 번호 꼬리) · 뼈 121 · 메시 6 + 조명 Icosphere · 재질 6 · 그림 5 · 클립 0(원본 고유 동작 없음). 손가락 5×3.
+    #   보조 뼈: 얼굴(meimao·tongkong·yanpi·zui·zuichun·head_bar) → Head · ForeTwist → ForeArm · gun_L/R(+Point*)은 손에 쥔 총 부품(각 1,8천 정점) → 그 손 · 이펙트 뼈(eff_·glow·smoke·qi·ci·lizi·baodian·mesh_*, 가중치 0)는 지운다. 🔴 손가락 뼈도 Hand 밑이라 「Hand 밑 전부 → Hand」로 합치면 손가락이 사라진다 — gun만 합친다.
+    "특수함_헬로우먼": dict(path="Assets/Art/Units/특수함_헬로우먼/특수함_헬로우먼.fbx", kind="human", size=("height", 1.8),
+                      source=os.path.join(SKINS, "13_특수함/특수함_헬로우먼.glb"), gltf_guess_bind=False, no_nulls=True, orient_snap=True, drop_meshes=["Icosphere"],
+                      rename_bones=biped_rename("Bip001", fingers=5, joints=3, spine2="Spine2"), rename_strip=r"_[0-9]+$",
+                      drop_bones=["_rootJoint", "Bip001_02"],
+                      merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                                   dict(pattern=r"^Bip001 L ForeTwist", into="mixamorig:LeftForeArm"), dict(pattern=r"^Bip001 R ForeTwist", into="mixamorig:RightForeArm"),
+                                   dict(under="gun_L_060", with_root=True, into="mixamorig:LeftHand"), dict(under="gun_R_097", with_root=True, into="mixamorig:RightHand")],
+                      drop_bones_re=r"^(eff_kenni|eff_0|1_0|glow_|ci_|lizi|smoke|qi_|baodian|mesh_alp|mesh_feng)",   # 이펙트 뼈 가중치 0 — 손·뿌리에 매달린 스킬 이펙트 사슬
+                      tpose_arms=biped_tpose_names(fingers=5, joints=3),
+                      glb_images={0: "kenni_body.png", 1: "kenni_wuqi.png", 2: "kenni_extra.png", 3: "kenni_face.png", 4: "kenni_hair.png"},
+                      materials=dict(textures={"role_kenni_xianbing_body_mat_01": [("DiffuseColor", "kenni_body.png")], "role_kenni_xianbing_skin_mat_01": [("DiffuseColor", "kenni_body.png")],
+                                               "role_kenni_xianbing_foot_mat_01": [("DiffuseColor", "kenni_body.png")], "role_kenni_xianbing_wuqi_mat_01": [("DiffuseColor", "kenni_wuqi.png")],
+                                               "role_kenni_xianbing_face_mat_01": [("DiffuseColor", "kenni_face.png")], "role_kenni_xianbing_hair_mat_01": [("DiffuseColor", "kenni_hair.png")]})),
+    # 특수함_장명자 ← 죠죠 스톤오션 엔리코 푸치(저폴리 원본 .blend, 사장님이 준 pucci-rig-jojos-bizarre-adventure.zip, 2026-10-01).
+    #   Blender 3.0.42 파일 · 메시 char.008 하나(1,496정점·재질 6, 전부 단색 노드 — UV·그림 0) · 뼈 72(변형 65 + IK·뒤꿈치 제어) · A자(팔 25° 아래) · −Y 정면 · 키 1.87.
+    #   🔴 재질은 Principled 기본색(뷰포트 색은 딴 값이라 파랗게 보인다)이 진짜: boots 검정 · pants.001(코트 537면) 거의 검정 · skin 갈색 · Material.003 붉은 주황 · .002 주황 · .005 회색.
+    #   🔴 foot 뼈가 역발 리그라 발볼→발목으로 뒤집혀 있고 부모가 제어 뼈 heel → bone_ends로 head = 발목(shin tail), tail = 발볼(toe head), 부모는 shin으로.
+    #   hand·knee 가중치 0 → palm.* 합침으로 hand에 가중치가 생기고 knee는 뺀다. DLT-upper_arm·shoulder.?.001은 팔·Spine1로 합침. 무가중치 정점 65(가슴판)는 가까운 정점 가중치 복사.
+    "특수함_장명자": dict(path="Assets/Art/Units/특수함_장명자/특수함_장명자.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(SKINS, "13_특수함/특수함_장명자.zip"), "source/PUCCI.blend"),
+                      no_nulls=True, orient_snap=True,
+                      blend_prep=dict(parents={"foot.L": "shin.L", "foot.R": "shin.R", "toe.L": "foot.L", "toe.R": "foot.R"},
+                                      bone_ends={"foot.L": dict(head="shin.L:tail", tail="toe.L:head"), "foot.R": dict(head="shin.R:tail", tail="toe.R:head")},
+                                      fallback_bone="pelvis"),
+                      solid_textures={"boots": None, "Material.003": None, "pants.001": None, "Material.002": None, "skin": None, "Material.005": None},
+                      rename_bones=PUCCI_RENAME, drop_bones=["knee.L", "knee.R"],
+                      merge_bones=[dict(pattern=r"^DLT-upper_arm\.L$", into="mixamorig:LeftArm"), dict(pattern=r"^DLT-upper_arm\.R$", into="mixamorig:RightArm"),
+                                   dict(pattern=r"^palm\.0[1-4]\.L$", into="mixamorig:LeftHand"), dict(pattern=r"^palm\.0[1-4]\.R$", into="mixamorig:RightHand"),
+                                   dict(pattern=r"^shoulder\.[LR]\.001$", into="mixamorig:Spine1")],
+                      tpose_arms=biped_tpose_names(fingers=0)),
+    # 특수함_임재현 ← 블리치 쿄라쿠 슌스이(모바일 게임 립 cha_shunsui_hat.fbx, 3ds Max Biped Bip01, 사장님이 준 shunsui-kyoraku.zip, 2026-10-01). 영원_김정래(우라하라)와 같은 cha_ 형식.
+    #   뼈 63 · 메시 3(몸 5,275정점 + 칼 둘 481정점씩) · 재질 1(cha_shunsui_hat.png 32KB) · 손가락 3×2 · Toe0 있음 · **클립 0**(원본 고유 동작 없음).
+    #   🔴 칼 둘은 **따로 된 메시**(wp1_0 x 0.85~1.32 · wp2_0 x 1.12~1.59, 몸 밖 오른쪽에 나란히 세워 둠) → 메시·뼈(Weapon_L/R + acc · 껍데기 뼈 G_6_wp1/2) 째 뺀다.
+    #   Head 밑 eye·hair_B/F → Head · 옷자락 dress_·skirt_ → Hips · tie(끈) → Spine1. 뿌리 cha_shunsui_hat·Bip01·.001(가중치 0) 뺌.
+    "특수함_임재현": dict(path="Assets/Art/Units/특수함_임재현/특수함_임재현.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.join(SKINS, "13_특수함/특수함_임재현.zip"), "source/cha_shunsui_hat.fbx"),
+                    archive_rgb={"textures/cha_shunsui_hat.png": "cha_shunsui_hat.png"},
+                    no_nulls=True, orient_snap=True, use_rest_pose=True,
+                    drop_meshes=["cha_shunsui_G_6_wp1_0", "cha_shunsui_G_6_wp2_0"],
+                    rename_bones=biped_rename("Bip01", fingers=3, joints=2),
+                    drop_bones=["cha_shunsui_hat", "Bip01", "cha_shunsui_hat.001", "cha_shunsui_G_6_wp1", "cha_shunsui_G_6_wp2",
+                                "Weapon_L", "Weapon_L_acc01", "Weapon_L_acc02", "Weapon_R", "Weapon_R_acc01", "Weapon_R_acc02"],
+                    merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                                 dict(pattern=r"^(dress_|skirt_)", into="mixamorig:Hips"), dict(pattern=r"^tie0", into="mixamorig:Spine1")],
+                    tpose_arms=biped_tpose_names(fingers=3, joints=2),
+                    materials=dict(textures={"cha_shunsui_hat": [("DiffuseColor", "cha_shunsui_hat.png")]})),
+    # 특수함_BJ_율희 ← 오버로드 코퀴토스(게임 추출 FBX unit_pre_00050101, 사장님이 준 cocytus.zip, 2026-10-01). zip 안 zip 안 zip(source/cocytus-overlord.zip > source/Cocytus.zip > Cocytus/*.fbx).
+    #   뼈 76 · 메시 2(몸 7,114 + 얼굴 859) · 재질 2(그림 2장, 512²급) · **클립 0** · ×0.01 · 키 약 1.6(뿔 포함) · **팔이 넷**(위 High 한 쌍 + 아래 Low 한 쌍) · 꼬리 11마디(뒤로 1.1배 키) · 미사용 「WeaponAx·WeaponKatana」.
+    #   팔: High를 Humanoid 팔로, Low는 보조 뼈(Spine1 자식)로 그대로 둔다 — 공용 클립은 High만 돌려 Low는 몸통에 고정. 🔸 A자 그대로(T자로 안 편다 — 위 팔을 펴면 아래 팔과 겹친다).
+    #   도끼창(WeaponAx 675정점)·카타나(WeaponKatana 139정점)는 몸 뼈 아닌 원점 뼈에 실려 몸 옆에 세워 둔 모습 → 정점째 뺀다. 꼬리·HipTwist → Hips · 턱 → Head · 어깨 패드 → 그쪽 Shoulder.
+    "특수함_BJ_율희": dict(path="Assets/Art/Units/특수함_BJ_율희/특수함_BJ_율희.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(SKINS, "13_특수함/특수함_BJ_율희.zip"), "source/cocytus-overlord.zip", "source/Cocytus.zip", "Cocytus/unit_pre_00050101.fbx"),
+                      archive_textures=["Cocytus/unit_tex_00050101.png", "Cocytus/unit_tex_face_00050101_00.png"],
+                      no_nulls=True, orient_snap=True, use_rest_pose=True,    # 기본 자세≠쉬는 자세 1.44(FBX가 포즈 저장) → 결합 자세
+                      drop_verts_of_bones=["WeaponAx", "WeaponKatana"],
+                      rename_bones=COCYTUS_RENAME,
+                      drop_bones=["unit_pre_00050101", "Cocytus_geo", "body", "face", "unit000501", "WeaponAx", "WeaponKatana"],
+                      merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"), dict(pattern=r"^(HipTwist|Tail[0-9]+)$", into="mixamorig:Hips"),
+                                   dict(pattern=r"^LeftShoulderPad$", into="mixamorig:LeftShoulder"), dict(pattern=r"^RightShoulderPad$", into="mixamorig:RightShoulder")]),
+    # 특수함_황길라 ← 오버로드 알베도(게임 추출 FBX scale.fbx, 사장님이 준 albedo.zip, 2026-10-01). zip 안 source/Albedo.zip 안 Albedo/scale.fbx(+ 그림 5장).
+    #   뼈 211 · 메시 1(mdoel 14,605정점·재질 2 — 몸·눈) · 원본 클립 7(attack·damage·dead·idle_00·idle_01·skill·spskill_00, 25fps — 이동 없음) · ×0.01 · 날개 34마디(허리) · 치마·머리털·리본·가슴 뼈.
+    #   🔴 도끼(j_axe 1,174정점)는 뿌리 뼈 밑에 따로 매달려 몸 옆에 세워 둔 모습 → 기본판은 정점째 뺀다(원본 클립에선 이 뼈가 손을 따라 움직인다 — 동작판에서 살림).
+    #   합침(기본판): 팔 트위스트·프릴·어깨 천 → 팔/아래팔 · 가슴 → Spine1 · 날개·리본 → Hips · 치마(허벅지 밑 → UpLeg, 무릎 밑 → Leg) · Head 밑(얼굴·머리털·턱) → Head. 스킬 이펙트 뼈(깃털·오라, 가중치 0)·scale·root는 뺀다.
+    "특수함_황길라": dict(path="Assets/Art/Units/특수함_황길라/특수함_황길라.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(SKINS, "13_특수함/특수함_황길라.zip"), "source/Albedo.zip", "Albedo/scale.fbx"),
+                      archive_textures=["Albedo/tex_dvl_mdl_albedo_alb_cnv.png", "Albedo/tex_dvl_mdl_albedo_nor.png"],
+                      no_nulls=True, orient_snap=True, use_rest_pose=True, zero_emission=True,   # 발광 0.5가 유니티에서 허옇게(반투명처럼) 떴다
+                      drop_verts_of_bones=["j_axe"],
+                      rename_bones=ALBEDO_RENAME,
+                      drop_bones=["scale", "root", "eff_skill_lbd_spskill_00_feather", "feather_00", "j_axe", "eff_skill_lbd_spskill_00_axe_aura",
+                                  "aura_00_purple", "aura_01_orange", "aura_01_orange_world", "aura_00_purple _world"],
+                      merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                                   dict(pattern=r"^j_(arm_twist|shoulder_cloth_0[0-2])_l$", into="mixamorig:LeftArm"), dict(pattern=r"^j_(arm_twist|shoulder_cloth_0[0-2])_r$", into="mixamorig:RightArm"),
+                                   dict(pattern=r"^j_(forearm_twist|arm_frills)_l$", into="mixamorig:LeftForeArm"), dict(pattern=r"^j_(forearm_twist|arm_frills)_r$", into="mixamorig:RightForeArm"),
+                                   dict(pattern=r"^j_breast_[lr]$", into="mixamorig:Spine1"),
+                                   dict(pattern=r"^j_(wing_|ribbon)", into="mixamorig:Hips"),
+                                   dict(pattern=r"^j_skirt_(twist_00|sub)_l$", into="mixamorig:LeftUpLeg"), dict(pattern=r"^j_skirt_(twist_00|sub)_r$", into="mixamorig:RightUpLeg"),
+                                   dict(pattern=r"^j_skirt_(twist_01|0[0-2]_0[0-2])_l$", into="mixamorig:LeftLeg"), dict(pattern=r"^j_skirt_(twist_01|0[0-2]_0[0-2])_r$", into="mixamorig:RightLeg")]),
+    # 특수함_장진희 ← 오버로드 샤르티아 블러드폴른(Mixamo로 리깅한 FBX 「Shalltear top half」, 사장님이 준 shalltear-bloodfallen.zip, 2026-10-01). zip 안 source/Shalltear.zip 안 FBX + jpg 한 장.
+    #   뼈 65(이미 mixamorig 표준 이름 · 이미 T자) · 메시 5(모자 21,093 · 몸 14,749 · 신발 5,016 · 머리 30,448 · 치마 프릴 14,745) · 재질 5 · **그림 1장(1366×1230 jpg) = 공식 캐릭터 일러스트 한 장을 UV로 오려 붙인 것** — 미리보기가 아니라 진짜 텍스처다(UV가 그림 안 작은 조각들을 가리킨다).
+    #   🔴 프릴(フリル.002)은 **스킨도 부모도 없는** 큰 치마 공(x ±0.72 · y ±0.75, 키의 절반) → rigid_meshes로 Hips에 통째 묶는다(안 묶으면 유니티가 첫 뼈에 강제로 붙여 몸이 움직일 때 튄다).
+    #   가중치 0 끝 뼈(HeadTop_End·손가락 4·Toe_End) 뺌. 원본 클립은 1프레임 포즈 하나(mixamo.com)라 동작 없음.
+    "특수함_장진희": dict(path="Assets/Art/Units/특수함_장진희/특수함_장진희.fbx", kind="human", size=("height", 1.8),
+                      archive=(os.path.join(SKINS, "13_특수함/특수함_장진희.zip"), "source/Shalltear.zip", "Shalltear top half.fbx"),
+                      archive_textures=["87c1bc634db3d91f9761ae894fa64f22.jpg"],
+                      no_nulls=True, orient_snap=True,
+                      use_rest_pose=True,                                     # 기본 자세≠쉬는 자세 1.45 — FBX가 딴 포즈를 저장(결합 자세가 진짜)
+                      rigid_meshes={"フリル.002": "mixamorig:Hips"},
+                      drop_bones_re=r"^mixamorig:.*(HeadTop_End|Thumb4|Index4|Middle4|Ring4|Pinky4|Toe_End)$"),
     "특별함_조도연": dict(path="Assets/Art/Units/특별함_조도연/특별함_조도연.fbx", kind="human", size=("height", 1.8),
                       source=os.path.join(SKINS, "03_특별함/특별함_조도연.glb"), glb_fix_identity_ibm=True, no_nulls=True, drop_meshes=["Icosphere"],
                       squash_chain=dict(bones=[f"thongue_C0_{i}_Jnt_0{26 + i}" for i in range(5)], factor=0.285),
@@ -3627,7 +3830,9 @@ UNITS = {
                                   for s, side in (("L", "Left"), ("R", "Right"))},
                       glb_images={0: "Body_baseColor.png", 2: "Body_normal.png", 3: "Assets_baseColor.png", 6: "Assets_normal.png"},
                       materials=dict(textures={"Body": [("DiffuseColor", "Body_baseColor.png"), ("NormalMap", "Body_normal.png")],
-                                               "Assets": [("DiffuseColor", "Assets_baseColor.png"), ("NormalMap", "Assets_normal.png")]})),
+                                               "Assets": [("DiffuseColor", "Assets_baseColor.png"), ("NormalMap", "Assets_normal.png")]}),
+                      # 🔸 왼 손목 보호대 둘의 법선을 오른쪽 짝에서 거울로(2026-09-30, PM이 Assets에 반영 — 유니티에서 갈색 정상 확인).
+                      mirror_normals_from={"Object_299": "Object_283", "Object_297": "Object_285"}),
     # 파란 동물 후드 잠옷(키구루미) 캐릭터 glb → 영원_이지원(2026-09-22 영원, blender 세션).
     # 뼈 66(_rootJoint 포함) · 메시 4(+Cube·Icosphere 조명용 더미) · 이미지 4(다 1024²) ·
     # 애니 1(Take 001, 0~23.2프레임 — 안 씀). 이미 mixamorig: 이름에 Sketchfab 번호 꼬리만
@@ -3764,7 +3969,35 @@ UNITS = {
                     tpose_arms=biped_tpose_names(fingers=5, joints=3),
                     glb_images={0: "moonpil_diffuse.png"},
                     materials=dict(textures={"415121": [("DiffuseColor", "moonpil_diffuse.png")],
-                                             "415121_body": [("DiffuseColor", "moonpil_diffuse.png")]})),
+                                             "415121_body": [("DiffuseColor", "moonpil_diffuse.png")]}),
+                    # 🔸 고유 동작 넓히기 준비(2026-09-30 밤, PM 지시) — 「영원_문필환@동작」으로 Assets 밖에 뽑는다. 기본 항목은 그대로.
+                    #   원본 33 테이크 · 뼈 위치까지 같은 중복 7 → 서로 다른 것 26(그중 1프레임 자세 3: attack_2·back·back_1).
+                    #   **두 폼**: A = 날개 접고 칼 든 폼(idle …) / B = 날개 편 폼(*_1 계열, idle_1 …). 폼마다 서기·달리기·평타·피격·죽음·스킬이 따로 있다.
+                    #   같은 것: attack_1_1 = skill_1_1 = skill_3_1(A 준비) · attack_2 = skill_1_2 = skill_3_2(A 중간, 1프레임) ·
+                    #            attack_1 = skill_1_1_1(B 준비) · attack_2_1 = skill_1_2_1 = skill_3_2_1(B 중간).
+                    #   skill_1_2_2(2.38초, 4m 솟음)는 A 자리에서 시작하는 단독 동작 — Transform으로 낸다(A→B 변신으로 보임, 확인 안 됨).
+                    #   조각 사이(준비→중간→본동작)는 원본에서 자리가 끊긴다(0.35m 순간 이동, 게임에선 컷) — 제자리 묶기로 수평 끊김은 사라지고 자세 끊김만 남는다.
+                    variants={"동작": dict(
+                        anim=True, anim_drop_ok=True, takes_only=True,
+                        take_names={"idle": "Idle", "run": "Move", "CommonAttack": "Attack", "strike_1": "Hit", "die": "Die", "stay_show": "Show",
+                                    "skill_1_1": "Skill1_Start", "skill_1_2": "Skill1_Mid", "skill_1_3": "Skill1_Hit",
+                                    "skill_3_3": "Skill2_Hit", "attack_3": "Attack2_Hit", "skill_1_2_2": "Transform",
+                                    "idle_1": "Idle_B", "run_1": "Move_B", "CommonAttack_1": "Attack_B", "strike_1_1": "Hit_B", "die_1": "Die_B",
+                                    "stay_show_1": "Show_B", "attack_1": "SkillB_Start", "attack_2_1": "SkillB_Mid",
+                                    "skill_1_3_1": "Skill1_B_Hit", "skill_3_1_1": "Skill2_B_Start", "skill_3_3_1": "Skill2_B_Hit",
+                                    "attack_3_1": "Attack2_B_Hit"},
+                        clip_concat={"Skill1": ["Skill1_Start", "Skill1_Mid", "Skill1_Hit"],
+                                     "Skill2": dict(parts=["Skill1_Start", "Skill1_Mid", "Skill2_Hit"], drop=["Skill2_Hit"]),
+                                     "Attack2": dict(parts=["Skill1_Start", "Skill1_Mid", "Attack2_Hit"], drop=["Attack2_Hit"]),
+                                     "Skill1_B": dict(parts=["SkillB_Start", "SkillB_Mid", "Skill1_B_Hit"], drop=["Skill1_B_Hit"]),
+                                     "Skill2_B": dict(parts=["Skill2_B_Start", "SkillB_Mid", "Skill2_B_Hit"], drop=["Skill2_B_Start", "Skill2_B_Hit"]),
+                                     "Attack2_B": dict(parts=["SkillB_Start", "SkillB_Mid", "Attack2_B_Hit"],
+                                                       drop=["SkillB_Start", "SkillB_Mid", "Attack2_B_Hit"])},
+                        clip_copy={"Attack_Lunge": "Attack", "Attack_B_Lunge": "Attack_B"},
+                        clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
+                        clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle",
+                                          takes=["Attack", "Die", "Skill1", "Skill2", "Attack2", "Skill1_Start", "Skill1_Mid", "Skill1_Hit", "Transform",
+                                                 "Attack_B", "Die_B", "Skill1_B", "Skill2_B", "Attack2_B"]))}),
     # 원피스 바운티러시 시키(shiki, pl_shiki_orig01) → 영원_윤현모(2026-09-22 영원, blender
     # 세션). ⚠️ PM 지시: 다리가 칼날 모양인 게 원작 — 무기처럼 빼지 말고 다리로 그대로 둘 것
     # (선례와 달리 이번엔 손에 든 무기 자체가 아예 없음, 렌더로 확인 — 다리 자체가 칼).
@@ -3827,7 +4060,29 @@ UNITS = {
                     tpose_arms=biped_tpose_names(fingers=5, joints=3),
                     glb_images={0: "sangho_diffuse.png"},
                     materials=dict(textures={"525241": [("DiffuseColor", "sangho_diffuse.png")],
-                                             "525241_body": [("DiffuseColor", "sangho_diffuse.png")]})),
+                                             "525241_body": [("DiffuseColor", "sangho_diffuse.png")]}),
+                    # 🔸 고유 동작 시범(2026-09-30, 사장님 「스킨 원본에 든 고유 동작을 살려 쓴다」 · 방식 ⓒ = 원본 뼈대 + 원본 클립을 같은 FBX 테이크로).
+                    #   (시범은 「이름@변형」으로 Assets 밖에 뽑았다 — 그 장치는 main()에 남아 있다. 다음 유닛 시범 때 variants={"동작": dict(…)}로 쓸 것.)
+                    #   원본 14 테이크 중 실제로 다른 동작 9: idle(=stay_show) · run · attack_1(=CommonAttack) · strike_1 · die ·
+                    #   skill_1_1·1_2·1_3 · skill_3_3(skill_3_1·3_2는 1_1·1_2와 같다) · back(1프레임, 버림).
+                    #   Skill1 = 준비(0.29초) + 중간(0.42초) + 본동작(4.62초)을 이은 것, 조각 셋도 Skill1_Start·Mid·Hit로 같이 낸다.
+                    #   Skill2 = 같은 준비·중간 + skill_3_3(4.96초). 조각은 Skill1 것과 같아 따로 안 낸다.
+                    #   제자리: 공격·스킬·죽음은 골반 수평 이동을 Idle 첫 자세 자리에 묶는다(높이는 그대로 — 도약은 남는다).
+                    #   Attack_Lunge = 같은 공격을 원본 그대로(0.49m 돌진) — 사장님이 둘을 보고 고르신다. Idle·Move·Hit는 원본 그대로.
+                    # 🔴 09-30 밤 PM이 이 산출을 Assets에 넣었다(60649a7f) → 시범 때 variants["동작"]이던 설정을 **기본으로 올렸다**
+                    #   (기본 설정 = 커밋된 FBX를 만든 설정이어야 check_entries가 참이다).
+                    **dict(
+                        anim=True, anim_drop_ok=True, takes_only=True,
+                        take_names={"idle": "Idle", "run": "Move", "attack_1": "Attack", "strike_1": "Hit", "die": "Die",
+                                    "skill_1_1": "Skill1_Start", "skill_1_2": "Skill1_Mid", "skill_1_3": "Skill1_Hit",
+                                    "skill_3_3": "Skill2_Hit"},
+                        clip_concat={"Skill1": ["Skill1_Start", "Skill1_Mid", "Skill1_Hit"],
+                                     "Skill2": dict(parts=["Skill1_Start", "Skill1_Mid", "Skill2_Hit"], drop=["Skill2_Hit"])},
+                        clip_copy={"Attack_Lunge": "Attack"},
+                        # 🔴 원본 클립은 결합 자세에서 수평 0.68m·위 0.21m 떨어진 자리에서 논다(실측) — Idle 첫 프레임을 제자리·바닥에 맞춘다.
+                        clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
+                        clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle",
+                                          takes=["Attack", "Die", "Skill1", "Skill2", "Skill1_Start", "Skill1_Mid", "Skill1_Hit"]))),
     # 원피스 바운티러시 아틀라스(베가펑크 위성 '폭력', pl_atlas_orig01) → 히든_전주연
     # (2026-09-22 히든, blender 세션). zip 안 rar(bsdtar로 품 — extract_archive는 이미
     # bsdtar만 씀, 7z 안 거침·폴백 불필요 확인) 안 pl_ 표준 계열(Body_Pelvis, PL_RENAME
@@ -5387,6 +5642,16 @@ def blend_prep(cfg, report):
                 p = p.parent
             b.parent = p
         b.use_connect = False
+    for name, spec in bp.get("bone_ends", {}).items():
+        # 🔸 bone_ends(2026-10-01 특수함_장명자 푸치): 뼈 머리·꼬리를 다른 뼈의 머리·꼬리 자리로 옮긴다("이름:head|tail"). 역발 리그의 foot 뼈는 발볼(head)→발목(tail)로 뒤집혀 있어
+        #   유니티 Humanoid의 Foot(발목 피벗)이 안 맞는다 → head = shin의 tail(발목), tail = toe의 head(발볼).
+        #   🔴 머리를 먼저 옮기면 꼬리 기준 뼈 자리가 바뀔 수 있어 **두 기준점을 먼저 읽고** 나서 같이 쓴다.
+        def _pt(ref):
+            bn, which = ref.split(":")
+            return eb[bn].head.copy() if which == "head" else eb[bn].tail.copy()
+        h = _pt(spec["head"]) if spec.get("head") else eb[name].head.copy()
+        tl = _pt(spec["tail"]) if spec.get("tail") else eb[name].tail.copy()
+        eb[name].head, eb[name].tail = h, tl
     for b in [b for b in eb if b.name not in deform]:
         eb.remove(b)
     bpy.ops.object.mode_set(mode="OBJECT")
@@ -5399,7 +5664,18 @@ HUMANOID_REQUIRED = ["Hips", "Spine", "Head", "LeftArm", "LeftForeArm", "LeftHan
                      "LeftUpLeg", "LeftLeg", "LeftFoot", "RightUpLeg", "RightLeg", "RightFoot"]
 
 
-def humanoid_weight_check(name, meshes):
+# 🔸 verified_in_unity(2026-09-30, PM 결정): 필수 칸에 매핑된 뼈에 가중치가 없어도(살이 보조 뼈에 붙은 리그) **유니티에서 Humanoid로
+#   정상 동작하는 것을 실제로 본** 유닛만 여기 적는다 — 이름 → 확인 날짜·근거. 안 적힌 유닛은 예전처럼 멈춘다.
+#   ⚠️ 짐작으로 넣지 말 것. PM이 units 사진 등으로 본 것만.
+VERIFIED_IN_UNITY = {
+    "특별함_최상호": "2026-09-30 PM units 사진 — Idle 자세로 정상(팔 내림)",
+    "특별함_조도연": "2026-09-30 PM units 사진 — Idle 자세로 정상",
+    **{n: "2026-09-30 PM units 사진 — 키 30·몸 위쪽·Idle로 서 있음·텍스처 정상"
+       for n in ("희귀함_박기찬", "희귀함_최상호_오타쿠의길", "안흔함_김수빈", "흔함_문필환", "특별함_박진웅", "특별함_황정기")},
+}
+
+
+def humanoid_weight_check(name, meshes, names=None):
     """🔴 오비토(2026-09-17 PM 유니티 isHuman False): 가중치 0 매핑 뼈는 FBX 스킨 뼈 목록에서 빠져 유니티 휴머노이드 매핑 후보가 안 된다 →
     필수 15뼈(mixamorig: 이름)가 전부 어떤 메시에든 가중치 > 0이어야 통과."""
     got = set()
@@ -5409,7 +5685,14 @@ def humanoid_weight_check(name, meshes):
             for ge in v.groups:
                 if ge.weight > 0:
                     got.add(idx[ge.group])
-    missing = [b for b in HUMANOID_REQUIRED if "mixamorig:" + b not in got]
+    # 🔸 humanoid_bones(2026-09-30, check_entries 따라잡기): mixamorig 이름이 아닌 리그(Bip001·Rigify·유니티 이름)는 커밋된 .meta의
+    #   humanDescription이 필수 15칸에 **무슨 뼈를 매핑했는지**를 항목에 적어 그 뼈로 본다. 안 적으면 예전처럼 mixamorig:<이름>.
+    names = names or {}
+    missing = [b for b in HUMANOID_REQUIRED if names.get(b, "mixamorig:" + b) not in got]
+    if os.environ.get("GRD_GATE_REPORT"):                               # 진단 전용 — 아래 _gate 주석
+        return f"GATE 가중치 없음 {missing}" if missing else "필수 15뼈 가중치 있음"
+    if missing and name in VERIFIED_IN_UNITY:
+        return f"매핑 뼈 가중치 없음 {missing} — 유니티에서 확인됨({VERIFIED_IN_UNITY[name]})"
     assert not missing, f"{name}: 휴머노이드 필수 뼈에 가중치가 없다(유니티 매핑 실패) {missing}"
     return "필수 15뼈 가중치 있음"
 
@@ -5655,7 +5938,7 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 bound.append(m.name)
         bpy.context.view_layer.update()
         report["아마추어에 붙인 메시"] = bound
-    if cfg.get("drop_verts_of_bones"):
+    def drop_verts_now():
         # 🔸 피즈(2026-09-16): 삼지창이 몸과 **같은 메시**(Object_6)에 들어 있고 뿌리 직계 Weapon_70 뼈 100% — 메시로는 못 빼니 그 뼈 몫이 반 넘는 정점을 지운다
         import bmesh as _bm
         gone_bones = set(cfg["drop_verts_of_bones"])
@@ -5679,6 +5962,9 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                     m.vertex_groups.remove(g)
             removed += len(kill)
         report["뼈로 지운 정점"] = f"{sorted(gone_bones)} {removed}"
+
+    if cfg.get("drop_verts_of_bones"):
+        drop_verts_now()
     if cfg.get("first_uv_only"):                                         # 🔸 킹콩: glb UV 5층 — glTF texCoord 0(첫 층)만 쓰니 나머지 층은 뺀다(유니티 UV1~4 쓰레기 방지)
         dropped = 0
         for m in [o for o in bpy.context.scene.objects if o.type == "MESH"]:
@@ -5706,7 +5992,9 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 cut += 1
             tri_after += sum(len(p.vertices) - 2 for p in m.data.polygons)
         report["감량"] = f"삼각형 {tri_before} → {tri_after} (메시 {cut}개 ×{dec['ratio']}, {dec.get('min_tris', 1000)}삼각형 이상만)" + (f" · 메시별 {dec['by_mesh']}" if dec.get('by_mesh') else "")
-    if cfg.get("rename_bones"):                                         # 사람형 매핑 뼈 이름을 표준으로(가중치 그룹 이름도 같이)
+    renamed = {}                                                        # 실제 옛 이름(번호 꼬리 포함) → 새 이름. 클립 표본의 뼈 이름을 옮길 때도 쓴다
+
+    def rename_bones_now():
         arm0 = main_armature()
         strip = re.compile(cfg["rename_strip"]) if cfg.get("rename_strip") else None   # 🔸 갑옷거인: glTF 번호 꼬리(Bip001 Pelvis_01) — 표 이름과 꼬리 뗀 이름으로 짝짓기
         for old, new in cfg["rename_bones"].items():
@@ -5719,10 +6007,14 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             assert b is not None, f"{name}: 이름 바꿀 뼈가 없다 {old}"
             assert new not in arm0.data.bones, f"{name}: 새 이름이 이미 있다 {new}"
             b.name = new
+            renamed[old] = new
             for m in bpy.context.scene.objects:
                 g = m.vertex_groups.get(old) if m.type == "MESH" else None
                 if g is not None:
                     g.name = new
+
+    if cfg.get("rename_bones"):                                         # 사람형 매핑 뼈 이름을 표준으로(가중치 그룹 이름도 같이)
+        rename_bones_now()
         report["이름 바꾼 뼈"] = len(cfg["rename_bones"])
     scene = bpy.context.scene
     arm = main_armature()
@@ -5743,9 +6035,63 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 o = bpy.data.objects.get(gone)
                 if o is not None:
                     bpy.data.objects.remove(o, do_unlink=True)
+        if cfg.get("drop_verts_of_bones"):                              # 🔴 다시 불러오면 지운 정점도 돌아온다(영원_문필환@동작 — 뒤의 drop_bones가 「가중치가 있어 뺄 수 없다」로 죽었다)
+            drop_verts_now()
+        if cfg.get("rename_bones"):
+            # 🔴 anim=True + rename_bones(2026-09-30, 고유 동작 시범 — 영원_최상호): 클립을 읽으려고 원본을 다시 불러오면
+            #   위에서 바꾼 뼈 이름이 풀린다 → 아래 단계(drop/merge/tpose …)가 「mixamorig:…」를 못 찾아 죽었다.
+            #   ① 다시 불러온 뼈대에 이름을 한 번 더 바꾸고 ② 클립 표본(원본 이름으로 찍힌 세계 행렬)의 키도 새 이름으로 옮긴다.
+            #   아마추어 오브젝트 이름은 안 바뀌므로 arm_name은 그대로 유효하다.
+            renamed.clear()
+            rename_bones_now()
+            arm = bpy.data.objects[arm_name]
+            clips = [(t_, f0_, [{renamed.get(k, k): M for k, M in w.items()} for w in fr_]) for t_, f0_, fr_ in clips]
         if cfg.get("take_names"):                                       # 원본 테이크 이름 → 유니티 클립 이름(잉어 Scene → Idle)
-            clips = [(cfg["take_names"].get(t, t), f0, fr) for t, f0, fr in clips]
+            if cfg.get("takes_only"):                                   # 표에 있는 원본 테이크만(중복·안 쓰는 테이크를 버린다) — 표 순서대로
+                by_src = {t: (f0, fr) for t, f0, fr in clips}
+                missing = [s for s in cfg["take_names"] if s not in by_src]
+                assert not missing, f"{name}: take_names에 적은 원본 테이크가 없다 {missing} (있는 것 {sorted(by_src)})"
+                report["버린 테이크"] = sorted(set(by_src) - set(cfg["take_names"]))
+                clips = [(new, *by_src[s]) for s, new in cfg["take_names"].items()]
+            else:
+                clips = [(cfg["take_names"].get(t, t), f0, fr) for t, f0, fr in clips]
             report["테이크 이름"] = [c[0] for c in clips]
+        if cfg.get("clip_concat"):
+            # 새 테이크 = 있는 테이크 여럿을 이어 붙인 것(스킬 준비 → 중간 → 본동작). 뒤 조각의 첫 프레임은 앞 조각의 끝과 같은 자세라 뺀다.
+            # drop=True면 조각 테이크는 버리고 이은 것만 남긴다.
+            by = {t: fr for t, _, fr in clips}
+            for new, spec in cfg["clip_concat"].items():
+                parts = spec["parts"] if isinstance(spec, dict) else spec
+                assert all(p in by for p in parts), f"{name}: clip_concat 조각이 없다 {new} {parts}"
+                joined = list(by[parts[0]])
+                for p in parts[1:]:
+                    joined += by[p][1:]
+                clips.append((new, 1, joined))
+                by[new] = joined
+                if isinstance(spec, dict) and spec.get("drop"):
+                    clips = [c for c in clips if c[0] not in spec["drop"]]
+        if cfg.get("clip_copy"):                                        # 같은 동작의 두 판(제자리 / 원본 그대로)을 나란히 내보낼 때
+            by = {t: (f0, fr) for t, f0, fr in clips}
+            for new, old in cfg["clip_copy"].items():
+                clips.append((new, *by[old]))
+        if cfg.get("clip_trim_tail"):
+            # 🔸 clip_trim_tail(2026-09-30, 동작 넓히기 — 초월_강주혁_AP 계열): 원본이 모든 클립을 **같은 길이로 채워** 내보냈다
+            #   (22개 중 18개가 66프레임 — 동작이 끝난 뒤 끝 자세로 멈춰 있다). 그대로 쓰면 공격 뒤 2초를 서 있는다.
+            #   → 끝 자세와 같은(뼈 행렬 성분 차 < tol) 꼬리 프레임을 자른다. 끝 자세 한 프레임은 남긴다. 움직임이 전혀 없는 클립은 2프레임으로.
+            tol = cfg["clip_trim_tail"] if isinstance(cfg["clip_trim_tail"], float) else 1e-4
+            trimmed = {}
+            out_c = []
+            for t_, f0_, fr_ in clips:
+                last = fr_[-1]
+                k = len(fr_) - 1
+                while k > 0 and all(max(abs(a - b) for ra, rb in zip(fr_[k - 1][bn], last[bn]) for a, b in zip(ra, rb)) < tol for bn in last):
+                    k -= 1
+                keep = max(min(k + 1, len(fr_)), 2)
+                if keep < len(fr_):
+                    trimmed[t_] = f"{len(fr_)}→{keep}"
+                out_c.append((t_, f0_, fr_[:keep]))
+            clips = out_c
+            report["꼬리 자른 클립(프레임)"] = trimmed
         if cfg.get("split_clips"):
             # 🔴 안흔함_강재규(2026-09-23): 원본이 「All Animations」 한 테이크에 서 있기·웅크리기·앞발 치기를 **이어 붙여** 놨다.
             #   ArtBinder.GetOrCreateOwnClipController는 **가장 긴 클립 하나**를 기본 상태로 놓으므로, 게임에서 재규어가
@@ -5802,7 +6148,9 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         _mats = [m.get("name") for m in _j.loads(_raw[20:20 + _s.unpack_from("<I", _raw, 12)[0]]).get("materials", [])] if _emb else []
         _emb = [(i, im.get("name") or (_mats[0] if len(_mats) == 1 else "이름없음%d" % i))
                 for i, im in enumerate(_emb) if "bufferView" in im]
-        assert not _emb, (f"{name}: glb 안에 박힌 그림이 {len(_emb)}장인데 glb_images를 안 적었다 — "
+        # 🔸 GRD_GATE_REPORT=1(2026-09-30, check_entries 실패 가르기): 관문 assert 셋을 **멈추지 않고 보고만** 하게 한다 —
+        #   「이 설정으로 뽑으면 무엇이 나오나」를 커밋본과 견줄 때만 쓴다. 산출용으로 켜지 말 것(회색·매핑 실패가 그대로 나간다).
+        assert os.environ.get("GRD_GATE_REPORT") or not _emb, (f"{name}: glb 안에 박힌 그림이 {len(_emb)}장인데 glb_images를 안 적었다 — "
                           f"그대로 두면 **텍스처 없이 회색으로 나간다**. 적을 것: " +
                           ", ".join(f"{i}: \"{n}.png\"" for i, n in _emb))
     if cfg.get("glb_images"):                                           # glb 내장 이미지를 원본 바이트 그대로 재질 이름 기준 파일로(재질을 짜기 전에)
@@ -5857,6 +6205,8 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 if g is not None:
                     g.name = new
         report["이름 바꾼 뼈"] = len(table)
+        if clips:                                                       # 🔴 클립 표본은 옛 이름으로 찍혀 있다(특별함_이정범·박예원@동작 — KeyError) → 키도 같이 옮긴다
+            clips = [(t_, f0_, [{table.get(k, k): M for k, M in w.items()} for w in fr_]) for t_, f0_, fr_ in clips]
     if cfg.get("copy_textures"):                                        # 흩어진 원본 텍스처를 재질 이름 기준 파일명으로 유닛 Textures/에(재질을 짜기 전에)
         tex_repo = tex_out_dir
         os.makedirs(tex_repo, exist_ok=True)
@@ -5982,9 +6332,16 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         assert float(_np.median(res) / span) < 0.15, \
             f"{name}: 뼈대↔메시 닮음변환이 안 맞는다(잔차 중앙 {float(_np.median(res) / span) * 100:.1f}%) {report['뼈대 좌표계 맞춤']}"
     # ── 기본 자세 그대로 붙잡기
+    if arm is not None and cfg.get("use_rest_pose"):
+        # 🔸 토지(2026-09-16): FBX 기본 자세가 전투 자세(몸이 +X로 73° 돌고 한 주먹을 든 채)인데 결합 자세는 −Y를 본 깨끗한 A자 → 기본 자세를 버리고 결합 자세로
+        for pb in arm.pose.bones:
+            pb.matrix_basis = Matrix.Identity(4)
+        bpy.context.view_layer.update()
+        report["기본 자세 버림"] = "결합 자세 사용"
     if arm is not None and cfg.get("pose_bones_world"):
         # 🔸 죠타로(2026-09-16): 옷깃 키체인 뼈가 쉬는 자세에서 수평(게임은 물리로 늘어뜨림) → 유니티에선 옆으로 막대처럼 뻗는다.
         #   세계 축 기준으로 뼈 머리를 중심으로 돌려 두고(자식 따라감) 아래 「기본 자세 그대로 붙잡기」가 굽는다.
+        # 🔸 (2026-10-01) use_rest_pose의 자세 초기화 **뒤에** 돌린다 — 앞에 있으면 초기화가 돌린 자세를 지웠다(특수함_BJ_율희 꼬리 곡선)
         Mw3 = arm.matrix_world.to_3x3().normalized()
         for bname, (axis, deg) in cfg["pose_bones_world"].items():
             pb = arm.pose.bones[bname]
@@ -5993,12 +6350,6 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             pb.matrix = Matrix.Translation(pivot) @ Matrix.Rotation(math.radians(deg), 4, ax) @ Matrix.Translation(-pivot) @ pb.matrix
             bpy.context.view_layer.update()
         report["돌린 뼈"] = list(cfg["pose_bones_world"])
-    if arm is not None and cfg.get("use_rest_pose"):
-        # 🔸 토지(2026-09-16): FBX 기본 자세가 전투 자세(몸이 +X로 73° 돌고 한 주먹을 든 채)인데 결합 자세는 −Y를 본 깨끗한 A자 → 기본 자세를 버리고 결합 자세로
-        for pb in arm.pose.bones:
-            pb.matrix_basis = Matrix.Identity(4)
-        bpy.context.view_layer.update()
-        report["기본 자세 버림"] = "결합 자세 사용"
     if arm is not None:
         arm.data.pose_position = "POSE"
         bpy.context.view_layer.update()
@@ -6570,15 +6921,56 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         new_arm.animation_data_create()
         for pb in new_arm.pose.bones:
             pb.rotation_mode = "QUATERNION"
+        # 🔸 clip_inplace(2026-09-30, 고유 동작 시범): 원본 클립이 골반을 끌고 앞으로 나간다(공격 돌진 0.49m · 스킬 1.19m).
+        #   게임에선 유닛 자리가 고정이라 몸이 자리에서 벗어나면 타격 판정·발밑 표시와 어긋난다.
+        #   → 적힌 테이크는 **골반 뼈의 수평(X·Y) 이동만** 기준 자세(anchor 테이크의 첫 프레임) 자리에 묶는다.
+        #     그 프레임의 모든 뼈를 같은 만큼 평행 이동하므로 자세는 그대로고, **높이(Z)는 안 건드려 도약·주저앉기는 남는다.**
+        #   출력 공간(G를 곱한 뒤)에서 잰다 — G가 방향을 돌려 놓았어도 Z가 위다.
+        # 🔸 clip_anchor(2026-09-30, 영원_최상호 실측): 원본 클립이 **결합 자세와 다른 자리**에서 논다 — Idle 첫 프레임 골반이
+        #   결합 자세 골반에서 수평 0.68m·위 0.21m 떨어져 있었다(립 원본의 장면 원점 차이). 그대로 구우면 유닛이 제 자리 옆 공중에 선다.
+        #   → 모든 테이크를 **같은 만큼** 옮긴다: 수평은 기준 테이크 첫 프레임의 골반이 쉬는 자세 골반 바로 위에 오게,
+        #     높이는(ground=True) 그 첫 프레임의 메시 최저점이 바닥(z 0)에 닿게. 상수 이동이라 동작·도약·테이크 사이 상대 위치는 그대로다.
+        anchor_cfg = cfg.get("clip_anchor") or {}
+        Tanchor = None
+        if anchor_cfg:
+            a_bone = anchor_cfg["bone"]
+            a_fr = next((fr for t_, _, fr in clips if t_ == anchor_cfg["take"]), None)
+            assert a_fr is not None and a_bone in rest, f"{name}: clip_anchor 기준이 없다 {anchor_cfg}"
+            d0 = (G @ a_fr[0][a_bone]).translation - rest[a_bone].translation
+            Tanchor = Matrix.Translation(Vector((-d0.x, -d0.y, 0.0)))
+            report["클립 기준점 수평 이동(m)"] = (round(-d0.x, 3), round(-d0.y, 3))
+        inplace = cfg.get("clip_inplace") or {}
+        ip_bone = inplace.get("bone")
+        ip_takes = set(inplace.get("takes", ()))
+        ip_home = None
+        if ip_takes:
+            assert ip_bone in rest, f"{name}: clip_inplace 뼈가 없다 {ip_bone}"
+            anchor = next((fr for t_, _, fr in clips if t_ == inplace.get("anchor")), None)
+            assert anchor is not None, f"{name}: clip_inplace anchor 테이크가 없다 {inplace.get('anchor')}"
+            ip_home = (G @ anchor[0][ip_bone]).translation.copy()
+            if Tanchor is not None:
+                ip_home = Tanchor @ ip_home
+            assert ip_takes <= {c[0] for c in clips}, f"{name}: clip_inplace 테이크가 없다 {ip_takes - {c[0] for c in clips}}"
         for take, f0, frames in clips:
             act = bpy.data.actions.new(take)
             assert act.name == take, f"{name}: 액션 이름이 잘렸다/바뀌었다: {take!r} → {act.name!r}"
             act.use_fake_user = True                                    # --blend 진단 파일에 클립이 다 남게(사용자 0이면 저장 때 빠진다)
             new_arm.animation_data.action = act
+            pulled = 0.0
             for fi, world in enumerate(frames):
                 pose = {}
+                Tfix = None
+                if Tanchor is not None:
+                    Tfix = Tanchor
+                if take in ip_takes:
+                    d = ((Tanchor @ G) if Tanchor is not None else G) @ world[ip_bone]
+                    d = d.translation - ip_home
+                    pulled = max(pulled, math.hypot(d.x, d.y))
+                    Tfix = Matrix.Translation(Vector((-d.x, -d.y, 0.0))) @ (Tanchor if Tanchor is not None else Matrix.Identity(4))
                 for bname in order:
                     P = _normalized(G @ world[bname])
+                    if Tfix is not None:
+                        P = Tfix @ P
                     pose[bname] = P
                     p = parent[bname]
                     local = rest[p].inverted() @ rest[bname] if p else rest[bname]
@@ -6588,6 +6980,8 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                     pb.location, pb.rotation_quaternion = bl, bq
                     pb.keyframe_insert("location", frame=f0 + fi)
                     pb.keyframe_insert("rotation_quaternion", frame=f0 + fi)
+            if take in ip_takes:
+                report.setdefault("제자리로 당긴 수평 이동 최대(m)", {})[take] = round(pulled, 3)
             if cfg.get("clip_ground"):
                 # 뿌리만 세계 z로 옮기면 자식은 부모 기준 키라 통째로 따라온다. 뿌리 기본 행렬의 이동 = 쉬는 자세 회전⁻¹ × 세계 이동
                 roots = [b.name for b in new_arm.data.bones if b.parent is None]
@@ -6607,6 +7001,34 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                         pb.keyframe_insert("location", frame=f0 + fi)
                     lifts.append(-low)
                 report.setdefault("클립 접지(m)", {})[take[-12:]] = (round(min(lifts), 3), round(max(lifts), 3))
+        if anchor_cfg.get("ground"):
+            # 기준 테이크 첫 프레임의 메시 최저점을 재서, 모든 테이크의 뿌리 뼈 위치 키를 같은 만큼 내린다/올린다(상수).
+            a_act = bpy.data.actions[anchor_cfg["take"]]
+            a_f0 = next(f0_ for t_, f0_, _ in clips if t_ == anchor_cfg["take"])
+            new_arm.animation_data.action = a_act
+            if hasattr(new_arm.animation_data, "action_slot") and len(a_act.slots):
+                new_arm.animation_data.action_slot = a_act.slots[0]
+            scene.frame_set(a_f0)
+            dg = bpy.context.evaluated_depsgraph_get()
+            low = float("inf")
+            for m in meshes:
+                ev = m.evaluated_get(dg)
+                me = ev.to_mesh()
+                low = min(low, min((ev.matrix_world @ v.co).z for v in me.vertices))
+                ev.to_mesh_clear()
+            roots = [b.name for b in new_arm.data.bones if b.parent is None]
+            for take, f0, frames in clips:
+                act = bpy.data.actions[take]
+                for fc in [fc for lay in act.layers for st in lay.strips for bag in st.channelbags for fc in bag.fcurves]:
+                    for r in roots:
+                        if fc.data_path == f'pose.bones["{r}"].location':
+                            dloc = rest[r].to_quaternion().inverted() @ Vector((0.0, 0.0, -low))
+                            for kp in fc.keyframe_points:
+                                kp.co.y += dloc[fc.array_index]
+                                kp.handle_left.y += dloc[fc.array_index]
+                                kp.handle_right.y += dloc[fc.array_index]
+                            fc.update()
+            report["클립 기준점 높이 이동(m)"] = round(-low, 3)
         report["클립"] = [c[0] for c in clips]
 
     if new_arm is not None and (cfg.get("synth_idle") or cfg.get("synth_clips")) and not clips:
@@ -6747,6 +7169,21 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     # 🔴 킹(2026-09-17 PM 유니티 반려): 원본 재질 알파(메시 이름 _0.1_ = 알파 0.1)가 relink_textures의 old.alpha로 그대로 넘어가
     #   FBX TransparencyFactor로 나가서 유니티 인형 재질 9개가 전부 Transparent(큐 3000)로 떴다 → 내보내기 직전 모든 재질을 불투명으로 못박고 검사한다.
     #   일부러 반투명을 남길 유닛만 keep_alpha=True.
+    if cfg.get("zero_emission"):
+        # 🔴 특수함_황길라(2026-10-01 PM 유니티 사진): 원본 재질이 EmissiveColor 회색 0.5(발광 맵 tex_..._emi.png의 전체 기본값)를 갖고 있어 FBX가 그대로 싣자
+        #   유니티가 몸 전체에 0.5 회색을 더해 **반투명해 보이게 허옇게 떴다**(검은 날개가 연회색) — 투명도가 아니라 발광. 내보내기 직전 발광을 끈다.
+        zeroed = []
+        for mat in {s.material for o in scene.objects if o.type == "MESH" for s in o.material_slots if s.material}:
+            if mat.use_nodes:
+                for nd in [nd for nd in mat.node_tree.nodes if nd.type == "BSDF_PRINCIPLED"]:
+                    for k in [k for k in ("Emission Color", "Emission") if k in nd.inputs]:
+                        for lk in list(nd.inputs[k].links):
+                            mat.node_tree.links.remove(lk)
+                        nd.inputs[k].default_value = (0.0, 0.0, 0.0, 1.0)
+                    if "Emission Strength" in nd.inputs:
+                        nd.inputs["Emission Strength"].default_value = 0.0
+                    zeroed.append(mat.name)
+        report["발광 끔"] = sorted(set(zeroed))
     if not cfg.get("keep_alpha"):
         from bpy_extras.node_shader_utils import PrincipledBSDFWrapper
         fixed = []
@@ -6796,7 +7233,7 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             seeded[b.name] = sorted({pts[int(k)][0].name for k in near})
         report["가중치 0 뼈 씨앗"] = seeded
     if cfg.get("kind") == "human" and not cfg.get("generic"):
-        report["휴머노이드 가중치"] = humanoid_weight_check(name, [o for o in scene.objects if o.type == "MESH"])
+        report["휴머노이드 가중치"] = humanoid_weight_check(name, [o for o in scene.objects if o.type == "MESH"], cfg.get("humanoid_bones"))
     # 🔴 영원_김영원(2026-09-22, PM 유니티 반려) — 아마추어 오브젝트 이름이 원본 그대로
     # (예: "INGAME_ANIMATION_SUPEREMOTE_MALE_FROG_Rig")로 남으면 블렌더 FBX 내보내기가
     # 그 오브젝트 노드와 뿌리 뼈(mixamorig:Hips) 노드를 겹쳐 써서, 유니티가 Hips를 뼈가
@@ -6812,22 +7249,128 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     #    🔴 「이미지 노드가 있나」로는 **못 잡는다** — 임포터가 만든 노드는 임시 폴더를 가리키고 있어서
     #       검사는 통과하는데 내보내면 사라진다(R18 버기가 정확히 그랬다: 검사 통과 → 결과물은 재질 7개 전부 그림 없음).
     #       그래서 **그 그림이 이 유닛의 Textures/ 안에 있는 파일인지**를 본다. 그게 내보내기에서 살아남는 조건이다.
+    if cfg.get("prop_attach"):
+        # 🔸 prop_attach(2026-09-30, 특별함_황정기 새총 지팡이 시범): 원본에서 몸 옆에 **따로 서 있는 소품**(제 뼈 하나에 100% 실린 정점 무리)을
+        #   통째로 옮겨 다른 뼈에 붙인다. 최종 공간(−Y 앞·Z 위·T자)에서: 소품 정점과 그 뼈를 pivot 기준으로 rot(축, 도)만큼 돌린 뒤 to로 옮기고,
+        #   뼈의 부모를 parent로 바꾼다. 몸 정점·다른 뼈는 안 건드린다.
+        pa = cfg["prop_attach"]
+        arm_p = main_armature()
+        Mx = (Matrix.Translation(Vector(pa["to"])) @ Matrix.Rotation(math.radians(pa["rot"][1]), 4, pa["rot"][0])
+              @ Matrix.Translation(-Vector(pa["pivot"])))
+        moved = 0
+        for m in [o for o in bpy.context.scene.objects if o.type == "MESH"]:
+            g = m.vertex_groups.get(pa["bone"])
+            if g is None:
+                continue
+            W, Wi = m.matrix_world, m.matrix_world.inverted()
+            for v in m.data.vertices:
+                if any(ge.group == g.index and ge.weight > 0.5 for ge in v.groups):
+                    v.co = Wi @ (Mx @ (W @ v.co))
+                    moved += 1
+            m.data.update()
+        bpy.context.view_layer.objects.active = arm_p
+        bpy.ops.object.mode_set(mode="EDIT")
+        eb = arm_p.data.edit_bones[pa["bone"]]
+        A, Ai = arm_p.matrix_world, arm_p.matrix_world.inverted()
+        eb.use_connect = False
+        eb.head, eb.tail = Ai @ (Mx @ (A @ eb.head)), Ai @ (Mx @ (A @ eb.tail))
+        eb.parent = arm_p.data.edit_bones[pa["parent"]]
+        bpy.ops.object.mode_set(mode="OBJECT")
+        report["소품 붙임"] = f"{pa['bone']} → {pa['parent']} · 옮긴 정점 {moved}"
+    if cfg.get("material_colors"):
+        # 🔸 특별함_최상호(2026-09-30, PM 사진 — 눈이 하얗게 비어 있었다): 원본 glb에서 그림 없이 **색만** 준 재질(눈동자·머리·샌들 끈)이
+        #   옛 기준 FBX를 거치며 기본 회색(0.8)이 됐다. relink는 기준 FBX 표만 보므로 색을 되살릴 길이 없었다 → 이름으로 색을 적는다.
+        done_c = {}
+        for mname, rgb in cfg["material_colors"].items():
+            m = bpy.data.materials.get(mname)
+            assert m is not None, f"{name}: material_colors에 적은 재질이 없다 {mname}"
+            bs = next(n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+            assert not bs.inputs["Base Color"].is_linked, f"{name}: {mname}은 그림이 물린 재질이다 — 색을 덮지 않는다"
+            bs.inputs["Base Color"].default_value = (*rgb, 1.0)
+            m.diffuse_color = (*rgb, 1.0)
+            done_c[mname] = tuple(rgb)
+        report["재질 색"] = done_c
+    if cfg.get("mirror_normals_from"):
+        # 🔸 특별함_조도연(2026-09-30, PM 사진 — 왼 손목 보호대만 허옇게 떴다): 원본 glb의 왼쪽 부품이 오른쪽의 거울 복사인데
+        #   **법선은 거울이 안 됐다**(감김은 거울 일치 0.82~0.95, 법선은 −0.15~−0.42). 그림은 멀쩡한데 빛을 거꾸로 받는다.
+        #   → 왼쪽 메시의 고리 법선을 오른쪽 짝(YZ 평면 거울)에서 면·정점 짝을 찾아 거울로 옮긴다. 정점·면은 안 건드린다.
+        from mathutils import kdtree as _kd
+        mrep = {}
+        for dst_n, src_n in cfg["mirror_normals_from"].items():
+            d_o, s_o = bpy.data.objects[dst_n], bpy.data.objects[src_n]
+            dm, sm = d_o.data, s_o.data
+            assert len(dm.polygons) == len(sm.polygons), f"{name}: 거울 짝의 면 수가 다르다 {dst_n}/{src_n}"
+            Ms, Md = s_o.matrix_world, d_o.matrix_world
+            Rs, Rd_inv = Ms.to_3x3(), Md.to_3x3().inverted()
+            tree = _kd.KDTree(len(sm.polygons))
+            for p_ in sm.polygons:
+                tree.insert(Ms @ p_.center, p_.index)
+            tree.balance()
+            out_n = [None] * len(dm.loops)
+            worst = 0.0
+            for p_ in dm.polygons:
+                c = Md @ p_.center
+                _, si, dist = tree.find(Vector((-c.x, c.y, c.z)))
+                worst = max(worst, dist)
+                sp = sm.polygons[si]
+                s_corners = [(Ms @ sm.vertices[sm.loops[li].vertex_index].co, li) for li in sp.loop_indices]
+                for li in p_.loop_indices:
+                    v = Md @ dm.vertices[dm.loops[li].vertex_index].co
+                    q = Vector((-v.x, v.y, v.z))
+                    sli = min(s_corners, key=lambda sc: (sc[0] - q).length)[1]
+                    n_ = Rs @ sm.corner_normals[sli].vector
+                    out_n[li] = (Rd_inv @ Vector((-n_.x, n_.y, n_.z))).normalized()
+            assert worst < 0.02, f"{name}: 거울 짝 면을 못 찾았다 {dst_n} (최대 {worst:.3f}m)"
+            dm.normals_split_custom_set([tuple(n_) for n_ in out_n])
+            dm.update()
+            mrep[dst_n] = f"{src_n} 거울 · 면 짝 최대 {worst:.4f}m"
+        report["법선 거울 옮김"] = mrep
     solid_ok = set(cfg.get("solid_materials", ()))
     want_dir = os.path.abspath(tex_out_dir)
+    # 🔸 2026-09-30 따라잡기: 옛 항목(기준 FBX 표로 다시 거는 recipe·relink)은 `--out` 시험에서 출력 폴더에 그림이 없으면 **저장소 Textures/**로
+    #   물러선다(relink_textures의 fallback_dir). 그 파일은 실제로 있고 FBX도 같은 이름을 가리키므로 회색으로 안 나간다 → 그것도 인정한다.
+    #   (임시 폴더를 가리키는 노드는 여전히 걸린다 — 저장소 Textures/ 안의 **있는 파일**만.)
+    repo_dir = os.path.abspath(os.path.join(os.path.dirname(dst_path), "Textures")) + os.sep
+
+    # 🔸 2026-09-30 따라잡기: archive_textures로 그림을 Textures/에 **복사는 했는데** 재질 노드는 압축 푼 임시 폴더의 원본을 그대로 가리키는
+    #   항목 다섯(특별함_김용태·이현빈·조세민·임채준·영원_김영원 …). 같은 이름의 복사본이 출력 Textures/에 있으면 노드를 그 복사본으로 돌린다 —
+    #   재질 구성은 그대로고 가리키는 파일만 살아남는 쪽으로 바뀐다(임시 폴더는 실행 끝에 사라진다).
+    repointed = []
+    for m in bpy.data.materials:
+        if not (m.use_nodes and m.node_tree):
+            continue
+        for n in m.node_tree.nodes:
+            if n.type == "TEX_IMAGE" and n.image and n.image.filepath:
+                ip = os.path.abspath(bpy.path.abspath(n.image.filepath))
+                if ip.startswith(want_dir) or ip.startswith(repo_dir):
+                    continue
+                # 출력 Textures/ 먼저, 없으면 저장소 Textures/(옛 rev 항목 — 원본 FBX 안의 경로가 만든 사람 PC 경로 그대로라 아무 데도 없다.
+                #   유니티는 파일 이름으로 Textures/에서 찾아 붙여 왔다. 같은 이름 파일이 실제로 있으면 그것을 가리키게 한다.)
+                twin = next((c for c in (os.path.join(want_dir, os.path.basename(ip)), os.path.join(repo_dir, os.path.basename(ip))) if os.path.isfile(c)), None)
+                if twin:
+                    n.image.filepath = twin
+                    repointed.append(os.path.basename(twin))
+    if repointed:
+        report["Textures/ 복사본으로 돌린 그림"] = sorted(set(repointed))
 
     def wired(m):
         if not (m.use_nodes and m.node_tree):
             return False
         for n in m.node_tree.nodes:
             if n.type == "TEX_IMAGE" and n.image and n.image.filepath:
-                if os.path.abspath(bpy.path.abspath(n.image.filepath)).startswith(want_dir):
+                ip = os.path.abspath(bpy.path.abspath(n.image.filepath))
+                if ip.startswith(want_dir) or (ip.startswith(repo_dir) and os.path.isfile(ip)):
                     return True
         return False
 
     bare = sorted({m.name for o in bpy.context.scene.objects if o.type == "MESH" and len(o.data.vertices)
                    for m in [s.material for s in o.material_slots]
                    if m is not None and m.name not in solid_ok and not wired(m)})
-    assert not bare, (f"{name}: 유닛 Textures/의 그림이 안 물린 재질 {len(bare)}개 — 이대로 나가면 **회색으로 보인다**. "
+    if bare and os.environ.get("GRD_GATE_REPORT"):
+        report["GATE 그림 안 물린 재질"] = bare
+        report["GATE 그 재질의 그림 경로"] = {m: [n.image.filepath for n in bpy.data.materials[m].node_tree.nodes if n.type == "TEX_IMAGE" and n.image]
+                                        for m in bare if bpy.data.materials[m].node_tree}
+    assert os.environ.get("GRD_GATE_REPORT") or not bare, (f"{name}: 유닛 Textures/의 그림이 안 물린 재질 {len(bare)}개 — 이대로 나가면 **회색으로 보인다**. "
                       f"`materials=dict(textures={{…}})`로 물리거나, 정말 단색이면 solid_materials에 적을 것: "
                       + ", ".join(bare[:8]))
     arm_obj = main_armature()
@@ -6859,6 +7402,158 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     return report
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# 🔸 고유 동작 넓히기 준비 2차(2026-09-30 밤, PM 지시) — 「이름@동작」으로 Assets 밖(~/GRD_motion_trial/<이름>/)에 뽑는다. 기본 항목은 그대로.
+#   아홉 유닛 전부 원본 클립에 **뼈 위치까지 같은 중복이 없다**(dedupe 실측). 계열별로 원본 이름 → 우리 이름 표만 다르다.
+#   공통: 기준 = Idle 첫 프레임(clip_anchor) · Idle*/Move*를 뺀 전부 골반 수평 제자리(clip_inplace, 높이는 그대로) ·
+#         Attack은 제자리가 기본, 원본 그대로는 Attack_Lunge · 채워 넣은 꼬리는 clip_trim_tail.
+def _motion_variant(names, bone="mixamorig:Hips", pin_also=(), lunge=True, **extra):
+    takes = list(names.values())
+    pinned = [x for x in takes if not x.startswith(("Idle", "Move")) or x in pin_also]
+    return dict(anim=True, anim_drop_ok=True, takes_only=True, take_names=names, clip_trim_tail=True,
+                clip_copy=({"Attack_Lunge": "Attack"} if lunge else {}),
+                clip_anchor=dict(bone=bone, take="Idle", ground=True),
+                clip_inplace=dict(bone=bone, anchor="Idle", takes=pinned), **extra)
+
+
+_HIT5 = {"dizzy": "Stun", "hitback": "HitBack", "hitdown": "HitDown", "hitfly": "HitFly", "hitkneel": "HitKneel"}
+_PL = {"idle_a": "Idle", "run": "Move", "combo_a": "Attack", "combo_b": "Attack2", "combo_c": "Attack3", "damage": "Hit", "down": "Die",
+       "skill_a": "Skill1", "skill_b": "Skill2", "stun": "Stun", "boost": "Boost", "dodge": "Dodge", "down_end": "GetUp",
+       "jump": "Jump", "jump_lp": "Jump_Loop", "jump_end": "Jump_End", "blownback_lp": "BlownBack_Loop", "blownback_end": "BlownBack_End",
+       "slammed": "Slammed", "electric_shock": "Shock", "shake": "Shake",
+       "idlehome_a": "Idle_Home", "opening": "Opening", "victory": "Win", "victory_lp": "Win_Loop", "lose": "Lose", "lose_lp": "Lose_Loop",
+       "flagget": "Flag", "flagget_lp": "Flag_Loop", "flagget_end": "Flag_End"}
+
+
+def _pl(prefix, skip=()):
+    return {f"{prefix}_{k}": v for k, v in _PL.items() if k not in skip}
+
+
+# 블리치 계열 battleout(attackN_M = 평타 연속기 · skillK = 스킬 본동작, _loop = 유지 자세 · hit* 다섯 · dizzy)
+UNITS["희귀함_구주호"]["variants"] = {"동작": _motion_variant({
+    "idle": "Idle", "move": "Move", "attack1_1": "Attack", "attack1_2": "Attack2", "attack1_3": "Attack3", "hit": "Hit", "die": "Die",
+    "skill1_1": "Skill1", "skill1_1_loop": "Skill1_Loop", "skill2_1": "Skill2", "skill2_1_loop": "Skill2_Loop", "skill3_1": "Skill3",
+    "skill4": "Skill4", "skill6_1": "Skill6", "skill6_1_loop": "Skill6_Loop", **_HIT5,
+    "bankai": "Bankai", "debut": "Debut", "switch": "Switch", "win": "Win"})}
+UNITS["특별함_이정범"]["variants"] = {"동작": _motion_variant({
+    "idle": "Idle", "move": "Move", "attack2_1": "Attack", "attack2_2": "Attack2", "attack2_3": "Attack3", "attack2_4": "Attack4",
+    "attack2_5": "Attack5", "hit": "Hit", "die": "Die",
+    "skill1_2": "Skill1", "skill1_2_loop": "Skill1_Loop", "skill2_2": "Skill2", "skill2_2_loop": "Skill2_Loop", "skill3_2": "Skill3",
+    "skill4": "Skill4", "skill6_2": "Skill6", "skill6_2_loop": "Skill6_Loop", **_HIT5, "win": "Win"}, bone="Bip001 Pelvis")}
+UNITS["김민준안경"]["variants"] = {"동작": _motion_variant({
+    "idle": "Idle", "move": "Move", "attack2_1": "Attack", "attack2_2": "Attack2", "attack2_3": "Attack3", "hit": "Hit", "die": "Die",
+    "skill1_2": "Skill1", "skill1_2_loop": "Skill1_Loop", "skill2_2": "Skill2", "skill2_2_loop": "Skill2_Loop", "skill3_2": "Skill3",
+    "skill4": "Skill4", "skill6_2": "Skill6", "skill6_2_loop": "Skill6_Loop", **_HIT5, "win": "Win"})}
+# 롤 계열(.anm 이름 그대로 든 glb). 피격 클립이 원본에 없다. 가렌 spell3(회전)은 방향 섞기용 다섯 장 중 정면(_0)만 낸다.
+UNITS["특별함_박민수"]["variants"] = {"동작": _motion_variant({f"garen_{k}.anm": v for k, v in {
+    "2013_idle1": "Idle", "2013_run": "Move", "2013_attack_01": "Attack", "2013_attack_02": "Attack2", "2013_crit": "Attack_Crit",
+    "2013_death": "Die", "2013_spell1": "Skill1", "base_spell3_0": "Skill3", "2013_spell4": "Skill4",
+    "2013_channelin": "Channel_In", "2013_channel": "Channel", "2013_idle2": "Idle2", "2013_idle3": "Idle3", "2013_idle_leadin": "Idle_LeadIn",
+    "2013_run_fast": "Move_Fast", "2013_run_haste": "Move_Haste", "2013_run_spell1": "Move_Spell1",
+    "2013_taunt": "Taunt", "2013_laugh": "Laugh", "2013_joke": "Joke", "2013_joke_loop": "Joke_Loop",
+    "2013_dance": "Dance", "2013_dance_loop": "Dance_Loop", "2013_recall": "Recall", "2013_recall_loop": "Recall_Loop",
+    "2013_recall_leadout": "Recall_Out", "2013_respawn": "Respawn"}.items()})}
+# 피즈: 서 있는 동작(idle1~6)도 1m씩 돌아다닌다 → Idle·Move까지 제자리로 묶는다.
+_FIZZ = {f"fizz_{k}.anm": v for k, v in {
+    "idle1": "Idle", "run": "Move", "attack1": "Attack", "attack2": "Attack2", "attack3": "Attack3", "crit": "Attack_Crit", "death": "Die",
+    "spell1": "Skill1", "spell3a": "Skill3", "spell3a_idle": "Skill3_Loop", "spell3b": "Skill3_EndB", "spell3c": "Skill3_EndC", "spell4": "Skill4",
+    "channel_windup": "Channel_In", "channel": "Channel", "idle2": "Idle2", "idle3": "Idle3", "idle4": "Idle4", "idle5": "Idle5", "idle6": "Idle6",
+    "taunt": "Taunt", "laugh": "Laugh", "joke": "Joke", "dance": "Dance"}.items()}
+UNITS["희귀함_조현규"]["variants"] = {"동작": _motion_variant(_FIZZ, pin_also=[v for v in _FIZZ.values() if v.startswith(("Idle", "Move")) and v != "Idle"])}
+# 바운티러시 pl_ 계열(combo_a·b·c = 평타 연속기 · skill_a·b · damage = 피격 · down = 쓰러짐(죽음 클립이 따로 없어 Die로) · down_end = 일어남)
+UNITS["특별함_박예원"]["variants"] = {"동작": _motion_variant(_pl("pl_sabo_stam01"))}
+UNITS["주영호"]["variants"] = {"동작": _motion_variant(_pl("pl_wapol_orig01"))}
+UNITS["왕승환"]["variants"] = {"동작": _motion_variant(_pl("pl_mb_marine01_musk01", skip=(
+    "skill_a", "skill_b", "idlehome_a", "opening", "victory", "victory_lp", "lose", "lose_lp", "flagget", "flagget_lp", "flagget_end")))}
+# 레이쥬: 원본에 전투 동작이 없다 — 서기 하나(Reiju_0000)와 컷신 몸짓 다섯(EV041_*)뿐. 공격·이동·피격·죽음 없음.
+UNITS["특별함_고우선"]["variants"] = {"동작": _motion_variant({
+    "Reiju_0000": "Idle", "EV041_Reiju_A_010": "Idle2", "EV041_Reiju_C_000": "Event_C", "EV041_Reiju_D_000": "Event_D",
+    "EV041_Reiju_E_000": "Event_E", "EV041_Reiju_F_000": "Event_F"}, lunge=False)}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 🔸 check_entries 「검사가 늦음」 따라잡기(2026-09-30 밤, PM 지시 — Docs/research/CHECK_ENTRIES_FAILURES.md 3-1).
+#   아래 표는 **커밋된 .fbx.meta의 humanDescription**에서 읽은 매핑(필수 15칸 → 실제 뼈 이름)이다. 산출물은 안 바뀐다 — 관문이 볼 뼈 이름만 알려 준다.
+_BIP_HUMANOID = {"Hips": "Bip001 Pelvis", "Spine": "Bip001 Spine", "Head": "Bip001 Head",
+                 **{f"{side}{part}": f"Bip001 {s} {bip}" for side, s in (("Left", "L"), ("Right", "R"))
+                    for part, bip in (("Arm", "UpperArm"), ("ForeArm", "Forearm"), ("Hand", "Hand"), ("UpLeg", "Thigh"), ("Leg", "Calf"), ("Foot", "Foot"))}}
+for _n in ("흔함_문필환", "특별함_이정범", "특별함_황정기"):
+    UNITS[_n]["humanoid_bones"] = _BIP_HUMANOID
+UNITS["안흔함_김수빈"]["humanoid_bones"] = {"Hips": "torso_498", "Spine": "spine_fk.003_493", "Head": "head_226", "LeftArm": "DEF-upper_arm.L_356", "LeftForeArm": "DEF-forearm.L_354", "LeftHand": "DEF-hand.L_352", "RightArm": "DEF-upper_arm.R_480", "RightForeArm": "DEF-forearm.R_478", "RightHand": "DEF-hand.R_476", "LeftUpLeg": "DEF-thigh.L_164", "LeftLeg": "DEF-shin.L_162", "LeftFoot": "DEF-foot.L_160", "RightUpLeg": "DEF-thigh.R_183", "RightLeg": "DEF-shin.R_181", "RightFoot": "DEF-foot.R_179"}
+UNITS["안흔함_박민수"]["humanoid_bones"] = {"Hips": "Hips", "Spine": "Spine", "Head": "Head", "LeftArm": "upper_arm.L_0167", "LeftForeArm": "forearm.L_0168", "LeftHand": "hand.L_0169", "RightArm": "upper_arm.R_0190", "RightForeArm": "forearm.R_0191", "RightHand": "hand.R_0192", "LeftUpLeg": "thigh.L_0214", "LeftLeg": "shin.L_0195", "LeftFoot": "foot.L_0216", "RightUpLeg": "thigh.R_0225", "RightLeg": "shin.R_0226", "RightFoot": "foot.R_0227"}
+UNITS["특별함_최상호"]["humanoid_bones"] = {"Hips": "Hips", "Spine": "Spine", "Head": "Head", "LeftArm": "LeftUpperArm", "LeftForeArm": "LeftLowerArm", "LeftHand": "LeftHand", "RightArm": "RightUpperArm", "RightForeArm": "RightLowerArm", "RightHand": "RightHand", "LeftUpLeg": "LeftUpperLeg", "LeftLeg": "LeftLowerLeg", "LeftFoot": "LeftFoot", "RightUpLeg": "RightUpperLeg", "RightLeg": "RightLowerLeg", "RightFoot": "RightFoot"}
+UNITS["희귀함_양재모"]["humanoid_bones"] = {"Spine": "mixamorig:Spine1"}   # meta가 Spine 칸에 Spine1을 매핑했다(mixamorig:Spine은 가중치 없는 중간 뼈)
+
+
+# 🔸 무기 살린 동작판(2026-09-30 밤, PM 지시): 기본 항목이 칼을 뺀 이유는 「결합 자세에서 발밑에 누워 있어서」였다(주석) —
+#   클립에서는 손(Bip001 Prop1 → rweapon)을 따라간다. 「이름@동작무기」 = 동작판에서 칼 메시·칼 뼈를 안 빼는 것만 다르다.
+for _n, _w, _img in (("초월_강주혁_AP", "bocun", 5), ("전설적인_이승우", "yin", 6)):
+    _v = dict(UNITS[_n]["variants"]["동작"])
+    _v["drop_meshes"] = ["Icosphere"]
+    _v["drop_bones"] = ["Bip001"]
+    _v["glb_images"] = {**UNITS[_n]["glb_images"], _img: f"{_w}_weapon_baseColor.png"}
+    _v["materials"] = dict(textures={**UNITS[_n]["materials"]["textures"], f"{_w}_weapon_0": [("DiffuseColor", f"{_w}_weapon_baseColor.png")]})
+    UNITS[_n]["variants"]["동작무기"] = _v
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 🔸 「그림 없는 재질」 따라잡기(2026-09-30 밤, PM 결정 — CHECK_ENTRIES_FAILURES.md 7절). 원본(glb/fbx)을 열어 그 재질이
+#   **원래 그림 없이 색만** 준 것임을 확인한 것만 solid_materials에 적는다(산출물은 안 바뀐다 — 관문이 단색을 인정할 뿐).
+for _n, _solid in {
+    "제한_임준성": ["MI_chr0400_simulation"],                                  # 원본 색 0.59 회색, 그림 없음
+    "희귀함_김정래": ["Skin", "hair"],                                          # 원본 .blend — 그림 없는 색 재질(살색·검정)
+    "희귀함_배병규": ["JotaroKujoPart3_LowerTeeth", "JotaroKujoPart3_Tongue", "JotaroKujoPart3_UpperTeeth"],   # 원본 흰색, 그림 없음(혀도 흰색이 원본)
+    "희귀함_박수찬": ["Glasses", "glass"],                                      # 원본 0.09 검정(glass는 알파 0.1)
+    "특별함_이병준": ["AvatarEyelashes"],                                       # 원본 검정
+    "특별함_박기찬": ["Mihawk_Beard", "Mihawk_Hair", "Mihawk_Plume"],            # 원본에 없는 재질 — 설정(BaseColor)으로 색을 준 것
+    "랜덤_야사카_카나코": ["Crystal.003"],                                       # 원본 색 재질(1.0, 0.57, 0.49)
+    "안흔함_상붕카": ["Material.001", "Material.002", "Material.003", "Material.004", "Material.005", "Material.010", "Material.012", "Material.013"],   # glb에 그림 0장 — 전부 색
+    "안흔함_강재규": ["dientes"],                                               # 이빨만 색. 🔴 Lengua·Ojos는 원본이 lengua.jpeg·ojos.jpeg를 가리키는데 그 파일이 원본 묶음에도 없다 — 실제 결함, 그대로 걸리게 둔다
+    "특별함_최상호": ["Pupil", "hair", "Sandals.001", "shock", "tongue", "material", "material_5", "Teeth", "Gum.001"],   # glb가 색만 준 아홉(material_colors로 되살린 것)
+    "희귀함_최상호_오타쿠의길": ["5_eyeshine_1.0_0_0.001", "5_eyewhite_1.0_0_0.001", "5_tongue_1.0_0_0.001"],   # 원본 흰색, 그림 없음(가중치 관문에 가려 있던 것)
+}.items():
+    UNITS[_n]["solid_materials"] = _solid
+# 탄지로 신발 둘: glb는 색(baseColorFactor)을 줬는데 옛 커밋본은 기본 회색 0.8 — 루피와 같은 증상. 09-30 밤 PM이 수정본을 Assets에 반영(끈 검붉게 확인) → 기본으로.
+UNITS["랜덤_카마도_탄지로"].update(
+    material_colors={"MI_P0001_V00_C00_0_Shoes": (0.281, 0.281, 0.281), "shoes_one": (0.139, 0.0044, 0.0)},
+    solid_materials=["MI_P0001_V00_C00_0_Shoes", "shoes_one"])
+
+
+# 🔸 우솝 새총 지팡이 두 판(2026-09-30 밤, PM 지시 — 사장님이 고르실 자료, Assets 밖). 기본(몸 옆에 세워 둠)은 그대로.
+#   실측(최종 공간): 지팡이 막대 x 0.92 · z 0.09~1.80(새총 갈래 z 1.4~1.8, x로 벌어짐) · 왼손 (0.63, 0.03, 1.41), 손바닥 아래로 · 등 y +0.27(머리털 뒤로 조금 묻힌다).
+UNITS["특별함_황정기"]["variants"] = {
+    # 손: 막대 가운데(z 0.85)를 왼손바닥 밑에, 막대를 앞뒤(−Y가 앞, 새총 쪽이 앞)로 눕힌다 — 팔을 내리면 창처럼 수평으로 든 모양.
+    "손": dict(prop_attach=dict(bone="Bone001", parent="Bip001 L Hand", pivot=(0.92, -0.01, 0.85), rot=("X", 90), to=(0.70, 0.02, 1.37))),
+    # 등: 가방 뒤에 25° 비스듬히(새총 쪽이 위·왼쪽 어깨 너머), Spine2에 붙인다.
+    "등": dict(prop_attach=dict(bone="Bone001", parent="Bip001 Spine2", pivot=(0.92, -0.01, 0.95), rot=("Y", 25), to=(0.0, 0.27, 1.10))),
+}
+
+
+# 🔸 황길라(알베도) 동작판(2026-10-01, Assets 밖 시범): 원본 클립 7개(attack·damage·dead·idle_00·idle_01·skill·spskill_00)를 테이크로. 날개·치마·리본·머리털 뼈는 **클립이 움직이므로 합치지 않고 남긴다**.
+#   도끼(j_axe)도 클립에서 손을 따라 움직이니 메시·뼈를 살려 Hips 밑으로(클립은 세계 행렬로 읽어 새 부모 기준으로 다시 굽는다). 원본에 **걷기·달리기가 없다** → Move 없음(공용 클립을 쓰거나 Idle을 대신).
+_alb = dict(UNITS["특수함_황길라"])
+UNITS["특수함_황길라"]["variants"] = {"동작": dict(
+    anim=True, anim_drop_ok=True, takes_only=True, drop_verts_of_bones=[],
+    take_names={"dvl_mdl_albedo_idle_00|Base Layer": "Idle", "dvl_mdl_albedo_idle_01|Base Layer": "Idle2", "dvl_mdl_albedo_attack|Base Layer": "Attack",
+                "dvl_mdl_albedo_damage|Base Layer": "Hit", "dvl_mdl_albedo_dead|Base Layer": "Die", "dvl_mdl_albedo_skill|Base Layer": "Skill1",
+                "dvl_mdl_albedo_spskill_00|Base Layer": "Skill2"},
+    clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
+    clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle", takes=["Attack", "Die", "Skill1", "Skill2", "Hit"]),
+    reparent_bones={"j_axe": "mixamorig:Hips"},
+    drop_bones=["scale", "root", "eff_skill_lbd_spskill_00_feather", "feather_00", "eff_skill_lbd_spskill_00_axe_aura",
+                "aura_00_purple", "aura_01_orange", "aura_01_orange_world", "aura_00_purple _world"],
+    merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                 dict(pattern=r"^j_(arm_twist|shoulder_cloth_0[0-2])_l$", into="mixamorig:LeftArm"), dict(pattern=r"^j_(arm_twist|shoulder_cloth_0[0-2])_r$", into="mixamorig:RightArm"),
+                 dict(pattern=r"^j_(forearm_twist|arm_frills)_l$", into="mixamorig:LeftForeArm"), dict(pattern=r"^j_(forearm_twist|arm_frills)_r$", into="mixamorig:RightForeArm"),
+                 dict(pattern=r"^j_breast_[lr]$", into="mixamorig:Spine1")])}
+
+
+# 🔸 BJ_율희(코퀴토스) 꼬리 판(2026-10-01, PM 지시): 꼬리 11마디가 뒤로 수평 막대처럼 굳는 게 어색 → 엉덩이에서 **뒤·아래로 휘어 끝이 땅 근처에서 말리는 곡선**으로 포즈를 잡아 그 자세를 쉬는 자세로 굽고 Hips에 합친다.
+#   세계 X축 기준 마디별 회전(머리 중심, 아래 마디가 따라감). 값은 마디 **증가분**(도) — 합이 휘는 각. 앞 7마디는 완만히 아래로, 뒤 4마디는 끝이 말리도록(반대로) 더 세게.
+_TAIL = {f"Tail{i}": ((1, 0, 0), d) for i, d in enumerate([-8, -9, -10, -10, -10, -11, -11, -11, -10, -4, 10], start=1)}
+UNITS["특수함_BJ_율희"]["pose_bones_world"] = _TAIL      # 2026-10-01 PM이 꼬리 곡선판을 Assets에 넣음(units 확인) → 기본으로 올림
+
+
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     out_dir, names, save_blend = None, [], False
@@ -6871,7 +7566,16 @@ def main():
         else:
             names.append(a)
     for name in names or list(UNITS):
-        r = fix(name, UNITS[name], out_dir, save_blend)
+        # 🔸 「이름@변형」(2026-09-30): 항목의 variants[변형]을 덮어쓴 설정으로 돈다. 시범 산출(--out으로 Assets 밖에)용 —
+        #   기본 항목은 **커밋된 FBX를 만든 설정 그대로** 두어야 check_entries가 참이다. 변형이 승인돼 Assets에 들어가면 그때 기본으로 올린다.
+        if "@" in name:
+            base, var = name.split("@", 1)
+            cfg = dict(UNITS[base])
+            cfg.update(cfg.pop("variants")[var])
+            name = base
+        else:
+            cfg = {k: v for k, v in UNITS[name].items() if k != "variants"}
+        r = fix(name, cfg, out_dir, save_blend)
         print("정리  " + "  ".join(f"{k} {v}" for k, v in r.items() if k != "출력"))
 
 

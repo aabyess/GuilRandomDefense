@@ -1,27 +1,24 @@
-랜덤_호시노_아이 (Hoshino Ai, 최애의 아이) 스킨 출처
+랜덤_호시노_아이 ← 「oshi-no-ko-arima-kana」(최애의 아이, Sketchfab) 스킨 출처 — 2026-09-30 교체(두 번째 판)
+
+🔴 모습은 아리마 카나다(빨간 단발 · 남색 베레모 · 남색 짧은 재킷 · 분홍 큰 리본 · 회색 주름치마 · 흰 양말).
+   사장님이 이 모델을 「호시노 아이」 자리에 지정하셨다(09-30). 첫 판(진짜 호시노 아이 모습, 최애의 아이 .blend)은
+   ~/Desktop/구랜디스킨모음/99_폐기_교체된원본/랜덤_호시노_아이_0930_최애의아이판.zip, 설정은 gen_rigify_skin.py RETIRED_SKINS["호시노_아이_최애의아이판"].
+   교체하면서 옛 FBX·.fbx.meta·Textures 6장(+.meta)을 먼저 지우고 새로 썼다(옛 .meta humanDescription 함정).
 
 원본: ~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_호시노_아이.zip
-  sha256: aa83b3fc25198d6df48ce16c3522de2c4c8a3016d7cca73bc09187076efe3cec
-  내용물: source/Sketchfab_2023_05_21_21_58_53.blend(텍스처 6장 팩) + textures/ 6장(Albedo 3 · LightRig 3)
+  sha256: d705875274a78c101524c94f72eda26600d6ee9599175a5ec16fca471d0a090d
+  안: source/cartoon5.fbx(3ds Max, 뼈 0) + textures/ re_1_color · re_2_color · re_3_color · re_5_color · re_6 · uv_4_color.png(1024², 16비트 RGB)
+라이선스: 🔴 미확인 — 사장님 Sketchfab 확인 대기.
 
-라이선스: ⚠️ 미확인 — zip에 license.txt가 없다. 사장님께 Sketchfab 페이지의 라이선스 확인 필요.
+빌드 스크립트: Tools/blender/gen_objrip_skin.py (SKINS["랜덤_호시노_아이"])
+  실행: blender -b --factory-startup --python Tools/blender/gen_objrip_skin.py -- 랜덤_호시노_아이
 
-빌드 스크립트: Tools/blender/gen_rigify_skin.py (SKINS["랜덤_호시노_아이"])
-  실행: blender -b --factory-startup --python Tools/blender/gen_rigify_skin.py -- 랜덤_호시노_아이
-
-처리 요약(2026-09-30, blender 세션):
-- 아마추어 AiRig 75뼈(자체 이름) → mixamorig 22뼈. hips·spine·chest·neck·head → Hips·Spine·Spine2·Neck·Head,
-  Spine1은 chest 머리의 0-길이 자리표시(가중치 없음이 정상 — bone_bind 21/22). 머리카락 10·눈 2 → Head,
-  치마 12 → Hips, 손가락 30 → 각 손. BaseRig(숨김·가중치 없음)는 안 씀. 무가중치 정점 0.
-- 마이크(Cylinder, 부모·가중치 없는 따로 메시): 소스는 리그를 포즈 잡은 채 저장했고 마이크는 그 포즈의 오른손에 있다.
-  쉬는 자세로 내보내면 허공에 뜨므로 hand.R의 「포즈→쉬는 자세」 변환을 걸어 손으로 옮긴 뒤 RightHand에 강체로 묶었다.
-  재질 3(Mic·Michandle·MicRing)은 원본 BSDF 색(거의 검정·링 회색)을 형체가 보이게 조금 밝힌 단색.
-  공격 클립에서 마이크가 얼굴 앞에 오는 것까지 렌더 확인. 손가락은 22뼈 규약상 펴진 채라 「쥐었다」기보다 손바닥에 붙어 있다.
-- 텍스처: 재질마다 Albedo(→발광색)와 LightRig(→Base Color)가 같이 물려 있다. LightRig는 흑백 명암 마스크
-  (빛 받는 곳=흰, 안 받는 곳=검 — 얼굴·피부·옷 일부는 검정으로 칠해 늘 밝게)라 색이 아니다. 색은 Albedo가 다 가져
-  Albedo만 쓴다(AiBody·hair·AiClothes.png, 1024/2048/2048). LightRig 3장은 버렸다.
-- 얼굴 모양 키 "Key 1"(363정점, 최대 0.049 원본 단위)이 1.0으로 켜진 채 — 소스가 보여 주는 얼굴 그대로 메시에 굽고 키 삭제.
-- Outline 재질 슬롯은 면 0 — 자동 제거. 감량 없음(30,638삼각형). 팔 A자 약 28° → 수평.
-- 재수입 검사: 최상위 Armature 하나 · 22뼈 · 키 1.8 · bbox 1.48×0.73×1.8 · 텍스처 6장 전부 내용 있음.
-  공용 idle·walk·attack 22뼈 리타겟, 뒷면 컬링 렌더에서 구멍 없음.
-- clip_spread 최대 0.98(기준 3.0) · bone_bind 21/22(Spine1 자리표시) · mesh_clash idle +2.7% · walk +2.8% · check_entries 통과.
+처리 요약(2026-09-30, Blender 세션):
+- 메시 19 중 13은 외곽선 껍데기(검정 무텍스처 재질 "Material #14", 본체를 부풀려 뒤집은 것)라 뺐다. 본체 6메시 → 한 메시 34,976삼각형.
+- 재질 6(원본 이름 "2"·"3"·"4"·"4.001"·"6"·"13 - Default" → kana_outfit·jacket·hair·face·ribbon·skin) · 텍스처 6(재질 이름으로 저장).
+  FBX가 없는 .psd를 가리켜 zip의 PNG로 다시 이었다. 텍스처에 알파 채널이 없다 → 알파 컷 대상 아님.
+- 리그 없음 → 관절 표 + bone heat. A자(팔 약 33°) → T자로 폄. 21뼈(Chest 계열 — Spine1 자리표시 없음).
+- 가중치 손본 곳 둘: 양말(발을 따라가던 것 → 정강이) · 재킷 앞섶·리본(몸 가운데를 Chest에, 소매 쪽으로 선형 섞음).
+  머리카락·베레모·얼굴은 Head에 통째 고정.
+- 재수입 검사: 21/21 · 무가중치 0 · clip_spread 최대 0.99 · mesh_clash idle +0.0%·walk +0.0%·attack +6.0%(손이 재킷 앞에 겹침 — 렌더 확인) ·
+  bone_bind ② 중앙 0.9%·③ 0.0% · 뒷면 컬링 켠 앞·뒤 렌더 구멍 없음 · check_entries 통과.

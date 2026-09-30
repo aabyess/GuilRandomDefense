@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_게이트_제한_최영민_33bd8aa4_B06B
+  m_EditorClassIdentifier:
+  skillName: '레베카 Rebeca_Skill_1 — 대상 B06B(PV 200 아님): 1/5'
+  description: '원작 레베카 h05I Rebeca_Skill_1의 갈래 — 대상 B06B(PV 200 아님): 1/5. 효과는 SkillData_게이트_제한_최영민_33bd8aa4와 같다. 2026-09-30 구현담당1(LIMITED_FILL_LIST X6).'
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 0.2
+    range: 450.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 1
+      attackType: 1
+      multiplier: 625000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 2187500.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+    requiredTargetBuffId: B06B
+    primaryTargetCondition: 4
+    primaryTargetConditionValue: 200.0

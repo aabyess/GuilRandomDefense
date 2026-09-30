@@ -1,0 +1,122 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작트리거_초월_조성진_AD_Usop_Attack_1of9
+  m_EditorClassIdentifier:
+  skillName: 우솝 — 1/9(600 범위 600000×1~1.5 + 대상 (450000 + 1500×PV)×1~1.5)
+  description: '원작 우솝 H09B Usop_Attack: GetRandomInt(1,9)==2 → 대상 중심 600 범위 600000×1~1.5 PIERCE/NORMAL + 대상 (450000 + 1500×PV)×1~1.5 NORMAL/UNIVERSAL. PV 항은 <200은 100(600000) · 200(750000) · ≥300(900000)으로 나눠 상수로. 2026-09-30 구현담당1.'
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 0.111111
+    range: 600.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 1
+      attackType: 2
+      multiplier: 600000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.5
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 600000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.5
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 1
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 750000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.5
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 2
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 900000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.5
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 3
+      targetConditionValue: 300.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0.0

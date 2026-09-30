@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_초월_박기찬_AD_b3948c74
   m_EditorClassIdentifier:
   skillName: 무적의 아이언 파이러츠 — 1/14
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 무적의 아이언 파이러츠(H08Y)의 게이트 "1/14" 능력 1개를 이 SkillData 하나로 묶었다.   · Franky_misiile_re#1: 계산식 180000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 무적의 아이언 파이러츠(H08Y)의 게이트 "1/14" 능력 1개를 이 SkillData 하나로 묶었다.   · Franky_misiile_re#1: 계산식 180000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. [초월 나머지 09-30] Franky_misiile_re는 스테이지 2·4에서 2회 — hitCount 1 → 2(2배 과소였다). 곁의 써니호 수만큼 늘어나는 것은 미반영. (Tools/apply_transcend_rest.py)'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -31,8 +31,8 @@ MonoBehaviour:
       multiplier: 180000.0
       bonus: 0.0
       chance: 1
-      hitCount: 1
-      duration: 0
+      hitCount: 2
+      duration: 0.2
       randMin: 1
       randMax: 1.5
       casterBuffCountFactor: 0

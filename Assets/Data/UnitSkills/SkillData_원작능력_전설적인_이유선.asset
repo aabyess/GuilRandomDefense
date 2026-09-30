@@ -12,24 +12,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_전설적인_이유선
   m_EditorClassIdentifier:
-  skillName: A0TW !그림자 흡수-루피 나메
-  description: 원작 전설적인 센고쿠 전 해군 원수 - 전설적인(Trig_Legend8). | 2차 배정(트리거·더미 채널): 원작 전설적인 센고쿠 전 해군 원수 - 전설적인(더미 경로 Trig_Legend8 → e00A(!전설 센고쿠 인의 더미) → A058). 정정(2026-09-06, GATE_FIX_14/c1adaea): 원작 Trig_Legend8 GetRandomInt(1,10)==3 AND 대상포인트값>199 확정 — 포인트값 조건(대상이 보스일 때만, 축 밖)은 버리고 확률만 반영. triggerChance 1.0(근사) → 0.10(1/10). 정정(2026-09-06, STOCK_FIELD_RESEARCH_RESULT.md/607351c, 라벨만 오배정 9건 중 하나): 위 A058 인용은 라벨이 잘못됐다 — A058(base Aroa/로어, 피해 필드 없음)에서 온 값이 아니라 이 465,000×2는 전부 Trig_Legend8 자신의 RRD(GATE_FIX_14에서 확정한 그 발동)에서 온 것이다. 값은 유지하고 출처 표기만 정정한다 — 능력ID만 잘못 붙었을 뿐 행 자체는 유효하다.
+  skillName: Legend8 충격파 — 1/10(500 범위 232500 + PV≥200 대상 465000×1~1.25)
+  description: '원작 전설적인 센고쿠 전 해군 원수 - 전설적인(Trig_Legend8). | 2차 배정(트리거·더미 채널): 원작 전설적인 센고쿠 전 해군 원수 - 전설적인(더미 경로 Trig_Legend8 → e00A(!전설 센고쿠 인의 더미) → A058). 정정(2026-09-06, GATE_FIX_14/c1adaea): 원작 Trig_Legend8 GetRandomInt(1,10)==3 AND 대상포인트값>199 확정 — 포인트값 조건(대상이 보스일 때만, 축 밖)은 버리고 확률만 반영. triggerChance 1.0(근사) → 0.10(1/10). 정정(2026-09-06, STOCK_FIELD_RESEARCH_RESULT.md/607351c, 라벨만 오배정 9건 중 하나): 위 A058 인용은 라벨이 잘못됐다 — A058(base Aroa/로어, 피해 필드 없음)에서 온 값이 아니라 이 465,000×2는 전부 Trig_Legend8 자신의 RRD(GATE_FIX_14에서 확정한 그 발동)에서 온 것이다. 값은 유지하고 출처 표기만 정정한다 — 능력ID만 잘못 붙었을 뿐 행 자체는 유효하다. [전설 남은 것 09-30] Legend8 충격파: 대상 중심 500 범위 232500 NORMAL/UNIVERSAL(UnitDamagePointLoc) + 대상 PV≥200이면 465000×1~1.25 HERO/NORMAL — 범위 232500이 없고 465000이 조건 없이 두 번(+ 값 1.0짜리 찌꺼기)이었다. (Tools/apply_legend_rest.py)'
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 0
+    range: 500.0
     effects:
     - kind: 0
       basis: 0
-      target: 3
-      damageType: 1
-      attackType: 4
-      multiplier: 465000.0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 232500.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     - kind: 0
       basis: 0
       target: 3
@@ -39,16 +51,16 @@ MonoBehaviour:
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
-      randMin: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
       randMax: 1.25
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 1.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 3
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0

@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작트리거_전설적인_최상호_Legend5_지진
+  m_EditorClassIdentifier:
+  skillName: 흰수염(전설) — 지진 1/9(600 범위 200000 · 이속 −30% 3초)
+  description: '원작 흰수염 h03B Legend5 GetRandomInt(1,9)==3: 천둥박수 A07G(ACt2, Ctc1 200000, aare 600, Ctc3 0.3, adur 3.0). 여진 −15%는 미반영. 2026-09-30 구현담당1.'
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 0.111111
+    range: 600.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 200000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 13
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.7
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 3.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 1.5
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0.0

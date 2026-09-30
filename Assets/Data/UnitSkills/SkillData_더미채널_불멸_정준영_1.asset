@@ -12,14 +12,59 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_더미채널_불멸_정준영_1
   m_EditorClassIdentifier:
-  skillName: SkillData_더미채널_불멸_정준영_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 불멸_정준영.  · Trig_Dragon_Attack → e02L(#불멸 드래곤스턴2) → A08V: 250000 정정(2026-09-06, CROSS_CHANNEL_DUPLICATE_SWEEP.md/65b7f96): Trig_Dragon_Attack → e02L → A08V를 제거했다 — 원작 발동 지점이 하나(Trig_Dragon_Attack)라 불멸_김용태(원작능력 루트 파일 보유)에 귀속. 79행 DPS 순위 배정이 독립적으로 같은 값을 또 배정한 중복이었다.
+  skillName: Dragon_Attack 1/10 — stomp A08V(525 범위 250000·스턴)
+  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 불멸_정준영.  · Trig_Dragon_Attack → e02L(#불멸 드래곤스턴2) → A08V: 250000 정정(2026-09-06, CROSS_CHANNEL_DUPLICATE_SWEEP.md/65b7f96): Trig_Dragon_Attack → e02L → A08V를 제거했다 — 원작 발동 지점이 하나(Trig_Dragon_Attack)라 불멸_김용태(원작능력 루트 파일 보유)에 귀속. 79행 DPS 순위 배정이 독립적으로 같은 값을 또 배정한 중복이었다. [불멸 블록 09-30] B17: 비어 있던 효과를 채움 — 시전자 주인 더미 e02L의 stomp A08V(AOws, Wrs1 250000, aare 525, adur 빈칸 = 스톡 3.0 · ahdu 0.45). 삭풍 h08H 소환체는 미반영. (Tools/apply_immortal_blocks.py)'
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 0
+    range: 525.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    effects: []
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 250000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 3.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 0.45

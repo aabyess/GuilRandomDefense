@@ -1,0 +1,180 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using UnityEditor;
+using UnityEngine;
+
+// 영원한 채우기 B·C 실측(2026-09-30) — 핸콕 1/14 stomp(영원_김영원)와 비비 더블샷·3연사(영원_문필환).
+// 유닛마다 떨어진 자리에 죽지 않는 표적 셋. 스킬별 시전 수·간격(SkillTelemetry.CastLog)과 표적이 실제로 스턴에 걸린 시간을 낸다.
+// ⚠️ 탐침 주의(09-30): ① 표적 체력 ×1e6에선 float 눈금이 1024쯤 — 작은 시험 피해는 눈금에 묻힌다 ② 데스카운트를 안 끄면
+//    게임 시간 50초쯤에 판이 끝나 유닛이 사라진다 ③ %최대체력 스킬은 표적을 금방 죽인다 → 죽으면 다시 세운다(Sample).
+// gameshot:
+//   gameshot x.png 1 1920x1080 click?:보통 wait:2 call:EternalFillProbe.Arena wait:90 call:EternalFillProbe.Report
+static class EternalFillProbe
+{
+    static string[] Units = Eternal;
+    static readonly string[] Eternal = { "영원_문필환", "영원_김영원", "영원_최상호", "영원_조세민", "영원_김정래" };
+    // 불멸 채우기(2026-09-30) — call:EternalFillProbe.ArenaImmortal. 오라는 Report의 「공격력·주기·표적 방어·이감」 줄로 본다
+    // (센고쿠 A062는 맵 전체라 나머지 일곱의 공격력에 +11%가 같이 실린다).
+    static readonly string[] Immortal = { "불멸_정윤식", "불멸_고도현", "불멸_이승우", "불멸_이이삭", "불멸_신지우", "불멸_박은석", "불멸_김용태", "불멸_정준영" };
+    static readonly Dictionary<string, UnitAttacker> attackers = new Dictionary<string, UnitAttacker>();
+
+    static string ArenaImmortal() { Units = Immortal; return Arena(); }
+    // 보스 스턴 단축 축(2026-09-30) — 「영구 스턴」 여섯을 일반 적(R21)과 저항 피부 보스(R60, PV 200)에 각각.
+    // Report의 「스턴 가동률」 = 표적이 스턴으로 멈춰 있던 시간 ÷ 판 시간(표적 셋 중 최대 = 주 대상).
+    static string dummyOverride;
+    static readonly string[] StunSix = { "초월_황준석_ADAP", "제한_최영민", "불멸_정준영", "불멸_신지우", "불멸_고도현", "초월_조성진_AD" };
+    static string ArenaStunSix() { Units = StunSix; return Arena(); }
+    static string ArenaStunSixBoss() { Units = StunSix; dummyOverride = "Enemy_R60_정윤식"; return Arena(); }
+    // 작은 축 다섯(2026-09-30) — 스킬 단위 대상 조건은 일반 적(「대상조건」으로 빠짐)과 PV 200 보스(발동) 둘로 본다.
+    static readonly string[] Axes = { "초월_김만경_AD", "전설적인_진연서", "초월_조성진_AD", "제한_최영민", "히든_호치킨",
+                                      "희귀함_박은석", "희귀함_이승우", "특별함_최준우", "전설적인_임채민", "초월_구주호_AD" };
+    // 시한 이감의 영웅 지속(저항 피부 표적엔 ahdu) — Report의 「표적 이감」 = 이감이 걸려 있던 구간 길이.
+    static readonly string[] SlowSix = { "불멸_고도현", "제한_최영민", "초월_구주호_AD", "초월_신문철_AP", "전설적인_최상호", "초월_두유찬_AD" };
+    static string ArenaSlowSix() { Units = SlowSix; return Arena(); }
+    static string ArenaSlowSixBoss() { Units = SlowSix; dummyOverride = "Enemy_R60_정윤식"; return Arena(); }
+    static string ArenaAxes() { Units = Axes; return Arena(); }
+    static string ArenaAxesBoss() { Units = Axes; dummyOverride = "Enemy_R60_정윤식"; return Arena(); }
+    // 초월·제한 큰 어긋남 정정(2026-09-30) — call:EternalFillProbe.ArenaTranscend. 황준석의 맵 전체 오라(방어 −8 · 이속 −5%)가 모든 표적에 실린다.
+    static readonly string[] Transcend = { "초월_두유찬_AD", "초월_양재모_AD", "초월_신문철_AP", "초월_최상호_AP", "초월_황준석_ADAP", "초월_구주호_AD",
+                                           "제한_강보명", "제한_김민규", "제한_이충민", "제한_박성호" };
+    static string ArenaTranscend() { Units = Transcend; return Arena(); }
+    // 히든·전설·희귀·특별 정정(2026-09-30) — call:EternalFillProbe.ArenaLower.
+    static readonly string[] Lower = { "히든_최윤서", "히든_황정기", "전설적인_신지우", "전설적인_이현주", "전설적인_임건웅", "전설적인_홍인창", "전설적인_박성호",
+                                       "전설적인_이재윤", "희귀함_서민성", "희귀함_엄태웅", "희귀함_조현규", "특별함_조도연" };
+    static string ArenaLower() { Units = Lower; return Arena(); }
+    // 중복 점검·랜덤 🔴·초월 묶음 A(2026-09-30) — call:EternalFillProbe.ArenaRest.
+    static readonly string[] Rest = { "랜덤_야사카_카나코", "랜덤_카마도_탄지로", "초월_강주혁_AP", "초월_노태현_AP", "초월_박민수_AD", "초월_임채민_AP", "초월_조성진_AD",
+                                      "초월_김민준_AP", "초월_유재헌_ADAP", "초월_임장혁_AD", "초월_이태훈_AP", "초월_박기찬_AD", "초월_김만경_AD" };
+    static string ArenaRest() { Units = Rest; return Arena(); }
+    // uabi 상시 능력 58건·전설 남은 셋·초월 게이지(2026-09-30) — call:EternalFillProbe.ArenaPassives.
+    static readonly string[] Passives = { "초월_강재규_AP", "초월_최상호_AD", "초월_조성진_AD", "초월_박민수_AD", "초월_배성령_AD", "초월_노태현_AP", "초월_강주혁_AP",
+                                          "영원_이지원", "제한_김강민", "랜덤_이민형", "전설적인_임채현", "전설적인_임채민", "전설적인_이유선", "변화됨_박은석" };
+    static string ArenaPassives() { Units = Passives; return Arena(); }
+    // 제한 나머지(2026-09-30) — call:EternalFillProbe.ArenaLimited.
+    static readonly string[] Limited = { "제한_강보명", "제한_최영민", "제한_전법규", "제한_이충민", "제한_이유범", "제한_임준성", "제한_김민규", "제한_박성호", "제한_김강민" };
+    static string ArenaLimited() { Units = Limited; return Arena(); }
+    // 랜덤 나머지(2026-09-30) — call:EternalFillProbe.ArenaRandom.
+    static readonly string[] RandomOnly = { "랜덤_이타도리_유지", "랜덤_이즈미_신이치", "랜덤_호시노_아이", "랜덤_이민형", "랜덤_카마도_탄지로", "랜덤_한마_바키", "랜덤_주호페이크", "랜덤_미도리야_이즈쿠", "랜덤_손오공" };
+    static string ArenaRandom() { Units = RandomOnly; return Arena(); }
+    // 초월 남은 것(2026-09-30) — call:EternalFillProbe.ArenaTranscend2.
+    static readonly string[] Transcend2 = { "초월_김경현_AP", "초월_황준석_ADAP", "초월_구주호_AD", "영원_이지원", "초월_김만경_AD", "초월_조성진_AD", "초월_임채민_AP" };
+    static string ArenaTranscend2() { Units = Transcend2; return Arena(); }
+    // 전설·희귀·특별 범위화(2026-09-30) — call:EternalFillProbe.ArenaRanges.
+    static readonly string[] Ranges = { "전설적인_이승우", "전설적인_정준영", "전설적인_박민수", "전설적인_최상호", "전설적인_백기현", "전설적인_신문철", "전설적인_진연서", "전설적인_이일중",
+                                        "희귀함_이용민", "희귀함_이재윤", "희귀함_윤현모", "희귀함_유재헌", "희귀함_박수찬", "희귀함_정내연", "특별함_최상호" };
+    static string ArenaRanges() { Units = Ranges; return Arena(); }
+
+    class Track { public Vector3 at; public string unit; public float stunStart = -1f; public readonly List<float> stuns = new List<float>(); public float slowStart = -1f; public readonly List<float> slows = new List<float>(); }
+    static readonly Dictionary<EnemyDummy, Track> tracks = new Dictionary<EnemyDummy, Track>();
+    static readonly List<UnitData> fielded = new List<UnitData>();
+    static float startTime;
+
+    static string Arena()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        UnitSpawner spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        dummyData = dummyOverride != null
+            ? AssetDatabase.LoadAssetAtPath<EnemyData>($"Assets/Data/Enemies/{dummyOverride}.asset")
+            : AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/Data/Enemies" })
+                .Select(g => AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(g)))
+                .FirstOrDefault(e => e != null && !e.isBoss && e.prefab != null && e.moveSpeed > 0f && e.name.Contains("R2"));
+        dummyOverride = null;
+        if (spawner == null || lane == null || dummyData == null) return "❌ UnitSpawner·레인·표적 적 없음";
+        tracks.Clear(); fielded.Clear(); attackers.Clear();
+        SkillTelemetry.Reset();
+        SkillTelemetry.Enabled = true;
+        for (int u = 0; u < Units.Length; u++)
+        {
+            UnitData data = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{Units[u]}.asset");
+            if (data == null) continue;
+            Vector3 home = lane.LaneCenter + Quaternion.Euler(0f, u * 360f / Units.Length, 0f) * Vector3.forward * 2000f;
+            for (int i = 0; i < 3; i++)
+            {
+                Vector3 at = home + Quaternion.Euler(0f, i * 120f, 0f) * Vector3.forward * 4f;
+                EnemyDummy dummy = SpawnTarget(at);
+                if (dummy != null) tracks[dummy] = new Track { unit = Units[u], at = at };
+            }
+            GameObject unit = spawner.Spawn(data, home, 0);
+            if (unit != null) { fielded.Add(data); if (unit.TryGetComponent(out UnitAttacker attacker)) attackers[Units[u]] = attacker; }
+        }
+        // 탐침은 레인 적을 안 막는다 — 데스카운트로 판이 끝나면 유닛이 사라져 평타가 멎는다(첫 판에서 50초쯤에 멎음).
+        RoundManager rm = Object.FindFirstObjectByType<RoundManager>();
+        typeof(RoundManager).GetField("deathCountEnabled", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.SetValue(rm, false);
+        startTime = Time.time;
+        EditorApplication.update -= Sample;
+        EditorApplication.update += Sample;
+        Time.timeScale = 2f;
+        return $"유닛 {fielded.Count}/{Units.Length} · 표적 {dummyData.name}(PV {dummyData.pointValue} · 저항 피부 {dummyData.resistantSkin}) · 2배속";
+    }
+
+    static EnemyData dummyData;
+    static EnemyDummy SpawnTarget(Vector3 at)
+    {
+        GameObject go = Object.Instantiate(dummyData.prefab, at, Quaternion.identity);
+        if (go.TryGetComponent(out WaypointMover mover)) mover.enabled = false;
+        if (!go.TryGetComponent(out EnemyDummy dummy)) return null;
+        dummy.Initialize(dummyData, 1e6f);
+        dummy.SetLane(-1);
+        return dummy;
+    }
+
+    static void Sample()
+    {
+        if (!Application.isPlaying) { EditorApplication.update -= Sample; return; }
+        foreach (var kv in tracks.ToList())
+        {
+            if (kv.Key == null || kv.Key.IsDead)
+            {
+                tracks.Remove(kv.Key);
+                EnemyDummy fresh = SpawnTarget(kv.Value.at);
+                if (fresh != null) { kv.Value.stunStart = -1f; kv.Value.slowStart = -1f; tracks[fresh] = kv.Value; }
+                continue;
+            }
+            Track t = kv.Value;
+            bool stunned = kv.Key.IsStunned;
+            if (stunned && t.stunStart < 0f) t.stunStart = Time.time;
+            else if (!stunned && t.stunStart >= 0f) { t.stuns.Add(Time.time - t.stunStart); t.stunStart = -1f; }
+            bool slowed = kv.Key.EffectiveSlowMultiplier < 0.999f;
+            if (slowed && t.slowStart < 0f) t.slowStart = Time.time;
+            else if (!slowed && t.slowStart >= 0f) { t.slows.Add(Time.time - t.slowStart); t.slowStart = -1f; }
+        }
+    }
+
+    static string Report()
+    {
+        EditorApplication.update -= Sample;
+        Time.timeScale = 1f;
+        float elapsed = Time.time - startTime;
+        var sb = new StringBuilder($"\n게임 시간 {elapsed:0.0}초\n" + SkillTelemetry.Report(fielded));
+        foreach (UnitData u in fielded)
+            foreach (var g in SkillTelemetry.CastLog.Where(e => e.unit == u).GroupBy(e => e.skill))
+            {
+                List<float> times = g.Select(e => e.time).ToList();
+                string gap = times.Count > 1 ? $" · 간격 평균 {(times[times.Count - 1] - times[0]) / (times.Count - 1):0.00}초" : "";
+                sb.Append($"\n{u.name} 「{(g.Key.Length > 40 ? g.Key.Substring(0, 40) : g.Key)}」 시전 {times.Count} · 판정 {SkillTelemetry.HitsOf(u)}타 중 {(float)times.Count / Mathf.Max(1, SkillTelemetry.HitsOf(u)):P1}{gap}");
+            }
+        foreach (var kv in attackers)
+        {
+            if (kv.Value == null) continue;
+            EnemyDummy near = tracks.Where(t => t.Value.unit == kv.Key && t.Key != null).Select(t => t.Key).FirstOrDefault();
+            sb.Append($"\n{kv.Key} 공격력 {kv.Value.AttackDamage:0} · 주기 {kv.Value.AttackInterval:0.000}"
+                      + (near != null ? $" · 표적 방어 {near.EffectiveArmor:0.0}(에셋 {dummyData.armor}) · 이감 {near.EffectiveSlowMultiplier:0.00}" : ""));
+        }
+        foreach (var g in tracks.Values.GroupBy(t => t.unit))
+        {
+            List<float> stuns = g.SelectMany(t => t.stuns).OrderBy(x => x).ToList();
+            sb.Append($"\n{g.Key} 표적 스턴 {stuns.Count}회" + (stuns.Count > 0 ? $" (최소 {stuns[0]:0.00} · 중앙 {stuns[stuns.Count / 2]:0.00} · 최대 {stuns[stuns.Count - 1]:0.00}초) 전부: {string.Join(" ", stuns.Select(x => x.ToString("0.00")))}" : ""));
+            // 표적별 — 평타 대상이 아닌 표적이 걸린 스턴은 무작위 대상(RandomEnemyInRange) 효과만 낼 수 있다(비비 더블샷 둘째 발).
+            sb.Append($" · 표적별 {string.Join("/", g.Select(t => t.stuns.Count + (t.stunStart >= 0f ? 1 : 0)))}");
+            float uptime = g.Max(t => (t.stuns.Sum() + (t.stunStart >= 0f ? Time.time - t.stunStart : 0f)) / Mathf.Max(0.01f, elapsed));
+            sb.Append($" · 스턴 가동률 {uptime:P0}");
+            List<float> slows = g.SelectMany(t => t.slows).OrderBy(x => x).ToList();
+            if (slows.Count > 0 || g.Any(t => t.slowStart >= 0f))
+                sb.Append($"\n{g.Key} 표적 이감 {slows.Count}구간" + (slows.Count > 0 ? $" (최소 {slows[0]:0.00} · 중앙 {slows[slows.Count / 2]:0.00} · 최대 {slows[slows.Count - 1]:0.00}초)" : "")
+                          + $" · 이감 가동률 {g.Max(t => (t.slows.Sum() + (t.slowStart >= 0f ? Time.time - t.slowStart : 0f)) / Mathf.Max(0.01f, elapsed)):P0}");
+        }
+        return sb.ToString();
+    }
+}

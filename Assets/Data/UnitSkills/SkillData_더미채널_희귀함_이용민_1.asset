@@ -13,19 +13,19 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_희귀함_이용민_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_희귀함_이용민_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 희귀함_이용민.  · Trig_Unique27 → e0BZ(U희귀함 바제스 더미) → A0K2: 12000
+  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 희귀함_이용민.  · Trig_Unique27 → e0BZ(U희귀함 바제스 더미) → A0K2: 12000 [범위화 09-30] 바제스 stomp A0K2는 500 범위 12000·스턴 0.9초 — 단일이었다. (Tools/apply_rare_special_ranges.py)'
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 0
+    range: 500.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
     effects:
     - kind: 0
       basis: 0
-      target: 3
+      target: 2
       damageType: 1
       attackType: 3
       multiplier: 12000.0
@@ -36,7 +36,7 @@ MonoBehaviour:
       casterBuffCountFactor: 0
     - kind: 1
       basis: 0
-      target: 3
+      target: 2
       damageType: 0
       attackType: 0
       multiplier: 0.0
@@ -44,3 +44,4 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0.9
+      heroDuration: 0.13

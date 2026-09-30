@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: SkillData_게이트_초월_배성령_AD_SandiAttack_Upgrade_1of18
   m_EditorClassIdentifier:
   skillName: 정열의 요리사 — (1/6 실패 뒤) 1/18
-  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_SandiAttack_Upgrade(HashAttack H09G) `if 1/6 → Sandi_skill_1 elseif GetRandomInt(1,18)==5` → 더미 e044 thunderclap A0MJ(Htc1 850000·aare 500·adur 3.5, Htc3 빈칸=기반 기본값 미확인이라 이감 뺌) + PV<200이면 주 대상 LIFE×0.10×(0.2+0.05×A11S)(SIEGE/UNIVERSAL→AP) + 주 대상 450000×rand1~2(MAGIC/UNIVERSAL). elseif라 확률은 (5/6)×(1/18)=5/108로 넣었다 — 1/6 에셋(게이트_초월_배성령_AD_18aa2343)과의 배타는 근사(따로 굴림). 천둥강타 피해 타입은 원작006_H096과 같이 AD/Unassigned.'
+  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_SandiAttack_Upgrade(HashAttack H09G) `if 1/6 → Sandi_skill_1 elseif GetRandomInt(1,18)==5` → 더미 e044 thunderclap A0MJ(Htc1 850000·aare 500·adur 3.5, Htc3 빈칸=기반 기본값 미확인이라 이감 뺌) + PV<200이면 주 대상 LIFE×0.10×(0.2+0.05×A11S)(SIEGE/UNIVERSAL→AP) + 주 대상 450000×rand1~2(MAGIC/UNIVERSAL). elseif라 확률은 (5/6)×(1/18)=5/108로 넣었다 — 1/6 에셋(게이트_초월_배성령_AD_18aa2343)과의 배타는 근사(따로 굴림). 천둥강타 피해 타입은 원작006_H096과 같이 AD/Unassigned. [배타 09-30] 배타 묶음 1의 뒤 스킬 — SandiAttack_Upgrade: if (1,6)==6 → Sandi_skill_1 elseif (1,18)==5 thunderclap(Tools/apply_exclusive_groups.py)'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.046296296296296294
+    triggerChance: 0.055556
     range: 500.0
     hitCountThreshold: 0
     resetTo: 0
@@ -91,3 +91,4 @@ MonoBehaviour:
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
+    exclusiveGroup: 1

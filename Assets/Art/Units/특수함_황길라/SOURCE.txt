@@ -1,0 +1,18 @@
+특수함_황길라 — 스킨 출처 (초안, 2026-10-01 Blender 세션)
+
+원본 묶음: 사장님이 준 albedo.zip → 구랜디스킨모음/13_특수함/특수함_황길라.zip
+  sha256 6f523b50e611feeea2ab2dae5f78a776244c0fab6ec1610612890db3e421ce59 (6,934,787 바이트)
+  안: textures/tex_dvl_mdl_albedo_alb_cnv.png(색) · tex_dvl_mdl_albedo_nor.png(노멀) + source/Albedo.zip(5,403,509)
+  그 안: Albedo/scale.fbx (FBX, 13.6MB, sha256 81e1aff303daba17…) + 같은 이름 그림 + tex_dvl_mdl_albedo_met.png(금속)·emi.png(발광)·ggx_lut.png — 금속·발광·lut는 안 썼다.
+캐릭터: 오버로드 — 알베도(날개·뿔·긴 드레스·도끼). 게임 추출 모델(dvl_mdl_albedo).
+작성자·라이선스 메타: **없다**(zip·FBX 어디에도 없음). 출처 URL 모름.
+같은 원본 대조: 구랜디스킨모음 안 같은 크기·sha256 파일 없음.
+
+원본 고유 동작: **있다 — 7개**(25fps): idle_00(152f) · idle_01(152f) · attack(77f) · damage(52f) · dead(85f) · skill(85f) · spskill_00(152f). **걷기·달리기는 없다.**
+  → 동작판(variants["동작"])을 ~/GRD_motion_trial/신규_특수함_황길라_동작/ 에 따로 뽑았다(Idle·Idle2·Attack·Hit·Die·Skill1·Skill2, 날개·치마·머리털·리본 뼈를 남겨 클립이 움직이게, 도끼도 손을 따라 움직이도록 살림).
+
+기본판 산출: 특수함_황길라.fbx — 뼈 51 · 정점 13,431(도끼 1,174정점 제외) · 재질 2(몸·눈) · 키 1.8m(뿔 포함) · 정면 −Y.
+  합침: 팔 트위스트·프릴·어깨 천 → 팔/아래팔 · 가슴 → Spine1 · 날개 34·리본 → Hips · 치마(허벅지 밑 → UpLeg, 무릎 밑 → Leg) · Head 밑(얼굴·머리털·턱) → Head. 스킬 이펙트 뼈(가중치 0)·scale·root는 삭제.
+  🔸 도끼(j_axe)는 뿌리 뼈에 따로 매달려 몸 옆에 세워 둔 모습이라 기본판은 정점째 뺐다.
+  🔴 날개는 기본판에선 굳어 있다(Hips에 합침) — 날개가 움직이는 건 동작판뿐.
+  검증: 필수 15뼈 가중치 OK · bind OK · clip_spread 0.99(기준 3.0) · 공용 clip 렌더 정상(날개·드레스 자락이 몸을 따라감).

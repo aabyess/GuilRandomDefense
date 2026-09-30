@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작017_H095
   m_EditorClassIdentifier:
   skillName: A0HG !유성화산-아카초
-  description: '06번① 순위배정(2차, 초월함 등급 정정) — 원작 신 해군원수(H095), #017, 능력 A0HG(!유성화산-아카초). 스킬승급형: 레벨1→2로 ''!유성화산-아카초''의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. upro(실제 이름): 아카이누. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). | 2026-09-30 채움(구현담당2, SKILL_FILL_STAGE2_seven.md §3 · 원문 재확인): Trig_Akainu_Attack — 마나==135면 0으로 되돌리고 Akainu_01, 아니면 마나+1(w3u H095 umpm=135) → OnHitCount·Mana·threshold 135·resetTo 0. (원작 주기는 136타. 136으로 두면 같은 유닛 회수_초월_김만경_AD_0ac0451e(135)가 공유 카운터를 먼저 0으로 돌려 이 스킬이 영영 안 나가므로 관례대로 135.) Akainu_01 Stage4: 유성 수 = 5+A0HG레벨(integerB<5+Lv) → Lv1 6개·Lv2 7개(툴팁 7/8은 하나 많다). 각 유성은 locationB = PolarProjection(대상 위치, GetRandomReal(-700,700), 무작위 방향)에 떨어지고 1초 뒤 Akainu_01_Shoot가 UnitDamagePointLoc(465, 1000000, NORMAL, UNIVERSAL) → AP(2)/Spells(7)·range 465. 낙하 거리가 0~700 균등이라 처음 맞은 적이 한 유성 범위에 들 확률은 465/700≈0.664 — hitCount는 유성 수 그대로 두고 multiplier를 1,000,000×465/700=664286로 근사했다(대상 한 명 기준 기댓값). A0HG는 원작 4레벨(유성 6~9)인데 우리 레벨은 2개뿐. 보스 예외(공격자 체력==60 AND 대상 PointValue==200이면 건너뜀)는 대응 상태가 없어 뺐다.'
+  description: '06번① 순위배정(2차, 초월함 등급 정정) — 원작 신 해군원수(H095), #017, 능력 A0HG(!유성화산-아카초). 스킬승급형: 레벨1→2로 ''!유성화산-아카초''의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. upro(실제 이름): 아카이누. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). | 2026-09-30 채움(구현담당2, SKILL_FILL_STAGE2_seven.md §3 · 원문 재확인): Trig_Akainu_Attack — 마나==135면 0으로 되돌리고 Akainu_01, 아니면 마나+1(w3u H095 umpm=135) → OnHitCount·Mana·threshold 135·resetTo 0. (원작 주기는 136타. 136으로 두면 같은 유닛 회수_초월_김만경_AD_0ac0451e(135)가 공유 카운터를 먼저 0으로 돌려 이 스킬이 영영 안 나가므로 관례대로 135.) Akainu_01 Stage4: 유성 수 = 5+A0HG레벨(integerB<5+Lv) → Lv1 6개·Lv2 7개(툴팁 7/8은 하나 많다). 각 유성은 locationB = PolarProjection(대상 위치, GetRandomReal(-700,700), 무작위 방향)에 떨어지고 1초 뒤 Akainu_01_Shoot가 UnitDamagePointLoc(465, 1000000, NORMAL, UNIVERSAL) → AP(2)/Spells(7)·range 465. 낙하 거리가 0~700 균등이라 처음 맞은 적이 한 유성 범위에 들 확률은 465/700≈0.664 — hitCount는 유성 수 그대로 두고 multiplier를 1,000,000×465/700=664286로 근사했다(대상 한 명 기준 기댓값). A0HG는 원작 4레벨(유성 6~9)인데 우리 레벨은 2개뿐. 보스 예외(공격자 체력==60 AND 대상 PointValue==200이면 건너뜀)는 대응 상태가 없어 뺐다. [지대 09-30] 지대: L0 e04F×6(A09L 150000/0.20초·반경 700·수명 1.595초 = 7틱, 지대당 1,050,000) / L1 e04F×7(A09L 150000/0.20초·반경 700·수명 1.595초 = 7틱, 지대당 1,050,000) — Akainu_01_Shoot: 유성(5 + A0HG 레벨)마다 낙하점에 e04F — 낙하점이 대상에서 ±700 안이고 지대 반경이 700이라 대상은 전부에 든다(Tools/apply_damage_zones.py)'
   triggerType: 3
   levels:
   - cooldown: 0
@@ -46,6 +46,35 @@ MonoBehaviour:
       targetCondition: 0
       targetConditionValue: 0
       cascadeGroup: 0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 150000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 6
+      duration: 1.595
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 1
+      triggerDamageAbove: 0.0
+      heroDuration: 0.0
+      maxTargets: 0
+      chainDamageStep: 0.0
+      zoneTickInterval: 0.2
+      zoneRadius: 700.0
+      zoneSpacing: 0
+      zoneAtCaster: 0
     requiredTargetBuffId:
     forbiddenTargetBuffId:
     hitCountFloor: 0
@@ -80,6 +109,35 @@ MonoBehaviour:
       targetCondition: 0
       targetConditionValue: 0
       cascadeGroup: 0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 150000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 7
+      duration: 1.595
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 1
+      triggerDamageAbove: 0.0
+      heroDuration: 0.0
+      maxTargets: 0
+      chainDamageStep: 0.0
+      zoneTickInterval: 0.2
+      zoneRadius: 700.0
+      zoneSpacing: 0
+      zoneAtCaster: 0
     requiredTargetBuffId:
     forbiddenTargetBuffId:
     hitCountFloor: 0

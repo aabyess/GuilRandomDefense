@@ -521,4 +521,48 @@ public class UnitData : ScriptableObject
     // 한 로스터에 원작 마나 유닛이 둘이라 둘째를 Life 카운터로 세어 둔 경우(영원_최상호 미호크)의 재생·상한(게이지 칸 단위).
     public float lifeGaugeRegenPerSecond;
     public float lifeGaugeMax;
+
+    // ⚠️ 맨 뒤(2026-09-30 구현담당1, PM 승인) — 게이지 시작값과 체력 게이지의 타당 증가. 전부 기본(0/false)이면 지금 동작 그대로.
+    // manaGaugeStart: 원작 umpi(시작 마나) × manaGaugePerMana(게이지 칸). 0이면 스킬의 resetTo에서 시작.
+    //   예: h02V(전설적인_정준영) umpi 50 = 최대 → 첫 평타에 바로 시전.
+    // lifeGaugeStart: 원작 유닛은 체력 가득으로 생긴다 → 「체력==최대」 검사가 첫 평타에 참. 소환 트리거가 체력을 따로
+    //   내리는 유닛(카이도 h07M → 1)은 0(= resetTo)으로 둔다. Tools/sync_mana_regen_from_w3u.py가 원문을 보고 채운다.
+    // lifeGaugeCustomHitGain이 켜지면 평타당 체력 게이지 증가를 +1 대신 lifeGaugeHitGain(0~1, 확률로 +1)로 —
+    //   네코마무시 h09Z는 평타 +1이 없어 0(재생으로만 참), 카타쿠리 h07I는 1/7 굴림의 else에서만 +1.
+    public float manaGaugeStart;
+    public float lifeGaugeStart;
+    public bool lifeGaugeCustomHitGain;
+    public float lifeGaugeHitGain;
+
+    // ⚠️ 맨 뒤(2026-09-30 구현담당1, PM 결정) — 원작 마나 재생 오라(AIba 브릴리언스 오라 기반, Hab1 = 초당 마나).
+    // 이 유닛 주변(manaAuraRange, 원작 단위 — 거리 비교는 ÷ WorldScale.Value)의 **같은 주인** 유닛의 마나 게이지 재생에 더해진다.
+    // 값은 Tools/sync_mana_regen_from_w3u.py가 uabi → w3a에서 채운다. 0이면 오라 없음(지금 동작).
+    // · manaAuraBuffId(원작 abuf): 같은 버프 ID끼리는 최댓값만, 다른 버프 ID는 합 — 엔진 지식(같은 버프 비중첩), 맵 미확정.
+    //   맵 안 정황: 능력마다 버프를 따로 주고 같은 캐릭터 계열(징베 전설·초월 = B056)만 같은 버프.
+    // · manaAuraIncludesSelf: 자기 포함 — 맵 미확정, 정황 둘(A0AD만 notself를 명시 · A0KI에 스톡 표기 그대로의 self). A0AD만 false.
+    // · 원작 atar 스톡 문자열은 friend(동맹 포함)로 보이나 우리는 같은 주인(OwnerId)만 — 멀티에서 남의 유닛에 안 걸리게(PM).
+    // · 체력 게이지엔 안 더해진다. 받는 쪽에 마나 게이지(manaGaugePerMana > 0 + 게이지 스킬)가 없으면 아무 일도 없다.
+    public float manaAuraRegenPerSecond;
+    public float manaAuraRange;
+    public string manaAuraBuffId;
+    public bool manaAuraIncludesSelf;
+
+    // ⚠️ 맨 뒤(2026-09-30 구현담당1, PM 결정 — Docs/research/SPLASH_ATTACK_DESIGN.md §7) — 평타 광역. 전부 0이면 지금 동작(한 마리).
+    // 반경은 원작 단위(거리 비교는 ÷ WorldScale.Value), 중심은 주 대상. 값은 Tools/sync_attack_splash_from_w3u.py가 대응표·w3u·w3a에서.
+    // · attackSplashRadius: 원작 무기 종류 msplash의 전체 피해 반경(ua1f). 반경 안의 **다른** 같은 레인 적이 평타와 같은 피해를
+    //   제 방어·상성으로 받는다. 절반·1/4 반경(ua1h·ua1q)은 0으로 본다(hrif 스톡 미확인 — 엔진 지식, 맵 밖 근거).
+    // · attackCleaveFactor·attackCleaveRadius: 클리브 능력(ACce) nca1·aare. 주변 적에게 평타 피해 × 비율,
+    //   방어 수치 무시·상성표 적용(워크3 클리브의 알려진 동작 — 미확정, 맵 밖 근거. 제작자도 능력 이름에 「방무뎀」).
+    // · 온힛 스킬·게이지·치명·방깎 특성은 주 대상에만(원작 평타 트리거는 공격받은 유닛 하나에 한 번).
+    public float attackSplashRadius;
+    public float attackCleaveFactor;
+    public float attackCleaveRadius;
+
+    // ⚠️ 맨 뒤(2026-09-30 구현담당1, 구조 칸 백로그 9번) — 평타 다중 대상(원작 Aroc 「멀티샷」). 0이면 지금 동작(한 마리).
+    // 평타 때 **공격자에서** attackExtraTargetRadius(원작 단위, Aroc aare ≈ 그 유닛 사거리) 안의 가까운 다른 적 attackExtraTargets마리가
+    // 평타와 같은 피해를 제 방어·상성으로 받는다. 온힛 스킬·게이지·치명은 주 대상에만(원작 평타 트리거는 공격받은 유닛 하나에 한 번).
+    // 수 = Efk3 + 1: 제작자 툴팁 「N명 동시 공격」이 여섯 능력 모두 Efk3 + 2(주 대상 포함)이고 유닛의 utc1도 Efk3 + 1로 적혀 있다.
+    // 값은 Tools/sync_attack_multishot_from_w3a.py가 대응표·w3u·w3a에서.
+    public int attackExtraTargets;
+    public float attackExtraTargetRadius;
 }

@@ -23,6 +23,14 @@ public enum SkillTriggerType
     // 핸콕 175)에 닿으면 그때만 발동하고 되돌린다. OnHitChance(1/N)로 근사하면 기댓값은
     // 같아도 "정확히 주기적"이라는 원작 감각이 사라져서 별도 타입으로 뗐다.
     OnHitCount,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, 구조 칸 백로그 13번) — 「적이 근처에 오면」. 원작 TriggerRegisterUnitInRange:
+    // 적이 이 유닛의 SkillLevel.enterRange 안에 들어오면 **그 적에게 한 번** 판정한다(에넬 뇌격·샹크스 패기·카타쿠리·핸콕 석화).
+    // 「한 번」은 적에게 남기는 표식으로 센다 — SkillLevel.forbiddenTargetBuffId가 곧 표식 이름이고, 판정에 들어간 적에게는
+    // 조건·확률이 빗나가도 그 표식이 영구히 남는다(원작이 조건을 보기 전에 TurnSpeed·PropWindow·FlyHeight를 바꿔 두는 것).
+    // 표식은 적 쪽에 있어 같은 표식을 쓰는 다른 유닛과 나눠 쓴다(원작도 에넬과 핸콕이 TurnSpeed 하나를 같이 쓴다).
+    // 맞은 적이 주 대상(SingleTarget)이고 범위 효과는 그 적 중심 SkillLevel.range. 평타와 무관하다.
+    OnEnemyEnterRange,
 }
 
 // OnHitCount 전용 — 이 카운터가 원작의 어느 공유 스탯(마나/체력)을 대신하는가. 새 enum이라
@@ -49,6 +57,16 @@ public enum SkillTargetKind
     Allies,
     Enemies,
     SingleTarget,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, PM 승인) — 반경(SkillLevel.range, 중심은 aoeCenter) 안의 **무작위 적 하나**.
+    // 원작 `GroupPickRandomUnit(GetUnitsInRange…)`(365곳) — 첫 대상도 뽑힐 수 있다(원문에 제외 조건이 없는 경우).
+    // 한 시전 안의 RandomEnemyInRange 효과들은 같은 적 하나를 같이 쓴다(피해 + 스턴이 같은 적에게 가도록).
+    RandomEnemyInRange,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, PM 지시) — 연쇄(원작 AOcl 연쇄 번개): 평타 대상에서 시작해, 방금 맞은 적에서 반경
+    // (SkillLevel.range) 안의 **아직 안 맞은 가장 가까운 적**으로 튄다. 맞는 수는 SkillEffect.maxTargets(주 대상 포함),
+    // 튈 때마다 피해가 (1 + chainDamageStep)배(원작 Ocl3 −0.1 = 튈 때마다 +10%).
+    ChainEnemies,
 }
 
 // 피해·효과 값이 무엇에 비례하는가. 원작 715건 전수 조사(UNIT_SKILL_TRIGGERS.md) 기준
@@ -234,6 +252,17 @@ public enum SkillEffectKind
     // multiplier = 남는 이동속도 비율(0.5 = 50% 속도, 원작 「이속 −50%」). duration초 뒤 되돌린다(0이면 건너뜀).
     // EnemyDummy.AddSlow/RemoveSlow — 여러 개가 겹치면 가장 강한 하나만(워크3 규칙).
     Slow,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, PM 승인) — 공격력 % 증가(원작 ACac 지휘 오라 퍼센트형 Cac1 0.5 = +50%,
+    // ANht 음수 Roa1을 아군에 건 것 등). multiplier = raw 퍼센트(0.5 = +50%). **기본 공격력(로스터 공격력 + 주스탯 몫)에만**
+    // 곱해 고정 가산으로 들어간다 — 워크3 % 공격력 오라가 흰 숫자(기본 피해)에만 걸리는 것(엔진 지식, 맵 미확정).
+    // 자리: UnitAttacker.AttackDamage의 괄호 안(FlatAttackPowerBonus 옆). 오라(Aura)와 시간제(duration) 둘 다 받는다.
+    AttackPowerBuffPercent,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, 구조 칸 백로그 13번) — 핸콕 석화의 방어 감소 표(원작 A0VJ, 레벨마다 0 · −5 · −10).
+    // EnemyDummy.AddHancockPetrificationStack을 multiplier번 부른다(수신기는 09-05부터 있었고 부르는 곳이 없었다).
+    // AId1 방깎(ArmorBreak, 합계 −75 상한)과 다른 표다 — 합치지 않는다.
+    A0VJStack,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -431,6 +460,39 @@ public class SkillEffect
     // 비교 값은 이 발동을 일으킨 평타의 피해량(recentAttackDamage = AttackDamage, 방어 적용 전)이다 —
     // 원작은 방어 적용 후 값이라 우리가 조금 더 자주 통과한다(방어 전 ≥ 방어 후). 2026-09-30 구현담당1.
     public float triggerDamageAbove;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, PM 지시) — 스턴의 영웅 지속(원작 ahdu). 저항 피부 적(EnemyData.resistantSkin)에게는
+    // duration 대신 이 값으로 건다. 0이면 「모름」 — duration × HeroDurationFallbackRatio로 떨어진다(UnitAttacker).
+    // 값은 Tools/sync_stun_hero_duration_from_w3a.py가 그 스턴·이감을 낸 원작 능력의 ahdu에서 채운다. Stun과 시한 Slow(duration > 0)만 읽는다(오라 이감은 지속이 없다).
+    public float heroDuration;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, PM 지시) — 맞는 적 수 상한. 0이면 제한 없음(지금 동작).
+    // · target Enemies: 범위 중심에서 가까운 순으로 이 수까지만(원작 부채꼴 칼날 AEfk Efk3 = 최대 대상 수).
+    // · target ChainEnemies: 연쇄가 닿는 수(주 대상 포함, 원작 Ocl2). chainDamageStep은 튈 때마다 곱해지는 증감(−0.1이 아니라
+    //   「+0.1 = 튈 때마다 +10%」로 적는다 — 원작 Ocl3는 「감소율」이라 부호가 반대다).
+    public int maxTargets;
+    public float chainDamageStep;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, 구조 칸 백로그 8번) — 주기 피해 지대. kind Damage에 zoneTickInterval > 0이면 이 효과는
+    // 즉발 피해가 아니라 **범위 중심에 지대를 세운다**(원작: 트리거가 만든 더미가 ANpi 영구 이몰레이션을 가진 것 —
+    // 아카이누 유성·에이스 불기둥·드래곤). duration초 동안 zoneTickInterval초마다 zoneRadius(원작 단위, 0이면 SkillLevel.range) 안의
+    // 적에게 multiplier(+bonus)를 준다 — 고정값만(지대는 시전자가 사라져도 남으니 시전자 쪽 basis를 못 읽는다).
+    // 원작 더미의 피해는 RRD를 안 거쳐 A11S 감수성이 안 곱해진다 → 지대 피해엔 감수성 계수를 안 곱한다.
+    // hitCount = 세우는 지대 수(>1이면 같은 자리에 겹치거나, zoneSpacing > 0이면 시전자→대상 방향으로 그 간격마다 하나씩).
+    // targetCondition(PV 조건)은 틱마다 대상별로 본다. 그 밖의 대상 게이트(버프·캐스케이드)는 안 본다.
+    public float zoneTickInterval;
+    public float zoneRadius;
+    public float zoneSpacing;
+    // 지대를 범위 중심이 아니라 시전자 자리에 세운다(원작 더미가 GetUnitLoc(시전자)에 서는 것 — 에이스 염제·뱌쿠야 천본앵).
+    public bool zoneAtCaster;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, 구조 칸 백로그 5번) — 장풍 직선(원작 carrionswarm 더미, ACca). lineLength > 0이면 이 효과는
+    // target·SkillLevel.range와 무관하게 **시전자에서 범위 중심(대상) 방향으로 뻗는 사다리꼴** 안의 적 모두에게 걸린다:
+    // 길이 lineLength(원작 Ucs3), 폭(반경)은 시전자 쪽 lineStartRadius(aare)에서 끝 lineEndRadius(Ucs4)까지 곧게 넓어진다. 전부 원작 단위.
+    // 대상이 없으면(쿨 자동 시전) 시전자가 보는 방향.
+    public float lineLength;
+    public float lineStartRadius;
+    public float lineEndRadius;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
@@ -560,6 +622,22 @@ public class SkillLevel
     // (King_Attack >50). 0(기본)이면 끈다. 게이지 판정 뒤·소모 앞에서 본다 — 조건이 안 맞으면 게이지를 안 쓰고
     // 계속 쌓는 원작과 같게(바닥 모드). 2026-09-30 구현담당1.
     public float targetArmorBreakAbove;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, PM 지시) — 스킬 단위 대상 조건. 평타 대상이 이 조건을 못 채우면 **판정 자체를 건너뛴다**
+    // (확률도 안 굴리고 게이지도 안 쓴다 — 원작 「LIFE==50 그리고 대상 PV==200이면」처럼 PV 200을 칠 때까지 게이지를 들고 있는 블록).
+    // 효과별 targetCondition과 다르다: 그쪽은 맞는 적마다 따로 보고 게이지는 이미 쓴 뒤다. None(기본)이면 지금 동작.
+    public SkillEffectTargetCondition primaryTargetCondition = SkillEffectTargetCondition.None;
+    public float primaryTargetConditionValue;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, 구조 칸 백로그 3번) — 배타 분기. 원작 `if 굴림A then 스킬A elseif 굴림B then 스킬B`는
+    // A의 굴림이 맞으면 B를 굴리지도 않는다. 같은 exclusiveGroup(0 = 없음)의 평타 확률 스킬(OnHitChance)은
+    // **한 평타에 하나만** — 로스터 스킬 목록에서 앞선 것의 확률 굴림이 맞았으면 뒤 것은 건너뛴다.
+    // 그래서 뒤 스킬의 triggerChance는 주변 확률((1−pA)×pB)이 아니라 원작에 적힌 조건부 확률(pB) 그대로 적는다.
+    // 목록 순서가 곧 if/elseif 순서다(Tools/apply_exclusive_groups.py가 순서를 맞춘다).
+    public int exclusiveGroup;
+
+    // OnEnemyEnterRange 전용 — 감지 반경(원작 단위, TriggerRegisterUnitInRange의 거리). range는 효과 범위로 따로 쓴다.
+    public float enterRange;
 }
 
 public enum SkillAoeCenter

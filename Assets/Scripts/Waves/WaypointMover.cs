@@ -33,11 +33,13 @@ public class WaypointMover : MonoBehaviour
     // EnemyDummy.AddFreeze/RemoveFreeze의 몫이다. EnemyDummy.AddSlow도 이 값으로
     // 클램프한다 — 정의는 여기 한 곳뿐이다.
     public const float MinSlowMultiplier = 0.01f;
+    // 이속을 **올리는** 배수의 상한(2026-09-30) — 원작 손해 오라(야마토 A12P: 적 이속 +15%)를 담으려고 1 초과를 받는다.
+    public const float MaxSpeedMultiplier = 2f;
 
     /// <summary>이감 배수를 반영한다.</summary>
     public void SetSlowMultiplier(float multiplier)
     {
-        slowMultiplier = Mathf.Clamp(multiplier, MinSlowMultiplier, 1f);
+        slowMultiplier = Mathf.Clamp(multiplier, MinSlowMultiplier, MaxSpeedMultiplier);
     }
 
     private void Start()

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_전설적인_이승우_Legend12_25
   m_EditorClassIdentifier:
   skillName: Legend12 25% (라분 박치기)
-  description: 원작 Trig_Legend12(h02Q 라분 = 전설적인_이승우) Stage5 `GetRandomInt(1,100)<26` → 대상 위치 575 광역 175000 MAGIC/UNIVERSAL + 대상 15000+3000×PV SIEGE/UNIVERSAL(PV 100/200/300/301 조건 넷으로 전개). e010 얽힘 뿌리(시전자 대상)는 겉모습. 2026-09-30 구현담당1(중복 검사).
+  description: '원작 Trig_Legend12(h02Q 라분 = 전설적인_이승우) Stage5 `GetRandomInt(1,100)<26` → 대상 위치 575 광역 175000 MAGIC/UNIVERSAL + 대상 15000+3000×PV SIEGE/UNIVERSAL(PV 100/200/300/301 조건 넷으로 전개). e010 얽힘 뿌리(시전자 대상)는 겉모습. 2026-09-30 구현담당1(중복 검사). [전설 범위화 09-30] 박치기: stomp A07V(600 범위, 피해 0, adur 2.25) 스턴 추가(575로). 「6타째 보장」 카운터는 미반영. (Tools/apply_legend_rest2.py)'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -136,6 +136,29 @@ MonoBehaviour:
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0.0
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 2.25
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 0.33
     requiredTargetBuffId:
     forbiddenTargetBuffId:
     hitCountFloor: 0

@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작트리거_전설적인_이유선_Legend8_인의
+  m_EditorClassIdentifier:
+  skillName: 센고쿠(전설) 인의 — 1/10(1900 범위 아군 공격력 +40% 6초)
+  description: '원작 센고쿠 h036 Legend8 GetRandomInt(1,10)==4(독립): 더미가 roar A058(Aroa, Roa1 +0.4 공격력, aare 1900, adur 6, abuf B007). 자기 포함 아군. ⚠️ A058의 Roa2 −18(방어)·atar에 enemies가 같이 있다 — 적 방어 −18이 걸리는지는 엔진 동작이라 미확정, 미반영. 2026-09-30 구현담당1.'
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 0.1
+    range: 1900.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 14
+      basis: 0
+      target: 0
+      damageType: 0
+      attackType: 0
+      multiplier: 0.4
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 6.0
+      casterBuffCountFactor: 0.0
+      buffId: B007
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 14
+      basis: 0
+      target: 1
+      damageType: 0
+      attackType: 0
+      multiplier: 0.4
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 6.0
+      casterBuffCountFactor: 0.0
+      buffId: B007
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 1
+    targetArmorBreakAbove: 0.0

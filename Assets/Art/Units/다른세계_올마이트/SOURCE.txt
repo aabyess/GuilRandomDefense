@@ -1,0 +1,21 @@
+다른세계_올마이트 ← 올마이트(나의 히어로 아카데미아) 스킨 출처 — 2026-09-30 새로 넣음
+
+원본: ~/Desktop/구랜디스킨모음/12_다른세계/다른세계_올마이트.zip
+  sha256: 22a047eda1f3124fe938dfe7c5b0c8c17a42fd750a658ff1087081a64bddf698
+  안: source/All_Might_From_My_Hero_Ones_Justice_2_Rigged.usdz + textures/*_baseColor.jpeg 4장
+  Sketchfab 「All Might From My Hero Ones Justice 2 Rigged」(게임 「My Hero One's Justice 2」 추출 모델).
+라이선스: 🔴 미확인 — zip·usdz 안에 작성자·라이선스 표기가 없다. 사장님 Sketchfab 확인 대기.
+
+빌드 스크립트: Tools/blender/gen_biped_skin.py (SKINS["다른세계_올마이트"])
+  실행: blender -b --factory-startup --python Tools/blender/gen_biped_skin.py -- 다른세계_올마이트
+
+처리 요약(2026-09-30, Blender 세션):
+- USDZ를 Blender USD 임포터로 읽음(생성기에 source_format="usd" 갈래 추가). 메시 5 전부 씀 → 한 메시 25,506삼각형(감량 안 함).
+- 재질 4 · 텍스처 4(몸 2048² · 얼굴 1024² · 머리카락 1024² · 눈 512×256), 재질 이름이 텍스처 파일 이름에 들어 있어 이름으로 맞는다.
+  원본 재질이 「금속 1.0 + 텍스처를 발광에」 꼴이라 금속·발광을 0으로 되돌림(plain_bsdf) — 안 하면 재수입 렌더가 하얗게 뜬다.
+- 🔴 뼈 이름이 숫자(n9…n283)뿐 — 22뼈 대응을 쉬는 자세 좌표·계층·가중치 정점 무게중심으로 짰다(근거는 생성기 주석).
+  169뼈 → 22: 얼굴 61뼈 → Head, 손가락 → 손, 관절 보정뼈·띠 사슬 → 무게중심이 놓인 마디.
+  골반과 척추 뿌리의 머리가 같은 점이라 Hips를 두 넓적다리 가운데로 내림. 척추 두 마디라 Spine1은 자리표시(가중치 0, 0-길이 아님).
+- 원본이 이미 T자. 원본 발 z 0.73은 원점이 떠 있던 것뿐(발 쪽이 빈 게 아님) → 발 z 0 · 키 1.8로 맞춤.
+- 재수입 검사: 22뼈(살 붙은 뼈 21/22) · 무가중치 0(bind_check OK) · clip_spread idle·walk·attack 최대 0.99 ·
+  mesh_clash 셋 다 +0.0% · bone_bind ② 중앙 0.9%·③ 0.0% · 뒷면 컬링 켠 앞·뒤 렌더에 구멍 없음 · check_entries 통과.

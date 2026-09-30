@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작트리거_영원_김정래_Uta_skill_2
+  m_EditorClassIdentifier:
+  skillName: Uta_skill_2 — 늘임표 낙하 1/33(500 범위 750000×1~1.5 ×3)
+  description: '원작 우타 h067 Trig_Uta_Attack GetRandomInt(1,33)==8 → Uta_skill_2: 500 범위 750000×1~1.5 NORMAL/UNIVERSAL 세 번(0.4초 뒤부터 0.05초 간격). 1/4 음표 병사 소환은 소환 구조라 제외. 2026-09-30 구현담당1(ETERNAL_FILL_LIST §10).'
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 0.030303030303030304
+    range: 500.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 750000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 3
+      duration: 0.15
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.5
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0.0

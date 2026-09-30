@@ -39,6 +39,7 @@ public static class ArtBinder
 
     // 클립 이름에서 찾을 낱말. Mixamo가 붙이는 영어 이름과, 직접 붙일 수 있는 한국어를 같이 본다.
     static readonly string[] IdleWords   = { "idle", "breathing", "대기" };
+    static readonly string[] CalmIdleWords = { "idle_calm" };
     static readonly string[] WalkWords   = { "walk", "run", "move", "이동", "걷" };
     static readonly string[] AttackWords = { "attack", "punch", "slash", "swing", "kick", "공격" };
     static readonly string[] DeathWords  = { "death", "dying", "die", "사망", "죽" };
@@ -142,6 +143,11 @@ public static class ArtBinder
         // 1.0 = 가장 긴 축(이물 돛대 포함 약 29)을 기준 키 20에 맞춘다.
         ("고대의배", 1.0f),
         ("해적선", 1.0f),
+        // 히든 배 둘(2026-09-30, 써니호·메리호 — gen_prop_unit rig_clips, Generic 자체 클립 Idle·Move·Attack). 위 두 척과 같은 자.
+        ("히든_맥주만땅", 1.0f),
+        ("히든_미소야", 1.0f),
+        // 영원_서민성(복마어주자 사당, 2026-09-30) — 1.81 × 2.0 × 1.52로 키보다 넓적하다. 키에 맞추면 옆 유닛을 덮으니 가장 긴 변(깊이)을 기준으로.
+        ("영원_서민성", 1.0f),
         // 특별함_노건완(노가리, 잉어 — 2026-09-14): 몸길이 기준, 재규어와 같은 0.45(몸길이 약 9). 사장님 보고 조정.
         // 🔴 (09-23) 0.45 → 0.66. 어깨(몸)높이 기준으로는 4.2가 나오는데, 그러면 화면에서 안 보인다.
         //    **보이기 바닥선 8**(사람 30의 27%)을 두고 거기에 맞춘 값이다. 재규어 > 잉어 순서는 유지된다.
@@ -569,7 +575,7 @@ public static class ArtBinder
     }
 
     // 이번에 새로 넣은 스킨 — LinkTexturesUnits가 도는 목록. 새 스킨을 넣을 때 여기에 이름을 더한다.
-    static readonly string[] PendingLinkUnits = { "안흔함_김용태" };
+    static readonly string[] PendingLinkUnits = { "랜덤_이타도리_유지", "특수함_헬로우먼", "특수함_장명자", "특수함_임재현", "특수함_황길라", "특수함_장진희", "특수함_BJ_율희" };
 
     static void LinkTexturesWhere(System.Func<string, bool> modelFilter)
     {
@@ -1181,7 +1187,8 @@ public static class ArtBinder
     // Humanoid 리그라면 모델이 달라도 같은 컨트롤러가 붙으므로, 234종이 이 하나를 공유한다.
     static string BuildController()
     {
-        AnimationClip idle = FindClip(IdleWords);
+        // 잔잔한 대기(CalmIdleClip, 09-30 — 오른팔 몸짓을 걷어 낸 복제본)가 있으면 그것을 먼저. 없으면 원본 idle.fbx.
+        AnimationClip idle = FindClip(CalmIdleWords) ?? FindClip(IdleWords);
         AnimationClip walk = FindClip(WalkWords);
         AnimationClip attack = FindClip(AttackWords);
         AnimationClip death = FindClip(DeathWords);
@@ -1420,7 +1427,9 @@ public static class ArtBinder
             .ToList();
         if (clips.Count == 0) return null;
 
+        // 이름이 딱 맞는 클립이 먼저다 — 영원_최상호는 Attack(제자리)과 Attack_Lunge(돌진)를 같이 가졌다(09-30 고유 동작 시범).
         AnimationClip Named(string word) =>
+            clips.FirstOrDefault(c => c.name.Equals(word, System.StringComparison.OrdinalIgnoreCase)) ??
             clips.FirstOrDefault(c => c.name.StartsWith(word, System.StringComparison.OrdinalIgnoreCase));
 
         AnimationClip idle = Named("Idle");

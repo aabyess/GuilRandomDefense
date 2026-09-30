@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_불멸_신지우_A0ET
   m_EditorClassIdentifier:
   skillName: A0ET !급소베기-가반
-  description: '2026-09-30 구현담당1: 원작 가반(h04F) uabi의 ACbh A0ET — Hbh1 13%·Hbh2 6.25(공격력 배수)·Hbh3 0·adur 0(스턴 없음). 원작능력_불멸_신지우(A0DP 45%)에 묶여 있던 공격력×6.25를 제 확률로 뗐다.'
+  description: '2026-09-30 구현담당1: 원작 가반(h04F) uabi의 ACbh A0ET — Hbh1 13%·Hbh2 6.25(공격력 배수)·Hbh3 0·adur 0(스턴 없음). 원작능력_불멸_신지우(A0DP 45%)에 묶여 있던 공격력×6.25를 제 확률로 뗐다. [불멸 블록 09-30] 과다 정정: A0ET atar가 air,sapper,enemies,ground — sapper(= PV≥200, utyp 전수) 대상에만. (Tools/apply_immortal_blocks.py)'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -36,6 +36,8 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0
+      targetCondition: 3
+      targetConditionValue: 200.0
     requiredTargetBuffId:
     forbiddenTargetBuffId:
     hitCountFloor: 0

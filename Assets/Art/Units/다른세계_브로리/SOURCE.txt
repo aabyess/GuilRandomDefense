@@ -1,0 +1,22 @@
+다른세계_브로리 ← 전설의 초사이어인 브로리(드래곤볼 Z) 스킨 출처 — 2026-09-30 새로 넣음
+
+원본: ~/Desktop/구랜디스킨모음/12_다른세계/다른세계_브로리.zip
+  sha256: e2763d351edd2b5782472b2e376cbb020585334cf585efab2ac4b262efb9c274
+  안: source/PSP - Dragon Ball Z Shin Budokai - Another Road - Broly Legendar.zip(→ LSSJ Broly.obj·.mtl·Tex_0011_0·0012_0·0013_0.png)
+      + textures/Tex_001[123]_0.png(같은 그림을 4비트 팔레트로 줄인 것 — 안 씀, 안쪽 zip의 RGBA 8비트를 씀)
+  Sketchfab 「broly-super-saiyan」(PSP 게임 「Dragon Ball Z: Shin Budokai – Another Road」 추출 모델).
+라이선스: 🔴 미확인 — zip 안에 작성자·라이선스 표기가 없다. 사장님 Sketchfab 확인 대기.
+
+빌드 스크립트: Tools/blender/gen_objrip_skin.py (SKINS["다른세계_브로리"])
+  실행: blender -b --factory-startup --python Tools/blender/gen_objrip_skin.py -- 다른세계_브로리
+
+처리 요약(2026-09-30, Blender 세션):
+- OBJ 오브젝트 1(g 그룹 11) · 정점 918(같은 자리 병합 후 877) · 1,494삼각형 · 뼈 없음 · 이미 T자·좌우 대칭 → 관절 표를 심어 자동 가중치(bone heat).
+- 재질 11이 그림 3장(256²·256²·128²)을 나눠 쓴다. 재질 이름(Material__NN)과 그림 이름(Tex_00NN_0)이 안 맞아
+  ArtBinder가 못 잇기 때문에 그림을 재질 이름으로 11장 복사(texture_by_material).
+- 머리카락+머리통(Material__26)·얼굴(Material__25)은 Head에 통째 고정.
+- ⚠️ UV가 v −1~0 칸에 있다(0~1 밖) — 텍스처 Wrap이 Repeat여야 한다(유니티 기본값). Clamp면 통째로 번진다.
+- ⚠️ PSP 원본이라 텍스처가 작다. 셀 음영 화풍이라 멀리선 멀쩡하고, 가까이선 Bilinear면 윤곽선이 흐려지고 Point면 계단이 보인다.
+- 재수입 검사: 21뼈(살 붙은 뼈 21/21) · 무가중치 0(bind_check OK) · clip_spread idle·walk·attack 최대 1.00 ·
+  mesh_clash idle +1.1%·walk +1.9%·attack +0.0%(문턱 3%) · bone_bind ② 중앙 1.0%·③ 0.0% ·
+  뒷면 컬링 켠 앞·뒤 렌더에 구멍 없음 · check_entries 통과. 크기 2.071×0.518×1.8(팔 폭이 키보다 넓다 — 원본 비율).

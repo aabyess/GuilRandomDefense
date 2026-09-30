@@ -893,6 +893,59 @@ SKINS = {
         decimate_ratio=1.0,
         uv_layers=1,
     ),
+    # 다른세계_올마이트 ← 올마이트(나의 히어로 아카데미아, 「My Hero One's Justice 2」 추출, Sketchfab
+    # 「All Might From My Hero Ones Justice 2 Rigged」) — 사장님 지정 2026-09-30. 같은 인물의 젊은 판이 안흔함_김용태(gen_rigify_skin).
+    # 원본 USDZ(Blender USD 임포터): 메시 5(몸 13,492삼각·손/목 2,320·얼굴 4,706·머리카락 4,546·눈 442 = 25,506) ·
+    #   재질 4(material_0를 몸·손 두 메시가 같이 씀) · 텍스처 4(zip textures/*.jpeg, 재질 이름+_baseColor) · 아마추어 169뼈 · 이미 T자.
+    # 🔴 뼈 이름이 숫자(n9…n283)뿐 — 아래 대응은 **쉬는 자세 머리 좌표·계층·가중치 정점 무게중심**으로 짰다(원본 단위, 발 z 0.73):
+    #   뿌리 둘: n238(z1.46, 아래로 다리 둘 = 골반) · n9(z1.46)→n10(1.58, 자식으로 쇄골 둘)→n11(1.746)→n12(1.834, 머리카락 전부).
+    #   팔 +x(정면 −Y라 왼쪽): n148(x0.03)→n149(0.175)→n150(0.362)→n151(0.548, 손가락 사슬 넷) / −x는 n193~n196.
+    #   다리 +x: n239(z1.344)→n240(1.093)→n241(0.842)→n242(0.770, y−0.082 발끝) / −x는 n262~n265.
+    #   보정뼈(관절 자리에 부모의 형제로 앉음)는 정점 무게중심이 놓인 마디로 접는다: n191(x0.08~0.35 삼각근)→Arm ·
+    #   n189(팔꿈치)·n181(손목 비틀림 x0.36~0.58)·n183 사슬(팔뚝 띠)→ForeArm · n175 사슬(손목 띠)→Hand · n260(z1.14~1.41)→UpLeg ·
+    #   n258(무릎)·n250(발목 위 z0.84~0.93)·n252 사슬(종아리 띠)→Leg · n244 사슬(발목 띠)→Foot. n13 밑 얼굴 61뼈→Head.
+    # 🔴 골반 n238과 척추 n9의 머리가 같은 점(z1.46) → 그대로면 Hips가 0-길이. Hips를 두 넓적다리 머리 가운데(z1.344)로 내린다.
+    #   척추가 두 마디(n9·n10)라 Spine1은 둘 사이 자리표시(가중치 0), 가슴 n10을 Spine2로(쇄골의 부모라 가슴이 어깨와 같이 돈다).
+    # 🔴 n12(머리) 꼬리가 1.1 길이로 허공에 뜸(n13 머리 z0.73 때문으로 보임) → bone_tail_offset.
+    # ⚠️ USD 임포터가 자세≠쉬는 자세로 들여와 화면에선 머리 위로 긴 기둥이 보인다 — 메시 데이터(쉬는 자세)만 쓰므로 산출과 무관.
+    "다른세계_올마이트": dict(
+        source="~/Desktop/구랜디스킨모음/12_다른세계/다른세계_올마이트.zip",
+        glb_member="source/All_Might_From_My_Hero_Ones_Justice_2_Rigged.usdz",
+        source_format="usd",
+        path="Assets/Art/Units/다른세계_올마이트/다른세계_올마이트.fbx",
+        mesh_name="AllMight",
+        height=1.8,
+        drop_meshes=set(),
+        rename={
+            "n238": "Hips", "n9": "Spine", "n10": "Spine2", "n11": "Neck", "n12": "Head",
+            "n148": "LeftShoulder", "n149": "LeftArm", "n150": "LeftForeArm", "n151": "LeftHand",
+            "n193": "RightShoulder", "n194": "RightArm", "n195": "RightForeArm", "n196": "RightHand",
+            "n239": "LeftUpLeg", "n240": "LeftLeg", "n241": "LeftFoot", "n242": "LeftToeBase",
+            "n262": "RightUpLeg", "n263": "RightLeg", "n264": "RightFoot", "n265": "RightToeBase",
+        },
+        fold_subtree={
+            "n13": "Head",
+            "n152": "LeftHand", "n156": "LeftHand", "n160": "LeftHand", "n164": "LeftHand", "n175": "LeftHand",
+            "n197": "RightHand", "n201": "RightHand", "n205": "RightHand", "n209": "RightHand", "n220": "RightHand",
+            "n191": "LeftArm", "n189": "LeftForeArm", "n181": "LeftForeArm", "n183": "LeftForeArm",
+            "n236": "RightArm", "n234": "RightForeArm", "n226": "RightForeArm", "n228": "RightForeArm",
+            "n260": "LeftUpLeg", "n258": "LeftLeg", "n250": "LeftLeg", "n252": "LeftLeg", "n244": "LeftFoot",
+            "n283": "RightUpLeg", "n281": "RightLeg", "n273": "RightLeg", "n275": "RightLeg", "n267": "RightFoot",
+        },
+        bone_position_override={"Hips": ("n239", "n262", 0.5), "Spine1": ("n9", "n10", 0.5)},
+        allow_dead_bones={"Spine1"},
+        bone_tail_offset={"Head": (0.0, 0.0, 0.2)},
+        body_member="textures/material_0_baseColor.jpeg",
+        eye_member="textures/MII_Pl12000_eye_GPA_baseColor.jpeg",
+        face_member="textures/MII_Pl12000_face_baseColor.jpeg",
+        hair_member="textures/MII_Pl12000_hair_baseColor.jpeg",
+        materials={"material_0": ("texture_file", "body_member"), "MII_Pl12000_eye_GPA": ("texture_file", "eye_member"),
+                   "MII_Pl12000_face": ("texture_file", "face_member"), "MII_Pl12000_hair": ("texture_file", "hair_member")},
+        plain_bsdf=True,
+        level_arms=False,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
 }
 
 # 🔴 폐기(2026-09-30 사장님 교체) — 한 번 짓고 Assets에 넣었다가 다른 모델로 바뀐 설정. SKINS 밖이라 main()·check_entries가
@@ -1104,6 +1157,9 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     if cfg.get("source_format") == "fbx" or glb_path.lower().endswith(".fbx"):
         bpy.ops.import_scene.fbx(filepath=glb_path)
+    elif cfg.get("source_format") == "usd":
+        # 올마이트(2026-09-30) — 원본이 USDZ. 빈 오브젝트 사슬(배율 0.0053·X 90°)은 아래 세계 좌표 굽기가 처리한다.
+        bpy.ops.wm.usd_import(filepath=glb_path)
     else:
         bpy.ops.import_scene.gltf(filepath=glb_path)
     scene = bpy.context.scene
@@ -1225,6 +1281,13 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
                     img = bpy.data.images.load(extra_paths[arg], check_existing=True)
                     wired_files[arg] = img
                 wire_image_material(m, img)
+            # 🔴 올마이트(2026-09-30) — 원본 재질이 「금속 1.0 + 텍스처를 발광에」(Sketchfab 무음영 꼴)다. wire_image_material은
+            # Principled 노드를 남겨 쓰므로 금속 1.0이 FBX에 실려 나가 재수입 렌더가 하얗게 떴다(주변 회색을 반사). 켠 유닛만 되돌린다.
+            if cfg.get("plain_bsdf") and m.use_nodes:
+                for n in m.node_tree.nodes:
+                    if n.type == "BSDF_PRINCIPLED":
+                        n.inputs["Metallic"].default_value = 0.0
+                        n.inputs["Emission Strength"].default_value = 0.0
 
     # 모든 조각을 세계 좌표로 굽고 하나로 합친다.
     for o in keep:

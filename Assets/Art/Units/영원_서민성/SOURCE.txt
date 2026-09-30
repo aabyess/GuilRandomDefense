@@ -1,0 +1,19 @@
+영원_서민성 ← 복마어주자(주술회전, 스쿠나의 영역 사당) 스킨 출처 — 2026-09-30 새로 넣음. 🔸 사람형이 아닌 구조물 — Generic 리그 + 자체 클립.
+
+원본: ~/Desktop/구랜디스킨모음/10_영원/영원_서민성.glb (18.1MB)
+  glb asset 메타: title 「Malevolent Shrine | Jujutsu Kaisen」 · author NexusB (https://sketchfab.com/NexusB)
+  · source https://sketchfab.com/3d-models/malevolent-shrine-jujutsu-kaisen-efcf94d9cf03434db7b0978144b500b6
+라이선스: CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/) — glb 메타에 명시. 🔴 저작자 표기(크레딧) 필요.
+
+빌드 스크립트: Tools/blender/gen_prop_unit.py (UNITS["영원_서민성"], rig_clips="shrine")
+  실행: blender -b --factory-startup --python Tools/blender/gen_prop_unit.py -- 영원_서민성
+
+처리 요약(2026-09-30, Blender 세션):
+- 사당만 들어 있다(스쿠나 캐릭터 없음). 메시 9 전부 씀 · 뼈·애니 0.
+- 🔴 원본 137,050삼각형 → 54,248. 소 해골 60,192 → 15,048(25%) · 입 48,224 → 14,466(30%) · 사람 해골 7,800 → 3,900(50%). 사당 본체·뿔·갈비뼈·가지는 그대로.
+- 재질 5 · 텍스처 5(기본색만, 1024², 재질 이름_baseColor.png). 노멀·거칠기 등 보조 맵 12장은 안 씀. 알파 전부 1.0 → 알파 컷 불필요.
+- 네 면이 거의 같은 모양이라 정면은 원본 −Y 그대로. 원점 = 전체 bbox 바닥 가운데, 최저점(바닥 둘레 소 해골 밑) z 0.
+- 🔴 넓적하다: 1.808 × 2.0 × 1.519(가장 긴 변 2.0 기준) — 가로·깊이가 키의 1.19배·1.32배.
+- 뼈 2(Root → Body, 전 정점 Body 가중치 1) · 클립 Idle 180 · Move 60 · Attack 24프레임.
+  Idle 좌우 0.6°·앞뒤 0.4°·들썩 1.2cm / Move 6cm 떠서 앞으로 1.5° 숙임 / Attack 5cm 솟으며 앞으로 3° 숙이는 맥동 한 번. 배 두 척과 같은 규약(테이크 이름·뼈 구조·이음새 0).
+- 검사: bind_check OK · clip_check 최저 z −0.004(Idle) · clip_table 이음새 0.0001 이하 · 뒷면 컬링 켠 앞·뒤·위 렌더 구멍 없음 · check_entries 통과.

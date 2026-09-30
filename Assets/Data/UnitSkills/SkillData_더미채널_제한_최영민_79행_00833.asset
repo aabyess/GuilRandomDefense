@@ -13,19 +13,19 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_제한_최영민_79행_00833
   m_EditorClassIdentifier:
   skillName: A0QX 3범위 레베카 궤적 둔화
-  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.0833로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.  · e0EZ(%제한됨변화 레베카 더미5) A0QX 3범위 레베카 궤적 둔화 [천둥소리 피해]: 100000 (원작 레베카·제한됨) 진입게이트: Trig_RebecaAttack_Actions[이벤트직결]: GetRandomInt(1,12)==6
+  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.0833로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.  · e0EZ(%제한됨변화 레베카 더미5) A0QX 3범위 레베카 궤적 둔화 [천둥소리 피해]: 100000 (원작 레베카·제한됨) 진입게이트: Trig_RebecaAttack_Actions[이벤트직결]: GetRandomInt(1,12)==6 [제한 나머지 09-30] U5: 천둥박수 A0QX는 시전자 중심 850 범위(100000 · 이속 −70% 2.5초) — 단일이었다. (Tools/apply_limited_rest.py)'
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.08333333333333333
-    range: 0
+    range: 850.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
     effects:
     - kind: 0
       basis: 0
-      target: 3
+      target: 2
       damageType: 1
       attackType: 4
       multiplier: 100000.0
@@ -36,7 +36,7 @@ MonoBehaviour:
       casterBuffCountFactor: 0
     - kind: 13
       basis: 0
-      target: 3
+      target: 2
       damageType: 0
       attackType: 0
       multiplier: 0.3
@@ -44,3 +44,5 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 2.5
+      heroDuration: 1.25
+    aoeCenter: 1

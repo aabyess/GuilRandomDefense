@@ -1254,6 +1254,7 @@ public static class ClaudeCommands
         public bool autoLoop;
         public bool bossChase;           // autoloop: 보스 라운드엔 레인의 흔함 아닌 유닛 전부 보스 공격(AttackTarget), 흔함은 칸에(09-26 PM 지시 — R30 벽이 배치냐 화력이냐)
         public bool storyPlus;           // autoloop: 스토리 보강 — 막히면 가장 센 유닛 둘씩, 깨면 약한 하나만 남기고 C로 복귀(09-26 PM 지시)
+        public int aimGrade = (int)UnitGrade.Rare;   // aim:<등급> — target의 목표 식 등급(기본 희귀함). 10-01 PM 지시: 전설·초월·불멸·영원까지
         public bool targetMode;          // autoloop: 희귀함 식 하나를 목표로 — 흔함선택·조합·판매를 그 식의 모자란 재료 쪽으로(09-26 PM 지시)
         public bool combineAll;          // autoloop: 지금 만들 수 있는 조합식을 전부 만든다(결과 등급 높은 것부터, 09-26 R20 벽 ③)
         public bool keepPen;             // autoloop: 흔함은 제 칸에 둔다 — 모서리 쓸기에서 흔함을 뺀다(09-26 칸 안 흔함 가동률 판)
@@ -1359,6 +1360,16 @@ public static class ClaudeCommands
             else if (token == "bosschase") job.bossChase = true;
             else if (token == "target") { job.targetMode = true; job.combineAll = true; }
             else if (token == "bossaway") job.bossAway = true;
+            else if (token.StartsWith("aim:"))
+            {
+                // 목표 식 등급을 올린다(target을 같이 켠다) — 이름은 한글 등급 이름의 앞부분이나 enum 이름.
+                string want = token.Substring(4);
+                UnitGrade? found = null;
+                foreach (UnitGrade g in Enum.GetValues(typeof(UnitGrade)))
+                    if (g.ToString().Equals(want, StringComparison.OrdinalIgnoreCase) || g.KoreanName().StartsWith(want)) { found = g; break; }
+                if (found == null) return $"❌ aim: 뒤엔 등급(희귀함·전설적인·초월·불멸·영원 …): {token}";
+                job.aimGrade = (int)found.Value; job.targetMode = true; job.combineAll = true;
+            }
             else if (token.StartsWith("mode:"))
             {
                 string want = token.Substring(5);
@@ -2729,12 +2740,80 @@ public static class ClaudeCommands
         return off.Count == 0 ? "" : $"      🌊 걷는 땅 밖에 선 내 지상 유닛 {off.Count}기: {string.Join(" | ", off.Take(5))}\n";
     }
 
+    // ⚖️ 밸런스 재측정(2026-09-30 PM 지시)용 — 판 동안 SkillTelemetry를 켜 두고 라운드 줄마다 덧붙인다:
+    //   · 평타 광역이 걷는 줄에서 실제 몇 마리 맞히나(광역 든 유닛의 「맞은 수 ÷ 평타 수」) · 피해 채널 비중(판 누계)
+    //   · 0번 레인 보스가 스턴으로 멈춰 있던 시간 ÷ 살아 있던 시간(이번 라운드) · 「영구 스턴」 후보 로스터가 판에 있나
+    static readonly string[] PermaStunRosters = { "초월_황준석_ADAP", "제한_최영민", "불멸_정준영", "불멸_신지우", "불멸_고도현", "초월_조성진_AD" };
+    static bool balanceOn;
+    static float bossAliveTime, bossStunTime, bossSlowTime, balanceLastT;
+
+    static void SampleBalance(GameShotJob job)
+    {
+        if (!job.autoLoop) return;
+        if (!balanceOn) { SkillTelemetry.Reset(); SkillTelemetry.Enabled = true; balanceOn = true; bossAliveTime = bossStunTime = bossSlowTime = 0f; }
+        // 게임 시계로 잰다 — EditorApplication.update는 게임 프레임보다 자주 불려 Time.deltaTime을 그대로 더하면 실제의 1/20쯤이 된다(09-30 1~3판).
+        float dt = Mathf.Clamp(Time.time - balanceLastT, 0f, 0.25f);
+        balanceLastT = Time.time;
+        foreach (EnemyDummy e in EnemyDummy.Active)
+        {
+            if (e == null || !e.IsBoss || e.LaneIndex != 0 || e.IsDead) continue;
+            bossAliveTime += dt;
+            if (e.IsStunned) bossStunTime += dt;
+            if (e.EffectiveSlowMultiplier < 0.999f) bossSlowTime += dt;
+        }
+    }
+
+    static string BalanceText(bool over)
+    {
+        if (!balanceOn) return "";
+        var sb = new StringBuilder();
+        List<UnitData> tracked = SkillTelemetry.TrackedUnits.ToList();
+        int hits = 0, splashHits = 0, splashUnitHits = 0;
+        var channel = new Dictionary<string, float>();
+        var perUnit = new List<string>();
+        foreach (UnitData u in tracked)
+        {
+            int h = SkillTelemetry.HitsOf(u);
+            hits += h;
+            bool area = u.attackSplashRadius > 0f || u.attackCleaveFactor > 0f;
+            if (area) { splashUnitHits += h; splashHits += SkillTelemetry.SplashHitsOf(u); }
+            if ((area || u.attackExtraTargets > 0) && h > 0)
+                perUnit.Add($"{u.name} ×{MyUnits().Count(x => x.Data == u)}기 {h}타·광역 {(float)SkillTelemetry.SplashHitsOf(u) / h:0.00}마리/타·평타 타당 {SkillTelemetry.DamageOf(u, "평타") / h:0}" +
+                            (u.attackExtraTargets > 0 ? $"·다중 피해 {SkillTelemetry.DamageOf(u, "평타다중") / Mathf.Max(1f, SkillTelemetry.DamageOf(u, "평타")):0.00}배" : ""));
+            foreach (string c in SkillTelemetry.ChannelsOf(u))
+            {
+                channel.TryGetValue(c, out float d);
+                channel[c] = d + SkillTelemetry.DamageOf(u, c);
+            }
+        }
+        float total = Mathf.Max(1f, channel.Values.Sum());
+        sb.Append($"      ⚖️ 판 누계 평타 {hits}타 · 광역 든 유닛 {splashUnitHits}타에 주변 {splashHits}마리(타당 {(splashUnitHits > 0 ? (float)splashHits / splashUnitHits : 0f):0.00})" +
+                  $" · 피해 비중 {string.Join(" ", channel.OrderByDescending(kv => kv.Value).Select(kv => $"{kv.Key} {kv.Value / total:P0}"))}\n");
+        if (perUnit.Count > 0) sb.Append($"      ⚖️ 광역·다중 유닛: {string.Join(" | ", perUnit.Take(12))}\n");
+        if (bossAliveTime > 0f)
+            sb.Append($"      ⚖️ 이번 라운드 0번 레인 보스: 살아 있던 {bossAliveTime:0.0}초 중 스턴 {bossStunTime:0.0}초({bossStunTime / bossAliveTime:P0}) · 이감 {bossSlowTime:0.0}초({bossSlowTime / bossAliveTime:P0})\n");
+        bossAliveTime = bossStunTime = bossSlowTime = 0f;
+        List<string> six = MyUnits().Where(u => PermaStunRosters.Contains(u.Data.name)).Select(u => u.Data.name).Distinct().ToList();
+        if (six.Count > 0) sb.Append($"      ⚖️ 「영구 스턴」 후보 보유: {string.Join(", ", six)}\n");
+        if (over)
+        {
+            // 판 끝 — 피해 상위 유닛(어느 유닛이 판을 끌었나).
+            var top = tracked.Select(u => (u, d: SkillTelemetry.ChannelsOf(u).Sum(c => SkillTelemetry.DamageOf(u, c)))).OrderByDescending(x => x.d).Take(8)
+                .Select(x => $"{x.u.name} {x.d / total:P0}");
+            sb.Append($"      ⚖️ 피해 상위: {string.Join(" · ", top)}\n");
+            balanceOn = false;
+            SkillTelemetry.Enabled = false;
+        }
+        return sb.ToString();
+    }
+
     static void RoundWatch(GameShotJob job)
     {
         float dt = Time.unscaledDeltaTime;
         if (dt > 0f) { frameSum += dt; frameMax = Mathf.Max(frameMax, dt); frameN++; }
         SampleUptime();
         WatchLaneBoss(job);
+        SampleBalance(job);
 
         RoundManager rm = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
         if (rm == null) return;
@@ -2753,6 +2832,7 @@ public static class ClaudeCommands
                 job.report += $"   🎚 난이도 {(dm != null ? $"{dm.Current.KoreanName()}(고름 {dm.IsModeSelected})" : "매니저 없음")} · 이 판이 건 값 {((DifficultyMode)job.mode).KoreanName()}\n";
             }
             job.report += $"   {head}: {RoundMetrics(job, rm)}\n" + ChoiceWispText() + OffGroundUnits();
+            job.report += BalanceText(over || round > job.watchRounds);
             string snapPath = Path.GetFullPath(Path.Combine(Folder, "shots", over ? "round_end.png" : $"round_{round:00}.png"));
             ScreenCapture.CaptureScreenshot(snapPath);
             job.report += $"      📸 {snapPath}\n";
@@ -2981,7 +3061,11 @@ public static class ClaudeCommands
                 // 목표 식 나무의 식을 먼저(위 등급부터) — 그다음 남는 재료만 쓰는 딴 식.
                 TargetPlan plan = RefreshTargetPlan(job);
                 // 희귀함 이상은 목표가 아니어도 먼저 만든다 — 지금 손에 든 희귀함이 나중 목표보다 낫다(i1_143 R15·R17: 가능했는데 목표 재료라 안 만듦).
-                next = ready.Where(r => r.result.grade.Tier() >= UnitGrade.Rare.Tier()).OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault()
+                // aim이 희귀함 위면 그 규칙을 끈다 — 목표 나무 밖의 희귀함·전설이 나무 재료(특정 특별함·희귀함)를 먹어 버리면 위 등급에 못 닿는다.
+                bool aimHigh = job.aimGrade != (int)UnitGrade.Rare;
+                // aim이 높을 땐 전설 이상은 나무 밖이어도 바로 만든다 — 사람도 전설이 되면 만든다(10-01 g1_199: 전설 가능 식을 목표 재료라 끝내 안 만듦).
+                next = (aimHigh ? ready.Where(r => r.result.grade.Tier() >= UnitGrade.Legendary.Tier()).OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault()
+                                : ready.Where(r => r.result.grade.Tier() >= UnitGrade.Rare.Tier()).OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault())
                        ?? ready.Where(r => plan != null && plan.treeRecipes.Contains(r)).OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault()
                        ?? ready.Where(r => plan == null || UsesOnlySurplus(r, plan)).OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault();
             }
@@ -3023,6 +3107,8 @@ public static class ClaudeCommands
         public int MissingCount => missing.Values.Sum();
     }
     static TargetPlan currentPlan;
+    static readonly HashSet<CombineRecipe> stuckTargets = new HashSet<CombineRecipe>();
+    static int stuckBest = int.MaxValue, stuckTurns;
     static Dictionary<UnitData, List<CombineRecipe>> recipesByResult;
     static readonly List<string> targetLog = new List<string>();
 
@@ -3066,15 +3152,24 @@ public static class ClaudeCommands
         return plan;
     }
 
-    static TargetPlan RefreshTargetPlan(GameShotJob job)
+    static TargetPlan RefreshTargetPlan(GameShotJob job, bool countTurn = false)
     {
         var owned = MyUnits().GroupBy(u => u.Data).ToDictionary(g => g.Key, g => g.Count());
         var byResult = RecipesByResult();
-        var candidates = byResult.Where(kv => kv.Key.grade == UnitGrade.Rare).SelectMany(kv => kv.Value).ToList();
+        var candidates = byResult.Where(kv => (int)kv.Key.grade == job.aimGrade).SelectMany(kv => kv.Value).Where(r => !stuckTargets.Contains(r)).ToList();
         if (candidates.Count == 0) return currentPlan = null;
         TargetPlan best = candidates.Select(r => PlanFor(r, owned)).OrderBy(p => p.MissingCount).First();
         if (currentPlan == null || currentPlan.target == null) { targetLog.Add($"R{job.lastRoundSeen} 목표 → {best.target.result.unitName}(모자람 {best.MissingCount})"); return currentPlan = best; }
         TargetPlan keep = PlanFor(currentPlan.target, owned);
+        // 막힘 — 모자란 잎이 6라운드(라운드 줄에서만 셈) 동안 안 줄면 그 목표를 이 판에서 버린다(조합식 없는 잎·흔함 선택에 없는 이름에 걸린 것, 10-01 g1_199 「볼보이5·악의근원1」).
+        if (keep.MissingCount < stuckBest) { stuckBest = keep.MissingCount; stuckTurns = 0; }
+        else if (countTurn && ++stuckTurns >= 6)
+        {
+            stuckTargets.Add(keep.target);
+            targetLog.Add($"R{job.lastRoundSeen} 목표 막힘 ✋ {keep.target.result.unitName}(모자람 {keep.MissingCount}, 6라운드 그대로) → 버림");
+            currentPlan = null; stuckBest = int.MaxValue; stuckTurns = 0;
+            return RefreshTargetPlan(job);
+        }
         if (best.target != keep.target && best.MissingCount + 3 < keep.MissingCount)
         {
             targetLog.Add($"R{job.lastRoundSeen} 목표 바꿈 {keep.target.result.unitName}(모자람 {keep.MissingCount}) → {best.target.result.unitName}(모자람 {best.MissingCount})");
@@ -3089,6 +3184,7 @@ public static class ClaudeCommands
         if (!job.targetMode || currentPlan == null || made != currentPlan.target) return;
         targetLog.Add($"R{job.lastRoundSeen} 목표 완성 ✅ {made.result.unitName}");
         currentPlan = null;
+        stuckBest = int.MaxValue; stuckTurns = 0;
     }
 
     static bool UsesOnlySurplus(CombineRecipe r, TargetPlan plan)
@@ -3113,7 +3209,7 @@ public static class ClaudeCommands
 
     static string TargetRoundText(GameShotJob job)
     {
-        TargetPlan plan = RefreshTargetPlan(job);
+        TargetPlan plan = RefreshTargetPlan(job, countTurn: true);
         string miss = plan == null ? "-" : string.Join(" ", plan.missing.OrderByDescending(kv => kv.Value).Select(kv => $"{kv.Key.unitName}{kv.Value}"));
         string text = $"\n      🎯 목표 {(plan?.target?.result != null ? plan.target.result.unitName : "-")} · 모자란 잎 {plan?.MissingCount ?? 0}({miss}) · 기록 {(targetLog.Count > 0 ? string.Join(" | ", targetLog) : "-")}";
         targetLog.Clear();
@@ -3214,7 +3310,7 @@ public static class ClaudeCommands
         woodLast = wallet.Get(ResourceType.Wood);
         woodIn.Clear(); woodOut.Clear(); woodInRound.Clear(); woodOutRound.Clear(); soldTotals.Clear();
         combineAvailRound.Clear(); combineDoneRound.Clear(); combineDoneTotal.Clear();
-        currentPlan = null; recipesByResult = null; targetLog.Clear(); lastStoryHp = -1f;
+        currentPlan = null; recipesByResult = null; targetLog.Clear(); lastStoryHp = -1f; stuckTargets.Clear(); stuckBest = int.MaxValue; stuckTurns = 0;
         wallet.OnResourceChanged += OnWoodChanged;
     }
 

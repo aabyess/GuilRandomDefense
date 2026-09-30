@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -36,6 +37,7 @@ public class EnemyDummy : MonoBehaviour
     public float Hp => hp;
     /// <summary>이 적의 데이터 — HUD 살펴보기(이름·방어)가 읽는다(2026-09-26).</summary>
     public EnemyData Data => data;
+    public bool HasResistantSkin => data != null && data.resistantSkin;
 
     // MP: 클라 겉모습이면 true — 판정(회복·오라)을 안 돌리고 체력은 호스트 값을 받아 적기만 한다.
     //     Active 등록은 그대로 둔다(체력바·미니맵이 그걸 돈다). 싱글·호스트에선 항상 false라 무동작.
@@ -189,6 +191,41 @@ public class EnemyDummy : MonoBehaviour
         if (freezeCount == 0 && stunVfx != null) { SkillVfx.Stop(stunVfx); stunVfx = null; }
     }
 
+    // ── 시한 효과(2026-09-30) — 걸린 쪽(이 적)이 스스로 세고 푼다. 건 유닛의 코루틴으로 세면 그 유닛이 조합·판매로
+    // 사라질 때 되돌리기도 같이 죽어 스턴·이감·방깎이 영영 남는다(CasterVanishProbe: 1.2초 스턴이 시전자 Destroy 6초 뒤에도 남음).
+    public void FreezeFor(float duration) { if (isActiveAndEnabled) StartCoroutine(FreezeRoutine(duration)); }
+    public void SlowFor(float multiplier, float duration) { if (isActiveAndEnabled) StartCoroutine(SlowRoutine(multiplier, duration)); }
+    public void Aid1ArmorShredFor(float amount, float duration) { if (isActiveAndEnabled) StartCoroutine(Aid1ArmorShredRoutine(amount, duration)); }
+    public void AllyAuraEffectFor(SkillEffect effect, float duration) { if (isActiveAndEnabled) StartCoroutine(AllyAuraEffectRoutine(effect, duration)); }
+
+    IEnumerator FreezeRoutine(float duration)
+    {
+        AddFreeze();
+        yield return new WaitForSeconds(duration);
+        RemoveFreeze();
+    }
+
+    IEnumerator SlowRoutine(float multiplier, float duration)
+    {
+        AddSlow(multiplier);
+        yield return new WaitForSeconds(duration);
+        RemoveSlow(multiplier);
+    }
+
+    IEnumerator Aid1ArmorShredRoutine(float amount, float duration)
+    {
+        AddAid1ArmorShred(amount);
+        yield return new WaitForSeconds(duration);
+        AddAid1ArmorShred(-amount);
+    }
+
+    IEnumerator AllyAuraEffectRoutine(SkillEffect effect, float duration)
+    {
+        ApplyAllyAuraEffect(effect);
+        yield return new WaitForSeconds(duration);
+        RemoveAllyAuraEffect(effect);
+    }
+
     // ── 스킬 이펙트(SkillVfx, 2026-09-29) — 받는 쪽에서 띄운다. 등급 게이트·재질 유무는 SkillVfx가 판단한다. ──
     GameObject stunVfx;
     GameObject slowVfx;
@@ -236,17 +273,17 @@ public class EnemyDummy : MonoBehaviour
     /// </summary>
     public void AddSlow(float multiplier)
     {
-        slowMultipliers.Add(Mathf.Clamp(multiplier, WaypointMover.MinSlowMultiplier, 1f));
+        slowMultipliers.Add(Mathf.Clamp(multiplier, WaypointMover.MinSlowMultiplier, WaypointMover.MaxSpeedMultiplier));
         ApplySlow();
-        if (slowMultipliers.Count == 1 && slowVfx == null) slowVfx = SkillVfx.Attach(SkillVfx.Kind.Slow, transform, 3f);   // 땅(발)보다 조금 위 — 1이면 풀밭에 묻혔다(09-29 실측)
+        if (multiplier < 1f && slowVfx == null) slowVfx = SkillVfx.Attach(SkillVfx.Kind.Slow, transform, 3f);   // 땅(발)보다 조금 위 — 1이면 풀밭에 묻혔다(09-29 실측)
     }
 
     /// <summary>이감을 되돌린다. AddSlow에 넣은 것과 같은 값을 넣어야 그 인스턴스가 빠진다.</summary>
     public void RemoveSlow(float multiplier)
     {
-        slowMultipliers.Remove(Mathf.Clamp(multiplier, WaypointMover.MinSlowMultiplier, 1f));
+        slowMultipliers.Remove(Mathf.Clamp(multiplier, WaypointMover.MinSlowMultiplier, WaypointMover.MaxSpeedMultiplier));
         ApplySlow();
-        if (slowMultipliers.Count == 0 && slowVfx != null) { SkillVfx.Stop(slowVfx); slowVfx = null; }
+        if (slowVfx != null && !slowMultipliers.Exists(m => m < 1f)) { SkillVfx.Stop(slowVfx); slowVfx = null; }
     }
 
     void ApplySlow()
@@ -259,10 +296,14 @@ public class EnemyDummy : MonoBehaviour
     {
         get
         {
-            float effective = 1f;
+            // 1 미만(이감)은 가장 강한 하나, 1 초과(이속 증가 — 원작 손해 오라)는 가장 큰 하나. 둘이 같이 걸리면 곱한다.
+            float slow = 1f, boost = 1f;
             foreach (float m in slowMultipliers)
-                effective = Mathf.Min(effective, m);
-            return Mathf.Max(effective, SlowFloorMultiplier);
+            {
+                if (m < 1f) slow = Mathf.Min(slow, m);
+                else boost = Mathf.Max(boost, m);
+            }
+            return Mathf.Max(slow, SlowFloorMultiplier) * boost;
         }
     }
 
@@ -443,7 +484,8 @@ public class EnemyDummy : MonoBehaviour
         switch (effect.kind)
         {
             case SkillEffectKind.ArmorBonus:
-                AddArmorShred(-effect.multiplier);
+                if (!string.IsNullOrEmpty(effect.buffId)) AddAuraArmorShred(effect.buffId, -effect.multiplier);
+                else AddArmorShred(-effect.multiplier);
                 break;
             case SkillEffectKind.HealOverTime:
                 AddRegenBonus(effect.multiplier);
@@ -458,7 +500,8 @@ public class EnemyDummy : MonoBehaviour
         switch (effect.kind)
         {
             case SkillEffectKind.ArmorBonus:
-                AddArmorShred(effect.multiplier);
+                if (!string.IsNullOrEmpty(effect.buffId)) RemoveAuraArmorShred(effect.buffId, -effect.multiplier);
+                else AddArmorShred(effect.multiplier);
                 break;
             case SkillEffectKind.HealOverTime:
                 RemoveRegenBonus(effect.multiplier);
@@ -548,6 +591,40 @@ public class EnemyDummy : MonoBehaviour
     // 아니라 깎는 양의 상한 — 방어 70인 적은 −5까지). 적 119종 전부 AId1을 달고 있고, 레벨을 내리거나
     // 없애는 트리거는 없다(영구). 위 armorShred(특성·오라 = 원작 AHad 음수 오라, 상한 없음)와 다른 축이다.
     // 원본: war3map_new.w3a 원본 표 AId1 (2026-09-30 구현담당1).
+    // 버프 ID가 있는 방깎 오라(원작 AHad 음수 오라 — 미공자 A0EC −35 등, 2026-09-30) — 같은 버프 ID끼리는 가장 큰 것 하나,
+    // 다른 버프 ID끼리는 합(엔진 지식, 맵 미확정 — 마나 재생 오라와 같은 규칙). AId1(스킬 방깎, 상한 −75)과는 다른 능력이라
+    // 그 상한 밖에서 따로 쌓인다. buffId가 빈 옛 에셋(원작009_H094)은 위 armorShred에 그냥 더해지는 예전 경로 그대로.
+    readonly Dictionary<string, List<float>> auraArmorShredById = new Dictionary<string, List<float>>();
+
+    void AddAuraArmorShred(string buffId, float amount)
+    {
+        if (!auraArmorShredById.TryGetValue(buffId, out List<float> list)) auraArmorShredById[buffId] = list = new List<float>();
+        list.Add(amount);
+    }
+
+    void RemoveAuraArmorShred(string buffId, float amount)
+    {
+        if (auraArmorShredById.TryGetValue(buffId, out List<float> list)) list.Remove(amount);
+    }
+
+    /// <summary>버프 ID별 최댓값의 합 — 방깎 오라가 지금 깎고 있는 방어력.</summary>
+    public float AuraArmorShred
+    {
+        get
+        {
+            float total = 0f;
+            foreach (List<float> list in auraArmorShredById.Values)
+            {
+                // 0에서 시작하면 방어를 올리는 오라(음수 방깎 — 거프 A0VE 적 방어 +15)가 통째로 버려진다(2026-09-30).
+                if (list.Count == 0) continue;
+                float best = list[0];
+                foreach (float v in list) best = Mathf.Max(best, v);
+                total += best;
+            }
+            return total;
+        }
+    }
+
     public const float Aid1ShredCap = 75f;
     float aid1Shred;
     /// <summary>스킬 방깎(AId1) 누적량(0~75). SkillLevel.targetArmorBreakAbove가 읽는다.</summary>
@@ -615,7 +692,7 @@ public class EnemyDummy : MonoBehaviour
 
     /// <summary>방깎을 적용한 실효 방어력. 하한 없음(원작).</summary>
     public float EffectiveArmor => IsReplica ? replicaArmor :   // MP: 클라 겉모습은 호스트 실효값
-        (data != null ? data.armor : 0f) - armorShred - aid1Shred + TableStackedArmorShred();
+        (data != null ? data.armor : 0f) - armorShred - aid1Shred - AuraArmorShred + TableStackedArmorShred();
 
     public ArmorType ArmorType => data != null ? data.armorType : ArmorType.Normal;
 

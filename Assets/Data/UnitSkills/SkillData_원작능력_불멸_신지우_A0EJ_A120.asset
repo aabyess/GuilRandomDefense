@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작능력_불멸_신지우_A0EJ_A120
+  m_EditorClassIdentifier:
+  skillName: A0EJ·A120 가반 방깎 — 평타 맞은 적 방어 −60(PV≠200)/−70(PV 200) 200초
+  description: 원작 가반 h04F uabi A0EJ(AIcb, Iarp 60, adur 200, atar nonancient)·A120(AIcb, Iarp 70, adur 200, atar ancient·sapper). ancient = PV 200(utyp 전수). 같은 능력은 겹치지 않고 갱신(버프 ID별 최댓값). AId1(상한 −75)과 다른 능력이라 그 상한 밖. 2026-09-30 구현담당1(IMMORTAL_FILL_LIST §2).
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 1.0
+    range: 0.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 4
+      basis: 0
+      target: 3
+      damageType: 0
+      attackType: 0
+      multiplier: -60.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 200.0
+      casterBuffCountFactor: 0.0
+      buffId: A0EJ
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 4
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 4
+      basis: 0
+      target: 3
+      damageType: 0
+      attackType: 0
+      multiplier: -70.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 200.0
+      casterBuffCountFactor: 0.0
+      buffId: A120
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 2
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0.0

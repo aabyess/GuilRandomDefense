@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: SkillData_게이트_제한_강보명_RedAttack_3of4
   m_EditorClassIdentifier:
   skillName: 패트릭 레드필드 — 3/4 (RedAttack 흡혈)
-  description: '원작 Trig_RedAttack(h05G = 제한_강보명): 1/22가 아니면 `GetRandomInt(1,4)>1` → if PV<200 최대×0.0275 CHAOS/UNIVERSAL else 162500 NORMAL/UNIVERSAL — 전체 (21/22)×(3/4). 제한_최영민 번들(원작능력_제한_최영민)에 잘못 있던 값을 주인에게로. 2026-09-30 구현담당1.'
+  description: '원작 Trig_RedAttack(h05G = 제한_강보명): 1/22가 아니면 `GetRandomInt(1,4)>1` → if PV<200 최대×0.0275 CHAOS/UNIVERSAL else 162500 NORMAL/UNIVERSAL — 전체 (21/22)×(3/4). 제한_최영민 번들(원작능력_제한_최영민)에 잘못 있던 값을 주인에게로. 2026-09-30 구현담당1. [제한 나머지 09-30] U4: GetRandomInt(1,4)>1은 앞의 if/elseif와 무관한 독립 굴림 — 0.7159 → 0.75. (Tools/apply_limited_rest.py)'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.7159090909090909
+    triggerChance: 0.75
     range: 0.0
     hitCountThreshold: 0
     resetTo: 0
