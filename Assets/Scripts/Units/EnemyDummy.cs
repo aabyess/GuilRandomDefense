@@ -251,10 +251,19 @@ public class EnemyDummy : MonoBehaviour
 
     void ApplySlow()
     {
-        float effective = 1f;
-        foreach (float m in slowMultipliers)
-            effective = Mathf.Min(effective, m);
-        if (mover != null) mover.SetSlowMultiplier(Mathf.Max(effective, SlowFloorMultiplier));
+        if (mover != null) mover.SetSlowMultiplier(EffectiveSlowMultiplier);
+    }
+
+    /// <summary>지금 실제로 걸린 이감 배수(가장 강한 하나, 최저 이속 하한 적용). 1이면 이감 없음.</summary>
+    public float EffectiveSlowMultiplier
+    {
+        get
+        {
+            float effective = 1f;
+            foreach (float m in slowMultipliers)
+                effective = Mathf.Min(effective, m);
+            return Mathf.Max(effective, SlowFloorMultiplier);
+        }
     }
 
     // 원작 최저 이속(war3mapMisc.txt MinUnitSpeed=70, 워크3 단위)을 우리 단위로 옮긴 값.
