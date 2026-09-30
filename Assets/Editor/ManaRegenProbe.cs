@@ -57,7 +57,7 @@ static class ManaRegenProbe
                 slot.home = c + Quaternion.Euler(0f, (u * 2 + v) * 360f / n, 0f) * Vector3.forward * RingRadius;
                 for (int i = 0; i < 3; i++) slot.targets.Add(SpawnTarget(slot.home, i));
                 GameObject go = spawner.Spawn(data, slot.home, 0);
-                if (go != null) { slot.attacker = go.GetComponent<UnitAttacker>(); sb.Append($"{data.name} · "); }
+                if (go != null) { slot.attacker = go.GetComponentInChildren<UnitAttacker>(); sb.Append($"{data.name} · "); }
                 slots.Add(slot);
             }
         }
@@ -130,7 +130,8 @@ static class ManaRegenProbe
             int hits = SkillTelemetry.HitsOf(u);
             float interval = s.attacker != null ? s.attacker.AttackInterval : 0f;
             int gauge = s.attacker != null && ManaCounterField != null ? (int)ManaCounterField.GetValue(s.attacker) : -1;
-            sb.Append($"\n{s.label}: 판정 {hits}타 · 실측 평타 주기 {(hits > 1 ? elapsed / hits : 0f):0.0000}초(설정 {interval:0.0000}) · 재생 {u.manaRegenPerSecond}/초 · 상한 {u.manaMax} · 환산 {u.manaGaugePerMana} · 끝날 때 게이지 {gauge}");
+            // ⚠️ 판 전체 시간 ÷ 타수는 쓰지 않는다 — 판 도중 패배 처리로 평타가 멎으면 주기가 부풀어 보인다(첫 판에서 1.6배). 주기는 시전 간격 ÷ 타수로 읽는다.
+            sb.Append($"\n{s.label}: 판정 {hits}타 · 설정 평타 주기 {interval:0.0000}초 · 재생 {u.manaRegenPerSecond}/초 · 상한 {u.manaMax} · 환산 {u.manaGaugePerMana} · 끝날 때 게이지 {gauge}");
             // 공유 게이지라 같은 타에 여럿이 같이 나간다 — 문턱이 같은 것 중 확률 판정 없는 첫 스킬의 시전만 센다.
             foreach ((string key, int threshold) in ManaGaugeSkills(u))
             {
@@ -141,7 +142,7 @@ static class ManaRegenProbe
                 if (casts.Count < 2) continue;
                 var gaps = new List<float>(); var hitGaps = new List<int>();
                 for (int i = 1; i < casts.Count; i++) { gaps.Add(casts[i].time - casts[i - 1].time); hitGaps.Add(casts[i].hits - casts[i - 1].hits); }
-                sb.Append($" · 간격 평균 {gaps.Average():0.00}초(최소 {gaps.Min():0.00}·최대 {gaps.Max():0.00}) · 타수 {string.Join("/", hitGaps.Distinct().OrderBy(x => x))}");
+                sb.Append($" · 간격 평균 {gaps.Average():0.00}초(최소 {gaps.Min():0.00}·최대 {gaps.Max():0.00}) · 타수 {string.Join("/", hitGaps.Distinct().OrderBy(x => x))} · 실측 평타 주기 {gaps.Sum() / Mathf.Max(1, hitGaps.Sum()):0.0000}초");
             }
         }
         string report = sb.ToString();
