@@ -10,22 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_양문호
+  m_Name: SkillData_원작능력_전설적인_양문호_Legend20_1of12
   m_EditorClassIdentifier:
-  skillName: Legend20 매 타 (크래커)
-  description: '원작 전설적인 샬롯 크래커 빅맘 3장성 - 전설적인(Trig_Legend20). | 2차 배정(트리거·더미 채널): 원작 전설적인 샬롯 크래커 빅맘 3장성 - 전설적인(Trig_Legend20). | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Legend20(h03H) = 매 타 대상 20000 NORMAL/UNIVERSAL + `1~12==3 → 대상 위치 400 광역 250000`. 이전: 확률 0.2(A10Y = h033 전설적인_임건웅 능력)·250000 두 벌(단일)·AD → 이 에셋은 매 타 20000(AP·Spells), 1/12 광역은 새 _Legend20_1of12.'
+  skillName: Legend20 1/12 광역
+  description: '원작 Trig_Legend20(h03H 크래커 = 전설적인_양문호): `GetRandomInt(1,12)==3` → 대상 위치 400 광역 250000 NORMAL/UNIVERSAL(AP·Spells). 2026-09-30 구현담당1(중복 검사).'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 0.0
+    triggerChance: 0.08333333333333333
+    range: 400.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
     effects:
     - kind: 0
       basis: 0
-      target: 3
+      target: 2
       damageType: 2
       attackType: 7
-      multiplier: 20000.0
+      multiplier: 250000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
@@ -42,3 +48,8 @@ MonoBehaviour:
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
