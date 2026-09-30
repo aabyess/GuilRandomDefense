@@ -1657,6 +1657,11 @@ public class UnitAttacker : MonoBehaviour
         if (target != null) target.RemoveAllyAuraEffect(effect);
     }
 
+    // 계측 채널 — %체력 세 basis는 「스킬%HP」로 따로 센다(보스 %HP 게이트 제거 효과를 재려고, 2026-09-30).
+    static string TelemetryChannel(SkillEffect effect) =>
+        effect.basis == SkillEffectBasis.TargetMaxHpPercent || effect.basis == SkillEffectBasis.TargetCurrentHpPercent
+        || effect.basis == SkillEffectBasis.TargetMissingHpPercent ? "스킬%HP" : "스킬";
+
     void DealSkillDamage(SkillEffect effect, EnemyDummy target, float recentAttackDamage)
     {
         // ⚠️ 2026-09-05 정정: PercentDamageTakenMultiplier(원작 A11S)는 "%체력 피해 전용
@@ -1685,7 +1690,7 @@ public class UnitAttacker : MonoBehaviour
         {
             float skillHpBefore = target.Hp;
             target.TakeDamage(amount, effect.damageType, effect.attackType, owner != null ? owner.OwnerId : -1);
-            SkillTelemetry.Damage(identity != null ? identity.Data : null, "스킬", target, skillHpBefore);
+            SkillTelemetry.Damage(identity != null ? identity.Data : null, TelemetryChannel(effect), target, skillHpBefore);
             return;
         }
 
@@ -1706,7 +1711,7 @@ public class UnitAttacker : MonoBehaviour
                 bool vfxBefore = SkillVfx.SetCasterGate(vfxAllowed);
                 target.TakeDamage(amountPerHit, damageType, attackType, owner != null ? owner.OwnerId : -1);
                 SkillVfx.SetCasterGate(vfxBefore);
-                SkillTelemetry.Damage(identity != null ? identity.Data : null, "스킬", target, hitHpBefore);
+                SkillTelemetry.Damage(identity != null ? identity.Data : null, "스킬", target, hitHpBefore);   // 다단 히트는 효과 정보가 없어 채널을 안 나눈다
             }
             if (i < hits - 1 && interval > 0f) yield return new WaitForSeconds(interval);
         }

@@ -65,6 +65,10 @@ public static class SkillTelemetry
         damage[channel] = d + dealt;
     }
 
+    /// <summary>한 유닛이 채널(「스킬」「스킬%HP」「치명」 등)로 낸 누적 피해. 탐침용.</summary>
+    public static float DamageOf(UnitData unit, string channel) =>
+        unit != null && stats.TryGetValue(unit, out UnitStats s) && s.damage.TryGetValue(channel, out float d) ? d : 0f;
+
     public static string Report(IEnumerable<UnitData> fielded)
     {
         StringBuilder sb = new StringBuilder();
