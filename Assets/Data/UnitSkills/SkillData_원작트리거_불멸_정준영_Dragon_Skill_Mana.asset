@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작트리거_불멸_정준영_Dragon_Skill_Mana
+  m_EditorClassIdentifier:
+  skillName: Dragon_Skill_Mana — MANA게이지160(425 범위 300000×1~2 ×11)
+  description: '원작 드래곤 h04D Dragon_Skill_Mana(마나==160): 대상에서 90~360 떨어진 무작위 지점 425 범위 300000×1~2 NORMAL/UNIVERSAL 11회(0.1~0.4초 간격) — 대상 중심으로 근사. 2026-09-30 구현담당1(IMMORTAL_FILL_LIST §2).'
+  triggerType: 3
+  levels:
+  - cooldown: 0
+    triggerChance: 1.0
+    range: 425.0
+    hitCountThreshold: 160
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 300000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 11
+      duration: 2.5
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 2.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0.0

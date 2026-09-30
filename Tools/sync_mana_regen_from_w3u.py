@@ -161,6 +161,12 @@ def main(dry, list_path=None):
                 checks, plus1 = trigger_life(uid)
                 if checks:
                     lc.append((uid, mo, plus1))
+            if len(lc) > 1:
+                # 한 로스터에 체력 검사 유닛이 여럿(불멸_정준영 = 빅맘 h04Q + 카이도 용형 h0AD) — 게이지 에셋 문턱과 uhpm이 같은 유닛 하나로
+                thr_set = {float(t) for t, _ in life_real}
+                narrowed = [x for x in lc if float(x[1].get('uhpm') or 0) in thr_set]
+                if len(narrowed) == 1:
+                    lc = narrowed
             if len(lc) != 1:
                 notes.append('⚠️ %s: 체력 게이지 에셋은 있는데 체력 검사 트리거 유닛이 %d개 — 건너뜀' % (ro, len(lc)))
             else:

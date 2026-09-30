@@ -12,7 +12,14 @@ using UnityEngine;
 //   gameshot x.png 1 1920x1080 click?:보통 wait:2 call:EternalFillProbe.Arena wait:90 call:EternalFillProbe.Report
 static class EternalFillProbe
 {
-    static readonly string[] Units = { "영원_문필환", "영원_김영원", "영원_최상호", "영원_조세민", "영원_김정래" };
+    static string[] Units = Eternal;
+    static readonly string[] Eternal = { "영원_문필환", "영원_김영원", "영원_최상호", "영원_조세민", "영원_김정래" };
+    // 불멸 채우기(2026-09-30) — call:EternalFillProbe.ArenaImmortal. 오라는 Report의 「공격력·주기·표적 방어·이감」 줄로 본다
+    // (센고쿠 A062는 맵 전체라 나머지 일곱의 공격력에 +11%가 같이 실린다).
+    static readonly string[] Immortal = { "불멸_정윤식", "불멸_고도현", "불멸_이승우", "불멸_이이삭", "불멸_신지우", "불멸_박은석", "불멸_김용태", "불멸_정준영" };
+    static readonly Dictionary<string, UnitAttacker> attackers = new Dictionary<string, UnitAttacker>();
+
+    static string ArenaImmortal() { Units = Immortal; return Arena(); }
 
     class Track { public Vector3 at; public string unit; public float stunStart = -1f; public readonly List<float> stuns = new List<float>(); }
     static readonly Dictionary<EnemyDummy, Track> tracks = new Dictionary<EnemyDummy, Track>();
@@ -28,7 +35,7 @@ static class EternalFillProbe
             .Select(g => AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(g)))
             .FirstOrDefault(e => e != null && !e.isBoss && e.prefab != null && e.moveSpeed > 0f && e.name.Contains("R2"));
         if (spawner == null || lane == null || dummyData == null) return "❌ UnitSpawner·레인·표적 적 없음";
-        tracks.Clear(); fielded.Clear();
+        tracks.Clear(); fielded.Clear(); attackers.Clear();
         SkillTelemetry.Reset();
         SkillTelemetry.Enabled = true;
         for (int u = 0; u < Units.Length; u++)
@@ -42,7 +49,8 @@ static class EternalFillProbe
                 EnemyDummy dummy = SpawnTarget(at);
                 if (dummy != null) tracks[dummy] = new Track { unit = Units[u], at = at };
             }
-            if (spawner.Spawn(data, home, 0) != null) fielded.Add(data);
+            GameObject unit = spawner.Spawn(data, home, 0);
+            if (unit != null) { fielded.Add(data); if (unit.TryGetComponent(out UnitAttacker attacker)) attackers[Units[u]] = attacker; }
         }
         // 탐침은 레인 적을 안 막는다 — 데스카운트로 판이 끝나면 유닛이 사라져 평타가 멎는다(첫 판에서 50초쯤에 멎음).
         RoundManager rm = Object.FindFirstObjectByType<RoundManager>();
@@ -97,6 +105,13 @@ static class EternalFillProbe
                 string gap = times.Count > 1 ? $" · 간격 평균 {(times[times.Count - 1] - times[0]) / (times.Count - 1):0.00}초" : "";
                 sb.Append($"\n{u.name} 「{(g.Key.Length > 40 ? g.Key.Substring(0, 40) : g.Key)}」 시전 {times.Count} · 판정 {SkillTelemetry.HitsOf(u)}타 중 {(float)times.Count / Mathf.Max(1, SkillTelemetry.HitsOf(u)):P1}{gap}");
             }
+        foreach (var kv in attackers)
+        {
+            if (kv.Value == null) continue;
+            EnemyDummy near = tracks.Where(t => t.Value.unit == kv.Key && t.Key != null).Select(t => t.Key).FirstOrDefault();
+            sb.Append($"\n{kv.Key} 공격력 {kv.Value.AttackDamage:0} · 주기 {kv.Value.AttackInterval:0.000}"
+                      + (near != null ? $" · 표적 방어 {near.EffectiveArmor:0.0}(에셋 {dummyData.armor}) · 이감 {near.EffectiveSlowMultiplier:0.00}" : ""));
+        }
         foreach (var g in tracks.Values.GroupBy(t => t.unit))
         {
             List<float> stuns = g.SelectMany(t => t.stuns).OrderBy(x => x).ToList();

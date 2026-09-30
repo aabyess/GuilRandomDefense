@@ -610,7 +610,9 @@ public class EnemyDummy : MonoBehaviour
             float total = 0f;
             foreach (List<float> list in auraArmorShredById.Values)
             {
-                float best = 0f;
+                // 0에서 시작하면 방어를 올리는 오라(음수 방깎 — 거프 A0VE 적 방어 +15)가 통째로 버려진다(2026-09-30).
+                if (list.Count == 0) continue;
+                float best = list[0];
                 foreach (float v in list) best = Mathf.Max(best, v);
                 total += best;
             }

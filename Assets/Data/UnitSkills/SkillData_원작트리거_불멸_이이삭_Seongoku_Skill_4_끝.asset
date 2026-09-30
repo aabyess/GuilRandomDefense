@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작트리거_불멸_이이삭_Seongoku_Skill_4_끝
+  m_EditorClassIdentifier:
+  skillName: Seongoku_Skill_4 끝 — LIFE게이지75(600 범위 2000000)
+  description: '원작 센고쿠 h04E Seongoku_Skill_4 스테이지 3: 대상 중심 600 범위 2000000 NORMAL/UNIVERSAL(옛 에셋은 단일이었다). 2026-09-30 구현담당1(IMMORTAL_FILL_LIST §2).'
+  triggerType: 3
+  levels:
+  - cooldown: 0
+    triggerChance: 1.0
+    range: 600.0
+    hitCountThreshold: 75
+    resetTo: 0
+    gaugeKind: 1
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 2000000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0.0
