@@ -3827,7 +3827,29 @@ UNITS = {
                     tpose_arms=biped_tpose_names(fingers=5, joints=3),
                     glb_images={0: "sangho_diffuse.png"},
                     materials=dict(textures={"525241": [("DiffuseColor", "sangho_diffuse.png")],
-                                             "525241_body": [("DiffuseColor", "sangho_diffuse.png")]})),
+                                             "525241_body": [("DiffuseColor", "sangho_diffuse.png")]}),
+                    # 🔸 고유 동작 시범(2026-09-30, 사장님 「스킨 원본에 든 고유 동작을 살려 쓴다」 · 방식 ⓒ = 원본 뼈대 + 원본 클립을 같은 FBX 테이크로).
+                    #   (시범은 「이름@변형」으로 Assets 밖에 뽑았다 — 그 장치는 main()에 남아 있다. 다음 유닛 시범 때 variants={"동작": dict(…)}로 쓸 것.)
+                    #   원본 14 테이크 중 실제로 다른 동작 9: idle(=stay_show) · run · attack_1(=CommonAttack) · strike_1 · die ·
+                    #   skill_1_1·1_2·1_3 · skill_3_3(skill_3_1·3_2는 1_1·1_2와 같다) · back(1프레임, 버림).
+                    #   Skill1 = 준비(0.29초) + 중간(0.42초) + 본동작(4.62초)을 이은 것, 조각 셋도 Skill1_Start·Mid·Hit로 같이 낸다.
+                    #   Skill2 = 같은 준비·중간 + skill_3_3(4.96초). 조각은 Skill1 것과 같아 따로 안 낸다.
+                    #   제자리: 공격·스킬·죽음은 골반 수평 이동을 Idle 첫 자세 자리에 묶는다(높이는 그대로 — 도약은 남는다).
+                    #   Attack_Lunge = 같은 공격을 원본 그대로(0.49m 돌진) — 사장님이 둘을 보고 고르신다. Idle·Move·Hit는 원본 그대로.
+                    # 🔴 09-30 밤 PM이 이 산출을 Assets에 넣었다(60649a7f) → 시범 때 variants["동작"]이던 설정을 **기본으로 올렸다**
+                    #   (기본 설정 = 커밋된 FBX를 만든 설정이어야 check_entries가 참이다).
+                    **dict(
+                        anim=True, anim_drop_ok=True, takes_only=True,
+                        take_names={"idle": "Idle", "run": "Move", "attack_1": "Attack", "strike_1": "Hit", "die": "Die",
+                                    "skill_1_1": "Skill1_Start", "skill_1_2": "Skill1_Mid", "skill_1_3": "Skill1_Hit",
+                                    "skill_3_3": "Skill2_Hit"},
+                        clip_concat={"Skill1": ["Skill1_Start", "Skill1_Mid", "Skill1_Hit"],
+                                     "Skill2": dict(parts=["Skill1_Start", "Skill1_Mid", "Skill2_Hit"], drop=["Skill2_Hit"])},
+                        clip_copy={"Attack_Lunge": "Attack"},
+                        # 🔴 원본 클립은 결합 자세에서 수평 0.68m·위 0.21m 떨어진 자리에서 논다(실측) — Idle 첫 프레임을 제자리·바닥에 맞춘다.
+                        clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
+                        clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle",
+                                          takes=["Attack", "Die", "Skill1", "Skill2", "Skill1_Start", "Skill1_Mid", "Skill1_Hit"]))),
     # 원피스 바운티러시 아틀라스(베가펑크 위성 '폭력', pl_atlas_orig01) → 히든_전주연
     # (2026-09-22 히든, blender 세션). zip 안 rar(bsdtar로 품 — extract_archive는 이미
     # bsdtar만 씀, 7z 안 거침·폴백 불필요 확인) 안 pl_ 표준 계열(Body_Pelvis, PL_RENAME
@@ -5706,7 +5728,9 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 cut += 1
             tri_after += sum(len(p.vertices) - 2 for p in m.data.polygons)
         report["감량"] = f"삼각형 {tri_before} → {tri_after} (메시 {cut}개 ×{dec['ratio']}, {dec.get('min_tris', 1000)}삼각형 이상만)" + (f" · 메시별 {dec['by_mesh']}" if dec.get('by_mesh') else "")
-    if cfg.get("rename_bones"):                                         # 사람형 매핑 뼈 이름을 표준으로(가중치 그룹 이름도 같이)
+    renamed = {}                                                        # 실제 옛 이름(번호 꼬리 포함) → 새 이름. 클립 표본의 뼈 이름을 옮길 때도 쓴다
+
+    def rename_bones_now():
         arm0 = main_armature()
         strip = re.compile(cfg["rename_strip"]) if cfg.get("rename_strip") else None   # 🔸 갑옷거인: glTF 번호 꼬리(Bip001 Pelvis_01) — 표 이름과 꼬리 뗀 이름으로 짝짓기
         for old, new in cfg["rename_bones"].items():
@@ -5719,10 +5743,14 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             assert b is not None, f"{name}: 이름 바꿀 뼈가 없다 {old}"
             assert new not in arm0.data.bones, f"{name}: 새 이름이 이미 있다 {new}"
             b.name = new
+            renamed[old] = new
             for m in bpy.context.scene.objects:
                 g = m.vertex_groups.get(old) if m.type == "MESH" else None
                 if g is not None:
                     g.name = new
+
+    if cfg.get("rename_bones"):                                         # 사람형 매핑 뼈 이름을 표준으로(가중치 그룹 이름도 같이)
+        rename_bones_now()
         report["이름 바꾼 뼈"] = len(cfg["rename_bones"])
     scene = bpy.context.scene
     arm = main_armature()
@@ -5743,9 +5771,43 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 o = bpy.data.objects.get(gone)
                 if o is not None:
                     bpy.data.objects.remove(o, do_unlink=True)
+        if cfg.get("rename_bones"):
+            # 🔴 anim=True + rename_bones(2026-09-30, 고유 동작 시범 — 영원_최상호): 클립을 읽으려고 원본을 다시 불러오면
+            #   위에서 바꾼 뼈 이름이 풀린다 → 아래 단계(drop/merge/tpose …)가 「mixamorig:…」를 못 찾아 죽었다.
+            #   ① 다시 불러온 뼈대에 이름을 한 번 더 바꾸고 ② 클립 표본(원본 이름으로 찍힌 세계 행렬)의 키도 새 이름으로 옮긴다.
+            #   아마추어 오브젝트 이름은 안 바뀌므로 arm_name은 그대로 유효하다.
+            renamed.clear()
+            rename_bones_now()
+            arm = bpy.data.objects[arm_name]
+            clips = [(t_, f0_, [{renamed.get(k, k): M for k, M in w.items()} for w in fr_]) for t_, f0_, fr_ in clips]
         if cfg.get("take_names"):                                       # 원본 테이크 이름 → 유니티 클립 이름(잉어 Scene → Idle)
-            clips = [(cfg["take_names"].get(t, t), f0, fr) for t, f0, fr in clips]
+            if cfg.get("takes_only"):                                   # 표에 있는 원본 테이크만(중복·안 쓰는 테이크를 버린다) — 표 순서대로
+                by_src = {t: (f0, fr) for t, f0, fr in clips}
+                missing = [s for s in cfg["take_names"] if s not in by_src]
+                assert not missing, f"{name}: take_names에 적은 원본 테이크가 없다 {missing} (있는 것 {sorted(by_src)})"
+                report["버린 테이크"] = sorted(set(by_src) - set(cfg["take_names"]))
+                clips = [(new, *by_src[s]) for s, new in cfg["take_names"].items()]
+            else:
+                clips = [(cfg["take_names"].get(t, t), f0, fr) for t, f0, fr in clips]
             report["테이크 이름"] = [c[0] for c in clips]
+        if cfg.get("clip_concat"):
+            # 새 테이크 = 있는 테이크 여럿을 이어 붙인 것(스킬 준비 → 중간 → 본동작). 뒤 조각의 첫 프레임은 앞 조각의 끝과 같은 자세라 뺀다.
+            # drop=True면 조각 테이크는 버리고 이은 것만 남긴다.
+            by = {t: fr for t, _, fr in clips}
+            for new, spec in cfg["clip_concat"].items():
+                parts = spec["parts"] if isinstance(spec, dict) else spec
+                assert all(p in by for p in parts), f"{name}: clip_concat 조각이 없다 {new} {parts}"
+                joined = list(by[parts[0]])
+                for p in parts[1:]:
+                    joined += by[p][1:]
+                clips.append((new, 1, joined))
+                by[new] = joined
+                if isinstance(spec, dict) and spec.get("drop"):
+                    clips = [c for c in clips if c[0] not in spec["drop"]]
+        if cfg.get("clip_copy"):                                        # 같은 동작의 두 판(제자리 / 원본 그대로)을 나란히 내보낼 때
+            by = {t: (f0, fr) for t, f0, fr in clips}
+            for new, old in cfg["clip_copy"].items():
+                clips.append((new, *by[old]))
         if cfg.get("split_clips"):
             # 🔴 안흔함_강재규(2026-09-23): 원본이 「All Animations」 한 테이크에 서 있기·웅크리기·앞발 치기를 **이어 붙여** 놨다.
             #   ArtBinder.GetOrCreateOwnClipController는 **가장 긴 클립 하나**를 기본 상태로 놓으므로, 게임에서 재규어가
@@ -6570,15 +6632,56 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         new_arm.animation_data_create()
         for pb in new_arm.pose.bones:
             pb.rotation_mode = "QUATERNION"
+        # 🔸 clip_inplace(2026-09-30, 고유 동작 시범): 원본 클립이 골반을 끌고 앞으로 나간다(공격 돌진 0.49m · 스킬 1.19m).
+        #   게임에선 유닛 자리가 고정이라 몸이 자리에서 벗어나면 타격 판정·발밑 표시와 어긋난다.
+        #   → 적힌 테이크는 **골반 뼈의 수평(X·Y) 이동만** 기준 자세(anchor 테이크의 첫 프레임) 자리에 묶는다.
+        #     그 프레임의 모든 뼈를 같은 만큼 평행 이동하므로 자세는 그대로고, **높이(Z)는 안 건드려 도약·주저앉기는 남는다.**
+        #   출력 공간(G를 곱한 뒤)에서 잰다 — G가 방향을 돌려 놓았어도 Z가 위다.
+        # 🔸 clip_anchor(2026-09-30, 영원_최상호 실측): 원본 클립이 **결합 자세와 다른 자리**에서 논다 — Idle 첫 프레임 골반이
+        #   결합 자세 골반에서 수평 0.68m·위 0.21m 떨어져 있었다(립 원본의 장면 원점 차이). 그대로 구우면 유닛이 제 자리 옆 공중에 선다.
+        #   → 모든 테이크를 **같은 만큼** 옮긴다: 수평은 기준 테이크 첫 프레임의 골반이 쉬는 자세 골반 바로 위에 오게,
+        #     높이는(ground=True) 그 첫 프레임의 메시 최저점이 바닥(z 0)에 닿게. 상수 이동이라 동작·도약·테이크 사이 상대 위치는 그대로다.
+        anchor_cfg = cfg.get("clip_anchor") or {}
+        Tanchor = None
+        if anchor_cfg:
+            a_bone = anchor_cfg["bone"]
+            a_fr = next((fr for t_, _, fr in clips if t_ == anchor_cfg["take"]), None)
+            assert a_fr is not None and a_bone in rest, f"{name}: clip_anchor 기준이 없다 {anchor_cfg}"
+            d0 = (G @ a_fr[0][a_bone]).translation - rest[a_bone].translation
+            Tanchor = Matrix.Translation(Vector((-d0.x, -d0.y, 0.0)))
+            report["클립 기준점 수평 이동(m)"] = (round(-d0.x, 3), round(-d0.y, 3))
+        inplace = cfg.get("clip_inplace") or {}
+        ip_bone = inplace.get("bone")
+        ip_takes = set(inplace.get("takes", ()))
+        ip_home = None
+        if ip_takes:
+            assert ip_bone in rest, f"{name}: clip_inplace 뼈가 없다 {ip_bone}"
+            anchor = next((fr for t_, _, fr in clips if t_ == inplace.get("anchor")), None)
+            assert anchor is not None, f"{name}: clip_inplace anchor 테이크가 없다 {inplace.get('anchor')}"
+            ip_home = (G @ anchor[0][ip_bone]).translation.copy()
+            if Tanchor is not None:
+                ip_home = Tanchor @ ip_home
+            assert ip_takes <= {c[0] for c in clips}, f"{name}: clip_inplace 테이크가 없다 {ip_takes - {c[0] for c in clips}}"
         for take, f0, frames in clips:
             act = bpy.data.actions.new(take)
             assert act.name == take, f"{name}: 액션 이름이 잘렸다/바뀌었다: {take!r} → {act.name!r}"
             act.use_fake_user = True                                    # --blend 진단 파일에 클립이 다 남게(사용자 0이면 저장 때 빠진다)
             new_arm.animation_data.action = act
+            pulled = 0.0
             for fi, world in enumerate(frames):
                 pose = {}
+                Tfix = None
+                if Tanchor is not None:
+                    Tfix = Tanchor
+                if take in ip_takes:
+                    d = ((Tanchor @ G) if Tanchor is not None else G) @ world[ip_bone]
+                    d = d.translation - ip_home
+                    pulled = max(pulled, math.hypot(d.x, d.y))
+                    Tfix = Matrix.Translation(Vector((-d.x, -d.y, 0.0))) @ (Tanchor if Tanchor is not None else Matrix.Identity(4))
                 for bname in order:
                     P = _normalized(G @ world[bname])
+                    if Tfix is not None:
+                        P = Tfix @ P
                     pose[bname] = P
                     p = parent[bname]
                     local = rest[p].inverted() @ rest[bname] if p else rest[bname]
@@ -6588,6 +6691,8 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                     pb.location, pb.rotation_quaternion = bl, bq
                     pb.keyframe_insert("location", frame=f0 + fi)
                     pb.keyframe_insert("rotation_quaternion", frame=f0 + fi)
+            if take in ip_takes:
+                report.setdefault("제자리로 당긴 수평 이동 최대(m)", {})[take] = round(pulled, 3)
             if cfg.get("clip_ground"):
                 # 뿌리만 세계 z로 옮기면 자식은 부모 기준 키라 통째로 따라온다. 뿌리 기본 행렬의 이동 = 쉬는 자세 회전⁻¹ × 세계 이동
                 roots = [b.name for b in new_arm.data.bones if b.parent is None]
@@ -6607,6 +6712,34 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                         pb.keyframe_insert("location", frame=f0 + fi)
                     lifts.append(-low)
                 report.setdefault("클립 접지(m)", {})[take[-12:]] = (round(min(lifts), 3), round(max(lifts), 3))
+        if anchor_cfg.get("ground"):
+            # 기준 테이크 첫 프레임의 메시 최저점을 재서, 모든 테이크의 뿌리 뼈 위치 키를 같은 만큼 내린다/올린다(상수).
+            a_act = bpy.data.actions[anchor_cfg["take"]]
+            a_f0 = next(f0_ for t_, f0_, _ in clips if t_ == anchor_cfg["take"])
+            new_arm.animation_data.action = a_act
+            if hasattr(new_arm.animation_data, "action_slot") and len(a_act.slots):
+                new_arm.animation_data.action_slot = a_act.slots[0]
+            scene.frame_set(a_f0)
+            dg = bpy.context.evaluated_depsgraph_get()
+            low = float("inf")
+            for m in meshes:
+                ev = m.evaluated_get(dg)
+                me = ev.to_mesh()
+                low = min(low, min((ev.matrix_world @ v.co).z for v in me.vertices))
+                ev.to_mesh_clear()
+            roots = [b.name for b in new_arm.data.bones if b.parent is None]
+            for take, f0, frames in clips:
+                act = bpy.data.actions[take]
+                for fc in [fc for lay in act.layers for st in lay.strips for bag in st.channelbags for fc in bag.fcurves]:
+                    for r in roots:
+                        if fc.data_path == f'pose.bones["{r}"].location':
+                            dloc = rest[r].to_quaternion().inverted() @ Vector((0.0, 0.0, -low))
+                            for kp in fc.keyframe_points:
+                                kp.co.y += dloc[fc.array_index]
+                                kp.handle_left.y += dloc[fc.array_index]
+                                kp.handle_right.y += dloc[fc.array_index]
+                            fc.update()
+            report["클립 기준점 높이 이동(m)"] = round(-low, 3)
         report["클립"] = [c[0] for c in clips]
 
     if new_arm is not None and (cfg.get("synth_idle") or cfg.get("synth_clips")) and not clips:
@@ -6871,7 +7004,16 @@ def main():
         else:
             names.append(a)
     for name in names or list(UNITS):
-        r = fix(name, UNITS[name], out_dir, save_blend)
+        # 🔸 「이름@변형」(2026-09-30): 항목의 variants[변형]을 덮어쓴 설정으로 돈다. 시범 산출(--out으로 Assets 밖에)용 —
+        #   기본 항목은 **커밋된 FBX를 만든 설정 그대로** 두어야 check_entries가 참이다. 변형이 승인돼 Assets에 들어가면 그때 기본으로 올린다.
+        if "@" in name:
+            base, var = name.split("@", 1)
+            cfg = dict(UNITS[base])
+            cfg.update(cfg.pop("variants")[var])
+            name = base
+        else:
+            cfg = {k: v for k, v in UNITS[name].items() if k != "variants"}
+        r = fix(name, cfg, out_dir, save_blend)
         print("정리  " + "  ".join(f"{k} {v}" for k, v in r.items() if k != "출력"))
 
 
