@@ -21,7 +21,18 @@ public static class SkillTelemetry
 
     static readonly Dictionary<UnitData, UnitStats> stats = new Dictionary<UnitData, UnitStats>();
 
-    public static void Reset() => stats.Clear();
+    // 시전 시각 기록(2026-09-30 마나 재생 판 측정) — 게이지 스킬의 발동 간격을 재려면 횟수만으론 모자라다.
+    // hits는 그 시전이 나간 평타가 그 유닛 종류의 몇 번째 판정이었나(간격을 타수로도 읽게).
+    public readonly struct CastEvent
+    {
+        public readonly UnitData unit; public readonly string skill; public readonly float time; public readonly int hits;
+        public CastEvent(UnitData unit, string skill, float time, int hits) { this.unit = unit; this.skill = skill; this.time = time; this.hits = hits; }
+    }
+    public static readonly List<CastEvent> CastLog = new List<CastEvent>();
+
+    public static void Reset() { stats.Clear(); CastLog.Clear(); }
+
+    public static int HitsOf(UnitData unit) => unit != null && stats.TryGetValue(unit, out UnitStats s) ? s.hits : 0;
 
     static UnitStats For(UnitData unit)
     {
@@ -36,6 +47,7 @@ public static class SkillTelemetry
         Dictionary<string, int> casts = For(unit).casts;
         casts.TryGetValue(key, out int n);
         casts[key] = n + 1;
+        CastLog.Add(new CastEvent(unit, key, Time.time, For(unit).hits));
     }
 
     public static void Hit(UnitData unit)
