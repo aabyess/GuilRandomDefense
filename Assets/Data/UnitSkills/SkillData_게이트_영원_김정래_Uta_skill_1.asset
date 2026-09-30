@@ -1,0 +1,133 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_게이트_영원_김정래_Uta_skill_1
+  m_EditorClassIdentifier:
+  skillName: 우타 — 1/10(Uta_skill_1 + _double)
+  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_Uta_Attack(HashAttack h067) `GetRandomInt(1,10)==5` → Uta_skill_1과 Uta_skill_1_double을 같이 부른다. ① skill_1: PV(대상)<200이면 MAX_LIFE×0.10×(0.2+0.05×A11S)(A11S 항은 우리 PercentDamageTakenMultiplier) + 500000, MELEE(→Normal 행)/UNIVERSAL(→AP). ② _double: 착탄점(대상 근처) 400 안 적 전원 350000×rand(1.0~1.5) NORMAL(→Spells)/UNIVERSAL, PV<200이면 250000+(MAX−LIFE)×0.12 + 500000. 보스(PV≥200)엔 ①과 ②의 단일 피해가 원작부터 없다 → targetCondition PV<200. 원작은 우타 체력>10일 때만 전체가 돈다(체력을 카운터로 씀) — 여기 없음. _double의 1/4 군대 소환(e0RL·h04O)도 없음.'
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 0.1
+    range: 400.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 1
+      target: 3
+      damageType: 2
+      attackType: 1
+      multiplier: 0.1
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 1
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 1
+      multiplier: 500000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 1
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 350000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.5
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+    - kind: 0
+      basis: 13
+      target: 3
+      damageType: 2
+      attackType: 1
+      multiplier: 0.12
+      bonus: 250000.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 1
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 1
+      multiplier: 500000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 1
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
