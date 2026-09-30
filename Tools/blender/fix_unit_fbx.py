@@ -3798,7 +3798,7 @@ UNITS = {
     "특수함_황길라": dict(path="Assets/Art/Units/특수함_황길라/특수함_황길라.fbx", kind="human", size=("height", 1.8),
                       archive=(os.path.join(SKINS, "13_특수함/특수함_황길라.zip"), "source/Albedo.zip", "Albedo/scale.fbx"),
                       archive_textures=["Albedo/tex_dvl_mdl_albedo_alb_cnv.png", "Albedo/tex_dvl_mdl_albedo_nor.png"],
-                      no_nulls=True, orient_snap=True, use_rest_pose=True,
+                      no_nulls=True, orient_snap=True, use_rest_pose=True, zero_emission=True,   # 발광 0.5가 유니티에서 허옇게(반투명처럼) 떴다
                       drop_verts_of_bones=["j_axe"],
                       rename_bones=ALBEDO_RENAME,
                       drop_bones=["scale", "root", "eff_skill_lbd_spskill_00_feather", "feather_00", "j_axe", "eff_skill_lbd_spskill_00_axe_aura",
@@ -7169,6 +7169,21 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     # 🔴 킹(2026-09-17 PM 유니티 반려): 원본 재질 알파(메시 이름 _0.1_ = 알파 0.1)가 relink_textures의 old.alpha로 그대로 넘어가
     #   FBX TransparencyFactor로 나가서 유니티 인형 재질 9개가 전부 Transparent(큐 3000)로 떴다 → 내보내기 직전 모든 재질을 불투명으로 못박고 검사한다.
     #   일부러 반투명을 남길 유닛만 keep_alpha=True.
+    if cfg.get("zero_emission"):
+        # 🔴 특수함_황길라(2026-10-01 PM 유니티 사진): 원본 재질이 EmissiveColor 회색 0.5(발광 맵 tex_..._emi.png의 전체 기본값)를 갖고 있어 FBX가 그대로 싣자
+        #   유니티가 몸 전체에 0.5 회색을 더해 **반투명해 보이게 허옇게 떴다**(검은 날개가 연회색) — 투명도가 아니라 발광. 내보내기 직전 발광을 끈다.
+        zeroed = []
+        for mat in {s.material for o in scene.objects if o.type == "MESH" for s in o.material_slots if s.material}:
+            if mat.use_nodes:
+                for nd in [nd for nd in mat.node_tree.nodes if nd.type == "BSDF_PRINCIPLED"]:
+                    for k in [k for k in ("Emission Color", "Emission") if k in nd.inputs]:
+                        for lk in list(nd.inputs[k].links):
+                            mat.node_tree.links.remove(lk)
+                        nd.inputs[k].default_value = (0.0, 0.0, 0.0, 1.0)
+                    if "Emission Strength" in nd.inputs:
+                        nd.inputs["Emission Strength"].default_value = 0.0
+                    zeroed.append(mat.name)
+        report["발광 끔"] = sorted(set(zeroed))
     if not cfg.get("keep_alpha"):
         from bpy_extras.node_shader_utils import PrincipledBSDFWrapper
         fixed = []
@@ -7536,7 +7551,7 @@ UNITS["특수함_황길라"]["variants"] = {"동작": dict(
 # 🔸 BJ_율희(코퀴토스) 꼬리 판(2026-10-01, PM 지시): 꼬리 11마디가 뒤로 수평 막대처럼 굳는 게 어색 → 엉덩이에서 **뒤·아래로 휘어 끝이 땅 근처에서 말리는 곡선**으로 포즈를 잡아 그 자세를 쉬는 자세로 굽고 Hips에 합친다.
 #   세계 X축 기준 마디별 회전(머리 중심, 아래 마디가 따라감). 값은 마디 **증가분**(도) — 합이 휘는 각. 앞 7마디는 완만히 아래로, 뒤 4마디는 끝이 말리도록(반대로) 더 세게.
 _TAIL = {f"Tail{i}": ((1, 0, 0), d) for i, d in enumerate([-8, -9, -10, -10, -10, -11, -11, -11, -10, -4, 10], start=1)}
-UNITS["특수함_BJ_율희"]["variants"] = {"꼬리": dict(pose_bones_world=_TAIL)}
+UNITS["특수함_BJ_율희"]["pose_bones_world"] = _TAIL      # 2026-10-01 PM이 꼬리 곡선판을 Assets에 넣음(units 확인) → 기본으로 올림
 
 
 def main():
