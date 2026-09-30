@@ -1551,10 +1551,14 @@ public class UnitAttacker : MonoBehaviour
                 SkillEffectTargetCondition.TargetPointValueLessThan => pointValue < effect.targetConditionValue,
                 SkillEffectTargetCondition.TargetPointValueEqual => pointValue == effect.targetConditionValue,
                 SkillEffectTargetCondition.TargetPointValueAtLeast => pointValue >= effect.targetConditionValue,
+                SkillEffectTargetCondition.TargetPointValueNotEqual => pointValue != effect.targetConditionValue,
                 _ => true,
             };
             if (!passes) return;
         }
+
+        // 평타 피해 문턱(원작 GetEventDamage() > X) — SkillEffect.triggerDamageAbove 주석 참고. 0이면 통과.
+        if (effect.triggerDamageAbove > 0f && recentAttackDamage <= effect.triggerDamageAbove) return;
 
         switch (effect.kind)
         {
