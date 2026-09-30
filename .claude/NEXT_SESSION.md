@@ -42,6 +42,11 @@
 - 겹침 파일 남은 것: 원작능력_영원_최상호 A0HP 둔화 오라(likely) · 게이트_영원_최상호_a8343962(카벤디시) · 더미채널_영원_김정래_1(우타 A16W 스턴 1.5 confirmed).
 - 회수_초월_김만경_AD_0ac0451e 라벨 틀림: 원문은 마나≠135 AND 대상 버프 B06B(광폭화 적) → OnHitChance 0.075 + requiredTargetBuffId B06B 제안.
 - 이태훈 A0GR: 운석은 별도 SkillData(levels[1] 1/96) · 스톰프 스턴 3초는 likely라 빼고 피해·방깎만.
+**09-30 오후 추가 (main 푸시)**
+- 이펙트 팩 55종 Assets/ThirdParty/(d2b4df72): Cartoon FX 25 · Hovl 30, Hovl 재질 URP 변환(ThirdPartyVfxUrp), 점검 사진 ShowCfxr/ShowHovl. **아직 스킬에 연결 안 됨** — Blender가 SKILL_VFX_MAPPING.csv 작성 중 → PM이 SkillVfx에 연결(특별함 이상만).
+- 구현담당1: 과다발동·중복(61c1ea94) · TargetMissingHpPercent basis(6f075261) · 영원 4·불일치 2(57f17818) · 초월·불멸 체력 비례 누락(3f4421b7). 큐: 김만경 회수 → 이태훈 → **보스 %HP 게이트 제거 + 조건(SKILL_BOSS_BRANCH_apply.csv, 조건 한 칸 밀림 9개 같이)** → 감수성 계수 효과별 → 「게이지 AND 1/N」 라벨 11개 원문 대조.
+- 보스 분기 조사(Blender 74a2bc24·12f9e72a): 원작은 보스에게 %HP 173건 중 114건을 준다, 전역 감쇄 없음.
+- 목록만(1.3.0 후보): 비비·우솝(축 없음) · 도플 각성 모드 · 샹크스·핸콕 「적이 근처에 오면」 발동(TriggerRegisterUnitInRange, 새 triggerType 필요) · 배타 분기(임채민·이타도리·이이삭) · 더미 이감 오라 5건 · Hbh1 빈칸 강타 10종.
 **진행 중**: Blender = 보스 체력 비례 분기(SKILL_BOSS_BRANCH.md, 보스 36종은 %체력 스킬 0 — 원작은 별도 고정값 분기).
 **작업트리 소음**: 폰트 SDF 3개 · SampleScene 빛 14개 URP 자동 추가 — 커밋 안 함.
 
