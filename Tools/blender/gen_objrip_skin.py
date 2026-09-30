@@ -803,6 +803,75 @@ SKINS = {
             ToeBase=(0.045, -0.04, 0.015), ToeTip=(0.045, -0.07, 0.01),
         ),
     ),
+    # 랜덤_호시노_아이 ← 「oshi-no-ko-arima-kana」(Sketchfab) — 🔴 **두 번째 판**(2026-09-30 사장님 교체). 파일 이름대로 모습은 **아리마 카나**다
+    #   (빨간 단발 · 남색 베레모 · 남색 짧은 재킷 · 분홍 큰 리본 · 회색 주름치마 · 흰 양말 — 호시노 아이의 보라 긴 머리·별 눈이 아니다).
+    #   사장님이 이 모델을 「호시노 아이」 자리에 지정하셨다. 옛 판(최애의 아이 .blend)은 gen_rigify_skin.py RETIRED_SKINS로 옮겼다.
+    #   원본: zip 안 source/cartoon5.fbx(3ds Max, 뼈 0 · 애니 0) + textures/ 6장(1024² 16비트 PNG). 메시 19 · A자(팔 약 33° 처짐) · 정면 −Y · 원본 키 0.99.
+    #   🔴 메시 19 중 13은 **외곽선 껍데기**다(재질 "Material #14" 검정·무텍스처, 본체를 부풀려 면을 뒤집은 것 — Object030·031·032·Sphere007은
+    #     본체와 정점 수까지 같다). 같이 합치면 노멀 재계산이 껍데기를 바깥으로 뒤집어 온몸이 검게 덮인다 → 전부 뺀다(drop_objects).
+    #     남는 본체 6: Object022(살·팔다리 re_1) · Object025(재킷 re_3) · Object027(치마·셔츠·양말·구두 re_2) · Object028(얼굴 re_5) ·
+    #     Object034(리본 둘 re_6) · Sphere004(머리카락·베레모 uv_4).
+    #   🔴 FBX 재질이 없는 파일(uv_N_color.psd)을 가리킨다 → zip textures/의 같은 번호 PNG로 잇는다(texture_files + texture_files_override).
+    #     재질 이름이 "2"·"3"·"4"·"4.001"·"6"·"13 - Default"라 kana_*로 바꾸고(material_rename) 그림도 그 이름으로 저장한다(texture_by_material).
+    #   관절 근거(키 1 정규화, 본체 6메시 실측): 팔 단면 중심 x0.12 z0.750 → x0.18 z0.709 → x0.24 z0.664 → x0.30 z0.646 → 손끝 x0.348 z0.644 ·
+    #     목(폭 최소 ±0.067) z0.82 · 머리 z0.84~1.0 · 치마 자락 z0.47~0.66 · 발 x0.02~0.06. 머리카락·베레모(kana_hair)·얼굴(kana_face)은 Head에 통째 고정.
+    "랜덤_호시노_아이": dict(
+        source="~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_호시노_아이.zip",
+        mesh_name="ArimaKana",
+        path="Assets/Art/Units/랜덤_호시노_아이/랜덤_호시노_아이.fbx",
+        height=1.8,
+        center_band=(0.04, 0.10),
+        drop_objects=("Object030", "Object031", "Object032", "Sphere007", "Object041", "Object042", "Object043", "Object044",
+                      "Object045", "Object046", "Object047", "Plane010", "Object048"),
+        join_all=True, straighten_arms=True,
+        # 가중치는 bone heat 그대로 두고 두 군데만 고친다(렌더로 하나씩 확인한 것):
+        #   ① 양말 — 구두에만 이어진 별도 껍질이라 발·발끝을 따라가 걷는 자세에서 흰 통이 바닥에 서 있었다.
+        #      발목 조금 위(z 0.075)부터 발·발끝 우세 정점을 그쪽 정강이에(양말 윗단 0.23 < 무릎 0.28이라 통째로 Leg가 맞다).
+        #   ② 재킷 앞섶·리본 — 몸통 쪽 정점이 어깨·팔 가중치를 받아 Idle에서 앞섶이 뒤로 말리고 검은 조끼가 뚫고 나왔다.
+        #      재킷·리본 재질의 몸 가운데(|x| ≤ 0.075)를 Chest에 붙이고 0.12까지 선형으로 원래 가중치에 섞는다(torso_pin, 근거는 build() 주석).
+        #   ⚠️ force_geodesic은 쓰지 말 것 — 앞섶은 멀쩡해지지만 통 넓은 소매가 팔뚝에서 찢어진다(2차 렌더).
+        reassign_above=[dict(src=("LeftFoot", "LeftToeBase"), dst="LeftLeg", z=0.075),
+                        dict(src=("RightFoot", "RightToeBase"), dst="RightLeg", z=0.075)],
+        torso_pin=dict(materials=("kana_jacket", "kana_ribbon"), bone="Chest", x_in=0.075, x_out=0.12, z_lo=0.55, z_hi=0.83),
+        material_rename={"13 - Default": "kana_skin", "2": "kana_outfit", "3": "kana_jacket",
+                         "4": "kana_hair", "4.001": "kana_face", "6": "kana_ribbon"},
+        texture_files={"kana_skin": "re_1_color.png", "kana_outfit": "re_2_color.png", "kana_jacket": "re_3_color.png",
+                       "kana_hair": "uv_4_color.png", "kana_face": "re_5_color.png", "kana_ribbon": "re_6.png"},
+        texture_files_override=True, texture_by_material=True,
+        rigid_materials={"kana_hair": "Head", "kana_face": "Head"},
+        joints=dict(
+            Hips=(0, 0, 0.55), Spine=(0, 0, 0.64), Chest=(0, 0, 0.74),
+            Neck=(0, 0, 0.82), Head=(0, 0, 0.845), HeadTop=(0, 0, 1.0),
+            Shoulder=(0.03, 0, 0.785), Arm=(0.10, 0, 0.765), ForeArm=(0.19, 0, 0.70),
+            Hand=(0.285, 0, 0.65), HandTip=(0.348, 0, 0.644),
+            UpLeg=(0.045, 0, 0.52), Leg=(0.04, 0, 0.28), Foot=(0.04, 0.005, 0.05),
+            ToeBase=(0.04, -0.03, 0.02), ToeTip=(0.04, -0.06, 0.015),
+        ),
+    ),
+    # 히든_이요한 ← 드래곤볼 어린 손오공(Sketchfab 「dragon-ball-kid-goku」) — 사장님 지정 2026-09-30(「영원 이요한」이라 하셨는데 로스터엔 히든_이요한뿐 —
+    #   PM이 확인 중. 영원 쪽으로 정정되면 이 키와 path만 바꾸면 된다).
+    #   🔴 원본이 **적 R55 박병규와 바이트까지 같은 zip**이다(sha256 95088e1e…). 관절 표는 위 "박병규" 항목 그대로(근거 주석도 거기) — 고치면 둘 다 고칠 것.
+    #   적과 다른 점 하나: 적은 여의봉 두 벌을 다 뺐지만(길을 걷는 적), 플레이어 유닛은 **등에 멘 여의봉(Power_Pole_Sheathed, 8정점)을 남겨 Chest에 고정**한다.
+    #   오른손 자리에서 앞뒤로 길게 뻗은 여의봉(submesh_4, 길이 1.2 — 키 1.08보다 길다)은 뺀다. 그대로 두면 크기 맞춤이 막대 기준이 되고 옆 유닛을 찌른다.
+    #   꼬리는 몸 메시 안에 있다(z 0.25~0.30에서 뒤로 y 0.55까지 수평). 뼈가 없어 bone heat가 주는 대로 골반·허벅지를 따라간다.
+    "히든_이요한": dict(source="~/Desktop/구랜디스킨모음/05_히든/히든_이요한.zip",
+               mesh_name="KidGoku",
+               path="Assets/Art/Units/히든_이요한/히든_이요한.fbx", height=1.8,
+               center_band=(0.02, 0.06),
+               drop_objects=["submesh_4"], join_all=True, keep_fused_faces=True, texture_by_material=True,
+               rigid_materials={"Power_Pole_Sheathed": "Chest"},
+               # 🔴 1차 렌더(뒤에서): 등에 멘 칼집(몸 메시 안)의 아래쪽이 왼팔 가중치를 받아 Idle에서 팔을 따라 세로로 서고, Chest에 고정한
+               #   여의봉과 갈라졌다. 꼬리 끝 5정점은 Head를 받았다(「가장 가까운 정점 복사」). 몸 뒤(y ≥ 0.07)에서 팔·어깨 우세인 정점 → Chest,
+               #   엉덩이 높이(z ≤ 0.35)에서 뒤로 뻗은(y ≥ 0.12) Head·Spine 우세 정점(= 꼬리) → Hips. ⚠️ 적 박병규 커밋본에는 같은 흠이 그대로 있다.
+               reassign_above=[dict(src=("LeftShoulder", "LeftArm", "LeftForeArm", "RightShoulder", "RightArm", "RightForeArm"),
+                                    dst="Chest", z=0.27, y=0.07),
+                               dict(src=("Head", "Spine", "Chest"), dst="Hips", z=0.0, z_max=0.35, y=0.12)],
+               joints=dict(Hips=(0, 0, 0.27), Spine=(0, 0, 0.33), Chest=(0, 0, 0.40),
+                           Neck=(0, 0, 0.48), Head=(0, 0, 0.51), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.04, 0, 0.445), Arm=(0.09, 0, 0.44), ForeArm=(0.18, 0, 0.435),
+                           Hand=(0.28, 0, 0.43), HandTip=(0.35, 0, 0.42),
+                           UpLeg=(0.07, 0, 0.23), Leg=(0.08, 0, 0.12), Foot=(0.09, 0.01, 0.035),
+                           ToeBase=(0.09, -0.04, 0.012), ToeTip=(0.09, -0.07, 0.008))),
     # 다른세계_김건부 ← 쿠잔/아오키지(원피스, Sketchfab 「one_piece_kuzan」) — 사장님 지정 2026-09-30.
     #   🔴 원본이 **적 R12 박예원과 바이트까지 같은 파일**이다(sha256 0d6f5ed8…, 정점 26,639 · 재질 6 MI_N108_E001_*). 12_다른세계 쪽이 09-23,
     #   90_적유닛 쪽 사본이 09-24. 그래서 설정도 위 "박예원" 항목 그대로다(관절 근거·코트 Chest 고정·A자 → straighten_arms는 거기 주석).
@@ -1145,6 +1214,11 @@ def build(name, cfg, out_dir=None, render_dir=None):
         for o in gone:
             report.setdefault("뺀 오브젝트", []).append((o.name, len(o.data.vertices)))
             bpy.data.meshes.remove(o.data)
+    # 🔸 material_rename {옛 이름: 새 이름}(2026-09-30 아리마 카나): 재질 이름이 "2"·"4.001"·"13 - Default"처럼 뜻도 없고 공백까지 있어
+    #   ArtBinder 이름 맞춤에 못 쓴다. 들여온 직후(빈 씬이라 이름이 안 밀린다) 바꾸고, 뒤의 texture_files·rigid_materials는 새 이름으로 적는다.
+    for old, new in cfg.get("material_rename", {}).items():
+        assert old in bpy.data.materials, f"{name}: material_rename '{old}' 재질이 없다 {[m.name for m in bpy.data.materials]}"
+        bpy.data.materials[old].name = new
     meshes = [o for o in scene.objects if o.type == "MESH"]
     # 🔴 PM 실측(전설적인_박민수/체인소맨) — 이 OBJ는 raw v.co만 보면 Y가 키처럼 보이지만(Y폭
     # 1.7726), 이건 착각이다 — wm.obj_import는 축 변환을 메시 데이터가 아니라 오브젝트의
@@ -1268,6 +1342,11 @@ def build(name, cfg, out_dir=None, render_dir=None):
         bsdf = next((n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None) if mat.use_nodes else None
         already_linked = bsdf and bsdf.inputs["Base Color"].links and \
             bsdf.inputs["Base Color"].links[0].from_node.type == "TEX_IMAGE"
+        # 🔴 아리마 카나(2026-09-30) — FBX 재질이 **없는 파일**(uv_N_color.psd)을 물고 있다. 노드는 연결돼 있지만 그림이 없어
+        #   아래 「이미 연결됨」 갈래의 img.save()가 죽는다. texture_files_override를 켠 항목은 texture_files에 적힌 재질을
+        #   「안 연결됨」으로 보고 zip의 실제 파일로 새로 잇는다(기존 항목은 안 켜서 그대로).
+        if cfg.get("texture_files_override") and mat.name in cfg.get("texture_files", {}):
+            already_linked = False
         # 🔴 희귀함_유재헌(FBX 소스) — PM 실측대로 텍스처가 이미 Base Color에 연결돼 있다. OBJ
         # 소스는(mtl만 있고 노드가 없어) 항상 새로 지어야 했지만, 이미 연결된 걸 또 지으면 이미지
         # 경로를 우리 Textures/ 폴더로 다시 잇는 수고가 드니 이미 연결된 경우는 건드리지 않고 스킵.
@@ -1346,6 +1425,9 @@ def build(name, cfg, out_dir=None, render_dir=None):
                 continue
             assert src_path, f"{mat.name}: 텍스처를 못 찾음(texture_files 확인)"
             dst_name = os.path.basename(src_path).lstrip("$") or mat.name + ".png"
+            if cfg.get("texture_files_override") and cfg.get("texture_by_material"):
+                # 재질 이름(2 · 4.001 같은 한 글자)과 그림 이름(re_2_color)이 안 맞는다 → 그림을 재질 이름으로 둔다(ArtBinder 정확일치).
+                dst_name = "".join(c for c in mat.name if c.isalnum() or c in "._-") + os.path.splitext(src_path)[1]
             tex_dst = os.path.join(tex_dir, dst_name)
             # 🔴 같은 파일을 자기 자신에 복사하면 shutil이 SameFileError로 죽는다(2026-09-24 R01 박진웅).
             #   재질 19개가 텍스처 10장을 나눠 쓰는데, 앞 재질이 이미 tex_dir에 넣어 둔 것을 뒤 재질이
@@ -1661,6 +1743,9 @@ def build(name, cfg, out_dir=None, render_dir=None):
         for v in body.data.vertices:
             if v.co.z < rule["z"] * Hf or not v.groups:
                 continue
+            # 🔸 선택 조건(2026-09-30 어린 손오공): "z_max"(키 비율) 아래만 · "y"(키 비율) 뒤쪽만 — 등 뒤 칼집·꼬리처럼 「몸 뒤에 붙은 것」을 집는다.
+            if ("z_max" in rule and v.co.z > rule["z_max"] * Hf) or ("y" in rule and v.co.y < rule["y"] * Hf):
+                continue
             if body.vertex_groups[max(v.groups, key=lambda g: g.weight).group].name in src:
                 moved.append(v.index)
         for vg in body.vertex_groups:
@@ -1671,6 +1756,36 @@ def build(name, cfg, out_dir=None, render_dir=None):
         dead, counts = dead_bones()
         report["뼈별 정점(w>0.01)"] = counts
         assert not dead, f"{name}: 가중치 없는 뼈(높이 재배정 뒤) {dead}"
+
+    # 🔸 cfg["torso_pin"] = dict(materials=(재질…), bone=뼈, x_in, x_out, z_lo, z_hi) — 그 재질의 정점 중 몸 가운데(|x| ≤ x_in·키)는
+    #   bone 1.0, x_out 바깥은 원래 가중치 그대로, 그 사이는 선형으로 섞는다(2026-09-30 아리마 카나 재킷). 높이 z_lo~z_hi(키 비율) 안만.
+    #   왜: 짧은 재킷 앞섶이 bone heat로 어깨·팔 가중치를 받아, 팔을 내리면 앞섶이 뒤로 말려 안쪽 조끼가 뚫고 나온다.
+    #   우세 정점을 통째로 못박으면(reassign_above) 어깨 덮개 경계가 톱니로 찢어지고, 어깨 몫만 넘기면(3·4차 렌더) 팔 몫이 남아 여전히 말린다.
+    #   x로 섞으면 앞섶은 몸통에 붙고 소매로 가면서 부드럽게 팔로 넘어간다.
+    tp = cfg.get("torso_pin")
+    if tp:
+        mats = {i for i, m in enumerate(body.data.materials) if m and m.name in tp["materials"]}
+        assert len(mats) == len(tp["materials"]), f"{name}: torso_pin 재질을 못 찾음 {[m.name for m in body.data.materials]}"
+        vids = {vi for p in body.data.polygons if p.material_index in mats for vi in p.vertices}
+        pin_vg = body.vertex_groups[PREFIX + tp["bone"]]
+        full = mixed = 0
+        for vi in vids:
+            v = body.data.vertices[vi]
+            if not (tp["z_lo"] * Hf <= v.co.z <= tp["z_hi"] * Hf):
+                continue
+            t = (abs(v.co.x) / Hf - tp["x_in"]) / (tp["x_out"] - tp["x_in"])
+            if t >= 1.0:
+                continue
+            t = max(0.0, t)
+            for g in v.groups:
+                g.weight *= t
+            pin_vg.add([vi], 1.0 - t, "ADD")
+            full += t == 0.0
+            mixed += t > 0.0
+        report["몸통 고정(torso_pin)"] = {"통째": full, "섞음": mixed}
+        dead, counts = dead_bones()
+        report["뼈별 정점(w>0.01)"] = counts
+        assert not dead, f"{name}: 가중치 없는 뼈(몸통 고정 뒤) {dead}"
 
     # 🔴 PM 실측(희귀함_선효진/보디빌더) — 이 소스는 65,536정점(16비트 인덱스 한계) 단위로 잘려
     # 나온 조각 셋을 합친 거라(Object_4·5·6, 위 복제 정점 병합으로 다시 1개 표면으로 붙음) 진짜

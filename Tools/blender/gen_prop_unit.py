@@ -113,6 +113,25 @@ UNITS = {
         decimate_by_verts={2490: 0.25},
         rig_clips="ship",
     ),
+    # 영원_서민성 ← 복마어주자(주술회전 스쿠나의 영역 사당). Sketchfab 「Malevolent Shrine | Jujutsu Kaisen」 by NexusB,
+    #   🔴 **CC-BY-4.0**(glb asset 메타에 명시 — 크레딧 표기 필요) https://sketchfab.com/3d-models/malevolent-shrine-jujutsu-kaisen-efcf94d9cf03434db7b0978144b500b6
+    #   **사당만** 들어 있다(스쿠나 캐릭터 없음). 뼈·애니 0 · 메시 9(사당 · 소 해골 · 입 · 사람 해골 · 뿔 · 갈비뼈 · 가지 · 기둥 · 내장) · 재질 5 ·
+    #   이미지 17(재질마다 기본색·노멀·거칠기 등 — 기본색 0·4·7·11·14만 쓴다, 전부 1024² · 알파 전부 1.0 → 알파 컷 불필요).
+    #   네 면이 거의 같은 모양(면마다 입 하나)이라 정면은 원본 −Y 그대로(rotate_z 불필요). 최저점은 바닥 둘레의 소 해골(z −0.029) — 그 밑면을 z 0에.
+    #   🔴 원본 137,050삼각형 — 소 해골 60,192 · 입 48,224가 대부분. 그 둘과 사람 해골 7,800을 감량한다(decimate_by_verts, 사당 본체·뿔·갈비뼈는 그대로).
+    #   🔴 넓적하다: 원본 0.362 × 0.400 × 0.304 — 가로·깊이가 키의 1.19배·1.32배. 길이 맞춤은 다른 Generic과 같이 「가장 긴 변」 기준.
+    "영원_서민성": dict(
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/10_영원/영원_서민성.glb"),
+        path="Assets/Art/Units/영원_서민성/영원_서민성.fbx",
+        length=2.0, rotate_z=0.0, center="all",
+        materials={"Extra_Stuff_Material": (0, None), "Bull_Skull_Material": (4, None), "Mouths_Material": (7, None),
+                   "Human_Skull_Material": (11, None), "Shrine_Material": (14, None)},
+        unused_images={1: "Extra_Stuff 보조 맵", 2: "Extra_Stuff 보조 맵", 3: "Extra_Stuff 보조 맵", 5: "Bull_Skull 보조 맵", 6: "Bull_Skull 보조 맵",
+                       8: "Mouths 보조 맵", 9: "Mouths 보조 맵", 10: "Mouths 보조 맵", 12: "Human_Skull 보조 맵", 13: "Human_Skull 보조 맵",
+                       15: "Shrine 보조 맵", 16: "Shrine 보조 맵"},
+        decimate_by_verts={35808: 0.25, 29780: 0.30, 5706: 0.5},
+        rig_clips="shrine",
+    ),
 }
 
 # 🔴 배 공용 클립(써니호·메리호가 **같은 값**을 쓴다). 파형은 gen_scan_rig.synth_idle_scan과 같은 식:
@@ -132,12 +151,27 @@ SHIP_CLIPS = [
          bones={"Hull": [((1, 0, 0), -2.0, -math.pi / 2)]},
          loc={"Root": [((0, 1, 0), 0.025, -math.pi / 2)]}),
 ]
-RIG_CLIPS = {"ship": (SHIP_PIVOT, SHIP_CLIPS)}
+# 🔴 사당 공용 클립(영원_서민성 복마어주자, 2026-09-30) — 배와 **같은 규약**(뼈 둘 Root → 몸통 뼈 · 테이크 Idle·Move·Attack · Idle이 제일 김 · 첫·끝 = 쉬는 자세).
+#   건물이라 배처럼 크게 흔들면 어색하다 → Idle은 아주 작은 떨림·맥동(좌우 0.6°·들썩 1.2cm), Move는 살짝 떠서(6cm) 앞으로 1.5° 숙여 미끄러지듯,
+#   Attack은 짧게 한 번 솟았다(5cm) 앞으로 3° 숙이는 맥동. 몸통 뼈 이름은 Body. 축 높이는 바닥 가까이(길이의 5%).
+SHRINE_PIVOT = 0.05
+SHRINE_CLIPS = [
+    dict(take="Idle", frames=180, step=3,
+         bones={"Body": [((0, 1, 0), 0.6, 0.0), ((1, 0, 0), 0.4, 1.1)]},
+         loc={"Root": [((0, 0, 1), 0.006, -math.pi / 2)]}),
+    dict(take="Move", frames=60, step=2,
+         bones={"Body": [((1, 0, 0), -0.75, -math.pi / 2), ((0, 1, 0), 0.8, 0.0)]},
+         loc={"Root": [((0, 0, 1), 0.03, -math.pi / 2)]}),
+    dict(take="Attack", frames=24, step=1,
+         bones={"Body": [((1, 0, 0), -1.5, -math.pi / 2)]},
+         loc={"Root": [((0, 0, 1), 0.025, -math.pi / 2)]}),
+]
+RIG_CLIPS = {"ship": (SHIP_PIVOT, SHIP_CLIPS, "Hull"), "shrine": (SHRINE_PIVOT, SHRINE_CLIPS, "Body")}
 
 
 def rig_and_clips(obj, length, kind, report):
-    """소품 하나를 뼈 둘(Root → Hull)에 강체로 물리고 클립을 짓는다. (아마추어, 클립 설명들)을 돌려준다."""
-    pivot, specs = RIG_CLIPS[kind]
+    """소품 하나를 뼈 둘(Root → Hull 또는 Body)에 강체로 물리고 클립을 짓는다. (아마추어, 클립 설명들)을 돌려준다."""
+    pivot, specs, body_bone = RIG_CLIPS[kind]
     scene = bpy.context.scene
     data = bpy.data.armatures.new("Armature")
     arm = bpy.data.objects.new("Armature", data)
@@ -150,13 +184,13 @@ def rig_and_clips(obj, length, kind, report):
     # 🔴 위치 키는 Hull이 아니라 **Root**에 준다(SHIP_CLIPS의 loc) — FBX엔 꼬리가 없어 재수입 때 Blender가 외자식 Hull을
     #   「이어진 뼈」로 읽고 위치 키를 무시한다(1차 산출에서 clip_table 「첫자세에서 최대」가 0.000으로 나와 알았다). 회전은 Hull(축 높이), 이동은 Root.
     root.head, root.tail = (0, 0, 0), (0, 0, length * pivot * 0.5)
-    hull = data.edit_bones.new("Hull")
+    hull = data.edit_bones.new(body_bone)
     hull.head, hull.tail = (0, 0, length * pivot), (0, 0, length * pivot * 2)
     hull.parent = root
     bpy.ops.object.mode_set(mode="OBJECT")
     for vg in list(obj.vertex_groups):
         obj.vertex_groups.remove(vg)
-    obj.vertex_groups.new(name="Hull").add(list(range(len(obj.data.vertices))), 1.0, "REPLACE")
+    obj.vertex_groups.new(name=body_bone).add(list(range(len(obj.data.vertices))), 1.0, "REPLACE")
     for m in list(obj.modifiers):
         obj.modifiers.remove(m)
     obj.modifiers.new("Armature", "ARMATURE").object = arm

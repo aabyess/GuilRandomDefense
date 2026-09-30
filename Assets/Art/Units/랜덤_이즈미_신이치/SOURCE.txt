@@ -1,0 +1,19 @@
+랜덤_이즈미_신이치 ← 신몬 베니마루(불꽃 소방대) 스킨 출처 — 2026-09-30 새로 넣음
+
+원본: ~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_이즈미_신이치.glb (원래 이름 benimaru_shinmon.glb, 2.2MB)
+  sha256: 35c9ca9fae322182d56942edb105eab920f9933aa12028f3773981dc91e29158
+  glb asset 메타: title 「Benimaru Shinmon」 · author tuananhrobert (https://sketchfab.com/tuananhrobert)
+  · source https://sketchfab.com/3d-models/benimaru-shinmon-aa4d497e0ae240b9a13f6c53d33e51a4
+라이선스: CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/) — glb 메타에 명시. 🔴 저작자 표기(크레딧) 필요.
+
+빌드 스크립트: Tools/blender/gen_scan_rig.py (UNITS["랜덤_이즈미_신이치"])
+  실행: blender -b --factory-startup --python Tools/blender/gen_scan_rig.py -- 랜덤_이즈미_신이치
+
+처리 요약(2026-09-30, Blender 세션):
+- 뼈·애니 0의 정적 glb. 메시 5 중 둘을 뺐다: 불꽃 판자(Object_2, 알파 블렌드 이펙트) · 외곽선 껍데기(Object_6, 몸을 부풀려 뒤집은 것).
+  남은 몸 1 + 머리카락 2겹 → 한 메시 34,624삼각형(감량 안 함).
+- 재질 2 · 텍스처 2(glb 이미지 0 → Body_baseColor.jpg, 3 → Hair_baseColor.jpg, 둘 다 jpeg 원본 바이트). 발광 맵(이미지 1)은 안 씀.
+- 🔴 비대칭 선 자세(오른팔은 옆으로 벌려 내림 · 왼팔은 통 넓은 핫피 소매 안) → 관절을 원본 좌표로 좌우 따로 재서 심고 bone heat, 팔 네 사슬만 T자로 폄.
+  팔 중심선 반지름 밖 정점은 팔 가중치를 뺐다(arm_capsule) — 안 빼면 왼손 옆 바지 주머니가 손을 따라 날아가고 조끼·핫피가 찢어진다.
+- ⚠️ 남은 흠: 왼쪽 핫피 소매가 팔을 다 따라가지 못해 T자·공격 자세에서 왼팔 뒤로 남색 천 조각이 남는다(Idle·걷기에선 작게 보임).
+  근본 원인은 「팔이 넓은 소매 안에서 몸에 붙은 자세」로 굳은 원본 — 선 자세가 T/A자인 다른 베니마루 모델이면 없어질 흠이다.

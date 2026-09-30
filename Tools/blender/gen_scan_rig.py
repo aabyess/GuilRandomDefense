@@ -1076,6 +1076,40 @@ UNITS = {
     #   팔이 몸에 붙어 있으니 유노와 같은 arm_capsule·delete_stretched_faces를 미리 건다.
     # ⚠️ 2026-09-24 관문 ③: 설정은 있는데 **모델 파일이 없다**(Assets/Art/Units/랜덤_이타도리_유지/…fbx).
     #   스킬 에셋은 이미 들어가 있다. 사장님이 들고 계신 건이라 **대기**로 둔다 — 돌리지 않는다.
+    # 불꽃 소방대 신몬 베니마루 → 랜덤_이즈미_신이치(2026-09-30 사장님 지정, 새 유닛). Sketchfab 「Benimaru Shinmon」 by tuananhrobert,
+    #   🔴 **CC-BY-4.0**(glb asset 메타에 명시 — 크레딧 표기 필요) https://sketchfab.com/3d-models/benimaru-shinmon-aa4d497e0ae240b9a13f6c53d33e51a4
+    #   뼈·스킨·애니 0의 정적 glb · 메시 5 · 재질 4 · 이미지 4(0 몸 기본색 jpeg · 1 몸 발광 · 2 불꽃 png · 3 머리카락 jpeg) · 원본 키 108(단위 없음) · 정면 −Y.
+    #   뺀 것: Object_2(재질 Fire — 몸 둘레를 도는 불꽃 판자 230정점, 알파 블렌드 이펙트) · Object_6(재질 outliner — 몸을 부풀려 뒤집은 외곽선 껍데기,
+    #     몸 Object_3과 정점 수 8,150이 같다. 같이 합치면 노멀 재계산이 껍데기를 뒤집어 온몸을 검게 덮는다).
+    #   남긴 것: Object_3(몸·옷 전부, 14,094삼각) · Object_4·Object_5(머리카락 두 겹 — 둘 다 검은 텍스처, 안겹은 면이 뒤집혀 있다 → Head 강체).
+    #   🔴 비대칭 선 자세: 오른팔(−X)은 옆으로 48° 벌려 내리고(맨팔), 왼팔은 통 넓은 핫피 소매 안에서 몸 옆에 늘어뜨림. 두 발도 벌어져 있다(왼발 x+15 · 오른발 x−7).
+    #   관절은 원본 좌표 실측(몸 메시 z 4단위 층의 x 구간 · 오른팔 x 2단위 띠): 목 z 90~94(폭 ±3.5) · 어깨 z 82~86(폭 −16~+17) · 허리띠 z 62 ·
+    #     가랑이 z 48(그 아래로 두 다리가 갈린다) · 오른팔 중심선 (−17,74)→(−20.4,70)→(−22.8,66)→(−26.2,62)→(−28.8,58)→(−30,50) ·
+    #     왼쪽 소매·팔 x 9~22(z 48~84), 손 z 46~50 · 발목 z 10: 오른 x −9.4~−3.9 · 왼 x 12.4~18.0.
+    "랜덤_이즈미_신이치": dict(
+        source=os.path.expanduser("~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_이즈미_신이치.glb"), mesh_name="Benimaru",
+        height=1.8, center_band=(0.02, 0.08), decimate=1.0, rotate_z=0.0,
+        drop_meshes=["Object_2", "Object_6"],
+        rigid_meshes={"Object_4": "Head", "Object_5": "Head"},
+        max_bone_share=0.7,                                             # 머리카락 두 겹 12,991정점이 Head 강체라 Head 몫 63%(heat 실패 아님 — 22뼈 전부 가중치)
+        joints=dict(
+            Hips=(0.0, 2.0, 54.0), Spine=(0.0, 2.0, 62.0), Spine1=(0.0, 2.0, 70.0), Spine2=(0.0, 2.5, 79.0),
+            Neck=(0.0, 2.5, 90.0), Head=(0.0, 1.0, 94.0), HeadTop=(0.0, 0.0, 108.0),
+            LeftShoulder=(4.0, 3.0, 85.0), LeftArm=(13.5, 4.0, 84.0), LeftForeArm=(17.0, 3.0, 67.0),
+            LeftHand=(16.5, 0.0, 53.0), LeftHandTip=(16.5, -1.0, 47.0),
+            RightShoulder=(-4.0, 3.0, 85.0), RightArm=(-12.5, 5.0, 84.0), RightForeArm=(-22.0, 9.0, 68.0),
+            RightHand=(-28.5, 10.5, 57.0), RightHandTip=(-30.5, 11.0, 50.0),
+            LeftUpLeg=(7.0, 2.0, 52.0), LeftLeg=(11.0, 2.0, 30.0), LeftFoot=(15.2, 2.5, 9.0),
+            LeftToeBase=(16.5, -4.0, 3.0), LeftToeTip=(17.5, -8.5, 2.0),
+            RightUpLeg=(-7.0, 2.0, 52.0), RightLeg=(-8.0, 2.0, 30.0), RightFoot=(-6.6, 2.5, 9.0),
+            RightToeBase=(-9.0, -4.0, 3.0), RightToeTip=(-11.0, -8.5, 2.0)),
+        straighten=["LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand", "RightShoulder", "RightArm", "RightForeArm", "RightHand"],
+        # 🔴 1차(캡슐 없음): 왼손이 바지 옆 주머니 바로 위에 있어 주머니가 LeftHand를 따라 T자에서 허공으로 날아갔고, 조끼·핫피가
+        #   팔 가중치를 받아 가슴·허리에서 톱니로 찢어졌다(렌더). → 팔 중심선에서 반지름 밖 정점은 팔 가중치를 뺀다(원본 단위, 키 108).
+        arm_capsule=dict(radius_src=(5.5, 5.0, 3.0), margin_src=1.0),   # 손 구간 3.0: 4.5면 주머니 윗단이 아직 손에 딸려 회색 띠로 늘어났다(2차 렌더)
+        closeups=[("armpit", 1.35, 0.8), ("crotch", 0.85, 0.9)],
+        glb_images={0: "Body_baseColor.jpg", 3: "Hair_baseColor.jpg"},
+        materials={"Body": [("Base Color", "Body_baseColor.jpg")], "Hair": [("Base Color", "Hair_baseColor.jpg")]}),
     "랜덤_이타도리_유지": dict(
         rebuild="사장님 대기 — 모델 파일이 아직 없다(설정·스킬 에셋만 있음)",
         source=os.path.expanduser("~/Desktop/구랜디스킨모음/11_랜덤유닛/랜덤_이타도리_유지.glb"), mesh_name="Itadori",
