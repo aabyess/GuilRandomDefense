@@ -101,6 +101,52 @@ def main():
     edit('SkillData_게이트_초월_박기찬_AD_b3948c74', 'Franky_misiile_re는 스테이지 2·4에서 2회 — hitCount 1 → 2(2배 과소였다). 곁의 써니호 수만큼 늘어나는 것은 미반영. ',
          lambda a: sat.set_effects(a, 0, [retarget(b, hitCount=2, duration=0.2) for b in sat.get_effect_blocks(a, 0)]))
 
+    # ════ 통째로 빠져 있던 게이지 스킬·보충(§0 순위 10 · 「통째로 없는 게이지 스킬」) ════
+    # 우솝 H09B → 초월_조성진_AD: Usop_Skill_Mana — 시전자 주인 더미 stomp A0S3 600 범위 2500000·스턴(adur 빈칸)
+    edit('SkillData_게이트_초월_조성진_AD_29846395', 'Usop_Skill_Mana: 시전자 주인 더미의 stomp A0S3(AOws, Wrs1 2500000, aare 600, adur 빈칸 = 스톡 3.0 · ahdu 0.45) 추가 — 고정 피해가 1000000뿐이었다(3.5배 과소). ',
+         lambda a: add(a, [dmg(ENEMIES, AP, SPELLS, 2500000.0), sat.effect(kind=STUN, target=ENEMIES, duration=STOCK_AOWS_ADUR)]))
+    # 브룩 H09I → 초월_노태현_AP: Brook_Skill_Mana(마나 115) — stomp A0AO 600 범위 3000000·스턴 + 525 범위 AIsr +10
+    new('초월_노태현_AP', 'SkillData_원작트리거_초월_노태현_AP_Brook_Skill_Mana', '브룩 — MANA게이지115(600 범위 3000000·스턴 + AIsr +10)',
+        '브룩 H09I BrookAttack: 마나==115 → Brook_Skill_Mana: 시전자 주인 더미 e06V의 stomp A0AO(AOws, Wrs1 3000000, aare 600, adur 빈칸 = 스톡 3.0 · ahdu 0.45) + 대상 중심 525 적 AIsr +10(600으로). '
+        '음표 더미(A0R1 보유 시 아군 공속 오라)는 미반영.', GAUGE,
+        sat.level_block(range=600.0, hitCountThreshold=115, effects=[sat.effect(kind=9, target=ENEMIES, multiplier=10.0), dmg(ENEMIES, AP, SPELLS, 3000000.0),
+                                                                    sat.effect(kind=STUN, target=ENEMIES, duration=STOCK_AOWS_ADUR)]))
+    # 염왕 조로 H0BT → 초월_강주혁_AP: Zoro_Samchun2(마나 145 — H0BT는 uabi에 A0GT가 있어 항상 이 갈래)
+    new('초월_강주혁_AP', 'SkillData_원작트리거_초월_강주혁_AP_Zoro_Samchun2', '염왕 — MANA게이지145(600 범위 (1500000 + STR×15000)×1~1.5 ×3 + 2500000×1~2.5 · 스턴)',
+        '염왕 조로 H0BT Zoro_Attack_enma: 마나==145 → Zoro_Samchun2: 대상 중심 600 범위 (1500000 + STR×15000)×1~1.5 CHAOS/NORMAL 3회(integerA==3까지) + 2500000×1~2.5 NORMAL/UNIVERSAL + '
+        'stomp A0O4 스턴(adur 빈칸 = 스톡 3.0 · ahdu 3.0). 소환체 h07G는 미반영.', GAUGE,
+        sat.level_block(range=600.0, hitCountThreshold=145, effects=[
+            sat.effect(kind=DAMAGE, basis=STR, target=ENEMIES, damageType=AD, attackType=CHAOS, multiplier=15000.0, bonus=1500000.0, randMax=1.5, hitCount=3, duration=0.18),
+            dmg(ENEMIES, AP, SPELLS, 2500000.0, randMax=2.5), sat.effect(kind=STUN, target=ENEMIES, duration=STOCK_AOWS_ADUR)]))
+    edit('SkillData_회수_초월_강주혁_AP_b7ae9b41', 'Zoro_enfor_3dragon 첫 발 추가: 405 범위 (535000 + STR×21000) CHAOS/NORMAL(425로) — 둘째 발 532500만 있어 절반이었다. ',
+         lambda a: add(a, [sat.effect(kind=DAMAGE, basis=STR, target=ENEMIES, damageType=AD, attackType=CHAOS, multiplier=21000.0, bonus=535000.0)], front=True))
+    # 징베 H09A → 초월_최상호_AD: Jimbe_Mu(마나 115) — AId1 +5 먼저, stomp A0X8 600 범위 스턴(피해 0)
+    edit('SkillData_게이트_초월_최상호_AD_3c5f8bd9', 'Jimbe_Mu: 범위 적 AId1 +5(피해보다 먼저) · stomp A0X8(600 범위, 피해 0, adur 빈칸 = 스톡 3.0 · ahdu 0.45) 스턴 추가. ',
+         lambda a: sat.set_effects(a, 0, [sat.effect(kind=ARMOR_BREAK, target=ENEMIES, multiplier=5.0)] + sat.get_effect_blocks(a, 0)
+                                   + [sat.effect(kind=STUN, target=ENEMIES, duration=STOCK_AOWS_ADUR)]))
+
+    # ════ 묶음 B·C에서 값이 분명한 것(로빈·징베·상디) ════
+    SIEGE = 3
+    edit('SkillData_게이트_초월_강재규_AP_85d0117d', 'Robine_skill_2: stomp A09I(525 범위, 피해 0) 스턴 adur 2.85초 추가. ',
+         lambda a: add(a, [sat.effect(kind=STUN, target=ENEMIES, duration=2.85)]))
+    edit('SkillData_게이트_초월_강재규_AP_fcba0856', 'Robine_skill_3: 대상 파이어볼트 A0V9 120000·스턴 3.0초 추가. ',
+         lambda a: add(a, [dmg(SINGLE, AP, SPELLS, 120000.0), sat.effect(kind=STUN, target=SINGLE, duration=3.0)]))
+    edit('SkillData_게이트_초월_최상호_AD_b8d2fd85', 'Jimbe(1/16): 범위 적 AId1 +3(피해보다 먼저) · 천둥박수 A0WZ(AHtc, Htc1 500000, aare 625) 추가. 이감은 Htc3 빈칸(스톡 미확인)이라 미반영. ',
+         lambda a: sat.set_effects(a, 0, [sat.effect(kind=ARMOR_BREAK, target=ENEMIES, multiplier=3.0)] + sat.get_effect_blocks(a, 0) + [dmg(ENEMIES, AP, SPELLS, 500000.0)]))
+    new('초월_최상호_AD', 'SkillData_원작트리거_초월_최상호_AD_Jimbe_jingak', '징베 — Jimbe_jingak 1/7(450 범위 1000000 + STR×17500, 그 뒤 AId1 +1)',
+        '징베 H09A jinbe_Attack GetRandomInt(1,7)==2 → Jimbe_jingak: 대상 중심 450 범위 (1000000 + STR×17500 + 맞는 적 AId1 레벨×10000) CHAOS/NORMAL, 그 뒤 AId1 +1. AId1 레벨 항은 미반영(하한).', ON_HIT,
+        sat.level_block(triggerChance=1.0 / 7.0, range=450.0, effects=[
+            sat.effect(kind=DAMAGE, basis=STR, target=ENEMIES, damageType=AD, attackType=CHAOS, multiplier=17500.0, bonus=1000000.0),
+            sat.effect(kind=ARMOR_BREAK, target=ENEMIES, multiplier=1.0)]))
+    new('초월_최상호_AD', 'SkillData_원작트리거_초월_최상호_AD_jinbe_추가타', '징베 — 평타 추가타 1/4(대상 1000000)',
+        '징베 H09A jinbe_Attack GetRandomInt(1,4)==2: 대상 (1000000 + 대상 AId1 레벨×10000) SIEGE/NORMAL. AId1 레벨 항은 미반영(하한).', ON_HIT,
+        sat.level_block(triggerChance=0.25, effects=[dmg(SINGLE, AD, SIEGE, 1000000.0)]))
+
+    def sandi(a):
+        sat.set_level_field(a, 0, 'range', 475.0)
+        add(a, [dmg(ENEMIES, AP, SPELLS, 582500.0)])
+    edit('SkillData_게이트_초월_배성령_AD_18aa2343', 'Sandi_skill_1: 0.11초 뒤 대상 근처 475 범위 582500 NORMAL/UNIVERSAL(UnitDamagePointLoc) 추가. ', sandi)
+
     print('바꾼 파일 %d' % len(set(changed)))
     for c in sorted(set(changed)):
         print(os.path.relpath(c, sat.ROOT))

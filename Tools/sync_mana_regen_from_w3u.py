@@ -104,6 +104,11 @@ def main(dry, list_path=None):
             # 조건이 Func…C 함수로 빠진 트리거(흰수염 Legend5·카이도)도 본다
             conds = ''.join(J[q.start():J.index('endfunction', q.start())]
                             for q in re.finditer(r'function Trig_%s_Func\w+C takes' % re.escape(t), J))
+            # 평타 트리거가 곧바로 다른 트리거를 부르고 체력 검사가 거기 있는 유닛(전설 마르코 Legend17_Marco → Legend17_Marcodamage)도 본다 — 한 단계만
+            for callee in re.findall(r'TriggerExecute\(gg_trg_(\w+)\)', b):
+                q = J.find('function Trig_%s_Actions takes' % callee)
+                if q >= 0:
+                    b += J[q:J.index('endfunction', q)]
             checks = bool(re.search(r'UNIT_STATE_LIFE,[^)]*\)\)(==|>)', b + conds))
             return checks, bool(re.search(r'UNIT_STATE_LIFE,[^)]*\)\)\+1', b))
         return False, False

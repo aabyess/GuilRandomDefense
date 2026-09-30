@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_전설적인_임채민_A048
   m_EditorClassIdentifier:
   skillName: A048 !육식
-  description: 쪼개기 실행(2026-09-06, PHASE2_FINAL_TALLY_2026-09-06.md/08e21d6, PHASE2_39_RESOLVED.csv/f18af68): 원작 전설적인 마르코 환수종'불사조' - 전설적인(h02T)의 능력. 1채널표(ORIGINAL_UNIT_ABILITIES.csv) 확정값 발동15%(Hbh1 미지정 → 스톡, 규칙③)·추가피해250,000. SkillData_원작능력_전설적인_임채민.asset이 이 능력 하나로 triggerChance를 공유하기엔 다른 능력(A074 및 루치 자체 배정분)이 섞여 있어(PM 설계 결정 — 능력 하나에 파일 하나) 별도 파일로 뗐다. 공격타입 원본 [미확인]이라 이 유닛 자신의 평타 타입을 그대로 썼다.
+  description: '쪼개기 실행(2026-09-06, PHASE2_FINAL_TALLY_2026-09-06.md/08e21d6, PHASE2_39_RESOLVED.csv/f18af68): 원작 전설적인 마르코 환수종''불사조'' - 전설적인(h02T)의 능력. 1채널표(ORIGINAL_UNIT_ABILITIES.csv) 확정값 발동15%(Hbh1 미지정 → 스톡, 규칙③)·추가피해250,000. SkillData_원작능력_전설적인_임채민.asset이 이 능력 하나로 triggerChance를 공유하기엔 다른 능력(A074 및 루치 자체 배정분)이 섞여 있어(PM 설계 결정 — 능력 하나에 파일 하나) 별도 파일로 뗐다. 공격타입 원본 [미확인]이라 이 유닛 자신의 평타 타입을 그대로 썼다. [전설 남은 것 09-30] 루치 A048(ACbh, adur 0.6): 스턴 0.6초 추가. (Tools/apply_legend_rest.py)'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -33,3 +33,25 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0
+    - kind: 1
+      basis: 0
+      target: 3
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.6
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0

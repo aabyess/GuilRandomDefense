@@ -32,6 +32,10 @@ static class EternalFillProbe
     static readonly string[] Rest = { "랜덤_야사카_카나코", "랜덤_카마도_탄지로", "초월_강주혁_AP", "초월_노태현_AP", "초월_박민수_AD", "초월_임채민_AP", "초월_조성진_AD",
                                       "초월_김민준_AP", "초월_유재헌_ADAP", "초월_임장혁_AD", "초월_이태훈_AP", "초월_박기찬_AD" };
     static string ArenaRest() { Units = Rest; return Arena(); }
+    // uabi 상시 능력 58건·전설 남은 셋·초월 게이지(2026-09-30) — call:EternalFillProbe.ArenaPassives.
+    static readonly string[] Passives = { "초월_강재규_AP", "초월_최상호_AD", "초월_조성진_AD", "초월_박민수_AD", "초월_배성령_AD", "초월_노태현_AP", "초월_강주혁_AP",
+                                          "영원_이지원", "제한_김강민", "랜덤_이민형", "전설적인_임채현", "전설적인_임채민", "전설적인_이유선", "변화됨_박은석" };
+    static string ArenaPassives() { Units = Passives; return Arena(); }
 
     class Track { public Vector3 at; public string unit; public float stunStart = -1f; public readonly List<float> stuns = new List<float>(); }
     static readonly Dictionary<EnemyDummy, Track> tracks = new Dictionary<EnemyDummy, Track>();

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_초월_최상호_AD_3c5f8bd9
   m_EditorClassIdentifier:
   skillName: 어인협객 — MANA게이지115.00
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 어인협객(H09A)의 게이트 "MANA게이지115.00" 능력 1개를 이 SkillData 하나로 묶었다.   · Jimbe_Mu#1: 계산식 (4350000.00+(I2R(GetUnitAbilityLevelSwapped('AId1',GetEnumUn  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. [Jimbe_Mu#1] 2026-09-06 정정: SkillEffectBasis.CasterSkillLevel 추가(b75bc73)로 능력 레벨 비례항(43500×레벨)을 되살렸다 — basis 0(Flat)→8(CasterSkillLevel), multiplier=43500(레벨 계수), bonus=4350000(상수항).
+  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 어인협객(H09A)의 게이트 "MANA게이지115.00" 능력 1개를 이 SkillData 하나로 묶었다.   · Jimbe_Mu#1: 계산식 (4350000.00+(I2R(GetUnitAbilityLevelSwapped(''AId1'',GetEnumUn  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. [Jimbe_Mu#1] 2026-09-06 정정: SkillEffectBasis.CasterSkillLevel 추가(b75bc73)로 능력 레벨 비례항(43500×레벨)을 되살렸다 — basis 0(Flat)→8(CasterSkillLevel), multiplier=43500(레벨 계수), bonus=4350000(상수항). [초월 나머지 09-30] Jimbe_Mu: 범위 적 AId1 +5(피해보다 먼저) · stomp A0X8(600 범위, 피해 0, adur 빈칸 = 스톡 3.0 · ahdu 0.45) 스턴 추가. (Tools/apply_transcend_rest.py)'
   triggerType: 3
   levels:
   - cooldown: 0
@@ -23,6 +23,28 @@ MonoBehaviour:
     resetTo: 0
     gaugeKind: 0
     effects:
+    - kind: 2
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 5.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     - kind: 0
       basis: 8
       target: 2
@@ -34,3 +56,25 @@ MonoBehaviour:
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 3.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
