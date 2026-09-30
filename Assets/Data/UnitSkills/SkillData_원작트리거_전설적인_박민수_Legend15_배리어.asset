@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_이승우_Legend12_25
+  m_Name: SkillData_원작트리거_전설적인_박민수_Legend15_배리어
   m_EditorClassIdentifier:
-  skillName: Legend12 25% (라분 박치기)
-  description: '원작 Trig_Legend12(h02Q 라분 = 전설적인_이승우) Stage5 `GetRandomInt(1,100)<26` → 대상 위치 575 광역 175000 MAGIC/UNIVERSAL + 대상 15000+3000×PV SIEGE/UNIVERSAL(PV 100/200/300/301 조건 넷으로 전개). e010 얽힘 뿌리(시전자 대상)는 겉모습. 2026-09-30 구현담당1(중복 검사). [전설 범위화 09-30] 박치기: stomp A07V(600 범위, 피해 0, adur 2.25) 스턴 추가(575로). 「6타째 보장」 카운터는 미반영. (Tools/apply_legend_rest2.py)'
+  skillName: 바르토로메오 — 배리어 1/10(550 범위 스턴 2.75초 + 225 범위 150000 + 1500×PV)
+  description: '원작 바르토로메오 h02Z Legend15 GetRandomInt(1,10)==3: stomp A096(550 범위, 피해 0, adur 2.75) + 대상 중심 225 범위 (150000 + 1500×맞는 적 PV) NORMAL/UNIVERSAL. 한 레벨에 반경이 하나라 550으로(피해 범위 225가 넓어진다 — 피해는 작은 쪽). PV 항은 <200은 100 · 200 · ≥300으로. 2026-09-30 구현담당1.'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.25
-    range: 575.0
+    triggerChance: 0.1
+    range: 550.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
@@ -26,16 +26,16 @@ MonoBehaviour:
     forbiddenBuffId:
     selfBuffId:
     effects:
-    - kind: 0
+    - kind: 1
       basis: 0
       target: 2
-      damageType: 2
-      attackType: 6
-      multiplier: 175000.0
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0.0
+      duration: 2.75
       casterBuffCountFactor: 0.0
       buffId:
       randMin: 1.0
@@ -50,10 +50,10 @@ MonoBehaviour:
       triggerDamageAbove: 0.0
     - kind: 0
       basis: 0
-      target: 3
+      target: 2
       damageType: 2
-      attackType: 3
-      multiplier: 315000.0
+      attackType: 7
+      multiplier: 300000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
@@ -66,16 +66,16 @@ MonoBehaviour:
       requiredTargetBuffId:
       forbiddenTargetBuffId:
       targetCondition: 1
-      targetConditionValue: 200
+      targetConditionValue: 200.0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0.0
     - kind: 0
       basis: 0
-      target: 3
+      target: 2
       damageType: 2
-      attackType: 3
-      multiplier: 615000.0
+      attackType: 7
+      multiplier: 450000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
@@ -88,38 +88,16 @@ MonoBehaviour:
       requiredTargetBuffId:
       forbiddenTargetBuffId:
       targetCondition: 2
-      targetConditionValue: 200
+      targetConditionValue: 200.0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0.0
     - kind: 0
       basis: 0
-      target: 3
+      target: 2
       damageType: 2
-      attackType: 3
-      multiplier: 915000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
-      buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
-      targetCondition: 2
-      targetConditionValue: 300
-      cascadeGroup: 0
-      skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 2
-      attackType: 3
-      multiplier: 918000.0
+      attackType: 7
+      multiplier: 600000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
@@ -132,29 +110,7 @@ MonoBehaviour:
       requiredTargetBuffId:
       forbiddenTargetBuffId:
       targetCondition: 3
-      targetConditionValue: 301
-      cascadeGroup: 0
-      skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    - kind: 1
-      basis: 0
-      target: 2
-      damageType: 0
-      attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 2.25
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
-      buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
-      targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 300.0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0.0
@@ -163,3 +119,4 @@ MonoBehaviour:
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
+    targetArmorBreakAbove: 0.0

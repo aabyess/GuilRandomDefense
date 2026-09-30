@@ -45,6 +45,10 @@ static class EternalFillProbe
     // 초월 남은 것(2026-09-30) — call:EternalFillProbe.ArenaTranscend2.
     static readonly string[] Transcend2 = { "초월_김경현_AP", "초월_황준석_ADAP", "초월_구주호_AD", "영원_이지원", "초월_김만경_AD", "초월_조성진_AD", "초월_임채민_AP" };
     static string ArenaTranscend2() { Units = Transcend2; return Arena(); }
+    // 전설·희귀·특별 범위화(2026-09-30) — call:EternalFillProbe.ArenaRanges.
+    static readonly string[] Ranges = { "전설적인_이승우", "전설적인_정준영", "전설적인_박민수", "전설적인_최상호", "전설적인_백기현", "전설적인_신문철", "전설적인_진연서", "전설적인_이일중",
+                                        "희귀함_이용민", "희귀함_이재윤", "희귀함_윤현모", "희귀함_유재헌", "희귀함_박수찬", "희귀함_정내연", "특별함_최상호" };
+    static string ArenaRanges() { Units = Ranges; return Arena(); }
 
     class Track { public Vector3 at; public string unit; public float stunStart = -1f; public readonly List<float> stuns = new List<float>(); }
     static readonly Dictionary<EnemyDummy, Track> tracks = new Dictionary<EnemyDummy, Track>();

@@ -13,30 +13,19 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_전설적인_최상호_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_전설적인_최상호_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 전설적인_최상호.  · Trig_Legend6 → e00E(!전설 쿠마 스턴 더미2) → A07K: 200000  · Trig_Legend6 → e0KD(!전설 쿠마 스턴 더미) → A07K: 200000
+  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 전설적인_최상호.  · Trig_Legend6 → e00E(!전설 쿠마 스턴 더미2) → A07K: 200000  · Trig_Legend6 → e0KD(!전설 쿠마 스턴 더미) → A07K: 200000 [전설 범위화 09-30] 쿠마 압력포: stomp A07K는 500 범위 200000·스턴 0.6초 한 번 — 단일 200000 ×2였다. (Tools/apply_legend_rest2.py)'
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 0
+    range: 500.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
     effects:
     - kind: 0
       basis: 0
-      target: 3
-      damageType: 1
-      attackType: 4
-      multiplier: 200000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
-    - kind: 0
-      basis: 0
-      target: 3
+      target: 2
       damageType: 1
       attackType: 4
       multiplier: 200000.0
@@ -47,7 +36,7 @@ MonoBehaviour:
       casterBuffCountFactor: 0
     - kind: 1
       basis: 0
-      target: 3
+      target: 2
       damageType: 0
       attackType: 0
       multiplier: 0.0
