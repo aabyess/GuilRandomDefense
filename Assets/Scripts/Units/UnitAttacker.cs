@@ -1664,7 +1664,9 @@ public class UnitAttacker : MonoBehaviour
         // 고정 피해에도 같은 계수가 곱는 사례가 43곳 중 7곳 있다(리서치담당 재조사). 그래서
         // basis를 안 가리고 스킬 피해 전반에 곱한다. %체력 분기 자체를 타는지는 별개 축
         // (2026-09-30부터 효과별 targetCondition — 전역 TakesPercentDamage 게이트는 걷었다)이다.
-        float amount = ResolveSkillEffectValue(effect, target, recentAttackDamage) * target.PercentDamageTakenMultiplier;
+        // 원작 식에 A11S 인자가 없는 효과는 감수성 계수를 안 곱한다(SkillEffect.skipDamageTakenMultiplier).
+        float amount = ResolveSkillEffectValue(effect, target, recentAttackDamage)
+            * (effect.skipDamageTakenMultiplier ? 1f : target.PercentDamageTakenMultiplier);
         // 원작 realD = 0.03×버프개수(SkillEffect.casterBuffCountFactor 주석 참고). 기존
         // 227개 효과는 이 필드가 직렬화에 없어 C# 기본값 0f로 읽힌다 — (1+0×count)=1이라
         // 배율이 완전히 무효, 회귀 없음. ⚠️ 2026-09-06: CountCasterBuffs()가 이제 버프

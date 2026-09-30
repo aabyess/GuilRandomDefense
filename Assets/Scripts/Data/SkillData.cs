@@ -416,6 +416,14 @@ public class SkillEffect
     // 우선한다) — 그룹 맨 앞에 chance==0을 두면 그 효과는 사실상 죽은 자리가 된다(의도한
     // 설계라면 그렇게 두어도 안전하다, 다만 보통은 실수일 가능성이 높다).
     public int cascadeGroup;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, 구현담당1 — PM 5번 다음 커밋). 원작 A11S 감수성 인자
+    // ×(0.20+0.05×A11S레벨)은 **그 인자가 적힌 트리거 식에만** 곱해진다. 우리는
+    // DealSkillDamage에서 스킬 피해 전반에 EnemyDummy.PercentDamageTakenMultiplier를 곱해 왔고,
+    // 그래서 원작 식에 그 인자가 없는 효과(SKILL_BOSS_BRANCH_apply.csv의 [원작 식엔 A11S 계수
+    // 없음] 88행 등)는 대개 ×0.9만큼 과소였다. true면 이 효과는 그 계수를 곱하지 않는다.
+    // 기본 false = 지금까지 동작(곱함) — 기존 에셋 회귀 없음.
+    public bool skipDamageTakenMultiplier;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
