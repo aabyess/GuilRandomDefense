@@ -269,6 +269,12 @@ def find_orphaned_buff_gates(skill_assets):
             caster_grant_sources.setdefault(m.group(1), []).append(sp)
         for m in re.finditer(r"\n {4}requiredBuffId: (\S+)", text):
             required_caster.setdefault(m.group(1), []).append(sp)
+        # forbiddenBuffId도 「그 버프를 게이트로 쓴다」(없을 때만 도는 블록 — 도플 각성 창 B00X·기어 세컨드 B00V).
+        for m in re.finditer(r"\n {4}forbiddenBuffId: (\S+)", text):
+            required_caster.setdefault(m.group(1), []).append(sp)
+        # 2026-09-30 — 상시 오라(triggerType 2)의 buffId는 게이트가 아니라 겹침 키다(원작 abuf: 같은 버프는 큰 것 하나,
+        # 다른 버프는 합 — UnitAttacker.AddAuraBonus·EnemyDummy.AddAuraArmorShred). 「거는데 아무도 안 요구」 검사에서 뺀다.
+        is_aura = re.search(r"^  triggerType: 2$", text, re.M) is not None
 
         for block in iter_effect_blocks(text):
             kind = field_value(block, "kind")
@@ -276,7 +282,7 @@ def find_orphaned_buff_gates(skill_assets):
             buff_id = field_value(block, "buffId")
             req_target_buff = field_value(block, "requiredTargetBuffId")
 
-            if kind is not None and int(kind) in _ADD_BUFF_KINDS and buff_id:
+            if kind is not None and int(kind) in _ADD_BUFF_KINDS and buff_id and not is_aura:
                 if target == _TARGET_ENEMIES:
                     target_granted.add(buff_id)
                     target_grant_sources.setdefault(buff_id, []).append(sp)
