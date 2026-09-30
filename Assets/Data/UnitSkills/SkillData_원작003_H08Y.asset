@@ -13,14 +13,114 @@ MonoBehaviour:
   m_Name: SkillData_원작003_H08Y
   m_EditorClassIdentifier:
   skillName: A069 !꾸드방-프랑초
-  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 무적의 아이언 파이러츠(H08Y), #003, 능력 A069(!꾸드방-프랑초). 스킬승급형: 레벨1→2로 '!꾸드방-프랑초'의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. upro(실제 이름): 프랑키. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다).
+  description: '06번① 순위배정(2차, 초월함 등급 정정) — 원작 무적의 아이언 파이러츠(H08Y), #003, 능력 A069(!꾸드방-프랑초). 스킬승급형: 레벨1→2로 ''!꾸드방-프랑초''의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. upro(실제 이름): 프랑키. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). | 2026-09-30 채움(구현담당2, SKILL_FILL_STAGE2_seven.md §4 · 원문 재확인): Trig_Franky_Attack_Actions `if GetRandomInt(1,10)==2 → Franky_Skill_1`(10%, 툴팁 5%는 틀림). Franky_Skill_1은 udg_bool_franky_tr(= A069 승급 시 true, A069 Lv2와 1:1)로 갈린다 — Lv1: 맞은 적 위치 400 안 적 전원 RRD(400000,0.8,1.5,NORMAL,UNIVERSAL) + 맞은 대상 추가 RRD(200000,0.8,1.5); Lv2: 500 안 전원 500000 + 대상 250000(같은 배율). NORMAL/UNIVERSAL → AP(2)/Spells(7). 더미 e06I·e0KC는 uabi=Aloc,Avul뿐(시각). 스턴·둔화 없음. range는 원작 단위.'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1
-    range: 0
-    effects: []
+    triggerChance: 0.1
+    range: 400.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 400000.0
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId:
+      randMin: 0.8
+      randMax: 1.5
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 200000.0
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId:
+      randMin: 0.8
+      randMax: 1.5
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
   - cooldown: 0
-    triggerChance: 1
-    range: 0
-    effects: []
+    triggerChance: 0.1
+    range: 500.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 500000.0
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId:
+      randMin: 0.8
+      randMax: 1.5
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 250000.0
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId:
+      randMin: 0.8
+      randMax: 1.5
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
