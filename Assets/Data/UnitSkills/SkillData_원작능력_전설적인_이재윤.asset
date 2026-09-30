@@ -12,47 +12,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_전설적인_이재윤
   m_EditorClassIdentifier:
-  skillName: A0EN !명왕의 검술
-  description: 원작 전설적인 Dr.히루루크 나라를 치료한 의사 - 전설적인(Trig_Legend29). 정정(2026-09-06, STOCK_FIELD_RESEARCH_RESULT.csv/607351c): 2차 배정(더미 경로 Trig_Legend29 → e0DX(!전설 히루루크 벚꽃) → A0O6, 100) 효과를 제거했다 — base AUls(로커스트 스웜)의 Uls1은 소환 마리 수지 피해 필드가 아니다. 기록만 남긴다.
+  skillName: Legend29 1/40 (히루루크, A0K9 켜짐)
+  description: '원작 전설적인 Dr.히루루크 나라를 치료한 의사 - 전설적인(Trig_Legend29). 정정(2026-09-06, STOCK_FIELD_RESEARCH_RESULT.csv/607351c): 2차 배정(더미 경로 Trig_Legend29 → e0DX(!전설 히루루크 벚꽃) → A0O6, 100) 효과를 제거했다 — base AUls(로커스트 스웜)의 Uls1은 소환 마리 수지 피해 필드가 아니다. 기록만 남긴다. | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Legend29(h03K) = `if A0K9 레벨==1 and 대상 PV<199 and 1~40<2 → e0DX locustswarm + 대상 위치 800 PV<200 적 전원 최대×0.5 HERO/UNIVERSAL`. 이전: 확률 0.12·스턴 0.6(A0EN = h03A 전설적인_진연서)·두 벌·AD. ⚠️ A0K9는 플레이어가 켜고 끄는 능력(Trig_hiru_japog)이 더하는 것 — 켜진 상태로 가정했다(우리에 수동 토글 없음, 목록).'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.12
-    range: 0
+    triggerChance: 0.025
+    range: 800.0
     effects:
     - kind: 0
       basis: 1
-      target: 3
-      damageType: 1
+      target: 2
+      damageType: 2
       attackType: 4
       multiplier: 0.5
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
       targetCondition: 1
-      targetConditionValue: 200.0
-      skipDamageTakenMultiplier: 1
-    - kind: 0
-      basis: 1
-      target: 3
-      damageType: 1
-      attackType: 4
-      multiplier: 0.5
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      targetCondition: 1
-      targetConditionValue: 200.0
-      skipDamageTakenMultiplier: 1
-    - kind: 1
-      basis: 0
-      target: 3
-      damageType: 0
-      attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0.6
+      targetConditionValue: 200
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0

@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_전설적인_임채현
   m_EditorClassIdentifier:
-  skillName: A052 !고무고무 열매
-  description: '원작 전설적인 후지토라 잇쇼우 ''신''해군대장 - 전설적인(Trig_Legend11). | 2차 배정(트리거·더미 채널): 원작 전설적인 후지토라 잇쇼우 ''신''해군대장 - 전설적인(더미 경로 Trig_Legend11 → e00B(!전설 후지토라 더미2) → A07U). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 2차 배정(트리거·더미 채널): 원작 전설적인 후지토라 잇쇼우 ''신''해군대장 - 전설적인(더미 경로 Trig_Legend11 → e00Z(!전설 후지토라 더미) → A07U). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. 정정(2026-09-06, GATE_FIX_14/c1adaea): 원작 Trig_Legend11 GetRandomInt(1,7)==6 확정 — triggerChance 1.0(근사) → 0.143(1/7). | 정정(2026-09-30, 구현담당1 — ORIGIN_ABILITY_PROVENANCE 「다른 곳에 있음」): 현재×0.01+500000은 Trig_Legend26(h02U=전설적인_홍인창) LIFE==40 광역 몫이라 그쪽 새 에셋으로. 뺀 효과(basis, 값, 상수): [(''2'', ''0.01'', ''500000.0'')] | 정정(2026-09-30, 구현담당1 — ORIGIN_ABILITY_PROVENANCE 「다른 곳에 있음」): 150000은 이 유닛 원작(h02X·h031·h03S)에 없는 값. 뺀 효과(basis, 값, 상수): [(''0'', ''150000.0'', ''0.0'')]'
+  skillName: Legend11 1/7 (후지토라 스톰프)
+  description: '원작 전설적인 후지토라 잇쇼우 ''신''해군대장 - 전설적인(Trig_Legend11). | 2차 배정(트리거·더미 채널): 원작 전설적인 후지토라 잇쇼우 ''신''해군대장 - 전설적인(더미 경로 Trig_Legend11 → e00B(!전설 후지토라 더미2) → A07U). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 2차 배정(트리거·더미 채널): 원작 전설적인 후지토라 잇쇼우 ''신''해군대장 - 전설적인(더미 경로 Trig_Legend11 → e00Z(!전설 후지토라 더미) → A07U). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. 정정(2026-09-06, GATE_FIX_14/c1adaea): 원작 Trig_Legend11 GetRandomInt(1,7)==6 확정 — triggerChance 1.0(근사) → 0.143(1/7). | 정정(2026-09-30, 구현담당1 — ORIGIN_ABILITY_PROVENANCE 「다른 곳에 있음」): 현재×0.01+500000은 Trig_Legend26(h02U=전설적인_홍인창) LIFE==40 광역 몫이라 그쪽 새 에셋으로. 뺀 효과(basis, 값, 상수): [(''2'', ''0.01'', ''500000.0'')] | 정정(2026-09-30, 구현담당1 — ORIGIN_ABILITY_PROVENANCE 「다른 곳에 있음」): 150000은 이 유닛 원작(h02X·h031·h03S)에 없는 값. 뺀 효과(basis, 값, 상수): [(''0'', ''150000.0'', ''0.0'')] | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Legend11(h031) = `1~7==6 → 스톰프 e00Z(A07U 대상 위치 450 광역 192500·스턴2.4) + 대상 577500 CHAOS/NORMAL`. 이전: 577500 두 벌 → 한 벌, 같은 굴림의 스톰프(더미채널_전설적인_임채현_1, 단일로 옮겨져 있던 것)를 광역 450으로 합치고 그 에셋은 지움.'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.143
-    range: 345.0
+    triggerChance: 0.14285714285714285
+    range: 450.0
     effects:
     - kind: 0
       basis: 0
@@ -29,14 +29,60 @@ MonoBehaviour:
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     - kind: 0
       basis: 0
-      target: 3
+      target: 2
       damageType: 1
-      attackType: 5
-      multiplier: 577500.0
+      attackType: 1
+      multiplier: 192500.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 2.4
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
