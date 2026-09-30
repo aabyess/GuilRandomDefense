@@ -1,0 +1,35 @@
+다른세계_나나미_치아키 스킨 출처 — 원본 캐릭터는 「에노시마 준코」(단간론파). 사장님이 이 유닛에 매칭(2026-09-30).
+
+원본: ~/Desktop/구랜디스킨모음/12_다른세계/다른세계_나나미_치아키.zip
+  sha256: a2e7ed7574a6a86d7a96a7282c1731a4fe6cb481c8165740a088b1ae40d4be00
+  내용물: source/Junko Enoshima.fbx(MMD/PMX 변환, 5.4MB) + textures/ 12장(.tga.png)
+  ⚠️ zip 안 두 파일명이 Shift-JIS→cp437 모지바케: 「âVâââc」=シャツ, 「âJü[âfâBâKâôér」=カーディガンＳ.
+     산출은 원래 이름(シャツ.tga.png·カーディガンＳ.tga.png)으로 썼다(gen_mmd_skin texture_source).
+  fukueno.tga.png(500×500 어두운 원)는 어느 재질 UV에도 대응이 없어 안 썼다.
+
+라이선스: ⚠️ 미확인 — zip에 license 파일이 없다. 사장님 확인 필요.
+
+빌드 스크립트: Tools/blender/gen_mmd_skin.py (SKINS["다른세계_나나미_치아키"])
+  실행: blender -b --factory-startup --python Tools/blender/gen_mmd_skin.py -- 다른세계_나나미_치아키
+
+처리 요약(2026-09-30, blender 세션):
+- 뼈 809(이시마루·몬도와 같은 영어 MMD 이름) → mixamorig 51(손가락 포함). 끝점 이름만 달라 LIMB_JUNKO·FINGER_CHAINS_JUNKO.
+  가중치만 합친 것: 머리카락·트윈테일·곰 머리핀·혀 → Head, 치마 물리뼈 5×10 → Hips, 가슴·넥타이 윗단 → Chest,
+  넥타이 아랫단 → Spine, 정강이 리본(Knee 자식) → 각 다리 Leg. 무가중치 정점 0.
+- 셰이프키 49(표정) 삭제. 안경(Glasses 562면)은 머리 **속**에 숨은 모프 토글 소품이라 뺐다(drop_materials).
+- 🔴 FBX가 텍스처를 하나도 안 물어서 재질 27개 ↔ 텍스처 11장을 UV 위치 ↔ 그림 배치로 직접 대조해 묶었다:
+  face=FACE(얼굴·귀·속눈썹·흰자·눈그늘·이) · eye=EJ-eye · body=BODY(피부) · hair=HAIR(머리카락+Head 두피) ·
+  kuro=KURO(모노쿠마 머리핀) · shiro=SHIRO(시로쿠마 머리핀, 재질명 「シLowerクマ」) · cardigan=카디건+배지 ·
+  shirt=셔츠+넥타이 · ribbon=RIBBON(빨간 체크 치마) · under=속옷+초커 · shoes=SHOES.
+  1차에 Head(두피)를 FACE에 뒀다가 뒤통수에 아이라인 그림이 찍혀 HAIR로 옮겼다(뒷면 렌더로 잡음).
+- 키 1.8m(원본 21.27단위 → 배율 0.0846) · 발 z 0 · 정면 −Y · 팔 처짐 펴서 T자.
+
+검증(내보낸 FBX 재수입):
+- 최상위 Armature 하나 · Hips 부모 None · 뼈 51 · 무가중치 0 · bbox 1.355×0.699×1.8.
+- 공용 idle·walk·attack 리타겟 50뼈, 뒷면 컬링 렌더에서 구멍 없음. 텍스처 11장 전부 내용 있음.
+- clip_spread 최대 1.03(기준 3.0) · bone_bind 51/51 · mesh_clash idle +3.2%(프레임 165, 렌더 확인: 오른손이 카디건 밑단에
+  얹히는 자세 — 결함 아님) · walk +2.8% · attack 0.0% · check_entries 통과.
+- 넥타이 드리움(2026-09-30, PM 지시): MMD 쉬는 자세(물리 없음)에선 가슴에서 앞아래로 칼처럼 뻗었다(z 9.0에서 몸 앞 1.1 넘게).
+  생성기 cfg drape로 넥타이 정점을 높이별로 몸 쪽(+y)으로만 옮김 — 가슴선 y −1.6에서 곧게, 치마 퍼짐 위로는 0.15 띄움(원본 단위),
+  이동량 표를 고르게 펴서 보간(1차 시도는 칸마다 따로 옮겨 넥타이가 찢겼다). 469정점. 모양·가중치(Necktie1~3→Chest, 4~6→Spine) 그대로.
+  재검: 쉬는 자세·idle 165 정면·양옆 렌더 확인, mesh_clash·clip_spread·bone_bind·check_entries 수치 변화 없음.

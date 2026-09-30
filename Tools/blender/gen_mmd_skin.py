@@ -93,6 +93,28 @@ WEIGHT_MAP_DIO = {
     "UpLeg": ["足.{s}"], "Leg": ["ひざ.{s}"], "Foot": ["足首.{s}"], "ToeBase": ["つま先.{s}"],
 }
 
+# 에노시마 준코(다른세계_나나미_치아키) — 이시마루 기본 표와 끝점 이름만 다르다(직접 확인):
+# HandTip→WristTip · IndexFingerTip→IndexFinger3Tip(중·약·새끼도 같은 꼴) · ThumbTip→Thumb2Tip.
+# SKINS 리터럴이 참조하므로 SKINS보다 앞에 둔다(기본 LIMB·FINGER_CHAINS는 SKINS 뒤에 있어 못 쓴다).
+LIMB_JUNKO = [
+    ("Shoulder", "Shoulder", "Arm", "Chest"), ("Arm", "Arm", "Elbow", "Shoulder"),
+    ("ForeArm", "Elbow", "Wrist", "Arm"), ("Hand", "Wrist", "WristTip", "ForeArm"),
+    ("UpLeg", "LegD", "KneeD", "Hips"), ("Leg", "KneeD", "AnkleD", "UpLeg"),
+    ("Foot", "AnkleD", "LegTipEX", "Leg"), ("ToeBase", "LegTipEX", "_LEGTIPTAIL_", "Foot"),
+]
+FINGER_CHAINS_JUNKO = [
+    ("Thumb1", "Thumb0", "Thumb1", None), ("Thumb2", "Thumb1", "Thumb2", "Thumb1"),
+    ("Thumb3", "Thumb2", "Thumb2Tip", "Thumb2"),
+    ("Index1", "IndexFinger1", "IndexFinger2", None), ("Index2", "IndexFinger2", "IndexFinger3", "Index1"),
+    ("Index3", "IndexFinger3", "IndexFinger3Tip", "Index2"),
+    ("Middle1", "MiddleFinger1", "MiddleFinger2", None), ("Middle2", "MiddleFinger2", "MiddleFinger3", "Middle1"),
+    ("Middle3", "MiddleFinger3", "MiddleFinger3Tip", "Middle2"),
+    ("Ring1", "RingFinger1", "RingFinger2", None), ("Ring2", "RingFinger2", "RingFinger3", "Ring1"),
+    ("Ring3", "RingFinger3", "RingFinger3Tip", "Ring2"),
+    ("Pinky1", "LittleFinger1", "LittleFinger2", None), ("Pinky2", "LittleFinger2", "LittleFinger3", "Pinky1"),
+    ("Pinky3", "LittleFinger3", "LittleFinger3Tip", "Pinky2"),
+]
+
 SKINS = {
     "희귀함_임채민": dict(
         source="~/Desktop/구랜디스킨모음/04_희귀함/희귀함_임채민.zip",
@@ -180,6 +202,60 @@ SKINS = {
             "eye": ["EyeL", "EyeR"],
         },
         texture_files={"body": "BUT_IT_WAS_ME_DIO_AWAKENED.png", "eye": "eyel_(Awakened).png"},
+    ),
+    # 다른세계_나나미_치아키 ← 원본은 「Junko Enoshima」(단간론파 에노시마 준코, 사장님이 이 유닛에 매칭,
+    # 2026-09-30 PM 경유). 이시마루·몬도와 같은 업로더 계열 영어 MMD 이름(LowerBody·LegD·ArmTwist…)이라
+    # 기본 표를 그대로 쓴다. 뼈 809 · 메시 1(재질 27) · 셰이프키 49(표정, 삭제) · 원본 키 21.24(파일 단위).
+    # 🔴 FBX가 텍스처를 하나도 안 문다(재질 노드에 이미지 0) — 재질 27개 ↔ 텍스처 12장을 **UV 위치 ↔ 그림 배치**로
+    #    직접 대조해 묶었다(이빨=FACE 맨 아래 흰 띠, 속눈썹=FACE 가운데 오른쪽 모양, 머리카락 가닥=HAIR 오른쪽 세로 띠,
+    #    배지=카디건 오른쪽 아래 흰 원, 넥타이=셔츠 왼쪽 검은 리본, 치마=RIBBON 빨간 체크, 곰 머리핀 둘=KURO·SHIRO).
+    "다른세계_나나미_치아키": dict(
+        source="~/Desktop/구랜디스킨모음/12_다른세계/다른세계_나나미_치아키.zip",
+        fbx_member="Junko Enoshima.fbx",
+        mesh_name="Junko",
+        path="Assets/Art/Units/다른세계_나나미_치아키/다른세계_나나미_치아키.fbx",
+        height=1.8,
+        center_band=(0.02, 0.06),
+        # 끝점 이름만 이시마루 표와 다르다(직접 확인): HandTip→WristTip, IndexFingerTip→IndexFinger3Tip,
+        # ThumbTip→Thumb2Tip(엄지는 0·1·2, 다른 손가락은 1·2·3).
+        limb=LIMB_JUNKO, finger_chains=FINGER_CHAINS_JUNKO,
+        material_buckets={
+            "face": ["Face", "FacePart", "睫Strand", "WhiteEye", "Eye影", "Ears", "UpperTeeth", "LowerTeeth"],
+            "eye": ["Eye"],
+            "body": ["Skin"],
+            "hair": ["Hair1", "Hair2", "Hair3", "SideHair", "Head"],   # Head=두피(뒤통수) — FACE에 두면 뒤통수에 아이라인 그림이 찍힌다(1차 렌더로 잡음)
+            "kuro": ["モノクマ"],                                     # 곰 머리핀(모노쿠마) — 검은쪽
+            "shiro": ["シLowerクマ"],                                 # 곰 머리핀(시로쿠마 「シロクマ」가 번역기로 「シLowerクマ」가 됨) — 흰쪽
+            "cardigan": ["CardiganL", "CardiganR", "バッチ"],
+            "shirt": ["Shirt", "Necktie"],
+            "ribbon": ["Skirt"],
+            "under": ["Underwear", "チョーカー"],
+            "shoes": ["Shoes"],
+        },
+        # ⚠️ "Eye"는 bucket_for가 startswith로도 잡아서 "Eye影"이 먼저 face에 걸리게 순서를 face 먼저 뒀다.
+        texture_files={"face": "FACE.tga.png", "eye": "EJ-eye.tga.png", "body": "BODY.tga.png", "hair": "HAIR.tga.png",
+                       "kuro": "KURO.tga.png", "shiro": "SHIRO.tga.png", "cardigan": "カーディガンＳ.tga.png",
+                       "shirt": "シャツ.tga.png", "ribbon": "RIBBON.tga.png", "under": "UNDER.tga.png",
+                       "shoes": "SHOES.tga.png"},
+        # zip 안 파일명이 Shift-JIS→cp437 모지바케(skin-import-traps ②) — 산출은 원래 이름으로.
+        texture_source={"カーディガンＳ.tga.png": "âJü[âfâBâKâôér.tga.png", "シャツ.tga.png": "âVâââc.tga.png"},
+        # 안경(Glasses 1,686정점)은 머리 **속**(y −0.11~0.5, 눈은 y −0.8)에 숨은 모프 토글 소품 — 셰이프키를 지우면
+        # 영영 안 보이는 면이라 뺀다(직접 확인: 에노시마 준코는 평소 안경을 안 쓴다).
+        drop_materials=("Glasses",),
+        # 넥타이 드리우기(PM 지시 2026-09-30) — 원본 단위 실측: 가슴 앞 y≈−1.5(z 14.5), 카디건 −1.1~−1.3, 치마 퍼짐이
+        # z 9.5에서 −2.95까지 나온다. 넥타이는 원래 z 9.0에서 y −4.06(몸 앞 1.1 넘게 뻗음) → 가슴선 −1.6에서 곧게, 치마 위로는 0.15 띄워.
+        drape=dict(material="Necktie", body_materials=("Shirt", "CardiganL", "CardiganR", "Skirt", "Skin", "Underwear", "バッチ"),
+                   x_band=0.5, pivot_z=14.3, hang_y=-1.6, gap=0.15),
+        # 가중치가 있는데 기본 표에 없는 그룹(1차 빌드 보고서가 직접 알려 줌) — 뼈는 안 만들고 가중치만 합친다.
+        weight_map_extra={
+            "Chest": ["Breast_L", "Breast_R", "Necktie1", "Necktie2", "Necktie3"],
+            "Spine": ["Necktie4", "Necktie5", "Necktie6"],               # 넥타이 아랫단(배 앞까지 늘어짐)
+            "Leg": ["Ribbon1_{s}", "Ribbon2_{s}", "Ribbon3_{s}", "Ribbon4_{s}"],   # 정강이 리본(Knee_* 자식, z 3~4)
+        },
+        weight_prefix_map={
+            "Head": ["FrontHair", "SideHair", "MiddleHair", "LowerHair", "UpperHair", "クLowerクマ", "シLowerクマ", "Tongue"],
+            "Hips": ["Skirt_"],                                          # 치마 물리 뼈 5×10
+        },
     ),
 }
 
@@ -314,6 +390,61 @@ def build(name, cfg, out_dir=None, render_dir=None):
     scene = bpy.context.scene
     body = next(o for o in scene.objects if o.type == "MESH")
     src_arm = next(o for o in scene.objects if o.type == "ARMATURE")
+    # 🔴 준코(2026-09-30) — MMD는 소품을 셰이프키로 제자리에 꺼내는 「토글」이 있다(안경: 평소엔 머리 **속**
+    # y −0.11~0.5에 숨어 있고 모프로 얼굴 앞에 나온다). 셰이프키를 지우면 영영 안 보이는 면이 남으니
+    # cfg["drop_materials"]에 적은 재질의 면을 import 직후 지운다(없으면 아무 일도 안 함).
+    drop_mats = set(cfg.get("drop_materials", ()))
+    if drop_mats:
+        import bmesh
+        bm = bmesh.new()
+        bm.from_mesh(body.data)
+        idx = {i for i, m in enumerate(body.data.materials) if m and m.name.split(".")[0] in drop_mats}
+        gone = [f for f in bm.faces if f.material_index in idx]
+        bmesh.ops.delete(bm, geom=gone, context="FACES")
+        loose = [v for v in bm.verts if not v.link_faces]
+        bmesh.ops.delete(bm, geom=loose, context="VERTS")
+        bm.to_mesh(body.data)
+        bm.free()
+        report["뺀 재질 면"] = {"재질": sorted(drop_mats), "면": len(gone)}
+    # 🔴 준코(2026-09-30, PM 지시) — MMD 쉬는 자세는 물리가 없어 넥타이가 가슴에서 앞아래로 칼처럼 뻗는다
+    # (옆에서 보면 결함). cfg["drape"]가 있으면 그 재질의 정점을 높이 구간마다 같은 양만큼 몸 쪽(+y)으로
+    # 옮긴다 — 목표는 「가슴선에서 곧게 떨어지되(hang_y), 몸(치마 퍼짐 포함) 앞면보다 gap만큼은 앞」.
+    # 구간마다 같은 양을 옮겨 넥타이 두께·매듭 모양은 그대로 둔다(원본 단위·월드 좌표, 정면 −Y 기준).
+    drape = cfg.get("drape")
+    if drape:
+        mw, mwi = body.matrix_world.copy(), body.matrix_world.inverted()
+        names = [m.name.split(".")[0] if m else "" for m in body.data.materials]
+        vmats = {}
+        for p in body.data.polygons:
+            for vi in p.vertices:
+                vmats.setdefault(vi, set()).add(names[p.material_index])
+        W = np.array([mw @ v.co for v in body.data.vertices])
+        tie = np.array([i for i, s in vmats.items() if drape["material"] in s])
+        bod = np.array([i for i, s in vmats.items() if s & set(drape["body_materials"]) and drape["material"] not in s])
+        B = W[bod]
+        B = B[np.abs(B[:, 0]) < drape.get("x_band", 0.5)]
+        # 높이별 이동량을 0.1 간격 표로 먼저 만들고(중심선·몸 앞면 모두 그 칸 평균), 이웃 칸과 고르게 편 뒤 정점마다
+        # 보간해 옮긴다 — 정점마다 제 칸 값을 쓰면 칸 경계에서 넥타이가 찢긴다(1차 시도에서 확인).
+        T = W[tie]
+        zs = np.arange(T[:, 2].min() - 0.1, drape["pivot_z"] + 0.1, 0.1)
+        shift = []
+        for z in zs:
+            band = B[np.abs(B[:, 2] - z) < 0.25]
+            front = band[:, 1].min() if len(band) else drape["hang_y"]
+            target = min(drape["hang_y"], front - drape["gap"])
+            same = T[np.abs(T[:, 2] - z) < 0.15]
+            centre = same[:, 1].max() if len(same) else target      # 몸 쪽 면 기준 — 넥타이 뒷면이 목표선에 닿게
+            shift.append(max(0.0, target - centre) if z < drape["pivot_z"] else 0.0)
+        shift = np.array(shift)
+        for _ in range(4):
+            shift[1:-1] = (shift[:-2] + shift[1:-1] * 2 + shift[2:]) / 4
+        shift = np.maximum.accumulate(shift[::-1])[::-1]          # 아래로 갈수록 줄지 않게(위가 더 당겨지면 꺾인다)
+        dy = np.interp(T[:, 2], zs, shift)
+        W[tie, 1] += dy
+        moved = int((dy > 1e-4).sum())
+        for vi in tie:
+            body.data.vertices[vi].co = mwi @ Vector(W[vi])
+        report["드리운 정점"] = {"재질": drape["material"], "정점": moved}
     body.name = body.data.name = cfg["mesh_name"]
     report["원본 정점·삼각형"] = [len(body.data.vertices), sum(len(p.vertices) - 2 for p in body.data.polygons)]
     report["원본 뼈(소스)"] = len(src_arm.data.bones)
@@ -342,7 +473,11 @@ def build(name, cfg, out_dir=None, render_dir=None):
     os.makedirs(tex_dir, exist_ok=True)
     bucket_mat = {}
     for bucket, fname in texture_files.items():
-        shutil.copy2(tex_paths[fname], os.path.join(tex_dir, fname))
+        # 🔴 나나미 치아키(에노시마 준코, 2026-09-30) — zip 안 파일명이 Shift-JIS가 cp437로 깨진
+        # 모지바케(「âVâââc」=シャツ)다. 산출 파일명(fname)은 원래 이름으로 쓰고, zip 안의 깨진 이름은
+        # cfg["texture_source"]로 따로 받는다(없으면 같은 이름 — 기존 스킨 동작 그대로).
+        src_name = cfg.get("texture_source", {}).get(fname, fname)
+        shutil.copy2(tex_paths[src_name], os.path.join(tex_dir, fname))
         mat = bpy.data.materials.new(f"MMD_{bucket}")
         mat.use_nodes = True
         nt = mat.node_tree
