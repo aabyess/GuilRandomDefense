@@ -479,6 +479,61 @@ SKINS = {
         decimate_ratio=0.35,                                      # 이미 저폴리(합쳐서 13,217정점) — 약한 감량만
         bake_size=2048,
     ),
+    "다른세계_고죠_사토루": dict(
+        # 2026-09-30 사장님 지시(PM 경유) — Sketchfab 「satoru gojo shinjuku battle style with rigs」.
+        # 원본 zip sha256 11c59d30…a7b020a. 안에 source/Untitled.glb 하나 + textures/ 4장.
+        # 🔴 textures/ 4장은 glb에 박힌 그림과 **내용이 다르다**(같은 크기인데 픽셀 평균차 1~139, 직접 비교).
+        #    glb가 실제로 부르는 건 박힌 그림이고 렌더도 그쪽이 맞게 나와서 박힌 그림을 쓴다(emission_texture).
+        source="~/Desktop/구랜디스킨모음/12_다른세계/다른세계_고죠_사토루.zip",
+        glb_member="source/Untitled.glb",
+        path="Assets/Art/Units/다른세계_고죠_사토루/다른세계_고죠_사토루.fbx",
+        mesh_name="Gojo",
+        strip_material_suffix=True,                               # 재질 꼬리 ".002" 떼기(ArtBinder 이름 일치) — build() 주석 참고
+        zero_emission=True,                                       # 소스 재질의 흰 발광(0.4~2.6) 끄기 — build() 주석 참고
+        height=1.8,                                               # 흔함 외 전 등급 1.8m 공통
+        # 메시 13 중 몸 8(Object_7~14, 전부 스킨) — 빼는 5는 전부 무가중치 조각(정점그룹 0, 직접 확인):
+        drop_meshes={
+            "Icosphere",                                          # 조명 구(42정점, 원점 반지름 1) — 늘 빼는 찌꺼기
+            "Object_139", "Object_166",                           # 🔵 사장님 지시로 뺀 파란 구슬 둘(창·蒼) — Material.001
+                                                                    #   청록 0,0.6,0.8·알파 0.14·발광, 1,972정점씩, 위팔 옆에 떠 있음
+            "Object_140", "Object_167",                           # Material.002 알파 0.0(원본에서 **안 보이는** 조각, 정강이 안쪽
+                                                                    #   z≈1.0·2,274정점씩) — 유니티는 이 알파를 안 써서 흰 덩어리로 나온다
+        },
+        # 리기파이 표준 체인 — glTF가 붙인 "_숫자" 꼬리 그대로(직접 확인).
+        rename={
+            "spine_162": "Hips", "spine.001_149": "Spine", "spine.002_148": "Spine1", "spine.003_147": "Spine2",
+            "spine.004_94": "Neck", "spine.005_93": "Head",
+            "shoulder.L_119": "LeftShoulder", "upper_arm.L_118": "LeftArm", "forearm.L_117": "LeftForeArm", "hand.L_116": "LeftHand",
+            "shoulder.R_144": "RightShoulder", "upper_arm.R_143": "RightArm", "forearm.R_142": "RightForeArm", "hand.R_141": "RightHand",
+            "thigh.L_156": "LeftUpLeg", "shin.L_155": "LeftLeg", "foot.L_154": "LeftFoot", "toe.L_152": "LeftToeBase",
+            "thigh.R_161": "RightUpLeg", "shin.R_160": "RightLeg", "foot.R_159": "RightFoot", "toe.R_157": "RightToeBase",
+        },
+        fold={
+            "breast.L_145": "Spine2", "breast.R_146": "Spine2",
+            "pelvis.L_150": "Hips", "pelvis.R_151": "Hips",
+            "heel.02.L_153": "LeftFoot", "heel.02.R_158": "RightFoot",
+            "hand.L.001_115": "LeftHand", "hand.R.001_140": "RightHand",   # 손 보조뼈(손바닥 자리)
+            "GLTF_created_0_rootJoint": "Hips",                    # spine 위 뿌리 한 마디(노바라와 같음) — 안 접으면 Hips가 루트가 아니게 된다
+        },
+        # spine.006_92 밑에 face_67(얼굴 대형 서브트리)과 눈썹·눈꺼풀 뼈가 곧장 매달려 있다 — 뿌리째 Head로.
+        fold_subtree={"spine.006_92": "Head"},
+        finger_prefixes=("palm.", "f_index.", "f_middle.", "f_ring.", "f_pinky.", "thumb."),
+        materials={
+            **{n: ("emission_texture", None) for n in (
+                "Gojo_toji_outfit_Gojo_toji_outfitMaterial__101",   # 얼굴·머리
+                "Gojo_toji_outfit_Gojo_toji_outfitMaterial__36",    # 머리카락
+                "Gojo_toji_outfit_Gojo_toji_outfitMaterial__75",    # 눈
+                "Gojo_toji_outfit_Gojo_toji_outfitMaterial__88",    # 눈(흰자 쪽) — 75와 같은 그림을 부른다
+                "Material__48",                                     # 몸·옷
+            )},
+            # 속눈썹 — 그림도 정점색도 없다(원본 기본색 0.588 회색). 게임 거리에선 선 하나라 짙은 단색.
+            "Gojo_toji_outfit_Gojo_toji_outfit_gojoLASHES": ("solid", (0.06, 0.06, 0.07, 1.0)),
+        },
+        rotate_z=0.0,                                             # 얼굴(코 뼈 y −0.35)이 −Y 쪽 — 정면 이미 −Y
+        level_arms=True,                                          # 직접 확인: upper_arm.L z 5.306 → hand.L z 3.73 = A자(팔 아래로)
+        decimate_ratio=1.0,                                       # 합쳐서 약 2.4만 면 — 감량 불필요
+        bake_size=2048,
+    ),
 }
 
 # 22뼈 계층(gen_skin_rig.py와 완전히 같은 이름 규칙 — PREFIX만 공유, 그 파일은 안 건드린다)
@@ -561,6 +616,28 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
     else:
         bpy.ops.import_scene.gltf(filepath=glb_path)
     scene = bpy.context.scene
+
+    # 🔴 고죠(2026-09-30) — 소스 재질 이름 끝이 ".002"라 FBX 재질 이름엔 점이 남고 텍스처 파일은
+    # safe_filename으로 "_002"가 된다. ArtBinder.MatchTexture는 완전일치·부분일치로만 찾아서
+    # (".002" ≠ "_002") 전부 회색이 된다. 켠 유닛만 import 직후 꼬리 ".숫자"를 떼어 둘을 같게 만든다.
+    if cfg.get("strip_material_suffix"):
+        for m in list(bpy.data.materials):
+            stripped = re.sub(r"\.\d{3}$", "", m.name)
+            if stripped != m.name and bpy.data.materials.get(stripped) is None:
+                m.name = stripped
+        # ⚠️ 이미지 이름도 떼어 둔다 — src_colors 등 이름 조회와 무관하지만 보고서가 헷갈리지 않게.
+        for im in list(bpy.data.images):
+            stripped = re.sub(r"\.\d{3}(_baseColor)$", r"\1", im.name)
+            if stripped != im.name and bpy.data.images.get(stripped) is None:
+                im.name = stripped
+    # 🔴 고죠(2026-09-30) — 소스 glTF 재질에 흰 발광(강도 0.4~2.6)이 박혀 있고 wire_image_material은 발광을
+    # 안 건드려 FBX까지 따라 나간다(재수입 렌더가 하얗게 떴다). 켠 유닛만 발광 강도를 0으로.
+    if cfg.get("zero_emission"):
+        for m in bpy.data.materials:
+            if m.use_nodes:
+                for n in m.node_tree.nodes:
+                    if n.type == "BSDF_PRINCIPLED" and "Emission Strength" in n.inputs:
+                        n.inputs["Emission Strength"].default_value = 0.0
 
     # 무기 소품 전용 1뼈짜리 rig가 따로 있는 소스(카스미: Blade Rig·Cabbard Rig·Sword Rig)는
     # next()로 아무 ARMATURE나 집으면 안 된다 — armature_name이 있으면 그걸로 직접 찾는다.
