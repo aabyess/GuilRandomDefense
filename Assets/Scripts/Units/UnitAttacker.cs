@@ -322,9 +322,25 @@ public class UnitAttacker : MonoBehaviour
         {
             activeBuffs.Add(new ActiveBuff { id = id, expiresAt = -1f, hitsRemaining = hitCharges, skipNextTick = true, attackSpeedMultiplierAmount = multiplier });
         }
+        else if (duration > 0f)
+        {
+            // 시간 버프는 원작처럼 같은 id가 다시 걸리면 만료만 갱신한다(2026-09-30). 전에는
+            // 항목을 새로 붙여 배율이 곱으로 쌓였다(A095 블러드러스트 0.5초 쿨 → 사실상 무한 누적).
+            // 오라·영구(duration 0)는 RemoveBuff와 짝이 맞아야 해서 아래 기존 경로 그대로다.
+            PruneExpiredBuffs();
+            ActiveBuff existing = string.IsNullOrEmpty(id) ? null
+                : activeBuffs.Find(b => b.id == id && b.hitsRemaining <= 0 && b.expiresAt > 0f && b.attackSpeedMultiplierAmount != 1f);
+            if (existing != null)
+            {
+                existing.expiresAt = Time.time + duration;
+                existing.attackSpeedMultiplierAmount = multiplier;
+                return;
+            }
+            activeBuffs.Add(new ActiveBuff { id = id, expiresAt = Time.time + duration, attackSpeedMultiplierAmount = multiplier });
+        }
         else
         {
-            activeBuffs.Add(new ActiveBuff { id = id, expiresAt = duration > 0f ? Time.time + duration : -1f, attackSpeedMultiplierAmount = multiplier });
+            activeBuffs.Add(new ActiveBuff { id = id, expiresAt = -1f, attackSpeedMultiplierAmount = multiplier });
         }
     }
 
@@ -992,6 +1008,11 @@ public class UnitAttacker : MonoBehaviour
                 case SkillEffectKind.ApplyBuff:
                     target.AddBuff(effect.buffId, 0f);
                     break;
+                // 이감 오라(원작 AOae 음수 Oae1·Aasl, 2026-09-30) — 범위 안에 있는 동안 영구로 걸고,
+                // 나가면 아래 Remove가 같은 값으로 뗀다. 겹치면 EnemyDummy가 남은 것 중 가장 강한 것을 다시 고른다.
+                case SkillEffectKind.Slow:
+                    target.AddSlow(effect.multiplier);
+                    break;
             }
         }
     }
@@ -1009,6 +1030,9 @@ public class UnitAttacker : MonoBehaviour
                     break;
                 case SkillEffectKind.ApplyBuff:
                     target.RemoveBuff(effect.buffId);
+                    break;
+                case SkillEffectKind.Slow:
+                    target.RemoveSlow(effect.multiplier);
                     break;
             }
         }
@@ -1535,8 +1559,9 @@ public class UnitAttacker : MonoBehaviour
                 break;
 
             // 이감(2026-09-29) — multiplier = 남는 속도 비율. AddSlow/RemoveSlow는 같은 값으로 짝을 맞춰야 빠진다.
+            // multiplier 0 = 「최저 이속까지」(원작 Htc3·Ctc3 ≥ 1) — EnemyDummy가 원작 MinUnitSpeed 하한으로 올린다.
             case SkillEffectKind.Slow:
-                if (effect.duration > 0f && effect.multiplier > 0f && effect.multiplier < 1f)
+                if (effect.duration > 0f && effect.multiplier >= 0f && effect.multiplier < 1f)
                     StartCoroutine(SkillSlowRoutine(target, effect.multiplier, effect.duration));
                 break;
 

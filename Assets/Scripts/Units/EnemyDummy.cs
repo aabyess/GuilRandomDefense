@@ -254,8 +254,19 @@ public class EnemyDummy : MonoBehaviour
         float effective = 1f;
         foreach (float m in slowMultipliers)
             effective = Mathf.Min(effective, m);
-        if (mover != null) mover.SetSlowMultiplier(effective);
+        if (mover != null) mover.SetSlowMultiplier(Mathf.Max(effective, SlowFloorMultiplier));
     }
+
+    // 원작 최저 이속(war3mapMisc.txt MinUnitSpeed=70, 워크3 단위)을 우리 단위로 옮긴 값.
+    // 환산 배율 0.24 = 우리 R01 moveSpeed 72 ÷ 원작 1라운드 적 o00I(레벨 01 알비다) umvs 300
+    // (보스 275 → 66도 같은 배율). 이감이 아무리 세도(원작 Htc3 2.5·Oae1 −0.99) 이 속도 밑으로는 안 내려간다.
+    public const float MinUnitSpeedWc3 = 70f;
+    public const float Wc3ToOurMoveSpeed = 72f / 300f;
+
+    // 이 적의 이감 하한 배수 = 최저 이속 ÷ 제 기본 이속. 이속 0(고정형)이나 데이터가 없으면 기존 하한 그대로.
+    float SlowFloorMultiplier => data != null && data.moveSpeed > 0f
+        ? Mathf.Clamp(MinUnitSpeedWc3 * Wc3ToOurMoveSpeed / data.moveSpeed, WaypointMover.MinSlowMultiplier, 1f)
+        : WaypointMover.MinSlowMultiplier;
 
     public void SetInvulnerable(bool value)
     {
