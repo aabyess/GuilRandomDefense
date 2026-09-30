@@ -10,23 +10,29 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_희귀함_정내연
+  m_Name: SkillData_원작능력_희귀함_최현우_Unique22_1of10
   m_EditorClassIdentifier:
-  skillName: A0K6 !자석 팔
-  description: 원작 희귀함 조로 '현상금 사냥꾼' 초신성 - 희귀함(더미 경로 Trig_Unique33 → e0BT(U희귀함 조로 더미 2) → A0QH). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다.
+  skillName: Unique22 1/10
+  description: 원작 Trig_Unique22(h025 = 희귀함_최현우) `GetRandomInt(1,10)==3` → 대상 위치 375 광역 4500 + PV<200 현재×0.10×(0.2+0.05×A11S), 전부 NORMAL/UNIVERSAL(AP·Spells). 2026-09-30 구현담당1(중복 검사).
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.4
-    range: 0
+    triggerChance: 0.1
+    range: 375.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
     effects:
     - kind: 0
-      basis: 3
-      target: 3
-      damageType: 1
-      attackType: 3
-      multiplier: 0.0
-      bonus: 6000
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 4500.0
+      bonus: 0.0
       chance: 1
       hitCount: 1
       duration: 0.0
@@ -41,16 +47,17 @@ MonoBehaviour:
       targetConditionValue: 0.0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-    - kind: 1
-      basis: 0
+      triggerDamageAbove: 0.0
+    - kind: 0
+      basis: 2
       target: 3
-      damageType: 0
-      attackType: 0
-      multiplier: 0.0
+      damageType: 2
+      attackType: 7
+      multiplier: 0.1
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0.5
+      duration: 0.0
       casterBuffCountFactor: 0.0
       buffId:
       randMin: 1.0
@@ -58,7 +65,13 @@ MonoBehaviour:
       buffHitCharges: 0
       requiredTargetBuffId:
       forbiddenTargetBuffId:
-      targetCondition: 0
-      targetConditionValue: 0.0
+      targetCondition: 1
+      targetConditionValue: 200
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0

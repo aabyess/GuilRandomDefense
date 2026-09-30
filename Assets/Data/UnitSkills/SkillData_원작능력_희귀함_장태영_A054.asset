@@ -10,23 +10,29 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_특별함_조성진
+  m_Name: SkillData_원작능력_희귀함_장태영_A054
   m_EditorClassIdentifier:
-  skillName: A0JT !쿠크리
-  description: 원작 특별함 상디 검은다리 - 특별함(더미 경로 Trig_Speical6 → e05D(S특별함 상디 더미) → A09Z). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다.
+  skillName: A054 !고무고무 열매
+  description: '원작 h01X uabi A054 ACbh: Hbh1 20% · Hbh3 3000 · adur 0. ⚠️ 58db2cc3에서 이 값을 희귀함_이재윤(h02A)에 넣었던 것은 주인 잘못 — h01X의 로스터는 희귀함_장태영(대응표). 공격타입 = 이 유닛 평타(Siege). 2026-09-30 구현담당1(중복 검사).'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 0
+    triggerChance: 0.2
+    range: 0.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
     effects:
     - kind: 0
       basis: 3
       target: 3
       damageType: 1
-      attackType: 1
+      attackType: 3
       multiplier: 0.0
-      bonus: 100
+      bonus: 3000.0
       chance: 1
       hitCount: 1
       duration: 0.0
@@ -41,3 +47,9 @@ MonoBehaviour:
       targetConditionValue: 0.0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
