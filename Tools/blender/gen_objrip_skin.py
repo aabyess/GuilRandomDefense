@@ -853,30 +853,42 @@ SKINS = {
             ToeBase=(0.04, -0.03, 0.02), ToeTip=(0.04, -0.06, 0.015),
         ),
     ),
-    # 히든_이요한 ← 드래곤볼 어린 손오공(Sketchfab 「dragon-ball-kid-goku」) — 사장님 지정 2026-09-30(「영원 이요한」이라 하셨는데 로스터엔 히든_이요한뿐 —
-    #   PM이 확인 중. 영원 쪽으로 정정되면 이 키와 path만 바꾸면 된다).
-    #   🔴 원본이 **적 R55 박병규와 바이트까지 같은 zip**이다(sha256 95088e1e…). 관절 표는 위 "박병규" 항목 그대로(근거 주석도 거기) — 고치면 둘 다 고칠 것.
-    #   적과 다른 점 하나: 적은 여의봉 두 벌을 다 뺐지만(길을 걷는 적), 플레이어 유닛은 **등에 멘 여의봉(Power_Pole_Sheathed, 8정점)을 남겨 Chest에 고정**한다.
-    #   오른손 자리에서 앞뒤로 길게 뻗은 여의봉(submesh_4, 길이 1.2 — 키 1.08보다 길다)은 뺀다. 그대로 두면 크기 맞춤이 막대 기준이 되고 옆 유닛을 찌른다.
-    #   꼬리는 몸 메시 안에 있다(z 0.25~0.30에서 뒤로 y 0.55까지 수평). 뼈가 없어 bone heat가 주는 대로 골반·허벅지를 따라간다.
-    "히든_이요한": dict(source="~/Desktop/구랜디스킨모음/05_히든/히든_이요한.zip",
-               mesh_name="KidGoku",
-               path="Assets/Art/Units/히든_이요한/히든_이요한.fbx", height=1.8,
-               center_band=(0.02, 0.06),
-               drop_objects=["submesh_4"], join_all=True, keep_fused_faces=True, texture_by_material=True,
-               rigid_materials={"Power_Pole_Sheathed": "Chest"},
-               # 🔴 1차 렌더(뒤에서): 등에 멘 칼집(몸 메시 안)의 아래쪽이 왼팔 가중치를 받아 Idle에서 팔을 따라 세로로 서고, Chest에 고정한
-               #   여의봉과 갈라졌다. 꼬리 끝 5정점은 Head를 받았다(「가장 가까운 정점 복사」). 몸 뒤(y ≥ 0.07)에서 팔·어깨 우세인 정점 → Chest,
-               #   엉덩이 높이(z ≤ 0.35)에서 뒤로 뻗은(y ≥ 0.12) Head·Spine 우세 정점(= 꼬리) → Hips. ⚠️ 적 박병규 커밋본에는 같은 흠이 그대로 있다.
-               reassign_above=[dict(src=("LeftShoulder", "LeftArm", "LeftForeArm", "RightShoulder", "RightArm", "RightForeArm"),
-                                    dst="Chest", z=0.27, y=0.07),
-                               dict(src=("Head", "Spine", "Chest"), dst="Hips", z=0.0, z_max=0.35, y=0.12)],
-               joints=dict(Hips=(0, 0, 0.27), Spine=(0, 0, 0.33), Chest=(0, 0, 0.40),
-                           Neck=(0, 0, 0.48), Head=(0, 0, 0.51), HeadTop=(0, 0, 1.0),
-                           Shoulder=(0.04, 0, 0.445), Arm=(0.09, 0, 0.44), ForeArm=(0.18, 0, 0.435),
-                           Hand=(0.28, 0, 0.43), HandTip=(0.35, 0, 0.42),
-                           UpLeg=(0.07, 0, 0.23), Leg=(0.08, 0, 0.12), Foot=(0.09, 0.01, 0.035),
-                           ToeBase=(0.09, -0.04, 0.012), ToeTip=(0.09, -0.07, 0.008))),
+    # 히든_이요한 ← 에스카노르(일곱 개의 대죄, Sketchfab 「escanor-seven-deadly-sins」) — 🔴 **두 번째 판**(2026-09-30 사장님 「이걸로 교체」).
+    #   첫 판(어린 손오공 — 적 R55 박병규와 같은 파일이었다)은 아래 RETIRED_SKINS["어린손오공_유닛판"].
+    #   이중 zip: source/Escanor.zip 안 Escanor.obj **하나뿐**(mtl 없음 — mtllib가 가리키는 Escanor.mtl이 zip에 없다) + 바깥 textures/1~6.png.
+    #   오브젝트 1(g 그룹 8) · 정점 9,781 · 삼각형 18,688 · 재질 8(Material__36~43, 전부 무텍스처로 들어온다) · 뼈 0 · **이미 T자** · 좌우 대칭 · 정면 −Y.
+    #   모습: 낮의 거구 「더 원」 쪽(웃통 벗은 근육질 · 주황 머리·콧수염 · 초록 바지) — 밤의 왜소한 모습이 아니다.
+    #   🔴 재질 ↔ 그림은 OBJ의 g 그룹 이름과 그림 내용을 맞춰 짝지었다(mtl이 없어 파일로는 안 묶인다):
+    #     37 torso·39 pantalon → 2.png(몸통+바지) · 40 cara → 4.png(얼굴) · 36 manos → 5.png(손) · 41 ojos → 3.png(눈) ·
+    #     43 cabello·42 bigote → 1.png(머리카락·콧수염) · 38 Juanma(= 도끼) → 6.png. 재질 이름을 esc_*로 바꾸고 그림도 그 이름으로 저장한다.
+    #   🔴 신기 리타(도끼, 재질 38 · 2,976삼각형)는 **뺀다**(drop_materials): 오른손에 쥔 채 자루가 앞으로 키의 0.58배 뻗고 날이 머리 위(z 1.03)까지 올라간다.
+    #     두면 키·깊이 맞춤이 도끼 기준이 되고(키가 3% 줄고 깊이가 몸의 3배), 공용 Idle에서 팔을 내리면 자루가 허리 높이에서 앞으로 1m 튀어나와
+    #     옆 유닛을 찌른다. 「손에 드는 무기는 뺀다」 선례(토센 칼·빅맘 검·손오공 여의봉)와 같다. 몸과 정점을 안 나눠 가져 깨끗이 빠진다.
+    #     되살리려면 drop_materials를 지우고 rigid_materials에 {"esc_axe": "RightHand"}를 넣으면 된다(그림 6.png는 짝지어 뒀다).
+    #   관절 근거(키 1 정규화, 도끼 뺀 몸 층 실측): 팔 단면 중심 z 0.80~0.816(x 0.16~0.52 전 구간) · 몸통 폭 ±0.127(z 0.82) · 손 x 0.414~0.544 ·
+    #     머리 폭 ±0.041~0.047(z 0.90~0.98) · 허리 가장 좁음 ±0.069(z 0.58) · z 0.50부터 아래로 두 다리가 갈린다 · 무릎 높이 다리 중심 x 0.078 · 발목 x 0.105.
+    "히든_이요한": dict(
+        source="~/Desktop/구랜디스킨모음/05_히든/히든_이요한.zip",
+        mesh_name="Escanor",
+        path="Assets/Art/Units/히든_이요한/히든_이요한.fbx",
+        height=1.8,
+        center_band=(0.04, 0.10),
+        material_rename={"Material__37": "esc_torso", "Material__39": "esc_pants", "Material__40": "esc_face", "Material__36": "esc_hands",
+                         "Material__41": "esc_eyes", "Material__43": "esc_hair", "Material__42": "esc_mustache", "Material__38": "esc_axe"},
+        drop_materials=["esc_axe"],
+        texture_files={"esc_torso": "2.png", "esc_pants": "2.png", "esc_face": "4.png", "esc_hands": "5.png",
+                       "esc_eyes": "3.png", "esc_hair": "1.png", "esc_mustache": "1.png"},
+        texture_files_override=True, texture_by_material=True,
+        rigid_materials={"esc_hair": "Head", "esc_mustache": "Head", "esc_face": "Head", "esc_eyes": "Head"},
+        joints=dict(
+            Hips=(0, -0.015, 0.53), Spine=(0, -0.015, 0.62), Chest=(0, -0.01, 0.75),
+            Neck=(0, -0.01, 0.875), Head=(0, -0.015, 0.895), HeadTop=(0, -0.015, 1.0),
+            Shoulder=(0.05, 0, 0.82), Arm=(0.15, 0, 0.805), ForeArm=(0.28, 0, 0.808),
+            Hand=(0.42, 0, 0.805), HandTip=(0.544, 0, 0.805),
+            UpLeg=(0.065, -0.01, 0.50), Leg=(0.085, -0.01, 0.27), Foot=(0.105, 0.0, 0.05),
+            ToeBase=(0.105, -0.05, 0.02), ToeTip=(0.105, -0.09, 0.015),
+        ),
+    ),
     # 다른세계_김건부 ← 쿠잔/아오키지(원피스, Sketchfab 「one_piece_kuzan」) — 사장님 지정 2026-09-30.
     #   🔴 원본이 **적 R12 박예원과 바이트까지 같은 파일**이다(sha256 0d6f5ed8…, 정점 26,639 · 재질 6 MI_N108_E001_*). 12_다른세계 쪽이 09-23,
     #   90_적유닛 쪽 사본이 09-24. 그래서 설정도 위 "박예원" 항목 그대로다(관절 근거·코트 Chest 고정·A자 → straighten_arms는 거기 주석).
@@ -919,6 +931,35 @@ SKINS = {
             ToeBase=(0.055, -0.07, 0.02), ToeTip=(0.055, -0.115, 0.015),
         ),
     ),
+}
+
+# 🔴 폐기(2026-09-30 사장님 교체) — 한 번 짓고 Assets에 넣었다가 다른 모델로 바뀐 설정. SKINS 밖이라 main()·check_entries가 안 본다
+# (gen_biped_skin.py·gen_rigify_skin.py의 RETIRED_SKINS와 같은 규칙). 다시 쓰려면 SKINS로 옮기고 이름·path를 그 유닛으로 바꾼다.
+RETIRED_SKINS = {
+    # 히든_이요한 ← 드래곤볼 어린 손오공(Sketchfab 「dragon-ball-kid-goku」) — 사장님 지정 2026-09-30(「영원 이요한」이라 하셨는데 로스터엔 히든_이요한뿐 —
+    #   PM이 확인 중. 영원 쪽으로 정정되면 이 키와 path만 바꾸면 된다).
+    #   🔴 원본이 **적 R55 박병규와 바이트까지 같은 zip**이다(sha256 95088e1e…). 관절 표는 위 "박병규" 항목 그대로(근거 주석도 거기) — 고치면 둘 다 고칠 것.
+    #   적과 다른 점 하나: 적은 여의봉 두 벌을 다 뺐지만(길을 걷는 적), 플레이어 유닛은 **등에 멘 여의봉(Power_Pole_Sheathed, 8정점)을 남겨 Chest에 고정**한다.
+    #   오른손 자리에서 앞뒤로 길게 뻗은 여의봉(submesh_4, 길이 1.2 — 키 1.08보다 길다)은 뺀다. 그대로 두면 크기 맞춤이 막대 기준이 되고 옆 유닛을 찌른다.
+    #   꼬리는 몸 메시 안에 있다(z 0.25~0.30에서 뒤로 y 0.55까지 수평). 뼈가 없어 bone heat가 주는 대로 골반·허벅지를 따라간다.
+    "어린손오공_유닛판": dict(source="~/Desktop/구랜디스킨모음/99_폐기_교체된원본/히든_이요한_0930_꼬마손오공_적박병규와중복.zip",
+               mesh_name="KidGoku",
+               path="Assets/Art/Units/어린손오공_유닛판/어린손오공_유닛판.fbx", height=1.8,   # ⚠️ 다시 쓸 때 유닛 이름으로
+               center_band=(0.02, 0.06),
+               drop_objects=["submesh_4"], join_all=True, keep_fused_faces=True, texture_by_material=True,
+               rigid_materials={"Power_Pole_Sheathed": "Chest"},
+               # 🔴 1차 렌더(뒤에서): 등에 멘 칼집(몸 메시 안)의 아래쪽이 왼팔 가중치를 받아 Idle에서 팔을 따라 세로로 서고, Chest에 고정한
+               #   여의봉과 갈라졌다. 꼬리 끝 5정점은 Head를 받았다(「가장 가까운 정점 복사」). 몸 뒤(y ≥ 0.07)에서 팔·어깨 우세인 정점 → Chest,
+               #   엉덩이 높이(z ≤ 0.35)에서 뒤로 뻗은(y ≥ 0.12) Head·Spine 우세 정점(= 꼬리) → Hips. ⚠️ 적 박병규 커밋본에는 같은 흠이 그대로 있다.
+               reassign_above=[dict(src=("LeftShoulder", "LeftArm", "LeftForeArm", "RightShoulder", "RightArm", "RightForeArm"),
+                                    dst="Chest", z=0.27, y=0.07),
+                               dict(src=("Head", "Spine", "Chest"), dst="Hips", z=0.0, z_max=0.35, y=0.12)],
+               joints=dict(Hips=(0, 0, 0.27), Spine=(0, 0, 0.33), Chest=(0, 0, 0.40),
+                           Neck=(0, 0, 0.48), Head=(0, 0, 0.51), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.04, 0, 0.445), Arm=(0.09, 0, 0.44), ForeArm=(0.18, 0, 0.435),
+                           Hand=(0.28, 0, 0.43), HandTip=(0.35, 0, 0.42),
+                           UpLeg=(0.07, 0, 0.23), Leg=(0.08, 0, 0.12), Foot=(0.09, 0.01, 0.035),
+                           ToeBase=(0.09, -0.04, 0.012), ToeTip=(0.09, -0.07, 0.008))),
 }
 
 SPINE = [("Hips", "Hips", "Spine", None), ("Spine", "Spine", "Chest", "Hips"),
@@ -1224,6 +1265,24 @@ def build(name, cfg, out_dir=None, render_dir=None):
     for old, new in cfg.get("material_rename", {}).items():
         assert old in bpy.data.materials, f"{name}: material_rename '{old}' 재질이 없다 {[m.name for m in bpy.data.materials]}"
         bpy.data.materials[old].name = new
+    # 🔸 drop_materials [재질 이름 조각](2026-09-30 에스카노르 도끼): 무기가 별도 오브젝트가 아니라 **한 오브젝트 안의 재질 하나**일 때.
+    #   그 재질의 면과, 그 면만 쓰던 정점을 지운다(material_rename 뒤라 새 이름으로 적는다). 몸과 정점을 나눠 가진 재질엔 쓰지 말 것(구멍이 난다).
+    for part in cfg.get("drop_materials", ()):
+        hit = 0
+        for o in [o for o in scene.objects if o.type == "MESH"]:
+            idx = {i for i, sl in enumerate(o.material_slots) if sl.material and part in sl.material.name}
+            if not idx:
+                continue
+            bm = bmesh.new()
+            bm.from_mesh(o.data)
+            faces = [f for f in bm.faces if f.material_index in idx]
+            hit += len(faces)
+            bmesh.ops.delete(bm, geom=faces, context="FACES")
+            bm.to_mesh(o.data)
+            bm.free()
+            o.data.update()
+        assert hit, f"{name}: drop_materials '{part}'에 맞는 면이 없다"
+        report.setdefault("뺀 재질(면 수)", {})[part] = hit
     meshes = [o for o in scene.objects if o.type == "MESH"]
     # 🔴 PM 실측(전설적인_박민수/체인소맨) — 이 OBJ는 raw v.co만 보면 Y가 키처럼 보이지만(Y폭
     # 1.7726), 이건 착각이다 — wm.obj_import는 축 변환을 메시 데이터가 아니라 오브젝트의

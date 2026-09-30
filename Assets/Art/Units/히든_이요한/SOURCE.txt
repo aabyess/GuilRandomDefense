@@ -1,21 +1,23 @@
-히든_이요한 ← 어린 손오공(드래곤볼) 스킨 출처 — 2026-09-30 새로 넣음
+히든_이요한 ← 에스카노르(일곱 개의 대죄) 스킨 출처 — 2026-09-30 교체(두 번째 판)
 
-원본: ~/Desktop/구랜디스킨모음/05_히든/히든_이요한.zip (Sketchfab 「dragon-ball-kid-goku」)
-  sha256: 95088e1e71ad0e394593f32f7b88182f5b4c3d1243aafdca5fb40f3941eead18
-  🔴 적 R55 박병규의 원본(90_적유닛/R51-R60/R55_박병규.zip)과 바이트까지 같은 파일 — 같은 모델을 플레이어 유닛과 적이 같이 쓴다.
-  안: source/Kid_Goku.zip(Kid_Goku.obj·.mtl·Kid_Goku.png 512²·Power_Pole.png 16×64·안 쓰는 얼굴 변형 둘) + textures/ 둘.
-라이선스: 🔴 미확인 — zip에 작성자·라이선스 표기가 없다. 사장님 Sketchfab 확인 대기.
+🔴 첫 판(어린 손오공)은 적 R55 박병규와 같은 파일이어서 사장님이 이 모델로 바꾸셨다(09-30 「이걸로 교체」).
+   옛 원본: ~/Desktop/구랜디스킨모음/99_폐기_교체된원본/히든_이요한_0930_꼬마손오공_적박병규와중복.zip, 설정은 gen_objrip_skin.py RETIRED_SKINS["어린손오공_유닛판"].
+   교체하면서 옛 FBX·.fbx.meta·Textures 3장(+.meta)을 먼저 지우고 새로 썼다.
 
-빌드 스크립트: Tools/blender/gen_objrip_skin.py (SKINS["히든_이요한"] — 관절 표는 "박병규" 항목과 같다)
+원본: ~/Desktop/구랜디스킨모음/05_히든/히든_이요한.zip (Sketchfab 「escanor-seven-deadly-sins」)
+  sha256: 494f2a42b4df94b4abdf36c1f7cf695f2ccb0f911efe093f38d96f9e7f523942 — 구랜디스킨모음의 다른 zip·glb·fbx와 같은 해시 없음(중복 아님).
+  안: source/Escanor.zip(Escanor.obj 하나 — mtl 없음) + textures/1~6.png.
+라이선스: 🔴 표기 없음 — OBJ라 메타 자리가 없고 zip에도 작성자·라이선스 파일이 없다. 사장님 Sketchfab 확인 대기.
+
+빌드 스크립트: Tools/blender/gen_objrip_skin.py (SKINS["히든_이요한"])
   실행: blender -b --factory-startup --python Tools/blender/gen_objrip_skin.py -- 히든_이요한
 
 처리 요약(2026-09-30, Blender 세션):
-- OBJ 오브젝트 4 · 뼈 0 · 이미 T자. 몸 907 + 머리 291 + 등에 멘 여의봉 8정점 → 한 메시 2,290삼각형.
-- 여의봉 두 벌: 손 자리에서 앞뒤로 길게 뻗은 것(키보다 김)은 뺐고, 등에 멘 것은 남겨 Chest에 통째 고정.
-  칼집·끈은 몸 메시 안에 있어 같이 Chest로 붙였다(안 붙이면 Idle에서 칼집 아래쪽이 왼팔을 따라 세로로 선다).
-- 꼬리는 몸 메시 안(엉덩이에서 뒤로 수평) — 뼈가 없어 Hips에 붙였다. 그래서 앞뒤 깊이가 1.32m(키 1.8 기준)로 길다.
-- 재질 3 · 텍스처 3(재질 이름으로 저장: Body.png·Head.png = Kid_Goku.png 512², Power_Pole_Sheathed.png 16×64).
-- 재수입 검사: 21/21뼈 · 무가중치 0 · clip_spread 통과 · mesh_clash idle +3.1% · walk +6.6%(문턱 3% 초과) · attack +0.0% ·
-  bone_bind ② 최대 14.9%(Hips — 뒤로 긴 꼬리를 Hips에 실은 탓) · check_entries 통과.
-  ⚠️ walk 6.6%는 칼집을 Chest로 옮기기 전엔 1.7%였다 — 칼집이 「몸통 껍데기」로 세어지면서 걷는 팔이 그 안쪽으로 읽히는 것으로 본다
-  (걷기 16프레임 렌더에선 팔이 몸을 뚫지 않는다). 아이 체형이라 팔이 몸통에 가깝다.
+- 낮의 거구 형태(웃통 벗은 근육질 · 주황 머리·콧수염 · 초록 바지). OBJ 오브젝트 1(g 그룹 8) · 뼈 0 · 이미 T자·좌우 대칭.
+- 🔴 도끼 「신기 리타」(2,976삼각형)는 뺐다: 오른손에서 앞으로 키의 0.58배 뻗고 날이 머리 위로 올라가 크기 맞춤이 도끼 기준이 되고,
+  팔을 내리면 자루가 앞으로 1m 튀어나온다. 몸과 정점을 안 나눠 가져 깨끗이 빠진다. 되살리는 법은 생성기 주석(esc_axe → RightHand 강체, 그림 6.png).
+- 남은 몸 15,712삼각형 · 재질 7(esc_torso·pants·face·hands·eyes·hair·mustache) · 텍스처 7(재질 이름으로 저장 — 1024², 눈만 256²).
+  mtl이 없어 재질 ↔ 그림은 OBJ 그룹 이름(torso·pantalon·cara·manos·ojos·cabello·bigote)과 그림 내용으로 짝지었다.
+- 외곽선 껍데기 메시 없음. 머리카락·콧수염·얼굴·눈은 Head에 통째 고정.
+- 재수입 검사: 21/21뼈 · 무가중치 0 · clip_spread 최대 0.99 · mesh_clash idle·walk·attack 전부 +0.0% · bone_bind ② 중앙 0.8%·③ 0.0% ·
+  뒷면 컬링 켠 앞·뒤 렌더 구멍 없음 · check_entries 통과. 크기 1.957 × 0.394 × 1.8.
