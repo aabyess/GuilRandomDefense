@@ -10,29 +10,29 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_영원_최상호_MIhawk_Mana
+  m_Name: SkillData_게이트_초월_임채민_AP_Tichi_skill_3
   m_EditorClassIdentifier:
-  skillName: 미호크 마나 — MANA게이지175(Life 카운터로 셈)
-  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_Mihawk_Attack(HashAttack h058) `GetUnitStateSwap(UNIT_STATE_MANA,GetAttacker())==175` → Trig_MIhawk_Mana Stage8 ForGroup 750(주 대상 위치 locationB) 적 전원 UnitDamageTargetBJ(MAX_LIFE×0.05+5250000, CHAOS, UNIVERSAL→AP). PV 분기 없음. ⚠️ 이 유닛(영원_최상호)은 마나 게이지를 카벤디시 게이트(MANA 100)가 이미 쓴다 — 카운터를 공유하면 175에 못 닿아서 쓰지 않는 Life 카운터(gaugeKind 1)로 센다. 상수항은 Flat 효과로 뗐다 — 원작에 PV 분기가 없어 보스도 상수를 받는데, %체력 basis의 bonus는 TakesPercentDamage 게이트에 같이 막힌다.'
+  skillName: 지진과 어둠의 검은수염 — LIFE게이지85
+  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_Tichi_Attack(HashAttack H090) `UNIT_STATE_LIFE==85` → SetUnitLife 1 → Trig_Tichi_skill_3: 시전자 위치(udg_Hero[0]) 925 적 전원 RRD(1750000+STR×50000+LIFE×0.03, NORMAL→Spells/UNIVERSAL→AP). PV 분기 없음. 상수+STR은 CasterStrength, 체력 항은 TargetCurrentHpPercent로 나눴다.'
   triggerType: 3
   levels:
   - cooldown: 0
     triggerChance: 1.0
-    range: 750.0
-    hitCountThreshold: 175
-    resetTo: 0
+    range: 925.0
+    hitCountThreshold: 85
+    resetTo: 1
     gaugeKind: 1
     requiredBuffId:
     forbiddenBuffId:
     selfBuffId:
     effects:
     - kind: 0
-      basis: 0
+      basis: 9
       target: 2
       damageType: 2
-      attackType: 5
-      multiplier: 5250000.0
-      bonus: 0.0
+      attackType: 7
+      multiplier: 50000.0
+      bonus: 1750000.0
       chance: 1
       hitCount: 1
       duration: 0.0
@@ -47,11 +47,11 @@ MonoBehaviour:
       targetConditionValue: 0.0
       cascadeGroup: 0
     - kind: 0
-      basis: 1
+      basis: 2
       target: 2
       damageType: 2
-      attackType: 5
-      multiplier: 0.05
+      attackType: 7
+      multiplier: 0.03
       bonus: 0.0
       chance: 1
       hitCount: 1
@@ -70,4 +70,4 @@ MonoBehaviour:
     forbiddenTargetBuffId:
     hitCountFloor: 0
     gaugeSpendAmount: 0
-    aoeCenter: 0
+    aoeCenter: 1

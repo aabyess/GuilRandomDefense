@@ -1,0 +1,108 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_게이트_초월_임장혁_AD_Luchi_Skill_1_Kick2
+  m_EditorClassIdentifier:
+  skillName: CP.Zero — Real<=7.25 AND 특성(A0R2)
+  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_Luchi_Attack(HashAttack H08W) `GetRandomReal(1,100)<=7.25(+플레이횟수 미소항)` AND udg_bool_lucchi_tr(특성 A0R2 구매 때 true, Trig_T_Ability_hero) → Trig_Luchi_Skill_1_Kick2: Stage1 주 대상 495 적 전원 400000(MAGIC/UNIVERSAL→AP) + PV<200이면 주 대상 MAX_LIFE×0.04(CHAOS/UNIVERSAL), Stage3 585 적 전원 400000. 레벨1(특성 전)은 원작이 대신 Luchi_Skill_1_Kick으로 가는데 그 트리거엔 직접 피해 호출이 없어 비워 뒀다(레벨2 = 특성 구매 뒤, 원작004_H08W의 A0R2와 같은 인덱스). ⚠️ 두 번째 광역 반경 585는 레벨 range 하나(495)로 근사.'
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 0.0725
+    range: 495.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects: []
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+  - cooldown: 0
+    triggerChance: 0.0725
+    range: 495.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 6
+      multiplier: 400000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+    - kind: 0
+      basis: 1
+      target: 3
+      damageType: 2
+      attackType: 5
+      multiplier: 0.04
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 1
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 6
+      multiplier: 400000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0

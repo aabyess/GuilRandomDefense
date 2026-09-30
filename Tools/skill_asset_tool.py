@@ -215,6 +215,12 @@ def add_skill_to_unit(roster_name, skill_guid):
     if skill_guid in t:
         return False
     line = '  - {fileID: 11400000, guid: %s, type: 2}\n' % skill_guid
+    # skills가 비어 있고 단일 skill만 쓰던 유닛이면, skills가 생기는 순간 skill이 무시되므로
+    # (UnitData.SkillCount — skills 우선) 기존 skill을 skills 맨 앞으로 옮기고 skill은 비운다.
+    single = re.search(r'^  skill: \{fileID: 11400000, guid: (\w+), type: 2\}\n', t, flags=re.M)
+    if single and re.search(r'^  skills: \[\]\n', t, flags=re.M):
+        t = t.replace(single.group(0), '  skill: {fileID: 0}\n', 1)
+        line = '  - {fileID: 11400000, guid: %s, type: 2}\n' % single.group(1) + line
     m = re.search(r'^  skills:\n((?:  - .*\n)*)', t, flags=re.M)
     if m:
         t = t[:m.end()] + line + t[m.end():]

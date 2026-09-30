@@ -1,0 +1,113 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_게이트_불멸_이승우_Garp_B005
+  m_EditorClassIdentifier:
+  skillName: 몽키.D.거프 — 버프B005==true
+  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1 B): 원문 Trig_Garp_AttackDamage Stage5 `UnitHasBuffBJ(시전자,''B005'')` 쪽. realG=시전자 버프 수, realD=0.25×realG. ① 주 대상 위치 360 적 전원 GetEventDamage×(1.10+realD)(CHAOS/NORMAL) → ReceivedDamage 1.10·버프계수 0.25/1.10 ② 주 대상 250000×(1+0.12×realD)(HERO/UNIVERSAL) → 버프계수 0.03 ③ PV<200이면 LIFE×0.05×(1+0.12realD), 아니면 LIFE×0.005×(…)(HERO/NORMAL). 같은 광역의 2500×realG(CHAOS/UNIVERSAL)는 우리 버프계수 꼴((1+f×n))로 못 담고 값이 작아 뺐다. B005는 짝 에셋 게이트_불멸_이승우_Garp_B005_open이 건다.'
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 1.0
+    range: 360.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: B005
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 5
+      target: 2
+      damageType: 1
+      attackType: 5
+      multiplier: 1.1
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.227273
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 4
+      multiplier: 250000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.03
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+    - kind: 0
+      basis: 2
+      target: 3
+      damageType: 1
+      attackType: 4
+      multiplier: 0.05
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.03
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 1
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+    - kind: 0
+      basis: 2
+      target: 3
+      damageType: 1
+      attackType: 4
+      multiplier: 0.005
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.03
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 3
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0

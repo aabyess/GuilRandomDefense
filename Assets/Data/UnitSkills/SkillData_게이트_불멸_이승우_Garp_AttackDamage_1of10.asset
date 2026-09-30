@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_영원_최상호_MIhawk_Mana
+  m_Name: SkillData_게이트_불멸_이승우_Garp_AttackDamage_1of10
   m_EditorClassIdentifier:
-  skillName: 미호크 마나 — MANA게이지175(Life 카운터로 셈)
-  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_Mihawk_Attack(HashAttack h058) `GetUnitStateSwap(UNIT_STATE_MANA,GetAttacker())==175` → Trig_MIhawk_Mana Stage8 ForGroup 750(주 대상 위치 locationB) 적 전원 UnitDamageTargetBJ(MAX_LIFE×0.05+5250000, CHAOS, UNIVERSAL→AP). PV 분기 없음. ⚠️ 이 유닛(영원_최상호)은 마나 게이지를 카벤디시 게이트(MANA 100)가 이미 쓴다 — 카운터를 공유하면 175에 못 닿아서 쓰지 않는 Life 카운터(gaugeKind 1)로 센다. 상수항은 Flat 효과로 뗐다 — 원작에 PV 분기가 없어 보스도 상수를 받는데, %체력 basis의 bonus는 TakesPercentDamage 게이트에 같이 막힌다.'
-  triggerType: 3
+  skillName: 몽키.D.거프 — 1/10(주먹 발구르기)
+  description: '2026-09-30 구현담당1: 원문 Trig_Garp_AttackDamage Stage5 끝(B005 여부와 무관) `GetRandomInt(1,10)==6` → 더미 e01G stomp A08U(AOws adur 2.5·aare 500) + 주 대상 위치 500 적 전원 RRD((615000+GetEventDamage×(1.05+realD))×(1+0.8×realD), CHAOS/NORMAL), realD=0.25×시전자 버프 수 c. 상수 쪽은 615000×(1+0.2c) 정확, 피해 쪽 1.05×(1+0.238c)(1+0.2c)는 c의 2차식이라 1차 근사(1.05×(1+0.438c)). Stun 2.5초 Enemies.'
+  triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 750.0
-    hitCountThreshold: 175
+    triggerChance: 0.1
+    range: 500.0
+    hitCountThreshold: 0
     resetTo: 0
-    gaugeKind: 1
+    gaugeKind: 0
     requiredBuffId:
     forbiddenBuffId:
     selfBuffId:
@@ -29,14 +29,14 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 2
-      damageType: 2
+      damageType: 1
       attackType: 5
-      multiplier: 5250000.0
+      multiplier: 615000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
       duration: 0.0
-      casterBuffCountFactor: 0.0
+      casterBuffCountFactor: 0.2
       buffId:
       randMin: 1.0
       randMax: 1.0
@@ -47,15 +47,35 @@ MonoBehaviour:
       targetConditionValue: 0.0
       cascadeGroup: 0
     - kind: 0
-      basis: 1
+      basis: 5
       target: 2
-      damageType: 2
+      damageType: 1
       attackType: 5
-      multiplier: 0.05
+      multiplier: 1.05
       bonus: 0.0
       chance: 1
       hitCount: 1
       duration: 0.0
+      casterBuffCountFactor: 0.438095
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 2.5
       casterBuffCountFactor: 0.0
       buffId:
       randMin: 1.0
