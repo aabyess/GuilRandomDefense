@@ -1823,7 +1823,7 @@ public class UnitAttacker : MonoBehaviour
             // multiplier 0 = 「최저 이속까지」(원작 Htc3·Ctc3 ≥ 1) — EnemyDummy가 원작 MinUnitSpeed 하한으로 올린다.
             case SkillEffectKind.Slow:
                 if (effect.duration > 0f && effect.multiplier >= 0f && effect.multiplier < 1f)
-                    target.SlowFor(effect.multiplier, effect.duration);
+                    target.SlowFor(effect.multiplier, StunDurationOn(target, effect));
                 break;
 
             // 방깎 — 부호 없는 감소값(effect.multiplier 그대로가 곧 깎는 양, ArmorBonus와
@@ -1881,7 +1881,7 @@ public class UnitAttacker : MonoBehaviour
         }
     }
 
-    // 저항 피부(원작 ACrk) 적에게는 스턴이 영웅 지속(ahdu)으로 걸린다(EnemyData.resistantSkin · SkillEffect.heroDuration 주석).
+    // 저항 피부(원작 ACrk) 적에게는 스턴·시한 이감이 영웅 지속(ahdu)으로 걸린다(EnemyData.resistantSkin · SkillEffect.heroDuration 주석).
     // heroDuration이 0(모름)이면 일반 지속 × 이 비율 — 맵의 스턴 능력 가운데 adur·ahdu가 둘 다 적힌 것의 분포가
     // 두 무리(stomp 계열 ≈0.15 · 강타/파이어볼트 계열 ≈0.5)라 덜 깎는 쪽 0.5를 쓴다(값을 모를 때 보스 스턴을 과하게 줄이지 않게).
     public const float HeroDurationFallbackRatio = 0.5f;

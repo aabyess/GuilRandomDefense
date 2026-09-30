@@ -20,13 +20,16 @@ import skill_asset_tool as sat  # noqa: E402
 import w3a  # noqa: E402
 
 STUN_BASES = ('AOws', 'ACbh', 'AHbh', 'AHtb', 'ANfb', 'ACtb', 'ANsb', 'ACfb')
+# 시한 이감(kind 13)을 내는 기반 — 천둥박수 계열. 2026-09-30 추가(PM 지시: 스턴과 같은 구조).
+SLOW_BASES = ('AHtc', 'ACt2', 'ACtc', 'ANht', 'ACsl', 'Aslo')
+KIND_BASES = {1: STUN_BASES, 13: SLOW_BASES}
 STOCK_AOWS_ADUR = 3.0
 
 
 def main(dry):
     AB = {}
     for a in w3a.parse(os.path.join(sat.ROOT, 'Tools/w3x/원본/war3map_new.w3a')):
-        if a['base'] not in STUN_BASES:
+        if a['base'] not in STUN_BASES + SLOW_BASES:
             continue
         f = {}
         for m in a['mods']:
@@ -35,7 +38,7 @@ def main(dry):
         adur = float(f['adur']) if 'adur' in f else (STOCK_AOWS_ADUR if a['base'] == 'AOws' else None)
         if adur is None or 'ahdu' not in f:
             continue
-        AB[a['id']] = (round(adur, 3), round(float(f['ahdu']), 3))
+        AB[a['id']] = (round(adur, 3), round(float(f['ahdu']), 3), a['base'])
     total = filled = same = ambiguous = 0
     changed, unknown = [], []
     for p in sorted(glob.glob(os.path.join(sat.SKILL_DIR, '*.asset'))):
@@ -46,11 +49,13 @@ def main(dry):
             blocks = sat.get_effect_blocks(a, i)
             out = []
             for b in blocks:
-                if re.search(r'^\s*-? ?kind: 1$', b, re.M):
+                km = re.search(r'^\s*-? ?kind: (\d+)$', b, re.M)
+                kind = int(km.group(1)) if km else 0
+                if kind in KIND_BASES:
                     d = float((re.search(r'^\s*duration: (\S+)', b, re.M) or [0, 0])[1])
                     if d > 0:
                         total += 1
-                        cands = sorted({AB[c][1] for c in codes if abs(AB[c][0] - d) < 0.011})
+                        cands = sorted({AB[c][1] for c in codes if abs(AB[c][0] - d) < 0.011 and AB[c][2] in KIND_BASES[kind]})
                         if cands:
                             h = max(0.01, cands[0])
                             if len(cands) > 1:
@@ -72,9 +77,9 @@ def main(dry):
             changed.append(p)
             if not dry:
                 sat.save(a)
-    print('스턴 효과 %d · 영웅 지속 찾음 %d(그중 이미 같음 %d · 모호 %d) · 못 찾음 %d(런타임 ×0.5) · 바꾼 에셋 %d' % (total, filled, same, ambiguous, len(unknown), len(changed)))
+    print('스턴·시한 이감 효과 %d · 영웅 지속 찾음 %d(그중 이미 같음 %d · 모호 %d) · 못 찾음 %d(런타임 ×0.5) · 바꾼 에셋 %d' % (total, filled, same, ambiguous, len(unknown), len(changed)))
     for n, d in unknown:
-        print('  못 찾음 %s (스턴 %g초)' % (n, d))
+        print('  못 찾음 %s (%g초)' % (n, d))
 
 
 if __name__ == '__main__':

@@ -29,6 +29,10 @@ static class EternalFillProbe
     // 작은 축 다섯(2026-09-30) — 스킬 단위 대상 조건은 일반 적(「대상조건」으로 빠짐)과 PV 200 보스(발동) 둘로 본다.
     static readonly string[] Axes = { "초월_김만경_AD", "전설적인_진연서", "초월_조성진_AD", "제한_최영민", "히든_호치킨",
                                       "희귀함_박은석", "희귀함_이승우", "특별함_최준우", "전설적인_임채민", "초월_구주호_AD" };
+    // 시한 이감의 영웅 지속(저항 피부 표적엔 ahdu) — Report의 「표적 이감」 = 이감이 걸려 있던 구간 길이.
+    static readonly string[] SlowSix = { "불멸_고도현", "제한_최영민", "초월_구주호_AD", "초월_신문철_AP", "전설적인_최상호", "초월_두유찬_AD" };
+    static string ArenaSlowSix() { Units = SlowSix; return Arena(); }
+    static string ArenaSlowSixBoss() { Units = SlowSix; dummyOverride = "Enemy_R60_정윤식"; return Arena(); }
     static string ArenaAxes() { Units = Axes; return Arena(); }
     static string ArenaAxesBoss() { Units = Axes; dummyOverride = "Enemy_R60_정윤식"; return Arena(); }
     // 초월·제한 큰 어긋남 정정(2026-09-30) — call:EternalFillProbe.ArenaTranscend. 황준석의 맵 전체 오라(방어 −8 · 이속 −5%)가 모든 표적에 실린다.
@@ -61,7 +65,7 @@ static class EternalFillProbe
                                         "희귀함_이용민", "희귀함_이재윤", "희귀함_윤현모", "희귀함_유재헌", "희귀함_박수찬", "희귀함_정내연", "특별함_최상호" };
     static string ArenaRanges() { Units = Ranges; return Arena(); }
 
-    class Track { public Vector3 at; public string unit; public float stunStart = -1f; public readonly List<float> stuns = new List<float>(); }
+    class Track { public Vector3 at; public string unit; public float stunStart = -1f; public readonly List<float> stuns = new List<float>(); public float slowStart = -1f; public readonly List<float> slows = new List<float>(); }
     static readonly Dictionary<EnemyDummy, Track> tracks = new Dictionary<EnemyDummy, Track>();
     static readonly List<UnitData> fielded = new List<UnitData>();
     static float startTime;
@@ -125,13 +129,16 @@ static class EternalFillProbe
             {
                 tracks.Remove(kv.Key);
                 EnemyDummy fresh = SpawnTarget(kv.Value.at);
-                if (fresh != null) { kv.Value.stunStart = -1f; tracks[fresh] = kv.Value; }
+                if (fresh != null) { kv.Value.stunStart = -1f; kv.Value.slowStart = -1f; tracks[fresh] = kv.Value; }
                 continue;
             }
             Track t = kv.Value;
             bool stunned = kv.Key.IsStunned;
             if (stunned && t.stunStart < 0f) t.stunStart = Time.time;
             else if (!stunned && t.stunStart >= 0f) { t.stuns.Add(Time.time - t.stunStart); t.stunStart = -1f; }
+            bool slowed = kv.Key.EffectiveSlowMultiplier < 0.999f;
+            if (slowed && t.slowStart < 0f) t.slowStart = Time.time;
+            else if (!slowed && t.slowStart >= 0f) { t.slows.Add(Time.time - t.slowStart); t.slowStart = -1f; }
         }
     }
 
@@ -163,6 +170,10 @@ static class EternalFillProbe
             sb.Append($" · 표적별 {string.Join("/", g.Select(t => t.stuns.Count + (t.stunStart >= 0f ? 1 : 0)))}");
             float uptime = g.Max(t => (t.stuns.Sum() + (t.stunStart >= 0f ? Time.time - t.stunStart : 0f)) / Mathf.Max(0.01f, elapsed));
             sb.Append($" · 스턴 가동률 {uptime:P0}");
+            List<float> slows = g.SelectMany(t => t.slows).OrderBy(x => x).ToList();
+            if (slows.Count > 0 || g.Any(t => t.slowStart >= 0f))
+                sb.Append($"\n{g.Key} 표적 이감 {slows.Count}구간" + (slows.Count > 0 ? $" (최소 {slows[0]:0.00} · 중앙 {slows[slows.Count / 2]:0.00} · 최대 {slows[slows.Count - 1]:0.00}초)" : "")
+                          + $" · 이감 가동률 {g.Max(t => (t.slows.Sum() + (t.slowStart >= 0f ? Time.time - t.slowStart : 0f)) / Mathf.Max(0.01f, elapsed)):P0}");
         }
         return sb.ToString();
     }

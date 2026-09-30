@@ -450,7 +450,7 @@ public class SkillEffect
 
     // ⚠️ 맨 뒤에 추가(2026-09-30, PM 지시) — 스턴의 영웅 지속(원작 ahdu). 저항 피부 적(EnemyData.resistantSkin)에게는
     // duration 대신 이 값으로 건다. 0이면 「모름」 — duration × HeroDurationFallbackRatio로 떨어진다(UnitAttacker).
-    // 값은 Tools/sync_stun_hero_duration_from_w3a.py가 그 스턴을 낸 원작 능력의 ahdu에서 채운다. Stun 말고는 안 읽는다.
+    // 값은 Tools/sync_stun_hero_duration_from_w3a.py가 그 스턴·이감을 낸 원작 능력의 ahdu에서 채운다. Stun과 시한 Slow(duration > 0)만 읽는다(오라 이감은 지속이 없다).
     public float heroDuration;
 
     // ⚠️ 맨 뒤에 추가(2026-09-30, PM 지시) — 맞는 적 수 상한. 0이면 제한 없음(지금 동작).
