@@ -823,6 +823,10 @@ public class UnitAttacker : MonoBehaviour
     // 고른 경로) 두 필드 중 하나라도 채워져 있으면 무조건 막는다 — "대상 없음=통과"로
     // 두면 오라가 조건 없이 나가버린다(SkillData.cs SkillLevel 주석 참고). target이
     // null이어도 두 필드가 전부 비어있으면(기존 전 자산) 이 분기 자체를 안 타 회귀 없다.
+    // SkillLevel.targetArmorBreakAbove — 주 대상 스킬 방깎 누적 > N(원작 AId1 레벨 비교). 0이면 통과.
+    static bool PassesArmorBreakGate(SkillLevel level, EnemyDummy target) =>
+        level.targetArmorBreakAbove <= 0f || (target != null && target.Aid1Shred > level.targetArmorBreakAbove);
+
     bool PassesBuffGate(SkillLevel level, EnemyDummy target)
     {
         if (!string.IsNullOrEmpty(level.requiredBuffId) && !HasBuff(level.requiredBuffId)) return false;
@@ -1134,6 +1138,7 @@ public class UnitAttacker : MonoBehaviour
                 SkillRuntimeState state = GetRuntimeState(skill);
                 if (level.cooldown > 0f && Time.time < state.onHitChanceLockedUntil) { SkillTelemetry.Gate(unitData, skill, "절대쿨"); continue; }
 
+                if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
                 if (Random.value >= level.triggerChance) { SkillTelemetry.Gate(unitData, skill, "확률실패"); continue; }
 
                 if (level.cooldown > 0f)
@@ -1169,6 +1174,7 @@ public class UnitAttacker : MonoBehaviour
                     if (lifeGaugeCounter <= level.hitCountFloor) { SkillTelemetry.Gate(unitData, skill, "게이지바닥미달"); continue; }
                 }
 
+                if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
                 if (Random.value >= level.triggerChance) { SkillTelemetry.Gate(unitData, skill, "바닥후확률실패"); continue; }
 
                 // "발동 시에만" 차감 — 위 hitCountThreshold 경로의 resetTo(확률과 무관하게
@@ -1195,6 +1201,7 @@ public class UnitAttacker : MonoBehaviour
                     if (!manaGaugeInitialized) { manaGaugeCounter = level.resetTo; manaGaugeInitialized = true; }
                     if (!manaIncremented) { manaGaugeCounter++; manaIncremented = true; }
                     if (manaGaugeCounter < level.hitCountThreshold) { SkillTelemetry.Gate(unitData, skill, "게이지미달(마나)"); continue; }
+                    if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
                     manaShouldReset = true;
                     manaResetValue = level.resetTo;
                 }
@@ -1203,6 +1210,7 @@ public class UnitAttacker : MonoBehaviour
                     if (!lifeGaugeInitialized) { lifeGaugeCounter = level.resetTo; lifeGaugeInitialized = true; }
                     if (!lifeIncremented) { lifeGaugeCounter++; lifeIncremented = true; }
                     if (lifeGaugeCounter < level.hitCountThreshold) { SkillTelemetry.Gate(unitData, skill, "게이지미달(생명)"); continue; }
+                    if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
                     lifeShouldReset = true;
                     lifeResetValue = level.resetTo;
                 }

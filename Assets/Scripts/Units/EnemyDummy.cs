@@ -550,6 +550,8 @@ public class EnemyDummy : MonoBehaviour
     // 원본: war3map_new.w3a 원본 표 AId1 (2026-09-30 구현담당1).
     public const float Aid1ShredCap = 75f;
     float aid1Shred;
+    /// <summary>스킬 방깎(AId1) 누적량(0~75). SkillLevel.targetArmorBreakAbove가 읽는다.</summary>
+    public float Aid1Shred => aid1Shred;
 
     // ⚠️ 2026-09-05 정정(2차): 처음엔 이 셋을 "우리 유닛의 방깎 트레잇이 범용으로 올리는
     // 표"로 오해했다(1차 정정, 04③ 최초 커밋). PM이 트리거를 다시 뒤져 **레벨을 올리는

@@ -13,13 +13,13 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_초월_황준석_ADAP_79행_10000
   m_EditorClassIdentifier:
   skillName: A0BV 0장풍 키자루초월 레이저
-  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.
+  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다. | 정정(2026-09-30 구현담당1, 「게이트 없음」 검사 Tools/audit_ungated.py): 원문 Trig_Kid_Attack(키드) `GetRandomInt(1,16)==2 → Kid_Skill_Life2` 안의 A0BV 레이저 → 확률 1/16(이전 1.0).'
   · e09R(@초월 키자루 레이저1) A0BV 0장풍 키자루초월 레이저 [시체폭발/죽음의사슬 피해]: 500000 (원작 키자루·초월함) 진입게이트: Trig_Kizaru_Attack_Actions[이벤트직결]: (조건없음)
   제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e0EB(@초월 키자루 팔척경곡옥1) A0P3 6장풍 팔척경: 270000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지)
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
+    triggerChance: 0.0625
     range: 0
     hitCountThreshold: 0
     resetTo: 0

@@ -54,6 +54,14 @@ def rrd_numbers(body, start):
 
 
 _occ_cache = {}
+COND = {}   # 'fn#i' → 그 if의 조건 문자열(조건 함수 호출이면 그 함수의 if(not(...)) 조건들로 펼침)
+
+
+def cond_text(text):
+    m = re.search(r'(Trig_\w+C)\(\)', text)
+    if m and m.group(1) in P.BODY:
+        return ' AND '.join(re.findall(r'if\(not\((.*?)\)\)then', P.BODY[m.group(1)])) or text
+    return text
 
 
 def occurrences(fn, depth=0, seen=()):
@@ -75,7 +83,9 @@ def occurrences(fn, depth=0, seen=()):
         path = tuple((f'{fn}#{i}', a) for i, a, st in stack if not st)
         if kw == 'if':
             line_end = body.find('then', m.end())
-            stack.append((counter, 0, cond_is_stage(body[m.end():line_end if line_end > 0 else m.end() + 200])))
+            ctext = body[m.end():line_end if line_end > 0 else m.end() + 200]
+            stack.append((counter, 0, cond_is_stage(ctext)))
+            COND[f'{fn}#{counter}'] = cond_text(ctext)
             counter += 1
         elif kw == 'elseif' and stack:
             i, a, st = stack[-1]

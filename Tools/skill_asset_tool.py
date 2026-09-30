@@ -26,7 +26,7 @@ SKILL_SCRIPT_GUID = '9457f64cd84d34fd095791a069c0adc6'
 # SkillLevel·SkillEffect 필드를 유니티가 쓰는 순서대로(없는 필드는 C# 기본값으로 읽힌다).
 LEVEL_FIELDS = ['cooldown', 'triggerChance', 'range', 'hitCountThreshold', 'resetTo', 'gaugeKind',
                 'requiredBuffId', 'forbiddenBuffId', 'selfBuffId', 'effects', 'requiredTargetBuffId',
-                'forbiddenTargetBuffId', 'hitCountFloor', 'gaugeSpendAmount', 'aoeCenter']
+                'forbiddenTargetBuffId', 'hitCountFloor', 'gaugeSpendAmount', 'aoeCenter', 'targetArmorBreakAbove']
 EFFECT_FIELDS = ['kind', 'basis', 'target', 'damageType', 'attackType', 'multiplier', 'bonus', 'chance',
                  'hitCount', 'duration', 'casterBuffCountFactor', 'buffId', 'randMin', 'randMax',
                  'buffHitCharges', 'requiredTargetBuffId', 'forbiddenTargetBuffId', 'targetCondition',
@@ -173,7 +173,7 @@ def level_block(**kw):
     effects = kw.pop('effects', [])
     d = dict(cooldown=0, triggerChance=1.0, range=0.0, hitCountThreshold=0, resetTo=0, gaugeKind=0,
              requiredBuffId='', forbiddenBuffId='', selfBuffId='', requiredTargetBuffId='',
-             forbiddenTargetBuffId='', hitCountFloor=0, gaugeSpendAmount=0, aoeCenter=0)
+             forbiddenTargetBuffId='', hitCountFloor=0, gaugeSpendAmount=0, aoeCenter=0, targetArmorBreakAbove=0.0)
     unknown = set(kw) - set(d)
     assert not unknown, unknown
     d.update(kw)

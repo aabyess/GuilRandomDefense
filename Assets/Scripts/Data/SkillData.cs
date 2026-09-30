@@ -555,6 +555,11 @@ public class SkillLevel
     // EVENT_PLAYER_UNIT_ATTACKED). 그래서 기본값이 Target이다. 대상이 없는 시전(쿨다운)은
     // 시전자로 떨어진다. 오라는 이 값을 안 본다(늘 시전자).
     public SkillAoeCenter aoeCenter = SkillAoeCenter.Target;
+
+    // 주 대상의 스킬 방깎(AId1) 누적이 이 값을 넘을 때만 발동 — 원작 `GetUnitAbilityLevel('AId1', 대상)>N`
+    // (King_Attack >50). 0(기본)이면 끈다. 게이지 판정 뒤·소모 앞에서 본다 — 조건이 안 맞으면 게이지를 안 쓰고
+    // 계속 쌓는 원작과 같게(바닥 모드). 2026-09-30 구현담당1.
+    public float targetArmorBreakAbove;
 }
 
 public enum SkillAoeCenter
