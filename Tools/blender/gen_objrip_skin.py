@@ -238,6 +238,11 @@ SKINS = {
                path="Assets/Art/Enemies/박병규/박병규.fbx", height=1.8,
                center_band=(0.02, 0.06),
                drop_objects=["Power_Pole"], join_all=True, keep_fused_faces=True, texture_by_material=True,
+               # 🔴 2026-09-30 보정(PM 승인, 히든_이요한에서 먼저 찾음): 등 뒤 칼집(몸 메시 안) 아래쪽이 왼팔 가중치를 받아 Idle에서 팔을 따라
+               #   세로로 섰고, 꼬리 끝 정점이 Head를 받고 있었다. 몸 뒤쪽 팔·어깨 우세 정점 → Chest, 꼬리 → Hips(이요한 항목과 같은 두 줄).
+               reassign_above=[dict(src=("LeftShoulder", "LeftArm", "LeftForeArm", "RightShoulder", "RightArm", "RightForeArm"),
+                                    dst="Chest", z=0.27, y=0.07),
+                               dict(src=("Head", "Spine", "Chest"), dst="Hips", z=0.0, z_max=0.35, y=0.12)],
                joints=dict(Hips=(0, 0, 0.27), Spine=(0, 0, 0.33), Chest=(0, 0, 0.40),
                            Neck=(0, 0, 0.48), Head=(0, 0, 0.51), HeadTop=(0, 0, 1.0),
                            Shoulder=(0.04, 0, 0.445), Arm=(0.09, 0, 0.44), ForeArm=(0.18, 0, 0.435),
