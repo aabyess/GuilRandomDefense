@@ -12,7 +12,18 @@ UnitData에 쓰는 값(없으면 0 = 지금 동작):
                        Life 게이지 — 영원_최상호 미호크 175처럼 한 로스터에 마나 유닛이 둘일 때)용. 게이지 칸 단위.
                        ⚠️ 진짜 체력 게이지의 재생(uhpr)은 여기서 안 채운다(hrif 스톡 기본 체력 재생 미확인 — PM 확인 대기).
 로스터에 대응 원작 유닛이 여럿이면 umpm×환산이 그 로스터 Mana 게이지 에셋 문턱과 맞는 유닛을 쓴다.
-사용: python3 Tools/sync_mana_regen_from_w3u.py [--dry]
+2026-09-30 추가(PM 승인) — 시작값과 진짜 체력 게이지:
+  manaGaugeStart     — 원작 umpi(시작 마나) × 환산. 빈칸 = 기반 hrif 스톡(마나 없는 유닛) 0으로 둔다.
+  진짜 체력 게이지(skillName에 「MANA」가 없는 Life 게이지 에셋)를 가진 로스터: 대응 uid 중 평타 트리거가 체력을 검사하는 유닛에서
+    lifeGaugeRegenPerSecond = uhpr, lifeGaugeMax = uhpm,
+    lifeGaugeStart = uhpm(원작 유닛은 체력 가득으로 생긴다 → 「체력==최대」가 첫 평타에 참). 소환 자리에서 SetUnitLifeBJ로
+                     체력을 내리는 유닛(카이도 h07M → 1.00)은 0(= 스킬 resetTo).
+    lifeGaugeCustomHitGain·lifeGaugeHitGain — 평타 트리거에 체력 +1이 없으면(네코마무시 h09Z) 켜고 0, HIT_GAIN_OVERRIDE에 있으면 그 값.
+  uhpr 빈칸(니카 H0BK·시노부 h084)은 기반 hrif 스톡값 HRIF_STOCK_UHPR. 재생 타입(uhrt)은 이 유닛들 전부 빈칸 = hrif 스톡.
+  근거(맵 안, 스톡 slk는 저장소·맵에 없다): ① 니카 툴팁 A166 「자연회복:초당+0.25/공격시+1」 — 제작자가 빈칸 유닛의 재생을 0.25로 적음
+  ② hrif 기반 350기 uhpr 명시값에 0.15·0.2·0.3·0.33·0.5가 있는데 0.25만 0건(에디터는 기본값과 같은 값을 저장하지 않는다)
+  ③ hrif 기반 체력 게이지 유닛 툴팁이 필드값 그대로 「자연회복 초당 0.3/0.33/0.5」라 적음(= hrif 재생 타입이 항상 돈다는 제작자 전제).
+사용: python3 Tools/sync_mana_regen_from_w3u.py [--dry] [--list <바꾼 파일 목록을 쓸 경로>]
 """
 import collections
 import csv
@@ -27,10 +38,14 @@ sys.path.insert(0, os.path.join(ROOT, 'Tools'))
 import w3u  # noqa: E402
 import skill_asset_tool as sat  # noqa: E402
 
-FIELDS = ['manaRegenPerSecond', 'manaMax', 'manaGaugePerMana', 'lifeGaugeRegenPerSecond', 'lifeGaugeMax']
+FIELDS = ['manaRegenPerSecond', 'manaMax', 'manaGaugePerMana', 'lifeGaugeRegenPerSecond', 'lifeGaugeMax',
+          'manaGaugeStart', 'lifeGaugeStart', 'lifeGaugeCustomHitGain', 'lifeGaugeHitGain']
+HRIF_STOCK_UHPR = 0.25   # 근거는 맨 위 주석 ①②③
+# 평타 +1이 확률 굴림 안에만 있는 유닛: 카타쿠리 Trig_katakuriAttack — `GetRandomInt(1,7)==4`일 때 체력>36이면 −17, 아니면 +1.
+HIT_GAIN_OVERRIDE = {'h07I': 1.0 / 7.0}
 
 
-def main(dry):
+def main(dry, list_path=None):
     U = {u['id']: u for u in w3u.parse(os.path.join(ROOT, 'Tools/w3x/원본/war3map_new.w3u'))}
     J = open(os.path.join(ROOT, 'Tools/w3x/원본/war3map_new.j'), encoding='utf-8', errors='replace').read()
     HASH = collections.defaultdict(list)
@@ -60,6 +75,26 @@ def main(dry):
             return None, checks
         return None, False
 
+    def trigger_life(uid):
+        """(평타 트리거가 체력을 검사함, 체력 +1 있음)"""
+        for t in HASH.get(uid, []):
+            p = J.find('function Trig_%s_Actions takes' % t)
+            if p < 0:
+                continue
+            b = J[p:J.index('endfunction', p)]
+            # 조건이 Func…C 함수로 빠진 트리거(흰수염 Legend5·카이도)도 본다
+            conds = ''.join(J[q.start():J.index('endfunction', q.start())]
+                            for q in re.finditer(r'function Trig_%s_Func\w+C takes' % re.escape(t), J))
+            checks = bool(re.search(r'UNIT_STATE_LIFE,[^)]*\)\)(==|>)', b + conds))
+            return checks, bool(re.search(r'UNIT_STATE_LIFE,[^)]*\)\)\+1', b))
+        return False, False
+
+    def spawn_life(uid):
+        """소환 자리에서 SetUnitLifeBJ(GetLastCreatedUnit(),N)으로 내리는 체력. 없으면 None(= 가득)."""
+        for m in re.finditer(r"Create\w*\([^\n]*'%s'[^\n]*\n(?:[^\n]*\n){0,2}?call SetUnitLifeBJ\(GetLastCreatedUnit\(\),([\d.]+)\)" % uid, J):
+            return float(m.group(1))
+        return None
+
     changed, notes, same = [], [], 0
     for ro, uids in sorted(rmap.items()):
         p = os.path.join(ROOT, 'Assets/Data/Units/Roster', ro + '.asset')
@@ -72,9 +107,7 @@ def main(dry):
                 continue
             per_hit, checks = trigger_mana(uid)
             cands.append((checks, uid, float(mo.get('umpm')), float(mo.get('umpr') or 0.0), per_hit))
-        if not cands:
-            continue
-        text = open(p, encoding='utf-8').read()
+        text = open(p, encoding='utf-8').read()   # 매번 디스크에서 다시 읽는다(모델 배선이 prefab 줄을 바꾼다)
         # 로스터 게이지 에셋: (종류, 문턱, skillName)
         gauges = []
         for g in re.findall(r'guid: (\w+), type: 2', text.split('  trait:')[0]):
@@ -91,6 +124,51 @@ def main(dry):
                     gauges.append((int(sat.get_level_field(a, li, 'gaugeKind') or 0), t, sk))
         mana_thr = [t for k, t, _ in gauges if k == 0]
         life_mana = [(t, sk) for k, t, sk in gauges if k == 1 and 'MANA' in sk.upper()]
+        life_real = [(t, sk) for k, t, sk in gauges if k == 1 and 'MANA' not in sk.upper()]
+        if not cands and not life_real:
+            continue
+        # 진짜 체력 게이지
+        lstart, lcustom, lgain = 0.0, 0, 0.0
+        lreal = None
+        if life_real:
+            lc = []
+            for uid in uids:
+                mo = U.get(uid, {}).get('mods', {})
+                checks, plus1 = trigger_life(uid)
+                if checks:
+                    lc.append((uid, mo, plus1))
+            if len(lc) != 1:
+                notes.append('⚠️ %s: 체력 게이지 에셋은 있는데 체력 검사 트리거 유닛이 %d개 — 건너뜀' % (ro, len(lc)))
+            else:
+                luid, mo, plus1 = lc[0]
+                base = U[luid]['base']
+                if 'uhpr' in mo:
+                    lr = float(mo['uhpr'])
+                elif base == 'hrif':
+                    lr = HRIF_STOCK_UHPR
+                    notes.append('%s(%s): uhpr 빈칸 → hrif 스톡 %g' % (ro, luid, lr))
+                else:
+                    lr = 0.0
+                    notes.append('⚠️ %s(%s): uhpr 빈칸, 기반 %s 스톡 모름 → 0' % (ro, luid, base))
+                if 'uhrt' in mo and mo['uhrt'] != 'always':
+                    notes.append('⚠️ %s(%s): 재생 타입 %s — 항상이 아님, 재생 0으로' % (ro, luid, mo['uhrt']))
+                    lr = 0.0
+                lm = float(mo.get('uhpm') or 0)
+                sl = spawn_life(luid)
+                lstart = lm if sl is None else 0.0
+                if sl is not None:
+                    notes.append('%s(%s): 소환 때 체력 %g으로 내림 → 시작값은 resetTo' % (ro, luid, sl))
+                if luid in HIT_GAIN_OVERRIDE:
+                    lcustom, lgain = 1, HIT_GAIN_OVERRIDE[luid]
+                elif not plus1:
+                    lcustom, lgain = 1, 0.0
+                    notes.append('%s(%s): 평타 체력 +1 없음 → 재생으로만 참' % (ro, luid))
+                thr = [t for t, _ in life_real if t]
+                if thr and max(thr) > lm:
+                    notes.append('⚠️ %s(%s): 체력 게이지 문턱 %s > uhpm %g' % (ro, luid, thr, lm))
+                lreal = (luid, lr, lm)
+        if not cands:
+            cands = [(False, '-', 0.0, 0.0, None)]   # 마나 없는 로스터(카타쿠리) — 마나 필드는 0
 
         def gpm_of(c):
             return 1.0 / c[4] if c[4] else ((max(mana_thr) / c[2]) if mana_thr else 1.0)
@@ -112,11 +190,23 @@ def main(dry):
             if other:
                 lrg, lmax = other[0][3], other[0][2]
                 notes.append('%s: Life 카운터 마나 %s ← %s(umpr %g · umpm %g)' % (ro, sk[:30], other[0][1], lrg, lmax))
-        target = [round(umpr, 4), round(umpm, 4), round(gpm, 4), round(lrg, 4), round(lmax, 4)]
+        if uid == '-':
+            gpm = 0.0
+            notes[:] = [n for n in notes if not n.startswith(ro + '(-)')]
+        if lreal:
+            if lmax:
+                notes.append('⚠️ %s: Life 카운터를 마나로도 쓰고 진짜 체력 게이지도 있음 — 체력 쪽을 씀' % ro)
+            lrg, lmax = lreal[1], lreal[2]
+        umpi = float(U.get(uid, {}).get('mods', {}).get('umpi') or 0.0)
+        mstart = umpi * gpm
+        if umpi:
+            notes.append('%s(%s): umpi %g → 마나 게이지 시작 %g' % (ro, uid, umpi, mstart))
+        target = [round(umpr, 4), round(umpm, 4), round(gpm, 4), round(lrg, 4), round(lmax, 4),
+                  round(mstart, 4), round(lstart, 4), float(lcustom), round(lgain, 4)]
 
         def get(k):
             m = re.search(r'^  %s: (\S+)' % k, text, re.M)
-            return round(float(m.group(1)), 4) if m else None
+            return round(float(m.group(1)), 4) if m else 0.0
         if [get(k) for k in FIELDS] == target:
             same += 1
             continue
@@ -124,7 +214,7 @@ def main(dry):
         if dry:
             continue
         for k, v in zip(FIELDS, target):
-            s = repr(float(v))
+            s = str(int(v)) if k == 'lifeGaugeCustomHitGain' else repr(float(v))
             if re.search(r'^  %s: ' % k, text, re.M):
                 text = re.sub(r'^(  %s:) .*$' % k, lambda m: m.group(1) + ' ' + s, text, count=1, flags=re.M)
             else:
@@ -132,10 +222,14 @@ def main(dry):
         open(p, 'w', encoding='utf-8').write(text)
     print('같음 %d · 바꿈 %d' % (same, len(changed)))
     for ro, uid, t in changed:
-        print('  %-24s %s  umpr %g · umpm %g · 게이지/마나 %g · Life카운터 재생 %g/상한 %g' % (ro, uid, *t))
+        print('  %-24s %s  umpr %g · umpm %g · 게이지/마나 %g · Life 재생 %g/상한 %g · 시작 마나 %g/체력 %g · 타당 체력 %s' % (
+            ro, uid, *t[:7], ('기본 +1' if not t[7] else '%.4g' % t[8])))
+    if list_path and not dry:
+        open(list_path, 'w', encoding='utf-8').write(''.join('Assets/Data/Units/Roster/%s.asset\n' % ro for ro, _, _ in changed))
+        print('바꾼 파일 목록 → %s' % list_path)
     for n in notes:
         print('  참고', n)
 
 
 if __name__ == '__main__':
-    main('--dry' in sys.argv)
+    main('--dry' in sys.argv, sys.argv[sys.argv.index('--list') + 1] if '--list' in sys.argv else None)

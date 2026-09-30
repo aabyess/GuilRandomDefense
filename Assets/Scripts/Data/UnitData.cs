@@ -521,4 +521,16 @@ public class UnitData : ScriptableObject
     // 한 로스터에 원작 마나 유닛이 둘이라 둘째를 Life 카운터로 세어 둔 경우(영원_최상호 미호크)의 재생·상한(게이지 칸 단위).
     public float lifeGaugeRegenPerSecond;
     public float lifeGaugeMax;
+
+    // ⚠️ 맨 뒤(2026-09-30 구현담당1, PM 승인) — 게이지 시작값과 체력 게이지의 타당 증가. 전부 기본(0/false)이면 지금 동작 그대로.
+    // manaGaugeStart: 원작 umpi(시작 마나) × manaGaugePerMana(게이지 칸). 0이면 스킬의 resetTo에서 시작.
+    //   예: h02V(전설적인_정준영) umpi 50 = 최대 → 첫 평타에 바로 시전.
+    // lifeGaugeStart: 원작 유닛은 체력 가득으로 생긴다 → 「체력==최대」 검사가 첫 평타에 참. 소환 트리거가 체력을 따로
+    //   내리는 유닛(카이도 h07M → 1)은 0(= resetTo)으로 둔다. Tools/sync_mana_regen_from_w3u.py가 원문을 보고 채운다.
+    // lifeGaugeCustomHitGain이 켜지면 평타당 체력 게이지 증가를 +1 대신 lifeGaugeHitGain(0~1, 확률로 +1)로 —
+    //   네코마무시 h09Z는 평타 +1이 없어 0(재생으로만 참), 카타쿠리 h07I는 1/7 굴림의 else에서만 +1.
+    public float manaGaugeStart;
+    public float lifeGaugeStart;
+    public bool lifeGaugeCustomHitGain;
+    public float lifeGaugeHitGain;
 }
