@@ -803,6 +803,48 @@ SKINS = {
             ToeBase=(0.045, -0.04, 0.015), ToeTip=(0.045, -0.07, 0.01),
         ),
     ),
+    # 다른세계_김건부 ← 쿠잔/아오키지(원피스, Sketchfab 「one_piece_kuzan」) — 사장님 지정 2026-09-30.
+    #   🔴 원본이 **적 R12 박예원과 바이트까지 같은 파일**이다(sha256 0d6f5ed8…, 정점 26,639 · 재질 6 MI_N108_E001_*). 12_다른세계 쪽이 09-23,
+    #   90_적유닛 쪽 사본이 09-24. 그래서 설정도 위 "박예원" 항목 그대로다(관절 근거·코트 Chest 고정·A자 → straighten_arms는 거기 주석).
+    #   ⚠️ 박예원 항목의 관절을 고치면 여기도 같이 고칠 것(같은 메시). 산출만 Assets/Art/Units로 나간다.
+    "다른세계_김건부": dict(source="~/Desktop/구랜디스킨모음/12_다른세계/다른세계_김건부.glb",
+               mesh_name="Aokiji",
+               path="Assets/Art/Units/다른세계_김건부/다른세계_김건부.fbx", height=1.8,
+               center_band=(0.02, 0.06),
+               straighten_arms=True,
+               rigid_materials={"Mantle": "Chest"}, texture_by_material=True,
+               joints=dict(Hips=(0, 0, 0.565), Spine=(0, 0, 0.66), Chest=(0, 0, 0.77),
+                           Neck=(0, 0, 0.875), Head=(0, 0, 0.905), HeadTop=(0, 0, 1.0),
+                           Shoulder=(0.03, 0.01, 0.835), Arm=(0.10, 0.03, 0.82), ForeArm=(0.21, 0.03, 0.74),
+                           Hand=(0.31, 0.03, 0.64), HandTip=(0.38, 0.03, 0.615),
+                           UpLeg=(0.05, 0, 0.54), Leg=(0.05, 0, 0.29), Foot=(0.05, 0.01, 0.045),
+                           ToeBase=(0.05, -0.05, 0.02), ToeTip=(0.05, -0.075, 0.015))),
+    # 다른세계_브로리 ← 전설의 초사이어인 브로리(PSP 「Dragon Ball Z Shin Budokai – Another Road」 립, Sketchfab 「broly-super-saiyan」)
+    # — 사장님 지정 2026-09-30. 이중 zip: source/PSP - …Broly Legendar.zip 안 「LSSJ Broly.obj」+.mtl+Tex_0011_0·0012_0(256²)·0013_0(128²).
+    #   ⚠️ 바깥 zip textures/의 같은 이름 PNG는 4비트 팔레트로 다시 줄인 것(바이트 다름) — 안쪽 zip의 RGBA 8비트 원본을 쓴다(extract_source가 안쪽 우선).
+    #   오브젝트 1(g 그룹 11) · 정점 918 · 삼각형 1,494 · 재질 11(Material__25~37)이 그림 3장을 나눠 씀 · 뼈 0 · **이미 T자** · 좌우 대칭 · 정면 −Y.
+    #   🔴 재질 이름(Material__NN)과 그림 이름(Tex_00NN_0)이 안 맞고 그림이 셋이라 ArtBinder가 못 잇는다 → texture_by_material로 재질 이름 PNG 11장.
+    #   관절 근거(키 1 정규화 — 키는 머리카락 끝까지, 원본 149.84): 팔 단면 중심 z 0.72(x 0.18~0.58 전 구간 0.709~0.738) · 몸통 폭 ±0.183(z 0.80~0.82) ·
+    #   팔 보호대 재질 x 0.35~0.45 · 손 재질 x 0.43~0.58 · 얼굴 재질 z 0.79~0.89 · 허리띠 0.57 · 허리천 z 0.24~0.54(가랑이를 가림) ·
+    #   장화 재질 z 0.08~0.26 · 발 x 0.02~0.09(중심 0.055). 팔 폭이 키보다 넓다(±0.575) — 다리가 짧은 PSP 비율.
+    #   머리(Material__26 머리카락+머리통)·얼굴(Material__25)은 Head에 못박는다(뾰족 머리카락이 어깨로 번지지 않게).
+    #   center_band는 발끝(y −0.12)이 든 0.02~0.06 대신 발목 0.04~0.10(앞뒤 중심이 몸통과 맞는다).
+    "다른세계_브로리": dict(
+        source="~/Desktop/구랜디스킨모음/12_다른세계/다른세계_브로리.zip",
+        mesh_name="Broly",
+        path="Assets/Art/Units/다른세계_브로리/다른세계_브로리.fbx",
+        height=1.8,
+        center_band=(0.04, 0.10),
+        rigid_materials={"Material__26": "Head", "Material__25": "Head"}, texture_by_material=True,
+        joints=dict(
+            Hips=(0, 0, 0.50), Spine=(0, 0.01, 0.59), Chest=(0, 0.01, 0.70),
+            Neck=(0, 0, 0.795), Head=(0, -0.01, 0.825), HeadTop=(0, -0.01, 1.0),
+            Shoulder=(0.06, 0, 0.74), Arm=(0.17, 0, 0.723), ForeArm=(0.31, 0, 0.723),
+            Hand=(0.45, 0, 0.722), HandTip=(0.575, 0, 0.72),
+            UpLeg=(0.06, 0, 0.47), Leg=(0.058, 0, 0.27), Foot=(0.055, 0.005, 0.05),
+            ToeBase=(0.055, -0.07, 0.02), ToeTip=(0.055, -0.115, 0.015),
+        ),
+    ),
 }
 
 SPINE = [("Hips", "Hips", "Spine", None), ("Spine", "Spine", "Chest", "Hips"),

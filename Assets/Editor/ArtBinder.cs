@@ -569,7 +569,7 @@ public static class ArtBinder
     }
 
     // 이번에 새로 넣은 스킨 — LinkTexturesUnits가 도는 목록. 새 스킨을 넣을 때 여기에 이름을 더한다.
-    static readonly string[] PendingLinkUnits = { "안흔함_김용태" };
+    static readonly string[] PendingLinkUnits = { "다른세계_올마이트", "다른세계_브로리", "다른세계_김건부" };
 
     static void LinkTexturesWhere(System.Func<string, bool> modelFilter)
     {

@@ -1,0 +1,17 @@
+다른세계_김건부 ← 쿠잔/아오키지(원피스) 스킨 출처 — 2026-09-30 새로 넣음
+
+원본: ~/Desktop/구랜디스킨모음/12_다른세계/다른세계_김건부.glb (Sketchfab 「one_piece_kuzan」, 3.8MB)
+  sha256: 0d6f5ed86ca739b7b881fb77877ff38c9faf5c756a0ac6a9620a844ff878dd84
+  🔴 적 R12 박예원의 원본(90_적유닛/R11-R20/R12_박예원.glb)과 바이트까지 같은 파일이다 — 같은 모델을 플레이어 유닛과 적이 같이 쓴다.
+라이선스: 🔴 미확인 — 사장님 Sketchfab 확인 대기.
+
+빌드 스크립트: Tools/blender/gen_objrip_skin.py (SKINS["다른세계_김건부"] — 설정은 "박예원" 항목과 같다)
+  실행: blender -b --factory-startup --python Tools/blender/gen_objrip_skin.py -- 다른세계_김건부
+
+처리 요약(2026-09-30, Blender 세션):
+- 뼈 0인 정적 glb · 메시 6 전부 씀(부품 6 = 재질 6, 버린 조각 없음) · 정점 26,639(병합 후 23,366) · 46,045삼각형(감량 안 함).
+- 텍스처 Image_0~5(립 함정) → 재질 이름으로 저장 6장(512²·1024²×4·128²).
+- A자(팔 약 40° 처짐) → 관절 표 + 지오데식 가중치 뒤 수평 T자로 폄. 해군 코트(Mantle)는 Chest에 통째 고정.
+- 재수입 검사: 21뼈(21/21) · 무가중치 0 · clip_spread 최대 0.99 · mesh_clash idle +0.0%·walk +8.3%·attack +0.0%
+  (walk 8.3%는 손이 코트와 몸 사이를 지나는 것 — 적 박예원과 같은 값, mesh_clash.py 머리말의 「코트 입은 대장」 설명) ·
+  bone_bind ② 중앙 1.0%(Chest 13.2%는 코트를 Chest에 실은 탓)·③ 0.0% · check_entries 통과. 적 박예원 커밋본과 네 지표가 전부 같다.
