@@ -2011,14 +2011,25 @@ public class UnitAttacker : MonoBehaviour
         TickGaugeRegen();
         UpdateSkillCooldown();
 
-        attackTimer -= Time.deltaTime;
-        if (attackTimer > 0f) return;
+        // ⚠️ 2026-09-30(PM 승인) — 예전엔 `attackTimer = AttackInterval`이라 프레임이 넘긴 시간을 버렸다: 평타 주기가
+        // 프레임에 매여 설정보다 길었다(1배속 0.38→0.391 +2.8%, 2배속 +5.4%). 이제 넘친 시간(≤0)을 다음 주기에서 뺀다.
+        // · 한 프레임에 한 번만 쏜다 — 주기가 프레임보다 짧으면 남는 시간은 버린다(폭주 없음).
+        // · 대상이 없는 동안은 0에서 멈춘다 — 음수로 쌓였다가 적이 오면 몰아 쏘지 않는다. 적이 오면 바로 쏜다
+        //   (예전엔 대상이 없어도 한 주기를 통째로 기다렸다).
+        if (attackTimer > 0f)
+        {
+            attackTimer -= Time.deltaTime;
+            if (attackTimer > 0f) return;
+        }
 
-        attackTimer = AttackInterval;
+        // UnitCombat의 목표는 읽기만 하면 돼서 매 프레임 본다. 직접 훑는 탐색(UnitCombat 없는 유닛·문)은 비싸서 띄엄띄엄.
+        bool canScan = true;
+        if (idleScanTimer > 0f) { idleScanTimer -= Time.deltaTime; canScan = idleScanTimer <= 0f; }
 
-        EnemyDummy target = ResolveTarget();
+        EnemyDummy target = combat != null ? combat.CurrentTarget : (canScan ? FindClosestEnemyInRange() : null);
         if (target != null)
         {
+            attackTimer = Mathf.Max(0f, attackTimer + AttackInterval);
             Anim?.PlayAttack();
             ApplyArmorShred(target);
             // isAbilityDamage: false — 평타는 원작에 UNIVERSAL이 없다(EnemyDummy.TakeDamage
@@ -2032,24 +2043,24 @@ public class UnitAttacker : MonoBehaviour
             return;
         }
 
+        attackTimer = 0f;
+        if (!canScan) return;
+
         // 적이 없을 때만 문을 친다. 문이 우선이면 적이 몰려와도 문만 때리고 있게 된다.
         DestructibleGate gate = FindClosestGateInRange();
         if (gate != null)
         {
+            attackTimer = AttackInterval;
             Anim?.PlayAttack();
             gate.TakeDamage(AttackDamage);
+            return;
         }
+        idleScanTimer = IdleScanInterval;
     }
 
-    // UnitCombat이 있으면 그쪽이 이미 골라둔 목표(사거리 안에 있을 때만 넘겨줌)를 그대로 쓴다 —
-    // 둘 다 EnemyDummy.Active를 훑으면 유닛 수만큼 중복 탐색이 된다. UnitCombat이 없는
-    // 오브젝트(구버전 프리팹 등)를 위해 예전처럼 스스로 찾는 경로도 남겨둔다.
-    EnemyDummy ResolveTarget()
-    {
-        if (combat != null) return combat.CurrentTarget;
-
-        return FindClosestEnemyInRange();
-    }
+    // 대상이 없을 때 비싼 탐색(전체 적 훑기·문)을 다시 하기까지의 간격.
+    const float IdleScanInterval = 0.2f;
+    float idleScanTimer;
 
     DestructibleGate FindClosestGateInRange()
     {
