@@ -7,8 +7,8 @@ B06G(A121 「3연사공속버프」 공속 +400%·0.2초)를 같이 건다 → B
 우리 축: 3연사 = OnHitChance 확률 1 + cooldown 6 + selfBuffId B034(창을 연 그 평타에서 바로 시전 — 0.148초 뒤 평타를 합침),
 더블샷 = 확률 0.25 + requiredBuffId B034. 로스터 skills 순서는 더블샷이 먼저여야 한다(창을 연 타엔 더블샷이 안 나간다).
 값(레벨 1): 3연사 한 발 = 100000×A0LZ레벨(1), 대상 PV<200이면 + 최대체력×(0.12+0.015×레벨) — CHAOS/UNIVERSAL, 3발(A0M1 레벨 2면 4발 — 레벨 축 없음).
-더블샷 = 폭풍망치 A0LV(AHtb) 750000 + 스턴 1초(adur). ⚠️ 0.15초 뒤 912 안 무작위 적 하나에게 같은 것(A0LW) 한 번 더는
-「무작위 적」 대상 축이 없어 미반영.
+더블샷 = 폭풍망치 A0LV(AHtb) 750000 + 스턴 1초(adur) + 0.15초 뒤 시전자 기준 912 안 무작위 적 하나에게 같은 것(A0LW) —
+무작위 대상 축(SkillTargetKind.RandomEnemyInRange, 09-30)으로 같은 순간에 넣는다(첫 대상도 뽑힐 수 있음, 원문에 제외 없음).
 """
 import os
 import sys
@@ -26,10 +26,13 @@ def main():
     specs = [
         ('SkillData_원작트리거_영원_문필환_vivi_Skill_Double', 'vivi_Skill_Double — 더블샷 1/4(절대쿨 B034 중)',
          '원작 비비 h057 Trig_ViVi_Attack → vivi_Skill_Double: 버프 B034가 있는 동안(3연사 창이 아닐 때) 1/4로 대상에게 폭풍망치 더미 e0CW(A0LV AHtb) 750000 + 스턴 1초. '
-         '⚠️ 0.15초 뒤 912 안 무작위 적 하나에게 한 번 더(e0CY A0LW)는 무작위 대상 축이 없어 미반영.' + NOTE,
-         sat.level_block(triggerChance=0.25, requiredBuffId='B034', effects=[
+         '둘째 발: 시전자 기준 912 안 무작위 적 하나에게 같은 폭풍망치 A0LW 750000 + 스턴 1초(원작은 0.15초 뒤, Player(4) 더미).' + NOTE,
+         sat.level_block(triggerChance=0.25, requiredBuffId='B034', range=912.0, aoeCenter=1, effects=[
              sat.effect(kind=0, target=SINGLE, damageType=2, attackType=7, multiplier=750000.0),
-             sat.effect(kind=1, target=SINGLE, duration=1.0)])),
+             sat.effect(kind=1, target=SINGLE, duration=1.0),
+             # 둘째 발 — 시전자 기준 912 안 무작위 적 하나(SkillTargetKind.RandomEnemyInRange = 4)
+             sat.effect(kind=0, target=4, damageType=2, attackType=7, multiplier=750000.0),
+             sat.effect(kind=1, target=4, duration=1.0)])),
         ('SkillData_원작트리거_영원_문필환_vivi_Skill_3_Triple', 'vivi_Skill_3_Triple — 3연사(절대쿨 6초 B034)',
          '원작 비비 h057 Trig_ViVi_Attack → vivi_Skill_3_Triple: B034(6초 절대쿨)가 없을 때 창(B06G 0.2초·공속 +400%)이 열리고 그 안의 다음 평타 하나가 3연사. '
          '한 발 = 100000×A0LZ 레벨(1) (+ 대상 PV<200이면 최대체력×(12%+1.5%×레벨)) CHAOS/UNIVERSAL, 3발. 창을 연 평타에서 바로 시전하는 것으로 합쳤다. '

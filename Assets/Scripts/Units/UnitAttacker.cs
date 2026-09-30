@@ -1427,6 +1427,8 @@ public class UnitAttacker : MonoBehaviour
         // 스킬별 이펙트(09-30): 범위 중심 땅·시전자 발밑에 한 번 — 적중 이펙트는 피해마다 EnemyDummy 쪽에서 바뀐다.
         SkillVfx.CastAt(aoeCenter, transform.position, range);
 
+        randomEnemyPicked = false;
+        randomEnemyPick = null;
         foreach (SkillEffect effect in level.effects)
         {
             if (effect == null) continue;
@@ -1456,6 +1458,10 @@ public class UnitAttacker : MonoBehaviour
     // 위험을 데이터 단계에서 잡는다). 핸콕에서 실제로 760을 0으로 비워둔 채 커밋할 뻔했다
     // (2026-09-05, PM 지시로 런타임에도 가드 추가). 콘솔이 도배되지 않게 한 번만 찍는다.
     static bool loggedUnboundedRange;
+
+    // 이번 시전에서 뽑은 무작위 적(RandomEnemyInRange) — CastSkillLevel이 시전마다 비운다.
+    bool randomEnemyPicked;
+    EnemyDummy randomEnemyPick;
 
     void ApplySkillEffect(SkillEffect effect, float range, Vector3 aoeCenter, EnemyDummy primaryTarget, float recentAttackDamage,
         Dictionary<object, HashSet<int>> firedCascadeGroups)
@@ -1489,6 +1495,24 @@ public class UnitAttacker : MonoBehaviour
                 foreach (EnemyDummy enemy in inRange)
                     if (enemy != null) ApplyToEnemy(effect, enemy, recentAttackDamage, firedCascadeGroups);
                 ListPool<EnemyDummy>.Release(inRange);
+                break;
+
+            // 반경 안 무작위 적 하나(SkillTargetKind.RandomEnemyInRange 주석) — 시전마다 한 번만 뽑아 그 시전의 효과들이 같이 쓴다.
+            case SkillTargetKind.RandomEnemyInRange:
+                if (!randomEnemyPicked)
+                {
+                    randomEnemyPicked = true;
+                    List<EnemyDummy> pool = ListPool<EnemyDummy>.Get();
+                    foreach (EnemyDummy enemy in EnemyDummy.Active)
+                    {
+                        if (enemy == null || enemy.IsDead) continue;
+                        if (range > 0f && Vector3.Distance(enemy.transform.position, aoeCenter) > range) continue;
+                        pool.Add(enemy);
+                    }
+                    randomEnemyPick = pool.Count > 0 ? pool[Random.Range(0, pool.Count)] : null;
+                    ListPool<EnemyDummy>.Release(pool);
+                }
+                if (randomEnemyPick != null) ApplyToEnemy(effect, randomEnemyPick, recentAttackDamage, firedCascadeGroups);
                 break;
 
             case SkillTargetKind.SingleTarget:

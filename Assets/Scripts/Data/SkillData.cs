@@ -49,6 +49,11 @@ public enum SkillTargetKind
     Allies,
     Enemies,
     SingleTarget,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, PM 승인) — 반경(SkillLevel.range, 중심은 aoeCenter) 안의 **무작위 적 하나**.
+    // 원작 `GroupPickRandomUnit(GetUnitsInRange…)`(365곳) — 첫 대상도 뽑힐 수 있다(원문에 제외 조건이 없는 경우).
+    // 한 시전 안의 RandomEnemyInRange 효과들은 같은 적 하나를 같이 쓴다(피해 + 스턴이 같은 적에게 가도록).
+    RandomEnemyInRange,
 }
 
 // 피해·효과 값이 무엇에 비례하는가. 원작 715건 전수 조사(UNIT_SKILL_TRIGGERS.md) 기준
