@@ -559,13 +559,46 @@ public class UnitAttacker : MonoBehaviour
     // 평타당 체력 게이지 증가 — 기본 +1, lifeGaugeCustomHitGain이면 lifeGaugeHitGain 확률로 +1(0이면 재생으로만 찬다).
     static int LifeGaugeHitGain(UnitData d) => d == null || !d.lifeGaugeCustomHitGain ? 1 : (Random.value < d.lifeGaugeHitGain ? 1 : 0);
 
+    // 마나 재생 오라(UnitData.manaAuraRegenPerSecond 주석 참고) — 주변 같은 주인 유닛의 오라를 0.25초마다 모은다.
+    // 같은 버프 ID는 최댓값만, 다른 버프 ID는 합. 멀티에선 진짜 유닛(UnitAttacker)이 호스트에만 있어 호스트에서만 더해진다.
+    const float ManaAuraScanInterval = 0.25f;
+    float manaAuraTimer, manaAuraBonus;
+    static readonly Dictionary<string, float> manaAuraScratch = new Dictionary<string, float>();
+
+    float ScanManaAuraBonus()
+    {
+        if (identity == null) return 0f;
+        int ownerId = identity.OwnerId;
+        Vector3 here = transform.position;
+        manaAuraScratch.Clear();
+        foreach (UnitIdentity other in UnitIdentity.Active)
+        {
+            if (other == null) continue;
+            UnitData od = other.Data;
+            if (od == null || od.manaAuraRegenPerSecond <= 0f || other.OwnerId != ownerId) continue;
+            if (other == identity) { if (!od.manaAuraIncludesSelf) continue; }
+            else
+            {
+                float worldRange = od.manaAuraRange / WorldScale.Value;
+                if ((other.transform.position - here).sqrMagnitude > worldRange * worldRange) continue;
+            }
+            string key = od.manaAuraBuffId ?? "";
+            if (!manaAuraScratch.TryGetValue(key, out float best) || od.manaAuraRegenPerSecond > best) manaAuraScratch[key] = od.manaAuraRegenPerSecond;
+        }
+        float sum = 0f;
+        foreach (float v in manaAuraScratch.Values) sum += v;
+        return sum;
+    }
+
     void TickGaugeRegen()
     {
         UnitData d = identity != null ? identity.Data : null;
         if (d == null) return;
         if (manaGaugeInitialized && d.manaGaugePerMana > 0f)
         {
-            manaRegenCarry += (d.manaRegenPerSecond + IntRegenBonus * CurrentIntelligence) * d.manaGaugePerMana * Time.deltaTime;
+            manaAuraTimer -= Time.deltaTime;
+            if (manaAuraTimer <= 0f) { manaAuraTimer = ManaAuraScanInterval; manaAuraBonus = ScanManaAuraBonus(); }
+            manaRegenCarry += (d.manaRegenPerSecond + IntRegenBonus * CurrentIntelligence + manaAuraBonus) * d.manaGaugePerMana * Time.deltaTime;
             if (manaRegenCarry >= 1f)
             {
                 int n = Mathf.FloorToInt(manaRegenCarry);

@@ -533,4 +533,17 @@ public class UnitData : ScriptableObject
     public float lifeGaugeStart;
     public bool lifeGaugeCustomHitGain;
     public float lifeGaugeHitGain;
+
+    // ⚠️ 맨 뒤(2026-09-30 구현담당1, PM 결정) — 원작 마나 재생 오라(AIba 브릴리언스 오라 기반, Hab1 = 초당 마나).
+    // 이 유닛 주변(manaAuraRange, 원작 단위 — 거리 비교는 ÷ WorldScale.Value)의 **같은 주인** 유닛의 마나 게이지 재생에 더해진다.
+    // 값은 Tools/sync_mana_regen_from_w3u.py가 uabi → w3a에서 채운다. 0이면 오라 없음(지금 동작).
+    // · manaAuraBuffId(원작 abuf): 같은 버프 ID끼리는 최댓값만, 다른 버프 ID는 합 — 엔진 지식(같은 버프 비중첩), 맵 미확정.
+    //   맵 안 정황: 능력마다 버프를 따로 주고 같은 캐릭터 계열(징베 전설·초월 = B056)만 같은 버프.
+    // · manaAuraIncludesSelf: 자기 포함 — 맵 미확정, 정황 둘(A0AD만 notself를 명시 · A0KI에 스톡 표기 그대로의 self). A0AD만 false.
+    // · 원작 atar 스톡 문자열은 friend(동맹 포함)로 보이나 우리는 같은 주인(OwnerId)만 — 멀티에서 남의 유닛에 안 걸리게(PM).
+    // · 체력 게이지엔 안 더해진다. 받는 쪽에 마나 게이지(manaGaugePerMana > 0 + 게이지 스킬)가 없으면 아무 일도 없다.
+    public float manaAuraRegenPerSecond;
+    public float manaAuraRange;
+    public string manaAuraBuffId;
+    public bool manaAuraIncludesSelf;
 }

@@ -23,6 +23,10 @@ UnitData에 쓰는 값(없으면 0 = 지금 동작):
   근거(맵 안, 스톡 slk는 저장소·맵에 없다): ① 니카 툴팁 A166 「자연회복:초당+0.25/공격시+1」 — 제작자가 빈칸 유닛의 재생을 0.25로 적음
   ② hrif 기반 350기 uhpr 명시값에 0.15·0.2·0.3·0.33·0.5가 있는데 0.25만 0건(에디터는 기본값과 같은 값을 저장하지 않는다)
   ③ hrif 기반 체력 게이지 유닛 툴팁이 필드값 그대로 「자연회복 초당 0.3/0.33/0.5」라 적음(= hrif 재생 타입이 항상 돈다는 제작자 전제).
+2026-09-30 추가(PM 결정) — 마나 재생 오라(AIba 기반, UnitData.manaAura* 주석 참고):
+  로스터 대응 uid의 uabi 중 기반 AIba이고 Hab1 > 0인 능력 → manaAuraRegenPerSecond(Hab1)·manaAuraRange(aare)·manaAuraBuffId(abuf)·
+  manaAuraIncludesSelf(atar에 notself가 없으면 AURA_DEFAULT_INCLUDES_SELF — 맵 미확정, 정황 둘). 값 0 껍데기(A0WM·A0AC)·아이템(A16D)·
+  대응 없는 유닛은 자연히 빠진다. 한 로스터에 여럿이면 값이 큰 것 하나(경고).
 사용: python3 Tools/sync_mana_regen_from_w3u.py [--dry] [--list <바꾼 파일 목록을 쓸 경로>]
 """
 import collections
@@ -36,17 +40,32 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.join(ROOT, 'Tools', 'w3x'))
 sys.path.insert(0, os.path.join(ROOT, 'Tools'))
 import w3u  # noqa: E402
+import w3a  # noqa: E402
 import skill_asset_tool as sat  # noqa: E402
 
 FIELDS = ['manaRegenPerSecond', 'manaMax', 'manaGaugePerMana', 'lifeGaugeRegenPerSecond', 'lifeGaugeMax',
-          'manaGaugeStart', 'lifeGaugeStart', 'lifeGaugeCustomHitGain', 'lifeGaugeHitGain']
-HRIF_STOCK_UHPR = 0.25   # 근거는 맨 위 주석 ①②③
+          'manaGaugeStart', 'lifeGaugeStart', 'lifeGaugeCustomHitGain', 'lifeGaugeHitGain',
+          'manaAuraRegenPerSecond', 'manaAuraRange', 'manaAuraBuffId', 'manaAuraIncludesSelf']
+INT_FIELDS = ('lifeGaugeCustomHitGain', 'manaAuraIncludesSelf')
+STR_FIELDS = ('manaAuraBuffId',)
+HRIF_STOCK_UHPR = 0.25   # ⚠️ 스톡 slk 미확인(저장소·맵에 없음) — 맵 안 근거 셋, 맨 위 주석 ①②③
+AURA_DEFAULT_INCLUDES_SELF = True   # atar 빈칸(스톡)일 때 — 맵 미확정. 뒤집으려면 여기만
 # 평타 +1이 확률 굴림 안에만 있는 유닛: 카타쿠리 Trig_katakuriAttack — `GetRandomInt(1,7)==4`일 때 체력>36이면 −17, 아니면 +1.
 HIT_GAIN_OVERRIDE = {'h07I': 1.0 / 7.0}
 
 
 def main(dry, list_path=None):
     U = {u['id']: u for u in w3u.parse(os.path.join(ROOT, 'Tools/w3x/원본/war3map_new.w3u'))}
+    AUR = {}
+    for a in w3a.parse(os.path.join(ROOT, 'Tools/w3x/원본/war3map_new.w3a')):
+        if a['base'] != 'AIba':
+            continue
+        f = {}
+        for m in a['mods']:
+            f.setdefault(m['field'], m['value'])
+        if float(f.get('Hab1') or 0) > 0:
+            AUR[a['id']] = (float(f['Hab1']), float(f.get('aare') or 0), str(f.get('abuf') or ''),
+                            (AURA_DEFAULT_INCLUDES_SELF if 'atar' not in f else ('notself' not in f['atar'] and 'self' in f['atar'])))
     J = open(os.path.join(ROOT, 'Tools/w3x/원본/war3map_new.j'), encoding='utf-8', errors='replace').read()
     HASH = collections.defaultdict(list)
     for m in re.finditer(r"SaveTriggerHandle\(\w+,'(\w{4})',\d+,gg_trg_(\w+)\)", J):
@@ -125,7 +144,12 @@ def main(dry, list_path=None):
         mana_thr = [t for k, t, _ in gauges if k == 0]
         life_mana = [(t, sk) for k, t, sk in gauges if k == 1 and 'MANA' in sk.upper()]
         life_real = [(t, sk) for k, t, sk in gauges if k == 1 and 'MANA' not in sk.upper()]
-        if not cands and not life_real:
+        auras = sorted((AUR[ab] for uid in uids for ab in str(U.get(uid, {}).get('mods', {}).get('uabi', '')).split(',') if ab in AUR),
+                       reverse=True)
+        if len(set(auras)) > 1:
+            notes.append('⚠️ %s: 마나 재생 오라가 여럿 %s — 큰 것 하나만' % (ro, auras))
+        aura = auras[0] if auras else (0.0, 0.0, '', False)
+        if not cands and not life_real and not auras:
             continue
         # 진짜 체력 게이지
         lstart, lcustom, lgain = 0.0, 0, 0.0
@@ -202,10 +226,13 @@ def main(dry, list_path=None):
         if umpi:
             notes.append('%s(%s): umpi %g → 마나 게이지 시작 %g' % (ro, uid, umpi, mstart))
         target = [round(umpr, 4), round(umpm, 4), round(gpm, 4), round(lrg, 4), round(lmax, 4),
-                  round(mstart, 4), round(lstart, 4), float(lcustom), round(lgain, 4)]
+                  round(mstart, 4), round(lstart, 4), float(lcustom), round(lgain, 4),
+                  round(aura[0], 4), round(aura[1], 4), aura[2], float(aura[3])]
 
         def get(k):
-            m = re.search(r'^  %s: (\S+)' % k, text, re.M)
+            m = re.search(r'^  %s: ?(\S*)' % k, text, re.M)
+            if k in STR_FIELDS:
+                return m.group(1) if m else ''
             return round(float(m.group(1)), 4) if m else 0.0
         if [get(k) for k in FIELDS] == target:
             same += 1
@@ -214,7 +241,7 @@ def main(dry, list_path=None):
         if dry:
             continue
         for k, v in zip(FIELDS, target):
-            s = str(int(v)) if k == 'lifeGaugeCustomHitGain' else repr(float(v))
+            s = v if k in STR_FIELDS else (str(int(v)) if k in INT_FIELDS else repr(float(v)))
             if re.search(r'^  %s: ' % k, text, re.M):
                 text = re.sub(r'^(  %s:) .*$' % k, lambda m: m.group(1) + ' ' + s, text, count=1, flags=re.M)
             else:
@@ -223,7 +250,8 @@ def main(dry, list_path=None):
     print('같음 %d · 바꿈 %d' % (same, len(changed)))
     for ro, uid, t in changed:
         print('  %-24s %s  umpr %g · umpm %g · 게이지/마나 %g · Life 재생 %g/상한 %g · 시작 마나 %g/체력 %g · 타당 체력 %s' % (
-            ro, uid, *t[:7], ('기본 +1' if not t[7] else '%.4g' % t[8])))
+            ro, uid, *t[:7], ('기본 +1' if not t[7] else '%.4g' % t[8]))
+              + (' · 마나 오라 %g/초 반경 %g 버프 %s 자기%s' % (t[9], t[10], t[11], '포함' if t[12] else '제외') if t[9] else ''))
     if list_path and not dry:
         open(list_path, 'w', encoding='utf-8').write(''.join('Assets/Data/Units/Roster/%s.asset\n' % ro for ro, _, _ in changed))
         print('바꾼 파일 목록 → %s' % list_path)

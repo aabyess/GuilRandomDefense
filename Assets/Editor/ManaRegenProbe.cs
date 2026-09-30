@@ -34,6 +34,55 @@ static class ManaRegenProbe
     static string ArenaAll() => Run(Units.Concat(LifeUnits).ToArray(), 2f);
     static string ArenaAll1x() => Run(Units.Concat(LifeUnits).ToArray(), 1f);
 
+    // 마나 재생 오라(2026-09-30) — 네 배치: 징베 혼자 / 징베(오라 끔) 혼자 / 징베+상디 / 징베+코알라+상디.
+    // 배치마다 유닛은 이름 다른 복제본(계측이 UnitData별이라). 기대(우리 평타 주기): 징베 27.8 · 끔 54.4 · 곁 상디 22.1 · 둘 곁 상디 13.6.
+    static string ArenaAura()
+    {
+        string[][] groups =
+        {
+            new[] { "전설적인_정윤식" },
+            new[] { "전설적인_정윤식!" },   // ! = 오라 필드 0
+            new[] { "전설적인_정윤식", "초월_배성령_AD" },
+            new[] { "전설적인_정윤식", "히든_황정기", "초월_배성령_AD" },
+            new[] { "초월_배성령_AD" },
+        };
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        UnitSpawner spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        dummyData = AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/Data/Enemies" })
+            .Select(g => AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(g)))
+            .FirstOrDefault(e => e != null && !e.isBoss && e.prefab != null && e.moveSpeed > 0f && e.name.Contains("R2"));
+        if (spawner == null || lane == null || dummyData == null) return "❌ UnitSpawner·레인·표적 적 없음";
+        slots.Clear();
+        SkillTelemetry.Reset();
+        SkillTelemetry.Enabled = true;
+        for (int g = 0; g < groups.Length; g++)
+        {
+            Vector3 home = lane.LaneCenter + Quaternion.Euler(0f, g * 360f / groups.Length, 0f) * Vector3.forward * RingRadius;
+            for (int m = 0; m < groups[g].Length; m++)
+            {
+                bool auraOff = groups[g][m].EndsWith("!");
+                UnitData source = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{groups[g][m].TrimEnd('!')}.asset");
+                if (source == null) continue;
+                UnitData data = Object.Instantiate(source);
+                data.name = $"배치{g + 1}({string.Join("+", groups[g].Select(x => x.Split('_')[1]))}) {source.name}";
+                if (auraOff) data.manaAuraRegenPerSecond = 0f;
+                var slot = new Slot { label = data.name, data = data, home = home };
+                if (m == 0) for (int i = 0; i < 3; i++) slot.targets.Add(SpawnTarget(home, i));
+                GameObject go = spawner.Spawn(data, home + Vector3.right * 10f * m, 0);
+                if (go != null) slot.attacker = go.GetComponentInChildren<UnitAttacker>();
+                slots.Add(slot);
+            }
+        }
+        SetDeathCount(false);
+        startTime = Time.time;
+        frames = 0;
+        EditorApplication.update -= Watch;
+        EditorApplication.update += Watch;
+        Time.timeScale = 2f;
+        return $"오라 배치 {groups.Length} · 유닛 {slots.Count(x => x.attacker != null)}/{slots.Count} · 2배속";
+    }
+
     static string Run(string[] Units, float timeScale)
     {
         if (!Application.isPlaying) return "❌ 플레이 중에만";
@@ -151,7 +200,7 @@ static class ManaRegenProbe
             int gauge = s.attacker != null && ManaCounterField != null ? (int)ManaCounterField.GetValue(s.attacker) : -1;
             // ⚠️ 판 전체 시간 ÷ 타수는 쓰지 않는다 — 판 도중 패배 처리로 평타가 멎으면 주기가 부풀어 보인다(첫 판에서 1.6배). 주기는 시전 간격 ÷ 타수로 읽는다.
             float period = s.lastHits > s.firstHits ? (s.lastHit - s.firstHit) / (s.lastHits - s.firstHits) : 0f;
-            sb.Append($"\n{s.label}: 판정 {hits}타 · 평타 주기 설정 {interval:0.0000}초 / 실측 {period:0.0000}초({(interval > 0f ? (period / interval - 1f) * 100f : 0f):+0.0;-0.0}%) · 체력 재생 {u.lifeGaugeRegenPerSecond}/초 상한 {u.lifeGaugeMax} 시작 {u.lifeGaugeStart} · 마나 시작 {u.manaGaugeStart} · 재생 {u.manaRegenPerSecond}/초 · 상한 {u.manaMax} · 환산 {u.manaGaugePerMana} · 끝날 때 게이지 {gauge}");
+            sb.Append($"\n{s.label}: 판정 {hits}타 · 평타 주기 설정 {interval:0.0000}초 / 실측 {period:0.0000}초({(interval > 0f ? (period / interval - 1f) * 100f : 0f):+0.0;-0.0}%) · 체력 재생 {u.lifeGaugeRegenPerSecond}/초 상한 {u.lifeGaugeMax} 시작 {u.lifeGaugeStart} · 마나 시작 {u.manaGaugeStart} · 오라 {u.manaAuraRegenPerSecond}/{u.manaAuraRange} · 재생 {u.manaRegenPerSecond}/초 · 상한 {u.manaMax} · 환산 {u.manaGaugePerMana} · 끝날 때 게이지 {gauge}");
             // 공유 게이지라 같은 타에 여럿이 같이 나간다 — 문턱이 같은 것 중 확률 판정 없는 첫 스킬의 시전만 센다.
             foreach ((string key, int threshold) in ManaGaugeSkills(u))
             {
