@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_불멸_고도현_79행_01250
   m_EditorClassIdentifier:
   skillName: A0OZ 0장풍 흰불 해일
-  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.1250로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.  · e0E8(#불멸 흰불 해일 1) A0OZ 0장풍 흰불 해일 [시체폭발/죽음의사슬 피해]: 350000 (원작 흰수염·불멸) 진입게이트: Trig_Ed_Attack_Actions[이벤트직결]: GetRandomInt(1,8)==5 [불멸 블록 09-30] B4 Ed_Skill_2sc: 확률 1/8 → (21/22)×1/8(1/22 갈래의 elseif) · 파도 둘(350000 ×2 — 직선 장풍을 대상 2타로 근사) · 대상 중심 600: 600000 HERO/NORMAL + 천둥박수 A0C7 200000·이감 45%(Ctc3 0.45) 3.5초. (Tools/apply_immortal_blocks.py)'
+  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.1250로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.  · e0E8(#불멸 흰불 해일 1) A0OZ 0장풍 흰불 해일 [시체폭발/죽음의사슬 피해]: 350000 (원작 흰수염·불멸) 진입게이트: Trig_Ed_Attack_Actions[이벤트직결]: GetRandomInt(1,8)==5 [불멸 블록 09-30] B4 Ed_Skill_2sc: 확률 1/8 → (21/22)×1/8(1/22 갈래의 elseif) · 파도 둘(350000 ×2 — 직선 장풍을 대상 2타로 근사) · 대상 중심 600: 600000 HERO/NORMAL + 천둥박수 A0C7 200000·이감 45%(Ctc3 0.45) 3.5초. (Tools/apply_immortal_blocks.py) [배타 09-30] 배타 묶음 1의 뒤 스킬 — Ed_Attack: if (1,22)==6 … elseif (1,8)==5 → Ed_Skill_2sc(Tools/apply_exclusive_groups.py)'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.119318
+    triggerChance: 0.125
     range: 600.0
     hitCountThreshold: 0
     resetTo: 0
@@ -101,3 +101,4 @@ MonoBehaviour:
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0.0
       heroDuration: 1.75
+    exclusiveGroup: 1

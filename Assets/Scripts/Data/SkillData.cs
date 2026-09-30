@@ -615,6 +615,13 @@ public class SkillLevel
     // 효과별 targetCondition과 다르다: 그쪽은 맞는 적마다 따로 보고 게이지는 이미 쓴 뒤다. None(기본)이면 지금 동작.
     public SkillEffectTargetCondition primaryTargetCondition = SkillEffectTargetCondition.None;
     public float primaryTargetConditionValue;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, 구조 칸 백로그 3번) — 배타 분기. 원작 `if 굴림A then 스킬A elseif 굴림B then 스킬B`는
+    // A의 굴림이 맞으면 B를 굴리지도 않는다. 같은 exclusiveGroup(0 = 없음)의 평타 확률 스킬(OnHitChance)은
+    // **한 평타에 하나만** — 로스터 스킬 목록에서 앞선 것의 확률 굴림이 맞았으면 뒤 것은 건너뛴다.
+    // 그래서 뒤 스킬의 triggerChance는 주변 확률((1−pA)×pB)이 아니라 원작에 적힌 조건부 확률(pB) 그대로 적는다.
+    // 목록 순서가 곧 if/elseif 순서다(Tools/apply_exclusive_groups.py가 순서를 맞춘다).
+    public int exclusiveGroup;
 }
 
 public enum SkillAoeCenter

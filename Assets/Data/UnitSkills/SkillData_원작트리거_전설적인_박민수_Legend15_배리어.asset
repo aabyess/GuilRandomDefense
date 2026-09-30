@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작트리거_전설적인_박민수_Legend15_배리어
   m_EditorClassIdentifier:
   skillName: 바르토로메오 — 배리어 1/10(550 범위 스턴 2.75초 + 225 범위 150000 + 1500×PV)
-  description: '원작 바르토로메오 h02Z Legend15 GetRandomInt(1,10)==3: stomp A096(550 범위, 피해 0, adur 2.75) + 대상 중심 225 범위 (150000 + 1500×맞는 적 PV) NORMAL/UNIVERSAL. 한 레벨에 반경이 하나라 550으로(피해 범위 225가 넓어진다 — 피해는 작은 쪽). PV 항은 <200은 100 · 200 · ≥300으로. 2026-09-30 구현담당1.'
+  description: '원작 바르토로메오 h02Z Legend15 GetRandomInt(1,10)==3: stomp A096(550 범위, 피해 0, adur 2.75) + 대상 중심 225 범위 (150000 + 1500×맞는 적 PV) NORMAL/UNIVERSAL. 한 레벨에 반경이 하나라 550으로(피해 범위 225가 넓어진다 — 피해는 작은 쪽). PV 항은 <200은 100 · 200 · ≥300으로. 2026-09-30 구현담당1. [배타 09-30] 배타 묶음 1의 앞 스킬 — Legend15: if (1,10)==3 stomp elseif (1,30)==3(Tools/apply_exclusive_groups.py)'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -121,3 +121,4 @@ MonoBehaviour:
     gaugeSpendAmount: 0
     aoeCenter: 0
     targetArmorBreakAbove: 0.0
+    exclusiveGroup: 1

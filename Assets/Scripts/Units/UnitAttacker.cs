@@ -1246,6 +1246,9 @@ public class UnitAttacker : MonoBehaviour
         }
     }
 
+    // 이번 평타에서 굴림을 맞힌 배타 묶음(SkillLevel.exclusiveGroup) — TryCastOnHitSkill이 평타마다 비운다.
+    readonly HashSet<int> firedExclusiveGroups = new HashSet<int>();
+
     void TryCastOnHitSkill(EnemyDummy attackedTarget)
     {
         UnitData unitData = identity != null ? identity.Data : null;
@@ -1277,6 +1280,7 @@ public class UnitAttacker : MonoBehaviour
         bool lifeShouldReset = false;
         int lifeResetValue = 0;
 
+        firedExclusiveGroups.Clear();
         for (int i = 0; i < count; i++)
         {
             SkillData skill = ResolveSkillAt(unitData, i);
@@ -1308,7 +1312,10 @@ public class UnitAttacker : MonoBehaviour
                 if (level.cooldown > 0f && Time.time < state.onHitChanceLockedUntil) { SkillTelemetry.Gate(unitData, skill, "절대쿨"); continue; }
 
                 if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
+                // 배타 분기(SkillLevel.exclusiveGroup) — 같은 묶음의 앞선 스킬이 이번 평타에 굴림을 맞혔으면 굴리지도 않는다.
+                if (level.exclusiveGroup != 0 && firedExclusiveGroups.Contains(level.exclusiveGroup)) { SkillTelemetry.Gate(unitData, skill, "배타"); continue; }
                 if (Random.value >= level.triggerChance) { SkillTelemetry.Gate(unitData, skill, "확률실패"); continue; }
+                if (level.exclusiveGroup != 0) firedExclusiveGroups.Add(level.exclusiveGroup);
 
                 if (level.cooldown > 0f)
                 {

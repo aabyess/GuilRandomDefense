@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: SkillData_원작트리거_전설적인_박민수_Legend15_배리어불스
   m_EditorClassIdentifier:
   skillName: 바르토로메오 — 배리어불스 (9/10)×1/30(225 범위 350000)
-  description: '원작 바르토로메오 h02Z Legend15: 배리어가 아닐 때 GetRandomInt(1,30)==3 → 0.75초 뒤 대상 중심 225 범위 350000 NORMAL/UNIVERSAL. 2026-09-30 구현담당1.'
+  description: '원작 바르토로메오 h02Z Legend15: 배리어가 아닐 때 GetRandomInt(1,30)==3 → 0.75초 뒤 대상 중심 225 범위 350000 NORMAL/UNIVERSAL. 2026-09-30 구현담당1. [배타 09-30] 배타 묶음 1의 뒤 스킬 — Legend15: if (1,10)==3 stomp elseif (1,30)==3(Tools/apply_exclusive_groups.py)'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.03
+    triggerChance: 0.033333
     range: 225.0
     hitCountThreshold: 0
     resetTo: 0
@@ -54,3 +54,4 @@ MonoBehaviour:
     gaugeSpendAmount: 0
     aoeCenter: 0
     targetArmorBreakAbove: 0.0
+    exclusiveGroup: 1

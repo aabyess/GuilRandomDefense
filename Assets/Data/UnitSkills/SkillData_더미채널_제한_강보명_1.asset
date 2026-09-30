@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_제한_강보명_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_제한_강보명_1
-  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 제한_강보명.  · Trig_RedAttack → e07R(%제한됨 패트릭 흡혈 2) → A0PV: 700000 정정(2026-09-06, CROSS_CHANNEL_DUPLICATE_SWEEP.md/65b7f96): Trig_RedAttack → e07R → A0PV를 제거했다 — 원작 발동 지점이 하나(Trig_RedAttack)라 제한_최영민(원작능력 루트 파일 보유)에 귀속. 79행 DPS 순위 배정이 독립적으로 같은 값을 또 배정한 중복이었다. | 되돌림(2026-09-30 구현담당1, 중복 검사): 위 정정은 RedAttack을 제한_최영민에 귀속했으나 대응표(MASTER_UID_ROSTER_MAP)는 h05G를 제한_강보명으로 잇는다. 원문 Trig_RedAttack: 1/22가 아니면 `GetRandomInt(1,20)==7` → e07R carrionswarm(A0PV ACca 700000, 끝 폭 450) — 전체 (21/22)×(1/20). 장풍 직선을 대상 위치 450 광역으로 근사, 능력 피해라 AP·Spells. [직선 09-30] 직선: A0PV 피해 700000 · 길이 800(빈칸 → 스톡 가정) · 반경 200→450 — 전에는 대상 중심 원(Tools/apply_line_skills.py)'
+  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 제한_강보명.  · Trig_RedAttack → e07R(%제한됨 패트릭 흡혈 2) → A0PV: 700000 정정(2026-09-06, CROSS_CHANNEL_DUPLICATE_SWEEP.md/65b7f96): Trig_RedAttack → e07R → A0PV를 제거했다 — 원작 발동 지점이 하나(Trig_RedAttack)라 제한_최영민(원작능력 루트 파일 보유)에 귀속. 79행 DPS 순위 배정이 독립적으로 같은 값을 또 배정한 중복이었다. | 되돌림(2026-09-30 구현담당1, 중복 검사): 위 정정은 RedAttack을 제한_최영민에 귀속했으나 대응표(MASTER_UID_ROSTER_MAP)는 h05G를 제한_강보명으로 잇는다. 원문 Trig_RedAttack: 1/22가 아니면 `GetRandomInt(1,20)==7` → e07R carrionswarm(A0PV ACca 700000, 끝 폭 450) — 전체 (21/22)×(1/20). 장풍 직선을 대상 위치 450 광역으로 근사, 능력 피해라 AP·Spells. [직선 09-30] 직선: A0PV 피해 700000 · 길이 800(빈칸 → 스톡 가정) · 반경 200→450 — 전에는 대상 중심 원(Tools/apply_line_skills.py) [배타 09-30] 배타 묶음 1의 뒤 스킬 — RedAttack: if (1,22)==6 → Red_skill_1 elseif (1,20)==7 carrionswarm(Tools/apply_exclusive_groups.py)'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.04772727272727273
+    triggerChance: 0.05
     range: 450.0
     hitCountThreshold: 0
     resetTo: 0
@@ -48,3 +48,4 @@ MonoBehaviour:
       lineLength: 800.0
       lineStartRadius: 200.0
       lineEndRadius: 450.0
+    exclusiveGroup: 1
