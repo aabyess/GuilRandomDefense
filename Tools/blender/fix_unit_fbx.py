@@ -1970,6 +1970,19 @@ UNITS = {
                                    dict(pattern=r"^Bone(29|31|33|35|37|39)$", into="mixamorig:LeftUpLeg", share=0.5, rest="mixamorig:Hips"),
                                    dict(pattern=r"^Bone(30|32|34|36|38|40)$", into="mixamorig:RightUpLeg", share=0.5, rest="mixamorig:Hips")],
                       tpose_arms=biped_tpose_names(), seed_zero_bones=0.001,
+                      # 🔸 「초월_김건_AP@동작」(2026-09-30 밤, 동작 넓히기 준비 — Assets 밖 시범). 원본 12클립, 중복 없음 — 전부 다른 동작.
+                      #   idle(전투 서기)·normal_idle(평상 서기)·move·attack(2.75초, 0.49 나갔다 돌아옴)·hurt·dead·skill1(3.21초)·skill2(9.04초)·
+                      #   xuanyun(기절)·jifei(날아감)·fukong(공중)·qishen(일어남).
+                      variants={"동작": dict(
+                          anim=True, anim_drop_ok=True, takes_only=True,
+                          take_names={"idle": "Idle", "move": "Move", "attack": "Attack", "hurt": "Hit", "dead": "Die",
+                                      "skill1": "Skill1", "skill2": "Skill2", "normal_idle": "Idle_Calm", "xuanyun": "Stun",
+                                      "jifei": "KnockUp", "fukong": "Air", "qishen": "GetUp"},
+                          clip_trim_tail=True,
+                          clip_copy={"Attack_Lunge": "Attack"},
+                          clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
+                          clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle",
+                                            takes=["Attack", "Die", "Skill1", "Skill2", "KnockUp", "Air", "GetUp"]))},
                       glb_images={0: "heihuzi_pifeng.png", 1: "heihuzi_shenti.png"},
                       materials=dict(textures={"Material.002": [("DiffuseColor", "heihuzi_pifeng.png")],
                                                "Material.001": [("DiffuseColor", "heihuzi_shenti.png")]})),
@@ -2046,6 +2059,14 @@ UNITS = {
                       # 1회차 Idle 상위1% 1.54(최대 14.3) — 털 옷깃 짧은 변에 Spine2·Shoulder 몫이 0.25/0.75로 뚝 끊김 → 이웃 평균 3회
                       smooth_weights={"bailegangwanjie_body_0_noesis_meshnode_0000": 3},
                       tpose_arms=biped_tpose_names(fingers=2, joints=2), seed_zero_bones=0.001,
+                      # 🔸 「초월_임장혁_AD@동작」(2026-09-30 밤, 동작 넓히기 준비 — Assets 밖 시범). 원본 19클립, 중복 없음. 길이가 42·58프레임으로 채워져 있다 → clip_trim_tail.
+                      #   attack2_1~ = 평타 연속기(한 타씩 따로 낸다) · skillN_2 = 스킬 본동작, _loop = 그 스킬의 유지 자세 · hit* = 피격 다섯 가지 · dizzy = 기절.
+                      variants={"동작": dict(
+                          anim=True, anim_drop_ok=True, takes_only=True,
+                          take_names={'idle': 'Idle', 'move': 'Move', 'attack2_1': 'Attack', 'attack2_2': 'Attack2', 'attack2_3': 'Attack3', 'hit': 'Hit', 'die': 'Die', 'skill1_2': 'Skill1', 'skill1_2_loop': 'Skill1_Loop', 'skill2_2': 'Skill2', 'skill2_2_loop': 'Skill2_Loop', 'skill3_2': 'Skill3', 'skill6_2': 'Skill6', 'skill6_2_loop': 'Skill6_Loop', 'dizzy': 'Stun', 'hitback': 'HitBack', 'hitdown': 'HitDown', 'hitfly': 'HitFly', 'hitkneel': 'HitKneel'},
+                          clip_trim_tail=True,
+                          clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
+                          clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle", takes=['Attack', 'Attack2', 'Attack3', 'Hit', 'Die', 'Skill1', 'Skill1_Loop', 'Skill2', 'Skill2_Loop', 'Skill3', 'Skill6', 'Skill6_Loop', 'HitBack', 'HitDown', 'HitFly', 'HitKneel']))},
                       glb_images={0: "bailegang_body_baseColor.png", 1: "bailegang_face_baseColor.png", 2: "bailegang_hair_baseColor.png",
                                   3: "bailegang_leye_baseColor.png", 4: "bailegang_mouth_baseColor.png", 5: "bailegang_reye_baseColor.png"},
                       materials=dict(textures={f"bailegangwanjie_{k}_0": [("DiffuseColor", f"bailegang_{k}_baseColor.png")]
@@ -2099,6 +2120,14 @@ UNITS = {
                       # 1회차 Idle 상위1% 1.52 — 찢김이 아니라 저폴리(3.5천 정점) 목깃·어깨 굵은 변에 반반 가중치 경계가 퍼져 2~2.8배 → 이웃 평균 2회
                       smooth_weights={"bocun_body_0_noesis_meshnode_0004": 2, "bocun_body_0_c_noesis_meshnode_0005": 2},
                       tpose_arms=biped_tpose_names(fingers=2, joints=2), seed_zero_bones=0.001,
+                      # 🔸 「초월_강주혁_AP@동작」(2026-09-30 밤, 동작 넓히기 준비 — Assets 밖 시범). 원본 22클립, 중복 없음. 18개가 66프레임으로 채워져 있다(끝 자세로 멈춤) → clip_trim_tail.
+                      #   attack2_1~ = 평타 연속기(한 타씩 따로 낸다) · skillN_2 = 스킬 본동작, _loop = 그 스킬의 유지 자세 · hit* = 피격 다섯 가지 · dizzy = 기절.
+                      variants={"동작": dict(
+                          anim=True, anim_drop_ok=True, takes_only=True,
+                          take_names={'idle': 'Idle', 'move': 'Move', 'attack2_1': 'Attack', 'attack2_2': 'Attack2', 'attack2_3': 'Attack3', 'hit': 'Hit', 'die': 'Die', 'skill1_2': 'Skill1', 'skill1_2_loop': 'Skill1_Loop', 'skill2_2': 'Skill2', 'skill2_2_loop': 'Skill2_Loop', 'skill3_2': 'Skill3', 'skill6_2': 'Skill6', 'skill6_2_loop': 'Skill6_Loop', 'dizzy': 'Stun', 'hitback': 'HitBack', 'hitdown': 'HitDown', 'hitfly': 'HitFly', 'hitkneel': 'HitKneel', 'skill4': 'Skill4', 'skill5_2': 'Skill5', 'win': 'Win'},
+                          clip_trim_tail=True,
+                          clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
+                          clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle", takes=['Attack', 'Attack2', 'Attack3', 'Hit', 'Die', 'Skill1', 'Skill1_Loop', 'Skill2', 'Skill2_Loop', 'Skill3', 'Skill6', 'Skill6_Loop', 'HitBack', 'HitDown', 'HitFly', 'HitKneel', 'Skill4', 'Skill5', 'Win']))},
                       glb_images={0: "bocun_body_baseColor.png", 1: "bocun_face_baseColor.png", 2: "bocun_leye_baseColor.png",
                                   3: "bocun_mouth_baseColor.png", 4: "bocun_reye_baseColor.png"},
                       materials=dict(textures={f"bocun_{k}_0": [("DiffuseColor", f"bocun_{k}_baseColor.png")]
@@ -2537,6 +2566,14 @@ UNITS = {
                       merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
                                    dict(pattern=r"^Bone00[1-4]$", into="mixamorig:Hips")],
                       tpose_arms=biped_tpose_names(fingers=2, joints=2), seed_zero_bones=0.001,
+                      # 🔸 「전설적인_이승우@동작」(2026-09-30 밤, 동작 넓히기 준비 — Assets 밖 시범). 원본 22클립, 중복 없음. 길이가 45·53프레임으로 채워져 있다 → clip_trim_tail.
+                      #   attack2_1~ = 평타 연속기(한 타씩 따로 낸다) · skillN_2 = 스킬 본동작, _loop = 그 스킬의 유지 자세 · hit* = 피격 다섯 가지 · dizzy = 기절.
+                      variants={"동작": dict(
+                          anim=True, anim_drop_ok=True, takes_only=True,
+                          take_names={'idle': 'Idle', 'move': 'Move', 'attack2_1': 'Attack', 'attack2_2': 'Attack2', 'attack2_3': 'Attack3', 'hit': 'Hit', 'die': 'Die', 'skill1_2': 'Skill1', 'skill1_2_loop': 'Skill1_Loop', 'skill2_2': 'Skill2', 'skill2_2_loop': 'Skill2_Loop', 'skill3_2': 'Skill3', 'skill6_2': 'Skill6', 'skill6_2_loop': 'Skill6_Loop', 'dizzy': 'Stun', 'hitback': 'HitBack', 'hitdown': 'HitDown', 'hitfly': 'HitFly', 'hitkneel': 'HitKneel', 'attack2_4': 'Attack4', 'skill4': 'Skill4', 'win': 'Win'},
+                          clip_trim_tail=True,
+                          clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
+                          clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle", takes=['Attack', 'Attack2', 'Attack3', 'Hit', 'Die', 'Skill1', 'Skill1_Loop', 'Skill2', 'Skill2_Loop', 'Skill3', 'Skill6', 'Skill6_Loop', 'HitBack', 'HitDown', 'HitFly', 'HitKneel', 'Attack4', 'Skill4', 'Win']))},
                       glb_images={0: "yin_body_baseColor.png", 1: "yin_face_baseColor.png", 2: "yin_hair_baseColor.png",
                                   3: "yin_leye_baseColor.png", 4: "yin_mouth_baseColor.png", 5: "yin_reye_baseColor.png"},
                       materials=dict(textures={f"yin_{k}_0": [("DiffuseColor", f"yin_{k}_baseColor.png")]
@@ -5850,6 +5887,24 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             by = {t: (f0, fr) for t, f0, fr in clips}
             for new, old in cfg["clip_copy"].items():
                 clips.append((new, *by[old]))
+        if cfg.get("clip_trim_tail"):
+            # 🔸 clip_trim_tail(2026-09-30, 동작 넓히기 — 초월_강주혁_AP 계열): 원본이 모든 클립을 **같은 길이로 채워** 내보냈다
+            #   (22개 중 18개가 66프레임 — 동작이 끝난 뒤 끝 자세로 멈춰 있다). 그대로 쓰면 공격 뒤 2초를 서 있는다.
+            #   → 끝 자세와 같은(뼈 행렬 성분 차 < tol) 꼬리 프레임을 자른다. 끝 자세 한 프레임은 남긴다. 움직임이 전혀 없는 클립은 2프레임으로.
+            tol = cfg["clip_trim_tail"] if isinstance(cfg["clip_trim_tail"], float) else 1e-4
+            trimmed = {}
+            out_c = []
+            for t_, f0_, fr_ in clips:
+                last = fr_[-1]
+                k = len(fr_) - 1
+                while k > 0 and all(max(abs(a - b) for ra, rb in zip(fr_[k - 1][bn], last[bn]) for a, b in zip(ra, rb)) < tol for bn in last):
+                    k -= 1
+                keep = max(min(k + 1, len(fr_)), 2)
+                if keep < len(fr_):
+                    trimmed[t_] = f"{len(fr_)}→{keep}"
+                out_c.append((t_, f0_, fr_[:keep]))
+            clips = out_c
+            report["꼬리 자른 클립(프레임)"] = trimmed
         if cfg.get("split_clips"):
             # 🔴 안흔함_강재규(2026-09-23): 원본이 「All Animations」 한 테이크에 서 있기·웅크리기·앞발 치기를 **이어 붙여** 놨다.
             #   ArtBinder.GetOrCreateOwnClipController는 **가장 긴 클립 하나**를 기본 상태로 놓으므로, 게임에서 재규어가
