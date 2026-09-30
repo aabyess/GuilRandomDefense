@@ -5,7 +5,7 @@ A={a['id']:a for a in w3a.parse('Tools/w3x/원본/war3map_new.w3a')}
 U={u['id']:u for u in w3u.parse('Tools/w3x/원본/war3map_new.w3u')}
 J=open('Tools/w3x/원본/war3map_new.j',encoding='utf-8',errors='replace').read()
 def clean(s): return re.sub(r'\|c[0-9a-fA-F]{8}|\|r','',str(s)).replace('|n',' / ')
-SKIP={'aart','abpx','abpy','ahky','aret','arar','atat','aani','acat','acap','aeat','atp1','aite','arac','ata0','ata1','atac','aher','alev','achd','areq','arqa','amat','asat','aspt','amac','amsp','aefs','aefl','ansf','aubx','auby','aut1','auu1','aun1','aunt','auar','arpx','arpy','arhk','aani','ahdu'}
+SKIP={'aart','abpx','abpy','ahky','aret','arar','atat','aani','acat','acap','aeat','atp1','aite','arac','ata0','ata1','atac','aher','alev','achd','areq','arqa','amat','asat','aspt','amac','amsp','aefs','aefl','ansf','aubx','auby','aut1','auu1','aun1','aunt','auar','arpx','arpy','arhk','aani'}
 def abil(aid,ind='      ',tip=False):
     a=A.get(aid)
     if not a: return ind+aid+' (스톡)'
@@ -23,7 +23,7 @@ def unit(uid,ind='    '):
     for ab in str(mo.get('uabi','')).split(','):
         if ab and ab not in('Avul','Aloc'): out.append(abil(ab))
     return out
-VIS=r'PlaySound|DestroyEffect|AddSpecialEffect|SetUnitAnimation|SetUnitFlyHeight|SetUnitScale|vibration|RemoveLocation|SetUnitVertexColor|SetUnitTimeScale|SetlocationAutoRemove|SetUnitFacing|ShowUnit|StopSound|bj_wantDestroyGroup|SetUnitLookAt|ResetUnitLookAt|SetUnitPathing|CameraSet|PanCamera|SetSoundPosition|AttachSoundToUnit|TextTag|QueueUnitAnimation|DestroyGroup|SetUnitAnimationByIndex|SetUnitX|SetUnitY|UnitRemoveBuffs|PolledWait'
+VIS=r'PlaySound|DestroyEffect|AddSpecialEffect|SetUnitAnimation|SetUnitFlyHeight|SetUnitScale|vibration|RemoveLocation|SetUnitVertexColor|SetUnitTimeScale|SetUnitFacing|ShowUnit|StopSound|bj_wantDestroyGroup|SetUnitLookAt|ResetUnitLookAt|SetUnitPathing|CameraSet|PanCamera|SetSoundPosition|AttachSoundToUnit|TextTag|QueueUnitAnimation|DestroyGroup|SetUnitAnimationByIndex|SetUnitX|SetUnitY|UnitRemoveBuffs|PolledWait'
 def short(l):
     return l.replace('s__TrigVariables__get_','TV.').replace('s__TrigVariables_','TV_').replace('(GlobalTV)','').replace('GlobalTV,','').replace('GetUnitStateSwap(UNIT_STATE_','ST(').replace('GetUnitState(','ST(').replace('UNIT_STATE_','')
 def trig(t,limit=9000):
