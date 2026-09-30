@@ -7,3 +7,4 @@
 - jparse·orig·ours·join·md: 원작 314 유닛 × 우리 SkillData 대조표(그물: uabi · UnitAddAbility · HashAttack 평타 트리거 · TriggerExecute 폐쇄)
 - imm_*: 불멸 등급 「채울 목록」용 덤프(유닛별 능력 필드·트리거 본문·우리 쪽 에셋)
 - units.py·abils.py: 원작 유닛·능력 표(json) 다시 만들기
+- roster_side.py: md.py가 읽는 `roster_side.json`(로스터 쪽 대응·스킬 유무) 생성. `--diff expected/roster_side.json`으로 09-30 21:01 출력과 비교
