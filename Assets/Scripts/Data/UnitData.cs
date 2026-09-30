@@ -510,4 +510,15 @@ public class UnitData : ScriptableObject
     // 이식돼 있다(순위/스킬 배정 과정에서 결정, 이름 매핑과는 별개 경로). 나머지
     // 31종은 전부 시작 0/0/0 + 표준 성장(주 0.85/부 0.21).
     public PrimaryStat primaryStat;
+
+    // ⚠️ 맨 뒤(2026-09-30 구현담당1, PM 지시) — 원작 게이지 마나는 평타 +x에 초당 재생(umpr, 영웅은 + INT×0.08)이
+    // 더해지고 최대 마나(umpm)에서 멈춘다. 우리 게이지(OnHitCount)는 타격 수만 셌다. 값은
+    // Tools/sync_mana_regen_from_w3u.py가 대응표·w3u로 채운다. 전부 0(기본)이면 지금 동작 그대로.
+    // manaGaugePerMana: 게이지 한 칸당 마나의 역수(평타 +1이면 1, 아오키지 +0.5면 2, 우타처럼 확률 사건만이면 문턱÷umpm).
+    public float manaRegenPerSecond;
+    public float manaMax;
+    public float manaGaugePerMana;
+    // 한 로스터에 원작 마나 유닛이 둘이라 둘째를 Life 카운터로 세어 둔 경우(영원_최상호 미호크)의 재생·상한(게이지 칸 단위).
+    public float lifeGaugeRegenPerSecond;
+    public float lifeGaugeMax;
 }

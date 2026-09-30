@@ -544,6 +544,41 @@ public class UnitAttacker : MonoBehaviour
     int lifeGaugeCounter;
     bool lifeGaugeInitialized;
 
+    // 게이지 재생(UnitData.manaRegenPerSecond 등 주석 참고) — 초당 재생을 소수로 모았다가 한 칸씩 게이지에 더한다.
+    // 검사는 지금처럼 평타 때만 한다 — 원작 트리거도 전부 평타(HashAttack) 안에서 마나를 검사하므로, 재생으로
+    // 문턱을 넘은 뒤 다음 평타에서 발동한다. 게이지는 최대 마나에서 멈춘다(원작 umpm 상한).
+    const float IntRegenBonus = 0.08f;   // war3mapMisc.txt IntRegenBonus
+    float manaRegenCarry, lifeRegenCarry;
+
+    int ManaGaugeCap(UnitData d) => d != null && d.manaMax > 0f ? Mathf.RoundToInt(d.manaMax * Mathf.Max(d.manaGaugePerMana, 0.0001f)) : int.MaxValue;
+    int LifeGaugeCap(UnitData d) => d != null && d.lifeGaugeMax > 0f ? Mathf.RoundToInt(d.lifeGaugeMax) : int.MaxValue;
+
+    void TickGaugeRegen()
+    {
+        UnitData d = identity != null ? identity.Data : null;
+        if (d == null) return;
+        if (manaGaugeInitialized && d.manaGaugePerMana > 0f)
+        {
+            manaRegenCarry += (d.manaRegenPerSecond + IntRegenBonus * CurrentIntelligence) * d.manaGaugePerMana * Time.deltaTime;
+            if (manaRegenCarry >= 1f)
+            {
+                int n = Mathf.FloorToInt(manaRegenCarry);
+                manaRegenCarry -= n;
+                manaGaugeCounter = Mathf.Min(manaGaugeCounter + n, ManaGaugeCap(d));
+            }
+        }
+        if (lifeGaugeInitialized && d.lifeGaugeRegenPerSecond > 0f)
+        {
+            lifeRegenCarry += d.lifeGaugeRegenPerSecond * Time.deltaTime;
+            if (lifeRegenCarry >= 1f)
+            {
+                int n = Mathf.FloorToInt(lifeRegenCarry);
+                lifeRegenCarry -= n;
+                lifeGaugeCounter = Mathf.Min(lifeGaugeCounter + n, LifeGaugeCap(d));
+            }
+        }
+    }
+
     // 01번 영웅 스탯(STR/AGI/INT) — 사장님 결정 2026-09-06. 원작 "적을 죽일 때마다
     // AddHeroXP(영웅, 1)"에 대응.
     //
@@ -1164,13 +1199,13 @@ public class UnitAttacker : MonoBehaviour
                 if (level.gaugeKind == SkillGaugeKind.Mana)
                 {
                     if (!manaGaugeInitialized) { manaGaugeCounter = level.resetTo; manaGaugeInitialized = true; }
-                    if (!manaIncremented) { manaGaugeCounter++; manaIncremented = true; }
+                    if (!manaIncremented) { manaGaugeCounter = Mathf.Min(manaGaugeCounter + 1, ManaGaugeCap(unitData)); manaIncremented = true; }
                     if (manaGaugeCounter <= level.hitCountFloor) { SkillTelemetry.Gate(unitData, skill, "게이지바닥미달"); continue; }
                 }
                 else
                 {
                     if (!lifeGaugeInitialized) { lifeGaugeCounter = level.resetTo; lifeGaugeInitialized = true; }
-                    if (!lifeIncremented) { lifeGaugeCounter++; lifeIncremented = true; }
+                    if (!lifeIncremented) { lifeGaugeCounter = Mathf.Min(lifeGaugeCounter + 1, LifeGaugeCap(unitData)); lifeIncremented = true; }
                     if (lifeGaugeCounter <= level.hitCountFloor) { SkillTelemetry.Gate(unitData, skill, "게이지바닥미달"); continue; }
                 }
 
@@ -1199,7 +1234,7 @@ public class UnitAttacker : MonoBehaviour
                 if (level.gaugeKind == SkillGaugeKind.Mana)
                 {
                     if (!manaGaugeInitialized) { manaGaugeCounter = level.resetTo; manaGaugeInitialized = true; }
-                    if (!manaIncremented) { manaGaugeCounter++; manaIncremented = true; }
+                    if (!manaIncremented) { manaGaugeCounter = Mathf.Min(manaGaugeCounter + 1, ManaGaugeCap(unitData)); manaIncremented = true; }
                     if (manaGaugeCounter < level.hitCountThreshold) { SkillTelemetry.Gate(unitData, skill, "게이지미달(마나)"); continue; }
                     if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
                     manaShouldReset = true;
@@ -1208,7 +1243,7 @@ public class UnitAttacker : MonoBehaviour
                 else
                 {
                     if (!lifeGaugeInitialized) { lifeGaugeCounter = level.resetTo; lifeGaugeInitialized = true; }
-                    if (!lifeIncremented) { lifeGaugeCounter++; lifeIncremented = true; }
+                    if (!lifeIncremented) { lifeGaugeCounter = Mathf.Min(lifeGaugeCounter + 1, LifeGaugeCap(unitData)); lifeIncremented = true; }
                     if (lifeGaugeCounter < level.hitCountThreshold) { SkillTelemetry.Gate(unitData, skill, "게이지미달(생명)"); continue; }
                     if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
                     lifeShouldReset = true;
@@ -1967,6 +2002,7 @@ public class UnitAttacker : MonoBehaviour
 
     void Update()
     {
+        TickGaugeRegen();
         UpdateSkillCooldown();
 
         attackTimer -= Time.deltaTime;
