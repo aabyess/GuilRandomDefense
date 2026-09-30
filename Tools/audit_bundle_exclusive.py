@@ -6,7 +6,7 @@
 
   ① 중복: 같은 레벨에 똑같은 효과 블록(모든 필드 동일)이 두 번 이상. 확률 1.0(OnHitChance) 레벨은 따로 센다.
   ② 배타 분기: 같은 레벨의 두 효과 값이 원문에서 같은 if 사슬의 서로 다른 갈래(if/elseif/else)에만 나온다.
-     - 원문 위치 = 그 에셋 원작 유닛(audit_origin_provenance와 같은 규칙)에 걸린 트리거의 RRD( … ) 인자 안 숫자.
+     - 원문 위치 = 그 에셋 원작 유닛(audit_origin_provenance와 같은 규칙)에 걸린 트리거의 RRD·UnitDamagePointLoc·UnitDamageTarget 인자 안 숫자.
      - ForGroup 콜백(function X를 넘기는 자리)과 TriggerExecute로 불린 트리거는 부른 자리의 갈래를 물려받는다.
      - Stage 분기(`Stage[GlobalTV]==n`, 시간 순서로 차례로 도는 것)는 배타로 치지 않는다.
      - 값이 여러 곳에 있으면 「같이 나올 수 있는 짝」이 하나라도 있으면 배타 아님(보수적으로).
@@ -27,7 +27,7 @@ import audit_origin_provenance as P  # noqa: E402  (J·BODY·UN·유닛→트리
 import skill_asset_tool as sat  # noqa: E402
 
 ROOT = P.ROOT
-TOK = re.compile(r"(?<![\w.])(elseif|else|endif|if)(?![\w])|function (\w+)|TriggerExecute\w*\(gg_trg_(\w+)\)|RRD\(")
+TOK = re.compile(r"(?<![\w.])(elseif|else|endif|if)(?![\w])|function (\w+)|TriggerExecute\w*\(gg_trg_(\w+)\)|RRD\(|UnitDamagePointLoc\(|UnitDamageTarget\w*\(")
 
 
 def cond_is_stage(text):
@@ -86,8 +86,8 @@ def occurrences(fn, depth=0, seen=()):
             stack[-1] = (i, a + 1, st)
         elif kw == 'endif' and stack:
             stack.pop()
-        elif m.group(0) == 'RRD(':
-            ns, end = rrd_numbers(body, m.start() + 3)
+        elif m.group(0) in ('RRD(', 'UnitDamagePointLoc(') or m.group(0).startswith('UnitDamageTarget'):
+            ns, end = rrd_numbers(body, m.end() - 1)
             out += [(v, path) for v in ns]
             pos = end
         elif fref and depth < 4 and fref in P.BODY and fref != fn and fref not in seen and not fref.endswith('C') and 'takes' not in body[m.end():m.end() + 7]:
