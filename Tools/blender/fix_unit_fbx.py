@@ -7062,6 +7062,34 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     #    🔴 「이미지 노드가 있나」로는 **못 잡는다** — 임포터가 만든 노드는 임시 폴더를 가리키고 있어서
     #       검사는 통과하는데 내보내면 사라진다(R18 버기가 정확히 그랬다: 검사 통과 → 결과물은 재질 7개 전부 그림 없음).
     #       그래서 **그 그림이 이 유닛의 Textures/ 안에 있는 파일인지**를 본다. 그게 내보내기에서 살아남는 조건이다.
+    if cfg.get("prop_attach"):
+        # 🔸 prop_attach(2026-09-30, 특별함_황정기 새총 지팡이 시범): 원본에서 몸 옆에 **따로 서 있는 소품**(제 뼈 하나에 100% 실린 정점 무리)을
+        #   통째로 옮겨 다른 뼈에 붙인다. 최종 공간(−Y 앞·Z 위·T자)에서: 소품 정점과 그 뼈를 pivot 기준으로 rot(축, 도)만큼 돌린 뒤 to로 옮기고,
+        #   뼈의 부모를 parent로 바꾼다. 몸 정점·다른 뼈는 안 건드린다.
+        pa = cfg["prop_attach"]
+        arm_p = main_armature()
+        Mx = (Matrix.Translation(Vector(pa["to"])) @ Matrix.Rotation(math.radians(pa["rot"][1]), 4, pa["rot"][0])
+              @ Matrix.Translation(-Vector(pa["pivot"])))
+        moved = 0
+        for m in [o for o in bpy.context.scene.objects if o.type == "MESH"]:
+            g = m.vertex_groups.get(pa["bone"])
+            if g is None:
+                continue
+            W, Wi = m.matrix_world, m.matrix_world.inverted()
+            for v in m.data.vertices:
+                if any(ge.group == g.index and ge.weight > 0.5 for ge in v.groups):
+                    v.co = Wi @ (Mx @ (W @ v.co))
+                    moved += 1
+            m.data.update()
+        bpy.context.view_layer.objects.active = arm_p
+        bpy.ops.object.mode_set(mode="EDIT")
+        eb = arm_p.data.edit_bones[pa["bone"]]
+        A, Ai = arm_p.matrix_world, arm_p.matrix_world.inverted()
+        eb.use_connect = False
+        eb.head, eb.tail = Ai @ (Mx @ (A @ eb.head)), Ai @ (Mx @ (A @ eb.tail))
+        eb.parent = arm_p.data.edit_bones[pa["parent"]]
+        bpy.ops.object.mode_set(mode="OBJECT")
+        report["소품 붙임"] = f"{pa['bone']} → {pa['parent']} · 옮긴 정점 {moved}"
     if cfg.get("material_colors"):
         # 🔸 특별함_최상호(2026-09-30, PM 사진 — 눈이 하얗게 비어 있었다): 원본 glb에서 그림 없이 **색만** 준 재질(눈동자·머리·샌들 끈)이
         #   옛 기준 FBX를 거치며 기본 회색(0.8)이 됐다. relink는 기준 FBX 표만 보므로 색을 되살릴 길이 없었다 → 이름으로 색을 적는다.
@@ -7302,6 +7330,16 @@ for _n, _solid in {
 UNITS["랜덤_카마도_탄지로"].update(
     material_colors={"MI_P0001_V00_C00_0_Shoes": (0.281, 0.281, 0.281), "shoes_one": (0.139, 0.0044, 0.0)},
     solid_materials=["MI_P0001_V00_C00_0_Shoes", "shoes_one"])
+
+
+# 🔸 우솝 새총 지팡이 두 판(2026-09-30 밤, PM 지시 — 사장님이 고르실 자료, Assets 밖). 기본(몸 옆에 세워 둠)은 그대로.
+#   실측(최종 공간): 지팡이 막대 x 0.92 · z 0.09~1.80(새총 갈래 z 1.4~1.8, x로 벌어짐) · 왼손 (0.63, 0.03, 1.41), 손바닥 아래로 · 등 y +0.27(머리털 뒤로 조금 묻힌다).
+UNITS["특별함_황정기"]["variants"] = {
+    # 손: 막대 가운데(z 0.85)를 왼손바닥 밑에, 막대를 앞뒤(−Y가 앞, 새총 쪽이 앞)로 눕힌다 — 팔을 내리면 창처럼 수평으로 든 모양.
+    "손": dict(prop_attach=dict(bone="Bone001", parent="Bip001 L Hand", pivot=(0.92, -0.01, 0.85), rot=("X", 90), to=(0.70, 0.02, 1.37))),
+    # 등: 가방 뒤에 25° 비스듬히(새총 쪽이 위·왼쪽 어깨 너머), Spine2에 붙인다.
+    "등": dict(prop_attach=dict(bone="Bone001", parent="Bip001 Spine2", pivot=(0.92, -0.01, 0.95), rot=("Y", 25), to=(0.0, 0.27, 1.10))),
+}
 
 
 def main():
