@@ -5432,6 +5432,8 @@ def humanoid_weight_check(name, meshes):
                 if ge.weight > 0:
                     got.add(idx[ge.group])
     missing = [b for b in HUMANOID_REQUIRED if "mixamorig:" + b not in got]
+    if os.environ.get("GRD_GATE_REPORT"):                               # 진단 전용 — 아래 _gate 주석
+        return f"GATE 가중치 없음 {missing}" if missing else "필수 15뼈 가중치 있음"
     assert not missing, f"{name}: 휴머노이드 필수 뼈에 가중치가 없다(유니티 매핑 실패) {missing}"
     return "필수 15뼈 가중치 있음"
 
@@ -5864,7 +5866,9 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         _mats = [m.get("name") for m in _j.loads(_raw[20:20 + _s.unpack_from("<I", _raw, 12)[0]]).get("materials", [])] if _emb else []
         _emb = [(i, im.get("name") or (_mats[0] if len(_mats) == 1 else "이름없음%d" % i))
                 for i, im in enumerate(_emb) if "bufferView" in im]
-        assert not _emb, (f"{name}: glb 안에 박힌 그림이 {len(_emb)}장인데 glb_images를 안 적었다 — "
+        # 🔸 GRD_GATE_REPORT=1(2026-09-30, check_entries 실패 가르기): 관문 assert 셋을 **멈추지 않고 보고만** 하게 한다 —
+        #   「이 설정으로 뽑으면 무엇이 나오나」를 커밋본과 견줄 때만 쓴다. 산출용으로 켜지 말 것(회색·매핑 실패가 그대로 나간다).
+        assert os.environ.get("GRD_GATE_REPORT") or not _emb, (f"{name}: glb 안에 박힌 그림이 {len(_emb)}장인데 glb_images를 안 적었다 — "
                           f"그대로 두면 **텍스처 없이 회색으로 나간다**. 적을 것: " +
                           ", ".join(f"{i}: \"{n}.png\"" for i, n in _emb))
     if cfg.get("glb_images"):                                           # glb 내장 이미지를 원본 바이트 그대로 재질 이름 기준 파일로(재질을 짜기 전에)
@@ -6960,7 +6964,9 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     bare = sorted({m.name for o in bpy.context.scene.objects if o.type == "MESH" and len(o.data.vertices)
                    for m in [s.material for s in o.material_slots]
                    if m is not None and m.name not in solid_ok and not wired(m)})
-    assert not bare, (f"{name}: 유닛 Textures/의 그림이 안 물린 재질 {len(bare)}개 — 이대로 나가면 **회색으로 보인다**. "
+    if bare and os.environ.get("GRD_GATE_REPORT"):
+        report["GATE 그림 안 물린 재질"] = bare
+    assert os.environ.get("GRD_GATE_REPORT") or not bare, (f"{name}: 유닛 Textures/의 그림이 안 물린 재질 {len(bare)}개 — 이대로 나가면 **회색으로 보인다**. "
                       f"`materials=dict(textures={{…}})`로 물리거나, 정말 단색이면 solid_materials에 적을 것: "
                       + ", ".join(bare[:8]))
     arm_obj = main_armature()
