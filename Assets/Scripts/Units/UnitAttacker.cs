@@ -1245,6 +1245,12 @@ public class UnitAttacker : MonoBehaviour
         // 산다(다음 평타·발동에선 새로 만든다, 영구 상태 아님).
         Dictionary<object, HashSet<int>> firedCascadeGroups = new Dictionary<object, HashSet<int>>();
 
+        // 범위 중심은 시전 시작 때 한 번 잡는다 — 앞 효과가 주 대상을 죽여도 같은 자리에서
+        // 나머지 효과가 터진다(원작도 GetUnitLoc를 먼저 저장해 두고 그 점을 쓴다).
+        Vector3 aoeCenter = level.aoeCenter == SkillAoeCenter.Target && primaryTarget != null
+            ? primaryTarget.transform.position
+            : transform.position;
+
         foreach (SkillEffect effect in level.effects)
         {
             if (effect == null) continue;
@@ -1253,7 +1259,7 @@ public class UnitAttacker : MonoBehaviour
             // ApplyToEnemy/ApplyToAlly로 미뤄서 그쪽에서 판정한다(범위 스킬이면 적마다
             // 독립된 캐스케이드가 되도록).
             if (effect.cascadeGroup == 0 && Random.value >= effect.chance) continue;
-            ApplySkillEffect(effect, range, primaryTarget, recentAttackDamage, firedCascadeGroups);
+            ApplySkillEffect(effect, range, aoeCenter, primaryTarget, recentAttackDamage, firedCascadeGroups);
         }
     }
 
@@ -1275,7 +1281,7 @@ public class UnitAttacker : MonoBehaviour
     // (2026-09-05, PM 지시로 런타임에도 가드 추가). 콘솔이 도배되지 않게 한 번만 찍는다.
     static bool loggedUnboundedRange;
 
-    void ApplySkillEffect(SkillEffect effect, float range, EnemyDummy primaryTarget, float recentAttackDamage,
+    void ApplySkillEffect(SkillEffect effect, float range, Vector3 aoeCenter, EnemyDummy primaryTarget, float recentAttackDamage,
         Dictionary<object, HashSet<int>> firedCascadeGroups)
     {
         if (range <= 0f &&
@@ -1301,7 +1307,7 @@ public class UnitAttacker : MonoBehaviour
                 foreach (EnemyDummy enemy in EnemyDummy.Active)
                 {
                     if (enemy == null) continue;
-                    if (range > 0f && Vector3.Distance(enemy.transform.position, transform.position) > range) continue;
+                    if (range > 0f && Vector3.Distance(enemy.transform.position, aoeCenter) > range) continue;
                     inRange.Add(enemy);
                 }
                 foreach (EnemyDummy enemy in inRange)

@@ -525,6 +525,19 @@ public class SkillLevel
     // LIFE−17"을 그렇게 읽었다). 둘 중 하나가 원작과 다를 수 있어 리서치담당 확인
     // 대기 중이다 — 답이 오기 전엔 이 동작을 바꾸지 말 것.
     public int gaugeSpendAmount;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, PM) — Enemies 범위의 중심. 원작 범위 스킬 133개 전수
+    // (Docs/research/SKILL_AOE_CENTER.md, Blender): 공격받은 적 위치 107 · 시전자 7 · 기타 19.
+    // 공격 트리거 문맥의 GetTriggerUnit()은 **공격받은 적**이다(Main_Attack_Trigger_Manager가
+    // EVENT_PLAYER_UNIT_ATTACKED). 그래서 기본값이 Target이다. 대상이 없는 시전(쿨다운)은
+    // 시전자로 떨어진다. 오라는 이 값을 안 본다(늘 시전자).
+    public SkillAoeCenter aoeCenter = SkillAoeCenter.Target;
+}
+
+public enum SkillAoeCenter
+{
+    Target,
+    Caster,
 }
 
 [CreateAssetMenu(fileName = "NewSkillData", menuName = "GuilRandomDefense/Skill Data")]
