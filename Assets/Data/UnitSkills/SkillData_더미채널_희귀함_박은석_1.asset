@@ -13,19 +13,19 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_희귀함_박은석_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_희귀함_박은석_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 희귀함_박은석.  · Trig_Unique9 → e03M(U희귀함 키자루 더미) → A09A: 6000 [추정: 자릿수 판정]
+  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 희귀함_박은석.  · Trig_Unique9 → e03M(U희귀함 키자루 더미) → A09A: 6000 [추정: 자릿수 판정] [작은 축 09-30] ⓓ 연쇄 번개 A09A(AOcl, Ocl1 6000 · Ocl2 8마리 · Ocl3 −0.1 = 튈 때마다 +10% · aare 1250): 단일 → 연쇄 8마리. (Tools/apply_small_axes.py)'
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.142857
-    range: 0
+    range: 1250.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
     effects:
     - kind: 0
       basis: 0
-      target: 3
+      target: 5
       damageType: 1
       attackType: 1
       multiplier: 6000.0
@@ -34,3 +34,5 @@ MonoBehaviour:
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      maxTargets: 8
+      chainDamageStep: 0.1

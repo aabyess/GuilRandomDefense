@@ -26,6 +26,11 @@ static class EternalFillProbe
     static readonly string[] StunSix = { "초월_황준석_ADAP", "제한_최영민", "불멸_정준영", "불멸_신지우", "불멸_고도현", "초월_조성진_AD" };
     static string ArenaStunSix() { Units = StunSix; return Arena(); }
     static string ArenaStunSixBoss() { Units = StunSix; dummyOverride = "Enemy_R60_정윤식"; return Arena(); }
+    // 작은 축 다섯(2026-09-30) — 스킬 단위 대상 조건은 일반 적(「대상조건」으로 빠짐)과 PV 200 보스(발동) 둘로 본다.
+    static readonly string[] Axes = { "초월_김만경_AD", "전설적인_진연서", "초월_조성진_AD", "제한_최영민", "히든_호치킨",
+                                      "희귀함_박은석", "희귀함_이승우", "특별함_최준우", "전설적인_임채민", "초월_구주호_AD" };
+    static string ArenaAxes() { Units = Axes; return Arena(); }
+    static string ArenaAxesBoss() { Units = Axes; dummyOverride = "Enemy_R60_정윤식"; return Arena(); }
     // 초월·제한 큰 어긋남 정정(2026-09-30) — call:EternalFillProbe.ArenaTranscend. 황준석의 맵 전체 오라(방어 −8 · 이속 −5%)가 모든 표적에 실린다.
     static readonly string[] Transcend = { "초월_두유찬_AD", "초월_양재모_AD", "초월_신문철_AP", "초월_최상호_AP", "초월_황준석_ADAP", "초월_구주호_AD",
                                            "제한_강보명", "제한_김민규", "제한_이충민", "제한_박성호" };

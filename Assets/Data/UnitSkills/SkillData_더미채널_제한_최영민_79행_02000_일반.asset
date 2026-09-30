@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_특별함_최준우_1
+  m_Name: SkillData_더미채널_제한_최영민_79행_02000_일반
   m_EditorClassIdentifier:
-  skillName: SkillData_더미채널_특별함_최준우_1
-  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 특별함_최준우.  · Trig_Speical3 → e05B(S특별함 마르코 더미) → A09X: 1500 [추정: 자릿수 판정] [작은 축 09-30] ⓔ 부채꼴 칼날 A09X(AEfk, Efk1 1500 · aare 1150 · Efk3 7): 단일 → 시전자 중심 1150 범위, 가까운 순 최대 7마리. (Tools/apply_small_axes.py)'
+  skillName: '레베카 Rebeca_Skill_1 천둥박수 A0QY — 그 밖: 1/10'
+  description: '원작 레베카 h05I Rebeca_Skill_1 천둥박수 A0QY의 갈래 — 그 밖: 1/10. 효과는 SkillData_더미채널_제한_최영민_79행_02000와 같다. 2026-09-30 구현담당1(LIMITED_FILL_LIST X6).'
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 1150.0
+    range: 460.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
@@ -27,12 +27,13 @@ MonoBehaviour:
       basis: 0
       target: 2
       damageType: 1
-      attackType: 3
-      multiplier: 1500.0
+      attackType: 4
+      multiplier: 50000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
-      maxTargets: 7
-    aoeCenter: 1
+    forbiddenTargetBuffId: B06B
+    primaryTargetCondition: 4
+    primaryTargetConditionValue: 200.0

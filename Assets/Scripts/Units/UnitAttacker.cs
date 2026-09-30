@@ -969,6 +969,21 @@ public class UnitAttacker : MonoBehaviour
     // 두면 오라가 조건 없이 나가버린다(SkillData.cs SkillLevel 주석 참고). target이
     // null이어도 두 필드가 전부 비어있으면(기존 전 자산) 이 분기 자체를 안 타 회귀 없다.
     // SkillLevel.targetArmorBreakAbove — 주 대상 스킬 방깎 누적 > N(원작 AId1 레벨 비교). 0이면 통과.
+    static bool PassesPointValueCondition(SkillEffectTargetCondition condition, float value, EnemyDummy target)
+    {
+        if (condition == SkillEffectTargetCondition.None) return true;
+        if (target == null) return false;
+        float pointValue = target.PointValue;
+        return condition switch
+        {
+            SkillEffectTargetCondition.TargetPointValueLessThan => pointValue < value,
+            SkillEffectTargetCondition.TargetPointValueEqual => pointValue == value,
+            SkillEffectTargetCondition.TargetPointValueAtLeast => pointValue >= value,
+            SkillEffectTargetCondition.TargetPointValueNotEqual => pointValue != value,
+            _ => true,
+        };
+    }
+
     static bool PassesArmorBreakGate(SkillLevel level, EnemyDummy target) =>
         level.targetArmorBreakAbove <= 0f || (target != null && target.Aid1Shred > level.targetArmorBreakAbove);
 
@@ -1280,6 +1295,9 @@ public class UnitAttacker : MonoBehaviour
             // 광폭화 몬스터 전용) — "대상이 이 상태일 때만 발동"은 캐스터가 아니라
             // attackedTarget의 버프를 봐야 한다.
             if (!PassesBuffGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "버프게이트"); continue; }
+            // 스킬 단위 대상 조건(SkillLevel.primaryTargetCondition) — 못 채우면 확률·게이지를 건드리지 않고 건너뛴다.
+            if (!PassesPointValueCondition(level.primaryTargetCondition, level.primaryTargetConditionValue, attackedTarget))
+            { SkillTelemetry.Gate(unitData, skill, "대상조건"); continue; }
 
             if (skill.triggerType == SkillTriggerType.OnHitChance)
             {
@@ -1456,6 +1474,8 @@ public class UnitAttacker : MonoBehaviour
     // 이번 시전에서 뽑은 무작위 적(RandomEnemyInRange) — CastSkillLevel이 시전마다 비운다.
     bool randomEnemyPicked;
     EnemyDummy randomEnemyPick;
+    // 연쇄(ChainEnemies)가 지금 몇 번째 적을 치고 있나에 따른 피해 배수 — 연쇄 밖에선 늘 1.
+    float chainDamageScale = 1f;
 
     void ApplySkillEffect(SkillEffect effect, float range, Vector3 aoeCenter, EnemyDummy primaryTarget, float recentAttackDamage,
         Dictionary<object, HashSet<int>> firedCascadeGroups)
@@ -1486,10 +1506,47 @@ public class UnitAttacker : MonoBehaviour
                     if (range > 0f && Vector3.Distance(enemy.transform.position, aoeCenter) > range) continue;
                     inRange.Add(enemy);
                 }
+                // 맞는 수 상한(SkillEffect.maxTargets) — 범위 중심에서 가까운 순으로.
+                if (effect.maxTargets > 0 && inRange.Count > effect.maxTargets)
+                {
+                    inRange.Sort((a, b) => (a.transform.position - aoeCenter).sqrMagnitude.CompareTo((b.transform.position - aoeCenter).sqrMagnitude));
+                    inRange.RemoveRange(effect.maxTargets, inRange.Count - effect.maxTargets);
+                }
                 foreach (EnemyDummy enemy in inRange)
                     if (enemy != null) ApplyToEnemy(effect, enemy, recentAttackDamage, firedCascadeGroups);
                 ListPool<EnemyDummy>.Release(inRange);
                 break;
+
+            // 연쇄(SkillTargetKind.ChainEnemies 주석) — 주 대상에서 시작해 방금 맞은 적에서 range 안의 안 맞은 가장 가까운 적으로.
+            case SkillTargetKind.ChainEnemies:
+            {
+                EnemyDummy current = primaryTarget != null ? primaryTarget : FindClosestEnemyWithin(range);
+                if (current == null) break;
+                List<EnemyDummy> chain = ListPool<EnemyDummy>.Get();
+                int limit = Mathf.Max(1, effect.maxTargets);
+                while (current != null && chain.Count < limit)
+                {
+                    chain.Add(current);
+                    EnemyDummy next = null;
+                    float best = range > 0f ? range * range : float.MaxValue;
+                    foreach (EnemyDummy enemy in EnemyDummy.Active)
+                    {
+                        if (enemy == null || enemy.IsDead || chain.Contains(enemy)) continue;
+                        float sqr = (enemy.transform.position - current.transform.position).sqrMagnitude;
+                        if (sqr <= best) { best = sqr; next = enemy; }
+                    }
+                    current = next;
+                }
+                chainDamageScale = 1f;
+                foreach (EnemyDummy enemy in chain)
+                {
+                    if (enemy != null) ApplyToEnemy(effect, enemy, recentAttackDamage, firedCascadeGroups);
+                    chainDamageScale *= 1f + effect.chainDamageStep;
+                }
+                chainDamageScale = 1f;
+                ListPool<EnemyDummy>.Release(chain);
+                break;
+            }
 
             // 반경 안 무작위 적 하나(SkillTargetKind.RandomEnemyInRange 주석) — 시전마다 한 번만 뽑아 그 시전의 효과들이 같이 쓴다.
             case SkillTargetKind.RandomEnemyInRange:
@@ -1742,20 +1799,7 @@ public class UnitAttacker : MonoBehaviour
         // 필드가 없어 회귀 없다. target==null(Aura/CooldownAutoCast가 대상 없이 도는 경로)
         // 이면 위 버프 게이트와 같은 원칙으로 조건이 걸려 있는 한 항상 막는다(대상이 없는데
         // "대상이 조건을 만족한다"고 통과시키면 안전하지 않다).
-        if (effect.targetCondition != SkillEffectTargetCondition.None)
-        {
-            if (target == null) return;
-            float pointValue = target.PointValue;
-            bool passes = effect.targetCondition switch
-            {
-                SkillEffectTargetCondition.TargetPointValueLessThan => pointValue < effect.targetConditionValue,
-                SkillEffectTargetCondition.TargetPointValueEqual => pointValue == effect.targetConditionValue,
-                SkillEffectTargetCondition.TargetPointValueAtLeast => pointValue >= effect.targetConditionValue,
-                SkillEffectTargetCondition.TargetPointValueNotEqual => pointValue != effect.targetConditionValue,
-                _ => true,
-            };
-            if (!passes) return;
-        }
+        if (!PassesPointValueCondition(effect.targetCondition, effect.targetConditionValue, target)) return;
 
         // 평타 피해 문턱(원작 GetEventDamage() > X) — SkillEffect.triggerDamageAbove 주석 참고. 0이면 통과.
         if (effect.triggerDamageAbove > 0f && recentAttackDamage <= effect.triggerDamageAbove) return;
@@ -1861,7 +1905,7 @@ public class UnitAttacker : MonoBehaviour
         // basis를 안 가리고 스킬 피해 전반에 곱한다. %체력 분기 자체를 타는지는 별개 축
         // (2026-09-30부터 효과별 targetCondition — 전역 TakesPercentDamage 게이트는 걷었다)이다.
         // 원작 식에 A11S 인자가 없는 효과는 감수성 계수를 안 곱한다(SkillEffect.skipDamageTakenMultiplier).
-        float amount = ResolveSkillEffectValue(effect, target, recentAttackDamage)
+        float amount = ResolveSkillEffectValue(effect, target, recentAttackDamage) * chainDamageScale
             * (effect.skipDamageTakenMultiplier ? 1f : target.PercentDamageTakenMultiplier);
         // 원작 realD = 0.03×버프개수(SkillEffect.casterBuffCountFactor 주석 참고). 기존
         // 227개 효과는 이 필드가 직렬화에 없어 C# 기본값 0f로 읽힌다 — (1+0×count)=1이라

@@ -273,17 +273,17 @@ public class EnemyDummy : MonoBehaviour
     /// </summary>
     public void AddSlow(float multiplier)
     {
-        slowMultipliers.Add(Mathf.Clamp(multiplier, WaypointMover.MinSlowMultiplier, 1f));
+        slowMultipliers.Add(Mathf.Clamp(multiplier, WaypointMover.MinSlowMultiplier, WaypointMover.MaxSpeedMultiplier));
         ApplySlow();
-        if (slowMultipliers.Count == 1 && slowVfx == null) slowVfx = SkillVfx.Attach(SkillVfx.Kind.Slow, transform, 3f);   // 땅(발)보다 조금 위 — 1이면 풀밭에 묻혔다(09-29 실측)
+        if (multiplier < 1f && slowVfx == null) slowVfx = SkillVfx.Attach(SkillVfx.Kind.Slow, transform, 3f);   // 땅(발)보다 조금 위 — 1이면 풀밭에 묻혔다(09-29 실측)
     }
 
     /// <summary>이감을 되돌린다. AddSlow에 넣은 것과 같은 값을 넣어야 그 인스턴스가 빠진다.</summary>
     public void RemoveSlow(float multiplier)
     {
-        slowMultipliers.Remove(Mathf.Clamp(multiplier, WaypointMover.MinSlowMultiplier, 1f));
+        slowMultipliers.Remove(Mathf.Clamp(multiplier, WaypointMover.MinSlowMultiplier, WaypointMover.MaxSpeedMultiplier));
         ApplySlow();
-        if (slowMultipliers.Count == 0 && slowVfx != null) { SkillVfx.Stop(slowVfx); slowVfx = null; }
+        if (slowVfx != null && !slowMultipliers.Exists(m => m < 1f)) { SkillVfx.Stop(slowVfx); slowVfx = null; }
     }
 
     void ApplySlow()
@@ -296,10 +296,14 @@ public class EnemyDummy : MonoBehaviour
     {
         get
         {
-            float effective = 1f;
+            // 1 미만(이감)은 가장 강한 하나, 1 초과(이속 증가 — 원작 손해 오라)는 가장 큰 하나. 둘이 같이 걸리면 곱한다.
+            float slow = 1f, boost = 1f;
             foreach (float m in slowMultipliers)
-                effective = Mathf.Min(effective, m);
-            return Mathf.Max(effective, SlowFloorMultiplier);
+            {
+                if (m < 1f) slow = Mathf.Min(slow, m);
+                else boost = Mathf.Max(boost, m);
+            }
+            return Mathf.Max(slow, SlowFloorMultiplier) * boost;
         }
     }
 

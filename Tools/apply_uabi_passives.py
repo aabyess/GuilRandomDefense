@@ -11,7 +11,7 @@
   반경 aare(빈칸 = 스톡 900). atar none은 껍데기라 제외.
 안 넣는 것(EXCLUDE):
   - 소환체·형태·얻는 길 없는 유닛의 능력(그 유닛이 서 있을 때만 도는 것): h04Y 광분 빅맘 · h0AE 히그마 · h0BH·h0BI·h0BJ 시키 부유물 · h088 우타 토트 · A179(불사조 마르코 형태 전용 공속 +225%)
-  - 우리 축에 안 담기는 것: A12P(야마토 — 적 이속 **+15%** 손해 오라) · A0EI·A0EH(흰수염 — PV 조건이 붙은 방깎 오라)
+  - 우리 축에 안 담기는 것: A0EI·A0EH(흰수염 — PV 조건이 붙은 방깎 오라). (A12P 야마토 적 이속 +15% 손해 오라는 09-30 밤부터 담긴다 — Slow 배수가 1 초과를 받는다.)
   - 값이 0인 것(A03K Cac1 0 · Hbh1 0으로 명시된 강타)
 「이미 있음」 판정: 그 로스터에 연결된 SkillData의 이름·설명·효과 어디에든 능력 코드가 적혀 있으면 건너뛴다(강타는 같은 배수·가산 값의 효과가 있어도 건너뛴다 — 이중 계상 방지).
 사용: python3 Tools/apply_uabi_passives.py [--apply] [접두사…]   (기본은 목록만 출력)
@@ -37,7 +37,7 @@ ON_HIT, AURA = 0, 2
 STOCK_AURA_RADIUS = 900
 STOCK_ACBH_HBH1 = 15.0
 EXCLUDE_UIDS = {'h04Y', 'h0AE', 'h0BH', 'h0BI', 'h0BJ', 'h088'}
-EXCLUDE_ABILITIES = {'A179', 'A12P', 'A0EI', 'A0EH'}
+EXCLUDE_ABILITIES = {'A179', 'A0EI', 'A0EH'}
 # 흔함 로스터에 대응된 원작 uid는 「안흔함 한 등급 어긋남」(NEXT_SESSION §3-5) 미해결이라 건너뛴다.
 SKIP_ROSTER_PREFIXES = ('흔함_',)
 BASES = ('AOae', 'AHad', 'ACac', 'Aasl', 'AIsx', 'AIfb', 'ACbh')
@@ -75,9 +75,10 @@ def main(apply, prefixes):
             who = [t for t, key in ((SELF, 'self'), (ALLIES, 'friend')) if key in atar.split(',')]
             effects, kind, label, trigger, level_kw = [], 'aura', '', AURA, {}
             if base == 'AOae':
-                if float(f.get('Oae1') or 0) < 0:
+                if float(f.get('Oae1') or 0) != 0 and 'enemies' in atar.split(','):
+                    # 음수 = 이감, 양수 = 적 이속 증가(손해 오라 — 야마토 A12P). 둘 다 Slow 효과의 배수(남는/늘어난 비율)로.
                     effects.append(sat.effect(kind=SLOW, target=ENEMIES, multiplier=round(1.0 + float(f['Oae1']), 4)))
-                    label = '적 이속 %+d%% 오라' % round(float(f['Oae1']) * 100)
+                    label = '적 이속 %+d%% 오라%s' % (round(float(f['Oae1']) * 100), '(손해 오라)' if float(f['Oae1']) > 0 else '')
                 if float(f.get('Oae2') or 0) > 0:
                     effects += [sat.effect(kind=SPEED, target=t, multiplier=round(float(f['Oae2']), 4), buffId=buff) for t in who]
                     label = '%s 공속 +%d%%' % ('아군' if ALLIES in who else '자기', round(float(f['Oae2']) * 100))

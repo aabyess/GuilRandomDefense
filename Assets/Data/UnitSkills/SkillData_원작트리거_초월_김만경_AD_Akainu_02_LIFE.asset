@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작트리거_초월_김만경_AD_Akainu_02_LIFE
   m_EditorClassIdentifier:
   skillName: '아카이누 체력 스킬 — LIFE게이지50(PV 200 대상: 대분화)'
-  description: '원작 아카이누 H095 Akainu_Attack: 체력==50 & 대상 PV==200 → 체력 1 + Akainu_02: 대상 파이어볼트 A0VL 스턴 3.0초 + 대상 위치 600 범위 (725000 + STR×5000) + 대상 (7250000 + STR×50000)×1~2.5 NORMAL/UNIVERSAL. ⚠️ 효과마다 PV==200 조건 — 게이지는 PV 200이 아닌 대상에서도 소모된다(원문은 PV 200을 칠 때까지 50을 들고 있는다, 스킬 단위 대상 조건 축 없음 — 히든 아카이누와 같은 근사). 지대는 미반영. 2026-09-30 구현담당1.'
+  description: '원작 아카이누 H095 Akainu_Attack: 체력==50 & 대상 PV==200 → 체력 1 + Akainu_02: 대상 파이어볼트 A0VL 스턴 3.0초 + 대상 위치 600 범위 (725000 + STR×5000) + 대상 (7250000 + STR×50000)×1~2.5 NORMAL/UNIVERSAL. ⚠️ 효과마다 PV==200 조건 — 게이지는 PV 200이 아닌 대상에서도 소모된다(원문은 PV 200을 칠 때까지 50을 들고 있는다, 스킬 단위 대상 조건 축 없음 — 히든 아카이누와 같은 근사). 지대는 미반영. 2026-09-30 구현담당1. [작은 축 09-30] ⓐ 평타 대상이 PV 200일 때만 판정(primaryTargetCondition) — 아니면 게이지(LIFE 50)를 안 쓰고 들고 있는다. (Tools/apply_small_axes.py)'
   triggerType: 3
   levels:
   - cooldown: 0
@@ -99,3 +99,5 @@ MonoBehaviour:
     gaugeSpendAmount: 0
     aoeCenter: 0
     targetArmorBreakAbove: 0.0
+    primaryTargetCondition: 2
+    primaryTargetConditionValue: 200.0

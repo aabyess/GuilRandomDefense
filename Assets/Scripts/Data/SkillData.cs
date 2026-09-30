@@ -54,6 +54,11 @@ public enum SkillTargetKind
     // 원작 `GroupPickRandomUnit(GetUnitsInRange…)`(365곳) — 첫 대상도 뽑힐 수 있다(원문에 제외 조건이 없는 경우).
     // 한 시전 안의 RandomEnemyInRange 효과들은 같은 적 하나를 같이 쓴다(피해 + 스턴이 같은 적에게 가도록).
     RandomEnemyInRange,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, PM 지시) — 연쇄(원작 AOcl 연쇄 번개): 평타 대상에서 시작해, 방금 맞은 적에서 반경
+    // (SkillLevel.range) 안의 **아직 안 맞은 가장 가까운 적**으로 튄다. 맞는 수는 SkillEffect.maxTargets(주 대상 포함),
+    // 튈 때마다 피해가 (1 + chainDamageStep)배(원작 Ocl3 −0.1 = 튈 때마다 +10%).
+    ChainEnemies,
 }
 
 // 피해·효과 값이 무엇에 비례하는가. 원작 715건 전수 조사(UNIT_SKILL_TRIGGERS.md) 기준
@@ -447,6 +452,13 @@ public class SkillEffect
     // duration 대신 이 값으로 건다. 0이면 「모름」 — duration × HeroDurationFallbackRatio로 떨어진다(UnitAttacker).
     // 값은 Tools/sync_stun_hero_duration_from_w3a.py가 그 스턴을 낸 원작 능력의 ahdu에서 채운다. Stun 말고는 안 읽는다.
     public float heroDuration;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, PM 지시) — 맞는 적 수 상한. 0이면 제한 없음(지금 동작).
+    // · target Enemies: 범위 중심에서 가까운 순으로 이 수까지만(원작 부채꼴 칼날 AEfk Efk3 = 최대 대상 수).
+    // · target ChainEnemies: 연쇄가 닿는 수(주 대상 포함, 원작 Ocl2). chainDamageStep은 튈 때마다 곱해지는 증감(−0.1이 아니라
+    //   「+0.1 = 튈 때마다 +10%」로 적는다 — 원작 Ocl3는 「감소율」이라 부호가 반대다).
+    public int maxTargets;
+    public float chainDamageStep;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
@@ -576,6 +588,12 @@ public class SkillLevel
     // (King_Attack >50). 0(기본)이면 끈다. 게이지 판정 뒤·소모 앞에서 본다 — 조건이 안 맞으면 게이지를 안 쓰고
     // 계속 쌓는 원작과 같게(바닥 모드). 2026-09-30 구현담당1.
     public float targetArmorBreakAbove;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, PM 지시) — 스킬 단위 대상 조건. 평타 대상이 이 조건을 못 채우면 **판정 자체를 건너뛴다**
+    // (확률도 안 굴리고 게이지도 안 쓴다 — 원작 「LIFE==50 그리고 대상 PV==200이면」처럼 PV 200을 칠 때까지 게이지를 들고 있는 블록).
+    // 효과별 targetCondition과 다르다: 그쪽은 맞는 적마다 따로 보고 게이지는 이미 쓴 뒤다. None(기본)이면 지금 동작.
+    public SkillEffectTargetCondition primaryTargetCondition = SkillEffectTargetCondition.None;
+    public float primaryTargetConditionValue;
 }
 
 public enum SkillAoeCenter
