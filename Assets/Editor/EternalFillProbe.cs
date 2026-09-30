@@ -6,13 +6,15 @@ using UnityEngine;
 
 // 영원한 채우기 B·C 실측(2026-09-30) — 핸콕 1/14 stomp(영원_김영원)와 비비 더블샷·3연사(영원_문필환).
 // 유닛마다 떨어진 자리에 죽지 않는 표적 셋. 스킬별 시전 수·간격(SkillTelemetry.CastLog)과 표적이 실제로 스턴에 걸린 시간을 낸다.
+// ⚠️ 탐침 주의(09-30): ① 표적 체력 ×1e6에선 float 눈금이 1024쯤 — 작은 시험 피해는 눈금에 묻힌다 ② 데스카운트를 안 끄면
+//    게임 시간 50초쯤에 판이 끝나 유닛이 사라진다 ③ %최대체력 스킬은 표적을 금방 죽인다 → 죽으면 다시 세운다(Sample).
 // gameshot:
 //   gameshot x.png 1 1920x1080 click?:보통 wait:2 call:EternalFillProbe.Arena wait:90 call:EternalFillProbe.Report
 static class EternalFillProbe
 {
-    static readonly string[] Units = { "영원_문필환", "영원_김영원" };
+    static readonly string[] Units = { "영원_문필환", "영원_김영원", "영원_최상호", "영원_조세민", "영원_김정래" };
 
-    class Track { public string unit; public float stunStart = -1f; public readonly List<float> stuns = new List<float>(); }
+    class Track { public Vector3 at; public string unit; public float stunStart = -1f; public readonly List<float> stuns = new List<float>(); }
     static readonly Dictionary<EnemyDummy, Track> tracks = new Dictionary<EnemyDummy, Track>();
     static readonly List<UnitData> fielded = new List<UnitData>();
     static float startTime;
@@ -22,7 +24,7 @@ static class EternalFillProbe
         if (!Application.isPlaying) return "❌ 플레이 중에만";
         UnitSpawner spawner = Object.FindFirstObjectByType<UnitSpawner>();
         LaneMarker lane = LaneMarker.Get(0);
-        EnemyData dummyData = AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/Data/Enemies" })
+        dummyData = AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/Data/Enemies" })
             .Select(g => AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(g)))
             .FirstOrDefault(e => e != null && !e.isBoss && e.prefab != null && e.moveSpeed > 0f && e.name.Contains("R2"));
         if (spawner == null || lane == null || dummyData == null) return "❌ UnitSpawner·레인·표적 적 없음";
@@ -36,9 +38,9 @@ static class EternalFillProbe
             Vector3 home = lane.LaneCenter + Quaternion.Euler(0f, u * 360f / Units.Length, 0f) * Vector3.forward * 2000f;
             for (int i = 0; i < 3; i++)
             {
-                GameObject go = Object.Instantiate(dummyData.prefab, home + Quaternion.Euler(0f, i * 120f, 0f) * Vector3.forward * 4f, Quaternion.identity);
-                if (go.TryGetComponent(out WaypointMover mover)) mover.enabled = false;
-                if (go.TryGetComponent(out EnemyDummy dummy)) { dummy.Initialize(dummyData, 1e6f); dummy.SetLane(-1); tracks[dummy] = new Track { unit = Units[u] }; }
+                Vector3 at = home + Quaternion.Euler(0f, i * 120f, 0f) * Vector3.forward * 4f;
+                EnemyDummy dummy = SpawnTarget(at);
+                if (dummy != null) tracks[dummy] = new Track { unit = Units[u], at = at };
             }
             if (spawner.Spawn(data, home, 0) != null) fielded.Add(data);
         }
@@ -52,12 +54,29 @@ static class EternalFillProbe
         return $"유닛 {fielded.Count}/{Units.Length} · 표적 {dummyData.name}(PV {dummyData.pointValue}) · 2배속";
     }
 
+    static EnemyData dummyData;
+    static EnemyDummy SpawnTarget(Vector3 at)
+    {
+        GameObject go = Object.Instantiate(dummyData.prefab, at, Quaternion.identity);
+        if (go.TryGetComponent(out WaypointMover mover)) mover.enabled = false;
+        if (!go.TryGetComponent(out EnemyDummy dummy)) return null;
+        dummy.Initialize(dummyData, 1e6f);
+        dummy.SetLane(-1);
+        return dummy;
+    }
+
     static void Sample()
     {
         if (!Application.isPlaying) { EditorApplication.update -= Sample; return; }
-        foreach (var kv in tracks)
+        foreach (var kv in tracks.ToList())
         {
-            if (kv.Key == null) continue;
+            if (kv.Key == null || kv.Key.IsDead)
+            {
+                tracks.Remove(kv.Key);
+                EnemyDummy fresh = SpawnTarget(kv.Value.at);
+                if (fresh != null) { kv.Value.stunStart = -1f; tracks[fresh] = kv.Value; }
+                continue;
+            }
             Track t = kv.Value;
             bool stunned = kv.Key.IsStunned;
             if (stunned && t.stunStart < 0f) t.stunStart = Time.time;

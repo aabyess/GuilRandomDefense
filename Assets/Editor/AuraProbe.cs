@@ -8,6 +8,7 @@ using UnityEngine;
 // 반경 안 표적·반경 밖 표적의 실효 방어·이감 배수·같은 시험 타격(물리 100만)의 실제 피해를 읽는다.
 // 아군 오라는 곁에 세운 흔함 유닛과 멀리 세운 흔함 유닛의 평타 주기·공격력으로 본다.
 // Step: 안쪽 표적을 반경 밖으로 옮기고 곁 아군을 멀리 보낸 뒤 다시 읽어 「나가면 풀리는가」를 본다.
+// ⚠️ 탐침 주의(09-30): 표적 체력 ×1e6은 float 눈금 1024 — 시험 타격은 100만으로. 몇 초짜리 판이라 데스카운트는 안 끈다.
 // gameshot:
 //   gameshot x.png 1 1920x1080 click?:보통 wait:2 call:AuraProbe.Arena wait:3 call:AuraProbe.Read wait:1 call:AuraProbe.Step wait:3 call:AuraProbe.Read
 static class AuraProbe

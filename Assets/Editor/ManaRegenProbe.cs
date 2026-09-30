@@ -8,6 +8,8 @@ using UnityEngine;
 // 유닛마다 떨어진 자리에 죽지 않는 표적 셋을 세우고, 같은 유닛을 둘 세운다: 에셋 그대로(재생 켬)와
 // 재생 필드 다섯을 0으로 한 실행 중 복제본(재생 끔 = 09-30 이전 동작 — 타수만 세는 게이지).
 // 간격은 SkillTelemetry.CastLog(시전 시각·그때까지 판정 타수)에서 읽는다.
+// ⚠️ 탐침 주의(09-30): 표적 체력 ×1e6은 float 눈금 1024(작은 피해는 묻힘) · 데스카운트를 끄고 돌린다(안 끄면 50초쯤 판 종료) ·
+//    R10 보스 제한 패배(게임 시간 약 458초)를 넘기면 평타가 멎는다 · %최대체력 스킬은 표적을 죽인다(Watch가 다시 세움).
 // gameshot:
 //   gameshot x.png 1 1920x1080 click?:보통 wait:2 call:ManaRegenProbe.Arena wait:350 call:ManaRegenProbe.Report
 // ArenaAll·ArenaAll1x(2026-09-30 체력 재생·시작값·평타 타이머): 마나 다섯 + 체력 게이지·시작 마나 로스터 전부, 2배속/1배속.
