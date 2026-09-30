@@ -16,6 +16,7 @@ public static class SkillTelemetry
         public readonly Dictionary<string, float> damage = new Dictionary<string, float>();
         // 시전까지 못 간 판정이 어느 자리에서 빠졌나(「스킬이름: 사유」 → 횟수). 2026-09-29 미발동 원인 규명.
         public readonly Dictionary<string, int> gates = new Dictionary<string, int>();
+        public int splashHits;   // 평타 광역(스플래시·클리브)이 주 대상 말고 맞힌 적 수 누계
         public int hits;   // 평타가 맞아 스킬 판정(TryCastOnHitSkill)에 들어간 횟수 — 게이지·저확률 판정의 표본 수
     }
 
@@ -55,6 +56,14 @@ public static class SkillTelemetry
         if (!Enabled || unit == null) return;
         For(unit).hits++;
     }
+
+    public static void SplashHit(UnitData unit)
+    {
+        if (!Enabled || unit == null) return;
+        For(unit).splashHits++;
+    }
+
+    public static int SplashHitsOf(UnitData unit) => unit != null && stats.TryGetValue(unit, out UnitStats s) ? s.splashHits : 0;
 
     /// <summary>스킬 판정이 시전 전에 빠진 자리를 센다(UnitAttacker의 continue·return마다 한 줄). skill이 null이면 유닛 단위 사유.</summary>
     public static void Gate(UnitData unit, SkillData skill, string reason)

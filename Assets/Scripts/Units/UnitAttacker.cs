@@ -1053,6 +1053,7 @@ public class UnitAttacker : MonoBehaviour
             // 없다(TryCastOnHitSkill 쪽만 있음, 아래 참고). ReceivedDamage basis를 쓰는
             // 효과가 이 경로를 타면 0(적용 안 함)으로 안전하게 빠진다.
             SkillTelemetry.Cast(identity != null ? identity.Data : null, skill);
+            SkillSfx.Cast(identity != null ? identity.Data : null, skill, transform.position);
             bool vfxBefore = SkillVfx.BeginCast(identity != null ? identity.Data : null, skill);
             CastSkillLevel(level, level.WorldRange, null, 0f);
             SkillVfx.EndCast(vfxBefore);
@@ -1380,6 +1381,7 @@ public class UnitAttacker : MonoBehaviour
             // 도는 경로라 이 값이 항상 뜻이 통한다(아래 ResolveSkillEffectValue.
             // ReceivedDamage 참고, 2026-09-06 PM 지시로 연결).
             SkillTelemetry.Cast(unitData, skill);
+            SkillSfx.Cast(unitData, skill, transform.position);
             bool vfxBefore = SkillVfx.BeginCast(unitData, skill);
             CastSkillLevel(level, level.WorldRange, attackedTarget, AttackDamage);
             SkillVfx.EndCast(vfxBefore);
@@ -2154,6 +2156,7 @@ public class UnitAttacker : MonoBehaviour
             target.TakeDamage(AttackDamage, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
                               armorIgnoreRatio: 0f, isAbilityDamage: false);
             SkillTelemetry.Damage(identity != null ? identity.Data : null, "평타", target, basicHpBefore);
+            ApplyAttackSplash(target);
             ApplyCritIfTriggered(target);
             TryCastOnHitSkill(target);
             return;
@@ -2172,6 +2175,41 @@ public class UnitAttacker : MonoBehaviour
             return;
         }
         idleScanTimer = IdleScanInterval;
+    }
+
+    // 평타 광역(UnitData.attackSplashRadius·attackCleave* 주석) — 주 대상은 이미 맞았으니 건너뛴다(이중 타격 없음).
+    // 같은 레인 적만(멀티에서 남의 레인 적을 안 때리게, PM 결정). 계측은 「평타광역」 채널로 따로.
+    void ApplyAttackSplash(EnemyDummy primary)
+    {
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null) return;
+        float splash = unitData.attackSplashRadius / WorldScale.Value;
+        float cleave = unitData.attackCleaveFactor > 0f ? unitData.attackCleaveRadius / WorldScale.Value : 0f;
+        float reach = Mathf.Max(splash, cleave);
+        if (reach <= 0f) return;
+
+        // 피해로 적이 죽으면 EnemyDummy.Active가 바뀐다 — 먼저 모아 두고 돈다(스킬 Enemies 갈래와 같은 이유).
+        Vector3 center = primary.transform.position;
+        List<EnemyDummy> inRange = ListPool<EnemyDummy>.Get();
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+        {
+            if (enemy == null || enemy == primary || enemy.IsDead || enemy.LaneIndex != primary.LaneIndex) continue;
+            if (Vector3.Distance(enemy.transform.position, center) <= reach) inRange.Add(enemy);
+        }
+        int ownerId = owner != null ? owner.OwnerId : -1;
+        float damage = AttackDamage;
+        foreach (EnemyDummy enemy in inRange)
+        {
+            float distance = Vector3.Distance(enemy.transform.position, center);
+            float hpBefore = enemy.Hp;
+            if (distance <= splash)
+                enemy.TakeDamage(damage, DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false);
+            if (distance <= cleave)
+                enemy.TakeDamage(damage * unitData.attackCleaveFactor, DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 1f, isAbilityDamage: false);
+            SkillTelemetry.Damage(unitData, "평타광역", enemy, hpBefore);
+            SkillTelemetry.SplashHit(unitData);
+        }
+        ListPool<EnemyDummy>.Release(inRange);
     }
 
     // 대상이 없을 때 비싼 탐색(전체 적 훑기·문)을 다시 하기까지의 간격.

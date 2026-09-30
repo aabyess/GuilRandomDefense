@@ -546,4 +546,15 @@ public class UnitData : ScriptableObject
     public float manaAuraRange;
     public string manaAuraBuffId;
     public bool manaAuraIncludesSelf;
+
+    // ⚠️ 맨 뒤(2026-09-30 구현담당1, PM 결정 — Docs/research/SPLASH_ATTACK_DESIGN.md §7) — 평타 광역. 전부 0이면 지금 동작(한 마리).
+    // 반경은 원작 단위(거리 비교는 ÷ WorldScale.Value), 중심은 주 대상. 값은 Tools/sync_attack_splash_from_w3u.py가 대응표·w3u·w3a에서.
+    // · attackSplashRadius: 원작 무기 종류 msplash의 전체 피해 반경(ua1f). 반경 안의 **다른** 같은 레인 적이 평타와 같은 피해를
+    //   제 방어·상성으로 받는다. 절반·1/4 반경(ua1h·ua1q)은 0으로 본다(hrif 스톡 미확인 — 엔진 지식, 맵 밖 근거).
+    // · attackCleaveFactor·attackCleaveRadius: 클리브 능력(ACce) nca1·aare. 주변 적에게 평타 피해 × 비율,
+    //   방어 수치 무시·상성표 적용(워크3 클리브의 알려진 동작 — 미확정, 맵 밖 근거. 제작자도 능력 이름에 「방무뎀」).
+    // · 온힛 스킬·게이지·치명·방깎 특성은 주 대상에만(원작 평타 트리거는 공격받은 유닛 하나에 한 번).
+    public float attackSplashRadius;
+    public float attackCleaveFactor;
+    public float attackCleaveRadius;
 }
