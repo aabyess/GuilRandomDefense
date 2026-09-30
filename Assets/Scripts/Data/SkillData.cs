@@ -23,6 +23,14 @@ public enum SkillTriggerType
     // 핸콕 175)에 닿으면 그때만 발동하고 되돌린다. OnHitChance(1/N)로 근사하면 기댓값은
     // 같아도 "정확히 주기적"이라는 원작 감각이 사라져서 별도 타입으로 뗐다.
     OnHitCount,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, 구조 칸 백로그 13번) — 「적이 근처에 오면」. 원작 TriggerRegisterUnitInRange:
+    // 적이 이 유닛의 SkillLevel.enterRange 안에 들어오면 **그 적에게 한 번** 판정한다(에넬 뇌격·샹크스 패기·카타쿠리·핸콕 석화).
+    // 「한 번」은 적에게 남기는 표식으로 센다 — SkillLevel.forbiddenTargetBuffId가 곧 표식 이름이고, 판정에 들어간 적에게는
+    // 조건·확률이 빗나가도 그 표식이 영구히 남는다(원작이 조건을 보기 전에 TurnSpeed·PropWindow·FlyHeight를 바꿔 두는 것).
+    // 표식은 적 쪽에 있어 같은 표식을 쓰는 다른 유닛과 나눠 쓴다(원작도 에넬과 핸콕이 TurnSpeed 하나를 같이 쓴다).
+    // 맞은 적이 주 대상(SingleTarget)이고 범위 효과는 그 적 중심 SkillLevel.range. 평타와 무관하다.
+    OnEnemyEnterRange,
 }
 
 // OnHitCount 전용 — 이 카운터가 원작의 어느 공유 스탯(마나/체력)을 대신하는가. 새 enum이라
@@ -250,6 +258,11 @@ public enum SkillEffectKind
     // 곱해 고정 가산으로 들어간다 — 워크3 % 공격력 오라가 흰 숫자(기본 피해)에만 걸리는 것(엔진 지식, 맵 미확정).
     // 자리: UnitAttacker.AttackDamage의 괄호 안(FlatAttackPowerBonus 옆). 오라(Aura)와 시간제(duration) 둘 다 받는다.
     AttackPowerBuffPercent,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, 구조 칸 백로그 13번) — 핸콕 석화의 방어 감소 표(원작 A0VJ, 레벨마다 0 · −5 · −10).
+    // EnemyDummy.AddHancockPetrificationStack을 multiplier번 부른다(수신기는 09-05부터 있었고 부르는 곳이 없었다).
+    // AId1 방깎(ArmorBreak, 합계 −75 상한)과 다른 표다 — 합치지 않는다.
+    A0VJStack,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -622,6 +635,9 @@ public class SkillLevel
     // 그래서 뒤 스킬의 triggerChance는 주변 확률((1−pA)×pB)이 아니라 원작에 적힌 조건부 확률(pB) 그대로 적는다.
     // 목록 순서가 곧 if/elseif 순서다(Tools/apply_exclusive_groups.py가 순서를 맞춘다).
     public int exclusiveGroup;
+
+    // OnEnemyEnterRange 전용 — 감지 반경(원작 단위, TriggerRegisterUnitInRange의 거리). range는 효과 범위로 따로 쓴다.
+    public float enterRange;
 }
 
 public enum SkillAoeCenter

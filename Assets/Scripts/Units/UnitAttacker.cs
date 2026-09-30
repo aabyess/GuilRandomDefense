@@ -1002,6 +1002,71 @@ public class UnitAttacker : MonoBehaviour
         return true;
     }
 
+    // 「적이 근처에 오면」(SkillTriggerType.OnEnemyEnterRange 주석) — 0.1초마다 감지 반경 안의 표식 없는 적을 하나씩 판정한다.
+    // 한 적에 대해 이 유닛의 근접 스킬을 전부 본 뒤에 표식을 남긴다(갈래가 여러 에셋이라 먼저 남기면 뒤 갈래가 그 적을 못 본다).
+    const float EnterRangeScanInterval = 0.1f;
+    float enterRangeScanTimer;
+    readonly List<SkillData> enterRangeSkills = new List<SkillData>();
+    readonly List<string> enterRangeMarks = new List<string>();
+
+    void TickEnterRangeSkills()
+    {
+        enterRangeScanTimer -= Time.deltaTime;
+        if (enterRangeScanTimer > 0f) return;
+        enterRangeScanTimer = EnterRangeScanInterval;
+
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null) return;
+        enterRangeSkills.Clear();
+        int count = EffectiveSkillCount(unitData);
+        for (int i = 0; i < count; i++)
+        {
+            SkillData skill = ResolveSkillAt(unitData, i);
+            if (skill != null && skill.triggerType == SkillTriggerType.OnEnemyEnterRange) enterRangeSkills.Add(skill);
+        }
+        if (enterRangeSkills.Count == 0) return;
+
+        // 피해로 적이 죽으면 EnemyDummy.Active가 바뀐다 — 먼저 모아 두고 돈다.
+        List<EnemyDummy> enemies = ListPool<EnemyDummy>.Get();
+        foreach (EnemyDummy enemy in EnemyDummy.Active) if (enemy != null) enemies.Add(enemy);
+        foreach (EnemyDummy enemy in enemies)
+        {
+            if (enemy == null || enemy.IsDead) continue;
+            float sqr = (enemy.transform.position - transform.position).sqrMagnitude;
+            firedExclusiveGroups.Clear();
+            enterRangeMarks.Clear();
+            foreach (SkillData skill in enterRangeSkills)
+            {
+                SkillLevel level = CurrentSkillLevel(skill);
+                if (level == null || level.effects == null || level.effects.Count == 0 || level.enterRange <= 0f) continue;
+                float reach = level.enterRange / WorldScale.Value;
+                if (sqr > reach * reach) continue;
+                // 표식이 이미 있으면 끝. 표식만 없고 다른 버프 게이트(B06B 등)에 걸린 갈래도 표식은 남긴다.
+                if (!string.IsNullOrEmpty(level.forbiddenTargetBuffId))
+                {
+                    if (enemy.HasBuff(level.forbiddenTargetBuffId)) continue;
+                    if (!enterRangeMarks.Contains(level.forbiddenTargetBuffId)) enterRangeMarks.Add(level.forbiddenTargetBuffId);
+                }
+                if (!PassesBuffGate(level, enemy)) { SkillTelemetry.Gate(unitData, skill, "버프게이트"); continue; }
+                if (!PassesPointValueCondition(level.primaryTargetCondition, level.primaryTargetConditionValue, enemy))
+                { SkillTelemetry.Gate(unitData, skill, "대상조건"); continue; }
+                if (level.exclusiveGroup != 0 && firedExclusiveGroups.Contains(level.exclusiveGroup)) { SkillTelemetry.Gate(unitData, skill, "배타"); continue; }
+                if (Random.value >= level.triggerChance) { SkillTelemetry.Gate(unitData, skill, "확률실패"); continue; }
+                if (level.exclusiveGroup != 0) firedExclusiveGroups.Add(level.exclusiveGroup);
+
+                SkillTelemetry.Cast(unitData, skill);
+                SkillSfx.Cast(unitData, skill, transform.position);
+                bool vfxBefore = SkillVfx.BeginCast(unitData, skill);
+                CastSkillLevel(level, level.WorldRange, enemy, 0f);
+                SkillVfx.EndCast(vfxBefore);
+                if (enemy == null || enemy.IsDead) break;
+            }
+            if (enemy != null && !enemy.IsDead)
+                foreach (string mark in enterRangeMarks) enemy.AddBuff(mark, 0f);
+        }
+        ListPool<EnemyDummy>.Release(enemies);
+    }
+
     // CooldownAutoCast·Aura 전용 — OnHitChance·OnHitCount는 평타가 실제로 맞았을 때만
     // 판정해야 해서 Update()의 공격 성공 분기에서 TryCastOnHitSkill로 따로 부른다.
     void UpdateSkillCooldown()
@@ -1924,6 +1989,11 @@ public class UnitAttacker : MonoBehaviour
                 target.AddA11SStack((int)effect.multiplier);
                 break;
 
+            // 핸콕 석화 방어 감소 표(A0VJ) — 표 길이에서 절로 멈춘다.
+            case SkillEffectKind.A0VJStack:
+                for (int i = 0; i < (int)effect.multiplier; i++) target.AddHancockPetrificationStack();
+                break;
+
             // ExtraProjectile은 아직 값 의미가 없다(이번 작업 범위 밖) — 조용히 무시.
         }
     }
@@ -2230,6 +2300,7 @@ public class UnitAttacker : MonoBehaviour
     {
         TickGaugeRegen();
         UpdateSkillCooldown();
+        TickEnterRangeSkills();
 
         // ⚠️ 2026-09-30(PM 승인) — 예전엔 `attackTimer = AttackInterval`이라 프레임이 넘긴 시간을 버렸다: 평타 주기가
         // 프레임에 매여 설정보다 길었다(1배속 0.38→0.391 +2.8%, 2배속 +5.4%). 이제 넘친 시간(≤0)을 다음 주기에서 뺀다.
