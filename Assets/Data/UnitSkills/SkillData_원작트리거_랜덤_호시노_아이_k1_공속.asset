@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작트리거_랜덤_호시노_아이_k1_공속
+  m_EditorClassIdentifier:
+  skillName: k' — 1/25 자기 공속 +400% 4초(B042)
+  description: '원작 k'' h06U 평타 트리거 k1: GetRandomInt(1,25) → 자기에게 A0QK(Ablo, Blo1 +4.0 공속, adur 4.0, abuf B042). 2026-09-30 구현담당1(RANDOM_FILL_LIST §2).'
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 0.04
+    range: 0.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 12
+      basis: 0
+      target: 0
+      damageType: 0
+      attackType: 0
+      multiplier: 4.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 4.0
+      casterBuffCountFactor: 0.0
+      buffId: B042
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0.0

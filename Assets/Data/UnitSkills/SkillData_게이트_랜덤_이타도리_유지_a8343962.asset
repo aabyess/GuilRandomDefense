@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_랜덤_이타도리_유지_a8343962
   m_EditorClassIdentifier:
   skillName: 나미카제 미나토 - 랜덤전용[제한됨] — MANA게이지100.00
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 나미카제 미나토 - 랜덤전용[제한됨](h09W)의 게이트 "MANA게이지100.00" 능력 1개를 이 SkillData 하나로 묶었다.   · Minato_Mana#1: 계산식 775000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 나미카제 미나토 - 랜덤전용[제한됨](h09W)의 게이트 "MANA게이지100.00" 능력 1개를 이 SkillData 하나로 묶었다.   · Minato_Mana#1: 계산식 775000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. [랜덤 나머지 09-30] §0-4 Minato_Mana: 775000 8회(0.12초 간격 — 1회였다, 8배 과소) + stomp 50000·스턴 2.75초. 대상 근처 무작위 지점은 대상 중심으로 근사. (Tools/apply_random_rest.py)'
   triggerType: 3
   levels:
   - cooldown: 0
@@ -31,6 +31,50 @@ MonoBehaviour:
       multiplier: 775000.0
       bonus: 0.0
       chance: 1
-      hitCount: 1
-      duration: 0
+      hitCount: 8
+      duration: 0.84
       casterBuffCountFactor: 0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 50000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 2.75
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0

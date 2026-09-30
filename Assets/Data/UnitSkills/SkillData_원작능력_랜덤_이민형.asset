@@ -12,72 +12,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_랜덤_이민형
   m_EditorClassIdentifier:
-  skillName: A0KU !영능력
-  description: '원작 랜덤전용 야가미 라이토 - 랜덤전용(Trig_Light1). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 야가미 라이토 - 랜덤전용(Trig_Light1). A11S(대상별 스킬피해 감수성) 계수는 보스 기준(×1.00)으로 고정 — 잡몹·소환체 대상엔 과다 계상될 수 있다. | 2차 배정(트리거·더미 채널): 원작 랜덤전용 야가미 라이토 - 랜덤전용(Trig_Light1). | 정정(2026-09-30, 구현담당1 — ORIGIN_ABILITY_PROVENANCE 「다른 곳에 있음」): 450000은 이 유닛 원작(h070·h073·h0BC)의 능력·트리거에 없는 값(히든1·카이도 등 남의 트리거에만 있음). 뺀 효과(basis, 값, 상수): [(''0'', ''450000.0'', ''0.0'')]'
+  skillName: Light1 데스노트 — 1/10(PV<200 대상 현재체력 30%×A11S계수)
+  description: '원작 랜덤전용 야가미 라이토 - 랜덤전용(Trig_Light1). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 야가미 라이토 - 랜덤전용(Trig_Light1). A11S(대상별 스킬피해 감수성) 계수는 보스 기준(×1.00)으로 고정 — 잡몹·소환체 대상엔 과다 계상될 수 있다. | 2차 배정(트리거·더미 채널): 원작 랜덤전용 야가미 라이토 - 랜덤전용(Trig_Light1). | 정정(2026-09-30, 구현담당1 — ORIGIN_ABILITY_PROVENANCE 「다른 곳에 있음」): 450000은 이 유닛 원작(h070·h073·h0BC)의 능력·트리거에 없는 값(히든1·카이도 등 남의 트리거에만 있음). 뺀 효과(basis, 값, 상수): [(''0'', ''450000.0'', ''0.0'')] [랜덤 나머지 09-30] §0-10 Light1: GetRandomInt(1,10)==5 → 대상 PV<200이면 현재체력 30%×A11S계수 HERO/UNIVERSAL뿐. 350000 · 350000×1~3 · 30%×1~3 · 1%×1~3은 「A0L7(T랜덤유닛강화) 보유 & 1/19」 갈래가 섞인 것 — 강화 구조가 없어 뺐다. 확률 0.14 → 0.1. (Tools/apply_random_rest.py)'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.14
+    triggerChance: 0.1
     range: 600.0
     effects:
     - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 5
-      multiplier: 350000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 0
       basis: 2
       target: 3
-      damageType: 1
+      damageType: 2
       attackType: 4
       multiplier: 0.3
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
       targetCondition: 1
       targetConditionValue: 200.0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 5
-      multiplier: 350000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      randMin: 1
-      randMax: 3
-    - kind: 0
-      basis: 2
-      target: 3
-      damageType: 1
-      attackType: 4
-      multiplier: 0.3
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      randMin: 1
-      randMax: 3
-      targetCondition: 1
-      targetConditionValue: 200.0
-    - kind: 0
-      basis: 2
-      target: 3
-      damageType: 1
-      attackType: 5
-      multiplier: 0.01
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      randMin: 1
-      randMax: 3
-      skipDamageTakenMultiplier: 1
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
