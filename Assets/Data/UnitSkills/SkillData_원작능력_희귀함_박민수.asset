@@ -13,10 +13,40 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_희귀함_박민수
   m_EditorClassIdentifier:
   skillName: Trig_Unique2 → e031(!전설 제프공속증가) → A095
-  description: 원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 희귀함 제프 해상 레스토랑 쉐프 - 희귀함(더미:Trig_Unique2 → e031(!전설 제프공속증가) → A095)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 유닛 하나(행 1개)를 통째로 이 유닛에 배정했다(2026-09-06 유닛 단위 재배정, TEAM_RULES 뿌리 ⑮). | 2차 배정(트리거·더미 채널): 원작 희귀함 제프 해상 레스토랑 쉐프 - 희귀함(더미 경로 Trig_Unique2 → e031(!전설 제프공속증가) → A095). 정정(2026-09-06, STOCK_FIELD_RESEARCH_RESULT.md/607351c): A095(4.0) 효과를 제거했다 — base Ablo(블러드러스트)의 Blo1은 공격속도/공격력 증가율이지 피해 필드가 아니다. 이 파일 전체가 이 효과 하나뿐이라 값이 고유해 안전하게 제거했다(확신도 낮음 6건 중 하나, 지금은 파일이 단일효과라 결론 남).
+  description: '원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 희귀함 제프 해상 레스토랑 쉐프 - 희귀함(더미:Trig_Unique2 → e031(!전설 제프공속증가) → A095)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 유닛 하나(행 1개)를 통째로 이 유닛에 배정했다(2026-09-06 유닛 단위 재배정, TEAM_RULES 뿌리 ⑮). | 2차 배정(트리거·더미 채널): 원작 희귀함 제프 해상 레스토랑 쉐프 - 희귀함(더미 경로 Trig_Unique2 → e031(!전설 제프공속증가) → A095). 정정(2026-09-06, STOCK_FIELD_RESEARCH_RESULT.md/607351c): A095(4.0) 효과를 제거했다 — base Ablo(블러드러스트)의 Blo1은 공격속도/공격력 증가율이지 피해 필드가 아니다. 이 파일 전체가 이 효과 하나뿐이라 값이 고유해 안전하게 제거했다(확신도 낮음 6건 중 하나, 지금은 파일이 단일효과라 결론 남). | 2026-09-30 채움(구현담당2, SKILL_FILL_STAGE2_seven.md §1 · 원문·w3a 재확인): Trig_Unique2_Actions `if GetRandomInt(1,10)==3` → e031(uabi A095) `bloodlust` → 공격자. w3a A095(Ablo) Blo1=4.0(공속 +400%)·Blo2=0(이속)·Blo3=0·adur=ahdu 3.0·abuf B03E. → OnHitChance 0.1 · kind 12 AttackSpeedBuffPercent(⚠️ 문서의 「kind 11」은 AttackPowerBuffFlat이라 틀림) · Self · multiplier 4.0(raw 퍼센트 → ×5) · duration 3 · buffId B03E. 같은 id 시간 버프는 곱으로 안 쌓이고 만료만 갱신된다(0909227e, 원작 블러드러스트와 같다). WC3 공속 배율 상한 5.0은 우리에 없다 — 다른 공속 버프와 곱해지면 5배를 넘을 수 있다(likely, 엔진 기본값). [버프게이트예외:B03E] 원문(war3map_new.j) 전수 검색 결과 "B03E" 문자열이 트리거 코드 어디에도 없다(0건) — A095(base Ablo, abuf=B03E)는 B051·B035·B06Y와 같은 부류(순수 네이티브 스탯 버프, 게이트로 참조하는 JASS 코드가 원작에 없음)다. buffId는 같은 id 갱신(곱 누적 방지)용이다.'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
+    triggerChance: 0.1
     range: 0
-    effects: []
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 12
+      basis: 0
+      target: 0
+      damageType: 0
+      attackType: 0
+      multiplier: 4.0
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 3.0
+      casterBuffCountFactor: 0
+      buffId: B03E
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0

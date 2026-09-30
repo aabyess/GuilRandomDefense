@@ -13,12 +13,60 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_영원_조세민
   m_EditorClassIdentifier:
   skillName: A0J7 !쿠사의 패기
-  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 영원한 '아마존릴리의 여제'  보아 핸콕 - 영원한(h05C)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 uid 그룹 총점(능력 기대값 합), 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. 능력마다 발동확률이 다르면 가장 높은 값을 대표로 썼다(SkillLevel 하나엔 triggerChance 하나뿐이라서 — 과소 계상보다 안전한 근사).
-  · A0J7 !쿠사의 패기: 발동1.0 배수8.0 추가500000.0
-  정정(2026-09-06, CRITERION3_TARGET_LIST_2026-09-06.md/bbb1ff0): 이 능력(A0J7)은 원작에서 같은 스톡 값을 최상호와 공유하는 자리다 — 대표(DPS 109,377 > 75,275)를 최상호로 남기고 이쪽은 회수했다(기준3, 사장님 확정).
+  description: '원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 영원한 ''아마존릴리의 여제''  보아 핸콕 - 영원한(h05C)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 uid 그룹 총점(능력 기대값 합), 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. 능력마다 발동확률이 다르면 가장 높은 값을 대표로 썼다(SkillLevel 하나엔 triggerChance 하나뿐이라서 — 과소 계상보다 안전한 근사). · A0J7 !쿠사의 패기: 발동1.0 배수8.0 추가500000.0 정정(2026-09-06, CRITERION3_TARGET_LIST_2026-09-06.md/bbb1ff0): 이 능력(A0J7)은 원작에서 같은 스톡 값을 최상호와 공유하는 자리다 — 대표(DPS 109,377 > 75,275)를 최상호로 남기고 이쪽은 회수했다(기준3, 사장님 확정). | 2026-09-30 채움(구현담당2, SKILL_FILL_STAGE2_seven.md §7 · w3a 재확인, PM 지시): A0J7은 h05C 자신의 uabi에 든 엔진 강타(ACbh, atar=air,enemies,ground — 실제로 돈다, j에서 A0J7 참조 0건). w3a Hbh3=500000·adur 3.0(ahdu 1.5)·Hbh2=8.0·Hbh1 빈칸. 발동 15%(Hbh1 빈칸=스톡 기본값, 툴팁 「15%」와 일치 — likely) · 단일 추가 피해 +500000(AD/Hero, 평타 타입 ua1t=hero) · 단일 스턴 3초. Hbh2 8배가 강타에서 실제로 곱해지는지는 unknown이라 PM 지시로 곱하지 않았다(Flat 500000만). 위 「최상호로 회수」와 달리 최상호 에셋에는 A0J7 강타 값이 없다(이름만 남음) — A0J7은 이 파일로 되살린다. 툴팁 둘째 줄(7.5%·460범위 85만+15만+이속 60%)은 A0J7이 아니라 hancock_skill_9(김영원 게이트_5a6f48de)다.'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
+    triggerChance: 0.15
     range: 0
-    effects: []
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 4
+      multiplier: 500000.0
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId:
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+    - kind: 1
+      basis: 0
+      target: 3
+      damageType: 0
+      attackType: 0
+      multiplier: 0
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 3.0
+      casterBuffCountFactor: 0
+      buffId:
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
