@@ -10,18 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_불멸_고도현_79행_10000
+  m_Name: SkillData_더미채널_불멸_고도현_A13P
   m_EditorClassIdentifier:
-  skillName: A13R !부유물-돌2
-  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.  · h0BH(부유물2불멸의) A13R !부유물-돌2 [배시 추가피해]: 30000 (원작 시키·불멸) 진입게이트: Trig_Shiki_Attack_Actions[이벤트직결]: (조건없음)  · h0BH(부유물2불멸의) A13P !부유물-돌31 [배시 추가피해]: 30000 (원작 시키·불멸) 진입게이트: Trig_Shiki_Attack_Actions[이벤트직결]: (조건없음) | 정정(2026-09-30, 구현담당1 — 과다발동 정리): 두 줄은 부유물2(h0BH)의 ACbh 강타 둘이라 각자 Hbh1로 굴러야 한다. 이 에셋은 A13R(Hbh1 35%·Hbh3 30000·adur 1.5)만 — triggerChance 1.0→0.35, Stun 1.5초. A13P(20%)는 SkillData_더미채널_불멸_고도현_A13P로 뗐다.'
+  skillName: A13P !부유물-돌31
+  description: '2026-09-30 구현담당1: SkillData_더미채널_불멸_고도현_79행_10000에서 뗀 부유물2(h0BH) 강타 A13P — ACbh Hbh1 20%·Hbh3 30000·adur 1.5(atar enemies).'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.35
-    range: 0
+    triggerChance: 0.2
+    range: 0.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
     effects:
     - kind: 0
       basis: 0
@@ -54,3 +57,8 @@ MonoBehaviour:
       targetCondition: 0
       targetConditionValue: 0.0
       cascadeGroup: 0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
