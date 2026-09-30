@@ -40,7 +40,7 @@ static class EternalFillProbe
     static readonly string[] Limited = { "제한_강보명", "제한_최영민", "제한_전법규", "제한_이충민", "제한_이유범", "제한_임준성", "제한_김민규", "제한_박성호", "제한_김강민" };
     static string ArenaLimited() { Units = Limited; return Arena(); }
     // 랜덤 나머지(2026-09-30) — call:EternalFillProbe.ArenaRandom.
-    static readonly string[] RandomOnly = { "랜덤_이타도리_유지", "랜덤_이즈미_신이치", "랜덤_호시노_아이", "랜덤_이민형", "랜덤_카마도_탄지로", "랜덤_한마_바키", "랜덤_주호페이크", "랜덤_미도리야_이즈쿠" };
+    static readonly string[] RandomOnly = { "랜덤_이타도리_유지", "랜덤_이즈미_신이치", "랜덤_호시노_아이", "랜덤_이민형", "랜덤_카마도_탄지로", "랜덤_한마_바키", "랜덤_주호페이크", "랜덤_미도리야_이즈쿠", "랜덤_손오공" };
     static string ArenaRandom() { Units = RandomOnly; return Arena(); }
     // 초월 남은 것(2026-09-30) — call:EternalFillProbe.ArenaTranscend2.
     static readonly string[] Transcend2 = { "초월_김경현_AP", "초월_황준석_ADAP", "초월_구주호_AD", "영원_이지원", "초월_김만경_AD", "초월_조성진_AD", "초월_임채민_AP" };
