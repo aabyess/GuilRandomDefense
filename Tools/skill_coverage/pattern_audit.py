@@ -186,7 +186,8 @@ for rp in sorted(glob.glob('Assets/Data/Units/Roster/*.asset')):
             if not (fnum(e, 'multiplier') or fnum(e, 'bonus')): continue
             if k not in (0, 2, 8, 9, 10): continue          # 피해·방깎·스택만(스턴·버프는 같은 값이 흔하다)
             key = (k, int(fnum(e, 'basis')), int(fnum(e, 'target')), fnum(e, 'multiplier'), fnum(e, 'bonus'), fnum(e, 'hitCount', 1),
-                   fnum(e, 'randMin', 1), fnum(e, 'randMax', 1), fnum(e, 'duration'))
+                   fnum(e, 'randMin', 1), fnum(e, 'randMax', 1), fnum(e, 'duration'),
+                   fnum(e, 'lineLength'), fnum(e, 'zoneTickInterval'))   # 모양이 다르면(원·선·지대) 같은 값이어도 다른 효과(2026-09-30)
             cond = (e.get('requiredTargetBuffId', '').strip(), e.get('forbiddenTargetBuffId', '').strip(), int(fnum(e, 'targetCondition')), fnum(e, 'targetConditionValue'))
             seen.setdefault(key, []).append((s['name'], cond, fnum(s['head'], 'triggerChance', 1), s['tt']))
     for key, L in seen.items():
