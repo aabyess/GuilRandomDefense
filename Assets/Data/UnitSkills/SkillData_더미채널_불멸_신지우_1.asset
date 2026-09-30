@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_불멸_신지우_1
   m_EditorClassIdentifier:
   skillName: SkillData_더미채널_불멸_신지우_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 불멸_신지우. ⚠️ 축 밖이라 뺀 조건: stage0→4 분기 조건 미확인 — 매 타로 근사 — 실제보다 자주 발동할 수 있다. [추정] HashAttack 등록 평타 트리거는 Kaido_Attack으로 확정됐지만 stage0→4 내부 분기 조건은 못 찾아 매 타 발동으로 근사했다.  · Trig_Kaido_Attack → e0H5(#불멸 카이도우 [공통] 번개) → A0SZ: 70000
+  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 불멸_신지우. ⚠️ 축 밖이라 뺀 조건: stage0→4 분기 조건 미확인 — 매 타로 근사 — 실제보다 자주 발동할 수 있다. [추정] HashAttack 등록 평타 트리거는 Kaido_Attack으로 확정됐지만 stage0→4 내부 분기 조건은 못 찾아 매 타 발동으로 근사했다.  · Trig_Kaido_Attack → e0H5(#불멸 카이도우 [공통] 번개) → A0SZ: 70000 | 정정(2026-09-30, 구현담당1 — R50 보스 0.6초 원문 대조): triggerChance 1.0 → 0.075. 원문 Trig_Kaido_Attack 단계 4(용형 10%가 아닐 때 GetRandomInt(1,12)==9) 처리에서만 e0H5 stomp A0SZ(Wrs1 70000·aare 500)를 부른다 → 평타당 0.9×1/12=0.075. 「매 타」 근사는 틀렸다.'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
+    triggerChance: 0.075
     range: 0
     hitCountThreshold: 0
     resetTo: 0
