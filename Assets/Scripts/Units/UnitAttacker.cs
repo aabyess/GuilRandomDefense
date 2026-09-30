@@ -2330,6 +2330,7 @@ public class UnitAttacker : MonoBehaviour
                               armorIgnoreRatio: 0f, isAbilityDamage: false);
             SkillTelemetry.Damage(identity != null ? identity.Data : null, "평타", target, basicHpBefore);
             ApplyAttackSplash(target);
+            ApplyAttackMultishot(target);
             ApplyCritIfTriggered(target);
             TryCastOnHitSkill(target);
             return;
@@ -2352,6 +2353,35 @@ public class UnitAttacker : MonoBehaviour
 
     // 평타 광역(UnitData.attackSplashRadius·attackCleave* 주석) — 주 대상은 이미 맞았으니 건너뛴다(이중 타격 없음).
     // 같은 레인 적만(멀티에서 남의 레인 적을 안 때리게, PM 결정). 계측은 「평타광역」 채널로 따로.
+    // 평타 다중 대상(UnitData.attackExtraTargets 주석) — 공격자에서 가까운 순으로 다른 적 N마리에게 평타와 같은 피해.
+    void ApplyAttackMultishot(EnemyDummy primary)
+    {
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null || unitData.attackExtraTargets <= 0 || unitData.attackExtraTargetRadius <= 0f) return;
+        float reach = unitData.attackExtraTargetRadius / WorldScale.Value;
+        Vector3 center = transform.position;
+        List<EnemyDummy> inRange = ListPool<EnemyDummy>.Get();
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+        {
+            if (enemy == null || enemy == primary || enemy.IsDead || enemy.LaneIndex != primary.LaneIndex) continue;
+            if ((enemy.transform.position - center).sqrMagnitude <= reach * reach) inRange.Add(enemy);
+        }
+        if (inRange.Count > unitData.attackExtraTargets)
+        {
+            inRange.Sort((a, b) => (a.transform.position - center).sqrMagnitude.CompareTo((b.transform.position - center).sqrMagnitude));
+            inRange.RemoveRange(unitData.attackExtraTargets, inRange.Count - unitData.attackExtraTargets);
+        }
+        int ownerId = owner != null ? owner.OwnerId : -1;
+        float damage = AttackDamage;
+        foreach (EnemyDummy enemy in inRange)
+        {
+            float hpBefore = enemy.Hp;
+            enemy.TakeDamage(damage, DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false);
+            SkillTelemetry.Damage(unitData, "평타다중", enemy, hpBefore);
+        }
+        ListPool<EnemyDummy>.Release(inRange);
+    }
+
     void ApplyAttackSplash(EnemyDummy primary)
     {
         UnitData unitData = identity != null ? identity.Data : null;

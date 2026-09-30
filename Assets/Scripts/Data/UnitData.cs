@@ -557,4 +557,12 @@ public class UnitData : ScriptableObject
     public float attackSplashRadius;
     public float attackCleaveFactor;
     public float attackCleaveRadius;
+
+    // ⚠️ 맨 뒤(2026-09-30 구현담당1, 구조 칸 백로그 9번) — 평타 다중 대상(원작 Aroc 「멀티샷」). 0이면 지금 동작(한 마리).
+    // 평타 때 **공격자에서** attackExtraTargetRadius(원작 단위, Aroc aare ≈ 그 유닛 사거리) 안의 가까운 다른 적 attackExtraTargets마리가
+    // 평타와 같은 피해를 제 방어·상성으로 받는다. 온힛 스킬·게이지·치명은 주 대상에만(원작 평타 트리거는 공격받은 유닛 하나에 한 번).
+    // 수 = Efk3 + 1: 제작자 툴팁 「N명 동시 공격」이 여섯 능력 모두 Efk3 + 2(주 대상 포함)이고 유닛의 utc1도 Efk3 + 1로 적혀 있다.
+    // 값은 Tools/sync_attack_multishot_from_w3a.py가 대응표·w3u·w3a에서.
+    public int attackExtraTargets;
+    public float attackExtraTargetRadius;
 }
