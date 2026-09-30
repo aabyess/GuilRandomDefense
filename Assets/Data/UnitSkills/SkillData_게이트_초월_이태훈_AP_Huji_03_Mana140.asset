@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_초월_이태훈_AP_Huji_03_Mana140
   m_EditorClassIdentifier:
   skillName: 후지토라 — MANA게이지140 (Huji_03)
-  description: '원작 Trig_Huji_Attack(H08X 후지토라 = 초월_이태훈_AP, MASTER_UID_ROSTER_MAP) MANA==140 → Trig_Huji_03: 대상 위치 700 광역 6250000×1~1.5 NORMAL/UNIVERSAL(AP·Spells). 이전엔 게이트_초월_양재모_AD_29846395(양재모_AD = H096 Law 몫 로스터)에 마나 게이지 하나로 Huji_03·Huji01 두 갈래(배타)가 같이 들어 있었다 — 주인과 게이트를 바로잡음. 2026-09-30 구현담당1.'
+  description: '원작 Trig_Huji_Attack(H08X 후지토라 = 초월_이태훈_AP, MASTER_UID_ROSTER_MAP) MANA==140 → Trig_Huji_03: 대상 위치 700 광역 6250000×1~1.5 NORMAL/UNIVERSAL(AP·Spells). 이전엔 게이트_초월_양재모_AD_29846395(양재모_AD = H096 Law 몫 로스터)에 마나 게이지 하나로 Huji_03·Huji01 두 갈래(배타)가 같이 들어 있었다 — 주인과 게이트를 바로잡음. 2026-09-30 구현담당1. [초월 나머지 09-30] Huji_03: 범위 적 AId1 +9(피해 전에) 추가. 씽크홀 이감 −99%(시간제 더미 오라)는 미반영. (Tools/apply_transcend_rest.py)'
   triggerType: 3
   levels:
   - cooldown: 0
@@ -26,6 +26,28 @@ MonoBehaviour:
     forbiddenBuffId:
     selfBuffId:
     effects:
+    - kind: 2
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 9.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     - kind: 0
       basis: 0
       target: 2

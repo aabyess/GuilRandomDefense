@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_초월_유재헌_ADAP_Sirahoshi_skill_Mana
   m_EditorClassIdentifier:
   skillName: 시라호시 마나 — MANA게이지120
-  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_Sirahoshi_Attack(HashAttack H08U) `UNIT_STATE_MANA==120` → Trig_Sirahoshi_skill_Mana Stage2 ForGroup 800(주 대상 위치) 적 전원 RRD(3350000+(MAX_LIFE−LIFE)×0.06, rand 1.0~1.5, NORMAL→Spells/UNIVERSAL→AP). PV 분기 없음. e0BD stomp(A0BD, adur 빈칸=기반 기본값 미확인)의 스턴은 뺐다. 상수항은 Flat 효과로 뗐다 — 원작에 PV 분기가 없어 보스도 상수를 받는데, %체력 basis의 bonus는 TakesPercentDamage 게이트에 같이 막힌다.'
+  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_Sirahoshi_Attack(HashAttack H08U) `UNIT_STATE_MANA==120` → Trig_Sirahoshi_skill_Mana Stage2 ForGroup 800(주 대상 위치) 적 전원 RRD(3350000+(MAX_LIFE−LIFE)×0.06, rand 1.0~1.5, NORMAL→Spells/UNIVERSAL→AP). PV 분기 없음. e0BD stomp(A0BD, adur 빈칸=기반 기본값 미확인)의 스턴은 뺐다. 상수항은 Flat 효과로 뗐다 — 원작에 PV 분기가 없어 보스도 상수를 받는데, %체력 basis의 bonus는 TakesPercentDamage 게이트에 같이 막힌다. [초월 나머지 09-30] stomp A0BD(700 범위, 피해 0, adur 빈칸 = 스톡 3.0 · ahdu 3.0) 스턴 추가(피해 범위 800으로). (Tools/apply_transcend_rest.py)'
   triggerType: 3
   levels:
   - cooldown: 0
@@ -67,6 +67,28 @@ MonoBehaviour:
       targetConditionValue: 0.0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 1
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 3.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     requiredTargetBuffId:
     forbiddenTargetBuffId:
     hitCountFloor: 0

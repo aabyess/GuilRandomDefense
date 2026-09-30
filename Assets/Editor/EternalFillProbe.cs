@@ -28,6 +28,10 @@ static class EternalFillProbe
     static readonly string[] Lower = { "히든_최윤서", "히든_황정기", "전설적인_신지우", "전설적인_이현주", "전설적인_임건웅", "전설적인_홍인창", "전설적인_박성호",
                                        "전설적인_이재윤", "희귀함_서민성", "희귀함_엄태웅", "희귀함_조현규", "특별함_조도연" };
     static string ArenaLower() { Units = Lower; return Arena(); }
+    // 중복 점검·랜덤 🔴·초월 묶음 A(2026-09-30) — call:EternalFillProbe.ArenaRest.
+    static readonly string[] Rest = { "랜덤_야사카_카나코", "랜덤_카마도_탄지로", "초월_강주혁_AP", "초월_노태현_AP", "초월_박민수_AD", "초월_임채민_AP", "초월_조성진_AD",
+                                      "초월_김민준_AP", "초월_유재헌_ADAP", "초월_임장혁_AD", "초월_이태훈_AP", "초월_박기찬_AD" };
+    static string ArenaRest() { Units = Rest; return Arena(); }
 
     class Track { public Vector3 at; public string unit; public float stunStart = -1f; public readonly List<float> stuns = new List<float>(); }
     static readonly Dictionary<EnemyDummy, Track> tracks = new Dictionary<EnemyDummy, Track>();
