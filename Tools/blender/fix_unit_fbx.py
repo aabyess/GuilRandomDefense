@@ -164,6 +164,16 @@ for _side, _ids in (("Left", dict(CLAVICLE="CLAVICLE_L_069", SHOULDER="SHOULDER_
                          _ids["TOE1"]: f"mixamorig:{_side}Foot", _ids["TOE2"]: f"mixamorig:{_side}ToeBase"})
     for _finger, _chain in _ids["fingers"].items():
         GAROU_RENAME.update({_bone: f"mixamorig:{_side}Hand{_finger}{_i}" for _i, _bone in enumerate(_chain, start=1)})
+# 키리기리 쿄코(단간론파 VR 추출 FBX, Fighting Path 계열 리그 — 가로우 GAROU_RENAME과 같은 뼈 이름에서 번호 꼬리만 없다, 2026-10-01 호시노_루비 자리).
+#   CLANK = 종아리, TOE1 = 발, TOE2 = 발끝. ROLL(트위스트)·EFFECT는 팔 뼈의 자식이라 이름을 안 바꾼다. 머리카락(LB_/LF_/LS_/BL_/BR_/BS_kami*)·얼굴(BROW/EYELID/MOUTH…)·치마(SKIRT*) 뼈는 그대로 보조 뼈로 둔다.
+KIRI_RENAME = {"WAIST": "mixamorig:Hips", "SPINE1": "mixamorig:Spine", "SPINE2": "mixamorig:Spine1", "SPINE3": "mixamorig:Spine2",
+               "NECK": "mixamorig:Neck", "HEAD": "mixamorig:Head"}
+for _s, _side in (("L", "Left"), ("R", "Right")):
+    KIRI_RENAME.update({f"CLAVICLE_{_s}": f"mixamorig:{_side}Shoulder", f"SHOULDER_{_s}": f"mixamorig:{_side}Arm", f"ELBOW_{_s}": f"mixamorig:{_side}ForeArm",
+                        f"WRIST_{_s}": f"mixamorig:{_side}Hand", f"THIGH_{_s}": f"mixamorig:{_side}UpLeg", f"CLANK_{_s}": f"mixamorig:{_side}Leg",
+                        f"TOE1_{_s}": f"mixamorig:{_side}Foot", f"TOE2_{_s}": f"mixamorig:{_side}ToeBase"})
+    for _f, _n in (("THUMB", "Thumb"), ("FORE", "Index"), ("MIDDLE", "Middle"), ("MEDICINAL", "Ring"), ("LITTLE", "Pinky")):
+        KIRI_RENAME.update({f"F_{_f}{_i}_{_s}": f"mixamorig:{_side}Hand{_n}{_i}" for _i in (1, 2, 3)})
 # 3ds Max Biped 사람형 뼈 → mixamorig(2026-09-16 토지·하나타로): prefix "Bip001"/"Bip01". 손가락 Finger0=엄지·1=검지·2=중지·3=약지·4=새끼, 마디 ""·"1"·"2".
 #   이름을 바꾸면 idle_stretch 판정(mixamorig 사슬)이 실제로 움직이고, 유니티 자동 매핑의 모호함도 없다. tpose_arms에는 biped_tpose_names(prefix)를 같이 준다.
 _BIPED_FINGERS = ("Thumb", "Index", "Middle", "Ring", "Pinky")
@@ -3660,6 +3670,38 @@ UNITS = {
                       drop_bones=["_rootJoint"], reparent_bones={"Bone.001_010": "Bone_00"},
                       glb_images={0: "carp_baseColor.png", 2: "carp_normal.png"},
                       materials=dict(textures={"carp": [("DiffuseColor", "carp_baseColor.png"), ("NormalMap", "carp_normal.png")]})),
+    # 다른세계_호시노_루비 ← 키리기리 쿄코(단간론파 VR, 사장님이 준 kyoko-kirigiri.zip, 2026-10-01 「그 모습 그대로 호시노_루비 자리에」).
+    #   zip(+textures/ 셋) 안 source/…Cyber Danganronpa VR….zip 안 Kyoko Kirigiri.FBX. 뼈 204 · 메시 1(25,937정점·재질 3) · 키 기록 없음(사람형) · 이미 T자(팔 같은 높이).
+    #   뿌리 NULL > RESERVE(가중치 0 중간 뼈)가 WAIST(Hips) 위에 끼어 있다 → 뺀다(가로우·흔함_문필환 교훈).
+    "다른세계_호시노_루비": dict(path="Assets/Art/Units/다른세계_호시노_루비/다른세계_호시노_루비.fbx", kind="human", size=("height", 1.8),
+                        archive=(os.path.join(SKINS, "12_다른세계/다른세계_호시노_루비.zip"), "source/PlayStation%204%20-%20Cyber%20Danganronpa%20VR%20The%20Class%20T.zip",
+                                 "Kyoko Kirigiri/Kyoko Kirigiri.FBX"),
+                        archive_textures=["Kyoko Kirigiri/Textures/08_Kirigiri_face_D.png", "Kyoko Kirigiri/Textures/08_Kirigiri_hair_D.png",
+                                          "Kyoko Kirigiri/Textures/08_Kirigiri_cloth_D.png"],
+                        rename_bones=KIRI_RENAME, drop_bones=["RESERVE", "NULL"], orient_snap=True, no_nulls=True,
+                        # 🔸 보조 뼈 정리(2026-10-01): 공용 Idle·Move는 이 뼈들을 안 돌리므로 합쳐도 동작은 같고, 얼굴 뼈 111이 유니티 아바타 매핑을 헷갈리게 할 위험(얼굴 뼈 겹침 점검 ⚠️)이 없어진다.
+                        #   머리털·얼굴 → Head · 치마 → Hips · 위팔·팔꿈치 롤 → 그 팔(가중치 0이던 위팔 뼈에 살이 붙는다 — 가중치 관문이 잡은 결함) · EFFECT → 손
+                        merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                                     dict(pattern=r"^SHOULDERROLL[12]_L$", into="mixamorig:LeftArm"), dict(pattern=r"^SHOULDERROLL[12]_R$", into="mixamorig:RightArm"),
+                                     dict(pattern=r"^ELBOWROLL[12]_L$", into="mixamorig:LeftForeArm"), dict(pattern=r"^ELBOWROLL[12]_R$", into="mixamorig:RightForeArm"),
+                                     dict(pattern=r"^EFFECT_L$", into="mixamorig:LeftHand"), dict(pattern=r"^EFFECT_R$", into="mixamorig:RightHand"),
+                                     dict(pattern=r"^SKIRT", into="mixamorig:Hips")]),
+    # 영원_김정래 ← 블리치 우라하라 키스케(모바일 게임 립 cha_urahara_sihae.fbx, 3ds Max Biped Bip01, 사장님이 준 kisuke-urahara.zip, 2026-10-01). 켄파치·하나타로와 같은 cha_ 형식.
+    #   뼈 50 · 메시 1(4,951정점·재질 1) · 텍스처 cha_urahara_sihae.png(14KB) · FBX ×0.01(세계 키 0.022) · 손가락 3×2 · **클립 0**(원본 고유 동작 없음).
+    #   🔴 칼(wp1 489정점 + Bone_swordtrail 82정점)이 몸 메시 **안에** 들어 있고 몸 옆 x −1.0(키 2.2의 절반)에 세워 둔 모습(하나타로·켄파치와 같다) → drop_verts_of_bones로 정점째 뺀다.
+    #   Head 밑 Eye·FHair·Hair·Hat → Head · 옷자락 B/L/LM/R/RM Cloth → Hips(유니티에선 안 돌아 합쳐도 같다). 뿌리 cha_urahara_sihae·Bip01·.001(가중치 0) 뺌.
+    "영원_김정래": dict(path="Assets/Art/Units/영원_김정래/영원_김정래.fbx", kind="human", size=("height", 1.8),
+                    archive=(os.path.join(SKINS, "10_영원/영원_김정래.zip"), "source/cha_urahara_sihae.fbx"),
+                    archive_rgb={"textures/cha_urahara_sihae.png": "cha_urahara_sihae.png"},
+                    no_nulls=True, orient_snap=True, use_rest_pose=True,
+                    drop_verts_of_bones=["wp1", "Bone_swordtrail"],
+                    # Toe0 뼈가 없는 Bip01(발이 끝) → 표에서 ToeBase 줄을 뺀다
+                    rename_bones={k: v for k, v in biped_rename("Bip01", fingers=3, joints=2).items() if "Toe0" not in k},
+                    drop_bones=["cha_urahara_sihae", "Bip01", "cha_urahara_sihae.001", "wp1", "Bone_swordtrail"],
+                    merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                                 dict(pattern=r"^[BLR]M?Cloth0", into="mixamorig:Hips")],
+                    tpose_arms=biped_tpose_names(fingers=3, joints=2),
+                    materials=dict(textures={"cha_urahara_sihae": [("DiffuseColor", "cha_urahara_sihae.png")]})),
     "특별함_조도연": dict(path="Assets/Art/Units/특별함_조도연/특별함_조도연.fbx", kind="human", size=("height", 1.8),
                       source=os.path.join(SKINS, "03_특별함/특별함_조도연.glb"), glb_fix_identity_ibm=True, no_nulls=True, drop_meshes=["Icosphere"],
                       squash_chain=dict(bones=[f"thongue_C0_{i}_Jnt_0{26 + i}" for i in range(5)], factor=0.285),
