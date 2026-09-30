@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_희귀함_황준석_A05R
+  m_Name: SkillData_원작능력_희귀함_현성현_A049
   m_EditorClassIdentifier:
-  skillName: A05R !매료매료 열매
-  description: '원작 A05R(h01M) ACbh 제 강타: Hbh1 비어 있음 → 스톡 기본 15%(Docs/reference/STOCK_DEFAULTS.csv, 툴팁 10%는 오류) · Hbh3 10000 · adur 0.6. 원작능력_희귀함_황준석 번들(확률 1.0)에서 떼어 냄 — 번들의 다른 효과는 그대로(Blender 판정 aeb46c8f, 2026-09-30 구현담당1).'
+  skillName: A049 !참륙용인
+  description: '원작 h026(시류) uabi A049 ACbh: Hbh1 20% · Hbh3 25000 · adur 0.9. 원작능력_희귀함_현성현 번들(확률 1.0)에서 떼어 냄. 공격타입 = 이 유닛 평타(Hero). 2026-09-30 구현담당1.'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.15
+    triggerChance: 0.2
     range: 0.0
     hitCountThreshold: 0
     resetTo: 0
@@ -32,7 +32,7 @@ MonoBehaviour:
       damageType: 1
       attackType: 4
       multiplier: 0.0
-      bonus: 10000.0
+      bonus: 25000.0
       chance: 1
       hitCount: 1
       duration: 0.0
@@ -47,6 +47,7 @@ MonoBehaviour:
       targetConditionValue: 0.0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     - kind: 1
       basis: 0
       target: 3
@@ -56,7 +57,7 @@ MonoBehaviour:
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0.6
+      duration: 0.9
       casterBuffCountFactor: 0.0
       buffId:
       randMin: 1.0
@@ -68,6 +69,7 @@ MonoBehaviour:
       targetConditionValue: 0.0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     requiredTargetBuffId:
     forbiddenTargetBuffId:
     hitCountFloor: 0

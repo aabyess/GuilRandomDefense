@@ -12,58 +12,56 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_희귀함_현성현
   m_EditorClassIdentifier:
-  skillName: A047 !육식
-  description: 원작 희귀함 시류 전 임펠다운 간수장 - 희귀함(Trig_Unique19). A11S(대상별 스킬피해 감수성) 계수는 보스 기준(×1.00)으로 고정 — 잡몹·소환체 대상엔 과다 계상될 수 있다. | 2차 배정(트리거·더미 채널): 원작 희귀함 시류 전 임펠다운 간수장 - 희귀함(Trig_Unique19). | 1채널 추가 배정(원작 희귀함 시류 전 임펠다운 간수장 - 희귀함(h026)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시).
+  skillName: Unique19 1/10 (시류)
+  description: '원작 희귀함 시류 전 임펠다운 간수장 - 희귀함(Trig_Unique19). A11S(대상별 스킬피해 감수성) 계수는 보스 기준(×1.00)으로 고정 — 잡몹·소환체 대상엔 과다 계상될 수 있다. | 2차 배정(트리거·더미 채널): 원작 희귀함 시류 전 임펠다운 간수장 - 희귀함(Trig_Unique19). | 1채널 추가 배정(원작 희귀함 시류 전 임펠다운 간수장 - 희귀함(h026)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시). | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Unique19(h026) = `if GetRandomInt(1,10)==3 → if PV<200 현재체력×0.10×(0.2+0.05×A11S) MELEE/UNIVERSAL else 12500 NORMAL/UNIVERSAL`. 확률 1.0 → 0.1, 0.1 사본 중복 제거, 둘 다 UNIVERSAL이라 AP(12500은 Spells). A11S 계수는 원식에 있어 기본 감수성 곱 그대로. +25000(×확률 1.0)은 h026 제 강타 A049(Hbh1 20·Hbh3 25000·adur 0.9)라 새 에셋 원작능력_희귀함_현성현_A049로. 스킬 이름 A047은 h023(희귀함_서민성) 능력 — 틀린 라벨.'
   · A049 !참륙용인: 발동0.2 배수0.0 추가25000.0
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
+    triggerChance: 0.1
     range: 0
     effects:
     - kind: 0
       basis: 2
       target: 3
-      damageType: 1
+      damageType: 2
       attackType: 1
       multiplier: 0.1
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
       targetCondition: 1
-      targetConditionValue: 200.0
-    - kind: 0
-      basis: 2
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 0.1
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      targetCondition: 1
-      targetConditionValue: 200.0
+      targetConditionValue: 200
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     - kind: 0
       basis: 0
       target: 3
-      damageType: 1
-      attackType: 1
+      damageType: 2
+      attackType: 7
       multiplier: 12500.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
       targetCondition: 3
-      targetConditionValue: 200.0
-    - kind: 0
-      basis: 3
-      target: 3
-      damageType: 1
-      attackType: 4
-      multiplier: 0.0
-      bonus: 25000.0
-      chance: 1
-      hitCount: 1
-      duration: 0
+      targetConditionValue: 200
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
