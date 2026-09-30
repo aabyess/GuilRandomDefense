@@ -46,6 +46,17 @@ public static class IslandShores
     /// <summary>세운 섬 수(테스트용).</summary>
     public static int Built { get; private set; }
 
+    // 🔴 배포판은 첫 씬이 NetBoot(메뉴)이고 게임 씬은 나중에 불린다 — AfterSceneLoad는 첫 씬에서 한 번만 돌아
+    //    게임 씬에선 안 세워졌다(0.3.0 빌드 사진으로 잡음). 씬이 불릴 때마다 다시 본다(이미 세운 섬은 상자가 꺼져 있어 건너뜀).
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void Hook()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) => Install();
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Install()
     {
@@ -55,7 +66,7 @@ public static class IslandShores
         var rects = new List<Rect>();
         foreach (MeshRenderer box in Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None))
         {
-            if (!box.name.EndsWith(CliffSuffix, System.StringComparison.Ordinal)) continue;
+            if (!box.enabled || !box.name.EndsWith(CliffSuffix, System.StringComparison.Ordinal)) continue;
             Transform t = box.transform;
             Vector3 scale = t.lossyScale;
             if (t.position.y + scale.y * 0.5f <= 0.5f) continue;

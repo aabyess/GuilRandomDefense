@@ -41,6 +41,16 @@ public class CombineBoardHeaders : MonoBehaviour
         return whitePixel;
     }
 
+    // 🔴 배포판은 첫 씬이 NetBoot — AfterSceneLoad만으론 게임 씬에서 안 돈다(IslandShores와 같은 이유, 0.3.0 빌드에서 잡음).
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void Hook()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) => Install();
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Install()
     {

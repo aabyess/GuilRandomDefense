@@ -1556,7 +1556,14 @@ public class NetLauncher : MonoBehaviour
         uint id = target.Object.Id.Raw;
         RtsCameraController cam = FindFirstObjectByType<RtsCameraController>();
         if (cam != null) cam.MoveTo(target.transform.position);
-        string State() => $"StunVfx {target.StunVfx} · SlowVfx {target.SlowVfx} · 클라가 받은 이펙트 {NetGameState.ReceivedVfx} · 겉모습 파티클 {(target.Visual != null ? target.Visual.GetComponentsInChildren<ParticleSystem>().Length : -1)}";
+        // 붙은 이펙트는 1.2.2부터 대상 자식이 아니라 SkillVfx 루트 밑 러너다 — 대상을 따라가는 러너와 그 입자를 센다(방장=Real·친구=Visual 같은 방식).
+        string Runners()
+        {
+            GameObject body = GameAuthority.IsServer ? target.Real : target.Visual;
+            (int runners, int playing, int particles) = SkillVfx.AttachedTo(body != null ? body.transform : null);
+            return $"러너 {runners} · 재생 겹 {playing} · 입자 {particles}";
+        }
+        string State() => $"StunVfx {target.StunVfx} · SlowVfx {target.SlowVfx} · 클라가 받은 이펙트 {NetGameState.ReceivedVfx} · {Runners()}";
 
         if (GameAuthority.IsServer && target.Real.TryGetComponent(out EnemyDummy real))
         {
@@ -1565,8 +1572,9 @@ public class NetLauncher : MonoBehaviour
             real.TakeDamage(1f, DamageType.AD, AttackType.Normal, 0, 0f, true);
             real.AddFreeze();
             SkillVfx.EndCast(before);
-            Debug.Log($"[VFX테스트] ① 흔함 시전(게이트) 적 {id}: 스턴 붙음 {real.HasStunVfx}(False여야)");
-            yield return new WaitForSecondsRealtime(2f);
+            yield return new WaitForSecondsRealtime(1f);
+            Debug.Log($"[VFX테스트] ① 흔함 시전(게이트) 적 {id}: 스턴 붙음 {real.HasStunVfx} · {Runners()} (False·러너 0·입자 0이어야)");
+            yield return new WaitForSecondsRealtime(1f);
             real.RemoveFreeze();
             yield return new WaitForSecondsRealtime(0.5f);
 
@@ -1576,23 +1584,25 @@ public class NetLauncher : MonoBehaviour
             real.AddArmorShred(1f);
             real.AddFreeze();
             real.AddSlow(0.5f);
-            Debug.Log($"[VFX테스트] ② 특별함 이상 시전 적 {id}: 스턴 {real.HasStunVfx} · 이감 {real.HasSlowVfx}(둘 다 True)");
-            yield return new WaitForSecondsRealtime(4f);
+            yield return new WaitForSecondsRealtime(1f);
+            Debug.Log($"[VFX테스트] ② 특별함 이상 시전 적 {id}: 스턴 {real.HasStunVfx} · 이감 {real.HasSlowVfx} · {Runners()} (둘 다 True·러너 2·입자 >0)");
+            yield return new WaitForSecondsRealtime(3f);
             real.RemoveFreeze();
             real.RemoveSlow(0.5f);
-            Debug.Log($"[VFX테스트] ③ 해제 적 {id}: 스턴 {real.HasStunVfx} · 이감 {real.HasSlowVfx}(둘 다 False)");
+            yield return new WaitForSecondsRealtime(0.5f);
+            Debug.Log($"[VFX테스트] ③ 해제 적 {id}: 스턴 {real.HasStunVfx} · 이감 {real.HasSlowVfx} · {Runners()} (둘 다 False·러너 0·입자 0)");
         }
         else
         {
             // 방장 순서에 맞춰 찍는다: ① 게이트 1초 뒤 · ② 1초 뒤(붙어 있어야) · ③ 해제 1.5초 뒤
             yield return new WaitForSecondsRealtime(1f);
-            Debug.Log($"[VFX테스트] ① 게이트 중 친구 적 {id}: {State()} (Stun False·받은 0이어야)");
+            Debug.Log($"[VFX테스트] ① 게이트 중 친구 적 {id}: {State()} (Stun False·받은 0·러너 0·입자 0이어야)");
             yield return new WaitForSecondsRealtime(2.8f);
-            Debug.Log($"[VFX테스트] ② 친구 적 {id}: {State()} (Stun·Slow True, 받은 ≥3)");
+            Debug.Log($"[VFX테스트] ② 친구 적 {id}: {State()} (Stun·Slow True, 받은 ≥3·러너 2·입자 >0)");
             yield return new WaitForEndOfFrame();
             ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "client_vfx_stun_slow.png"));
             yield return new WaitForSecondsRealtime(4.5f);
-            Debug.Log($"[VFX테스트] ③ 해제 뒤 친구 적 {id}: {State()} (Stun·Slow False)");
+            Debug.Log($"[VFX테스트] ③ 해제 뒤 친구 적 {id}: {State()} (Stun·Slow False·러너 0·입자 0)");
         }
     }
 
