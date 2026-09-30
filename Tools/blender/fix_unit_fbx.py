@@ -3764,7 +3764,35 @@ UNITS = {
                     tpose_arms=biped_tpose_names(fingers=5, joints=3),
                     glb_images={0: "moonpil_diffuse.png"},
                     materials=dict(textures={"415121": [("DiffuseColor", "moonpil_diffuse.png")],
-                                             "415121_body": [("DiffuseColor", "moonpil_diffuse.png")]})),
+                                             "415121_body": [("DiffuseColor", "moonpil_diffuse.png")]}),
+                    # 🔸 고유 동작 넓히기 준비(2026-09-30 밤, PM 지시) — 「영원_문필환@동작」으로 Assets 밖에 뽑는다. 기본 항목은 그대로.
+                    #   원본 33 테이크 · 뼈 위치까지 같은 중복 7 → 서로 다른 것 26(그중 1프레임 자세 3: attack_2·back·back_1).
+                    #   **두 폼**: A = 날개 접고 칼 든 폼(idle …) / B = 날개 편 폼(*_1 계열, idle_1 …). 폼마다 서기·달리기·평타·피격·죽음·스킬이 따로 있다.
+                    #   같은 것: attack_1_1 = skill_1_1 = skill_3_1(A 준비) · attack_2 = skill_1_2 = skill_3_2(A 중간, 1프레임) ·
+                    #            attack_1 = skill_1_1_1(B 준비) · attack_2_1 = skill_1_2_1 = skill_3_2_1(B 중간).
+                    #   skill_1_2_2(2.38초, 4m 솟음)는 A 자리에서 시작하는 단독 동작 — Transform으로 낸다(A→B 변신으로 보임, 확인 안 됨).
+                    #   조각 사이(준비→중간→본동작)는 원본에서 자리가 끊긴다(0.35m 순간 이동, 게임에선 컷) — 제자리 묶기로 수평 끊김은 사라지고 자세 끊김만 남는다.
+                    variants={"동작": dict(
+                        anim=True, anim_drop_ok=True, takes_only=True,
+                        take_names={"idle": "Idle", "run": "Move", "CommonAttack": "Attack", "strike_1": "Hit", "die": "Die", "stay_show": "Show",
+                                    "skill_1_1": "Skill1_Start", "skill_1_2": "Skill1_Mid", "skill_1_3": "Skill1_Hit",
+                                    "skill_3_3": "Skill2_Hit", "attack_3": "Attack2_Hit", "skill_1_2_2": "Transform",
+                                    "idle_1": "Idle_B", "run_1": "Move_B", "CommonAttack_1": "Attack_B", "strike_1_1": "Hit_B", "die_1": "Die_B",
+                                    "stay_show_1": "Show_B", "attack_1": "SkillB_Start", "attack_2_1": "SkillB_Mid",
+                                    "skill_1_3_1": "Skill1_B_Hit", "skill_3_1_1": "Skill2_B_Start", "skill_3_3_1": "Skill2_B_Hit",
+                                    "attack_3_1": "Attack2_B_Hit"},
+                        clip_concat={"Skill1": ["Skill1_Start", "Skill1_Mid", "Skill1_Hit"],
+                                     "Skill2": dict(parts=["Skill1_Start", "Skill1_Mid", "Skill2_Hit"], drop=["Skill2_Hit"]),
+                                     "Attack2": dict(parts=["Skill1_Start", "Skill1_Mid", "Attack2_Hit"], drop=["Attack2_Hit"]),
+                                     "Skill1_B": dict(parts=["SkillB_Start", "SkillB_Mid", "Skill1_B_Hit"], drop=["Skill1_B_Hit"]),
+                                     "Skill2_B": dict(parts=["Skill2_B_Start", "SkillB_Mid", "Skill2_B_Hit"], drop=["Skill2_B_Start", "Skill2_B_Hit"]),
+                                     "Attack2_B": dict(parts=["SkillB_Start", "SkillB_Mid", "Attack2_B_Hit"],
+                                                       drop=["SkillB_Start", "SkillB_Mid", "Attack2_B_Hit"])},
+                        clip_copy={"Attack_Lunge": "Attack", "Attack_B_Lunge": "Attack_B"},
+                        clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
+                        clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle",
+                                          takes=["Attack", "Die", "Skill1", "Skill2", "Attack2", "Skill1_Start", "Skill1_Mid", "Skill1_Hit", "Transform",
+                                                 "Attack_B", "Die_B", "Skill1_B", "Skill2_B", "Attack2_B"]))}),
     # 원피스 바운티러시 시키(shiki, pl_shiki_orig01) → 영원_윤현모(2026-09-22 영원, blender
     # 세션). ⚠️ PM 지시: 다리가 칼날 모양인 게 원작 — 무기처럼 빼지 말고 다리로 그대로 둘 것
     # (선례와 달리 이번엔 손에 든 무기 자체가 아예 없음, 렌더로 확인 — 다리 자체가 칼).
@@ -5679,7 +5707,7 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 bound.append(m.name)
         bpy.context.view_layer.update()
         report["아마추어에 붙인 메시"] = bound
-    if cfg.get("drop_verts_of_bones"):
+    def drop_verts_now():
         # 🔸 피즈(2026-09-16): 삼지창이 몸과 **같은 메시**(Object_6)에 들어 있고 뿌리 직계 Weapon_70 뼈 100% — 메시로는 못 빼니 그 뼈 몫이 반 넘는 정점을 지운다
         import bmesh as _bm
         gone_bones = set(cfg["drop_verts_of_bones"])
@@ -5703,6 +5731,9 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                     m.vertex_groups.remove(g)
             removed += len(kill)
         report["뼈로 지운 정점"] = f"{sorted(gone_bones)} {removed}"
+
+    if cfg.get("drop_verts_of_bones"):
+        drop_verts_now()
     if cfg.get("first_uv_only"):                                         # 🔸 킹콩: glb UV 5층 — glTF texCoord 0(첫 층)만 쓰니 나머지 층은 뺀다(유니티 UV1~4 쓰레기 방지)
         dropped = 0
         for m in [o for o in bpy.context.scene.objects if o.type == "MESH"]:
@@ -5773,6 +5804,8 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 o = bpy.data.objects.get(gone)
                 if o is not None:
                     bpy.data.objects.remove(o, do_unlink=True)
+        if cfg.get("drop_verts_of_bones"):                              # 🔴 다시 불러오면 지운 정점도 돌아온다(영원_문필환@동작 — 뒤의 drop_bones가 「가중치가 있어 뺄 수 없다」로 죽었다)
+            drop_verts_now()
         if cfg.get("rename_bones"):
             # 🔴 anim=True + rename_bones(2026-09-30, 고유 동작 시범 — 영원_최상호): 클립을 읽으려고 원본을 다시 불러오면
             #   위에서 바꾼 뼈 이름이 풀린다 → 아래 단계(drop/merge/tpose …)가 「mixamorig:…」를 못 찾아 죽었다.
