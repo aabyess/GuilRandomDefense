@@ -15,3 +15,5 @@ CC-BY 에셋은 저작자 이름을 크레딧 화면에 넣어야 한다(`Assets
 
 그 밖의 CC-BY-4.0 83건(구랜디스킨모음 glb 메타)은 `Docs/research/SKIN_GLB_LICENSES.csv`에 작성자와 함께 있다 — 크레딧 화면을 만들 때 그 표에서 뽑는다.
 CC-BY가 아닌 19건(Sketchfab Standard 14 · NC 4 · NC-ND 1)도 같은 표에 있다.
+
+- **특수함_헬로우먼** 스킨 — "Aotwa kenny ackerman" by Prime Slayer3D (https://sketchfab.com/ianadrielbravo), CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/). 원본: https://sketchfab.com/3d-models/aotwa-kenny-ackerman-a105fdb205e74d18b98b952c94e3a2eb — 리깅 정리·뼈 합침으로 수정함(2026-10-01).
