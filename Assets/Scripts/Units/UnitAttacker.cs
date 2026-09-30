@@ -1453,6 +1453,8 @@ public class UnitAttacker : MonoBehaviour
                 return target.TakesPercentDamage ? target.MaxHp * effect.multiplier + effect.bonus : 0f;
             case SkillEffectBasis.TargetCurrentHpPercent:
                 return target.TakesPercentDamage ? target.Hp * effect.multiplier + effect.bonus : 0f;
+            case SkillEffectBasis.TargetMissingHpPercent:
+                return target.TakesPercentDamage ? Mathf.Max(0f, target.MaxHp - target.Hp) * effect.multiplier + effect.bonus : 0f;
             case SkillEffectBasis.CasterAttackPower: return AttackDamage * effect.multiplier + effect.bonus;
             // 연구단계 × multiplier + bonus 꼴을 명시적으로 쓴다(원작 예: 핸콕 "연구횟수×
             // 30,000+360,000") — 이 "연구단계"는 타입 업그레이드(원작 "강화소 3",

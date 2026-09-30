@@ -138,6 +138,14 @@ public enum SkillEffectBasis
     // UnitAttacker.SelfUpgradeLevel(유닛 인스턴스별 런타임 카운터, TryUpgradeSelf로 올림)이
     // 이 값을 들고 있다. multiplier/bonus는 다른 레벨 기반 basis와 같은 관례(level×multiplier+bonus).
     CasterSelfUpgradeLevel,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, 구현담당1 — 체력 비례 누락 채우기). 원작 「잃은 체력」 비례
+    // `(MAX_LIFE − LIFE) × k + c` 꼴(Z_Skill_Mana ×0.08 · Sirahoshi_skill_Mana ×0.06 · Uta_skill_1_double
+    // ×0.12 · Legend6 ×0.04 등). 전엔 TargetMaxHpPercent(+k)와 TargetCurrentHpPercent(−k) 두 효과로
+    // 나눠 담았는데, DealSkillDamage가 0 이하 피해를 버려서(amount<=0 → return) 음수 쪽이 통째로
+    // 사라지고 최대체력×k가 그대로 나갔다. 한 효과 안에서 (MaxHp − Hp)×m + b로 계산한다.
+    // %체력 두 종과 같은 게이트(TakesPercentDamage)를 탄다.
+    TargetMissingHpPercent,
 }
 
 // 무엇을 하는 효과인가.
