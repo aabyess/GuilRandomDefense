@@ -1254,6 +1254,7 @@ public static class ClaudeCommands
         public bool autoLoop;
         public bool bossChase;           // autoloop: 보스 라운드엔 레인의 흔함 아닌 유닛 전부 보스 공격(AttackTarget), 흔함은 칸에(09-26 PM 지시 — R30 벽이 배치냐 화력이냐)
         public bool storyPlus;           // autoloop: 스토리 보강 — 막히면 가장 센 유닛 둘씩, 깨면 약한 하나만 남기고 C로 복귀(09-26 PM 지시)
+        public int aimGrade = (int)UnitGrade.Rare;   // aim:<등급> — target의 목표 식 등급(기본 희귀함). 10-01 PM 지시: 전설·초월·불멸·영원까지
         public bool targetMode;          // autoloop: 희귀함 식 하나를 목표로 — 흔함선택·조합·판매를 그 식의 모자란 재료 쪽으로(09-26 PM 지시)
         public bool combineAll;          // autoloop: 지금 만들 수 있는 조합식을 전부 만든다(결과 등급 높은 것부터, 09-26 R20 벽 ③)
         public bool keepPen;             // autoloop: 흔함은 제 칸에 둔다 — 모서리 쓸기에서 흔함을 뺀다(09-26 칸 안 흔함 가동률 판)
@@ -1359,6 +1360,16 @@ public static class ClaudeCommands
             else if (token == "bosschase") job.bossChase = true;
             else if (token == "target") { job.targetMode = true; job.combineAll = true; }
             else if (token == "bossaway") job.bossAway = true;
+            else if (token.StartsWith("aim:"))
+            {
+                // 목표 식 등급을 올린다(target을 같이 켠다) — 이름은 한글 등급 이름의 앞부분이나 enum 이름.
+                string want = token.Substring(4);
+                UnitGrade? found = null;
+                foreach (UnitGrade g in Enum.GetValues(typeof(UnitGrade)))
+                    if (g.ToString().Equals(want, StringComparison.OrdinalIgnoreCase) || g.KoreanName().StartsWith(want)) { found = g; break; }
+                if (found == null) return $"❌ aim: 뒤엔 등급(희귀함·전설적인·초월·불멸·영원 …): {token}";
+                job.aimGrade = (int)found.Value; job.targetMode = true; job.combineAll = true;
+            }
             else if (token.StartsWith("mode:"))
             {
                 string want = token.Substring(5);
@@ -3050,7 +3061,9 @@ public static class ClaudeCommands
                 // 목표 식 나무의 식을 먼저(위 등급부터) — 그다음 남는 재료만 쓰는 딴 식.
                 TargetPlan plan = RefreshTargetPlan(job);
                 // 희귀함 이상은 목표가 아니어도 먼저 만든다 — 지금 손에 든 희귀함이 나중 목표보다 낫다(i1_143 R15·R17: 가능했는데 목표 재료라 안 만듦).
-                next = ready.Where(r => r.result.grade.Tier() >= UnitGrade.Rare.Tier()).OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault()
+                // aim이 희귀함 위면 그 규칙을 끈다 — 목표 나무 밖의 희귀함·전설이 나무 재료(특정 특별함·희귀함)를 먹어 버리면 위 등급에 못 닿는다.
+                bool aimHigh = job.aimGrade != (int)UnitGrade.Rare;
+                next = (aimHigh ? null : ready.Where(r => r.result.grade.Tier() >= UnitGrade.Rare.Tier()).OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault())
                        ?? ready.Where(r => plan != null && plan.treeRecipes.Contains(r)).OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault()
                        ?? ready.Where(r => plan == null || UsesOnlySurplus(r, plan)).OrderByDescending(r => r.result.grade.Tier()).FirstOrDefault();
             }
@@ -3139,7 +3152,7 @@ public static class ClaudeCommands
     {
         var owned = MyUnits().GroupBy(u => u.Data).ToDictionary(g => g.Key, g => g.Count());
         var byResult = RecipesByResult();
-        var candidates = byResult.Where(kv => kv.Key.grade == UnitGrade.Rare).SelectMany(kv => kv.Value).ToList();
+        var candidates = byResult.Where(kv => (int)kv.Key.grade == job.aimGrade).SelectMany(kv => kv.Value).ToList();
         if (candidates.Count == 0) return currentPlan = null;
         TargetPlan best = candidates.Select(r => PlanFor(r, owned)).OrderBy(p => p.MissingCount).First();
         if (currentPlan == null || currentPlan.target == null) { targetLog.Add($"R{job.lastRoundSeen} 목표 → {best.target.result.unitName}(모자람 {best.MissingCount})"); return currentPlan = best; }
