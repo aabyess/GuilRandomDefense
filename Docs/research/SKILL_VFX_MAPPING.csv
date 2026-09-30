@@ -1,0 +1,462 @@
+# 스킬별 이펙트 모양 매핑 — 2026-09-30 Blender 세션, 읽기 전용. 기준 커밋 3f4421b7(에셋은 작업 트리에서 읽음)
+# 대상: 특별함 이상 유닛(로스터 파일 등급 접두 ≠ 흔함·안흔함)이 참조하는 스킬 에셋 381개
+# 원작 아트 출처 3층: ① 에셋 설명의 트리거(+그 트리거가 부르는 하위 트리거 1단계)의 AddSpecialEffect* 모델 ② 그 트리거가 만드는 더미 유닛의 umdl·ua1m과 더미 능력의 아트 ③ 에셋 skillName의 능력 ID 아트. .mdl/.mdx 값만 셌다(조합 능력 아트 필드=레시피 함정 회피). 트리거 이름이 없는 06번① 에셋은 파일명의 유닛 ID로 공격 해시테이블 트리거를 잡았다(확신도에 표시)
+# 역할: 적중=대상 유닛에 붙음(투사체 포함) · 범위/지면=지점·더미 몸 모델 · 시전자=우리 유닛에 붙음. 위치는 SKILL_AOE_CENTER.md와 같은 해석기로 판정
+# 모양 묶음: A 충격파 고리 · B 초승달 검기 · C 땅 폭발 · D 섬광·번개 · E 투사체 (ONE_RANDOM_SKILL_VFX.md §3) + F 오라·원소(묶음 밖). 판정=모델 이름 키워드, 안 되면 맵 MDX를 열어 텍스처 이름 투표(맵에 파일 없는 Model\ 경로는 이름만)
+# 원소(색) 태그(fire/ice/water/elec/dark/holy/earth/green)로 같은 묶음 안에서 프리팹을 골랐다. 원작 아트가 없는 에셋은 효과 종류로 SkillVfx 기본 종류를 적었다
+asset_path,원작_능력_ID,원작_트리거,원작_아트,모양_묶음,적중시_프리팹,범위_지면_프리팹,시전자_프리팹,확신도
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_모몬가_ff8bed43.asset,,En_nomal,az-slash-red.mdx ; Abilities\Weapons\WaterElementalMissile\WaterElementalMissile.mdl ; !piercing5.mdx ; model\en_weapon-240.mdl …(+6),B 초승달 검기 (전체 A/B/C/E),CFXR: CFXR4 Sword Hit FIRE (Cross),Hovl: AoE slash orange,CFXR: CFXR4 Sword Trail FIRE (360 Spiral),높음
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_미도리야_이즈쿠_079f80a5.asset,,Higma_W,Model\Effect BY_Wood_Eff_Ord_DanGe_Dus_Kuosan_1_1_1.mdx ; Model\Effect BY_Wood_Effect_Naruto_MingRen_WeiShouYu_2.mdx ; Model\Effect BY_Wood_GongChengSiPai_5 Orange.mdx ; Model\Effect Gun Shot Red.mdx …(+1),E 투사체 (전체 B/E/F),CFXR: CFXR Hit A (Red),,,중간
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_미도리야_이즈쿠_2c7de21c.asset,,Higma_Q,Model\Effect BY_Wood_Eff_Ord_YeYe_Wid_KuoSan_1.mdx ; Model\Effect Freezingring.mdx ; Model\Effect BY_Wood_GongChengSiPai_5 Orange.mdx ; Model\Effect Gun Shot Red.mdx …(+2),A 충격파 고리 (전체 A/D/E/F),Hovl: Snow hit,,,높음
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_손오공_948ad1b7.asset,,Yukari_R2,Model\Effect Mythic_Void Teleport Target.mdx ; Model\Effect Yukari Train.mdx ; Model\Effect Mythic_Heal Purple.mdx ; Model\Effect BoltImpact Purple.mdx,F 오라·원소(묶음 밖) (전체 A/F),CFXR: CFXR3 Hit Misc A,,,낮음
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_이민형_4266b6e3.asset,,Tatsumaki_T_Explosion_by_AZ_Attack,Abilities\Weapons\AncientProtectorMissile\AncientProtectorMissile.mdl ; Model\Effect AZ_Hit Green.mdx ; Abilities\Spells\Orc\WarStomp\WarStompCaster.mdl ; Model\Effect AZ_Meteor Explosion Green.mdx …(+2),E 투사체 (전체 A/C/E),CFXR: CFXR Hit D 3D (Yellow),Hovl: Ground AOE explosion,,중간
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_이즈미_신이치_351a0f00.asset,,kikoyou_hp,Model\Effect CharmTarget.mdx ; Model\Effect Cast Blue.mdx ; Model\Effect Air Cannon.mdx ; Model\Effect AZ_Slash White.mdx …(+5),D 섬광·번개 (전체 A/B/D),CFXR: CFXR3 Hit Light B (Air),,자체메시: VFX_충격파_원판,중간
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_이즈미_신이치_41677101.asset,,kikoyou_skill_1,Model\ESGBB2.mdx ; model\blueki07.mdl ; model\Effect AZ_Yishan2.mdl,—,(원작 모델 판별 불가),(원작 모델 판별 불가),(원작 모델 판별 불가),낮음
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_이즈미_신이치_61743e88.asset,,kikoyou_mana,Abilities\Spells\Human\Invisibility\InvisibilityTarget.mdl ; Model\Effect AZ_Lina(2)_T1_MagicMatrix.mdx ; Model\Effect Blue Slash.mdx ; Model\Effect Sky Ring Sky.mdx …(+2),B 초승달 검기 (전체 A/B/E/F),CFXR: CFXR4 Sword Hit PLAIN (Cross),,Hovl: Buff,높음
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_이즈미_신이치_d3498c23.asset,,kikoyou_skill_2,Model\Effect Hit Wave.mdx ; Model\Effect Build-In SpiritTouchTarget.mdx ; Model\ESGBB.mdl ; model\blueki07.mdl,A 충격파 고리 (전체 A),,(원작 모델 판별 불가),자체메시: VFX_충격파_원판,중간
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_이타도리_유지_18aa2343.asset,,Minato_Q2,Abilities\Spells\NightElf\Rejuvenation\RejuvenationTarget.mdl ; Model\Effect LB_hdg.mdx ; Model\Effect Fuzzy Stomp.mdx ; Model\Effect Yellow Flash 1.mdx …(+3),D 섬광·번개 (전체 A/D),Hovl: Holy hit,,Hovl: Lightning aura,낮음
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_이타도리_유지_84bf5e76.asset,,Minato_E,Abilities\Spells\NightElf\Rejuvenation\RejuvenationTarget.mdl ; Model\Namikaze Minato.mdx ; Model\Effect Rasengan Whirl.mdx ; Model\Effect Almagest.mdx …(+6),D 섬광·번개 (전체 D),CFXR: CFXR3 Hit Electric C (Air),(원작 모델 판별 불가),(원작 모델 판별 불가),낮음
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_이타도리_유지_a8343962.asset,,Minato_Mana,Abilities\Spells\NightElf\Rejuvenation\RejuvenationTarget.mdl ; Model\Effect Minato Kunai.mdx ; Model\az_jugg_e3.mdx ; Model\Effect Yellow Flash 1.mdx …(+5),D 섬광·번개 (전체 B/D),Hovl: Holy hit,,Hovl: Lightning aura,중간
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_주호페이크_3a13fd3d.asset,,Bronya_Skill_1,Model\Effect AZ_Slash White.mdx ; Model\Effect Power Charge Blue.mdx ; Model\Effect Flash blue.mdx ; Model\Effect AZ-Hit.mdx …(+1),F 오라·원소(묶음 밖) (전체 B/D/F),Hovl: Star hit,,CFXR: CFXR4 Sword Trail PLAIN (360 Spiral),중간
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_카마도_탄지로_3c5f8bd9.asset,,Ryougi_Shiki_R2,Model\Effect Blink New Sky.mdx ; Abilities\Spells\Human\Invisibility\InvisibilityTarget.mdl ; Model\Effect Blue-Zhendi-Ryougi-Big.mdx ; Model\Effect Fuzzy Stomp.mdx …(+13),A 충격파 고리 (전체 A/B/C/D/F),CFXR: CFXR3 Hit Light B (Air),자체메시: VFX_충격파_원판,자체메시: VFX_충격파_원판,중간
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_카마도_탄지로_d370bb23.asset,,Ryougi_Shiki_2,Model\Effect Flash Blue.mdx ; Model\Effect GameBABY_mdx_lingzifengbao_001 Blue.mdx ; Model\Effect Hit Wave.mdx ; Model\Effect White-Qiquan-Special.mdx …(+8),A 충격파 고리 (전체 A/C/D),CFXR: CFXR Impact Glowing HDR (Blue),,자체메시: VFX_충격파_원판,중간
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_카마도_탄지로_ff8bed43.asset,,"Ryougi_Skill_3_double,Ryougi_Skill_3_triple,Ryougi_Skill_3",Model\Effect Flash Blue.mdx ; Model\Effect Shock Wave Blue.mdx ; Abilities\Spells\Human\Invisibility\InvisibilityTarget.mdl ; Model\Hero Ryougi Shiki.mdx …(+12),A 충격파 고리 (전체 A/B/C/D/F),CFXR: CFXR Impact Glowing HDR (Blue),,자체메시: VFX_충격파_원판,중간
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_한마_바키_355f5d39.asset,,"byakuya_Chan,Byakuya_R",Model\Effect Hit Wave Engage.mdx ; Model\Effect JDP White Flash.mdx ; Model\Effect Blessing of Moon White.mdx ; Model\Effect AZ_Shockwave23 White.mdx …(+12),A 충격파 고리 (전체 A/B/D/E/F),CFXR: CFXR Hit D 3D (Yellow),자체메시: VFX_충격파_원판,자체메시: VFX_충격파_원판,중간
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_한마_바키_9ffa9c45.asset,,byakuya_Q,model\chunbon6.mdl ; Model\AkihaClawsakura_bakuya.mdl ; model\chunbon4.mdl ; model\senbonzakurapart.mdl …(+2),B 초승달 검기 (전체 B),,(원작 모델 판별 불가),CFXR: CFXR4 Sword Trail PLAIN (360 Spiral),낮음
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_호시노_아이_33bd8aa4.asset,,BronyaMotar_E,Model\Effect BY_Wood_Eff_Ord_NiYa_Bh3_QuanFeng.mdx ; Model\Effect Ryoul Laser Particle Blue WIde.mdx ; Model\Effect DT Blue Minimalist.mdx ; Model\Effect Blue--Zhendi.mdx …(+1),A 충격파 고리 (전체 A/D),CFXR: CFXR Impact Glowing HDR (Blue),,,중간
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_호시노_아이_3a13fd3d.asset,,BronyaMotar_laser,Model\Bronya3.mdx ; Model\Effect Charge A Blue Light Short.mdx ; Model\Effect Laser Blue.mdx ; Model\Effect Blue Spring Burst.mdx …(+3),D 섬광·번개 (전체 A/C/D/F),Hovl: Holy hit,,,높음
+Assets/Data/UnitSkills/SkillData_게이트_랜덤_호시노_아이_55b5cff0.asset,,BronyaMotar_R,Model\Effect TX_Shunshenzhishu.mdx ; Abilities\Spells\Other\Charm\CharmTarget.mdl ; Model\Effect File00002124.mdx ; Model\Effect BY_Wood_Eff_Ord_NiYa_Bh3_LiXingZaoWu.mdx …(+11),D 섬광·번개 (전체 A/D/F),Hovl: Holy hit,자체메시: VFX_충격파_원판,(원작 모델 판별 불가),중간
+Assets/Data/UnitSkills/SkillData_게이트_변화됨_강재규_5c20b80f.asset,,carrot_skill_2,[ruchi_effect]guipaiqigong_blue2.mdl ; flamestrike3.mdl ; E_WarStompCaster.mdl,C 땅 폭발 (전체 A/C),,,CFXR: CFXR2 WW Explosion,중간
+Assets/Data/UnitSkills/SkillData_게이트_변화됨_김건_355f5d39.asset,,Bugi_SommonDamage2,,—,SkillVfx.Smash,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_게이트_변화됨_박은석_8eab1c6f.asset,,Transpom_AceMana,!Flame Aura.mdl ; DoomDeath4.mdx ; !@FS.mdl ; katongoukamekkyaku.mdl,A 충격파 고리 (전체 A/C),CFXR: CFXR3 Hit Fire B (Air),자체메시: VFX_땅_폭발,,높음
+Assets/Data/UnitSkills/SkillData_게이트_변화됨_박은석_9ffa9c45.asset,,Transpom_Ace_bulRemake,flame aura4.mdx ; eqh08.mdx ; !FireFist4.mdl ; eqh08.mdl …(+1),C 땅 폭발 (전체 C/E),CFXR: CFXR3 Fire Explosion B,Hovl: Meteors AOE,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_게이트_변화됨_최상호_9ffa9c45.asset,,Transpom_dp,1gun55_dp.mdl ; Railgun3t.mdl,E 투사체 (전체 E),,Hovl: Meteors AOE,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_게이트_불멸_고도현_caa364ec.asset,,"Ed_Skill_1_Item,Ed_Skill_1",Cleave.mdl ; by_kid4d.mdl ; tx-ed.mdl ; Abilities\Spells\Human\Thunderclap\ThunderClapCaster.mdl …(+1),C 땅 폭발 (전체 A/B/C),,자체메시: VFX_땅_폭발,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_게이트_불멸_김용태_55b5cff0.asset,,roger_Mana,ioncannon3.mdl ; shadowassault(lightblue)2.mdl ; Heavens Gate2.mdl,D 섬광·번개 (전체 A/D),,Hovl: Red energy explosion,,높음
+Assets/Data/UnitSkills/SkillData_게이트_불멸_김용태_57c27e37.asset,,roger_Skill_2,by_kid5d.mdl ; fire-boom.mdl ; Wave_squished2.mdl ; arua6.mdl,C 땅 폭발 (전체 A/C/F),,,CFXR: CFXR Magic Poof,높음
+Assets/Data/UnitSkills/SkillData_게이트_불멸_신지우_84bf5e76.asset,,Gaban_Skill_1,[DZ.Spell]006LightS.mdl ; Effect_Black_Getsuga10.mdl ; AZLavaStomp.mdl ; [DZ.Spell]006B.mdl …(+2),B 초승달 검기 (전체 A/B/D),,Hovl: AoE slash orange,,높음
+Assets/Data/UnitSkills/SkillData_게이트_불멸_신지우_d33a6a78.asset,,Gaban_Skill_mana,Abilities\Spells\Undead\CarrionSwarm\CarrionSwarmDamage.mdl ; Abilities\Spells\Human\HolyBolt\HolyBoltSpecialArt.mdl,D 섬광·번개 (전체 D),,,Hovl: Lightning aura,높음
+Assets/Data/UnitSkills/SkillData_게이트_영원_김영원_5a6f48de.asset,,"hancock_skill_Mana,hancock_skill_9",boa25.mdl ; !FireLance5.mdx ; [DZ.Spell]001_pink.mdl ; Wave_squished2-noSound.mdx …(+4),C 땅 폭발 (전체 A/C/D),,자체메시: VFX_땅_폭발,CFXR: CFXR Flash,중간
+Assets/Data/UnitSkills/SkillData_게이트_영원_김영원_86ef2902.asset,,arrow_h2,EnergyBurst2.mdl ; jian3.mdx ; ShootGB2.mdl ; flamestrike3.mdl …(+3),B 초승달 검기 (전체 B/C/D/E),CFXR: CFXR4 Sword Hit PLAIN (Cross),,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_게이트_영원_김영원_b3948c74.asset,,hancock_skill_10,@TX - 1.mdl ; han2.mdl ; AncientExplode(Blue).mdl,C 땅 폭발 (전체 A/C),,Hovl: Ground AOE explosion,,중간
+Assets/Data/UnitSkills/SkillData_게이트_영원_김정래_Uta_skill_1.asset,,"Uta_skill_1,Uta_Attack,Normal",model\Effect AZ_Dust Rush 02.mdx ; model\Effect BY_Wood_Effect_Naruto_MingRen_WeiShouYu_2.mdx ; model\az_uta_r2.mdx ; model\slash-uta.mdx …(+16),E 투사체 (전체 A/B/C/D/E/F),CFXR: CFXR Hit D 3D (Yellow),CFXR: CFXR3 Magic Aura A (Runic),(원작 모델 판별 불가),중간
+Assets/Data/UnitSkills/SkillData_게이트_영원_김정래_a22567e4.asset,,Uta_skill_3_mana,Model\az_gangtiex12_f2.mdx ; Model\uta_hit_h3.mdl ; Model\WarStompCaster NoneColor.mdx ; Model\GZMW3.mdl …(+3),A 충격파 고리 (전체 A/D/F),CFXR: CFXR2 Ground Hit,CFXR: CFXR4 Falling Stars,(원작 모델 판별 불가),중간
+Assets/Data/UnitSkills/SkillData_게이트_영원_김정래_ff8bed43.asset,,Uta_ArmyS,model\Effect AZ_Dust Rush 02.mdx ; model\Effect BY_Wood_Effect_Naruto_MingRen_WeiShouYu_2.mdx ; model\az_uta_r2.mdx ; model\slash-uta.mdx …(+2),C 땅 폭발 (전체 B/C),Hovl: Stones hit,(원작 모델 판별 불가),,낮음
+Assets/Data/UnitSkills/SkillData_게이트_영원_문필환_355f5d39.asset,,tots_R,Abilities\Spells\Other\HowlOfTerror\HowlCaster.mdl ; BlackEnergyCharge.mdx ; model\Effect BY_Wood_Effect_Order_DanGe_DaoGuang_BaoZha_1_2_23333.mdx ; Model\Effect Malmter Exshexian-Black2.mdx …(+2),B 초승달 검기 (전체 A/B/F),CFXR: CFXR4 Sword Hit PLAIN (Cross),,,높음
+Assets/Data/UnitSkills/SkillData_게이트_영원_서민성_948ad1b7.asset,,Odeng_Skill,Model\AZ_M.mdx ; rb7.mdx ; Model\AZ_S.mdx ; SkillW.mdx …(+3),B 초승달 검기 (전체 A/B/C/D),CFXR: CFXR4 Sword Hit FIRE (Cross),CFXR: CFXR4 Falling Stars,,높음
+Assets/Data/UnitSkills/SkillData_게이트_영원_서민성_b5c9b49a.asset,,Odeng_Skill_mana,Model\Effect_modeEF2_93.mdx ; model\flamecrack.mdx ; Model\odeng_fire.mdl,C 땅 폭발 (전체 C),CFXR: CFXR3 Fire Explosion B,자체메시: VFX_땅_폭발,,중간
+Assets/Data/UnitSkills/SkillData_게이트_영원_윤현모_aa9cf1bd.asset,,ace_skill_5,,—,SkillVfx.Smash,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_게이트_영원_윤현모_d319dd11.asset,,ace_skill_3,cenarionfury2.mdl ; !Flame Aura.mdl ; DoomDeath4.mdx ; !@FS.mdl …(+1),A 충격파 고리 (전체 A/C/D),CFXR: CFXR3 Hit Fire B (Air),자체메시: VFX_땅_폭발,,높음
+Assets/Data/UnitSkills/SkillData_게이트_영원_이지원_3ba504d5.asset,,"Nika_Random_Punch,Nika_AttackDamage",eff_nika.mdl ; Thunder_nami4.mdl ; AZ_Earthshaker_C2.mdl ; BY_Storm2.mdl …(+5),D 섬광·번개 (전체 A/C/D/F),CFXR: CFXR Impact Glowing HDR (Blue),자체메시: VFX_번개_기둥,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_게이트_영원_최상호_MIhawk_Mana.asset,,"Mihawk_Attack,MIhawk_Mana",supershinythingy.mdx ; az_yishan.mdl ; mihawkslash.mdl ; cfdtz_n2.mdl …(+12),A 충격파 고리 (전체 A/B/C/D),CFXR: CFXR3 Hit Fire B (Air),Hovl: AoE slash orange,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_게이트_영원_최상호_a8343962.asset,,Cavendish_skill_Mana,DevilSlam.mdx2.mdx ; basicstrike.mdl ; ice2.mdl ; FrostNova.mdl …(+1),F 오라·원소(묶음 밖) (전체 A/E/F),,CFXR: CFXR2 Firewall A,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_게이트_전설적인_이현주_0e5cf375.asset,,Legend_han_1,Hancok8.mdl ; pink_flare3.mdx ; Ora_shanks_dummy.mdx ; [DZ.Spell]001_pink.mdl …(+2),F 오라·원소(묶음 밖) (전체 A/D/F),Hovl: Star hit,자체메시: VFX_충격파_원판,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_게이트_전설적인_임건웅_87ed0ff5.asset,,Legend19_1,PoisonBall3.mdl ; Abilities\Weapons\FaerieDragonMissile\FaerieDragonMissile.mdl ; PoisonBall3.mdx,E 투사체 (전체 E),CFXR: CFXR Hit D 3D (Yellow),Hovl: Meteors AOE,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_게이트_전설적인_임건웅_9ffa9c45.asset,,Legend19_0,PoisonBall3.mdl ; PoisonBall3.mdx ; horo_explosion979_pink.mdl,E 투사체 (전체 C/E),CFXR: CFXR Hit D 3D (Yellow),Hovl: Meteors AOE,,높음
+Assets/Data/UnitSkills/SkillData_게이트_전설적인_임장혁_3a13fd3d.asset,,Legend31_toki,Effect Granrey Cero by Deckai Orange.mdx ; Effect_MirrorImage.mdl ; !sslash3.mdl,F 오라·원소(묶음 밖) (전체 A/B/F),Hovl: Holy hit,Hovl: AoE slash orange,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_게이트_전설적인_임채민_355f5d39.asset,,Legend17_Marcodamage,EffectStrikeDust.mdx ; featheraura135.mdl ; EffectInvisibleAirCharge2.mdx ; EffectInvisibleAirCharge2.mdl,F 오라·원소(묶음 밖) (전체 C/E/F),Hovl: Snow hit,,Hovl: Magic shield blue,높음
+Assets/Data/UnitSkills/SkillData_게이트_전설적인_임채현_03847fe6.asset,,Legend35ulti_trg,AZ_Zeusking_Impact-blue.mdl ; windball.mdl ; kkslq8.mdl,A 충격파 고리 (전체 A/D/E),,Hovl: Red energy explosion,,높음
+Assets/Data/UnitSkills/SkillData_게이트_전설적인_정윤식_355f5d39.asset,,Legend34Moria_Skill,az_bat.mdl,C 땅 폭발 (전체 C),,자체메시: VFX_땅_폭발,,높음
+Assets/Data/UnitSkills/SkillData_게이트_전설적인_정준영_3a13fd3d.asset,,"Gaban_Skill_mana,Legend13_2",Abilities\Spells\Undead\CarrionSwarm\CarrionSwarmDamage.mdl ; Abilities\Spells\Human\HolyBolt\HolyBoltSpecialArt.mdl ; nituzuo3.5.mdl ; Akiha Claw Whi.mdl …(+1),D 섬광·번개 (전체 B/D),,,Hovl: Lightning aura,높음
+Assets/Data/UnitSkills/SkillData_게이트_전설적인_진연서_483e0464.asset,,Legend32_neko1,zise-somek2.mdx ; AZ-Ice-Zhendi3.mdx,A 충격파 고리 (전체 A),CFXR: CFXR3 Hit Fire B (Air),,,중간
+Assets/Data/UnitSkills/SkillData_게이트_전설적인_최상호_355f5d39.asset,,Legend51,Cleave.mdl ; tx-ed.mdl ; Abilities\Spells\Human\Thunderclap\ThunderClapCaster.mdl,B 초승달 검기 (전체 A/B),,Hovl: AoE slash blue,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_게이트_전설적인_홍인창_fbb3c4ff.asset,,Legend26_tichi_crows,zise-smoke1.mdx ; BlackHoles.mdl ; AvengerMissile2.mdl,C 땅 폭발 (전체 C/D/E),Hovl: Explosion,Hovl: Meteors AOE,CFXR: CFXR Magic Poof,높음
+Assets/Data/UnitSkills/SkillData_게이트_제한_강보명_57c27e37.asset,,Red_skill_1,Model\ch.mdl ; Model\BS.mdl,—,,,(원작 모델 판별 불가),낮음
+Assets/Data/UnitSkills/SkillData_게이트_제한_김강민_948ad1b7.asset,,cro_skill_2,sandsword.mdl ; WARRR2111.mdl,B 초승달 검기 (전체 B/C),,Hovl: AoE slash orange,,높음
+Assets/Data/UnitSkills/SkillData_게이트_제한_김민규_136d09f9.asset,,Kata_03,E_WarStompCaster_kata.mdl ; az_gangtiex12_f4.mdl,D 섬광·번개 (전체 A/D),,자체메시: VFX_번개_기둥,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_게이트_제한_김민규_3a13fd3d.asset,,katakuri_Skill_2,E_WarStompCaster_kata_45.mdl ; !cftx2.mdl ; az_tormentedsoul_t1.mdl ; [DZ.Spell]001.mdl,A 충격파 고리 (전체 A/C),,자체메시: VFX_충격파_원판,,높음
+Assets/Data/UnitSkills/SkillData_게이트_제한_박성호_3a13fd3d.asset,,Marco_S2,EffectInvisibleAirCharge2.mdx ; Sgod_Slash_no99.mdx ; Effect_Slam_M.mdx ; Effect_M_B.mdx …(+2),A 충격파 고리 (전체 A/B/C/D/F),CFXR: CFXR3 Hit Fire B (Air),,Hovl: Lightning aura,높음
+Assets/Data/UnitSkills/SkillData_게이트_제한_박성호_874ea782.asset,,Marco_S1,AZ_Punch_blue.mdx ; Effect AZ_S_blue.mdx ; AZ_Rush_m0.mdx,A 충격파 고리 (전체 A/B/C),CFXR: CFXR Impact Glowing HDR (Blue),,,높음
+Assets/Data/UnitSkills/SkillData_게이트_제한_이유범_351a0f00.asset,,Sinobu_Skill_hp2,EnergyBurst4sinobu.mdx ; fuzzystomp2.mdx ; nituzuo2.mdx ; az_yishan.mdx …(+3),B 초승달 검기 (전체 A/B/C/D),Hovl: Charge slash blue,Hovl: Ground AOE explosion,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_게이트_제한_이유범_43ad0210.asset,,Sinobu_Skill_4,EnergyBurst4sinobu.mdx ; !piercing5.mdx ; slash-gold11.mdx ; windfaster.mdx …(+1),D 섬광·번개 (전체 A/B/D/F),Hovl: Electro hit,Hovl: Red energy explosion,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_게이트_제한_이충민_18aa2343.asset,,Ain_Skill_1,heroAin.mdl ; k3.mdl ; ShootGB2.mdl ; fuzzystomp2.mdl …(+1),A 충격파 고리 (전체 A/E),,,자체메시: VFX_충격파_원판,중간
+Assets/Data/UnitSkills/SkillData_게이트_제한_이충민_8f2b5872.asset,,Ain_Skill_2,heroAin.mdl ; ShootGB2_ain.mdl ; randomshot3_ain.mdl ; Effect_MirrorImage.mdl,E 투사체 (전체 A/E),,Hovl: Meteors AOE,,높음
+Assets/Data/UnitSkills/SkillData_게이트_제한_임준성_355f5d39.asset,,"King_skill_2_tr,King_skill_2",animeslashfinal.mdx ; swordeff1.mdx ; by_feather2.mdl ; @SlashCRIT23.mdl …(+2),B 초승달 검기 (전체 B/C/E),Hovl: Electro slash,Hovl: Meteors AOE,,높음
+Assets/Data/UnitSkills/SkillData_게이트_제한_전법규_9ffa9c45.asset,,Enel_skill_2,ethereallightning5.mdl ; ethereallightning3.mdl,D 섬광·번개 (전체 D),,Hovl: Red energy explosion,,높음
+Assets/Data/UnitSkills/SkillData_게이트_제한_최영민_30f704bf.asset,,Rebeca_Skill_3,Model\BlossomsMissile3.mdl ; MCut.mdl ; model\lb_hdg2.mdl ; Model\WarStompCaster.mdl,E 투사체 (전체 A/B/E),,,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_게이트_제한_최영민_33bd8aa4.asset,,Rebeca_Skill_1,E_WarStompCaster.mdl ; [kata]PinkSatelliteShelling.mdl ; Abilities\Spells\Items\TomeOfRetraining\TomeOfRetrainingCaster.mdl,A 충격파 고리 (전체 A),,자체메시: VFX_충격파_원판,,중간
+Assets/Data/UnitSkills/SkillData_게이트_초월_강재규_AP_85d0117d.asset,,Robine_skill_2,frozenshell.mdl,D 섬광·번개 (전체 D),,CFXR: CFXR4 Falling Stars,,중간
+Assets/Data/UnitSkills/SkillData_게이트_초월_강재규_AP_Robine_skill_1.asset,,"Robine_skill_1,Robin_Attack",BlinkPinkCaster.mdl ; Robin_dres9.mdl ; IceNova.mdx ; overhix3.mdx …(+3),A 충격파 고리 (전체 A/C/D),,Hovl: Freeze circle,,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_강재규_AP_fcba0856.asset,,Robine_skill_3,robinhand.mdl,—,,(원작 모델 판별 불가),,낮음
+Assets/Data/UnitSkills/SkillData_게이트_초월_강주혁_AP_5c20b80f.asset,,Nami_Skill_2,Stormfall.mdx ; Abilities\Weapons\Bolt\BoltImpact.mdl ; LB_Nami.mdl ; Abilities\Weapons\SpiritOfVengeanceMissile\SpiritOfVengeanceMissile.mdl …(+3),F 오라·원소(묶음 밖) (전체 A/D/E/F),CFXR: CFXR Impact Glowing HDR (Blue),자체메시: VFX_번개_기둥,,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_구주호_AD_355f5d39.asset,,Yamato_Attack_Damage2,EffectFuzzystompBlue.mdx ; EffectAncientExplode(Blue)Light2.mdx ; BY_Wood_Effect_Order_DanGe_DaoGuang_BaoZha_1_2_2.mdx ; BY_Wood_BaShenAn_JuQi_5 Pink2.mdx …(+3),A 충격파 고리 (전체 A/B/D),CFXR: CFXR3 Hit Fire B (Air),Hovl: Red energy explosion,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_김경현_AP_4266b6e3.asset,,Snake_3_Kingkobra,Effect Snake_casterart.mdx ; Effect Interceptor Shell Explosion.mdx ; effect Az_Slash_Snake.mdx ; Effect AZ_Slash Red.mdx …(+8),A 충격파 고리 (전체 A/B/C/D),CFXR: CFXR3 Hit Fire B (Air),Hovl: AoE slash blue,(원작 모델 판별 불가),높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_김경현_AP_b7ae9b41.asset,,Snake_2,BY_Wood_GongChengSiPai_45.mdl ; az3.mdl ; AZ_Yin_Qsnake.mdl,B 초승달 검기 (전체 B/C),,Hovl: AoE slash blue,CFXR: CFXR Magic Poof,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_김민준_AP_2a646778.asset,,Tasigi_03,Abilities\Weapons\ZigguratMissile\ZigguratMissile.mdl ; tashigi17.mdl ; Akiha Claw-blue.mdl ; pink_flare3.mdl …(+2),E 투사체 (전체 A/B/D/E),CFXR: CFXR Hit D 3D (Yellow),자체메시: VFX_번개_기둥,,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_김민준_AP_355f5d39.asset,,"Tasigi_02,tahsigi",Abilities\Spells\Orc\MirrorImage\MirrorImageCaster.mdl ; tashigi17.mdl ; Mr.War3_XZ4.mdl ; E_WhiteWaveS.mdl …(+7),A 충격파 고리 (전체 A/B/C/D),CFXR: CFXR3 Hit Fire B (Air),자체메시: VFX_번개_기둥,CFXR: CFXR4 Sword Trail PLAIN (360 Spiral),중간
+Assets/Data/UnitSkills/SkillData_게이트_초월_노태현_AP_BrookAttack_1of24.asset,,BrookAttack,arua6.mdl ; az-slash-blue.mdl ; mahou_no_uta_by_deckai.mdl ; rin_missile.mdl,F 오라·원소(묶음 밖) (전체 A/B/E/F),,CFXR: CFXR3 Magic Aura A (Runic),,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_노태현_AP_BrookAttack_B00Y.asset,,BrookAttack,arua6.mdl ; az-slash-blue.mdl ; mahou_no_uta_by_deckai.mdl ; rin_missile.mdl,F 오라·원소(묶음 밖) (전체 A/B/E/F),,CFXR: CFXR3 Magic Aura A (Runic),,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_두유찬_AD_8eab1c6f.asset,,Sabo_Mana,%56.mdl ; !tenpajyousai+sfx+by+deckai.mdl ; Explorer_BOOM.mdl ; shadowassault(lightblue)2.mdl,D 섬광·번개 (전체 A/C/D),,CFXR: CFXR4 Falling Stars,,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_박기찬_AD_a8343962.asset,,Franky_Skill_Mana1,mirrorzi_model_effects_jinsechongjipao.mdx ; EffectSkyRing.mdx ; EffectYellowLight.mdx ; exshexian.mdx …(+2),A 충격파 고리 (전체 A/D),CFXR: CFXR Impact Glowing HDR (Blue),,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_박기찬_AD_b3948c74.asset,,Franky_misiile_re,Effect_Artillery_Franky.mdx ; MoonWrath.mdl,C 땅 폭발 (전체 B/C),CFXR: CFXR3 Fire Explosion B,Hovl: AoE slash orange,,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_박민수_AD_b5c9b49a.asset,,"Zoro_samchun1,Zoro_Samchun2",BY_Wood_Eff_Ord_YeYe_Wid_KuoSan_1.mdx ; saitamawave3.mdl ; EnergyBurst3sinobu.mdl ; animeslashfinal.mdl …(+10),A 충격파 고리 (전체 A/B/C/D/F),(원작 모델 판별 불가),자체메시: VFX_충격파_원판,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_박민수_AD_b7ae9b41.asset,,Zoro_raven,rb7.mdx ; MCut2.mdx ; rb7.mdl ; az_qiliu2.mdl …(+2),B 초승달 검기 (전체 B),CFXR: CFXR4 Sword Hit FIRE (Cross),,CFXR: CFXR4 Sword Trail FIRE (360 Spiral),높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_배성령_AD_18aa2343.asset,,Sandi_skill_1,!kick.type2.mdl ; E_WhiteWaveS.mdl ; k3.mdl ; [Spell]ElementalEffectHoly5.mdl,A 충격파 고리 (전체 A/D),,자체메시: VFX_충격파_원판,(원작 모델 판별 불가),중간
+Assets/Data/UnitSkills/SkillData_게이트_초월_배성령_AD_3c5f8bd9.asset,,Sandi_skill_Mana2,!FireFist2.mdl ; NewDirtEXNofire00.mdl ; !FireLance2.mdx ; ioncannon2_sandi.mdl,C 땅 폭발 (전체 C/D),,자체메시: VFX_땅_폭발,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_배성령_AD_SandiAttack_Upgrade_1of18.asset,,"SandiAttack_Upgrade,Sandi_skill_1",REDshotingR1c.mdl ; E_WarStompCaster.mdl ; !kick.type2.mdl ; E_WhiteWaveS.mdl …(+6),C 땅 폭발 (전체 A/C/D/E),,자체메시: VFX_땅_폭발,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_신문철_AP_355f5d39.asset,,Ruffy_AttackDamage,NewDirtEXNofire_90.mdl ; NewDirtEXNofire_90.mdx,C 땅 폭발 (전체 C),,자체메시: VFX_땅_폭발,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_신문철_AP_55ecbfb2.asset,,Ruffy_Mana,LW10.mdx ; SuperBigExplosion.mdx ; Effect_AZ_T_Misslie.mdl ; red-zhendi-2.mdx …(+1),A 충격파 고리 (전체 A/C/E),CFXR: CFXR3 Hit Fire B (Air),Hovl: Meteors AOE,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_양재모_AD_29846395.asset,,"Huji_03,Huji01",Abilities\Spells\Human\Invisibility\InvisibilityTarget.mdl ; k3.mdl ; AZ_DG001_1.mdl ; Ephemeral Slash Purple2.mdl …(+12),A 충격파 고리 (전체 A/B/C/D/F),,자체메시: VFX_충격파_원판,Hovl: Buff,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_양재모_AD_Law_Skill_2.asset,,"Law_Skill_2,Law_Attack",White SlashB.mdl ; dustwave2.mdl ; !rawroom.mdl ; [Spell]TownPortal2.mdl …(+8),B 초승달 검기 (전체 A/B/C/D),,Hovl: AoE slash orange,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_유재헌_ADAP_Sirahoshi_skill_Mana.asset,,"Sirahoshi_skill_Mana,Sirahoshi_Attack",FreezingRing.mdl ; Shiva'sWrath.mdl ; 000F5.mdl ; Aqua_Wave_Fix1.mdx …(+5),A 충격파 고리 (전체 A/C/F),CFXR: CFXR Impact Glowing HDR (Blue),Hovl: Freeze circle,,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_임장혁_AD_5e483927.asset,,Luchi_Skill_3_6kinggun,AZ_Yin_Q4.mdl ; AZ_XuanFeng02B2.mdl ; AZ_Earthshaker_C2.mdl,C 땅 폭발 (전체 C/D/F),,자체메시: VFX_땅_폭발,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_임장혁_AD_Luchi_Skill_1_Kick2.asset,A0R2,"Luchi_Skill_1_Kick2,T_Ability_hero,Luchi_Attack",rin_missile.mdl ; Gikura_A.mdl ; yaya r texiao.mdl ; DoomDeath2.mdl …(+25),E 투사체 (전체 A/C/D/E/F),CFXR: CFXR Hit A (Red),자체메시: VFX_땅_폭발,Hovl: Buff,중간
+Assets/Data/UnitSkills/SkillData_게이트_초월_임장혁_AD_Luchi_Skill_2_ZiGun.asset,,"Luchi_Skill_2_ZiGun,Luchi_Attack",Gikura_A.mdl ; yaya r texiao.mdl ; DoomDeath2.mdl ; Gikura_A.mdx …(+6),C 땅 폭발 (전체 A/C/D/F),(원작 모델 판별 불가),자체메시: VFX_땅_폭발,CFXR: CFXR Flash,중간
+Assets/Data/UnitSkills/SkillData_게이트_초월_임채민_AP_42844439.asset,,Tichi_skill_2_tr,ThunderclapCasterBlack.mdx ; ThunderclapCasterBlack.mdl ; tichief4_tr.mdx ; cosmic field2.mdl …(+1),A 충격파 고리 (전체 A/C),Hovl: Electro hit,,자체메시: VFX_충격파_원판,중간
+Assets/Data/UnitSkills/SkillData_게이트_초월_임채민_AP_Tichi_skill_3.asset,,"Tichi_skill_3,Tichi_Attack",zise-smoke1.mdx ; zise-smoke_tr3.mdl ; BlackHoles.mdl ; AvengerMissile2.mdl …(+12),A 충격파 고리 (전체 A/C/D/E),Hovl: Electro hit,자체메시: VFX_충격파_원판,CFXR: CFXR Magic Poof,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_임채민_AP_da9fb163.asset,,Tichi_skill_1,zise-smoke1.mdx ; zise-smoke_tr3.mdl ; BlackHoles.mdl ; AvengerMissile2.mdl,C 땅 폭발 (전체 C/D/E),Hovl: Explosion,Hovl: Meteors AOE,CFXR: CFXR Magic Poof,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_조성진_AD_29846395.asset,,Usop_Skill_Mana,SuperBigExplosion.mdl,C 땅 폭발 (전체 C),,자체메시: VFX_땅_폭발,,중간
+Assets/Data/UnitSkills/SkillData_게이트_초월_조성진_AD_33bd8aa4.asset,,Usop_Skill_2,1gun55_dp.mdl ; !shot09.mdl,E 투사체 (전체 E),,Hovl: Meteors AOE,,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_최상호_AD_3c5f8bd9.asset,,Jimbe_Mu,az_piercing2.mdl ; SkillW.mdl,A 충격파 고리 (전체 A/C),,자체메시: VFX_충격파_원판,CFXR: CFXR Magic Poof,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_최상호_AD_b8d2fd85.asset,,Jimbe,AquaSpikeVersion2.mdl ; Shiva'sWrath.mdl,D 섬광·번개 (전체 C/D),,자체메시: VFX_번개_기둥,,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_최상호_AP_18aa2343.asset,,DP_Skill_3,Dimension SlashOriginal.mdl,B 초승달 검기 (전체 B),,Hovl: AoE slash blue,,높음
+Assets/Data/UnitSkills/SkillData_게이트_초월_최상호_AP_355f5d39.asset,,DP_AttackDamagegaksung,,—,SkillVfx.Smash,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_게이트_초월_최상호_AP_5c20b80f.asset,,DP_Skill_2,1gun55_dp.mdl ; Railgun3t.mdl,E 투사체 (전체 E),,Hovl: Meteors AOE,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_게이트_희귀함_황준석_d1ddeea9.asset,,Tich1_danil,zise-smoke1.mdx ; BlackHoles.mdl ; AvengerMissile2.mdl,C 땅 폭발 (전체 C/D/E),Hovl: Explosion,Hovl: Meteors AOE,CFXR: CFXR Magic Poof,높음
+Assets/Data/UnitSkills/SkillData_게이트_히든_최윤서_3c5f8bd9.asset,,deken_Mana,maxim.mdx ; NewDirtEXNofire.mdl,F 오라·원소(묶음 밖) (전체 C/F),CFXR: CFXR Impact Glowing HDR (Blue),자체메시: VFX_땅_폭발,,높음
+Assets/Data/UnitSkills/SkillData_게이트_히든_최윤서_b8d2fd85.asset,,deken_skill_1,!effect2.mdl ; az_akasha_w_red.mdx ; red-zhendi-2.mdl,A 충격파 고리 (전체 A/C),CFXR: CFXR3 Fire Explosion B,Hovl: Red energy explosion,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_게이트_히든_호치킨_21297197.asset,,Akainu_02_hidden,magmahandBig.mdl ; Dash_Sfx.mdl ; DoomDeath4.mdl ; Lava Slam.mdl …(+2),C 땅 폭발 (전체 A/C/D),,자체메시: VFX_땅_폭발,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_게이트_히든_황정기_2251ce1a.asset,,koalla_skill_1,Ora_reliy.mdx ; ShootGB1a.mdl ; !flare8.mdl ; FreezingRing.mdl …(+1),A 충격파 고리 (전체 A/D/E/F),,Hovl: Freeze circle,Hovl: Magic shield blue,높음
+Assets/Data/UnitSkills/SkillData_게이트_히든_황정기_2a646778.asset,,koalla_skill_Mana,mr.war3_bhztx2.mdx ; dustwave3.mdl ; Model\ef-modelpack.mdl ; punch2.mdl …(+1),A 충격파 고리 (전체 A/C/D),,,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_더미채널_랜덤_모몬가_1.asset,,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_더미채널_랜덤_이즈미_신이치_1.asset,,Naruto1,Model\rasenshuriken2.mdl ; Model\newrasengan32.mdl,E 투사체 (전체 E),,Hovl: Meteors AOE,CFXR: CFXR Flash,중간
+Assets/Data/UnitSkills/SkillData_더미채널_랜덤_이타도리_유지_1.asset,,cat1,Model\firecut.mdl ; EGS.mdl,B 초승달 검기 (전체 B),,Hovl: AoE slash orange,,중간
+Assets/Data/UnitSkills/SkillData_더미채널_랜덤_카마도_탄지로_1.asset,,k1,NewDirtEXNofire4.1.mdl ; Model\k'_borken2.mdl ; Model\kdumy.mdl ; Abilities\Spells\Human\MarkOfChaos\MarkOfChaosTarget.mdl,C 땅 폭발 (전체 C/D),,자체메시: VFX_땅_폭발,Hovl: Star aura,중간
+Assets/Data/UnitSkills/SkillData_더미채널_변화됨_박은석_79행_01000.asset,A0C4,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_더미채널_불멸_고도현_1.asset,,Shiki_Attack,PsychicTarget2.mdl ; Wind Blast33.mdx ; NewDirtEXNofire.mdl ; water_jinbe3.mdl …(+10),E 투사체 (전체 A/B/C/E/F),CFXR: CFXR Hit D 3D (Yellow),자체메시: VFX_충격파_원판,CFXR: CFXR4 Sword Trail PLAIN (360 Spiral),높음
+Assets/Data/UnitSkills/SkillData_더미채널_불멸_고도현_79행_01250.asset,A0OZ,Ed_Attack,Cleave.mdl ; by_kid4d.mdl ; tx-ed.mdl ; Abilities\Spells\Human\Thunderclap\ThunderClapCaster.mdl …(+5),F 오라·원소(묶음 밖) (전체 A/B/C/F),CFXR: CFXR Impact Glowing HDR (Blue),Hovl: AoE slash blue,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_더미채널_불멸_고도현_79행_10000.asset,A13R,Shiki_Attack,PsychicTarget2.mdl ; Wind Blast33.mdx ; NewDirtEXNofire.mdl ; water_jinbe3.mdl …(+11),E 투사체 (전체 A/B/C/E/F),CFXR: CFXR Hit D 3D (Yellow),Hovl: Red energy explosion,CFXR: CFXR4 Sword Trail PLAIN (360 Spiral),높음
+Assets/Data/UnitSkills/SkillData_더미채널_불멸_고도현_A13P.asset,A13P,,E_RockUp.mdx,C 땅 폭발 (전체 C),Hovl: Stones hit,,,중간
+Assets/Data/UnitSkills/SkillData_더미채널_불멸_박은석_79행_00625.asset,A09F,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_더미채널_불멸_신지우_1.asset,,Kaido_Attack,WindCirclefaster.mdl ; E_WarStompCaster.mdl ; E_RockUp.mdl ; az_axe.mdl …(+17),A 충격파 고리 (전체 A/B/C/D),CFXR: CFXR3 Fire Explosion B,Hovl: Red energy explosion,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_더미채널_불멸_신지우_h04F.asset,,Gaban_Attack,Abilities\Spells\Orc\AncestralSpirit\AncestralSpiritCaster.mdl ; [DZ.Spell]006LightS.mdl ; Effect_Black_Getsuga10.mdl ; AZLavaStomp.mdl …(+5),B 초승달 검기 (전체 A/B/D),,Hovl: AoE slash orange,Hovl: Lightning aura,높음
+Assets/Data/UnitSkills/SkillData_더미채널_불멸_이이삭_1.asset,,Sengoku_Attack,Enlightenment2.mdl ; sengoku_hand.mdx ; az_firering1a.mdl ; JN_HS_rulaibaozha1.mdl …(+7),A 충격파 고리 (전체 A/C/D),,Hovl: Red energy explosion,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_더미채널_불멸_정윤식_1.asset,,LaillySkill,Abilities\Weapons\AncientProtectorMissile\AncientProtectorMissile.mdl ; blue-liz-move.mdx ; WindWeak2.mdx ; Psionic Shot Blue.mdx …(+18),D 섬광·번개 (전체 A/B/C/D/E/F),CFXR: CFXR Explosion 1,자체메시: VFX_번개_기둥,Hovl: Lightning aura,높음
+Assets/Data/UnitSkills/SkillData_더미채널_불멸_정윤식_79행_10000.asset,A149,LaillySkill,Abilities\Weapons\AncientProtectorMissile\AncientProtectorMissile.mdl ; blue-liz-move.mdx ; WindWeak2.mdx ; Psionic Shot Blue.mdx …(+18),D 섬광·번개 (전체 A/B/C/D/E/F),CFXR: CFXR Explosion 1,자체메시: VFX_번개_기둥,Hovl: Lightning aura,높음
+Assets/Data/UnitSkills/SkillData_더미채널_불멸_정준영_1.asset,,Dragon_Attack,WindCirclefaster.mdl ; Atsugai1.mdl ; Abilities\Spells\Other\Tornado\TornadoElementalSmall.mdl ; T-dustwave.mdl …(+5),A 충격파 고리 (전체 A/C/D/F),,자체메시: VFX_충격파_원판,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_영원_김정래_1.asset,,Uta_Attack,model\Effect AZ_Dust Rush 02.mdx ; model\Effect BY_Wood_Effect_Naruto_MingRen_WeiShouYu_2.mdx ; model\az_uta_r2.mdx ; model\slash-uta.mdx …(+16),E 투사체 (전체 A/B/C/D/E/F),CFXR: CFXR Hit D 3D (Yellow),CFXR: CFXR3 Magic Aura A (Runic),(원작 모델 판별 불가),중간
+Assets/Data/UnitSkills/SkillData_더미채널_영원_김정래_A0F1.asset,A0F1,Bugi_Attack,yiwan.mdl ; Abilities\Spells\Human\Thunderclap\ThunderClapCaster.mdl ; BlightwalkerAura.mdx ; slam.mdl,A 충격파 고리 (전체 A/D),CFXR: CFXR3 Hit Fire B (Air),,Hovl: Star aura,높음
+Assets/Data/UnitSkills/SkillData_더미채널_영원_윤현모_1.asset,,Ace_Attack,SuperBigExplosion.mdl ; kongukan.mdl ; !FireFist2.mdx ; flamestrike3.mdl …(+6),C 땅 폭발 (전체 A/C/D),CFXR: CFXR3 Fire Explosion B,자체메시: VFX_땅_폭발,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_더미채널_영원_조세민_79행_lock.asset,A0OK,,jian3.mdx,B 초승달 검기 (전체 B),CFXR: CFXR4 Sword Hit PLAIN (Cross),,,중간
+Assets/Data/UnitSkills/SkillData_더미채널_영원_최상호_1.asset,,Cavendish_Attack,skybomb.mdl ; AZ_Z047_0Real.mdl ; Abilities\Spells\Other\Levelup\LevelupCaster.mdl ; DevilSlam.mdx2.mdx …(+4),F 오라·원소(묶음 밖) (전체 A/C/D/E/F),,CFXR: CFXR2 Firewall A,CFXR: CFXR Magic Poof,높음
+Assets/Data/UnitSkills/SkillData_더미채널_영원_최상호_79행_10000.asset,A0B6,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_더미채널_전설적인_김건_1.asset,,Legend4,PsychicTarget.mdl,A 충격파 고리 (전체 A),,자체메시: VFX_충격파_원판,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_전설적인_박병규_1.asset,,Legend7,s_PowerCharge_Effect_Portrait.mdl ; Wave_squished2.mdx ; supershinythingy.mdx,A 충격파 고리 (전체 A/B/F),CFXR: CFXR Impact Glowing HDR (Blue),Hovl: Snow AOE,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_전설적인_임장혁_1.asset,,Legend18,bulletexplosion2.mdl ; kdumy.mdl ; !FireFist7.mdx ; Firewall.mdl,C 땅 폭발 (전체 A/C),CFXR: CFXR3 Fire Explosion B,자체메시: VFX_땅_폭발,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_더미채널_전설적인_임채민_1.asset,,Legend10,NewDirtEXNofire.mdl,C 땅 폭발 (전체 C),,,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_더미채널_전설적인_임채현_1.asset,,Legend11,Ephemeral Slash Purple2.mdl ; AZ_DG001_1.mdl ; BY_Storm2.mdl,F 오라·원소(묶음 밖) (전체 B/F),,Hovl: Smoke AOE explosion,CFXR: CFXR4 Sword Trail PLAIN (360 Spiral),높음
+Assets/Data/UnitSkills/SkillData_더미채널_전설적인_정준영_1.asset,,Legend2,Aqua_Wave_Fix1.mdx ; suijinha.mdl,A 충격파 고리 (전체 A/F),CFXR: CFXR Impact Glowing HDR (Blue),자체메시: VFX_충격파_벽,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_전설적인_정준영_2.asset,,Legend2,Aqua_Wave_Fix1.mdx ; suijinha.mdl,A 충격파 고리 (전체 A/F),CFXR: CFXR Impact Glowing HDR (Blue),자체메시: VFX_충격파_벽,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_전설적인_최상호_1.asset,,Legend6,SpiritoftheEarth5.mdl ; FJB.mdl ; KumaPad3.mdl ; E_WarStompCaster.mdl …(+2),C 땅 폭발 (전체 A/C/F),,Hovl: Ground AOE explosion,,중간
+Assets/Data/UnitSkills/SkillData_더미채널_전설적인_최상호_2.asset,,Legend6,SpiritoftheEarth5.mdl ; FJB.mdl ; KumaPad3.mdl ; E_WarStompCaster.mdl …(+2),A 충격파 고리 (전체 A/C/F),,자체메시: VFX_충격파_원판,,중간
+Assets/Data/UnitSkills/SkillData_더미채널_제한_강보명_1.asset,,RedAttack,model\bloq3.mdl ; az-slash-red.mdl ; Model\AZ_BaoHunJue.mdx ; Model\ReapersClawsRed2.mdl …(+3),B 초승달 검기 (전체 B/C),Hovl: Explosion,Hovl: AoE slash orange,CFXR: CFXR4 Sword Trail FIRE (360 Spiral),중간
+Assets/Data/UnitSkills/SkillData_더미채널_제한_최영민_79행_00833.asset,A0QX,RebecaAttack,E_WarStompCaster.mdl ; [kata]PinkSatelliteShelling.mdl ; Abilities\Spells\Items\TomeOfRetraining\TomeOfRetrainingCaster.mdl ; Model\BlossomsMissile3.mdl …(+3),A 충격파 고리 (전체 A/B/E),,자체메시: VFX_충격파_원판,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_더미채널_제한_최영민_79행_02000.asset,A0QY,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_더미채널_초월_강주혁_AP_79행_10000.asset,A0B0,Nami_Skill_4,namifire3.mdl ; Abilities\Spells\Other\Monsoon\MonsoonBoltTarget.mdl ; tornado33.mdl,D 섬광·번개 (전체 C/D/F),,자체메시: VFX_번개_기둥,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_초월_구주호_AD_79행_01429.asset,A160,"RokuguTree_Attack,Rokugu_Attack",Flamestrike_remake3.mdl ; ThornSlam3.mdl ; sujiejianglin3.mdl ; mokton.mdl …(+4),A 충격파 고리 (전체 A/B/C),,자체메시: VFX_충격파_원판,CFXR: CFXR Magic Poof,높음
+Assets/Data/UnitSkills/SkillData_더미채널_초월_신문철_AP_79행_10000.asset,A09Q,"Ruffy_AttackDamage,Ruffy_Attack",by17.mdx ; luffy_wano01_s1.mdx ; k3.mdl ; slash-gold10.mdl …(+8),C 땅 폭발 (전체 A/B/C/E),CFXR: CFXR3 Hit Fire B (Air),자체메시: VFX_땅_폭발,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_더미채널_초월_신문철_AP_A09T.asset,A09T,Ruffy_AttackDamage,NewDirtEXNofire_90.mdl ; NewDirtEXNofire_90.mdx,C 땅 폭발 (전체 C),,자체메시: VFX_땅_폭발,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_더미채널_초월_임채민_AP_79행_01000.asset,A13V,Tichi_Attack,zise-smoke1.mdx ; zise-smoke_tr3.mdl ; BlackHoles.mdl ; AvengerMissile2.mdl …(+12),A 충격파 고리 (전체 A/C/D/E),Hovl: Electro hit,자체메시: VFX_충격파_원판,CFXR: CFXR Magic Poof,높음
+Assets/Data/UnitSkills/SkillData_더미채널_초월_최상호_AP_79행_10000.asset,A0PI,DP_Attack,Stomp-large.mdl ; mr.war3_zhizhuwang.mdl ; 1gun55_dp.mdl ; Railgun3t.mdl …(+1),B 초승달 검기 (전체 A/B/E),,Hovl: AoE slash blue,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_더미채널_초월_황준석_ADAP_79행_01000.asset,A10Z,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_더미채널_초월_황준석_ADAP_79행_10000.asset,A0BV,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_더미채널_특별함_이병준_1.asset,,Speical7,Abilities\Spells\Items\WandOfNeutralization\NeutralizationMissile.mdl,D 섬광·번개 (전체 D),CFXR: CFXR3 Hit Electric C (Air),,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_특별함_조성진_1.asset,,Speical6,DoomDeath4.mdl ; DoomDeath4.mdx,A 충격파 고리 (전체 A),CFXR: CFXR3 Hit Fire B (Air),Hovl: Red energy explosion,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_더미채널_특별함_최동준_1.asset,,Speical9,Abilities\Spells\Other\BreathOfFire\BreathOfFireMissile.mdl,C 땅 폭발 (전체 C),CFXR: CFXR3 Fire Explosion B,,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_특별함_최준우_1.asset,,Speical3,JDP_Blue2.mdx,F 오라·원소(묶음 밖) (전체 F),Hovl: Holy hit,,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_희귀함_강재규_1.asset,,Unique3,WarStompCaster_nocrack.mdl,A 충격파 고리 (전체 A),,Hovl: Red energy explosion,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_더미채널_희귀함_구주호_1.asset,,Unique32,Abilities\Spells\Orc\WarStomp\WarStompCaster.mdl ; FreezingRing.mdl,A 충격파 고리 (전체 A),,자체메시: VFX_충격파_원판,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_희귀함_박도진_1.asset,,Unique14,Wave_squished2.mdl ; Abilities\Spells\Items\WandOfNeutralization\NeutralizationMissile.mdl,D 섬광·번개 (전체 A/D),CFXR: CFXR3 Hit Electric C (Air),,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_더미채널_희귀함_박수찬_1.asset,,Unique10,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_더미채널_희귀함_박은석_1.asset,,Unique9,Abilities\Spells\Orc\HealingWave\HealingWaveTarget.mdl,A 충격파 고리 (전체 A),CFXR: CFXR Impact Glowing HDR (Blue),,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_더미채널_희귀함_유재헌_1.asset,,Unique23,effect_chanrao.mdl,A 충격파 고리 (전체 A),,자체메시: VFX_충격파_원판,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_희귀함_윤현모_1.asset,,Unique11,Abilities\Spells\Undead\FrostNova\FrostNovaTarget.mdl,A 충격파 고리 (전체 A),,Hovl: Freeze circle,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_희귀함_이상혁_1.asset,,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_더미채널_희귀함_이승우_1.asset,,Unique4,JDP_Blue2.mdx,F 오라·원소(묶음 밖) (전체 F),Hovl: Holy hit,,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_희귀함_이용민_1.asset,,Unique27,Abilities\Spells\NightElf\Taunt\TauntCaster.mdl,—,,(원작 모델 판별 불가),,낮음
+Assets/Data/UnitSkills/SkillData_더미채널_희귀함_이재윤_1.asset,,Unique18,Abilities\Spells\Undead\Darksummoning\DarkSummonTarget.mdl,F 오라·원소(묶음 밖) (전체 F),,Hovl: Magic circle 2,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_희귀함_임채민_1.asset,,Unique29,Effect_AZ_T_Misslie.mdl ; InterceptorShell.mdx,B 초승달 검기 (전체 B/E),CFXR: CFXR4 Sword Hit FIRE (Cross),Hovl: Meteors AOE,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_희귀함_정내연_1.asset,,Unique33,kkslq8.mdx ; tiger.mdl ; darkblade.mdl ; JudgementTarget.mdl,D 섬광·번개 (전체 B/D),CFXR: CFXR Impact Glowing HDR (Blue),Hovl: Red energy explosion,,높음
+Assets/Data/UnitSkills/SkillData_더미채널_희귀함_황준석_1.asset,,Unique34,nituzuo2.mdl ; gem_two_diamond.mdl ; fuzzystomp.mdl ; @100.mdl,A 충격파 고리 (전체 A),,자체메시: VFX_충격파_원판,,높음
+Assets/Data/UnitSkills/SkillData_버프게이트_랜덤_미도리야_이즈쿠_B05N.asset,,,,—,SkillVfx.Buff,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_버프게이트_불멸_박은석_B00M.asset,,,,—,SkillVfx.Buff,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_버프게이트_영원_김영원_B03M.asset,,,,—,SkillVfx.Buff,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_버프게이트_전설적인_이현주_B00D.asset,,Legend_han_kiss,EnergyBurst4sinobu.mdl ; Wave_squished2-noSound.mdx ; effect_hancock.mdl,D 섬광·번개 (전체 A/D),,Hovl: Red energy explosion,,높음
+Assets/Data/UnitSkills/SkillData_버프게이트_제한_김민규_B045.asset,,,,—,SkillVfx.Buff,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_버프게이트_초월_양재모_AD_B03Z.asset,,,,—,SkillVfx.Buff,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작001_H090.asset,A0D0,해시(유닛 H090) Tichi_Attack,zise-smoke1.mdx ; zise-smoke_tr3.mdl ; BlackHoles.mdl ; AvengerMissile2.mdl …(+12),A 충격파 고리 (전체 A/C/D/E),Hovl: Electro hit,자체메시: VFX_충격파_원판,CFXR: CFXR Magic Poof,중간(해시로 유닛 공격 트리거 전체)
+Assets/Data/UnitSkills/SkillData_원작002_H0B4.asset,A10F,해시(유닛 H0B4) Kid_Attack,by17.mdx ; az_gpqg3-700.mdl ; BY_Wood_Effect_Dash.mdl ; AZ-Ice-Zhendi3.mdl …(+25),A 충격파 고리 (전체 A/B/C/D/F),CFXR: CFXR Impact Glowing HDR (Blue),자체메시: VFX_땅_폭발,자체메시: VFX_충격파_원판,중간(해시로 유닛 공격 트리거 전체)
+Assets/Data/UnitSkills/SkillData_원작003_H08Y.asset,A069,"Franky_Skill_1,Franky_Attack",franky_sunny_eff3.mdl ; Conflagrate Blue.mdl ; mirrorzi_model_effects_jinsechongjipao.mdx ; EffectSkyRing.mdx …(+6),A 충격파 고리 (전체 A/B/C/D),CFXR: CFXR Impact Glowing HDR (Blue),Hovl: Red energy explosion,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_원작004_H08W.asset,A0R2,해시(유닛 H08W) Luchi_Attack,Gikura_A.mdl ; yaya r texiao.mdl ; DoomDeath2.mdl ; Gikura_A.mdx …(+6),C 땅 폭발 (전체 A/C/D/F),(원작 모델 판별 불가),자체메시: VFX_땅_폭발,CFXR: CFXR Flash,중간(해시로 유닛 공격 트리거 전체)
+Assets/Data/UnitSkills/SkillData_원작005_H08X.asset,A0GR,해시(유닛 H08X) Huji_Attack,Abilities\Spells\Human\Invisibility\InvisibilityTarget.mdl ; k3.mdl ; AZ_DG001_1.mdl ; Ephemeral Slash Purple2.mdl …(+13),A 충격파 고리 (전체 A/B/C/D/F),,자체메시: VFX_충격파_원판,Hovl: Buff,중간(해시로 유닛 공격 트리거 전체)
+Assets/Data/UnitSkills/SkillData_원작008_H08U.asset,A0EQ,Sirahoshi_Attack,FreezingRing.mdl ; Shiva'sWrath.mdl ; 000F5.mdl ; Aqua_Wave_Fix1.mdx …(+5),A 충격파 고리 (전체 A/C/F),CFXR: CFXR Impact Glowing HDR (Blue),Hovl: Freeze circle,,높음
+Assets/Data/UnitSkills/SkillData_원작010_H09E.asset,A0AL,해시(유닛 H09E) DP_Attack,Stomp-large.mdl ; mr.war3_zhizhuwang.mdl ; 1gun55_dp.mdl ; Railgun3t.mdl …(+1),B 초승달 검기 (전체 A/B/E),,Hovl: AoE slash blue,CFXR: CFXR Flash,중간(해시로 유닛 공격 트리거 전체)
+Assets/Data/UnitSkills/SkillData_원작013_H099_A09S.asset,A09S,해시(유닛 H099) Ruffy_Attack,by17.mdx ; luffy_wano01_s1.mdx ; k3.mdl ; slash-gold10.mdl …(+8),C 땅 폭발 (전체 A/B/C/E),CFXR: CFXR3 Hit Fire B (Air),자체메시: VFX_땅_폭발,CFXR: CFXR2 WW Explosion,중간(해시로 유닛 공격 트리거 전체)
+Assets/Data/UnitSkills/SkillData_원작015_H09B.asset,A0IE,해시(유닛 H09B) Usop_Attack,Explorer_BOOM.mdl ; 1gun55_dp.mdl ; !shot09.mdl ; SuperBigExplosion.mdl,E 투사체 (전체 C/E),,Hovl: Meteors AOE,,중간(해시로 유닛 공격 트리거 전체)
+Assets/Data/UnitSkills/SkillData_원작017_H095.asset,A0HG,"Akainu_Attack,Akainu_01",WarStomp.mdx ; E_SuperShinyThingyPurple.mdx ; magmahand.mdl ; magmahandBig.mdl …(+7),C 땅 폭발 (전체 A/B/C/D),,자체메시: VFX_땅_폭발,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_원작021_h04E.asset,A0D8,"Sengoku_Skill_Item,Seongoku_Skill_4",IonCannonWave.mdl ; E_BlueLightBurst2.mdl ; PsychicTarget0302.mdl ; AZ.mdl …(+1),A 충격파 고리 (전체 A/D),,Hovl: Red energy explosion,,높음
+Assets/Data/UnitSkills/SkillData_원작022_h04G.asset,A09E,해시(유닛 h04G) Z_Attack,!flare8.mdl ; IceNova.mdl ; Abilities\Weapons\FarseerMissile\FarseerMissile.mdl ; fortress3.mdl …(+9),C 땅 폭발 (전체 A/B/C/D/E/F),,Hovl: Ground AOE explosion,CFXR: CFXR Magic Poof,중간(해시로 유닛 공격 트리거 전체)
+Assets/Data/UnitSkills/SkillData_원작023_h04C.asset,A0GY,"Garp_Attack,Garp_Mana2",kaido_eff3_90.mdl ; E_FastStrike.mdl ; kaido_kamai2_garp2.mdl ; tx-11.mdl …(+4),E 투사체 (전체 A/C/E),CFXR: CFXR Hit D 3D (Yellow),Hovl: Ground AOE explosion,,높음
+Assets/Data/UnitSkills/SkillData_원작024_h04D.asset,A0FS,"Dragon_Skill_Mana,Dragon_Skill_1_T,Dragon_Skill_1",Abilities\Spells\Other\Tornado\TornadoElementalSmall.mdl ; T-dustwave.mdl ; NewDirtEXNofire00.mdl ; BY_Wood_Eff_Wid_XuanFeng.mdl …(+3),F 오라·원소(묶음 밖) (전체 A/C/D/F),,CFXR: CFXR3 Magic Aura A (Runic),,높음
+Assets/Data/UnitSkills/SkillData_원작026_h049.asset,A0ES,해시(유닛 h049) LaillySkill,Abilities\Weapons\AncientProtectorMissile\AncientProtectorMissile.mdl ; blue-liz-move.mdx ; WindWeak2.mdx ; Psionic Shot Blue.mdx …(+18),D 섬광·번개 (전체 A/B/C/D/E/F),CFXR: CFXR Explosion 1,자체메시: VFX_번개_기둥,Hovl: Lightning aura,중간(해시로 유닛 공격 트리거 전체)
+Assets/Data/UnitSkills/SkillData_원작028_h05C.asset,A0IN,"hancock_skill_Mana,hancock_skill_9,arrow_h2",EnergyBurst2.mdl ; jian3.mdx ; ShootGB2.mdl ; flamestrike3.mdl …(+11),B 초승달 검기 (전체 A/B/C/D/E),CFXR: CFXR4 Sword Hit PLAIN (Cross),자체메시: VFX_땅_폭발,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_원작능력_랜덤_가사이_유노.asset,A0KW,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_랜덤_모몬가.asset,,ichigo1,Model\BY_Wood_Effect_Order_Integration_Slash_1.mdx ; Model\redsweep2.mdx ; Model\blackwave.mdl,B 초승달 검기 (전체 A/B),Hovl: Electro slash,,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_원작능력_랜덤_야사카_카나코.asset,A0GL,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_랜덤_이민형.asset,A0KU,Light1,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_랜덤_이즈미_신이치.asset,A0H6,Naruto1,Model\rasenshuriken2.mdl ; Model\newrasengan32.mdl,E 투사체 (전체 E),,Hovl: Meteors AOE,CFXR: CFXR Flash,중간
+Assets/Data/UnitSkills/SkillData_원작능력_랜덤_이즈미_신이치_A0LG.asset,A0LG,Naruto1,Model\rasenshuriken2.mdl ; Model\newrasengan32.mdl,E 투사체 (전체 E),,Hovl: Meteors AOE,CFXR: CFXR Flash,중간
+Assets/Data/UnitSkills/SkillData_원작능력_랜덤_이타도리_유지.asset,A0XB,cat1,Model\firecut.mdl ; EGS.mdl,B 초승달 검기 (전체 B),,Hovl: AoE slash orange,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_랜덤_주호페이크.asset,,yomi2,MCut2.mdl,B 초승달 검기 (전체 B),,자체메시: VFX_초승달_검기,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_랜덤_주호페이크_A0KU.asset,A0KU,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_랜덤_카마도_탄지로.asset,A0KT,vampire,Model\darknova.mdl ; Model\vus.mdl ; DarkPillar.mdl ; Model\batsonly.mdl,A 충격파 고리 (전체 A/F),,자체메시: VFX_충격파_원판,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_랜덤_한마_바키.asset,A0GL,isz,model\ph.mdl ; Model\bd.mdl,—,,(원작 모델 판별 불가),,낮음
+Assets/Data/UnitSkills/SkillData_원작능력_랜덤_호시노_아이.asset,A0KW,k1,NewDirtEXNofire4.1.mdl ; Model\k'_borken2.mdl ; Model\kdumy.mdl ; Abilities\Spells\Human\MarkOfChaos\MarkOfChaosTarget.mdl,C 땅 폭발 (전체 C/D),,자체메시: VFX_땅_폭발,Hovl: Star aura,높음
+Assets/Data/UnitSkills/SkillData_원작능력_랜덤_호시노_아이_A0KT.asset,A0KT,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_변화됨_강재규.asset,,carrotattack,[ruchi_effect]guipaiqigong_blue2.mdl ; flamestrike3.mdl ; E_WarStompCaster.mdl ; BlinkCaster_white.mdx …(+1),D 섬광·번개 (전체 A/C/D),,자체메시: VFX_번개_기둥,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_원작능력_변화됨_김건.asset,A041,Transpom6,1shiningflare3.mdl ; Abilities\Spells\Orc\CommandAura\CommandAura.mdl,F 오라·원소(묶음 밖) (전체 B/F),Hovl: Star hit,Hovl: AoE slash orange,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_변화됨_박은석.asset,A0S7,Transpom1,az_pa_c_blue.mdl,B 초승달 검기 (전체 B),,Hovl: AoE slash orange,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_변화됨_최상호.asset,A0GD,Transpom2,AZ_Knife_light2T4.mdl ; 1gun55_dp.mdl ; Railgun3t.mdl,B 초승달 검기 (전체 B/E),,Hovl: AoE slash orange,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_고도현.asset,A0EM,"Shiki_Attack,Z_Attack",PsychicTarget2.mdl ; Wind Blast33.mdx ; NewDirtEXNofire.mdl ; water_jinbe3.mdl …(+23),E 투사체 (전체 A/B/C/D/E/F),CFXR: CFXR Hit D 3D (Yellow),자체메시: VFX_충격파_원판,CFXR: CFXR4 Sword Trail PLAIN (360 Spiral),높음
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_김용태.asset,A0LS,"Dragon_Attack,roger_Attack",WindCirclefaster.mdl ; Atsugai1.mdl ; Abilities\Spells\Other\Tornado\TornadoElementalSmall.mdl ; T-dustwave.mdl …(+16),A 충격파 고리 (전체 A/B/C/D/F),CFXR: CFXR3 Hit Fire B (Air),자체메시: VFX_충격파_원판,CFXR: CFXR Magic Poof,높음
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_김용태_A08V.asset,A08V,Dragon_Attack,WindCirclefaster.mdl ; Atsugai1.mdl ; Abilities\Spells\Other\Tornado\TornadoElementalSmall.mdl ; T-dustwave.mdl …(+5),A 충격파 고리 (전체 A/C/D/F),,자체메시: VFX_충격파_원판,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_김용태_A0FI.asset,A0FI,roger_Attack,re3.mdl ; BY_Wood_GongChengSiPai_33.mdl ; rogers3.mdl ; ioncannon3.mdl …(+7),A 충격파 고리 (전체 A/B/C/D/F),CFXR: CFXR3 Hit Fire B (Air),자체메시: VFX_번개_기둥,CFXR: CFXR Magic Poof,높음
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_박은석.asset,A05P,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_신지우.asset,A0DP,"Gaban_Attack,Kaido_Attack",Abilities\Spells\Orc\AncestralSpirit\AncestralSpiritCaster.mdl ; [DZ.Spell]006LightS.mdl ; Effect_Black_Getsuga10.mdl ; AZLavaStomp.mdl …(+25),C 땅 폭발 (전체 A/B/C/D),CFXR: CFXR3 Fire Explosion B,Hovl: Red energy explosion,Hovl: Lightning aura,높음
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_이승우_A044.asset,A044,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_이이삭.asset,A0PL,Sengoku_Attack,Enlightenment2.mdl ; sengoku_hand.mdx ; az_firering1a.mdl ; JN_HS_rulaibaozha1.mdl …(+7),A 충격파 고리 (전체 A/C/D),,Hovl: Red energy explosion,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_정윤식_A0EM.asset,A0EM,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_정윤식_A0EO.asset,A0EO,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_정준영_A0IT.asset,A0IT,,bigmamslash.mdx,B 초승달 검기 (전체 B),CFXR: CFXR4 Sword Hit PLAIN (Cross),,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_정준영_A0SN.asset,A0SN,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_정준영_A0YY.asset,A0YY,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_정준영_A0YZ.asset,A0YZ,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_정준영_A0Z8.asset,A0Z8,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_정준영_A0ZV.asset,A0ZV,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_정준영_A13O.asset,A13O,,red-zhendi-2.mdx,A 충격파 고리 (전체 A),CFXR: CFXR3 Hit Fire B (Air),,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_정준영_A13P.asset,A13P,,E_RockUp.mdx,C 땅 폭발 (전체 C),Hovl: Stones hit,,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_정준영_A13Q.asset,A13Q,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_불멸_정준영_A13R.asset,A13R,,red-zhendi-2.mdx,A 충격파 고리 (전체 A),CFXR: CFXR3 Hit Fire B (Air),,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_영원_김영원.asset,A0G3,"Cavendish_Attack,ViVi_Attack",skybomb.mdl ; AZ_Z047_0Real.mdl ; Abilities\Spells\Other\Levelup\LevelupCaster.mdl ; DevilSlam.mdx2.mdx …(+14),B 초승달 검기 (전체 A/B/C/D/E/F),CFXR: CFXR4 Sword Hit PLAIN (Cross),CFXR: CFXR2 Firewall A,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_원작능력_영원_김정래.asset,A0OU,Bugi_Attack,yiwan.mdl ; Abilities\Spells\Human\Thunderclap\ThunderClapCaster.mdl ; BlightwalkerAura.mdx ; slam.mdl,A 충격파 고리 (전체 A/D),CFXR: CFXR3 Hit Fire B (Air),,Hovl: Star aura,높음
+Assets/Data/UnitSkills/SkillData_원작능력_영원_문필환.asset,,Uta_Attack,model\Effect AZ_Dust Rush 02.mdx ; model\Effect BY_Wood_Effect_Naruto_MingRen_WeiShouYu_2.mdx ; model\az_uta_r2.mdx ; model\slash-uta.mdx …(+16),E 투사체 (전체 A/B/C/D/E/F),CFXR: CFXR Hit D 3D (Yellow),CFXR: CFXR3 Magic Aura A (Runic),(원작 모델 판별 불가),중간
+Assets/Data/UnitSkills/SkillData_원작능력_영원_문필환_A0LZ.asset,A0LZ,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_영원_문필환_A16W.asset,A16W,Uta_Attack,model\Effect AZ_Dust Rush 02.mdx ; model\Effect BY_Wood_Effect_Naruto_MingRen_WeiShouYu_2.mdx ; model\az_uta_r2.mdx ; model\slash-uta.mdx …(+16),E 투사체 (전체 A/B/C/D/E/F),CFXR: CFXR Hit D 3D (Yellow),CFXR: CFXR3 Magic Aura A (Runic),(원작 모델 판별 불가),중간
+Assets/Data/UnitSkills/SkillData_원작능력_영원_서민성.asset,A0LZ,Uta_Tots,model\Effect BY_Wood_Effect_Order_DanGe_DaoGuang_BaoZha_1_2_23333.mdx ; Abilities\Spells\Other\HowlOfTerror\HowlCaster.mdl ; BlackEnergyCharge.mdx ; Model\Effect Malmter Exshexian-Black2.mdx …(+2),B 초승달 검기 (전체 A/B/F),CFXR: CFXR4 Sword Hit PLAIN (Cross),,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_영원_윤현모.asset,A0EA,Ace_Attack,SuperBigExplosion.mdl ; kongukan.mdl ; !FireFist2.mdx ; flamestrike3.mdl …(+6),C 땅 폭발 (전체 A/C/D),CFXR: CFXR3 Fire Explosion B,자체메시: VFX_땅_폭발,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_원작능력_영원_이지원.asset,A0M8,Odeng_Attack,Model\sunstrikeimpact3.mdx ; Model\flamecrack.mdx ; !kick.type3.mdl ; Model\AZ_Jugg_E11.mdx …(+10),C 땅 폭발 (전체 A/B/C/D),CFXR: CFXR3 Fire Explosion B,CFXR: CFXR4 Falling Stars,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_영원_조세민.asset,A0J7,hancock_skill_9,boa25.mdl ; !FireLance5.mdx ; [DZ.Spell]001_pink.mdl ; Wave_squished2-noSound.mdx …(+1),C 땅 폭발 (전체 A/C/D),,자체메시: VFX_땅_폭발,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_영원_최상호.asset,A0J7,Cavendish_Attack,skybomb.mdl ; AZ_Z047_0Real.mdl ; Abilities\Spells\Other\Levelup\LevelupCaster.mdl ; DevilSlam.mdx2.mdx …(+4),F 오라·원소(묶음 밖) (전체 A/C/D/E/F),,CFXR: CFXR2 Firewall A,CFXR: CFXR Magic Poof,높음
+Assets/Data/UnitSkills/SkillData_원작능력_영원_최상호_A0EA.asset,A0EA,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_영원_최상호_A0HV.asset,A0HV,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_박민석.asset,A08H,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_박민수.asset,A0JW,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_박성호.asset,,Legend0,1gun7birth.mdx ; t_effect-03.mdl ; slash-gold10.mdl,A 충격파 고리 (전체 A/B/E),,자체메시: VFX_충격파_원판,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_박은석.asset,,Legend23,EnergyBurst2.mdl ; AZ_Yin_Q12.mdl,D 섬광·번개 (전체 B/D),,Hovl: Red energy explosion,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_백기현.asset,A07T,Legend10,NewDirtEXNofire.mdl,C 땅 폭발 (전체 C),,,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_신문철.asset,A0TL,Legend4,PsychicTarget.mdl,A 충격파 고리 (전체 A),,자체메시: VFX_충격파_원판,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_신지우.asset,A0T0,Legend16sc,slash5.mdl ; EnergyBurst2-law.mdl ; @SlashCRIT23.mdl ; injection.mdl,B 초승달 검기 (전체 B/D),,Hovl: AoE slash blue,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_양문호.asset,A10Y,Legend20,az-slash-pink4.mdl,B 초승달 검기 (전체 B),,Hovl: AoE slash orange,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_양재모.asset,A16L,Legend32,AZ-Ice-Zhendi3.mdl ; zise-somek2.mdx ; AZ-Ice-Zhendi3.mdx,A 충격파 고리 (전체 A),CFXR: CFXR3 Hit Fire B (Air),Hovl: Red energy explosion,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_엄태웅.asset,A0O7,Legend25,[Spell]TownPortal3.mdl ; Thunder_nami1.mdl,A 충격파 고리 (전체 A/D),,Hovl: Red energy explosion,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_이승우.asset,A08H,Legend12,ancientexplode.mdl,A 충격파 고리 (전체 A),,Hovl: Red energy explosion,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_이시원.asset,A06M,Legend28koby,punch2.mdl ; Abilities\Spells\Human\Slow\SlowCaster.mdl,D 섬광·번개 (전체 D),,자체메시: VFX_번개_기둥,(원작 모델 판별 불가),낮음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_이유선.asset,A0TW,Legend8,FJB.mdl ; Abilities\Spells\Human\HolyBolt\HolyBoltSpecialArt.mdl ; Abilities\Spells\NightElf\BattleRoar\RoarCaster.mdl,D 섬광·번개 (전체 D),,자체메시: VFX_번개_기둥,(원작 모델 판별 불가),낮음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_이일중.asset,A0JW,Legend30,slash-gold11.mdl ; !piercing5.mdl ; ShadowAssault90.mdl ; mihawkslashhit2.mdl,B 초승달 검기 (전체 A/B/F),,Hovl: AoE slash blue,CFXR: CFXR4 Sword Trail PLAIN (360 Spiral),높음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_이재윤.asset,A0EN,Legend29,valkkame3.mdl ; Doodads\Northrend\Props\NorthrendTombstone\NorthrendTombstone2.mdl,C 땅 폭발 (전체 C),Hovl: Explosion,Hovl: Ground AOE explosion,CFXR: CFXR Magic Poof,높음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_이현주.asset,A0L4,Legend26,uberdarkwave.mdl ; zise-smoke1.mdx ; BlackHoles.mdl ; AvengerMissile2.mdl,C 땅 폭발 (전체 A/C/D/E),Hovl: Explosion,Hovl: Red energy explosion,CFXR: CFXR Magic Poof,높음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_임건웅.asset,A0GH,Legend1sc,kkslq8.mdl,D 섬광·번개 (전체 D),,자체메시: VFX_번개_기둥,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_임장혁.asset,A0IS,Legend18,bulletexplosion2.mdl ; kdumy.mdl ; !FireFist7.mdx ; Firewall.mdl …(+1),C 땅 폭발 (전체 A/C),CFXR: CFXR3 Fire Explosion B,자체메시: VFX_땅_폭발,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_임채민.asset,A03X,Legend21sc,ThunderClapCaster22.mdl,A 충격파 고리 (전체 A),,자체메시: VFX_충격파_원판,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_임채민_A048.asset,A048,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_임채민_A074.asset,A074,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_임채현.asset,A052,Legend11,Ephemeral Slash Purple2.mdl ; AZ_DG001_1.mdl ; BY_Storm2.mdl,F 오라·원소(묶음 밖) (전체 B/F),,Hovl: Smoke AOE explosion,CFXR: CFXR4 Sword Trail PLAIN (360 Spiral),중간
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_정윤식.asset,A074,Legend2,Aqua_Wave_Fix1.mdx ; suijinha.mdl,A 충격파 고리 (전체 A/F),CFXR: CFXR Impact Glowing HDR (Blue),자체메시: VFX_충격파_벽,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_정준영.asset,A0QL,Legend9,yadospell.mdl ; kaido_shock.mdl ; boom_white.mdl,D 섬광·번개 (전체 A/C/D),,자체메시: VFX_번개_기둥,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_정준영_A06M.asset,A06M,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_정준영_A0IS.asset,A0IS,,t_effect-03.mdx,A 충격파 고리 (전체 A),CFXR: CFXR Impact Glowing HDR (Blue),,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_정준영_A0PQ.asset,A0PQ,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_진연서.asset,A05S,Legend7,s_PowerCharge_Effect_Portrait.mdl ; Wave_squished2.mdx ; supershinythingy.mdx,A 충격파 고리 (전체 A/B/F),CFXR: CFXR Impact Glowing HDR (Blue),Hovl: Snow AOE,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_진연서_A0EN.asset,A0EN,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_최상호.asset,A0PQ,Legend6,SpiritoftheEarth5.mdl ; FJB.mdl ; KumaPad3.mdl ; E_WarStompCaster.mdl …(+2),A 충격파 고리 (전체 A/C/F),,자체메시: VFX_충격파_원판,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_전설적인_홍인창.asset,A048,Legend22,ShadowAssault.mdl ; BlackEnergyCharge.mdl,F 오라·원소(묶음 밖) (전체 F),,CFXR: CFXR2 Firewall A,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_제한_강보명_A0GK.asset,A0GK,,Model\AZ_BaoHunJue.mdx,C 땅 폭발 (전체 C),Hovl: Explosion,,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_제한_강보명_A0GM.asset,A0GM,,Model\AZ_BaoHunJue.mdx,C 땅 폭발 (전체 C),Hovl: Explosion,,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_제한_김민규.asset,A0QQ,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_제한_김민규_A0QO.asset,A0QO,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_제한_박성호.asset,A0QO,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_제한_이유범.asset,A0GM,King_Attack,BY_Wood_Eff_Ord_YeYe_Wid_KuoSan_1.mdx ; Effect Mythic_Heal Orange.mdx ; by_fire4.mdl ; AZ_Lordgarithospf_W11.mdl …(+7),B 초승달 검기 (전체 A/B/C/E/F),Hovl: Electro slash,Hovl: Meteors AOE,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_제한_이충민.asset,A15N,katakuriAttack,E_WarStompCaster_kata.mdl ; az_gangtiex12_f4.mdl ; E_WarStompCaster_kata_45.mdl ; !cftx2.mdl …(+2),A 충격파 고리 (전체 A/C/D),,자체메시: VFX_충격파_원판,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_원작능력_제한_임준성.asset,A17K,Sinobu_Attack,windfaster.mdx ; mihawkslashhit2.mdl ; Mdx_Effect_06 Okita Dekan_Flash.mdx ; Mdx_Effect_06 Okita Dekan_Flash2.mdx …(+12),B 초승달 검기 (전체 A/B/C/D/F),Hovl: Charge slash blue,Hovl: AoE slash blue,CFXR: CFXR Flash,높음
+Assets/Data/UnitSkills/SkillData_원작능력_제한_전법규.asset,A05M,croTrans,sandpoff.mdx ; AFBsand.mdx ; !watersteal2.mdl ; sandsword.mdl …(+1),C 땅 폭발 (전체 B/C/F),Hovl: Stones hit,자체메시: VFX_충격파_벽,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_제한_최영민.asset,A0GK,RedAttack,model\bloq3.mdl ; az-slash-red.mdl ; Model\AZ_BaoHunJue.mdx ; Model\ReapersClawsRed2.mdl …(+3),B 초승달 검기 (전체 B/C),Hovl: Explosion,Hovl: AoE slash orange,CFXR: CFXR4 Sword Trail FIRE (360 Spiral),높음
+Assets/Data/UnitSkills/SkillData_원작능력_제한_최영민_A0QV.asset,A0QV,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_제한_최영민_A17K.asset,A17K,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A03W.asset,A03W,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A04D.asset,A04D,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A051.asset,A051,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A0AG.asset,A0AG,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A0AK.asset,A0AK,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A0CS.asset,A0CS,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A0G4.asset,A0G4,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A0HA.asset,A0HA,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A0HK.asset,A0HK,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A0HN.asset,A0HN,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A0IT.asset,A0IT,,bigmamslash.mdx,B 초승달 검기 (전체 B),CFXR: CFXR4 Sword Hit PLAIN (Cross),,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A0KA.asset,A0KA,,luffy_wano01_s2.mdx,—,(원작 모델 판별 불가),,,낮음
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A0KE.asset,A0KE,,luffy_wano01_s2.mdx,—,(원작 모델 판별 불가),,,낮음
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A0X0.asset,A0X0,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A0ZV.asset,A0ZV,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A101.asset,A101,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_초월_황준석_ADAP_A103.asset,A103,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_양재모.asset,A0SI,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_왕승환.asset,A0SQ,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_유재헌.asset,A0HZ,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_이정범.asset,A0JT,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_이지원.asset,A06O,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_이현빈.asset,A06O,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_임장혁.asset,A0MK,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_임채준.asset,A05E,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_정승준.asset,A0DJ,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_조도연.asset,A0HZ,Speical5,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_조성진.asset,A0JT,Speical6,DoomDeath4.mdl ; DoomDeath4.mdx,A 충격파 고리 (전체 A),CFXR: CFXR3 Hit Fire B (Air),Hovl: Red energy explosion,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_조세민.asset,A06O,Speical7,Abilities\Spells\Items\WandOfNeutralization\NeutralizationMissile.mdl,D 섬광·번개 (전체 D),CFXR: CFXR3 Hit Electric C (Air),,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_주영호.asset,A06O,Speical1,Abilities\Spells\NightElf\Cyclone\CycloneTarget.mdl,F 오라·원소(묶음 밖) (전체 F),,CFXR: CFXR3 Magic Aura A (Runic),,높음
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_최동준.asset,A045,Speical9,Abilities\Spells\Other\BreathOfFire\BreathOfFireMissile.mdl,C 땅 폭발 (전체 C),CFXR: CFXR3 Fire Explosion B,,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_최상호.asset,A0MK,Speical12,darkblade.mdl,B 초승달 검기 (전체 B),,자체메시: VFX_초승달_검기,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_최준우.asset,A05E,Speical3,JDP_Blue2.mdx,F 오라·원소(묶음 밖) (전체 F),Hovl: Holy hit,,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_특별함_황정기.asset,A0DJ,Speical4,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_특수함_장진희.asset,A0EP,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_특수함_황길라.asset,A0IL,,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_김만경.asset,A0DS,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_김청운.asset,A06Q,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_노수신.asset,A04B,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_노태현.asset,A0FJ,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_두유찬.asset,A0K6,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_박기찬.asset,A03N,,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_박민수.asset,A095,Unique2,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_박수찬.asset,A0AX,Unique10,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_박은석.asset,A09A,Unique9,Abilities\Spells\Orc\HealingWave\HealingWaveTarget.mdl,A 충격파 고리 (전체 A),CFXR: CFXR Impact Glowing HDR (Blue),,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_배병규.asset,A0BE,Unique3,WarStompCaster_nocrack.mdl,A 충격파 고리 (전체 A),,Hovl: Red energy explosion,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_배성령.asset,,Unique5,Asuma-Explosion4.mdl,C 땅 폭발 (전체 C),,자체메시: VFX_땅_폭발,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_배현진.asset,,Unique1,,—,SkillVfx.SpellHit,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_서민성.asset,A097,Unique14,Wave_squished2.mdl ; Abilities\Spells\Items\WandOfNeutralization\NeutralizationMissile.mdl,D 섬광·번개 (전체 A/D),CFXR: CFXR3 Hit Electric C (Air),,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_선효진.asset,,Unique6,Abilities\Spells\Human\Thunderclap\ThunderClapCaster.mdl ; Abilities\Spells\Orc\Purge\PurgeBuffTarget.mdl,A 충격파 고리 (전체 A/F),Hovl: Electro hit,CFXR: CFXR3 Magic Aura A (Runic),,높음
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_양재모.asset,,Unique26,DefendCaster.mdl,A 충격파 고리 (전체 A),,자체메시: VFX_충격파_원판,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_엄태웅.asset,,Unique35,az-xiapi.mdl,B 초승달 검기 (전체 B),,Hovl: AoE slash orange,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_윤현모.asset,A0UZ,Unique11,Abilities\Spells\Undead\FrostNova\FrostNovaTarget.mdl,A 충격파 고리 (전체 A),,Hovl: Freeze circle,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_이상혁.asset,,Unique12,Stomp.mdl,A 충격파 고리 (전체 A),,자체메시: VFX_충격파_원판,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_이승우.asset,A03Y,Unique4,JDP_Blue2.mdx,F 오라·원소(묶음 밖) (전체 F),Hovl: Holy hit,,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_이용민.asset,A0DS,Unique27,Abilities\Spells\NightElf\Taunt\TauntCaster.mdl,—,,(원작 모델 판별 불가),,낮음
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_이은엽.asset,A06Q,Unique8,mihawkslashhit.mdl,B 초승달 검기 (전체 B),,Hovl: AoE slash blue,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_이재윤.asset,A054,Unique18,Abilities\Spells\Undead\Darksummoning\DarkSummonTarget.mdl,F 오라·원소(묶음 밖) (전체 F),,Hovl: Magic circle 2,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_이태훈.asset,A04B,Unique17,!watersteal2.mdl,F 오라·원소(묶음 밖) (전체 F),,자체메시: VFX_충격파_벽,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_임채민.asset,A040,Unique29,Effect_AZ_T_Misslie.mdl ; InterceptorShell.mdx ; bulletdummy4_ben.mdx,B 초승달 검기 (전체 B/E),CFXR: CFXR4 Sword Hit FIRE (Cross),Hovl: Meteors AOE,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_장태영.asset,A0JW,Unique32,Abilities\Spells\Orc\WarStomp\WarStompCaster.mdl ; FreezingRing.mdl,A 충격파 고리 (전체 A),,자체메시: VFX_충격파_원판,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_장하민.asset,A0FJ,Unique21,!LBall9.mdx,E 투사체 (전체 E),CFXR: CFXR Hit D 3D (Yellow),,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_정내연.asset,A0K6,Unique33,kkslq8.mdx ; tiger.mdl ; darkblade.mdl ; JudgementTarget.mdl,D 섬광·번개 (전체 B/D),CFXR: CFXR Impact Glowing HDR (Blue),Hovl: Red energy explosion,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_조현규.asset,A05J,Unique31,NewSparksEX.mdx,D 섬광·번개 (전체 D),,Hovl: Red energy explosion,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_최상호_오타쿠의길.asset,A04U,Unique30,CatapultMissile3_hand.mdx ; CatapultMissile3.mdl ; WARRR2111.mdl ; fuzzystomp.mdl,E 투사체 (전체 A/C/E),CFXR: CFXR Impact Glowing HDR (Blue),Hovl: Meteors AOE,,높음
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_최상호_윤식파의두뇌.asset,A03N,Unique20,Abilities\Spells\Undead\VampiricAura\VampiricAura.mdl ; fallinlove5.mdl,F 오라·원소(묶음 밖) (전체 F),,CFXR: CFXR3 Magic Aura A (Runic),,중간
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_최현우.asset,A049,Unique22,Akiha Claw sakura.mdl,B 초승달 검기 (전체 B),,자체메시: VFX_초승달_검기,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_현성현.asset,A047,Unique19,ph_dajian_daoguang012.mdx,B 초승달 검기 (전체 B),CFXR: CFXR4 Sword Hit PLAIN (Cross),,,중간
+Assets/Data/UnitSkills/SkillData_원작능력_희귀함_황준석.asset,A05R,Unique34,nituzuo2.mdl ; gem_two_diamond.mdl ; fuzzystomp.mdl ; @100.mdl,A 충격파 고리 (전체 A),,자체메시: VFX_충격파_원판,,높음
+Assets/Data/UnitSkills/SkillData_절대쿨_랜덤_한마_바키.asset,,Byakuya_E,Model\Effect Blink New Pink.mdx ; Model\Effect BY_Wood_Eff_Ord_NiYa_Bh3_XuanFeng Pink.mdx ; Model\Effect Senbonzakura Senkei.mdx ; Model\Effect Warstomp Energy Pink.mdx …(+10),C 땅 폭발 (전체 A/B/C/F),Hovl: Stones hit,(원작 모델 판별 불가),자체메시: VFX_충격파_원판,중간
+Assets/Data/UnitSkills/SkillData_절대쿨_불멸_정윤식.asset,,Kick_1,Abilities\Weapons\AncientProtectorMissile\AncientProtectorMissile.mdl ; blue-liz-move.mdx ; WindWeak2.mdx ; Psionic Shot Blue.mdx …(+9),C 땅 폭발 (전체 A/C/D/E/F),CFXR: CFXR Explosion 1,,Hovl: Lightning aura,높음
+Assets/Data/UnitSkills/SkillData_절대쿨_초월_강주혁_AP.asset,,Nami_Skill_4,namifire3.mdl ; Abilities\Spells\Other\Monsoon\MonsoonBoltTarget.mdl ; tornado33.mdl,D 섬광·번개 (전체 C/D/F),,자체메시: VFX_번개_기둥,,높음
+Assets/Data/UnitSkills/SkillData_절대쿨_초월_두유찬_AD_1.asset,,Sabo_Skill_1,!Flame Aura.mdl ; !FireFist2.mdl ; Ora_shanks_dummy.mdx ; flamestrike3.mdl …(+2),C 땅 폭발 (전체 A/C/F),Hovl: Star hit,자체메시: VFX_땅_폭발,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_절대쿨_초월_두유찬_AD_3.asset,,Sabo_Skill_3,Zukokku.mdl ; Abilities\Spells\Other\Doom\DoomDeath.mdl,D 섬광·번개 (전체 D),,CFXR: CFXR4 Falling Stars,,중간
+Assets/Data/UnitSkills/SkillData_절대쿨_초월_두유찬_AD_4.asset,,Sabo_Skill_4,,—,SkillVfx.StunImpact,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_카이도_불멸_신지우_buster.asset,,Kaido_Dragon_buster,kaido_eff5.mdx ; kaido_shock.mdx ; kaido_kamai2.mdx ; Wind Blast33.mdl …(+2),C 땅 폭발 (전체 A/C),CFXR: CFXR3 Fire Explosion B,자체메시: VFX_땅_폭발,,높음
+Assets/Data/UnitSkills/SkillData_카이도_불멸_신지우_life100.asset,,"Kaido_Dragon_melee_1,Kaido_Dragon_Skill_2",kaido_kamai2.mdx ; !FireFist22.mdl ; by_fire4.mdl ; BY_Wood_Sand_YueKongJi_nocrack.mdl …(+1),C 땅 폭발 (전체 C),,자체메시: VFX_땅_폭발,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_카이도_불멸_신지우_skill18.asset,,Kaido_Skill_1_8,Bmisaka light.mdx ; AZ_Zeusking_Impact-black.mdx ; AZ_Zeusking_Impact-red.mdx ; kaido_eff3.mdx …(+7),A 충격파 고리 (전체 A/C/D),CFXR: CFXR3 Fire Explosion B,Hovl: Red energy explosion,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_회수_불멸_고도현_8eab1c6f.asset,,Shiki_Lion,water_jinbe3.mdl ; ancientexplode.mdl,F 오라·원소(묶음 밖) (전체 A/F),,자체메시: VFX_충격파_벽,,높음
+Assets/Data/UnitSkills/SkillData_회수_불멸_고도현_a23cc245.asset,,Shiki_SKill_item,card8.mdl ; BY_Wood_Sand_YueKongJi7.mdl ; Abilities\Weapons\AncientProtectorMissile\AncientProtectorMissile.mdl ; @fire6.mdl …(+1),E 투사체 (전체 A/C/E),CFXR: CFXR Hit D 3D (Yellow),Hovl: Ground AOE explosion,,높음
+Assets/Data/UnitSkills/SkillData_회수_불멸_고도현_a80b907f.asset,,Shiki_champa2,Slash_FlareAdditive0453.mdl ; rb7.mdl ; MCut.mdl ; MCut2.mdl,B 초승달 검기 (전체 B),,,CFXR: CFXR4 Sword Trail PLAIN (360 Spiral),높음
+Assets/Data/UnitSkills/SkillData_회수_불멸_박은석_b8d2fd85.asset,,Z_skill_3,E_MSL.mdl ; BY_Storm2.mdl ; PillarofFlameBlue.mdl ; E_SlamB.mdl …(+3),F 오라·원소(묶음 밖) (전체 A/B/C/D/F),,Hovl: Smoke AOE explosion,자체메시: VFX_충격파_원판,높음
+Assets/Data/UnitSkills/SkillData_회수_불멸_이승우_355f5d39.asset,,Garp_AttackDamage,kaido_kamai2_garp2.mdl ; tx-11.mdl ; garp_stun.mdl ; kaido_eff3_90.mdl,C 땅 폭발 (전체 A/C),,자체메시: VFX_땅_폭발,,높음
+Assets/Data/UnitSkills/SkillData_회수_불멸_이이삭_f50ad66e.asset,,Sengoku_Skill_Item,IonCannonWave.mdl ; E_BlueLightBurst2.mdl,A 충격파 고리 (전체 A/D),,Hovl: Red energy explosion,,높음
+Assets/Data/UnitSkills/SkillData_회수_불멸_정윤식_355f5d39.asset,,LaillySkill1,,—,SkillVfx.Smash,,,낮음(원작 아트 없음 → SkillVfx 기본)
+Assets/Data/UnitSkills/SkillData_회수_영원_문필환_55b5cff0.asset,,vivi_Skill_4_Mana,Model\Effect BY_Wood_GongChengSiPai_5 Orange.mdx ; Model\Effect Gun Shot Red.mdx ; Model\Effect BY_Wood_Effect_Naruto_MingRen_WeiShouYu_2.mdx ; randomshot3.mdl,F 오라·원소(묶음 밖) (전체 E/F),Hovl: Star hit,Hovl: Meteors AOE,,높음
+Assets/Data/UnitSkills/SkillData_회수_영원_문필환_9ffa9c45.asset,,vivi_skill_2,DevilSlams2.mdl ; az-slash-red.mdl,A 충격파 고리 (전체 A/B),,Hovl: Red energy explosion,CFXR: CFXR4 Sword Trail FIRE (360 Spiral),높음
+Assets/Data/UnitSkills/SkillData_회수_초월_강주혁_AP_b7ae9b41.asset,,Zoro_enfor_3dragon,swordeff1.mdl ; animeslashfinal.mdl ; rb7.mdl,B 초승달 검기 (전체 B),,Hovl: AoE slash blue,CFXR: CFXR4 Sword Trail PLAIN (360 Spiral),높음
+Assets/Data/UnitSkills/SkillData_회수_초월_구주호_AD_3a13fd3d.asset,,Rokugu_skill_1,fuzzystomp2.mdl ; Tree_1.mdl ; tree_oak_lv1.mdl,A 충격파 고리 (전체 A),,자체메시: VFX_충격파_원판,,낮음
+Assets/Data/UnitSkills/SkillData_회수_초월_구주호_AD_c453ba09.asset,,"Kizaru_01_shoot,Kizaru_01",BY_Wood_GongChengSiPai_46.mdx ; wind_dust11.mdx ; effect_shengguang3.mdx ; bearibon3.mdl …(+4),B 초승달 검기 (전체 A/B/C/D),CFXR: CFXR4 Sword Hit ICE (Cross),자체메시: VFX_충격파_원판,(원작 모델 판별 불가),높음
+Assets/Data/UnitSkills/SkillData_회수_초월_김만경_AD_0ac0451e.asset,,Akainu_02,magmahandBig.mdl ; Dash_Sfx.mdl ; DoomDeath4.mdl ; Lava Slam.mdl …(+2),C 땅 폭발 (전체 A/C/D),,자체메시: VFX_땅_폭발,CFXR: CFXR2 WW Explosion,높음
+Assets/Data/UnitSkills/SkillData_회수_초월_노태현_AP_3a13fd3d.asset,,Brook_Skill_1,arua6.mdl ; az-slash-blue.mdl,F 오라·원소(묶음 밖) (전체 B/F),,CFXR: CFXR3 Magic Aura A (Runic),,높음
+Assets/Data/UnitSkills/SkillData_회수_초월_양재모_AD_f54a123f.asset,,Law_skill_5,DimensionSlashOriginal2.mdl ; guangci_5743.mdl ; Slash_FlareAdditive0453.mdl,B 초승달 검기 (전체 B),,Hovl: AoE slash blue,,중간
+Assets/Data/UnitSkills/SkillData_회수_초월_최상호_AP_355f5d39.asset,,DP_AttackDamage,,—,SkillVfx.Smash,,,낮음(원작 아트 없음 → SkillVfx 기본)
+#
+# ===== 요약: 프리팹별 사용 횟수(적중·범위·시전자 칸 합) =====
+#  74  자체메시: VFX_충격파_원판  →  Assets/Art/Effects/Meshes/VFX_충격파_원판.fbx
+#  43  SkillVfx.SpellHit  →  Assets/Scripts/Units/SkillVfx.cs (Kind.SpellHit)
+#  35  자체메시: VFX_땅_폭발  →  Assets/Art/Effects/Meshes/VFX_땅_폭발.fbx
+#  33  SkillVfx.StunImpact  →  Assets/Scripts/Units/SkillVfx.cs (Kind.StunImpact)
+#  29  Hovl: Red energy explosion  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/AoE effects/Red energy explosion.prefab
+#  28  CFXR: CFXR Flash  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Misc/CFXR Flash.prefab
+#  24  CFXR: CFXR Impact Glowing HDR (Blue)  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Impacts/CFXR Impact Glowing HDR (Blue).prefab
+#  21  Hovl: Meteors AOE  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/AoE effects/Meteors AOE.prefab
+#  20  CFXR: CFXR2 WW Explosion  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Explosions/CFXR2 WW Explosion.prefab
+#  20  CFXR: CFXR3 Hit Fire B (Air)  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Fire/CFXR3 Hit Fire B (Air).prefab
+#  17  CFXR: CFXR Magic Poof  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Misc/CFXR Magic Poof.prefab
+#  17  Hovl: AoE slash orange  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/AoE effects/AoE slash orange.prefab
+#  17  자체메시: VFX_번개_기둥  →  Assets/Art/Effects/Meshes/VFX_번개_기둥.fbx
+#  15  CFXR: CFXR Hit D 3D (Yellow)  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Impacts/CFXR Hit D 3D (Yellow).prefab
+#  15  CFXR: CFXR3 Fire Explosion B  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Explosions/CFXR3 Fire Explosion B.prefab
+#  13  Hovl: AoE slash blue  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/AoE effects/AoE slash blue.prefab
+#  11  CFXR: CFXR3 Magic Aura A (Runic)  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Magic Misc/CFXR3 Magic Aura A (Runic).prefab
+#  11  CFXR: CFXR4 Sword Trail PLAIN (360 Spiral)  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Sword Trails/Plain/CFXR4 Sword Trail PLAIN (360 Spiral).prefab
+#  11  Hovl: Lightning aura  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Character auras/Lightning aura.prefab
+#  10  CFXR: CFXR4 Sword Hit PLAIN (Cross)  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Sword Trails/Plain/CFXR4 Sword Hit PLAIN (Cross).prefab
+#   9  Hovl: Explosion  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Hits and explosions/Explosion.prefab
+#   9  Hovl: Holy hit  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Hits and explosions/Holy hit.prefab
+#   8  Hovl: Ground AOE explosion  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/AoE effects/Ground AOE explosion.prefab
+#   6  CFXR: CFXR4 Falling Stars  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Magic Misc/CFXR4 Falling Stars.prefab
+#   6  Hovl: Electro hit  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Hits and explosions/Electro hit.prefab
+#   6  Hovl: Freeze circle  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Magic circles/Freeze circle.prefab
+#   6  자체메시: VFX_충격파_벽  →  Assets/Art/Effects/Meshes/VFX_충격파_벽.fbx
+#   5  CFXR: CFXR2 Firewall A  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Fire/CFXR2 Firewall A.prefab
+#   5  CFXR: CFXR3 Hit Electric C (Air)  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Electric/CFXR3 Hit Electric C (Air).prefab
+#   5  CFXR: CFXR4 Sword Hit FIRE (Cross)  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Sword Trails/Fire/CFXR4 Sword Hit FIRE (Cross).prefab
+#   5  CFXR: CFXR4 Sword Trail FIRE (360 Spiral)  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Sword Trails/Fire/CFXR4 Sword Trail FIRE (360 Spiral).prefab
+#   5  Hovl: Star hit  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Hits and explosions/Star hit.prefab
+#   5  Hovl: Stones hit  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Hits and explosions/Stones hit.prefab
+#   5  SkillVfx.Buff  →  Assets/Scripts/Units/SkillVfx.cs (Kind.Buff)
+#   5  SkillVfx.Smash  →  Assets/Scripts/Units/SkillVfx.cs (Kind.Smash)
+#   4  CFXR: CFXR Explosion 1  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Explosions/CFXR Explosion 1.prefab
+#   4  Hovl: Buff  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Character auras/Buff.prefab
+#   4  Hovl: Star aura  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Character auras/Star aura.prefab
+#   3  Hovl: Electro slash  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Slash effects/Electro slash.prefab
+#   3  Hovl: Smoke AOE explosion  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/AoE effects/Smoke AOE explosion.prefab
+#   3  자체메시: VFX_초승달_검기  →  Assets/Art/Effects/Meshes/VFX_초승달_검기.fbx
+#   2  CFXR: CFXR Hit A (Red)  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Impacts/CFXR Hit A (Red).prefab
+#   2  CFXR: CFXR3 Hit Light B (Air)  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Light/CFXR3 Hit Light B (Air).prefab
+#   2  Hovl: Charge slash blue  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Slash effects/Charge slash blue.prefab
+#   2  Hovl: Magic circle 2  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Magic circles/Magic circle 2.prefab
+#   2  Hovl: Magic shield blue  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Magic shields/Magic shield blue.prefab
+#   2  Hovl: Snow AOE  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/AoE effects/Snow AOE.prefab
+#   2  Hovl: Snow hit  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Hits and explosions/Snow hit.prefab
+#   1  CFXR: CFXR2 Ground Hit  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Impacts/CFXR2 Ground Hit.prefab
+#   1  CFXR: CFXR3 Hit Misc A  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Misc/CFXR3 Hit Misc A.prefab
+#   1  CFXR: CFXR4 Sword Hit ICE (Cross)  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Sword Trails/Ice/CFXR4 Sword Hit ICE (Cross).prefab
+#   0  CFXR: CFXR Electrified 3  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Electric/CFXR Electrified 3.prefab
+#   0  CFXR: CFXR2 Poison Cloud  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Misc/CFXR2 Poison Cloud.prefab
+#   0  CFXR: CFXR3 Hit Ice B (Air)  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Ice/CFXR3 Hit Ice B (Air).prefab
+#   0  CFXR: CFXR4 Sword Trail ICE (360 Spiral)  →  Assets/ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Sword Trails/Ice/CFXR4 Sword Trail ICE (360 Spiral).prefab
+#   0  Hovl: Charge slash purple  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Slash effects/Charge slash purple.prefab
+#   0  Hovl: Debuff  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Character auras/Debuff.prefab
+#   0  Hovl: Green hit  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Hits and explosions/Green hit.prefab
+#   0  Hovl: Healing  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Character auras/Healing.prefab
+#   0  Hovl: Healing circle  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Magic circles/Healing circle.prefab
+#   0  Hovl: Laser AOE  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/AoE effects/Laser AOE.prefab
+#   0  Hovl: Magic circle  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Magic circles/Magic circle.prefab
+#   0  Hovl: Snow slash  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Slash effects/Snow slash.prefab
+#   0  Hovl: Stone slash  →  Assets/ThirdParty/Hovl Studio/Magic effects pack/Prefabs/Slash effects/Stone slash.prefab
+#   0  SkillVfx.ArmorBreak  →  Assets/Scripts/Units/SkillVfx.cs (Kind.ArmorBreak)
+#   0  SkillVfx.Hit  →  Assets/Scripts/Units/SkillVfx.cs (Kind.Hit)
+#   0  SkillVfx.Slow  →  Assets/Scripts/Units/SkillVfx.cs (Kind.Slow)
+#   0  SkillVfx.Stun  →  Assets/Scripts/Units/SkillVfx.cs (Kind.Stun)
+#
+# 한 번도 안 쓰인 후보 17개(뺄 후보 — 단 SkillVfx 기본 종류는 코드 경로라 빼면 안 됨): Hovl: Magic circle · Hovl: Healing circle · Hovl: Laser AOE · Hovl: Healing · Hovl: Debuff · Hovl: Snow slash · Hovl: Charge slash purple · Hovl: Stone slash · Hovl: Green hit · CFXR: CFXR2 Poison Cloud · CFXR: CFXR4 Sword Trail ICE (360 Spiral) · CFXR: CFXR3 Hit Ice B (Air) · CFXR: CFXR Electrified 3 · SkillVfx.Hit · SkillVfx.ArmorBreak · SkillVfx.Stun · SkillVfx.Slow
+# 확신도: 높음 199 · 중간 80 · 낮음 102 (낮음 가운데 원작 아트 없음 86)
+# 주 모양 묶음 분포: — 94 · A 91 · C 55 · B 48 · D 36 · F 31 · E 26
