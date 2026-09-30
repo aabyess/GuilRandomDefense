@@ -19,6 +19,7 @@ MonoBehaviour:
   - cooldown: 0
     triggerChance: 1
     range: 760
+    aoeCenter: 1
     hitCountThreshold: 175
     resetTo: 0
     gaugeKind: 0
@@ -33,6 +34,8 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0
+      targetCondition: 3
+      targetConditionValue: 200.0
     - kind: 0
       basis: 1
       target: 3
@@ -43,6 +46,9 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0
+      targetCondition: 1
+      targetConditionValue: 200.0
+      skipDamageTakenMultiplier: 1
     - kind: 0
       basis: 4
       target: 2
@@ -56,6 +62,7 @@ MonoBehaviour:
   - cooldown: 0
     triggerChance: 1
     range: 760
+    aoeCenter: 1
     hitCountThreshold: 175
     resetTo: 0
     gaugeKind: 0
@@ -70,6 +77,8 @@ MonoBehaviour:
       chance: 1
       hitCount: 2
       duration: 0.11
+      targetCondition: 3
+      targetConditionValue: 200.0
     - kind: 0
       basis: 1
       target: 3
@@ -80,6 +89,9 @@ MonoBehaviour:
       chance: 1
       hitCount: 2
       duration: 0.11
+      targetCondition: 1
+      targetConditionValue: 200.0
+      skipDamageTakenMultiplier: 1
     - kind: 0
       basis: 4
       target: 2

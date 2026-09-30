@@ -56,7 +56,7 @@ public class NetGameState : NetworkBehaviour
         // 호스트: 원격 슬롯 앞으로 온 안내를 그 클라에 넘긴다(자기 것은 자기 화면에 이미 떴다).
         if (HasStateAuthority) PlayerNotification.Shown += RouteNotification;
         if (HasStateAuthority) GameSound.RemoteRouted += RouteSound;
-        if (HasStateAuthority) SkillVfx.Played += RouteVfx;
+        if (HasStateAuthority) { SkillVfx.Played += RouteVfx; SkillVfx.PlayedPrefab += RoutePrefabVfx; }
 
         if (!HasStateAuthority)
         {
@@ -71,6 +71,7 @@ public class NetGameState : NetworkBehaviour
         PlayerNotification.Shown -= RouteNotification;
         GameSound.RemoteRouted -= RouteSound;
         SkillVfx.Played -= RouteVfx;
+        SkillVfx.PlayedPrefab -= RoutePrefabVfx;
         if (Instance == this) Instance = null;
     }
 
@@ -176,6 +177,16 @@ public class NetGameState : NetworkBehaviour
     {
         ReceivedVfx++;
         SkillVfx.Burst((SkillVfx.Kind)kind, position);
+    }
+
+    // 스킬별 팩 이펙트(09-30) — 표 번호(SkillVfxTable.prefabs)·위치·지름·땅 여부. 양쪽이 같은 표를 빌드에 싣고 있다.
+    void RoutePrefabVfx(int index, Vector3 position, float diameter, bool ground) => RPC_SkillPrefabVfx((short)index, position, diameter, ground);
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies, Channel = RpcChannel.Unreliable)]
+    public void RPC_SkillPrefabVfx(short index, Vector3 position, float diameter, NetworkBool ground)
+    {
+        ReceivedVfx++;
+        SkillVfx.PlayPrefab(index, position, diameter, ground, notify: false);
     }
 
     /// <summary>클라가 받은 한 번짜리 이펙트 수(두 창 확인용 로그).</summary>

@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: SkillData_카이도_불멸_신지우_buster
   m_EditorClassIdentifier:
   skillName: 카이도 — 용형 평타(Kaido_Dragon_buster)
-  description: 원작 h07M 카이도(용형 평타), 게이트="Kaido_Skill_int>=10 (용형 평타)"(리서치담당 확정, 2026-09-06 985150d — udg_Kaido_Damage=ReceivedDamage). Kaido_Skill_int는 카이도 평타에서만 오르는 카운터라 우리 축에 없지만, 10을 넘으면 그 뒤로 영구히 조건을 만족한다(단조 증가) — 한 판에 수백 번 때리는 유닛 특성상 초반 10타만 지나면 사실상 상시 발동이라 OnHitChance triggerChance=1.0이 장기적으로 정확한 근사다(PM 확인, 2026-09-06). 2효과: ReceivedDamage×2.1875+1,125,000(Enemies range575, NORMAL→AD, rand1) / 같은 식(SingleTarget, UNIVERSAL→AP, rand2.58 고정).
+  description: '원작 h07M 카이도(용형 평타), 게이트="Kaido_Skill_int>=10 (용형 평타)"(리서치담당 확정, 2026-09-06 985150d — udg_Kaido_Damage=ReceivedDamage). Kaido_Skill_int는 카이도 평타에서만 오르는 카운터라 우리 축에 없지만, 10을 넘으면 그 뒤로 영구히 조건을 만족한다(단조 증가) — 한 판에 수백 번 때리는 유닛 특성상 초반 10타만 지나면 사실상 상시 발동이라 OnHitChance triggerChance=1.0이 장기적으로 정확한 근사다(PM 확인, 2026-09-06). 2효과: ReceivedDamage×2.1875+1,125,000(Enemies range575, NORMAL→AD, rand1) / 같은 식(SingleTarget, UNIVERSAL→AP, rand2.58 고정). | 정정(2026-09-30, 구현담당1 — R50 보스 0.6초 원문 대조): triggerChance 1.0 → 0.0936. 원문 Trig_Kaido_Attack: 용형 버프 B05Q가 없고 GetRandomInt(1,10)==6일 때 metamorphosis + Kaido_Dragon_buster(카운터 0으로). 「Kaido_Skill_int≥10 단조 증가라 상시」는 틀렸다 — 이 분기는 카운터와 무관하게 10%, 카운터 ≥11이면 먼저 Skill_1_8로 빠진다. 시뮬 기대 평타당 0.0936(용형 지속 중 B05Q로 막히는 몫은 빠짐).'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
+    triggerChance: 0.0936
     range: 575
     hitCountThreshold: 0
     resetTo: 0

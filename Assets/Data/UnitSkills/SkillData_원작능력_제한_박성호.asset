@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_제한_박성호
   m_EditorClassIdentifier:
   skillName: A0QO !떡떡열매
-  description:  | 1채널 추가 배정(원작 제한됨 마르코 흰수염 유산의 수호자 - 제한됨(h08O)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시).
+  description: ' | 1채널 추가 배정(원작 제한됨 마르코 흰수염 유산의 수호자 - 제한됨(h08O)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시). | 정정(2026-09-30, 구현담당1 — ORIGIN_ABILITY_PROVENANCE 「다른 곳에 있음」): 최대×0.0275는 Trig_RedAttack(h05G=제한_강보명) 몫. 뺀 효과(basis, 값, 상수): [(''1'', ''0.0275'', ''0.0'')]'
   · A15N !봉황인: 발동1.0 배수3.25 추가150000.0
   triggerType: 0
   levels:
@@ -21,16 +21,6 @@ MonoBehaviour:
     triggerChance: 0.2
     range: 900.0
     effects:
-    - kind: 0
-      basis: 1
-      target: 3
-      damageType: 2
-      attackType: 5
-      multiplier: 0.0275
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
     - kind: 0
       basis: 3
       target: 3
@@ -41,3 +31,13 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0
+    - kind: 1
+      basis: 0
+      target: 3
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 1.2

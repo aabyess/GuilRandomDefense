@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작005_H08X_운석
+  m_EditorClassIdentifier:
+  skillName: A0GR 중력장 Lv2 — 운석(1/24×1/4)
+  description: '2026-09-30 구현담당1(SKILL_FILL_STAGE2_seven §6): 원문 j:16546~ `A0GR 레벨==2 AND GetRandomInt(1,4)==3` → Huji_meteor: 1초 뒤 0.28초 간격 5타 × 535 적 전원 RRD(315000, CHAOS/NORMAL)(hitCount 5·duration 1.4) + e079 stomp A11L(Wrs1 1500000·aare 535). 레벨1은 0(없음), 레벨2는 1/24×1/4=1/96. 중력장과 같은 타에만 뜨는 동시성은 잃는다(기댓값은 같음). A11L 스턴(adur 빈칸, likely)은 뺐다.'
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 0.010416666666666666
+    range: 535.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects: []
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+  - cooldown: 0
+    triggerChance: 0.010416666666666666
+    range: 535.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 1
+      attackType: 5
+      multiplier: 315000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 5
+      duration: 1.4
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 1500000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0

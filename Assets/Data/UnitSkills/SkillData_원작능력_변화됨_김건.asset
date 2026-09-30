@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_변화됨_김건
   m_EditorClassIdentifier:
   skillName: A041 !패기의 탄환
-  description: 원작 변화된 베이비 5 초토화 모드 - 변화된(Trig_Transpom6). | 2차 배정(트리거·더미 채널): 원작 변화된 베이비 5 초토화 모드 - 변화된(Trig_Transpom6). | 2차 배정(트리거·더미 채널): 원작 변화된 베이비 5 초토화 모드 - 변화된(Trig_Transpom6). | 2차 배정(트리거·더미 채널): 원작 변화된 베이비 5 초토화 모드 - 변화된(Trig_Transpom6).
+  description: '원작 변화된 베이비 5 초토화 모드 - 변화된(Trig_Transpom6). | 2차 배정(트리거·더미 채널): 원작 변화된 베이비 5 초토화 모드 - 변화된(Trig_Transpom6). | 2차 배정(트리거·더미 채널): 원작 변화된 베이비 5 초토화 모드 - 변화된(Trig_Transpom6). | 2차 배정(트리거·더미 채널): 원작 변화된 베이비 5 초토화 모드 - 변화된(Trig_Transpom6). | 정정(2026-09-30, 구현담당1 — ORIGIN_ABILITY_PROVENANCE 「다른 곳에 있음」): 180000은 Trig_Transpom1(h05W=변화됨_박은석) 몫이고 그쪽 에셋에 이미 있다. 뺀 효과(basis, 값, 상수): [(''0'', ''180000.0'', ''0.0'')]'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -25,16 +25,6 @@ MonoBehaviour:
       target: 3
       damageType: 1
       attackType: 1
-      multiplier: 180000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
       multiplier: 145000.0
       bonus: 0.0
       chance: 1
@@ -60,6 +50,10 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0
+      targetCondition: 0
+      targetConditionValue: 0
+      requiredTargetBuffId: B06B
+      skipDamageTakenMultiplier: 1
     - kind: 0
       basis: 0
       target: 3
@@ -96,6 +90,10 @@ MonoBehaviour:
       duration: 0
       randMin: 0.7
       randMax: 0.7
+      targetCondition: 0
+      targetConditionValue: 0
+      requiredTargetBuffId: B06B
+      skipDamageTakenMultiplier: 1
     - kind: 0
       basis: 2
       target: 3
@@ -108,3 +106,6 @@ MonoBehaviour:
       duration: 0
       randMin: 0.7
       randMax: 0.7
+      targetCondition: 2
+      targetConditionValue: 200.0
+      skipDamageTakenMultiplier: 1

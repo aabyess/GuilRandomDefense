@@ -12,11 +12,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_희귀함_이상혁
   m_EditorClassIdentifier:
-  skillName: A06D !디아블 잠브
-  description: 원작 희귀함 돈키호테 도플라밍고 칠무해 - 희귀함(Trig_Unique12). | 2차 배정(트리거·더미 채널): 원작 희귀함 돈키호테 도플라밍고 칠무해 - 희귀함(더미 경로 Trig_Unique12 → e059(U희귀함 도플 더미) → A09W). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. 재정정(2026-09-06, 리서치담당 c00f472 오더 감사 — 뿌리 ㉖ 정정의 정정): 바로 앞 정정(triggerChance를 0.0→1/11로 되살림)이 틀렸다 — e059(A09W)는 오더 자체가 없고 실제 피해는 ForGroupBJ(Trig_Unique12_Func006A)가 낸다(확정 무효). 되살렸던 3개 효과(전부 이 값 6000의 중복 사본)를 다시 제거하고 triggerChance는 0으로 잠근다. [게이트 미확인]이 아니라 "확정 무효"다 — 지어내지 않고 기록만 남긴다.
+  skillName: Trig_Unique12 도플라밍고 희귀함
+  description: '원작 희귀함 돈키호테 도플라밍고 칠무해 - 희귀함(Trig_Unique12). | 2차 배정(트리거·더미 채널): 원작 희귀함 돈키호테 도플라밍고 칠무해 - 희귀함(더미 경로 Trig_Unique12 → e059(U희귀함 도플 더미) → A09W). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. 재정정(2026-09-06, 리서치담당 c00f472 오더 감사 — 뿌리 ㉖ 정정의 정정): 바로 앞 정정(triggerChance를 0.0→1/11로 되살림)이 틀렸다 — e059(A09W)는 오더 자체가 없고 실제 피해는 ForGroupBJ(Trig_Unique12_Func006A)가 낸다(확정 무효). 되살렸던 3개 효과(전부 이 값 6000의 중복 사본)를 다시 제거하고 triggerChance는 0으로 잠근다. [게이트 미확인]이 아니라 "확정 무효"다 — 지어내지 않고 기록만 남긴다. | 2026-09-30 채움(구현담당2, SKILL_FILL_STAGE2_seven.md §2 · 원문 재확인): 위 「확정 무효」는 e059 더미 쪽 얘기이고, 피해는 Trig_Unique12_Actions가 직접 낸다 — `if GetRandomInt(1,11)==3` → 맞은 적 위치 450 안 적 전원 ForGroupBJ(Func006A) `RRD(GetAttacker(),GetEnumUnit(),6000.00,1.00,1.00,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_UNIVERSAL)`. 해시 j:3394 h01L→gg_trg_Unique12(도플라밍고). 1/11·range 450(원작 단위)·Enemies·6000·AP/Spells로 채웠다. 더미채널 _이상혁_1은 빈 채로 둔다(이중 계상 방지). skillName「A06D !디아블 잠브」는 상디(h02I, 배현진) 능력 이름이 잘못 붙은 것이라 Trig_Unique12로 정정. 범위 중심(원작=맞은 적, 우리=시전자)은 별건.'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.0
-    range: 0
+    triggerChance: 0.09091
+    range: 450.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
     effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 6000.0
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId:
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0

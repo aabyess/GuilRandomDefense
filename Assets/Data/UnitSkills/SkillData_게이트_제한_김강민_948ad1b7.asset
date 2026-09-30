@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_제한_김강민_948ad1b7
   m_EditorClassIdentifier:
   skillName: 크로커다일 사막의 악어 - 제한됨 — 1/20
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 크로커다일 사막의 악어 - 제한됨(h05F)의 게이트 "1/20" 능력 1개를 이 SkillData 하나로 묶었다.   · cro_skill_2#1: 계산식 1000000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
+  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 크로커다일 사막의 악어 - 제한됨(h05F)의 게이트 "1/20" 능력 1개를 이 SkillData 하나로 묶었다.   · cro_skill_2#1: 계산식 1000000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. | 추가(2026-09-30, 구현담당1): 원문 Trig_cro_skill_2 Stage1 — e0EM stomp A0PU(Wrs1 200000·aare 550·adur 2.5): 광역 200000 + 스턴 2.5초.'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -36,3 +36,45 @@ MonoBehaviour:
       randMin: 1
       randMax: 1.5
       casterBuffCountFactor: 0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 200000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 2.5
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0

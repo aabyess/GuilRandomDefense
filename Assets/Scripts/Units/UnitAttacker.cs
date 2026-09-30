@@ -322,9 +322,25 @@ public class UnitAttacker : MonoBehaviour
         {
             activeBuffs.Add(new ActiveBuff { id = id, expiresAt = -1f, hitsRemaining = hitCharges, skipNextTick = true, attackSpeedMultiplierAmount = multiplier });
         }
+        else if (duration > 0f)
+        {
+            // 시간 버프는 원작처럼 같은 id가 다시 걸리면 만료만 갱신한다(2026-09-30). 전에는
+            // 항목을 새로 붙여 배율이 곱으로 쌓였다(A095 블러드러스트 0.5초 쿨 → 사실상 무한 누적).
+            // 오라·영구(duration 0)는 RemoveBuff와 짝이 맞아야 해서 아래 기존 경로 그대로다.
+            PruneExpiredBuffs();
+            ActiveBuff existing = string.IsNullOrEmpty(id) ? null
+                : activeBuffs.Find(b => b.id == id && b.hitsRemaining <= 0 && b.expiresAt > 0f && b.attackSpeedMultiplierAmount != 1f);
+            if (existing != null)
+            {
+                existing.expiresAt = Time.time + duration;
+                existing.attackSpeedMultiplierAmount = multiplier;
+                return;
+            }
+            activeBuffs.Add(new ActiveBuff { id = id, expiresAt = Time.time + duration, attackSpeedMultiplierAmount = multiplier });
+        }
         else
         {
-            activeBuffs.Add(new ActiveBuff { id = id, expiresAt = duration > 0f ? Time.time + duration : -1f, attackSpeedMultiplierAmount = multiplier });
+            activeBuffs.Add(new ActiveBuff { id = id, expiresAt = -1f, attackSpeedMultiplierAmount = multiplier });
         }
     }
 
@@ -880,8 +896,8 @@ public class UnitAttacker : MonoBehaviour
             // 없다(TryCastOnHitSkill 쪽만 있음, 아래 참고). ReceivedDamage basis를 쓰는
             // 효과가 이 경로를 타면 0(적용 안 함)으로 안전하게 빠진다.
             SkillTelemetry.Cast(identity != null ? identity.Data : null, skill);
-            bool vfxBefore = SkillVfx.BeginCast(identity != null ? identity.Data : null);
-            CastSkillLevel(level, level.range, null, 0f);
+            bool vfxBefore = SkillVfx.BeginCast(identity != null ? identity.Data : null, skill);
+            CastSkillLevel(level, level.WorldRange, null, 0f);
             SkillVfx.EndCast(vfxBefore);
         }
     }
@@ -937,7 +953,7 @@ public class UnitAttacker : MonoBehaviour
             foreach (EnemyDummy enemy in EnemyDummy.Active)
             {
                 if (enemy == null) continue;
-                if (level.range > 0f && Vector3.Distance(enemy.transform.position, transform.position) > level.range) continue;
+                if (level.range > 0f && Vector3.Distance(enemy.transform.position, transform.position) > level.WorldRange) continue;
                 enemiesInRange.Add(enemy);
             }
         }
@@ -959,7 +975,7 @@ public class UnitAttacker : MonoBehaviour
 
         // Allies 타겟 지속효과 — 같은 규칙.
         List<UnitIdentity> alliesInRange = gatePasses && identity != null
-            ? UnitIdentity.AlliesOf(identity, level.range)
+            ? UnitIdentity.AlliesOf(identity, level.WorldRange)
             : new List<UnitIdentity>();
         for (int i = state.auraAffectedAllies.Count - 1; i >= 0; i--)
         {
@@ -992,6 +1008,11 @@ public class UnitAttacker : MonoBehaviour
                 case SkillEffectKind.ApplyBuff:
                     target.AddBuff(effect.buffId, 0f);
                     break;
+                // 이감 오라(원작 AOae 음수 Oae1·Aasl, 2026-09-30) — 범위 안에 있는 동안 영구로 걸고,
+                // 나가면 아래 Remove가 같은 값으로 뗀다. 겹치면 EnemyDummy가 남은 것 중 가장 강한 것을 다시 고른다.
+                case SkillEffectKind.Slow:
+                    target.AddSlow(effect.multiplier);
+                    break;
             }
         }
     }
@@ -1009,6 +1030,9 @@ public class UnitAttacker : MonoBehaviour
                     break;
                 case SkillEffectKind.ApplyBuff:
                     target.RemoveBuff(effect.buffId);
+                    break;
+                case SkillEffectKind.Slow:
+                    target.RemoveSlow(effect.multiplier);
                     break;
             }
         }
@@ -1190,8 +1214,8 @@ public class UnitAttacker : MonoBehaviour
             // 도는 경로라 이 값이 항상 뜻이 통한다(아래 ResolveSkillEffectValue.
             // ReceivedDamage 참고, 2026-09-06 PM 지시로 연결).
             SkillTelemetry.Cast(unitData, skill);
-            bool vfxBefore = SkillVfx.BeginCast(unitData);
-            CastSkillLevel(level, level.range, attackedTarget, AttackDamage);
+            bool vfxBefore = SkillVfx.BeginCast(unitData, skill);
+            CastSkillLevel(level, level.WorldRange, attackedTarget, AttackDamage);
             SkillVfx.EndCast(vfxBefore);
         }
 
@@ -1221,6 +1245,14 @@ public class UnitAttacker : MonoBehaviour
         // 산다(다음 평타·발동에선 새로 만든다, 영구 상태 아님).
         Dictionary<object, HashSet<int>> firedCascadeGroups = new Dictionary<object, HashSet<int>>();
 
+        // 범위 중심은 시전 시작 때 한 번 잡는다 — 앞 효과가 주 대상을 죽여도 같은 자리에서
+        // 나머지 효과가 터진다(원작도 GetUnitLoc를 먼저 저장해 두고 그 점을 쓴다).
+        Vector3 aoeCenter = level.aoeCenter == SkillAoeCenter.Target && primaryTarget != null
+            ? primaryTarget.transform.position
+            : transform.position;
+        // 스킬별 이펙트(09-30): 범위 중심 땅·시전자 발밑에 한 번 — 적중 이펙트는 피해마다 EnemyDummy 쪽에서 바뀐다.
+        SkillVfx.CastAt(aoeCenter, transform.position, range);
+
         foreach (SkillEffect effect in level.effects)
         {
             if (effect == null) continue;
@@ -1229,7 +1261,7 @@ public class UnitAttacker : MonoBehaviour
             // ApplyToEnemy/ApplyToAlly로 미뤄서 그쪽에서 판정한다(범위 스킬이면 적마다
             // 독립된 캐스케이드가 되도록).
             if (effect.cascadeGroup == 0 && Random.value >= effect.chance) continue;
-            ApplySkillEffect(effect, range, primaryTarget, recentAttackDamage, firedCascadeGroups);
+            ApplySkillEffect(effect, range, aoeCenter, primaryTarget, recentAttackDamage, firedCascadeGroups);
         }
     }
 
@@ -1251,7 +1283,7 @@ public class UnitAttacker : MonoBehaviour
     // (2026-09-05, PM 지시로 런타임에도 가드 추가). 콘솔이 도배되지 않게 한 번만 찍는다.
     static bool loggedUnboundedRange;
 
-    void ApplySkillEffect(SkillEffect effect, float range, EnemyDummy primaryTarget, float recentAttackDamage,
+    void ApplySkillEffect(SkillEffect effect, float range, Vector3 aoeCenter, EnemyDummy primaryTarget, float recentAttackDamage,
         Dictionary<object, HashSet<int>> firedCascadeGroups)
     {
         if (range <= 0f &&
@@ -1277,7 +1309,7 @@ public class UnitAttacker : MonoBehaviour
                 foreach (EnemyDummy enemy in EnemyDummy.Active)
                 {
                     if (enemy == null) continue;
-                    if (range > 0f && Vector3.Distance(enemy.transform.position, transform.position) > range) continue;
+                    if (range > 0f && Vector3.Distance(enemy.transform.position, aoeCenter) > range) continue;
                     inRange.Add(enemy);
                 }
                 foreach (EnemyDummy enemy in inRange)
@@ -1413,16 +1445,20 @@ public class UnitAttacker : MonoBehaviour
             // 터지는데, 누가 채우면 조용히 사라진다 — 코드가 아니라
             // check_required_fields.py(#13, basis=Flat인데 bonus≠0)로 막는다.
             case SkillEffectBasis.Flat: return effect.multiplier;
-            // %체력 분기는 "이 대상이 %체력기를 타는가" 게이트가 먼저다(원작
-            // GetUnitPointValue(대상)<200 — 보스는 200 이상이라 이 분기 자체를 건너뛰고 별도
-            // 고정값 분기로 간다). bonus는 **게이트 안쪽**이다 — 게이트에 막히면 상수항도 같이
-            // 0이어야 한다(상수항만 나가면 원작과 다르다). EnemyData.takesPercentDamage 참고.
+            // %체력 세 basis — 2026-09-30부터 보스 게이트가 없다(구현담당1, PM 5번). 전엔
+            // EnemyData.takesPercentDamage=false(보스 36종)면 상수항까지 0이었는데, 원작은 보스를
+            // 막는 전역 장치가 없고(SKILL_BOSS_BRANCH.md §5) 트리거마다 GetUnitPointValue 분기로
+            // 보스에게 다른 식을 준다(173건 중 114건은 보스도 %HP를 받는다). 그 분기는 이제 효과별
+            // SkillEffect.targetCondition(PV <200 / ==200 / ≥200 / ≥300)이 맡는다 — 조건 없는
+            // %체력 효과는 원작처럼 보스도 맞는다.
             // 감수성 계수(PercentDamageTakenMultiplier)는 여기서 안 곱한다 — 아래
             // DealSkillDamage에서 스킬 피해 전반에 곱한다.
             case SkillEffectBasis.TargetMaxHpPercent:
-                return target.TakesPercentDamage ? target.MaxHp * effect.multiplier + effect.bonus : 0f;
+                return target.MaxHp * effect.multiplier + effect.bonus;
             case SkillEffectBasis.TargetCurrentHpPercent:
-                return target.TakesPercentDamage ? target.Hp * effect.multiplier + effect.bonus : 0f;
+                return target.Hp * effect.multiplier + effect.bonus;
+            case SkillEffectBasis.TargetMissingHpPercent:
+                return Mathf.Max(0f, target.MaxHp - target.Hp) * effect.multiplier + effect.bonus;
             case SkillEffectBasis.CasterAttackPower: return AttackDamage * effect.multiplier + effect.bonus;
             // 연구단계 × multiplier + bonus 꼴을 명시적으로 쓴다(원작 예: 핸콕 "연구횟수×
             // 30,000+360,000") — 이 "연구단계"는 타입 업그레이드(원작 "강화소 3",
@@ -1535,8 +1571,9 @@ public class UnitAttacker : MonoBehaviour
                 break;
 
             // 이감(2026-09-29) — multiplier = 남는 속도 비율. AddSlow/RemoveSlow는 같은 값으로 짝을 맞춰야 빠진다.
+            // multiplier 0 = 「최저 이속까지」(원작 Htc3·Ctc3 ≥ 1) — EnemyDummy가 원작 MinUnitSpeed 하한으로 올린다.
             case SkillEffectKind.Slow:
-                if (effect.duration > 0f && effect.multiplier > 0f && effect.multiplier < 1f)
+                if (effect.duration > 0f && effect.multiplier >= 0f && effect.multiplier < 1f)
                     StartCoroutine(SkillSlowRoutine(target, effect.multiplier, effect.duration));
                 break;
 
@@ -1620,14 +1657,21 @@ public class UnitAttacker : MonoBehaviour
         if (target != null) target.RemoveAllyAuraEffect(effect);
     }
 
+    // 계측 채널 — %체력 세 basis는 「스킬%HP」로 따로 센다(보스 %HP 게이트 제거 효과를 재려고, 2026-09-30).
+    static string TelemetryChannel(SkillEffect effect) =>
+        effect.basis == SkillEffectBasis.TargetMaxHpPercent || effect.basis == SkillEffectBasis.TargetCurrentHpPercent
+        || effect.basis == SkillEffectBasis.TargetMissingHpPercent ? "스킬%HP" : "스킬";
+
     void DealSkillDamage(SkillEffect effect, EnemyDummy target, float recentAttackDamage)
     {
         // ⚠️ 2026-09-05 정정: PercentDamageTakenMultiplier(원작 A11S)는 "%체력 피해 전용
         // 감수성"이 아니라 "이 대상이 스킬 피해를 얼마나 받는가" 계수다 — 원작에 게이트 없이
         // 고정 피해에도 같은 계수가 곱는 사례가 43곳 중 7곳 있다(리서치담당 재조사). 그래서
         // basis를 안 가리고 스킬 피해 전반에 곱한다. %체력 분기 자체를 타는지는 별개 축
-        // (target.TakesPercentDamage, ResolveSkillEffectValue에서 이미 갈랐다)이다.
-        float amount = ResolveSkillEffectValue(effect, target, recentAttackDamage) * target.PercentDamageTakenMultiplier;
+        // (2026-09-30부터 효과별 targetCondition — 전역 TakesPercentDamage 게이트는 걷었다)이다.
+        // 원작 식에 A11S 인자가 없는 효과는 감수성 계수를 안 곱한다(SkillEffect.skipDamageTakenMultiplier).
+        float amount = ResolveSkillEffectValue(effect, target, recentAttackDamage)
+            * (effect.skipDamageTakenMultiplier ? 1f : target.PercentDamageTakenMultiplier);
         // 원작 realD = 0.03×버프개수(SkillEffect.casterBuffCountFactor 주석 참고). 기존
         // 227개 효과는 이 필드가 직렬화에 없어 C# 기본값 0f로 읽힌다 — (1+0×count)=1이라
         // 배율이 완전히 무효, 회귀 없음. ⚠️ 2026-09-06: CountCasterBuffs()가 이제 버프
@@ -1646,7 +1690,7 @@ public class UnitAttacker : MonoBehaviour
         {
             float skillHpBefore = target.Hp;
             target.TakeDamage(amount, effect.damageType, effect.attackType, owner != null ? owner.OwnerId : -1);
-            SkillTelemetry.Damage(identity != null ? identity.Data : null, "스킬", target, skillHpBefore);
+            SkillTelemetry.Damage(identity != null ? identity.Data : null, TelemetryChannel(effect), target, skillHpBefore);
             return;
         }
 
@@ -1662,11 +1706,12 @@ public class UnitAttacker : MonoBehaviour
             if (target != null)
             {
                 float hitHpBefore = target.Hp;
-                bool vfxBefore = SkillVfx.CasterAllowsVfx;
-                SkillVfx.EndCast(vfxAllowed);   // 여러 번 때리기는 시전 문맥 밖(코루틴)이라 시작 때 등급 판정을 싣고 온다
+                // 여러 번 때리기는 시전 문맥 밖(코루틴)이라 시작 때 등급 판정을 싣고 온다. 첫 타는 시전 안에서 동기로 돌므로
+                // 스킬 이펙트 칸을 지우지 않는 SetCasterGate로(09-30).
+                bool vfxBefore = SkillVfx.SetCasterGate(vfxAllowed);
                 target.TakeDamage(amountPerHit, damageType, attackType, owner != null ? owner.OwnerId : -1);
-                SkillVfx.EndCast(vfxBefore);
-                SkillTelemetry.Damage(identity != null ? identity.Data : null, "스킬", target, hitHpBefore);
+                SkillVfx.SetCasterGate(vfxBefore);
+                SkillTelemetry.Damage(identity != null ? identity.Data : null, "스킬", target, hitHpBefore);   // 다단 히트는 효과 정보가 없어 채널을 안 나눈다
             }
             if (i < hits - 1 && interval > 0f) yield return new WaitForSeconds(interval);
         }

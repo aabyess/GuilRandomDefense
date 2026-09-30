@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_불멸_김용태_A08V
   m_EditorClassIdentifier:
   skillName: A08V !전쟁의 함성
-  description: 값 대조 확정(2026-09-06, PHASE2_VALUE_MATCH_2026-09-06.md/bdfd720): 원작 불멸의 몽키.D.드래곤 혁명군의 수장 - 불멸의(더미 경로 Trig_Dragon_Attack → e02L(#불멸 드래곤스턴2) → A08V, base AOws/Wrs1=250,000). SkillData_원작능력_불멸_김용태.asset은 이 능력 하나로 triggerChance를 공유하기엔 다른 능력(A12U 등)이 섞여 있어(PM 설계 결정 — 능력 하나에 파일 하나) 별도 파일로 뗐다. DUMMY_CHANNEL_GATES.csv 확정 게이트: Trig_Dragon_Attack_Actions "GetRandomInt(1,10)==6" → 1/10.
+  description: '값 대조 확정(2026-09-06, PHASE2_VALUE_MATCH_2026-09-06.md/bdfd720): 원작 불멸의 몽키.D.드래곤 혁명군의 수장 - 불멸의(더미 경로 Trig_Dragon_Attack → e02L(#불멸 드래곤스턴2) → A08V, base AOws/Wrs1=250,000). SkillData_원작능력_불멸_김용태.asset은 이 능력 하나로 triggerChance를 공유하기엔 다른 능력(A12U 등)이 섞여 있어(PM 설계 결정 — 능력 하나에 파일 하나) 별도 파일로 뗐다. DUMMY_CHANNEL_GATES.csv 확정 게이트: Trig_Dragon_Attack_Actions "GetRandomInt(1,10)==6" → 1/10. | 정정(2026-09-30, 구현담당1 — ORIGIN_ABILITY_PROVENANCE 「다른 곳에 있음」): 250000은 A08V(AOws Wrs1, 드래곤 불멸 e02L — Trig_Dragon_Attack, h04D=불멸_정준영) 몫이다. h04J(김용태)의 능력이 아니다. 뺀 효과(basis, 값, 상수): [(''0'', ''250000.0'', ''0.0'')]'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,14 +22,4 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 250000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
+    effects: []

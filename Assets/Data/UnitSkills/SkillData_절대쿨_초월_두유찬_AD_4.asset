@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_절대쿨_초월_두유찬_AD_4
   m_EditorClassIdentifier:
   skillName: 사보 — 게이지+확률×2(Sabo_Skill_4)
-  description: 5절대쿨 계열(ORIGINAL_GATED_SKILLS_14.csv, 우리표커버=미수록) 신규 배정 — 원작 H092 사보(Sabo_Skill_4), 버프 B00N. 게이트=MANA게이지==125.00 AND GetRandomInt(1,10)==5 AND GetRandomInt(1,6)==4(확률은 수학적으로 동치인 1/10×1/6=1/60으로 합쳤다). ⚠️ 절대쿨 생략 근거는 _1과 동일. OnHitCount(마나125)+triggerChance=1/60. 4행 중 2행만 옮겼다 — RRD#1 Flat 500,000(Enemies range 415, CHAOS/NORMAL(damage)→AD)과 RRD#4 대상최대체력×0.01(SingleTarget, HERO/NORMAL(damage)→AD). RRD#2(UNIVERSAL, 버프개수 얽힌 truncated 수식)와 RRD#3(HERO, 능력레벨계수+버프개수 이중으로 얽힌 truncated 수식, %MaxHp)은 지어내지 않고 뺐다. 두 효과 모두 × rand(1.0~1.5)(MULTIPLIER_CORRECTIONS.csv, 2026-09-06 적용 — Sabo_Skill_4는 RRD순번 구분 없이 게이트 전체에 배율 하나로 표기돼 있어 두 효과에 동일 적용했다).
+  description: '5절대쿨 계열(ORIGINAL_GATED_SKILLS_14.csv, 우리표커버=미수록) 신규 배정 — 원작 H092 사보(Sabo_Skill_4), 버프 B00N. 게이트=MANA게이지==125.00 AND GetRandomInt(1,10)==5 AND GetRandomInt(1,6)==4(확률은 수학적으로 동치인 1/10×1/6=1/60으로 합쳤다). ⚠️ 절대쿨 생략 근거는 _1과 동일. OnHitCount(마나125)+triggerChance=1/60. 4행 중 2행만 옮겼다 — RRD#1 Flat 500,000(Enemies range 415, CHAOS/NORMAL(damage)→AD)과 RRD#4 대상최대체력×0.01(SingleTarget, HERO/NORMAL(damage)→AD). RRD#2(UNIVERSAL, 버프개수 얽힌 truncated 수식)와 RRD#3(HERO, 능력레벨계수+버프개수 이중으로 얽힌 truncated 수식, %MaxHp)은 지어내지 않고 뺐다. 두 효과 모두 × rand(1.0~1.5)(MULTIPLIER_CORRECTIONS.csv, 2026-09-06 적용 — Sabo_Skill_4는 RRD순번 구분 없이 게이트 전체에 배율 하나로 표기돼 있어 두 효과에 동일 적용했다). | 정정(2026-09-30, 구현담당1 — SKILL_BASIS_AUDIT §3-2 「계수 불일치」 확인): 원문 Trig_Sabo_Skill_4는 ① 대상 위치 415 적 전원 500000×rand(1.0~1.5) CHAOS/NORMAL ② 주 대상 500000+50000×시전자 버프 수 CHAOS/UNIVERSAL ③ PV<200이면 MAX_LIFE×0.04×(0.2+0.10×A11S) HERO/NORMAL, 아니면(보스) MAX_LIFE×0.01 ④ e049 thunderbolt(A0C2 AHtb adur 1.85) → 주 대상 스턴. 우리에 있던 최대체력×0.01은 ③의 보스 쪽 분기였다(일반 적에게 0.01이 나가던 뒤집힘). ①에 rand, ②(casterBuffCountFactor 0.1), ③ 두 갈래(targetCondition PV<200 / ≥200), ④ Stun 1.85를 넣었다. ⚠️ ③의 A11S 계단은 원작 0.10, 우리 PercentDamageTakenMultiplier는 전역 계단이라 다를 수 있다.'
   triggerType: 3
   levels:
   - cooldown: 0
@@ -37,6 +37,46 @@ MonoBehaviour:
       randMax: 1.5
       casterBuffCountFactor: 0
     - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 5
+      multiplier: 500000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.1
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+    - kind: 0
+      basis: 1
+      target: 3
+      damageType: 1
+      attackType: 4
+      multiplier: 0.04
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 1
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+    - kind: 0
       basis: 1
       target: 3
       damageType: 1
@@ -45,7 +85,35 @@ MonoBehaviour:
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
-      randMin: 1
-      randMax: 1.5
-      casterBuffCountFactor: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 3
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 1
+    - kind: 1
+      basis: 0
+      target: 3
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 1.85
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0

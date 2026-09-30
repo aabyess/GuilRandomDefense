@@ -12,16 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_게이트_영원_김영원_5a6f48de
   m_EditorClassIdentifier:
-  skillName: |CFFFFFA78'아마존릴리의 여제'  보아  — MANA게이지175.00 AND 1/15
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 |CFFFFFA78'아마존릴리의 여제'  보아 (h05C)의 게이트 "MANA게이지175.00 AND 1/15" 능력 1개를 이 SkillData 하나로 묶었다.   · hancock_skill_9#1: 계산식 850000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.
-  triggerType: 3
+  skillName: '|CFFFFFA78''아마존릴리의 여제''  보아  — 마나≠175 AND 1/15'
+  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 |CFFFFFA78''아마존릴리의 여제''  보아 (h05C)의 게이트 "MANA게이지175.00 AND 1/15" 능력 1개를 이 SkillData 하나로 묶었다.   · hancock_skill_9#1: 계산식 850000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. | 2026-09-30 교정(구현담당2, SKILL_FILL_STAGE2_seven.md §7 · 원문·w3a 재확인): 게이트 라벨 「MANA게이지175 AND 1/15」가 틀렸다 — Trig_Hancock_Attack은 마나==175면 hancock_skill_Mana(원작028_h05C 몫)를 부르고, **그 else(마나≠175) 안에서** 매 타 `GetRandomInt(1,15)==3`이면 hancock_skill_9를 부른다. 그래서 OnHitCount 175(=175타 도달 뒤 1/15, 약 2,600타에 한 번)를 OnHitChance·triggerChance 1/15로 바꿨다(175타째 한 번 빠지는 차이 0.6%는 무시). 피해: 450 안 적 전원 RRD(850000,1.0,1.5,HERO,NORMAL)(Func003Func006A) → AD/Hero·×1.0~1.5(기존 값 유지). 추가: e08F `creepthunderclap` → A0C6(ACt2) Ctc1=150000·Ctc3=0.6(이속 −60%)·Ctc4=0·adur 2.5·aare 600 → Damage 150000 AP(2)/Spells(7) + Slow multiplier 0.4(남는 속도)·duration 2.5(한 번 거는 둔화라 오라 코드와 무관하게 동작). e0KV·e0KW(A0C6 보유)·e0AA는 만들기만 하고 오더가 없다(시각). 선더클랩 반경 600 ≠ RRD 450 — 에셋 range는 하나라 보수적으로 450.'
+  triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.066667
     range: 450.0
-    hitCountThreshold: 175
+    hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
     effects:
     - kind: 0
       basis: 0
@@ -29,10 +32,61 @@ MonoBehaviour:
       damageType: 1
       attackType: 4
       multiplier: 850000.0
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
-      randMin: 1
-      randMax: 1.5
       casterBuffCountFactor: 0
+      buffId:
+      randMin: 1.0
+      randMax: 1.5
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 150000.0
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId:
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+    - kind: 13
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.4
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 2.5
+      casterBuffCountFactor: 0
+      buffId:
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0

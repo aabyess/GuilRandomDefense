@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_영원_문필환_A16W
   m_EditorClassIdentifier:
   skillName: A16W !전쟁의 함성
-  description: 값 대조 확정(2026-09-06, PHASE2_VALUE_MATCH_2026-09-06.md/bdfd720): 원작 영원한 세계의 가희 우타 - 영원한(더미 경로 Trig_Uta_Attack → e0R1(E영원 우타 오선보1) → A16W, base AOws/Wrs1=450,000). SkillData_원작능력_영원_문필환.asset은 이 능력 하나로 triggerChance를 공유하기엔 다른 능력(A0LZ·A0OU 등)이 섞여 있어(PM 설계 결정 — 능력 하나에 파일 하나) 별도 파일로 뗐다. DUMMY_CHANNEL_GATES.csv 확정 게이트: Trig_Uta_Attack_Actions "시전자체력>10.00 AND GetRandomInt(1,9)==2" — 체력 조건은 확률을 줄이는 게 아니라 생존 전제조건이라 축 밖으로 두고 확률항만 사용 → 1/9(≈0.111).
+  description: '값 대조 확정(2026-09-06, PHASE2_VALUE_MATCH_2026-09-06.md/bdfd720): 원작 영원한 세계의 가희 우타 - 영원한(더미 경로 Trig_Uta_Attack → e0R1(E영원 우타 오선보1) → A16W, base AOws/Wrs1=450,000). SkillData_원작능력_영원_문필환.asset은 이 능력 하나로 triggerChance를 공유하기엔 다른 능력(A0LZ·A0OU 등)이 섞여 있어(PM 설계 결정 — 능력 하나에 파일 하나) 별도 파일로 뗐다. DUMMY_CHANNEL_GATES.csv 확정 게이트: Trig_Uta_Attack_Actions "시전자체력>10.00 AND GetRandomInt(1,9)==2" — 체력 조건은 확률을 줄이는 게 아니라 생존 전제조건이라 축 밖으로 두고 확률항만 사용 → 1/9(≈0.111). | 비움(2026-09-30, 구현담당1 — 출처 검증): A16W(우타 h067)는 영원_김정래 몫이라 더미채널_영원_김정래_1로 되돌렸다. 영원_문필환의 원작(h057 비비·h088)에는 없다.'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,14 +22,4 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 450000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
+    effects: []

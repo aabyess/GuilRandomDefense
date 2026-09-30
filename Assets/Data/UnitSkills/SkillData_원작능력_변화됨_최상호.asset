@@ -13,23 +13,13 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_변화됨_최상호
   m_EditorClassIdentifier:
   skillName: A0GD !숲숲 열매
-  description: 원작 변화된 돈키호테 도플라밍고 하늘귀신 - 변화된(Trig_Transpom2).
+  description: '원작 변화된 돈키호테 도플라밍고 하늘귀신 - 변화된(Trig_Transpom2). | 정정(2026-09-30, 구현담당1 — ORIGIN_ABILITY_PROVENANCE 「다른 곳에 있음」): 145000은 Trig_Transpom6(h07N=변화됨_김건) 몫이고 그쪽 에셋에 이미 있다. 뺀 효과(basis, 값, 상수): [(''0'', ''145000.0'', ''0.0'')]'
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.2
     range: 0
     effects:
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 2
-      attackType: 7
-      multiplier: 145000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
     - kind: 0
       basis: 0
       target: 3
@@ -40,3 +30,13 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0
+    - kind: 1
+      basis: 0
+      target: 3
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 1.75

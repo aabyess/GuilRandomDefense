@@ -138,6 +138,14 @@ public enum SkillEffectBasis
     // UnitAttacker.SelfUpgradeLevel(유닛 인스턴스별 런타임 카운터, TryUpgradeSelf로 올림)이
     // 이 값을 들고 있다. multiplier/bonus는 다른 레벨 기반 basis와 같은 관례(level×multiplier+bonus).
     CasterSelfUpgradeLevel,
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, 구현담당1 — 체력 비례 누락 채우기). 원작 「잃은 체력」 비례
+    // `(MAX_LIFE − LIFE) × k + c` 꼴(Z_Skill_Mana ×0.08 · Sirahoshi_skill_Mana ×0.06 · Uta_skill_1_double
+    // ×0.12 · Legend6 ×0.04 등). 전엔 TargetMaxHpPercent(+k)와 TargetCurrentHpPercent(−k) 두 효과로
+    // 나눠 담았는데, DealSkillDamage가 0 이하 피해를 버려서(amount<=0 → return) 음수 쪽이 통째로
+    // 사라지고 최대체력×k가 그대로 나갔다. 한 효과 안에서 (MaxHp − Hp)×m + b로 계산한다.
+    // 보스 분기는 %체력 두 종과 같이 효과별 targetCondition으로 건다(2026-09-30 전역 게이트 제거).
+    TargetMissingHpPercent,
 }
 
 // 무엇을 하는 효과인가.
@@ -408,6 +416,14 @@ public class SkillEffect
     // 우선한다) — 그룹 맨 앞에 chance==0을 두면 그 효과는 사실상 죽은 자리가 된다(의도한
     // 설계라면 그렇게 두어도 안전하다, 다만 보통은 실수일 가능성이 높다).
     public int cascadeGroup;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, 구현담당1 — PM 5번 다음 커밋). 원작 A11S 감수성 인자
+    // ×(0.20+0.05×A11S레벨)은 **그 인자가 적힌 트리거 식에만** 곱해진다. 우리는
+    // DealSkillDamage에서 스킬 피해 전반에 EnemyDummy.PercentDamageTakenMultiplier를 곱해 왔고,
+    // 그래서 원작 식에 그 인자가 없는 효과(SKILL_BOSS_BRANCH_apply.csv의 [원작 식엔 A11S 계수
+    // 없음] 88행 등)는 대개 ×0.9만큼 과소였다. true면 이 효과는 그 계수를 곱하지 않는다.
+    // 기본 false = 지금까지 동작(곱함) — 기존 에셋 회귀 없음.
+    public bool skipDamageTakenMultiplier;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
@@ -429,8 +445,12 @@ public class SkillLevel
     // 확률 판정과 별개 블록이라(원작도 그렇다) 확률에 실패해도 게이지는 리셋된다. 기존
     // OnHitCount 자산은 전부 기본값 1f라 이 판정이 항상 통과해 회귀가 없다.
     [Range(0f, 1f)] public float triggerChance = 1f;
-    // 시전·오라 반경.
+    // 시전·오라 반경 — ⚠️ 원작(워크3) 단위 그대로다(500·450·415 …). 거리 비교엔 반드시
+    // WorldRange를 쓸 것. 2026-09-30까지 range를 세계 거리에 그대로 대서 모든 범위 스킬이
+    // 4.167배 반경(면적 17배)으로 때렸다(Blender 조사 지적, PM 확인: 유닛 사거리 600 → 144인데
+    // 스킬 반경 500은 500으로 비교됐다).
     public float range;
+    public float WorldRange => range / WorldScale.Value;
 
     // ⚠️ 맨 뒤에 추가 — 직렬화 순서를 지킨다.
     // OnHitCount 전용 — 카운터가 이 값에 닿으면 발동한다. 다른 발동방식이면 0(안 씀).
@@ -521,6 +541,19 @@ public class SkillLevel
     // LIFE−17"을 그렇게 읽었다). 둘 중 하나가 원작과 다를 수 있어 리서치담당 확인
     // 대기 중이다 — 답이 오기 전엔 이 동작을 바꾸지 말 것.
     public int gaugeSpendAmount;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, PM) — Enemies 범위의 중심. 원작 범위 스킬 133개 전수
+    // (Docs/research/SKILL_AOE_CENTER.md, Blender): 공격받은 적 위치 107 · 시전자 7 · 기타 19.
+    // 공격 트리거 문맥의 GetTriggerUnit()은 **공격받은 적**이다(Main_Attack_Trigger_Manager가
+    // EVENT_PLAYER_UNIT_ATTACKED). 그래서 기본값이 Target이다. 대상이 없는 시전(쿨다운)은
+    // 시전자로 떨어진다. 오라는 이 값을 안 본다(늘 시전자).
+    public SkillAoeCenter aoeCenter = SkillAoeCenter.Target;
+}
+
+public enum SkillAoeCenter
+{
+    Target,
+    Caster,
 }
 
 [CreateAssetMenu(fileName = "NewSkillData", menuName = "GuilRandomDefense/Skill Data")]
