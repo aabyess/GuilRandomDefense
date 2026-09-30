@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_제한_이유범
   m_EditorClassIdentifier:
   skillName: A0GM !끓어오르는피
-  description: 원작 제한됨 킹 삼재해:화재 - 제한됨(더미 경로 Trig_King_Attack → e0NS(%제한됨변화 킹 공속더미1) → A10X). 정정(2026-09-06, STOCK_FIELD_RESEARCH_RESULT.csv/607351c): A10X(0.3) 효과를 제거했다 — base Ablo(블러드러스트)의 Blo1은 공격속도/공격력 증가율이지 피해 필드가 아니다. 기록만 남긴다.
+  description: '원작 제한됨 킹 삼재해:화재 - 제한됨(더미 경로 Trig_King_Attack → e0NS(%제한됨변화 킹 공속더미1) → A10X). 정정(2026-09-06, STOCK_FIELD_RESEARCH_RESULT.csv/607351c): A10X(0.3) 효과를 제거했다 — base Ablo(블러드러스트)의 Blo1은 공격속도/공격력 증가율이지 피해 필드가 아니다. 기록만 남긴다. | 정정(2026-09-30, 구현담당1 — 출처 검증): 이 효과(최대×0.08, PV<200)는 King_Attack이 아니라 시노부 Trig_Sinobu_Attack(h084=제한_이유범)의 `GetRandomInt(1,8)==5` 분기다 → triggerChance 0.2→0.125, 같은 분기의 600000(무조건)·PV==200 MAX×0.02를 더했다(원작능력_제한_임준성에 사본으로 있던 것).'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.2
+    triggerChance: 0.125
     range: 550.0
     effects:
     - kind: 0
@@ -42,3 +42,45 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 2.5
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 600000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+    - kind: 0
+      basis: 1
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 0.02
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 2
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 1

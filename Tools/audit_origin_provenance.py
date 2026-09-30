@@ -182,9 +182,13 @@ def main(out_path):
     for p in sorted(glob.glob(os.path.join(ROOT, 'Assets/Data/UnitSkills/SkillData_원작능력_*.asset'))):
         a = sat.load(p)
         units = sorted(asset_units.get(p, ()))
-        origs = sorted({o for u in units for o in roster_map.get(u, [])})
-        if not origs:   # 대응표에 없는 로스터 — 에셋 설명의 「원작 …(hXXX)」에서
-            origs = sorted(set(re.findall(r'\((h\w{3}|H\w{3})\)', a.head)) & set(UN))
+        # 원작 유닛 = 대응표 ∪ 에셋 설명의 「원작 …(hXXX)」 ∪ skillName 능력 ID의 소유 유닛(1채널 순위 배정은 대응표에 없는 유닛일 수 있다)
+        origs = {o for u in units for o in roster_map.get(u, [])}
+        origs |= set(re.findall(r'\((h\w{3}|H\w{3})\)', a.head)) & set(UN)
+        m2 = re.search(r'^  skillName: \'?(A\w{3})\b', a.head, re.M)
+        if m2:
+            origs |= {uid for uid in UN if m2.group(1) in unit_abilities(uid) and uid[0] in 'hH'}
+        origs = sorted(origs)
         pools = [(o,) + unit_pool(o) for o in origs]
         for li in range(len(a.levels)):
             for ei, b in enumerate(sat.get_effect_blocks(a, li)):
