@@ -881,7 +881,7 @@ public class UnitAttacker : MonoBehaviour
             // 효과가 이 경로를 타면 0(적용 안 함)으로 안전하게 빠진다.
             SkillTelemetry.Cast(identity != null ? identity.Data : null, skill);
             bool vfxBefore = SkillVfx.BeginCast(identity != null ? identity.Data : null);
-            CastSkillLevel(level, level.range, null, 0f);
+            CastSkillLevel(level, level.WorldRange, null, 0f);
             SkillVfx.EndCast(vfxBefore);
         }
     }
@@ -937,7 +937,7 @@ public class UnitAttacker : MonoBehaviour
             foreach (EnemyDummy enemy in EnemyDummy.Active)
             {
                 if (enemy == null) continue;
-                if (level.range > 0f && Vector3.Distance(enemy.transform.position, transform.position) > level.range) continue;
+                if (level.range > 0f && Vector3.Distance(enemy.transform.position, transform.position) > level.WorldRange) continue;
                 enemiesInRange.Add(enemy);
             }
         }
@@ -959,7 +959,7 @@ public class UnitAttacker : MonoBehaviour
 
         // Allies 타겟 지속효과 — 같은 규칙.
         List<UnitIdentity> alliesInRange = gatePasses && identity != null
-            ? UnitIdentity.AlliesOf(identity, level.range)
+            ? UnitIdentity.AlliesOf(identity, level.WorldRange)
             : new List<UnitIdentity>();
         for (int i = state.auraAffectedAllies.Count - 1; i >= 0; i--)
         {
@@ -1191,7 +1191,7 @@ public class UnitAttacker : MonoBehaviour
             // ReceivedDamage 참고, 2026-09-06 PM 지시로 연결).
             SkillTelemetry.Cast(unitData, skill);
             bool vfxBefore = SkillVfx.BeginCast(unitData);
-            CastSkillLevel(level, level.range, attackedTarget, AttackDamage);
+            CastSkillLevel(level, level.WorldRange, attackedTarget, AttackDamage);
             SkillVfx.EndCast(vfxBefore);
         }
 

@@ -57,7 +57,7 @@ public class EnemyAuraCaster : MonoBehaviour
         // 06번(트레잇 배선)이 실제 레벨을 골라오면 이 인덱스를 바꾼다 — 지금은 SkillData 쪽에
         // 레벨을 올리는 코드가 어디에도 없어(SkillData.cs 자체 코멘트) 항상 레벨1만 쓴다.
         SkillLevel level = skill.levels[0];
-        List<EnemyDummy> inRange = EnemyDummy.AlliesOf(self, level.range);
+        List<EnemyDummy> inRange = EnemyDummy.AlliesOf(self, level.WorldRange);
 
         for (int i = affected.Count - 1; i >= 0; i--)
         {

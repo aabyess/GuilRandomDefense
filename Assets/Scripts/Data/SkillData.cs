@@ -429,8 +429,12 @@ public class SkillLevel
     // 확률 판정과 별개 블록이라(원작도 그렇다) 확률에 실패해도 게이지는 리셋된다. 기존
     // OnHitCount 자산은 전부 기본값 1f라 이 판정이 항상 통과해 회귀가 없다.
     [Range(0f, 1f)] public float triggerChance = 1f;
-    // 시전·오라 반경.
+    // 시전·오라 반경 — ⚠️ 원작(워크3) 단위 그대로다(500·450·415 …). 거리 비교엔 반드시
+    // WorldRange를 쓸 것. 2026-09-30까지 range를 세계 거리에 그대로 대서 모든 범위 스킬이
+    // 4.167배 반경(면적 17배)으로 때렸다(Blender 조사 지적, PM 확인: 유닛 사거리 600 → 144인데
+    // 스킬 반경 500은 500으로 비교됐다).
     public float range;
+    public float WorldRange => range / WorldScale.Value;
 
     // ⚠️ 맨 뒤에 추가 — 직렬화 순서를 지킨다.
     // OnHitCount 전용 — 카운터가 이 값에 닿으면 발동한다. 다른 발동방식이면 0(안 씀).
