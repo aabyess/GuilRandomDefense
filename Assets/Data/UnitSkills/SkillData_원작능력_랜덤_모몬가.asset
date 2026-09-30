@@ -12,56 +12,93 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_랜덤_모몬가
   m_EditorClassIdentifier:
-  skillName: Trig_ichigo1
-  description: 원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 유닛 하나(행 4개)를 통째로 이 유닛에 배정했다(2026-09-06 유닛 단위 재배정, TEAM_RULES 뿌리 ⑮). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(더미 경로 Trig_ichigo1 → e0O7(!이치고 월아) → A093). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다.
+  skillName: ichigo1 강화 후 1/5 (이치고)
+  description: '원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 유닛 하나(행 4개)를 통째로 이 유닛에 배정했다(2026-09-06 유닛 단위 재배정, TEAM_RULES 뿌리 ⑮). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(더미 경로 Trig_ichigo1 → e0O7(!이치고 월아) → A093). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 정정(2026-09-30 구현담당1, 「게이트 없음」 검사 Tools/audit_ungated.py): 원문 Trig_ichigo1(h071) = `if UserData==1 and 1~5==3 → 대상 위치 385 광역 200000 CHAOS/UNIVERSAL + PV<200 최대×0.02 / 그 외 100000`. UserData=1은 R_Unit_skill_tr(랜덤 스킬 강화)가 켠다 → L0 빈 효과, L1에 효과(호시노 A0KT와 같은 축, 우리엔 아직 올리는 길 없음 — 목록). 이전: 확률 1.0·AD·1150(잔재).'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 0
+    triggerChance: 0.2
+    range: 385.0
+    effects: []
+  - cooldown: 0
+    triggerChance: 0.2
+    range: 385.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
     effects:
     - kind: 0
       basis: 0
-      target: 3
-      damageType: 1
+      target: 2
+      damageType: 2
       attackType: 5
       multiplier: 200000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 100000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      targetCondition: 3
-      targetConditionValue: 200.0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     - kind: 0
       basis: 1
       target: 3
-      damageType: 1
-      attackType: 1
+      damageType: 2
+      attackType: 7
       multiplier: 0.02
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
       targetCondition: 1
-      targetConditionValue: 200.0
-      skipDamageTakenMultiplier: 1
+      targetConditionValue: 200
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     - kind: 0
       basis: 0
       target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 1150.0
+      damageType: 2
+      attackType: 7
+      multiplier: 100000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 3
+      targetConditionValue: 200
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0.0

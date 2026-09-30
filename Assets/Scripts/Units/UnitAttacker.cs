@@ -433,13 +433,13 @@ public class UnitAttacker : MonoBehaviour
     // 없다. 버프 파일(`war3map.w3h`)의 버프 311개를 전수 확인해도 지속시간 필드 자체가 없고,
     // 능력 파일 쪽 지속시간 필드는 다른 능력 1,036건에서 멀쩡히 쓰이는데 방깎 계열만 0이다 —
     // **영구 누적이 확정이다** (`UNIT_STATS_RESEARCH.md`).
-    // → 제한을 걷어냈다. 무한히 쌓여도 EffectiveArmor가 -20에서 잘리므로 효과는 유계다.
+    // → 제한을 걷어냈다. 무한히 쌓여도 피해 배율이 2배에 수렴하므로 효과는 유계다(하한 −20은 09-30 걷음).
     //
     // ⚠️ 2026-09-05 정정(2차, 04③): 1차 정정("표 레벨을 올리는 것으로 바뀌었다")이
     // 틀렸었다 — A0TK/A0VI/A0VJ는 범용 방깎 표가 아니라 **카이도·핸콕 전용 스킬**이
     // 올리는 능력이었다(PM, 트리거 재조사). 우리 유닛의 일반 ArmorShred 트레잇은
     // 원래대로 EnemyDummy.armorShred(float, 원작 `Iarp`류)를 직접 깎는다 — 이 값은
-    // ArmorFloor(-20)에서 잘리므로 무한 누적이어도 효과는 유계다. A0TK/A0VI/A0VJ 쪽은
+    // 피해 배율이 2배에 수렴하므로 무한 누적이어도 효과는 유계다. A0TK/A0VI/A0VJ 쪽은
     // EnemyDummy.AddKaidoAttackStack 등 전용 메서드로만 올라간다(카이도·핸콕에 대응하는
     // 유닛이 우리 로스터에 아직 없어 호출부는 없음 — 06번 이후).
     void ApplyArmorShred(EnemyDummy target)
@@ -544,6 +544,41 @@ public class UnitAttacker : MonoBehaviour
     int lifeGaugeCounter;
     bool lifeGaugeInitialized;
 
+    // 게이지 재생(UnitData.manaRegenPerSecond 등 주석 참고) — 초당 재생을 소수로 모았다가 한 칸씩 게이지에 더한다.
+    // 검사는 지금처럼 평타 때만 한다 — 원작 트리거도 전부 평타(HashAttack) 안에서 마나를 검사하므로, 재생으로
+    // 문턱을 넘은 뒤 다음 평타에서 발동한다. 게이지는 최대 마나에서 멈춘다(원작 umpm 상한).
+    const float IntRegenBonus = 0.08f;   // war3mapMisc.txt IntRegenBonus
+    float manaRegenCarry, lifeRegenCarry;
+
+    int ManaGaugeCap(UnitData d) => d != null && d.manaMax > 0f ? Mathf.RoundToInt(d.manaMax * Mathf.Max(d.manaGaugePerMana, 0.0001f)) : int.MaxValue;
+    int LifeGaugeCap(UnitData d) => d != null && d.lifeGaugeMax > 0f ? Mathf.RoundToInt(d.lifeGaugeMax) : int.MaxValue;
+
+    void TickGaugeRegen()
+    {
+        UnitData d = identity != null ? identity.Data : null;
+        if (d == null) return;
+        if (manaGaugeInitialized && d.manaGaugePerMana > 0f)
+        {
+            manaRegenCarry += (d.manaRegenPerSecond + IntRegenBonus * CurrentIntelligence) * d.manaGaugePerMana * Time.deltaTime;
+            if (manaRegenCarry >= 1f)
+            {
+                int n = Mathf.FloorToInt(manaRegenCarry);
+                manaRegenCarry -= n;
+                manaGaugeCounter = Mathf.Min(manaGaugeCounter + n, ManaGaugeCap(d));
+            }
+        }
+        if (lifeGaugeInitialized && d.lifeGaugeRegenPerSecond > 0f)
+        {
+            lifeRegenCarry += d.lifeGaugeRegenPerSecond * Time.deltaTime;
+            if (lifeRegenCarry >= 1f)
+            {
+                int n = Mathf.FloorToInt(lifeRegenCarry);
+                lifeRegenCarry -= n;
+                lifeGaugeCounter = Mathf.Min(lifeGaugeCounter + n, LifeGaugeCap(d));
+            }
+        }
+    }
+
     // 01번 영웅 스탯(STR/AGI/INT) — 사장님 결정 2026-09-06. 원작 "적을 죽일 때마다
     // AddHeroXP(영웅, 1)"에 대응.
     //
@@ -598,6 +633,14 @@ public class UnitAttacker : MonoBehaviour
     }
 
     public void GainKillExperience() => AddHeroXp(1);
+
+    /// <summary>캐릭터 레벨 characterLevel(1~24)에 닿는 누적 경험치(=누적 킬 수). 탐침이 영웅을 그 레벨로 세울 때 쓴다.</summary>
+    public static int HeroXpToReach(int characterLevel)
+    {
+        if (characterLevel <= 1) return 0;
+        int index = Mathf.Min(characterLevel - 2, HeroXpThresholds.Length - 1);
+        return (int)System.Math.Ceiling(HeroXpThresholds[index]);
+    }
 
     // ⚠️ 아직 안 잇는다 — "어느 유닛의 주스탯이 무엇인가"(STR/AGI/INT 중 무엇이 그 유닛의
     // 성장 축인가) 대응표가 없다(PM 지시 2026-09-06). 대응이 오면 각 유닛의 UnitData에서
@@ -815,6 +858,10 @@ public class UnitAttacker : MonoBehaviour
     // 고른 경로) 두 필드 중 하나라도 채워져 있으면 무조건 막는다 — "대상 없음=통과"로
     // 두면 오라가 조건 없이 나가버린다(SkillData.cs SkillLevel 주석 참고). target이
     // null이어도 두 필드가 전부 비어있으면(기존 전 자산) 이 분기 자체를 안 타 회귀 없다.
+    // SkillLevel.targetArmorBreakAbove — 주 대상 스킬 방깎 누적 > N(원작 AId1 레벨 비교). 0이면 통과.
+    static bool PassesArmorBreakGate(SkillLevel level, EnemyDummy target) =>
+        level.targetArmorBreakAbove <= 0f || (target != null && target.Aid1Shred > level.targetArmorBreakAbove);
+
     bool PassesBuffGate(SkillLevel level, EnemyDummy target)
     {
         if (!string.IsNullOrEmpty(level.requiredBuffId) && !HasBuff(level.requiredBuffId)) return false;
@@ -1126,6 +1173,7 @@ public class UnitAttacker : MonoBehaviour
                 SkillRuntimeState state = GetRuntimeState(skill);
                 if (level.cooldown > 0f && Time.time < state.onHitChanceLockedUntil) { SkillTelemetry.Gate(unitData, skill, "절대쿨"); continue; }
 
+                if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
                 if (Random.value >= level.triggerChance) { SkillTelemetry.Gate(unitData, skill, "확률실패"); continue; }
 
                 if (level.cooldown > 0f)
@@ -1151,16 +1199,17 @@ public class UnitAttacker : MonoBehaviour
                 if (level.gaugeKind == SkillGaugeKind.Mana)
                 {
                     if (!manaGaugeInitialized) { manaGaugeCounter = level.resetTo; manaGaugeInitialized = true; }
-                    if (!manaIncremented) { manaGaugeCounter++; manaIncremented = true; }
+                    if (!manaIncremented) { manaGaugeCounter = Mathf.Min(manaGaugeCounter + 1, ManaGaugeCap(unitData)); manaIncremented = true; }
                     if (manaGaugeCounter <= level.hitCountFloor) { SkillTelemetry.Gate(unitData, skill, "게이지바닥미달"); continue; }
                 }
                 else
                 {
                     if (!lifeGaugeInitialized) { lifeGaugeCounter = level.resetTo; lifeGaugeInitialized = true; }
-                    if (!lifeIncremented) { lifeGaugeCounter++; lifeIncremented = true; }
+                    if (!lifeIncremented) { lifeGaugeCounter = Mathf.Min(lifeGaugeCounter + 1, LifeGaugeCap(unitData)); lifeIncremented = true; }
                     if (lifeGaugeCounter <= level.hitCountFloor) { SkillTelemetry.Gate(unitData, skill, "게이지바닥미달"); continue; }
                 }
 
+                if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
                 if (Random.value >= level.triggerChance) { SkillTelemetry.Gate(unitData, skill, "바닥후확률실패"); continue; }
 
                 // "발동 시에만" 차감 — 위 hitCountThreshold 경로의 resetTo(확률과 무관하게
@@ -1185,16 +1234,18 @@ public class UnitAttacker : MonoBehaviour
                 if (level.gaugeKind == SkillGaugeKind.Mana)
                 {
                     if (!manaGaugeInitialized) { manaGaugeCounter = level.resetTo; manaGaugeInitialized = true; }
-                    if (!manaIncremented) { manaGaugeCounter++; manaIncremented = true; }
+                    if (!manaIncremented) { manaGaugeCounter = Mathf.Min(manaGaugeCounter + 1, ManaGaugeCap(unitData)); manaIncremented = true; }
                     if (manaGaugeCounter < level.hitCountThreshold) { SkillTelemetry.Gate(unitData, skill, "게이지미달(마나)"); continue; }
+                    if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
                     manaShouldReset = true;
                     manaResetValue = level.resetTo;
                 }
                 else
                 {
                     if (!lifeGaugeInitialized) { lifeGaugeCounter = level.resetTo; lifeGaugeInitialized = true; }
-                    if (!lifeIncremented) { lifeGaugeCounter++; lifeIncremented = true; }
+                    if (!lifeIncremented) { lifeGaugeCounter = Mathf.Min(lifeGaugeCounter + 1, LifeGaugeCap(unitData)); lifeIncremented = true; }
                     if (lifeGaugeCounter < level.hitCountThreshold) { SkillTelemetry.Gate(unitData, skill, "게이지미달(생명)"); continue; }
+                    if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
                     lifeShouldReset = true;
                     lifeResetValue = level.resetTo;
                 }
@@ -1551,10 +1602,14 @@ public class UnitAttacker : MonoBehaviour
                 SkillEffectTargetCondition.TargetPointValueLessThan => pointValue < effect.targetConditionValue,
                 SkillEffectTargetCondition.TargetPointValueEqual => pointValue == effect.targetConditionValue,
                 SkillEffectTargetCondition.TargetPointValueAtLeast => pointValue >= effect.targetConditionValue,
+                SkillEffectTargetCondition.TargetPointValueNotEqual => pointValue != effect.targetConditionValue,
                 _ => true,
             };
             if (!passes) return;
         }
+
+        // 평타 피해 문턱(원작 GetEventDamage() > X) — SkillEffect.triggerDamageAbove 주석 참고. 0이면 통과.
+        if (effect.triggerDamageAbove > 0f && recentAttackDamage <= effect.triggerDamageAbove) return;
 
         switch (effect.kind)
         {
@@ -1582,8 +1637,9 @@ public class UnitAttacker : MonoBehaviour
             // 안 읽어서 "값은 있는데 아무 일도 안 난다"였다(PM 지시로 정정). duration>0이면
             // 그 시간 뒤에 되돌린다 — 0(기본)이면 SupportShop 독약과 같은 관례로 영구
             // 누적한다(원작 방깎은 대개 지속시간이 없다, war3map.w3h 버프 311개 전수 확인).
+            // 원작에선 트리거가 AId1 레벨을 올리는 것이라 합계 −75에서 멈춘다(EnemyDummy.Aid1ShredCap).
             case SkillEffectKind.ArmorBreak:
-                target.AddArmorShred(effect.multiplier);
+                target.AddAid1ArmorShred(effect.multiplier);
                 if (effect.duration > 0f) StartCoroutine(RevertArmorShredRoutine(target, effect.multiplier, effect.duration));
                 break;
 
@@ -1648,7 +1704,7 @@ public class UnitAttacker : MonoBehaviour
     IEnumerator RevertArmorShredRoutine(EnemyDummy target, float amount, float duration)
     {
         yield return new WaitForSeconds(duration);
-        if (target != null) target.AddArmorShred(-amount);
+        if (target != null) target.AddAid1ArmorShred(-amount);
     }
 
     IEnumerator RevertAllyAuraEffectRoutine(EnemyDummy target, SkillEffect effect, float duration)
@@ -1946,6 +2002,7 @@ public class UnitAttacker : MonoBehaviour
 
     void Update()
     {
+        TickGaugeRegen();
         UpdateSkillCooldown();
 
         attackTimer -= Time.deltaTime;

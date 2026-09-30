@@ -13,38 +13,60 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_초월_강주혁_AP_79행_10000
   m_EditorClassIdentifier:
   skillName: A0B0 2범위 나미초월 블리자드3
-  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다. ⚠️ 2026-09-06 역추적 검증 완료(PM/리서치담당) — e09H·e0IZ 둘 다 나미(H08V)의 Nami_Skill_4 계열, 같은 상위 진입게이트(버프B012 없음, 축 밖이라 이미 triggerChance=1.0으로 근사됨)를 공유할 뿐 배타 관계가 아니다. 배선 불필요 — 지금처럼 둘 다 무조건 발동이 맞다.
+  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다. ⚠️ 2026-09-06 역추적 검증 완료(PM/리서치담당) — e09H·e0IZ 둘 다 나미(H08V)의 Nami_Skill_4 계열, 같은 상위 진입게이트(버프B012 없음, 축 밖이라 이미 triggerChance=1.0으로 근사됨)를 공유할 뿐 배타 관계가 아니다. 배선 불필요 — 지금처럼 둘 다 무조건 발동이 맞다. | 정정(2026-09-30 구현담당1, 중복 검사): 500000 두 개는 중복이 아니라 더미 둘(e09H A0B0 블리자드3 · e0IZ A0AZ 블리자드4, Trig_Nami_Skill_4 Stage0에서 둘 다 blizzard 명령)이 맞다. 다만 게이트가 틀렸다 — Nami_Attack은 시전자 B012 없을 때만 Skill_4를 부르고, e09H가 시전자에게 frostarmor(A0BO, B012, Ufa1 3.5초)를 걸어 3.5초 잠근다 → 절대쿨_초월_강주혁_AP와 같은 cooldown 3.5. 블리자드는 Hbz1 파도 3회·Hbz2 파도당 500000·aare 500 → 대상 위치 광역 500·hitCount 3(간격 1초 근사)·능력 피해라 AP·Spells. Stage1의 e0IZ 세 기는 명령 없이 세워져 A0FV 이감 오라·겉모습뿐(더미 이감 오라 목록).'
   · e09H(@초월 나미 웨더리아3-얼음) A0B0 2범위 나미초월 블리자드3 [블리자드 파동당 피해]: 500000 (원작 나미·초월함) 진입게이트: Trig_Nami_Attack_Actions[이벤트직결]: UnitHasBuffBJ(GetAttacker(),'B012')==false
   · e0IZ(@초월 나미 웨더리아5-리메이크) A0AZ 2범위 나미초월 블리자드4 [블리자드 파동당 피해]: 500000 (원작 나미·초월함) 진입게이트: Trig_Nami_Attack_Actions[이벤트직결]: UnitHasBuffBJ(GetAttacker(),'B012')==false
   제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e09I(@초월 나미 웨더리아4-업화피닉스1) A0AZ 2범위 나미초월 블리자드4: 500000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지)
   triggerType: 0
   levels:
-  - cooldown: 0
+  - cooldown: 3.5
     triggerChance: 1.0
-    range: 0
+    range: 500.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
     effects:
     - kind: 0
       basis: 0
-      target: 3
-      damageType: 1
-      attackType: 3
+      target: 2
+      damageType: 2
+      attackType: 7
       multiplier: 500000.0
       bonus: 0.0
       chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
+      hitCount: 3
+      duration: 3.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     - kind: 0
       basis: 0
-      target: 3
-      damageType: 1
-      attackType: 3
+      target: 2
+      damageType: 2
+      attackType: 7
       multiplier: 500000.0
       bonus: 0.0
       chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
+      hitCount: 3
+      duration: 3.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0

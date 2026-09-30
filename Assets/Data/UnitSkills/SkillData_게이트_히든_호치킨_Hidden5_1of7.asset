@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_히든_호치킨_Hidden5_1of7
   m_EditorClassIdentifier:
   skillName: '[히든조합]아카이누 — 1/7'
-  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_Hidden5(HashAttack h03Z) `GetRandomInt(1,7)==4` → 더미 e0EI firebolt(A0UX adur 2.25)로 주 대상 스턴 + 주 대상 위치 500 적 전원 100000(MAGIC/UNIVERSAL) + 주 대상 305000×rand1~3(NORMAL→Spells/UNIVERSAL) + PV==200이면 765000×rand1~3, elseif 대상 B06B 보유면 MAX_LIFE×0.1. elseif의 「PV≠200」은 조건 하나로 못 담아 B06B 조건만 걸었다(B06B 광폭화 소환체가 PV 정확히 200일 때만 원작과 다르다).'
+  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_Hidden5(HashAttack h03Z) `GetRandomInt(1,7)==4` → 더미 e0EI firebolt(A0UX adur 2.25)로 주 대상 스턴 + 주 대상 위치 500 적 전원 100000(MAGIC/UNIVERSAL) + 주 대상 305000×rand1~3(NORMAL→Spells/UNIVERSAL) + PV==200이면 765000×rand1~3, elseif 대상 B06B 보유면 MAX_LIFE×0.1. elseif의 「PV≠200」은 조건 하나로 못 담아 B06B 조건만 걸었다(B06B 광폭화 소환체가 PV 정확히 200일 때만 원작과 다르다). | 정정(2026-09-30 구현담당1, 배타 분기 검사): 최대체력×0.1은 원문 `if PV==200 → 765000 elseif 대상 B06B → 최대×0.1`의 elseif 쪽 — requiredTargetBuffId B06B + PV≠200을 넣음(이전엔 조건 없이 매번).'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -103,8 +103,8 @@ MonoBehaviour:
       buffHitCharges: 0
       requiredTargetBuffId: B06B
       forbiddenTargetBuffId:
-      targetCondition: 0
-      targetConditionValue: 0.0
+      targetCondition: 4
+      targetConditionValue: 200
       cascadeGroup: 0
       skipDamageTakenMultiplier: 1
     - kind: 1

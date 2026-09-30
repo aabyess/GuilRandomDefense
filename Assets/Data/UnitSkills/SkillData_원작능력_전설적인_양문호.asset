@@ -12,41 +12,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_전설적인_양문호
   m_EditorClassIdentifier:
-  skillName: A10Y !레이드 슈트
-  description: 원작 전설적인 샬롯 크래커 빅맘 3장성 - 전설적인(Trig_Legend20). | 2차 배정(트리거·더미 채널): 원작 전설적인 샬롯 크래커 빅맘 3장성 - 전설적인(Trig_Legend20).
+  skillName: Legend20 매 타 (크래커)
+  description: '원작 전설적인 샬롯 크래커 빅맘 3장성 - 전설적인(Trig_Legend20). | 2차 배정(트리거·더미 채널): 원작 전설적인 샬롯 크래커 빅맘 3장성 - 전설적인(Trig_Legend20). | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Legend20(h03H) = 매 타 대상 20000 NORMAL/UNIVERSAL + `1~12==3 → 대상 위치 400 광역 250000`. 이전: 확률 0.2(A10Y = h033 전설적인_임건웅 능력)·250000 두 벌(단일)·AD → 이 에셋은 매 타 20000(AP·Spells), 1/12 광역은 새 _Legend20_1of12.'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.2
-    range: 0
+    triggerChance: 1.0
+    range: 0.0
     effects:
     - kind: 0
       basis: 0
       target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 250000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
-      multiplier: 250000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 1
+      damageType: 2
+      attackType: 7
       multiplier: 20000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0

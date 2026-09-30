@@ -16,7 +16,7 @@ public enum TraitEffectKind
     Summon,                 // 소환(서브유닛) — Tier B 전용
     MovementAbilityGrant,   // 이동능력부여(공중이동 등)
     StatusAilment,          // 상태이상(스턴 등)
-    ArmorShred,             // 방깎 — EnemyDummy.EffectiveArmor를 깎는다. 하한 -20
+    ArmorShred,             // 방깎 — EnemyDummy.EffectiveArmor를 깎는다. 하한 없음(원작)
     DamageTypeChange,       // 판정변경(물뎀→마뎀, 고정뎀 전환 등)
     MechanismChange,        // 메커니즘변경(소환수 제한 변경 등) — Tier B
     UtilityBuff,            // 버프(공속·자원회복 등, 대개 조건부 트리거) — Tier B

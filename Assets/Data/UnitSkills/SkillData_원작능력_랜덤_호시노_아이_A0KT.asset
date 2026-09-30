@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_원작능력_랜덤_호시노_아이_A0KT
   m_EditorClassIdentifier:
   skillName: A0KT !체인드라이브
-  description: 쪼개기 실행(2026-09-06, PHASE2_FINAL_TALLY_2026-09-06.md/08e21d6, PHASE2_39_RESOLVED.csv/f18af68): 원작 랜덤전용 k' - 랜덤전용(h06U)의 능력. 1채널표(ORIGINAL_UNIT_ABILITIES.csv) 확정값 발동18%·배수6.25·추가피해400,000. SkillData_원작능력_랜덤_호시노_아이.asset이 이 능력 하나로 triggerChance를 공유하기엔 다른 능력(A0LJ·A0QK 및 k' 자체 배정분)이 섞여 있어(PM 설계 결정 — 능력 하나에 파일 하나) 별도 파일로 뗐다. 공격타입 원본 [미확인]이라 이 유닛 자신의 평타 타입을 그대로 썼다.
+  description: '쪼개기 실행(2026-09-06, PHASE2_FINAL_TALLY_2026-09-06.md/08e21d6, PHASE2_39_RESOLVED.csv/f18af68): 원작 랜덤전용 k'' - 랜덤전용(h06U)의 능력. 1채널표(ORIGINAL_UNIT_ABILITIES.csv) 확정값 발동18%·배수6.25·추가피해400,000. SkillData_원작능력_랜덤_호시노_아이.asset이 이 능력 하나로 triggerChance를 공유하기엔 다른 능력(A0LJ·A0QK 및 k'' 자체 배정분)이 섞여 있어(PM 설계 결정 — 능력 하나에 파일 하나) 별도 파일로 뗐다. 공격타입 원본 [미확인]이라 이 유닛 자신의 평타 타입을 그대로 썼다. | 레벨2 추가(2026-09-30 구현담당1): 원작 A0KT alev 2 — Lv2 Hbh1 18% · Hbh2 9.25 · Hbh3 500000(R_Unit_skill_tr가 2로 올림).'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -33,3 +33,40 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0
+  - cooldown: 0
+    triggerChance: 0.18
+    range: 500.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 3
+      target: 3
+      damageType: 1
+      attackType: 3
+      multiplier: 9.25
+      bonus: 500000.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0

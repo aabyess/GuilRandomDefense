@@ -12,51 +12,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_전설적인_이승우
   m_EditorClassIdentifier:
-  skillName: A08H !샨디아의 기운
-  description: 원작 전설적인 라분 레드라인을 넘으려는 향유고래 - 전설적인(Trig_Legend12). | 2차 배정(트리거·더미 채널): 원작 전설적인 라분 레드라인을 넘으려는 향유고래 - 전설적인(Trig_Legend12).
+  skillName: Legend12 매 타 여파 (라분)
+  description: '원작 전설적인 라분 레드라인을 넘으려는 향유고래 - 전설적인(Trig_Legend12). | 2차 배정(트리거·더미 채널): 원작 전설적인 라분 레드라인을 넘으려는 향유고래 - 전설적인(Trig_Legend12). | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Legend12(h02Q, 평타마다) = 피해 이벤트 뒤 Stage5: 대상 위치 275 광역 RRD(피해) CHAOS/NORMAL + `if UserData==6 … elseif 1~100<26 → 575 광역 175000 MAGIC/UNIVERSAL + e010 얽힘·스톰프 + 대상 15000+3000×PV SIEGE/UNIVERSAL`. 이전: 확률 0.25·스턴 0.4(A08H = h03F 전설적인_박민석)·175000 세 벌 → 이 에셋은 매 타 275 광역 피해×1, 25% 갈래는 새 _Legend12_25. UserData==6 갈래(카운터 미상)는 목록.'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.25
-    range: 0
+    triggerChance: 1.0
+    range: 275.0
     effects:
     - kind: 0
-      basis: 0
-      target: 3
-      damageType: 2
-      attackType: 6
-      multiplier: 175000.0
+      basis: 5
+      target: 2
+      damageType: 1
+      attackType: 5
+      multiplier: 1.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 2
-      attackType: 6
-      multiplier: 175000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 2
-      attackType: 6
-      multiplier: 175000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 1
-      basis: 0
-      target: 3
-      damageType: 0
-      attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0.4
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0

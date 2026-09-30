@@ -1821,8 +1821,9 @@ UNITS = {
     #   여기 항목은 **「만드는 법」이 아니라 「못 만든다는 기록」**이다. rebuild 표식이 관문을 막는다.
     #   원본을 다시 구하면 그때 진짜 설정으로 바꿀 것.
     # ══════════════════════════════════════════════════════════════════════════════════════
-    "안흔함_김용태": dict(path="Assets/Art/Units/안흔함_김용태/안흔함_김용태.fbx",
-                    rebuild="불가 — 설정도 원본도 없음(원본 Yujiro Hanma.fbx, ~/.Trash/yujiro-hanma-v10.zip sha256 4b5ec7b0… 삭제됨)"),
+    # 🔴 2026-09-30 교체: 옛 안흔함_김용태(Yujiro Hanma)는 사장님 지시로 다른세계_한마_유지로로 옮겼다(PM 복사 — FBX·텍스처 SHA-1 전부 같음 확인, FBX 5b548f33…). 안흔함_김용태는 이제 쿠마 — gen_biped_skin.py SKINS["안흔함_김용태"]가 짓는다.
+    "다른세계_한마_유지로": dict(path="Assets/Art/Units/다른세계_한마_유지로/다른세계_한마_유지로.fbx",
+                    rebuild="불가 — 설정도 원본도 없음(옛 안흔함_김용태를 옮긴 것. 원본 Yujiro Hanma.fbx, ~/.Trash/yujiro-hanma-v10.zip sha256 4b5ec7b0… 삭제됨)"),
     "안흔함_엄태웅": dict(path="Assets/Art/Units/안흔함_엄태웅/안흔함_엄태웅.fbx",
                     rebuild="불가 — 설정도 원본도 없음(원본 Baki.fbx, sha256 b804a941… 삭제됨. 김용태와 같은 리그)"),
     "안흔함_이재윤": dict(path="Assets/Art/Units/안흔함_이재윤/안흔함_이재윤.fbx",
@@ -1831,6 +1832,17 @@ UNITS = {
                    rebuild="불가 — 설정도 원본도 없음(원본 Chopper.FBX + Mixamo 오토리깅, sha256 63c48f53… 삭제됨)"),
     "흔함_임장혁": dict(path="Assets/Art/Units/흔함_임장혁/흔함_임장혁.fbx",
                    rebuild="불가 — 설정도 원본도 없음(원본 pl_franky_punk01 (merge).fbx, sha256 c6129ce0… 삭제됨)"),
+    # 변화됨 4종(2026-09-30) — 재료 유닛 스킨을 **바이트 그대로 복사**한 것(PM ca1b44b8, 근거 Docs/research/TRANSFORMED_GRADE.md:
+    #   원작 변화됨 7종 중 5종이 재료와 같은 모델·틴트 없음). 직접 확인: 네 FBX sha256이 재료 FBX와 전부 같다.
+    #   다시 만들 일이 생기면 이 항목이 아니라 **재료 항목을 다시 뽑아 복사**한다(재료가 바뀌면 이것도 같이 바꿀 것).
+    "변화됨_박은석": dict(path="Assets/Art/Units/변화됨_박은석/변화됨_박은석.fbx",
+                    rebuild="재료 스킨 복사 — 전설적인_박은석 FBX 그대로(sha256 bca9c769…, Docs/research/TRANSFORMED_GRADE.md, ca1b44b8)"),
+    "변화됨_김건": dict(path="Assets/Art/Units/변화됨_김건/변화됨_김건.fbx",
+                   rebuild="재료 스킨 복사 — 전설적인_김건 FBX 그대로(sha256 abf9a27d…, Docs/research/TRANSFORMED_GRADE.md, ca1b44b8)"),
+    "변화됨_강재규": dict(path="Assets/Art/Units/변화됨_강재규/변화됨_강재규.fbx",
+                    rebuild="재료 스킨 복사 — 희귀함_강재규 FBX 그대로(sha256 8a0eacf0…, Docs/research/TRANSFORMED_GRADE.md, ca1b44b8)"),
+    "변화됨_최상호": dict(path="Assets/Art/Units/변화됨_최상호/변화됨_최상호.fbx",
+                    rebuild="재료 스킨 복사 — 희귀함_최상호_윤식파의두뇌 FBX 그대로(sha256 5a7648f5…, Docs/research/TRANSFORMED_GRADE.md, ca1b44b8)"),
     # 바운티러시 시류 → 희귀함_노수신(2026-09-16 희귀함 9호). 마르코·후즈후와 같은 (merge) pl_ 리그(뼈 81 · 배율 0.01 · 재질 1 · 빈 오브젝트 15).
     #   실측: **이미 T자**(Upper ±0.0046 → Fore ±0.0107 → Palm ±0.0157이 전부 z 0.0266) · 기본 자세 = 쉬는 자세(어긋난 뼈 0) → tpose_arms 불필요.
     #   겹친 변형: 표정 4벌 → face_normal · 손 5벌 → l/r_hand_open · 담배 2벌 → 입에 문 cigarette_mouth · 무기 5벌 → **weapon_01 한 자루**(오른손 r_weapon_joint에 434정점으로 제대로 실림).

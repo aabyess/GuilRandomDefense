@@ -1,32 +1,27 @@
-원본 파일명: Yujiro Hanma.fbx
-받은 폴더:   /var/folders/xg/fb93t40j38j8b2swdmjblvp00000gn/T/tmp.WlRViwC9Qy/안흔함_김용태
-옮긴 날:     2026-09-07
-리깅:        본·스킨 데이터 1283 건
-애니메이션:  커브 0 건
+안흔함_김용태 ← 젊은 올마이트(나의 히어로 아카데미아) 스킨 출처 — 2026-09-30 교체(두 번째)
 
-⚠️ 출처 라이선스를 확인하고, 상용 게임 추출 에셋이면 배포 전에 교체해야 합니다.
+🔴 교체 기록(같은 날 두 번):
+  ① 옛 모델 Yujiro Hanma → 다른세계_한마_유지로로 옮김(PM 복사, 바이트 같음 확인).
+  ② 쿠마 PX(원피스)를 한 번 넣었다가 사장님 지시로 이 모델로 바꿈. 쿠마 원본은 99_폐기_교체된원본/안흔함_김용태_이전_쿠마PX69.zip,
+     설정은 gen_biped_skin.py RETIRED_SKINS["쿠마PX69"](다른 유닛에 다시 쓸 수 있음).
+  두 번 다 옛 FBX·.fbx.meta·Textures를 먼저 지우고 새로 썼다(옛 .meta humanDescription 함정 — skin-import-traps ①).
 
-출처·크레딧 (원본 Read Me!.txt):
-  캐릭터: BAKI (유지로 한마)
-  3D 모델: Fist of the North Star Legends Revive (게임 추출)
-  HD 텍스처·포팅: Omega Slender
-  이용 조건: 크레딧 표기만 요구한다.
+원본: ~/Desktop/구랜디스킨모음/02_안흔함/안흔함_김용태.glb (원래 파일 이름 jovem_all_might.glb, 7.7MB)
+  sha256: 5a15edf9881e49a9e1138526ed96056ec867a701924bbb7e9810728101bd1bbe
+  glb asset 메타: title 「Jovem all might」 · author victordavi1606 (https://sketchfab.com/victordavi1606)
+  · source https://sketchfab.com/3d-models/jovem-all-might-199adeacf32c4383b14841eb65fab8de
+라이선스: CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/) — glb 메타에 명시. 🔴 저작자 표기(크레딧) 필요.
 
-사장님 확정 2026-09-07: IP 제약 없음(상업적 사용 아님, 친구들과 재미로).
+빌드 스크립트: Tools/blender/gen_rigify_skin.py (SKINS["안흔함_김용태"])
+  실행: blender -b --factory-startup --python Tools/blender/gen_rigify_skin.py -- 안흔함_김용태
 
-── 원본 보관 기록 (2026-09-14, 다운로드 원본 삭제 전) ──
-사장님 결정: 정보만 여기 적고 다운로드 원본은 지운다. 전체 목록 Docs/ART_SOURCES_ARCHIVE.md
-- ~/.Trash/yujiro-hanma-v10.zip · 11.9MB · sha256 4b5ec7b039bafdc2
-    source/Yujiro Hanma v1_0 by Omega Slender.zip (8.3MB)
-    textures/Hair.png (0.5MB)
-    textures/Body.png (3.0MB)
-- ~/.Trash/yujiro-hanma-v10/ (풀어 둔 폴더 · 20.6MB · 파일 9개)
-    textures/Hair.png (0.5MB)
-    textures/Body.png (3.0MB)
-    source/Yujiro Hanma v1_0 by Omega Slender.zip (8.3MB)
-    source/Yujiro Hanma v1.0 by Omega Slender/Read Me!.txt (0.0MB)
-    source/Yujiro Hanma v1.0 by Omega Slender/Yujiro Hanma.fbx (4.8MB)
-    source/Yujiro Hanma v1.0 by Omega Slender/Yujiro Hanma.fbm/Hair.png (0.8MB)
-    source/Yujiro Hanma v1.0 by Omega Slender/Yujiro Hanma.fbm/Body.png (3.0MB)
-    source/Yujiro Hanma v1.0 by Omega Slender/Yujiro Hanma.fbm/Body_Normal.png (0.1MB)
-    source/Yujiro Hanma v1.0 by Omega Slender/Yujiro Hanma.fbm/Hair_Normal.png (0.0MB)
+처리 요약(2026-09-30, blender 세션):
+- 메시 19개 전부 씀(몸·옷·망토 안팎·얼굴·머리카락·눈·부츠·벨트 등), Icosphere(조명 구)만 버림. 원본 부품 19 = 산출 재질 19.
+- 텍스처 이름 Image_0~10(립 함정) → 재질 이름으로 저장(19장, 같은 그림을 쓰는 재질은 각자 복사본).
+  무텍스처 재질 셋(euewhite 눈흰자 · 40_Mesh2 가슴 문양 주황 · bELT 벨트 노랑)은 glTF baseColorFactor를 sRGB 단색 PNG로.
+- 🔴 뿌리 빈 오브젝트 사슬이 키를 −Y·망토를 +Z로 눕혀 들여온다 → root_rotate_x −90°(키 +Z·정면 −Y). 이미 T자.
+- 뼈 262 → 22: 얼굴 120·눈·머리카락 20 → Head, 손가락·손 보정 → 손, 「Unused_*」 비틀림·보정뼈 → 각 본체 뼈,
+  목도리·망토 세 사슬 → Spine2(몸통에 붙어 뻣뻣하게 따라감). 척추 두 마디라 Spine1은 Spine↔Chest 가운데 자리표시
+  (0-길이 아님 — 새 3항 bone_position_override), chain_tails로 꼬리를 다음 관절에 이음.
+- 재수입 검사: 22뼈(21/22 — Spine1 자리표시) · 키 1.8 · 무가중치 0 · 70,959삼각형(부츠만 약 4.4만 — 감량 안 함) ·
+  idle·walk·attack 정상 · clip_spread 최대 0.99 · mesh_clash 0.0% · bone_bind ② 중앙 0.8% · check_entries 통과.

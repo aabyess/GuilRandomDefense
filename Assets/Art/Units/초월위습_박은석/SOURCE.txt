@@ -1,0 +1,22 @@
+초월위습_박은석(표시 이름 박은석초월위습) ← 「Kuma Slave」(원피스, 노예가 된 바솔로뮤 쿠마) 스킨 출처
+
+원본: ~/Desktop/구랜디스킨모음/14_초월위습/초월위습_박은석.zip
+  sha256: fb57979ed57f18c2f86b41c720ebdf7b2b3d25c89f03fca01e39f6b61d93db29
+  내용물: source/kuma_slave_fbx_opvc_by_strifffe_djzlovi.rar(RAR5) + textures/daxiong.jpeg
+  RAR 안: mesh.fbx · daxiong.jpeg(1024², zip 쪽과 바이트는 다르고 픽셀은 같음) · kuma slave.png(1920×1080 미리보기, 안 씀)
+  RAR5 풀기: bsdtar(libarchive 3.7.4) — unar 결과와 바이트 같음, 0바이트 없음 확인(생성기에 0바이트 검사 추가).
+
+작성자: 「OPVC by strifffe」(RAR 파일 이름 표기 — OPVC = One Piece Pirate Warriors 계열 립으로 보임, DeviantArt 「djzlovi」 ID)
+라이선스: ⚠️ 미확인 — 파일 안에 라이선스 문구 없음. 사장님께 원 게시물 확인 필요.
+
+빌드 스크립트: Tools/blender/gen_biped_skin.py (SKINS["초월위습_박은석"])
+  실행: blender -b --factory-startup --python Tools/blender/gen_biped_skin.py -- 초월위습_박은석
+
+처리 요약(2026-09-30, blender 세션):
+- 메시 daxiong 하나(6,042정점·7,362면) · **재질 슬롯 0** → 새 재질 "daxiong"을 만들어 전 면에 걸고 daxiong.jpeg를 이음
+  (텍스처 1장 = 전 부위 아틀라스, UV0이 그 배치 — 렌더로 얼굴·옷·칼·장갑 전부 제자리 확인). UV1은 버림.
+- 3ds Biped 80뼈 → 22뼈. 머리 보조뼈(옆·뒷머리·얼굴 Bone001~018) → Head, 목 앞 Bone007 → Neck, 손가락·끝뼈 → 각 손·발끝.
+  팔이 아래로 처진 자세(위팔 약 44°) → 수평으로 폄.
+- 등에 꽂힌 칼 세 자루는 몸에 붙은 설계(미리보기와 같음, Spine2·왼쇄골 가중치) — 유지. bone_bind Spine2 ② 16.9%는 이 칼들 때문.
+- 재수입 검사: 22뼈(22/22) · 키 1.8 · 무가중치 0 · idle·walk·attack 정상 · clip_spread 최대 1.00 · mesh_clash idle +0.3% · check_entries 통과.
+- 안흔함_김용태(쿠마 PX)와 비교: ClaudeBridge/shots/kuma_vs_kuma_slave.png — 검정 PX 재킷·점박이 바지 vs 회색 피 묻은 옷·등의 칼로 구별된다.

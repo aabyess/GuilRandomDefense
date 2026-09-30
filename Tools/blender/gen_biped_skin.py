@@ -823,6 +823,123 @@ SKINS = {
         decimate_ratio=1.0,
         uv_layers=1,
     ),
+    # 다른세계_모리야_스와코 ← 콘파쿠 요우무(동방, Sketchfab 「touhou low poly youmu」, 사장님 지정 2026-09-30).
+    # 원본 FBX: 메시 2 · 아마추어 Youmu 29뼈 · 텍스처 2(512² 팔레트+이진 알파, 투명 = 검정).
+    #   Cube = 요우무 본체(394정점, 가중치 있음). Cube.17506 = 꼬마 유유코(159정점, 가중치·부모 없음) — 요우무 머리 옆에
+    #   떠 있는 별도 인물(x 1.25~3.55, z 4.9~7.9) → 버림(PM 지시 「둘이면 요우무만」).
+    #   반령(myon 5뼈 사슬, 본체 메시 안 50정점 섬) — 머리 위(z 7.2~9.2)·왼쪽에서 뒤로 7.5(키 9.2의 80%) 늘어진 떠 있는 유령 →
+    #   몸에 안 붙은 뜬 소품이라 버림(drop_bone_verts). 칼 둘(허리 뒤 판자 4·6정점, hip에 가중치)은 몸에 붙어 있어 유지.
+    # 🔴 다리 이름이 좌우 뒤바뀜 — 정면 −Y(발끝 y −0.59)에서 thigh_R이 x +0.37(= 캐릭터 왼쪽). 팔은 arm_L이 +x로 맞다.
+    #   위치대로 thigh_R → LeftUpLeg로 잇는다.
+    "다른세계_모리야_스와코": dict(
+        source="~/Desktop/구랜디스킨모음/12_다른세계/다른세계_모리야_스와코.zip",
+        glb_member="source/touhou_low_poly_youmu.fbx",
+        source_format="fbx",
+        path="Assets/Art/Units/다른세계_모리야_스와코/다른세계_모리야_스와코.fbx",
+        mesh_name="Youmu",
+        height=1.8,
+        drop_meshes={"Cube.17506"},
+        drop_bone_verts={"myon", "myon.001", "myon.002", "myon.003", "myon.004"},
+        material_rename={"Cube": "touhou_low_poly_youmu"},
+        apply_shape_mix=True,
+        rename={
+            "hip": "Hips", "spine": "Spine", "chest": "Spine1", "neck": "Neck", "head": "Head",
+            "arm_L": "LeftArm", "elbow_L": "LeftForeArm", "hand_L": "LeftHand",
+            "arm_R": "RightArm", "elbow_R": "RightForeArm", "hand_R": "RightHand",
+            "thigh_R": "LeftUpLeg", "leg_R": "LeftLeg", "foot_R": "LeftFoot", "foot_R_end": "LeftToeBase",
+            "thigh_L": "RightUpLeg", "leg_L": "RightLeg", "foot_L": "RightFoot", "foot_L_end": "RightToeBase",
+        },
+        fold={"hat": "Head", "hat_end": "Head", "hand_L_end": "LeftHand", "hand_R_end": "RightHand",
+              "myon": "Hips", "myon.001": "Hips", "myon.002": "Hips", "myon.003": "Hips", "myon.004": "Hips",
+              "myon.004_end": "Hips"},
+        # 척추 hip·spine·chest·neck — Spine2는 chest↔neck 반, 어깨는 neck↔arm 반의 자리표시(가중치 없음).
+        bone_position_override={"Spine2": ("chest", "neck", 0.5),
+                                "LeftShoulder": ("neck", "arm_L", 0.5), "RightShoulder": ("neck", "arm_R", 0.5)},
+        allow_dead_bones={"Spine2", "LeftShoulder", "RightShoulder", "LeftToeBase", "RightToeBase"},
+        tex_member="textures/touhou_low_poly_youmu.png",
+        materials={"touhou_low_poly_youmu": ("texture_file", "tex_member")},
+        level_arms=True,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
+    # 초월위습_박은석 ← 「Kuma Slave」(원피스, 노예가 된 바솔로뮤 쿠마) — 사장님 지정 2026-09-30(「초월 쿠마 위습」).
+    # 원본: zip 안 source/kuma_slave_fbx_opvc_by_strifffe_djzlovi.rar(RAR5 — bsdtar로 풀림, unar와 바이트 같음 확인)
+    #   → mesh.fbx · daxiong.jpeg(1024², zip의 textures/daxiong.jpeg와 픽셀 같음) · kuma slave.png(1920×1080 미리보기, 안 씀).
+    #   작성자 표기 「OPVC by strifffe」(파일 이름). 메시 daxiong 하나(6,042정점) · 재질 슬롯 0 · UV 2장(UV0 사용) · 3ds Biped 80뼈.
+    #   등의 칼 세 자루는 몸에 꽂힌 설계(Spine2 가중치, 미리보기와 같음) — 떠 있지 않아 유지.
+    #   팔이 아래로 약 60° 처진 자세 → level_arms. 쇄골 부모가 Neck(보통은 Spine2)이지만 22뼈 새 계층이 Spine2로 잇는다.
+    "초월위습_박은석": dict(
+        source="~/Desktop/구랜디스킨모음/14_초월위습/초월위습_박은석.zip",
+        glb_member="source/kuma_slave_fbx_opvc_by_strifffe_djzlovi.rar",
+        inner_gltf="mesh.fbx",
+        source_format="fbx",
+        path="Assets/Art/Units/초월위습_박은석/초월위습_박은석.fbx",
+        mesh_name="KumaSlave",
+        height=1.8,
+        biped_prefix="Bip001",
+        drop_meshes=set(),
+        assign_material={"daxiong": "daxiong"},
+        fold={"Bip001": "Hips", "Bip001 L Toe0_end": "LeftToeBase", "Bip001 R Toe0_end": "RightToeBase",
+              # 머리 보조뼈 — 옆머리(Bone001·002 좌우)·뒷머리(Bone004·005)·얼굴(Bone016·018), 목 앞 Bone007.
+              **{n: "Head" for n in ("Bone001", "Bone002", "Bone002_end", "Bone001(mirrored)", "Bone002(mirrored)",
+                                     "Bone002(mirrored)_end", "Bone004", "Bone005", "Bone005_end",
+                                     "Bone016", "Bone016_end", "Bone018", "Bone018_end")},
+              "Bone007": "Neck", "Bone007_end": "Neck",
+              **{f"Bip001 {s} Finger{i}{j}_end": ("Left" if s == "L" else "Right") + "Hand"
+                 for s in ("L", "R") for i in range(5) for j in ("2",)}},
+        tex_member="textures/daxiong.jpeg",
+        materials={"daxiong": ("texture_file", "tex_member")},
+        level_arms=True,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
+}
+
+# 🔴 폐기(2026-09-30 사장님 교체) — 한 번 짓고 Assets에 넣었다가 다른 모델로 바뀐 설정. SKINS 밖이라 main()·check_entries가
+# 안 본다. 나중에 다른 유닛에 쓰려면 SKINS로 옮기고 이름·path를 그 유닛으로 바꾼다(검증·함정 기록은 주석에 그대로 있다).
+RETIRED_SKINS = {
+    # 쿠마 PX(원피스) — 안흔함_김용태에 09-30 한 번 넣었다가 같은 날 「젊은 올마이트」로 교체됨. 원본 zip은 99_폐기_교체된원본/로 옮겨졌다.
+    # 안흔함_김용태 ← 바솔로뮤 쿠마 PX-?(원피스) — 🔴 교체(2026-09-30, 사장님 지시). 옛 모델(Yujiro Hanma, fix_unit_fbx.py의
+    # 「재생성 불가」 항목)은 다른세계_한마_유지로로 옮겼다(PM 복사, FBX sha256 같음 확인). 옛 FBX·.meta·Textures는 지우고 새로 씀.
+    # 원본 KUMAEXPORT.fbx(2019, 학교 과제 추정): Mixamo 오토리깅(mixamorig 65뼈, A자, 배율 0.01·X 90°, 액션 1개 — 안 씀) · 메시 8.
+    # 텍스처 있는 재질은 셋뿐(셔츠 TEXTURE.jpg · 바지 PANTS-DIFFUSE.jpg · 모자 cap.psd → zip의 CAP.jpg). 나머지 다섯은 단색.
+    # bump 두 장(TEXTURE-bump·PANTS-BUMP)은 흑백 높이맵이다(원본이 노멀맵 노드에 잘못 꽂음) — 기본색 우선이라 안 쓴다.
+    # 재질 이름을 텍스처 파일 이름·뜻 있는 이름으로 바꿔 ArtBinder가 이름으로 찾게 한다(원본은 "09___Defaultmat" 꼴).
+    "쿠마PX69": dict(
+        source="~/Desktop/구랜디스킨모음/99_폐기_교체된원본/안흔함_김용태_이전_쿠마PX69.zip",
+        glb_member="source/KUMAEXPORT.fbx",
+        source_format="fbx",
+        path="Assets/Art/Units/쿠마PX69/쿠마PX69.fbx",   # ⚠️ 다시 쓸 때 유닛 이름으로 바꿀 것
+        mesh_name="Kuma",
+        height=1.8,
+        drop_meshes=set(),
+        recalc_normals=("BODY_FINAL", "CAP", "Cylinder001", "HAIR", "HAT", "KUMA_SHIRT_FINAL", "PANTS_FINAL001", "SHOES"),
+        material_rename={"KUMA_SHIRT_FINAL": "TEXTURE", "PANTS_FINAL001": "PANTS-DIFFUSE", "CAP": "CAP",
+                         "BODY_FINAL": "KumaSkin", "HAIR": "KumaHair", "SHOES": "KumaShoes",
+                         "Cylinder001": "KumaRedPin", "HAT": "KumaHatBand"},
+        rename={f"mixamorig:{n}": n for n in (
+            "Hips", "Spine", "Spine1", "Spine2", "Neck", "Head",
+            "LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand", "RightShoulder", "RightArm", "RightForeArm", "RightHand",
+            "LeftUpLeg", "LeftLeg", "LeftFoot", "LeftToeBase", "RightUpLeg", "RightLeg", "RightFoot", "RightToeBase")},
+        fold={"mixamorig:HeadTop_End": "Head", "mixamorig:LeftToe_End": "LeftToeBase", "mixamorig:RightToe_End": "RightToeBase",
+              **{f"mixamorig:{side}Hand{f}{i}": f"{side}Hand" for side in ("Left", "Right")
+                 for f in ("Thumb", "Index", "Middle", "Ring", "Pinky") for i in (1, 2, 3, 4)}},
+        shirt_member="textures/TEXTURE.jpg",
+        pants_member="textures/PANTS-DIFFUSE.jpg",
+        cap_member="textures/CAP.jpg",
+        materials={
+            "TEXTURE": ("texture_file", "shirt_member"), "PANTS-DIFFUSE": ("texture_file", "pants_member"),
+            "CAP": ("texture_file", "cap_member"),
+            # 단색 — 원본 Base Color(선형)를 sRGB 표시값으로: 피부 (0.541,0.322,0.204) · 머리 0.008 · 신발 (0.023,0.016,0.02) ·
+            # 모자 핀 순빨강 · 모자 띠 0.588(3ds 기본 회색).
+            "KumaSkin": ("solid", (0.76, 0.60, 0.49, 1.0)), "KumaHair": ("solid", (0.09, 0.09, 0.09, 1.0)),
+            "KumaShoes": ("solid", (0.16, 0.13, 0.15, 1.0)), "KumaRedPin": ("solid", (1.0, 0.0, 0.0, 1.0)),
+            "KumaHatBand": ("solid", (0.79, 0.79, 0.79, 1.0)),
+        },
+        level_arms=True,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
 }
 
 # 22뼈 계층 — gen_rigify_skin.py·gen_skin_rig.py와 같은 이름 규칙(PREFIX만 공유).
@@ -852,6 +969,8 @@ def find_glb_and_extras(cfg, workdir):
             os.makedirs(inner_dir, exist_ok=True)
             subprocess.run(["bsdtar", "-xf", glb_path, "-C", inner_dir], check=True)
             glb_path = os.path.join(inner_dir, cfg["inner_gltf"])
+            # 🔴 7z는 RAR5를 0바이트로 푸는 일이 있었다(메모리) — 풀린 파일이 비었으면 여기서 멈춘다.
+            assert os.path.getsize(glb_path) > 0, f"RAR에서 풀린 {glb_path}가 0바이트"
         # 히나타 — 곁텍스처(밑줄 이름 png)가 소스 FBX 안 깨진 경로(공백 이름 tga) 대신
         # 실제로 필요한 경우, "_member"로 끝나는 cfg 키를 전부 workdir 기준 경로로 돌려준다
         # (gen_rigify_skin.py의 texture_file kind와 같은 장치).
@@ -989,6 +1108,19 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
         bpy.ops.import_scene.gltf(filepath=glb_path)
     scene = bpy.context.scene
 
+    # 🔴 요우무(2026-09-30) — 재질 이름이 "Material.001"뿐이라 ArtBinder가 이름으로 텍스처를 못 찾는다.
+    # cfg["material_rename"]={메시 이름: 새 재질 이름}으로 그 메시 첫 재질을 텍스처 파일 이름과 같게 바꾼다.
+    # ⚠️ 재질 이름으로 찾으면 안 된다 — 빈 씬에 들여오면 "Material.001"이 "Material"로 들어와 이름이 한 칸씩 밀린다.
+    for mesh_name, new_name in cfg.get("material_rename", {}).items():
+        bpy.data.objects[mesh_name].data.materials[0].name = new_name
+    # 🔴 요우무 — 표정 모양 키가 소스에 켜진 채(angry_mouth_open 1.0 등)다. 유니티는 블렌드셰이프를 0에서
+    # 시작하므로 켠 유닛만 지금 섞인 모양을 메시에 굽고 키를 지운다(gen_rigify_skin과 같은 장치).
+    if cfg.get("apply_shape_mix"):
+        for o in [o for o in scene.objects if o.type == "MESH" and o.data.shape_keys
+                  and o.name not in cfg.get("drop_meshes", set())]:
+            report.setdefault("구운 모양 키", {})[o.name] = [(k.name, round(k.value, 3)) for k in o.data.shape_keys.key_blocks if k.value]
+            bpy.context.view_layer.objects.active = o
+            bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
     arm_obj = next(o for o in scene.objects if o.type == "ARMATURE")
     all_meshes = [o for o in scene.objects if o.type == "MESH"]
     keep = [o for o in all_meshes if o.name not in cfg.get("drop_meshes", set())]
@@ -1026,6 +1158,30 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
             o.data.update()
         report["뼈 기준 정점 삭제"] = {b: 0 for b in target_bones}  # 개수는 실측 로그로 대체(아래)
 
+    # 🔴 노예 쿠마(2026-09-30) — 메시에 재질 슬롯이 아예 없다(텍스처 한 장만 곁에 있음). cfg["assign_material"]=
+    # {메시: 재질 이름}이면 새 재질을 만들어 모든 면에 건다(그다음 materials 표가 그 이름으로 텍스처를 잇는다).
+    for mesh_name, mat_name in cfg.get("assign_material", {}).items():
+        o = bpy.data.objects[mesh_name]
+        mat = bpy.data.materials.new(mat_name)
+        mat.use_nodes = True
+        o.data.materials.clear()
+        o.data.materials.append(mat)
+        for poly in o.data.polygons:
+            poly.material_index = 0
+
+    # 🔴 쿠마(2026-09-30) — 모자(CAP) 면 방향이 대부분 안쪽으로 뒤집혀 있어 뒷면 컬링(유니티 URP Lit 기본)에서 모자가
+    # 사라지고 이마가 띠처럼 비친다(컬링 끈 렌더에선 멀쩡 — 확인). cfg["recalc_normals"]의 메시만 면 방향을 바깥으로 다시 맞춘다.
+    for mesh_name in cfg.get("recalc_normals", ()):
+        import bmesh as _bmesh
+        o = bpy.data.objects[mesh_name]
+        bm = _bmesh.new()
+        bm.from_mesh(o.data)
+        _bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        bm.to_mesh(o.data)
+        bm.free()
+        o.data.update()
+        report.setdefault("면 방향 다시 맞춤", []).append(mesh_name)
+
     # UV 층을 첫 장만 남기고 통일(히소카 사고 재발 방지 — 이 소스는 UV1이 범위 1.9×2.0으로
     # 퇴화가 아니라 오히려 "너무 큰" 비정상 라이트맵이라 반드시 첫 장만 남겨야 한다).
     for o in keep:
@@ -1049,6 +1205,20 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
                 wire_texture_direct(m)
             elif kind == "flat_color":
                 wire_flat_color(m, arg)
+            elif kind == "solid":
+                # 🔴 쿠마(2026-09-30) — flat_color는 텍스처가 없어 ArtBinder가 재질을 못 맞춘다(「못 찾음」으로 남아
+                # FBX 기본색 그대로). 재질 이름 PNG 한 장(64², 색은 sRGB 표시값)을 만들어 잇는다 — gen_rigify_skin의 solid와 같다.
+                img = wired_files.get(("solid", m.name))
+                if img is None:
+                    os.makedirs(os.path.join(workdir, "solid"), exist_ok=True)
+                    sp = os.path.join(workdir, "solid", safe_filename(m.name) + ".png")
+                    img = bpy.data.images.new(os.path.basename(sp), 64, 64)
+                    img.pixels = list(arg) * (64 * 64)
+                    img.filepath_raw = sp
+                    img.file_format = "PNG"
+                    img.save()
+                    wired_files[("solid", m.name)] = img
+                wire_image_material(m, img)
             elif kind == "texture_file":
                 img = wired_files.get(arg)
                 if img is None:

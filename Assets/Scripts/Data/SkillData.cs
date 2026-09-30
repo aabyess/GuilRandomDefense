@@ -255,6 +255,8 @@ public enum SkillEffectTargetCondition
     TargetPointValueLessThan,
     TargetPointValueEqual,
     TargetPointValueAtLeast,
+    // 원작 `if PV==200 … elseif …`의 elseif 쪽(보스가 아닐 때). 2026-09-30 구현담당1(Legend22).
+    TargetPointValueNotEqual,
 }
 
 // 효과 하나. 레벨 하나가 이걸 여러 개 가질 수 있다 — "레벨2에 효과가 하나 더 생긴다"(원작
@@ -424,6 +426,11 @@ public class SkillEffect
     // 없음] 88행 등)는 대개 ×0.9만큼 과소였다. true면 이 효과는 그 계수를 곱하지 않는다.
     // 기본 false = 지금까지 동작(곱함) — 기존 에셋 회귀 없음.
     public bool skipDamageTakenMultiplier;
+
+    // 원작 `GetEventDamage() > X` 문턱(예: Trig_Legend22 원혼 폭발 >100 / >360000). 0(기본)이면 끈다.
+    // 비교 값은 이 발동을 일으킨 평타의 피해량(recentAttackDamage = AttackDamage, 방어 적용 전)이다 —
+    // 원작은 방어 적용 후 값이라 우리가 조금 더 자주 통과한다(방어 전 ≥ 방어 후). 2026-09-30 구현담당1.
+    public float triggerDamageAbove;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
@@ -548,6 +555,11 @@ public class SkillLevel
     // EVENT_PLAYER_UNIT_ATTACKED). 그래서 기본값이 Target이다. 대상이 없는 시전(쿨다운)은
     // 시전자로 떨어진다. 오라는 이 값을 안 본다(늘 시전자).
     public SkillAoeCenter aoeCenter = SkillAoeCenter.Target;
+
+    // 주 대상의 스킬 방깎(AId1) 누적이 이 값을 넘을 때만 발동 — 원작 `GetUnitAbilityLevel('AId1', 대상)>N`
+    // (King_Attack >50). 0(기본)이면 끈다. 게이지 판정 뒤·소모 앞에서 본다 — 조건이 안 맞으면 게이지를 안 쓰고
+    // 계속 쌓는 원작과 같게(바닥 모드). 2026-09-30 구현담당1.
+    public float targetArmorBreakAbove;
 }
 
 public enum SkillAoeCenter

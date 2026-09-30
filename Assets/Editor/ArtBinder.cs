@@ -538,8 +538,40 @@ public static class ArtBinder
         return $"\n{System.IO.Path.GetFileNameWithoutExtension(path)}: 키 {height:F0}으로 맞췄습니다.";
     }
 
+    // 알파 컷 유닛(2026-09-30) — 눈·눈썹·리본·칼 같은 부위가 **이진 알파 판자**인 모델. 불투명 Lit로 지으면
+    //   투명 칸(RGB 검정)이 검은 네모로 나온다(blender 세션 요우무 비교 렌더 youmu_face_clip_vs_opaque.png).
+    //   텍스처 알파만 보고 자동으로 켜지 않는다 — 알파 채널에 거칠기 등 다른 값을 담은 텍스처가 있으면 구멍이 난다. 확인된 유닛만 이름으로.
+    //   컬은 그대로(끄지 않는다) — 판자 뒷면이 필요하면 그때 유닛별로.
+    static readonly HashSet<string> AlphaCutUnits = new HashSet<string> { "다른세계_모리야_스와코" };
+
+    static void MakeAlphaCut(Material material)
+    {
+        material.SetFloat("_Surface", 0f);
+        material.SetFloat("_AlphaClip", 1f);
+        material.SetFloat("_Cutoff", 0.5f);
+        material.EnableKeyword("_ALPHATEST_ON");
+        material.SetOverrideTag("RenderType", "TransparentCutout");
+        material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+    }
+
     [MenuItem("Tools/아트/텍스처 연결")]
-    public static void LinkTextures()
+    public static void LinkTextures() => LinkTexturesWhere(null);
+
+    // 유닛 하나만(2026-09-30): 전체 「텍스처 연결」은 적 모델·다른 유닛 .meta까지 다시 리맵해 재질 수백 개를 새로 만든다.
+    //   새 스킨 하나를 넣을 땐 이것만. ClaudeBridge `call ArtBinder.LinkTexturesFor` 는 인자가 없어서 LinkTexturesUnits(아래 목록)로.
+    public static void LinkTexturesFor(string unitFolder) =>
+        LinkTexturesWhere(p => Nfc(System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(p))) == Nfc(unitFolder));
+
+    public static string LinkTexturesUnits()
+    {
+        foreach (string u in PendingLinkUnits) LinkTexturesFor(u);
+        return "텍스처 연결(유닛만): " + string.Join(", ", PendingLinkUnits);
+    }
+
+    // 이번에 새로 넣은 스킨 — LinkTexturesUnits가 도는 목록. 새 스킨을 넣을 때 여기에 이름을 더한다.
+    static readonly string[] PendingLinkUnits = { "안흔함_김용태" };
+
+    static void LinkTexturesWhere(System.Func<string, bool> modelFilter)
     {
         List<Texture2D> textures = LoadTexturesUnder("Assets/Art");
 
@@ -559,6 +591,7 @@ public static class ArtBinder
 
         foreach (string modelPath in ModelPaths())
         {
+            if (modelFilter != null && !modelFilter(modelPath)) continue;
             ModelImporter importer = AssetImporter.GetAtPath(modelPath) as ModelImporter;
             if (importer == null) continue;
 
@@ -610,6 +643,7 @@ public static class ArtBinder
                 material.shader = shader;
                 material.SetTexture("_BaseMap", texture);
                 material.SetTexture("_MainTex", texture);   // Standard 폴백
+                if (AlphaCutUnits.Contains(unitName)) MakeAlphaCut(material);
                 EditorUtility.SetDirty(material);
 
                 importer.AddRemap(slot, material);

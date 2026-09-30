@@ -12,38 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_희귀함_황준석
   m_EditorClassIdentifier:
-  skillName: A05R !매료매료 열매
-  description: 원작 희귀함 죠즈 흰수염 3번대 대장 다이아몬드 - 희귀함(Trig_Unique34). | 2차 배정(트리거·더미 채널): 원작 희귀함 죠즈 흰수염 3번대 대장 다이아몬드 - 희귀함(Trig_Unique34). | 2차 배정(트리거·더미 채널): 원작 희귀함 죠즈 흰수염 3번대 대장 다이아몬드 - 희귀함(더미 경로 Trig_Unique34 → e090(U희귀함 죠즈 더미1) → A07C). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다.
+  skillName: Unique34 1/10 (다이아몬드 죠즈)
+  description: '원작 희귀함 죠즈 흰수염 3번대 대장 다이아몬드 - 희귀함(Trig_Unique34). | 2차 배정(트리거·더미 채널): 원작 희귀함 죠즈 흰수염 3번대 대장 다이아몬드 - 희귀함(Trig_Unique34). | 2차 배정(트리거·더미 채널): 원작 희귀함 죠즈 흰수염 3번대 대장 다이아몬드 - 희귀함(더미 경로 Trig_Unique34 → e090(U희귀함 죠즈 더미1) → A07C). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 정정(2026-09-30 구현담당1, 중복·배타 검사): 원문 Trig_Unique34(h02E) = Stage0 `GetRandomInt(1,10)==1` → … Stage8 스톰프(e090, 더미채널_희귀함_황준석_1) + 대상 `if PV==300 → 70000 else 35000`(SIEGE/UNKNOWN) 한 번. 확률 1.0 → 0.1, 70000·35000 두 벌(사본)·배타 갈래 동시 발동 → PV==300 / PV≠300 조건으로 한 벌. 현재체력×0.1(PV<200)은 Unique20(h01M = 희귀함_최상호_윤식파의두뇌) 값이라 제거. 스톰프(e090 A07C AOws: 대상 위치 500 광역 10000·스턴 0.9)도 같은 굴림이라 더미채널_희귀함_황준석_1(따로 굴리던 0.1)을 여기로 합치고 그 에셋은 지움(피해·공격타입은 그 에셋 값 그대로).'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 0
+    triggerChance: 0.1
+    range: 500.0
     effects:
     - kind: 0
-      basis: 2
-      target: 3
-      damageType: 2
-      attackType: 7
-      multiplier: 0.1
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      targetCondition: 1
-      targetConditionValue: 200
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 2
-      attackType: 7
-      multiplier: 15000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 2
-      duration: 0
-      casterBuffCountFactor: 0
-    - kind: 0
       basis: 0
       target: 3
       damageType: 1
@@ -52,7 +29,19 @@ MonoBehaviour:
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 2
+      targetConditionValue: 300
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     - kind: 0
       basis: 0
       target: 3
@@ -62,34 +51,60 @@ MonoBehaviour:
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 4
+      targetConditionValue: 300
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
     - kind: 0
       basis: 0
-      target: 3
-      damageType: 1
-      attackType: 3
-      multiplier: 70000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 1
-      attackType: 3
-      multiplier: 35000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-    - kind: 0
-      basis: 0
-      target: 3
+      target: 2
       damageType: 1
       attackType: 4
       multiplier: 10000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.9
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0

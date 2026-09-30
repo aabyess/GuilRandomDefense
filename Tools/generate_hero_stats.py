@@ -25,6 +25,12 @@ AgiAttackSpeedBonus가 구동하는 대상)에 대응하고, 스킬이 어느 �
 7기에 만드는 것이라 "전부 원작대로" 원칙에 어긋난다. **다음 사람이 "영원이 비었네"
 하고 채우지 말 것** — 이 스크립트도, UnitData.primaryStat 주석도 이 이유를 못
 박아둔다.
+
+⚠️ 2026-09-30 정정(구현담당1, PM 지시): 위 「DPS 순위 기반 배정」과 「영원 의도적 공백」은 이름 매핑이 불가능하던
+때의 결정이다. 지금은 Docs/reference/MASTER_UID_ROSTER_MAP.csv가 로스터 ↔ 원작 유닛을 잇고, 그걸로 대조하니
+초월 11기의 성장치가 원작 w3u와 달랐다(김만경 H095 원작 STR인데 INT 등). 성장치·기초값·primaryStat의 정본은
+이제 `Tools/sync_hero_stats_from_w3u.py`(원작 ustr/uagi/uint·ustp/uagp/uinp·upra)다 — 영원_이지원(H0BK 니카,
+원작 영원 중 스탯을 가진 그 1기)도 거기서 채웠다. 이 스크립트는 primaryStat이 없을 때만 쓰므로 재실행해도 무해하다.
 """
 import re
 import glob
