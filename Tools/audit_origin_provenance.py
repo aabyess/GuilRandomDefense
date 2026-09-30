@@ -202,7 +202,7 @@ def main(out_path):
                 vals = []
                 for k in ('multiplier', 'bonus', 'duration', 'randMax'):
                     try:
-                        v = float(d.get(k, '0') or 0)
+                        v = float(d.get(k, '1' if k == 'randMax' else '0') or 0)   # 필드가 없으면 C# 기본값(randMax=1)
                     except ValueError:
                         continue
                     if (k in ('multiplier', 'bonus', 'duration') and v != 0) or (k == 'randMax' and v != 1):
