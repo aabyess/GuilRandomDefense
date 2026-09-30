@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_게이트_초월_구주호_AD_355f5d39
   m_EditorClassIdentifier:
-  skillName: 오니히메 인수화 — (게이트 없음)
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 오니히메 인수화(H0BE)의 게이트 "(게이트 없음)" 능력 3개를 이 SkillData 하나로 묶었다.   · Yamato_Attack_Damage2#1: 계산식 ((GetEventDamage()*0.75)+15000.00)   · Yamato_Attack_Damage2#2: 계산식 ((GetEventDamage()*0.20)+15000.00)   · Yamato_Attack_Damage2#3: 계산식 ((GetEventDamage()*0.75)+15000.00)  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Yamato_Attack_Damage2#1] ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0.  [Yamato_Attack_Damage2#2] ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0.  [Yamato_Attack_Damage2#3] ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0. [확정: 원작도 매 타] 원작 트리거에 게이트가 없다(파일명 해시 355f5d39 = 「(게이트 없음)」, 리서치담당 edad47f). triggerChance = 1.0이 원작 그대로다 — 고치지 말 것.
+  skillName: 오니히메 인수화 — 매 타(Yamato_Attack_Damage2, B06N 없을 때)
+  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 오니히메 인수화(H0BE)의 게이트 "(게이트 없음)" 능력 3개를 이 SkillData 하나로 묶었다.   · Yamato_Attack_Damage2#1: 계산식 ((GetEventDamage()*0.75)+15000.00)   · Yamato_Attack_Damage2#2: 계산식 ((GetEventDamage()*0.20)+15000.00)   · Yamato_Attack_Damage2#3: 계산식 ((GetEventDamage()*0.75)+15000.00)  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Yamato_Attack_Damage2#1] ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0.  [Yamato_Attack_Damage2#2] ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0.  [Yamato_Attack_Damage2#3] ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0. [확정: 원작도 매 타] 원작 트리거에 게이트가 없다(파일명 해시 355f5d39 = 「(게이트 없음)」, 리서치담당 edad47f). triggerChance = 1.0이 원작 그대로다 — 고치지 말 것. | 정정(2026-09-30 구현담당1, 배타 분기 검사): 원문 Trig_Yamato_Attack_Damage2는 `if 시전자 B06N (광역 0.75×피해+15000 AD + 0.20×피해+15000 AP) else (0.75×피해+15000 AD)` — 두 갈래를 한 굴림에 다 내던 것을 else만 남김. B06N(인수화 변신 상태 버프)은 우리에 거는 곳이 없다 — 변신이 생기면 B06N 갈래를 requiredBuffId 에셋으로 추가(목록). 같은 트리거의 15% (3.75×피해+375000)×이속 보정 광역은 이 에셋 범위 밖(목록).'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -23,28 +23,6 @@ MonoBehaviour:
     resetTo: 0
     gaugeKind: 0
     effects:
-    - kind: 0
-      basis: 5
-      target: 2
-      damageType: 1
-      attackType: 5
-      multiplier: 0.75
-      bonus: 15000.0
-      chance: 1
-      hitCount: 2
-      duration: 0
-      casterBuffCountFactor: 0
-    - kind: 0
-      basis: 5
-      target: 2
-      damageType: 2
-      attackType: 5
-      multiplier: 0.2
-      bonus: 15000.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
     - kind: 0
       basis: 5
       target: 2
