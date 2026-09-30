@@ -433,13 +433,13 @@ public class UnitAttacker : MonoBehaviour
     // 없다. 버프 파일(`war3map.w3h`)의 버프 311개를 전수 확인해도 지속시간 필드 자체가 없고,
     // 능력 파일 쪽 지속시간 필드는 다른 능력 1,036건에서 멀쩡히 쓰이는데 방깎 계열만 0이다 —
     // **영구 누적이 확정이다** (`UNIT_STATS_RESEARCH.md`).
-    // → 제한을 걷어냈다. 무한히 쌓여도 EffectiveArmor가 -20에서 잘리므로 효과는 유계다.
+    // → 제한을 걷어냈다. 무한히 쌓여도 피해 배율이 2배에 수렴하므로 효과는 유계다(하한 −20은 09-30 걷음).
     //
     // ⚠️ 2026-09-05 정정(2차, 04③): 1차 정정("표 레벨을 올리는 것으로 바뀌었다")이
     // 틀렸었다 — A0TK/A0VI/A0VJ는 범용 방깎 표가 아니라 **카이도·핸콕 전용 스킬**이
     // 올리는 능력이었다(PM, 트리거 재조사). 우리 유닛의 일반 ArmorShred 트레잇은
     // 원래대로 EnemyDummy.armorShred(float, 원작 `Iarp`류)를 직접 깎는다 — 이 값은
-    // ArmorFloor(-20)에서 잘리므로 무한 누적이어도 효과는 유계다. A0TK/A0VI/A0VJ 쪽은
+    // 피해 배율이 2배에 수렴하므로 무한 누적이어도 효과는 유계다. A0TK/A0VI/A0VJ 쪽은
     // EnemyDummy.AddKaidoAttackStack 등 전용 메서드로만 올라간다(카이도·핸콕에 대응하는
     // 유닛이 우리 로스터에 아직 없어 호출부는 없음 — 06번 이후).
     void ApplyArmorShred(EnemyDummy target)

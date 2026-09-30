@@ -527,21 +527,9 @@ public class EnemyDummy : MonoBehaviour
 
     [SerializeField] DamageTable damageTable;
 
-    // 방깎이 방어력을 여기까지만 밀 수 있다. 하한이 없으면 방깎 유닛을 쌓을수록 무한히
-    // 세져서 밸런싱이 무너진다.
-    //
-    // **근거가 한 번 바뀌었다. 값은 그대로다.**
-    //
-    // 옛 근거(틀림): "원작 서술 — 방어력 −20이면 71% 추가 피해, 그 이상은 불필요".
-    //   71%는 `2 − 0.94^20 = 1.71`로 **감폭 상수가 0.06일 때만 나오는 수**인데 이 맵은 0.02다.
-    //   맵 텍스트(wts·war3map.j·툴팁)를 전수로 뒤져도 그 문구가 **0건**이다 — 일반 워크3 상식이었다.
-    //
-    // 새 근거(맞음): **방깎 최대 70**(원작 `Iarp`)이 중반 라인몹 방어를 딱 이 근처로 민다.
-    //   R51 방어 47 → −23 · **R54 방어 50 → −20**(정확히 일치) · R59 방어 54 → −16.
-    //   ⚠️ 다만 **R64(방어 70) 이후엔 방깎을 다 걸어도 0 아래로 못 간다** — 후반엔 안 통한다.
-    //
-    // 참고: 이 맵의 상수(0.02)에서 −20의 배율은 1.71이 아니라 **1.33**이다.
-    public const float ArmorFloor = -20f;
+    // 실효 방어력엔 하한이 없다(원작대로). 예전의 하한 −20은 원작 근거가 없던 우리 추론값이라
+    // 걷었다(2026-09-30 PM 지시) — 워크3엔 방어 최소값이 없고, 음수 방어 피해 배율은 ArmorMultiplier가
+    // 2 − 0.98^(−방어)로 2배에 수렴해 절로 유계다. 스킬 방깎(AId1)은 합계 −75에서 멈춘다(Aid1ShredCap).
 
     // 방어력 1당 감폭량. **원작 `war3mapMisc.txt` 24행 `DefenseArmor=0.02`** 그대로다.
     // 워크3 기본값은 0.06인데 **원작 맵이 3분의 1로 낮춰놨다** — 그만큼 방어력이 덜 아프다.
@@ -623,9 +611,9 @@ public class EnemyDummy : MonoBehaviour
         return total;
     }
 
-    /// <summary>방깎을 적용한 실효 방어력. 하한 -20.</summary>
+    /// <summary>방깎을 적용한 실효 방어력. 하한 없음(원작).</summary>
     public float EffectiveArmor => IsReplica ? replicaArmor :   // MP: 클라 겉모습은 호스트 실효값
-        Mathf.Max(ArmorFloor, (data != null ? data.armor : 0f) - armorShred - aid1Shred + TableStackedArmorShred());
+        (data != null ? data.armor : 0f) - armorShred - aid1Shred + TableStackedArmorShred();
 
     public ArmorType ArmorType => data != null ? data.armorType : ArmorType.Normal;
 
