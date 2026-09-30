@@ -30,7 +30,7 @@ static class EternalFillProbe
     static string ArenaLower() { Units = Lower; return Arena(); }
     // 중복 점검·랜덤 🔴·초월 묶음 A(2026-09-30) — call:EternalFillProbe.ArenaRest.
     static readonly string[] Rest = { "랜덤_야사카_카나코", "랜덤_카마도_탄지로", "초월_강주혁_AP", "초월_노태현_AP", "초월_박민수_AD", "초월_임채민_AP", "초월_조성진_AD",
-                                      "초월_김민준_AP", "초월_유재헌_ADAP", "초월_임장혁_AD", "초월_이태훈_AP", "초월_박기찬_AD" };
+                                      "초월_김민준_AP", "초월_유재헌_ADAP", "초월_임장혁_AD", "초월_이태훈_AP", "초월_박기찬_AD", "초월_김만경_AD" };
     static string ArenaRest() { Units = Rest; return Arena(); }
     // uabi 상시 능력 58건·전설 남은 셋·초월 게이지(2026-09-30) — call:EternalFillProbe.ArenaPassives.
     static readonly string[] Passives = { "초월_강재규_AP", "초월_최상호_AD", "초월_조성진_AD", "초월_박민수_AD", "초월_배성령_AD", "초월_노태현_AP", "초월_강주혁_AP",

@@ -147,6 +147,35 @@ def main():
         add(a, [dmg(ENEMIES, AP, SPELLS, 582500.0)])
     edit('SkillData_게이트_초월_배성령_AD_18aa2343', 'Sandi_skill_1: 0.11초 뒤 대상 근처 475 범위 582500 NORMAL/UNIVERSAL(UnitDamagePointLoc) 추가. ', sandi)
 
+    # ════ 티치·아카이누·조로의 빠진 평타 블록 ════
+    # 티치 H090 → 초월_임채민_AP: Tichi_Attack 1/10 안에서 1/TR_AddInt(기본 6)이면 강진(_tr), 아니면 지진 — 5/6·1/6 배타를 확률 곱으로
+    edit('SkillData_더미채널_초월_임채민_AP_79행_01000', 'Tichi_skill_4(지진)는 1/10 중 5/6(나머지 1/6은 강진 Tichi_skill_4_tr) — 확률 0.1 → 0.0833. ',
+         lambda a: sat.set_level_field(a, 0, 'triggerChance', round(0.1 * 5.0 / 6.0, 6)))
+    new('초월_임채민_AP', 'SkillData_원작트리거_초월_임채민_AP_Tichi_skill_4_tr', '티치 — 강진 1/10 × 1/6(시전자 중심 700 범위 400000·이감 75% + 250000 + STR×3000)',
+        '티치 H090 Tichi_Attack: 1/10 안에서 GetRandomInt(1,TR_AddInt=6)==3 → Tichi_skill_4_tr: 시전자 중심 — 천둥박수 A0Q6(AHtc, Htc1 400000, aare 700, Htc3 0.75, adur 3.0) + '
+        '700 범위 (250000 + STR×3000) NORMAL/UNIVERSAL. T특성 뒤 1/3은 미반영.', ON_HIT,
+        sat.level_block(triggerChance=round(0.1 / 6.0, 6), range=700.0, aoeCenter=1, effects=[
+            dmg(ENEMIES, AP, SPELLS, 400000.0), sat.effect(kind=SLOW, target=ENEMIES, multiplier=0.25, duration=3.0),
+            sat.effect(kind=DAMAGE, basis=STR, target=ENEMIES, damageType=AP, attackType=SPELLS, multiplier=3000.0, bonus=250000.0)]))
+    # 아카이누 H095 → 초월_김만경_AD: Akainu_03 용암분출 — 마나≠135 & 1/10(B06B 없는 대상이면 02가 안 터졌을 때 → 0.925 × 0.1)
+    new('초월_김만경_AD', 'SkillData_원작트리거_초월_김만경_AD_Akainu_03', '아카이누 — Akainu_03 용암분출 0.0925(450 범위 300000 + 대상 스턴 2.25초)',
+        '아카이누 H095 Akainu_Attack: 02(7.5%)가 안 터졌을 때 GetRandomInt(1,10)==5 → Akainu_03: 대상 파이어볼트 A0UX 스턴 2.25초 + 대상 위치 450 범위 300000 NORMAL/UNIVERSAL(UnitDamagePointLoc). '
+        '지대(A09L 150000/0.2초 2초)·이속 −10% 더미는 미반영(주기 피해 지대 구조).', ON_HIT,
+        sat.level_block(triggerChance=0.0925, range=450.0, effects=[dmg(ENEMIES, AP, SPELLS, 300000.0), sat.effect(kind=STUN, target=SINGLE, duration=2.25)]))
+    # 조로 H09F → 초월_박민수_AD: Zoro_saza1 1/6 · Zoro_tiger 1/33
+    new('초월_박민수_AD', 'SkillData_원작트리거_초월_박민수_AD_Zoro_saza1', '조로 — Zoro_saza1 1/6(405 범위 (602500 + STR×6000)×1~1.5 + 대상 (903750 + STR×60000)×1~1.5 · 스턴 1초)',
+        '조로 H09F Zoro_Attack_re GetRandomInt(1,6)==2 → Zoro_saza1: 대상 근처 405 범위 (602500 + STR×6000)×1~1.5 CHAOS/NORMAL → 대상 (903750 + STR×60000)×1~1.5 + 파이어볼트 A0UQ 스턴 1.0초. '
+        'A0GQ 레벨 2 이상의 STR 계수(7500·75000)는 미반영.', ON_HIT,
+        sat.level_block(triggerChance=round(1.0 / 6.0, 6), range=405.0, effects=[
+            sat.effect(kind=DAMAGE, basis=STR, target=ENEMIES, damageType=AD, attackType=CHAOS, multiplier=6000.0, bonus=602500.0, randMax=1.5),
+            sat.effect(kind=DAMAGE, basis=STR, target=SINGLE, damageType=AD, attackType=CHAOS, multiplier=60000.0, bonus=903750.0, randMax=1.5),
+            sat.effect(kind=STUN, target=SINGLE, duration=1.0)]))
+    new('초월_박민수_AD', 'SkillData_원작트리거_초월_박민수_AD_Zoro_tiger', '조로 — Zoro_tiger 1/33(500 범위 2500000 + STR×50000 · stomp 150000·스턴 2.5초)',
+        '조로 H09F Zoro_Attack_re GetRandomInt(1,33)==10 → Zoro_tiger: stomp A0AW(500 범위 150000, adur 2.5 · ahdu 0.37) + 대상 중심 500 범위 (2500000 + STR×50000) CHAOS/NORMAL.', ON_HIT,
+        sat.level_block(triggerChance=round(1.0 / 33.0, 6), range=500.0, effects=[
+            dmg(ENEMIES, AP, SPELLS, 150000.0), sat.effect(kind=STUN, target=ENEMIES, duration=2.5),
+            sat.effect(kind=DAMAGE, basis=STR, target=ENEMIES, damageType=AD, attackType=CHAOS, multiplier=50000.0, bonus=2500000.0)]))
+
     print('바꾼 파일 %d' % len(set(changed)))
     for c in sorted(set(changed)):
         print(os.path.relpath(c, sat.ROOT))
