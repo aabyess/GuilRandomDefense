@@ -33,6 +33,11 @@ public static class SkillTelemetry
 
     public static void Reset() { stats.Clear(); CastLog.Clear(); }
 
+    /// <summary>계측에 잡힌 유닛 종류 전부와, 한 유닛의 피해 채널 이름들. 밸런스 판 요약용(2026-09-30).</summary>
+    public static IEnumerable<UnitData> TrackedUnits => stats.Keys;
+    public static IEnumerable<string> ChannelsOf(UnitData unit) =>
+        unit != null && stats.TryGetValue(unit, out UnitStats s) ? (IEnumerable<string>)s.damage.Keys : System.Array.Empty<string>();
+
     public static int HitsOf(UnitData unit) => unit != null && stats.TryGetValue(unit, out UnitStats s) ? s.hits : 0;
 
     static UnitStats For(UnitData unit)

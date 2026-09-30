@@ -2729,12 +2729,80 @@ public static class ClaudeCommands
         return off.Count == 0 ? "" : $"      🌊 걷는 땅 밖에 선 내 지상 유닛 {off.Count}기: {string.Join(" | ", off.Take(5))}\n";
     }
 
+    // ⚖️ 밸런스 재측정(2026-09-30 PM 지시)용 — 판 동안 SkillTelemetry를 켜 두고 라운드 줄마다 덧붙인다:
+    //   · 평타 광역이 걷는 줄에서 실제 몇 마리 맞히나(광역 든 유닛의 「맞은 수 ÷ 평타 수」) · 피해 채널 비중(판 누계)
+    //   · 0번 레인 보스가 스턴으로 멈춰 있던 시간 ÷ 살아 있던 시간(이번 라운드) · 「영구 스턴」 후보 로스터가 판에 있나
+    static readonly string[] PermaStunRosters = { "초월_황준석_ADAP", "제한_최영민", "불멸_정준영", "불멸_신지우", "불멸_고도현", "초월_조성진_AD" };
+    static bool balanceOn;
+    static float bossAliveTime, bossStunTime, bossSlowTime, balanceLastT;
+
+    static void SampleBalance(GameShotJob job)
+    {
+        if (!job.autoLoop) return;
+        if (!balanceOn) { SkillTelemetry.Reset(); SkillTelemetry.Enabled = true; balanceOn = true; bossAliveTime = bossStunTime = bossSlowTime = 0f; }
+        // 게임 시계로 잰다 — EditorApplication.update는 게임 프레임보다 자주 불려 Time.deltaTime을 그대로 더하면 실제의 1/20쯤이 된다(09-30 1~3판).
+        float dt = Mathf.Clamp(Time.time - balanceLastT, 0f, 0.25f);
+        balanceLastT = Time.time;
+        foreach (EnemyDummy e in EnemyDummy.Active)
+        {
+            if (e == null || !e.IsBoss || e.LaneIndex != 0 || e.IsDead) continue;
+            bossAliveTime += dt;
+            if (e.IsStunned) bossStunTime += dt;
+            if (e.EffectiveSlowMultiplier < 0.999f) bossSlowTime += dt;
+        }
+    }
+
+    static string BalanceText(bool over)
+    {
+        if (!balanceOn) return "";
+        var sb = new StringBuilder();
+        List<UnitData> tracked = SkillTelemetry.TrackedUnits.ToList();
+        int hits = 0, splashHits = 0, splashUnitHits = 0;
+        var channel = new Dictionary<string, float>();
+        var perUnit = new List<string>();
+        foreach (UnitData u in tracked)
+        {
+            int h = SkillTelemetry.HitsOf(u);
+            hits += h;
+            bool area = u.attackSplashRadius > 0f || u.attackCleaveFactor > 0f;
+            if (area) { splashUnitHits += h; splashHits += SkillTelemetry.SplashHitsOf(u); }
+            if ((area || u.attackExtraTargets > 0) && h > 0)
+                perUnit.Add($"{u.name} ×{MyUnits().Count(x => x.Data == u)}기 {h}타·광역 {(float)SkillTelemetry.SplashHitsOf(u) / h:0.00}마리/타·평타 타당 {SkillTelemetry.DamageOf(u, "평타") / h:0}" +
+                            (u.attackExtraTargets > 0 ? $"·다중 피해 {SkillTelemetry.DamageOf(u, "평타다중") / Mathf.Max(1f, SkillTelemetry.DamageOf(u, "평타")):0.00}배" : ""));
+            foreach (string c in SkillTelemetry.ChannelsOf(u))
+            {
+                channel.TryGetValue(c, out float d);
+                channel[c] = d + SkillTelemetry.DamageOf(u, c);
+            }
+        }
+        float total = Mathf.Max(1f, channel.Values.Sum());
+        sb.Append($"      ⚖️ 판 누계 평타 {hits}타 · 광역 든 유닛 {splashUnitHits}타에 주변 {splashHits}마리(타당 {(splashUnitHits > 0 ? (float)splashHits / splashUnitHits : 0f):0.00})" +
+                  $" · 피해 비중 {string.Join(" ", channel.OrderByDescending(kv => kv.Value).Select(kv => $"{kv.Key} {kv.Value / total:P0}"))}\n");
+        if (perUnit.Count > 0) sb.Append($"      ⚖️ 광역·다중 유닛: {string.Join(" | ", perUnit.Take(12))}\n");
+        if (bossAliveTime > 0f)
+            sb.Append($"      ⚖️ 이번 라운드 0번 레인 보스: 살아 있던 {bossAliveTime:0.0}초 중 스턴 {bossStunTime:0.0}초({bossStunTime / bossAliveTime:P0}) · 이감 {bossSlowTime:0.0}초({bossSlowTime / bossAliveTime:P0})\n");
+        bossAliveTime = bossStunTime = bossSlowTime = 0f;
+        List<string> six = MyUnits().Where(u => PermaStunRosters.Contains(u.Data.name)).Select(u => u.Data.name).Distinct().ToList();
+        if (six.Count > 0) sb.Append($"      ⚖️ 「영구 스턴」 후보 보유: {string.Join(", ", six)}\n");
+        if (over)
+        {
+            // 판 끝 — 피해 상위 유닛(어느 유닛이 판을 끌었나).
+            var top = tracked.Select(u => (u, d: SkillTelemetry.ChannelsOf(u).Sum(c => SkillTelemetry.DamageOf(u, c)))).OrderByDescending(x => x.d).Take(8)
+                .Select(x => $"{x.u.name} {x.d / total:P0}");
+            sb.Append($"      ⚖️ 피해 상위: {string.Join(" · ", top)}\n");
+            balanceOn = false;
+            SkillTelemetry.Enabled = false;
+        }
+        return sb.ToString();
+    }
+
     static void RoundWatch(GameShotJob job)
     {
         float dt = Time.unscaledDeltaTime;
         if (dt > 0f) { frameSum += dt; frameMax = Mathf.Max(frameMax, dt); frameN++; }
         SampleUptime();
         WatchLaneBoss(job);
+        SampleBalance(job);
 
         RoundManager rm = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
         if (rm == null) return;
@@ -2753,6 +2821,7 @@ public static class ClaudeCommands
                 job.report += $"   🎚 난이도 {(dm != null ? $"{dm.Current.KoreanName()}(고름 {dm.IsModeSelected})" : "매니저 없음")} · 이 판이 건 값 {((DifficultyMode)job.mode).KoreanName()}\n";
             }
             job.report += $"   {head}: {RoundMetrics(job, rm)}\n" + ChoiceWispText() + OffGroundUnits();
+            job.report += BalanceText(over || round > job.watchRounds);
             string snapPath = Path.GetFullPath(Path.Combine(Folder, "shots", over ? "round_end.png" : $"round_{round:00}.png"));
             ScreenCapture.CaptureScreenshot(snapPath);
             job.report += $"      📸 {snapPath}\n";
