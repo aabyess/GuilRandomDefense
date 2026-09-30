@@ -1,28 +1,27 @@
-안흔함_김용태 ← 바솔로뮤 쿠마 PX(원피스) 스킨 출처 — 2026-09-30 교체
+안흔함_김용태 ← 젊은 올마이트(나의 히어로 아카데미아) 스킨 출처 — 2026-09-30 교체(두 번째)
 
-🔴 교체 기록: 옛 모델(Yujiro Hanma)은 사장님 지시로 다른세계_한마_유지로로 옮겼다(PM 복사, FBX·텍스처 SHA-1 같음 확인).
-   옛 FBX·.fbx.meta·Textures는 지우고 새로 썼다(옛 .meta의 humanDescription이 남으면 T자가 된다 — skin-import-traps ①).
+🔴 교체 기록(같은 날 두 번):
+  ① 옛 모델 Yujiro Hanma → 다른세계_한마_유지로로 옮김(PM 복사, 바이트 같음 확인).
+  ② 쿠마 PX(원피스)를 한 번 넣었다가 사장님 지시로 이 모델로 바꿈. 쿠마 원본은 99_폐기_교체된원본/안흔함_김용태_이전_쿠마PX69.zip,
+     설정은 gen_biped_skin.py RETIRED_SKINS["쿠마PX69"](다른 유닛에 다시 쓸 수 있음).
+  두 번 다 옛 FBX·.fbx.meta·Textures를 먼저 지우고 새로 썼다(옛 .meta humanDescription 함정 — skin-import-traps ①).
 
-원본: ~/Desktop/구랜디스킨모음/02_안흔함/안흔함_김용태.zip
-  sha256: 81c814cc8e0802829992690b60f1030d13aa73e1807bcb205d4acd1925e5e04b
-  내용물: source/KUMAEXPORT.fbx(2019) + textures/ 5장(TEXTURE·TEXTURE-bump·PANTS-DIFFUSE·PANTS-BUMP·CAP .jpg)
+원본: ~/Desktop/구랜디스킨모음/02_안흔함/안흔함_김용태.glb (원래 파일 이름 jovem_all_might.glb, 7.7MB)
+  sha256: 5a15edf9881e49a9e1138526ed96056ec867a701924bbb7e9810728101bd1bbe
+  glb asset 메타: title 「Jovem all might」 · author victordavi1606 (https://sketchfab.com/victordavi1606)
+  · source https://sketchfab.com/3d-models/jovem-all-might-199adeacf32c4383b14841eb65fab8de
+라이선스: CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/) — glb 메타에 명시. 🔴 저작자 표기(크레딧) 필요.
 
-라이선스: ⚠️ 미확인 — zip에 license 파일이 없다(원본 경로 B:\WAWASCHOOLFILES\… — 학교 과제물로 보인다). 사장님 확인 필요.
-
-빌드 스크립트: Tools/blender/gen_biped_skin.py (SKINS["안흔함_김용태"])
-  실행: blender -b --factory-startup --python Tools/blender/gen_biped_skin.py -- 안흔함_김용태
+빌드 스크립트: Tools/blender/gen_rigify_skin.py (SKINS["안흔함_김용태"])
+  실행: blender -b --factory-startup --python Tools/blender/gen_rigify_skin.py -- 안흔함_김용태
 
 처리 요약(2026-09-30, blender 세션):
-- Mixamo 오토리깅(mixamorig 65뼈, A자, 배율 0.01·X 90°) → 22뼈(손가락·HeadTop_End·Toe_End 접음), 팔 A자 약 36° → 수평.
-  원본 액션 1개(mixamo Layer0)는 안 씀. 메시 8개 전부 사용(셔츠·바지·몸·모자·머리카락·신발·안경(HAT)·빨간 눈빛(Cylinder001)).
-- 🔴 면 방향: 모자(CAP)가 대부분 안쪽으로 뒤집혀 있어 뒷면 컬링에서 모자가 사라지고 이마가 띠처럼 비쳤다(컬링 끈 렌더는 멀쩡).
-  8개 메시 전부 면 방향을 바깥으로 다시 맞춤(recalc_normals). 전후: ClaudeBridge/shots/kuma_cap_normals_before_after.png.
-- 재질: 원본 이름이 "09___Defaultmat" 꼴이라 ArtBinder가 못 찾는다 → 텍스처 있는 셋은 텍스처 파일 이름으로(TEXTURE·
-  PANTS-DIFFUSE·CAP — 원본 모자는 cap.psd를 가리켰지만 zip엔 CAP.jpg), 단색 다섯은 뜻 있는 이름 + 64² 단색 PNG
-  (KumaSkin·KumaHair·KumaShoes·KumaRedPin·KumaHatBand — 원본 Base Color를 sRGB로).
-- bump 두 장(TEXTURE-bump·PANTS-BUMP)은 흑백 높이맵(원본이 노멀맵 노드에 잘못 꽂음) — 기본색 우선이라 안 씀.
-  쓰려면 유니티 텍스처 임포트 「Create from Grayscale」로 노멀맵을 만들 수 있다.
-- UV0 범위 V 2.59(타일링) — 유니티 기본 Wrap=Repeat면 원본대로 보인다.
-- 재수입 검사: 22뼈(22/22) · 키 1.8 · 무가중치 0 · 53,940삼각형 · idle·walk·attack 정상 · clip_spread 최대 0.97 · check_entries 통과.
-- ⚠️ mesh_clash idle +13.8% · walk +9.0% — 팔을 내리면 위팔 소매가 거대한 재킷 어깨 속에 묻힌다(몸집 설계 탓, 렌더에서
-  찢김·튀어나옴은 없고 아래팔부터 재킷 밖으로 나온다).
+- 메시 19개 전부 씀(몸·옷·망토 안팎·얼굴·머리카락·눈·부츠·벨트 등), Icosphere(조명 구)만 버림. 원본 부품 19 = 산출 재질 19.
+- 텍스처 이름 Image_0~10(립 함정) → 재질 이름으로 저장(19장, 같은 그림을 쓰는 재질은 각자 복사본).
+  무텍스처 재질 셋(euewhite 눈흰자 · 40_Mesh2 가슴 문양 주황 · bELT 벨트 노랑)은 glTF baseColorFactor를 sRGB 단색 PNG로.
+- 🔴 뿌리 빈 오브젝트 사슬이 키를 −Y·망토를 +Z로 눕혀 들여온다 → root_rotate_x −90°(키 +Z·정면 −Y). 이미 T자.
+- 뼈 262 → 22: 얼굴 120·눈·머리카락 20 → Head, 손가락·손 보정 → 손, 「Unused_*」 비틀림·보정뼈 → 각 본체 뼈,
+  목도리·망토 세 사슬 → Spine2(몸통에 붙어 뻣뻣하게 따라감). 척추 두 마디라 Spine1은 Spine↔Chest 가운데 자리표시
+  (0-길이 아님 — 새 3항 bone_position_override), chain_tails로 꼬리를 다음 관절에 이음.
+- 재수입 검사: 22뼈(21/22 — Spine1 자리표시) · 키 1.8 · 무가중치 0 · 70,959삼각형(부츠만 약 4.4만 — 감량 안 함) ·
+  idle·walk·attack 정상 · clip_spread 최대 0.99 · mesh_clash 0.0% · bone_bind ② 중앙 0.8% · check_entries 통과.

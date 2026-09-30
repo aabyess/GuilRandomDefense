@@ -862,47 +862,6 @@ SKINS = {
         decimate_ratio=1.0,
         uv_layers=1,
     ),
-    # 안흔함_김용태 ← 바솔로뮤 쿠마 PX-?(원피스) — 🔴 교체(2026-09-30, 사장님 지시). 옛 모델(Yujiro Hanma, fix_unit_fbx.py의
-    # 「재생성 불가」 항목)은 다른세계_한마_유지로로 옮겼다(PM 복사, FBX sha256 같음 확인). 옛 FBX·.meta·Textures는 지우고 새로 씀.
-    # 원본 KUMAEXPORT.fbx(2019, 학교 과제 추정): Mixamo 오토리깅(mixamorig 65뼈, A자, 배율 0.01·X 90°, 액션 1개 — 안 씀) · 메시 8.
-    # 텍스처 있는 재질은 셋뿐(셔츠 TEXTURE.jpg · 바지 PANTS-DIFFUSE.jpg · 모자 cap.psd → zip의 CAP.jpg). 나머지 다섯은 단색.
-    # bump 두 장(TEXTURE-bump·PANTS-BUMP)은 흑백 높이맵이다(원본이 노멀맵 노드에 잘못 꽂음) — 기본색 우선이라 안 쓴다.
-    # 재질 이름을 텍스처 파일 이름·뜻 있는 이름으로 바꿔 ArtBinder가 이름으로 찾게 한다(원본은 "09___Defaultmat" 꼴).
-    "안흔함_김용태": dict(
-        source="~/Desktop/구랜디스킨모음/02_안흔함/안흔함_김용태.zip",
-        glb_member="source/KUMAEXPORT.fbx",
-        source_format="fbx",
-        path="Assets/Art/Units/안흔함_김용태/안흔함_김용태.fbx",
-        mesh_name="Kuma",
-        height=1.8,
-        drop_meshes=set(),
-        recalc_normals=("BODY_FINAL", "CAP", "Cylinder001", "HAIR", "HAT", "KUMA_SHIRT_FINAL", "PANTS_FINAL001", "SHOES"),
-        material_rename={"KUMA_SHIRT_FINAL": "TEXTURE", "PANTS_FINAL001": "PANTS-DIFFUSE", "CAP": "CAP",
-                         "BODY_FINAL": "KumaSkin", "HAIR": "KumaHair", "SHOES": "KumaShoes",
-                         "Cylinder001": "KumaRedPin", "HAT": "KumaHatBand"},
-        rename={f"mixamorig:{n}": n for n in (
-            "Hips", "Spine", "Spine1", "Spine2", "Neck", "Head",
-            "LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand", "RightShoulder", "RightArm", "RightForeArm", "RightHand",
-            "LeftUpLeg", "LeftLeg", "LeftFoot", "LeftToeBase", "RightUpLeg", "RightLeg", "RightFoot", "RightToeBase")},
-        fold={"mixamorig:HeadTop_End": "Head", "mixamorig:LeftToe_End": "LeftToeBase", "mixamorig:RightToe_End": "RightToeBase",
-              **{f"mixamorig:{side}Hand{f}{i}": f"{side}Hand" for side in ("Left", "Right")
-                 for f in ("Thumb", "Index", "Middle", "Ring", "Pinky") for i in (1, 2, 3, 4)}},
-        shirt_member="textures/TEXTURE.jpg",
-        pants_member="textures/PANTS-DIFFUSE.jpg",
-        cap_member="textures/CAP.jpg",
-        materials={
-            "TEXTURE": ("texture_file", "shirt_member"), "PANTS-DIFFUSE": ("texture_file", "pants_member"),
-            "CAP": ("texture_file", "cap_member"),
-            # 단색 — 원본 Base Color(선형)를 sRGB 표시값으로: 피부 (0.541,0.322,0.204) · 머리 0.008 · 신발 (0.023,0.016,0.02) ·
-            # 모자 핀 순빨강 · 모자 띠 0.588(3ds 기본 회색).
-            "KumaSkin": ("solid", (0.76, 0.60, 0.49, 1.0)), "KumaHair": ("solid", (0.09, 0.09, 0.09, 1.0)),
-            "KumaShoes": ("solid", (0.16, 0.13, 0.15, 1.0)), "KumaRedPin": ("solid", (1.0, 0.0, 0.0, 1.0)),
-            "KumaHatBand": ("solid", (0.79, 0.79, 0.79, 1.0)),
-        },
-        level_arms=True,
-        decimate_ratio=1.0,
-        uv_layers=1,
-    ),
     # 초월위습_박은석 ← 「Kuma Slave」(원피스, 노예가 된 바솔로뮤 쿠마) — 사장님 지정 2026-09-30(「초월 쿠마 위습」).
     # 원본: zip 안 source/kuma_slave_fbx_opvc_by_strifffe_djzlovi.rar(RAR5 — bsdtar로 풀림, unar와 바이트 같음 확인)
     #   → mesh.fbx · daxiong.jpeg(1024², zip의 textures/daxiong.jpeg와 픽셀 같음) · kuma slave.png(1920×1080 미리보기, 안 씀).
@@ -930,6 +889,53 @@ SKINS = {
                  for s in ("L", "R") for i in range(5) for j in ("2",)}},
         tex_member="textures/daxiong.jpeg",
         materials={"daxiong": ("texture_file", "tex_member")},
+        level_arms=True,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
+}
+
+# 🔴 폐기(2026-09-30 사장님 교체) — 한 번 짓고 Assets에 넣었다가 다른 모델로 바뀐 설정. SKINS 밖이라 main()·check_entries가
+# 안 본다. 나중에 다른 유닛에 쓰려면 SKINS로 옮기고 이름·path를 그 유닛으로 바꾼다(검증·함정 기록은 주석에 그대로 있다).
+RETIRED_SKINS = {
+    # 쿠마 PX(원피스) — 안흔함_김용태에 09-30 한 번 넣었다가 같은 날 「젊은 올마이트」로 교체됨. 원본 zip은 99_폐기_교체된원본/로 옮겨졌다.
+    # 안흔함_김용태 ← 바솔로뮤 쿠마 PX-?(원피스) — 🔴 교체(2026-09-30, 사장님 지시). 옛 모델(Yujiro Hanma, fix_unit_fbx.py의
+    # 「재생성 불가」 항목)은 다른세계_한마_유지로로 옮겼다(PM 복사, FBX sha256 같음 확인). 옛 FBX·.meta·Textures는 지우고 새로 씀.
+    # 원본 KUMAEXPORT.fbx(2019, 학교 과제 추정): Mixamo 오토리깅(mixamorig 65뼈, A자, 배율 0.01·X 90°, 액션 1개 — 안 씀) · 메시 8.
+    # 텍스처 있는 재질은 셋뿐(셔츠 TEXTURE.jpg · 바지 PANTS-DIFFUSE.jpg · 모자 cap.psd → zip의 CAP.jpg). 나머지 다섯은 단색.
+    # bump 두 장(TEXTURE-bump·PANTS-BUMP)은 흑백 높이맵이다(원본이 노멀맵 노드에 잘못 꽂음) — 기본색 우선이라 안 쓴다.
+    # 재질 이름을 텍스처 파일 이름·뜻 있는 이름으로 바꿔 ArtBinder가 이름으로 찾게 한다(원본은 "09___Defaultmat" 꼴).
+    "쿠마PX69": dict(
+        source="~/Desktop/구랜디스킨모음/99_폐기_교체된원본/안흔함_김용태_이전_쿠마PX69.zip",
+        glb_member="source/KUMAEXPORT.fbx",
+        source_format="fbx",
+        path="Assets/Art/Units/쿠마PX69/쿠마PX69.fbx",   # ⚠️ 다시 쓸 때 유닛 이름으로 바꿀 것
+        mesh_name="Kuma",
+        height=1.8,
+        drop_meshes=set(),
+        recalc_normals=("BODY_FINAL", "CAP", "Cylinder001", "HAIR", "HAT", "KUMA_SHIRT_FINAL", "PANTS_FINAL001", "SHOES"),
+        material_rename={"KUMA_SHIRT_FINAL": "TEXTURE", "PANTS_FINAL001": "PANTS-DIFFUSE", "CAP": "CAP",
+                         "BODY_FINAL": "KumaSkin", "HAIR": "KumaHair", "SHOES": "KumaShoes",
+                         "Cylinder001": "KumaRedPin", "HAT": "KumaHatBand"},
+        rename={f"mixamorig:{n}": n for n in (
+            "Hips", "Spine", "Spine1", "Spine2", "Neck", "Head",
+            "LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand", "RightShoulder", "RightArm", "RightForeArm", "RightHand",
+            "LeftUpLeg", "LeftLeg", "LeftFoot", "LeftToeBase", "RightUpLeg", "RightLeg", "RightFoot", "RightToeBase")},
+        fold={"mixamorig:HeadTop_End": "Head", "mixamorig:LeftToe_End": "LeftToeBase", "mixamorig:RightToe_End": "RightToeBase",
+              **{f"mixamorig:{side}Hand{f}{i}": f"{side}Hand" for side in ("Left", "Right")
+                 for f in ("Thumb", "Index", "Middle", "Ring", "Pinky") for i in (1, 2, 3, 4)}},
+        shirt_member="textures/TEXTURE.jpg",
+        pants_member="textures/PANTS-DIFFUSE.jpg",
+        cap_member="textures/CAP.jpg",
+        materials={
+            "TEXTURE": ("texture_file", "shirt_member"), "PANTS-DIFFUSE": ("texture_file", "pants_member"),
+            "CAP": ("texture_file", "cap_member"),
+            # 단색 — 원본 Base Color(선형)를 sRGB 표시값으로: 피부 (0.541,0.322,0.204) · 머리 0.008 · 신발 (0.023,0.016,0.02) ·
+            # 모자 핀 순빨강 · 모자 띠 0.588(3ds 기본 회색).
+            "KumaSkin": ("solid", (0.76, 0.60, 0.49, 1.0)), "KumaHair": ("solid", (0.09, 0.09, 0.09, 1.0)),
+            "KumaShoes": ("solid", (0.16, 0.13, 0.15, 1.0)), "KumaRedPin": ("solid", (1.0, 0.0, 0.0, 1.0)),
+            "KumaHatBand": ("solid", (0.79, 0.79, 0.79, 1.0)),
+        },
         level_arms=True,
         decimate_ratio=1.0,
         uv_layers=1,

@@ -304,6 +304,64 @@ SKINS = {
         decimate_ratio=0.17,
         bake_size=2048,
     ),
+    # 안흔함_김용태 ← 젊은 올마이트(나의 히어로 아카데미아, Sketchfab 「Jovem all might」 by victordavi1606, CC-BY-4.0)
+    # — 사장님 지시 2026-09-30(쿠마 PX 대신). 원본 glb 7.7MB: 메시 19 + 조명 구 · 아마추어 262뼈(얼굴 120·머리카락 20·망토 4사슬·
+    # 비틀림/보정 「Unused_*」) · 텍스처 Image_0~10(립 함정 — 재질 이름으로 저장). 무텍스처 재질 셋은 glTF baseColorFactor 단색.
+    # 뿌리 빈 오브젝트 사슬이 키를 −Y·망토를 +Z로 눕혀 들여온다 → root_rotate_x −90°로 키 +Z·정면 −Y. 이미 T자.
+    "안흔함_김용태": dict(
+        source="~/Desktop/구랜디스킨모음/02_안흔함/안흔함_김용태.glb",
+        path="Assets/Art/Units/안흔함_김용태/안흔함_김용태.fbx",
+        mesh_name="YoungAllMight",
+        height=1.8,
+        root_rotate_x=-90.0,
+        chain_tails=True,
+        drop_meshes={"Icosphere"},
+        rigid={},
+        rename={
+            "Hips_03_6": "Hips", "Spine_04_7": "Spine", "Chest_05_8": "Spine2", "Neck_06_9": "Neck", "Head_07_10": "Head",
+            "Left shoulder_093_161": "LeftShoulder", "Left arm_094_162": "LeftArm", "Left elbow_096_165": "LeftForeArm",
+            "Left wrist_097_166": "LeftHand",
+            "Right shoulder_0116_193": "RightShoulder", "Right arm_0117_194": "RightArm", "Right elbow_0119_197": "RightForeArm",
+            "Right wrist_0120_198": "RightHand",
+            "Left leg_0160_255": "LeftUpLeg", "Left knee_0163_258": "LeftLeg", "Left ankle_0164_259": "LeftFoot",
+            "Left toe_0165_260": "LeftToeBase",
+            "Right leg_0153_244": "RightUpLeg", "Right knee_0155_247": "RightLeg", "Right ankle_0156_248": "RightFoot",
+            "Right toe_0157_249": "RightToeBase",
+        },
+        fold={"GLTF_created_0_rootJoint": "Hips", "_rootJoint_5": "Hips",
+              "Left toe_end_0258_261": "LeftToeBase", "Right toe_end_0254_250": "RightToeBase"},
+        fold_subtree={
+            "Head_07_10": "Head",                                   # 얼굴 120·눈·머리카락 20
+            "Left wrist_097_166": "LeftHand", "Right wrist_0120_198": "RightHand",   # 손가락·손 보정
+            "Unused_L_Arm_Ex_095_163": "LeftArm", "Unused_R_Arm_Ex_0118_195": "RightArm",
+            "Unused_Arm_Left_Wrist_Adj_0114_189": "LeftForeArm", "Unused_L_Elbow_Ex_0115_191": "LeftForeArm",
+            "Unused_Arm_Right_Wrist_Adj_0137_221": "RightForeArm", "Unused_R_Elbow_Ex_0138_223": "RightForeArm",
+            "AC_Scarf_0139_225": "Spine2", "AC_L_Mant_A_0140_227": "Spine2", "AC_C_Mant_A_0144_232": "Spine2",
+            "AC_R_Mant_A_0148_237": "Spine2",                       # 목도리·망토 세 사슬(몸통에 붙여 뻣뻣하게)
+            "Unused_Hip_Adj_0152_242": "Hips", "Unused_Hip_Adj_001_0167_264": "Hips",
+            "Unused_Leg_Left_Adj_0161_256": "LeftUpLeg", "Unused_Leg_Right_Adj_0154_245": "RightUpLeg",
+            "Unused_Leg_Right_Adj_001_0159_253": "RightUpLeg",
+            "Unused_Leg_Left_Knee_Adj_0166_262": "LeftLeg", "Unused_Leg_Right_Knee_Adj_0158_251": "RightLeg",
+        },
+        # 척추 Spine·Chest 두 마디 — Spine1은 둘 사이 가운데(0-길이 아님).
+        bone_position_override={"Spine1": ("Spine_04_7", "Chest_05_8", 0.5)},
+        allow_dead_bones={"Spine1"},
+        materials={
+            **{n: ("emission_texture", None) for n in (
+                "new_pupil", "material_0.002", "suitneck", "material_11", "skin", "5_Material29_1_0_0", "eyebrows", "suit",
+                "Undercape", "outer_cape", "lines", "face", "young_boots",
+                "7_0012-Plane.003_0.1_16_16", "7_0002-Plane.003_0.1_16_16", "7_0001-Plane.003_0.1_16_16")},
+            # 무텍스처 — glTF baseColorFactor(선형)를 sRGB로: 눈흰자 0.8 · 가슴 문양 (0.8,0.393,0.004) · 벨트 (0.658,0.8,0.003)
+            "euewhite": ("solid", (0.906, 0.906, 0.906, 1.0)),
+            "40_Mesh2_0.1_0_0.002": ("solid", (0.906, 0.665, 0.05, 1.0)),
+            "bELT": ("solid", (0.835, 0.906, 0.04, 1.0)),
+        },
+        zero_emission=True,
+        rotate_z=0.0,
+        level_arms=False,
+        decimate_ratio=1.0,
+        bake_size=1024,
+    ),
     # 다른세계_무면허_라이더(원펀맨 무면허 라이더, Sketchfab glb — 사장님 지정 2026-09-30). 게임 립 계열.
     # 🔴 PM 걱정한 자전거·배경 없음 — 메시 7개 전부 인물(몸·입속·얼굴·갑옷·벨트·고글·머리카락, 전부 105뼈 가중치) + 조명 구.
     # 텍스처 이름은 Image_0~6(립 함정)이지만 재질 이름이 멀쩡해 재질 이름으로 저장한다. 원본 키 1.74, 이미 T자.
@@ -1143,7 +1201,12 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
     pos_override = cfg.get("bone_position_override", {})
     eb_by_name = {}
     for tname, _ in SPINE:
-        if tname in pos_override:
+        if tname in pos_override and len(pos_override[tname]) == 3:
+            # 🔴 젊은 올마이트(2026-09-30) — 3항 {target: (a, b, 비율)}이면 a·b 머리 사이 보간점에 둔다(gen_biped_skin과 같은
+            # 장치). 0-길이 자리표시는 유니티 리타겟에서 자식 방향을 잃는다(우루루 Spine2 사고) — 체인 꼬리(chain_tails)와 함께 쓴다.
+            a, b, r = pos_override[tname]
+            h = t = old_head_tail[a][0].lerp(old_head_tail[b][0], r)
+        elif tname in pos_override:
             src, end = pos_override[tname]
             h = t = old_head_tail[src][0 if end == "head" else 1]
         else:
