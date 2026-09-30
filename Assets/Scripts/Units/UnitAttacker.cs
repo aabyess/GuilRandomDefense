@@ -969,7 +969,7 @@ public class UnitAttacker : MonoBehaviour
     // 두면 오라가 조건 없이 나가버린다(SkillData.cs SkillLevel 주석 참고). target이
     // null이어도 두 필드가 전부 비어있으면(기존 전 자산) 이 분기 자체를 안 타 회귀 없다.
     // SkillLevel.targetArmorBreakAbove — 주 대상 스킬 방깎 누적 > N(원작 AId1 레벨 비교). 0이면 통과.
-    static bool PassesPointValueCondition(SkillEffectTargetCondition condition, float value, EnemyDummy target)
+    internal static bool PassesPointValueCondition(SkillEffectTargetCondition condition, float value, EnemyDummy target)
     {
         if (condition == SkillEffectTargetCondition.None) return true;
         if (target == null) return false;
@@ -1488,6 +1488,23 @@ public class UnitAttacker : MonoBehaviour
                 loggedUnboundedRange = true;
                 Debug.LogWarning($"{name}: {effect.target} 효과의 range가 {range}(<=0)라 시전을 " +
                                  "건너뛴다 — 데이터 확인 필요(SkillLevel.range).", this);
+            }
+            return;
+        }
+
+        // 주기 피해 지대(SkillEffect.zoneTickInterval 주석) — 대상 종류와 무관하게 범위 중심에 세우고 끝. 틱은 SkillDamageZone이 센다.
+        if (effect.kind == SkillEffectKind.Damage && effect.zoneTickInterval > 0f)
+        {
+            if (effect.duration <= 0f) return;
+            int zones = Mathf.Max(1, effect.hitCount);
+            Vector3 forward = aoeCenter - transform.position; forward.y = 0f;
+            forward = forward.sqrMagnitude > 0.0001f ? forward.normalized : transform.forward;
+            float radius = effect.zoneRadius > 0f ? effect.zoneRadius / WorldScale.Value : range;
+            for (int i = 0; i < zones; i++)
+            {
+                Vector3 at = effect.zoneSpacing > 0f ? transform.position + forward * (effect.zoneSpacing / WorldScale.Value * (i + 1))
+                    : effect.zoneAtCaster ? transform.position : aoeCenter;
+                SkillDamageZone.Spawn(at, radius, effect, identity != null ? identity.Data : null, owner != null ? owner.OwnerId : -1, SkillVfx.CasterAllowsVfx);
             }
             return;
         }

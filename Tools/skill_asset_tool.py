@@ -31,7 +31,8 @@ LEVEL_FIELDS = ['cooldown', 'triggerChance', 'range', 'hitCountThreshold', 'rese
 EFFECT_FIELDS = ['kind', 'basis', 'target', 'damageType', 'attackType', 'multiplier', 'bonus', 'chance',
                  'hitCount', 'duration', 'casterBuffCountFactor', 'buffId', 'randMin', 'randMax',
                  'buffHitCharges', 'requiredTargetBuffId', 'forbiddenTargetBuffId', 'targetCondition',
-                 'targetConditionValue', 'cascadeGroup', 'skipDamageTakenMultiplier', 'triggerDamageAbove', 'heroDuration', 'maxTargets', 'chainDamageStep']
+                 'targetConditionValue', 'cascadeGroup', 'skipDamageTakenMultiplier', 'triggerDamageAbove', 'heroDuration', 'maxTargets', 'chainDamageStep',
+                 'zoneTickInterval', 'zoneRadius', 'zoneSpacing', 'zoneAtCaster']
 STRING_FIELDS = {'requiredBuffId', 'forbiddenBuffId', 'selfBuffId', 'requiredTargetBuffId',
                  'forbiddenTargetBuffId', 'buffId'}
 
@@ -129,7 +130,8 @@ def effect(**kw):
     e = dict(kind=0, basis=0, target=2, damageType=0, attackType=0, multiplier=0.0, bonus=0.0, chance=1,
              hitCount=1, duration=0.0, casterBuffCountFactor=0.0, buffId='', randMin=1.0, randMax=1.0,
              buffHitCharges=0, requiredTargetBuffId='', forbiddenTargetBuffId='', targetCondition=0,
-             targetConditionValue=0.0, cascadeGroup=0, skipDamageTakenMultiplier=0, triggerDamageAbove=0.0, heroDuration=0.0, maxTargets=0, chainDamageStep=0.0)
+             targetConditionValue=0.0, cascadeGroup=0, skipDamageTakenMultiplier=0, triggerDamageAbove=0.0, heroDuration=0.0, maxTargets=0, chainDamageStep=0.0,
+             zoneTickInterval=0.0, zoneRadius=0.0, zoneSpacing=0.0, zoneAtCaster=0)
     unknown = set(kw) - set(e)
     assert not unknown, unknown
     e.update(kw)

@@ -459,6 +459,19 @@ public class SkillEffect
     //   「+0.1 = 튈 때마다 +10%」로 적는다 — 원작 Ocl3는 「감소율」이라 부호가 반대다).
     public int maxTargets;
     public float chainDamageStep;
+
+    // ⚠️ 맨 뒤에 추가(2026-09-30, 구조 칸 백로그 8번) — 주기 피해 지대. kind Damage에 zoneTickInterval > 0이면 이 효과는
+    // 즉발 피해가 아니라 **범위 중심에 지대를 세운다**(원작: 트리거가 만든 더미가 ANpi 영구 이몰레이션을 가진 것 —
+    // 아카이누 유성·에이스 불기둥·드래곤). duration초 동안 zoneTickInterval초마다 zoneRadius(원작 단위, 0이면 SkillLevel.range) 안의
+    // 적에게 multiplier(+bonus)를 준다 — 고정값만(지대는 시전자가 사라져도 남으니 시전자 쪽 basis를 못 읽는다).
+    // 원작 더미의 피해는 RRD를 안 거쳐 A11S 감수성이 안 곱해진다 → 지대 피해엔 감수성 계수를 안 곱한다.
+    // hitCount = 세우는 지대 수(>1이면 같은 자리에 겹치거나, zoneSpacing > 0이면 시전자→대상 방향으로 그 간격마다 하나씩).
+    // targetCondition(PV 조건)은 틱마다 대상별로 본다. 그 밖의 대상 게이트(버프·캐스케이드)는 안 본다.
+    public float zoneTickInterval;
+    public float zoneRadius;
+    public float zoneSpacing;
+    // 지대를 범위 중심이 아니라 시전자 자리에 세운다(원작 더미가 GetUnitLoc(시전자)에 서는 것 — 에이스 염제·뱌쿠야 천본앵).
+    public bool zoneAtCaster;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
