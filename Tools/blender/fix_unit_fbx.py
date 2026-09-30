@@ -3261,7 +3261,12 @@ UNITS = {
     "특별함_최상호": dict(rev="b037f72d", path="Assets/Art/Units/특별함_최상호/특별함_최상호.fbx", kind="human", size=("height", 1.8),
                       source=os.path.join(SKINS, "03_특별함/특별함_최상호.glb"),
                       # mesh_0(Pupil 582정점·모양 키 3) = Object_7, mesh_0.001(shock 60정점·모양 키 3) = Object_8
-                      recipe=dict(rename=LUFFY_RENAME, mesh_alias={"mesh_0": "Object_7", "mesh_0.001": "Object_8"})),
+                      recipe=dict(rename=LUFFY_RENAME, mesh_alias={"mesh_0": "Object_7", "mesh_0.001": "Object_8"}),
+                      # 🔸 「특별함_최상호@수정」(2026-09-30 PM 지시, Assets 밖 시범): 원본 glb의 재질 색 되살리기 — 기본 회색으로 나가던 9개.
+                      #   glb 값: Pupil (0.07,0.05,0.05) · hair·Sandals.001 검정 · 나머지 여섯(shock·tongue·material·material_5·Teeth·Gum.001)은 색 지정 없음 = 흰색.
+                      variants={"수정": dict(material_colors={"Pupil": (0.07, 0.05, 0.05), "hair": (0.0, 0.0, 0.0), "Sandals.001": (0.0, 0.0, 0.0),
+                                                            "shock": (1.0, 1.0, 1.0), "tongue": (1.0, 1.0, 1.0), "material": (1.0, 1.0, 1.0),
+                                                            "material_5": (1.0, 1.0, 1.0), "Teeth": (1.0, 1.0, 1.0), "Gum.001": (1.0, 1.0, 1.0)})}),
     # 🔴 원인 3겹(2026-09-14 PM 유니티 확인): ①Biped 무게중심 Bip001이 Hips 위에 끼어 엉덩이 높이가 바닥으로 저장 ②팔·다리 메시를 BN_ 보조 뼈가
     #    Pelvis/Clavicle에 나란히 붙어 몰았다 ③살린 Null 뼈 틀 규약이 Biped와 섞여 아바타 skeleton 90° + A자 쉬는 자세 → 넷을 다 켠다(outT3와 같은 설정)
     "흔함_문필환": dict(rev="01d46427", path="Assets/Art/Units/흔함_문필환/흔함_문필환.fbx", kind="human", size=("height", 1.8),
@@ -3627,7 +3632,9 @@ UNITS = {
                                   for s, side in (("L", "Left"), ("R", "Right"))},
                       glb_images={0: "Body_baseColor.png", 2: "Body_normal.png", 3: "Assets_baseColor.png", 6: "Assets_normal.png"},
                       materials=dict(textures={"Body": [("DiffuseColor", "Body_baseColor.png"), ("NormalMap", "Body_normal.png")],
-                                               "Assets": [("DiffuseColor", "Assets_baseColor.png"), ("NormalMap", "Assets_normal.png")]})),
+                                               "Assets": [("DiffuseColor", "Assets_baseColor.png"), ("NormalMap", "Assets_normal.png")]}),
+                      # 🔸 「특별함_조도연@수정」(2026-09-30 PM 지시, Assets 밖 시범): 왼 손목 보호대 둘의 법선을 오른쪽 짝에서 거울로.
+                      variants={"수정": dict(mirror_normals_from={"Object_299": "Object_283", "Object_297": "Object_285"})}),
     # 파란 동물 후드 잠옷(키구루미) 캐릭터 glb → 영원_이지원(2026-09-22 영원, blender 세션).
     # 뼈 66(_rootJoint 포함) · 메시 4(+Cube·Icosphere 조명용 더미) · 이미지 4(다 1024²) ·
     # 애니 1(Take 001, 0~23.2프레임 — 안 씀). 이미 mixamorig: 이름에 Sketchfab 번호 꼬리만
@@ -6982,6 +6989,54 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     #    🔴 「이미지 노드가 있나」로는 **못 잡는다** — 임포터가 만든 노드는 임시 폴더를 가리키고 있어서
     #       검사는 통과하는데 내보내면 사라진다(R18 버기가 정확히 그랬다: 검사 통과 → 결과물은 재질 7개 전부 그림 없음).
     #       그래서 **그 그림이 이 유닛의 Textures/ 안에 있는 파일인지**를 본다. 그게 내보내기에서 살아남는 조건이다.
+    if cfg.get("material_colors"):
+        # 🔸 특별함_최상호(2026-09-30, PM 사진 — 눈이 하얗게 비어 있었다): 원본 glb에서 그림 없이 **색만** 준 재질(눈동자·머리·샌들 끈)이
+        #   옛 기준 FBX를 거치며 기본 회색(0.8)이 됐다. relink는 기준 FBX 표만 보므로 색을 되살릴 길이 없었다 → 이름으로 색을 적는다.
+        done_c = {}
+        for mname, rgb in cfg["material_colors"].items():
+            m = bpy.data.materials.get(mname)
+            assert m is not None, f"{name}: material_colors에 적은 재질이 없다 {mname}"
+            bs = next(n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+            assert not bs.inputs["Base Color"].is_linked, f"{name}: {mname}은 그림이 물린 재질이다 — 색을 덮지 않는다"
+            bs.inputs["Base Color"].default_value = (*rgb, 1.0)
+            m.diffuse_color = (*rgb, 1.0)
+            done_c[mname] = tuple(rgb)
+        report["재질 색"] = done_c
+    if cfg.get("mirror_normals_from"):
+        # 🔸 특별함_조도연(2026-09-30, PM 사진 — 왼 손목 보호대만 허옇게 떴다): 원본 glb의 왼쪽 부품이 오른쪽의 거울 복사인데
+        #   **법선은 거울이 안 됐다**(감김은 거울 일치 0.82~0.95, 법선은 −0.15~−0.42). 그림은 멀쩡한데 빛을 거꾸로 받는다.
+        #   → 왼쪽 메시의 고리 법선을 오른쪽 짝(YZ 평면 거울)에서 면·정점 짝을 찾아 거울로 옮긴다. 정점·면은 안 건드린다.
+        from mathutils import kdtree as _kd
+        mrep = {}
+        for dst_n, src_n in cfg["mirror_normals_from"].items():
+            d_o, s_o = bpy.data.objects[dst_n], bpy.data.objects[src_n]
+            dm, sm = d_o.data, s_o.data
+            assert len(dm.polygons) == len(sm.polygons), f"{name}: 거울 짝의 면 수가 다르다 {dst_n}/{src_n}"
+            Ms, Md = s_o.matrix_world, d_o.matrix_world
+            Rs, Rd_inv = Ms.to_3x3(), Md.to_3x3().inverted()
+            tree = _kd.KDTree(len(sm.polygons))
+            for p_ in sm.polygons:
+                tree.insert(Ms @ p_.center, p_.index)
+            tree.balance()
+            out_n = [None] * len(dm.loops)
+            worst = 0.0
+            for p_ in dm.polygons:
+                c = Md @ p_.center
+                _, si, dist = tree.find(Vector((-c.x, c.y, c.z)))
+                worst = max(worst, dist)
+                sp = sm.polygons[si]
+                s_corners = [(Ms @ sm.vertices[sm.loops[li].vertex_index].co, li) for li in sp.loop_indices]
+                for li in p_.loop_indices:
+                    v = Md @ dm.vertices[dm.loops[li].vertex_index].co
+                    q = Vector((-v.x, v.y, v.z))
+                    sli = min(s_corners, key=lambda sc: (sc[0] - q).length)[1]
+                    n_ = Rs @ sm.corner_normals[sli].vector
+                    out_n[li] = (Rd_inv @ Vector((-n_.x, n_.y, n_.z))).normalized()
+            assert worst < 0.02, f"{name}: 거울 짝 면을 못 찾았다 {dst_n} (최대 {worst:.3f}m)"
+            dm.normals_split_custom_set([tuple(n_) for n_ in out_n])
+            dm.update()
+            mrep[dst_n] = f"{src_n} 거울 · 면 짝 최대 {worst:.4f}m"
+        report["법선 거울 옮김"] = mrep
     solid_ok = set(cfg.get("solid_materials", ()))
     want_dir = os.path.abspath(tex_out_dir)
 
