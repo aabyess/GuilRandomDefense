@@ -17,9 +17,12 @@ public class BlenderClipPostprocessor : AssetPostprocessor
     static readonly string[] Roots = { "Assets/Art/Monsters/", "Assets/Art/Creatures/", "Assets/Art/Props/",
                                        "Assets/Art/Units/고대의배/", "Assets/Art/Units/해적선/",
                                        // 히든 배 둘(2026-09-30) — Idle·Move 반복(MoveLoopRoots). 버전은 안 올림: 새 파일 둘뿐.
-                                       "Assets/Art/Units/히든_맥주만땅/", "Assets/Art/Units/히든_미소야/", "Assets/Art/Units/영원_서민성/" };
+                                       "Assets/Art/Units/히든_맥주만땅/", "Assets/Art/Units/히든_미소야/", "Assets/Art/Units/영원_서민성/",
+                                       // 영원_최상호(2026-09-30 고유 동작 시범) — 원본 Idle·Move 반복.
+                                       "Assets/Art/Units/영원_최상호/" };
 
-    static readonly string[] MoveLoopRoots = { "Assets/Art/Units/히든_맥주만땅/", "Assets/Art/Units/히든_미소야/", "Assets/Art/Units/영원_서민성/" };
+    static readonly string[] MoveLoopRoots = { "Assets/Art/Units/히든_맥주만땅/", "Assets/Art/Units/히든_미소야/", "Assets/Art/Units/영원_서민성/",
+                                               "Assets/Art/Units/영원_최상호/" };
 
     // 규칙을 바꾸면 올린다 — 올려야 이미 임포트된 FBX도 다시 돈다.
     // 1 → 2 (2026-09-13): 배 유닛 폴더 추가.
