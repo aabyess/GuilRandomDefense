@@ -28,11 +28,22 @@
 - **강타형 스턴 전부 누락**, **이감(둔화) kind 자체가 없었음** → SkillEffectKind.Slow(13) 신설(f04207d0), 데이터는 아직 0.
 - 기본 이펙트: SkillVfx(Kenney CC0 텍스처 11장, 재질 SkillVfxMaterials.Build → Resources/Effects) — 적중·마법적중·방깎·스턴·이감·버프. 받는 쪽 EnemyDummy 훅. 멀티 복제는 mp e02b8b12. 점검 ClaudeCommands.VfxShowcase(표적 넷).
 
-## ▶ 09-30 재시작 (새 PM 세션) — 모든 세션이 새로 켜져 어제 기억 없음
-- 워크플로 wf_88215736 결과는 세션과 함께 **사라짐** → 사람 손으로 재분배: 이감·강타 스턴 전수 = **구현담당1** → Docs/research/SKILL_FILL_STAGE2_slow_stun.md · 7종 개별 = **Blender** → Docs/research/SKILL_FILL_STAGE2_seven.md (둘 다 읽기 전용, 문서만 커밋). PM이 검증한 뒤 Assets/Data/UnitSkills 반영.
-- **v1.2.1 배포 끝남**(09-29 18:10, 빌드 b5485460) · release/1.2.1 origin 푸시(09-30 PM).
-- **구현담당2**: main(9f5b92d4·f8b13500) → mp 병합 중.
-- 작업트리 소음: 폰트 SDF 3개(동적 아틀라스)·SampleScene 빛 14개에 URP UniversalAdditionalLightData 자동 추가 — 커밋하지 않음.
+## ▶ 09-30 진행 (새 PM 세션) — 가동: PM·구현담당1·Blender (**구현담당2는 사장님 지시로 꺼짐, 지시 금지**)
+**끝난 것 (main 푸시)**
+- 어제 워크플로 결과가 유실돼서 손으로 다시 함 → 문서 셋: SKILL_FILL_STAGE2_seven(Blender) · SKILL_FILL_STAGE2_slow_stun(구현담당1) · SKILL_BASIS_AUDIT(구현담당2) · SKILL_AOE_CENTER(Blender).
+- 🔴 **스킬 반경 단위 버그**(4aad0072): range는 원작 단위인데 세계 거리에 그대로 대서 범위 스킬·오라 전부 4.167배 반경이었다 → SkillLevel.WorldRange.
+- **범위 중심 = 맞은 적**(aaeb4894): SkillLevel.aoeCenter(기본 Target), 시전자 7개만 1.
+- 구현담당1: 오라 Slow·최저 이속(70 원작)·같은 id 공속 버프 갱신(0909227e) · 강타/더미 스턴 91건(b94146cc) · 이감 7건(62132f2f) · 황준석·정준영 분할 파일 값 섞임(88b30fd7). 실측 판 StunSlowProbe 진행 중.
+- 구현담당2: 7종(이상혁·배현진·박기찬·김만경·유재헌·김영원 skill_9·조세민 A0J7·박민수 A095) 반영(b643b068·0be24a23). mp 병합·VFX 측정 수정 푸시(14f6fcd9).
+- v1.2.1 배포 끝남(09-29 18:10) · release/1.2.1 푸시.
+- 이펙트 팩 두 개 **다운로드 완료**(~/Library/Unity/Asset Store-5.x/). Cartoon FX = URP 셰이더 내장, Hovl = 재질 34개가 빌트인 파티클 셰이더 → 우리 URP 파티클로 재질만 바꾸면 됨(유료 지원팩 불필요). 사장님 승인: 쓸 것만 골라 넣기(만화 글자·해골·하트 제외), **스킬 데이터 작업 끝난 뒤**.
+**구현담당2가 남긴 것 (PM 이어받음)**
+- 체력 비례 누락 21개 전부 미착수: 영원 4(미호크 MIhawk_Mana·우타 Uta_skill_1/_double은 새 게이트 에셋으로 떼기 승인·카벤디시·비비) · 불일치 2(Kick_1 원작 최대체력×0.15↔우리 현재체력×1.0, Sabo_Skill_4 0.04↔0.01) · 초월 9 · 불멸 · 샹크스 3종 소속 확인.
+- 겹침 파일 남은 것: 원작능력_영원_최상호 A0HP 둔화 오라(likely) · 게이트_영원_최상호_a8343962(카벤디시) · 더미채널_영원_김정래_1(우타 A16W 스턴 1.5 confirmed).
+- 회수_초월_김만경_AD_0ac0451e 라벨 틀림: 원문은 마나≠135 AND 대상 버프 B06B(광폭화 적) → OnHitChance 0.075 + requiredTargetBuffId B06B 제안.
+- 이태훈 A0GR: 운석은 별도 SkillData(levels[1] 1/96) · 스톰프 스턴 3초는 likely라 빼고 피해·방깎만.
+**진행 중**: Blender = 보스 체력 비례 분기(SKILL_BOSS_BRANCH.md, 보스 36종은 %체력 스킬 0 — 원작은 별도 고정값 분기).
+**작업트리 소음**: 폰트 SDF 3개 · SampleScene 빛 14개 URP 자동 추가 — 커밋 안 함.
 
 ## 3. ⬜ 진행 중 / 다음
 1. **워크플로 `skill-fill-stage2` (run wf_88215736-b55)** — 원작 j/w3a에서 이감 전수·강타 스턴 전수·7종 개별 값 추출 + 제안마다 반박 검증 2명. 결과가 오면 **survived만** Assets/Data/UnitSkills에 반영(disputed는 PM이 근거 재확인). 스크립트: `~/.claude/projects/-Users-sang-GitHub-GuilRandomDefense/b2a0a06b-e05d-4ccf-9d09-6408605e6203/workflows/scripts/skill-fill-stage2-wf_88215736-b55.js`. 계측 주의: 피해 합계를 볼 땐 표적 체력 배율 1e3 이하.
