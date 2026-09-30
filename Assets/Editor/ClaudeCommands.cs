@@ -378,6 +378,19 @@ public static class ClaudeCommands
         return sb.Length > 0 ? sb.ToString() : "   Vfx 없음";
     }
 
+    static string Fix0929Probe()
+    {
+        StringBuilder sb = new StringBuilder();
+        foreach (MonoBehaviour b in UnityEngine.Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+            if (b is ILaneShop && b.name.StartsWith("Lane1_") && b.TryGetComponent(out BoxCollider box))
+                sb.Append($"{b.name.Substring(6)} {box.bounds.size.x:F0}×{box.bounds.size.y:F0} · ");
+        int on = 0, off = 0;
+        RecipeDollSpawner sp = UnityEngine.Object.FindFirstObjectByType<RecipeDollSpawner>();
+        if (sp != null) foreach (Animator a in sp.GetComponentsInChildren<Animator>(true)) { if (a.enabled) on++; else off++; }
+        sb.Append($"\n   인형 Animator 켜짐 {on} · 꺼짐 {off}");
+        return sb.ToString();
+    }
+
     static string SkillProbeReport()
     {
         Time.timeScale = 1f;
