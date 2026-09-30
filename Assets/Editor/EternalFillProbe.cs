@@ -1,0 +1,88 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using UnityEditor;
+using UnityEngine;
+
+// 영원한 채우기 B·C 실측(2026-09-30) — 핸콕 1/14 stomp(영원_김영원)와 비비 더블샷·3연사(영원_문필환).
+// 유닛마다 떨어진 자리에 죽지 않는 표적 셋. 스킬별 시전 수·간격(SkillTelemetry.CastLog)과 표적이 실제로 스턴에 걸린 시간을 낸다.
+// gameshot:
+//   gameshot x.png 1 1920x1080 click?:보통 wait:2 call:EternalFillProbe.Arena wait:90 call:EternalFillProbe.Report
+static class EternalFillProbe
+{
+    static readonly string[] Units = { "영원_문필환", "영원_김영원" };
+
+    class Track { public string unit; public float stunStart = -1f; public readonly List<float> stuns = new List<float>(); }
+    static readonly Dictionary<EnemyDummy, Track> tracks = new Dictionary<EnemyDummy, Track>();
+    static readonly List<UnitData> fielded = new List<UnitData>();
+    static float startTime;
+
+    static string Arena()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        UnitSpawner spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        EnemyData dummyData = AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/Data/Enemies" })
+            .Select(g => AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(g)))
+            .FirstOrDefault(e => e != null && !e.isBoss && e.prefab != null && e.moveSpeed > 0f && e.name.Contains("R2"));
+        if (spawner == null || lane == null || dummyData == null) return "❌ UnitSpawner·레인·표적 적 없음";
+        tracks.Clear(); fielded.Clear();
+        SkillTelemetry.Reset();
+        SkillTelemetry.Enabled = true;
+        for (int u = 0; u < Units.Length; u++)
+        {
+            UnitData data = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{Units[u]}.asset");
+            if (data == null) continue;
+            Vector3 home = lane.LaneCenter + Quaternion.Euler(0f, u * 360f / Units.Length, 0f) * Vector3.forward * 2000f;
+            for (int i = 0; i < 3; i++)
+            {
+                GameObject go = Object.Instantiate(dummyData.prefab, home + Quaternion.Euler(0f, i * 120f, 0f) * Vector3.forward * 4f, Quaternion.identity);
+                if (go.TryGetComponent(out WaypointMover mover)) mover.enabled = false;
+                if (go.TryGetComponent(out EnemyDummy dummy)) { dummy.Initialize(dummyData, 1e6f); dummy.SetLane(-1); tracks[dummy] = new Track { unit = Units[u] }; }
+            }
+            if (spawner.Spawn(data, home, 0) != null) fielded.Add(data);
+        }
+        // 탐침은 레인 적을 안 막는다 — 데스카운트로 판이 끝나면 유닛이 사라져 평타가 멎는다(첫 판에서 50초쯤에 멎음).
+        RoundManager rm = Object.FindFirstObjectByType<RoundManager>();
+        typeof(RoundManager).GetField("deathCountEnabled", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.SetValue(rm, false);
+        startTime = Time.time;
+        EditorApplication.update -= Sample;
+        EditorApplication.update += Sample;
+        Time.timeScale = 2f;
+        return $"유닛 {fielded.Count}/{Units.Length} · 표적 {dummyData.name}(PV {dummyData.pointValue}) · 2배속";
+    }
+
+    static void Sample()
+    {
+        if (!Application.isPlaying) { EditorApplication.update -= Sample; return; }
+        foreach (var kv in tracks)
+        {
+            if (kv.Key == null) continue;
+            Track t = kv.Value;
+            bool stunned = kv.Key.IsStunned;
+            if (stunned && t.stunStart < 0f) t.stunStart = Time.time;
+            else if (!stunned && t.stunStart >= 0f) { t.stuns.Add(Time.time - t.stunStart); t.stunStart = -1f; }
+        }
+    }
+
+    static string Report()
+    {
+        EditorApplication.update -= Sample;
+        Time.timeScale = 1f;
+        float elapsed = Time.time - startTime;
+        var sb = new StringBuilder($"\n게임 시간 {elapsed:0.0}초\n" + SkillTelemetry.Report(fielded));
+        foreach (UnitData u in fielded)
+            foreach (var g in SkillTelemetry.CastLog.Where(e => e.unit == u).GroupBy(e => e.skill))
+            {
+                List<float> times = g.Select(e => e.time).ToList();
+                string gap = times.Count > 1 ? $" · 간격 평균 {(times[times.Count - 1] - times[0]) / (times.Count - 1):0.00}초" : "";
+                sb.Append($"\n{u.name} 「{(g.Key.Length > 40 ? g.Key.Substring(0, 40) : g.Key)}」 시전 {times.Count} · 판정 {SkillTelemetry.HitsOf(u)}타 중 {(float)times.Count / Mathf.Max(1, SkillTelemetry.HitsOf(u)):P1}{gap}");
+            }
+        foreach (var g in tracks.Values.GroupBy(t => t.unit))
+        {
+            List<float> stuns = g.SelectMany(t => t.stuns).OrderBy(x => x).ToList();
+            sb.Append($"\n{g.Key} 표적 스턴 {stuns.Count}회" + (stuns.Count > 0 ? $" (최소 {stuns[0]:0.00} · 중앙 {stuns[stuns.Count / 2]:0.00} · 최대 {stuns[stuns.Count - 1]:0.00}초) 전부: {string.Join(" ", stuns.Select(x => x.ToString("0.00")))}" : ""));
+        }
+        return sb.ToString();
+    }
+}

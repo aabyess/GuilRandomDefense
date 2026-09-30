@@ -10,38 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_영원_김영원_b3948c74
+  m_Name: SkillData_원작트리거_영원_문필환_vivi_Skill_Double
   m_EditorClassIdentifier:
-  skillName: |CFFFFFA78'아마존릴리의 여제'  보아  — 1/14
-  description: 게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 |CFFFFFA78'아마존릴리의 여제'  보아 (h05C)의 게이트 "1/14" 능력 1개를 이 SkillData 하나로 묶었다.   · hancock_skill_10#1: 계산식 1000000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. 보충(2026-09-30 구현담당1, ETERNAL_FILL_LIST §2-8): 같은 1/14 블록의 더미 e0AC stomp(A0Q0 AOws) — 250000 피해(Wrs1)·스턴 2.75초(adur)를 더했다. 원작 stomp 반경은 650인데 레벨 반경이 하나라 600으로 같이 쓴다(8% 작음). ⚠️ 핸콕 본체 로스터 미정(사장님 결정 대기) — 자리는 그대로.
+  skillName: vivi_Skill_Double — 더블샷 1/4(절대쿨 B034 중)
+  description: '원작 비비 h057 Trig_ViVi_Attack → vivi_Skill_Double: 버프 B034가 있는 동안(3연사 창이 아닐 때) 1/4로 대상에게 폭풍망치 더미 e0CW(A0LV AHtb) 750000 + 스턴 1초. ⚠️ 0.15초 뒤 912 안 무작위 적 하나에게 한 번 더(e0CY A0LW)는 무작위 대상 축이 없어 미반영. 2026-09-30 구현담당1(ETERNAL_FILL_LIST §2).'
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.071429
-    range: 600.0
+    triggerChance: 0.25
+    range: 0.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: B034
+    forbiddenBuffId:
+    selfBuffId:
     effects:
     - kind: 0
       basis: 0
-      target: 2
-      damageType: 1
-      attackType: 4
-      multiplier: 1000000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      randMin: 1
-      randMax: 1.5
-      casterBuffCountFactor: 0
-    - kind: 0
-      basis: 0
-      target: 2
-      damageType: 1
-      attackType: 4
-      multiplier: 250000.0
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 750000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
@@ -60,14 +50,14 @@ MonoBehaviour:
       triggerDamageAbove: 0.0
     - kind: 1
       basis: 0
-      target: 2
+      target: 3
       damageType: 0
       attackType: 0
       multiplier: 0.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 2.75
+      duration: 1.0
       casterBuffCountFactor: 0.0
       buffId:
       randMin: 1.0
@@ -80,3 +70,9 @@ MonoBehaviour:
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0.0

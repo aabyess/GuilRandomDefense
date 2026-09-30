@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작트리거_영원_문필환_vivi_Skill_3_Triple
+  m_EditorClassIdentifier:
+  skillName: vivi_Skill_3_Triple — 3연사(절대쿨 6초 B034)
+  description: '원작 비비 h057 Trig_ViVi_Attack → vivi_Skill_3_Triple: B034(6초 절대쿨)가 없을 때 창(B06G 0.2초·공속 +400%)이 열리고 그 안의 다음 평타 하나가 3연사. 한 발 = 100000×A0LZ 레벨(1) (+ 대상 PV<200이면 최대체력×(12%+1.5%×레벨)) CHAOS/UNIVERSAL, 3발. 창을 연 평타에서 바로 시전하는 것으로 합쳤다. A0M1 레벨 2의 4발·A0LZ 레벨 성장은 레벨 축이 없어 레벨 1 기준. 2026-09-30 구현담당1(ETERNAL_FILL_LIST §2).'
+  triggerType: 0
+  levels:
+  - cooldown: 6
+    triggerChance: 1.0
+    range: 0.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId: B034
+    effects:
+    - kind: 0
+      basis: 1
+      target: 3
+      damageType: 2
+      attackType: 5
+      multiplier: 0.135
+      bonus: 100000.0
+      chance: 1
+      hitCount: 3
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 1
+      targetConditionValue: 200
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 1
+      triggerDamageAbove: 0.0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 5
+      multiplier: 100000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 3
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 3
+      targetConditionValue: 200
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 1
+      triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0.0
