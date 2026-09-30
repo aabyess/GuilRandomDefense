@@ -28,6 +28,12 @@
 - **강타형 스턴 전부 누락**, **이감(둔화) kind 자체가 없었음** → SkillEffectKind.Slow(13) 신설(f04207d0), 데이터는 아직 0.
 - 기본 이펙트: SkillVfx(Kenney CC0 텍스처 11장, 재질 SkillVfxMaterials.Build → Resources/Effects) — 적중·마법적중·방깎·스턴·이감·버프. 받는 쪽 EnemyDummy 훅. 멀티 복제는 mp e02b8b12. 점검 ClaudeCommands.VfxShowcase(표적 넷).
 
+## ▶ 09-30 재시작 (새 PM 세션) — 모든 세션이 새로 켜져 어제 기억 없음
+- 워크플로 wf_88215736 결과는 세션과 함께 **사라짐** → 사람 손으로 재분배: 이감·강타 스턴 전수 = **구현담당1** → Docs/research/SKILL_FILL_STAGE2_slow_stun.md · 7종 개별 = **Blender** → Docs/research/SKILL_FILL_STAGE2_seven.md (둘 다 읽기 전용, 문서만 커밋). PM이 검증한 뒤 Assets/Data/UnitSkills 반영.
+- **v1.2.1 배포 끝남**(09-29 18:10, 빌드 b5485460) · release/1.2.1 origin 푸시(09-30 PM).
+- **구현담당2**: main(9f5b92d4·f8b13500) → mp 병합 중.
+- 작업트리 소음: 폰트 SDF 3개(동적 아틀라스)·SampleScene 빛 14개에 URP UniversalAdditionalLightData 자동 추가 — 커밋하지 않음.
+
 ## 3. ⬜ 진행 중 / 다음
 1. **워크플로 `skill-fill-stage2` (run wf_88215736-b55)** — 원작 j/w3a에서 이감 전수·강타 스턴 전수·7종 개별 값 추출 + 제안마다 반박 검증 2명. 결과가 오면 **survived만** Assets/Data/UnitSkills에 반영(disputed는 PM이 근거 재확인). 스크립트: `~/.claude/projects/-Users-sang-GitHub-GuilRandomDefense/b2a0a06b-e05d-4ccf-9d09-6408605e6203/workflows/scripts/skill-fill-stage2-wf_88215736-b55.js`. 계측 주의: 피해 합계를 볼 땐 표적 체력 배율 1e3 이하.
 2. **v1.2.1 배포(구현담당2 담당)**: 구현담당1 SkillVfx 다듬기 커밋 → mp에 main 병합 → main `git merge --ff-only mp`(그 사이 main 커밋 금지 공지) → ../GuilRandomDefense-build 에서 release/1.2.1 → BuildBeta 윈도우·맥 → F1·F2·G 꺼짐 확인 → ~/Desktop/구랜디_베타/ zip 두 개 + 안내문 맨 위 「1.2.1v 변경 내역」(초안 승인됨), 1.2.0v 산출물은 이전_1.2.0v로. 이감·스턴 데이터는 1.2.1에 안 넣음(1.2.2).
