@@ -10,51 +10,29 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_영원_이지원_Mana150
+  m_Name: SkillData_원작트리거_초월_구주호_AD_Yamato_Dash
   m_EditorClassIdentifier:
-  skillName: 니카 — MANA게이지150
-  description: '원작 Trig_Nika_Attack(H0BK 니카, HashAttack): MANA==150 → 대상 위치 750 광역 8500000×1~1.5 HERO/NORMAL(Func020A). 우리 에셋에 없던 경로라 이번에 넣음. 2026-09-30 구현담당1. [초월 남은 것 09-30] 시전자 주인 더미 e0QK의 stomp A165(AOws, Wrs1 2500000, aare 600, adur 2.5) 추가(750 범위로). (Tools/apply_transcend_rest2.py)'
-  triggerType: 3
+  skillName: 야마토 — Yamato_Dash 매 타(450 범위 K×1.15 + 215000 · 대상 ×1.25)
+  description: '원작 야마토 H0BE Yamato_Dash(매 타): 대상 중심 450 범위 (직전 평타 피해×1.15 + 215000) NORMAL/UNIVERSAL + 대상에 같은 값 ×1.25. 「직전 타의 피해」는 같은 타의 피해로 근사. 2026-09-30 구현담당1.'
+  triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 1.0
-    range: 750.0
-    hitCountThreshold: 150
-    resetTo: 1
+    range: 450.0
+    hitCountThreshold: 0
+    resetTo: 0
     gaugeKind: 0
     requiredBuffId:
     forbiddenBuffId:
     selfBuffId:
     effects:
     - kind: 0
-      basis: 0
-      target: 2
-      damageType: 1
-      attackType: 4
-      multiplier: 8500000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.5
-      buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
-      targetCondition: 0
-      targetConditionValue: 0.0
-      cascadeGroup: 0
-      skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    - kind: 0
-      basis: 0
+      basis: 5
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 2500000.0
-      bonus: 0.0
+      multiplier: 1.15
+      bonus: 215000.0
       chance: 1
       hitCount: 1
       duration: 0.0
@@ -70,16 +48,16 @@ MonoBehaviour:
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0.0
-    - kind: 1
-      basis: 0
-      target: 2
-      damageType: 0
-      attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+    - kind: 0
+      basis: 5
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 1.4375
+      bonus: 268750.0
       chance: 1
       hitCount: 1
-      duration: 2.5
+      duration: 0.0
       casterBuffCountFactor: 0.0
       buffId:
       randMin: 1.0
@@ -97,3 +75,4 @@ MonoBehaviour:
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
+    targetArmorBreakAbove: 0.0

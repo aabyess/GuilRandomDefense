@@ -12,27 +12,104 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_더미채널_초월_황준석_ADAP_79행_10000
   m_EditorClassIdentifier:
-  skillName: A0BV 0장풍 키자루초월 레이저
-  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다. | 정정(2026-09-30 구현담당1, 「게이트 없음」 검사 Tools/audit_ungated.py): 원문 Trig_Kid_Attack(키드) `GetRandomInt(1,16)==2 → Kid_Skill_Life2` 안의 A0BV 레이저 → 확률 1/16(이전 1.0).'
+  skillName: 키드 — Kid_Skill_Life2 펑크 1/16(500 범위 500000 + STR×5000 · 대상 (125000 + STR×5000)×2 · 스턴 3초)
+  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다. | 정정(2026-09-30 구현담당1, 「게이트 없음」 검사 Tools/audit_ungated.py): 원문 Trig_Kid_Attack(키드) `GetRandomInt(1,16)==2 → Kid_Skill_Life2` 안의 A0BV 레이저 → 확률 1/16(이전 1.0). [초월 남은 것 09-30] Kid_Skill_Life2(1/16): 단일 500000 → 대상 중심 500 범위 (500000 + STR×5000) + 대상 (125000 + STR×5000)×(1 + n)(n = 대상 125 안 적 수 — 1로) + 파이어볼트 A10L 99999·스턴 3.0초. 이름표가 「키자루 레이저」로 잘못 붙어 있었다(값·확률은 키드 것). (Tools/apply_transcend_rest2.py)'
   · e09R(@초월 키자루 레이저1) A0BV 0장풍 키자루초월 레이저 [시체폭발/죽음의사슬 피해]: 500000 (원작 키자루·초월함) 진입게이트: Trig_Kizaru_Attack_Actions[이벤트직결]: (조건없음)
   제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e0EB(@초월 키자루 팔척경곡옥1) A0P3 6장풍 팔척경: 270000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지)
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.0625
-    range: 0
+    range: 500.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
     effects:
     - kind: 0
+      basis: 9
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 5000.0
+      bonus: 500000.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 0
+      basis: 9
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 10000.0
+      bonus: 250000.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 0
       basis: 0
       target: 3
-      damageType: 1
-      attackType: 4
-      multiplier: 500000.0
+      damageType: 2
+      attackType: 7
+      multiplier: 99999.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 1
+      basis: 0
+      target: 3
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 3.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0

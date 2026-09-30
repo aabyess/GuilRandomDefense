@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작트리거_초월_구주호_AD_Yamato_뇌명
+  m_EditorClassIdentifier:
+  skillName: 야마토 — 뇌명 15%(525 범위 (K×3.75 + 375000) × 이속 계수)
+  description: '원작 야마토 H0BE Yamato_Attack_Damage2: GetRandomInt(1,100)<=15 → 대상 중심 525 범위 (K×3.75 + 375000)×(0.83 + clamp(90/이속, 0, 1.17)) CHAOS/UNIVERSAL. 이속 역비례 계수는 축이 없어 원작 이속 300 기준 1.13으로 고정(느린 적일수록 최대 ×2.0인 것은 미반영). 2026-09-30 구현담당1.'
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 0.15
+    range: 525.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 5
+      target: 2
+      damageType: 2
+      attackType: 5
+      multiplier: 4.2375
+      bonus: 423750.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0.0

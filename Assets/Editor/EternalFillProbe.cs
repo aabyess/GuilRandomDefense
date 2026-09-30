@@ -42,6 +42,9 @@ static class EternalFillProbe
     // 랜덤 나머지(2026-09-30) — call:EternalFillProbe.ArenaRandom.
     static readonly string[] RandomOnly = { "랜덤_이타도리_유지", "랜덤_이즈미_신이치", "랜덤_호시노_아이", "랜덤_이민형", "랜덤_카마도_탄지로", "랜덤_한마_바키", "랜덤_주호페이크", "랜덤_미도리야_이즈쿠" };
     static string ArenaRandom() { Units = RandomOnly; return Arena(); }
+    // 초월 남은 것(2026-09-30) — call:EternalFillProbe.ArenaTranscend2.
+    static readonly string[] Transcend2 = { "초월_김경현_AP", "초월_황준석_ADAP", "초월_구주호_AD", "영원_이지원", "초월_김만경_AD", "초월_조성진_AD", "초월_임채민_AP" };
+    static string ArenaTranscend2() { Units = Transcend2; return Arena(); }
 
     class Track { public Vector3 at; public string unit; public float stunStart = -1f; public readonly List<float> stuns = new List<float>(); }
     static readonly Dictionary<EnemyDummy, Track> tracks = new Dictionary<EnemyDummy, Track>();

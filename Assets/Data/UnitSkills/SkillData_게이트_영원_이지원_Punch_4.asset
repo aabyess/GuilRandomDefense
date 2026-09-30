@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_게이트_영원_이지원_Punch_4
   m_EditorClassIdentifier:
   skillName: 니카 펀치 중 1/10 (4%)
-  description: '원작 Trig_Nika_Attack(H0BK 니카, HashAttack): 펀치 갈래(40%) 안의 `GetRandomInt(1,10)==2` → 대상 위치 500 광역 750000×1~1.5 HERO/NORMAL(스톰프 e0RB). 전체 4%를 따로 굴림(원작은 펀치가 나온 타에만). 2026-09-30 구현담당1(배타 분기 검사, 게이트_영원_이지원_3ba504d5에서 갈라 냄).'
+  description: '원작 Trig_Nika_Attack(H0BK 니카, HashAttack): 펀치 갈래(40%) 안의 `GetRandomInt(1,10)==2` → 대상 위치 500 광역 750000×1~1.5 HERO/NORMAL(스톰프 e0RB). 전체 4%를 따로 굴림(원작은 펀치가 나온 타에만). 2026-09-30 구현담당1(배타 분기 검사, 게이트_영원_이지원_3ba504d5에서 갈라 냄). [초월 남은 것 09-30] 더미 e0RB의 stomp A16F(AOws, Wrs1 150000, aare 500, adur 2.0) 추가. (Tools/apply_transcend_rest2.py)'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -40,6 +40,50 @@ MonoBehaviour:
       buffId:
       randMin: 1.0
       randMax: 1.5
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 150000.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 1
+      basis: 0
+      target: 2
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 2.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
       buffHitCharges: 0
       requiredTargetBuffId:
       forbiddenTargetBuffId:

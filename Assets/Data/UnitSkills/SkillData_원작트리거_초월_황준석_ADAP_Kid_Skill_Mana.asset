@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_영원_이지원_Mana150
+  m_Name: SkillData_원작트리거_초월_황준석_ADAP_Kid_Skill_Mana
   m_EditorClassIdentifier:
-  skillName: 니카 — MANA게이지150
-  description: '원작 Trig_Nika_Attack(H0BK 니카, HashAttack): MANA==150 → 대상 위치 750 광역 8500000×1~1.5 HERO/NORMAL(Func020A). 우리 에셋에 없던 경로라 이번에 넣음. 2026-09-30 구현담당1. [초월 남은 것 09-30] 시전자 주인 더미 e0QK의 stomp A165(AOws, Wrs1 2500000, aare 600, adur 2.5) 추가(750 범위로). (Tools/apply_transcend_rest2.py)'
+  skillName: 키드 체력 스킬 — LIFE게이지50(500 범위 2000000·스턴 2초 + 대상 1000000 + STR×50000)
+  description: '원작 키드 H0B4 Kid_Attack: 체력==50 → Kid_Skill_Mana(T특성 없음): stomp A110(AOws, Wrs1 2000000, aare 500, adur 2.0) + 대상 125 안 적에게 (1000000 + STR×50000)×(1 + 0.01n) NORMAL/UNIVERSAL(대상 하나로 근사). 2026-09-30 구현담당1.'
   triggerType: 3
   levels:
   - cooldown: 0
     triggerChance: 1.0
-    range: 750.0
-    hitCountThreshold: 150
+    range: 500.0
+    hitCountThreshold: 50
     resetTo: 1
-    gaugeKind: 0
+    gaugeKind: 1
     requiredBuffId:
     forbiddenBuffId:
     selfBuffId:
@@ -29,31 +29,9 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 2
-      damageType: 1
-      attackType: 4
-      multiplier: 8500000.0
-      bonus: 0.0
-      chance: 1
-      hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.5
-      buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
-      targetCondition: 0
-      targetConditionValue: 0.0
-      cascadeGroup: 0
-      skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    - kind: 0
-      basis: 0
-      target: 2
       damageType: 2
       attackType: 7
-      multiplier: 2500000.0
+      multiplier: 2000000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
@@ -79,7 +57,29 @@ MonoBehaviour:
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 2.5
+      duration: 2.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+    - kind: 0
+      basis: 9
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 50000.0
+      bonus: 1000000.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
       casterBuffCountFactor: 0.0
       buffId:
       randMin: 1.0
@@ -97,3 +97,4 @@ MonoBehaviour:
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
+    targetArmorBreakAbove: 0.0

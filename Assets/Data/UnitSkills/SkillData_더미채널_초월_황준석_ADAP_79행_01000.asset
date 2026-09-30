@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SkillData_더미채널_초월_황준석_ADAP_79행_01000
   m_EditorClassIdentifier:
   skillName: A10Z 0장풍 키드초월 리펠1
-  description: 진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.1000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.
+  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.1000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다. [초월 남은 것 09-30] Kid_Skill_3(아이템 없음): 장풍 A10Z 300000(단일 근사) + 대상 중심 450 범위 300000 NORMAL/UNIVERSAL. 600000은 아이템 갈래(Kid_Skill_3_item의 A17P)라 뺐다. (Tools/apply_transcend_rest2.py)'
   · e0MW(@초월 키드 더미3) A10Z 0장풍 키드초월 리펠1 [시체폭발/죽음의사슬 피해]: 300000 (원작 키드·초월함) 진입게이트: Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND NOT(UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true) | Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true
   · e0MY(@초월 키드 더미2) A17P 0장풍 키드초월 댐드펑크 [시체폭발/죽음의사슬 피해]: 600000 (원작 키드·초월함) 진입게이트: Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND NOT(UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true) | Trig_Kid_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==2 AND UnitHasItem(GetAttacker(),udg_item_kid_mot[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==true
   제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e0NM(@초월 키드 더미01) A10Z 0장풍 키드초월 리펠1: 300000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지) ⚠️ 2026-09-06 정정(PM 지시, 리서치담당 원문 확인 0c3ff5f, 뿌리 ㊸, 커밋 9f3cdcc) — 한때 e0MY(60만, item==true 분기)를 "DisableTrigger로 꺼진 채 다시 안 켜지는 죽은 코드"로 보고 삭제했었다. ⚠️ 2026-09-06 재정정(리서치담당 3667276로 철회) — 틀렸다. WC3 네이티브에서 DisableTrigger는 "이 트리거가 자기 등록 이벤트에 자동반응할지"만 끄는 것이고, ConditionalTriggerExecute/TriggerExecute로 직접 호출하면 비활성 상태와 무관하게 그냥 돈다 — InitTrig에서 DisableTrigger를 거는 건 이 맵의 표준 보일러플레이트지 죽음의 신호가 아니었다. **e0MY(60만)는 살아있다** — 복원했다. 지금 30만/60만 둘 다 남기되(둘 다 chance:1, 항상 같이 발동), ⚠️ **배타인데 우리 엔진으로 표현 못 함**으로 꼬리표를 단다: 원작은 캐스터의 아이템(I010) 보유 여부로 300,000 또는 600,000 중 **하나만** 나가는데, 우리는 아이템 시스템이 없어(ItemData는 껍데기, 인스턴스 0개) 조건을 못 붙인다 — 지금은 둘 다 나가 원작보다 과대다: 아이템 보유 시 +300,000(30만→90만이 아니라 원래 60만만 나가야 할 자리에 30만이 더 붙음), 미보유 시 +600,000(30만만 나가야 할 자리에 60만이 더 붙음). 아이템 축이 생기면 캐스터 조건(I010 보유)으로 배선할 것 — 대상 조건(§12 SkillEffectTargetCondition)이 아니라 새 캐스터 조건 축이 필요하다(§12 ⑤ 논의 참고).
@@ -21,7 +21,7 @@ MonoBehaviour:
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 0
+    range: 450.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
@@ -39,12 +39,23 @@ MonoBehaviour:
       casterBuffCountFactor: 0
     - kind: 0
       basis: 0
-      target: 3
-      damageType: 1
-      attackType: 4
-      multiplier: 600000.0
+      target: 2
+      damageType: 2
+      attackType: 7
+      multiplier: 300000.0
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 0
+      targetConditionValue: 0.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
