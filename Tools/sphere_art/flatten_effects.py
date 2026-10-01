@@ -29,6 +29,8 @@ HELD_PARTS = {"lb_kz_g8"}   # 손에 쥐는 메시(쿠잔 얼음 칼날) — 손
 POSE = {"BlSkill04A_g0": {"euler": [90.0, 0.0, 0.0], "offset": [0.0, 0.55, 0.45]}}   # 땅에 눕는 초승달 판 → 가슴 높이 앞 허공에 세워 휘두름(10-01 PM)
 LIMB_PARTS = {"AkainuBW7_g2", "AkainuBW7_g5"}   # 마그마 소매(김만경_AD)
 AURA = bool(os.environ.get("AURA"))   # 상시 오라 모델(몸 없음) — 맵 단위 그대로(1m = 100 wc3 = 24 게임 단위), 통째 한 프리팹 <별칭>.prefab
+SKIP_MODELS = {x for x in os.environ.get("SKIP_MODELS", "").split(",") if x}      # 예: SKIP_MODELS=bigmom7.mdx — 그 모델 부품 전부 뺀다
+MODEL_SCALE = {k: float(v) for k, v in (x.split(":") for x in os.environ.get("MODEL_SCALE", "").split(",") if x)}   # 예: MODEL_SCALE=mrk7.mdx:0.6 — 그 모델 부품 크기 배율
 FORCE_STATES = [x for x in os.environ.get("FORCE_STATES", "").split("|") if x]   # 예: FORCE_STATES=스킬
 ORDER = ["대기", "이동", "공격", "스킬"]
 
@@ -60,7 +62,10 @@ def main():
         slot = p["visible"]["ours_slot"]
         if slot == "없음" or p["visible"].get("never_active"):
             continue
-        h = 30.0 / 24.0 if AURA else heights.get(p["model"], 1.8)   # 오라: 키 30 ÷ 1.25 = 24 단위/m (WorldScale 4.167 ← 100 wc3/m)
+        if p["model"] in SKIP_MODELS:
+            continue
+        h = 30.0 / 24.0 if AURA else heights.get(p["model"], 1.8)
+        h = h / MODEL_SCALE.get(p["model"], 1.0)   # 몸 키를 키우면 (30÷키)가 줄어 위치·크기·속도가 같이 준다   # 오라: 키 30 ÷ 1.25 = 24 단위/m (WorldScale 4.167 ← 100 wc3/m)
         states = [x for x in ORDER if x in p["visible"]["ours_states"]]
         if AURA:
             states = list(ORDER)   # 상시 오라는 늘 켜져 있다
