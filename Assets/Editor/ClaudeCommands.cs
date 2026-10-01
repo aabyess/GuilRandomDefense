@@ -3262,11 +3262,17 @@ public static class ClaudeCommands
         else if (countTurn && ++stuckTurns >= 6)
         {
             stuckTargets.Add(keep.target);
-            targetLog.Add($"R{job.lastRoundSeen} 목표 막힘 ✋ {keep.target.result.unitName}(모자람 {keep.MissingCount}, 6라운드 그대로) → 버림");
+            // 막힘 원인 갈래 — 뽑기 잎(조합식 없는 비흔함, 운에 맡김) vs 흔함 공급 부족(흔함선택 위습이 안 옴 — 게임 규칙이라 도구가 못 늘린다).
+            string why = keep.DrawOnlyMissing > 0
+                ? $"뽑기 잎 부족 {keep.DrawOnlyMissing}({string.Join(" ", keep.missing.Where(kv => kv.Key.grade != UnitGrade.Common).Select(kv => $"{kv.Key.unitName}{kv.Value}"))})"
+                : $"흔함 공급 부족 {keep.MissingCount}({string.Join(" ", keep.missing.Select(kv => $"{kv.Key.unitName}{kv.Value}"))})";
+            targetLog.Add($"R{job.lastRoundSeen} 목표 막힘 ✋ {keep.target.result.unitName}(모자람 {keep.MissingCount}, 6라운드 그대로) → 버림 · 원인 {why}");
             currentPlan = null; stuckBest = int.MaxValue; stuckTurns = 0;
             return RefreshTargetPlan(job);
         }
-        if (best.target != keep.target && best.Score(job.oldBottleneck) + 3 < keep.Score(job.oldBottleneck))
+        // 일찍 갈아타기 — 지금 목표가 뽑기 잎을 아직 못 가졌는데 뽑기 잎이 더 적은 식이 흔함 6칸 이내 차이면 바로 옮긴다(옛 막힘 판정 6라운드를 안 기다린다).
+        bool earlySwitch = !job.oldBottleneck && best.target != keep.target && best.DrawOnlyMissing < keep.DrawOnlyMissing && best.MissingCount <= keep.MissingCount + 6;
+        if (best.target != keep.target && (earlySwitch || best.Score(job.oldBottleneck) + 3 < keep.Score(job.oldBottleneck)))
         {
             targetLog.Add($"R{job.lastRoundSeen} 목표 바꿈 {keep.target.result.unitName}(모자람 {keep.MissingCount}) → {best.target.result.unitName}(모자람 {best.MissingCount})");
             return currentPlan = best;
