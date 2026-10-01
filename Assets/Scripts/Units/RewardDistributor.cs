@@ -442,7 +442,7 @@ public class RewardDistributor : MonoBehaviour
                 if (storyReward.earlyResourceRewards != null && context.ResourceWallet != null)
                     foreach (EnemyResourceReward reward in storyReward.earlyResourceRewards) context.ResourceWallet.Add(reward.type, reward.amount);
                 GrantWisps(context, storyReward.earlyWispRewards);
-                if (!string.IsNullOrEmpty(storyReward.earlyClearMessage)) PlayerNotification.Show(context.PlayerId, storyReward.earlyClearMessage, 10f);
+                if (!string.IsNullOrEmpty(storyReward.earlyClearMessage)) PlayerNotification.Show(context.PlayerId, storyReward.earlyClearMessage, 5f);   // 원작 TRIGSTR 12683·12692 5초
             }
 
             // 특성포인트 4갈래 중 세 번째 — 스토리 12(코드잇) 클리어 1개.
