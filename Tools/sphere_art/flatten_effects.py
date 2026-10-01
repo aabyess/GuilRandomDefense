@@ -25,6 +25,8 @@ HINTS = {"RightHand": "hand,right", "LeftHand": "hand,left", "Spine1(가슴)": "
 # 모델 통째 붙는 곳 지정(원작 힌트가 ?일 때 PM 지시): 마르코 날개 = 가슴
 ATTACH_OVERRIDE = {"mrk7.mdx": "chest"}
 HELD_PARTS = {"lb_kz_g8"}   # 손에 쥐는 메시(쿠잔 얼음 칼날) — 손 뼈에 쥐는 점을 맞춘다
+# 자리·기울기 덮어쓰기(메시): euler 도, offset = 몸 키 비율(유니티 x·y·z, +z = 앞). 원작 대응이 없어 PM이 배정한 판만.
+POSE = {"BlSkill04A_g0": {"euler": [90.0, 0.0, 0.0], "offset": [0.0, 0.55, 0.45]}}   # 땅에 눕는 초승달 판 → 가슴 높이 앞 허공에 세워 휘두름(10-01 PM)
 LIMB_PARTS = {"AkainuBW7_g2", "AkainuBW7_g5"}   # 마그마 소매(김만경_AD)
 FORCE_STATES = [x for x in os.environ.get("FORCE_STATES", "").split("|") if x]   # 예: FORCE_STATES=스킬
 ORDER = ["대기", "이동", "공격", "스킬"]
@@ -75,6 +77,8 @@ def main():
             if layer is None:
                 continue
             tex = layer["texture"]["file"]
+            if p["name"] in POSE:
+                out["euler"], out["offset"] = POSE[p["name"]]["euler"], POSE[p["name"]]["offset"]
             out.update(pos=vec(p["attach"]["unity_pos_m"]), fbx=p["fbx"], fbxObject=layer["fbx_object"], texture=tex, additive=bool(layer["additive"]),
                        cutout=layer["fbx_object"].endswith("_cut"), blend=layer["fbx_object"].endswith("_blend"))
             if out["blend"] and opaque_alpha(os.path.join(folder, tex)):

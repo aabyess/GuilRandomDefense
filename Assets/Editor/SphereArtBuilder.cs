@@ -25,7 +25,7 @@ static class SphereArtBuilder
     {
         public string kind, name, slot, model, texture, fbx, fbxObject, shape, states, attach;
         public float bodyHeightM, rate, life, speed, speedVar, cone, gravity, mid;
-        public float[] pos, box, size, rgb, alpha;
+        public float[] pos, box, size, rgb, alpha, euler, offset;
         public bool additive, cutout, blend;
         public int rows, cols;
     }
@@ -99,6 +99,8 @@ static class SphereArtBuilder
         var wrapper = new GameObject(p.name);
         wrapper.transform.SetParent(parent, false);
         wrapper.transform.localScale = Vector3.one * k;
+        if (p.euler != null && p.euler.Length >= 3) wrapper.transform.localRotation = Quaternion.Euler(p.euler[0], p.euler[1], p.euler[2]);
+        if (p.offset != null && p.offset.Length >= 3) wrapper.transform.localPosition = new Vector3(p.offset[0], p.offset[1], p.offset[2]) * GameBodyHeight;
         GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(source);
         instance.transform.SetParent(wrapper.transform, false);
         string fbxName = instance.name.Replace("(Clone)", "");   // 이름 대조용(루트 자체가 메시인 FBX는 렌더러 이름 = 이 이름)
