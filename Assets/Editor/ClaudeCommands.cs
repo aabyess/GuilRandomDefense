@@ -1259,6 +1259,7 @@ public static class ClaudeCommands
         public string focusSpec = "";     // focus:<구간> — 1배로 볼 라운드 구간 「20-」·「25-35,45-」. 비면 판 전체가 배속   // aim:<등급> — target의 목표 식 등급(기본 희귀함). 10-01 PM 지시: 전설·초월·불멸·영원까지
         public bool targetMode;          // autoloop: 희귀함 식 하나를 목표로 — 흔함선택·조합·판매를 그 식의 모자란 재료 쪽으로(09-26 PM 지시)
         public bool combineAll;          // autoloop: 지금 만들 수 있는 조합식을 전부 만든다(결과 등급 높은 것부터, 09-26 R20 벽 ③)
+        public bool oldBottleneck;       // autoloop: 병목 고침(위습 몰아주기·막힌 이름 지킴·막힌 목표 되살림) 끄기 — 옛 도구 대조용(10-01)
         public bool keepPen;             // autoloop: 흔함은 제 칸에 둔다 — 모서리 쓸기에서 흔함을 뺀다(09-26 칸 안 흔함 가동률 판)
         public bool sellSpare;           // autoloop: 조합표가 못 쓸 만큼 남는 유닛을 판다(09-26 PM 지시 — 목재·위습 경로)
         public bool storySent;           // autoloop: 안흔함을 스토리존에 보냈나 — 스토리가 깨지면 복귀포탈로 되돌린다
@@ -1357,6 +1358,7 @@ public static class ClaudeCommands
             else if (token == "noshop") job.noShop = true;
             else if (token == "sell") job.sellSpare = true;
             else if (token == "keeppen") job.keepPen = true;
+            else if (token == "oldbottleneck") job.oldBottleneck = true;
             else if (token == "combineall") job.combineAll = true;
             else if (token == "storyplus") job.storyPlus = true;
             else if (token == "bosschase") job.bossChase = true;
@@ -3239,6 +3241,13 @@ public static class ClaudeCommands
     {
         var owned = MyUnits().GroupBy(u => u.Data).ToDictionary(g => g.Key, g => g.Count());
         var byResult = RecipesByResult();
+        // 버린 목표도 재료가 다 채워지면 되살린다(블록 이름 지킴도 같이 풀린다 — BlockedCommonNames는 stuckTargets에서 유도).
+        if (stuckTargets.Count > 0 && !job.oldBottleneck)
+            foreach (CombineRecipe revived in stuckTargets.Where(r => PlanFor(r, owned).MissingCount == 0).ToList())
+            {
+                stuckTargets.Remove(revived);
+                targetLog.Add($"R{job.lastRoundSeen} 막힌 목표 되살림 ♻️ {revived.result.unitName}(재료 다 채워짐)");
+            }
         var candidates = byResult.Where(kv => (int)kv.Key.grade == job.aimGrade).SelectMany(kv => kv.Value).Where(r => !stuckTargets.Contains(r)).ToList();
         if (candidates.Count == 0) return currentPlan = null;
         TargetPlan best = candidates.Select(r => PlanFor(r, owned)).OrderBy(p => p.MissingCount).First();
@@ -3282,6 +3291,23 @@ public static class ClaudeCommands
         }
         return true;
     }
+
+    // 막힌 이름 — 버린 목표(stuckTargets) 재료 잎 중 흔함선택 포탈이 없어 위습으로 못 채우는 흔함 이름. 이 이름을 팔면 다시 못 얻는다.
+    static HashSet<string> BlockedCommonNames()
+    {
+        var names = new HashSet<string>();
+        if (stuckTargets.Count == 0) return names;
+        var portals = new HashSet<string>(UnityEngine.Object.FindObjectsByType<UnitPortal>(FindObjectsSortMode.None)
+            .Select(p => p.gameObject.name).Where(n => n.StartsWith("흔함선택_")).Select(n => n.Substring(5)));
+        var none = new Dictionary<UnitData, int>();
+        foreach (CombineRecipe r in stuckTargets)
+            foreach (var kv in PlanFor(r, none).missing)
+                if (kv.Key.grade == UnitGrade.Common && !portals.Contains(kv.Key.unitName ?? "")) names.Add(kv.Key.unitName ?? "");
+        return names;
+    }
+
+    // 막힌 이름 지킴은 이 수까지만 — 코드엔 유닛 수 상한이 없어(겹쳐 세운다) 도구가 정한 소프트 한계. 넘으면 기존 판매 규칙대로 판다.
+    const int BlockedKeepUnitLimit = 150;
 
     static Dictionary<string, int> TargetMissingCommons()
     {
@@ -3336,14 +3362,24 @@ public static class ClaudeCommands
         bool NearLane(Component c) => lane0 == null || Vector2.Distance(new Vector2(c.transform.position.x, c.transform.position.z), new Vector2(lane0.LaneCenter.x, lane0.LaneCenter.z)) < 700f;
         Dictionary<UnitData, int> demand = RecipeMaxDemand();
         var spare = new List<UnitIdentity>();
+        int totalOwned = MyUnits().Count();
+        HashSet<string> blocked = job.targetMode && !job.oldBottleneck ? BlockedCommonNames() : new HashSet<string>();
+        bool atLimit = totalOwned >= BlockedKeepUnitLimit;
+        int blockedKept = 0, blockedSold = 0;
         foreach (var group in MyUnits().Where(u => SellGrades.Contains(u.Data.grade) && NearLane(u)).GroupBy(u => u.Data))
         {
             int keep = 2 * (demand.TryGetValue(group.Key, out int d) ? d : 0);
+            if (group.Key.grade == UnitGrade.Common && blocked.Contains(group.Key.unitName ?? ""))
+            {
+                int extra = Math.Max(0, group.Count() - keep);
+                if (atLimit) blockedSold += extra; else { blockedKept += extra; keep = group.Count(); }
+            }
             if (job.targetMode && currentPlan != null && currentPlan.reserved.TryGetValue(group.Key, out int held)) keep = Math.Max(keep, held);   // 목표 식 재료는 안 판다
             spare.AddRange(group.Skip(keep));
         }
         spare = spare.OrderBy(u => u.Data.grade.Tier()).Take(SellPerTurn).ToList();   // 싼 것부터
-        if (spare.Count == 0) return "   💰 판매: 남는 유닛 없음\n";
+        string blockedText = blocked.Count > 0 ? $" · 막힌 이름 지킴 {blockedKept}기 / 한계로 팜 {blockedSold}기({string.Join(",", blocked)}, 보유 {totalOwned}/{BlockedKeepUnitLimit})" : "";
+        if (spare.Count == 0) return "   💰 판매: 남는 유닛 없음" + blockedText + "\n";
         PlayerContext me = PlayerContext.GetOccupied(0);
         int woodBefore = me?.ResourceWallet?.Get(ResourceType.Wood) ?? 0;
         int wispBefore = UnityEngine.Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None).Count(w => w != null && (!w.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0));
@@ -3363,7 +3399,7 @@ public static class ClaudeCommands
         int woodAfter = me?.ResourceWallet?.Get(ResourceType.Wood) ?? 0;
         int wispAfter = UnityEngine.Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None).Count(w => w != null && (!w.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0));
         return $"   💰 판매 {sold.Count}기: {string.Join(", ", sold.GroupBy(x => x).Select(g => g.Count() > 1 ? $"{g.Key}×{g.Count()}" : g.Key))} → 목재 {woodBefore}→{woodAfter} · 위습 {wispBefore}→{wispAfter}" +
-               $" · 누계 {string.Join(" ", soldTotals.Select(kv => $"{kv.Key}{kv.Value}"))}\n";
+               $" · 누계 {string.Join(" ", soldTotals.Select(kv => $"{kv.Key}{kv.Value}"))}" + blockedText + "\n";
     }
 
     // 흔함이 제 칸 안(칸 한가운데에서 칸 폭 절반 안)에 몇 기 있나 — keeppen 판에서 박스 쓸기에 딸려 나간 흔함을 센다(09-26).
@@ -3501,8 +3537,10 @@ public static class ClaudeCommands
         for (int i = 0; i < choiceWisps + plainCommonWisps && choicePortals.Count > 0; i++)
         {
             // target — 목표 식에 가장 많이 모자란 흔함 이름을 고른다(다 채웠으면 옛 규칙).
-            string wanted = targetMissing?.Where(kv => kv.Value > 0 && choicePortals.Contains("흔함선택_" + kv.Key))
-                .OrderByDescending(kv => kv.Value).Select(kv => "흔함선택_" + kv.Key).FirstOrDefault();
+            //   몰아주기 — 모자람 ≤3인 이름을 적은 순으로 먼저 끝내고(여러 이름에 퍼지면 어느 식도 안 끝난다), 없으면 많은 순.
+            var open = targetMissing?.Where(kv => kv.Value > 0 && choicePortals.Contains("흔함선택_" + kv.Key)).ToList();
+            string wanted = open == null ? null : job.oldBottleneck ? open.OrderByDescending(kv => kv.Value).Select(kv => "흔함선택_" + kv.Key).FirstOrDefault() : (open.Where(kv => kv.Value <= 3).OrderBy(kv => kv.Value).Select(kv => "흔함선택_" + kv.Key).FirstOrDefault()
+                ?? open.OrderByDescending(kv => kv.Value).Select(kv => "흔함선택_" + kv.Key).FirstOrDefault());
             if (wanted != null) targetMissing[wanted.Substring(5)]--;
             string odd = choicePortals.FirstOrDefault(n => myCommonCounts.TryGetValue(n.Substring(5), out int c) && c % 2 == 1);
             string portal = wanted ?? odd ?? choicePortals[(job.lastRoundSeen + i) % choicePortals.Count];
