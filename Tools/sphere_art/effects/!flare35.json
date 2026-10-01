@@ -1,0 +1,117 @@
+{
+ "roster": "!flare35",
+ "alias": "!flare35",
+ "single": true,
+ "parts": [
+  {
+   "kind": "mesh",
+   "name": "!flare35_g0",
+   "slot": "항상",
+   "model": "!flare35.mdx",
+   "bodyHeightM": 1.25,
+   "states": "대기|이동|공격|스킬",
+   "attach": "body",
+   "unlit": true,
+   "pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fbx": "!flare35_g0.fbx",
+   "fbxObject": "!flare35_g0_L0_add",
+   "texture": "Textures/Textures_Shockwave10.blp.png",
+   "additive": true,
+   "cutout": false,
+   "blend": false
+  },
+  {
+   "kind": "particle",
+   "name": "!flare35_pre2_0_par1",
+   "slot": "항상",
+   "model": "!flare35.mdx",
+   "bodyHeightM": 1.25,
+   "states": "대기|이동|공격|스킬",
+   "attach": "body",
+   "pos": [
+    -0.0,
+    0.0,
+    0.0
+   ],
+   "texture": "Textures/Textures_Flare.blp.png",
+   "additive": true,
+   "rate": 20.0,
+   "life": 0.5,
+   "speed": 0.0,
+   "speedVar": 0.0,
+   "shape": "cone",
+   "cone": 0.0,
+   "box": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "gravity": 0.0,
+   "size": [
+    0.75,
+    1.15,
+    0.6
+   ],
+   "mid": 0.6,
+   "rgb": [
+    0.2,
+    0.51,
+    0.976,
+    0.494,
+    0.749,
+    0.945,
+    0.267,
+    0.635,
+    1.0
+   ],
+   "alpha": [
+    0.196,
+    0.667,
+    0.0
+   ],
+   "rows": 1,
+   "cols": 1
+  },
+  {
+   "kind": "ribbon",
+   "name": "!flare35_ribbon_0_ribbon",
+   "slot": "항상",
+   "model": "!flare35.mdx",
+   "bodyHeightM": 1.25,
+   "states": "대기|이동|공격|스킬",
+   "attach": "body",
+   "pos": [
+    0.35,
+    0.0,
+    0.0
+   ],
+   "texture": "Textures/Textures_Shockwave10.blp.png",
+   "additive": true,
+   "trail": 0.45,
+   "width": 0.8,
+   "widthEnd": 0.8,
+   "alpha": [
+    0.9,
+    0.9,
+    0.9
+   ],
+   "rgb": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "spinAxis": "Y",
+   "spinDeg": 360.0
+  }
+ ]
+}
