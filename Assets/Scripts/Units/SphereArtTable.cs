@@ -15,7 +15,8 @@ using UnityEngine;
 public static class SphereArtTable
 {
     /// <summary>보이는 때 — 항상 / 공격 모션 중(Animator 상태 Attack) / 스킬 중(UnitSphereArt.PulseSkill이 켠 동안).</summary>
-    public enum When { Always, Attack, Skill }
+    /// <summary>보이는 때 — 비트 마스크(대기·이동·공격 중 하나 + 스킬 신호). 표 열: 「항상」 또는 「이동|공격|스킬」처럼 | 로 이은 것.</summary>
+    [System.Flags] public enum When { Idle = 1, Move = 2, Attack = 4, Skill = 8, Always = 15 }
 
     public struct Art
     {
@@ -24,14 +25,14 @@ public static class SphereArtTable
         public Vector3 pos;     // 붙는 곳 기준 로컬 위치(뼈면 그 뼈 로컬, origin이면 땅 기준 세계 단위)
         public Vector3 euler;   // 로컬 회전(도) — origin은 무시(늘 세계 정렬)
         public float scale;     // 크기 배수(0이면 1)
-        public When when;
+        public When when;   // 🔴 struct라 기본값 0 — new Art로 만들 땐 when = When.Always를 꼭 적을 것(옛 enum은 0 = Always였다)
     }
 
     const string TablePath = "Effects/SphereArtTable";
     static Dictionary<string, List<Art>> byRoster;
 
-    static readonly Art[] TranscendentArts = { new Art { key = "handsaura2", attach = "origin", scale = 1f } };
-    static readonly Art[] HiddenArts = { new Art { key = "blightwalkeraura", attach = "origin", scale = 1f } };
+    static readonly Art[] TranscendentArts = { new Art { key = "handsaura2", attach = "origin", scale = 1f, when = When.Always } };
+    static readonly Art[] HiddenArts = { new Art { key = "blightwalkeraura", attach = "origin", scale = 1f, when = When.Always } };
 
     /// <summary>등급만으로 붙는 오라(초월 = HandsAura2 발밑, 히든 = BlightwalkerAura 발밑). 없으면 빈 배열.</summary>
     public static Art[] GradeArts(UnitGrade grade)
@@ -64,8 +65,23 @@ public static class SphereArtTable
         if (f.Length > 3) a.pos = ParseVec(f[3]);
         if (f.Length > 4) a.euler = ParseVec(f[4]);
         if (f.Length > 5 && float.TryParse(f[5], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float sc) && sc > 0f) a.scale = sc;
-        if (f.Length > 6) a.when = f[6].Trim() == "공격" ? When.Attack : f[6].Trim() == "스킬" ? When.Skill : When.Always;
+        if (f.Length > 6) a.when = ParseWhen(f[6]);
         return a;
+    }
+
+    static When ParseWhen(string s)
+    {
+        When w = 0;
+        foreach (string t in s.Split('|', ','))
+            switch (t.Trim())
+            {
+                case "대기": w |= When.Idle; break;
+                case "이동": w |= When.Move; break;
+                case "공격": w |= When.Attack; break;
+                case "스킬": w |= When.Skill; break;
+                case "항상": w |= When.Always; break;
+            }
+        return w == 0 ? When.Always : w;
     }
 
     static Vector3 ParseVec(string s)

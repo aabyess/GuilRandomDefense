@@ -28,11 +28,14 @@ public class UnitSphereArt : MonoBehaviour
         public bool origin;
         public bool placeholder;             // 임시 모양(코드로 그린 판) — 진짜 모델은 프리팹 회전 그대로
         public float diameter;               // 원점 오라 세계 지름
+        public string attachedTo = "";       // Describe용 — 실제로 붙은 곳(뼈 이름 · body · 「뼈 못 찾음」)
     }
 
     readonly List<Part> parts = new List<Part>();
     UnitData data;
     Animator animator;
+    bool hasSpeed;
+    static readonly int SpeedHash = Animator.StringToHash(CharacterAnimator.SpeedParam);
     float skillUntil;
     bool visible = true;
 
@@ -46,6 +49,8 @@ public class UnitSphereArt : MonoBehaviour
     {
         data = d;
         animator = GetComponentInChildren<Animator>();
+        if (animator != null && animator.runtimeAnimatorController != null)
+            foreach (AnimatorControllerParameter prm in animator.parameters) if (prm.nameHash == SpeedHash) hasSpeed = true;
         List<SphereArtTable.Art> arts = SphereArtTable.For(d);
         if (arts.Count == 0) return;
         float height = BodyHeight();
@@ -85,18 +90,30 @@ public class UnitSphereArt : MonoBehaviour
         }
         else
         {
-            Transform bone = FindBone(art.attach);
+            // 「follow:뼈」 = 부가 이펙트 프리팹(몸 좌표·발밑 원점, SphereArtBuilder) — 몸 자리에 세운 뒤 그 뼈에 월드 자리를 지킨 채 옮겨 붙여 뼈를 따라가게 한다.
+            bool follow = art.attach.StartsWith("follow:");
+            string spot = follow ? art.attach.Substring(7) : art.attach;
+            Transform bone = FindBone(spot);
             bool real = SphereArtTable.HasRealModel(art.key);
-            if (bone != null)
+            if (follow)
+            {
+                go.transform.SetParent(transform, false);
+                go.transform.localPosition = art.pos;
+                if (bone != null) go.transform.SetParent(bone, true);
+                part.attachedTo = bone != null ? bone.name : (spot == "body" ? "body" : $"body(뼈 {spot} 못 찾음)");
+            }
+            else if (bone != null)
             {
                 go.transform.SetParent(bone, false);
                 go.transform.localPosition = art.pos;
                 go.transform.localRotation *= Quaternion.Euler(art.euler);
+                part.attachedTo = bone.name;
             }
             else
             {
                 go.transform.SetParent(transform, false);
-                go.transform.localPosition = FallbackPosition(art.attach, height) + art.pos;
+                go.transform.localPosition = FallbackPosition(spot, height) + art.pos;
+                part.attachedTo = $"몸 비율({spot})";
             }
             // 진짜 모델은 Blender가 정한 크기를 그대로(배율만 곱한다). 임시 모양은 몸 높이에 비례한 빛 구슬.
             // 뼈 자식의 lossyScale에 휘둘리지 않게 세계 크기로 맞춘다.
@@ -104,7 +121,7 @@ public class UnitSphereArt : MonoBehaviour
             part.diameter = size * (art.scale > 0f ? art.scale : 1f);
         }
         ApplyScale(part);
-        SetShown(part, part.when == SphereArtTable.When.Always && visible);
+        SetShown(part, (part.when & SphereArtTable.When.Idle) != 0 && visible);
         parts.Add(part);
     }
 
@@ -129,6 +146,8 @@ public class UnitSphereArt : MonoBehaviour
         if (hb.HasValue && animator != null && animator.avatar != null && animator.avatar.isValid && animator.isHuman)
         {
             Transform b = animator.GetBoneTransform(hb.Value);
+            // Chest·UpperChest는 선택 뼈 — 믹사모 아바타엔 없을 때가 있다(10-01 구주호). 가까운 뼈로 대신한다.
+            if (b == null && hb.Value == HumanBodyBones.Chest) b = animator.GetBoneTransform(HumanBodyBones.UpperChest) ?? animator.GetBoneTransform(HumanBodyBones.Spine);
             if (b != null) return b;
         }
         // ② Generic(고유 동작 유닛 등)은 뼈 이름으로 찾는다 — 이름이 같거나 그 조각을 담은 첫 뼈
@@ -194,19 +213,24 @@ public class UnitSphereArt : MonoBehaviour
         }
         if (!visible) return;
 
-        bool attacking = false, skilling = Time.time < skillUntil;
-        if (animator != null && animator.runtimeAnimatorController != null) attacking = animator.GetCurrentAnimatorStateInfo(0).IsName("Attack");
+        bool attacking = false, moving = false, skilling = Time.time < skillUntil;
+        if (animator != null && animator.runtimeAnimatorController != null)
+        {
+            attacking = animator.GetCurrentAnimatorStateInfo(0).IsName("Attack");
+            if (hasSpeed) moving = animator.GetFloat(SpeedHash) > 0.05f;
+        }
+        SphereArtTable.When now = attacking ? SphereArtTable.When.Attack : moving ? SphereArtTable.When.Move : SphereArtTable.When.Idle;
+        if (skilling) now |= SphereArtTable.When.Skill;
         foreach (Part p in parts)
         {
             if (p.go == null) continue;
             if (p.origin) p.go.transform.rotation = p.placeholder ? Quaternion.Euler(90f, 0f, 0f) : Quaternion.identity;   // 유닛 회전을 안 따른다(세계 정렬)
             if (p.when == SphereArtTable.When.Always) continue;
-            bool on = p.when == SphereArtTable.When.Attack ? attacking : skilling;
-            SetShown(p, on);
+            SetShown(p, (p.when & now) != 0);
         }
     }
 
-    bool Shown(Part p) => p.when == SphereArtTable.When.Always;
+    bool Shown(Part p) => (p.when & SphereArtTable.When.Idle) != 0;
 
     /// <summary>점검용 한 줄(call:UnitSphereArt.Describe).</summary>
     static string Describe()
@@ -214,7 +238,7 @@ public class UnitSphereArt : MonoBehaviour
         var sb = new System.Text.StringBuilder();
         sb.Append($"상시 오라: 켜짐 {Enabled} · 붙은 유닛 {AttachedUnits} · 부품 {AttachedParts}");
         foreach (UnitSphereArt a in FindObjectsByType<UnitSphereArt>(FindObjectsSortMode.None))
-            sb.Append($"\n  {(a.data != null ? a.data.name : "?")}: " + string.Join(", ", a.parts.ConvertAll(p => p.go != null ? $"{p.go.name}@{(p.go.transform.parent != null ? p.go.transform.parent.name : "-")}{(p.go.activeSelf ? "" : "(숨김)")}" : "(없어짐)")));
+            sb.Append($"\n  {(a.data != null ? a.data.name : "?")}: " + string.Join(", ", a.parts.ConvertAll(p => p.go != null ? $"{p.go.name}@{(p.attachedTo.Length > 0 ? p.attachedTo : p.go.transform.parent != null ? p.go.transform.parent.name : "-")}{(p.go.activeSelf ? "" : "(숨김)")}" : "(없어짐)")));
         return sb.ToString();
     }
 

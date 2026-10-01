@@ -10,6 +10,7 @@
 변환 규칙
   · 좌표·크기는 미터(원작 모델 몸 키 기준). 유니티에서 (게임 키 30 ÷ 그 모델 몸 키 m)를 곱해 게임 단위로 만든다 — 모델마다 몸 키가 달라 부품마다 bodyHeightM을 싣는다.
   · 방출량 0 + 슬롯이 항상이 아닌 방출기는 KP2E 키의 최댓값을 방출량으로 쓴다(원작이 그 동작 때 켜는 값).
+  · 보이는 때 = ours_states(대기·이동·공격·스킬 중 해당하는 것, | 로 이음) — 전부면 항상. 붙는 뼈 = humanoid_hint(? 는 body = 유닛 루트).
   · 슬롯 「없음」(원작에서도 안 켜짐)·팀색 판(skip)은 뺀다.
 """
 import json, os, shutil, sys
@@ -18,6 +19,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 OUT_DIR = os.path.join(HERE, "effects")
 SRC_DIR = os.path.join(ROOT, "Assets", "Resources", "Effects", "Sphere", "Src")
+
+
+HINTS = {"RightHand": "hand,right", "LeftHand": "hand,left", "Spine1(가슴)": "chest", "Hips": "hips", "Head": "head"}
+ORDER = ["대기", "이동", "공격", "스킬"]
 
 
 def vec(v, n=3, d=0.0):
@@ -37,8 +42,15 @@ def main():
         if slot == "없음" or p["visible"].get("never_active"):
             continue
         h = heights.get(p["model"], 1.8)
-        out = {"kind": p["kind"], "name": p["name"], "slot": slot, "model": p["model"], "bodyHeightM": h}
+        states = [x for x in ORDER if x in p["visible"]["ours_states"]]
+        if not states:
+            continue
+        out = {"kind": p["kind"], "name": p["name"], "slot": slot, "model": p["model"], "bodyHeightM": h,
+               "states": "|".join(states), "attach": HINTS.get(p["attach"]["humanoid_hint"], "body")}
         if p["kind"] == "mesh":
+            # 메시 pivot은 원작 팔 뼈의 자리(팔을 벌린 자세 기준, 몸에서 ~0.9m) — 우리 스킨 손에 붙이면 팔 흔들림에 크게 휘둘린다(10-01 구주호 날개) → 가슴 뼈에.
+            if out["attach"] in ("hand,left", "hand,right"):
+                out["attach"] = "chest"
             layer = next((l for l in p["layers"] if not l.get("skip")), None)
             if layer is None:
                 continue
@@ -50,7 +62,7 @@ def main():
         elif p["kind"] == "particle":
             u = p["unity"]
             rate = float(u["emission_rate_per_s"])
-            if rate <= 0 and slot != "항상":
+            if rate <= 0 and "대기" not in states:
                 keys = (p["raw"].get("tracks", {}).get("KP2E") or {}).get("keys", [])
                 rate = max([k[1][0] for k in keys] or [0.0])
             if rate <= 0:

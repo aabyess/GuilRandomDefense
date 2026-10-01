@@ -23,7 +23,7 @@ static class SphereArtBuilder
 
     [System.Serializable] class Part
     {
-        public string kind, name, slot, model, texture, fbx, fbxObject, shape;
+        public string kind, name, slot, model, texture, fbx, fbxObject, shape, states, attach;
         public float bodyHeightM, rate, life, speed, speedVar, cone, gravity, mid;
         public float[] pos, box, size, rgb, alpha;
         public bool additive, cutout;
@@ -44,12 +44,17 @@ static class SphereArtBuilder
         {
             Roster r = JsonUtility.FromJson<Roster>(File.ReadAllText(file, Encoding.UTF8));
             string rosterName = r.roster.Normalize(NormalizationForm.FormC);
-            foreach (IGrouping<string, Part> g in r.parts.GroupBy(p => p.slot))
+            // 같은 아트 키 접두의 옛 프리팹을 지우고 다시 만든다(그룹 이름이 바뀌어도 낡은 게 안 남게)
+            foreach (string old in AssetDatabase.FindAssets("t:Prefab", new[] { ResDir }).Select(AssetDatabase.GUIDToAssetPath).Where(a => Path.GetFileName(a).StartsWith(r.alias + "_")).ToList())
+                AssetDatabase.DeleteAsset(old);
+            // 보이는 때(states)와 붙는 뼈(attach)가 같은 부품끼리 프리팹 하나
+            foreach (IGrouping<(string states, string attach), Part> g in r.parts.GroupBy(p => (p.states, p.attach)))
             {
-                string slotKey = g.Key == "공격" ? "attack" : g.Key == "스킬" ? "skill" : "always";
-                string key = $"{r.alias}_{slotKey}";
+                string when = g.Key.states.Split('|').Length == 4 ? "항상" : g.Key.states;
+                string letters = string.Concat(g.Key.states.Split('|').Select(s => s == "대기" ? "i" : s == "이동" ? "m" : s == "공격" ? "a" : "s"));
+                string key = $"{r.alias}_{letters}_{g.Key.attach.Replace(",", "")}";
                 report.AppendLine(BuildPrefab(rosterName, r.alias, key, g.ToList()));
-                tsv.AppendLine($"{rosterName}\t{key}\tbody\t\t\t1\t{g.Key}");
+                tsv.AppendLine($"{rosterName}\t{key}\tfollow:{g.Key.attach}\t\t\t1\t{when}");
             }
         }
         File.WriteAllText(Path.Combine(ProjectRoot, "Tools/sphere_art/extra.tsv"), tsv.ToString(), new UTF8Encoding(false));
