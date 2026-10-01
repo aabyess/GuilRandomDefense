@@ -3307,6 +3307,7 @@ UNITS = {
                       #   09-08 아바타 검증 실패로 PM이 넣었다) 뼈 이름도 Bone.NNN이라 mixamorig 필수 15뼈 검사가 애초에 통과할 수 없다.
                       #   그 검사가 생긴 뒤로 이 항목을 한 번도 안 돌렸던 것뿐이다 — 이번에 돌리자마자 걸렸다. 사실에 맞춘다.
                       hips="Bone_61", head="Bone.004_3", source=os.path.join(SKINS, "02_안흔함/안흔함_이호준.glb"), recipe={}, clip_ground=True, generic=True,
+                      glb_images={0: "0.jpg", 1: "1.png", 2: "2.png"},   # glb 안 그림 3장 = 커밋본 Textures/ 0.jpg·1.png·2.png와 md5 일치(2026-10-01 실측)
                       split_clips=[dict(take="Idle", range=(1, 58), loop=10),
                                    dict(take="Attack", range=(58, 96))]),
     "안흔함_김경현": dict(rev="4c92dba1", path="Assets/Art/Units/안흔함_김경현/안흔함_김경현.fbx", kind="human", size=("height", 1.8)),
@@ -3347,7 +3348,8 @@ UNITS = {
     "안흔함_박민수": dict(rev="dd84a0cb", path="Assets/Art/Units/안흔함_박민수/안흔함_박민수.fbx", kind="human", size=("height", 1.8),
                       source=os.path.join(SKINS, "02_안흔함/안흔함_박민수.glb"), gltf_guess_bind=False,
                       recipe=dict(rename=DENJI_RENAME)),
-    "안흔함_상붕카": dict(path="Assets/Art/Characters/안흔함_상붕카.glb", kind="prop", size=("length", 1.8)),
+    "안흔함_상붕카": dict(path="Assets/Art/Characters/안흔함_상붕카.glb", kind="prop", size=("length", 1.8),
+                      rebuild="불가 — 생성기 산출물이 아니라 Characters/의 glb 소품을 그대로 쓴다(kind=prop, 그림 0장·단색만, FBX를 안 만든다)"),
     # 사이타마(Ready Player Me·Mixamo 리그 glb, 2026-09-14): 번호 꼬리를 떼고 mixamorig 이름으로. 쉬는 자세 A자(위팔 수평 아래 59°, 아래팔 앞 33°) → T자
     #   (손가락 네 줄이 다 있어 손바닥 굴리기까지). 조명용 Icosphere 뺌. Wolf3D_Body 베이스는 1×1 단색 jpg — 원본 바이트 그대로(유니티가 읽음).
     "특별함_배성령": dict(path="Assets/Art/Units/특별함_배성령/특별함_배성령.fbx", kind="human", size=("height", 1.8),
