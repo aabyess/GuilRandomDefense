@@ -1,4 +1,4 @@
-# 다음 세션 이어받기 — 2026-10-01 저녁 (PM 작성, Opus 5.5 세션)
+# 다음 세션 이어받기 — 2026-10-02 새벽 (PM 작성, Opus 5.5 세션) — 맥 재시동 직전판
 
 `CLAUDE.md` → `.claude/PROJECT_BRIEF.md` → `.claude/TEAM_RULES.md`를 먼저 읽고 이 문서로 온다.
 10-01 오후판은 git 이력에 있다. 이 문서가 그것을 대체한다. **작업이 진행되면 PM이 이 문서를 갱신한다(큰 단계마다).**
@@ -34,30 +34,37 @@
 - **측정 도구**: 흔함 위습 몰아주기 · 뽑기 전용 잎(악의근원·상붕카) 점수 +10·보유 시 0 · 그 잎 안 팔기(445e739e). 옛/새 R20 대조는 BALANCE §4.
 
 ## 3. 세션별 앞으로 할 일
+### 🔴 재시동 직후 (PM 먼저)
+- **맥 재시동 이유**: 10-01 밤 이 맥의 앱 실행 경로(LaunchServices/runningboard)가 막혀 **계산기도 안 열렸다**(가동 11일). 앱·빌드 문제 아님 — 바이너리 직접 실행은 0.3.1·0.3.3 둘 다 사진 확인. 사용자 lsd 재시작으론 안 풀림. 재시동 뒤 `~/Desktop/구랜디_베타/GuRandi 0.3.3v.app` 더블클릭이 되는지 사장님께 확인. 🔴 실행 확인을 `pgrep -f "<경로>"`로 하지 말 것 — 그 문자열이 든 내 셸 명령줄을 잡아 「떴다」고 오보했다. `ps -axo pid,comm`에서 실행 파일 경로로.
+- **main에 아직 안 들어간 두 커밋**(release/0.3.3 브랜치에만): 44b2ba80b(BuildBeta 이름 영문 GuRandi)·6c3854113(GameVersion 0.3.3) → `git cherry-pick` 해서 main에 넣고 푸시(에디터에 판이 없을 때 — Editor 스크립트라 리로드).
+- 세션 넷 다시 띄우고(ListAgents) 첫 지시에 배경·에디터 규칙.
+
 ### PM
-0. 🔴 **0.3.3v 배포 완료(10-01 23:40)** — release/0.3.3(빌드 사본). main에 아직 안 들어간 두 커밋: 44b2ba80b(BuildBeta 영문 이름 GuRandi)·6c3854113(GameVersion 0.3.3) → R60 판 끝난 뒤 main에 cherry-pick(Editor 스크립트라 판 중 쓰면 오염). 🔴 배포 zip은 `zip -r -y -X`(Info-ZIP)로, BurstDebugInformation_DoNotShip 제외, 이름 영문만 — 맥 ditto zip은 한글 이름에 UTF-8 표시를 안 넣어 윈도우에서 빈 폴더가 됐다(친구 메일 0.3.1).
-1. 사장님 답 받기(§4) — 특히 앱 실행·황준석 겹침.
-2. 다음 배포 0.3.2: 부가 이펙트 11곳·상시 오라·고유 동작 3·4묶음(이미 0.3.1에 들어감 — 확인)·도구는 무관. 절차: build 사본에서 `git checkout -B release/0.3.2 main`(사본에 남는 폴더 .meta 미추적 파일은 지우고) → GameVersion → `BuildBeta.Mac`/`Windows` 배치 → 앱 바이너리를 `-mpSolo -mpSaveDir … -mpSoloMenuAt 25 사진` → ditto zip → 안내문.
-3. 멀티 두 창 확인(아직 안 함) · 윈도우 실행 확인(아직).
+1. **0.3.3v 배포 완료(10-01 23:40)**: `~/Desktop/구랜디_베타/` = GuRandi_Beta_Mac/Windows_0.3.3v.zip · GuRandi 0.3.3v.app · 안내문. 🔴 배포 zip은 `zip -r -y -X`(Info-ZIP), BurstDebugInformation_DoNotShip 제외, 이름 영문만, 뒤에 python zipfile로 비ASCII 0·testzip 검사 — 맥 ditto zip은 한글 이름에 UTF-8 표시를 안 넣어 윈도우에서 「500MB인데 빈 폴더」가 됐다(친구 메일 0.3.1).
+2. 다음 배포 0.3.4: build 사본에서 `git checkout -B release/0.3.4 main`(사본에 생기는 미추적 폴더 .meta는 지움) → GameVersion → `BuildBeta.Mac`/`Windows` 배치 → 앱 바이너리를 `-mpSolo -mpSaveDir … -mpSoloMenuAt 25 사진`으로 확인 → zip(위 규칙) → 안내문.
+3. 아직 안 한 확인: 멀티 두 창(스킬 효과음·이펙트·획득 음성·브금·오라가 친구 화면에도) · 윈도우 실제 실행(맥이라 못 봄 — 친구에게 부탁) · 65·70·75R 보스 곡(보통은 60R가 끝이라 에디터 점프 불가 — 어려움 이상으로).
+4. 앱 아이콘: PlayerIcon.icns가 빌드에 없음(일반 아이콘). 사장님이 원하면 아이콘 그림.
 ### 구현담당1
-- 진행 중(19:40~): 새 도구 R20 → aim:전설 R60 1배. 결과 BALANCE 문서.
+- 진행 중이던 것(재시동으로 끊김): **aim:전설 R60 1배**(23:36 시작). 새 도구(d14d13a6d — 뽑기 잎 적은 식으로 일찍 갈아타기 · 막힘 원인 갈래 로그)로 다시 돌릴 것 → BALANCE 문서.
+- 직전 R20(g1_222): 통과, 골드 4125, 뽑기 잎 6라운드 낭비는 사라짐. 남은 병목 = 흔함 선택 위습 공급(게임 규칙이라 도구가 못 늘림).
 - 보류: 레이쥬(전설적인_임건웅) 피해 73% = 체력 비례 스킬 가설(BossDuelProbe 분해 필요).
 ### 구현담당2
-- 부가 이펙트·상시 오라 파이프라인 = `Docs/research/SPHERE_ART_PIPELINE.md`(흐름 run_all.sh·run_aura.sh → BuildAll → build_table.py, 함정 8, 상태).
-- 남은 것: 황준석 겹침 조정(사장님 답) · 도플라밍고 실 32(폭 5%라 제외 — 되살리기 한 줄) · 오라 맵에 없는 7 · NEXT_SESSION용 구역 정리 문서.
+- 파이프라인 문서 = `Docs/research/SPHERE_ART_PIPELINE.md`(run_all.sh·run_aura.sh → BuildAll → build_table.py, 함정 8).
+- 끝남: 초월 부가 이펙트 11곳(황준석 ⓐ 적용 c45af5b61) · 상시 오라 원작 모양 17 · 등급 오라 원작 크기 일치.
+- 남은 것: 도플라밍고 실 32(폭 5%라 제외 — 되살리기 한 줄) · 오라 「맵에 없는 7」 임시 그대로 · 시불(Ora_siki) 바위는 근사 텍스처가 없어 단색 · 오라 리본 근사.
 ### Blender
-- 진행 중: 워크3 기본 텍스처 원본이 이 컴퓨터에 있는지(읽기 전용) — 있으면 근사 텍스처 교체.
-- 남은 쓸 만함: 히든_전유라(gen_biped_skin 판)·랜덤_손오공·특별함_조세민·적 R21/R33/R44 — 가치 작아 보류.
+- 끝남: 고유 동작 1~4묶음(유닛 30·적 16) · 부가 이펙트·상시 오라 effects.json 34폴더 · 워크3 기본 텍스처 탐색(이 컴퓨터에 없음).
+- 남은 쓸 만함: 히든_전유라(gen_biped_skin 판)·랜덤_손오공·특별함_조세민·적 R21/R33/R44 — 가치 작아 보류. 애매 18은 Idle만이라 안 씀.
 
 ## 4. 사장님 답 대기
-1. 🔴 **0.3.1 앱 더블클릭 실행 안 됨**: 바이너리 직접 실행은 정상. PM이 옛 LaunchServices 등록 8곳 정리(lsregister -u) + xattr -cr + adhoc 재서명. PM 셸에선 `open`이 멈춰 확인 불가 → 사장님 재시도/우클릭→열기 결과 대기. 아이콘(PlayerIcon.icns) 빌드에 없음(일반 아이콘).
-2. **황준석 겹침**: ⓐ빅맘 구름 빼기 ⓑ+마르코 날개 0.6배 ⓒ다른 조합(사진 e3_h_f).
-3. **워크3 정품 데이터 있나?** 근사 텍스처 39개(HandsAura2 Zap1_Red·Blue_Glow2·EQ_Rock2 등) 원본이 이 컴퓨터엔 없음(Blender 전수 탐색, `~/GRD_motion_trial/_wc3_textures/찾아본곳.md`). 정품 War3.mpq/리포지드 CASC 위치를 주시면 바로 뽑음. 커뮤니티 추출본은 출처 판단 필요.
-4. 옛 대기(10-01 오후판 §4): 스킬 주인 질문 표 · 히든·다른세계 원작 대응 · 이펙트 메시 여덟 · 김건 털·박예원 자세 · 히루루크·변신·변화됨 · 브금/효과음 볼륨 · NC-ND 주영호(이번에 고유 동작 반영됨) · 밸런스 숫자.
+1. 재시동 뒤 앱 더블클릭 되는지.
+2. **워크3 정품 데이터 있나?** 근사 텍스처 39개(HandsAura2 Zap1_Red·Blue_Glow2·EQ_Rock2 등) 원본이 이 컴퓨터엔 없음(`~/GRD_motion_trial/_wc3_textures/찾아본곳.md`). 정품 War3.mpq/리포지드 CASC 위치를 주시면 바로 뽑음.
+3. 볼륨(브금 10곡·효과음) — 평균 dB로만 맞춘 어림값, PM은 소리를 못 들음.
+4. 옛 대기(10-01 오후판 §4): 스킬 주인 질문 표 · 히든·다른세계 원작 대응 · 이펙트 메시 여덟 · 김건 털·박예원 자세 · 히루루크·변신·변화됨 · NC-ND 주영호(고유 동작 반영됨) · 밸런스 숫자.
 
 ## 5. 저장소·작업 폴더
 - main 전부 푸시. 작업트리에 늘 남는 것(커밋 금지): Pretendard SDF 2 · Anton SDF · Materials/Map lane·rock mat · `.check_entries_out/`.
-- worktree: `../GuilRandomDefense-mp`(mp = main과 같음, ff로 맞춤) · `../GuilRandomDefense-build`(release/0.3.1) · `../GuilRandomDefense-mp-build`(멀티 테스트 앱 — 옛 판).
+- worktree: `../GuilRandomDefense-mp`(mp = main과 같음, ff로 맞춤) · `../GuilRandomDefense-build`(release/0.3.3) · `../GuilRandomDefense-mp-build`(멀티 테스트 앱 — 옛 판).
 - 저장소 밖: `~/GRD_motion_trial/`(고유_1~4묶음·초월_부가이펙트·초월_상시오라·_work 스크래치) · `~/Desktop/구랜디스킨모음/80_사운드/`(브금 원본·잘린 판) · `~/Desktop/구랜디_베타/`(배포판).
 
 ## 6. 굳은 규칙·함정 (누적)
