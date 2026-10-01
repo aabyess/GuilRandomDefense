@@ -66,6 +66,12 @@ static class SphereArtBuilder
     static string BuildPrefab(string roster, string alias, string key, List<Part> parts)
     {
         var root = new GameObject(key);
+        // 손에 쥐는 부품: 첫 부품의 원작 pivot(몸 좌표)을 쥐는 점으로(SphereArtHold) — 손 뼈 붙임 프리팹 전부
+        if (parts[0].attach.StartsWith("hand,") && parts[0].pos != null && parts[0].pos.Length >= 3)
+        {
+            float kHold = GameBodyHeight / Mathf.Max(0.1f, parts[0].bodyHeightM);
+            root.AddComponent<SphereArtHold>().pivot = new Vector3(parts[0].pos[0], parts[0].pos[1], parts[0].pos[2]) * kHold;
+        }
         int meshes = 0, systems = 0;
         var notes = new StringBuilder();
         try

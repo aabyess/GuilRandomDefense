@@ -108,6 +108,8 @@ public class UnitSphereArt : MonoBehaviour
             {
                 go.transform.SetParent(transform, false);
                 go.transform.localPosition = art.pos;
+                // 손에 쥐는 것: 원작 손 pivot을 우리 손 뼈 자리로 옮긴다(SphereArtHold)
+                if (bone != null && go.TryGetComponent(out SphereArtHold hold)) go.transform.position += bone.position - go.transform.TransformPoint(hold.pivot);
                 if (bone != null) go.transform.SetParent(bone, true);
                 part.attachedTo = bone != null ? bone.name : (spot == "body" ? "body" : $"body(뼈 {spot} 못 찾음)");
             }
