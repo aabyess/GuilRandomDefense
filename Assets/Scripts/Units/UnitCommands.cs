@@ -24,7 +24,7 @@ public static class UnitCommands
         if (anchor == null || anchor.Data == null) return 0;
 
         Vector3 center = anchor.transform.position;
-        string wanted = anchor.Data.unitName;
+        UnitData wanted = anchor.Data;   // 문자열 이름이 아니라 데이터 참조 — 동명 16쌍이 섞이지 않게(원작은 unit type id 비교)
         int owner = anchor.TryGetComponent(out OwnedByPlayer anchorOwner)
             ? anchorOwner.OwnerId
             : LocalPlayer.LocalPlayerId;
@@ -33,7 +33,7 @@ public static class UnitCommands
         foreach (UnitIdentity unit in Object.FindObjectsByType<UnitIdentity>(FindObjectsSortMode.None))
         {
             if (unit == null || unit.Data == null) continue;
-            if (unit.Data.unitName != wanted) continue;
+            if (unit.Data != wanted) continue;
             if (unit.TryGetComponent(out OwnedByPlayer other) && other.OwnerId != owner) continue;
 
             crowd.Add(unit);
@@ -44,6 +44,8 @@ public static class UnitCommands
         {
             if (!Place(crowd[i], center, i, crowd.Count)) continue;
             moved++;
+            // 원작 Trig_Unit_Mougi(j:6306-6310): 모은 유닛 전원에게 holdposition. 모은 뒤 제자리를 지키게 한다.
+            if (crowd[i].TryGetComponent(out UnitCombat gathered)) gathered.SetHold(true);
             // 모으는 자리가 창고 섬이 아니면 창고 목록에서 뺀다(창고 섬 위 유닛을 기준으로 모았으면 그대로 창고에 있다).
             if (!IsOnWarehouseIsland(crowd[i].gameObject, owner)) Warehouse.Forget(crowd[i].gameObject);
         }
