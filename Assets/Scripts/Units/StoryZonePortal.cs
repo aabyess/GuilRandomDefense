@@ -16,12 +16,28 @@ public class StoryZonePortal : MonoBehaviour
         destination = position;
     }
 
+    static bool LaneHasBoss(int laneIndex)
+    {
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+            if (enemy != null && enemy.LaneIndex == laneIndex && enemy.IsBoss) return true;
+        return false;
+    }
+
     // TODO(멀티): UnitPortal과 같은 이유로 서버 권위로 옮겨야 한다.
     void OnTriggerEnter(Collider other)
     {
         if (!GameAuthority.IsServer) return;
         if (!other.TryGetComponent(out OwnedByPlayer owner)) return; // 적 유닛에는 이게 없다
         if (!other.TryGetComponent(out UnitCombat combat)) return;
+
+        // 원작 Trig_story_move1re1(j:6158-6168): 그 플레이어 레인(p?_life_zone)에 보스급 적(UNIT_TYPE_ANCIENT, 플레이어 0의 적)이 있으면
+        // 「보스/미션중에는 스토리에 진입이 불가능합니다」(주황, 1초)를 띄우고 보내지 않는다.
+        // ⚠️ 우리 「미션」(해적단 퇴치 미니보스 등 EnemyData.rewardsKillerOnly)은 레인 소속이 없어(LaneIndex −1) 여기선 못 센다 — 레인 보스만.
+        if (LaneHasBoss(owner.OwnerId))
+        {
+            PlayerNotification.Show(owner.OwnerId, "<color=#FF8200>보스/미션중에는 스토리에 진입이 불가능합니다</color>", 1f);
+            return;
+        }
 
         // SnapTo는 NavMesh에 못 올리면 아무것도 안 바꾸고 조용히 false만 돌려준다
         // (UnitCombat.SnapTo 주석 참고) — StoryReturnPortal과 같은 이유로 플레이어에게
