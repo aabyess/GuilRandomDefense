@@ -435,6 +435,7 @@ public class RewardDistributor : MonoBehaviour
             }
 
             GrantWisps(context, storyReward.wispRewards);
+            GrantItemDrop(context, storyReward.itemDropChance, storyReward.itemDrops);   // 원작 스토리 4~9 확률 아이템(생존자만 이 루프에 온다)
 
             if (earlyClear)
             {

@@ -47,6 +47,10 @@ public class StoryData : ScriptableObject
     [Tooltip("그 플레이어에게만 띄우는 원작 문구")]
     public string earlyClearMessage;
 
+    [Header("확률 아이템 드랍 — 원작 Trig_Story_reward4~9, 생존자별 독립 굴림(EnemyItemDrop: 가중치·문구·보유 시 건너뜀)")]
+    [Range(0f, 1f)] public float itemDropChance;
+    public List<EnemyItemDrop> itemDrops;
+
     /// <summary>변신 후에 쓸 데이터. 보스가 따로 없으면 건물 것을 그대로 쓴다.</summary>
     public EnemyData BossOrBuilding => boss != null ? boss : building;
 
