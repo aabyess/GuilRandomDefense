@@ -525,6 +525,24 @@ public class RewardDistributor : MonoBehaviour
     // 포인트값>100은 UnitGrade.Tier()>=Superior.Tier()로 근사한다(원작 유닛 개별
     // 매핑 불가라 등급으로 근사 — APPROXIMATION_LEDGER.md §① 확정, 이미 설계돼 있던
     // 자리를 그대로 썼다).
+    /// <summary>
+    /// 도전과제 「패스트 유니크」 — 원작 Trig_UnitJohabCounter_Func018(udg_Level<8 + 얻은 유닛이 희귀함(판매 능력 A0B9 레벨1) + udg_FU[플레이어]==false)
+    /// → FU=true, 흔함선택 위습(e018) 1 + 문구 5초. UnitSpawner.Spawn(유일한 플레이어 유닛 생성 지점)이 부른다.
+    /// </summary>
+    public void GrantFastUniqueIfEligible(UnitData data, int ownerId)
+    {
+        if (!GameAuthority.IsServer) return;
+        if (data == null || data.grade != UnitGrade.Rare || saveRewardCommonChoiceWisp == null) return;
+        RoundManager roundManager = FindFirstObjectByType<RoundManager>();
+        if (roundManager == null || roundManager.CurrentRound >= 8) return;
+        PlayerContext context = PlayerContext.Get(ownerId);
+        if (context == null || !context.IsOccupied || context.FastUniqueGranted) return;
+
+        context.FastUniqueGranted = true;
+        GrantWisps(context, new List<WispReward> { new WispReward { wisp = saveRewardCommonChoiceWisp, count = 1 } });
+        PlayerNotification.Show(ownerId, "<color=#959595>도전과제 -패스트 유니크 완료!</color>\n<color=#DB7093>보상-흔함 선택 위습 1기를 획득합니다!</color>", 5f);
+    }
+
     public void GrantUnionWispIfEligible(UnitData data, int ownerId)
     {
         if (data == null || unionWisp == null) return;

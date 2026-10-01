@@ -84,6 +84,9 @@ public class PlayerContext : MonoBehaviour
 
     public int PlayerId => playerId;
 
+    // 도전과제 「패스트 유니크」(원작 udg_FU[플레이어]) — 8라운드 전에 처음 희귀함을 얻으면 한 번만. 한 판짜리.
+    public bool FastUniqueGranted { get; set; }
+
     // 변화(A0KJ) 회수 — 원작은 플레이어마다 시작에 h07D(변화 토큰) 2기를 주고(생성 경로 없음), 변화가 성공할 때마다 소유자 토큰을 1기 제거한다
     // (Trig_change j:20362, 조건 「목재 ≥10 + 토큰 ≥1」) → **플레이어당 한 판 2회**. 변화됨 조합(결과 등급 Transformed)이 이 회수를 쓴다.
     // 한 판짜리(직렬화 안 함). 호스트가 정하고 클라는 NetPlayer가 옮겨 적는다(HUD 표시용).
