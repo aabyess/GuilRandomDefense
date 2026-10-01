@@ -1255,7 +1255,7 @@ public static class ClaudeCommands
         public bool bossChase;           // autoloop: 보스 라운드엔 레인의 흔함 아닌 유닛 전부 보스 공격(AttackTarget), 흔함은 칸에(09-26 PM 지시 — R30 벽이 배치냐 화력이냐)
         public bool storyPlus;           // autoloop: 스토리 보강 — 막히면 가장 센 유닛 둘씩, 깨면 약한 하나만 남기고 C로 복귀(09-26 PM 지시)
         public int aimGrade = (int)UnitGrade.Rare;
-        public float fastScale = 1f;      // fast:<배율> — 1배 구간 밖의 Time.timeScale(10-01 사장님 지시: 검증된 앞 라운드는 빠르게)
+        public float fastScale = 0f;      // fast:<배율> — 1배 구간 밖의 Time.timeScale(10-01 사장님 지시: 검증된 앞 라운드는 빠르게)
         public string focusSpec = "";     // focus:<구간> — 1배로 볼 라운드 구간 「20-」·「25-35,45-」. 비면 판 전체가 배속   // aim:<등급> — target의 목표 식 등급(기본 희귀함). 10-01 PM 지시: 전설·초월·불멸·영원까지
         public bool targetMode;          // autoloop: 희귀함 식 하나를 목표로 — 흔함선택·조합·판매를 그 식의 모자란 재료 쪽으로(09-26 PM 지시)
         public bool combineAll;          // autoloop: 지금 만들 수 있는 조합식을 전부 만든다(결과 등급 높은 것부터, 09-26 R20 벽 ③)
@@ -1528,7 +1528,7 @@ public static class ClaudeCommands
 
             case "clicking":
             {
-                if (job.clickIndex > 0 && inStage < GameShotClickGap) break;   // 앞 클릭의 결과가 화면에 반영될 틈
+                if (job.clickIndex > 0 && inStage * Mathf.Max(1f, Time.timeScale) < GameShotClickGap) break;   // 앞 클릭의 결과가 화면에 반영될 틈(게임 시간 — 배속 10-01)
                 string target = job.clicks[job.clickIndex];
                 if (target.StartsWith("@call:"))
                 {
@@ -1671,7 +1671,7 @@ public static class ClaudeCommands
             }
 
             case "spawning":
-                if (job.clickIndex > 0 && inStage < GameShotClickGap) break;   // 마지막 클릭(난이도 등)이 반영될 틈
+                if (job.clickIndex > 0 && inStage * Mathf.Max(1f, Time.timeScale) < GameShotClickGap) break;   // 마지막 클릭(난이도 등)이 반영될 틈
                 spawnedUnits.Clear();
                 shotUnits.Clear();
                 combineBefore.Clear();
@@ -2840,6 +2840,8 @@ public static class ClaudeCommands
     }
 
     static float frameEma = -1f;
+    static float turnStartedAt = -1f, turnDoneAt = -1f;
+    static int turnDropped;
     static float speedCapLogged = -1f;
     static string speedLog = "";
 
@@ -2851,7 +2853,7 @@ public static class ClaudeCommands
 
     static void ApplyRoundSpeed(GameShotJob job)
     {
-        if (job.fastScale <= 1f || !EditorApplication.isPlaying) return;
+        if (job.fastScale < 1f || !EditorApplication.isPlaying) return;
         float dt = Time.unscaledDeltaTime;
         if (dt > 0f && dt < 1f) frameEma = frameEma < 0f ? dt : frameEma * 0.98f + dt * 0.02f;
         RoundManager rm = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
@@ -2860,6 +2862,10 @@ public static class ClaudeCommands
         // 위습 다섯을 포탈로 보냈는데 하나도 유닛이 안 되고(위습 칸 그대로) R2에 무너졌다. 동작 사이 틈·위습 걸음이 실제 시간에 맞춰져 있다.
         //    → 도구의 기다림(@wait)을 게임 시간으로 바꿨다(위). 배속을 동작 동안 끄면 배속이 거의 안 걸린다(6라운드 시험에서 실제 시간이 1배와 같았다).
         float want = InFocus(job, round) ? 1f : job.fastScale;
+        // 턴이 아직 남았으면(시작 안 한 동작이 있으면) 라운드 남은 시간(게임 초)이 남은 동작 × 2초보다 짧을 때 1배로 — 한 턴이 다음 라운드에 잘리지 않게.
+        int pending = job.clicks.Count - job.clickIndex;
+        if (pending > 0 && rm != null && rm.RoundTimeLeft > 0f && rm.RoundTimeLeft < pending * 2f) want = 1f;
+        if (pending <= 0 && turnStartedAt >= 0f && turnDoneAt < 0f) turnDoneAt = Time.time;
         if (want > 1f && frameEma > 0f)
         {
             float shortest = UnityEngine.Object.FindObjectsByType<UnitAttacker>(FindObjectsSortMode.None)
@@ -2876,8 +2882,9 @@ public static class ClaudeCommands
 
     static string SpeedText(GameShotJob job, int round)
     {
-        if (job.fastScale <= 1f) return "";
-        string text = $"      ⏩ 이 라운드(R{round}) 배율 {Time.timeScale:0.##}{(InFocus(job, round) ? " · 1배 구간(숫자 판정에 씀)" : " · 배속 구간 — 피해·처치 시간은 판정에 안 씀, 보스는 처치 여부만")} · 실제 프레임 {frameEma * 1000f:0.#}ms\n" + speedLog;
+        if (job.fastScale < 1f) return "";
+        string turn = turnStartedAt < 0f ? "" : $" · 지난 턴 {(turnDoneAt >= 0f ? $"게임 {turnDoneAt - turnStartedAt:0.0}초에 끝" : "안 끝남")} · 판 누계 버린 동작 {turnDropped}";
+        string text = $"      ⏩ 이 라운드(R{round}) 배율 {Time.timeScale:0.##}{turn}{(InFocus(job, round) ? " · 1배 구간(숫자 판정에 씀)" : " · 배속 구간 — 피해·처치 시간은 판정에 안 씀, 보스는 처치 여부만")} · 실제 프레임 {frameEma * 1000f:0.#}ms\n" + speedLog;
         speedLog = "";
         return text;
     }
@@ -3387,7 +3394,7 @@ public static class ClaudeCommands
         woodIn.Clear(); woodOut.Clear(); woodInRound.Clear(); woodOutRound.Clear(); soldTotals.Clear();
         combineAvailRound.Clear(); combineDoneRound.Clear(); combineDoneTotal.Clear();
         currentPlan = null; recipesByResult = null; targetLog.Clear(); lastStoryHp = -1f; stuckTargets.Clear(); stuckBest = int.MaxValue; stuckTurns = 0;
-        frameEma = -1f; speedCapLogged = -1f; speedLog = "";
+        frameEma = -1f; speedCapLogged = -1f; speedLog = ""; turnStartedAt = turnDoneAt = -1f; turnDropped = 0;
         wallet.OnResourceChanged += OnWoodChanged;
     }
 
@@ -3434,7 +3441,9 @@ public static class ClaudeCommands
             int dropped = job.clicks.Count - job.clickIndex - 1;
             job.clicks.RemoveRange(job.clickIndex + 1, dropped);
             job.report += $"   ⏭ 앞 턴이 안 끝나 남은 {dropped}동작을 버리고 새로 짬\n";
+            turnDropped += dropped;
         }
+        turnStartedAt = Time.time; turnDoneAt = -1f;
         EnsureWoodWatch();
         var myWisps = UnityEngine.Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None)
             .Where(w => w != null && w.Data != null && (!w.TryGetComponent(out OwnedByPlayer o) || o.OwnerId == 0)).ToList();
