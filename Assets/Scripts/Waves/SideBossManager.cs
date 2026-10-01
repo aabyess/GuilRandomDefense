@@ -46,7 +46,11 @@ public class SideBossManager : MonoBehaviour
     // §⑧ 정산 — 그 플레이어의 "다음 보스 라운드(R65/70/75) 시작 체력 배율". 기본 1f
     // (사이드보스전을 안 겪었으면 그대로) — 62/66/71을 거치면 실제 값으로 채워진다.
     // WaveSpawner.BossStartHpMultiplierProvider가 이 배열을 그대로 읽는다.
-    readonly float[] nextBossStartHpMultiplier = NewArray(1f);
+    // 원작 Trig_Enemy_Boss_sinsekai(j:5617-5622): 사이드보스가 없으면 시작 체력% = 보스 ×0.85 + 0(사이드 몫 없음), 있으면 ×0.85 + 사이드%×0.15.
+    // 그래서 기본은 1f가 아니라 0.85다. 구세계 보스(R10~60)엔 이 배율이 없다 — Provide가 R65+ 아니면 1f를 준다.
+    const float NewWorldBossBaseHp = 0.85f;
+    const int NewWorldBossFirstRound = 65;   // R65/70/75 — RoundManager.isNewWorldBoss와 같은 경계
+    readonly float[] nextBossStartHpMultiplier = NewArray(NewWorldBossBaseHp);
 
     // 이 라운드에서 이미 스폰했는지(레인별) — 스폰카운터가 15를 넘긴 뒤에도 계속 늘어나므로
     // 한 번만 트리거되게 막는다.
@@ -165,8 +169,10 @@ public class SideBossManager : MonoBehaviour
     float ProvideBossStartHpMultiplier(int laneIndex)
     {
         if (laneIndex < 0 || laneIndex >= MaxPlayers) return 1f;
+        // 구세계 보스(R10~60)는 원작에 이 배율이 없다 — 값도 소모하지 않는다.
+        if (roundManager == null || roundManager.CurrentRound < NewWorldBossFirstRound) return 1f;
         float value = nextBossStartHpMultiplier[laneIndex];
-        nextBossStartHpMultiplier[laneIndex] = 1f;
+        nextBossStartHpMultiplier[laneIndex] = NewWorldBossBaseHp;
         return value;
     }
 }
