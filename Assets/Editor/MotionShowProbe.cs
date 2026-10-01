@@ -37,6 +37,8 @@ static class MotionShowProbe
     static string CamSide() => CamAt(55f, 10f, 0f);
     // 공격 모션 강제 — 「공격」 때 보이는 부품 확인용
     static string AttackAll() { foreach (CharacterAnimator c in Object.FindObjectsByType<CharacterAnimator>(FindObjectsSortMode.None)) if (c.GetComponent<UnitIdentity>() != null) c.PlayAttack(); return "공격 모션"; }
+    // 로스터 이름을 ClaudeBridge/probe_roster.txt 첫 줄에서 읽어 세운다 — 상시 오라 사진용(명령에 인자를 못 넘겨서)
+    static string ShowFile() => Show(System.IO.File.ReadAllLines(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Application.dataPath), "ClaudeBridge/probe_roster.txt"))[0].Trim().Normalize(System.Text.NormalizationForm.FormC));
     static string KimAp() => Show("초월_김민준_AP");
     static string ShinAp() => Show("초월_신문철_AP");
     static string JiEter() => Show("영원_이지원");

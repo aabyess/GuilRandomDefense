@@ -2,18 +2,18 @@
 # 초월 부가 이펙트 재료 → 납작 JSON 전부 다시(알파벳 = Resources 키 접두, 로스터 = Roster 에셋 이름). 쓰고 나서 유니티에서 call SphereArtBuilder.BuildAll → python3 Tools/sphere_art/build_table.py → refresh
 B=~/GRD_motion_trial/초월_부가이펙트
 H=$(dirname "$0")/flatten_effects.py
-python3 $H $B/초월_구주호_AD juho_ad 초월_구주호_AD
-python3 $H $B/초월_김만경_AD kim_ad 초월_김만경_AD
-python3 $H $B/초월_최상호_AD sang_ad 초월_최상호_AD
-python3 $H $B/초월_박기찬_AD gi_ad 초월_박기찬_AD
-python3 $H $B/초월_황준석_ADAP hjs_base 초월_황준석_ADAP
-python3 $H $B/_미대응/마르코_날개 hjs_marco 초월_황준석_ADAP
-python3 $H $B/_미대응/쿠잔_얼음칼날 hjs_kuzan 초월_황준석_ADAP
-python3 $H $B/_미대응/검은_초승달 sang_crescent 초월_최상호_AD
+/usr/bin/python3 $H $B/초월_구주호_AD juho_ad 초월_구주호_AD
+/usr/bin/python3 $H $B/초월_김만경_AD kim_ad 초월_김만경_AD
+/usr/bin/python3 $H $B/초월_최상호_AD sang_ad 초월_최상호_AD
+/usr/bin/python3 $H $B/초월_박기찬_AD gi_ad 초월_박기찬_AD
+/usr/bin/python3 $H $B/초월_황준석_ADAP hjs_base 초월_황준석_ADAP
+/usr/bin/python3 $H $B/_미대응/마르코_날개 hjs_marco 초월_황준석_ADAP
+/usr/bin/python3 $H $B/_미대응/쿠잔_얼음칼날 hjs_kuzan 초월_황준석_ADAP
+/usr/bin/python3 $H $B/_미대응/검은_초승달 sang_crescent 초월_최상호_AD
 # 휘두를 때 잠깐 나타나는 베기 판(PM 10-01) — 원작 시퀀스가 비어 쓰는 때를 정해 준다
-FORCE_STATES=스킬 python3 $H $B/_미대응/초승달_베기 bae_slash 초월_배성령_AD
-FORCE_STATES=공격 python3 $H $B/_미대응/큰_베기_호 park_slash 초월_박민석_ADAP
-python3 $H $B/초월_신문철_AP shin_ap 초월_신문철_AP
-python3 $H $B/영원_이지원 ji_eter 영원_이지원
-python3 $H $B/초월_김민준_AP kim_ap 초월_김민준_AP
-python3 $H $B/초월_최상호_AP sang_ap 초월_최상호_AP
+FORCE_STATES=스킬 /usr/bin/python3 $H $B/_미대응/초승달_베기 bae_slash 초월_배성령_AD
+FORCE_STATES=공격 /usr/bin/python3 $H $B/_미대응/큰_베기_호 park_slash 초월_박민석_ADAP
+/usr/bin/python3 $H $B/초월_신문철_AP shin_ap 초월_신문철_AP
+/usr/bin/python3 $H $B/영원_이지원 ji_eter 영원_이지원
+/usr/bin/python3 $H $B/초월_김민준_AP kim_ap 초월_김민준_AP
+/usr/bin/python3 $H $B/초월_최상호_AP sang_ap 초월_최상호_AP

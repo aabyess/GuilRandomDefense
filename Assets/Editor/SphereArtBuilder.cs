@@ -23,13 +23,14 @@ static class SphereArtBuilder
 
     [System.Serializable] class Part
     {
-        public string kind, name, slot, model, texture, fbx, fbxObject, shape, states, attach;
+        public string kind, name, slot, model, texture, fbx, fbxObject, shape, states, attach, spinAxis;
+        public float spinDeg;
         public float trail, width, widthEnd, bodyHeightM, rate, life, speed, speedVar, cone, gravity, mid;
         public float[] pos, box, size, rgb, alpha, euler, offset;
         public bool additive, cutout, blend;
         public int rows, cols;
     }
-    [System.Serializable] class Roster { public string roster, alias; public List<Part> parts; }
+    [System.Serializable] class Roster { public string roster, alias; public bool single; public List<Part> parts; }
 
     static string ProjectRoot => Path.GetDirectoryName(Application.dataPath);
 
@@ -45,8 +46,18 @@ static class SphereArtBuilder
             Roster r = JsonUtility.FromJson<Roster>(File.ReadAllText(file, Encoding.UTF8));
             string rosterName = r.roster.Normalize(NormalizationForm.FormC);
             // 같은 아트 키 접두의 옛 프리팹을 지우고 다시 만든다(그룹 이름이 바뀌어도 낡은 게 안 남게)
-            foreach (string old in AssetDatabase.FindAssets("t:Prefab", new[] { ResDir }).Select(AssetDatabase.GUIDToAssetPath).Where(a => Path.GetFileName(a).StartsWith(r.alias + "_")).ToList())
-                AssetDatabase.DeleteAsset(old);
+            if (!r.single)
+                foreach (string old in AssetDatabase.FindAssets("t:Prefab", new[] { ResDir }).Select(AssetDatabase.GUIDToAssetPath).Where(a => Path.GetFileName(a).StartsWith(r.alias + "_")).ToList())
+                    AssetDatabase.DeleteAsset(old);
+            if (r.single && r.parts.Count == 0) { report.AppendLine($"{r.alias}: 부품 없음(원작에서 안 켜지는 모델) — 임시 모양 유지"); continue; }
+            if (r.single)
+            {
+                // 상시 오라: 모델 통째 한 프리팹 <별칭>.prefab — 별칭 = 원작 파일 이름 소문자(SphereArtTable.Create가 그 이름으로 찾는다)
+                string exact = $"{ResDir}/{r.alias}.prefab";
+                if (File.Exists(Path.Combine(ProjectRoot, exact))) AssetDatabase.DeleteAsset(exact);
+                report.AppendLine(BuildPrefab(r.alias, r.alias, r.alias, r.parts, aura: true));
+                continue;
+            }
             // 보이는 때(states)와 붙는 뼈(attach)가 같은 부품끼리 프리팹 하나
             foreach (IGrouping<(string states, string attach), Part> g in r.parts.GroupBy(p => (p.states, p.attach)))
             {
@@ -63,11 +74,11 @@ static class SphereArtBuilder
         return report.ToString().TrimEnd();
     }
 
-    static string BuildPrefab(string roster, string alias, string key, List<Part> parts)
+    static string BuildPrefab(string roster, string alias, string key, List<Part> parts, bool aura = false)
     {
         var root = new GameObject(key);
         // 손에 쥐는 부품: 첫 부품의 원작 pivot(몸 좌표)을 쥐는 점으로(SphereArtHold) — 손 뼈 붙임 프리팹 전부
-        if (parts[0].attach.StartsWith("hand,") && parts[0].pos != null && parts[0].pos.Length >= 3)
+        if (parts.Count > 0 && parts[0].attach != null && parts[0].attach.StartsWith("hand,") && parts[0].pos != null && parts[0].pos.Length >= 3)
         {
             float kHold = GameBodyHeight / Mathf.Max(0.1f, parts[0].bodyHeightM);
             root.AddComponent<SphereArtHold>().pivot = new Vector3(parts[0].pos[0], parts[0].pos[1], parts[0].pos[2]) * kHold;
@@ -89,6 +100,13 @@ static class SphereArtBuilder
         return $"{roster} · {key}: 메시 {meshes} · 파티클 {systems}{notes}";
     }
 
+    static void AddSpin(GameObject go, Part p)
+    {
+        var spin = go.AddComponent<SphereArtSpin>();
+        spin.axis = p.spinAxis == "X" ? Vector3.right : p.spinAxis == "Z" ? Vector3.forward : Vector3.up;
+        spin.degPerSecond = p.spinDeg;
+    }
+
     // ── 메시 ──────────────────────────────────────────────────────────────
     static bool AddMesh(Transform parent, string roster, string alias, Part p, float k, StringBuilder notes)
     {
@@ -100,6 +118,7 @@ static class SphereArtBuilder
         var wrapper = new GameObject(p.name);
         wrapper.transform.SetParent(parent, false);
         wrapper.transform.localScale = Vector3.one * k;
+        if (p.spinDeg != 0f) AddSpin(wrapper, p);
         if (p.euler != null && p.euler.Length >= 3) wrapper.transform.localRotation = Quaternion.Euler(p.euler[0], p.euler[1], p.euler[2]);
         if (p.offset != null && p.offset.Length >= 3) wrapper.transform.localPosition = new Vector3(p.offset[0], p.offset[1], p.offset[2]) * GameBodyHeight;
         GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(source);
@@ -143,6 +162,12 @@ static class SphereArtBuilder
         {
             // 가산·알파혼합 = 파티클 URP Unlit 사본(메시에도 그대로 쓰인다). 혼합은 Skill_*.mat 방식(_Blend 0 · Src/Dst 알파).
             if (m == null) { AssetDatabase.CopyAsset(AdditiveBase, path); m = AssetDatabase.LoadAssetAtPath<Material>(path); }
+            if (!p.blend)   // 가산으로 되돌린다(이전 빌드가 블렌드로 바꿔 둔 재질이 남아 있을 수 있다)
+            {
+                m.SetFloat("_Blend", 2f);
+                m.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.One);
+                m.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.One);
+            }
             if (p.blend)
             {
                 m.SetFloat("_Blend", 0f);
@@ -232,6 +257,13 @@ static class SphereArtBuilder
     // 리본 = TrailRenderer — 붙은 뼈가 움직일 때만 궤적이 그려진다(검 휘두름·이동)
     static void AddRibbon(Transform parent, string alias, Part p, float k)
     {
+        if (p.spinDeg != 0f)
+        {   // 같은 회전 뼈에 붙은 궤적 — 돌리는 부모 아래에 둬서 원을 그리게 한다(Ora_siki 리본)
+            var spinner = new GameObject(p.name + "_spin");
+            spinner.transform.SetParent(parent, false);
+            AddSpin(spinner, p);
+            parent = spinner.transform;
+        }
         var go = new GameObject(p.name);
         go.transform.SetParent(parent, false);
         go.transform.localPosition = new Vector3(p.pos[0], p.pos[1], p.pos[2]) * k;
@@ -253,12 +285,21 @@ static class SphereArtBuilder
     {
         string texName = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(p.texture));
         string safe = new string(texName.Select(c => char.IsLetterOrDigit(c) ? c : '_').ToArray());
-        string path = $"{MatDir}/{alias}_{safe}.mat";
+        bool blendMode = !p.additive;   // 원작 필터 「블렌드」는 텍스처 알파로 그린다 — 가산으로 그리면 사각 바탕이 비친다(10-01 flames&smoke)
+        string path = $"{MatDir}/{alias}_{safe}{(blendMode ? "_blend" : "")}.mat";
         Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
         if (m == null)
         {
             AssetDatabase.CopyAsset(AdditiveBase, path);
             m = AssetDatabase.LoadAssetAtPath<Material>(path);
+        }
+        if (blendMode)
+        {
+            m.SetFloat("_Blend", 0f);
+            m.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.SetFloat("_SrcBlendAlpha", (float)UnityEngine.Rendering.BlendMode.One);
+            m.SetFloat("_DstBlendAlpha", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
         }
         // 원본 텍스처 폴더 = Src/<로스터>/ — 같은 이름이 로스터마다 다를 일은 없으니 별칭 폴더를 훑는다.
         Texture2D tex = AssetDatabase.FindAssets("t:Texture2D " + texName, new[] { $"{ResDir}/Src" })

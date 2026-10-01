@@ -84,7 +84,8 @@ public class UnitSphereArt : MonoBehaviour
         if (origin)
         {
             // 발밑 땅 — 부모는 유닛 루트(함께 움직이되 LateUpdate에서 회전을 세계로 되돌린다). 크기 = 원작 단위 ÷ WorldScale.
-            part.diameter = SphereArtTable.OriginDiameterMapUnits(art.key) / WorldScale.Value * (art.scale > 0f ? art.scale : 1f);
+            // 진짜 모델(SphereArtBuilder 오라 프리팹)은 이미 맵 단위 ÷ WorldScale로 구워져 있다 — 임시 판만 표의 지름을 쓴다
+            part.diameter = (part.placeholder ? SphereArtTable.OriginDiameterMapUnits(art.key) / WorldScale.Value : 1f) * (art.scale > 0f ? art.scale : 1f);
             go.transform.SetParent(transform, false);
             go.transform.localPosition = art.pos + Vector3.up * GroundLift;
         }
