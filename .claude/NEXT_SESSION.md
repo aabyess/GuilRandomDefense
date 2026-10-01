@@ -35,6 +35,7 @@
 
 ## 3. 세션별 앞으로 할 일
 ### PM
+0. 🔴 **0.3.3v 배포 완료(10-01 23:40)** — release/0.3.3(빌드 사본). main에 아직 안 들어간 두 커밋: 44b2ba80b(BuildBeta 영문 이름 GuRandi)·6c3854113(GameVersion 0.3.3) → R60 판 끝난 뒤 main에 cherry-pick(Editor 스크립트라 판 중 쓰면 오염). 🔴 배포 zip은 `zip -r -y -X`(Info-ZIP)로, BurstDebugInformation_DoNotShip 제외, 이름 영문만 — 맥 ditto zip은 한글 이름에 UTF-8 표시를 안 넣어 윈도우에서 빈 폴더가 됐다(친구 메일 0.3.1).
 1. 사장님 답 받기(§4) — 특히 앱 실행·황준석 겹침.
 2. 다음 배포 0.3.2: 부가 이펙트 11곳·상시 오라·고유 동작 3·4묶음(이미 0.3.1에 들어감 — 확인)·도구는 무관. 절차: build 사본에서 `git checkout -B release/0.3.2 main`(사본에 남는 폴더 .meta 미추적 파일은 지우고) → GameVersion → `BuildBeta.Mac`/`Windows` 배치 → 앱 바이너리를 `-mpSolo -mpSaveDir … -mpSoloMenuAt 25 사진` → ditto zip → 안내문.
 3. 멀티 두 창 확인(아직 안 함) · 윈도우 실행 확인(아직).
