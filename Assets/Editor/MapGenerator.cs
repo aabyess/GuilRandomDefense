@@ -5098,6 +5098,7 @@ public static class MapGenerator
         // 무조건 false로 돌려서, 10엔 도박 칸이 눌러도 아무 반응이 없었다.
         int repaired = RepairPlayerParts();
         bool unionWispFixed = RepairRewardDistributorUnionWisp();
+        RepairSaveRewardWisps();
         int rerollFixed = RepairUniqueReroll();
 
         return "\n플레이어 2~4번 자리는 비워뒀습니다 — 그 레인엔 적이 안 나옵니다."
@@ -5136,6 +5137,15 @@ public static class MapGenerator
             return true;
         }
         return EnsureAssetRef(distributor, "unionWisp", unionWisp);
+    }
+
+    // 41R 2차 세이브 보상(GAP 09-27 4번) — 흔함선택(원작 e018)·랜덤위습(e0IX) 참조를 RewardDistributor에 채운다.
+    static void RepairSaveRewardWisps()
+    {
+        RewardDistributor distributor = Object.FindFirstObjectByType<RewardDistributor>(FindObjectsInactive.Include);
+        if (distributor == null) return;
+        EnsureAssetRef(distributor, "saveRewardCommonChoiceWisp", AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_흔함선택.asset"));
+        EnsureAssetRef(distributor, "saveRewardRandomWisp", AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_랜덤유닛.asset"));
     }
 
     /// <summary>이미 물려 있던 참조 중 **남의 오브젝트를 가리키는 것**만 한 줄로. 없으면 빈 문자열.</summary>

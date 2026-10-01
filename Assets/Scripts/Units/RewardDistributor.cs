@@ -32,6 +32,9 @@ public class RewardDistributor : MonoBehaviour
     // 그 자리다(2026-09-07, APPROXIMATION_LEDGER.md §① 설계 확정 후 배선). 비어 있으면
     // (기본값 null) GrantUnionWispIfEligible이 아무 일도 안 한다.
     [SerializeField] WispData unionWisp;
+    // 41R 2차 세이브 보상(원작 Trig_SaveReward_2, j:5364-5372) — 흔함선택 위습(e018)·랜덤위습(e0IX). MapGenerator.RepairSaveRewardWisps가 채운다.
+    [SerializeField] WispData saveRewardCommonChoiceWisp;
+    [SerializeField] WispData saveRewardRandomWisp;
 
     // 우물 한가운데 뭉쳐 있게 둔다. 8로 벌리면 별 모양으로 흩어져서 다섯 덩어리로 보이는데,
     // 이건 한 사람 몫의 시작 자원이라 한 무더기로 읽혀야 한다.
@@ -460,6 +463,29 @@ public class RewardDistributor : MonoBehaviour
         if (context.NavigationState == null || context.NavigationState.Choice != NavigationChoice.Union) return;
 
         GrantWisps(context, new List<WispReward> { new WispReward { wisp = unionWisp, count = 1 } });
+    }
+
+    /// <summary>
+    /// 41라운드 진입 때 1회(원작 Trig_SaveReward_2, 호출 j:5687 udg_Level==41, 한 번 돌면 트리거 삭제): 플레이어 1~4 **전원**(생존 검사 없음)에게 각자 자기 세이브값으로 —
+    /// 클리어 횟수 ≥30 → 흔함선택 위습 1 · 누적 포인트 ≥1000 → 랜덤위습 1 · ≥1500 → 랜덤위습 1 더(합 2). 문구는 전원 10초.
+    /// </summary>
+    public void GrantSecondSaveRewards()
+    {
+        if (!GameAuthority.IsServer) return;
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            PlayerSaveData data = context.PersistentSave != null ? context.PersistentSave.Data : null;
+            if (data == null) continue;
+            var rewards = new List<WispReward>();
+            if (data.cumulativeClearCount >= 30 && saveRewardCommonChoiceWisp != null)
+                rewards.Add(new WispReward { wisp = saveRewardCommonChoiceWisp, count = 1 });
+            int randoms = (data.cumulativePlayPoint >= 1000 ? 1 : 0) + (data.cumulativePlayPoint >= 1500 ? 1 : 0);
+            if (randoms > 0 && saveRewardRandomWisp != null)
+                rewards.Add(new WispReward { wisp = saveRewardRandomWisp, count = randoms });
+            if (rewards.Count > 0) GrantWisps(context, rewards);
+        }
+        foreach (PlayerContext context in PlayerContext.Occupied)
+            PlayerNotification.Show(context.PlayerId, "세이브회수에 따른 2차 보상이 지급됩니다.", 10f);
     }
 
     void SpawnWisp(PlayerContext context, WispData wispData, int count)

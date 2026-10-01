@@ -502,6 +502,8 @@ public class RoundManager : MonoBehaviour
         {
             return;
         }
+        // 원작 Trig_SaveReward_2(j:5687, udg_Level==41): 세이브 누적에 따른 2차 보상 — 게이트를 통과한 판의 41R 진입 때 한 번.
+        if (currentRound == 41) RewardDistributor.Instance?.GrantSecondSaveRewards();
 
         // 다음 라운드가 실제로 시작될 때만 준다 — 마지막 라운드를 넘기지 못하고 위에서
         // 게임이 끝나는 경로로 빠지면 여기까지 안 온다. 1라운드 시작(Start())에서는 이 메서드
