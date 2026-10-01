@@ -26,7 +26,7 @@ static class SphereArtBuilder
         public string kind, name, slot, model, texture, fbx, fbxObject, shape, states, attach;
         public float bodyHeightM, rate, life, speed, speedVar, cone, gravity, mid;
         public float[] pos, box, size, rgb, alpha;
-        public bool additive, cutout;
+        public bool additive, cutout, blend;
         public int rows, cols;
     }
     [System.Serializable] class Roster { public string roster, alias; public List<Part> parts; }
@@ -95,16 +95,26 @@ static class SphereArtBuilder
         bool found = false;
         foreach (Renderer r in instance.GetComponentsInChildren<Renderer>(true))
         {
-            if (r.name != p.fbxObject) { Object.DestroyImmediate(r.gameObject); continue; }
+            if (r.name != p.fbxObject && !p.fbxObject.StartsWith(r.name + "_L")) { Object.DestroyImmediate(r.gameObject); continue; }   // 유니티가 재질 접미(_L0_add)를 뗀 이름으로 읽을 때가 있다(lb_jimbe_g0)
             found = true;
             r.sharedMaterial = MeshMaterial(roster, alias, p);
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             r.receiveShadows = false;
         }
-        if (!found) { notes.Append($" ⚠️ 오브젝트 {p.fbxObject} 없음"); Object.DestroyImmediate(instance); return false; }
+        if (!found) { notes.Append($" ⚠️ 오브젝트 {p.fbxObject} 없음(FBX 안: {string.Join(", ", source.GetComponentsInChildren<Renderer>(true).Select(x => x.name))})"); Object.DestroyImmediate(instance); return false; }
         instance.transform.localScale = Vector3.one * k;
         Bounds b = default; bool first = true;
         foreach (Renderer r in instance.GetComponentsInChildren<Renderer>()) { if (first) { b = r.bounds; first = false; } else b.Encapsulate(r.bounds); }
+        if (p.attach.StartsWith("limb,"))
+        {
+            // 소매: 어깨 쪽 끝 = 안쪽·위, 손 쪽 끝 = 바깥쪽·아래(경계 상자 근사) — 옆(몸 좌우)은 중심 x의 부호로 안/바깥을 정한다.
+            float sign = b.center.x >= 0f ? 1f : -1f;
+            var limb = parent.GetComponent<SphereArtLimb>() ?? parent.gameObject.AddComponent<SphereArtLimb>();
+            limb.start = new Vector3(b.center.x - sign * b.extents.x, b.max.y, b.center.z);
+            limb.end = new Vector3(b.center.x + sign * b.extents.x, b.min.y, b.center.z);
+            limb.left = p.attach.EndsWith("left");
+            notes.Append($" [소매 어깨끝 {limb.start:F1} → 손끝 {limb.end:F1}]");
+        }
         notes.Append($" [{p.name} 경계 {b.min:F1}~{b.max:F1}]");
         return true;
     }
@@ -112,9 +122,24 @@ static class SphereArtBuilder
     static Material MeshMaterial(string roster, string alias, Part p)
     {
         string path = $"{MatDir}/{alias}_{p.fbxObject}.mat";
-        Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
-        if (m == null) { m = new Material(Shader.Find("Universal Render Pipeline/Lit")); AssetDatabase.CreateAsset(m, path); }
         Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>($"{ResDir}/Src/{roster}/{p.texture}");
+        Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (p.additive || p.blend)
+        {
+            // 가산·알파혼합 = 파티클 URP Unlit 사본(메시에도 그대로 쓰인다). 혼합은 Skill_*.mat 방식(_Blend 0 · Src/Dst 알파).
+            if (m == null) { AssetDatabase.CopyAsset(AdditiveBase, path); m = AssetDatabase.LoadAssetAtPath<Material>(path); }
+            if (p.blend)
+            {
+                m.SetFloat("_Blend", 0f);
+                m.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                m.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            }
+            m.SetFloat("_Cull", 0f);
+            if (tex != null) m.SetTexture("_BaseMap", tex);
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+        if (m == null) { m = new Material(Shader.Find("Universal Render Pipeline/Lit")); AssetDatabase.CreateAsset(m, path); }
         m.SetTexture("_BaseMap", tex);
         m.SetColor("_BaseColor", Color.white);
         m.SetFloat("_Cull", 0f);                                   // 양면

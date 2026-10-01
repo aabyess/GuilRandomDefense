@@ -93,9 +93,18 @@ public class UnitSphereArt : MonoBehaviour
             // 「follow:뼈」 = 부가 이펙트 프리팹(몸 좌표·발밑 원점, SphereArtBuilder) — 몸 자리에 세운 뒤 그 뼈에 월드 자리를 지킨 채 옮겨 붙여 뼈를 따라가게 한다.
             bool follow = art.attach.StartsWith("follow:");
             string spot = follow ? art.attach.Substring(7) : art.attach;
-            Transform bone = FindBone(spot);
+            // 「limb,left|right」 = 팔에 씌우는 메시 — 어깨→손 선분을 우리 팔에 맞춰(SphereArtLimb) 위팔 뼈에 붙인다
+            bool limb = follow && spot.StartsWith("limb,");
+            Transform bone = limb ? null : FindBone(spot);
             bool real = SphereArtTable.HasRealModel(art.key);
-            if (follow)
+            if (limb && go.TryGetComponent(out SphereArtLimb fit))
+            {
+                string side = spot.Substring(5);
+                go.transform.SetParent(transform, false);
+                go.transform.localPosition = art.pos;
+                part.attachedTo = FitLimb(go.transform, fit, side == "left");
+            }
+            else if (follow)
             {
                 go.transform.SetParent(transform, false);
                 go.transform.localPosition = art.pos;
@@ -120,9 +129,30 @@ public class UnitSphereArt : MonoBehaviour
             float size = real ? 1f : height * BodyArtRatio;
             part.diameter = size * (art.scale > 0f ? art.scale : 1f);
         }
-        ApplyScale(part);
+        if (!part.attachedTo.Contains("소매 맞춤")) ApplyScale(part);
         SetShown(part, (part.when & SphereArtTable.When.Idle) != 0 && visible);
         parts.Add(part);
+    }
+
+    // 소매 맞춤: 어깨 끝→손 끝 선분을 우리 팔(위팔 뼈→손 뼈)에 회전·크기로 맞추고 위팔 뼈에 월드 자리 유지 채 붙인다. 못 맞추면 body에 둔다.
+    string FitLimb(Transform t, SphereArtLimb fit, bool left)
+    {
+        if (animator == null || !animator.isHuman) return "body(Humanoid 아님 — 소매 못 맞춤)";
+        Transform upper = animator.GetBoneTransform(left ? HumanBodyBones.LeftUpperArm : HumanBodyBones.RightUpperArm);
+        Transform lower = animator.GetBoneTransform(left ? HumanBodyBones.LeftLowerArm : HumanBodyBones.RightLowerArm);
+        Transform hand = animator.GetBoneTransform(left ? HumanBodyBones.LeftHand : HumanBodyBones.RightHand);
+        // 아래팔(팔꿈치→손)에 씌운다 — 위팔에 붙이면 팔꿈치를 굽혔을 때 소매가 팔을 따로 놀았다(10-01 김만경 사진)
+        Transform root = lower != null ? lower : upper;
+        if (root == null || hand == null) return "body(팔 뼈 못 찾음)";
+        Vector3 s0 = t.TransformPoint(fit.start), h0 = t.TransformPoint(fit.end);
+        Vector3 s1 = root.position, h1 = hand.position;
+        Quaternion q = Quaternion.FromToRotation(h0 - s0, h1 - s1);
+        float f = (h1 - s1).magnitude / Mathf.Max(1e-3f, (h0 - s0).magnitude) * fit.lengthBoost;
+        t.rotation = q * t.rotation;
+        t.position = s1 + q * (t.position - s0) * f;
+        t.localScale *= f;
+        t.SetParent(root, true);
+        return root.name + "(소매 맞춤 ×" + f.ToString("0.00") + ")";
     }
 
     static void ApplyScale(Part p)

@@ -35,6 +35,10 @@ static class MotionShowProbe
     static string CamBack() => CamAt(0f, 14f, -50f);
     static string CamFront() => CamAt(0f, 14f, 50f);
     static string CamSide() => CamAt(55f, 10f, 0f);
+    // 공격 모션 강제 — 「공격」 때 보이는 부품 확인용
+    static string AttackAll() { foreach (CharacterAnimator c in Object.FindObjectsByType<CharacterAnimator>(FindObjectsSortMode.None)) if (c.GetComponent<UnitIdentity>() != null) c.PlayAttack(); return "공격 모션"; }
+    static string KimMan() => Show("초월_김만경_AD");
+    static string SangAd() => Show("초월_최상호_AD");
     static string Keyjaru() => Show("초월_구주호_AD");
     // 스킬 중 부품 확인용 — 모든 UnitSphereArt에 스킬 신호를 6초 준다
     static string PulseAll() { foreach (UnitSphereArt a in Object.FindObjectsByType<UnitSphereArt>(FindObjectsSortMode.None)) a.PulseSkill(6f); return "스킬 신호 6초"; }

@@ -22,6 +22,7 @@ SRC_DIR = os.path.join(ROOT, "Assets", "Resources", "Effects", "Sphere", "Src")
 
 
 HINTS = {"RightHand": "hand,right", "LeftHand": "hand,left", "Spine1(가슴)": "chest", "Hips": "hips", "Head": "head"}
+LIMB_PARTS = {"AkainuBW7_g2", "AkainuBW7_g5"}   # 마그마 소매(김만경_AD)
 ORDER = ["대기", "이동", "공격", "스킬"]
 
 
@@ -50,13 +51,14 @@ def main():
         if p["kind"] == "mesh":
             # 메시 pivot은 원작 팔 뼈의 자리(팔을 벌린 자세 기준, 몸에서 ~0.9m) — 우리 스킨 손에 붙이면 팔 흔들림에 크게 휘둘린다(10-01 구주호 날개) → 가슴 뼈에.
             if out["attach"] in ("hand,left", "hand,right"):
-                out["attach"] = "chest"
+                # 예외 표(PM 10-01): 팔에 씌우는 소매는 우리 팔에 맞춰 위팔 뼈에(SphereArtLimb), 그 밖(날개 등 몸에서 뻗은 것)은 가슴 뼈에.
+                out["attach"] = ("limb," + out["attach"].split(",")[1]) if p["name"] in LIMB_PARTS else "chest"
             layer = next((l for l in p["layers"] if not l.get("skip")), None)
             if layer is None:
                 continue
             tex = layer["texture"]["file"]
             out.update(fbx=p["fbx"], fbxObject=layer["fbx_object"], texture=tex, additive=bool(layer["additive"]),
-                       cutout=layer["fbx_object"].endswith("_cut"))
+                       cutout=layer["fbx_object"].endswith("_cut"), blend=layer["fbx_object"].endswith("_blend"))
             files.update([p["fbx"], tex])
             # 같은 FBX의 다른 오브젝트(g5·g6)는 부품마다 따로 — 슬롯이 다르므로
         elif p["kind"] == "particle":
