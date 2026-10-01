@@ -31,6 +31,8 @@ public class NetEntity : NetworkBehaviour
     [Networked] public float AttackDamage { get; set; }
     [Networked] public float AttackRange { get; set; }
     [Networked] public float AttackInterval { get; set; }
+    /// <summary>호스트 실물의 캐릭터 레벨(1~24) — 친구 화면 정보칸 「Lv.N」.</summary>
+    [Networked] public byte HeroLevel { get; set; }
     // 적: 방깎·이감·난이도가 반영된 실효 방어력과 이동속도(겉모습은 에셋 기준값밖에 모른다).
     [Networked] public float EnemyArmor { get; set; }
     [Networked] public float EnemyMoveSpeed { get; set; }
@@ -119,6 +121,7 @@ public class NetEntity : NetworkBehaviour
             if (AttackDamage != realAttacker.AttackDamage) AttackDamage = realAttacker.AttackDamage;
             if (AttackRange != realAttacker.AttackRange) AttackRange = realAttacker.AttackRange;
             if (AttackInterval != realAttacker.AttackInterval) AttackInterval = realAttacker.AttackInterval;
+            if (HeroLevel != realAttacker.CharacterLevel) HeroLevel = (byte)realAttacker.CharacterLevel;
         }
 
         if (RerollAbility == 0 && EntityKind == NetEntityKind.Unit && Real.TryGetComponent(out UniqueRerollAbility reroll) && NetLauncher.Catalog != null)

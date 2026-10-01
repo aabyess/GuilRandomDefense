@@ -2861,6 +2861,9 @@ public class GameHud : MonoBehaviour
         float damage = attacker != null ? attacker.AttackDamage : mirror != null ? mirror.AttackDamage : 0f;
         float range = attacker != null ? attacker.AttackRange : mirror != null ? mirror.AttackRange : 0f;
         float interval = attacker != null ? attacker.AttackInterval : mirror != null ? mirror.AttackInterval : 0f;
+        // 영웅 레벨(GAP 09-27 「영웅 레벨·XP HUD」) — 이름 줄 끝에 「Lv.N」(워크3 영웅 정보창의 레벨). 줄을 늘리지 않아 정보칸 높이는 그대로.
+        int heroLevel = attacker != null ? attacker.CharacterLevel : mirror != null ? mirror.HeroLevel : 0;
+        string levelLabel = hasStats && heroLevel > 0 ? $"  Lv.{heroLevel}" : "";
         string attackPower = hasStats ? damage.ToString("F0") : "-";
         string attackRange = hasStats ? range.ToString("F1") : "-";
         string attackSpeed = hasStats && interval > 0f
@@ -2872,7 +2875,7 @@ public class GameHud : MonoBehaviour
         // 없는 값을 지어내지 않고 실제로 있는 축만 표시한다(2026-09-23, PM 보고 예정).
         unitInfoText.text =
             // 09-29 워크3 콘솔: 이름 한 줄 + 스탯 두 열(정보칸이 넓어져 한 줄에 하나씩 쓰면 오른쪽이 빈다).
-            $"<size=115%><color=#{gradeColorHex}>{unitName} - {grade}</color></size>\n" +
+            $"<size=115%><color=#{gradeColorHex}>{unitName} - {grade}{levelLabel}</color></size>\n" +
             $"공격력: {attackPower}<pos=50%>사거리: {attackRange}\n" +
             $"공격속도: {attackSpeed}/s<pos=50%>체력: {hp}";
     }

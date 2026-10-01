@@ -744,6 +744,9 @@ public class UnitAttacker : MonoBehaviour
 
     public void GainKillExperience() => AddHeroXp(1);
 
+    /// <summary>캐릭터 레벨(1~24) — 정보칸 표시용. 내부 heroLevel은 레벨업 누적 횟수(0~23)라 +1이다.</summary>
+    public int CharacterLevel => heroLevel + 1;
+
     /// <summary>캐릭터 레벨 characterLevel(1~24)에 닿는 누적 경험치(=누적 킬 수). 탐침이 영웅을 그 레벨로 세울 때 쓴다.</summary>
     public static int HeroXpToReach(int characterLevel)
     {
