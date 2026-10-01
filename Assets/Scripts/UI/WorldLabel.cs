@@ -29,7 +29,8 @@ public class WorldLabel : MonoBehaviour
         GameObject child = new GameObject("Text", typeof(TextMeshPro));
         child.transform.SetParent(transform, false);
         label = child.GetComponent<TextMeshPro>();
-        label.text = text;
+        // 글자는 한글 SDF(GameHud.UiFontAsset)가 준비된 뒤에 넣는다 — 먼저 넣으면 기본 폰트에 한글이 없어 글자마다 경고 + 네모(□)가 된다(09-27 gameshot 26건).
+        label.text = "";
         label.fontSize = fontSize;
         label.fontStyle = FontStyles.Bold;
         label.alignment = TextAlignmentOptions.Center;
@@ -45,7 +46,9 @@ public class WorldLabel : MonoBehaviour
     {
         if (label == null) return;
         // GameHud의 한글 SDF가 늦게 준비될 수 있다 — 준비되면 한 번만 바꿔 끼운다.
-        if (label.font != GameHud.UiFontAsset && GameHud.UiFontAsset != null) label.font = GameHud.UiFontAsset;
+        if (GameHud.UiFontAsset == null) return;
+        if (label.font != GameHud.UiFontAsset) label.font = GameHud.UiFontAsset;
+        if (label.text != text) label.text = text;
         if (cam == null) cam = Camera.main;
         if (cam == null) return;
 
