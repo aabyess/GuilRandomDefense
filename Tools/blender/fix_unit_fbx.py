@@ -7541,8 +7541,7 @@ UNITS["특별함_황정기"]["prop_attach"] = dict(bone="Bone001", parent="Bip00
 
 # 🔸 황길라(알베도) 동작판(2026-10-01, Assets 밖 시범): 원본 클립 7개(attack·damage·dead·idle_00·idle_01·skill·spskill_00)를 테이크로. 날개·치마·리본·머리털 뼈는 **클립이 움직이므로 합치지 않고 남긴다**.
 #   도끼(j_axe)도 클립에서 손을 따라 움직이니 메시·뼈를 살려 Hips 밑으로(클립은 세계 행렬로 읽어 새 부모 기준으로 다시 굽는다). 원본에 **걷기·달리기가 없다** → Move 없음(공용 클립을 쓰거나 Idle을 대신).
-_alb = dict(UNITS["특수함_황길라"])
-UNITS["특수함_황길라"]["variants"] = {"동작": dict(
+UNITS["특수함_황길라"].update(dict(
     anim=True, anim_drop_ok=True, takes_only=True, drop_verts_of_bones=[],
     take_names={"dvl_mdl_albedo_idle_00|Base Layer": "Idle", "dvl_mdl_albedo_idle_01|Base Layer": "Idle2", "dvl_mdl_albedo_attack|Base Layer": "Attack",
                 "dvl_mdl_albedo_damage|Base Layer": "Hit", "dvl_mdl_albedo_dead|Base Layer": "Die", "dvl_mdl_albedo_skill|Base Layer": "Skill1",
@@ -7555,7 +7554,7 @@ UNITS["특수함_황길라"]["variants"] = {"동작": dict(
     merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
                  dict(pattern=r"^j_(arm_twist|shoulder_cloth_0[0-2])_l$", into="mixamorig:LeftArm"), dict(pattern=r"^j_(arm_twist|shoulder_cloth_0[0-2])_r$", into="mixamorig:RightArm"),
                  dict(pattern=r"^j_(forearm_twist|arm_frills)_l$", into="mixamorig:LeftForeArm"), dict(pattern=r"^j_(forearm_twist|arm_frills)_r$", into="mixamorig:RightForeArm"),
-                 dict(pattern=r"^j_breast_[lr]$", into="mixamorig:Spine1")])}
+                 dict(pattern=r"^j_breast_[lr]$", into="mixamorig:Spine1")]))  # 2026-10-01 사장님 지시로 「동작」판을 기본으로 올림 — 자체 클립 Idle·Idle2·Attack·Hit·Die·Skill1·Skill2(유니티에서 Generic 등록 필요)
 
 
 # 🔸 BJ_율희(코퀴토스) 꼬리 판(2026-10-01, PM 지시): 꼬리 11마디가 뒤로 수평 막대처럼 굳는 게 어색 → 엉덩이에서 **뒤·아래로 휘어 끝이 땅 근처에서 말리는 곡선**으로 포즈를 잡아 그 자세를 쉬는 자세로 굽고 Hips에 합친다.
