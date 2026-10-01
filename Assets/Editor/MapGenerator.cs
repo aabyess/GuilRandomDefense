@@ -3173,7 +3173,9 @@ public static class MapGenerator
     // 뺐다 — 앞으로 새 자원 포탈을 추가할 때 등급을 빠뜨리면 컴파일 단계에서 걸린다.
     // 발판 월드 글자(원작 Trig_udongText j:3659-3674) — 포탈은 납작한 원기둥이라 자식으로 달면 글자가 같이 찌그러진다 → 부모 아래 별도 오브젝트.
     // 글자는 원작 문구 그대로(주황 |cffFF8200 은 안내 글, 나머지는 흰색). 금화·목재·마나 세 줄의 TRIGSTR 원문은 wts(14442·14631·14797).
-    const float PortalLabelHeight = 14f;
+    // 글자 높이·크기는 포탈 지름에 비례(표준 포탈 37.5에서 14·18 — 스토리 포탈 62.5·복귀 포탈 100에서도 같은 비율로 읽히게, 09-27 gameshot).
+    const float PortalLabelHeightPerDiameter = 0.37f;
+    const float PortalLabelSizePerDiameter = 0.48f;
     // 등급 포탈 줄 라벨 — 원작 StoryReward_Tier2/3/4/Legend 문구(우리 band.label 기준). 흔함 선택 줄은 원작에도 글자가 없다.
     static readonly System.Collections.Generic.Dictionary<string, string> PortalBandLabels = new System.Collections.Generic.Dictionary<string, string>
     {
@@ -3186,8 +3188,9 @@ public static class MapGenerator
     {
         GameObject holder = new GameObject($"라벨_{portal.name}");
         holder.transform.SetParent(parent, false);
-        holder.transform.position = portal.transform.position + Vector3.up * PortalLabelHeight;
-        holder.AddComponent<WorldLabel>().Configure(text, orange ? new Color(1f, 0.51f, 0f, 1f) : Color.white, 18f);
+        float diameter = portal.transform.localScale.x;
+        holder.transform.position = portal.transform.position + Vector3.up * (diameter * PortalLabelHeightPerDiameter);
+        holder.AddComponent<WorldLabel>().Configure(text, orange ? new Color(1f, 0.51f, 0f, 1f) : Color.white, diameter * PortalLabelSizePerDiameter);
     }
 
     static GameObject BuildResourcePortal(Transform parent, string name, Vector3 ground,
