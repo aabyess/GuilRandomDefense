@@ -26,13 +26,15 @@ public static class BuildBeta
         // 유니버설(인텔+애플실리콘). OSXStandalone 네임스페이스는 맥 빌드 모듈이 있을 때만 생겨서 직접 쓰면
         // 모듈 없는 환경(compile_check 포함)에서 컴파일이 깨진다 — 문자열 설정으로 넣는다.
         EditorUserBuildSettings.SetPlatformSettings(BuildPipeline.GetBuildTargetName(BuildTarget.StandaloneOSX), "Architecture", "x64ARM64");
-        Build(BuildTarget.StandaloneOSX, Path.Combine("Builds", "Mac"), $"구랜디 {GameVersion.Label}.app");
+        Build(BuildTarget.StandaloneOSX, Path.Combine("Builds", "Mac"), $"GuRandi {GameVersion.Label}.app");
     }
 
     [MenuItem("Tools/빌드/윈도우 베타 빌드")]
     // 파일 이름에 버전을 넣는다(09-26 사장님 「구랜디2 이런 식 말고 1.1.0v 이런 식으로」 — 같은 zip을 두 번 풀면 맥이 「GuilRandomDefense 2.app」을 만들어
     //    어느 게 새 판인지 몰랐다). ⚠️ productName(GuilRandomDefense)은 그대로 둔다 — 세이브 폴더(persistentDataPath)가 그 이름이라 바꾸면 기록이 사라진다.
-    public static void Windows() => Build(BuildTarget.StandaloneWindows64, Path.Combine("Builds", "Windows", $"구랜디 {GameVersion.Label}"), "구랜디.exe");
+    // 🔴 (10-01 0.3.3) 폴더·exe·앱 이름은 **영문만**. 맥 ditto 압축은 한글 이름에 UTF-8 표시(zip 플래그 0x800)를 안 넣어서
+    //    윈도우 탐색기가 이름을 못 읽고 「500MB인데 빈 폴더」가 됐다(친구 메일 — 0.3.1 zip 423개 항목 전부 표시 없음 확인).
+    public static void Windows() => Build(BuildTarget.StandaloneWindows64, Path.Combine("Builds", "Windows", $"GuRandi_{GameVersion.Label}"), "GuRandi.exe");
 
     static void Build(BuildTarget target, string relDir, string fileName)
     {
@@ -51,8 +53,8 @@ public static class BuildBeta
 
         BuildReport report = BuildPipeline.BuildPlayer(options);
         BuildSummary summary = report.summary;
-        string platform = target == BuildTarget.StandaloneOSX ? "맥" : "윈도우";
-        Debug.Log($"[베타 빌드] {GameVersion.Label} · 압축 이름 구랜디_베타_{platform}_{GameVersion.Label}.zip");
+        string platform = target == BuildTarget.StandaloneOSX ? "Mac" : "Windows";
+        Debug.Log($"[베타 빌드] {GameVersion.Label} · 압축 이름 GuRandi_Beta_{platform}_{GameVersion.Label}.zip");
         Debug.Log($"[베타 빌드] {target} {summary.result} · {summary.totalSize / (1024 * 1024)}MB · 오류 {summary.totalErrors} · 경고 {summary.totalWarnings} · {summary.totalTime}");
         if (Application.isBatchMode) EditorApplication.Exit(summary.result == BuildResult.Succeeded ? 0 : 1);
     }
