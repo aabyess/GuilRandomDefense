@@ -69,8 +69,7 @@ public class DefeatOverlay : MonoBehaviour
         detailText.text =
             $"라운드 {round}\n\n" +
             $"{(string.IsNullOrEmpty(local?.DefeatMessage) ? "레인에 적이 너무 많아 데스카운트가 0이 됐습니다." : local.DefeatMessage)}\n" +
-            "골드를 잃고, 레인의 내 유닛과 적이 사라졌습니다.\n" +
-            "<color=#9FD5FF>위습은 그대로 남아 있습니다.</color>\n\n" +
+            "골드·목재·특성 포인트를 잃고, 내 유닛·위습과 레인의 적이 사라졌습니다.\n\n" +
             (allDead
                 ? "<size=80%>플레이 모드를 껐다 켜면 새 판이 시작됩니다.</size>"
                 : "<size=80%>다른 플레이어가 남아 있어 게임은 계속됩니다.</size>");

@@ -302,6 +302,20 @@ public class RoundManager : MonoBehaviour
         // 원작 udg_PlayerDeath[i]=1 분기의 같은 SetPlayerStateBJ(플레이어, GOLD, 0).
         RewardDistributor.Instance?.ConfiscateGoldOnPlayerDefeated(context);
 
+        // 원작 패배 분기(j:3385-3388): 골드뿐 아니라 목재·FOOD_USED도 0, 그 플레이어 소유 유닛을 맵 전체에서 지운다(위습 포함 — IsUnitOwnedByPlayer).
+        // 상점 건물은 안 건드린다(되돌릴 방법이 없다, PM 09-27 승인 범위: 유닛·위습·레인 유닛·골드·목재).
+        ResourceWallet wallet = context.ResourceWallet;
+        if (wallet != null) wallet.TrySpend(ResourceType.Wood, wallet.Get(ResourceType.Wood));
+        UnitUpgrades upgrades = context.UnitUpgrades;   // FOOD_USED(원작에서 특성 포인트가 이 칸) 0 — Trig_DeathTimer5 j:3388
+        if (upgrades != null) upgrades.TrySpendTraitPoints(upgrades.TraitPoints);
+        foreach (Wisp wisp in new List<Wisp>(Wisp.Active))
+        {
+            if (wisp == null || wisp.IsConsumed) continue;
+            if (!wisp.TryGetComponent(out OwnedByPlayer wispOwner) || wispOwner.OwnerId != playerId) continue;
+            wisp.MarkConsumed();
+            Destroy(wisp.gameObject);
+        }
+
         if (context.UnitInventory != null)
         {
             // Consume()이 이 목록 자체를 지운다 — 돌면서 지우면 안 되니 스냅샷부터 뜬다.
