@@ -1046,7 +1046,7 @@ public class EnemyDummy : MonoBehaviour
             // (EnemyData.rewardsKillerOnly) — 그래서 killerPlayerId를 여기서 넘겨준다.
             if (data != null && RewardDistributor.Instance != null)
             {
-                RewardDistributor.Instance.GrantKillReward(data, LaneIndex, SpawnRound, killerPlayerId);
+                RewardDistributor.Instance.GrantKillReward(data, LaneIndex, SpawnRound, killerPlayerId, transform.position);
             }
             else if (data != null && !loggedNoRewardDistributor)
             {

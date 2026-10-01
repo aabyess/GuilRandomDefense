@@ -55,6 +55,7 @@ public class NetGameState : NetworkBehaviour
 
         // 호스트: 원격 슬롯 앞으로 온 안내를 그 클라에 넘긴다(자기 것은 자기 화면에 이미 떴다).
         if (HasStateAuthority) PlayerNotification.Shown += RouteNotification;
+        if (HasStateAuthority) KillGoldPopup.Shown += RouteKillGold;
         if (HasStateAuthority) GameSound.RemoteRouted += RouteSound;
         if (HasStateAuthority) SummonVoice.Broadcast += RouteSummonVoice;
         if (HasStateAuthority) SkillSfx.Broadcast += RouteSkillSfx;
@@ -71,6 +72,7 @@ public class NetGameState : NetworkBehaviour
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
         PlayerNotification.Shown -= RouteNotification;
+        KillGoldPopup.Shown -= RouteKillGold;
         GameSound.RemoteRouted -= RouteSound;
         SummonVoice.Broadcast -= RouteSummonVoice;
         SkillSfx.Broadcast -= RouteSkillSfx;
@@ -124,6 +126,17 @@ public class NetGameState : NetworkBehaviour
             {
                 player.RPC_PlaySound((byte)id);
                 if (soundsLogged++ < 10) Debug.Log($"[MP] 소리 넘김 → 슬롯 {playerId}: {id}(방장 PC에선 안 냄)");
+                return;
+            }
+    }
+
+    void RouteKillGold(int playerId, Vector3 worldPos, int amount)
+    {
+        if (playerId == LocalPlayer.LocalPlayerId) return;   // 호스트 자신의 것은 KillGoldPopup.Show가 이미 그렸다
+        foreach (NetPlayer player in NetPlayer.All)
+            if (player != null && player.Slot == playerId && !player.HasInputAuthority)
+            {
+                player.RPC_KillGold(worldPos, amount);
                 return;
             }
     }
