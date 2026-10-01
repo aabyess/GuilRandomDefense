@@ -1572,7 +1572,8 @@ public static class ClaudeCommands
                 {
                     if (target.StartsWith("@wait:"))
                     {
-                        if (inStage < float.Parse(target.Substring(6), System.Globalization.CultureInfo.InvariantCulture)) break;
+                        // 게임 시간으로 기다린다 — 배속(fast:) 중엔 실제 시간이 그만큼 줄어든다(위습 걸음·유닛 등장은 게임 시간, 10-01).
+                        if (inStage * Mathf.Max(1f, Time.timeScale) < float.Parse(target.Substring(6), System.Globalization.CultureInfo.InvariantCulture)) break;
                         job.report += $"   ⏱ {target.Substring(6)}초 기다림\n";
                     }
                     else if (target == "@buttons")
@@ -2855,6 +2856,9 @@ public static class ClaudeCommands
         if (dt > 0f && dt < 1f) frameEma = frameEma < 0f ? dt : frameEma * 0.98f + dt * 0.02f;
         RoundManager rm = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
         int round = rm != null ? rm.CurrentRound : 0;
+        // 10-01 첫 시험(g1_204): 4배로 R1 동안
+        // 위습 다섯을 포탈로 보냈는데 하나도 유닛이 안 되고(위습 칸 그대로) R2에 무너졌다. 동작 사이 틈·위습 걸음이 실제 시간에 맞춰져 있다.
+        //    → 도구의 기다림(@wait)을 게임 시간으로 바꿨다(위). 배속을 동작 동안 끄면 배속이 거의 안 걸린다(6라운드 시험에서 실제 시간이 1배와 같았다).
         float want = InFocus(job, round) ? 1f : job.fastScale;
         if (want > 1f && frameEma > 0f)
         {
