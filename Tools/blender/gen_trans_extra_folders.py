@@ -70,7 +70,7 @@ for r, models in sorted(roster_models.items()):
                 tp = v["textures"][ti]; fn = tp.replace("\\", "_").replace("/", "_") + ".png"
                 src = os.path.join(SC, "_tex", fn)
                 if os.path.exists(src): shutil.copy(src, os.path.join(out, "Textures", fn)); md.append(f"  - 텍스처 #{ti} = `Textures/{fn}`")
-                else: md.append(f"  - 텍스처 #{ti} = {tp} (맵에 없는 워크3 기본 — 근사로 대체)")
+                else: md.append(f"  - 텍스처 #{ti} = {tp} (파일 없음)")
             rb = [(x["name"], x["chain"]) for x in v["ribbons"]]
             if rb: md.append(f"  - 리본 붙는 뼈 예: {rb[:3]}")
         md.append("")
