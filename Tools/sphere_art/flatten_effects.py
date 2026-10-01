@@ -90,6 +90,10 @@ def main():
             if AURA and spins:
                 r = max(spins, key=lambda r: abs(r["deg_per_s"]))
                 out["spinAxis"], out["spinDeg"] = r["axis_unity"], r["deg_per_s"]
+            if AURA:
+                out["unlit"] = True   # 오라 메시는 빛나는 효과 — 조명 받는 재질이면 뒤쪽이 검게 죽는다(10-01 Ora_siki 바위)
+            if AURA and layer["texture"].get("approx") and not layer["additive"]:
+                out["flat"] = [0.55, 0.45, 0.38]   # 근사 바위 텍스처는 UV 자리에 따라 검게 나온다 — 근사가 거짓 그림이 되느니 갈색 회색 단색(10-01 Ora_siki)
             out.update(pos=vec(p["attach"]["unity_pos_m"]), fbx=p["fbx"], fbxObject=layer["fbx_object"], texture=tex, additive=bool(layer["additive"]),
                        cutout=layer["fbx_object"].endswith("_cut"), blend=layer["fbx_object"].endswith("_blend"))
             if out["blend"] and opaque_alpha(os.path.join(folder, tex)):

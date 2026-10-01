@@ -26,8 +26,8 @@ static class SphereArtBuilder
         public string kind, name, slot, model, texture, fbx, fbxObject, shape, states, attach, spinAxis;
         public float spinDeg;
         public float trail, width, widthEnd, bodyHeightM, rate, life, speed, speedVar, cone, gravity, mid;
-        public float[] pos, box, size, rgb, alpha, euler, offset;
-        public bool additive, cutout, blend;
+        public float[] pos, box, size, rgb, alpha, euler, offset, flat;
+        public bool additive, cutout, blend, unlit;
         public int rows, cols;
     }
     [System.Serializable] class Roster { public string roster, alias; public bool single; public List<Part> parts; }
@@ -179,9 +179,11 @@ static class SphereArtBuilder
             EditorUtility.SetDirty(m);
             return m;
         }
-        if (m == null) { m = new Material(Shader.Find("Universal Render Pipeline/Lit")); AssetDatabase.CreateAsset(m, path); }
-        m.SetTexture("_BaseMap", tex);
-        m.SetColor("_BaseColor", Color.white);
+        Shader wanted = Shader.Find(p.unlit ? "Universal Render Pipeline/Unlit" : "Universal Render Pipeline/Lit");
+        if (m == null) { m = new Material(wanted); AssetDatabase.CreateAsset(m, path); }
+        else if (m.shader != wanted) m.shader = wanted;
+        if (p.flat != null && p.flat.Length >= 3) { m.SetTexture("_BaseMap", null); m.SetColor("_BaseColor", new Color(p.flat[0], p.flat[1], p.flat[2])); }
+        else { m.SetTexture("_BaseMap", tex); m.SetColor("_BaseColor", Color.white); }
         m.SetFloat("_Cull", 0f);                                   // 양면
         m.SetFloat("_Smoothness", 0.05f);
         m.SetFloat("_Metallic", 0f);
