@@ -63,21 +63,25 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 
     void OnEnable()
     {
-        EnemyDummy.OnBossKilled += HandleBossKilled;
+        EnemyDummy.OnLaneBossKilled += HandleBossKilled;
     }
 
     void OnDisable()
     {
-        EnemyDummy.OnBossKilled -= HandleBossKilled;
+        EnemyDummy.OnLaneBossKilled -= HandleBossKilled;
     }
 
     // 어느 레인의 보스든(누구 것이든) 죽으면 그 라운드에 도달했다는 팀 전체의 진행이므로,
     // 이 상점의 주인만 해금한다 — "내 레인 보스를 잡아야만"이 아니다. 4인 플레이면 보스가
     // 레인마다 하나씩(최대 4마리) 죽어 이 핸들러가 여러 번 불릴 수 있는데, GamblingProgress.Unlock은
     // HashSet.Add라 몇 번을 불러도 무해하다.
-    void HandleBossKilled(int roundNumber)
+    // 🔴 09-27 정정: 원작 Rhse(R10)·Rhde(R20)는 **보스가 든 레인의 주인만** 해금한다(SetPlayerTechResearchedSwap(…, Player(BossRectInt)), j:13448·13459).
+    //    예전엔 아무 레인 보스가 죽으면 전원이 열렸다 — 솔로는 같고 멀티에서 느린 사람이 공짜로 열렸다.
+    void HandleBossKilled(int roundNumber, int laneIndex)
     {
-        GamblingProgress progress = OwnerContext?.GamblingProgress;
+        PlayerContext ownerContext = OwnerContext;
+        if (ownerContext == null || ownerContext.PlayerId != laneIndex) return;
+        GamblingProgress progress = ownerContext.GamblingProgress;
         if (progress == null) return;
 
         UnlockMatching(moneyOptions, roundNumber, progress);
@@ -350,12 +354,12 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         if (option.stockMax > 0 && (stockProgress == null || stockProgress.Stock(option) <= 0)) return false;
         if (!StoryRequirementMet(option)) return false;
         if (option.category == GamblingCategory.Unit && (unitSpawner == null || gachaTable == null)) return false;
+        // 유닛 도박도 해금 대상이다(고급도박 R15) — 돈 도박만 이 검사를 했다.
+        if (option.category == GamblingCategory.Unit && option.requiresUnlock && (stockProgress == null || !stockProgress.IsUnlocked(option))) return false;
 
         PlayerContext context = OwnerContext;
         if (context == null) return false;
 
-        // 유닛 도박도 해금 대상이다(고급도박 R15) — 돈 도박만 이 검사를 했다.
-        if (option.category == GamblingCategory.Unit && option.requiresUnlock && (stockProgress == null || !stockProgress.IsUnlocked(option))) return false;
         if (option.category == GamblingCategory.Money)
         {
             GamblingProgress progress = context.GamblingProgress;
@@ -406,12 +410,12 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         if (option.category == GamblingCategory.Money)
             return MoneyUnavailableReason(option);
 
+        if (option.requiresUnlock && (context.GamblingProgress == null || !context.GamblingProgress.IsUnlocked(option)))
+            return string.IsNullOrEmpty(option.unlockHint) ? "아직 해금되지 않음" : option.unlockHint;
         string stock = StockReason(option, context.GamblingProgress);
         if (stock != null) return stock;
         if (context.ResourceWallet == null) return null;
         if (context.ResourceWallet.Get(option.costResourceType) < option.cost)
-        if (option.requiresUnlock && (context.GamblingProgress == null || !context.GamblingProgress.IsUnlocked(option)))
-            return string.IsNullOrEmpty(option.unlockHint) ? "아직 해금되지 않음" : option.unlockHint;
             return $"{ResourceLabel(option.costResourceType)}이(가) 부족합니다.";
         if (option.goldCost > 0 && (context.GoldWallet == null || context.GoldWallet.Gold < option.goldCost))
             return "골드가 부족합니다.";

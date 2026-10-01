@@ -26,6 +26,8 @@ public class EnemyDummy : MonoBehaviour
     // TakeDamage의 사망 처리 흐름 안에서는 이 신호만 보내고, 실제 처리(도박소 해금 등)는
     // 구독하는 쪽이 한다 — 사망 처리는 가벼워야 한다.
     public static event System.Action<int> OnBossKilled;
+    /// <summary>레인 보스 처치(라운드, 레인=주인 번호). 원작 Rhse·Rhde는 그 레인 주인만 해금한다(j:13448·13459) — OnBossKilled는 레인이 없어 팀 전체가 열렸다.</summary>
+    public static event System.Action<int, int> OnLaneBossKilled;
 
     static RoundManager roundManagerCache;
     static RoundManager RoundManagerRef => roundManagerCache != null
@@ -1070,6 +1072,7 @@ public class EnemyDummy : MonoBehaviour
             if (data != null && data.isBoss && LaneIndex >= 0)
             {
                 OnBossKilled?.Invoke(SpawnRound);
+                OnLaneBossKilled?.Invoke(SpawnRound, LaneIndex);
             }
 
             Destroy(gameObject);
