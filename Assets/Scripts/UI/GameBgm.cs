@@ -26,6 +26,7 @@ public class GameBgm : MonoBehaviour
         new Cue("Music/binks_sake", 0, 1, 0.5f),             // 첫 화면 ~ 1라운드(2라운드 시작 때 끔)
         new Cue("Music/boss_r10_zoltraak", 10, 10, 0.1f),   // 첫 보스(10라운드 주영호) — 11라운드 시작 때 끔
         new Cue("Music/boss_r20_journey", 20, 20, 0.11f),   // 20라운드 보스(박은석) — 21라운드 시작 때 끔. 평균 −14.2dB → 0.11이면 ≈ −33.4dB
+        new Cue("Music/boss_r30_hacking", 30, 30, 0.19f),   // 30라운드 보스(김만경) — 31라운드 시작 때 끔. 평균 −18.9dB → 0.19이면 ≈ −33.3dB
     };
     const float FadeSeconds = 1.75f;
     const bool BgmOn = true;
