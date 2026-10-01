@@ -2915,6 +2915,7 @@ public static class MapGenerator
                     new Vector3((columnLeft + columnRight) * 0.5f, MapLayout.IslandTop + 0.25f, bandCenterZ),
                     PortalDiameter);
                 ConfigurePortal(portal, band.grade, null, table, spawner);
+                if (PortalBandLabels.TryGetValue(band.label, out string bandLabel)) AddPortalLabel(parent, portal, bandLabel, false);
 
                 if (band.bonusChance > 0f) ApplyBonusGrade(portal, band.bonusGrade, band.bonusChance);
                 continue;
@@ -3129,22 +3130,26 @@ public static class MapGenerator
         ConfigurePortal(unitRandom, UnitGrade.RandomUnit, null, table, spawner,
                         rewardGrade: UnitGrade.Common);
         ApplyBonusUnit(unitRandom, "해적선", RandomShipBonusChance);
+        AddPortalLabel(parent, unitRandom, "유닛 랜덤", false);
 
         // 동: 금화 랜덤 — 원작 그대로 "15 + 라운드×12~35"(2026-09-04, ORD11.089.w3x 확인).
         // 예전엔 범위를 20 하나로 뭉개뒀는데, 그 폭이 원작 골드포탈의 도박성 그 자체다.
         // 이 셋(금화·목재·마나)은 위 "위습칸_자원"이 뿌리는 RandomUnit 등급 위습만 받는다.
-        BuildResourcePortal(parent, "Portal_금화랜덤", new Vector3(centerX + armX, 0f, centerZ),
-            ResourcePortal.Payout.Gold, ResourceType.Wood, 15, 12, 100f, UnitGrade.RandomUnit, perRoundMax: 35);
+        AddPortalLabel(parent, BuildResourcePortal(parent, "Portal_금화랜덤", new Vector3(centerX + armX, 0f, centerZ),
+            ResourcePortal.Payout.Gold, ResourceType.Wood, 15, 12, 100f, UnitGrade.RandomUnit, perRoundMax: 35),
+            "금화랜덤\n(15+현재라운드x12~x35", false);
 
         // 서: 목재 랜덤 — 원작은 66% 확률로 목재 1개.
-        BuildResourcePortal(parent, "Portal_목재랜덤", new Vector3(centerX - armX, 0f, centerZ),
-            ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f, UnitGrade.RandomUnit);
+        AddPortalLabel(parent, BuildResourcePortal(parent, "Portal_목재랜덤", new Vector3(centerX - armX, 0f, centerZ),
+            ResourcePortal.Payout.Resource, ResourceType.Wood, 1, 0, 66f, UnitGrade.RandomUnit),
+            "목재 랜덤\n(66%확률로 목재1획득)", false);
 
         // 남: 도움소 마나 — 원작은 "20 + 라운드×1.5 회복".
         // 마나를 쓰는 도움소 건물은 아직 없지만, 자원은 지금부터 쌓아둔다.
         // 원작 확정 공식(2026-09-04, ORD11.089.w3x Trig_Random_Mana 직접 확인): 20 + 라운드×1.5.
-        BuildResourcePortal(parent, "Portal_도움소마나", new Vector3(centerX, 0f, centerZ - armZ),
-            ResourcePortal.Payout.Resource, ResourceType.Mana, 20, 1.5f, 100f, UnitGrade.RandomUnit);
+        AddPortalLabel(parent, BuildResourcePortal(parent, "Portal_도움소마나", new Vector3(centerX, 0f, centerZ - armZ),
+            ResourcePortal.Payout.Resource, ResourceType.Mana, 20, 1.5f, 100f, UnitGrade.RandomUnit),
+            "도움소 마나\n20 + (현재라운드 x 1.5)회복", false);
 
         // 가운데에서 위습이 생긴다. 여기서 어느 포탈로 갈지는 플레이어가 정한다.
         GameObject cell = new GameObject("위습칸_자원");
@@ -3166,6 +3171,25 @@ public static class MapGenerator
     // 받아버렸다(PM 재조사) — Accepts 자체의 그 기본값은 다른 포탈이 기대고 있을 수 있어
     // 안 건드리고, 여기서 값을 채우는 쪽으로 고쳤다. 그래서 acceptedGrade를 필수 인자로
     // 뺐다 — 앞으로 새 자원 포탈을 추가할 때 등급을 빠뜨리면 컴파일 단계에서 걸린다.
+    // 발판 월드 글자(원작 Trig_udongText j:3659-3674) — 포탈은 납작한 원기둥이라 자식으로 달면 글자가 같이 찌그러진다 → 부모 아래 별도 오브젝트.
+    // 글자는 원작 문구 그대로(주황 |cffFF8200 은 안내 글, 나머지는 흰색). 금화·목재·마나 세 줄의 TRIGSTR 원문은 wts(14442·14631·14797).
+    const float PortalLabelHeight = 14f;
+    // 등급 포탈 줄 라벨 — 원작 StoryReward_Tier2/3/4/Legend 문구(우리 band.label 기준). 흔함 선택 줄은 원작에도 글자가 없다.
+    static readonly System.Collections.Generic.Dictionary<string, string> PortalBandLabels = new System.Collections.Generic.Dictionary<string, string>
+    {
+        { "안흔함", "'안흔함'등급유닛 전체랜덤" },
+        { "특별함", "'특별함'등급유닛 전체랜덤" },
+        { "희귀함·특수함", "'희귀함,특수함(3%확률)'등급유닛 전체랜덤" },
+        { "전설·히든", "'전설&히든'등급유닛 전체랜덤" },
+    };
+    static void AddPortalLabel(Transform parent, GameObject portal, string text, bool orange)
+    {
+        GameObject holder = new GameObject($"라벨_{portal.name}");
+        holder.transform.SetParent(parent, false);
+        holder.transform.position = portal.transform.position + Vector3.up * PortalLabelHeight;
+        holder.AddComponent<WorldLabel>().Configure(text, orange ? new Color(1f, 0.51f, 0f, 1f) : Color.white, 18f);
+    }
+
     static GameObject BuildResourcePortal(Transform parent, string name, Vector3 ground,
                                     ResourcePortal.Payout payout, ResourceType resource,
                                     int baseAmount, float perRound, float chance,
@@ -3294,6 +3318,7 @@ public static class MapGenerator
         NavMeshModifier modifier = portal.AddComponent<NavMeshModifier>();
         modifier.ignoreFromBuild = true;
 
+        AddPortalLabel(parent, portal, "스토리 존 입장", true);   // 원작 j:3669-3672 |cffFF8200
         StoryZonePortal component = portal.AddComponent<StoryZonePortal>();
         component.SetDestination(StoryZoneLandingPoint(laneIndex));
         StructureDresser.DressPortal(portal, "포탈_마법진_스토리", StructureDresser.StoryGlow);
@@ -3368,6 +3393,7 @@ public static class MapGenerator
         NavMeshModifier modifier = portal.AddComponent<NavMeshModifier>();
         modifier.ignoreFromBuild = true;
 
+        AddPortalLabel(parent, portal, "라인 존으로 돌아가기", true);   // 원작 j:3659 |cffFF8200
         StoryReturnPortal component = portal.AddComponent<StoryReturnPortal>();
         Vector3[] destinations = new Vector3[MapLayout.Lanes.Length];
         for (int i = 0; i < MapLayout.Lanes.Length; i++)
