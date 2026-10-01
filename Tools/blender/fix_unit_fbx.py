@@ -7262,8 +7262,13 @@ def fix(name, cfg, out_dir=None, save_blend=False):
         #   뼈의 부모를 parent로 바꾼다. 몸 정점·다른 뼈는 안 건드린다.
         pa = cfg["prop_attach"]
         arm_p = main_armature()
-        Mx = (Matrix.Translation(Vector(pa["to"])) @ Matrix.Rotation(math.radians(pa["rot"][1]), 4, pa["rot"][0])
-              @ Matrix.Translation(-Vector(pa["pivot"])))
+        if "rot_to" in pa:
+            # rot_to=(x,y,z): 소품의 +Z(막대 위쪽)가 T자 최종 공간에서 향할 방향 — 팔을 내린 **동작 중 자세**로 거꾸로 풀어 구한 값(황정기 손세움). roll=그 축 둘레 도.
+            dv = Vector(pa["rot_to"]).normalized()
+            Rm = Matrix.Rotation(math.radians(pa.get("roll", 0.0)), 4, dv) @ Vector((0, 0, 1)).rotation_difference(dv).to_matrix().to_4x4()
+        else:
+            Rm = Matrix.Rotation(math.radians(pa["rot"][1]), 4, pa["rot"][0])
+        Mx = Matrix.Translation(Vector(pa["to"])) @ Rm @ Matrix.Translation(-Vector(pa["pivot"]))
         moved = 0
         for m in [o for o in bpy.context.scene.objects if o.type == "MESH"]:
             g = m.vertex_groups.get(pa["bone"])
@@ -7528,12 +7533,10 @@ UNITS["랜덤_카마도_탄지로"].update(
 
 # 🔸 우솝 새총 지팡이 두 판(2026-09-30 밤, PM 지시 — 사장님이 고르실 자료, Assets 밖). 기본(몸 옆에 세워 둠)은 그대로.
 #   실측(최종 공간): 지팡이 막대 x 0.92 · z 0.09~1.80(새총 갈래 z 1.4~1.8, x로 벌어짐) · 왼손 (0.63, 0.03, 1.41), 손바닥 아래로 · 등 y +0.27(머리털 뒤로 조금 묻힌다).
-UNITS["특별함_황정기"]["variants"] = {
-    # 손: 막대 가운데(z 0.85)를 왼손바닥 밑에, 막대를 앞뒤(−Y가 앞, 새총 쪽이 앞)로 눕힌다 — 팔을 내리면 창처럼 수평으로 든 모양.
-    "손": dict(prop_attach=dict(bone="Bone001", parent="Bip001 L Hand", pivot=(0.92, -0.01, 0.85), rot=("X", 90), to=(0.70, 0.02, 1.37))),
-    # 등: 가방 뒤에 25° 비스듬히(새총 쪽이 위·왼쪽 어깨 너머), Spine2에 붙인다.
-    "등": dict(prop_attach=dict(bone="Bone001", parent="Bip001 Spine2", pivot=(0.92, -0.01, 0.95), rot=("Y", 25), to=(0.0, 0.27, 1.10))),
-}
+# 🔸 확정(2026-10-01 사장님 ⓑ손): 지팡이를 **왼손에 세워 쥔** 모양이 기본. 막대 아래 4할(z 0.75)을 손바닥 중심에 쥐고, 막대 위쪽은 공용 Idle 자세에서 수직이 되도록 거꾸로 푼 방향(rot_to — T자에선 팔이 옆으로 벌어져 가로)으로 둔다.
+#   (눕힌 옛 「손」판은 허리 가방을 뚫어서 버렸다. 등에 메는 「등」은 사장님이 안 고르셔 지웠다 — git 기록에 있음.)
+#   실측(공용 idle·walk·attack 27프레임): 손 메시까지 5~12mm 고정(강체)·막대 아래끝 바닥 위 0.25m 이상·위끝 최대 1.96m·bind_check OK.
+UNITS["특별함_황정기"]["prop_attach"] = dict(bone="Bone001", parent="Bip001 L Hand", pivot=(0.92, -0.01, 0.75), rot_to=(-0.999, -0.022, 0.048), to=(0.66, 0.035, 1.40))
 
 
 # 🔸 황길라(알베도) 동작판(2026-10-01, Assets 밖 시범): 원본 클립 7개(attack·damage·dead·idle_00·idle_01·skill·spskill_00)를 테이크로. 날개·치마·리본·머리털 뼈는 **클립이 움직이므로 합치지 않고 남긴다**.
