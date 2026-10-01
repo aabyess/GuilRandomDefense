@@ -1167,6 +1167,12 @@ public class GameHud : MonoBehaviour
                     RewardDistributor.Instance.GrantWisps(context, reward);
                     // 원작 j:13152(본인 4초) — 알림 묶음 13/13, GAP 108
                     PlayerNotification.Show(seller, $"누적 {everyN}포인트<color=#FF8200>를 획득하여</color> <color=#FFD700> 1기의 랜덤위습 획득!</color>", 4f);
+                    // 원작 j:13153: 같은 순간 35% 확률로 목재 1 추가(「1개의 추가목재 획득!」, 위 일반 목재 보상과 같은 문구).
+                    if (identity.Data.sellRewardEveryNWood > 0 && context.ResourceWallet != null && Random.value < identity.Data.sellRewardEveryNWoodChance)
+                    {
+                        context.ResourceWallet.Add(ResourceType.Wood, identity.Data.sellRewardEveryNWood);
+                        PlayerNotification.Show(seller, $"<color=#20B2AA>{identity.Data.sellRewardEveryNWood}개의 추가목재 획득!</color>", 4f);
+                    }
                 }
                 else
                     PlayerNotification.Show(seller, $"{context.UnitUpgrades.CommonSellCount}<color=#FF8200> 포인트 적립!</color>", 4f);   // j:13155

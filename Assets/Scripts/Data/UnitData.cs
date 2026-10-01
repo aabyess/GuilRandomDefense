@@ -480,6 +480,9 @@ public class UnitData : ScriptableObject
     // 목재 보너스가 빠져 있다 — 두 값이 서로 안 맞아 목재 보너스는 안 만들었다(위습만).
     public int sellRewardEveryNSells;
     public WispData sellRewardEveryNWisp;
+    // 🔴 정정(09-27, j:13146-13156 Trig_unique_sell 직독): N번째(3포인트)에 위습과 함께 **35%로 목재 1**(GetRandomPercentageBJ()<=35) 추가 — 위 옛 조사(2026-09-04)가 맞았다.
+    public int sellRewardEveryNWood;
+    public float sellRewardEveryNWoodChance = 1f;
 
     // 01번 영웅 스탯 — 이 유닛의 주스탯(원작 `upra`, ORIGINAL_HERO_STATS.md ㉠·㉣). `upra`가
     // 구동하는 건 엔진 상수뿐이다(StrAttackBonus=800→주스탯×800 공격력, AgiAttackSpeedBonus
