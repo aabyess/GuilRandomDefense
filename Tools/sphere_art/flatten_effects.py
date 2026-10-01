@@ -26,6 +26,15 @@ LIMB_PARTS = {"AkainuBW7_g2", "AkainuBW7_g5"}   # 마그마 소매(김만경_AD)
 ORDER = ["대기", "이동", "공격", "스킬"]
 
 
+def opaque_alpha(path):
+    try:
+        from PIL import Image
+        lo, _ = Image.open(path).convert("RGBA").getchannel("A").getextrema()
+        return lo >= 250
+    except Exception:
+        return False
+
+
 def vec(v, n=3, d=0.0):
     v = list(v or [])
     return (v + [d] * n)[:n]
@@ -59,6 +68,9 @@ def main():
             tex = layer["texture"]["file"]
             out.update(fbx=p["fbx"], fbxObject=layer["fbx_object"], texture=tex, additive=bool(layer["additive"]),
                        cutout=layer["fbx_object"].endswith("_cut"), blend=layer["fbx_object"].endswith("_blend"))
+            if out["blend"] and opaque_alpha(os.path.join(folder, tex)):
+                # 알파가 전부 255인 텍스처(검정 바탕)를 알파혼합으로 그리면 검은 판이 된다(10-01 박기찬 baozha) → 가산으로(검정 = 투명).
+                out["blend"], out["additive"] = False, True
             files.update([p["fbx"], tex])
             # 같은 FBX의 다른 오브젝트(g5·g6)는 부품마다 따로 — 슬롯이 다르므로
         elif p["kind"] == "particle":

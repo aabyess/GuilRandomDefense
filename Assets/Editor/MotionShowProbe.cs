@@ -37,6 +37,22 @@ static class MotionShowProbe
     static string CamSide() => CamAt(55f, 10f, 0f);
     // 공격 모션 강제 — 「공격」 때 보이는 부품 확인용
     static string AttackAll() { foreach (CharacterAnimator c in Object.FindObjectsByType<CharacterAnimator>(FindObjectsSortMode.None)) if (c.GetComponent<UnitIdentity>() != null) c.PlayAttack(); return "공격 모션"; }
+    static string GiAd() => Show("초월_박기찬_AD");
+    // 프리팹 계층 덤프 — 부가 이펙트 위치 진단(경로는 DumpPath)
+    static string DumpPath = "Assets/Resources/Effects/Sphere/sang_ad_a_body.prefab";
+    static string DumpSang() => Dump("Assets/Resources/Effects/Sphere/sang_ad_a_body.prefab");
+    static string Dump(string path)
+    {
+        GameObject g = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        if (g == null) return "없음 " + path;
+        var sb = new System.Text.StringBuilder();
+        foreach (Transform t in g.GetComponentsInChildren<Transform>(true))
+        {
+            Renderer r = t.GetComponent<Renderer>();
+            sb.AppendLine($"{t.name} 로컬 {t.localPosition:F2} 회전 {t.localEulerAngles:F0} 배율 {t.localScale:F2}" + (r != null ? $" 렌더러 경계 {r.bounds.min:F1}~{r.bounds.max:F1}" : ""));
+        }
+        return sb.ToString();
+    }
     static string KimMan() => Show("초월_김만경_AD");
     static string SangAd() => Show("초월_최상호_AD");
     static string Keyjaru() => Show("초월_구주호_AD");

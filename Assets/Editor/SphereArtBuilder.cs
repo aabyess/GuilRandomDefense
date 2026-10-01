@@ -88,21 +88,27 @@ static class SphereArtBuilder
         string fbxPath = $"{ResDir}/Src/{roster}/{p.fbx}";
         GameObject source = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
         if (source == null) { notes.Append($" ⚠️ FBX 없음 {fbxPath}"); return false; }
+        // 🔴 배율은 껍데기(wrapper)에 준다 — FBX 오브젝트의 로컬 위치(원작 pivot, 미터)도 같이 게임 단위로 커져야 한다.
+        //    인스턴스 자체에 주면 위치는 미터 그대로라 별빛이 발밑에 앉았다(10-01 최상호_AD, PM 사진 지적).
+        var wrapper = new GameObject(p.name);
+        wrapper.transform.SetParent(parent, false);
+        wrapper.transform.localScale = Vector3.one * k;
         GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(source);
-        instance.transform.SetParent(parent, false);
-        instance.name = p.name;
+        instance.transform.SetParent(wrapper.transform, false);
+        string fbxName = instance.name.Replace("(Clone)", "");   // 이름 대조용(루트 자체가 메시인 FBX는 렌더러 이름 = 이 이름)
+        instance.name = p.name + "_fbx";
         PrefabUtility.UnpackPrefabInstance(instance, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
         bool found = false;
         foreach (Renderer r in instance.GetComponentsInChildren<Renderer>(true))
         {
-            if (r.name != p.fbxObject && !p.fbxObject.StartsWith(r.name + "_L")) { Object.DestroyImmediate(r.gameObject); continue; }   // 유니티가 재질 접미(_L0_add)를 뗀 이름으로 읽을 때가 있다(lb_jimbe_g0)
+            string rn = r.gameObject == instance ? fbxName : r.name;
+            if (rn != p.fbxObject && !p.fbxObject.StartsWith(rn + "_L")) { Object.DestroyImmediate(r.gameObject); continue; }   // 유니티가 재질 접미(_L0_add)를 뗀 이름으로 읽을 때가 있다(lb_jimbe_g0)
             found = true;
             r.sharedMaterial = MeshMaterial(roster, alias, p);
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             r.receiveShadows = false;
         }
-        if (!found) { notes.Append($" ⚠️ 오브젝트 {p.fbxObject} 없음(FBX 안: {string.Join(", ", source.GetComponentsInChildren<Renderer>(true).Select(x => x.name))})"); Object.DestroyImmediate(instance); return false; }
-        instance.transform.localScale = Vector3.one * k;
+        if (!found) { notes.Append($" ⚠️ 오브젝트 {p.fbxObject} 없음(FBX 안: {string.Join(", ", source.GetComponentsInChildren<Renderer>(true).Select(x => x.name))})"); Object.DestroyImmediate(wrapper); return false; }
         Bounds b = default; bool first = true;
         foreach (Renderer r in instance.GetComponentsInChildren<Renderer>()) { if (first) { b = r.bounds; first = false; } else b.Encapsulate(r.bounds); }
         if (p.attach.StartsWith("limb,"))
