@@ -3294,7 +3294,12 @@ UNITS = {
                       #   Attack은 한 번짜리(유니티가 트리거 뒤 Idle로 섞어 돌아간다)라 안 건다.
                       split_clips=[dict(take="Idle", range=(1, 115), loop=12),
                                    dict(take="Move", range=(121, 230), loop=12),
-                                   dict(take="Attack", range=(271, 341))]),
+                                   dict(take="Attack", range=(271, 341))],
+                      # 🔸 혀·눈(2026-10-01, PM 승인 — 시범 「혀눈」을 기본으로 올림): 그림이 원본 묶음에 없어 회색이던 것. 혀는 묶음에 남은 aiStandardSurface5_baseColor.jpeg가
+                      #   **분홍 살색 그림**이라 혀 그림으로 걸고(확정 근거는 없다 — 색이 혀답다는 것뿐), 눈은 단색 황갈. 원본(Sketchfab "jaguar" zip, 출처 Docs/ART_SOURCES_ARCHIVE.md)을 다시 받으면 (a)로 바꿀 것.
+                      materials=dict(textures={"aiStandardSurface": [("DiffuseColor", "aiStandardSurface1_baseColor.jpeg")],
+                                               "Lengua": [("DiffuseColor", "aiStandardSurface5_baseColor.jpeg")]}),
+                      material_colors={"Ojos": (0.75, 0.55, 0.10)}),
     # 🔴 이호준(볼보이 좀비, 2026-09-23): 클립이 둘인데 하나는 **키 1개짜리 껍데기**(GLTF_created_0|Armature.001|mixamo.com|Layer0)이고
     #   실제 동작은 96프레임 하나뿐이다. 그 하나 안에 「서서 흔들림 → 웅크림 → 앞으로 손 뻗기」가 이어져 있어,
     #   ArtBinder가 그걸 통째로 Idle로 돌리면 **매 바퀴 팔이 앞(−0.45)에서 뒤(+0.11)로 튄다**(손 위치 곡선으로 확인).
@@ -7510,7 +7515,7 @@ for _n, _solid in {
     "특별함_박기찬": ["Mihawk_Beard", "Mihawk_Hair", "Mihawk_Plume"],            # 원본에 없는 재질 — 설정(BaseColor)으로 색을 준 것
     "랜덤_야사카_카나코": ["Crystal.003"],                                       # 원본 색 재질(1.0, 0.57, 0.49)
     "안흔함_상붕카": ["Material.001", "Material.002", "Material.003", "Material.004", "Material.005", "Material.010", "Material.012", "Material.013"],   # glb에 그림 0장 — 전부 색
-    "안흔함_강재규": ["dientes"],                                               # 이빨만 색. 🔴 Lengua·Ojos는 원본이 lengua.jpeg·ojos.jpeg를 가리키는데 그 파일이 원본 묶음에도 없다 — 실제 결함, 그대로 걸리게 둔다
+    "안흔함_강재규": ["dientes", "Ojos"],                                  # 이빨·눈은 색(Ojos는 material_colors) — 혀 Lengua는 남은 그림 aiStandardSurface5를 건다(위 항목 주석)
     "특별함_최상호": ["Pupil", "hair", "Sandals.001", "shock", "tongue", "material", "material_5", "Teeth", "Gum.001"],   # glb가 색만 준 아홉(material_colors로 되살린 것)
     "희귀함_최상호_오타쿠의길": ["5_eyeshine_1.0_0_0.001", "5_eyewhite_1.0_0_0.001", "5_tongue_1.0_0_0.001"],   # 원본 흰색, 그림 없음(가중치 관문에 가려 있던 것)
 }.items():
