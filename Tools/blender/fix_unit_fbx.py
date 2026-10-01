@@ -7041,6 +7041,27 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                                 kp.handle_right.y += dloc[fc.array_index]
                             fc.update()
             report["클립 기준점 높이 이동(m)"] = round(-low, 3)
+        if cfg.get("clip_floor_feet"):
+            # 🔸 clip_floor_feet(2026-10-01 PM 기준: 「발목 뼈가 바닥 아래면 보정」): 모든 클립·기준점 이동이 끝난 **뒤** 매 프레임 발·발끝 뼈 머리의 최저 z가 0 아래면
+            #   그만큼만 뿌리를 올린다(양수 프레임은 안 건드려 도약·공중 동작은 남는다 — clip_ground는 메시 최저를 매 프레임 0에 맞춰 도약을 죽이고 망토까지 잡는다).
+            feet = [bn.name for bn in new_arm.data.bones if any(k_ in bn.name for k_ in ("Foot", "Toe"))]
+            roots = [bn.name for bn in new_arm.data.bones if bn.parent is None]
+            for take, f0, frames in clips:
+                act = bpy.data.actions[take]
+                new_arm.animation_data.action = act
+                if hasattr(new_arm.animation_data, "action_slot") and len(act.slots):
+                    new_arm.animation_data.action_slot = act.slots[0]
+                lifted = 0.0
+                for fi in range(len(frames)):
+                    scene.frame_set(f0 + fi)
+                    low = min((new_arm.matrix_world @ new_arm.pose.bones[fb].head).z for fb in feet)
+                    if low < 0.0:
+                        for r in roots:
+                            pb = new_arm.pose.bones[r]
+                            pb.location = pb.location + rest[r].to_quaternion().inverted() @ Vector((0.0, 0.0, -low))
+                            pb.keyframe_insert("location", frame=f0 + fi)
+                        lifted = max(lifted, -low)
+                report.setdefault("발뼈 바닥 보정 최대(m)", {})[take[-12:]] = round(lifted, 3)
         report["클립"] = [c[0] for c in clips]
 
     if new_arm is not None and (cfg.get("synth_idle") or cfg.get("synth_clips")) and not clips:
@@ -7510,6 +7531,19 @@ UNITS["제한_이유범"].update(_motion_variant(_BL(_TES)))
 # 센고쿠(불멸_고도현): 원본에 Idle·스킬 하나뿐(idle_a · skill_a/_lp/_end) — 걷기·평타·피격·죽음이 없다. 스킬을 Attack(시작·유지·끝)으로 쓴다.
 UNITS["불멸_고도현"].update(_motion_variant(_BL({
     "pl_sengoku_orig02_idle_a": "Idle", "pl_sengoku_orig02_skill_a": "Attack", "pl_sengoku_orig02_skill_a_lp": "Attack_Loop", "pl_sengoku_orig02_skill_a_end": "Attack_End"}), lunge=False))
+
+# 🔸 고유 동작판 2묶음 — 전설적인 9종(2026-10-01, 바로 기본으로). 전부 pl_ 계열. 제퍼(김건·이시원)는 원본이 bs01_ 판(전투 자세)만 갖고 있어 그 판을 쓴다.
+for _n, _pre in (("전설적인_김민준", "pl_kizaru_orig01"), ("전설적인_김용태", "pl_kaido_orig01"), ("전설적인_박은석", "pl_bkuma_orig01"),
+                 ("전설적인_백기현", "pl_urouge_orig01"), ("전설적인_신지우", "pl_bigmom_orig01"), ("전설적인_이일중", "pl_shanks_hand01"),
+                 ("전설적인_임건웅", "pl_fujitora_orig01")):
+    UNITS[_n].update(_motion_variant(_BL(_pl(_pre)), clip_floor_feet=_n in ("전설적인_김민준", "전설적인_김용태", "전설적인_신지우")))   # 발뼈가 −0.03~−0.06까지 내려가는 셋만
+_ZEPH = {f"pl_zephyr_orig01_{k}": v for k, v in {
+    "bs01_idle_a": "Idle", "bs01_run": "Move", "bs01_combo_a_s": "Attack", "bs01_combo_b": "Attack2", "bs01_combo_c": "Attack3", "bs01_damage": "Hit", "down": "Die",
+    "bs01_skill_a": "Skill1", "bs01_skill_b": "Skill2", "bs01_stun": "Stun", "bs01_boost": "Boost", "bs01_dodge": "Dodge", "down_end": "GetUp",
+    "bs01_blownback_lp": "BlownBack_Loop", "bs01_blownback_end": "BlownBack_End", "bs01_electric_shock": "Shock", "bs01_idlehome_a": "Idle_Home",
+    "bs01_victory": "Win", "bs01_victory_lp": "Win_Loop", "bs01_lose_lp": "Lose_Loop", "bs01_flagget": "Flag", "bs01_jump_lp": "Jump_Loop"}.items()}
+for _n in ("전설적인_김건", "전설적인_이시원"):
+    UNITS[_n].update(_motion_variant(_BL(_ZEPH), clip_floor_feet=True))      # Attack3 발뼈가 바닥 아래 0.21m까지 — 발이 땅에 묻는 프레임만 올림
 
 
 # ─────────────────────────────────────────────────────────────────────────────
