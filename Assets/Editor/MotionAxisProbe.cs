@@ -135,6 +135,7 @@ static class MotionArmatureProbe
 static class AuraPerf
 {
     static readonly System.Collections.Generic.List<string> result = new System.Collections.Generic.List<string>();
+    static string only;   // 한 로스터 60기(최악 시험) — StartJuho 등
 
     class Runner : MonoBehaviour
     {
@@ -144,7 +145,7 @@ static class AuraPerf
             LaneMarker lane = LaneMarker.Get(0);
             var datas = AssetDatabase.FindAssets("t:UnitData", new[] { "Assets/Data/Units/Roster" })
                 .Select(g => AssetDatabase.LoadAssetAtPath<UnitData>(AssetDatabase.GUIDToAssetPath(g)))
-                .Where(d => d != null && d.prefab != null && (d.grade == UnitGrade.Transcendent || d.grade == UnitGrade.Hidden)).ToList();
+                .Where(d => d != null && d.prefab != null && (only != null ? d.name.Normalize(System.Text.NormalizationForm.FormC) == only : (d.grade == UnitGrade.Transcendent || d.grade == UnitGrade.Hidden))).ToList();
             for (int i = 0; i < 60; i++)
                 spawner.Spawn(datas[i % datas.Count], lane.LaneCenter + new Vector3((i % 10 - 5) * 14f, 0f, (i / 10 - 3) * 14f), 0);
             yield return new WaitForSeconds(1.5f);   // 설치기가 붙을 시간
@@ -160,8 +161,12 @@ static class AuraPerf
         }
     }
 
+    static string StartJuho() { only = "초월_구주호_AD"; return Start(); }   // 부가 이펙트 가장 무거운 로스터(파티클 25계·날개)
+    static string StartKim() { only = "초월_김만경_AD"; return Start(); }
+
     static string Start()
     {
+        if (!new System.Diagnostics.StackTrace().ToString().Contains("StartJuho") && !new System.Diagnostics.StackTrace().ToString().Contains("StartKim")) only = null;
         result.Clear();
         new GameObject("[AuraPerf]").AddComponent<Runner>();
         return "시작(60기)";
