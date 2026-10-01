@@ -127,6 +127,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
     {
         if (Time.time < GetCooldownUntil(skill)) return "재사용 대기 중입니다.";
         if (skill.maxUses > 0 && UsesSoFar(skill) >= skill.maxUses) return $"{skill.maxUses}회 모두 사용했습니다.";
+        if (skill.stockMax > 0 && Stock(skill) <= 0) return $"재고가 없습니다 — {Mathf.CeilToInt(SecondsToNextStock(skill))}초 뒤 충전됩니다.";
 
         if (context == null) return null;
 
@@ -210,6 +211,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
     void Awake()
     {
         owner = GetComponent<OwnedByPlayer>();
+        shopStartTime = Time.time;
     }
 
     public bool CanCast(SupportSkillData skill)
@@ -217,6 +219,7 @@ public class SupportShop : MonoBehaviour, ILaneShop
         if (skill == null) return false;
         if (Time.time < GetCooldownUntil(skill)) return false;
         if (skill.maxUses > 0 && UsesSoFar(skill) >= skill.maxUses) return false;
+        if (skill.stockMax > 0 && Stock(skill) <= 0) return false;
 
         PlayerContext context = OwnerContext;
         if (context == null) return false;
@@ -254,12 +257,56 @@ public class SupportShop : MonoBehaviour, ILaneShop
         return skill != null && usesSoFar.TryGetValue(skill, out int count) ? count : 0;
     }
 
+    // 재고식(SupportSkillData.stockMax>0) — GamblingProgress.Advance와 같은 모델. 시계는 판 시작+stockStartDelaySeconds부터 돌고 가득 차 있으면 멈춘다.
+    struct StockState { public int count; public float lastCharge; }
+    readonly Dictionary<SupportSkillData, StockState> stocks = new Dictionary<SupportSkillData, StockState>();
+    float shopStartTime;   // Awake에서 판 시작(씬 로드) 시각으로 — 재고 시작 지연의 기준
+
+    StockState AdvanceStock(SupportSkillData skill)
+    {
+        float begin = shopStartTime + skill.stockStartDelaySeconds;
+        if (!stocks.TryGetValue(skill, out StockState s)) s = new StockState { count = 0, lastCharge = begin };
+        if (Time.time >= begin && skill.stockRegenSeconds > 0f)
+        {
+            if (s.lastCharge < begin) s.lastCharge = begin;
+            if (s.count >= skill.stockMax) s.lastCharge = Time.time;   // 가득 차 있는 동안엔 시계가 안 돈다
+            else
+                while (s.count < skill.stockMax && Time.time - s.lastCharge >= skill.stockRegenSeconds)
+                {
+                    s.count++;
+                    s.lastCharge += skill.stockRegenSeconds;
+                }
+        }
+        stocks[skill] = s;
+        return s;
+    }
+
+    /// <summary>지금 재고. stockMax 0인 스킬은 제한 없음(int.MaxValue).</summary>
+    public int Stock(SupportSkillData skill) => skill == null || skill.stockMax <= 0 ? int.MaxValue : AdvanceStock(skill).count;
+
+    /// <summary>다음 충전까지 남은 초(재고가 가득이거나 지연 중이면 지연/0).</summary>
+    public float SecondsToNextStock(SupportSkillData skill)
+    {
+        if (skill == null || skill.stockMax <= 0) return 0f;
+        StockState s = AdvanceStock(skill);
+        float begin = shopStartTime + skill.stockStartDelaySeconds;
+        if (Time.time < begin) return begin + skill.stockRegenSeconds - Time.time;
+        return s.count >= skill.stockMax ? 0f : Mathf.Max(0f, s.lastCharge + skill.stockRegenSeconds - Time.time);
+    }
+
     void StartCooldown(SupportSkillData skill)
     {
         cooldownUntil[skill] = Time.time + skill.EffectiveCooldownSeconds(IsBoosted(OwnerContext, skill));
 
         if (skill.maxUses > 0)
             usesSoFar[skill] = UsesSoFar(skill) + 1;
+        if (skill.stockMax > 0)
+        {
+            StockState s = AdvanceStock(skill);
+            if (s.count >= skill.stockMax) s.lastCharge = Time.time;   // 가득이었다면 이 순간부터 충전 시계가 돈다
+            s.count = Mathf.Max(0, s.count - 1);
+            stocks[skill] = s;
+        }
     }
 
     bool TrySpendCost(SupportSkillData skill, PlayerContext context)

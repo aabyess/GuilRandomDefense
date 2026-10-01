@@ -66,6 +66,13 @@ public class SupportSkillData : ScriptableObject
     [Header("사용 횟수 상한 — 0이면 무제한(선택위습제조는 3)")]
     public int maxUses;
 
+    // 재고식(원작 w3u usma·usrg·usst) — 능력치 증가(H0B7): 최대 4 · 115초마다 +1 · 판 시작 1825초 뒤부터. 0이면 이 방식을 안 쓴다(maxUses 방식).
+    // 초기 재고는 기존 도박 관례(500엔·10엔 도박)대로 0 — 지연 뒤 간격마다 +1, 가득 차면 시계가 멈춘다. 지연 직후 첫 재고가 즉시 1개인지는 w3u만으론 확정 못 한다.
+    [Header("재고식 — stockMax 0이면 안 씀")]
+    public int stockMax;
+    public float stockRegenSeconds;
+    public float stockStartDelaySeconds;
+
     [Header("범위 (targetKind == Ground)")]
     public float radius;
     public bool mapWide;           // true면 radius 대신 자기 소유 유닛 전체(출항이다)
