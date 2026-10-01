@@ -363,6 +363,9 @@ public class RewardDistributor : MonoBehaviour
         if (!GameAuthority.IsServer) return;
         if (storyReward == null) return;
         AnnounceStoryReward(storyReward);
+        // 조기 클리어 보너스(원작 j:13510 스토리2 udg_Level<9 · j:13614 스토리10 udg_Level<30) — 클리어 시점의 라운드로 판정한다.
+        RoundManager roundForBonus = storyReward.earlyClearBeforeRound > 0 ? FindFirstObjectByType<RoundManager>() : null;
+        bool earlyClear = roundForBonus != null && roundForBonus.CurrentRound < storyReward.earlyClearBeforeRound;
 
         foreach (PlayerContext context in PlayerContext.All)
         {
@@ -392,6 +395,14 @@ public class RewardDistributor : MonoBehaviour
             }
 
             GrantWisps(context, storyReward.wispRewards);
+
+            if (earlyClear)
+            {
+                if (storyReward.earlyResourceRewards != null && context.ResourceWallet != null)
+                    foreach (EnemyResourceReward reward in storyReward.earlyResourceRewards) context.ResourceWallet.Add(reward.type, reward.amount);
+                GrantWisps(context, storyReward.earlyWispRewards);
+                if (!string.IsNullOrEmpty(storyReward.earlyClearMessage)) PlayerNotification.Show(context.PlayerId, storyReward.earlyClearMessage, 10f);
+            }
 
             // 특성포인트 4갈래 중 세 번째 — 스토리 12(코드잇) 클리어 1개.
             // ⚠️ 정정(2026-09-05, 사장님 확정 07번): "원작대로 스토리 12로 옮기고 피카 퀘스트도

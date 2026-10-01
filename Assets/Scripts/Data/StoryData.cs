@@ -39,6 +39,14 @@ public class StoryData : ScriptableObject
     public List<EnemyResourceReward> resourceRewards;
     public List<WispReward> wispRewards;
 
+    [Header("조기 클리어 보너스 — 원작 도전과제(클리어 시점 라운드가 이 값 미만이면 추가 지급, 생존자만)")]
+    [Tooltip("0이면 없음. 원작 udg_Level < N (스토리2: 9 · 스토리10: 30)")]
+    public int earlyClearBeforeRound;
+    public List<EnemyResourceReward> earlyResourceRewards;
+    public List<WispReward> earlyWispRewards;
+    [Tooltip("그 플레이어에게만 띄우는 원작 문구")]
+    public string earlyClearMessage;
+
     /// <summary>변신 후에 쓸 데이터. 보스가 따로 없으면 건물 것을 그대로 쓴다.</summary>
     public EnemyData BossOrBuilding => boss != null ? boss : building;
 
