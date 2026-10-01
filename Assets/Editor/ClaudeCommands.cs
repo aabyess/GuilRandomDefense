@@ -1607,8 +1607,9 @@ public static class ClaudeCommands
                 if (target == "@bosschase")
                 {
                     string chase = BossChase();
-                    if (chase == null && inStage < 15.0) break;   // 보스가 아직 안 나왔다 — 15초까지 기다린다
-                    job.report += chase ?? "   👑 보스 공격: 15초 안에 0번 레인 보스를 못 찾음 — 건너뜀\n";
+                    // 10-02: R60은 신세계 대기 준비 40초가 먼저 있어 보스가 40초 뒤에 나온다 — 15초 상한이면 건너뛰어(g1_235 R60 63초까지 사거리 안 0기) 60초로
+                    if (chase == null && inStage < 60.0) break;   // 보스가 아직 안 나왔다 — 60초까지 기다린다
+                    job.report += chase ?? "   👑 보스 공격: 60초 안에 0번 레인 보스를 못 찾음 — 건너뜀\n";
                     job.clickIndex++;
                     Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
                     break;
@@ -3449,13 +3450,16 @@ public static class ClaudeCommands
         woodLast = value;
         if (delta == 0) return;
         string who = "?";
-        foreach (System.Diagnostics.StackFrame f in new System.Diagnostics.StackTrace(1).GetFrames() ?? Array.Empty<System.Diagnostics.StackFrame>())
+        foreach (System.Diagnostics.StackFrame f in new System.Diagnostics.StackTrace(1, true).GetFrames() ?? Array.Empty<System.Diagnostics.StackFrame>())
         {
             MethodBase m = f.GetMethod();
             Type t = m?.DeclaringType;
             while (t != null && t.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute), false)) t = t.DeclaringType;
             if (t == null || t == typeof(ResourceWallet) || t == typeof(ClaudeCommands) || t.Namespace?.StartsWith("System") == true) continue;
             who = $"{t.Name}.{m.Name}";
+            // 10-02: 같은 메서드가 여러 경로로 목재를 주므로(크립 2단계 보너스·보스·스토리·조기 보너스) 소스 줄 번호를 붙여 가른다
+            int line = f.GetFileLineNumber();
+            if (line > 0) who += ":" + line;
             break;
         }
         foreach (var book in delta > 0 ? new[] { woodIn, woodInRound } : new[] { woodOut, woodOutRound })
