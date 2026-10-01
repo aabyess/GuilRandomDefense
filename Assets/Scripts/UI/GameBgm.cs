@@ -27,6 +27,8 @@ public class GameBgm : MonoBehaviour
         new Cue("Music/boss_r10_zoltraak", 10, 10, 0.1f),   // 첫 보스(10라운드 주영호) — 11라운드 시작 때 끔
         new Cue("Music/boss_r20_journey", 20, 20, 0.11f),   // 20라운드 보스(박은석) — 21라운드 시작 때 끔. 평균 −14.2dB → 0.11이면 ≈ −33.4dB
         new Cue("Music/boss_r30_hacking", 30, 30, 0.19f),   // 30라운드 보스(김만경) — 31라운드 시작 때 끔. 평균 −18.9dB → 0.19이면 ≈ −33.3dB
+        new Cue("Music/boss_r40_silent_solitude", 40, 40, 0.07f),   // 40라운드 보스(김용태) — 평균 −10.2dB → 0.07이면 ≈ −33.3dB
+        new Cue("Music/boss_r50_gotoubun", 50, 50, 0.07f),   // 50라운드 보스(이태훈) — 평균 −10.1dB → 0.07이면 ≈ −33.2dB
     };
     const float FadeSeconds = 1.75f;
     const bool BgmOn = true;

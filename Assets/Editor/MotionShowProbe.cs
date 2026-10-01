@@ -61,6 +61,17 @@ static class MotionShowProbe
     static string AuraHidden() => Show("히든_이요한");
     static string AuraChar() => Show("전설적인_백기현");
     static string AuraTrans() => Show("초월_임장혁_AD");
+    // PM 10-01 고유 동작 확대 확인용
+    static string N_Hyunmo() => Show("영원_윤현모");
+    static string N_Dohyun() => Show("불멸_고도현");
+    static string N_Sungryung() => Show("초월_배성령_AD");
+    static string N_Jaemo() => Show("초월_양재모_AD");
+    static string N_Youngmin() => Show("제한_최영민");
+    static string N_Yongtae() => Show("전설적인_김용태");
+    static string N_Eunseok() => Show("전설적인_박은석");
+    static string N_Gilla() => Show("특수함_황길라");
+    static string N_Jeonggi() => Show("특별함_황정기");
+    static string N_Jaegyu() => Show("안흔함_강재규");
 
     static readonly System.Collections.Generic.List<GameObject> shown = new System.Collections.Generic.List<GameObject>();
 

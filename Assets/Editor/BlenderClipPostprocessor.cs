@@ -31,7 +31,9 @@ public class BlenderClipPostprocessor : AssetPostprocessor
                                        "Assets/Art/Units/특별함_박예원/",
                                        "Assets/Art/Units/희귀함_조현규/",
                                        // 적 셋(2026-10-01 고유 동작) — Idle·Move 반복.
-                                       "Assets/Art/Enemies/주영호/", "Assets/Art/Enemies/왕승환/", "Assets/Art/Enemies/김민준안경/" };
+                                       "Assets/Art/Enemies/주영호/", "Assets/Art/Enemies/왕승환/", "Assets/Art/Enemies/김민준안경/",
+                                       // 고유 동작 확대(2026-10-01) — 황길라·고도현은 Move 클립 없음(Idle만 반복).
+                                       "Assets/Art/Units/특수함_황길라/", "Assets/Art/Units/영원_윤현모/", "Assets/Art/Units/불멸_고도현/", "Assets/Art/Units/초월_배성령_AD/", "Assets/Art/Units/초월_양재모_AD/", "Assets/Art/Units/제한_이유범/", "Assets/Art/Units/제한_최영민/", "Assets/Art/Units/전설적인_김건/", "Assets/Art/Units/전설적인_이시원/", "Assets/Art/Units/전설적인_김민준/", "Assets/Art/Units/전설적인_김용태/", "Assets/Art/Units/전설적인_박은석/", "Assets/Art/Units/전설적인_백기현/", "Assets/Art/Units/전설적인_신지우/", "Assets/Art/Units/전설적인_이일중/", "Assets/Art/Units/전설적인_임건웅/" };
 
     static readonly string[] MoveLoopRoots = { "Assets/Art/Units/히든_맥주만땅/", "Assets/Art/Units/히든_미소야/", "Assets/Art/Units/영원_서민성/",
                                                "Assets/Art/Units/영원_최상호/",
@@ -45,7 +47,8 @@ public class BlenderClipPostprocessor : AssetPostprocessor
                                                "Assets/Art/Units/특별함_박민수/",
                                                "Assets/Art/Units/특별함_박예원/",
                                                "Assets/Art/Units/희귀함_조현규/",
-                                               "Assets/Art/Enemies/주영호/", "Assets/Art/Enemies/왕승환/", "Assets/Art/Enemies/김민준안경/" };
+                                               "Assets/Art/Enemies/주영호/", "Assets/Art/Enemies/왕승환/", "Assets/Art/Enemies/김민준안경/",
+                                               "Assets/Art/Units/영원_윤현모/", "Assets/Art/Units/초월_배성령_AD/", "Assets/Art/Units/초월_양재모_AD/", "Assets/Art/Units/제한_이유범/", "Assets/Art/Units/제한_최영민/", "Assets/Art/Units/전설적인_김건/", "Assets/Art/Units/전설적인_이시원/", "Assets/Art/Units/전설적인_김민준/", "Assets/Art/Units/전설적인_김용태/", "Assets/Art/Units/전설적인_박은석/", "Assets/Art/Units/전설적인_백기현/", "Assets/Art/Units/전설적인_신지우/", "Assets/Art/Units/전설적인_이일중/", "Assets/Art/Units/전설적인_임건웅/" };
 
     // 규칙을 바꾸면 올린다 — 올려야 이미 임포트된 FBX도 다시 돈다.
     // 1 → 2 (2026-09-13): 배 유닛 폴더 추가.

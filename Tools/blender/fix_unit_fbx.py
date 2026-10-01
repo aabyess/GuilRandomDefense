@@ -7545,6 +7545,25 @@ _ZEPH = {f"pl_zephyr_orig01_{k}": v for k, v in {
 for _n in ("전설적인_김건", "전설적인_이시원"):
     UNITS[_n].update(_motion_variant(_BL(_ZEPH), clip_floor_feet=True))      # Attack3 발뼈가 바닥 아래 0.21m까지 — 발이 땅에 묻는 프레임만 올림
 
+# 🔸 고유 동작판 3묶음 — 히든·희귀함·특별함(2026-10-01, 전수조사 「쓸 만함」, 바로 기본으로). pl_ 계열 — 원본에 없는 클립은 skip(survey_clips가 읽은 목록).
+for _n, _pre, _skip in (
+    ("히든_석성례", "pl_alvida_orig01", ()),
+    ("히든_전주연", "pl_atlas_orig01", ('down', 'stun', 'dodge', 'jump', 'jump_lp', 'blownback_lp', 'slammed', 'shake', 'flagget_lp')),
+    ("히든_한나웅", "pl_demaroblack_orig01", ()),
+    ("히든_여은서", "pl_aceyamato_yamato_doub01", ('victory', 'victory_lp', 'lose', 'lose_lp')),
+    ("희귀함_노수신", "pl_shiryu_hach01", ('dodge', 'down_end', 'blownback_lp', 'blownback_end', 'slammed')),
+    ("희귀함_노태현", "pl_marco_orig01", ()),
+    ("희귀함_양재모", "pl_whoswho_jinj01", ('dodge', 'blownback_lp', 'flagget_end')),
+    ("희귀함_이승우", "pl_rayleigh_orig01", ()),
+    ("특별함_김태영", "pl_charlos_orig01", ()),
+    ("특별함_송형성", "pl_adio_orig01", ()),
+    ("특별함_이지원", "pl_york_orig01", ('damage', 'dodge', 'down_end', 'jump_end', 'blownback_lp', 'blownback_end', 'slammed', 'electric_shock', 'shake', 'lose', 'flagget', 'flagget_lp', 'flagget_end')),
+    ("특별함_이현빈", "pl_noland_sora01", ('stun', 'lose', 'flagget')),
+    ("특별함_임채준", "pl_geckomoria_topw01", ()),
+    ("특별함_정승준", "pl_ryuma_orig01", ()),
+):
+    UNITS[_n].update(_motion_variant(_BL(_pl(_pre, skip=_skip)), clip_floor_feet=_n in ("희귀함_양재모", "특별함_송형성", "특별함_이현빈")))   # Attack 발뼈가 −0.03~−0.10까지 내려가는 셋
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 🔸 check_entries 「검사가 늦음」 따라잡기(2026-09-30 밤, PM 지시 — Docs/research/CHECK_ENTRIES_FAILURES.md 3-1).

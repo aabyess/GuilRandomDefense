@@ -282,6 +282,8 @@ public static class ArtBinder
     {
         "영원_최상호", "영원_문필환", "초월_김건_AP", "초월_강주혁_AP", "초월_임장혁_AD", "전설적인_이승우",
         "희귀함_구주호", "특별함_이정범", "특별함_박민수", "특별함_박예원", "희귀함_조현규",
+        // 고유 동작 확대(2026-10-01) — 갈기·망토·드레스·무기가 키보다 넓은 모델이 많다.
+        "특수함_황길라", "영원_윤현모", "불멸_고도현", "초월_배성령_AD", "초월_양재모_AD", "제한_이유범", "제한_최영민", "전설적인_김건", "전설적인_이시원", "전설적인_김민준", "전설적인_김용태", "전설적인_박은석", "전설적인_백기현", "전설적인_신지우", "전설적인_이일중", "전설적인_임건웅",
     };
 
     static bool IsAlreadyUpright(string modelName) => AlreadyUprightModels.Any(n => Nfc(n) == Nfc(modelName));
@@ -586,7 +588,7 @@ public static class ArtBinder
     }
 
     // 이번에 새로 넣은 스킨 — LinkTexturesUnits가 도는 목록. 새 스킨을 넣을 때 여기에 이름을 더한다.
-    static readonly string[] PendingLinkUnits = { "영원_문필환", "초월_김건_AP", "초월_강주혁_AP", "초월_임장혁_AD", "전설적인_이승우", "희귀함_구주호", "특별함_이정범", "특별함_박민수", "특별함_박예원", "희귀함_조현규" };
+    static readonly string[] PendingLinkUnits = { "특수함_황길라", "영원_윤현모", "불멸_고도현", "초월_배성령_AD", "초월_양재모_AD", "제한_이유범", "제한_최영민", "전설적인_김건", "전설적인_이시원", "전설적인_김민준", "전설적인_김용태", "전설적인_박은석", "전설적인_백기현", "전설적인_신지우", "전설적인_이일중", "전설적인_임건웅", "특별함_황정기", "안흔함_강재규" };
 
     static void LinkTexturesWhere(System.Func<string, bool> modelFilter)
     {
@@ -1373,7 +1375,7 @@ public static class ArtBinder
             // 사람형은 뼈로 방향을 재서 자동으로 세운다. 수동 표에 적힌 모델은 그게 우선이다.
             // 네 발 짐승은 건드리지 않는다 — 세우는 규칙이 사람 기준이라 오히려 일으켜 세운다.
             if (RotationFor(model.name) == Quaternion.identity && !IsFourLegged(model.name) && !IsAlreadyUpright(model.name)) AutoUpright(visual);
-            FitToHeight(instance, visual, HeightScaleFor(model.name));
+            FitToHeight(instance, visual, HeightScaleFor(model.name), measureHeight: IsAlreadyUpright(model.name));
         }
         AttachAnimator(instance, visual);
 
@@ -1519,8 +1521,9 @@ public static class ArtBinder
     // 체력바도 발밑에 뜬다. NavMeshAgent의 반지름·높이도 스케일을 안 따라가므로 같이 맞춘다.
     // authoredHeight > 0이면 기준 키 대신 그 값으로 맞춘다(Blender로 실제 치수대로 지은 모델, BindEnemies 표).
     // keepOrigin: 모델 원점을 그대로 둔다(수면 원점 모델) — 경계 최저점을 바닥에 맞추지 않는다.
+    // measureHeight: 아바타 없는(Generic) 사람 모델 — 고유 동작 유닛. 키(Y)로 잰다.
     static void FitToHeight(GameObject root, GameObject visual, float heightScale = 1f, float authoredHeight = 0f,
-                            bool keepOrigin = false)
+                            bool keepOrigin = false, bool measureHeight = false)
     {
         // 콜라이더·에이전트도 같은 키를 쓴다. 보이는 것만 줄이면 클릭 판정과 체력바가
         // 원래 크기 자리에 남아서, 작아진 모델 위 허공을 눌러야 선택된다.
@@ -1546,7 +1549,9 @@ public static class ArtBinder
         // 몸길이가 키보다 긴 짐승을 키로 맞추면 몸길이가 기준을 넘어 거대해진다
         // (재규어: 키 20에 맞추면 몸길이 34, 사람 둘을 합친 것보다 길다).
         // 표에 키를 적은 모델은 짐승이어도 키(Y)로 잰다 — 그 표의 값 자체가 키다.
-        float measured = authoredHeight > 0f || IsHumanVisual(visual) ? size.y : Mathf.Max(size.x, size.y, size.z);
+        // 🔴 (10-01) 고유 동작(Generic) 사람 모델도 키로 — 가장 긴 축으로 재면 드릴 총(제퍼)·털외투(카이도)·벌린 팔(쿠마)이
+        //    30에 걸려 키가 18~22로 줄었다(units 실측). 이미 선 모델(AlreadyUprightModels)은 Y가 키다.
+        float measured = authoredHeight > 0f || measureHeight || IsHumanVisual(visual) ? size.y : Mathf.Max(size.x, size.y, size.z);
 
         if (measured > 0.001f)
         {
