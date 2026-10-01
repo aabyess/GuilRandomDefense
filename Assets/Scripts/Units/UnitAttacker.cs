@@ -1056,6 +1056,7 @@ public class UnitAttacker : MonoBehaviour
 
                 SkillTelemetry.Cast(unitData, skill);
                 SkillSfx.Cast(unitData, skill, transform.position);
+                PulseSphereArt();
                 bool vfxBefore = SkillVfx.BeginCast(unitData, skill);
                 CastSkillLevel(level, level.WorldRange, enemy, 0f);
                 SkillVfx.EndCast(vfxBefore);
@@ -1134,10 +1135,20 @@ public class UnitAttacker : MonoBehaviour
             // 효과가 이 경로를 타면 0(적용 안 함)으로 안전하게 빠진다.
             SkillTelemetry.Cast(identity != null ? identity.Data : null, skill);
             SkillSfx.Cast(identity != null ? identity.Data : null, skill, transform.position);
+            PulseSphereArt();
             bool vfxBefore = SkillVfx.BeginCast(identity != null ? identity.Data : null, skill);
             CastSkillLevel(level, level.WorldRange, null, 0f);
             SkillVfx.EndCast(vfxBefore);
         }
+    }
+
+    // 「스킬 중」 구체 부품 오라 — 컴포넌트는 소환 뒤에 붙을 수 있어 Awake 캐시 금지, 첫 시전 때 지연 조회(없으면 null 유지).
+    UnitSphereArt sphereArt;
+    bool sphereArtLooked;
+    void PulseSphereArt()
+    {
+        if (sphereArt == null && !sphereArtLooked) { sphereArt = GetComponent<UnitSphereArt>(); sphereArtLooked = sphereArt != null; }
+        if (sphereArt != null) sphereArt.PulseSkill(1f);
     }
 
     // ---- Aura 지속효과 — 대상 추적(Apply-once/Remove-on-exit), EnemyAuraCaster와 같은
@@ -1472,6 +1483,7 @@ public class UnitAttacker : MonoBehaviour
             // ReceivedDamage 참고, 2026-09-06 PM 지시로 연결).
             SkillTelemetry.Cast(unitData, skill);
             SkillSfx.Cast(unitData, skill, transform.position);
+            PulseSphereArt();
             bool vfxBefore = SkillVfx.BeginCast(unitData, skill);
             CastSkillLevel(level, level.WorldRange, attackedTarget, AttackDamage);
             SkillVfx.EndCast(vfxBefore);
