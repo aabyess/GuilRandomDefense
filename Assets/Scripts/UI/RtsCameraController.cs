@@ -18,7 +18,8 @@ public class RtsCameraController : MonoBehaviour
     [SerializeField] float inputSmoothing = 12f;     // 클수록 즉각적. 0이면 감속 없음
 
     [Header("확대·축소")]
-    [SerializeField] float zoomStep = 8f;            // 휠 한 칸당 높이 변화
+    // 휠 한 칸당 높이 변화 비율. 예전엔 고정 8(높이 수백~1750에서 1%도 안 돼 휠이 안 먹는 것처럼 보였다, 사장님 10-02) → 비율로.
+    [SerializeField] float zoomRatio = 0.12f;   // 필드 이름을 바꿔 씬에 저장된 옛 값(8)이 덮어쓰지 못하게 했다
     [SerializeField] float zoomSmoothing = 10f;
     [SerializeField] float minHeight = 12f;
     // 420 * 4.167(원작 비율 2단계 정본 배율, PM 지시 2026-09-23) — 맵 실제 생성 시점엔
@@ -344,7 +345,7 @@ public class RtsCameraController : MonoBehaviour
             ? Vector2.Lerp(smoothedInput, rawInput, 1f - Mathf.Exp(-inputSmoothing * delta))
             : rawInput;
 
-        targetHeight = Mathf.Clamp(targetHeight - ZoomInput() * zoomStep, minHeight, maxHeight);
+        targetHeight = Mathf.Clamp(targetHeight * (1f - ZoomInput() * zoomRatio), minHeight, maxHeight);
 
         Vector3 position = transform.position;
         position += PlanarDirection(smoothedInput) * (moveSpeed * HeightScale() * delta);

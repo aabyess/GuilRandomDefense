@@ -272,6 +272,7 @@ public class GameHud : MonoBehaviour
     // 값이 안 바뀌면 문자열을 새로 만들지 않기 위한 마지막 표시값 캐시.
     int lastGold = int.MinValue;
     int lastWood = int.MinValue;
+    int lastMana = int.MinValue;
     int lastRound = int.MinValue;
     int lastTimeTenths = int.MinValue;
     bool lastPreparing;
@@ -710,7 +711,7 @@ public class GameHud : MonoBehaviour
 
         RectTransform resourcePanel = CreatePanel(topBar, "ResourcePanel", Color.clear);
         SetAnchors(resourcePanel, new Vector2(0.01f, 0f), new Vector2(0.35f, 1f));
-        goldWoodText = CreateLabel(resourcePanel, "ResourceText", "골드 -   목재 -");
+        goldWoodText = CreateLabel(resourcePanel, "ResourceText", "골드 -   목재 -   마나 -");
         goldWoodText.alignment = TextAlignmentOptions.Left;
         goldWoodText.fontSize = 22;
 
@@ -3015,11 +3016,15 @@ public class GameHud : MonoBehaviour
         int gold = local != null && local.GoldWallet != null ? local.GoldWallet.Gold : 0;
         int wood = local != null && local.ResourceWallet != null ? local.ResourceWallet.Get(ResourceType.Wood) : 0;
 
-        if (gold != lastGold || wood != lastWood)
+        // 도움소 스킬(마나포션·선택위습제조 등)이 마나를 쓰는데 현재 양을 볼 곳이 없었다(사장님 10-02).
+        int mana = local != null && local.ResourceWallet != null ? local.ResourceWallet.Get(ResourceType.Mana) : 0;
+
+        if (gold != lastGold || wood != lastWood || mana != lastMana)
         {
             lastGold = gold;
             lastWood = wood;
-            goldWoodText.text = $"골드 {gold}   목재 {wood}";
+            lastMana = mana;
+            goldWoodText.text = $"골드 {gold}   목재 {wood}   마나 {mana}";
         }
 
         RoundManager rm = RoundManagerRef;
