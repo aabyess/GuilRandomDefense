@@ -1140,7 +1140,7 @@ public static class ArtBinder
     // 사람 골격이 아닌 **적** 모델 — Humanoid로 바꾸지 않고 Generic(자기 클립)으로 둔다(유닛은 UnitModelPostprocessor.GenericRigUnits).
     // 🔴 09-25에 R43 양문호(매머드)가 이 목록 없이 MakeHumanoid를 타서 Humanoid로 들어가 있었다(.meta animationType 3) —
     //    네발짐승 41뼈가 사람 골격으로 잘못 매핑돼 공용 걷기 클립을 탔다. 폴더 이름(= 모델 파일 이름)으로 거른다.
-    static readonly string[] GenericEnemyModels = { "양문호", "강민호" };
+    static readonly string[] GenericEnemyModels = { "양문호", "강민호", "주영호", "왕승환", "김민준안경" };   // 뒤 셋 10-01 고유 동작(자기 클립 Idle·Move·Attack…)
 
     static bool IsGenericEnemyModel(string path)
     {

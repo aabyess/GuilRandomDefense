@@ -29,7 +29,9 @@ public class BlenderClipPostprocessor : AssetPostprocessor
                                        "Assets/Art/Units/특별함_이정범/",
                                        "Assets/Art/Units/특별함_박민수/",
                                        "Assets/Art/Units/특별함_박예원/",
-                                       "Assets/Art/Units/희귀함_조현규/" };
+                                       "Assets/Art/Units/희귀함_조현규/",
+                                       // 적 셋(2026-10-01 고유 동작) — Idle·Move 반복.
+                                       "Assets/Art/Enemies/주영호/", "Assets/Art/Enemies/왕승환/", "Assets/Art/Enemies/김민준안경/" };
 
     static readonly string[] MoveLoopRoots = { "Assets/Art/Units/히든_맥주만땅/", "Assets/Art/Units/히든_미소야/", "Assets/Art/Units/영원_서민성/",
                                                "Assets/Art/Units/영원_최상호/",
@@ -42,7 +44,8 @@ public class BlenderClipPostprocessor : AssetPostprocessor
                                                "Assets/Art/Units/특별함_이정범/",
                                                "Assets/Art/Units/특별함_박민수/",
                                                "Assets/Art/Units/특별함_박예원/",
-                                               "Assets/Art/Units/희귀함_조현규/" };
+                                               "Assets/Art/Units/희귀함_조현규/",
+                                               "Assets/Art/Enemies/주영호/", "Assets/Art/Enemies/왕승환/", "Assets/Art/Enemies/김민준안경/" };
 
     // 규칙을 바꾸면 올린다 — 올려야 이미 임포트된 FBX도 다시 돈다.
     // 1 → 2 (2026-09-13): 배 유닛 폴더 추가.
