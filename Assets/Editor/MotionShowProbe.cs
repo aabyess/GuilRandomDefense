@@ -22,6 +22,9 @@ static class MotionShowProbe
     static string Minsu() => Show("특별함_박민수");
     static string Yewon() => Show("특별함_박예원");
     static string Hyeongyu() => Show("희귀함_조현규");
+    static string AuraHidden() => Show("히든_이요한");
+    static string AuraChar() => Show("전설적인_백기현");
+    static string AuraTrans() => Show("초월_임장혁_AD");
 
     static readonly System.Collections.Generic.List<GameObject> shown = new System.Collections.Generic.List<GameObject>();
 

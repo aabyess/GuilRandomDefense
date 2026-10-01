@@ -129,3 +129,43 @@ static class MotionArmatureProbe
         return sb.ToString();
     }
 }
+
+// 상시 오라 성능 비교(2026-10-01) — 초월·히든 60기를 세우고 오라 켬/끔/켬 각 3초의 평균 프레임 시간을 잰다.
+//   gameshot x.png 1 960x540 call:AuraPerf.Start wait:14 call:AuraPerf.Report
+static class AuraPerf
+{
+    static readonly System.Collections.Generic.List<string> result = new System.Collections.Generic.List<string>();
+
+    class Runner : MonoBehaviour
+    {
+        System.Collections.IEnumerator Start()
+        {
+            UnitSpawner spawner = FindFirstObjectByType<UnitSpawner>();
+            LaneMarker lane = LaneMarker.Get(0);
+            var datas = AssetDatabase.FindAssets("t:UnitData", new[] { "Assets/Data/Units/Roster" })
+                .Select(g => AssetDatabase.LoadAssetAtPath<UnitData>(AssetDatabase.GUIDToAssetPath(g)))
+                .Where(d => d != null && d.prefab != null && (d.grade == UnitGrade.Transcendent || d.grade == UnitGrade.Hidden)).ToList();
+            for (int i = 0; i < 60; i++)
+                spawner.Spawn(datas[i % datas.Count], lane.LaneCenter + new Vector3((i % 10 - 5) * 14f, 0f, (i / 10 - 3) * 14f), 0);
+            yield return new WaitForSeconds(1.5f);   // 설치기가 붙을 시간
+            foreach (bool on in new[] { true, false, true })
+            {
+                UnitSphereArt.Enabled = on;
+                yield return new WaitForSeconds(0.5f);
+                float t = 0f; int n = 0; float end = Time.realtimeSinceStartup + 3f;
+                while (Time.realtimeSinceStartup < end) { t += Time.unscaledDeltaTime; n++; yield return null; }
+                result.Add($"오라 {(on ? "켬" : "끔")}: 평균 {t / n * 1000f:0.0}ms ({n / t:0.0}fps) · 붙은 유닛 {UnitSphereArt.AttachedUnits} · 부품 {UnitSphereArt.AttachedParts}");
+            }
+            UnitSphereArt.Enabled = true;
+        }
+    }
+
+    static string Start()
+    {
+        result.Clear();
+        new GameObject("[AuraPerf]").AddComponent<Runner>();
+        return "시작(60기)";
+    }
+
+    static string Report() => string.Join("\n", result);
+}
