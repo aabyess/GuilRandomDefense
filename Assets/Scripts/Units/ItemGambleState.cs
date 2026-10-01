@@ -78,8 +78,7 @@ public class ItemGambleState : MonoBehaviour
         return true;
     }
 
-    /// <summary>증분 지급용(스토리 보상 등). 지금은 아무도 안 부른다 — 6·9라운드 재고는
-    /// 증분이 아니라 절대값 세팅이라 SetStock을 쓴다(아래).</summary>
+    /// <summary>증분 지급용 — 스토리 6·9 클리어 때 RewardDistributor.GrantStoryReward가 +1(원작 Item_Int, 도박 사용 때 −1이라 재고 수와 같다).</summary>
     public void AddStock(int amount)
     {
         stock += amount;

@@ -435,6 +435,9 @@ public class RewardDistributor : MonoBehaviour
             }
 
             GrantWisps(context, storyReward.wispRewards);
+
+            // 원작 Trig_Story_reward6·9(j:13555·13603, 생존자만): udg_Item_Int+1 → AddUnitToStock(H0BS, Item_Int, 최대 2). Item_Int는 도박 사용 때 −1이라 곧 재고 수다 — 절대값이 아니라 +1.
+            if (storyReward.order == 6 || storyReward.order == 9) context.ItemGambleState?.AddStock(1);
             GrantItemDrop(context, storyReward.itemDropChance, storyReward.itemDrops);   // 원작 스토리 4~9 확률 아이템(생존자만 이 루프에 온다)
 
             if (earlyClear)
