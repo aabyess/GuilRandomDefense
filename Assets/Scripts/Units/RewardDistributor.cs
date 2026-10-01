@@ -360,7 +360,9 @@ public class RewardDistributor : MonoBehaviour
             // 개별로 검사한다. 다른 스토리엔 이 조건이 없다(원작에 없음) — order==7일
             // 때만 건다. PlayerContext.IsDead가 그 자리다(HandlePlayerDefeated 주석
             // "원작 udg_PlayerDeath[i]=1 분기의 같은 SetPlayerStateBJ" 참고).
-            if (storyReward.order == 7 && context.IsDead) continue;
+            // 🔴 정정(09-27, j 전수 확인): Trig_Story_reward1~13의 Func002Func001C가 **전부** udg_PlayerDeath[플레이어]==0이다 — 7번만이 아니다.
+            //    (옛 주석 「다른 스토리엔 이 조건이 없다」는 틀렸다.) 죽은 플레이어는 스토리 보상을 못 받는다.
+            if (context.IsDead) continue;
 
             if (storyReward.goldReward > 0 && context.GoldWallet != null)
             {
