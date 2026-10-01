@@ -7488,16 +7488,17 @@ UNITS["특별함_고우선"]["variants"] = {"동작": _motion_variant({
     "EV041_Reiju_E_000": "Event_E", "EV041_Reiju_F_000": "Event_F"}, lunge=False)}
 
 
-# 🔸 고유 동작판 1묶음(2026-10-01, 사장님 「각 스킨에 고유 스킨이나 모션 있으면 살려도 좋아」 → 전수조사 「쓸 만함」 위 등급부터). 「이름@고유」로 Assets 밖에 뽑는다.
+# 🔸 고유 동작판 1묶음 — **기본으로 승격**(2026-10-01 PM 지시; 바닥 기준은 발목·발끝 뼈, 망토만 내려가는 건 그대로).
+# (원래: 2026-10-01, 사장님 「각 스킨에 고유 스킨이나 모션 있으면 살려도 좋아」 → 전수조사 「쓸 만함」 위 등급부터). 「이름@고유」로 Assets 밖에 뽑는다.
 #   전부 바운티러시 pl_ 계열 — 클립 이름은 같고 접두만 다르다. 원본에 없는 클립은 skip으로 뺀다(전수조사 survey_clips.py가 클립 목록을 읽어 만든 표).
 def _BL(d):                                                      # FBX 원본 테이크 이름은 「…|Base Layer」 꼴
     return {f"{k}|Base Layer": v for k, v in d.items()}
 
 
-UNITS["영원_윤현모"]["variants"] = {"고유": _motion_variant(_BL(_pl("pl_shiki_orig01")))}
-UNITS["초월_배성령_AD"]["variants"] = {"고유": _motion_variant(_BL(_pl("pl_killer_atta01")))}
-UNITS["초월_양재모_AD"]["variants"] = {"고유": _motion_variant(_BL(_pl("pl_akainu_gens01")))}
-UNITS["제한_최영민"]["variants"] = {"고유": _motion_variant(_BL(_pl("pl_ichiji_orig01")))}
+UNITS["영원_윤현모"].update(_motion_variant(_BL(_pl("pl_shiki_orig01"))))
+UNITS["초월_배성령_AD"].update(_motion_variant(_BL(_pl("pl_killer_atta01"))))
+UNITS["초월_양재모_AD"].update(_motion_variant(_BL(_pl("pl_akainu_gens01"))))
+UNITS["제한_최영민"].update(_motion_variant(_BL(_pl("pl_ichiji_orig01"))))
 # 테소로(제한_이유범): 평타·스킬·idle_a·run이 「_1」 꼬리(원본 둘째 판) — 첫째 판이 없다. str01_*(변신 자세)는 안 쓴다.
 _TES = {f"pl_tesoro_orig01_{k}": v for k, v in {
     "idle_a_1": "Idle", "run_1": "Move", "combo_a_1": "Attack", "combo_b_1": "Attack2", "combo_c_1": "Attack3", "damage": "Hit", "down": "Die",
@@ -7505,10 +7506,10 @@ _TES = {f"pl_tesoro_orig01_{k}": v for k, v in {
     "down_end": "GetUp", "jump": "Jump", "jump_lp": "Jump_Loop", "jump_end": "Jump_End", "blownback_lp": "BlownBack_Loop", "blownback_end": "BlownBack_End",
     "slammed": "Slammed", "electric_shock": "Shock", "shake": "Shake", "idlehome_a": "Idle_Home", "opening": "Opening", "victory": "Win", "victory_lp": "Win_Loop",
     "lose": "Lose", "lose_lp": "Lose_Loop", "flagget": "Flag", "flagget_lp": "Flag_Loop", "flagget_end": "Flag_End"}.items()}
-UNITS["제한_이유범"]["variants"] = {"고유": _motion_variant(_BL(_TES))}
+UNITS["제한_이유범"].update(_motion_variant(_BL(_TES)))
 # 센고쿠(불멸_고도현): 원본에 Idle·스킬 하나뿐(idle_a · skill_a/_lp/_end) — 걷기·평타·피격·죽음이 없다. 스킬을 Attack(시작·유지·끝)으로 쓴다.
-UNITS["불멸_고도현"]["variants"] = {"고유": _motion_variant(_BL({
-    "pl_sengoku_orig02_idle_a": "Idle", "pl_sengoku_orig02_skill_a": "Attack", "pl_sengoku_orig02_skill_a_lp": "Attack_Loop", "pl_sengoku_orig02_skill_a_end": "Attack_End"}), lunge=False)}
+UNITS["불멸_고도현"].update(_motion_variant(_BL({
+    "pl_sengoku_orig02_idle_a": "Idle", "pl_sengoku_orig02_skill_a": "Attack", "pl_sengoku_orig02_skill_a_lp": "Attack_Loop", "pl_sengoku_orig02_skill_a_end": "Attack_End"}), lunge=False))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
