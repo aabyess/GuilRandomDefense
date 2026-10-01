@@ -607,7 +607,11 @@ public class SupportShop : MonoBehaviour, ILaneShop
             return peek;
         }
 
-        return ApplyOneWaveDamage(skill, point, round, context, isFirstWave: true);
+        int hits = ApplyOneWaveDamage(skill, point, round, context, isFirstWave: true);
+        // 항법 「도움소 강화」: 대지진은 같은 자리에 한 번 더(원작 AOeq 레벨2, j:12765-12792). 방깎은 첫 타에만(isFirstWave).
+        int extraHits = IsBoosted(context, skill) ? skill.boostedExtraHits : 0;
+        for (int i = 0; i < extraHits; i++) ApplyOneWaveDamage(skill, point, round, context, isFirstWave: false);
+        return hits;
     }
 
     IEnumerator MultiWaveDamageRoutine(SupportSkillData skill, Vector3 point, int round, PlayerContext context)

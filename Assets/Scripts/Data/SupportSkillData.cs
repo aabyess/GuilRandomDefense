@@ -174,6 +174,12 @@ public class SupportSkillData : ScriptableObject
     // 우솝 특성 전용 — armorShredOnHit/duration은 항법 축(boosted 매개변수)이 아니라
     // usoppTraitBoosts && UsoppDockhouseTrait.Active로만 올라간다. SupportShop이 그 조합을
     // 미리 계산해 이 두 메서드에 넘긴다(둘 다 boostedX==0이면 원래값 그대로 — 회귀 없음).
+    // 🔴 정정(09-27, j 직독): 대지진(AOeq)은 w3a 레벨1·2 블록이 같아도 **트리거가 레벨을 본다** — Trig_Absolb1_Func006Func005C가 GetUnitAbilityLevel(AOeq)==2일 때
+    //    같은 반경(625)에 RRD 1,000,000을 한 번 더 낸다(j:12765-12792). 레벨은 항법 「도움소 강화」(R037, Manso AOeq→2)가 올린다. 옛 주석 「스케일링 자체가 없다」는 틀렸다.
+    //    항법 「도움소 강화」일 때 즉발 스킬에 추가로 나가는 타격 횟수(대지진 1). 0(기본)이면 없음 — 맨 뒤에 추가(직렬화 순서).
+    [Header("항법 '도움소 강화' 전용 — 즉발 스킬의 추가 타격 횟수(대지진 1)")]
+    public int boostedExtraHits;
+
     public float EffectiveArmorShredOnHit(bool usoppBoosted) =>
         (usoppBoosted && boostedArmorShredOnHit > 0f) ? boostedArmorShredOnHit : armorShredOnHit;
     public float EffectiveDuration(bool usoppBoosted) =>
