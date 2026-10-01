@@ -19,10 +19,30 @@ public class BlenderClipPostprocessor : AssetPostprocessor
                                        // 히든 배 둘(2026-09-30) — Idle·Move 반복(MoveLoopRoots). 버전은 안 올림: 새 파일 둘뿐.
                                        "Assets/Art/Units/히든_맥주만땅/", "Assets/Art/Units/히든_미소야/", "Assets/Art/Units/영원_서민성/",
                                        // 영원_최상호(2026-09-30 고유 동작 시범) — 원본 Idle·Move 반복.
-                                       "Assets/Art/Units/영원_최상호/" };
+                                       "Assets/Art/Units/영원_최상호/",
+                                       "Assets/Art/Units/영원_문필환/",
+                                       "Assets/Art/Units/초월_김건_AP/",
+                                       "Assets/Art/Units/초월_강주혁_AP/",
+                                       "Assets/Art/Units/초월_임장혁_AD/",
+                                       "Assets/Art/Units/전설적인_이승우/",
+                                       "Assets/Art/Units/희귀함_구주호/",
+                                       "Assets/Art/Units/특별함_이정범/",
+                                       "Assets/Art/Units/특별함_박민수/",
+                                       "Assets/Art/Units/특별함_박예원/",
+                                       "Assets/Art/Units/희귀함_조현규/" };
 
     static readonly string[] MoveLoopRoots = { "Assets/Art/Units/히든_맥주만땅/", "Assets/Art/Units/히든_미소야/", "Assets/Art/Units/영원_서민성/",
-                                               "Assets/Art/Units/영원_최상호/" };
+                                               "Assets/Art/Units/영원_최상호/",
+                                               "Assets/Art/Units/영원_문필환/",
+                                               "Assets/Art/Units/초월_김건_AP/",
+                                               "Assets/Art/Units/초월_강주혁_AP/",
+                                               "Assets/Art/Units/초월_임장혁_AD/",
+                                               "Assets/Art/Units/전설적인_이승우/",
+                                               "Assets/Art/Units/희귀함_구주호/",
+                                               "Assets/Art/Units/특별함_이정범/",
+                                               "Assets/Art/Units/특별함_박민수/",
+                                               "Assets/Art/Units/특별함_박예원/",
+                                               "Assets/Art/Units/희귀함_조현규/" };
 
     // 규칙을 바꾸면 올린다 — 올려야 이미 임포트된 FBX도 다시 돈다.
     // 1 → 2 (2026-09-13): 배 유닛 폴더 추가.

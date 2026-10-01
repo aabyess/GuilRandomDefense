@@ -76,6 +76,17 @@ public class UnitModelPostprocessor : AssetPostprocessor
         // 같은 FBX 테이크로(Idle·Move·Attack·Attack_Lunge·Hit·Die·Skill1·Skill2, fix_unit_fbx 「영원_최상호@동작」).
         // Humanoid로 읽으면 날개·갈래머리·코트 보조 뼈 곡선이 빠진다 → Generic 자체 클립.
         "영원_최상호",
+        // 고유 동작 10종(2026-10-01, 최상호 시범과 같은 방식 — 원본 뼈대 + 원본 클립을 같은 FBX 테이크로, Blender fix_unit_fbx). Humanoid로 읽으면 보조 뼈 곡선이 빠진다.
+        "영원_문필환",
+        "초월_김건_AP",
+        "초월_강주혁_AP",
+        "초월_임장혁_AD",
+        "전설적인_이승우",
+        "희귀함_구주호",
+        "특별함_이정범",
+        "특별함_박민수",
+        "특별함_박예원",
+        "희귀함_조현규",
 
         // 특별함_노건완(노가리, 잉어 — 2026-09-14) — 물고기라 사람 골격이 없다. 자기 Idle 클립(헤엄·꼬리짓)만 쓴다.
         "특별함_노건완",

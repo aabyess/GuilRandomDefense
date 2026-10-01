@@ -275,6 +275,17 @@ public static class ArtBinder
     }
 
 
+    // 🔴 고유 동작 유닛(2026-10-01) — Blender fix_unit_fbx가 이미 세워 내보낸 Generic 모델이다(T자 키 Y 1.7~1.8m 실측).
+    //    Generic은 아바타가 없어 UprightByBounds(경계 상자: 가장 긴 축을 위로)가 도는데, 망토·날개·무기로 가로나 앞뒤가 키보다 긴 모델은
+    //    멀쩡한 걸 90° 눕혔다(임장혁·조현규·이승우·박민수·문필환이 옆으로 누움, 10-01 사장님 화면). 이 모델들은 돌리지 않는다.
+    static readonly string[] AlreadyUprightModels =
+    {
+        "영원_최상호", "영원_문필환", "초월_김건_AP", "초월_강주혁_AP", "초월_임장혁_AD", "전설적인_이승우",
+        "희귀함_구주호", "특별함_이정범", "특별함_박민수", "특별함_박예원", "희귀함_조현규",
+    };
+
+    static bool IsAlreadyUpright(string modelName) => AlreadyUprightModels.Any(n => Nfc(n) == Nfc(modelName));
+
     // 방향 벡터를 여섯 축(±X·±Y·±Z) 중 가장 가까운 것으로 맞춘다.
     // exclude를 주면 그 축과 나란한 것(±)은 후보에서 뺀다 — 위와 오른쪽이 겹치면 안 되기 때문이다.
     static Vector3 NearestAxis(Vector3 v, Vector3 exclude = default)
@@ -374,7 +385,7 @@ public static class ArtBinder
     /// 표(ModelAdjustments)에 회전을 직접 적은 모델인가. 그런 모델은 뼈로 재서 세우지 않는다 —
     /// 뼈와 메시가 따로 노는 변환본(안흔함_박준희)은 뼈 기준으로 돌리면 오히려 눕는다. MapGenerator 인형 세우기도 이걸 본다.
     /// </summary>
-    public static bool HasManualRotation(string modelName) => RotationFor(modelName) != Quaternion.identity;
+    public static bool HasManualRotation(string modelName) => RotationFor(modelName) != Quaternion.identity || IsAlreadyUpright(modelName);   // 이미 선 고유 동작 모델도 자동으로 안 돌린다
 
     static Quaternion RotationFor(string modelName)
     {
@@ -575,7 +586,7 @@ public static class ArtBinder
     }
 
     // 이번에 새로 넣은 스킨 — LinkTexturesUnits가 도는 목록. 새 스킨을 넣을 때 여기에 이름을 더한다.
-    static readonly string[] PendingLinkUnits = { "랜덤_이타도리_유지", "특수함_헬로우먼", "특수함_장명자", "특수함_임재현", "특수함_황길라", "특수함_장진희", "특수함_BJ_율희" };
+    static readonly string[] PendingLinkUnits = { "영원_문필환", "초월_김건_AP", "초월_강주혁_AP", "초월_임장혁_AD", "전설적인_이승우", "희귀함_구주호", "특별함_이정범", "특별함_박민수", "특별함_박예원", "희귀함_조현규" };
 
     static void LinkTexturesWhere(System.Func<string, bool> modelFilter)
     {
@@ -1361,7 +1372,7 @@ public static class ArtBinder
             visual.transform.localRotation = RotationFor(model.name);
             // 사람형은 뼈로 방향을 재서 자동으로 세운다. 수동 표에 적힌 모델은 그게 우선이다.
             // 네 발 짐승은 건드리지 않는다 — 세우는 규칙이 사람 기준이라 오히려 일으켜 세운다.
-            if (RotationFor(model.name) == Quaternion.identity && !IsFourLegged(model.name)) AutoUpright(visual);
+            if (RotationFor(model.name) == Quaternion.identity && !IsFourLegged(model.name) && !IsAlreadyUpright(model.name)) AutoUpright(visual);
             FitToHeight(instance, visual, HeightScaleFor(model.name));
         }
         AttachAnimator(instance, visual);
