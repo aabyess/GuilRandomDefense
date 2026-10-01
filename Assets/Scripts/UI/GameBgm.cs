@@ -35,9 +35,10 @@ public class GameBgm : MonoBehaviour
         new Cue("Music/boss_r65_danganronpa", 65, 65, 0.065f),   // 65라운드 보스(이승우) — 평균 −9.8dB → 0.065이면 ≈ −33.5dB
         new Cue("Music/boss_r70_jonathan", 70, 70, 0.075f),   // 70라운드 보스(신지우) — 평균 −11.4dB → 0.075이면 ≈ −33.9dB
         new Cue("Music/boss_r75_johnny", 75, 75, 0.085f),   // 75라운드 마지막 보스(이이삭) — 평균 −12.3dB → 0.085이면 ≈ −33.7dB
-        // 라운드 브금(10-01) — 2라운드부터 끝까지, 보스 라운드 동안 멈췄다가 이어서. 31분 곡이라 ≈R53까지 한 바퀴, 그 뒤 되풀이.
+        // 라운드 브금(10-01) — 2~59라운드(60라운드 대기 시간까지), 보스 라운드 동안 멈췄다가 이어서. 31분 곡이라 ≈R53까지 한 바퀴, 그 뒤 되풀이.
+        //   사장님 10-01 「60라운드 이후부터는 배경으로 깔리는 브금을 꺼」 — 60R부터는 보스 곡(60·65·70·75)만 나온다.
         //   평균 −20.7dB → 0.2이면 ≈ −34.7dB(깔리는 곡이라 보스 곡보다 1dB쯤 작게).
-        new Cue("Music/round_fourth_layer", 2, 999, 0.2f, resume: true),
+        new Cue("Music/round_fourth_layer", 2, 59, 0.2f, resume: true),
     };
     const float FadeSeconds = 1.75f;
     const bool BgmOn = true;
