@@ -17,24 +17,26 @@ public class GameBgm : MonoBehaviour
 {
     struct Cue
     {
-        public string Track; public int FromRound; public int ToRound; public float Volume; public bool Resume;
-        public Cue(string track, int from, int to, float volume, bool resume = false) { Track = track; FromRound = from; ToRound = to; Volume = volume; Resume = resume; }
+        public string Track; public int FromRound; public int ToRound; public float Volume; public bool Resume; public bool Once; public bool Hold;
+        public Cue(string track, int from, int to, float volume, bool resume = false, bool once = false, bool hold = false) { Track = track; FromRound = from; ToRound = to; Volume = volume; Resume = resume; Once = once; Hold = hold; }
     }
 
+    // Once 줄(첫 곡·보스 곡, 10-02 사장님)은 한 번만 끝까지 틀고, 끝나면 그 줄을 건너뛴다 → 구간이 남았으면 라운드 브금(Resume)이 멈춘 자리에서 이어진다.
+    // Hold 줄(보스 곡, 10-02 사장님 「3~4분이라 보스 라운드 끝나도 계속」)은 구간을 벗어나도 끝까지 틀고 끝난 뒤에 라운드 브금이 이어진다.
     // 볼륨 계산(사장님 「시끄럽다」 10-01): binks_sake는 평균 −27.6dB라 0.5를 곱하면 ≈ −33.6dB.
     // 보스 테마(Zoltraak 앞 2:15)는 평균 −13.1dB로 14.5dB 크다 → 0.1이면 ≈ −33.1dB로 맞춘 것. 어림값이니 사장님이 들어 보고 조절.
     static readonly Cue[] Cues =
     {
-        new Cue("Music/binks_sake", 0, 1, 0.5f),             // 첫 화면 ~ 1라운드(2라운드 시작 때 끔)
-        new Cue("Music/boss_r10_zoltraak", 10, 10, 0.1f),   // 첫 보스(10라운드 주영호) — 11라운드 시작 때 끔
-        new Cue("Music/boss_r20_journey", 20, 20, 0.11f),   // 20라운드 보스(박은석) — 21라운드 시작 때 끔. 평균 −14.2dB → 0.11이면 ≈ −33.4dB
-        new Cue("Music/boss_r30_hacking", 30, 30, 0.19f),   // 30라운드 보스(김만경) — 31라운드 시작 때 끔. 평균 −18.9dB → 0.19이면 ≈ −33.3dB
-        new Cue("Music/boss_r40_silent_solitude", 40, 40, 0.07f),   // 40라운드 보스(김용태) — 평균 −10.2dB → 0.07이면 ≈ −33.3dB
-        new Cue("Music/boss_r50_gotoubun", 50, 50, 0.07f),   // 50라운드 보스(이태훈) — 평균 −10.1dB → 0.07이면 ≈ −33.2dB
-        new Cue("Music/boss_r60_departure", 60, 60, 0.07f),   // 60라운드 보스(정윤식) — 평균 −10.6dB → 0.07이면 ≈ −33.7dB
-        new Cue("Music/boss_r65_danganronpa", 65, 65, 0.065f),   // 65라운드 보스(이승우) — 평균 −9.8dB → 0.065이면 ≈ −33.5dB
-        new Cue("Music/boss_r70_jonathan", 70, 70, 0.075f),   // 70라운드 보스(신지우) — 평균 −11.4dB → 0.075이면 ≈ −33.9dB
-        new Cue("Music/boss_r75_johnny", 75, 75, 0.085f),   // 75라운드 마지막 보스(이이삭) — 평균 −12.3dB → 0.085이면 ≈ −33.7dB
+        new Cue("Music/binks_sake", 0, 1, 0.5f, once: true),             // 첫 화면 ~ 1라운드(2라운드 시작 때 끔)
+        new Cue("Music/boss_r10_zoltraak", 10, 10, 0.1f, once: true, hold: true),   // 첫 보스(10라운드 주영호) — 11라운드 시작 때 끔
+        new Cue("Music/boss_r20_journey", 20, 20, 0.11f, once: true, hold: true),   // 20라운드 보스(박은석) — 21라운드 시작 때 끔. 평균 −14.2dB → 0.11이면 ≈ −33.4dB
+        new Cue("Music/boss_r30_hacking", 30, 30, 0.19f, once: true, hold: true),   // 30라운드 보스(김만경) — 31라운드 시작 때 끔. 평균 −18.9dB → 0.19이면 ≈ −33.3dB
+        new Cue("Music/boss_r40_silent_solitude", 40, 40, 0.07f, once: true, hold: true),   // 40라운드 보스(김용태) — 평균 −10.2dB → 0.07이면 ≈ −33.3dB
+        new Cue("Music/boss_r50_gotoubun", 50, 50, 0.07f, once: true, hold: true),   // 50라운드 보스(이태훈) — 평균 −10.1dB → 0.07이면 ≈ −33.2dB
+        new Cue("Music/boss_r60_departure", 60, 60, 0.07f, once: true, hold: true),   // 60라운드 보스(정윤식) — 평균 −10.6dB → 0.07이면 ≈ −33.7dB
+        new Cue("Music/boss_r65_danganronpa", 65, 65, 0.065f, once: true, hold: true),   // 65라운드 보스(이승우) — 평균 −9.8dB → 0.065이면 ≈ −33.5dB
+        new Cue("Music/boss_r70_jonathan", 70, 70, 0.075f, once: true, hold: true),   // 70라운드 보스(신지우) — 평균 −11.4dB → 0.075이면 ≈ −33.9dB
+        new Cue("Music/boss_r75_johnny", 75, 75, 0.085f, once: true, hold: true),   // 75라운드 마지막 보스(이이삭) — 평균 −12.3dB → 0.085이면 ≈ −33.7dB
         // 라운드 브금(10-01) — 2~59라운드(60라운드 대기 시간까지), 보스 라운드 동안 멈췄다가 이어서. 31분 곡이라 ≈R53까지 한 바퀴, 그 뒤 되풀이.
         //   사장님 10-01 「60라운드 이후부터는 배경으로 깔리는 브금을 꺼」 — 60R부터는 보스 곡(60·65·70·75)만 나온다.
         //   평균 −20.7dB → 0.2이면 ≈ −34.7dB(깔리는 곡이라 보스 곡보다 1dB쯤 작게).
@@ -52,6 +54,8 @@ public class GameBgm : MonoBehaviour
     readonly float[] savedTime = new float[Cues.Length];   // Resume 곡이 멈춘 자리
     float pendingSeek = -1f;         // Play 직후에 옮길 자리(스트리밍 클립은 Play 전 time이 안 먹을 수 있다)
     bool fading;
+    readonly bool[] finishedCue = new bool[Cues.Length];   // Once 곡이 끝까지 나왔다 — 다시 틀지 않는다
+    float lastTime;                  // 직전 프레임 재생 위치(끝났는지 판정용)
     int lastRound;
 
     /// <summary>지금 실제로 나고 있나(테스트용).</summary>
@@ -97,6 +101,8 @@ public class GameBgm : MonoBehaviour
         source.clip = null;
         current = -1;
         fading = false;
+        System.Array.Clear(finishedCue, 0, finishedCue.Length);
+        lastTime = 0f;
         lastRound = 0;
         System.Array.Clear(savedTime, 0, savedTime.Length);
         pendingSeek = -1f;
@@ -124,10 +130,10 @@ public class GameBgm : MonoBehaviour
         return true;
     }
 
-    static int CueFor(int round)
+    int CueFor(int round)
     {
         for (int i = 0; i < Cues.Length; i++)
-            if (round >= Cues[i].FromRound && round <= Cues[i].ToRound) return i;
+            if (!finishedCue[i] && round >= Cues[i].FromRound && round <= Cues[i].ToRound) return i;
         return -1;
     }
 
@@ -146,7 +152,7 @@ public class GameBgm : MonoBehaviour
 
         int want = CueFor(effective);
         if (want >= 0 && clips[want] == null) want = -1;
-        if (want != current && current >= 0 && !fading) fading = true;   // 구간을 벗어남 → 줄여서 끈다
+        if (want != current && current >= 0 && !fading && !Cues[current].Hold) fading = true;   // 구간을 벗어남 → 줄여서 끈다
 
         if (fading)
         {
@@ -165,11 +171,25 @@ public class GameBgm : MonoBehaviour
             source.clip = clips[want];
             source.volume = Cues[want].Volume;
             source.time = 0f;
+            lastTime = 0f;
             pendingSeek = Cues[want].Resume ? savedTime[want] : -1f;
         }
         if (current < 0) return;
 
         bool on = GameSound.Enabled;
+        source.loop = !Cues[current].Once;
+        if (Cues[current].Once)
+        {
+            if (on && !source.isPlaying && lastTime > clips[current].length - 0.5f)   // 끝까지 나온 뒤 멈춤 — 이 줄은 끝, 다음 줄로
+            {
+                finishedCue[current] = true;
+                source.Stop();
+                source.clip = null;
+                current = -1;
+                return;
+            }
+            if (source.isPlaying) lastTime = source.time;
+        }
         if (on && !source.isPlaying) source.UnPause();
         if (on && !source.isPlaying) source.Play();   // 아직 한 번도 안 틀었으면 UnPause로는 안 돈다
         else if (!on && source.isPlaying) source.Pause();
