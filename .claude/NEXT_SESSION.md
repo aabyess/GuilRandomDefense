@@ -42,6 +42,7 @@
 - 진행 중(19:40~): 새 도구 R20 → aim:전설 R60 1배. 결과 BALANCE 문서.
 - 보류: 레이쥬(전설적인_임건웅) 피해 73% = 체력 비례 스킬 가설(BossDuelProbe 분해 필요).
 ### 구현담당2
+- 부가 이펙트·상시 오라 파이프라인 = `Docs/research/SPHERE_ART_PIPELINE.md`(흐름 run_all.sh·run_aura.sh → BuildAll → build_table.py, 함정 8, 상태).
 - 남은 것: 황준석 겹침 조정(사장님 답) · 도플라밍고 실 32(폭 5%라 제외 — 되살리기 한 줄) · 오라 맵에 없는 7 · NEXT_SESSION용 구역 정리 문서.
 ### Blender
 - 진행 중: 워크3 기본 텍스처 원본이 이 컴퓨터에 있는지(읽기 전용) — 있으면 근사 텍스처 교체.
