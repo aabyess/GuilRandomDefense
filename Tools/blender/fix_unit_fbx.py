@@ -7564,6 +7564,13 @@ for _n, _pre, _skip in (
 ):
     UNITS[_n].update(_motion_variant(_BL(_pl(_pre, skip=_skip)), clip_floor_feet=_n in ("희귀함_양재모", "특별함_송형성", "특별함_이현빈")))   # Attack 발뼈가 −0.03~−0.10까지 내려가는 셋
 
+# 🔸 고유 동작판 4묶음 — 적(2026-10-01, 전수조사 「쓸 만함」 적 12종, 기본으로). ⚠️ 박민수(R29 모모노스케)는 원본 zip에 클립이 **별도 파일(momonosuke animations.fbx)**이라 지금 항목(momonosuke.fbx)으론 못 뽑는다 — 보류. 적 R번호 폴더 이름 → 적 항목 키. 임준성(R52 제피로스)은 제퍼 bs01 판이라 위 _ZEPH 표를 쓴다.
+for _n, _pre in (("반항아_이승우", "pl_ryuma_orig01"), ("배병욱", "pl_oven_orig01"), ("인홍진", "pl_pageone_orig01"), ("조도연", "pl_ashuradoji_orig01"),
+                 ("문채홍", "pl_ssnake_orig01"), ("유시은", "pl_apoo_2yaf01"), ("정다희", "pl_bonie_orig01"),
+                 ("이태훈", "pl_smoker_stam01"), ("간보는_김용태", "pl_zephyr_orig01"), ("울부짖는_노태현", "pl_katakuri_orig01"), ("윤현모", "pl_ichiji_orig01")):
+    UNITS[_n].update(_motion_variant(_BL(_pl(_pre)), clip_floor_feet=True))
+UNITS["임준성"].update(_motion_variant(_BL(_ZEPH), clip_floor_feet=True))
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 🔸 check_entries 「검사가 늦음」 따라잡기(2026-09-30 밤, PM 지시 — Docs/research/CHECK_ENTRIES_FAILURES.md 3-1).
