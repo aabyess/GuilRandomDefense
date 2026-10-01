@@ -145,7 +145,8 @@ public class PersistentSave : MonoBehaviour
     public int AddClearBonus(int aliveEnemyCount)
     {
         int p = Mathf.Max(0, aliveEnemyCount);
-        int bonus = 10 - ((p / 10) * 10) / 5;
+        // 원작 Trig_Save_sido3_Func004Func001Func002C: P_Counter < 50일 때만 보너스를 정한다(아니면 0점) — 식은 p ≥ 60에서 음수가 되므로 이 가드가 필요하다.
+        int bonus = p < 50 ? 10 - ((p / 10) * 10) / 5 : 0;
         AddSessionPoints(bonus, announce: false);
         return bonus;
     }

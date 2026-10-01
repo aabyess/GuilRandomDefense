@@ -439,10 +439,15 @@ public class RoundManager : MonoBehaviour
 
             if (cleared)
             {
-                int alive = PersistentSave.CountAliveInLane(context.PlayerId);
-                int bonus = context.PersistentSave.AddClearBonus(alive);
-                // 원작 j:5747(그 플레이어에게만, 사실상 계속): 「유닛카운트 점수 보너스:N점!」
-                PlayerNotification.Show(context.PlayerId, $"<color=#52E252>유닛카운트 점수 보너스:{bonus}점!</color>", VictoryNoticeSeconds);
+                // 🔴 원작 yuca_bonus는 Trig_Save_sido3(「모드 신세계를 클리어」, j:5743-5747)에서만 정해진다 — 쉬움·보통(60R까지)·그 밖의 「모드를 클리어」 트리거
+                //    (Trig_Save_sido2_easy 등, j:5728-5738)는 Clear_Game=1 + SavePlayer뿐 보너스가 없다. 그래서 신세계(61R~)까지 간 판만 준다(쉬움·보통 클리어 보너스는 사라짐).
+                if (totalRounds > 60)
+                {
+                    int alive = PersistentSave.CountAliveInLane(context.PlayerId);
+                    int bonus = context.PersistentSave.AddClearBonus(alive);
+                    // 원작 j:5747(그 플레이어에게만, 사실상 계속): 「유닛카운트 점수 보너스:N점!」
+                    PlayerNotification.Show(context.PlayerId, $"<color=#52E252>유닛카운트 점수 보너스:{bonus}점!</color>", VictoryNoticeSeconds);
+                }
             }
 
             context.PersistentSave.FinishRun(cleared);
