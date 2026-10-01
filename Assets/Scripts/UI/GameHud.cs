@@ -308,6 +308,7 @@ public class GameHud : MonoBehaviour
 
     bool teamPanelInitialized;
     int lastTotalEnemyCount = int.MinValue;
+    int lastDeathLimit = int.MinValue;   // 팀 현황판 제목의 패배 한계(41R에 내려가면 다시 그린다)
     string lastDifficultyLabel;   // 팀 현황판 머리 줄의 난이도 — 고르기 전엔 null(안 보임)
     readonly int[] lastSlotEnemyCount = new int[TeamSlotCount];
     readonly int[] lastSlotGold = new int[TeamSlotCount];
@@ -3309,7 +3310,11 @@ public class GameHud : MonoBehaviour
         DifficultyManager difficulty = DifficultyManager.Instance;
         string difficultyLabel = difficulty != null && difficulty.IsModeSelected ? difficulty.Current.KoreanName() : null;
 
-        bool changed = !teamPanelInitialized || totalEnemies != lastTotalEnemyCount || difficultyLabel != lastDifficultyLabel;
+        // 원작 멀티보드 제목 「유닛 카운트 = 70 <- 패배」(j:3362, udg_ModeEnemyInt = 레인당 한계). 한계는 41R에 난이도별로 내려간다.
+        int deathLimit = !GameAuthority.IsServer && NetGameState.Instance != null   // MP: 클라는 호스트 값
+            ? NetGameState.Instance.DeathLimit
+            : (roundManager != null ? roundManager.EnemyCountLimit : 0);
+        bool changed = !teamPanelInitialized || totalEnemies != lastTotalEnemyCount || difficultyLabel != lastDifficultyLabel || deathLimit != lastDeathLimit;
 
         for (int i = 0; i < TeamSlotCount; i++)
         {
@@ -3337,9 +3342,14 @@ public class GameHud : MonoBehaviour
         teamPanelInitialized = true;
         lastTotalEnemyCount = totalEnemies;
         lastDifficultyLabel = difficultyLabel;
+        lastDeathLimit = deathLimit;
 
         teamPanelBuilder.Clear();
-        teamPanelBuilder.Append("유닛 카운트 ").Append(totalEnemies);
+        // 원작 색: 제목 |c00ffb0ff · 한계 숫자 |cFF00FF00. 지금 전체 적 수는 원작엔 없지만 아랫줄 「적 M」들의 합이라 그대로 남긴다.
+        if (deathLimit > 0)
+            teamPanelBuilder.Append("<color=#FFB0FF>유닛 카운트 = </color><color=#00FF00>").Append(deathLimit).Append("</color><color=#FFB0FF> <- 패배</color>   |   적 ").Append(totalEnemies);
+        else
+            teamPanelBuilder.Append("유닛 카운트 ").Append(totalEnemies);
         if (difficultyLabel != null) teamPanelBuilder.Append("   |   난이도 ").Append(difficultyLabel);
 
         for (int i = 0; i < TeamSlotCount; i++)

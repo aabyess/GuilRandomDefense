@@ -17,6 +17,8 @@ public class NetGameState : NetworkBehaviour
 
     [Networked] public NetworkBool Started { get; set; }
     [Networked] public byte ExtraTimerKind { get; set; }
+    /// <summary>레인당 유닛 수 패배 한계(원작 udg_ModeEnemyInt) — 클라 팀 현황판 제목 「유닛 카운트 = N <- 패배」용. 0 = 모름.</summary>
+    [Networked] public int DeathLimit { get; set; }
     /// <summary>제한시간 스토리(원작 와노쿠니) 남은 초, 없으면 -1 · 그 스토리 이름 — HUD 「{이름} 남은 시간:」.</summary>
     [Networked] public float StoryLimitLeft { get; set; }
     [Networked] public NetworkString<_16> StoryLimitName { get; set; }
@@ -98,6 +100,7 @@ public class NetGameState : NetworkBehaviour
             ExtraTimerLeft = extraSeconds;
         }
         else if (ExtraTimerKind != 0) ExtraTimerKind = 0;
+        if (DeathLimit != roundManager.EnemyCountLimit) DeathLimit = roundManager.EnemyCountLimit;
 
         StoryManager story = StoryManager.Instance;
         if (story != null)

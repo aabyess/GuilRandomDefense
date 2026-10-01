@@ -76,6 +76,8 @@ public class RoundManager : MonoBehaviour
     // 「원작대로 바꾸자」로 70. 씬 값은 MapGenerator.WireRoundRewardWisp가 맵 생성 때 맞춘다.
     // ⚠️ 원작 지옥·신·악몽은 41라운드에 60/55/50으로 내려간다 — 우리엔 아직 난이도가 없다.
     [SerializeField] int enemyCountThreshold = 70;
+    /// <summary>레인당 유닛 수 패배 한계(원작 udg_ModeEnemyInt) — 41R에 난이도별로 60/55/50으로 내려간다. 팀 현황판 제목용.</summary>
+    public int EnemyCountLimit => enemyCountThreshold;
     [SerializeField] bool deathCountEnabled = true;  // 구조를 볼 땐 꺼두고 테스트한다.
     // 원작 udg_Counter_death_amount 초기값 9, 틱 0.65초(InitTrig_DeathTimer5의 TimerStart).
     [SerializeField] int startingDeathCount = 9;
