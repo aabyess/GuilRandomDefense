@@ -1254,7 +1254,9 @@ public static class ClaudeCommands
         public bool autoLoop;
         public bool bossChase;           // autoloop: 보스 라운드엔 레인의 흔함 아닌 유닛 전부 보스 공격(AttackTarget), 흔함은 칸에(09-26 PM 지시 — R30 벽이 배치냐 화력이냐)
         public bool storyPlus;           // autoloop: 스토리 보강 — 막히면 가장 센 유닛 둘씩, 깨면 약한 하나만 남기고 C로 복귀(09-26 PM 지시)
-        public int aimGrade = (int)UnitGrade.Rare;   // aim:<등급> — target의 목표 식 등급(기본 희귀함). 10-01 PM 지시: 전설·초월·불멸·영원까지
+        public int aimGrade = (int)UnitGrade.Rare;
+        public float fastScale = 1f;      // fast:<배율> — 1배 구간 밖의 Time.timeScale(10-01 사장님 지시: 검증된 앞 라운드는 빠르게)
+        public string focusSpec = "";     // focus:<구간> — 1배로 볼 라운드 구간 「20-」·「25-35,45-」. 비면 판 전체가 배속   // aim:<등급> — target의 목표 식 등급(기본 희귀함). 10-01 PM 지시: 전설·초월·불멸·영원까지
         public bool targetMode;          // autoloop: 희귀함 식 하나를 목표로 — 흔함선택·조합·판매를 그 식의 모자란 재료 쪽으로(09-26 PM 지시)
         public bool combineAll;          // autoloop: 지금 만들 수 있는 조합식을 전부 만든다(결과 등급 높은 것부터, 09-26 R20 벽 ③)
         public bool keepPen;             // autoloop: 흔함은 제 칸에 둔다 — 모서리 쓸기에서 흔함을 뺀다(09-26 칸 안 흔함 가동률 판)
@@ -1360,6 +1362,16 @@ public static class ClaudeCommands
             else if (token == "bosschase") job.bossChase = true;
             else if (token == "target") { job.targetMode = true; job.combineAll = true; }
             else if (token == "bossaway") job.bossAway = true;
+            else if (token.StartsWith("fast:"))
+            {
+                if (!float.TryParse(token.Substring(5), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out job.fastScale) || job.fastScale < 1f)
+                    return $"❌ fast: 뒤엔 1 이상 배율: {token}";
+            }
+            else if (token.StartsWith("focus:"))
+            {
+                job.focusSpec = token.Substring(6);
+                if (ParseFocus(job.focusSpec) == null) return $"❌ focus: 뒤엔 라운드 구간(20- · 25-35,45-): {token}";
+            }
             else if (token.StartsWith("aim:"))
             {
                 // 목표 식 등급을 올린다(target을 같이 켠다) — 이름은 한글 등급 이름의 앞부분이나 enum 이름.
@@ -2807,6 +2819,65 @@ public static class ClaudeCommands
         return sb.ToString();
     }
 
+    // ⏩ 배속(10-01 사장님 지시) — fast:<배율> focus:<1배 구간>. 1배 구간 밖은 배율, 안은 1배(그 라운드 준비 시간부터).
+    // 🔴 평타는 한 프레임에 한 번만 나간다(넘친 시간 버림 수정 이후) — 배율 × 프레임 시간이 가장 짧은 평타 주기를 넘으면 빠른 유닛이 덜 때린다.
+    //    그래서 배율을 「가장 짧은 평타 주기 ÷ 평균 실제 프레임 시간」으로 깎는다(깎으면 로그). 배속 구간의 피해·처치 시간은 판정에 쓰지 않는다.
+    static List<(int from, int to)> ParseFocus(string spec)
+    {
+        var list = new List<(int, int)>();
+        if (string.IsNullOrEmpty(spec)) return list;
+        foreach (string part in spec.Split(','))
+        {
+            string[] ab = part.Split('-');
+            if (ab.Length == 1 && int.TryParse(ab[0], out int one)) { list.Add((one, one)); continue; }
+            if (ab.Length != 2 || !int.TryParse(ab[0], out int from)) return null;
+            int to = ab[1].Length == 0 ? int.MaxValue : (int.TryParse(ab[1], out int t) ? t : -1);
+            if (to < from) return null;
+            list.Add((from, to));
+        }
+        return list;
+    }
+
+    static float frameEma = -1f;
+    static float speedCapLogged = -1f;
+    static string speedLog = "";
+
+    static bool InFocus(GameShotJob job, int round)
+    {
+        var focus = ParseFocus(job.focusSpec);
+        return focus != null && focus.Any(f => round >= f.from && round <= f.to);
+    }
+
+    static void ApplyRoundSpeed(GameShotJob job)
+    {
+        if (job.fastScale <= 1f || !EditorApplication.isPlaying) return;
+        float dt = Time.unscaledDeltaTime;
+        if (dt > 0f && dt < 1f) frameEma = frameEma < 0f ? dt : frameEma * 0.98f + dt * 0.02f;
+        RoundManager rm = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
+        int round = rm != null ? rm.CurrentRound : 0;
+        float want = InFocus(job, round) ? 1f : job.fastScale;
+        if (want > 1f && frameEma > 0f)
+        {
+            float shortest = UnityEngine.Object.FindObjectsByType<UnitAttacker>(FindObjectsSortMode.None)
+                .Where(a => a != null && a.isActiveAndEnabled).Select(a => a.AttackInterval).Where(x => x > 0.01f).DefaultIfEmpty(0.24f).Min();
+            float cap = Mathf.Max(1f, shortest / frameEma);
+            if (cap < want)
+            {
+                if (Mathf.Abs(cap - speedCapLogged) > 0.25f) { speedLog += $"      ⏩ 배율 {want:0.#} → {cap:0.##}로 깎음(가장 짧은 평타 주기 {shortest:0.###}초 ÷ 실제 프레임 {frameEma * 1000f:0.#}ms) R{round}\n"; speedCapLogged = cap; }
+                want = cap;
+            }
+        }
+        if (Mathf.Abs(Time.timeScale - want) > 0.01f) Time.timeScale = want;
+    }
+
+    static string SpeedText(GameShotJob job, int round)
+    {
+        if (job.fastScale <= 1f) return "";
+        string text = $"      ⏩ 이 라운드(R{round}) 배율 {Time.timeScale:0.##}{(InFocus(job, round) ? " · 1배 구간(숫자 판정에 씀)" : " · 배속 구간 — 피해·처치 시간은 판정에 안 씀, 보스는 처치 여부만")} · 실제 프레임 {frameEma * 1000f:0.#}ms\n" + speedLog;
+        speedLog = "";
+        return text;
+    }
+
     static void RoundWatch(GameShotJob job)
     {
         float dt = Time.unscaledDeltaTime;
@@ -2814,6 +2885,7 @@ public static class ClaudeCommands
         SampleUptime();
         WatchLaneBoss(job);
         SampleBalance(job);
+        ApplyRoundSpeed(job);
 
         RoundManager rm = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
         if (rm == null) return;
@@ -2831,7 +2903,7 @@ public static class ClaudeCommands
                 DifficultyManager dm = DifficultyManager.Instance;
                 job.report += $"   🎚 난이도 {(dm != null ? $"{dm.Current.KoreanName()}(고름 {dm.IsModeSelected})" : "매니저 없음")} · 이 판이 건 값 {((DifficultyMode)job.mode).KoreanName()}\n";
             }
-            job.report += $"   {head}: {RoundMetrics(job, rm)}\n" + ChoiceWispText() + OffGroundUnits();
+            job.report += $"   {head}: {RoundMetrics(job, rm)}\n" + ChoiceWispText() + OffGroundUnits() + SpeedText(job, round);
             job.report += BalanceText(over || round > job.watchRounds);
             string snapPath = Path.GetFullPath(Path.Combine(Folder, "shots", over ? "round_end.png" : $"round_{round:00}.png"));
             ScreenCapture.CaptureScreenshot(snapPath);
@@ -3311,6 +3383,7 @@ public static class ClaudeCommands
         woodIn.Clear(); woodOut.Clear(); woodInRound.Clear(); woodOutRound.Clear(); soldTotals.Clear();
         combineAvailRound.Clear(); combineDoneRound.Clear(); combineDoneTotal.Clear();
         currentPlan = null; recipesByResult = null; targetLog.Clear(); lastStoryHp = -1f; stuckTargets.Clear(); stuckBest = int.MaxValue; stuckTurns = 0;
+        frameEma = -1f; speedCapLogged = -1f; speedLog = "";
         wallet.OnResourceChanged += OnWoodChanged;
     }
 
