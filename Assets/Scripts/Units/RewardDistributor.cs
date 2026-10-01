@@ -353,6 +353,12 @@ public class RewardDistributor : MonoBehaviour
         //    패왕의길 「항법효과: + 나무 1개 를 추가로 획득!」은 그 보상 자체가 아직 없어(GAP 59) 띄우지 않는다.
         string name = boss != null && !string.IsNullOrEmpty(boss.enemyName) ? boss.enemyName : "보스";
         PlayerNotification.Show(context.PlayerId, $"{name}  <color=#FF8200>처치!</color>", 7f);
+        // 원작 Trig_BossReward(j:13436): udg_Tech_Onedill_int==1(패왕의길 선택자, Trig_onedill_Tech)이면 구세계 보스(udg_Level<62)마다 목재 +1 · 「항법효과: + 나무 1개 를 추가로 획득!」(10초).
+        if (context.NavigationState != null && context.NavigationState.Choice == NavigationChoice.Hegemon)
+        {
+            context.ResourceWallet?.Add(ResourceType.Wood, 1);
+            PlayerNotification.Show(context.PlayerId, "<color=#FFD700>항법효과:</color> + <color=#20B2AA>나무 1개</color> <color=#FF8200>를 추가로 획득!</color>", 10f);
+        }
         PlayerNotification.Show(context.PlayerId, $"<color=#FFD700>{reward.gold}골드</color> + <color=#20B2AA>나무 {reward.wood}개</color> <color=#FF8200>를 획득!</color>", 10f);
         GrantBossItemDrop(context, boss);
     }
