@@ -51,6 +51,8 @@ public class ResourcePortal : MonoBehaviour
     }
 
     // TODO(멀티): UnitPortal과 같은 이유로 서버 권위로 옮겨야 한다.
+    string PayoutName() => payout == Payout.Gold ? "골드" : resourceType == ResourceType.Wood ? "목재" : resourceType == ResourceType.Mana ? "마나" : resourceType.ToString();
+
     void OnTriggerEnter(Collider other)
     {
         if (!GameAuthority.IsServer) return;
@@ -88,7 +90,7 @@ public class ResourcePortal : MonoBehaviour
             // 말이 되게 일반형을 폴백으로 둔다.
             string failMessage = payout == Payout.Resource && resourceType == ResourceType.Wood
                 ? "목재도박에 실패하였습니다."
-                : $"{(payout == Payout.Gold ? "골드" : resourceType.ToString())} 획득에 실패했습니다.";
+                : $"{PayoutName()} 획득에 실패했습니다.";
             PlayerNotification.Show(ownerId, failMessage);
             return;
         }
@@ -96,7 +98,6 @@ public class ResourcePortal : MonoBehaviour
         int round = roundManager != null ? roundManager.CurrentRound : 1;
         float scale = perRoundMax > perRound ? Random.Range(perRound, perRoundMax) : perRound;
         int amount = Mathf.Max(0, Mathf.RoundToInt(baseAmount + scale * round));
-        string payoutLabel = payout == Payout.Gold ? "골드" : resourceType.ToString();
 
         if (payout == Payout.Gold)
             context.GoldWallet?.Add(amount);
@@ -106,7 +107,14 @@ public class ResourcePortal : MonoBehaviour
         // amount==0은 위습이 이미 소모된 뒤(81-82줄)라 알림 없이 return하면 자원(위습)만
         // 사라진 것처럼 보인다 — 성공 지급도 실패 메시지(92줄)처럼 화면에 알려야 한다
         // (PM 지시 2026-09-05). 0이든 아니든 같은 자리에서 처리하면 분기가 하나로 끝난다.
-        PlayerNotification.Show(ownerId, $"{payoutLabel} {amount} 획득!");
-        Debug.Log($"{name}: 플레이어 {ownerId}에게 {payoutLabel} {amount} 지급.");
+        // 원작 문구 그대로 — 목재: Trig_Random_Wood 「|cffFF0000목재 1 획득 !|r」(3초) · 마나: Trig_Random_Mana 「도움소의 현재마나 : |cffFF0000N|r」(3초, 더한 뒤 합계).
+        // 금화는 원작 문구를 따로 못 찾아 기존 「골드 N 획득!」 그대로. 전엔 영어 이름이 그대로 나왔다(「Wood 1 획득!」·「Mana 31 획득!」).
+        if (payout == Payout.Resource && resourceType == ResourceType.Wood)
+            PlayerNotification.Show(ownerId, $"<color=#FF0000>목재 {amount} 획득 !</color>", 3f);
+        else if (payout == Payout.Resource && resourceType == ResourceType.Mana)
+            PlayerNotification.Show(ownerId, $"도움소의 현재마나 : <color=#FF0000>{context.ResourceWallet?.Get(ResourceType.Mana) ?? amount}</color>", 3f);
+        else
+            PlayerNotification.Show(ownerId, $"{PayoutName()} {amount} 획득!");
+        Debug.Log($"{name}: 플레이어 {ownerId}에게 {PayoutName()} {amount} 지급.");
     }
 }
