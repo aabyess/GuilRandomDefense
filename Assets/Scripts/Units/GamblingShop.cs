@@ -354,6 +354,8 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         PlayerContext context = OwnerContext;
         if (context == null) return false;
 
+        // 유닛 도박도 해금 대상이다(고급도박 R15) — 돈 도박만 이 검사를 했다.
+        if (option.category == GamblingCategory.Unit && option.requiresUnlock && (stockProgress == null || !stockProgress.IsUnlocked(option))) return false;
         if (option.category == GamblingCategory.Money)
         {
             GamblingProgress progress = context.GamblingProgress;
@@ -408,6 +410,8 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         if (stock != null) return stock;
         if (context.ResourceWallet == null) return null;
         if (context.ResourceWallet.Get(option.costResourceType) < option.cost)
+        if (option.requiresUnlock && (context.GamblingProgress == null || !context.GamblingProgress.IsUnlocked(option)))
+            return string.IsNullOrEmpty(option.unlockHint) ? "아직 해금되지 않음" : option.unlockHint;
             return $"{ResourceLabel(option.costResourceType)}이(가) 부족합니다.";
         if (option.goldCost > 0 && (context.GoldWallet == null || context.GoldWallet.Gold < option.goldCost))
             return "골드가 부족합니다.";

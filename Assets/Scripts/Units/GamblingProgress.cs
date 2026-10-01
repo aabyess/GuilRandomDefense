@@ -22,9 +22,19 @@ public class GamblingProgress : MonoBehaviour
         usesSoFar[option] = count + 1;
     }
 
+    RoundManager roundManager;
+
     public bool IsUnlocked(GamblingOptionData option)
     {
-        return option != null && unlockedOptions.Contains(option);
+        if (option == null) return false;
+        if (unlockedOptions.Contains(option)) return true;
+        // 라운드 도달 해금(원작 Rhri R15 — 전원 동시). 보스 처치 해금(Unlock)과 별개 경로.
+        if (option.unlockAtRound > 0)
+        {
+            if (roundManager == null) roundManager = FindFirstObjectByType<RoundManager>();
+            if (roundManager != null && roundManager.CurrentRound >= option.unlockAtRound) return true;
+        }
+        return false;
     }
 
     // 해금 조건(예: 10라운드 보스 처치)이 성립했을 때 그 시스템이 이걸 부른다.

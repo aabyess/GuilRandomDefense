@@ -136,4 +136,9 @@ public class GamblingOptionData : ScriptableObject
     //    「스토리를 N개 깼다」로 근사한다. 0이면 조건 없음.
     [Tooltip("스토리를 이만큼 깨야 굴릴 수 있다(원작 R02F 근사). 0이면 조건 없음")]
     public int requiresStoriesCleared;
+
+    // 원작 Rhri: udg_Level==15가 되면 **전원** 연구가 켜진다(j Trig_Round_boolean_Trigger) — 고급도박(h06D 2500금+목재4)이 그때부터. 0이면 라운드 해금 아님.
+    //    requiresUnlock와 같이 켠다(unlockRound는 「보스 처치」용이라 별개 축).
+    [Tooltip("이 라운드에 도달하면 전원 해금(원작 Rhri R15). 0이면 해당 없음")]
+    public int unlockAtRound;
 }
