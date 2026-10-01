@@ -22,6 +22,8 @@ SRC_DIR = os.path.join(ROOT, "Assets", "Resources", "Effects", "Sphere", "Src")
 
 
 HINTS = {"RightHand": "hand,right", "LeftHand": "hand,left", "Spine1(가슴)": "chest", "Hips": "hips", "Head": "head"}
+# 모델 통째 붙는 곳 지정(원작 힌트가 ?일 때 PM 지시): 마르코 날개 = 가슴
+ATTACH_OVERRIDE = {"mrk7.mdx": "chest"}
 LIMB_PARTS = {"AkainuBW7_g2", "AkainuBW7_g5"}   # 마그마 소매(김만경_AD)
 ORDER = ["대기", "이동", "공격", "스킬"]
 
@@ -57,6 +59,8 @@ def main():
             continue
         out = {"kind": p["kind"], "name": p["name"], "slot": slot, "model": p["model"], "bodyHeightM": h,
                "states": "|".join(states), "attach": HINTS.get(p["attach"]["humanoid_hint"], "body")}
+        if p["model"] in ATTACH_OVERRIDE:
+            out["attach"] = ATTACH_OVERRIDE[p["model"]]
         if p["kind"] == "mesh":
             # 메시 pivot은 원작 팔 뼈의 자리(팔을 벌린 자세 기준, 몸에서 ~0.9m) — 우리 스킨 손에 붙이면 팔 흔들림에 크게 휘둘린다(10-01 구주호 날개) → 가슴 뼈에.
             if out["attach"] in ("hand,left", "hand,right"):
@@ -95,14 +99,17 @@ def main():
         parts.append(out)
 
     os.makedirs(OUT_DIR, exist_ok=True)
-    with open(os.path.join(OUT_DIR, roster + ".json"), "w", encoding="utf-8") as f:
+    old = os.path.join(OUT_DIR, roster + ".json")
+    if os.path.exists(old) and alias + ".json" != roster + ".json":
+        os.remove(old)   # 옛 이름(로스터 이름)으로 쓰던 파일 — 지금은 별칭이 파일 이름(한 로스터가 여러 재료 폴더를 받을 수 있다)
+    with open(os.path.join(OUT_DIR, alias + ".json"), "w", encoding="utf-8") as f:
         json.dump({"roster": roster, "alias": alias, "parts": parts}, f, ensure_ascii=False, indent=1)
-    for rel in sorted(files):
+    for rel in ([] if os.environ.get("NOCOPY") else sorted(files)):
         src = os.path.join(folder, rel)
         dst = os.path.join(SRC_DIR, roster, rel)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         shutil.copyfile(src, dst)
-    print(f"{roster}: 부품 {len(parts)}개 · 재료 {len(files)}개 → {os.path.join(OUT_DIR, roster + '.json')}")
+    print(f"{roster}({alias}): 부품 {len(parts)}개 · 재료 {len(files)}개 → {os.path.join(OUT_DIR, alias + '.json')}")
 
 
 if __name__ == "__main__":
