@@ -747,9 +747,12 @@ public static class MapLayout
     public static Island LaneApron(Island lane)
     {
         float fieldBottom = lane.center.y - lane.size.y * 0.5f;
+        // 폭은 레인과 같게(2026-10-01 사장님 「건물 양옆을 그냥 땅으로 채워」) — 우리 줄 폭(74%)을 땅에도 쓰니
+        // 레인 섬과 앞치마 사이 양옆 모서리가 홈이 되어 바다가 파고들었다(섬 가장자리 장식이 그 홈을 물로 그림).
+        // 우리 줄·상점 줄 자체의 폭과 자리는 그대로다(UnitPenRow·상점 줄은 따로 잰다).
         return new Island(lane.name + "_앞치마",
             lane.center.x, fieldBottom - LaneApronDepth * 0.5f,
-            lane.size.x * UnitRowWidthRatio, LaneApronDepth, lane.tint);
+            lane.size.x, LaneApronDepth, lane.tint);
     }
 
     /// <summary>
