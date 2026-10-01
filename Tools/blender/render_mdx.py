@@ -106,9 +106,11 @@ def make_material(name, layer, tex_entry):
     return mat
 
 
-def build(model, tag):
+def build(model, tag, only=None):
     objs = []
     for gi, g in enumerate(model["geosets"]):
+        if only is not None and gi not in only:
+            continue
         mdef = model["materials"][g["material"]]
         for li, layer in enumerate(mdef["layers"]):
             me = bpy.data.meshes.new(f"{tag}_{gi}_{li}")
@@ -133,7 +135,7 @@ def bounds(objs):
     return lo, hi
 
 
-def render_views(objs, base):
+def render_views(objs, base, view_names=None):
     scn = bpy.context.scene
     try:
         scn.render.engine = "BLENDER_EEVEE_NEXT"
@@ -163,6 +165,8 @@ def render_views(objs, base):
     cam.data.clip_end = size * 20
     views = (("앞비스듬히", Vector((1.0, -0.9, 0.55))), ("뒤", Vector((-1.0, 0.25, 0.25))), ("위", Vector((0.001, 0.0, 1.0))))
     for name, d in views:
+        if view_names and name not in view_names:
+            continue
         d = d.normalized()
         cam.location = c + d * size * 3
         cam.rotation_euler = (-d).to_track_quat("-Z", "Y").to_euler()
@@ -172,16 +176,32 @@ def render_views(objs, base):
 
 
 report = []
+ANALYSIS = _json.load(open(os.environ["ANALYSIS"])) if os.environ.get("ANALYSIS") else {}
+PART_CLASSES = {"effect", "teamglow", "blendplane", "conditional"}
 for name in NAMES:
     fpath = os.path.join(WORK, name)
     data = open(fpath, "rb").read() if os.path.exists(fpath) else None
     if data is None:
-        report.append((name, "맵에 없음"))
-        print("MDX", name, "맵에 없음")
+        report.append((name, "작업폴더에 없음"))
+        print("MDX", name, "없음")
         continue
-    bpy.ops.wm.read_factory_settings(use_empty=True)
     model = mdx_geo.parse(data)
     tag = os.path.splitext(name)[0]
+    an = next((v for v in ANALYSIS.values() if v.get("file") == name), None)
+    if an:
+        part_idx = {g["index"] for g in an["geosets"] if g["cls"] in PART_CLASSES}
+        has_parts = bool(part_idx or an.get("particles") or an.get("ribbons"))
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        objs = build(model, tag)
+        lo, hi = render_views(objs, tag + "_몸+부품", ("앞비스듬히", "뒤"))
+        if part_idx:
+            bpy.ops.wm.read_factory_settings(use_empty=True)
+            objs = build(model, tag, part_idx)
+            render_views(objs, tag + "_부품만", ("앞비스듬히", "위"))
+        print("MDX", name, "parts", sorted(part_idx), "ext", tuple(round(v, 1) for v in (hi - lo)))
+        report.append((name, sorted(part_idx)))
+        continue
+    bpy.ops.wm.read_factory_settings(use_empty=True)
     objs = build(model, tag)
     lo, hi = render_views(objs, tag)
     ext = tuple(round(v, 1) for v in (hi - lo))

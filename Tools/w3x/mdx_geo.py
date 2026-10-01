@@ -89,11 +89,14 @@ def parse_geosets(c):
             n, = struct.unpack("<I", g[p:p + 4]); p += 4
             geo["indices"] = list(struct.unpack("<%dH" % n, g[p:p + 2 * n])); p += 2 * n
             tag(b"GNDX")
-            n, = struct.unpack("<I", g[p:p + 4]); p += 4 + n
+            n, = struct.unpack("<I", g[p:p + 4]); p += 4
+            geo["gndx"] = list(g[p:p + n]); p += n                  # 정점 → 행렬 그룹 번호
             tag(b"MTGC")
-            n, = struct.unpack("<I", g[p:p + 4]); p += 4 + 4 * n
+            n, = struct.unpack("<I", g[p:p + 4]); p += 4
+            geo["mtgc"] = list(struct.unpack("<%dI" % n, g[p:p + 4 * n])); p += 4 * n   # 그룹별 뼈 개수
             tag(b"MATS")
-            n, = struct.unpack("<I", g[p:p + 4]); p += 4 + 4 * n
+            n, = struct.unpack("<I", g[p:p + 4]); p += 4
+            geo["mats"] = list(struct.unpack("<%dI" % n, g[p:p + 4 * n])); p += 4 * n   # 뼈(노드) 번호 나열
             mid, sg, sf = struct.unpack("<3I", g[p:p + 12]); p += 12
             geo["material"] = mid
             p += 4 + 12 + 12                                      # boundsRadius, min, max
