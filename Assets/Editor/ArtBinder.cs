@@ -284,6 +284,8 @@ public static class ArtBinder
         "희귀함_구주호", "특별함_이정범", "특별함_박민수", "특별함_박예원", "희귀함_조현규",
         // 고유 동작 확대(2026-10-01) — 갈기·망토·드레스·무기가 키보다 넓은 모델이 많다.
         "특수함_황길라", "영원_윤현모", "불멸_고도현", "초월_배성령_AD", "초월_양재모_AD", "제한_이유범", "제한_최영민", "전설적인_김건", "전설적인_이시원", "전설적인_김민준", "전설적인_김용태", "전설적인_박은석", "전설적인_백기현", "전설적인_신지우", "전설적인_이일중", "전설적인_임건웅",
+        // 고유 동작 3묶음(10-01)
+        "히든_석성례", "히든_여은서", "히든_전주연", "히든_한나웅", "희귀함_노수신", "희귀함_노태현", "희귀함_양재모", "희귀함_이승우", "특별함_김태영", "특별함_송형성", "특별함_이지원", "특별함_이현빈", "특별함_임채준", "특별함_정승준",
     };
 
     static bool IsAlreadyUpright(string modelName) => AlreadyUprightModels.Any(n => Nfc(n) == Nfc(modelName));
@@ -588,7 +590,7 @@ public static class ArtBinder
     }
 
     // 이번에 새로 넣은 스킨 — LinkTexturesUnits가 도는 목록. 새 스킨을 넣을 때 여기에 이름을 더한다.
-    static readonly string[] PendingLinkUnits = { "특수함_황길라", "영원_윤현모", "불멸_고도현", "초월_배성령_AD", "초월_양재모_AD", "제한_이유범", "제한_최영민", "전설적인_김건", "전설적인_이시원", "전설적인_김민준", "전설적인_김용태", "전설적인_박은석", "전설적인_백기현", "전설적인_신지우", "전설적인_이일중", "전설적인_임건웅", "특별함_황정기", "안흔함_강재규" };
+    static readonly string[] PendingLinkUnits = { "히든_석성례", "히든_여은서", "히든_전주연", "히든_한나웅", "희귀함_노수신", "희귀함_노태현", "희귀함_양재모", "희귀함_이승우", "특별함_김태영", "특별함_송형성", "특별함_이지원", "특별함_이현빈", "특별함_임채준", "특별함_정승준" };
 
     static void LinkTexturesWhere(System.Func<string, bool> modelFilter)
     {
@@ -1142,7 +1144,8 @@ public static class ArtBinder
     // 사람 골격이 아닌 **적** 모델 — Humanoid로 바꾸지 않고 Generic(자기 클립)으로 둔다(유닛은 UnitModelPostprocessor.GenericRigUnits).
     // 🔴 09-25에 R43 양문호(매머드)가 이 목록 없이 MakeHumanoid를 타서 Humanoid로 들어가 있었다(.meta animationType 3) —
     //    네발짐승 41뼈가 사람 골격으로 잘못 매핑돼 공용 걷기 클립을 탔다. 폴더 이름(= 모델 파일 이름)으로 거른다.
-    static readonly string[] GenericEnemyModels = { "양문호", "강민호", "주영호", "왕승환", "김민준안경" };   // 뒤 셋 10-01 고유 동작(자기 클립 Idle·Move·Attack…)
+    static readonly string[] GenericEnemyModels = { "양문호", "강민호", "주영호", "왕승환", "김민준안경",
+        "반항아_이승우", "배병욱", "인홍진", "조도연", "문채홍", "유시은", "정다희", "이태훈", "간보는_김용태", "울부짖는_노태현", "윤현모", "임준성", "박민수" };   // 10-01 고유 동작 4묶음(적 13)   // 뒤 셋 10-01 고유 동작(자기 클립 Idle·Move·Attack…)
 
     static bool IsGenericEnemyModel(string path)
     {
