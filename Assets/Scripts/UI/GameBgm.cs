@@ -10,13 +10,15 @@ using UnityEngine.SceneManagement;
 /// 라운드는 싱글·호스트는 RoundManager, 멀티 클라는 호스트가 실어 보낸 NetGameState(HUD가 읽는 값과 같다)에서 읽는다.
 /// 메뉴의 「소리 끄기」(<see cref="GameSound.Enabled"/>)를 그대로 따른다 — 끄면 멈추고, 켜면 멈춘 자리에서 이어진다.
 /// 곡을 추가하려면 Assets/Audio/Music/Resources/Music/에 파일을 넣고 표에 한 줄.
+/// 표는 **위에서부터** 맞는 첫 줄을 쓴다 — 보스 곡을 라운드 브금(넓은 구간)보다 위에 둔다.
+/// Resume 줄(라운드 브금, 10-01 사장님 「②」)은 구간을 벗어날 때 끄지 않고 멈춘 자리를 기억했다가, 돌아오면 그 자리에서 잇는다(보스전 동안 멈춤).
 /// </summary>
 public class GameBgm : MonoBehaviour
 {
     struct Cue
     {
-        public string Track; public int FromRound; public int ToRound; public float Volume;
-        public Cue(string track, int from, int to, float volume) { Track = track; FromRound = from; ToRound = to; Volume = volume; }
+        public string Track; public int FromRound; public int ToRound; public float Volume; public bool Resume;
+        public Cue(string track, int from, int to, float volume, bool resume = false) { Track = track; FromRound = from; ToRound = to; Volume = volume; Resume = resume; }
     }
 
     // 볼륨 계산(사장님 「시끄럽다」 10-01): binks_sake는 평균 −27.6dB라 0.5를 곱하면 ≈ −33.6dB.
@@ -29,6 +31,13 @@ public class GameBgm : MonoBehaviour
         new Cue("Music/boss_r30_hacking", 30, 30, 0.19f),   // 30라운드 보스(김만경) — 31라운드 시작 때 끔. 평균 −18.9dB → 0.19이면 ≈ −33.3dB
         new Cue("Music/boss_r40_silent_solitude", 40, 40, 0.07f),   // 40라운드 보스(김용태) — 평균 −10.2dB → 0.07이면 ≈ −33.3dB
         new Cue("Music/boss_r50_gotoubun", 50, 50, 0.07f),   // 50라운드 보스(이태훈) — 평균 −10.1dB → 0.07이면 ≈ −33.2dB
+        new Cue("Music/boss_r60_departure", 60, 60, 0.07f),   // 60라운드 보스(정윤식) — 평균 −10.6dB → 0.07이면 ≈ −33.7dB
+        new Cue("Music/boss_r65_danganronpa", 65, 65, 0.065f),   // 65라운드 보스(이승우) — 평균 −9.8dB → 0.065이면 ≈ −33.5dB
+        new Cue("Music/boss_r70_jonathan", 70, 70, 0.075f),   // 70라운드 보스(신지우) — 평균 −11.4dB → 0.075이면 ≈ −33.9dB
+        new Cue("Music/boss_r75_johnny", 75, 75, 0.085f),   // 75라운드 마지막 보스(이이삭) — 평균 −12.3dB → 0.085이면 ≈ −33.7dB
+        // 라운드 브금(10-01) — 2라운드부터 끝까지, 보스 라운드 동안 멈췄다가 이어서. 31분 곡이라 ≈R53까지 한 바퀴, 그 뒤 되풀이.
+        //   평균 −20.7dB → 0.2이면 ≈ −34.7dB(깔리는 곡이라 보스 곡보다 1dB쯤 작게).
+        new Cue("Music/round_fourth_layer", 2, 999, 0.2f, resume: true),
     };
     const float FadeSeconds = 1.75f;
     const bool BgmOn = true;
@@ -39,6 +48,8 @@ public class GameBgm : MonoBehaviour
     RoundManager roundManager;
     float nextFind;
     int current = -1;                // 지금 틀고 있는(또는 줄이는 중인) 곡 — -1이면 없음
+    readonly float[] savedTime = new float[Cues.Length];   // Resume 곡이 멈춘 자리
+    float pendingSeek = -1f;         // Play 직후에 옮길 자리(스트리밍 클립은 Play 전 time이 안 먹을 수 있다)
     bool fading;
     int lastRound;
 
@@ -86,6 +97,8 @@ public class GameBgm : MonoBehaviour
         current = -1;
         fading = false;
         lastRound = 0;
+        System.Array.Clear(savedTime, 0, savedTime.Length);
+        pendingSeek = -1f;
         roundManager = null;
     }
 
@@ -138,6 +151,7 @@ public class GameBgm : MonoBehaviour
         {
             source.volume -= Cues[current].Volume / FadeSeconds * Time.unscaledDeltaTime;
             if (source.volume > 0f) return;
+            if (Cues[current].Resume) savedTime[current] = source.time;
             source.Stop();
             source.clip = null;
             current = -1;
@@ -150,6 +164,7 @@ public class GameBgm : MonoBehaviour
             source.clip = clips[want];
             source.volume = Cues[want].Volume;
             source.time = 0f;
+            pendingSeek = Cues[want].Resume ? savedTime[want] : -1f;
         }
         if (current < 0) return;
 
@@ -157,6 +172,7 @@ public class GameBgm : MonoBehaviour
         if (on && !source.isPlaying) source.UnPause();
         if (on && !source.isPlaying) source.Play();   // 아직 한 번도 안 틀었으면 UnPause로는 안 돈다
         else if (!on && source.isPlaying) source.Pause();
+        if (pendingSeek > 0f && source.isPlaying) { source.time = Mathf.Min(pendingSeek, source.clip.length - 0.1f); pendingSeek = -1f; }
     }
 
     static string Describe() =>
