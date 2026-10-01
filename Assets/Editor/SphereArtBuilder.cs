@@ -24,7 +24,7 @@ static class SphereArtBuilder
     [System.Serializable] class Part
     {
         public string kind, name, slot, model, texture, fbx, fbxObject, shape, states, attach;
-        public float bodyHeightM, rate, life, speed, speedVar, cone, gravity, mid;
+        public float trail, width, widthEnd, bodyHeightM, rate, life, speed, speedVar, cone, gravity, mid;
         public float[] pos, box, size, rgb, alpha, euler, offset;
         public bool additive, cutout, blend;
         public int rows, cols;
@@ -81,6 +81,7 @@ static class SphereArtBuilder
                 float k = GameBodyHeight / Mathf.Max(0.1f, p.bodyHeightM);
                 if (p.kind == "mesh") { if (AddMesh(root.transform, roster, alias, p, k, notes)) meshes++; }
                 else if (p.kind == "particle") { AddParticles(root.transform, alias, p, k); systems++; }
+                else if (p.kind == "ribbon") { AddRibbon(root.transform, alias, p, k); systems++; }
             }
             PrefabUtility.SaveAsPrefabAsset(root, $"{ResDir}/{key}.prefab");
         }
@@ -226,6 +227,26 @@ static class SphereArtBuilder
         renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         renderer.receiveShadows = false;
         renderer.sharedMaterial = ParticleMaterial(alias, p);
+    }
+
+    // 리본 = TrailRenderer — 붙은 뼈가 움직일 때만 궤적이 그려진다(검 휘두름·이동)
+    static void AddRibbon(Transform parent, string alias, Part p, float k)
+    {
+        var go = new GameObject(p.name);
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = new Vector3(p.pos[0], p.pos[1], p.pos[2]) * k;
+        var trail = go.AddComponent<TrailRenderer>();
+        trail.time = Mathf.Max(0.05f, p.trail);
+        trail.startWidth = p.width * k; trail.endWidth = p.widthEnd * k;
+        trail.minVertexDistance = 0.3f;
+        trail.alignment = LineAlignment.View;
+        trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        trail.receiveShadows = false;
+        var g = new Gradient();
+        g.SetKeys(new[] { new GradientColorKey(new Color(p.rgb[0], p.rgb[1], p.rgb[2]), 0f), new GradientColorKey(new Color(p.rgb[0], p.rgb[1], p.rgb[2]), 1f) },
+                  new[] { new GradientAlphaKey(p.alpha[0], 0f), new GradientAlphaKey(0f, 1f) });
+        trail.colorGradient = g;
+        trail.sharedMaterial = ParticleMaterial(alias, p);
     }
 
     static Material ParticleMaterial(string alias, Part p)

@@ -37,6 +37,7 @@ static class MotionShowProbe
     static string CamSide() => CamAt(55f, 10f, 0f);
     // 공격 모션 강제 — 「공격」 때 보이는 부품 확인용
     static string AttackAll() { foreach (CharacterAnimator c in Object.FindObjectsByType<CharacterAnimator>(FindObjectsSortMode.None)) if (c.GetComponent<UnitIdentity>() != null) c.PlayAttack(); return "공격 모션"; }
+    static string KimAp() => Show("초월_김민준_AP");
     static string ShinAp() => Show("초월_신문철_AP");
     static string JiEter() => Show("영원_이지원");
     static string HjsAd() => Show("초월_황준석_ADAP");

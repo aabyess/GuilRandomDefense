@@ -23,7 +23,7 @@ SRC_DIR = os.path.join(ROOT, "Assets", "Resources", "Effects", "Sphere", "Src")
 
 HINTS = {"RightHand": "hand,right", "LeftHand": "hand,left", "Spine1(가슴)": "chest", "Hips": "hips", "Head": "head"}
 # 모델 통째 붙는 곳 지정(원작 힌트가 ?일 때 PM 지시): 마르코 날개 = 가슴
-ATTACH_OVERRIDE = {"mrk7.mdx": "chest"}
+ATTACH_OVERRIDE = {"mrk7.mdx": "chest", "tashigi17.mdx": "hand,right"}   # 타시기 검 궤적 → 오른손(검을 쥔 손)
 HELD_PARTS = {"lb_kz_g8"}   # 손에 쥐는 메시(쿠잔 얼음 칼날) — 손 뼈에 쥐는 점을 맞춘다
 # 자리·기울기 덮어쓰기(메시): euler 도, offset = 몸 키 비율(유니티 x·y·z, +z = 앞). 원작 대응이 없어 PM이 배정한 판만.
 POSE = {"BlSkill04A_g0": {"euler": [90.0, 0.0, 0.0], "offset": [0.0, 0.55, 0.45]}}   # 땅에 눕는 초승달 판 → 가슴 높이 앞 허공에 세워 휘두름(10-01 PM)
@@ -61,7 +61,7 @@ def main():
         states = [x for x in ORDER if x in p["visible"]["ours_states"]]
         if FORCE_STATES:
             states = FORCE_STATES   # 단독 이펙트 모델(초승달 베기 등)은 원작 시퀀스가 비어 있다 — 쓰는 쪽이 정한 때로
-        if not states:
+        if not states and p["kind"] != "ribbon":
             continue
         out = {"kind": p["kind"], "name": p["name"], "slot": slot, "model": p["model"], "bodyHeightM": h,
                "states": "|".join(states), "attach": HINTS.get(p["attach"]["humanoid_hint"], "body")}
@@ -103,8 +103,19 @@ def main():
                        shape=u["shape"], cone=u.get("cone_angle_deg", 25.0), box=vec(u["box_size_m"]),
                        gravity=u["gravity_modifier"], size=vec(u["size_m"]), mid=u["mid_time_fraction"],
                        rgb=rgb, alpha=vec(u["alpha"]), rows=fb.get("rows", 1), cols=fb.get("cols", 1))
+        elif p["kind"] == "ribbon":
+            u = p["unity"]
+            if u["width_ratio_to_body"] < 0.1:
+                continue   # 가는 실 리본(도플라밍고 32개, 몸 키의 5%)은 거의 안 보이고 TrailRenderer 32개는 값만 든다 — 뺀다(PM 보고)
+            if not states or FORCE_STATES == []:
+                out["states"] = "|".join(["이동", "공격"])   # 리본 가시 트랙 정보 없음 — 궤적은 움직일 때만 그려진다
+            tex = p["texture"]["file"]
+            files.add(tex)
+            out.update(pos=vec(p["attach"]["unity_pos_m"]), texture=tex, additive=bool(p.get("additive", True)),
+                       trail=u["trail_time_s"], width=u["width_start_m"], widthEnd=u["width_end_m"],
+                       alpha=[u["alpha"], u["alpha"], u["alpha"]], rgb=list(u["color_rgb"]) * 3)
         else:
-            continue   # 리본은 두 번째 묶음에서(TrailRenderer)
+            continue
         parts.append(out)
 
     os.makedirs(OUT_DIR, exist_ok=True)

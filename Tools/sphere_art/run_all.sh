@@ -15,3 +15,5 @@ FORCE_STATES=스킬 python3 $H $B/_미대응/초승달_베기 bae_slash 초월_�
 FORCE_STATES=공격 python3 $H $B/_미대응/큰_베기_호 park_slash 초월_박민석_ADAP
 python3 $H $B/초월_신문철_AP shin_ap 초월_신문철_AP
 python3 $H $B/영원_이지원 ji_eter 영원_이지원
+python3 $H $B/초월_김민준_AP kim_ap 초월_김민준_AP
+python3 $H $B/초월_최상호_AP sang_ap 초월_최상호_AP
