@@ -354,6 +354,40 @@ public class RewardDistributor : MonoBehaviour
         string name = boss != null && !string.IsNullOrEmpty(boss.enemyName) ? boss.enemyName : "보스";
         PlayerNotification.Show(context.PlayerId, $"{name}  <color=#FF8200>처치!</color>", 7f);
         PlayerNotification.Show(context.PlayerId, $"<color=#FFD700>{reward.gold}골드</color> + <color=#20B2AA>나무 {reward.wood}개</color> <color=#FF8200>를 획득!</color>", 10f);
+        GrantBossItemDrop(context, boss);
+    }
+
+    // 원작 Trig_BossReward의 아이템 드랍(j:13436-13473, udg_Level<62 구세계 보스만 — 데이터가 구세계 보스 에셋에만 있다).
+    // 원작은 아이템을 그 플레이어 영웅에게 주고 ItemPoolRemoveItemType으로 도박 풀에서도 뺀다 → 우리 ItemInventory.Add + ItemGambleState.RegisterAcquired.
+    void GrantBossItemDrop(PlayerContext context, EnemyData boss)
+    {
+        if (boss != null) GrantItemDrop(context, boss.itemDropChance, boss.itemDrops);
+    }
+
+    // 확률로 목록에서 아이템 하나(가중치 비례)를 그 플레이어 인벤토리에 넣는다 — 보스 드랍·스토리 드랍 공용.
+    void GrantItemDrop(PlayerContext context, float chance, List<EnemyItemDrop> drops)
+    {
+        if (drops == null || drops.Count == 0 || context == null || context.ItemInventory == null) return;
+        if (Random.value >= chance) return;
+
+        float total = 0f;
+        foreach (EnemyItemDrop drop in drops) if (drop != null && drop.item != null) total += Mathf.Max(0f, drop.weight);
+        if (total <= 0f) return;
+        float roll = Random.value * total;
+        EnemyItemDrop picked = null;
+        foreach (EnemyItemDrop drop in drops)
+        {
+            if (drop == null || drop.item == null) continue;
+            picked = drop;
+            roll -= Mathf.Max(0f, drop.weight);
+            if (roll <= 0f) break;
+        }
+        if (picked == null) return;
+        if (picked.skipIfOwned && System.Linq.Enumerable.Contains(context.ItemInventory.Items, picked.item)) return;
+
+        context.ItemInventory.Add(picked.item);
+        context.ItemGambleState?.RegisterAcquired(picked.item);
+        if (!string.IsNullOrEmpty(picked.message)) PlayerNotification.Show(context.PlayerId, picked.message, 10f);
     }
 
     // 스토리 클리어 보상: 전체 플레이어에게 골드 + 자원 + 위습 지급.

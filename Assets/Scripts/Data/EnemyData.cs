@@ -8,6 +8,18 @@ public class EnemyResourceReward
     public int amount;
 }
 
+// 보스 처치 아이템 드랍 한 줄(원작 Trig_BossReward j:13436-13473): 드랍이 터지면(EnemyData.itemDropChance) 이 줄들 중 weight 비례로 하나.
+[System.Serializable]
+public class EnemyItemDrop
+{
+    public ItemData item;
+    public float weight = 1f;
+    [Tooltip("원작 TRIGSTR 문구 그대로(그 플레이어에게만 10초)")]
+    public string message;
+    [Tooltip("원작 UnitHasItemOfTypeBJ==false 조건 — 이미 갖고 있으면 안 준다")]
+    public bool skipIfOwned;
+}
+
 // 방어 타입. **원작 그대로다** — `war3map.w3u`에서 실제로 쓰이는 네 종류다
 // (`UNIT_STATS_RESEARCH.md`). 「보스」라는 타입은 원작에 없어서 뺐다.
 //
@@ -85,6 +97,10 @@ public class EnemyData : ScriptableObject
     //    전원 지급(rewardsAllPlayers)이면 「{닉네임} 님이 {라벨}을 사냥하여 모든플레이어에게 N골드와 나무 N개 를 지급합니다.」,
     //    처치자 지급이면 처치자에게만 「{라벨}을 사냥하여 N골드와 나무 N개 를 지급합니다.」(알림 묶음 8/13, GAP 82).
     public string killAnnounceLabel;
+
+    // 보스 처치 아이템 드랍 — 0이면 없음. 1/N이면 1f/N. 원작 R10 1/23(I00K|I00Z 반반)·R20 1/21(I00U)·R30 6%(I007, 니카 선행 없는 쪽).
+    [Range(0f, 1f)] public float itemDropChance;
+    public List<EnemyItemDrop> itemDrops = new List<EnemyItemDrop>();
 
     // 크립 2단계 50/50(원작 Trig_creep_reward j:13941-13969): 처치자에게 [bonusRewardChance 확률로] 「목재 bonusRewardWood + bonusRewardUnit(해적선)」,
     //    아니면 기본 자원(resourceRewards — 목재 7). 둘 다 세이브 포인트 +1. 문구는 원작 그대로(성공/실패 각각). 비워 두면 기능 꺼짐.
