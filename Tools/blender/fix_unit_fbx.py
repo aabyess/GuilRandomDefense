@@ -7570,6 +7570,12 @@ for _n, _pre in (("반항아_이승우", "pl_ryuma_orig01"), ("배병욱", "pl_o
                  ("이태훈", "pl_smoker_stam01"), ("간보는_김용태", "pl_zephyr_orig01"), ("울부짖는_노태현", "pl_katakuri_orig01"), ("윤현모", "pl_ichiji_orig01")):
     UNITS[_n].update(_motion_variant(_BL(_pl(_pre)), clip_floor_feet=True))
 UNITS["임준성"].update(_motion_variant(_BL(_ZEPH), clip_floor_feet=True))
+# 박민수(R29 모모노스케): 원본 rar에 모델(momonosuke.fbx — 클립 없음)과 **애니 파일(momonosuke animations.fbx — 같은 메시 + 클립 34, 뼈 92)**이 따로 있다 → 애니 파일을 소스로.
+UNITS["박민수"]["archive"] = (UNITS["박민수"]["archive"][0], UNITS["박민수"]["archive"][1], "momonosuke animations.fbx")
+#   🔴 애니 파일은 뼈가 92개로 줄어(150→92) 얼굴(face_normal)·칼집 손잡이(l_handle_sheath)가 묶이던 뼈가 없다 → 무가중치 → 유니티가 첫 뼈에 붙여 몸이 움직이면 튄다(bind_check FAIL로 잡음).
+#   기본 리그에선 각각 Head·Hips로 합쳐지던 것이라 rigid_meshes로 그 뼈에 통째 묶는다.
+UNITS["박민수"]["rigid_meshes"] = {"face_normal": "mixamorig:Head", "l_handle_sheath": "mixamorig:Hips"}
+UNITS["박민수"].update(_motion_variant(_BL(_pl("pl_momonosuke_orig01")), clip_floor_feet=True))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
