@@ -1,6 +1,6 @@
 """원작 MDX 모델의 부가 이펙트 지오셋을 FBX로 뜯는다(2026-10-01, 초월 부가 이펙트).
 
-  ANALYSIS=<analysis.json> blender -b --factory-startup --python Tools/blender/export_mdx_parts.py -- <작업폴더> <출력폴더> <모델.mdx> <지오셋번호,번호…>
+  [ANALYSIS=<analysis.json>] blender -b --factory-startup --python Tools/blender/export_mdx_parts.py -- <작업폴더> <출력폴더> <모델.mdx> <지오셋번호,번호…>
 
 - 작업폴더 = mdx_extract/mdx_effect_parts가 MDX·_tex/를 풀어 둔 곳. 출력폴더/<모델>_g<번호>.fbx + Textures/*.png.
 - 지오셋마다 메시 하나(층이 여럿이면 층마다 오브젝트 `<모델>_g<번호>_L<층>_<필터>`). **오브젝트 원점 = 붙는 뼈의 pivot** — 날개짓처럼 뼈 둘레로 돌릴 때 그대로 돌리면 된다.
@@ -25,8 +25,8 @@ args = sys.argv[sys.argv.index("--") + 1:]
 WORK, OUT, NAME, IDX = args[0], args[1], args[2], [int(x) for x in args[3].split(",")]
 os.makedirs(os.path.join(OUT, "Textures"), exist_ok=True)
 SC = 0.01
-ANALYSIS = json.load(open(os.environ["ANALYSIS"]))
-an = next(v for v in ANALYSIS.values() if v.get("file") == NAME)
+ANALYSIS = json.load(open(os.environ["ANALYSIS"])) if os.environ.get("ANALYSIS") else {}
+an = next((v for v in ANALYSIS.values() if v.get("file") == NAME), None)       # 없으면(오라 같은 통짜 이펙트 모델) pivot = 모델 원점
 tag = os.path.splitext(NAME)[0]
 model = mdx_geo.parse(open(os.path.join(WORK, NAME), "rb").read())
 SUFFIX = {"none": "cut", "transparent": "cut", "blend": "blend", "additive": "add", "addalpha": "add", "modulate": "blend"}
@@ -36,7 +36,7 @@ rot = __import__("mathutils").Matrix.Rotation(math.radians(-90), 4, "Z")
 made = []
 for gi in IDX:
     g = model["geosets"][gi]
-    pivot = Vector(next(x for x in an["geosets"] if x["index"] == gi)["bone_pivot"])
+    pivot = Vector(next(x for x in an["geosets"] if x["index"] == gi)["bone_pivot"]) if an else Vector((0, 0, 0))
     mdef = model["materials"][g["material"]]
     for li, layer in enumerate(mdef["layers"]):
         tex = model["textures"][layer["tex"]]
