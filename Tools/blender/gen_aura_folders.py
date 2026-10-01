@@ -7,7 +7,7 @@
 import csv, json, os, re, shutil, subprocess, sys, collections
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "w3x"))
 import mdx_anim, mdx_geo
-SC = os.environ["SCR"]
+SC = os.environ.get("SCR") or os.path.expanduser("~/GRD_motion_trial/_work/mdxwork")
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.expanduser("~/GRD_motion_trial/초월_상시오라")
 APPROX = set(json.load(open(os.path.join(SC, "_approx.json")))) if os.path.exists(os.path.join(SC, "_approx.json")) else set()

@@ -10,7 +10,8 @@ import mdx_anim, mdx_geo, mdx_effect_parts as EP
 
 HOME = os.path.expanduser("~/GRD_motion_trial")
 ROOT_T, ROOT_A = HOME + "/초월_부가이펙트", HOME + "/초월_상시오라"
-TRANS, AURA = os.environ["TRANS"], os.environ["AURA"]
+_WORK = os.path.expanduser("~/GRD_motion_trial/_work")
+TRANS, AURA = os.environ.get("TRANS") or _WORK + "/transwork", os.environ.get("AURA") or _WORK + "/mdxwork"
 SC = 0.01
 FM = {0: "blend", 1: "additive", 2: "modulate", 3: "modulate2x", 4: "alphakey"}
 MESH_FILTER = {"none": "cut", "transparent": "cut", "blend": "blend", "additive": "add", "addalpha": "add", "modulate": "blend"}

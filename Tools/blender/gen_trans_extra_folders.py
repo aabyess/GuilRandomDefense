@@ -5,7 +5,7 @@
 """
 import json, os, re, shutil, subprocess, sys
 HOME = os.path.expanduser("~/GRD_motion_trial/초월_부가이펙트")
-SC = os.environ["SCR"]
+SC = os.environ.get("SCR") or os.path.expanduser("~/GRD_motion_trial/_work/transwork")
 A = json.load(open(os.path.join(SC, "analysis.json")))
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 by_file = {v["file"]: v for v in A.values()}
