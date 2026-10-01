@@ -269,7 +269,18 @@ public class RewardDistributor : MonoBehaviour
         }
 
         if (data.goldReward > 0) killer.GoldWallet?.Add(data.goldReward);
-        GrantResources(killer, data);
+        if (data.bonusRewardUnit != null && Random.value < data.bonusRewardChance)
+        {
+            // 원작 크립 2단계 50%: 목재 2 + 해적선(기본 목재 7 대신).
+            if (data.bonusRewardWood > 0) killer.ResourceWallet?.Add(ResourceType.Wood, data.bonusRewardWood);
+            SpawnUnitAtWarehouse(killer, data.bonusRewardUnit);
+            if (!string.IsNullOrEmpty(data.bonusRewardMessage)) PlayerNotification.Show(killerPlayerId, data.bonusRewardMessage, 10f);
+        }
+        else
+        {
+            GrantResources(killer, data);
+            if (data.bonusRewardUnit != null && !string.IsNullOrEmpty(data.baseRewardMessage)) PlayerNotification.Show(killerPlayerId, data.baseRewardMessage, 10f);
+        }
         if (data.savePointReward > 0) killer.PersistentSave?.AddSessionPoints(data.savePointReward);
         if (data.isBoss) GrantBossReward(killer, round, data);
     }
@@ -413,16 +424,22 @@ public class RewardDistributor : MonoBehaviour
     void GrantAncientShip(PlayerContext context)
     {
         if (ancientShipUnit == null) return; // 콘텐츠 결손이 아니라 배선 누락 — 조용히 넘기지 않는다.
+        SpawnUnitAtWarehouse(context, ancientShipUnit);
+    }
 
+    // 창고 근처에 유닛을 세운다(고대의 배·크립 2단계 해적선 공용).
+    void SpawnUnitAtWarehouse(PlayerContext context, UnitData unit)
+    {
+        if (unit == null || context == null) return;
         UnitSpawner spawner = SpawnerRef;
         if (spawner == null)
         {
-            Debug.LogWarning("RewardDistributor: UnitSpawner를 찾지 못해 고대의 배를 지급하지 못했습니다.", this);
+            Debug.LogWarning($"RewardDistributor: UnitSpawner를 찾지 못해 {unit.unitName}을(를) 지급하지 못했습니다.", this);
             return;
         }
 
         Vector3 position = context.Warehouse != null ? context.Warehouse.transform.position : context.transform.position;
-        spawner.Spawn(ancientShipUnit, position, context.PlayerId);
+        spawner.Spawn(unit, position, context.PlayerId);
     }
 
     public void GrantWisps(PlayerContext context, List<WispReward> wispRewards)

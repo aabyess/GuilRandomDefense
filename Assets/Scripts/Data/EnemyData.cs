@@ -86,6 +86,14 @@ public class EnemyData : ScriptableObject
     //    처치자 지급이면 처치자에게만 「{라벨}을 사냥하여 N골드와 나무 N개 를 지급합니다.」(알림 묶음 8/13, GAP 82).
     public string killAnnounceLabel;
 
+    // 크립 2단계 50/50(원작 Trig_creep_reward j:13941-13969): 처치자에게 [bonusRewardChance 확률로] 「목재 bonusRewardWood + bonusRewardUnit(해적선)」,
+    //    아니면 기본 자원(resourceRewards — 목재 7). 둘 다 세이브 포인트 +1. 문구는 원작 그대로(성공/실패 각각). 비워 두면 기능 꺼짐.
+    public UnitData bonusRewardUnit;
+    public int bonusRewardWood;
+    [Range(0f, 1f)] public float bonusRewardChance;
+    public string bonusRewardMessage;
+    public string baseRewardMessage;
+
     public bool isBoss;
 
     // ⚠️ 2026-09-05까지는 "AP는 방어력을 무시한다"고 적혀 있었는데, 사장님 확정(02번)으로
