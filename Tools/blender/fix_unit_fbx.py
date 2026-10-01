@@ -5147,7 +5147,12 @@ def sample_clips(src, arm_name, recipe, ref, guess_bind=True, scene_basis=False)
     empties = skeleton_empties(arm, ref["empties"] if ref is not None else None)
     from_gltf = src.lower().endswith((".glb", ".gltf"))
     clips = []
-    for act in list(bpy.data.actions):
+    # 🔴 FBX 가져오기는 테이크마다 노드별 액션으로 쪼갠다(「eff_muzzle_a|…」「post_flag|…」). 그걸 뼈대에 입히면 **그 노드의 오브젝트 변환 곡선이 뼈대 오브젝트에 얹혀**
+    #   (예: 배율) 이후 모든 클립의 세계 좌표가 100배로 구워졌다(초월_양재모_AD 고유 동작판 — 뼈 위치 99m). 뼈대 몫 액션이 있으면 그것만 읽는다.
+    pool = list(bpy.data.actions)
+    if not from_gltf and any(a_.name.startswith(arm_name + "|") for a_ in pool):
+        pool = [a_ for a_ in pool if a_.name.startswith(arm_name + "|")]
+    for act in pool:
         ad = arm.animation_data or arm.animation_data_create()
         ad.action = act
         if hasattr(ad, "action_slot") and len(act.slots):
@@ -7481,6 +7486,29 @@ UNITS["왕승환"]["variants"] = {"동작": _motion_variant(_pl("pl_mb_marine01_
 UNITS["특별함_고우선"]["variants"] = {"동작": _motion_variant({
     "Reiju_0000": "Idle", "EV041_Reiju_A_010": "Idle2", "EV041_Reiju_C_000": "Event_C", "EV041_Reiju_D_000": "Event_D",
     "EV041_Reiju_E_000": "Event_E", "EV041_Reiju_F_000": "Event_F"}, lunge=False)}
+
+
+# 🔸 고유 동작판 1묶음(2026-10-01, 사장님 「각 스킨에 고유 스킨이나 모션 있으면 살려도 좋아」 → 전수조사 「쓸 만함」 위 등급부터). 「이름@고유」로 Assets 밖에 뽑는다.
+#   전부 바운티러시 pl_ 계열 — 클립 이름은 같고 접두만 다르다. 원본에 없는 클립은 skip으로 뺀다(전수조사 survey_clips.py가 클립 목록을 읽어 만든 표).
+def _BL(d):                                                      # FBX 원본 테이크 이름은 「…|Base Layer」 꼴
+    return {f"{k}|Base Layer": v for k, v in d.items()}
+
+
+UNITS["영원_윤현모"]["variants"] = {"고유": _motion_variant(_BL(_pl("pl_shiki_orig01")))}
+UNITS["초월_배성령_AD"]["variants"] = {"고유": _motion_variant(_BL(_pl("pl_killer_atta01")))}
+UNITS["초월_양재모_AD"]["variants"] = {"고유": _motion_variant(_BL(_pl("pl_akainu_gens01")))}
+UNITS["제한_최영민"]["variants"] = {"고유": _motion_variant(_BL(_pl("pl_ichiji_orig01")))}
+# 테소로(제한_이유범): 평타·스킬·idle_a·run이 「_1」 꼬리(원본 둘째 판) — 첫째 판이 없다. str01_*(변신 자세)는 안 쓴다.
+_TES = {f"pl_tesoro_orig01_{k}": v for k, v in {
+    "idle_a_1": "Idle", "run_1": "Move", "combo_a_1": "Attack", "combo_b_1": "Attack2", "combo_c_1": "Attack3", "damage": "Hit", "down": "Die",
+    "skill_a_1": "Skill1", "skill_a_lp_1": "Skill1_Loop", "skill_a_end_1": "Skill1_End", "skill_b_1": "Skill2", "stun": "Stun", "boost": "Boost", "dodge": "Dodge",
+    "down_end": "GetUp", "jump": "Jump", "jump_lp": "Jump_Loop", "jump_end": "Jump_End", "blownback_lp": "BlownBack_Loop", "blownback_end": "BlownBack_End",
+    "slammed": "Slammed", "electric_shock": "Shock", "shake": "Shake", "idlehome_a": "Idle_Home", "opening": "Opening", "victory": "Win", "victory_lp": "Win_Loop",
+    "lose": "Lose", "lose_lp": "Lose_Loop", "flagget": "Flag", "flagget_lp": "Flag_Loop", "flagget_end": "Flag_End"}.items()}
+UNITS["제한_이유범"]["variants"] = {"고유": _motion_variant(_BL(_TES))}
+# 센고쿠(불멸_고도현): 원본에 Idle·스킬 하나뿐(idle_a · skill_a/_lp/_end) — 걷기·평타·피격·죽음이 없다. 스킬을 Attack(시작·유지·끝)으로 쓴다.
+UNITS["불멸_고도현"]["variants"] = {"고유": _motion_variant(_BL({
+    "pl_sengoku_orig02_idle_a": "Idle", "pl_sengoku_orig02_skill_a": "Attack", "pl_sengoku_orig02_skill_a_lp": "Attack_Loop", "pl_sengoku_orig02_skill_a_end": "Attack_End"}), lunge=False)}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
