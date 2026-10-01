@@ -10,3 +10,6 @@ python3 $H $B/초월_황준석_ADAP hjs_base 초월_황준석_ADAP
 python3 $H $B/_미대응/마르코_날개 hjs_marco 초월_황준석_ADAP
 python3 $H $B/_미대응/쿠잔_얼음칼날 hjs_kuzan 초월_황준석_ADAP
 python3 $H $B/_미대응/검은_초승달 sang_crescent 초월_최상호_AD
+# 휘두를 때 잠깐 나타나는 베기 판(PM 10-01) — 원작 시퀀스가 비어 쓰는 때를 정해 준다
+FORCE_STATES=스킬 python3 $H $B/_미대응/초승달_베기 bae_slash 초월_배성령_AD
+FORCE_STATES=공격 python3 $H $B/_미대응/큰_베기_호 park_slash 초월_박민석_ADAP

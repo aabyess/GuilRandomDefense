@@ -24,7 +24,9 @@ SRC_DIR = os.path.join(ROOT, "Assets", "Resources", "Effects", "Sphere", "Src")
 HINTS = {"RightHand": "hand,right", "LeftHand": "hand,left", "Spine1(가슴)": "chest", "Hips": "hips", "Head": "head"}
 # 모델 통째 붙는 곳 지정(원작 힌트가 ?일 때 PM 지시): 마르코 날개 = 가슴
 ATTACH_OVERRIDE = {"mrk7.mdx": "chest"}
+HELD_PARTS = {"lb_kz_g8"}   # 손에 쥐는 메시(쿠잔 얼음 칼날) — 손 뼈에 쥐는 점을 맞춘다
 LIMB_PARTS = {"AkainuBW7_g2", "AkainuBW7_g5"}   # 마그마 소매(김만경_AD)
+FORCE_STATES = [x for x in os.environ.get("FORCE_STATES", "").split("|") if x]   # 예: FORCE_STATES=스킬
 ORDER = ["대기", "이동", "공격", "스킬"]
 
 
@@ -55,6 +57,8 @@ def main():
             continue
         h = heights.get(p["model"], 1.8)
         states = [x for x in ORDER if x in p["visible"]["ours_states"]]
+        if FORCE_STATES:
+            states = FORCE_STATES   # 단독 이펙트 모델(초승달 베기 등)은 원작 시퀀스가 비어 있다 — 쓰는 쪽이 정한 때로
         if not states:
             continue
         out = {"kind": p["kind"], "name": p["name"], "slot": slot, "model": p["model"], "bodyHeightM": h,
@@ -65,12 +69,13 @@ def main():
             # 메시 pivot은 원작 팔 뼈의 자리(팔을 벌린 자세 기준, 몸에서 ~0.9m) — 우리 스킨 손에 붙이면 팔 흔들림에 크게 휘둘린다(10-01 구주호 날개) → 가슴 뼈에.
             if out["attach"] in ("hand,left", "hand,right"):
                 # 예외 표(PM 10-01): 팔에 씌우는 소매는 우리 팔에 맞춰 위팔 뼈에(SphereArtLimb), 그 밖(날개 등 몸에서 뻗은 것)은 가슴 뼈에.
-                out["attach"] = ("limb," + out["attach"].split(",")[1]) if p["name"] in LIMB_PARTS else "chest"
-            layer = next((l for l in p["layers"] if not l.get("skip")), None)
+                out["attach"] = ("limb," + out["attach"].split(",")[1]) if p["name"] in LIMB_PARTS else (out["attach"] if p["name"] in HELD_PARTS else "chest")
+            live = [l for l in p["layers"] if not l.get("skip")]
+            layer = next((l for l in live if l["additive"]), live[0] if live else None)   # 층이 여럿이면(혼합+가산 같은 그림) 가산 층 하나
             if layer is None:
                 continue
             tex = layer["texture"]["file"]
-            out.update(fbx=p["fbx"], fbxObject=layer["fbx_object"], texture=tex, additive=bool(layer["additive"]),
+            out.update(pos=vec(p["attach"]["unity_pos_m"]), fbx=p["fbx"], fbxObject=layer["fbx_object"], texture=tex, additive=bool(layer["additive"]),
                        cutout=layer["fbx_object"].endswith("_cut"), blend=layer["fbx_object"].endswith("_blend"))
             if out["blend"] and opaque_alpha(os.path.join(folder, tex)):
                 # 알파가 전부 255인 텍스처(검정 바탕)를 알파혼합으로 그리면 검은 판이 된다(10-01 박기찬 baozha) → 가산으로(검정 = 투명).
