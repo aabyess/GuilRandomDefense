@@ -3190,6 +3190,10 @@ public static class ClaudeCommands
         public Dictionary<UnitData, int> missing = new Dictionary<UnitData, int>();
         public HashSet<CombineRecipe> treeRecipes = new HashSet<CombineRecipe>();
         public int MissingCount => missing.Values.Sum();
+        // 뽑기 전용 잎(조합식 없는 비흔함 — 악의근원·상붕카) 중 아직 못 가진 것. 흔함선택 위습으로 못 채우니 도구는 운에 맡길 수밖에 없다(10-01 g1_219·g1_221 막힘 원인).
+        public int DrawOnlyMissing => missing.Where(kv => kv.Key.grade != UnitGrade.Common).Sum(kv => kv.Value);
+        // 목표 고르는 점수 — 뽑기 전용 잎은 하나당 +10(사실상 배제). 이미 가진 잎은 missing에 없으니 비용 0이다.
+        public int Score(bool old) => old ? MissingCount : MissingCount + 10 * DrawOnlyMissing;
     }
     static TargetPlan currentPlan;
     static readonly HashSet<CombineRecipe> stuckTargets = new HashSet<CombineRecipe>();
@@ -3241,7 +3245,7 @@ public static class ClaudeCommands
     {
         var owned = MyUnits().GroupBy(u => u.Data).ToDictionary(g => g.Key, g => g.Count());
         var byResult = RecipesByResult();
-        // 버린 목표도 재료가 다 채워지면 되살린다(블록 이름 지킴도 같이 풀린다 — BlockedCommonNames는 stuckTargets에서 유도).
+        // 버린 목표도 재료가 다 채워지면 되살린다(블록 이름 지킴도 같이 풀린다 — BlockedDrawOnlyUnits는 stuckTargets에서 유도).
         if (stuckTargets.Count > 0 && !job.oldBottleneck)
             foreach (CombineRecipe revived in stuckTargets.Where(r => PlanFor(r, owned).MissingCount == 0).ToList())
             {
@@ -3250,7 +3254,7 @@ public static class ClaudeCommands
             }
         var candidates = byResult.Where(kv => (int)kv.Key.grade == job.aimGrade).SelectMany(kv => kv.Value).Where(r => !stuckTargets.Contains(r)).ToList();
         if (candidates.Count == 0) return currentPlan = null;
-        TargetPlan best = candidates.Select(r => PlanFor(r, owned)).OrderBy(p => p.MissingCount).First();
+        TargetPlan best = candidates.Select(r => PlanFor(r, owned)).OrderBy(p => p.Score(job.oldBottleneck)).First();
         if (currentPlan == null || currentPlan.target == null) { targetLog.Add($"R{job.lastRoundSeen} 목표 → {best.target.result.unitName}(모자람 {best.MissingCount})"); return currentPlan = best; }
         TargetPlan keep = PlanFor(currentPlan.target, owned);
         // 막힘 — 모자란 잎이 6라운드(라운드 줄에서만 셈) 동안 안 줄면 그 목표를 이 판에서 버린다(조합식 없는 잎·흔함 선택에 없는 이름에 걸린 것, 10-01 g1_199 「볼보이5·악의근원1」).
@@ -3262,7 +3266,7 @@ public static class ClaudeCommands
             currentPlan = null; stuckBest = int.MaxValue; stuckTurns = 0;
             return RefreshTargetPlan(job);
         }
-        if (best.target != keep.target && best.MissingCount + 3 < keep.MissingCount)
+        if (best.target != keep.target && best.Score(job.oldBottleneck) + 3 < keep.Score(job.oldBottleneck))
         {
             targetLog.Add($"R{job.lastRoundSeen} 목표 바꿈 {keep.target.result.unitName}(모자람 {keep.MissingCount}) → {best.target.result.unitName}(모자람 {best.MissingCount})");
             return currentPlan = best;
@@ -3292,21 +3296,19 @@ public static class ClaudeCommands
         return true;
     }
 
-    // 막힌 이름 — 버린 목표(stuckTargets) 재료 잎 중 흔함선택 포탈이 없어 위습으로 못 채우는 흔함 이름. 이 이름을 팔면 다시 못 얻는다.
-    static HashSet<string> BlockedCommonNames()
+    // 막힌 잎 — 버린 목표(stuckTargets) 재료 중 뽑기 전용 잎(조합식 없는 비흔함)이면서 지금 갖고 있는 유닛. 팔면 다시 구하기 어렵다.
+    static HashSet<UnitData> BlockedDrawOnlyUnits()
     {
-        var names = new HashSet<string>();
-        if (stuckTargets.Count == 0) return names;
-        var portals = new HashSet<string>(UnityEngine.Object.FindObjectsByType<UnitPortal>(FindObjectsSortMode.None)
-            .Select(p => p.gameObject.name).Where(n => n.StartsWith("흔함선택_")).Select(n => n.Substring(5)));
+        var units = new HashSet<UnitData>();
+        if (stuckTargets.Count == 0) return units;
         var none = new Dictionary<UnitData, int>();
         foreach (CombineRecipe r in stuckTargets)
             foreach (var kv in PlanFor(r, none).missing)
-                if (kv.Key.grade == UnitGrade.Common && !portals.Contains(kv.Key.unitName ?? "")) names.Add(kv.Key.unitName ?? "");
-        return names;
+                if (kv.Key.grade != UnitGrade.Common) units.Add(kv.Key);
+        return units;
     }
 
-    // 막힌 이름 지킴은 이 수까지만 — 코드엔 유닛 수 상한이 없어(겹쳐 세운다) 도구가 정한 소프트 한계. 넘으면 기존 판매 규칙대로 판다.
+    // 막힌 잎 지킴은 이 수까지만 — 코드엔 유닛 수 상한이 없어(겹쳐 세운다) 도구가 정한 소프트 한계. 넘으면 기존 판매 규칙대로 판다.
     const int BlockedKeepUnitLimit = 150;
 
     static Dictionary<string, int> TargetMissingCommons()
@@ -3363,13 +3365,13 @@ public static class ClaudeCommands
         Dictionary<UnitData, int> demand = RecipeMaxDemand();
         var spare = new List<UnitIdentity>();
         int totalOwned = MyUnits().Count();
-        HashSet<string> blocked = job.targetMode && !job.oldBottleneck ? BlockedCommonNames() : new HashSet<string>();
+        HashSet<UnitData> blocked = job.targetMode && !job.oldBottleneck ? BlockedDrawOnlyUnits() : new HashSet<UnitData>();
         bool atLimit = totalOwned >= BlockedKeepUnitLimit;
         int blockedKept = 0, blockedSold = 0;
         foreach (var group in MyUnits().Where(u => SellGrades.Contains(u.Data.grade) && NearLane(u)).GroupBy(u => u.Data))
         {
             int keep = 2 * (demand.TryGetValue(group.Key, out int d) ? d : 0);
-            if (group.Key.grade == UnitGrade.Common && blocked.Contains(group.Key.unitName ?? ""))
+            if (blocked.Contains(group.Key))
             {
                 int extra = Math.Max(0, group.Count() - keep);
                 if (atLimit) blockedSold += extra; else { blockedKept += extra; keep = group.Count(); }
@@ -3378,7 +3380,7 @@ public static class ClaudeCommands
             spare.AddRange(group.Skip(keep));
         }
         spare = spare.OrderBy(u => u.Data.grade.Tier()).Take(SellPerTurn).ToList();   // 싼 것부터
-        string blockedText = blocked.Count > 0 ? $" · 막힌 이름 지킴 {blockedKept}기 / 한계로 팜 {blockedSold}기({string.Join(",", blocked)}, 보유 {totalOwned}/{BlockedKeepUnitLimit})" : "";
+        string blockedText = blocked.Count > 0 ? $" · 막힌 뽑기 전용 잎 지킴 {blockedKept}기 / 한계로 팜 {blockedSold}기({string.Join(",", blocked.Select(u => u.unitName))}, 보유 {totalOwned}/{BlockedKeepUnitLimit})" : "";
         if (spare.Count == 0) return "   💰 판매: 남는 유닛 없음" + blockedText + "\n";
         PlayerContext me = PlayerContext.GetOccupied(0);
         int woodBefore = me?.ResourceWallet?.Get(ResourceType.Wood) ?? 0;
