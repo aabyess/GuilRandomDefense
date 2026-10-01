@@ -83,6 +83,19 @@ public class PlayerContext : MonoBehaviour
     }
 
     public int PlayerId => playerId;
+
+    // 변화(A0KJ) 회수 — 원작은 플레이어마다 시작에 h07D(변화 토큰) 2기를 주고(생성 경로 없음), 변화가 성공할 때마다 소유자 토큰을 1기 제거한다
+    // (Trig_change j:20362, 조건 「목재 ≥10 + 토큰 ≥1」) → **플레이어당 한 판 2회**. 변화됨 조합(결과 등급 Transformed)이 이 회수를 쓴다.
+    // 한 판짜리(직렬화 안 함). 호스트가 정하고 클라는 NetPlayer가 옮겨 적는다(HUD 표시용).
+    public const int TransformUsesPerGame = 2;
+    public int TransformUsesLeft { get; private set; } = TransformUsesPerGame;
+    public bool TryConsumeTransformUse()
+    {
+        if (TransformUsesLeft <= 0) return false;
+        TransformUsesLeft--;
+        return true;
+    }
+    public void ApplyReplicatedTransformUses(int left) { TransformUsesLeft = Mathf.Clamp(left, 0, TransformUsesPerGame); }
     public bool IsOccupied => occupied;
     public bool IsDead => isDead;
 

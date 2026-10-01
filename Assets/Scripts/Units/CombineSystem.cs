@@ -224,6 +224,7 @@ public class CombineSystem : MonoBehaviour
 
         // 결과도 필드에 나와야 한다. Spawn이 인벤토리 등록까지 하므로 따로 Add하지 않는다.
         spawner.Spawn(recipe.result, resultPosition, ownerId);
+        if (IsTransformRecipe(recipe)) OwnerContext?.TryConsumeTransformUse();   // 원작: 변화 성공 때 토큰 1기 제거
 
         // 도움소 「능력치 증가」(H0B7) 선행 조건(Rhfl) — 초월함 조합을 완료한 순간 켠다.
         // 원작은 이 순간부터 계속 조합해도 다시 안 꺼진다(한 번만 넘으면 되는 문턱)이라
@@ -296,6 +297,12 @@ public class CombineSystem : MonoBehaviour
             lines.Add("원딜 잠김 — 패왕의길로 이미 한 기를 얻어 제한됨·초월·불멸·영원은 더 만들 수 없습니다.");
             return lines;
         }
+        // 원작 Trig_change 실패 문구 — 목재나 회수가 모자라면 같은 한 줄(본인에게만). 회수가 0이면 재료가 다 있어도 이 줄.
+        if (IsTransformRecipe(recipe) && OwnerContext != null && OwnerContext.TransformUsesLeft <= 0)
+        {
+            lines.Add("목재나 변화가능 횟수가 부족합니다!");
+            return lines;
+        }
         UnitInventory inventory = Inventory;
         if (recipe.ingredients != null && inventory != null)
         {
@@ -330,11 +337,13 @@ public class CombineSystem : MonoBehaviour
             foreach (RecipeResourceCost cost in recipe.resourceCosts)
                 if (cost.type == ResourceType.Wood && resources.Get(cost.type) < cost.amount)
                 {
-                    lines.Add($"목재가 부족합니다!:{cost.amount - resources.Get(cost.type)}");
+                    lines.Add(IsTransformRecipe(recipe) ? "목재나 변화가능 횟수가 부족합니다!" : $"목재가 부족합니다!:{cost.amount - resources.Get(cost.type)}");
                     return lines;
                 }
         return lines;
     }
+
+    static bool IsTransformRecipe(CombineRecipe recipe) => recipe != null && recipe.result != null && recipe.result.grade == UnitGrade.Transformed;
 
     bool CanAfford(CombineRecipe recipe, bool pickForExecution,
                    out List<UnitIdentity> unitsToRemove, out List<ItemData> itemsToRemove)
@@ -346,6 +355,8 @@ public class CombineSystem : MonoBehaviour
         // 원딜(GAP 6, NavigationState.OneDealLocked) — 잠긴 플레이어는 네 등급(제한됨·초월·불멸·영원) 결과 식을 못 만든다.
         if (recipe.result != null && NavigationState.IsOneDealGrade(recipe.result.grade) && OwnerContext?.NavigationState != null &&
             OwnerContext.NavigationState.OneDealLocked) return false;
+        // 변화(A0KJ) 회수(원작 Trig_change) — 플레이어당 2회.
+        if (IsTransformRecipe(recipe) && OwnerContext != null && OwnerContext.TransformUsesLeft <= 0) return false;
         if (!RoundConditionMet(recipe)) return false;
 
         UnitInventory targetInventory = Inventory;
