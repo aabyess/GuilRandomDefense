@@ -123,6 +123,7 @@ public class UnitSphereArt : MonoBehaviour
 
     Transform FindBone(string attach)
     {
+        if (attach == "body") return null;   // 유닛 루트(발밑 원점) — 부가 이펙트 프리팹은 몸 좌표 그대로(SphereArtBuilder)
         // ① 사람형 아바타가 있으면 HumanBodyBones
         HumanBodyBones? hb = HumanBone(attach);
         if (hb.HasValue && animator != null && animator.avatar != null && animator.avatar.isValid && animator.isHuman)
@@ -161,7 +162,7 @@ public class UnitSphereArt : MonoBehaviour
     {
         switch (attach)
         {
-            case "origin": case "sprite": return null;
+            case "origin": case "sprite": case "body": return null;
             case "chest": return "spine2";
             case "hand,left": return "lefthand";
             case "hand,right": case "weapon": return "righthand";
@@ -174,6 +175,7 @@ public class UnitSphereArt : MonoBehaviour
     {
         switch (attach)
         {
+            case "body": return Vector3.zero;
             case "chest": return new Vector3(0f, height * ChestRatio, 0f);
             case "hand,left": return new Vector3(-height * 0.18f, height * HandRatio, 0f);
             case "hand,right": case "weapon": return new Vector3(height * 0.18f, height * HandRatio, 0f);

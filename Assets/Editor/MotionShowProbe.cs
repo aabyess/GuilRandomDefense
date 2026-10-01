@@ -22,6 +22,22 @@ static class MotionShowProbe
     static string Minsu() => Show("특별함_박민수");
     static string Yewon() => Show("특별함_박예원");
     static string Hyeongyu() => Show("희귀함_조현규");
+    // 카메라를 지정 방향 가까이로 — 부가 이펙트 사진용(유닛은 home에 서 있다)
+    static string CamAt(float dx, float dy, float dz)
+    {
+        UnitIdentity u = Object.FindObjectsByType<UnitIdentity>(FindObjectsSortMode.None).FirstOrDefault();
+        if (u == null || Camera.main == null) return "❌ 유닛/카메라 없음";
+        Vector3 focus = u.transform.position + Vector3.up * 16f;
+        Camera.main.transform.position = focus + new Vector3(dx, dy, dz);
+        Camera.main.transform.LookAt(focus);
+        return $"카메라 {dx},{dy},{dz}";
+    }
+    static string CamBack() => CamAt(0f, 14f, -50f);
+    static string CamFront() => CamAt(0f, 14f, 50f);
+    static string CamSide() => CamAt(55f, 10f, 0f);
+    static string Keyjaru() => Show("초월_구주호_AD");
+    // 스킬 중 부품 확인용 — 모든 UnitSphereArt에 스킬 신호를 6초 준다
+    static string PulseAll() { foreach (UnitSphereArt a in Object.FindObjectsByType<UnitSphereArt>(FindObjectsSortMode.None)) a.PulseSkill(6f); return "스킬 신호 6초"; }
     static string AuraHidden() => Show("히든_이요한");
     static string AuraChar() => Show("전설적인_백기현");
     static string AuraTrans() => Show("초월_임장혁_AD");

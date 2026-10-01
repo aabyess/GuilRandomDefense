@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+"""Blender 세션의 effects.json → 유니티 빌더가 읽는 납작한 JSON + 재료 복사.
+
+쓰는 법:  python3 Tools/sphere_art/flatten_effects.py <폴더(~/GRD_motion_trial/초월_부가이펙트/<로스터>)> <아스키 별칭> [로스터 이름]
+  · 읽음:   <폴더>/effects.json (스키마는 ../_effects_schema.md)
+  · 씀:     Tools/sphere_art/effects/<로스터>.json  — Unity JsonUtility가 읽을 수 있는 고정 꼴(Newtonsoft 없음)
+  · 복사:   FBX·텍스처 → Assets/Resources/Effects/Sphere/Src/<로스터>/ (Textures/ 하위 구조 유지)
+이어서 유니티에서 `call SphereArtBuilder.BuildAll` → 프리팹·재질 + Tools/sphere_art/extra.tsv → `python3 Tools/sphere_art/build_table.py`.
+
+변환 규칙
+  · 좌표·크기는 미터(원작 모델 몸 키 기준). 유니티에서 (게임 키 30 ÷ 그 모델 몸 키 m)를 곱해 게임 단위로 만든다 — 모델마다 몸 키가 달라 부품마다 bodyHeightM을 싣는다.
+  · 방출량 0 + 슬롯이 항상이 아닌 방출기는 KP2E 키의 최댓값을 방출량으로 쓴다(원작이 그 동작 때 켜는 값).
+  · 슬롯 「없음」(원작에서도 안 켜짐)·팀색 판(skip)은 뺀다.
+"""
+import json, os, shutil, sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
+OUT_DIR = os.path.join(HERE, "effects")
+SRC_DIR = os.path.join(ROOT, "Assets", "Resources", "Effects", "Sphere", "Src")
+
+
+def vec(v, n=3, d=0.0):
+    v = list(v or [])
+    return (v + [d] * n)[:n]
+
+
+def main():
+    folder = os.path.abspath(os.path.expanduser(sys.argv[1]))
+    alias = sys.argv[2]                       # Resources 키에 쓸 아스키 이름(한글 NFC/NFD 함정 피함) — 예: juho_ad
+    roster = sys.argv[3] if len(sys.argv) > 3 else os.path.basename(folder).replace("초월_", "초월_")
+    data = json.load(open(os.path.join(folder, "effects.json"), encoding="utf-8"))
+    heights = {m["model"]: m["body_height_m"] for m in data["models"]}
+    parts, files = [], set()
+    for p in data["parts"]:
+        slot = p["visible"]["ours_slot"]
+        if slot == "없음" or p["visible"].get("never_active"):
+            continue
+        h = heights.get(p["model"], 1.8)
+        out = {"kind": p["kind"], "name": p["name"], "slot": slot, "model": p["model"], "bodyHeightM": h}
+        if p["kind"] == "mesh":
+            layer = next((l for l in p["layers"] if not l.get("skip")), None)
+            if layer is None:
+                continue
+            tex = layer["texture"]["file"]
+            out.update(fbx=p["fbx"], fbxObject=layer["fbx_object"], texture=tex, additive=bool(layer["additive"]),
+                       cutout=layer["fbx_object"].endswith("_cut"))
+            files.update([p["fbx"], tex])
+            # 같은 FBX의 다른 오브젝트(g5·g6)는 부품마다 따로 — 슬롯이 다르므로
+        elif p["kind"] == "particle":
+            u = p["unity"]
+            rate = float(u["emission_rate_per_s"])
+            if rate <= 0 and slot != "항상":
+                keys = (p["raw"].get("tracks", {}).get("KP2E") or {}).get("keys", [])
+                rate = max([k[1][0] for k in keys] or [0.0])
+            if rate <= 0:
+                continue
+            fb = p.get("flipbook") or {}
+            tex = p["texture"]["file"]
+            files.add(tex)
+            rgb = [c for tri in u["color_rgb"] for c in tri]
+            out.update(pos=vec(p["attach"]["unity_pos_m"]), texture=tex, additive=bool(p.get("additive", True)),
+                       rate=rate, life=u["lifetime_s"], speed=u["start_speed_mps"], speedVar=u["speed_variation_fraction"],
+                       shape=u["shape"], cone=u.get("cone_angle_deg", 25.0), box=vec(u["box_size_m"]),
+                       gravity=u["gravity_modifier"], size=vec(u["size_m"]), mid=u["mid_time_fraction"],
+                       rgb=rgb, alpha=vec(u["alpha"]), rows=fb.get("rows", 1), cols=fb.get("cols", 1))
+        else:
+            continue   # 리본은 두 번째 묶음에서(TrailRenderer)
+        parts.append(out)
+
+    os.makedirs(OUT_DIR, exist_ok=True)
+    with open(os.path.join(OUT_DIR, roster + ".json"), "w", encoding="utf-8") as f:
+        json.dump({"roster": roster, "alias": alias, "parts": parts}, f, ensure_ascii=False, indent=1)
+    for rel in sorted(files):
+        src = os.path.join(folder, rel)
+        dst = os.path.join(SRC_DIR, roster, rel)
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        shutil.copyfile(src, dst)
+    print(f"{roster}: 부품 {len(parts)}개 · 재료 {len(files)}개 → {os.path.join(OUT_DIR, roster + '.json')}")
+
+
+if __name__ == "__main__":
+    main()
