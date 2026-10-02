@@ -154,12 +154,16 @@ public class StoryManager : MonoBehaviour
     void Finish(StoryData story)
     {
         Debug.Log($"스토리 클리어: {story.storyName}");
+        EnemyDummy deadStory = activeEnemy;   // 파괴된 컴포넌트라도 관리 필드(누적 피해)는 읽힌다
         running = null;
         activeEnemy = null;
         finished++;
 
         if (RewardDistributor.Instance != null)
+        {
             RewardDistributor.Instance.GrantStoryReward(story);
+            RewardDistributor.Instance.GrantStoryContribution(finished, deadStory);
+        }
         else
             Debug.LogWarning("StoryManager: RewardDistributor가 없어 스토리 보상을 지급하지 못했습니다.", this);
 
@@ -212,6 +216,7 @@ public class StoryManager : MonoBehaviour
         }
 
         dummy.Initialize(story.building);
+        dummy.EnableContributionTracking();   // 원작 스토리 딜 기여도 — 처치 때 RewardDistributor.GrantStoryContribution이 읽는다
         // MP: 원작 R01G(퇴장 시 Player(5) 계열 최대 체력 감소) 대상 + GAP 4 난이도·파티·솔로 가산(DifficultyManager.StoryHpBonus).
         dummy.MarkStoryHpTarget(DifficultyManager.StoryHpBonus(story.order));
         dummy.SetLane(-1);          // 레인 몹이 아니다. 패배 판정(가장 붐비는 레인)에 섞이면 안 된다.

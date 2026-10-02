@@ -330,6 +330,11 @@ public class EnemyDummy : MonoBehaviour
         LaneIndex = laneIndex;
     }
 
+    /// <summary>스토리 적 전용 — 켜면 플레이어별 누적 피해(ContributionDamage)와 마지막 타격자(LastHitPlayer)를 센다.</summary>
+    public float[] ContributionDamage { get; private set; }
+    public int LastHitPlayer { get; private set; } = -1;
+    public void EnableContributionTracking() { ContributionDamage = new float[8]; }
+
     // 크립 주인(원작 UnitUserData) — ≥0이면 처치 보상이 주인에게 가고, ownerOnly면 주인이 아닌 플레이어의 피해는 무시한다.
     int creepOwner = -1;
     bool creepOwnerOnly;
@@ -1031,7 +1036,15 @@ public class EnemyDummy : MonoBehaviour
         // invulnerable("1 밑으로 안 내려간다")과는 다른 축이라 여기서 먼저, 별도로 거른다.
         if (trueInvulnerable) return;
 
-        hp -= MitigatedDamage(amount, type, attackType, armorIgnoreRatio, isAbilityDamage);
+        float hpBefore = hp;
+        float mitigatedDamage = MitigatedDamage(amount, type, attackType, armorIgnoreRatio, isAbilityDamage);
+        hp -= mitigatedDamage;
+        // 스토리 기여도(원작 Trig_Story_damage): 플레이어별 누적 피해 — 체력을 넘긴 몫(오버킬)은 뺀다(PlayerDamageOver). 마지막으로 때린 플레이어 = 막타.
+        if (ContributionDamage != null && killerPlayerId >= 0 && killerPlayerId < ContributionDamage.Length)
+        {
+            ContributionDamage[killerPlayerId] += Mathf.Clamp(mitigatedDamage, 0f, Mathf.Max(0f, hpBefore));
+            LastHitPlayer = killerPlayerId;
+        }
 
         // 스킬 피해만(평타·치명은 isAbilityDamage=false). 같은 적에 몰려도 0.12초에 한 번.
         if (isAbilityDamage && amount > 0f && Time.time >= nextHitVfxTime)

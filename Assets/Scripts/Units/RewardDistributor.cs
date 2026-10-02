@@ -399,6 +399,75 @@ public class RewardDistributor : MonoBehaviour
 
     // 스토리 클리어 보상: 전체 플레이어에게 골드 + 자원 + 위습 지급.
     // 보스 최다 데미지·도전과제 보상은 기여도 추적 시스템이 없어 아직 만들지 않았다(별도 작업).
+    /// <summary>
+    /// 스토리 딜 기여도(원작 Trig_Story_damage + Trig_Story2_Actions, j:13492-13682). storyNumber = 이번 스토리를 깬 뒤 끝낸 스토리 수(원작 udg_Story_Count 증가 뒤 값).
+    /// ① 각자 「자신이 가한데미지는 (N)%입니다.」(5초) ② 10번째 이상: 기여도 ≥30%면 목재 +1 ③ 6번째 이상: 막타 친 사람 목재 +1
+    /// ④ 최다 딜러(동률이면 번호 큰 쪽) 보상 — 5번째까지 랜덤위습 1 · 6~9번째 흔함선택위습 1 + 세이브포인트 1 · 10번째 이상 세이브포인트 2 + (멀티) 흔함선택+랜덤위습 / (솔로) 흔함선택 1.
+    /// </summary>
+    public void GrantStoryContribution(int storyNumber, EnemyDummy dead)
+    {
+        if (!GameAuthority.IsServer || dead == null || dead.ContributionDamage == null) return;
+        float maxHp = Mathf.Max(1f, dead.MaxHp);
+        float[] damage = dead.ContributionDamage;
+
+        int top = -1;
+        float topDamage = -1f;
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            int p = context.PlayerId;
+            if (p < 0 || p >= damage.Length) continue;
+            PlayerNotification.Show(p, $"<color=#FFD700>자신이 가한데미지는 ({(int)(100f * damage[p] / maxHp)})%입니다.</color>", 5f);
+            if (damage[p] >= topDamage) { topDamage = damage[p]; top = p; }
+            if (storyNumber >= 10 && damage[p] >= maxHp * 0.30f && !context.IsDead)
+            {
+                context.ResourceWallet?.Add(ResourceType.Wood, 1);
+                PlayerNotification.Show(p, "기여도 30% 이상으로 추가획득!  <color=#20B2AA> + 목재 1개</color>", 5f);
+                Debug.Log($"[기여도보상] 스토리 {storyNumber} 플레이어 {p} 30% — 위습 0·목재 1·세이브포인트 0");
+            }
+        }
+
+        if (storyNumber >= 6 && dead.LastHitPlayer >= 0)
+        {
+            PlayerContext last = PlayerContext.GetOccupied(dead.LastHitPlayer);
+            if (last != null && !last.IsDead)
+            {
+                last.ResourceWallet?.Add(ResourceType.Wood, 1);   // 원작은 머리 위 청록 「+1」 글자도 띄운다(생략)
+                Debug.Log($"[기여도보상] 스토리 {storyNumber} 플레이어 {dead.LastHitPlayer} 막타 — 위습 0·목재 1·세이브포인트 0");
+            }
+        }
+
+        PlayerContext best = top >= 0 ? PlayerContext.GetOccupied(top) : null;
+        if (best == null || best.IsDead) return;
+        string name = PlayerDisplayName.Of(top);
+        bool multi = PlayerContext.OccupiedCount > 1;
+        var rewards = new List<WispReward>();
+        string line;
+        if (storyNumber < 6)
+        {
+            if (saveRewardRandomWisp != null) rewards.Add(new WispReward { wisp = saveRewardRandomWisp, count = 1 });
+            line = $"<color=#FF0000>{name}</color>이 가장 많은 데미지를 입혀 해당플레이어에게 <color=#FF8200>랜덤위습 1기를 지급합니다!</color>";
+        }
+        else if (storyNumber < 10)
+        {
+            if (saveRewardCommonChoiceWisp != null) rewards.Add(new WispReward { wisp = saveRewardCommonChoiceWisp, count = 1 });
+            best.PersistentSave?.AddSessionPoints(1);
+            line = $"<color=#FF0000>{name}</color>이 가장 많은 데미지를 입혀해당플레이어에게 <color=#FF8200>흔함선택위습 1기를 지급합니다!</color>";
+        }
+        else
+        {
+            best.PersistentSave?.AddSessionPoints(2);
+            if (saveRewardCommonChoiceWisp != null) rewards.Add(new WispReward { wisp = saveRewardCommonChoiceWisp, count = 1 });
+            if (multi && saveRewardRandomWisp != null) rewards.Add(new WispReward { wisp = saveRewardRandomWisp, count = 1 });
+            line = multi
+                ? $"<color=#FF0000>{name}</color>이 가장 많은 데미지를 입혀해당플레이어에게 <color=#FF8200>흔함선택위습+랜덤위습 1기를 지급합니다!</color>"
+                : "솔로플레이:10라운드이상 스토리 기여도 보상이 감소합니다.<color=#FF8200>흔함선택위습1기 지급.</color> ";
+        }
+        if (rewards.Count > 0) GrantWisps(best, rewards);
+        int wispTotal = 0; foreach (WispReward r in rewards) wispTotal += r.count;
+        Debug.Log($"[기여도보상] 스토리 {storyNumber} 플레이어 {top} 최다딜러 — 위습 {wispTotal}·목재 0·세이브포인트 {(storyNumber < 6 ? 0 : storyNumber < 10 ? 1 : 2)}");
+        foreach (PlayerContext context in PlayerContext.Occupied) PlayerNotification.Show(context.PlayerId, line, 5f);
+    }
+
     public void GrantStoryReward(StoryData storyReward)
     {
         if (!GameAuthority.IsServer) return;
