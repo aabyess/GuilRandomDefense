@@ -2049,9 +2049,138 @@ public static class MapGenerator
 
     enum CostIconShape { Coin, Log }
 
+    // 소품 모델(금화·목재). blender가 만든 fbx를 이 폴더에 넣으면 비용 아이콘·특수지급 전시가 자동으로 모델로 바뀐다 — 없으면 원판·원기둥 자리표시.
+    const string PropFolder = "Assets/Art/Props/";
+    const string PropGoldCoin = "금화";
+    const string PropWoodLog = "목재";
+
+    // 모델을 groundPos(바닥 가운데)에 세운다. 가로·세로·높이 중 가장 긴 변이 fitSize가 되게 맞춘다. 모델이 없으면 false.
+    static bool TryPlaceProp(Transform parent, string name, string model, Vector3 groundPos, float fitSize)
+    {
+        GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(PropFolder + model + ".fbx");
+        if (asset == null) return false;
+
+        GameObject prop = Object.Instantiate(asset, parent);
+        prop.name = name;
+        prop.transform.position = groundPos;
+        if (!TryMeasureFigure(prop, out Bounds b) || Mathf.Max(b.size.x, b.size.y, b.size.z) < 0.0001f)
+        {
+            Object.DestroyImmediate(prop);
+            return false;
+        }
+
+        prop.transform.localScale *= fitSize / Mathf.Max(b.size.x, b.size.y, b.size.z);
+        TryMeasureFigure(prop, out b);
+        // 가운데·바닥을 맞춘다 — 원점이 모델 한쪽에 있어도 같은 자리에 선다.
+        prop.transform.position += new Vector3(groundPos.x - b.center.x, groundPos.y - b.min.y, groundPos.z - b.center.z);
+        foreach (Collider c in prop.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(c);
+        return true;
+    }
+
+    // 특수지급 줄 세 자리 위에 「무엇을 주는지」를 세운다 — 마법진만 있으면 안 보인다(사장님 09-02 스크린샷).
+    // 돈+목재는 소품(금화·목재), 유닛 자리는 그 유닛 인형(조합표 인형과 같은 방식: 실행 때 세움).
+    // 포탈은 이미 씬에 있으니 이름으로 찾아 그 가운데에 놓는다 — 생성 때와 Repair가 같은 코드를 쓴다.
+    const string SpecialDisplayPrefix = "특수지급_";
+
+    static string BuildSpecialRewardDisplays(Transform parent)
+    {
+        int props = 0, dolls = 0;
+        List<string> missing = new List<string>();
+
+        foreach (GachaBand band in GachaBands)
+        {
+            if (band.specialSlots == null) continue;
+            foreach (SpecialSlot slot in band.specialSlots)
+            {
+                if (slot.givesResources)
+                {
+                    Transform portal = parent.Find($"Portal_{slot.label}_엔");
+                    if (portal == null) { missing.Add(slot.label); continue; }
+                    float off = ChoicePortalDiameter * 0.22f;   // 마법진 안에서 좌우로 나란히
+                    BuildCostIcon(parent, $"{SpecialDisplayPrefix}돈", portal.position.x - off, portal.position.z,
+                                  new Color(1.00f, 0.82f, 0.25f), CostIconShape.Coin, glow: false);
+                    BuildCostIcon(parent, $"{SpecialDisplayPrefix}목재", portal.position.x + off, portal.position.z,
+                                  new Color(0.45f, 0.30f, 0.16f), CostIconShape.Log, glow: false);
+                    props += 2;
+                    continue;
+                }
+
+                if (slot.unitAssets == null) continue;
+                foreach (string asset in slot.unitAssets)
+                {
+                    UnitData unit = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{asset}.asset");
+                    Transform portal = unit == null ? null : parent.Find($"Portal_{unit.unitName}");
+                    if (portal == null) { missing.Add(asset); continue; }
+                    if (TryPlaceUnitModel(parent, $"{SpecialDisplayPrefix}{unit.unitName}",
+                            new Vector3(portal.position.x, MapLayout.IslandTop, portal.position.z),
+                            unit, DisplayFigureHeight, out GameObject figure))
+                    {
+                        RecordRecipeDoll(parent, figure, unit);
+                        dolls++;
+                    }
+                    else missing.Add($"{asset}(모델 없음)");
+                }
+            }
+        }
+
+        return $"특수지급 전시: 소품 {props} · 인형 {dolls}" + (missing.Count > 0 ? $" · ⚠️ 못 세움 {string.Join(", ", missing)}" : "");
+    }
+
+    // 맵 전체 재생성(씬 diff 수십만 줄) 없이 두 가지만 고친다: ① 조합표 비용 아이콘(금화·목재)을 소품 모델로 ② 특수지급 전시물 세우기.
+    // 다시 불러도 안전하다 — 옛 전시물·옛 아이콘·인형 목록의 특수지급 줄을 먼저 지운다. NavMesh는 안 건드린다(콜라이더 없는 장식).
+    // 부르기: call MapGenerator.RepairGachaRewardDisplays
+    static string RepairGachaRewardDisplays()
+    {
+        Transform parent = null;
+        foreach (GameObject go in Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (go.name.StartsWith("Portal_") && go.transform.parent != null) { parent = go.transform.parent; break; }
+        if (parent == null) return "⚠️ 씬에서 포탈 부모를 못 찾았습니다.";
+
+        // 전시물·옛 인형 지우기(부모 직속만 훑는다 — 지우면서 도는 것이라 역순)
+        int removed = 0;
+        for (int i = parent.childCount - 1; i >= 0; i--)
+        {
+            Transform child = parent.GetChild(i);
+            if (child.name.StartsWith(SpecialDisplayPrefix)) { Object.DestroyImmediate(child.gameObject); removed++; }
+        }
+        RecipeDollSpawner spawner = parent.Find(RecipeDollHolderName)?.GetComponent<RecipeDollSpawner>();
+        int oldDolls = spawner != null ? spawner.RemoveDolls(SpecialDisplayPrefix) : 0;
+
+        // 비용 아이콘: 이름 「비용_<줄>_코인_N」·「비용_<줄>_Wood_N」(행운토큰은 그대로)을 같은 자리에서 다시 짓는다.
+        int icons = 0;
+        List<(string name, Vector3 pos, bool wood)> redo = new List<(string, Vector3, bool)>();
+        for (int i = parent.childCount - 1; i >= 0; i--)
+        {
+            Transform child = parent.GetChild(i);
+            if (!child.name.StartsWith("비용_")) continue;
+            bool coin = child.name.Contains("_코인_"), wood = child.name.Contains("_Wood_");
+            if (!coin && !wood) continue;
+            redo.Add((child.name, child.position, wood));
+            Object.DestroyImmediate(child.gameObject);
+        }
+        foreach (var r in redo)
+        {
+            BuildCostIcon(parent, r.name, r.pos.x, r.pos.z,
+                          r.wood ? new Color(0.45f, 0.30f, 0.16f) : new Color(1.00f, 0.82f, 0.25f),
+                          r.wood ? CostIconShape.Log : CostIconShape.Coin, glow: false);
+            icons++;
+        }
+
+        string report = BuildSpecialRewardDisplays(parent);
+        if (spawner != null) EditorUtility.SetDirty(spawner);
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(parent.gameObject.scene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(parent.gameObject.scene);
+        return $"옛 전시물 {removed}개·옛 인형 {oldDolls}기 지움 · 비용 아이콘 {icons}개 다시 지음 · {report} · 씬 저장";
+    }
+
     static void BuildCostIcon(Transform parent, string name, float x, float z, Color color,
                               CostIconShape shape, bool glow)
     {
+        // 행운토큰(glow)만 예전 원판을 그대로 쓴다. 금화·목재는 소품 모델이 있으면 그것으로 — 없으면 아래 자리표시.
+        if (!glow && TryPlaceProp(parent, name, shape == CostIconShape.Coin ? PropGoldCoin : PropWoodLog,
+                                  new Vector3(x, MapLayout.IslandTop, z), CostSlot))
+            return;
+
         GameObject icon = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         icon.name = name;
         icon.transform.SetParent(parent, false);
@@ -2984,6 +3113,8 @@ public static class MapGenerator
                 }
             }
         }
+
+        BuildSpecialRewardDisplays(parent);   // 특수지급 세 자리의 지급물(소품·인형)
 
         // --- 오른쪽 세로줄: 조합식 없이 캐릭터만 전시하는 등급 ---
         // 이 등급들은 조합식 표에 올리지 않기로 확정돼 있어서, 여기가 유일하게 눈으로 보는 곳이다.

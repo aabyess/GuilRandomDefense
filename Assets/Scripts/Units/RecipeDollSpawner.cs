@@ -34,6 +34,8 @@ public class RecipeDollSpawner : MonoBehaviour
 
     public IReadOnlyList<Doll> Dolls => dolls;
     public void AddDoll(Doll doll) => dolls.Add(doll);
+    /// <summary>이름이 prefix로 시작하는 인형을 목록에서 뺀다(맵 일부만 다시 짓는 Repair용). 뺀 수를 돌려준다.</summary>
+    public int RemoveDolls(string prefix) => dolls.RemoveAll(d => d != null && d.name != null && d.name.StartsWith(prefix));
 
     /// <summary>마지막으로 세운 인형 수와 걸린 시간(ms) — 시작 시간 증가분을 재는 데 쓴다.</summary>
     public static int LastSpawnCount { get; private set; }
