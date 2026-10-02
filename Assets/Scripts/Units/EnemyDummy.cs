@@ -330,6 +330,12 @@ public class EnemyDummy : MonoBehaviour
         LaneIndex = laneIndex;
     }
 
+    // 크립 주인(원작 UnitUserData) — ≥0이면 처치 보상이 주인에게 가고, ownerOnly면 주인이 아닌 플레이어의 피해는 무시한다.
+    int creepOwner = -1;
+    bool creepOwnerOnly;
+    static readonly float[] creepWarnAt = new float[8];
+    public void SetCreepOwner(int owner, bool ownerOnly) { creepOwner = owner; creepOwnerOnly = ownerOnly && owner >= 0; }
+
     public static int CountInLane(int laneIndex)
     {
         int count = 0;
@@ -1010,6 +1016,17 @@ public class EnemyDummy : MonoBehaviour
     {
         if (isDead) return;
 
+        // 원작 Trig_Creep_Damage: 주인이 아닌 플레이어가 크립 2·3단계를 때리면 피해를 되돌리고 「다른 플레이어의 크립에게는 피해를 줄 수 없습니다!」(1초).
+        if (creepOwnerOnly && killerPlayerId >= 0 && killerPlayerId != creepOwner)
+        {
+            if (killerPlayerId < creepWarnAt.Length && Time.time >= creepWarnAt[killerPlayerId])
+            {
+                creepWarnAt[killerPlayerId] = Time.time + 1f;
+                PlayerNotification.Show(killerPlayerId, "다른 플레이어의 크립에게는 피해를 줄 수 없습니다!", 1f);
+            }
+            return;
+        }
+
         // §⑤ 완전 무적 — 피해 계산 자체를 안 한다(hp가 조금도 안 움직인다). 아래
         // invulnerable("1 밑으로 안 내려간다")과는 다른 축이라 여기서 먼저, 별도로 거른다.
         if (trueInvulnerable) return;
@@ -1048,7 +1065,9 @@ public class EnemyDummy : MonoBehaviour
             // (EnemyData.rewardsKillerOnly) — 그래서 killerPlayerId를 여기서 넘겨준다.
             if (data != null && RewardDistributor.Instance != null)
             {
-                RewardDistributor.Instance.GrantKillReward(data, LaneIndex, SpawnRound, killerPlayerId, transform.position);
+                // 크립 2·3단계(처치자 지급형)는 처치자가 아니라 섬 주인에게(원작 GetUnitUserData). 1단계(전원 지급)는 알림의 처치자 이름 때문에 그대로.
+                int rewardPlayer = creepOwner >= 0 && data.rewardsKillerOnly && !data.rewardsAllPlayers ? creepOwner : killerPlayerId;
+                RewardDistributor.Instance.GrantKillReward(data, LaneIndex, SpawnRound, rewardPlayer, transform.position);
             }
             else if (data != null && !loggedNoRewardDistributor)
             {

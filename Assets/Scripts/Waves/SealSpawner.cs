@@ -28,6 +28,9 @@ public class SealSpawner : MonoBehaviour
     [Header("1단계 → 2단계 → 3단계 순서대로")]
     [SerializeField] EnemyData sealData;                       // 1단계 물범
     [SerializeField] List<EnemyData> laterStages = new List<EnemyData>();   // 2·3단계
+    // 크립섬 주인(= 플레이어 번호, 섬 i = 플레이어 i). 원작은 크립마다 UnitUserData=섬 번호를 달아 2·3단계 보상을 **처치자가 아니라 주인에게만** 주고(Trig_creep_reward j:13941-13969),
+    // 주인이 아닌 플레이어의 피해는 되돌린다(Trig_Creep_Damage). MapGenerator가 채운다 — −1이면 예전처럼 처치자 지급·제한 없음.
+    [SerializeField] int ownerIndex = -1;
 
     GameObject current;
     Coroutine chain;
@@ -51,17 +54,18 @@ public class SealSpawner : MonoBehaviour
     // **리스폰하지 않는다.** 원작에서 크립은 판당 한 번 도는 콘텐츠다.
     IEnumerator ChainRoutine()
     {
-        if (!Spawn(sealData)) yield break;
+        if (!Spawn(sealData, false)) yield break;
         yield return new WaitUntil(() => current == null);
 
         foreach (EnemyData stage in laterStages)
         {
-            if (!Spawn(stage)) yield break;
+            if (!Spawn(stage, true)) yield break;
             yield return new WaitUntil(() => current == null);
         }
     }
 
-    bool Spawn(EnemyData data)
+    // restrictToOwner: 2·3단계만 주인 외 피해 금지(원작은 2·3단계 유닛에만 피해 이벤트를 건다 — 1단계 물범 제한은 j에서 미확정이라 걸지 않음).
+    bool Spawn(EnemyData data, bool restrictToOwner)
     {
         if (!GameAuthority.IsServer) return false;
 
@@ -77,6 +81,7 @@ public class SealSpawner : MonoBehaviour
         {
             dummy.Initialize(data);
             dummy.MarkStoryHpTarget(); // MP: 원작 R01G 대상(크립 = Player(5))
+            dummy.SetCreepOwner(ownerIndex, restrictToOwner);
             // 크립은 레인 몹이 아니다 — 레인 번호가 붙으면 패배 판정(가장 붐비는 레인 기준)에
             // 섞여 들어간다. 그래서 보상도 레인 주인이 아니라 처치자에게 간다
             // (EnemyData.rewardsKillerOnly).

@@ -283,6 +283,7 @@ public class RewardDistributor : MonoBehaviour
         }
         if (data.savePointReward > 0) killer.PersistentSave?.AddSessionPoints(data.savePointReward);
         if (data.isBoss) GrantBossReward(killer, round, data);
+        Debug.Log($"[크립보상] {data.enemyName} 플레이어 {killerPlayerId} — 골드 {data.goldReward} · 세이브포인트 {data.savePointReward} · 해적선 분기 {(data.bonusRewardUnit != null ? "있음" : "없음")}");
     }
 
     // rewardsAllPlayers 전용(물범류) — 확정 지급, 원작 별개 축이라 그대로 둔다.

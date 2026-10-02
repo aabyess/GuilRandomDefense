@@ -3420,6 +3420,7 @@ public static class MapGenerator
 
         // 물범바위(Assets/Art/Creatures/물범바위.fbx)는 섬에 두지 않는다 — 사장님 09-13 「물범 섬에는 돌맹이 치워줘」.
         // 단계 적(물범→노루→양)은 섬 한가운데에 선다.
+        int sealOwner = 0;
         foreach (MapLayout.Island island in MapLayout.SealIslands)
         {
             GameObject spawner = new GameObject($"{island.name}_물범");
@@ -3429,6 +3430,7 @@ public static class MapGenerator
             SealSpawner component = spawner.AddComponent<SealSpawner>();
             SerializedObject so = new SerializedObject(component);
             so.FindProperty("sealData").objectReferenceValue = seal;
+            so.FindProperty("ownerIndex").intValue = sealOwner++;   // 섬 i = 플레이어 i(원작 크립 UserData 1~4)
 
             SerializedProperty stages = so.FindProperty("laterStages");
             stages.arraySize = later.Length;
@@ -5099,6 +5101,7 @@ public static class MapGenerator
         int repaired = RepairPlayerParts();
         bool unionWispFixed = RepairRewardDistributorUnionWisp();
         RepairSaveRewardWisps();
+        RepairSealOwners();
         int rerollFixed = RepairUniqueReroll();
 
         return "\n플레이어 2~4번 자리는 비워뒀습니다 — 그 레인엔 적이 안 나옵니다."
@@ -5137,6 +5140,19 @@ public static class MapGenerator
             return true;
         }
         return EnsureAssetRef(distributor, "unionWisp", unionWisp);
+    }
+
+    // 크립섬 주인 번호(원작 UserData) — 이미 씬에 있는 SealSpawner에 섬 순서대로 채운다.
+    static void RepairSealOwners()
+    {
+        for (int i = 0; i < MapLayout.SealIslands.Length; i++)
+        {
+            GameObject go = GameObject.Find($"{MapLayout.SealIslands[i].name}_물범");
+            if (go == null || !go.TryGetComponent(out SealSpawner spawner)) continue;
+            SerializedObject so = new SerializedObject(spawner);
+            so.FindProperty("ownerIndex").intValue = i;
+            so.ApplyModifiedProperties();
+        }
     }
 
     // 41R 2차 세이브 보상(GAP 09-27 4번) — 흔함선택(원작 e018)·랜덤위습(e0IX) 참조를 RewardDistributor에 채운다.
