@@ -225,6 +225,21 @@ public static class NetCommands
         if (commandsLogged++ < 30) Debug.Log($"[MP] 상점 요청 수행: 슬롯 {sender.Slot} {((Component)shop).name} 칸 {slot} → {(used ? "성공" : "실패: " + reason)}");
     }
 
+    /// <summary>클라 → 호스트: 아이템 칸의 사용형 아이템을 쓴다(ItemUseKind 바이트 — 카탈로그 인덱스를 안 쓴다).</summary>
+    public static void RequestUseItem(ItemUseKind kind)
+    {
+        if (NetPlayer.Local == null) return;
+        NetPlayer.Local.RPC_UseItem((byte)kind);
+    }
+
+    public static void ExecuteUseItem(NetPlayer sender, byte useKind)
+    {
+        PlayerContext context = PlayerContext.Get(sender.Slot);
+        if (context == null || RewardDistributor.Instance == null) return;
+        bool used = RewardDistributor.Instance.UseItem(context, (ItemUseKind)useKind);
+        if (commandsLogged++ < 30) Debug.Log($"[MP] 아이템 사용 요청: 슬롯 {sender.Slot} {(ItemUseKind)useKind} → {(used ? "수행" : "보유 없음/불가")}");
+    }
+
     public static void RequestHudUnitAction(NetHudAction action, Selectable unit, int argument)
     {
         NetEntity entity = unit != null ? unit.GetComponentInParent<NetEntity>() : null;

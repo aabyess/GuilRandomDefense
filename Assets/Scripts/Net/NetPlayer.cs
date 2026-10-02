@@ -41,6 +41,8 @@ public class NetPlayer : NetworkBehaviour
     [Networked] public byte TransformUsesLeft { get; set; } = PlayerContext.TransformUsesPerGame;
     [Networked] public int GambleUnlockedMask { get; set; }
     [Networked, Capacity(16)] public NetworkArray<short> GambleUses => default;
+    /// <summary>보유 아이템(카탈로그 인덱스+1, 0=빈 칸, 소유 순서) — 친구 화면 아이템 칸용. 호스트가 쓰고 클라가 PlayerContext.ItemInventory에 옮겨 적는다.</summary>
+    [Networked, Capacity(16)] public NetworkArray<short> HeldItems => default;
     // 돈 도박 충전식 재고·누적 지급·졸업(구현담당1 a9b6a7c3). 재고 -1 = 재고 없는 옵션, 충전은 「다음까지 남은 초」.
     [Networked, Capacity(16)] public NetworkArray<short> GambleStock => default;
     [Networked, Capacity(16)] public NetworkArray<float> GambleNextSeconds => default;
@@ -142,6 +144,15 @@ public class NetPlayer : NetworkBehaviour
             if (OneDealLocked != context.NavigationState.OneDealLocked) OneDealLocked = context.NavigationState.OneDealLocked;
         }
         if (TransformUsesLeft != context.TransformUsesLeft) TransformUsesLeft = (byte)context.TransformUsesLeft;   // 변화 남은 회수(클라 HUD용)
+        if (context.ItemInventory != null && NetLauncher.Catalog != null)
+        {
+            var heldNow = context.ItemInventory.Items;
+            for (int i = 0; i < 16; i++)
+            {
+                short code = i < heldNow.Count && heldNow[i] != null ? (short)(NetLauncher.Catalog.IndexOf(heldNow[i]) + 1) : (short)0;
+                if (HeldItems[i] != code) HeldItems.Set(i, code);
+            }
+        }
 
         NetCatalog catalog = NetLauncher.Catalog;
         if (catalog != null && context.GamblingProgress != null)
@@ -209,6 +220,17 @@ public class NetPlayer : NetworkBehaviour
         // 졸업은 한 번 — Graduate()를 불러야 도박소가 돈 칸 캐시를 바꾼다(구현담당1 안내).
         if (GambleGraduated && context.GamblingProgress != null && !context.GamblingProgress.Graduated)
             context.GamblingProgress.Graduate();
+        // 클라: 호스트가 복제한 보유 아이템을 내 아이템 칸에 옮겨 적는다(예전엔 친구 화면 아이템 칸이 항상 비어 있었다).
+        if (!HasStateAuthority && catalog != null && context.ItemInventory != null)
+        {
+            var held = new List<ItemData>(16);
+            for (int i = 0; i < 16; i++)
+            {
+                int idx = HeldItems[i] - 1;
+                if (idx >= 0 && idx < catalog.items.Count && catalog.items[idx] != null) held.Add(catalog.items[idx]);
+            }
+            context.ItemInventory.ApplyReplicated(held);
+        }
 
         UnitUpgrades upgrades = context.UnitUpgrades;
         if (catalog != null && upgrades != null)
@@ -310,6 +332,12 @@ public class NetPlayer : NetworkBehaviour
     public void RPC_ShopUse(short shop, byte slot, byte targetKind, Vector3 point, NetworkId target)
     {
         NetCommands.ExecuteShopUse(this, shop, slot, targetKind, point, target);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_UseItem(byte useKind)
+    {
+        NetCommands.ExecuteUseItem(this, useKind);
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]

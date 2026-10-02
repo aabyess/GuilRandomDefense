@@ -94,4 +94,28 @@ public class ItemData : ScriptableObject
     // 이번 범위 밖이다(PM 지시) — 인벤토리가 플레이어별 구조로 바뀐 뒤에 적용 지점을
     // 정한다. 지금은 스키마와 검증된 값까지만이다.
     public List<ItemEffect> effects = new List<ItemEffect>();
+
+    // ⚠️ 맨 뒤에 추가(2026-09-27, 아이템 사용 경로) — 원작 Trig_item_up2(EVENT_UNIT_USE_ITEM)가 쓰는 사용형 아이템 셋(I011·I00S·I003).
+    //    사용하면 아이템이 사라지고 효과가 난다. None이면 보유형(사용 버튼 없음).
+    public ItemUseKind useKind;
+    // I011 위습꾸러미: 독립 굴림 목록 — chance(0~1)로 wisp, 아니면 elseWisp. 원작 1/2 안흔함|랜덤 · 1/3 특별함|랜덤 · 1/6 희귀함|흔함선택.
+    public List<ItemUseWispRoll> useWispRolls = new List<ItemUseWispRoll>();
+}
+
+public enum ItemUseKind
+{
+    None,
+    WispBundle,       // I011 위습꾸러미
+    AncientShip,      // I00S 고대의배
+    HeroTransform,    // I003 명검 — 영웅 변신(캐릭터 연동, 아직 사용 불가)
+}
+
+[System.Serializable]
+public class ItemUseWispRoll
+{
+    public WispData wisp;
+    [Range(0f, 1f)] public float chance = 1f;
+    public WispData elseWisp;
+    [Tooltip("지급 문구 색(원작 |cff…) — 예 4B0082")]
+    public string colorHex = "FFFFFF";
 }

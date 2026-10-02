@@ -1305,9 +1305,25 @@ public class GameHud : MonoBehaviour
             EventTrigger trigger = row.gameObject.AddComponent<EventTrigger>();
             AddTriggerEntry(trigger, EventTriggerType.PointerEnter, _ => OnItemInventoryRowHoverEnter(capturedIndex));
             AddTriggerEntry(trigger, EventTriggerType.PointerExit, _ => HideCombineTooltip());
+            AddTriggerEntry(trigger, EventTriggerType.PointerClick, _ => OnItemInventoryRowClicked(capturedIndex));   // 좌클릭 = 사용(사용형 아이템만)
 
             row.gameObject.SetActive(false);
         }
+    }
+
+    // 사용형 아이템(ItemData.useKind) 칸 클릭 — 원작 Trig_item_up2(사용 이벤트). 서버/싱글은 바로, 클라는 RPC로 요청한다.
+    void OnItemInventoryRowClicked(int index)
+    {
+        if (index < 0 || index >= MaxItemInventorySlots) return;
+        ItemData item = itemInventoryRowItems[index];
+        if (item == null || item.useKind == ItemUseKind.None) return;
+        if (item.useKind == ItemUseKind.HeroTransform)
+        {
+            PlayerNotification.Show(LocalPlayer.LocalPlayerId, "영웅 변신 — 아직 사용할 수 없습니다.", 3f);
+            return;
+        }
+        if (GameAuthority.IsServer) RewardDistributor.Instance?.UseItem(PlayerContext.Local, item.useKind);
+        else NetCommands.RequestUseItem(item.useKind);
     }
 
     void OnItemInventoryRowHoverEnter(int index)
@@ -1318,6 +1334,8 @@ public class GameHud : MonoBehaviour
         if (item == null) return;
 
         string text = !string.IsNullOrEmpty(item.tooltipText) ? item.tooltipText : item.itemName;
+        if (item.useKind == ItemUseKind.WispBundle || item.useKind == ItemUseKind.AncientShip) text += "\n(클릭하면 사용)";
+        else if (item.useKind == ItemUseKind.HeroTransform) text += "\n(영웅 변신 — 아직 사용할 수 없음)";
         ShowTooltip(text, (RectTransform)itemInventoryRowRoots[index].transform);
     }
 
@@ -1412,7 +1430,9 @@ public class GameHud : MonoBehaviour
 
             ItemData item = itemInventoryKeys[i];
             itemInventoryRowItems[i] = item;
-            itemInventoryRowTexts[i].text = $"{item.itemName} x{itemInventoryCounts[item]}";
+            bool usable = item.useKind == ItemUseKind.WispBundle || item.useKind == ItemUseKind.AncientShip;
+            itemInventoryRowTexts[i].text = $"{item.itemName} x{itemInventoryCounts[item]}" + (usable ? " [사용]" : "");
+            if (usable) itemInventoryRowRoots[i].GetComponent<Image>().color = Color.Lerp(ButtonColor, new Color(0.9f, 0.75f, 0.3f, ButtonColor.a), 0.35f);
         }
 
         int remaining = itemInventoryKeys.Count - shown;

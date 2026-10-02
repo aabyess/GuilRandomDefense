@@ -17,6 +17,7 @@ public class NetCatalog : ScriptableObject
     public List<UnitUpgradeTrackData> gradeTracks = new List<UnitUpgradeTrackData>();
     public List<AttackTypeUpgradeTrackData> attackTypeTracks = new List<AttackTypeUpgradeTrackData>();
     public List<UniqueRerollAbilityData> rerollAbilities = new List<UniqueRerollAbilityData>();
+    public List<ItemData> items = new List<ItemData>();   // 친구 화면 아이템 칸 복제(HeldItems)용 — 호스트·클라 빌드가 같아야 한다
 
     Dictionary<Object, int> index;
 
@@ -42,6 +43,7 @@ public class NetCatalog : ScriptableObject
                 foreach (UnitUpgradeTrackData t in gradeTracks) Add(t != null ? t.name : "-");
                 foreach (AttackTypeUpgradeTrackData t in attackTypeTracks) Add(t != null ? t.name : "-");
                 foreach (UniqueRerollAbilityData r in rerollAbilities) Add(r != null ? r.name : "-");
+                foreach (ItemData it in items) Add(it != null ? it.name : "-");
                 return (int)hash;
             }
         }
@@ -57,6 +59,7 @@ public class NetCatalog : ScriptableObject
             for (int i = 0; i < enemies.Count; i++) if (enemies[i] != null) index[enemies[i]] = i;
             for (int i = 0; i < wisps.Count; i++) if (wisps[i] != null) index[wisps[i]] = i;
             for (int i = 0; i < traits.Count; i++) if (traits[i] != null) index[traits[i]] = i;
+            for (int i = 0; i < items.Count; i++) if (items[i] != null) index[items[i]] = i;
         }
         return index.TryGetValue(data, out int i2) ? i2 : -1;
     }

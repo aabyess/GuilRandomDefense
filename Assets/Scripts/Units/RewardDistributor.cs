@@ -470,6 +470,37 @@ public class RewardDistributor : MonoBehaviour
         foreach (PlayerContext context in PlayerContext.Occupied) PlayerNotification.Show(context.PlayerId, line, 5f);
     }
 
+    /// <summary>
+    /// 사용형 아이템을 쓴다(원작 Trig_item_up2, j) — 그 플레이어가 kind에 맞는 아이템을 들고 있으면 하나 소모하고 효과를 낸다. 서버만.
+    /// WispBundle(I011): 아이템의 useWispRolls를 독립으로 굴려 위습 지급(각 「{위습 이름} 획득 !」 10초, 원작 색). AncientShip(I00S): 고대의 배 1기 + 「{이름} 획득 !」.
+    /// </summary>
+    public bool UseItem(PlayerContext context, ItemUseKind kind)
+    {
+        if (!GameAuthority.IsServer || context == null || context.ItemInventory == null || kind == ItemUseKind.None || kind == ItemUseKind.HeroTransform) return false;
+        ItemData held = null;
+        foreach (ItemData item in context.ItemInventory.Items) if (item != null && item.useKind == kind) { held = item; break; }
+        if (held == null) return false;
+        context.ItemInventory.Remove(held);
+
+        if (kind == ItemUseKind.WispBundle)
+        {
+            foreach (ItemUseWispRoll roll in held.useWispRolls)
+            {
+                if (roll == null) continue;
+                WispData got = Random.value < roll.chance ? roll.wisp : roll.elseWisp;
+                if (got == null) continue;
+                GrantWisps(context, new List<WispReward> { new WispReward { wisp = got, count = 1 } });
+                PlayerNotification.Show(context.PlayerId, $"<color=#{roll.colorHex}>{got.wispName} 획득 ! </color>", 10f);
+            }
+        }
+        else if (kind == ItemUseKind.AncientShip)
+        {
+            GrantAncientShip(context);
+            PlayerNotification.Show(context.PlayerId, "<color=#FF0000>고대의 배 획득 ! </color>", 10f);
+        }
+        return true;
+    }
+
     public void GrantStoryReward(StoryData storyReward)
     {
         if (!GameAuthority.IsServer) return;
