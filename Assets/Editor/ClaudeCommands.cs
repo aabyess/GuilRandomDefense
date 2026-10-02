@@ -1320,6 +1320,7 @@ public static class ClaudeCommands
     static string StartGameShot(string[] parts)
     {
         if (parts.Length == 0) return "❌ 사용법: gameshot <파일> [초] [가로x세로] [super:N] [click:<버튼>]...";
+        try { File.Delete(Path.Combine(Folder, "STOP")); } catch { }   // 지난 판에 남은 정지 신호가 새 판을 죽이지 않게
         if (Application.isBatchMode) return "❌ gameshot은 켜진 에디터에서만 된다(배치모드엔 Game 뷰가 없다)";
         if (currentId == null) return "❌ gameshot은 inbox로만 받는다(결과를 플레이 모드 뒤에 그 번호로 쓴다)";
         if (EditorApplication.isPlayingOrWillChangePlaymode) return "❌ 이미 플레이 모드다 — 멈춘 뒤 다시 보내세요";
@@ -1496,6 +1497,15 @@ public static class ClaudeCommands
 
         GameShotJob job = LoadGameShot();
         if (job == null || !job.prefixReady) return;   // 아직 Poll이 명령 파일을 다 안 돌렸다
+
+        // 정지 신호(10-02): ClaudeBridge/STOP 파일이 있으면 이 판을 버리고 플레이를 끝낸다. Poll은 플레이 중 inbox를 안 집으므로 여기서 직접 본다.
+        //    파일은 읽고 곧 지운다 — 다음 판이 남은 신호에 죽지 않게.
+        string stopPath = Path.Combine(Folder, "STOP");
+        if (File.Exists(stopPath))
+        {
+            try { File.Delete(stopPath); } catch { }
+            if (job.stage != "exiting") { FailGameShot(job, "ClaudeBridge/STOP 신호로 중단 — 이 판은 버린다"); return; }
+        }
 
         double inStage = EditorApplication.timeSinceStartup - job.stageSince;
         // 플레이 도중 리로드가 났으면 그 판은 더 돌려도 믿을 수 없다(가상 마우스·정적 기록도 날아간다) — 바로 끝낸다(09-24 loop6).
