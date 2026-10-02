@@ -3636,7 +3636,7 @@ public static class MapGenerator
     // 안에 다른 장식물은 하나도 없다. 예전 판(섬을 동서로 가르는 담 + 문기둥)은 우리 창작이었다.
     // 원작 위치는 공터 가운데에서 x −1%·y +6%(북쪽) — 섬 크기에 같은 비율로 옮긴다.
     // 방향: 워크3 문은 기본 방향(270°)에서 동서로 놓이니 180°는 남북으로 선다 → y축 90°.
-    // 크기: ZTsg 모델 치수는 워크3 데이터가 없어 못 구했다 — 문 상자는 예전 규격 그대로.
+    // 크기: ZTsg 모델 치수는 워크3 데이터가 없어 못 구했다. 사장님 「정의문 크기 많이 키워」(10-02) → 예전 규격의 3배.
     const float GateWidth = 22f;
     const float GateHeight = 7f;
     const float WallHeight = 5.5f;
@@ -3644,6 +3644,7 @@ public static class MapGenerator
     const float GateOffsetX = (3904f - (3136f + 4704f) * 0.5f) / (4704f - 3136f);   // −0.010
     const float GateOffsetZ = (384f - (-352f + 960f) * 0.5f) / (960f + 352f);       // +0.061
     const float GateYaw = 90f;
+    const float JusticeGateScale = 3f;   // 문 상자만 — GateWidth·GateThickness는 소품 비켜 두기 간격에도 쓰여 그대로 둔다
 
     static string BuildPunkHazardGate(Transform parent)
     {
@@ -3660,10 +3661,10 @@ public static class MapGenerator
         gate.transform.SetParent(parent, false);
         gate.transform.position = new Vector3(
             island.center.x + island.size.x * GateOffsetX,
-            MapLayout.IslandTop + GateHeight * 0.5f,
+            MapLayout.IslandTop + GateHeight * JusticeGateScale * 0.5f,
             island.center.y + island.size.y * GateOffsetZ);
         gate.transform.rotation = Quaternion.Euler(0f, GateYaw, 0f);
-        gate.transform.localScale = new Vector3(GateWidth - GateThickness, GateHeight, GateThickness);
+        gate.transform.localScale = new Vector3(GateWidth - GateThickness, GateHeight, GateThickness) * JusticeGateScale;
         PaintGlow(gate, new Color(0.85f, 0.72f, 0.30f));   // 부술 대상이라 눈에 띄어야 한다
         gate.AddComponent<DestructibleGate>();
         DressGate(gate);
