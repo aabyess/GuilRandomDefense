@@ -20,6 +20,7 @@ from mathutils import Matrix
 SRC_ZIP = os.path.expanduser("~/Desktop/구랜디스킨모음/92_스토리스킨/Story10_동양미래대학교_디오머리.zip")
 NAME = "Story10_동양미래대학교"
 FOOT = 44.0
+KEEP_ALL = "--head-only" not in sys.argv     # 사장님 10-02: 「병 안에 넣은 상태로」 — 받침 틀·돔 뚜껑·꼭지 전부 살린 원본 전시 장면이 기본. --head-only면 머리만(이전 판)
 
 
 def main():
@@ -69,7 +70,7 @@ def main():
     for fs, lo, hi in comps:
         inside = all(lo[i] >= big[1][i] - m and hi[i] <= big[2][i] + m for i in range(3))
         wide = (hi[0] - lo[0]) > 0.28 or (hi[1] - lo[1]) > 0.28
-        ok = fs is big[0] or (inside and not wide)
+        ok = KEEP_ALL or fs is big[0] or (inside and not wide)
         (keep if ok else drop).extend(fs)
         print("덩어리", len(fs), "면", [round(x, 3) for x in lo], [round(x, 3) for x in hi], "남김" if ok else "뺌")
     print("남김 면", len(keep), "뺌 면", len(drop))
@@ -77,8 +78,9 @@ def main():
     bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
     # 목 바닥을 평평하게: 원본 목 단면은 V자(z 0.0393~0.0485) → 0.050 평면으로 잘라 아래를 버리고(clear_inner) 그 단면을 막는다
     CUT = 0.050
-    geom = list(bm.verts) + list(bm.edges) + list(bm.faces)
-    bmesh.ops.bisect_plane(bm, geom=geom, dist=1e-6, plane_co=(0, 0, CUT), plane_no=(0, 0, 1), clear_inner=True)
+    geom = [] if KEEP_ALL else list(bm.verts) + list(bm.edges) + list(bm.faces)
+    if geom != []:
+      bmesh.ops.bisect_plane(bm, geom=geom, dist=1e-6, plane_co=(0, 0, CUT), plane_no=(0, 0, 1), clear_inner=True)
     bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
     # 열린 고리 찾기 → 가장 낮은 것(목)을 막는다
     bnd = [e for e in bm.edges if e.is_boundary]
@@ -163,6 +165,7 @@ def main():
     dims = V.max(0) - V.min(0)
     tris = sum(len(p.vertices) - 2 for p in me.polygons)
     print("최종 크기(게임 단위)", dims.round(2).tolist(), "삼각형", tris, "최저 z", round(float(V[:, 2].min()), 3), "배율", round(s, 2))
+    print("원본 장면 전체" if KEEP_ALL else "머리만")
     assert 40 <= dims[2] <= 90, f"높이 {dims[2]:.1f} 규격 밖"
     me.transform(Matrix.Scale(1 / 11.4, 4))
     bpy.ops.object.select_all(action="DESELECT")
@@ -188,8 +191,8 @@ def render(odir):
     sc.camera = cam
     cam.data.type = "ORTHO"
     cam.data.ortho_scale = 80
-    for name, loc, rot in (("앞", (0, -150, 25), (90, 0, 0)), ("옆", (150, 0, 25), (90, 0, 90)), ("위", (0, 0, 150), (0, 0, 0)),
-                           ("아래", (0, 0, -150), (180, 0, 0)), ("비스듬", (100, -100, 70), (60, 0, 45))):
+    for name, loc, rot in (("앞", (0, -150, 36), (90, 0, 0)), ("옆", (150, 0, 36), (90, 0, 90)), ("위", (0, 0, 150), (0, 0, 0)),
+                           ("아래", (0, 0, -150), (180, 0, 0)), ("비스듬", (100, -100, 80), (60, 0, 45))):
         cam.location = loc
         cam.rotation_euler = [math.radians(x) for x in rot]
         sc.render.filepath = os.path.join(odir, name + ".png")

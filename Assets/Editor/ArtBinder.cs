@@ -865,7 +865,7 @@ public static class ArtBinder
         ("Story07_메가스터디", "Enemy_Story07_메가스터디", 4.2982f, false),   // 10-02 도로헤도로 En 피규어(49.0 단위 ÷ 11.4)
         ("Story08_사이버넷", "Enemy_Story08_사이버넷", 4.0351f, false),   // 10-02 다크 영 오버로드(46.0 단위 ÷ 11.4, 대기 1프레임으로 굳힘)
         ("Story09_7탄약창", "Enemy_Story09_7탄약창", 6.6754f, false),   // 10-02 뚱뚱한 거인(76.1 단위 ÷ 11.4, 팔 70° 내림)
-        ("Story10_동양미래대학교", "Enemy_Story10_동양미래대학교", 4.5439f, false),   // 10-02 DIO 머리(51.8 단위 ÷ 11.4)
+        ("Story10_동양미래대학교", "Enemy_Story10_동양미래대학교", 6.2632f, false),   // 10-02 DIO 머리 전시(받침+돔, 71.4 단위 ÷ 11.4)
         ("Story11_日本", "Enemy_Story11_日本", 3.6137f, false),
         ("Story12_코드잇", "Enemy_Story12_코드잇", 7.7700f, false),
         ("Story13_쉬었음", "Enemy_Story13_쉬었음", 3.9561f, false),   // 10-02 나뭇잎 마을 호카게 광장 구역(45.1 단위 ÷ 11.4)
