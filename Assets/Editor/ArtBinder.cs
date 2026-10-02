@@ -590,7 +590,7 @@ public static class ArtBinder
     }
 
     // 이번에 새로 넣은 스킨 — LinkTexturesUnits가 도는 목록. 새 스킨을 넣을 때 여기에 이름을 더한다.
-    static readonly string[] PendingLinkUnits = { "특별함_압살롬" };
+    static readonly string[] PendingLinkUnits = { "안흔함_좀비" };
 
     static void LinkTexturesWhere(System.Func<string, bool> modelFilter)
     {
@@ -857,7 +857,7 @@ public static class ArtBinder
 
         // 스토리 적 = 건물 13채. 바닥은 전부 45×45 안이고 원점은 바닥 가운데다.
         ("Story01_하이츠", "Enemy_Story01_하이츠", 7.1575f, false),
-        ("Story02_큰소망유치원", "Enemy_Story02_큰소망유치원", 4.5500f, false),
+        ("Story02_큰소망유치원", "Enemy_Story02_큰소망유치원", 5.6491f, false),   // 10-02 아롱파크(탑 64.4 단위 ÷ 11.4)
         ("Story03_한양영어유치원", "Enemy_Story03_한양영어유치원", 5.1450f, false),
         ("Story04_구일초등학교", "Enemy_Story04_구일초등학교", 6.5625f, false),
         ("Story05_구일중학교", "Enemy_Story05_구일중학교", 6.2650f, false),

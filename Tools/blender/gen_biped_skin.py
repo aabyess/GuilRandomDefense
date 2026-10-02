@@ -985,6 +985,37 @@ SKINS = {
         decimate_ratio=1.0,
         uv_layers=1,
     ),
+    # 안흔함_좀비(원작 h00H, potk-emilia) — PM 지시 2026-10-02. 압살롬과 같은 potk 골격(Pelvis·Spine·Spine1·Neck·Head·L/RUpperArm, 쇄골·Spine2 없음). 지팡이 없음.
+    "안흔함_좀비": dict(
+        source="~/Desktop/구랜디스킨모음/02_안흔함/안흔함_좀비.zip",
+        glb_member="source/prefab.fbx",
+        source_format="fbx",
+        body_member="textures/unit_model_616_01_texture.png",
+        face_member="textures/unit_model_616_01_face_texture.png",
+        path="Assets/Art/Units/안흔함_좀비/안흔함_좀비.fbx",
+        mesh_name="Zombie",
+        height=1.8,
+        drop_meshes=set(),
+        material_rename={"body_0": "unit_model_616_01_texture", "body_1": "unit_model_616_01_face_texture"},
+        rename={"Pelvis": "Hips", "Spine": "Spine", "Spine1": "Spine2", "Neck": "Neck", "Head": "Head",
+                "LUpperArm": "LeftArm", "LForearm": "LeftForeArm", "LHand": "LeftHand",
+                "RUpperArm": "RightArm", "RForearm": "RightForeArm", "RHand": "RightHand",
+                "LThigh": "LeftUpLeg", "LCalf": "LeftLeg", "LFoot": "LeftFoot", "LToe0Nub": "LeftToeBase",
+                "RThigh": "RightUpLeg", "RCalf": "RightLeg", "RFoot": "RightFoot", "RToe0Nub": "RightToeBase"},
+        fold={"prefab": "Hips", "Bip": "Hips", "body": "Hips", "HeadNub": "Head",
+              "weaponl": "LeftHand", "weaponr": "RightHand"},
+        fold_subtree={"CSK01_01": "Hips", "LSK01_01": "Hips", "LSK02_01": "Hips", "RSK01_01": "Hips", "RSK02_01": "Hips",
+                      "Lpony01_01": "Head", "Rpony01_01": "Head", "Lmafu01": "Neck", "Rmafu01": "Neck"},
+        # 쇄골·Spine1 없음 → 길이 있는 자리표시 뼈(0-길이는 유니티 리타겟이 방향을 못 잡는다 — 우루루 교훈).
+        bone_position_override={"Spine1": ("Spine", "Spine1", 0.5), "LeftShoulder": ("Neck", "LUpperArm", 0.5),
+                                "RightShoulder": ("Neck", "RUpperArm", 0.5)},
+        allow_dead_bones={"Spine1", "Neck", "LeftShoulder", "RightShoulder", "LeftToeBase", "RightToeBase"},  # 발끝은 Nub뿐(가중치 0)
+        materials={"unit_model_616_01_texture": ("texture_file", "body_member"),
+                   "unit_model_616_01_face_texture": ("texture_file", "face_member")},
+        level_arms=True,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
 }
 
 # 🔴 폐기(2026-09-30 사장님 교체) — 한 번 짓고 Assets에 넣었다가 다른 모델로 바뀐 설정. SKINS 밖이라 main()·check_entries가

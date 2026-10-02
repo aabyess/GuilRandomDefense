@@ -3638,13 +3638,15 @@ public static class MapGenerator
     // 방향: 워크3 문은 기본 방향(270°)에서 동서로 놓이니 180°는 남북으로 선다 → y축 90°.
     // 크기: ZTsg 모델 치수는 워크3 데이터가 없어 못 구했다. 사장님 「정의문 크기 많이 키워」(10-02) → 예전 규격의 3배.
     const float GateWidth = 22f;
-    const float GateHeight = 7f;
     const float WallHeight = 5.5f;
     const float GateThickness = 1.4f;
     const float GateOffsetX = (3904f - (3136f + 4704f) * 0.5f) / (4704f - 3136f);   // −0.010
     const float GateOffsetZ = (384f - (-352f + 960f) * 0.5f) / (960f + 352f);       // +0.061
     const float GateYaw = 45f;   // 사장님 「45도 대각선으로 돌려줘」(10-02) — 원작 화면 기억. 원작 doo 값은 180°(남북=90°)
     const float JusticeGateScale = 3f;   // 문 상자만 — GateWidth·GateThickness는 소품 비켜 두기 간격에도 쓰여 그대로 둔다
+    // 10-02 에니에스로비 정의의 문(Sketchfab Cyrone™ CC-BY-4.0)으로 모델 교체 — 3:4 아치문이라 상자 비율도 그 모델 치수로.
+    // Blender 재측정: 20.61 × 27.65 × 2.13 (가로:높이:두께 = 1 : 1.342 : 0.103). WallPieceSize 「정의문」과 같은 값.
+    static readonly Vector3 JusticeGateBox = new Vector3(20.6f, 27.65f, 2.13f);
 
     static string BuildPunkHazardGate(Transform parent)
     {
@@ -3661,10 +3663,10 @@ public static class MapGenerator
         gate.transform.SetParent(parent, false);
         gate.transform.position = new Vector3(
             island.center.x + island.size.x * GateOffsetX,
-            MapLayout.IslandTop + GateHeight * JusticeGateScale * 0.5f,
+            MapLayout.IslandTop + JusticeGateBox.y * JusticeGateScale * 0.5f,
             island.center.y + island.size.y * GateOffsetZ);
         gate.transform.rotation = Quaternion.Euler(0f, GateYaw, 0f);
-        gate.transform.localScale = new Vector3(GateWidth - GateThickness, GateHeight, GateThickness) * JusticeGateScale;
+        gate.transform.localScale = JusticeGateBox * JusticeGateScale;
         PaintGlow(gate, new Color(0.85f, 0.72f, 0.30f));   // 부술 대상이라 눈에 띄어야 한다
         gate.AddComponent<DestructibleGate>();
         DressGate(gate);
@@ -3940,7 +3942,7 @@ public static class MapGenerator
         { "나무기둥", new Vector3(2.2f, 7f, 2.2f) },
         { "이끼돌기둥", new Vector3(2.2f, 7f, 2.2f) },
         // 문
-        { "정의문", new Vector3(20.6f, 7f, 1.4f) },
+        { "정의문", new Vector3(20.6f, 27.65f, 2.13f) },   // 10-02 에니에스로비 문
     };
 
     // 조각의 실제 크기를 규격으로 돌려준다. 유니티 임포트 단위(useFileScale)가 어떻게 먹었는지는
