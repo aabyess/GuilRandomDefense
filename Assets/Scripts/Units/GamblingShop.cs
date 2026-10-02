@@ -178,7 +178,11 @@ public class GamblingShop : MonoBehaviour, ILaneShop
         if (index == 6)
             return unitOptions.Count > 3 ? unitOptions[3] : null;
 
-        return null; // 7, 8은 줄을 맞추기 위한 항상 빈 칸.
+        // 압살롬 도박(원작 h069, R20 보스 해금) — 다른세계 도박 옆 칸.
+        if (index == 7)
+            return unitOptions.Count > 4 ? unitOptions[4] : null;
+
+        return null; // 8은 줄을 맞추기 위한 항상 빈 칸.
     }
 
     // 「남은 개수/최대 · 다음 충전까지 초」 — 워크3 상점의 재고 숫자·충전 원과 같은 정보(친구 베타 「왜 안 눌리지」 방지, PM 09-26).

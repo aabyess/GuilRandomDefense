@@ -933,7 +933,7 @@ public static class MapGenerator
         // 슬롯 인덱스가 곧 하단 칸 자리다 — 순서가 화면 배치를 정한다.
         // 졸업(원작 h062 → h08C) 뒤 돈 도박 줄에 들어오는 둘까지 같이 싣는다 — 보이는 칸은 GamblingShop.VisibleMoney가 고른다.
         FillAssetList(so.FindProperty("moneyOptions"), "10엔 도박", "500엔 도박", "고급 유닛 생성", "목재 구입");
-        FillAssetList(so.FindProperty("unitOptions"), "하급도박", "중급도박", "고급도박", "다른세계 도박");
+        FillAssetList(so.FindProperty("unitOptions"), "하급도박", "중급도박", "고급도박", "다른세계 도박", "압살롬 도박");
 
         so.FindProperty("gachaTable").objectReferenceValue =
             AssetDatabase.LoadAssetAtPath<GachaTable>("Assets/Data/MainGachaTable.asset");
@@ -3643,7 +3643,7 @@ public static class MapGenerator
     const float GateThickness = 1.4f;
     const float GateOffsetX = (3904f - (3136f + 4704f) * 0.5f) / (4704f - 3136f);   // −0.010
     const float GateOffsetZ = (384f - (-352f + 960f) * 0.5f) / (960f + 352f);       // +0.061
-    const float GateYaw = 90f;
+    const float GateYaw = 45f;   // 사장님 「45도 대각선으로 돌려줘」(10-02) — 원작 화면 기억. 원작 doo 값은 180°(남북=90°)
     const float JusticeGateScale = 3f;   // 문 상자만 — GateWidth·GateThickness는 소품 비켜 두기 간격에도 쓰여 그대로 둔다
 
     static string BuildPunkHazardGate(Transform parent)

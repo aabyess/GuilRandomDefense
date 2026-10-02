@@ -946,6 +946,45 @@ SKINS = {
         decimate_ratio=1.0,
         uv_layers=1,
     ),
+    # 특별함_압살롬(원작 h010, potk-megumin) — PM 지시 2026-10-02. 원본: source/prefab.fbx(Unity 프리팹 FBX, 애니 0) + textures 3장
+    # (몸 unit_model_516_02 · 얼굴 _face · 지팡이 weapon_model_rod_134). 뼈 56개 3ds Biped 꼴이지만 이름이 "Bip001 " 접두 없이
+    # Pelvis·Spine·Spine1·Neck·Head·LUpperArm·LForearm·LHand·LThigh·LCalf·LFoot·LToe0Nub — 쇄골·Spine2 없음(UpperArm이 Neck 자식).
+    # 이미 T자(팔 수평). 앞 −Y(발끝 Nub가 −Y). 지팡이(weapon_model_rod_133_0)는 가중치 0 단독 메시, 왼손(LHand/weaponl)을 y로 가로질러
+    # 쥔다 → rigid_to_bone으로 통째 LeftHand에 물린다. 치마(CSK·LSK·RSK)·망토(mafu)·말총(pony)은 Hips·Neck·Head로 접는다.
+    "특별함_압살롬": dict(
+        source="~/Desktop/구랜디스킨모음/03_특별함/특별함_압살롬.zip",
+        glb_member="source/prefab.fbx",
+        source_format="fbx",
+        body_member="textures/unit_model_516_02_texture.png",
+        face_member="textures/unit_model_516_02_face_texture.png",
+        rod_member="textures/weapon_model_rod_134_texture.png",
+        path="Assets/Art/Units/특별함_압살롬/특별함_압살롬.fbx",
+        mesh_name="Absalom",
+        height=1.8,
+        drop_meshes=set(),
+        material_rename={"body_0": "unit_model_516_02_texture", "body_1": "unit_model_516_02_face_texture",
+                         "weapon_model_rod_133_0": "weapon_model_rod_134_texture"},
+        rigid_to_bone={"weapon_model_rod_133_0": "weapon_model_rod_133"},
+        rename={"Pelvis": "Hips", "Spine": "Spine", "Spine1": "Spine2", "Neck": "Neck", "Head": "Head",
+                "LUpperArm": "LeftArm", "LForearm": "LeftForeArm", "LHand": "LeftHand",
+                "RUpperArm": "RightArm", "RForearm": "RightForeArm", "RHand": "RightHand",
+                "LThigh": "LeftUpLeg", "LCalf": "LeftLeg", "LFoot": "LeftFoot", "LToe0Nub": "LeftToeBase",
+                "RThigh": "RightUpLeg", "RCalf": "RightLeg", "RFoot": "RightFoot", "RToe0Nub": "RightToeBase"},
+        fold={"prefab": "Hips", "Bip": "Hips", "body": "Hips", "HeadNub": "Head",
+              "weaponl": "LeftHand", "prefab.001": "LeftHand", "weapon_model_rod_133": "LeftHand", "weaponr": "RightHand"},
+        fold_subtree={"CSK01_01": "Hips", "LSK01_01": "Hips", "LSK02_01": "Hips", "RSK01_01": "Hips", "RSK02_01": "Hips",
+                      "Lpony01_01": "Head", "Rpony01_01": "Head", "Lmafu01": "Neck", "Rmafu01": "Neck"},
+        # 쇄골·Spine1 없음 → 길이 있는 자리표시 뼈(0-길이는 유니티 리타겟이 방향을 못 잡는다 — 우루루 교훈).
+        bone_position_override={"Spine1": ("Spine", "Spine1", 0.5), "LeftShoulder": ("Neck", "LUpperArm", 0.5),
+                                "RightShoulder": ("Neck", "RUpperArm", 0.5)},
+        allow_dead_bones={"Spine1", "LeftShoulder", "RightShoulder", "LeftToeBase", "RightToeBase"},  # 발끝은 Nub뿐(가중치 0)
+        materials={"unit_model_516_02_texture": ("texture_file", "body_member"),
+                   "unit_model_516_02_face_texture": ("texture_file", "face_member"),
+                   "weapon_model_rod_134_texture": ("texture_file", "rod_member")},
+        level_arms=True,
+        decimate_ratio=1.0,
+        uv_layers=1,
+    ),
 }
 
 # 🔴 폐기(2026-09-30 사장님 교체) — 한 번 짓고 Assets에 넣었다가 다른 모델로 바뀐 설정. SKINS 밖이라 main()·check_entries가
@@ -1289,6 +1328,13 @@ def build(name, cfg, out_dir=None, render_dir=None, workdir=None):
                         n.inputs["Metallic"].default_value = 0.0
                         n.inputs["Emission Strength"].default_value = 0.0
 
+    # 압살롬(2026-10-02) — 가중치 0인 단독 소품(지팡이)은 cfg["rigid_to_bone"]={메시: 소스 뼈}로 전 정점을 그 뼈에 1.0으로 물린다
+    # (안 하면 아래 「무가중치 → 최근접 정점」이 소품을 몸 가중치로 끌고 간다). 뼈는 이후 rename/fold로 접힌다.
+    for mesh_name, bone_name in cfg.get("rigid_to_bone", {}).items():
+        o = bpy.data.objects[mesh_name]
+        vg = o.vertex_groups.get(bone_name) or o.vertex_groups.new(name=bone_name)
+        vg.add(list(range(len(o.data.vertices))), 1.0, "REPLACE")
+
     # 모든 조각을 세계 좌표로 굽고 하나로 합친다.
     for o in keep:
         M = Matrix(o.matrix_world)
@@ -1590,7 +1636,9 @@ def main():
             render_dir = next(it)
         else:
             names.append(a)
-    for n in names or list(SKINS):
+    import unicodedata
+    nfc = {unicodedata.normalize("NFC", k): k for k in SKINS}
+    for n in [nfc[unicodedata.normalize("NFC", x)] for x in names] or list(SKINS):
         r = build(n, SKINS[n], out_dir, render_dir)
         print("리깅  " + json.dumps(r, ensure_ascii=False, default=str))
 
