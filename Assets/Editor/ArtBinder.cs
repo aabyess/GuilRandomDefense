@@ -863,7 +863,7 @@ public static class ArtBinder
         ("Story05_구일중학교", "Enemy_Story05_구일중학교", 6.2650f, false),
         ("Story06_구일고등학교", "Enemy_Story06_구일고등학교", 7.5088f, false),   // 10-02 공중전화 부스(85.6 단위 ÷ 11.4)
         ("Story07_메가스터디", "Enemy_Story07_메가스터디", 4.2982f, false),   // 10-02 도로헤도로 En 피규어(49.0 단위 ÷ 11.4)
-        ("Story08_사이버넷", "Enemy_Story08_사이버넷", 5.2325f, false),
+        ("Story08_사이버넷", "Enemy_Story08_사이버넷", 4.0351f, false),   // 10-02 다크 영 오버로드(46.0 단위 ÷ 11.4, 대기 1프레임으로 굳힘)
         ("Story09_7탄약창", "Enemy_Story09_7탄약창", 3.8587f, false),
         ("Story10_동양미래대학교", "Enemy_Story10_동양미래대학교", 5.0750f, false),
         ("Story11_日本", "Enemy_Story11_日本", 3.6137f, false),
