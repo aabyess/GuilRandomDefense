@@ -34,6 +34,7 @@ public enum ItemEffectKind
     ManaRegenPerSecond,     // 아군 초당 마나회복 +N(원작 필드 Hab1) — 예: I00V
     HealthRegenPerSecond,   // 아군 초당 체력회복 +N(원작 필드 Uau2) — 예: I00W·I00Y
     StackDamagePercent,     // 스택 1개당 피해 +N%(원작 필드 Isx1) — 예: I005
+    GoldPlus,               // 처치 골드 배율 가산(원작 udg_Gold_Plus +0.20, Trig_item_up — 주울 때 한 번, I00Z) — 맨 뒤에 추가(직렬화 순서)
 }
 
 // 아이템 수치 효과 하나. SkillEffect처럼 "레벨(여기선 아이템 하나)이 효과 여러 개를

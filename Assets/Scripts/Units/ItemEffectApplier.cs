@@ -92,11 +92,14 @@ public class ItemEffectApplier : MonoBehaviour
     /// 원래 곱셈이고(AttackPowerMultiplier가 리스트를 전부 곱한다), SupportShop 버프도
     /// 그렇게 쌓인다. 아이템만 덧셈으로 두면 같은 화면에서 두 규칙이 섞인다.
     /// </summary>
+    float appliedGoldPlus;
+
     void Reconcile()
     {
         float power = 1f;
         float speed = 1f;
         float manaRegen = 0f;
+        float goldPlus = 0f;
 
         if (subscribedItems != null)
         {
@@ -119,6 +122,9 @@ public class ItemEffectApplier : MonoBehaviour
                         case ItemEffectKind.ManaRegenPerSecond:
                             manaRegen += effect.value;
                             break;
+                        case ItemEffectKind.GoldPlus:
+                            goldPlus += effect.value;
+                            break;
 
                         // 걸 자리가 없는 둘(위 주석). 조용히 버리면 나중에 "값이 있는데
                         // 안 돈다"로 헤매므로, 실제로 그 아이템을 손에 넣었을 때 한 번만
@@ -135,6 +141,13 @@ public class ItemEffectApplier : MonoBehaviour
         if (context != null && context.ResourceWallet != null)
         {
             context.ResourceWallet.SetManaRegenBonus(manaRegen);
+        }
+
+        // 원작 Trig_item_up: I00Z를 줍는 순간 Gold_Plus +0.20 — 되돌리는 코드는 없다. 그래서 들고 있는 합이 지금까지 적용한 값보다 클 때만 차액을 더한다(내려놓아도 회수 안 함).
+        if (context != null && context.GoldWallet != null && goldPlus > appliedGoldPlus)
+        {
+            context.GoldWallet.AddGoldPlus(goldPlus - appliedGoldPlus);
+            appliedGoldPlus = goldPlus;
         }
 
         // 지금 살아 있는 유닛 목록을 먼저 뜬다(순회 중에 컬렉션이 바뀔 수 있다).
