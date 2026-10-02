@@ -406,7 +406,9 @@ public class RewardDistributor : MonoBehaviour
     /// </summary>
     public void GrantStoryContribution(int storyNumber, EnemyDummy dead)
     {
-        if (!GameAuthority.IsServer || dead == null || dead.ContributionDamage == null) return;
+        // 🔴 dead는 이미 Destroy된 EnemyDummy다(StoryManager.Update가 파괴된 적을 보고 Finish를 부른다). UnityEngine.Object의 == null은 파괴된 객체에 true라
+        //    예전엔 여기서 항상 조기 return — 관리 필드(누적 피해)는 파괴 뒤에도 읽히므로 참조 null만 본다.
+        if (!GameAuthority.IsServer || ReferenceEquals(dead, null) || dead.ContributionDamage == null) return;
         float maxHp = Mathf.Max(1f, dead.MaxHp);
         float[] damage = dead.ContributionDamage;
 
