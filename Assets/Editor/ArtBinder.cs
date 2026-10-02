@@ -861,7 +861,7 @@ public static class ArtBinder
         ("Story03_한양영어유치원", "Enemy_Story03_한양영어유치원", 6.0000f, false),   // 10-02 에니에스로비 탑+아치(68.4 단위 ÷ 11.4)
         ("Story04_구일초등학교", "Enemy_Story04_구일초등학교", 3.6842f, false),   // 10-02 이치라쿠 라멘(높이 42 단위 ÷ 11.4, 히든_호치킨과 같은 원본)
         ("Story05_구일중학교", "Enemy_Story05_구일중학교", 6.2650f, false),
-        ("Story06_구일고등학교", "Enemy_Story06_구일고등학교", 7.6475f, false),
+        ("Story06_구일고등학교", "Enemy_Story06_구일고등학교", 7.5088f, false),   // 10-02 공중전화 부스(85.6 단위 ÷ 11.4)
         ("Story07_메가스터디", "Enemy_Story07_메가스터디", 7.7875f, false),
         ("Story08_사이버넷", "Enemy_Story08_사이버넷", 5.2325f, false),
         ("Story09_7탄약창", "Enemy_Story09_7탄약창", 3.8587f, false),
