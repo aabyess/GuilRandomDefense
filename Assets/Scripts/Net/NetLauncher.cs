@@ -54,6 +54,8 @@ using UnityEngine.SceneManagement;
 ///   -mpSoloCoinAt 초          (혼자 하기) 그 초에 10엔 도박 → 소리 끔 → 10엔 도박 → 소리 켬(끈 동안 안 나는지)
 ///   -mpTestNotices 초 경로    (호스트) 알림 묶음 확인 — 보스 타이머 칸(캡처)·조합 부족·유닛도박 공지·승리 문구, 알림을 로그로
 ///   -mpTestGap 초             (호스트) GAP 09-27 다섯 항목 확인 — 데스 경고·위습 페널티·패배 세이브(슬롯 1)·창고·판매 위습
+///   -mpTestSecondSave 초      (호스트) 41R 2차 세이브 보상(RewardDistributor.GrantSecondSaveRewards)을 그 초에 한 번 부르고 슬롯별 위습 수·호스트가 든 슬롯별 세이브값을 로그로 —
+///                             클라 세이브(player_0.json: 클리어 30·포인트 1500)는 -mpSaveDir 폴더에 미리 넣어 둔다
 ///   -mpTestSelect 초 폴더     (양쪽, 클라 확인용) 슬롯 1(친구) 유닛 최대 4기와 레인 1 적 둘을 **거울 ID 순**으로 골라 캡처 —
 ///                             방장·친구가 같은 개체를 고르므로 파일 이름(id)으로 나란히 비교한다. 소환 없이 있는 것만
 ///   -mpTestPortraits 초 폴더  (호스트) 흔함·특별함·재규어·적·매머드·보스를 차례로 골라 초상화 캡처 + 초상 켬/끔 FPS
@@ -92,6 +94,7 @@ public class NetLauncher : MonoBehaviour
     float testMenuDelay = -1f;
     int testDupes;
     float testGapDelay = -1f;
+    float testSecondSaveDelay = -1f;
     float testNoticesDelay = -1f;
     string testNoticesShot;
     int noticesLogged;
@@ -219,6 +222,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpCamWisp": camWispDelay = Seconds(i + 1); break;
                 case "-mpToken": cliToken = Arg(i + 1); break;
                 case "-mpTestGap": testGapDelay = Seconds(i + 1); break;
+                case "-mpTestSecondSave": testSecondSaveDelay = Seconds(i + 1); break;
                 case "-mpTestNotices": testNoticesDelay = Seconds(i + 1); testNoticesShot = Arg(i + 2); break;
                 case "-mpTestCoin": testCoinDelay = Seconds(i + 1); int.TryParse(Arg(i + 2), out testCoinCount); break;
                 case "-mpSoloCoinAt": soloCoinAt = Seconds(i + 1); break;
@@ -724,6 +728,7 @@ public class NetLauncher : MonoBehaviour
             PlayerNotification.Shown += (slot, msg, dur) => { if (noticesLogged++ < 80) Debug.Log($"[알림로그] → 슬롯 {slot}({dur:0}초): {msg}"); };
         if (testNoticesDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestNoticesAfter(testNoticesDelay, testNoticesShot));
         if (testGapDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestGapAfter(testGapDelay));
+        if (testSecondSaveDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestSecondSaveAfter(testSecondSaveDelay));
         if (testCoinDelay >= 0f) StartCoroutine(TestCoinAfter(testCoinDelay, Mathf.Max(1, testCoinCount)));
         if (testDupes > 0 && GameAuthority.IsServer) SpawnDuplicateUnits(testDupes);
         if (testSameTypeDelay >= 0f) StartCoroutine(TestSameTypeAfter(testSameTypeDelay, testSameTypeShot));
@@ -877,6 +882,26 @@ public class NetLauncher : MonoBehaviour
     }
 
     // GAP 09-27 1·2·5·7·8 확인(호스트). 사사로운 필드·메서드는 리플렉션으로 — 테스트 전용, 게임 코드는 안 바꾼다.
+    IEnumerator TestSecondSaveAfter(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        string Wisps(int slot)
+        {
+            int n = 0;
+            foreach (Wisp w in Wisp.Active)
+                if (w != null && !w.IsConsumed && w.TryGetComponent(out OwnedByPlayer o) && o.OwnerId == slot) n++;
+            return n.ToString();
+        }
+        foreach (PlayerContext c in PlayerContext.Occupied)
+        {
+            var d = c.PersistentSave != null ? c.PersistentSave.Data : null;
+            Debug.Log($"[2차세이브테스트] 전 — 슬롯 {c.PlayerId}: 호스트가 든 세이브 클리어 {(d != null ? d.cumulativeClearCount : -1)}회·포인트 {(d != null ? d.cumulativePlayPoint : -1)} · 위습 {Wisps(c.PlayerId)}");
+        }
+        RewardDistributor.Instance?.GrantSecondSaveRewards();
+        yield return new WaitForSecondsRealtime(1f);
+        foreach (PlayerContext c in PlayerContext.Occupied) Debug.Log($"[2차세이브테스트] 후 — 슬롯 {c.PlayerId}: 위습 {Wisps(c.PlayerId)}");
+    }
+
     IEnumerator TestGapAfter(float seconds)
     {
         yield return new WaitForSecondsRealtime(seconds);
