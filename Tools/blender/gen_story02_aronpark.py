@@ -195,11 +195,11 @@ def export(body, out):
     used = sorted({p.material_index for p in body.data.polygons})
     keep_mats = [body.material_slots[i].material for i in used]
     remap = {old: new for new, old in enumerate(used)}
-    for p in body.data.polygons:
-        p.material_index = remap[p.material_index]
-    body.data.materials.clear()
+    new_idx = [remap[p.material_index] for p in body.data.polygons]
+    body.data.materials.clear()                         # 🔴 슬롯을 비우면 면의 재질 번호가 0으로 눌린다 — 저장해 둔 값을 다시 먹인다
     for m in keep_mats:
         body.data.materials.append(m)
+    body.data.polygons.foreach_set("material_index", new_idx)
     # 규격: 게임 단위(1 bu = 1 단위)를 미터(1/11.4)로 줄였다가 global_scale 11.4로 내보낸다(buildings_common.export와 같게)
     body.data.transform(Matrix.Scale(1 / 11.4, 4))
     body.data.update()
