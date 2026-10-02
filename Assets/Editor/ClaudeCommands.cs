@@ -1292,6 +1292,7 @@ public static class ClaudeCommands
         public int droppedLogs;     // 종류 상한을 넘어 못 실은 로그 수
         public bool failed;
         public int midPlayReloads;  // 플레이 도중 도메인 리로드 횟수(아래 NoteMidPlayReload)
+        public bool visitSupport, visitPirate;   // 10-02 PM: support — 도움소(능력치 증가·마나포션) 방문 · pirate — 해적단상점(퇴치 퀘스트) 방문. 기본 끔(기준선 일관성), 켠 판은 「실제 플레이 편향 보정」 비교 판
         public bool noCombine, noShop, bossAway;   // autoloop에서 조합·상점을 뺀다 — 일부러 약한 판(보스 제한 패배 확인용)
         public int mode = (int)DifficultyMode.Normal;   // mode:<난이도> — 기본 보통(09-25 PM 지시: 기억값이 쉬움이라 판 B~F가 전부 쉬움이었다)
         public int prevSavedMode = int.MinValue;         // 사장님 기억값 — 판이 끝나면 되돌린다(MinValue = 원래 없었음)
@@ -1356,6 +1357,8 @@ public static class ClaudeCommands
             else if (token == "autoloop") job.autoLoop = true;
             else if (token == "nocombine") job.noCombine = true;
             else if (token == "noshop") job.noShop = true;
+            else if (token == "support") job.visitSupport = true;
+            else if (token == "pirate") job.visitPirate = true;
             else if (token == "sell") job.sellSpare = true;
             else if (token == "keeppen") job.keepPen = true;
             else if (token == "oldbottleneck") job.oldBottleneck = true;
@@ -3515,7 +3518,10 @@ public static class ClaudeCommands
         if (job.lastRoundSeen >= 2 && !job.noShop)   // noshop — 일부러 약한 판
         {
             job.shopTried = true;
-            foreach (string shop in SpendShops)
+            IEnumerable<string> shopList = SpendShops;
+            if (job.visitSupport) shopList = shopList.Concat(new[] { "Lane1_도움소" });
+            if (job.visitPirate) shopList = shopList.Concat(new[] { "Lane1_해적단상점" });
+            foreach (string shop in shopList)
             {
                 turn.Add("@sel:" + shop);
                 turn.Add("?@shopspend:" + shop);
