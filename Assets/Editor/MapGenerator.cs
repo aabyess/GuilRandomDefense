@@ -3631,47 +3631,74 @@ public static class MapGenerator
         return sum / rects.Length;
     }
 
-    // 펑크해저드 한가운데를 가로지르는 정의문. 부수기 전에는 섬이 둘로 나뉜다.
+    // 펑크해저드(원작 dog_zone) 공터에 홀로 선 정의문. 2026-10-02 사장님 「원작대로가자」.
+    // 원작 war3map.doo: ZTsg_0053 (3904, 384) 방향 180° 배율 1.5 — 이 둘레 dog_zone(3136,−352)~(4704,960)
+    // 안에 다른 장식물은 하나도 없다. 예전 판(섬을 동서로 가르는 담 + 문기둥)은 우리 창작이었다.
+    // 원작 위치는 공터 가운데에서 x −1%·y +6%(북쪽) — 섬 크기에 같은 비율로 옮긴다.
+    // 방향: 워크3 문은 기본 방향(270°)에서 동서로 놓이니 180°는 남북으로 선다 → y축 90°.
+    // 크기: ZTsg 모델 치수는 워크3 데이터가 없어 못 구했다 — 문 상자는 예전 규격 그대로.
     const float GateWidth = 22f;
     const float GateHeight = 7f;
     const float WallHeight = 5.5f;
     const float GateThickness = 1.4f;
+    const float GateOffsetX = (3904f - (3136f + 4704f) * 0.5f) / (4704f - 3136f);   // −0.010
+    const float GateOffsetZ = (384f - (-352f + 960f) * 0.5f) / (960f + 352f);       // +0.061
+    const float GateYaw = 90f;
 
     static string BuildPunkHazardGate(Transform parent)
     {
         MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "PunkHazard");
+        BuildJusticeGate(parent, island);
+        StructureDresser.ScatterPunkHazard(parent, island, GateWidth, GateThickness);
+        return "\n펑크해저드 공터에 정의문을 세웠습니다 (원작 자리·방향).";
+    }
 
-        float z = island.center.y;
-        float left = island.center.x - island.size.x * 0.5f;
-        float right = island.center.x + island.size.x * 0.5f;
-        float gateLeft = island.center.x - GateWidth * 0.5f;
-        float gateRight = island.center.x + GateWidth * 0.5f;
-
-        // 문 양옆은 고정 벽 — 여기가 뚫려 있으면 문을 부술 이유가 없다.
-        BuildWall(parent, "펑크해저드_좌측벽",
-            new Vector3((left + gateLeft) * 0.5f, MapLayout.IslandTop + WallHeight * 0.5f, z),
-            new Vector3(gateLeft - left, WallHeight, GateThickness));
-        BuildWall(parent, "펑크해저드_우측벽",
-            new Vector3((gateRight + right) * 0.5f, MapLayout.IslandTop + WallHeight * 0.5f, z),
-            new Vector3(right - gateRight, WallHeight, GateThickness));
-
-        // 문기둥
-        foreach (float pillarX in new[] { gateLeft, gateRight })
-            BuildWall(parent, "펑크해저드_문기둥",
-                new Vector3(pillarX, MapLayout.IslandTop + GateHeight * 0.5f, z),
-                new Vector3(GateThickness * 1.6f, GateHeight, GateThickness * 1.6f));
-
+    static GameObject BuildJusticeGate(Transform parent, MapLayout.Island island)
+    {
         GameObject gate = GameObject.CreatePrimitive(PrimitiveType.Cube);
         gate.name = "정의문";
         gate.transform.SetParent(parent, false);
-        gate.transform.position = new Vector3(island.center.x, MapLayout.IslandTop + GateHeight * 0.5f, z);
+        gate.transform.position = new Vector3(
+            island.center.x + island.size.x * GateOffsetX,
+            MapLayout.IslandTop + GateHeight * 0.5f,
+            island.center.y + island.size.y * GateOffsetZ);
+        gate.transform.rotation = Quaternion.Euler(0f, GateYaw, 0f);
         gate.transform.localScale = new Vector3(GateWidth - GateThickness, GateHeight, GateThickness);
         PaintGlow(gate, new Color(0.85f, 0.72f, 0.30f));   // 부술 대상이라 눈에 띄어야 한다
         gate.AddComponent<DestructibleGate>();
         DressGate(gate);
-        StructureDresser.ScatterPunkHazard(parent, island, GateWidth, GateThickness);
+        return gate;
+    }
 
-        return "\n펑크해저드에 정의문을 세웠습니다 (부수면 길이 열립니다).";
+    // 맵 전체 재생성(씬 diff 수십만 줄) 없이 정의문만 원작 판으로 바꾼다: 옛 담·문기둥·문을 지우고
+    // 문을 다시 세운 뒤 NavMesh를 다시 굽고 씬을 저장한다. 소품(얼음·용암)은 그대로 둔다.
+    // 부르기: call MapGenerator.RepairJusticeGate
+    static string RepairJusticeGate()
+    {
+        MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "PunkHazard");
+        string[] oldNames =
+        {
+            "펑크해저드_좌측벽", "펑크해저드_우측벽", "펑크해저드_문기둥",
+            "펑크해저드_좌측벽_모양", "펑크해저드_우측벽_모양", "펑크해저드_문기둥_모양", "정의문",
+        };
+
+        Transform parent = null;
+        int removed = 0;
+        foreach (GameObject go in Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (go == null || System.Array.IndexOf(oldNames, go.name) < 0) continue;
+            if (go.name == "정의문" && go.GetComponent<DestructibleGate>() == null) continue;
+            if (go.name == "정의문") parent = go.transform.parent;
+            Object.DestroyImmediate(go);
+            removed++;
+        }
+        if (parent == null) return "⚠️ 씬에서 정의문(DestructibleGate)을 못 찾았습니다.";
+
+        GameObject gate = BuildJusticeGate(parent, island);
+        string nav = BuildNavMesh(parent.gameObject);
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gate.scene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(gate.scene);
+        return $"옛 조각 {removed}개 지움 · 정의문 {gate.transform.position} 회전 {GateYaw}° · 씬 저장\n{nav}";
     }
 
     // 초월·불멸은 조합식 표에 올리지 않고 전시만 한다(사용자 확정).
@@ -3988,7 +4015,7 @@ public static class MapGenerator
     // 정의문 겉모습. 벽과 달리 **문 상자의 자식**으로 붙인다 — DestructibleGate.Break가 부서질 때
     // 문 상자 자체를 아래로 내리므로(transform.position), 옆에 두면 모양만 제자리에 남는다.
     // 문 상자는 20.6×7×1.4로 한쪽으로 늘어나 있어서 자식이 그 배율을 물려받는다 — 배율과 위치를
-    // 부모 배율로 나눠 되돌린다. 문 상자는 회전이 없고 조각 회전은 90° 단위라 모양이 비틀리지 않는다.
+    // 부모 배율로 나눠 되돌린다. 문 상자는 y축으로만 돌고(원작 방향) 조각 회전은 90° 단위라 모양이 비틀리지 않는다.
     // 문을 찾는 쪽(UnitAttacker)은 DestructibleGate.Active 목록을 보므로 렌더러를 떼도 공격 대상은 그대로다.
     static void DressGate(GameObject gate)
     {
