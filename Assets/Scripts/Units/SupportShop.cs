@@ -81,7 +81,10 @@ public class SupportShop : MonoBehaviour, ILaneShop
         SupportSkillData skill = skills[index];
         if (skill == null) return LaneShopSlotView.Empty;
 
-        return new LaneShopSlotView(skill.skillName, SkillColor, CanCast(skill), TargetKindOf(skill));
+        LaneShopTargetKind kind = TargetKindOf(skill);
+        // 지점 스킬은 찍는 동안 반경 원을 보여 준다(맵 전체 스킬은 원이 뜻이 없어 0).
+        float radius = kind == LaneShopTargetKind.Ground && !skill.mapWide ? skill.radius : 0f;
+        return new LaneShopSlotView(skill.skillName, SkillColor, CanCast(skill), kind, radius);
     }
 
     static LaneShopTargetKind TargetKindOf(SupportSkillData skill)

@@ -18,14 +18,21 @@ public readonly struct LaneShopSlotView
     public readonly Color color;
     public readonly bool available;
     public readonly LaneShopTargetKind targetKind;
+    // 지점을 찍는 칸이 미치는 반경(게임 단위). 0보다 크면 HUD가 찍는 동안 커서에 범위 원을 그린다.
+    public readonly float targetRadius;
+    // 이 칸의 단축키. '\0'이면 HUD가 칸 위치로 워크3 격자 키(Q W E R / A S D F / Z X C V)를 준다.
+    public readonly char hotkey;
 
     public LaneShopSlotView(string label, Color color, bool available,
-                             LaneShopTargetKind targetKind = LaneShopTargetKind.None)
+                             LaneShopTargetKind targetKind = LaneShopTargetKind.None, float targetRadius = 0f,
+                             char hotkey = '\0')
     {
         this.label = label;
         this.color = color;
         this.available = available;
         this.targetKind = targetKind;
+        this.targetRadius = targetRadius;
+        this.hotkey = hotkey;
     }
 
     // label이 null/빈 문자열이면 HUD는 이 칸을 빈 칸으로 취급한다(투명 처리).

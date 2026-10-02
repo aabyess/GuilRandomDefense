@@ -218,7 +218,9 @@ public class VoyageLogShop : MonoBehaviour, ILaneShop
             cachedSearchLabel = seconds > 0 ? $"탐색\n{seconds}초" : "탐색\n보물찾기";
         }
 
-        return new LaneShopSlotView(cachedSearchLabel, LogColor, seconds <= 0, LaneShopTargetKind.Ground);
+        // 단축키 Q — 사장님 10-02 「건물 누르고 q 누르고 왼쪽 클릭」.
+        return new LaneShopSlotView(cachedSearchLabel, LogColor, seconds <= 0, LaneShopTargetKind.Ground,
+                                    hunt.RangeFor(owner.OwnerId), 'Q');
     }
 
     string GetSearchTooltip()

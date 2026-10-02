@@ -859,7 +859,7 @@ public static class ArtBinder
         ("Story01_하이츠", "Enemy_Story01_하이츠", 7.1575f, false),
         ("Story02_큰소망유치원", "Enemy_Story02_큰소망유치원", 5.6491f, false),   // 10-02 아롱파크(탑 64.4 단위 ÷ 11.4)
         ("Story03_한양영어유치원", "Enemy_Story03_한양영어유치원", 6.0000f, false),   // 10-02 에니에스로비 탑+아치(68.4 단위 ÷ 11.4)
-        ("Story04_구일초등학교", "Enemy_Story04_구일초등학교", 6.5625f, false),
+        ("Story04_구일초등학교", "Enemy_Story04_구일초등학교", 3.6842f, false),   // 10-02 이치라쿠 라멘(높이 42 단위 ÷ 11.4, 히든_호치킨과 같은 원본)
         ("Story05_구일중학교", "Enemy_Story05_구일중학교", 6.2650f, false),
         ("Story06_구일고등학교", "Enemy_Story06_구일고등학교", 7.6475f, false),
         ("Story07_메가스터디", "Enemy_Story07_메가스터디", 7.7875f, false),
@@ -868,7 +868,7 @@ public static class ArtBinder
         ("Story10_동양미래대학교", "Enemy_Story10_동양미래대학교", 5.0750f, false),
         ("Story11_日本", "Enemy_Story11_日本", 3.6137f, false),
         ("Story12_코드잇", "Enemy_Story12_코드잇", 7.7700f, false),
-        ("Story13_쉬었음", "Enemy_Story13_쉬었음", 4.9437f, false),
+        ("Story13_쉬었음", "Enemy_Story13_쉬었음", 3.9561f, false),   // 10-02 나뭇잎 마을 호카게 광장 구역(45.1 단위 ÷ 11.4)
 
         // 원작 [퀘스트] 거대 해왕류(o02N) — 사장님 09-13 「원랜디 참고해서 해왕류 바다에 넣어줄래?」로 표에 넣었다.
         // 바다뱀형, Blender 원본은 몸길이 350·높이 195.5(수면 위 121 + 물속 74). 사장님 09-13 「크기도 반으로」 →

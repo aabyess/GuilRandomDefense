@@ -267,6 +267,18 @@ public class GameHud : MonoBehaviour
     ILaneShop pendingShop;           // 대상 지정 중 currentShop이 바뀌어도 원래 상점에 정확히 반영되도록
     int pendingSlotIndex = -1;       // 커서로 대상을 찍기를 기다리는 논리 슬롯 (-1이면 대기 아님)
     LaneShopTargetKind pendingTargetKind;
+    float pendingTargetRadius;       // 지점 칸의 반경 — 찍는 동안 커서에 범위 원(TargetAreaIndicator)
+
+    // 상점 칸 단축키(10-02 사장님 「건물 누르고 q 누르고 왼쪽 클릭」). 칸 위치의 워크3 격자 키가 기본이고,
+    // 상점이 LaneShopSlotView.hotkey로 따로 정하면 그 키를 쓴다. RefreshShopAffordability가 채운다.
+    static readonly char[] ShopGridHotkeys = { 'Q', 'W', 'E', 'R', 'A', 'S', 'D', 'F', 'Z', 'X', 'C', 'V' };
+    readonly char[] shopSlotHotkeys = new char[CommandSlotCount];
+
+    // SelectionManager가 읽는다 — 상점 건물을 고른 동안은 유닛 명령 키(A·S·H·V·C·M)를 안 받고,
+    // 상점 칸 대상을 찍는 클릭은 선택 클릭으로 안 친다(찍고 나서 건물 선택이 풀리지 않게).
+    public static bool ShopSelected { get; private set; }
+    public static bool ShopTargetingPending { get; private set; }
+    public static int ShopClickConsumedFrame { get; private set; } = -1;
     int targetingStartFrame;        // 칸을 고른 바로 그 클릭이 대상 클릭으로 다시 잡히지 않게
 
     // 값이 안 바뀌면 문자열을 새로 만들지 않기 위한 마지막 표시값 캐시.
@@ -375,7 +387,9 @@ public class GameHud : MonoBehaviour
         RefreshUnitCommandCards();
         RefreshInventoryPanel();
         RefreshItemInventoryPanel();
+        RefreshShopHotkeys();
         RefreshShopTargeting();
+        RefreshTargetArea();
         RefreshTraitTargeting();
         RefreshHoveredTooltip();
         RefreshTraitButton();
@@ -2455,7 +2469,40 @@ public class GameHud : MonoBehaviour
         pendingShop = currentShop;
         pendingSlotIndex = logicalIndex;
         pendingTargetKind = view.targetKind;
+        pendingTargetRadius = view.targetRadius;
         targetingStartFrame = Time.frameCount;
+    }
+
+    // 상점을 고른 동안 칸 단축키를 받는다. 채팅 중엔 안 받는다(SelectionManager와 같은 이유).
+    void RefreshShopHotkeys()
+    {
+        ShopSelected = currentShop as Object != null;
+        if (!ShopSelected || ChatInputGate.IsOpen) return;
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null) return;
+
+        for (int visual = 0; visual < CommandSlotCount; visual++)
+        {
+            char key = shopSlotHotkeys[visual];
+            if (key == '\0' || shopLogicalSlotIndex[visual] < 0) continue;
+            if (!System.Enum.TryParse(key.ToString(), out Key inputKey)) continue;
+            if (!keyboard[inputKey].wasPressedThisFrame) continue;
+
+            OnShopSlotClicked(visual);
+            return;
+        }
+    }
+
+    // 지점 칸을 찍는 동안 커서 아래 땅에 범위 원. 대기가 풀리면(실행·우클릭·선택 해제) 바로 끈다.
+    void RefreshTargetArea()
+    {
+        ShopTargetingPending = pendingSlotIndex >= 0;
+        bool show = ShopTargetingPending && pendingTargetKind == LaneShopTargetKind.Ground
+                    && pendingTargetRadius > 0f && Mouse.current != null && Camera.main != null;
+        if (show && WorldPick.TryHit(Camera.main, Mouse.current.position.ReadValue(), out RaycastHit hit))
+            TargetAreaIndicator.Show(hit.point, pendingTargetRadius);
+        else
+            TargetAreaIndicator.Hide();
     }
 
     // 칸을 고른 뒤 다음 클릭을 기다린다. 우클릭이면 취소. uGUI 위 클릭(다른 버튼 등)은
@@ -2487,6 +2534,7 @@ public class GameHud : MonoBehaviour
         int index = pendingSlotIndex;
         LaneShopTargetKind kind = pendingTargetKind;
         pendingSlotIndex = -1;
+        ShopClickConsumedFrame = Time.frameCount;   // 이 클릭은 대상 지정 — SelectionManager가 선택으로 안 친다
 
         // ⚠️ 2026-09-05: 아무것도 안 맞으면 예전엔 그냥 취소됐다("조용한 실패" #10) — 대상
         // 지정 모드로 들어갔다가 빈 허공을 눌러서 조용히 풀리면, 방금 그게 취소인지 실패인지
@@ -2689,6 +2737,8 @@ public class GameHud : MonoBehaviour
             int slot = UnitCommandResultSlotOrder[i];
             shopLogicalSlotIndex[slot] = -1;
             unitCommandSlotNames[slot].text = "";
+            unitCommandSlotHotkeys[slot].text = "";
+            shopSlotHotkeys[slot] = '\0';
             unitCommandSlotBackgrounds[slot].color = Color.clear;
         }
 
@@ -2736,11 +2786,19 @@ public class GameHud : MonoBehaviour
             if (string.IsNullOrEmpty(view.label))
             {
                 unitCommandSlotNames[slot].text = "";
+                unitCommandSlotHotkeys[slot].text = "";
+                shopSlotHotkeys[slot] = '\0';
                 unitCommandSlotBackgrounds[slot].color = Color.clear;
                 continue;
             }
 
             unitCommandSlotNames[slot].text = view.label;
+            char key = view.hotkey != '\0' ? view.hotkey : ShopGridHotkeys[slot];
+            if (shopSlotHotkeys[slot] != key)
+            {
+                shopSlotHotkeys[slot] = key;
+                unitCommandSlotHotkeys[slot].text = key.ToString();
+            }
 
             Color color = view.color;
             color.a = view.available ? color.a : 0.35f;

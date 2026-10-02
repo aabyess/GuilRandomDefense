@@ -68,6 +68,10 @@ public class SelectionManager : MonoBehaviour
         {
             // 하단 HUD 등 uGUI 위에서 누른 클릭은 월드 선택으로 취급하지 않는다.
             ignoreCurrentPress = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+            // 상점 칸(보물찾기 탐색 등)의 지점을 찍는 클릭은 선택이 아니다 — 찍은 뒤에도 건물 선택이 남게.
+            // GameHud가 먼저 돌면 대기가 이미 풀렸으므로 「이 프레임에 소비됨」도 같이 본다.
+            if (GameHud.ShopTargetingPending || GameHud.ShopClickConsumedFrame == Time.frameCount)
+                ignoreCurrentPress = true;
 
             if (!ignoreCurrentPress)
             {
@@ -194,6 +198,8 @@ public class SelectionManager : MonoBehaviour
     void HandleCommandKeys()
     {
         if (Keyboard.current == null || selected.Count == 0) return;
+        // 상점 건물을 고른 동안은 같은 글자가 상점 칸 단축키다(GameHud.RefreshShopHotkeys) — 유닛 명령으로 안 받는다.
+        if (GameHud.ShopSelected) return;
 
         if (Keyboard.current.aKey.wasPressedThisFrame)
             BeginAttackTargeting();
