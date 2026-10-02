@@ -568,4 +568,14 @@ public class UnitData : ScriptableObject
     // 값은 Tools/sync_attack_multishot_from_w3a.py가 대응표·w3u·w3a에서.
     public int attackExtraTargets;
     public float attackExtraTargetRadius;
+
+    // ⚠️ 맨 뒤(2026-10-02, 사장님 결정 — 모리아 h00B) — 원작 A113 「그림자그림자 열매」(ANba 블랙애로, Nbau=h00H 좀비).
+    // 이 유닛이 **평타로 죽인** 적이 좀비(raiseOnKillUnit)로 부활해 이 유닛의 주인 것이 된다. 비어 있으면 안 쓴다.
+    // 대상 제외는 원작 atar 「nonancient·nonsapper·nonhero」 — 원작에서 보스·퀘스트 보스·PV 200 몹이 전부 ancient·sapper라 PV ≥ 200은 안 된다.
+    // 🔴 [추정] Nba3 = 10.0의 뜻은 w3a만으론 확정 못 한다(맵에 ANba가 A113 하나뿐). 기본은 「부활 확률 10%·영구」로 읽었다 —
+    //    조합식 A029(좀비×3 + 나미)가 성립하려면 좀비가 쌓여야 하기 때문. 「소환 지속시간 10초」가 맞다면 확률 100·지속 10으로 바꾸면 된다(에셋 값만).
+    public UnitData raiseOnKillUnit;
+    [Range(0f, 100f)] public float raiseOnKillChancePercent;
+    [Tooltip("0이면 영구. 0보다 크면 이만큼 뒤 사라진다")]
+    public float raiseOnKillLifetimeSeconds;
 }

@@ -2347,6 +2347,7 @@ public class UnitAttacker : MonoBehaviour
             ApplyAttackSplash(target);
             ApplyAttackMultishot(target);
             ApplyCritIfTriggered(target);
+            if (target.IsDead) TryRaiseOnKill(target);
             TryCastOnHitSkill(target);
             return;
         }
@@ -2473,5 +2474,26 @@ public class UnitAttacker : MonoBehaviour
         }
 
         return closest;
+    }
+
+    static UnitSpawner raiseSpawner;
+
+    // 원작 A113 그림자그림자 열매(모리아): 평타로 죽인 적이 좀비로 부활해 이 유닛의 주인 것이 된다. 값은 UnitData.raiseOnKill*(주석에 [추정] 근거).
+    // 평타 주 대상만(원작 오브 효과는 맞은 유닛 하나) · 서버만 · 보스·PV 200 이상(원작 ancient·sapper)은 제외.
+    void TryRaiseOnKill(EnemyDummy dead)
+    {
+        UnitData data = identity != null ? identity.Data : null;
+        if (data == null || data.raiseOnKillUnit == null || owner == null) return;
+        if (!GameAuthority.IsServer) return;
+        if (dead.PointValue >= 200f) return;
+        if (Random.Range(0f, 100f) >= data.raiseOnKillChancePercent) return;
+
+        if (raiseSpawner == null) raiseSpawner = FindFirstObjectByType<UnitSpawner>();
+        if (raiseSpawner == null) return;
+        LaneMarker lane = LaneMarker.Get(owner.OwnerId);
+        Vector3 position = lane != null ? lane.TakeSpawnPosition(data.raiseOnKillUnit) : transform.position;
+        GameObject raised = raiseSpawner.Spawn(data.raiseOnKillUnit, position, owner.OwnerId);
+        if (raised != null && data.raiseOnKillLifetimeSeconds > 0f)
+            raised.AddComponent<TimedLife>().Begin(data.raiseOnKillLifetimeSeconds);
     }
 }
