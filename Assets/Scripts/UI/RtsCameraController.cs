@@ -57,6 +57,23 @@ public class RtsCameraController : MonoBehaviour
         FocusOnLocalLane();
     }
 
+    // 10-03 카메라 후보 비교(사장님 「너무 위에서 본 것 같다」) — gameshot `call:RtsCameraController.ViewA` 등으로 바꿔 찍는다.
+    //   A = 지금(50°·60°) · B = 42°·70° · C = 35°·70°(워크3 기본 FOV 70). 고른 값은 씬 카메라 회전·FOV에 넣는다.
+    static string ApplyView(float pitch, float fov)
+    {
+        RtsCameraController rts = FindFirstObjectByType<RtsCameraController>();
+        Camera cam = rts != null ? rts.GetComponent<Camera>() : null;
+        if (cam == null) return "❌ RtsCameraController 없음";
+        cam.fieldOfView = fov;
+        Vector3 e = rts.transform.eulerAngles;
+        rts.transform.rotation = Quaternion.Euler(pitch, e.y, e.z);
+        rts.FocusOnLocalLane();
+        return $"피치 {pitch}° · FOV {fov}° → 위치 {rts.transform.position}";
+    }
+    static string ViewA() => ApplyView(50f, 60f);
+    static string ViewB() => ApplyView(42f, 70f);
+    static string ViewC() => ApplyView(35f, 70f);
+
     /// <summary>내 레인이 화면 중앙에 오도록 맞춘다. 레인 표식이 없으면 씬에 놓인 위치를 그대로 쓴다.</summary>
     public void FocusOnLocalLane()
     {
