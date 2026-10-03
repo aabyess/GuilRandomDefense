@@ -392,7 +392,12 @@ public class RewardDistributor : MonoBehaviour
         if (picked == null) return;
         if (picked.skipIfOwned && System.Linq.Enumerable.Contains(context.ItemInventory.Items, picked.item)) return;
 
-        context.ItemInventory.Add(picked.item);
+        if (!context.ItemInventory.Add(picked.item))
+        {
+            // 아이템 칸은 원작대로 6칸(사장님 10-03). 가득 차면 못 받는다 — 도박 재고·풀은 건드리지 않는다.
+            PlayerNotification.Show(context.PlayerId, $"<color=#FF8A65>아이템 칸이 가득 차서(최대 {ItemInventory.MaxItems}칸) {picked.item.itemName}을(를) 받지 못했습니다.</color>", 6f);
+            return;
+        }
         context.ItemGambleState?.RegisterAcquired(picked.item);
         if (!string.IsNullOrEmpty(picked.message)) PlayerNotification.Show(context.PlayerId, picked.message, 10f);
     }

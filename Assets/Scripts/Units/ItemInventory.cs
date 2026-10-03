@@ -10,10 +10,18 @@ public class ItemInventory : MonoBehaviour
 
     public event Action OnInventoryChanged;
 
-    public void Add(ItemData item)
+    /// <summary>원작 영웅 인벤토리 6칸(사장님 확정 10-03) — 한 플레이어가 들 수 있는 아이템 수 상한.</summary>
+    public const int MaxItems = 6;
+
+    public bool IsFull => items.Count >= MaxItems;
+
+    /// <summary>넣었으면 true. 6칸이 차 있으면 거절(호출부가 알린다).</summary>
+    public bool Add(ItemData item)
     {
+        if (items.Count >= MaxItems) return false;
         items.Add(item);
         OnInventoryChanged?.Invoke();
+        return true;
     }
 
     /// <summary>MP 클라: 호스트가 복제해 준 보유 목록으로 통째 교체한다(이벤트는 바뀌었을 때 한 번).</summary>

@@ -23,4 +23,17 @@ static class DisplayProbe
         KillGoldPopup.Show(0, p + Vector3.right * 20f, 10, wood: true);
         return sb.ToString();
     }
+
+    // 영웅 단추 점검 — 내 유닛 중 영웅 표 대상과 단추 상태를 찍는다(gameshot call:DisplayProbe.HeroState).
+    static string HeroState()
+    {
+        var sb = new StringBuilder();
+        foreach (UnitIdentity u in UnitIdentity.Active)
+            if (u != null && u.Data != null && u.Data.name.Contains("김민준"))
+                sb.AppendLine($"유닛 {u.name} · 주인 {u.OwnerId}(내 번호 {LocalPlayer.LocalPlayerId}) · 데이터 이름 「{u.Data.name}」 · 영웅표 {UnitHeroTable.IsHero(u.Data)}");
+        sb.AppendLine($"UnitIdentity.Active {UnitIdentity.Active.Count}개: " + string.Join(" / ", System.Linq.Enumerable.Select(UnitIdentity.Active, u => u == null ? "null" : $"{u.name}|{(u.Data != null ? u.Data.name : "데이터없음")}|주인{u.OwnerId}|영웅{UnitHeroTable.IsHero(u.Data)}")));
+        GameObject col = GameObject.Find("HeroButtons");
+        sb.AppendLine(col == null ? "HeroButtons 오브젝트 없음" : $"HeroButtons 자식 {col.transform.childCount}개 · 켜진 것 {col.GetComponentsInChildren<UnityEngine.UI.Button>().Length}개 · 위치 {((RectTransform)col.transform).anchoredPosition} 크기 {((RectTransform)col.transform).sizeDelta}");
+        return sb.ToString();
+    }
 }

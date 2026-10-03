@@ -70,7 +70,7 @@ public class GameHud : MonoBehaviour
     const int SelectionCardColumns = 6;   // 워크3처럼 6열 × 2줄(09-29 콘솔 개편 — 정보칸이 초상화와 갈라져 넓어졌다)
     const int SelectionCardRows = 2;
     const int MaxInventoryEntries = 16;
-    const int MaxItemInventorySlots = 8;
+    const int MaxItemInventorySlots = 6;   // 원작 영웅 인벤토리 2×3(사장님 확정 10-03) — ItemInventory.MaxItems와 같은 값
 
     [SerializeField] SelectionManager selectionManager;
 
@@ -403,6 +403,7 @@ public class GameHud : MonoBehaviour
         RefreshFitGrids();
         RefreshSelectionPanel();
         RefreshTopBar();
+        RefreshHeroButtons();
         RefreshTeamPanel();
         RefreshStoryPanel();
         RefreshUnitCommandCards();
@@ -620,6 +621,9 @@ public class GameHud : MonoBehaviour
 
         RectTransform itemPanel = CreatePanel(bar, "ItemInventoryPanel", SlotColor);
         SetFixedRight(itemPanel, itemRight, ItemPanelWidth);
+        // 사진의 엠블럼 자리(인벤토리 6칸 뒤 문장) — 직접 그린 근사 그림. 칸은 반투명이라 문장이 비친다.
+        Sprite emblem = UiSkin.Get("inventory_emblem");
+        if (emblem != null) { Image itemPanelImage = itemPanel.GetComponent<Image>(); itemPanelImage.sprite = emblem; itemPanelImage.type = Image.Type.Simple; itemPanelImage.color = Color.white; }
         AddConsoleFrame(itemPanel);
         itemInventoryParent = itemPanel;
 
@@ -629,6 +633,7 @@ public class GameHud : MonoBehaviour
         BuildUnitCommandGrid(commandPanel);
 
         BuildTopBar();
+        BuildHeroButtons();
         BuildStoryPanel();
         BuildTeamPanel();
         BuildTraitButton();
@@ -1434,7 +1439,7 @@ public class GameHud : MonoBehaviour
 
         for (int i = 0; i < MaxItemInventorySlots; i++)
         {
-            RectTransform row = CreatePanel(grid.transform, $"ItemInventoryRow{i}", ButtonColor);
+            RectTransform row = CreatePanel(grid.transform, $"ItemInventoryRow{i}", new Color(ButtonColor.r, ButtonColor.g, ButtonColor.b, 0.72f));
             AddPanelBorder(row, BorderInnerColor, 1f);
             itemInventoryRowRoots[i] = row.gameObject;
 
@@ -1565,7 +1570,7 @@ public class GameHud : MonoBehaviour
             bool used = i < shown;
             // 09-29 콘솔 격자: 빈 칸도 켜 둔다(끄면 격자가 당겨 붙어 칸 수가 안 보인다 — 워크3 인벤토리도 빈 칸이 보인다).
             if (!itemInventoryRowRoots[i].activeSelf) itemInventoryRowRoots[i].SetActive(true);
-            itemInventoryRowRoots[i].GetComponent<Image>().color = used ? ButtonColor : SlotColor;
+            itemInventoryRowRoots[i].GetComponent<Image>().color = used ? new Color(ButtonColor.r, ButtonColor.g, ButtonColor.b, 0.82f) : new Color(SlotColor.r, SlotColor.g, SlotColor.b, 0.55f);   // 반투명 — 엠블럼이 비친다
 
             if (!used)
             {
@@ -1578,7 +1583,7 @@ public class GameHud : MonoBehaviour
             itemInventoryRowItems[i] = item;
             bool usable = item.useKind == ItemUseKind.WispBundle || item.useKind == ItemUseKind.AncientShip;
             itemInventoryRowTexts[i].text = $"{item.itemName} x{itemInventoryCounts[item]}" + (usable ? " [사용]" : "");
-            if (usable) itemInventoryRowRoots[i].GetComponent<Image>().color = Color.Lerp(ButtonColor, new Color(0.9f, 0.75f, 0.3f, ButtonColor.a), 0.35f);
+            if (usable) itemInventoryRowRoots[i].GetComponent<Image>().color = Color.Lerp(new Color(ButtonColor.r, ButtonColor.g, ButtonColor.b, 0.82f), new Color(0.9f, 0.75f, 0.3f, 0.82f), 0.35f);
         }
 
         int remaining = itemInventoryKeys.Count - shown;
@@ -2019,6 +2024,85 @@ public class GameHud : MonoBehaviour
             collapseLabel.text = teamPanelCollapsed ? "+" : "-";
             teamPanelInitialized = false;   // 다음 프레임에 다시 그린다
         });
+    }
+
+    // ───────────── 영웅 단추(사진: 왼쪽 아래 초상 아이콘 + 레벨) ─────────────
+    // 대상 = 내 유닛 중 원작에서 영웅 클래스(H 아이디 + 영웅 베이스)인 유닛에 대응하는 것(UnitHeroTable — 로스터 2개뿐, 보고 항목).
+    // 누르면 그 유닛을 고르고 카메라를 옮긴다. 그림은 직접 그린 틀(icon_hero_frame) 위에 이름 첫 글자 + 레벨.
+    const int MaxHeroButtons = 6;
+    RectTransform heroButtonColumn;
+    readonly RectTransform[] heroButtonRoots = new RectTransform[MaxHeroButtons];
+    readonly TMP_Text[] heroButtonTexts = new TMP_Text[MaxHeroButtons];
+    readonly UnitIdentity[] heroButtonUnits = new UnitIdentity[MaxHeroButtons];
+    float nextHeroRefresh;
+
+    void BuildHeroButtons()
+    {
+        GameObject obj = new GameObject("HeroButtons", typeof(RectTransform), typeof(VerticalLayoutGroup));
+        obj.transform.SetParent(transform, false);
+        heroButtonColumn = (RectTransform)obj.transform;
+        heroButtonColumn.anchorMin = heroButtonColumn.anchorMax = new Vector2(0.002f, 0.40f);   // 사진: 콘솔 위 왼쪽(y≈65~71%) — 위습 칸 위로 쌓는다
+        heroButtonColumn.pivot = new Vector2(0f, 0f);
+        heroButtonColumn.sizeDelta = new Vector2(66f, 0f);
+        VerticalLayoutGroup column = obj.GetComponent<VerticalLayoutGroup>();
+        column.spacing = 4f;
+        column.childAlignment = TextAnchor.LowerLeft;
+        column.childControlWidth = true;
+        column.childControlHeight = true;
+        column.childForceExpandWidth = true;
+        column.childForceExpandHeight = false;
+        obj.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        for (int i = 0; i < MaxHeroButtons; i++)
+        {
+            GameObject b = new GameObject($"HeroButton{i}", typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
+            b.transform.SetParent(heroButtonColumn, false);
+            b.GetComponent<LayoutElement>().preferredHeight = 64f;
+            Image frame = b.GetComponent<Image>();
+            if (!UiSkin.Apply(frame, "icon_hero_frame", new Color(0.08f, 0.07f, 0.1f, 1f))) frame.color = new Color(0.08f, 0.07f, 0.1f, 1f);
+            int captured = i;
+            b.GetComponent<Button>().onClick.AddListener(() => OnHeroButtonClicked(captured));
+            TMP_Text label = CreateLabel(b.transform, "Label", "");
+            SetAnchors(label.rectTransform, Vector2.zero, Vector2.one);
+            label.fontSize = 17;
+            label.fontStyle = FontStyles.Bold;
+            label.raycastTarget = false;
+            heroButtonRoots[i] = (RectTransform)b.transform;
+            heroButtonTexts[i] = label;
+            b.SetActive(false);
+        }
+    }
+
+    void RefreshHeroButtons()
+    {
+        if (heroButtonColumn == null || Time.unscaledTime < nextHeroRefresh) return;
+        nextHeroRefresh = Time.unscaledTime + 0.4f;
+        int n = 0;
+        foreach (UnitIdentity unit in UnitIdentity.Active)
+        {
+            if (n >= MaxHeroButtons) break;
+            if (unit == null || unit.OwnerId != LocalPlayer.LocalPlayerId || !UnitHeroTable.IsHero(unit.Data)) continue;
+            UnitAttacker attacker = unit.GetComponentInChildren<UnitAttacker>();
+            int level = attacker != null ? attacker.CharacterLevel : 1;
+            string initial = unit.Data.unitName.Length > 0 ? unit.Data.unitName.Substring(0, 1) : "?";
+            heroButtonUnits[n] = unit;
+            heroButtonTexts[n].text = $"<size=26>{initial}</size>\n<size=15><color=#F3D27A>Lv.{level}</color></size>";
+            if (!heroButtonRoots[n].gameObject.activeSelf) heroButtonRoots[n].gameObject.SetActive(true);
+            n++;
+        }
+        for (int i = n; i < MaxHeroButtons; i++)
+        {
+            heroButtonUnits[i] = null;
+            if (heroButtonRoots[i].gameObject.activeSelf) heroButtonRoots[i].gameObject.SetActive(false);
+        }
+    }
+
+    void OnHeroButtonClicked(int index)
+    {
+        UnitIdentity unit = index >= 0 && index < MaxHeroButtons ? heroButtonUnits[index] : null;
+        if (unit == null) return;
+        if (unit.TryGetComponent(out Selectable selectable) && Selection != null) Selection.SelectOnly(selectable);
+        RtsCameraController camera = FindFirstObjectByType<RtsCameraController>();
+        if (camera != null) camera.MoveTo(unit.transform.position);
     }
 
     // 초상 아래 바 한 줄(체력=초록, 마나=파랑): 어두운 바탕 + 채움 + 가운데 글자 「현재 / 최대」.
