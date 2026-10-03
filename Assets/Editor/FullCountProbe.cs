@@ -50,6 +50,25 @@ static class FullCountProbe
         return sb.ToString();
     }
 
+    // 신세계 진입만(R59 끝 → R60 시작): 점수 1250 · 점수판 3열 · e015 보상 위습(표식) 확인용.
+    static string Enter60()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        RoundManager rm = Rm;
+        Advance(rm, 59);
+        int marked = 0, all = 0;
+        foreach (Wisp w in Wisp.Active) if (w != null && w.Data != null && w.Data.targetGrade == UnitGrade.Legendary) { all++; if (w.NewWorldReward) marked++; }
+        return $"신세계 진입 → {Score()} · 전설·히든 위습 {all}기 중 표식 {marked}기 · 난이도 {DifficultyManager.Instance.Current.KoreanName()}";
+    }
+
+    // 표식 위습 하나를 전설·히든 포탈로 보낸 것과 같은 효과(감점 경로)만 확인 — UnitPortal.OnTriggerEnter가 부르는 FullCountScore를 직접 호출.
+    static string UseReward()
+    {
+        int before = FullCountScore.HostGet(0);
+        FullCountScore.OnNewWorldRewardUsed(0);
+        return $"보상 사용 → 점수 {before} → {FullCountScore.HostGet(0)}";
+    }
+
     // 신세계 보스 처치: 보스가 뜨고 N초 뒤 이 함수를 부른다(빠른 판 ≤17.5초 / 느린 판).
     static string KillBoss()
     {

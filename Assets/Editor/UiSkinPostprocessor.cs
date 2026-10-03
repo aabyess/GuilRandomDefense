@@ -36,5 +36,14 @@ public class UiSkinPostprocessor : AssetPostprocessor
         string name = System.IO.Path.GetFileNameWithoutExtension(assetPath);
         int border = BorderFor(name);
         importer.spriteBorder = new Vector4(border, border, border, border);
+        if (name == "stone_tile")
+        {
+            // Image.Type.Tiled가 이음매 없이 깔리려면 전체 사각형 메시 + 반복 래핑이 필요하다.
+            importer.wrapMode = TextureWrapMode.Repeat;
+            var settings = new TextureImporterSettings();
+            importer.ReadTextureSettings(settings);
+            settings.spriteMeshType = SpriteMeshType.FullRect;
+            importer.SetTextureSettings(settings);
+        }
     }
 }

@@ -80,6 +80,11 @@ public class DifficultySelectHud : MonoBehaviour
         if (dialogTime) dialogShown = true;
     }
 
+    void OnDestroy()
+    {
+        if (blackout != null) Destroy(blackout);
+    }
+
     static void EnsureEventSystem()
     {
         if (FindFirstObjectByType<EventSystem>() != null) return;
@@ -91,7 +96,7 @@ public class DifficultySelectHud : MonoBehaviour
     {
         // 검정 가림막 — GameHud(정렬 0) 아래, 이름표(-95)·킬골드(-94) 위. 상단 바·하단 콘솔은 가려지지 않는다.
         GameObject blackoutCanvas = new GameObject("DifficultyBlackout", typeof(RectTransform), typeof(Canvas));
-        blackoutCanvas.transform.SetParent(transform, false);
+        // 루트에 둔다 — 이 오브젝트의 캔버스(정렬 100)의 자식이면 정렬이 따라 올라가 HUD를 덮는다(첫 시험 때 상단 바·콘솔이 다 가려졌다).
         Canvas bc = blackoutCanvas.GetComponent<Canvas>();
         bc.renderMode = RenderMode.ScreenSpaceOverlay;
         bc.overrideSorting = true;

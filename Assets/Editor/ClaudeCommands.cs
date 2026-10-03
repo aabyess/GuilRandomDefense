@@ -1294,6 +1294,7 @@ public static class ClaudeCommands
         public int midPlayReloads;  // 플레이 도중 도메인 리로드 횟수(아래 NoteMidPlayReload)
         public bool visitSupport, visitPirate;   // 10-02 PM: support — 도움소(능력치 증가·마나포션) 방문 · pirate — 해적단상점(퇴치 퀘스트) 방문. 기본 끔(기준선 일관성), 켠 판은 「실제 플레이 편향 보정」 비교 판
         public bool noCombine, noShop, bossAway;   // autoloop에서 조합·상점을 뺀다 — 일부러 약한 판(보스 제한 패배 확인용)
+        public bool askMode;             // askmode — 난이도를 자동으로 안 고른다(원작 대화상자를 그대로 본다, 10-03)
         public int mode = (int)DifficultyMode.Normal;   // mode:<난이도> — 기본 보통(09-25 PM 지시: 기억값이 쉬움이라 판 B~F가 전부 쉬움이었다)
         public int prevSavedMode = int.MinValue;         // 사장님 기억값 — 판이 끝나면 되돌린다(MinValue = 원래 없었음)
         public int logsBeforeReload = -1;
@@ -1368,6 +1369,7 @@ public static class ClaudeCommands
             else if (token == "pirate") job.visitPirate = true;
             else if (token == "sell") job.sellSpare = true;
             else if (token == "keeppen") job.keepPen = true;
+            else if (token == "askmode") job.askMode = true;
             else if (token == "oldbottleneck") job.oldBottleneck = true;
             else if (token == "combineall") job.combineAll = true;
             else if (token == "storyplus") job.storyPlus = true;
@@ -1485,7 +1487,7 @@ public static class ClaudeCommands
         //    게임의 실제 경로(기억해서 시작)를 타도록 기억값을 이 판의 난이도로 써 두고, 판이 끝나면 사장님 원래 값으로 되돌린다.
         job.prevSavedMode = PlayerPrefs.HasKey(DifficultyManager.SavedModeKey) ? PlayerPrefs.GetInt(DifficultyManager.SavedModeKey) : int.MinValue;
         PlayerPrefs.SetInt(DifficultyManager.SavedModeKey, job.mode);
-        PlayerPrefs.SetInt(DifficultyManager.ToolAutoPickKey, 1);   // 2026-10-03: 사람 플레이는 매번 대화상자 — 도구만 기억값으로 건너뛴다(한 판짜리 신호)
+        if (!job.askMode) PlayerPrefs.SetInt(DifficultyManager.ToolAutoPickKey, 1);   // 2026-10-03: 사람 플레이는 매번 대화상자 — 도구만 기억값으로 건너뛴다(한 판짜리 신호)
         PlayerPrefs.Save();
         SaveGameShot(job);
         EditorApplication.isPlaying = true;   // 이 update가 끝난 뒤에 들어간다

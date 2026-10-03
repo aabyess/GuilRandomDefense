@@ -61,8 +61,9 @@ public class GameHud : MonoBehaviour
     //    얼마나 가리는지는 실제 플레이 화면에서 판단하지 않았다.
     //    교훈: **화면을 덮는 변경은 만든 사람 말고 보는 사람이 판정한다.**
     // 사장님이 「너무 작다」고 하시면 이 숫자 하나만 올린다. 미니맵 그림은 칸 비율을 따라가므로(MinimapCamera) 다른 곳은 안 고친다.
-    const float BottomBarHeight = 0.22f;
-    const float MinimapTop = 0.22f;
+    // 2026-10-03 사장님 인게임 사진 기준: 콘솔 높이 27%(y 73~100%). 옛 22%에서 키웠다(3D 화면이 그만큼 더 가려진다 — 보고 항목).
+    const float BottomBarHeight = 0.27f;
+    const float MinimapTop = 0.27f;
     const int CommandColumns = 4;
     const int TeamSlotCount = 4;
     const int MaxSelectionCards = 12;
@@ -78,6 +79,10 @@ public class GameHud : MonoBehaviour
     TMP_Text unitInfoPortraitInitial;
     RawImage unitInfoPortraitModel;   // 초상화(09-26 사장님 요청): 실제 모델이 Idle로 서 있는 RenderTexture(PortraitStage)
     GameObject unitInfoPortraitSlotObject;
+    Image portraitHpBar, portraitMpBar;          // 초상 아래 체력·마나 바(채움 비율로 그린다)
+    TMP_Text portraitHpText, portraitMpText;
+    GameObject unitStatRows;                     // 정보칸 「공격력/방어/상태」 줄(사진 서식) — 유닛 한 기를 고를 때만
+    TMP_Text unitDamageText, unitArmorText, unitStatusText;
     TMP_Text goldText;
     TMP_Text woodText;
     TMP_Text foodText;        // 고기 칸 = 원작 FOOD_USED = 우리 특성 포인트(사장님 확정 10-03)
@@ -452,6 +457,15 @@ public class GameHud : MonoBehaviour
 
         RectTransform bar = CreatePanel(transform, "BottomBar", PanelColor);
         SetAnchors(bar, new Vector2(0f, 0f), new Vector2(1f, BottomBarHeight));
+        // 사진의 회색 돌벽 콘솔 — 돌 타일(직접 그린 근사, Tools/ui/gen_ui_skin.py)을 깐다. 그림이 없으면 옛 청동회색.
+        Sprite stone = UiSkin.Get("stone_tile");
+        if (stone != null)
+        {
+            Image barImage = bar.GetComponent<Image>();
+            barImage.sprite = stone;
+            barImage.type = Image.Type.Tiled;
+            barImage.color = Color.white;
+        }
 
         // 3D 화면과 갈리는 경계선. 판이 불투명해도 위쪽 경계가 밋밋하면 화면에 얹힌 게 아니라
         // 잘린 것처럼 보인다 — 밝은 선 한 줄이 "여기부터 UI"를 읽히게 한다.
@@ -510,6 +524,26 @@ public class GameHud : MonoBehaviour
         //    아래변을 MinimapTop에 맞춘다. 숫자를 박으면 오늘처럼 미니맵을 옮길 때 어긋난다.
         BuildWispSlots();
 
+        // 사진의 미니맵 오른쪽 세로 단추 5개(워크3 기본: 지형·동맹색·크립·신호 등) — 자리와 모양만 만든다. 기능은 아직 없다(보고 항목).
+        RectTransform minimapButtons = CreatePanel(consoleLeft, "MinimapButtons", Color.clear);
+        minimapButtons.GetComponent<Image>().raycastTarget = false;
+        LayoutElement minimapButtonsLayout = minimapButtons.gameObject.AddComponent<LayoutElement>();
+        minimapButtonsLayout.preferredWidth = 46f;
+        minimapButtonsLayout.flexibleWidth = 0f;
+        VerticalLayoutGroup minimapButtonsColumn = minimapButtons.gameObject.AddComponent<VerticalLayoutGroup>();
+        minimapButtonsColumn.spacing = 4f;
+        minimapButtonsColumn.childControlWidth = true;
+        minimapButtonsColumn.childControlHeight = true;
+        minimapButtonsColumn.childForceExpandWidth = true;
+        minimapButtonsColumn.childForceExpandHeight = true;
+        for (int i = 0; i < 5; i++)
+        {
+            RectTransform mb = CreatePanel(minimapButtons, $"MinimapButton{i}", new Color(0.35f, 0.28f, 0.1f, 1f));
+            Image mbImage = mb.GetComponent<Image>();
+            mbImage.raycastTarget = false;
+            if (UiSkin.Apply(mbImage, "minimap_button")) mbImage.preserveAspect = true;
+        }
+
         // 09-29 워크3 콘솔: [미니맵] [초상화] [정보·카드] [아이템 2×4] [명령 4×3]. 오른쪽 두 칸은 고정 폭(ConsoleMargin 주석).
         RectTransform portraitSlot = CreatePanel(consoleLeft, "UnitInfoPortraitSlot", SlotColor);
         portraitLayout = portraitSlot.gameObject.AddComponent<LayoutElement>();
@@ -517,11 +551,13 @@ public class GameHud : MonoBehaviour
         portraitLayout.flexibleWidth = 0f;
         AddConsoleFrame(portraitSlot);
         unitInfoPortraitSlotObject = portraitSlot.gameObject;
+        portraitHpBar = BuildPortraitBar(portraitSlot, "PortraitHpBar", "bar_hp", new Vector2(0.04f, 0.10f), new Vector2(0.96f, 0.18f), out portraitHpText);
+        portraitMpBar = BuildPortraitBar(portraitSlot, "PortraitMpBar", "bar_mp", new Vector2(0.04f, 0.01f), new Vector2(0.96f, 0.09f), out portraitMpText);
 
         GameObject portraitObj = new GameObject("Portrait", typeof(RectTransform), typeof(Image));
         portraitObj.transform.SetParent(portraitSlot, false);
         RectTransform portraitRect = portraitObj.GetComponent<RectTransform>();
-        portraitRect.anchorMin = new Vector2(0.04f, 0.04f);
+        portraitRect.anchorMin = new Vector2(0.04f, 0.19f);    // 아래 15%는 체력·마나 바 자리(사진: 초상 아래 「77777 / 77777」 · 「180 / 180」)
         portraitRect.anchorMax = new Vector2(0.96f, 0.96f);
         portraitRect.offsetMin = Vector2.zero;
         portraitRect.offsetMax = Vector2.zero;
@@ -563,6 +599,22 @@ public class GameHud : MonoBehaviour
         unitInfoText.fontSize = 24;
         unitInfoText.lineSpacing = 1.15f;
         unitInfoText.textWrappingMode = TextWrappingModes.Normal;
+
+        // 사진의 정보칸 서식: 이름 줄 아래 「공격 아이콘 + 데미지:」 · 「방어 아이콘 + 아머:」 · 「상태:」(버프 아이콘 줄 자리).
+        RectTransform statRows = CreatePanel(infoPanel, "UnitStatRows", Color.clear);
+        statRows.GetComponent<Image>().raycastTarget = false;
+        SetAnchors(statRows, new Vector2(0.03f, 0.04f), new Vector2(0.97f, 0.70f));
+        VerticalLayoutGroup statColumn = statRows.gameObject.AddComponent<VerticalLayoutGroup>();
+        statColumn.spacing = 6f;
+        statColumn.childControlWidth = true;
+        statColumn.childControlHeight = true;
+        statColumn.childForceExpandWidth = true;
+        statColumn.childForceExpandHeight = true;
+        unitDamageText = BuildStatRow(statRows, "icon_attack");
+        unitArmorText = BuildStatRow(statRows, "icon_armor");
+        unitStatusText = BuildStatRow(statRows, null);
+        unitStatRows = statRows.gameObject;
+        unitStatRows.SetActive(false);
 
         BuildSelectionCards(infoPanel);
 
@@ -758,14 +810,14 @@ public class GameHud : MonoBehaviour
         layout.childForceExpandHeight = true;
 
         // 퀘스트: 원작 맵이 퀘스트 로그를 안 쓴다(j에 CreateQuest 0건) → 버튼만 두고 흐리게(사진의 첫 버튼도 흐림).
-        TMP_Text questLabel = CreateTopBarButton(menuButtonsPanel, "QuestButton", "퀘스트", 150f);
+        TMP_Text questLabel = CreateTopBarButton(menuButtonsPanel, "QuestButton", "퀘스트", 130f);
         questLabel.alpha = 0.45f;
         questLabel.transform.parent.GetComponent<Button>().interactable = false;
-        TMP_Text menuLabel = CreateTopBarButton(menuButtonsPanel, "MenuButton", "메뉴 (F10)", 150f);
+        TMP_Text menuLabel = CreateTopBarButton(menuButtonsPanel, "MenuButton", "메뉴 (F10)", 130f);
         menuLabel.transform.parent.GetComponent<Button>().onClick.AddListener(OpenGameMenu);
         // 동맹/대화는 동작 없음 — 원작 배치만 재현한다. 메뉴는 [계속하기]/[처음 화면으로](BuildGameMenu).
-        CreateTopBarButton(menuButtonsPanel, "AllianceButton", "동맹 (F11)", 150f);
-        CreateTopBarButton(menuButtonsPanel, "ChatButton", "대화 (F12)", 150f);
+        CreateTopBarButton(menuButtonsPanel, "AllianceButton", "동맹 (F11)", 130f);
+        CreateTopBarButton(menuButtonsPanel, "ChatButton", "대화 (F12)", 130f);
 
         // 가운데 낮밤 시계(장식)
         RectTransform clock = CreatePanel(topBar, "ClockOrb", Color.clear);
@@ -1544,14 +1596,14 @@ public class GameHud : MonoBehaviour
     // 글자가 「항법: ④ 도움소 강화」까지 길어지므로 다른 버튼(90)보다 넓게 두고, 넘치면 글자를 줄인다.
     void BuildNavigationUI()
     {
-        navigationButtonText = CreateTopBarButton(topBarButtons, "NavigationButton", "항법 선택", 210f);
+        navigationButtonText = CreateTopBarButton(topBarButtons, "NavigationButton", "항법 선택", 190f);
         navigationButtonText.enableAutoSizing = true;
         navigationButtonText.fontSizeMin = 12f;
         navigationButtonText.fontSizeMax = 18f;
         navigationButtonText.textWrappingMode = TextWrappingModes.NoWrap;
 
         GameObject panel = navigationButtonText.transform.parent.gameObject;
-        panel.transform.SetAsFirstSibling();   // 메뉴·동맹·대화는 원작 자리(오른쪽 끝) 그대로
+        // 상단 바 왼쪽 줄에서는 원작 4버튼(퀘스트·메뉴·동맹·대화) 뒤 맨 끝에 둔다(사진 배치 — 항법은 우리만의 기능).
         panel.GetComponent<Button>().onClick.AddListener(OnNavigationButtonClicked);
 
         navigationButtonPanel = panel;
@@ -1910,7 +1962,7 @@ public class GameHud : MonoBehaviour
         GameObject obj = new GameObject("RightColumn", typeof(RectTransform), typeof(VerticalLayoutGroup));
         obj.transform.SetParent(transform, false);
         rightColumn = (RectTransform)obj.transform;
-        SetAnchors(rightColumn, new Vector2(0.785f, 0.23f), new Vector2(0.99f, TopBarBottom - 0.003f));
+        SetAnchors(rightColumn, new Vector2(0.73f, BottomBarHeight + 0.01f), new Vector2(0.99f, TopBarBottom - 0.003f));
 
         VerticalLayoutGroup layout = obj.GetComponent<VerticalLayoutGroup>();
         layout.childAlignment = TextAnchor.UpperCenter;
@@ -1941,7 +1993,7 @@ public class GameHud : MonoBehaviour
 
         teamPanelText = CreateLabel(teamPanel, "TeamPanelText", "");
         teamPanelText.alignment = TextAlignmentOptions.TopLeft;
-        teamPanelText.fontSize = 20;
+        teamPanelText.fontSize = 18;
         teamPanelText.lineSpacing = 1.1f;
         teamPanelText.textWrappingMode = TextWrappingModes.NoWrap;
         teamPanelText.overflowMode = TextOverflowModes.Overflow;
@@ -1967,6 +2019,75 @@ public class GameHud : MonoBehaviour
             collapseLabel.text = teamPanelCollapsed ? "+" : "-";
             teamPanelInitialized = false;   // 다음 프레임에 다시 그린다
         });
+    }
+
+    // 초상 아래 바 한 줄(체력=초록, 마나=파랑): 어두운 바탕 + 채움 + 가운데 글자 「현재 / 최대」.
+    static Image BuildPortraitBar(RectTransform parent, string name, string spriteName, Vector2 min, Vector2 max, out TMP_Text label)
+    {
+        RectTransform back = CreatePanel(parent, name, new Color(0f, 0f, 0f, 0.9f));
+        SetAnchors(back, min, max);
+        back.GetComponent<Image>().raycastTarget = false;
+        RectTransform fill = CreatePanel(back, "Fill", Color.white);
+        SetAnchors(fill, Vector2.zero, Vector2.one);
+        Image fillImage = fill.GetComponent<Image>();
+        fillImage.raycastTarget = false;
+        fillImage.color = spriteName == "bar_hp" ? new Color(0.2f, 0.75f, 0.28f) : new Color(0.18f, 0.38f, 0.9f);
+        Sprite sprite = UiSkin.Get(spriteName);
+        if (sprite != null) { fillImage.sprite = sprite; fillImage.color = Color.white; }
+        fillImage.type = Image.Type.Filled;
+        fillImage.fillMethod = Image.FillMethod.Horizontal;
+        fillImage.fillAmount = 1f;
+        label = CreateLabel(back, "Text", "");
+        SetAnchors(label.rectTransform, Vector2.zero, Vector2.one);
+        label.fontSize = 17;
+        label.fontStyle = FontStyles.Bold;
+        label.raycastTarget = false;
+        back.gameObject.SetActive(false);
+        return fillImage;
+    }
+
+    // 정보칸 스탯 한 줄: 왼쪽 아이콘(없으면 빈 자리) + 글자. 사진의 「데미지:」「아머:」「상태:」 줄.
+    static TMP_Text BuildStatRow(RectTransform parent, string iconName)
+    {
+        RectTransform row = CreatePanel(parent, "StatRow", Color.clear);
+        row.GetComponent<Image>().raycastTarget = false;
+        HorizontalLayoutGroup h = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+        h.spacing = 8f;
+        h.childControlWidth = true;
+        h.childControlHeight = true;
+        h.childForceExpandWidth = false;
+        h.childForceExpandHeight = true;
+        RectTransform icon = CreatePanel(row, "Icon", Color.clear);
+        Image iconImage = icon.GetComponent<Image>();
+        iconImage.raycastTarget = false;
+        LayoutElement iconLayout = icon.gameObject.AddComponent<LayoutElement>();
+        iconLayout.preferredWidth = 40f;
+        iconLayout.flexibleWidth = 0f;
+        if (iconName != null && UiSkin.Apply(iconImage, iconName)) iconImage.preserveAspect = true;
+        TMP_Text text = CreateLabel(row, "Text", "");
+        text.alignment = TextAlignmentOptions.Left;
+        text.fontSize = 22;
+        text.textWrappingMode = TextWrappingModes.NoWrap;
+        text.raycastTarget = false;
+        LayoutElement textLayout = text.gameObject.AddComponent<LayoutElement>();
+        textLayout.flexibleWidth = 1f;
+        return text;
+    }
+
+    // 초상 아래 바 표시: hp=null이면 둘 다 숨김. mana가 null이면 마나 줄만 숨김(원작에서 마나 없는 유닛).
+    void SetPortraitBars(int? hp, int? mana, int manaCap)
+    {
+        if (portraitHpBar == null) return;
+        bool hpOn = hp.HasValue;
+        bool mpOn = hpOn && mana.HasValue;
+        if (portraitHpBar.transform.parent.gameObject.activeSelf != hpOn) portraitHpBar.transform.parent.gameObject.SetActive(hpOn);
+        if (portraitMpBar.transform.parent.gameObject.activeSelf != mpOn) portraitMpBar.transform.parent.gameObject.SetActive(mpOn);
+        if (hpOn) { portraitHpBar.fillAmount = 1f; portraitHpText.text = $"{hp.Value} / {hp.Value}"; }   // 플레이어 유닛은 피해를 안 받는다 — 항상 가득
+        if (mpOn)
+        {
+            portraitMpBar.fillAmount = manaCap > 0 ? Mathf.Clamp01(mana.Value / (float)manaCap) : 1f;
+            portraitMpText.text = $"{mana.Value} / {manaCap}";
+        }
     }
 
     static MinimapCamera BuildMinimap(RectTransform parent)
@@ -2982,6 +3103,8 @@ public class GameHud : MonoBehaviour
 
     void ShowSingleInfo(SelectionManager selection, int count)
     {
+        SetPortraitBars(null, null, 0);   // 아래 유닛 분기에서만 켠다
+        if (unitStatRows != null && unitStatRows.activeSelf) unitStatRows.SetActive(false);
         unitCardsPanel.SetActive(false);
         unitInfoText.gameObject.SetActive(true);
         if (unitInfoPortraitSlotObject != null) unitInfoPortraitSlotObject.SetActive(true);
@@ -3060,6 +3183,34 @@ public class GameHud : MonoBehaviour
         // 마나·방어력은 PM 요청에 있었으나 UnitData/UnitAttacker에 그 필드 자체가 없다
         // (플레이어 유닛은 마나를 소모하지 않고, 방어력 감폭은 EnemyDummy 전용 축이다) —
         // 없는 값을 지어내지 않고 실제로 있는 축만 표시한다(2026-09-23, PM 보고 예정).
+        if (data != null && unitStatRows != null)
+        {
+            // 사진 서식(Docs/reference/ui/원랜디_인게임_01.png): 「이름(흰) 별명(노랑) – 등급(등급색)」 + 공격 아이콘 줄 + 방어 아이콘 줄 + 상태 줄,
+            //   체력·마나는 초상 아래 바. 플레이어 유닛은 피해를 안 받으니 방어는 원작 무적 표기(빨강)와 같다.
+            string person = data.DisplayName.Length > data.unitName.Length ? data.DisplayName.Substring(0, data.DisplayName.Length - data.unitName.Length - 1) : "";
+            string firstPart = person.Length > 0 ? person : data.unitName;
+            string secondPart = person.Length > 0 ? $" <color=#FFD84A>{data.unitName}</color>" : "";
+            unitInfoText.text = $"<size=115%>{firstPart}{secondPart} – <color=#{gradeColorHex}>{grade}{levelLabel}</color></size>";
+            string bonus = hasStats && data.attackPower > 0f && damage - data.attackPower >= 0.5f ? $" <color=#46E06A>+{damage - data.attackPower:F0}</color>" : "";
+            unitDamageText.text = $"<color=#FF9A3A>공격력:</color> {attackPower}{bonus}   <color=#FF9A3A>사거리:</color> {attackRange}   <color=#FF9A3A>공속:</color> {attackSpeed}/s";
+            unitArmorText.text = "<color=#FF9A3A>방어:</color> <color=#FF4A4A>무적</color>";
+            unitStatusText.text = "<color=#FF9A3A>상태:</color>";
+            if (!unitStatRows.activeSelf) unitStatRows.SetActive(true);
+            int? manaNow = null;
+            int manaCap = 0;
+            if (UnitManaTable.HasMana(data))
+            {
+                PlayerContext localPlayer = PlayerContext.Local;
+                if (localPlayer != null && localPlayer.ResourceWallet != null)
+                {
+                    manaNow = localPlayer.ResourceWallet.Get(ResourceType.Mana);
+                    manaCap = localPlayer.ResourceWallet.GetCap(ResourceType.Mana);
+                }
+            }
+            SetPortraitBars(Mathf.RoundToInt(data.hp), manaNow, manaCap);
+            return;
+        }
+
         unitInfoText.text =
             // 09-29 워크3 콘솔: 이름 한 줄 + 스탯 두 열(정보칸이 넓어져 한 줄에 하나씩 쓰면 오른쪽이 빈다).
             $"<size=115%><color=#{gradeColorHex}>{unitName} - {grade}{levelLabel}</color></size>\n" +
@@ -3486,8 +3637,8 @@ public class GameHud : MonoBehaviour
     }
 
     // 점수판 열 위치(px, 글자 20 기준) — 이름 칸 폭 ≈ 칩 + 칭호(최대 5자) + 닉네임(최대 12자).
-    const int ScoreboardCountColumn = 330;
-    const int ScoreboardFullColumn = 500;
+    const int ScoreboardCountColumn = 250;
+    const int ScoreboardFullColumn = 430;
     // 원작 플레이어 색(j 14714~14717) — 1 빨강 · 2 파랑 · 3 보라 · 4 노랑.
     static readonly string[] ScoreboardColorHex = { "FF0202", "0041FF", "530080", "FFFC00" };
 
@@ -3571,6 +3722,11 @@ public class GameHud : MonoBehaviour
         lastFullVisible = fullVisible;
 
         teamPanelBuilder.Clear();
+        // 신세계에서 3열이 되면 원작이 글자를 0.11→0.09(≈82%)로 줄인다(j 29703) — 열 위치도 같은 비율로.
+        float boardScale = fullVisible ? 0.82f : 1f;
+        int countCol = Mathf.RoundToInt(ScoreboardCountColumn * boardScale);
+        int fullCol = Mathf.RoundToInt(ScoreboardFullColumn * boardScale);
+        if (fullVisible) teamPanelBuilder.Append("<size=82%>");
         // 원작 멀티보드(j 14700~14728) 모양: 제목 한 줄 + 머리줄 + 플레이어 4줄, 열은 [이름 | 남은 라운드 유닛 수 | (신세계) 풀카운트].
         //   제목 「|c00ffb0ff유닛 카운트 = |cFF00FF00N|c00ffb0ff<- 패배」 · 머리줄 「|cff00ffff난이도 :|r{모드}|cff00ffff모드|r」 / 「|c0000ff00남은 라운드 유닛 수」.
         //   이름은 플레이어 색(1 ff0202 · 2 0041FF · 3 530080 · 4 FFFC00)이고, 골드·목재는 점수판에 없다(상단 바 자원 — 사장님 확정 10-03).
@@ -3592,7 +3748,7 @@ public class GameHud : MonoBehaviour
 
         teamPanelBuilder.Append("\n<color=#00FFFF>");
         if (difficultyLabel != null) teamPanelBuilder.Append("난이도 : ").Append(difficultyLabel).Append("모드"); else teamPanelBuilder.Append("난이도 : -");
-        teamPanelBuilder.Append("</color><pos=").Append(ScoreboardCountColumn).Append("><color=#00FF00>남은 라운드 유닛 수</color>");
+        teamPanelBuilder.Append("</color><pos=").Append(countCol).Append("><color=#00FF00>남은 라운드 유닛 수</color>");
 
         for (int i = 0; i < TeamSlotCount; i++)
         {
@@ -3623,7 +3779,7 @@ public class GameHud : MonoBehaviour
 
             if (slotHas[i])
             {
-                teamPanelBuilder.Append("<pos=").Append(ScoreboardCountColumn).Append('>');
+                teamPanelBuilder.Append("<pos=").Append(countCol).Append('>');
                 if (slotGrace[i] > 0 && !slotDead[i])
                     teamPanelBuilder.Append("<color=#FF8A65>연결 끊김 ").Append(slotGrace[i]).Append("초</color>");   // MP
                 else if (slotDead[i])
@@ -3631,7 +3787,7 @@ public class GameHud : MonoBehaviour
                 else
                     teamPanelBuilder.Append(slotEnemy[i]);
                 // 원작 3열 「|cff00ffff풀카운트  :|r N  점」 — 신세계 진입 뒤부터(j 29702~29708).
-                if (fullVisible) teamPanelBuilder.Append("<pos=").Append(ScoreboardFullColumn).Append("><color=#00FFFF>풀카운트  :</color> ").Append(slotFull[i]).Append("  점");
+                if (fullVisible) teamPanelBuilder.Append("<pos=").Append(fullCol).Append("><color=#00FFFF>풀카운트  :</color> ").Append(slotFull[i]).Append("  점");
             }
             if (isLocal) teamPanelBuilder.Append("</b>");
         }

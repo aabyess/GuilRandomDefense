@@ -14,7 +14,7 @@ public class GameChatBox : MonoBehaviour
     [SerializeField] ChatUnlockManager chatUnlockManager;
     [SerializeField] HiddenCombineManager hiddenCombineManager;
 
-    const float BottomHudHeightFraction = 0.22f;
+    const float BottomHudHeightFraction = 0.27f;
     const float BoxWidth = 320f;
     const float BoxHeight = 28f;
     const float BottomGap = 8f;
