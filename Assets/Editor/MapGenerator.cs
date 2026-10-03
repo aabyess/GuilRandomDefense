@@ -646,7 +646,22 @@ public static class MapGenerator
     // 2026-09-23 사장님 "유닛이 너무 작아서 안 보인다" → 적 키 15 → 22.5(1.5배)가 되면서
     // 지름이 5.4 → 8.1이 됐다. 폭 12 그대로면 1.48마리밖에 안 들어간다 → **18로 올려
     // 2.22마리를 유지**한다(1.5배, 같은 근거·같은 비율).
-    const float TrackWidth = 18f;
+    // 10-03: 적 키 36(지름 ≈13)에 맞춰 18 → 28.8(같은 1.6배). 보이는 흙길 폭은 아래 TrackVisualWidthRatio가 정한다.
+    const float TrackWidth = 28.8f;
+
+    // 🔴 10-03 사장님 「적이 지나가는 길을 넓혀 달라」: 원작 사진(Docs/reference/ui/원랜디_카메라구도.png)의 적 길 폭은
+    //    레인 가로의 약 1/10(우리 18은 1/43). **보이는 흙길만** 넓힌다 — 적은 그대로 가운데 선(LaneTrackRect)을 걷고
+    //    NavMesh·순찰·사거리·랩 시간은 안 바뀐다(흙길은 콜라이더 없는 장식). TrackWidth(적 두 마리 나란히의 근거)는 그대로 둔다.
+    //    바깥쪽으로는 필드 가장자리까지만 나간다 — 남쪽은 가운데 선에서 필드 끝까지 SouthGreenZ(≈11.7)뿐이고 그 아래가
+    //    흔함 칸이라, 모자란 만큼 안쪽으로 더 깐다(폭은 네 변 모두 같게).
+    const float TrackVisualWidthRatio = 0.09f;   // × 레인 필드 가로(781.4) ≈ 70
+
+    // 가운데 선에서 바깥(필드 가장자리 쪽)으로 out, 안쪽으로 in만큼 — 합이 폭.
+    static void TrackBand(float width, float edgeDistance, out float outward, out float inward)
+    {
+        outward = Mathf.Min(width * 0.5f, Mathf.Max(0f, edgeDistance - 0.5f));
+        inward = width - outward;
+    }
 
     // 🔴 2026-09-23: 흙길 inset을 고정 상수로 두면 순찰 경로와 갈라진다. 실제로 1단계에서
     //    MapLayout.LaneLoop의 기본 inset만 Scale을 태우고 여기(14f)를 안 고쳐서 58.3 대 14로
@@ -669,15 +684,28 @@ public static class MapGenerator
         float z = track.center.y;
         float y = MapLayout.IslandTop + 0.04f;   // 잔디 위에 살짝 얹어 z-fighting을 피한다
 
-        // 순찰 경로를 따라 도는 흙길 — 적이 실제로 지나는 자리다.
-        BuildDecor(parent, $"{lane.name}_흙길_위", new Vector3(x, y, z + halfZ),
-                   new Vector3(halfX * 2f + TrackWidth, 0.08f, TrackWidth), "dirt");
-        BuildDecor(parent, $"{lane.name}_흙길_아래", new Vector3(x, y, z - halfZ),
-                   new Vector3(halfX * 2f + TrackWidth, 0.08f, TrackWidth), "dirt");
-        BuildDecor(parent, $"{lane.name}_흙길_왼", new Vector3(x - halfX, y, z),
-                   new Vector3(TrackWidth, 0.08f, halfZ * 2f - TrackWidth), "dirt");
-        BuildDecor(parent, $"{lane.name}_흙길_오른", new Vector3(x + halfX, y, z),
-                   new Vector3(TrackWidth, 0.08f, halfZ * 2f - TrackWidth), "dirt");
+        // 순찰 경로를 따라 도는 흙길 — 적이 실제로 지나는 자리다. 변마다 바깥/안쪽 폭이 다르다(TrackBand).
+        MapLayout.Island field = MapLayout.LaneField(lane);
+        float width = field.size.x * TrackVisualWidthRatio;
+        float fieldTop = field.center.y + field.size.y * 0.5f, fieldBottom = field.center.y - field.size.y * 0.5f;
+        float fieldLeft = field.center.x - field.size.x * 0.5f, fieldRight = field.center.x + field.size.x * 0.5f;
+        TrackBand(width, fieldTop - (z + halfZ), out float nOut, out float nIn);
+        TrackBand(width, (z - halfZ) - fieldBottom, out float sOut, out float sIn);
+        TrackBand(width, (x - halfX) - fieldLeft, out float wOut, out float wIn);
+        TrackBand(width, fieldRight - (x + halfX), out float eOut, out float eIn);
+
+        // 위·아래 변은 모서리까지 덮고, 왼·오른 변은 그 사이만 채운다(겹치면 z-fighting).
+        float left = x - halfX - wOut, right = x + halfX + eOut;
+        float topOuter = z + halfZ + nOut, topInner = z + halfZ - nIn;
+        float bottomOuter = z - halfZ - sOut, bottomInner = z - halfZ + sIn;
+        BuildDecor(parent, $"{lane.name}_흙길_위", new Vector3((left + right) * 0.5f, y, (topOuter + topInner) * 0.5f),
+                   new Vector3(right - left, 0.08f, topOuter - topInner), "dirt");
+        BuildDecor(parent, $"{lane.name}_흙길_아래", new Vector3((left + right) * 0.5f, y, (bottomOuter + bottomInner) * 0.5f),
+                   new Vector3(right - left, 0.08f, bottomInner - bottomOuter), "dirt");
+        BuildDecor(parent, $"{lane.name}_흙길_왼", new Vector3(x - halfX + (wIn - wOut) * 0.5f, y, (topInner + bottomInner) * 0.5f),
+                   new Vector3(wOut + wIn, 0.08f, topInner - bottomInner), "dirt");
+        BuildDecor(parent, $"{lane.name}_흙길_오른", new Vector3(x + halfX + (eOut - eIn) * 0.5f, y, (topInner + bottomInner) * 0.5f),
+                   new Vector3(eOut + eIn, 0.08f, topInner - bottomInner), "dirt");
 
         // (레인 안 ㄱ자 벽 넷은 2026-09-26 사장님 지시로 지웠다 — MapLayout.CornerWallOffsetX 주석.)
 
@@ -3835,6 +3863,34 @@ public static class MapGenerator
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gate.scene);
         UnityEditor.SceneManagement.EditorSceneManager.SaveScene(gate.scene);
         return $"옛 조각 {removed}개 지움 · 정의문 {gate.transform.position} 회전 {GateYaw}° · 씬 저장\n{quest}\n{nav}";
+    }
+
+    // 맵 전체 재생성 없이 레인 흙길만 다시 깐다(10-03 흙길 넓히기). 장식이라 NavMesh는 안 굽는다.
+    // 부르기: call MapGenerator.RepairLaneTracks
+    static string RepairLaneTracks()
+    {
+        int removed = 0, built = 0;
+        UnityEngine.SceneManagement.Scene scene = default;
+        foreach (MapLayout.Island lane in MapLayout.Lanes)
+        {
+            Transform parent = null;
+            foreach (string side in new[] { "위", "아래", "왼", "오른" })
+            {
+                GameObject old = GameObject.Find($"{lane.name}_흙길_{side}");
+                if (old == null) continue;
+                parent = old.transform.parent;
+                scene = old.scene;
+                Object.DestroyImmediate(old);
+                removed++;
+            }
+            if (parent == null) continue;
+            DecorateLane(parent, lane);
+            built += 4;
+        }
+        if (removed == 0) return "⚠️ 씬에서 「<레인>_흙길_*」을 못 찾았습니다.";
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+        return $"흙길 {removed}개 지우고 {built}개 다시 깜(폭 = 필드 가로 × {TrackVisualWidthRatio}) · 씬 저장";
     }
 
     // 정의문 뒤 보상 사슬(JusticeGateQuest) — 문이 부서지면 dog_zone(=펑크해저드 공터) 가운데에 3제독 하나가 선다. 이미 있으면 지우고 다시 만든다.

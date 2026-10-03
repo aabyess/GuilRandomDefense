@@ -57,7 +57,9 @@ public static class ArtBinder
     // 🔴 2026-09-23 사장님 지시("유닛들 크기 전체적으로 좀 더 키워야할듯? 너무 작아서 잘 안 보인다")로 20 → 30.
     //    맵이 원작 비율로 4.167배가 되면서 같은 키 20이 화면에서 작아 보였다. 1.5배로 올린다.
     //    ⚠️ 적 키(EnemyHeight)와 흙길 폭(MapGenerator.TrackWidth)이 이 값에 묶여 있다 — 같이 올려야 한다.
-    public const float UnitHeight = 30f;
+    // 🔴 10-03 사장님 「원랜디보다 유닛이 작다」: 원작 화면(Docs/reference/ui/원랜디_카메라구도.png)은 유닛 키 ≈ 레인 폭의 1/23,
+    //    우리는 같은 카메라에서 1/50 → 30 → 48(1.6배, 1차 — 사진 보고 조정). 적·흙길도 같은 비율로 따라온다.
+    public const float UnitHeight = 48f;
 
     // 적은 흙길 위를 줄지어 걷는다. 아군과 같은 키 20으로 두면 지름이 7.2가 되어
     // 폭 12짜리 길에 한 마리 반밖에 안 들어가고, 사람이 길보다 커 보인다.
@@ -68,7 +70,8 @@ public static class ArtBinder
     // 길 폭(MapLayout)과 묶인 값이라 여기만 보고 올리면 길이 좁아 보인다.
     // 2026-09-23: 유닛 20→30에 맞춰 15 → 22.5(같은 1.5배). 지름 5.4 → 8.1이 되므로
     // 흙길 폭도 12 → 18로 같이 올려야 길에 두 마리가 그대로 나란히 선다.
-    const float EnemyHeight = 22.5f;
+    // 10-03: 유닛 30→48에 맞춰 22.5 → 36(같은 1.6배, 아군:적 비 0.75 유지).
+    const float EnemyHeight = 36f;
 
     // 프리팹 이름이 아니라 붙어 있는 컴포넌트로 가른다 — 이름 규칙이 바뀌어도 안 깨진다.
     static float HeightFor(GameObject root)
