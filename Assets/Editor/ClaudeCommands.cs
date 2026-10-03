@@ -1346,6 +1346,12 @@ public static class ClaudeCommands
                     return $"❌ wait: 뒤엔 초: {token}";
                 job.clicks.Add("@wait:" + token.Substring(5));
             }
+            else if (token.StartsWith("key:"))
+            {
+                // 가상 키보드로 키 하나를 눌렀다 뗀다 — 상점 칸 단축키 확인용(10-03). 이름은 Input System Key 이름(Q·A·Space …).
+                if (!Enum.TryParse(token.Substring(4), true, out Key kk) || kk == Key.None) return $"❌ key: 뒤엔 키 이름(Q·W·Space …): {token}";
+                job.clicks.Add("@key:" + kk);
+            }
             else if (token == "buttons") job.clicks.Add("@buttons");
             else if (token == "cardpair") job.clicks.Add("@cardpair");
             else if (token.StartsWith("call:")) job.clicks.Add("@call:" + token.Substring(5));
@@ -1563,6 +1569,35 @@ public static class ClaudeCommands
                     RoundManager jrm = UnityEngine.Object.FindFirstObjectByType<RoundManager>();
                     object ok = jrm == null ? null : typeof(RoundManager).GetMethod("DebugJumpToRound", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.Invoke(jrm, new object[] { jr });
                     job.report += $"   ⏩ R{jr}로 점프: {(ok == null ? "❌ RoundManager.DebugJumpToRound 없음" : ok is bool b && b ? "✅" : $"❌ 거부({ok})")} · t={Time.time:F1}\n";
+                    job.clickIndex++;
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
+                    break;
+                }
+                if (target.StartsWith("@key:"))
+                {
+                    // 한 프레임 누르고 다음 단계에서 뗀다 — wasPressedThisFrame이 누른 프레임에 잡힌다.
+                    Key pressKey = (Key)Enum.Parse(typeof(Key), target.Substring(5));
+                    Keyboard shotKeyboard = InputSystem.devices.OfType<Keyboard>().FirstOrDefault(k => k.name == ShotKeyboardName)
+                                            ?? InputSystem.AddDevice<Keyboard>(ShotKeyboardName);
+                    if (!shotKeyboard.enabled) InputSystem.EnableDevice(shotKeyboard);
+                    if (job.pointerPhase == 0)
+                    {
+                        InputSystem.QueueStateEvent(shotKeyboard, new KeyboardState(pressKey));
+                        job.pointerPhase = 1;
+                        SaveGameShot(job);
+                        break;
+                    }
+                    if (job.pointerPhase == 1)
+                    {
+                        InputSystem.QueueStateEvent(shotKeyboard, new KeyboardState());
+                        job.pointerPhase = 2;
+                        SaveGameShot(job);
+                        break;
+                    }
+                    job.pointerPhase = 0;
+                    GameObject area = GameObject.Find("TargetAreaIndicator");
+                    job.report += $"   ⌨️ {pressKey} 키 · 상점 선택 {GameHud.ShopSelected} · 지점 대기 {GameHud.ShopTargetingPending}"
+                                  + $" · 범위 원 {(area != null && area.activeInHierarchy ? $"켜짐 {area.transform.position:F1}" : "꺼짐")}\n";
                     job.clickIndex++;
                     Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
                     break;
@@ -2337,6 +2372,7 @@ public static class ClaudeCommands
     static InputSettings.EditorInputBehaviorInPlayMode? previousBehavior;
     static InputSettings.BackgroundBehavior? previousBackground;
     const string ShotMouseName = "ClaudeGameShotMouse";
+    const string ShotKeyboardName = "ClaudeGameShotKeyboard";
 
     static void EnsureShotMouse()
     {
@@ -2397,6 +2433,8 @@ public static class ClaudeCommands
         disabledMice.Clear();
         foreach (Mouse m in InputSystem.devices.OfType<Mouse>().Where(m => m.name == ShotMouseName).ToList())
             InputSystem.RemoveDevice(m);
+        foreach (Keyboard k in InputSystem.devices.OfType<Keyboard>().Where(k => k.name == ShotKeyboardName).ToList())
+            InputSystem.RemoveDevice(k);
         shotMouse = null;
         if (previousMouse != null && previousMouse.added) previousMouse.MakeCurrent();
         previousMouse = null;
