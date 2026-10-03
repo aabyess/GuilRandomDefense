@@ -367,7 +367,9 @@ public static class MapLayout
     // UnitGradeExtensions.Tier()가 초월 9 · 제한됨 10 · **불멸 11**이다(초월이 위가 아니다).
     // 지금 씬 순서와도 같으므로, 뒤집으면 사장님이 안 시킨 변화가 화면에 난다.
     const float DisplaySizeZ = 67.195f * Scale;        // 280.0 — 두 섬 깊이가 같다
-    const float TranscendSizeX = 110.391f * Scale;     // 460.0
+    // 🔴 10-03 발견: 460이면 줄당 6칸이라 초월 25종이 5줄(4줄+1)이 되는데 섬 깊이 280은 4줄(61.4×4=245.6+여백)만 담아
+    //    25번째(황준석)가 섬 **밖 바다 위**에 떠 있었다(조합판 북쪽 물). 줄당 7칸 → 4줄이 되게 폭을 495로(7칸 = 61.4×7 + 여백 61.4 = 491.2 이상).
+    const float TranscendSizeX = 495f;
     const float ImmortalSizeX = 67.195f * Scale;       // 280.0
     const float CombineTopZBeforeShift = -17.04f * Scale;   // −71.0 (「윗변 z=−71」)
 

@@ -4009,9 +4009,12 @@ public static class MapGenerator
             if (child.name == "Nature") continue;
             int dock = DockOf(child.name);
             int inOld = RectIndex(oldRects, child.position);
-            if (inOld >= 0 || dock >= 0)
+            // 전시 섬 이름 접두(초월_·불멸_·초월전시_·불멸전시_)는 그 섬 것뿐이다 — 섬 밖으로 삐져나간 것(10-03 초월 25번째 인형이 바다 위에 있었다)도 같이 지운다.
+            int byName = child.name.StartsWith("초월_") || child.name.StartsWith("초월전시") ? 1
+                       : child.name.StartsWith("불멸_") || child.name.StartsWith("불멸전시") ? 2 : -1;
+            if (inOld >= 0 || dock >= 0 || byName >= 0)
             {
-                int owner = dock >= 0 ? dock : inOld;
+                int owner = dock >= 0 ? dock : byName >= 0 ? byName : inOld;
                 victims.Add(child);
                 victimCounts[owner]++;
                 Tally(owner, child.name);
@@ -4199,6 +4202,9 @@ public static class MapGenerator
         BuildStoneFloor(parent, "초월전시_바닥", island);
 
         int perRow = Mathf.Max(1, Mathf.FloorToInt((island.size.x - SlotSpacing) / SlotSpacing));
+        int rowCount = Mathf.CeilToInt(units.Count / (float)perRow);
+        if (rowCount * SlotSpacing > island.size.y - 2f)
+            Debug.LogWarning($"[맵] 초월 전시 {units.Count}종이 줄당 {perRow}칸 × {rowCount}줄({rowCount * SlotSpacing:F0})이라 섬 깊이 {island.size.y:F0}를 넘습니다 — 마지막 줄이 바다 위에 섭니다. MapLayout.TranscendSizeX를 늘리세요.");
         float startX = island.center.x - (perRow - 1) * SlotSpacing * 0.5f;
         float startZ = island.center.y + island.size.y * 0.5f - SlotSpacing;
 

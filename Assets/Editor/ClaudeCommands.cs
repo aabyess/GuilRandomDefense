@@ -2337,8 +2337,33 @@ public static class ClaudeCommands
         return $"{pick.gameObject.name}「{ButtonLabel(pick)}」(골드 {goldBefore} → {goldAfter})";
     }
 
+    // 10-03 사장님 지시로 위습 칸이 글자(이름 TMP) 대신 3D 아이콘이 됐다(자식은 Icon·Count뿐). 도구는 칸을 「종류 이름」으로 찾아 왔으므로
+    // 칸이 가진 WispData(GameHud.wispSlots의 data)에서 예전 글자(「위습」 뺀 이름)를 다시 만든다 — GameHud.ShortWispName과 같은 규칙.
+    static string WispSlotKind(GameObject slotRoot)
+    {
+        GameHud hud = UnityEngine.Object.FindFirstObjectByType<GameHud>(FindObjectsInactive.Include);
+        if (hud == null) return null;
+        var slots = typeof(GameHud).GetField("wispSlots", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(hud) as System.Collections.IEnumerable;
+        if (slots == null) return null;
+        foreach (object slot in slots)
+        {
+            System.Type t = slot.GetType();
+            if (!(t.GetField("root")?.GetValue(slot) is GameObject root) || root != slotRoot) continue;
+            WispData data = t.GetField("data")?.GetValue(slot) as WispData;
+            if (data == null || string.IsNullOrEmpty(data.wispName)) return null;
+            string name = data.wispName.Replace("위습", "").Trim();
+            return name.Length == 0 ? "위습" : name;
+        }
+        return null;
+    }
+
     static string ButtonLabel(UnityEngine.UI.Button button)
     {
+        if (button.gameObject.name.StartsWith("WispSlot"))
+        {
+            string kind = WispSlotKind(button.gameObject);
+            if (kind != null) return kind;
+        }
         UnityEngine.UI.Text text = button.GetComponentInChildren<UnityEngine.UI.Text>();
         if (text != null && !string.IsNullOrWhiteSpace(text.text)) return text.text.Trim();
         TMPro.TMP_Text tmp = button.GetComponentInChildren<TMPro.TMP_Text>();
@@ -4008,7 +4033,7 @@ public static class ClaudeCommands
             any = true;
             if (!count.gameObject.activeInHierarchy) continue;
             Transform nameNode = count.transform.parent.Find("Name");
-            string label = nameNode != null && nameNode.TryGetComponent(out TMPro.TMP_Text n) ? n.text : count.transform.parent.name;
+            string label = nameNode != null && nameNode.TryGetComponent(out TMPro.TMP_Text n) ? n.text : (WispSlotKind(count.transform.parent.gameObject) ?? count.transform.parent.name);
             if (int.TryParse(count.text.Trim(), out int value)) total += value;
             parts.Add($"{label} {count.text.Trim()}");
         }
