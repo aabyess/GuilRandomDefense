@@ -14,12 +14,28 @@ static class JusticeQuestProbe
         foreach (EnemyDummy e in EnemyDummy.Active)
             if (e != null && e.Data != null && e.Data.enemyName.StartsWith("[퀘스트]")) { dogs++; sb.AppendLine($"  제독 「{e.Data.enemyName}」 HP {e.Hp:N0}/{e.MaxHp:N0} 위치 {e.transform.position:F1} 방어 {e.Data.armor}"); }
         sb.AppendLine($"  제독 수 {dogs}");
+        sb.Append(Effects());
         foreach (EnemyDummy e in EnemyDummy.Active)
             if (e != null && e.LaneIndex < 0) sb.AppendLine($"  [레인-1] {e.name} 「{(e.Data != null ? e.Data.enemyName : "데이터없음")}」 {e.transform.position:F1}");
         foreach (GameObject go in Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None))
             if (go.name.StartsWith("Mob_유재헌") || go.name.StartsWith("Mob_김정래") || go.name.StartsWith("Mob_박예원")) sb.AppendLine($"  씬 객체 {go.name} {go.transform.position:F1} active={go.activeInHierarchy}");
         JusticeGateQuest q = Object.FindFirstObjectByType<JusticeGateQuest>();
         sb.AppendLine(q == null ? "  JusticeGateQuest 없음" : $"  JusticeGateQuest {q.transform.position:F1} enabled={q.enabled}");
+        return sb.ToString();
+    }
+
+    static string Break1() { JusticeGateQuest.ForcedKind = 1; return Break(); }
+    static string Break2() { JusticeGateQuest.ForcedKind = 2; return Break(); }
+    static string Break3() { JusticeGateQuest.ForcedKind = 3; return Break(); }
+
+    // 버프가 실제로 먹는 값 — 공격력·공격 간격(내 유닛 하나)·적 이속 배율(적 하나, 레인 적)
+    static string Effects()
+    {
+        var sb = new StringBuilder();
+        foreach (UnitAttacker a in Object.FindObjectsByType<UnitAttacker>(FindObjectsSortMode.None))
+        { sb.AppendLine($"  내 유닛 {a.name} 공격력 {a.AttackDamage:F2} · 공격간격 {a.AttackInterval:F4}s"); break; }
+        foreach (EnemyDummy e in EnemyDummy.Active)
+            if (e != null && e.LaneIndex >= 0) { sb.AppendLine($"  적 {e.name} 이속배율 {e.EffectiveSlowMultiplier:F4} · 실효 이속 {e.MoveSpeed:F2}"); break; }
         return sb.ToString();
     }
 

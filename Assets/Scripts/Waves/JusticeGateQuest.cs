@@ -25,6 +25,9 @@ public class JusticeGateQuest : MonoBehaviour
     // o02M/Q/R 모두 upgr에 R01A~R01E(모드별 +50%)가 있어 거대 해왕류와 같은 1.5배(SeaKingSpawner.HpMultiplier 주석 참고).
     const float HpMultiplier = 1.5f;
 
+    /// <summary>점검 전용 — 1·2·3이면 GetRandomInt(1,3) 대신 그 종류로 소환한다(JusticeQuestProbe). 0이면 원작대로 무작위.</summary>
+    public static int ForcedKind;
+
     bool started;
     GameObject current;
 
@@ -45,7 +48,7 @@ public class JusticeGateQuest : MonoBehaviour
     {
         GrantDoorRewards();
 
-        int kind = Random.Range(1, 4);   // GetRandomInt(1,3)
+        int kind = ForcedKind >= 1 && ForcedKind <= 3 ? ForcedKind : Random.Range(1, 4);   // GetRandomInt(1,3)
         EnemyData data = kind == 1 ? redDog : kind == 2 ? yellowMonkey : blueBird;
         if (!SpawnDog(data)) yield break;
 
