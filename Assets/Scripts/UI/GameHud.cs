@@ -1316,7 +1316,14 @@ public class GameHud : MonoBehaviour
             // TryGamble 안에서 전부 처리한다(§31). 재고가 0이면 false를 돌려주지만
             // 판매(유닛 소멸) 자체는 막지 않는다 — 위 sellRewardWisp/TraitPoints와 같은
             // 관례로 "보상이 안 나올 수 있어도 판매는 항상 된다".
-            if (identity.Data.sellTriggersItemGamblePool != null && context.ItemGambleState != null &&
+            // 아이템 칸 6칸이 차 있으면 도박을 돌리지 않는다(재고·풀을 안 건드림 — RewardDistributor.GrantItemDrop과 같은 규칙).
+            //   예전엔 Add가 거절돼도 「획득!」이 뜨고 아이템·재고만 사라졌다.
+            ItemInventory gambleInventory = InventoryOf(context);
+            bool gambleBlockedByFull = identity.Data.sellTriggersItemGamblePool != null && context.ItemGambleState != null
+                && context.ItemGambleState.HasStock && gambleInventory != null && gambleInventory.IsFull;
+            if (gambleBlockedByFull)
+                PlayerNotification.Show(owner.OwnerId, $"<color=#FF8A65>아이템 칸이 가득 차서(최대 {ItemInventory.MaxItems}칸) 아이템 도박을 못 했습니다.</color>", 6f);
+            else if (identity.Data.sellTriggersItemGamblePool != null && context.ItemGambleState != null &&
                 context.ItemGambleState.TryGamble(identity.Data.sellTriggersItemGamblePool, out ItemData wonItem) &&
                 wonItem != null)
             {
