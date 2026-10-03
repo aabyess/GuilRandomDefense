@@ -125,8 +125,9 @@ public class PersistentSave : MonoBehaviour
     //
     // ✅ 2026-09-12: treasure(+2, 팀이 9번째 보물상자를 찾는 순간 전원) — TreasureHunt.
     //
-    // ⚠️ 나머지(Story2·creep_reward·door_quest·Red_dog)는 여전히 대응 코드가
-    // 0건이다(2026-09-05 확인 — Story는 13개 있지만 "Story2"가 우리 스토리 몇 번에
+    // ✅ 2026-10-03: door_quest(+3)·Red_dog(+1)은 JusticeGateQuest가 부른다(정의문 보상 사슬).
+    //
+    // ⚠️ 나머지(Story2·creep_reward)는 2026-09-05 확인 당시 대응 코드가 0건이었다(그때 기록: Story는 13개 있지만 "Story2"가 우리 스토리 몇 번에
     // 대응하는지는 원작-우리 스토리 번호가 아예 별개라 결정할 근거가 없다). 각 시스템이
     // 실제로 만들어질 때 그 트리거가 이 메서드를 부르면 된다.
     public void AddSessionPoints(int amount, bool announce = true)
@@ -196,5 +197,14 @@ public class PersistentSave : MonoBehaviour
 
         SessionPoints = 0;
         WriteToDisk();
+
+        // 세이브 코드(원작 VJSE_Save, 사장님 10-03 확정 — 자동 저장과 병행): 이 PC 주인의 슬롯만. 멀티 원격 슬롯은 친구 PC에서(NetSaves.WriteResult).
+        if (!remote && playerId == LocalPlayer.LocalPlayerId) SaveCodeService.PresentAfterRun(playerId, Data);
+    }
+
+    /// <summary>세이브 코드 불러오기(싱글 판 중 -load)로 값이 바뀌었을 때 메모리의 것도 맞춘다.</summary>
+    public void ReplaceData(PlayerSaveData data)
+    {
+        if (data != null) Data = data;
     }
 }

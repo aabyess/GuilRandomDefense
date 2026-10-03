@@ -82,6 +82,13 @@ public class GameChatBox : MonoBehaviour
 
         if (local == null || string.IsNullOrWhiteSpace(text)) return;
 
+        // 원작 OnChatLoad: 「-load 코드」 — 판정은 이 PC에서(내 파일·내 닉네임이 열쇠). 말로는 뿌리지 않는다(코드 노출 방지).
+        if (text.TrimStart().StartsWith("-load ", System.StringComparison.OrdinalIgnoreCase))
+        {
+            ShowStatus(HandleLoadCommand(local, text.TrimStart().Substring(6)));
+            return;
+        }
+
         // MP: 채팅 한 줄이 곧 코드 입력(원작 워크3). 판정은 PlayerChat이 한다 — 코드면 실행, 말은 전원(싱글은 나)에게 한 줄.
         //     멀티 클라는 호스트에 보내기만 한다(코드 결과는 알림으로, 채팅 줄은 전원에게 돌아온다).
         if (!PlayerChat.AllowLocalSend()) return;
@@ -94,6 +101,16 @@ public class GameChatBox : MonoBehaviour
         string name = MatchConfig.Active && NetPlayer.Local != null ? NetPlayer.Local.DisplayName : LocalName();
         string codeResult = PlayerChat.HandleOnAuthority(local.PlayerId, name, text, out _);
         if (codeResult != null) ShowStatus(codeResult);   // 코드 결과는 지금처럼 입력창 자리에(보낸 사람만)
+    }
+
+    // 원작 「-load는 1라운드 전까지만 가능합니다.」. 같이 하기에선 판 시작 때 호스트가 세이브를 이미 받았으니 대기실에서만 받는다.
+    static string HandleLoadCommand(PlayerContext local, string code)
+    {
+        RoundManager rm = FindFirstObjectByType<RoundManager>();
+        if (rm != null && !(rm.CurrentRound <= 1 && rm.PreRoundTimeLeft > 0f)) return "-load는 1라운드 전까지만 가능합니다.";
+        if (MatchConfig.Active) return "같이 하기에선 대기실의 「세이브 코드 불러오기」로 입력하세요.";
+        SaveCodeService.Load(PlayerDisplayName.RawNickname(local.PlayerId), code, out string message, data => local.PersistentSave?.ReplaceData(data));
+        return message;
     }
 
     // 싱글에서 채팅 줄 앞에 붙일 이름 — 같이 하기에서 쓰던 닉네임 기억값, 없으면 「나」.

@@ -209,20 +209,45 @@ public class NetLobbyUi : MonoBehaviour
         roomPanel.SetActive(false);
     }
 
+    TMP_InputField saveNickInput;
+    TMP_InputField saveCodeInput;
+    TMP_Text saveLoadResult;
+
     void BuildModePanel(RectTransform root)
     {
         Image card = CreateImage(root, "ModePanel", Card);
-        Place(card.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -60f), new Vector2(620f, 380f));
+        Place(card.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -60f), new Vector2(620f, 660f));
         modePanel = card.gameObject;
         RectTransform c = card.rectTransform;
 
         Button solo = CreateButton(c, "SoloButton", "혼자 하기", ButtonNormal, 36);
-        Place((RectTransform)solo.transform, new Vector2(0.5f, 0.5f), new Vector2(0f, 75f), new Vector2(480f, 100f));
+        Place((RectTransform)solo.transform, new Vector2(0.5f, 0.5f), new Vector2(0f, 245f), new Vector2(480f, 100f));
         solo.onClick.AddListener(() => launcher.PlaySolo());
 
         Button together = CreateButton(c, "TogetherButton", "같이 하기", ButtonAccent, 36);
-        Place((RectTransform)together.transform, new Vector2(0.5f, 0.5f), new Vector2(0f, -65f), new Vector2(480f, 100f));
+        Place((RectTransform)together.transform, new Vector2(0.5f, 0.5f), new Vector2(0f, 120f), new Vector2(480f, 100f));
         together.onClick.AddListener(() => multiplayerChosen = true);
+
+        // 세이브 코드 불러오기(원작 -load, 사장님 10-03 확정) — 다른 PC에서 만든 코드로 클리어 횟수 등을 이어 받는다. 닉네임이 열쇠.
+        TMP_Text header = CreateText(c, "SaveCodeHeader", "세이브 코드 불러오기 (다른 PC 기록 이어받기)", 24, font, TextDim, TextAlignmentOptions.Center);
+        Place(header.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 25f), new Vector2(560f, 36f));
+        saveNickInput = CreateInput(c, "SaveNickInput", "코드를 만들 때 쓴 닉네임", NetPlayer.MaxNicknameLength);
+        Place((RectTransform)saveNickInput.transform, new Vector2(0.5f, 0.5f), new Vector2(0f, -35f), new Vector2(540f, 60f));
+        saveNickInput.text = NetPlayer.LoadNickname();
+        saveNickInput.onEndEdit.AddListener(value => { NetPlayer.SaveNickname(value); if (nicknameInput != null) nicknameInput.text = NetPlayer.LoadNickname(); });
+        saveCodeInput = CreateInput(c, "SaveCodeInput", "세이브 코드 (GRD1-…)", 80);
+        Place((RectTransform)saveCodeInput.transform, new Vector2(0.5f, 0.5f), new Vector2(0f, -105f), new Vector2(540f, 60f));
+        Button load = CreateButton(c, "SaveLoadButton", "불러오기", ButtonNormal, 30);
+        Place((RectTransform)load.transform, new Vector2(0.5f, 0.5f), new Vector2(0f, -175f), new Vector2(300f, 60f));
+        load.onClick.AddListener(() =>
+        {
+            NetPlayer.SaveNickname(saveNickInput.text);
+            if (nicknameInput != null) nicknameInput.text = NetPlayer.LoadNickname();
+            SaveCodeService.Load(NetPlayer.SanitizeNickname(saveNickInput.text), saveCodeInput.text, out string message);
+            saveLoadResult.text = message;
+        });
+        saveLoadResult = CreateText(c, "SaveLoadResult", "", 24, font, TextMain, TextAlignmentOptions.Center);
+        Place(saveLoadResult.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -258f), new Vector2(580f, 100f));
     }
 
     void BuildMainPanel(RectTransform root)

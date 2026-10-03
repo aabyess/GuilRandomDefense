@@ -31,6 +31,18 @@ public static class PlayerDisplayName
         return title.Length == 0 ? BareName(slot) : title + $"<color=#FFFFFF>{BareName(slot)}</color>";
     }
 
+    /// <summary>세이브 코드 열쇠로 쓰는 원본 닉네임 — 칭호·「플레이어 N」 대체 이름 없이, 비어 있으면 빈 문자열.</summary>
+    public static string RawNickname(int slot)
+    {
+        if (MatchConfig.Active)
+        {
+            foreach (NetPlayer player in NetPlayer.All)
+                if (player != null && player.Slot == slot) return NetPlayer.SanitizeNickname(player.Nickname.ToString());
+            return "";
+        }
+        return slot == LocalPlayer.LocalPlayerId ? NetPlayer.SanitizeNickname(NetPlayer.LoadNickname()) : "";
+    }
+
     static string BareName(int slot)
     {
         if (MatchConfig.Active)

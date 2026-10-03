@@ -53,6 +53,7 @@ public static class NetSaves
             PersistentSave.WriteOwnSave(data);
             Debug.Log($"[MP] 세이브 저장: {PersistentSave.PathFor(0)} — 누적 {point}점 · 클리어 {clear}회 · 최고 {best}");
             PlayerNotification.Show(LocalPlayer.LocalPlayerId, "이번 판 기록을 저장했습니다.", 6f);
+            SaveCodeService.PresentAfterRun(LocalPlayer.LocalPlayerId, data);   // 원작식 세이브 코드(다른 PC 이어하기)
         }
         catch (System.Exception e)
         {
