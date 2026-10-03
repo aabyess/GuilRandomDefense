@@ -325,6 +325,7 @@ public class GameHud : MonoBehaviour
     bool itemInventoryDirty = true;
 
     bool teamPanelInitialized;
+    bool teamPanelCollapsed;   // 점수판 접기(사진의 ▼) — 로컬 보기 설정
     int lastTotalEnemyCount = int.MinValue;
     int lastDeathLimit = int.MinValue;   // 팀 현황판 제목의 패배 한계(41R에 내려가면 다시 그린다)
     string lastDifficultyLabel;   // 팀 현황판 머리 줄의 난이도 — 고르기 전엔 null(안 보임)
@@ -1930,6 +1931,7 @@ public class GameHud : MonoBehaviour
         //    「플레이어 4」가 상자 밑으로 흘러나왔다(09-23 1920×1080 실측). 줄 수·플레이어 수가 바뀌어도
         //    맞게, 패널의 레이아웃 그룹이 글자의 preferredHeight로 높이를 정한다(RightColumn 참고).
         RectTransform teamPanel = CreatePanel(RightColumn(), "TeamPanel", new Color(0f, 0f, 0f, 0.6f));
+        UiSkin.Apply(teamPanel.GetComponent<Image>(), "multiboard_frame_9s", new Color(0f, 0f, 0f, 0.6f));   // 원작 멀티보드: 금테 짙은 판
         VerticalLayoutGroup fit = teamPanel.gameObject.AddComponent<VerticalLayoutGroup>();
         fit.padding = new RectOffset(8, 8, 4, 6);
         fit.childControlWidth = true;
@@ -1943,6 +1945,28 @@ public class GameHud : MonoBehaviour
         teamPanelText.lineSpacing = 1.1f;
         teamPanelText.textWrappingMode = TextWrappingModes.NoWrap;
         teamPanelText.overflowMode = TextOverflowModes.Overflow;
+        teamPanelText.raycastTarget = false;
+
+        // 접기 버튼(워크3 멀티보드 기본 기능, 사진의 ▼) — 접으면 제목 줄만 남는다. 기호는 폰트 누락을 피해 ASCII.
+        GameObject collapse = new GameObject("TeamPanelCollapse", typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
+        collapse.transform.SetParent(teamPanel, false);
+        collapse.GetComponent<LayoutElement>().ignoreLayout = true;
+        RectTransform collapseRect = (RectTransform)collapse.transform;
+        collapseRect.anchorMin = collapseRect.anchorMax = new Vector2(1f, 1f);
+        collapseRect.pivot = new Vector2(1f, 1f);
+        collapseRect.anchoredPosition = new Vector2(-4f, -3f);
+        collapseRect.sizeDelta = new Vector2(26f, 22f);
+        Image collapseImage = collapse.GetComponent<Image>();
+        if (!UiSkin.Apply(collapseImage, "button_navy_9s", new Color(0.12f, 0.2f, 0.45f, 1f))) collapseImage.color = new Color(0.12f, 0.2f, 0.45f, 1f);
+        TMP_Text collapseLabel = CreateLabel(collapse.transform, "Label", "-");
+        collapseLabel.fontSize = 18;
+        collapseLabel.raycastTarget = false;
+        collapse.GetComponent<Button>().onClick.AddListener(() =>
+        {
+            teamPanelCollapsed = !teamPanelCollapsed;
+            collapseLabel.text = teamPanelCollapsed ? "+" : "-";
+            teamPanelInitialized = false;   // 다음 프레임에 다시 그린다
+        });
     }
 
     static MinimapCamera BuildMinimap(RectTransform parent)
@@ -3554,6 +3578,12 @@ public class GameHud : MonoBehaviour
             teamPanelBuilder.Append("<color=#FFB0FF>유닛 카운트 = </color><color=#00FF00>").Append(deathLimit).Append("</color><color=#FFB0FF> <- 패배</color>");
         else
             teamPanelBuilder.Append("<color=#FFB0FF>유닛 카운트 </color>").Append(totalEnemies);
+
+        if (teamPanelCollapsed)
+        {
+            teamPanelText.text = teamPanelBuilder.ToString();
+            return;   // 접힘: 제목 줄만(원작 멀티보드 접기)
+        }
 
         teamPanelBuilder.Append("\n<color=#00FFFF>");
         if (difficultyLabel != null) teamPanelBuilder.Append("난이도 : ").Append(difficultyLabel).Append("모드"); else teamPanelBuilder.Append("난이도 : -");
