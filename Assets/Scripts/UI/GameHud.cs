@@ -326,6 +326,8 @@ public class GameHud : MonoBehaviour
     readonly int[] lastSlotEnemyCount = new int[TeamSlotCount];
     readonly int[] lastSlotGold = new int[TeamSlotCount];
     readonly int[] lastSlotFull = new int[TeamSlotCount];
+    readonly string[] slotNameCache = new string[TeamSlotCount];   // 점수판 이름 칸(칭호+닉네임) — 1초마다 다시 읽는다(문자열 할당을 프레임마다 안 하려고)
+    float nextSlotNameRefresh;
     bool lastFullVisible;
     readonly int[] lastSlotWood = new int[TeamSlotCount];
     readonly int[] slotGrace = new int[TeamSlotCount];       // MP: 끊김 유예 남은 초(0 = 연결됨)
@@ -3382,7 +3384,26 @@ public class GameHud : MonoBehaviour
             selectionManager.SelectOnly(selectable);
     }
 
-    // 팀 현황판 값은 자주 안 바뀌므로(적/골드/목재), 이전 프레임과 비교해 실제로 바뀐 경우에만
+    // 점수판 열 위치(px, 글자 20 기준) — 이름 칸 폭 ≈ 칩 + 칭호(최대 5자) + 닉네임(최대 12자).
+    const int ScoreboardCountColumn = 330;
+    const int ScoreboardFullColumn = 500;
+    // 원작 플레이어 색(j 14714~14717) — 1 빨강 · 2 파랑 · 3 보라 · 4 노랑.
+    static readonly string[] ScoreboardColorHex = { "FF0202", "0041FF", "530080", "FFFC00" };
+
+    /// <summary>점수판 이름 칸: 칭호(자체 색) + 닉네임(플레이어 색). 닉네임이 없으면 「플레이어 N」.</summary>
+    static string ScoreboardName(int slot)
+    {
+        if (PlayerContext.GetOccupied(slot) == null) return null;
+        string nick = PlayerDisplayName.RawNickname(slot);
+        if (string.IsNullOrWhiteSpace(nick)) nick = $"플레이어 {slot + 1}";
+        PlayerContext context = PlayerContext.GetOccupied(slot);
+        int clears = context != null && context.PersistentSave != null ? context.PersistentSave.Data.cumulativeClearCount : 0;
+        string title = PlayerDisplayName.ClearTitleOf(clears);
+        int index = Mathf.Clamp(slot, 0, 3);
+        return title + "<color=#" + ScoreboardColorHex[index] + ">" + nick + "</color>";
+    }
+
+    // 팀 현황판 값은 자주 안 바뀌므로(적 수·이름·풀카운트), 이전 프레임과 비교해 실제로 바뀐 경우에만
     // StringBuilder를 다시 채운다.
     void RefreshTeamPanel()
     {
@@ -3405,7 +3426,17 @@ public class GameHud : MonoBehaviour
             ? NetGameState.Instance.DeathLimit
             : (roundManager != null ? roundManager.EnemyCountLimit : 0);
         bool fullVisible = FullCountScore.Visible;
-        bool changed = !teamPanelInitialized || fullVisible != lastFullVisible || totalEnemies != lastTotalEnemyCount || difficultyLabel != lastDifficultyLabel || deathLimit != lastDeathLimit;
+        bool namesChanged = false;
+        if (Time.unscaledTime >= nextSlotNameRefresh)
+        {
+            nextSlotNameRefresh = Time.unscaledTime + 1f;
+            for (int i = 0; i < TeamSlotCount; i++)
+            {
+                string nameNow = ScoreboardName(i);
+                if (nameNow != slotNameCache[i]) { slotNameCache[i] = nameNow; namesChanged = true; }
+            }
+        }
+        bool changed = namesChanged || !teamPanelInitialized || fullVisible != lastFullVisible || totalEnemies != lastTotalEnemyCount || difficultyLabel != lastDifficultyLabel || deathLimit != lastDeathLimit;
 
         for (int i = 0; i < TeamSlotCount; i++)
         {
@@ -3439,12 +3470,17 @@ public class GameHud : MonoBehaviour
         lastFullVisible = fullVisible;
 
         teamPanelBuilder.Clear();
-        // 원작 색: 제목 |c00ffb0ff · 한계 숫자 |cFF00FF00. 지금 전체 적 수는 원작엔 없지만 아랫줄 「적 M」들의 합이라 그대로 남긴다.
+        // 원작 멀티보드(j 14700~14728) 모양: 제목 한 줄 + 머리줄 + 플레이어 4줄, 열은 [이름 | 남은 라운드 유닛 수 | (신세계) 풀카운트].
+        //   제목 「|c00ffb0ff유닛 카운트 = |cFF00FF00N|c00ffb0ff<- 패배」 · 머리줄 「|cff00ffff난이도 :|r{모드}|cff00ffff모드|r」 / 「|c0000ff00남은 라운드 유닛 수」.
+        //   이름은 플레이어 색(1 ff0202 · 2 0041FF · 3 530080 · 4 FFFC00)이고, 골드·목재는 점수판에 없다(상단 바 자원 — 사장님 확정 10-03).
         if (deathLimit > 0)
-            teamPanelBuilder.Append("<color=#FFB0FF>유닛 카운트 = </color><color=#00FF00>").Append(deathLimit).Append("</color><color=#FFB0FF> <- 패배</color>   |   적 ").Append(totalEnemies);
+            teamPanelBuilder.Append("<color=#FFB0FF>유닛 카운트 = </color><color=#00FF00>").Append(deathLimit).Append("</color><color=#FFB0FF> <- 패배</color>");
         else
-            teamPanelBuilder.Append("유닛 카운트 ").Append(totalEnemies);
-        if (difficultyLabel != null) teamPanelBuilder.Append("   |   난이도 ").Append(difficultyLabel);
+            teamPanelBuilder.Append("<color=#FFB0FF>유닛 카운트 </color>").Append(totalEnemies);
+
+        teamPanelBuilder.Append("\n<color=#00FFFF>");
+        if (difficultyLabel != null) teamPanelBuilder.Append("난이도 : ").Append(difficultyLabel).Append("모드"); else teamPanelBuilder.Append("난이도 : -");
+        teamPanelBuilder.Append("</color><pos=").Append(ScoreboardCountColumn).Append("><color=#00FF00>남은 라운드 유닛 수</color>");
 
         for (int i = 0; i < TeamSlotCount; i++)
         {
@@ -3458,32 +3494,34 @@ public class GameHud : MonoBehaviour
 
             teamPanelBuilder.Append('\n');
 
+            string hex = ScoreboardColorHex[i];
             bool isLocal = slotHas[i] && i == LocalPlayer.LocalPlayerId;
-            if (isLocal) teamPanelBuilder.Append("<b><color=#FFD54A>");
-
-            teamPanelBuilder.Append("플레이어 ").Append(i + 1);
-            if (slotGrace[i] > 0 && !slotDead[i])
+            if (isLocal) teamPanelBuilder.Append("<b>");
+            // 이름 칸 = 플레이어 색 칩(원작 줄 앞 아이콘 자리) + 칭호(자체 색) + 닉네임(플레이어 색)
+            teamPanelBuilder.Append("<mark=#").Append(hex).Append("FF>  </mark> ");   // 칩은 글자(■)가 폰트에 없을 수 있어 TMP 형광펜 배경으로 그린다
+            if (slotHas[i])
             {
-                teamPanelBuilder.Append(" | <color=#FF8A65>연결 끊김 ").Append(slotGrace[i]).Append("초</color>");   // MP
-            }
-            else if (slotDead[i])
-            {
-                teamPanelBuilder.Append(" | 사망");
-            }
-            else if (slotHas[i])
-            {
-                teamPanelBuilder.Append(" | 적 ").Append(slotEnemy[i])
-                    .Append(" | 골드 ").Append(slotGold[i])
-                    .Append(" | 목재 ").Append(slotWood[i]);
-                // 원작 멀티보드 3번째 행 「|cff00ffff풀카운트  :|r N  점」 — 신세계 진입 뒤부터(j:29704).
-                if (fullVisible) teamPanelBuilder.Append(" | <color=#00FFFF>풀카운트  :</color> ").Append(slotFull[i]).Append("  점");
+                string title = slotNameCache[i] ?? ScoreboardName(i);
+                teamPanelBuilder.Append(title);   // 칭호·닉네임 서식은 ScoreboardName이 색 태그까지 만든다
             }
             else
             {
-                teamPanelBuilder.Append(" | 비어있음");
+                teamPanelBuilder.Append("<color=#808080>열림</color>");
             }
 
-            if (isLocal) teamPanelBuilder.Append("</color></b>");
+            if (slotHas[i])
+            {
+                teamPanelBuilder.Append("<pos=").Append(ScoreboardCountColumn).Append('>');
+                if (slotGrace[i] > 0 && !slotDead[i])
+                    teamPanelBuilder.Append("<color=#FF8A65>연결 끊김 ").Append(slotGrace[i]).Append("초</color>");   // MP
+                else if (slotDead[i])
+                    teamPanelBuilder.Append("<color=#FF5050>사망</color>");
+                else
+                    teamPanelBuilder.Append(slotEnemy[i]);
+                // 원작 3열 「|cff00ffff풀카운트  :|r N  점」 — 신세계 진입 뒤부터(j 29702~29708).
+                if (fullVisible) teamPanelBuilder.Append("<pos=").Append(ScoreboardFullColumn).Append("><color=#00FFFF>풀카운트  :</color> ").Append(slotFull[i]).Append("  점");
+            }
+            if (isLocal) teamPanelBuilder.Append("</b>");
         }
 
         teamPanelText.text = teamPanelBuilder.ToString();
