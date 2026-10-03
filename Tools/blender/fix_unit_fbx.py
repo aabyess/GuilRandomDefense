@@ -5802,31 +5802,33 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             assert o is not None and o.type == "MESH", f"{name}: 뺄 메시가 없다 {gone}"
             bpy.data.objects.remove(o, do_unlink=True)
         report["뺀 메시"] = list(cfg["drop_meshes"])
-    if cfg.get("drop_material_faces"):                                  # 🔸 유기(2026-09-17): UE 립 한 메시 안의 눈 렌즈 덮개·결투 원반 발광 면 — 그 재질 칸 면만 지우고 빈 재질 칸도 뺀다
-        import bmesh
-        gone_mats = set(cfg["drop_material_faces"])
-        dropped = {}
-        for m in [o for o in bpy.context.scene.objects if o.type == "MESH"]:
-            idx = {i for i, mat in enumerate(m.data.materials) if mat is not None and mat.name in gone_mats}
-            if not idx:
-                continue
-            bm = bmesh.new()
-            bm.from_mesh(m.data)
-            faces = [f for f in bm.faces if f.material_index in idx]
-            counts = {i: sum(1 for f in faces if f.material_index == i) for i in idx}
-            bmesh.ops.delete(bm, geom=faces, context="FACES")
-            loose = [v for v in bm.verts if not v.link_faces]
-            bmesh.ops.delete(bm, geom=loose, context="VERTS")
-            bm.to_mesh(m.data)
-            bm.free()
-            for i in sorted(idx, reverse=True):
-                dropped[m.data.materials[i].name] = counts[i]
-                m.data.materials.pop(index=i)
-                for poly in m.data.polygons:
-                    if poly.material_index > i:
-                        poly.material_index -= 1
-        assert set(dropped) == gone_mats, f"{name}: 뺄 재질이 없다 {gone_mats - set(dropped)}"
-        report["뺀 재질 면"] = dropped
+    def drop_material_faces_now():                                      # 🔸 유기(2026-09-17) · 2026-10-03: 클립 때문에 원본을 다시 불러오면 지운 면이 돌아오므로 함수로 빼 두 번 부른다(손오공 LINE 외곽선 껍데기)
+            import bmesh
+            gone_mats = set(cfg["drop_material_faces"])
+            dropped = {}
+            for m in [o for o in bpy.context.scene.objects if o.type == "MESH"]:
+                idx = {i for i, mat in enumerate(m.data.materials) if mat is not None and mat.name in gone_mats}
+                if not idx:
+                    continue
+                bm = bmesh.new()
+                bm.from_mesh(m.data)
+                faces = [f for f in bm.faces if f.material_index in idx]
+                counts = {i: sum(1 for f in faces if f.material_index == i) for i in idx}
+                bmesh.ops.delete(bm, geom=faces, context="FACES")
+                loose = [v for v in bm.verts if not v.link_faces]
+                bmesh.ops.delete(bm, geom=loose, context="VERTS")
+                bm.to_mesh(m.data)
+                bm.free()
+                for i in sorted(idx, reverse=True):
+                    dropped[m.data.materials[i].name] = counts[i]
+                    m.data.materials.pop(index=i)
+                    for poly in m.data.polygons:
+                        if poly.material_index > i:
+                            poly.material_index -= 1
+            assert set(dropped) == gone_mats, f"{name}: 뺄 재질이 없다 {gone_mats - set(dropped)}"
+            report["뺀 재질 면"] = dropped
+    if cfg.get("drop_material_faces"):
+        drop_material_faces_now()
     if cfg.get("double_sided_meshes"):
         # 🔴 유기(2026-09-17 PM 유니티 인형): 한 겹 천 재킷 망토 — 블렌더 렌더는 양면을 그리지만 유니티(URP Lit)는 뒷면을 잘라
         #   정면에서 망토 안쪽이 안 보이고 앞 모서리 접힌 띠만 남아 「소매 끝 실」처럼 보였다(가중치 늘어짐 아님 — Idle 변 늘어짐 2배 넘는 곳은 목깃뿐, 실측).
@@ -6049,6 +6051,8 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                     bpy.data.objects.remove(o, do_unlink=True)
         if cfg.get("drop_verts_of_bones"):                              # 🔴 다시 불러오면 지운 정점도 돌아온다(영원_문필환@동작 — 뒤의 drop_bones가 「가중치가 있어 뺄 수 없다」로 죽었다)
             drop_verts_now()
+        if cfg.get("drop_material_faces"):                              # 🔴 지운 재질 면도 돌아온다(랜덤_손오공@동작 — LINE 외곽선 껍데기가 몸을 덮을 뻔했다)
+            drop_material_faces_now()
         if cfg.get("rename_bones"):
             # 🔴 anim=True + rename_bones(2026-09-30, 고유 동작 시범 — 영원_최상호): 클립을 읽으려고 원본을 다시 불러오면
             #   위에서 바꾼 뼈 이름이 풀린다 → 아래 단계(drop/merge/tpose …)가 「mixamorig:…」를 못 찾아 죽었다.
@@ -6121,9 +6125,12 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 return (Matrix.Translation(la.lerp(lb, w)) @ qa.slerp(qb, w).to_matrix().to_4x4()
                         @ Matrix.Diagonal(sa.lerp(sb, w)).to_4x4())
 
-            base = max(clips, key=lambda c: len(c[2]))
+            longest = max(clips, key=lambda c: len(c[2]))
+            by_name = {c[0]: c for c in clips}
             cut = []
             for spec in cfg["split_clips"]:
+                # 🔸 src(2026-10-03, 5묶음): 자를 원본 클립을 이름으로 고른다(take_names 뒤의 이름). 없으면 가장 긴 클립(옛 동작).
+                base = by_name[spec["src"]] if spec.get("src") else longest
                 s0, s1 = spec["range"]
                 i0, i1 = s0 - base[1], s1 - base[1]
                 assert 0 <= i0 < i1 < len(base[2]), f"{name}: 자를 구간이 클립 밖이다 {spec}"
@@ -6136,6 +6143,16 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                         j = len(seg) - 1 - k + i
                         w = i / k
                         seg[j] = {n2: _blend(M, head[n2], w) for n2, M in seg[j].items()}
+                if spec.get("step", 1) > 1:                                  # 2026-10-03: step=k → k프레임마다 한 장(k배속). 마지막 프레임은 남긴다 — 손오공 10초 포즈 클립을 공격 길이로
+                    seg = seg[::spec["step"]] + ([seg[-1]] if (len(seg) - 1) % spec["step"] else [])
+                land = spec.get("land")
+                if land:
+                    # 🔸 land(2026-10-03): 끝이 공중·자세 중간인 한 번짜리 클립 뒤에 **착지 구간**을 붙인다 — 끝 자세에서 다른 클립(보통 Idle) 첫 자세로 k프레임 보간.
+                    #   없으면 유니티가 Idle로 섞을 때 한 프레임 만에 튄다(서희원 R33 점프 공격).
+                    tgt = by_name[land["to"]][2][0]
+                    last = seg[-1]
+                    for i in range(1, int(land["k"]) + 1):
+                        seg.append({n2: _blend(last[n2], tgt[n2], i / land["k"]) for n2 in last})
                 cut.append((spec["take"], 1, seg))
             report["자른 클립"] = [f"{t} {spec['range'][0]}~{spec['range'][1]} ({len(fr)}프레임)"
                                 for (t, _, fr), spec in zip(cut, cfg["split_clips"])]
@@ -7045,6 +7062,8 @@ def fix(name, cfg, out_dir=None, save_blend=False):
             # 🔸 clip_floor_feet(2026-10-01 PM 기준: 「발목 뼈가 바닥 아래면 보정」): 모든 클립·기준점 이동이 끝난 **뒤** 매 프레임 발·발끝 뼈 머리의 최저 z가 0 아래면
             #   그만큼만 뿌리를 올린다(양수 프레임은 안 건드려 도약·공중 동작은 남는다 — clip_ground는 메시 최저를 매 프레임 0에 맞춰 도약을 죽이고 망토까지 잡는다).
             feet = [bn.name for bn in new_arm.data.bones if any(k_ in bn.name for k_ in ("Foot", "Toe"))]
+            if isinstance(cfg["clip_floor_feet"], (list, tuple)):                   # 2026-10-03: mixamorig 이름이 아닌 리그(강민호 l_foot01…)는 발뼈 목록을 직접 준다
+                feet = list(cfg["clip_floor_feet"])
             roots = [bn.name for bn in new_arm.data.bones if bn.parent is None]
             for take, f0, frames in clips:
                 act = bpy.data.actions[take]
@@ -7576,6 +7595,74 @@ UNITS["박민수"]["archive"] = (UNITS["박민수"]["archive"][0], UNITS["박민
 #   기본 리그에선 각각 Head·Hips로 합쳐지던 것이라 rigid_meshes로 그 뼈에 통째 묶는다.
 UNITS["박민수"]["rigid_meshes"] = {"face_normal": "mixamorig:Head", "l_handle_sheath": "mixamorig:Hips"}
 UNITS["박민수"].update(_motion_variant(_BL(_pl("pl_momonosuke_orig01")), clip_floor_feet=True))
+
+
+# 🔸 고유 동작판 5묶음(2026-10-03, PM 지시 — 전수조사에서 보류해 둔 「쓸 만함」 여섯 중 fix_unit_fbx 쪽 다섯). 「이름@동작」 변형으로 Assets 밖(~/GRD_motion_trial/고유_5묶음/)에만 뽑는다.
+#   히든_전유라는 gen_biped_skin 판이라 그쪽 파일에서 처리한다. 클립이 적어 Move가 없는 셋은 이호준식(Idle·Attack만).
+UNITS["특별함_조세민"]["variants"] = {"동작": _motion_variant(_BL({
+    "pl_mr5five_orig01_idlehome_a": "Idle", "pl_mr5five_orig01_skill_a": "Attack", "pl_mr5five_orig01_victory_lp": "Win_Loop"}), lunge=False)}
+UNITS["서희원"]["variants"] = {"동작": _motion_variant(_BL({
+    "pl_bonie_orig02_idle_a": "Idle", "pl_bonie_orig02_run": "Move", "pl_bonie_orig02_skill_b_end": "Attack"}), lunge=False,
+    # skill_b_end = 웅크렸다 뛰어오르는 11프레임(0.44초) — 끝이 공중이라 착지 8프레임을 Idle 첫 자세로 보간해 붙인다. skill_b(33프레임)는 서 있는 자세와 거의 같아(이음새 0.0003·움직임 0.047) 안 쓴다.
+    split_clips=[dict(take="Idle", src="Idle", range=(1, 33)), dict(take="Move", src="Move", range=(1, 17)),
+                 dict(take="Attack", src="Attack", range=(1, 11), land=dict(to="Idle", k=8))])}
+
+# R21 박도진(호로 glb): 원본 클립 둘뿐(idle 39 · attack1 21) — Move 없음(이호준식). 24fps.
+UNITS["박도진"]["variants"] = {"동작": _motion_variant({"idle": "Idle", "attack1": "Attack"}, lunge=False)}
+
+# R44 강민호(페이지원 스피노): 원본 클립 넷(idle_a 181 · skill_b 395 · victory_lp 181 · victory 219). 지금 커밋본은 synth_clips(사인 파형)다.
+#   skill_b는 **한 동작이 아니라 이어 붙인 연출**이다(뼈 높이·골반 속도·10프레임 간격 렌더로 구간을 잡음, 60fps):
+#     1~70   작게 나타나 커지며 일어서 포효(몸 크기가 변함 — 안 씀)
+#     85~175 뛰는 걸음(골반이 일정 속도로 앞으로, 왼발 앞뒤 정점 88·130·175 → **주기 약 44프레임**) → Move = 88~133(46f, loop로 이음새)
+#     212~229 웅크림 → 232~265 **도약**(골반 z 0.017 → 0.033, 몸길이의 약 75%) → 268~290 착지·꼬리 휘두름 → Attack = 221~285 + 착지 보간 12f(Idle 첫 자세로)
+#     340~391 다시 작아져 사라짐(안 씀) · victory 둘은 승리 연출(안 씀)
+UNITS["강민호"]["variants"] = {"동작": dict(
+    anim=True, anim_drop_ok=True, takes_only=True, synth_clips=None, clip_trim_tail=True,
+    take_names=_BL({"pl_pageone_orig02_idle_a": "Idle", "pl_pageone_orig02_skill_b": "Skill"}),
+    split_clips=[dict(take="Idle", src="Idle", range=(1, 181)),
+                 dict(take="Move", src="Skill", range=(88, 133), loop=10),
+                 dict(take="Attack", src="Skill", range=(221, 285), land=dict(to="Idle", k=12))],
+    clip_anchor=dict(bone="Body_Pelvis", take="Idle", ground=True),
+    clip_inplace=dict(bone="Body_Pelvis", anchor="Idle", takes=["Move", "Attack"]))}
+
+# 랜덤_손오공(MMD 포즈 클립): 클립 넷이 **전부 601프레임(10초) 포즈 시연**이다 — 서서 시작 → 자세 → 길게 유지 → 돌아옴(첫 프레임이 모두 같은 선 자세).
+#   00-IDLE = 서 있기(허리띠 흔들림, 이음새 0) → Idle 그대로. 01-OSSU = 머리 긁적·허리 손 인사(전투 아님 → 안 씀). 02-STANCE = 등을 보이며 웅크림(안 씀).
+#   03-KAMEHAMEHA = 팔을 크게 벌렸다 한 팔 들고 → 양손 옆구리 모음(「카-메-하-메」 준비) → 유지 → 돌아옴. **발사 자세는 없다.** 1~257프레임(준비 동작)을 2배속(step 2)으로 Attack,
+#   끝에 착지 보간 12f. (공격이 1초 안팎으로 반복되므로 4.3초 원본 속도는 못 쓴다 — 속도를 바꾼 것이라 README에 적음)
+UNITS["랜덤_손오공"]["variants"] = {"동작": dict(
+    anim=True, anim_drop_ok=True, takes_only=True, clip_trim_tail=True, skip_shapes=True,       # skip_shapes: 모양 키 클립이 같은 이름(Idle·Attack)으로 한 벌 더 나가 유니티에 중복 클립이 된다
+    take_names={"00-IDLE": "Idle", "03-KAMEHAMEHA": "Kame"},
+    split_clips=[dict(take="Idle", src="Idle", range=(1, 601)),
+                 dict(take="Attack", src="Kame", range=(1, 257), step=2, land=dict(to="Idle", k=12))],
+    clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
+    clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle", takes=["Attack"]))}
+
+# 히든_전유라(블리치 우루루 glb, Bip001 · Spine2·Toe0 없음 · 손가락 마디 2개): 커밋본은 gen_biped_skin(22뼈 새로 짓기·정적)이라 **클립이 안 실린다.**
+#   클립 26개가 든 원본 glb를 fix_unit_fbx 길(이름 바꾸기 + 클립 다시 굽기)로 다시 읽는 **동작판 전용 항목**이다. 이 항목의 기본(variants 밖)은 쓰지 않는다 — 커밋본 기준 검사(check_entries) 대상 아님.
+#   뼈: Head 밑 head·눈·입 뼈 → Head · Bone001~015(가슴 주변 리본 사슬) → Spine1 · Bip001·Prop1·rweapon·무기 메시 → 뺌. 재질 6(몸·얼굴·머리·눈 둘·입), 무기(tex03)는 안 씀.
+UNITS["히든_전유라"] = dict(path="Assets/Art/Units/히든_전유라/히든_전유라.fbx", kind="human", size=("height", 1.8),
+    archive=(os.path.expanduser("~/Desktop/구랜디스킨모음/05_히든/히든_전유라.zip"), "source/yu_0_battleout.glb"),
+    gltf_guess_bind=False,
+    drop_meshes=["yu_weapon_0_noesis_meshnode_0003", "Icosphere"],
+    rename_bones=BIP001_NO_SPINE2_NO_TOE,
+    drop_bones=["Bip001", "Bip001 Prop1", "rweapon", "yu_weapon_0"],
+    no_nulls=True, orient_snap=True,
+    merge_bones=[dict(under="mixamorig:Head", into="mixamorig:Head"),
+                 dict(pattern=r"^Bone0[0-9][0-9]$", into="mixamorig:Spine1")],
+    level_chains=[dict(chain=["mixamorig:Hips", "mixamorig:Spine", "mixamorig:Spine1", "mixamorig:Neck", "mixamorig:Head"], target=(0, 0, 1))],
+    tpose_arms={s: {"Clavicle": f"mixamorig:{side}Shoulder", "UpperArm": f"mixamorig:{side}Arm",
+                    "Forearm": f"mixamorig:{side}ForeArm", "Hand": f"mixamorig:{side}Hand"}
+                for s, side in (("L", "Left"), ("R", "Right"))},
+    glb_images={0: "yu_body_0.png", 1: "yu_face_0.png", 2: "yu_hair_0.png", 3: "yu_leye_0.png", 4: "yu_mouth_0.png", 5: "yu_reye_0.png"},
+    materials=dict(textures={"yu_body_0": [("DiffuseColor", "yu_body_0.png")], "yu_face_0": [("DiffuseColor", "yu_face_0.png")],
+                             "yu_hair_0": [("DiffuseColor", "yu_hair_0.png")], "yu_leye_0": [("DiffuseColor", "yu_leye_0.png")],
+                             "yu_mouth_0": [("DiffuseColor", "yu_mouth_0.png")], "yu_reye_0": [("DiffuseColor", "yu_reye_0.png")]}))
+#   골라 쓴 클립(24fps): debut(뿌리 0.5)·skill4(6.7)·switch(3.3)는 뿌리가 크게 떠나는 연출이라 안 쓴다. skill1~2·6은 시작 + _loop(유지) 짝.
+UNITS["히든_전유라"]["variants"] = {"동작": _motion_variant({
+    "idle": "Idle", "move": "Move", "attack1": "Attack", "attack1_1": "Attack2", "attack1_2": "Attack3", "attack1_3": "Attack4", "attack1_4": "Attack5",
+    "hit": "Hit", "die": "Die", "dizzy": "Stun", "hitback": "HitBack", "hitdown": "HitDown", "hitfly": "HitFly", "hitkneel": "HitKneel",
+    "skill1_1": "Skill1", "skill1_1_loop": "Skill1_Loop", "skill2_1": "Skill2", "skill2_1_loop": "Skill2_Loop", "skill3_1": "Skill3",
+    "skill6_1": "Skill6", "skill6_1_loop": "Skill6_Loop", "bankai": "Bankai", "win": "Win"}, clip_floor_feet=True)}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
