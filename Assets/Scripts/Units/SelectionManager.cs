@@ -27,6 +27,8 @@ public class SelectionManager : MonoBehaviour
     // 우클릭 취소는 같은 프레임의 우클릭 이동(UnitMover)도 막아야 한다 — 스크립트 실행 순서와 상관없이.
     //    이름은 옛것 그대로지만 M 이동 대기도 포함한다(둘 다 우클릭 = 취소).
     public bool IsAttackTargeting => targeting != TargetMode.None || attackCancelFrame == Time.frameCount;
+    // A(공격) 대기 중인가 — 사거리 원을 진하게 그리는 쪽(AttackRangeIndicator)이 읽는다. 이동(M) 대기는 아니다.
+    public static bool AttackModeActive { get; private set; }
     const float AttackPickTolerancePixels = 36f;
     // 좌클릭 살펴보기(적 정보)용 — 공격 대상 고르기보다 넉넉히. 1080 기준 픽셀, 화면 높이에 비례해 늘린다.
     const float InspectPickTolerancePixels = 56f;
@@ -382,8 +384,9 @@ public class SelectionManager : MonoBehaviour
     static Texture2D attackCursorTexture;
     static Texture2D moveCursorTexture;
 
-    void LateUpdate() => SyncAttackCursor(targeting);
-    void OnDisable() => SyncAttackCursor(TargetMode.None);
+    // 공격 대기 상태도 여기서 내건다 — 사거리 원(AttackRangeIndicator)이 진하게 바뀐다(한 프레임 늦어도 원 색만 늦는다).
+    void LateUpdate() { SyncAttackCursor(targeting); AttackModeActive = targeting == TargetMode.Attack; }
+    void OnDisable() { SyncAttackCursor(TargetMode.None); AttackModeActive = false; }
 
     void SyncAttackCursor(TargetMode want)
     {
