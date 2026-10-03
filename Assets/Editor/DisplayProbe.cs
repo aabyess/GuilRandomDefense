@@ -28,7 +28,7 @@ static class DisplayProbe
     // 상시 오라 근접 사진용(gameshot call: — spawn보다 먼저 도니 EditorApplication.update로 유닛이 생길 때까지 기다린다).
     // 바깥에서 비스듬히 내려다보는 보조 카메라를 메인 위에 얹는다. 이름 조각 = 대상 유닛, 거리·높이는 유닛 키 배수.
     static string AuraCloseup() => CloseupOn("김민준", 55f, -85f);
-    static string CloseupPark() => CloseupOn("박민수", 14f, -42f);
+    static string CloseupPark() => CloseupOn("박민수", 30f, -90f);
     static string CloseupOn(string part, float up, float back)
     {
         EditorApplication.CallbackFunction tick = null;

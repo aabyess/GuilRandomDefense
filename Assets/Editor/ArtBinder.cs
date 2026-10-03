@@ -120,6 +120,22 @@ public static class ArtBinder
         //    변환 축 오류는 90°·180° 단위라 뼈로 재면 정확히 나온다.
     };
 
+    // 세운 뒤 정면(Y) 보정 — 10-03 모델 정면 점검(Docs/facing_audit_2026-10-03.txt)에서 정면이 +Z가 아니었던 모델.
+    // AutoUpright(뼈·경계 상자)는 세우기만 하고 앞뒤·좌우는 모른다. 수동 회전(ModelAdjustments)에 적으면 AutoUpright가 꺼지므로 따로 둔다.
+    // 각도 = 부모 위(Y)축 둘레(유니티 Y 회전은 +Z를 +X 쪽으로 돌린다 → +90이면 −X가 +Z로, −90이면 +X가 +Z로).
+    // ⚠️ 점검 도구의 정면(−X)은 뼈 이름 L/R로 잰 값이라 좌우가 뒤바뀌어 있을 수 있다 — 박민수는 +90을 넣었더니 뒷모습이 되어 −90으로 확정(10-03 사진).
+    static readonly (string model, float yaw)[] FacingFixes =
+    {
+        ("특별함_박민수", -90f),   // 점검상 −X였으나 실제는 +X(L/R 뼈 이름 반전) — 사장님 「초상이 옆을 본다」
+    };
+
+    static float FacingFixFor(string modelName)
+    {
+        foreach ((string name, float yaw) in FacingFixes)
+            if (Nfc(name) == Nfc(modelName)) return yaw;
+        return 0f;
+    }
+
     // 에셋 이름의 한글은 macOS에서 NFC가 아닐 수 있다 — 리터럴과 견주기 전에 맞춘다.
     static string Nfc(string s) => s?.Normalize(System.Text.NormalizationForm.FormC);
 
@@ -1389,6 +1405,8 @@ public static class ArtBinder
             // 사람형은 뼈로 방향을 재서 자동으로 세운다. 수동 표에 적힌 모델은 그게 우선이다.
             // 네 발 짐승은 건드리지 않는다 — 세우는 규칙이 사람 기준이라 오히려 일으켜 세운다.
             if (RotationFor(model.name) == Quaternion.identity && !IsFourLegged(model.name) && !IsAlreadyUpright(model.name)) AutoUpright(visual);
+            float facingFix = FacingFixFor(model.name);
+            if (facingFix != 0f) visual.transform.localRotation = Quaternion.Euler(0f, facingFix, 0f) * visual.transform.localRotation;   // 세운 다음 정면만 돌린다(Y라 키는 그대로)
             FitToHeight(instance, visual, HeightScaleFor(model.name), measureHeight: IsAlreadyUpright(model.name));
         }
         AttachAnimator(instance, visual);
