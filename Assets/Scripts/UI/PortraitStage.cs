@@ -30,6 +30,8 @@ public class PortraitStage : MonoBehaviour
     const float StandingAspect = 1.35f;   // 픽셀 상자 높이/폭이 이 이상이면 서 있는 모습
     const float HeadMargin = 0.06f;       // 머리 꼭대기 위 여백(칸 높이 비율)
     bool cloneIsHuman;
+    Color32[] lastPixels; Color32 lastBg; int lastSize;   // MeasureModel이 마지막으로 읽은 칸
+    const float BodyRowFraction = 0.15f;   // 행의 모델 픽셀 수가 가장 넓은 행의 이 비율 이상이면 몸통(칼·창 같은 가는 소품은 제외)
 
     static PortraitStage instance;
 
@@ -229,6 +231,34 @@ public class PortraitStage : MonoBehaviour
         yield return endOfFrame;
         if (clone != target || clone == null) yield break;
         if (!MeasureModel(out float bx0, out float by0, out float bx1, out float by1)) yield break;
+        // 머리 꼭대기 = 위에서부터 첫 「몸통 두께」 행. 키보다 높이 솟은 칼·지팡이 때문에 상자 윗면이 머리 위에 뜨는 모델이 있다.
+        int size2 = lastSize;
+        var rows = new int[size2];
+        int maxRow = 0;
+        for (int y = 0; y < size2; y++)
+        {
+            int c = 0;
+            for (int x = 0; x < size2; x++)
+            {
+                Color32 q = lastPixels[y * size2 + x];
+                if (Mathf.Abs(q.r - lastBg.r) + Mathf.Abs(q.g - lastBg.g) + Mathf.Abs(q.b - lastBg.b) > 12) c++;
+            }
+            rows[y] = c;
+            if (c > maxRow) maxRow = c;
+        }
+        int headRow = size2 - 1;
+        for (int y = size2 - 1; y >= 0; y--) if (rows[y] >= maxRow * BodyRowFraction) { headRow = y; break; }
+        by1 = Mathf.Min(by1, (headRow + 1) / (float)size2);
+        // 가로 가운데 = 상반신 띠(머리 꼭대기~BustFraction 아래)의 모델 픽셀 평균 x — 옆으로 뻗은 소품에 끌려가지 않게.
+        int bandTop = headRow, bandBottom = Mathf.Max(0, Mathf.RoundToInt(headRow - (by1 - by0) * BustFraction * size2));
+        long sumX = 0, cnt = 0;
+        for (int y = bandBottom; y <= bandTop; y++)
+            for (int x = 0; x < size2; x++)
+            {
+                Color32 q = lastPixels[y * size2 + x];
+                if (Mathf.Abs(q.r - lastBg.r) + Mathf.Abs(q.g - lastBg.g) + Mathf.Abs(q.b - lastBg.b) > 12) { sumX += x; cnt++; }
+            }
+        if (cnt > 0) { float mx = sumX / (float)cnt / size2; float half = (bx1 - bx0) * 0.5f; bx0 = mx - half; bx1 = mx + half; }
         float boxW = bx1 - bx0, boxH = by1 - by0;
         if (!cloneIsHuman && boxH / Mathf.Max(0.01f, boxW) < StandingAspect) yield break;
         float bustH = boxH * BustFraction;
@@ -255,7 +285,10 @@ public class PortraitStage : MonoBehaviour
         RenderTexture.active = previous;
 
         Color32[] pixels = readback.GetPixels32();
-        Color32 bg = pixels[0];                // 모서리 = 배경(1단계가 넉넉하니 모델이 모서리엔 없다)
+        lastPixels = pixels;
+        lastSize = size;
+        Color32 bg = pixels[0];
+        lastBg = bg;                // 모서리 = 배경(1단계가 넉넉하니 모델이 모서리엔 없다)
         int minX = size, minY = size, maxX = -1, maxY = -1;
         for (int y = 0; y < size; y++)
             for (int x = 0; x < size; x++)
