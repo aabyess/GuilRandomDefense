@@ -151,9 +151,12 @@ public class RtsCameraController : MonoBehaviour
         if (t.StartsWith("-")) t = t.Substring(1);
         if (!t.StartsWith("시야")) return null;
         string arg = t.Substring(2).Trim();
-        if (!int.TryParse(arg, out int sight)) return "사용법: 시야 100~300 (기본 200)";
+        // 「시야가 좁네」 같은 보통 말은 명령이 아니다 — 글자가 붙어 있으면 채팅으로 넘긴다. 사용법은 「시야」 단독·「-시야 …」일 때만.
+        bool dashed = text.TrimStart().StartsWith("-");
+        if (!int.TryParse(arg, out int sight))
+            return arg.Length == 0 || dashed ? "사용법: 시야 100~300 (기본 200)" : null;
         sight = Mathf.Clamp(sight, 50, 300);
-        try { PlayerPrefs.SetInt(SightPrefKey, sight); } catch { }
+        try { PlayerPrefs.SetInt(SightPrefKey, sight); PlayerPrefs.Save(); } catch { }
         RtsCameraController rts = FindFirstObjectByType<RtsCameraController>();
         if (rts != null) { rts.startZoom = ZoomForSight(sight); rts.FocusOnLocalLane(); }
         return $"시야 {sight}";
