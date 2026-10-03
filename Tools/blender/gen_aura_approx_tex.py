@@ -11,17 +11,23 @@ y, x = np.mgrid[0:S, 0:S].astype(np.float32)
 x = (x + .5) / S * 2 - 1; y = (y + .5) / S * 2 - 1
 r = np.sqrt(x * x + y * y); th = np.arctan2(y, x)
 rng = np.random.RandomState(7)
-ph = rng.rand(24) * 6.28
 rays = np.zeros_like(r)
-for k, p in enumerate(ph):
+for k in range(24):
+    p = rng.rand() * 6.28
     n = 5 + k % 7
-    rays += (np.abs(np.cos((th - p) * n / 2)) ** 24) * (0.5 + 0.5 * rng.rand())
-rays = np.clip(rays / 4, 0, 1)
-fall = np.clip(1 - r, 0, 1)
-core = np.exp(-r * 5)
-v = np.clip(core * 1.2 + rays * fall ** 1.2 * 1.1, 0, 1)
-# Zap1_Red 근사: 흰 중심 + 붉은 광선
-rgb = np.stack([np.clip(v * 1.0 + core * .6, 0, 1), np.clip(v * .25 + core * .7, 0, 1), np.clip(v * .35 + core * .7, 0, 1)], -1)
+    rays += (np.abs(np.cos((th - p) * n / 2)) ** 40) * (0.6 + 0.4 * rng.rand())
+rays = np.clip(rays / 2.2, 0, 1)
+# 2차(2026-10-03, 「원랜디처럼 더 밝게」): 흰 코어가 판의 절반 이상 · 광선은 연분홍~마젠타(붉은 기 거의 없음) · 가장자리만 보라
+core = np.clip(1.15 - r * 0.85, 0, 1)                            # 판 전체의 분홍 바탕(가장자리로 갈수록 보라)
+ray = rays * np.clip(1 - r, 0, 1) ** 0.6
+v = np.clip(core * 0.6 + ray * 0.5 + np.exp(-r * 6) * 0.2, 0, 1)
+# 밝기 → 색 사다리: 보라(가장자리) → 마젠타 → 연분홍 → 흰(중심). 붉은 기 없이 파랑 높게.
+stops = [(0.0, (0.0, 0.0, 0.0)), (0.2, (0.4, 0.1, 0.75)), (0.45, (0.8, 0.25, 0.9)), (0.65, (0.98, 0.42, 0.95)), (0.9, (1.0, 0.85, 1.0)), (1.0, (1.0, 1.0, 1.0))]
+rgb = np.zeros(v.shape + (3,), np.float32)
+for (a0, c0), (a1, c1) in zip(stops[:-1], stops[1:]):
+    m = (v >= a0) & (v <= a1)
+    w = ((v - a0) / (a1 - a0))[..., None]
+    rgb = np.where(m[..., None], np.array(c0, np.float32) * (1 - w) + np.array(c1, np.float32) * w, rgb)
 rgb[r > 1] = 0
 def save(name, rgb):
     a = np.concatenate([rgb, np.ones((S, S, 1), np.float32)], -1)
@@ -29,6 +35,6 @@ def save(name, rgb):
     im.pixels = a[::-1].ravel()          # 이미지 y는 아래부터
     im.filepath_raw = os.path.join(OUT, name); im.file_format = "PNG"; im.save()
 save("Textures_Zap1_Red.blp.png", rgb)
-g = np.exp(-(r * 1.7) ** 2)
-purple = np.stack([g * .75, g * .3, g * 1.0], -1); purple[r > 1] = 0
+g = np.exp(-(r * 1.5) ** 2)
+purple = np.stack([g * .22, g * .06, g * .38], -1); purple[r > 1] = 0
 save("Textures_Purple_Glow.blp.png", purple)

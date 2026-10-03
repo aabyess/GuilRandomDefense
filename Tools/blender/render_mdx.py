@@ -83,7 +83,7 @@ def make_material(name, layer, tex_entry):
                 nt.links.new(fac, mul.inputs[0]); nt.links.new(alpha, mul.inputs[1])
                 fac = mul.outputs[0]
             nt.links.new(fac, mix.inputs["Fac"])
-        em.inputs["Strength"].default_value = 1.6
+        em.inputs["Strength"].default_value = float(os.environ.get("EMIT_STRENGTH", "1.6"))
         nt.links.new(tr.outputs[0], mix.inputs[1]); nt.links.new(em.outputs[0], mix.inputs[2])
         nt.links.new(mix.outputs[0], out.inputs["Surface"])
         mat.surface_render_method = "BLENDED"
@@ -163,7 +163,24 @@ def render_views(objs, base, view_names=None):
     cam.data.ortho_scale = size
     cam.data.clip_start = size * 0.01
     cam.data.clip_end = size * 20
-    views = (("앞비스듬히", Vector((1.0, -0.9, 0.55))), ("뒤", Vector((-1.0, 0.25, 0.25))), ("위", Vector((0.001, 0.0, 1.0))))
+    if os.environ.get("GROUND_RGB"):                                  # 2026-10-03: 바닥 위에서 보기(원작 사진 대조용) — GROUND_RGB="r,g,b"(0~1)
+        gr = tuple(float(x) for x in os.environ["GROUND_RGB"].split(","))
+        lo0, hi0 = bounds(objs)
+        fl = bpy.data.meshes.new("floor")
+        R = max((hi0 - lo0).length, 1.0) * 3
+        fl.from_pydata([(-R, -R, lo0.z - 0.5), (R, -R, lo0.z - 0.5), (R, R, lo0.z - 0.5), (-R, R, lo0.z - 0.5)], [], [(0, 1, 2, 3)])
+        fo = bpy.data.objects.new("floor", fl)
+        scn.collection.objects.link(fo)
+        fm = bpy.data.materials.new("floor")
+        fm.use_nodes = True
+        fm.node_tree.nodes.clear()
+        em = fm.node_tree.nodes.new("ShaderNodeEmission")
+        em.inputs["Color"].default_value = gr + (1,)
+        fo2 = fm.node_tree.nodes.new("ShaderNodeOutputMaterial")
+        fm.node_tree.links.new(em.outputs[0], fo2.inputs["Surface"])
+        fl.materials.append(fm)
+        bg.inputs[0].default_value = gr + (1,)
+    views = (("사진", Vector((0.0, -1.0, 1.0))), ("앞비스듬히", Vector((1.0, -0.9, 0.55))), ("뒤", Vector((-1.0, 0.25, 0.25))), ("위", Vector((0.001, 0.0, 1.0))))
     for name, d in views:
         if view_names and name not in view_names:
             continue
