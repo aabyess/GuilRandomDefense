@@ -25,6 +25,7 @@ Unity 6 URP 프로젝트 (6000.0.82f1).
    각 탭은 `claude --dangerously-skip-permissions -n <역할> --model claude-sonnet-5-5 <역할 지시문>`이다.
    역할 지시문은 `.claude/team/<역할>.md`다.
    닫기 전에 할 일: ListAgents로 옛 팀원이 **일하는 중(busy)**인지 본다. 일하는 중이면 사장님께 먼저 묻는다.
+   NEXT_SESSION에 「팀원은 이미 새 세션」이라고 적혀 있으면 `--fresh`를 돌리지 않는다. ListAgents로 떠 있는지만 확인하고 이어간다(PM만 바뀐 경우).
    측정 체인(nohup)과 에디터 판은 탭을 닫아도 안 죽는다.
    하루 중간에 하나만 다시 띄울 때는 `--fresh 구현담당1`처럼 역할을 준다. `--fresh`가 없으면 떠 있는 역할은 건너뛴다.
 3. 팀원은 문서를 읽은 뒤 PM에게 「[역할 → PM] 준비 완료」와 자기 몫의 남은 일을 보낸다. 셋이 다 보고하면 첫 지시를 준다.
