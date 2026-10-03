@@ -109,7 +109,7 @@ public class PlayerNotificationHud : MonoBehaviour
     const float BoxWidth = 760f;
     const float BoxHeight = 30f;
     const float Spacing = 2f;
-    const float LeftMargin = 20f;
+    const float LeftMargin = 76f;   // 영웅 단추 열(x 4~70)과 안 겹치게 오른쪽으로 민다(원작도 영웅 아이콘 오른쪽에서 글이 시작)
     const float BottomGap = 8f;
     // 하단 바를 못 찾을 때의 예비값 — GameHud 하단 바가 화면 아래 22%다(GameChatBox와 같은 값).
     const float FallbackBottomHudFraction = 0.22f;
