@@ -3276,7 +3276,7 @@ public class GameHud : MonoBehaviour
             string secondPart = person.Length > 0 ? $" <color=#FFD84A>{data.unitName}</color>" : "";
             unitInfoText.text = $"<size=115%>{firstPart}{secondPart} – <color=#{gradeColorHex}>{grade}{levelLabel}</color></size>";
             string bonus = hasStats && data.attackPower > 0f && damage - data.attackPower >= 0.5f ? $" <color=#46E06A>+{damage - data.attackPower:F0}</color>" : "";
-            unitDamageText.text = $"<color=#FF9A3A>공격력:</color> {attackPower}{bonus}   <color=#FF9A3A>사거리:</color> {attackRange}   <color=#FF9A3A>공속:</color> {attackSpeed}/s";
+            unitDamageText.text = $"<color=#FF9A3A>공격력:</color> {attackPower}{bonus}";   // 사장님 10-03: 사거리·공속은 정보칸에서 뺀다(F1 DebugHud엔 남음)
             unitArmorText.text = "<color=#FF9A3A>방어:</color> <color=#FF4A4A>무적</color>";
             unitStatusText.text = "<color=#FF9A3A>상태:</color>";
             if (!unitStatRows.activeSelf) unitStatRows.SetActive(true);
@@ -3856,10 +3856,7 @@ public class GameHud : MonoBehaviour
                 string title = slotNameCache[i] ?? ScoreboardName(i);
                 teamPanelBuilder.Append(title);   // 칭호·닉네임 서식은 ScoreboardName이 색 태그까지 만든다
             }
-            else
-            {
-                teamPanelBuilder.Append("<color=#808080>열림</color>");
-            }
+            // 빈 자리는 색 칩만(사장님 10-03: 「열림」 글자 제거)
 
             if (slotHas[i])
             {
