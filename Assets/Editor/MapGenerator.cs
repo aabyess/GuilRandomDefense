@@ -370,7 +370,8 @@ public static class MapGenerator
         public float radiusPerHeight;   // 원점 기준 가로 반경 ÷ 높이. 어떻게 돌려도 이 원 안에 든다
     }
 
-    static string BuildNatureBorders(Transform root)
+    /// <param name="onlyIsland">이 섬(레인 제외) 둘레만 다시 뿌린다 — 맵 일부만 다시 지을 때(RepairCombineBoard). 기존 "Nature" 묶음에 더한다. null이면 전부.</param>
+    static string BuildNatureBorders(Transform root, string onlyIsland = null)
     {
         List<NatureAsset> assets = new List<NatureAsset>();
         List<string> missing = new List<string>();
@@ -410,14 +411,19 @@ public static class MapGenerator
             obstacles.Add(Rect.MinMaxRect(bounds.min.x - 1f, bounds.min.z - 1f, bounds.max.x + 1f, bounds.max.z + 1f));
         }
 
-        GameObject container = new GameObject("Nature");
-        container.transform.SetParent(root, false);
-        container.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
+        GameObject container = onlyIsland != null && root.Find("Nature") != null ? root.Find("Nature").gameObject : null;
+        if (container == null)
+        {
+            container = new GameObject("Nature");
+            container.transform.SetParent(root, false);
+            container.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
+        }
 
         List<Vector3> placed = new List<Vector3>();   // (x, z, 반경)
         int blocked = 0;
 
         int laneCount = 0;
+        if (onlyIsland == null)
         foreach (MapLayout.Island lane in MapLayout.Lanes)
             laneCount += ScatterBorder(container.transform, lane, NatureLane, 7f, 6f, 16f,
                 MapLayout.LaneApronDepth, assets, obstacles, placed, ref blocked);
@@ -432,6 +438,7 @@ public static class MapGenerator
         List<string> skipped = new List<string>();
         foreach (MapLayout.Island island in others)
         {
+            if (onlyIsland != null && island.name != onlyIsland) continue;
             // 🔴 사장님 지시 2026-09-24 「조합판에는 풀,돌 조형물들 없애줘 초월,불멸판에도」 —
             //    이 셋은 **읽는 섬**이다(조합식 표·전시 인형). 테두리 장식이 글씨와 인형을 가린다.
             if (System.Array.IndexOf(BareIslands, island.name) >= 0)
@@ -1479,7 +1486,7 @@ public static class MapGenerator
     ///    쓰는데, 거기는 섬 오른쪽 칸 폭(281)에 줄 하나(≈277)가 겨우 들어가는 모양이라 배율을 타면 넘친다 — 1로 둔다.
     /// </summary>
     static float BoardScale = 1f;
-    const float RecipeSlotBase = 15.4f;     // 유닛 한 칸(키 30 시절). 원작 슬롯 한 변 64 ÷ Scale
+    internal const float RecipeSlotBase = 15.4f;     // 유닛 한 칸(키 30 시절). 원작 슬롯 한 변 64 ÷ Scale
     static float RecipeSlot => RecipeSlotBase * BoardScale;
     // ── 조합식 표 간격 (2026-09-23 재설계) ────────────────────────────────
     // 사장님 「조합판도 너무 붙어있으니깐 답답한 느낌이든다」.
@@ -2995,6 +3002,14 @@ public static class MapGenerator
 
     static string BuildGachaPortals(GameObject gachaIsland)
     {
+        // 다른세계 조합식 줄이 조합판과 같은 칸 피치(BoardScale)를 탄다(사장님 10-03). 예외가 나도 꺼 둔다.
+        BoardScale = MapLayout.CombineBoardScale;
+        try { return BuildGachaPortalsCore(gachaIsland); }
+        finally { BoardScale = 1f; }
+    }
+
+    static string BuildGachaPortalsCore(GameObject gachaIsland)
+    {
         if (gachaIsland == null) return "";
 
         GachaTable table = AssetDatabase.LoadAssetAtPath<GachaTable>("Assets/Data/MainGachaTable.asset");
@@ -3057,7 +3072,8 @@ public static class MapGenerator
         float columnLeft = left + 2f;
         // 왼쪽 등급 칸 열과 오른쪽 전시 칸의 경계. 전시 칸이 다른세계 조합식 한 줄을
         // 통째로 담아야 해서 섬 가운데보다 왼쪽에 둔다(왼쪽 열 폭은 예전 그대로다).
-        float columnRight = island.center.x - 4f;
+        // 왼쪽 등급 칸 열은 섬을 넓혀도 예전 폭 그대로(MapLayout.GachaCellColumnWidth) — 늘어난 몫은 전부 오른쪽 전시 칸이 받는다.
+        float columnRight = columnLeft + MapLayout.GachaCellColumnWidth;
 
         List<string> specialPending = new List<string>();
 
@@ -3169,7 +3185,7 @@ public static class MapGenerator
 
         // --- 오른쪽 세로줄: 조합식 없이 캐릭터만 전시하는 등급 ---
         // 이 등급들은 조합식 표에 올리지 않기로 확정돼 있어서, 여기가 유일하게 눈으로 보는 곳이다.
-        float rightColumnLeft = island.center.x - 4f;   // 등급 칸 열의 오른벽과 같은 자리
+        float rightColumnLeft = columnRight;   // 등급 칸 열의 오른벽과 같은 자리
         float displayLeft = rightColumnLeft + 4f;
         float displayWidth = left + island.size.x - 2f - displayLeft;
         // 전시 격자는 조합표와 분리된 제 간격을 쓴다(DisplaySlotSpacing 주석 참고).
@@ -3252,15 +3268,17 @@ public static class MapGenerator
 
         // 자원 칸은 동서남북 포탈을 두려면 정사각형에 가까워야 한다.
         // 열 아래쪽에서 폭만큼 떼어 쓰고, 남는 위쪽 전부를 전시 칸으로 준다.
-        float hubHeight = displayRight - rightColumnLeft;
+        // 오른쪽 칸이 넓어져도 자원 칸 정사각형은 예전 크기(= 왼쪽 열 폭 + 8)를 지킨다 — 그만큼 전시가 쓸 깊이를 아낀다.
+        float hubHeight = Mathf.Min(displayRight - rightColumnLeft, MapLayout.GachaCellColumnWidth + 8f);
         float hubTop = bandBottom + hubHeight;
+        float columnMid = (rightColumnLeft + displayRight) * 0.5f;
 
         // 전시와 자원은 위아래로 붙은 한 열이다. 칸막이 한 장으로 나눈다.
         BuildCellColumn(parent, "오른열", rightColumnLeft, displayRight, bandTop, bandBottom,
                         new List<float> { hubTop }, skipLeftWall: true);
 
         string resourceReport = BuildResourceHub(parent,
-            rightColumnLeft, displayRight, hubTop, bandBottom);
+            columnMid - hubHeight * 0.5f, columnMid + hubHeight * 0.5f, hubTop, bandBottom);
 
         float displayDepth = bandTop - displayZ;
         float available = bandTop - bandBottom;
@@ -3277,6 +3295,8 @@ public static class MapGenerator
         string recipeFit = recipeRows == 0 || widestRecipe <= displayWidth
             ? ""
             : $"\n  ⚠️ 다른세계 조합식({widestRecipe:F0})이 칸 폭({displayWidth:F0})을 넘습니다";
+        // 섬 크기 리터럴(MapLayout.GachaOtherWorldRowWidthBase·RowCount)이 에셋과 맞는지 — 어긋나면 여기서 고발한다.
+        recipeFit += $"\n  다른세계 조합식: 가장 넓은 줄 {widestRecipe:F1}(BoardScale {BoardScale:0.##}, 1배 환산 {widestRecipe / BoardScale:F1} / 리터럴 {MapLayout.GachaOtherWorldRowWidthBasePublic:F1}) · 줄 수 {recipeRows}(리터럴 {MapLayout.GachaOtherWorldRowCountPublic}) · 칸 폭 {displayWidth:F0}";
 
         return $"\n뽑기 섬: 흔함 선택 {commons.Count}칸, 등급 칸 {GachaBands.Length}줄, " +
                $"전시 {displayed}종 + 조합식 {recipeRows}줄 (깊이 {displayDepth:F0}/{available:F0}, {fit})." +
@@ -3914,6 +3934,231 @@ public static class MapGenerator
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
         UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
         return $"흙길 {removed}개 지우고 {built}개 다시 깜(폭 = 필드 가로 × {TrackVisualWidthRatio}) · 씬 저장";
+    }
+
+    // 조합판·뽑기섬 간격 벌리기(10-03 사장님 「조합판 간격을 벌려 달라」「뽑기섬 다른세계 줄도」) — 맵 전체 재생성 없이 네 섬만 다시 짓는다:
+    // 조합판(CombineTable) · 초월 전시 · 불멸 전시 · 뽑기섬(GachaIsland).
+    // 왜 Repair인가: 전체 재생성은 오늘 씬에서만 고친 것(흙길 RepairLaneTracks·정의문 등)을 되돌린다.
+    // 순서: ① 지금 씬의 네 섬 자리를 **옛 발자국**으로 잰다 ② 새 발자국(MapLayout)에 남의 것이 있으면 아무것도 안 지우고 멈춘다
+    //       ③ 옛 발자국 안의 직계 자식(+「<섬>_」 부두 + Nature 묶음 속 그 섬 둘레 자연물)과 인형 목록 항목을 섬별로 지운다
+    //       ④ 섬·표·전시·뽑기섬 포탈/조합식 줄/인형·부두·뽑기섬 둘레 자연물을 다시 짓는다 ⑤ 위습 생성 위치(PlayerContext) · 카메라 이동 범위 · NavMesh · 씬 저장.
+    // 해변(IslandShores)은 실행 때 섬 크기에서 만들어져 씬에 없다. 조합판·전시 둘은 BareIslands라 자연물이 애초에 없다.
+    // 부르기: call MapGenerator.RepairCombineBoardDryRun (지우지 않고 목록만) → call MapGenerator.RepairCombineBoard
+    static string RepairCombineBoardDryRun() => RepairCombineBoardCore(true);
+    static string RepairCombineBoard() => RepairCombineBoardCore(false);
+
+    static string RepairCombineBoardCore(bool dryRun)
+    {
+        string[] names = { "CombineTable", "TranscendDisplay", "ImmortalDisplay", "GachaIsland" };
+        string[] labels = { "조합판", "초월 전시", "불멸 전시", "뽑기섬" };
+        const int N = 4;
+        GameObject[] olds = new GameObject[N];
+        for (int i = 0; i < N; i++)
+        {
+            olds[i] = GameObject.Find(names[i]);
+            if (olds[i] == null) return $"⚠️ 씬에서 「{names[i]}」를 못 찾았습니다 — 맵이 생성돼 있지 않거나 열린 씬이 다릅니다.";
+        }
+        Transform parent = olds[0].transform.parent;
+        var scene = olds[0].scene;
+        for (int i = 1; i < N; i++)
+            if (parent == null || olds[i].transform.parent != parent) return "⚠️ 네 섬의 부모가 서로 다릅니다 — 중단.";
+
+        // ① 옛 발자국(섬 판 + 절벽 치마 몫).
+        Rect[] oldRects = new Rect[N], newRects = new Rect[N];
+        MapLayout.Island[] zones = new MapLayout.Island[N];
+        string[] oldDesc = new string[N];
+        for (int i = 0; i < N; i++)
+        {
+            Vector3 pos = olds[i].transform.position, size = olds[i].transform.lossyScale;
+            float halfX = size.x * 0.5f + MapLayout.CliffOverhang, halfZ = size.z * 0.5f + MapLayout.CliffOverhang;
+            oldRects[i] = Rect.MinMaxRect(pos.x - halfX, pos.z - halfZ, pos.x + halfX, pos.z + halfZ);
+            oldDesc[i] = $"{pos.x:F0},{pos.z:F0} {size.x:F0}×{size.z:F0}";
+            string n = names[i];
+            zones[i] = System.Array.Find(MapLayout.Zones, z => z.name == n);
+            float nx = zones[i].size.x * 0.5f + MapLayout.CliffOverhang, nz = zones[i].size.y * 0.5f + MapLayout.CliffOverhang;
+            newRects[i] = Rect.MinMaxRect(zones[i].center.x - nx, zones[i].center.y - nz, zones[i].center.x + nx, zones[i].center.y + nz);
+        }
+        int RectIndex(Rect[] rects, Vector3 p)
+        {
+            for (int i = 0; i < rects.Length; i++)
+                if (rects[i].Contains(new Vector2(p.x, p.z))) return i;
+            return -1;
+        }
+        int DockOf(string name)
+        {
+            for (int i = 0; i < N; i++)
+                if (name.StartsWith(names[i] + "_") && name != names[i] + "_Cliff") return i;
+            return -1;
+        }
+
+        // ② 지울 것(직계 자식 중 옛 발자국 안 + 부두)과 남의 것 검사.
+        List<Transform> victims = new List<Transform>();
+        int[] victimCounts = new int[N], natureCounts = new int[N];
+        var nameGroups = new List<Dictionary<string, int>>();
+        for (int i = 0; i < N; i++) nameGroups.Add(new Dictionary<string, int>());
+        void Tally(int island, string name)
+        {
+            int cut = name.IndexOf('_');
+            string key = cut > 0 ? name.Substring(0, cut) : name;
+            nameGroups[island][key] = nameGroups[island].TryGetValue(key, out int c) ? c + 1 : 1;
+        }
+        List<string> foreign = new List<string>();
+        foreach (Transform child in parent)
+        {
+            if (child.name == "Nature") continue;
+            int dock = DockOf(child.name);
+            int inOld = RectIndex(oldRects, child.position);
+            if (inOld >= 0 || dock >= 0)
+            {
+                int owner = dock >= 0 ? dock : inOld;
+                victims.Add(child);
+                victimCounts[owner]++;
+                Tally(owner, child.name);
+                continue;
+            }
+            if (RectIndex(newRects, child.position) >= 0 && child.name != "Sea" && !child.name.StartsWith("바다"))
+                foreign.Add($"{child.name}@({child.position.x:F0},{child.position.z:F0})");
+        }
+        Transform natureHolder = parent.Find("Nature");
+        if (natureHolder != null)
+            foreach (Transform prop in natureHolder)
+            {
+                int inOld = RectIndex(oldRects, prop.position);
+                if (inOld < 0) continue;
+                victims.Add(prop);
+                natureCounts[inOld]++;
+            }
+        if (foreign.Count > 0)
+            return $"⚠️ 새 발자국 안에 남의 오브젝트 {foreign.Count}개가 있어 아무것도 안 지우고 멈춥니다(겹침 방지): " +
+                   string.Join(", ", foreign.Take(12));
+
+        // 직계가 아닌 자리(다른 묶음 안)에 발자국 안 오브젝트가 있으면 지우지 않고 알린다.
+        int nested = 0;
+        List<string> nestedNames = new List<string>();
+        HashSet<Transform> victimSet = new HashSet<Transform>(victims);
+        foreach (Transform t in parent.GetComponentsInChildren<Transform>(true))
+        {
+            if (t == parent || t.parent == parent) continue;
+            Transform top = t;
+            while (top.parent != parent) top = top.parent;
+            if (victimSet.Contains(top) || victimSet.Contains(t.parent) && t.parent != top) continue;
+            if (top.name == "Nature" && victimSet.Contains(t)) continue;
+            if (RectIndex(oldRects, t.position) < 0) continue;
+            // 지울 직계 자식의 후손은 부모와 함께 사라진다 — 세지 않는다.
+            Transform walk = t; bool underVictim = false;
+            while (walk != null && walk != parent) { if (victimSet.Contains(walk)) { underVictim = true; break; } walk = walk.parent; }
+            if (underVictim) continue;
+            nested++;
+            if (nestedNames.Count < 8) nestedNames.Add($"{top.name}/{t.name}");
+        }
+
+        // 인형 목록: 옛 발자국 안의 항목을 섬별로 센다(실행이면 뺀다).
+        RecipeDollSpawner spawner = parent.GetComponentInChildren<RecipeDollSpawner>(true);
+        int[] dollsRemoved = new int[N];
+        int dollsBefore = 0;
+        if (spawner != null)
+        {
+            SerializedObject spawnerSo = new SerializedObject(spawner);
+            SerializedProperty list = spawnerSo.FindProperty("dolls");
+            dollsBefore = list.arraySize;
+            for (int d = list.arraySize - 1; d >= 0; d--)
+            {
+                Vector3 pos = list.GetArrayElementAtIndex(d).FindPropertyRelative("position").vector3Value;
+                int idx = RectIndex(oldRects, pos);
+                if (idx < 0) continue;
+                dollsRemoved[idx]++;
+                if (!dryRun) list.DeleteArrayElementAtIndex(d);
+            }
+            if (!dryRun) spawnerSo.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        string Groups(int i) => string.Join(" ", nameGroups[i].OrderByDescending(kv => kv.Value).Take(14).Select(kv => $"{kv.Key}×{kv.Value}"));
+        if (dryRun)
+        {
+            return "조합판·뽑기섬 Repair 시험(아무것도 안 지움)\n" + string.Join("\n", Enumerable.Range(0, N).Select(i =>
+                $"  {labels[i]}: 옛 {oldDesc[i]} → 새 {zones[i].center.x:F0},{zones[i].center.y:F0} {zones[i].size.x:F0}×{zones[i].size.y:F0} · 지울 것 직계 {victimCounts[i]}개 + 자연물 {natureCounts[i]}개 + 인형 항목 {dollsRemoved[i]}개\n    이름 묶음: {Groups(i)}")) +
+                $"\n  인형 목록 {dollsBefore}기 · 직계 밖에서 발자국 안에 있어 안 지울 것 {nested}개" + (nested > 0 ? $"({string.Join(", ", nestedNames)})" : "") +
+                $"\n  새 발자국 안 남의 것 0개 · 새 발자국: {string.Join(" | ", Enumerable.Range(0, N).Select(i => $"{labels[i]} x {newRects[i].xMin:F0}~{newRects[i].xMax:F0} z {newRects[i].yMin:F0}~{newRects[i].yMax:F0}"))}";
+        }
+
+        // ③ 지운다.
+        foreach (Transform victim in victims) Object.DestroyImmediate(victim.gameObject);
+
+        // ④ 다시 짓는다 — 맵 생성과 같은 함수·같은 순서.
+        int childrenBefore = parent.childCount;
+        GameObject[] built = new GameObject[N];
+        for (int i = 0; i < N; i++) built[i] = BuildIsland(parent, zones[i]);
+        string tableReport = BuildCombineColumns(built[0]);
+        string displayReport = BuildGradeDisplays(parent);
+        string portalReport = BuildGachaPortals(built[3]);
+        int dressed = StructureDresser.DressGachaPortals(parent);
+        string dockReport = StructureDresser.PlaceDocks(parent, "CombineTable") + StructureDresser.PlaceDocks(parent, "GachaIsland");
+        string natureReport = BuildNatureBorders(parent, "GachaIsland");
+
+        int[] rebuiltCounts = new int[N];
+        for (int c = childrenBefore; c < parent.childCount; c++)
+        {
+            Transform child = parent.GetChild(c);
+            int idx = DockOf(child.name) >= 0 ? DockOf(child.name) : RectIndex(newRects, child.position);
+            rebuiltCounts[Mathf.Max(0, idx)]++;
+        }
+        RecipeDollSpawner spawnerAfter = parent.GetComponentInChildren<RecipeDollSpawner>(true);
+        int dollsAfter = spawnerAfter != null ? new SerializedObject(spawnerAfter).FindProperty("dolls").arraySize : 0;
+
+        // ⑤ 위습 생성 위치(RewireScene과 같은 식) · 카메라 이동 범위 · NavMesh · 저장.
+        PlayerContext[] contexts = Object.FindObjectsByType<PlayerContext>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (PlayerContext context in contexts)
+            context.transform.position = new Vector3(zones[3].center.x, MapLayout.IslandTop, zones[3].center.y + zones[3].size.y * 0.5f - 6f);
+
+        string cameraReport = "카메라 컨트롤러를 못 찾음";
+        Camera camera = Camera.main;
+        RtsCameraController controller = camera != null ? camera.GetComponent<RtsCameraController>() : null;
+        if (controller != null)
+        {
+            IslandBounds bounds = MeasureIslands();
+            SerializedObject cameraSo = new SerializedObject(controller);
+            Vector2 oldMin = cameraSo.FindProperty("boundsMin").vector2Value, oldMax = cameraSo.FindProperty("boundsMax").vector2Value;
+            Vector2 newMin = new Vector2(bounds.minX - CameraMargin, bounds.minZ - CameraMargin);
+            Vector2 newMax = new Vector2(bounds.maxX + CameraMargin, bounds.maxZ + CameraMargin);
+            cameraSo.FindProperty("boundsMin").vector2Value = newMin;
+            cameraSo.FindProperty("boundsMax").vector2Value = newMax;
+            cameraSo.ApplyModifiedProperties();
+            cameraReport = $"카메라 이동 범위 {oldMin}~{oldMax} → {newMin}~{newMax}";
+        }
+
+        // 겹침: 새 섬 발자국끼리 + 이웃 섬(스토리 구역 등) 전수.
+        List<string> overlapLines = new List<string>();
+        foreach (MapLayout.Island other in AllIslands())
+        {
+            Rect otherRect = Rect.MinMaxRect(other.center.x - other.size.x * 0.5f, other.center.y - other.size.y * 0.5f,
+                                             other.center.x + other.size.x * 0.5f, other.center.y + other.size.y * 0.5f);
+            for (int i = 0; i < N; i++)
+            {
+                if (other.name == names[i]) continue;
+                Rect mine = Rect.MinMaxRect(zones[i].center.x - zones[i].size.x * 0.5f, zones[i].center.y - zones[i].size.y * 0.5f,
+                                            zones[i].center.x + zones[i].size.x * 0.5f, zones[i].center.y + zones[i].size.y * 0.5f);
+                if (mine.Overlaps(otherRect)) overlapLines.Add($"⚠️ {names[i]} ↔ {other.name} 겹침");
+            }
+        }
+        float seaHalf = MapLayout.SeaSize * 0.5f;
+        string seaLine = string.Join(" · ", Enumerable.Range(0, N).Select(i =>
+            $"{labels[i]} 가장자리 x {zones[i].center.x - zones[i].size.x * 0.5f:F0}~{zones[i].center.x + zones[i].size.x * 0.5f:F0}, z {zones[i].center.y - zones[i].size.y * 0.5f:F0}~{zones[i].center.y + zones[i].size.y * 0.5f:F0}"));
+        MapLayout.Island story = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
+        string gapLine = $"뽑기섬 왼쪽 변 − 스토리 구역 오른쪽 변 = {(zones[3].center.x - zones[3].size.x * 0.5f) - (story.center.x + story.size.x * 0.5f):F1} · " +
+                         $"조합판 왼쪽 변 − 뽑기섬 오른쪽 변 = {(zones[0].center.x - zones[0].size.x * 0.5f) - (zones[3].center.x + zones[3].size.x * 0.5f):F1} · 바다 ±{seaHalf:F0} 안 여유(동 {seaHalf - (zones[0].center.x + zones[0].size.x * 0.5f):F0}, 남 {zones[0].center.y - zones[0].size.y * 0.5f + seaHalf:F0})";
+
+        string nav = BuildNavMesh(parent.gameObject);
+        AssetDatabase.SaveAssets();
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+
+        string perIsland = string.Join("\n", Enumerable.Range(0, N).Select(i =>
+            $"  {labels[i]}: 지움 직계 {victimCounts[i]}개 + 자연물 {natureCounts[i]}개(인형 항목 {dollsRemoved[i]}) → 새로 만듦 {rebuiltCounts[i]}개 · 옛 {oldDesc[i]} → 새 {zones[i].center.x:F0},{zones[i].center.y:F0} {zones[i].size.x:F0}×{zones[i].size.y:F0}"));
+        return $"조합판·뽑기섬 간격 Repair(BoardScale {MapLayout.CombineBoardScale:0.##})\n{perIsland}\n" +
+               $"  인형 목록 {dollsBefore} → {dollsAfter}기 · 직계 밖에서 발자국 안에 있어 안 지운 것 {nested}개" +
+               (nested > 0 ? $"({string.Join(", ", nestedNames)})" : "") +
+               $"\n  {gapLine}\n  겹침: {(overlapLines.Count == 0 ? "없음(네 섬 ↔ 전 섬 전수)" : string.Join(", ", overlapLines))}\n  {seaLine}\n" +
+               $"  PlayerContext {contexts.Length}개 위습 위치 옮김 · 포탈 아치 {dressed}개\n  {cameraReport}\n{tableReport}{displayReport}{portalReport}{dockReport}{natureReport}\n{nav}\n씬 저장";
     }
 
     // 정의문 뒤 보상 사슬(JusticeGateQuest) — 문이 부서지면 dog_zone(=펑크해저드 공터) 가운데에 3제독 하나가 선다. 이미 있으면 지우고 다시 만든다.

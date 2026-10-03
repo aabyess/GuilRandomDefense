@@ -388,7 +388,21 @@ public static class MapLayout
 
     // 옮기는 셋의 x 중심 — StoryZone은 앞서 정한 자리 그대로, 나머지는 간격에서 유도한다.
     const float StoryZoneSizeX = 180f * Scale;
-    const float GachaSizeX = 136f * Scale;
+    // 🔴 2026-10-03 사장님 「뽑기섬 다른세계 줄도 넓혀 달라」 — 조합판과 같은 BoardScale(키÷30)이 다른세계 조합식 줄에도 걸린다.
+    //    줄 하나가 칸 폭에 겨우 들어가던(277.3 / 281.35) 터라 **오른쪽 전시 칸만** 줄 폭 증가분만큼 넓히고, 왼쪽 등급 칸 열은 예전 폭
+    //    그대로 둔다(GachaCellColumnWidth). 세로는 다른세계 줄 수(9) × 줄 높이 증가분만큼 **아래로만** 늘린다(윗변 고정).
+    //    ⚠️ 277.3·9는 에셋에서 나오는 값이라 리터럴이다(섬 정의가 에셋보다 먼저 — 조합판 CombineSizeX와 같은 순환).
+    //       어긋나면 BuildGachaPortals 보고문이 「줄 폭 N/칸 M」·「줄 수」로 고발한다.
+    const float GachaSizeXBase = 136f * Scale;
+    const float GachaOtherWorldRowWidthBase = 277.3f;   // 다른세계 조합식 가장 넓은 줄(BoardScale 1) — 보고문 「다른세계 조합식」과 대조
+    const int GachaOtherWorldRowCount = 9;
+    public const int GachaOtherWorldRowCountPublic = GachaOtherWorldRowCount;
+    public const float GachaOtherWorldRowWidthBasePublic = GachaOtherWorldRowWidthBase;
+    /// <summary>뽑기섬 왼쪽 등급 칸 열 폭 — 섬을 넓혀도 이 폭은 그대로다(예전 섬 폭÷2 − 6).</summary>
+    public const float GachaCellColumnWidth = GachaSizeXBase * 0.5f - 6f;
+    const float GachaSizeX = GachaSizeXBase + GachaOtherWorldRowWidthBase * (CombineBoardScale - 1f);
+    // 세로 증가분: 줄 높이(칸×3)가 BoardScale배가 되는 만큼 × 줄 수. 윗변은 안 움직이게 중심을 반만큼 내린다.
+    const float GachaExtraZ = GachaOtherWorldRowCount * MapGenerator.RecipeSlotBase * 3f * (CombineBoardScale - 1f);
     // 🔴 2026-09-24 사장님 지시 「흔함은 맨 왼쪽에 붙게 해줘 그리고 양 여백 있는거 보기 별로다
     //    여백은 없애줘」 → 섬 가로를 **표 자연 가로에 맞춘다**(1700.0 → 1462).
     //    옛 1700은 표가 6열이던 시절 값이라 10열 1461.3에 238.7이 남았고, 가운데 정렬이라
@@ -536,7 +550,7 @@ public static class MapLayout
         // ⚠️ 2026-09-24부터 **윗변 z=62.5는 더 이상 고정이 아니다** — DownShift가 −465를 얹어
         //    실제 윗변은 −402.9다. 위로 늘려도 레인과 500 떨어져 있으니 그 제약은 풀렸지만,
         //    늘릴 땐 LaneToIslandGapZ가 줄어드는 것이므로 보고문의 간격 줄을 같이 봐야 한다.
-        new Island("GachaIsland",      GachaCenterX, -99.20f * Scale + DownShift, GachaSizeX, 228.40f * Scale, "gacha"),
+        new Island("GachaIsland",      GachaCenterX, -99.20f * Scale + DownShift - GachaExtraZ * 0.5f, GachaSizeX, 228.40f * Scale + GachaExtraZ, "gacha"),
         // 조합식 표는 전시 섬과 겹치지 않도록 폭을 줄이고 왼쪽으로 당겼다.
         // (2026-09-23, 원작 비율 4단계, PM 지시 "섬을 넓혀라 — 52% 축소는 받지 않는다")
         // 새 칸 크기로 열을 자연 폭대로 늘어놓으면 2192가 필요한데 옛 폭은 1142라, 그대로 두면

@@ -383,12 +383,14 @@ public static class StructureDresser
         ("Warehouse4",   new Vector2(1f, 0f),  0.50f, false),
     };
 
-    public static string PlaceDocks(Transform parent)
+    /// <param name="onlyIsland">이 섬의 부두만 짓는다(맵 일부만 다시 지을 때 — 부두 순번 i는 그대로라 목선 모양이 전체 생성과 같다). null이면 전부.</param>
+    public static string PlaceDocks(Transform parent, string onlyIsland = null)
     {
         int piers = 0;
         for (int i = 0; i < DockSites.Length; i++)
         {
             var site = DockSites[i];
+            if (onlyIsland != null && site.island != onlyIsland) continue;
             MapLayout.Island island = MapLayout.Zones.Concat(MapLayout.Warehouses).FirstOrDefault(z => z.name == site.island);
             if (string.IsNullOrEmpty(island.name)) continue;
 
