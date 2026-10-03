@@ -410,7 +410,13 @@ public static class MapLayout
     //    자연 폭 1372.304. ⚠️ PM이 준 1372는 **−0.3으로 축소가 발동한다** — 위에 적은 그
     //    거짓 보고문 함정에 정확히 다시 걸리는 값이다. 0.7을 남겨 1373으로 둔다.
     //    왼쪽 변은 이 수와 무관하다(CombineCenterX가 간격 유도식이라 폭이 바뀌어도 안 움직인다).
-    const float CombineSizeX = 1373f;
+    //
+    // 🔴 2026-10-03 사장님 「조합판 간격을 벌려 달라」 — 유닛 키 30 → 48(×1.6)인데 칸 피치는 그대로라 붙어 보였다.
+    //    칸·줄·화살표·벽·등급 간격이 전부 MapGenerator.BoardScale(= 키÷30)을 타므로 **자연 폭·깊이도 정확히 같은 배율**이다
+    //    → 아래 1373·1307.5(키 30 시절 값)에 CombineBoardScale을 곱한다. 0.7 여유도 같이 커져(1.12) 축소 거짓 보고문 경계는 안 넘는다.
+    public const float CombineBoardScale = ArtBinder.UnitHeight / CombineBoardReferenceHeight;
+    const float CombineBoardReferenceHeight = 30f;   // 위 1373·1307.5·978.75를 잰 때의 유닛 키
+    const float CombineSizeX = 1373f * CombineBoardScale;
 
     // 🔴 2026-09-24 사장님 지시 「제일 긴 열 맞춰서 세로 길이 줄여주고」.
     //
@@ -430,7 +436,7 @@ public static class MapLayout
     // ⚠️ 이 값은 **리터럴일 수밖에 없다** — 섬 크기는 표를 짓기 전에 정해지는데 깊이는 표를
     //    지어야 나온다(순환). 그래서 대신 **넘치면 보고문이 경고하고 필요한 값을 알려 준다.**
     //    사장님이 조합식을 더하시면 그 줄을 보고 이 수를 올린다.
-    const float CombineSizeZ = 1307.5f;
+    const float CombineSizeZ = 1307.5f * CombineBoardScale;
 
     // 조합판 윗변 — 예전 주석들이 말하는 「윗변 z=−71」이 이 값이다(초월 전시 아래변과의 경계).
     // 🔴 **세로를 줄일 때 윗변은 그대로 두고 밑변만 올린다.** 윗변을 내리면 표 머리가 같이
@@ -465,7 +471,7 @@ public static class MapLayout
     ///    2026-09-24에 정확히 이 두 전시 섬에서 그 일이 났다(LeftShift에 안 들어가 남겨졌다).
     ///    오프셋이 어긋나면 BuildCombineColumns 보고문이 실측값과 나란히 찍어 고발한다.
     /// </summary>
-    public const float LegendColumnCenterOffset = 978.75f;
+    public const float LegendColumnCenterOffset = 978.75f * CombineBoardScale;   // 열 폭이 전부 BoardScale을 타므로 같은 배율(키 30 시절 978.75)
 
     /// <summary>전시 섬 x 중심 — 전설 열 중심에 맞춘다(사장님 「전설 위에 오게끔」).</summary>
     public const float DisplayCenterX = CombineTableLeftX + LegendColumnCenterOffset;

@@ -1448,7 +1448,7 @@ public static class MapGenerator
     const float PedestalWidth = DisplayFigureHeight * PedestalDiameterPerFigureHeight;   // 7.8
 
     // 등급이 바뀔 때 두는 벽 자리. 줄 하나보다 조금 더 벌려 "여기서 등급이 바뀐다"가 읽히게 한다.
-    const float GradeWallGap = RecipeRowHeight * 1.3f;   // 60.1
+    static float GradeWallGap => RecipeRowHeight * 1.3f;   // 60.1 (BoardScale 1일 때)
 
     /// <summary>
     /// 등급 무리 사이에 두는 가로 간격(사장님 2026-09-24 「각 등급마다 오른쪽 약간씩 띄워줄래?」).
@@ -1458,7 +1458,7 @@ public static class MapGenerator
     ///    세로 틈(지금 8열 전설↕제한됨 한 자리)이고, 이건 열 **사이**의 가로 틈이다.
     ///    같은 등급이 두 열에 걸친 자리에는 넣지 않는다 — 붙어 있어야 한 등급으로 읽힌다.
     /// </summary>
-    const float GradeGroupGap = RecipeSlot;   // 15.4
+    static float GradeGroupGap => RecipeSlot;   // 15.4 (BoardScale 1일 때)
 
     /// <summary>
     /// 조합식 표의 열 수. 169줄을 이 수로 **고르게 나눠** 담는다(BuildCombineColumns 참고).
@@ -1471,7 +1471,16 @@ public static class MapGenerator
     // 아래 `spread` 표와 **반드시 같아야 한다** — 표에 9열을 쓰는데 여기가 8이면 마지막 열이
     // 통째로 사라진다. `neededColumns` 검사가 그걸 잡지만, 걸리기 전에 같이 고치는 게 맞다.
     const int CombineTableColumns = 9;
-    const float RecipeSlot = 15.4f;     // 유닛 한 칸. 원작 슬롯 한 변 64 ÷ Scale
+    /// <summary>
+    /// 🔴 2026-10-03 사장님 「조합판 간격을 벌려 달라, 너무 따닥따닥. 크기는 좋다」 — 유닛 키가 30 → 48(1.6배)이 됐는데
+    /// 칸·줄·화살표·벽 간격은 그대로라 붙어 보였다. **칸 피치를 인형 키에 매단다**: 아래 「…Base」 값은 키 30 시절 값이고,
+    /// 실제 값은 BoardScale(= 지금 키 ÷ 30)을 곱한다. 키를 또 바꾸면 간격이 저절로 따라온다(섬 크기는 MapLayout이 같은 배율로 유도).
+    /// ⚠️ BoardScale은 **조합판을 짓는 동안만** 켠다(BuildCombineColumns). 뽑기섬 「다른세계」 조합식 줄도 같은 함수(PlaceRecipeRow)를
+    ///    쓰는데, 거기는 섬 오른쪽 칸 폭(281)에 줄 하나(≈277)가 겨우 들어가는 모양이라 배율을 타면 넘친다 — 1로 둔다.
+    /// </summary>
+    static float BoardScale = 1f;
+    const float RecipeSlotBase = 15.4f;     // 유닛 한 칸(키 30 시절). 원작 슬롯 한 변 64 ÷ Scale
+    static float RecipeSlot => RecipeSlotBase * BoardScale;
     // ── 조합식 표 간격 (2026-09-23 재설계) ────────────────────────────────
     // 사장님 「조합판도 너무 붙어있으니깐 답답한 느낌이든다」.
     //
@@ -1487,19 +1496,25 @@ public static class MapGenerator
     //       칸 크기를 바꾸면 간격이 따라오므로 손으로 박은 수가 또 어긋나는 일이 없다.
     //       가로는 이만큼만 벌린다 — 사장님이 앞서 「너비가 너무 길어지는 느낌」이라 하셔서
     //       열 수(6)를 그대로 둔 채 여백만 준다. 답답함은 **세로로** 푼다(줄 높이·등급 벽).
-    const float RecipeGap = RecipeSlot;          // 15.4
-    const float RecipeArrowGap = 13.689f; // 재료 묶음과 결과 사이. 4.0 × 3.422
+    static float RecipeGap => RecipeSlot;          // 15.4 (BoardScale 1일 때)
+    const float RecipeArrowGapBase = 13.689f; // 재료 묶음과 결과 사이. 4.0 × 3.422
+    static float RecipeArrowGap => RecipeArrowGapBase * BoardScale;
     // 줄 높이 = 칸의 3배. 위 "원작 근거 없음"이 여기에도 그대로 적용된다 —
     // 예전 값 28.4는 "원작 조합표 줄 간격"이라 적혀 있었지만 원작에 그 표가 없다.
-    const float RecipeRowHeight = RecipeSlot * 3f;   // 46.2
-    const float RecipeSlotHeight = 10.951f; // 3.2 × 3.422
+    static float RecipeRowHeight => RecipeSlot * 3f;   // 46.2 (BoardScale 1일 때)
+    const float RecipeSlotHeightBase = 10.951f; // 3.2 × 3.422
+    static float RecipeSlotHeight => RecipeSlotHeightBase * BoardScale;
 
     // 조합 비용(코인·목재·행운토큰)을 줄 왼쪽에 세우는 아이콘.
     // 재료 칸보다 작게 둬야 "이건 유닛이 아니라 자원"으로 읽힌다.
-    const float CostSlot = 10.951f;    // 3.2 × 3.422 — 유닛 칸(15.4)의 0.71배, 반드시 더 작아야 한다
-    const float CostGap = 4.107f;      // 1.2 × 3.422
-    const float CostBlockGap = 6.844f; // 비용 묶음과 첫 재료 사이. 2.0 × 3.422
-    const float ColumnPad = 6.844f;    // 열 바닥판 좌우 여백 — 열 사이 벽이 이 안에 선다. 2.0 × 3.422
+    const float CostSlotBase = 10.951f;    // 3.2 × 3.422 — 유닛 칸(15.4)의 0.71배, 반드시 더 작아야 한다
+    static float CostSlot => CostSlotBase * BoardScale;
+    const float CostGapBase = 4.107f;      // 1.2 × 3.422
+    static float CostGap => CostGapBase * BoardScale;
+    const float CostBlockGapBase = 6.844f; // 비용 묶음과 첫 재료 사이. 2.0 × 3.422
+    static float CostBlockGap => CostBlockGapBase * BoardScale;
+    const float ColumnPadBase = 6.844f;    // 열 바닥판 좌우 여백 — 열 사이 벽이 이 안에 선다. 2.0 × 3.422
+    static float ColumnPad => ColumnPadBase * BoardScale;
 
     // 조합표 가로 축소율. 열을 자연 폭으로 늘어놓으면 섬 폭(274)을 50 넘겨서
     // 양쪽으로 25씩 삐져나온다(2026-09-06 사장님 스크린샷). 자연 폭을 먼저 재고
@@ -1517,6 +1532,14 @@ public static class MapGenerator
     static float CostBlockGapW => CostBlockGap * RecipeScale;
 
     static string BuildCombineColumns(GameObject table)
+    {
+        // 조합판을 짓는 동안만 칸 피치 배율을 켠다(BoardScale 주석). 예외가 나도 꺼 둬야 뽑기섬 줄이 안 틀어진다.
+        BoardScale = MapLayout.CombineBoardScale;
+        try { return BuildCombineColumnsCore(table); }
+        finally { BoardScale = 1f; }
+    }
+
+    static string BuildCombineColumnsCore(GameObject table)
     {
         if (table == null) return "";
 
