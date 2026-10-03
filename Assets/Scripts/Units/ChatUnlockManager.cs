@@ -129,6 +129,7 @@ public class ChatUnlockManager : MonoBehaviour
         }
 
         SpawnResult(context, data);
+        FullCountScore.AddTopUnit(playerId);   // 원작 Trig_Eternal_*/IM_*/Forever_*의 one_dill +1(풀카운트 클리어 보너스 판정)
 
         // 2026-09-06 — Eternal_Lucci(+2)·IM_dragon(+4)류 Damage_level_Fixed 누적.
         // 항법 "패왕의길"·HiddenCombineManager의 Hidden_Aokiji와 같은 카운터

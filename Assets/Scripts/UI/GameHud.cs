@@ -127,6 +127,7 @@ public class GameHud : MonoBehaviour
     // 변경 감지로 아낀 것보다 할당이 더 나온다.
     readonly int[] slotEnemy = new int[TeamSlotCount];
     readonly int[] slotGold = new int[TeamSlotCount];
+    readonly int[] slotFull = new int[TeamSlotCount];
     readonly int[] slotWood = new int[TeamSlotCount];
     readonly bool[] slotHas = new bool[TeamSlotCount];
     readonly bool[] slotDead = new bool[TeamSlotCount];
@@ -324,6 +325,8 @@ public class GameHud : MonoBehaviour
     string lastDifficultyLabel;   // 팀 현황판 머리 줄의 난이도 — 고르기 전엔 null(안 보임)
     readonly int[] lastSlotEnemyCount = new int[TeamSlotCount];
     readonly int[] lastSlotGold = new int[TeamSlotCount];
+    readonly int[] lastSlotFull = new int[TeamSlotCount];
+    bool lastFullVisible;
     readonly int[] lastSlotWood = new int[TeamSlotCount];
     readonly int[] slotGrace = new int[TeamSlotCount];       // MP: 끊김 유예 남은 초(0 = 연결됨)
     readonly int[] lastSlotGrace = new int[TeamSlotCount];
@@ -3401,7 +3404,8 @@ public class GameHud : MonoBehaviour
         int deathLimit = !GameAuthority.IsServer && NetGameState.Instance != null   // MP: 클라는 호스트 값
             ? NetGameState.Instance.DeathLimit
             : (roundManager != null ? roundManager.EnemyCountLimit : 0);
-        bool changed = !teamPanelInitialized || totalEnemies != lastTotalEnemyCount || difficultyLabel != lastDifficultyLabel || deathLimit != lastDeathLimit;
+        bool fullVisible = FullCountScore.Visible;
+        bool changed = !teamPanelInitialized || fullVisible != lastFullVisible || totalEnemies != lastTotalEnemyCount || difficultyLabel != lastDifficultyLabel || deathLimit != lastDeathLimit;
 
         for (int i = 0; i < TeamSlotCount; i++)
         {
@@ -3412,6 +3416,8 @@ public class GameHud : MonoBehaviour
             slotGold[i] = context != null && context.GoldWallet != null ? context.GoldWallet.Gold : 0;
             slotWood[i] = context != null && context.ResourceWallet != null ? context.ResourceWallet.Get(ResourceType.Wood) : 0;
             slotGrace[i] = MatchConfig.Active ? NetPlayer.GraceSecondsFor(i) : 0;   // MP: 재접속 유예 「연결 끊김 57초」
+            slotFull[i] = FullCountScore.Get(i);
+            if (slotFull[i] != lastSlotFull[i]) changed = true;
 
             if (slotGrace[i] != lastSlotGrace[i]) changed = true;
             if (slotHas[i] != lastSlotHasContext[i]
@@ -3430,6 +3436,7 @@ public class GameHud : MonoBehaviour
         lastTotalEnemyCount = totalEnemies;
         lastDifficultyLabel = difficultyLabel;
         lastDeathLimit = deathLimit;
+        lastFullVisible = fullVisible;
 
         teamPanelBuilder.Clear();
         // 원작 색: 제목 |c00ffb0ff · 한계 숫자 |cFF00FF00. 지금 전체 적 수는 원작엔 없지만 아랫줄 「적 M」들의 합이라 그대로 남긴다.
@@ -3445,6 +3452,7 @@ public class GameHud : MonoBehaviour
             lastSlotDead[i] = slotDead[i];
             lastSlotEnemyCount[i] = slotEnemy[i];
             lastSlotGold[i] = slotGold[i];
+            lastSlotFull[i] = slotFull[i];
             lastSlotWood[i] = slotWood[i];
             lastSlotGrace[i] = slotGrace[i];
 
@@ -3467,6 +3475,8 @@ public class GameHud : MonoBehaviour
                 teamPanelBuilder.Append(" | 적 ").Append(slotEnemy[i])
                     .Append(" | 골드 ").Append(slotGold[i])
                     .Append(" | 목재 ").Append(slotWood[i]);
+                // 원작 멀티보드 3번째 행 「|cff00ffff풀카운트  :|r N  점」 — 신세계 진입 뒤부터(j:29704).
+                if (fullVisible) teamPanelBuilder.Append(" | <color=#00FFFF>풀카운트  :</color> ").Append(slotFull[i]).Append("  점");
             }
             else
             {

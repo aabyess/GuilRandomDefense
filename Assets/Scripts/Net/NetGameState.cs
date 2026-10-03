@@ -43,6 +43,9 @@ public class NetGameState : NetworkBehaviour
     [Networked] public float StorySeconds { get; set; }
     [Networked] public NetworkString<_16> StoryInterlude { get; set; }
     [Networked] public int StoryFinished { get; set; }
+    /// <summary>풀카운트(원작 멀티보드 3번째 행) — 호스트가 판정한 점수를 클라 점수판에 보인다. 신세계 진입 전엔 숨김.</summary>
+    [Networked, Capacity(4)] public NetworkArray<int> FullCounts => default;
+    [Networked] public NetworkBool FullCountVisible { get; set; }
 
     RoundManager roundManager;
     int notificationsLogged;
@@ -101,6 +104,9 @@ public class NetGameState : NetworkBehaviour
         }
         else if (ExtraTimerKind != 0) ExtraTimerKind = 0;
         if (DeathLimit != roundManager.EnemyCountLimit) DeathLimit = roundManager.EnemyCountLimit;
+        if (FullCountVisible != FullCountScore.HostVisible) FullCountVisible = FullCountScore.HostVisible;
+        for (int i = 0; i < FullCountScore.Players; i++)
+            if (FullCounts.Get(i) != FullCountScore.HostGet(i)) FullCounts.Set(i, FullCountScore.HostGet(i));
 
         StoryManager story = StoryManager.Instance;
         if (story != null)

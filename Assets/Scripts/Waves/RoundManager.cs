@@ -162,6 +162,7 @@ public class RoundManager : MonoBehaviour
 
         // 보스 타임리밋 패배(2단계 A) — waveSpawner가 라운드보스를 스폰할 때마다 이 알림을 받는다.
         if (waveSpawner != null) waveSpawner.OnRoundBossSpawned += OnRoundBossSpawned;
+        FullCountScore.Begin();   // 풀카운트(원작 udg_full_count): 시작 500 — 점수판엔 신세계 진입 때부터 보인다
     }
 
     void Update()
@@ -358,6 +359,7 @@ public class RoundManager : MonoBehaviour
     // 이 이벤트 자체가 안 온다 — WaveSpawner 쪽 게이트 참고).
     void OnRoundBossSpawned(int laneIndex, int roundNumber, EnemyDummy boss)
     {
+        FullCountScore.OnBossSpawned(laneIndex, roundNumber);   // 신세계 보스 17.5초 안 처치 판정의 시작 시각
         StartCoroutine(BossTimeoutRoutine(laneIndex, roundNumber, boss));
     }
 
@@ -485,6 +487,7 @@ public class RoundManager : MonoBehaviour
     void AdvanceRound()
     {
         GrantRoundClearWisps(currentRound);
+        FullCountScore.OnRoundEnd(currentRound, finalClear: totalRounds > 60 && currentRound == totalRounds);   // 풀카운트 라운드 끝 가산(원작 Round_10ver Stage 20)
         // 아이템 도박 재고는 라운드가 아니라 스토리 6·9 클리어 때 +1 — RewardDistributor.GrantStoryReward(원작 Item_Int+1, j:13555·13603).
 
         currentRound++;
@@ -517,6 +520,7 @@ public class RoundManager : MonoBehaviour
         {
             for (int i = 0; i < MaxTrackedLanes; i++)
                 laneDeathCount[i] = NewWorldDeathCount;
+            if (totalRounds > 60) FullCountScore.OnNewWorldEnter();   // 원작 Stage 11: 전원 1250점·full_C 0, 점수판 풀카운트 행이 처음 뜬다
         }
         if (currentRound == 60 && round60Delay > 0f)
             AnnounceAll("<color=#FF8200>미지의 바다인 신세계로 출항합니다. 40초의 대기시간을 가집니다.</color>", 5f);   // TRIGSTR_15735 1줄
