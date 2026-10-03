@@ -525,25 +525,7 @@ public class GameHud : MonoBehaviour
         //    아래변을 MinimapTop에 맞춘다. 숫자를 박으면 오늘처럼 미니맵을 옮길 때 어긋난다.
         BuildWispSlots();
 
-        // 사진의 미니맵 오른쪽 세로 단추 5개(워크3 기본: 지형·동맹색·크립·신호 등) — 자리와 모양만 만든다. 기능은 아직 없다(보고 항목).
-        RectTransform minimapButtons = CreatePanel(consoleLeft, "MinimapButtons", Color.clear);
-        minimapButtons.GetComponent<Image>().raycastTarget = false;
-        LayoutElement minimapButtonsLayout = minimapButtons.gameObject.AddComponent<LayoutElement>();
-        minimapButtonsLayout.preferredWidth = 46f;
-        minimapButtonsLayout.flexibleWidth = 0f;
-        VerticalLayoutGroup minimapButtonsColumn = minimapButtons.gameObject.AddComponent<VerticalLayoutGroup>();
-        minimapButtonsColumn.spacing = 4f;
-        minimapButtonsColumn.childControlWidth = true;
-        minimapButtonsColumn.childControlHeight = true;
-        minimapButtonsColumn.childForceExpandWidth = true;
-        minimapButtonsColumn.childForceExpandHeight = true;
-        for (int i = 0; i < 5; i++)
-        {
-            RectTransform mb = CreatePanel(minimapButtons, $"MinimapButton{i}", new Color(0.35f, 0.28f, 0.1f, 1f));
-            Image mbImage = mb.GetComponent<Image>();
-            mbImage.raycastTarget = false;
-            if (UiSkin.Apply(mbImage, "minimap_button")) mbImage.preserveAspect = true;
-        }
+        // 미니맵 오른쪽 둥근 단추 5개(기능 없는 자리표시)는 사장님 10-03 지시로 뺐다.
 
         // 09-29 워크3 콘솔: [미니맵] [초상화] [정보·카드] [아이템 2×4] [명령 4×3]. 오른쪽 두 칸은 고정 폭(ConsoleMargin 주석).
         RectTransform portraitSlot = CreatePanel(consoleLeft, "UnitInfoPortraitSlot", SlotColor);

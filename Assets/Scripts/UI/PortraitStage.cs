@@ -24,6 +24,12 @@ public class PortraitStage : MonoBehaviour
     // 모델의 높이와 폭 중 큰 쪽이 칸의 이만큼을 채운다(PM 09-26: 약 90%).
     const float FillFraction = 0.9f;
     const float FieldOfView = 28f;
+    // 상반신 초상(사장님 10-03: 워크3처럼 머리~허리). 서 있는 모습(사람형이거나 픽셀 상자가 세로로 길쭉)이면 위쪽 이 비율만 칸에 채운다.
+    // 건물·노트북 같은 가로로 넓은 모델은 전신 그대로. 허리 = 사람 키의 약 절반.
+    const float BustFraction = 0.5f;
+    const float StandingAspect = 1.35f;   // 픽셀 상자 높이/폭이 이 이상이면 서 있는 모습
+    const float HeadMargin = 0.06f;       // 머리 꼭대기 위 여백(칸 높이 비율)
+    bool cloneIsHuman;
 
     static PortraitStage instance;
 
@@ -120,6 +126,7 @@ public class PortraitStage : MonoBehaviour
         t.localRotation = Quaternion.identity;
         t.localScale = source.transform.lossyScale;   // 실물과 같은 크기(ArtBinder가 맞춘 키) — 구도는 경계로 다시 맞춘다
 
+        cloneIsHuman = clone.TryGetComponent(out Animator cloneAnimator) && cloneAnimator.isHuman;
         Frame();
         StopAllCoroutines();
         StartCoroutine(RefineByPixels(clone));
@@ -217,6 +224,23 @@ public class PortraitStage : MonoBehaviour
             if (Debug.isDebugBuild || Application.isEditor)
                 Debug.Log($"[초상] {clone.name} {pass + 1}차: 채움 {fraction:P0} → 거리 {distance:0.00}");
         }
+
+        // 3차: 상반신 자르기. 전신이 칸에 맞은 상태에서 다시 재, 위쪽 BustFraction만 칸 높이에 맞춘다(폭은 넘쳐 잘려도 됨).
+        yield return endOfFrame;
+        if (clone != target || clone == null) yield break;
+        if (!MeasureModel(out float bx0, out float by0, out float bx1, out float by1)) yield break;
+        float boxW = bx1 - bx0, boxH = by1 - by0;
+        if (!cloneIsHuman && boxH / Mathf.Max(0.01f, boxW) < StandingAspect) yield break;
+        float bustH = boxH * BustFraction;
+        float halfViewNow = distance * Mathf.Tan(FieldOfView * 0.5f * Mathf.Deg2Rad);
+        Transform cam2 = stageCamera.transform;
+        // 가로는 상자 가운데, 세로는 (머리 꼭대기 아래 bustH)의 가운데를 칸 가운데로 — 위 여백은 줌 뒤 HeadMargin만큼 남는다.
+        float bustCenterY = by1 - bustH * 0.5f;
+        aim += cam2.right * ((bx0 + bx1 - 1f) * halfViewNow) + cam2.up * ((bustCenterY * 2f - 1f) * halfViewNow);
+        distance = Mathf.Max(0.05f, distance * bustH / (1f - HeadMargin * 2f));
+        ApplyCamera();
+        if (Debug.isDebugBuild || Application.isEditor)
+            Debug.Log($"[초상] {clone.name} 상반신: 상자 {boxW:P0}×{boxH:P0} 사람형 {cloneIsHuman} → 거리 {distance:0.00}");
     }
 
     // 칸에서 배경색과 다른 픽셀의 상자(0~1, 아래 왼쪽 원점). 모델이 없거나 가장자리에 닿아 잘렸으면 false.
