@@ -125,7 +125,8 @@ public class UnitAttacker : MonoBehaviour
             // SkillAttackSpeedBuffMultiplier는 ActiveBuff 레지스트리 기반(자동 만료)이라
             // 기존 attackSpeedBuffs(수동 Add/Remove, SupportShop 전용)와 별도 축이다 — 곱은
             // 순서 무관이라 그냥 같이 곱한다.
-            float product = ResearchSpeedMultiplier * HeroAttackSpeedMultiplier * SkillAttackSpeedBuffMultiplier * AuraAttackSpeedMultiplier;
+            float product = ResearchSpeedMultiplier * HeroAttackSpeedMultiplier * SkillAttackSpeedBuffMultiplier * AuraAttackSpeedMultiplier
+                            * (1f + TeamBuffs.AttackSpeedPercent);
             foreach (float buff in attackSpeedBuffs) product *= buff;
             return product > 0f ? product : 1f;
         }
@@ -316,7 +317,7 @@ public class UnitAttacker : MonoBehaviour
     {
         get
         {
-            float sum = AuraBonusTotal(SkillEffectKind.AttackPowerBuffPercent, false);
+            float sum = AuraBonusTotal(SkillEffectKind.AttackPowerBuffPercent, false) + TeamBuffs.AttackPowerPercent;
             if (activeBuffs.Count > 0)
             {
                 PruneExpiredBuffs();
@@ -873,6 +874,20 @@ public class UnitAttacker : MonoBehaviour
     // 유닛 전원에게 킬 경험치 1을 준다. 누가 죽였는지는 안 본다(원작 그대로).
     public static void GrantHeroKillExperienceToLane(int laneIndex) =>
         ForEachHeroInLane(laneIndex, attacker => attacker.GainKillExperience());
+
+    /// <summary>
+    /// 원작 Trig_door_quest·Trig_Red_dog의 ForGroupBJ(udg_Exp_Group, AddHeroXP 600) — 생존 검사가 없다(죽은 플레이어의 영웅도 받는다).
+    /// 대상 집합은 ForEachHeroInLane과 같지만(조합 초월함·영원한) 주인을 가리지 않는다.
+    /// </summary>
+    public static void GrantHeroXpToAllHeroes(int amount)
+    {
+        foreach (UnitIdentity identity in UnitIdentity.Active)
+        {
+            if (identity == null || identity.Data == null) continue;
+            if (identity.Data.grade != UnitGrade.Transcendent && identity.Data.grade != UnitGrade.Eternal) continue;
+            if (identity.TryGetComponent(out UnitAttacker attacker)) attacker.AddHeroXp(amount);
+        }
+    }
 
     // 도움소 「능력치 증가」 전용 — statIndex 0=STR·1=AGI·2=INT. 대상 집합이
     // GrantHeroKillExperienceToLane과 완전히 같다(원작이 같은 그룹 udg_Exp_Hero_Group을

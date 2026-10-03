@@ -7,10 +7,14 @@ using UnityEngine;
 /// </summary>
 public class DestructibleGate : MonoBehaviour
 {
-    [SerializeField] float maxHp = 5000f;
+    // 원작 war3map.w3b ZTsg bhps = 487,700,000(애니에스 로비 정의문). 옛 값 5,000은 우리 임시 숫자였다.
+    [SerializeField] float maxHp = 487700000f;
     [SerializeField] Transform openTarget;   // 부서지면 이 위치로 내려앉는다(비면 아래로 가라앉힘)
 
     public static readonly List<DestructibleGate> Active = new List<DestructibleGate>();
+
+    /// <summary>문이 부서진 순간(서버에서만) — 원작 Trig_door_quest(TriggerRegisterDeathEvent ZTsg_0053)에 대응. JusticeGateQuest가 듣는다.</summary>
+    public static event System.Action<DestructibleGate> OnBroken;
 
     float hp;
     bool isBroken;
@@ -64,5 +68,6 @@ public class DestructibleGate : MonoBehaviour
             : transform.position + Vector3.down * (transform.localScale.y + 1f);
 
         Debug.Log($"{name}이(가) 부서졌습니다.");
+        OnBroken?.Invoke(this);
     }
 }

@@ -3783,6 +3783,7 @@ public static class MapGenerator
     {
         MapLayout.Island island = System.Array.Find(MapLayout.Zones, z => z.name == "PunkHazard");
         BuildJusticeGate(parent, island);
+        BuildJusticeGateQuest(parent, island);
         StructureDresser.ScatterPunkHazard(parent, island, GateWidth, GateThickness);
         return "\n펑크해저드 공터에 정의문을 세웠습니다 (원작 자리·방향).";
     }
@@ -3829,10 +3830,31 @@ public static class MapGenerator
         if (parent == null) return "⚠️ 씬에서 정의문(DestructibleGate)을 못 찾았습니다.";
 
         GameObject gate = BuildJusticeGate(parent, island);
+        string quest = BuildJusticeGateQuest(parent, island);
         string nav = BuildNavMesh(parent.gameObject);
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gate.scene);
         UnityEditor.SceneManagement.EditorSceneManager.SaveScene(gate.scene);
-        return $"옛 조각 {removed}개 지움 · 정의문 {gate.transform.position} 회전 {GateYaw}° · 씬 저장\n{nav}";
+        return $"옛 조각 {removed}개 지움 · 정의문 {gate.transform.position} 회전 {GateYaw}° · 씬 저장\n{quest}\n{nav}";
+    }
+
+    // 정의문 뒤 보상 사슬(JusticeGateQuest) — 문이 부서지면 dog_zone(=펑크해저드 공터) 가운데에 3제독 하나가 선다. 이미 있으면 지우고 다시 만든다.
+    static string BuildJusticeGateQuest(Transform parent, MapLayout.Island island)
+    {
+        const string name = "정의문퀘스트";
+        foreach (JusticeGateQuest old in Object.FindObjectsByType<JusticeGateQuest>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            Object.DestroyImmediate(old.gameObject);
+
+        GameObject go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.position = new Vector3(island.center.x, MapLayout.IslandTop, island.center.y);
+        JusticeGateQuest quest = go.AddComponent<JusticeGateQuest>();
+        SerializedObject so = new SerializedObject(quest);
+        so.FindProperty("redDog").objectReferenceValue = AssetDatabase.LoadAssetAtPath<EnemyData>("Assets/Data/Enemies/Enemy_Dog_붉은개.asset");
+        so.FindProperty("yellowMonkey").objectReferenceValue = AssetDatabase.LoadAssetAtPath<EnemyData>("Assets/Data/Enemies/Enemy_Dog_노란원숭이.asset");
+        so.FindProperty("blueBird").objectReferenceValue = AssetDatabase.LoadAssetAtPath<EnemyData>("Assets/Data/Enemies/Enemy_Dog_푸른꿩.asset");
+        so.FindProperty("commonChoiceWisp").objectReferenceValue = AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_흔함선택.asset");
+        so.ApplyModifiedProperties();
+        return $"{name}: {go.transform.position} (3제독·위습 연결)";
     }
 
     // 초월·불멸은 조합식 표에 올리지 않고 전시만 한다(사용자 확정).

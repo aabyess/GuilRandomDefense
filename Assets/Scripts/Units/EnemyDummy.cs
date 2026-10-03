@@ -288,6 +288,9 @@ public class EnemyDummy : MonoBehaviour
         if (slowVfx != null && !slowMultipliers.Exists(m => m < 1f)) { SkillVfx.Stop(slowVfx); slowVfx = null; }
     }
 
+    /// <summary>팀 버프(냉철함)가 바뀌었을 때 이미 나와 있는 적에게 다시 반영한다.</summary>
+    public void RefreshSlow() => ApplySlow();
+
     void ApplySlow()
     {
         if (mover != null) mover.SetSlowMultiplier(EffectiveSlowMultiplier);
@@ -305,7 +308,7 @@ public class EnemyDummy : MonoBehaviour
                 if (m < 1f) slow = Mathf.Min(slow, m);
                 else boost = Mathf.Max(boost, m);
             }
-            return Mathf.Max(slow, SlowFloorMultiplier) * boost;
+            return Mathf.Max(slow * TeamBuffs.EnemySlowMultiplier, SlowFloorMultiplier) * boost;
         }
     }
 
@@ -417,6 +420,8 @@ public class EnemyDummy : MonoBehaviour
                 visualRoot.localScale = baseVisualScale * Mathf.Max(0.01f, enemyData.visualScale);
             }
         }
+
+        if (TeamBuffs.EnemySlowMultiplier < 1f) ApplySlow();   // 냉철함 발동 뒤에 나온 적도 같은 이감
 
         // Instantiate는 동기 호출이라(Awake가 그 안에서 바로 돈다) Update가 끼어들 틈이 없다 —
         // 지금 CurrentRound가 곧 이 적을 내보낸 웨이브의 라운드다. WaveSpawner를 거치지 않고
