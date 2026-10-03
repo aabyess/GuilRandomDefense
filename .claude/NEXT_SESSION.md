@@ -1,10 +1,44 @@
-# 다음 세션 이어받기 — 2026-10-03 12:30 (PM 작성, Opus 5.5 세션)
+# 다음 세션 이어받기 — 2026-10-03 오후 마감 (PM 2번째, Opus 5.5 세션)
 
 `CLAUDE.md` → `.claude/PROJECT_BRIEF.md` → `.claude/TEAM_RULES.md`를 먼저 읽고 이 문서로 온다.
-🔴 **새 PM: 이 문서를 읽은 뒤 `.claude/team/spawn_team.sh --fresh`로 팀원 셋을 띄운다**(CLAUDE.md 「이어받기」 2번, 사장님 10-03 확정 · Sonnet 5.5).
+🔴 **새 PM: 팀원은 이미 새 세션 — `--fresh` 돌리지 말 것**(아래 10-03 오후 판 §0).
 10-01 오후판은 git 이력에 있다. 이 문서가 그것을 대체한다. **작업이 진행되면 PM이 이 문서를 갱신한다(큰 단계마다).**
 
 ---
+
+## ⭐⭐⭐⭐ 10-03 오후 판 (PM 2번째, Opus 5.5 — 마감) — 이게 최신. 아래 「10-03 판」은 오전 기록
+전부 main 푸시. **0.3.4 배포는 여전히 「나중에」**(사장님).
+
+### 0) 새 PM이 맨 먼저 할 것
+- 🔴 **팀원 셋(구현담당1·구현담당2·blender)도 이 마감과 같이 새 세션으로 갈아 끼웠다**(spawn_team.sh --fresh) → 새 PM은 `--fresh`를 **돌리지 말 것**. ListAgents로 셋이 떠 있는지만 보고, 각자 「준비 완료」를 받은 뒤 첫 지시.
+- PM 교체 규칙 새로 생김(사장님 10-03): PM 대화가 길어지면 **PM이 스스로** NEXT_SESSION 갱신·푸시 → `.claude/team/spawn_pm.sh`(새 pm 탭 · Opus 5.5 · 20초 뒤 옛 pm 탭 닫힘). CLAUDE.md 참고.
+- 첫 일: **오늘 밤 기준선 10판**(구현담당1, g1_290~299) — 오늘 HEAD(유닛 1.6배·흙길·조합판 간격·카메라 줌)로. 방법은 handoff_구현담당1.md. autoloop 위습 칸 찾기를 오늘 고쳤으니 짧은 판(rounds:3)으로 위습→포탈 먼저 확인.
+
+### 1) 오늘 오후 반영 (전부 main)
+- **UI**: 미니맵 옆 둥근 단추 5개 삭제 · 초상 상반신(PortraitStage 3차 보정, 비인간형은 전신) · **둥근 모서리 UI**(UiSkin.RoundFill/Ring, 반지름 8~10px — 더 둥글게는 UiSkin.DefaultRadius) · **위습 칸 = 위습 3D 아이콘**(WispIconBaker, 이름은 툴팁 · 원작도 위습 7종이 BTNWisp 한 장이라 종류 구분은 등급색) · 영웅 단추 겹침(채팅 x 76).
+- **초월 분홍 오라**: 원작 사진 오라 = 우리 HandsAura2(A07O). 번개로 보였던 건 근사 텍스처 오류 + 파이프라인이 층 첫 장만 읽어 Zap1_Red가 빠졌던 것. 2차 근사 텍스처(blender gen_aura_approx_tex.py) · 크기 1.0 · 세기 Purple 1.0/Zap 0.7 · Yellow 층 drop — 값은 `Tools/sphere_art/effects_overrides.json`(flatten 재실행해도 안 지워짐). 사장님 「저렇게 가는 걸로」 확정.
+- **유닛·적 키 1.6배**(ArtBinder.UnitHeight 30→48 · EnemyHeight 22.5→36, 사장님 「원랜디보다 작다」 — 화면상 유닛/레인 1/50 vs 원작 1/23). 스토리 건물도 같이 1.6배(아직 실판에서 눈으로 못 봄 — 스토리 들어갈 때 확인).
+- **적 흙길 넓힘**: 보이는 띠만 레인 가로×0.09(≈70), 남쪽은 흔함 칸 때문에 안쪽으로. 적은 그대로 가운데 선 → 밸런스 무관. `call MapGenerator.RepairLaneTracks`.
+- **조합판·뽑기섬 간격 1.6배**(구현담당1 RepairCombineBoard/DryRun, BoardScale = UnitHeight÷30): 조합판 2246×2092, 뽑기섬 726×1201, 전시 섬 동쪽으로. 인형 681/681.
+- **카메라**: FOV 30 구도는 사장님 반려(「위에서 본 납작한 시점」) → 원래 50°·60° 유지 + **시작 줌 0.85**(섬+우리 다 담은 구도에서 화면 가운데 쪽으로 15% 당김, startZoom은 NonSerialized) + 채팅 **「시야 N」**(100=0.65·150=0.75·200=0.85, 50~300 직선, 이 PC PlayerPrefs). 비교 사진 Docs/ui_mockups/compare/09·10.
+- **바다색** 밝은 청록(SeaWater.mat 얕은 0.25/0.82/0.80 · 깊은 0.04/0.42/0.58 · 깊이 14). 사장님 「심해 느낌」 — 밝기는 원작보다 어둡지 않았고 바다 색상 문제였다.
+- **고유 동작 5묶음 여섯**: 조세민·손오공(카메하메 2배속 공격)·전유라(23클립)·박도진(구부정)·서희원·강민호(서서 꼬리 든 원본 자세) — 사장님 「일단 넣어봐」.
+- **박민수 정면 보정**(ArtBinder.FacingFixes −90, 프리팹 직접) · 정면 점검 FacingAudit(328개, 고칠 건 박민수뿐).
+
+### 2) 사장님 답 대기 / 확인할 것
+- 작은 일(구현담당2 몫): WispIconBaker.Bake가 위습 복제본의 NavMeshAgent를 NavMesh 밖에서 만들어 「Failed to create agent」 경고 1건 — 복제본 NavMeshAgent 끄기.
+- 초월 전시 섬 25종이 4줄에 안 들어가 1명(황준석 아오키지)이 바다 위에 서 있던 결함 → TranscendSizeX 495로 고침(구현담당1).
+- 시야 채팅 실제 입력 확인(코드만 컴파일 통과, 채팅창으로는 안 쳐 봄).
+- 스토리 건물 1.6배가 구역을 가리지 않는지(실판).
+- 0.3.4 배포 시점 · 정의문 체력 · 3대장 반격 · 랜덤전용 one_dill · War3.mpq · 어려움 완화 · 볼륨(오전 판 §2 그대로).
+
+### 3) 함정 (오늘 새로)
+- 🔴 **「모델 배선」 메뉴는 돌릴 때마다 Generated·Data·씬 fileID를 통째로 뒤섞는다**(내용 같아도 diff 700개) — 한 유닛만 고칠 땐 그 프리팹만 직접.
+- 🔴 브리지 outbox 이름이 옛 파일과 겹치면 옛 결과를 읽는다(오늘 pm_w1 — 10-02 파일) → 날짜 접두(pm1003_).
+- [SerializeField] 기본값을 바꿔도 씬에 이미 박힌 값이 이긴다(startZoom 0.8 남음) → 코드가 정해야 하는 값은 NonSerialized.
+- 맵 Repair는 「섬 직계 자식」만 지운다 → 다른 묶음 밑 인형이 옛 자리에 남는다(초월 아오키지가 바다 위에 남음 — 구현담당1이 정리).
+- gameshot에서 클릭/콜은 spawn보다 먼저 돈다 → 유닛이 필요한 촬영은 `call:ClaudeCommands.SkillProbeSpawn`.
+- 에디터 없이 컴파일 검사: `Tools/ui/csc_check.sh`(런타임) · `Tools/ui/csc_check_editor.sh`(Editor).
 
 ## ⭐⭐⭐ 10-03 판 (PM, Opus 5.5 — 12:30 마감) — 이게 최신. 아래 10-02 판은 그 전 기록
 전부 main 푸시. **0.3.4 배포는 사장님이 「나중에」** — 0.3.3v 이후 변경이 많고 [Networked]도 여러 번 바뀜 → 호스트·클라 같은 빌드 필수.
