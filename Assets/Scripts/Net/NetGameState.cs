@@ -133,13 +133,13 @@ public class NetGameState : NetworkBehaviour
             }
     }
 
-    void RouteKillGold(int playerId, Vector3 worldPos, int amount)
+    void RouteKillGold(int playerId, Vector3 worldPos, int amount, bool wood)
     {
         if (playerId == LocalPlayer.LocalPlayerId) return;   // 호스트 자신의 것은 KillGoldPopup.Show가 이미 그렸다
         foreach (NetPlayer player in NetPlayer.All)
             if (player != null && player.Slot == playerId && !player.HasInputAuthority)
             {
-                player.RPC_KillGold(worldPos, amount);
+                player.RPC_KillGold(worldPos, amount, wood);
                 return;
             }
     }

@@ -304,9 +304,9 @@ public class NetPlayer : NetworkBehaviour
 
     /// <summary>호스트 → 이 접속자: 그 사람이 받은 처치 골드 「+N」 글자(원작은 받은 플레이어에게만 보임).</summary>
     [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
-    public void RPC_KillGold(Vector3 worldPos, int amount)
+    public void RPC_KillGold(Vector3 worldPos, int amount, bool wood)
     {
-        KillGoldPopup.ShowLocal(worldPos, amount);
+        KillGoldPopup.ShowLocal(worldPos, amount, wood);
     }
 
     /// <summary>호스트 → 이 접속자: 그 사람에게만 나는 소리(GameSound.PlayFor가 원격 슬롯이면 여기로).</summary>

@@ -404,7 +404,7 @@ public class RewardDistributor : MonoBehaviour
     /// ① 각자 「자신이 가한데미지는 (N)%입니다.」(5초) ② 10번째 이상: 기여도 ≥30%면 목재 +1 ③ 6번째 이상: 막타 친 사람 목재 +1
     /// ④ 최다 딜러(동률이면 번호 큰 쪽) 보상 — 5번째까지 랜덤위습 1 · 6~9번째 흔함선택위습 1 + 세이브포인트 1 · 10번째 이상 세이브포인트 2 + (멀티) 흔함선택+랜덤위습 / (솔로) 흔함선택 1.
     /// </summary>
-    public void GrantStoryContribution(int storyNumber, EnemyDummy dead)
+    public void GrantStoryContribution(int storyNumber, EnemyDummy dead, Vector3 deadPosition = default, int storyOrder = 0)
     {
         // 🔴 dead는 이미 Destroy된 EnemyDummy다(StoryManager.Update가 파괴된 적을 보고 Finish를 부른다). UnityEngine.Object의 == null은 파괴된 객체에 true라
         //    예전엔 여기서 항상 조기 return — 관리 필드(누적 피해)는 파괴 뒤에도 읽히므로 참조 null만 본다.
@@ -433,7 +433,10 @@ public class RewardDistributor : MonoBehaviour
             PlayerContext last = PlayerContext.GetOccupied(dead.LastHitPlayer);
             if (last != null && !last.IsDead)
             {
-                last.ResourceWallet?.Add(ResourceType.Wood, 1);   // 원작은 머리 위 청록 「+1」 글자도 띄운다(생략)
+                last.ResourceWallet?.Add(ResourceType.Wood, 1);
+                // 원작 Trig_Story2(막타 목재 +1): 죽은 보스 머리 위 청록 「+N」 — N은 지급량(1)이 아니라 그 보스의 기본 비행 높이 필드(umvh: 6~8번 1.0 · 9~13번 10.0,
+                // w3u n006~n00D 디코드)라 9번째부터 「+10」으로 뜨지만 목재는 1개다(원작 그대로). 받은 사람에게만 보인다.
+                KillGoldPopup.Show(dead.LastHitPlayer, deadPosition, storyOrder >= 9 ? 10 : 1, wood: true);
                 Debug.Log($"[기여도보상] 스토리 {storyNumber} 플레이어 {dead.LastHitPlayer} 막타 — 위습 0·목재 1·세이브포인트 0");
             }
         }

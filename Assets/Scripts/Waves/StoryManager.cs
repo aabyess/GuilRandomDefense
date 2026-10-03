@@ -126,6 +126,7 @@ public class StoryManager : MonoBehaviour
             // EnemyDummy는 죽을 때 GameObject를 파괴한다. 파괴된 참조는 == null 로 판정된다.
             if (activeEnemy != null)
             {
+                activeEnemyPosition = activeEnemy.transform.position;   // 죽어 파괴된 뒤엔 못 읽으니 마지막 자리를 둔다(막타 글자 자리)
                 if (running.timeLimitSeconds > 0f && Time.time >= spawnedAt + running.timeLimitSeconds)
                     FailTimeLimit(running);
                 return;
@@ -151,6 +152,8 @@ public class StoryManager : MonoBehaviour
         FindFirstObjectByType<RoundManager>()?.DefeatAllPlayers($"{story.storyName} 격파에 실패하여 패배합니다.");
     }
 
+    Vector3 activeEnemyPosition;
+
     void Finish(StoryData story)
     {
         Debug.Log($"스토리 클리어: {story.storyName}");
@@ -162,7 +165,7 @@ public class StoryManager : MonoBehaviour
         if (RewardDistributor.Instance != null)
         {
             RewardDistributor.Instance.GrantStoryReward(story);
-            RewardDistributor.Instance.GrantStoryContribution(finished, deadStory);
+            RewardDistributor.Instance.GrantStoryContribution(finished, deadStory, activeEnemyPosition, story.order);
         }
         else
             Debug.LogWarning("StoryManager: RewardDistributor가 없어 스토리 보상을 지급하지 못했습니다.", this);
