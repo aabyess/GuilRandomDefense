@@ -23,8 +23,8 @@ static class SphereArtBuilder
 
     [System.Serializable] class Part
     {
-        public string kind, name, slot, model, texture, fbx, fbxObject, shape, states, attach, spinAxis, layerTag;   // layerTag: 같은 메시에 텍스처 층을 한 겹 더 얹을 때 재질 이름을 갈라 준다(HandsAura2 g1의 Purple_Glow + Zap1_Red)
-        public float spinDeg, intensity;   // intensity: 가산 재질 색 배율(0이면 1)
+        public string kind, name, slot, model, texture, fbx, fbxObject, shape, states, attach, spinAxis;
+        public float spinDeg, intensity;   // intensity: 가산 재질 색 배율(0이면 1) — Tools/sphere_art/effects_overrides.json
         public float trail, width, widthEnd, bodyHeightM, rate, life, speed, speedVar, cone, gravity, mid;
         public float[] pos, box, size, rgb, alpha, euler, offset, flat;
         public bool additive, cutout, blend, unlit;
@@ -155,7 +155,7 @@ static class SphereArtBuilder
 
     static Material MeshMaterial(string roster, string alias, Part p)
     {
-        string path = $"{MatDir}/{alias}_{p.fbxObject}{(string.IsNullOrEmpty(p.layerTag) ? "" : "_" + p.layerTag)}.mat";
+        string path = $"{MatDir}/{alias}_{p.fbxObject}.mat";
         Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>($"{ResDir}/Src/{roster}/{p.texture}");
         Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
         if (p.additive || p.blend)
