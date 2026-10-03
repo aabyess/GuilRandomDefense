@@ -414,7 +414,7 @@ public class NetLauncher : MonoBehaviour
 
         if (runner.IsServer && gameStatePrefab != null)
         {
-            int difficulty = cliDifficulty != NetGameState.NoDifficulty ? cliDifficulty : SavedDifficulty();
+            int difficulty = cliDifficulty;   // 난이도는 게임 안에서 방장이 정한다(사장님 10-03) — 명령줄 테스트 값만 미리 건다
             runner.Spawn(gameStatePrefab, Vector3.zero, Quaternion.identity, null,
                 (r, spawned) =>
                 {
@@ -640,7 +640,7 @@ public class NetLauncher : MonoBehaviour
 
     public bool CanStartMatch =>
         IsHost && session != null && !session.MatchStarted
-        && NetGameState.Instance != null && NetGameState.Instance.SelectedDifficulty.HasValue
+        && NetGameState.Instance != null
         && AllReady;
 
     /// <summary>시작 버튼이 왜 꺼져 있는지 — 버튼 아래에 그대로 보여 준다.</summary>
@@ -649,7 +649,6 @@ public class NetLauncher : MonoBehaviour
         get
         {
             if (!IsHost) return "";
-            if (NetGameState.Instance == null || !NetGameState.Instance.SelectedDifficulty.HasValue) return "난이도를 고르세요.";
             int notReady = NetPlayer.All.Count(p => !p.IsReadyForStart);
             if (notReady > 0) return $"{notReady}명이 아직 준비하지 않았습니다.";
             return "";

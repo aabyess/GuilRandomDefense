@@ -51,7 +51,11 @@ public class DifficultyManager : MonoBehaviour
         //    → **지난번에 고른 난이도를 기억해 그대로 시작한다.** 창은 기억이 없을 때만 뜬다.
         //    바꾸려면 아래 ForgetSavedMode()를 부르면 된다(메뉴 Tools/게임/난이도 다시 묻기).
         //    ⚠️ 기억은 이 기계 안에서만이다(PlayerPrefs) — 판 상태가 아니라 사람의 편의값이다.
-        if (GameAuthority.IsServer && PlayerPrefs.HasKey(SavedModeKey))
+        //    ⚠️ 2026-10-03 사장님 확정으로 **사람 플레이에선 더 이상 건너뛰지 않는다** — 원작은 게임에 들어가서 방장이 매번 고른다
+        //    (DifficultySelectHud). 기억값 자동 선택은 측정 도구(gameshot `mode:`)가 ToolAutoPick을 켰을 때만 쓴다.
+        bool toolAutoPick = PlayerPrefs.GetInt(ToolAutoPickKey, 0) == 1;
+        if (toolAutoPick) PlayerPrefs.DeleteKey(ToolAutoPickKey);   // 한 판짜리 신호 — 도구가 켜고 이 판이 시작하며 소비한다(남아도 다음 사람 플레이에 번지지 않게)
+        if (toolAutoPick && GameAuthority.IsServer && PlayerPrefs.HasKey(SavedModeKey))
         {
             int saved = PlayerPrefs.GetInt(SavedModeKey);
             if (System.Enum.IsDefined(typeof(DifficultyMode), saved))
@@ -69,6 +73,9 @@ public class DifficultyManager : MonoBehaviour
 
     public const string SavedModeKey = "GuilRandomDefense.Difficulty";
 
+    /// <summary>측정 도구(ClaudeCommands gameshot mode:)만 1로 써 둔다 — 그 판의 Awake가 기억값으로 대화상자 없이 시작하고 키를 지운다. 사람 플레이엔 없다.</summary>
+    public const string ToolAutoPickKey = "GuilRandomDefense.ToolAutoPick";
+
     void OnDestroy()
     {
         if (Instance == this) Instance = null;
@@ -84,8 +91,11 @@ public class DifficultyManager : MonoBehaviour
         if (current.HasValue) return;
 
         ApplyMode(mode);
-        PlayerPrefs.SetInt(SavedModeKey, (int)mode);
+        PlayerPrefs.SetInt(SavedModeKey, (int)mode);   // 마지막으로 고른 난이도 기억(도구가 쓰는 값) — 사람 플레이는 이걸로 자동 선택하지 않는다
         PlayerPrefs.Save();
+        // MP: 호스트가 고르면 [Networked] 난이도에 실어 클라가 따라가게 한다(클라는 NetGameState가 ApplyReplicatedMode로 건다).
+        if (MatchConfig.Active && NetGameState.Instance != null && NetGameState.Instance.HasStateAuthority)
+            NetGameState.Instance.Difficulty = (int)mode;
     }
 
     // MP: 판 도중 재접속한 클라 — 게임 씬이 NetGameState보다 먼저 떠 Awake가 난이도를 못 봤을 때 NetGameState가 늦게 건다.

@@ -1485,6 +1485,7 @@ public static class ClaudeCommands
         //    게임의 실제 경로(기억해서 시작)를 타도록 기억값을 이 판의 난이도로 써 두고, 판이 끝나면 사장님 원래 값으로 되돌린다.
         job.prevSavedMode = PlayerPrefs.HasKey(DifficultyManager.SavedModeKey) ? PlayerPrefs.GetInt(DifficultyManager.SavedModeKey) : int.MinValue;
         PlayerPrefs.SetInt(DifficultyManager.SavedModeKey, job.mode);
+        PlayerPrefs.SetInt(DifficultyManager.ToolAutoPickKey, 1);   // 2026-10-03: 사람 플레이는 매번 대화상자 — 도구만 기억값으로 건너뛴다(한 판짜리 신호)
         PlayerPrefs.Save();
         SaveGameShot(job);
         EditorApplication.isPlaying = true;   // 이 update가 끝난 뒤에 들어간다
@@ -4057,6 +4058,7 @@ public static class ClaudeCommands
     {
         ReleaseShotMouse();
         // 사장님 기억 난이도를 되돌린다(판이 바꿔 둔 것).
+        PlayerPrefs.DeleteKey(DifficultyManager.ToolAutoPickKey);
         if (job.prevSavedMode == int.MinValue) PlayerPrefs.DeleteKey(DifficultyManager.SavedModeKey);
         else PlayerPrefs.SetInt(DifficultyManager.SavedModeKey, job.prevSavedMode);
         PlayerPrefs.Save();

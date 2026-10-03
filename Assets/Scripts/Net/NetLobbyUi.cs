@@ -154,17 +154,7 @@ public class NetLobbyUi : MonoBehaviour
             else { slotTags[slot].text = "준비 중…"; slotTags[slot].color = TextDim; }
         }
 
-        NetGameState state = NetGameState.Instance;
-        DifficultyMode? selected = state != null ? state.SelectedDifficulty : null;
         bool isHost = launcher.IsHost;
-        for (int i = 0; i < DifficultyOrder.Length; i++)
-        {
-            bool on = selected.HasValue && selected.Value == DifficultyOrder[i];
-            difficultyImages[i].color = on ? Selected : ButtonNormal;
-            difficultyButtons[i].interactable = isHost;
-            difficultyButtons[i].GetComponentInChildren<TMP_Text>().color = on ? Backdrop : TextMain;
-        }
-        difficultyHint.text = isHost ? "방장이 고릅니다" : (selected.HasValue ? "방장이 골랐습니다" : "방장이 고르는 중…");
 
         NetPlayer local = NetPlayer.Local;
         readyButton.gameObject.SetActive(!isHost);
@@ -334,23 +324,9 @@ public class NetLobbyUi : MonoBehaviour
             Place(slotTags[slot].rectTransform, new Vector2(1f, 0.5f), new Vector2(-130f, 0f), new Vector2(220f, 60f));
         }
 
-        // 난이도
-        TMP_Text difficultyLabel = CreateText(c, "DifficultyLabel", "난이도", 26, boldFont, TextMain, TextAlignmentOptions.Left);
-        Place(difficultyLabel.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(-420f, -135f), new Vector2(200f, 40f));
-        difficultyHint = CreateText(c, "DifficultyHint", "", 22, font, TextDim, TextAlignmentOptions.Right);
-        Place(difficultyHint.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(360f, -135f), new Vector2(320f, 40f));
-        for (int i = 0; i < DifficultyOrder.Length; i++)
-        {
-            DifficultyMode mode = DifficultyOrder[i];
-            Button b = CreateButton(c, $"Difficulty{mode}", mode.KoreanName(), ButtonNormal, 26);
-            Place((RectTransform)b.transform, new Vector2(0.5f, 0.5f), new Vector2(-435f + i * 174f, -195f), new Vector2(160f, 64f));
-            b.onClick.AddListener(() => launcher.SetDifficulty(mode));
-            // 방장이 아니면 누를 수 없지만, 색조가 비활성으로 바뀌면 버튼 배경이 사라져 「무엇을 골랐나」가 안 읽힌다.
-            // 색은 RefreshRoom이 직접 칠한다(선택=노랑).
-            b.transition = UnityEngine.UI.Selectable.Transition.None;
-            difficultyButtons[i] = b;
-            difficultyImages[i] = b.GetComponent<Image>();
-        }
+        // 난이도는 방에서 고르지 않는다 — 원작처럼 게임에 들어간 뒤 방장이 대화상자로 정한다(사장님 확정 10-03, j 15263~15285).
+        TMP_Text difficultyInfo = CreateText(c, "DifficultyInfo", "난이도는 시작한 뒤 방장이 「모드를 선택하세요.」 창에서 고릅니다.", 24, font, TextDim, TextAlignmentOptions.Center);
+        Place(difficultyInfo.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -165f), new Vector2(1040f, 40f));
 
         // 준비 / 시작 / 나가기
         readyButton = CreateButton(c, "ReadyButton", "준비", ButtonAccent, 32);
