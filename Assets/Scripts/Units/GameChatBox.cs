@@ -89,6 +89,14 @@ public class GameChatBox : MonoBehaviour
             return;
         }
 
+        // 10-03 「시야 N」 카메라 줌 — 이 PC 화면만 바꾸니 호스트로 안 보내고 말로도 안 뿌린다.
+        string sight = RtsCameraController.TryHandleSightChat(text);
+        if (sight != null)
+        {
+            ShowStatus(sight);
+            return;
+        }
+
         // MP: 채팅 한 줄이 곧 코드 입력(원작 워크3). 판정은 PlayerChat이 한다 — 코드면 실행, 말은 전원(싱글은 나)에게 한 줄.
         //     멀티 클라는 호스트에 보내기만 한다(코드 결과는 알림으로, 채팅 줄은 전원에게 돌아온다).
         if (!PlayerChat.AllowLocalSend()) return;

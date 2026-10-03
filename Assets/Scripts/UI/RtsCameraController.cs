@@ -54,12 +54,13 @@ public class RtsCameraController : MonoBehaviour
     void Start()
     {
         targetHeight = transform.position.y;
+        try { if (PlayerPrefs.HasKey(SightPrefKey)) startZoom = ZoomForSight(PlayerPrefs.GetInt(SightPrefKey, DefaultSight)); } catch { }
         FocusOnLocalLane();
     }
 
     // 10-03 카메라 후보 비교(사장님 「너무 위에서 본 것 같다」) — gameshot `call:RtsCameraController.ViewA` 등으로 바꿔 찍는다.
     //   A = 지금(50°·60°) · B = 42°·70° · C = 35°·70°(워크3 기본 FOV 70). 고른 값은 씬 카메라 회전·FOV에 넣는다.
-    static string ApplyView(float pitch, float fov)
+    static string ApplyView(float pitch, float fov, float zoom = -1f)
     {
         RtsCameraController rts = FindFirstObjectByType<RtsCameraController>();
         Camera cam = rts != null ? rts.GetComponent<Camera>() : null;
@@ -67,12 +68,16 @@ public class RtsCameraController : MonoBehaviour
         cam.fieldOfView = fov;
         Vector3 e = rts.transform.eulerAngles;
         rts.transform.rotation = Quaternion.Euler(pitch, e.y, e.z);
+        if (zoom > 0f) rts.startZoom = zoom;
         rts.FocusOnLocalLane();
-        return $"피치 {pitch}° · FOV {fov}° → 위치 {rts.transform.position}";
+        return $"피치 {pitch}° · FOV {fov}° · 줌 {rts.startZoom} → 위치 {rts.transform.position}";
     }
     static string ViewA() => ApplyView(50f, 60f);
     static string ViewB() => ApplyView(42f, 70f);
     static string ViewC() => ApplyView(35f, 70f);
+    static string ZoomA85() => ApplyView(50f, 60f, 0.85f);
+    static string ZoomA75() => ApplyView(50f, 60f, 0.75f);
+    static string ZoomA65() => ApplyView(50f, 60f, 0.65f);
 
     /// <summary>내 레인이 화면 중앙에 오도록 맞춘다. 레인 표식이 없으면 씬에 놓인 위치를 그대로 쓴다.</summary>
     public void FocusOnLocalLane()
@@ -129,6 +134,31 @@ public class RtsCameraController : MonoBehaviour
     //    (09-23: 높이 216.7·z 1432.4)은 실행하면 이 함수가 **덮어쓴다**(실측 높이 425.5·z 1224.9). 그 편집 시점 값으로 계산해
     //    「높이 338.7로 올리자」까지 갔었는데, 넣었으면 화면이 한 픽셀도 안 바뀌었다. 시작 구도는 여기서만 정해진다.
 
+    // 시작 구도에서 화면 가운데 쪽으로 다가가는 비율(1 = 섬+우리를 다 담은 그대로). 10-03 사장님 확정 0.85 = 시야 200.
+    // ⚠️ 직렬화하지 않는다 — 씬에 값이 박히면 여기 기본값을 바꿔도 안 따라온다(10-03 실제로 0.8이 남았다). 바꾸는 길은 채팅 「시야 N」뿐.
+    [System.NonSerialized] float startZoom = 0.85f;
+
+    // 10-03 사장님: 채팅 「시야 N」 — 100 = 0.65 · 150 = 0.75 · 200 = 0.85(기본). 그 사이·바깥은 같은 직선(0.45 + N × 0.002), N 50~300.
+    //   이 PC에만 기억한다(PlayerPrefs — 보는 사람 편의라 판정·멀티와 무관).
+    public const int DefaultSight = 200;
+    const string SightPrefKey = "CameraSight";
+    public static float ZoomForSight(int sight) => 0.45f + Mathf.Clamp(sight, 50, 300) * 0.002f;
+
+    /// <summary>채팅 「시야 N」/「-시야 N」. 시야 명령이 아니면 null.</summary>
+    public static string TryHandleSightChat(string text)
+    {
+        string t = text.Trim();
+        if (t.StartsWith("-")) t = t.Substring(1);
+        if (!t.StartsWith("시야")) return null;
+        string arg = t.Substring(2).Trim();
+        if (!int.TryParse(arg, out int sight)) return "사용법: 시야 100~300 (기본 200)";
+        sight = Mathf.Clamp(sight, 50, 300);
+        try { PlayerPrefs.SetInt(SightPrefKey, sight); } catch { }
+        RtsCameraController rts = FindFirstObjectByType<RtsCameraController>();
+        if (rts != null) { rts.startZoom = ZoomForSight(sight); rts.FocusOnLocalLane(); }
+        return $"시야 {sight}";
+    }
+
     const int FrameIterations = 10;
     const float FrameMarginRatio = 0.03f;   // 보이는 띠 높이의 3%씩 위아래 여유
     const float FrameHeightStep = 1.15f;
@@ -182,6 +212,11 @@ public class RtsCameraController : MonoBehaviour
             if (height >= maxHeight) break;
             height = Mathf.Min(height * FrameHeightStep, maxHeight);
         }
+
+        // 10-03 사장님 「A 각도로 가고 약간 더 줌」: 섬+우리를 다 담은 구도에서 화면 가운데 땅 점 쪽으로 startZoom만큼 다가간다
+        //   (높이만 낮추면 보는 자리가 앞으로 밀린다 — 가운데를 고정하려고 시선 방향으로 당긴다). 1 = 다 담은 그대로.
+        if (startZoom < 1f && RayToGround(cam.ViewportPointToRay(new Vector3(0.5f, (nearViewportY + farViewportY) * 0.5f, 0f)), groundY, out Vector3 focus))
+            transform.position = focus + (transform.position - focus) * startZoom;
 
         Vector3 unclamped = transform.position;
         Vector3 clamped = unclamped;
