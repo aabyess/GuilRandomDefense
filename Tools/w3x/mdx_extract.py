@@ -41,10 +41,12 @@ def placeholder(name):
         for w, h in ((14, S * 0.45), (S * 0.45, 14)):
             d.ellipse([S / 2 - w, S / 2 - h, S / 2 + w, S / 2 + h], fill=col + (255,))
     elif "zap" in low or "lightning" in low:
-        pts = [(S * 0.5, 4)]
-        for k in range(1, 10):
-            pts.append((S * 0.5 + (-1) ** k * 26, 4 + k * S / 10))
-        d.line(pts, fill=col + (255,), width=10)
+        # 2026-10-03: 지그재그 번개는 틀린 짐작이었다(원작 사진의 HandsAura2 판 = 흰 중심 + 방사 광선). 정확한 근사는 Tools/blender/gen_aura_approx_tex.py.
+        for k in range(24):
+            a = k / 24 * 2 * math.pi
+            ln = S * (0.25 + 0.2 * ((k * 7) % 5) / 4)
+            d.line([(S / 2, S / 2), (S / 2 + math.cos(a) * ln, S / 2 + math.sin(a) * ln)], fill=col + (255,), width=5)
+        d.ellipse([S * 0.4, S * 0.4, S * 0.6, S * 0.6], fill=(255, 255, 255, 255))
     else:
         for r in range(int(S * 0.5), 0, -4):
             t = 1 - r / (S * 0.5)
