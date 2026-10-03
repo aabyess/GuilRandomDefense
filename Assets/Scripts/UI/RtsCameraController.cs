@@ -112,14 +112,6 @@ public class RtsCameraController : MonoBehaviour
     //    (09-23: 높이 216.7·z 1432.4)은 실행하면 이 함수가 **덮어쓴다**(실측 높이 425.5·z 1224.9). 그 편집 시점 값으로 계산해
     //    「높이 338.7로 올리자」까지 갔었는데, 넣었으면 화면이 한 픽셀도 안 바뀌었다. 시작 구도는 여기서만 정해진다.
 
-    // 🔴 10-03 사장님 「카메라 구도를 원랜디처럼」(참고 Docs/reference/ui/원랜디_카메라구도.png): 원작 화면은 앞뒤 원근 차이가 거의 없다
-    //    (사진 속 안쪽 구조물의 가로 폭이 위아래로 거의 같다). 우리는 FOV 60°·피치 50°라 위쪽이 아래의 0.56배로 좁아 보였다.
-    //    그래서 시작할 때 **피치를 워크3 기본 AoA 304°(=56°)로, FOV를 30°로 좁히고** 높이는 아래 맞춤 루프가 다시 정한다
-    //    (같은 섬 크기를 담으려면 FOV를 절반으로 줄인 만큼 카메라가 멀어져 ≈2.3배 높이). 휠 줌 범위(minHeight~maxHeight)는 그 구도를 포함한다.
-    [Header("시작 구도(원랜디 카메라)")]
-    [SerializeField] float startPitch = 56f;
-    [SerializeField] float startFov = 30f;
-
     const int FrameIterations = 10;
     const float FrameMarginRatio = 0.03f;   // 보이는 띠 높이의 3%씩 위아래 여유
     const float FrameHeightStep = 1.15f;
@@ -127,12 +119,6 @@ public class RtsCameraController : MonoBehaviour
     bool FrameLaneAndPen(LaneMarker lane)
     {
         Camera cam = GetComponent<Camera>();
-        if (cam != null)
-        {
-            cam.fieldOfView = startFov;
-            Vector3 euler = transform.eulerAngles;
-            transform.rotation = Quaternion.Euler(startPitch, euler.y, euler.z);
-        }
         Vector3 planar = Vector3.ProjectOnPlane(transform.forward, Vector3.up);
         // 이 구도는 카메라가 z축을 따라 볼 때만 뜻이 있다(우리 맵은 +z를 본다). 아니면 예전 방식으로.
         if (cam == null || Mathf.Abs(planar.z) < Mathf.Abs(planar.x)) return false;
