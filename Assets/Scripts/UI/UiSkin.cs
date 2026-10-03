@@ -66,7 +66,7 @@ public static class UiSkin
         tex.SetPixels32(pixels);
         tex.Apply();
         float border = r + 1;
-        Sprite sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 1f, 0, SpriteMeshType.FullRect, new Vector4(border, border, border, border));
+        Sprite sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(border, border, border, border));
         roundCache[key] = sprite;
         return sprite;
     }

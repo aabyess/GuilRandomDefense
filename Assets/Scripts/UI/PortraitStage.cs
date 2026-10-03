@@ -129,7 +129,7 @@ public class PortraitStage : MonoBehaviour
         // 유닛 루트 기준 상대 회전을 그대로 둔다(10-03 박민수가 옆을 보던 원인 짐작). 대상 자체를 복제하면 identity.
         t.localRotation = source == target ? Quaternion.identity : Quaternion.Inverse(target.transform.rotation) * source.transform.rotation;
         if (Debug.isDebugBuild || Application.isEditor)
-            Debug.Log($"[초상] {target.name}: Animator 오브젝트 {source.name} localRotation {source.transform.localEulerAngles} · 월드 상대 {t.localEulerAngles}");
+            Debug.Log($"[초상] {target.name}: Animator 오브젝트 {source.name} localRotation {source.transform.localEulerAngles} · 월드 상대 {t.localEulerAngles} · 유닛 루트 월드 {target.transform.eulerAngles} · Animator 월드 {source.transform.eulerAngles} · 하위 {string.Join(",", System.Linq.Enumerable.Select(source.GetComponentsInChildren<Renderer>(true), r => r.name + r.transform.localEulerAngles))}");
         t.localScale = source.transform.lossyScale;   // 실물과 같은 크기(ArtBinder가 맞춘 키) — 구도는 경계로 다시 맞춘다
 
         cloneIsHuman = clone.TryGetComponent(out Animator cloneAnimator) && cloneAnimator.isHuman;

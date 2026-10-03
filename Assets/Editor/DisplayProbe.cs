@@ -27,7 +27,9 @@ static class DisplayProbe
 
     // 상시 오라 근접 사진용(gameshot call: — spawn보다 먼저 도니 EditorApplication.update로 유닛이 생길 때까지 기다린다).
     // 바깥에서 비스듬히 내려다보는 보조 카메라를 메인 위에 얹는다. 이름 조각 = 대상 유닛, 거리·높이는 유닛 키 배수.
-    static string AuraCloseup()
+    static string AuraCloseup() => CloseupOn("김민준", 55f, -85f);
+    static string CloseupPark() => CloseupOn("박민수", 14f, -42f);
+    static string CloseupOn(string part, float up, float back)
     {
         EditorApplication.CallbackFunction tick = null;
         float started = (float)EditorApplication.timeSinceStartup;
@@ -36,7 +38,7 @@ static class DisplayProbe
             if (!Application.isPlaying) { EditorApplication.update -= tick; return; }
             if (EditorApplication.timeSinceStartup - started > 30) { EditorApplication.update -= tick; return; }
             UnitIdentity target = null;
-            foreach (UnitIdentity u in UnitIdentity.Active) if (u != null && u.name.Contains("김민준")) target = u;
+            foreach (UnitIdentity u in UnitIdentity.Active) if (u != null && u.name.Contains(part)) target = u;
             if (target == null || Camera.main == null) return;
             EditorApplication.update -= tick;
             var go = new GameObject("AuraCloseupCamera");
@@ -45,12 +47,38 @@ static class DisplayProbe
             cam.depth = Camera.main.depth + 10;
             cam.fieldOfView = 35f;
             Vector3 p = target.transform.position;
-            cam.transform.position = p + new Vector3(0f, 55f, -85f);   // 유닛 키 ≈30: 앞쪽 위에서 비스듬히(원작 사진 각도)
+            cam.transform.position = p + new Vector3(0f, up, back);   // 유닛 키 ≈30: 앞쪽 위에서 비스듬히(원작 사진 각도)
             cam.transform.LookAt(p + Vector3.up * 8f);
         };
         EditorApplication.update += tick;
         return "AuraCloseup 예약";
     }
+
+    // spawn: 뒤에 생긴 유닛을 고르는 예약 선택(select:는 spawn보다 먼저 돈다) — 초상 확인용.
+    static string SelectLater(string part)
+    {
+        EditorApplication.CallbackFunction tick = null;
+        float started = (float)EditorApplication.timeSinceStartup;
+        tick = () =>
+        {
+            if (!Application.isPlaying || EditorApplication.timeSinceStartup - started > 30) { EditorApplication.update -= tick; return; }
+            SelectionManager manager = Object.FindFirstObjectByType<SelectionManager>();
+            if (manager == null) return;
+            foreach (UnitIdentity u in UnitIdentity.Active)
+                if (u != null && u.name.Contains(part) && u.TryGetComponent(out Selectable sel))
+                {
+                    EditorApplication.update -= tick;
+                    manager.SelectOnly(sel);
+                    return;
+                }
+        };
+        EditorApplication.update += tick;
+        return "예약: " + part;
+    }
+    static string SelectPark() => SelectLater("박민수");
+    static string SelectBae() => SelectLater("배성령");
+    static string SelectYoo() => SelectLater("유재헌");
+    static string SelectKimTY() => SelectLater("김태영");
 
     // 영웅 단추 점검 — 내 유닛 중 영웅 표 대상과 단추 상태를 찍는다(gameshot call:DisplayProbe.HeroState).
     static string HeroState()
