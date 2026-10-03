@@ -13,12 +13,12 @@ public class UiSkinPostprocessor : AssetPostprocessor
         {
             case "console_cell_frame_9s": return 20;
             case "dialog_panel_9s": return 16;
-            case "multiboard_frame_9s": return 4;
-            case "timer_frame_9s": return 4;
-            case "button_navy_9s": return 4;
-            case "button_navy_hover_9s": return 4;
-            case "topbar_button_9s": return 4;
-            case "topbar_resource_9s": return 4;
+            case "multiboard_frame_9s": return 9;
+            case "timer_frame_9s": return 9;
+            case "button_navy_9s": return 9;
+            case "button_navy_hover_9s": return 9;
+            case "topbar_button_9s": return 9;
+            case "topbar_resource_9s": return 9;
             default: return 0;
         }
     }

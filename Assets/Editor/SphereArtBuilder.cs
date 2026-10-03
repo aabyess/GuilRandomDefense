@@ -24,7 +24,7 @@ static class SphereArtBuilder
     [System.Serializable] class Part
     {
         public string kind, name, slot, model, texture, fbx, fbxObject, shape, states, attach, spinAxis;
-        public float spinDeg;
+        public float spinDeg, intensity;   // intensity: 가산 재질 색 배율(0이면 1) — Tools/sphere_art/effects_overrides.json
         public float trail, width, widthEnd, bodyHeightM, rate, life, speed, speedVar, cone, gravity, mid;
         public float[] pos, box, size, rgb, alpha, euler, offset, flat;
         public bool additive, cutout, blend, unlit;
@@ -175,6 +175,7 @@ static class SphereArtBuilder
                 m.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
             }
             m.SetFloat("_Cull", 0f);
+            m.SetColor("_BaseColor", Color.white * (p.intensity > 0f ? p.intensity : 1f));   // 원작 오라는 가산이 포화해 더 하얗다 — 세기 배율(알파 1 유지)
             if (tex != null) m.SetTexture("_BaseMap", tex);
             EditorUtility.SetDirty(m);
             return m;

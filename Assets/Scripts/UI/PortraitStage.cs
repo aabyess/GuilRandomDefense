@@ -125,7 +125,11 @@ public class PortraitStage : MonoBehaviour
         Transform t = clone.transform;
         t.SetParent(transform, false);   // 여기서 켜진다(Animator가 Idle부터)
         t.localPosition = Vector3.zero;
-        t.localRotation = Quaternion.identity;
+        // 모델 쪽 방향 보정(Animator 오브젝트의 localRotation — AutoUpright·Generic 모델의 Y 회전 등)을 지우지 않는다:
+        // 유닛 루트 기준 상대 회전을 그대로 둔다(10-03 박민수가 옆을 보던 원인 짐작). 대상 자체를 복제하면 identity.
+        t.localRotation = source == target ? Quaternion.identity : Quaternion.Inverse(target.transform.rotation) * source.transform.rotation;
+        if (Debug.isDebugBuild || Application.isEditor)
+            Debug.Log($"[초상] {target.name}: Animator 오브젝트 {source.name} localRotation {source.transform.localEulerAngles} · 월드 상대 {t.localEulerAngles}");
         t.localScale = source.transform.lossyScale;   // 실물과 같은 크기(ArtBinder가 맞춘 키) — 구도는 경계로 다시 맞춘다
 
         cloneIsHuman = clone.TryGetComponent(out Animator cloneAnimator) && cloneAnimator.isHuman;
@@ -150,7 +154,7 @@ public class PortraitStage : MonoBehaviour
         return false;
     }
 
-    static void Strip(GameObject root)
+    internal static void Strip(GameObject root)
     {
         // 뒤에서부터 — RequireComponent로 딸린 것은 보통 요구한 쪽보다 앞에 있다.
         Component[] components = root.GetComponentsInChildren<Component>(true);
@@ -168,7 +172,7 @@ public class PortraitStage : MonoBehaviour
                 child.gameObject.SetActive(false);
     }
 
-    static void SetLayerRecursively(GameObject root, int layer)
+    internal static void SetLayerRecursively(GameObject root, int layer)
     {
         foreach (Transform t in root.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = layer;
     }

@@ -111,6 +111,7 @@ public class GameHud : MonoBehaviour
     {
         public GameObject root;
         public Image background;
+        public Image icon;
         public TMP_Text nameText;
         public TMP_Text countText;
         public WispData data;
@@ -3562,35 +3563,38 @@ public class GameHud : MonoBehaviour
             slot.sizeDelta = new Vector2(WispSlotSize, WispSlotSize);
             AddPanelBorder(slot, BorderColor, BorderThickness);
 
-            // 이름은 글자 수가 종류마다 달라(「초월」 2자 ~ 「백수생활선택」 6자) 자동 축소를 켠다.
-            // 44px 칸에 고정 크기를 쓰면 긴 이름이 잘려 무슨 위습인지 알 수 없다.
-            TMP_Text nameText = CreateLabel(slot, "Name", "");
-            SetAnchors((RectTransform)nameText.transform, new Vector2(0.06f, 0.44f), new Vector2(0.94f, 0.98f));
-            nameText.enableAutoSizing = true;
-            nameText.fontSizeMin = 7f;
-            nameText.fontSizeMax = 12f;
-            // 줄바꿈을 **켠다.** NoWrap이면 「백수생활선택」 같은 긴 이름이 한 줄로 뻗어
-            // 칸 밖으로 나가고, 왼쪽 끝 칸은 화면 밖으로 잘린다(44px 판에서 실제로 그랬다).
-            nameText.textWrappingMode = TextWrappingModes.Normal;
-            nameText.overflowMode = TextOverflowModes.Truncate;
-            nameText.color = Color.black;   // 배경이 등급색(밝은 편)이라 검정이 읽힌다
-            nameText.raycastTarget = false;
+            // 위습 모델 아이콘(WispIconBaker) — 배경은 등급색 그대로. 이름 글자는 칸에서 빼고 마우스를 올리면 툴팁으로 보인다(사장님 10-03).
+            RectTransform iconRect = CreatePanel(slot, "Icon", Color.white);
+            SetAnchors(iconRect, new Vector2(0.06f, 0.06f), new Vector2(0.94f, 0.94f));
+            Image iconImage = iconRect.GetComponent<Image>();
+            iconImage.raycastTarget = false;
+            iconImage.preserveAspect = true;
+            iconImage.enabled = false;   // 아이콘이 구워지면 켠다
+
+            TMP_Text nameText = null;   // 이름 칸 없음(툴팁)
 
             TMP_Text countText = CreateLabel(slot, "Count", "");
-            SetAnchors((RectTransform)countText.transform, new Vector2(0.06f, 0.02f), new Vector2(0.94f, 0.44f));
-            countText.fontSize = 19f;
+            SetAnchors((RectTransform)countText.transform, new Vector2(0.45f, 0.0f), new Vector2(0.98f, 0.5f));
+            countText.fontSize = 22f;
             countText.fontStyle = FontStyles.Bold;
-            countText.color = Color.black;
+            countText.alignment = TextAlignmentOptions.BottomRight;
+            countText.color = Color.white;
+            countText.outlineWidth = 0.3f;
+            countText.outlineColor = new Color32(0, 0, 0, 255);
             countText.raycastTarget = false;
 
             int index = i;
             slot.gameObject.AddComponent<Button>().onClick.AddListener(() => OnWispSlotClicked(index));
+            EventTrigger wispTrigger = slot.gameObject.AddComponent<EventTrigger>();
+            AddTriggerEntry(wispTrigger, EventTriggerType.PointerEnter, _ => OnWispSlotHover(index));
+            AddTriggerEntry(wispTrigger, EventTriggerType.PointerExit, _ => HideCombineTooltip());
             slot.gameObject.SetActive(false);   // 그 종류가 하나도 없으면 칸을 아예 안 보인다
 
             wispSlots.Add(new WispSlot
             {
                 root = slot.gameObject,
                 background = slot.GetComponent<Image>(),
+                icon = iconImage,
                 nameText = nameText,
                 countText = countText,
             });
@@ -3644,7 +3648,12 @@ public class GameHud : MonoBehaviour
             WispData data = wispTypeOrder[i];
             slot.data = data;
             slot.background.color = data.targetGrade.Color();
-            slot.nameText.text = ShortWispName(data.wispName);
+            if (slot.nameText != null) slot.nameText.text = ShortWispName(data.wispName);
+            if (!slot.icon.enabled || slot.icon.sprite == null)
+            {
+                Sprite sprite = WispIconBaker.Get(wispsByType[data].Count > 0 ? wispsByType[data][0] : null);
+                if (sprite != null) { slot.icon.sprite = sprite; slot.icon.enabled = true; }
+            }
             slot.countText.text = wispsByType[data].Count.ToString();
             if (!slot.root.activeSelf) slot.root.SetActive(true);
         }
@@ -3658,6 +3667,12 @@ public class GameHud : MonoBehaviour
                              $"{wispTypeOrder.Count - wispSlots.Count}가지가 미니맵 위에 안 보입니다. " +
                              "GameHud.MaxWispSlots를 늘리세요.");
         }
+    }
+
+    void OnWispSlotHover(int index)
+    {
+        if (index < 0 || index >= wispSlots.Count || wispSlots[index].data == null) return;
+        ShowTooltip(wispSlots[index].data.wispName, (RectTransform)wispSlots[index].root.transform);
     }
 
     static int CompareWispTypes(WispData a, WispData b)
@@ -3998,29 +4013,49 @@ public class GameHud : MonoBehaviour
     {
         GameObject obj = new GameObject(name, typeof(RectTransform), typeof(Image));
         obj.transform.SetParent(parent, false);
-        obj.GetComponent<Image>().color = color;
+        Image image = obj.GetComponent<Image>();
+        image.color = color;
+        // 둥근 모서리(사장님 10-03). 투명 컨테이너와 화면 전체를 덮는 막·바는 그대로 사각형.
+        if (color.a > 0.01f && !SquarePanelNames.Contains(name))
+        {
+            image.sprite = UiSkin.RoundFill();
+            image.type = Image.Type.Sliced;
+        }
         return obj.GetComponent<RectTransform>();
     }
+
+    static readonly HashSet<string> SquarePanelNames = new HashSet<string> { "BottomBar", "TopBar", "GameMenu", "Fill", "Border" };
 
     // 9-slice 스프라이트가 없어 모서리 4개를 얇은 Image 띠로 겹쳐 테두리처럼 보이게 한다.
     // 미니맵·초상화 칸처럼 "이 영역이 하나의 칸"임을 배경 알파만으로는 못 알아볼 때 쓴다.
     static void AddPanelBorder(RectTransform parent, Color color, float thickness)
     {
-        CreateBorderStrip(parent, color, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, -thickness), Vector2.zero);
-        CreateBorderStrip(parent, color, new Vector2(0f, 0f), new Vector2(1f, 0f), Vector2.zero, new Vector2(0f, thickness));
-        CreateBorderStrip(parent, color, new Vector2(0f, 0f), new Vector2(0f, 1f), Vector2.zero, new Vector2(thickness, 0f));
-        CreateBorderStrip(parent, color, new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(-thickness, 0f), Vector2.zero);
+        AddRoundRing(parent, color, thickness, UiSkin.DefaultRadius, 0f);
+    }
+
+    // 둥근 테두리 고리 한 겹 — inset만큼 안쪽으로 들어가 앉는다(반지름도 그만큼 줄인다).
+    static void AddRoundRing(RectTransform parent, Color color, float thickness, float radius, float inset)
+    {
+        GameObject obj = new GameObject("Border", typeof(RectTransform), typeof(Image));
+        obj.transform.SetParent(parent, false);
+        Image image = obj.GetComponent<Image>();
+        image.sprite = UiSkin.RoundRing(Mathf.Max(1f, radius - inset), thickness);
+        image.type = Image.Type.Sliced;
+        image.color = color;
+        image.raycastTarget = false;
+        RectTransform rect = obj.GetComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = new Vector2(inset, inset);
+        rect.offsetMax = new Vector2(-inset, -inset);
     }
 
     // 워크3 콘솔 칸 테두리 — 바깥 금테 2px + 안쪽 짙은 금 1px(09-29). ⚠️ GridLayoutGroup이 붙은 오브젝트엔 쓰지 않는다 —
     //    테두리 띠가 격자 자식으로 끼어 칸 하나를 차지한다. 격자는 이 칸 안의 자식에 둔다(BuildUnitCommandGrid).
     static void AddConsoleFrame(RectTransform parent)
     {
-        AddPanelBorder(parent, BorderColor, 2f);
-        CreateBorderStrip(parent, BorderInnerColor, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(2f, -3f), new Vector2(-2f, -2f));
-        CreateBorderStrip(parent, BorderInnerColor, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(2f, 2f), new Vector2(-2f, 3f));
-        CreateBorderStrip(parent, BorderInnerColor, new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(2f, 2f), new Vector2(3f, -2f));
-        CreateBorderStrip(parent, BorderInnerColor, new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(-3f, 2f), new Vector2(-2f, -2f));
+        AddRoundRing(parent, BorderColor, 2f, 10f, 0f);
+        AddRoundRing(parent, BorderInnerColor, 1f, 10f, 2f);
     }
 
     // 하단 바 안, 오른쪽 끝에서 rightInset만큼 떨어진 곳에 고정 폭 칸(세로는 바의 5~95%).

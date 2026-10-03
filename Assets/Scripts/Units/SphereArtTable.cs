@@ -31,7 +31,7 @@ public static class SphereArtTable
     const string TablePath = "Effects/SphereArtTable";
     static Dictionary<string, List<Art>> byRoster;
 
-    static readonly Art[] TranscendentArts = { new Art { key = "handsaura2", attach = "origin", scale = 1f, when = When.Always } };
+    static readonly Art[] TranscendentArts = { new Art { key = "handsaura2", attach = "origin", scale = 1.5f, when = When.Always } };
     static readonly Art[] HiddenArts = { new Art { key = "blightwalkeraura", attach = "origin", scale = 1f, when = When.Always } };
 
     /// <summary>등급만으로 붙는 오라(초월 = HandsAura2 발밑, 히든 = BlightwalkerAura 발밑). 없으면 빈 배열.</summary>

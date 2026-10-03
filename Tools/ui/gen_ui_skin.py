@@ -58,6 +58,31 @@ def stone_tile(w=128, h=128, seed=1):
     return out
 
 
+def round_mask(img, radius, ss_=4):
+    """이미지 알파를 둥근 사각형으로 깎는다(4배 확대 마스크 → 축소로 부드러운 가장자리). 사장님 10-03 「UI가 너무 각져 있다」."""
+    w, h = img.size
+    m = Image.new('L', (w * ss_, h * ss_), 0)
+    ImageDraw.Draw(m).rounded_rectangle([0, 0, w * ss_ - 1, h * ss_ - 1], radius=radius * ss_, fill=255)
+    m = m.resize((w, h), Image.LANCZOS)
+    out = img.convert('RGBA')
+    a = ImageChops.multiply(out.getchannel('A'), m)
+    out.putalpha(a)
+    return out
+
+
+def rounded_panel(w, h, radius, fill, lines, ss_=4):
+    """둥근 칸: fill은 RGBA 이미지(w×h) 또는 색, lines는 [(inset, 두께, 색), …] 바깥부터 — 금테를 둥글게 그린다."""
+    base = fill if isinstance(fill, Image.Image) else Image.new('RGBA', (w, h), fill)
+    base = round_mask(base.convert('RGBA'), radius)
+    big = base.resize((w * ss_, h * ss_), Image.LANCZOS)
+    d = ImageDraw.Draw(big)
+    for inset, width, color in lines:
+        for k in range(width):
+            o = (inset + k) * ss_
+            d.rounded_rectangle([o, o, w * ss_ - 1 - o, h * ss_ - 1 - o], radius=max(1, (radius - inset - k)) * ss_, outline=color, width=ss_)
+    return big.resize((w, h), Image.LANCZOS)
+
+
 def save(img, name):
     img.save(os.path.join(OUT, name))
     print('  ', name, img.size)
@@ -100,7 +125,7 @@ def gen_stone_tile():
 def gen_console_frame():
     # 콘솔 칸 틀: 어두운 속 + 돌 테두리(칸 감싸는 용) 9-slice 96px, border 20
     img = nine_slice_frame(96, 20, inner=(6, 6, 8), stone=True, gold_line=2)
-    save(img, 'console_cell_frame_9s.png')
+    save(round_mask(img, 14), 'console_cell_frame_9s.png')
 
 
 def gen_dialog_panel():
@@ -112,23 +137,14 @@ def gen_dialog_panel():
     d = ImageDraw.Draw(img)
     for i in range(3):
         d.rectangle([16 + i, 16 + i, w - 17 - i, h - 17 - i], outline=GOLD if i else GOLD_HI)
-    save(img, 'dialog_panel_9s.png')
+    save(round_mask(img, 14), 'dialog_panel_9s.png')
 
 
 def gen_multiboard_frame():
     w = h = 64
-    base = Image.new('RGBA', (w, h), (10, 14, 28, 235))
-    d = ImageDraw.Draw(base)
-    d.rectangle([0, 0, w - 1, h - 1], outline=GOLD_DK)
-    d.rectangle([2, 2, w - 3, h - 3], outline=GOLD)
-    d.rectangle([3, 3, w - 4, h - 4], outline=GOLD_HI)
-    save(base, 'multiboard_frame_9s.png')
+    save(rounded_panel(w, h, 8, (10, 14, 28, 235), [(0, 1, GOLD_DK + (255,)), (2, 1, GOLD + (255,)), (3, 1, GOLD_HI + (255,))]), 'multiboard_frame_9s.png')
     # 타이머 창: 짙은 붉은 속 + 금 테
-    t = Image.new('RGBA', (w, h), (28, 10, 14, 240))
-    d = ImageDraw.Draw(t)
-    d.rectangle([0, 0, w - 1, h - 1], outline=GOLD_DK)
-    d.rectangle([2, 2, w - 3, h - 3], outline=(190, 150, 50))
-    save(t, 'timer_frame_9s.png')
+    save(rounded_panel(w, h, 8, (28, 10, 14, 240), [(0, 1, GOLD_DK + (255,)), (2, 1, (190, 150, 50, 255))]), 'timer_frame_9s.png')
 
 
 def button(name, w=128, h=40, hover=False):
@@ -140,25 +156,16 @@ def button(name, w=128, h=40, hover=False):
         t = y / (h - 1)
         c = tuple(int(top[i] + (bot[i] - top[i]) * t) for i in range(3))
         d.line([(0, y), (w, y)], fill=c + (255,))
-    d.rectangle([0, 0, w - 1, h - 1], outline=GOLD_DK)
-    d.rectangle([1, 1, w - 2, h - 2], outline=GOLD)
-    d.line([(2, 2), (w - 3, 2)], fill=GOLD_HI)
-    save(img, name)
+    save(rounded_panel(w, h, 8, img, [(0, 1, GOLD_DK + (255,)), (1, 1, GOLD + (255,))]), name)
 
 
 def gen_buttons():
     button('button_navy_9s.png')
     button('button_navy_hover_9s.png', hover=True)
     # 상단 바 버튼(메뉴/동맹/대화): 더 납작한 남색판 + 금테
-    img = Image.new('RGBA', (96, 28), (16, 26, 62, 255))
-    d = ImageDraw.Draw(img)
-    d.rectangle([0, 0, 95, 27], outline=GOLD_DK); d.rectangle([1, 1, 94, 26], outline=GOLD)
-    save(img, 'topbar_button_9s.png')
+    save(rounded_panel(96, 28, 8, (16, 26, 62, 255), [(0, 1, GOLD_DK + (255,)), (1, 1, GOLD + (255,))]), 'topbar_button_9s.png')
     # 상단 바 자원 칸
-    res = Image.new('RGBA', (96, 28), (6, 10, 22, 255))
-    d = ImageDraw.Draw(res)
-    d.rectangle([0, 0, 95, 27], outline=(74, 61, 26)); d.rectangle([1, 1, 94, 26], outline=(120, 96, 40))
-    save(res, 'topbar_resource_9s.png')
+    save(rounded_panel(96, 28, 8, (6, 10, 22, 255), [(0, 1, (74, 61, 26, 255)), (1, 1, (120, 96, 40, 255))]), 'topbar_resource_9s.png')
 
 
 def ss(size, fn, ss_=4):
@@ -166,6 +173,7 @@ def ss(size, fn, ss_=4):
     big = Image.new('RGBA', (size * ss_, size * ss_), (0, 0, 0, 0))
     fn(ImageDraw.Draw(big), size * ss_)
     return big.resize((size, size), Image.LANCZOS)
+
 
 
 def gen_icons():

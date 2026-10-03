@@ -77,6 +77,7 @@ def main():
                "states": "|".join(states), "attach": HINTS.get(p["attach"]["humanoid_hint"], "body")}
         if p["model"] in ATTACH_OVERRIDE:
             out["attach"] = ATTACH_OVERRIDE[p["model"]]
+        extras = []
         if p["kind"] == "mesh":
             # 메시 pivot은 원작 팔 뼈의 자리(팔을 벌린 자세 기준, 몸에서 ~0.9m) — 우리 스킨 손에 붙이면 팔 흔들림에 크게 휘둘린다(10-01 구주호 날개) → 가슴 뼈에.
             if out["attach"] in ("hand,left", "hand,right"):
@@ -105,6 +106,16 @@ def main():
                 # 알파가 전부 255인 텍스처(검정 바탕)를 알파혼합으로 그리면 검은 판이 된다(10-01 박기찬 baozha) → 가산으로(검정 = 투명).
                 out["blend"], out["additive"] = False, True
             files.update([p["fbx"], tex])
+            # 층이 여럿이고 **그림이 다르면**(HandsAura2 g1 = Purple_Glow + Zap1_Red) 층마다 부품 하나 — 첫 장만 읽던 탓에 Zap이 빠졌었다(10-03).
+            # 그림이 같은 혼합+가산 짝(초승달 베기)은 예전대로 가산 하나.
+            extra_layers = [l for l in live if l is not layer and l["texture"]["file"] != tex]
+            for l in extra_layers:
+                extra = dict(out, name=p["name"] + "_" + l["fbx_object"].split("_")[-2], fbxObject=l["fbx_object"], texture=l["texture"]["file"],
+                             additive=bool(l["additive"]), cutout=l["fbx_object"].endswith("_cut"), blend=l["fbx_object"].endswith("_blend"))
+                if extra["blend"] and opaque_alpha(os.path.join(folder, l["texture"]["file"])):
+                    extra["blend"], extra["additive"] = False, True
+                extras.append(extra)
+                files.add(l["texture"]["file"])
             # 같은 FBX의 다른 오브젝트(g5·g6)는 부품마다 따로 — 슬롯이 다르므로
         elif p["kind"] == "particle":
             u = p["unity"]
@@ -140,6 +151,7 @@ def main():
         else:
             continue
         parts.append(out)
+        parts.extend(extras)
 
     if AURA:   # 리본·파티클은 모델의 가장 빠른 메시 회전을 따라 돈다(원작: 같은 Dummy 뼈에 붙은 궤적 — Ora_siki 리본이 원을 그린다)
         top = max([q for q in parts if q.get("spinDeg")], key=lambda q: abs(q["spinDeg"]), default=None)
@@ -153,6 +165,15 @@ def main():
                 q["spinAxis"], q["spinDeg"] = "Y", 360.0
                 if abs(q["pos"][0]) + abs(q["pos"][2]) < 0.05:
                     q["pos"][0] = 0.35
+    # 손으로 맞춘 값(사진 대조 세기 등)은 json이 아니라 별도 표 — 생성기가 다시 뽑아도 안 지워진다: Tools/sphere_art/effects_overrides.json
+    #   {"<별칭>": {"<부품 이름>": {"intensity": 1.3, ...}}} — 있는 필드만 부품에 덮어쓴다.
+    ov_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "effects_overrides.json")
+    if os.path.exists(ov_path):
+        with open(ov_path, encoding="utf-8") as f:
+            ov = json.load(f).get(alias, {})
+        for q in parts:
+            q.update(ov.get(q["name"], {}))
+        parts = [q for q in parts if not q.get("drop")]   # "drop": true = 이 부품을 뺀다(사진에 안 보이는 층)
     os.makedirs(OUT_DIR, exist_ok=True)
     old = os.path.join(OUT_DIR, roster + ".json")
     if os.path.exists(old) and alias + ".json" != roster + ".json":
