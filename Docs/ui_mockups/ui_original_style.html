@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UI 원랜디스럽게 — 목업</title>
+<style>
+:root{--bg:#0b0f17;--panel:#121826;--ink:#e8edf6;--dim:#8d9ab0;--gold:#c9a24a;--gold2:#f3d27a;--line:#2a3350;--slot:#0e131d;
+--p1:#ff0202;--p2:#0041ff;--p3:#530080;--p4:#fffc00;--cy:#00ffff;--gr:#00ff00;--pk:#ffb0ff}
+@media (prefers-color-scheme: light){:root{--bg:#eef1f6;--panel:#fff;--ink:#16202f;--dim:#5a6578;--line:#c9d0de;--slot:#e6eaf2}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;padding:24px 16px 80px}
+main{max-width:1200px;margin:0 auto}h1{font-size:26px;margin:0 0 4px}h2{font-size:20px;margin:40px 0 4px;border-top:1px solid var(--line);padding-top:24px}
+p.sub{color:var(--dim);margin:0 0 16px}.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:860px){.row{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--dim);margin-bottom:8px}
+.tag.new{color:#06240f;background:#7be39a;border-color:#7be39a}.tag.old{color:var(--ink)}
+.board{background:rgba(10,14,24,.78);border:1px solid #3a4568;border-radius:4px;padding:8px 10px;font-size:13px;width:max-content;max-width:100%}
+.board .t{color:var(--pk)}.board .t b{color:var(--gr)}
+table.mb{border-collapse:collapse;margin-top:4px}table.mb td{padding:1px 10px 1px 0;white-space:nowrap}
+.chip{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.console{position:relative;height:150px;background:#07090e;border:2px solid var(--gold);border-radius:4px;display:grid;gap:6px;padding:6px;font-size:11px}
+.cell{border:1px solid var(--gold);background:var(--slot);border-radius:3px;position:relative;color:var(--dim);display:flex;align-items:center;justify-content:center;text-align:center;padding:2px}
+.cell.miss{border:1px dashed #ff8a5b;color:#ff8a5b}
+.bar{height:7px;border-radius:2px;background:#222;overflow:hidden;margin-top:3px;width:100%}.bar i{display:block;height:100%}
+.hp i{background:#3ddc57;width:72%}.mp i{background:#4a7bff;width:55%}.xp i{background:#b06bff;width:40%}
+.grid{display:grid;gap:3px;width:100%;height:100%}.g2x4{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(4,1fr)}.g2x3{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(3,1fr)}.g4x3{grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr)}
+.g4x3 span,.g2x3 span,.g2x4 span{border:1px solid #6b5a2a;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--dim)}
+.legend{font-size:12px;color:var(--dim);margin-top:6px}
+.lobby{display:grid;grid-template-columns:230px 1fr 230px;grid-template-rows:auto auto auto;gap:10px;font-size:13px}
+.lobby .slot{display:grid;grid-template-columns:20px 1fr auto;gap:8px;align-items:center;padding:7px 8px;border:1px solid var(--line);border-radius:4px;background:var(--slot);margin-bottom:6px}
+.lobby .btn{padding:8px;border-radius:4px;border:1px solid var(--line);text-align:center;background:var(--slot);font-weight:600}
+.btn.sel{outline:2px solid var(--gold2)}.btn.go{background:#1f5f9e;color:#fff;border-color:#1f5f9e}.btn.red{background:#6a2a30;color:#fff;border-color:#6a2a30}
+.chat{height:90px;overflow:hidden;border:1px solid var(--line);border-radius:4px;background:var(--slot);padding:6px;font-size:12px;color:var(--dim)}
+ul{margin:6px 0 0 18px;padding:0}li{margin:2px 0}code{background:var(--slot);padding:1px 5px;border-radius:3px;font-size:12px}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px}.flow span.b{padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:var(--slot)}
+</style></head><body><main>
+<h1>UI 원랜디스럽게 — 목업 3장</h1>
+<p class="sub">구현담당2 · 2026-10-03 · 설계안(코드 없음). 그림은 전부 CSS로 직접 그림(이 목업엔 원작 그림 0). 실제 구현 땐 원작 그림 사용 가능 — 맵 안에 있는 것/정품 필요한 것 구분은 문서 ④. 근거 줄·표는 <code>Docs/UI_ORIGINAL_STYLE.md</code>.</p>
+
+<h2>① 점수판 (우상단)</h2>
+<p class="sub">원작 멀티보드: 제목 + 2열×5행(신세계에선 3열). 색은 j 값 그대로(1번 빨강 ff0202 · 2번 파랑 0041FF · 3번 보라 530080 · 4번 노랑 FFFC00).</p>
+<div class="row">
+ <div class="card"><span class="tag old">지금(GameHud)</span>
+  <div class="board" style="font-family:inherit">
+   <div class="t">유닛 카운트 = <b>70</b> &lt;- 패배 &nbsp;|&nbsp; 적 8 &nbsp;|&nbsp; 난이도 어려움</div>
+   <div style="color:#ffd54a;font-weight:700">플레이어 1 | 적 8 | 골드 50 | 목재 1 | <span style="color:var(--cy)">풀카운트 : 6880 점</span></div>
+   <div>플레이어 2 | 비어있음</div><div>플레이어 3 | 비어있음</div><div>플레이어 4 | 비어있음</div>
+  </div>
+  <ul class="legend"><li>한 줄 문장 — 열이 안 맞음</li><li>이름에 플레이어 색·닉네임·칭호 없음</li></ul></div>
+ <div class="card"><span class="tag new">개편안</span>
+  <div class="board">
+   <div class="t">유닛 카운트 = <b>70</b> &lt;- 패배</div>
+   <table class="mb">
+    <tr><td style="color:var(--cy)">난이도 : 어려움모드</td><td style="color:var(--gr)">남은 라운드 유닛 수</td><td style="color:var(--dim)">골드/목재</td><td style="color:var(--cy)">신세계 ▸ 풀카운트</td></tr>
+    <tr><td><span class="chip" style="background:var(--p1)"></span><b style="color:var(--p1)">[불멸의]</b> 길동이</td><td>8</td><td style="color:var(--dim)">50 / 1</td><td><span style="color:var(--cy)">풀카운트 :</span> 6880 점</td></tr>
+    <tr><td><span class="chip" style="background:var(--p2)"></span><span style="color:var(--p2)">[루키]</span> 민수</td><td>3</td><td style="color:var(--dim)">120 / 0</td><td><span style="color:var(--cy)">풀카운트 :</span> 6100 점</td></tr>
+    <tr><td><span class="chip" style="background:var(--p3)"></span><span style="color:#a64ad6">[간부]</span> 지현</td><td>0</td><td style="color:var(--dim)">80 / 2</td><td><span style="color:var(--cy)">풀카운트 :</span> 7250 점</td></tr>
+    <tr><td style="color:var(--dim)"><span class="chip" style="background:#444"></span>열림</td><td></td><td></td><td></td></tr>
+   </table>
+  </div>
+  <ul class="legend"><li>실제 2열 표 + 머리줄 · 신세계에서 3열 추가(글자 약 −18%)</li><li>이름 = 플레이어 색 칩 + 칭호 + 닉네임, 내 줄만 굵게</li><li>골드/목재 열은 선택(가/나/다)</li></ul></div>
+</div>
+
+<h2>② 하단 UI</h2>
+<p class="sub">배치는 이미 워크3 모양. 빠진 것: 초상화 아래 체력·마나 바, 경험치 바, 아이콘 인벤토리, 버프 줄. (점선 주황 = 개편안에서 추가)</p>
+<div class="row">
+ <div class="card"><span class="tag old">지금</span>
+  <div class="console" style="grid-template-columns:1.2fr .9fr 3.2fr .8fr 2fr">
+   <div class="cell">미니맵</div><div class="cell">초상화<br>(3D Idle)</div>
+   <div class="cell" style="align-items:flex-start;justify-content:flex-start;text-align:left;color:var(--ink);padding:6px">박기찬 야동마스터 – 특별함 Lv.1<br>공격력 400 · 사거리 112.1<br>공격속도 1.00/s · 체력 324 <span style="color:var(--dim)">(기준값)</span></div>
+   <div class="cell"><div class="grid g2x4"><span>글</span><span>자</span><span>줄</span><span>8칸</span><span></span><span></span><span></span><span></span></div></div>
+   <div class="cell"><div class="grid g4x3"><span>이동</span><span>정지</span><span>홀드</span><span>공격</span><span>모으기</span><span>정렬</span><span></span><span>판매</span><span>조합</span><span></span><span></span><span></span></div></div>
+  </div>
+  <p class="legend">2×4 = 8칸 글자 줄 · 마나·체력 바·XP 바·버프 없음</p></div>
+ <div class="card"><span class="tag new">개편안</span>
+  <div class="console" style="grid-template-columns:1.2fr .9fr 3.2fr .8fr 2fr">
+   <div class="cell">미니맵<br><span style="font-size:10px">(신호 단추는 미룸)</span></div>
+   <div class="cell" style="flex-direction:column">초상화
+     <div class="bar hp"><i></i></div><div class="bar mp" style="display:none"><i></i></div>
+     <span style="font-size:10px;color:#ff8a5b">▲ 체력 바(실시간)</span></div>
+   <div class="cell" style="align-items:flex-start;justify-content:flex-start;text-align:left;color:var(--ink);padding:6px;flex-direction:column">
+     <span>박기찬 야동마스터 – 특별함 <b style="color:var(--gold2)">Lv.7</b></span>
+     <span>공격력 400 · 사거리 112.1 · 공속 1.00/s</span>
+     <span>체력 233 / 324</span>
+     <div class="bar xp" style="max-width:260px"><i></i></div><span style="font-size:10px;color:#ff8a5b">▲ 경험치 바(영웅)</span>
+     <span style="font-size:10px;color:#ff8a5b;border:1px dashed #ff8a5b;padding:1px 6px;margin-top:3px">[버프 아이콘 줄 — 후순위]</span></div>
+   <div class="cell miss"><div class="grid g2x3"><span>7</span><span>8</span><span>4</span><span>5</span><span>1</span><span>2</span></div></div>
+   <div class="cell"><div class="grid g4x3"><span>이동</span><span>정지</span><span>홀드</span><span>공격</span><span>모으기</span><span>정렬</span><span></span><span>판매</span><span>조합</span><span></span><span></span><span></span></div></div>
+  </div>
+  <p class="legend">아이템 = 아이콘 슬롯 + 단축키(6칸 vs 8칸은 결정 필요) · 상단 메뉴 단추를 좌상단으로 옮기면 워크3 느낌 더</p></div>
+</div>
+
+<h2>③ 방 만들기 (NetBoot · 대기실)</h2>
+<p class="sub">워크3 커스텀 게임 로비 구조: 왼쪽 맵 정보 · 가운데 플레이어 슬롯 표 · 오른쪽 난이도 · 아래 채팅/시작. 난이도 단추 색은 원작 대화상자 색(j 15267~15277).</p>
+<div class="card"><span class="tag new">개편안 (1920×1080 기준 비율)</span>
+ <div class="lobby">
+  <div class="card" style="grid-row:1 / span 2">
+   <b style="font-size:20px;letter-spacing:.2em">구 랜 디</b><br><span style="color:var(--dim)">v0.3.4</span>
+   <p style="margin:8px 0 2px;color:var(--dim)">방 코드</p><div style="font-size:28px;font-weight:800;letter-spacing:.25em;color:var(--gold2)">K7QXM</div>
+   <div class="btn" style="margin-top:6px">코드 복사</div>
+   <p style="margin:12px 0 2px;color:var(--dim)">선택한 난이도</p><div>어려움 — 75라운드<br>유닛 카운트 한계 70</div></div>
+  <div class="card" style="grid-row:1 / span 2">
+   <div style="display:grid;grid-template-columns:20px 1fr auto;gap:8px;color:var(--dim);font-size:12px;padding:0 8px 4px"><span></span><span>플레이어</span><span>상태</span></div>
+   <div class="slot"><span class="chip" style="background:var(--p1);width:14px;height:14px"></span><span><b style="color:var(--p1)">[불멸의]</b> 길동이 <span style="color:var(--gold2)">♛</span></span><span style="color:var(--gold2)">방장</span></div>
+   <div class="slot"><span class="chip" style="background:var(--p2);width:14px;height:14px"></span><span>민수</span><span style="color:#7be39a">준비됨</span></div>
+   <div class="slot"><span class="chip" style="background:var(--p3);width:14px;height:14px"></span><span>지현</span><span style="color:var(--dim)">대기 중</span></div>
+   <div class="slot"><span class="chip" style="background:var(--p4);width:14px;height:14px"></span><span style="color:var(--dim)">열림</span><span></span></div>
+   <p class="legend" style="margin:4px 8px">팀은 원작처럼 사람 4명 한 팀(고정 표기) · 슬롯 색은 원작 4색</p></div>
+  <div class="card">
+   <b>난이도</b> <span class="legend">(방장만)</span>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
+    <div class="btn" style="color:#00bfff">쉬움</div><div class="btn" style="color:#ee82ee">보통</div>
+    <div class="btn sel" style="color:#ff4040">어려움</div><div class="btn" style="color:#b84be6">지옥</div>
+    <div class="btn" style="color:#ffd700">신</div><div class="btn" style="color:#ffd700">악몽</div></div>
+   <p class="legend">방장이 아니면 「방장이 모드를 선택하고 있습니다」</p></div>
+  <div class="card" style="display:grid;gap:8px"><div class="btn go">시작</div><div class="btn">준비</div><div class="btn red">나가기</div></div>
+ </div>
+ <div class="chat" style="margin-top:10px">[길동이] 다 왔어요?<br>[민수] 네 준비 눌렀어요<br><span style="color:var(--dim)">▎친구에게 할 말 (Enter로 보내기)</span></div>
+ <div class="flow" style="margin-top:12px"><b>시작 직후(원작 흐름 j 15260~15488):</b>
+  <span class="b">잠시만 기다려주십시오 6초</span>→<span class="b">(난이도 이미 선택 — 대화상자 생략)</span>→<span class="b">「-load 코드」 안내 20초</span>→<span class="b">1라운드 시작까지 21초 타이머</span>→<span class="b">점수판 생성</span></div>
+</div>
+<p class="legend">※ 목업은 레이아웃·색 제안이다. 실제 NetBoot 화면 사진은 별도 씬이라 아직 못 찍음 — 승인 뒤 한 번 촬영해 대조한다.</p>
+</main></body></html>
