@@ -1,3 +1,4 @@
+using UnityEditor;
 using System.Text;
 using UnityEngine;
 
@@ -22,6 +23,33 @@ static class DisplayProbe
         KillGoldPopup.Show(0, p + Vector3.right * 8f, 1, wood: true);
         KillGoldPopup.Show(0, p + Vector3.right * 20f, 10, wood: true);
         return sb.ToString();
+    }
+
+    // 상시 오라 근접 사진용(gameshot call: — spawn보다 먼저 도니 EditorApplication.update로 유닛이 생길 때까지 기다린다).
+    // 바깥에서 비스듬히 내려다보는 보조 카메라를 메인 위에 얹는다. 이름 조각 = 대상 유닛, 거리·높이는 유닛 키 배수.
+    static string AuraCloseup()
+    {
+        EditorApplication.CallbackFunction tick = null;
+        float started = (float)EditorApplication.timeSinceStartup;
+        tick = () =>
+        {
+            if (!Application.isPlaying) { EditorApplication.update -= tick; return; }
+            if (EditorApplication.timeSinceStartup - started > 30) { EditorApplication.update -= tick; return; }
+            UnitIdentity target = null;
+            foreach (UnitIdentity u in UnitIdentity.Active) if (u != null && u.name.Contains("김민준")) target = u;
+            if (target == null || Camera.main == null) return;
+            EditorApplication.update -= tick;
+            var go = new GameObject("AuraCloseupCamera");
+            Camera cam = go.AddComponent<Camera>();
+            cam.CopyFrom(Camera.main);
+            cam.depth = Camera.main.depth + 10;
+            cam.fieldOfView = 35f;
+            Vector3 p = target.transform.position;
+            cam.transform.position = p + new Vector3(0f, 55f, -85f);   // 유닛 키 ≈30: 앞쪽 위에서 비스듬히(원작 사진 각도)
+            cam.transform.LookAt(p + Vector3.up * 8f);
+        };
+        EditorApplication.update += tick;
+        return "AuraCloseup 예약";
     }
 
     // 영웅 단추 점검 — 내 유닛 중 영웅 표 대상과 단추 상태를 찍는다(gameshot call:DisplayProbe.HeroState).
