@@ -3281,7 +3281,8 @@ public static class MapGenerator
             columnMid - hubHeight * 0.5f, columnMid + hubHeight * 0.5f, hubTop, bandBottom);
 
         float displayDepth = bandTop - displayZ;
-        float available = bandTop - bandBottom;
+        // 전시가 쓸 수 있는 깊이는 자원 칸(정사각형, 아래쪽)을 뺀 위쪽 몫이다 — 예전 식은 열 전체를 재서 여유가 부풀려졌다(10-03 정정).
+        float available = bandTop - hubTop;
         string fit = displayDepth <= available
             ? $"여유 {available - displayDepth:F0}"
             : $"⚠️ {displayDepth - available:F0} 모자람";

@@ -394,7 +394,7 @@ public static class MapLayout
     //    ⚠️ 277.3·9는 에셋에서 나오는 값이라 리터럴이다(섬 정의가 에셋보다 먼저 — 조합판 CombineSizeX와 같은 순환).
     //       어긋나면 BuildGachaPortals 보고문이 「줄 폭 N/칸 M」·「줄 수」로 고발한다.
     const float GachaSizeXBase = 136f * Scale;
-    const float GachaOtherWorldRowWidthBase = 277.3f;   // 다른세계 조합식 가장 넓은 줄(BoardScale 1) — 보고문 「다른세계 조합식」과 대조
+    const float GachaOtherWorldRowWidthBase = 265.9f;   // 다른세계 조합식 가장 넓은 줄(BoardScale 1) — 보고문 「다른세계 조합식」과 대조
     const int GachaOtherWorldRowCount = 9;
     public const int GachaOtherWorldRowCountPublic = GachaOtherWorldRowCount;
     public const float GachaOtherWorldRowWidthBasePublic = GachaOtherWorldRowWidthBase;
@@ -430,7 +430,9 @@ public static class MapLayout
     //    → 아래 1373·1307.5(키 30 시절 값)에 CombineBoardScale을 곱한다. 0.7 여유도 같이 커져(1.12) 축소 거짓 보고문 경계는 안 넘는다.
     public const float CombineBoardScale = ArtBinder.UnitHeight / CombineBoardReferenceHeight;
     const float CombineBoardReferenceHeight = 30f;   // 위 1373·1307.5·978.75를 잰 때의 유닛 키
-    const float CombineSizeX = 1373f * CombineBoardScale;
+    // ⚠️ 10-03 Repair 실측: 자연 폭이 1373이 아니라 1403.1(×1.6 = 2245.0)이었다(그 사이 어느 열에 재료 칸이 하나 늘었다 — 2%가 조용히 줄어 맞춰졌다).
+    //    그래서 기준 폭을 1404로 고친다(×1.6 = 2246.4, 여유 1.4).
+    const float CombineSizeX = 1404f * CombineBoardScale;
 
     // 🔴 2026-09-24 사장님 지시 「제일 긴 열 맞춰서 세로 길이 줄여주고」.
     //
@@ -485,7 +487,8 @@ public static class MapLayout
     ///    2026-09-24에 정확히 이 두 전시 섬에서 그 일이 났다(LeftShift에 안 들어가 남겨졌다).
     ///    오프셋이 어긋나면 BuildCombineColumns 보고문이 실측값과 나란히 찍어 고발한다.
     /// </summary>
-    public const float LegendColumnCenterOffset = 978.75f * CombineBoardScale;   // 열 폭이 전부 BoardScale을 타므로 같은 배율(키 30 시절 978.75)
+    // (2차 실측 정정: 1580.6은 가로가 2% **줄어 맞춰진** 판 값이었다. 섬 폭을 고쳐 축소가 없어진 판의 실측은 1615.3 → ÷1.6 = 1009.6.)
+    public const float LegendColumnCenterOffset = 1010f * CombineBoardScale;   // 열 폭이 전부 BoardScale을 타므로 같은 배율
 
     /// <summary>전시 섬 x 중심 — 전설 열 중심에 맞춘다(사장님 「전설 위에 오게끔」).</summary>
     public const float DisplayCenterX = CombineTableLeftX + LegendColumnCenterOffset;
