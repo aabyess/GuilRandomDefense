@@ -28,12 +28,15 @@ def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     out = os.path.expanduser("~/GRD_motion_trial/Story08_다크영")
     frame = 1
+    bright = None   # 시범용: 거의 검정인 텍스처의 바닥 명도(sRGB 0~1). 모양은 그대로
     it = iter(args)
     for a in it:
         if a == "--out":
             out = next(it)
         elif a == "--frame":
             frame = int(next(it))
+        elif a == "--bright":
+            bright = float(next(it))
     work = "/tmp/gen_story08_work"
     os.makedirs(work, exist_ok=True)
     with zipfile.ZipFile(SRC_ZIP) as z:
@@ -80,6 +83,17 @@ def main():
         img.pixels.foreach_get(arr)
         arr = arr.reshape(h, w, 4)
         arr[..., 3] = 1.0
+        if bright is not None:
+            # 이미지 픽셀은 Blender가 선형으로 읽는다 → sRGB 값으로 바꿔 감마를 걸고 되돌린다(알파 제외)
+            rgb = arr[..., :3]
+            srgb = np.where(rgb <= 0.0031308, rgb * 12.92, 1.055 * np.power(np.maximum(rgb, 1e-8), 1 / 2.4) - 0.055)
+            lum = srgb @ np.array([0.2126, 0.7152, 0.0722])
+            med = float(np.median(lum))
+            if med < 0.1:   # 거의 검정인 텍스처만: 바닥 명도 bright를 깔고, 무늬(상위 0.5% 기준)는 늘려 살린다
+                top = max(float(np.percentile(lum, 99.5)), 0.02)
+                srgb = bright + (1 - bright) * np.power(np.clip(srgb / top, 0, 1), 0.5)
+            arr[..., :3] = np.where(srgb <= 0.04045, srgb / 12.92, np.power((srgb + 0.055) / 1.055, 2.4))
+            print("밝기", name, "중앙", round(med, 3), "→ 적용" if med < 0.1 else "→ 그대로")
         im = bpy.data.images.new(name, w, h, alpha=False)
         im.pixels.foreach_set(arr.ravel())
         if max(w, h) > 1024:
