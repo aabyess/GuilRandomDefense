@@ -1,37 +1,37 @@
-# 구현담당2 인수인계 — 2026-10-03 (UI 원랜디스럽게 + 풀카운트·세이브 코드·e015·난이도 대화상자)
+# 구현담당2 인수인계 — 2026-10-03 밤 (UI 원랜디스럽게 2·분홍 오라·정면 점검)
 
-새 세션은 기억이 없다. 이 문서 → `Docs/UI_ORIGINAL_STYLE.md` → `Docs/SPEC_2026-10-03_difficulty_dialog_and_e015.md` 순으로 읽고 시작한다.
+새 세션은 기억이 없다. 이 문서 → `Docs/UI_ORIGINAL_STYLE.md` → 필요하면 `Docs/SPEC_2026-10-03_difficulty_dialog_and_e015.md` 순으로 읽는다. 전부 main에 커밋됨(푸시는 PM).
 
-## 오늘 끝난 것 (전부 main, 푸시는 PM)
-- 표시류: 스토리 막타 청록 「+N」(원작은 N=보스 비행높이 필드, 9번째부터 +10) · 클리어 칭호 13단계(PlayerDisplayName) — 커밋 a04bbbe51.
-- 세이브 코드: Data/SaveCode.cs(생성·검증, 서버 DB 전환 시 이 자리만 교체) + Units/SaveCodeService.cs + 시작 화면 「세이브 코드 불러오기」 + 채팅 `-load` — 닉네임이 열쇠, 클리어 큰 쪽 채택. 프로브 Editor/SaveCodeProbe.cs.
-- 풀카운트: Units/FullCountScore.cs(+ NetGameState [Networked] FullCounts) — 시작 500·신세계 진입 1250·라운드 끝 배수×(5+full_C)·보스 +300(+200 신속)·클리어 보너스. 프로브 Editor/FullCountProbe.cs(Entry/Enter60/UseReward/KillBoss).
-  미구현: 랜덤전용(PV180) [조합] one_dill +8 경로(대응 미정).
-- e015 신세계 보상: RewardDistributor.GrantNewWorldWisps(어려움·지옥 2기 / 신·악몽 1기, Wisp.NewWorldReward 표식) → UnitPortal이 표식 위습 소모 시 FullCountScore.OnNewWorldRewardUsed(−625×배수). 프로브로 확인(포탈 경유 자체는 함수 호출로 대체 확인).
-- 난이도 선택 = 게임 안 방장 대화상자(원작 6.6초·6버튼·검정 가림막은 루트 캔버스 −50·사진 모양). 로비 난이도 버튼 제거. 기억값 자동선택 제거 — **측정 도구만** PlayerPrefs `GuilRandomDefense.ToolAutoPick`(한 판짜리)로 건너뜀(gameshot mode:가 켬, 새 토큰 `askmode`는 안 켬 = 대화상자를 그대로 봄).
-- UI 개편 1단계(사진 `Docs/reference/ui/원랜디_인게임_01.png` 기준): 점수판 표화(제목·머리줄·플레이어 색 칩+칭호+닉·적 수·신세계 3열·접기) · 상단 바(좌 퀘스트 흐림·메뉴 F10·동맹·대화·항법 / 시계 / 금화·나무·고기=특성 포인트 / 구랜디, 마나는 시계 옆) · 우상단 타이머 창 스택 · 콘솔 27%·돌벽(stone_tile 타일)·미니맵 단추 5개(그림만) · 초상 아래 체력/마나 바(마나는 UnitManaTable 51개만) · 정보칸 서식(이름 별명 – 등급 / 공격 아이콘 줄 / 방어: 무적 / 상태:).
-  비교 사진: `Docs/ui_mockups/compare/01~03*.jpg`(원작 왼쪽·우리 오른쪽, `Tools/ui/compare_shot.py`).
-- 인프라: UiSkin(Resources/UI/Skin 슬롯, 정품으로 바꿔 끼우기) · UiSkinPostprocessor(스프라이트·9-slice) · `Tools/ui/gen_ui_skin.py`(근사 그림 22종 생성, Pillow 필요: venv) · `gen_mana_table.py`/`gen_hero_table.py`(w3u → 표 cs) · `Tools/ui/csc_check.sh`(에디터 없이 컴파일 검사 — 판 도는 중에도 안전, 이번에 에디터 대기를 크게 줄였다).
+## 오늘 끝난 것
+- **정보칸·점수판**: 사거리·공속 뺌(공격력+보너스만, F1 DebugHud엔 남음) · 빈 플레이어 자리 「열림」 글자 뺌(색 칩만).
+- **영웅 단추**: 정상 점등(원래도 코드는 맞았음 — 탐침이 spawn보다 먼저 돌았던 것). 대상은 로스터 2개(초월_구주호_AD·초월_김민준_AP) 그대로(PM 확정). 채팅 줄 시작 x를 20→76(`PlayerNotification.LeftMargin`)으로 밀어 겹침 해소.
+- **미니맵 오른쪽 둥근 단추 5개 제거**.
+- **초상 상반신** (`PortraitStage`): 전신을 맞춘 뒤 3차 보정으로 머리 꼭대기~허리(`BustFraction` 0.5)만 칸에 맞춤. 머리 꼭대기는 「몸통 두께 행」(`BodyRowFraction` 0.15)으로 잡아 칼·지팡이가 상자 윗면을 올리는 모델에 안 속음. 사람형(Humanoid)은 항상, 비사람형은 세로로 길쭉(`StandingAspect` 1.35)할 때만(노트북은 전신 유지). Head·Hips 뼈 대신 픽셀 비율. Animator 오브젝트 회전은 유닛 루트 기준 상대 회전으로 보존(무해). `[초상] …localRotation` 진단 로그가 남아 있음(에디터/디버그 빌드만).
+- **둥근 UI**: `UiSkin.RoundFill/RoundRing`(코드 생성 9-slice, **PPU 100 필수** — 1이면 모서리가 100배로 늘어 거대한 타원이 된다) → `GameHud.CreatePanel`(색 있는 패널 자동 둥글게, 예외 이름 `SquarePanelNames`: BottomBar·TopBar·GameMenu·Fill·Border)·`AddPanelBorder`·`AddConsoleFrame` 일괄. 반지름: `UiSkin.DefaultRadius` 8, 콘솔 칸 틀 10(`AddConsoleFrame`). 더 둥글게 = 이 값만 키움. 스킨 PNG 8종(topbar·topbar_resource·button_navy(+hover)·multiboard·timer·dialog_panel·console_cell_frame)은 `Tools/ui/gen_ui_skin.py`로 둥글게 재생성(`round_mask`·`rounded_panel`), `UiSkinPostprocessor` 9-slice 테두리 4→9. **전/후 비교 사진은 안 만듦.**
+- **위습 칸 3D 아이콘** (`UI/WispIconBaker.cs`): 살아 있는 위습이 처음 보일 때 한 번 구워 Sprite 캐시(직교 카메라·레이어 31·−12000 높이·128px). 위습 모델은 프리팹 하나(플레이어 색)라 종류 구분은 배경 등급색. 이름 글자 칸(Name)은 없앰 → 마우스 올리면 툴팁(`OnWispSlotHover`), 개수는 흰 글씨+외곽선. 칸 오브젝트 `WispSlot{i}` 자식 = Icon·Count. (구현담당1 autoloop이 칸 글자로 찾던 것은 알려 줌 — 도구가 고치는 중.)
+- **분홍 오라(HandsAura2)**: Purple_Glow·Zap1_Red 새 근사 텍스처 적용. Zap1_Red는 g1 둘째 층으로 새로 들어감(원인: 생성기가 층 첫 장만 읽었음). 값은 `Tools/sphere_art/effects_overrides.json`(g1 intensity 1.0 · g1_L1 Zap 0.7 · g0_L1 Yellow_Glow `drop`), 크기 `SphereArtTable.TranscendentArts` scale **1.0**(1.5는 판 폭이 정강이의 1.6배로 너무 컸음, 1.3 세기는 흰색으로 포화). 비교 사진 `Docs/ui_mockups/compare/07_pink_aura.jpg`. 한계: 원작은 판이 2~3겹 촘촘, 우리는 12장 1겹.
+- **flatten 생성기** (`Tools/sphere_art/flatten_effects.py`): 메시 층이 여럿이고 그림이 다르면 층마다 부품(`<부품>_L1`), 같은 그림의 혼합+가산 짝은 가산 하나. 손값은 `effects_overrides.json`(`{별칭:{부품:{intensity|drop|…}}}`)에서 덮어씀 — 이 json은 생성기가 안 지운다. 빌더(`SphereArtBuilder`)에 `intensity`(가산 재질 색 배율) 필드. 층 여럿인 메시는 전체 34 effects.json·51 메시 부품 중 3개뿐(HandsAura2 g0·g1, 초승달 베기 — 후자는 같은 그림이라 문제 없음). 재생성: `NOCOPY=1 AURA=1 python3 flatten_effects.py <폴더> <별칭> <별칭>` → 유니티 `call SphereArtBuilder.BuildAll` → refresh. ⚠️ BuildAll은 Sphere 프리팹을 전부 다시 써서 diff가 크다(내용 동일) — 필요한 것만 `git add`.
+- **정면 점검 도구** `Assets/Editor/FacingAudit.cs`(읽기 전용, `call FacingAudit.Run` → `ClaudeBridge/outbox/facing_audit.txt`, 결과 표 `Docs/facing_audit_2026-10-03.txt`): 328개 중 +Z 287 · −Z 0 · 옆 7 · 못 잼 34. ⚠️ Humanoid 아닌 모델은 뼈 이름 L/R로 재서 **좌우가 뒤바뀔 수 있다**(박민수는 −X로 나왔지만 실제는 +X).
+- **박민수 정면**: `ArtBinder.FacingFixes`(세운 뒤 Y 보정, `ModelAdjustments`에 적으면 AutoUpright가 꺼지므로 따로) 에 `특별함_박민수 −90`. 프리팹은 회전값만 직접 고쳐 커밋. 나머지 5(임건웅·이일중·김용태·최영민·조현규)는 정면 사진상 정상(20~50° 비스듬할 뿐), 고치지 않음. 사진 `compare/09_facing_six.png`·`10_park_fixed.png`.
+- 탐침(`Assets/Editor/DisplayProbe.cs`): `AuraCloseup`·`CloseupPark`·`CloseupFront`(이름은 `ClaudeBridge/probe_name.txt`)·`SelectPark/Bae/Yoo/KimTY`·`SelectLater(이름)`·`HeroState`. gameshot `call:`은 **spawn보다 먼저** 도니 EditorApplication.update로 예약하는 방식을 쓴다.
 
-## 남은 단계 (순서대로)
-1. **사장님 결정 4건 반영**(PM 전달): ①상단 마나 칸 유지(이미 그대로) ②항법 선택 버튼 유지 — 상단 버튼 맨 끝(이미 맨 끝, 최신 사진으로 재확인) ③**정보칸 사거리·공속 빼기**(GameHud ShowSingleInfo의 unitDamageText에서 「사거리/공속」 제거, 공격력 + 보너스만; DebugHud F1엔 남겨도 됨) ④**빈 플레이어 자리 「열림」 → 빈칸**(GameHud RefreshTeamPanel의 `<color=#808080>열림</color>` 제거, 색 칩만 남김). 반영 뒤 비교 사진 갱신.
-2. **인벤토리 6칸** — 코드는 작업트리에 있으나 **커밋돼 있지 않았다면 이 커밋에 포함됨**: MaxItemInventorySlots 6, ItemInventory.MaxItems 6 + Add가 bool(가득 차면 거절, RewardDistributor 드랍 줄에서 안내), 엠블럼 배경(inventory_emblem) + 반투명 칸. 확인 안 된 것: 아이템을 든 채 실제 칸 모양 사진, 도박·스토리 아이템 경로가 7번째를 시도할 때 안내가 뜨는지.
-3. **영웅 단추** — GameHud.BuildHeroButtons/RefreshHeroButtons/OnHeroButtonClicked + Data/UnitHeroTable.cs(원작 영웅 클래스 H+영웅 베이스 28종 → 로스터 **2개뿐**: 초월_구주호_AD · 초월_김민준_AP, PM 정의 그대로). ⚠️ **화면에 안 뜨는 문제 미해결**: 프로브(DisplayProbe.HeroState)에서 `UnitIdentity.Active`에 spawn:으로 세운 초월_김민준_AP가 안 잡혔다(Active 1개뿐 — 도구 spawn이 판 시작 뒤 지연 생성이거나 wait 2초가 모자랐을 수 있음). 먼저 wait를 늘려 Active/OwnerId/IsHero를 다시 찍고, 단추가 켜지는지 본다. 영웅 2개뿐이라 PM에게 대상 확대 여부를 다시 물을 것.
-4. **방 패널(로비) 재배치** — `Docs/UI_ORIGINAL_STYLE.md` ③: 왼쪽 맵 정보+방 코드 / 가운데 슬롯 표(원작 4색·방장 표시) / 아래 채팅 / 시작·준비·나가기. 난이도 칸은 이미 정보 문구로 대체됨. NetBoot는 별도 씬이라 gameshot으로 못 찍음 — 에디터에서 NetBoot를 열어 한 번 눈으로 확인하거나 Game 뷰 캡처 수단을 새로 만들어야 한다.
-5. **마지막 확인**: g1 형식 짧은 판 `gameshot … rounds:3 mode:보통`으로 mode: 자동선택이 대화상자를 건너뛰는지(구현담당1 기준선 도구 보호). 오늘 단발 판들(mode:어려움/신)은 통과.
-6. 기준선은 PM이 UI 들어간 HEAD로 새로 돌린다 — 그 전에 에디터를 비워 둘 것.
+## 남은 확인 / 일
+1. **아이템 6칸 모습**: 아이템을 든 사진을 못 찍음(도박·스토리 아이템 경로가 7번째를 시도할 때 안내가 뜨는지도 미확인).
+2. **로비(NetBoot) 방 패널 재배치**: PM 보류. `Docs/UI_ORIGINAL_STYLE.md` ③. NetBoot는 별도 씬이라 gameshot 불가 — 에디터에서 열어 눈으로.
+3. **위습 여러 종류가 같이 보이는 사진**: 시작엔 「랜덤유닛」 한 종류뿐이고 위습 종류를 세우는 도구가 없다. 필요하면 도구부터.
+4. 둥근 UI 전/후 비교 사진(필요하다고 하면). 모서리가 은은해서 더 크게 원하면 반지름 값만.
+5. 분홍 오라: 판 밀도(2~3겹)는 모델 정점 수 문제라 못 맞춤 — 사장님이 더 원하면 판을 복제 배치하는 방안 검토.
+6. 영웅 단추: 대상 2개 그대로. 늘리자는 말이 나오면 `UnitHeroTable`(gen_hero_table.py).
 
-## 함정 (오늘 겪음)
-- 🔴 에디터는 하나를 같이 쓴다: refresh·판 전에 구현담당1·PM에게 「돌립니다」, 끝나면 「끝났습니다」. 판 중 소스 편집·refresh 금지(미컴파일이 판을 무효로 만든다). 컴파일 검사는 `Tools/ui/csc_check.sh`(에디터 불필요).
-- 🔴 Canvas 자식이 부모 캔버스 정렬을 상속 — 난이도 가림막을 대화상자 캔버스 자식으로 두면 HUD까지 덮는다(루트로 둠).
-- `<color>` 안 ■ 같은 도형 글자는 폰트에 없을 수 있다 → TMP `<mark>`로 칩을 그린다.
-- gameshot `spawn:`은 판 시작 뒤 생성이라 바로 읽으면 없을 수 있다(wait를 둘 것).
-- gameshot `askmode` = 난이도 자동선택을 끄고 대화상자를 본다. `mode:`는 도구 신호(ToolAutoPickKey)를 켜서 대화상자를 건너뛴다 — 신호는 Awake가 읽고 지운다.
-- 한글 파일명 NFC/NFD: 표 생성기는 CSV 문자열과 listdir을 비교한다(지금은 일치, macOS 파일명 정규화 주의).
-- 원본 w3x(`Tools/w3x/원본/*`)는 git worktree에 없다(.gitignore) — 생성기는 주 저장소 경로로 폴백하게 해 뒀다.
-- 정품 워크3 UI 그림은 이 PC에 없다 → 근사 그림 + UiSkin 슬롯. 원작 그림을 새로 넣는 커밋은 `Docs/REPLACE_BEFORE_PUBLIC.md` 🔴 표에 한 줄.
-- RtsCameraController는 구현담당1(카메라 담당) 영역 — MoveTo 호출만 쓴다.
+## 함정
+- 🔴 에디터 하나를 같이 쓴다: refresh·판·Assets 쓰기 전에 「씁니다」, 끝나면 「끝났습니다」. 남의 판 중 소스 편집·refresh 금지. 컴파일 검사는 `Tools/ui/csc_check.sh [작업폴더]`(Assembly-CSharp만 — Editor 폴더는 안 봄; Editor 파일은 Assembly-CSharp-Editor.rsp로 따로 검사).
+- 🔴 **모델 배선 메뉴(`Tools/아트/모델 배선`)를 돌리면 Generated 프리팹 400여 개 + Data 에셋 수백 개 + 씬의 fileID가 통째로 뒤섞인다**(내용은 같은데 diff 700개). 필요한 변경만 골라 커밋하고 나머지는 `git checkout -- Assets/Prefabs Assets/Data`로 되돌린다. 한 프리팹의 값만 바꾸면 되면 YAML을 직접 고치는 편이 깔끔했다(박민수). 같은 변경을 `ArtBinder`에도 넣어 다음 배선과 일관되게.
+- Unity `Sprite.Create` 9-slice는 **PPU를 캔버스 reference(100)와 맞춰야** 모서리 크기가 맞는다.
+- gameshot: `spawn:`·`select:` 순서 — select는 spawn보다 먼저. 사진 확인에서 「화면 위」와 「월드 방향」을 헷갈렸다(박민수: 카메라가 −Z면 +Z 정면 유닛은 뒷모습). 판독하기 전에 카메라가 어디서 보는지부터.
+- 생성기 json을 손으로 고치지 말 것(다시 뽑으면 사라짐) — 손값은 overrides json.
+- 판 중 스크린샷 경로: `ClaudeBridge/shots/<이름>.png`, 결과 로그 `ClaudeBridge/outbox/<이름>.txt`. 비교 사진은 `/usr/bin/python3`(Pillow 있음) + `Tools/ui/compare_shot.py`.
+- 동시 판 여러 개를 inbox에 넣으면 순서대로 돈다(각 ~40~60초). 긴 대기는 `run_in_background`+until 루프(foreground sleep 연쇄는 막힘).
 
 ## 위치
-- worktree 없음(병합 후 제거). 브랜치 `ui-original`은 main에 ff 병합돼 남아 있으니 지워도 된다.
-- 문서: `Docs/UI_ORIGINAL_STYLE.md` · `Docs/SPEC_2026-10-03_difficulty_dialog_and_e015.md` · `Docs/ui_mockups/`(목업·compare·skin_preview) · 사진 `Docs/reference/ui/`.
+- worktree 없음(정리함). 사진: `Docs/ui_mockups/compare/04~10`.
+- 문서: `Docs/UI_ORIGINAL_STYLE.md` · `Docs/facing_audit_2026-10-03.txt` · 근사 텍스처 생성기 `Tools/blender/gen_aura_approx_tex.py`.
