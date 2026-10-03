@@ -98,4 +98,79 @@ static class DisplayProbe
         sb.AppendLine(col == null ? "HeroButtons 오브젝트 없음" : $"HeroButtons 자식 {col.transform.childCount}개 · 켜진 것 {col.GetComponentsInChildren<UnityEngine.UI.Button>(false).Length}개 · 위치 {((RectTransform)col.transform).anchoredPosition} 크기 {((RectTransform)col.transform).sizeDelta}");
         return sb.ToString();
     }
+
+    // ───── 촬영용 탐침(10-03 밤) — gameshot call:로 부르면 spawn보다 먼저 도니 EditorApplication.update로 판이 준비될 때까지 기다린다.
+    // 결과 한 줄은 ClaudeBridge/outbox/구현담당2_<이름>.txt 에도 남는다.
+    static void WhenReady(string name, System.Func<bool> ready, System.Func<string> act)
+    {
+        EditorApplication.CallbackFunction tick = null;
+        float started = (float)EditorApplication.timeSinceStartup;
+        tick = () =>
+        {
+            if (!Application.isPlaying) { EditorApplication.update -= tick; return; }
+            bool timeout = EditorApplication.timeSinceStartup - started > 40;
+            if (!timeout && !ready()) return;
+            EditorApplication.update -= tick;
+            string result = timeout ? "❌ 40초 안에 준비 안 됨" : act();
+            Debug.Log($"[탐침 {name}] {result}");
+            string root = System.IO.Path.GetDirectoryName(Application.dataPath);
+            string dir = System.IO.Path.Combine(root, "ClaudeBridge/outbox");
+            System.IO.Directory.CreateDirectory(dir);
+            System.IO.File.WriteAllText(System.IO.Path.Combine(dir, $"구현담당2_{name}.txt"), result);
+        };
+        EditorApplication.update += tick;
+    }
+
+    // 위습 칸에 서로 다른 종류(Assets/Data/Wisps 전부)를 한 개씩 채운다 — 등급색·3D 아이콘 구분 사진용(gameshot call:DisplayProbe.WispKinds).
+    static string WispKinds()
+    {
+        WhenReady("WispKinds", () => PlayerContext.Local != null && RewardDistributor.Instance != null && GameAuthority.IsServer, () =>
+        {
+            var rewards = new System.Collections.Generic.List<WispReward>();
+            var names = new System.Collections.Generic.List<string>();
+            foreach (string guid in AssetDatabase.FindAssets("t:WispData", new[] { "Assets/Data/Wisps" }))
+            {
+                WispData w = AssetDatabase.LoadAssetAtPath<WispData>(AssetDatabase.GUIDToAssetPath(guid));
+                if (w == null || w.prefab == null) continue;
+                rewards.Add(new WispReward { wisp = w, count = 1 });
+                names.Add($"{w.name}({w.targetGrade})");
+            }
+            RewardDistributor.Instance.GrantWisps(PlayerContext.Local, rewards);
+            return $"위습 {rewards.Count}종 지급: " + string.Join(", ", names);
+        });
+        return "WispKinds 예약";
+    }
+
+    // 아이템 칸을 6개 채우고, 7번째를 실제 지급 경로(보스·스토리 드랍 GrantItemDrop, 확률 1)로 넣어 본다 — 「칸이 가득 찼습니다」 알림이 떠야 한다.
+    // 🔴 칸 비우기 없이 쓰는 촬영 전용(gameshot call:DisplayProbe.ItemsFull).
+    static string ItemsFull()
+    {
+        WhenReady("ItemsFull", () => PlayerContext.Local != null && PlayerContext.Local.ItemInventory != null && RewardDistributor.Instance != null, () =>
+        {
+            PlayerContext me = PlayerContext.Local;
+            var all = new System.Collections.Generic.List<ItemData>();
+            foreach (string guid in AssetDatabase.FindAssets("t:ItemData", new[] { "Assets/Data/Items" }))
+            {
+                ItemData it = AssetDatabase.LoadAssetAtPath<ItemData>(AssetDatabase.GUIDToAssetPath(guid));
+                if (it != null && !string.IsNullOrEmpty(it.itemName)) all.Add(it);
+            }
+            all.Sort((a, b) => string.CompareOrdinal(a.name, b.name));
+            var sb = new StringBuilder();
+            int added = 0;
+            foreach (ItemData it in all)
+            {
+                if (me.ItemInventory.IsFull) break;
+                if (me.ItemInventory.Add(it)) { added++; sb.Append(it.itemName).Append(", "); }
+            }
+            sb.AppendLine($"→ {added}개 넣음 · 보유 {me.ItemInventory.Items.Count}/{ItemInventory.MaxItems} · IsFull {me.ItemInventory.IsFull}");
+            ItemData seventh = null;
+            foreach (ItemData it in all) if (!System.Linq.Enumerable.Contains(me.ItemInventory.Items, it)) { seventh = it; break; }
+            var drops = new System.Collections.Generic.List<EnemyItemDrop> { new EnemyItemDrop { item = seventh, weight = 1f } };
+            System.Reflection.MethodInfo m = typeof(RewardDistributor).GetMethod("GrantItemDrop", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            m.Invoke(RewardDistributor.Instance, new object[] { me, 1f, drops });
+            sb.AppendLine($"7번째({(seventh != null ? seventh.itemName : "없음")}) 드랍 경로 호출 → 보유 {me.ItemInventory.Items.Count}/{ItemInventory.MaxItems} (6이면 거절됨, 알림은 화면 사진으로)");
+            return sb.ToString();
+        });
+        return "ItemsFull 예약";
+    }
 }
