@@ -28,8 +28,14 @@ static class DisplayProbe
     // 상시 오라 근접 사진용(gameshot call: — spawn보다 먼저 도니 EditorApplication.update로 유닛이 생길 때까지 기다린다).
     // 바깥에서 비스듬히 내려다보는 보조 카메라를 메인 위에 얹는다. 이름 조각 = 대상 유닛, 거리·높이는 유닛 키 배수.
     static string AuraCloseup() => CloseupOn("김민준", 55f, -85f);
+    // 정면 확인용: 이름은 ClaudeBridge/probe_name.txt, 카메라는 유닛의 +Z쪽(정면이 +Z면 얼굴이 보인다).
+    static string CloseupFront()
+    {
+        string root = System.IO.Path.GetDirectoryName(Application.dataPath);
+        return CloseupOn(System.IO.File.ReadAllText(System.IO.Path.Combine(root, "ClaudeBridge/probe_name.txt")).Trim(), 62f, 100f, 24f);
+    }
     static string CloseupPark() => CloseupOn("박민수", 30f, -90f);
-    static string CloseupOn(string part, float up, float back)
+    static string CloseupOn(string part, float up, float back, float lookUp = 8f)
     {
         EditorApplication.CallbackFunction tick = null;
         float started = (float)EditorApplication.timeSinceStartup;
@@ -48,7 +54,7 @@ static class DisplayProbe
             cam.fieldOfView = 35f;
             Vector3 p = target.transform.position;
             cam.transform.position = p + new Vector3(0f, up, back);   // 유닛 키 ≈30: 앞쪽 위에서 비스듬히(원작 사진 각도)
-            cam.transform.LookAt(p + Vector3.up * 8f);
+            cam.transform.LookAt(p + Vector3.up * lookUp);
         };
         EditorApplication.update += tick;
         return "AuraCloseup 예약";
