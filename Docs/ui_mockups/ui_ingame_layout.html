@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>인게임 배치 목업 — 사진 기준</title>
+<style>
+:root{--bg:#0b0f17;--ink:#e8edf6;--dim:#8d9ab0;--gold:#c9a24a;--gold2:#f3d27a;--line:#2a3350;--navy:#16203a;--stone:#6b6f77}
+@media (prefers-color-scheme: light){:root{--bg:#eef1f6;--ink:#16202f;--dim:#5a6578;--line:#c9d0de}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;padding:20px 16px 60px}
+main{max-width:1280px;margin:0 auto}h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:26px 0 6px}p.sub{color:var(--dim);margin:0 0 14px}
+.screen{position:relative;width:100%;aspect-ratio:1720/960;background:linear-gradient(#3a4f33,#6a5a44 60%,#4a4f57);border:1px solid var(--line);overflow:hidden;font-size:clamp(8px,1.05vw,14px)}
+.abs{position:absolute}.gold{border:2px solid var(--gold);border-radius:3px}
+.btn{background:var(--navy);color:#cfe0ff;display:flex;align-items:center;justify-content:center;border:2px solid var(--gold);border-radius:3px}
+.res{background:#0b1020;color:#fff;border:2px solid #4a3d1a;display:flex;align-items:center;justify-content:space-between;padding:0 8px}
+.ico{display:inline-block;width:1.1em;height:1.1em;border-radius:50%}
+.stone{background:repeating-linear-gradient(135deg,#6d7078 0 6px,#60636b 6px 12px);border-top:3px solid #3a3d44}
+.cell{background:#000;border:2px solid #8a7a45}
+.bar{position:absolute;left:0;right:0;height:1.6em;display:flex;align-items:center;justify-content:center;font-weight:700}
+.hp{bottom:1.6em;background:#2a8a35;color:#d9ffd9}.mp{bottom:0;background:#1a2a60;color:#fff}
+.timer{background:#1a0d12;border:2px solid #a68a2a;border-radius:3px;display:flex;justify-content:space-between;align-items:center;padding:0 10px}
+.mbo{background:#0e1220;border:2px solid #a68a2a;border-radius:3px;display:flex;justify-content:space-between;align-items:center;padding:0 10px;color:var(--ink)}
+.tag{position:absolute;background:#ff8a5b;color:#1a0d00;font-size:10px;font-weight:700;padding:1px 5px;border-radius:2px;z-index:5}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:900px){.cmp{grid-template-columns:1fr}}
+.legend{font-size:12px;color:var(--dim)}
+</style></head><body><main>
+<h1>인게임 배치 목업 — 사장님 사진(원랜디_인게임_01) 기준</h1>
+<p class="sub">좌표는 사진 1720×960 비율 그대로. 색·배치 제안일 뿐 — 그림은 전부 CSS로 직접 그림(원작 그림 0). 주황 표 = 우리 현재와 다른 곳.</p>
+<div class="cmp">
+<div><h2>개편안 (사진 배치)</h2>
+<div class="screen">
+ <!-- 상단 바 -->
+ <div class="abs btn" style="left:0;top:0;width:10.5%;height:3%;opacity:.55">퀘스트</div>
+ <div class="abs btn" style="left:11%;top:0;width:10.5%;height:3%">메뉴 (F10)</div>
+ <div class="abs btn" style="left:22%;top:0;width:10.5%;height:3%">동맹 (F11)</div>
+ <div class="abs btn" style="left:33%;top:0;width:10.5%;height:3%">대화 (F12)</div>
+ <div class="abs" style="left:46%;top:0;width:8%;height:5.5%;border-radius:0 0 50% 50%;background:radial-gradient(#7fb8ff,#1f3a78);border:2px solid var(--gold)"></div>
+ <div class="abs res" style="left:57.5%;top:0;width:11%;height:3%"><span class="ico" style="background:#e8c14a"></span><b>113875</b></div>
+ <div class="abs res" style="left:69.5%;top:0;width:10.5%;height:3%"><span class="ico" style="background:#2f9a4a"></span><b>50</b></div>
+ <div class="abs res" style="left:80.5%;top:0;width:9%;height:3%"><span class="ico" style="background:#c9703a"></span><b>5</b></div>
+ <div class="abs res" style="left:90%;top:0;width:10%;height:3%;justify-content:center;color:#7fe0ff"><b>구랜디</b></div>
+ <span class="tag" style="left:0;top:3.4%">상단 바: 좌 버튼·우 자원(금화·나무·고기=특성 포인트)</span>
+ <!-- 우상단 스택 -->
+ <div class="abs timer" style="left:78.5%;top:5%;width:20.5%;height:4.6%"><span style="color:#ff4a4a;font-weight:700">보스 제한시간</span><b>00:00:00</b></div>
+ <div class="abs mbo" style="left:78.5%;top:10.2%;width:20.5%;height:3.6%"><b>유닛 카운트 = 70 &lt;- 패배</b><span>▼</span></div>
+ <span class="tag" style="left:70%;top:14.3%">타이머 창 + 멀티보드(접힘)</span>
+ <!-- 영웅 단추 -->
+ <div class="abs gold" style="left:.3%;top:65%;width:4.6%;height:7%;background:#223"></div>
+ <span class="tag" style="left:.3%;top:72.5%">영웅 단추+Lv(정의 필요)</span>
+ <!-- 시스템 문구 -->
+ <div class="abs" style="left:6%;top:47%;width:30%;color:#e56cff;font-weight:800;text-shadow:1px 1px 2px #000;line-height:1.35">보통모드를 클리어하셨습니다 ! 축하드립니다 !<br>보통모드를 클리어하셨습니다 ! 축하드립니다 !</div>
+ <!-- 콘솔 -->
+ <div class="abs stone" style="left:0;top:73%;width:100%;height:27%"></div>
+ <div class="abs gold" style="left:.6%;top:75.5%;width:18.5%;height:23%;background:#0b1a33;display:flex;align-items:center;justify-content:center;color:var(--dim)">미니맵</div>
+ <div class="abs" style="left:19.5%;top:75%;width:2.6%;height:24%;display:grid;gap:4%">
+  <div class="gold" style="background:#2a2a1e;border-radius:50%"></div><div class="gold" style="background:#2a2a1e;border-radius:50%"></div><div class="gold" style="background:#2a2a1e;border-radius:50%"></div><div class="gold" style="background:#2a2a1e;border-radius:50%"></div><div class="gold" style="background:#2a2a1e;border-radius:50%"></div></div>
+ <div class="abs gold" style="left:26.5%;top:77%;width:10%;height:23%;background:#1b1612;border-radius:40% 40% 0 0;overflow:hidden"><div style="height:60%;display:flex;align-items:center;justify-content:center;color:var(--dim)">초상(3D)</div><div class="bar hp">77777 / 77777</div><div class="bar mp">180 / 180</div></div>
+ <div class="abs" style="left:37%;top:77%;width:26%;height:23%;background:#000;border:2px solid #8a7a45;padding:6px 10px;line-height:1.5">
+  <div><b>몽키.D.루피</b> <span style="color:#ffd84a">명왕 레일리의 제자</span> – <span style="color:#46e06a">초월함</span></div>
+  <div><span style="color:#ff9a3a">데미지:</span> 20001 – 20015 <span style="color:#46e06a">+35014</span></div>
+  <div><span style="color:#ff9a3a">아머:</span> <span style="color:#ff4a4a">무적</span></div>
+  <div style="color:var(--dim)">상태: ▢▢▢▢▢▢▢▢</div></div>
+ <div class="abs" style="left:64%;top:76%;width:10%;height:24%;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);gap:3%"><div class="gold" style="background:#1b1612"></div><div class="gold" style="background:#1b1612"></div><div class="gold" style="background:#1b1612"></div><div class="gold" style="background:#1b1612"></div><div class="gold" style="background:#1b1612"></div><div class="gold" style="background:#1b1612"></div></div>
+ <span class="tag" style="left:64%;top:73.2%">아이템 6칸(2×3) = 엠블럼 자리</span>
+ <div class="abs" style="left:76%;top:76%;width:23%;height:23%;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);gap:1.5%">
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div></div>
+</div>
+<p class="legend">상단 바 y 0~3% · 콘솔 y 73~100% · 명령칸 x 76~99% — 문서 ⑤-3 좌표표와 같은 값.</p></div>
+
+<div><h2>지금 우리 화면(같은 비율로 단순화)</h2>
+<div class="screen">
+ <div class="abs" style="left:1%;top:.6%;color:#fff;font-weight:700">골드 40 &nbsp; 목재 1 &nbsp; 마나 15</div>
+ <div class="abs" style="left:52%;top:.6%;color:#fff;font-weight:700">라운드 1 &nbsp; 준비 17.9s</div>
+ <div class="abs btn" style="left:78%;top:.3%;width:11%;height:3.2%">항법 선택</div>
+ <div class="abs btn" style="left:89.5%;top:.3%;width:3.5%;height:3.2%">메뉴</div>
+ <div class="abs btn" style="left:93.4%;top:.3%;width:3%;height:3.2%">동맹</div>
+ <div class="abs btn" style="left:96.6%;top:.3%;width:3%;height:3.2%">대화</div>
+ <div class="abs" style="left:71%;top:5.8%;width:28%;height:12%;background:rgba(80,80,90,.7);padding:4px 8px;color:#fff;font-size:.9em;line-height:1.3">유닛 카운트 = 70 &lt;- 패배 | 적 8 | 난이도 어려움<br>플레이어 1 | 적 8 | 골드 50 | 목재 1 | 풀카운트 : 6880 점<br>플레이어 2 | 비어있음<br>플레이어 3 | 비어있음<br>플레이어 4 | 비어있음</div>
+ <div class="abs" style="left:1%;top:47%;width:35%;color:#ddd;line-height:1.5">보통 모드가 선택되었습니다.<br>60라운드 보스 처치시 클리어합니다.</div>
+ <div class="abs" style="left:0;top:79%;width:100%;height:21%;background:#0b0e16;border-top:2px solid var(--gold)"></div>
+ <div class="abs gold" style="left:1%;top:80%;width:12%;height:19%;background:#0b1a33"></div>
+ <div class="abs gold" style="left:14%;top:80%;width:10.5%;height:19%;background:#1b1612"></div>
+ <div class="abs" style="left:25%;top:80%;width:36%;height:19%;background:#000;border:2px solid var(--gold);padding:6px 10px">이름 – 등급 Lv.1<br>공격력 / 사거리 / 공속 / 체력</div>
+ <div class="abs gold" style="left:62.5%;top:80%;width:8%;height:19%;background:#101216"></div>
+ <div class="abs gold" style="left:72%;top:80%;width:27%;height:19%;background:#101216"></div>
+ <span class="tag" style="left:1%;top:6%">좌우 뒤집힘: 자원 좌 · 버튼 우</span>
+ <span class="tag" style="left:50%;top:5%">타이머 가운데(사진은 우상단)</span>
+ <span class="tag" style="left:70%;top:19%">점수판: 한 줄 문장·골드 목재 포함</span>
+ <span class="tag" style="left:1%;top:72.5%">콘솔 높이 21% · 돌벽 아님 · 바·버프·미니맵 단추·영웅 단추 없음</span>
+</div>
+<p class="legend">우리 화면: g2_fc_a.png(1920×1080) 구조를 같은 비율로 옮김.</p></div>
+</div>
+</main></body></html>
