@@ -25,6 +25,7 @@ public static class WispIconBaker
         Vector3 origin = new Vector3(0f, -12000f, 0f);
         GameObject stage = new GameObject("WispIconStage");
         stage.transform.position = origin;
+        stage.SetActive(false);   // 꺼진 부모 밑에서 복제 — NavMeshAgent가 NavMesh 밖에서 켜져 경고를 내기 전에 Strip이 지운다
         GameObject clone = Object.Instantiate(source, stage.transform, false);
         clone.name = "WispIcon";
         PortraitStage.Strip(clone);
@@ -32,6 +33,7 @@ public static class WispIconBaker
         clone.transform.localPosition = Vector3.zero;
         clone.transform.localRotation = Quaternion.identity;
         clone.transform.localScale = source.transform.lossyScale;
+        stage.SetActive(true);
 
         Renderer[] renderers = clone.GetComponentsInChildren<Renderer>();
         if (renderers.Length == 0) { Object.Destroy(stage); return null; }
