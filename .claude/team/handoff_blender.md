@@ -6,7 +6,7 @@
 1. **분홍 오라**: 원작 사진의 초월 발밑 분홍·흰 조각 = **HandsAura2**(A07O 「스피어 초월함」 atat, 로스터 23명)였다. 모델은 맞았고 근사 텍스처(Zap1_Red·Purple_Glow)가 틀렸다(mdx_extract.placeholder가 이름 「zap」만 보고 지그재그 번개를 그림). 방사 광선 + 분홍 바탕으로 다시 그림 → 2차(더 밝게)까지 PM이 게임에 반영(크기 1.0 · 세기 Purple 1.0 / Zap 0.7).
    - 산출: `~/GRD_motion_trial/초월_상시오라/HandsAura2/Textures/` 두 장 · 비교.png(원작 사진 ↔ 렌더) · 설명.md에 정정 기록.
    - 남은 관찰(미해결): 원작 판이 사진상 우리 모델 치수보다 1.5배쯤 커 보임(맵 쪽 배율 필드 미확인) · 지오셋 0의 Yellow_Glow는 사진에 안 보임(유니티에서 끄거나 약하게) · 정품 Zap1_Red.blp를 구하면 교체.
-2. **고유 동작 5묶음** 여섯 → `~/GRD_motion_trial/고유_5묶음/`(README.md에 클립표·판단·결함검사). **PM이 Assets 반영 완료(06ba66713, Generic 확인)**. 단 README의 「박도진(구부정)」「손오공(Attack 2배속)」은 사장님 답 대기였다 — 반영 여부는 PM에게 확인.
+2. **고유 동작 5묶음** 여섯 → `~/GRD_motion_trial/고유_5묶음/`(README.md에 클립표·판단·결함검사). **PM이 Assets 반영 완료(06ba66713, Generic 확인)**. README의 「박도진(구부정)」「손오공(Attack 2배속)」도 사장님 10-03 「반영해」로 확정(지금 들어간 그대로).
 
 ## 도구 위치·쓰는 법 (전부 Tools/blender/, 커밋됨)
 - `gen_aura_approx_tex.py` — Zap1_Red·Purple_Glow 근사 재생성. `blender -b --factory-startup --python … -- <출력폴더>`. 값 조정은 stops(색 사다리)·core·ray 줄.
@@ -26,6 +26,6 @@
 
 ## 남은 보류
 - 히든_전유라 Move가 15프레임·이음새 0.066 — 필요하면 split_clips `loop=`로 다듬기(다른 클립도 split에 다 적어야 함).
-- 박도진(클립이 구부정) · 손오공 Attack(2배속 가공) — 사장님 결정 대기.
+- ~~박도진(클립이 구부정) · 손오공 Attack(2배속 가공) — 사장님 결정 대기.~~ → **사장님 10-03 「반영해」 확정** — 06ba66713에 이미 들어간 그대로 유지(구부정 원본 클립 · 카메하메 준비 2배속).
 - 정품 War3 텍스처(War3.mpq/CASC) 위치 — 사장님 답 대기. 근사 텍스처 39개 + HandsAura2 두 장이 근사다.
 - 적 R67·R73·R74(항목 없음) · 애매 18(Idle만) — 가치 작아 보류.
