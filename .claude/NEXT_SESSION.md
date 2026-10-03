@@ -1,6 +1,7 @@
 # 다음 세션 이어받기 — 2026-10-02 오후 (PM 작성, Opus 5.5 세션)
 
 `CLAUDE.md` → `.claude/PROJECT_BRIEF.md` → `.claude/TEAM_RULES.md`를 먼저 읽고 이 문서로 온다.
+🔴 **새 PM: 이 문서를 읽은 뒤 `.claude/team/spawn_team.sh --fresh`로 팀원 셋을 띄운다**(CLAUDE.md 「이어받기」 2번, 사장님 10-03 확정 · Sonnet 5.5).
 10-01 오후판은 git 이력에 있다. 이 문서가 그것을 대체한다. **작업이 진행되면 PM이 이 문서를 갱신한다(큰 단계마다).**
 
 ---
