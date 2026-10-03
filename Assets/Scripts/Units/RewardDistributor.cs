@@ -603,6 +603,30 @@ public class RewardDistributor : MonoBehaviour
         spawner.Spawn(unit, position, context.PlayerId);
     }
 
+    // 신세계 진입 보상(원작 Trig_Round_10ver Stage 11, j 29709~29754): 살아 있는 플레이어마다 「전설위습」(e015, 우리 전설·히든 위습) —
+    // 악몽·신 1기, 그 밖(어려움·지옥) 2기. 원작 SetUnitUserData=1 표식을 Wisp.NewWorldReward로 건다(쓰면 풀카운트 감점 — 그 위습이 전설 50%/히든 50% 포탈을 지날 때).
+    // 지급 문구는 없다(위습이 조용히 생긴다). RoundManager가 currentRound==60 && totalRounds>60 때 한 번 부른다.
+    WispData legendHiddenWisp;
+    public void GrantNewWorldWisps(DifficultyMode mode)
+    {
+        if (!GameAuthority.IsServer) return;
+        if (legendHiddenWisp == null)
+            foreach (WispData data in Resources.FindObjectsOfTypeAll<WispData>())
+                if (data != null && data.targetGrade == UnitGrade.Legendary && !data.isPlayerChoice && data.prefab != null) { legendHiddenWisp = data; break; }
+        if (legendHiddenWisp == null)
+        {
+            Debug.LogWarning("RewardDistributor: 전설·히든 위습(WispData)을 못 찾아 신세계 보상을 못 줍니다.");
+            return;
+        }
+        int count = mode == DifficultyMode.God || mode == DifficultyMode.Nightmare ? 1 : 2;
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            if (context.IsDead) continue;   // 원작 PlayerDeath==0만
+            SpawnWisp(context, legendHiddenWisp, count, newWorldReward: true);
+            Debug.Log($"[신세계보상] 슬롯 {context.PlayerId}에게 전설·히든 위습 {count}기(표식) — 모드 {mode.KoreanName()}");
+        }
+    }
+
     public void GrantWisps(PlayerContext context, List<WispReward> wispRewards)
     {
         // MP: 위습(실물)은 호스트만 만든다 — 클라에서 불리면 호스트가 모르는 위습이 생긴다(09-26 클라 G키 사고).
@@ -684,7 +708,7 @@ public class RewardDistributor : MonoBehaviour
             PlayerNotification.Show(context.PlayerId, "세이브회수에 따른 2차 보상이 지급됩니다.", 10f);
     }
 
-    void SpawnWisp(PlayerContext context, WispData wispData, int count)
+    void SpawnWisp(PlayerContext context, WispData wispData, int count, bool newWorldReward = false)
     {
         if (wispData.prefab == null)
         {
@@ -724,6 +748,7 @@ public class RewardDistributor : MonoBehaviour
                 wisp = instance.AddComponent<Wisp>();
             }
             wisp.SetData(wispData);
+            wisp.NewWorldReward = newWorldReward;
 
             if (!instance.TryGetComponent(out OwnedByPlayer owner))
             {

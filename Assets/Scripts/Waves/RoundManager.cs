@@ -520,7 +520,11 @@ public class RoundManager : MonoBehaviour
         {
             for (int i = 0; i < MaxTrackedLanes; i++)
                 laneDeathCount[i] = NewWorldDeathCount;
-            if (totalRounds > 60) FullCountScore.OnNewWorldEnter();   // 원작 Stage 11: 전원 1250점·full_C 0, 점수판 풀카운트 행이 처음 뜬다
+            if (totalRounds > 60)
+            {
+                FullCountScore.OnNewWorldEnter();
+                if (DifficultyManager.Instance != null) RewardDistributor.Instance?.GrantNewWorldWisps(DifficultyManager.Instance.Current);   // e015 신세계 보상 위습
+            }   // 원작 Stage 11: 전원 1250점·full_C 0, 점수판 풀카운트 행이 처음 뜬다
         }
         if (currentRound == 60 && round60Delay > 0f)
             AnnounceAll("<color=#FF8200>미지의 바다인 신세계로 출항합니다. 40초의 대기시간을 가집니다.</color>", 5f);   // TRIGSTR_15735 1줄

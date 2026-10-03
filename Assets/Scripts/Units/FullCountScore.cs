@@ -42,6 +42,7 @@ public static class FullCountScore
         for (int i = 0; i < Players; i++) { score[i] = StartScore; topUnits[i] = 0; bossSpawnedAt[i] = -1f; }
         fullC = 0;
         visible = false;
+        cleared = false;
         UnitIdentity.OnAcquired -= HandleAcquired;
         UnitIdentity.OnAcquired += HandleAcquired;
         EnemyDummy.OnLaneBossKilled -= HandleLaneBossKilled;
@@ -61,6 +62,22 @@ public static class FullCountScore
         if (!GameAuthority.IsServer || slot < 0 || slot >= Players) return;
         topUnits[slot]++;
         Debug.Log($"[풀카운트] 슬롯 {slot} 최상위 유닛 {topUnits[slot]}");
+    }
+
+    static bool cleared;   // 마지막 라운드를 끝낸 뒤(원작 Level>75) — 보상 사용 감점 없음
+
+    /// <summary>
+    /// 신세계 보상 위습(표식) 사용 — 원작 Trig_Story_Tier6_Legend(j 84689~84696): Level≤75면 풀카운트 −= sinsekai_reward_int×625(신·악몽 2, 그 밖 1),
+    /// 문구 「|cffFF0000신세계 보상사용:풀카운트{N}점 감소!」 2초(본인).
+    /// </summary>
+    public static void OnNewWorldRewardUsed(int slot)
+    {
+        if (!GameAuthority.IsServer || slot < 0 || slot >= Players || cleared) return;
+        DifficultyMode mode = DifficultyManager.Instance != null ? DifficultyManager.Instance.Current : DifficultyMode.Normal;
+        int cost = (mode == DifficultyMode.God || mode == DifficultyMode.Nightmare ? 2 : 1) * 625;
+        score[slot] -= cost;
+        PlayerNotification.Show(slot, $"<color=#FF0000>신세계 보상사용:풀카운트{cost}점 감소!</color>", 2f);
+        Debug.Log($"[풀카운트] 슬롯 {slot} 신세계 보상 사용 −{cost} · 합 {score[slot]}");
     }
 
     public static void OnNewWorldEnter()
@@ -113,6 +130,7 @@ public static class FullCountScore
         if ((finishedRound + 1) % 5 == 0) fullC += 5;   // 원작: 증가한 Level이 5의 배수
 
         if (!finalClear) return;
+        cleared = true;
         foreach (PlayerContext context in PlayerContext.Occupied)
         {
             int p = context.PlayerId;

@@ -7,6 +7,9 @@ public class Wisp : MonoBehaviour
 
     public WispData Data => data;
 
+    /// <summary>원작 SetUnitUserData(unit,1) — 신세계 진입 보상 위습 표식(j 29716). 이 위습을 포탈에 쓰면 풀카운트가 깎인다(FullCountScore.OnNewWorldRewardUsed). 호스트 로직 전용.</summary>
+    public bool NewWorldReward { get; set; }
+
     // MP: 필드에 나와 있는 위습 등록부(UnitIdentity.Active·EnemyDummy.Active와 같은 관례). 멀티 호스트가
     //     이걸 훑어 클라에 거울을 세운다(NetMirrorHost). 싱글에선 읽는 곳이 없다 — 등록만 하는 무동작.
     public static readonly System.Collections.Generic.List<Wisp> Active = new System.Collections.Generic.List<Wisp>();

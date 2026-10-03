@@ -245,6 +245,7 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
         }
 
         wisp.MarkConsumed();
+        if (wisp.NewWorldReward) FullCountScore.OnNewWorldRewardUsed(ownerId);   // 원작 Trig_Story_Tier6_Legend: 신세계 보상 표식 위습을 쓰면 풀카운트 −625×배수
         Destroy(wisp.gameObject);
 
         // Spawn이 인벤토리 등록까지 한다 — 여기서 따로 Add하면 필드에 없는 유닛이 인벤토리에 생긴다.
