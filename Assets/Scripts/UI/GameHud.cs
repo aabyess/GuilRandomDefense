@@ -78,7 +78,12 @@ public class GameHud : MonoBehaviour
     TMP_Text unitInfoPortraitInitial;
     RawImage unitInfoPortraitModel;   // 초상화(09-26 사장님 요청): 실제 모델이 Idle로 서 있는 RenderTexture(PortraitStage)
     GameObject unitInfoPortraitSlotObject;
-    TMP_Text goldWoodText;
+    TMP_Text goldText;
+    TMP_Text woodText;
+    TMP_Text foodText;        // 고기 칸 = 원작 FOOD_USED = 우리 특성 포인트(사장님 확정 10-03)
+    TMP_Text manaText;        // 원작 상단 바엔 없다 — 도움소 스킬이 쓰는 플레이어 마나(사장님 10-02 요청)라 시계 옆에 작게 둔다
+    TMP_Text roundTimerTitle; // 우상단 타이머 창 제목(원작 「현재레벨->」)
+    int lastFood = int.MinValue;
 
     // 미니맵 위 위습 칸 — 왜 이 모양인지는 BuildWispSlots 주석에 있다.
     // 52px인 이유: 44px로 처음 찍었더니 「랜덤유닛」이 칸을 넘쳐 **화면 왼쪽 끝에서 잘렸다**
@@ -212,7 +217,7 @@ public class GameHud : MonoBehaviour
     };
 
     GameObject navigationButtonPanel;
-    RectTransform topBarButtons;   // 상단 바 오른쪽 버튼 줄(메뉴·동맹·대화) — 항법 버튼도 여기 선다
+    RectTransform topBarButtons;   // 상단 바 왼쪽 버튼 줄(퀘스트·메뉴·동맹·대화) — 항법 버튼도 여기 선다
     TMP_Text navigationButtonText;
     bool navigationButtonTextInitialized;
     bool lastNavigationHasChosen;
@@ -383,6 +388,11 @@ public class GameHud : MonoBehaviour
 
     void Update()
     {
+        // 상단 바 「메뉴 (F10)」 — 워크3 기본 단축키
+        if (Keyboard.current != null && Keyboard.current.f10Key.wasPressedThisFrame && gameMenu != null)
+        {
+            if (gameMenu.activeSelf) CloseGameMenu(); else OpenGameMenu();
+        }
         RefreshConsoleLayout();
         RefreshFitGrids();
         RefreshSelectionPanel();
@@ -724,58 +734,122 @@ public class GameHud : MonoBehaviour
         storyText.gameObject.SetActive(false);
     }
 
+    // 사장님 인게임 사진(Docs/reference/ui/원랜디_인게임_01.png) 비율: 상단 바는 화면 맨 위 한 줄(높이 ≈3.2%),
+    // 왼쪽 버튼 「퀘스트·메뉴(F10)·동맹(F11)·대화(F12)」 · 가운데 낮밤 시계 · 오른쪽 금화·나무·고기(=특성 포인트) 아이콘+숫자 + 맵 이름.
+    // 라운드 시간은 이제 우상단 타이머 창(RightColumn 맨 위, 사진의 「보스 제한시간」 자리) — 문서 UI_ORIGINAL_STYLE.md ⑤.
+    const float TopBarBottom = 0.968f;
+
     void BuildTopBar()
     {
-        RectTransform topBar = CreatePanel(transform, "TopBar", new Color(0f, 0f, 0f, 0.75f));
-        SetAnchors(topBar, new Vector2(0f, 0.95f), new Vector2(1f, 1f));
+        RectTransform topBar = CreatePanel(transform, "TopBar", new Color(0f, 0f, 0f, 0.55f));
+        SetAnchors(topBar, new Vector2(0f, TopBarBottom), new Vector2(1f, 1f));
 
-        RectTransform resourcePanel = CreatePanel(topBar, "ResourcePanel", Color.clear);
-        SetAnchors(resourcePanel, new Vector2(0.01f, 0f), new Vector2(0.35f, 1f));
-        goldWoodText = CreateLabel(resourcePanel, "ResourceText", "골드 -   목재 -   마나 -");
-        goldWoodText.alignment = TextAlignmentOptions.Left;
-        goldWoodText.fontSize = 22;
-
-        RectTransform roundPanel = CreatePanel(topBar, "RoundPanel", Color.clear);
-        SetAnchors(roundPanel, new Vector2(0.36f, 0f), new Vector2(0.64f, 1f));
-        roundTimeText = CreateLabel(roundPanel, "RoundTimeText", "라운드 -   남은시간 -");
-        roundTimeText.fontSize = 22;
-
-        // 보스 제한시간·신세계 대기 타이머(원작 타이머 창 제목, 알림 묶음 3) — 상단 바 **아래** 가운데. 라운드 시간(바 안 가운데)과 안 겹친다(PM 09-27).
-        RectTransform extraTimerPanel = CreatePanel(transform, "ExtraTimerPanel", new Color(0f, 0f, 0f, 0.6f));
-        SetAnchors(extraTimerPanel, new Vector2(0.36f, 0.912f), new Vector2(0.64f, 0.948f));   // 보스·스토리 둘이 한 줄에 들어가는 폭
-        extraTimerText = CreateLabel(extraTimerPanel, "ExtraTimerText", "");
-        extraTimerText.fontSize = 20;
-        extraTimerObject = extraTimerPanel.gameObject;
-        extraTimerObject.SetActive(false);
-
+        // 왼쪽 버튼 줄(항법 버튼도 여기 — 우리만의 기능이라 원작 4버튼 뒤에 붙인다)
         RectTransform menuButtonsPanel = CreatePanel(topBar, "TopBarButtons", Color.clear);
         topBarButtons = menuButtonsPanel;
-        SetAnchors(menuButtonsPanel, new Vector2(0.66f, 0.08f), new Vector2(0.99f, 0.92f));
-
+        SetAnchors(menuButtonsPanel, new Vector2(0f, 0.04f), new Vector2(0.455f, 0.96f));
         HorizontalLayoutGroup layout = menuButtonsPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
         layout.spacing = 6f;
-        layout.childAlignment = TextAnchor.MiddleRight;
+        layout.childAlignment = TextAnchor.MiddleLeft;
         layout.childControlWidth = true;
         layout.childControlHeight = true;
         layout.childForceExpandWidth = false;
         layout.childForceExpandHeight = true;
 
-        // 동맹/대화는 동작 없음 — 원작 배치만 재현한다. 메뉴는 [계속하기]/[처음 화면으로](BuildGameMenu).
-        TMP_Text menuLabel = CreateTopBarButton(menuButtonsPanel, "MenuButton", "메뉴");
+        // 퀘스트: 원작 맵이 퀘스트 로그를 안 쓴다(j에 CreateQuest 0건) → 버튼만 두고 흐리게(사진의 첫 버튼도 흐림).
+        TMP_Text questLabel = CreateTopBarButton(menuButtonsPanel, "QuestButton", "퀘스트", 150f);
+        questLabel.alpha = 0.45f;
+        questLabel.transform.parent.GetComponent<Button>().interactable = false;
+        TMP_Text menuLabel = CreateTopBarButton(menuButtonsPanel, "MenuButton", "메뉴 (F10)", 150f);
         menuLabel.transform.parent.GetComponent<Button>().onClick.AddListener(OpenGameMenu);
-        CreateTopBarButton(menuButtonsPanel, "AllianceButton", "동맹");
-        CreateTopBarButton(menuButtonsPanel, "ChatButton", "대화");
+        // 동맹/대화는 동작 없음 — 원작 배치만 재현한다. 메뉴는 [계속하기]/[처음 화면으로](BuildGameMenu).
+        CreateTopBarButton(menuButtonsPanel, "AllianceButton", "동맹 (F11)", 150f);
+        CreateTopBarButton(menuButtonsPanel, "ChatButton", "대화 (F12)", 150f);
+
+        // 가운데 낮밤 시계(장식)
+        RectTransform clock = CreatePanel(topBar, "ClockOrb", Color.clear);
+        SetAnchors(clock, new Vector2(0.47f, -0.55f), new Vector2(0.53f, 1f));
+        clock.GetComponent<Image>().raycastTarget = false;
+        Image clockImage = clock.GetComponent<Image>();
+        if (UiSkin.Apply(clockImage, "clock_orb")) clockImage.preserveAspect = true;
+
+        // 플레이어 마나(원작 상단 바엔 없음 — 도움소 스킬용) 시계 왼쪽에 작게
+        manaText = CreateTopBarResource(topBar, "ManaPanel", null, 0.395f, 0.465f, new Color(0.45f, 0.65f, 1f));
+
+        // 자원 셋: 금화·나무·고기 (아이콘 + 숫자)
+        goldText = CreateTopBarResource(topBar, "GoldPanel", "icon_gold", 0.575f, 0.685f, Color.white);
+        woodText = CreateTopBarResource(topBar, "WoodPanel", "icon_lumber", 0.695f, 0.80f, Color.white);
+        foodText = CreateTopBarResource(topBar, "FoodPanel", "icon_food", 0.81f, 0.90f, Color.white);
+
+        // 맵 이름(사진 「원랜디 시즌 3」 자리 — 사장님 확정: 「구랜디」)
+        RectTransform mapName = CreatePanel(topBar, "MapNamePanel", Color.clear);
+        SetAnchors(mapName, new Vector2(0.905f, 0.08f), new Vector2(0.995f, 0.92f));
+        TMP_Text mapLabel = CreateLabel(mapName, "MapNameText", "구랜디");
+        mapLabel.fontSize = 18;
+        mapLabel.color = new Color(0.5f, 0.88f, 1f);
+
+        // 우상단 스택(RightColumn): 라운드 타이머 창 → 보스·신세계 타이머 창 → (BuildTeamPanel) 점수판. 사진의 「보스 제한시간」/「유닛 카운트」 자리.
+        RectTransform roundWindow = CreatePanel(RightColumn(), "RoundTimerWindow", new Color(0.11f, 0.05f, 0.07f, 0.94f));
+        UiSkin.Apply(roundWindow.GetComponent<Image>(), "timer_frame_9s", new Color(0.11f, 0.05f, 0.07f, 0.94f));
+        roundWindow.gameObject.AddComponent<LayoutElement>().preferredHeight = 44f;
+        roundTimerTitle = CreateLabel(roundWindow, "RoundTimerTitle", "현재레벨->");
+        SetAnchors(roundTimerTitle.rectTransform, new Vector2(0.04f, 0f), new Vector2(0.62f, 1f));
+        roundTimerTitle.alignment = TextAlignmentOptions.Left;
+        roundTimerTitle.fontSize = 20;
+        roundTimerTitle.color = new Color(1f, 0.28f, 0.28f);
+        roundTimeText = CreateLabel(roundWindow, "RoundTimeText", "-");
+        SetAnchors(roundTimeText.rectTransform, new Vector2(0.55f, 0f), new Vector2(0.96f, 1f));
+        roundTimeText.alignment = TextAlignmentOptions.Right;
+        roundTimeText.fontSize = 22;
+
+        // 보스 제한시간·신세계 대기 타이머(원작 타이머 창 제목, 알림 묶음 3)도 같은 스택에 — 켜질 때만 보인다.
+        RectTransform extraTimerPanel = CreatePanel(RightColumn(), "ExtraTimerPanel", new Color(0.11f, 0.05f, 0.07f, 0.94f));
+        UiSkin.Apply(extraTimerPanel.GetComponent<Image>(), "timer_frame_9s", new Color(0.11f, 0.05f, 0.07f, 0.94f));
+        extraTimerPanel.gameObject.AddComponent<LayoutElement>().preferredHeight = 44f;
+        extraTimerText = CreateLabel(extraTimerPanel, "ExtraTimerText", "");
+        SetAnchors(extraTimerText.rectTransform, new Vector2(0.04f, 0f), new Vector2(0.96f, 1f));
+        extraTimerText.alignment = TextAlignmentOptions.Left;
+        extraTimerText.fontSize = 18;
+        extraTimerText.textWrappingMode = TextWrappingModes.NoWrap;
+        extraTimerObject = extraTimerPanel.gameObject;
+        extraTimerObject.SetActive(false);
+    }
+
+    // 상단 바 자원 칸: 어두운 칸 + 왼쪽 아이콘 + 오른쪽 정렬 숫자. 아이콘 이름이 null이면 글자만(마나).
+    static TMP_Text CreateTopBarResource(RectTransform topBar, string name, string iconName, float x0, float x1, Color textColor)
+    {
+        RectTransform panel = CreatePanel(topBar, name, new Color(0.02f, 0.04f, 0.09f, 0.95f));
+        SetAnchors(panel, new Vector2(x0, 0.08f), new Vector2(x1, 0.92f));
+        UiSkin.Apply(panel.GetComponent<Image>(), "topbar_resource_9s", new Color(0.02f, 0.04f, 0.09f, 0.95f));
+        panel.GetComponent<Image>().raycastTarget = false;
+        if (iconName != null)
+        {
+            RectTransform icon = CreatePanel(panel, "Icon", Color.clear);
+            SetAnchors(icon, new Vector2(0.03f, 0.1f), new Vector2(0.2f, 0.9f));
+            Image iconImage = icon.GetComponent<Image>();
+            iconImage.raycastTarget = false;
+            if (UiSkin.Apply(iconImage, iconName)) iconImage.preserveAspect = true;
+        }
+        TMP_Text label = CreateLabel(panel, "Value", "0");
+        SetAnchors(label.rectTransform, new Vector2(iconName != null ? 0.2f : 0.05f, 0f), new Vector2(0.95f, 1f));
+        label.alignment = TextAlignmentOptions.Right;
+        label.fontSize = 20;
+        label.color = textColor;
+        label.raycastTarget = false;
+        return label;
     }
 
     static TMP_Text CreateTopBarButton(Transform parent, string name, string label, float width = 90f)
     {
         GameObject obj = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
         obj.transform.SetParent(parent, false);
-        obj.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.15f);
+        Image image = obj.GetComponent<Image>();
+        if (!UiSkin.Apply(image, "topbar_button_9s", new Color(1f, 1f, 1f, 0.15f))) image.color = new Color(1f, 1f, 1f, 0.15f);
         obj.GetComponent<LayoutElement>().preferredWidth = width;
 
         TMP_Text text = CreateLabel(obj.transform, name + "Label", label);
         text.fontSize = 18;
+        text.color = new Color(0.81f, 0.88f, 1f);
         text.raycastTarget = false;
         return text;
     }
@@ -1835,7 +1909,7 @@ public class GameHud : MonoBehaviour
         GameObject obj = new GameObject("RightColumn", typeof(RectTransform), typeof(VerticalLayoutGroup));
         obj.transform.SetParent(transform, false);
         rightColumn = (RectTransform)obj.transform;
-        SetAnchors(rightColumn, new Vector2(0.71f, 0.23f), new Vector2(0.99f, 0.95f));
+        SetAnchors(rightColumn, new Vector2(0.785f, 0.23f), new Vector2(0.99f, TopBarBottom - 0.003f));
 
         VerticalLayoutGroup layout = obj.GetComponent<VerticalLayoutGroup>();
         layout.childAlignment = TextAnchor.UpperCenter;
@@ -3103,7 +3177,7 @@ public class GameHud : MonoBehaviour
 
     void RefreshTopBar()
     {
-        if (goldWoodText == null || roundTimeText == null) return;
+        if (goldText == null || roundTimeText == null) return;
 
         PlayerContext local = PlayerContext.Local;
         int gold = local != null && local.GoldWallet != null ? local.GoldWallet.Gold : 0;
@@ -3112,12 +3186,17 @@ public class GameHud : MonoBehaviour
         // 도움소 스킬(마나포션·선택위습제조 등)이 마나를 쓰는데 현재 양을 볼 곳이 없었다(사장님 10-02).
         int mana = local != null && local.ResourceWallet != null ? local.ResourceWallet.Get(ResourceType.Mana) : 0;
 
-        if (gold != lastGold || wood != lastWood || mana != lastMana)
+        int food = local != null && local.UnitUpgrades != null ? local.UnitUpgrades.TraitPoints : 0;   // 원작 고기(인구) 칸 = FOOD_USED = 특성 포인트
+        if (gold != lastGold || wood != lastWood || mana != lastMana || food != lastFood)
         {
             lastGold = gold;
             lastWood = wood;
             lastMana = mana;
-            goldWoodText.text = $"골드 {gold}   목재 {wood}   마나 {mana}";
+            lastFood = food;
+            goldText.text = gold.ToString();
+            woodText.text = wood.ToString();
+            foodText.text = food.ToString();
+            manaText.text = $"마나 {mana}";
         }
 
         RoundManager rm = RoundManagerRef;
@@ -3144,11 +3223,9 @@ public class GameHud : MonoBehaviour
             lastRound = round;
             lastTimeTenths = timeTenths;
             lastPreparing = preparing;
-            roundTimeText.text = rm == null
-                ? "라운드 -   남은시간 -"
-                : preparing
-                    ? $"라운드 {round}   준비 {timeTenths / 10f:F1}s"
-                    : $"라운드 {round}   남은시간 {timeTenths / 10f:F1}s";
+            // 원작 타이머 창: 제목(빨강) + 시간. 「현재레벨->N」(j 29588) · 라운드 사이 준비엔 「N라운드 준비」.
+            roundTimerTitle.text = rm == null ? "현재레벨->" : preparing ? $"{round}라운드 준비" : $"현재레벨->{round}";
+            roundTimeText.text = rm == null ? "-" : Clock(timeTenths / 10f);
         }
 
         RefreshExtraTimer(rm);
