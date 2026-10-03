@@ -12,3 +12,8 @@
     「소환 지속시간 10초」가 맞다면 에셋 `raiseOnKillChancePercent: 100`, `raiseOnKillLifetimeSeconds: 10`으로만 바꾸면 된다(TimedLife).
 - 좀비(h00H) 원작 uabi = A029,Avul — 판매·창고 능력 없음(우리 판매 보상 0으로만 반영, 유닛 UI 버튼 제한은 안 함).
 - 탐침: `gameshot … call:MoriaProbe.Setup wait:45 call:MoriaProbe.Report` (확률 100%로 시험 후 되돌림) — 평타 처치 19건 → 좀비 19기(모델 에밀리아) → 좀비×3 + 흔함_강재규 → 압살롬 조합 성공(좀비 19→16·강재규 1→0·압살롬 0→1).
+
+
+## 10-03 확정(PM)
+Nba3 = **소환 지속시간**(WC3 ANba 필드: Nba1 추가 피해 · Nba2 소환 수 · Nba3 소환 유닛 지속시간 — 스톡 블랙애로 Dark Minion 80초). 원작 = 화살로 죽은 적마다 100% 좀비 1기·10초.
+→ 에셋 `raiseOnKillChancePercent: 100` · `raiseOnKillLifetimeSeconds: 10`. 좀비×3 조합은 10초 안에 셋을 모아야 한다(원작 그대로).
