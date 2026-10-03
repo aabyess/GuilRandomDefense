@@ -150,7 +150,7 @@ public class PortraitStage : MonoBehaviour
         return false;
     }
 
-    static void Strip(GameObject root)
+    internal static void Strip(GameObject root)
     {
         // 뒤에서부터 — RequireComponent로 딸린 것은 보통 요구한 쪽보다 앞에 있다.
         Component[] components = root.GetComponentsInChildren<Component>(true);
@@ -168,7 +168,7 @@ public class PortraitStage : MonoBehaviour
                 child.gameObject.SetActive(false);
     }
 
-    static void SetLayerRecursively(GameObject root, int layer)
+    internal static void SetLayerRecursively(GameObject root, int layer)
     {
         foreach (Transform t in root.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = layer;
     }
