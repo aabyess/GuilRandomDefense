@@ -3581,6 +3581,11 @@ public class GameHud : MonoBehaviour
 
         if (teamPanelCollapsed)
         {
+            for (int i = 0; i < TeamSlotCount; i++)   // 접힌 동안에도 「바뀌었나」 기준을 맞춰 둔다(안 맞추면 매 프레임 다시 그림)
+            {
+                lastSlotHasContext[i] = slotHas[i]; lastSlotDead[i] = slotDead[i]; lastSlotEnemyCount[i] = slotEnemy[i];
+                lastSlotGold[i] = slotGold[i]; lastSlotFull[i] = slotFull[i]; lastSlotWood[i] = slotWood[i]; lastSlotGrace[i] = slotGrace[i];
+            }
             teamPanelText.text = teamPanelBuilder.ToString();
             return;   // 접힘: 제목 줄만(원작 멀티보드 접기)
         }
