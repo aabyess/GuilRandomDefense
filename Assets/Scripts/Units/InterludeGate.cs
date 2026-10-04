@@ -22,6 +22,10 @@ public class InterludeGate : MonoBehaviour
     // 규칙은 그대로 지켜진다(61d872a3 — 위습 하나를 세 포탈이 나눠 쓴다).
     [SerializeField] bool stayOpenOnceStarted = true;
 
+    // 🔴 2026-10-04 원작대로(PM 「follow-original」): 특수지급 세 자리(원작 Trig_Story_Tier5_*, war3map.j 13380~13430)의 조건은 「들어온 유닛이 e01A(초월위습)」뿐이다 —
+    //    《백수생활》 시간 잠금은 원작에 없다. 켜면 구간과 상관없이 늘 열린다(초월 위습이 생기는 스토리 10 클리어 뒤 바로 쓸 수 있다). 「이미 골랐다」 색 표시는 그대로.
+    [SerializeField] bool alwaysOpen = false;
+
     [Header("닫혔을 때 색 — MaterialPropertyBlock으로 덮어쓴다(배칭 안 깨짐)")]
     [SerializeField] Color closedColor = new Color(0.3f, 0.3f, 0.3f, 0.6f);
 
@@ -75,7 +79,7 @@ public class InterludeGate : MonoBehaviour
         nextCheckTime = Time.time + checkInterval;
 
         bool inInterlude = StoryManager.Instance != null && StoryManager.Instance.IsInterlude(interludeName);
-        interludeOpen = inInterlude || (stayOpenOnceStarted && interludeOpen);
+        interludeOpen = alwaysOpen || inInterlude || (stayOpenOnceStarted && interludeOpen);
         hasInterludeState = true;
 
         RefreshVisual();

@@ -3662,9 +3662,9 @@ public static class ClaudeCommands
             job.choicePicks.Add(unit);
         }
         if (picked.Count > 0) turn.Insert(2 * picked.Count, "@wait:12");
-        // target — 《백수생활》 선택 위습은 박은석 초월위습으로(특수 칸은 백수생활 5분에만 열린다 — 닫혀 있으면 선택 클릭이라 건너뛴다).
+        // target — 초월 위습(스토리 10 보상 1기, 원작 e01A)은 특수지급 세 자리 중 박은석 초월위습으로(10-04 원작화: 백수생활선택 위습·시간 잠금이 없어졌다).
         if (job.targetMode)
-            for (int i = myWisps.Count(w => (w.Data.wispName ?? "").Contains("백수생활 선택")); i > 0; i--) { turn.Add("?백수생활 선택"); turn.Add("@rc:Portal_박은석초월위습"); }
+            for (int i = myWisps.Count(w => (w.Data.wispName ?? "").Replace(" ", "") == "초월위습"); i > 0; i--) { turn.Add("?초월"); turn.Add("@rc:Portal_박은석초월위습"); }
 
         // 상점 — 라운드 2부터 **매 턴** 남는 골드를 쓴다(09-25 PM 지시 — 판 B는 R12에 골드 18,422를 안 쓰고 끝났다).
         //    등급 강화소 → 공격타입 강화소 → 도박소 순으로 골라, 골드가 실제로 줄어드는 칸을 몇 번씩 누른다(@shopspend).
