@@ -1,6 +1,6 @@
 #!/bin/bash
 cd /Users/sang/GitHub/GuilRandomDefense
-for n in 300 301 302 303 304 305 306 307 308 309; do
+for n in 310 311 312 313 314 315 316 317 318 319; do
   extra=""; if [ $((n % 2)) -eq 1 ]; then extra=" support pirate"; fi
   rm -f ClaudeBridge/outbox/g1_$n.txt
   echo "gameshot b$n 75 1600x900 rounds:60 autoloop keeppen sell aim:전설 bosschase mode:보통$extra" > ClaudeBridge/inbox/g1_$n.txt
