@@ -1,0 +1,192 @@
+<title>구랜디 조합 검색 시안</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* 레이아웃: 시안마다 실제 게임 화면(16:9) 위에 패널을 겹쳐 그리고, 아래에 장단점 두 칸 */
+  :root{
+    --bg:#15171c; --ink:#e9e6dc; --muted:#a7a397; --gold:#c9a24a; --gold2:#7a5f22;
+    --panel:#0d1424f2; --line:#2b3a5e; --chip:#0a1020; --sel:#1b2b52cc;
+    --g-common:#c8c8c8; --g-special:#e8c547; --g-rare:#5aa9ff; --g-legend:#ff8a3d; --g-hidden:#c77dff; --g-trans:#ff6fd8; --g-trf:#7fe0c4;
+    --ok:#6fd36f; --no:#7a7a7a; --card:#1c1f26; --cardline:#2a2e38; --note:#ffe36e; --notefg:#222;
+    --font:"Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font)}
+  .wrap{max-width:1240px;margin:0 auto;padding-inline:20px;padding-block:24px 48px}
+  h1{font-size:24px;margin:0 0 6px;text-wrap:balance}
+  .lead{margin:4px 0;color:var(--muted);font-size:14px;line-height:1.7;max-width:70ch}
+  .opt{margin-top:34px}
+  .opt h2{font-size:19px;margin:0 0 6px;text-wrap:balance}
+  .opt h2 span{display:inline-block;background:var(--gold);color:#1b1407;border-radius:6px;padding:1px 9px;margin-right:8px;font-size:15px}
+  .desc{color:var(--muted);font-size:14px;margin:0 0 12px;line-height:1.7;max-width:80ch}
+  .pros{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin-top:10px}
+  .pros div{flex:1 1 260px;min-width:0;background:var(--card);border:1px solid var(--cardline);border-radius:8px;padding:10px 12px;line-height:1.6}
+  .pros b{color:var(--gold)}
+  .frame{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;background:#000 url(game.jpg) center/cover no-repeat;border-radius:8px;overflow:hidden;
+         box-shadow:0 8px 30px #0008;border:1px solid #333;container-type:inline-size}
+  .dim{position:absolute;inset:0;background:#000a}
+  .wc3{position:absolute;background:var(--panel);border:2px solid var(--gold2);outline:1px solid #000;border-radius:6px;box-shadow:inset 0 0 0 1px #c9a24a33,0 6px 22px #000a}
+  .title{color:var(--gold);font-weight:700;letter-spacing:.04em}
+  .search{display:flex;align-items:center;gap:.5cqw;background:#050912;border:1px solid var(--line);border-radius:4px;padding:.45cqw .7cqw}
+  .caret{display:inline-block;width:1px;height:1.1em;background:var(--ink);animation:b 1s steps(1) infinite}
+  @keyframes b{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.caret{animation:none}}
+  .chips{display:flex;flex-wrap:wrap;gap:.35cqw}
+  .chip{border:1px solid var(--line);border-radius:3px;padding:.12cqw .5cqw;color:var(--muted);background:var(--chip);white-space:nowrap}
+  .chip.on{color:#111;background:var(--gold);border-color:var(--gold)}
+  .gs{color:var(--g-special)} .gr{color:var(--g-rare)} .gl{color:var(--g-legend)} .gh{color:var(--g-hidden)} .gc{color:var(--g-common)} .gt{color:var(--g-trans)}
+  .alias{color:var(--muted);font-weight:400}
+  .tab{position:absolute;right:0;writing-mode:vertical-rl;background:linear-gradient(#2a3a66,#18234a);color:var(--gold);
+       border:2px solid var(--gold2);border-right:none;border-radius:6px 0 0 6px;padding:.9cqw .45cqw;font-weight:700;letter-spacing:.15em}
+  .key{display:inline-block;border:1px solid #5a6a90;border-bottom-width:2px;border-radius:3px;padding:0 .3cqw;font-size:.85em;color:#cfd8ee;margin-top:.4cqw;writing-mode:horizontal-tb}
+  .note{position:absolute;background:var(--note);color:var(--notefg);font-size:1.05cqw;padding:.3cqw .6cqw;border-radius:4px;font-weight:700;box-shadow:0 2px 8px #0008}
+  /* 초상 */
+  .pt{display:inline-block;flex:none;border-radius:4px;border:2px solid;background:#1d2538 center/cover no-repeat;vertical-align:middle}
+  .pt.miss{filter:grayscale(1) brightness(.55)}
+  .b-s{border-color:var(--g-special)} .b-r{border-color:var(--g-rare)} .b-l{border-color:var(--g-legend)} .b-h{border-color:var(--g-hidden)} .b-t{border-color:var(--g-trans)} .b-c{border-color:var(--g-common)}
+  .ok{color:var(--ok)} .no{color:var(--no)}
+  /* A: 서랍 결과 줄 */
+  .arow{display:flex;gap:.6cqw;align-items:flex-start;padding:.5cqw .3cqw;border-bottom:1px solid #1e2a47}
+  .arow.sel{background:var(--sel);outline:1px solid var(--gold2)}
+  .arow .pt.big{width:3.6cqw;height:3.6cqw}
+  .arow .body{min-width:0;flex:1}
+  .arow .res{font-weight:700}
+  .mats{display:flex;gap:.35cqw;align-items:center;margin-top:.3cqw;flex-wrap:wrap}
+  .mats .pt{width:2.2cqw;height:2.2cqw}
+  .mats .lab{font-size:.85cqw;color:var(--muted)}
+  .sec{color:var(--gold);font-size:.95cqw;margin:.55cqw 0 .1cqw}
+  /* B: 큰 창 */
+  .lrow{display:flex;gap:.5cqw;align-items:center;padding:.35cqw .3cqw;border-bottom:1px solid #1e2a47}
+  .lrow.sel{background:var(--sel);outline:1px solid var(--gold2)}
+  .lrow .pt{width:2.6cqw;height:2.6cqw}
+  .tag{display:inline-block;font-size:.8em;border-radius:3px;padding:0 .35cqw;background:#24324f;color:#cfd8ee;margin-left:.2cqw}
+  .mat{display:inline-flex;flex-direction:column;align-items:center;gap:.25cqw}
+  .mat .pt{width:5.4cqw;height:5.4cqw}
+  .mat small{font-size:.85cqw}
+  .uses{display:flex;gap:1cqw;flex-wrap:wrap}
+  .use{display:flex;align-items:center;gap:.4cqw;background:#121a2e;border:1px solid var(--line);border-radius:4px;padding:.25cqw .5cqw .25cqw .25cqw}
+  .use .pt{width:2.6cqw;height:2.6cqw}
+  footer{color:var(--muted);font-size:13px;margin-top:30px;line-height:1.7;max-width:80ch}
+  @media (max-width:700px){.note{display:none}}
+</style>
+
+<div class="wrap">
+  <h1>조합표 검색 — 스킨 초상 넣은 시안</h1>
+  <p class="lead">친구 피드백: 「원랜디는 스킨이 곧 캐릭터라 조합표에서 눈으로 찾는데, 구랜디는 친구 이름이라 하나씩 다 읽어야 한다」. 그래서 결과마다 <b>스킨 초상</b>을 붙이고, <b>보이는 캐릭터 이름</b>(쵸파·마히토·빅맘)으로도 찾게 했습니다.</p>
+  <p class="lead">초상은 게임 안 실제 모델을 대기 자세로 찍은 것입니다. 캐릭터 이름은 스킨 원본에서 뽑은 표(242종 중 221종 확인)를 씁니다. 예시 검색어는 「강재규」입니다. <span class="ok">밝은 초상</span>은 이미 가진 재료, <span class="no">회색 초상</span>은 없는 재료입니다.</p>
+
+  <!-- ───────── A ───────── -->
+  <section class="opt">
+    <h2><span>A</span>오른쪽 서랍 + 초상</h2>
+    <p class="desc">오른쪽 끝 탭이나 F5로 엽니다. 싸우면서도 켜 둘 수 있는 크기입니다. 결과를 누르면 카메라가 조합판의 그 식으로 이동합니다.</p>
+    <div class="frame">
+      <div class="wc3" style="right:2.2cqw;top:4cqw;width:30cqw;height:45cqw;padding:1cqw;font-size:1.05cqw;display:flex;flex-direction:column;gap:.6cqw">
+        <div class="title" style="font-size:1.3cqw">조합 검색</div>
+        <div class="search"><span>🔍</span><span>강재규</span><span class="caret"></span></div>
+        <div class="chips"><span class="chip on">전체</span><span class="chip">특별</span><span class="chip">희귀</span><span class="chip">전설</span><span class="chip">히든</span><span class="chip">초월</span><span class="chip">지금 가능</span></div>
+        <div style="color:var(--muted);font-size:.9cqw">만드는 법 1 · 재료로 쓰임 3 · 같은 이름 3</div>
+        <div style="overflow:hidden;flex:1;min-height:0">
+          <div class="arow sel">
+            <span class="pt big b-r" style="background-image:url(p/희귀함_강재규.png)"></span>
+            <div class="body"><div class="res gr">희귀함 강재규 <span class="alias">· 마히토</span></div>
+              <div class="mats"><span class="lab">←</span>
+                <span class="pt b-s" style="background-image:url(p/특별함_정승준.png)"></span>
+                <span class="pt b-s" style="background-image:url(p/특별함_최준우.png)"></span>
+                <span class="pt b-s miss" style="background-image:url(p/특별함_배성령.png)"></span>
+                <span class="lab">정승준·최준우·<span class="no">배성령</span></span></div></div>
+          </div>
+          <div class="sec">▼ 강재규가 재료인 식</div>
+          <div class="arow">
+            <span class="pt big b-l" style="background-image:url(p/전설적인_신지우.png)"></span>
+            <div class="body"><div class="res gl">전설 신지우 <span class="alias">· 빅맘</span></div>
+              <div class="mats"><span class="lab">←</span>
+                <span class="pt b-r miss" style="background-image:url(p/희귀함_강재규.png)"></span>
+                <span class="pt b-r" style="background-image:url(p/희귀함_박은석.png)"></span>
+                <span class="pt b-r miss" style="background-image:url(p/희귀함_이상혁.png)"></span>
+                <span class="lab"><span class="no">강재규</span>·박은석·<span class="no">이상혁</span></span></div></div>
+          </div>
+          <div class="arow">
+            <span class="pt big b-h" style="background-image:url(p/히든_김영학.png)"></span>
+            <div class="body"><div class="res gh">히든 김영학 <span class="alias">· 이이다 텐야</span></div>
+              <div class="mats"><span class="lab">←</span>
+                <span class="pt b-r miss" style="background-image:url(p/희귀함_강재규.png)"></span>
+                <span class="pt b-r miss" style="background-image:url(p/희귀함_황준석.png)"></span>
+                <span class="pt b-r miss" style="background-image:url(p/희귀함_이은엽.png)"></span>
+                <span class="lab">강재규·황준석·이은엽</span></div></div>
+          </div>
+          <div class="arow">
+            <span class="pt big b-t" style="background-image:url(p/초월_강재규_AP.png)"></span>
+            <div class="body"><div class="res gt">초월 강재규 AP <span class="alias">· 토니토니 쵸파</span></div>
+              <div class="mats"><span class="lab">← 전설 강재규 · 초월위습 박은석 …</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="tab" style="top:4cqw;font-size:1.1cqw">조합 검색<span class="key">F5</span></div>
+      <div class="note" style="right:33.5cqw;top:6cqw">① 친구 이름 · 캐릭터 이름 · 채팅 코드 · 초성</div>
+      <div class="note" style="right:33.5cqw;top:19cqw">② 초상으로 바로 알아봄 · 회색 = 없는 재료</div>
+      <div class="note" style="right:33.5cqw;top:33cqw">③ 누르면 조합판으로 날아감</div>
+    </div>
+    <div class="pros">
+      <div><b>좋은 점</b><br>싸우면서도 켜 둘 수 있음 · 레인을 거의 안 가림 · 초상만 훑어도 찾음 · 「지금 가능」으로 당장 할 수 있는 식만</div>
+      <div><b>아쉬운 점</b><br>초상이 작다(재료 초상 손톱만 함) · 재료가 5개인 식은 줄이 길어짐</div>
+    </div>
+  </section>
+
+  <!-- ───────── B ───────── -->
+  <section class="opt">
+    <h2><span>B</span>가운데 큰 창 (워크3 퀘스트 창 식) + 초상</h2>
+    <p class="desc">탭이나 F5로 엽니다. 왼쪽 목록에서 고르면 오른쪽에 큰 초상으로 「만드는 법」과 「이 유닛이 재료인 식」이 나옵니다. 라운드 사이 정비 시간에 공부하기 좋은 모양입니다.</p>
+    <div class="frame">
+      <div class="dim"></div>
+      <div class="wc3" style="left:9cqw;top:3cqw;width:82cqw;height:46cqw;padding:1.1cqw;font-size:1.1cqw;display:flex;flex-direction:column;gap:.8cqw">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="title" style="font-size:1.45cqw">조합표 검색</div><div style="color:var(--muted)">ESC 닫기 ✕</div>
+        </div>
+        <div style="display:flex;gap:.8cqw;align-items:center;flex-wrap:wrap">
+          <div class="search" style="flex:1 1 20cqw"><span>🔍</span><span>강재규</span><span class="caret"></span></div>
+          <div class="chips"><span class="chip on">전체 등급 ▾</span><span class="chip">지금 가능</span><span class="chip on">재료로 쓰임 포함</span></div>
+        </div>
+        <div style="display:flex;gap:1.2cqw;flex:1;min-height:0">
+          <div style="width:25cqw;border-right:1px solid var(--line);padding-right:.8cqw;overflow:hidden">
+            <div class="lrow sel"><span class="pt b-r" style="background-image:url(p/희귀함_강재규.png)"></span><span><b class="gr">희귀함 강재규</b><br><span class="alias" style="font-size:.85cqw">마히토 · 뒤틀린사랑</span></span></div>
+            <div class="lrow"><span class="pt b-c" style="background-image:url(p/흔함_강재규.png)"></span><span><b class="gc">흔함 강재규</b><br><span class="alias" style="font-size:.85cqw">쵸파</span></span></div>
+            <div class="lrow"><span class="pt b-t" style="background-image:url(p/변화됨_강재규.png)"></span><span><b style="color:var(--g-trf)">변화됨 강재규</b><br><span class="alias" style="font-size:.85cqw">마히토</span></span></div>
+            <div class="lrow"><span class="pt b-t" style="background-image:url(p/초월_강재규_AP.png)"></span><span><b class="gt">초월 강재규 AP</b><br><span class="alias" style="font-size:.85cqw">토니토니 쵸파</span></span></div>
+            <div class="lrow"><span class="pt b-l" style="background-image:url(p/전설적인_신지우.png)"></span><span><b class="gl">전설 신지우</b> <span class="tag">재료</span><br><span class="alias" style="font-size:.85cqw">빅맘</span></span></div>
+            <div class="lrow"><span class="pt b-h" style="background-image:url(p/히든_김영학.png)"></span><span><b class="gh">히든 김영학</b> <span class="tag">재료</span><br><span class="alias" style="font-size:.85cqw">이이다 텐야</span></span></div>
+          </div>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1cqw">
+            <div style="display:flex;align-items:center;gap:1cqw">
+              <span class="pt b-r" style="width:9cqw;height:9cqw;background-image:url(p/희귀함_강재규.png)"></span>
+              <div><div class="gr" style="font-size:1.7cqw;font-weight:700">강재규 <span style="font-size:1.1cqw">· 희귀함</span></div>
+                   <div style="color:var(--muted);margin-top:.3cqw">스킨 <b style="color:var(--ink)">마히토</b> (주술회전) · 채팅 코드 <b style="color:var(--ink)">뒤틀린사랑</b></div>
+                   <div style="color:var(--muted);margin-top:.2cqw">조합판 3번째 줄 · 비용 없음</div></div>
+            </div>
+            <div class="title">만드는 법</div>
+            <div style="display:flex;gap:1cqw;align-items:center;flex-wrap:wrap">
+              <span class="mat"><span class="pt b-s" style="background-image:url(p/특별함_정승준.png)"></span><small>정승준 · 류마</small><small class="ok">✔ 있음</small></span>
+              <span class="mat"><span class="pt b-s" style="background-image:url(p/특별함_최준우.png)"></span><small>최준우 · 베르고</small><small class="ok">✔ 있음</small></span>
+              <span class="mat"><span class="pt b-s miss" style="background-image:url(p/특별함_배성령.png)"></span><small>배성령 · 사이타마</small><small class="no">✘ 없음</small></span>
+              <span style="font-size:2.4cqw;color:var(--gold)">→</span>
+              <span class="mat"><span class="pt b-r" style="background-image:url(p/희귀함_강재규.png)"></span><small class="gr">강재규</small><small>&nbsp;</small></span>
+            </div>
+            <div class="title">강재규가 재료인 식</div>
+            <div class="uses">
+              <span class="use"><span class="pt b-l" style="background-image:url(p/전설적인_신지우.png)"></span><span class="gl">전설 신지우 · 빅맘</span></span>
+              <span class="use"><span class="pt b-h" style="background-image:url(p/히든_김영학.png)"></span><span class="gh">히든 김영학 · 이이다</span></span>
+              <span class="use"><span class="pt b-t" style="background-image:url(p/초월_강재규_AP.png)"></span><span class="gt">초월 강재규 AP</span></span>
+            </div>
+            <div style="margin-top:auto;display:flex;gap:.6cqw"><span class="chip on" style="padding:.35cqw 1cqw">조합판에서 보기 ↗</span><span class="chip" style="padding:.35cqw 1cqw">재료 어디서 나오나</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="tab" style="top:4cqw;font-size:1.1cqw">조합 검색<span class="key">F5</span></div>
+    </div>
+    <div class="pros">
+      <div><b>좋은 점</b><br>초상이 커서 한눈에 알아봄 · 스킨 캐릭터·채팅 코드·조합판 위치까지 한 화면 · 처음 하는 친구가 공부하기 좋음</div>
+      <div><b>아쉬운 점</b><br>열면 화면을 거의 다 가림 → 라운드 사이용 · 싸우는 중엔 닫아야 함</div>
+    </div>
+  </section>
+
+  <footer>배경은 실제 게임 화면(0.3.5)입니다. 섞는 것도 됩니다. 예를 들어 평소엔 A의 서랍으로 쓰고, 결과를 두 번 누르면 B의 큰 창으로 상세를 보는 식입니다.</footer>
+</div>
