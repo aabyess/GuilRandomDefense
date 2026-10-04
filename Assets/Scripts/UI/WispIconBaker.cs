@@ -11,6 +11,9 @@ public static class WispIconBaker
     static Sprite cached;
     static bool failed;
 
+    /// <summary>이미 구워 둔 위습 아이콘(없으면 null) — 조합 검색의 「아무 유닛」 재료 그림용.</summary>
+    public static Sprite Cached => cached;
+
     public static Sprite Get(Wisp source)
     {
         if (cached != null) return cached;
