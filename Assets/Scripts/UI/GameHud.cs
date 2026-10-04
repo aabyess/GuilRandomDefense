@@ -324,6 +324,7 @@ public class GameHud : MonoBehaviour
     RectTransform itemInventoryParent;     // 콘솔의 아이템 칸(BuildUI)
     readonly GameObject[] itemInventoryRowRoots = new GameObject[MaxItemInventorySlots];
     readonly TMP_Text[] itemInventoryRowTexts = new TMP_Text[MaxItemInventorySlots];
+    readonly Image[] itemInventoryRowIcons = new Image[MaxItemInventorySlots];   // 아이템 아이콘(ItemData.icon) — 있으면 칸을 그림으로 채우고 글자는 오른쪽 아래 개수만
     readonly ItemData[] itemInventoryRowItems = new ItemData[MaxItemInventorySlots];
     readonly Dictionary<ItemData, int> itemInventoryCounts = new Dictionary<ItemData, int>();
     readonly List<ItemData> itemInventoryKeys = new List<ItemData>();
@@ -1481,6 +1482,17 @@ public class GameHud : MonoBehaviour
             AddPanelBorder(row, BorderInnerColor, 1f);
             itemInventoryRowRoots[i] = row.gameObject;
 
+            // 아이콘은 글자보다 먼저 만든다(글자가 위에 그려져야 개수가 보인다). 아이콘이 없는 아이템은 꺼 두고 글자만 쓴다.
+            RectTransform iconRect = new GameObject($"ItemInventoryRowIcon{i}", typeof(RectTransform), typeof(Image)).GetComponent<RectTransform>();
+            iconRect.SetParent(row, false);
+            iconRect.anchorMin = Vector2.zero; iconRect.anchorMax = Vector2.one;
+            iconRect.offsetMin = new Vector2(2f, 2f); iconRect.offsetMax = new Vector2(-2f, -2f);
+            Image iconImage = iconRect.GetComponent<Image>();
+            iconImage.preserveAspect = true;
+            iconImage.raycastTarget = false;
+            iconImage.enabled = false;
+            itemInventoryRowIcons[i] = iconImage;
+
             TMP_Text label = CreateLabel(row, $"ItemInventoryRowText{i}", "");
             label.enableAutoSizing = true;
             label.fontSizeMin = 11f;
@@ -1614,13 +1626,21 @@ public class GameHud : MonoBehaviour
             {
                 itemInventoryRowItems[i] = null;
                 itemInventoryRowTexts[i].text = "";
+                itemInventoryRowIcons[i].enabled = false;
                 continue;
             }
 
             ItemData item = itemInventoryKeys[i];
             itemInventoryRowItems[i] = item;
             bool usable = item.useKind == ItemUseKind.WispBundle || item.useKind == ItemUseKind.AncientShip;
-            itemInventoryRowTexts[i].text = $"{item.itemName} x{itemInventoryCounts[item]}" + (usable ? " [사용]" : "");
+            // 아이콘이 있으면 그림이 칸을 채우고 개수만 오른쪽 아래(이름은 호버 툴팁) — 없으면 예전처럼 「이름 xN」 글자.
+            bool hasIcon = item.icon != null;
+            itemInventoryRowIcons[i].enabled = hasIcon;
+            if (hasIcon) itemInventoryRowIcons[i].sprite = item.icon;
+            itemInventoryRowTexts[i].alignment = hasIcon ? TextAlignmentOptions.BottomRight : TextAlignmentOptions.Center;
+            itemInventoryRowTexts[i].text = hasIcon
+                ? $"<b>x{itemInventoryCounts[item]}</b>" + (usable ? "▶" : "")
+                : $"{item.itemName} x{itemInventoryCounts[item]}" + (usable ? " [사용]" : "");
             if (usable) itemInventoryRowRoots[i].GetComponent<Image>().color = Color.Lerp(new Color(ButtonColor.r, ButtonColor.g, ButtonColor.b, 0.82f), new Color(0.9f, 0.75f, 0.3f, 0.82f), 0.35f);
         }
 
