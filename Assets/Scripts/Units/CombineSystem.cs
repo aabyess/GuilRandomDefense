@@ -34,6 +34,9 @@ public class CombineSystem : MonoBehaviour
         : resourceWallet != null ? resourceWallet : PlayerContext.Local != null ? PlayerContext.Local.ResourceWallet : null;
 
     /// <summary>MP: 조합식을 네트워크로 가리킬 번호(이 조합기의 recipes 목록 순서 — 호스트·클라 같은 씬).</summary>
+    /// <summary>조합식 전체(읽기 전용) — 조합 검색 서랍이 훑는다.</summary>
+    public IReadOnlyList<CombineRecipe> Recipes => recipes;
+
     public int IndexOfRecipe(CombineRecipe recipe) => recipes != null ? recipes.IndexOf(recipe) : -1;
     public CombineRecipe RecipeAt(int index) => recipes != null && index >= 0 && index < recipes.Count ? recipes[index] : null;
 

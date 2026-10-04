@@ -359,6 +359,17 @@ public class RtsCameraController : MonoBehaviour
         transform.position = position;
     }
 
+    /// <summary>높이를 바꿔(targetHeight와 같이) 그 지면 좌표가 화면 중앙에 오게 옮긴다 — 조합 검색이 조합판의 식으로 날아갈 때. MoveTo만 쓰면 높이가 안 따라가 엉뚱한 곳을 본다.</summary>
+    public void FlyTo(Vector3 groundPosition, float height)
+    {
+        height = Mathf.Clamp(height, minHeight, maxHeight);
+        targetHeight = height;
+        Vector3 position = transform.position;
+        position.y = height;
+        transform.position = position;
+        MoveTo(groundPosition);
+    }
+
     /// <summary>현재 높이·기울기에서 카메라 위치와 화면 중앙 지면 사이의 수평 거리.</summary>
     Vector3 FocusOffset()
     {

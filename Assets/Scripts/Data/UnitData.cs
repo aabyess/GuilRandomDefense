@@ -285,6 +285,8 @@ public class UnitData : ScriptableObject
 {
     public string unitName;
     public UnitGrade grade;
+    // 조합 검색(F5)용 — 스킨 캐릭터 이름들(쉼표로 여러 개, 앞뒤 공백 무시. 예 "쵸파,토니토니쵸파"). 읽기만 한다. 구현담당1이 235종 데이터를 채운다.
+    public string skinAlias;
 
     // 화면에 보이는 이름(2026-09-29 유저 피드백 「‘성대결절’이 아니라 ‘박예원 성대결절’이어야」).
     // 특별함 이상 164종은 unitName에 별명만 있고 사람 이름은 에셋 이름(「특별함_박예원」)에만 있다.
