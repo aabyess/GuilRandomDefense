@@ -2609,6 +2609,13 @@ public static class ClaudeCommands
                 Vector3 sp = cam.WorldToScreenPoint(aim);
                 (float bandBottom, float bandTop) = PointerBand();
                 bool visible = sp.z > 0f && sp.x > 20f && sp.x < cam.pixelWidth - 20f && sp.y > bandBottom * cam.pixelHeight + 10f && sp.y < bandTop * cam.pixelHeight - 10f;
+                // 🔴 트리거(포탈) 우클릭은 HUD 띠 판정이 어긋나도(10-04 g1_292·293: 화면 가운데 (800,460)인데 14번 전부 「안 들어옴」) 화면 가운데 영역이면 누른다.
+                //    띠(BottomBar/TopBar GameObject.Find) 값이 이상해져도 위습→포탈이 끊기지 않게 하는 안전판 — 띠 값은 아래 건너뜀 로그에 같이 찍힌다.
+                bool bandOff = false;
+                if (!visible && !left && target.TryGetComponent(out Collider trigCol) && trigCol.isTrigger
+                    && sp.z > 0f && sp.x > cam.pixelWidth * 0.15f && sp.x < cam.pixelWidth * 0.85f && sp.y > cam.pixelHeight * 0.15f && sp.y < cam.pixelHeight * 0.85f)
+                { visible = true; bandOff = true; }
+                if (bandOff) job.report += $"   ⚠️ {label}: HUD 띠 판정은 밖이지만 화면 가운데라 누름 — {PointerBandInfo(bandBottom, bandTop, cam)}\n";
                 // 🔴 좌클릭(건물·유닛 고르기)은 **화면 가운데 영역**에 들 때만 누른다(09-25 판 D). 강화소·도박소를 y≈188에서 눌렀는데
                 //    그 자리가 하단 HUD 위라 선택이 안 됐다 — 띠 판정(bandBottom)은 통과했으니 판정 기준이 화면 배율과 어긋난 것이다.
                 //    원인을 쫓기보다 가운데로 카메라를 옮겨 누르는 쪽이 사람 조작과도 같다.
@@ -2622,7 +2629,7 @@ public static class ClaudeCommands
                     //    그래도 안 들어오면 **이 동작만** 건너뛴다. 긴 판 하나가 우클릭 하나 때문에 통째로 죽었다(09-25 i1_16, R3).
                     if (job.pointerX <= -3f)
                     {
-                        job.report += $"   ⚠️ {label}: 카메라를 세 번 옮겨도 {target.name}이 화면 안(HUD 사이)에 안 들어옴 — 화면 좌표 {sp} · 이 동작을 건너뜀\n";
+                        job.report += $"   ⚠️ {label}: 카메라를 세 번 옮겨도 {target.name}이 화면 안(HUD 사이)에 안 들어옴 — 화면 좌표 {sp} · {PointerBandInfo(bandBottom, bandTop, cam)} · 이 동작을 건너뜀\n";
                         job.pointerX = 0f;
                         return true;
                     }
@@ -4058,6 +4065,23 @@ public static class ClaudeCommands
             else top = Mathf.Min(corners[0].y, corners[2].y) / Screen.height;
         }
         return (bottom, top);
+    }
+
+    // 띠 판정이 어긋났을 때 원인을 볼 수 있게 — 띠 값·화면 크기·BottomBar/TopBar 실제 rect.
+    static string PointerBandInfo(float bandBottom, float bandTop, Camera cam)
+    {
+        string Rect(string objName)
+        {
+            GameObject[] all = Resources.FindObjectsOfTypeAll<GameObject>().Where(g => g.scene.IsValid() && g.name == objName).ToArray();
+            if (all.Length == 0) return $"{objName} 없음";
+            return string.Join("/", all.Select(g =>
+            {
+                if (!(g.transform is RectTransform rt)) return $"{objName}(RectTransform 아님)";
+                var c = new Vector3[4]; rt.GetWorldCorners(c);
+                return $"{objName}{(g.activeInHierarchy ? "" : "(꺼짐)")}[y {c[0].y:F0}~{c[2].y:F0} x {c[0].x:F0}~{c[2].x:F0}]";
+            }));
+        }
+        return $"띠 {bandBottom:F2}~{bandTop:F2} · Screen {Screen.width}x{Screen.height} · cam {cam.pixelWidth}x{cam.pixelHeight} · {Rect("BottomBar")} · {Rect("TopBar")}";
     }
 
     static void Advance(GameShotJob job, string stage)
