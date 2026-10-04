@@ -253,6 +253,45 @@ public class SupportShop : MonoBehaviour, ILaneShop
         return cooldownUntil.TryGetValue(skill, out float until) ? until : 0f;
     }
 
+    // ── MP 복제(10-04, 도박소 GamblingProgress.ApplyReplicated와 같은 방식) ──
+    // 쿨다운·재고 충전은 호스트 시계(Time.time)라 클라 화면은 「남은 초」로 받아 자기 Time.time으로 되짚는다. 클라가 로컬 시계로 따로 도는 경로는 없다
+    // (사용은 호스트 RPC라 클라 로컬 cooldownUntil·stocks는 이 복제로만 바뀐다). 싱글·호스트는 부르지 않는다.
+    public const int MaxReplicatedSkills = 12;
+
+    /// <summary>복제 보내는 쪽(호스트): 이 칸 스킬의 남은 쿨다운 초.</summary>
+    public float ReplicatedCooldownRemaining(int index) =>
+        index >= 0 && index < skills.Count && skills[index] != null ? GetCooldownRemaining(skills[index]) : 0f;
+
+    /// <summary>복제 보내는 쪽: 재고(재고 없는 스킬은 −1)와 다음 충전까지 남은 초.</summary>
+    public void ReplicatedStock(int index, out int stock, out float secondsToNext)
+    {
+        stock = -1; secondsToNext = 0f;
+        if (index < 0 || index >= skills.Count || skills[index] == null || skills[index].stockMax <= 0) return;
+        stock = Mathf.Min(short.MaxValue, Stock(skills[index]));
+        secondsToNext = SecondsToNextStock(skills[index]);
+    }
+
+    /// <summary>MP 클라: 호스트가 복제한 값을 받아 적는다. stock&lt;0이면 재고 없는 스킬.</summary>
+    public void ApplyReplicated(int index, float cooldownRemaining, int stock, float secondsToNext)
+    {
+        if (index < 0 || index >= skills.Count || skills[index] == null) return;
+        SupportSkillData skill = skills[index];
+        cooldownUntil[skill] = cooldownRemaining > 0f ? Time.time + cooldownRemaining : 0f;
+        if (stock >= 0 && skill.stockMax > 0)
+        {
+            float elapsed = skill.stockRegenSeconds > 0f && stock < skill.stockMax ? skill.stockRegenSeconds - secondsToNext : 0f;
+            stocks[skill] = new StockState { count = stock, lastCharge = Time.time - Mathf.Max(0f, elapsed) };
+        }
+    }
+
+    /// <summary>이 플레이어의 도움소(씬에 플레이어마다 하나).</summary>
+    public static SupportShop For(int playerId)
+    {
+        foreach (SupportShop shop in FindObjectsByType<SupportShop>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (shop.TryGetComponent(out OwnedByPlayer o) && o.OwnerId == playerId) return shop;
+        return null;
+    }
+
     // 툴팁에 "재사용까지 N초" 표시용.
     public float GetCooldownRemaining(SupportSkillData skill)
     {
