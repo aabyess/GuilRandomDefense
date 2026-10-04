@@ -2242,15 +2242,18 @@ public static class MapGenerator
                 nameHolder.transform.position = new Vector3(x, labelY, nameZ);
                 nameHolder.AddComponent<WorldLabel>().Configure(title, Color.white, fontSize);
 
-                GameObject lockHolder = new GameObject($"{SpecialDisplayPrefix}잠김_{slot.label}");
-                lockHolder.transform.SetParent(parent, false);
-                lockHolder.transform.position = new Vector3(x, labelY, nameZ - lineHeight * 1.1f);
-                lockHolder.AddComponent<WorldLabel>().Configure("백수생활 때 열림", new Color(1f, 0.51f, 0f, 1f), fontSize);
+                // 10-04 원작대로: 시간 잠금을 없앴다(InterludeGate.alwaysOpen) → 「백수생활 때 열림」 대신 늘 보이는 안내. 원작 조건은 「초월위습 유닛이 들어옴」뿐이다.
+                GameObject hintHolder = new GameObject($"{SpecialDisplayPrefix}안내_{slot.label}");
+                hintHolder.transform.SetParent(parent, false);
+                hintHolder.transform.position = new Vector3(x, labelY, nameZ - lineHeight * 1.1f);
+                hintHolder.AddComponent<WorldLabel>().Configure("초월 위습을 넣는 곳", new Color(1f, 0.51f, 0f, 1f), fontSize);
 
                 foreach (InterludeGate gate in slotGates)
                 {
-                    gate.SetLockedOnly(new[] { lockHolder });
+                    gate.SetLockedOnly(new GameObject[0]);   // 잠김 전용 글자 없음 — 안내는 늘 켜져 있다
                     SerializedObject so = new SerializedObject(gate);
+                    so.FindProperty("alwaysOpen").boolValue = true;
+                    so.FindProperty("choiceTrackedWispData").objectReferenceValue = AssetDatabase.LoadAssetAtPath<WispData>(InterludeChoiceWispPath);
                     so.FindProperty("closedColor").colorValue = LockedPortalColor;
                     so.ApplyModifiedProperties();
                     EditorUtility.SetDirty(gate);
@@ -4934,7 +4937,8 @@ public static class MapGenerator
     // 《백수생활》 선택 위습. 실제 등급 의미는 없고 WispCell 라우팅 키로만 쓴다 —
     // 픽업 위습들이 안 쓰는 값이라야 엉뚱한 칸으로 흘러가지 않는다.
     const UnitGrade InterludeChoiceGrade = UnitGrade.Transcendent;
-    const string InterludeChoiceWispPath = "Assets/Data/Wisps/Wisp_백수생활선택.asset";
+    // 10-04 원작화: 세 자리를 쓰는 위습은 스토리 10 보상의 초월위습(원작 e01A) — 「이미 골랐다」 색도 이 위습 기준. (옛 Wisp_백수생활선택은 안 쓴다)
+    const string InterludeChoiceWispPath = "Assets/Data/Wisps/Wisp_초월위습.asset";
 
     static void GateToInterlude(GameObject portal)
     {
