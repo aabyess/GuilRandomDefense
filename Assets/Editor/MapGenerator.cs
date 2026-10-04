@@ -1422,6 +1422,7 @@ public static class MapGenerator
     const float SlotSize = 30.7f;       // 자리표시 큐브(전시 격자 기준) 3.0 × 10.233
     const float SlotHeight = 34.79f;    // 3.4 × 10.233
     const float PedestalDiameter = 6f;         // 받침_불멸 지름·받침_초월 모서리 지름(Blender 규격) — ⚠️ 모델 실측값, Scale 안 탄다
+    const bool CombineBoardPedestals = false;   // 조합판 칸 받침(받침_조합) 깔기 — 사장님 10-04 「티 안 나게」로 끔
     const float CombinePedestalWidth = 5.98f;  // 받침_조합 한 변 — 위와 같은 이유로 그대로
 
     /// <summary>
@@ -2289,9 +2290,14 @@ public static class MapGenerator
         // 칸마다 낮은 돌 받침(5.98×5.98, 2026-09-13 Blender). 지름은 인형 기준(PedestalWidth,
         // 전시 받침과 같은 규칙 — PM 지시 2026-09-23)이되, 칸 폭이 그보다 좁으면 칸에 맞춘다
         // (옆 칸 받침과 맞닿지 않게).
-        float lift = StructureDresser.PlacePedestal(parent, "받침_조합", $"{prefix}_{label}_받침",
-                                                    ground, 0f, Mathf.Min(PedestalWidth, SlotW) / CombinePedestalWidth);
-        ground.y += lift;
+        // 🔴 사장님 10-04: 「조합판 유닛들 밑에 회색 작은 초록색 — 티 안 나게 투명하게」 → 조합판 칸 받침은 안 깐다(인형이 섬 바닥에 선다).
+        //    다시 깔려면 CombineBoardPedestals를 true로(전시 받침_초월·받침_불멸은 따로라 영향 없음).
+        if (CombineBoardPedestals)
+        {
+            float lift = StructureDresser.PlacePedestal(parent, "받침_조합", $"{prefix}_{label}_받침",
+                                                        ground, 0f, Mathf.Min(PedestalWidth, SlotW) / CombinePedestalWidth);
+            ground.y += lift;
+        }
 
         // 인형 키는 레인 유닛과 같은 값으로 고정한다(사장님 지시 2026-09-23, DisplayFigureHeight).
         // ⚠️ 예전 값(RecipeRowHeight×0.9×RecipeScale)은 "칸이 좁아지면 인형도 같이 줄여 겹침을
