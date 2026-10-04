@@ -39,12 +39,12 @@ public class RecipeSearchDrawer : MonoBehaviour
     // ── 모양
     const float PanelWidth = 560f, PanelHeight = 800f, TabWidth = 46f, TabHeight = 210f, TabOffsetY = 150f;
     const float OpenX = -(TabWidth + 6f), ClosedX = 40f;
-    const float RowHeight = 118f, CellWidth = 62f;
+    const float RowHeight = 148f, CellWidth = 62f;
     const int MaxRows = 40;
     const int MaxCells = 8;
-    static readonly Color PanelFill = new Color(0.05f, 0.08f, 0.16f, 0.95f);
+    static readonly Color PanelFill = new Color(0.04f, 0.07f, 0.18f, 1f);
     static readonly Color Gold = new Color(0.79f, 0.64f, 0.29f, 1f);
-    static readonly Color RowFill = new Color(0.09f, 0.14f, 0.26f, 0.92f);
+    static readonly Color RowFill = new Color(0.04f, 0.07f, 0.16f, 0.96f);
     static readonly Color Muted = new Color(0.65f, 0.64f, 0.59f, 1f);
     static readonly Color Have = new Color(0.44f, 0.83f, 0.44f, 1f);
     static readonly Color Lack = new Color(0.55f, 0.55f, 0.58f, 1f);
@@ -65,6 +65,7 @@ public class RecipeSearchDrawer : MonoBehaviour
         public GameObject root;
         public Image portrait;
         public TMP_Text title, sub;
+        public GameObject stone, gold, gradeBorder;
         public Cell[] cells;
         public CombineRecipe recipe;
         public List<Ingredient> ingredients = new List<Ingredient>();
@@ -138,6 +139,44 @@ public class RecipeSearchDrawer : MonoBehaviour
         panel.gameObject.SetActive(false);
     }
 
+    // 워크3(원랜디) 결: 돌/금 테두리 9-슬라이스(dialog_panel_9s) + 남색 단추(button_navy_9s) + 어두운 홈(console_cell_frame_9s). 각진 테두리가 우선이다.
+    // 그림이 없으면(Resources/UI/Skin) 색 칠한 칸으로 물러난다(UiSkin.Apply). multiplier = Image.pixelsPerUnitMultiplier — 클수록 9-슬라이스 테두리가 얇아진다.
+    static void Skin(Image image, string name, Color fallback, float multiplier = 1f)
+    {
+        if (UiSkin.Apply(image, name, fallback))
+        {
+            image.pixelsPerUnitMultiplier = multiplier;
+            image.raycastTarget = true;
+        }
+    }
+
+    // 둥글지 않은 얇은 사각 테두리(위·아래·왼·오른 4장). 켜고 끌 수 있게 묶음 오브젝트를 돌려준다.
+    static GameObject AddSquareBorder(RectTransform parent, string name, Color color, float thickness)
+    {
+        RectTransform holder = NewRect(name, parent);
+        Stretch(holder, 0f, 0f, 0f, 0f);
+        void Edge(string edge, Vector2 min, Vector2 max, Vector2 offMin, Vector2 offMax)
+        {
+            RectTransform r = NewRect(edge, holder);
+            r.anchorMin = min; r.anchorMax = max; r.offsetMin = offMin; r.offsetMax = offMax;
+            Image image = r.gameObject.AddComponent<Image>();
+            image.color = color;
+            image.raycastTarget = false;
+        }
+        Edge("T", new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, -thickness), Vector2.zero);
+        Edge("B", Vector2.zero, new Vector2(1f, 0f), Vector2.zero, new Vector2(0f, thickness));
+        Edge("L", Vector2.zero, new Vector2(0f, 1f), Vector2.zero, new Vector2(thickness, 0f));
+        Edge("R", new Vector2(1f, 0f), Vector2.one, new Vector2(-thickness, 0f), Vector2.zero);
+        return holder.gameObject;
+    }
+
+    static void SetBorderColor(GameObject border, Color color)
+    {
+        foreach (Image image in border.GetComponentsInChildren<Image>(true)) image.color = color;
+    }
+
+    const float Inset = 26f;   // 돌 테두리(16px) 안쪽 여백
+
     void BuildTab()
     {
         tab = NewRect("Tab", transform);
@@ -146,17 +185,19 @@ public class RecipeSearchDrawer : MonoBehaviour
         tab.sizeDelta = new Vector2(TabWidth, TabHeight);
         tab.anchoredPosition = new Vector2(0f, TabOffsetY);
         Image bg = tab.gameObject.AddComponent<Image>();
-        bg.sprite = UiSkin.RoundFill(8f);
-        bg.type = Image.Type.Sliced;
-        bg.color = new Color(0.12f, 0.19f, 0.36f, 0.97f);
-        AddRing(tab, 8f, 2f);
-        tab.gameObject.AddComponent<Button>().onClick.AddListener(Toggle);
+        Skin(bg, "dialog_panel_9s", new Color(0.12f, 0.19f, 0.36f, 0.97f), 1.7f);
+        Button button = tab.gameObject.AddComponent<Button>();
+        ColorBlock colors = button.colors;
+        colors.highlightedColor = new Color(1.2f, 1.2f, 1.35f, 1f);
+        colors.pressedColor = new Color(0.8f, 0.8f, 0.9f, 1f);
+        button.colors = colors;
+        button.onClick.AddListener(Toggle);
 
         TMP_Text label = MakeText(tab, "Label", "조\n합\n검\n색", 19f, Gold, TextAlignmentOptions.Center, FontStyles.Bold);
-        Stretch(label.rectTransform, 2f, 36f, 2f, 6f);
+        Stretch(label.rectTransform, 4f, 14f, 4f, 36f);
         label.lineSpacing = -6f;
         TMP_Text key = MakeText(tab, "Key", "F5", 15f, new Color(0.81f, 0.85f, 0.93f, 1f), TextAlignmentOptions.Center, FontStyles.Bold);
-        Place(key.rectTransform, 0f, TabHeight - 30f, TabWidth, 24f);
+        Place(key.rectTransform, 0f, TabHeight - 36f, TabWidth, 24f);
     }
 
     void BuildPanel()
@@ -167,15 +208,12 @@ public class RecipeSearchDrawer : MonoBehaviour
         panel.sizeDelta = new Vector2(PanelWidth, PanelHeight);
         panel.anchoredPosition = new Vector2(ClosedX, 0f);
         Image bg = panel.gameObject.AddComponent<Image>();
-        bg.sprite = UiSkin.RoundFill(10f);
-        bg.type = Image.Type.Sliced;
-        bg.color = PanelFill;
-        AddRing(panel, 10f, 2f);
+        Skin(bg, "dialog_panel_9s", PanelFill);   // 난이도 대화상자와 같은 돌/금 테두리 + 남색 안쪽
 
-        TMP_Text title = MakeText(panel, "Title", "조합 검색", 24f, Gold, TextAlignmentOptions.Left, FontStyles.Bold);
-        Place(title.rectTransform, 16f, 10f, 300f, 34f);
+        TMP_Text title = MakeText(panel, "Title", "조합 검색", 25f, new Color(1f, 0.84f, 0.25f, 1f), TextAlignmentOptions.Left, FontStyles.Bold);
+        Place(title.rectTransform, Inset, 18f, 300f, 34f);
         TMP_Text close = MakeText(panel, "Close", "✕", 22f, Muted, TextAlignmentOptions.Center, FontStyles.Bold);
-        Place(close.rectTransform, PanelWidth - 50f, 10f, 36f, 34f);
+        Place(close.rectTransform, PanelWidth - Inset - 36f, 18f, 36f, 34f);
         close.raycastTarget = true;
         close.gameObject.AddComponent<Button>().onClick.AddListener(() => SetOpen(false));
 
@@ -183,7 +221,7 @@ public class RecipeSearchDrawer : MonoBehaviour
         BuildChips();
 
         infoText = MakeText(panel, "Info", "", 15f, Muted, TextAlignmentOptions.Left, FontStyles.Normal);
-        Place(infoText.rectTransform, 16f, 140f, PanelWidth - 32f, 24f);
+        Place(infoText.rectTransform, Inset, 150f, PanelWidth - Inset * 2f, 24f);
 
         BuildScroll();
     }
@@ -191,15 +229,12 @@ public class RecipeSearchDrawer : MonoBehaviour
     void BuildInput()
     {
         RectTransform inputRect = NewRect("Input", panel);
-        Place(inputRect, 14f, 52f, PanelWidth - 28f, 44f);
+        Place(inputRect, Inset, 58f, PanelWidth - Inset * 2f, 44f);
         Image bg = inputRect.gameObject.AddComponent<Image>();
-        bg.sprite = UiSkin.RoundFill(6f);
-        bg.type = Image.Type.Sliced;
-        bg.color = new Color(0.02f, 0.035f, 0.09f, 1f);
-        AddRing(inputRect, 6f, 1.5f, new Color(0.17f, 0.23f, 0.37f, 1f));
+        Skin(bg, "console_cell_frame_9s", new Color(0.02f, 0.035f, 0.09f, 1f), 3f);   // 어두운 홈
 
         RectTransform viewport = NewRect("Text Area", inputRect);
-        Stretch(viewport, 12f, 4f, 12f, 4f);
+        Stretch(viewport, 14f, 5f, 14f, 5f);
         viewport.gameObject.AddComponent<RectMask2D>();
         TMP_Text text = MakeText(viewport, "Text", "", 21f, new Color(0.91f, 0.90f, 0.86f, 1f), TextAlignmentOptions.Left, FontStyles.Normal);
         Stretch(text.rectTransform, 0f, 0f, 0f, 0f);
@@ -222,27 +257,35 @@ public class RecipeSearchDrawer : MonoBehaviour
         inputRect.gameObject.SetActive(true);
     }
 
+    GameObject[] chipBorders;
+
     void BuildChips()
     {
         int count = GradeChipLabels.Length + 1;
         chipImages = new Image[count];
-        float x = 14f;
+        chipBorders = new GameObject[count];
+        float x = Inset;
         for (int i = 0; i < count; i++)
         {
             bool isNow = i == GradeChipLabels.Length;
             string label = isNow ? "지금 가능" : GradeChipLabels[i];
-            float width = isNow ? 92f : 58f;
+            float width = isNow ? 88f : 55f;
             RectTransform chip = NewRect("Chip" + i, panel);
-            Place(chip, x, 104f, width, 30f);
+            Place(chip, x, 110f, width, 30f);
             Image bg = chip.gameObject.AddComponent<Image>();
-            bg.sprite = UiSkin.RoundFill(5f);
-            bg.type = Image.Type.Sliced;
+            Skin(bg, "button_navy_9s", ChipOff);
             chipImages[i] = bg;
+            Button button = chip.gameObject.AddComponent<Button>();
+            ColorBlock colors = button.colors;
+            colors.highlightedColor = new Color(1.25f, 1.25f, 1.45f, 1f);
+            colors.pressedColor = new Color(0.8f, 0.8f, 0.9f, 1f);
+            button.colors = colors;
+            int captured = i;
+            button.onClick.AddListener(() => OnChip(captured));
             TMP_Text text = MakeText(chip, "Label", label, 16f, Color.white, TextAlignmentOptions.Center, FontStyles.Bold);
             Stretch(text.rectTransform, 0f, 0f, 0f, 0f);
-            int captured = i;
-            chip.gameObject.AddComponent<Button>().onClick.AddListener(() => OnChip(captured));
-            x += width + 5f;
+            chipBorders[i] = AddSquareBorder(chip, "GoldBorder", Gold, 2f);   // 누른 칩 = 금빛 테두리
+            x += width + 4f;
         }
         RefreshChips();
     }
@@ -250,13 +293,14 @@ public class RecipeSearchDrawer : MonoBehaviour
     void BuildScroll()
     {
         RectTransform scrollRect = NewRect("Scroll", panel);
-        Place(scrollRect, 10f, 170f, PanelWidth - 20f, PanelHeight - 182f);
+        Place(scrollRect, Inset - 4f, 180f, PanelWidth - Inset * 2f + 8f, PanelHeight - 180f - Inset);
         ScrollRect scroll = scrollRect.gameObject.AddComponent<ScrollRect>();
         Image hit = scrollRect.gameObject.AddComponent<Image>();
         hit.color = new Color(0f, 0f, 0f, 0.001f);
 
+        const float barWidth = 14f;
         RectTransform viewport = NewRect("Viewport", scrollRect);
-        Stretch(viewport, 0f, 0f, 0f, 0f);
+        Stretch(viewport, 0f, 0f, barWidth + 4f, 0f);
         viewport.gameObject.AddComponent<RectMask2D>();
 
         content = NewRect("Content", viewport);
@@ -267,17 +311,41 @@ public class RecipeSearchDrawer : MonoBehaviour
         content.sizeDelta = Vector2.zero;
         VerticalLayoutGroup layout = content.gameObject.AddComponent<VerticalLayoutGroup>();
         layout.spacing = 5f;
-        layout.padding = new RectOffset(4, 4, 4, 8);
+        layout.padding = new RectOffset(2, 2, 2, 8);
         layout.childControlWidth = true;
         layout.childControlHeight = true;
         layout.childForceExpandWidth = true;
         layout.childForceExpandHeight = false;
         content.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
+        // 스크롤바: 어두운 홈 + 금색 손잡이.
+        RectTransform barRect = NewRect("Scrollbar", scrollRect);
+        barRect.anchorMin = new Vector2(1f, 0f);
+        barRect.anchorMax = Vector2.one;
+        barRect.pivot = new Vector2(1f, 0.5f);
+        barRect.offsetMin = new Vector2(-barWidth, 0f);
+        barRect.offsetMax = Vector2.zero;
+        Image track = barRect.gameObject.AddComponent<Image>();
+        track.color = new Color(0.02f, 0.025f, 0.05f, 1f);
+        AddSquareBorder(barRect, "Edge", new Color(0.30f, 0.31f, 0.34f, 1f), 1f);
+        RectTransform sliding = NewRect("Sliding Area", barRect);
+        Stretch(sliding, 2f, 2f, 2f, 2f);
+        RectTransform handleRect = NewRect("Handle", sliding);
+        handleRect.sizeDelta = Vector2.zero;
+        Image handle = handleRect.gameObject.AddComponent<Image>();
+        handle.color = new Color(0.78f, 0.62f, 0.30f, 1f);
+        Scrollbar bar = barRect.gameObject.AddComponent<Scrollbar>();
+        bar.handleRect = handleRect;
+        bar.targetGraphic = handle;
+        bar.direction = Scrollbar.Direction.BottomToTop;
+
         scroll.viewport = viewport;
         scroll.content = content;
         scroll.horizontal = false;
         scroll.vertical = true;
+        scroll.verticalScrollbar = bar;
+        scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+        scroll.verticalScrollbarSpacing = 2f;
         scroll.movementType = ScrollRect.MovementType.Clamped;
         scroll.scrollSensitivity = 40f;
 
@@ -293,21 +361,30 @@ public class RecipeSearchDrawer : MonoBehaviour
         row.root = root.gameObject;
         root.gameObject.AddComponent<LayoutElement>().preferredHeight = RowHeight;
         Image bg = root.gameObject.AddComponent<Image>();
-        bg.sprite = UiSkin.RoundFill(7f);
-        bg.type = Image.Type.Sliced;
-        bg.color = RowFill;
+        bg.color = RowFill;   // 각진 어두운 남색 판
+        row.stone = AddSquareBorder(root, "StoneBorder", new Color(0.30f, 0.31f, 0.35f, 1f), 2f);
+        row.gold = AddSquareBorder(root, "GoldBorder", Gold, 2f);   // 고른 줄 = 금빛 외곽
+        row.gold.SetActive(false);
         root.gameObject.AddComponent<Button>().onClick.AddListener(() => OnRowClicked(row));
 
-        RectTransform portrait = NewRect("Portrait", root);
-        Place(portrait, 8f, 8f, 52f, 52f);
+        // 결과 초상: 워크3 명령 칸처럼 테두리 있는 정사각(console_cell_frame) + 등급색 얇은 안쪽 테두리.
+        RectTransform frame = NewRect("PortraitFrame", root);
+        Place(frame, 8f, 8f, 60f, 60f);
+        Image frameImage = frame.gameObject.AddComponent<Image>();
+        Skin(frameImage, "console_cell_frame_9s", new Color(0.02f, 0.02f, 0.03f, 1f), 3f);
+        frameImage.raycastTarget = false;
+        RectTransform portrait = NewRect("Portrait", frame);
+        Stretch(portrait, 8f, 8f, 8f, 8f);
         row.portrait = portrait.gameObject.AddComponent<Image>();
         row.portrait.raycastTarget = false;
+        row.gradeBorder = AddSquareBorder(portrait, "GradeBorder", Color.white, 2f);
 
         row.title = MakeText(root, "Title", "", 20f, Color.white, TextAlignmentOptions.Left, FontStyles.Bold);
-        Place(row.title.rectTransform, 68f, 6f, 440f, 28f);
+        Place(row.title.rectTransform, 76f, 8f, 440f, 28f);
         row.title.overflowMode = TextOverflowModes.Ellipsis;
+        row.title.richText = true;
         row.sub = MakeText(root, "Sub", "", 14f, Muted, TextAlignmentOptions.Left, FontStyles.Normal);
-        Place(row.sub.rectTransform, 68f, 34f, 440f, 22f);
+        Place(row.sub.rectTransform, 76f, 38f, 440f, 22f);
         row.sub.overflowMode = TextOverflowModes.Ellipsis;
 
         row.cells = new Cell[MaxCells];
@@ -315,14 +392,19 @@ public class RecipeSearchDrawer : MonoBehaviour
         {
             var cell = new Cell();
             RectTransform cellRoot = NewRect("Cell" + i, root);
-            Place(cellRoot, 6f + i * CellWidth, 62f, CellWidth - 2f, 52f + 8f);
+            Place(cellRoot, 6f + i * CellWidth, 72f, CellWidth - 2f, 72f);
             cell.root = cellRoot.gameObject;
-            RectTransform cp = NewRect("Portrait", cellRoot);
-            Place(cp, 8f, 0f, 40f, 40f);
+            RectTransform cf = NewRect("Frame", cellRoot);
+            Place(cf, 6f, 0f, 48f, 48f);
+            Image cfImage = cf.gameObject.AddComponent<Image>();
+            Skin(cfImage, "console_cell_frame_9s", new Color(0.02f, 0.02f, 0.03f, 1f), 3.4f);
+            cfImage.raycastTarget = false;
+            RectTransform cp = NewRect("Portrait", cf);
+            Stretch(cp, 6f, 6f, 6f, 6f);
             cell.portrait = cp.gameObject.AddComponent<Image>();
             cell.portrait.raycastTarget = false;
             cell.label = MakeText(cellRoot, "Label", "", 11f, new Color(0.85f, 0.86f, 0.9f, 1f), TextAlignmentOptions.Top, FontStyles.Normal);
-            Place(cell.label.rectTransform, -2f, 41f, CellWidth + 2f, 28f);
+            Place(cell.label.rectTransform, -2f, 49f, CellWidth + 2f, 28f);
             cell.label.lineSpacing = -10f;
             cell.mark = MakeText(cellRoot, "Mark", "", 15f, Have, TextAlignmentOptions.TopRight, FontStyles.Bold);
             Place(cell.mark.rectTransform, 22f, -3f, 40f, 20f);
@@ -427,15 +509,19 @@ public class RecipeSearchDrawer : MonoBehaviour
         for (int i = 0; i < chipImages.Length; i++)
         {
             bool on = i == GradeChipLabels.Length ? nowOnly : i == gradeChip;
-            chipImages[i].color = on ? Gold : ChipOff;
+            if (chipBorders != null && chipBorders[i] != null) chipBorders[i].SetActive(on);
             TMP_Text label = chipImages[i].GetComponentInChildren<TMP_Text>();
-            if (label != null) label.color = on ? new Color(0.07f, 0.06f, 0.03f, 1f) : Color.white;
+            if (label != null) label.color = on ? new Color(1f, 0.84f, 0.25f, 1f) : Color.white;
         }
     }
+
+    CombineRecipe selectedRecipe;
 
     void OnRowClicked(Row row)
     {
         if (row.recipe == null) return;
+        selectedRecipe = row.recipe;
+        foreach (Row other in rows) if (other.gold != null) other.gold.SetActive(other.root.activeSelf && other.recipe == selectedRecipe);
         if (!RecipeLocator.Locate(row.recipe))
             PlayerNotification.Show(LocalPlayer.LocalPlayerId, "조합판에서 그 식의 인형을 찾지 못했습니다.", 4f);
     }
@@ -547,8 +633,12 @@ public class RecipeSearchDrawer : MonoBehaviour
         row.root.SetActive(true);
         row.root.transform.SetSiblingIndex(sibling);
         UnitData result = recipe.result;
-        row.title.text = $"{result.grade.KoreanName()} {result.DisplayName}";
-        row.title.color = result.grade.Color();
+        string gradeHex = ColorUtility.ToHtmlStringRGB(result.grade.Color());
+        string alias = FirstAlias(result);
+        row.title.text = $"<color=#{gradeHex}>{result.grade.KoreanName()} {result.DisplayName}</color>" + (alias != null ? $" <color=#9a9aa2><size=85%>· {alias}</size></color>" : "");
+        row.title.color = Color.white;
+        SetBorderColor(row.gradeBorder, result.grade.Color());
+        row.gold.SetActive(recipe == selectedRecipe);
         row.sub.text = CostLine(recipe);
 
         row.ingredients.Clear();
@@ -579,6 +669,18 @@ public class RecipeSearchDrawer : MonoBehaviour
                 : ing.kind == IngredientKind.SpecificItem && ing.item != null ? ing.item.itemName
                 : $"아무 {ing.grade.KoreanName()}";
         }
+    }
+
+    // 스킨 캐릭터 이름(UnitData.skinAlias, 쉼표 구분)의 첫 번째 — 결과 이름 옆 회색으로.
+    static string FirstAlias(UnitData unit)
+    {
+        if (unit == null || string.IsNullOrEmpty(unit.skinAlias)) return null;
+        foreach (string part in unit.skinAlias.Split(','))
+        {
+            string trimmed = part.Trim();
+            if (trimmed.Length > 0) return trimmed;
+        }
+        return null;
     }
 
     static string CostLine(CombineRecipe recipe)

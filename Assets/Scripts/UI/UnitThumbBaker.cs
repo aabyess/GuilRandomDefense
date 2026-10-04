@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>
 /// 유닛별 64px 초상 썸네일(조합 검색 서랍용). 처음 필요할 때 대기열에 넣고 **프레임당 몇 개씩** 구워 캐시한다 — 한 프레임에 몰아 굽지 않는다(프레임 튐 방지).
 /// WispIconBaker와 같은 방식: 모델을 복제해 먼 곳(y −13000, 레이어 31)에 세우고 카메라로 한 장 찍은 뒤 바로 지운다.
-/// 구도는 PortraitStage와 같은 결 — 서 있는 모습(높이/폭 ≥ 1.35)이면 머리~허리(위쪽 절반), 아니면 전신. (PortraitStage는 선택 초상이 쓰는 한 개짜리 무대라 따로 둔다.)
+/// 구도: 사람형(Humanoid)이면 Head·Hips 뼈로 머리 위(torso×0.45)~엉덩이 위(torso×0.15), 아니면 서 있는 모습(높이/폭 ≥ 1.35)은 렌더러 경계 위쪽 절반, 그 밖엔 전신. 자세는 Idle 0.3초. (PortraitStage는 선택 초상이 쓰는 한 개짜리 무대라 따로 둔다.)
 /// 순수 겉모습이다: 복제의 게임 스크립트·콜라이더·NavMeshAgent는 PortraitStage.Strip이 떼고, 꺼진 부모 아래서 만들어 Awake가 안 돈다.
 /// </summary>
 public static class UnitThumbBaker
@@ -81,10 +81,16 @@ public static class UnitThumbBaker
             clone.transform.localPosition = Vector3.zero;
             clone.transform.localRotation = Quaternion.identity;
             stage.SetActive(true);
+            Transform head = null, hips = null;
             foreach (Animator animator in clone.GetComponentsInChildren<Animator>())
             {
                 animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-                animator.Update(0.05f);   // Idle 자세를 한 번 잡는다(T자로 안 나오게)
+                animator.Update(0.3f);   // 대기(Idle) 자세를 0.3초 진행해 잡는다(T자로 안 나오게)
+                if (head == null && animator.isHuman)
+                {
+                    head = animator.GetBoneTransform(HumanBodyBones.Head);
+                    hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+                }
                 animator.enabled = false;
             }
 
@@ -98,7 +104,16 @@ public static class UnitThumbBaker
             bool standing = b.size.y / Mathf.Max(horizontal, 0.001f) >= StandingAspect;
             Vector3 center = b.center;
             float half = Mathf.Max(b.size.x, b.size.y, b.size.z) * 0.5f;
-            if (standing)
+            float torso = head != null && hips != null ? head.position.y - hips.position.y : 0f;
+            if (torso > 0.01f)
+            {
+                // 사람형(Humanoid): 머리·엉덩이 뼈로 잡는다 — 머리 위 torso×0.45 ~ 엉덩이 위 torso×0.15. 칼·지팡이·망토가 경계 상자를 부풀려도 안 속는다(PM 시안 v2 방식).
+                float top = head.position.y + torso * 0.45f;
+                float bottom = hips.position.y + torso * 0.15f;
+                center = new Vector3(head.position.x, (top + bottom) * 0.5f, head.position.z);
+                half = (top - bottom) * 0.5f * 1.05f / 1.12f;   // 아래 ×1.12 여백과 합쳐 5% 여유
+            }
+            else if (standing)
             {
                 float height = b.size.y * BustFraction;
                 center = new Vector3(b.center.x, b.max.y - height * 0.5f, b.center.z);
