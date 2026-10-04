@@ -100,6 +100,10 @@ public class ItemData : ScriptableObject
     public ItemUseKind useKind;
     // I011 위습꾸러미: 독립 굴림 목록 — chance(0~1)로 wisp, 아니면 elseWisp. 원작 1/2 안흔함|랜덤 · 1/3 특별함|랜덤 · 1/6 희귀함|흔함선택.
     public List<ItemUseWispRoll> useWispRolls = new List<ItemUseWispRoll>();
+
+    // ⚠️ 맨 뒤에 추가(2026-10-04, 사장님 「아이템도 원랜디 이미지가 있을 텐데 — 글로만 넣으니 안 예쁘다」) — 원작 아이템 아이콘(iico).
+    //    ItemIconLinker(에디터)가 Assets/Art/Items/<코드>_<이름>.png를 코드로 찾아 채운다. 비어 있으면 HUD가 지금처럼 글자만 그린다.
+    public Sprite icon;
 }
 
 public enum ItemUseKind
