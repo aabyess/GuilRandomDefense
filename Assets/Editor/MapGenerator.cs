@@ -602,7 +602,7 @@ public static class MapGenerator
         return false;
     }
 
-    static void PlaceNatureProp(Transform parent, NatureAsset pick, Vector2 at, float height, float yaw)
+    static void PlaceNatureProp(Transform parent, NatureAsset pick, Vector2 at, float height, float yaw, float groundY = MapLayout.IslandTop)
     {
         GameObject prop = (GameObject)PrefabUtility.InstantiatePrefab(pick.asset, parent);
         float scale = height / pick.height;
@@ -610,7 +610,7 @@ public static class MapGenerator
         // FBX 루트가 가진 회전·크기(축 변환)를 지우지 않고 그 위에 곱한다. 대입하면 옆으로 눕는다.
         prop.transform.localScale = pick.asset.transform.localScale * scale;
         prop.transform.rotation = Quaternion.Euler(0f, yaw, 0f) * pick.asset.transform.localRotation;
-        prop.transform.position = new Vector3(at.x, MapLayout.IslandTop - pick.minY * scale, at.y);
+        prop.transform.position = new Vector3(at.x, groundY - pick.minY * scale, at.y);
 
         foreach (Collider collider in prop.GetComponentsInChildren<Collider>(true))
             Object.DestroyImmediate(collider);
@@ -811,6 +811,239 @@ public static class MapGenerator
         BuildWall(parent, "레인간_가로벽",
             new Vector3((overallMinX + overallMaxX) * 0.5f, MapLayout.IslandTop + WallHeight * 0.5f, hWallZ),
             new Vector3(overallMaxX - overallMinX, WallHeight, hGap + InterLaneWallMargin));
+
+        BuildInterLaneHills(parent);   // 겉모습: 콜라이더 없는 솟은 대지(위 설명)
+    }
+
+    // ──────────────────────────────────────────────────────────── 레인 사이 언덕 (2026-10-04)
+    //
+    // 사장님 「도박소 줄 아래 넓은 아이보리 띠 — 디자인이 구림, 언덕처럼 원랜디처럼 대지 느낌으로」.
+    // 그 띠는 레인 사이 십자 벽 둘(BuildInterLaneWalls)에 돌담 조각(DressWall)을 230~338 폭으로 늘려 붙인 것이었다.
+    // 🔴 막는 상자(콜라이더)·NavMesh는 **그대로**다 — 겉모습만 바꾼다. 상자는 렌더러 없이 콜라이더만 남고,
+    //    그 자리에 콜라이더 없는 「솟은 대지」 메시를 얹는다: 윗면 잔디(레인과 같은 재질) · 가장자리 흙 경사 · 바다까지 내려가는 바위 밑단 ·
+    //    윗면에 낮은 소품(풀·덤불·바위·어린나무)을 듬성듬성. 높이는 레인 윗면에서 HillRise(IslandShores 둔덕 RidgeHeight와 같은 3.2 — 유닛 키 48의 1/15,
+    //    레인을 보는 카메라 시야를 안 막는다). 소품도 키 낮은 것만(HillPropMaxHeight).
+    // - 경사는 레인 윗면과 같은 높이(IslandTop)에서 시작해 HillSlopeRun 안쪽에서 윗면에 닿는다 — 레인 가장자리와 틈·턱 없이 이어진다.
+    // - 십자 교차점: 가로 언덕 윗면을 0.05 낮춰 같은 높이 겹침(z-fight)을 피한다(세로 윗면이 이긴다). 경사는 윗면 아래라 가려진다.
+    // - 메시는 Assets/Art/MapMeshes/에 에셋으로 저장한다(씬이 참조). 다시 지어도 같은 파일을 덮는다.
+    // - 소품·언덕 묶음은 NavMeshModifier.ignoreFromBuild — 콜라이더가 없지만 혹시 모를 구움 포함도 막는다.
+    const float HillRise = 3.2f;
+    const float HillSlopeRun = 16f;
+    const float HillPropMaxHeight = 14f;
+    const float HillPropCell = 48f;
+    const float HillPropKeep = 0.5f;
+    const string HillContainerName = "레인간_언덕";
+    const string HillMeshFolder = "Assets/Art/MapMeshes";
+
+    static string BuildInterLaneHills(Transform parent)
+    {
+        // 낡은 겉모습(돌담 조각·옛 언덕)을 먼저 지운다 — 다시 불러도 안전하다.
+        for (int i = parent.childCount - 1; i >= 0; i--)
+        {
+            Transform child = parent.GetChild(i);
+            if (child.name == HillContainerName || (child.name.StartsWith("레인간") && child.name.EndsWith("_모양")))
+                Object.DestroyImmediate(child.gameObject);
+        }
+
+        if (!AssetDatabase.IsValidFolder(HillMeshFolder)) AssetDatabase.CreateFolder("Assets/Art", "MapMeshes");
+
+        GameObject container = new GameObject(HillContainerName);
+        container.transform.SetParent(parent, false);
+        container.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
+
+        List<NatureAsset> propAssets = LoadHillProps();
+        int hills = 0, props = 0;
+        float lower = 0f;   // 두 번째(가로) 언덕 윗면을 낮춰 십자에서 겹침을 피한다
+        foreach (MapLayout.Island footprint in InterLaneWallFootprints())
+        {
+            float minX = footprint.center.x - footprint.size.x * 0.5f + InterLaneWallMargin * 0.5f;
+            float maxX = footprint.center.x + footprint.size.x * 0.5f - InterLaneWallMargin * 0.5f;
+            float minZ = footprint.center.y - footprint.size.y * 0.5f + InterLaneWallMargin * 0.5f;
+            float maxZ = footprint.center.y + footprint.size.y * 0.5f - InterLaneWallMargin * 0.5f;
+            Mesh mesh = SaveHillMesh(footprint.name, BuildHillMesh(minX, maxX, minZ, maxZ, lower));
+
+            GameObject hill = new GameObject(footprint.name + "_언덕", typeof(MeshFilter), typeof(MeshRenderer));
+            hill.transform.SetParent(container.transform, false);
+            hill.GetComponent<MeshFilter>().sharedMesh = mesh;
+            float sizeX = maxX - minX, sizeZ = maxZ - minZ;
+            hill.GetComponent<MeshRenderer>().sharedMaterials = new[]
+            {
+                HillMaterial("lane", sizeX, sizeZ),   // 윗면 — 레인과 같은 잔디
+                HillMaterial("dirt", sizeX, sizeZ),   // 가장자리 경사
+                HillMaterial("rock", sizeX, sizeZ),   // 바다까지 내려가는 밑단
+            };
+            GameObjectUtility.SetStaticEditorFlags(hill, StaticEditorFlags.BatchingStatic);
+            hills++;
+
+            props += ScatterHillProps(container.transform, footprint.name, minX, maxX, minZ, maxZ, lower, propAssets);
+            lower += 0.05f;
+        }
+        return $"레인 사이 언덕: {hills}개 · 소품 {props}개";
+    }
+
+    static Material HillMaterial(string key, float sizeX, float sizeZ)
+    {
+        Surface surface = Surfaces[key];
+        int tilesX = Mathf.Max(1, Mathf.RoundToInt(sizeX * TilesPerUnit(surface)));
+        int tilesZ = Mathf.Max(1, Mathf.RoundToInt(sizeZ * TilesPerUnit(surface)));
+        return GetOrCreateTiledMaterial(key, surface, tilesX, tilesZ);
+    }
+
+    // 메시: 서브메시 0 윗면 · 1 경사 4장 · 2 바다까지 내려가는 밑단 4장. 앞면(시계 방향)이 바깥을 보게 면마다 법선으로 확인해 뒤집는다.
+    static Mesh BuildHillMesh(float minX, float maxX, float minZ, float maxZ, float lower)
+    {
+        float baseY = MapLayout.IslandTop + 0.05f;       // 경사 시작 — 레인 윗면과 같은 높이에서 이어지되 같은 평면 깜빡임을 피한다
+        float topY = MapLayout.IslandTop + HillRise - lower;
+        float seaY = 0f;
+        float run = Mathf.Min(HillSlopeRun, (maxX - minX) * 0.4f, (maxZ - minZ) * 0.4f);
+
+        var vertices = new List<Vector3>();
+        var uvs = new List<Vector2>();
+        var tops = new List<int>();
+        var slopes = new List<int>();
+        var skirts = new List<int>();
+        float sizeX = maxX - minX, sizeZ = maxZ - minZ;
+
+        void Quad(List<int> triangles, Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 outward, bool skirt)
+        {
+            int start = vertices.Count;
+            Vector3[] quad = { a, b, c, d };
+            foreach (Vector3 v in quad)
+            {
+                vertices.Add(v);
+                // 윗면·경사는 위에서 본 평면 투영, 밑단은 (가로 위치, 높이) — 세로로 늘어나 줄무늬지지 않게.
+                uvs.Add(skirt ? new Vector2(((v.x - minX) / sizeX + (v.z - minZ) / sizeZ), v.y * 0.04f)
+                              : new Vector2((v.x - minX) / sizeX, (v.z - minZ) / sizeZ));
+            }
+            // 앞면은 시계 방향 — cross(b−a, c−a)가 바깥을 향하면 (a,b,c) 그대로, 아니면 뒤집는다.
+            bool keep = Vector3.Dot(Vector3.Cross(b - a, c - a), outward) > 0f;
+            if (keep) { triangles.AddRange(new[] { start, start + 1, start + 2, start, start + 2, start + 3 }); }
+            else { triangles.AddRange(new[] { start, start + 2, start + 1, start, start + 3, start + 2 }); }
+        }
+
+        // 바깥 사각형(경사 시작)·안쪽 사각형(윗면)의 모서리.
+        Vector3 o00 = new Vector3(minX, baseY, minZ), o10 = new Vector3(maxX, baseY, minZ);
+        Vector3 o11 = new Vector3(maxX, baseY, maxZ), o01 = new Vector3(minX, baseY, maxZ);
+        Vector3 i00 = new Vector3(minX + run, topY, minZ + run), i10 = new Vector3(maxX - run, topY, minZ + run);
+        Vector3 i11 = new Vector3(maxX - run, topY, maxZ - run), i01 = new Vector3(minX + run, topY, maxZ - run);
+
+        Quad(tops, i00, i01, i11, i10, Vector3.up, false);
+        float tilt = HillRise / run;
+        Quad(slopes, o00, i00, i10, o10, new Vector3(0f, 1f, -tilt), false);   // 남(−z)
+        Quad(slopes, o11, i11, i01, o01, new Vector3(0f, 1f, tilt), false);    // 북(+z)
+        Quad(slopes, o01, i01, i00, o00, new Vector3(-tilt, 1f, 0f), false);   // 서(−x)
+        Quad(slopes, o10, i10, i11, o11, new Vector3(tilt, 1f, 0f), false);    // 동(+x)
+
+        Vector3 s00 = new Vector3(minX, seaY, minZ), s10 = new Vector3(maxX, seaY, minZ);
+        Vector3 s11 = new Vector3(maxX, seaY, maxZ), s01 = new Vector3(minX, seaY, maxZ);
+        Quad(skirts, s00, o00, o10, s10, Vector3.back, true);
+        Quad(skirts, s11, o11, o01, s01, Vector3.forward, true);
+        Quad(skirts, s01, o01, o00, s00, Vector3.left, true);
+        Quad(skirts, s10, o10, o11, s11, Vector3.right, true);
+
+        Mesh mesh = new Mesh { name = "InterLaneHill" };
+        mesh.SetVertices(vertices);
+        mesh.SetUVs(0, uvs);
+        mesh.subMeshCount = 3;
+        mesh.SetTriangles(tops, 0);
+        mesh.SetTriangles(slopes, 1);
+        mesh.SetTriangles(skirts, 2);
+        mesh.RecalculateNormals();
+        mesh.RecalculateTangents();
+        mesh.RecalculateBounds();
+        return mesh;
+    }
+
+    static Mesh SaveHillMesh(string footprintName, Mesh fresh)
+    {
+        string path = $"{HillMeshFolder}/{footprintName}_언덕.asset";
+        Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+        if (existing == null)
+        {
+            AssetDatabase.CreateAsset(fresh, path);
+            return fresh;
+        }
+        existing.Clear();
+        EditorUtility.CopySerialized(fresh, existing);
+        Object.DestroyImmediate(fresh);
+        EditorUtility.SetDirty(existing);
+        return existing;
+    }
+
+    static readonly string[] HillPropFiles =
+    {
+        "Grass/풀_01", "Grass/풀_02", "Grass/풀_03", "Grass/덤불_01", "Grass/덤불_02",
+        "Rocks/바위_01", "Rocks/바위_02", "Rocks/바위_03", "Rocks/둥근강돌_02", "Rocks/이끼바위_01", "Rocks/이끼바위_02", "Rocks/자갈무리_01",
+        "Trees/어린나무_01", "Trees/그루터기_01", "Trees/쓰러진통나무_01",
+    };
+
+    static List<NatureAsset> LoadHillProps()
+    {
+        var result = new List<NatureAsset>();
+        foreach (NatureProp prop in NatureProps)
+        {
+            if (System.Array.IndexOf(HillPropFiles, prop.file) < 0) continue;
+            GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(NatureFolder + prop.file + ".fbx");
+            if (asset == null || !TryMeasureFigure(asset, out Bounds bounds) || bounds.size.y < 0.001f) continue;
+            float reachX = Mathf.Max(Mathf.Abs(bounds.min.x), Mathf.Abs(bounds.max.x));
+            float reachZ = Mathf.Max(Mathf.Abs(bounds.min.z), Mathf.Abs(bounds.max.z));
+            result.Add(new NatureAsset
+            {
+                asset = asset, prop = prop, height = bounds.size.y, minY = bounds.min.y,
+                radiusPerHeight = Mathf.Sqrt(reachX * reachX + reachZ * reachZ) / bounds.size.y,
+            });
+        }
+        return result;
+    }
+
+    // 윗면 안쪽(경사 안쪽 여유를 두고)에 칸(HillPropCell)마다 확률 HillPropKeep로 하나씩 — 듬성듬성. 씨앗은 이름에서 뽑아 늘 같은 자리.
+    static int ScatterHillProps(Transform container, string seedName, float minX, float maxX, float minZ, float maxZ,
+                                float lower, List<NatureAsset> assets)
+    {
+        if (assets.Count == 0) return 0;
+        System.Random rng = new System.Random(StableSeed(seedName + "_언덕"));
+        int totalWeight = assets.Sum(a => a.prop.weight);
+        float margin = HillSlopeRun + 6f;
+        float groundY = MapLayout.IslandTop + HillRise - lower;
+        int count = 0;
+        for (float z = minZ + margin; z < maxZ - margin; z += HillPropCell)
+            for (float x = minX + margin; x < maxX - margin; x += HillPropCell)
+            {
+                if (rng.NextDouble() > HillPropKeep) continue;
+                NatureAsset pick = PickWeighted(assets, totalWeight, rng);
+                float height = Mathf.Min(HillPropMaxHeight, Mathf.Lerp(pick.prop.minHeight, pick.prop.maxHeight, (float)rng.NextDouble()));
+                float yaw = (float)rng.NextDouble() * 360f;
+                Vector2 at = new Vector2(x + (float)rng.NextDouble() * (HillPropCell - 8f), z + (float)rng.NextDouble() * (HillPropCell - 8f));
+                if (at.x > maxX - margin || at.y > maxZ - margin) continue;
+                PlaceNatureProp(container, pick, at, height, yaw, groundY);
+                count++;
+            }
+        return count;
+    }
+
+    // 반영용: 전체 맵 재생성 없이 레인 사이 언덕만 다시 짓는다(옛 돌담 겉모습 포함). NavMesh·콜라이더는 안 건드린다.
+    // 부르기: call MapGenerator.RepairInterLaneHills
+    static string RepairInterLaneHills()
+    {
+        GameObject wall = null;
+        foreach (GameObject go in Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (go.name == "레인간_세로벽") { wall = go; break; }
+        if (wall == null) return "⚠️ 씬에서 레인간_세로벽을 못 찾았습니다.";
+
+        // 막는 상자는 렌더러 없이 콜라이더만 — 옛 판이 상자 렌더러를 남겼으면 떼어 겉모습이 안 겹치게 한다.
+        int stripped = 0;
+        foreach (GameObject box in new[] { wall, GameObject.Find("레인간_가로벽") })
+        {
+            if (box == null) continue;
+            if (box.TryGetComponent(out MeshRenderer r)) { Object.DestroyImmediate(r); stripped++; }
+            if (box.TryGetComponent(out MeshFilter f)) Object.DestroyImmediate(f);
+        }
+
+        string report = BuildInterLaneHills(wall.transform.parent);
+        AssetDatabase.SaveAssets();
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(wall.scene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(wall.scene);
+        return $"{report} · 상자 렌더러 {stripped}개 뗌 · 씬 저장";
     }
 
     /// <summary>
@@ -4616,6 +4849,13 @@ public static class MapGenerator
         wall.transform.localScale = scale;
         Paint(wall, "rock", scale.x, scale.z);
         // 콜라이더는 남긴다 — 실제로 막히는 벽이라야 유닛이 부스 사이로 새지 않는다.
+        if (name.StartsWith("레인간"))
+        {
+            // 레인 사이 벽은 돌담 조각 대신 BuildInterLaneHills의 솟은 대지가 겉모습이다 — 상자는 렌더러만 뗀다.
+            Object.DestroyImmediate(wall.GetComponent<MeshRenderer>());
+            Object.DestroyImmediate(wall.GetComponent<MeshFilter>());
+            return;
+        }
         DressWall(wall, WallPieceFor(name, scale));
     }
 
