@@ -2786,6 +2786,12 @@ public class GameHud : MonoBehaviour
     //     실패 사유는 호스트가 TryUse를 돌린 뒤 알림으로 돌려준다. 싱글·호스트는 그대로 TryUse.
     static bool UseShop(ILaneShop shop, int index, LaneShopTarget target, out string reason)
     {
+        // 쪽 넘김 상점(도박소 ↔ 해적단): 쪽 넘김 칸은 이 화면 안에서만 처리하고, 나머지는 쪽과 무관한 절대 번호로 바꿔 보낸다.
+        if (shop is IPagedLaneShop paged)
+        {
+            if (paged.TryChangePage(index)) { reason = null; return true; }
+            index = paged.ToNetSlot(index);
+        }
         if (!GameAuthority.IsServer) { reason = null; return NetCommands.RequestShopUse(shop, index, target); }
         return shop.TryUse(index, target, out reason);
     }
@@ -3026,6 +3032,7 @@ public class GameHud : MonoBehaviour
         // 12칸의 내용·클릭 의미만 상점 칸으로 바뀐다.
         if (shop != currentShop)
         {
+            (currentShop as IPagedLaneShop)?.ResetPage();   // 떠날 때 쪽을 처음으로 — 다시 고르면 도박 칸부터
             currentShop = shop;
             pendingSlotIndex = -1;
             RebuildShopSlots(shop);

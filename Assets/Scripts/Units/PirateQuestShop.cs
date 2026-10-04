@@ -9,7 +9,7 @@ using UnityEngine;
 // 재고는 이 상점 인스턴스(=레인=플레이어) 각자가 독립적으로 갖는다 — 원작도 상점 건물이
 // 4레인 각각 따로 서 있어 플레이어마다 별도 재고다.
 [RequireComponent(typeof(Selectable), typeof(OwnedByPlayer))]
-public class PirateQuestShop : MonoBehaviour, ILaneShop
+public class PirateQuestShop : MonoBehaviour
 {
     [SerializeField] List<PirateQuestData> quests = new List<PirateQuestData>();
 
@@ -69,7 +69,9 @@ public class PirateQuestShop : MonoBehaviour, ILaneShop
         }
     }
 
-    // ---- ILaneShop ----
+    // ---- 칸 목록 ----
+    // 2026-10-04: 독립 건물(ILaneShop)이 아니라 도박소(GamblingShop)에 붙어 그 「해적단」 쪽을 채운다 — 사장님 「건물이 너무 많아 줄이자」.
+    //   메서드 모양은 ILaneShop과 같다(GamblingShop이 그대로 위임). 재고·보충·퀘스트 로직은 그대로.
 
     public int SlotCount => quests.Count;
 

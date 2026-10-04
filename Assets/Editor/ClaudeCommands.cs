@@ -2323,7 +2323,8 @@ public static class ClaudeCommands
         var slots = UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
             .Where(b => b.gameObject.name.StartsWith("UnitCommandSlot"))
             .OrderBy(b => int.TryParse(b.gameObject.name.Substring("UnitCommandSlot".Length), out int n) ? n : 99).ToList();
-        UnityEngine.UI.Button pick = slots.FirstOrDefault(b => b.IsActive() && b.IsInteractable() && ButtonLabel(b).Length > 0 && !UnitCommandLabels.Contains(ButtonLabel(b)));
+        UnityEngine.UI.Button pick = slots.FirstOrDefault(b => b.IsActive() && b.IsInteractable() && ButtonLabel(b).Length > 0 && !UnitCommandLabels.Contains(ButtonLabel(b))
+            && ButtonLabel(b) != "해적단 ▶" && ButtonLabel(b) != "◀ 뒤로");   // 10-04: 도박소 쪽 넘김 칸은 「첫 상점 칸」이 아니다
         if (pick == null)
         {
             string listing = string.Join(" · ", slots.Select(b => $"{b.gameObject.name.Substring("UnitCommandSlot".Length)}「{ButtonLabel(b)}」{(b.IsInteractable() ? "" : "(흐림)")}"));
@@ -3099,7 +3100,8 @@ public static class ClaudeCommands
     {
         var owned = new HashSet<UnitGrade>(MyUnits().Select(u => u.Data.grade));
         var all = UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
-            .Where(b => b.gameObject.name.StartsWith("UnitCommandSlot") && b.IsActive() && ButtonLabel(b).Length > 0 && !UnitCommandLabels.Contains(ButtonLabel(b)))
+            .Where(b => b.gameObject.name.StartsWith("UnitCommandSlot") && b.IsActive() && ButtonLabel(b).Length > 0 && !UnitCommandLabels.Contains(ButtonLabel(b))
+                        && ButtonLabel(b) != "해적단 ▶" && ButtonLabel(b) != "◀ 뒤로")   // 10-04: 도박소 쪽 넘김 칸은 사는 칸이 아니다 — 누르면 쪽이 바뀌어 지출이 끊긴다
             .OrderBy(b => int.TryParse(b.gameObject.name.Substring("UnitCommandSlot".Length), out int n) ? n : 99).ToList();
         var slots = all.Where(b => WorthBuying(shop, ButtonLabel(b), owned)).ToList();
         int skipped = all.Count - slots.Count;
@@ -3603,11 +3605,18 @@ public static class ClaudeCommands
             job.shopTried = true;
             IEnumerable<string> shopList = SpendShops;
             if (job.visitSupport) shopList = shopList.Concat(new[] { "Lane1_도움소" });
-            if (job.visitPirate) shopList = shopList.Concat(new[] { "Lane1_해적단상점" });
             foreach (string shop in shopList)
             {
                 turn.Add("@sel:" + shop);
                 turn.Add("?@shopspend:" + shop);
+            }
+            if (job.visitPirate)
+            {
+                // 10-04: 해적단상점이 도박소 안으로 합쳐졌다 — 도박소를 골라 「해적단 ▶」 칸을 눌러 퀘스트 쪽을 열고 사 본다(이름은 옛 「Lane1_해적단상점」 유지: WorthBuying·보고문 호환).
+                turn.Add("@sel:Lane1_도박소");
+                turn.Add("?해적단 ▶");
+                turn.Add("?@shopspend:Lane1_해적단상점");
+                turn.Add("?◀ 뒤로");   // 쪽을 도박으로 되돌린다 — 다음 턴 도박소 방문이 퀘스트 칸을 도박 칸으로 읽지 않게
             }
         }
         for (int k = 0; k < (job.noCombine || job.targetMode ? 0 : 3); k++)   // target — 카드 조합은 목표 재료를 가리지 않아 끈다(@combineall이 대신)   // nocombine — 일부러 약한 판(보스 제한 패배 확인용, 09-25)

@@ -111,7 +111,6 @@ public static class MapGenerator
             BuildOtherWorldUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildEternalUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildAttackTypeUpgradeShop(root.transform, MapLayout.Lanes[i], i);
-            BuildPirateQuestShop(root.transform, MapLayout.Lanes[i], i, pirateQuests);
             BuildVoyageLogShop(root.transform, MapLayout.Lanes[i], i);
             BuildStoryZonePortal(root.transform, MapLayout.Lanes[i], i);
             laneObjects.Add(laneObject);
@@ -148,7 +147,7 @@ public static class MapGenerator
         string sealReport = BuildSealSpawners(root.transform);
         string seaKingReport = BuildSeaKing(root.transform) + BuildTreasureHunt(root.transform);
         string questReport = BuildPirateQuestManager() +
-            $"\n해적단 퀘스트 상점: {pirateQuests.Count}개 연결(레인당 1개, 재고·보충은 상점이 스스로 관리)." +
+            $"\n해적단 퀘스트: {pirateQuests.Count}개 — 도박소 「해적단 ▶」 쪽에 연결(레인당 1벌, 재고·보충은 PirateQuestShop이 스스로 관리)." +
             (pirateQuests.Count == 0 ? $"\n  ⚠️ {PirateQuestFolder}에서 PirateQuestData를 하나도 못 찾았습니다." : "");
         string chatUnlockReport = BuildChatUnlockManager();
         string hiddenCombineReport = BuildHiddenCombineManager();
@@ -735,7 +734,8 @@ public static class MapGenerator
     // 이 값이 상점 사이 간격을 정한다 — 늘리면 기존 상점들이 조금씩 좁혀 선다.
     // 자리는 0 도박소 · 1 유닛강화 · 2 다른세계강화 · 3 영원함강화 · 4 도움소 ·
     //          5 해적단상점 · 6 공격타입강화 · 7 항해일지.
-    const int LaneShopCount = 8;
+    // 2026-10-04: 해적단상점을 도박소 안으로 합쳐(사장님 「건물이 너무 많아 줄이자」) 8→7. 자리는 0 도박소 · 1 유닛강화 · 2 다른세계강화 · 3 영원함강화 · 4 도움소 · 5 공격타입강화 · 6 항해일지.
+    const int LaneShopCount = 7;
     // 원작 비율 5단계(PM 지시 2026-09-23) — 실제 건물 모델이 있으면 StructureDresser.
     // DressLaneShop이 클릭 상자를 모델 크기로 다시 맞추므로 이 값은 최종 크기를 안 정한다.
     // 그래도 모델이 없을 때(자리표시 큐브)의 크기·판정이라 맵 배율과 같이 키운다.
@@ -932,10 +932,12 @@ public static class MapGenerator
         marker.SetUnitRowWidth(ResolveUnitPenWidth(lane));
     }
 
-    static Vector3 LaneShopSlot(MapLayout.Island lane, int slot)
+    static Vector3 LaneShopSlot(MapLayout.Island lane, int slot) => LaneShopSlotAt(lane, slot, LaneShopCount);
+
+    static Vector3 LaneShopSlotAt(MapLayout.Island lane, int slot, int count)
     {
         MapLayout.Island strip = MapLayout.LaneShopStrip(lane);
-        float step = strip.size.x / (LaneShopCount + 1);
+        float step = strip.size.x / (count + 1);
         return new Vector3(strip.center.x - strip.size.x * 0.5f + step * (slot + 1),
                            MapLayout.IslandTop + 1.5f, strip.center.y);
     }
@@ -974,6 +976,28 @@ public static class MapGenerator
             AssetDatabase.LoadAssetAtPath<GachaTable>("Assets/Data/MainGachaTable.asset");
         so.FindProperty("unitSpawner").objectReferenceValue =
             Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
+        so.ApplyModifiedProperties();
+
+        AttachPirateQuests(gambling, LoadPirateQuests());
+    }
+
+    // 해적단 퀘스트를 도박소 건물에 붙인다(2026-10-04 합침) — 건물을 따로 안 짓는다. 재고·보충은 PirateQuestShop이 레인(=플레이어)별로 들고 있다.
+    static void AttachPirateQuests(GamblingShop gambling, List<PirateQuestData> quests)
+    {
+        PirateQuestShop questShop = gambling.GetComponent<PirateQuestShop>();
+        if (questShop == null) questShop = gambling.gameObject.AddComponent<PirateQuestShop>();
+        SerializedObject questSo = new SerializedObject(questShop);
+        SerializedProperty list = questSo.FindProperty("quests");
+        list.ClearArray();
+        for (int i = 0; i < quests.Count; i++)
+        {
+            list.InsertArrayElementAtIndex(i);
+            list.GetArrayElementAtIndex(i).objectReferenceValue = quests[i];
+        }
+        questSo.ApplyModifiedProperties();
+
+        SerializedObject so = new SerializedObject(gambling);
+        so.FindProperty("pirate").objectReferenceValue = questShop;
         so.ApplyModifiedProperties();
     }
 
@@ -1034,7 +1058,7 @@ public static class MapGenerator
     static void BuildAttackTypeUpgradeShop(Transform parent, MapLayout.Island lane, int laneIndex)
     {
         GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_공격타입강화소",
-            LaneShopSlot(lane, 6), laneIndex, "display");
+            LaneShopSlot(lane, 5), laneIndex, "display");
 
         AttackTypeUpgradeShop attackShop = shop.AddComponent<AttackTypeUpgradeShop>();
         SerializedObject so = new SerializedObject(attackShop);
@@ -1130,31 +1154,8 @@ public static class MapGenerator
             .ToList();
     }
 
-    // 해적단 퀘스트 상점 — 레인당 하나. 2026-09-05 2차 정정(사장님 발견 + PM 재조사)으로
-    // 트리거 포탈(CreatePortalObject)에서 클릭형 상점(BuildLaneShopBody)으로 바뀌었다 —
-    // 원작이 "유닛이 걸어 들어가 판다"가 아니라 "상점 h07A에서 사는 순간 발동"
-    // (`GetSoldUnit()`)이라, 이번엔 반대로 클릭형이 정답이다(다른 포탈들과 헷갈리지 말 것 —
-    // 저건 여전히 몸으로 들어가야 맞다). 슬롯 위치(5번)는 기존 포탈 자리를 그대로 쓴다 —
-    // 배치는 사장님 몫이라 이번 정정과 무관하게 안 바꿨다.
-    static void BuildPirateQuestShop(Transform parent, MapLayout.Island lane, int laneIndex,
-                                     List<PirateQuestData> quests)
-    {
-        GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_해적단상점",
-            LaneShopSlot(lane, 5), laneIndex, "event");
-
-        PirateQuestShop questShop = shop.AddComponent<PirateQuestShop>();
-        SerializedObject so = new SerializedObject(questShop);
-        SerializedProperty list = so.FindProperty("quests");
-
-        list.ClearArray();
-        for (int i = 0; i < quests.Count; i++)
-        {
-            list.InsertArrayElementAtIndex(i);
-            list.GetArrayElementAtIndex(i).objectReferenceValue = quests[i];
-        }
-
-        so.ApplyModifiedProperties();
-    }
+    // (해적단 퀘스트 상점 건물은 2026-10-04 도박소에 합쳐 없어졌다 — AttachPirateQuests / RepairPirateIntoGambling. 옛 경위: 2026-09-05 2차 정정으로
+    //  트리거 포탈에서 클릭형 상점으로 바뀐 것 — 원작이 「상점 h07A에서 사는 순간 발동」(GetSoldUnit())이라 클릭형이 정답이고, 지금은 그 클릭형이 도박소 쪽이 됐다.)
 
     // 항해일지(원작 H0C4) — 7번 자리. 원작은 판 시작 시 4명 기지에 하나씩 놓이는 건물이라
     // (CreateUnitsForPlayer0~3의 CreateUnit(Player(N),'H0C4',...)), 우리도 레인당 하나다.
@@ -1166,7 +1167,7 @@ public static class MapGenerator
     static void BuildVoyageLogShop(Transform parent, MapLayout.Island lane, int laneIndex)
     {
         GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_항해일지",
-            LaneShopSlot(lane, 7), laneIndex, "gacha");
+            LaneShopSlot(lane, 6), laneIndex, "gacha");
 
         VoyageLogShop voyageLog = shop.AddComponent<VoyageLogShop>();
         SerializedObject so = new SerializedObject(voyageLog);
@@ -4019,6 +4020,61 @@ public static class MapGenerator
     //       ④ 섬·표·전시·뽑기섬 포탈/조합식 줄/인형·부두·뽑기섬 둘레 자연물을 다시 짓는다 ⑤ 위습 생성 위치(PlayerContext) · 카메라 이동 범위 · NavMesh · 씬 저장.
     // 해변(IslandShores)은 실행 때 섬 크기에서 만들어져 씬에 없다. 조합판·전시 둘은 BareIslands라 자연물이 애초에 없다.
     // 부르기: call MapGenerator.RepairCombineBoardDryRun (지우지 않고 목록만) → call MapGenerator.RepairCombineBoard
+    /// <summary>
+    /// 2026-10-04 해적단상점 → 도박소 합치기를 **씬에만** 반영한다(전체 맵 재생성은 오늘 씬에서 고친 것을 되돌려서 안 쓴다).
+    /// 레인마다: 해적단상점(+_모양)을 지우고, 도박소에 PirateQuestShop을 붙여 퀘스트를 연결하고(GamblingShop.pirate),
+    /// 남은 상점 7채를 새 간격(LaneShopCount 8→7)으로 옮긴다(본체와 _모양 같이, x·z만). 해적단상점이 이미 없으면 옮기지 않는다(두 번 돌려도 안전).
+    /// 호출: call MapGenerator.RepairPirateIntoGambling
+    /// </summary>
+    static string RepairPirateIntoGambling()
+    {
+        var shops = new (string suffix, int oldSlot, int newSlot)[]
+        {
+            ("도박소", 0, 0), ("유닛강화소", 1, 1), ("다른세계강화소", 2, 2), ("영원함강화소", 3, 3),
+            ("도움소", 4, 4), ("공격타입강화소", 6, 5), ("항해일지", 7, 6),
+        };
+        List<PirateQuestData> quests = LoadPirateQuests();
+        var lines = new List<string>();
+        UnityEngine.SceneManagement.Scene scene = default;
+        GameObject anyShop = null;
+        for (int i = 0; i < MapLayout.Lanes.Length; i++)
+        {
+            MapLayout.Island lane = MapLayout.Lanes[i];
+            GameObject gamblingObject = GameObject.Find($"{lane.name}_도박소");
+            if (gamblingObject == null || !gamblingObject.TryGetComponent(out GamblingShop gambling)) { lines.Add($"  {lane.name}: ⚠️ 도박소를 못 찾음 — 건너뜀"); continue; }
+            anyShop = gamblingObject; scene = gamblingObject.scene;
+
+            GameObject oldPirate = GameObject.Find($"{lane.name}_해적단상점");
+            GameObject oldPirateModel = GameObject.Find($"{lane.name}_해적단상점_모양");
+            int moved = 0;
+            if (oldPirate != null)
+            {
+                Object.DestroyImmediate(oldPirate);
+                if (oldPirateModel != null) Object.DestroyImmediate(oldPirateModel);
+                foreach ((string suffix, int oldSlot, int newSlot) in shops)
+                {
+                    Vector3 delta = LaneShopSlotAt(lane, newSlot, 7) - LaneShopSlotAt(lane, oldSlot, 8);
+                    delta.y = 0f;
+                    foreach (string objName in new[] { $"{lane.name}_{suffix}", $"{lane.name}_{suffix}_모양" })
+                    {
+                        GameObject go = GameObject.Find(objName);
+                        if (go == null) continue;
+                        go.transform.position += delta;
+                        moved++;
+                    }
+                }
+            }
+            AttachPirateQuests(gambling, quests);
+            lines.Add($"  {lane.name}: 해적단상점 {(oldPirate != null ? "지움" : "이미 없음")} · 상점 {moved}개 이동 · 도박소에 퀘스트 {quests.Count}개 연결");
+        }
+        if (anyShop == null) return "⚠️ 도박소를 하나도 못 찾았습니다 — 맵이 생성돼 있지 않거나 열린 씬이 다릅니다.";
+        string nav = BuildNavMesh(anyShop.transform.parent.gameObject);
+        AssetDatabase.SaveAssets();
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+        return "해적단 → 도박소 합치기 Repair\n" + string.Join("\n", lines) + "\n" + nav;
+    }
+
     static string RepairCombineBoardDryRun() => RepairCombineBoardCore(true);
     static string RepairCombineBoard() => RepairCombineBoardCore(false);
 
