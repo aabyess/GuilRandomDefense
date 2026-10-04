@@ -152,6 +152,18 @@ public class DifficultyManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 스토리 체력 인원 배수(2026-10-04 사장님) — 원작 파티 가산이 없는 쉬움·보통에서만 참가 인원 수(혼자 1)를 곱한다. 어려움 이상은 1(원작 +3~15%/인 가산을 StoryHpBonus가 이미 쓴다).
+    /// 인원은 CountParty가 판 시작 때 센 값(MP면 MatchConfig 참가 슬롯) — 스토리는 호스트만 소환·체력을 정하고 클라는 SetReplicaHp로 받는다.
+    /// </summary>
+    public static int StoryPartyScale()
+    {
+        DifficultyManager dm = Instance;
+        if (dm == null || !dm.current.HasValue || DifficultyTable.HasPartySoloAdjust(dm.current.Value)) return 1;
+        dm.CountParty(announce: false);
+        return Mathf.Max(1, StoryPartyPlayers);
+    }
+
     /// <summary>스토리 order(1~)의 최대 체력 가산(합, 0.15 = +15%). StoryManager가 스폰 때 EnemyDummy.MarkStoryHpTarget에 넘긴다.</summary>
     public static float StoryHpBonus(int storyOrder)
     {
