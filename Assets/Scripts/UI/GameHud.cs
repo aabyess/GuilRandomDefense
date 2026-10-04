@@ -262,6 +262,11 @@ public class GameHud : MonoBehaviour
 
     readonly GameObject[] unitCommandSlotRoots = new GameObject[CommandSlotCount];
     readonly Image[] unitCommandSlotBackgrounds = new Image[CommandSlotCount];
+    // 워크3 쿨다운 덮개(사장님 10-04) — 칸 위 검은 반투명이 12시에서 시계방향으로 걷힌다. 상점이 준 남은/전체 초를 「끝나는 시각」으로 바꿔 매 프레임 돌린다.
+    readonly Image[] unitCommandSlotCooldown = new Image[CommandSlotCount];
+    readonly float[] shopCooldownEnd = new float[CommandSlotCount];
+    readonly float[] shopCooldownTotal = new float[CommandSlotCount];
+    static Sprite cooldownWhiteSprite;
     readonly TMP_Text[] unitCommandSlotNames = new TMP_Text[CommandSlotCount];
     readonly Button[] unitCommandSlotButtons = new Button[CommandSlotCount];
     readonly TMP_Text[] unitCommandSlotHotkeys = new TMP_Text[CommandSlotCount];
@@ -2685,6 +2690,33 @@ public class GameHud : MonoBehaviour
         hotkeyText.rectTransform.offsetMax = new Vector2(-4f, 0f);
         unitCommandSlotHotkeys[index] = hotkeyText;
 
+        // 쿨다운 덮개 — 글자(Name·Hotkey) 아래, 배경 위. 어두운 부분 = 남은 시간이 12시에서 시계방향으로 줄어든다(채움 방향은 반시계 · 시작 12시).
+        if (cooldownWhiteSprite == null)
+        {
+            Texture2D white = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            white.SetPixels(new[] { Color.white, Color.white, Color.white, Color.white });
+            white.Apply();
+            cooldownWhiteSprite = Sprite.Create(white, new Rect(0f, 0f, 2f, 2f), new Vector2(0.5f, 0.5f), 100f);
+        }
+        GameObject cooldown = new GameObject("Cooldown", typeof(RectTransform), typeof(Image));
+        cooldown.transform.SetParent(card.transform, false);
+        RectTransform cooldownRect = (RectTransform)cooldown.transform;
+        cooldownRect.anchorMin = Vector2.zero;
+        cooldownRect.anchorMax = Vector2.one;
+        cooldownRect.offsetMin = Vector2.zero;
+        cooldownRect.offsetMax = Vector2.zero;
+        cooldown.transform.SetSiblingIndex(nameText.transform.GetSiblingIndex());
+        Image cooldownImage = cooldown.GetComponent<Image>();
+        cooldownImage.sprite = cooldownWhiteSprite;
+        cooldownImage.type = Image.Type.Filled;
+        cooldownImage.fillMethod = Image.FillMethod.Radial360;
+        cooldownImage.fillOrigin = (int)Image.Origin360.Top;
+        cooldownImage.fillClockwise = false;
+        cooldownImage.color = new Color(0f, 0f, 0f, 0.6f);
+        cooldownImage.raycastTarget = false;
+        cooldown.SetActive(false);
+        unitCommandSlotCooldown[index] = cooldownImage;
+
         unitCommandSlotRoots[index] = card;
         unitCommandSlotBackgrounds[index] = background;
         unitCommandSlotNames[index] = nameText;
@@ -3082,6 +3114,7 @@ public class GameHud : MonoBehaviour
                 nextUnitCommandDimRefreshTime = Time.time + RecipeRefreshInterval;
                 RefreshShopAffordability();
             }
+            UpdateShopCooldownOverlays();
             return;
         }
 
@@ -3113,6 +3146,7 @@ public class GameHud : MonoBehaviour
             unitCommandSlotHotkeys[slot].text = "";
             shopSlotHotkeys[slot] = '\0';
             unitCommandSlotBackgrounds[slot].color = Color.clear;
+            ClearShopCooldown(slot);
         }
 
         // 0~2·12번(공격/정지/모으기/정렬)은 상점 칸이 아니다 — 기본값 0이 "논리 슬롯 0"으로
@@ -3162,8 +3196,17 @@ public class GameHud : MonoBehaviour
                 unitCommandSlotHotkeys[slot].text = "";
                 shopSlotHotkeys[slot] = '\0';
                 unitCommandSlotBackgrounds[slot].color = Color.clear;
+                ClearShopCooldown(slot);
                 continue;
             }
+
+            // 갱신 주기(0.4초)마다 상점이 준 남은 시간으로 끝나는 시각을 다시 맞춘다 — 사이는 UpdateShopCooldownOverlays가 매 프레임 돌린다.
+            if (view.cooldownTotal > 0f && view.cooldownRemaining > 0f)
+            {
+                shopCooldownTotal[slot] = view.cooldownTotal;
+                shopCooldownEnd[slot] = Time.time + view.cooldownRemaining;
+            }
+            else ClearShopCooldown(slot);
 
             unitCommandSlotNames[slot].text = view.label;
             char key = view.hotkey != '\0' ? view.hotkey : ShopGridHotkeys[slot];
@@ -3176,6 +3219,34 @@ public class GameHud : MonoBehaviour
             Color color = view.color;
             color.a = view.available ? color.a : 0.35f;
             unitCommandSlotBackgrounds[slot].color = color;
+        }
+    }
+
+    void ClearShopCooldown(int slot)
+    {
+        shopCooldownTotal[slot] = 0f;
+        if (unitCommandSlotCooldown[slot] != null && unitCommandSlotCooldown[slot].gameObject.activeSelf)
+            unitCommandSlotCooldown[slot].gameObject.SetActive(false);
+    }
+
+    // 매 프레임: 남은 시간/전체로 덮개를 돌린다(서버 시간 기준 — 멀티 클라는 상점이 클라에 복제한 값이 그대로 들어온다).
+    void UpdateShopCooldownOverlays()
+    {
+        for (int i = 0; i < UnitCommandResultSlotOrder.Length; i++)
+        {
+            int slot = UnitCommandResultSlotOrder[i];
+            Image overlay = unitCommandSlotCooldown[slot];
+            if (overlay == null) continue;
+            float total = shopCooldownTotal[slot];
+            float remaining = total > 0f ? shopCooldownEnd[slot] - Time.time : 0f;
+            if (remaining <= 0f)
+            {
+                if (overlay.gameObject.activeSelf) overlay.gameObject.SetActive(false);
+                shopCooldownTotal[slot] = 0f;
+                continue;
+            }
+            if (!overlay.gameObject.activeSelf) overlay.gameObject.SetActive(true);
+            overlay.fillAmount = Mathf.Clamp01(remaining / total);
         }
     }
 

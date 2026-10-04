@@ -163,6 +163,10 @@ public class TreasureHunt : MonoBehaviour
         return searchCooldown;
     }
 
+    /// <summary>MP 클라: 호스트가 복제한 남은 쿨타임(초)을 자기 시계로 되짚어 적는다 — 클라가 로컬 시계로 따로 돌지 않게. 싱글·호스트는 부르지 않는다.</summary>
+    public void ApplyReplicatedCooldown(int playerId, float remaining) =>
+        cooldownUntil[playerId] = remaining > 0f ? Time.time + remaining : 0f;
+
     public float CooldownRemaining(int playerId) =>
         cooldownUntil.TryGetValue(playerId, out float until) ? Mathf.Max(0f, until - Time.time) : 0f;
 

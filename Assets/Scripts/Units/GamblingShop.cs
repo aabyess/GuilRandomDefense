@@ -145,7 +145,17 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
 
         GamblingOptionData opt = OptionAt(index);
         bool available = CanRoll(opt);
-        return new LaneShopSlotView(cache.label + StockSuffix(opt), cache.color, available, LaneShopTargetKind.None);
+        // 충전식은 재고 0일 때만 칸을 덮는다(PM 권장 — 재고 1 이상이면 칸은 밝게). 남은 시간은 「다음 1개까지」.
+        float cdRemaining = 0f, cdTotal = 0f;
+        GamblingProgress stockProgress = OwnerContext?.GamblingProgress;
+        if (opt != null && opt.stockMax > 0 && opt.stockRegenSeconds > 0f && stockProgress != null
+            && (!opt.requiresUnlock || stockProgress.IsUnlocked(opt)) && stockProgress.Stock(opt) <= 0)
+        {
+            cdRemaining = stockProgress.SecondsToNextStock(opt);
+            cdTotal = opt.stockRegenSeconds;
+        }
+        return new LaneShopSlotView(cache.label + StockSuffix(opt), cache.color, available, LaneShopTargetKind.None,
+                                    0f, '\0', cdRemaining, cdTotal);
     }
 
     // 호버할 때만 불린다 — 문자열 조립은 여기서만 한다(GetSlotView는 캐시된 값만 돌려준다).

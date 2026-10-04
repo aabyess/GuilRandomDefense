@@ -48,6 +48,13 @@ public class NetPlayer : NetworkBehaviour
     [Networked, Capacity(16)] public NetworkArray<float> GambleNextSeconds => default;
     [Networked, Capacity(16)] public NetworkArray<int> GamblePayout => default;
     [Networked] public NetworkBool GambleGraduated { get; set; }
+    // 도움소 스킬별 쿨다운·재고 충전 남은 초 + 탐색(보물찾기) 남은 쿨타임 — 클라 상점 칸 덮개·글자용(10-04). 도박소와 같이 호스트가 쓰고 클라가 자기 시계로 되짚는다.
+    // 스킬 칸 수(12)에 맞춰 최소. 재고 −1 = 재고 없는 스킬.
+    [Networked, Capacity(SupportShop.MaxReplicatedSkills)] public NetworkArray<float> SupportCooldown => default;
+    [Networked, Capacity(SupportShop.MaxReplicatedSkills)] public NetworkArray<short> SupportStock => default;
+    [Networked, Capacity(SupportShop.MaxReplicatedSkills)] public NetworkArray<float> SupportNextSeconds => default;
+    [Networked] public float TreasureCooldown { get; set; }
+    SupportShop supportShopCache;
 
     // UnitUpgrades(특성 포인트·해금 특성·강화 레벨) — 특성 버튼·강화소 칸 표시용. 특성은 카탈로그 번호+1(0=빈칸).
     public const int MaxReplicatedTraits = 32;
@@ -171,6 +178,26 @@ public class NetPlayer : NetworkBehaviour
             GambleGraduated = context.GamblingProgress.Graduated;
         }
 
+        // 도움소·탐색 쿨다운(호스트가 씀). 값이 바뀐 칸만 쓴다(네트워크 쓰기 최소) — 카운트다운 중엔 틱마다 바뀐다.
+        if (supportShopCache == null) supportShopCache = SupportShop.For(Slot);
+        if (supportShopCache != null)
+        {
+            int skillCount = Mathf.Min(supportShopCache.SlotCount, SupportShop.MaxReplicatedSkills);
+            for (int i = 0; i < skillCount; i++)
+            {
+                float cooldown = supportShopCache.ReplicatedCooldownRemaining(i);
+                if (SupportCooldown[i] != cooldown) SupportCooldown.Set(i, cooldown);
+                supportShopCache.ReplicatedStock(i, out int stock, out float next);
+                if (SupportStock[i] != (short)stock) SupportStock.Set(i, (short)stock);
+                if (SupportNextSeconds[i] != next) SupportNextSeconds.Set(i, next);
+            }
+        }
+        if (TreasureHunt.Instance != null)
+        {
+            float treasure = TreasureHunt.Instance.CooldownRemaining(Slot);
+            if (TreasureCooldown != treasure) TreasureCooldown = treasure;
+        }
+
         UnitUpgrades upgrades = context.UnitUpgrades;
         if (catalog != null && upgrades != null)
         {
@@ -217,6 +244,15 @@ public class NetPlayer : NetworkBehaviour
             for (int i = 0; i < catalog.gamblingOptions.Count && i < 16; i++)
                 context.GamblingProgress.ApplyReplicated(catalog.gamblingOptions[i], GambleUses[i], (GambleUnlockedMask & (1 << i)) != 0,
                     GambleStock[i], GambleNextSeconds[i], GamblePayout[i]);
+        // 클라: 도움소·탐색 쿨다운을 호스트 값으로 되짚는다(클라 로컬 시계로 따로 돌던 경로를 끊는다).
+        if (supportShopCache == null) supportShopCache = SupportShop.For(Slot);
+        if (supportShopCache != null)
+        {
+            int skillCount = Mathf.Min(supportShopCache.SlotCount, SupportShop.MaxReplicatedSkills);
+            for (int i = 0; i < skillCount; i++)
+                supportShopCache.ApplyReplicated(i, SupportCooldown[i], SupportStock[i], SupportNextSeconds[i]);
+        }
+        if (TreasureHunt.Instance != null) TreasureHunt.Instance.ApplyReplicatedCooldown(Slot, TreasureCooldown);
         // 졸업은 한 번 — Graduate()를 불러야 도박소가 돈 칸 캐시를 바꾼다(구현담당1 안내).
         if (GambleGraduated && context.GamblingProgress != null && !context.GamblingProgress.Graduated)
             context.GamblingProgress.Graduate();
