@@ -32,6 +32,9 @@ public class InterludeGate : MonoBehaviour
     [Header("원판 대신 보이는 것 — 바닥 마법진(맵 생성기가 채움). 원판 그림이 꺼져 있으면 이쪽을 물들인다")]
     [SerializeField] Renderer[] visuals = new Renderer[0];
 
+    [Header("잠긴 동안만 보이는 것 — 「백수생활 때 열림」 글자(맵 생성기가 채움). 열리면 꺼진다")]
+    [SerializeField] GameObject[] lockedOnly = new GameObject[0];
+
     enum VisualState { Open, ClosedByInterlude, ClosedByChoice }
 
     Collider gateCollider;
@@ -102,7 +105,11 @@ public class InterludeGate : MonoBehaviour
         lastAppliedState = state;
 
         ApplyColor(state);
+        foreach (GameObject locked in lockedOnly)
+            if (locked != null) locked.SetActive(state == VisualState.ClosedByInterlude);
     }
+
+    public void SetLockedOnly(GameObject[] objects) => lockedOnly = objects ?? new GameObject[0];
 
     public void SetVisuals(Renderer[] renderers) => visuals = renderers ?? new Renderer[0];
 

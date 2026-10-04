@@ -2184,6 +2184,73 @@ public static class MapGenerator
         return $"특수지급 전시: 소품 {props} · 인형 {dolls}" + (missing.Count > 0 ? $" · ⚠️ 못 세움 {string.Join(", ", missing)}" : "");
     }
 
+    // 특수지급 세 자리의 이름표(무엇을 주는지)와 「백수생활 때 열림」 글자(잠긴 동안만).
+    // 🔴 원인(10-04 사장님 「포탈이 안 보이는 것 같다」): 이 줄 포탈은 스토리 8 전엔 InterludeGate가 마법진을 어두운 회색(알파 0.6)으로
+    //    눌러 두는데 「잠겼다」는 글자가 없어 그냥 안 보이는 것으로 읽혔고, 이름표도 없었다(다른 줄은 AddPortalLabel이 있다).
+    //    포탈 자체는 세 자리 모두 진짜다 — 박은석 초월위습도 로스터 「초월위습_박은석」(unitName 박은석초월위습)으로 UnitPortal이 배선된다
+    //    (「미구현_」 가지는 안 탄다). 라벨은 전시물(인형 키 48) 몸에 가리지 않게 마법진 **앞**(−z, 카메라 쪽)에 둔다.
+    //    이름이 「특수지급_」로 시작해 RepairGachaRewardDisplays가 전시물과 같이 지우고 다시 짓는다.
+    static readonly Color LockedPortalColor = new Color(0.50f, 0.50f, 0.62f, 0.9f);   // 어둡지만 땅과 구분되는 회청색(기본 0.3 회색 알파 0.6은 땅에 묻혔다)
+
+    static string BuildSpecialSlotMarks(Transform parent)
+    {
+        int slots = 0, gates = 0;
+        List<string> missing = new List<string>();
+        foreach (GachaBand band in GachaBands)
+        {
+            if (band.specialSlots == null) continue;
+            foreach (SpecialSlot slot in band.specialSlots)
+            {
+                List<string> portalNames = new List<string>();
+                if (slot.givesResources) { portalNames.Add($"Portal_{slot.label}_엔"); portalNames.Add($"Portal_{slot.label}_목재"); }
+                else if (slot.unitAssets != null)
+                    foreach (string asset in slot.unitAssets)
+                    {
+                        UnitData unit = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{asset}.asset");
+                        if (unit != null) portalNames.Add($"Portal_{unit.unitName}");
+                    }
+
+                List<InterludeGate> slotGates = new List<InterludeGate>();
+                float sumX = 0f, z = 0f, diameter = ChoicePortalDiameter;
+                foreach (string portalName in portalNames)
+                {
+                    Transform portal = parent.Find(portalName);
+                    if (portal == null || !portal.TryGetComponent(out InterludeGate gate)) { missing.Add(portalName); continue; }
+                    slotGates.Add(gate);
+                    sumX += portal.position.x;
+                    z = portal.position.z;
+                    diameter = portal.lossyScale.x;
+                }
+                if (slotGates.Count == 0) continue;
+                float x = sumX / slotGates.Count;
+
+                string title = slot.givesResources ? "금화+목재" : slot.label;
+                float frontZ = z - diameter * 0.62f;   // 마법진 앞쪽(카메라가 +z를 본다)
+                GameObject nameHolder = new GameObject($"{SpecialDisplayPrefix}라벨_{slot.label}");
+                nameHolder.transform.SetParent(parent, false);
+                nameHolder.transform.position = new Vector3(x, MapLayout.IslandTop + diameter * 0.30f, frontZ);
+                nameHolder.AddComponent<WorldLabel>().Configure(title, Color.white, diameter * PortalLabelSizePerDiameter);
+
+                GameObject lockHolder = new GameObject($"{SpecialDisplayPrefix}잠김_{slot.label}");
+                lockHolder.transform.SetParent(parent, false);
+                lockHolder.transform.position = new Vector3(x, MapLayout.IslandTop + diameter * 0.30f + diameter * 0.55f, frontZ);
+                lockHolder.AddComponent<WorldLabel>().Configure("백수생활 때 열림", new Color(1f, 0.51f, 0f, 1f), diameter * PortalLabelSizePerDiameter);
+
+                foreach (InterludeGate gate in slotGates)
+                {
+                    gate.SetLockedOnly(new[] { lockHolder });
+                    SerializedObject so = new SerializedObject(gate);
+                    so.FindProperty("closedColor").colorValue = LockedPortalColor;
+                    so.ApplyModifiedProperties();
+                    EditorUtility.SetDirty(gate);
+                    gates++;
+                }
+                slots++;
+            }
+        }
+        return $"특수지급 이름표: 자리 {slots} · 포탈 {gates}" + (missing.Count > 0 ? $" · ⚠️ 못 찾음 {string.Join(", ", missing)}" : "");
+    }
+
     // 맵 전체 재생성(씬 diff 수십만 줄) 없이 두 가지만 고친다: ① 조합표 비용 아이콘(금화·목재)을 소품 모델로 ② 특수지급 전시물 세우기.
     // 다시 불러도 안전하다 — 옛 전시물·옛 아이콘·인형 목록의 특수지급 줄을 먼저 지운다. NavMesh는 안 건드린다(콜라이더 없는 장식).
     // 부르기: call MapGenerator.RepairGachaRewardDisplays
@@ -2224,7 +2291,7 @@ public static class MapGenerator
             icons++;
         }
 
-        string report = BuildSpecialRewardDisplays(parent);
+        string report = BuildSpecialRewardDisplays(parent) + " · " + BuildSpecialSlotMarks(parent);
         if (spawner != null) EditorUtility.SetDirty(spawner);
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(parent.gameObject.scene);
         UnityEditor.SceneManagement.EditorSceneManager.SaveScene(parent.gameObject.scene);
@@ -3147,7 +3214,7 @@ public static class MapGenerator
 
                 if (slot.unitAssets == null || slot.unitAssets.Length == 0)
                 {
-                    // 지급물의 형태가 아직 안 정해진 자리(박은석 초월위습). 자리만 세우고 보고에 남긴다.
+                    // 지급물의 형태가 아직 안 정해진 자리(Pending). 지금 세 자리는 전부 유닛·자원이라 이 가지는 안 탄다(박은석 초월위습도 로스터 에셋이 있다).
                     PlaceUnitMarker(parent, $"미구현_{slot.label}", new Vector3(at.x, 0f, at.z),
                         UnitGrade.RandomUnit);
                     specialPending.Add(slot.label);
@@ -3182,6 +3249,7 @@ public static class MapGenerator
         }
 
         BuildSpecialRewardDisplays(parent);   // 특수지급 세 자리의 지급물(소품·인형)
+        BuildSpecialSlotMarks(parent);        // 특수지급 세 자리의 이름표·「잠김」 글자
 
         // --- 오른쪽 세로줄: 조합식 없이 캐릭터만 전시하는 등급 ---
         // 이 등급들은 조합식 표에 올리지 않기로 확정돼 있어서, 여기가 유일하게 눈으로 보는 곳이다.
