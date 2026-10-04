@@ -97,6 +97,9 @@ public static class ArtBinder
     // 맞추면 탈것이나 짐승은 어색해진다. 모델 파일을 고치는 대신 여기서 조정한다.
     static readonly (string model, Vector3 euler, float heightScale)[] ModelAdjustments =
     {
+        // 흔함_강재규(쵸파) — 사장님 10-04 「좀 큰 것 같다, 반으로」. 흔함 기본 0.85의 절반. 회전 0이라 AutoUpright는 그대로 돈다.
+        ("흔함_강재규", Vector3.zero, 0.425f),
+
         // (09-13) 안흔함_상붕카 줄을 뺐다 — blender가 fix_unit_fbx.py로 두 바퀴가 바닥에 닿게 다시 지었다
         // (앞바퀴 −Y, 길이 1.8m). 옛 파일은 끝으로 선 채 들어와 여기서 (−90, 90, 0)으로 눕혔는데, 그대로 두면 두 번 눕는다.
         // 이제 FourLeggedModels(몸길이 기준)에서 크기만 맞춘다.
