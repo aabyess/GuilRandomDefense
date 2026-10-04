@@ -2039,6 +2039,13 @@ public static class MapGenerator
                 // count가 3이면 같은 칸을 세 번 놓는다 — 원작 표가 그렇게 늘어놓는다.
                 for (int n = 0; n < Mathf.Max(1, ingredient.count); n++)
                 {
+                    // 「랜덤유닛 아무거나」 재료는 색 큐브 대신 랜덤유닛 위습 모양으로(사장님 10-04 「스킨 없는 거 뭐야」).
+                    if (ingredient.kind == IngredientKind.UnitGradeWildcard && ingredient.wildcardGrade == UnitGrade.RandomUnit
+                        && PlaceAnyUnitWisp(parent, x, z, $"재료_{label}"))
+                    {
+                        x += SlotW + GapW;
+                        continue;
+                    }
                     PlaceRecipeSlot(parent, x, z, IngredientName(ingredient), IngredientColor(ingredient),
                                     $"재료_{label}", ingredient.unit);
                     x += SlotW + GapW;
@@ -2716,7 +2723,7 @@ public static class MapGenerator
     // 판단(BrokenSkinDolls·폭주 방어막·짐승 배수)은 전부 위에서 이미 끝났다 — 목록엔 통과한 인형만 들어간다.
     const string RecipeDollHolderName = "조합표_인형";
 
-    static void RecordRecipeDoll(Transform parent, GameObject figure, UnitData unit)
+    static void RecordRecipeDoll(Transform parent, GameObject figure, UnitData unit, GameObject prefab = null)
     {
         Transform holder = parent.Find(RecipeDollHolderName);
         if (holder == null)
@@ -2730,6 +2737,7 @@ public static class MapGenerator
         {
             name = figure.name,
             unit = unit,
+            prefab = prefab,   // unit이 없는 인형(랜덤유닛 위습)만 쓴다
             position = figure.transform.position,
             rotation = figure.transform.rotation,
             // 부모(holder)가 배율 1이라 월드 배율 = 이 값. 인형이 parent 바로 아래였으니 parent 배율도 1이어야 한다 — 아래 검사.
@@ -2925,6 +2933,44 @@ public static class MapGenerator
                 return clip;
 
         return controller.animationClips.Length > 0 ? controller.animationClips[0] : null;
+    }
+
+    // 「랜덤유닛 아무거나」 재료 자리 — 랜덤유닛 위습(흰 구슬, 위습 칸 아이콘과 같은 프리팹)을 인형 목록에 올리고 아래에 「아무 유닛」 이름표를 둔다.
+    //    인형은 씬에 안 굽고 RecipeDollSpawner가 실행 때 세운다(Doll.prefab 경로 — 위습 프리팹은 모델 배선이 안 지운다). 동작 부품(NavMeshAgent·Collider·
+    //    스크립트 등)은 RecipeDollSpawner.StripToDoll이 걷어내 진짜 위습처럼 포탈에 먹히거나 클릭되지 않는다.
+    //    크기: 인형 키(DisplayFigureHeight) × 0.45 지름 — 옆 인형 가슴께 높이의 구슬. 프리팹 크기는 재서 맞춘다(위습 루트 배율을 믿지 않는다).
+    const float AnyUnitWispDiameterPerHeight = 0.45f;
+    static bool PlaceAnyUnitWisp(Transform parent, float x, float z, string prefix)
+    {
+        WispData wisp = AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_랜덤유닛.asset");
+        if (wisp == null || wisp.prefab == null) return false;
+
+        GameObject figure = Object.Instantiate(wisp.prefab, parent);
+        figure.name = $"{prefix}_아무유닛";
+        figure.transform.position = Vector3.zero;
+        figure.transform.rotation = Quaternion.identity;
+        Bounds bounds = default; bool any = false;
+        foreach (Renderer renderer in figure.GetComponentsInChildren<Renderer>(true))
+        {
+            if (renderer is ParticleSystemRenderer || renderer is TrailRenderer || renderer is LineRenderer) continue;
+            if (!any) { bounds = renderer.bounds; any = true; } else bounds.Encapsulate(renderer.bounds);
+        }
+        if (!any || bounds.size.y < 1e-4f) { Object.DestroyImmediate(figure); return false; }
+
+        float diameter = DisplayFigureHeight * AnyUnitWispDiameterPerHeight;
+        float factor = diameter / bounds.size.y;
+        figure.transform.localScale *= factor;
+        // 구슬 가운데가 바닥에서 반지름 + 여유만큼 떠 있게(바닥에 파묻히지 않게) — 모델 가운데가 원점에서 벗어난 만큼 보정.
+        Vector3 centerOffset = bounds.center * factor;
+        figure.transform.position = new Vector3(x, MapLayout.IslandTop + diameter * 0.5f + 2f, z) - centerOffset;
+        RecordRecipeDoll(parent, figure, null, wisp.prefab);   // figure는 안에서 지운다
+
+        // 이름표 — 다른 월드 글자와 같은 WorldLabel(실행 때 TMP). 구슬 바로 앞(−z, 카메라 쪽) 바닥 가까이.
+        GameObject labelHolder = new GameObject($"{prefix}_아무유닛_라벨");
+        labelHolder.transform.SetParent(parent, false);
+        labelHolder.transform.position = new Vector3(x, MapLayout.IslandTop + 2f, z - diameter * 0.9f);
+        labelHolder.AddComponent<WorldLabel>().Configure("아무 유닛", Color.white, diameter * 0.3f);
+        return true;
     }
 
     static string IngredientName(RecipeIngredient ingredient)
