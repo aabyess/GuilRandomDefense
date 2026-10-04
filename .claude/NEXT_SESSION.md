@@ -6,6 +6,12 @@
 
 ---
 
+## ⭐⭐⭐⭐⭐⭐ 10-04 낮 — 0.3.5v 윈도우 배포(11:48) — 이게 최신
+- 사장님 결정으로 기준선 g1_300~309 중단(300만 완료 = 끔 R60 **클리어 확정**, 301 버림) → 개선 먼저.
+- 0.3.5v(main 3d82830cd, 빌드 사본 release/0.3.5): F10 [화면](ScreenMode, 맥 앱으로 저장값 1280×720 복원 실측 ✅) · 상점 7채 새 모델(gen_shops_v2, RepairLaneShopModels) · 해적단→도박소 8번 칸 「해적단 ▶」(실측 구입 ✅) · 상점 8→7 · 사거리 원 A 때만(**미실측** — 도구에 선택·A 입력 없음) · 받침_조합 제거 · 뽑기섬 흔함 선택 줄 ×1.6(섬 1238) · 특수지급 이름표·잠김 글자 · 쵸파 프리팹·인형 절반(DollHeightMultiplier).
+- `~/Desktop/구랜디_베타/GuRandi_Beta_Windows_0.3.5v.zip` + 안내문 갱신. 맥 0.3.5 앱은 빌드 사본 Builds/Mac에만(배포 안 함).
+- 다음: 구현담당2 special-labels 브랜치(특수지급 이름표 ×5·위치 앞쪽) 병합 → RepairGachaRewardDisplays → 사진 · 기준선 재측정(g1_301~ caffeinate) · 사거리 원 실측.
+
 ## ⭐⭐⭐⭐⭐ 10-04 오전 (PM 3번째, Opus 5.5) — 이게 최신
 - **0.3.4v 윈도우판 배포 완료(10-04 09:24, 사장님 지시 「윈도우버전 배포」)**: 빌드 사본 release/0.3.4 = main c465403cc · `~/Desktop/구랜디_베타/GuRandi_Beta_Windows_0.3.4v.zip`(567MB, 208항목·비ASCII 0·testzip OK·DoNotShip 제외) · 안내문 0.3.4v로 갱신(맥 칸 빼고 「맥판은 아직 0.3.3v, 같이 하기는 같은 버전만」). 빌드 DLL에 0.3.4·새 코드 문자열 확인. 맥판은 안 만듦(옛 0.3.3 zip·app과 윈도우 0.3.3 zip은 그대로 둠 — 지울지 사장님께).
 - 병합: 구현담당2 wisp-navagent(WispIconBaker 경고 제거 — 실측 0건 · 메타몽 도박 6칸 가득 버그 · 「시야가 좁네」 채팅 삼킴 · 촬영 탐침 DisplayProbe.WispKinds/ItemsFull) · 구현담당1 g1-pointerband(autoloop 포탈 우클릭 띠 판정 안전판 + 진단 로그, 7ccef6951).
