@@ -67,18 +67,24 @@ public class EnemyDummy : MonoBehaviour
     public const int MaxStoryHpReductionLevel = 5;
     public static int StoryHpReductionLevel { get; private set; }
     // 2026-09-27 GAP 4: 스토리는 난이도·파티·솔로 가산(storyHpBonus)도 함께 — 워크3 rhpo는 합산이라 1 + 가산 − 0.1×퇴장레벨.
-    float StoryHpFactor => Mathf.Max(0.05f, 1f + storyHpBonus - 0.1f * StoryHpReductionLevel);
+    // 🔴 2026-10-04 사장님 「스토리 인원수 비례해서 체력이 늘어나게」 — 원작 파티 가산(+3~15%/인)은 어려움 이상에만 있다(solo_1~4). 쉬움·보통엔 없어서 **우리 식**:
+    //    스토리 체력 × 참가 인원(storyPartyScale, 혼자 ×1·넷 ×4). 이 경우 중간에 나간 사람은 −10%/레벨 대신 인원에서 1씩 빠진다(×(인원−퇴장수)).
+    float StoryHpFactor => storyPartyScale > 1
+        ? Mathf.Max(0.05f, (1f + storyHpBonus) * Mathf.Max(1, storyPartyScale - StoryHpReductionLevel))
+        : Mathf.Max(0.05f, 1f + storyHpBonus - 0.1f * StoryHpReductionLevel);
     float storyHpBonus;
+    int storyPartyScale = 1;
 
     bool storyHpTarget;
     public bool IsStoryHpTarget => storyHpTarget; // MP: 검증 로그용
     float appliedStoryHpFactor = 1f;
 
     /// <summary>MP: 스토리·퀘스트 미니보스·크립 스폰 직후(체력을 다 정한 뒤) 부른다 — 지금 레벨의 감소를 건다.</summary>
-    public void MarkStoryHpTarget(float extraHpBonus = 0f)
+    public void MarkStoryHpTarget(float extraHpBonus = 0f, int partyScale = 1)
     {
         storyHpTarget = true;
         storyHpBonus = extraHpBonus;
+        storyPartyScale = Mathf.Max(1, partyScale);
         RescaleStoryHp();
     }
 
