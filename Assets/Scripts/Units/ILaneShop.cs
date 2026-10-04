@@ -57,6 +57,17 @@ public readonly struct LaneShopTarget
 }
 
 // 레인 건물(도움소/강화소/도박소 등) 공용 인터페이스. HUD는 이것만 알면 된다.
+// 한 건물이 칸 묶음(쪽)을 바꿔 보여 주는 상점(도박소 ↔ 해적단 퀘스트). 쪽은 **화면(클라)마다 따로**라 서버는 모른다 —
+// 그래서 HUD가 칸을 누르면 ① TryChangePage로 쪽 넘김 칸인지 먼저 묻고(맞으면 네트워크로 안 보낸다)
+// ② 아니면 ToNetSlot으로 「쪽과 상관없는 절대 번호」로 바꿔 TryUse·RPC에 싣는다. TryUse(절대 번호)는 서버·호스트·싱글 모두 같다.
+// GetSlotView·GetSlotTooltip의 index는 화면 칸 번호(현재 쪽 기준)다.
+public interface IPagedLaneShop : ILaneShop
+{
+    bool TryChangePage(int visibleIndex);
+    int ToNetSlot(int visibleIndex);
+    void ResetPage();
+}
+
 public interface ILaneShop
 {
     int SlotCount { get; }

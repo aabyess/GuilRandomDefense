@@ -5,7 +5,7 @@ using UnityEngine;
 // 칸을 누르면 자원을 쓴다. 파괴 불가, 적 타겟에서 자동 제외된다 — SupportShop과 같은 이유로
 // EnemyDummy.Active/DestructibleGate.Active 어디에도 등록되지 않는다.
 [RequireComponent(typeof(Selectable), typeof(OwnedByPlayer))]
-public class GamblingShop : MonoBehaviour, ILaneShop
+public class GamblingShop : MonoBehaviour, IPagedLaneShop
 {
     // 하단 그리드는 가로 3칸 — 원작 화면처럼 윗줄(돈 도박)과 아랫줄(유닛 도박)이 줄로 갈리게,
     // 9칸 중 인덱스 6 다음 두 칸(7,8)은 항상 빈 칸으로 둔다.
@@ -15,6 +15,9 @@ public class GamblingShop : MonoBehaviour, ILaneShop
     [SerializeField] List<GamblingOptionData> moneyOptions = new List<GamblingOptionData>();
     [SerializeField] List<GamblingOptionData> unitOptions = new List<GamblingOptionData>();
     [SerializeField] GachaTable gachaTable;
+    // 해적단 퀘스트(2026-10-04 합침) — 같은 건물에 붙은 PirateQuestShop. 8번 칸 「해적단 ▶」을 누르면 칸이 퀘스트 목록으로 바뀌고
+    // 같은 8번 칸이 「◀ 뒤로」가 된다. 쪽은 화면마다 따로(IPagedLaneShop) — 서버엔 절대 번호(PirateNetBase+퀘스트 번호)만 간다.
+    [SerializeField] PirateQuestShop pirate;
     [SerializeField] UnitSpawner unitSpawner;
 
     // ⚠️ 맨 뒤에 추가(2026-09-07, "희귀함 리롤" A0VX) — GamblingOptionData.
@@ -42,6 +45,11 @@ public class GamblingShop : MonoBehaviour, ILaneShop
     bool slotCacheBuilt;
 
     const int SlotCountValue = 9;
+    const int PageSlot = 8;              // 「해적단 ▶」 / 「◀ 뒤로」 칸(원래 항상 빈 칸)
+    const int PirateNetBase = 100;       // TryUse(절대 번호) — 100 + 퀘스트 번호
+    const int PirateVisibleSlots = 8;    // 해적단 쪽에서 퀘스트가 쓸 수 있는 칸 0~7(8은 뒤로)
+    static readonly Color PageColor = new Color(0.75f, 0.55f, 0.2f);   // 해적단 퀘스트 칸과 같은 청동색
+    bool pirateOpen;                     // 이 화면(클라)에서 해적단 쪽을 보는 중 — 서버 상태 아님
 
     OwnedByPlayer owner;
 
@@ -101,8 +109,28 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 
     public int SlotCount => SlotCountValue;
 
+    // ---- IPagedLaneShop ----
+
+    public bool TryChangePage(int visibleIndex)
+    {
+        if (pirate == null || visibleIndex != PageSlot) return false;
+        pirateOpen = !pirateOpen;
+        return true;
+    }
+
+    public int ToNetSlot(int visibleIndex) => pirateOpen && visibleIndex != PageSlot ? PirateNetBase + visibleIndex : visibleIndex;
+
+    public void ResetPage() => pirateOpen = false;
+
     public LaneShopSlotView GetSlotView(int index)
     {
+        if (pirate != null)
+        {
+            if (index == PageSlot)
+                return new LaneShopSlotView(pirateOpen ? "◀ 뒤로" : "해적단 ▶", PageColor, true, LaneShopTargetKind.None);
+            if (pirateOpen)
+                return index >= 0 && index < PirateVisibleSlots && index < pirate.SlotCount ? pirate.GetSlotView(index) : LaneShopSlotView.Empty;
+        }
         if (!slotCacheBuilt) BuildSlotCache();
         if (index < 0 || index >= SlotCountValue) return LaneShopSlotView.Empty;
 
@@ -123,6 +151,11 @@ public class GamblingShop : MonoBehaviour, ILaneShop
     // 호버할 때만 불린다 — 문자열 조립은 여기서만 한다(GetSlotView는 캐시된 값만 돌려준다).
     public string GetSlotTooltip(int index)
     {
+        if (pirate != null)
+        {
+            if (index == PageSlot) return pirateOpen ? "도박소로 돌아갑니다" : "해적단 퀘스트 — 미니보스 퇴치 의뢰를 삽니다";
+            if (pirateOpen) return index >= 0 && index < PirateVisibleSlots && index < pirate.SlotCount ? pirate.GetSlotTooltip(index) : null;
+        }
         if (index == TraitPointSlotIndex) return BuildTraitPointTooltip();
 
         GamblingOptionData option = OptionAt(index);
@@ -133,6 +166,13 @@ public class GamblingShop : MonoBehaviour, ILaneShop
 
     public bool TryUse(int index, LaneShopTarget target, out string failReason)
     {
+        // 절대 번호: 100 이상 = 해적단 퀘스트(서버·호스트·싱글 모두). 쪽 넘김 칸은 HUD가 TryChangePage로 먼저 처리해 여기 안 온다.
+        if (index >= PirateNetBase)
+        {
+            failReason = null;
+            return pirate != null && index - PirateNetBase < PirateVisibleSlots && pirate.TryUse(index - PirateNetBase, target, out failReason);
+        }
+        if (index == PageSlot) { failReason = null; return false; }   // 8번은 쪽 넘김 전용 — 도박 옵션이 없는 빈 칸
         if (index == TraitPointSlotIndex) return TryPurchaseTraitPoint(out failReason);
 
         failReason = null;
