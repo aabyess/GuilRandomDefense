@@ -169,6 +169,21 @@ static class DisplayProbe
             System.Reflection.MethodInfo m = typeof(RewardDistributor).GetMethod("GrantItemDrop", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
             m.Invoke(RewardDistributor.Instance, new object[] { me, 1f, drops });
             sb.AppendLine($"7번째({(seventh != null ? seventh.itemName : "없음")}) 드랍 경로 호출 → 보유 {me.ItemInventory.Items.Count}/{ItemInventory.MaxItems} (6이면 거절됨, 알림은 화면 사진으로)");
+            // 알림은 6초뿐이라 gameshot의 늦은 사진엔 안 잡힌다 — 7번째 시도 0.5초 뒤에 직접 찍는다(UI 포함, Game 뷰가 보이는 상태여야 써진다).
+            string root = System.IO.Path.GetDirectoryName(Application.dataPath);
+            string shots = System.IO.Path.Combine(root, "ClaudeBridge/shots");
+            System.IO.Directory.CreateDirectory(shots);
+            string snap = System.IO.Path.Combine(shots, "구현담당2_ItemsFull.png");
+            double due = EditorApplication.timeSinceStartup + 0.5;
+            EditorApplication.CallbackFunction snapTick = null;
+            snapTick = () =>
+            {
+                if (EditorApplication.timeSinceStartup < due) return;
+                EditorApplication.update -= snapTick;
+                if (Application.isPlaying) ScreenCapture.CaptureScreenshot(snap);
+            };
+            EditorApplication.update += snapTick;
+            sb.AppendLine("0.5초 뒤 사진 → ClaudeBridge/shots/구현담당2_ItemsFull.png");
             return sb.ToString();
         });
         return "ItemsFull 예약";

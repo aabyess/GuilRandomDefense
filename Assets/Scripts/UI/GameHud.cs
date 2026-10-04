@@ -400,6 +400,7 @@ public class GameHud : MonoBehaviour
         {
             if (gameMenu.activeSelf) CloseGameMenu(); else OpenGameMenu();
         }
+        if (gameMenuScreenButtons != null && gameMenuScreenButtons.activeInHierarchy) RefreshScreenButtons();   // 해상도 바뀜은 한 프레임 뒤에 반영된다
         RefreshConsoleLayout();
         RefreshFitGrids();
         RefreshSelectionPanel();
@@ -648,6 +649,9 @@ public class GameHud : MonoBehaviour
     GameObject gameMenuConfirmButtons;
     TMP_Text gameMenuConfirmLabel;
     TMP_Text gameMenuSoundLabel;
+    GameObject gameMenuScreenButtons;
+    readonly Image[] gameMenuScreenImages = new Image[ScreenMode.Options.Length];
+    readonly Button[] gameMenuScreenButtonComponents = new Button[ScreenMode.Options.Length];
 
     void RefreshSoundLabel() => gameMenuSoundLabel.text = GameSound.Enabled ? "소리 끄기" : "소리 켜기";
 
@@ -666,7 +670,7 @@ public class GameHud : MonoBehaviour
         openableGameMenu = gameMenu;
 
         RectTransform card = CreatePanel(dim, "Card", new Color(0.13f, 0.16f, 0.23f, 0.97f));
-        SetAnchors(card, new Vector2(0.29f, 0.38f), new Vector2(0.71f, 0.64f));   // 가장 긴 문구가 한 줄에 들어가는 폭
+        SetAnchors(card, new Vector2(0.22f, 0.38f), new Vector2(0.78f, 0.64f));   // 가장 긴 문구가 한 줄에 들어가는 폭(화면 단추 여섯이 들어가게 넓힘)
         AddPanelBorder(card, BorderColor, BorderThickness);
 
         gameMenuMessage = CreateLabel(card, "Message", "메뉴");
@@ -674,10 +678,25 @@ public class GameHud : MonoBehaviour
         gameMenuMessage.fontSize = 26;
 
         gameMenuMainButtons = CreateRow(card, "MainButtons");
-        CreateMenuButton(gameMenuMainButtons.transform, "ContinueButton", "계속하기", new Color(0.20f, 0.52f, 0.86f, 1f), new Vector2(0.04f, 0f), new Vector2(0.33f, 1f), CloseGameMenu);
+        CreateMenuButton(gameMenuMainButtons.transform, "ContinueButton", "계속하기", new Color(0.20f, 0.52f, 0.86f, 1f), new Vector2(0.02f, 0f), new Vector2(0.26f, 1f), CloseGameMenu);
         // 소리 켜기/끄기(PM 09-27 — 설정 창이 없어 메뉴 한 줄. GameSound가 PlayerPrefs로 기억한다)
-        gameMenuSoundLabel = CreateMenuButton(gameMenuMainButtons.transform, "SoundButton", "", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.355f, 0f), new Vector2(0.645f, 1f), ToggleSound);
-        CreateMenuButton(gameMenuMainButtons.transform, "HomeButton", "처음 화면으로", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.67f, 0f), new Vector2(0.96f, 1f), ShowGameMenuConfirm);
+        gameMenuSoundLabel = CreateMenuButton(gameMenuMainButtons.transform, "SoundButton", "", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.275f, 0f), new Vector2(0.505f, 1f), ToggleSound);
+        // 화면 모드·해상도(10-04 친구 피드백) — 누르면 단추 줄이 화면 선택으로 바뀐다.
+        CreateMenuButton(gameMenuMainButtons.transform, "ScreenButton", "화면", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.52f, 0f), new Vector2(0.745f, 1f), ShowGameMenuScreen);
+        CreateMenuButton(gameMenuMainButtons.transform, "HomeButton", "처음 화면으로", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.76f, 0f), new Vector2(0.98f, 1f), ShowGameMenuConfirm);
+
+        gameMenuScreenButtons = CreateRow(card, "ScreenButtons");
+        float cell = 0.96f / (ScreenMode.Options.Length + 1);
+        for (int i = 0; i < ScreenMode.Options.Length; i++)
+        {
+            int captured = i;
+            float x = 0.02f + cell * i;
+            TMP_Text label = CreateMenuButton(gameMenuScreenButtons.transform, $"ScreenOption{i}", ScreenMode.Options[i].label, new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(x + 0.004f, 0f), new Vector2(x + cell - 0.004f, 1f), () => OnScreenOptionClicked(captured));
+            label.fontSize = 19;
+            gameMenuScreenImages[i] = label.transform.parent.GetComponent<Image>();
+            gameMenuScreenButtonComponents[i] = label.transform.parent.GetComponent<Button>();
+        }
+        CreateMenuButton(gameMenuScreenButtons.transform, "ScreenBackButton", "뒤로", new Color(0.20f, 0.52f, 0.86f, 1f), new Vector2(0.02f + cell * ScreenMode.Options.Length + 0.004f, 0f), new Vector2(0.98f, 1f), OpenGameMenu).fontSize = 19;
 
         gameMenuConfirmButtons = CreateRow(card, "ConfirmButtons");
         gameMenuConfirmLabel = CreateMenuButton(gameMenuConfirmButtons.transform, "ConfirmButton", "나가기", new Color(0.55f, 0.22f, 0.24f, 1f), new Vector2(0.05f, 0f), new Vector2(0.48f, 1f), ConfirmLeaveGame);
@@ -711,11 +730,39 @@ public class GameHud : MonoBehaviour
         RefreshSoundLabel();
         gameMenuMainButtons.SetActive(true);
         gameMenuConfirmButtons.SetActive(false);
+        gameMenuScreenButtons.SetActive(false);
         gameMenu.SetActive(true);
         gameMenu.transform.SetAsLastSibling();
     }
 
     void CloseGameMenu() => gameMenu.SetActive(false);
+
+    void ShowGameMenuScreen()
+    {
+        gameMenuMainButtons.SetActive(false);
+        gameMenuScreenButtons.SetActive(true);
+        RefreshScreenButtons();
+    }
+
+    void OnScreenOptionClicked(int index)
+    {
+        ScreenMode.Choose(index);
+        RefreshScreenButtons();
+    }
+
+    // 지금 Screen 상태와 맞는 칸을 밝게, 모니터에 안 들어가는 칸은 회색으로 막는다. 해상도 바뀜은 프레임 뒤에 반영돼 Update에서도 다시 그린다.
+    void RefreshScreenButtons()
+    {
+        int current = ScreenMode.CurrentIndex();
+        for (int i = 0; i < gameMenuScreenImages.Length; i++)
+        {
+            bool available = ScreenMode.IsAvailable(i);
+            gameMenuScreenButtonComponents[i].interactable = available;
+            gameMenuScreenImages[i].color = !available ? new Color(0.18f, 0.20f, 0.26f, 1f)
+                : i == current ? new Color(0.20f, 0.52f, 0.86f, 1f) : new Color(0.26f, 0.32f, 0.44f, 1f);
+        }
+        gameMenuMessage.text = current >= 0 ? $"화면: {ScreenMode.Options[current].label}" : $"화면: 창 {Screen.width}×{Screen.height}";
+    }
 
     public void ShowGameMenuConfirm()
     {
@@ -727,6 +774,7 @@ public class GameHud : MonoBehaviour
             : "나가면 유닛이 모두 사라집니다. 나갈까요?";
         gameMenuConfirmLabel.text = online ? "나가기" : "처음 화면으로";
         gameMenuMainButtons.SetActive(false);
+        gameMenuScreenButtons.SetActive(false);
         gameMenuConfirmButtons.SetActive(true);
     }
 
