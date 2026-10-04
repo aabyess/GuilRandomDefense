@@ -2516,6 +2516,12 @@ public static class MapGenerator
     //       교훈: 모델 파일을 바꾼 뒤엔 반드시 모델 배선부터 — 옛 프리팹 값이 새 모델을 비틀어도 조용하다.
     static readonly string[] BrokenSkinDolls = { };
 
+    /// <summary>모델 이름(프리팹에서 Unit_을 뗀 것) → 조합판·부스·전시 인형의 키 배수. ArtBinder.ModelAdjustments에서 키를 줄인 모델만 적는다.</summary>
+    static readonly Dictionary<string, float> DollHeightMultiplier = new Dictionary<string, float>
+    {
+        { "흔함_강재규", 0.5f },   // 쵸파 — 프리팹 0.85→0.425(절반)와 같은 비
+    };
+
     // 유닛 프리팹에서 보이는 부분만 떼어 세운다. 프리팹을 통째로 놓으면 조합표 위에
     // 진짜 유닛이 살아 움직이게 된다 — 이건 보여주기용 인형이라 부품을 전부 걷어낸다.
     static bool TryPlaceUnitModel(Transform parent, string name, Vector3 ground, UnitData unit, float height, float yaw = 0f) =>
@@ -2527,6 +2533,10 @@ public static class MapGenerator
         if (unit == null || unit.prefab == null) return false;
         string brokenCheck = unit.prefab.name.StartsWith("Unit_") ? unit.prefab.name.Substring(5) : unit.prefab.name;
         if (BrokenSkinDolls.Contains(brokenCheck)) return false;   // 색 큐브로 — 위 표 주석 참고
+
+        // 모델별 인형 키 배수 — 인형은 프리팹 크기를 안 먹고 목표 키(height)에 맞춰 다시 키우므로, 「이 유닛은 작게」는 여기서도 같이 줘야 한다.
+        //    (ArtBinder.ModelAdjustments의 키 배수와 짝 — 10-04 흔함_강재규(쵸파) 「반으로」: 프리팹 0.85→0.425였는데 부스·조합판 인형은 그대로 같은 키였다.)
+        if (DollHeightMultiplier.TryGetValue(brokenCheck, out float dollMultiplier)) height *= dollMultiplier;
 
         GameObject figure = Object.Instantiate(unit.prefab, parent);
         figure.name = name;
