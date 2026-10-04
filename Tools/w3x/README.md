@@ -8,6 +8,13 @@
 `(listfile)`이 지워져 있고 내부 파일이 **암호화**되어 있어서, `mpyq` 같은 기성 라이브러리는
 파일 목록도 못 읽고 암호화 블록도 못 푼다. `mpqread.py`가 그 둘을 직접 처리한다.
 
+## 원본 위치 (사장님 10-04: 「이 파일 계속 쓸 테니 옮겨서 계속 뜯어봐라」)
+
+- **정본: `Tools/w3x/원본/ORD11.089.w3x`**(git 무시 폴더, sha1 91f19087…). `~/Downloads/`에 있던 같은 파일은 치웠다 — 문서의 옛 경로 `~/Downloads/ORD11.089.w3x`는 이 경로로 읽을 것.
+- **미리 풀어 둔 것: `Tools/w3x/원본/풀린것/`** — war3map.j(5.3MB 트리거)·w3u(유닛)·w3t(아이템)·w3a(능력)·w3b·w3d·w3q(업그레이드)·w3h(버프)·wts(문자열)·w3i·doo(배치)·w3e(지형)·mmp·shd·wpm·war3mapMap.blp(미니맵)·war3mapMisc/Skin/Extra.txt. 없는 것: war3mapUnits.doo·w3r·w3c·w3s·imp·wct·wtg·(listfile).
+  BLP·MDX 같은 임포트 파일은 listfile이 없어 **이름을 알아야** 꺼낸다(w3t iico·w3a 아트 필드·w3u umdl에서 이름을 얻어 `a.read(이름)`).
+- 🔴 `mpyq`가 `/usr/bin/python3`에만 깔려 있다(homebrew python3엔 없음) → `/usr/bin/python3`로 돌릴 것.
+
 ## 쓰는 법
 
 ```python
@@ -16,7 +23,7 @@ from mpqread import Archive
 import w3u, w3q, w3a, wts
 
 # 1) 앞 512바이트를 잘라 MPQ만 남긴다
-src = open('/경로/ORD11.089.w3x','rb').read()
+src = open('Tools/w3x/원본/ORD11.089.w3x','rb').read()
 open('/tmp/ord.mpq','wb').write(src[512:])
 
 # 2) 원하는 파일을 꺼낸다
