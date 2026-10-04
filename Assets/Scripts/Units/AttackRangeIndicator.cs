@@ -81,6 +81,8 @@ public class AttackRangeIndicator : MonoBehaviour
         if (!wanted) return;
         Rebuild();   // 선택해 둔 채 강화·버프로 사거리가 바뀌어도 따라간다(같으면 바로 돌아간다)
         if (!line.enabled) { if (pulse != null) pulse.enabled = false; return; }
+        // 사장님 10-04: 사거리 원은 A(공격 대기)를 눌렀을 때만 — 그냥 선택만 했을 땐 안 그린다.
+        if (!SelectionManager.AttackModeActive) { line.enabled = false; if (pulse != null) pulse.enabled = false; return; }
 
         bool wantAttack = SelectionManager.AttackModeActive;
         if (wantAttack != attackMode)

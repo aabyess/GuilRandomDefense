@@ -47,7 +47,7 @@ public class Selectable : MonoBehaviour
         else if (indicator != null)
             indicator.SetSelected(selected);
 
-        // 사거리 원은 선택했을 때만. 항상 켜두면 레인이 원으로 덮인다.
+        // 사거리 원은 선택된 유닛에만 걸어 두고, 실제로 그리는 건 A(공격 대기) 중일 때뿐이다(AttackRangeIndicator, 사장님 10-04).
         if (rangeIndicator != null) rangeIndicator.SetVisible(selected);
     }
 
