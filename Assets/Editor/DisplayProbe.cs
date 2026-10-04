@@ -188,4 +188,27 @@ static class DisplayProbe
         });
         return "ItemsFull 예약";
     }
+
+    // 특수지급 세 자리 이름표 촬영용 — 카메라를 가운데 자리(박은석) 앞 거리 190에 세운다(WorldLabel 페이드 260~520 안, 구현담당1 실측).
+    // MoveTo만 쓰면 높이 감쇠로 엉뚱한 곳을 봐서 position + RtsCameraController.targetHeight를 직접 맞춘다. gameshot call:DisplayProbe.CamToSpecial wait:3
+    static string CamToSpecial()
+    {
+        float born = (float)EditorApplication.timeSinceStartup;
+        WhenReady("CamToSpecial", () => EditorApplication.timeSinceStartup - born > 2f && Camera.main != null, () =>
+        {
+            GameObject label = null;
+            foreach (GameObject go in Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (go.name.StartsWith("특수지급_라벨_박은석")) { label = go; break; }
+            if (label == null) return "❌ 특수지급_라벨_박은석 오브젝트 없음(RepairGachaRewardDisplays 먼저)";
+            Camera cam = Camera.main;
+            Vector3 look = label.transform.position + new Vector3(0f, 10f, 30f);
+            Vector3 pos = look - cam.transform.forward * 190f;
+            RtsCameraController rts = cam.GetComponent<RtsCameraController>();
+            cam.transform.position = pos;
+            if (rts != null)
+                typeof(RtsCameraController).GetField("targetHeight", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.SetValue(rts, pos.y);
+            return $"카메라 → {pos:F1} (보는 곳 {look:F1})";
+        });
+        return "CamToSpecial 예약";
+    }
 }
