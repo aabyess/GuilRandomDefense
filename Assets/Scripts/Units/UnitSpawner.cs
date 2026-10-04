@@ -36,6 +36,10 @@ public class UnitSpawner : MonoBehaviour
         if (instance.TryGetComponent(out UnitAttacker attacker))
             attacker.ApplyStats(data.attackPower, data.attackRange, data.attackSpeed);
 
+        // 공격할 때 표적을 바라본다(겉모습만, 10-04). 전투 유닛(UnitCombat)에만.
+        if (instance.GetComponent<UnitCombat>() != null && instance.GetComponent<UnitFacing>() == null)
+            instance.AddComponent<UnitFacing>();
+
         if (instance.TryGetComponent(out NavMeshAgent agent))
         {
             agent.speed = data.moveSpeed;
