@@ -4054,15 +4054,19 @@ public static class ClaudeCommands
     static (float bottom, float top) PointerBand()
     {
         Canvas.ForceUpdateCanvases();
+        // 🔴 Screen.height는 에디터 창 크기라 Game 뷰 해상도(cam.pixelHeight)와 다를 수 있다(10-04 g1_y3: Screen 642x1156 · cam 1600x900 →
+        //    TopBar 871/1156=0.75로 잘못 나와 띠가 위에서 25%나 잘렸다 — g1_292·293 포탈 우클릭 전부 건너뜀의 뿌리). 카메라 기준으로 나눈다.
+        Camera bandCam = Camera.main;
+        float viewH = bandCam != null ? bandCam.pixelHeight : Screen.height;
         float bottom = 0f, top = 1f;
         foreach ((string objName, bool isBottom) in new[] { ("BottomBar", true), ("TopBar", false) })
         {
             GameObject found = GameObject.Find(objName);
-            if (found == null || !(found.transform is RectTransform rect) || Screen.height <= 0) continue;
+            if (found == null || !(found.transform is RectTransform rect) || viewH <= 0) continue;
             Vector3[] corners = new Vector3[4];
             rect.GetWorldCorners(corners);
-            if (isBottom) bottom = Mathf.Max(corners[0].y, corners[2].y) / Screen.height;
-            else top = Mathf.Min(corners[0].y, corners[2].y) / Screen.height;
+            if (isBottom) bottom = Mathf.Max(corners[0].y, corners[2].y) / viewH;
+            else top = Mathf.Min(corners[0].y, corners[2].y) / viewH;
         }
         return (bottom, top);
     }
