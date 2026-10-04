@@ -11,7 +11,7 @@ using UnityEngine;
 /// </summary>
 public class GameVersion : MonoBehaviour
 {
-    public const string Number = "0.3.5";
+    public const string Number = "0.3.6";
     // 사장님 표기 그대로 「1.1.0v」(09-26 두 번 — 「1.1.0v 이런식으로」). 앱·압축 파일 이름에도 이 글자를 쓴다(BuildBeta).
     public static string Label => Number + "v";
 
