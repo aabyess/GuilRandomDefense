@@ -84,7 +84,15 @@ public class SupportShop : MonoBehaviour, ILaneShop
         LaneShopTargetKind kind = TargetKindOf(skill);
         // 지점 스킬은 찍는 동안 반경 원을 보여 준다(맵 전체 스킬은 원이 뜻이 없어 0).
         float radius = kind == LaneShopTargetKind.Ground && !skill.mapWide ? skill.radius : 0f;
-        return new LaneShopSlotView(skill.skillName, SkillColor, CanCast(skill), kind, radius);
+        // 쿨다운(재사용 대기)은 늘, 재고식은 재고 0일 때 「다음 1개까지」 — 더 긴 쪽을 덮개로 보인다.
+        float cdRemaining = GetCooldownRemaining(skill);
+        float cdTotal = cdRemaining > 0f ? skill.EffectiveCooldownSeconds(IsBoosted(OwnerContext, skill)) : 0f;
+        if (skill.stockMax > 0 && skill.stockRegenSeconds > 0f && Stock(skill) <= 0)
+        {
+            float stockRemaining = SecondsToNextStock(skill);
+            if (stockRemaining > cdRemaining) { cdRemaining = stockRemaining; cdTotal = skill.stockRegenSeconds; }
+        }
+        return new LaneShopSlotView(skill.skillName, SkillColor, CanCast(skill), kind, radius, '\0', cdRemaining, cdTotal);
     }
 
     static LaneShopTargetKind TargetKindOf(SupportSkillData skill)

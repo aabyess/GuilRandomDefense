@@ -22,10 +22,14 @@ public readonly struct LaneShopSlotView
     public readonly float targetRadius;
     // 이 칸의 단축키. '\0'이면 HUD가 칸 위치로 워크3 격자 키(Q W E R / A S D F / Z X C V)를 준다.
     public readonly char hotkey;
+    // 워크3 쿨다운 표시(사장님 10-04): 남은 초·전체 초. cooldownTotal이 0이거나 남은 게 0이면 덮개 없음.
+    // HUD가 받은 순간 「끝나는 시각」으로 바꿔 매 프레임 비율을 돌린다(0.4초 갱신 사이를 부드럽게) — 상점은 평소처럼 캐시 값만 넘기면 된다.
+    public readonly float cooldownRemaining;
+    public readonly float cooldownTotal;
 
     public LaneShopSlotView(string label, Color color, bool available,
                              LaneShopTargetKind targetKind = LaneShopTargetKind.None, float targetRadius = 0f,
-                             char hotkey = '\0')
+                             char hotkey = '\0', float cooldownRemaining = 0f, float cooldownTotal = 0f)
     {
         this.label = label;
         this.color = color;
@@ -33,6 +37,8 @@ public readonly struct LaneShopSlotView
         this.targetKind = targetKind;
         this.targetRadius = targetRadius;
         this.hotkey = hotkey;
+        this.cooldownRemaining = cooldownRemaining;
+        this.cooldownTotal = cooldownTotal;
     }
 
     // label이 null/빈 문자열이면 HUD는 이 칸을 빈 칸으로 취급한다(투명 처리).

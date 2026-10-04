@@ -220,7 +220,8 @@ public class VoyageLogShop : MonoBehaviour, ILaneShop
 
         // 단축키 Q — 사장님 10-02 「건물 누르고 q 누르고 왼쪽 클릭」.
         return new LaneShopSlotView(cachedSearchLabel, LogColor, seconds <= 0, LaneShopTargetKind.Ground,
-                                    hunt.RangeFor(owner.OwnerId), 'Q');
+                                    hunt.RangeFor(owner.OwnerId), 'Q',
+                                    hunt.CooldownRemaining(owner.OwnerId), hunt.CooldownFor(OwnerContext));
     }
 
     string GetSearchTooltip()
