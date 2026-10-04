@@ -3067,10 +3067,18 @@ public static class MapGenerator
     const float BandWispGap = PortalDiameter * 0.5f + WispColliderRadius + WispCellMargin;
 
     // 위습이 생겨 머무는 칸. 생성 지점에서 위습 반지름만큼 더 내려가도 칸 안이어야 한다(여유 5).
-    const float CommonAreaDepth = ChoiceWispGap + WispColliderRadius + 5f;
+    // 🔴 2026-10-04 사장님 「선택위습 흔함 뽑는 곳이 위아래가 너무 좁다」: 인형 키가 30→48(×1.6)이 됐는데 부스 깊이(14)와 위습 머무는 칸은 그대로라
+    //    48짜리 인형이 깊이 14 부스에 서고 위습(지름 25)이 46.5 칸에 끼었다. 세로만 인형 배율(UnitHeight÷30)만큼 늘린다 —
+    //    가로는 부스 폭 72.6(= 섬 폭 726 ÷ 흔함 9+1)이 포탈 지름 27보다 넉넉해서 「두 줄로 접기」는 필요 없다. 위습↔포탈 거리(ChoiceWispGap)는 그대로.
+    public const float ChoiceRowScale = ArtBinder.UnitHeight / 30f;
+    const float CommonAreaDepthBase = ChoiceWispGap + WispColliderRadius + 5f;   // 늘리기 전 값(46.5)
+    const float CommonAreaDepth = CommonAreaDepthBase * ChoiceRowScale;
+    const float BoothDepthBase = 14f;
+    /// <summary>뽑기섬 위쪽 흔함 줄이 깊어진 만큼 섬을 아래로 늘리는 양(MapLayout.GachaExtraZ가 더한다) — 아래 등급 칸 높이가 안 줄게.</summary>
+    public const float GachaChoiceRowExtraZ = (BoothDepthBase + CommonAreaDepthBase) * (ChoiceRowScale - 1f);
 
     const float PortalInset = 9f;       // 칸 위벽에서 포탈까지
-    const float BoothDepth = 14f;        // 포탈 앞부터 뒷벽까지
+    const float BoothDepth = BoothDepthBase * ChoiceRowScale;   // 포탈 앞부터 뒷벽까지(14 × 인형 배율)
     const float BoothWallHeight = 4.5f;
     const float BoothWallThickness = 0.6f;
 
