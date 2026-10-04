@@ -2192,6 +2192,7 @@ public static class MapGenerator
     //    포탈 자체는 세 자리 모두 진짜다 — 박은석 초월위습도 로스터 「초월위습_박은석」(unitName 박은석초월위습)으로 UnitPortal이 배선된다
     //    (「미구현_」 가지는 안 탄다). 라벨은 전시물(인형 키 48) 몸에 가리지 않게 마법진 **앞**(−z, 카메라 쪽)에 둔다.
     //    이름이 「특수지급_」로 시작해 RepairGachaRewardDisplays가 전시물과 같이 지우고 다시 짓는다.
+    const float SpecialLabelSizeMul = 5f;   // 10-04: 실측 사진을 보고 조정(글자가 자리 간격 ≈62에 닿으면 줄이고, 아직 작으면 키운다)
     static readonly Color LockedPortalColor = new Color(0.50f, 0.50f, 0.62f, 0.9f);   // 어둡지만 땅과 구분되는 회청색(기본 0.3 회색 알파 0.6은 땅에 묻혔다)
 
     static string BuildSpecialSlotMarks(Transform parent)
@@ -2227,16 +2228,23 @@ public static class MapGenerator
                 float x = sumX / slotGates.Count;
 
                 string title = slot.givesResources ? "금화+목재" : slot.label;
-                float frontZ = z - diameter * 0.62f;   // 마법진 앞쪽(카메라가 +z를 본다)
+                // 글자 크기: TMP 월드 글자는 fontSize 1 = 0.1 단위라 지름×0.48(=13)은 마법진 폭 27에 비해 줄 폭 10 남짓이었다(10-04 z7.png 실측: 거의 안 읽힘).
+                //   한 줄(8자)이 마법진 폭을 넘고 자리 간격(≈62)엔 안 닿게 SpecialLabelSizeMul배. 글자 한 줄 높이 = fontSize×0.1.
+                float fontSize = diameter * PortalLabelSizePerDiameter * SpecialLabelSizeMul;
+                float lineHeight = fontSize * 0.1f * 1.3f;
+                // 둘 다 마법진 **앞**(−z, 카메라 쪽) 땅 가까이에 줄지어 둔다. 예전엔 「열림」 글자를 위로(y+23) 올려, 투영하면 마법진 한가운데
+                // 인형 몸 위에 작게 얹혔다(z7.png) — 켜져 있었지만 인형에 묻혔다. 이름 한 줄 아래에 「열림」 줄.
+                float nameZ = z - diameter * 0.5f - lineHeight * 0.7f;
+                float labelY = MapLayout.IslandTop + lineHeight * 0.5f + 0.5f;
                 GameObject nameHolder = new GameObject($"{SpecialDisplayPrefix}라벨_{slot.label}");
                 nameHolder.transform.SetParent(parent, false);
-                nameHolder.transform.position = new Vector3(x, MapLayout.IslandTop + diameter * 0.30f, frontZ);
-                nameHolder.AddComponent<WorldLabel>().Configure(title, Color.white, diameter * PortalLabelSizePerDiameter);
+                nameHolder.transform.position = new Vector3(x, labelY, nameZ);
+                nameHolder.AddComponent<WorldLabel>().Configure(title, Color.white, fontSize);
 
                 GameObject lockHolder = new GameObject($"{SpecialDisplayPrefix}잠김_{slot.label}");
                 lockHolder.transform.SetParent(parent, false);
-                lockHolder.transform.position = new Vector3(x, MapLayout.IslandTop + diameter * 0.30f + diameter * 0.55f, frontZ);
-                lockHolder.AddComponent<WorldLabel>().Configure("백수생활 때 열림", new Color(1f, 0.51f, 0f, 1f), diameter * PortalLabelSizePerDiameter);
+                lockHolder.transform.position = new Vector3(x, labelY, nameZ - lineHeight * 1.1f);
+                lockHolder.AddComponent<WorldLabel>().Configure("백수생활 때 열림", new Color(1f, 0.51f, 0f, 1f), fontSize);
 
                 foreach (InterludeGate gate in slotGates)
                 {
