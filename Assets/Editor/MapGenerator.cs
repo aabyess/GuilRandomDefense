@@ -4083,6 +4083,37 @@ public static class MapGenerator
         return "해적단 → 도박소 합치기 Repair\n" + string.Join("\n", lines) + "\n" + nav;
     }
 
+    // 부르기: call MapGenerator.RepairLaneShopModels — 레인 상점 건물 모양만 다시 입힌다(10-04 상점 7채 새 모양).
+    // 상자(클릭 판정·상점 컴포넌트)는 그대로 두고 「_모양」만 지운 뒤 StructureDresser.DressLaneShop으로 새 모델을 세운다.
+    // ⚠️ 해적단 합치기(RepairPirateIntoGambling)로 자리를 옮긴 **뒤에** 부를 것 — 이 함수는 상자 자리에 세운다.
+    static string RepairLaneShopModels()
+    {
+        string[] suffixes = { "도박소", "유닛강화소", "다른세계강화소", "영원함강화소", "공격타입강화소", "도움소", "항해일지" };
+        var lines = new List<string>();
+        GameObject anyShop = null;
+        foreach (MapLayout.Island lane in MapLayout.Lanes)
+        {
+            int dressed = 0;
+            foreach (string suffix in suffixes)
+            {
+                GameObject body = GameObject.Find($"{lane.name}_{suffix}");
+                if (body == null) { lines.Add($"  ⚠️ {lane.name}_{suffix} 없음"); continue; }
+                anyShop = body;
+                GameObject oldModel = GameObject.Find($"{lane.name}_{suffix}_모양");
+                if (oldModel != null) Object.DestroyImmediate(oldModel);
+                StructureDresser.DressLaneShop(body);
+                if (GameObject.Find($"{lane.name}_{suffix}_모양") != null) dressed++;
+                else lines.Add($"  ⚠️ {lane.name}_{suffix}: 모델을 못 세움");
+            }
+            lines.Add($"  {lane.name}: {dressed}/{suffixes.Length}채");
+        }
+        if (anyShop == null) return "⚠️ 상점을 하나도 못 찾았습니다 — 맵이 생성돼 있지 않거나 열린 씬이 다릅니다.";
+        var scene = anyShop.scene;
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+        return "레인 상점 모양 다시 입히기\n" + string.Join("\n", lines);
+    }
+
     static string RepairCombineBoardDryRun() => RepairCombineBoardCore(true);
     static string RepairCombineBoard() => RepairCombineBoardCore(false);
 
