@@ -2234,7 +2234,8 @@ public static class MapGenerator
                 float lineHeight = fontSize * 0.1f * 1.3f;
                 // 둘 다 마법진 **앞**(−z, 카메라 쪽) 땅 가까이에 줄지어 둔다. 예전엔 「열림」 글자를 위로(y+23) 올려, 투영하면 마법진 한가운데
                 // 인형 몸 위에 작게 얹혔다(z7.png) — 켜져 있었지만 인형에 묻혔다. 이름 한 줄 아래에 「열림」 줄.
-                float nameZ = z - diameter * 0.5f - lineHeight * 0.7f;
+                // 레일리+배 자리는 자전거 앞바퀴가 마법진 앞으로 튀어나와 글자를 가렸다(10-04 사진) — 세 자리 모두 한 줄 더 앞으로 빼 줄을 맞춘다.
+                float nameZ = z - diameter * 0.5f - lineHeight * 1.9f;
                 float labelY = MapLayout.IslandTop + lineHeight * 0.5f + 0.5f;
                 GameObject nameHolder = new GameObject($"{SpecialDisplayPrefix}라벨_{slot.label}");
                 nameHolder.transform.SetParent(parent, false);
