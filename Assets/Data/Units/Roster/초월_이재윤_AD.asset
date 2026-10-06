@@ -12,20 +12,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1426f971d9174ed9b3e5519d787e74b, type: 3}
   m_Name: "\uCD08\uC6D4_\uC774\uC7AC\uC724_AD"
   m_EditorClassIdentifier: 
-  unitName: "\uC774\uC7AC\uC724"
+  unitName: "\uCD08\uD2B9\uAE09\uC778\uC2F8"
   grade: 7
   skinAlias: "\uC637\uCF54\uCE20 \uC720\uD0C0,Yuta Okkotsu,Yuta"
   damageType: 1
   attackType: 1
-  movementAbility: 0
+  movementAbility: 1
   hp: 6122.2
   attackPower: 45405.3
   attackRange: 238.44
   attackSpeed: 1.7343
   moveSpeed: 125.3
   skill: {fileID: 0}
-  skills: []
-  trait: {fileID: 11400000, guid: 69cc5ca1e25487b0422b5c9b941994c9, type: 2}
+  skills:
+  - {fileID: 11400000, guid: 372a42e6262aa4ca4a2a39dbd4678e45, type: 2}
+  - {fileID: 11400000, guid: 6003e840a962649e79c7e15254883a28, type: 2}
+  - {fileID: 11400000, guid: 3735d3448916548f4b977768a2d74ebb, type: 2}
+  - {fileID: 11400000, guid: e8719f56e39454fa88231c23133382eb, type: 2}
+  - {fileID: 11400000, guid: 397635d0017a741f0b12160c7a6f7664, type: 2}
+  - {fileID: 11400000, guid: 42b849d8fa6fa4dfaa49c3b7bc82248d, type: 2}
+  trait: {fileID: 0}
   prefab: {fileID: 406646326744551679, guid: d27658eb317344d5f86dc1a1c1b84f13, type: 3}
   critChance: 0
   critDamageMultiplier: 1
@@ -52,7 +58,7 @@ MonoBehaviour:
   sellRewardEveryNWoodChance: 1
   primaryStat: 2
   manaRegenPerSecond: 0
-  manaMax: 0
+  manaMax: 50
   manaGaugePerMana: 0
   lifeGaugeRegenPerSecond: 0
   lifeGaugeMax: 0

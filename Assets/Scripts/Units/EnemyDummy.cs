@@ -192,6 +192,22 @@ public class EnemyDummy : MonoBehaviour
         if (freezeCount == 1 && stunVfx == null) stunVfx = SkillVfx.Attach(SkillVfx.Kind.Stun, transform, VfxTop + 4f);
     }
 
+    /// <summary>영구 정지(종이비행기 유물): 풀 방법 없이 겹침 횟수를 하나 더 올려 둔다 — 다른 스턴이 끝나도 계속 멈춰 있다. 보스도 마찬가지(끝까지 멈춤).</summary>
+    public bool FrozenForever { get; private set; }
+    public void FreezeForever()
+    {
+        if (FrozenForever) return;
+        FrozenForever = true;
+        AddFreeze();
+    }
+
+    /// <summary>현재체력을 비율만큼 깎는다(최대체력은 그대로, 죽이지 않는다 — 비율 < 1). 종이비행기의 −25%.</summary>
+    public void CutCurrentHpPercent(float fraction)
+    {
+        if (isDead || fraction <= 0f || fraction >= 1f) return;
+        hp *= 1f - fraction;
+    }
+
     public void RemoveFreeze()
     {
         freezeCount = Mathf.Max(0, freezeCount - 1);

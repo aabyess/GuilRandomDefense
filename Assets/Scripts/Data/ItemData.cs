@@ -116,6 +116,8 @@ public enum ItemUseKind
     WispBundle,       // I011 위습꾸러미
     AncientShip,      // I00S 고대의배
     HeroTransform,    // I003 명검 — 영웅 변신(캐릭터 연동, 아직 사용 불가)
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 이재윤 유물 종이비행기) — 눌러서 적 하나를 고르면 그 적을 영구 정지 + 내 레인 적 전체 현재체력 −25%. 한 번 쓰면 끝, 아이템은 남는다(PaperPlane.TryUse).
+    PaperPlane,
 }
 
 [System.Serializable]

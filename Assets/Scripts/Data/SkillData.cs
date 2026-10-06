@@ -749,6 +749,10 @@ public class SkillLevel
     // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 김민준 푸바오 「포커싱오더」) — ActiveButton 스킬 전용 **토글**: 누르면 켜짐/꺼짐만 바뀐다(쿨·효과 없음).
     // 켜진 동안 시전자 + 시전자의 소환수가 사거리 안에서 「잃은 체력이 가장 많은 적」을 먼저 친다(UnitAttacker.FocusLostHp · UnitCombat 표적 고르기).
     public bool toggleMode;
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 이재윤 「내면의악」) — 0이 아니면 이 레벨(주로 오라)은 「내 레인의 적 수(유닛 카운트)가 [패배 한계−N, 패배 한계]일 때만」 켜진다.
+    // 한계는 HUD 「유닛 카운트 = 70 <- 패배」와 같은 값(RoundManager.EnemyCountLimit, 난이도별). 켜진 동안 Enemies 오라는 **내 레인의 적에게만** 걸린다.
+    public int laneCountWindow;
 }
 
 public enum SkillAoeCenter

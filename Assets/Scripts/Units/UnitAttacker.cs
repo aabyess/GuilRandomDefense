@@ -1206,8 +1206,21 @@ public class UnitAttacker : MonoBehaviour
     static bool PassesArmorBreakGate(SkillLevel level, EnemyDummy target) =>
         level.targetArmorBreakAbove <= 0f || (target != null && target.Aid1Shred > level.targetArmorBreakAbove);
 
+    // 레인 적 수 창(SkillLevel.laneCountWindow, 초월 이재윤 「내면의악」) — 내 레인의 적 수가 [한계−N, 한계]일 때만 참.
+    RoundManager laneRound;
+    bool PassesLaneCountWindow(int window)
+    {
+        if (owner == null) return false;
+        if (laneRound == null) laneRound = FindFirstObjectByType<RoundManager>();
+        if (laneRound == null) return false;
+        int limit = laneRound.EnemyCountLimit;
+        int count = RoundManager.LaneEnemyCount(owner.OwnerId);
+        return count >= limit - window && count <= limit;
+    }
+
     bool PassesBuffGate(SkillLevel level, EnemyDummy target)
     {
+        if (level.laneCountWindow > 0 && !PassesLaneCountWindow(level.laneCountWindow)) return false;
         if (!string.IsNullOrEmpty(level.requiredBuffId) && !HasBuff(level.requiredBuffId)) return false;
         if (!string.IsNullOrEmpty(level.forbiddenBuffId) && HasBuff(level.forbiddenBuffId)) return false;
 
@@ -1444,6 +1457,7 @@ public class UnitAttacker : MonoBehaviour
             foreach (EnemyDummy enemy in EnemyDummy.Active)
             {
                 if (enemy == null) continue;
+                if (level.laneCountWindow > 0 && (owner == null || enemy.LaneIndex != owner.OwnerId)) continue;   // 내면의악 — 내 레인의 적에게만
                 if (level.range > 0f && Vector3.Distance(enemy.transform.position, transform.position) > level.WorldRange) continue;
                 enemiesInRange.Add(enemy);
             }

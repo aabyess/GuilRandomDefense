@@ -525,6 +525,7 @@ public class GameHud : MonoBehaviour
         RefreshBombButton();
         RefreshTalentButtons();
         RefreshDockTargeting();
+        RefreshPaperPlaneTargeting();
         RefreshActiveButton();
         RefreshNavigationButton();
         RefreshRerollButton();
@@ -2054,6 +2055,36 @@ public class GameHud : MonoBehaviour
         }
     }
 
+    // 종이비행기(초월 이재윤 유물) — 아이템 칸을 누르면 표적 고르기 대기, 적 하나를 좌클릭하면 발동(우클릭 취소). 호스트/싱글만(멀티 클라는 요청 길이 없다).
+    bool paperPlaneTargeting;
+    int paperPlaneStartFrame;
+
+    void BeginPaperPlane()
+    {
+        PlayerContext me = PlayerContext.Local;
+        if (!GameAuthority.IsServer) { BlockedOnMultiplayerClient(); return; }
+        if (!PaperPlane.HasItem(me)) { PlayerNotification.Show(LocalPlayer.LocalPlayerId, "종이비행기가 없습니다.", 4f); return; }
+        if (me.ItemInventory.PaperPlaneUsed) { PlayerNotification.Show(LocalPlayer.LocalPlayerId, "종이비행기는 한 번만 쓸 수 있습니다(이미 썼습니다).", 4f); return; }
+        paperPlaneTargeting = true;
+        paperPlaneStartFrame = Time.frameCount;
+        PlayerNotification.Show(LocalPlayer.LocalPlayerId, "종이비행기: 정지시킬 적을 클릭하세요. (우클릭 취소)", 4f);
+    }
+
+    void RefreshPaperPlaneTargeting()
+    {
+        if (!paperPlaneTargeting) return;
+        if (Mouse.current == null) { paperPlaneTargeting = false; return; }
+        if (Mouse.current.rightButton.wasPressedThisFrame) { paperPlaneTargeting = false; return; }
+        if (!Mouse.current.leftButton.wasPressedThisFrame || Time.frameCount <= paperPlaneStartFrame) return;
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
+
+        paperPlaneTargeting = false;
+        EnemyDummy target = WorldPick.TryPickEnemy(Camera.main, Mouse.current.position.ReadValue(), 40f);
+        if (target == null) { PlayerNotification.Show(LocalPlayer.LocalPlayerId, "대상 적을 찾을 수 없습니다.", 4f); return; }
+        if (!PaperPlane.TryUse(PlayerContext.Local, target, out string reason))
+            PlayerNotification.Show(LocalPlayer.LocalPlayerId, reason ?? "지금은 사용할 수 없습니다.", 4f);
+    }
+
     // 사용형 아이템(ItemData.useKind) 칸 클릭 — 원작 Trig_item_up2(사용 이벤트). 서버/싱글은 바로, 클라는 RPC로 요청한다.
     void OnItemInventoryRowClicked(int index)
     {
@@ -2065,6 +2096,7 @@ public class GameHud : MonoBehaviour
             PlayerNotification.Show(LocalPlayer.LocalPlayerId, "영웅 변신 — 아직 사용할 수 없습니다.", 3f);
             return;
         }
+        if (item.useKind == ItemUseKind.PaperPlane) { BeginPaperPlane(); return; }
         if (GameAuthority.IsServer) RewardDistributor.Instance?.UseItem(PlayerContext.Local, item.useKind);
         else NetCommands.RequestUseItem(item.useKind);
     }
@@ -2079,6 +2111,7 @@ public class GameHud : MonoBehaviour
         string text = !string.IsNullOrEmpty(item.tooltipText) ? item.tooltipText : item.itemName;
         if (item.useKind == ItemUseKind.WispBundle || item.useKind == ItemUseKind.AncientShip) text += "\n(클릭하면 사용)";
         else if (item.useKind == ItemUseKind.HeroTransform) text += "\n(영웅 변신 — 아직 사용할 수 없음)";
+        else if (item.useKind == ItemUseKind.PaperPlane) text += PlayerContext.Local != null && PlayerContext.Local.ItemInventory != null && PlayerContext.Local.ItemInventory.PaperPlaneUsed ? "\n(사용 완료 — 한 번만 쓸 수 있습니다)" : "\n(클릭 → 적 하나를 골라 사용)";
         ShowTooltip(text, (RectTransform)itemInventoryRowRoots[index].transform);
     }
 

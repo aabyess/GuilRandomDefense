@@ -8,6 +8,9 @@ public class ItemInventory : MonoBehaviour
 
     public IReadOnlyList<ItemData> Items => items;
 
+    /// <summary>종이비행기 유물(초월 이재윤)을 이미 썼나 — 한 판에 한 번만(호스트 상태). 아이템은 인벤토리에 남는다.</summary>
+    public bool PaperPlaneUsed;
+
     public event Action OnInventoryChanged;
 
     /// <summary>원작 영웅 인벤토리 6칸(사장님 확정 10-03) — 한 플레이어가 들 수 있는 아이템 수 상한.</summary>

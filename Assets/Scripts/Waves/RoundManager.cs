@@ -261,6 +261,9 @@ public class RoundManager : MonoBehaviour
 
     // 매 프레임 도는 경로라 한 번만 훑는다. 레인이 없는 적(-1, 물범·스토리 건물 등)은 어느
     // 플레이어의 카운트다운과도 무관해서 이제 안 센다 — 예전 전역 최댓값 방식의 부산물이었다.
+    /// <summary>그 레인의 지금 적 수(HUD 「유닛 카운트」와 같은 값, 매 프레임 갱신). 초월 이재윤 「내면의악」 같은 창 게이트가 읽는다.</summary>
+    public static int LaneEnemyCount(int lane) => lane >= 0 && lane < MaxTrackedLanes ? laneCounts[lane] : 0;
+
     static void UpdateLaneEnemyCounts()
     {
         System.Array.Clear(laneCounts, 0, laneCounts.Length);
