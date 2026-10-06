@@ -3514,10 +3514,15 @@ public static class MapGenerator
     //    가로는 부스 폭 72.6(= 섬 폭 726 ÷ 흔함 9+1)이 포탈 지름 27보다 넉넉해서 「두 줄로 접기」는 필요 없다. 위습↔포탈 거리(ChoiceWispGap)는 그대로.
     public const float ChoiceRowScale = ArtBinder.UnitHeight / 30f;
     const float CommonAreaDepthBase = ChoiceWispGap + WispColliderRadius + 5f;   // 늘리기 전 값(46.5)
-    const float CommonAreaDepth = CommonAreaDepthBase * ChoiceRowScale;
+    // 🔴 2026-10-06 사장님 「선택위습은 포탈이랑 너무 가까운 것 같다, 좀 늘리자」: 위습 생성 자리를 포탈 줄에서 60 떨어뜨린다(옛 29 = 포탈 접촉 30.5와 거의 붙어 있었다).
+    //    위습은 흔함 칸에서 지름×1.25 간격 격자로 깔린다(RewardDistributor.FindSpreadSlot) — 생성 줄 + 한 줄이 더 들어가게 칸 깊이를 잡는다.
+    //    칸 깊이 = 생성 거리 + 한 줄 간격 + 위습 반지름 + 여유 5. 포탈 판정은 런타임에 r18(ChoicePortalReach) — 접촉 30.5 < 60.
+    public const float ChoiceWispSpawnGap = 60f;
+    const float CommonAreaDepth = ChoiceWispSpawnGap + 2.5f * WispColliderRadius + WispColliderRadius + 5f;   // 60 + 31.25 + 12.5 + 5 = 108.75
     const float BoothDepthBase = 14f;
-    /// <summary>뽑기섬 위쪽 흔함 줄이 깊어진 만큼 섬을 아래로 늘리는 양(MapLayout.GachaExtraZ가 더한다) — 아래 등급 칸 높이가 안 줄게.</summary>
-    public const float GachaChoiceRowExtraZ = (BoothDepthBase + CommonAreaDepthBase) * (ChoiceRowScale - 1f);
+    /// <summary>뽑기섬 위쪽 흔함 줄이 깊어진 만큼 섬을 아래로 늘리는 양(MapLayout.GachaExtraZ가 더한다) — 아래 등급 칸 높이가 안 줄게.
+    /// (옛 기준 부스 14 + 위습 칸 46.5)에서 지금 부스 + 위습 칸까지 늘어난 몫이다.</summary>
+    public const float GachaChoiceRowExtraZ = (BoothDepthBase * ChoiceRowScale + CommonAreaDepth) - (BoothDepthBase + CommonAreaDepthBase);
 
     const float PortalInset = 9f;       // 칸 위벽에서 포탈까지
     const float BoothDepth = BoothDepthBase * ChoiceRowScale;   // 포탈 앞부터 뒷벽까지(14 × 인형 배율)
@@ -3585,7 +3590,7 @@ public static class MapGenerator
         //    한가운데는 「칸 안에 있다」는 뜻일 뿐 **포탈과의 거리를 보장하지 않는다.**
         //    필요 거리에서 유도한다 — 위습이나 포탈 크기가 바뀌어도 따라온다.
         commonCell.transform.position = new Vector3(
-            island.center.x, MapLayout.IslandTop, rowZ - ChoiceWispGap);
+            island.center.x, MapLayout.IslandTop, rowZ - ChoiceWispSpawnGap);
         commonCell.AddComponent<WispCell>().SetGrade(UnitGrade.Common);
 
         // --- 왼쪽: 벽으로 나뉜 칸 5줄 ---
