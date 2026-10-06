@@ -7,16 +7,16 @@ using UnityEngine;
 /// 유닛강화소 칸 재배치 + 히든 합치기 + 특수함 합치기(사장님 10-06 — 「히든은 전설적인 강화와 같이」 「특수함이랑 제한됨 같이 업글됨」).
 /// 호출: call UnitUpgradeLayoutApply.Apply (다시 불러도 안전). 전설적인 트랙 targetGrades에 Hidden · 제한됨 트랙에 Superior 추가 · 「히든 강화」 트랙 삭제 ·
 /// 씬의 유닛강화소 tracks 순서를 새로 정한다 · NetCatalog 재생성(NetSetup.BuildCatalog).
-/// 칸 순서(논리 0~7)는 GameHud.UnitCommandResultSlotOrder로 화면 칸이 된다: 0~3 = 아래 줄(Z X C V), 4~7 = 위 줄(A S D F) — 위 줄에 낮은 등급 넷이 오도록 랜덤유닛 쪽을 앞에 둔다.
+/// 칸 순서(논리 0~7)는 GameHud.UnitCommandResultSlotOrder로 화면 칸이 된다: 0~3 = 윗줄(Q W E R), 4~7 = 둘째 줄(A S D F).
 /// </summary>
 static class UnitUpgradeLayoutApply
 {
     const string Folder = "Assets/Data/UnitUpgrades";
-    // 논리 순서: 아래 줄 Z X C V = 랜덤유닛 · 제한됨·특수함 · 불멸 · 초월 / 위 줄 A S D F = 흔함·안흔함 · 특별함 · 희귀함 · 전설·히든.
+    // 논리 순서(상점은 윗줄도 칸이다 — GameHud.ShopSlotOrder): Q W E R = 흔함·안흔함 · 특별함 · 희귀함 · 전설·히든 / A S D F = 랜덤유닛 · 제한됨·특수함 · 불멸 · 초월.
     static readonly string[] Order =
     {
-        "랜덤유닛 강화", "제한됨 강화", "불멸 강화", "초월 강화",
         "흔함·안흔함 강화", "특별함 강화", "희귀함 강화", "전설적인 강화",
+        "랜덤유닛 강화", "제한됨 강화", "불멸 강화", "초월 강화",
     };
 
     static UnitUpgradeTrackData Load(string name) => AssetDatabase.LoadAssetAtPath<UnitUpgradeTrackData>($"{Folder}/UnitUpgrade_{name}.asset");

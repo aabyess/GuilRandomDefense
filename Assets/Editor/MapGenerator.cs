@@ -1401,9 +1401,9 @@ public static class MapGenerator
     // 등급). 8개→9개.
     static readonly string[] UnitUpgradeTrackNames =
     {
-        // 2026-10-06 사장님: 히든은 전설적인 강화와 같이(트랙 삭제) · 특수함은 제한됨 강화와 같이. 논리 순서 0~3 = 화면 아래 줄(Z X C V), 4~7 = 위 줄(A S D F) — UnitUpgradeLayoutApply와 같다.
-        "랜덤유닛 강화", "제한됨 강화", "불멸 강화", "초월 강화",
+        // 2026-10-06 사장님: 히든은 전설적인 강화와 같이(트랙 삭제) · 특수함은 제한됨 강화와 같이. 논리 순서 0~3 = 윗줄(Q W E R), 4~7 = 둘째 줄(A S D F) — 상점은 윗줄도 칸이다(GameHud.ShopSlotOrder). UnitUpgradeLayoutApply와 같다.
         "흔함·안흔함 강화", "특별함 강화", "희귀함 강화", "전설적인 강화",
+        "랜덤유닛 강화", "제한됨 강화", "불멸 강화", "초월 강화",
     };
 
     const string UnitUpgradeFolder = "Assets/Data/UnitUpgrades";

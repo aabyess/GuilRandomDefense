@@ -17,6 +17,30 @@ static class UpgradeShopProbe
         return null;
     }
 
+    static string Pick(string part)
+    {
+        foreach (Selectable sel in Object.FindObjectsByType<Selectable>(FindObjectsSortMode.None))
+            if (sel.name.StartsWith("Lane1_") && sel.name.Contains(part))
+            {
+                Object.FindFirstObjectByType<SelectionManager>().SelectOnly(sel);
+                return $"선택: {sel.name}";
+            }
+        return $"❌ {part} 없음";
+    }
+    static string AnyUnit()
+    {
+        foreach (UnitIdentity u in UnitIdentity.Active)
+            if (u != null && !u.IsSummon && u.TryGetComponent(out Selectable sel)) { Object.FindFirstObjectByType<SelectionManager>().SelectOnly(sel); return $"선택: {u.name}"; }
+        return "❌ 유닛 없음";
+    }
+    static string Gamble() => Pick("도박소");
+    static string Support() => Pick("도움소");
+    static string AttackType() => Pick("공격타입");
+    static string Eternal() => Pick("영원함강화소");
+    static string Voyage() => Pick("항해일지");
+    static string OtherWorld() => Pick("다른세계강화소");
+    static string Unit() => Pick("_유닛강화소");
+
     static string Select()
     {
         shop = FindShop();

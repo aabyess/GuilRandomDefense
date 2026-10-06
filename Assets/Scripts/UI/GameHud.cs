@@ -271,6 +271,8 @@ public class GameHud : MonoBehaviour
     // 덜 어수선하다.
     // 09-29 4×3: 상점(도박소 9칸)은 유닛 명령이 숨으니 3줄 → 2줄 → 1줄 오른쪽 끝 순. 조합 결과·유닛별 칸은 4~11(ReflowFlexSlots).
     static readonly int[] UnitCommandResultSlotOrder = { 8, 9, 10, 11, 4, 5, 6, 7, 3 };
+    // 10-06 사장님: 상점을 골랐을 때는 윗줄(Q W E R)도 상점 칸이다 — 상점 논리 칸 0~11이 화면 칸 0~11(Q W E R / A S D F / Z X C V) 그대로. 유닛 고를 때·조합 결과는 위 UnitCommandResultSlotOrder 그대로.
+    static readonly int[] ShopSlotOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
 
     // 10-06 명령 카드 재배치 — 4~11은 유닛마다 달라지는 칸. 고정 번호를 버리고 ReflowFlexSlots가 매번 11→4 순서로 빈틈없이 채운다(오른쪽 아래부터).
     // 넣는 순서 = 액티브 → 유닛 전용(재능투자·최윤서 강화) → 특성강화 → 조합 결과. 8칸을 넘으면 경고 로그(조용히 버리지 않는다).
@@ -3997,9 +3999,9 @@ public class GameHud : MonoBehaviour
     // GetSlotView가 이미 값을 캐시해서 돌려주므로(Docs/design/LANE_SHOP.md) 여기서 또 캐시할 필요가 없다.
     void RebuildShopSlots(ILaneShop shop)
     {
-        for (int i = 0; i < UnitCommandResultSlotOrder.Length; i++)
+        for (int i = 0; i < ShopSlotOrder.Length; i++)
         {
-            int slot = UnitCommandResultSlotOrder[i];
+            int slot = ShopSlotOrder[i];
             shopLogicalSlotIndex[slot] = -1;
             unitCommandSlotNames[slot].text = "";
             unitCommandSlotHotkeys[slot].text = "";
@@ -4019,16 +4021,16 @@ public class GameHud : MonoBehaviour
 
         // 09-29 4×3: 상점 칸 3~6번은 유닛 명령·판매 칸과 겹친다. 위에서 유닛 명령을 감출 때(또는 판매 칸이 꺼질 때)
         //    interactable=false가 남으면 도박소 칸이 안 눌린다 — 상점 칸은 여기서 다시 켠다.
-        for (int i = 0; i < UnitCommandResultSlotOrder.Length; i++)
-            unitCommandSlotButtons[UnitCommandResultSlotOrder[i]].interactable = true;
+        for (int i = 0; i < ShopSlotOrder.Length; i++)
+            unitCommandSlotButtons[ShopSlotOrder[i]].interactable = true;
 
         if (shop == null) return;
 
-        int shown = Mathf.Min(shop.SlotCount, UnitCommandResultSlotOrder.Length);
+        int shown = Mathf.Min(shop.SlotCount, ShopSlotOrder.Length);
 
         for (int i = 0; i < shown; i++)
         {
-            shopLogicalSlotIndex[UnitCommandResultSlotOrder[i]] = i;
+            shopLogicalSlotIndex[ShopSlotOrder[i]] = i;
         }
 
         RefreshShopAffordability();
@@ -4041,9 +4043,9 @@ public class GameHud : MonoBehaviour
     {
         if (currentShop as Object == null) return;
 
-        for (int i = 0; i < UnitCommandResultSlotOrder.Length; i++)
+        for (int i = 0; i < ShopSlotOrder.Length; i++)
         {
-            int slot = UnitCommandResultSlotOrder[i];
+            int slot = ShopSlotOrder[i];
             int logicalIndex = shopLogicalSlotIndex[slot];
             if (logicalIndex < 0) continue;
 
@@ -4100,9 +4102,9 @@ public class GameHud : MonoBehaviour
     // 매 프레임: 남은 시간/전체로 덮개를 돌린다(서버 시간 기준 — 멀티 클라는 상점이 클라에 복제한 값이 그대로 들어온다).
     void UpdateShopCooldownOverlays()
     {
-        for (int i = 0; i < UnitCommandResultSlotOrder.Length; i++)
+        for (int i = 0; i < ShopSlotOrder.Length; i++)
         {
-            int slot = UnitCommandResultSlotOrder[i];
+            int slot = ShopSlotOrder[i];
             Image overlay = unitCommandSlotCooldown[slot];
             if (overlay == null) continue;
             float total = shopCooldownTotal[slot];
