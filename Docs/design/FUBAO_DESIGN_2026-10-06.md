@@ -21,7 +21,7 @@
 |---|---|---|---|
 | 평타 확률 발동 | ✅ | `OnHitChance` | 없음 |
 | 대상 최대체력 비례 피해 | ✅ | `SkillEffectBasis.TargetMaxHpPercent` | — |
-| **대상 잃은 체력 비례 피해** | ❌ | 있는 건 최대(TargetMaxHpPercent)·현재(TargetCurrentHpPercent)뿐 | ➊ `SkillEffectBasis.TargetLostHpPercent`(맨 뒤) = (최대−현재) × multiplier. EnemyDummy.MaxHp·hp는 이미 읽힘 |
+| 대상 잃은 체력 비례 피해 | ✅ (정정 10-06 PM) | `SkillEffectBasis.TargetMissingHpPercent`(=13, 강재규 「강약약강_끝딜」이 씀) | **새로 만들지 않는다**(처음 설계표의 ➊은 취소) |
 | 적 마법방어 감소 | ✅ | `SkillEffectKind.AegrStack`(레벨 +N, 레벨당 마방 배율 0.01, 박민석 「마방깍」이 쓰는 그 축) · EnemyDummy.EffectiveMagicMultiplier | 없음. 「−6%」= Aegr **+6 레벨**(= 마법 피해 배율 +0.06). 꺾임 레벨까지만 쌓임(난이도별 상한은 엔진이 자른다) |
 | 소환 1기 | ✅ | `SkillEffectKind.SummonUnit`(구현담당1) · summonUnits·summonLifetime·summonRadius, 종류마다 동시 1기·다시 나오면 남은 시간만 되돌림, TimedLife | 소환 유닛 에셋 1개(`Summon_김민준_산하동료`) — 시노부 분신 형식 |
 | **액티브 토글(켜짐/꺼짐)** | ❌ | `ActiveButton`은 누르면 쿨 걸고 효과 한 번 시전하는 구조 | ➋ `SkillLevel.toggleMode`(맨 뒤 필드) — 켜면 상태만 바뀌고 쿨 없음·다시 누르면 꺼짐. UnitAttacker에 `bool FocusOn`, 명령 카드 5번 칸 라벨 「켜짐/꺼짐」(GameHud, 쿨 덮개 대신 점등) · 멀티는 `NetHudAction.CastActive` 재사용(호스트가 토글) |
@@ -35,7 +35,7 @@
 
 | # | 사장님 이름 | 종류 | 발동 | 효과 | 우리 수치 | 근거 |
 |---|---|---|---|---|---|---|
-| ① | 찍어누르기 | 끝딜(잃은 체력 비례) | 평타 확률(OnHitChance) **15%** | 대상 한 기에게 **잃은 체력의 2%** AP 피해 | 확률 15% · ×0.02 · 마딜 · 단일 | 「잃은 체력 2%」는 사장님 수치. 확률은 박민석 흑인(최대체력%) 15%·초월 최대체력% 9건 확률 7.25~20% 중앙 → 15%(**제안값**). 잃은 체력 비례는 원작 근거 없음 — 새 basis로 구현. 2%×(보스 최대체력)은 후반 보스에서 큰 값이 될 수 있어 `bossDamageMultiplier` 계열 상한을 ❓질문3 |
+| ① | 찍어누르기 | 끝딜(잃은 체력 비례) | ⚠️ 사장님 끝딜 분류(10-06): 확률 발동 일반=최대체력 · **마나 스킬=잃은 체력** · 컨셉=확률 처형 → 이 스킬은 **마나 스킬(OnHitCount 마나 N타째)로 바뀔 가능성이 큼 — 사장님 답 오면 이 줄을 고친다.** 임시: 평타 확률(OnHitChance) **15%** | 대상 한 기에게 **잃은 체력의 2%** AP 피해 | 확률 15% · ×0.02 · 마딜 · 단일 | 「잃은 체력 2%」는 사장님 수치. 확률은 박민석 흑인(최대체력%) 15%·초월 최대체력% 9건 확률 7.25~20% 중앙 → 15%(**제안값**). 잃은 체력 비례는 원작 근거 없음 — 새 basis로 구현. 2%×(보스 최대체력)은 후반 보스에서 큰 값이 될 수 있어 `bossDamageMultiplier` 계열 상한을 ❓질문3 |
 | ② | 포커싱오더 | 액티브 **토글** | 버튼(명령 카드 5번 칸·Q) | 켜면 **본인 + 소환수**만 사거리 안에서 잃은 체력이 많은 적을 먼저 친다. 다시 누르면 해제 | 마나·쿨 없음 · 기본 꺼짐 | 사장님 확정(포커싱 = 본인+소환수만). 바지사장의 Q 단추 틀 재사용 — 토글 모드만 추가. 진행 중인 공격은 바로 바꾸지 않고 **다음 표적 고를 때** 적용 |
 | ③ | 특출난분석력 | 마법방어 감소 | 평타 확률(OnHitChance) **25%** | 대상 마법방어 −6%(Aegr +6레벨, 영구 누적·꺾임 레벨까지) | 확률 25% · Aegr +6 | 「적 마방 −6%」는 사장님 수치. 확률 25%·영구 누적은 **제안값**(박민석 외동Lv.Devil은 10%에 +5레벨, 원작 영원 김정래·조세민 Aegr +5). 구현담당1 박민석 「마방깍」과 **같은 축**(AegrStack)이라 둘이 겹쳐 쌓인다 — 마딜 부대에 유리하게 의도됨 |
 | ④ | 산하동료호출 | 소환 | 평타 확률(OnHitChance) **10%** | 「산하 동료」 1기 소환, **20초** | 확률 10% · 소환 1기 · 지속 20초(summonLifetime 기본) · 반경 70·부채꼴 35° 기본값 | 사장님 지시(PM): 평타 10%·20초·1기. 원작 소환(구일 20초 부채꼴)과 같은 기본값 |
@@ -62,6 +62,6 @@
 
 ## 6. 구현 순서(PM 확인 뒤)
 
-1. 구현담당1의 SkillData·UnitAttacker 커밋 확인 → ➊ basis ➋ toggleMode ➌ 표적 우선순위 (UnitAttacker·UnitCombat·GameHud·NetHudAction — 에디터에 「씁니다」)
+1. 구현담당1의 SkillData·UnitAttacker 커밋 확인 → ➋ toggleMode ➌ 표적 우선순위 (UnitAttacker·UnitCombat·GameHud·NetHudAction — 에디터에 「씁니다」)
 2. 데이터: `Assets/Editor/FubaoApply.cs`(박민석 `MinseokApply`와 같은 형식, 다시 불러도 안전): 재료 3개 교체 · SkillData 4 · 소환 유닛 · skills 교체(구 게이트 3개 떼기) · chatPhrase CSV
 3. 실측(gameshot 탐침): ①잃은 체력 2% 값이 (최대−현재)와 일치 · ②토글 켠 뒤 사거리 안 체력 다른 적 셋 중 잃은 체력 큰 쪽을 먼저 침 · 소환수도 같은 표적 · 끄면 가까운 쪽 · 다른 유닛 불변 · ③Aegr 스택 +6 후 마법 피해 배율 +0.06 · ④소환 1기 유지·20초 뒤 사라짐·두 번째 발동은 새로 안 만들고 시간만 되돌림.
