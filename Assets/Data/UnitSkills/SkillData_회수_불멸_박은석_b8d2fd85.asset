@@ -10,29 +10,90 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_회수_불멸_박은석_b8d2fd85
-  m_EditorClassIdentifier:
-  skillName: 제트 해군 스승 "Z" - 불멸의 — 1/16
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 제트 해군 스승 "Z" - 불멸의(h04G)의 게이트 "1/16" 능력 1개를 이 SkillData 하나로 묶었다.   · Z_skill_3#1: 계산식 1000000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. [불멸 블록 09-30] 과다 정정: Z_skill_3의 직접 1000000은 대상 PV==200일 때만(장풍 1000000은 별도 에셋). (Tools/apply_immortal_blocks.py)'
+  m_Name: "SkillData_\uD68C\uC218_\uBD88\uBA78_\uBC15\uC740\uC11D_b8d2fd85"
+  m_EditorClassIdentifier: 
+  skillName: "\uC81C\uD2B8 \uD574\uAD70 \uC2A4\uC2B9 \"Z\" - \uBD88\uBA78\uC758 \u2014
+    1/16"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 \uC81C\uD2B8 \uD574\uAD70 \uC2A4\uC2B9 \"Z\" - \uBD88\uBA78\uC758(h04G)\uC758
+    \uAC8C\uC774\uD2B8 \"1/16\" \uB2A5\uB825 1\uAC1C\uB97C \uC774 SkillData \uD558\uB098\uB85C
+    \uBB36\uC5C8\uB2E4.   \xB7 Z_skill_3#1: \uACC4\uC0B0\uC2DD 1000000.00  hitCount>1\uC740
+    \"\uAC19\uC740 RRD \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0 \uC2DC\uAC04\uCC28
+    \uB2E4\uB2E8\uD788\uD2B8\uAC00 \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC
+    \uC5F0\uC18D N\uD68C)\uC73C\uB85C \uADFC\uC0AC\uD588\uB2E4. [\uBD88\uBA78 \uBE14\uB85D
+    09-30] \uACFC\uB2E4 \uC815\uC815: Z_skill_3\uC758 \uC9C1\uC811 1000000\uC740
+    \uB300\uC0C1 PV==200\uC77C \uB54C\uB9CC(\uC7A5\uD48D 1000000\uC740 \uBCC4\uB3C4
+    \uC5D0\uC14B). (Tools/apply_immortal_blocks.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.0625
-    range: 0.0
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 7
-      multiplier: 1000000.0
-      bonus: 0.0
+      multiplier: 1000000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 2
-      targetConditionValue: 200.0
+      targetConditionValue: 200
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 074c5a1b440ad458b9c7a7adf18547d9, type: 3}

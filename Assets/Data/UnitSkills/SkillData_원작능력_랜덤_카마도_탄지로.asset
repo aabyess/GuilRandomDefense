@@ -10,38 +10,102 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_랜덤_카마도_탄지로
-  m_EditorClassIdentifier:
-  skillName: Trig_vampire 1/10 — 500 범위 300000×1~3
-  description: '원작 랜덤전용 뱀파이어 - 랜덤전용(Trig_vampire). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 뱀파이어 - 랜덤전용(Trig_vampire). | 정정(2026-09-30, 구현담당1 — 보스 판 실측): 이 에셋의 %체력 효과 일부는 같은 유닛 게이트 에셋 식의 「2차 배정」 사본이라(원문 트리거엔 해당 %HP 호출 없음) 이 에셋의 확률로 이중 계상된다. 보스 게이트를 걷으며 사본의 보스 분기(PV≥200/==200)가 보스에게 새로 열려서, 보스 분기 사본은 뺐다(정본은 게이트 에셋에 있다). 일반몹 분기 사본(PV<200)은 지금까지 동작대로 두고, 사본 정리는 따로. 제거한 보스 분기 사본(원래 순번·basis·계수): [(3, ''1'', ''0.03''), (7, ''1'', ''0.03''), (12, ''1'', ''0.01''), (16, ''1'', ''0.01'')]. [중복 점검 09-30] 확률 0.18에 단일 1800000 세 벌 + 300000 + AIsr 8이 들어 있었다(18%로 대상 ≈720만). 원문: GetRandomInt(1,10)==5 → 500 범위 300000×1~3 CHAOS/UNIVERSAL뿐. 1800000(600 범위)·AIsr +8은 「마나==115 그리고 A0LA(T랜덤유닛강화) 보유」 블록 — 강화 구조가 없어 뺐다. (Tools/apply_audit_dupes.py)'
-  배선(2026-09-06, STACK_AXES_INCREMENT_LIST.md, HashAttack 확인): 이 파일 전체가 h06T 뱀파이어의
-  Trig_vampire 하나로만 배정돼 있어(다른 원작 유닛과 안 섞임) 쪼갤 필요 없이 AisrStack +8을
-  이 파일 자체 발동에 새 효과로 얹었다(Trig_vampire_Func001Func007A).
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uB79C\uB364_\uCE74\uB9C8\uB3C4_\uD0C4\uC9C0\uB85C"
+  m_EditorClassIdentifier: 
+  skillName: "Trig_vampire 1/10 \u2014 500 \uBC94\uC704 300000\xD71~3"
+  description: "\uC6D0\uC791 \uB79C\uB364\uC804\uC6A9 \uBC40\uD30C\uC774\uC5B4 -
+    \uB79C\uB364\uC804\uC6A9(Trig_vampire). | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uB79C\uB364\uC804\uC6A9 \uBC40\uD30C\uC774\uC5B4
+    - \uB79C\uB364\uC804\uC6A9(Trig_vampire). | \uC815\uC815(2026-09-30, \uAD6C\uD604\uB2F4\uB2F91
+    \u2014 \uBCF4\uC2A4 \uD310 \uC2E4\uCE21): \uC774 \uC5D0\uC14B\uC758 %\uCCB4\uB825
+    \uD6A8\uACFC \uC77C\uBD80\uB294 \uAC19\uC740 \uC720\uB2DB \uAC8C\uC774\uD2B8
+    \uC5D0\uC14B \uC2DD\uC758 \u300C2\uCC28 \uBC30\uC815\u300D \uC0AC\uBCF8\uC774\uB77C(\uC6D0\uBB38
+    \uD2B8\uB9AC\uAC70\uC5D4 \uD574\uB2F9 %HP \uD638\uCD9C \uC5C6\uC74C) \uC774 \uC5D0\uC14B\uC758
+    \uD655\uB960\uB85C \uC774\uC911 \uACC4\uC0C1\uB41C\uB2E4. \uBCF4\uC2A4 \uAC8C\uC774\uD2B8\uB97C
+    \uAC77\uC73C\uBA70 \uC0AC\uBCF8\uC758 \uBCF4\uC2A4 \uBD84\uAE30(PV\u2265200/==200)\uAC00
+    \uBCF4\uC2A4\uC5D0\uAC8C \uC0C8\uB85C \uC5F4\uB824\uC11C, \uBCF4\uC2A4 \uBD84\uAE30
+    \uC0AC\uBCF8\uC740 \uBE90\uB2E4(\uC815\uBCF8\uC740 \uAC8C\uC774\uD2B8 \uC5D0\uC14B\uC5D0
+    \uC788\uB2E4). \uC77C\uBC18\uBAB9 \uBD84\uAE30 \uC0AC\uBCF8(PV<200)\uC740 \uC9C0\uAE08\uAE4C\uC9C0
+    \uB3D9\uC791\uB300\uB85C \uB450\uACE0, \uC0AC\uBCF8 \uC815\uB9AC\uB294 \uB530\uB85C.
+    \uC81C\uAC70\uD55C \uBCF4\uC2A4 \uBD84\uAE30 \uC0AC\uBCF8(\uC6D0\uB798 \uC21C\uBC88\xB7basis\xB7\uACC4\uC218):
+    [(3, '1', '0.03'), (7, '1', '0.03'), (12, '1', '0.01'), (16, '1', '0.01')]. [\uC911\uBCF5
+    \uC810\uAC80 09-30] \uD655\uB960 0.18\uC5D0 \uB2E8\uC77C 1800000 \uC138 \uBC8C
+    + 300000 + AIsr 8\uC774 \uB4E4\uC5B4 \uC788\uC5C8\uB2E4(18%\uB85C \uB300\uC0C1
+    \u2248720\uB9CC). \uC6D0\uBB38: GetRandomInt(1,10)==5 \u2192 500 \uBC94\uC704
+    300000\xD71~3 CHAOS/UNIVERSAL\uBFD0. 1800000(600 \uBC94\uC704)\xB7AIsr +8\uC740
+    \u300C\uB9C8\uB098==115 \uADF8\uB9AC\uACE0 A0LA(T\uB79C\uB364\uC720\uB2DB\uAC15\uD654)
+    \uBCF4\uC720\u300D \uBE14\uB85D \u2014 \uAC15\uD654 \uAD6C\uC870\uAC00 \uC5C6\uC5B4
+    \uBE90\uB2E4. (Tools/apply_audit_dupes.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 500.0
+    range: 500
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 5
-      multiplier: 300000.0
-      bonus: 0.0
+      multiplier: 300000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 3.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 3
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 7c79da4c21b3948baa07575bd299f8dc, type: 3}

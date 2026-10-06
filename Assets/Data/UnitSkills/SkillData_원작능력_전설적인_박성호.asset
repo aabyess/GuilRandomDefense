@@ -10,26 +10,105 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_박성호
-  m_EditorClassIdentifier:
-  skillName: Legend0 개틀링 — 45%(375 범위 47500×0.5~2)
-  description: '원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 전설적인 몽키.D.루피 ''기어 2'' Jet 개틀링 - 전설적인(Trig_Legend0)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 유닛 하나(행 1개)를 통째로 이 유닛에 배정했다(2026-09-06 유닛 단위 재배정, TEAM_RULES 뿌리 ⑮). | 2차 배정(트리거·더미 채널): 원작 전설적인 몽키.D.루피 ''기어 2'' Jet 개틀링 - 전설적인(Trig_Legend0). | 1채널 추가 배정(원작 전설적인 몽키.D.루피 ''기어 2'' Jet 개틀링 - 전설적인(h02X)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시). 정정(2026-09-06, GATE_FIX_14/c1adaea): 원작 Trig_Legend0 GetRandomInt(1,100)<46 확정 — triggerChance 1.0(근사) → 0.45. [하위 등급 블록 09-30] §0-8 Legend0: 개틀링은 대상 중심 375 범위(단일이었다). 같이 들어 있던 A052(×4.25 + 75000)는 별도 강타(15%)라 에셋을 뗐다 — 45%로 나가 3배 과다였다. (Tools/apply_lower_grade_blocks.py)'
-  · A052 !고무고무 열매: 발동1.0 배수4.25 추가75000.0
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uBC15\uC131\uD638"
+  m_EditorClassIdentifier: 
+  skillName: "Legend0 \uAC1C\uD2C0\uB9C1 \u2014 45%(375 \uBC94\uC704 47500\xD70.5~2)"
+  description: "\uC6D0\uC791 \uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8 \uD53C\uD574\uD45C(ORIGINAL_SKILL_DAMAGE_TABLE.csv)
+    DPS \uC21C\uC704 \uBC30\uC815 \u2014 \uC6D0\uC791 \uC804\uC124\uC801\uC778 \uBABD\uD0A4.D.\uB8E8\uD53C
+    '\uAE30\uC5B4 2' Jet \uAC1C\uD2C0\uB9C1 - \uC804\uC124\uC801\uC778(Trig_Legend0)\uC758
+    \uD53C\uD574\uB97C \uC62E\uACBC\uB2E4. 1\uCC28(uabi \uB2A5\uB825ID) CSV\uC5D4
+    \uC5C6\uB358 \uB2A5\uB825\uC774\uB2E4 \u2014 \uC6D0\uC791\uC774 \uC720\uB2DBID\u2192\uD2B8\uB9AC\uAC70
+    \uD574\uC2DC\uD14C\uC774\uBE14\uB85C \uCC98\uB9AC\uD574\uC11C \uB2A5\uB825ID\uB85C\uB294
+    \uC548 \uBCF4\uC600\uB2E4. \uAC1C\uBCC4 \uB300\uC751 \uC544\uB2D8(\uC774\uB984\uB9E4\uD551
+    \uBD88\uAC00) \u2014 \uC6D0\uC791 \uC720\uB2DB \uD558\uB098(\uD589 1\uAC1C)\uB97C
+    \uD1B5\uC9F8\uB85C \uC774 \uC720\uB2DB\uC5D0 \uBC30\uC815\uD588\uB2E4(2026-09-06
+    \uC720\uB2DB \uB2E8\uC704 \uC7AC\uBC30\uC815, TEAM_RULES \uBFCC\uB9AC \u246E).
+    | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8 \uCC44\uB110): \uC6D0\uC791
+    \uC804\uC124\uC801\uC778 \uBABD\uD0A4.D.\uB8E8\uD53C '\uAE30\uC5B4 2' Jet \uAC1C\uD2C0\uB9C1
+    - \uC804\uC124\uC801\uC778(Trig_Legend0). | 1\uCC44\uB110 \uCD94\uAC00 \uBC30\uC815(\uC6D0\uC791
+    \uC804\uC124\uC801\uC778 \uBABD\uD0A4.D.\uB8E8\uD53C '\uAE30\uC5B4 2' Jet \uAC1C\uD2C0\uB9C1
+    - \uC804\uC124\uC801\uC778(h02X)\uC758 \uB2A5\uB825 1\uAC1C): \uB2E4\uB978 \uCC44\uB110\uC774
+    \uC774\uBBF8 \uC774 \uC720\uB2DB\uC744 \uCC28\uC9C0\uD558\uACE0 \uC788\uC5B4
+    \uC21C\uC704 \uBC30\uC815 \uB300\uC2E0 \uADF8 \uC720\uB2DB\uC5D0 \uADF8\uB300\uB85C
+    \uC5B9\uC5C8\uB2E4(\uC6B0\uC120\uC21C\uC704 06\uBC88\u2460/\uAC8C\uC774\uD2B8\xB7\uD68C\uC218/2\uCC44\uB110\uC774
+    1\uCC44\uB110\uBCF4\uB2E4 \uBA3C\uC800, 2026-09-06 PM \uC9C0\uC2DC). \uC815\uC815(2026-09-06,
+    GATE_FIX_14/c1adaea): \uC6D0\uC791 Trig_Legend0 GetRandomInt(1,100)<46 \uD655\uC815
+    \u2014 triggerChance 1.0(\uADFC\uC0AC) \u2192 0.45. [\uD558\uC704 \uB4F1\uAE09
+    \uBE14\uB85D 09-30] \xA70-8 Legend0: \uAC1C\uD2C0\uB9C1\uC740 \uB300\uC0C1 \uC911\uC2EC
+    375 \uBC94\uC704(\uB2E8\uC77C\uC774\uC5C8\uB2E4). \uAC19\uC774 \uB4E4\uC5B4 \uC788\uB358
+    A052(\xD74.25 + 75000)\uB294 \uBCC4\uB3C4 \uAC15\uD0C0(15%)\uB77C \uC5D0\uC14B\uC744
+    \uB5D0\uB2E4 \u2014 45%\uB85C \uB098\uAC00 3\uBC30 \uACFC\uB2E4\uC600\uB2E4.
+    (Tools/apply_lower_grade_blocks.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.45
-    range: 375.0
+    range: 375
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 3
-      multiplier: 47500.0
-      bonus: 0.0
+      multiplier: 47500
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
       randMin: 0.5
       randMax: 2
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: c4710cae1601b4fbaa35f8b16ad813f6, type: 3}

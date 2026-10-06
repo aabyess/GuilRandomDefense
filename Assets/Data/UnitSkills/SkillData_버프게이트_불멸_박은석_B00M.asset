@@ -10,10 +10,63 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_버프게이트_불멸_박은석_B00M
-  m_EditorClassIdentifier:
-  skillName: 제트 — B00M 창(버프 부여)
-  description: '06번③(2026-09-06, PM 승인) — 원작 #022 h04G 제트 "!차지 버스터"(A09E)의 게이트 "버프 B00M 보유(0.6초 창, 평타 1/10로 열림)"를 그동안 창 확률로 근사한 triggerChance=0.0267 하나로 뭉쳐 두었다(SkillData_원작022_h04G.asset 참고). 이번에 실제 게이트 구조로 되돌린다 — 이 스킬이 그 "창을 여는 평타"다: 평타 적중마다 1/10 확률로 자기 자신에게 B00M 버프를 건다(SkillEffectKind.ApplyBuff, target=Self). h04G(A09E)는 triggerChance를 1.0으로 되돌리고 requiredBuffId=B00M을 걸어 "버프가 열려 있는 동안의 평타"만 통과시킨다. ⚠️ 2026-09-06 정정(PM, 리서치담당 원작 레지스터 확인) — 원작 0.6초는 시간이 아니라 **타수**를 뜻했다: h04G의 원작 기본 공격간격(ua1c)은 0.66초라 그대로면 0.6초 창이 항상 만료되지만, 연구(R002 불멸 업그레이드 +210%~, R01N 공성)로 실효 공격간격이 0.213~0.150초까지 빨라져 0.6초 안에 평타가 2.8~4.0회 들어간다 — "0.6초 창"의 실제 뜻은 "다음 평타 약 3회"였다(연구 초반 2.8회 기준, 안전하게 3으로 반올림). 우리는 이 유닛의 공격속도 스케일이 원작과 달라 시간(0.6초)을 그대로 옮기면 뜻이 사라진다(값을 바꾼 게 아니라 **단위를 시간→타수로 바꿔 옮긴 것**) — `buffHitCharges=3`으로 구현한다(duration은 이제 안 쓰여 0). 레벨3(원작 툴팁 기준 창 0.5초+피해 45만×2발)은 필드 미확인이라 넣지 않는다 — 레벨1 기준만 반영. ⚠️ 2026-09-06 추가(리서치담당 SHORT_BUFF_WINDOW_GATES.md, 연구 0단계 재확인) — 이 `buffHitCharges=3`은 **연구 1단계(원작에서 이 게이트가 실제로 처음 켜지는 최소 상태) 기준**이다. **연구 0단계(전혀 안 산 상태)에선 원작도 0.91회로 한 대를 못 덮는다** — "연구를 사야 켜지는 스킬"이 원작 설계다. 우리에 연구소 공속 축이 아직 없어 항상 "0단계"로 도는 지금, 이 스킬의 실제 발동률이 낮게 나와도 버그가 아니라 원작의 "연구 전" 상태와 같다. 확인(2026-09-07, PM 지시로 6건 전수 대조): 이 opener는 이미 완성돼 있었다 — 소비하는 쪽(SkillData_원작022_h04G.asset)에 requiredBuffId=B00M이 이미 걸려 있고 몬테카를로 실측(BALANCE_SIMULATION §22)까지 끝난 상태다. 위 "받아 쓰는 쪽이 아직 없다"류 서술은 다른 5건(B05N·B03M·B00D·B045·B03Z)에 해당하는 것이었지 이 파일엔 원래 안 맞았다 — 착오 정정. [불멸 블록 09-30] §V-12: B00M은 A0S4 0.6초 창 — 3타 충전은 과다, 다음 1타(buffHitCharges 1). (Tools/apply_immortal_blocks.py)'
+  m_Name: "SkillData_\uBC84\uD504\uAC8C\uC774\uD2B8_\uBD88\uBA78_\uBC15\uC740\uC11D_B00M"
+  m_EditorClassIdentifier: 
+  skillName: "\uC81C\uD2B8 \u2014 B00M \uCC3D(\uBC84\uD504 \uBD80\uC5EC)"
+  description: "06\uBC88\u2462(2026-09-06, PM \uC2B9\uC778) \u2014 \uC6D0\uC791 #022
+    h04G \uC81C\uD2B8 \"!\uCC28\uC9C0 \uBC84\uC2A4\uD130\"(A09E)\uC758 \uAC8C\uC774\uD2B8
+    \"\uBC84\uD504 B00M \uBCF4\uC720(0.6\uCD08 \uCC3D, \uD3C9\uD0C0 1/10\uB85C \uC5F4\uB9BC)\"\uB97C
+    \uADF8\uB3D9\uC548 \uCC3D \uD655\uB960\uB85C \uADFC\uC0AC\uD55C triggerChance=0.0267
+    \uD558\uB098\uB85C \uBB49\uCCD0 \uB450\uC5C8\uB2E4(SkillData_\uC6D0\uC791022_h04G.asset
+    \uCC38\uACE0). \uC774\uBC88\uC5D0 \uC2E4\uC81C \uAC8C\uC774\uD2B8 \uAD6C\uC870\uB85C
+    \uB418\uB3CC\uB9B0\uB2E4 \u2014 \uC774 \uC2A4\uD0AC\uC774 \uADF8 \"\uCC3D\uC744
+    \uC5EC\uB294 \uD3C9\uD0C0\"\uB2E4: \uD3C9\uD0C0 \uC801\uC911\uB9C8\uB2E4 1/10
+    \uD655\uB960\uB85C \uC790\uAE30 \uC790\uC2E0\uC5D0\uAC8C B00M \uBC84\uD504\uB97C
+    \uAC74\uB2E4(SkillEffectKind.ApplyBuff, target=Self). h04G(A09E)\uB294 triggerChance\uB97C
+    1.0\uC73C\uB85C \uB418\uB3CC\uB9AC\uACE0 requiredBuffId=B00M\uC744 \uAC78\uC5B4
+    \"\uBC84\uD504\uAC00 \uC5F4\uB824 \uC788\uB294 \uB3D9\uC548\uC758 \uD3C9\uD0C0\"\uB9CC
+    \uD1B5\uACFC\uC2DC\uD0A8\uB2E4. \u26A0\uFE0F 2026-09-06 \uC815\uC815(PM, \uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    \uC6D0\uC791 \uB808\uC9C0\uC2A4\uD130 \uD655\uC778) \u2014 \uC6D0\uC791 0.6\uCD08\uB294
+    \uC2DC\uAC04\uC774 \uC544\uB2C8\uB77C **\uD0C0\uC218**\uB97C \uB73B\uD588\uB2E4:
+    h04G\uC758 \uC6D0\uC791 \uAE30\uBCF8 \uACF5\uACA9\uAC04\uACA9(ua1c)\uC740 0.66\uCD08\uB77C
+    \uADF8\uB300\uB85C\uBA74 0.6\uCD08 \uCC3D\uC774 \uD56D\uC0C1 \uB9CC\uB8CC\uB418\uC9C0\uB9CC,
+    \uC5F0\uAD6C(R002 \uBD88\uBA78 \uC5C5\uADF8\uB808\uC774\uB4DC +210%~, R01N \uACF5\uC131)\uB85C
+    \uC2E4\uD6A8 \uACF5\uACA9\uAC04\uACA9\uC774 0.213~0.150\uCD08\uAE4C\uC9C0 \uBE68\uB77C\uC838
+    0.6\uCD08 \uC548\uC5D0 \uD3C9\uD0C0\uAC00 2.8~4.0\uD68C \uB4E4\uC5B4\uAC04\uB2E4
+    \u2014 \"0.6\uCD08 \uCC3D\"\uC758 \uC2E4\uC81C \uB73B\uC740 \"\uB2E4\uC74C \uD3C9\uD0C0
+    \uC57D 3\uD68C\"\uC600\uB2E4(\uC5F0\uAD6C \uCD08\uBC18 2.8\uD68C \uAE30\uC900,
+    \uC548\uC804\uD558\uAC8C 3\uC73C\uB85C \uBC18\uC62C\uB9BC). \uC6B0\uB9AC\uB294
+    \uC774 \uC720\uB2DB\uC758 \uACF5\uACA9\uC18D\uB3C4 \uC2A4\uCF00\uC77C\uC774 \uC6D0\uC791\uACFC
+    \uB2EC\uB77C \uC2DC\uAC04(0.6\uCD08)\uC744 \uADF8\uB300\uB85C \uC62E\uAE30\uBA74
+    \uB73B\uC774 \uC0AC\uB77C\uC9C4\uB2E4(\uAC12\uC744 \uBC14\uAFBC \uAC8C \uC544\uB2C8\uB77C
+    **\uB2E8\uC704\uB97C \uC2DC\uAC04\u2192\uD0C0\uC218\uB85C \uBC14\uAFD4 \uC62E\uAE34
+    \uAC83**) \u2014 `buffHitCharges=3`\uC73C\uB85C \uAD6C\uD604\uD55C\uB2E4(duration\uC740
+    \uC774\uC81C \uC548 \uC4F0\uC5EC 0). \uB808\uBCA83(\uC6D0\uC791 \uD234\uD301
+    \uAE30\uC900 \uCC3D 0.5\uCD08+\uD53C\uD574 45\uB9CC\xD72\uBC1C)\uC740 \uD544\uB4DC
+    \uBBF8\uD655\uC778\uC774\uB77C \uB123\uC9C0 \uC54A\uB294\uB2E4 \u2014 \uB808\uBCA81
+    \uAE30\uC900\uB9CC \uBC18\uC601. \u26A0\uFE0F 2026-09-06 \uCD94\uAC00(\uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    SHORT_BUFF_WINDOW_GATES.md, \uC5F0\uAD6C 0\uB2E8\uACC4 \uC7AC\uD655\uC778) \u2014
+    \uC774 `buffHitCharges=3`\uC740 **\uC5F0\uAD6C 1\uB2E8\uACC4(\uC6D0\uC791\uC5D0\uC11C
+    \uC774 \uAC8C\uC774\uD2B8\uAC00 \uC2E4\uC81C\uB85C \uCC98\uC74C \uCF1C\uC9C0\uB294
+    \uCD5C\uC18C \uC0C1\uD0DC) \uAE30\uC900**\uC774\uB2E4. **\uC5F0\uAD6C 0\uB2E8\uACC4(\uC804\uD600
+    \uC548 \uC0B0 \uC0C1\uD0DC)\uC5D0\uC120 \uC6D0\uC791\uB3C4 0.91\uD68C\uB85C \uD55C
+    \uB300\uB97C \uBABB \uB36E\uB294\uB2E4** \u2014 \"\uC5F0\uAD6C\uB97C \uC0AC\uC57C
+    \uCF1C\uC9C0\uB294 \uC2A4\uD0AC\"\uC774 \uC6D0\uC791 \uC124\uACC4\uB2E4. \uC6B0\uB9AC\uC5D0
+    \uC5F0\uAD6C\uC18C \uACF5\uC18D \uCD95\uC774 \uC544\uC9C1 \uC5C6\uC5B4 \uD56D\uC0C1
+    \"0\uB2E8\uACC4\"\uB85C \uB3C4\uB294 \uC9C0\uAE08, \uC774 \uC2A4\uD0AC\uC758
+    \uC2E4\uC81C \uBC1C\uB3D9\uB960\uC774 \uB0AE\uAC8C \uB098\uC640\uB3C4 \uBC84\uADF8\uAC00
+    \uC544\uB2C8\uB77C \uC6D0\uC791\uC758 \"\uC5F0\uAD6C \uC804\" \uC0C1\uD0DC\uC640
+    \uAC19\uB2E4. \uD655\uC778(2026-09-07, PM \uC9C0\uC2DC\uB85C 6\uAC74 \uC804\uC218
+    \uB300\uC870): \uC774 opener\uB294 \uC774\uBBF8 \uC644\uC131\uB3FC \uC788\uC5C8\uB2E4
+    \u2014 \uC18C\uBE44\uD558\uB294 \uCABD(SkillData_\uC6D0\uC791022_h04G.asset)\uC5D0
+    requiredBuffId=B00M\uC774 \uC774\uBBF8 \uAC78\uB824 \uC788\uACE0 \uBAAC\uD14C\uCE74\uB97C\uB85C
+    \uC2E4\uCE21(BALANCE_SIMULATION \xA722)\uAE4C\uC9C0 \uB05D\uB09C \uC0C1\uD0DC\uB2E4.
+    \uC704 \"\uBC1B\uC544 \uC4F0\uB294 \uCABD\uC774 \uC544\uC9C1 \uC5C6\uB2E4\"\uB958
+    \uC11C\uC220\uC740 \uB2E4\uB978 5\uAC74(B05N\xB7B03M\xB7B00D\xB7B045\xB7B03Z)\uC5D0
+    \uD574\uB2F9\uD558\uB294 \uAC83\uC774\uC5C8\uC9C0 \uC774 \uD30C\uC77C\uC5D4 \uC6D0\uB798
+    \uC548 \uB9DE\uC558\uB2E4 \u2014 \uCC29\uC624 \uC815\uC815. [\uBD88\uBA78 \uBE14\uB85D
+    09-30] \xA7V-12: B00M\uC740 A0S4 0.6\uCD08 \uCC3D \u2014 3\uD0C0 \uCDA9\uC804\uC740
+    \uACFC\uB2E4, \uB2E4\uC74C 1\uD0C0(buffHitCharges 1). (Tools/apply_immortal_blocks.py)"
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,9 +75,9 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 6
       basis: 0
@@ -36,8 +89,54 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0
-      randMin: 1
-      randMax: 1
       casterBuffCountFactor: 0
       buffId: B00M
+      randMin: 1
+      randMax: 1
       buffHitCharges: 1
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: e5fbd17d407dd4e7d949b283480c217d, type: 3}

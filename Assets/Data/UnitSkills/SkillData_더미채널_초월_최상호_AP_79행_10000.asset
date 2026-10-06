@@ -10,52 +10,141 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_초월_최상호_AP_79행_10000
-  m_EditorClassIdentifier:
-  skillName: A0PI 3범위 도플초월 오색실1
-  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다. | 정정(2026-09-30, 구현담당1 — 과다발동 정리): 원문 Trig_DP_Attack `GetRandomInt(1,7)==4` → e06K thunderclap A0PI(Htc1 205000·aare 525·Htc3 2.5=최저 이속까지·adur 4.5). triggerChance 1.0→1/7, 범위 525 Enemies, Slow(0=하한) 4.5초. 같이 있던 150000(A0AM, e0IW)은 각성 모드 트리거 Trig_DP_Attack_gaksung의 1/5 분기라 뺐다 — 우리엔 각성(metamorphosis) 모드가 없다. [초월·제한 블록 09-30] 거미줄 1/7은 일반형(DP_Attack) 블록 — forbiddenBuffId B00X. (Tools/apply_transcend_limited_blocks.py)'
-  · e06K(@초월 도플 거미줄) A0PI 3범위 도플초월 오색실1 [천둥소리 피해]: 205000 (원작 도플·초월함) 진입게이트: Trig_DP_Attack_Actions[이벤트직결]: (조건없음)
-  · e0IW(@초월 도플 새장) A0AM 3범위 도플각성흉탄 [천둥소리 피해]: 150000 (원작 도플·초월함) 진입게이트: Trig_DP_Attack_gaksung_Actions[이벤트직결]: (조건없음)
-  제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e06H(@초월 도플 할퀴기) A0PI 3범위 도플초월 오색실1: 205000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지) / e06R(@초월 도플 흉탄더미) A0AM 3범위 도플각성흉탄: 150000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지)
+  m_Name: "SkillData_\uB354\uBBF8\uCC44\uB110_\uCD08\uC6D4_\uCD5C\uC0C1\uD638_AP_79\uD589_10000"
+  m_EditorClassIdentifier: 
+  skillName: "A0PI 3\uBC94\uC704 \uB3C4\uD50C\uCD08\uC6D4 \uC624\uC0C9\uC2E41"
+  description: "\uC9C4\uC785\uAC8C\uC774\uD2B8 \uD655\uC815(2026-09-06, \uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    799ef03) \u2014 triggerChance=1.0000\uB85C \uC7A0\uAE08 \uD574\uC81C. \uC591\uC758
+    \uC0C1\uD0DC\uC870\uAC74(\uC2A4\uD14C\uC774\uC9C0\xB7\uBC84\uD504 \uBCF4\uC720
+    \uB4F1)\uC740 \uCD95 \uBC16\uC774\uB77C \uBE90\uB2E4 \u2014 \uC2E4\uC81C\uBCF4\uB2E4
+    \uC790\uC8FC \uBC1C\uB3D9\uD560 \uC218 \uC788\uB2E4. | \uC815\uC815(2026-09-30,
+    \uAD6C\uD604\uB2F4\uB2F91 \u2014 \uACFC\uB2E4\uBC1C\uB3D9 \uC815\uB9AC): \uC6D0\uBB38
+    Trig_DP_Attack `GetRandomInt(1,7)==4` \u2192 e06K thunderclap A0PI(Htc1 205000\xB7aare
+    525\xB7Htc3 2.5=\uCD5C\uC800 \uC774\uC18D\uAE4C\uC9C0\xB7adur 4.5). triggerChance
+    1.0\u21921/7, \uBC94\uC704 525 Enemies, Slow(0=\uD558\uD55C) 4.5\uCD08. \uAC19\uC774
+    \uC788\uB358 150000(A0AM, e0IW)\uC740 \uAC01\uC131 \uBAA8\uB4DC \uD2B8\uB9AC\uAC70
+    Trig_DP_Attack_gaksung\uC758 1/5 \uBD84\uAE30\uB77C \uBE90\uB2E4 \u2014 \uC6B0\uB9AC\uC5D4
+    \uAC01\uC131(metamorphosis) \uBAA8\uB4DC\uAC00 \uC5C6\uB2E4. [\uCD08\uC6D4\xB7\uC81C\uD55C
+    \uBE14\uB85D 09-30] \uAC70\uBBF8\uC904 1/7\uC740 \uC77C\uBC18\uD615(DP_Attack)
+    \uBE14\uB85D \u2014 forbiddenBuffId B00X. (Tools/apply_transcend_limited_blocks.py)"
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.14285714285714285
-    range: 525.0
+    triggerChance: 0.14285715
+    range: 525
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
     forbiddenBuffId: B00X
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 4
-      multiplier: 205000.0
-      bonus: 0.0
+      multiplier: 205000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 13
       basis: 0
       target: 2
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 4.5
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
       heroDuration: 2.25
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: c3446708c2f4f42dfad8ae107b884994, type: 3}

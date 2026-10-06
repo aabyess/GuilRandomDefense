@@ -10,95 +10,229 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_랜덤_모몬가
-  m_EditorClassIdentifier:
-  skillName: ichigo1 강화 후 1/5 (이치고)
-  description: '원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 유닛 하나(행 4개)를 통째로 이 유닛에 배정했다(2026-09-06 유닛 단위 재배정, TEAM_RULES 뿌리 ⑮). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(Trig_ichigo1). | 2차 배정(트리거·더미 채널): 원작 랜덤전용 쿠로사키 이치고 - 랜덤전용(더미 경로 Trig_ichigo1 → e0O7(!이치고 월아) → A093). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 정정(2026-09-30 구현담당1, 「게이트 없음」 검사 Tools/audit_ungated.py): 원문 Trig_ichigo1(h071) = `if UserData==1 and 1~5==3 → 대상 위치 385 광역 200000 CHAOS/UNIVERSAL + PV<200 최대×0.02 / 그 외 100000`. UserData=1은 R_Unit_skill_tr(랜덤 스킬 강화)가 켠다 → L0 빈 효과, L1에 효과(호시노 A0KT와 같은 축, 우리엔 아직 올리는 길 없음 — 목록). 이전: 확률 1.0·AD·1150(잔재).'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uB79C\uB364_\uBAA8\uBAAC\uAC00"
+  m_EditorClassIdentifier: 
+  skillName: "ichigo1 \uAC15\uD654 \uD6C4 1/5 (\uC774\uCE58\uACE0)"
+  description: "\uC6D0\uC791 \uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8 \uD53C\uD574\uD45C(ORIGINAL_SKILL_DAMAGE_TABLE.csv)
+    DPS \uC21C\uC704 \uBC30\uC815 \u2014 \uC6D0\uC791 \uB79C\uB364\uC804\uC6A9 \uCFE0\uB85C\uC0AC\uD0A4
+    \uC774\uCE58\uACE0 - \uB79C\uB364\uC804\uC6A9(Trig_ichigo1)\uC758 \uD53C\uD574\uB97C
+    \uC62E\uACBC\uB2E4. 1\uCC28(uabi \uB2A5\uB825ID) CSV\uC5D4 \uC5C6\uB358 \uB2A5\uB825\uC774\uB2E4
+    \u2014 \uC6D0\uC791\uC774 \uC720\uB2DBID\u2192\uD2B8\uB9AC\uAC70 \uD574\uC2DC\uD14C\uC774\uBE14\uB85C
+    \uCC98\uB9AC\uD574\uC11C \uB2A5\uB825ID\uB85C\uB294 \uC548 \uBCF4\uC600\uB2E4.
+    \uAC1C\uBCC4 \uB300\uC751 \uC544\uB2D8(\uC774\uB984\uB9E4\uD551 \uBD88\uAC00)
+    \u2014 \uC6D0\uC791 \uC720\uB2DB \uD558\uB098(\uD589 4\uAC1C)\uB97C \uD1B5\uC9F8\uB85C
+    \uC774 \uC720\uB2DB\uC5D0 \uBC30\uC815\uD588\uB2E4(2026-09-06 \uC720\uB2DB \uB2E8\uC704
+    \uC7AC\uBC30\uC815, TEAM_RULES \uBFCC\uB9AC \u246E). | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uB79C\uB364\uC804\uC6A9 \uCFE0\uB85C\uC0AC\uD0A4
+    \uC774\uCE58\uACE0 - \uB79C\uB364\uC804\uC6A9(Trig_ichigo1). | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uB79C\uB364\uC804\uC6A9 \uCFE0\uB85C\uC0AC\uD0A4
+    \uC774\uCE58\uACE0 - \uB79C\uB364\uC804\uC6A9(Trig_ichigo1). | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uB79C\uB364\uC804\uC6A9 \uCFE0\uB85C\uC0AC\uD0A4
+    \uC774\uCE58\uACE0 - \uB79C\uB364\uC804\uC6A9(Trig_ichigo1). | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uB79C\uB364\uC804\uC6A9 \uCFE0\uB85C\uC0AC\uD0A4
+    \uC774\uCE58\uACE0 - \uB79C\uB364\uC804\uC6A9(\uB354\uBBF8 \uACBD\uB85C Trig_ichigo1
+    \u2192 e0O7(!\uC774\uCE58\uACE0 \uC6D4\uC544) \u2192 A093). \u26A0\uFE0F \uC2A4\uD1A1
+    \uD544\uB4DC \uAC12 \uADF8\uB300\uB85C \u2014 \uD544\uB4DC \uB73B\uC774 \uBBF8\uD655\uC778\uC774\uB77C
+    \uD53C\uD574\uAC00 \uC544\uB2C8\uB77C \uB2E4\uB978 \uD6A8\uACFC(\uC2AC\uB85C\uC6B0\xB7\uC2A4\uD134\xB7\uBC84\uD504
+    \uB4F1)\uC600\uC744 \uC218 \uC788\uB2E4. \uACF5\uACA9\uD0C0\uC785 \uC6D0\uBCF8\uC774
+    [\uBBF8\uD655\uC778]\uC774\uB77C \uC774 \uC720\uB2DB \uC790\uC2E0\uC758 \uD3C9\uD0C0
+    \uD0C0\uC785\uC73C\uB85C \uB300\uC2E0\uD588\uB2E4. | \uC815\uC815(2026-09-30
+    \uAD6C\uD604\uB2F4\uB2F91, \u300C\uAC8C\uC774\uD2B8 \uC5C6\uC74C\u300D \uAC80\uC0AC
+    Tools/audit_ungated.py): \uC6D0\uBB38 Trig_ichigo1(h071) = `if UserData==1 and
+    1~5==3 \u2192 \uB300\uC0C1 \uC704\uCE58 385 \uAD11\uC5ED 200000 CHAOS/UNIVERSAL
+    + PV<200 \uCD5C\uB300\xD70.02 / \uADF8 \uC678 100000`. UserData=1\uC740 R_Unit_skill_tr(\uB79C\uB364
+    \uC2A4\uD0AC \uAC15\uD654)\uAC00 \uCF20\uB2E4 \u2192 L0 \uBE48 \uD6A8\uACFC,
+    L1\uC5D0 \uD6A8\uACFC(\uD638\uC2DC\uB178 A0KT\uC640 \uAC19\uC740 \uCD95, \uC6B0\uB9AC\uC5D4
+    \uC544\uC9C1 \uC62C\uB9AC\uB294 \uAE38 \uC5C6\uC74C \u2014 \uBAA9\uB85D). \uC774\uC804:
+    \uD655\uB960 1.0\xB7AD\xB71150(\uC794\uC7AC)."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.2
-    range: 385.0
-    effects: []
-  - cooldown: 0
-    triggerChance: 0.2
-    range: 385.0
+    range: 385
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
+    effects: []
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  - cooldown: 0
+    triggerChance: 0.2
+    range: 385
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 5
-      multiplier: 200000.0
-      bonus: 0.0
+      multiplier: 200000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 1
       target: 3
       damageType: 2
       attackType: 7
       multiplier: 0.02
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 1
       targetConditionValue: 200
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 7
-      multiplier: 100000.0
-      bonus: 0.0
+      multiplier: 100000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 3
       targetConditionValue: 200
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 0c44f5ef36d9242df9016e30a1bf993b, type: 3}

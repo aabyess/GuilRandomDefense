@@ -10,21 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작오라_영원_이지원_A15O
-  m_EditorClassIdentifier:
-  skillName: A15O 고동소리 — 자기 공격력 +25%
-  description: 원작 H0BK uabi A15O(ACac, Cac1 0.25 · aare 850 · abuf B07G, atar air,invulnerable,organic,self,ground,vulnerable). 2026-09-30 구현담당1(Tools/apply_uabi_passives.py).
+  m_Name: "SkillData_\uC6D0\uC791\uC624\uB77C_\uC601\uC6D0_\uC774\uC9C0\uC6D0_A15O"
+  m_EditorClassIdentifier: 
+  skillName: "A15O \uACE0\uB3D9\uC18C\uB9AC \u2014 \uC790\uAE30 \uACF5\uACA9\uB825
+    +25%"
+  description: "\uC6D0\uC791 H0BK uabi A15O(ACac, Cac1 0.25 \xB7 aare 850 \xB7 abuf
+    B07G, atar air,invulnerable,organic,self,ground,vulnerable). 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(Tools/apply_uabi_passives.py)."
   triggerType: 2
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 850.0
+    triggerChance: 1
+    range: 850
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 14
       basis: 0
@@ -32,25 +34,58 @@ MonoBehaviour:
       damageType: 0
       attackType: 0
       multiplier: 0.25
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
+      duration: 0
+      casterBuffCountFactor: 0
       buffId: B07G
-      randMin: 1.0
-      randMax: 1.0
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 948b09b6c3b1b49af8454fdf407ba61a, type: 3}

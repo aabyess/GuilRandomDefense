@@ -10,47 +10,83 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작트리거_랜덤_미도리야_이즈쿠_Higma_LIFE85
-  m_EditorClassIdentifier:
-  skillName: 히그마(랜덤) 체력 스킬 — LIFE게이지85(대상 5000000)
-  description: '원작 히그마 h0AC Higma_Attack: 체력==85 → 대상 5000000 NORMAL/UNIVERSAL(+ 2/5로 돈 500~1000 — 경제, 미반영). 2026-09-30 구현담당1.'
+  m_Name: "SkillData_\uC6D0\uC791\uD2B8\uB9AC\uAC70_\uB79C\uB364_\uBBF8\uB3C4\uB9AC\uC57C_\uC774\uC988\uCFE0_Higma_LIFE85"
+  m_EditorClassIdentifier: 
+  skillName: "\uD788\uADF8\uB9C8(\uB79C\uB364) \uCCB4\uB825 \uC2A4\uD0AC \u2014 LIFE\uAC8C\uC774\uC9C085(\uB300\uC0C1
+    5000000)"
+  description: "\uC6D0\uC791 \uD788\uADF8\uB9C8 h0AC Higma_Attack: \uCCB4\uB825==85
+    \u2192 \uB300\uC0C1 5000000 NORMAL/UNIVERSAL(+ 2/5\uB85C \uB3C8 500~1000 \u2014
+    \uACBD\uC81C, \uBBF8\uBC18\uC601). 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91."
   triggerType: 3
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 0.0
+    triggerChance: 1
+    range: 0
     hitCountThreshold: 85
     resetTo: 1
     gaugeKind: 1
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 7
-      multiplier: 5000000.0
-      bonus: 0.0
+      multiplier: 5000000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: cbe2c552f84484fc0abaa20afe7bea1c, type: 3}

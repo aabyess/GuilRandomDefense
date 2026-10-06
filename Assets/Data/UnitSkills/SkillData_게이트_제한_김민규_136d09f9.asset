@@ -10,21 +10,47 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_제한_김민규_136d09f9
-  m_EditorClassIdentifier:
-  skillName: 샬롯 카타쿠리 장성 밀가루 대신 - 제한됨 — 1/7 AND 버프B045==true
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 샬롯 카타쿠리 장성 밀가루 대신 - 제한됨(h07I)의 게이트 "1/7 AND 버프B045==true" 능력 1개를 이 SkillData 하나로 묶었다.   · Kata_03#1: 계산식 ((GetEventDamage()*0.75)+100000.00)  ⚠️ 조건(버프B045==true)은 우리 축 밖(버프) 또는 축이 하나뿐(게이지 중복)이라 뺐다 — 실제보다 자주 발동할 수 있다.  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Kata_03#1] ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0. 완료(2026-09-07, PM 지시 — opener/consumer 디렉터리 충돌 해소 확인 후 마저 배선): requiredBuffId=B045를 걸었다 — 이제 opener(SkillData_버프게이트_제한_김민규_B045.asset)가 건 버프가 없으면 이 게이트가 통과하지 않는다(이전엔 필드가 아예 없어 조건 없이 항상 통과하던 조용한 과다발동 상태였다). 위 ReceivedDamage(basis=5) 미구현 이슈는 별개이며 이번 작업 범위 밖이다. [초월·제한 블록 09-30] U2: Kata_03은 B045 동안 매 타(1/7 아님 — 별도 최상위 if) — 확률 1/7 → 1.0(7배 과소였다). (Tools/apply_transcend_limited_blocks.py)'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uC81C\uD55C_\uAE40\uBBFC\uADDC_136d09f9"
+  m_EditorClassIdentifier: 
+  skillName: "\uC0EC\uB86F \uCE74\uD0C0\uCFE0\uB9AC \uC7A5\uC131 \uBC00\uAC00\uB8E8
+    \uB300\uC2E0 - \uC81C\uD55C\uB428 \u2014 1/7 AND \uBC84\uD504B045==true"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 \uC0EC\uB86F \uCE74\uD0C0\uCFE0\uB9AC \uC7A5\uC131
+    \uBC00\uAC00\uB8E8 \uB300\uC2E0 - \uC81C\uD55C\uB428(h07I)\uC758 \uAC8C\uC774\uD2B8
+    \"1/7 AND \uBC84\uD504B045==true\" \uB2A5\uB825 1\uAC1C\uB97C \uC774 SkillData
+    \uD558\uB098\uB85C \uBB36\uC5C8\uB2E4.   \xB7 Kata_03#1: \uACC4\uC0B0\uC2DD ((GetEventDamage()*0.75)+100000.00) 
+    \u26A0\uFE0F \uC870\uAC74(\uBC84\uD504B045==true)\uC740 \uC6B0\uB9AC \uCD95 \uBC16(\uBC84\uD504)
+    \uB610\uB294 \uCD95\uC774 \uD558\uB098\uBFD0(\uAC8C\uC774\uC9C0 \uC911\uBCF5)\uC774\uB77C
+    \uBE90\uB2E4 \u2014 \uC2E4\uC81C\uBCF4\uB2E4 \uC790\uC8FC \uBC1C\uB3D9\uD560
+    \uC218 \uC788\uB2E4.  hitCount>1\uC740 \"\uAC19\uC740 RRD \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0
+    \uC2DC\uAC04\uCC28 \uB2E4\uB2E8\uD788\uD2B8\uAC00 \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC
+    \uC5F0\uC18D N\uD68C)\uC73C\uB85C \uADFC\uC0AC\uD588\uB2E4.  [Kata_03#1] \u26A0\uFE0F
+    ReceivedDamage\uB294 \uC77D\uB294 \uCF54\uB4DC\uAC00 \uC544\uC9C1 \uC5C6\uB2E4(SkillData.cs
+    \uC8FC\uC11D) \u2014 \uC9C0\uAE08\uC740 \uC21C\uC218 \uB370\uC774\uD130 \uC790\uB9AC,
+    \uBC1C\uB3D9\uD574\uB3C4 \uD53C\uD574 0. \uC644\uB8CC(2026-09-07, PM \uC9C0\uC2DC
+    \u2014 opener/consumer \uB514\uB809\uD130\uB9AC \uCDA9\uB3CC \uD574\uC18C \uD655\uC778
+    \uD6C4 \uB9C8\uC800 \uBC30\uC120): requiredBuffId=B045\uB97C \uAC78\uC5C8\uB2E4
+    \u2014 \uC774\uC81C opener(SkillData_\uBC84\uD504\uAC8C\uC774\uD2B8_\uC81C\uD55C_\uAE40\uBBFC\uADDC_B045.asset)\uAC00
+    \uAC74 \uBC84\uD504\uAC00 \uC5C6\uC73C\uBA74 \uC774 \uAC8C\uC774\uD2B8\uAC00
+    \uD1B5\uACFC\uD558\uC9C0 \uC54A\uB294\uB2E4(\uC774\uC804\uC5D4 \uD544\uB4DC\uAC00
+    \uC544\uC608 \uC5C6\uC5B4 \uC870\uAC74 \uC5C6\uC774 \uD56D\uC0C1 \uD1B5\uACFC\uD558\uB358
+    \uC870\uC6A9\uD55C \uACFC\uB2E4\uBC1C\uB3D9 \uC0C1\uD0DC\uC600\uB2E4). \uC704
+    ReceivedDamage(basis=5) \uBBF8\uAD6C\uD604 \uC774\uC288\uB294 \uBCC4\uAC1C\uC774\uBA70
+    \uC774\uBC88 \uC791\uC5C5 \uBC94\uC704 \uBC16\uC774\uB2E4. [\uCD08\uC6D4\xB7\uC81C\uD55C
+    \uBE14\uB85D 09-30] U2: Kata_03\uC740 B045 \uB3D9\uC548 \uB9E4 \uD0C0(1/7 \uC544\uB2D8
+    \u2014 \uBCC4\uB3C4 \uCD5C\uC0C1\uC704 if) \u2014 \uD655\uB960 1/7 \u2192 1.0(7\uBC30
+    \uACFC\uC18C\uC600\uB2E4). (Tools/apply_transcend_limited_blocks.py)"
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 415.0
+    triggerChance: 1
+    range: 415
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
     requiredBuffId: B045
-    forbiddenBuffId:
-    selfBuffId:
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 5
@@ -32,8 +58,58 @@ MonoBehaviour:
       damageType: 1
       attackType: 5
       multiplier: 0.75
-      bonus: 100000.0
+      bonus: 100000
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 015b762b6fa884ddf8d2951977ba2678, type: 3}

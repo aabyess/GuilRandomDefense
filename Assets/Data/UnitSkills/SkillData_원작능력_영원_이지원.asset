@@ -10,24 +10,89 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_영원_이지원
-  m_EditorClassIdentifier:
-  skillName: A0M8 !해적파견조직총수
-  description: '원작 영원한 참된 호걸 코즈키 오뎅 - 영원한(Trig_Odeng_Attack). | 2차 배정(트리거·더미 채널): 원작 영원한 참된 호걸 코즈키 오뎅 - 영원한(Trig_Odeng_Attack). | 정정(2026-09-30, 구현담당1 — ORIGIN_ABILITY_PROVENANCE 「다른 곳에 있음」): 1625000은 Trig_Cavendish_Attack(h05B=영원_최상호) 몫, 1500000×2·1150000은 이 유닛 원작(H0BK·h05A)에 없는 값. 뺀 효과(basis, 값, 상수): [(''0'', ''1625000.0'', ''0.0''), (''0'', ''1500000.0'', ''0.0''), (''0'', ''1500000.0'', ''0.0''), (''0'', ''1150000.0'', ''0.0'')]'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC601\uC6D0_\uC774\uC9C0\uC6D0"
+  m_EditorClassIdentifier: 
+  skillName: "A0M8 !\uD574\uC801\uD30C\uACAC\uC870\uC9C1\uCD1D\uC218"
+  description: "\uC6D0\uC791 \uC601\uC6D0\uD55C \uCC38\uB41C \uD638\uAC78 \uCF54\uC988\uD0A4
+    \uC624\uB385 - \uC601\uC6D0\uD55C(Trig_Odeng_Attack). | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uC601\uC6D0\uD55C \uCC38\uB41C \uD638\uAC78 \uCF54\uC988\uD0A4
+    \uC624\uB385 - \uC601\uC6D0\uD55C(Trig_Odeng_Attack). | \uC815\uC815(2026-09-30,
+    \uAD6C\uD604\uB2F4\uB2F91 \u2014 ORIGIN_ABILITY_PROVENANCE \u300C\uB2E4\uB978
+    \uACF3\uC5D0 \uC788\uC74C\u300D): 1625000\uC740 Trig_Cavendish_Attack(h05B=\uC601\uC6D0_\uCD5C\uC0C1\uD638)
+    \uBAAB, 1500000\xD72\xB71150000\uC740 \uC774 \uC720\uB2DB \uC6D0\uC791(H0BK\xB7h05A)\uC5D0
+    \uC5C6\uB294 \uAC12. \uBE80 \uD6A8\uACFC(basis, \uAC12, \uC0C1\uC218): [('0',
+    '1625000.0', '0.0'), ('0', '1500000.0', '0.0'), ('0', '1500000.0', '0.0'), ('0',
+    '1150000.0', '0.0')]"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.0777
-    range: 415.0
+    range: 415
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 1
       basis: 0
       target: 3
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 7.77
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
       heroDuration: 7.77
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: ad86db22f652545049d4997611246a77, type: 3}

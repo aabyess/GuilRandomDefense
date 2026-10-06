@@ -10,38 +10,150 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_영원_이지원_3ba504d5
-  m_EditorClassIdentifier:
-  skillName: 태양의신-니카 — LIFE게이지115 → 거대화(B078 4.25초)
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 |CFFFFFA78태양의신-니카(H0BK)의 게이트 "LIFE게이지115.00 AND 버프B078==true" 능력 4개를 이 SkillData 하나로 묶었다.   · Nika_AttackDamage#1: 계산식 ((GetEventDamage()*5.00)+1000000.00)   · Nika_AttackDamage#2: 계산식 ((GetEventDamage()*2.00)+200000.00)   · Nika_AttackDamage#3: 계산식 ((GetEventDamage()*5.00)+500000.00)   · Nika_AttackDamage#4: 계산식 ((GetEventDamage()*2.00)+200000.00)  ⚠️ 조건(버프B078==true)은 우리 축 밖(버프) 또는 축이 하나뿐(게이지 중복)이라 뺐다 — 실제보다 자주 발동할 수 있다.  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Nika_AttackDamage#1] ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0.  [Nika_AttackDamage#2] ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0.  [Nika_AttackDamage#3] ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0.  [Nika_AttackDamage#4] ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0. [Nika_Random_Punch#1/#2] 회수(2026-09-06, SkillEffectBasis.TargetMoveSpeed 추가, a8835c8/OUT_OF_AXIS_CLASSIFY.md②): 원작 "450,000×(1+0.01×(대상이속×0.30))"을 전개해 대상이속×1350+450000으로 담았다 — 같은 게이트(LIFE게이지115.00 AND 버프B078==true)라 이 SkillData에 합쳤다. #2는 대상 인자만 다르고(RRD대상인자가 다른 변수) 식은 동일하다. ⚠️ range는 원작 이 행 자체는 400인데 range가 SkillLevel 공유 필드라 이미 이 파일의 Nika_AttackDamage(Enemies, range 500)와 같이 써야 해서 500 그대로 뒀다(줄이면 기존 효과가 좁아진다) — 약간 더 넓게 근사됨. ⚠️ 2026-09-06 정정(PM 지시, 06번①) — "조건(버프B078==true)을 뺐다"는 위 설명은 근사가 아니라 의도적 생략이었다: 리서치담당 확인 결과 B078을 거는 조건(Trig_Nika_Attack의 LIFE==115)과 이 스킬의 소비 조건(LIFE게이지115.00)이 **완전히 같은 순간**이다 — 원작이 버프를 쓴 건 트리거 사이에 신호를 넘기려는 구현 수단이지 추가 게이트가 아니다. 별도 opener를 만들면 같은 공유 게이지라 opener와 이 스킬이 정확히 같은 타에 임계에 닿는데, "여는 그 타는 못 쓴다" 순서 규칙(h04G/B00M과 같은 이유) 때문에 원작에 없는 1타 지연이 새로 생긴다. 그래서 requiredBuffId 없이 지금의 OnHitCount(Life, 115, resetTo=1) 그대로 둔다 — 나중에 "버프 게이트가 빠졌다"고 다시 넣지 말 것. | 정정(2026-09-30 구현담당1, 배타 분기 검사): 위 「B078은 신호 전달 수단, 버프 게이트 넣지 말 것」은 원문과 다르다. LIFE==115면 LIFE를 1로 되돌리고 e0QT가 시전자에게 bloodlust A15E(B078, adur 4.25초)를 건다 — 그 4.25초 동안 **매 타** Nika_AttackDamage(18%/82% 배타)가 돌고, B078이 없을 때만 40% Random_Punch가 돈다(`if B078 … else if 1~5>3 …`, 배타). 이전 에셋은 게이지가 찰 때 한 번 두 갈래·펀치까지 다 냈다. → 이 에셋은 B078만 걸고, 피해는 갈래별 새 에셋(_B078_18 · _B078_82 · _Punch_40 · _Punch_4 · _Mana150)으로. 근사: 게이지가 찬 그 타에 우리는 B078을 먼저 걸어 같은 타부터 거대화 갈래가 돌 수 있다(원작은 다음 타부터).'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uC601\uC6D0_\uC774\uC9C0\uC6D0_3ba504d5"
+  m_EditorClassIdentifier: 
+  skillName: "\uD0DC\uC591\uC758\uC2E0-\uB2C8\uCE74 \u2014 LIFE\uAC8C\uC774\uC9C0115
+    \u2192 \uAC70\uB300\uD654(B078 4.25\uCD08)"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 |CFFFFFA78\uD0DC\uC591\uC758\uC2E0-\uB2C8\uCE74(H0BK)\uC758
+    \uAC8C\uC774\uD2B8 \"LIFE\uAC8C\uC774\uC9C0115.00 AND \uBC84\uD504B078==true\"
+    \uB2A5\uB825 4\uAC1C\uB97C \uC774 SkillData \uD558\uB098\uB85C \uBB36\uC5C8\uB2E4.  
+    \xB7 Nika_AttackDamage#1: \uACC4\uC0B0\uC2DD ((GetEventDamage()*5.00)+1000000.00)  
+    \xB7 Nika_AttackDamage#2: \uACC4\uC0B0\uC2DD ((GetEventDamage()*2.00)+200000.00)  
+    \xB7 Nika_AttackDamage#3: \uACC4\uC0B0\uC2DD ((GetEventDamage()*5.00)+500000.00)  
+    \xB7 Nika_AttackDamage#4: \uACC4\uC0B0\uC2DD ((GetEventDamage()*2.00)+200000.00) 
+    \u26A0\uFE0F \uC870\uAC74(\uBC84\uD504B078==true)\uC740 \uC6B0\uB9AC \uCD95 \uBC16(\uBC84\uD504)
+    \uB610\uB294 \uCD95\uC774 \uD558\uB098\uBFD0(\uAC8C\uC774\uC9C0 \uC911\uBCF5)\uC774\uB77C
+    \uBE90\uB2E4 \u2014 \uC2E4\uC81C\uBCF4\uB2E4 \uC790\uC8FC \uBC1C\uB3D9\uD560
+    \uC218 \uC788\uB2E4.  hitCount>1\uC740 \"\uAC19\uC740 RRD \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0
+    \uC2DC\uAC04\uCC28 \uB2E4\uB2E8\uD788\uD2B8\uAC00 \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC
+    \uC5F0\uC18D N\uD68C)\uC73C\uB85C \uADFC\uC0AC\uD588\uB2E4.  [Nika_AttackDamage#1]
+    \u26A0\uFE0F ReceivedDamage\uB294 \uC77D\uB294 \uCF54\uB4DC\uAC00 \uC544\uC9C1
+    \uC5C6\uB2E4(SkillData.cs \uC8FC\uC11D) \u2014 \uC9C0\uAE08\uC740 \uC21C\uC218
+    \uB370\uC774\uD130 \uC790\uB9AC, \uBC1C\uB3D9\uD574\uB3C4 \uD53C\uD574 0.  [Nika_AttackDamage#2]
+    \u26A0\uFE0F ReceivedDamage\uB294 \uC77D\uB294 \uCF54\uB4DC\uAC00 \uC544\uC9C1
+    \uC5C6\uB2E4(SkillData.cs \uC8FC\uC11D) \u2014 \uC9C0\uAE08\uC740 \uC21C\uC218
+    \uB370\uC774\uD130 \uC790\uB9AC, \uBC1C\uB3D9\uD574\uB3C4 \uD53C\uD574 0.  [Nika_AttackDamage#3]
+    \u26A0\uFE0F ReceivedDamage\uB294 \uC77D\uB294 \uCF54\uB4DC\uAC00 \uC544\uC9C1
+    \uC5C6\uB2E4(SkillData.cs \uC8FC\uC11D) \u2014 \uC9C0\uAE08\uC740 \uC21C\uC218
+    \uB370\uC774\uD130 \uC790\uB9AC, \uBC1C\uB3D9\uD574\uB3C4 \uD53C\uD574 0.  [Nika_AttackDamage#4]
+    \u26A0\uFE0F ReceivedDamage\uB294 \uC77D\uB294 \uCF54\uB4DC\uAC00 \uC544\uC9C1
+    \uC5C6\uB2E4(SkillData.cs \uC8FC\uC11D) \u2014 \uC9C0\uAE08\uC740 \uC21C\uC218
+    \uB370\uC774\uD130 \uC790\uB9AC, \uBC1C\uB3D9\uD574\uB3C4 \uD53C\uD574 0. [Nika_Random_Punch#1/#2]
+    \uD68C\uC218(2026-09-06, SkillEffectBasis.TargetMoveSpeed \uCD94\uAC00, a8835c8/OUT_OF_AXIS_CLASSIFY.md\u2461):
+    \uC6D0\uC791 \"450,000\xD7(1+0.01\xD7(\uB300\uC0C1\uC774\uC18D\xD70.30))\"\uC744
+    \uC804\uAC1C\uD574 \uB300\uC0C1\uC774\uC18D\xD71350+450000\uC73C\uB85C \uB2F4\uC558\uB2E4
+    \u2014 \uAC19\uC740 \uAC8C\uC774\uD2B8(LIFE\uAC8C\uC774\uC9C0115.00 AND \uBC84\uD504B078==true)\uB77C
+    \uC774 SkillData\uC5D0 \uD569\uCCE4\uB2E4. #2\uB294 \uB300\uC0C1 \uC778\uC790\uB9CC
+    \uB2E4\uB974\uACE0(RRD\uB300\uC0C1\uC778\uC790\uAC00 \uB2E4\uB978 \uBCC0\uC218)
+    \uC2DD\uC740 \uB3D9\uC77C\uD558\uB2E4. \u26A0\uFE0F range\uB294 \uC6D0\uC791
+    \uC774 \uD589 \uC790\uCCB4\uB294 400\uC778\uB370 range\uAC00 SkillLevel \uACF5\uC720
+    \uD544\uB4DC\uB77C \uC774\uBBF8 \uC774 \uD30C\uC77C\uC758 Nika_AttackDamage(Enemies,
+    range 500)\uC640 \uAC19\uC774 \uC368\uC57C \uD574\uC11C 500 \uADF8\uB300\uB85C
+    \uB480\uB2E4(\uC904\uC774\uBA74 \uAE30\uC874 \uD6A8\uACFC\uAC00 \uC881\uC544\uC9C4\uB2E4)
+    \u2014 \uC57D\uAC04 \uB354 \uB113\uAC8C \uADFC\uC0AC\uB428. \u26A0\uFE0F 2026-09-06
+    \uC815\uC815(PM \uC9C0\uC2DC, 06\uBC88\u2460) \u2014 \"\uC870\uAC74(\uBC84\uD504B078==true)\uC744
+    \uBE90\uB2E4\"\uB294 \uC704 \uC124\uBA85\uC740 \uADFC\uC0AC\uAC00 \uC544\uB2C8\uB77C
+    \uC758\uB3C4\uC801 \uC0DD\uB7B5\uC774\uC5C8\uB2E4: \uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    \uD655\uC778 \uACB0\uACFC B078\uC744 \uAC70\uB294 \uC870\uAC74(Trig_Nika_Attack\uC758
+    LIFE==115)\uACFC \uC774 \uC2A4\uD0AC\uC758 \uC18C\uBE44 \uC870\uAC74(LIFE\uAC8C\uC774\uC9C0115.00)\uC774
+    **\uC644\uC804\uD788 \uAC19\uC740 \uC21C\uAC04**\uC774\uB2E4 \u2014 \uC6D0\uC791\uC774
+    \uBC84\uD504\uB97C \uC4F4 \uAC74 \uD2B8\uB9AC\uAC70 \uC0AC\uC774\uC5D0 \uC2E0\uD638\uB97C
+    \uB118\uAE30\uB824\uB294 \uAD6C\uD604 \uC218\uB2E8\uC774\uC9C0 \uCD94\uAC00 \uAC8C\uC774\uD2B8\uAC00
+    \uC544\uB2C8\uB2E4. \uBCC4\uB3C4 opener\uB97C \uB9CC\uB4E4\uBA74 \uAC19\uC740
+    \uACF5\uC720 \uAC8C\uC774\uC9C0\uB77C opener\uC640 \uC774 \uC2A4\uD0AC\uC774
+    \uC815\uD655\uD788 \uAC19\uC740 \uD0C0\uC5D0 \uC784\uACC4\uC5D0 \uB2FF\uB294\uB370,
+    \"\uC5EC\uB294 \uADF8 \uD0C0\uB294 \uBABB \uC4F4\uB2E4\" \uC21C\uC11C \uADDC\uCE59(h04G/B00M\uACFC
+    \uAC19\uC740 \uC774\uC720) \uB54C\uBB38\uC5D0 \uC6D0\uC791\uC5D0 \uC5C6\uB294
+    1\uD0C0 \uC9C0\uC5F0\uC774 \uC0C8\uB85C \uC0DD\uAE34\uB2E4. \uADF8\uB798\uC11C
+    requiredBuffId \uC5C6\uC774 \uC9C0\uAE08\uC758 OnHitCount(Life, 115, resetTo=1)
+    \uADF8\uB300\uB85C \uB454\uB2E4 \u2014 \uB098\uC911\uC5D0 \"\uBC84\uD504 \uAC8C\uC774\uD2B8\uAC00
+    \uBE60\uC84C\uB2E4\"\uACE0 \uB2E4\uC2DC \uB123\uC9C0 \uB9D0 \uAC83. | \uC815\uC815(2026-09-30
+    \uAD6C\uD604\uB2F4\uB2F91, \uBC30\uD0C0 \uBD84\uAE30 \uAC80\uC0AC): \uC704 \u300CB078\uC740
+    \uC2E0\uD638 \uC804\uB2EC \uC218\uB2E8, \uBC84\uD504 \uAC8C\uC774\uD2B8 \uB123\uC9C0
+    \uB9D0 \uAC83\u300D\uC740 \uC6D0\uBB38\uACFC \uB2E4\uB974\uB2E4. LIFE==115\uBA74
+    LIFE\uB97C 1\uB85C \uB418\uB3CC\uB9AC\uACE0 e0QT\uAC00 \uC2DC\uC804\uC790\uC5D0\uAC8C
+    bloodlust A15E(B078, adur 4.25\uCD08)\uB97C \uAC74\uB2E4 \u2014 \uADF8 4.25\uCD08
+    \uB3D9\uC548 **\uB9E4 \uD0C0** Nika_AttackDamage(18%/82% \uBC30\uD0C0)\uAC00
+    \uB3CC\uACE0, B078\uC774 \uC5C6\uC744 \uB54C\uB9CC 40% Random_Punch\uAC00 \uB3C8\uB2E4(`if
+    B078 \u2026 else if 1~5>3 \u2026`, \uBC30\uD0C0). \uC774\uC804 \uC5D0\uC14B\uC740
+    \uAC8C\uC774\uC9C0\uAC00 \uCC30 \uB54C \uD55C \uBC88 \uB450 \uAC08\uB798\xB7\uD380\uCE58\uAE4C\uC9C0
+    \uB2E4 \uB0C8\uB2E4. \u2192 \uC774 \uC5D0\uC14B\uC740 B078\uB9CC \uAC78\uACE0,
+    \uD53C\uD574\uB294 \uAC08\uB798\uBCC4 \uC0C8 \uC5D0\uC14B(_B078_18 \xB7 _B078_82
+    \xB7 _Punch_40 \xB7 _Punch_4 \xB7 _Mana150)\uC73C\uB85C. \uADFC\uC0AC: \uAC8C\uC774\uC9C0\uAC00
+    \uCC2C \uADF8 \uD0C0\uC5D0 \uC6B0\uB9AC\uB294 B078\uC744 \uBA3C\uC800 \uAC78\uC5B4
+    \uAC19\uC740 \uD0C0\uBD80\uD130 \uAC70\uB300\uD654 \uAC08\uB798\uAC00 \uB3CC
+    \uC218 \uC788\uB2E4(\uC6D0\uC791\uC740 \uB2E4\uC74C \uD0C0\uBD80\uD130)."
   triggerType: 3
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 500.0
+    triggerChance: 1
+    range: 500
     hitCountThreshold: 115
     resetTo: 1
     gaugeKind: 1
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 6
       basis: 0
       target: 0
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 4.25
-      casterBuffCountFactor: 0.0
+      casterBuffCountFactor: 0
       buffId: B078
-      randMin: 1.0
-      randMax: 1.0
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 377cb52f195014303bb3abd9fe0ffacb, type: 3}

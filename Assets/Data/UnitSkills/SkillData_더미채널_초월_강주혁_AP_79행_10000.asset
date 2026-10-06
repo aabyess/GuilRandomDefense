@@ -10,63 +10,153 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_초월_강주혁_AP_79행_10000
-  m_EditorClassIdentifier:
-  skillName: A0B0 2범위 나미초월 블리자드3
-  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다. ⚠️ 2026-09-06 역추적 검증 완료(PM/리서치담당) — e09H·e0IZ 둘 다 나미(H08V)의 Nami_Skill_4 계열, 같은 상위 진입게이트(버프B012 없음, 축 밖이라 이미 triggerChance=1.0으로 근사됨)를 공유할 뿐 배타 관계가 아니다. 배선 불필요 — 지금처럼 둘 다 무조건 발동이 맞다. | 정정(2026-09-30 구현담당1, 중복 검사): 500000 두 개는 중복이 아니라 더미 둘(e09H A0B0 블리자드3 · e0IZ A0AZ 블리자드4, Trig_Nami_Skill_4 Stage0에서 둘 다 blizzard 명령)이 맞다. 다만 게이트가 틀렸다 — Nami_Attack은 시전자 B012 없을 때만 Skill_4를 부르고, e09H가 시전자에게 frostarmor(A0BO, B012, Ufa1 3.5초)를 걸어 3.5초 잠근다 → 절대쿨_초월_강주혁_AP와 같은 cooldown 3.5. 블리자드는 Hbz1 파도 3회·Hbz2 파도당 500000·aare 500 → 대상 위치 광역 500·hitCount 3(간격 1초 근사)·능력 피해라 AP·Spells. Stage1의 e0IZ 세 기는 명령 없이 세워져 A0FV 이감 오라·겉모습뿐(더미 이감 오라 목록).'
-  · e09H(@초월 나미 웨더리아3-얼음) A0B0 2범위 나미초월 블리자드3 [블리자드 파동당 피해]: 500000 (원작 나미·초월함) 진입게이트: Trig_Nami_Attack_Actions[이벤트직결]: UnitHasBuffBJ(GetAttacker(),'B012')==false
-  · e0IZ(@초월 나미 웨더리아5-리메이크) A0AZ 2범위 나미초월 블리자드4 [블리자드 파동당 피해]: 500000 (원작 나미·초월함) 진입게이트: Trig_Nami_Attack_Actions[이벤트직결]: UnitHasBuffBJ(GetAttacker(),'B012')==false
-  제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e09I(@초월 나미 웨더리아4-업화피닉스1) A0AZ 2범위 나미초월 블리자드4: 500000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지)
+  m_Name: "SkillData_\uB354\uBBF8\uCC44\uB110_\uCD08\uC6D4_\uAC15\uC8FC\uD601_AP_79\uD589_10000"
+  m_EditorClassIdentifier: 
+  skillName: "A0B0 2\uBC94\uC704 \uB098\uBBF8\uCD08\uC6D4 \uBE14\uB9AC\uC790\uB4DC3"
+  description: "\uC9C4\uC785\uAC8C\uC774\uD2B8 \uD655\uC815(2026-09-06, \uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    799ef03) \u2014 triggerChance=1.0000\uB85C \uC7A0\uAE08 \uD574\uC81C. \uC591\uC758
+    \uC0C1\uD0DC\uC870\uAC74(\uC2A4\uD14C\uC774\uC9C0\xB7\uBC84\uD504 \uBCF4\uC720
+    \uB4F1)\uC740 \uCD95 \uBC16\uC774\uB77C \uBE90\uB2E4 \u2014 \uC2E4\uC81C\uBCF4\uB2E4
+    \uC790\uC8FC \uBC1C\uB3D9\uD560 \uC218 \uC788\uB2E4. \u26A0\uFE0F 2026-09-06
+    \uC5ED\uCD94\uC801 \uAC80\uC99D \uC644\uB8CC(PM/\uB9AC\uC11C\uCE58\uB2F4\uB2F9)
+    \u2014 e09H\xB7e0IZ \uB458 \uB2E4 \uB098\uBBF8(H08V)\uC758 Nami_Skill_4 \uACC4\uC5F4,
+    \uAC19\uC740 \uC0C1\uC704 \uC9C4\uC785\uAC8C\uC774\uD2B8(\uBC84\uD504B012 \uC5C6\uC74C,
+    \uCD95 \uBC16\uC774\uB77C \uC774\uBBF8 triggerChance=1.0\uC73C\uB85C \uADFC\uC0AC\uB428)\uB97C
+    \uACF5\uC720\uD560 \uBFD0 \uBC30\uD0C0 \uAD00\uACC4\uAC00 \uC544\uB2C8\uB2E4.
+    \uBC30\uC120 \uBD88\uD544\uC694 \u2014 \uC9C0\uAE08\uCC98\uB7FC \uB458 \uB2E4
+    \uBB34\uC870\uAC74 \uBC1C\uB3D9\uC774 \uB9DE\uB2E4. | \uC815\uC815(2026-09-30
+    \uAD6C\uD604\uB2F4\uB2F91, \uC911\uBCF5 \uAC80\uC0AC): 500000 \uB450 \uAC1C\uB294
+    \uC911\uBCF5\uC774 \uC544\uB2C8\uB77C \uB354\uBBF8 \uB458(e09H A0B0 \uBE14\uB9AC\uC790\uB4DC3
+    \xB7 e0IZ A0AZ \uBE14\uB9AC\uC790\uB4DC4, Trig_Nami_Skill_4 Stage0\uC5D0\uC11C
+    \uB458 \uB2E4 blizzard \uBA85\uB839)\uC774 \uB9DE\uB2E4. \uB2E4\uB9CC \uAC8C\uC774\uD2B8\uAC00
+    \uD2C0\uB838\uB2E4 \u2014 Nami_Attack\uC740 \uC2DC\uC804\uC790 B012 \uC5C6\uC744
+    \uB54C\uB9CC Skill_4\uB97C \uBD80\uB974\uACE0, e09H\uAC00 \uC2DC\uC804\uC790\uC5D0\uAC8C
+    frostarmor(A0BO, B012, Ufa1 3.5\uCD08)\uB97C \uAC78\uC5B4 3.5\uCD08 \uC7A0\uADFC\uB2E4
+    \u2192 \uC808\uB300\uCFE8_\uCD08\uC6D4_\uAC15\uC8FC\uD601_AP\uC640 \uAC19\uC740
+    cooldown 3.5. \uBE14\uB9AC\uC790\uB4DC\uB294 Hbz1 \uD30C\uB3C4 3\uD68C\xB7Hbz2
+    \uD30C\uB3C4\uB2F9 500000\xB7aare 500 \u2192 \uB300\uC0C1 \uC704\uCE58 \uAD11\uC5ED
+    500\xB7hitCount 3(\uAC04\uACA9 1\uCD08 \uADFC\uC0AC)\xB7\uB2A5\uB825 \uD53C\uD574\uB77C
+    AP\xB7Spells. Stage1\uC758 e0IZ \uC138 \uAE30\uB294 \uBA85\uB839 \uC5C6\uC774
+    \uC138\uC6CC\uC838 A0FV \uC774\uAC10 \uC624\uB77C\xB7\uAC89\uBAA8\uC2B5\uBFD0(\uB354\uBBF8
+    \uC774\uAC10 \uC624\uB77C \uBAA9\uB85D)."
   triggerType: 0
   levels:
   - cooldown: 3.5
-    triggerChance: 1.0
-    range: 500.0
+    triggerChance: 1
+    range: 500
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 500000.0
-      bonus: 0.0
+      multiplier: 500000
+      bonus: 0
       chance: 1
       hitCount: 3
-      duration: 3.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 3
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 500000.0
-      bonus: 0.0
+      multiplier: 500000
+      bonus: 0
       chance: 1
       hitCount: 3
-      duration: 3.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 3
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: e7170365bef984d2c9a4a3e2866a919a, type: 3}

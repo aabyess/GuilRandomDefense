@@ -10,41 +10,130 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_제한_최영민_33bd8aa4_일반
-  m_EditorClassIdentifier:
-  skillName: '레베카 Rebeca_Skill_1 — 그 밖: 1/10'
-  description: '원작 레베카 h05I Rebeca_Skill_1의 갈래 — 그 밖: 1/10. 효과는 SkillData_게이트_제한_최영민_33bd8aa4와 같다. 2026-09-30 구현담당1(LIMITED_FILL_LIST X6).'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uC81C\uD55C_\uCD5C\uC601\uBBFC_33bd8aa4_\uC77C\uBC18"
+  m_EditorClassIdentifier: 
+  skillName: "\uB808\uBCA0\uCE74 Rebeca_Skill_1 \u2014 \uADF8 \uBC16: 1/10"
+  description: "\uC6D0\uC791 \uB808\uBCA0\uCE74 h05I Rebeca_Skill_1\uC758 \uAC08\uB798
+    \u2014 \uADF8 \uBC16: 1/10. \uD6A8\uACFC\uB294 SkillData_\uAC8C\uC774\uD2B8_\uC81C\uD55C_\uCD5C\uC601\uBBFC_33bd8aa4\uC640
+    \uAC19\uB2E4. 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(LIMITED_FILL_LIST X6)."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 450.0
+    range: 450
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 1
-      multiplier: 625000.0
-      bonus: 0.0
+      multiplier: 625000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 7
-      multiplier: 2187500.0
-      bonus: 0.0
+      multiplier: 2187500
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
     forbiddenTargetBuffId: B06B
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
     primaryTargetCondition: 4
-    primaryTargetConditionValue: 200.0
+    primaryTargetConditionValue: 200
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 177c3162566054a6d9dbb2fa238e0218, type: 3}

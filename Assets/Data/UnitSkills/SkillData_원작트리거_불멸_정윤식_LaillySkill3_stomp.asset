@@ -10,70 +10,133 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작트리거_불멸_정윤식_LaillySkill3_stomp
-  m_EditorClassIdentifier:
-  skillName: LaillySkill3 stomp A081 — MANA게이지115(500 범위 1250000·스턴)
-  description: '원작 레일리 h049 LaillySkill3 레벨 1 갈래: 시전자 주인 더미 e01H가 대상 자리에서 stomp A081(AOws, Wrs1 1250000, aare 500, adur 빈칸 = 스톡 3.0 · ahdu 0.45). 2026-09-30 구현담당1(IMMORTAL_FILL_LIST §2).'
+  m_Name: "SkillData_\uC6D0\uC791\uD2B8\uB9AC\uAC70_\uBD88\uBA78_\uC815\uC724\uC2DD_LaillySkill3_stomp"
+  m_EditorClassIdentifier: 
+  skillName: "LaillySkill3 stomp A081 \u2014 MANA\uAC8C\uC774\uC9C0115(500 \uBC94\uC704
+    1250000\xB7\uC2A4\uD134)"
+  description: "\uC6D0\uC791 \uB808\uC77C\uB9AC h049 LaillySkill3 \uB808\uBCA8 1
+    \uAC08\uB798: \uC2DC\uC804\uC790 \uC8FC\uC778 \uB354\uBBF8 e01H\uAC00 \uB300\uC0C1
+    \uC790\uB9AC\uC5D0\uC11C stomp A081(AOws, Wrs1 1250000, aare 500, adur \uBE48\uCE78
+    = \uC2A4\uD1A1 3.0 \xB7 ahdu 0.45). 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(IMMORTAL_FILL_LIST
+    \xA72)."
   triggerType: 3
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 500.0
+    triggerChance: 1
+    range: 500
     hitCountThreshold: 115
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 1250000.0
-      bonus: 0.0
+      multiplier: 1250000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 2
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 3.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 3
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
       heroDuration: 0.45
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 88304075d59534b70a7cf5940897b69c, type: 3}

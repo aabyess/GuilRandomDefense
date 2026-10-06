@@ -10,21 +10,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작오라_불멸_이이삭_A142
-  m_EditorClassIdentifier:
-  skillName: A142 해군원수-자신만적용 — 아군 공격력 +22% 오라(자기 제외)
-  description: 원작 센고쿠 h04E uabi A142(ACac, Cac1 0.22, aare 850, atar에 self 없음, abuf B06W). ⚠️ 이름은 「자신만적용」인데 필드는 자기 제외 — 필드대로(확신 낮음). 2026-09-30 구현담당1(IMMORTAL_FILL_LIST §1).
+  m_Name: "SkillData_\uC6D0\uC791\uC624\uB77C_\uBD88\uBA78_\uC774\uC774\uC0AD_A142"
+  m_EditorClassIdentifier: 
+  skillName: "A142 \uD574\uAD70\uC6D0\uC218-\uC790\uC2E0\uB9CC\uC801\uC6A9 \u2014
+    \uC544\uAD70 \uACF5\uACA9\uB825 +22% \uC624\uB77C(\uC790\uAE30 \uC81C\uC678)"
+  description: "\uC6D0\uC791 \uC13C\uACE0\uCFE0 h04E uabi A142(ACac, Cac1 0.22, aare
+    850, atar\uC5D0 self \uC5C6\uC74C, abuf B06W). \u26A0\uFE0F \uC774\uB984\uC740
+    \u300C\uC790\uC2E0\uB9CC\uC801\uC6A9\u300D\uC778\uB370 \uD544\uB4DC\uB294 \uC790\uAE30
+    \uC81C\uC678 \u2014 \uD544\uB4DC\uB300\uB85C(\uD655\uC2E0 \uB0AE\uC74C). 2026-09-30
+    \uAD6C\uD604\uB2F4\uB2F91(IMMORTAL_FILL_LIST \xA71)."
   triggerType: 2
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 850.0
+    triggerChance: 1
+    range: 850
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 14
       basis: 0
@@ -32,25 +37,58 @@ MonoBehaviour:
       damageType: 0
       attackType: 0
       multiplier: 0.22
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
+      duration: 0
+      casterBuffCountFactor: 0
       buffId: B06W
-      randMin: 1.0
-      randMax: 1.0
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 5d4147526c26a46f08e95f770ca62118, type: 3}

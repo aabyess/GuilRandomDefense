@@ -10,61 +10,141 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_불멸_정준영_1
-  m_EditorClassIdentifier:
-  skillName: Dragon_Attack 1/10 — stomp A08V(525 범위 250000·스턴)
-  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 불멸_정준영.  · Trig_Dragon_Attack → e02L(#불멸 드래곤스턴2) → A08V: 250000 정정(2026-09-06, CROSS_CHANNEL_DUPLICATE_SWEEP.md/65b7f96): Trig_Dragon_Attack → e02L → A08V를 제거했다 — 원작 발동 지점이 하나(Trig_Dragon_Attack)라 불멸_김용태(원작능력 루트 파일 보유)에 귀속. 79행 DPS 순위 배정이 독립적으로 같은 값을 또 배정한 중복이었다. [불멸 블록 09-30] B17: 비어 있던 효과를 채움 — 시전자 주인 더미 e02L의 stomp A08V(AOws, Wrs1 250000, aare 525, adur 빈칸 = 스톡 3.0 · ahdu 0.45). 삭풍 h08H 소환체는 미반영. (Tools/apply_immortal_blocks.py)'
+  m_Name: "SkillData_\uB354\uBBF8\uCC44\uB110_\uBD88\uBA78_\uC815\uC900\uC601_1"
+  m_EditorClassIdentifier: 
+  skillName: "Dragon_Attack 1/10 \u2014 stomp A08V(525 \uBC94\uC704 250000\xB7\uC2A4\uD134)"
+  description: "\uB354\uBBF8 \uCC44\uB110 \uAC8C\uC774\uD2B8 \uD655\uC815(2026-09-06,
+    DUMMY_CHANNEL_GATES.csv, a1c34bc) \u2014 \uBD88\uBA78_\uC815\uC900\uC601.  \xB7
+    Trig_Dragon_Attack \u2192 e02L(#\uBD88\uBA78 \uB4DC\uB798\uACE4\uC2A4\uD1342)
+    \u2192 A08V: 250000 \uC815\uC815(2026-09-06, CROSS_CHANNEL_DUPLICATE_SWEEP.md/65b7f96):
+    Trig_Dragon_Attack \u2192 e02L \u2192 A08V\uB97C \uC81C\uAC70\uD588\uB2E4 \u2014
+    \uC6D0\uC791 \uBC1C\uB3D9 \uC9C0\uC810\uC774 \uD558\uB098(Trig_Dragon_Attack)\uB77C
+    \uBD88\uBA78_\uAE40\uC6A9\uD0DC(\uC6D0\uC791\uB2A5\uB825 \uB8E8\uD2B8 \uD30C\uC77C
+    \uBCF4\uC720)\uC5D0 \uADC0\uC18D. 79\uD589 DPS \uC21C\uC704 \uBC30\uC815\uC774
+    \uB3C5\uB9BD\uC801\uC73C\uB85C \uAC19\uC740 \uAC12\uC744 \uB610 \uBC30\uC815\uD55C
+    \uC911\uBCF5\uC774\uC5C8\uB2E4. [\uBD88\uBA78 \uBE14\uB85D 09-30] B17: \uBE44\uC5B4
+    \uC788\uB358 \uD6A8\uACFC\uB97C \uCC44\uC6C0 \u2014 \uC2DC\uC804\uC790 \uC8FC\uC778
+    \uB354\uBBF8 e02L\uC758 stomp A08V(AOws, Wrs1 250000, aare 525, adur \uBE48\uCE78
+    = \uC2A4\uD1A1 3.0 \xB7 ahdu 0.45). \uC0AD\uD48D h08H \uC18C\uD658\uCCB4\uB294
+    \uBBF8\uBC18\uC601. (Tools/apply_immortal_blocks.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 525.0
+    range: 525
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 250000.0
-      bonus: 0.0
+      multiplier: 250000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 2
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 3.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 3
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
       heroDuration: 0.45
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 856db3da05a8047cd83f258eabe2a322, type: 3}

@@ -10,10 +10,51 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_희귀함_박민수
-  m_EditorClassIdentifier:
-  skillName: Trig_Unique2 → e031(!전설 제프공속증가) → A095
-  description: '원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 희귀함 제프 해상 레스토랑 쉐프 - 희귀함(더미:Trig_Unique2 → e031(!전설 제프공속증가) → A095)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 유닛 하나(행 1개)를 통째로 이 유닛에 배정했다(2026-09-06 유닛 단위 재배정, TEAM_RULES 뿌리 ⑮). | 2차 배정(트리거·더미 채널): 원작 희귀함 제프 해상 레스토랑 쉐프 - 희귀함(더미 경로 Trig_Unique2 → e031(!전설 제프공속증가) → A095). 정정(2026-09-06, STOCK_FIELD_RESEARCH_RESULT.md/607351c): A095(4.0) 효과를 제거했다 — base Ablo(블러드러스트)의 Blo1은 공격속도/공격력 증가율이지 피해 필드가 아니다. 이 파일 전체가 이 효과 하나뿐이라 값이 고유해 안전하게 제거했다(확신도 낮음 6건 중 하나, 지금은 파일이 단일효과라 결론 남). | 2026-09-30 채움(구현담당2, SKILL_FILL_STAGE2_seven.md §1 · 원문·w3a 재확인): Trig_Unique2_Actions `if GetRandomInt(1,10)==3` → e031(uabi A095) `bloodlust` → 공격자. w3a A095(Ablo) Blo1=4.0(공속 +400%)·Blo2=0(이속)·Blo3=0·adur=ahdu 3.0·abuf B03E. → OnHitChance 0.1 · kind 12 AttackSpeedBuffPercent(⚠️ 문서의 「kind 11」은 AttackPowerBuffFlat이라 틀림) · Self · multiplier 4.0(raw 퍼센트 → ×5) · duration 3 · buffId B03E. 같은 id 시간 버프는 곱으로 안 쌓이고 만료만 갱신된다(0909227e, 원작 블러드러스트와 같다). WC3 공속 배율 상한 5.0은 우리에 없다 — 다른 공속 버프와 곱해지면 5배를 넘을 수 있다(likely, 엔진 기본값). [버프게이트예외:B03E] 원문(war3map_new.j) 전수 검색 결과 "B03E" 문자열이 트리거 코드 어디에도 없다(0건) — A095(base Ablo, abuf=B03E)는 B051·B035·B06Y와 같은 부류(순수 네이티브 스탯 버프, 게이트로 참조하는 JASS 코드가 원작에 없음)다. buffId는 같은 id 갱신(곱 누적 방지)용이다.'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uD76C\uADC0\uD568_\uBC15\uBBFC\uC218"
+  m_EditorClassIdentifier: 
+  skillName: "Trig_Unique2 \u2192 e031(!\uC804\uC124 \uC81C\uD504\uACF5\uC18D\uC99D\uAC00)
+    \u2192 A095"
+  description: "\uC6D0\uC791 \uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8 \uD53C\uD574\uD45C(ORIGINAL_SKILL_DAMAGE_TABLE.csv)
+    DPS \uC21C\uC704 \uBC30\uC815 \u2014 \uC6D0\uC791 \uD76C\uADC0\uD568 \uC81C\uD504
+    \uD574\uC0C1 \uB808\uC2A4\uD1A0\uB791 \uC250\uD504 - \uD76C\uADC0\uD568(\uB354\uBBF8:Trig_Unique2
+    \u2192 e031(!\uC804\uC124 \uC81C\uD504\uACF5\uC18D\uC99D\uAC00) \u2192 A095)\uC758
+    \uD53C\uD574\uB97C \uC62E\uACBC\uB2E4. 1\uCC28(uabi \uB2A5\uB825ID) CSV\uC5D4
+    \uC5C6\uB358 \uB2A5\uB825\uC774\uB2E4 \u2014 \uC6D0\uC791\uC774 \uC720\uB2DBID\u2192\uD2B8\uB9AC\uAC70
+    \uD574\uC2DC\uD14C\uC774\uBE14\uB85C \uCC98\uB9AC\uD574\uC11C \uB2A5\uB825ID\uB85C\uB294
+    \uC548 \uBCF4\uC600\uB2E4. \uAC1C\uBCC4 \uB300\uC751 \uC544\uB2D8(\uC774\uB984\uB9E4\uD551
+    \uBD88\uAC00) \u2014 \uC6D0\uC791 \uC720\uB2DB \uD558\uB098(\uD589 1\uAC1C)\uB97C
+    \uD1B5\uC9F8\uB85C \uC774 \uC720\uB2DB\uC5D0 \uBC30\uC815\uD588\uB2E4(2026-09-06
+    \uC720\uB2DB \uB2E8\uC704 \uC7AC\uBC30\uC815, TEAM_RULES \uBFCC\uB9AC \u246E).
+    | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8 \uCC44\uB110): \uC6D0\uC791
+    \uD76C\uADC0\uD568 \uC81C\uD504 \uD574\uC0C1 \uB808\uC2A4\uD1A0\uB791 \uC250\uD504
+    - \uD76C\uADC0\uD568(\uB354\uBBF8 \uACBD\uB85C Trig_Unique2 \u2192 e031(!\uC804\uC124
+    \uC81C\uD504\uACF5\uC18D\uC99D\uAC00) \u2192 A095). \uC815\uC815(2026-09-06,
+    STOCK_FIELD_RESEARCH_RESULT.md/607351c): A095(4.0) \uD6A8\uACFC\uB97C \uC81C\uAC70\uD588\uB2E4
+    \u2014 base Ablo(\uBE14\uB7EC\uB4DC\uB7EC\uC2A4\uD2B8)\uC758 Blo1\uC740 \uACF5\uACA9\uC18D\uB3C4/\uACF5\uACA9\uB825
+    \uC99D\uAC00\uC728\uC774\uC9C0 \uD53C\uD574 \uD544\uB4DC\uAC00 \uC544\uB2C8\uB2E4.
+    \uC774 \uD30C\uC77C \uC804\uCCB4\uAC00 \uC774 \uD6A8\uACFC \uD558\uB098\uBFD0\uC774\uB77C
+    \uAC12\uC774 \uACE0\uC720\uD574 \uC548\uC804\uD558\uAC8C \uC81C\uAC70\uD588\uB2E4(\uD655\uC2E0\uB3C4
+    \uB0AE\uC74C 6\uAC74 \uC911 \uD558\uB098, \uC9C0\uAE08\uC740 \uD30C\uC77C\uC774
+    \uB2E8\uC77C\uD6A8\uACFC\uB77C \uACB0\uB860 \uB0A8). | 2026-09-30 \uCC44\uC6C0(\uAD6C\uD604\uB2F4\uB2F92,
+    SKILL_FILL_STAGE2_seven.md \xA71 \xB7 \uC6D0\uBB38\xB7w3a \uC7AC\uD655\uC778):
+    Trig_Unique2_Actions `if GetRandomInt(1,10)==3` \u2192 e031(uabi A095) `bloodlust`
+    \u2192 \uACF5\uACA9\uC790. w3a A095(Ablo) Blo1=4.0(\uACF5\uC18D +400%)\xB7Blo2=0(\uC774\uC18D)\xB7Blo3=0\xB7adur=ahdu
+    3.0\xB7abuf B03E. \u2192 OnHitChance 0.1 \xB7 kind 12 AttackSpeedBuffPercent(\u26A0\uFE0F
+    \uBB38\uC11C\uC758 \u300Ckind 11\u300D\uC740 AttackPowerBuffFlat\uC774\uB77C
+    \uD2C0\uB9BC) \xB7 Self \xB7 multiplier 4.0(raw \uD37C\uC13C\uD2B8 \u2192 \xD75)
+    \xB7 duration 3 \xB7 buffId B03E. \uAC19\uC740 id \uC2DC\uAC04 \uBC84\uD504\uB294
+    \uACF1\uC73C\uB85C \uC548 \uC313\uC774\uACE0 \uB9CC\uB8CC\uB9CC \uAC31\uC2E0\uB41C\uB2E4(0909227e,
+    \uC6D0\uC791 \uBE14\uB7EC\uB4DC\uB7EC\uC2A4\uD2B8\uC640 \uAC19\uB2E4). WC3 \uACF5\uC18D
+    \uBC30\uC728 \uC0C1\uD55C 5.0\uC740 \uC6B0\uB9AC\uC5D0 \uC5C6\uB2E4 \u2014 \uB2E4\uB978
+    \uACF5\uC18D \uBC84\uD504\uC640 \uACF1\uD574\uC9C0\uBA74 5\uBC30\uB97C \uB118\uC744
+    \uC218 \uC788\uB2E4(likely, \uC5D4\uC9C4 \uAE30\uBCF8\uAC12). [\uBC84\uD504\uAC8C\uC774\uD2B8\uC608\uC678:B03E]
+    \uC6D0\uBB38(war3map_new.j) \uC804\uC218 \uAC80\uC0C9 \uACB0\uACFC \"B03E\" \uBB38\uC790\uC5F4\uC774
+    \uD2B8\uB9AC\uAC70 \uCF54\uB4DC \uC5B4\uB514\uC5D0\uB3C4 \uC5C6\uB2E4(0\uAC74)
+    \u2014 A095(base Ablo, abuf=B03E)\uB294 B051\xB7B035\xB7B06Y\uC640 \uAC19\uC740
+    \uBD80\uB958(\uC21C\uC218 \uB124\uC774\uD2F0\uBE0C \uC2A4\uD0EF \uBC84\uD504,
+    \uAC8C\uC774\uD2B8\uB85C \uCC38\uC870\uD558\uB294 JASS \uCF54\uB4DC\uAC00 \uC6D0\uC791\uC5D0
+    \uC5C6\uC74C)\uB2E4. buffId\uB294 \uAC19\uC740 id \uAC31\uC2E0(\uACF1 \uB204\uC801
+    \uBC29\uC9C0)\uC6A9\uC774\uB2E4."
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,31 +63,68 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 12
       basis: 0
       target: 0
       damageType: 0
       attackType: 0
-      multiplier: 4.0
+      multiplier: 4
       bonus: 0
       chance: 1
       hitCount: 1
-      duration: 3.0
+      duration: 3
       casterBuffCountFactor: 0
       buffId: B03E
       randMin: 1
       randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
       targetConditionValue: 0
       cascadeGroup: 0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: d16f17fa769f8435787bce5e2a419556, type: 3}

@@ -10,42 +10,101 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_제한_강보명_1
-  m_EditorClassIdentifier:
-  skillName: SkillData_더미채널_제한_강보명_1
-  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 제한_강보명.  · Trig_RedAttack → e07R(%제한됨 패트릭 흡혈 2) → A0PV: 700000 정정(2026-09-06, CROSS_CHANNEL_DUPLICATE_SWEEP.md/65b7f96): Trig_RedAttack → e07R → A0PV를 제거했다 — 원작 발동 지점이 하나(Trig_RedAttack)라 제한_최영민(원작능력 루트 파일 보유)에 귀속. 79행 DPS 순위 배정이 독립적으로 같은 값을 또 배정한 중복이었다. | 되돌림(2026-09-30 구현담당1, 중복 검사): 위 정정은 RedAttack을 제한_최영민에 귀속했으나 대응표(MASTER_UID_ROSTER_MAP)는 h05G를 제한_강보명으로 잇는다. 원문 Trig_RedAttack: 1/22가 아니면 `GetRandomInt(1,20)==7` → e07R carrionswarm(A0PV ACca 700000, 끝 폭 450) — 전체 (21/22)×(1/20). 장풍 직선을 대상 위치 450 광역으로 근사, 능력 피해라 AP·Spells. [직선 09-30] 직선: A0PV 피해 700000 · 길이 800(빈칸 → 스톡 가정) · 반경 200→450 — 전에는 대상 중심 원(Tools/apply_line_skills.py) [배타 09-30] 배타 묶음 1의 뒤 스킬 — RedAttack: if (1,22)==6 → Red_skill_1 elseif (1,20)==7 carrionswarm(Tools/apply_exclusive_groups.py)'
+  m_Name: "SkillData_\uB354\uBBF8\uCC44\uB110_\uC81C\uD55C_\uAC15\uBCF4\uBA85_1"
+  m_EditorClassIdentifier: 
+  skillName: "SkillData_\uB354\uBBF8\uCC44\uB110_\uC81C\uD55C_\uAC15\uBCF4\uBA85_1"
+  description: "\uB354\uBBF8 \uCC44\uB110 \uAC8C\uC774\uD2B8 \uD655\uC815(2026-09-06,
+    DUMMY_CHANNEL_GATES.csv, a1c34bc) \u2014 \uC81C\uD55C_\uAC15\uBCF4\uBA85.  \xB7
+    Trig_RedAttack \u2192 e07R(%\uC81C\uD55C\uB428 \uD328\uD2B8\uB9AD \uD761\uD608
+    2) \u2192 A0PV: 700000 \uC815\uC815(2026-09-06, CROSS_CHANNEL_DUPLICATE_SWEEP.md/65b7f96):
+    Trig_RedAttack \u2192 e07R \u2192 A0PV\uB97C \uC81C\uAC70\uD588\uB2E4 \u2014
+    \uC6D0\uC791 \uBC1C\uB3D9 \uC9C0\uC810\uC774 \uD558\uB098(Trig_RedAttack)\uB77C
+    \uC81C\uD55C_\uCD5C\uC601\uBBFC(\uC6D0\uC791\uB2A5\uB825 \uB8E8\uD2B8 \uD30C\uC77C
+    \uBCF4\uC720)\uC5D0 \uADC0\uC18D. 79\uD589 DPS \uC21C\uC704 \uBC30\uC815\uC774
+    \uB3C5\uB9BD\uC801\uC73C\uB85C \uAC19\uC740 \uAC12\uC744 \uB610 \uBC30\uC815\uD55C
+    \uC911\uBCF5\uC774\uC5C8\uB2E4. | \uB418\uB3CC\uB9BC(2026-09-30 \uAD6C\uD604\uB2F4\uB2F91,
+    \uC911\uBCF5 \uAC80\uC0AC): \uC704 \uC815\uC815\uC740 RedAttack\uC744 \uC81C\uD55C_\uCD5C\uC601\uBBFC\uC5D0
+    \uADC0\uC18D\uD588\uC73C\uB098 \uB300\uC751\uD45C(MASTER_UID_ROSTER_MAP)\uB294
+    h05G\uB97C \uC81C\uD55C_\uAC15\uBCF4\uBA85\uC73C\uB85C \uC787\uB294\uB2E4. \uC6D0\uBB38
+    Trig_RedAttack: 1/22\uAC00 \uC544\uB2C8\uBA74 `GetRandomInt(1,20)==7` \u2192
+    e07R carrionswarm(A0PV ACca 700000, \uB05D \uD3ED 450) \u2014 \uC804\uCCB4 (21/22)\xD7(1/20).
+    \uC7A5\uD48D \uC9C1\uC120\uC744 \uB300\uC0C1 \uC704\uCE58 450 \uAD11\uC5ED\uC73C\uB85C
+    \uADFC\uC0AC, \uB2A5\uB825 \uD53C\uD574\uB77C AP\xB7Spells. [\uC9C1\uC120 09-30]
+    \uC9C1\uC120: A0PV \uD53C\uD574 700000 \xB7 \uAE38\uC774 800(\uBE48\uCE78 \u2192
+    \uC2A4\uD1A1 \uAC00\uC815) \xB7 \uBC18\uACBD 200\u2192450 \u2014 \uC804\uC5D0\uB294
+    \uB300\uC0C1 \uC911\uC2EC \uC6D0(Tools/apply_line_skills.py) [\uBC30\uD0C0 09-30]
+    \uBC30\uD0C0 \uBB36\uC74C 1\uC758 \uB4A4 \uC2A4\uD0AC \u2014 RedAttack: if (1,22)==6
+    \u2192 Red_skill_1 elseif (1,20)==7 carrionswarm(Tools/apply_exclusive_groups.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.05
-    range: 450.0
+    range: 450
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 700000.0
-      bonus: 0.0
+      multiplier: 700000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      lineLength: 800.0
-      lineStartRadius: 200.0
-      lineEndRadius: 450.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 800
+      lineStartRadius: 200
+      lineEndRadius: 450
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
     exclusiveGroup: 1
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 39dd4d9e11bf349449bbb2c73bdf9b66, type: 3}

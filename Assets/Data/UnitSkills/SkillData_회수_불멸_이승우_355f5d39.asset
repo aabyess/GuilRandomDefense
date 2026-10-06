@@ -10,37 +10,116 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_회수_불멸_이승우_355f5d39
-  m_EditorClassIdentifier:
-  skillName: 몽키.D.거프 해군영웅 주먹의 거프 - 불멸의 — (게이트 없음)
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 몽키.D.거프 해군영웅 주먹의 거프 - 불멸의(h04C)의 게이트 "(게이트 없음)" 능력 2개를 이 SkillData 하나로 묶었다.   · Garp_AttackDamage#1: 계산식 (GetEventDamage()*(1.10+s__TrigVariables__get_realD(GlobalTV   · Garp_AttackDamage#3: 계산식 (GetEventDamage()*(1+s__TrigVariables__get_realD(GlobalTV)))  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Garp_AttackDamage#1] ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0.  [Garp_AttackDamage#3] ⚠️ ReceivedDamage는 읽는 코드가 아직 없다(SkillData.cs 주석) — 지금은 순수 데이터 자리, 발동해도 피해 0. [확정: 원작도 매 타] 원작 트리거에 게이트가 없다(파일명 해시 355f5d39 = 「(게이트 없음)」, 리서치담당 edad47f). triggerChance = 1.0이 원작 그대로다 — 고치지 말 것. ⚠️ 2026-09-06 대상조건 배선(PM 지시, CHANCE1_FIX_INSTRUCTIONS.md) — #1<200/#3 ELSE(>=200) 원작 그대로 targetCondition 배선. 값은 안 건드림. 이 basis(ReceivedDamage)는 아직 읽는 코드가 없어(위 참고) 지금은 두 효과 다 0 피해 — 조건 배선은 축이 실제로 살아났을 때를 위한 것. | 정정(2026-09-30, 구현담당1 — SKILL_BASIS_AUDIT §3-1 B): 원문 Trig_Garp_AttackDamage Stage5는 PV가 아니라 **시전자 버프 B005(A08W 블러드러스트) 보유 여부**로 갈린다. realG=시전자 버프 수(index6), realD=0.25×realG. 이 에셋은 B005 없음 쪽: 주 대상 위치 325 적 전원 RRD(GetEventDamage×(1+realD), CHAOS/NORMAL) → ReceivedDamage 1.0·casterBuffCountFactor 0.25·forbiddenBuffId B005. 전에 PV<200 조건을 달고 있던 1.1 효과는 B005 쪽이라 게이트_불멸_이승우_Garp_B005로 옮겼다.'
+  m_Name: "SkillData_\uD68C\uC218_\uBD88\uBA78_\uC774\uC2B9\uC6B0_355f5d39"
+  m_EditorClassIdentifier: 
+  skillName: "\uBABD\uD0A4.D.\uAC70\uD504 \uD574\uAD70\uC601\uC6C5 \uC8FC\uBA39\uC758
+    \uAC70\uD504 - \uBD88\uBA78\uC758 \u2014 (\uAC8C\uC774\uD2B8 \uC5C6\uC74C)"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 \uBABD\uD0A4.D.\uAC70\uD504 \uD574\uAD70\uC601\uC6C5
+    \uC8FC\uBA39\uC758 \uAC70\uD504 - \uBD88\uBA78\uC758(h04C)\uC758 \uAC8C\uC774\uD2B8
+    \"(\uAC8C\uC774\uD2B8 \uC5C6\uC74C)\" \uB2A5\uB825 2\uAC1C\uB97C \uC774 SkillData
+    \uD558\uB098\uB85C \uBB36\uC5C8\uB2E4.   \xB7 Garp_AttackDamage#1: \uACC4\uC0B0\uC2DD
+    (GetEventDamage()*(1.10+s__TrigVariables__get_realD(GlobalTV   \xB7 Garp_AttackDamage#3:
+    \uACC4\uC0B0\uC2DD (GetEventDamage()*(1+s__TrigVariables__get_realD(GlobalTV))) 
+    hitCount>1\uC740 \"\uAC19\uC740 RRD \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0 \uC2DC\uAC04\uCC28
+    \uB2E4\uB2E8\uD788\uD2B8\uAC00 \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC
+    \uC5F0\uC18D N\uD68C)\uC73C\uB85C \uADFC\uC0AC\uD588\uB2E4.  [Garp_AttackDamage#1]
+    \u26A0\uFE0F ReceivedDamage\uB294 \uC77D\uB294 \uCF54\uB4DC\uAC00 \uC544\uC9C1
+    \uC5C6\uB2E4(SkillData.cs \uC8FC\uC11D) \u2014 \uC9C0\uAE08\uC740 \uC21C\uC218
+    \uB370\uC774\uD130 \uC790\uB9AC, \uBC1C\uB3D9\uD574\uB3C4 \uD53C\uD574 0.  [Garp_AttackDamage#3]
+    \u26A0\uFE0F ReceivedDamage\uB294 \uC77D\uB294 \uCF54\uB4DC\uAC00 \uC544\uC9C1
+    \uC5C6\uB2E4(SkillData.cs \uC8FC\uC11D) \u2014 \uC9C0\uAE08\uC740 \uC21C\uC218
+    \uB370\uC774\uD130 \uC790\uB9AC, \uBC1C\uB3D9\uD574\uB3C4 \uD53C\uD574 0. [\uD655\uC815:
+    \uC6D0\uC791\uB3C4 \uB9E4 \uD0C0] \uC6D0\uC791 \uD2B8\uB9AC\uAC70\uC5D0 \uAC8C\uC774\uD2B8\uAC00
+    \uC5C6\uB2E4(\uD30C\uC77C\uBA85 \uD574\uC2DC 355f5d39 = \u300C(\uAC8C\uC774\uD2B8
+    \uC5C6\uC74C)\u300D, \uB9AC\uC11C\uCE58\uB2F4\uB2F9 edad47f). triggerChance =
+    1.0\uC774 \uC6D0\uC791 \uADF8\uB300\uB85C\uB2E4 \u2014 \uACE0\uCE58\uC9C0 \uB9D0
+    \uAC83. \u26A0\uFE0F 2026-09-06 \uB300\uC0C1\uC870\uAC74 \uBC30\uC120(PM \uC9C0\uC2DC,
+    CHANCE1_FIX_INSTRUCTIONS.md) \u2014 #1<200/#3 ELSE(>=200) \uC6D0\uC791 \uADF8\uB300\uB85C
+    targetCondition \uBC30\uC120. \uAC12\uC740 \uC548 \uAC74\uB4DC\uB9BC. \uC774
+    basis(ReceivedDamage)\uB294 \uC544\uC9C1 \uC77D\uB294 \uCF54\uB4DC\uAC00 \uC5C6\uC5B4(\uC704
+    \uCC38\uACE0) \uC9C0\uAE08\uC740 \uB450 \uD6A8\uACFC \uB2E4 0 \uD53C\uD574 \u2014
+    \uC870\uAC74 \uBC30\uC120\uC740 \uCD95\uC774 \uC2E4\uC81C\uB85C \uC0B4\uC544\uB0AC\uC744
+    \uB54C\uB97C \uC704\uD55C \uAC83. | \uC815\uC815(2026-09-30, \uAD6C\uD604\uB2F4\uB2F91
+    \u2014 SKILL_BASIS_AUDIT \xA73-1 B): \uC6D0\uBB38 Trig_Garp_AttackDamage Stage5\uB294
+    PV\uAC00 \uC544\uB2C8\uB77C **\uC2DC\uC804\uC790 \uBC84\uD504 B005(A08W \uBE14\uB7EC\uB4DC\uB7EC\uC2A4\uD2B8)
+    \uBCF4\uC720 \uC5EC\uBD80**\uB85C \uAC08\uB9B0\uB2E4. realG=\uC2DC\uC804\uC790
+    \uBC84\uD504 \uC218(index6), realD=0.25\xD7realG. \uC774 \uC5D0\uC14B\uC740 B005
+    \uC5C6\uC74C \uCABD: \uC8FC \uB300\uC0C1 \uC704\uCE58 325 \uC801 \uC804\uC6D0
+    RRD(GetEventDamage\xD7(1+realD), CHAOS/NORMAL) \u2192 ReceivedDamage 1.0\xB7casterBuffCountFactor
+    0.25\xB7forbiddenBuffId B005. \uC804\uC5D0 PV<200 \uC870\uAC74\uC744 \uB2EC\uACE0
+    \uC788\uB358 1.1 \uD6A8\uACFC\uB294 B005 \uCABD\uC774\uB77C \uAC8C\uC774\uD2B8_\uBD88\uBA78_\uC774\uC2B9\uC6B0_Garp_B005\uB85C
+    \uC62E\uACBC\uB2E4."
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 325.0
+    triggerChance: 1
+    range: 325
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
     forbiddenBuffId: B005
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 5
       target: 2
       damageType: 1
       attackType: 5
-      multiplier: 1.0
-      bonus: 0.0
+      multiplier: 1
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
+      duration: 0
       casterBuffCountFactor: 0.25
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 387cc161cee7d45ee84919ccf978a754, type: 3}

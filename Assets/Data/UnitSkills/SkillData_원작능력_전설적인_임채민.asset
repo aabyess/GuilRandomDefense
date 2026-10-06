@@ -10,80 +10,209 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_임채민
-  m_EditorClassIdentifier:
-  skillName: Legend21sc 1/9 (로브 루치)
-  description: '원작 전설적인 로브 루치 생명귀환 지회무신 - 전설적인(Trig_Legend21sc). | 2차 배정(트리거·더미 채널): 원작 전설적인 로브 루치 생명귀환 지회무신 - 전설적인(Trig_Legend21sc). A11S(대상별 스킬피해 감수성) 계수는 보스 기준(×1.00)으로 고정 — 잡몹·소환체 대상엔 과다 계상될 수 있다. | 2차 배정(트리거·더미 채널): 원작 전설적인 로브 루치 생명귀환 지회무신 - 전설적인(Trig_Legend21sc). | 1채널 추가 배정(원작 전설적인 로브 루치 생명귀환 지회무신 - 전설적인(h02R)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시). | 1채널 추가 배정(원작 전설적인 마르코 환수종''불사조'' - 전설적인(h02T)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시). | 정정(2026-09-30 구현담당1, 중복·배타 검사): 원문 Trig_Legend21sc(h02R) = `1~9==3 → 대상 위치 315 광역 100000 MAGIC/UNIVERSAL + if PV<200 현재×0.3×(0.2+0.05×A11S) SIEGE/UNIVERSAL else 345000×1~2 CHAOS/UNIVERSAL`. 이전: 확률 0.2·스턴 0.75(A03X = h035 전설적인_백기현 능력)·345000/0.3 두 벌·광역 100000을 단일로·500000(h02T 마르코 Legend17_MacroLifeSkill 식의 상수만 떼어 온 것) → 원문대로. 마르코 LIFE 25 스킬은 게이지 리셋을 원문에서 확인 못 해 목록.'
-  쪼개기 실행(2026-09-06, PHASE2_FINAL_TALLY_2026-09-06.md/08e21d6): A074·A048을 각각 SkillData_원작능력_전설적인_임채민_A074/A048.asset으로 뗐다(PM 설계 결정 — 능력 하나에 파일 하나). 루치 자체 배정분(Trig_Legend21sc 직접)은 능력별 값이 없는 유닛 단위 배정이라 쪼개기 대상이 아니다 — 원본 파일에 그대로 둔다.
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uC784\uCC44\uBBFC"
+  m_EditorClassIdentifier: 
+  skillName: "Legend21sc 1/9 (\uB85C\uBE0C \uB8E8\uCE58)"
+  description: "\uC6D0\uC791 \uC804\uC124\uC801\uC778 \uB85C\uBE0C \uB8E8\uCE58 \uC0DD\uBA85\uADC0\uD658
+    \uC9C0\uD68C\uBB34\uC2E0 - \uC804\uC124\uC801\uC778(Trig_Legend21sc). | 2\uCC28
+    \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8 \uCC44\uB110): \uC6D0\uC791 \uC804\uC124\uC801\uC778
+    \uB85C\uBE0C \uB8E8\uCE58 \uC0DD\uBA85\uADC0\uD658 \uC9C0\uD68C\uBB34\uC2E0 -
+    \uC804\uC124\uC801\uC778(Trig_Legend21sc). A11S(\uB300\uC0C1\uBCC4 \uC2A4\uD0AC\uD53C\uD574
+    \uAC10\uC218\uC131) \uACC4\uC218\uB294 \uBCF4\uC2A4 \uAE30\uC900(\xD71.00)\uC73C\uB85C
+    \uACE0\uC815 \u2014 \uC7A1\uBAB9\xB7\uC18C\uD658\uCCB4 \uB300\uC0C1\uC5D4 \uACFC\uB2E4
+    \uACC4\uC0C1\uB420 \uC218 \uC788\uB2E4. | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uC804\uC124\uC801\uC778 \uB85C\uBE0C \uB8E8\uCE58
+    \uC0DD\uBA85\uADC0\uD658 \uC9C0\uD68C\uBB34\uC2E0 - \uC804\uC124\uC801\uC778(Trig_Legend21sc).
+    | 1\uCC44\uB110 \uCD94\uAC00 \uBC30\uC815(\uC6D0\uC791 \uC804\uC124\uC801\uC778
+    \uB85C\uBE0C \uB8E8\uCE58 \uC0DD\uBA85\uADC0\uD658 \uC9C0\uD68C\uBB34\uC2E0 -
+    \uC804\uC124\uC801\uC778(h02R)\uC758 \uB2A5\uB825 1\uAC1C): \uB2E4\uB978 \uCC44\uB110\uC774
+    \uC774\uBBF8 \uC774 \uC720\uB2DB\uC744 \uCC28\uC9C0\uD558\uACE0 \uC788\uC5B4
+    \uC21C\uC704 \uBC30\uC815 \uB300\uC2E0 \uADF8 \uC720\uB2DB\uC5D0 \uADF8\uB300\uB85C
+    \uC5B9\uC5C8\uB2E4(\uC6B0\uC120\uC21C\uC704 06\uBC88\u2460/\uAC8C\uC774\uD2B8\xB7\uD68C\uC218/2\uCC44\uB110\uC774
+    1\uCC44\uB110\uBCF4\uB2E4 \uBA3C\uC800, 2026-09-06 PM \uC9C0\uC2DC). | 1\uCC44\uB110
+    \uCD94\uAC00 \uBC30\uC815(\uC6D0\uC791 \uC804\uC124\uC801\uC778 \uB9C8\uB974\uCF54
+    \uD658\uC218\uC885'\uBD88\uC0AC\uC870' - \uC804\uC124\uC801\uC778(h02T)\uC758
+    \uB2A5\uB825 1\uAC1C): \uB2E4\uB978 \uCC44\uB110\uC774 \uC774\uBBF8 \uC774 \uC720\uB2DB\uC744
+    \uCC28\uC9C0\uD558\uACE0 \uC788\uC5B4 \uC21C\uC704 \uBC30\uC815 \uB300\uC2E0
+    \uADF8 \uC720\uB2DB\uC5D0 \uADF8\uB300\uB85C \uC5B9\uC5C8\uB2E4(\uC6B0\uC120\uC21C\uC704
+    06\uBC88\u2460/\uAC8C\uC774\uD2B8\xB7\uD68C\uC218/2\uCC44\uB110\uC774 1\uCC44\uB110\uBCF4\uB2E4
+    \uBA3C\uC800, 2026-09-06 PM \uC9C0\uC2DC). | \uC815\uC815(2026-09-30 \uAD6C\uD604\uB2F4\uB2F91,
+    \uC911\uBCF5\xB7\uBC30\uD0C0 \uAC80\uC0AC): \uC6D0\uBB38 Trig_Legend21sc(h02R)
+    = `1~9==3 \u2192 \uB300\uC0C1 \uC704\uCE58 315 \uAD11\uC5ED 100000 MAGIC/UNIVERSAL
+    + if PV<200 \uD604\uC7AC\xD70.3\xD7(0.2+0.05\xD7A11S) SIEGE/UNIVERSAL else 345000\xD71~2
+    CHAOS/UNIVERSAL`. \uC774\uC804: \uD655\uB960 0.2\xB7\uC2A4\uD134 0.75(A03X =
+    h035 \uC804\uC124\uC801\uC778_\uBC31\uAE30\uD604 \uB2A5\uB825)\xB7345000/0.3
+    \uB450 \uBC8C\xB7\uAD11\uC5ED 100000\uC744 \uB2E8\uC77C\uB85C\xB7500000(h02T
+    \uB9C8\uB974\uCF54 Legend17_MacroLifeSkill \uC2DD\uC758 \uC0C1\uC218\uB9CC \uB5BC\uC5B4
+    \uC628 \uAC83) \u2192 \uC6D0\uBB38\uB300\uB85C. \uB9C8\uB974\uCF54 LIFE 25 \uC2A4\uD0AC\uC740
+    \uAC8C\uC774\uC9C0 \uB9AC\uC14B\uC744 \uC6D0\uBB38\uC5D0\uC11C \uD655\uC778 \uBABB
+    \uD574 \uBAA9\uB85D."
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.1111111111111111
-    range: 315.0
+    triggerChance: 0.11111111
+    range: 315
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 6
-      multiplier: 100000.0
-      bonus: 0.0
+      multiplier: 100000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 2
       target: 3
       damageType: 2
       attackType: 3
       multiplier: 0.3
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 1
       targetConditionValue: 200
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 5
-      multiplier: 345000.0
-      bonus: 0.0
+      multiplier: 345000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 2.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 2
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 3
       targetConditionValue: 200
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: f0029f9c40e4e4ab8b7377d705e72e32, type: 3}

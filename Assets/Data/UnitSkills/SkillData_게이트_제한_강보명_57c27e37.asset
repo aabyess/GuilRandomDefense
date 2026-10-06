@@ -10,19 +10,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_제한_강보명_57c27e37
-  m_EditorClassIdentifier:
-  skillName: 패트릭 레드필드 붉은백작 - 제한됨 — 1/22
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 패트릭 레드필드 붉은백작 - 제한됨(h05G)의 게이트 "1/22" 능력 2개를 이 SkillData 하나로 묶었다.   · Red_skill_1#1: 계산식 (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit())*(0.01*0   · Red_skill_1#2: 계산식 700000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. [배타 09-30] 배타 묶음 1의 앞 스킬 — RedAttack: if (1,22)==6 → Red_skill_1 elseif (1,20)==7 carrionswarm(Tools/apply_exclusive_groups.py)'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uC81C\uD55C_\uAC15\uBCF4\uBA85_57c27e37"
+  m_EditorClassIdentifier: 
+  skillName: "\uD328\uD2B8\uB9AD \uB808\uB4DC\uD544\uB4DC \uBD89\uC740\uBC31\uC791
+    - \uC81C\uD55C\uB428 \u2014 1/22"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 \uD328\uD2B8\uB9AD \uB808\uB4DC\uD544\uB4DC \uBD89\uC740\uBC31\uC791
+    - \uC81C\uD55C\uB428(h05G)\uC758 \uAC8C\uC774\uD2B8 \"1/22\" \uB2A5\uB825 2\uAC1C\uB97C
+    \uC774 SkillData \uD558\uB098\uB85C \uBB36\uC5C8\uB2E4.   \xB7 Red_skill_1#1:
+    \uACC4\uC0B0\uC2DD (GetUnitStateSwap(UNIT_STATE_MAX_LIFE,GetEnumUnit())*(0.01*0  
+    \xB7 Red_skill_1#2: \uACC4\uC0B0\uC2DD 700000.00  hitCount>1\uC740 \"\uAC19\uC740
+    RRD \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0 \uC2DC\uAC04\uCC28 \uB2E4\uB2E8\uD788\uD2B8\uAC00
+    \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC \uC5F0\uC18D N\uD68C)\uC73C\uB85C
+    \uADFC\uC0AC\uD588\uB2E4. [\uBC30\uD0C0 09-30] \uBC30\uD0C0 \uBB36\uC74C 1\uC758
+    \uC55E \uC2A4\uD0AC \u2014 RedAttack: if (1,22)==6 \u2192 Red_skill_1 elseif
+    (1,20)==7 carrionswarm(Tools/apply_exclusive_groups.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.045455
-    range: 900.0
-    aoeCenter: 1
+    range: 900
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 1
@@ -30,21 +43,106 @@ MonoBehaviour:
       damageType: 2
       attackType: 7
       multiplier: 0.008
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
       skipDamageTakenMultiplier: 1
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 700000.0
-      bonus: 0.0
+      multiplier: 700000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 1
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
     exclusiveGroup: 1
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 39dd4d9e11bf349449bbb2c73bdf9b66, type: 3}

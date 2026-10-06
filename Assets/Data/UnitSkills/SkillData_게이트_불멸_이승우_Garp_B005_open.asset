@@ -10,21 +10,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_불멸_이승우_Garp_B005_open
-  m_EditorClassIdentifier:
-  skillName: 몽키.D.거프 — 7/100(B005 창)
-  description: '2026-09-30 구현담당1: 원문 Trig_Garp_Attack `GetRandomInt(1,100)<8`(=7%) → 더미 e02M이 시전자에게 bloodlust A08W(Ablo Blo1 0.45=공속+45%·adur/ahdu 3.25초·버프 B005). AttackSpeedBuffPercent Self 0.45·3.25초·buffId B005(같은 id는 만료만 갱신). 소비 쪽(Garp_B005·회수_…_355f5d39)보다 뒤에 붙였다.'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uBD88\uBA78_\uC774\uC2B9\uC6B0_Garp_B005_open"
+  m_EditorClassIdentifier: 
+  skillName: "\uBABD\uD0A4.D.\uAC70\uD504 \u2014 7/100(B005 \uCC3D)"
+  description: "2026-09-30 \uAD6C\uD604\uB2F4\uB2F91: \uC6D0\uBB38 Trig_Garp_Attack
+    `GetRandomInt(1,100)<8`(=7%) \u2192 \uB354\uBBF8 e02M\uC774 \uC2DC\uC804\uC790\uC5D0\uAC8C
+    bloodlust A08W(Ablo Blo1 0.45=\uACF5\uC18D+45%\xB7adur/ahdu 3.25\uCD08\xB7\uBC84\uD504
+    B005). AttackSpeedBuffPercent Self 0.45\xB73.25\uCD08\xB7buffId B005(\uAC19\uC740
+    id\uB294 \uB9CC\uB8CC\uB9CC \uAC31\uC2E0). \uC18C\uBE44 \uCABD(Garp_B005\xB7\uD68C\uC218_\u2026_355f5d39)\uBCF4\uB2E4
+    \uB4A4\uC5D0 \uBD99\uC600\uB2E4."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.07
-    range: 0.0
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 12
       basis: 0
@@ -32,22 +37,58 @@ MonoBehaviour:
       damageType: 0
       attackType: 0
       multiplier: 0.45
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 3.25
-      casterBuffCountFactor: 0.0
+      casterBuffCountFactor: 0
       buffId: B005
-      randMin: 1.0
-      randMax: 1.0
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 387cc161cee7d45ee84919ccf978a754, type: 3}

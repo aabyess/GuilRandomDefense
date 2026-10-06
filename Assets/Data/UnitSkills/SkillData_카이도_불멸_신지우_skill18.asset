@@ -10,10 +10,39 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_카이도_불멸_신지우_skill18
-  m_EditorClassIdentifier:
-  skillName: 카이도 — Kaido_Skill_1_8(신규 확정행)
-  description: '원작 카이도(h07M/h0AD), 표에 없던 행(2026-09-06 리서치담당 신규 추가). 게이트가 경로A(Kaido_Skill_int>=11) 또는 경로B(LIFE100아님 AND Kaido_Skill_int<10 AND B05Q없음 AND 1/7) 중 하나 — "폼"이 아니라 카운터로 갈리는 배타 경로이고, Kaido_Skill_int는 카이도 평타에서만 오른다(PM 확인, 2026-09-06). 카운터가 10 미만인 초반 평타 10타 구간만 경로B(1/7)고, 11 이상이 되면 영구히 경로A(무조건)로 넘어간다 — 유닛이 한 판에 수백 번 때리므로 정상 상태는 "무조건" 쪽이고 초반 구간은 전체에서 무시할 만한 비중이다. 그래서 OnHitChance triggerChance=1.0이 장기적으로 정확한 근사다(7배 과다 계상이 아니다) — 카운터가 정확히 10일 때 어느 경로도 안 맞는 원작의 한 틱짜리 빈틈은 무시했다. 2효과: ReceivedDamage×5.9375+2,250,000(Enemies range575, NORMAL→AD, rand1, A0VI 1중첩 동반은 축 밖) / 같은 식(SingleTarget, UNIVERSAL→AP, rand2.58 고정). | 정정(2026-09-30, 구현담당1 — R50 보스 0.6초 원문 대조): triggerChance 1.0 → 0.0585. 원문 Trig_Kaido_Attack: udg_Kaido_Skill_int≥11이면 Kaido_Skill_1_8(카운터 0으로). 카운터는 피격 처리 단계 4(D==9, +2)·5(기본, +1)·6(A≤15, +2)에서 오르고 용형 발동(10%)에서 0이 된다 — 단조 증가가 아니다. 시뮬 기대 평타당 1/17.1(이 유닛은 마나·생명 카운터를 이미 둘 다 써서 기대 확률로 옮김).'
+  m_Name: "SkillData_\uCE74\uC774\uB3C4_\uBD88\uBA78_\uC2E0\uC9C0\uC6B0_skill18"
+  m_EditorClassIdentifier: 
+  skillName: "\uCE74\uC774\uB3C4 \u2014 Kaido_Skill_1_8(\uC2E0\uADDC \uD655\uC815\uD589)"
+  description: "\uC6D0\uC791 \uCE74\uC774\uB3C4(h07M/h0AD), \uD45C\uC5D0 \uC5C6\uB358
+    \uD589(2026-09-06 \uB9AC\uC11C\uCE58\uB2F4\uB2F9 \uC2E0\uADDC \uCD94\uAC00).
+    \uAC8C\uC774\uD2B8\uAC00 \uACBD\uB85CA(Kaido_Skill_int>=11) \uB610\uB294 \uACBD\uB85CB(LIFE100\uC544\uB2D8
+    AND Kaido_Skill_int<10 AND B05Q\uC5C6\uC74C AND 1/7) \uC911 \uD558\uB098 \u2014
+    \"\uD3FC\"\uC774 \uC544\uB2C8\uB77C \uCE74\uC6B4\uD130\uB85C \uAC08\uB9AC\uB294
+    \uBC30\uD0C0 \uACBD\uB85C\uC774\uACE0, Kaido_Skill_int\uB294 \uCE74\uC774\uB3C4
+    \uD3C9\uD0C0\uC5D0\uC11C\uB9CC \uC624\uB978\uB2E4(PM \uD655\uC778, 2026-09-06).
+    \uCE74\uC6B4\uD130\uAC00 10 \uBBF8\uB9CC\uC778 \uCD08\uBC18 \uD3C9\uD0C0 10\uD0C0
+    \uAD6C\uAC04\uB9CC \uACBD\uB85CB(1/7)\uACE0, 11 \uC774\uC0C1\uC774 \uB418\uBA74
+    \uC601\uAD6C\uD788 \uACBD\uB85CA(\uBB34\uC870\uAC74)\uB85C \uB118\uC5B4\uAC04\uB2E4
+    \u2014 \uC720\uB2DB\uC774 \uD55C \uD310\uC5D0 \uC218\uBC31 \uBC88 \uB54C\uB9AC\uBBC0\uB85C
+    \uC815\uC0C1 \uC0C1\uD0DC\uB294 \"\uBB34\uC870\uAC74\" \uCABD\uC774\uACE0 \uCD08\uBC18
+    \uAD6C\uAC04\uC740 \uC804\uCCB4\uC5D0\uC11C \uBB34\uC2DC\uD560 \uB9CC\uD55C \uBE44\uC911\uC774\uB2E4.
+    \uADF8\uB798\uC11C OnHitChance triggerChance=1.0\uC774 \uC7A5\uAE30\uC801\uC73C\uB85C
+    \uC815\uD655\uD55C \uADFC\uC0AC\uB2E4(7\uBC30 \uACFC\uB2E4 \uACC4\uC0C1\uC774
+    \uC544\uB2C8\uB2E4) \u2014 \uCE74\uC6B4\uD130\uAC00 \uC815\uD655\uD788 10\uC77C
+    \uB54C \uC5B4\uB290 \uACBD\uB85C\uB3C4 \uC548 \uB9DE\uB294 \uC6D0\uC791\uC758
+    \uD55C \uD2F1\uC9DC\uB9AC \uBE48\uD2C8\uC740 \uBB34\uC2DC\uD588\uB2E4. 2\uD6A8\uACFC:
+    ReceivedDamage\xD75.9375+2,250,000(Enemies range575, NORMAL\u2192AD, rand1, A0VI
+    1\uC911\uCCA9 \uB3D9\uBC18\uC740 \uCD95 \uBC16) / \uAC19\uC740 \uC2DD(SingleTarget,
+    UNIVERSAL\u2192AP, rand2.58 \uACE0\uC815). | \uC815\uC815(2026-09-30, \uAD6C\uD604\uB2F4\uB2F91
+    \u2014 R50 \uBCF4\uC2A4 0.6\uCD08 \uC6D0\uBB38 \uB300\uC870): triggerChance 1.0
+    \u2192 0.0585. \uC6D0\uBB38 Trig_Kaido_Attack: udg_Kaido_Skill_int\u226511\uC774\uBA74
+    Kaido_Skill_1_8(\uCE74\uC6B4\uD130 0\uC73C\uB85C). \uCE74\uC6B4\uD130\uB294 \uD53C\uACA9
+    \uCC98\uB9AC \uB2E8\uACC4 4(D==9, +2)\xB75(\uAE30\uBCF8, +1)\xB76(A\u226415,
+    +2)\uC5D0\uC11C \uC624\uB974\uACE0 \uC6A9\uD615 \uBC1C\uB3D9(10%)\uC5D0\uC11C
+    0\uC774 \uB41C\uB2E4 \u2014 \uB2E8\uC870 \uC99D\uAC00\uAC00 \uC544\uB2C8\uB2E4.
+    \uC2DC\uBBAC \uAE30\uB300 \uD3C9\uD0C0\uB2F9 1/17.1(\uC774 \uC720\uB2DB\uC740
+    \uB9C8\uB098\xB7\uC0DD\uBA85 \uCE74\uC6B4\uD130\uB97C \uC774\uBBF8 \uB458 \uB2E4
+    \uC368\uC11C \uAE30\uB300 \uD655\uB960\uB85C \uC62E\uAE40)."
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,6 +51,9 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 5
@@ -33,9 +65,44 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
       randMin: 1
       randMax: 1
-      casterBuffCountFactor: 0
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 5
       target: 3
@@ -46,6 +113,54 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
       randMin: 2.58
       randMax: 2.58
-      casterBuffCountFactor: 0
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: e0be1d72052df42e28dc4b4b5a627b07, type: 3}

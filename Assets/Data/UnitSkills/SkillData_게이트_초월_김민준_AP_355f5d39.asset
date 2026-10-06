@@ -10,71 +10,270 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_초월_김민준_AP_355f5d39
-  m_EditorClassIdentifier:
-  skillName: 해군의 홍일점 — 16% (tahsigi, A0B7 Lv1)
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 해군의 홍일점(H05N)의 게이트 "(게이트 없음)" 능력 3개를 이 SkillData 하나로 묶었다.   · Tasigi_02#1: 계산식 500000.00   · tahsigi#3: 계산식 500000.00   · tahsigi#4: 계산식 500000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. [확정: 원작도 매 타] 원작 트리거에 게이트가 없다(파일명 해시 355f5d39 = 「(게이트 없음)」, 리서치담당 edad47f). triggerChance = 1.0이 원작 그대로다 — 고치지 말 것. ⚠️ 2026-09-06 마저 채움(사장님 결정 01번, 영웅 스탯 시스템 완성) — 같은 게이트의 tahsigi#1·#2가 GetHeroStatBJ(STR) 항이 있어 미뤄져 있었다. 이제 이 유닛(타시기 대응)의 baseStrength/strengthPerLevel이 채워져 CasterStrength 축이 실제 값을 낸다. 원식 tahsigi#1=(400000+STR×2500)+GetEventDamage()×3.75, tahsigi#2=(350000+STR×2500)+GetEventDamage()×6.00 — 우리 SkillEffect 하나로는 ReceivedDamage와 CasterStrength를 동시에 못 더해서(각각 basis 하나만 곱+더한다) 효과 2개(ReceivedDamage 부분 + CasterStrength 부분)로 쪼갰다. ⚠️ 근사 — 원작은 한 번의 RRD 합산 피해인데 우리는 별개의 두 타격으로 나가 방어력·상성 배율이 각 조각에 따로 곱는다(원작은 합산값 하나에 한 번만 곱함) — 총합 전(방어 적용 전) 값은 같지만 방어 적용 후엔 약간 달라질 수 있다. target=Enemies·range=450(원작 그대로)로 옮기며 level.range도 0→450으로 바꿨다(기존 3효과는 SingleTarget이라 range를 안 써서 영향 없음). | 정정(2026-09-30 구현담당1, 배타 분기 검사): 위 「원작도 매 타 — 고치지 말 것」은 틀렸다. 원문 Trig_Tashigi_Attack은 `r=GetRandomInt(1,100); if r<=16 → tahsigi elseif r>91 → Tasigi_02`. tahsigi는 피해 이벤트 뒤 `if A0B7 레벨==2 → Stage1·2 두 번(광역 450 (400000+STR×2500)+피해×3.75 + 대상 500000) else → 광역 450 400000+AGI×5000(CHAOS) + (350000+STR×2500)+피해×6 + 대상 500000`. A0B7(타시기 체)은 영웅 스킬(uhab)로 영원 승급 때 1레벨, 2레벨은 영웅 스킬 포인트 — 우리 축이 없어 1레벨 갈래만(목록). Tasigi_02(9%)는 새 에셋 게이트_초월_김민준_AP_Tasigi_02로. 두 에셋이 따로 굴려 같은 타에 겹칠 확률 1.4%는 근사.'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uCD08\uC6D4_\uAE40\uBBFC\uC900_AP_355f5d39"
+  m_EditorClassIdentifier: 
+  skillName: "\uD574\uAD70\uC758 \uD64D\uC77C\uC810 \u2014 16% (tahsigi, A0B7 Lv1)"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 \uD574\uAD70\uC758 \uD64D\uC77C\uC810(H05N)\uC758 \uAC8C\uC774\uD2B8
+    \"(\uAC8C\uC774\uD2B8 \uC5C6\uC74C)\" \uB2A5\uB825 3\uAC1C\uB97C \uC774 SkillData
+    \uD558\uB098\uB85C \uBB36\uC5C8\uB2E4.   \xB7 Tasigi_02#1: \uACC4\uC0B0\uC2DD
+    500000.00   \xB7 tahsigi#3: \uACC4\uC0B0\uC2DD 500000.00   \xB7 tahsigi#4: \uACC4\uC0B0\uC2DD
+    500000.00  hitCount>1\uC740 \"\uAC19\uC740 RRD \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0
+    \uC2DC\uAC04\uCC28 \uB2E4\uB2E8\uD788\uD2B8\uAC00 \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC
+    \uC5F0\uC18D N\uD68C)\uC73C\uB85C \uADFC\uC0AC\uD588\uB2E4. [\uD655\uC815: \uC6D0\uC791\uB3C4
+    \uB9E4 \uD0C0] \uC6D0\uC791 \uD2B8\uB9AC\uAC70\uC5D0 \uAC8C\uC774\uD2B8\uAC00
+    \uC5C6\uB2E4(\uD30C\uC77C\uBA85 \uD574\uC2DC 355f5d39 = \u300C(\uAC8C\uC774\uD2B8
+    \uC5C6\uC74C)\u300D, \uB9AC\uC11C\uCE58\uB2F4\uB2F9 edad47f). triggerChance =
+    1.0\uC774 \uC6D0\uC791 \uADF8\uB300\uB85C\uB2E4 \u2014 \uACE0\uCE58\uC9C0 \uB9D0
+    \uAC83. \u26A0\uFE0F 2026-09-06 \uB9C8\uC800 \uCC44\uC6C0(\uC0AC\uC7A5\uB2D8
+    \uACB0\uC815 01\uBC88, \uC601\uC6C5 \uC2A4\uD0EF \uC2DC\uC2A4\uD15C \uC644\uC131)
+    \u2014 \uAC19\uC740 \uAC8C\uC774\uD2B8\uC758 tahsigi#1\xB7#2\uAC00 GetHeroStatBJ(STR)
+    \uD56D\uC774 \uC788\uC5B4 \uBBF8\uB904\uC838 \uC788\uC5C8\uB2E4. \uC774\uC81C
+    \uC774 \uC720\uB2DB(\uD0C0\uC2DC\uAE30 \uB300\uC751)\uC758 baseStrength/strengthPerLevel\uC774
+    \uCC44\uC6CC\uC838 CasterStrength \uCD95\uC774 \uC2E4\uC81C \uAC12\uC744 \uB0B8\uB2E4.
+    \uC6D0\uC2DD tahsigi#1=(400000+STR\xD72500)+GetEventDamage()\xD73.75, tahsigi#2=(350000+STR\xD72500)+GetEventDamage()\xD76.00
+    \u2014 \uC6B0\uB9AC SkillEffect \uD558\uB098\uB85C\uB294 ReceivedDamage\uC640
+    CasterStrength\uB97C \uB3D9\uC2DC\uC5D0 \uBABB \uB354\uD574\uC11C(\uAC01\uAC01
+    basis \uD558\uB098\uB9CC \uACF1+\uB354\uD55C\uB2E4) \uD6A8\uACFC 2\uAC1C(ReceivedDamage
+    \uBD80\uBD84 + CasterStrength \uBD80\uBD84)\uB85C \uCABC\uAC30\uB2E4. \u26A0\uFE0F
+    \uADFC\uC0AC \u2014 \uC6D0\uC791\uC740 \uD55C \uBC88\uC758 RRD \uD569\uC0B0 \uD53C\uD574\uC778\uB370
+    \uC6B0\uB9AC\uB294 \uBCC4\uAC1C\uC758 \uB450 \uD0C0\uACA9\uC73C\uB85C \uB098\uAC00
+    \uBC29\uC5B4\uB825\xB7\uC0C1\uC131 \uBC30\uC728\uC774 \uAC01 \uC870\uAC01\uC5D0
+    \uB530\uB85C \uACF1\uB294\uB2E4(\uC6D0\uC791\uC740 \uD569\uC0B0\uAC12 \uD558\uB098\uC5D0
+    \uD55C \uBC88\uB9CC \uACF1\uD568) \u2014 \uCD1D\uD569 \uC804(\uBC29\uC5B4 \uC801\uC6A9
+    \uC804) \uAC12\uC740 \uAC19\uC9C0\uB9CC \uBC29\uC5B4 \uC801\uC6A9 \uD6C4\uC5D4
+    \uC57D\uAC04 \uB2EC\uB77C\uC9C8 \uC218 \uC788\uB2E4. target=Enemies\xB7range=450(\uC6D0\uC791
+    \uADF8\uB300\uB85C)\uB85C \uC62E\uAE30\uBA70 level.range\uB3C4 0\u2192450\uC73C\uB85C
+    \uBC14\uAFE8\uB2E4(\uAE30\uC874 3\uD6A8\uACFC\uB294 SingleTarget\uC774\uB77C
+    range\uB97C \uC548 \uC368\uC11C \uC601\uD5A5 \uC5C6\uC74C). | \uC815\uC815(2026-09-30
+    \uAD6C\uD604\uB2F4\uB2F91, \uBC30\uD0C0 \uBD84\uAE30 \uAC80\uC0AC): \uC704 \u300C\uC6D0\uC791\uB3C4
+    \uB9E4 \uD0C0 \u2014 \uACE0\uCE58\uC9C0 \uB9D0 \uAC83\u300D\uC740 \uD2C0\uB838\uB2E4.
+    \uC6D0\uBB38 Trig_Tashigi_Attack\uC740 `r=GetRandomInt(1,100); if r<=16 \u2192
+    tahsigi elseif r>91 \u2192 Tasigi_02`. tahsigi\uB294 \uD53C\uD574 \uC774\uBCA4\uD2B8
+    \uB4A4 `if A0B7 \uB808\uBCA8==2 \u2192 Stage1\xB72 \uB450 \uBC88(\uAD11\uC5ED
+    450 (400000+STR\xD72500)+\uD53C\uD574\xD73.75 + \uB300\uC0C1 500000) else \u2192
+    \uAD11\uC5ED 450 400000+AGI\xD75000(CHAOS) + (350000+STR\xD72500)+\uD53C\uD574\xD76
+    + \uB300\uC0C1 500000`. A0B7(\uD0C0\uC2DC\uAE30 \uCCB4)\uC740 \uC601\uC6C5 \uC2A4\uD0AC(uhab)\uB85C
+    \uC601\uC6D0 \uC2B9\uAE09 \uB54C 1\uB808\uBCA8, 2\uB808\uBCA8\uC740 \uC601\uC6C5
+    \uC2A4\uD0AC \uD3EC\uC778\uD2B8 \u2014 \uC6B0\uB9AC \uCD95\uC774 \uC5C6\uC5B4
+    1\uB808\uBCA8 \uAC08\uB798\uB9CC(\uBAA9\uB85D). Tasigi_02(9%)\uB294 \uC0C8 \uC5D0\uC14B
+    \uAC8C\uC774\uD2B8_\uCD08\uC6D4_\uAE40\uBBFC\uC900_AP_Tasigi_02\uB85C. \uB450
+    \uC5D0\uC14B\uC774 \uB530\uB85C \uAD74\uB824 \uAC19\uC740 \uD0C0\uC5D0 \uACB9\uCE60
+    \uD655\uB960 1.4%\uB294 \uADFC\uC0AC."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.16
-    range: 450.0
+    range: 450
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 10
       target: 2
       damageType: 2
       attackType: 5
-      multiplier: 5000.0
-      bonus: 400000.0
+      multiplier: 5000
+      bonus: 400000
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 5
       target: 2
       damageType: 2
       attackType: 6
-      multiplier: 6.0
-      bonus: 0.0
+      multiplier: 6
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 9
       target: 2
       damageType: 2
       attackType: 6
-      multiplier: 2500.0
-      bonus: 350000.0
+      multiplier: 2500
+      bonus: 350000
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 6
-      multiplier: 500000.0
-      bonus: 0.0
+      multiplier: 500000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 2e65c9bb477e14b0280554b2c1a13c90, type: 3}

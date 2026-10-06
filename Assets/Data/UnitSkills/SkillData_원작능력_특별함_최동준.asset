@@ -10,13 +10,45 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_특별함_최동준
-  m_EditorClassIdentifier:
-  skillName: A045 !육식
-  description: '원작 특별함 포트거스.D.에이스 흰수염 해적단 2번대대장 - 특별함(더미 경로 Trig_Speical9 → e0E6(안흔함 더미2 에이스) → A0BI). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. [하위 등급 블록 09-30] §0-1: 925는 원문에 없는 값(장풍 A0BI의 Ucs3 거리 필드를 피해로 읽은 것) — 매 타 925를 뺌(효과 0). 진짜 블록(1/7 장풍 850)은 더미채널 에셋에 있다. (Tools/apply_lower_grade_blocks.py)'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uD2B9\uBCC4\uD568_\uCD5C\uB3D9\uC900"
+  m_EditorClassIdentifier: 
+  skillName: "A045 !\uC721\uC2DD"
+  description: "\uC6D0\uC791 \uD2B9\uBCC4\uD568 \uD3EC\uD2B8\uAC70\uC2A4.D.\uC5D0\uC774\uC2A4
+    \uD770\uC218\uC5FC \uD574\uC801\uB2E8 2\uBC88\uB300\uB300\uC7A5 - \uD2B9\uBCC4\uD568(\uB354\uBBF8
+    \uACBD\uB85C Trig_Speical9 \u2192 e0E6(\uC548\uD754\uD568 \uB354\uBBF82 \uC5D0\uC774\uC2A4)
+    \u2192 A0BI). \u26A0\uFE0F \uC2A4\uD1A1 \uD544\uB4DC \uAC12 \uADF8\uB300\uB85C
+    \u2014 \uD544\uB4DC \uB73B\uC774 \uBBF8\uD655\uC778\uC774\uB77C \uD53C\uD574\uAC00
+    \uC544\uB2C8\uB77C \uB2E4\uB978 \uD6A8\uACFC(\uC2AC\uB85C\uC6B0\xB7\uC2A4\uD134\xB7\uBC84\uD504
+    \uB4F1)\uC600\uC744 \uC218 \uC788\uB2E4. \uACF5\uACA9\uD0C0\uC785 \uC6D0\uBCF8\uC774
+    [\uBBF8\uD655\uC778]\uC774\uB77C \uC774 \uC720\uB2DB \uC790\uC2E0\uC758 \uD3C9\uD0C0
+    \uD0C0\uC785\uC73C\uB85C \uB300\uC2E0\uD588\uB2E4. [\uD558\uC704 \uB4F1\uAE09
+    \uBE14\uB85D 09-30] \xA70-1: 925\uB294 \uC6D0\uBB38\uC5D0 \uC5C6\uB294 \uAC12(\uC7A5\uD48D
+    A0BI\uC758 Ucs3 \uAC70\uB9AC \uD544\uB4DC\uB97C \uD53C\uD574\uB85C \uC77D\uC740
+    \uAC83) \u2014 \uB9E4 \uD0C0 925\uB97C \uBE8C(\uD6A8\uACFC 0). \uC9C4\uC9DC \uBE14\uB85D(1/7
+    \uC7A5\uD48D 850)\uC740 \uB354\uBBF8\uCC44\uB110 \uC5D0\uC14B\uC5D0 \uC788\uB2E4.
+    (Tools/apply_lower_grade_blocks.py)"
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
+    triggerChance: 1
     range: 0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects: []
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: bdad8defc1af344cbb20d49efe6840e4, type: 3}

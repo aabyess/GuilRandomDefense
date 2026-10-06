@@ -10,10 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_특별함_최동준_1
-  m_EditorClassIdentifier:
-  skillName: SkillData_더미채널_특별함_최동준_1
-  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 특별함_최동준.  · Trig_Speical9 → e0E6(안흔함 더미2 에이스) → A0BI: 850 [직선 09-30] 직선: A0BI 피해 850 · 길이 925 · 반경 215→400 — 전에는 단일 대상(Tools/apply_line_skills.py)'
+  m_Name: "SkillData_\uB354\uBBF8\uCC44\uB110_\uD2B9\uBCC4\uD568_\uCD5C\uB3D9\uC900_1"
+  m_EditorClassIdentifier: 
+  skillName: "SkillData_\uB354\uBBF8\uCC44\uB110_\uD2B9\uBCC4\uD568_\uCD5C\uB3D9\uC900_1"
+  description: "\uB354\uBBF8 \uCC44\uB110 \uAC8C\uC774\uD2B8 \uD655\uC815(2026-09-06,
+    DUMMY_CHANNEL_GATES.csv, a1c34bc) \u2014 \uD2B9\uBCC4\uD568_\uCD5C\uB3D9\uC900. 
+    \xB7 Trig_Speical9 \u2192 e0E6(\uC548\uD754\uD568 \uB354\uBBF82 \uC5D0\uC774\uC2A4)
+    \u2192 A0BI: 850 [\uC9C1\uC120 09-30] \uC9C1\uC120: A0BI \uD53C\uD574 850 \xB7
+    \uAE38\uC774 925 \xB7 \uBC18\uACBD 215\u2192400 \u2014 \uC804\uC5D0\uB294 \uB2E8\uC77C
+    \uB300\uC0C1(Tools/apply_line_skills.py)"
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,18 +27,68 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 3
-      multiplier: 850.0
-      bonus: 0.0
+      multiplier: 850
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
-      lineLength: 925.0
-      lineStartRadius: 215.0
-      lineEndRadius: 400.0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 925
+      lineStartRadius: 215
+      lineEndRadius: 400
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: dcbeb3211f6244e36803ce1d078b6b88, type: 3}

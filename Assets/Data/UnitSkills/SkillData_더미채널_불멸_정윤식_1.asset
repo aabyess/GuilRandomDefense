@@ -10,10 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_불멸_정윤식_1
-  m_EditorClassIdentifier:
-  skillName: SkillData_더미채널_불멸_정윤식_1
-  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 불멸_정윤식.  · Trig_LaillySkill → e003(#불멸 레일리웨이브4) → A002: 300000 [직선 09-30] 직선: A002 피해 300000 · 길이 1100 · 반경 226→487 — 전에는 단일 대상(Tools/apply_line_skills.py)'
+  m_Name: "SkillData_\uB354\uBBF8\uCC44\uB110_\uBD88\uBA78_\uC815\uC724\uC2DD_1"
+  m_EditorClassIdentifier: 
+  skillName: "SkillData_\uB354\uBBF8\uCC44\uB110_\uBD88\uBA78_\uC815\uC724\uC2DD_1"
+  description: "\uB354\uBBF8 \uCC44\uB110 \uAC8C\uC774\uD2B8 \uD655\uC815(2026-09-06,
+    DUMMY_CHANNEL_GATES.csv, a1c34bc) \u2014 \uBD88\uBA78_\uC815\uC724\uC2DD.  \xB7
+    Trig_LaillySkill \u2192 e003(#\uBD88\uBA78 \uB808\uC77C\uB9AC\uC6E8\uC774\uBE0C4)
+    \u2192 A002: 300000 [\uC9C1\uC120 09-30] \uC9C1\uC120: A002 \uD53C\uD574 300000
+    \xB7 \uAE38\uC774 1100 \xB7 \uBC18\uACBD 226\u2192487 \u2014 \uC804\uC5D0\uB294
+    \uB2E8\uC77C \uB300\uC0C1(Tools/apply_line_skills.py)"
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,18 +27,68 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 4
-      multiplier: 300000.0
-      bonus: 0.0
+      multiplier: 300000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
-      lineLength: 1100.0
-      lineStartRadius: 226.0
-      lineEndRadius: 487.0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 1100
+      lineStartRadius: 226
+      lineEndRadius: 487
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 88304075d59534b70a7cf5940897b69c, type: 3}

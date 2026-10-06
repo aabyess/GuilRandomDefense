@@ -10,45 +10,83 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_제한_김강민_croTrans_1of17
-  m_EditorClassIdentifier:
-  skillName: 크로커다일 — 1/17
-  description: '2026-09-30 구현담당1: 원문 Trig_croTrans(HashAttack h05F → 제한_김강민) `GetRandomInt(1,17)==3` → 주 대상 RRD(800000, rand 1~2, NORMAL/UNIVERSAL). 원작능력_제한_전법규에 잘못 들어가 있던 것을 옮겼다.'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uC81C\uD55C_\uAE40\uAC15\uBBFC_croTrans_1of17"
+  m_EditorClassIdentifier: 
+  skillName: "\uD06C\uB85C\uCEE4\uB2E4\uC77C \u2014 1/17"
+  description: "2026-09-30 \uAD6C\uD604\uB2F4\uB2F91: \uC6D0\uBB38 Trig_croTrans(HashAttack
+    h05F \u2192 \uC81C\uD55C_\uAE40\uAC15\uBBFC) `GetRandomInt(1,17)==3` \u2192 \uC8FC
+    \uB300\uC0C1 RRD(800000, rand 1~2, NORMAL/UNIVERSAL). \uC6D0\uC791\uB2A5\uB825_\uC81C\uD55C_\uC804\uBC95\uADDC\uC5D0
+    \uC798\uBABB \uB4E4\uC5B4\uAC00 \uC788\uB358 \uAC83\uC744 \uC62E\uACBC\uB2E4."
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.058823529411764705
-    range: 0.0
+    triggerChance: 0.05882353
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 7
-      multiplier: 800000.0
-      bonus: 0.0
+      multiplier: 800000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 2.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 2
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: aab1d3f5dee71470ca175f1ac7fc1e62, type: 3}

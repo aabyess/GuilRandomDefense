@@ -10,47 +10,83 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작트리거_초월_최상호_AP_DP_Skill_3_일반
-  m_EditorClassIdentifier:
-  skillName: 도플라밍고 [일반] — DP_Skill_3 1/8(525 범위 750000 + STR×10000)
-  description: '원작 도플라밍고 H09E DP_Attack: GetRandomInt(1,8)==2 → DP_Skill_3(대상 중심 525: 750000 + STR×10000 PIERCE/NORMAL). 각성 창(B00X) 밖에서만. 2026-09-30 구현담당1.'
+  m_Name: "SkillData_\uC6D0\uC791\uD2B8\uB9AC\uAC70_\uCD08\uC6D4_\uCD5C\uC0C1\uD638_AP_DP_Skill_3_\uC77C\uBC18"
+  m_EditorClassIdentifier: 
+  skillName: "\uB3C4\uD50C\uB77C\uBC0D\uACE0 [\uC77C\uBC18] \u2014 DP_Skill_3 1/8(525
+    \uBC94\uC704 750000 + STR\xD710000)"
+  description: "\uC6D0\uC791 \uB3C4\uD50C\uB77C\uBC0D\uACE0 H09E DP_Attack: GetRandomInt(1,8)==2
+    \u2192 DP_Skill_3(\uB300\uC0C1 \uC911\uC2EC 525: 750000 + STR\xD710000 PIERCE/NORMAL).
+    \uAC01\uC131 \uCC3D(B00X) \uBC16\uC5D0\uC11C\uB9CC. 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.125
-    range: 525.0
+    range: 525
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
+    requiredBuffId: 
     forbiddenBuffId: B00X
-    selfBuffId:
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 9
       target: 2
       damageType: 1
       attackType: 2
-      multiplier: 10000.0
-      bonus: 750000.0
+      multiplier: 10000
+      bonus: 750000
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: c3446708c2f4f42dfad8ae107b884994, type: 3}

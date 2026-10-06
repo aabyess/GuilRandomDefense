@@ -10,47 +10,82 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작오라_초월_강재규_AP_A0I8
-  m_EditorClassIdentifier:
-  skillName: A0I8 마노스 기간테스 — 적 방어 -45 오라
-  description: 원작 H098 uabi A0I8(AHad, aare 851 · Had1 -45 · abuf B028, atar air,enemies,ground). 2026-09-30 구현담당1(Tools/apply_uabi_passives.py).
+  m_Name: "SkillData_\uC6D0\uC791\uC624\uB77C_\uCD08\uC6D4_\uAC15\uC7AC\uADDC_AP_A0I8"
+  m_EditorClassIdentifier: 
+  skillName: "A0I8 \uB9C8\uB178\uC2A4 \uAE30\uAC04\uD14C\uC2A4 \u2014 \uC801 \uBC29\uC5B4
+    -45 \uC624\uB77C"
+  description: "\uC6D0\uC791 H098 uabi A0I8(AHad, aare 851 \xB7 Had1 -45 \xB7 abuf
+    B028, atar air,enemies,ground). 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(Tools/apply_uabi_passives.py)."
   triggerType: 2
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 851.0
+    triggerChance: 1
+    range: 851
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 4
       basis: 0
       target: 2
       damageType: 0
       attackType: 0
-      multiplier: -45.0
-      bonus: 0.0
+      multiplier: -45
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
+      duration: 0
+      casterBuffCountFactor: 0
       buffId: B028
-      randMin: 1.0
-      randMax: 1.0
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: e5b26fcda1b9247228cc2db3e256de4b, type: 3}

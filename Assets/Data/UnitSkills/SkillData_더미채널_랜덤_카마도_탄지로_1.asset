@@ -10,11 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_랜덤_카마도_탄지로_1
-  m_EditorClassIdentifier:
-  skillName: SkillData_더미채널_랜덤_카마도_탄지로_1
-  description: 더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 랜덤_카마도_탄지로. ⚠️ 축 밖이라 뺀 조건: 능력레벨 조건 — 실제보다 자주 발동할 수 있다.  · Trig_k1 → e0CT(R랜유 k 더미 3 미닛츠 더미) → A0LJ: 5000. 정정(2026-09-06, 리서치담당 c00f472 오더 감사): e0CQ(같은 A0LJ, 5000) 몫을 제거했다 — 오더 없음, ForGroupBJ(Trig_k1_Func001Func011A)가 실제 피해를 낸다. e0CT 몫(아래 남은 효과)은 유효해 그대로 둔다.
-  정정(2026-09-06, CROSS_CHANNEL_DUPLICATE_SWEEP.md/65b7f96): Trig_k1 → e0CT → A0LJ를 제거했다 — 원작 발동 지점이 하나(Trig_k1, 원작 k')라 랜덤_호시노_아이(원작능력 루트 파일 보유, 루트는 딴 트리거 vampire=뱀파이어)에 귀속. 79행 DPS 순위 배정이 독립적으로 같은 값을 또 배정한 중복이었다.
+  m_Name: "SkillData_\uB354\uBBF8\uCC44\uB110_\uB79C\uB364_\uCE74\uB9C8\uB3C4_\uD0C4\uC9C0\uB85C_1"
+  m_EditorClassIdentifier: 
+  skillName: "SkillData_\uB354\uBBF8\uCC44\uB110_\uB79C\uB364_\uCE74\uB9C8\uB3C4_\uD0C4\uC9C0\uB85C_1"
+  description: 
   triggerType: 0
   levels:
   - cooldown: 0
@@ -23,4 +22,20 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects: []
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 0c44f5ef36d9242df9016e30a1bf993b, type: 3}

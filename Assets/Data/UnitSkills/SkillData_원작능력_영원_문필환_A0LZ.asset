@@ -10,26 +10,80 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_영원_문필환_A0LZ
-  m_EditorClassIdentifier:
-  skillName: A0LZ !알라바스타-비영
-  description: 쪼개기 실행(2026-09-06, PHASE2_FINAL_TALLY_2026-09-06.md/08e21d6, PHASE2_39_RESOLVED.csv/f18af68): 원작 영원한 알라바스타의 왕녀-ver파이러츠 네펠타리 비비 - 영원한(h057)의 능력. 1채널표(ORIGINAL_UNIT_ABILITIES.csv) 확정값 발동10%·배수5.0. SkillData_원작능력_영원_문필환.asset이 이 능력 하나로 triggerChance를 공유하기엔 다른 능력(A16W 및 우타 자체 배정분)이 섞여 있어(PM 설계 결정 — 능력 하나에 파일 하나) 별도 파일로 뗐다. A0OU(원작에서도 Hbh1=0으로 안 도는 같은 스톡값 중복)는 이미 이 파일에서 제거됐다. 공격타입 원본 [미확인]이라 이 유닛 자신의 평타 타입을 그대로 썼다.
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC601\uC6D0_\uBB38\uD544\uD658_A0LZ"
+  m_EditorClassIdentifier: 
+  skillName: "A0LZ !\uC54C\uB77C\uBC14\uC2A4\uD0C0-\uBE44\uC601"
+  description: 
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 450.0
+    range: 450
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 3
       target: 3
       damageType: 1
       attackType: 1
-      multiplier: 5.0
-      bonus: 0.0
+      multiplier: 5
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 53eaaaa539dc048a68af217180f76082, type: 3}

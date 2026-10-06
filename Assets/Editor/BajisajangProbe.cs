@@ -40,6 +40,16 @@ static class BajisajangProbe
         return "선택: 바지사장 한 기";
     }
 
+    // 정보 창 스킬 아이콘 호버 툴팁 재현 — GameHud.OnSkillIconHover(index)를 직접 부른다(마우스를 올린 것과 같은 길).
+    static string HoverIcon()
+    {
+        var hud = Object.FindFirstObjectByType<GameHud>();
+        if (hud == null) return "❌ GameHud 없음";
+        var m = typeof(GameHud).GetMethod("OnSkillIconHover", BindingFlags.NonPublic | BindingFlags.Instance);
+        m.Invoke(hud, new object[] { 3 });
+        return "툴팁: 스킬 아이콘 4번째(분노조절장애) 호버";
+    }
+
     static string Report1()
     {
         if (!Application.isPlaying || baji == null) return "❌ Setup 먼저";

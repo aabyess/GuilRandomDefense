@@ -10,15 +10,36 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_이재윤
-  m_EditorClassIdentifier:
-  skillName: Legend29 1/40 (히루루크, A0K9 켜짐)
-  description: '원작 전설적인 Dr.히루루크 나라를 치료한 의사 - 전설적인(Trig_Legend29). 정정(2026-09-06, STOCK_FIELD_RESEARCH_RESULT.csv/607351c): 2차 배정(더미 경로 Trig_Legend29 → e0DX(!전설 히루루크 벚꽃) → A0O6, 100) 효과를 제거했다 — base AUls(로커스트 스웜)의 Uls1은 소환 마리 수지 피해 필드가 아니다. 기록만 남긴다. | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Legend29(h03K) = `if A0K9 레벨==1 and 대상 PV<199 and 1~40<2 → e0DX locustswarm + 대상 위치 800 PV<200 적 전원 최대×0.5 HERO/UNIVERSAL`. 이전: 확률 0.12·스턴 0.6(A0EN = h03A 전설적인_진연서)·두 벌·AD. ⚠️ A0K9는 플레이어가 켜고 끄는 능력(Trig_hiru_japog)이 더하는 것 — 켜진 상태로 가정했다(우리에 수동 토글 없음, 목록).'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uC774\uC7AC\uC724"
+  m_EditorClassIdentifier: 
+  skillName: "Legend29 1/40 (\uD788\uB8E8\uB8E8\uD06C, A0K9 \uCF1C\uC9D0)"
+  description: "\uC6D0\uC791 \uC804\uC124\uC801\uC778 Dr.\uD788\uB8E8\uB8E8\uD06C
+    \uB098\uB77C\uB97C \uCE58\uB8CC\uD55C \uC758\uC0AC - \uC804\uC124\uC801\uC778(Trig_Legend29).
+    \uC815\uC815(2026-09-06, STOCK_FIELD_RESEARCH_RESULT.csv/607351c): 2\uCC28 \uBC30\uC815(\uB354\uBBF8
+    \uACBD\uB85C Trig_Legend29 \u2192 e0DX(!\uC804\uC124 \uD788\uB8E8\uB8E8\uD06C
+    \uBC9A\uAF43) \u2192 A0O6, 100) \uD6A8\uACFC\uB97C \uC81C\uAC70\uD588\uB2E4 \u2014
+    base AUls(\uB85C\uCEE4\uC2A4\uD2B8 \uC2A4\uC6DC)\uC758 Uls1\uC740 \uC18C\uD658
+    \uB9C8\uB9AC \uC218\uC9C0 \uD53C\uD574 \uD544\uB4DC\uAC00 \uC544\uB2C8\uB2E4.
+    \uAE30\uB85D\uB9CC \uB0A8\uAE34\uB2E4. | \uC815\uC815(2026-09-30 \uAD6C\uD604\uB2F4\uB2F91,
+    \uC911\uBCF5 \uAC80\uC0AC): \uC6D0\uBB38 Trig_Legend29(h03K) = `if A0K9 \uB808\uBCA8==1
+    and \uB300\uC0C1 PV<199 and 1~40<2 \u2192 e0DX locustswarm + \uB300\uC0C1 \uC704\uCE58
+    800 PV<200 \uC801 \uC804\uC6D0 \uCD5C\uB300\xD70.5 HERO/UNIVERSAL`. \uC774\uC804:
+    \uD655\uB960 0.12\xB7\uC2A4\uD134 0.6(A0EN = h03A \uC804\uC124\uC801\uC778_\uC9C4\uC5F0\uC11C)\xB7\uB450
+    \uBC8C\xB7AD. \u26A0\uFE0F A0K9\uB294 \uD50C\uB808\uC774\uC5B4\uAC00 \uCF1C\uACE0
+    \uB044\uB294 \uB2A5\uB825(Trig_hiru_japog)\uC774 \uB354\uD558\uB294 \uAC83 \u2014
+    \uCF1C\uC9C4 \uC0C1\uD0DC\uB85C \uAC00\uC815\uD588\uB2E4(\uC6B0\uB9AC\uC5D0 \uC218\uB3D9
+    \uD1A0\uAE00 \uC5C6\uC74C, \uBAA9\uB85D)."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.025
-    range: 800.0
+    range: 800
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 1
@@ -26,19 +47,58 @@ MonoBehaviour:
       damageType: 2
       attackType: 4
       multiplier: 0.5
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 1
       targetConditionValue: 200
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 66effc345fa89410eb11862c85ab2559, type: 3}

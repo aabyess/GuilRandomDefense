@@ -10,46 +10,142 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_영원_서민성
-  m_EditorClassIdentifier:
-  skillName: A0LZ !알라바스타-비영
-  description: '원작 영원한 토트 무지카 봉인된 악보의 괴물 - 영원한(Trig_Uta_Tots). | 1채널 추가 배정(원작 영원한 참된 호걸 코즈키 오뎅 - 영원한(h08R)의 능력 2개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시). | 정정(2026-09-30, 구현담당1 — ORIGIN_ABILITY_PROVENANCE 「다른 곳에 있음」): 250000은 이 유닛 원작(h057·h08R)에 없는 값. 뺀 효과(basis, 값, 상수): [(''0'', ''250000.0'', ''0.0'')] | 정리(2026-09-30 구현담당1, 중복 검사): ×0(CasterAttackPower multiplier 0·bonus 0) 잔재 둘 제거 — 피해 0인 자리.'
-  · A0YF !오뎅 이도류: 발동0.2 배수0.0 추가0.0 [피해 0 — 비피해 효과였을 수 있다]
-  · A0Y0 !패기-류오(오뎅): 발동0.35 배수0.0 추가0.0 [피해 0 — 비피해 효과였을 수 있다]
-  확정(2026-09-06, PHASE2_39_RESOLVED.csv/f18af68, 1채널표): A0YF(atar=none, 엔진 배시 미작동)·A0Y0(35%·스턴만, 배수·추가피해 0)가 원작에서도 피해가 없다 — 이 파일의 마지막 basis3/mult0/bonus0 블록 두 개와 부합, 채울 값이 없는 게 맞다(추가 편집 없음).
-  배선 보류(2026-09-06, STACK_AXES_INCREMENT_LIST.md): h08R 오뎅의 AIsr +1 소스(Trig_Odeng_Attack_
-  Func023A)가 이 파일의 h08R 능력 2개(A0YF·A0Y0) 중 어느 쪽인지, 아니면 둘 다 아닌 이 유닛의
-  또 다른 발동인지 이 파일 안에서 특정할 근거가 없다 — 게다가 A0YF(20%)·A0Y0(35%)는 각자 다른
-  발동확률을 갖는데 이 파일 전체는 triggerChance 0.1 하나를 공유한다(주 배정인 토트무지카와도
-  안 갈림). 잘못 걸면 토트무지카가 돌 때마다 오뎅의 스택도 같이 오르는 과다 계상이 된다 —
-  추측 없이 미배선으로 남긴다. ⚠️ 참고: STACK_AXES_INCREMENT_LIST.md는 A11S+5(Trig_Uta_skill_
-  3_mana)를 "우타 계열"(이름만 추정) 소유로 적었다 — 오뎅(h08R)이 아니다. 이전 지시 문구
-  중 "오뎅이 AIsr+1·A11S+5 둘 다 올린다"는 착오였다 — A11S+5는 별개 미확정 유닛(우타) 몫이라
-  애초에 이 파일과 무관하고, 그쪽도 미배선 대상이다.
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC601\uC6D0_\uC11C\uBBFC\uC131"
+  m_EditorClassIdentifier: 
+  skillName: "A0LZ !\uC54C\uB77C\uBC14\uC2A4\uD0C0-\uBE44\uC601"
+  description: "\uC6D0\uC791 \uC601\uC6D0\uD55C \uD1A0\uD2B8 \uBB34\uC9C0\uCE74 \uBD09\uC778\uB41C
+    \uC545\uBCF4\uC758 \uAD34\uBB3C - \uC601\uC6D0\uD55C(Trig_Uta_Tots). | 1\uCC44\uB110
+    \uCD94\uAC00 \uBC30\uC815(\uC6D0\uC791 \uC601\uC6D0\uD55C \uCC38\uB41C \uD638\uAC78
+    \uCF54\uC988\uD0A4 \uC624\uB385 - \uC601\uC6D0\uD55C(h08R)\uC758 \uB2A5\uB825
+    2\uAC1C): \uB2E4\uB978 \uCC44\uB110\uC774 \uC774\uBBF8 \uC774 \uC720\uB2DB\uC744
+    \uCC28\uC9C0\uD558\uACE0 \uC788\uC5B4 \uC21C\uC704 \uBC30\uC815 \uB300\uC2E0
+    \uADF8 \uC720\uB2DB\uC5D0 \uADF8\uB300\uB85C \uC5B9\uC5C8\uB2E4(\uC6B0\uC120\uC21C\uC704
+    06\uBC88\u2460/\uAC8C\uC774\uD2B8\xB7\uD68C\uC218/2\uCC44\uB110\uC774 1\uCC44\uB110\uBCF4\uB2E4
+    \uBA3C\uC800, 2026-09-06 PM \uC9C0\uC2DC). | \uC815\uC815(2026-09-30, \uAD6C\uD604\uB2F4\uB2F91
+    \u2014 ORIGIN_ABILITY_PROVENANCE \u300C\uB2E4\uB978 \uACF3\uC5D0 \uC788\uC74C\u300D):
+    250000\uC740 \uC774 \uC720\uB2DB \uC6D0\uC791(h057\xB7h08R)\uC5D0 \uC5C6\uB294
+    \uAC12. \uBE80 \uD6A8\uACFC(basis, \uAC12, \uC0C1\uC218): [('0', '250000.0',
+    '0.0')] | \uC815\uB9AC(2026-09-30 \uAD6C\uD604\uB2F4\uB2F91, \uC911\uBCF5 \uAC80\uC0AC):
+    \xD70(CasterAttackPower multiplier 0\xB7bonus 0) \uC794\uC7AC \uB458 \uC81C\uAC70
+    \u2014 \uD53C\uD574 0\uC778 \uC790\uB9AC."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 450.0
+    range: 450
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 4
-      multiplier: 1000000.0
-      bonus: 0.0
+      multiplier: 1000000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 3
       damageType: 1
       attackType: 4
-      multiplier: 500000.0
-      bonus: 0.0
+      multiplier: 500000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 53eaaaa539dc048a68af217180f76082, type: 3}

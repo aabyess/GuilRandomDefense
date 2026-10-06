@@ -10,35 +10,142 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_희귀함_노수신
-  m_EditorClassIdentifier:
-  skillName: A04B !잠의 노래 프람
-  description: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 희귀함 브룩 해골 음악가 - 희귀함(h01N)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 uid 그룹 총점(능력 기대값 합), 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. 능력마다 발동확률이 다르면 가장 높은 값을 대표로 썼다(SkillLevel 하나엔 triggerChance 하나뿐이라서 — 과소 계상보다 안전한 근사).
-  · A04B !잠의 노래 프람: 발동0.14 배수0.0 추가4500.0
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uD76C\uADC0\uD568_\uB178\uC218\uC2E0"
+  m_EditorClassIdentifier: 
+  skillName: "A04B !\uC7A0\uC758 \uB178\uB798 \uD504\uB78C"
+  description: "\uC6D0\uC791 \uB2A5\uB825\uD45C(ORIGINAL_UNIT_ABILITIES.csv) DPS
+    \uC21C\uC704 \uBC30\uC815 \u2014 \uC6D0\uC791 \uD76C\uADC0\uD568 \uBE0C\uB8E9
+    \uD574\uACE8 \uC74C\uC545\uAC00 - \uD76C\uADC0\uD568(h01N)\uC758 \uBC1C\uB3D9\uD655\uB960\xB7\uD53C\uD574\uBC30\uC218\xB7\uCD94\uAC00\uD53C\uD574\uB97C
+    \uADF8\uB300\uB85C \uC62E\uACBC\uB2E4. \uAC1C\uBCC4 \uB300\uC751 \uC544\uB2D8(\uC774\uB984\uB9E4\uD551
+    \uBD88\uAC00, \uC21C\uC704 \uBC30\uC815\uC73C\uB85C \uC6B0\uD68C) \u2014 \uB4F1\uAE09
+    \uC548\uC5D0\uC11C \uC6D0\uC791\uC740 uid \uADF8\uB8F9 \uCD1D\uC810(\uB2A5\uB825
+    \uAE30\uB300\uAC12 \uD569), \uC6B0\uB9AC\uB294 DPS(\uACF5\uACA9\uB825\xD7\uACF5\uC18D)
+    \uB0B4\uB9BC\uCC28\uC21C\uC73C\uB85C \uC815\uB82C\uD574 \uC21C\uC11C\uB300\uB85C
+    \uC9DD\uC9C0\uC5C8\uB2E4. damageType\uC740 AD\uB85C \uD1B5\uC77C(\uC6D0\uC791
+    \uC2A4\uD0AC\uC758 \uB9C8\uBC95 \uC5EC\uBD80\uB294 CSV\uC5D0 \uC5C6\uC74C, \uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    \uC870\uC0AC \uC911) \u2014 attackType\uC740 \uC774 \uC720\uB2DB\uC758 \uD3C9\uD0C0
+    \uD0C0\uC785\uC744 \uADF8\uB300\uB85C \uC37C\uB2E4. \uB2A5\uB825\uB9C8\uB2E4
+    \uBC1C\uB3D9\uD655\uB960\uC774 \uB2E4\uB974\uBA74 \uAC00\uC7A5 \uB192\uC740 \uAC12\uC744
+    \uB300\uD45C\uB85C \uC37C\uB2E4(SkillLevel \uD558\uB098\uC5D4 triggerChance \uD558\uB098\uBFD0\uC774\uB77C\uC11C
+    \u2014 \uACFC\uC18C \uACC4\uC0C1\uBCF4\uB2E4 \uC548\uC804\uD55C \uADFC\uC0AC)."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.14
     range: 0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 3
       target: 3
       damageType: 1
       attackType: 3
-      multiplier: 0.0
-      bonus: 4500.0
+      multiplier: 0
+      bonus: 4500
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 3
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0.4
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
       heroDuration: 0.2
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: d7fad0a5285634b01a16293cd8909b6b, type: 3}

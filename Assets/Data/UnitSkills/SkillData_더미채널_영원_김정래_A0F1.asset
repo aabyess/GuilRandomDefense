@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_영원_김정래_A0F1
-  m_EditorClassIdentifier:
-  skillName: A0F1 !강력범-죄수크리
-  description: 게이트 확정(2026-09-06, PM 지시 — atar='air,enemies,ground' 유효 확인): 원작 영원한 천냥광대 버기 - 영원한(더미 경로 Trig_Bugi_Attack → h079(임펠다운 Lv.6죄수 버기의 부하 - 초월함) → A0F1). Hbh1=20(발동 20%) · Hbh2=1.5(크리티컬 배수) — 능력 이름("죄수크리")대로 평타 크리티컬 배수 효과. SkillData_원작능력_영원_김정래.asset은 이 능력 하나로 triggerChance를 공유하기엔 이미 다른 능력 다수(A17I·A157·A158·A159·A0M8 등)가 섞여 있어(PM 설계 결정 — 능력 하나에 파일 하나) 별도 파일로 새로 뗐다. 공격타입 원본 [미확인]이라 이 유닛 자신의 평타 타입을 그대로 썼다.
+  m_Name: "SkillData_\uB354\uBBF8\uCC44\uB110_\uC601\uC6D0_\uAE40\uC815\uB798_A0F1"
+  m_EditorClassIdentifier: 
+  skillName: "A0F1 !\uAC15\uB825\uBC94-\uC8C4\uC218\uD06C\uB9AC"
+  description: 
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,6 +22,9 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 3
@@ -29,8 +32,58 @@ MonoBehaviour:
       damageType: 1
       attackType: 1
       multiplier: 1.5
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 6b4811fcab3e74f71aa77c69c91cc736, type: 3}

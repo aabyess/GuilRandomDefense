@@ -10,35 +10,93 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_이승우
-  m_EditorClassIdentifier:
-  skillName: Legend12 매 타 여파 (라분)
-  description: '원작 전설적인 라분 레드라인을 넘으려는 향유고래 - 전설적인(Trig_Legend12). | 2차 배정(트리거·더미 채널): 원작 전설적인 라분 레드라인을 넘으려는 향유고래 - 전설적인(Trig_Legend12). | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Legend12(h02Q, 평타마다) = 피해 이벤트 뒤 Stage5: 대상 위치 275 광역 RRD(피해) CHAOS/NORMAL + `if UserData==6 … elseif 1~100<26 → 575 광역 175000 MAGIC/UNIVERSAL + e010 얽힘·스톰프 + 대상 15000+3000×PV SIEGE/UNIVERSAL`. 이전: 확률 0.25·스턴 0.4(A08H = h03F 전설적인_박민석)·175000 세 벌 → 이 에셋은 매 타 275 광역 피해×1, 25% 갈래는 새 _Legend12_25. UserData==6 갈래(카운터 미상)는 목록.'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uC774\uC2B9\uC6B0"
+  m_EditorClassIdentifier: 
+  skillName: "Legend12 \uB9E4 \uD0C0 \uC5EC\uD30C (\uB77C\uBD84)"
+  description: "\uC6D0\uC791 \uC804\uC124\uC801\uC778 \uB77C\uBD84 \uB808\uB4DC\uB77C\uC778\uC744
+    \uB118\uC73C\uB824\uB294 \uD5A5\uC720\uACE0\uB798 - \uC804\uC124\uC801\uC778(Trig_Legend12).
+    | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8 \uCC44\uB110): \uC6D0\uC791
+    \uC804\uC124\uC801\uC778 \uB77C\uBD84 \uB808\uB4DC\uB77C\uC778\uC744 \uB118\uC73C\uB824\uB294
+    \uD5A5\uC720\uACE0\uB798 - \uC804\uC124\uC801\uC778(Trig_Legend12). | \uC815\uC815(2026-09-30
+    \uAD6C\uD604\uB2F4\uB2F91, \uC911\uBCF5 \uAC80\uC0AC): \uC6D0\uBB38 Trig_Legend12(h02Q,
+    \uD3C9\uD0C0\uB9C8\uB2E4) = \uD53C\uD574 \uC774\uBCA4\uD2B8 \uB4A4 Stage5: \uB300\uC0C1
+    \uC704\uCE58 275 \uAD11\uC5ED RRD(\uD53C\uD574) CHAOS/NORMAL + `if UserData==6
+    \u2026 elseif 1~100<26 \u2192 575 \uAD11\uC5ED 175000 MAGIC/UNIVERSAL + e010
+    \uC5BD\uD798\xB7\uC2A4\uD1B0\uD504 + \uB300\uC0C1 15000+3000\xD7PV SIEGE/UNIVERSAL`.
+    \uC774\uC804: \uD655\uB960 0.25\xB7\uC2A4\uD134 0.4(A08H = h03F \uC804\uC124\uC801\uC778_\uBC15\uBBFC\uC11D)\xB7175000
+    \uC138 \uBC8C \u2192 \uC774 \uC5D0\uC14B\uC740 \uB9E4 \uD0C0 275 \uAD11\uC5ED
+    \uD53C\uD574\xD71, 25% \uAC08\uB798\uB294 \uC0C8 _Legend12_25. UserData==6 \uAC08\uB798(\uCE74\uC6B4\uD130
+    \uBBF8\uC0C1)\uB294 \uBAA9\uB85D."
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 275.0
+    triggerChance: 1
+    range: 275
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 5
       target: 2
       damageType: 1
       attackType: 5
-      multiplier: 1.0
-      bonus: 0.0
+      multiplier: 1
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 7d46b4bbe96e24fa1a1a24dde3691142, type: 3}

@@ -10,35 +10,89 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_양문호
-  m_EditorClassIdentifier:
-  skillName: Legend20 매 타 (크래커)
-  description: '원작 전설적인 샬롯 크래커 빅맘 3장성 - 전설적인(Trig_Legend20). | 2차 배정(트리거·더미 채널): 원작 전설적인 샬롯 크래커 빅맘 3장성 - 전설적인(Trig_Legend20). | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Legend20(h03H) = 매 타 대상 20000 NORMAL/UNIVERSAL + `1~12==3 → 대상 위치 400 광역 250000`. 이전: 확률 0.2(A10Y = h033 전설적인_임건웅 능력)·250000 두 벌(단일)·AD → 이 에셋은 매 타 20000(AP·Spells), 1/12 광역은 새 _Legend20_1of12.'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uC591\uBB38\uD638"
+  m_EditorClassIdentifier: 
+  skillName: "Legend20 \uB9E4 \uD0C0 (\uD06C\uB798\uCEE4)"
+  description: "\uC6D0\uC791 \uC804\uC124\uC801\uC778 \uC0EC\uB86F \uD06C\uB798\uCEE4
+    \uBE45\uB9D8 3\uC7A5\uC131 - \uC804\uC124\uC801\uC778(Trig_Legend20). | 2\uCC28
+    \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8 \uCC44\uB110): \uC6D0\uC791 \uC804\uC124\uC801\uC778
+    \uC0EC\uB86F \uD06C\uB798\uCEE4 \uBE45\uB9D8 3\uC7A5\uC131 - \uC804\uC124\uC801\uC778(Trig_Legend20).
+    | \uC815\uC815(2026-09-30 \uAD6C\uD604\uB2F4\uB2F91, \uC911\uBCF5 \uAC80\uC0AC):
+    \uC6D0\uBB38 Trig_Legend20(h03H) = \uB9E4 \uD0C0 \uB300\uC0C1 20000 NORMAL/UNIVERSAL
+    + `1~12==3 \u2192 \uB300\uC0C1 \uC704\uCE58 400 \uAD11\uC5ED 250000`. \uC774\uC804:
+    \uD655\uB960 0.2(A10Y = h033 \uC804\uC124\uC801\uC778_\uC784\uAC74\uC6C5 \uB2A5\uB825)\xB7250000
+    \uB450 \uBC8C(\uB2E8\uC77C)\xB7AD \u2192 \uC774 \uC5D0\uC14B\uC740 \uB9E4 \uD0C0
+    20000(AP\xB7Spells), 1/12 \uAD11\uC5ED\uC740 \uC0C8 _Legend20_1of12."
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 0.0
+    triggerChance: 1
+    range: 0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 7
-      multiplier: 20000.0
-      bonus: 0.0
+      multiplier: 20000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: cb5125a8eb37a4125ae9aaa084dfe872, type: 3}

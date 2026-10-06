@@ -10,47 +10,84 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작트리거_초월_구주호_AD_Rokugu_흡수
-  m_EditorClassIdentifier:
-  skillName: 초록소 — 전방위 흡수 1/25(시전자 중심 925 범위 1000000×1~1.5)
-  description: '원작 초록소 H0BL Rokugu_Attack: GetRandomInt(1,25)==2 → 시전자 중심 925 범위 (1000000 + 충전×1825)×1~1.5 CHAOS/NORMAL. 마나 +5·충전은 미반영. 2026-09-30 구현담당1.'
+  m_Name: "SkillData_\uC6D0\uC791\uD2B8\uB9AC\uAC70_\uCD08\uC6D4_\uAD6C\uC8FC\uD638_AD_Rokugu_\uD761\uC218"
+  m_EditorClassIdentifier: 
+  skillName: "\uCD08\uB85D\uC18C \u2014 \uC804\uBC29\uC704 \uD761\uC218 1/25(\uC2DC\uC804\uC790
+    \uC911\uC2EC 925 \uBC94\uC704 1000000\xD71~1.5)"
+  description: "\uC6D0\uC791 \uCD08\uB85D\uC18C H0BL Rokugu_Attack: GetRandomInt(1,25)==2
+    \u2192 \uC2DC\uC804\uC790 \uC911\uC2EC 925 \uBC94\uC704 (1000000 + \uCDA9\uC804\xD71825)\xD71~1.5
+    CHAOS/NORMAL. \uB9C8\uB098 +5\xB7\uCDA9\uC804\uC740 \uBBF8\uBC18\uC601. 2026-09-30
+    \uAD6C\uD604\uB2F4\uB2F91."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.04
-    range: 925.0
+    range: 925
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 5
-      multiplier: 1000000.0
-      bonus: 0.0
+      multiplier: 1000000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
       randMax: 1.5
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 1
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 7f5b973ba52104f4c9d0cde54fca4f31, type: 3}

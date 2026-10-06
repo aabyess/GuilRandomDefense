@@ -10,47 +10,84 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작트리거_불멸_이이삭_Seongoku_Skill_4_끝
-  m_EditorClassIdentifier:
-  skillName: Seongoku_Skill_4 끝 — LIFE게이지75(600 범위 2000000)
-  description: '원작 센고쿠 h04E Seongoku_Skill_4 스테이지 3: 대상 중심 600 범위 2000000 NORMAL/UNIVERSAL(옛 에셋은 단일이었다). 2026-09-30 구현담당1(IMMORTAL_FILL_LIST §2).'
+  m_Name: "SkillData_\uC6D0\uC791\uD2B8\uB9AC\uAC70_\uBD88\uBA78_\uC774\uC774\uC0AD_Seongoku_Skill_4_\uB05D"
+  m_EditorClassIdentifier: 
+  skillName: "Seongoku_Skill_4 \uB05D \u2014 LIFE\uAC8C\uC774\uC9C075(600 \uBC94\uC704
+    2000000)"
+  description: "\uC6D0\uC791 \uC13C\uACE0\uCFE0 h04E Seongoku_Skill_4 \uC2A4\uD14C\uC774\uC9C0
+    3: \uB300\uC0C1 \uC911\uC2EC 600 \uBC94\uC704 2000000 NORMAL/UNIVERSAL(\uC61B
+    \uC5D0\uC14B\uC740 \uB2E8\uC77C\uC774\uC5C8\uB2E4). 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(IMMORTAL_FILL_LIST
+    \xA72)."
   triggerType: 3
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 600.0
+    triggerChance: 1
+    range: 600
     hitCountThreshold: 75
     resetTo: 0
     gaugeKind: 1
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 2000000.0
-      bonus: 0.0
+      multiplier: 2000000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 671c40a70abad4eb3a16de8d58a1d0f3, type: 3}

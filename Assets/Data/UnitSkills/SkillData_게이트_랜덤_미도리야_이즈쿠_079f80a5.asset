@@ -10,30 +10,102 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_랜덤_미도리야_이즈쿠_079f80a5
-  m_EditorClassIdentifier:
-  skillName: '히그마(랜덤) — Higma_W(B05N 동안 매 타: 400 범위 175000 ×2)'
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 마운틴.D.히그마 - 랜덤전용[제한됨](h0AC)의 게이트 "LIFE게이지85.00 AND 버프B05N==true" 능력 1개를 이 SkillData 하나로 묶었다.   · Higma_W#1: 계산식 175000.00  ⚠️ 조건(버프B05N==true)은 우리 축 밖(버프) 또는 축이 하나뿐(게이지 중복)이라 뺐다 — 실제보다 자주 발동할 수 있다.  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. 완료(2026-09-07, PM 지시 — opener/consumer 디렉터리 충돌 해소 확인 후 마저 배선): requiredBuffId=B05N을 걸었다 — 이제 opener(SkillData_버프게이트_랜덤_미도리야_이즈쿠_B05N.asset)가 건 버프가 없으면 이 게이트가 통과하지 않는다(이전엔 필드가 아예 없어 조건 없이 항상 통과하던 조용한 과다발동 상태였다). [랜덤 통째 09-30] §0-8: Higma_W는 「LIFE 85 AND B05N」이 아니라 B05N 동안 매 타(별도 최상위 if) — 발동 방식 OnHitCount(LIFE 85) → 평타 확률 1 + requiredBuffId B05N. 175000 ×2. (Tools/apply_random_rest2.py)'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uB79C\uB364_\uBBF8\uB3C4\uB9AC\uC57C_\uC774\uC988\uCFE0_079f80a5"
+  m_EditorClassIdentifier: 
+  skillName: "\uD788\uADF8\uB9C8(\uB79C\uB364) \u2014 Higma_W(B05N \uB3D9\uC548 \uB9E4
+    \uD0C0: 400 \uBC94\uC704 175000 \xD72)"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 \uB9C8\uC6B4\uD2F4.D.\uD788\uADF8\uB9C8 - \uB79C\uB364\uC804\uC6A9[\uC81C\uD55C\uB428](h0AC)\uC758
+    \uAC8C\uC774\uD2B8 \"LIFE\uAC8C\uC774\uC9C085.00 AND \uBC84\uD504B05N==true\"
+    \uB2A5\uB825 1\uAC1C\uB97C \uC774 SkillData \uD558\uB098\uB85C \uBB36\uC5C8\uB2E4.  
+    \xB7 Higma_W#1: \uACC4\uC0B0\uC2DD 175000.00  \u26A0\uFE0F \uC870\uAC74(\uBC84\uD504B05N==true)\uC740
+    \uC6B0\uB9AC \uCD95 \uBC16(\uBC84\uD504) \uB610\uB294 \uCD95\uC774 \uD558\uB098\uBFD0(\uAC8C\uC774\uC9C0
+    \uC911\uBCF5)\uC774\uB77C \uBE90\uB2E4 \u2014 \uC2E4\uC81C\uBCF4\uB2E4 \uC790\uC8FC
+    \uBC1C\uB3D9\uD560 \uC218 \uC788\uB2E4.  hitCount>1\uC740 \"\uAC19\uC740 RRD
+    \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0 \uC2DC\uAC04\uCC28 \uB2E4\uB2E8\uD788\uD2B8\uAC00
+    \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC \uC5F0\uC18D N\uD68C)\uC73C\uB85C
+    \uADFC\uC0AC\uD588\uB2E4. \uC644\uB8CC(2026-09-07, PM \uC9C0\uC2DC \u2014 opener/consumer
+    \uB514\uB809\uD130\uB9AC \uCDA9\uB3CC \uD574\uC18C \uD655\uC778 \uD6C4 \uB9C8\uC800
+    \uBC30\uC120): requiredBuffId=B05N\uC744 \uAC78\uC5C8\uB2E4 \u2014 \uC774\uC81C
+    opener(SkillData_\uBC84\uD504\uAC8C\uC774\uD2B8_\uB79C\uB364_\uBBF8\uB3C4\uB9AC\uC57C_\uC774\uC988\uCFE0_B05N.asset)\uAC00
+    \uAC74 \uBC84\uD504\uAC00 \uC5C6\uC73C\uBA74 \uC774 \uAC8C\uC774\uD2B8\uAC00
+    \uD1B5\uACFC\uD558\uC9C0 \uC54A\uB294\uB2E4(\uC774\uC804\uC5D4 \uD544\uB4DC\uAC00
+    \uC544\uC608 \uC5C6\uC5B4 \uC870\uAC74 \uC5C6\uC774 \uD56D\uC0C1 \uD1B5\uACFC\uD558\uB358
+    \uC870\uC6A9\uD55C \uACFC\uB2E4\uBC1C\uB3D9 \uC0C1\uD0DC\uC600\uB2E4). [\uB79C\uB364
+    \uD1B5\uC9F8 09-30] \xA70-8: Higma_W\uB294 \u300CLIFE 85 AND B05N\u300D\uC774
+    \uC544\uB2C8\uB77C B05N \uB3D9\uC548 \uB9E4 \uD0C0(\uBCC4\uB3C4 \uCD5C\uC0C1\uC704
+    if) \u2014 \uBC1C\uB3D9 \uBC29\uC2DD OnHitCount(LIFE 85) \u2192 \uD3C9\uD0C0
+    \uD655\uB960 1 + requiredBuffId B05N. 175000 \xD72. (Tools/apply_random_rest2.py)"
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 400.0
+    triggerChance: 1
+    range: 400
     hitCountThreshold: 0
     resetTo: 1
     gaugeKind: 0
     requiredBuffId: B05N
-    forbiddenBuffId:
-    selfBuffId:
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 175000.0
-      bonus: 0.0
+      multiplier: 175000
+      bonus: 0
       chance: 1
       hitCount: 2
       duration: 0.1
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: cbe2c552f84484fc0abaa20afe7bea1c, type: 3}

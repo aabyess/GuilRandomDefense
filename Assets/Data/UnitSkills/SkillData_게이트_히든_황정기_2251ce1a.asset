@@ -10,40 +10,157 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_히든_황정기_2251ce1a
-  m_EditorClassIdentifier:
-  skillName: '[히든조합]코알라혁명군-어인공수도대리사범 — MANA게이지135.00 AND 1/8'
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 [히든조합]코알라혁명군-어인공수도대리사범(h03V)의 게이트 "MANA게이지135.00 AND 1/8" 능력 2개를 이 SkillData 하나로 묶었다.   · koalla_skill_1#1: 계산식 (525000.00+(52500.00*I2R(GetPlayerTechCountSimple(''R01O'',Get   · koalla_skill_1#2: 계산식 525000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. ⚠️⚠️ 2026-09-06 축 혼선 정정(뿌리 ㉜ 네 번째, PM): 첫 효과(R01O, koalla_skill_1#1)는 basis=ResearchLevel(4)인데, UnitAttacker.CountResearchLevel()이 그동안 UnitUpgrades.LevelForGrade(등급 업그레이드, 히든=최대21)를 읽고 있었다 — 원래 뜻은 타입 업그레이드(R01O, 최대3)라 실제로 최대 7배 과대였다(히든 연구소는 hasOriginalResearch=1이라 실주행 상태). CountResearchLevel()을 등급 트랙 연결에서 끊어 항상 0을 반환하도록 정정했다 — 값(multiplier=52500/bonus=525000)과 basis=ResearchLevel은 그대로 둔다(우리에 타입 업그레이드 축이 아직 없어서다, 생기면 자동으로 켜진다). 정정 후 지금은 상수항(525000)만 나간다. 둘째 효과(koalla_skill_1#2, basis=Flat)는 원래부터 연구 무관 — 영향 없음. | 정정(2026-09-30, 구현담당1 — 「게이지 AND 1/N」 라벨 원문 대조): 원문 Trig_Koalla_Attack의 koalla_skill_1은 마나==135가 아닐 때(else) `GetRandomInt(1,8)==5`다 — 마나 135 게이지로 거는 게 아니다. OnHitCount에서 OnHitChance(확률 그대로)로.'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uD788\uB4E0_\uD669\uC815\uAE30_2251ce1a"
+  m_EditorClassIdentifier: 
+  skillName: "[\uD788\uB4E0\uC870\uD569]\uCF54\uC54C\uB77C\uD601\uBA85\uAD70-\uC5B4\uC778\uACF5\uC218\uB3C4\uB300\uB9AC\uC0AC\uBC94
+    \u2014 MANA\uAC8C\uC774\uC9C0135.00 AND 1/8"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 [\uD788\uB4E0\uC870\uD569]\uCF54\uC54C\uB77C\uD601\uBA85\uAD70-\uC5B4\uC778\uACF5\uC218\uB3C4\uB300\uB9AC\uC0AC\uBC94(h03V)\uC758
+    \uAC8C\uC774\uD2B8 \"MANA\uAC8C\uC774\uC9C0135.00 AND 1/8\" \uB2A5\uB825 2\uAC1C\uB97C
+    \uC774 SkillData \uD558\uB098\uB85C \uBB36\uC5C8\uB2E4.   \xB7 koalla_skill_1#1:
+    \uACC4\uC0B0\uC2DD (525000.00+(52500.00*I2R(GetPlayerTechCountSimple('R01O',Get  
+    \xB7 koalla_skill_1#2: \uACC4\uC0B0\uC2DD 525000.00  hitCount>1\uC740 \"\uAC19\uC740
+    RRD \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0 \uC2DC\uAC04\uCC28 \uB2E4\uB2E8\uD788\uD2B8\uAC00
+    \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC \uC5F0\uC18D N\uD68C)\uC73C\uB85C
+    \uADFC\uC0AC\uD588\uB2E4. \u26A0\uFE0F\u26A0\uFE0F 2026-09-06 \uCD95 \uD63C\uC120
+    \uC815\uC815(\uBFCC\uB9AC \u325C \uB124 \uBC88\uC9F8, PM): \uCCAB \uD6A8\uACFC(R01O,
+    koalla_skill_1#1)\uB294 basis=ResearchLevel(4)\uC778\uB370, UnitAttacker.CountResearchLevel()\uC774
+    \uADF8\uB3D9\uC548 UnitUpgrades.LevelForGrade(\uB4F1\uAE09 \uC5C5\uADF8\uB808\uC774\uB4DC,
+    \uD788\uB4E0=\uCD5C\uB30021)\uB97C \uC77D\uACE0 \uC788\uC5C8\uB2E4 \u2014 \uC6D0\uB798
+    \uB73B\uC740 \uD0C0\uC785 \uC5C5\uADF8\uB808\uC774\uB4DC(R01O, \uCD5C\uB3003)\uB77C
+    \uC2E4\uC81C\uB85C \uCD5C\uB300 7\uBC30 \uACFC\uB300\uC600\uB2E4(\uD788\uB4E0
+    \uC5F0\uAD6C\uC18C\uB294 hasOriginalResearch=1\uC774\uB77C \uC2E4\uC8FC\uD589
+    \uC0C1\uD0DC). CountResearchLevel()\uC744 \uB4F1\uAE09 \uD2B8\uB799 \uC5F0\uACB0\uC5D0\uC11C
+    \uB04A\uC5B4 \uD56D\uC0C1 0\uC744 \uBC18\uD658\uD558\uB3C4\uB85D \uC815\uC815\uD588\uB2E4
+    \u2014 \uAC12(multiplier=52500/bonus=525000)\uACFC basis=ResearchLevel\uC740
+    \uADF8\uB300\uB85C \uB454\uB2E4(\uC6B0\uB9AC\uC5D0 \uD0C0\uC785 \uC5C5\uADF8\uB808\uC774\uB4DC
+    \uCD95\uC774 \uC544\uC9C1 \uC5C6\uC5B4\uC11C\uB2E4, \uC0DD\uAE30\uBA74 \uC790\uB3D9\uC73C\uB85C
+    \uCF1C\uC9C4\uB2E4). \uC815\uC815 \uD6C4 \uC9C0\uAE08\uC740 \uC0C1\uC218\uD56D(525000)\uB9CC
+    \uB098\uAC04\uB2E4. \uB458\uC9F8 \uD6A8\uACFC(koalla_skill_1#2, basis=Flat)\uB294
+    \uC6D0\uB798\uBD80\uD130 \uC5F0\uAD6C \uBB34\uAD00 \u2014 \uC601\uD5A5 \uC5C6\uC74C.
+    | \uC815\uC815(2026-09-30, \uAD6C\uD604\uB2F4\uB2F91 \u2014 \u300C\uAC8C\uC774\uC9C0
+    AND 1/N\u300D \uB77C\uBCA8 \uC6D0\uBB38 \uB300\uC870): \uC6D0\uBB38 Trig_Koalla_Attack\uC758
+    koalla_skill_1\uC740 \uB9C8\uB098==135\uAC00 \uC544\uB2D0 \uB54C(else) `GetRandomInt(1,8)==5`\uB2E4
+    \u2014 \uB9C8\uB098 135 \uAC8C\uC774\uC9C0\uB85C \uAC70\uB294 \uAC8C \uC544\uB2C8\uB2E4.
+    OnHitCount\uC5D0\uC11C OnHitChance(\uD655\uB960 \uADF8\uB300\uB85C)\uB85C."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.125
-    range: 500.0
+    range: 500
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 4
       target: 2
       damageType: 1
       attackType: 5
-      multiplier: 52500.0
-      bonus: 525000.0
+      multiplier: 52500
+      bonus: 525000
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
       randMin: 1
       randMax: 1.5
-      casterBuffCountFactor: 0
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 6
-      multiplier: 525000.0
-      bonus: 0.0
+      multiplier: 525000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 42a20587c17e045eca6cd28fc6a41f55, type: 3}

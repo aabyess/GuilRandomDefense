@@ -10,10 +10,60 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_버프게이트_제한_김민규_B045
-  m_EditorClassIdentifier:
-  skillName: 카타쿠리 — B045 창(버프 부여, 바닥+비용)
-  description: '06번①(2026-09-06, PM 지시, 19ed606) — 원작 샬롯 카타쿠리(h07I)의 버프 B045는 더미 Trig_katakuriAttack이 "1/7 AND LIFE>36" 조건으로 캐스터 자신에게 걸고, 발동 시 LIFE를 17 깎는다(오더 스트링 확인). "정확히 N타째"(hitCountThreshold)가 아니라 "게이지가 36을 넘는 동안 계속" + 확률 판정이라 신규 필드 SkillLevel.hitCountFloor(36)로 담았다 — 임계 도달 시 자동 리셋되는 hitCountThreshold와 달리 자동 리셋이 없고, 발동에 성공했을 때만(확률까지 통과했을 때만) gaugeSpendAmount(17)만큼 깎는다(비용을 빼먹으면 원작보다 강해진다, PM 지시). 지속시간(1.25초)은 타수로 환산 — 1.25초 → 4대(buffHitCharges=4). 소비하는 쪽(SkillData_게이트_제한_김민규_136d09f9.asset, "1/7 AND 버프B045==true")은 requiredBuffId=B045만 마저 걸면 완성되는데, 그 파일이 있는 Assets/Data/UnitSkills/를 구현담당1이 지금 같이 만지고 있어 이번엔 안 건드렸다(PM에게 보고, 디렉터리 안전해지면 이어서 완성). 그때까지 이 opener는 걸어둬도 무해하다(받아 쓰는 쪽이 아직 없음, LIFE 게이지 소모도 다른 스킬과 안 겹친다 — 김민규는 이 스킬 전에 OnHitCount/게이지 스킬이 없었다). ⚠️ [차감 시점 원작 확인 대기, 2026-09-06 PM 지시] — gaugeSpendAmount를 "확률 성공 시에만" 깎도록 만들었는데, 기존 hitCountThreshold 게이지(resetTo)는 반대로 "확률 실패해도 항상" 리셋된다(SkillLevel.triggerChance 주석, "확률 판정과 별개 블록이라 원작도 그렇다"). 조사 원문("1/7 AND LIFE>36 → 발동 시 LIFE−17")은 성공 시로 읽히지만 기존 패턴과 반대라 리서치담당 확인 전까지는 확정 아님 — 답이 오면 gaugeSpendAmount 적용 시점(성공 후 전용 vs 확률과 무관하게 항상)을 다시 볼 것. ⚠️ 2026-09-06 추가(리서치담당 SHORT_BUFF_WINDOW_GATES.md) — `buffHitCharges=4`는 **연구 1단계(원작에서 실제로 켜지는 최소 상태) 기준**이다(연구 0단계에서도 카타쿠리는 3.5회로 한 대는 덮는다 — 비비·핸콕전설·제트·핸콕영원 넷과 달리 0%가 정상은 아니다). 우리에 연구소 공속 축이 아직 없어 실제 발동률은 이 "1단계" 가정보다 낮게 나올 수 있다. [초월·제한 블록 09-30] U3: B045 = A0R7(Ablo, Blo1 공속 +400%, adur 1.25초) — 「4타 충전」 ApplyBuff → 공속 +400% 1.25초 버프(B045)로. Kata_03이 이 버프 동안 매 타. (Tools/apply_transcend_limited_blocks.py)'
+  m_Name: "SkillData_\uBC84\uD504\uAC8C\uC774\uD2B8_\uC81C\uD55C_\uAE40\uBBFC\uADDC_B045"
+  m_EditorClassIdentifier: 
+  skillName: "\uCE74\uD0C0\uCFE0\uB9AC \u2014 B045 \uCC3D(\uBC84\uD504 \uBD80\uC5EC,
+    \uBC14\uB2E5+\uBE44\uC6A9)"
+  description: "06\uBC88\u2460(2026-09-06, PM \uC9C0\uC2DC, 19ed606) \u2014 \uC6D0\uC791
+    \uC0EC\uB86F \uCE74\uD0C0\uCFE0\uB9AC(h07I)\uC758 \uBC84\uD504 B045\uB294 \uB354\uBBF8
+    Trig_katakuriAttack\uC774 \"1/7 AND LIFE>36\" \uC870\uAC74\uC73C\uB85C \uCE90\uC2A4\uD130
+    \uC790\uC2E0\uC5D0\uAC8C \uAC78\uACE0, \uBC1C\uB3D9 \uC2DC LIFE\uB97C 17 \uAE4E\uB294\uB2E4(\uC624\uB354
+    \uC2A4\uD2B8\uB9C1 \uD655\uC778). \"\uC815\uD655\uD788 N\uD0C0\uC9F8\"(hitCountThreshold)\uAC00
+    \uC544\uB2C8\uB77C \"\uAC8C\uC774\uC9C0\uAC00 36\uC744 \uB118\uB294 \uB3D9\uC548
+    \uACC4\uC18D\" + \uD655\uB960 \uD310\uC815\uC774\uB77C \uC2E0\uADDC \uD544\uB4DC
+    SkillLevel.hitCountFloor(36)\uB85C \uB2F4\uC558\uB2E4 \u2014 \uC784\uACC4 \uB3C4\uB2EC
+    \uC2DC \uC790\uB3D9 \uB9AC\uC14B\uB418\uB294 hitCountThreshold\uC640 \uB2EC\uB9AC
+    \uC790\uB3D9 \uB9AC\uC14B\uC774 \uC5C6\uACE0, \uBC1C\uB3D9\uC5D0 \uC131\uACF5\uD588\uC744
+    \uB54C\uB9CC(\uD655\uB960\uAE4C\uC9C0 \uD1B5\uACFC\uD588\uC744 \uB54C\uB9CC)
+    gaugeSpendAmount(17)\uB9CC\uD07C \uAE4E\uB294\uB2E4(\uBE44\uC6A9\uC744 \uBE7C\uBA39\uC73C\uBA74
+    \uC6D0\uC791\uBCF4\uB2E4 \uAC15\uD574\uC9C4\uB2E4, PM \uC9C0\uC2DC). \uC9C0\uC18D\uC2DC\uAC04(1.25\uCD08)\uC740
+    \uD0C0\uC218\uB85C \uD658\uC0B0 \u2014 1.25\uCD08 \u2192 4\uB300(buffHitCharges=4).
+    \uC18C\uBE44\uD558\uB294 \uCABD(SkillData_\uAC8C\uC774\uD2B8_\uC81C\uD55C_\uAE40\uBBFC\uADDC_136d09f9.asset,
+    \"1/7 AND \uBC84\uD504B045==true\")\uC740 requiredBuffId=B045\uB9CC \uB9C8\uC800
+    \uAC78\uBA74 \uC644\uC131\uB418\uB294\uB370, \uADF8 \uD30C\uC77C\uC774 \uC788\uB294
+    Assets/Data/UnitSkills/\uB97C \uAD6C\uD604\uB2F4\uB2F91\uC774 \uC9C0\uAE08 \uAC19\uC774
+    \uB9CC\uC9C0\uACE0 \uC788\uC5B4 \uC774\uBC88\uC5D4 \uC548 \uAC74\uB4DC\uB838\uB2E4(PM\uC5D0\uAC8C
+    \uBCF4\uACE0, \uB514\uB809\uD130\uB9AC \uC548\uC804\uD574\uC9C0\uBA74 \uC774\uC5B4\uC11C
+    \uC644\uC131). \uADF8\uB54C\uAE4C\uC9C0 \uC774 opener\uB294 \uAC78\uC5B4\uB46C\uB3C4
+    \uBB34\uD574\uD558\uB2E4(\uBC1B\uC544 \uC4F0\uB294 \uCABD\uC774 \uC544\uC9C1
+    \uC5C6\uC74C, LIFE \uAC8C\uC774\uC9C0 \uC18C\uBAA8\uB3C4 \uB2E4\uB978 \uC2A4\uD0AC\uACFC
+    \uC548 \uACB9\uCE5C\uB2E4 \u2014 \uAE40\uBBFC\uADDC\uB294 \uC774 \uC2A4\uD0AC
+    \uC804\uC5D0 OnHitCount/\uAC8C\uC774\uC9C0 \uC2A4\uD0AC\uC774 \uC5C6\uC5C8\uB2E4).
+    \u26A0\uFE0F [\uCC28\uAC10 \uC2DC\uC810 \uC6D0\uC791 \uD655\uC778 \uB300\uAE30,
+    2026-09-06 PM \uC9C0\uC2DC] \u2014 gaugeSpendAmount\uB97C \"\uD655\uB960 \uC131\uACF5
+    \uC2DC\uC5D0\uB9CC\" \uAE4E\uB3C4\uB85D \uB9CC\uB4E4\uC5C8\uB294\uB370, \uAE30\uC874
+    hitCountThreshold \uAC8C\uC774\uC9C0(resetTo)\uB294 \uBC18\uB300\uB85C \"\uD655\uB960
+    \uC2E4\uD328\uD574\uB3C4 \uD56D\uC0C1\" \uB9AC\uC14B\uB41C\uB2E4(SkillLevel.triggerChance
+    \uC8FC\uC11D, \"\uD655\uB960 \uD310\uC815\uACFC \uBCC4\uAC1C \uBE14\uB85D\uC774\uB77C
+    \uC6D0\uC791\uB3C4 \uADF8\uB807\uB2E4\"). \uC870\uC0AC \uC6D0\uBB38(\"1/7 AND
+    LIFE>36 \u2192 \uBC1C\uB3D9 \uC2DC LIFE\u221217\")\uC740 \uC131\uACF5 \uC2DC\uB85C
+    \uC77D\uD788\uC9C0\uB9CC \uAE30\uC874 \uD328\uD134\uACFC \uBC18\uB300\uB77C \uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    \uD655\uC778 \uC804\uAE4C\uC9C0\uB294 \uD655\uC815 \uC544\uB2D8 \u2014 \uB2F5\uC774
+    \uC624\uBA74 gaugeSpendAmount \uC801\uC6A9 \uC2DC\uC810(\uC131\uACF5 \uD6C4 \uC804\uC6A9
+    vs \uD655\uB960\uACFC \uBB34\uAD00\uD558\uAC8C \uD56D\uC0C1)\uC744 \uB2E4\uC2DC
+    \uBCFC \uAC83. \u26A0\uFE0F 2026-09-06 \uCD94\uAC00(\uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    SHORT_BUFF_WINDOW_GATES.md) \u2014 `buffHitCharges=4`\uB294 **\uC5F0\uAD6C 1\uB2E8\uACC4(\uC6D0\uC791\uC5D0\uC11C
+    \uC2E4\uC81C\uB85C \uCF1C\uC9C0\uB294 \uCD5C\uC18C \uC0C1\uD0DC) \uAE30\uC900**\uC774\uB2E4(\uC5F0\uAD6C
+    0\uB2E8\uACC4\uC5D0\uC11C\uB3C4 \uCE74\uD0C0\uCFE0\uB9AC\uB294 3.5\uD68C\uB85C
+    \uD55C \uB300\uB294 \uB36E\uB294\uB2E4 \u2014 \uBE44\uBE44\xB7\uD578\uCF55\uC804\uC124\xB7\uC81C\uD2B8\xB7\uD578\uCF55\uC601\uC6D0
+    \uB137\uACFC \uB2EC\uB9AC 0%\uAC00 \uC815\uC0C1\uC740 \uC544\uB2C8\uB2E4). \uC6B0\uB9AC\uC5D0
+    \uC5F0\uAD6C\uC18C \uACF5\uC18D \uCD95\uC774 \uC544\uC9C1 \uC5C6\uC5B4 \uC2E4\uC81C
+    \uBC1C\uB3D9\uB960\uC740 \uC774 \"1\uB2E8\uACC4\" \uAC00\uC815\uBCF4\uB2E4 \uB0AE\uAC8C
+    \uB098\uC62C \uC218 \uC788\uB2E4. [\uCD08\uC6D4\xB7\uC81C\uD55C \uBE14\uB85D
+    09-30] U3: B045 = A0R7(Ablo, Blo1 \uACF5\uC18D +400%, adur 1.25\uCD08) \u2014
+    \u300C4\uD0C0 \uCDA9\uC804\u300D ApplyBuff \u2192 \uACF5\uC18D +400% 1.25\uCD08
+    \uBC84\uD504(B045)\uB85C. Kata_03\uC774 \uC774 \uBC84\uD504 \uB3D9\uC548 \uB9E4
+    \uD0C0. (Tools/apply_transcend_limited_blocks.py)"
   triggerType: 3
   levels:
   - cooldown: 0
@@ -22,31 +72,68 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 1
-    hitCountFloor: 36
-    gaugeSpendAmount: 17
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 12
       basis: 0
       target: 0
       damageType: 0
       attackType: 0
-      multiplier: 4.0
-      bonus: 0.0
+      multiplier: 4
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 1.25
-      casterBuffCountFactor: 0.0
+      casterBuffCountFactor: 0
       buffId: B045
-      randMin: 1.0
-      randMax: 1.0
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 36
+    gaugeSpendAmount: 17
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 015b762b6fa884ddf8d2951977ba2678, type: 3}

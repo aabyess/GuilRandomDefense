@@ -10,13 +10,56 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_희귀함_박은석
-  m_EditorClassIdentifier:
-  skillName: Trig_Unique9 → e03M(U희귀함 키자루 더미) → A09A
-  description: '원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 희귀함 보르살리노 해군대장 - 희귀함(더미:Trig_Unique9 → e03M(U희귀함 키자루 더미) → A09A)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 유닛 하나(행 1개)를 통째로 이 유닛에 배정했다(2026-09-06 유닛 단위 재배정, TEAM_RULES 뿌리 ⑮). | 2차 배정(트리거·더미 채널): 원작 희귀함 보르살리노 해군대장 - 희귀함(더미 경로 Trig_Unique9 → e03M(U희귀함 키자루 더미) → A09A). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. [범위화 09-30] 값 8.0은 연쇄 번개 A09A의 대상 수(Ocl2)를 피해로 읽은 찌꺼기 — 매 타 효과를 비움(연쇄 자체는 축이 없어 단일 6000 그대로). (Tools/apply_rare_special_ranges.py)'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uD76C\uADC0\uD568_\uBC15\uC740\uC11D"
+  m_EditorClassIdentifier: 
+  skillName: "Trig_Unique9 \u2192 e03M(U\uD76C\uADC0\uD568 \uD0A4\uC790\uB8E8 \uB354\uBBF8)
+    \u2192 A09A"
+  description: "\uC6D0\uC791 \uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8 \uD53C\uD574\uD45C(ORIGINAL_SKILL_DAMAGE_TABLE.csv)
+    DPS \uC21C\uC704 \uBC30\uC815 \u2014 \uC6D0\uC791 \uD76C\uADC0\uD568 \uBCF4\uB974\uC0B4\uB9AC\uB178
+    \uD574\uAD70\uB300\uC7A5 - \uD76C\uADC0\uD568(\uB354\uBBF8:Trig_Unique9 \u2192
+    e03M(U\uD76C\uADC0\uD568 \uD0A4\uC790\uB8E8 \uB354\uBBF8) \u2192 A09A)\uC758
+    \uD53C\uD574\uB97C \uC62E\uACBC\uB2E4. 1\uCC28(uabi \uB2A5\uB825ID) CSV\uC5D4
+    \uC5C6\uB358 \uB2A5\uB825\uC774\uB2E4 \u2014 \uC6D0\uC791\uC774 \uC720\uB2DBID\u2192\uD2B8\uB9AC\uAC70
+    \uD574\uC2DC\uD14C\uC774\uBE14\uB85C \uCC98\uB9AC\uD574\uC11C \uB2A5\uB825ID\uB85C\uB294
+    \uC548 \uBCF4\uC600\uB2E4. \uAC1C\uBCC4 \uB300\uC751 \uC544\uB2D8(\uC774\uB984\uB9E4\uD551
+    \uBD88\uAC00) \u2014 \uC6D0\uC791 \uC720\uB2DB \uD558\uB098(\uD589 1\uAC1C)\uB97C
+    \uD1B5\uC9F8\uB85C \uC774 \uC720\uB2DB\uC5D0 \uBC30\uC815\uD588\uB2E4(2026-09-06
+    \uC720\uB2DB \uB2E8\uC704 \uC7AC\uBC30\uC815, TEAM_RULES \uBFCC\uB9AC \u246E).
+    | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8 \uCC44\uB110): \uC6D0\uC791
+    \uD76C\uADC0\uD568 \uBCF4\uB974\uC0B4\uB9AC\uB178 \uD574\uAD70\uB300\uC7A5 -
+    \uD76C\uADC0\uD568(\uB354\uBBF8 \uACBD\uB85C Trig_Unique9 \u2192 e03M(U\uD76C\uADC0\uD568
+    \uD0A4\uC790\uB8E8 \uB354\uBBF8) \u2192 A09A). \u26A0\uFE0F \uC2A4\uD1A1 \uD544\uB4DC
+    \uAC12 \uADF8\uB300\uB85C \u2014 \uD544\uB4DC \uB73B\uC774 \uBBF8\uD655\uC778\uC774\uB77C
+    \uD53C\uD574\uAC00 \uC544\uB2C8\uB77C \uB2E4\uB978 \uD6A8\uACFC(\uC2AC\uB85C\uC6B0\xB7\uC2A4\uD134\xB7\uBC84\uD504
+    \uB4F1)\uC600\uC744 \uC218 \uC788\uB2E4. \uACF5\uACA9\uD0C0\uC785 \uC6D0\uBCF8\uC774
+    [\uBBF8\uD655\uC778]\uC774\uB77C \uC774 \uC720\uB2DB \uC790\uC2E0\uC758 \uD3C9\uD0C0
+    \uD0C0\uC785\uC73C\uB85C \uB300\uC2E0\uD588\uB2E4. [\uBC94\uC704\uD654 09-30]
+    \uAC12 8.0\uC740 \uC5F0\uC1C4 \uBC88\uAC1C A09A\uC758 \uB300\uC0C1 \uC218(Ocl2)\uB97C
+    \uD53C\uD574\uB85C \uC77D\uC740 \uCC0C\uAEBC\uAE30 \u2014 \uB9E4 \uD0C0 \uD6A8\uACFC\uB97C
+    \uBE44\uC6C0(\uC5F0\uC1C4 \uC790\uCCB4\uB294 \uCD95\uC774 \uC5C6\uC5B4 \uB2E8\uC77C
+    6000 \uADF8\uB300\uB85C). (Tools/apply_rare_special_ranges.py)"
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
+    triggerChance: 1
     range: 0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects: []
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: eed90ba4dc5a9460e951862054134146, type: 3}

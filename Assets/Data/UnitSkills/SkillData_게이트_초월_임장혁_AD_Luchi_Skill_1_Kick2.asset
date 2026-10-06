@@ -10,132 +10,261 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_초월_임장혁_AD_Luchi_Skill_1_Kick2
-  m_EditorClassIdentifier:
-  skillName: CP.Zero — Real<=7.25 AND 특성(A0R2)
-  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_Luchi_Attack(HashAttack H08W) `GetRandomReal(1,100)<=7.25(+플레이횟수 미소항)` AND udg_bool_lucchi_tr(특성 A0R2 구매 때 true, Trig_T_Ability_hero) → Trig_Luchi_Skill_1_Kick2: Stage1 주 대상 495 적 전원 400000(MAGIC/UNIVERSAL→AP) + PV<200이면 주 대상 MAX_LIFE×0.04(CHAOS/UNIVERSAL), Stage3 585 적 전원 400000. 레벨1(특성 전)은 원작이 대신 Luchi_Skill_1_Kick으로 가는데 그 트리거엔 직접 피해 호출이 없어 비워 뒀다(레벨2 = 특성 구매 뒤, 원작004_H08W의 A0R2와 같은 인덱스). ⚠️ 두 번째 광역 반경 585는 레벨 range 하나(495)로 근사. [직선 09-30] 직선: L0 A0R6 피해 600000 · 길이 1100 · 반경 225→450 — 루치 Luchi_Skill_1_Kick(T특성 없을 때 갈래): 더미 e0F4가 carrionswarm A0R6 — 레벨 1 자리가 비어 있었다(Tools/apply_line_skills.py)'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uCD08\uC6D4_\uC784\uC7A5\uD601_AD_Luchi_Skill_1_Kick2"
+  m_EditorClassIdentifier: 
+  skillName: "CP.Zero \u2014 Real<=7.25 AND \uD2B9\uC131(A0R2)"
+  description: "2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(\uCCB4\uB825 \uBE44\uB840 \uB204\uB77D,
+    SKILL_BASIS_AUDIT \xA73-1): \uC6D0\uBB38 Trig_Luchi_Attack(HashAttack H08W) `GetRandomReal(1,100)<=7.25(+\uD50C\uB808\uC774\uD69F\uC218
+    \uBBF8\uC18C\uD56D)` AND udg_bool_lucchi_tr(\uD2B9\uC131 A0R2 \uAD6C\uB9E4 \uB54C
+    true, Trig_T_Ability_hero) \u2192 Trig_Luchi_Skill_1_Kick2: Stage1 \uC8FC \uB300\uC0C1
+    495 \uC801 \uC804\uC6D0 400000(MAGIC/UNIVERSAL\u2192AP) + PV<200\uC774\uBA74
+    \uC8FC \uB300\uC0C1 MAX_LIFE\xD70.04(CHAOS/UNIVERSAL), Stage3 585 \uC801 \uC804\uC6D0
+    400000. \uB808\uBCA81(\uD2B9\uC131 \uC804)\uC740 \uC6D0\uC791\uC774 \uB300\uC2E0
+    Luchi_Skill_1_Kick\uC73C\uB85C \uAC00\uB294\uB370 \uADF8 \uD2B8\uB9AC\uAC70\uC5D4
+    \uC9C1\uC811 \uD53C\uD574 \uD638\uCD9C\uC774 \uC5C6\uC5B4 \uBE44\uC6CC \uB480\uB2E4(\uB808\uBCA82
+    = \uD2B9\uC131 \uAD6C\uB9E4 \uB4A4, \uC6D0\uC791004_H08W\uC758 A0R2\uC640 \uAC19\uC740
+    \uC778\uB371\uC2A4). \u26A0\uFE0F \uB450 \uBC88\uC9F8 \uAD11\uC5ED \uBC18\uACBD
+    585\uB294 \uB808\uBCA8 range \uD558\uB098(495)\uB85C \uADFC\uC0AC. [\uC9C1\uC120
+    09-30] \uC9C1\uC120: L0 A0R6 \uD53C\uD574 600000 \xB7 \uAE38\uC774 1100 \xB7
+    \uBC18\uACBD 225\u2192450 \u2014 \uB8E8\uCE58 Luchi_Skill_1_Kick(T\uD2B9\uC131
+    \uC5C6\uC744 \uB54C \uAC08\uB798): \uB354\uBBF8 e0F4\uAC00 carrionswarm A0R6
+    \u2014 \uB808\uBCA8 1 \uC790\uB9AC\uAC00 \uBE44\uC5B4 \uC788\uC5C8\uB2E4(Tools/apply_line_skills.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.0725
-    range: 495.0
+    range: 495
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 600000.0
-      bonus: 0.0
+      multiplier: 600000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 0
-      chainDamageStep: 0.0
-      zoneTickInterval: 0.0
-      zoneRadius: 0.0
-      zoneSpacing: 0.0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
       zoneAtCaster: 0
-      lineLength: 1100.0
-      lineStartRadius: 225.0
-      lineEndRadius: 450.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      lineLength: 1100
+      lineStartRadius: 225
+      lineEndRadius: 450
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
   - cooldown: 0
     triggerChance: 0.0725
-    range: 495.0
+    range: 495
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 6
-      multiplier: 400000.0
-      bonus: 0.0
+      multiplier: 400000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 1
       target: 3
       damageType: 2
       attackType: 5
       multiplier: 0.04
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 1
-      targetConditionValue: 200.0
+      targetConditionValue: 200
       cascadeGroup: 0
       skipDamageTakenMultiplier: 1
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 6
-      multiplier: 400000.0
-      bonus: 0.0
+      multiplier: 400000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: c7faf3158dc7a413e973db5b5f58b1c2, type: 3}

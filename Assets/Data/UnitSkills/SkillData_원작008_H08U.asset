@@ -10,42 +10,98 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작008_H08U
-  m_EditorClassIdentifier:
-  skillName: A0EQ !해류조정-시라호시
-  description: '06번① 순위배정 — 원작 #008 H08U "포세이돈" 인어공주(시라호시), upro(실제 이름): 시라호시, 능력 A0EQ(!해류조정-시라호시). 스킬승급형: 레벨1→2로 ''!해류조정-시라호시''의 효과가 하나 늘어난다(원작 실측, 배율 아님). 수치 미상 — 두 레벨 모두 effects가 비어 있다. 사장님 콘텐츠 배정 시 채울 것. ⚠️ 2026-09-05 정정: triggerType을 CooldownAutoCast(1)→OnHitChance(0)로 바꿨다 — 원작 확인 결과 이 23종은 평타에 붙어 발동하는 트리거였다(06번① 제작 당시 원작 발동 방식을 확인 안 하고 기본값으로 지음). triggerChance는 아직 안 건드림(원작 발동확률이 Hbh1이 아니라 트리거의 GetRandomInt 게이트에 있어 리서치담당 별도 조사 중 — 그 값 없이 effects를 채우면 매 타 발동한다). | 2026-09-30 채움(구현담당2, SKILL_FILL_STAGE2_seven.md §5 · 원문·w3a 재확인): Trig_Sirahoshi_Attack `if GetRandomInt(1,9)==5`(1/9, 툴팁 12%는 틀림) → A0EQ 레벨로 갈림. Lv1: 맞은 적 위치에 e04V(Player 8) stomp → A06W(AOws) Wrs1=380000·aare 600·adur 2.15(ahdu 1.18). Lv2: e0KA ×3 중 첫째만 stomp → A0WW Wrs1=450000·aare 600·adur 2.35(e04V·e04X는 오더 없음=시각). 적은 영웅이 아니라 adur을 쓴다. 워 스톰프 피해 = 주문 피해 → AP(2)/Spells(7)(likely, 엔진 기본). range는 원작 단위 600. 스턴은 구현담당1 문서 186·269행과 같은 값(PM 지시로 이 파일은 구현담당2 소유).'
+  m_Name: "SkillData_\uC6D0\uC791008_H08U"
+  m_EditorClassIdentifier: 
+  skillName: "A0EQ !\uD574\uB958\uC870\uC815-\uC2DC\uB77C\uD638\uC2DC"
+  description: "06\uBC88\u2460 \uC21C\uC704\uBC30\uC815 \u2014 \uC6D0\uC791 #008
+    H08U \"\uD3EC\uC138\uC774\uB3C8\" \uC778\uC5B4\uACF5\uC8FC(\uC2DC\uB77C\uD638\uC2DC),
+    upro(\uC2E4\uC81C \uC774\uB984): \uC2DC\uB77C\uD638\uC2DC, \uB2A5\uB825 A0EQ(!\uD574\uB958\uC870\uC815-\uC2DC\uB77C\uD638\uC2DC).
+    \uC2A4\uD0AC\uC2B9\uAE09\uD615: \uB808\uBCA81\u21922\uB85C '!\uD574\uB958\uC870\uC815-\uC2DC\uB77C\uD638\uC2DC'\uC758
+    \uD6A8\uACFC\uAC00 \uD558\uB098 \uB298\uC5B4\uB09C\uB2E4(\uC6D0\uC791 \uC2E4\uCE21,
+    \uBC30\uC728 \uC544\uB2D8). \uC218\uCE58 \uBBF8\uC0C1 \u2014 \uB450 \uB808\uBCA8
+    \uBAA8\uB450 effects\uAC00 \uBE44\uC5B4 \uC788\uB2E4. \uC0AC\uC7A5\uB2D8 \uCF58\uD150\uCE20
+    \uBC30\uC815 \uC2DC \uCC44\uC6B8 \uAC83. \u26A0\uFE0F 2026-09-05 \uC815\uC815:
+    triggerType\uC744 CooldownAutoCast(1)\u2192OnHitChance(0)\uB85C \uBC14\uAFE8\uB2E4
+    \u2014 \uC6D0\uC791 \uD655\uC778 \uACB0\uACFC \uC774 23\uC885\uC740 \uD3C9\uD0C0\uC5D0
+    \uBD99\uC5B4 \uBC1C\uB3D9\uD558\uB294 \uD2B8\uB9AC\uAC70\uC600\uB2E4(06\uBC88\u2460
+    \uC81C\uC791 \uB2F9\uC2DC \uC6D0\uC791 \uBC1C\uB3D9 \uBC29\uC2DD\uC744 \uD655\uC778
+    \uC548 \uD558\uACE0 \uAE30\uBCF8\uAC12\uC73C\uB85C \uC9C0\uC74C). triggerChance\uB294
+    \uC544\uC9C1 \uC548 \uAC74\uB4DC\uB9BC(\uC6D0\uC791 \uBC1C\uB3D9\uD655\uB960\uC774
+    Hbh1\uC774 \uC544\uB2C8\uB77C \uD2B8\uB9AC\uAC70\uC758 GetRandomInt \uAC8C\uC774\uD2B8\uC5D0
+    \uC788\uC5B4 \uB9AC\uC11C\uCE58\uB2F4\uB2F9 \uBCC4\uB3C4 \uC870\uC0AC \uC911
+    \u2014 \uADF8 \uAC12 \uC5C6\uC774 effects\uB97C \uCC44\uC6B0\uBA74 \uB9E4 \uD0C0
+    \uBC1C\uB3D9\uD55C\uB2E4). | 2026-09-30 \uCC44\uC6C0(\uAD6C\uD604\uB2F4\uB2F92,
+    SKILL_FILL_STAGE2_seven.md \xA75 \xB7 \uC6D0\uBB38\xB7w3a \uC7AC\uD655\uC778):
+    Trig_Sirahoshi_Attack `if GetRandomInt(1,9)==5`(1/9, \uD234\uD301 12%\uB294 \uD2C0\uB9BC)
+    \u2192 A0EQ \uB808\uBCA8\uB85C \uAC08\uB9BC. Lv1: \uB9DE\uC740 \uC801 \uC704\uCE58\uC5D0
+    e04V(Player 8) stomp \u2192 A06W(AOws) Wrs1=380000\xB7aare 600\xB7adur 2.15(ahdu
+    1.18). Lv2: e0KA \xD73 \uC911 \uCCAB\uC9F8\uB9CC stomp \u2192 A0WW Wrs1=450000\xB7aare
+    600\xB7adur 2.35(e04V\xB7e04X\uB294 \uC624\uB354 \uC5C6\uC74C=\uC2DC\uAC01).
+    \uC801\uC740 \uC601\uC6C5\uC774 \uC544\uB2C8\uB77C adur\uC744 \uC4F4\uB2E4. \uC6CC
+    \uC2A4\uD1B0\uD504 \uD53C\uD574 = \uC8FC\uBB38 \uD53C\uD574 \u2192 AP(2)/Spells(7)(likely,
+    \uC5D4\uC9C4 \uAE30\uBCF8). range\uB294 \uC6D0\uC791 \uB2E8\uC704 600. \uC2A4\uD134\uC740
+    \uAD6C\uD604\uB2F4\uB2F91 \uBB38\uC11C 186\xB7269\uD589\uACFC \uAC19\uC740 \uAC12(PM
+    \uC9C0\uC2DC\uB85C \uC774 \uD30C\uC77C\uC740 \uAD6C\uD604\uB2F4\uB2F92 \uC18C\uC720)."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.11111
-    range: 600.0
+    range: 600
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 380000.0
+      multiplier: 380000
       bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
-      buffId:
+      buffId: 
       randMin: 1
       randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
       targetConditionValue: 0
       cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 2
@@ -57,50 +113,113 @@ MonoBehaviour:
       hitCount: 1
       duration: 2.15
       casterBuffCountFactor: 0
-      buffId:
+      buffId: 
       randMin: 1
       randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
       targetConditionValue: 0
       cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
       heroDuration: 1.18
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
   - cooldown: 0
     triggerChance: 0.11111
-    range: 600.0
+    range: 600
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 450000.0
+      multiplier: 450000
       bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
-      buffId:
+      buffId: 
       randMin: 1
       randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
       targetConditionValue: 0
       cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 2
@@ -112,17 +231,53 @@ MonoBehaviour:
       hitCount: 1
       duration: 2.35
       casterBuffCountFactor: 0
-      buffId:
+      buffId: 
       randMin: 1
       randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
       targetConditionValue: 0
       cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
       heroDuration: 2.35
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: eea3118f85f494bbd8d99f57833f7daa, type: 3}

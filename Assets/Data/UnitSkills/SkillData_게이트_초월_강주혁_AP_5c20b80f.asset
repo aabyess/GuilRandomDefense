@@ -10,60 +10,173 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_초월_강주혁_AP_5c20b80f
-  m_EditorClassIdentifier:
-  skillName: 웨더리아의 항해사 — 1/9
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 웨더리아의 항해사(H08V)의 게이트 "1/9" 능력 3개를 이 SkillData 하나로 묶었다.   · Nami_Skill_2#1: 계산식 800000.00   · Nami_Skill_2#2: 계산식 400000.00   · Nami_Skill_2#3: 계산식 400000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. ⚠️ 2026-09-06 정정(PM 지시, 리서치담당 JASS 원문 확인 — RRD_SEQUENCE_DUPLICATE_AUDIT.md 사례2) — #1(80만)·#2(40만)는 `if GetRandomInt(1,100)<33` 배타분기(33%/67%)이고 #3(40만)은 조건과 무관하게 항상 발동. 이전엔 셋 다 chance=1로 매번 다 나가 100% 160만 확정타였다(최대 약 4배 과다). #1 chance=0.33, #2 chance=0.67로 원작 분기 확률을 그대로 넣었다 — 값(80만/40만/40만)은 그대로. ⚠️ 엔진 한계: SkillEffect.chance는 효과별 독립 판정(UnitAttacker.CastSkillLevel, `foreach`+개별 Random.value)이라 "둘 중 하나만"을 구조적으로 강제하진 못한다 — 기대값은 정확히 맞춘 근사다(0.33×80만+0.67×40만+40만=93.2만, 이전 160만 확정 대비). #1·#2가 우연히 동시에 뜨거나(22.11%) 둘 다 안 뜰(22.11%) 경우가 원작엔 없는 이 근사만의 부작용이다. 🔴 2026-09-07 재정정(PM 지시, 리서치담당 `Trig_Nami_Skill_2_Actions` 원문 재확인, `ebc9828`) — #1/#2의 33%/67% 분기는 그 자체가 `if UnitHasItem(캐스터, Item_nami)`(아이템 보유) 게이트 안에 있고, 아이템이 없으면 무조건 40만(#3)만 나간다. 09-06 정정은 배타 쌍(33%/67%)만 옮기고 그걸 감싼 바깥의 "아이템 보유" 조건을 놓쳤다 — 우리 유닛은 아이템을 들 수 있는 축 자체가 없으므로 지금은 "아이템 없음"이 항상 참이다. #1 chance 0.33→0, #2 chance 0.67→0으로 내려 지금은 #3(40만)만 나가게 한다(93.2만→40만, 원작보다 세게 나가던 걸 낮추는 방향). ⚠️ 값(80만/40만)은 지우지 않고 그대로 둔다 — 아이템 보유 축이 생기면 0.33/0.67로 복구할 값이다. [중복 점검 09-30] Nami_Skill_2(아이템 없음): 대상 중심 300 범위 400000 + 대상 400000 NORMAL/UNIVERSAL(대상 80만 · 곁 40만). 아이템 갈래(800000 묶음 · 둘째 400000 묶음)를 같이 더해 대상 240만이었다(3배 과다). (Tools/apply_audit_dupes.py)'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uCD08\uC6D4_\uAC15\uC8FC\uD601_AP_5c20b80f"
+  m_EditorClassIdentifier: 
+  skillName: "\uC6E8\uB354\uB9AC\uC544\uC758 \uD56D\uD574\uC0AC \u2014 1/9"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 \uC6E8\uB354\uB9AC\uC544\uC758 \uD56D\uD574\uC0AC(H08V)\uC758
+    \uAC8C\uC774\uD2B8 \"1/9\" \uB2A5\uB825 3\uAC1C\uB97C \uC774 SkillData \uD558\uB098\uB85C
+    \uBB36\uC5C8\uB2E4.   \xB7 Nami_Skill_2#1: \uACC4\uC0B0\uC2DD 800000.00   \xB7
+    Nami_Skill_2#2: \uACC4\uC0B0\uC2DD 400000.00   \xB7 Nami_Skill_2#3: \uACC4\uC0B0\uC2DD
+    400000.00  hitCount>1\uC740 \"\uAC19\uC740 RRD \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0
+    \uC2DC\uAC04\uCC28 \uB2E4\uB2E8\uD788\uD2B8\uAC00 \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC
+    \uC5F0\uC18D N\uD68C)\uC73C\uB85C \uADFC\uC0AC\uD588\uB2E4. \u26A0\uFE0F 2026-09-06
+    \uC815\uC815(PM \uC9C0\uC2DC, \uB9AC\uC11C\uCE58\uB2F4\uB2F9 JASS \uC6D0\uBB38
+    \uD655\uC778 \u2014 RRD_SEQUENCE_DUPLICATE_AUDIT.md \uC0AC\uB8402) \u2014 #1(80\uB9CC)\xB7#2(40\uB9CC)\uB294
+    `if GetRandomInt(1,100)<33` \uBC30\uD0C0\uBD84\uAE30(33%/67%)\uC774\uACE0 #3(40\uB9CC)\uC740
+    \uC870\uAC74\uACFC \uBB34\uAD00\uD558\uAC8C \uD56D\uC0C1 \uBC1C\uB3D9. \uC774\uC804\uC5D4
+    \uC14B \uB2E4 chance=1\uB85C \uB9E4\uBC88 \uB2E4 \uB098\uAC00 100% 160\uB9CC
+    \uD655\uC815\uD0C0\uC600\uB2E4(\uCD5C\uB300 \uC57D 4\uBC30 \uACFC\uB2E4). #1
+    chance=0.33, #2 chance=0.67\uB85C \uC6D0\uC791 \uBD84\uAE30 \uD655\uB960\uC744
+    \uADF8\uB300\uB85C \uB123\uC5C8\uB2E4 \u2014 \uAC12(80\uB9CC/40\uB9CC/40\uB9CC)\uC740
+    \uADF8\uB300\uB85C. \u26A0\uFE0F \uC5D4\uC9C4 \uD55C\uACC4: SkillEffect.chance\uB294
+    \uD6A8\uACFC\uBCC4 \uB3C5\uB9BD \uD310\uC815(UnitAttacker.CastSkillLevel, `foreach`+\uAC1C\uBCC4
+    Random.value)\uC774\uB77C \"\uB458 \uC911 \uD558\uB098\uB9CC\"\uC744 \uAD6C\uC870\uC801\uC73C\uB85C
+    \uAC15\uC81C\uD558\uC9C4 \uBABB\uD55C\uB2E4 \u2014 \uAE30\uB300\uAC12\uC740 \uC815\uD655\uD788
+    \uB9DE\uCD98 \uADFC\uC0AC\uB2E4(0.33\xD780\uB9CC+0.67\xD740\uB9CC+40\uB9CC=93.2\uB9CC,
+    \uC774\uC804 160\uB9CC \uD655\uC815 \uB300\uBE44). #1\xB7#2\uAC00 \uC6B0\uC5F0\uD788
+    \uB3D9\uC2DC\uC5D0 \uB728\uAC70\uB098(22.11%) \uB458 \uB2E4 \uC548 \uB730(22.11%)
+    \uACBD\uC6B0\uAC00 \uC6D0\uC791\uC5D4 \uC5C6\uB294 \uC774 \uADFC\uC0AC\uB9CC\uC758
+    \uBD80\uC791\uC6A9\uC774\uB2E4. \U0001F534 2026-09-07 \uC7AC\uC815\uC815(PM \uC9C0\uC2DC,
+    \uB9AC\uC11C\uCE58\uB2F4\uB2F9 `Trig_Nami_Skill_2_Actions` \uC6D0\uBB38 \uC7AC\uD655\uC778,
+    `ebc9828`) \u2014 #1/#2\uC758 33%/67% \uBD84\uAE30\uB294 \uADF8 \uC790\uCCB4\uAC00
+    `if UnitHasItem(\uCE90\uC2A4\uD130, Item_nami)`(\uC544\uC774\uD15C \uBCF4\uC720)
+    \uAC8C\uC774\uD2B8 \uC548\uC5D0 \uC788\uACE0, \uC544\uC774\uD15C\uC774 \uC5C6\uC73C\uBA74
+    \uBB34\uC870\uAC74 40\uB9CC(#3)\uB9CC \uB098\uAC04\uB2E4. 09-06 \uC815\uC815\uC740
+    \uBC30\uD0C0 \uC30D(33%/67%)\uB9CC \uC62E\uAE30\uACE0 \uADF8\uAC78 \uAC10\uC2FC
+    \uBC14\uAE65\uC758 \"\uC544\uC774\uD15C \uBCF4\uC720\" \uC870\uAC74\uC744 \uB193\uCCE4\uB2E4
+    \u2014 \uC6B0\uB9AC \uC720\uB2DB\uC740 \uC544\uC774\uD15C\uC744 \uB4E4 \uC218
+    \uC788\uB294 \uCD95 \uC790\uCCB4\uAC00 \uC5C6\uC73C\uBBC0\uB85C \uC9C0\uAE08\uC740
+    \"\uC544\uC774\uD15C \uC5C6\uC74C\"\uC774 \uD56D\uC0C1 \uCC38\uC774\uB2E4. #1
+    chance 0.33\u21920, #2 chance 0.67\u21920\uC73C\uB85C \uB0B4\uB824 \uC9C0\uAE08\uC740
+    #3(40\uB9CC)\uB9CC \uB098\uAC00\uAC8C \uD55C\uB2E4(93.2\uB9CC\u219240\uB9CC,
+    \uC6D0\uC791\uBCF4\uB2E4 \uC138\uAC8C \uB098\uAC00\uB358 \uAC78 \uB0AE\uCD94\uB294
+    \uBC29\uD5A5). \u26A0\uFE0F \uAC12(80\uB9CC/40\uB9CC)\uC740 \uC9C0\uC6B0\uC9C0
+    \uC54A\uACE0 \uADF8\uB300\uB85C \uB454\uB2E4 \u2014 \uC544\uC774\uD15C \uBCF4\uC720
+    \uCD95\uC774 \uC0DD\uAE30\uBA74 0.33/0.67\uB85C \uBCF5\uAD6C\uD560 \uAC12\uC774\uB2E4.
+    [\uC911\uBCF5 \uC810\uAC80 09-30] Nami_Skill_2(\uC544\uC774\uD15C \uC5C6\uC74C):
+    \uB300\uC0C1 \uC911\uC2EC 300 \uBC94\uC704 400000 + \uB300\uC0C1 400000 NORMAL/UNIVERSAL(\uB300\uC0C1
+    80\uB9CC \xB7 \uACC1 40\uB9CC). \uC544\uC774\uD15C \uAC08\uB798(800000 \uBB36\uC74C
+    \xB7 \uB458\uC9F8 400000 \uBB36\uC74C)\uB97C \uAC19\uC774 \uB354\uD574 \uB300\uC0C1
+    240\uB9CC\uC774\uC5C8\uB2E4(3\uBC30 \uACFC\uB2E4). (Tools/apply_audit_dupes.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.111111
-    range: 300.0
+    range: 300
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 400000.0
-      bonus: 0.0
+      multiplier: 400000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 7
-      multiplier: 400000.0
-      bonus: 0.0
+      multiplier: 400000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 7e4e32dfce9bb422990ae7adc8a0e06f, type: 3}

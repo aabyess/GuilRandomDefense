@@ -10,65 +10,134 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_불멸_박은석_Z_Skill_Mana
-  m_EditorClassIdentifier:
-  skillName: 제트 해군 스승 "Z" - 불멸의 — MANA게이지160
-  description: '2026-09-30 구현담당1(체력 비례 누락, SKILL_BASIS_AUDIT §3-1): 원문 Trig_Z_Attack(HashAttack h04G) `UNIT_STATE_MANA==160` → Trig_Z_Skill_Mana Stage2: 주 대상 위치 725 살아 있는 적 전원 RRD(4850000+(MAX_LIFE−LIFE)×0.08, NORMAL→Spells/UNIVERSAL→AP). PV 분기 없음 → 상수는 Flat으로 떼 보스도 받게 했다.'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uBD88\uBA78_\uBC15\uC740\uC11D_Z_Skill_Mana"
+  m_EditorClassIdentifier: 
+  skillName: "\uC81C\uD2B8 \uD574\uAD70 \uC2A4\uC2B9 \"Z\" - \uBD88\uBA78\uC758 \u2014
+    MANA\uAC8C\uC774\uC9C0160"
+  description: "2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(\uCCB4\uB825 \uBE44\uB840 \uB204\uB77D,
+    SKILL_BASIS_AUDIT \xA73-1): \uC6D0\uBB38 Trig_Z_Attack(HashAttack h04G) `UNIT_STATE_MANA==160`
+    \u2192 Trig_Z_Skill_Mana Stage2: \uC8FC \uB300\uC0C1 \uC704\uCE58 725 \uC0B4\uC544
+    \uC788\uB294 \uC801 \uC804\uC6D0 RRD(4850000+(MAX_LIFE\u2212LIFE)\xD70.08, NORMAL\u2192Spells/UNIVERSAL\u2192AP).
+    PV \uBD84\uAE30 \uC5C6\uC74C \u2192 \uC0C1\uC218\uB294 Flat\uC73C\uB85C \uB5BC
+    \uBCF4\uC2A4\uB3C4 \uBC1B\uAC8C \uD588\uB2E4."
   triggerType: 3
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 725.0
+    triggerChance: 1
+    range: 725
     hitCountThreshold: 160
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 4850000.0
-      bonus: 0.0
+      multiplier: 4850000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 13
       target: 2
       damageType: 2
       attackType: 7
       multiplier: 0.08
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 1
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 074c5a1b440ad458b9c7a7adf18547d9, type: 3}

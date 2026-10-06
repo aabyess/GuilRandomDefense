@@ -10,59 +10,157 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_초월_신문철_AP_79행_10000
-  m_EditorClassIdentifier:
-  skillName: A09Q 0장풍 기간트개틀링1
-  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=1.0000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다. ⚠️ 2026-09-06 역추적 검증 완료(PM/리서치담당) — e04Q(평타 랜덤 프록)·e054(피격반사 데미지 연출 더미)는 메커니즘 자체가 다른 별개 효과라 배타 질문이 성립 안 한다. 배선 불필요. ⚠️ 별도 발견: e04Q의 원작 로컬 게이트는 GetRandomInt(1,80)==70(1.25%) AND 버프B06Y없음인데, 우리는 상위 진입게이트(조건없음)만 반영하고 이 1.25% 자체를 축 밖으로 빼 triggerChance=1.0으로 근사했다 — 일반적 ''버프 조건 드롭''보다 훨씬 큰 폭(약 80배 과다발동)이라 별도로 표시한다. [게이트 미확인 아님, 확률 자체를 드롭한 사례 — 06번 계열과 별도 확인 필요] | 정정(2026-09-30, 구현담당1 — 과다발동 정리): 원문 Trig_Ruffy_Attack j:15895 `GetRandomInt(1,80)==70` AND B06Y 미보유 → e04Q frostarmor(A146 AUfa 절대쿨 Ufa1 1.75초)+clusterrockets A09Q(Ncs1 47500·aare 405·adur 1). triggerChance 1.0→0.0125, cooldown 1.75, 범위 405 Enemies, Stun 1초 추가. 같이 들어 있던 50000(e054 A09T 천둥강타)은 다른 트리거(Trig_Ruffy_AttackDamage 17.5%)라 SkillData_더미채널_초월_신문철_AP_A09T로 뗐다. A0JU 보유 시엔 원작이 로켓 대신 버프(원작013_H099)로 가는데 그 조건은 여기 없다.'
-  · e04Q(@초월 루피 개틀링 더미) A09Q 0장풍 기간트개틀링1 [클러스터로켓 피해]: 47500 (원작 루피·초월함) 진입게이트: Trig_Ruffy_Attack_Actions[이벤트직결]: (조건없음)
-  · e054(@초월 루피 펀치더미) A09T 3범위 루피초월 둔화 [천둥소리 피해]: 50000 (원작 루피·초월함) 진입게이트: Trig_Ruffy_Attack_Actions[이벤트직결]: (조건없음)
-  제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e04Q(@초월 루피 개틀링 더미) A09N !4범위 루피초월 호크 개틀링: 40000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지)
+  m_Name: "SkillData_\uB354\uBBF8\uCC44\uB110_\uCD08\uC6D4_\uC2E0\uBB38\uCCA0_AP_79\uD589_10000"
+  m_EditorClassIdentifier: 
+  skillName: "A09Q 0\uC7A5\uD48D \uAE30\uAC04\uD2B8\uAC1C\uD2C0\uB9C11"
+  description: "\uC9C4\uC785\uAC8C\uC774\uD2B8 \uD655\uC815(2026-09-06, \uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    799ef03) \u2014 triggerChance=1.0000\uB85C \uC7A0\uAE08 \uD574\uC81C. \uC591\uC758
+    \uC0C1\uD0DC\uC870\uAC74(\uC2A4\uD14C\uC774\uC9C0\xB7\uBC84\uD504 \uBCF4\uC720
+    \uB4F1)\uC740 \uCD95 \uBC16\uC774\uB77C \uBE90\uB2E4 \u2014 \uC2E4\uC81C\uBCF4\uB2E4
+    \uC790\uC8FC \uBC1C\uB3D9\uD560 \uC218 \uC788\uB2E4. \u26A0\uFE0F 2026-09-06
+    \uC5ED\uCD94\uC801 \uAC80\uC99D \uC644\uB8CC(PM/\uB9AC\uC11C\uCE58\uB2F4\uB2F9)
+    \u2014 e04Q(\uD3C9\uD0C0 \uB79C\uB364 \uD504\uB85D)\xB7e054(\uD53C\uACA9\uBC18\uC0AC
+    \uB370\uBBF8\uC9C0 \uC5F0\uCD9C \uB354\uBBF8)\uB294 \uBA54\uCEE4\uB2C8\uC998
+    \uC790\uCCB4\uAC00 \uB2E4\uB978 \uBCC4\uAC1C \uD6A8\uACFC\uB77C \uBC30\uD0C0
+    \uC9C8\uBB38\uC774 \uC131\uB9BD \uC548 \uD55C\uB2E4. \uBC30\uC120 \uBD88\uD544\uC694.
+    \u26A0\uFE0F \uBCC4\uB3C4 \uBC1C\uACAC: e04Q\uC758 \uC6D0\uC791 \uB85C\uCEEC
+    \uAC8C\uC774\uD2B8\uB294 GetRandomInt(1,80)==70(1.25%) AND \uBC84\uD504B06Y\uC5C6\uC74C\uC778\uB370,
+    \uC6B0\uB9AC\uB294 \uC0C1\uC704 \uC9C4\uC785\uAC8C\uC774\uD2B8(\uC870\uAC74\uC5C6\uC74C)\uB9CC
+    \uBC18\uC601\uD558\uACE0 \uC774 1.25% \uC790\uCCB4\uB97C \uCD95 \uBC16\uC73C\uB85C
+    \uBE7C triggerChance=1.0\uC73C\uB85C \uADFC\uC0AC\uD588\uB2E4 \u2014 \uC77C\uBC18\uC801
+    '\uBC84\uD504 \uC870\uAC74 \uB4DC\uB86D'\uBCF4\uB2E4 \uD6E8\uC52C \uD070 \uD3ED(\uC57D
+    80\uBC30 \uACFC\uB2E4\uBC1C\uB3D9)\uC774\uB77C \uBCC4\uB3C4\uB85C \uD45C\uC2DC\uD55C\uB2E4.
+    [\uAC8C\uC774\uD2B8 \uBBF8\uD655\uC778 \uC544\uB2D8, \uD655\uB960 \uC790\uCCB4\uB97C
+    \uB4DC\uB86D\uD55C \uC0AC\uB840 \u2014 06\uBC88 \uACC4\uC5F4\uACFC \uBCC4\uB3C4
+    \uD655\uC778 \uD544\uC694] | \uC815\uC815(2026-09-30, \uAD6C\uD604\uB2F4\uB2F91
+    \u2014 \uACFC\uB2E4\uBC1C\uB3D9 \uC815\uB9AC): \uC6D0\uBB38 Trig_Ruffy_Attack
+    j:15895 `GetRandomInt(1,80)==70` AND B06Y \uBBF8\uBCF4\uC720 \u2192 e04Q frostarmor(A146
+    AUfa \uC808\uB300\uCFE8 Ufa1 1.75\uCD08)+clusterrockets A09Q(Ncs1 47500\xB7aare
+    405\xB7adur 1). triggerChance 1.0\u21920.0125, cooldown 1.75, \uBC94\uC704 405
+    Enemies, Stun 1\uCD08 \uCD94\uAC00. \uAC19\uC774 \uB4E4\uC5B4 \uC788\uB358 50000(e054
+    A09T \uCC9C\uB465\uAC15\uD0C0)\uC740 \uB2E4\uB978 \uD2B8\uB9AC\uAC70(Trig_Ruffy_AttackDamage
+    17.5%)\uB77C SkillData_\uB354\uBBF8\uCC44\uB110_\uCD08\uC6D4_\uC2E0\uBB38\uCCA0_AP_A09T\uB85C
+    \uB5D0\uB2E4. A0JU \uBCF4\uC720 \uC2DC\uC5D4 \uC6D0\uC791\uC774 \uB85C\uCF13
+    \uB300\uC2E0 \uBC84\uD504(\uC6D0\uC791013_H099)\uB85C \uAC00\uB294\uB370 \uADF8
+    \uC870\uAC74\uC740 \uC5EC\uAE30 \uC5C6\uB2E4."
   triggerType: 0
   levels:
   - cooldown: 1.75
     triggerChance: 0.0125
-    range: 405.0
+    range: 405
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 3
-      multiplier: 47500.0
-      bonus: 0.0
+      multiplier: 47500
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 2
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 1.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 1
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: a2b47ae003d6c4305b31ff3d87ec85c5, type: 3}

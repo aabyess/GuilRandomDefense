@@ -10,15 +10,93 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_불멸_고도현
-  m_EditorClassIdentifier:
-  skillName: A0EM !명왕의 검술
-  description: '원작 불멸의 제트 해군 스승 "Z" - 불멸의(Trig_Z_Attack). | 1채널 추가 배정(원작 불멸의 금사자 시키 천신 - 불멸의(h04B)의 능력 2개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시). | ⑤-2 이관(원작 금사자 시키, 옛 2채널 중복 정리 — 게이트/회수가 채널우선순위 승자): 원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 불멸의 금사자 시키 천신 - 불멸의(더미:Trig_Shiki_Attack → e026(#불멸 시키 더미) → A08O)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 유닛 하나(행 2개)를 통째로 이 유닛에 배정했다(2026-09-06 유닛 단위 재배정, TEAM_RULES 뿌리 ⑮). | 2차 배정(트리거·더미 채널): 원작 불멸의 금사자 시키 천신 - 불멸의(더미 경로 Trig_Shiki_Attack → e026(#불멸 시키 더미) → A08O). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 2차 배정(트리거·더미 채널): 원작 불멸의 금사자 시키 천신 - 불멸의(더미 경로 Trig_Shiki_Attack → e026(#불멸 시키 더미) → A13U). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. [미확인](2026-09-06, 리서치담당 73de814): 원작 Trig_Z_Attack(제트) 조건은 확정됐다 — "대상이 버프 B06B(신세계 광폭화 몬스터 전용, R62·66·71 사이드보스 소환체에만 붙음) 보유". 실전에서는 그 몹이 필드에 있는 시간 비율에 달려 있어 정확한 발동률을 낼 수 없다 — 대상이 광폭화(B06B) 상태일 때만 발동, 실전 발동은 매우 드묾. triggerChance=1.0은 크게 과다이지만 정확한 대체값이 없어 그대로 둔다. | 정정(2026-09-30, 구현담당1 — R50 보스 2.9초 원문 대조): 효과를 모두 비웠다. 이 에셋은 확률 1.0(매 타)인데 담긴 것이 전부 남의 몫이었다: 3,250,000 광역·250,000 광역·400,000은 이 유닛(시키 h04B) 게이트 에셋 회수_불멸_고도현_8eab1c6f(마나125)·a23cc245·a80b907f/더미채널_불멸_고도현_1의 사본, 최대체력×0.025는 제트 Trig_Z_Attack(대상 B06B, h04G=불멸_박은석 몫 → 그쪽 새 에셋으로 옮김), 750,000은 시키·제트 원문에 없는 값. 시키 h04B의 강타 중 발동하는 것은 A0T1(20%·피해 0·스턴 0)뿐이라 담을 것이 없다. 뺀 것(basis, 값, target): [(''0'', ''750000.0'', ''3''), (''0'', ''3250000.0'', ''2''), (''0'', ''250000.0'', ''2''), (''1'', ''0.025'', ''3''), (''3'', ''0.0'', ''3''), (''0'', ''400000.0'', ''3'')]'
-  · A0T1 !바닷물 가두기: 발동0.2 배수0.0 추가0.0 [피해 0 — 비피해 효과였을 수 있다]
-  정정(2026-09-06, ACBH_ATAR_AUDIT.csv ㉢): A0LS !천신(발동0.18 배수0.0 추가700000.0) 효과를 제거했다 — atar에 enemies가 없어(atar=none) 원작 엔진에서 이 배시 필드 자체가 안 돈다(오늘 발견한 atar 규칙, ACbh 469개 중 65%가 이 케이스). 기록만 남긴다: 원작 Hbh1=18(참고용, 실제로는 안 쓰임) · Hbh3=700000. 정정(2026-09-06, 리서치담당 채널 대조): A0EM은 1채널 표(ORIGINAL_UNIT_ABILITIES.csv, h049 레일리 명왕)에서 왔는데(발동=[] 배수=[] 추가=[92500.0]) 이 파일의 7개 효과는 2채널 표(ORIGINAL_SKILL_DAMAGE_TABLE.csv, 금사자 시키 천신)에서 왔다 — 채널이 달라 애초에 이 파일엔 A0EM에 대응하는 효과가 없었다(불멸_정윤식_A0EM.asset이 유일한 실제 값, 이미 정확함). 기준3(CRITERION3_TARGET_LIST_2026-09-06.md/bbb1ff0)에서 이 파일 쪽을 제거 대상으로 지목한 건 전제가 틀렸던 것으로 정정한다 — 제거할 것도 없었다. 정정(2026-09-06, 판정 d5f72d5): A13U의 -7.0 효과를 제거했다 — base AHad의 Had1은 방어력 감소량(음수)이라 피해가 아니다. 같은 파일의 다른 효과들(750000·3250000·250000·0.025·400000)은 다른 트리거에서 온 값이라 그대로 둔다. (판정 불일치는 음수값을 못 잡는 정규식 버그가 원인이었음이 밝혀져 해소됐다.)
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uBD88\uBA78_\uACE0\uB3C4\uD604"
+  m_EditorClassIdentifier: 
+  skillName: "A0EM !\uBA85\uC655\uC758 \uAC80\uC220"
+  description: "\uC6D0\uC791 \uBD88\uBA78\uC758 \uC81C\uD2B8 \uD574\uAD70 \uC2A4\uC2B9
+    \"Z\" - \uBD88\uBA78\uC758(Trig_Z_Attack). | 1\uCC44\uB110 \uCD94\uAC00 \uBC30\uC815(\uC6D0\uC791
+    \uBD88\uBA78\uC758 \uAE08\uC0AC\uC790 \uC2DC\uD0A4 \uCC9C\uC2E0 - \uBD88\uBA78\uC758(h04B)\uC758
+    \uB2A5\uB825 2\uAC1C): \uB2E4\uB978 \uCC44\uB110\uC774 \uC774\uBBF8 \uC774 \uC720\uB2DB\uC744
+    \uCC28\uC9C0\uD558\uACE0 \uC788\uC5B4 \uC21C\uC704 \uBC30\uC815 \uB300\uC2E0
+    \uADF8 \uC720\uB2DB\uC5D0 \uADF8\uB300\uB85C \uC5B9\uC5C8\uB2E4(\uC6B0\uC120\uC21C\uC704
+    06\uBC88\u2460/\uAC8C\uC774\uD2B8\xB7\uD68C\uC218/2\uCC44\uB110\uC774 1\uCC44\uB110\uBCF4\uB2E4
+    \uBA3C\uC800, 2026-09-06 PM \uC9C0\uC2DC). | \u2464-2 \uC774\uAD00(\uC6D0\uC791
+    \uAE08\uC0AC\uC790 \uC2DC\uD0A4, \uC61B 2\uCC44\uB110 \uC911\uBCF5 \uC815\uB9AC
+    \u2014 \uAC8C\uC774\uD2B8/\uD68C\uC218\uAC00 \uCC44\uB110\uC6B0\uC120\uC21C\uC704
+    \uC2B9\uC790): \uC6D0\uC791 \uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8 \uD53C\uD574\uD45C(ORIGINAL_SKILL_DAMAGE_TABLE.csv)
+    DPS \uC21C\uC704 \uBC30\uC815 \u2014 \uC6D0\uC791 \uBD88\uBA78\uC758 \uAE08\uC0AC\uC790
+    \uC2DC\uD0A4 \uCC9C\uC2E0 - \uBD88\uBA78\uC758(\uB354\uBBF8:Trig_Shiki_Attack
+    \u2192 e026(#\uBD88\uBA78 \uC2DC\uD0A4 \uB354\uBBF8) \u2192 A08O)\uC758 \uD53C\uD574\uB97C
+    \uC62E\uACBC\uB2E4. 1\uCC28(uabi \uB2A5\uB825ID) CSV\uC5D4 \uC5C6\uB358 \uB2A5\uB825\uC774\uB2E4
+    \u2014 \uC6D0\uC791\uC774 \uC720\uB2DBID\u2192\uD2B8\uB9AC\uAC70 \uD574\uC2DC\uD14C\uC774\uBE14\uB85C
+    \uCC98\uB9AC\uD574\uC11C \uB2A5\uB825ID\uB85C\uB294 \uC548 \uBCF4\uC600\uB2E4.
+    \uAC1C\uBCC4 \uB300\uC751 \uC544\uB2D8(\uC774\uB984\uB9E4\uD551 \uBD88\uAC00)
+    \u2014 \uC6D0\uC791 \uC720\uB2DB \uD558\uB098(\uD589 2\uAC1C)\uB97C \uD1B5\uC9F8\uB85C
+    \uC774 \uC720\uB2DB\uC5D0 \uBC30\uC815\uD588\uB2E4(2026-09-06 \uC720\uB2DB \uB2E8\uC704
+    \uC7AC\uBC30\uC815, TEAM_RULES \uBFCC\uB9AC \u246E). | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uBD88\uBA78\uC758 \uAE08\uC0AC\uC790 \uC2DC\uD0A4
+    \uCC9C\uC2E0 - \uBD88\uBA78\uC758(\uB354\uBBF8 \uACBD\uB85C Trig_Shiki_Attack
+    \u2192 e026(#\uBD88\uBA78 \uC2DC\uD0A4 \uB354\uBBF8) \u2192 A08O). \u26A0\uFE0F
+    \uC2A4\uD1A1 \uD544\uB4DC \uAC12 \uADF8\uB300\uB85C \u2014 \uD544\uB4DC \uB73B\uC774
+    \uBBF8\uD655\uC778\uC774\uB77C \uD53C\uD574\uAC00 \uC544\uB2C8\uB77C \uB2E4\uB978
+    \uD6A8\uACFC(\uC2AC\uB85C\uC6B0\xB7\uC2A4\uD134\xB7\uBC84\uD504 \uB4F1)\uC600\uC744
+    \uC218 \uC788\uB2E4. \uACF5\uACA9\uD0C0\uC785 \uC6D0\uBCF8\uC774 [\uBBF8\uD655\uC778]\uC774\uB77C
+    \uC774 \uC720\uB2DB \uC790\uC2E0\uC758 \uD3C9\uD0C0 \uD0C0\uC785\uC73C\uB85C
+    \uB300\uC2E0\uD588\uB2E4. | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uBD88\uBA78\uC758 \uAE08\uC0AC\uC790 \uC2DC\uD0A4
+    \uCC9C\uC2E0 - \uBD88\uBA78\uC758(\uB354\uBBF8 \uACBD\uB85C Trig_Shiki_Attack
+    \u2192 e026(#\uBD88\uBA78 \uC2DC\uD0A4 \uB354\uBBF8) \u2192 A13U). \u26A0\uFE0F
+    \uC2A4\uD1A1 \uD544\uB4DC \uAC12 \uADF8\uB300\uB85C \u2014 \uD544\uB4DC \uB73B\uC774
+    \uBBF8\uD655\uC778\uC774\uB77C \uD53C\uD574\uAC00 \uC544\uB2C8\uB77C \uB2E4\uB978
+    \uD6A8\uACFC(\uC2AC\uB85C\uC6B0\xB7\uC2A4\uD134\xB7\uBC84\uD504 \uB4F1)\uC600\uC744
+    \uC218 \uC788\uB2E4. \uACF5\uACA9\uD0C0\uC785 \uC6D0\uBCF8\uC774 [\uBBF8\uD655\uC778]\uC774\uB77C
+    \uC774 \uC720\uB2DB \uC790\uC2E0\uC758 \uD3C9\uD0C0 \uD0C0\uC785\uC73C\uB85C
+    \uB300\uC2E0\uD588\uB2E4. [\uBBF8\uD655\uC778](2026-09-06, \uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    73de814): \uC6D0\uC791 Trig_Z_Attack(\uC81C\uD2B8) \uC870\uAC74\uC740 \uD655\uC815\uB410\uB2E4
+    \u2014 \"\uB300\uC0C1\uC774 \uBC84\uD504 B06B(\uC2E0\uC138\uACC4 \uAD11\uD3ED\uD654
+    \uBAAC\uC2A4\uD130 \uC804\uC6A9, R62\xB766\xB771 \uC0AC\uC774\uB4DC\uBCF4\uC2A4
+    \uC18C\uD658\uCCB4\uC5D0\uB9CC \uBD99\uC74C) \uBCF4\uC720\". \uC2E4\uC804\uC5D0\uC11C\uB294
+    \uADF8 \uBAB9\uC774 \uD544\uB4DC\uC5D0 \uC788\uB294 \uC2DC\uAC04 \uBE44\uC728\uC5D0
+    \uB2EC\uB824 \uC788\uC5B4 \uC815\uD655\uD55C \uBC1C\uB3D9\uB960\uC744 \uB0BC
+    \uC218 \uC5C6\uB2E4 \u2014 \uB300\uC0C1\uC774 \uAD11\uD3ED\uD654(B06B) \uC0C1\uD0DC\uC77C
+    \uB54C\uB9CC \uBC1C\uB3D9, \uC2E4\uC804 \uBC1C\uB3D9\uC740 \uB9E4\uC6B0 \uB4DC\uBB3E.
+    triggerChance=1.0\uC740 \uD06C\uAC8C \uACFC\uB2E4\uC774\uC9C0\uB9CC \uC815\uD655\uD55C
+    \uB300\uCCB4\uAC12\uC774 \uC5C6\uC5B4 \uADF8\uB300\uB85C \uB454\uB2E4. | \uC815\uC815(2026-09-30,
+    \uAD6C\uD604\uB2F4\uB2F91 \u2014 R50 \uBCF4\uC2A4 2.9\uCD08 \uC6D0\uBB38 \uB300\uC870):
+    \uD6A8\uACFC\uB97C \uBAA8\uB450 \uBE44\uC6E0\uB2E4. \uC774 \uC5D0\uC14B\uC740
+    \uD655\uB960 1.0(\uB9E4 \uD0C0)\uC778\uB370 \uB2F4\uAE34 \uAC83\uC774 \uC804\uBD80
+    \uB0A8\uC758 \uBAAB\uC774\uC5C8\uB2E4: 3,250,000 \uAD11\uC5ED\xB7250,000 \uAD11\uC5ED\xB7400,000\uC740
+    \uC774 \uC720\uB2DB(\uC2DC\uD0A4 h04B) \uAC8C\uC774\uD2B8 \uC5D0\uC14B \uD68C\uC218_\uBD88\uBA78_\uACE0\uB3C4\uD604_8eab1c6f(\uB9C8\uB098125)\xB7a23cc245\xB7a80b907f/\uB354\uBBF8\uCC44\uB110_\uBD88\uBA78_\uACE0\uB3C4\uD604_1\uC758
+    \uC0AC\uBCF8, \uCD5C\uB300\uCCB4\uB825\xD70.025\uB294 \uC81C\uD2B8 Trig_Z_Attack(\uB300\uC0C1
+    B06B, h04G=\uBD88\uBA78_\uBC15\uC740\uC11D \uBAAB \u2192 \uADF8\uCABD \uC0C8
+    \uC5D0\uC14B\uC73C\uB85C \uC62E\uAE40), 750,000\uC740 \uC2DC\uD0A4\xB7\uC81C\uD2B8
+    \uC6D0\uBB38\uC5D0 \uC5C6\uB294 \uAC12. \uC2DC\uD0A4 h04B\uC758 \uAC15\uD0C0
+    \uC911 \uBC1C\uB3D9\uD558\uB294 \uAC83\uC740 A0T1(20%\xB7\uD53C\uD574 0\xB7\uC2A4\uD134
+    0)\uBFD0\uC774\uB77C \uB2F4\uC744 \uAC83\uC774 \uC5C6\uB2E4. \uBE80 \uAC83(basis,
+    \uAC12, target): [('0', '750000.0', '3'), ('0', '3250000.0', '2'), ('0', '250000.0',
+    '2'), ('1', '0.025', '3'), ('3', '0.0', '3'), ('0', '400000.0', '3')]"
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 450.0
+    triggerChance: 1
+    range: 450
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects: []
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: f8b3753c560d242c589697da13b972ce, type: 3}

@@ -10,10 +10,46 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_영원_조세민
-  m_EditorClassIdentifier:
-  skillName: A0J7 !쿠사의 패기
-  description: '원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 영원한 ''아마존릴리의 여제''  보아 핸콕 - 영원한(h05C)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 uid 그룹 총점(능력 기대값 합), 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. 능력마다 발동확률이 다르면 가장 높은 값을 대표로 썼다(SkillLevel 하나엔 triggerChance 하나뿐이라서 — 과소 계상보다 안전한 근사). · A0J7 !쿠사의 패기: 발동1.0 배수8.0 추가500000.0 정정(2026-09-06, CRITERION3_TARGET_LIST_2026-09-06.md/bbb1ff0): 이 능력(A0J7)은 원작에서 같은 스톡 값을 최상호와 공유하는 자리다 — 대표(DPS 109,377 > 75,275)를 최상호로 남기고 이쪽은 회수했다(기준3, 사장님 확정). | 2026-09-30 채움(구현담당2, SKILL_FILL_STAGE2_seven.md §7 · w3a 재확인, PM 지시): A0J7은 h05C 자신의 uabi에 든 엔진 강타(ACbh, atar=air,enemies,ground — 실제로 돈다, j에서 A0J7 참조 0건). w3a Hbh3=500000·adur 3.0(ahdu 1.5)·Hbh2=8.0·Hbh1 빈칸. 발동 15%(Hbh1 빈칸=스톡 기본값, 툴팁 「15%」와 일치 — likely) · 단일 추가 피해 +500000(AD/Hero, 평타 타입 ua1t=hero) · 단일 스턴 3초. Hbh2 8배가 강타에서 실제로 곱해지는지는 unknown이라 PM 지시로 곱하지 않았다(Flat 500000만). 위 「최상호로 회수」와 달리 최상호 에셋에는 A0J7 강타 값이 없다(이름만 남음) — A0J7은 이 파일로 되살린다. 툴팁 둘째 줄(7.5%·460범위 85만+15만+이속 60%)은 A0J7이 아니라 hancock_skill_9(김영원 게이트_5a6f48de)다.'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC601\uC6D0_\uC870\uC138\uBBFC"
+  m_EditorClassIdentifier: 
+  skillName: "A0J7 !\uCFE0\uC0AC\uC758 \uD328\uAE30"
+  description: "\uC6D0\uC791 \uB2A5\uB825\uD45C(ORIGINAL_UNIT_ABILITIES.csv) DPS
+    \uC21C\uC704 \uBC30\uC815 \u2014 \uC6D0\uC791 \uC601\uC6D0\uD55C '\uC544\uB9C8\uC874\uB9B4\uB9AC\uC758
+    \uC5EC\uC81C'  \uBCF4\uC544 \uD578\uCF55 - \uC601\uC6D0\uD55C(h05C)\uC758 \uBC1C\uB3D9\uD655\uB960\xB7\uD53C\uD574\uBC30\uC218\xB7\uCD94\uAC00\uD53C\uD574\uB97C
+    \uADF8\uB300\uB85C \uC62E\uACBC\uB2E4. \uAC1C\uBCC4 \uB300\uC751 \uC544\uB2D8(\uC774\uB984\uB9E4\uD551
+    \uBD88\uAC00, \uC21C\uC704 \uBC30\uC815\uC73C\uB85C \uC6B0\uD68C) \u2014 \uB4F1\uAE09
+    \uC548\uC5D0\uC11C \uC6D0\uC791\uC740 uid \uADF8\uB8F9 \uCD1D\uC810(\uB2A5\uB825
+    \uAE30\uB300\uAC12 \uD569), \uC6B0\uB9AC\uB294 DPS(\uACF5\uACA9\uB825\xD7\uACF5\uC18D)
+    \uB0B4\uB9BC\uCC28\uC21C\uC73C\uB85C \uC815\uB82C\uD574 \uC21C\uC11C\uB300\uB85C
+    \uC9DD\uC9C0\uC5C8\uB2E4. damageType\uC740 AD\uB85C \uD1B5\uC77C(\uC6D0\uC791
+    \uC2A4\uD0AC\uC758 \uB9C8\uBC95 \uC5EC\uBD80\uB294 CSV\uC5D0 \uC5C6\uC74C, \uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    \uC870\uC0AC \uC911) \u2014 attackType\uC740 \uC774 \uC720\uB2DB\uC758 \uD3C9\uD0C0
+    \uD0C0\uC785\uC744 \uADF8\uB300\uB85C \uC37C\uB2E4. \uB2A5\uB825\uB9C8\uB2E4
+    \uBC1C\uB3D9\uD655\uB960\uC774 \uB2E4\uB974\uBA74 \uAC00\uC7A5 \uB192\uC740 \uAC12\uC744
+    \uB300\uD45C\uB85C \uC37C\uB2E4(SkillLevel \uD558\uB098\uC5D4 triggerChance \uD558\uB098\uBFD0\uC774\uB77C\uC11C
+    \u2014 \uACFC\uC18C \uACC4\uC0C1\uBCF4\uB2E4 \uC548\uC804\uD55C \uADFC\uC0AC).
+    \xB7 A0J7 !\uCFE0\uC0AC\uC758 \uD328\uAE30: \uBC1C\uB3D91.0 \uBC30\uC2188.0 \uCD94\uAC00500000.0
+    \uC815\uC815(2026-09-06, CRITERION3_TARGET_LIST_2026-09-06.md/bbb1ff0): \uC774
+    \uB2A5\uB825(A0J7)\uC740 \uC6D0\uC791\uC5D0\uC11C \uAC19\uC740 \uC2A4\uD1A1 \uAC12\uC744
+    \uCD5C\uC0C1\uD638\uC640 \uACF5\uC720\uD558\uB294 \uC790\uB9AC\uB2E4 \u2014 \uB300\uD45C(DPS
+    109,377 > 75,275)\uB97C \uCD5C\uC0C1\uD638\uB85C \uB0A8\uAE30\uACE0 \uC774\uCABD\uC740
+    \uD68C\uC218\uD588\uB2E4(\uAE30\uC9003, \uC0AC\uC7A5\uB2D8 \uD655\uC815). | 2026-09-30
+    \uCC44\uC6C0(\uAD6C\uD604\uB2F4\uB2F92, SKILL_FILL_STAGE2_seven.md \xA77 \xB7
+    w3a \uC7AC\uD655\uC778, PM \uC9C0\uC2DC): A0J7\uC740 h05C \uC790\uC2E0\uC758
+    uabi\uC5D0 \uB4E0 \uC5D4\uC9C4 \uAC15\uD0C0(ACbh, atar=air,enemies,ground \u2014
+    \uC2E4\uC81C\uB85C \uB3C8\uB2E4, j\uC5D0\uC11C A0J7 \uCC38\uC870 0\uAC74). w3a
+    Hbh3=500000\xB7adur 3.0(ahdu 1.5)\xB7Hbh2=8.0\xB7Hbh1 \uBE48\uCE78. \uBC1C\uB3D9
+    15%(Hbh1 \uBE48\uCE78=\uC2A4\uD1A1 \uAE30\uBCF8\uAC12, \uD234\uD301 \u300C15%\u300D\uC640
+    \uC77C\uCE58 \u2014 likely) \xB7 \uB2E8\uC77C \uCD94\uAC00 \uD53C\uD574 +500000(AD/Hero,
+    \uD3C9\uD0C0 \uD0C0\uC785 ua1t=hero) \xB7 \uB2E8\uC77C \uC2A4\uD134 3\uCD08.
+    Hbh2 8\uBC30\uAC00 \uAC15\uD0C0\uC5D0\uC11C \uC2E4\uC81C\uB85C \uACF1\uD574\uC9C0\uB294\uC9C0\uB294
+    unknown\uC774\uB77C PM \uC9C0\uC2DC\uB85C \uACF1\uD558\uC9C0 \uC54A\uC558\uB2E4(Flat
+    500000\uB9CC). \uC704 \u300C\uCD5C\uC0C1\uD638\uB85C \uD68C\uC218\u300D\uC640
+    \uB2EC\uB9AC \uCD5C\uC0C1\uD638 \uC5D0\uC14B\uC5D0\uB294 A0J7 \uAC15\uD0C0 \uAC12\uC774
+    \uC5C6\uB2E4(\uC774\uB984\uB9CC \uB0A8\uC74C) \u2014 A0J7\uC740 \uC774 \uD30C\uC77C\uB85C
+    \uB418\uC0B4\uB9B0\uB2E4. \uD234\uD301 \uB458\uC9F8 \uC904(7.5%\xB7460\uBC94\uC704
+    85\uB9CC+15\uB9CC+\uC774\uC18D 60%)\uC740 A0J7\uC774 \uC544\uB2C8\uB77C hancock_skill_9(\uAE40\uC601\uC6D0
+    \uAC8C\uC774\uD2B8_5a6f48de)\uB2E4."
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,30 +58,58 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 3
       damageType: 1
       attackType: 4
-      multiplier: 500000.0
+      multiplier: 500000
       bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
-      buffId:
+      buffId: 
       randMin: 1
       randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
       targetConditionValue: 0
       cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 3
@@ -55,19 +119,55 @@ MonoBehaviour:
       bonus: 0
       chance: 1
       hitCount: 1
-      duration: 3.0
+      duration: 3
       casterBuffCountFactor: 0
-      buffId:
+      buffId: 
       randMin: 1
       randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
       targetConditionValue: 0
       cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
       heroDuration: 1.5
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 25b566935d9a54d38a55ecc1701273f2, type: 3}

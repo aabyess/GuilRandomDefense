@@ -10,44 +10,88 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_초월_노태현_AP_BrookAttack_1of24
-  m_EditorClassIdentifier:
-  skillName: 소울 킹 — 1/24(B00Y 창)
-  description: '2026-09-30 구현담당1: 원문 Trig_BrookAttack `GetRandomInt(1,24)==10` → 더미 e073이 시전자에게 bloodlust A0AQ(Ablo Blo1 1.0=공속+100%·Blo2 0·영웅 ahdu 0.85초·버프 B00Y). AttackSpeedBuffPercent Self 1.0·0.85초·buffId B00Y — 같은 id는 만료만 갱신된다. 소비 쪽 게이트_초월_노태현_AP_BrookAttack_B00Y보다 뒤에 붙여 여는 평타와 쓰는 평타가 겹치지 않게 했다. 같은 분기의 flamingarrows 명령은 없음.'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uCD08\uC6D4_\uB178\uD0DC\uD604_AP_BrookAttack_1of24"
+  m_EditorClassIdentifier: 
+  skillName: "\uC18C\uC6B8 \uD0B9 \u2014 1/24(B00Y \uCC3D)"
+  description: "2026-09-30 \uAD6C\uD604\uB2F4\uB2F91: \uC6D0\uBB38 Trig_BrookAttack
+    `GetRandomInt(1,24)==10` \u2192 \uB354\uBBF8 e073\uC774 \uC2DC\uC804\uC790\uC5D0\uAC8C
+    bloodlust A0AQ(Ablo Blo1 1.0=\uACF5\uC18D+100%\xB7Blo2 0\xB7\uC601\uC6C5 ahdu
+    0.85\uCD08\xB7\uBC84\uD504 B00Y). AttackSpeedBuffPercent Self 1.0\xB70.85\uCD08\xB7buffId
+    B00Y \u2014 \uAC19\uC740 id\uB294 \uB9CC\uB8CC\uB9CC \uAC31\uC2E0\uB41C\uB2E4.
+    \uC18C\uBE44 \uCABD \uAC8C\uC774\uD2B8_\uCD08\uC6D4_\uB178\uD0DC\uD604_AP_BrookAttack_B00Y\uBCF4\uB2E4
+    \uB4A4\uC5D0 \uBD99\uC5EC \uC5EC\uB294 \uD3C9\uD0C0\uC640 \uC4F0\uB294 \uD3C9\uD0C0\uAC00
+    \uACB9\uCE58\uC9C0 \uC54A\uAC8C \uD588\uB2E4. \uAC19\uC740 \uBD84\uAE30\uC758
+    flamingarrows \uBA85\uB839\uC740 \uC5C6\uC74C."
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.041666666666666664
-    range: 0.0
+    triggerChance: 0.041666668
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 12
       basis: 0
       target: 0
       damageType: 0
       attackType: 0
-      multiplier: 1.0
-      bonus: 0.0
+      multiplier: 1
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0.85
-      casterBuffCountFactor: 0.0
+      casterBuffCountFactor: 0
       buffId: B00Y
-      randMin: 1.0
-      randMax: 1.0
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: d7fad0a5285634b01a16293cd8909b6b, type: 3}

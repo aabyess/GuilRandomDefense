@@ -10,18 +10,39 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_초월_배성령_AD_18aa2343
-  m_EditorClassIdentifier:
-  skillName: 정열의 요리사 — 1/6
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 정열의 요리사(H09G)의 게이트 "1/6" 능력 2개를 이 SkillData 하나로 묶었다.   · Sandi_skill_1#1: 계산식 ((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni   · Sandi_skill_1#2: 계산식 450000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Sandi_skill_1#1] A11S식 계수(계수 0.20+0.05×레벨/연구)를 레벨1 기준으로 고정해 곱했다(원작 레벨1과 동일) — 레벨 축이 우리에 없다. ⚠️ 2026-09-06 정정(PM) — A11S는 대상 EnemyData.percentDamageTaken, 이미 보편 적용. baked 0.25를 나눠 원래 계수(0.10)만 남김 — 이중 적용 버그(0.25×0.90=0.225, 원작 0.90 대비 4.0배 과소). [초월 나머지 09-30] Sandi_skill_1: 0.11초 뒤 대상 근처 475 범위 582500 NORMAL/UNIVERSAL(UnitDamagePointLoc) 추가. (Tools/apply_transcend_rest.py) [배타 09-30] 배타 묶음 1의 앞 스킬 — SandiAttack_Upgrade: if (1,6)==6 → Sandi_skill_1 elseif (1,18)==5 thunderclap(Tools/apply_exclusive_groups.py)'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uCD08\uC6D4_\uBC30\uC131\uB839_AD_18aa2343"
+  m_EditorClassIdentifier: 
+  skillName: "\uC815\uC5F4\uC758 \uC694\uB9AC\uC0AC \u2014 1/6"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 \uC815\uC5F4\uC758 \uC694\uB9AC\uC0AC(H09G)\uC758 \uAC8C\uC774\uD2B8
+    \"1/6\" \uB2A5\uB825 2\uAC1C\uB97C \uC774 SkillData \uD558\uB098\uB85C \uBB36\uC5C8\uB2E4.  
+    \xB7 Sandi_skill_1#1: \uACC4\uC0B0\uC2DD ((GetUnitStateSwap(UNIT_STATE_LIFE,s__TrigVariables__get_uni  
+    \xB7 Sandi_skill_1#2: \uACC4\uC0B0\uC2DD 450000.00  hitCount>1\uC740 \"\uAC19\uC740
+    RRD \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0 \uC2DC\uAC04\uCC28 \uB2E4\uB2E8\uD788\uD2B8\uAC00
+    \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC \uC5F0\uC18D N\uD68C)\uC73C\uB85C
+    \uADFC\uC0AC\uD588\uB2E4.  [Sandi_skill_1#1] A11S\uC2DD \uACC4\uC218(\uACC4\uC218
+    0.20+0.05\xD7\uB808\uBCA8/\uC5F0\uAD6C)\uB97C \uB808\uBCA81 \uAE30\uC900\uC73C\uB85C
+    \uACE0\uC815\uD574 \uACF1\uD588\uB2E4(\uC6D0\uC791 \uB808\uBCA81\uACFC \uB3D9\uC77C)
+    \u2014 \uB808\uBCA8 \uCD95\uC774 \uC6B0\uB9AC\uC5D0 \uC5C6\uB2E4. \u26A0\uFE0F
+    2026-09-06 \uC815\uC815(PM) \u2014 A11S\uB294 \uB300\uC0C1 EnemyData.percentDamageTaken,
+    \uC774\uBBF8 \uBCF4\uD3B8 \uC801\uC6A9. baked 0.25\uB97C \uB098\uB220 \uC6D0\uB798
+    \uACC4\uC218(0.10)\uB9CC \uB0A8\uAE40 \u2014 \uC774\uC911 \uC801\uC6A9 \uBC84\uADF8(0.25\xD70.90=0.225,
+    \uC6D0\uC791 0.90 \uB300\uBE44 4.0\uBC30 \uACFC\uC18C). [\uCD08\uC6D4 \uB098\uBA38\uC9C0
+    09-30] Sandi_skill_1: 0.11\uCD08 \uB4A4 \uB300\uC0C1 \uADFC\uCC98 475 \uBC94\uC704
+    582500 NORMAL/UNIVERSAL(UnitDamagePointLoc) \uCD94\uAC00. (Tools/apply_transcend_rest.py)
+    [\uBC30\uD0C0 09-30] \uBC30\uD0C0 \uBB36\uC74C 1\uC758 \uC55E \uC2A4\uD0AC \u2014
+    SandiAttack_Upgrade: if (1,6)==6 \u2192 Sandi_skill_1 elseif (1,18)==5 thunderclap(Tools/apply_exclusive_groups.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.166667
-    range: 475.0
+    range: 475
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 2
@@ -29,46 +50,154 @@ MonoBehaviour:
       damageType: 2
       attackType: 3
       multiplier: 0.1
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 1
-      targetConditionValue: 200.0
+      targetConditionValue: 200
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 6
-      multiplier: 450000.0
-      bonus: 0.0
+      multiplier: 450000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
       randMin: 1
       randMax: 2
-      casterBuffCountFactor: 0
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 582500.0
-      bonus: 0.0
+      multiplier: 582500
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
     exclusiveGroup: 1
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 7b9f588d2220745d5a5bfd0264b80307, type: 3}

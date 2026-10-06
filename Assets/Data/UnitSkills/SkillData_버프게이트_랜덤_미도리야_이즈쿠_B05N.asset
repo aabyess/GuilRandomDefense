@@ -10,10 +10,34 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_버프게이트_랜덤_미도리야_이즈쿠_B05N
-  m_EditorClassIdentifier:
-  skillName: 히그마(랜덤) — B05N 창(버프 부여)
-  description: '06번①(2026-09-06, PM 지시, 19ed606) — 원작 마운틴.D.히그마(h0AC)의 버프 B05N은 더미 Trig_Higma_Attack이 1/12(8.33%) 확률로 캐스터 자신에게 건다(오더 스트링 확인). 이 스킬이 그 opener다: 평타 적중마다 1/12 확률로 자기 자신에게 B05N을 건다(ApplyBuff, target=Self). 지속시간(1.15초)은 타수로 환산 — 1.15초 → 2대(buffHitCharges=2). ⚠️ 2026-09-06 정정(리서치담당 SHORT_BUFF_WINDOW_GATES.md, 연구 0단계 누락 재확인) — 등급 업그레이드는 "레벨당 조금씩"이 아니라 "첫 구매에 기본값이 통째로" 붙는 구조라 0단계와 1단계 차이가 가장 크다. 연구 1단계(원작에서 실제로 켜지는 최소 상태) 기준으로 3에서 2로 낮춘다. 소비하는 쪽(SkillData_게이트_랜덤_미도리야_이즈쿠_079f80a5.asset, "LIFE게이지85.00 AND 버프B05N==true")은 requiredBuffId=B05N만 마저 걸면 완성되는데, 그 파일이 있는 Assets/Data/UnitSkills/를 구현담당1이 지금 같이 만지고 있어 이번엔 안 건드렸다(PM에게 보고, 디렉터리 안전해지면 이어서 완성). 그때까지 이 opener는 걸어둬도 무해하다. [랜덤 통째 09-30] §0-8: B05N = 공속 +400% 1.15초 버프(더미 e0MO의 bloodlust) — 「2타 충전」 ApplyBuff → AttackSpeedBuffPercent 4.0·1.15초·buffId B05N. (Tools/apply_random_rest2.py)'
+  m_Name: "SkillData_\uBC84\uD504\uAC8C\uC774\uD2B8_\uB79C\uB364_\uBBF8\uB3C4\uB9AC\uC57C_\uC774\uC988\uCFE0_B05N"
+  m_EditorClassIdentifier: 
+  skillName: "\uD788\uADF8\uB9C8(\uB79C\uB364) \u2014 B05N \uCC3D(\uBC84\uD504 \uBD80\uC5EC)"
+  description: "06\uBC88\u2460(2026-09-06, PM \uC9C0\uC2DC, 19ed606) \u2014 \uC6D0\uC791
+    \uB9C8\uC6B4\uD2F4.D.\uD788\uADF8\uB9C8(h0AC)\uC758 \uBC84\uD504 B05N\uC740 \uB354\uBBF8
+    Trig_Higma_Attack\uC774 1/12(8.33%) \uD655\uB960\uB85C \uCE90\uC2A4\uD130 \uC790\uC2E0\uC5D0\uAC8C
+    \uAC74\uB2E4(\uC624\uB354 \uC2A4\uD2B8\uB9C1 \uD655\uC778). \uC774 \uC2A4\uD0AC\uC774
+    \uADF8 opener\uB2E4: \uD3C9\uD0C0 \uC801\uC911\uB9C8\uB2E4 1/12 \uD655\uB960\uB85C
+    \uC790\uAE30 \uC790\uC2E0\uC5D0\uAC8C B05N\uC744 \uAC74\uB2E4(ApplyBuff, target=Self).
+    \uC9C0\uC18D\uC2DC\uAC04(1.15\uCD08)\uC740 \uD0C0\uC218\uB85C \uD658\uC0B0 \u2014
+    1.15\uCD08 \u2192 2\uB300(buffHitCharges=2). \u26A0\uFE0F 2026-09-06 \uC815\uC815(\uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    SHORT_BUFF_WINDOW_GATES.md, \uC5F0\uAD6C 0\uB2E8\uACC4 \uB204\uB77D \uC7AC\uD655\uC778)
+    \u2014 \uB4F1\uAE09 \uC5C5\uADF8\uB808\uC774\uB4DC\uB294 \"\uB808\uBCA8\uB2F9
+    \uC870\uAE08\uC529\"\uC774 \uC544\uB2C8\uB77C \"\uCCAB \uAD6C\uB9E4\uC5D0 \uAE30\uBCF8\uAC12\uC774
+    \uD1B5\uC9F8\uB85C\" \uBD99\uB294 \uAD6C\uC870\uB77C 0\uB2E8\uACC4\uC640 1\uB2E8\uACC4
+    \uCC28\uC774\uAC00 \uAC00\uC7A5 \uD06C\uB2E4. \uC5F0\uAD6C 1\uB2E8\uACC4(\uC6D0\uC791\uC5D0\uC11C
+    \uC2E4\uC81C\uB85C \uCF1C\uC9C0\uB294 \uCD5C\uC18C \uC0C1\uD0DC) \uAE30\uC900\uC73C\uB85C
+    3\uC5D0\uC11C 2\uB85C \uB0AE\uCD98\uB2E4. \uC18C\uBE44\uD558\uB294 \uCABD(SkillData_\uAC8C\uC774\uD2B8_\uB79C\uB364_\uBBF8\uB3C4\uB9AC\uC57C_\uC774\uC988\uCFE0_079f80a5.asset,
+    \"LIFE\uAC8C\uC774\uC9C085.00 AND \uBC84\uD504B05N==true\")\uC740 requiredBuffId=B05N\uB9CC
+    \uB9C8\uC800 \uAC78\uBA74 \uC644\uC131\uB418\uB294\uB370, \uADF8 \uD30C\uC77C\uC774
+    \uC788\uB294 Assets/Data/UnitSkills/\uB97C \uAD6C\uD604\uB2F4\uB2F91\uC774 \uC9C0\uAE08
+    \uAC19\uC774 \uB9CC\uC9C0\uACE0 \uC788\uC5B4 \uC774\uBC88\uC5D4 \uC548 \uAC74\uB4DC\uB838\uB2E4(PM\uC5D0\uAC8C
+    \uBCF4\uACE0, \uB514\uB809\uD130\uB9AC \uC548\uC804\uD574\uC9C0\uBA74 \uC774\uC5B4\uC11C
+    \uC644\uC131). \uADF8\uB54C\uAE4C\uC9C0 \uC774 opener\uB294 \uAC78\uC5B4\uB46C\uB3C4
+    \uBB34\uD574\uD558\uB2E4. [\uB79C\uB364 \uD1B5\uC9F8 09-30] \xA70-8: B05N = \uACF5\uC18D
+    +400% 1.15\uCD08 \uBC84\uD504(\uB354\uBBF8 e0MO\uC758 bloodlust) \u2014 \u300C2\uD0C0
+    \uCDA9\uC804\u300D ApplyBuff \u2192 AttackSpeedBuffPercent 4.0\xB71.15\uCD08\xB7buffId
+    B05N. (Tools/apply_random_rest2.py)"
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,29 +46,68 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 12
       basis: 0
       target: 0
       damageType: 0
       attackType: 0
-      multiplier: 4.0
-      bonus: 0.0
+      multiplier: 4
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 1.15
-      casterBuffCountFactor: 0.0
+      casterBuffCountFactor: 0
       buffId: B05N
-      randMin: 1.0
-      randMax: 1.0
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: cbe2c552f84484fc0abaa20afe7bea1c, type: 3}

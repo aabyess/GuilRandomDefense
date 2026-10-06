@@ -10,45 +10,176 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작006_H096
-  m_EditorClassIdentifier:
-  skillName: A10S !감마나이프
-  description: 06번① 순위배정(2차, 초월함 등급 정정) — 원작 로키포트 사건의 주모자(H096), #006, 능력교체형: (구 능력 불명) 제거 후 A10S(!감마나이프) 부여. upro(실제 이름): 트라팔가 로우. 2026-09-06 값 배정(TRAIT_REPLACEMENT_SKILLS.md/csv, 리서치담당 f6b44a6) — 기본판(e0NQ→A0OG) 350000을 강화판(e03T→A140) 437500이 완전히 대체한다(레벨 개념 아님, 특성 구매 즉시 437500 하나로 고정). Enemies/485범위/Flat. 타입 [미확인] — 이 더미(AHtc 계열)의 damageType/attackType은 어느 원작 표에도 안 나와 안전 기본값(AD/Unassigned)으로 둔다(CHAOS/UNIVERSAL은 이 더미가 아니라 RRD 0.2%현재체력 branch 쪽 값이라 여기 전용 아님, 아래 참고). triggerChance=0.125(GetRandomInt(1,8)==6, Trig_Law_Attack — ORIGINAL_TRAIT_GATE_MAPPING.csv 직접 인용) — 2026-09-06 리서치담당 재확인 완료: A10S는 atar=none이라 엔진 배시가 아예 안 돌아 Hbh1/Hbh3는 읽히지 않는 껍데기이고, 진짜 게이트는 트리거의 GetRandomInt(1,8)==6 하나뿐이다(atar에 enemies가 없으면 Hbh*를 안 읽는다는 일반 규칙 확정, ACbh 469개 중 65% 해당). 0.125 확정. ⚠️ 2026-09-06 마저 채움 — 구현담당2가 SkillEffect 단위 대상 버프 게이트(902dbeb)를 만들어 스킬을 안 쪼개고도 두 효과를 따로 가를 수 있게 됐다. B06B(광폭화) 보유 적 전용 RRD 현재체력×0.20(CHAOS/UNIVERSAL, 툴팁 "33%"는 오류) 보너스를 두 번째 효과로 추가했다 — effect.requiredTargetBuffId="B06B"라 이 효과만 대상이 B06B를 가졌을 때 걸리고, 첫 번째 효과(437500 기본 피해)는 게이트가 비어 있어 그대로 항상 나간다.
+  m_Name: "SkillData_\uC6D0\uC791006_H096"
+  m_EditorClassIdentifier: 
+  skillName: "A10S !\uAC10\uB9C8\uB098\uC774\uD504"
+  description: 
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.125
     range: 485
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 0
-      multiplier: 437500.0
-      bonus: 0.0
+      multiplier: 437500
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 2
       target: 2
       damageType: 2
       attackType: 5
       multiplier: 0.2
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
       requiredTargetBuffId: B06B
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 13
       basis: 0
       target: 2
       damageType: 0
       attackType: 0
       multiplier: 0.6
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 3.0
+      duration: 3
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
       heroDuration: 1.1
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 63e8025c945b848378c2a6a64d5ea6c1, type: 3}

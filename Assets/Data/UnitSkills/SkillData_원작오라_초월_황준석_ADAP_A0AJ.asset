@@ -10,47 +10,84 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작오라_초월_황준석_ADAP_A0AJ
-  m_EditorClassIdentifier:
-  skillName: A0AJ 열매각성 방깍 — 적 방어 −60 오라
-  description: 원작 각성 도플라밍고 h04P uabi A0AJ(AHad, Had1 −60, aare 850, abuf B01E). 이감은 겹치면 가장 강한 하나만(EnemyDummy), 방깎 오라는 버프 ID별 최댓값의 합. 2026-09-30 구현담당1.
+  m_Name: "SkillData_\uC6D0\uC791\uC624\uB77C_\uCD08\uC6D4_\uD669\uC900\uC11D_ADAP_A0AJ"
+  m_EditorClassIdentifier: 
+  skillName: "A0AJ \uC5F4\uB9E4\uAC01\uC131 \uBC29\uAE4D \u2014 \uC801 \uBC29\uC5B4
+    \u221260 \uC624\uB77C"
+  description: "\uC6D0\uC791 \uAC01\uC131 \uB3C4\uD50C\uB77C\uBC0D\uACE0 h04P uabi
+    A0AJ(AHad, Had1 \u221260, aare 850, abuf B01E). \uC774\uAC10\uC740 \uACB9\uCE58\uBA74
+    \uAC00\uC7A5 \uAC15\uD55C \uD558\uB098\uB9CC(EnemyDummy), \uBC29\uAE4E \uC624\uB77C\uB294
+    \uBC84\uD504 ID\uBCC4 \uCD5C\uB313\uAC12\uC758 \uD569. 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91."
   triggerType: 2
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 850.0
+    triggerChance: 1
+    range: 850
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 4
       basis: 0
       target: 2
       damageType: 0
       attackType: 0
-      multiplier: -60.0
-      bonus: 0.0
+      multiplier: -60
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
+      duration: 0
+      casterBuffCountFactor: 0
       buffId: B01E
-      randMin: 1.0
-      randMax: 1.0
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 3b6ce3aec84ff42bda6ec682ff29d617, type: 3}

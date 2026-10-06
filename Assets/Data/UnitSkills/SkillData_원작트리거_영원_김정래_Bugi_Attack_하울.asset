@@ -10,21 +10,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작트리거_영원_김정래_Bugi_Attack_하울
-  m_EditorClassIdentifier:
-  skillName: Bugi_Attack 1/22 — 허세 하울(아군 공격력 +33% 4.5초)
-  description: 원작 버기 h05A Trig_Bugi_Attack GetRandomInt(1,22)==3 → 더미 e0AJ howlofterror(A0M5 ANht Roa1 −0.33, adur 4.5, aare 900, atar …self…friend, abuf B036) = 주변 아군 공격력 +33%. 원작 더미는 Player(4)(동맹 전원), 우리는 같은 주인만. 2026-09-30 구현담당1(apply_eternal_unlocked).
+  m_Name: "SkillData_\uC6D0\uC791\uD2B8\uB9AC\uAC70_\uC601\uC6D0_\uAE40\uC815\uB798_Bugi_Attack_\uD558\uC6B8"
+  m_EditorClassIdentifier: 
+  skillName: "Bugi_Attack 1/22 \u2014 \uD5C8\uC138 \uD558\uC6B8(\uC544\uAD70 \uACF5\uACA9\uB825
+    +33% 4.5\uCD08)"
+  description: "\uC6D0\uC791 \uBC84\uAE30 h05A Trig_Bugi_Attack GetRandomInt(1,22)==3
+    \u2192 \uB354\uBBF8 e0AJ howlofterror(A0M5 ANht Roa1 \u22120.33, adur 4.5, aare
+    900, atar \u2026self\u2026friend, abuf B036) = \uC8FC\uBCC0 \uC544\uAD70 \uACF5\uACA9\uB825
+    +33%. \uC6D0\uC791 \uB354\uBBF8\uB294 Player(4)(\uB3D9\uB9F9 \uC804\uC6D0), \uC6B0\uB9AC\uB294
+    \uAC19\uC740 \uC8FC\uC778\uB9CC. 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(apply_eternal_unlocked)."
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.045454545454545456
-    range: 900.0
+    triggerChance: 0.045454547
+    range: 900
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 14
       basis: 0
@@ -32,47 +37,106 @@ MonoBehaviour:
       damageType: 0
       attackType: 0
       multiplier: 0.33
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 4.5
-      casterBuffCountFactor: 0.0
+      casterBuffCountFactor: 0
       buffId: B036
-      randMin: 1.0
-      randMax: 1.0
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 14
       basis: 0
       target: 1
       damageType: 0
       attackType: 0
       multiplier: 0.33
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 4.5
-      casterBuffCountFactor: 0.0
+      casterBuffCountFactor: 0
       buffId: B036
-      randMin: 1.0
-      randMax: 1.0
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 2fa88fa10172e437ea3e74d606273e70, type: 3}

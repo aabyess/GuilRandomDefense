@@ -10,60 +10,153 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_변화됨_박은석
-  m_EditorClassIdentifier:
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uBCC0\uD654\uB428_\uBC15\uC740\uC11D"
+  m_EditorClassIdentifier: 
   skillName: Transpom1 1/10
-  description: '원작 변화된 비비 알라바스타의 왕녀 - 변화된(Trig_Transpom1). | 2차 배정(트리거·더미 채널): 원작 변화된 비비 알라바스타의 왕녀 - 변화된(Trig_Transpom1). | 2차 배정(트리거·더미 채널): 원작 변화된 비비 알라바스타의 왕녀 - 변화된(Trig_Transpom1). | 1채널 추가 배정(원작 변화된 벤 베크만 붉은머리 해적단 부선장 - 변화된(h05T)의 능력 1개): 등급 정원이 좁아 순위 배정 자리가 없어서, 게이지가 충돌하지 않는 같은 등급 로스터에 1:다로 흡수시켰다(어제 시키 배정과 같은 원칙, 2026-09-06 PM 지시). | 1채널 추가 배정(원작 변화된 코비 "거프의 제자" 해군루키 대령 - 변화된(h07E)의 능력 1개): 등급 정원이 좁아 순위 배정 자리가 없어서, 게이지가 충돌하지 않는 같은 등급 로스터에 1:다로 흡수시켰다(어제 시키 배정과 같은 원칙, 2026-09-06 PM 지시). | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Transpom1(h05W) = `1~10==3 → 대상 위치 450 광역 100000 NORMAL/UNIVERSAL + 180000 MELEE/NORMAL` / 따로 `1~20==4 → 대상 250000 NORMAL/UNIVERSAL`. 이전: 확률 0.5·스턴0.45(A0S7 = h07J 변화됨_강재규)·250000/180000 두 벌(단일)·×0 잔재 → 이 에셋은 1/10 광역, 1/20은 새 _Transpom1_1of20.'
-  · A0GD !숲숲 열매: 발동0.2 배수0.0 추가0.0 [피해 0 — 비피해 효과였을 수 있다]
-  · A041 !패기의 탄환: 발동0.2 배수0.0 추가0.0 [피해 0 — 비피해 효과였을 수 있다]
-  확정(2026-09-06, PHASE2_39_RESOLVED.csv/f18af68, 1채널표): A0GD(제한_최영민과 공유하는 능력, 확률·스턴만 있고 배수·추가피해 0)·A041(확률만 있고 전부 0)이 원작에서도 피해가 없다 — 이 파일의 마지막 basis3/mult0/bonus0 블록 두 개와 부합, 채울 값이 없는 게 맞다(추가 편집 없음).
+  description: "\uC6D0\uC791 \uBCC0\uD654\uB41C \uBE44\uBE44 \uC54C\uB77C\uBC14\uC2A4\uD0C0\uC758
+    \uC655\uB140 - \uBCC0\uD654\uB41C(Trig_Transpom1). | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uBCC0\uD654\uB41C \uBE44\uBE44 \uC54C\uB77C\uBC14\uC2A4\uD0C0\uC758
+    \uC655\uB140 - \uBCC0\uD654\uB41C(Trig_Transpom1). | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uBCC0\uD654\uB41C \uBE44\uBE44 \uC54C\uB77C\uBC14\uC2A4\uD0C0\uC758
+    \uC655\uB140 - \uBCC0\uD654\uB41C(Trig_Transpom1). | 1\uCC44\uB110 \uCD94\uAC00
+    \uBC30\uC815(\uC6D0\uC791 \uBCC0\uD654\uB41C \uBCA4 \uBCA0\uD06C\uB9CC \uBD89\uC740\uBA38\uB9AC
+    \uD574\uC801\uB2E8 \uBD80\uC120\uC7A5 - \uBCC0\uD654\uB41C(h05T)\uC758 \uB2A5\uB825
+    1\uAC1C): \uB4F1\uAE09 \uC815\uC6D0\uC774 \uC881\uC544 \uC21C\uC704 \uBC30\uC815
+    \uC790\uB9AC\uAC00 \uC5C6\uC5B4\uC11C, \uAC8C\uC774\uC9C0\uAC00 \uCDA9\uB3CC\uD558\uC9C0
+    \uC54A\uB294 \uAC19\uC740 \uB4F1\uAE09 \uB85C\uC2A4\uD130\uC5D0 1:\uB2E4\uB85C
+    \uD761\uC218\uC2DC\uCF30\uB2E4(\uC5B4\uC81C \uC2DC\uD0A4 \uBC30\uC815\uACFC \uAC19\uC740
+    \uC6D0\uCE59, 2026-09-06 PM \uC9C0\uC2DC). | 1\uCC44\uB110 \uCD94\uAC00 \uBC30\uC815(\uC6D0\uC791
+    \uBCC0\uD654\uB41C \uCF54\uBE44 \"\uAC70\uD504\uC758 \uC81C\uC790\" \uD574\uAD70\uB8E8\uD0A4
+    \uB300\uB839 - \uBCC0\uD654\uB41C(h07E)\uC758 \uB2A5\uB825 1\uAC1C): \uB4F1\uAE09
+    \uC815\uC6D0\uC774 \uC881\uC544 \uC21C\uC704 \uBC30\uC815 \uC790\uB9AC\uAC00
+    \uC5C6\uC5B4\uC11C, \uAC8C\uC774\uC9C0\uAC00 \uCDA9\uB3CC\uD558\uC9C0 \uC54A\uB294
+    \uAC19\uC740 \uB4F1\uAE09 \uB85C\uC2A4\uD130\uC5D0 1:\uB2E4\uB85C \uD761\uC218\uC2DC\uCF30\uB2E4(\uC5B4\uC81C
+    \uC2DC\uD0A4 \uBC30\uC815\uACFC \uAC19\uC740 \uC6D0\uCE59, 2026-09-06 PM \uC9C0\uC2DC).
+    | \uC815\uC815(2026-09-30 \uAD6C\uD604\uB2F4\uB2F91, \uC911\uBCF5 \uAC80\uC0AC):
+    \uC6D0\uBB38 Trig_Transpom1(h05W) = `1~10==3 \u2192 \uB300\uC0C1 \uC704\uCE58
+    450 \uAD11\uC5ED 100000 NORMAL/UNIVERSAL + 180000 MELEE/NORMAL` / \uB530\uB85C
+    `1~20==4 \u2192 \uB300\uC0C1 250000 NORMAL/UNIVERSAL`. \uC774\uC804: \uD655\uB960
+    0.5\xB7\uC2A4\uD1340.45(A0S7 = h07J \uBCC0\uD654\uB428_\uAC15\uC7AC\uADDC)\xB7250000/180000
+    \uB450 \uBC8C(\uB2E8\uC77C)\xB7\xD70 \uC794\uC7AC \u2192 \uC774 \uC5D0\uC14B\uC740
+    1/10 \uAD11\uC5ED, 1/20\uC740 \uC0C8 _Transpom1_1of20."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 450.0
+    range: 450
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 100000.0
-      bonus: 0.0
+      multiplier: 100000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 1
-      multiplier: 180000.0
-      bonus: 0.0
+      multiplier: 180000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 48d166e044f92412e8e74da0b5aeb801, type: 3}

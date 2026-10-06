@@ -10,43 +10,112 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_희귀함_이상혁
-  m_EditorClassIdentifier:
-  skillName: Trig_Unique12 도플라밍고 희귀함
-  description: '원작 희귀함 돈키호테 도플라밍고 칠무해 - 희귀함(Trig_Unique12). | 2차 배정(트리거·더미 채널): 원작 희귀함 돈키호테 도플라밍고 칠무해 - 희귀함(더미 경로 Trig_Unique12 → e059(U희귀함 도플 더미) → A09W). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. 재정정(2026-09-06, 리서치담당 c00f472 오더 감사 — 뿌리 ㉖ 정정의 정정): 바로 앞 정정(triggerChance를 0.0→1/11로 되살림)이 틀렸다 — e059(A09W)는 오더 자체가 없고 실제 피해는 ForGroupBJ(Trig_Unique12_Func006A)가 낸다(확정 무효). 되살렸던 3개 효과(전부 이 값 6000의 중복 사본)를 다시 제거하고 triggerChance는 0으로 잠근다. [게이트 미확인]이 아니라 "확정 무효"다 — 지어내지 않고 기록만 남긴다. | 2026-09-30 채움(구현담당2, SKILL_FILL_STAGE2_seven.md §2 · 원문 재확인): 위 「확정 무효」는 e059 더미 쪽 얘기이고, 피해는 Trig_Unique12_Actions가 직접 낸다 — `if GetRandomInt(1,11)==3` → 맞은 적 위치 450 안 적 전원 ForGroupBJ(Func006A) `RRD(GetAttacker(),GetEnumUnit(),6000.00,1.00,1.00,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_UNIVERSAL)`. 해시 j:3394 h01L→gg_trg_Unique12(도플라밍고). 1/11·range 450(원작 단위)·Enemies·6000·AP/Spells로 채웠다. 더미채널 _이상혁_1은 빈 채로 둔다(이중 계상 방지). skillName「A06D !디아블 잠브」는 상디(h02I, 배현진) 능력 이름이 잘못 붙은 것이라 Trig_Unique12로 정정. 범위 중심(원작=맞은 적, 우리=시전자)은 별건.'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uD76C\uADC0\uD568_\uC774\uC0C1\uD601"
+  m_EditorClassIdentifier: 
+  skillName: "Trig_Unique12 \uB3C4\uD50C\uB77C\uBC0D\uACE0 \uD76C\uADC0\uD568"
+  description: "\uC6D0\uC791 \uD76C\uADC0\uD568 \uB3C8\uD0A4\uD638\uD14C \uB3C4\uD50C\uB77C\uBC0D\uACE0
+    \uCE60\uBB34\uD574 - \uD76C\uADC0\uD568(Trig_Unique12). | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uD76C\uADC0\uD568 \uB3C8\uD0A4\uD638\uD14C \uB3C4\uD50C\uB77C\uBC0D\uACE0
+    \uCE60\uBB34\uD574 - \uD76C\uADC0\uD568(\uB354\uBBF8 \uACBD\uB85C Trig_Unique12
+    \u2192 e059(U\uD76C\uADC0\uD568 \uB3C4\uD50C \uB354\uBBF8) \u2192 A09W). \u26A0\uFE0F
+    \uC2A4\uD1A1 \uD544\uB4DC \uAC12 \uADF8\uB300\uB85C \u2014 \uD544\uB4DC \uB73B\uC774
+    \uBBF8\uD655\uC778\uC774\uB77C \uD53C\uD574\uAC00 \uC544\uB2C8\uB77C \uB2E4\uB978
+    \uD6A8\uACFC(\uC2AC\uB85C\uC6B0\xB7\uC2A4\uD134\xB7\uBC84\uD504 \uB4F1)\uC600\uC744
+    \uC218 \uC788\uB2E4. \uACF5\uACA9\uD0C0\uC785 \uC6D0\uBCF8\uC774 [\uBBF8\uD655\uC778]\uC774\uB77C
+    \uC774 \uC720\uB2DB \uC790\uC2E0\uC758 \uD3C9\uD0C0 \uD0C0\uC785\uC73C\uB85C
+    \uB300\uC2E0\uD588\uB2E4. \uC7AC\uC815\uC815(2026-09-06, \uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    c00f472 \uC624\uB354 \uAC10\uC0AC \u2014 \uBFCC\uB9AC \u3256 \uC815\uC815\uC758
+    \uC815\uC815): \uBC14\uB85C \uC55E \uC815\uC815(triggerChance\uB97C 0.0\u21921/11\uB85C
+    \uB418\uC0B4\uB9BC)\uC774 \uD2C0\uB838\uB2E4 \u2014 e059(A09W)\uB294 \uC624\uB354
+    \uC790\uCCB4\uAC00 \uC5C6\uACE0 \uC2E4\uC81C \uD53C\uD574\uB294 ForGroupBJ(Trig_Unique12_Func006A)\uAC00
+    \uB0B8\uB2E4(\uD655\uC815 \uBB34\uD6A8). \uB418\uC0B4\uB838\uB358 3\uAC1C \uD6A8\uACFC(\uC804\uBD80
+    \uC774 \uAC12 6000\uC758 \uC911\uBCF5 \uC0AC\uBCF8)\uB97C \uB2E4\uC2DC \uC81C\uAC70\uD558\uACE0
+    triggerChance\uB294 0\uC73C\uB85C \uC7A0\uADFC\uB2E4. [\uAC8C\uC774\uD2B8 \uBBF8\uD655\uC778]\uC774
+    \uC544\uB2C8\uB77C \"\uD655\uC815 \uBB34\uD6A8\"\uB2E4 \u2014 \uC9C0\uC5B4\uB0B4\uC9C0
+    \uC54A\uACE0 \uAE30\uB85D\uB9CC \uB0A8\uAE34\uB2E4. | 2026-09-30 \uCC44\uC6C0(\uAD6C\uD604\uB2F4\uB2F92,
+    SKILL_FILL_STAGE2_seven.md \xA72 \xB7 \uC6D0\uBB38 \uC7AC\uD655\uC778): \uC704
+    \u300C\uD655\uC815 \uBB34\uD6A8\u300D\uB294 e059 \uB354\uBBF8 \uCABD \uC598\uAE30\uC774\uACE0,
+    \uD53C\uD574\uB294 Trig_Unique12_Actions\uAC00 \uC9C1\uC811 \uB0B8\uB2E4 \u2014
+    `if GetRandomInt(1,11)==3` \u2192 \uB9DE\uC740 \uC801 \uC704\uCE58 450 \uC548
+    \uC801 \uC804\uC6D0 ForGroupBJ(Func006A) `RRD(GetAttacker(),GetEnumUnit(),6000.00,1.00,1.00,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_UNIVERSAL)`.
+    \uD574\uC2DC j:3394 h01L\u2192gg_trg_Unique12(\uB3C4\uD50C\uB77C\uBC0D\uACE0).
+    1/11\xB7range 450(\uC6D0\uC791 \uB2E8\uC704)\xB7Enemies\xB76000\xB7AP/Spells\uB85C
+    \uCC44\uC6E0\uB2E4. \uB354\uBBF8\uCC44\uB110 _\uC774\uC0C1\uD601_1\uC740 \uBE48
+    \uCC44\uB85C \uB454\uB2E4(\uC774\uC911 \uACC4\uC0C1 \uBC29\uC9C0). skillName\u300CA06D
+    !\uB514\uC544\uBE14 \uC7A0\uBE0C\u300D\uB294 \uC0C1\uB514(h02I, \uBC30\uD604\uC9C4)
+    \uB2A5\uB825 \uC774\uB984\uC774 \uC798\uBABB \uBD99\uC740 \uAC83\uC774\uB77C
+    Trig_Unique12\uB85C \uC815\uC815. \uBC94\uC704 \uC911\uC2EC(\uC6D0\uC791=\uB9DE\uC740
+    \uC801, \uC6B0\uB9AC=\uC2DC\uC804\uC790)\uC740 \uBCC4\uAC74."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.09091
-    range: 450.0
+    range: 450
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 6000.0
+      multiplier: 6000
       bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
-      buffId:
+      buffId: 
       randMin: 1
       randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
       targetConditionValue: 0
       cascadeGroup: 0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 6c9832c031adf43c88df06a0c6a9b755, type: 3}

@@ -10,29 +10,86 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_희귀함_박은석_1
-  m_EditorClassIdentifier:
-  skillName: SkillData_더미채널_희귀함_박은석_1
-  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 희귀함_박은석.  · Trig_Unique9 → e03M(U희귀함 키자루 더미) → A09A: 6000 [추정: 자릿수 판정] [작은 축 09-30] ⓓ 연쇄 번개 A09A(AOcl, Ocl1 6000 · Ocl2 8마리 · Ocl3 −0.1 = 튈 때마다 +10% · aare 1250): 단일 → 연쇄 8마리. (Tools/apply_small_axes.py)'
+  m_Name: "SkillData_\uB354\uBBF8\uCC44\uB110_\uD76C\uADC0\uD568_\uBC15\uC740\uC11D_1"
+  m_EditorClassIdentifier: 
+  skillName: "SkillData_\uB354\uBBF8\uCC44\uB110_\uD76C\uADC0\uD568_\uBC15\uC740\uC11D_1"
+  description: "\uB354\uBBF8 \uCC44\uB110 \uAC8C\uC774\uD2B8 \uD655\uC815(2026-09-06,
+    DUMMY_CHANNEL_GATES.csv, a1c34bc) \u2014 \uD76C\uADC0\uD568_\uBC15\uC740\uC11D. 
+    \xB7 Trig_Unique9 \u2192 e03M(U\uD76C\uADC0\uD568 \uD0A4\uC790\uB8E8 \uB354\uBBF8)
+    \u2192 A09A: 6000 [\uCD94\uC815: \uC790\uB9BF\uC218 \uD310\uC815] [\uC791\uC740
+    \uCD95 09-30] \u24D3 \uC5F0\uC1C4 \uBC88\uAC1C A09A(AOcl, Ocl1 6000 \xB7 Ocl2
+    8\uB9C8\uB9AC \xB7 Ocl3 \u22120.1 = \uD288 \uB54C\uB9C8\uB2E4 +10% \xB7 aare
+    1250): \uB2E8\uC77C \u2192 \uC5F0\uC1C4 8\uB9C8\uB9AC. (Tools/apply_small_axes.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.142857
-    range: 1250.0
+    range: 1250
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 5
       damageType: 1
       attackType: 1
-      multiplier: 6000.0
-      bonus: 0.0
+      multiplier: 6000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 8
       chainDamageStep: 0.1
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: eed90ba4dc5a9460e951862054134146, type: 3}

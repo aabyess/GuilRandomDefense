@@ -10,47 +10,84 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작트리거_랜덤_호시노_아이_k1_공속
-  m_EditorClassIdentifier:
-  skillName: k' — 1/25 자기 공속 +400% 4초(B042)
-  description: '원작 k'' h06U 평타 트리거 k1: GetRandomInt(1,25) → 자기에게 A0QK(Ablo, Blo1 +4.0 공속, adur 4.0, abuf B042). 2026-09-30 구현담당1(RANDOM_FILL_LIST §2). [버프게이트예외:B042] B042(A0QK 공속 +400%)는 순수 스탯 버프 — j에 B042 조회 0건.'
+  m_Name: "SkillData_\uC6D0\uC791\uD2B8\uB9AC\uAC70_\uB79C\uB364_\uD638\uC2DC\uB178_\uC544\uC774_k1_\uACF5\uC18D"
+  m_EditorClassIdentifier: 
+  skillName: "k' \u2014 1/25 \uC790\uAE30 \uACF5\uC18D +400% 4\uCD08(B042)"
+  description: "\uC6D0\uC791 k' h06U \uD3C9\uD0C0 \uD2B8\uB9AC\uAC70 k1: GetRandomInt(1,25)
+    \u2192 \uC790\uAE30\uC5D0\uAC8C A0QK(Ablo, Blo1 +4.0 \uACF5\uC18D, adur 4.0,
+    abuf B042). 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(RANDOM_FILL_LIST \xA72). [\uBC84\uD504\uAC8C\uC774\uD2B8\uC608\uC678:B042]
+    B042(A0QK \uACF5\uC18D +400%)\uB294 \uC21C\uC218 \uC2A4\uD0EF \uBC84\uD504 \u2014
+    j\uC5D0 B042 \uC870\uD68C 0\uAC74."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.04
-    range: 0.0
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 12
       basis: 0
       target: 0
       damageType: 0
       attackType: 0
-      multiplier: 4.0
-      bonus: 0.0
+      multiplier: 4
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 4.0
-      casterBuffCountFactor: 0.0
+      duration: 4
+      casterBuffCountFactor: 0
       buffId: B042
-      randMin: 1.0
-      randMax: 1.0
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 0c44f5ef36d9242df9016e30a1bf993b, type: 3}

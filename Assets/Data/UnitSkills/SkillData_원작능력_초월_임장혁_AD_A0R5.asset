@@ -10,47 +10,82 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_초월_임장혁_AD_A0R5
-  m_EditorClassIdentifier:
-  skillName: A0R5 !육식 — 25% +500000
-  description: 원작 루치 H08W uabi A0R5(ACbh, Hbh1 25, Hbh3 500000, adur 빈칸 · ahdu 1.0 — 스턴은 ACbh 스톡 adur 미확인이라 미반영). 2026-09-30 구현담당1.
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uCD08\uC6D4_\uC784\uC7A5\uD601_AD_A0R5"
+  m_EditorClassIdentifier: 
+  skillName: "A0R5 !\uC721\uC2DD \u2014 25% +500000"
+  description: "\uC6D0\uC791 \uB8E8\uCE58 H08W uabi A0R5(ACbh, Hbh1 25, Hbh3 500000,
+    adur \uBE48\uCE78 \xB7 ahdu 1.0 \u2014 \uC2A4\uD134\uC740 ACbh \uC2A4\uD1A1 adur
+    \uBBF8\uD655\uC778\uC774\uB77C \uBBF8\uBC18\uC601). 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.25
-    range: 0.0
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 3
       target: 3
       damageType: 1
       attackType: 4
-      multiplier: 0.0
-      bonus: 500000.0
+      multiplier: 0
+      bonus: 500000
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: bdad8defc1af344cbb20d49efe6840e4, type: 3}

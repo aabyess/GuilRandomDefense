@@ -10,28 +10,112 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_희귀함_서민성
-  m_EditorClassIdentifier:
-  skillName: Unique14 1/7 — 장풍 A097 8000
-  description: '원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 희귀함 카쿠 CP9 소소열매 람각 주단 - 희귀함(더미:Trig_Unique14 → e038(H히든 카쿠 더미) → A097)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 유닛 하나(행 1개)를 통째로 이 유닛에 배정했다(2026-09-06 유닛 단위 재배정, TEAM_RULES 뿌리 ⑮). | 2차 배정(트리거·더미 채널): 원작 희귀함 카쿠 CP9 소소열매 람각 주단 - 희귀함(더미 경로 Trig_Unique14 → e038(H히든 카쿠 더미) → A097). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 1채널 추가 배정(원작 희귀함 카쿠 CP9 소소열매 람각 주단 - 희귀함(h023)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시). [하위 등급 블록 09-30] §0-1: 확률 1.0에 셋이 다 들어 매 타 14050이었다(7.4배 과다). 장풍 8000은 1/7(GetRandomInt(1,7)==4) · A047 +5000은 15%(별도 에셋) · 1050은 원문에 없는 값(A097의 Ucs3 거리 필드)이라 뺌. (Tools/apply_lower_grade_blocks.py) [직선 09-30] 직선: A097 피해 8000 · 길이 1050 · 반경 200→550 — 전에는 단일 대상(Tools/apply_line_skills.py)'
-  · A047 !육식: 발동1.0 배수0.0 추가5000.0
-  복구(2026-09-06, 리서치담당 w3a 원문 디코드/0fe3562): A097의 진짜 피해 필드는 Ucs1=8000.0이다(Ucs2=7e7 미사용, Ucs3=1050.0은 배병규와 공유하는 스톡 템플릿 잔재로 아래 1050.0 효과가 그것, Ucs4=550.0은 미사용). 소유 판정(희귀함_박도진 중복 제거)은 옳았고 값이 파이프라인에서 통째로 안 옮겨진 것이었다 — Ucs1=8000을 새 효과로 추가한다. 기존 두 효과(1050.0·bonus5000.0)는 그대로 둔다 — h023의 별개 1채널 원작 능력에서 온 값이라 안 겹친다.
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uD76C\uADC0\uD568_\uC11C\uBBFC\uC131"
+  m_EditorClassIdentifier: 
+  skillName: "Unique14 1/7 \u2014 \uC7A5\uD48D A097 8000"
+  description: "\uC6D0\uC791 \uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8 \uD53C\uD574\uD45C(ORIGINAL_SKILL_DAMAGE_TABLE.csv)
+    DPS \uC21C\uC704 \uBC30\uC815 \u2014 \uC6D0\uC791 \uD76C\uADC0\uD568 \uCE74\uCFE0
+    CP9 \uC18C\uC18C\uC5F4\uB9E4 \uB78C\uAC01 \uC8FC\uB2E8 - \uD76C\uADC0\uD568(\uB354\uBBF8:Trig_Unique14
+    \u2192 e038(H\uD788\uB4E0 \uCE74\uCFE0 \uB354\uBBF8) \u2192 A097)\uC758 \uD53C\uD574\uB97C
+    \uC62E\uACBC\uB2E4. 1\uCC28(uabi \uB2A5\uB825ID) CSV\uC5D4 \uC5C6\uB358 \uB2A5\uB825\uC774\uB2E4
+    \u2014 \uC6D0\uC791\uC774 \uC720\uB2DBID\u2192\uD2B8\uB9AC\uAC70 \uD574\uC2DC\uD14C\uC774\uBE14\uB85C
+    \uCC98\uB9AC\uD574\uC11C \uB2A5\uB825ID\uB85C\uB294 \uC548 \uBCF4\uC600\uB2E4.
+    \uAC1C\uBCC4 \uB300\uC751 \uC544\uB2D8(\uC774\uB984\uB9E4\uD551 \uBD88\uAC00)
+    \u2014 \uC6D0\uC791 \uC720\uB2DB \uD558\uB098(\uD589 1\uAC1C)\uB97C \uD1B5\uC9F8\uB85C
+    \uC774 \uC720\uB2DB\uC5D0 \uBC30\uC815\uD588\uB2E4(2026-09-06 \uC720\uB2DB \uB2E8\uC704
+    \uC7AC\uBC30\uC815, TEAM_RULES \uBFCC\uB9AC \u246E). | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uD76C\uADC0\uD568 \uCE74\uCFE0 CP9 \uC18C\uC18C\uC5F4\uB9E4
+    \uB78C\uAC01 \uC8FC\uB2E8 - \uD76C\uADC0\uD568(\uB354\uBBF8 \uACBD\uB85C Trig_Unique14
+    \u2192 e038(H\uD788\uB4E0 \uCE74\uCFE0 \uB354\uBBF8) \u2192 A097). \u26A0\uFE0F
+    \uC2A4\uD1A1 \uD544\uB4DC \uAC12 \uADF8\uB300\uB85C \u2014 \uD544\uB4DC \uB73B\uC774
+    \uBBF8\uD655\uC778\uC774\uB77C \uD53C\uD574\uAC00 \uC544\uB2C8\uB77C \uB2E4\uB978
+    \uD6A8\uACFC(\uC2AC\uB85C\uC6B0\xB7\uC2A4\uD134\xB7\uBC84\uD504 \uB4F1)\uC600\uC744
+    \uC218 \uC788\uB2E4. \uACF5\uACA9\uD0C0\uC785 \uC6D0\uBCF8\uC774 [\uBBF8\uD655\uC778]\uC774\uB77C
+    \uC774 \uC720\uB2DB \uC790\uC2E0\uC758 \uD3C9\uD0C0 \uD0C0\uC785\uC73C\uB85C
+    \uB300\uC2E0\uD588\uB2E4. | 1\uCC44\uB110 \uCD94\uAC00 \uBC30\uC815(\uC6D0\uC791
+    \uD76C\uADC0\uD568 \uCE74\uCFE0 CP9 \uC18C\uC18C\uC5F4\uB9E4 \uB78C\uAC01 \uC8FC\uB2E8
+    - \uD76C\uADC0\uD568(h023)\uC758 \uB2A5\uB825 1\uAC1C): \uB2E4\uB978 \uCC44\uB110\uC774
+    \uC774\uBBF8 \uC774 \uC720\uB2DB\uC744 \uCC28\uC9C0\uD558\uACE0 \uC788\uC5B4
+    \uC21C\uC704 \uBC30\uC815 \uB300\uC2E0 \uADF8 \uC720\uB2DB\uC5D0 \uADF8\uB300\uB85C
+    \uC5B9\uC5C8\uB2E4(\uC6B0\uC120\uC21C\uC704 06\uBC88\u2460/\uAC8C\uC774\uD2B8\xB7\uD68C\uC218/2\uCC44\uB110\uC774
+    1\uCC44\uB110\uBCF4\uB2E4 \uBA3C\uC800, 2026-09-06 PM \uC9C0\uC2DC). [\uD558\uC704
+    \uB4F1\uAE09 \uBE14\uB85D 09-30] \xA70-1: \uD655\uB960 1.0\uC5D0 \uC14B\uC774
+    \uB2E4 \uB4E4\uC5B4 \uB9E4 \uD0C0 14050\uC774\uC5C8\uB2E4(7.4\uBC30 \uACFC\uB2E4).
+    \uC7A5\uD48D 8000\uC740 1/7(GetRandomInt(1,7)==4) \xB7 A047 +5000\uC740 15%(\uBCC4\uB3C4
+    \uC5D0\uC14B) \xB7 1050\uC740 \uC6D0\uBB38\uC5D0 \uC5C6\uB294 \uAC12(A097\uC758
+    Ucs3 \uAC70\uB9AC \uD544\uB4DC)\uC774\uB77C \uBE8C. (Tools/apply_lower_grade_blocks.py)
+    [\uC9C1\uC120 09-30] \uC9C1\uC120: A097 \uD53C\uD574 8000 \xB7 \uAE38\uC774 1050
+    \xB7 \uBC18\uACBD 200\u2192550 \u2014 \uC804\uC5D0\uB294 \uB2E8\uC77C \uB300\uC0C1(Tools/apply_line_skills.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.142857
     range: 0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 1
-      multiplier: 8000.0
-      bonus: 0.0
+      multiplier: 8000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
-      lineLength: 1050.0
-      lineStartRadius: 200.0
-      lineEndRadius: 550.0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 1050
+      lineStartRadius: 200
+      lineEndRadius: 550
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: bdad8defc1af344cbb20d49efe6840e4, type: 3}

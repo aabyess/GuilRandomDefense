@@ -10,125 +10,179 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작트리거_제한_전법규_enel_thunder_PV200
-  m_EditorClassIdentifier:
-  skillName: 에넬 뇌격 — 근접 950(PV 200 이상)
-  description: '원작 에넬 h05E enel_thunder: 적이 950 안에 들어오면(TurnSpeed 0.50일 때 한 번) PV≥200 or B06B → 425 범위 AIsr +1·425000 + 대상 8500000 / 아니면 1/7로 대상 4250000. [근접 09-30] 2026-09-30 구현담당1(Tools/apply_enter_range_skills.py).'
+  m_Name: "SkillData_\uC6D0\uC791\uD2B8\uB9AC\uAC70_\uC81C\uD55C_\uC804\uBC95\uADDC_enel_thunder_PV200"
+  m_EditorClassIdentifier: 
+  skillName: "\uC5D0\uB12C \uB1CC\uACA9 \u2014 \uADFC\uC811 950(PV 200 \uC774\uC0C1)"
+  description: "\uC6D0\uC791 \uC5D0\uB12C h05E enel_thunder: \uC801\uC774 950 \uC548\uC5D0
+    \uB4E4\uC5B4\uC624\uBA74(TurnSpeed 0.50\uC77C \uB54C \uD55C \uBC88) PV\u2265200
+    or B06B \u2192 425 \uBC94\uC704 AIsr +1\xB7425000 + \uB300\uC0C1 8500000 / \uC544\uB2C8\uBA74
+    1/7\uB85C \uB300\uC0C1 4250000. [\uADFC\uC811 09-30] 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(Tools/apply_enter_range_skills.py)."
   triggerType: 4
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 425.0
+    triggerChance: 1
+    range: 425
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 9
       basis: 0
       target: 2
       damageType: 0
       attackType: 0
-      multiplier: 1.0
-      bonus: 0.0
+      multiplier: 1
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 0
-      chainDamageStep: 0.0
-      zoneTickInterval: 0.0
-      zoneRadius: 0.0
-      zoneSpacing: 0.0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
       zoneAtCaster: 0
-      lineLength: 0.0
-      lineStartRadius: 0.0
-      lineEndRadius: 0.0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 425000.0
-      bonus: 0.0
+      multiplier: 425000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 0
-      chainDamageStep: 0.0
-      zoneTickInterval: 0.0
-      zoneRadius: 0.0
-      zoneSpacing: 0.0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
       zoneAtCaster: 0
-      lineLength: 0.0
-      lineStartRadius: 0.0
-      lineEndRadius: 0.0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 7
-      multiplier: 8500000.0
-      bonus: 0.0
+      multiplier: 8500000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 0
-      chainDamageStep: 0.0
-      zoneTickInterval: 0.0
-      zoneRadius: 0.0
-      zoneSpacing: 0.0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
       zoneAtCaster: 0
-      lineLength: 0.0
-      lineStartRadius: 0.0
-      lineEndRadius: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId: 표식_TurnSpeed
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: "\uD45C\uC2DD_TurnSpeed"
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
     primaryTargetCondition: 3
-    primaryTargetConditionValue: 200.0
+    primaryTargetConditionValue: 200
     exclusiveGroup: 1
-    enterRange: 950.0
+    enterRange: 950
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: a6fd5d45daa77437397f3f2265c99df8, type: 3}

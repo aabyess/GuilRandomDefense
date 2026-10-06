@@ -10,40 +10,170 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_제한_최영민_33bd8aa4
-  m_EditorClassIdentifier:
-  skillName: 레베카 콜로세움 전설의  후예 - 제한됨 — 1/5
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 레베카 콜로세움 전설의  후예 - 제한됨(h05I)의 게이트 "1/5" 능력 2개를 이 SkillData 하나로 묶었다.   · Rebeca_Skill_1#1: 계산식 (600000.00+(25000.00*I2R(GetUnitAbilityLevelSwapped(''A0QW'',u   · Rebeca_Skill_1#2: 계산식 (2100000.00+(87500.00*I2R(GetUnitAbilityLevelSwapped(''A0QW'',  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다.  [Rebeca_Skill_1#1] ⚠️ 능력 레벨 비례항(multiplier=25000×레벨)은 레벨 축이 없어 빼고 상수항(bonus)만 Flat으로 옮겼다 — 실제보다 약할 수 있다.  [Rebeca_Skill_1#2] ⚠️ 능력 레벨 비례항(multiplier=87500×레벨)은 레벨 축이 없어 빼고 상수항(bonus)만 Flat으로 옮겼다 — 실제보다 약할 수 있다. ⚠️ 2026-09-06 확인(LEVEL_COEFFICIENT_AXES.md, PM) — 이건 A11S가 아니라 A0QW(레베카 h05I 전용 자기 평타 누적 스택, 최대 21)다. A11S 16건과 달리 이중 적용 버그가 아니다 — 여기 값(600000/2100000)은 레벨1로 baked한 게 아니라 레벨(스택)=0의 순수 상수항 그대로다(CSV 원식의 상수항과 정확히 일치, multiplier=level×coefficient 항만 뺐다). 우리에 "평타마다 자기 능력 레벨을 영구 누적"하는 축이 없어(OnHitCount 게이지는 임계 도달 시 리셋되는 공유 카운터라 다른 구조다) 새로 안 만든다 — 원작 유닛 한 기 전용이라 축을 새로 만들 값어치가 작다는 판단(PM). 스택 없는 상태(레벨0)로 안전하게 근사한 것, 회귀 없음 — 값을 깎는 근사(최대 1.8배까지 약함)로 남는다. [제한 나머지 09-30] U7: 「전설의 후예」 A0QW는 레벨 1에서 시작 — 600000 + 25000×1 = 625000 · 2100000 + 87500×1 = 2187500(레벨 0 값이었다). 레벨 성장(1/45)은 미반영. (Tools/apply_limited_rest.py) [작은 축 09-30] ⓑ X6: 게이트가 대상에 따라 갈린다(PV 200이면 1/5 · B06B면 1/5 · 그 밖 1/10) — 이 에셋은 「대상 PV 200: 1/5」 갈래로, 나머지 둘은 _B06B·_일반 에셋. (Tools/apply_small_axes.py)'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uC81C\uD55C_\uCD5C\uC601\uBBFC_33bd8aa4"
+  m_EditorClassIdentifier: 
+  skillName: "\uB808\uBCA0\uCE74 \uCF5C\uB85C\uC138\uC6C0 \uC804\uC124\uC758  \uD6C4\uC608
+    - \uC81C\uD55C\uB428 \u2014 1/5"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 \uB808\uBCA0\uCE74 \uCF5C\uB85C\uC138\uC6C0 \uC804\uC124\uC758 
+    \uD6C4\uC608 - \uC81C\uD55C\uB428(h05I)\uC758 \uAC8C\uC774\uD2B8 \"1/5\" \uB2A5\uB825
+    2\uAC1C\uB97C \uC774 SkillData \uD558\uB098\uB85C \uBB36\uC5C8\uB2E4.   \xB7
+    Rebeca_Skill_1#1: \uACC4\uC0B0\uC2DD (600000.00+(25000.00*I2R(GetUnitAbilityLevelSwapped('A0QW',u  
+    \xB7 Rebeca_Skill_1#2: \uACC4\uC0B0\uC2DD (2100000.00+(87500.00*I2R(GetUnitAbilityLevelSwapped('A0QW', 
+    hitCount>1\uC740 \"\uAC19\uC740 RRD \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0 \uC2DC\uAC04\uCC28
+    \uB2E4\uB2E8\uD788\uD2B8\uAC00 \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC
+    \uC5F0\uC18D N\uD68C)\uC73C\uB85C \uADFC\uC0AC\uD588\uB2E4.  [Rebeca_Skill_1#1]
+    \u26A0\uFE0F \uB2A5\uB825 \uB808\uBCA8 \uBE44\uB840\uD56D(multiplier=25000\xD7\uB808\uBCA8)\uC740
+    \uB808\uBCA8 \uCD95\uC774 \uC5C6\uC5B4 \uBE7C\uACE0 \uC0C1\uC218\uD56D(bonus)\uB9CC
+    Flat\uC73C\uB85C \uC62E\uACBC\uB2E4 \u2014 \uC2E4\uC81C\uBCF4\uB2E4 \uC57D\uD560
+    \uC218 \uC788\uB2E4.  [Rebeca_Skill_1#2] \u26A0\uFE0F \uB2A5\uB825 \uB808\uBCA8
+    \uBE44\uB840\uD56D(multiplier=87500\xD7\uB808\uBCA8)\uC740 \uB808\uBCA8 \uCD95\uC774
+    \uC5C6\uC5B4 \uBE7C\uACE0 \uC0C1\uC218\uD56D(bonus)\uB9CC Flat\uC73C\uB85C \uC62E\uACBC\uB2E4
+    \u2014 \uC2E4\uC81C\uBCF4\uB2E4 \uC57D\uD560 \uC218 \uC788\uB2E4. \u26A0\uFE0F
+    2026-09-06 \uD655\uC778(LEVEL_COEFFICIENT_AXES.md, PM) \u2014 \uC774\uAC74 A11S\uAC00
+    \uC544\uB2C8\uB77C A0QW(\uB808\uBCA0\uCE74 h05I \uC804\uC6A9 \uC790\uAE30 \uD3C9\uD0C0
+    \uB204\uC801 \uC2A4\uD0DD, \uCD5C\uB300 21)\uB2E4. A11S 16\uAC74\uACFC \uB2EC\uB9AC
+    \uC774\uC911 \uC801\uC6A9 \uBC84\uADF8\uAC00 \uC544\uB2C8\uB2E4 \u2014 \uC5EC\uAE30
+    \uAC12(600000/2100000)\uC740 \uB808\uBCA81\uB85C baked\uD55C \uAC8C \uC544\uB2C8\uB77C
+    \uB808\uBCA8(\uC2A4\uD0DD)=0\uC758 \uC21C\uC218 \uC0C1\uC218\uD56D \uADF8\uB300\uB85C\uB2E4(CSV
+    \uC6D0\uC2DD\uC758 \uC0C1\uC218\uD56D\uACFC \uC815\uD655\uD788 \uC77C\uCE58,
+    multiplier=level\xD7coefficient \uD56D\uB9CC \uBE90\uB2E4). \uC6B0\uB9AC\uC5D0
+    \"\uD3C9\uD0C0\uB9C8\uB2E4 \uC790\uAE30 \uB2A5\uB825 \uB808\uBCA8\uC744 \uC601\uAD6C
+    \uB204\uC801\"\uD558\uB294 \uCD95\uC774 \uC5C6\uC5B4(OnHitCount \uAC8C\uC774\uC9C0\uB294
+    \uC784\uACC4 \uB3C4\uB2EC \uC2DC \uB9AC\uC14B\uB418\uB294 \uACF5\uC720 \uCE74\uC6B4\uD130\uB77C
+    \uB2E4\uB978 \uAD6C\uC870\uB2E4) \uC0C8\uB85C \uC548 \uB9CC\uB4E0\uB2E4 \u2014
+    \uC6D0\uC791 \uC720\uB2DB \uD55C \uAE30 \uC804\uC6A9\uC774\uB77C \uCD95\uC744
+    \uC0C8\uB85C \uB9CC\uB4E4 \uAC12\uC5B4\uCE58\uAC00 \uC791\uB2E4\uB294 \uD310\uB2E8(PM).
+    \uC2A4\uD0DD \uC5C6\uB294 \uC0C1\uD0DC(\uB808\uBCA80)\uB85C \uC548\uC804\uD558\uAC8C
+    \uADFC\uC0AC\uD55C \uAC83, \uD68C\uADC0 \uC5C6\uC74C \u2014 \uAC12\uC744 \uAE4E\uB294
+    \uADFC\uC0AC(\uCD5C\uB300 1.8\uBC30\uAE4C\uC9C0 \uC57D\uD568)\uB85C \uB0A8\uB294\uB2E4.
+    [\uC81C\uD55C \uB098\uBA38\uC9C0 09-30] U7: \u300C\uC804\uC124\uC758 \uD6C4\uC608\u300D
+    A0QW\uB294 \uB808\uBCA8 1\uC5D0\uC11C \uC2DC\uC791 \u2014 600000 + 25000\xD71
+    = 625000 \xB7 2100000 + 87500\xD71 = 2187500(\uB808\uBCA8 0 \uAC12\uC774\uC5C8\uB2E4).
+    \uB808\uBCA8 \uC131\uC7A5(1/45)\uC740 \uBBF8\uBC18\uC601. (Tools/apply_limited_rest.py)
+    [\uC791\uC740 \uCD95 09-30] \u24D1 X6: \uAC8C\uC774\uD2B8\uAC00 \uB300\uC0C1\uC5D0
+    \uB530\uB77C \uAC08\uB9B0\uB2E4(PV 200\uC774\uBA74 1/5 \xB7 B06B\uBA74 1/5 \xB7
+    \uADF8 \uBC16 1/10) \u2014 \uC774 \uC5D0\uC14B\uC740 \u300C\uB300\uC0C1 PV 200:
+    1/5\u300D \uAC08\uB798\uB85C, \uB098\uBA38\uC9C0 \uB458\uC740 _B06B\xB7_\uC77C\uBC18
+    \uC5D0\uC14B. (Tools/apply_small_axes.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.2
-    range: 450.0
+    range: 450
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 1
-      multiplier: 625000.0
-      bonus: 0.0
+      multiplier: 625000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 7
-      multiplier: 2187500.0
-      bonus: 0.0
+      multiplier: 2187500
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
     primaryTargetCondition: 2
-    primaryTargetConditionValue: 200.0
+    primaryTargetConditionValue: 200
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 177c3162566054a6d9dbb2fa238e0218, type: 3}

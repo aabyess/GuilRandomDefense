@@ -10,47 +10,83 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_박민석_A0VW
-  m_EditorClassIdentifier:
-  skillName: A0VW 샨디아의 기운 방깎 — 평타 맞은 PV 200 적 방어 −40 · 7초
-  description: 원작 카르가라 h03F uabi A0VW(AIcb, Iarp 40, adur 7, atar ancient = PV 200). 같은 능력은 겹치지 않고 갱신. 2026-09-30 구현담당1.
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uBC15\uBBFC\uC11D_A0VW"
+  m_EditorClassIdentifier: 
+  skillName: "A0VW \uC0E8\uB514\uC544\uC758 \uAE30\uC6B4 \uBC29\uAE4E \u2014 \uD3C9\uD0C0
+    \uB9DE\uC740 PV 200 \uC801 \uBC29\uC5B4 \u221240 \xB7 7\uCD08"
+  description: "\uC6D0\uC791 \uCE74\uB974\uAC00\uB77C h03F uabi A0VW(AIcb, Iarp 40,
+    adur 7, atar ancient = PV 200). \uAC19\uC740 \uB2A5\uB825\uC740 \uACB9\uCE58\uC9C0
+    \uC54A\uACE0 \uAC31\uC2E0. 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91."
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 0.0
+    triggerChance: 1
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 4
       basis: 0
       target: 3
       damageType: 0
       attackType: 0
-      multiplier: -40.0
-      bonus: 0.0
+      multiplier: -40
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 7.0
-      casterBuffCountFactor: 0.0
+      duration: 7
+      casterBuffCountFactor: 0
       buffId: A0VW
-      randMin: 1.0
-      randMax: 1.0
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 2
-      targetConditionValue: 200.0
+      targetConditionValue: 200
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: ff098ccc878be4c7fa72505aea56590b, type: 3}

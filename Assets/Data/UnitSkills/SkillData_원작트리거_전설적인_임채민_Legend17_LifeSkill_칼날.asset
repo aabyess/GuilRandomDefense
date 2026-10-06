@@ -10,52 +10,84 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작트리거_전설적인_임채민_Legend17_LifeSkill_칼날
-  m_EditorClassIdentifier:
-  skillName: 마르코(전설) 깃털폭풍 칼날 A08J — LIFE게이지25(시전자 중심 1100 범위 400000 · 최대 7마리)
-  description: '원작 마르코 h02T Legend17_MacroLifeSkill: 더미가 fanofknives A08J(AEfk, Efk1 400000 · aare 1100 · Efk3 7). 2026-09-30 구현담당1(LEGEND_FILL_LIST §0-9).'
+  m_Name: "SkillData_\uC6D0\uC791\uD2B8\uB9AC\uAC70_\uC804\uC124\uC801\uC778_\uC784\uCC44\uBBFC_Legend17_LifeSkill_\uCE7C\uB0A0"
+  m_EditorClassIdentifier: 
+  skillName: "\uB9C8\uB974\uCF54(\uC804\uC124) \uAE43\uD138\uD3ED\uD48D \uCE7C\uB0A0
+    A08J \u2014 LIFE\uAC8C\uC774\uC9C025(\uC2DC\uC804\uC790 \uC911\uC2EC 1100 \uBC94\uC704
+    400000 \xB7 \uCD5C\uB300 7\uB9C8\uB9AC)"
+  description: "\uC6D0\uC791 \uB9C8\uB974\uCF54 h02T Legend17_MacroLifeSkill: \uB354\uBBF8\uAC00
+    fanofknives A08J(AEfk, Efk1 400000 \xB7 aare 1100 \xB7 Efk3 7). 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(LEGEND_FILL_LIST
+    \xA70-9)."
   triggerType: 3
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 1100.0
+    triggerChance: 1
+    range: 1100
     hitCountThreshold: 25
     resetTo: 1
     gaugeKind: 1
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 400000.0
-      bonus: 0.0
+      multiplier: 400000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 7
-      chainDamageStep: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 1
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
     primaryTargetCondition: 0
-    primaryTargetConditionValue: 0.0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 233d8dbe2c4044468a6e4f30f641a1b1, type: 3}

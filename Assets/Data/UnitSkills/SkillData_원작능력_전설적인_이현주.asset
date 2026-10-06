@@ -10,35 +10,144 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_이현주
-  m_EditorClassIdentifier:
-  skillName: A05S !매료매료 열매 — 15% +150000 · 스턴 0.8초
-  description: '원작 전설적인 마샬.D.티치 검은수염 해적단 선장 "검은수염" - 전설적인(Trig_Legend26). | 1채널 추가 배정(원작 전설적인 보아 핸콕 쿠사 해적단 선장 - 전설적인(h032)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시). | 정정(2026-09-30, 구현담당1 — ORIGIN_ABILITY_PROVENANCE 「다른 곳에 있음」): 현재×0.01+500000은 Trig_Legend26(h02U=전설적인_홍인창) LIFE==40 광역 몫이라 그쪽 새 에셋으로. 뺀 효과(basis, 값, 상수): [(''2'', ''0.01'', ''500000.0'')] [하위 등급 블록 09-30] A05S(ACbh, Hbh1 빈칸 = 스톡 15%, Hbh3 150000, adur 0.8): 확률 0.2 → 0.15 · 스턴 0.3 → 0.8초. (Tools/apply_lower_grade_blocks.py)'
-  · A05S !매료매료 열매: 발동1.0 배수0.0 추가150000.0
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uC774\uD604\uC8FC"
+  m_EditorClassIdentifier: 
+  skillName: "A05S !\uB9E4\uB8CC\uB9E4\uB8CC \uC5F4\uB9E4 \u2014 15% +150000 \xB7
+    \uC2A4\uD134 0.8\uCD08"
+  description: "\uC6D0\uC791 \uC804\uC124\uC801\uC778 \uB9C8\uC0EC.D.\uD2F0\uCE58
+    \uAC80\uC740\uC218\uC5FC \uD574\uC801\uB2E8 \uC120\uC7A5 \"\uAC80\uC740\uC218\uC5FC\"
+    - \uC804\uC124\uC801\uC778(Trig_Legend26). | 1\uCC44\uB110 \uCD94\uAC00 \uBC30\uC815(\uC6D0\uC791
+    \uC804\uC124\uC801\uC778 \uBCF4\uC544 \uD578\uCF55 \uCFE0\uC0AC \uD574\uC801\uB2E8
+    \uC120\uC7A5 - \uC804\uC124\uC801\uC778(h032)\uC758 \uB2A5\uB825 1\uAC1C): \uB2E4\uB978
+    \uCC44\uB110\uC774 \uC774\uBBF8 \uC774 \uC720\uB2DB\uC744 \uCC28\uC9C0\uD558\uACE0
+    \uC788\uC5B4 \uC21C\uC704 \uBC30\uC815 \uB300\uC2E0 \uADF8 \uC720\uB2DB\uC5D0
+    \uADF8\uB300\uB85C \uC5B9\uC5C8\uB2E4(\uC6B0\uC120\uC21C\uC704 06\uBC88\u2460/\uAC8C\uC774\uD2B8\xB7\uD68C\uC218/2\uCC44\uB110\uC774
+    1\uCC44\uB110\uBCF4\uB2E4 \uBA3C\uC800, 2026-09-06 PM \uC9C0\uC2DC). | \uC815\uC815(2026-09-30,
+    \uAD6C\uD604\uB2F4\uB2F91 \u2014 ORIGIN_ABILITY_PROVENANCE \u300C\uB2E4\uB978
+    \uACF3\uC5D0 \uC788\uC74C\u300D): \uD604\uC7AC\xD70.01+500000\uC740 Trig_Legend26(h02U=\uC804\uC124\uC801\uC778_\uD64D\uC778\uCC3D)
+    LIFE==40 \uAD11\uC5ED \uBAAB\uC774\uB77C \uADF8\uCABD \uC0C8 \uC5D0\uC14B\uC73C\uB85C.
+    \uBE80 \uD6A8\uACFC(basis, \uAC12, \uC0C1\uC218): [('2', '0.01', '500000.0')]
+    [\uD558\uC704 \uB4F1\uAE09 \uBE14\uB85D 09-30] A05S(ACbh, Hbh1 \uBE48\uCE78 =
+    \uC2A4\uD1A1 15%, Hbh3 150000, adur 0.8): \uD655\uB960 0.2 \u2192 0.15 \xB7 \uC2A4\uD134
+    0.3 \u2192 0.8\uCD08. (Tools/apply_lower_grade_blocks.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.15
     range: 0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 3
       target: 3
       damageType: 1
       attackType: 1
-      multiplier: 0.0
-      bonus: 150000.0
+      multiplier: 0
+      bonus: 150000
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 3
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0.8
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
       heroDuration: 0.4
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 2d0046953563f41b2a707894577eeeed, type: 3}

@@ -10,59 +10,83 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작트리거_랜덤_모몬가_ichigo2
-  m_EditorClassIdentifier:
-  skillName: 이치고 — 월아천충 1/22(A093 피해 450000 · 길이 1150 · 반경 250→375)
-  description: '원작 이치고 h071 ichigo1: GetRandomInt(1,22)==3 → ichigo2가 더미 e0MT로 carrionswarm A093 한 번(뒤따르는 e0MT 여섯은 시각). [직선 09-30] 2026-09-30 구현담당1(Tools/apply_line_skills.py).'
+  m_Name: "SkillData_\uC6D0\uC791\uD2B8\uB9AC\uAC70_\uB79C\uB364_\uBAA8\uBAAC\uAC00_ichigo2"
+  m_EditorClassIdentifier: 
+  skillName: "\uC774\uCE58\uACE0 \u2014 \uC6D4\uC544\uCC9C\uCDA9 1/22(A093 \uD53C\uD574
+    450000 \xB7 \uAE38\uC774 1150 \xB7 \uBC18\uACBD 250\u2192375)"
+  description: "\uC6D0\uC791 \uC774\uCE58\uACE0 h071 ichigo1: GetRandomInt(1,22)==3
+    \u2192 ichigo2\uAC00 \uB354\uBBF8 e0MT\uB85C carrionswarm A093 \uD55C \uBC88(\uB4A4\uB530\uB974\uB294
+    e0MT \uC5EC\uC12F\uC740 \uC2DC\uAC01). [\uC9C1\uC120 09-30] 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(Tools/apply_line_skills.py)."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.045455
-    range: 0.0
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 450000.0
-      bonus: 0.0
+      multiplier: 450000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 0
-      chainDamageStep: 0.0
-      zoneTickInterval: 0.0
-      zoneRadius: 0.0
-      zoneSpacing: 0.0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
       zoneAtCaster: 0
-      lineLength: 1150.0
-      lineStartRadius: 250.0
-      lineEndRadius: 375.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      lineLength: 1150
+      lineStartRadius: 250
+      lineEndRadius: 375
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
     primaryTargetCondition: 0
-    primaryTargetConditionValue: 0.0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 647d9c35304c4400aad44fc9ea45cf03, type: 3}

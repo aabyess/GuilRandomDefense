@@ -10,47 +10,87 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작트리거_초월_강주혁_AP_Nami_Skill_1
-  m_EditorClassIdentifier:
-  skillName: 나미 — Nami_Skill_1 헤비레인 1/24(400 범위 300000×1~1.5 ×8)
-  description: '원작 나미 H08V Nami_Attack 1/24 → Nami_Skill_1: 대상 근처 무작위 지점 400 범위 (300000 + INT×3500)×1~1.5 NORMAL/UNIVERSAL 8회(integerA==8까지) — 대상 중심으로 근사, INT 항은 H08V가 hrif 기반(영웅 아님)이라 0. T특성 끝 타(450000)·이감 오라 A0FV는 미반영. 2026-09-30 구현담당1.'
+  m_Name: "SkillData_\uC6D0\uC791\uD2B8\uB9AC\uAC70_\uCD08\uC6D4_\uAC15\uC8FC\uD601_AP_Nami_Skill_1"
+  m_EditorClassIdentifier: 
+  skillName: "\uB098\uBBF8 \u2014 Nami_Skill_1 \uD5E4\uBE44\uB808\uC778 1/24(400
+    \uBC94\uC704 300000\xD71~1.5 \xD78)"
+  description: "\uC6D0\uC791 \uB098\uBBF8 H08V Nami_Attack 1/24 \u2192 Nami_Skill_1:
+    \uB300\uC0C1 \uADFC\uCC98 \uBB34\uC791\uC704 \uC9C0\uC810 400 \uBC94\uC704 (300000
+    + INT\xD73500)\xD71~1.5 NORMAL/UNIVERSAL 8\uD68C(integerA==8\uAE4C\uC9C0) \u2014
+    \uB300\uC0C1 \uC911\uC2EC\uC73C\uB85C \uADFC\uC0AC, INT \uD56D\uC740 H08V\uAC00
+    hrif \uAE30\uBC18(\uC601\uC6C5 \uC544\uB2D8)\uC774\uB77C 0. T\uD2B9\uC131 \uB05D
+    \uD0C0(450000)\xB7\uC774\uAC10 \uC624\uB77C A0FV\uB294 \uBBF8\uBC18\uC601. 2026-09-30
+    \uAD6C\uD604\uB2F4\uB2F91."
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.041666666666666664
-    range: 400.0
+    triggerChance: 0.041666668
+    range: 400
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 300000.0
-      bonus: 0.0
+      multiplier: 300000
+      bonus: 0
       chance: 1
       hitCount: 8
-      duration: 3.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
+      duration: 3
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
       randMax: 1.5
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: e7170365bef984d2c9a4a3e2866a919a, type: 3}

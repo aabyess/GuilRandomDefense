@@ -10,36 +10,95 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_특별함_주영호
-  m_EditorClassIdentifier:
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uD2B9\uBCC4\uD568_\uC8FC\uC601\uD638"
+  m_EditorClassIdentifier: 
   skillName: Speical1 1/10
-  description: '원작 특별함 나미 크리마 텍트 - 특별함(Trig_Speical1). | 2차 배정(트리거·더미 채널): 원작 특별함 나미 크리마 텍트 - 특별함(더미 경로 Trig_Speical1 → e099(S특별함 나미 더미) → A0RF). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Speical1(h00P) = `1~10==3 → e099(A0RF 이감 오라 더미) + 대상 위치 400 광역 800 NORMAL/UNIVERSAL`. 이전: 확률 0.2·스턴0.25(A06O = h011/h018 남의 강타)·800 두 벌(단일)·AD → 원문대로.'
-  정정(2026-09-06, 판정 d5f72d5): A0RF의 -0.05 효과를 제거했다 — base AOae의 Oae1은 이동속도 감소율(음수)이라 피해가 아니다. 같은 파일의 다른 효과들(800×2)은 다른 트리거에서 온 값이라 그대로 둔다. (판정 불일치는 음수값을 못 잡는 정규식 버그가 원인이었음이 밝혀져 해소됐다.)
+  description: "\uC6D0\uC791 \uD2B9\uBCC4\uD568 \uB098\uBBF8 \uD06C\uB9AC\uB9C8 \uD14D\uD2B8
+    - \uD2B9\uBCC4\uD568(Trig_Speical1). | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uD2B9\uBCC4\uD568 \uB098\uBBF8 \uD06C\uB9AC\uB9C8
+    \uD14D\uD2B8 - \uD2B9\uBCC4\uD568(\uB354\uBBF8 \uACBD\uB85C Trig_Speical1 \u2192
+    e099(S\uD2B9\uBCC4\uD568 \uB098\uBBF8 \uB354\uBBF8) \u2192 A0RF). \u26A0\uFE0F
+    \uC2A4\uD1A1 \uD544\uB4DC \uAC12 \uADF8\uB300\uB85C \u2014 \uD544\uB4DC \uB73B\uC774
+    \uBBF8\uD655\uC778\uC774\uB77C \uD53C\uD574\uAC00 \uC544\uB2C8\uB77C \uB2E4\uB978
+    \uD6A8\uACFC(\uC2AC\uB85C\uC6B0\xB7\uC2A4\uD134\xB7\uBC84\uD504 \uB4F1)\uC600\uC744
+    \uC218 \uC788\uB2E4. \uACF5\uACA9\uD0C0\uC785 \uC6D0\uBCF8\uC774 [\uBBF8\uD655\uC778]\uC774\uB77C
+    \uC774 \uC720\uB2DB \uC790\uC2E0\uC758 \uD3C9\uD0C0 \uD0C0\uC785\uC73C\uB85C
+    \uB300\uC2E0\uD588\uB2E4. | \uC815\uC815(2026-09-30 \uAD6C\uD604\uB2F4\uB2F91,
+    \uC911\uBCF5 \uAC80\uC0AC): \uC6D0\uBB38 Trig_Speical1(h00P) = `1~10==3 \u2192
+    e099(A0RF \uC774\uAC10 \uC624\uB77C \uB354\uBBF8) + \uB300\uC0C1 \uC704\uCE58
+    400 \uAD11\uC5ED 800 NORMAL/UNIVERSAL`. \uC774\uC804: \uD655\uB960 0.2\xB7\uC2A4\uD1340.25(A06O
+    = h011/h018 \uB0A8\uC758 \uAC15\uD0C0)\xB7800 \uB450 \uBC8C(\uB2E8\uC77C)\xB7AD
+    \u2192 \uC6D0\uBB38\uB300\uB85C."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 400.0
+    range: 400
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 800.0
-      bonus: 0.0
+      multiplier: 800
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: e7170365bef984d2c9a4a3e2866a919a, type: 3}

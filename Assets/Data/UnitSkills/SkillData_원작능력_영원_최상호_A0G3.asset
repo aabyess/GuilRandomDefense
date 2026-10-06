@@ -10,48 +10,84 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_영원_최상호_A0G3
-  m_EditorClassIdentifier:
-  skillName: A0G3 !최강의 참격 — 매 타 스턴 1.2초
-  description: '원작 미호크 h058 uabi A0G3(ACbh Hbh1 100·adur 1.2·Hbh3 0, atar air,enemies,ground, 트리거 참조 0): 평타마다 100%로 대상 스턴 1.2초, 피해 없음. 조건·절대쿨 없음. 2026-09-30 구현담당1(apply_eternal_unlocked).'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC601\uC6D0_\uCD5C\uC0C1\uD638_A0G3"
+  m_EditorClassIdentifier: 
+  skillName: "A0G3 !\uCD5C\uAC15\uC758 \uCC38\uACA9 \u2014 \uB9E4 \uD0C0 \uC2A4\uD134
+    1.2\uCD08"
+  description: "\uC6D0\uC791 \uBBF8\uD638\uD06C h058 uabi A0G3(ACbh Hbh1 100\xB7adur
+    1.2\xB7Hbh3 0, atar air,enemies,ground, \uD2B8\uB9AC\uAC70 \uCC38\uC870 0): \uD3C9\uD0C0\uB9C8\uB2E4
+    100%\uB85C \uB300\uC0C1 \uC2A4\uD134 1.2\uCD08, \uD53C\uD574 \uC5C6\uC74C. \uC870\uAC74\xB7\uC808\uB300\uCFE8
+    \uC5C6\uC74C. 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(apply_eternal_unlocked)."
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 0.0
+    triggerChance: 1
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 1
       basis: 0
       target: 3
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 1.2
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
       heroDuration: 1.2
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: c3e383c9ae4ea409685224d0b01cd195, type: 3}

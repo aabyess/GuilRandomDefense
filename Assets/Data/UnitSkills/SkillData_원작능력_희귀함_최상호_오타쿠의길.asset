@@ -10,103 +10,239 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_희귀함_최상호_오타쿠의길
-  m_EditorClassIdentifier:
-  skillName: Unique30 1/8 (맨손 투포환)
-  description: '원작 희귀함 거프 해군 영웅 - 희귀함(Trig_Unique30). | 2차 배정(트리거·더미 채널): 원작 희귀함 거프 해군 영웅 - 희귀함(Trig_Unique30). | 1채널 추가 배정(원작 희귀함 거프 해군 영웅 - 희귀함(h01Q)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시). | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Unique30(h01Q) = `1~8==4 → … Stage7: 50% AId1+1 + e00T thunderbolt(A07S 스턴2.5) + 대상 40000 NORMAL/UNIVERSAL + 대상 위치 500 광역 52500 SIEGE/NORMAL`. 이전: 52500 두 벌(단일)·+20000(제 강타 A04U) → 원문대로, A04U는 새 _A04U. 50% 방깎은 효과 chance 0.5.'
-  · A04U !패기의 주먹: 발동0.2 배수0.0 추가20000.0
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uD76C\uADC0\uD568_\uCD5C\uC0C1\uD638_\uC624\uD0C0\uCFE0\uC758\uAE38"
+  m_EditorClassIdentifier: 
+  skillName: "Unique30 1/8 (\uB9E8\uC190 \uD22C\uD3EC\uD658)"
+  description: "\uC6D0\uC791 \uD76C\uADC0\uD568 \uAC70\uD504 \uD574\uAD70 \uC601\uC6C5
+    - \uD76C\uADC0\uD568(Trig_Unique30). | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uD76C\uADC0\uD568 \uAC70\uD504 \uD574\uAD70 \uC601\uC6C5
+    - \uD76C\uADC0\uD568(Trig_Unique30). | 1\uCC44\uB110 \uCD94\uAC00 \uBC30\uC815(\uC6D0\uC791
+    \uD76C\uADC0\uD568 \uAC70\uD504 \uD574\uAD70 \uC601\uC6C5 - \uD76C\uADC0\uD568(h01Q)\uC758
+    \uB2A5\uB825 1\uAC1C): \uB2E4\uB978 \uCC44\uB110\uC774 \uC774\uBBF8 \uC774 \uC720\uB2DB\uC744
+    \uCC28\uC9C0\uD558\uACE0 \uC788\uC5B4 \uC21C\uC704 \uBC30\uC815 \uB300\uC2E0
+    \uADF8 \uC720\uB2DB\uC5D0 \uADF8\uB300\uB85C \uC5B9\uC5C8\uB2E4(\uC6B0\uC120\uC21C\uC704
+    06\uBC88\u2460/\uAC8C\uC774\uD2B8\xB7\uD68C\uC218/2\uCC44\uB110\uC774 1\uCC44\uB110\uBCF4\uB2E4
+    \uBA3C\uC800, 2026-09-06 PM \uC9C0\uC2DC). | \uC815\uC815(2026-09-30 \uAD6C\uD604\uB2F4\uB2F91,
+    \uC911\uBCF5 \uAC80\uC0AC): \uC6D0\uBB38 Trig_Unique30(h01Q) = `1~8==4 \u2192
+    \u2026 Stage7: 50% AId1+1 + e00T thunderbolt(A07S \uC2A4\uD1342.5) + \uB300\uC0C1
+    40000 NORMAL/UNIVERSAL + \uB300\uC0C1 \uC704\uCE58 500 \uAD11\uC5ED 52500 SIEGE/NORMAL`.
+    \uC774\uC804: 52500 \uB450 \uBC8C(\uB2E8\uC77C)\xB7+20000(\uC81C \uAC15\uD0C0
+    A04U) \u2192 \uC6D0\uBB38\uB300\uB85C, A04U\uB294 \uC0C8 _A04U. 50% \uBC29\uAE4E\uC740
+    \uD6A8\uACFC chance 0.5."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.125
-    range: 500.0
+    range: 500
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 7
-      multiplier: 40000.0
-      bonus: 0.0
+      multiplier: 40000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 3
-      multiplier: 52500.0
-      bonus: 0.0
+      multiplier: 52500
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 3
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 2.5
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
       heroDuration: 1.25
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 2
       basis: 0
       target: 3
       damageType: 0
       attackType: 0
-      multiplier: 1.0
-      bonus: 0.0
+      multiplier: 1
+      bonus: 0
       chance: 0.5
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 8baec4f5f0e5c44878650543e5fcf2b2, type: 3}

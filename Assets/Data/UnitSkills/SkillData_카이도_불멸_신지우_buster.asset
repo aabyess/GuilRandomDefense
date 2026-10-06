@@ -10,10 +10,31 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_카이도_불멸_신지우_buster
-  m_EditorClassIdentifier:
-  skillName: 카이도 — 용형 평타(Kaido_Dragon_buster)
-  description: '원작 h07M 카이도(용형 평타), 게이트="Kaido_Skill_int>=10 (용형 평타)"(리서치담당 확정, 2026-09-06 985150d — udg_Kaido_Damage=ReceivedDamage). Kaido_Skill_int는 카이도 평타에서만 오르는 카운터라 우리 축에 없지만, 10을 넘으면 그 뒤로 영구히 조건을 만족한다(단조 증가) — 한 판에 수백 번 때리는 유닛 특성상 초반 10타만 지나면 사실상 상시 발동이라 OnHitChance triggerChance=1.0이 장기적으로 정확한 근사다(PM 확인, 2026-09-06). 2효과: ReceivedDamage×2.1875+1,125,000(Enemies range575, NORMAL→AD, rand1) / 같은 식(SingleTarget, UNIVERSAL→AP, rand2.58 고정). | 정정(2026-09-30, 구현담당1 — R50 보스 0.6초 원문 대조): triggerChance 1.0 → 0.0936. 원문 Trig_Kaido_Attack: 용형 버프 B05Q가 없고 GetRandomInt(1,10)==6일 때 metamorphosis + Kaido_Dragon_buster(카운터 0으로). 「Kaido_Skill_int≥10 단조 증가라 상시」는 틀렸다 — 이 분기는 카운터와 무관하게 10%, 카운터 ≥11이면 먼저 Skill_1_8로 빠진다. 시뮬 기대 평타당 0.0936(용형 지속 중 B05Q로 막히는 몫은 빠짐).'
+  m_Name: "SkillData_\uCE74\uC774\uB3C4_\uBD88\uBA78_\uC2E0\uC9C0\uC6B0_buster"
+  m_EditorClassIdentifier: 
+  skillName: "\uCE74\uC774\uB3C4 \u2014 \uC6A9\uD615 \uD3C9\uD0C0(Kaido_Dragon_buster)"
+  description: "\uC6D0\uC791 h07M \uCE74\uC774\uB3C4(\uC6A9\uD615 \uD3C9\uD0C0),
+    \uAC8C\uC774\uD2B8=\"Kaido_Skill_int>=10 (\uC6A9\uD615 \uD3C9\uD0C0)\"(\uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    \uD655\uC815, 2026-09-06 985150d \u2014 udg_Kaido_Damage=ReceivedDamage). Kaido_Skill_int\uB294
+    \uCE74\uC774\uB3C4 \uD3C9\uD0C0\uC5D0\uC11C\uB9CC \uC624\uB974\uB294 \uCE74\uC6B4\uD130\uB77C
+    \uC6B0\uB9AC \uCD95\uC5D0 \uC5C6\uC9C0\uB9CC, 10\uC744 \uB118\uC73C\uBA74 \uADF8
+    \uB4A4\uB85C \uC601\uAD6C\uD788 \uC870\uAC74\uC744 \uB9CC\uC871\uD55C\uB2E4(\uB2E8\uC870
+    \uC99D\uAC00) \u2014 \uD55C \uD310\uC5D0 \uC218\uBC31 \uBC88 \uB54C\uB9AC\uB294
+    \uC720\uB2DB \uD2B9\uC131\uC0C1 \uCD08\uBC18 10\uD0C0\uB9CC \uC9C0\uB098\uBA74
+    \uC0AC\uC2E4\uC0C1 \uC0C1\uC2DC \uBC1C\uB3D9\uC774\uB77C OnHitChance triggerChance=1.0\uC774
+    \uC7A5\uAE30\uC801\uC73C\uB85C \uC815\uD655\uD55C \uADFC\uC0AC\uB2E4(PM \uD655\uC778,
+    2026-09-06). 2\uD6A8\uACFC: ReceivedDamage\xD72.1875+1,125,000(Enemies range575,
+    NORMAL\u2192AD, rand1) / \uAC19\uC740 \uC2DD(SingleTarget, UNIVERSAL\u2192AP,
+    rand2.58 \uACE0\uC815). | \uC815\uC815(2026-09-30, \uAD6C\uD604\uB2F4\uB2F91
+    \u2014 R50 \uBCF4\uC2A4 0.6\uCD08 \uC6D0\uBB38 \uB300\uC870): triggerChance 1.0
+    \u2192 0.0936. \uC6D0\uBB38 Trig_Kaido_Attack: \uC6A9\uD615 \uBC84\uD504 B05Q\uAC00
+    \uC5C6\uACE0 GetRandomInt(1,10)==6\uC77C \uB54C metamorphosis + Kaido_Dragon_buster(\uCE74\uC6B4\uD130
+    0\uC73C\uB85C). \u300CKaido_Skill_int\u226510 \uB2E8\uC870 \uC99D\uAC00\uB77C
+    \uC0C1\uC2DC\u300D\uB294 \uD2C0\uB838\uB2E4 \u2014 \uC774 \uBD84\uAE30\uB294
+    \uCE74\uC6B4\uD130\uC640 \uBB34\uAD00\uD558\uAC8C 10%, \uCE74\uC6B4\uD130 \u226511\uC774\uBA74
+    \uBA3C\uC800 Skill_1_8\uB85C \uBE60\uC9C4\uB2E4. \uC2DC\uBBAC \uAE30\uB300 \uD3C9\uD0C0\uB2F9
+    0.0936(\uC6A9\uD615 \uC9C0\uC18D \uC911 B05Q\uB85C \uB9C9\uD788\uB294 \uBAAB\uC740
+    \uBE60\uC9D0)."
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,6 +43,9 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 5
@@ -33,9 +57,44 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
       randMin: 1
       randMax: 1
-      casterBuffCountFactor: 0
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 5
       target: 3
@@ -46,6 +105,54 @@ MonoBehaviour:
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
       randMin: 2.58
       randMax: 2.58
-      casterBuffCountFactor: 0
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: e0be1d72052df42e28dc4b4b5a627b07, type: 3}

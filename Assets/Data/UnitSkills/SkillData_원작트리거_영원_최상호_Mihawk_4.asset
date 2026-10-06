@@ -10,47 +10,82 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작트리거_영원_최상호_Mihawk_4
-  m_EditorClassIdentifier:
-  skillName: Mihawk_4 — 1/7(450 범위 450000)
-  description: '원작 미호크 h058 Trig_Mihawk_Attack 바깥 GetRandomInt(1,7)==1 → Mihawk_4: 450 범위 450000 MAGIC/UNIVERSAL 한 번. 2026-09-30 구현담당1(ETERNAL_FILL_LIST §10).'
+  m_Name: "SkillData_\uC6D0\uC791\uD2B8\uB9AC\uAC70_\uC601\uC6D0_\uCD5C\uC0C1\uD638_Mihawk_4"
+  m_EditorClassIdentifier: 
+  skillName: "Mihawk_4 \u2014 1/7(450 \uBC94\uC704 450000)"
+  description: "\uC6D0\uC791 \uBBF8\uD638\uD06C h058 Trig_Mihawk_Attack \uBC14\uAE65
+    GetRandomInt(1,7)==1 \u2192 Mihawk_4: 450 \uBC94\uC704 450000 MAGIC/UNIVERSAL
+    \uD55C \uBC88. 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(ETERNAL_FILL_LIST \xA710)."
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.14285714285714285
-    range: 450.0
+    triggerChance: 0.14285715
+    range: 450
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 6
-      multiplier: 450000.0
-      bonus: 0.0
+      multiplier: 450000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 87ed8e4becdd94570b493099c15f5154, type: 3}

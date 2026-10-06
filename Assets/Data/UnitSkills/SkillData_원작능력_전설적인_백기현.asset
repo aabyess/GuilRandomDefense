@@ -10,35 +10,162 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_백기현
-  m_EditorClassIdentifier:
-  skillName: Trig_Legend10 → e00V(!전설 샹크스 스턴) → A07T
-  description: '원작 트리거·더미 피해표(ORIGINAL_SKILL_DAMAGE_TABLE.csv) DPS 순위 배정 — 원작 전설적인 샹크스 사황 ''붉은머리'' - 전설적인(더미:Trig_Legend10 → e00V(!전설 샹크스 스턴) → A07T)의 피해를 옮겼다. 1차(uabi 능력ID) CSV엔 없던 능력이다 — 원작이 유닛ID→트리거 해시테이블로 처리해서 능력ID로는 안 보였다. 개별 대응 아님(이름매핑 불가) — 원작 유닛 하나(행 1개)를 통째로 이 유닛에 배정했다(2026-09-06 유닛 단위 재배정, TEAM_RULES 뿌리 ⑮). | 2차 배정(트리거·더미 채널): 원작 전설적인 샹크스 사황 ''붉은머리'' - 전설적인(더미 경로 Trig_Legend10 → e00V(!전설 샹크스 스턴) → A07T). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 1채널 추가 배정(원작 전설적인 샹크스 사황 ''붉은머리'' - 전설적인(h035)의 능력 1개): 다른 채널이 이미 이 유닛을 차지하고 있어 순위 배정 대신 그 유닛에 그대로 얹었다(우선순위 06번①/게이트·회수/2채널이 1채널보다 먼저, 2026-09-06 PM 지시). 정정(2026-09-06, GATE_FIX_14/c1adaea): 원작 Trig_Legend10 → e00V 더미 GetRandomInt(1,10)==3 확정(DUMMY_CHANNEL_GATES.csv에 이미 있던 값과 일치) — triggerChance 1.0(근사) → 0.10(1/10). [전설 범위화 09-30] 패기(Legend10 1/10): stomp A07T는 600 범위 125000·스턴 2.0초 — 단일이었다. 같이 들어 있던 A03X(×10 + 250000)는 별도 강타(20%)라 에셋을 뗐다(0.1로 나가 2배 과소였다). (Tools/apply_legend_rest2.py)'
-  · A03X !패기의 검술: 발동0.2 배수10.0 추가250000.0
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uBC31\uAE30\uD604"
+  m_EditorClassIdentifier: 
+  skillName: "Trig_Legend10 \u2192 e00V(!\uC804\uC124 \uC0F9\uD06C\uC2A4 \uC2A4\uD134)
+    \u2192 A07T"
+  description: "\uC6D0\uC791 \uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8 \uD53C\uD574\uD45C(ORIGINAL_SKILL_DAMAGE_TABLE.csv)
+    DPS \uC21C\uC704 \uBC30\uC815 \u2014 \uC6D0\uC791 \uC804\uC124\uC801\uC778 \uC0F9\uD06C\uC2A4
+    \uC0AC\uD669 '\uBD89\uC740\uBA38\uB9AC' - \uC804\uC124\uC801\uC778(\uB354\uBBF8:Trig_Legend10
+    \u2192 e00V(!\uC804\uC124 \uC0F9\uD06C\uC2A4 \uC2A4\uD134) \u2192 A07T)\uC758
+    \uD53C\uD574\uB97C \uC62E\uACBC\uB2E4. 1\uCC28(uabi \uB2A5\uB825ID) CSV\uC5D4
+    \uC5C6\uB358 \uB2A5\uB825\uC774\uB2E4 \u2014 \uC6D0\uC791\uC774 \uC720\uB2DBID\u2192\uD2B8\uB9AC\uAC70
+    \uD574\uC2DC\uD14C\uC774\uBE14\uB85C \uCC98\uB9AC\uD574\uC11C \uB2A5\uB825ID\uB85C\uB294
+    \uC548 \uBCF4\uC600\uB2E4. \uAC1C\uBCC4 \uB300\uC751 \uC544\uB2D8(\uC774\uB984\uB9E4\uD551
+    \uBD88\uAC00) \u2014 \uC6D0\uC791 \uC720\uB2DB \uD558\uB098(\uD589 1\uAC1C)\uB97C
+    \uD1B5\uC9F8\uB85C \uC774 \uC720\uB2DB\uC5D0 \uBC30\uC815\uD588\uB2E4(2026-09-06
+    \uC720\uB2DB \uB2E8\uC704 \uC7AC\uBC30\uC815, TEAM_RULES \uBFCC\uB9AC \u246E).
+    | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8 \uCC44\uB110): \uC6D0\uC791
+    \uC804\uC124\uC801\uC778 \uC0F9\uD06C\uC2A4 \uC0AC\uD669 '\uBD89\uC740\uBA38\uB9AC'
+    - \uC804\uC124\uC801\uC778(\uB354\uBBF8 \uACBD\uB85C Trig_Legend10 \u2192 e00V(!\uC804\uC124
+    \uC0F9\uD06C\uC2A4 \uC2A4\uD134) \u2192 A07T). \u26A0\uFE0F \uC2A4\uD1A1 \uD544\uB4DC
+    \uAC12 \uADF8\uB300\uB85C \u2014 \uD544\uB4DC \uB73B\uC774 \uBBF8\uD655\uC778\uC774\uB77C
+    \uD53C\uD574\uAC00 \uC544\uB2C8\uB77C \uB2E4\uB978 \uD6A8\uACFC(\uC2AC\uB85C\uC6B0\xB7\uC2A4\uD134\xB7\uBC84\uD504
+    \uB4F1)\uC600\uC744 \uC218 \uC788\uB2E4. \uACF5\uACA9\uD0C0\uC785 \uC6D0\uBCF8\uC774
+    [\uBBF8\uD655\uC778]\uC774\uB77C \uC774 \uC720\uB2DB \uC790\uC2E0\uC758 \uD3C9\uD0C0
+    \uD0C0\uC785\uC73C\uB85C \uB300\uC2E0\uD588\uB2E4. | 1\uCC44\uB110 \uCD94\uAC00
+    \uBC30\uC815(\uC6D0\uC791 \uC804\uC124\uC801\uC778 \uC0F9\uD06C\uC2A4 \uC0AC\uD669
+    '\uBD89\uC740\uBA38\uB9AC' - \uC804\uC124\uC801\uC778(h035)\uC758 \uB2A5\uB825
+    1\uAC1C): \uB2E4\uB978 \uCC44\uB110\uC774 \uC774\uBBF8 \uC774 \uC720\uB2DB\uC744
+    \uCC28\uC9C0\uD558\uACE0 \uC788\uC5B4 \uC21C\uC704 \uBC30\uC815 \uB300\uC2E0
+    \uADF8 \uC720\uB2DB\uC5D0 \uADF8\uB300\uB85C \uC5B9\uC5C8\uB2E4(\uC6B0\uC120\uC21C\uC704
+    06\uBC88\u2460/\uAC8C\uC774\uD2B8\xB7\uD68C\uC218/2\uCC44\uB110\uC774 1\uCC44\uB110\uBCF4\uB2E4
+    \uBA3C\uC800, 2026-09-06 PM \uC9C0\uC2DC). \uC815\uC815(2026-09-06, GATE_FIX_14/c1adaea):
+    \uC6D0\uC791 Trig_Legend10 \u2192 e00V \uB354\uBBF8 GetRandomInt(1,10)==3 \uD655\uC815(DUMMY_CHANNEL_GATES.csv\uC5D0
+    \uC774\uBBF8 \uC788\uB358 \uAC12\uACFC \uC77C\uCE58) \u2014 triggerChance 1.0(\uADFC\uC0AC)
+    \u2192 0.10(1/10). [\uC804\uC124 \uBC94\uC704\uD654 09-30] \uD328\uAE30(Legend10
+    1/10): stomp A07T\uB294 600 \uBC94\uC704 125000\xB7\uC2A4\uD134 2.0\uCD08 \u2014
+    \uB2E8\uC77C\uC774\uC5C8\uB2E4. \uAC19\uC774 \uB4E4\uC5B4 \uC788\uB358 A03X(\xD710
+    + 250000)\uB294 \uBCC4\uB3C4 \uAC15\uD0C0(20%)\uB77C \uC5D0\uC14B\uC744 \uB5D0\uB2E4(0.1\uB85C
+    \uB098\uAC00 2\uBC30 \uACFC\uC18C\uC600\uB2E4). (Tools/apply_legend_rest2.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 600.0
+    range: 600
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 3
-      multiplier: 125000.0
-      bonus: 0.0
+      multiplier: 125000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 2
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 2.0
+      duration: 2
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
       heroDuration: 0.3
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: f0029f9c40e4e4ab8b7377d705e72e32, type: 3}

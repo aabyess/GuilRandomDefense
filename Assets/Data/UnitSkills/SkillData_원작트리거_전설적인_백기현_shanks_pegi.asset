@@ -10,21 +10,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작트리거_전설적인_백기현_shanks_pegi
-  m_EditorClassIdentifier:
-  skillName: 샹크스 패왕색 — 근접 1049(대상 최대체력 3% · 스턴 0.62초)
-  description: '원작 샹크스 h035 Legend10_shanks_pegi: 적이 1049 안에 들어오면(FlyHeight ≠ 1일 때 한 번) 대상 최대체력 3% + 더미 e0IU thunderbolt A0UE(스턴 0.62 / 영웅 0.62). [근접 09-30] 2026-09-30 구현담당1(Tools/apply_enter_range_skills.py).'
+  m_Name: "SkillData_\uC6D0\uC791\uD2B8\uB9AC\uAC70_\uC804\uC124\uC801\uC778_\uBC31\uAE30\uD604_shanks_pegi"
+  m_EditorClassIdentifier: 
+  skillName: "\uC0F9\uD06C\uC2A4 \uD328\uC655\uC0C9 \u2014 \uADFC\uC811 1049(\uB300\uC0C1
+    \uCD5C\uB300\uCCB4\uB825 3% \xB7 \uC2A4\uD134 0.62\uCD08)"
+  description: "\uC6D0\uC791 \uC0F9\uD06C\uC2A4 h035 Legend10_shanks_pegi: \uC801\uC774
+    1049 \uC548\uC5D0 \uB4E4\uC5B4\uC624\uBA74(FlyHeight \u2260 1\uC77C \uB54C \uD55C
+    \uBC88) \uB300\uC0C1 \uCD5C\uB300\uCCB4\uB825 3% + \uB354\uBBF8 e0IU thunderbolt
+    A0UE(\uC2A4\uD134 0.62 / \uC601\uC6C5 0.62). [\uADFC\uC811 09-30] 2026-09-30
+    \uAD6C\uD604\uB2F4\uB2F91(Tools/apply_enter_range_skills.py)."
   triggerType: 4
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 0.0
+    triggerChance: 1
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 1
@@ -32,71 +37,106 @@ MonoBehaviour:
       damageType: 2
       attackType: 7
       multiplier: 0.03
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 1
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 0
-      chainDamageStep: 0.0
-      zoneTickInterval: 0.0
-      zoneRadius: 0.0
-      zoneSpacing: 0.0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
       zoneAtCaster: 0
-      lineLength: 0.0
-      lineStartRadius: 0.0
-      lineEndRadius: 0.0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 3
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0.62
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
       heroDuration: 0.62
       maxTargets: 0
-      chainDamageStep: 0.0
-      zoneTickInterval: 0.0
-      zoneRadius: 0.0
-      zoneSpacing: 0.0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
       zoneAtCaster: 0
-      lineLength: 0.0
-      lineStartRadius: 0.0
-      lineEndRadius: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId: 표식_FlyHeight
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: "\uD45C\uC2DD_FlyHeight"
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
     primaryTargetCondition: 0
-    primaryTargetConditionValue: 0.0
+    primaryTargetConditionValue: 0
     exclusiveGroup: 0
-    enterRange: 1049.0
+    enterRange: 1049
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: f0029f9c40e4e4ab8b7377d705e72e32, type: 3}

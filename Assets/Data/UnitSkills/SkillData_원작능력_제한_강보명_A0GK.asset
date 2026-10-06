@@ -10,38 +10,159 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_제한_강보명_A0GK
-  m_EditorClassIdentifier:
-  skillName: A0GK !단신 최강
-  description: '쪼갬(2026-09-06, PM 설계 결정 — 능력 하나에 파일 하나): 이전엔 이 파일이 2개 능력코드(A0GK, A0GM)의 효과를 triggerChance 하나로 공유했다. A0GK !!단신 최강(발동1.0)만 남기고 나머지는 새 파일로 옮겼다(같은 로스터에 skills로 추가). 원래 설명: 원작 능력표(ORIGINAL_UNIT_ABILITIES.csv) DPS 순위 배정 — 원작 제한됨 패트릭 레드필드 붉은백작 - 제한됨(h05G)의 발동확률·피해배수·추가피해를 그대로 옮겼다. 개별 대응 아님(이름매핑 불가, 순위 배정으로 우회) — 등급 안에서 원작은 uid 그룹 총점(능력 기대값 합), 우리는 DPS(공격력×공속) 내림차순으로 정렬해 순서대로 짝지었다. damageType은 AD로 통일(원작 스킬의 마법 여부는 CSV에 없음, 리서치담당 조사 중) — attackType은 이 유닛의 평타 타입을 그대로 썼다. 이 원작 유닛의 능력 2개를 전부 이 유닛 하나에 배정했다(uid 단위 배정, 뿌리 ⑮ 세 번째 얼굴 수정). 능력마다 발동확률이 다르면 가장 높은 값을 대표로 썼다(SkillLevel 하나엔 triggerChance 하나뿐이라서 — 과소 계상보다 안전한 근사).   · A0GK !단신 최강: 발동1.0 배수0.0 추가850000.0   · A0GM !끓어오르는피: 발동0.2 배수0.0 추가252500.0   확정(2026-09-06, GATE_FIX_9/5bac2f0): A0GK Hbh1=100.0(확률 100%) — triggerChance=1.0이 정당. 값 유지, 재감사 불필요.  [초월·제한 블록 09-30] X1: A0GK atar ancient — PV 200 대상만(일반 몹에 매 타 +850000·스턴 1.5초 = 영구 스턴이었다). (Tools/apply_transcend_limited_blocks.py)'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC81C\uD55C_\uAC15\uBCF4\uBA85_A0GK"
+  m_EditorClassIdentifier: 
+  skillName: "A0GK !\uB2E8\uC2E0 \uCD5C\uAC15"
+  description: "\uCABC\uAC2C(2026-09-06, PM \uC124\uACC4 \uACB0\uC815 \u2014 \uB2A5\uB825
+    \uD558\uB098\uC5D0 \uD30C\uC77C \uD558\uB098): \uC774\uC804\uC5D4 \uC774 \uD30C\uC77C\uC774
+    2\uAC1C \uB2A5\uB825\uCF54\uB4DC(A0GK, A0GM)\uC758 \uD6A8\uACFC\uB97C triggerChance
+    \uD558\uB098\uB85C \uACF5\uC720\uD588\uB2E4. A0GK !!\uB2E8\uC2E0 \uCD5C\uAC15(\uBC1C\uB3D91.0)\uB9CC
+    \uB0A8\uAE30\uACE0 \uB098\uBA38\uC9C0\uB294 \uC0C8 \uD30C\uC77C\uB85C \uC62E\uACBC\uB2E4(\uAC19\uC740
+    \uB85C\uC2A4\uD130\uC5D0 skills\uB85C \uCD94\uAC00). \uC6D0\uB798 \uC124\uBA85:
+    \uC6D0\uC791 \uB2A5\uB825\uD45C(ORIGINAL_UNIT_ABILITIES.csv) DPS \uC21C\uC704
+    \uBC30\uC815 \u2014 \uC6D0\uC791 \uC81C\uD55C\uB428 \uD328\uD2B8\uB9AD \uB808\uB4DC\uD544\uB4DC
+    \uBD89\uC740\uBC31\uC791 - \uC81C\uD55C\uB428(h05G)\uC758 \uBC1C\uB3D9\uD655\uB960\xB7\uD53C\uD574\uBC30\uC218\xB7\uCD94\uAC00\uD53C\uD574\uB97C
+    \uADF8\uB300\uB85C \uC62E\uACBC\uB2E4. \uAC1C\uBCC4 \uB300\uC751 \uC544\uB2D8(\uC774\uB984\uB9E4\uD551
+    \uBD88\uAC00, \uC21C\uC704 \uBC30\uC815\uC73C\uB85C \uC6B0\uD68C) \u2014 \uB4F1\uAE09
+    \uC548\uC5D0\uC11C \uC6D0\uC791\uC740 uid \uADF8\uB8F9 \uCD1D\uC810(\uB2A5\uB825
+    \uAE30\uB300\uAC12 \uD569), \uC6B0\uB9AC\uB294 DPS(\uACF5\uACA9\uB825\xD7\uACF5\uC18D)
+    \uB0B4\uB9BC\uCC28\uC21C\uC73C\uB85C \uC815\uB82C\uD574 \uC21C\uC11C\uB300\uB85C
+    \uC9DD\uC9C0\uC5C8\uB2E4. damageType\uC740 AD\uB85C \uD1B5\uC77C(\uC6D0\uC791
+    \uC2A4\uD0AC\uC758 \uB9C8\uBC95 \uC5EC\uBD80\uB294 CSV\uC5D0 \uC5C6\uC74C, \uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    \uC870\uC0AC \uC911) \u2014 attackType\uC740 \uC774 \uC720\uB2DB\uC758 \uD3C9\uD0C0
+    \uD0C0\uC785\uC744 \uADF8\uB300\uB85C \uC37C\uB2E4. \uC774 \uC6D0\uC791 \uC720\uB2DB\uC758
+    \uB2A5\uB825 2\uAC1C\uB97C \uC804\uBD80 \uC774 \uC720\uB2DB \uD558\uB098\uC5D0
+    \uBC30\uC815\uD588\uB2E4(uid \uB2E8\uC704 \uBC30\uC815, \uBFCC\uB9AC \u246E \uC138
+    \uBC88\uC9F8 \uC5BC\uAD74 \uC218\uC815). \uB2A5\uB825\uB9C8\uB2E4 \uBC1C\uB3D9\uD655\uB960\uC774
+    \uB2E4\uB974\uBA74 \uAC00\uC7A5 \uB192\uC740 \uAC12\uC744 \uB300\uD45C\uB85C
+    \uC37C\uB2E4(SkillLevel \uD558\uB098\uC5D4 triggerChance \uD558\uB098\uBFD0\uC774\uB77C\uC11C
+    \u2014 \uACFC\uC18C \uACC4\uC0C1\uBCF4\uB2E4 \uC548\uC804\uD55C \uADFC\uC0AC).  
+    \xB7 A0GK !\uB2E8\uC2E0 \uCD5C\uAC15: \uBC1C\uB3D91.0 \uBC30\uC2180.0 \uCD94\uAC00850000.0  
+    \xB7 A0GM !\uB053\uC5B4\uC624\uB974\uB294\uD53C: \uBC1C\uB3D90.2 \uBC30\uC2180.0
+    \uCD94\uAC00252500.0   \uD655\uC815(2026-09-06, GATE_FIX_9/5bac2f0): A0GK Hbh1=100.0(\uD655\uB960
+    100%) \u2014 triggerChance=1.0\uC774 \uC815\uB2F9. \uAC12 \uC720\uC9C0, \uC7AC\uAC10\uC0AC
+    \uBD88\uD544\uC694.  [\uCD08\uC6D4\xB7\uC81C\uD55C \uBE14\uB85D 09-30] X1: A0GK
+    atar ancient \u2014 PV 200 \uB300\uC0C1\uB9CC(\uC77C\uBC18 \uBAB9\uC5D0 \uB9E4
+    \uD0C0 +850000\xB7\uC2A4\uD134 1.5\uCD08 = \uC601\uAD6C \uC2A4\uD134\uC774\uC5C8\uB2E4).
+    (Tools/apply_transcend_limited_blocks.py)"
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
+    triggerChance: 1
     range: 0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 3
       target: 3
       damageType: 1
       attackType: 3
-      multiplier: 0.0
-      bonus: 850000.0
+      multiplier: 0
+      bonus: 850000
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 2
-      targetConditionValue: 200.0
+      targetConditionValue: 200
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 3
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 1.5
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 2
-      targetConditionValue: 200.0
+      targetConditionValue: 200
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
       heroDuration: 1.5
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: fbed510b2057a4e4d8fa699841dbfca3, type: 3}

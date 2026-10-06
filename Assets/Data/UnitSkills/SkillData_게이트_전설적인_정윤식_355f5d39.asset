@@ -10,38 +10,99 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_전설적인_정윤식_355f5d39
-  m_EditorClassIdentifier:
-  skillName: 겟코 모리아 — 17% (Legend34Moria_Skill)
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 겟코 모리아 쉐도우 아스가르드 - 전설적인(h02N)의 게이트 "(게이트 없음)" 능력 2개를 이 SkillData 하나로 묶었다.   · Legend34Moria_Skill#1: 계산식 250000.00   · Legend34Moria_Skill#2: 계산식 800000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. [확정: 원작도 매 타] 원작 트리거에 게이트가 없다(파일명 해시 355f5d39 = 「(게이트 없음)」, 리서치담당 edad47f). triggerChance = 1.0이 원작 그대로다 — 고치지 말 것. | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Legend34Moria(h02N) = `GetRandomInt(1,100)<=17 → Legend34Moria_Skill: 피해 이벤트 뒤 대상 위치 400 광역 250000 NORMAL/UNIVERSAL (+ UserData==3이고 대상이 SAPPER면 AIsr+10·대상 800000)`. 이전: 확률 1.0(게이트 없음)·800000 매 타 → 17% 광역만. 800000 갈래(UserData==3·SAPPER)는 조건 축 없음(목록).'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uC804\uC124\uC801\uC778_\uC815\uC724\uC2DD_355f5d39"
+  m_EditorClassIdentifier: 
+  skillName: "\uAC9F\uCF54 \uBAA8\uB9AC\uC544 \u2014 17% (Legend34Moria_Skill)"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 \uAC9F\uCF54 \uBAA8\uB9AC\uC544 \uC250\uB3C4\uC6B0
+    \uC544\uC2A4\uAC00\uB974\uB4DC - \uC804\uC124\uC801\uC778(h02N)\uC758 \uAC8C\uC774\uD2B8
+    \"(\uAC8C\uC774\uD2B8 \uC5C6\uC74C)\" \uB2A5\uB825 2\uAC1C\uB97C \uC774 SkillData
+    \uD558\uB098\uB85C \uBB36\uC5C8\uB2E4.   \xB7 Legend34Moria_Skill#1: \uACC4\uC0B0\uC2DD
+    250000.00   \xB7 Legend34Moria_Skill#2: \uACC4\uC0B0\uC2DD 800000.00  hitCount>1\uC740
+    \"\uAC19\uC740 RRD \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0 \uC2DC\uAC04\uCC28
+    \uB2E4\uB2E8\uD788\uD2B8\uAC00 \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC
+    \uC5F0\uC18D N\uD68C)\uC73C\uB85C \uADFC\uC0AC\uD588\uB2E4. [\uD655\uC815: \uC6D0\uC791\uB3C4
+    \uB9E4 \uD0C0] \uC6D0\uC791 \uD2B8\uB9AC\uAC70\uC5D0 \uAC8C\uC774\uD2B8\uAC00
+    \uC5C6\uB2E4(\uD30C\uC77C\uBA85 \uD574\uC2DC 355f5d39 = \u300C(\uAC8C\uC774\uD2B8
+    \uC5C6\uC74C)\u300D, \uB9AC\uC11C\uCE58\uB2F4\uB2F9 edad47f). triggerChance =
+    1.0\uC774 \uC6D0\uC791 \uADF8\uB300\uB85C\uB2E4 \u2014 \uACE0\uCE58\uC9C0 \uB9D0
+    \uAC83. | \uC815\uC815(2026-09-30 \uAD6C\uD604\uB2F4\uB2F91, \uC911\uBCF5 \uAC80\uC0AC):
+    \uC6D0\uBB38 Trig_Legend34Moria(h02N) = `GetRandomInt(1,100)<=17 \u2192 Legend34Moria_Skill:
+    \uD53C\uD574 \uC774\uBCA4\uD2B8 \uB4A4 \uB300\uC0C1 \uC704\uCE58 400 \uAD11\uC5ED
+    250000 NORMAL/UNIVERSAL (+ UserData==3\uC774\uACE0 \uB300\uC0C1\uC774 SAPPER\uBA74
+    AIsr+10\xB7\uB300\uC0C1 800000)`. \uC774\uC804: \uD655\uB960 1.0(\uAC8C\uC774\uD2B8
+    \uC5C6\uC74C)\xB7800000 \uB9E4 \uD0C0 \u2192 17% \uAD11\uC5ED\uB9CC. 800000 \uAC08\uB798(UserData==3\xB7SAPPER)\uB294
+    \uC870\uAC74 \uCD95 \uC5C6\uC74C(\uBAA9\uB85D)."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.17
-    range: 400.0
+    range: 400
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 250000.0
-      bonus: 0.0
+      multiplier: 250000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 66d322e033eac4d4f81d392f433cc50c, type: 3}

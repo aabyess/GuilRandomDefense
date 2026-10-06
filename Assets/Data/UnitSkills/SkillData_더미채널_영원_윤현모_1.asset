@@ -10,93 +10,202 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_영원_윤현모_1
-  m_EditorClassIdentifier:
-  skillName: SkillData_더미채널_영원_윤현모_1
-  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 영원_윤현모. 정정(2026-09-06, GATE_FIX_6/b0661f9): 원작 버프 B017 미보유 게이트 = 5절대쿨 에이스영원 4.25초 — ORIGINAL_ABSOLUTE_COOLDOWN.csv에 이미 있던 값이라 새 축 없이 SkillLevel.cooldown으로 그대로 표현한다.  · Trig_Ace_Attack → e0AB(E영원 에이스 특대화권 더미1) → A0BL: 1150000. 정정(2026-09-06, 리서치담당 c00f472 오더 감사): e0AI(A0OH, 120000)를 제거했다 — 오더 없음, 생성 후 RemoveLocation+루프뿐이라 순수 연출. 지어내지 않고 값 기록만 남긴다. | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Ace_Attack(h059/h05B)의 `B017 없을 때` 갈래 = e0D8 firebolt(A14K 피해 0·스턴3.5) + 시전자 frostarmor(A0CB B017 4.25초 = 이 cooldown) + e0AB carrionswarm(A0BL 1150000, 끝 폭 460) + e0AI 셋 phoenix(A0OH Eim1 120000, 360). 장풍을 대상 위치 460 광역으로(직선 근사), 스턴 3.5 추가, 불사조 화염 120000 한 번(셋 중 대상에 닿는 하나로 근사). 이전: 단일 1150000뿐. [지대 09-30] 지대: L0 e0AI×3(A0OH 120000/0.20초·반경 360·수명 1.595초 = 7틱, 지대당 840,000) — Ace_Attack: 시전자 앞 340·680·1020에 e0AI 셋 — 옛 근사(460 범위 120000 한 번)를 지대로 바꿈(Tools/apply_damage_zones.py) [직선 09-30] 직선: A0BL 피해 1.15e+06 · 길이 950 · 반경 210→460 — 전에는 대상 중심 원(Tools/apply_line_skills.py)'
+  m_Name: "SkillData_\uB354\uBBF8\uCC44\uB110_\uC601\uC6D0_\uC724\uD604\uBAA8_1"
+  m_EditorClassIdentifier: 
+  skillName: "SkillData_\uB354\uBBF8\uCC44\uB110_\uC601\uC6D0_\uC724\uD604\uBAA8_1"
+  description: "\uB354\uBBF8 \uCC44\uB110 \uAC8C\uC774\uD2B8 \uD655\uC815(2026-09-06,
+    DUMMY_CHANNEL_GATES.csv, a1c34bc) \u2014 \uC601\uC6D0_\uC724\uD604\uBAA8. \uC815\uC815(2026-09-06,
+    GATE_FIX_6/b0661f9): \uC6D0\uC791 \uBC84\uD504 B017 \uBBF8\uBCF4\uC720 \uAC8C\uC774\uD2B8
+    = 5\uC808\uB300\uCFE8 \uC5D0\uC774\uC2A4\uC601\uC6D0 4.25\uCD08 \u2014 ORIGINAL_ABSOLUTE_COOLDOWN.csv\uC5D0
+    \uC774\uBBF8 \uC788\uB358 \uAC12\uC774\uB77C \uC0C8 \uCD95 \uC5C6\uC774 SkillLevel.cooldown\uC73C\uB85C
+    \uADF8\uB300\uB85C \uD45C\uD604\uD55C\uB2E4.  \xB7 Trig_Ace_Attack \u2192 e0AB(E\uC601\uC6D0
+    \uC5D0\uC774\uC2A4 \uD2B9\uB300\uD654\uAD8C \uB354\uBBF81) \u2192 A0BL: 1150000.
+    \uC815\uC815(2026-09-06, \uB9AC\uC11C\uCE58\uB2F4\uB2F9 c00f472 \uC624\uB354
+    \uAC10\uC0AC): e0AI(A0OH, 120000)\uB97C \uC81C\uAC70\uD588\uB2E4 \u2014 \uC624\uB354
+    \uC5C6\uC74C, \uC0DD\uC131 \uD6C4 RemoveLocation+\uB8E8\uD504\uBFD0\uC774\uB77C
+    \uC21C\uC218 \uC5F0\uCD9C. \uC9C0\uC5B4\uB0B4\uC9C0 \uC54A\uACE0 \uAC12 \uAE30\uB85D\uB9CC
+    \uB0A8\uAE34\uB2E4. | \uC815\uC815(2026-09-30 \uAD6C\uD604\uB2F4\uB2F91, \uC911\uBCF5
+    \uAC80\uC0AC): \uC6D0\uBB38 Trig_Ace_Attack(h059/h05B)\uC758 `B017 \uC5C6\uC744
+    \uB54C` \uAC08\uB798 = e0D8 firebolt(A14K \uD53C\uD574 0\xB7\uC2A4\uD1343.5)
+    + \uC2DC\uC804\uC790 frostarmor(A0CB B017 4.25\uCD08 = \uC774 cooldown) + e0AB
+    carrionswarm(A0BL 1150000, \uB05D \uD3ED 460) + e0AI \uC14B phoenix(A0OH Eim1
+    120000, 360). \uC7A5\uD48D\uC744 \uB300\uC0C1 \uC704\uCE58 460 \uAD11\uC5ED\uC73C\uB85C(\uC9C1\uC120
+    \uADFC\uC0AC), \uC2A4\uD134 3.5 \uCD94\uAC00, \uBD88\uC0AC\uC870 \uD654\uC5FC
+    120000 \uD55C \uBC88(\uC14B \uC911 \uB300\uC0C1\uC5D0 \uB2FF\uB294 \uD558\uB098\uB85C
+    \uADFC\uC0AC). \uC774\uC804: \uB2E8\uC77C 1150000\uBFD0. [\uC9C0\uB300 09-30]
+    \uC9C0\uB300: L0 e0AI\xD73(A0OH 120000/0.20\uCD08\xB7\uBC18\uACBD 360\xB7\uC218\uBA85
+    1.595\uCD08 = 7\uD2F1, \uC9C0\uB300\uB2F9 840,000) \u2014 Ace_Attack: \uC2DC\uC804\uC790
+    \uC55E 340\xB7680\xB71020\uC5D0 e0AI \uC14B \u2014 \uC61B \uADFC\uC0AC(460 \uBC94\uC704
+    120000 \uD55C \uBC88)\uB97C \uC9C0\uB300\uB85C \uBC14\uAFC8(Tools/apply_damage_zones.py)
+    [\uC9C1\uC120 09-30] \uC9C1\uC120: A0BL \uD53C\uD574 1.15e+06 \xB7 \uAE38\uC774
+    950 \xB7 \uBC18\uACBD 210\u2192460 \u2014 \uC804\uC5D0\uB294 \uB300\uC0C1 \uC911\uC2EC
+    \uC6D0(Tools/apply_line_skills.py)"
   triggerType: 0
   levels:
   - cooldown: 4.25
-    triggerChance: 1.0
-    range: 460.0
+    triggerChance: 1
+    range: 460
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 1150000.0
-      bonus: 0.0
+      multiplier: 1150000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      lineLength: 950.0
-      lineStartRadius: 210.0
-      lineEndRadius: 460.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 950
+      lineStartRadius: 210
+      lineEndRadius: 460
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 3
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 3.5
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
       heroDuration: 3.5
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 120000.0
-      bonus: 0.0
+      multiplier: 120000
+      bonus: 0
       chance: 1
       hitCount: 3
       duration: 1.595
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 1
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 0
-      chainDamageStep: 0.0
+      chainDamageStep: 0
       zoneTickInterval: 0.2
-      zoneRadius: 360.0
+      zoneRadius: 360
       zoneSpacing: 340
       zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: f50e9113ca4364866976feb98b52317e, type: 3}

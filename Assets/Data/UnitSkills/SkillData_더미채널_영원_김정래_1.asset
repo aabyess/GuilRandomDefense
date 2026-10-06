@@ -10,10 +10,27 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_영원_김정래_1
-  m_EditorClassIdentifier:
-  skillName: SkillData_더미채널_영원_김정래_1
-  description: '더미 채널 게이트 확정(2026-09-06, DUMMY_CHANNEL_GATES.csv, a1c34bc) — 영원_김정래. ⚠️ 축 밖이라 뺀 조건: 체력>N 조건(거의 항상 참) — 실제보다 자주 발동할 수 있다.  · Trig_Uta_Attack → e0R1(E영원 우타 오선보1) → A16W: 450000 정정(2026-09-06, CROSS_CHANNEL_DUPLICATE_SWEEP.md/65b7f96): Trig_Uta_Attack → e0R1 → A16W를 제거했다 — 원작 발동 지점이 하나(Trig_Uta_Attack)라 영원_문필환(원작능력 루트 파일 보유, 오늘 SkillData_원작능력_영원_문필환_A16W.asset으로 이미 분리됨)에 귀속. 79행 DPS 순위 배정이 독립적으로 같은 값을 또 배정한 중복이었다. | 되돌림(2026-09-30, 구현담당1 — 출처 검증): Trig_Uta_Attack(HashAttack h067) `GetRandomInt(1,9)==2` → e0R1 stomp A16W(Wrs1 450000·스턴 1.5). h067은 MASTER_UID_ROSTER_MAP상 영원_김정래라, 09-06 중복 정리 때 영원_문필환(원작능력_영원_문필환_A16W)으로 보냈던 것을 이 에셋으로 되돌렸다.'
+  m_Name: "SkillData_\uB354\uBBF8\uCC44\uB110_\uC601\uC6D0_\uAE40\uC815\uB798_1"
+  m_EditorClassIdentifier: 
+  skillName: "SkillData_\uB354\uBBF8\uCC44\uB110_\uC601\uC6D0_\uAE40\uC815\uB798_1"
+  description: "\uB354\uBBF8 \uCC44\uB110 \uAC8C\uC774\uD2B8 \uD655\uC815(2026-09-06,
+    DUMMY_CHANNEL_GATES.csv, a1c34bc) \u2014 \uC601\uC6D0_\uAE40\uC815\uB798. \u26A0\uFE0F
+    \uCD95 \uBC16\uC774\uB77C \uBE80 \uC870\uAC74: \uCCB4\uB825>N \uC870\uAC74(\uAC70\uC758
+    \uD56D\uC0C1 \uCC38) \u2014 \uC2E4\uC81C\uBCF4\uB2E4 \uC790\uC8FC \uBC1C\uB3D9\uD560
+    \uC218 \uC788\uB2E4.  \xB7 Trig_Uta_Attack \u2192 e0R1(E\uC601\uC6D0 \uC6B0\uD0C0
+    \uC624\uC120\uBCF41) \u2192 A16W: 450000 \uC815\uC815(2026-09-06, CROSS_CHANNEL_DUPLICATE_SWEEP.md/65b7f96):
+    Trig_Uta_Attack \u2192 e0R1 \u2192 A16W\uB97C \uC81C\uAC70\uD588\uB2E4 \u2014
+    \uC6D0\uC791 \uBC1C\uB3D9 \uC9C0\uC810\uC774 \uD558\uB098(Trig_Uta_Attack)\uB77C
+    \uC601\uC6D0_\uBB38\uD544\uD658(\uC6D0\uC791\uB2A5\uB825 \uB8E8\uD2B8 \uD30C\uC77C
+    \uBCF4\uC720, \uC624\uB298 SkillData_\uC6D0\uC791\uB2A5\uB825_\uC601\uC6D0_\uBB38\uD544\uD658_A16W.asset\uC73C\uB85C
+    \uC774\uBBF8 \uBD84\uB9AC\uB428)\uC5D0 \uADC0\uC18D. 79\uD589 DPS \uC21C\uC704
+    \uBC30\uC815\uC774 \uB3C5\uB9BD\uC801\uC73C\uB85C \uAC19\uC740 \uAC12\uC744 \uB610
+    \uBC30\uC815\uD55C \uC911\uBCF5\uC774\uC5C8\uB2E4. | \uB418\uB3CC\uB9BC(2026-09-30,
+    \uAD6C\uD604\uB2F4\uB2F91 \u2014 \uCD9C\uCC98 \uAC80\uC99D): Trig_Uta_Attack(HashAttack
+    h067) `GetRandomInt(1,9)==2` \u2192 e0R1 stomp A16W(Wrs1 450000\xB7\uC2A4\uD134
+    1.5). h067\uC740 MASTER_UID_ROSTER_MAP\uC0C1 \uC601\uC6D0_\uAE40\uC815\uB798\uB77C,
+    09-06 \uC911\uBCF5 \uC815\uB9AC \uB54C \uC601\uC6D0_\uBB38\uD544\uD658(\uC6D0\uC791\uB2A5\uB825_\uC601\uC6D0_\uBB38\uD544\uD658_A16W)\uC73C\uB85C
+    \uBCF4\uB0C8\uB358 \uAC83\uC744 \uC774 \uC5D0\uC14B\uC73C\uB85C \uB418\uB3CC\uB838\uB2E4."
   triggerType: 0
   levels:
   - cooldown: 0
@@ -22,25 +39,116 @@ MonoBehaviour:
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 3
       damageType: 1
       attackType: 1
-      multiplier: 450000.0
-      bonus: 0.0
+      multiplier: 450000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 3
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 1.5
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
       heroDuration: 0.3
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 0e2e48f616e904537976c7c83e3bcde3, type: 3}

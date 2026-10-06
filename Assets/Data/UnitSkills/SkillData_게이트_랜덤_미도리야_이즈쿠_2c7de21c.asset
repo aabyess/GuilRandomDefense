@@ -10,27 +10,96 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_랜덤_미도리야_이즈쿠_2c7de21c
-  m_EditorClassIdentifier:
-  skillName: 히그마(랜덤) — Higma_Q 1/20(375 범위 100000 ×22)
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 마운틴.D.히그마 - 랜덤전용[제한됨](h0AC)의 게이트 "LIFE게이지85.00 AND 1/20" 능력 2개를 이 SkillData 하나로 묶었다.   · Higma_Q#1: 계산식 100000.00   · Higma_Q#2: 계산식 100000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. | 정정(2026-09-30, 구현담당1 — 「게이지 AND 1/N」 라벨 원문 대조): 원문 Trig_Higma_Attack의 Higma_Q 호출은 `GetRandomInt(1,20)==3` 단독 if다(LIFE 85 블록과 별개). OnHitCount에서 OnHitChance(확률 그대로)로. [랜덤 통째 09-30] §0-8: Higma_Q는 375 범위 100000이 ≈22회(스테이지 33까지, 스테이지마다 그룹 호출 둘 중 하나) — 효과 둘 × 2회 = 4회였다(≈5배 과소). 효과 하나 hitCount 22로. (Tools/apply_random_rest2.py)'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uB79C\uB364_\uBBF8\uB3C4\uB9AC\uC57C_\uC774\uC988\uCFE0_2c7de21c"
+  m_EditorClassIdentifier: 
+  skillName: "\uD788\uADF8\uB9C8(\uB79C\uB364) \u2014 Higma_Q 1/20(375 \uBC94\uC704
+    100000 \xD722)"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 \uB9C8\uC6B4\uD2F4.D.\uD788\uADF8\uB9C8 - \uB79C\uB364\uC804\uC6A9[\uC81C\uD55C\uB428](h0AC)\uC758
+    \uAC8C\uC774\uD2B8 \"LIFE\uAC8C\uC774\uC9C085.00 AND 1/20\" \uB2A5\uB825 2\uAC1C\uB97C
+    \uC774 SkillData \uD558\uB098\uB85C \uBB36\uC5C8\uB2E4.   \xB7 Higma_Q#1: \uACC4\uC0B0\uC2DD
+    100000.00   \xB7 Higma_Q#2: \uACC4\uC0B0\uC2DD 100000.00  hitCount>1\uC740 \"\uAC19\uC740
+    RRD \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0 \uC2DC\uAC04\uCC28 \uB2E4\uB2E8\uD788\uD2B8\uAC00
+    \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC \uC5F0\uC18D N\uD68C)\uC73C\uB85C
+    \uADFC\uC0AC\uD588\uB2E4. | \uC815\uC815(2026-09-30, \uAD6C\uD604\uB2F4\uB2F91
+    \u2014 \u300C\uAC8C\uC774\uC9C0 AND 1/N\u300D \uB77C\uBCA8 \uC6D0\uBB38 \uB300\uC870):
+    \uC6D0\uBB38 Trig_Higma_Attack\uC758 Higma_Q \uD638\uCD9C\uC740 `GetRandomInt(1,20)==3`
+    \uB2E8\uB3C5 if\uB2E4(LIFE 85 \uBE14\uB85D\uACFC \uBCC4\uAC1C). OnHitCount\uC5D0\uC11C
+    OnHitChance(\uD655\uB960 \uADF8\uB300\uB85C)\uB85C. [\uB79C\uB364 \uD1B5\uC9F8
+    09-30] \xA70-8: Higma_Q\uB294 375 \uBC94\uC704 100000\uC774 \u224822\uD68C(\uC2A4\uD14C\uC774\uC9C0
+    33\uAE4C\uC9C0, \uC2A4\uD14C\uC774\uC9C0\uB9C8\uB2E4 \uADF8\uB8F9 \uD638\uCD9C
+    \uB458 \uC911 \uD558\uB098) \u2014 \uD6A8\uACFC \uB458 \xD7 2\uD68C = 4\uD68C\uC600\uB2E4(\u22485\uBC30
+    \uACFC\uC18C). \uD6A8\uACFC \uD558\uB098 hitCount 22\uB85C. (Tools/apply_random_rest2.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.05
-    range: 375.0
+    range: 375
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 100000.0
-      bonus: 0.0
+      multiplier: 100000
+      bonus: 0
       chance: 1
       hitCount: 22
       duration: 3.2
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: cbe2c552f84484fc0abaa20afe7bea1c, type: 3}

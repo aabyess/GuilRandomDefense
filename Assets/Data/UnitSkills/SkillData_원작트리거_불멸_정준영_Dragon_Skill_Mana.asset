@@ -10,47 +10,85 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작트리거_불멸_정준영_Dragon_Skill_Mana
-  m_EditorClassIdentifier:
-  skillName: Dragon_Skill_Mana — MANA게이지160(425 범위 300000×1~2 ×11)
-  description: '원작 드래곤 h04D Dragon_Skill_Mana(마나==160): 대상에서 90~360 떨어진 무작위 지점 425 범위 300000×1~2 NORMAL/UNIVERSAL 11회(0.1~0.4초 간격) — 대상 중심으로 근사. 2026-09-30 구현담당1(IMMORTAL_FILL_LIST §2).'
+  m_Name: "SkillData_\uC6D0\uC791\uD2B8\uB9AC\uAC70_\uBD88\uBA78_\uC815\uC900\uC601_Dragon_Skill_Mana"
+  m_EditorClassIdentifier: 
+  skillName: "Dragon_Skill_Mana \u2014 MANA\uAC8C\uC774\uC9C0160(425 \uBC94\uC704
+    300000\xD71~2 \xD711)"
+  description: "\uC6D0\uC791 \uB4DC\uB798\uACE4 h04D Dragon_Skill_Mana(\uB9C8\uB098==160):
+    \uB300\uC0C1\uC5D0\uC11C 90~360 \uB5A8\uC5B4\uC9C4 \uBB34\uC791\uC704 \uC9C0\uC810
+    425 \uBC94\uC704 300000\xD71~2 NORMAL/UNIVERSAL 11\uD68C(0.1~0.4\uCD08 \uAC04\uACA9)
+    \u2014 \uB300\uC0C1 \uC911\uC2EC\uC73C\uB85C \uADFC\uC0AC. 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(IMMORTAL_FILL_LIST
+    \xA72)."
   triggerType: 3
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 425.0
+    triggerChance: 1
+    range: 425
     hitCountThreshold: 160
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 300000.0
-      bonus: 0.0
+      multiplier: 300000
+      bonus: 0
       chance: 1
       hitCount: 11
       duration: 2.5
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 2.0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 2
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 856db3da05a8047cd83f258eabe2a322, type: 3}

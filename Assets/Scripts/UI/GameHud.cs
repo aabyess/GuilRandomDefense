@@ -81,6 +81,13 @@ public class GameHud : MonoBehaviour
     GameObject unitInfoPortraitSlotObject;
     Image portraitHpBar, portraitMpBar;          // 초상 아래 체력·마나 바(채움 비율로 그린다)
     TMP_Text portraitHpText, portraitMpText;
+    // 정보 창 스킬 아이콘 줄(사장님 10-06 「유닛을 고르면 스킬 아이콘을 줄지어, 올리면 이름·설명」 — 워크3 영웅 능력 칸 느낌).
+    const int MaxSkillIcons = 10;
+    GameObject skillIconRow;
+    readonly Image[] skillIconBorders = new Image[MaxSkillIcons];
+    readonly Image[] skillIconFaces = new Image[MaxSkillIcons];
+    readonly TMP_Text[] skillIconLabels = new TMP_Text[MaxSkillIcons];
+    readonly SkillData[] skillIconSkills = new SkillData[MaxSkillIcons];
     GameObject unitStatRows;                     // 정보칸 「공격력/방어/상태」 줄(사진 서식) — 유닛 한 기를 고를 때만
     TMP_Text unitDamageText, unitArmorText, unitStatusText;
     TMP_Text goldText;
@@ -616,6 +623,7 @@ public class GameHud : MonoBehaviour
         unitStatRows = statRows.gameObject;
         unitStatRows.SetActive(false);
 
+        BuildSkillIconRow(infoPanel);
         BuildSelectionCards(infoPanel);
 
         RectTransform itemPanel = CreatePanel(bar, "ItemInventoryPanel", SlotColor);
@@ -2703,6 +2711,90 @@ public class GameHud : MonoBehaviour
 
 
 
+    // 정보 창 오른쪽 아래 스킬 아이콘 줄 — 칸 46, 한 줄에 들어가는 만큼 줄바꿈, 최대 10칸. 그림이 없으면 스킬 이름 첫 글자. 디버프 표식 스킬(에셋 이름에 「디버프」)은 빨간 테두리.
+    void BuildSkillIconRow(RectTransform infoPanel)
+    {
+        RectTransform row = CreatePanel(infoPanel, "UnitSkillIcons", Color.clear);
+        row.GetComponent<Image>().raycastTarget = false;
+        SetAnchors(row, new Vector2(0.50f, 0.05f), new Vector2(0.97f, 0.66f));
+        GridLayoutGroup grid = row.gameObject.AddComponent<GridLayoutGroup>();
+        grid.cellSize = new Vector2(46f, 46f);
+        grid.spacing = new Vector2(6f, 6f);
+        grid.startCorner = GridLayoutGroup.Corner.UpperRight;   // 오른쪽 위에서 시작 — 정보 글씨(왼쪽)와 안 겹치게
+        grid.childAlignment = TextAnchor.UpperRight;
+        skillIconRow = row.gameObject;
+
+        for (int i = 0; i < MaxSkillIcons; i++)
+        {
+            int captured = i;
+            GameObject border = new GameObject($"SkillIcon{i}", typeof(RectTransform), typeof(Image), typeof(EventTrigger));
+            border.transform.SetParent(row, false);
+            Image borderImage = border.GetComponent<Image>();
+            borderImage.color = new Color(0.85f, 0.70f, 0.30f, 1f);
+            skillIconBorders[i] = borderImage;
+
+            GameObject faceObject = new GameObject("Face", typeof(RectTransform), typeof(Image));
+            faceObject.transform.SetParent(border.transform, false);
+            RectTransform faceRect = (RectTransform)faceObject.transform;
+            faceRect.anchorMin = Vector2.zero; faceRect.anchorMax = Vector2.one;
+            faceRect.offsetMin = new Vector2(2f, 2f); faceRect.offsetMax = new Vector2(-2f, -2f);
+            Image face = faceObject.GetComponent<Image>();
+            face.color = Color.white;
+            face.raycastTarget = false;
+            skillIconFaces[i] = face;
+
+            TMP_Text letter = CreateLabel(border.transform, "Letter", "");
+            letter.fontSize = 24;
+            letter.fontStyle = FontStyles.Bold;
+            letter.raycastTarget = false;
+            skillIconLabels[i] = letter;
+
+            EventTrigger trigger = border.GetComponent<EventTrigger>();
+            AddTriggerEntry(trigger, EventTriggerType.PointerEnter, _ => OnSkillIconHover(captured));
+            AddTriggerEntry(trigger, EventTriggerType.PointerExit, _ => HideCombineTooltip());
+            border.SetActive(false);
+        }
+        row.gameObject.SetActive(false);
+    }
+
+    void RefreshSkillIcons(UnitData data)
+    {
+        if (skillIconRow == null) return;
+        int shown = 0;
+        if (data != null && data.skills != null)
+        {
+            foreach (SkillData skill in data.skills)
+            {
+                if (skill == null || shown >= MaxSkillIcons) continue;
+                int i = shown++;
+                skillIconSkills[i] = skill;
+                bool debuff = skill.name.Contains("디버프");
+                skillIconBorders[i].color = debuff ? new Color(0.85f, 0.25f, 0.25f, 1f) : new Color(0.85f, 0.70f, 0.30f, 1f);
+                bool hasIcon = skill.icon != null;
+                skillIconFaces[i].sprite = skill.icon;
+                skillIconFaces[i].enabled = hasIcon;
+                string title = skill.skillName ?? "";
+                int start = 0;
+                while (start < title.Length && !char.IsLetterOrDigit(title[start])) start++;
+                skillIconLabels[i].text = hasIcon || start >= title.Length ? "" : title[start].ToString();
+                skillIconBorders[i].gameObject.SetActive(true);
+            }
+        }
+        for (int i = shown; i < MaxSkillIcons; i++) { skillIconSkills[i] = null; skillIconBorders[i].gameObject.SetActive(false); }
+        skillIconRow.SetActive(shown > 0);
+    }
+
+    void OnSkillIconHover(int index)
+    {
+        SkillData skill = index >= 0 && index < MaxSkillIcons ? skillIconSkills[index] : null;
+        if (skill == null) return;
+        string text = skill.skillName ?? "";
+        if (!string.IsNullOrEmpty(skill.description)) text += "\n" + skill.description;
+        if (skill.triggerType == SkillTriggerType.ActiveButton && skill.levels != null && skill.levels.Count > 0)
+            text += $"\n[누르는 스킬] 쿨타임 {skill.levels[0].cooldown:0.#}초";
+        ShowTooltip(text, (RectTransform)skillIconBorders[index].transform);
+    }
+
     static void AddTriggerEntry(EventTrigger trigger, EventTriggerType type, UnityEngine.Events.UnityAction<BaseEventData> callback)
     {
         EventTrigger.Entry entry = new EventTrigger.Entry { eventID = type };
@@ -2930,7 +3022,13 @@ public class GameHud : MonoBehaviour
         {
             BuildUnitCommandSlot(i, grid.transform);
 
-            if (i < UnitOnlyCommandLabels.Length)
+            if (IsRemovedCommandSlot(i))
+            {
+                // 사장님 10-06 「이동·정지는 없애도 된다」 — 카드에서 뺀다(우클릭 이동·M/S 단축키는 그대로). 칸 번호는 안 바꾼다(홀드 2·공격 3·모으기 4·…).
+                unitCommandSlotBackgrounds[i].color = Color.clear;
+                unitCommandSlotButtons[i].interactable = false;
+            }
+            else if (i < UnitOnlyCommandLabels.Length)
             {
                 unitCommandSlotNames[i].text = UnitOnlyCommandLabels[i];
                 unitCommandSlotHotkeys[i].text = UnitOnlyCommandHotkeys[i];
@@ -2944,6 +3042,8 @@ public class GameHud : MonoBehaviour
         }
     }
 
+    static bool IsRemovedCommandSlot(int slot) => slot == MoveCommandSlot || slot == StopCommandSlot;   // 이동(0)·정지(1) — 명령 카드에서 뺐다(10-06)
+
     // 이동·정지·홀드·공격·모으기·정렬 여섯 칸. 유닛에게만 의미가 있어서 건물을 고르면 통째로 감춘다.
     bool unitOnlyCommandsShown = true;
 
@@ -2952,6 +3052,14 @@ public class GameHud : MonoBehaviour
         unitOnlyCommandsShown = visible;
         for (int i = 0; i < UnitOnlyCommandLabels.Length; i++)
         {
+            if (IsRemovedCommandSlot(i))
+            {
+                unitCommandSlotNames[i].text = "";
+                unitCommandSlotHotkeys[i].text = "";
+                unitCommandSlotBackgrounds[i].color = Color.clear;
+                unitCommandSlotButtons[i].interactable = false;
+                continue;
+            }
             unitCommandSlotNames[i].text = visible ? UnitOnlyCommandLabels[i] : "";
             unitCommandSlotHotkeys[i].text = visible ? UnitOnlyCommandHotkeys[i] : "";
             unitCommandSlotBackgrounds[i].color = visible ? UnitCommandDefaultColor : Color.clear;
@@ -3667,6 +3775,7 @@ public class GameHud : MonoBehaviour
     {
         SetPortraitBars(null, null, 0);   // 아래 유닛 분기에서만 켠다
         if (unitStatRows != null && unitStatRows.activeSelf) unitStatRows.SetActive(false);
+        if (skillIconRow != null && skillIconRow.activeSelf) skillIconRow.SetActive(false);
         unitCardsPanel.SetActive(false);
         unitInfoText.gameObject.SetActive(true);
         if (unitInfoPortraitSlotObject != null) unitInfoPortraitSlotObject.SetActive(true);
@@ -3758,6 +3867,7 @@ public class GameHud : MonoBehaviour
             unitArmorText.text = "<color=#FF9A3A>방어:</color> <color=#FF4A4A>무적</color>";
             unitStatusText.text = "<color=#FF9A3A>상태:</color>";
             if (!unitStatRows.activeSelf) unitStatRows.SetActive(true);
+            RefreshSkillIcons(data);
             int? manaNow = null;
             int manaCap = 0;
             if (UnitManaTable.HasMana(data))
@@ -3860,6 +3970,7 @@ public class GameHud : MonoBehaviour
     void ShowCardGrid(SelectionManager selection)
     {
         unitInfoText.gameObject.SetActive(false);
+        if (skillIconRow != null && skillIconRow.activeSelf) skillIconRow.SetActive(false);
         // 09-29 워크3 콘솔: 초상화 칸이 카드 격자와 따로 있어 여러 기를 골라도 첫 유닛 초상을 보인다(워크3와 같다).
         Selectable firstSelected = selection.Selected[0];
         UnitData firstData = firstSelected != null && firstSelected.TryGetComponent(out UnitIdentity firstIdentity) ? firstIdentity.Data : null;

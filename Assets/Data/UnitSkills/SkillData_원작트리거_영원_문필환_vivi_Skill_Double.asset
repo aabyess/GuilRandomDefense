@@ -10,115 +10,236 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작트리거_영원_문필환_vivi_Skill_Double
-  m_EditorClassIdentifier:
-  skillName: vivi_Skill_Double — 더블샷 1/4(절대쿨 B034 중)
-  description: '원작 비비 h057 Trig_ViVi_Attack → vivi_Skill_Double: 버프 B034가 있는 동안(3연사 창이 아닐 때) 1/4로 대상에게 폭풍망치 더미 e0CW(A0LV AHtb) 750000 + 스턴 1초. 둘째 발: 시전자 기준 912 안 무작위 적 하나(첫 대상도 뽑힐 수 있음 — 원문에 제외 없음)에게 같은 폭풍망치 A0LW 750000 + 스턴 1초(원작은 0.15초 뒤, 우리는 같은 순간). Player(4) 더미가 쏘는 것 — 기존 더미채널 규칙대로 도는 것으로 봄. 2026-09-30 구현담당1(ETERNAL_FILL_LIST §2).'
+  m_Name: "SkillData_\uC6D0\uC791\uD2B8\uB9AC\uAC70_\uC601\uC6D0_\uBB38\uD544\uD658_vivi_Skill_Double"
+  m_EditorClassIdentifier: 
+  skillName: "vivi_Skill_Double \u2014 \uB354\uBE14\uC0F7 1/4(\uC808\uB300\uCFE8
+    B034 \uC911)"
+  description: "\uC6D0\uC791 \uBE44\uBE44 h057 Trig_ViVi_Attack \u2192 vivi_Skill_Double:
+    \uBC84\uD504 B034\uAC00 \uC788\uB294 \uB3D9\uC548(3\uC5F0\uC0AC \uCC3D\uC774
+    \uC544\uB2D0 \uB54C) 1/4\uB85C \uB300\uC0C1\uC5D0\uAC8C \uD3ED\uD48D\uB9DD\uCE58
+    \uB354\uBBF8 e0CW(A0LV AHtb) 750000 + \uC2A4\uD134 1\uCD08. \uB458\uC9F8 \uBC1C:
+    \uC2DC\uC804\uC790 \uAE30\uC900 912 \uC548 \uBB34\uC791\uC704 \uC801 \uD558\uB098(\uCCAB
+    \uB300\uC0C1\uB3C4 \uBF51\uD790 \uC218 \uC788\uC74C \u2014 \uC6D0\uBB38\uC5D0
+    \uC81C\uC678 \uC5C6\uC74C)\uC5D0\uAC8C \uAC19\uC740 \uD3ED\uD48D\uB9DD\uCE58
+    A0LW 750000 + \uC2A4\uD134 1\uCD08(\uC6D0\uC791\uC740 0.15\uCD08 \uB4A4, \uC6B0\uB9AC\uB294
+    \uAC19\uC740 \uC21C\uAC04). Player(4) \uB354\uBBF8\uAC00 \uC3D8\uB294 \uAC83
+    \u2014 \uAE30\uC874 \uB354\uBBF8\uCC44\uB110 \uADDC\uCE59\uB300\uB85C \uB3C4\uB294
+    \uAC83\uC73C\uB85C \uBD04. 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(ETERNAL_FILL_LIST
+    \xA72)."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.25
-    range: 912.0
+    range: 912
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
     requiredBuffId: B034
-    forbiddenBuffId:
-    selfBuffId:
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 7
-      multiplier: 750000.0
-      bonus: 0.0
+      multiplier: 750000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 3
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 1.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 1
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      heroDuration: 1.0
+      triggerDamageAbove: 0
+      heroDuration: 1
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 0
       basis: 0
       target: 4
       damageType: 2
       attackType: 7
-      multiplier: 750000.0
-      bonus: 0.0
+      multiplier: 750000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     - kind: 1
       basis: 0
       target: 4
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 1.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 1
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      heroDuration: 1.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 1
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 1
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 21300000, guid: 53eaaaa539dc048a68af217180f76082, type: 3}
