@@ -48,7 +48,7 @@ public static class JaegyuProbe
     {
         UnitAttacker j = Jae();
         MethodInfo m = typeof(UnitAttacker).GetMethod("BeginSelfStun", BindingFlags.NonPublic | BindingFlags.Instance);
-        m.Invoke(j, new object[] { 3f });
+        m.Invoke(j, new object[] { 3f, false });
         return "   자기 스턴 3초 시작\n" + Report();
     }
 }

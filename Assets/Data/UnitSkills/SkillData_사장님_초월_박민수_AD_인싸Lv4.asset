@@ -10,13 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uAC15\uC7AC\uADDC_AP_3\uB300\uC545\uC9C8"
+  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uBC15\uBBFC\uC218_AD_\uC778\uC2F8Lv4"
   m_EditorClassIdentifier: 
-  skillName: "3\uB300\uC545\uC9C8 \u2014 \uAE61\uB51C(\uBC1C\uB3D9)"
-  description: "\uC0AC\uC7A5\uB2D8 10-06. \uD3C9\uD0C0 10% \uD655\uB960\uB85C \uB9DE\uC740
-    \uC801\uC5D0\uAC8C \uACE0\uC815 200000(\uC6D0\uC791 \uB3C4\uD50C\uB77C\uBC0D\uACE0
-    \uC77C\uBC18 DP_Skill_2 1/10\xB7200000). \uB9C8\uB51C \u2014 AP \uB2A5\uB825
-    \uD53C\uD574\uB294 \uBC29\uC5B4 \uBB34\uC2DC(\uC6B0\uB9AC \uC5D4\uC9C4 \uAE30\uBCF8)."
+  skillName: "\uC778\uC2F8Lv.4 \u2014 \uD604\uC7AC\uCCB4\uB825(\uB2E8\uC77C)"
+  description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uD604\uC7AC\uCCB4\uB825(\uB2E8\uC77C)\u300D.
+    \uD3C9\uD0C0 10% \uD655\uB960\uB85C \uB9DE\uC740 \uC801 \uD604\uC7AC \uCCB4\uB825\uC758
+    25%(\uC6D0\uC791 \uB3C4\uD50C\uB77C\uBC0D\uACE0 \uC77C\uBC18 DP_Skill_2, PV<200)
+    \u2014 \uBCF4\uC2A4(PV\u2265200)\uB294 \uBE44\uB840 \uB300\uC2E0 \uACE0\uC815
+    300000(\uC6D0\uC791 \uBCF4\uC2A4 \uACE0\uC815 \uBD84\uAE30)."
   triggerType: 0
   levels:
   - cooldown: 0
@@ -24,17 +25,17 @@ MonoBehaviour:
     range: 0
     hitCountThreshold: 0
     resetTo: 0
-    gaugeKind: 1
+    gaugeKind: 0
     requiredBuffId: 
     forbiddenBuffId: 
     selfBuffId: 
     effects:
     - kind: 0
-      basis: 0
+      basis: 2
       target: 3
-      damageType: 2
-      attackType: 7
-      multiplier: 200000
+      damageType: 1
+      attackType: 1
+      multiplier: 0.25
       bonus: 0
       chance: 1
       hitCount: 1
@@ -46,8 +47,56 @@ MonoBehaviour:
       buffHitCharges: 0
       requiredTargetBuffId: 
       forbiddenTargetBuffId: 
-      targetCondition: 0
-      targetConditionValue: 0
+      targetCondition: 1
+      targetConditionValue: 200
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 1
+      multiplier: 300000
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 3
+      targetConditionValue: 200
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0

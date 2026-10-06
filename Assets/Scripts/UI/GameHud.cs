@@ -185,6 +185,7 @@ public class GameHud : MonoBehaviour
     bool activeSlotShown;    // 액티브(누르는) 스킬 칸(ActiveSlot) — 초월 최상호 「바지사장」 등 ActiveButton 스킬을 가진 유닛 한 기를 골랐을 때만
     SkillData activeShownSkill;
     float activeLocalReadyAt;   // 멀티 클라: 호스트의 쿨을 모르니 누른 시각 + 쿨로 어림한 값(진짜 판정은 호스트)
+    bool talentSlotsShown;   // 초월 박민수 「재능투자」 칸 4개(TalentFirstSlot~) — 박민수 한 기를 골랐을 때만
     bool yoonseoSlotShown;   // 초월 노태현 「최윤서 강화」 칸(YoonseoSlot) — 노태현 한 기를 골랐을 때만
     bool sellSlotEnabled;
     string sellSlotTooltip;
@@ -430,6 +431,8 @@ public class GameHud : MonoBehaviour
         RefreshGambleButtons();
         RefreshSellButton();
         RefreshYoonseoButton();
+        RefreshTalentButtons();
+        RefreshDockTargeting();
         RefreshActiveButton();
         RefreshNavigationButton();
         RefreshRerollButton();
@@ -1276,6 +1279,73 @@ public class GameHud : MonoBehaviour
         sellSlotTooltip = $"판매\n({rewardDesc})";
     }
 
+    // 초월 박민수 「재능투자」(사장님 10-06) — 조합 결과 칸 8~11(박민수 초월은 조합 결과가 없어 비어 있다)에 공격력·공격속도·방깎·스턴 4칸.
+    // 한 칸을 누르면 포인트 1점 투자(되돌릴 수 없음). 칸 이름 아래 글자: 현재 단계/최대 단계, 윗칸 글자: 남은 포인트. 못 할 때 이유를 띄운다(상점 칸 규칙).
+    const int TalentFirstSlot = 8;
+
+    UnitAttacker TalentCandidate()
+    {
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return null;
+        Selectable single = selection.Selected[0];
+        if (!single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.Data.name != UnitAttacker.TalentUnitAsset) return null;
+        return single.TryGetComponent(out UnitAttacker attacker) ? attacker : null;
+    }
+
+    void RefreshTalentButtons()
+    {
+        if (unitCommandSlotRoots[TalentFirstSlot] == null) return;
+        if (currentShop as Object != null) { talentSlotsShown = false; return; }   // 상점을 고른 동안 이 칸들은 상점 칸이다
+        UnitAttacker attacker = TalentCandidate();
+        if (attacker == null)
+        {
+            if (!talentSlotsShown) return;
+            talentSlotsShown = false;
+            for (int k = 0; k < UnitAttacker.TalentKindCount; k++)
+            {
+                int slot = TalentFirstSlot + k;
+                unitCommandSlotNames[slot].text = "";
+                unitCommandSlotNames[slot].color = Color.white;
+                unitCommandSlotHotkeys[slot].text = "";
+                unitCommandSlotBackgrounds[slot].color = Color.clear;
+                unitCommandSlotButtons[slot].interactable = false;
+            }
+            return;
+        }
+        talentSlotsShown = true;
+        int points = attacker.TalentPointsAvailable;
+        for (int k = 0; k < UnitAttacker.TalentKindCount; k++)
+        {
+            int slot = TalentFirstSlot + k;
+            int have = attacker.GetTalent(k), max = UnitAttacker.TalentMaxOf(k);
+            bool open = have < max && points > 0;
+            unitCommandSlotNames[slot].text = $"{UnitAttacker.TalentNames[k]}\n{have}/{max}";
+            unitCommandSlotHotkeys[slot].text = $"포인트 {points}";
+            Color color = UnitCommandDefaultColor;
+            color.a = open ? 1f : 0.35f;
+            unitCommandSlotBackgrounds[slot].color = color;
+            unitCommandSlotNames[slot].color = open ? Color.white : new Color(1f, 1f, 1f, 0.4f);
+            unitCommandSlotButtons[slot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
+        }
+    }
+
+    void OnTalentClicked(int kind)
+    {
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1) return;
+        Selectable single = selection.Selected[0];
+        if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.Talent, single, kind); return; }
+        ExecuteTalentOn(single, kind);
+    }
+
+    // MP: 버튼과 멀티 호스트가 받은 클라 요청(NetCommands)이 같이 쓰는 본체.
+    public void ExecuteTalentOn(Selectable single, int kind)
+    {
+        if (single == null || !single.TryGetComponent(out UnitAttacker attacker) || !single.TryGetComponent(out OwnedByPlayer owner)) return;
+        if (!attacker.TryInvestTalent(kind, out string reason)) { PlayerNotification.Show(owner.OwnerId, reason, 4f); return; }
+        PlayerNotification.Show(owner.OwnerId, $"<color=#FFD700>재능투자</color> {UnitAttacker.TalentNames[kind]} {attacker.GetTalent(kind)}/{UnitAttacker.TalentMaxOf(kind)} (남은 포인트 {attacker.TalentPointsAvailable})", 4f);
+    }
+
     // 초월 노태현 「최윤서 강화」(사장님 10-06) — 가운데 줄 왼쪽에서 셋째 빈 칸(6번). 한 기를 골랐고 그 유닛이 초월 노태현일 때만 보인다.
     // 누르면 내 최윤서 한 기를 소모하고 영구 강화(방무딜 + 아군 디버프 100% 제거). 못 할 땐 이유를 띄운다(상점 칸 규칙과 같게).
     const int YoonseoSlot = 6;
@@ -1396,10 +1466,53 @@ public class GameHud : MonoBehaviour
         if (keyboard != null && !ChatInputGate.IsOpen && keyboard.sKey.wasPressedThisFrame) OnActiveClicked();
     }
 
+    // 대상 지정 액티브(SkillLevel.needsTargetClick, 초월 강재규 「단일도킹」) — 칸을 누르면 대기, 적 하나를 좌클릭하면 발동(우클릭 취소).
+    SkillData pendingDockSkill;
+    Selectable pendingDockUnit;
+    int pendingDockStartFrame;
+
+    void RefreshDockTargeting()
+    {
+        if (pendingDockSkill == null) return;
+        if (Mouse.current == null || pendingDockUnit == null) { pendingDockSkill = null; return; }
+        if (Mouse.current.rightButton.wasPressedThisFrame) { pendingDockSkill = null; return; }
+        if (!Mouse.current.leftButton.wasPressedThisFrame || Time.frameCount <= pendingDockStartFrame) return;
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
+
+        SkillData skill = pendingDockSkill;
+        Selectable unit = pendingDockUnit;
+        pendingDockSkill = null;
+        pendingDockUnit = null;
+        int playerId = unit.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
+        EnemyDummy target = WorldPick.TryPickEnemy(Camera.main, Mouse.current.position.ReadValue(), 40f);
+        if (target == null) { PlayerNotification.Show(playerId, "대상 적을 찾을 수 없습니다.", 4f); return; }
+        if (!GameAuthority.IsServer) { BlockedOnMultiplayerClient(); return; }
+        ExecuteCastActiveOnTarget(unit, target);
+    }
+
+    public void ExecuteCastActiveOnTarget(Selectable single, EnemyDummy target)
+    {
+        if (single == null || !single.TryGetComponent(out UnitAttacker attacker)) return;
+        SkillData skill = attacker.ActiveSkill;
+        if (skill == null) return;
+        int playerId = single.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
+        if (!attacker.TryCastActiveOn(skill, target, out string reason))
+            PlayerNotification.Show(playerId, reason ?? "지금은 사용할 수 없습니다.", 4f);
+    }
+
     void OnActiveClicked()
     {
         SkillData skill = ActiveSkillOf(out Selectable single);
         if (skill == null || single == null) return;
+        if (skill.levels != null && skill.levels.Count > 0 && skill.levels[0].needsTargetClick)
+        {
+            if (!GameAuthority.IsServer) { BlockedOnMultiplayerClient(); return; }
+            pendingDockSkill = skill;
+            pendingDockUnit = single;
+            pendingDockStartFrame = Time.frameCount;
+            PlayerNotification.Show(LocalPlayer.LocalPlayerId, $"{skill.skillName.Split('—')[0].Trim()}: 대상 적을 클릭하세요. (우클릭 취소)", 4f);
+            return;
+        }
         if (!GameAuthority.IsServer)
         {
             if (Time.time < activeLocalReadyAt) { PlayerNotification.Show(LocalPlayer.LocalPlayerId, $"쿨타임 중입니다. ({Mathf.CeilToInt(activeLocalReadyAt - Time.time)}초)"); return; }
@@ -2654,6 +2767,17 @@ public class GameHud : MonoBehaviour
             float cd = activeShownSkill.levels != null && activeShownSkill.levels.Count > 0 ? activeShownSkill.levels[0].cooldown : 0f;
             ShowTooltip($"{activeShownSkill.skillName}  [{ActiveHotkey}]\n{activeShownSkill.description}\n쿨타임 {cd:0.#}초 · 마나 소모 없음", cardRect);
         }
+        else if (talentSlotsShown && index >= TalentFirstSlot && index < TalentFirstSlot + UnitAttacker.TalentKindCount)
+        {
+            int k = index - TalentFirstSlot;
+            ShowTooltip($"재능투자 — {UnitAttacker.TalentNames[k]}\n" + (k switch
+            {
+                0 => "한 단계마다 기본 공격력 +10% (최대 5단계)",
+                1 => "한 단계마다 공격속도 +8% (최대 5단계)",
+                2 => "한 단계마다 평타로 맞힌 적의 방어 −1 (최대 5단계)",
+                _ => "한 단계마다 감금·억제기 스턴 확률 +2.5%p·지속 +0.35초 (최대 3단계)",
+            }) + "\n영웅 레벨당 1포인트(최대 18). 되돌릴 수 없음.", cardRect);
+        }
         else if (index == YoonseoSlot && yoonseoSlotShown)
         {
             ShowTooltip("최윤서 강화\n내 최윤서(히든·전설) 한 기가 사라지고, 방어 무시 피해가 켜지며 아군 이속 감소 디버프가 100% 없어진다. 한 번 켜면 영구.", cardRect);
@@ -2976,6 +3100,12 @@ public class GameHud : MonoBehaviour
         if (index == YoonseoSlot && yoonseoSlotShown && currentShop as Object == null)
         {
             OnYoonseoClicked();
+            return;
+        }
+
+        if (talentSlotsShown && index >= TalentFirstSlot && index < TalentFirstSlot + UnitAttacker.TalentKindCount && currentShop as Object == null)
+        {
+            OnTalentClicked(index - TalentFirstSlot);
             return;
         }
 

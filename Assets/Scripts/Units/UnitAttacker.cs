@@ -128,7 +128,7 @@ public class UnitAttacker : MonoBehaviour
             // SkillAttackSpeedBuffMultiplier는 ActiveBuff 레지스트리 기반(자동 만료)이라
             // 기존 attackSpeedBuffs(수동 Add/Remove, SupportShop 전용)와 별도 축이다 — 곱은
             // 순서 무관이라 그냥 같이 곱한다.
-            float product = ResearchSpeedMultiplier * HeroAttackSpeedMultiplier * SkillAttackSpeedBuffMultiplier * AuraAttackSpeedMultiplier
+            float product = ResearchSpeedMultiplier * HeroAttackSpeedMultiplier * SkillAttackSpeedBuffMultiplier * AuraAttackSpeedMultiplier * TalentAttackSpeedMultiplier
                             * (1f + TeamBuffs.AttackSpeedPercent);
             foreach (float buff in attackSpeedBuffs) product *= buff;
             return product > 0f ? product : 1f;
@@ -321,7 +321,7 @@ public class UnitAttacker : MonoBehaviour
     {
         get
         {
-            float sum = AuraBonusTotal(SkillEffectKind.AttackPowerBuffPercent, false) + TeamBuffs.AttackPowerPercent;
+            float sum = AuraBonusTotal(SkillEffectKind.AttackPowerBuffPercent, false) + TeamBuffs.AttackPowerPercent + TalentAttackPercent;
             if (activeBuffs.Count > 0)
             {
                 PruneExpiredBuffs();
@@ -659,6 +659,30 @@ public class UnitAttacker : MonoBehaviour
         PulseSphereArt();
         bool vfxBefore = SkillVfx.BeginCast(unitData, skill);
         CastSkillLevel(level, level.WorldRange, null, 0f);
+        SkillVfx.EndCast(vfxBefore);
+        return true;
+    }
+
+    /// <summary>대상 지정 액티브(SkillLevel.needsTargetClick, 초월 강재규 단일도킹) — 고른 적이 주 대상. 사거리 밖·쿨 중이면 이유를 돌려주고 false.</summary>
+    public bool TryCastActiveOn(SkillData skill, EnemyDummy target, out string failReason)
+    {
+        failReason = null;
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (skill == null || unitData == null || skill.triggerType != SkillTriggerType.ActiveButton) { failReason = "쓸 수 없는 스킬입니다."; return false; }
+        if (target == null || target.IsDead) { failReason = "대상이 없습니다."; return false; }
+        SkillLevel level = CurrentSkillLevel(skill);
+        if (level == null || level.effects == null || level.effects.Count == 0) { failReason = "아직 효과가 없는 스킬입니다."; return false; }
+        SkillRuntimeState state = GetRuntimeState(skill);
+        float remaining = state.activeReadyAt - Time.time;
+        if (remaining > 0f) { failReason = $"쿨타임 중입니다. ({Mathf.CeilToInt(remaining)}초)"; return false; }
+        if (level.range > 0f && Vector3.Distance(transform.position, target.transform.position) > level.WorldRange) { failReason = "사거리 밖입니다."; return false; }
+
+        state.activeReadyAt = Time.time + Mathf.Max(0.01f, level.cooldown);
+        SkillTelemetry.Cast(unitData, skill);
+        SkillSfx.Cast(unitData, skill, transform.position);
+        PulseSphereArt();
+        bool vfxBefore = SkillVfx.BeginCast(unitData, skill);
+        CastSkillLevel(level, level.WorldRange, target, 0f);
         SkillVfx.EndCast(vfxBefore);
         return true;
     }
@@ -1556,7 +1580,7 @@ public class UnitAttacker : MonoBehaviour
         return debuffIdScratch.Count;
     }
 
-    float DamagePassiveFactor(EnemyDummy target) => BossDamageFactor(target) * AllyDebuffDamageFactor();
+    float DamagePassiveFactor(EnemyDummy target) => BossDamageFactor(target) * AllyDebuffDamageFactor() * GrowthDamageFactor();
 
     // 만성피로(SelfStunRefillLifeGauge) — 자기 스턴 동안 공격·스킬이 멈추고, 끝나면 체력 게이지가 즉시 가득 찬다.
     public const string SelfStunBuffId = "SELF_STUN";
@@ -1564,9 +1588,12 @@ public class UnitAttacker : MonoBehaviour
     bool selfStunActive;
     public bool IsSelfStunned => Time.time < selfStunUntil;
 
-    void BeginSelfStun(float duration)
+    bool selfStunRefill;   // 끝날 때 체력 게이지를 가득 채우나(effect.multiplier > 0). 사장님 10-06 정정: 기본은 안 채운다 — 평타로 0부터 다시 40타.
+
+    void BeginSelfStun(float duration, bool refill = false)
     {
         if (duration <= 0f) return;
+        selfStunRefill = refill;
         selfStunUntil = Mathf.Max(selfStunUntil, Time.time + duration);
         selfStunActive = true;
         AddBuff(SelfStunBuffId, duration);
@@ -1579,7 +1606,7 @@ public class UnitAttacker : MonoBehaviour
         if (Time.time < selfStunUntil) return true;
         selfStunActive = false;
         UnitData unitData = identity != null ? identity.Data : null;
-        if (unitData != null) { lifeGaugeCounter = LifeGaugeCap(unitData) == int.MaxValue ? lifeGaugeCounter : LifeGaugeCap(unitData); lifeGaugeInitialized = true; }
+        if (selfStunRefill && unitData != null) { lifeGaugeCounter = LifeGaugeCap(unitData) == int.MaxValue ? lifeGaugeCounter : LifeGaugeCap(unitData); lifeGaugeInitialized = true; }
         return false;
     }
 
@@ -1603,6 +1630,86 @@ public class UnitAttacker : MonoBehaviour
             }
         }
         return splashMultiplier;
+    }
+
+    // ---- 재능투자(초월 박민수 「해방된자」, 사장님 10-06) — 영웅 레벨당 스킬 포인트 1점(레벨 18에서 멈춤), 공격력 5·공속 5·방깎 5·스턴 3단에 나눠 투자(되돌릴 수 없음).
+    // 점당: 공격력 +10% · 공속 +8% · 방깎 −1 · 스턴 확률 +2.5%p·지속 +0.35초(단일·범위 스턴 둘 다). 원작 타시기(H05N) 능력 A0JI 방깎·A0JJ 스턴 값 환산(Docs/research/TRANSCEND_MINSOO_DESIGN_2026-10-06.md §4). ----
+    public const string TalentUnitAsset = "초월_박민수_AD";
+    public const int TalentKindCount = 4;
+    static readonly int[] TalentMax = { 5, 5, 5, 3 };
+    public static readonly string[] TalentNames = { "공격력", "공격속도", "방깎", "스턴" };
+    const int TalentPointCap = 18;
+    readonly int[] talent = new int[TalentKindCount];
+
+    public bool HasTalents => identity != null && identity.Data != null && identity.Data.name == TalentUnitAsset;
+    public int GetTalent(int kind) => talent[kind];
+    public static int TalentMaxOf(int kind) => TalentMax[kind];
+    public int TalentSpent { get { int n = 0; foreach (int t in talent) n += t; return n; } }
+    public int TalentPointsAvailable => Mathf.Max(0, Mathf.Min(CharacterLevel, TalentPointCap) - TalentSpent);
+
+    public bool TryInvestTalent(int kind, out string reason)
+    {
+        reason = null;
+        if (!HasTalents || kind < 0 || kind >= TalentKindCount) { reason = "투자할 수 없는 유닛입니다."; return false; }
+        if (talent[kind] >= TalentMax[kind]) { reason = $"{TalentNames[kind]}은(는) 최대 단계입니다."; return false; }
+        if (TalentPointsAvailable <= 0) { reason = "남은 포인트가 없습니다. (레벨이 오르면 1점씩, 최대 18점)"; return false; }
+        talent[kind]++;
+        return true;
+    }
+
+    float TalentAttackPercent => HasTalents ? talent[0] * 0.10f : 0f;
+    float TalentAttackSpeedMultiplier => HasTalents ? 1f + talent[1] * 0.08f : 1f;
+    float TalentArmorBreak => HasTalents ? talent[2] * 1f : 0f;
+    float TalentStunDuration => HasTalents ? talent[3] * 0.35f : 0f;
+
+    // 스턴 투자가 이 레벨의 확률을 키운다(talentStunScaled 스턴 효과를 가진 발동 스킬만).
+    float TalentChanceBonus(SkillLevel level)
+    {
+        if (!HasTalents || talent[3] <= 0 || level.effects == null) return 0f;
+        foreach (SkillEffect effect in level.effects) if (effect != null && effect.talentStunScaled) return talent[3] * 0.025f;
+        return 0f;
+    }
+
+    // 방깎 투자: 평타가 맞으면 대상 방어 −(단계) 5초(같은 적에게 겹쳐 쌓지 않는다 — 이미 걸려 있으면 건너뜀).
+    readonly Dictionary<EnemyDummy, float> talentShredUntil = new Dictionary<EnemyDummy, float>();
+
+    void ApplyTalentArmorBreak(EnemyDummy target)
+    {
+        float amount = TalentArmorBreak;
+        if (amount <= 0f || target == null) return;
+        if (talentShredUntil.TryGetValue(target, out float until) && Time.time < until) return;
+        if (talentShredUntil.Count > 64) talentShredUntil.Clear();
+        talentShredUntil[target] = Time.time + 4.9f;
+        target.Aid1ArmorShredFor(amount, 5f);
+    }
+
+    // 무시무시한성장속도(DamageGrowthOverTime) — 이 유닛이 생긴 뒤 흐른 시간 비례 피해 증가.
+    float spawnedAt;
+    UnitData growthFor;
+    float growthRate, growthStep = 30f, growthCap;
+
+    float GrowthDamageFactor()
+    {
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null) return 1f;
+        if (growthFor != unitData)
+        {
+            growthFor = unitData;
+            growthRate = 0f; growthCap = 0f; growthStep = 30f;
+            int count = BaseSkillCount(unitData);
+            for (int i = 0; i < count; i++)
+            {
+                SkillData skill = ResolveSkillAt(unitData, i);
+                if (skill == null || skill.levels == null || skill.levels.Count == 0 || skill.levels[0].effects == null) continue;
+                foreach (SkillEffect effect in skill.levels[0].effects)
+                    if (effect != null && effect.kind == SkillEffectKind.DamageGrowthOverTime)
+                    { growthRate += effect.multiplier; growthCap = Mathf.Max(growthCap, effect.bonus); if (effect.duration > 0f) growthStep = effect.duration; }
+            }
+        }
+        if (growthRate <= 0f) return 1f;
+        float extra = Mathf.Floor((Time.time - spawnedAt) / growthStep) * growthRate;
+        if (growthCap > 0f) extra = Mathf.Min(extra, growthCap);
+        return 1f + extra;
     }
 
     // ---- 최윤서 강화(초월 노태현, 사장님 10-06) — 영구 상태. 켜지면 방무딜(armorIgnoreRequiresBuff) + 아군 이속 감소 디버프 100% 제거. ----
@@ -1793,7 +1900,7 @@ public class UnitAttacker : MonoBehaviour
                 if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
                 // 배타 분기(SkillLevel.exclusiveGroup) — 같은 묶음의 앞선 스킬이 이번 평타에 굴림을 맞혔으면 굴리지도 않는다.
                 if (level.exclusiveGroup != 0 && firedExclusiveGroups.Contains(level.exclusiveGroup)) { SkillTelemetry.Gate(unitData, skill, "배타"); continue; }
-                if (Random.value >= level.triggerChance) { SkillTelemetry.Gate(unitData, skill, "확률실패"); continue; }
+                if (Random.value >= level.triggerChance + TalentChanceBonus(level)) { SkillTelemetry.Gate(unitData, skill, "확률실패"); continue; }
                 if (level.exclusiveGroup != 0) firedExclusiveGroups.Add(level.exclusiveGroup);
 
                 if (level.cooldown > 0f)
@@ -1973,11 +2080,11 @@ public class UnitAttacker : MonoBehaviour
         if (effect.kind == SkillEffectKind.SummonUnit) { SummonFor(effect); return; }
         if (effect.kind == SkillEffectKind.KillNormalEnemies) { KillNearestNormalEnemy(range); return; }
         if (effect.kind == SkillEffectKind.AttackSpeedStack) { AddAttackSpeedStack(effect); return; }
-        if (effect.kind == SkillEffectKind.SelfStunRefillLifeGauge) { BeginSelfStun(effect.duration); return; }
+        if (effect.kind == SkillEffectKind.SelfStunRefillLifeGauge) { BeginSelfStun(effect.duration, effect.multiplier > 0f); return; }
         // 아군에게 스킬 빌려주기·보스 배율은 오라/패시브로만 쓴다(여기서는 할 일 없음).
         if (effect.kind == SkillEffectKind.GrantSkillToAllies || effect.kind == SkillEffectKind.BossDamageMultiplier
             || effect.kind == SkillEffectKind.SplashDamageMultiplier || effect.kind == SkillEffectKind.AllyMoveSpeedDebuff
-            || effect.kind == SkillEffectKind.DamagePerAllyDebuff) return;
+            || effect.kind == SkillEffectKind.DamagePerAllyDebuff || effect.kind == SkillEffectKind.DamageGrowthOverTime) return;
 
         // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
         if (effect.lineLength > 0f && effect.zoneTickInterval <= 0f)
@@ -2355,7 +2462,7 @@ public class UnitAttacker : MonoBehaviour
             // 시한 효과(스턴·이감·방깎·ArmorBonus/HealOverTime)는 전부 걸린 적이 센다(EnemyDummy.*For, 2026-09-30) —
             // 여기서 코루틴으로 세면 이 유닛이 조합·판매로 사라질 때 영영 안 풀린다.
             case SkillEffectKind.Stun:
-                if (effect.duration > 0f) target.FreezeFor(StunDurationOn(target, effect) * AttackSpeedScaleFactor(effect));
+                if (effect.duration > 0f) target.FreezeFor(StunDurationOn(target, effect) * AttackSpeedScaleFactor(effect) + (effect.talentStunScaled ? TalentStunDuration : 0f));
                 break;
 
             // 이감(2026-09-29) — multiplier = 남는 속도 비율. AddSlow/RemoveSlow는 같은 값으로 짝을 맞춰야 빠진다.
@@ -2700,6 +2807,7 @@ public class UnitAttacker : MonoBehaviour
 
     void Awake()
     {
+        spawnedAt = Time.time;
         combat = GetComponent<UnitCombat>();
     }
 
@@ -2769,6 +2877,7 @@ public class UnitAttacker : MonoBehaviour
                               armorIgnoreRatio: 0f, isAbilityDamage: false);
             SkillTelemetry.Damage(identity != null ? identity.Data : null, "평타", target, basicHpBefore);
             ApplyAttackSplash(target);
+            ApplyTalentArmorBreak(target);
             ApplyAttackMultishot(target);
             ApplyCritIfTriggered(target);
             if (target.IsDead) TryRaiseOnKill(target);

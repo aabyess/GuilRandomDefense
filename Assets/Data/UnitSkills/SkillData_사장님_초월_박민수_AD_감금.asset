@@ -10,35 +10,36 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uAC15\uC7AC\uADDC_AP_3\uB300\uC545\uC9C8"
+  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uBC15\uBBFC\uC218_AD_\uAC10\uAE08"
   m_EditorClassIdentifier: 
-  skillName: "3\uB300\uC545\uC9C8 \u2014 \uAE61\uB51C(\uBC1C\uB3D9)"
-  description: "\uC0AC\uC7A5\uB2D8 10-06. \uD3C9\uD0C0 10% \uD655\uB960\uB85C \uB9DE\uC740
-    \uC801\uC5D0\uAC8C \uACE0\uC815 200000(\uC6D0\uC791 \uB3C4\uD50C\uB77C\uBC0D\uACE0
-    \uC77C\uBC18 DP_Skill_2 1/10\xB7200000). \uB9C8\uB51C \u2014 AP \uB2A5\uB825
-    \uD53C\uD574\uB294 \uBC29\uC5B4 \uBB34\uC2DC(\uC6B0\uB9AC \uC5D4\uC9C4 \uAE30\uBCF8)."
+  skillName: "\uAC10\uAE08 \u2014 \uB2E8\uC77C \uC2A4\uD134(\uBC1C\uB3D9)"
+  description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uC2A4\uD134(\uB2E8\uC77C, 0.8)\u300D.
+    \uD3C9\uD0C0 20% \uD655\uB960\uB85C \uB9DE\uC740 \uC801 \uC2A4\uD134 0.8\uCD08(\uC6D0\uC791
+    \uCD08\uC6D4 \uAE40\uACBD\uD604 AP A0X4 20%\xB70.5\uCD08 \uD655\uB960 \uAE30\uC900).
+    \uC7AC\uB2A5\uD22C\uC790 \u300C\uC2A4\uD134\u300D \uB2E8\uACC4\uB9C8\uB2E4 \uC9C0\uC18D
+    +0.35\uCD08\xB7\uD655\uB960 +2.5%p."
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.1
+    triggerChance: 0.2
     range: 0
     hitCountThreshold: 0
     resetTo: 0
-    gaugeKind: 1
+    gaugeKind: 0
     requiredBuffId: 
     forbiddenBuffId: 
     selfBuffId: 
     effects:
-    - kind: 0
+    - kind: 1
       basis: 0
       target: 3
-      damageType: 2
-      attackType: 7
-      multiplier: 200000
+      damageType: 1
+      attackType: 0
+      multiplier: 0
       bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 0.8
       casterBuffCountFactor: 0
       buffId: 
       randMin: 1
@@ -71,7 +72,7 @@ MonoBehaviour:
       minAllyTier: 5
       armorIgnoreRatio: 0
       armorIgnoreRequiresBuff: 
-      talentStunScaled: 0
+      talentStunScaled: 1
       stackPerHit: 0.01
       stackCap: 1
       stackResetSeconds: 3

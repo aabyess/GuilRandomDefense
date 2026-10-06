@@ -13,13 +13,16 @@ MonoBehaviour:
   m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uAC15\uC7AC\uADDC_AP_\uB9CC\uC131\uD53C\uB85C"
   m_EditorClassIdentifier: 
   skillName: "\uB9CC\uC131\uD53C\uB85C \u2014 \uCCB4\uB825 \uAC8C\uC774\uC9C0\uAC00
-    \uD130\uC9C0\uBA74 \uC790\uAE30 \uC2A4\uD134 3\uCD08 \uD6C4 \uAC8C\uC774\uC9C0
-    \uAC00\uB4DD"
+    \uD130\uC9C0\uBA74 \uC790\uAE30 \uC2A4\uD134 3\uCD08(\uAE68\uC5B4\uB098\uBA74
+    \uAC8C\uC774\uC9C0 0\uBD80\uD130)"
   description: "\uC0AC\uC7A5\uB2D8 10-06. \uAC04\uC7BD\uC774\uAC00 \uD130\uC9C0\uB294
-    \uC21C\uAC04(\uCCB4\uB825 \uAC8C\uC774\uC9C0 40) \uC790\uAE30 \uC790\uC2E0\uC774
-    3\uCD08 \uC2A4\uD134(\uACF5\uACA9\xB7\uC2A4\uD0AC \uC815\uC9C0) \u2192 \uB05D\uB098\uBA74
-    \uCCB4\uB825 \uAC8C\uC774\uC9C0\uAC00 \uC989\uC2DC \uAC00\uB4DD(\uB2E4\uC74C
-    \uCCB4\uB825\uC2A4\uD0AC \uBC14\uB85C \uAC00\uB2A5)."
+    \uC21C\uAC04(\uCCB4\uB825 \uAC8C\uC774\uC9C0 40 \u2192 0) \uC790\uAE30 \uC790\uC2E0\uC774
+    3\uCD08 \uC2A4\uD134(\uACF5\uACA9\xB7\uC2A4\uD0AC \uC815\uC9C0) \u2192 \uAE68\uC5B4\uB09C\uB2E4(\u300C\uC644\uC804
+    \uD68C\uBCF5\u300D = \uAE30\uC808\uC5D0\uC11C \uD68C\uBCF5). \uC0AC\uC7A5\uB2D8
+    \uC815\uC815: \uAC8C\uC774\uC9C0\uB294 \uC548 \uCC44\uC6B4\uB2E4 \u2014 \uAE68\uC5B4\uB09C
+    \uB4A4 \uD3C9\uD0C0\uB85C 0\uBD80\uD130 \uB2E4\uC2DC 40\uD0C0. (SkillEffect.multiplier>0\uC774\uBA74
+    \uB05D\uC5D0 \uAC8C\uC774\uC9C0 \uAC00\uB4DD \uCC44\uC6C0 \uC635\uC158\uC774
+    \uB0A8\uC544 \uC788\uB2E4.)"
   triggerType: 3
   levels:
   - cooldown: 0
@@ -74,9 +77,12 @@ MonoBehaviour:
       minAllyTier: 5
       armorIgnoreRatio: 0
       armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1
       stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
     requiredTargetBuffId: 
     forbiddenTargetBuffId: 
     hitCountFloor: 0
@@ -87,3 +93,6 @@ MonoBehaviour:
     primaryTargetConditionValue: 0
     exclusiveGroup: 0
     enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+  icon: {fileID: 0}

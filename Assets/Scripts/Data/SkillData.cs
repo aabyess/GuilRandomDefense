@@ -302,6 +302,11 @@ public enum SkillEffectKind
     // 범위(SkillLevel.range) 안에서 가장 가까운 **일반 적 한 기**를 즉사시킨다. 일반 적 = 보스 아님(EnemyDummy.IsBoss) · 스토리/신세계 아님(PointValue < 200) ·
     // 신세계 광폭화 버프(B06B) 없음 — 원작 LaillySkill3·Kick_1의 「PV<200 + B06B 없을 때만 KillUnit」과 같은 판정. 보상은 일반 처치와 같다(막타 피해로 처리).
     KillNormalEnemies,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 박민수 「해방된자」 — 무시무시한성장속도) — 직렬화 순서를 지킨다.
+    // 시간 비례 피해 증가(패시브, Self): 이 유닛이 생긴 뒤 duration초(예: 30)가 지날 때마다 최종 피해 +multiplier(0.02 = +2%), 상한 bonus(1.0 = +100%).
+    // 평타·스킬·스플래시 모두. 게임 시계(Time.time) 기준. 원작 근거 없음 — 제안값(사장님 확정).
+    DamageGrowthOverTime,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -553,6 +558,9 @@ public class SkillEffect
     [Range(0f, 1f)] public float armorIgnoreRatio;
     public string armorIgnoreRequiresBuff = "";
 
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 박민수 재능투자) — 스턴 효과가 투자 「스턴」 단계를 따라 커진다: 지속 +0.35초/단계, 이 효과를 가진 발동 스킬의 확률 +2.5%p/단계.
+    public bool talentStunScaled;
+
     // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 양재모) — AttackSpeedStack 전용: 평타 1타당 쌓이는 비율(0.01 = +1%) · 상한(1.0 = +100%) · 무공격 초기화 시간(초).
     public float stackPerHit = 0.01f;
     public float stackCap = 1f;
@@ -712,6 +720,10 @@ public class SkillLevel
     // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 박민석 유닛삭제) — 켜져 있으면 OnHitCount 스킬이 「범위 안에 일반 적(보스·스토리 아님)이 있을 때만」 발동한다.
     // 없으면 게이지를 쓰지도·되돌리지도 않고 그대로 둔다(다음 평타에 다시 본다).
     public bool requireNormalEnemyInRange;
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 강재규 단일도킹) — ActiveButton 스킬 전용: 칸을 누른 뒤 **적 하나를 클릭**해야 발동한다(원작 A0K3 「사람으로서 부끄러움」 — 유닛 타깃 능력).
+    // true면 GameHud가 대상 지정 상태로 들어가고, 고른 적이 SingleTarget 효과의 주 대상이 된다. range 안(월드 환산)에 있어야 한다.
+    public bool needsTargetClick;
 }
 
 public enum SkillAoeCenter
