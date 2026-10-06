@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+import sys
+if "--i-know" not in sys.argv:
+    sys.exit("⛔ 폐기(10-06 PM): 스토리 체력·방어는 원작 값(w3u uhpm·udef·uhpr)으로 에셋에 직접 들어갔다. 이 생성기는 hp를 임시값으로 덮어쓴다 — 돌리지 말 것.")
+
 # -*- coding: utf-8 -*-
 """스토리 13개의 건물 EnemyData 에셋을 만들고, 각 Assets/Data/Stories/*.asset의
 building 필드를 그 에셋으로 연결한다.
