@@ -128,7 +128,8 @@ public class CombineSystem : MonoBehaviour
     {
         if (recipe == null || recipe.result == null) return false;
         UnitGrade grade = recipe.result.grade;
-        return grade == UnitGrade.Hidden || grade == UnitGrade.Immortal || grade == UnitGrade.Transcendent;
+        // 사장님 10-06 「히든·초월·불멸·다른세계는 타이핑 치고 뽑을 수 있게」 — 다른세계도 채팅 전용.
+        return grade == UnitGrade.Hidden || grade == UnitGrade.Immortal || grade == UnitGrade.Transcendent || grade == UnitGrade.OtherWorld;
     }
 
     static string NormalizePhrase(string text) =>
@@ -145,8 +146,9 @@ public class CombineSystem : MonoBehaviour
                 if (phrase.Length > 0) yield return phrase;
             }
 
-        string[] nameParts = recipe.name.Split('_');
-        if (nameParts.Length >= 2 && nameParts[1].Length > 0) yield return NormalizePhrase(nameParts[1] + "조합");
+        // 「이름 조합」: 에셋 이름에서 등급 접두를 뺀 나머지 전부(다른세계_고죠_사토루 → 「고죠 사토루 조합」). 첫 토막만 쓰면 「고죠 조합」이 돼 이름이 잘렸다.
+        int cut = recipe.name.IndexOf('_');
+        if (cut > 0 && cut < recipe.name.Length - 1) yield return NormalizePhrase(recipe.name.Substring(cut + 1) + "조합");
 
         if (!string.IsNullOrEmpty(recipe.chatPhrase)) yield return NormalizePhrase(recipe.chatPhrase);
     }
@@ -177,8 +179,9 @@ public class CombineSystem : MonoBehaviour
         {
             if (!CanCombineNow(match))
             {
+                // 모자란 것을 전부 알린다(사장님 10-06 「뭐 없으면 ㅇㅇ부족, ㅇㅇ없음」) — 첫 줄만 보이면 나머지를 모른다.
                 List<string> shortage = DescribeShortage(match);
-                return shortage.Count > 0 ? shortage[0] : $"{label}: 지금은 조합할 수 없습니다.";
+                return shortage.Count > 0 ? string.Join("\n", shortage) : $"{label}: 지금은 조합할 수 없습니다.";
             }
             return TryCombine(match) ? $"{label} 조합 성공!" : $"{label}: 지금은 조합할 수 없습니다.";
         }
