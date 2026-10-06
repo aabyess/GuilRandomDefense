@@ -608,6 +608,18 @@ public class RewardDistributor : MonoBehaviour
                 context.UnitUpgrades?.GrantStoryPoint();
             }
 
+            // 원작 reward8: 「도움소 잠금」 항법(udg_Tech_No_support)을 고른 생존자에게 [히든]실버즈 레일리(h05X) 1기 추가.
+            if (storyReward.supportLockBonusUnit != null && context.NavigationState != null && context.NavigationState.Choice == NavigationChoice.SupportLock)
+            {
+                SpawnUnitAtWarehouse(context, storyReward.supportLockBonusUnit);
+                PlayerNotification.Show(context.PlayerId, $"<color=#FF0000>테크 추가효과:</color> <color=#4682B4>{storyReward.supportLockBonusUnit.DisplayName}</color> <color=#FF00FF>희귀함</color> 추가 획득!", 10f);
+            }
+
+            // 원작 reward9: R02P(스토리:9.어인섬파괴) 연구 = 다른세계 유닛 도박(h06E/H0AW, ureq h08B·Rhst·R02P)의 요구 — 생존자만.
+            if (storyReward.unlockGamblingOptions != null && context.GamblingProgress != null)
+                foreach (GamblingOptionData option in storyReward.unlockGamblingOptions)
+                    context.GamblingProgress.Unlock(option);
+
             // 05번 「고대의 배」 지급 경로 ㉡ — 스토리 7(임펠다운 대응) 전용, h05Y 1기.
             // 위 IsDead 게이트를 이미 통과한 플레이어만 여기 온다.
             if (storyReward.order == 7)
@@ -615,6 +627,10 @@ public class RewardDistributor : MonoBehaviour
                 GrantAncientShip(context);
             }
         }
+
+        // 원작 reward11·12·13(j 13560 이후): 플레이어 루프 **밖**에서 ForGroupBJ(udg_Exp_Group, AddHeroXPSwapped(300)) — PlayerDeath 게이트 없이 영웅 전원(전역 그룹).
+        // 정의문 퀘스트(JusticeGateQuest)와 같은 UnitAttacker.GrantHeroXpToAllHeroes(조합으로 만든 초월·영원 영웅 전부).
+        if (storyReward.heroXpToAllHeroes > 0) UnitAttacker.GrantHeroXpToAllHeroes(storyReward.heroXpToAllHeroes);
     }
 
     UnitSpawner cachedUnitSpawner;

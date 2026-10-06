@@ -55,6 +55,15 @@ public class StoryData : ScriptableObject
     //   모델마다 정면이 달라서 스토리 데이터 한 칸으로 맞춘다(모델 배선을 다시 돌리지 않아도 된다).
     public float facingYaw;
 
+    // ⚠️ 맨 뒤에 추가(10-06 사장님 「스토리 보상 원작과 맞추기」) — 원작 Trig_Story_reward8·9·11·12·13(j 13499~13632)의 빠진 부분. 전부 기본값이면 아무 일도 안 한다.
+    [Header("원작 추가 보상 — Trig_Story_reward8·9·11·12·13")]
+    [Tooltip("이 스토리 클리어 때 영웅 전원(조합으로 만든 초월·영원 영웅, 원작 udg_Exp_Group = 전역 그룹)에게 경험치. 원작 11·12·13번 +300. 0이면 없음.")]
+    public int heroXpToAllHeroes;
+    [Tooltip("항법 「도움소 잠금」을 고른 생존자에게만 1기 더 준다(원작 reward8 Func002Func001Func008C — udg_Tech_No_support, [히든]실버즈 레일리 h05X). 비우면 없음.")]
+    public UnitData supportLockBonusUnit;
+    [Tooltip("이 스토리 클리어 때 생존자의 도박소에서 이 도박을 연다(원작 reward9 SetPlayerTechResearchedSwap R02P = 다른세계 유닛 도박 h06E/H0AW의 요구 연구).")]
+    public List<GamblingOptionData> unlockGamblingOptions;
+
     /// <summary>변신 후에 쓸 데이터. 보스가 따로 없으면 건물 것을 그대로 쓴다.</summary>
     public EnemyData BossOrBuilding => boss != null ? boss : building;
 

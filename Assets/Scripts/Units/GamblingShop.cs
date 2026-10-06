@@ -239,8 +239,9 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
     string StockSuffix(GamblingOptionData option)
     {
         GamblingProgress progress = OwnerContext?.GamblingProgress;
-        if (option == null || option.stockMax <= 0 || progress == null) return "";
-        if (option.requiresUnlock && !progress.IsUnlocked(option)) return "\n(잠김)";
+        if (option == null || progress == null) return "";
+        if (option.requiresUnlock && !progress.IsUnlocked(option)) return "\n(잠김)";   // 재고 없는 유닛 도박(다른세계: 스토리 9번 뒤 해금)도 칸에 잠김을 쓴다
+        if (option.stockMax <= 0) return "";
         // 재고가 있어도 스토리 조건에 막히면 「1/1」만 보고 「왜 안 눌리지」가 된다(09-26 확인 판) — 막는 조건을 칸에 쓴다.
         if (!StoryRequirementMet(option))
             return $"\n스토리 {(StoryManager.Instance != null ? StoryManager.Instance.FinishedCount : 0)}/{option.requiresStoriesCleared}";
@@ -381,9 +382,12 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
             ? $"행운의토큰 {FailureLuckyTokens(option, OwnerContext)} + 목재 {option.failureWood}"
             : "없음";
 
+        string lockNote = option.requiresUnlock && !(OwnerContext?.GamblingProgress?.IsUnlocked(option) ?? false)
+            ? $"\n<color=#FF7070>잠김 — {(string.IsNullOrEmpty(option.unlockHint) ? "아직 해금되지 않음" : option.unlockHint)}</color>"
+            : "";
         return $"{option.optionName}\n{PlayerFacingText.Clean(option.description)}\n"
              + $"비용: {ResourceLabel(option.costResourceType)} {option.cost}\n성공 확률: {EffectiveSuccessChance(option, OwnerContext):F0}%{BoostNote(option, OwnerContext)}\n"
-             + $"성공 시: {resultDesc}\n실패 시: {failDesc}";
+             + $"성공 시: {resultDesc}\n실패 시: {failDesc}{lockNote}";
     }
 
     static string ResourceLabel(ResourceType type)

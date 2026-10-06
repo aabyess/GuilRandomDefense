@@ -10,12 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5131109608d1664b6c99c249a89039af, type: 3}
-  m_Name: Story08_사이버넷
+  m_Name: "Story08_\uC0AC\uC774\uBC84\uB137"
   m_EditorClassIdentifier: 
-  storyName: 사이버넷
+  storyName: "\uC0AC\uC774\uBC84\uB137"
   order: 8
   delayAfterPreviousSeconds: 0
   interludeName: 
+  godNightmareOnly: 0
+  timeLimitSeconds: 0
   building: {fileID: 11400000, guid: 2c1a75e14120234458a2f43bc5def017, type: 2}
   boss: {fileID: 0}
   goldReward: 8000
@@ -25,9 +27,18 @@ MonoBehaviour:
   wispRewards:
   - wisp: {fileID: 11400000, guid: e343898df3db474d85f1c7d1582a1334, type: 2}
     count: 2
+  earlyClearBeforeRound: 0
+  earlyResourceRewards: []
+  earlyWispRewards: []
+  earlyClearMessage: 
   itemDropChance: 0.0454545
   itemDrops:
   - item: {fileID: 11400000, guid: fbc80f4748a74d5bb9c20939a19f7199, type: 2}
     weight: 1
-    message: "★아이템:\n불사조의 깃털 - 전설적인 획득!"
+    message: "\u2605\uC544\uC774\uD15C:\n\uBD88\uC0AC\uC870\uC758 \uAE43\uD138 -
+      \uC804\uC124\uC801\uC778 \uD68D\uB4DD!"
     skipIfOwned: 1
+  facingYaw: 0
+  heroXpToAllHeroes: 0
+  supportLockBonusUnit: {fileID: 11400000, guid: 23c784b755224cb7aa09733afd310fc7, type: 2}
+  unlockGamblingOptions: []

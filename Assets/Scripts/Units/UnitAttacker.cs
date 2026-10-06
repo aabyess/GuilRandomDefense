@@ -2043,12 +2043,12 @@ public class UnitAttacker : MonoBehaviour
         target.Aid1ArmorShredFor(amount, 5f);
     }
 
-    // 스토리 적 상대 피해(SkillEffectKind.StoryDamageMultiplier, 초월 황준석 「믿음직한도움」) — PointValue ≥ 200(스토리·보스)인 적에게 ×multiplier. 보잡(BossDamageFactor)과 같은 캐시 방식.
+    // 스토리 적 상대 피해(SkillEffectKind.StoryDamageMultiplier, 초월 황준석 「믿음직한도움」) — IsStoryHpTarget(스토리·퀘스트 미니보스·크립)인 적에게 ×multiplier. 보잡(BossDamageFactor)과 같은 캐시 방식.
     UnitData storyMultiplierFor;
     float storyMultiplier = 1f;
     float StoryDamageFactor(EnemyDummy target)
     {
-        if (target == null || target.PointValue < 200f) return 1f;
+        if (target == null || !target.IsStoryHpTarget) return 1f;   // 스토리·퀘스트 미니보스·크립(MarkStoryHpTarget) — PV≥200은 R20 보스 등 일반 보스도 걸려 안 쓴다(10-06 PM)
         UnitData unitData = identity != null ? identity.Data : null;
         if (unitData == null) return 1f;
         if (storyMultiplierFor != unitData)

@@ -10,25 +10,50 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e38dcfb2166e0425695e116cb8b725bc, type: 3}
-  m_Name: Gambling_다른세계 도박
-  m_EditorClassIdentifier:
-  optionName: 다른세계 도박
-  description: 3500엔과 목재 5개를 걸고 다른세계 등급 유닛을 노린다. 성공률 17%. 실패해도 행운의 토큰을 돌려받는다.
+  m_Name: "Gambling_\uB2E4\uB978\uC138\uACC4 \uB3C4\uBC15"
+  m_EditorClassIdentifier: 
+  optionName: "\uB2E4\uB978\uC138\uACC4 \uB3C4\uBC15"
+  description: "3500\uC5D4\uACFC \uBAA9\uC7AC 5\uAC1C\uB97C \uAC78\uACE0 \uB2E4\uB978\uC138\uACC4
+    \uB4F1\uAE09 \uC720\uB2DB\uC744 \uB178\uB9B0\uB2E4. \uC131\uACF5\uB960 17%. \uC2E4\uD328\uD574\uB3C4
+    \uD589\uC6B4\uC758 \uD1A0\uD070\uC744 \uB3CC\uB824\uBC1B\uB294\uB2E4."
   category: 1
   costResourceType: 0
   cost: 5
+  goldCost: 3500
   successChancePercent: 17
   primaryResultGrade: 11
   useSecondaryGrade: 0
   secondaryResultGrade: 11
+  bonusUnit: {fileID: 0}
+  bonusChancePercent: 0
+  bonusPool: []
+  bonusPoolChancePercent: 0
   successGoldMin: 0
   successGoldMax: 0
+  failureGoldMin: 0
+  failureGoldMax: 0
   grantFailureReward: 1
   failureLuckyTokens: 1
   failureWood: 1
-  failureGoldMin: 0
-  failureGoldMax: 0
-  goldCost: 3500
   scalesWithGamblerNavigation: 1
-  announceFailLabel: 다른세계 유닛
-  announceSuccessLabel: 다른세계
+  announceFailLabel: "\uB2E4\uB978\uC138\uACC4 \uC720\uB2DB"
+  announceSuccessLabel: "\uB2E4\uB978\uC138\uACC4"
+  grantsUniqueRerollOnGenericSuccess: 0
+  maxUses: 0
+  requiresUnlock: 1
+  unlockHint: "\uC2A4\uD1A0\uB9AC 9\uBC88(\uC5B4\uC778\uC12C) \uD074\uB9AC\uC5B4
+    \uD6C4 \uD574\uAE08"
+  unlockRound: 0
+  stockMax: 0
+  stockRegenSeconds: 0
+  stockInitial: 0
+  coinSoundOnSuccess: 0
+  coinSoundOnFailure: 0
+  graduateAtCumulative: 0
+  retiredOnGraduation: 0
+  requiresGraduation: 0
+  payoutResourceType: 0
+  payoutResourceAmount: 0
+  secondaryChancePercent: 0
+  requiresStoriesCleared: 0
+  unlockAtRound: 0
