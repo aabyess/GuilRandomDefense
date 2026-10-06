@@ -7,7 +7,7 @@ using UnityEngine;
 /// 호출: call NotaehyunApply.Apply (다시 불러도 안전 — 같은 이름 스킬 에셋은 덮어쓴다). 설계표: Docs/research/TRANSCEND_NOTAEHYUN_DESIGN_2026-10-06.md.
 ///  · 반사회적인격 = 디버프(단점): 반경 600 안 아군 이속 −20%(AllyMoveSpeedDebuff). 최윤서 강화가 켜지면 100% 제거. 원작 근거 없음 — 제안값.
 ///  · 하체부실 = 이동속도감소: 평타 12.5% · 남는 속도 0.6 · 3초(원작 초월 양재모 로키포트 1/8·0.6·3.0).
-///  · 돌발행동 = 깡딜: 평타 10% · 200000(원작 도플라밍고 일반 DP_Skill_2 1/10·200000).
+///  · 돌발행동 = 깡딜: 평타 10% · 400000(신 기준 감사로 200000→400000, 원작 초월 확률 깡딜 중앙값).
 ///  · 시너지폭발 = 스플래시(UnitData.attackSplashRadius 300) + 폭발증폭(스플래시 피해 ×1.5, 원작 근거 없음 — 제안값).
 ///  · 가리지않는수단과방법 = 체력스킬(마나 게이지 50타째, 대상 현재체력 25%·보스는 고정 300000 — 원작 김만경·키드 LIFE50/도플 25%/보스 고정 분기) + 보잡(보스 ×1.3 제안값).
 ///  · 방어 무시: 위 피해 효과는 평소 방어를 따르고, 「최윤서 강화」(영구 버프 YOONSEO_ENHANCED)가 켜지면 방어 무시(armorIgnoreRatio 1).
@@ -66,9 +66,9 @@ static class NotaehyunApply
             new SkillEffect { kind = SkillEffectKind.Slow, target = SkillTargetKind.SingleTarget, multiplier = 0.6f, duration = 3f });
 
         SkillData burst = MakeSkill("돌발행동", "돌발행동 — 깡딜(발동)",
-            "사장님 10-06. 평타 10% 확률로 맞은 적에게 고정 200000(원작 도플라밍고 일반 DP_Skill_2 1/10·200000). 평소엔 방어를 따르고 「최윤서 강화」가 켜지면 방어 무시.",
+            "사장님 10-06. 평타 10% 확률로 맞은 적에게 고정 400000(사장님 10-06 신 기준 감사: 원작 초월 확률 깡딜 중앙값 40만, 처음엔 도플라밍고 일반 200000). 평소엔 방어를 따르고 「최윤서 강화」가 켜지면 방어 무시.",
             SkillTriggerType.OnHitChance, 0f, 0.10f, 0f, 0, SkillGaugeKind.Mana,
-            Hit(SkillEffectBasis.Flat, 200000f));
+            Hit(SkillEffectBasis.Flat, 400000f));
 
         SkillData synergy = MakeSkill("시너지폭발", "시너지폭발 — 스플래시 + 폭발증폭",
             "사장님 10-06. 평타 범위 피해(UnitData.attackSplashRadius 300 — 최상호 구일과 같은 반경) + 폭발증폭: 범위 피해량 ×1.5(주 대상 평타는 그대로). 폭발증폭은 원작 근거 없음 — 제안값.",

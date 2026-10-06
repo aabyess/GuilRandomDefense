@@ -14,9 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   skillName: "3\uB300\uC545\uC9C8 \u2014 \uAE61\uB51C(\uBC1C\uB3D9)"
   description: "\uC0AC\uC7A5\uB2D8 10-06. \uD3C9\uD0C0 10% \uD655\uB960\uB85C \uB9DE\uC740
-    \uC801\uC5D0\uAC8C \uACE0\uC815 200000(\uC6D0\uC791 \uB3C4\uD50C\uB77C\uBC0D\uACE0
-    \uC77C\uBC18 DP_Skill_2 1/10\xB7200000). \uB9C8\uB51C \u2014 AP \uB2A5\uB825
-    \uD53C\uD574\uB294 \uBC29\uC5B4 \uBB34\uC2DC(\uC6B0\uB9AC \uC5D4\uC9C4 \uAE30\uBCF8)."
+    \uC801\uC5D0\uAC8C \uACE0\uC815 400000(\uC0AC\uC7A5\uB2D8 10-06 \uC2E0 \uAE30\uC900
+    \uAC10\uC0AC: \uC6D0\uC791 \uCD08\uC6D4 \uD655\uB960 \uAE61\uB51C \uC911\uC559\uAC12
+    40\uB9CC, \uCC98\uC74C\uC5D4 \uB3C4\uD50C\uB77C\uBC0D\uACE0 \uC77C\uBC18 200000).
+    \uB9C8\uB51C \u2014 AP \uB2A5\uB825 \uD53C\uD574\uB294 \uBC29\uC5B4 \uBB34\uC2DC(\uC6B0\uB9AC
+    \uC5D4\uC9C4 \uAE30\uBCF8)."
   triggerType: 0
   levels:
   - cooldown: 0
@@ -34,7 +36,7 @@ MonoBehaviour:
       target: 3
       damageType: 2
       attackType: 7
-      multiplier: 200000
+      multiplier: 400000
       bonus: 0
       chance: 1
       hitCount: 1
@@ -77,6 +79,7 @@ MonoBehaviour:
       stackResetSeconds: 3
       attackSpeedScale: 0
       attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
     requiredTargetBuffId: 
     forbiddenTargetBuffId: 
     hitCountFloor: 0
@@ -89,4 +92,7 @@ MonoBehaviour:
     enterRange: 0
     requireNormalEnemyInRange: 0
     needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
   icon: {fileID: 21300000, guid: c3446708c2f4f42dfad8ae107b884994, type: 3}

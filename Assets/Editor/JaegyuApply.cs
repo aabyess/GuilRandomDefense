@@ -8,7 +8,7 @@ using UnityEngine;
 ///  · 3대악질 = 깡딜: 평타 10% · 200000(원작 도플라밍고 일반 1/10·200000), AP(능력 피해는 방어 무시 — 우리 엔진 기본).
 ///  · 간잽이 = 스턴(체력스킬): 체력 게이지 40 가득 → 범위 525 스턴 2.85초(원작 Robine_skill_2 stomp A09I 525·2.85초, 이 유닛 원작 LIFE 40) → 게이지 0.
 ///  · 만성피로: 같은 순간(게이지 40) 자기 스턴 3초 → 깨어남(게이지는 0부터 다시 — 사장님 10-06 정정).
-///  · 강약약강 = 끝딜(평타 10% · 대상 잃은 체력 5%, 보스(PV≥200)는 고정 300000) + 패시브 아군발 디버프 개수 비례 피해(개당 +15%, 상한 +60%). 원작 근거 없음 — 제안값.
+///  · 강약약강 = 끝딜(마나 스킬: 마나 게이지 125 · 대상 잃은 체력 5%, 보스도 같은 식) + 패시브 아군발 디버프 개수 비례 피해(개당 +15%, 상한 +60%). 원작 근거 없음 — 제안값.
 /// </summary>
 static class JaegyuApply
 {
@@ -52,9 +52,9 @@ static class JaegyuApply
         if (unit == null || recipe == null) return "❌ 초월_강재규_AP 유닛·조합식 에셋 없음";
 
         SkillData burst = MakeSkill("3대악질", "3대악질 — 깡딜(발동)",
-            "사장님 10-06. 평타 10% 확률로 맞은 적에게 고정 200000(원작 도플라밍고 일반 DP_Skill_2 1/10·200000). 마딜 — AP 능력 피해는 방어 무시(우리 엔진 기본).",
+            "사장님 10-06. 평타 10% 확률로 맞은 적에게 고정 400000(사장님 10-06 신 기준 감사: 원작 초월 확률 깡딜 중앙값 40만, 처음엔 도플라밍고 일반 200000). 마딜 — AP 능력 피해는 방어 무시(우리 엔진 기본).",
             SkillTriggerType.OnHitChance, 0f, 0.10f, 0, SkillGaugeKind.Life,
-            Hit(SkillEffectBasis.Flat, 200000f));
+            Hit(SkillEffectBasis.Flat, 400000f));
 
         SkillData stun = MakeSkill("간잽이", "간잽이 — 스턴(체력스킬: 체력 게이지 40)",
             "사장님 10-06 「체력스킬 = 스턴」. 체력 게이지(평타 +1)가 40에 차면 범위 525 안 적 스턴 2.85초(원작 Robine_skill_2 stomp A09I 525·2.85초, 이 유닛 원작 LIFE게이지 40) → 게이지 0.",
@@ -66,11 +66,10 @@ static class JaegyuApply
             SkillTriggerType.OnHitCount, 0f, 1f, 40, SkillGaugeKind.Life,
             new SkillEffect { kind = SkillEffectKind.SelfStunRefillLifeGauge, target = SkillTargetKind.Self, duration = 3f });
 
-        SkillData finisher = MakeSkill("강약약강_끝딜", "강약약강 — 끝딜(잃은 체력 5%)",
-            "사장님 10-06 「끝딜(잃은체력5%)」. 평타 10% 확률로 대상이 잃은 체력(최대−현재)의 5% 피해. 보스(PV≥200)는 비례 대신 고정 300000(원작 보스 분기 — 보스 상한). 원작 근거 없음 — 제안값.",
-            SkillTriggerType.OnHitChance, 0f, 0.10f, 0, SkillGaugeKind.Life,
-            Hit(SkillEffectBasis.TargetMissingHpPercent, 0.05f, SkillEffectTargetCondition.TargetPointValueLessThan, 200f),
-            Hit(SkillEffectBasis.Flat, 300000f, SkillEffectTargetCondition.TargetPointValueAtLeast, 200f));
+        SkillData finisher = MakeSkill("강약약강_끝딜", "강약약강 — 끝딜(마나 스킬 · 잃은 체력 5%)",
+            "사장님 10-06 「끝딜(잃은체력5%)」 → 마나 스킬로 전환(끝딜 3종 규칙: 마나 스킬 = 잃은 체력 비례) + 보스 상한 해제. 마나 게이지(평타 +1)가 125에 차면 대상이 잃은 체력(최대−현재)의 5% 피해, 보스(PV≥200)도 같은 식(고정 300000 분기 제거) → 게이지 0. 125는 원작 초월 마나 임계 115~160 안(두유찬·바지사장과 같은 값), 5%는 제안값. 만성피로(체력 게이지 40)와 게이지가 따로라 안 엉킨다.",
+            SkillTriggerType.OnHitCount, 0f, 1f, 125, SkillGaugeKind.Mana,
+            Hit(SkillEffectBasis.TargetMissingHpPercent, 0.05f));
 
         SkillData perDebuff = MakeSkill("강약약강_디버프비례", "강약약강 — 아군발 디버프 개수 비례 피해 증가(패시브)",
             "사장님 10-06 「아군에 의해서 받는 디버프 개수 비례 데미지 증가」. 노태현 「아군 이속 감소」 같은 아군발 디버프를 받는 가짓수 × 개당 +15%(상한 +60%) 최종 피해 증가. 원작 근거 없음 — 제안값.",
@@ -95,6 +94,8 @@ static class JaegyuApply
         unit.skills = new List<SkillData> { burst, stun, tired, finisher, perDebuff, dock };
         unit.unitName = Title;
         unit.lifeGaugeMax = 40f;
+        unit.manaMax = 125f;                    // 끝딜 마나 게이지(평타 +1)
+        unit.manaGaugePerMana = 1f;
         unit.lifeGaugeStart = 0f;
         unit.lifeGaugeRegenPerSecond = 0f;
         unit.lifeGaugeCustomHitGain = false;   // 평타 +1
@@ -103,6 +104,6 @@ static class JaegyuApply
         recipe.chatPhrase = Phrase;
         EditorUtility.SetDirty(recipe);
         AssetDatabase.SaveAssets();
-        return $"강재규 상호파정보보완관 적용: 스킬 {old.Count}개({string.Join(",", old)}) 제거 → {unit.skills.Count}개 · 칭호 「{unit.unitName}」 · 체력 게이지 {unit.lifeGaugeMax} · 입력말 {recipe.chatPhrase} · 재료 {recipe.ingredients.Count}종 그대로";
+        return $"강재규 상호파정보보완관 적용: 스킬 {old.Count}개({string.Join(",", old)}) 제거 → {unit.skills.Count}개 · 칭호 「{unit.unitName}」 · 체력 게이지 {unit.lifeGaugeMax} · 마나 게이지 {unit.manaMax} · 입력말 {recipe.chatPhrase} · 재료 {recipe.ingredients.Count}종 그대로";
     }
 }

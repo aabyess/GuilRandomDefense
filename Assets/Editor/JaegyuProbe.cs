@@ -51,4 +51,51 @@ public static class JaegyuProbe
         m.Invoke(j, new object[] { 3f, false });
         return "   자기 스턴 3초 시작\n" + Report();
     }
+
+    // ---- 10-06 2차(마나 끝딜 실측, 구현담당3) ----
+    static EnemyDummy finisherTarget;
+
+    /// 0번 레인 가운데에 표적 1마리(보스 데이터면 isBoss true)를 세우고 체력을 최대의 40%로(잃은 체력 60%) 만든 뒤 강재규를 곁에 둔다. 이 표적은 움직이지 않는다.
+    static string Target(string enemyAsset)
+    {
+        LaneMarker lane = LaneMarker.Get(0);
+        EnemyData data = UnityEditor.AssetDatabase.LoadAssetAtPath<EnemyData>($"Assets/Data/Enemies/{enemyAsset}.asset");
+        if (lane == null || data == null || data.prefab == null) return $"❌ 레인·적 없음 {enemyAsset}";
+        Vector3 c = lane.LaneCenter;
+        GameObject go = Object.Instantiate(data.prefab, c + Vector3.forward * 8f, Quaternion.identity);
+        if (go.TryGetComponent(out WaypointMover mover)) mover.enabled = false;
+        EnemyDummy dummy = go.GetComponent<EnemyDummy>();
+        dummy.Initialize(data, 1e9f); dummy.SetLane(-1);
+        typeof(EnemyDummy).GetField("hp", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(dummy, dummy.MaxHp * 0.4f);
+        finisherTarget = dummy;
+        UnitAttacker j = Jae();
+        if (j != null && j.TryGetComponent(out UnityEngine.AI.NavMeshAgent agent)) agent.Warp(c + Vector3.back * 30f);
+        return $"   표적 {enemyAsset}(isBoss {data.isBoss}) 체력 {dummy.Hp:F0}/{dummy.MaxHp:F0} (잃은 체력 {dummy.MaxHp - dummy.Hp:F0})";
+    }
+    public static string TargetNormal() => Target("Enemy_R45_이현빈");
+    public static string TargetBoss() => Target("Enemy_R60_정윤식");
+
+    static int ManaGauge(UnitAttacker a) => (int)typeof(UnitAttacker).GetField("manaGaugeCounter", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(a);
+    public static string Mana124()
+    {
+        UnitAttacker j = Jae();
+        typeof(UnitAttacker).GetField("manaGaugeCounter", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(j, 124);
+        typeof(UnitAttacker).GetField("manaGaugeInitialized", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(j, true);
+        return "   강재규 마나 게이지 → 124";
+    }
+    public static string Check()
+    {
+        UnitAttacker j = Jae();
+        return $"   마나 게이지 {ManaGauge(j)}/125 · 체력 게이지 {Get<int>(j, "lifeGaugeCounter")}/40 · 자기 스턴 {(j.IsSelfStunned ? "중" : "아님")} · 표적 체력 {finisherTarget.Hp:F0}/{finisherTarget.MaxHp:F0} (잃은 체력 {finisherTarget.MaxHp - finisherTarget.Hp:F0})";
+    }
+
+    /// 마나 124 + 체력 39를 같은 순간에 → 다음 평타 하나에 끝딜(마나)과 간잽이·만성피로(체력)가 동시에 나가고 두 게이지가 서로 안 엉키는지.
+    public static string Both()
+    {
+        UnitAttacker j = Jae();
+        foreach (string f in new[] { "manaGaugeInitialized", "lifeGaugeInitialized" }) typeof(UnitAttacker).GetField(f, BindingFlags.NonPublic | BindingFlags.Instance).SetValue(j, true);
+        typeof(UnitAttacker).GetField("manaGaugeCounter", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(j, 124);
+        typeof(UnitAttacker).GetField("lifeGaugeCounter", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(j, 39);
+        return "   강재규 마나 게이지 → 124 · 체력 게이지 → 39";
+    }
 }
