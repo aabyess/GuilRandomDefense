@@ -48,6 +48,7 @@
 | 무엇 | 비고 |
 |---|---|
 | 아이템 아이콘(Assets/Art/Items/) — 원랜디 맵에서 꺼낸 BLP→PNG | 사장님 10-04 「친구끼리라 원작 그림 OK」. 맵 안에 든 것만 쓴다(워크3 기본 BTN 아이콘은 우리에게 없음) |
+| 스킬·유물 아이콘(예정, 연결은 구현담당) — 원랜디 맵 BLP→PNG `~/GRD_skill_icons/` | 사장님 10-06 「원랜디 파일에서 가져다 쓰자」. 맵 안에 든 것만 쓴다(능력 아이콘 1,065개 중 고유 201장만 맵 안, 나머지는 워크3 표준 BTN — War3.mpq 없음). 대응표 `Tools/skill_icons/skill_icon_map.csv`. ⚠️ 위 아이템 줄과 달리 `Assets/Art/Items/`의 지금 그림은 실제로 game-icons.net(CC BY 3.0, `~/GRD_motion_trial/아이템아이콘/credits.md`)이다 — 원작 아이템 아이콘 38개 중 34개는 맵 밖이라 못 뽑는다 |
 
 ## 🟢 작성자 표기
 
