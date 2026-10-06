@@ -1084,9 +1084,14 @@ public class GameHud : MonoBehaviour
         UiSkin.Apply(roundWindow.GetComponent<Image>(), "timer_frame_9s", new Color(0.11f, 0.05f, 0.07f, 0.94f));
         roundWindow.gameObject.AddComponent<LayoutElement>().preferredHeight = 44f;
         roundTimerTitle = CreateLabel(roundWindow, "RoundTimerTitle", "현재레벨->");
-        SetAnchors(roundTimerTitle.rectTransform, new Vector2(0.04f, 0f), new Vector2(0.62f, 1f));
+        SetAnchors(roundTimerTitle.rectTransform, new Vector2(0.04f, 0f), new Vector2(0.80f, 1f));   // 적 이름까지 들어가게 넓힘(시간 글자는 오른쪽 끝에 붙는다)
         roundTimerTitle.alignment = TextAlignmentOptions.Left;
         roundTimerTitle.fontSize = 20;
+        roundTimerTitle.richText = true;
+        roundTimerTitle.enableAutoSizing = true;
+        roundTimerTitle.fontSizeMin = 13f;
+        roundTimerTitle.fontSizeMax = 20f;
+        roundTimerTitle.overflowMode = TextOverflowModes.Ellipsis;
         roundTimerTitle.color = new Color(1f, 0.28f, 0.28f);
         roundTimeText = CreateLabel(roundWindow, "RoundTimeText", "-");
         SetAnchors(roundTimeText.rectTransform, new Vector2(0.55f, 0f), new Vector2(0.96f, 1f));
@@ -4722,7 +4727,10 @@ public class GameHud : MonoBehaviour
             lastTimeTenths = timeTenths;
             lastPreparing = preparing;
             // 원작 타이머 창: 제목(빨강) + 시간. 「현재레벨->N」(j 29588) · 라운드 사이 준비엔 「N라운드 준비」.
-            roundTimerTitle.text = rm == null ? "현재레벨->" : preparing ? $"{round}라운드 준비" : $"현재레벨->{round}";
+            // 사장님 10-06: 「현재레벨->9 이재윤」 — 그 라운드 적(보스 라운드는 보스) 이름을 번호 뒤에. 준비·신세계 대기엔 다음 라운드 적 이름. 원작 제목엔 이름이 없다(번호만) — 우리 추가.
+            string roundEnemy = rm != null ? rm.EnemyNameOfRound(round) : "";
+            string roundEnemySuffix = string.IsNullOrEmpty(roundEnemy) ? "" : $" <color=#FFD54F>{roundEnemy}</color>";
+            roundTimerTitle.text = rm == null ? "현재레벨->" : preparing ? $"{round}라운드 준비{roundEnemySuffix}" : $"현재레벨->{round}{roundEnemySuffix}";
             roundTimeText.text = rm == null ? "-" : Clock(timeTenths / 10f);
         }
 

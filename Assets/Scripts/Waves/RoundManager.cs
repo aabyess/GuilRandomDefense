@@ -866,6 +866,21 @@ public class RoundManager : MonoBehaviour
         return normalRoundDuration;
     }
 
+    /// <summary>그 라운드에 나오는 적 이름(우상단 「현재레벨->9 이재윤」용). 보스 라운드는 보스 이름, 아니면 웨이브의 첫 적. 웨이브가 없으면 빈 문자열. 멀티 클라도 같은 씬 표(rounds)로 찾는다.</summary>
+    public string EnemyNameOfRound(int roundNumber)
+    {
+        WaveData waveData = GetWaveData(roundNumber);
+        if (waveData == null || waveData.spawnList == null) return "";
+        EnemyData pick = null;
+        foreach (WaveSpawnEntry entry in waveData.spawnList)
+        {
+            if (entry == null || entry.enemyData == null) continue;
+            if (entry.enemyData.isBoss) { pick = entry.enemyData; break; }
+            if (pick == null) pick = entry.enemyData;
+        }
+        return pick != null ? pick.enemyName ?? "" : "";
+    }
+
     WaveData GetWaveData(int roundNumber)
     {
         if (rounds == null) return null;
