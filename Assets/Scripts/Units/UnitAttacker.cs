@@ -611,6 +611,7 @@ public class UnitAttacker : MonoBehaviour
         public List<EnemyDummy> auraAffectedEnemies;
         public List<UnitIdentity> auraAffectedAllies;
         public List<string> auraSelfAppliedBuffIds;
+        public SkillLevel auraLevelApplied;   // 지금 걸려 있는 효과가 속한 레벨 — 특성 강화로 레벨이 바뀌면 옛 레벨 효과를 먼저 뗀다(10-06 임장혁 이간질 제거)
     }
 
     Dictionary<SkillData, SkillRuntimeState> skillRuntimeStates;
@@ -1386,6 +1387,24 @@ public class UnitAttacker : MonoBehaviour
         state.auraAffectedEnemies ??= new List<EnemyDummy>();
         state.auraAffectedAllies ??= new List<UnitIdentity>();
         state.auraSelfAppliedBuffIds ??= new List<string>();
+
+        // 스킬 레벨이 바뀌었으면(특성 강화) 옛 레벨이 걸어 둔 효과를 전부 떼고 새 레벨로 다시 건다 — 안 떼면 옛 효과(이간질)가 영구히 남는다.
+        if (state.auraLevelApplied != null && state.auraLevelApplied != level)
+        {
+            SkillLevel oldLevel = state.auraLevelApplied;
+            foreach (SkillEffect effect in oldLevel.effects)
+            {
+                if (effect.target != SkillTargetKind.Self || (effect.kind != SkillEffectKind.ApplyBuff && !IsAuraStatKind(effect.kind)) || string.IsNullOrEmpty(effect.buffId)) continue;
+                if (!state.auraSelfAppliedBuffIds.Remove(effect.buffId)) continue;
+                if (IsAuraStatKind(effect.kind)) RemoveAuraBonus(this, effect.kind, effect.buffId);
+                RemoveBuff(effect.buffId);
+            }
+            foreach (EnemyDummy target in state.auraAffectedEnemies) if (target != null) RemovePersistentAuraEffectsFromEnemy(oldLevel, target);
+            foreach (UnitIdentity ally in state.auraAffectedAllies) if (ally != null) RemovePersistentAuraEffectsFromAlly(oldLevel, ally);
+            state.auraAffectedEnemies.Clear();
+            state.auraAffectedAllies.Clear();
+        }
+        state.auraLevelApplied = level;
 
         // Self 효과 — 범위 개념이 없다(캐스터 자기 자신). 게이트가 막히면 뗀다, 풀리면
         // 다시 건다 — 한 번 걸고 다시 안 떼는 게 아니라 "지금 켜져 있는가"를 그대로

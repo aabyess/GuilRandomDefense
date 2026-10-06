@@ -91,7 +91,8 @@ static class JanghyukApply
         SkillData dispel = MakeSkill("고충해소", "고충해소 — 디버프 해제(오라)",
             "사장님 10-06 「디버프해제」. 반경 850 안 아군이 받는 아군발 디버프(이속 감소·공격력 감소)를 무시한다. 이 유닛 자신이 건 이간질은 지우지 않는다(PM 기본안 — 특성 2pt 제거가 의미 있게). 이재윤 「긍정의힘」과 같은 효과(DispelAllyDebuffs 공유).",
             SkillTriggerType.Aura, 850f, 1f, 0, SkillGaugeKind.Mana,
-            One(new SkillEffect { kind = SkillEffectKind.DispelAllyDebuffs, target = SkillTargetKind.Allies, multiplier = 1f, buffId = "JANG_DISPEL" }));
+            One(new SkillEffect { kind = SkillEffectKind.DispelAllyDebuffs, target = SkillTargetKind.Allies, multiplier = 1f, buffId = "JANG_DISPEL" },
+                new SkillEffect { kind = SkillEffectKind.DispelAllyDebuffs, target = SkillTargetKind.Self, multiplier = 1f, buffId = "JANG_DISPEL" }));   // 자기도(10-06 실측: 임장혁 본인 이속이 노태현 디버프로 100.2에 남았다)
 
         var old = new List<string>();
         if (unit.skills != null) foreach (SkillData s in unit.skills) if (s != null) old.Add(s.name);
@@ -99,6 +100,7 @@ static class JanghyukApply
         unit.skills = new List<SkillData> { praiseSpeed, praiseAttack, dizzy, gaslight, divide, music, score, dispel };
         unit.unitName = Title;
         unit.manaMax = 120f;                 // 악보완성! 마나 게이지(평타 +1)
+        unit.manaGaugePerMana = 1f;          // 0이면 게이지 상한이 0이 돼 악보완성!이 영영 못 찬다(10-06 실측에서 발견)
         unit.manaAuraRegenPerSecond = 2f;    // 신나는연주 — 마나 재생 오라
         unit.manaAuraRange = 850f;
         unit.manaAuraBuffId = "JANG_MANA_AURA";
