@@ -37,7 +37,8 @@ public class GameVersion : MonoBehaviour
         float scale = Mathf.Max(1f, Screen.height / 1080f);
         Style.fontSize = Mathf.RoundToInt(14f * scale);
         // 게임 화면에선 하단 바 윗선 바로 위 오른쪽 구석(09-29 — 바 안 구석은 명령 카드 금테와 겹쳤다). 첫 화면처럼 바가 없으면 화면 구석.
-        float bottom = HasBottomBar() ? Screen.height * (1f - BottomBarFraction) : Screen.height;
+        // 10-06 PM 「0.3.7v가 판매 칸 모서리에 겹친다」 — 바 높이가 0.22보다 커져서(명령 카드 4×3) 고정 비율은 어긋났다. 바 RectTransform의 실제 윗선을 읽는다.
+        float bottom = HasBottomBar() ? BarTopFromTop() : Screen.height;
         GUI.Label(new Rect(0f, 0f, Screen.width - 8f * scale, bottom - 4f * scale), Label, Style);
     }
 
@@ -45,6 +46,19 @@ public class GameVersion : MonoBehaviour
     const float BottomBarFraction = 0.22f;
     GameObject bottomBar;
     float nextBarLookup;
+
+    // 하단 바 윗선의 화면 위쪽 기준 y(OnGUI 좌표). 오버레이 캔버스라 월드 모서리가 곧 화면 픽셀이다. 못 읽으면 옛 비율.
+    float BarTopFromTop()
+    {
+        if (bottomBar != null && bottomBar.transform is RectTransform rect)
+        {
+            Vector3[] corners = new Vector3[4];
+            rect.GetWorldCorners(corners);   // 0 좌하 · 1 좌상 · 2 우상 · 3 우하
+            float top = Screen.height - corners[1].y;
+            if (top > 0f && top < Screen.height) return top;
+        }
+        return Screen.height * (1f - BottomBarFraction);
+    }
 
     bool HasBottomBar()
     {
