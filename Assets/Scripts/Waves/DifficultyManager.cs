@@ -156,8 +156,12 @@ public class DifficultyManager : MonoBehaviour
     /// 스토리 체력 인원 배수(2026-10-04 사장님) — 원작 파티 가산이 없는 쉬움·보통에서만 참가 인원 수(혼자 1)를 곱한다. 어려움 이상은 1(원작 +3~15%/인 가산을 StoryHpBonus가 이미 쓴다).
     /// 인원은 CountParty가 판 시작 때 센 값(MP면 MatchConfig 참가 슬롯) — 스토리는 호스트만 소환·체력을 정하고 클라는 SetReplicaHp로 받는다.
     /// </summary>
+    const bool StoryPartyScaleEnabled = false;
     public static int StoryPartyScale()
     {
+        // 🔴 10-06 사장님 「원작대로」: 스토리 체력·방어를 원작 값으로 바꾸며 이 우리 규칙(쉬움·보통 ×인원)은 끈다 — 원작은 어려움 이상 인원 가산(StoryHpBonus)뿐.
+        //    다시 켜려면 이 return 한 줄만 지운다.
+        if (!StoryPartyScaleEnabled) return 1;
         DifficultyManager dm = Instance;
         if (dm == null || !dm.current.HasValue || DifficultyTable.HasPartySoloAdjust(dm.current.Value)) return 1;
         dm.CountParty(announce: false);
