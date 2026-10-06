@@ -116,6 +116,15 @@ public class PlayerContext : MonoBehaviour
     /// <summary>왜 졌는지 — 원작 CustomDefeat·패배 문구(색 태그 없는 한 줄). 패배 화면(DefeatOverlay)이 쓴다. 멀티 클라는 NetPlayer가 옮겨 적는다.</summary>
     public string DefeatMessage { get; private set; }
 
+    // 초월 엄태웅 「웅교교주」(사장님 10-06): 엔 10000을 내고 도박 성공 확률 +4%p, 최대 5회 — 플레이어 개인 누적(여러 기를 눌러도 합산).
+    // 100%도 0%도 아닌 도박에만 적용(GamblingShop.EffectiveSuccessChance). 세이브 없는 한 판짜리 상태라 런타임 값만 둔다.
+    public const int GambleBoostMax = 5;
+    public const float GambleBoostPercentEach = 4f;
+    public const int GambleBoostCost = 10000;
+    public int GambleBoostCount { get; private set; }
+    public float GambleBoostPercent => GambleBoostCount * GambleBoostPercentEach;
+    public bool TryAddGambleBoost() { if (GambleBoostCount >= GambleBoostMax) return false; GambleBoostCount++; return true; }
+
     // 도움소 「능력치 증가」(H0B7) 선행 조건 — 원작 Rhfl(초월함 조합 완료). 세이브/로드가
     // 없는 한 판짜리 진행 상태라 GamblingProgress와 같은 결로 런타임 bool만 둔다.
     // CombineSystem.TryCombine이 결과 등급이 초월함일 때 세운다.

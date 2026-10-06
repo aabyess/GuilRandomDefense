@@ -92,4 +92,76 @@ static class LegendProbe
         var tracked = EnemyDummy.Active.Where(e => e != null && !e.IsBoss).Take(5).ToList();
         return $"[노태현 지대] 가까운 적 {tracked.Count}기 체력 {string.Join(", ", tracked.Select(e => $"{e.Hp:F0}/{e.MaxHp:F0}"))}";
     }
+
+    // ── 2차(10-06 오후): 단독 유닛 지대 DPS · 최상호 방깎 오라 · 공속 버프 ──
+    static UnitIdentity solo;
+    static System.Collections.Generic.List<EnemyDummy> soloEnemies;
+    static float[] soloHp, soloArmor;
+
+    static string SoloSetup(string name)
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        if (solo != null) Object.Destroy(solo.gameObject);
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        var d = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{name}.asset");
+        solo = spawner.Spawn(d, lane != null ? lane.TakeSpawnPosition(d) : Vector3.zero, 0).GetComponent<UnitIdentity>();
+        return $"단독 {name} 세움 @ {solo.transform.position}";
+    }
+    static string SoloSetupNotae() => SoloSetup("전설적인_노태현");
+    static string SoloSetupShanks() => SoloSetup("전설적인_백기현");
+    static string SoloSetupEdward() => SoloSetup("전설적인_최상호");
+
+    // 지금 살아 있는 적 체력을 크게 고정하고 기준값을 잡는다(Soloend 전 시점)
+    static string SoloMark()
+    {
+        var hpField = typeof(EnemyDummy).GetField("hp", BindingFlags.NonPublic | BindingFlags.Instance);
+        soloEnemies = EnemyDummy.Active.Where(e => e != null).ToList();
+        foreach (EnemyDummy e in soloEnemies) hpField.SetValue(e, 5e6f);
+        int k = 0;   // 가까운 일반 적 6기를 단독 유닛 곁(반경 80 안)으로 데려온다 — 지대·오라 영향권 보장
+        if (solo != null)
+            foreach (EnemyDummy e in soloEnemies.Where(x => !x.IsBoss).OrderBy(x => Vector3.Distance(x.transform.position, solo.transform.position)).Take(6))
+            {
+                float a = k++ * Mathf.PI / 3f;
+                var ag = e.GetComponent<UnityEngine.AI.NavMeshAgent>();
+                Vector3 to = solo.transform.position + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * 60f;
+                if (ag != null) ag.Warp(to); else e.transform.position = to;
+            }
+        soloHp = soloEnemies.Select(e => e.Hp).ToArray();
+        soloArmor = soloEnemies.Select(e => e.EffectiveArmor).ToArray();
+        return $"표시 {soloEnemies.Count}기";
+    }
+    static string SoloEnd(string label, float seconds)
+    {
+        if (solo == null || soloEnemies == null) return "❌ SoloMark 먼저";
+        var sb = new StringBuilder();
+        Vector3 up = solo.transform.position;
+        var rows = soloEnemies.Select((e, i) => new { e, i }).Where(x => x.e != null)
+            .Select(x => new { dist = Vector3.Distance(x.e.transform.position, up), dmg = soloHp[x.i] - x.e.Hp, dArm = x.e.EffectiveArmor - soloArmor[x.i], pv = x.e.PointValue, boss = x.e.IsBoss })
+            .OrderBy(r => r.dist).ToList();
+        sb.AppendLine($"[{label}] {seconds}초 · 적 {rows.Count}기");
+        foreach (var r in rows.Take(8)) sb.AppendLine($"  거리 {r.dist:F0} PV {r.pv:F0}{(r.boss ? " 보스" : "")}: 체력Δ {r.dmg:F0} ({r.dmg / seconds:F0}/초) · 방어Δ {r.dArm:F1}");
+        float best = rows.Count > 0 ? rows.Max(r => r.dmg) : 0f;
+        sb.AppendLine($"  최대 체력Δ {best:F0} → {best / seconds:F0}/초 · 맞은 적 {rows.Count(r => r.dmg > 0)}기");
+        return sb.ToString();
+    }
+    static string SoloEnd5() => SoloEnd("노태현/백기현 지대", 5f);
+    static string SoloEnd3() => SoloEnd("최상호 방깎", 3f);
+
+    // 공속 버프 둘: 신지우 A0GA(아군 한 기 +150%) · 박민석 A08G(자기 +400%)
+    static string BuffTest()
+    {
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        UnitIdentity Make(string n) { var d = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/전설적인_{n}.asset"); return spawner.Spawn(d, lane != null ? lane.TakeSpawnPosition(d) : Vector3.zero, 0).GetComponent<UnitIdentity>(); }
+        UnitIdentity jiwoo = Make("신지우"), minseok = Make("박민석");
+        var cast = typeof(UnitAttacker).GetMethod("CastSkillLevel", BindingFlags.NonPublic | BindingFlags.Instance);
+        var target = EnemyDummy.Active.FirstOrDefault(e => e != null);
+        UnitAttacker ja = jiwoo.GetComponent<UnitAttacker>(), ma = minseok.GetComponent<UnitAttacker>();
+        float jb = ja.CurrentAttackSpeedMultiplier, mb = ma.CurrentAttackSpeedMultiplier;
+        SkillData a0ga = jiwoo.Data.skills.First(x => x.skillName.Contains("A0GA")), a08g = minseok.Data.skills.First(x => x.skillName.Contains("A08G"));
+        cast.Invoke(ja, new object[] { a0ga.levels[0], a0ga.levels[0].WorldRange, target, 0f });
+        cast.Invoke(ma, new object[] { a08g.levels[0], a08g.levels[0].WorldRange, target, 0f });
+        return $"[A0GA] 신지우 공속 {jb:F2}→{ja.CurrentAttackSpeedMultiplier:F2} · 박민석 {mb:F2}→{ma.CurrentAttackSpeedMultiplier:F2} (A0GA 자기/아군 한 기에 +150%라면 둘 중 하나가 2.5배) · [A08G] 박민석 자기 +400%라면 5.0배";
+    }
 }

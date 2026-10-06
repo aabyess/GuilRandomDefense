@@ -382,7 +382,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
             : "없음";
 
         return $"{option.optionName}\n{option.description}\n"
-             + $"비용: {ResourceLabel(option.costResourceType)} {option.cost}\n성공 확률: {option.successChancePercent:F0}%\n"
+             + $"비용: {ResourceLabel(option.costResourceType)} {option.cost}\n성공 확률: {EffectiveSuccessChance(option, OwnerContext):F0}%{BoostNote(option, OwnerContext)}\n"
              + $"성공 시: {resultDesc}\n실패 시: {failDesc}";
     }
 
@@ -495,6 +495,18 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
         return null;
     }
 
+    // 엄태웅 「웅교교주」 누적(+4%p×횟수, 최대 5회)을 100%가 아닌 도박에 더한다(상한 100%). 성공률 0은 「옛 에셋 = 항상 성공」이라 그대로 둔다.
+    static float EffectiveSuccessChance(GamblingOptionData option, PlayerContext context)
+    {
+        float baseChance = option.successChancePercent;
+        if (context == null || baseChance <= 0f || baseChance >= 100f) return baseChance;
+        return Mathf.Min(100f, baseChance + context.GambleBoostPercent);
+    }
+
+    static string BoostNote(GamblingOptionData option, PlayerContext context)
+        => context != null && context.GambleBoostCount > 0 && option.successChancePercent > 0f && option.successChancePercent < 100f
+            ? $" (웅교교주 +{Mathf.Min(100f, option.successChancePercent + context.GambleBoostPercent) - option.successChancePercent:F0}%p)" : "";
+
     // 성공/실패 구분이 없다 — 걸고 나면 항상 결과 범위(0 포함) 안에서 얼마를 받는다.
     bool TryRollMoney(GamblingOptionData option, PlayerContext context, out string failReason)
     {
@@ -507,7 +519,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
 
         // 성공률이 0이면 옛 에셋(성공/실패 구분 없이 항상 지급)으로 보고 성공 취급한다.
         bool success = option.successChancePercent <= 0f
-                       || Random.Range(0f, 100f) < option.successChancePercent;
+                       || Random.Range(0f, 100f) < EffectiveSuccessChance(option, context);
 
         context.GamblingProgress?.ConsumeStock(option);
 
@@ -568,7 +580,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
             && Random.Range(0f, 100f) < option.bonusPoolChancePercent)
             poolReward = option.bonusPool[Random.Range(0, option.bonusPool.Count)];
 
-        bool success = poolReward != null || Random.Range(0f, 100f) < option.successChancePercent;
+        bool success = poolReward != null || Random.Range(0f, 100f) < EffectiveSuccessChance(option, context);
 
         // 당첨 시 지급할 등급을 자원 차감 전에 미리 정하고, 그 등급 pool이 비어있으면
         // 통째로 취소한다 — unitSpawner가 없거나 지급할 유닛이 없는데 자원만 나가면

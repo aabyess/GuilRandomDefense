@@ -193,6 +193,7 @@ public class GameHud : MonoBehaviour
     SkillData activeShownSkill;
     float activeLocalReadyAt;   // 멀티 클라: 호스트의 쿨을 모르니 누른 시각 + 쿨로 어림한 값(진짜 판정은 호스트)
     bool talentSlotsShown;   // 초월 박민수 「재능투자」 칸 4개(FlexKind.Talent) — 박민수 한 기를 골랐을 때만
+    bool gambleBoostSlotShown;   // 초월 엄태웅 「웅교교주」 칸(FlexKind.GambleBoost) — 엄태웅 중사(진) 한 기를 골랐을 때만
     bool yoonseoSlotShown;   // 초월 노태현 「최윤서 강화」 칸(FlexKind.Yoonseo) — 노태현 한 기를 골랐을 때만
     bool sellSlotEnabled;
     string sellSlotTooltip;
@@ -273,7 +274,7 @@ public class GameHud : MonoBehaviour
     // 넣는 순서 = 액티브 → 유닛 전용(재능투자·최윤서 강화) → 특성강화 → 조합 결과. 8칸을 넘으면 경고 로그(조용히 버리지 않는다).
     const int FlexSlotFirst = 4;
     const int FlexSlotLast = 11;
-    enum FlexKind : byte { None, Trait, Active, Talent, Yoonseo, Recipe }
+    enum FlexKind : byte { None, Trait, Active, Talent, Yoonseo, Recipe, GambleBoost }
     readonly FlexKind[] flexKind = new FlexKind[CommandSlotCount];
     readonly int[] flexArg = new int[CommandSlotCount];          // Talent는 투자 종류(0~3), Recipe는 flexRecipes 번호
     readonly FlexKind[] flexWantKind = new FlexKind[CommandSlotCount];
@@ -312,6 +313,7 @@ public class GameHud : MonoBehaviour
         if (activeSlotShown) Put(FlexKind.Active, 0);
         if (talentSlotsShown) for (int k = 0; k < UnitAttacker.TalentKindCount; k++) Put(FlexKind.Talent, k);
         if (yoonseoSlotShown) Put(FlexKind.Yoonseo, 0);
+        if (gambleBoostSlotShown) Put(FlexKind.GambleBoost, 0);
         if (traitSlotShown) Put(FlexKind.Trait, 0);
         for (int i = 0; i < flexRecipes.Count; i++) Put(FlexKind.Recipe, i);
 
@@ -517,6 +519,7 @@ public class GameHud : MonoBehaviour
         RefreshGambleButtons();
         RefreshSellButton();
         RefreshYoonseoButton();
+        RefreshGambleBoostButton();
         RefreshTalentButtons();
         RefreshDockTargeting();
         RefreshActiveButton();
@@ -1449,6 +1452,58 @@ public class GameHud : MonoBehaviour
         if (single == null || !single.TryGetComponent(out UnitAttacker attacker) || !single.TryGetComponent(out OwnedByPlayer owner)) return;
         if (!attacker.TryInvestTalent(kind, out string reason)) { PlayerNotification.Show(owner.OwnerId, reason, 4f); return; }
         PlayerNotification.Show(owner.OwnerId, $"<color=#FFD700>재능투자</color> {UnitAttacker.TalentNames[kind]} {attacker.GetTalent(kind)}/{UnitAttacker.TalentMaxOf(kind)} (남은 포인트 {attacker.TalentPointsAvailable})", 4f);
+    }
+
+    // 초월 엄태웅 「웅교교주」(사장님 10-06) — 유닛별 칸(FlexKind.GambleBoost). 엄태웅 중사(진) 한 기를 골랐을 때만 보인다.
+    // 누르면 엔 10000을 내고 내 도박 성공 확률 +4%p(개인 누적 최대 5회). 못 할 땐 이유를 띄운다.
+    const string GambleBoostUnitAsset = "초월_엄태웅_AD";
+
+    bool GambleBoostCandidate()
+    {
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return false;
+        return selection.Selected[0].TryGetComponent(out UnitIdentity identity) && identity.Data != null && identity.Data.name == GambleBoostUnitAsset;
+    }
+
+    void RefreshGambleBoostButton()
+    {
+        if (currentShop as Object != null || !GambleBoostCandidate()) { gambleBoostSlotShown = false; return; }   // 칸 비우기는 ReflowFlexSlots
+        gambleBoostSlotShown = true;
+        int slot = FlexSlotOf(FlexKind.GambleBoost);
+        if (slot < 0) return;
+        PlayerContext context = PlayerContext.Get(LocalPlayer.LocalPlayerId);
+        int count = context != null ? context.GambleBoostCount : 0;
+        bool done = count >= PlayerContext.GambleBoostMax;
+        unitCommandSlotNames[slot].text = $"웅교교주\n{count}/{PlayerContext.GambleBoostMax}";
+        unitCommandSlotHotkeys[slot].text = "";
+        Color color = UnitCommandDefaultColor;
+        color.a = done ? 0.35f : 1f;
+        unitCommandSlotBackgrounds[slot].color = color;
+        unitCommandSlotNames[slot].color = done ? new Color(1f, 1f, 1f, 0.4f) : Color.white;
+        unitCommandSlotButtons[slot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
+    }
+
+    void OnGambleBoostClicked()
+    {
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1) return;
+        Selectable single = selection.Selected[0];
+        if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.GambleBoost, single, 0); return; }
+        ExecuteGambleBoostOn(single);
+    }
+
+    // MP: 버튼과 멀티 호스트가 받은 클라 요청(NetCommands)이 같이 쓰는 본체.
+    public void ExecuteGambleBoostOn(Selectable single)
+    {
+        if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.Data.name != GambleBoostUnitAsset) return;
+        if (!single.TryGetComponent(out OwnedByPlayer owner)) return;
+        int playerId = owner.OwnerId;
+        PlayerContext context = PlayerContext.Get(playerId);
+        if (context == null) return;
+        if (context.GambleBoostCount >= PlayerContext.GambleBoostMax) { PlayerNotification.Show(playerId, $"이미 최대 {PlayerContext.GambleBoostMax}회입니다.", 4f); return; }
+        if (context.GoldWallet == null || !context.GoldWallet.TrySpend(PlayerContext.GambleBoostCost)) { PlayerNotification.Show(playerId, $"엔이 부족합니다({PlayerContext.GambleBoostCost:N0}).", 4f); return; }
+        context.TryAddGambleBoost();
+        PlayerNotification.Show(playerId, $"<color=#FFD700>웅교교주</color> 도박 성공 확률 +{PlayerContext.GambleBoostPercentEach:F0}%p ({context.GambleBoostCount}/{PlayerContext.GambleBoostMax}회, 합계 +{context.GambleBoostPercent:F0}%p)", 5f);
     }
 
     // 초월 노태현 「최윤서 강화」(사장님 10-06) — 유닛별 칸(FlexKind.Yoonseo). 한 기를 골랐고 그 유닛이 초월 노태현일 때만 보인다.
@@ -2961,6 +3016,10 @@ public class GameHud : MonoBehaviour
                 _ => "한 단계마다 감금·억제기 스턴 확률 +2.5%p·지속 +0.35초 (최대 3단계)",
             }) + "\n영웅 레벨당 1포인트(최대 18). 되돌릴 수 없음.", cardRect);
         }
+        else if (FlexKindAt(index) == FlexKind.GambleBoost && gambleBoostSlotShown)
+        {
+            ShowTooltip($"웅교교주\n엔 {PlayerContext.GambleBoostCost:N0}을 내고 도박 성공 확률 +{PlayerContext.GambleBoostPercentEach:F0}%p. 최대 {PlayerContext.GambleBoostMax}회(플레이어 개인 누적). 100%가 아닌 모든 도박에 적용(상한 100%).", cardRect);
+        }
         else if (FlexKindAt(index) == FlexKind.Yoonseo && yoonseoSlotShown)
         {
             ShowTooltip("최윤서 강화\n내 최윤서(히든·전설) 한 기가 사라지고, 방어 무시 피해가 켜지며 아군 이속 감소 디버프가 100% 없어진다. 한 번 켜면 영구.", cardRect);
@@ -3278,6 +3337,7 @@ public class GameHud : MonoBehaviour
                 case FlexKind.Trait: if (traitSlotShown) OnTraitButtonClicked(); return;
                 case FlexKind.Active: if (activeSlotShown) OnActiveClicked(); return;
                 case FlexKind.Yoonseo: if (yoonseoSlotShown) OnYoonseoClicked(); return;
+                case FlexKind.GambleBoost: if (gambleBoostSlotShown) OnGambleBoostClicked(); return;
                 case FlexKind.Talent: if (talentSlotsShown) OnTalentClicked(flexArg[index]); return;
             }
         }
