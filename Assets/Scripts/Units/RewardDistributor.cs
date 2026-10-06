@@ -180,7 +180,7 @@ public class RewardDistributor : MonoBehaviour
     // 직접 찾지 않아도 되고, 죽는 순간 라운드가 막 넘어가도 "이 적이 태어난 라운드" 기준으로
     // 정확하다(GrantRoundClearWisps·OnBossKilled와 같은 이유).
     // deathPosition: 죽은 적 자리(처치 골드 「+N」 글자 위치, 원작 CreateTextTagUnitBJ). 없으면 글자만 생략한다.
-    public void GrantKillReward(EnemyData data, int laneIndex, int round, int killerPlayerId = -1, Vector3? deathPosition = null)
+    public void GrantKillReward(EnemyData data, int laneIndex, int round, int killerPlayerId = -1, Vector3? deathPosition = null, float slowPercent = 0f)
     {
         if (!GameAuthority.IsServer) return;
         if (data == null) return;
@@ -210,8 +210,10 @@ public class RewardDistributor : MonoBehaviour
         PlayerContext owner = PlayerContext.Get(laneIndex);
         if (owner == null || !owner.IsOccupied) return;
 
-        GrantKillGold(owner, round, deathPosition);
-        GrantResources(owner, data);
+        // 현상수배(초월 유재헌 SlowRewardBonus): 죽은 적이 이감을 받고 있었으면 이감 1%당 +N% — 골드·목재에 곱한다.
+        float slowBonus = slowPercent > 0f ? UnitAttacker.SlowRewardPerPercent(owner.PlayerId) * slowPercent : 0f;
+        GrantKillGold(owner, round, deathPosition, 1f + slowBonus);
+        GrantResources(owner, data, 1f + slowBonus);
 
         if (data.isBoss) GrantBossReward(owner, round, data);
     }
@@ -303,14 +305,15 @@ public class RewardDistributor : MonoBehaviour
         if (data.savePointReward > 0) context.PersistentSave?.AddSessionPoints(data.savePointReward);
     }
 
-    void GrantResources(PlayerContext context, EnemyData data)
+    void GrantResources(PlayerContext context, EnemyData data, float factor = 1f)
     {
         if (data.resourceRewards == null || context.ResourceWallet == null) return;
 
         foreach (EnemyResourceReward reward in data.resourceRewards)
         {
-            context.ResourceWallet.Add(reward.type, reward.amount);
-            if (reward.type == ResourceType.Wood && reward.amount > 0) WoodSound(context);
+            int amount = factor > 1f ? Mathf.RoundToInt(reward.amount * factor) : reward.amount;
+            context.ResourceWallet.Add(reward.type, amount);
+            if (reward.type == ResourceType.Wood && amount > 0) WoodSound(context);
         }
     }
 
@@ -323,7 +326,7 @@ public class RewardDistributor : MonoBehaviour
     // Gold_Math(L) = 1 + 2⌊L/5⌋ + 3⌊L/6⌋ − ⌊L/10⌋ (정수 나눗셈) — war3map.j 원문 그대로.
     static int ComputeGoldMath(int round) => 1 + 2 * (round / 5) + 3 * (round / 6) - (round / 10);
 
-    void GrantKillGold(PlayerContext context, int round, Vector3? deathPosition)
+    void GrantKillGold(PlayerContext context, int round, Vector3? deathPosition, float factor = 1f)
     {
         if (context.GoldWallet == null) return;
         if (Random.value >= KillGoldChance) return;
@@ -333,7 +336,7 @@ public class RewardDistributor : MonoBehaviour
         // 사라져 최종 배수가 과소해진다. Gold_Math 자체는 원작에서도 정수 나눗셈이 맞다.
         int goldMath = ComputeGoldMath(round);
         float goldPlus = context.GoldWallet.GoldPlus;
-        int gold = Mathf.FloorToInt(goldMath * (2f + goldPlus));
+        int gold = Mathf.FloorToInt(goldMath * (2f + goldPlus) * factor);
         context.GoldWallet.Add(gold);
         // 원작 j:3374-3375 — 골드를 받은 플레이어에게만 죽은 자리에 금색 「+N」이 1.5초 떠오른다.
         if (deathPosition.HasValue) KillGoldPopup.Show(context.PlayerId, deathPosition.Value, gold);

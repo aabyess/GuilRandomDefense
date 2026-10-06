@@ -850,6 +850,34 @@ public class UnitAttacker : MonoBehaviour
 
     float EnhanceScaleFactor(SkillEffect effect) => effect != null && effect.enhanceScale > 0f ? 1f + effect.enhanceScale * EnhanceLevel : 1f;
 
+    // 현상수배(SkillEffectKind.SlowRewardBonus, 초월 유재헌) — 이 주인(ownerId)의 살아 있는 유닛 중 패시브가 있는 것들의 「이감 1%당 보상 +N」 합. 보상 쪽(RewardDistributor)이 부른다.
+    static readonly Dictionary<UnitData, float> slowRewardCache = new Dictionary<UnitData, float>();
+
+    public static float SlowRewardPerPercent(int ownerId)
+    {
+        float total = 0f;
+        foreach (UnitIdentity unit in UnitIdentity.Active)
+        {
+            if (unit == null || unit.Data == null || unit.OwnerId != ownerId) continue;
+            if (!slowRewardCache.TryGetValue(unit.Data, out float per))
+            {
+                per = 0f;
+                var list = new List<SkillData>();
+                if (unit.Data.skills != null) list.AddRange(unit.Data.skills);
+                if (unit.Data.skill != null) list.Add(unit.Data.skill);
+                foreach (SkillData skill in list)
+                {
+                    if (skill == null || skill.levels == null || skill.levels.Count == 0 || skill.levels[0].effects == null) continue;
+                    foreach (SkillEffect effect in skill.levels[0].effects)
+                        if (effect != null && effect.kind == SkillEffectKind.SlowRewardBonus) per += effect.multiplier;
+                }
+                slowRewardCache[unit.Data] = per;
+            }
+            total += per;
+        }
+        return total;
+    }
+
     // 막타충(SkillEffectKind.SkillDamageAfterKill) — 스킬 피해로 일반 적을 처치하면 duration초 동안 스킬 피해 +multiplier. 패시브 값은 스킬에서 읽어 둔다.
     UnitData afterKillFor;
     float afterKillBonus, afterKillDuration, afterKillUntil;
@@ -1607,7 +1635,7 @@ public class UnitAttacker : MonoBehaviour
             foreach (EnemyDummy enemy in EnemyDummy.Active)
             {
                 if (enemy == null) continue;
-                if (level.laneCountWindow > 0 && (owner == null || enemy.LaneIndex != owner.OwnerId)) continue;   // 내면의악 — 내 레인의 적에게만
+                if ((level.laneCountWindow > 0 || level.ownLaneOnly) && (owner == null || enemy.LaneIndex != owner.OwnerId)) continue;   // 내면의악·현상수배 — 내 레인의 적에게만
                 if (level.range > 0f && Vector3.Distance(enemy.transform.position, transform.position) > level.WorldRange) continue;
                 enemiesInRange.Add(enemy);
             }
@@ -2756,7 +2784,7 @@ public class UnitAttacker : MonoBehaviour
             || effect.kind == SkillEffectKind.DamagePerAllyDebuff || effect.kind == SkillEffectKind.DamageGrowthOverTime
             || effect.kind == SkillEffectKind.AllySkillDamageBonus || effect.kind == SkillEffectKind.DispelAllyDebuffs
             || effect.kind == SkillEffectKind.GoldPlusBonus || effect.kind == SkillEffectKind.StoryDamageMultiplier
-            || effect.kind == SkillEffectKind.DamagePerTargetArmorShred || effect.kind == SkillEffectKind.DamagePerRecruit || effect.kind == SkillEffectKind.DamageVsTargetBuff || effect.kind == SkillEffectKind.SkillDamageAfterKill) return;
+            || effect.kind == SkillEffectKind.DamagePerTargetArmorShred || effect.kind == SkillEffectKind.DamagePerRecruit || effect.kind == SkillEffectKind.DamageVsTargetBuff || effect.kind == SkillEffectKind.SkillDamageAfterKill || effect.kind == SkillEffectKind.SlowRewardBonus) return;
 
         // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
         if (effect.lineLength > 0f && effect.zoneTickInterval <= 0f)

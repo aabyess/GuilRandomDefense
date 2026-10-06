@@ -1116,7 +1116,7 @@ public class EnemyDummy : MonoBehaviour
             {
                 // 크립 2·3단계(처치자 지급형)는 처치자가 아니라 섬 주인에게(원작 GetUnitUserData). 1단계(전원 지급)는 알림의 처치자 이름 때문에 그대로.
                 int rewardPlayer = creepOwner >= 0 && data.rewardsKillerOnly && !data.rewardsAllPlayers ? creepOwner : killerPlayerId;
-                RewardDistributor.Instance.GrantKillReward(data, LaneIndex, SpawnRound, rewardPlayer, transform.position);
+                RewardDistributor.Instance.GrantKillReward(data, LaneIndex, SpawnRound, rewardPlayer, transform.position, Mathf.Max(0f, (1f - EffectiveSlowMultiplier) * 100f));
             }
             else if (data != null && !loggedNoRewardDistributor)
             {

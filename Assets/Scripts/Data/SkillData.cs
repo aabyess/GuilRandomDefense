@@ -374,6 +374,10 @@ public enum SkillEffectKind
     // ⚠️ 맨 뒤에 추가(2026-10-06, 영원함 서민성 「막타충」 — 사장님 확정 「몹 막타 시 스킬 데미지 증가」) — 직렬화 순서를 지킨다.
     // 패시브(Self): 이 유닛의 **스킬 피해**가 일반 적을 처치하면 duration초(5) 동안 이 유닛 스킬 피해(평타 제외)가 ×(1 + multiplier)(0.2 = +20%). 다시 처치하면 시간만 갱신(중첩 없음).
     SkillDamageAfterKill,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 유재헌 「현상수배」 — 사장님 확정 「이감 1%당 골드·목재 +1%」) — 직렬화 순서를 지킨다.
+    // 패시브(Self): 내 레인의 적이 죽을 때 그 적이 받고 있던 이감(%) 1당 처치 골드·목재가 +multiplier(0.01 = +1%)씩 늘어난다(이속 82%면 이감 18% → +18%). RewardDistributor가 본다.
+    SlowRewardBonus,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -837,6 +841,9 @@ public class SkillLevel
 
     // ⚠️ 맨 뒤에 추가(2026-10-06, 영원함 서민성) — 0보다 크면 이 스킬 레벨은 시전자의 강화 레벨(UnitAttacker.EnhanceLevel)이 이 값 이상일 때만 발동한다(6강·11강·16강 해금).
     public int requiredEnhanceLevel;
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 유재헌 「현상수배」) — true면 이 레벨의 Enemies 오라는 **내 레인의 적에게만** 걸린다(laneCountWindow 없이도).
+    public bool ownLaneOnly;
 }
 
 public enum SkillAoeCenter

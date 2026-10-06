@@ -195,6 +195,7 @@ public class GameHud : MonoBehaviour
     float activeLocalReadyAt;   // 멀티 클라: 호스트의 쿨을 모르니 누른 시각 + 쿨로 어림한 값(진짜 판정은 호스트)
     bool talentSlotsShown;   // 초월 박민수 「재능투자」 칸 4개(FlexKind.Talent) — 박민수 한 기를 골랐을 때만
     bool bombSlotShown;   // 초월 엄태웅 「폭탄제조(목재강화)」 칸(FlexKind.Bomb) — 엄태웅 중사(진) 한 기를 골랐을 때만
+    bool totoSlotShown;   // 초월 유재헌 「토토」 칸(FlexKind.Toto) — 유재헌 앰생파조장 한 기를 골랐을 때만
     bool enhanceSlotShown;   // 영원함 서민성 「강화」 칸(FlexKind.Enhance) — UnitData.enhanceMaxLevel > 0인 유닛 한 기를 골랐을 때만
     bool gambleBoostSlotShown;   // 초월 엄태웅 「웅교교주」 칸(FlexKind.GambleBoost) — 엄태웅 중사(진) 한 기를 골랐을 때만
     bool yoonseoSlotShown;   // 초월 노태현 「최윤서 강화」 칸(FlexKind.Yoonseo) — 노태현 한 기를 골랐을 때만
@@ -279,7 +280,7 @@ public class GameHud : MonoBehaviour
     // 넣는 순서 = 액티브 → 유닛 전용(재능투자·최윤서 강화) → 특성강화 → 조합 결과. 8칸을 넘으면 경고 로그(조용히 버리지 않는다).
     const int FlexSlotFirst = 4;
     const int FlexSlotLast = 11;
-    enum FlexKind : byte { None, Trait, Active, Talent, Yoonseo, Recipe, GambleBoost, Bomb, Enhance }
+    enum FlexKind : byte { None, Trait, Active, Talent, Yoonseo, Recipe, GambleBoost, Bomb, Enhance, Toto }
     readonly FlexKind[] flexKind = new FlexKind[CommandSlotCount];
     readonly int[] flexArg = new int[CommandSlotCount];          // Talent는 투자 종류(0~3), Recipe는 flexRecipes 번호
     readonly FlexKind[] flexWantKind = new FlexKind[CommandSlotCount];
@@ -318,6 +319,7 @@ public class GameHud : MonoBehaviour
         if (activeSlotShown) Put(FlexKind.Active, 0);
         if (talentSlotsShown) for (int k = 0; k < UnitAttacker.TalentKindCount; k++) Put(FlexKind.Talent, k);
         if (yoonseoSlotShown) Put(FlexKind.Yoonseo, 0);
+        if (totoSlotShown) Put(FlexKind.Toto, 0);
         if (enhanceSlotShown) Put(FlexKind.Enhance, 0);
         if (gambleBoostSlotShown) Put(FlexKind.GambleBoost, 0);
         if (bombSlotShown) Put(FlexKind.Bomb, 0);
@@ -531,6 +533,7 @@ public class GameHud : MonoBehaviour
         RefreshYoonseoButton();
         RefreshGambleBoostButton();
         RefreshEnhanceButton();
+        RefreshTotoButton();
         RefreshBombButton();
         RefreshTalentButtons();
         RefreshDockTargeting();
@@ -1596,6 +1599,80 @@ public class GameHud : MonoBehaviour
         SkillVfx.CastAt(center, origin, radius);
         SkillVfx.EndCast(vfxGate);
         PlayerNotification.Show(playerId, $"<color=#FFD700>폭탄제조</color> 목재 {BombWoodCost}개 · {victims.Count}기에게 {damage:N0} 방어 무시", 3f);
+    }
+
+    // 초월 유재헌 「토토」(사장님 10-06) — 유닛별 칸(FlexKind.Toto). 유재헌 앰생파조장 한 기를 골랐을 때만 보인다.
+    // 엔 1,000을 내고 33% 성공 → 금화 3,000엔 / 목재 1 / 위습 1 중 하나(각 1/3). 쿨 없음(엔이 곧 제한). 멀티 클라는 호스트에 요청(NetHudAction.Toto).
+    const string TotoUnitAsset = "초월_유재헌_ADAP";
+    const int TotoCost = 1000, TotoGoldReward = 3000;
+    const float TotoChance = 0.33f;
+
+    bool TotoCandidate()
+    {
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return false;
+        return selection.Selected[0].TryGetComponent(out UnitIdentity identity) && identity.Data != null && identity.Data.name == TotoUnitAsset;
+    }
+
+    void RefreshTotoButton()
+    {
+        if (currentShop as Object != null || !TotoCandidate()) { totoSlotShown = false; return; }   // 칸 비우기는 ReflowFlexSlots
+        totoSlotShown = true;
+        int slot = FlexSlotOf(FlexKind.Toto);
+        if (slot < 0) return;
+        PlayerContext context = PlayerContext.Get(LocalPlayer.LocalPlayerId);
+        bool enough = context != null && context.GoldWallet != null && context.GoldWallet.Gold >= TotoCost;
+        unitCommandSlotNames[slot].text = $"토토\n{TotoCost:N0}엔";
+        unitCommandSlotHotkeys[slot].text = "";
+        Color color = UnitCommandDefaultColor;
+        color.a = enough ? 1f : 0.35f;
+        unitCommandSlotBackgrounds[slot].color = color;
+        unitCommandSlotNames[slot].color = enough ? Color.white : new Color(1f, 1f, 1f, 0.4f);
+        unitCommandSlotButtons[slot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
+    }
+
+    void OnTotoClicked()
+    {
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1) return;
+        Selectable single = selection.Selected[0];
+        if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.Toto, single, 0); return; }
+        ExecuteTotoOn(single);
+    }
+
+    // MP: 버튼과 멀티 호스트가 받은 클라 요청(NetCommands)이 같이 쓰는 본체. 결과 문자열은 탐침이 읽는다(성공/실패/보상).
+    public string LastTotoResult { get; private set; }
+
+    public void ExecuteTotoOn(Selectable single)
+    {
+        if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.Data.name != TotoUnitAsset) return;
+        if (!single.TryGetComponent(out OwnedByPlayer owner)) return;
+        int playerId = owner.OwnerId;
+        PlayerContext context = PlayerContext.Get(playerId);
+        if (context == null || context.GoldWallet == null) return;
+        if (!context.GoldWallet.TrySpend(TotoCost)) { PlayerNotification.Show(playerId, $"엔이 부족합니다({TotoCost:N0}).", 4f); LastTotoResult = "엔 부족"; return; }
+        if (Random.value >= TotoChance) { PlayerNotification.Show(playerId, $"<color=#B0B0B0>토토 실패</color> — {TotoCost:N0}엔을 잃었습니다.", 4f); LastTotoResult = "실패"; return; }
+        int pick = Random.Range(0, 3);
+        if (pick == 0)
+        {
+            context.GoldWallet.Add(TotoGoldReward);
+            PlayerNotification.Show(playerId, $"<color=#FFD700>토토 성공!</color> 금화 {TotoGoldReward:N0}엔", 5f);
+            LastTotoResult = "금화";
+        }
+        else if (pick == 1)
+        {
+            if (context.ResourceWallet != null) context.ResourceWallet.Add(ResourceType.Wood, 1);
+            PlayerNotification.Show(playerId, "<color=#FFD700>토토 성공!</color> <color=#20B2AA>목재 1</color>", 5f);
+            LastTotoResult = "목재";
+        }
+        else
+        {
+            WispData wisp = wispTypeOrder.Find(w => w != null && w.name == "Wisp_랜덤유닛");
+            if (wisp == null) foreach (WispData loaded in UnityEngine.Resources.FindObjectsOfTypeAll<WispData>()) if (loaded != null && loaded.name == "Wisp_랜덤유닛") { wisp = loaded; break; }
+            if (wisp != null && RewardDistributor.Instance != null) RewardDistributor.Instance.GrantWisps(context, new List<WispReward> { new WispReward { wisp = wisp, count = 1 } });
+            PlayerNotification.Show(playerId, "<color=#FFD700>토토 성공!</color> 위습 1", 5f);
+            LastTotoResult = "위습";
+        }
     }
 
     // 영원함 서민성 「강화」(사장님 10-06) — 유닛별 칸(FlexKind.Enhance). UnitData.enhanceMaxLevel > 0인 유닛 한 기를 골랐을 때만 보인다.
@@ -3343,6 +3420,10 @@ public class GameHud : MonoBehaviour
             SkillLevel bombLevel = BombSkillOf(lastCommandUnitData)?.levels?[0];
             ShowTooltip($"폭탄제조 (목재강화)\n목재 {BombWoodCost}개를 내고 사거리 안 적이 가장 많이 모인 곳에 범위 폭탄 1발 — 반경 {(bombLevel != null ? bombLevel.range : 0f):F0}, 피해 {(bombLevel != null && bombLevel.effects.Count > 0 ? bombLevel.effects[0].multiplier : 0f):N0}(방어 무시, 보스 포함). 횟수 제한 없음(목재가 한계).", cardRect);
         }
+        else if (FlexKindAt(index) == FlexKind.Toto && totoSlotShown)
+        {
+            ShowTooltip($"토토\n엔 {TotoCost:N0}을 내고 도박 — {TotoChance * 100f:F0}% 확률로 금화 {TotoGoldReward:N0}엔 / 목재 1 / 위습 1 중 하나(각 1/3). 실패하면 엔만 잃는다. 쿨 없음.", cardRect);
+        }
         else if (FlexKindAt(index) == FlexKind.Enhance && enhanceSlotShown)
         {
             UnitAttacker enhancer = EnhanceCandidate();
@@ -3687,6 +3768,7 @@ public class GameHud : MonoBehaviour
                 case FlexKind.Yoonseo: if (yoonseoSlotShown) OnYoonseoClicked(); return;
                 case FlexKind.GambleBoost: if (gambleBoostSlotShown) OnGambleBoostClicked(); return;
                 case FlexKind.Enhance: if (enhanceSlotShown) OnEnhanceClicked(); return;
+                case FlexKind.Toto: if (totoSlotShown) OnTotoClicked(); return;
                 case FlexKind.Bomb: if (bombSlotShown) OnBombClicked(); return;
                 case FlexKind.Talent: if (talentSlotsShown) OnTalentClicked(flexArg[index]); return;
             }
