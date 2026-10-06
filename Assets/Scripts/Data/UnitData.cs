@@ -596,4 +596,11 @@ public class UnitData : ScriptableObject
     // ⚠️ 맨 뒤(2026-10-06, 불멸 김용태 「주위 적 사망 시 체력 게이지 +5」 — 사장님 확정) — 이 유닛 반경(lifeGaugeOnEnemyDeathRange, 원작 단위) 안에서 적이 죽을 때마다 체력 게이지 +값(상한은 lifeGaugeMax). 0이면 꺼짐.
     public float lifeGaugeOnEnemyDeath;
     public float lifeGaugeOnEnemyDeathRange;
+
+    // ⚠️ 맨 뒤(2026-10-06, 영원함 서민성 「고혈-가장중요한순간」) — 「강화」 시스템: enhanceMaxLevel > 0이면 이 유닛을 골랐을 때 명령 카드에 「강화」 칸이 뜨고,
+    // 누를 때마다 엔 enhanceGoldCost + 위습 enhanceWispCount개(종류 무관)를 내고 이 유닛 한 기의 강화 레벨이 1 오른다(최대 enhanceMaxLevel). UnitAttacker.EnhanceLevel.
+    // 스킬 해금은 SkillLevel.requiredEnhanceLevel, 레벨 비례 피해는 SkillEffect.enhanceScale.
+    public int enhanceMaxLevel;
+    public int enhanceGoldCost;
+    public int enhanceWispCount;
 }

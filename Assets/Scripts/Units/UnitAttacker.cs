@@ -729,10 +729,24 @@ public class UnitAttacker : MonoBehaviour
         SkillLevel level = CurrentSkillLevel(skill);
         if (level == null || level.effects == null || level.effects.Count == 0) { failReason = "아직 효과가 없는 스킬입니다."; return false; }
         SkillEffect tele = level.effects.Find(e => e != null && e.kind == SkillEffectKind.TeleportToPoint);
-        if (tele == null) { failReason = "지점을 고르는 스킬이 아닙니다."; return false; }
         SkillRuntimeState state = GetRuntimeState(skill);
         float remaining = state.activeReadyAt - Time.time;
         if (remaining > 0f) { failReason = $"쿨타임 중입니다. ({Mathf.CeilToInt(remaining)}초)"; return false; }
+        if (!PassesBuffGate(level, null)) { failReason = "지금은 쓸 수 없습니다."; return false; }
+        if (tele == null)
+        {
+            // 땅 지점 시전(영원함 서민성 「그의스킬샷」) — 고른 지점이 범위 중심: 반경(level.range) 안 적에게 효과가 나간다.
+            state.activeReadyAt = Time.time + Mathf.Max(0.01f, level.cooldown);
+            SkillTelemetry.Cast(unitData, skill);
+            SkillSfx.Cast(unitData, skill, point);
+            PulseSphereArt();
+            bool vfx = SkillVfx.BeginCast(unitData, skill);
+            castCenterOverride = point;
+            try { CastSkillLevel(level, level.WorldRange, null, 0f); }
+            finally { castCenterOverride = null; }
+            SkillVfx.EndCast(vfx);
+            return true;
+        }
         if (tele.multiplier > 0f && Vector3.Distance(transform.position, point) > tele.multiplier / WorldScale.Value) { failReason = "사거리 밖입니다."; return false; }
         if (!TryGetComponent(out UnityEngine.AI.NavMeshAgent agent) || !UnityEngine.AI.NavMesh.SamplePosition(point, out UnityEngine.AI.NavMeshHit hit, 30f * WorldScale.Value, agent.areaMask))
         { failReason = "그곳으로는 이동할 수 없습니다."; return false; }
@@ -805,6 +819,66 @@ public class UnitAttacker : MonoBehaviour
         CastSkillLevel(level, level.WorldRange, target, 0f);
         SkillVfx.EndCast(vfxBefore);
         return true;
+    }
+
+    // ───── 강화(영원함 서민성 「고혈-가장중요한순간」): 엔 + 위습을 내고 이 유닛 한 기의 강화 레벨을 올린다(UnitData.enhanceMaxLevel). 서버만. ─────
+    public int EnhanceLevel { get; private set; }
+
+    public bool TryEnhance(out string failReason)
+    {
+        failReason = null;
+        UnitData data = identity != null ? identity.Data : null;
+        if (!GameAuthority.IsServer || data == null || data.enhanceMaxLevel <= 0 || owner == null) { failReason = "강화할 수 없는 유닛입니다."; return false; }
+        if (EnhanceLevel >= data.enhanceMaxLevel) { failReason = $"이미 최대 강화({data.enhanceMaxLevel})입니다."; return false; }
+        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        if (context == null || context.GoldWallet == null) { failReason = "플레이어 정보를 찾지 못했습니다."; return false; }
+        var wisps = new List<Wisp>();
+        foreach (Wisp wisp in Wisp.Active)
+        {
+            if (wisps.Count >= data.enhanceWispCount) break;
+            if (wisp != null && !wisp.IsConsumed && wisp.TryGetComponent(out OwnedByPlayer wispOwner) && wispOwner.OwnerId == owner.OwnerId) wisps.Add(wisp);
+        }
+        if (wisps.Count < data.enhanceWispCount) { failReason = $"위습이 모자랍니다(위습 {data.enhanceWispCount}개 필요)."; return false; }
+        if (context.GoldWallet.Gold < data.enhanceGoldCost) { failReason = $"엔이 모자랍니다({data.enhanceGoldCost:N0}엔 필요)."; return false; }
+        if (!context.GoldWallet.TrySpend(data.enhanceGoldCost)) { failReason = "엔이 모자랍니다."; return false; }
+        foreach (Wisp wisp in wisps) { wisp.MarkConsumed(); Destroy(wisp.gameObject); }
+        EnhanceLevel++;
+        PlayerNotification.Show(context.PlayerId, $"<color=#FFD700>강화 {EnhanceLevel}/{data.enhanceMaxLevel}</color> — {data.unitName}", 4f);
+        return true;
+    }
+
+    float EnhanceScaleFactor(SkillEffect effect) => effect != null && effect.enhanceScale > 0f ? 1f + effect.enhanceScale * EnhanceLevel : 1f;
+
+    // 막타충(SkillEffectKind.SkillDamageAfterKill) — 스킬 피해로 일반 적을 처치하면 duration초 동안 스킬 피해 +multiplier. 패시브 값은 스킬에서 읽어 둔다.
+    UnitData afterKillFor;
+    float afterKillBonus, afterKillDuration, afterKillUntil;
+
+    void ReadAfterKillPassive()
+    {
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null || afterKillFor == unitData) return;
+        afterKillFor = unitData; afterKillBonus = 0f; afterKillDuration = 0f;
+        int count = BaseSkillCount(unitData);
+        for (int i = 0; i < count; i++)
+        {
+            SkillData skill = ResolveSkillAt(unitData, i);
+            if (skill == null || skill.levels == null || skill.levels.Count == 0 || skill.levels[0].effects == null) continue;
+            foreach (SkillEffect effect in skill.levels[0].effects)
+                if (effect != null && effect.kind == SkillEffectKind.SkillDamageAfterKill) { afterKillBonus += effect.multiplier; afterKillDuration = Mathf.Max(afterKillDuration, effect.duration); }
+        }
+    }
+
+    float AfterKillFactor(SkillEffect effect)
+    {
+        if (effect == null || effect.kind != SkillEffectKind.Damage) return 1f;
+        ReadAfterKillPassive();
+        return afterKillBonus > 0f && Time.time < afterKillUntil ? 1f + afterKillBonus : 1f;
+    }
+
+    void RegisterSkillKill(EnemyDummy target)
+    {
+        ReadAfterKillPassive();
+        if (afterKillBonus > 0f) afterKillUntil = Time.time + afterKillDuration;
     }
 
     // 「공격한 횟수 비례」(SkillEffect.hitCountScale, 영원함 이지원 그동안쌓은덕력) — 평타 총수 × 계수(상한 Cap)만큼 +. 0이면 1(꺼짐).
@@ -1295,6 +1369,7 @@ public class UnitAttacker : MonoBehaviour
     bool PassesBuffGate(SkillLevel level, EnemyDummy target)
     {
         if (level.laneCountWindow > 0 && !PassesLaneCountWindow(level.laneCountWindow)) return false;
+        if (level.requiredEnhanceLevel > 0 && EnhanceLevel < level.requiredEnhanceLevel) return false;   // 6강·11강·16강 해금(영원함 서민성)
         if (!string.IsNullOrEmpty(level.requiredBuffId) && !HasBuff(level.requiredBuffId)) return false;
         if (!string.IsNullOrEmpty(level.forbiddenBuffId) && HasBuff(level.forbiddenBuffId)) return false;
 
@@ -2588,6 +2663,7 @@ public class UnitAttacker : MonoBehaviour
     // 없으면(쿨다운·오라) 사거리 안에서 새로 고른다. recentAttackDamage: 이 발동을 일으킨
     // 평타의 피해량(SkillEffectBasis.ReceivedDamage 전용, 없으면 0 — UpdateSkillCooldown이
     // 그렇게 부른다).
+    Vector3? castCenterOverride;   // 지점 지정 스킬샷(TryCastActiveAtPoint 땅 시전)의 범위 중심 — 그 시전 동안만
     bool gambleWon;   // GambleRoll 결과(이 시전 안에서만 쓴다)
     readonly Dictionary<SkillLevel, int> castCounts = new Dictionary<SkillLevel, int>();
     int currentCastIndex;
@@ -2612,7 +2688,8 @@ public class UnitAttacker : MonoBehaviour
 
         // 범위 중심은 시전 시작 때 한 번 잡는다 — 앞 효과가 주 대상을 죽여도 같은 자리에서
         // 나머지 효과가 터진다(원작도 GetUnitLoc를 먼저 저장해 두고 그 점을 쓴다).
-        Vector3 aoeCenter = level.aoeCenter == SkillAoeCenter.Target && primaryTarget != null
+        Vector3 aoeCenter = castCenterOverride.HasValue ? castCenterOverride.Value
+            : level.aoeCenter == SkillAoeCenter.Target && primaryTarget != null
             ? primaryTarget.transform.position
             : transform.position;
         // 스킬별 이펙트(09-30): 범위 중심 땅·시전자 발밑에 한 번 — 적중 이펙트는 피해마다 EnemyDummy 쪽에서 바뀐다.
@@ -2678,7 +2755,7 @@ public class UnitAttacker : MonoBehaviour
             || effect.kind == SkillEffectKind.DamagePerAllyDebuff || effect.kind == SkillEffectKind.DamageGrowthOverTime
             || effect.kind == SkillEffectKind.AllySkillDamageBonus || effect.kind == SkillEffectKind.DispelAllyDebuffs
             || effect.kind == SkillEffectKind.GoldPlusBonus || effect.kind == SkillEffectKind.StoryDamageMultiplier
-            || effect.kind == SkillEffectKind.DamagePerTargetArmorShred || effect.kind == SkillEffectKind.DamagePerRecruit || effect.kind == SkillEffectKind.DamageVsTargetBuff) return;
+            || effect.kind == SkillEffectKind.DamagePerTargetArmorShred || effect.kind == SkillEffectKind.DamagePerRecruit || effect.kind == SkillEffectKind.DamageVsTargetBuff || effect.kind == SkillEffectKind.SkillDamageAfterKill) return;
 
         // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
         if (effect.lineLength > 0f && effect.zoneTickInterval <= 0f)
@@ -2919,7 +2996,7 @@ public class UnitAttacker : MonoBehaviour
     // **여기 최종 결과 하나에만 곱한다**(RandomDamageMultiplier 참고).
     float ResolveSkillEffectValue(SkillEffect effect, EnemyDummy target, float recentAttackDamage)
     {
-        return ResolveBaseSkillEffectValue(effect, target, recentAttackDamage) * RandomDamageMultiplier(effect) * AttackSpeedScaleFactor(effect) * HitCountScaleFactor(effect);
+        return ResolveBaseSkillEffectValue(effect, target, recentAttackDamage) * RandomDamageMultiplier(effect) * AttackSpeedScaleFactor(effect) * HitCountScaleFactor(effect) * EnhanceScaleFactor(effect) * AfterKillFactor(effect);
     }
 
     // 원작 RRD의 GetRandomReal(min, max) 부분. 원작이 매 시전마다 새로 굴리므로 여기서도
@@ -3184,7 +3261,9 @@ public class UnitAttacker : MonoBehaviour
         if (hits <= 1)
         {
             float skillHpBefore = target.Hp;
+            bool wasNormalEnemy = IsNormalEnemy(target);
             target.TakeDamage(amount, effect.damageType, effect.attackType, owner != null ? owner.OwnerId : -1, armorIgnoreRatio: SkillArmorIgnore(effect), armorScale: AttackArmorScale);
+            if (target.IsDead && wasNormalEnemy) RegisterSkillKill(target);   // 막타충(영원함 서민성)
             SkillTelemetry.Damage(identity != null ? identity.Data : null, TelemetryChannel(effect), target, skillHpBefore);
             return;
         }

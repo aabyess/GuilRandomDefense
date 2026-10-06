@@ -195,6 +195,7 @@ public class GameHud : MonoBehaviour
     float activeLocalReadyAt;   // 멀티 클라: 호스트의 쿨을 모르니 누른 시각 + 쿨로 어림한 값(진짜 판정은 호스트)
     bool talentSlotsShown;   // 초월 박민수 「재능투자」 칸 4개(FlexKind.Talent) — 박민수 한 기를 골랐을 때만
     bool bombSlotShown;   // 초월 엄태웅 「폭탄제조(목재강화)」 칸(FlexKind.Bomb) — 엄태웅 중사(진) 한 기를 골랐을 때만
+    bool enhanceSlotShown;   // 영원함 서민성 「강화」 칸(FlexKind.Enhance) — UnitData.enhanceMaxLevel > 0인 유닛 한 기를 골랐을 때만
     bool gambleBoostSlotShown;   // 초월 엄태웅 「웅교교주」 칸(FlexKind.GambleBoost) — 엄태웅 중사(진) 한 기를 골랐을 때만
     bool yoonseoSlotShown;   // 초월 노태현 「최윤서 강화」 칸(FlexKind.Yoonseo) — 노태현 한 기를 골랐을 때만
     bool sellSlotEnabled;
@@ -278,7 +279,7 @@ public class GameHud : MonoBehaviour
     // 넣는 순서 = 액티브 → 유닛 전용(재능투자·최윤서 강화) → 특성강화 → 조합 결과. 8칸을 넘으면 경고 로그(조용히 버리지 않는다).
     const int FlexSlotFirst = 4;
     const int FlexSlotLast = 11;
-    enum FlexKind : byte { None, Trait, Active, Talent, Yoonseo, Recipe, GambleBoost, Bomb }
+    enum FlexKind : byte { None, Trait, Active, Talent, Yoonseo, Recipe, GambleBoost, Bomb, Enhance }
     readonly FlexKind[] flexKind = new FlexKind[CommandSlotCount];
     readonly int[] flexArg = new int[CommandSlotCount];          // Talent는 투자 종류(0~3), Recipe는 flexRecipes 번호
     readonly FlexKind[] flexWantKind = new FlexKind[CommandSlotCount];
@@ -317,6 +318,7 @@ public class GameHud : MonoBehaviour
         if (activeSlotShown) Put(FlexKind.Active, 0);
         if (talentSlotsShown) for (int k = 0; k < UnitAttacker.TalentKindCount; k++) Put(FlexKind.Talent, k);
         if (yoonseoSlotShown) Put(FlexKind.Yoonseo, 0);
+        if (enhanceSlotShown) Put(FlexKind.Enhance, 0);
         if (gambleBoostSlotShown) Put(FlexKind.GambleBoost, 0);
         if (bombSlotShown) Put(FlexKind.Bomb, 0);
         if (traitSlotShown) Put(FlexKind.Trait, 0);
@@ -528,6 +530,7 @@ public class GameHud : MonoBehaviour
         RefreshSellButton();
         RefreshYoonseoButton();
         RefreshGambleBoostButton();
+        RefreshEnhanceButton();
         RefreshBombButton();
         RefreshTalentButtons();
         RefreshDockTargeting();
@@ -1593,6 +1596,53 @@ public class GameHud : MonoBehaviour
         SkillVfx.CastAt(center, origin, radius);
         SkillVfx.EndCast(vfxGate);
         PlayerNotification.Show(playerId, $"<color=#FFD700>폭탄제조</color> 목재 {BombWoodCost}개 · {victims.Count}기에게 {damage:N0} 방어 무시", 3f);
+    }
+
+    // 영원함 서민성 「강화」(사장님 10-06) — 유닛별 칸(FlexKind.Enhance). UnitData.enhanceMaxLevel > 0인 유닛 한 기를 골랐을 때만 보인다.
+    // 누르면 엔 + 위습을 내고 그 유닛 강화 레벨 +1(UnitAttacker.TryEnhance). 멀티 클라는 호스트에 요청(NetHudAction.Enhance) — 레벨 표시는 호스트 유닛 기준이라 클라 거울엔 아직 안 보인다.
+    UnitAttacker EnhanceCandidate()
+    {
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return null;
+        Selectable single = selection.Selected[0];
+        if (!single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.Data.enhanceMaxLevel <= 0) return null;
+        return single.TryGetComponent(out UnitAttacker attacker) ? attacker : null;
+    }
+
+    void RefreshEnhanceButton()
+    {
+        if (currentShop as Object != null) { enhanceSlotShown = false; return; }
+        UnitAttacker attacker = EnhanceCandidate();
+        if (attacker == null) { enhanceSlotShown = false; return; }   // 칸 비우기는 ReflowFlexSlots
+        enhanceSlotShown = true;
+        int slot = FlexSlotOf(FlexKind.Enhance);
+        if (slot < 0) return;
+        UnitData data = attacker.GetComponent<UnitIdentity>().Data;
+        bool done = attacker.EnhanceLevel >= data.enhanceMaxLevel;
+        unitCommandSlotNames[slot].text = $"강화\n{attacker.EnhanceLevel}/{data.enhanceMaxLevel}";
+        unitCommandSlotHotkeys[slot].text = "";
+        Color color = UnitCommandDefaultColor;
+        color.a = done ? 0.35f : 1f;
+        unitCommandSlotBackgrounds[slot].color = color;
+        unitCommandSlotNames[slot].color = done ? new Color(1f, 1f, 1f, 0.4f) : Color.white;
+        unitCommandSlotButtons[slot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
+    }
+
+    void OnEnhanceClicked()
+    {
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1) return;
+        Selectable single = selection.Selected[0];
+        if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.Enhance, single, 0); return; }
+        ExecuteEnhanceOn(single);
+    }
+
+    // MP: 버튼과 멀티 호스트가 받은 클라 요청(NetCommands)이 같이 쓰는 본체.
+    public void ExecuteEnhanceOn(Selectable single)
+    {
+        if (single == null || !single.TryGetComponent(out UnitAttacker attacker)) return;
+        int playerId = single.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
+        if (!attacker.TryEnhance(out string reason)) PlayerNotification.Show(playerId, reason ?? "지금은 강화할 수 없습니다.", 4f);
     }
 
     // 초월 엄태웅 「웅교교주」(사장님 10-06) — 유닛별 칸(FlexKind.GambleBoost). 엄태웅 중사(진) 한 기를 골랐을 때만 보인다.
@@ -3293,6 +3343,12 @@ public class GameHud : MonoBehaviour
             SkillLevel bombLevel = BombSkillOf(lastCommandUnitData)?.levels?[0];
             ShowTooltip($"폭탄제조 (목재강화)\n목재 {BombWoodCost}개를 내고 사거리 안 적이 가장 많이 모인 곳에 범위 폭탄 1발 — 반경 {(bombLevel != null ? bombLevel.range : 0f):F0}, 피해 {(bombLevel != null && bombLevel.effects.Count > 0 ? bombLevel.effects[0].multiplier : 0f):N0}(방어 무시, 보스 포함). 횟수 제한 없음(목재가 한계).", cardRect);
         }
+        else if (FlexKindAt(index) == FlexKind.Enhance && enhanceSlotShown)
+        {
+            UnitAttacker enhancer = EnhanceCandidate();
+            UnitData ed = enhancer != null && enhancer.TryGetComponent(out UnitIdentity enhanceIdentity) ? enhanceIdentity.Data : null;
+            ShowTooltip(ed == null ? "강화" : $"강화 {enhancer.EnhanceLevel}/{ed.enhanceMaxLevel}\n엔 {ed.enhanceGoldCost:N0}과 위습 {ed.enhanceWispCount}개(종류 무관)를 내고 이 유닛 한 기의 강화 레벨을 1 올린다. 6강: 단일 스턴 · 11강: 이감+마방깍 · 16강: 마나 스킬 해금. 레벨당 스킬샷 피해 +5%.", cardRect);
+        }
         else if (FlexKindAt(index) == FlexKind.GambleBoost && gambleBoostSlotShown)
         {
             ShowTooltip($"웅교교주\n엔 {PlayerContext.GambleBoostCost:N0}을 내고 도박 성공 확률 +{PlayerContext.GambleBoostPercentEach:F0}%p. 최대 {PlayerContext.GambleBoostMax}회(플레이어 개인 누적). 100%가 아닌 모든 도박에 적용(상한 100%).", cardRect);
@@ -3630,6 +3686,7 @@ public class GameHud : MonoBehaviour
                 case FlexKind.Active: if (activeSlotShown) OnActiveClicked(); return;
                 case FlexKind.Yoonseo: if (yoonseoSlotShown) OnYoonseoClicked(); return;
                 case FlexKind.GambleBoost: if (gambleBoostSlotShown) OnGambleBoostClicked(); return;
+                case FlexKind.Enhance: if (enhanceSlotShown) OnEnhanceClicked(); return;
                 case FlexKind.Bomb: if (bombSlotShown) OnBombClicked(); return;
                 case FlexKind.Talent: if (talentSlotsShown) OnTalentClicked(flexArg[index]); return;
             }
