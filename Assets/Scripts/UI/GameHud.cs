@@ -1386,11 +1386,11 @@ public class GameHud : MonoBehaviour
         unitCommandSlotButtons[YoonseoSlot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
     }
 
-    // 액티브(누르는) 스킬 칸(2026-10-06, 초월 최상호 「바지사장」) — 명령 카드 둘째 줄 둘째 칸(5번, 워크3 격자 키 S). 4번(모으기)·6번(최윤서 강화)·7번(판매) 사이 빈칸이고,
+    // 액티브(누르는) 스킬 칸(2026-10-06, 초월 최상호 「바지사장」) — 명령 카드 둘째 줄 둘째 칸(5번, 단축키 Q). 4번(모으기)·6번(최윤서 강화)·7번(판매) 사이 빈칸이고,
     // 조합 결과 칸(8~11)과 안 겹친다. 한 기를 골랐고 그 유닛 스킬 목록에 SkillTriggerType.ActiveButton이 있을 때만 보인다.
     // 마나 소모 없음. 쿨 중엔 상점 칸과 같은 시계방향 덮개. 못 쓸 때도 눌러서 이유를 본다.
     const int ActiveSlot = 5;
-    const char ActiveHotkey = 'S';
+    const char ActiveHotkey = 'Q';   // S는 정지가 쓴다(명령 카드 글자 단축키 M·S·H·A·V)
 
     SkillData ActiveSkillOf(out Selectable single)
     {
@@ -1463,7 +1463,7 @@ public class GameHud : MonoBehaviour
 
         // 단축키 S — 채팅 중엔 안 받는다(상점 단축키와 같은 이유).
         Keyboard keyboard = Keyboard.current;
-        if (keyboard != null && !ChatInputGate.IsOpen && keyboard.sKey.wasPressedThisFrame) OnActiveClicked();
+        if (keyboard != null && !ChatInputGate.IsOpen && keyboard.qKey.wasPressedThisFrame) OnActiveClicked();
     }
 
     // 대상 지정 액티브(SkillLevel.needsTargetClick, 초월 강재규 「단일도킹」) — 칸을 누르면 대기, 적 하나를 좌클릭하면 발동(우클릭 취소).
