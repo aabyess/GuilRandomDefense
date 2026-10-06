@@ -112,12 +112,13 @@ public class SideBossBarLayer : MonoBehaviour
         // new GameObject(name, types)는 RequireComponent 체인을 못 믿을 수 있다).
         GameObject background = new GameObject("Background", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         StretchToParent(background.transform, barRect);
-        background.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.6f);
+        background.GetComponent<Image>().color = Color.black;   // 불투명 검정(체력바와 같은 꼴, 10-06)
 
         GameObject fillObject = new GameObject("Fill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         StretchToParent(fillObject.transform, barRect);
 
         Image fillImage = fillObject.GetComponent<Image>();
+        fillImage.sprite = UiSkin.WhiteSprite;   // 스프라이트 없는 Filled는 비율이 안 먹는다(UiSkin.WhiteSprite 주석)
         fillImage.type = Image.Type.Filled;
         fillImage.fillMethod = Image.FillMethod.Horizontal;
         fillImage.fillOrigin = (int)Image.OriginHorizontal.Left;

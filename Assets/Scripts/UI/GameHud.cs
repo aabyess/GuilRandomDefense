@@ -604,19 +604,31 @@ public class GameHud : MonoBehaviour
         RectTransform bar = CreatePanel(transform, "BottomBar", PanelColor);
         SetAnchors(bar, new Vector2(0f, 0f), new Vector2(1f, BottomBarHeight));
         // 사진의 회색 돌벽 콘솔 — 돌 타일(직접 그린 근사, Tools/ui/gen_ui_skin.py)을 깐다. 그림이 없으면 옛 청동회색.
-        Sprite stone = UiSkin.Get("stone_tile");
+        Sprite stone = UiSkin.BarBackground(out bool barTiled);
         if (stone != null)
         {
             Image barImage = bar.GetComponent<Image>();
             barImage.sprite = stone;
-            // 선술집 테마의 하단 바 그림은 9-slice(위 쇠띠·리벳은 늘리지 않고 가로 널판만 늘린다) — 돌 타일만 타일로 깐다.
-            barImage.type = stone.border != Vector4.zero ? Image.Type.Sliced : Image.Type.Tiled;
+            // DarkWood(선술집) 그림만 9-slice(위 쇠띠·리벳은 늘리지 않고 가로 널판만 늘린다) — 나머지는 타일로 깐다.
+            barImage.type = !barTiled && stone.border != Vector4.zero ? Image.Type.Sliced : Image.Type.Tiled;
             barImage.color = Color.white;
         }
 
         // 3D 화면과 갈리는 경계선. 판이 불투명해도 위쪽 경계가 밋밋하면 화면에 얹힌 게 아니라
         // 잘린 것처럼 보인다 — 밝은 선 한 줄이 "여기부터 UI"를 읽히게 한다.
-        if (!UiSkin.IsTavern)
+        Sprite barEdgeSprite = UiSkin.BarEdge();
+        if (barEdgeSprite != null)
+        {
+            // 시안 A·B·C: 바 윗선에 나무/금속 띠(그림 높이 그대로, 가로 타일)
+            RectTransform edgeRect = CreatePanel(bar, "BarEdgeStrip", Color.white);
+            edgeRect.anchorMin = new Vector2(0f, 1f); edgeRect.anchorMax = new Vector2(1f, 1f);
+            edgeRect.pivot = new Vector2(0.5f, 1f);
+            edgeRect.offsetMin = new Vector2(0f, -barEdgeSprite.rect.height);
+            edgeRect.offsetMax = Vector2.zero;
+            Image edgeImage = edgeRect.GetComponent<Image>();
+            edgeImage.sprite = barEdgeSprite; edgeImage.type = Image.Type.Tiled; edgeImage.color = Color.white; edgeImage.raycastTarget = false;
+        }
+        else if (UiSkin.Bar != UiSkin.BarStyle.DarkWood)
             CreateBorderStrip(bar, BarEdgeColor, new Vector2(0f, 1f), new Vector2(1f, 1f),
                               new Vector2(0f, -BarEdgeThickness), Vector2.zero);
 
@@ -1055,7 +1067,7 @@ public class GameHud : MonoBehaviour
             gauge.SetSiblingIndex(manaText.transform.GetSiblingIndex());
             manaFill = gauge.GetComponent<Image>();
             manaFill.raycastTarget = false;
-            manaFill.sprite = null;
+            manaFill.sprite = UiSkin.WhiteSprite;   // null이면 Filled 비율이 안 먹어 마나 게이지가 늘 가득 차 보였다
             manaFill.type = Image.Type.Filled;
             manaFill.fillMethod = Image.FillMethod.Horizontal;
             manaFill.fillOrigin = 0;
@@ -5338,13 +5350,13 @@ public class GameHud : MonoBehaviour
     //    테두리 띠가 격자 자식으로 끼어 칸 하나를 차지한다. 격자는 이 칸 안의 자식에 둔다(BuildUnitCommandGrid).
     static void AddConsoleFrame(RectTransform parent)
     {
-        // 선술집 테마: 칸 자체의 그림을 나무 액자 + 어두운 가죽 안쪽(cell_big_9slice)으로 바꾼다 — 자식(미니맵·초상·정보·격자)은 그 위에 그려진다. 테두리는 그림에 들어 있다.
-        Sprite tavernCell = UiSkin.IsTavern ? UiSkin.Tavern("cell_big_9slice") : null;
-        if (tavernCell != null && parent.TryGetComponent(out Image panelImage))
+        // 하단 UI 시안(UiSkin.Bar): 칸 자체의 그림을 시안 액자(A 나무 테두리·B 밝은 원목·C 청동·DarkWood 선술집)로 바꾼다 — 자식(미니맵·초상·정보·격자)은 그 위에 그려진다. Stone이면 옛 금테 고리.
+        Sprite barCell = UiSkin.BarCell(out float cellShrink);
+        if (barCell != null && parent.TryGetComponent(out Image panelImage))
         {
-            panelImage.sprite = tavernCell;
+            panelImage.sprite = barCell;
             panelImage.type = Image.Type.Sliced;
-            panelImage.pixelsPerUnitMultiplier = TavernCellBorderShrink;   // 40px 테두리를 줄여 안쪽 내용 자리를 넓힌다
+            panelImage.pixelsPerUnitMultiplier = cellShrink;
             panelImage.color = Color.white;
             return;
         }

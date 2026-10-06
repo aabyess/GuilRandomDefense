@@ -72,14 +72,20 @@ public class HealthBarLayer : MonoBehaviour
 
         // Image가 요구하는 CanvasRenderer를 직접 나열해서 넣는다 — new GameObject(name, types)는
         // RequireComponent 체인을 못 믿을 수 있어(순서·Awake 시점 문제) 명시적으로 채운다.
+        // 바 뒤는 불투명 검정(워크3 체력바 꼴, 친구 베타 10-06 「배경이 투명이라 닳는 게 안 보인다」) — 체력이 줄수록 검은 칸이 늘어나 보인다. 1px 바깥으로 둘러 테두리도 된다.
+        //   backgroundColor 필드는 씬에 알파 0.6으로 직렬화돼 있어 쓰지 않는다(필드는 남겨 둠).
         GameObject background = new GameObject("Background", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         StretchToParent(background.transform, rootRect);
-        background.GetComponent<Image>().color = backgroundColor;
+        RectTransform backgroundRect = (RectTransform)background.transform;
+        backgroundRect.offsetMin = new Vector2(-1f, -1f);
+        backgroundRect.offsetMax = new Vector2(1f, 1f);
+        background.GetComponent<Image>().color = Color.black;
 
         GameObject fillObject = new GameObject("Fill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         StretchToParent(fillObject.transform, rootRect);
 
         Image fillImage = fillObject.GetComponent<Image>();
+        fillImage.sprite = UiSkin.WhiteSprite;   // 스프라이트 없는 Filled는 비율이 안 먹는다(UiSkin.WhiteSprite 주석)
         fillImage.type = Image.Type.Filled;
         fillImage.fillMethod = Image.FillMethod.Horizontal;
         fillImage.fillOrigin = (int)Image.OriginHorizontal.Left;

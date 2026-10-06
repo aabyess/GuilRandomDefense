@@ -47,5 +47,28 @@ static class TavernProbe
     static string SetStone() { UiSkin.Theme = UiSkin.UiTheme.Stone; return "테마 = 돌(다음 판부터)"; }
     static string SetTavern() { UiSkin.Theme = UiSkin.UiTheme.Tavern; return "테마 = 선술집(다음 판부터)"; }
 
+    // 적 3마리 체력 100% · 50% · 10% (체력바 배경 확인용)
+    static string Hp3()
+    {
+        LaneMarker lane = LaneMarker.Get(0);
+        EnemyData ed = System.Linq.Enumerable.FirstOrDefault(
+            System.Linq.Enumerable.Select(AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/Data/Enemies" }), g => AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(g))),
+            e => e != null && !e.isBoss && e.prefab != null && e.name.Contains("R2"));
+        if (lane == null || ed == null) return "❌ 준비 안 됨";
+        float[] ratios = { 1f, 0.5f, 0.1f };
+        FieldInfo hpField = typeof(EnemyDummy).GetField("hp", BindingFlags.Instance | BindingFlags.NonPublic);
+        for (int i = 0; i < 3; i++)
+        {
+            GameObject go = Object.Instantiate(ed.prefab, lane.LaneCenter + new Vector3(-40f + i * 40f, 0f, 90f), Quaternion.Euler(0f, 180f, 0f));
+            if (go.TryGetComponent(out WaypointMover m)) m.enabled = false;
+            var e = go.GetComponent<EnemyDummy>();
+            e.Initialize(ed, 1e3f);
+            e.SetLane(0);
+            hpField.SetValue(e, e.MaxHp * ratios[i]);
+        }
+        Object.FindFirstObjectByType<RtsCameraController>()?.MoveTo(lane.LaneCenter + new Vector3(0f, 0f, 90f));
+        return "적 3마리 체력 100/50/10%";
+    }
+
     static string Clear() { Object.FindFirstObjectByType<SelectionManager>().ClearSelection(); return "선택 해제"; }
 }
