@@ -14,7 +14,7 @@ public static class PlayerFacingText
 {
     // 개발 메모의 흔적. 플레이어 설명에 나올 일이 없는 말만 둔다.
     static readonly Regex DevMark = new Regex(
-        @"원작|w3a|w3u|w3q|트리거|Trig_|정정|RRD|\b[AHRIh][0-9A-Z][0-9A-Za-z]{2}\b|\bj:\d|PM\b|사장님|제안값|구현담당|리서치담당|blender|\.md\b|\.csv\b|0x[0-9a-f]|\(\d{2}-\d{2}|20\d\d-\d\d|대응표|upgr|gba|gmo|glvl|해석|실측|탐침|Apply|직렬화|에셋|필드|레벨\d블록|GetUnit|순위배정|게이트별|배정\(",
+        @"원작|w3a|w3u|w3q|트리거|Trig_|정정|RRD|\b[AHRIh][0-9A-Z][0-9A-Za-z]{2}\b|\bj:\d|PM\b|사장님|제안값|구현담당|리서치담당|blender|\.md\b|\.csv\b|0x[0-9a-f]|\(\d{2}-\d{2}|20\d\d-\d\d|대응표|upgr|gba|gmo|glvl|해석|실측|탐침|Apply|직렬화|에셋|필드|레벨\d블록|GetUnit|순위배정|게이트별|배정\(|\b[a-z]+[A-Z][A-Za-z0-9]+\b|\.cs\b|잘못|고쳤|가설|되돌리|확정값|\*\*|주석|이전엔|헷갈리|확인돼|미확인|안 옮|[A-Z][a-z]{2,}[A-Z]\w*/|\b[A-Z][a-z]+_|=\d|안 바꿈|별개 능력|이름만 비슷|부가 버프",
         RegexOptions.Compiled);
 
     public static bool HasDevNotes(string text) => !string.IsNullOrEmpty(text) && DevMark.IsMatch(text);
@@ -35,6 +35,14 @@ public static class PlayerFacingText
             kept.Add(p);
         }
         return string.Join(" ", kept).Trim();
+    }
+
+    /// <summary>강화소 칸 설명 — 메모가 섞였으면 기본 문장(수치 줄은 상점이 따로 붙인다).</summary>
+    public static string TrackDescription(string text, string fallback = "해당 등급 유닛 전체를 영구히 강화합니다.")
+    {
+        if (!HasDevNotes(text)) return text ?? "";
+        string c = Clean(text);
+        return c.Length >= 8 ? c : fallback;
     }
 
     /// <summary>스킬 이름 — 「이름 — 메모」 꼴이면 앞만.</summary>
