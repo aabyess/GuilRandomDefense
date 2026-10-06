@@ -325,6 +325,14 @@ public enum SkillEffectKind
     // 형태변환(구건): 발동하면 버프 GUN_FORM을 건다. 지속 = duration + min(bonus, multiplier × 유닛삭제 카운트)초, 카운트는 전부 소모(0으로).
     // 형태 동안 자기 공격속도 formSelfAttackSpeed(−0.30 = −30%)가 걸렸다가 형태가 끝나면 풀린다. target은 Self. 형태 중 스킬은 SkillLevel.requiredBuffId = GUN_FORM으로 게이트.
     FormChange,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 신문철 「스노우볼」 — 사장님 스킬) — 평타 한 대마다 자기 최종 피해가 stackPerHit(0.01 = +1%)씩 쌓인다(상한 stackCap 0.15 = +15%),
+    // 마지막 평타 뒤 stackResetSeconds(3)초 지나면 0으로 초기화. AttackSpeedStack(양재모)과 같은 틀의 피해판. 평타·스킬 피해 모두에 곱한다. target은 Self.
+    AttackDamageStack,
+    // 이 유닛이 살아 있는 동안 주인 플레이어의 처치 골드 배율(GoldWallet.GoldPlus)을 multiplier(0.2 = +0.2)만큼 올린다(초월 황준석 「준석의담판」). 죽거나 팔리면 되돌린다. 패시브 Self.
+    GoldPlusBonus,
+    // 스토리 적(원작 GetUnitPointValue ≥ 200) 상대 평타·스킬 최종 피해에 multiplier(1.3 = ×1.3)를 곱한다(초월 황준석 「믿음직한도움」). 보잡(BossDamageMultiplier)의 스토리판. 패시브 Self.
+    StoryDamageMultiplier,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -756,6 +764,10 @@ public class SkillLevel
     // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 이재윤 「내면의악」) — 0이 아니면 이 레벨(주로 오라)은 「내 레인의 적 수(유닛 카운트)가 [패배 한계−N, 패배 한계]일 때만」 켜진다.
     // 한계는 HUD 「유닛 카운트 = 70 <- 패배」와 같은 값(RoundManager.EnemyCountLimit, 난이도별). 켜진 동안 Enemies 오라는 **내 레인의 적에게만** 걸린다.
     public int laneCountWindow;
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 신문철 「엄마간식」) — ActiveButton 스킬 전용: 칸을 누른 뒤 **내 아군 유닛 하나를 클릭**해야 발동한다(자기도 가능, 우클릭 취소).
+    // 고른 아군에게 이 레벨의 효과(AttackSpeedBuffPercent 등 ApplyToAlly가 받는 것)가 걸린다. needsTargetClick(적 대상)의 아군판.
+    public bool needsAllyClick;
 }
 
 public enum SkillAoeCenter

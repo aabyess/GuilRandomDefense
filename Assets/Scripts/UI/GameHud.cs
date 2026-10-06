@@ -527,6 +527,7 @@ public class GameHud : MonoBehaviour
         RefreshTalentButtons();
         RefreshDockTargeting();
         RefreshPaperPlaneTargeting();
+        RefreshAllyTargeting();
         RefreshActiveButton();
         RefreshNavigationButton();
         RefreshRerollButton();
@@ -1750,6 +1751,40 @@ public class GameHud : MonoBehaviour
         ExecuteCastActiveOnTarget(unit, target);
     }
 
+    // 아군 지정 액티브(SkillLevel.needsAllyClick, 초월 신문철 「엄마간식」) — 칸을 누르면 대기, 내 아군 하나를 좌클릭하면 발동(우클릭 취소).
+    SkillData pendingAllySkill;
+    Selectable pendingAllyUnit;
+    int pendingAllyStartFrame;
+
+    void RefreshAllyTargeting()
+    {
+        if (pendingAllySkill == null) return;
+        if (Mouse.current == null || pendingAllyUnit == null) { pendingAllySkill = null; return; }
+        if (Mouse.current.rightButton.wasPressedThisFrame) { pendingAllySkill = null; return; }
+        if (!Mouse.current.leftButton.wasPressedThisFrame || Time.frameCount <= pendingAllyStartFrame) return;
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
+
+        SkillData skill = pendingAllySkill;
+        Selectable caster = pendingAllyUnit;
+        pendingAllySkill = null;
+        pendingAllyUnit = null;
+        int playerId = caster.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
+        if (!WorldPick.TryHit(Camera.main, Mouse.current.position.ReadValue(), out RaycastHit hit) || !hit.collider.TryGetComponent(out UnitIdentity ally))
+        {
+            PlayerNotification.Show(playerId, "아군 유닛을 찾을 수 없습니다.", 4f);
+            return;
+        }
+        ExecuteCastActiveOnAlly(caster, ally, skill);
+    }
+
+    public void ExecuteCastActiveOnAlly(Selectable single, UnitIdentity ally, SkillData skill)
+    {
+        if (single == null || !single.TryGetComponent(out UnitAttacker attacker)) return;
+        int playerId = single.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
+        if (!attacker.TryCastActiveOnAlly(skill, ally, out string reason))
+            PlayerNotification.Show(playerId, reason ?? "지금은 사용할 수 없습니다.", 4f);
+    }
+
     public void ExecuteCastActiveOnTarget(Selectable single, EnemyDummy target)
     {
         if (single == null || !single.TryGetComponent(out UnitAttacker attacker)) return;
@@ -1764,6 +1799,16 @@ public class GameHud : MonoBehaviour
     {
         SkillData skill = ActiveSkillOf(out Selectable single);
         if (skill == null || single == null) return;
+        if (skill.levels != null && skill.levels.Count > 0 && skill.levels[0].needsAllyClick)
+        {
+            // 아군 지정(초월 신문철 엄마간식) — 칸을 누르면 내 아군 하나를 클릭할 때까지 대기(우클릭 취소). 호스트/싱글만.
+            if (!GameAuthority.IsServer) { BlockedOnMultiplayerClient(); return; }
+            pendingAllySkill = skill;
+            pendingAllyUnit = single;
+            pendingAllyStartFrame = Time.frameCount;
+            PlayerNotification.Show(LocalPlayer.LocalPlayerId, $"{skill.skillName.Split('—')[0].Trim()}: 아군 유닛을 클릭하세요. (우클릭 취소)", 4f);
+            return;
+        }
         if (skill.levels != null && skill.levels.Count > 0 && skill.levels[0].needsTargetClick)
         {
             if (!GameAuthority.IsServer) { BlockedOnMultiplayerClient(); return; }

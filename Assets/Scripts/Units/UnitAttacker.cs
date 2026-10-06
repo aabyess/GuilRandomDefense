@@ -719,6 +719,27 @@ public class UnitAttacker : MonoBehaviour
         return true;
     }
 
+    /// <summary>아군 지정 액티브(SkillLevel.needsAllyClick, 초월 신문철 엄마간식) — 고른 내 아군(자기 가능)에게 효과를 건다. 쿨 중·남의 유닛이면 이유를 돌려주고 false.</summary>
+    public bool TryCastActiveOnAlly(SkillData skill, UnitIdentity ally, out string failReason)
+    {
+        failReason = null;
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (skill == null || unitData == null || skill.triggerType != SkillTriggerType.ActiveButton) { failReason = "쓸 수 없는 스킬입니다."; return false; }
+        if (ally == null || identity == null || ally.OwnerId != identity.OwnerId) { failReason = "내 아군 유닛을 골라야 합니다."; return false; }
+        SkillLevel level = CurrentSkillLevel(skill);
+        if (level == null || level.effects == null || level.effects.Count == 0) { failReason = "아직 효과가 없는 스킬입니다."; return false; }
+        SkillRuntimeState state = GetRuntimeState(skill);
+        float remaining = state.activeReadyAt - Time.time;
+        if (remaining > 0f) { failReason = $"쿨타임 중입니다. ({Mathf.CeilToInt(remaining)}초)"; return false; }
+
+        state.activeReadyAt = Time.time + Mathf.Max(0.01f, level.cooldown);
+        SkillTelemetry.Cast(unitData, skill);
+        SkillSfx.Cast(unitData, skill, transform.position);
+        PulseSphereArt();
+        foreach (SkillEffect effect in level.effects) if (effect != null) ApplyToAlly(effect, ally, null);
+        return true;
+    }
+
     /// <summary>대상 지정 액티브(SkillLevel.needsTargetClick, 초월 강재규 단일도킹) — 고른 적이 주 대상. 사거리 밖·쿨 중이면 이유를 돌려주고 false.</summary>
     public bool TryCastActiveOn(SkillData skill, EnemyDummy target, out string failReason)
     {
@@ -1767,7 +1788,7 @@ public class UnitAttacker : MonoBehaviour
         return debuffIdScratch.Count;
     }
 
-    float DamagePassiveFactor(EnemyDummy target) => BossDamageFactor(target) * AllyDebuffDamageFactor() * GrowthDamageFactor();
+    float DamagePassiveFactor(EnemyDummy target) => BossDamageFactor(target) * StoryDamageFactor(target) * AllyDebuffDamageFactor() * GrowthDamageFactor() * (1f + attackDamageStack);
 
     // 만성피로(SelfStunRefillLifeGauge) — 자기 스턴 동안 공격·스킬이 멈추고, 끝나면 체력 게이지가 즉시 가득 찬다.
     public const string SelfStunBuffId = "SELF_STUN";
@@ -1868,6 +1889,84 @@ public class UnitAttacker : MonoBehaviour
         if (talentShredUntil.Count > 64) talentShredUntil.Clear();
         talentShredUntil[target] = Time.time + 4.9f;
         target.Aid1ArmorShredFor(amount, 5f);
+    }
+
+    // 스토리 적 상대 피해(SkillEffectKind.StoryDamageMultiplier, 초월 황준석 「믿음직한도움」) — PointValue ≥ 200(스토리·보스)인 적에게 ×multiplier. 보잡(BossDamageFactor)과 같은 캐시 방식.
+    UnitData storyMultiplierFor;
+    float storyMultiplier = 1f;
+    float StoryDamageFactor(EnemyDummy target)
+    {
+        if (target == null || target.PointValue < 200f) return 1f;
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null) return 1f;
+        if (storyMultiplierFor != unitData)
+        {
+            storyMultiplierFor = unitData;
+            storyMultiplier = 1f;
+            int count = BaseSkillCount(unitData);
+            for (int i = 0; i < count; i++)
+            {
+                SkillData skill = ResolveSkillAt(unitData, i);
+                if (skill == null || skill.levels == null || skill.levels.Count == 0 || skill.levels[0].effects == null) continue;
+                foreach (SkillEffect effect in skill.levels[0].effects)
+                    if (effect != null && effect.kind == SkillEffectKind.StoryDamageMultiplier && effect.multiplier > 0f) storyMultiplier *= effect.multiplier;
+            }
+        }
+        return storyMultiplier;
+    }
+
+    // 스노우볼(SkillEffectKind.AttackDamageStack, 초월 신문철) — 평타마다 최종 피해 +stackPerHit 누적(상한 stackCap), 마지막 평타 뒤 stackResetSeconds초면 0.
+    float attackDamageStack, attackDamageStackResetAt;
+    public float AttackDamageStackValue => attackDamageStack;
+
+    void AddAttackDamageStack(SkillEffect effect)
+    {
+        attackDamageStack = Mathf.Min(effect.stackCap, attackDamageStack + effect.stackPerHit);
+        attackDamageStackResetAt = Time.time + effect.stackResetSeconds;
+    }
+
+    void TickAttackDamageStack()
+    {
+        if (attackDamageStack <= 0f || Time.time < attackDamageStackResetAt) return;
+        attackDamageStack = 0f;
+    }
+
+    // 준석의담판(SkillEffectKind.GoldPlusBonus, 초월 황준석) — 이 유닛이 살아 있는 동안 주인의 처치 골드 배율을 올려 두었다가 사라지면 되돌린다.
+    // 주인·데이터는 소환 뒤에야 붙으므로(Awake 캐시 금지) Update에서 처음 보이는 순간에 건다.
+    float appliedGoldPlus;
+    PlayerContext goldPlusContext;
+
+    float GoldPlusBonusOf(UnitData unitData)
+    {
+        float total = 0f;
+        int count = BaseSkillCount(unitData);
+        for (int i = 0; i < count; i++)
+        {
+            SkillData skill = ResolveSkillAt(unitData, i);
+            if (skill == null || skill.levels == null || skill.levels.Count == 0 || skill.levels[0].effects == null) continue;
+            foreach (SkillEffect effect in skill.levels[0].effects)
+                if (effect != null && effect.kind == SkillEffectKind.GoldPlusBonus) total += effect.multiplier;
+        }
+        return total;
+    }
+
+    void TickGoldPlusBonus()
+    {
+        if (appliedGoldPlus != 0f || owner == null || identity == null || identity.Data == null || !GameAuthority.IsServer) return;
+        float bonus = GoldPlusBonusOf(identity.Data);
+        if (bonus <= 0f) { appliedGoldPlus = float.Epsilon; return; }   // 이 유닛엔 없다 — 다시 안 훑는다
+        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        if (context == null || context.GoldWallet == null) return;
+        goldPlusContext = context;
+        appliedGoldPlus = bonus;
+        context.GoldWallet.AdjustGoldPlus(bonus);
+    }
+
+    void RemoveGoldPlusBonus()
+    {
+        if (appliedGoldPlus > 0.0001f && goldPlusContext != null && goldPlusContext.GoldWallet != null) goldPlusContext.GoldWallet.AdjustGoldPlus(-appliedGoldPlus);
+        appliedGoldPlus = 0f;
+        goldPlusContext = null;
     }
 
     // 무시무시한성장속도(DamageGrowthOverTime) — 이 유닛이 생긴 뒤 흐른 시간 비례 피해 증가.
@@ -2270,12 +2369,14 @@ public class UnitAttacker : MonoBehaviour
         if (effect.kind == SkillEffectKind.FormChange) { BeginGunForm(effect); return; }
         if (effect.kind == SkillEffectKind.Knockback) { KnockBack(primaryTarget, effect); return; }
         if (effect.kind == SkillEffectKind.AttackSpeedStack) { AddAttackSpeedStack(effect); return; }
+        if (effect.kind == SkillEffectKind.AttackDamageStack) { AddAttackDamageStack(effect); return; }
         if (effect.kind == SkillEffectKind.SelfStunRefillLifeGauge) { BeginSelfStun(effect.duration, effect.multiplier > 0f); return; }
         // 아군에게 스킬 빌려주기·보스 배율은 오라/패시브로만 쓴다(여기서는 할 일 없음).
         if (effect.kind == SkillEffectKind.GrantSkillToAllies || effect.kind == SkillEffectKind.BossDamageMultiplier
             || effect.kind == SkillEffectKind.SplashDamageMultiplier || effect.kind == SkillEffectKind.AllyMoveSpeedDebuff
             || effect.kind == SkillEffectKind.DamagePerAllyDebuff || effect.kind == SkillEffectKind.DamageGrowthOverTime
-            || effect.kind == SkillEffectKind.AllySkillDamageBonus || effect.kind == SkillEffectKind.DispelAllyDebuffs) return;
+            || effect.kind == SkillEffectKind.AllySkillDamageBonus || effect.kind == SkillEffectKind.DispelAllyDebuffs
+            || effect.kind == SkillEffectKind.GoldPlusBonus || effect.kind == SkillEffectKind.StoryDamageMultiplier) return;
 
         // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
         if (effect.lineLength > 0f && effect.zoneTickInterval <= 0f)
@@ -3035,6 +3136,7 @@ public class UnitAttacker : MonoBehaviour
     void OnDestroy()
     {
         if (upgrades != null) upgrades.OnLevelChanged -= HandleUpgradesChanged;
+        RemoveGoldPlusBonus();
 
         // ⚠️ 2026-09-06 추가(오라 무한누적 근본수정) — EnemyAuraCaster.OnDestroy와 같은
         // 이유: 이 유닛이 죽는 순간까지 걸어둔 오라 지속효과를 전부 되돌린다. 안 그러면
@@ -3066,6 +3168,8 @@ public class UnitAttacker : MonoBehaviour
         TickGaugeRegen();
         TickMoveSpeedDebuff();
         TickAttackSpeedStack();
+        TickAttackDamageStack();
+        TickGoldPlusBonus();
         UpdateSkillCooldown();
         TickEnterRangeSkills();
         if (TickSelfStun()) { attackTimer = Mathf.Max(attackTimer, 0.05f); return; }   // 만성피로 — 자기 스턴 중엔 공격·스킬 정지

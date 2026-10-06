@@ -27,6 +27,12 @@ public class GoldWallet : MonoBehaviour
         GoldPlus += amount;
     }
 
+    /// <summary>유닛 스킬(초월 황준석 준석의담판)이 올린 배율을 되돌릴 때처럼 음수도 받는다. 0 아래로는 안 내려간다.</summary>
+    public void AdjustGoldPlus(float delta)
+    {
+        GoldPlus = Mathf.Max(0f, GoldPlus + delta);
+    }
+
     public event System.Action<int> OnGoldChanged;
 
     void Awake()
