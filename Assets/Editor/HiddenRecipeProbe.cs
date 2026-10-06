@@ -50,4 +50,26 @@ static class HiddenRecipeProbe
         var recipe = AssetDatabase.LoadAssetAtPath<CombineRecipe>($"Assets/Data/Recipes/{name}.asset");
         return recipe != null && RecipeLocator.Locate(recipe) ? $"✅ {name} 줄로 카메라 이동" : $"❌ {name} 줄 인형을 못 찾음";
     }
+    // 「이름 조합」 문구 점검 — 재료를 세워 주고 「나나미 치아키 조합」(다른세계)·「강재규 AP 조합」(초월)을 친다(밑줄 정규화 수정 확인).
+    static string NamePhrases()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        var box = Object.FindFirstObjectByType<GameChatBox>();
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        var sb = new StringBuilder();
+        foreach ((string recipeName, string phrase) in new[] { ("다른세계_나나미_치아키", "나나미 치아키 조합"), ("초월_강재규_AP", "강재규 AP 조합") })
+        {
+            var recipe = AssetDatabase.LoadAssetAtPath<CombineRecipe>($"Assets/Data/Recipes/{recipeName}.asset");
+            if (recipe == null) { sb.AppendLine($"{recipeName}: 식 없음"); continue; }
+            int before = UnitIdentity.Active.Count(u => u != null && u.Data == recipe.result && u.OwnerId == 0);
+            foreach (RecipeIngredient ing in recipe.ingredients)
+                if (ing.unit != null)
+                    for (int k = 0; k < Mathf.Max(1, ing.count); k++)
+                        spawner.Spawn(ing.unit, LaneMarker.Get(0) != null ? LaneMarker.Get(0).TakeSpawnPosition(ing.unit) : Vector3.zero, 0);
+            string message = box.TryExecuteCode(0, phrase);
+            int after = UnitIdentity.Active.Count(u => u != null && u.Data == recipe.result && u.OwnerId == 0);
+            sb.AppendLine($"「{phrase}」 → {message ?? "(코드 아님)"} · 결과 {recipe.result.unitName} {before}→{after}");
+        }
+        return sb.ToString();
+    }
 }

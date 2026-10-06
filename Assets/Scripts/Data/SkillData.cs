@@ -280,6 +280,18 @@ public enum SkillEffectKind
     AllyMoveSpeedDebuff,
     // 스플래시(평타 광역) 피해 배율(패시브, multiplier = 곱, 1.5 = +50%). 주 대상 평타는 그대로, 범위 안 다른 적에게만. 원작 근거 없음 — 제안값.
     SplashDamageMultiplier,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 양재모 「간호학과대표」 — 사장님 스킬) — 직렬화 순서를 지킨다.
+    // 평타 한 대마다 자기 공속이 stackPerHit(0.01 = +1%)씩 쌓인다(상한 stackCap, 마지막 평타 뒤 stackResetSeconds초 안 치면 0으로 초기화).
+    // OnHitChance(확률 1) 스킬에 Self로 단다. 원작 근거 없음 — 제안값(원작 공속은 고정 오라뿐).
+    AttackSpeedStack,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 강재규 「상호파정보보완관」 — 사장님 스킬) — 직렬화 순서를 지킨다.
+    // 아군발 디버프(AllyMoveSpeedDebuff 등)를 이 유닛이 몇 가지 받고 있는지 세어 그만큼 최종 피해 증가(패시브, Self):
+    // 피해 ×(1 + multiplier × 개수), 상한 bonus(예: 0.6 = +60%). 최윤서 강화로 꺼진 디버프는 세지 않는다. 평타·스킬·스플래시 모두. 원작 근거 없음 — 제안값.
+    DamagePerAllyDebuff,
+    // 만성피로: 발동하면 자기 자신이 duration초 스턴(공격·스킬 정지)에 걸렸다가, 끝나면 체력 게이지(Life)가 즉시 가득 찬다. target은 Self.
+    SelfStunRefillLifeGauge,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -530,6 +542,11 @@ public class SkillEffect
     // armorIgnoreRequiresBuff가 비어 있지 않으면 시전자에게 그 버프가 있을 때만 적용(최윤서 강화 = 영구 버프 YOONSEO_ENHANCED).
     [Range(0f, 1f)] public float armorIgnoreRatio;
     public string armorIgnoreRequiresBuff = "";
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 양재모) — AttackSpeedStack 전용: 평타 1타당 쌓이는 비율(0.01 = +1%) · 상한(1.0 = +100%) · 무공격 초기화 시간(초).
+    public float stackPerHit = 0.01f;
+    public float stackCap = 1f;
+    public float stackResetSeconds = 3f;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에

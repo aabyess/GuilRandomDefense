@@ -1370,6 +1370,28 @@ public class UnitAttacker : MonoBehaviour
         }
     }
 
+    // 간호학과대표(SkillEffectKind.AttackSpeedStack) — 평타마다 공속 +stackPerHit 누적(상한 stackCap), 마지막 평타 뒤 stackResetSeconds초 지나면 0.
+    // 값은 오라 레지스트리(버프 id 하나, AttackSpeedBuffPercent)에 매번 다시 적는다 — 다른 공속 오라와는 곱으로 겹친다.
+    const string AttackSpeedStackId = "ATTACK_SPEED_STACK";
+    float attackSpeedStack, attackSpeedStackResetAt;
+
+    void AddAttackSpeedStack(SkillEffect effect)
+    {
+        attackSpeedStack = Mathf.Min(effect.stackCap, attackSpeedStack + effect.stackPerHit);
+        attackSpeedStackResetAt = Time.time + effect.stackResetSeconds;
+        RemoveAuraBonus(this, SkillEffectKind.AttackSpeedBuffPercent, AttackSpeedStackId);
+        AddAuraBonus(this, SkillEffectKind.AttackSpeedBuffPercent, AttackSpeedStackId, attackSpeedStack);
+    }
+
+    public float AttackSpeedStackValue => attackSpeedStack;
+
+    void TickAttackSpeedStack()
+    {
+        if (attackSpeedStack <= 0f || Time.time < attackSpeedStackResetAt) return;
+        attackSpeedStack = 0f;
+        RemoveAuraBonus(this, SkillEffectKind.AttackSpeedBuffPercent, AttackSpeedStackId);
+    }
+
     // 보잡(SkillEffectKind.BossDamageMultiplier) — 이 유닛 스킬 중 패시브 배율의 곱. 보스(EnemyDummy.IsBoss) 상대 평타·스킬 최종 피해에 곱한다.
     // 유닛 종류가 바뀔 때만 다시 센다(Awake 캐시 금지 — identity.Data가 늦게 세워진다).
     UnitData bossMultiplierFor;
@@ -1394,6 +1416,78 @@ public class UnitAttacker : MonoBehaviour
             }
         }
         return bossMultiplier;
+    }
+
+    // 아군발 디버프 개수 비례 피해(SkillEffectKind.DamagePerAllyDebuff, 초월 강재규) — 패시브 비율·상한을 스킬에서 읽어 둔다.
+    UnitData debuffRateFor;
+    float debuffRate, debuffCap;
+
+    float AllyDebuffDamageFactor()
+    {
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null || auraBonuses.Count == 0) return 1f;
+        if (debuffRateFor != unitData)
+        {
+            debuffRateFor = unitData;
+            debuffRate = 0f; debuffCap = 0f;
+            int count = BaseSkillCount(unitData);
+            for (int i = 0; i < count; i++)
+            {
+                SkillData skill = ResolveSkillAt(unitData, i);
+                if (skill == null || skill.levels == null || skill.levels.Count == 0 || skill.levels[0].effects == null) continue;
+                foreach (SkillEffect effect in skill.levels[0].effects)
+                    if (effect != null && effect.kind == SkillEffectKind.DamagePerAllyDebuff) { debuffRate += effect.multiplier; debuffCap = Mathf.Max(debuffCap, effect.bonus); }
+            }
+        }
+        if (debuffRate <= 0f) return 1f;
+        int debuffs = CountAllyDebuffs();
+        if (debuffs == 0) return 1f;
+        float extra = debuffRate * debuffs;
+        if (debuffCap > 0f) extra = Mathf.Min(extra, debuffCap);
+        return 1f + extra;
+    }
+
+    static readonly HashSet<string> debuffIdScratch = new HashSet<string>();
+
+    // 받고 있는 아군발 디버프 가짓수(같은 ID는 하나) — 준 쪽이 사라졌거나 최윤서 강화로 꺼진 건 세지 않는다.
+    public int CountAllyDebuffs()
+    {
+        debuffIdScratch.Clear();
+        for (int i = 0; i < auraBonuses.Count; i++)
+        {
+            AuraBonus b = auraBonuses[i];
+            if (b.source == null || b.kind != SkillEffectKind.AllyMoveSpeedDebuff) continue;
+            if (b.source is UnitAttacker debuffer && debuffer.YoonseoEnhanced) continue;
+            debuffIdScratch.Add(b.id);
+        }
+        return debuffIdScratch.Count;
+    }
+
+    float DamagePassiveFactor(EnemyDummy target) => BossDamageFactor(target) * AllyDebuffDamageFactor();
+
+    // 만성피로(SelfStunRefillLifeGauge) — 자기 스턴 동안 공격·스킬이 멈추고, 끝나면 체력 게이지가 즉시 가득 찬다.
+    public const string SelfStunBuffId = "SELF_STUN";
+    float selfStunUntil;
+    bool selfStunActive;
+    public bool IsSelfStunned => Time.time < selfStunUntil;
+
+    void BeginSelfStun(float duration)
+    {
+        if (duration <= 0f) return;
+        selfStunUntil = Mathf.Max(selfStunUntil, Time.time + duration);
+        selfStunActive = true;
+        AddBuff(SelfStunBuffId, duration);
+    }
+
+    // Update 맨 앞에서: 스턴이 끝난 순간 게이지를 채운다(true면 아직 스턴 중 — 호출한 쪽이 공격·스킬을 건너뛴다).
+    bool TickSelfStun()
+    {
+        if (!selfStunActive) return false;
+        if (Time.time < selfStunUntil) return true;
+        selfStunActive = false;
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData != null) { lifeGaugeCounter = LifeGaugeCap(unitData) == int.MaxValue ? lifeGaugeCounter : LifeGaugeCap(unitData); lifeGaugeInitialized = true; }
+        return false;
     }
 
     // 폭발증폭(SkillEffectKind.SplashDamageMultiplier) — 이 유닛 스킬 중 패시브 배율의 곱. 평타 광역(ApplyAttackSplash) 피해에만 곱한다.
@@ -1782,9 +1876,12 @@ public class UnitAttacker : MonoBehaviour
     {
         // 소환(최상호 구일) — 대상이 없다. 확률·쿨다운은 위(CastSkillLevel·평타 확률 발동)가 이미 판정했다.
         if (effect.kind == SkillEffectKind.SummonUnit) { SummonFor(effect); return; }
+        if (effect.kind == SkillEffectKind.AttackSpeedStack) { AddAttackSpeedStack(effect); return; }
+        if (effect.kind == SkillEffectKind.SelfStunRefillLifeGauge) { BeginSelfStun(effect.duration); return; }
         // 아군에게 스킬 빌려주기·보스 배율은 오라/패시브로만 쓴다(여기서는 할 일 없음).
         if (effect.kind == SkillEffectKind.GrantSkillToAllies || effect.kind == SkillEffectKind.BossDamageMultiplier
-            || effect.kind == SkillEffectKind.SplashDamageMultiplier || effect.kind == SkillEffectKind.AllyMoveSpeedDebuff) return;
+            || effect.kind == SkillEffectKind.SplashDamageMultiplier || effect.kind == SkillEffectKind.AllyMoveSpeedDebuff
+            || effect.kind == SkillEffectKind.DamagePerAllyDebuff) return;
 
         // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
         if (effect.lineLength > 0f && effect.zoneTickInterval <= 0f)
@@ -2266,7 +2363,7 @@ public class UnitAttacker : MonoBehaviour
         // 근사다. 거프 4행(Garp_AttackDamage #5·#6·#7, 값×(1+0.12×버프개수))이 이 factor로
         // 실제로 걸린다.
         amount *= 1f + effect.casterBuffCountFactor * CountCasterBuffs();
-        amount *= BossDamageFactor(target);   // 보잡(BossDamageMultiplier) — 보스 상대 ×배율
+        amount *= DamagePassiveFactor(target);   // 보잡(BossDamageMultiplier) × 아군발 디버프 개수 비례(DamagePerAllyDebuff)
         if (amount <= 0f) return;
 
         // ⚠️ 평타(DamageTypeOf/AttackTypeOf)가 아니라 이 효과 자신의 damageType/attackType을
@@ -2543,8 +2640,10 @@ public class UnitAttacker : MonoBehaviour
     {
         TickGaugeRegen();
         TickMoveSpeedDebuff();
+        TickAttackSpeedStack();
         UpdateSkillCooldown();
         TickEnterRangeSkills();
+        if (TickSelfStun()) { attackTimer = Mathf.Max(attackTimer, 0.05f); return; }   // 만성피로 — 자기 스턴 중엔 공격·스킬 정지
 
         // ⚠️ 2026-09-30(PM 승인) — 예전엔 `attackTimer = AttackInterval`이라 프레임이 넘긴 시간을 버렸다: 평타 주기가
         // 프레임에 매여 설정보다 길었다(1배속 0.38→0.391 +2.8%, 2배속 +5.4%). 이제 넘친 시간(≤0)을 다음 주기에서 뺀다.
@@ -2570,7 +2669,7 @@ public class UnitAttacker : MonoBehaviour
             // isAbilityDamage: false — 평타는 원작에 UNIVERSAL이 없다(EnemyDummy.TakeDamage
             // 문서 참고). 로스터 damageType이 AP인 유닛이라도 평타로 방어를 무시하면 안 된다.
             float basicHpBefore = target.Hp;
-            target.TakeDamage(AttackDamage * BossDamageFactor(target), DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
+            target.TakeDamage(AttackDamage * DamagePassiveFactor(target), DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
                               armorIgnoreRatio: 0f, isAbilityDamage: false);
             SkillTelemetry.Damage(identity != null ? identity.Data : null, "평타", target, basicHpBefore);
             ApplyAttackSplash(target);
@@ -2621,7 +2720,7 @@ public class UnitAttacker : MonoBehaviour
         foreach (EnemyDummy enemy in inRange)
         {
             float hpBefore = enemy.Hp;
-            enemy.TakeDamage(damage * BossDamageFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false);
+            enemy.TakeDamage(damage * DamagePassiveFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false);
             SkillTelemetry.Damage(unitData, "평타다중", enemy, hpBefore);
         }
         ListPool<EnemyDummy>.Release(inRange);
@@ -2651,9 +2750,9 @@ public class UnitAttacker : MonoBehaviour
             float distance = Vector3.Distance(enemy.transform.position, center);
             float hpBefore = enemy.Hp;
             if (distance <= splash)
-                enemy.TakeDamage(damage * BossDamageFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false);
+                enemy.TakeDamage(damage * DamagePassiveFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false);
             if (distance <= cleave)
-                enemy.TakeDamage(damage * unitData.attackCleaveFactor * BossDamageFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 1f, isAbilityDamage: false);
+                enemy.TakeDamage(damage * unitData.attackCleaveFactor * DamagePassiveFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 1f, isAbilityDamage: false);
             SkillTelemetry.Damage(unitData, "평타광역", enemy, hpBefore);
             SkillTelemetry.SplashHit(unitData);
         }
