@@ -110,4 +110,32 @@ static class UpgradeBuyProbe
         return $"각 칸 {n}번씩 — 성공 {bought}번 · 엔 {g0} → {ctx.GoldWallet.Gold}";
     }
     static string Buy5() => BuyN(5);
+
+    // 가격 표: 칸마다 1렙·중간·마지막 가격(트랙 데이터) + 칸 툴팁 한 칸 + 그림용으로 툴팁을 띄운다
+    static string PriceTable()
+    {
+        if (shop == null) shop = Object.FindObjectsByType<UnitUpgradeShop>(FindObjectsSortMode.None).FirstOrDefault(s => s.SlotCount >= 8 && s.name.Contains("Lane1_유닛강화소"));
+        var so = new SerializedObject(shop); var tp = so.FindProperty("tracks");
+        var sb = new StringBuilder();
+        for (int i = 0; i < tp.arraySize; i++)
+        {
+            var t = (UnitUpgradeTrackData)tp.GetArrayElementAtIndex(i).objectReferenceValue;
+            int last = t.maxLevel, mid = (last + 1) / 2;
+            sb.AppendLine($"  {t.trackName,-14} 최대 {last}렙 · 1렙 {t.CostForLevel(0)} · 중간({mid}렙) {t.CostForLevel(mid - 1)} · 마지막({last}렙) {t.CostForLevel(last - 1)}");
+        }
+        return sb.ToString();
+    }
+    static string ShowTooltip()
+    {
+        if (shop == null) shop = Object.FindObjectsByType<UnitUpgradeShop>(FindObjectsSortMode.None).FirstOrDefault(s => s.SlotCount >= 8 && s.name.Contains("Lane1_유닛강화소"));
+        Object.FindFirstObjectByType<SelectionManager>().SelectOnly(shop.GetComponent<Selectable>());
+        return "선택";
+    }
+    static string Hover()
+    {
+        var hud = Object.FindFirstObjectByType<GameHud>();
+        var m = typeof(GameHud).GetMethod("ShowHoveredTooltipNow", BindingFlags.NonPublic | BindingFlags.Instance);
+        m.Invoke(hud, new object[] { 2 });   // 화면 칸 2 = E (희귀함)
+        return "툴팁: " + shop.GetSlotTooltip(2).Replace("\n", " | ");
+    }
 }

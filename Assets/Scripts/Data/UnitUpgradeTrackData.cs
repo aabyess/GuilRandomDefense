@@ -83,8 +83,12 @@ public class UnitUpgradeTrackData : ScriptableObject
     public float statLevel1Bonus;
     public float statBonusGrowthPerLevel;
 
+    // ⚠️ 2026-10-07 정정(친구 피드백 「업그레이드 가격이 한 가격으로 고정」, 사장님 확정 「원작 디코드 식」): 원작 war3map.w3q는
+    // 레벨 L(1부터) 비용 = gglb(base) + gglm(increment) × (L−1)이다(예: 전설 R000 70+50 → 1렙 70·2렙 120·…·21렙 1070).
+    // 옛 코드는 「1렙만 base, 그 뒤 전부 increment 고정」으로 읽어 모든 레벨이 한 가격이었다. level = 지금 레벨(0이면 1렙을 사는 값).
+    // 이 필드 이름은 직렬화 키라 그대로(costBase = gglb · costGrowthPerLevel = gglm).
     public int CostForLevel(int level) =>
-        level <= 0 ? Mathf.Max(0, costBase) : Mathf.Max(0, Mathf.RoundToInt(costGrowthPerLevel));
+        Mathf.Max(0, Mathf.RoundToInt(costBase + costGrowthPerLevel * Mathf.Max(0, level)));
 
     // 2026-09-06 정정 — 예전 이름 MultiplierForLevel, "공격력 배율"로 잘못 쓰였다(구현담당2
     // 발견, PM 확인). 메서드는 직렬화되지 않으니 이름을 바로 고쳤다. statLevel1Multiplier가
