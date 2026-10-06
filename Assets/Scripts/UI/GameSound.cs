@@ -141,8 +141,13 @@ public static class GameSound
     }
 
     /// <summary>이 PC에서 바로 낸다(원격에서 받은 소리도 여기로).</summary>
+    // 사장님 10-06 「유닛이 공격하거나 적이 죽을 때 효과음 없애자 — 배경 브금이 안 들린다」: 평타 적중 셋·일반 적 처치는 끈다(보스 처치는 남김).
+    //   자리·파일은 그대로 두고 여기서만 막는다 — 다시 켜려면 이 목록에서 빼면 된다.
+    static readonly HashSet<GameSoundId> Muted = new HashSet<GameSoundId> { GameSoundId.HitMelee, GameSoundId.HitRanged, GameSoundId.HitMagic, GameSoundId.EnemyDeath };
+
     public static void Play(GameSoundId id)
     {
+        if (Muted.Contains(id)) return;
         if (Slots.ContainsKey(id))
         {
             if (TryPass(id)) PlayVariant(id);
@@ -187,6 +192,7 @@ public static class GameSound
 
     static void PlayVariant(GameSoundId id)
     {
+        if (Muted.Contains(id)) return;   // 친구 화면·전체 알림 경로도 같이 막는다
         if (!Enabled) return;
         Pool pool = PoolFor(id);
         if (pool.clips.Length == 0) return;
