@@ -435,7 +435,7 @@ public static class MapLayout
     const float CombineBoardReferenceHeight = 30f;   // 위 1373·1307.5·978.75를 잰 때의 유닛 키
     // ⚠️ 10-03 Repair 실측: 자연 폭이 1373이 아니라 1403.1(×1.6 = 2245.0)이었다(그 사이 어느 열에 재료 칸이 하나 늘었다 — 2%가 조용히 줄어 맞춰졌다).
     //    그래서 기준 폭을 1404로 고친다(×1.6 = 2246.4, 여유 1.4).
-    const float CombineSizeX = 1404f * CombineBoardScale;
+    const float CombineSizeX = 1436f * CombineBoardScale;   // 10-06 히든 여은서 재료 6칸(9열 폭 315→364)이 들어가도록 1404→1436(가로 여유 5 남김)
 
     // 🔴 2026-09-24 사장님 지시 「제일 긴 열 맞춰서 세로 길이 줄여주고」.
     //
