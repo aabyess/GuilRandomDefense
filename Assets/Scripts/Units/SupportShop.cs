@@ -134,6 +134,9 @@ public class SupportShop : MonoBehaviour, ILaneShop
     // CanCast와 같은 조건을 그대로 따라가며 "어디서 막혔는지"만 문구로 뽑는다(GamblingShop.
     // UnavailableReason과 같은 이유 — GetSlotView가 0.4초마다 CanCast만 부르는 자리라
     // 문자열 조립은 클릭이 실제로 실패했을 때만 한다).
+    public string GetUnavailableReason(int index) =>
+        index >= 0 && index < skills.Count && skills[index] != null ? CastUnavailableReason(skills[index], OwnerContext) : null;
+
     string CastUnavailableReason(SupportSkillData skill, PlayerContext context)
     {
         if (Time.time < GetCooldownUntil(skill)) return "재사용 대기 중입니다.";

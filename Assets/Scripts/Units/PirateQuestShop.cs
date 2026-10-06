@@ -169,6 +169,21 @@ public class PirateQuestShop : MonoBehaviour
         return true;
     }
 
+    public string GetUnavailableReason(int index)
+    {
+        if (index < 0 || index >= quests.Count || quests[index] == null) return null;
+        PirateQuestData quest = quests[index];
+        PirateQuestManager manager = PirateQuestManager.Instance;
+        if (manager == null) return null;
+        if (manager.IsActive(quest, owner.OwnerId)) return $"{quest.questName}: 이미 진행 중입니다.";
+        int round = manager.CurrentRound;
+        if ((quest.minRound > 0 && round < quest.minRound) || (quest.maxRound > 0 && round > quest.maxRound))
+            return $"{quest.questName}: 지금은 열리지 않습니다 ({quest.minRound}~{quest.maxRound}라운드).";
+        if (slotState[index].stock <= 0)
+            return $"{quest.questName}: 품절 — {Mathf.Max(0f, slotState[index].restockTimer):F0}초 뒤 재입고";
+        return "골드가 부족합니다!";
+    }
+
     bool CanBuy(int index)
     {
         PirateQuestData quest = quests[index];

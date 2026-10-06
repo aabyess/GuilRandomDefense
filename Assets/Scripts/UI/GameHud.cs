@@ -2857,7 +2857,13 @@ public class GameHud : MonoBehaviour
         if (logicalIndex < 0) return;
 
         LaneShopSlotView view = currentShop.GetSlotView(logicalIndex);
-        if (string.IsNullOrEmpty(view.label) || !view.available) return;
+        if (string.IsNullOrEmpty(view.label)) return;
+        if (!view.available)
+        {
+            // 2026-10-06 사장님: 못 쓰는 칸을 눌렀을 때 아무 반응이 없으면 먹통으로 보인다 → 왜 못 쓰는지 띄운다.
+            PlayerNotification.Show(LocalPlayer.LocalPlayerId, currentShop.GetUnavailableReason(logicalIndex) ?? "지금은 사용할 수 없습니다.");
+            return;
+        }
 
         if (view.targetKind == LaneShopTargetKind.None)
         {

@@ -115,6 +115,21 @@ public class VoyageLogShop : MonoBehaviour, ILaneShop
         return new LaneShopSlotView(cachedLabel, LogColor, CanBuy(), LaneShopTargetKind.None);
     }
 
+    public string GetUnavailableReason(int index)
+    {
+        if (index == SearchSlot)
+        {
+            TreasureHunt hunt = TreasureHunt.Instance;
+            return hunt == null ? null : $"탐색 재사용 대기 중입니다 — {Mathf.CeilToInt(hunt.CooldownRemaining(owner.OwnerId))}초 남음";
+        }
+        if (index != GambleSlot) return null;
+        PlayerContext context = OwnerContext;
+        if (context?.GoldWallet == null || context.ResourceWallet == null) return null;
+        if (AvailableStock(context) <= 0) return "남은 도박 횟수가 없습니다. (6·9라운드 스토리 클리어 시 1회씩)";
+        if (context.GoldWallet.Gold < goldCost) return "골드가 부족합니다!";
+        return "목재가 부족합니다!";
+    }
+
     public string GetSlotTooltip(int index)
     {
         if (index == SearchSlot) return GetSearchTooltip();

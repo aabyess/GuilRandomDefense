@@ -78,6 +78,10 @@ public interface ILaneShop
 {
     int SlotCount { get; }
 
+    // 못 쓰는 칸(available == false)을 눌렀을 때 띄울 이유(사장님 10-06 「눌렀는데 아무 반응 없으면 먹통으로 보인다」).
+    // 판정만 하고 아무것도 바꾸지 않는다. 모르면 null — HUD가 일반 문구를 띄운다.
+    string GetUnavailableReason(int index) => null;
+
     LaneShopSlotView GetSlotView(int index);
 
     // 호버할 때만 불린다 — 문자열 조립 비용은 여기서만 든다.

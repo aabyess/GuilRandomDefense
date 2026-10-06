@@ -129,6 +129,18 @@ public class AttackTypeUpgradeShop : MonoBehaviour, ILaneShop
         return upgrades != null ? upgrades.Level(track) : 0;
     }
 
+    public string GetUnavailableReason(int index)
+    {
+        if (index < 0 || index >= tracks.Count || tracks[index] == null) return null;
+        AttackTypeUpgradeTrackData track = tracks[index];
+        int level = LevelOf(track);
+        if (track.maxLevel > 0 && level >= track.maxLevel) return "이미 최대 레벨입니다.";
+        PlayerContext context = OwnerContext;
+        if (context?.GoldWallet == null || context.ResourceWallet == null) return null;
+        if (context.GoldWallet.Gold < track.CostForLevel(level)) return $"골드가 부족합니다! ({track.CostForLevel(level)}엔 필요)";
+        return $"목재가 부족합니다! (목재 {track.WoodCostForLevel(level)}개 필요)";
+    }
+
     bool CanUpgrade(AttackTypeUpgradeTrackData track, int level)
     {
         if (track.maxLevel > 0 && level >= track.maxLevel) return false;

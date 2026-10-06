@@ -286,6 +286,19 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
         return $"특성포인트 구매\n비용: {traitPointPurchaseCost}엔\n특성포인트 1개를 즉시 받습니다 (1회 한정)";
     }
 
+    public string GetUnavailableReason(int index)
+    {
+        if (pirate != null && pirateOpen)
+            return index >= 0 && index < PirateVisibleSlots && index < pirate.SlotCount ? pirate.GetUnavailableReason(index) : null;
+        if (index == TraitPointSlotIndex)
+        {
+            PlayerContext context = OwnerContext;
+            if (context?.UnitUpgrades == null) return null;
+            return context.UnitUpgrades.HasPurchasedPoint ? "이미 구매했습니다 (1회 한정)." : "골드가 부족합니다.";
+        }
+        return UnavailableReason(OptionAt(index));
+    }
+
     bool CanPurchaseTraitPoint()
     {
         PlayerContext context = OwnerContext;

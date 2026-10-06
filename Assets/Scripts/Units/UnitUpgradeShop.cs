@@ -151,6 +151,17 @@ public class UnitUpgradeShop : MonoBehaviour, ILaneShop
         return upgrades != null ? upgrades.Level(track) : 0;
     }
 
+    public string GetUnavailableReason(int index)
+    {
+        if (index < 0 || index >= tracks.Count || tracks[index] == null) return null;
+        UnitUpgradeTrackData track = tracks[index];
+        if (!ResearchLabImplemented) return "연구소 준비 중 — 아직 강화할 수 없습니다.";
+        if (!track.hasOriginalResearch) return $"{track.trackName}: 원작에 대응하는 연구소가 없는 등급이라 강화할 수 없습니다.";
+        int level = LevelOf(track);
+        if (track.maxLevel > 0 && level >= track.maxLevel) return "이미 최대 레벨입니다.";
+        return $"골드가 부족합니다! ({track.CostForLevel(level)}엔 필요)";
+    }
+
     bool CanUpgrade(UnitUpgradeTrackData track, int level)
     {
         if (!ResearchLabImplemented) return false;   // 슬롯이 눌러도 되는 것처럼 안 보이게
