@@ -2588,6 +2588,7 @@ public class UnitAttacker : MonoBehaviour
     // 없으면(쿨다운·오라) 사거리 안에서 새로 고른다. recentAttackDamage: 이 발동을 일으킨
     // 평타의 피해량(SkillEffectBasis.ReceivedDamage 전용, 없으면 0 — UpdateSkillCooldown이
     // 그렇게 부른다).
+    bool gambleWon;   // GambleRoll 결과(이 시전 안에서만 쓴다)
     readonly Dictionary<SkillLevel, int> castCounts = new Dictionary<SkillLevel, int>();
     int currentCastIndex;
 
@@ -2626,6 +2627,9 @@ public class UnitAttacker : MonoBehaviour
             // chance를 굴린다. 그룹 있음 — 여기서 안 굴린다. 대상마다 따로 굴려야 하므로
             // ApplyToEnemy/ApplyToAlly로 미뤄서 그쪽에서 판정한다(범위 스킬이면 적마다
             // 독립된 캐스케이드가 되도록).
+            if (effect.kind == SkillEffectKind.GambleRoll) { gambleWon = Random.value < effect.multiplier; continue; }   // 베팅 굴림(영원함 김영원 아주위험한게임)
+            if (effect.gambleGate == 1 && !gambleWon) continue;
+            if (effect.gambleGate == 2 && gambleWon) continue;
             if (effect.cascadeGroup == 0 && Random.value >= effect.chance) continue;
             ApplySkillEffect(effect, range, aoeCenter, primaryTarget, recentAttackDamage, firedCascadeGroups);
         }

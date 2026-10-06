@@ -366,6 +366,10 @@ public enum SkillEffectKind
     // ⚠️ 맨 뒤에 추가(2026-10-06, 영원함 문필환 「꺽을수없는고집」 — 사장님 확정: 「광폭화」 = 광폭화 몹(B06B) 상대 강화) — 직렬화 순서를 지킨다.
     // 패시브(Self): 맞는 적이 buffId(예: B06B 신세계 광폭화)를 가졌으면 이 유닛 피해(평타·스킬)가 ×(1 + multiplier)(0.5 = ×1.5). 여러 개면 곱한다.
     DamageVsTargetBuff,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 영원함 김영원 「아주위험한게임」 — 사장님 확정 「토토 = 평타 확률 베팅, 실패 대가 = 자기 스턴」) — 직렬화 순서를 지킨다.
+    // 베팅 굴림: multiplier(0.5)의 확률로 「이김」, 아니면 「짐」. 이 효과 **뒤에 있는** 같은 시전의 효과 중 SkillEffect.gambleGate 1은 이겼을 때만, 2는 졌을 때만 나간다. 굴림은 시전마다 한 번.
+    GambleRoll,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -652,6 +656,9 @@ public class SkillEffect
     // (이번 발동 전까지 발동한 횟수, 최대 castCountCap회까지 센다. Cap 0이면 무제한). 첫 발동은 기본값, 둘째는 +castCountBonus … 0이면 꺼짐.
     public float castCountBonus;
     public int castCountCap;
+
+    // ⚠️ 맨 뒤(2026-10-06, 영원함 김영원) — GambleRoll 뒤에서만 의미: 0 = 항상, 1 = 베팅에 이겼을 때만, 2 = 졌을 때만.
+    public int gambleGate;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
