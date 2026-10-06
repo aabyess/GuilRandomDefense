@@ -10,34 +10,34 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uACF5\uC6A9_\uB514\uBC84\uD504_\uC678\uB3D9"
-  m_EditorClassIdentifier: 
-  skillName: 외동
-  description: 누구나 엮이기 싫어 도망칩니다.
+  m_Name: SkillData_공용_디버프_01
+  m_EditorClassIdentifier:
+  skillName: 01
+  description: 나이가 어려 때리기 어렵습니다.
   triggerType: 2
   levels:
   - cooldown: 0
-    triggerChance: 1
-    range: 600.0
+    triggerChance: 1.0
+    range: 0.0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId: 
-    forbiddenBuffId: 
-    selfBuffId: 
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
     effects:
-    - kind: 13
+    - kind: 14
       basis: 0
-      target: 2
+      target: 0
       damageType: 0
       attackType: 0
-      multiplier: 1.15
+      multiplier: -0.15
       bonus: 0.0
       chance: 1
       hitCount: 1
       duration: 0.0
       casterBuffCountFactor: 0.0
-      buffId: DEBUFF_외동
+      buffId: DEBUFF_01
       randMin: 1.0
       randMax: 1.0
       buffHitCharges: 0
@@ -58,15 +58,13 @@ MonoBehaviour:
       lineLength: 0.0
       lineStartRadius: 0.0
       lineEndRadius: 0.0
-    requiredTargetBuffId: 
-    forbiddenTargetBuffId: 
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0
+    targetArmorBreakAbove: 0.0
     primaryTargetCondition: 0
-    primaryTargetConditionValue: 0
+    primaryTargetConditionValue: 0.0
     exclusiveGroup: 0
-    enterRange: 0
-    requireNormalEnemyInRange: 0
-  icon: {fileID: 0}
+    enterRange: 0.0
