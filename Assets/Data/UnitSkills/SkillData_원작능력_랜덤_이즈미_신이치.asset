@@ -10,24 +10,131 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_랜덤_이즈미_신이치
-  m_EditorClassIdentifier:
-  skillName: A0H6 !슈타인베르거
-  description: '원작 랜덤전용 나루토 선인모드 - 랜덤전용(더미 경로 Trig_Naruto1 → e0CL(R랜유 대옥나선환 더미) → A0LF). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 2차 배정(트리거·더미 채널): 원작 랜덤전용 나루토 선인모드 - 랜덤전용(더미 경로 Trig_Naruto1 → e0CJ(R랜유 풍둔 나선 수리검 더미) → A0LG). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. 분리(2026-09-06, PHASE2_VALUE_MATCH_2026-09-06.md/bdfd720): A0LG(180,000)를 값 대조로 확정해 SkillData_원작능력_랜덤_이즈미_신이치_A0LG.asset으로 뗐다 — 이 파일엔 A0LF만 남았다(값겹침모호, 유예). | 정정(2026-09-30, 구현담당1 — 보스 판 실측): 이 에셋의 %체력 효과 일부는 같은 유닛 게이트 에셋 식의 「2차 배정」 사본이라(원문 트리거엔 해당 %HP 호출 없음) 이 에셋의 확률로 이중 계상된다. 보스 게이트를 걷으며 사본의 보스 분기(PV≥200/==200)가 보스에게 새로 열려서, 보스 분기 사본은 뺐다(정본은 게이트 에셋에 있다). 일반몹 분기 사본(PV<200)은 지금까지 동작대로 두고, 사본 정리는 따로. 제거한 보스 분기 사본(원래 순번·basis·계수): [(7, ''2'', ''0.01'')]. | 정정(2026-09-30, 구현담당1 — ORIGIN_ABILITY_PROVENANCE 「다른 곳에 있음」): 400000은 이 유닛 원작(h06V·h06X·h0BF)에 없는 값. 뺀 효과(basis, 값, 상수): [(''0'', ''400000.0'', ''0.0'')]'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uB79C\uB364_\uC774\uC988\uBBF8_\uC2E0\uC774\uCE58"
+  m_EditorClassIdentifier: 
+  skillName: "A0H6 !\uC288\uD0C0\uC778\uBCA0\uB974\uAC70"
+  description: "\uC6D0\uC791 \uB79C\uB364\uC804\uC6A9 \uB098\uB8E8\uD1A0 \uC120\uC778\uBAA8\uB4DC
+    - \uB79C\uB364\uC804\uC6A9(\uB354\uBBF8 \uACBD\uB85C Trig_Naruto1 \u2192 e0CL(R\uB79C\uC720
+    \uB300\uC625\uB098\uC120\uD658 \uB354\uBBF8) \u2192 A0LF). \u26A0\uFE0F \uC2A4\uD1A1
+    \uD544\uB4DC \uAC12 \uADF8\uB300\uB85C \u2014 \uD544\uB4DC \uB73B\uC774 \uBBF8\uD655\uC778\uC774\uB77C
+    \uD53C\uD574\uAC00 \uC544\uB2C8\uB77C \uB2E4\uB978 \uD6A8\uACFC(\uC2AC\uB85C\uC6B0\xB7\uC2A4\uD134\xB7\uBC84\uD504
+    \uB4F1)\uC600\uC744 \uC218 \uC788\uB2E4. \uACF5\uACA9\uD0C0\uC785 \uC6D0\uBCF8\uC774
+    [\uBBF8\uD655\uC778]\uC774\uB77C \uC774 \uC720\uB2DB \uC790\uC2E0\uC758 \uD3C9\uD0C0
+    \uD0C0\uC785\uC73C\uB85C \uB300\uC2E0\uD588\uB2E4. | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uB79C\uB364\uC804\uC6A9 \uB098\uB8E8\uD1A0 \uC120\uC778\uBAA8\uB4DC
+    - \uB79C\uB364\uC804\uC6A9(\uB354\uBBF8 \uACBD\uB85C Trig_Naruto1 \u2192 e0CJ(R\uB79C\uC720
+    \uD48D\uB454 \uB098\uC120 \uC218\uB9AC\uAC80 \uB354\uBBF8) \u2192 A0LG). \u26A0\uFE0F
+    \uC2A4\uD1A1 \uD544\uB4DC \uAC12 \uADF8\uB300\uB85C \u2014 \uD544\uB4DC \uB73B\uC774
+    \uBBF8\uD655\uC778\uC774\uB77C \uD53C\uD574\uAC00 \uC544\uB2C8\uB77C \uB2E4\uB978
+    \uD6A8\uACFC(\uC2AC\uB85C\uC6B0\xB7\uC2A4\uD134\xB7\uBC84\uD504 \uB4F1)\uC600\uC744
+    \uC218 \uC788\uB2E4. \uACF5\uACA9\uD0C0\uC785 \uC6D0\uBCF8\uC774 [\uBBF8\uD655\uC778]\uC774\uB77C
+    \uC774 \uC720\uB2DB \uC790\uC2E0\uC758 \uD3C9\uD0C0 \uD0C0\uC785\uC73C\uB85C
+    \uB300\uC2E0\uD588\uB2E4. \uBD84\uB9AC(2026-09-06, PHASE2_VALUE_MATCH_2026-09-06.md/bdfd720):
+    A0LG(180,000)\uB97C \uAC12 \uB300\uC870\uB85C \uD655\uC815\uD574 SkillData_\uC6D0\uC791\uB2A5\uB825_\uB79C\uB364_\uC774\uC988\uBBF8_\uC2E0\uC774\uCE58_A0LG.asset\uC73C\uB85C
+    \uB5D0\uB2E4 \u2014 \uC774 \uD30C\uC77C\uC5D4 A0LF\uB9CC \uB0A8\uC558\uB2E4(\uAC12\uACB9\uCE68\uBAA8\uD638,
+    \uC720\uC608). | \uC815\uC815(2026-09-30, \uAD6C\uD604\uB2F4\uB2F91 \u2014 \uBCF4\uC2A4
+    \uD310 \uC2E4\uCE21): \uC774 \uC5D0\uC14B\uC758 %\uCCB4\uB825 \uD6A8\uACFC \uC77C\uBD80\uB294
+    \uAC19\uC740 \uC720\uB2DB \uAC8C\uC774\uD2B8 \uC5D0\uC14B \uC2DD\uC758 \u300C2\uCC28
+    \uBC30\uC815\u300D \uC0AC\uBCF8\uC774\uB77C(\uC6D0\uBB38 \uD2B8\uB9AC\uAC70\uC5D4
+    \uD574\uB2F9 %HP \uD638\uCD9C \uC5C6\uC74C) \uC774 \uC5D0\uC14B\uC758 \uD655\uB960\uB85C
+    \uC774\uC911 \uACC4\uC0C1\uB41C\uB2E4. \uBCF4\uC2A4 \uAC8C\uC774\uD2B8\uB97C
+    \uAC77\uC73C\uBA70 \uC0AC\uBCF8\uC758 \uBCF4\uC2A4 \uBD84\uAE30(PV\u2265200/==200)\uAC00
+    \uBCF4\uC2A4\uC5D0\uAC8C \uC0C8\uB85C \uC5F4\uB824\uC11C, \uBCF4\uC2A4 \uBD84\uAE30
+    \uC0AC\uBCF8\uC740 \uBE90\uB2E4(\uC815\uBCF8\uC740 \uAC8C\uC774\uD2B8 \uC5D0\uC14B\uC5D0
+    \uC788\uB2E4). \uC77C\uBC18\uBAB9 \uBD84\uAE30 \uC0AC\uBCF8(PV<200)\uC740 \uC9C0\uAE08\uAE4C\uC9C0
+    \uB3D9\uC791\uB300\uB85C \uB450\uACE0, \uC0AC\uBCF8 \uC815\uB9AC\uB294 \uB530\uB85C.
+    \uC81C\uAC70\uD55C \uBCF4\uC2A4 \uBD84\uAE30 \uC0AC\uBCF8(\uC6D0\uB798 \uC21C\uBC88\xB7basis\xB7\uACC4\uC218):
+    [(7, '2', '0.01')]. | \uC815\uC815(2026-09-30, \uAD6C\uD604\uB2F4\uB2F91 \u2014
+    ORIGIN_ABILITY_PROVENANCE \u300C\uB2E4\uB978 \uACF3\uC5D0 \uC788\uC74C\u300D):
+    400000\uC740 \uC774 \uC720\uB2DB \uC6D0\uC791(h06V\xB7h06X\xB7h0BF)\uC5D0 \uC5C6\uB294
+    \uAC12. \uBE80 \uD6A8\uACFC(basis, \uAC12, \uC0C1\uC218): [('0', '400000.0',
+    '0.0')]"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.0425
-    range: 375.0
+    range: 375
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 1
       basis: 0
       target: 3
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 5.0
-      heroDuration: 5.0
+      duration: 5
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 5
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: 5d7664ba8cd8d4100aa9e8e39e57c786, type: 3}

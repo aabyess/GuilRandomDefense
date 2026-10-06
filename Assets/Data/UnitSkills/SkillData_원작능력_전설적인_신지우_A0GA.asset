@@ -10,21 +10,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_신지우_A0GA
-  m_EditorClassIdentifier:
-  skillName: A0GA 외과수술 — 아군 한 기 공속 +150% 12초(쿨 50초)
-  description: 원작 로우 h03C uabi A0GA(Auhf, Uhf1 1.5 · adur 12 · acdn 50 · aran 750 · abuf B023 · atar friend,self). 쿨다운마다 사거리 750 안 아군 한 기(시전자에서 가장 가까운)에게 공속 +150% 12초. 자동 시전으로 근사. 2026-10-06 구현담당1.
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uC2E0\uC9C0\uC6B0_A0GA"
+  m_EditorClassIdentifier: 
+  skillName: "A0GA \uC678\uACFC\uC218\uC220 \u2014 \uC544\uAD70 \uD55C \uAE30 \uACF5\uC18D
+    +150% 12\uCD08(\uCFE8 50\uCD08)"
+  description: "\uC6D0\uC791 \uB85C\uC6B0 h03C uabi A0GA(Auhf, Uhf1 1.5 \xB7 adur
+    12 \xB7 acdn 50 \xB7 aran 750 \xB7 abuf B023 \xB7 atar friend,self). \uCFE8\uB2E4\uC6B4\uB9C8\uB2E4
+    \uC0AC\uAC70\uB9AC 750 \uC548 \uC544\uAD70 \uD55C \uAE30(\uC2DC\uC804\uC790\uC5D0\uC11C
+    \uAC00\uC7A5 \uAC00\uAE4C\uC6B4)\uC5D0\uAC8C \uACF5\uC18D +150% 12\uCD08. \uC790\uB3D9
+    \uC2DC\uC804\uC73C\uB85C \uADFC\uC0AC. 2026-10-06 \uAD6C\uD604\uB2F4\uB2F91."
   triggerType: 1
   levels:
-  - cooldown: 50.0
-    triggerChance: 1.0
-    range: 750.0
+  - cooldown: 50
+    triggerChance: 1
+    range: 750
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 12
       basis: 0
@@ -32,39 +37,74 @@ MonoBehaviour:
       damageType: 0
       attackType: 0
       multiplier: 1.5
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 12.0
-      casterBuffCountFactor: 0.0
+      duration: 12
+      casterBuffCountFactor: 0
       buffId: B023
-      randMin: 1.0
-      randMax: 1.0
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 1
-      chainDamageStep: 0.0
-      zoneTickInterval: 0.0
-      zoneRadius: 0.0
-      zoneSpacing: 0.0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
       zoneAtCaster: 0
-      lineLength: 0.0
-      lineStartRadius: 0.0
-      lineEndRadius: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
     primaryTargetCondition: 0
-    primaryTargetConditionValue: 0.0
+    primaryTargetConditionValue: 0
     exclusiveGroup: 0
-    enterRange: 0.0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: e58fe80093b7844d096c3e9c501854bd, type: 3}

@@ -10,61 +10,102 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_정윤식_A001
-  m_EditorClassIdentifier:
-  skillName: A001 스탬피드 — 2초 다발 낙하(쿨 7초·반경 225)
-  description: '원작 징베 h03G A001(스탬피드): 2초 동안 10발 낙하 · 발당 150,000 · 반경 225 · 쿨 7초. 낙하 위치 분포 원문 없음 → 해석: 쿨다운마다 반경 225 안 적에게 초당 750,000 DoT 2초(=1,500,000, 중심 적 기준 상한). 2026-10-06 구현담당1.'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uC815\uC724\uC2DD_A001"
+  m_EditorClassIdentifier: 
+  skillName: "A001 \uC2A4\uD0EC\uD53C\uB4DC \u2014 2\uCD08 \uB2E4\uBC1C \uB099\uD558(\uCFE8
+    7\uCD08\xB7\uBC18\uACBD 225)"
+  description: "\uC6D0\uC791 \uC9D5\uBCA0 h03G A001(\uC2A4\uD0EC\uD53C\uB4DC): 2\uCD08
+    \uB3D9\uC548 10\uBC1C \uB099\uD558 \xB7 \uBC1C\uB2F9 150,000 \xB7 \uBC18\uACBD
+    225 \xB7 \uCFE8 7\uCD08. \uB099\uD558 \uC704\uCE58 \uBD84\uD3EC \uC6D0\uBB38
+    \uC5C6\uC74C \u2192 \uD574\uC11D: \uCFE8\uB2E4\uC6B4\uB9C8\uB2E4 \uBC18\uACBD
+    225 \uC548 \uC801\uC5D0\uAC8C \uCD08\uB2F9 750,000 DoT 2\uCD08(=1,500,000, \uC911\uC2EC
+    \uC801 \uAE30\uC900 \uC0C1\uD55C). 2026-10-06 \uAD6C\uD604\uB2F4\uB2F91."
   triggerType: 1
   levels:
-  - cooldown: 7.0
-    triggerChance: 1.0
-    range: 225.0
+  - cooldown: 7
+    triggerChance: 1
+    range: 225
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 26
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 750000.0
-      bonus: 0.0
+      multiplier: 750000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 2.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 2
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 0
-      chainDamageStep: 0.0
-      zoneTickInterval: 0.0
-      zoneRadius: 0.0
-      zoneSpacing: 0.0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
       zoneAtCaster: 0
-      lineLength: 0.0
-      lineStartRadius: 0.0
-      lineEndRadius: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
     primaryTargetCondition: 0
-    primaryTargetConditionValue: 0.0
+    primaryTargetConditionValue: 0
     exclusiveGroup: 0
-    enterRange: 0.0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: 52463bcebe8fd4705b94d8ff25744b46, type: 3}

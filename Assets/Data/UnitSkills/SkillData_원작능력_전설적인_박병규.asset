@@ -10,58 +10,184 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_박병규
-  m_EditorClassIdentifier:
-  skillName: Legend18 1/10 (에이스 화염)
-  description: '원작 전설적인 골.D.에이스 해적왕의 아들 - 전설적인(Trig_Legend18). | 2차 배정(트리거·더미 채널): 원작 전설적인 골.D.에이스 해적왕의 아들 - 전설적인(Trig_Legend18). | 2차 배정(트리거·더미 채널): 원작 전설적인 골.D.에이스 해적왕의 아들 - 전설적인(더미 경로 Trig_Legend18 → e0DB(!전설 에이스 더미2) → A0BK). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 2차 배정(트리거·더미 채널): 원작 전설적인 골.D.에이스 해적왕의 아들 - 전설적인(더미 경로 Trig_Legend18 → e0IP(!전설 에이스 더미1) → A0BK). ⚠️ 스톡 필드 값 그대로 — 필드 뜻이 미확인이라 피해가 아니라 다른 효과(슬로우·스턴·버프 등)였을 수 있다. 공격타입 원본이 [미확인]이라 이 유닛 자신의 평타 타입으로 대신했다. | 정정(2026-09-30 구현담당1, 중복 검사): 원문 Trig_Legend18(h02O) = `1~10==7 → e0D5 firebolt 둘(A14K 피해 0·스턴 3.5) + 대상 400000 MAGIC/UNIVERSAL + (1~4==3 → 대상 위치 600 광역 200000 MAGIC/UNIVERSAL)`. 이전: 확률 0.18·스턴 0.85(A0IS = h02V 전설적인_정준영)·두 벌·900 셋(원문 어디에도 없음) → 1/10 대상 400000 + 스턴 3.5. 안쪽 1/4 광역은 더미채널_전설적인_임장혁_1(0.025)에 채움.'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uBC15\uBCD1\uADDC"
+  m_EditorClassIdentifier: 
+  skillName: "Legend18 1/10 (\uC5D0\uC774\uC2A4 \uD654\uC5FC)"
+  description: "\uC6D0\uC791 \uC804\uC124\uC801\uC778 \uACE8.D.\uC5D0\uC774\uC2A4
+    \uD574\uC801\uC655\uC758 \uC544\uB4E4 - \uC804\uC124\uC801\uC778(Trig_Legend18).
+    | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8 \uCC44\uB110): \uC6D0\uC791
+    \uC804\uC124\uC801\uC778 \uACE8.D.\uC5D0\uC774\uC2A4 \uD574\uC801\uC655\uC758
+    \uC544\uB4E4 - \uC804\uC124\uC801\uC778(Trig_Legend18). | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uC804\uC124\uC801\uC778 \uACE8.D.\uC5D0\uC774\uC2A4
+    \uD574\uC801\uC655\uC758 \uC544\uB4E4 - \uC804\uC124\uC801\uC778(\uB354\uBBF8
+    \uACBD\uB85C Trig_Legend18 \u2192 e0DB(!\uC804\uC124 \uC5D0\uC774\uC2A4 \uB354\uBBF82)
+    \u2192 A0BK). \u26A0\uFE0F \uC2A4\uD1A1 \uD544\uB4DC \uAC12 \uADF8\uB300\uB85C
+    \u2014 \uD544\uB4DC \uB73B\uC774 \uBBF8\uD655\uC778\uC774\uB77C \uD53C\uD574\uAC00
+    \uC544\uB2C8\uB77C \uB2E4\uB978 \uD6A8\uACFC(\uC2AC\uB85C\uC6B0\xB7\uC2A4\uD134\xB7\uBC84\uD504
+    \uB4F1)\uC600\uC744 \uC218 \uC788\uB2E4. \uACF5\uACA9\uD0C0\uC785 \uC6D0\uBCF8\uC774
+    [\uBBF8\uD655\uC778]\uC774\uB77C \uC774 \uC720\uB2DB \uC790\uC2E0\uC758 \uD3C9\uD0C0
+    \uD0C0\uC785\uC73C\uB85C \uB300\uC2E0\uD588\uB2E4. | 2\uCC28 \uBC30\uC815(\uD2B8\uB9AC\uAC70\xB7\uB354\uBBF8
+    \uCC44\uB110): \uC6D0\uC791 \uC804\uC124\uC801\uC778 \uACE8.D.\uC5D0\uC774\uC2A4
+    \uD574\uC801\uC655\uC758 \uC544\uB4E4 - \uC804\uC124\uC801\uC778(\uB354\uBBF8
+    \uACBD\uB85C Trig_Legend18 \u2192 e0IP(!\uC804\uC124 \uC5D0\uC774\uC2A4 \uB354\uBBF81)
+    \u2192 A0BK). \u26A0\uFE0F \uC2A4\uD1A1 \uD544\uB4DC \uAC12 \uADF8\uB300\uB85C
+    \u2014 \uD544\uB4DC \uB73B\uC774 \uBBF8\uD655\uC778\uC774\uB77C \uD53C\uD574\uAC00
+    \uC544\uB2C8\uB77C \uB2E4\uB978 \uD6A8\uACFC(\uC2AC\uB85C\uC6B0\xB7\uC2A4\uD134\xB7\uBC84\uD504
+    \uB4F1)\uC600\uC744 \uC218 \uC788\uB2E4. \uACF5\uACA9\uD0C0\uC785 \uC6D0\uBCF8\uC774
+    [\uBBF8\uD655\uC778]\uC774\uB77C \uC774 \uC720\uB2DB \uC790\uC2E0\uC758 \uD3C9\uD0C0
+    \uD0C0\uC785\uC73C\uB85C \uB300\uC2E0\uD588\uB2E4. | \uC815\uC815(2026-09-30
+    \uAD6C\uD604\uB2F4\uB2F91, \uC911\uBCF5 \uAC80\uC0AC): \uC6D0\uBB38 Trig_Legend18(h02O)
+    = `1~10==7 \u2192 e0D5 firebolt \uB458(A14K \uD53C\uD574 0\xB7\uC2A4\uD134 3.5)
+    + \uB300\uC0C1 400000 MAGIC/UNIVERSAL + (1~4==3 \u2192 \uB300\uC0C1 \uC704\uCE58
+    600 \uAD11\uC5ED 200000 MAGIC/UNIVERSAL)`. \uC774\uC804: \uD655\uB960 0.18\xB7\uC2A4\uD134
+    0.85(A0IS = h02V \uC804\uC124\uC801\uC778_\uC815\uC900\uC601)\xB7\uB450 \uBC8C\xB7900
+    \uC14B(\uC6D0\uBB38 \uC5B4\uB514\uC5D0\uB3C4 \uC5C6\uC74C) \u2192 1/10 \uB300\uC0C1
+    400000 + \uC2A4\uD134 3.5. \uC548\uCABD 1/4 \uAD11\uC5ED\uC740 \uB354\uBBF8\uCC44\uB110_\uC804\uC124\uC801\uC778_\uC784\uC7A5\uD601_1(0.025)\uC5D0
+    \uCC44\uC6C0."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 0.0
+    range: 0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 6
-      multiplier: 400000.0
-      bonus: 0.0
+      multiplier: 400000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
     - kind: 1
       basis: 0
       target: 3
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 3.5
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
       heroDuration: 3.5
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: c92295a27bc4642a0b0831c8f96d621b, type: 3}

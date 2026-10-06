@@ -10,45 +10,102 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_영원_서민성_Odeng_Attack_every
-  m_EditorClassIdentifier:
-  skillName: Odeng_Attack 매 타
-  description: '원작 Trig_Odeng_Attack(h08R 오뎅) 끝줄: 조건 없이 매 타 대상 RRD 1150000 ATTACK_TYPE_HERO·DAMAGE_TYPE_NORMAL(AD·Hero). Blender 판정(aeb46c8f)은 1/14 단일이라 했으나 원문에서 이 RRD는 1/14 블록(endif) 바깥 — 매 타가 맞다(2026-09-30 구현담당1). 원작능력_영원_서민성 번들 #0에서 이관.'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uC601\uC6D0_\uC11C\uBBFC\uC131_Odeng_Attack_every"
+  m_EditorClassIdentifier: 
+  skillName: "Odeng_Attack \uB9E4 \uD0C0"
+  description: "\uC6D0\uC791 Trig_Odeng_Attack(h08R \uC624\uB385) \uB05D\uC904: \uC870\uAC74
+    \uC5C6\uC774 \uB9E4 \uD0C0 \uB300\uC0C1 RRD 1150000 ATTACK_TYPE_HERO\xB7DAMAGE_TYPE_NORMAL(AD\xB7Hero).
+    Blender \uD310\uC815(aeb46c8f)\uC740 1/14 \uB2E8\uC77C\uC774\uB77C \uD588\uC73C\uB098
+    \uC6D0\uBB38\uC5D0\uC11C \uC774 RRD\uB294 1/14 \uBE14\uB85D(endif) \uBC14\uAE65
+    \u2014 \uB9E4 \uD0C0\uAC00 \uB9DE\uB2E4(2026-09-30 \uAD6C\uD604\uB2F4\uB2F91).
+    \uC6D0\uC791\uB2A5\uB825_\uC601\uC6D0_\uC11C\uBBFC\uC131 \uBC88\uB4E4 #0\uC5D0\uC11C
+    \uC774\uAD00."
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 0.0
+    triggerChance: 1
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 3
       damageType: 1
       attackType: 4
-      multiplier: 1150000.0
-      bonus: 0.0
+      multiplier: 1150000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: 2a4570a074db34e79aa3b7ca1a393196, type: 3}

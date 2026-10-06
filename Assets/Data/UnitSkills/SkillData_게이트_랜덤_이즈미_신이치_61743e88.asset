@@ -10,38 +10,171 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_랜덤_이즈미_신이치_61743e88
-  m_EditorClassIdentifier:
-  skillName: 키쿄우 - 랜덤전용[제한됨] — LIFE게이지50.00 AND MANA게이지85.00
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 키쿄우 - 랜덤전용[제한됨](h0BF)의 게이트 "LIFE게이지50.00 AND MANA게이지85.00" 능력 2개를 이 SkillData 하나로 묶었다.   · kikoyou_mana#1: 계산식 300000.00   · kikoyou_mana#2: 계산식 100000.00  ⚠️ 조건(MANA게이지85.00)은 우리 축 밖(버프) 또는 축이 하나뿐(게이지 중복)이라 뺐다 — 실제보다 자주 발동할 수 있다.  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. | 정정(2026-09-30, 구현담당1): 원문 Trig_kikoyou_Attack의 kikoyou_mana는 `UNIT_STATE_MANA==85`(→마나 0) 하나뿐이다 — LIFE 50과 무관. 게이지를 Life 50에서 Mana 85(리셋 0)로. [랜덤 나머지 09-30] §0-5 kikoyou_mana: 300000 CHAOS/NORMAL + 100000 NORMAL/UNIVERSAL 10회(1회였다, 10배 과소). (Tools/apply_random_rest.py)'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uB79C\uB364_\uC774\uC988\uBBF8_\uC2E0\uC774\uCE58_61743e88"
+  m_EditorClassIdentifier: 
+  skillName: "\uD0A4\uCFC4\uC6B0 - \uB79C\uB364\uC804\uC6A9[\uC81C\uD55C\uB428] \u2014
+    LIFE\uAC8C\uC774\uC9C050.00 AND MANA\uAC8C\uC774\uC9C085.00"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 \uD0A4\uCFC4\uC6B0 - \uB79C\uB364\uC804\uC6A9[\uC81C\uD55C\uB428](h0BF)\uC758
+    \uAC8C\uC774\uD2B8 \"LIFE\uAC8C\uC774\uC9C050.00 AND MANA\uAC8C\uC774\uC9C085.00\"
+    \uB2A5\uB825 2\uAC1C\uB97C \uC774 SkillData \uD558\uB098\uB85C \uBB36\uC5C8\uB2E4.  
+    \xB7 kikoyou_mana#1: \uACC4\uC0B0\uC2DD 300000.00   \xB7 kikoyou_mana#2: \uACC4\uC0B0\uC2DD
+    100000.00  \u26A0\uFE0F \uC870\uAC74(MANA\uAC8C\uC774\uC9C085.00)\uC740 \uC6B0\uB9AC
+    \uCD95 \uBC16(\uBC84\uD504) \uB610\uB294 \uCD95\uC774 \uD558\uB098\uBFD0(\uAC8C\uC774\uC9C0
+    \uC911\uBCF5)\uC774\uB77C \uBE90\uB2E4 \u2014 \uC2E4\uC81C\uBCF4\uB2E4 \uC790\uC8FC
+    \uBC1C\uB3D9\uD560 \uC218 \uC788\uB2E4.  hitCount>1\uC740 \"\uAC19\uC740 RRD
+    \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0 \uC2DC\uAC04\uCC28 \uB2E4\uB2E8\uD788\uD2B8\uAC00
+    \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC \uC5F0\uC18D N\uD68C)\uC73C\uB85C
+    \uADFC\uC0AC\uD588\uB2E4. | \uC815\uC815(2026-09-30, \uAD6C\uD604\uB2F4\uB2F91):
+    \uC6D0\uBB38 Trig_kikoyou_Attack\uC758 kikoyou_mana\uB294 `UNIT_STATE_MANA==85`(\u2192\uB9C8\uB098
+    0) \uD558\uB098\uBFD0\uC774\uB2E4 \u2014 LIFE 50\uACFC \uBB34\uAD00. \uAC8C\uC774\uC9C0\uB97C
+    Life 50\uC5D0\uC11C Mana 85(\uB9AC\uC14B 0)\uB85C. [\uB79C\uB364 \uB098\uBA38\uC9C0
+    09-30] \xA70-5 kikoyou_mana: 300000 CHAOS/NORMAL + 100000 NORMAL/UNIVERSAL 10\uD68C(1\uD68C\uC600\uB2E4,
+    10\uBC30 \uACFC\uC18C). (Tools/apply_random_rest.py)"
   triggerType: 3
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 525.0
+    triggerChance: 1
+    range: 525
     hitCountThreshold: 85
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 5
-      multiplier: 300000.0
-      bonus: 0.0
+      multiplier: 300000
+      bonus: 0
       chance: 1
       hitCount: 10
-      duration: 1.0
+      duration: 1
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 100000.0
-      bonus: 0.0
+      multiplier: 100000
+      bonus: 0
       chance: 1
       hitCount: 10
-      duration: 1.0
+      duration: 1
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: 1e5a2c068220846e685c456bd53038ce, type: 3}

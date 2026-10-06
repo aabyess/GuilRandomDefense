@@ -10,61 +10,101 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_박민석_A08G
-  m_EditorClassIdentifier:
-  skillName: A08G 샨디아의 창 — 자기 공속 +400% 5.25초
-  description: 원작 카르가라 h03F uabi A08G(Ablo, Blo1 4.0 · adur 5.25 · 마나 비용 100 · 마나 재생 6/초 → 약 16.7초마다). 자기 공속 +400% 5.25초. 마나 소비 자동 시전은 쿨다운 16.67초로 근사. 2026-10-06 구현담당1.
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uBC15\uBBFC\uC11D_A08G"
+  m_EditorClassIdentifier: 
+  skillName: "A08G \uC0E8\uB514\uC544\uC758 \uCC3D \u2014 \uC790\uAE30 \uACF5\uC18D
+    +400% 5.25\uCD08"
+  description: "\uC6D0\uC791 \uCE74\uB974\uAC00\uB77C h03F uabi A08G(Ablo, Blo1 4.0
+    \xB7 adur 5.25 \xB7 \uB9C8\uB098 \uBE44\uC6A9 100 \xB7 \uB9C8\uB098 \uC7AC\uC0DD
+    6/\uCD08 \u2192 \uC57D 16.7\uCD08\uB9C8\uB2E4). \uC790\uAE30 \uACF5\uC18D +400%
+    5.25\uCD08. \uB9C8\uB098 \uC18C\uBE44 \uC790\uB3D9 \uC2DC\uC804\uC740 \uCFE8\uB2E4\uC6B4
+    16.67\uCD08\uB85C \uADFC\uC0AC. 2026-10-06 \uAD6C\uD604\uB2F4\uB2F91."
   triggerType: 1
   levels:
   - cooldown: 16.67
-    triggerChance: 1.0
-    range: 0.0
+    triggerChance: 1
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 12
       basis: 0
       target: 0
       damageType: 0
       attackType: 0
-      multiplier: 4.0
-      bonus: 0.0
+      multiplier: 4
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 5.25
-      casterBuffCountFactor: 0.0
+      casterBuffCountFactor: 0
       buffId: B00E
-      randMin: 1.0
-      randMax: 1.0
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 0
-      chainDamageStep: 0.0
-      zoneTickInterval: 0.0
-      zoneRadius: 0.0
-      zoneSpacing: 0.0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
       zoneAtCaster: 0
-      lineLength: 0.0
-      lineStartRadius: 0.0
-      lineEndRadius: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
     primaryTargetCondition: 0
-    primaryTargetConditionValue: 0.0
+    primaryTargetConditionValue: 0
     exclusiveGroup: 0
-    enterRange: 0.0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: 6e73087a5cbce48ec846ed5bcd2e278d, type: 3}

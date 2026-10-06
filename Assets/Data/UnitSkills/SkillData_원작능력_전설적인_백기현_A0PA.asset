@@ -10,61 +10,101 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_백기현_A0PA
-  m_EditorClassIdentifier:
-  skillName: A0PA 패왕색의 패기 — 0.2초마다 12,500(반경 1051)
-  description: 원작 샹크스 h035 uabi A0PA(ANpi, Eim1 12,500 · adur 0.2초 · aare 1051 · atar organic = 기계 제외 — 우리는 구분 없음). 상시 주기 피해 지대 — 유닛 곁 반경 1051 적에게 0.2초마다 12,500. 2026-10-06 구현담당1.
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uBC31\uAE30\uD604_A0PA"
+  m_EditorClassIdentifier: 
+  skillName: "A0PA \uD328\uC655\uC0C9\uC758 \uD328\uAE30 \u2014 0.2\uCD08\uB9C8\uB2E4
+    12,500(\uBC18\uACBD 1051)"
+  description: "\uC6D0\uC791 \uC0F9\uD06C\uC2A4 h035 uabi A0PA(ANpi, Eim1 12,500
+    \xB7 adur 0.2\uCD08 \xB7 aare 1051 \xB7 atar organic = \uAE30\uACC4 \uC81C\uC678
+    \u2014 \uC6B0\uB9AC\uB294 \uAD6C\uBD84 \uC5C6\uC74C). \uC0C1\uC2DC \uC8FC\uAE30
+    \uD53C\uD574 \uC9C0\uB300 \u2014 \uC720\uB2DB \uACC1 \uBC18\uACBD 1051 \uC801\uC5D0\uAC8C
+    0.2\uCD08\uB9C8\uB2E4 12,500. 2026-10-06 \uAD6C\uD604\uB2F4\uB2F91."
   triggerType: 1
   levels:
   - cooldown: 0.2
-    triggerChance: 1.0
-    range: 1051.0
+    triggerChance: 1
+    range: 1051
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 12500.0
-      bonus: 0.0
+      multiplier: 12500
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 0
-      chainDamageStep: 0.0
-      zoneTickInterval: 0.0
-      zoneRadius: 0.0
-      zoneSpacing: 0.0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
       zoneAtCaster: 0
-      lineLength: 0.0
-      lineStartRadius: 0.0
-      lineEndRadius: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
     primaryTargetCondition: 0
-    primaryTargetConditionValue: 0.0
+    primaryTargetConditionValue: 0
     exclusiveGroup: 0
-    enterRange: 0.0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: f0029f9c40e4e4ab8b7377d705e72e32, type: 3}

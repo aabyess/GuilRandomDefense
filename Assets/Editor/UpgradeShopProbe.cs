@@ -27,6 +27,18 @@ static class UpgradeShopProbe
             }
         return $"❌ {part} 없음";
     }
+    static string SpawnSelect(string rosterName)
+    {
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        var d = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{rosterName}.asset");
+        if (d == null) return $"❌ {rosterName} 없음";
+        var go = spawner.Spawn(d, lane != null ? lane.TakeSpawnPosition(d) : Vector3.zero, 0);
+        Object.FindFirstObjectByType<SelectionManager>().SelectOnly(go.GetComponent<Selectable>());
+        return $"선택: {go.name} · 스킬 {d.skills.Count}개 · 아이콘 있는 스킬 {d.skills.Count(k => k != null && k.icon != null)}개";
+    }
+    static string Gu9() => SpawnSelect("초월_최상호_AD");
+    static string Eternal1() => SpawnSelect("영원_김영원");
     static string AnyUnit()
     {
         foreach (UnitIdentity u in UnitIdentity.Active)

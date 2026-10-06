@@ -10,61 +10,178 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_초월_임채민_AP_79행_01000
-  m_EditorClassIdentifier:
-  skillName: A13V 3범위 검수초 지진
-  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.1000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다.  · e066(@초월 검은수염지진) A13V 3범위 검수초 지진 [천둥소리 피해]: 400000 (원작 검은수염·초월함) 진입게이트: Trig_Tichi_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==5 AND GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3 | Trig_Tichi_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==5 AND NOT(GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3)  · e0PH(@초월 검은수염지진2) A0Q6 3범위 검수초 지진-강진 [천둥소리 피해]: 400000 (원작 검은수염·초월함) 진입게이트: Trig_Tichi_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==5 AND GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3 | Trig_Tichi_Attack_Actions[이벤트직결]: GetRandomInt(1,10)==5 AND NOT(GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3) [중복 점검 09-30] Tichi_skill_4 지진(기본 갈래 A13V): 대상 중심 650 범위 400000 · 이감 70% 3초 한 벌 — 단일 400000 ×2 + 이감 둘(두 갈래 A13V·A0Q6을 같이)이었다. (Tools/apply_audit_dupes.py) [초월 나머지 09-30] Tichi_skill_4(지진)는 1/10 중 5/6(나머지 1/6은 강진 Tichi_skill_4_tr) — 확률 0.1 → 0.0833. (Tools/apply_transcend_rest.py)'
+  m_Name: "SkillData_\uB354\uBBF8\uCC44\uB110_\uCD08\uC6D4_\uC784\uCC44\uBBFC_AP_79\uD589_01000"
+  m_EditorClassIdentifier: 
+  skillName: "A13V 3\uBC94\uC704 \uAC80\uC218\uCD08 \uC9C0\uC9C4"
+  description: "\uC9C4\uC785\uAC8C\uC774\uD2B8 \uD655\uC815(2026-09-06, \uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    799ef03) \u2014 triggerChance=0.1000\uB85C \uC7A0\uAE08 \uD574\uC81C. \uC591\uC758
+    \uC0C1\uD0DC\uC870\uAC74(\uC2A4\uD14C\uC774\uC9C0\xB7\uBC84\uD504 \uBCF4\uC720
+    \uB4F1)\uC740 \uCD95 \uBC16\uC774\uB77C \uBE90\uB2E4 \u2014 \uC2E4\uC81C\uBCF4\uB2E4
+    \uC790\uC8FC \uBC1C\uB3D9\uD560 \uC218 \uC788\uB2E4.  \xB7 e066(@\uCD08\uC6D4
+    \uAC80\uC740\uC218\uC5FC\uC9C0\uC9C4) A13V 3\uBC94\uC704 \uAC80\uC218\uCD08 \uC9C0\uC9C4
+    [\uCC9C\uB465\uC18C\uB9AC \uD53C\uD574]: 400000 (\uC6D0\uC791 \uAC80\uC740\uC218\uC5FC\xB7\uCD08\uC6D4\uD568)
+    \uC9C4\uC785\uAC8C\uC774\uD2B8: Trig_Tichi_Attack_Actions[\uC774\uBCA4\uD2B8\uC9C1\uACB0]:
+    GetRandomInt(1,10)==5 AND GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3
+    | Trig_Tichi_Attack_Actions[\uC774\uBCA4\uD2B8\uC9C1\uACB0]: GetRandomInt(1,10)==5
+    AND NOT(GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3) 
+    \xB7 e0PH(@\uCD08\uC6D4 \uAC80\uC740\uC218\uC5FC\uC9C0\uC9C42) A0Q6 3\uBC94\uC704
+    \uAC80\uC218\uCD08 \uC9C0\uC9C4-\uAC15\uC9C4 [\uCC9C\uB465\uC18C\uB9AC \uD53C\uD574]:
+    400000 (\uC6D0\uC791 \uAC80\uC740\uC218\uC5FC\xB7\uCD08\uC6D4\uD568) \uC9C4\uC785\uAC8C\uC774\uD2B8:
+    Trig_Tichi_Attack_Actions[\uC774\uBCA4\uD2B8\uC9C1\uACB0]: GetRandomInt(1,10)==5
+    AND GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3
+    | Trig_Tichi_Attack_Actions[\uC774\uBCA4\uD2B8\uC9C1\uACB0]: GetRandomInt(1,10)==5
+    AND NOT(GetRandomInt(1,udg_Tichi_TR_AddInt[GetConvertedPlayerId(GetOwningPlayer(GetAttacker()))])==3)
+    [\uC911\uBCF5 \uC810\uAC80 09-30] Tichi_skill_4 \uC9C0\uC9C4(\uAE30\uBCF8 \uAC08\uB798
+    A13V): \uB300\uC0C1 \uC911\uC2EC 650 \uBC94\uC704 400000 \xB7 \uC774\uAC10 70%
+    3\uCD08 \uD55C \uBC8C \u2014 \uB2E8\uC77C 400000 \xD72 + \uC774\uAC10 \uB458(\uB450
+    \uAC08\uB798 A13V\xB7A0Q6\uC744 \uAC19\uC774)\uC774\uC5C8\uB2E4. (Tools/apply_audit_dupes.py)
+    [\uCD08\uC6D4 \uB098\uBA38\uC9C0 09-30] Tichi_skill_4(\uC9C0\uC9C4)\uB294 1/10
+    \uC911 5/6(\uB098\uBA38\uC9C0 1/6\uC740 \uAC15\uC9C4 Tichi_skill_4_tr) \u2014
+    \uD655\uB960 0.1 \u2192 0.0833. (Tools/apply_transcend_rest.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.083333
-    range: 650.0
+    range: 650
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 400000.0
-      bonus: 0.0
+      multiplier: 400000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
     - kind: 13
       basis: 0
       target: 2
       damageType: 0
       attackType: 0
       multiplier: 0.3
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 3.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 3
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
+      triggerDamageAbove: 0
       heroDuration: 1.5
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: 9e0c246b1cc0c4233a422e8efb94058b, type: 3}

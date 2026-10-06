@@ -10,85 +10,219 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_불멸_이승우_Garp_AttackDamage_1of10
-  m_EditorClassIdentifier:
-  skillName: 몽키.D.거프 — 1/10(주먹 발구르기)
-  description: '2026-09-30 구현담당1: 원문 Trig_Garp_AttackDamage Stage5 끝(B005 여부와 무관) `GetRandomInt(1,10)==6` → 더미 e01G stomp A08U(AOws adur 2.5·aare 500) + 주 대상 위치 500 적 전원 RRD((615000+GetEventDamage×(1.05+realD))×(1+0.8×realD), CHAOS/NORMAL), realD=0.25×시전자 버프 수 c. 상수 쪽은 615000×(1+0.2c) 정확, 피해 쪽 1.05×(1+0.238c)(1+0.2c)는 c의 2차식이라 1차 근사(1.05×(1+0.438c)). Stun 2.5초 Enemies.'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uBD88\uBA78_\uC774\uC2B9\uC6B0_Garp_AttackDamage_1of10"
+  m_EditorClassIdentifier: 
+  skillName: "\uBABD\uD0A4.D.\uAC70\uD504 \u2014 1/10(\uC8FC\uBA39 \uBC1C\uAD6C\uB974\uAE30)"
+  description: "2026-09-30 \uAD6C\uD604\uB2F4\uB2F91: \uC6D0\uBB38 Trig_Garp_AttackDamage
+    Stage5 \uB05D(B005 \uC5EC\uBD80\uC640 \uBB34\uAD00) `GetRandomInt(1,10)==6` \u2192
+    \uB354\uBBF8 e01G stomp A08U(AOws adur 2.5\xB7aare 500) + \uC8FC \uB300\uC0C1
+    \uC704\uCE58 500 \uC801 \uC804\uC6D0 RRD((615000+GetEventDamage\xD7(1.05+realD))\xD7(1+0.8\xD7realD),
+    CHAOS/NORMAL), realD=0.25\xD7\uC2DC\uC804\uC790 \uBC84\uD504 \uC218 c. \uC0C1\uC218
+    \uCABD\uC740 615000\xD7(1+0.2c) \uC815\uD655, \uD53C\uD574 \uCABD 1.05\xD7(1+0.238c)(1+0.2c)\uB294
+    c\uC758 2\uCC28\uC2DD\uC774\uB77C 1\uCC28 \uADFC\uC0AC(1.05\xD7(1+0.438c)). Stun
+    2.5\uCD08 Enemies."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.1
-    range: 500.0
+    range: 500
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 5
-      multiplier: 615000.0
-      bonus: 0.0
+      multiplier: 615000
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
+      duration: 0
       casterBuffCountFactor: 0.2
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
     - kind: 0
       basis: 5
       target: 2
       damageType: 1
       attackType: 5
       multiplier: 1.05
-      bonus: 0.0
+      bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.0
+      duration: 0
       casterBuffCountFactor: 0.438095
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
     - kind: 1
       basis: 0
       target: 2
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 2.5
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
       heroDuration: 0.41
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: 9e0c246b1cc0c4233a422e8efb94058b, type: 3}

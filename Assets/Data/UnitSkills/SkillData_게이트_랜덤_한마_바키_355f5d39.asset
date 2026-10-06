@@ -10,85 +10,295 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_랜덤_한마_바키_355f5d39
-  m_EditorClassIdentifier:
-  skillName: 쿠치키 뱌쿠야 - 랜덤전용[제한됨] — MANA게이지145 (Byakuya_R + Chan)
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 쿠치키 뱌쿠야 - 랜덤전용[제한됨](h08I)의 게이트 "(게이트 없음)" 능력 3개를 이 SkillData 하나로 묶었다.   · Byakuya_R#1: 계산식 5000000.00   · byakuya_Chan#1: 계산식 (425000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVari   · byakuya_Chan#2: 계산식 500000.00  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. 정정(2026-09-08, PM — Tools/classify_multihit_loops.py 전수): 원작 Trig_byakuya_Chan_Actions 스테이지2는 "integerA를 1 올리고, A>=33이면 빠져나가고 아니면 RRD를 때린 뒤 0.12초 뒤 스테이지2로 되돌아감"이다. A=1..32에서 RRD가 돌고 A=33에서 끝나므로 **32번** 반복이다(#1<200과 #2 ELSE는 서로 배타라 한 번에 하나씩). byakuya_Chan#1/#2만 hitCount 1→32. ⚠️ Byakuya_R#1(5,000,000)은 **다른 트리거**라 그대로 1이다. 간격 0.12초는 "0.02~0.25초 실질 동일" 범위라 duration=0 유지. ⚠️ 2026-09-06 대상조건 배선(PM 지시) — byakuya_Chan#1<200/#2 ELSE(>=200), Byakuya_R#1은 원작대로 무조건 별개(다른 트리거). [지대 09-30] 지대: L0 e0LP×4(A11C 180000/0.15초·반경 415·수명 3.595초 = 23틱, 지대당 4,140,000) — byakuya_Chan: 시전자 300 안 무작위 네 곳에 e0LP(반경 415라 겹친 것으로)(Tools/apply_damage_zones.py)'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uB79C\uB364_\uD55C\uB9C8_\uBC14\uD0A4_355f5d39"
+  m_EditorClassIdentifier: 
+  skillName: "\uCFE0\uCE58\uD0A4 \uBC4C\uCFE0\uC57C - \uB79C\uB364\uC804\uC6A9[\uC81C\uD55C\uB428]
+    \u2014 MANA\uAC8C\uC774\uC9C0145 (Byakuya_R + Chan)"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 \uCFE0\uCE58\uD0A4 \uBC4C\uCFE0\uC57C - \uB79C\uB364\uC804\uC6A9[\uC81C\uD55C\uB428](h08I)\uC758
+    \uAC8C\uC774\uD2B8 \"(\uAC8C\uC774\uD2B8 \uC5C6\uC74C)\" \uB2A5\uB825 3\uAC1C\uB97C
+    \uC774 SkillData \uD558\uB098\uB85C \uBB36\uC5C8\uB2E4.   \xB7 Byakuya_R#1: \uACC4\uC0B0\uC2DD
+    5000000.00   \xB7 byakuya_Chan#1: \uACC4\uC0B0\uC2DD (425000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVari  
+    \xB7 byakuya_Chan#2: \uACC4\uC0B0\uC2DD 500000.00  hitCount>1\uC740 \"\uAC19\uC740
+    RRD \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0 \uC2DC\uAC04\uCC28 \uB2E4\uB2E8\uD788\uD2B8\uAC00
+    \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC \uC5F0\uC18D N\uD68C)\uC73C\uB85C
+    \uADFC\uC0AC\uD588\uB2E4. \uC815\uC815(2026-09-08, PM \u2014 Tools/classify_multihit_loops.py
+    \uC804\uC218): \uC6D0\uC791 Trig_byakuya_Chan_Actions \uC2A4\uD14C\uC774\uC9C02\uB294
+    \"integerA\uB97C 1 \uC62C\uB9AC\uACE0, A>=33\uC774\uBA74 \uBE60\uC838\uB098\uAC00\uACE0
+    \uC544\uB2C8\uBA74 RRD\uB97C \uB54C\uB9B0 \uB4A4 0.12\uCD08 \uB4A4 \uC2A4\uD14C\uC774\uC9C02\uB85C
+    \uB418\uB3CC\uC544\uAC10\"\uC774\uB2E4. A=1..32\uC5D0\uC11C RRD\uAC00 \uB3CC\uACE0
+    A=33\uC5D0\uC11C \uB05D\uB098\uBBC0\uB85C **32\uBC88** \uBC18\uBCF5\uC774\uB2E4(#1<200\uACFC
+    #2 ELSE\uB294 \uC11C\uB85C \uBC30\uD0C0\uB77C \uD55C \uBC88\uC5D0 \uD558\uB098\uC529).
+    byakuya_Chan#1/#2\uB9CC hitCount 1\u219232. \u26A0\uFE0F Byakuya_R#1(5,000,000)\uC740
+    **\uB2E4\uB978 \uD2B8\uB9AC\uAC70**\uB77C \uADF8\uB300\uB85C 1\uC774\uB2E4. \uAC04\uACA9
+    0.12\uCD08\uB294 \"0.02~0.25\uCD08 \uC2E4\uC9C8 \uB3D9\uC77C\" \uBC94\uC704\uB77C
+    duration=0 \uC720\uC9C0. \u26A0\uFE0F 2026-09-06 \uB300\uC0C1\uC870\uAC74 \uBC30\uC120(PM
+    \uC9C0\uC2DC) \u2014 byakuya_Chan#1<200/#2 ELSE(>=200), Byakuya_R#1\uC740 \uC6D0\uC791\uB300\uB85C
+    \uBB34\uC870\uAC74 \uBCC4\uAC1C(\uB2E4\uB978 \uD2B8\uB9AC\uAC70). [\uC9C0\uB300
+    09-30] \uC9C0\uB300: L0 e0LP\xD74(A11C 180000/0.15\uCD08\xB7\uBC18\uACBD 415\xB7\uC218\uBA85
+    3.595\uCD08 = 23\uD2F1, \uC9C0\uB300\uB2F9 4,140,000) \u2014 byakuya_Chan: \uC2DC\uC804\uC790
+    300 \uC548 \uBB34\uC791\uC704 \uB124 \uACF3\uC5D0 e0LP(\uBC18\uACBD 415\uB77C
+    \uACB9\uCE5C \uAC83\uC73C\uB85C)(Tools/apply_damage_zones.py)"
   triggerType: 3
   levels:
   - cooldown: 0
-    triggerChance: 1.0
-    range: 700.0
+    triggerChance: 1
+    range: 700
     hitCountThreshold: 145
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 5000000.0
-      bonus: 0.0
+      multiplier: 5000000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
       randMin: 1
       randMax: 1.5
-      casterBuffCountFactor: 0
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
     - kind: 0
       basis: 1
       target: 3
       damageType: 2
       attackType: 5
       multiplier: 0.0175
-      bonus: 425000.0
+      bonus: 425000
       chance: 1
       hitCount: 32
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 1
       targetConditionValue: 200
+      cascadeGroup: 0
       skipDamageTakenMultiplier: 1
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
     - kind: 0
       basis: 0
       target: 3
       damageType: 2
       attackType: 5
-      multiplier: 500000.0
-      bonus: 0.0
+      multiplier: 500000
+      bonus: 0
       chance: 1
       hitCount: 32
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 3
       targetConditionValue: 200
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
     - kind: 0
       basis: 0
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 180000.0
-      bonus: 0.0
+      multiplier: 180000
+      bonus: 0
       chance: 1
       hitCount: 4
       duration: 3.595
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 1
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 0
-      chainDamageStep: 0.0
+      chainDamageStep: 0
       zoneTickInterval: 0.15
-      zoneRadius: 415.0
+      zoneRadius: 415
       zoneSpacing: 0
       zoneAtCaster: 1
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: e84504ed694cc4e62ab48b7e0a13638e, type: 3}

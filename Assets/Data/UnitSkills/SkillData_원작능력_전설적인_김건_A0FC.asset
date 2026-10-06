@@ -10,61 +10,101 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_김건_A0FC
-  m_EditorClassIdentifier:
-  skillName: A0FC 파키케팔로 — 33% 크리 ×10 +330,000 (PV≥200 대상만)
-  description: 원작 울티 h03S uabi A0FC(AIcs, Ocr1 33% · Ocr2 ×10 · Ocr3 +330,000 · atar sapper = PV≥200). 평타 33% 확률로 평타 피해의 ×10(추가분 9배) + 330,000. 평타 자체는 따로 들어가므로 추가 피해만 낸다. 2026-10-06 구현담당1.
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uAE40\uAC74_A0FC"
+  m_EditorClassIdentifier: 
+  skillName: "A0FC \uD30C\uD0A4\uCF00\uD314\uB85C \u2014 33% \uD06C\uB9AC \xD710
+    +330,000 (PV\u2265200 \uB300\uC0C1\uB9CC)"
+  description: "\uC6D0\uC791 \uC6B8\uD2F0 h03S uabi A0FC(AIcs, Ocr1 33% \xB7 Ocr2
+    \xD710 \xB7 Ocr3 +330,000 \xB7 atar sapper = PV\u2265200). \uD3C9\uD0C0 33% \uD655\uB960\uB85C
+    \uD3C9\uD0C0 \uD53C\uD574\uC758 \xD710(\uCD94\uAC00\uBD84 9\uBC30) + 330,000.
+    \uD3C9\uD0C0 \uC790\uCCB4\uB294 \uB530\uB85C \uB4E4\uC5B4\uAC00\uBBC0\uB85C \uCD94\uAC00
+    \uD53C\uD574\uB9CC \uB0B8\uB2E4. 2026-10-06 \uAD6C\uD604\uB2F4\uB2F91."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.33
-    range: 0.0
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 3
       target: 3
       damageType: 1
       attackType: 1
-      multiplier: 9.0
-      bonus: 330000.0
+      multiplier: 9
+      bonus: 330000
       chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 0
-      chainDamageStep: 0.0
-      zoneTickInterval: 0.0
-      zoneRadius: 0.0
-      zoneSpacing: 0.0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
       zoneAtCaster: 0
-      lineLength: 0.0
-      lineStartRadius: 0.0
-      lineEndRadius: 0.0
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
     primaryTargetCondition: 3
-    primaryTargetConditionValue: 200.0
+    primaryTargetConditionValue: 200
     exclusiveGroup: 0
-    enterRange: 0.0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: 90a9f9a07d8a443f5b3b461a5c922f72, type: 3}

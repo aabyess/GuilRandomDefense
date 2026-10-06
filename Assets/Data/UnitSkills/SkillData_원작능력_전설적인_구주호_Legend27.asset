@@ -10,103 +10,167 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_원작능력_전설적인_구주호_Legend27
-  m_EditorClassIdentifier:
-  skillName: Legend27 1/178 (슈가 장난감 콜렉션 no.31)
-  description: '원작 슈가 h037 Legend27: GetRandomInt(1,178)==4 → h06N 「장난감 콜렉션 no.31」(평타 185,000·주기 0.39·사거리 460) 4.5초 소환 + 그중 GetRandomInt(1,3)==1이면 A0QF(Aspt Sod1 1 Sod2 h07H)로 「망가진 장난감」(평타 250,000·주기 0.38·사거리 450) 생성 — h07H 수명은 원문 없음(시스템 유닛, 판매 버튼 A080뿐)이라 4.5초로 제안. 1/12 h06P 「장난감」(selfdestruct)은 폭발 피해 수치 원문 없음(A0J1은 아트용 스톡 Asph)이라 미반영. 소환체 사거리는 원작÷5.5. 2026-10-06 구현담당1.'
+  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uAD6C\uC8FC\uD638_Legend27"
+  m_EditorClassIdentifier: 
+  skillName: "Legend27 1/178 (\uC288\uAC00 \uC7A5\uB09C\uAC10 \uCF5C\uB809\uC158
+    no.31)"
+  description: "\uC6D0\uC791 \uC288\uAC00 h037 Legend27: GetRandomInt(1,178)==4 \u2192
+    h06N \u300C\uC7A5\uB09C\uAC10 \uCF5C\uB809\uC158 no.31\u300D(\uD3C9\uD0C0 185,000\xB7\uC8FC\uAE30
+    0.39\xB7\uC0AC\uAC70\uB9AC 460) 4.5\uCD08 \uC18C\uD658 + \uADF8\uC911 GetRandomInt(1,3)==1\uC774\uBA74
+    A0QF(Aspt Sod1 1 Sod2 h07H)\uB85C \u300C\uB9DD\uAC00\uC9C4 \uC7A5\uB09C\uAC10\u300D(\uD3C9\uD0C0
+    250,000\xB7\uC8FC\uAE30 0.38\xB7\uC0AC\uAC70\uB9AC 450) \uC0DD\uC131 \u2014 h07H
+    \uC218\uBA85\uC740 \uC6D0\uBB38 \uC5C6\uC74C(\uC2DC\uC2A4\uD15C \uC720\uB2DB,
+    \uD310\uB9E4 \uBC84\uD2BC A080\uBFD0)\uC774\uB77C 4.5\uCD08\uB85C \uC81C\uC548.
+    1/12 h06P \u300C\uC7A5\uB09C\uAC10\u300D(selfdestruct)\uC740 \uD3ED\uBC1C \uD53C\uD574
+    \uC218\uCE58 \uC6D0\uBB38 \uC5C6\uC74C(A0J1\uC740 \uC544\uD2B8\uC6A9 \uC2A4\uD1A1
+    Asph)\uC774\uB77C \uBBF8\uBC18\uC601. \uC18C\uD658\uCCB4 \uC0AC\uAC70\uB9AC\uB294
+    \uC6D0\uC791\xF75.5. 2026-10-06 \uAD6C\uD604\uB2F4\uB2F91."
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.005618
-    range: 0.0
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId:
-    forbiddenBuffId:
-    selfBuffId:
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 16
       basis: 0
       target: 0
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
-      chance: 1.0
+      multiplier: 0
+      bonus: 0
+      chance: 1
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 0
-      chainDamageStep: 0.0
-      zoneTickInterval: 0.0
-      zoneRadius: 0.0
-      zoneSpacing: 0.0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
       zoneAtCaster: 0
-      lineLength: 0.0
-      lineStartRadius: 0.0
-      lineEndRadius: 0.0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
       summonUnits:
       - {fileID: 11400000, guid: a55e06d2389b1e2f2619477da40e367f, type: 2}
       summonLifetime: 4.5
       summonFanDegrees: 0
       summonRadius: 60
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
     - kind: 16
       basis: 0
       target: 0
       damageType: 0
       attackType: 0
-      multiplier: 0.0
-      bonus: 0.0
+      multiplier: 0
+      bonus: 0
       chance: 0.3333
       hitCount: 1
-      duration: 0.0
-      casterBuffCountFactor: 0.0
-      buffId:
-      randMin: 1.0
-      randMax: 1.0
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId:
-      forbiddenTargetBuffId:
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
       targetCondition: 0
-      targetConditionValue: 0.0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0.0
-      heroDuration: 0.0
+      triggerDamageAbove: 0
+      heroDuration: 0
       maxTargets: 0
-      chainDamageStep: 0.0
-      zoneTickInterval: 0.0
-      zoneRadius: 0.0
-      zoneSpacing: 0.0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
       zoneAtCaster: 0
-      lineLength: 0.0
-      lineStartRadius: 0.0
-      lineEndRadius: 0.0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
       summonUnits:
       - {fileID: 11400000, guid: f78bb41318790dac67c889603cc68df1, type: 2}
       summonLifetime: 4.5
       summonFanDegrees: 35
       summonRadius: 60
-    requiredTargetBuffId:
-    forbiddenTargetBuffId:
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
-    targetArmorBreakAbove: 0.0
+    targetArmorBreakAbove: 0
     primaryTargetCondition: 0
-    primaryTargetConditionValue: 0.0
+    primaryTargetConditionValue: 0
     exclusiveGroup: 0
-    enterRange: 0.0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: 6b5ae008636ad460d9c1b20d501d5f11, type: 3}

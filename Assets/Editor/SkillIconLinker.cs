@@ -15,6 +15,7 @@ public static class SkillIconLinker
     const string CsvPath = "Tools/skill_icons/skill_icon_map.csv";
     const string IconFolder = "Assets/Art/SkillIcons";
     const string SkillFolder = "Assets/Data/UnitSkills";
+    const string DefaultIconPath = "Tools/skill_icons/default_icon.txt";
 
     static string SourceFolder => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_skill_icons");
 
@@ -85,7 +86,9 @@ public static class SkillIconLinker
         // 1) 행 → (스킬, png, 확신도)
         var jobs = new List<(SkillData skill, string png, string confidence, string label)>();
         var problems = new List<string>();
-        int rows = 0, noPng = 0, missingAsset = 0, plannedMissing = 0;
+        var seenPaths = new HashSet<string>();   // 표에 행이 있는 에셋 경로(아이콘없음 행 포함)
+        int rows = 0, noPng = 0, missingAsset = 0, plannedMissing = 0, defaulted = 0;
+        string defaultPng = File.Exists(DefaultIconPath) ? File.ReadAllText(DefaultIconPath, Encoding.UTF8).Trim() : "";
         string[] lines = File.ReadAllLines(CsvPath, Encoding.UTF8);
         for (int li = 1; li < lines.Length; li++)
         {
@@ -93,8 +96,14 @@ public static class SkillIconLinker
             List<string> c = ParseLine(lines[li].TrimStart('﻿'));
             if (c.Count < 11) continue;
             rows++;
+            if (!c[0].StartsWith("(예정)")) seenPaths.Add(c[0]);
             string png = c[7].Trim();
-            if (png.Length == 0) { noPng++; continue; }
+            if (png.Length == 0)
+            {
+                // 「아이콘없음」 행(게이트·더미 58행) — 칸이 비지 않게 기본 그림(Tools/skill_icons/default_icon.txt)을 꽂는다.
+                if (defaultPng.Length == 0) { noPng++; continue; }
+                png = defaultPng; defaulted++;
+            }
             SkillData skill;
             if (c[0].StartsWith("(예정)"))
             {
@@ -113,6 +122,17 @@ public static class SkillIconLinker
         int copied = 0, sourceMissing = 0;
         var wanted = new HashSet<string>();
         foreach (var j in jobs) wanted.Add(j.png);
+        // 표에 행이 없는 SkillData(오늘 새로 만든 불멸·영원함·초월 등) — 칸이 비지 않게 같은 기본 그림. blender가 표 행을 추가하면 다음 Link가 진짜 그림으로 바꾼다.
+        var noRow = new List<SkillData>();
+        if (defaultPng.Length > 0)
+            foreach (string guid in AssetDatabase.FindAssets("t:SkillData", new[] { SkillFolder }))
+            {
+                string ap = AssetDatabase.GUIDToAssetPath(guid);
+                if (seenPaths.Contains(ap)) continue;
+                var sk = AssetDatabase.LoadAssetAtPath<SkillData>(ap);
+                if (sk != null) noRow.Add(sk);
+            }
+        if (noRow.Count > 0) wanted.Add(defaultPng);
         foreach (string png in wanted)
         {
             string source = Path.Combine(SourceFolder, png);
@@ -161,10 +181,23 @@ public static class SkillIconLinker
             string key = string.IsNullOrEmpty(j.confidence) ? "(없음)" : j.confidence;
             byConfidence[key] = (byConfidence.TryGetValue(key, out int n) ? n : 0) + 1;
         }
+        // 표 행 없는 것: 아이콘이 비어 있거나 이미 기본 그림이면 기본 그림(진짜 그림이 있는 건 건드리지 않는다)
+        int noRowDefaulted = 0;
+        if (noRow.Count > 0)
+        {
+            Sprite defaultSprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{IconFolder}/{Safe(defaultPng)}");
+            if (defaultSprite != null)
+                foreach (SkillData sk in noRow)
+                {
+                    if (sk.icon != null && sk.icon != defaultSprite) continue;
+                    if (sk.icon != defaultSprite) { sk.icon = defaultSprite; EditorUtility.SetDirty(sk); }
+                    noRowDefaulted++;
+                }
+        }
         AssetDatabase.SaveAssets();
 
         var sb = new StringBuilder();
-        sb.AppendLine($"스킬 아이콘 연결: 표 {rows}행 · 연결 {linked}개 · PNG 복사 {copied}개(원본 없음 {sourceMissing}) · PNG 없는 행 {noPng}개(글자 첫 글자로 표시) · 에셋 없음 {missingAsset} · 계획 행 못 맞춤 {plannedMissing} · 스프라이트 실패 {spriteFail}");
+        sb.AppendLine($"스킬 아이콘 연결: 표 {rows}행 · 연결 {linked}개 · PNG 복사 {copied}개(원본 없음 {sourceMissing}) · 기본 그림 — 「아이콘없음」 행이라 {defaulted}개 · 「표 행이 없어서」 {noRowDefaulted}개 · PNG 없는 행 {noPng}개(글자 첫 글자로 표시) · 에셋 없음 {missingAsset} · 계획 행 못 맞춤 {plannedMissing} · 스프라이트 실패 {spriteFail}");
         sb.Append("  확신도별 연결: ");
         foreach (var kv in byConfidence) sb.Append($"{kv.Key} {kv.Value} · ");
         if (problems.Count > 0) sb.Append("\n  못 맞춘 행: " + string.Join(" | ", problems));

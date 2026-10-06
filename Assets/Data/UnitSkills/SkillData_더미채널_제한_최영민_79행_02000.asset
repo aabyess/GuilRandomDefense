@@ -10,31 +10,107 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_더미채널_제한_최영민_79행_02000
-  m_EditorClassIdentifier:
-  skillName: A0QY 3범위 레베카제한 기본둔화
-  description: '진입게이트 확정(2026-09-06, 리서치담당 799ef03) — triggerChance=0.2000로 잠금 해제. 양의 상태조건(스테이지·버프 보유 등)은 축 밖이라 뺐다 — 실제보다 자주 발동할 수 있다. [제한 나머지 09-30] U6: 천둥박수 A0QY는 대상 중심 460 범위 50000 — 단일이었다. (Tools/apply_limited_rest.py) [작은 축 09-30] ⓑ X6: 게이트가 대상에 따라 갈린다(PV 200이면 1/5 · B06B면 1/5 · 그 밖 1/10) — 이 에셋은 「대상 PV 200: 1/5」 갈래로, 나머지 둘은 _B06B·_일반 에셋. (Tools/apply_small_axes.py)'
-  · e0EQ(%제한됨변화 레베카 더미13) A0QY 3범위 레베카제한 기본둔화 [천둥소리 피해]: 50000 (원작 레베카·제한됨) 진입게이트: Trig_RebecaAttack_Actions[이벤트직결]: GetRandomInt(1,10)==6 | Trig_RebecaAttack_Actions[이벤트직결]: GetUnitPointValue(GetTriggerUnit())==200 AND GetRandomInt(1,5)==4 | Trig_RebecaAttack_Actions[이벤트직결]: UnitHasBuffBJ(GetTriggerUnit(),'B06B')==true AND GetRandomInt(1,5)==4
-  제거된 행(오더 없음 — 시각 이펙트, 리서치담당 19f86f7/5b7ed24): e0F0(%제한됨변화 레베카 더미1) A0QY 3범위 레베카제한 기본둔화: 50000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지) / e0F1(%제한됨변화 레베카 더미12) A0QY 3범위 레베카제한 기본둔화: 50000(원작 값, 참고용 — 실제로는 안 쏨. 피해는 같은 트리거의 RRD가 ORIGINAL_UNLISTED_SKILL_EFFECTS.csv에 이미 셈, 이중 계상 방지)
+  m_Name: "SkillData_\uB354\uBBF8\uCC44\uB110_\uC81C\uD55C_\uCD5C\uC601\uBBFC_79\uD589_02000"
+  m_EditorClassIdentifier: 
+  skillName: "A0QY 3\uBC94\uC704 \uB808\uBCA0\uCE74\uC81C\uD55C \uAE30\uBCF8\uB454\uD654"
+  description: "\uC9C4\uC785\uAC8C\uC774\uD2B8 \uD655\uC815(2026-09-06, \uB9AC\uC11C\uCE58\uB2F4\uB2F9
+    799ef03) \u2014 triggerChance=0.2000\uB85C \uC7A0\uAE08 \uD574\uC81C. \uC591\uC758
+    \uC0C1\uD0DC\uC870\uAC74(\uC2A4\uD14C\uC774\uC9C0\xB7\uBC84\uD504 \uBCF4\uC720
+    \uB4F1)\uC740 \uCD95 \uBC16\uC774\uB77C \uBE90\uB2E4 \u2014 \uC2E4\uC81C\uBCF4\uB2E4
+    \uC790\uC8FC \uBC1C\uB3D9\uD560 \uC218 \uC788\uB2E4. [\uC81C\uD55C \uB098\uBA38\uC9C0
+    09-30] U6: \uCC9C\uB465\uBC15\uC218 A0QY\uB294 \uB300\uC0C1 \uC911\uC2EC 460
+    \uBC94\uC704 50000 \u2014 \uB2E8\uC77C\uC774\uC5C8\uB2E4. (Tools/apply_limited_rest.py)
+    [\uC791\uC740 \uCD95 09-30] \u24D1 X6: \uAC8C\uC774\uD2B8\uAC00 \uB300\uC0C1\uC5D0
+    \uB530\uB77C \uAC08\uB9B0\uB2E4(PV 200\uC774\uBA74 1/5 \xB7 B06B\uBA74 1/5 \xB7
+    \uADF8 \uBC16 1/10) \u2014 \uC774 \uC5D0\uC14B\uC740 \u300C\uB300\uC0C1 PV 200:
+    1/5\u300D \uAC08\uB798\uB85C, \uB098\uBA38\uC9C0 \uB458\uC740 _B06B\xB7_\uC77C\uBC18
+    \uC5D0\uC14B. (Tools/apply_small_axes.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.2
-    range: 460.0
+    range: 460
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 4
-      multiplier: 50000.0
-      bonus: 0.0
+      multiplier: 50000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
     primaryTargetCondition: 2
-    primaryTargetConditionValue: 200.0
+    primaryTargetConditionValue: 200
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: 9e0c246b1cc0c4233a422e8efb94058b, type: 3}

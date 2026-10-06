@@ -10,18 +10,38 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: SkillData_게이트_랜덤_호시노_아이_33bd8aa4
-  m_EditorClassIdentifier:
-  skillName: 부릉냐 - 랜덤전용[제한됨] — 1/5
-  description: '게이트별 배정(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv, 2026-09-06): 원작 부릉냐 - 랜덤전용[제한됨](h09N)의 게이트 "1/5" 능력 1개를 이 SkillData 하나로 묶었다.   · BronyaMotar_E#2: 계산식 (3125000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVar  hitCount>1은 "같은 RRD 식의 반복"이지 시간차 다단히트가 아니다 — duration=0(즉시 연속 N회)으로 근사했다. [BronyaMotar_E#1] 회수(2026-09-06, SkillEffectBasis.CasterGaugeValue 추가, a8835c8/OUT_OF_AXIS_CLASSIFY.md②): 원작 "625,000×(1+0.005×시전자마나)"를 전개해 시전자마나×3125+625000으로 담았다. ⚠️ 원작 마나는 평타 +1 AND E 스킬 +5 두 경로인데 우리엔 E가 없어 게이지가 천천히 오른다 → 배율 상한(×1.745)에 덜 도달하는 알려진 과소다. E를 구현하면 그때 +5를 이 게이지에 이을 것. [구조 뒤 09-30] ⑤ BronyaMotar_E: 415 범위 피해 난수 배율 1~1.5(Tools/apply_structure_followups.py)'
+  m_Name: "SkillData_\uAC8C\uC774\uD2B8_\uB79C\uB364_\uD638\uC2DC\uB178_\uC544\uC774_33bd8aa4"
+  m_EditorClassIdentifier: 
+  skillName: "\uBD80\uB989\uB0D0 - \uB79C\uB364\uC804\uC6A9[\uC81C\uD55C\uB428] \u2014
+    1/5"
+  description: "\uAC8C\uC774\uD2B8\uBCC4 \uBC30\uC815(ORIGINAL_UNLISTED_SKILL_EFFECTS.csv,
+    2026-09-06): \uC6D0\uC791 \uBD80\uB989\uB0D0 - \uB79C\uB364\uC804\uC6A9[\uC81C\uD55C\uB428](h09N)\uC758
+    \uAC8C\uC774\uD2B8 \"1/5\" \uB2A5\uB825 1\uAC1C\uB97C \uC774 SkillData \uD558\uB098\uB85C
+    \uBB36\uC5C8\uB2E4.   \xB7 BronyaMotar_E#2: \uACC4\uC0B0\uC2DD (3125000.00+(GetUnitStateSwap(UNIT_STATE_MAX_LIFE,s__TrigVar 
+    hitCount>1\uC740 \"\uAC19\uC740 RRD \uC2DD\uC758 \uBC18\uBCF5\"\uC774\uC9C0 \uC2DC\uAC04\uCC28
+    \uB2E4\uB2E8\uD788\uD2B8\uAC00 \uC544\uB2C8\uB2E4 \u2014 duration=0(\uC989\uC2DC
+    \uC5F0\uC18D N\uD68C)\uC73C\uB85C \uADFC\uC0AC\uD588\uB2E4. [BronyaMotar_E#1]
+    \uD68C\uC218(2026-09-06, SkillEffectBasis.CasterGaugeValue \uCD94\uAC00, a8835c8/OUT_OF_AXIS_CLASSIFY.md\u2461):
+    \uC6D0\uC791 \"625,000\xD7(1+0.005\xD7\uC2DC\uC804\uC790\uB9C8\uB098)\"\uB97C
+    \uC804\uAC1C\uD574 \uC2DC\uC804\uC790\uB9C8\uB098\xD73125+625000\uC73C\uB85C
+    \uB2F4\uC558\uB2E4. \u26A0\uFE0F \uC6D0\uC791 \uB9C8\uB098\uB294 \uD3C9\uD0C0
+    +1 AND E \uC2A4\uD0AC +5 \uB450 \uACBD\uB85C\uC778\uB370 \uC6B0\uB9AC\uC5D4 E\uAC00
+    \uC5C6\uC5B4 \uAC8C\uC774\uC9C0\uAC00 \uCC9C\uCC9C\uD788 \uC624\uB978\uB2E4 \u2192
+    \uBC30\uC728 \uC0C1\uD55C(\xD71.745)\uC5D0 \uB35C \uB3C4\uB2EC\uD558\uB294 \uC54C\uB824\uC9C4
+    \uACFC\uC18C\uB2E4. E\uB97C \uAD6C\uD604\uD558\uBA74 \uADF8\uB54C +5\uB97C \uC774
+    \uAC8C\uC774\uC9C0\uC5D0 \uC774\uC744 \uAC83. [\uAD6C\uC870 \uB4A4 09-30] \u2464
+    BronyaMotar_E: 415 \uBC94\uC704 \uD53C\uD574 \uB09C\uC218 \uBC30\uC728 1~1.5(Tools/apply_structure_followups.py)"
   triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 0.2
-    range: 415.0
+    range: 415
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
+    requiredBuffId: 
+    forbiddenBuffId: 
+    selfBuffId: 
     effects:
     - kind: 0
       basis: 1
@@ -29,21 +49,132 @@ MonoBehaviour:
       damageType: 2
       attackType: 7
       multiplier: 0.02
-      bonus: 3125000.0
+      bonus: 3125000
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
       skipDamageTakenMultiplier: 1
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
     - kind: 0
       basis: 7
       target: 2
       damageType: 2
       attackType: 7
-      multiplier: 3125.0
-      bonus: 625000.0
+      multiplier: 3125
+      bonus: 625000
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
       randMax: 1.5
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: f3dad3faa889c4285b81e4a8fe0a65fb, type: 3}
