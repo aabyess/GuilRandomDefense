@@ -1625,9 +1625,25 @@ public class UnitAttacker : MonoBehaviour
 
     bool HasNormalEnemyInRange(float worldRange) => NearestNormalEnemy(worldRange) != null;
 
-    void KillNearestNormalEnemy(float worldRange)
+    // 범위 안 일반 적 중 잃은 체력(최대−현재)이 가장 큰 적(초월 이태훈 「약자멸시」 — 사장님 10-06 「잃은체력이가장높은몹우선삭제」). 같으면 가까운 쪽.
+    EnemyDummy MostLostHpNormalEnemy(float worldRange)
     {
-        EnemyDummy target = NearestNormalEnemy(worldRange);
+        EnemyDummy best = null;
+        float bestLost = -1f, bestSqr = float.MaxValue, rangeSqr = worldRange > 0f ? worldRange * worldRange : float.MaxValue;
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+        {
+            if (!IsNormalEnemy(enemy)) continue;
+            float sqr = (enemy.transform.position - transform.position).sqrMagnitude;
+            if (sqr > rangeSqr) continue;
+            float lost = enemy.MaxHp - enemy.Hp;
+            if (lost > bestLost || (Mathf.Approximately(lost, bestLost) && sqr < bestSqr)) { bestLost = lost; bestSqr = sqr; best = enemy; }
+        }
+        return best;
+    }
+
+    void KillNearestNormalEnemy(float worldRange, bool mostLostHp = false)
+    {
+        EnemyDummy target = mostLostHp ? MostLostHpNormalEnemy(worldRange) : NearestNormalEnemy(worldRange);
         if (target == null) return;
         // 막타 피해로 처리 — 일반 처치와 같은 경로(보상·처치 알림)를 탄다. 방어·상성은 무시하고 확실히 죽는 크기.
         target.TakeDamage(1e12f, DamageType.AD, AttackType.Unassigned, owner != null ? owner.OwnerId : -1, armorIgnoreRatio: 1f, isAbilityDamage: false);
@@ -2250,7 +2266,7 @@ public class UnitAttacker : MonoBehaviour
     {
         // 소환(최상호 구일) — 대상이 없다. 확률·쿨다운은 위(CastSkillLevel·평타 확률 발동)가 이미 판정했다.
         if (effect.kind == SkillEffectKind.SummonUnit) { SummonFor(effect); return; }
-        if (effect.kind == SkillEffectKind.KillNormalEnemies) { KillNearestNormalEnemy(range); return; }
+        if (effect.kind == SkillEffectKind.KillNormalEnemies) { KillNearestNormalEnemy(range, effect.killMostLostHp); return; }
         if (effect.kind == SkillEffectKind.FormChange) { BeginGunForm(effect); return; }
         if (effect.kind == SkillEffectKind.Knockback) { KnockBack(primaryTarget, effect); return; }
         if (effect.kind == SkillEffectKind.AttackSpeedStack) { AddAttackSpeedStack(effect); return; }

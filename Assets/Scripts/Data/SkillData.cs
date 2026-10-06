@@ -592,6 +592,9 @@ public class SkillEffect
 
     // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 김건 형태변환) — FormChange 전용: 형태 동안 자기 공격속도 변화(−0.30 = −30%). 0이면 없음.
     public float formSelfAttackSpeed;
+
+    // ⚠️ 맨 뒤(2026-10-06 구현담당3, 초월 이태훈 「약자멸시」) — KillNormalEnemies의 대상 선택: false면 가장 가까운 일반 적, true면 범위 안 일반 적 중 잃은 체력(최대−현재)이 가장 큰 적.
+    public bool killMostLostHp;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
