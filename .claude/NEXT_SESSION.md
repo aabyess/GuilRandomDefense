@@ -34,6 +34,7 @@
 - 공용 파일(GameHud·UnitAttacker·SkillData)에 남의 미커밋 hunk가 섞인다 — 자기 hunk만 스테이징해 커밋(구현담당1·3이 그렇게 함). PM은 효과음을 `git apply --cached` + `git apply`로 넣음.
 - 탐침 표적 체력 ×1e9는 평타가 float에 묻힌다 — ×1e3.
 - AD %체력이 방어를 타던 것(두유찬 실측으로 발견).
+- 미커밋 남은 것: `SkillData_공용_디버프_외동.asset`(주인 불명 — 아무도 자기 것 아니라 함, diff 보고 판단) · Effects/Sphere 58개·폰트 SDF(예전부터).
 
 
 ## ⭐⭐⭐⭐⭐⭐⭐⭐⭐ 10-06 저녁 마감 — 이게 최신 (팀 전원 교체 직전에 씀)
