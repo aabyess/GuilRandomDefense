@@ -15,6 +15,7 @@ public static class NetLoadingHook
         if (Time.unscaledTime - lastShownAt < 2f) return;   // 같은 전환에서 두 번째 호출(방장 ②+③)
         lastShownAt = Time.unscaledTime;
         Debug.Log($"[MP] 로딩 화면({from})");
+        DoorTransition.SlamForSceneChange();   // 10-06 친구 화면도 문이 닫혔다가 게임에서 열린다(방장·혼자 하기는 이미 닫혀 있으면 그대로)
         LoadingScreen.Show();
     }
 }

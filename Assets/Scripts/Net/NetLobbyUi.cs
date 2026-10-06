@@ -217,10 +217,11 @@ public class NetLobbyUi : MonoBehaviour
     TMP_Text saveLoadResult;
     GameObject saveGroup;
     bool saveOpen;
-    RectTransform soloRect, togetherRect, toggleRect;
+    RectTransform soloRect, togetherRect, toggleRect, settingsRect;
 
     // 메뉴 틀 안 단추 자리(틀 위에서 내려온 거리, 시안 1600×900 y 316·428·540 → 틀 안 271·406·541). 세이브 코드를 펴면 위 세 단추가 촘촘해지고 아래에 입력칸이 선다.
-    static readonly float[] ClosedY = { 271f, 406f, 541f };
+    // 10-06 [설정] 단추가 넷째로 들어오며 간격을 좁혔다(세이브 코드를 펴면 설정 단추는 숨는다 — 입력칸 자리).
+    static readonly float[] ClosedY = { 236f, 346f, 456f, 566f };
     static readonly float[] OpenY = { 235f, 330f, 425f };
 
     void BuildModePanel(RectTransform root)
@@ -231,7 +232,7 @@ public class NetLobbyUi : MonoBehaviour
 
         Button solo = CreateButton(c, "SoloButton", "혼자 하기", ButtonAccent, 38);
         soloRect = (RectTransform)solo.transform;
-        solo.onClick.AddListener(() => launcher.PlaySolo());
+        solo.onClick.AddListener(() => DoorTransition.CloseThen(() => launcher.PlaySolo(), expectScene: true));   // 10-06 선술집 문
 
         Button together = CreateButton(c, "TogetherButton", "같이 하기", ButtonNormal, 38);
         togetherRect = (RectTransform)together.transform;
@@ -241,6 +242,11 @@ public class NetLobbyUi : MonoBehaviour
         Button toggle = CreateButton(c, "SaveCodeToggle", "세이브 코드 불러오기", ButtonNormal, 31);
         toggleRect = (RectTransform)toggle.transform;
         toggle.onClick.AddListener(() => SetSaveOpen(!saveOpen));
+
+        // 10-06 사장님 「세이브 코드 불러오기 밑에 설정 — 사운드 조절·창모드/전체화면·해상도」
+        Button settings = CreateButton(c, "SettingsButton", "설정", ButtonNormal, 34);
+        settingsRect = (RectTransform)settings.transform;
+        settings.onClick.AddListener(() => SetSettingsOpen(true));
 
         RectTransform group = CreateRect(c, "SaveGroup");
         group.anchorMin = Vector2.zero; group.anchorMax = Vector2.one; group.offsetMin = group.offsetMax = Vector2.zero;
@@ -277,6 +283,113 @@ public class NetLobbyUi : MonoBehaviour
         PlaceFromTop(soloRect, -ys[0], ButtonSize);
         PlaceFromTop(togetherRect, -ys[1], ButtonSize);
         PlaceFromTop(toggleRect, -ys[2], ButtonSize);
+        settingsRect.gameObject.SetActive(!open);
+        if (!open) PlaceFromTop(settingsRect, -ClosedY[3], ButtonSize);
+    }
+
+    // ───── 설정 창(10-06) — 화면 가운데 모달. 소리 둘(전체·배경음악) + 화면(ScreenMode.Options) + 닫기 ─────
+    GameObject settingsPanel;
+    readonly System.Collections.Generic.List<(int index, LobbyButtonFx fx, Button button)> screenButtons = new System.Collections.Generic.List<(int, LobbyButtonFx, Button)>();
+
+    void SetSettingsOpen(bool open)
+    {
+        if (settingsPanel == null) BuildSettingsPanel((RectTransform)transform);
+        settingsPanel.SetActive(open);
+        if (open) RefreshScreenButtons();
+    }
+
+    void BuildSettingsPanel(RectTransform root)
+    {
+        Image dim = CreateImage(root, "SettingsDim", new Color(0f, 0f, 0f, 0.6f));
+        Stretch(dim.rectTransform);
+        settingsPanel = dim.gameObject;
+        dim.gameObject.AddComponent<Button>().onClick.AddListener(() => SetSettingsOpen(false));   // 바깥을 누르면 닫힘
+
+        Image card = CreateImage(dim.rectTransform, "SettingsCard", Card);
+        Sprite frame = Lobby("menu_frame");
+        Vector2 size = new Vector2(760f, 820f);
+        if (frame != null) { card.sprite = frame; card.type = Image.Type.Sliced; card.color = Color.white; card.pixelsPerUnitMultiplier = 512f / size.x; }
+        Place(card.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, size);
+        card.raycastTarget = true;   // 카드 안을 눌러도 닫히지 않게(dim보다 위에서 받는다)
+        RectTransform c = card.rectTransform;
+
+        TMP_Text head = CreateText(c, "Title", "설정", 46, titleFont, ButtonText, TextAlignmentOptions.Center);
+        PlaceFromTop(head.rectTransform, -92f, new Vector2(600f, 70f));
+
+        float y = -190f;
+        AddVolumeRow(c, "전체 소리", y, AudioPrefs.MasterVolume, AudioPrefs.SetMaster);
+        y -= 92f;
+        AddVolumeRow(c, "배경 음악", y, AudioPrefs.MusicVolume, AudioPrefs.SetMusic);
+        y -= 100f;
+
+        TMP_Text screenHead = CreateText(c, "ScreenHead", "화면", 30, boldFont, ButtonText, TextAlignmentOptions.Left);
+        PlaceFromTopX(screenHead.rectTransform, -150f, y, new Vector2(300f, 44f));
+        y -= 56f;
+        // 전체 화면 먼저, 창은 큰 것부터(저장 번호와 상관없이 보기 좋은 순서)
+        int[] order = Enumerable.Range(0, ScreenMode.Options.Length)
+            .OrderBy(i => ScreenMode.Options[i].fullScreen ? 0 : 1)
+            .ThenByDescending(i => ScreenMode.Options[i].width * ScreenMode.Options[i].height).ToArray();
+        Vector2 cell = new Vector2(290f, 62f);
+        for (int k = 0; k < order.Length; k++)
+        {
+            int index = order[k];
+            Button b = CreateButton(c, $"Screen{index}", ScreenMode.Options[index].label, ButtonNormal, 24);
+            SizeButton(b, cell);
+            PlaceFromTopX((RectTransform)b.transform, k % 2 == 0 ? -152f : 152f, y - (k / 2) * 72f, cell);
+            b.onClick.AddListener(() => { ScreenMode.Choose(index); RefreshScreenButtons(); });
+            screenButtons.Add((index, b.GetComponent<LobbyButtonFx>(), b));
+        }
+        y -= ((order.Length + 1) / 2) * 72f + 30f;
+
+        Button close = CreateButton(c, "SettingsClose", "닫기", ButtonNormal, 32);
+        SizeButton(close, new Vector2(240f, 70f));
+        PlaceFromTop((RectTransform)close.transform, y - 10f, new Vector2(240f, 70f));
+        close.onClick.AddListener(() => SetSettingsOpen(false));
+        settingsPanel.SetActive(false);
+    }
+
+    void RefreshScreenButtons()
+    {
+        int current = ScreenMode.CurrentIndex();
+        foreach ((int index, LobbyButtonFx fx, Button button) in screenButtons)
+        {
+            button.interactable = ScreenMode.IsAvailable(index);
+            if (fx != null && fx.label != null) fx.label.color = index == current ? Selected : ButtonText;
+        }
+    }
+
+    // 한 줄: 이름 · 막대(Slider) · 퍼센트. 값이 바뀌면 바로 적용·저장.
+    void AddVolumeRow(RectTransform parent, string label, float y, float value, System.Action<float> onChange)
+    {
+        TMP_Text name = CreateText(parent, label + "Label", label, 28, boldFont, ButtonText, TextAlignmentOptions.Left);
+        PlaceFromTopX(name.rectTransform, -230f, y, new Vector2(170f, 44f));
+        TMP_Text percent = CreateText(parent, label + "Percent", "", 26, inputFont, TextMain, TextAlignmentOptions.Right);
+        PlaceFromTopX(percent.rectTransform, 270f, y, new Vector2(90f, 44f));
+
+        RectTransform sliderRect = CreateRect(parent, label + "Slider");
+        PlaceFromTopX(sliderRect, 40f, y, new Vector2(330f, 30f));
+        Image track = CreateImage(sliderRect, "Track", new Color(0.08f, 0.06f, 0.04f, 0.95f));
+        Stretch(track.rectTransform, 0f, 8f);
+        RectTransform fillArea = CreateRect(sliderRect, "FillArea");
+        Stretch(fillArea, 0f, 8f);
+        Image fill = CreateImage(fillArea, "Fill", Gold);
+        fill.rectTransform.anchorMin = Vector2.zero; fill.rectTransform.anchorMax = new Vector2(0f, 1f);
+        fill.rectTransform.offsetMin = fill.rectTransform.offsetMax = Vector2.zero;
+        RectTransform handleArea = CreateRect(sliderRect, "HandleArea");
+        Stretch(handleArea, 12f, 0f);
+        Image handle = CreateImage(handleArea, "Handle", ButtonText);
+        handle.rectTransform.sizeDelta = new Vector2(24f, 0f);
+        handle.rectTransform.anchorMin = Vector2.zero; handle.rectTransform.anchorMax = new Vector2(0f, 1f);
+
+        Slider slider = sliderRect.gameObject.AddComponent<Slider>();
+        slider.fillRect = fill.rectTransform;
+        slider.handleRect = handle.rectTransform;
+        slider.targetGraphic = handle;
+        slider.direction = Slider.Direction.LeftToRight;
+        slider.minValue = 0f; slider.maxValue = 1f;
+        slider.value = value;
+        percent.text = $"{Mathf.RoundToInt(value * 100f)}%";
+        slider.onValueChanged.AddListener(v => { onChange(v); percent.text = $"{Mathf.RoundToInt(v * 100f)}%"; });
     }
 
     // 입력칸 안 왼쪽 끝에 붙는 작은 이름표 — 입력칸이 어느 값인지 한눈에(사장님 10-06 「닉네임 이름표」). 글자는 이름표 폭만큼 오른쪽으로 민다.
@@ -312,7 +425,7 @@ public class NetLobbyUi : MonoBehaviour
         createButton.onClick.AddListener(() =>
         {
             NetPlayer.SaveNickname(nicknameInput.text);
-            launcher.CreateRoom();
+            DoorTransition.CloseThen(() => launcher.CreateRoom(), expectScene: false);
         });
 
         TMP_Text or = CreateText(c, "Or", "또는 방 코드로 참가", 26, font, TextDim, TextAlignmentOptions.Center);
@@ -329,7 +442,8 @@ public class NetLobbyUi : MonoBehaviour
         joinButton.onClick.AddListener(() =>
         {
             NetPlayer.SaveNickname(nicknameInput.text);
-            launcher.JoinRoom(codeInput.text);
+            string code = codeInput.text;
+            DoorTransition.CloseThen(() => launcher.JoinRoom(code), expectScene: false);
         });
 
         // 틀 위쪽 바깥(화면 위 가장자리와 틀 사이)에 작게 — 메뉴 틀 안은 단추 자리라 비운다.
@@ -409,13 +523,13 @@ public class NetLobbyUi : MonoBehaviour
 
         startButton = CreateButton(c, "StartButton", "시작", ButtonAccent, 32);
         Place((RectTransform)startButton.transform, new Vector2(0.5f, 0.5f), new Vector2(120f, -300f), new Vector2(380f, 84f));
-        startButton.onClick.AddListener(() => launcher.StartMatch());
+        startButton.onClick.AddListener(() => DoorTransition.CloseThen(() => launcher.StartMatch(), expectScene: true));
         startHint = CreateText(c, "StartHint", "", 20, font, TextDim, TextAlignmentOptions.Center);
         Place(startHint.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(120f, -362f), new Vector2(520f, 32f));
 
         Button leave = CreateButton(c, "LeaveButton", "나가기", ButtonDanger, 28);
         Place((RectTransform)leave.transform, new Vector2(0.5f, 0.5f), new Vector2(-330f, -300f), new Vector2(240f, 84f));
-        leave.onClick.AddListener(() => launcher.Leave());
+        leave.onClick.AddListener(() => DoorTransition.CloseThen(() => launcher.Leave(), expectScene: false));   // 대기실 → 첫 화면: 닫혔다 열림
 
         // 대기실 채팅 — 게임 안 채팅과 같은 길(PlayerChat). 줄은 알림 자리(왼쪽 아래)에 쌓인다.
         chatInput = CreateInput(root, "LobbyChatInput", "친구에게 할 말 (Enter로 보내기)", PlayerChat.MaxLength);
@@ -661,6 +775,9 @@ public class NetLobbyUi : MonoBehaviour
             new Color(0.78f, 0.67f, 0.43f, 1f), new Color(0.78f, 0.67f, 0.43f, 1f));
         subtitle.outlineWidth = 0.3f;
         subtitle.outlineColor = new Color32(48, 26, 6, 255);
+        // 10-06 사장님 「깜빡이는 게 아니라 보였다 안 보였다 생동감 있게」 — 숨 쉬듯 천천히 흐려졌다 돌아온다(그림자도 같이).
+        TextBreathe breathe = subtitle.gameObject.AddComponent<TextBreathe>();
+        breathe.texts = new[] { subtitle, subShadow };
         title.enableVertexGradient = true;
         title.colorGradient = new VertexGradient(
             new Color(1f, 0.93f, 0.62f, 1f), new Color(1f, 0.93f, 0.62f, 1f),
@@ -730,7 +847,18 @@ public class LobbyButtonFx : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         selectable = GetComponent<UnityEngine.UI.Selectable>();
     }
 
-    public void OnPointerEnter(PointerEventData e) { hover = true; Apply(); }
+    // 10-06 사장님 「버튼에 마우스 올리면 달그락 거리는 애니메이션」 — 나무 판이 흔들리듯 좌우로 몇 번 까딱이며 잦아든다 + 나무 소리.
+    const float RattleSeconds = 0.38f;
+    float rattleLeft;
+    public void OnPointerEnter(PointerEventData e)
+    {
+        hover = true; Apply();
+        if (selectable == null || selectable.interactable)
+        {
+            if (rattleLeft <= 0f) GameSound.Play(GameSoundId.UiRattle);
+            rattleLeft = RattleSeconds;
+        }
+    }
     public void OnPointerExit(PointerEventData e) { hover = false; down = false; Apply(); }
     public void OnPointerDown(PointerEventData e) { down = true; Apply(); }
     public void OnPointerUp(PointerEventData e) { down = false; Apply(); }
@@ -738,11 +866,21 @@ public class LobbyButtonFx : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     bool lastInteractable = true;
     void Update()
     {
+        if (rattleLeft > 0f)
+        {
+            rattleLeft -= Time.unscaledDeltaTime;
+            float k = Mathf.Max(0f, rattleLeft) / RattleSeconds;            // 1 → 0 으로 잦아듦
+            float phase = (RattleSeconds - rattleLeft) * 52f;               // 초당 ≈8번 까딱
+            transform.localRotation = Quaternion.Euler(0f, 0f, 3.2f * k * Mathf.Sin(phase));
+            float pop = 1f + 0.045f * k;
+            transform.localScale = new Vector3(pop, pop, 1f);
+            if (rattleLeft <= 0f) { transform.localRotation = Quaternion.identity; transform.localScale = Vector3.one; }
+        }
         bool ok = selectable == null || selectable.interactable;
         if (ok != lastInteractable) { lastInteractable = ok; if (!ok) { hover = down = false; } Apply(); }
     }
 
-    void OnDisable() { hover = down = false; }
+    void OnDisable() { hover = down = false; rattleLeft = 0f; transform.localRotation = Quaternion.identity; transform.localScale = Vector3.one; }
 
     void Apply()
     {
@@ -784,5 +922,28 @@ public class LobbyRowHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         bool on = movable && hover;
         if (hint != null && hint.gameObject.activeSelf != on) hint.gameObject.SetActive(on);
         if (on && row != null) row.color = Highlight;
+    }
+}
+
+/// <summary>글자를 숨 쉬듯 서서히 흐렸다 밝힌다(첫 화면 부제, 사장님 10-06). 사인 곡선에 부드러운 가감속 — 깜빡임이 아니다.</summary>
+public class TextBreathe : MonoBehaviour
+{
+    public TMP_Text[] texts;
+    public float period = 4.2f;      // 한 번 숨 쉬는 데 걸리는 초
+    public float minAlpha = 0.08f;   // 거의 안 보일 때까지
+    float[] baseAlpha;
+
+    void Start()
+    {
+        baseAlpha = new float[texts.Length];
+        for (int i = 0; i < texts.Length; i++) baseAlpha[i] = texts[i] != null ? texts[i].alpha : 1f;
+    }
+
+    void Update()
+    {
+        float s = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / period);
+        s = s * s * (3f - 2f * s);   // 위·아래에서 잠깐 머문다
+        float a = Mathf.Lerp(minAlpha, 1f, s);
+        for (int i = 0; i < texts.Length; i++) if (texts[i] != null) texts[i].alpha = baseAlpha[i] * a;
     }
 }

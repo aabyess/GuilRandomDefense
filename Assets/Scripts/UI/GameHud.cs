@@ -918,14 +918,14 @@ public class GameHud : MonoBehaviour
         NetLauncher launcher = NetLauncher.Instance;
         if (launcher != null && launcher.InRoom)
         {
-            launcher.Leave();   // MP: 방장은 방을 닫고, 친구는 [나가기] 예고 뒤 나간다 — 둘 다 첫 화면으로
+            DoorTransition.CloseThen(() => launcher.Leave(), expectScene: true);   // MP: 방장은 방을 닫고, 친구는 [나가기] 예고 뒤 나간다 — 둘 다 첫 화면으로 · 10-06 문이 닫혔다 첫 화면에서 열림
             return;
         }
         // 혼자 하기: 첫 화면(빌드의 0번 씬 NetBoot)으로. 게임 씬만 있는 빌드(에디터에서 게임 씬을 바로 켠 경우 등)면 이 판을 다시 시작한다.
         int current = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
         int target = current != 0 && UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings > 1 ? 0 : current;
         Debug.Log($"[HUD] 메뉴: 처음 화면으로 — 씬 {target}");
-        UnityEngine.SceneManagement.SceneManager.LoadScene(target);
+        DoorTransition.CloseThen(() => UnityEngine.SceneManagement.SceneManager.LoadScene(target), expectScene: true);   // 10-06 선술집 문이 닫혔다가 첫 화면에서 열린다
     }
 
     // 좌측 세로 패널. 하단 HUD(y 0~0.22)·상단 바(0.95~1)·스토리 줄(0.90~0.95)을 피해서

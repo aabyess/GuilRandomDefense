@@ -22,6 +22,9 @@ public static class ScreenMode
         new Option { label = "창 1600×900", width = 1600, height = 900 },
         new Option { label = "창 1366×768", width = 1366, height = 768 },
         new Option { label = "창 1280×720", width = 1280, height = 720 },
+        // 10-06 사장님 「창모드일 때 1920×1200 이런 식으로」 — 저장값이 번호라 **맨 뒤에만** 붙인다(앞에 끼우면 옛 저장이 다른 해상도로 읽힌다).
+        new Option { label = "창 1920×1200", width = 1920, height = 1200 },
+        new Option { label = "창 2560×1440", width = 2560, height = 1440 },
     };
 
     const string PrefsKey = "GuilRandomDefense.ScreenMode";
