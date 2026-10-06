@@ -28,7 +28,7 @@ static class EternalUpgradeApply
         {
             var unit = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{name}.asset");
             if (unit == null) return $"❌ 유닛 없음: {name}";
-            string path = $"{Folder}/UnitUpgrade_영원_{unit.unitName}.asset";
+            string path = $"{Folder}/UnitUpgrade_{name}.asset";   // 로스터 이름 기준 — 칭호(unitName)가 바뀌어도 파일이 안 바뀐다
             var track = AssetDatabase.LoadAssetAtPath<UnitUpgradeTrackData>(path);
             if (track == null)
             {
