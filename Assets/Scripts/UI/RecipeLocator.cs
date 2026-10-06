@@ -27,7 +27,7 @@ public static class RecipeLocator
         var wanted = new HashSet<UnitData>();
         if (recipe.ingredients != null)
             foreach (RecipeIngredient ing in recipe.ingredients)
-                if (ing != null && ing.kind == IngredientKind.SpecificUnit && ing.unit != null) wanted.Add(ing.unit);
+                if (ing != null && ing.kind == IngredientKind.SpecificUnit && ing.unit != null) { wanted.Add(ing.unit); if (ing.alternativeUnit != null) wanted.Add(ing.alternativeUnit); }
 
         foreach (DollInfo doll in Object.FindObjectsByType<DollInfo>(FindObjectsSortMode.None))
         {

@@ -303,7 +303,8 @@ public class UnitData : ScriptableObject
             displayPersonResolved = true;
             string[] parts = name.Split('_');
             // 10-06 사장님 「바지사장이 아니라 최상호 바지사장처럼 풀네임」 — 「초월_최상호_AP」·「희귀함_최상호_오타쿠의길」처럼 세 토막인 것도 둘째 토막이 사람 이름이다.
-            if (parts.Length >= 2 && parts[0] != "Unit" && parts[1].Length > 0
+            // 10-06 다른세계는 사장님이 「이름 칭호」 한 덩어리를 unitName에 준다(예 「고태훈 다른세계의주민」 — 에셋 이름은 다른세계_무면허_라이더) → 사람 이름을 따로 안 붙인다.
+            if (grade != UnitGrade.OtherWorld && parts.Length >= 2 && parts[0] != "Unit" && parts[1].Length > 0
                 && !string.IsNullOrEmpty(unitName) && !unitName.Contains(parts[1]))
                 displayPerson = parts[1];
             return displayPerson;

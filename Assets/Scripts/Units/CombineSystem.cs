@@ -416,12 +416,12 @@ public class CombineSystem : MonoBehaviour
                 foreach (UnitIdentity member in inventory.Members)
                 {
                     if (member == null || member.Data == null) continue;
-                    if (ingredient.kind == IngredientKind.SpecificUnit ? member.Data == ingredient.unit
+                    if (ingredient.kind == IngredientKind.SpecificUnit ? (member.Data == ingredient.unit || (ingredient.alternativeUnit != null && member.Data == ingredient.alternativeUnit))
                         : ingredient.kind == IngredientKind.UnitGradeWildcard && member.Data.grade == ingredient.wildcardGrade) have++;
                 }
                 if (have >= need) continue;
                 string name = ingredient.kind == IngredientKind.SpecificUnit
-                    ? (ingredient.unit != null ? ingredient.unit.unitName : "?")
+                    ? (ingredient.unit != null ? (ingredient.alternativeUnit != null ? $"{ingredient.unit.unitName} 또는 {ingredient.alternativeUnit.unitName}" : ingredient.unit.unitName) : "?")
                     : $"{ingredient.wildcardGrade.KoreanName()} 등급";
                 lines.Add($"재료 부족 : {name} {need - have}개");
             }
@@ -596,7 +596,8 @@ public class CombineSystem : MonoBehaviour
 
             if (!TryTakeUnit(pool, ingredient.unit, Mathf.Max(1, ingredient.count), unitsToRemove))
             {
-                return false;
+                // 「A or B」(RecipeIngredient.alternativeUnit) — A가 없으면 B로 대신한다(count 1인 칸만).
+                if (ingredient.alternativeUnit == null || Mathf.Max(1, ingredient.count) != 1 || !TryTakeUnit(pool, ingredient.alternativeUnit, 1, unitsToRemove)) return false;
             }
         }
 

@@ -3526,7 +3526,7 @@ public class GameHud : MonoBehaviour
         switch (ingredient.kind)
         {
             case IngredientKind.SpecificUnit:
-                return ingredient.unit != null ? ingredient.unit.DisplayName : null;
+                return ingredient.unit != null ? (ingredient.alternativeUnit != null ? $"({ingredient.unit.DisplayName} 또는 {ingredient.alternativeUnit.DisplayName})" : ingredient.unit.DisplayName) : null;
             case IngredientKind.SpecificItem:
                 return ingredient.item != null ? ingredient.item.itemName : null;
             case IngredientKind.UnitGradeWildcard:

@@ -18,6 +18,10 @@ public class RecipeIngredient
     public UnitGrade wildcardGrade; // kind == UnitGradeWildcard — 이 등급이면 어떤 유닛이든 인정 (예: "랜덤전용유닛 1기")
 
     public int count = 1;
+
+    // ⚠️ 맨 뒤(2026-10-06, 다른세계 브로리 「임채현 or 이재윤」 — 사장님 확정) — 「A or B」 재료: kind == SpecificUnit일 때 unit이 모자라면 이 유닛으로 대신한다(둘 다 있으면 unit 먼저).
+    // CombineSystem 재료 판정·소모·부족 안내와 GameHud 재료 문구가 본다. count가 2 이상인 칸엔 쓰지 않는다(첫 재료가 일부만 들어간 채 대안으로 넘어가지 않게).
+    public UnitData alternativeUnit;
 }
 
 [System.Serializable]
