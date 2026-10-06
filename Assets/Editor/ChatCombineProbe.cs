@@ -25,18 +25,22 @@ static class ChatCombineProbe
             leaked += combine.GetRecipesStartingWith(u).Count(CombineSystem.IsChatOnly);
         sb.AppendLine($"[목록] 채팅 전용 식 {chatOnly.Count}개 (히든 {chatOnly.Count(r => r.result.grade == UnitGrade.Hidden)} · 불멸 {chatOnly.Count(r => r.result.grade == UnitGrade.Immortal)} · 초월 {chatOnly.Count(r => r.result.grade == UnitGrade.Transcendent)}) · 버튼 목록에 샌 것 {leaked}(기대 0)");
 
-        foreach (UnitGrade grade in new[] { UnitGrade.Hidden, UnitGrade.Immortal, UnitGrade.Transcendent })
+        CombineRecipe lastTested = null;
+        foreach ((UnitGrade grade, bool epithet) in new[] { (UnitGrade.Hidden, false), (UnitGrade.Immortal, false), (UnitGrade.Transcendent, false), (UnitGrade.Transcendent, true) })
         {
-            CombineRecipe recipe = chatOnly.FirstOrDefault(r => r.result.grade == grade && (r.ingredients ?? new()).All(i => i != null && i.kind == IngredientKind.SpecificUnit && i.unit != null));
-            if (recipe == null) { sb.AppendLine($"[{grade}] 시험할 식 없음"); continue; }
+            CombineRecipe recipe = chatOnly.FirstOrDefault(r => r.result.grade == grade && (!epithet || !string.IsNullOrEmpty(r.chatPhrase)) && r != lastTested && (r.ingredients ?? new()).All(i => i != null && i.kind == IngredientKind.SpecificUnit && i.unit != null));
+            if (recipe == null) { sb.AppendLine($"[{grade}{(epithet ? " 수식어" : "")}] 시험할 식 없음"); continue; }
             int before = UnitIdentity.Active.Count(u => u != null && u.Data == recipe.result && u.OwnerId == 0);
             foreach (RecipeIngredient ing in recipe.ingredients)
                 for (int k = 0; k < Mathf.Max(1, ing.count); k++)
                     spawner.Spawn(ing.unit, LaneMarker.Get(0) != null ? LaneMarker.Get(0).TakeSpawnPosition(ing.unit) : Vector3.zero, 0);
-            string phrase = recipe.commandId.Split('/').Last().Trim();
+            // 히든은 「친구이름 조합」(에셋 이름 히든_최윤서 → 「최윤서 조합」), 나머지는 commandId 영문 코드(「… tr」·「… im」)
+            lastTested = recipe;
+            string[] nameParts = recipe.name.Split('_');
+            string phrase = epithet ? recipe.chatPhrase : grade == UnitGrade.Hidden ? nameParts[1] + " 조합" : recipe.commandId.Split('/').Last().Trim();
             string message = box.TryExecuteCode(0, phrase);
             int after = UnitIdentity.Active.Count(u => u != null && u.Data == recipe.result && u.OwnerId == 0);
-            sb.AppendLine($"[{grade}] {recipe.name} 「{phrase}」 → {message ?? "(코드 아님)"} · 결과 유닛 {before}→{after} · 모자란 것 {string.Join(" / ", combine.DescribeShortage(recipe))}");
+            sb.AppendLine($"[{grade}{(epithet ? " 수식어" : "")}] {recipe.name} 「{phrase}」 → {message ?? "(코드 아님)"} · 결과 유닛 {before}→{after} · 모자란 것 {string.Join(" / ", combine.DescribeShortage(recipe))}");
         }
         sb.AppendLine("[엉뚱한 말] " + (box.TryExecuteCode(0, "안녕하세요") ?? "null(기대)"));
         return sb.ToString();
