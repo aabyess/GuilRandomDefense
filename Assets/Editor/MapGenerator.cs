@@ -65,6 +65,9 @@ public static class MapGenerator
         { "story",     new Surface("grass", new Color(0.92f, 0.84f, 1.00f), 0.120f, 0.05f) },
         { "gacha",     new Surface("grass", new Color(1.00f, 0.98f, 0.82f), 0.120f, 0.05f) },
         { "combine",   new Surface("grass", new Color(0.90f, 0.90f, 0.88f), 0.120f, 0.05f) },
+        // 레인 사이 십자 대지(2026-10-06 사장님 「그랜드캐니언처럼 흙으로 된 섬」) — 메시 UV가 월드 단위라 타일 수는 안 쓴다(BuildInterLaneHills).
+        { "canyontop",   new Surface("canyon_top",    Color.white,         0f,     0.05f) },
+        { "canyoncliff", new Surface("canyon_strata", Color.white,         0f,     0.08f) },
         { "portal",    new Surface(null,    new Color(0.30f, 0.70f, 0.85f), 0f,     0.60f) },
     };
 
@@ -815,23 +818,36 @@ public static class MapGenerator
         BuildInterLaneHills(parent);   // 겉모습: 콜라이더 없는 솟은 대지(위 설명)
     }
 
-    // ──────────────────────────────────────────────────────────── 레인 사이 언덕 (2026-10-04)
+    // ──────────────────────────────────────────────────────────── 레인 사이 언덕 (2026-10-04) → 협곡 대지 (2026-10-06)
     //
     // 사장님 「도박소 줄 아래 넓은 아이보리 띠 — 디자인이 구림, 언덕처럼 원랜디처럼 대지 느낌으로」.
     // 그 띠는 레인 사이 십자 벽 둘(BuildInterLaneWalls)에 돌담 조각(DressWall)을 230~338 폭으로 늘려 붙인 것이었다.
     // 🔴 막는 상자(콜라이더)·NavMesh는 **그대로**다 — 겉모습만 바꾼다. 상자는 렌더러 없이 콜라이더만 남고,
-    //    그 자리에 콜라이더 없는 「솟은 대지」 메시를 얹는다: 윗면 잔디(레인과 같은 재질) · 가장자리 흙 경사 · 바다까지 내려가는 바위 밑단 ·
-    //    윗면에 낮은 소품(풀·덤불·바위·어린나무)을 듬성듬성. 높이는 레인 윗면에서 HillRise(IslandShores 둔덕 RidgeHeight와 같은 3.2 — 유닛 키 48의 1/15,
-    //    레인을 보는 카메라 시야를 안 막는다). 소품도 키 낮은 것만(HillPropMaxHeight).
-    // - 경사는 레인 윗면과 같은 높이(IslandTop)에서 시작해 HillSlopeRun 안쪽에서 윗면에 닿는다 — 레인 가장자리와 틈·턱 없이 이어진다.
-    // - 십자 교차점: 가로 언덕 윗면을 0.05 낮춰 같은 높이 겹침(z-fight)을 피한다(세로 윗면이 이긴다). 경사는 윗면 아래라 가려진다.
+    //    그 자리에 콜라이더 없는 「솟은 대지」 메시를 얹는다.
+    // 2026-10-06 사장님 「십자가 더 올라오게, 잔디보다 그랜드캐니언처럼 흙으로 된 섬처럼」 → 잔디 언덕(높이 3.2)을
+    //    두 단 협곡 대지(높이 HillRise)로: 레인 가장자리 흙 비탈 → 절벽 → 중턱 턱 → 절벽 → 붉은 흙 윗면.
+    //    절벽·비탈·바다까지 내려가는 밑단은 지층 텍스처(canyon_strata — UV v = 높이라 띠가 수평), 턱·윗면은 붉은 흙(canyon_top).
+    //    UV는 월드 단위(CanyonStrataTile·CanyonTopTile)라 재질 타일은 1×1이다.
+    // - 시야: 윗면 가장자리는 발자국에서 HillProfile 마지막 안쪽만큼 들어가 있어, 카메라 50°~60°에서 절벽 그림자 띠
+    //    (HillRise ÷ tan 50° ≈ 20)가 발자국 밖 레인까지 안 닿는다.
+    // - 십자 교차점: 가로 대지를 0.05 낮춰 같은 높이 겹침(z-fight)을 피한다(세로 윗면이 이긴다).
     // - 메시는 Assets/Art/MapMeshes/에 에셋으로 저장한다(씬이 참조). 다시 지어도 같은 파일을 덮는다.
-    // - 소품·언덕 묶음은 NavMeshModifier.ignoreFromBuild — 콜라이더가 없지만 혹시 모를 구움 포함도 막는다.
-    const float HillRise = 3.2f;
-    const float HillSlopeRun = 16f;
+    // - 소품·대지 묶음은 NavMeshModifier.ignoreFromBuild — 콜라이더가 없지만 혹시 모를 구움 포함도 막는다.
+    const float HillRise = 24f;           // 유닛 키 48의 절반
+    const float CanyonStrataTile = 24f;   // 지층 텍스처 세로 한 장 = 대지 높이 하나
+    const float CanyonTopTile = 96f;
+    // 단면(바깥 → 안): (발자국 가장자리에서 들어간 거리, 높이 비율, 윗면 재질인가). 첫 점은 레인 높이.
+    static readonly (float inset, float rise, bool flat)[] HillProfile =
+    {
+        (0f, 0f, false),      // 레인 가장자리
+        (9f, 0.10f, false),   // 흙 비탈(무너진 돌 더미)
+        (13f, 0.52f, false),  // 아래 절벽
+        (24f, 0.55f, true),   // 중턱 턱
+        (28f, 1f, false),     // 위 절벽
+    };
     const float HillPropMaxHeight = 14f;
     const float HillPropCell = 48f;
-    const float HillPropKeep = 0.5f;
+    const float HillPropKeep = 0.35f;
     const string HillContainerName = "레인간_언덕";
     const string HillMeshFolder = "Assets/Art/MapMeshes";
 
@@ -851,9 +867,12 @@ public static class MapGenerator
         container.transform.SetParent(parent, false);
         container.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
 
+        Material topMaterial = GetOrCreateTiledMaterial("canyontop", Surfaces["canyontop"], 1, 1);
+        Material cliffMaterial = GetOrCreateTiledMaterial("canyoncliff", Surfaces["canyoncliff"], 1, 1);
+
         List<NatureAsset> propAssets = LoadHillProps();
         int hills = 0, props = 0;
-        float lower = 0f;   // 두 번째(가로) 언덕 윗면을 낮춰 십자에서 겹침을 피한다
+        float lower = 0f;   // 두 번째(가로) 대지 윗면을 낮춰 십자에서 겹침을 피한다
         foreach (MapLayout.Island footprint in InterLaneWallFootprints())
         {
             float minX = footprint.center.x - footprint.size.x * 0.5f + InterLaneWallMargin * 0.5f;
@@ -865,89 +884,77 @@ public static class MapGenerator
             GameObject hill = new GameObject(footprint.name + "_언덕", typeof(MeshFilter), typeof(MeshRenderer));
             hill.transform.SetParent(container.transform, false);
             hill.GetComponent<MeshFilter>().sharedMesh = mesh;
-            float sizeX = maxX - minX, sizeZ = maxZ - minZ;
-            hill.GetComponent<MeshRenderer>().sharedMaterials = new[]
-            {
-                HillMaterial("lane", sizeX, sizeZ),   // 윗면 — 레인과 같은 잔디
-                HillMaterial("dirt", sizeX, sizeZ),   // 가장자리 경사
-                HillMaterial("rock", sizeX, sizeZ),   // 바다까지 내려가는 밑단
-            };
+            hill.GetComponent<MeshRenderer>().sharedMaterials = new[] { topMaterial, cliffMaterial };
             GameObjectUtility.SetStaticEditorFlags(hill, StaticEditorFlags.BatchingStatic);
             hills++;
 
             props += ScatterHillProps(container.transform, footprint.name, minX, maxX, minZ, maxZ, lower, propAssets);
             lower += 0.05f;
         }
-        return $"레인 사이 언덕: {hills}개 · 소품 {props}개";
+        return $"레인 사이 협곡 대지: {hills}개 · 높이 {HillRise} · 바위 {props}개";
     }
 
-    static Material HillMaterial(string key, float sizeX, float sizeZ)
-    {
-        Surface surface = Surfaces[key];
-        int tilesX = Mathf.Max(1, Mathf.RoundToInt(sizeX * TilesPerUnit(surface)));
-        int tilesZ = Mathf.Max(1, Mathf.RoundToInt(sizeZ * TilesPerUnit(surface)));
-        return GetOrCreateTiledMaterial(key, surface, tilesX, tilesZ);
-    }
-
-    // 메시: 서브메시 0 윗면 · 1 경사 4장 · 2 바다까지 내려가는 밑단 4장. 앞면(시계 방향)이 바깥을 보게 면마다 법선으로 확인해 뒤집는다.
+    // 메시: 서브메시 0 붉은 흙(턱·윗면) · 1 지층(비탈·절벽·바다까지 내려가는 밑단). 앞면(시계 방향)이 바깥을 보게 면마다 법선으로 확인해 뒤집는다.
     static Mesh BuildHillMesh(float minX, float maxX, float minZ, float maxZ, float lower)
     {
-        float baseY = MapLayout.IslandTop + 0.05f;       // 경사 시작 — 레인 윗면과 같은 높이에서 이어지되 같은 평면 깜빡임을 피한다
-        float topY = MapLayout.IslandTop + HillRise - lower;
+        float baseY = MapLayout.IslandTop + 0.05f;       // 레인 윗면과 같은 높이에서 이어지되 같은 평면 깜빡임을 피한다
         float seaY = 0f;
-        float run = Mathf.Min(HillSlopeRun, (maxX - minX) * 0.4f, (maxZ - minZ) * 0.4f);
+        float shrink = Mathf.Min(1f, Mathf.Min(maxX - minX, maxZ - minZ) * 0.4f / HillProfile[HillProfile.Length - 1].inset);
 
         var vertices = new List<Vector3>();
         var uvs = new List<Vector2>();
         var tops = new List<int>();
-        var slopes = new List<int>();
-        var skirts = new List<int>();
-        float sizeX = maxX - minX, sizeZ = maxZ - minZ;
+        var cliffs = new List<int>();
 
-        void Quad(List<int> triangles, Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 outward, bool skirt)
+        void Quad(List<int> triangles, Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 outward, bool flat)
         {
             int start = vertices.Count;
-            Vector3[] quad = { a, b, c, d };
-            foreach (Vector3 v in quad)
+            bool alongX = Mathf.Abs(outward.z) >= Mathf.Abs(outward.x);   // 남·북 면은 x를 따라, 동·서 면은 z를 따라 띠가 흐른다
+            foreach (Vector3 v in new[] { a, b, c, d })
             {
                 vertices.Add(v);
-                // 윗면·경사는 위에서 본 평면 투영, 밑단은 (가로 위치, 높이) — 세로로 늘어나 줄무늬지지 않게.
-                uvs.Add(skirt ? new Vector2(((v.x - minX) / sizeX + (v.z - minZ) / sizeZ), v.y * 0.04f)
-                              : new Vector2((v.x - minX) / sizeX, (v.z - minZ) / sizeZ));
+                uvs.Add(flat ? new Vector2(v.x / CanyonTopTile, v.z / CanyonTopTile)
+                             : new Vector2((alongX ? v.x : v.z) / CanyonStrataTile, v.y / CanyonStrataTile));
             }
-            // 앞면은 시계 방향 — cross(b−a, c−a)가 바깥을 향하면 (a,b,c) 그대로, 아니면 뒤집는다.
             bool keep = Vector3.Dot(Vector3.Cross(b - a, c - a), outward) > 0f;
             if (keep) { triangles.AddRange(new[] { start, start + 1, start + 2, start, start + 2, start + 3 }); }
             else { triangles.AddRange(new[] { start, start + 2, start + 1, start, start + 3, start + 2 }); }
         }
 
-        // 바깥 사각형(경사 시작)·안쪽 사각형(윗면)의 모서리.
-        Vector3 o00 = new Vector3(minX, baseY, minZ), o10 = new Vector3(maxX, baseY, minZ);
-        Vector3 o11 = new Vector3(maxX, baseY, maxZ), o01 = new Vector3(minX, baseY, maxZ);
-        Vector3 i00 = new Vector3(minX + run, topY, minZ + run), i10 = new Vector3(maxX - run, topY, minZ + run);
-        Vector3 i11 = new Vector3(maxX - run, topY, maxZ - run), i01 = new Vector3(minX + run, topY, maxZ - run);
+        Vector3[] Ring(float inset, float y) => new[]
+        {
+            new Vector3(minX + inset, y, minZ + inset), new Vector3(maxX - inset, y, minZ + inset),
+            new Vector3(maxX - inset, y, maxZ - inset), new Vector3(minX + inset, y, maxZ - inset),
+        };
+        float RingY(int i) => baseY + (HillRise * HillProfile[i].rise - (i == 0 ? 0f : lower));
 
-        Quad(tops, i00, i01, i11, i10, Vector3.up, false);
-        float tilt = HillRise / run;
-        Quad(slopes, o00, i00, i10, o10, new Vector3(0f, 1f, -tilt), false);   // 남(−z)
-        Quad(slopes, o11, i11, i01, o01, new Vector3(0f, 1f, tilt), false);    // 북(+z)
-        Quad(slopes, o01, i01, i00, o00, new Vector3(-tilt, 1f, 0f), false);   // 서(−x)
-        Quad(slopes, o10, i10, i11, o11, new Vector3(tilt, 1f, 0f), false);    // 동(+x)
+        // 네 변: (모서리 a, 모서리 b, 바깥 방향)
+        (int a, int b, Vector3 dir)[] sides = { (0, 1, Vector3.back), (2, 3, Vector3.forward), (3, 0, Vector3.left), (1, 2, Vector3.right) };
 
-        Vector3 s00 = new Vector3(minX, seaY, minZ), s10 = new Vector3(maxX, seaY, minZ);
-        Vector3 s11 = new Vector3(maxX, seaY, maxZ), s01 = new Vector3(minX, seaY, maxZ);
-        Quad(skirts, s00, o00, o10, s10, Vector3.back, true);
-        Quad(skirts, s11, o11, o01, s01, Vector3.forward, true);
-        Quad(skirts, s01, o01, o00, s00, Vector3.left, true);
-        Quad(skirts, s10, o10, o11, s11, Vector3.right, true);
+        for (int i = 1; i < HillProfile.Length; i++)
+        {
+            Vector3[] outer = Ring(HillProfile[i - 1].inset * shrink, RingY(i - 1));
+            Vector3[] inner = Ring(HillProfile[i].inset * shrink, RingY(i));
+            bool flat = HillProfile[i].flat;
+            float tilt = (RingY(i) - RingY(i - 1)) / Mathf.Max(0.01f, (HillProfile[i].inset - HillProfile[i - 1].inset) * shrink);
+            foreach (var side in sides)
+                Quad(flat ? tops : cliffs, outer[side.a], inner[side.a], inner[side.b], outer[side.b], side.dir + Vector3.up / Mathf.Max(0.01f, tilt), flat);
+        }
+
+        Vector3[] top = Ring(HillProfile[HillProfile.Length - 1].inset * shrink, RingY(HillProfile.Length - 1));
+        Quad(tops, top[0], top[3], top[2], top[1], Vector3.up, true);
+
+        Vector3[] rim = Ring(0f, baseY);
+        Vector3[] sea = Ring(0f, seaY);
+        foreach (var side in sides)
+            Quad(cliffs, sea[side.a], rim[side.a], rim[side.b], sea[side.b], side.dir, false);
 
         Mesh mesh = new Mesh { name = "InterLaneHill" };
         mesh.SetVertices(vertices);
         mesh.SetUVs(0, uvs);
-        mesh.subMeshCount = 3;
+        mesh.subMeshCount = 2;
         mesh.SetTriangles(tops, 0);
-        mesh.SetTriangles(slopes, 1);
-        mesh.SetTriangles(skirts, 2);
+        mesh.SetTriangles(cliffs, 1);
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
         mesh.RecalculateBounds();
@@ -972,9 +979,8 @@ public static class MapGenerator
 
     static readonly string[] HillPropFiles =
     {
-        "Grass/풀_01", "Grass/풀_02", "Grass/풀_03", "Grass/덤불_01", "Grass/덤불_02",
-        "Rocks/바위_01", "Rocks/바위_02", "Rocks/바위_03", "Rocks/둥근강돌_02", "Rocks/이끼바위_01", "Rocks/이끼바위_02", "Rocks/자갈무리_01",
-        "Trees/어린나무_01", "Trees/그루터기_01", "Trees/쓰러진통나무_01",
+        // 협곡 대지(10-06): 풀·나무·이끼는 빼고 마른 바위만.
+        "Rocks/바위_01", "Rocks/바위_02", "Rocks/바위_03", "Rocks/자갈무리_01", "Trees/그루터기_01",
     };
 
     static List<NatureAsset> LoadHillProps()
@@ -1003,8 +1009,8 @@ public static class MapGenerator
         if (assets.Count == 0) return 0;
         System.Random rng = new System.Random(StableSeed(seedName + "_언덕"));
         int totalWeight = assets.Sum(a => a.prop.weight);
-        float margin = HillSlopeRun + 6f;
-        float groundY = MapLayout.IslandTop + HillRise - lower;
+        float margin = HillProfile[HillProfile.Length - 1].inset + 6f;
+        float groundY = MapLayout.IslandTop + 0.05f + HillRise - lower;
         int count = 0;
         for (float z = minZ + margin; z < maxZ - margin; z += HillPropCell)
             for (float x = minX + margin; x < maxX - margin; x += HillPropCell)
