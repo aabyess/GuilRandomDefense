@@ -55,7 +55,7 @@ public static class GameSound
     static Slot S(string folder, float db, float gap, int perSecond, int voices, GameSoundId group)
         => new Slot { folder = folder, db = db, gap = gap, perSecond = perSecond, voices = voices, group = group };
 
-    // 볼륨은 blender README 권장값(enemy_death −8 · ui_click −6 · hit_* −4 · 나머지 0).
+    // 볼륨은 blender README 권장값(enemy_death −8 · ui_click −6 · hit_* −4 · 나머지 0). 10-07 친구 피드백 「보스·스토리 깰 때 터지는 소리가 크다」 → boss_death −7.
     // 연타 제한: 평타 셋 합쳐 초당 12 · 간격 0.05 / 일반 처치 초당 8 · 간격 0.05 / 나머지 간격 0.1.
     static readonly Dictionary<GameSoundId, Slot> Slots = new Dictionary<GameSoundId, Slot>
     {
@@ -63,7 +63,7 @@ public static class GameSound
         { GameSoundId.HitRanged,  S("hit_ranged",  -4f, 0.05f, 12, 4, GameSoundId.HitMelee) },
         { GameSoundId.HitMagic,   S("hit_magic",   -4f, 0.05f, 12, 4, GameSoundId.HitMelee) },
         { GameSoundId.EnemyDeath, S("enemy_death", -8f, 0.05f,  8, 4, GameSoundId.EnemyDeath) },
-        { GameSoundId.BossDeath,  S("boss_death",   0f, 0.1f,   0, 2, GameSoundId.BossDeath) },
+        { GameSoundId.BossDeath,  S("boss_death",  -7f, 0.1f,   0, 2, GameSoundId.BossDeath) },
         { GameSoundId.UiClick,    S("ui_click",    -6f, 0.1f,   0, 2, GameSoundId.UiClick) },
         { GameSoundId.UiError,    S("ui_error",     0f, 0.1f,   0, 2, GameSoundId.UiError) },
         { GameSoundId.Combine,    S("combine",      0f, 0.1f,   0, 2, GameSoundId.Combine) },

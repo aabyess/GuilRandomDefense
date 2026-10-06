@@ -49,7 +49,7 @@ public static class SummonVoice
         { "초월_노태현_AP", new[] { "Brook" } },
         { "초월_두유찬_AD", new[] { "sabo" } },
         { "초월_박기찬_AD", new[] { "Franky" } },
-        { "초월_박민수_AD", new[] { "Zoro" } },
+        { "초월_박민수_AD", new[] { "Minsu_boss" } },   // 10-07 사장님 녹음 파일(원작 Zoro 대신, Assets/Audio/Custom)
         { "초월_배성령_AD", new[] { "Sanji_2" } },
         { "초월_신문철_AP", new[] { "Luffy" } },
         { "초월_양재모_AD", new[] { "Law" } },
