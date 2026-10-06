@@ -579,7 +579,7 @@ public class UnitAttacker : MonoBehaviour
         // 평타와 동일하게 적용 안 한다.
         float critHpBefore = target.Hp;
         target.TakeDamage(bonus, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
-                          armorIgnoreRatio: 0f, isAbilityDamage: false);
+                          armorIgnoreRatio: 0f, isAbilityDamage: false, armorScale: AttackArmorScale);
         SkillTelemetry.Damage(unitData, "치명", target, critHpBefore);
 
         // 스턴 시간은 걸린 적이 센다(EnemyDummy.FreezeFor) — 이 유닛이 사라져도 풀린다.
@@ -703,6 +703,7 @@ public class UnitAttacker : MonoBehaviour
             FocusLostHp = !FocusLostHp;   // 토글 — 쿨·마나·효과 없음
             return true;
         }
+        if (level != null && level.needsPointClick) { failReason = "땅 지점을 클릭해야 합니다."; return false; }
         if (level == null || level.effects == null || level.effects.Count == 0) { failReason = "아직 효과가 없는 스킬입니다."; return false; }
         SkillRuntimeState state = GetRuntimeState(skill);
         float remaining = state.activeReadyAt - Time.time;
@@ -716,6 +717,32 @@ public class UnitAttacker : MonoBehaviour
         bool vfxBefore = SkillVfx.BeginCast(unitData, skill);
         CastSkillLevel(level, level.WorldRange, null, 0f);
         SkillVfx.EndCast(vfxBefore);
+        return true;
+    }
+
+    /// <summary>지점 지정 액티브(SkillLevel.needsPointClick, 초월 배성령 암살스킬 — TeleportToPoint) — 고른 땅 지점으로 순간이동(NavMesh 밖이면 가장 가까운 NavMesh 점). 쿨 중·갈 수 없는 곳이면 이유를 돌려주고 false.</summary>
+    public bool TryCastActiveAtPoint(SkillData skill, Vector3 point, out string failReason)
+    {
+        failReason = null;
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (skill == null || unitData == null || skill.triggerType != SkillTriggerType.ActiveButton) { failReason = "쓸 수 없는 스킬입니다."; return false; }
+        SkillLevel level = CurrentSkillLevel(skill);
+        if (level == null || level.effects == null || level.effects.Count == 0) { failReason = "아직 효과가 없는 스킬입니다."; return false; }
+        SkillEffect tele = level.effects.Find(e => e != null && e.kind == SkillEffectKind.TeleportToPoint);
+        if (tele == null) { failReason = "지점을 고르는 스킬이 아닙니다."; return false; }
+        SkillRuntimeState state = GetRuntimeState(skill);
+        float remaining = state.activeReadyAt - Time.time;
+        if (remaining > 0f) { failReason = $"쿨타임 중입니다. ({Mathf.CeilToInt(remaining)}초)"; return false; }
+        if (tele.multiplier > 0f && Vector3.Distance(transform.position, point) > tele.multiplier / WorldScale.Value) { failReason = "사거리 밖입니다."; return false; }
+        if (!TryGetComponent(out UnityEngine.AI.NavMeshAgent agent) || !UnityEngine.AI.NavMesh.SamplePosition(point, out UnityEngine.AI.NavMeshHit hit, 30f * WorldScale.Value, agent.areaMask))
+        { failReason = "그곳으로는 이동할 수 없습니다."; return false; }
+
+        state.activeReadyAt = Time.time + Mathf.Max(0.01f, level.cooldown);
+        SkillTelemetry.Cast(unitData, skill);
+        SkillSfx.Cast(unitData, skill, transform.position);
+        PulseSphereArt();
+        if (agent.isOnNavMesh) { agent.Warp(hit.position); agent.ResetPath(); }
+        else transform.position = hit.position;
         return true;
     }
 
@@ -2913,7 +2940,7 @@ public class UnitAttacker : MonoBehaviour
         if (hits <= 1)
         {
             float skillHpBefore = target.Hp;
-            target.TakeDamage(amount, effect.damageType, effect.attackType, owner != null ? owner.OwnerId : -1, armorIgnoreRatio: SkillArmorIgnore(effect));
+            target.TakeDamage(amount, effect.damageType, effect.attackType, owner != null ? owner.OwnerId : -1, armorIgnoreRatio: SkillArmorIgnore(effect), armorScale: AttackArmorScale);
             SkillTelemetry.Damage(identity != null ? identity.Data : null, TelemetryChannel(effect), target, skillHpBefore);
             return;
         }
@@ -2921,6 +2948,9 @@ public class UnitAttacker : MonoBehaviour
         // SupportSkillData.waveCount/duration과 같은 관례 — duration에 걸쳐 나눠 때린다.
         StartCoroutine(SkillMultiHitRoutine(target, amount, effect.damageType, effect.attackType, hits, effect.duration, SkillVfx.CasterAllowsVfx));
     }
+
+    // 방무뎀(UnitData.attackArmorIgnoreRatio, 초월 배성령 「무방비상태」) — 평타·스킬 피해가 적 방어를 이 비율만큼 덜 받는다(적 방어 ×(1−비율)). 0이면 1(꺼짐).
+    float AttackArmorScale => identity != null && identity.Data != null ? 1f - Mathf.Clamp01(identity.Data.attackArmorIgnoreRatio) : 1f;
 
     // 최윤서 강화 방무딜 — 효과의 방어 무시 비율(armorIgnoreRequiresBuff가 있으면 그 버프를 가진 시전자만).
     float SkillArmorIgnore(SkillEffect effect)
@@ -3230,7 +3260,7 @@ public class UnitAttacker : MonoBehaviour
             // 문서 참고). 로스터 damageType이 AP인 유닛이라도 평타로 방어를 무시하면 안 된다.
             float basicHpBefore = target.Hp;
             target.TakeDamage(AttackDamage * DamagePassiveFactor(target), DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
-                              armorIgnoreRatio: 0f, isAbilityDamage: false);
+                              armorIgnoreRatio: 0f, isAbilityDamage: false, armorScale: AttackArmorScale);
             SkillTelemetry.Damage(identity != null ? identity.Data : null, "평타", target, basicHpBefore);
             GameSound.PlayAll(BasicHitSound);   // 평타 적중음(10-06) — 주 대상 한 번만(광역·다중·치명 추가타는 안 낸다). 연타 제한은 GameSound가
             ApplyAttackSplash(target);
@@ -3282,7 +3312,7 @@ public class UnitAttacker : MonoBehaviour
         foreach (EnemyDummy enemy in inRange)
         {
             float hpBefore = enemy.Hp;
-            enemy.TakeDamage(damage * DamagePassiveFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false);
+            enemy.TakeDamage(damage * DamagePassiveFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false, armorScale: AttackArmorScale);
             SkillTelemetry.Damage(unitData, "평타다중", enemy, hpBefore);
         }
         ListPool<EnemyDummy>.Release(inRange);
@@ -3312,7 +3342,7 @@ public class UnitAttacker : MonoBehaviour
             float distance = Vector3.Distance(enemy.transform.position, center);
             float hpBefore = enemy.Hp;
             if (distance <= splash)
-                enemy.TakeDamage(damage * DamagePassiveFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false);
+                enemy.TakeDamage(damage * DamagePassiveFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false, armorScale: AttackArmorScale);
             if (distance <= cleave)
                 enemy.TakeDamage(damage * unitData.attackCleaveFactor * DamagePassiveFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 1f, isAbilityDamage: false);
             SkillTelemetry.Damage(unitData, "평타광역", enemy, hpBefore);

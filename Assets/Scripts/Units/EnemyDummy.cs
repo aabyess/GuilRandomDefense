@@ -944,7 +944,7 @@ public class EnemyDummy : MonoBehaviour
     /// 명시적으로 <c>false</c>로 넘긴다.
     /// </summary>
     float MitigatedDamage(float amount, DamageType type, AttackType attackType, float armorIgnoreRatio,
-                          bool isAbilityDamage)
+                          bool isAbilityDamage, float armorScale = 1f)
     {
         // AP = 원작 UNIVERSAL — 물리 방어력과 마법저항을 둘 다 무시한다(엔진 규칙 확정,
         // PM 2026-09-05). attackType은 안 본다 — 어느 상성표 행이든(물리·마법 모두)
@@ -971,7 +971,10 @@ public class EnemyDummy : MonoBehaviour
 
             // 방무뎀은 전부/전무가 아니라 비율이다. 피해를 둘로 갈라 한쪽만 감폭시킨다.
             float ignored = Mathf.Clamp01(armorIgnoreRatio);
-            amount = amount * (1f - ignored) * ArmorMultiplier(EffectiveArmor)
+            // armorScale(UnitData.attackArmorIgnoreRatio — 사장님 10-06 배성령 방무뎀 50%): 양수 방어 수치 자체를 이만큼으로 줄여 계수에 넣는다.
+            float armor = EffectiveArmor;
+            if (armorScale < 1f && armor > 0f) armor *= Mathf.Max(0f, armorScale);
+            amount = amount * (1f - ignored) * ArmorMultiplier(armor)
                    + amount * ignored;
         }
 
@@ -1044,7 +1047,7 @@ public class EnemyDummy : MonoBehaviour
     /// 유닛이 평타로 방어를 통째로 무시하면 안 된다(위 <c>MitigatedDamage</c> 요약 참고).
     /// </param>
     public void TakeDamage(float amount, DamageType type, AttackType attackType,
-                           int killerPlayerId, float armorIgnoreRatio = 0f, bool isAbilityDamage = true)
+                           int killerPlayerId, float armorIgnoreRatio = 0f, bool isAbilityDamage = true, float armorScale = 1f)
     {
         if (isDead) return;
 
@@ -1064,7 +1067,7 @@ public class EnemyDummy : MonoBehaviour
         if (trueInvulnerable) return;
 
         float hpBefore = hp;
-        float mitigatedDamage = MitigatedDamage(amount, type, attackType, armorIgnoreRatio, isAbilityDamage);
+        float mitigatedDamage = MitigatedDamage(amount, type, attackType, armorIgnoreRatio, isAbilityDamage, armorScale);
         hp -= mitigatedDamage;
         // 스토리 기여도(원작 Trig_Story_damage): 플레이어별 누적 피해 — 체력을 넘긴 몫(오버킬)은 뺀다(PlayerDamageOver). 마지막으로 때린 플레이어 = 막타.
         if (ContributionDamage != null && killerPlayerId >= 0 && killerPlayerId < ContributionDamage.Length)

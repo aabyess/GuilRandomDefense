@@ -588,4 +588,8 @@ public class UnitData : ScriptableObject
     [Range(0f, 100f)] public float raiseOnKillChancePercent;
     [Tooltip("0이면 영구. 0보다 크면 이만큼 뒤 사라진다")]
     public float raiseOnKillLifetimeSeconds;
+
+    // ⚠️ 맨 뒤(2026-10-06, 초월 배성령 「무방비상태」 방무뎀 50%) — 이 유닛의 **평타·스킬 피해가 적 방어의 이 비율만큼을 무시**한다(적 방어 ×(1−값), 양수 방어만 — 음수 방어는 그대로).
+    // SkillEffect.armorIgnoreRatio(피해를 둘로 갈라 한쪽만 방어를 무시)와 다른 축이다: 이쪽은 **방어 수치 자체를 깎아** 계수 1/(1+0.02×방어)에 넣는다(사장님 확정: 「적 방어의 50%를 무시」). 0이면 꺼짐.
+    [Range(0f, 1f)] public float attackArmorIgnoreRatio;
 }

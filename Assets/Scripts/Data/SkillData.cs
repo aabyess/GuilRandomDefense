@@ -338,6 +338,11 @@ public enum SkillEffectKind
     // 상위 유닛 개수 비례 **스플래시 피해** 강화(패시브, Self): 이 유닛 평타 광역(ApplyAttackSplash) 피해가 ×(1 + min(bonus, multiplier × 주인의 전설 이상 유닛 수))(소환수·초월위습 제외 — CountHighGradeUnits, 구일 공격 오라와 같은 기준).
     // 예: multiplier 0.02 · bonus 1.0 = 1기당 +2%·상한 +100%. 원작 근거 없음 — 제안값(사장님 확정).
     SkillDamagePerHighGradeUnit,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 배성령 「암살스킬」 — 사장님 확정, 공용: 유재헌·신지우·박은석·전법규도 쓴다) — 직렬화 순서를 지킨다.
+    // 순간이동: ActiveButton + SkillLevel.needsPointClick — 칸을 누른 뒤 **땅 지점을 클릭**하면 시전자가 그 지점으로 NavMeshAgent.Warp(NavMesh 밖이면 가장 가까운 NavMesh 점).
+    // multiplier > 0이면 시전 사거리 제한(원작 단위), 0이면 제한 없음. 쿨은 SkillLevel.cooldown. 돌아오지 않는다(고른 곳이 새 위치). 효과 처리는 UnitAttacker.TryCastActiveAtPoint(CastSkillLevel 안 거침).
+    TeleportToPoint,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -773,6 +778,9 @@ public class SkillLevel
     // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 신문철 「엄마간식」) — ActiveButton 스킬 전용: 칸을 누른 뒤 **내 아군 유닛 하나를 클릭**해야 발동한다(자기도 가능, 우클릭 취소).
     // 고른 아군에게 이 레벨의 효과(AttackSpeedBuffPercent 등 ApplyToAlly가 받는 것)가 걸린다. needsTargetClick(적 대상)의 아군판.
     public bool needsAllyClick;
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 배성령 「암살스킬」) — ActiveButton 스킬 전용: 칸을 누른 뒤 **땅 지점을 클릭**해야 발동한다(우클릭 취소). TeleportToPoint 효과와 짝.
+    public bool needsPointClick;
 }
 
 public enum SkillAoeCenter
