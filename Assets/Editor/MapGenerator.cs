@@ -1796,7 +1796,12 @@ public static class MapGenerator
     /// 🔴 2026-10-06 사장님 「랜덤유닛 여기 간격도 넓혀줘」(0.3.7 맥판 사진: 울타리 선 하나 사이 두 줄이 앞뒤로 바짝) — 전시 격자 **줄 사이(z)** 간격만 ×1.3.
     /// 키 48 인형을 24 간격 줄로 세워 앞뒤가 겹쳐 보였다. 가로(칸 폭÷7)·다른세계 조합식 줄·등급 사이 한 줄 비움은 이 배율만 탄다(깊이 여유는 보고문 「깊이 N/M」).
     /// </summary>
-    const float DisplayRowPitchZ = 1.8f;
+    const float DisplayRowPitchZ = 5.0f;
+    /// <summary>
+    /// 전시 줄 간격 배율(DisplayRowPitchZ)이 늘린 깊이만큼 뽑기섬을 아래로 늘리는 양(MapLayout.GachaExtraZ가 더한다).
+    /// 증가분 = (배율 − 1) × 칸 간격 × (랜덤유닛 줄 수 2 + 등급 사이 빈 줄 1). ⚠️ 3은 14종÷7칸 = 2줄에서 나온 리터럴 — 어긋나면 보고문 「깊이 N/M」이 고발한다.
+    /// </summary>
+    public const float GachaDisplayExtraZ = (DisplayRowPitchZ - 1f) * DisplaySlotSpacing * 3f;
 
     const float SlotSpacing = 61.4f;    // 원작 조합 슬롯 간격 256 ÷ Scale
     const float SlotSize = 30.7f;       // 자리표시 큐브(전시 격자 기준) 3.0 × 10.233

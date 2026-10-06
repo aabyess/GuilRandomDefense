@@ -405,7 +405,7 @@ public static class MapLayout
     const float GachaSizeX = GachaSizeXBase + GachaOtherWorldRowWidthBase * (CombineBoardScale - 1f);
     // 세로 증가분: 줄 높이(칸×3)가 BoardScale배가 되는 만큼 × 줄 수. 윗변은 안 움직이게 중심을 반만큼 내린다.
     //    + 흔함 선택 줄(부스·위습 칸)이 인형 배율만큼 깊어진 몫(MapGenerator.GachaChoiceRowExtraZ, 10-04) — 아래 등급 칸 높이를 지킨다.
-    const float GachaExtraZ = GachaOtherWorldRowCount * MapGenerator.RecipeSlotBase * 3f * (CombineBoardScale - 1f) + MapGenerator.GachaChoiceRowExtraZ;
+    const float GachaExtraZ = GachaOtherWorldRowCount * MapGenerator.RecipeSlotBase * 3f * (CombineBoardScale - 1f) + MapGenerator.GachaChoiceRowExtraZ + MapGenerator.GachaDisplayExtraZ;
     // 🔴 2026-09-24 사장님 지시 「흔함은 맨 왼쪽에 붙게 해줘 그리고 양 여백 있는거 보기 별로다
     //    여백은 없애줘」 → 섬 가로를 **표 자연 가로에 맞춘다**(1700.0 → 1462).
     //    옛 1700은 표가 6열이던 시절 값이라 10열 1461.3에 238.7이 남았고, 가운데 정렬이라
