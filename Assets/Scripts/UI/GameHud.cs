@@ -500,6 +500,7 @@ public class GameHud : MonoBehaviour
         {
             if (gameMenu.activeSelf) CloseGameMenu(); else OpenGameMenu();
         }
+        PlayButtonClickSound();
         if (gameMenuScreenButtons != null && gameMenuScreenButtons.activeInHierarchy) RefreshScreenButtons();   // 해상도 바뀜은 한 프레임 뒤에 반영된다
         RefreshConsoleLayout();
         RefreshFitGrids();
@@ -529,6 +530,25 @@ public class GameHud : MonoBehaviour
         RefreshActiveButton();
         RefreshNavigationButton();
         RefreshRerollButton();
+    }
+
+    // 버튼 누름 소리(10-06) — 버튼마다 onClick에 거는 대신 한 곳에서: 왼쪽 버튼을 누른 프레임에 UI 레이캐스트 맨 위가 누를 수 있는 Button
+    // (또는 그 자식)이면 낸다. 이 HUD가 만든 버튼뿐 아니라 같은 화면의 다른 uGUI 버튼도 같이 잡힌다. 이 PC 사람만 듣는다(GameSound.Play).
+    // 흐린(interactable 꺼진) 버튼은 소리 없음 — 왜 안 되는지는 실패 알림(PlayerNotification.ShowFailure)이 실패음과 함께 말한다.
+    static readonly List<RaycastResult> clickSoundHits = new List<RaycastResult>();
+
+    void PlayButtonClickSound()
+    {
+        if (Mouse.current == null || !Mouse.current.leftButton.wasPressedThisFrame) return;
+        EventSystem eventSystem = EventSystem.current;
+        if (eventSystem == null) return;
+        // 누를 때만(초당 몇 번) 만든다 — 매 프레임 아니라 할당은 신경 쓸 만큼이 아니다.
+        PointerEventData pointer = new PointerEventData(eventSystem) { position = Mouse.current.position.ReadValue() };
+        clickSoundHits.Clear();
+        eventSystem.RaycastAll(pointer, clickSoundHits);
+        if (clickSoundHits.Count == 0 || clickSoundHits[0].gameObject == null) return;
+        Button button = clickSoundHits[0].gameObject.GetComponentInParent<Button>();
+        if (button != null && button.IsInteractable()) GameSound.Play(GameSoundId.UiClick);
     }
 
     void OnDestroy()
@@ -1300,7 +1320,7 @@ public class GameHud : MonoBehaviour
         // false를 돌려주므로 여기서 그냥 리턴하면 원작의 "차감 없이 stop 명령만"과 같다.
         if (!wallet.TrySpend(ResourceType.Wood, option.woodCost))
         {
-            PlayerNotification.Show(owner.OwnerId, "목재가 부족합니다!");
+            PlayerNotification.ShowFailure(owner.OwnerId, "목재가 부족합니다!");
             return;
         }
 
@@ -1454,7 +1474,7 @@ public class GameHud : MonoBehaviour
     public void ExecuteTalentOn(Selectable single, int kind)
     {
         if (single == null || !single.TryGetComponent(out UnitAttacker attacker) || !single.TryGetComponent(out OwnedByPlayer owner)) return;
-        if (!attacker.TryInvestTalent(kind, out string reason)) { PlayerNotification.Show(owner.OwnerId, reason, 4f); return; }
+        if (!attacker.TryInvestTalent(kind, out string reason)) { PlayerNotification.ShowFailure(owner.OwnerId, reason, 4f); return; }
         PlayerNotification.Show(owner.OwnerId, $"<color=#FFD700>재능투자</color> {UnitAttacker.TalentNames[kind]} {attacker.GetTalent(kind)}/{UnitAttacker.TalentMaxOf(kind)} (남은 포인트 {attacker.TalentPointsAvailable})", 4f);
     }
 
@@ -1737,7 +1757,7 @@ public class GameHud : MonoBehaviour
         if (skill == null) return;
         int playerId = single.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
         if (!attacker.TryCastActiveOn(skill, target, out string reason))
-            PlayerNotification.Show(playerId, reason ?? "지금은 사용할 수 없습니다.", 4f);
+            PlayerNotification.ShowFailure(playerId, reason ?? "지금은 사용할 수 없습니다.", 4f);
     }
 
     void OnActiveClicked()
@@ -1772,7 +1792,7 @@ public class GameHud : MonoBehaviour
         if (skill == null) return;
         int playerId = single.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
         if (!attacker.TryCastActive(skill, out string reason))
-            PlayerNotification.Show(playerId, reason ?? "지금은 사용할 수 없습니다.", 4f);
+            PlayerNotification.ShowFailure(playerId, reason ?? "지금은 사용할 수 없습니다.", 4f);
     }
 
     void OnYoonseoClicked()
@@ -1874,6 +1894,7 @@ public class GameHud : MonoBehaviour
                 Random.value < identity.Data.sellRewardWoodChance)
             {
                 context.ResourceWallet.Add(ResourceType.Wood, identity.Data.sellRewardWood);
+                GameSound.PlayFor(seller, GameSoundId.Wood);   // 목재 획득음(10-06)
                 PlayerNotification.Show(seller, $"<color=#20B2AA>{identity.Data.sellRewardWood}개의 추가목재 획득!</color>", 4f);   // j:13153/13165
             }
 
@@ -1897,6 +1918,7 @@ public class GameHud : MonoBehaviour
                     if (identity.Data.sellRewardEveryNWood > 0 && context.ResourceWallet != null && Random.value < identity.Data.sellRewardEveryNWoodChance)
                     {
                         context.ResourceWallet.Add(ResourceType.Wood, identity.Data.sellRewardEveryNWood);
+                        GameSound.PlayFor(seller, GameSoundId.Wood);   // 목재 획득음(10-06)
                         PlayerNotification.Show(seller, $"<color=#20B2AA>{identity.Data.sellRewardEveryNWood}개의 추가목재 획득!</color>", 4f);
                     }
                 }
@@ -3493,6 +3515,7 @@ public class GameHud : MonoBehaviour
             List<string> shortage = system.DescribeShortage(recipe);
             if (shortage.Count == 0) PlayerNotification.Show(LocalPlayer.LocalPlayerId, "지금은 조합할 수 없습니다.", 5f);
             foreach (string line in shortage) PlayerNotification.Show(LocalPlayer.LocalPlayerId, line, 5f);
+            GameSound.Play(GameSoundId.UiError);   // 실패음(10-06) — 모자란 줄이 여럿이어도 한 번
             return;
         }
 
@@ -3524,7 +3547,7 @@ public class GameHud : MonoBehaviour
             // ("조용한 실패" #11). 구체적 원인은 CombineSystem.TryCombine이 이미
             // Debug.LogWarning으로 남긴다(배선 오류라 플레이어가 할 수 있는 게 없다) —
             // 여기서는 "눌렀는데 안 됐다"는 것만 화면에 알린다.
-            PlayerNotification.Show(LocalPlayer.LocalPlayerId, "지금은 조합할 수 없습니다.");
+            PlayerNotification.ShowFailure(LocalPlayer.LocalPlayerId, "지금은 조합할 수 없습니다.");
         }
     }
 
@@ -3559,7 +3582,7 @@ public class GameHud : MonoBehaviour
         if (!view.available)
         {
             // 2026-10-06 사장님: 못 쓰는 칸을 눌렀을 때 아무 반응이 없으면 먹통으로 보인다 → 왜 못 쓰는지 띄운다.
-            PlayerNotification.Show(LocalPlayer.LocalPlayerId, currentShop.GetUnavailableReason(logicalIndex) ?? "지금은 사용할 수 없습니다.");
+            PlayerNotification.ShowFailure(LocalPlayer.LocalPlayerId, currentShop.GetUnavailableReason(logicalIndex) ?? "지금은 사용할 수 없습니다.");
             return;
         }
 
@@ -3570,7 +3593,7 @@ public class GameHud : MonoBehaviour
             // 사유를 out으로 돌려준다(상점 4곳이 이미 알고 있던 사유를 그대로 올려보낸다) —
             // 사유가 없으면(배선 오류 등, 플레이어가 봐도 못 고침) 일반 문구로 대신한다.
             if (UseShop(currentShop, logicalIndex, default, out string reason)) RefreshShopAffordability(); // MP: UseShop
-            else PlayerNotification.Show(LocalPlayer.LocalPlayerId, reason ?? "지금은 사용할 수 없습니다.");
+            else PlayerNotification.ShowFailure(LocalPlayer.LocalPlayerId, reason ?? "지금은 사용할 수 없습니다.");
             return;
         }
 
@@ -3679,7 +3702,7 @@ public class GameHud : MonoBehaviour
         }
 
         if (used) RefreshShopAffordability();
-        else PlayerNotification.Show(LocalPlayer.LocalPlayerId, reason ?? "지금은 사용할 수 없습니다.");
+        else PlayerNotification.ShowFailure(LocalPlayer.LocalPlayerId, reason ?? "지금은 사용할 수 없습니다.");
     }
 
     // 로빈(H098) 전용 — RefreshShopTargeting과 같은 모양(칸을 고른 뒤 다음 클릭을 기다리다

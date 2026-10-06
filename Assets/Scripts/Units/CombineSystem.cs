@@ -295,6 +295,7 @@ public class CombineSystem : MonoBehaviour
 
         // 결과도 필드에 나와야 한다. Spawn이 인벤토리 등록까지 하므로 따로 Add하지 않는다.
         spawner.Spawn(recipe.result, resultPosition, ownerId);
+        GameSound.PlayFor(ownerId, GameSoundId.Combine);   // 조합 성공음(10-06) — 조합한 사람에게만(멀티 친구면 NetGameState가 넘긴다)
         if (IsTransformRecipe(recipe)) OwnerContext?.TryConsumeTransformUse();   // 원작: 변화 성공 때 토큰 1기 제거
 
         // 도움소 「능력치 증가」(H0B7) 선행 조건(Rhfl) — 초월함 조합을 완료한 순간 켠다.

@@ -62,6 +62,7 @@ public class NetGameState : NetworkBehaviour
         if (HasStateAuthority) PlayerNotification.Shown += RouteNotification;
         if (HasStateAuthority) KillGoldPopup.Shown += RouteKillGold;
         if (HasStateAuthority) GameSound.RemoteRouted += RouteSound;
+        if (HasStateAuthority) GameSound.Broadcast += RouteGameSound;
         if (HasStateAuthority) SummonVoice.Broadcast += RouteSummonVoice;
         if (HasStateAuthority) SkillSfx.Broadcast += RouteSkillSfx;
         if (HasStateAuthority) { SkillVfx.Played += RouteVfx; SkillVfx.PlayedPrefab += RoutePrefabVfx; }
@@ -79,6 +80,7 @@ public class NetGameState : NetworkBehaviour
         PlayerNotification.Shown -= RouteNotification;
         KillGoldPopup.Shown -= RouteKillGold;
         GameSound.RemoteRouted -= RouteSound;
+        GameSound.Broadcast -= RouteGameSound;
         SummonVoice.Broadcast -= RouteSummonVoice;
         SkillSfx.Broadcast -= RouteSkillSfx;
         SkillVfx.Played -= RouteVfx;
@@ -213,6 +215,17 @@ public class NetGameState : NetworkBehaviour
     public void RPC_SkillSfx(short clip, byte volume, Vector3 position)
     {
         SkillSfx.Play(clip, volume / 255f, position);
+    }
+
+    // 전원 효과음(10-06 — 평타 적중·처치·라운드 시작·보스 등장). 판정(UnitAttacker·EnemyDummy·RoundManager)은 호스트에서만 돌아서
+    // 클라엔 그 순간이 없다 — 호스트 GameSound.PlayAll이 연타 제한(평타 초당 12 · 처치 초당 8)을 통과한 것만 여기로 온다.
+    // 방장 PC는 이미 냈다. 놓쳐도 되는 것이라 비신뢰 채널(스킬 효과음과 같다).
+    void RouteGameSound(GameSoundId id) => RPC_GameSound((byte)id);
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies, Channel = RpcChannel.Unreliable)]
+    public void RPC_GameSound(byte id)
+    {
+        GameSound.PlayBroadcast((GameSoundId)id);
     }
 
     void RouteVfx(SkillVfx.Kind kind, Vector3 position) => RPC_SkillVfx((byte)kind, position);

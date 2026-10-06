@@ -24,6 +24,14 @@ public static class PlayerNotification
         PlayerNotificationHud.EnsureInstance().Enqueue(playerId, message, duration);
         Shown?.Invoke(playerId, message, duration); // MP
     }
+
+    /// <summary>「왜 안 되는지」 알림 — <see cref="Show"/>에 실패음(GameSoundId.UiError)을 붙인다(10-06). 소리도 그 사람에게만
+    /// (멀티 호스트면 GameSound.RemoteRouted로 그 친구에게). 성공·정보 알림엔 쓰지 말 것.</summary>
+    public static void ShowFailure(int playerId, string message, float duration = 4f)
+    {
+        Show(playerId, message, duration);
+        GameSound.PlayFor(playerId, GameSoundId.UiError);
+    }
 }
 
 public class PlayerNotificationHud : MonoBehaviour

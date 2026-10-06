@@ -1099,6 +1099,9 @@ public class EnemyDummy : MonoBehaviour
             // 파괴보다 먼저 부른다 — Destroy가 걸린 뒤엔 재생될 틈이 없다.
             // (지금은 즉시 파괴라 사실상 안 보이지만, 사망 연출을 넣을 자리를 여기로 정해둔다.)
             GetComponent<CharacterAnimator>()?.PlayDeath();
+            // 처치음(10-06) — 여긴 호스트·싱글만 온다(바로 위 IsServer). 보스(스토리·사이드 보스 포함 isBoss)는 큰 소리, 나머지는 작은 퍽.
+            // 클라는 GameSound.PlayAll → NetGameState가 넘긴다. 흡수(RemoveInstantly)는 소리 없음.
+            GameSound.PlayAll(data != null && data.isBoss ? GameSoundId.BossDeath : GameSoundId.EnemyDeath);
 
             // 처치 골드는 보통 킬러가 아니라 이 적이 걷던 레인의 주인에게 간다(원작 그대로).
             // 예외는 레인에 안 속한 적(크립·퀘스트 미니보스)뿐이고, 그 판단은 분배기가 한다

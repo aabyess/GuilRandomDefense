@@ -150,7 +150,7 @@ public static class NetCommands
     {
         CombineSystem system = Object.FindFirstObjectByType<CombineSystem>();
         CombineRecipe recipe = system != null ? system.RecipeAt(recipeIndex) : null;
-        if (recipe == null) { PlayerNotification.Show(sender.Slot, "지금은 조합할 수 없습니다."); return; }
+        if (recipe == null) { PlayerNotification.ShowFailure(sender.Slot, "지금은 조합할 수 없습니다."); return; }
 
         if (!TryGetOwnedReal(sender, casterId, "조합", out GameObject caster) || !caster.TryGetComponent(out UnitIdentity identity) || identity.Data == null)
         {
@@ -177,7 +177,7 @@ public static class NetCommands
         }
         finally { CombineSystem.ActingPlayerOverride = -1; }
 
-        if (!ok) PlayerNotification.Show(sender.Slot, rejected ?? "지금은 조합할 수 없습니다.");
+        if (!ok) PlayerNotification.ShowFailure(sender.Slot, rejected ?? "지금은 조합할 수 없습니다.");
         if (commandsLogged++ < 30) Debug.Log($"[MP] 조합 요청 수행: 슬롯 {sender.Slot} 조합식 {recipeIndex}({identity.Data.unitName}) → {(ok ? "성공" : "거절: " + (rejected ?? "TryCombine 실패"))}");
     }
 
@@ -226,7 +226,7 @@ public static class NetCommands
         }
 
         bool used = shop.TryUse(slot, target, out string reason);
-        if (!used) PlayerNotification.Show(sender.Slot, reason ?? "지금은 사용할 수 없습니다.");
+        if (!used) PlayerNotification.ShowFailure(sender.Slot, reason ?? "지금은 사용할 수 없습니다.");
         if (commandsLogged++ < 30) Debug.Log($"[MP] 상점 요청 수행: 슬롯 {sender.Slot} {((Component)shop).name} 칸 {slot} → {(used ? "성공" : "실패: " + reason)}");
     }
 

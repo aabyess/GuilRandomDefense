@@ -364,7 +364,15 @@ public class RoundManager : MonoBehaviour
     {
         FullCountScore.OnBossSpawned(laneIndex, roundNumber);   // 신세계 보스 17.5초 안 처치 판정의 시작 시각
         StartCoroutine(BossTimeoutRoutine(laneIndex, roundNumber, boss));
+        // 보스 등장음(10-06, 전원) — 레인마다 보스가 하나씩 서서 이 이벤트가 레인 수만큼 온다 → 라운드당 한 번만.
+        if (lastBossAppearSoundRound != roundNumber)
+        {
+            lastBossAppearSoundRound = roundNumber;
+            GameSound.PlayAll(GameSoundId.BossAppear);
+        }
     }
+
+    int lastBossAppearSoundRound = -1;
 
     IEnumerator BossTimeoutRoutine(int laneIndex, int roundNumber, EnemyDummy boss)
     {
@@ -658,6 +666,8 @@ public class RoundManager : MonoBehaviour
 
         roundTimer = ResolveRoundDuration(roundNumber, waveData);
         AnnounceRoundStart(roundNumber, waveData);
+        // 라운드 시작음(10-06, 전원) — 보스 라운드는 보스가 설 때 BossAppear가 대신 난다(OnRoundBossSpawned). 여긴 호스트·싱글만.
+        if (waveData == null || !waveData.IsBossRound) GameSound.PlayAll(GameSoundId.RoundStart);
 
         if (waveData != null && waveData.IsBossRound)
         {

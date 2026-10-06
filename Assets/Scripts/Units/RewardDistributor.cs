@@ -273,7 +273,7 @@ public class RewardDistributor : MonoBehaviour
         if (data.bonusRewardUnit != null && Random.value < data.bonusRewardChance)
         {
             // 원작 크립 2단계 50%: 목재 2 + 해적선(기본 목재 7 대신).
-            if (data.bonusRewardWood > 0) killer.ResourceWallet?.Add(ResourceType.Wood, data.bonusRewardWood);
+            if (data.bonusRewardWood > 0) { killer.ResourceWallet?.Add(ResourceType.Wood, data.bonusRewardWood); WoodSound(killer); }
             SpawnUnitAtWarehouse(killer, data.bonusRewardUnit);
             if (!string.IsNullOrEmpty(data.bonusRewardMessage)) PlayerNotification.Show(killerPlayerId, data.bonusRewardMessage, 10f);
         }
@@ -310,7 +310,14 @@ public class RewardDistributor : MonoBehaviour
         foreach (EnemyResourceReward reward in data.resourceRewards)
         {
             context.ResourceWallet.Add(reward.type, reward.amount);
+            if (reward.type == ResourceType.Wood && reward.amount > 0) WoodSound(context);
         }
+    }
+
+    // 목재 획득음(10-06) — 받은 사람에게만(멀티 친구면 GameSound.RemoteRouted → NetGameState가 넘긴다). 한 순간에 여러 번 와도 0.1초 간격으로 한 번.
+    static void WoodSound(PlayerContext context)
+    {
+        if (context != null) GameSound.PlayFor(context.PlayerId, GameSoundId.Wood);
     }
 
     // Gold_Math(L) = 1 + 2⌊L/5⌋ + 3⌊L/6⌋ − ⌊L/10⌋ (정수 나눗셈) — war3map.j 원문 그대로.
@@ -350,6 +357,7 @@ public class RewardDistributor : MonoBehaviour
 
         context.GoldWallet?.Add(reward.gold);
         context.ResourceWallet?.Add(ResourceType.Wood, reward.wood);
+        if (reward.wood > 0) WoodSound(context);
 
         // 원작 Trig_BossReward(j:13456~13480, 레인 주인에게만): 「{보스}  처치!」(7초) + 「N골드 + 나무 N개 를 획득!」(10초) — 알림 묶음 11/13, GAP 102.
         //    패왕의길 「항법효과: + 나무 1개 를 추가로 획득!」은 그 보상 자체가 아직 없어(GAP 59) 띄우지 않는다.
@@ -359,6 +367,7 @@ public class RewardDistributor : MonoBehaviour
         if (context.NavigationState != null && context.NavigationState.Choice == NavigationChoice.Hegemon)
         {
             context.ResourceWallet?.Add(ResourceType.Wood, 1);
+            WoodSound(context);
             PlayerNotification.Show(context.PlayerId, "<color=#FFD700>항법효과:</color> + <color=#20B2AA>나무 1개</color> <color=#FF8200>를 추가로 획득!</color>", 10f);
         }
         PlayerNotification.Show(context.PlayerId, $"<color=#FFD700>{reward.gold}골드</color> + <color=#20B2AA>나무 {reward.wood}개</color> <color=#FF8200>를 획득!</color>", 10f);
@@ -429,6 +438,7 @@ public class RewardDistributor : MonoBehaviour
             if (storyNumber >= 10 && damage[p] >= maxHp * 0.30f && !context.IsDead)
             {
                 context.ResourceWallet?.Add(ResourceType.Wood, 1);
+                WoodSound(context);
                 PlayerNotification.Show(p, "기여도 30% 이상으로 추가획득!  <color=#20B2AA> + 목재 1개</color>", 5f);
                 Debug.Log($"[기여도보상] 스토리 {storyNumber} 플레이어 {p} 30% — 위습 0·목재 1·세이브포인트 0");
             }
@@ -440,6 +450,7 @@ public class RewardDistributor : MonoBehaviour
             if (last != null && !last.IsDead)
             {
                 last.ResourceWallet?.Add(ResourceType.Wood, 1);
+                WoodSound(last);
                 // 원작 Trig_Story2(막타 목재 +1): 죽은 보스 머리 위 청록 「+N」 — N은 지급량(1)이 아니라 그 보스의 기본 비행 높이 필드(umvh: 6~8번 1.0 · 9~13번 10.0,
                 // w3u n006~n00D 디코드)라 9번째부터 「+10」으로 뜨지만 목재는 1개다(원작 그대로). 받은 사람에게만 보인다.
                 KillGoldPopup.Show(dead.LastHitPlayer, deadPosition, storyOrder >= 9 ? 10 : 1, wood: true);
@@ -543,6 +554,7 @@ public class RewardDistributor : MonoBehaviour
                 foreach (EnemyResourceReward reward in storyReward.resourceRewards)
                 {
                     context.ResourceWallet.Add(reward.type, reward.amount);
+                    if (reward.type == ResourceType.Wood && reward.amount > 0) WoodSound(context);
                 }
             }
 
@@ -555,7 +567,11 @@ public class RewardDistributor : MonoBehaviour
             if (earlyClear)
             {
                 if (storyReward.earlyResourceRewards != null && context.ResourceWallet != null)
-                    foreach (EnemyResourceReward reward in storyReward.earlyResourceRewards) context.ResourceWallet.Add(reward.type, reward.amount);
+                    foreach (EnemyResourceReward reward in storyReward.earlyResourceRewards)
+                    {
+                        context.ResourceWallet.Add(reward.type, reward.amount);
+                        if (reward.type == ResourceType.Wood && reward.amount > 0) WoodSound(context);
+                    }
                 GrantWisps(context, storyReward.earlyWispRewards);
                 if (!string.IsNullOrEmpty(storyReward.earlyClearMessage)) PlayerNotification.Show(context.PlayerId, storyReward.earlyClearMessage, 5f);   // 원작 TRIGSTR 12683·12692 5초
             }

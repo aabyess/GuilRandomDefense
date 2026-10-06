@@ -2825,6 +2825,22 @@ public class UnitAttacker : MonoBehaviour
         ? identity.Data.damageType
         : DamageType.AD;
 
+    // 평타 적중음 갈래(10-06). 우리 로스터는 사거리로 근접/원거리를 못 가른다 — 거의 다 원작 400~600(원작 영웅 사거리)이라 전부 원거리가 된다.
+    // 그래서 공격 타입으로 가른다: Magic·Spells 또는 damageType에 AP → 마법 · Pierce(화살)·Siege(포) → 원거리 · 나머지(Normal·Hero·미배정) → 근접.
+    // Awake에서 캐시하지 않는다 — 프리팹엔 UnitIdentity 데이터가 스폰 뒤에 붙는다(spawn-order 함정).
+    GameSoundId BasicHitSound
+    {
+        get
+        {
+            UnitData data = identity != null ? identity.Data : null;
+            if (data == null) return GameSoundId.HitMelee;
+            if (data.attackType == AttackType.Magic || data.attackType == AttackType.Spells || (data.damageType & DamageType.AP) != 0)
+                return GameSoundId.HitMagic;
+            if (data.attackType == AttackType.Pierce || data.attackType == AttackType.Siege) return GameSoundId.HitRanged;
+            return GameSoundId.HitMelee;
+        }
+    }
+
     // 이 유닛의 평타 공격 타입. ⚠️ "239종 어디에도 안 붙어서 전부 Unassigned"는 낡은
     // 서술이다(2026-09-05 확인, UnitData.cs의 attackType 필드 주석과 같은 정정) —
     // damageType=AP인 40종엔 이미 Magic이 붙어 있다. 물리(AD) 199종의 세부 타입
@@ -3065,6 +3081,7 @@ public class UnitAttacker : MonoBehaviour
             target.TakeDamage(AttackDamage * DamagePassiveFactor(target), DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
                               armorIgnoreRatio: 0f, isAbilityDamage: false);
             SkillTelemetry.Damage(identity != null ? identity.Data : null, "평타", target, basicHpBefore);
+            GameSound.PlayAll(BasicHitSound);   // 평타 적중음(10-06) — 주 대상 한 번만(광역·다중·치명 추가타는 안 낸다). 연타 제한은 GameSound가
             ApplyAttackSplash(target);
             ApplyTalentArmorBreak(target);
             ApplyAttackMultishot(target);

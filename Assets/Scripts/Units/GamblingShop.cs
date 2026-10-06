@@ -644,6 +644,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
             if (!bonusHit && option.grantsUniqueRerollOnGenericSuccess)
                 UniqueRerollAbility.Attach(spawned, uniqueRerollAbilityData, unitSpawner);
             AnnounceUnitGamble(option, owner.OwnerId, reward);
+            GameSound.PlayFor(owner.OwnerId, GameSoundId.Gacha);   // 뽑기음(10-06) — 당첨만. 실패는 「실패 !」 알림이 말한다
         }
         else
         {
