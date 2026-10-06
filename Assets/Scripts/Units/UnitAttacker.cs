@@ -1571,7 +1571,7 @@ public class UnitAttacker : MonoBehaviour
 
     static bool IsAuraStatKind(SkillEffectKind kind) =>
         kind == SkillEffectKind.AttackSpeedBuffPercent || kind == SkillEffectKind.AttackPowerBuffFlat || kind == SkillEffectKind.AttackPowerBuffPercent
-        || kind == SkillEffectKind.AllyMoveSpeedDebuff || kind == SkillEffectKind.AllySkillDamageBonus || kind == SkillEffectKind.DispelAllyDebuffs;
+        || kind == SkillEffectKind.AllyMoveSpeedDebuff || kind == SkillEffectKind.AllySkillDamageBonus || kind == SkillEffectKind.DispelAllyDebuffs || kind == SkillEffectKind.SkillTriggerChanceBonus;
 
     void UpdateAuraTick(SkillLevel level, SkillRuntimeState state, bool gatePasses)
     {
@@ -2411,6 +2411,59 @@ public class UnitAttacker : MonoBehaviour
         moveDebuffApplied = reduction > 0f;
     }
 
+    // 발명품제작(SkillEffectKind.GrantInvention, 제한됨 이충민) — 금화·목재·위습·소환수·상붕카 중 하나를 균등으로. 서버만.
+    public string LastInventionResult { get; private set; }
+
+    void GrantInvention(SkillEffect effect)
+    {
+        if (!GameAuthority.IsServer || owner == null) return;
+        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        if (context == null) return;
+        int pick = Random.Range(0, 5);
+        switch (pick)
+        {
+            case 0:
+                context.GoldWallet?.Add(Mathf.RoundToInt(effect.multiplier));
+                LastInventionResult = "금화";
+                PlayerNotification.Show(context.PlayerId, $"<color=#FFD700>발명품제작</color> 금화 {Mathf.RoundToInt(effect.multiplier):N0}엔", 4f);
+                break;
+            case 1:
+                context.ResourceWallet?.Add(ResourceType.Wood, Mathf.Max(1, Mathf.RoundToInt(effect.bonus)));
+                LastInventionResult = "목재";
+                PlayerNotification.Show(context.PlayerId, $"<color=#FFD700>발명품제작</color> <color=#20B2AA>목재 {Mathf.Max(1, Mathf.RoundToInt(effect.bonus))}</color>", 4f);
+                break;
+            case 2:
+                if (effect.rewardWisp != null && RewardDistributor.Instance != null)
+                    RewardDistributor.Instance.GrantWisps(context, new List<WispReward> { new WispReward { wisp = effect.rewardWisp, count = 1 } });
+                LastInventionResult = "위습";
+                PlayerNotification.Show(context.PlayerId, "<color=#FFD700>발명품제작</color> 위습 1", 4f);
+                break;
+            case 3:
+            {
+                UnitSpawner spawner = FindFirstObjectByType<UnitSpawner>();
+                UnitData kind = effect.summonUnits != null && effect.summonUnits.Count > 0 ? effect.summonUnits[0] : null;
+                if (spawner != null && kind != null)
+                {
+                    GameObject summoned = spawner.Spawn(kind, FanPosition(transform.forward, 0f, 70f, kind), owner.OwnerId, summoned: true);
+                    if (summoned != null) { summoned.AddComponent<TimedLife>().Begin(20f); summoned.AddComponent<SummonedBy>().Summoner = this; }
+                }
+                LastInventionResult = "소환수";
+                PlayerNotification.Show(context.PlayerId, "<color=#FFD700>발명품제작</color> 소환수 1기(20초)", 4f);
+                break;
+            }
+            default:
+            {
+                UnitSpawner spawner = FindFirstObjectByType<UnitSpawner>();
+                UnitData kind = effect.summonUnits != null && effect.summonUnits.Count > 1 ? effect.summonUnits[1] : null;
+                LaneMarker lane = LaneMarker.Get(owner.OwnerId);
+                if (spawner != null && kind != null && lane != null) spawner.Spawn(kind, lane.TakeSpawnPosition(kind), owner.OwnerId);
+                LastInventionResult = "상붕카";
+                PlayerNotification.Show(context.PlayerId, "<color=#FFD700>발명품제작</color> 상붕카 1기", 4f);
+                break;
+            }
+        }
+    }
+
     // 소환(SkillEffectKind.SummonUnit) — 종류마다 동시 1기. 이미 있으면 남은 시간을 되돌린다. 자리는 시전자 앞쪽 부채꼴(가운데 = 시전자가 보는 방향).
     // 부채꼴 각도는 종류 개수로 −fan·0·+fan 식으로 나눈다(1기=가운데, 2기=±fan/2, 3기=−fan·0·+fan). 자리는 NavMesh.SamplePosition으로 보정하고 지상 유닛을 바다에 안 세운다.
     readonly Dictionary<UnitData, GameObject> summonedByKind = new Dictionary<UnitData, GameObject>();
@@ -2575,7 +2628,7 @@ public class UnitAttacker : MonoBehaviour
                 if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
                 // 배타 분기(SkillLevel.exclusiveGroup) — 같은 묶음의 앞선 스킬이 이번 평타에 굴림을 맞혔으면 굴리지도 않는다.
                 if (level.exclusiveGroup != 0 && firedExclusiveGroups.Contains(level.exclusiveGroup)) { SkillTelemetry.Gate(unitData, skill, "배타"); continue; }
-                if (Random.value >= level.triggerChance + TalentChanceBonus(level)) { SkillTelemetry.Gate(unitData, skill, "확률실패"); continue; }
+                if (Random.value >= Mathf.Min(1f, (level.triggerChance + TalentChanceBonus(level)) * (1f + AuraBonusTotal(SkillEffectKind.SkillTriggerChanceBonus, false)))) { SkillTelemetry.Gate(unitData, skill, "확률실패"); continue; }
                 if (level.exclusiveGroup != 0) firedExclusiveGroups.Add(level.exclusiveGroup);
 
                 if (level.cooldown > 0f)
@@ -2770,6 +2823,7 @@ public class UnitAttacker : MonoBehaviour
     {
         // 소환(최상호 구일) — 대상이 없다. 확률·쿨다운은 위(CastSkillLevel·평타 확률 발동)가 이미 판정했다.
         if (effect.kind == SkillEffectKind.SummonUnit) { SummonFor(effect); return; }
+        if (effect.kind == SkillEffectKind.GrantInvention) { GrantInvention(effect); return; }
         if (effect.kind == SkillEffectKind.KillNormalEnemies) { lastKillSucceeded = KillNearestNormalEnemy(range, effect.killMostLostHp); return; }
         if (effect.kind == SkillEffectKind.RecruitEnemy) { RecruitNearestEnemy(range, effect); return; }
         if (effect.kind == SkillEffectKind.GrantLoot) { if (lastKillSucceeded || effect.lootAlways) GrantLoot(effect); lastKillSucceeded = false; return; }
@@ -2784,7 +2838,7 @@ public class UnitAttacker : MonoBehaviour
             || effect.kind == SkillEffectKind.DamagePerAllyDebuff || effect.kind == SkillEffectKind.DamageGrowthOverTime
             || effect.kind == SkillEffectKind.AllySkillDamageBonus || effect.kind == SkillEffectKind.DispelAllyDebuffs
             || effect.kind == SkillEffectKind.GoldPlusBonus || effect.kind == SkillEffectKind.StoryDamageMultiplier
-            || effect.kind == SkillEffectKind.DamagePerTargetArmorShred || effect.kind == SkillEffectKind.DamagePerRecruit || effect.kind == SkillEffectKind.DamageVsTargetBuff || effect.kind == SkillEffectKind.SkillDamageAfterKill || effect.kind == SkillEffectKind.SlowRewardBonus) return;
+            || effect.kind == SkillEffectKind.DamagePerTargetArmorShred || effect.kind == SkillEffectKind.DamagePerRecruit || effect.kind == SkillEffectKind.DamageVsTargetBuff || effect.kind == SkillEffectKind.SkillDamageAfterKill || effect.kind == SkillEffectKind.SlowRewardBonus || effect.kind == SkillEffectKind.SkillTriggerChanceBonus) return;
 
         // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
         if (effect.lineLength > 0f && effect.zoneTickInterval <= 0f)

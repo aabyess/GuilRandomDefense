@@ -78,6 +78,7 @@ public class RecipeSearchDrawer : MonoBehaviour
         public ItemData item;
         public UnitGrade grade;
         public int count;
+        public UnitData alt;   // 「A 또는 B」 재료(RecipeIngredient.alternativeUnit)
     }
 
     CombineSystem system;
@@ -594,7 +595,7 @@ public class RecipeSearchDrawer : MonoBehaviour
                 }
                 if (recipe.ingredients == null) continue;
                 foreach (RecipeIngredient ing in recipe.ingredients)
-                    if (ing != null && ing.kind == IngredientKind.SpecificUnit && ing.unit != null && HangulSearch.UnitMatches(nq, ing.unit))
+                    if (ing != null && ing.kind == IngredientKind.SpecificUnit && ing.unit != null && (HangulSearch.UnitMatches(nq, ing.unit) || (ing.alternativeUnit != null && HangulSearch.UnitMatches(nq, ing.alternativeUnit))))
                     {
                         asMaterial.Add(recipe);
                         break;
@@ -656,7 +657,7 @@ public class RecipeSearchDrawer : MonoBehaviour
                     row.ingredients[at] = merged;
                 }
                 else
-                    row.ingredients.Add(new Ingredient { kind = ing.kind, unit = ing.unit, item = ing.item, grade = ing.wildcardGrade, count = count });
+                    row.ingredients.Add(new Ingredient { kind = ing.kind, unit = ing.unit, item = ing.item, grade = ing.wildcardGrade, count = count, alt = ing.alternativeUnit });
             }
 
         for (int i = 0; i < MaxCells; i++)
@@ -665,7 +666,7 @@ public class RecipeSearchDrawer : MonoBehaviour
             if (i >= row.ingredients.Count) { cell.root.SetActive(false); continue; }
             cell.root.SetActive(true);
             Ingredient ing = row.ingredients[i];
-            cell.label.text = ing.kind == IngredientKind.SpecificUnit && ing.unit != null ? ing.unit.DisplayNameTwoLines
+            cell.label.text = ing.kind == IngredientKind.SpecificUnit && ing.unit != null ? (ing.alt != null ? $"{ing.unit.DisplayNameTwoLines}\n또는 {ing.alt.DisplayName}" : ing.unit.DisplayNameTwoLines)
                 : ing.kind == IngredientKind.SpecificItem && ing.item != null ? ing.item.itemName
                 : $"아무 {ing.grade.KoreanName()}";
         }
@@ -762,7 +763,7 @@ public class RecipeSearchDrawer : MonoBehaviour
         int n = 0;
         switch (ing.kind)
         {
-            case IngredientKind.SpecificUnit: if (ing.unit != null) ownedUnits.TryGetValue(ing.unit, out n); break;
+            case IngredientKind.SpecificUnit: if (ing.unit != null) ownedUnits.TryGetValue(ing.unit, out n); if (ing.alt != null && ownedUnits.TryGetValue(ing.alt, out int altOwned)) n += altOwned; break;
             case IngredientKind.SpecificItem: if (ing.item != null) ownedItems.TryGetValue(ing.item, out n); break;
             default: ownedGrades.TryGetValue(ing.grade, out n); break;
         }

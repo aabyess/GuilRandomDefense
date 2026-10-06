@@ -378,6 +378,13 @@ public enum SkillEffectKind
     // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 유재헌 「현상수배」 — 사장님 확정 「이감 1%당 골드·목재 +1%」) — 직렬화 순서를 지킨다.
     // 패시브(Self): 내 레인의 적이 죽을 때 그 적이 받고 있던 이감(%) 1당 처치 골드·목재가 +multiplier(0.01 = +1%)씩 늘어난다(이속 82%면 이감 18% → +18%). RewardDistributor가 본다.
     SlowRewardBonus,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 제한됨 이충민 「발명품제작」 — 마나 스킬(금화, 목재, 랜덤위습, 소환수, 상붕카), 설계표 제안값으로) — 직렬화 순서를 지킨다.
+    // 발동할 때마다 다섯 중 하나를 균등(1/5)으로 준다: ① 금화 multiplier엔 ② 목재 bonus개 ③ rewardWisp 위습 1개 ④ summonUnits[0] 소환수 1기(20초, 시전자 곁) ⑤ summonUnits[1] 유닛 1기(정식 유닛 — 상붕카). 서버만.
+    GrantInvention,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 제한됨 이충민 「확률조작」 — 「스킬발동확률증가」) — 오라(Allies/Self, 같은 buffId는 최댓값): 받는 유닛의 **평타 확률 발동 스킬 확률**이 ×(1 + multiplier)(0.25 = ×1.25)로 커진다. 상한 1.
+    SkillTriggerChanceBonus,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -670,6 +677,9 @@ public class SkillEffect
 
     // ⚠️ 맨 뒤(2026-10-06, 영원함 서민성) — 시전자 강화 레벨(UnitAttacker.EnhanceLevel) 1당 이 효과(Damage)가 enhanceScale(0.05 = +5%)씩 세진다. 0이면 꺼짐.
     public float enhanceScale;
+
+    // ⚠️ 맨 뒤(2026-10-06, 제한됨 이충민 발명품제작) — GrantInvention 전용: 위습 보상 종류.
+    public WispData rewardWisp;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
