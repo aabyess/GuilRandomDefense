@@ -93,6 +93,7 @@ public class GameHud : MonoBehaviour
     TMP_Text goldText;
     TMP_Text woodText;
     TMP_Text foodText;        // 고기 칸 = 원작 FOOD_USED = 우리 특성 포인트(사장님 확정 10-03)
+    Image manaFill;           // 10-06 사장님 「도움소 마나 얼마나 찼는지 게이지」 — 마나 칸 안을 왼쪽부터 채우는 막대(최대 = 지갑 상한 1000)
     TMP_Text manaText;        // 원작 상단 바엔 없다 — 도움소 스킬이 쓰는 플레이어 마나(사장님 10-02 요청)라 시계 옆에 작게 둔다
     TMP_Text roundTimerTitle; // 우상단 타이머 창 제목(원작 「현재레벨->」)
     int lastFood = int.MinValue;
@@ -530,6 +531,7 @@ public class GameHud : MonoBehaviour
         RefreshDockTargeting();
         RefreshPaperPlaneTargeting();
         RefreshAllyTargeting();
+        RefreshPointTargeting();
         RefreshActiveButton();
         RefreshNavigationButton();
         RefreshRerollButton();
@@ -996,6 +998,25 @@ public class GameHud : MonoBehaviour
 
         // 플레이어 마나(원작 상단 바엔 없음 — 도움소 스킬용) 시계 왼쪽에 작게
         manaText = CreateTopBarResource(topBar, "ManaPanel", null, 0.395f, 0.465f, new Color(0.45f, 0.65f, 1f));
+        {
+            // 게이지: 칸 안쪽(테두리 3px 안)에 깔고 글자 아래로. 채움은 Filled Horizontal.
+            RectTransform gauge = CreatePanel(manaText.transform.parent, "ManaGauge", new Color(0.2f, 0.45f, 1f, 0.55f));
+            gauge.anchorMin = Vector2.zero; gauge.anchorMax = Vector2.one;
+            gauge.offsetMin = new Vector2(3f, 3f); gauge.offsetMax = new Vector2(-3f, -3f);
+            gauge.SetSiblingIndex(manaText.transform.GetSiblingIndex());
+            manaFill = gauge.GetComponent<Image>();
+            manaFill.raycastTarget = false;
+            manaFill.sprite = null;
+            manaFill.type = Image.Type.Filled;
+            manaFill.fillMethod = Image.FillMethod.Horizontal;
+            manaFill.fillOrigin = 0;
+            manaFill.fillAmount = 0f;
+            manaText.alignment = TextAlignmentOptions.Center;
+            manaText.enableAutoSizing = true;   // 「마나 1000/1000」이 칸(화면 폭 7%)에 들어가게
+            manaText.fontSizeMin = 11f;
+            manaText.fontSizeMax = 17f;
+            manaText.color = Color.white;
+        }
 
         // 자원 셋: 금화·나무·고기 (아이콘 + 숫자)
         goldText = CreateTopBarResource(topBar, "GoldPanel", "icon_gold", 0.575f, 0.685f, Color.white);
@@ -1783,6 +1804,40 @@ public class GameHud : MonoBehaviour
         ExecuteCastActiveOnAlly(caster, ally, skill);
     }
 
+    // 지점 지정 액티브(SkillLevel.needsPointClick, 초월 배성령 「암살스킬」 순간이동) — 칸을 누르면 대기, 땅을 좌클릭하면 그 지점으로 순간이동(우클릭 취소). 호스트/싱글만.
+    SkillData pendingPointSkill;
+    Selectable pendingPointUnit;
+    int pendingPointStartFrame;
+
+    void RefreshPointTargeting()
+    {
+        if (pendingPointSkill == null) return;
+        if (Mouse.current == null || pendingPointUnit == null) { pendingPointSkill = null; return; }
+        if (Mouse.current.rightButton.wasPressedThisFrame) { pendingPointSkill = null; return; }
+        if (!Mouse.current.leftButton.wasPressedThisFrame || Time.frameCount <= pendingPointStartFrame) return;
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
+
+        SkillData skill = pendingPointSkill;
+        Selectable caster = pendingPointUnit;
+        pendingPointSkill = null;
+        pendingPointUnit = null;
+        int playerId = caster.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
+        if (!WorldPick.TryHit(Camera.main, Mouse.current.position.ReadValue(), out RaycastHit hit))
+        {
+            PlayerNotification.Show(playerId, "땅 지점을 찾을 수 없습니다.", 4f);
+            return;
+        }
+        ExecuteCastActiveAtPoint(caster, hit.point, skill);
+    }
+
+    public void ExecuteCastActiveAtPoint(Selectable single, Vector3 point, SkillData skill)
+    {
+        if (single == null || !single.TryGetComponent(out UnitAttacker attacker)) return;
+        int playerId = single.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
+        if (!attacker.TryCastActiveAtPoint(skill, point, out string reason))
+            PlayerNotification.ShowFailure(playerId, reason ?? "지금은 사용할 수 없습니다.", 4f);
+    }
+
     public void ExecuteCastActiveOnAlly(Selectable single, UnitIdentity ally, SkillData skill)
     {
         if (single == null || !single.TryGetComponent(out UnitAttacker attacker)) return;
@@ -1805,6 +1860,15 @@ public class GameHud : MonoBehaviour
     {
         SkillData skill = ActiveSkillOf(out Selectable single);
         if (skill == null || single == null) return;
+        if (skill.levels != null && skill.levels.Count > 0 && skill.levels[0].needsPointClick)
+        {
+            if (!GameAuthority.IsServer) { BlockedOnMultiplayerClient(); return; }
+            pendingPointSkill = skill;
+            pendingPointUnit = single;
+            pendingPointStartFrame = Time.frameCount;
+            PlayerNotification.Show(LocalPlayer.LocalPlayerId, $"{skill.skillName.Split('—')[0].Trim()}: 이동할 땅을 클릭하세요. (우클릭 취소)", 4f);
+            return;
+        }
         if (skill.levels != null && skill.levels.Count > 0 && skill.levels[0].needsAllyClick)
         {
             // 아군 지정(초월 신문철 엄마간식) — 칸을 누르면 내 아군 하나를 클릭할 때까지 대기(우클릭 취소). 호스트/싱글만.
@@ -4375,7 +4439,9 @@ public class GameHud : MonoBehaviour
             goldText.text = gold.ToString();
             woodText.text = wood.ToString();
             foodText.text = food.ToString();
-            manaText.text = $"마나 {mana}";
+            int manaCap = local != null && local.ResourceWallet != null ? local.ResourceWallet.GetCap(ResourceType.Mana) : 0;
+            manaText.text = manaCap > 0 ? $"마나 {mana}/{manaCap}" : $"마나 {mana}";
+            if (manaFill != null) manaFill.fillAmount = manaCap > 0 ? Mathf.Clamp01((float)mana / manaCap) : 0f;
         }
 
         RoundManager rm = RoundManagerRef;
