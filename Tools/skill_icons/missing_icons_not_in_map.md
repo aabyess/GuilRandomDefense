@@ -18,3 +18,5 @@
 - `Model\BTNodeng_skill3` — 1행: 원작오라_영원_서민성_A0Y2
 - `Model\btnsb` — 1행: 원작능력_랜덤_이즈미_신이치
 - `model\BTNBronyaR.blp` — 4행: 게이트_랜덤_호시노_아이_33bd8aa4, 게이트_랜덤_호시노_아이_3a13fd3d, 게이트_랜덤_호시노_아이_55b5cff0, 원작오라_랜덤_호시노_아이_A13I
+
+## 2026-10-06 후속: 위 16경로는 효과에 맞는 웹 표준 BTN으로 임시 대체했다(map_skill_icons.py FALLBACK_STD, csv 확신도 「낮음」). 정품 그림이 생기면 FALLBACK_STD 줄을 지우고 extract 경로만 추가하면 된다.

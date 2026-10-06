@@ -109,6 +109,15 @@ STD_MANUAL = {
     '최상호_AP_분노조절장애': ('btnberserkfortrolls', '공속 증가'), '최상호_AP_절대공격': ('btnmanadrain', '마나스킬 깡딜'), '최상호_AP_절대방어': ('btndefend', '체력스킬 스턴'),
 }
 
+# 원작 아이콘 경로가 맵 밖 비표준(Model\\…)이라 못 구한 16경로: 효과에 맞는 웹 표준 BTN으로 임시 대체(2026-10-06, 확신도 낮음 = 모양만 맞춘 임시 그림)
+FALLBACK_STD = {
+    'btnbronyad': 'btnholybolt', 'btnbronyaq': 'btnengineeringupgrade', 'btnbronyar': 'btnbookofsummoning', 'btnen_skill1': 'btnthoriummelee',
+    'btnfuhuag': 'btnflamingarrows', 'btnryougiq': 'btndaggerofescape', 'btnryougid2': 'btnultravision', 'btnyukari_skill4': 'btnphaseshifton',
+    'btn_byakuya_skill3': 'btnfrostmourne', 'btnbyakuya_skill3': 'btnstarwand', 'btn_higma': 'btnheadhunter', 'btn_higma_skill_4': 'btncleavingattack',
+    'btn_higma_skill_5': 'btndwarvenlongrifle', 'btnodeng_skill1': 'btnsteelmelee', 'btnodeng_skill3': 'btnspiritwalkeradepttraining', 'btnsb': 'btnorboflightning',
+}
+DEFAULT_ICON = 'std_btnspellbookbls.png'   # 「아이콘없음」 행(더미채널·대표 능력 없는 게이트/회수 등)에 쓸 기본 그림 → default_icon.txt
+
 rows = []
 def add(path, kind, code, how, conf, alt=''):
     ic = icon_of(code) if code else None
@@ -179,6 +188,16 @@ for nm, code, why, conf in PLAN:
         add(nm, '계획', rc, why + ' [유닛 %s]' % uid, conf)
     else:
         add(nm, '계획', code, why, conf)
+
+# 못찾음 → 표준 BTN 대체
+for r_ in rows:
+    if r_[6] == '못찾음':
+        key = r_[5].replace('/', '\\').split('\\')[-1].lower()
+        key = key[:-4] if key.endswith('.blp') else key
+        std_ = FALLBACK_STD.get(key)
+        if std_ and os.path.exists(os.path.expanduser('~/GRD_skill_icons/std_%s.png' % std_)):
+            r_[6], r_[7], r_[8], r_[10] = '맵밖', 'std_%s.png' % std_, '웹 모음(수동 대체: 원작 그림은 맵 밖)', '낮음'
+open('Tools/skill_icons/default_icon.txt', 'w', encoding='utf-8').write(DEFAULT_ICON + '\n')
 
 with open('Tools/skill_icons/skill_icon_map.csv', 'w', encoding='utf-8-sig', newline='') as fh:
     w = csv.writer(fh)
