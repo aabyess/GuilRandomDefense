@@ -305,22 +305,26 @@ public class NetLobbyUi : MonoBehaviour
         settingsPanel = dim.gameObject;
         dim.gameObject.AddComponent<Button>().onClick.AddListener(() => SetSettingsOpen(false));   // 바깥을 누르면 닫힘
 
-        Image card = CreateImage(dim.rectTransform, "SettingsCard", Card);
-        Sprite frame = Lobby("menu_frame");
-        Vector2 size = new Vector2(760f, 820f);
-        if (frame != null) { card.sprite = frame; card.type = Image.Type.Sliced; card.color = Color.white; card.pixelsPerUnitMultiplier = 512f / size.x; }
+        // 메뉴 틀 그림(menu_frame)은 위아래 룬 띠가 커서 줄이 겹친다(0.3.10 맥 실측) — 설정 창은 어두운 판 + 금테 두 겹으로.
+        Image card = CreateImage(dim.rectTransform, "SettingsCard", new Color(0.09f, 0.07f, 0.05f, 0.97f));
+        Vector2 size = new Vector2(760f, 760f);
         Place(card.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, size);
+        var outline = card.gameObject.AddComponent<Outline>(); outline.effectColor = Gold; outline.effectDistance = new Vector2(3f, -3f);
+        Image inner = CreateImage(card.rectTransform, "Inner", new Color(0f, 0f, 0f, 0f));
+        Stretch(inner.rectTransform, 14f, 14f);
+        inner.color = new Color(0.16f, 0.12f, 0.08f, 1f);   // 안쪽 판(Outline을 안쪽에도 걸면 사각 전체가 금색으로 덮인다 — 맥 실측)
+        inner.raycastTarget = false;
         card.raycastTarget = true;   // 카드 안을 눌러도 닫히지 않게(dim보다 위에서 받는다)
         RectTransform c = card.rectTransform;
 
         TMP_Text head = CreateText(c, "Title", "설정", 46, titleFont, ButtonText, TextAlignmentOptions.Center);
-        PlaceFromTop(head.rectTransform, -92f, new Vector2(600f, 70f));
+        PlaceFromTop(head.rectTransform, -64f, new Vector2(600f, 70f));
 
-        float y = -190f;
+        float y = -150f;
         AddVolumeRow(c, "전체 소리", y, AudioPrefs.MasterVolume, AudioPrefs.SetMaster);
-        y -= 92f;
+        y -= 80f;
         AddVolumeRow(c, "배경 음악", y, AudioPrefs.MusicVolume, AudioPrefs.SetMusic);
-        y -= 100f;
+        y -= 84f;
 
         TMP_Text screenHead = CreateText(c, "ScreenHead", "화면", 30, boldFont, ButtonText, TextAlignmentOptions.Left);
         PlaceFromTopX(screenHead.rectTransform, -150f, y, new Vector2(300f, 44f));
@@ -339,7 +343,7 @@ public class NetLobbyUi : MonoBehaviour
             b.onClick.AddListener(() => { ScreenMode.Choose(index); RefreshScreenButtons(); });
             screenButtons.Add((index, b.GetComponent<LobbyButtonFx>(), b));
         }
-        y -= ((order.Length + 1) / 2) * 72f + 30f;
+        y -= ((order.Length + 1) / 2) * 72f + 12f;
 
         Button close = CreateButton(c, "SettingsClose", "닫기", ButtonNormal, 32);
         SizeButton(close, new Vector2(240f, 70f));
