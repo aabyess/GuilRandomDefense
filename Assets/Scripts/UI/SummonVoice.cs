@@ -42,7 +42,7 @@ public static class SummonVoice
         { "영원_최상호", new[] { "mihawk", "cavendish" } },
         { "초월_강재규_AP", new[] { "Robin" } },
         { "초월_강주혁_AP", new[] { "Nami", "Zoro_2" } },
-        { "초월_구주호_AD", new[] { "kizaru", "ryokugyu", "yamato" } },   // 원작 + PM 추가
+        { "초월_구주호_AD", new[] { "kizaru", "jinbe", "yamato" } },   // 원작 + PM 추가 · 10-06 사장님: 료쿠규 ↔ 징베 맞바꿈(최상호 AD와)
         { "초월_김경현_AP", new[] { "snakeman" } },
         { "초월_김만경_AD", new[] { "Akainu" } },
         { "초월_김민준_AP", new[] { "tashigi" } },
@@ -58,7 +58,7 @@ public static class SummonVoice
         { "초월_임장혁_AD", new[] { "lucci" } },
         { "초월_임채민_AP", new[] { "Teach" } },
         { "초월_조성진_AD", new[] { "Usop" } },
-        { "초월_최상호_AD", new[] { "jinbe" } },
+        { "초월_최상호_AD", new[] { "ryokugyu" } },   // 10-06 사장님: 징베 ↔ 료쿠규 맞바꿈(구주호 AD와)
         { "초월_최상호_AP", new[] { "DP" } },
         { "초월_황준석_ADAP", new[] { "kid" } },
         { "영원_김영원", new[] { "hancock" } },   // PM 배정
