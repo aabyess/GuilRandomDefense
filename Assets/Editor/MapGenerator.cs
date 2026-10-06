@@ -680,8 +680,8 @@ public static class MapGenerator
     //     자리를 만들어 결국 지웠다 — 사각형을 만드는 길은 하나여야 한다.)
     //    값 자체는 원작 실측 비율이다(MapLayout.TrackInsetRatioX/Z 주석 참고).
 
-    // 흙길 모서리 반경 = DirtRoadBuilder.CornerRatios[이 번호] × 띠 폭(시안 0 작게 · 1 중간 · 2 크게 — 사장님 10-06 고르는 중, 임시 1).
-    const int DirtCornerIndex = 1;
+    // 흙길 모서리 반경 = DirtRoadBuilder.CornerRatios[이 번호] × 띠 폭(시안 0 작게 · 1 중간 · 2 크게 — 사장님 10-06 「크게(×1.6)」 선택).
+    const int DirtCornerIndex = 2;
 
     /// <summary>흙길 띠의 바깥·안쪽 직사각형(월드 XZ, Rect.y = z)과 띠 폭. 가운데 선(LaneTrackRect)은 그대로 — 변마다 바깥/안쪽 폭이 다르다(TrackBand).</summary>
     internal static void DirtRoadRects(MapLayout.Island lane, out Rect outer, out Rect inner, out float width)
@@ -4469,6 +4469,13 @@ public static class MapGenerator
         return $"옛 조각 {removed}개 지움 · 정의문 {gate.transform.position} 회전 {GateYaw}° · 씬 저장\n{quest}\n{nav}";
     }
 
+    // 저장된 씬 파일을 다시 연다(디스크에서 되돌린 뒤 편집기 메모리를 맞출 때). 부르기: call MapGenerator.ReloadSampleScene
+    static string ReloadSampleScene()
+    {
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(ScenePath, UnityEditor.SceneManagement.OpenSceneMode.Single);
+        return $"씬 다시 엶: {scene.path} (더티 {scene.isDirty})";
+    }
+
     // 맵 전체 재생성 없이 레인 흙길만 다시 깐다(10-03 흙길 넓히기). 장식이라 NavMesh는 안 굽는다.
     // 부르기: call MapGenerator.RepairLaneTracks
     static string RepairLaneTracks()
@@ -4478,9 +4485,9 @@ public static class MapGenerator
         foreach (MapLayout.Island lane in MapLayout.Lanes)
         {
             Transform parent = null;
-            foreach (string side in new[] { "위", "아래", "왼", "오른" })
+            foreach (string side in new[] { "위", "아래", "왼", "오른", "" })   // 「」(빈 이름) = 둥근 띠 메시 하나(10-06) — 다시 깔 때 옛것도 지운다
             {
-                GameObject old = GameObject.Find($"{lane.name}_흙길_{side}");
+                GameObject old = GameObject.Find(side.Length == 0 ? $"{lane.name}_흙길" : $"{lane.name}_흙길_{side}");
                 if (old == null) continue;
                 parent = old.transform.parent;
                 scene = old.scene;
@@ -4489,12 +4496,12 @@ public static class MapGenerator
             }
             if (parent == null) continue;
             DecorateLane(parent, lane);
-            built += 4;
+            built += 1;
         }
         if (removed == 0) return "⚠️ 씬에서 「<레인>_흙길_*」을 못 찾았습니다.";
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
         UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
-        return $"흙길 {removed}개 지우고 {built}개 다시 깜(폭 = 필드 가로 × {TrackVisualWidthRatio}) · 씬 저장";
+        return $"흙길 {removed}개 지우고 둥근 띠 {built}개 다시 깜(폭 = 필드 가로 × {TrackVisualWidthRatio}, 모서리 ×{DirtRoadBuilder.CornerRatios[DirtCornerIndex]}) · 씬 저장";
     }
 
     // 조합판·뽑기섬 간격 벌리기(10-03 사장님 「조합판 간격을 벌려 달라」「뽑기섬 다른세계 줄도」) — 맵 전체 재생성 없이 네 섬만 다시 짓는다:
