@@ -193,6 +193,7 @@ public class GameHud : MonoBehaviour
     SkillData activeShownSkill;
     float activeLocalReadyAt;   // 멀티 클라: 호스트의 쿨을 모르니 누른 시각 + 쿨로 어림한 값(진짜 판정은 호스트)
     bool talentSlotsShown;   // 초월 박민수 「재능투자」 칸 4개(FlexKind.Talent) — 박민수 한 기를 골랐을 때만
+    bool bombSlotShown;   // 초월 엄태웅 「폭탄제조(목재강화)」 칸(FlexKind.Bomb) — 엄태웅 중사(진) 한 기를 골랐을 때만
     bool gambleBoostSlotShown;   // 초월 엄태웅 「웅교교주」 칸(FlexKind.GambleBoost) — 엄태웅 중사(진) 한 기를 골랐을 때만
     bool yoonseoSlotShown;   // 초월 노태현 「최윤서 강화」 칸(FlexKind.Yoonseo) — 노태현 한 기를 골랐을 때만
     bool sellSlotEnabled;
@@ -274,7 +275,7 @@ public class GameHud : MonoBehaviour
     // 넣는 순서 = 액티브 → 유닛 전용(재능투자·최윤서 강화) → 특성강화 → 조합 결과. 8칸을 넘으면 경고 로그(조용히 버리지 않는다).
     const int FlexSlotFirst = 4;
     const int FlexSlotLast = 11;
-    enum FlexKind : byte { None, Trait, Active, Talent, Yoonseo, Recipe, GambleBoost }
+    enum FlexKind : byte { None, Trait, Active, Talent, Yoonseo, Recipe, GambleBoost, Bomb }
     readonly FlexKind[] flexKind = new FlexKind[CommandSlotCount];
     readonly int[] flexArg = new int[CommandSlotCount];          // Talent는 투자 종류(0~3), Recipe는 flexRecipes 번호
     readonly FlexKind[] flexWantKind = new FlexKind[CommandSlotCount];
@@ -314,6 +315,7 @@ public class GameHud : MonoBehaviour
         if (talentSlotsShown) for (int k = 0; k < UnitAttacker.TalentKindCount; k++) Put(FlexKind.Talent, k);
         if (yoonseoSlotShown) Put(FlexKind.Yoonseo, 0);
         if (gambleBoostSlotShown) Put(FlexKind.GambleBoost, 0);
+        if (bombSlotShown) Put(FlexKind.Bomb, 0);
         if (traitSlotShown) Put(FlexKind.Trait, 0);
         for (int i = 0; i < flexRecipes.Count; i++) Put(FlexKind.Recipe, i);
 
@@ -520,6 +522,7 @@ public class GameHud : MonoBehaviour
         RefreshSellButton();
         RefreshYoonseoButton();
         RefreshGambleBoostButton();
+        RefreshBombButton();
         RefreshTalentButtons();
         RefreshDockTargeting();
         RefreshActiveButton();
@@ -1454,6 +1457,93 @@ public class GameHud : MonoBehaviour
         PlayerNotification.Show(owner.OwnerId, $"<color=#FFD700>재능투자</color> {UnitAttacker.TalentNames[kind]} {attacker.GetTalent(kind)}/{UnitAttacker.TalentMaxOf(kind)} (남은 포인트 {attacker.TalentPointsAvailable})", 4f);
     }
 
+    // 초월 엄태웅 「폭탄제조(목재강화)」(사장님 10-06 확정 가): 누를 때마다 목재 1개 → 사거리 안 적 밀집 지점에 범위 폭탄 1발(방어 무시, 보스 포함).
+    // 표적·반경은 설계표 제안(밀집 지점·반경 500·연타 간격 0.5초). 피해 2,000,000은 사장님 확정(500만에서 내림).
+    const int BombWoodCost = 1;
+    const string BombSkillPrefix = "폭탄제조";   // 피해·반경(range, 원작 단위 — 세계 거리는 WorldRange)·연타 간격(cooldown)은 이 이름의 SkillData(ActiveButton)에서 읽는다 — 사장님 신 기준 수치 확정 때 에셋 한 칸만 고친다.
+
+    static SkillData BombSkillOf(UnitData data)
+    {
+        if (data == null || data.skills == null) return null;
+        foreach (SkillData skill in data.skills)
+            if (skill != null && skill.skillName != null && skill.skillName.StartsWith(BombSkillPrefix)) return skill;
+        return null;
+    }
+    readonly System.Collections.Generic.Dictionary<int, float> bombReadyAt = new System.Collections.Generic.Dictionary<int, float>();
+
+    void RefreshBombButton()
+    {
+        if (currentShop as Object != null || !GambleBoostCandidate()) { bombSlotShown = false; return; }   // 칸 비우기는 ReflowFlexSlots
+        bombSlotShown = true;
+        int slot = FlexSlotOf(FlexKind.Bomb);
+        if (slot < 0) return;
+        PlayerContext context = PlayerContext.Get(LocalPlayer.LocalPlayerId);
+        int wood = context != null && context.ResourceWallet != null ? context.ResourceWallet.Get(ResourceType.Wood) : 0;
+        unitCommandSlotNames[slot].text = $"폭탄제조\n목재 {wood}";
+        unitCommandSlotHotkeys[slot].text = "";
+        Color color = UnitCommandDefaultColor;
+        color.a = wood >= BombWoodCost ? 1f : 0.35f;
+        unitCommandSlotBackgrounds[slot].color = color;
+        unitCommandSlotNames[slot].color = wood >= BombWoodCost ? Color.white : new Color(1f, 1f, 1f, 0.4f);
+        unitCommandSlotButtons[slot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
+    }
+
+    void OnBombClicked()
+    {
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1) return;
+        Selectable single = selection.Selected[0];
+        if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.Bomb, single, 0); return; }
+        ExecuteBombOn(single);
+    }
+
+    // MP: 버튼과 멀티 호스트가 받은 클라 요청(NetCommands)이 같이 쓰는 본체. 표적을 먼저 찾고(없으면 목재를 안 쓴다), 목재를 낸 뒤 터뜨린다.
+    public void ExecuteBombOn(Selectable single)
+    {
+        if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.Data.name != GambleBoostUnitAsset) return;
+        if (!single.TryGetComponent(out OwnedByPlayer owner) || !single.TryGetComponent(out UnitAttacker attacker)) return;
+        int playerId = owner.OwnerId;
+        PlayerContext context = PlayerContext.Get(playerId);
+        if (context == null || context.ResourceWallet == null) return;
+
+        int key = single.GetInstanceID();
+        if (bombReadyAt.TryGetValue(key, out float readyAt) && Time.time < readyAt) return;   // 연타 간격 — 조용히 무시
+
+        SkillData bombSkill = BombSkillOf(identity.Data);
+        SkillLevel bombLevel = bombSkill != null && bombSkill.levels != null && bombSkill.levels.Count > 0 ? bombSkill.levels[0] : null;
+        if (bombLevel == null || bombLevel.effects == null || bombLevel.effects.Count == 0) { PlayerNotification.Show(playerId, "폭탄 스킬 데이터가 없습니다.", 4f); return; }
+        float damage = bombLevel.effects[0].multiplier;
+        Vector3 origin = single.transform.position;
+        float reach = attacker.AttackRange;
+        float radius = bombLevel.WorldRange;
+        var inRange = new System.Collections.Generic.List<EnemyDummy>();
+        foreach (EnemyDummy e in EnemyDummy.Active)
+            if (e != null && !e.IsDead && Vector3.Distance(origin, e.transform.position) <= reach) inRange.Add(e);
+        if (inRange.Count == 0) { PlayerNotification.Show(playerId, "사거리 안에 적이 없습니다.", 4f); return; }
+        if (context.ResourceWallet.Get(ResourceType.Wood) < BombWoodCost) { PlayerNotification.Show(playerId, $"목재가 부족합니다(목재 {BombWoodCost}개).", 4f); return; }
+
+        // 밀집 지점: 사거리 안 적 중 반경 안에 다른 적(사거리 안이든 밖이든 살아 있는 적)이 가장 많은 적의 위치.
+        EnemyDummy best = null;
+        int bestCount = -1;
+        foreach (EnemyDummy candidate in inRange)
+        {
+            int count = 0;
+            foreach (EnemyDummy e in EnemyDummy.Active)
+                if (e != null && !e.IsDead && Vector3.Distance(candidate.transform.position, e.transform.position) <= radius) count++;
+            if (count > bestCount) { bestCount = count; best = candidate; }
+        }
+        Vector3 center = best.transform.position;
+
+        if (!context.ResourceWallet.TrySpend(ResourceType.Wood, BombWoodCost)) return;
+        bombReadyAt[key] = Time.time + bombLevel.cooldown;
+        var victims = new System.Collections.Generic.List<EnemyDummy>();
+        foreach (EnemyDummy e in EnemyDummy.Active)
+            if (e != null && !e.IsDead && Vector3.Distance(center, e.transform.position) <= radius) victims.Add(e);
+        foreach (EnemyDummy e in victims)
+            e.TakeDamage(damage, DamageType.AP, AttackType.Spells, playerId, 1f);
+        PlayerNotification.Show(playerId, $"<color=#FFD700>폭탄제조</color> 목재 {BombWoodCost}개 · {victims.Count}기에게 {damage:N0} 방어 무시", 3f);
+    }
+
     // 초월 엄태웅 「웅교교주」(사장님 10-06) — 유닛별 칸(FlexKind.GambleBoost). 엄태웅 중사(진) 한 기를 골랐을 때만 보인다.
     // 누르면 엔 10000을 내고 내 도박 성공 확률 +4%p(개인 누적 최대 5회). 못 할 땐 이유를 띄운다.
     const string GambleBoostUnitAsset = "초월_엄태웅_AD";
@@ -1550,7 +1640,7 @@ public class GameHud : MonoBehaviour
         single = selection.Selected[0];
         if (!single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.Data.skills == null) return null;
         foreach (SkillData skill in identity.Data.skills)
-            if (skill != null && skill.triggerType == SkillTriggerType.ActiveButton) return skill;
+            if (skill != null && skill.triggerType == SkillTriggerType.ActiveButton && !(skill.skillName != null && skill.skillName.StartsWith(BombSkillPrefix))) return skill;   // 폭탄제조는 자기 칸(FlexKind.Bomb)이 있다
         return null;
     }
 
@@ -3016,6 +3106,11 @@ public class GameHud : MonoBehaviour
                 _ => "한 단계마다 감금·억제기 스턴 확률 +2.5%p·지속 +0.35초 (최대 3단계)",
             }) + "\n영웅 레벨당 1포인트(최대 18). 되돌릴 수 없음.", cardRect);
         }
+        else if (FlexKindAt(index) == FlexKind.Bomb && bombSlotShown)
+        {
+            SkillLevel bombLevel = BombSkillOf(lastCommandUnitData)?.levels?[0];
+            ShowTooltip($"폭탄제조 (목재강화)\n목재 {BombWoodCost}개를 내고 사거리 안 적이 가장 많이 모인 곳에 범위 폭탄 1발 — 반경 {(bombLevel != null ? bombLevel.range : 0f):F0}, 피해 {(bombLevel != null && bombLevel.effects.Count > 0 ? bombLevel.effects[0].multiplier : 0f):N0}(방어 무시, 보스 포함). 횟수 제한 없음(목재가 한계).", cardRect);
+        }
         else if (FlexKindAt(index) == FlexKind.GambleBoost && gambleBoostSlotShown)
         {
             ShowTooltip($"웅교교주\n엔 {PlayerContext.GambleBoostCost:N0}을 내고 도박 성공 확률 +{PlayerContext.GambleBoostPercentEach:F0}%p. 최대 {PlayerContext.GambleBoostMax}회(플레이어 개인 누적). 100%가 아닌 모든 도박에 적용(상한 100%).", cardRect);
@@ -3338,6 +3433,7 @@ public class GameHud : MonoBehaviour
                 case FlexKind.Active: if (activeSlotShown) OnActiveClicked(); return;
                 case FlexKind.Yoonseo: if (yoonseoSlotShown) OnYoonseoClicked(); return;
                 case FlexKind.GambleBoost: if (gambleBoostSlotShown) OnGambleBoostClicked(); return;
+                case FlexKind.Bomb: if (bombSlotShown) OnBombClicked(); return;
                 case FlexKind.Talent: if (talentSlotsShown) OnTalentClicked(flexArg[index]); return;
             }
         }

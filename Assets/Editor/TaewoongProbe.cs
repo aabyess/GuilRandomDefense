@@ -40,4 +40,59 @@ static class TaewoongProbe
     }
     static UnitAttacker lastAttacker;
     static string Aura() => lastAttacker == null ? "❌ Run 먼저" : $"[오라 후] 곁 안흔함_엄태웅 공격력% 보너스 {lastAttacker.PercentAttackPowerBonus:F2}(기대 0.25 — 반경 안일 때)";
+
+    // ── 폭탄제조(목재강화) 실측: 적을 곁으로 데려와 누른다 ──
+    static UnitIdentity bombUnit;
+    static string BombRun()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        var d = AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/초월_엄태웅_AD.asset");
+        var go = spawner.Spawn(d, lane != null ? lane.TakeSpawnPosition(d) : Vector3.zero, 0);
+        bombUnit = go.GetComponent<UnitIdentity>();
+        var hpField = typeof(EnemyDummy).GetField("hp", BindingFlags.NonPublic | BindingFlags.Instance);
+        var enemies = EnemyDummy.Active.Where(e => e != null && !e.IsDead).OrderBy(e => Vector3.Distance(e.transform.position, go.transform.position)).Take(8).ToList();
+        int k = 0;
+        foreach (EnemyDummy e in enemies)
+        {
+            hpField.SetValue(e, 1e8f);
+            float a = k++ * Mathf.PI / 4f;
+            var ag = e.GetComponent<UnityEngine.AI.NavMeshAgent>();
+            Vector3 to = go.transform.position + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * (k <= 6 ? 40f : 300f);   // 6기는 폭탄 반경 안, 2기는 반경 밖
+            if (ag != null) ag.Warp(to); else e.transform.position = to;
+        }
+        var ctx = PlayerContext.Get(0);
+        var hud = Object.FindFirstObjectByType<GameHud>();
+        var sel = go.GetComponent<Selectable>();
+        var before = enemies.Select(e => e.Hp).ToArray();
+        int wood0 = ctx.ResourceWallet.Get(ResourceType.Wood);
+        var sb = new StringBuilder();
+        sb.AppendLine($"[폭탄] 엄태웅 사거리 {go.GetComponent<UnitAttacker>().AttackRange:F0} · 적 {enemies.Count}기 · 목재 {wood0}");
+        hud.ExecuteBombOn(sel);
+        int wood1 = ctx.ResourceWallet.Get(ResourceType.Wood);
+        sb.AppendLine($"  1발: 목재 {wood0}→{wood1} · 체력Δ " + string.Join(", ", enemies.Select((e, i) => $"{before[i] - e.Hp:F0}")));
+        hud.ExecuteBombOn(sel);   // 0.5초 안 — 막혀야 한다
+        sb.AppendLine($"  연타(즉시): 목재 {wood1}→{ctx.ResourceWallet.Get(ResourceType.Wood)}(같아야 함)");
+        return sb.ToString();
+    }
+
+    // 0.6초 뒤 2발째 · 목재 0일 때 세 번째(목재·피해 안 변해야 함)
+    static string BombAgain()
+    {
+        var ctx = PlayerContext.Get(0);
+        var hud = Object.FindFirstObjectByType<GameHud>();
+        var sel = bombUnit.GetComponent<Selectable>();
+        var near = EnemyDummy.Active.Where(e => e != null && !e.IsDead).OrderBy(e => Vector3.Distance(e.transform.position, bombUnit.transform.position)).ToList();
+        float hpBefore = near.Count > 0 ? near[0].Hp : 0f;
+        int wood0 = ctx.ResourceWallet.Get(ResourceType.Wood);
+        hud.ExecuteBombOn(sel);
+        int wood1 = ctx.ResourceWallet.Get(ResourceType.Wood);
+        var sb = new StringBuilder($"[폭탄 2발째] 목재 {wood0}→{wood1} · 가장 가까운 적 체력Δ {hpBefore - (near.Count > 0 ? near[0].Hp : 0f):F0}\n");
+        ctx.ResourceWallet.TrySpend(ResourceType.Wood, ctx.ResourceWallet.Get(ResourceType.Wood));   // 목재 0
+        float hp2 = near.Count > 0 ? near[0].Hp : 0f;
+        hud.ExecuteBombOn(sel);
+        sb.AppendLine($"  목재 0에서 누름: 목재 {ctx.ResourceWallet.Get(ResourceType.Wood)} · 체력Δ {hp2 - (near.Count > 0 ? near[0].Hp : 0f):F0}(0이어야 함)");
+        return sb.ToString();
+    }
 }

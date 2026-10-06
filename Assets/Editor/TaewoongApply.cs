@@ -9,7 +9,7 @@ using UnityEngine;
 ///  · 주특기 = 방깎: 평타 1/12 · 범위 550 · 방어 −5(원작 김민준 AP 9%·550·−5 · 최상호 1/16·−3).
 ///  · 강도높은트레이너 = 공격력 오라: 반경 850 · 아군+자기 공격력 +25%(원작 강재규 A0V8).
 ///  · 웅교교주 = 도박확률증가(+4%p/회, 엔 10000, 최대 5회 · 플레이어 개인 누적)는 명령 카드 칸이라 SkillData가 없다(GameHud·GamblingShop).
-///  · 폭탄제조(목재강화)·유물 지배자의싸인은 사장님 확인 중 — 아직 안 넣는다.
+///  · 폭탄제조(목재강화) = 명령 카드 칸(FlexKind.Bomb) + 이 Apply가 만드는 SkillData 「폭탄제조」(피해 5,000,000). 유물 지배자의싸인은 사장님 확인 중 — 아직 안 넣는다.
 /// </summary>
 static class TaewoongApply
 {
@@ -66,10 +66,19 @@ static class TaewoongApply
             new SkillEffect { kind = SkillEffectKind.AttackPowerBuffPercent, target = SkillTargetKind.Allies, multiplier = 0.25f, buffId = "TAEWOONG_ATK_AURA" },
             new SkillEffect { kind = SkillEffectKind.AttackPowerBuffPercent, target = SkillTargetKind.Self, multiplier = 0.25f, buffId = "TAEWOONG_ATK_AURA" });
 
+        // 폭탄제조(목재강화, 사장님 확정 가): 명령 카드 칸 FlexKind.Bomb이 이 SkillData를 읽는다(GameHud.BombSkillOf) — ActiveButton이지만 일반 액티브 칸은 이름으로 건너뛴다.
+        // 피해 5,000,000(사장님 확정) · 반경 500 · 연타 간격 0.5초 · 방어 무시(armorIgnoreRatio 1) · 보스 포함.
+        SkillData bomb = MakeSkill("폭탄제조", "폭탄제조(목재강화) — 목재 1개 · 범위 폭탄(방어 무시)",
+            "사장님 10-06 「목재강화(목재 1개: 폭탄제조 — 범위, 방무딜 100%, 데미지, 개수제한X)」. 명령 카드 칸을 누를 때마다 목재 1개 → 사거리 안 적 밀집 지점에 폭탄 1발(반경 500, 보스 포함, 연타 간격 0.5초). 피해 5,000,000(사장님 확정, 신 기준 R45 일반 몹까지 한 방) — 값을 바꿀 땐 이 효과 한 칸만 고친다.",
+            SkillTriggerType.ActiveButton, 500f, 1f,
+            new SkillEffect { kind = SkillEffectKind.Damage, basis = SkillEffectBasis.Flat, target = SkillTargetKind.Enemies, damageType = DamageType.AP, attackType = AttackType.Spells, multiplier = 5000000f, armorIgnoreRatio = 1f });
+        bomb.levels[0].cooldown = 0.5f;
+        EditorUtility.SetDirty(bomb);
+
         var old = new List<string>();
         if (unit.skills != null) foreach (SkillData s in unit.skills) if (s != null) old.Add(s.name);
         unit.skill = null;
-        unit.skills = new List<SkillData> { burst, bind, shred, aura };
+        unit.skills = new List<SkillData> { burst, bind, shred, aura, bomb };
         unit.unitName = Title;
         unit.trait = null;   // 원작 호킨스 A0WK 능력교체형 특성이 새 스킬을 덮지 않게 — 특성 에셋은 그대로
         EditorUtility.SetDirty(unit);

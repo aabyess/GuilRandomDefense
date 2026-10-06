@@ -111,6 +111,10 @@ static class LegendProbe
     static string SoloSetupNotae() => SoloSetup("전설적인_노태현");
     static string SoloSetupShanks() => SoloSetup("전설적인_백기현");
     static string SoloSetupEdward() => SoloSetup("전설적인_최상호");
+    static string SoloSetupJingbe() => SoloSetup("전설적인_정윤식");
+    static string SoloSetupBoa() => SoloSetup("전설적인_이현주");
+    static string SoloSetupRayju() => SoloSetup("전설적인_임건웅");
+    static string SoloEnd8() => SoloEnd("징베/보아/레이쥬", 8f);
 
     // 지금 살아 있는 적 체력을 크게 고정하고 기준값을 잡는다(Soloend 전 시점)
     static string SoloMark()

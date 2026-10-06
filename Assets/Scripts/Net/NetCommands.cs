@@ -12,6 +12,7 @@ public enum NetHudAction : byte
     Yoonseo = 4,   // 초월 노태현 「최윤서 강화」(10-06)
     CastActive = 5,   // 액티브(누르는) 스킬 시전 — 초월 최상호 「바지사장」(10-06)
     Talent = 6,    // 초월 박민수 「재능투자」(10-06) — argument = 투자처(0 공격력·1 공속·2 방깎·3 스턴)
+    Bomb = 8,   // 초월 엄태웅 「폭탄제조」(10-06) — 목재 1개 → 사거리 안 밀집 지점 범위 폭탄
     GambleBoost = 7,   // 초월 엄태웅 「웅교교주」(10-06) — 엔 10000 → 도박 성공 확률 +4%p(개인 누적, 최대 5회)
 }
 
@@ -267,6 +268,7 @@ public static class NetCommands
             case NetHudAction.Yoonseo: hud.ExecuteYoonseoOn(selectable); break;
             case NetHudAction.Talent: hud.ExecuteTalentOn(selectable, argument); break;
             case NetHudAction.GambleBoost: hud.ExecuteGambleBoostOn(selectable); break;
+            case NetHudAction.Bomb: hud.ExecuteBombOn(selectable); break;
             case NetHudAction.CastActive: hud.ExecuteCastActiveOn(selectable); break;
             case NetHudAction.Reroll:
                 if (real.TryGetComponent(out UniqueRerollAbility reroll))
