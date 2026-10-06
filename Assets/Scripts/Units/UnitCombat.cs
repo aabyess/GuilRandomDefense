@@ -241,7 +241,17 @@ public class UnitCombat : MonoBehaviour
         if (currentTarget != null)
         {
             float sqrToTarget = (currentTarget.transform.position - transform.position).sqrMagnitude;
-            if (sqrToTarget <= AttackRangeSqr()) return;
+            if (sqrToTarget <= AttackRangeSqr())
+            {
+                // 포커싱오더(초월 김민준 푸바오) — 홀드 중에도 켜져 있으면 주기마다 사거리 안에서 다시 고른다.
+                if (attacker != null && attacker.FocusActive && Time.time >= nextScanTime)
+                {
+                    nextScanTime = Time.time + scanInterval;
+                    EnemyDummy pick = FindClosestEnemyWithin(attacker.AttackRange);
+                    if (pick != null) currentTarget = pick;
+                }
+                return;
+            }
             currentTarget = null;
             nextScanTime = 0f;
         }
@@ -282,6 +292,13 @@ public class UnitCombat : MonoBehaviour
                 // 매 프레임 SetDestination을 부르면 경로를 계속 다시 계산한다.
                 if (Time.time < nextScanTime) return;
                 nextScanTime = Time.time + scanInterval;
+
+                // 포커싱오더(초월 김민준 푸바오) — 켜진 동안은 주기마다 표적을 다시 고른다(지금 적이 안 죽어도 잃은 체력 많은 적이 있으면 갈아탄다). A로 찍은 표적은 그대로.
+                if (!forced && attacker != null && attacker.FocusActive)
+                {
+                    EnemyDummy pick = FindClosestEnemyWithin(SearchRange());
+                    if (pick != null && pick != currentTarget) { currentTarget = pick; sqrToTarget = (pick.transform.position - transform.position).sqrMagnitude; }
+                }
 
                 SetDestination(sqrToTarget <= AttackRangeSqr() ? transform.position : currentTarget.transform.position);
                 return;

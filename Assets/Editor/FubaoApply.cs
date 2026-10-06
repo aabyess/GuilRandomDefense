@@ -54,6 +54,9 @@ static class FubaoApply
         summon.attackSpeed = body.attackSpeed;
         summon.attackRange = body.attackRange;
         summon.moveSpeed = 0f;                                          // 제자리(시노부 분신과 같다)
+        // 모델은 임시로 흔함_강재규(쵸파)를 쓴다 — 다른 소환체 에셋들과 같다. 프리팹 참조는 「모델 배선」이 프리팹을 다시 만들면 fileID가 바뀌어 끊기므로(10-06 0440c7ab4 뒤 소환체 5종 전부 끊김) 매번 로스터의 현재 참조로 다시 잇는다.
+        UnitData modelOwner = AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/흔함_강재규.asset");
+        if (modelOwner != null && modelOwner.prefab != null) summon.prefab = modelOwner.prefab;
         summon.skill = null;
         summon.skills = new List<SkillData>();
         summon.trait = null;
