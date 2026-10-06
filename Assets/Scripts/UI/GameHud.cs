@@ -531,7 +531,6 @@ public class GameHud : MonoBehaviour
         RefreshDockTargeting();
         RefreshPaperPlaneTargeting();
         RefreshAllyTargeting();
-        RefreshPointTargeting();
         RefreshActiveButton();
         RefreshNavigationButton();
         RefreshRerollButton();
@@ -1804,40 +1803,6 @@ public class GameHud : MonoBehaviour
         ExecuteCastActiveOnAlly(caster, ally, skill);
     }
 
-    // 지점 지정 액티브(SkillLevel.needsPointClick, 초월 배성령 「암살스킬」 순간이동) — 칸을 누르면 대기, 땅을 좌클릭하면 그 지점으로 순간이동(우클릭 취소). 호스트/싱글만.
-    SkillData pendingPointSkill;
-    Selectable pendingPointUnit;
-    int pendingPointStartFrame;
-
-    void RefreshPointTargeting()
-    {
-        if (pendingPointSkill == null) return;
-        if (Mouse.current == null || pendingPointUnit == null) { pendingPointSkill = null; return; }
-        if (Mouse.current.rightButton.wasPressedThisFrame) { pendingPointSkill = null; return; }
-        if (!Mouse.current.leftButton.wasPressedThisFrame || Time.frameCount <= pendingPointStartFrame) return;
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
-
-        SkillData skill = pendingPointSkill;
-        Selectable caster = pendingPointUnit;
-        pendingPointSkill = null;
-        pendingPointUnit = null;
-        int playerId = caster.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
-        if (!WorldPick.TryHit(Camera.main, Mouse.current.position.ReadValue(), out RaycastHit hit))
-        {
-            PlayerNotification.Show(playerId, "땅 지점을 찾을 수 없습니다.", 4f);
-            return;
-        }
-        ExecuteCastActiveAtPoint(caster, hit.point, skill);
-    }
-
-    public void ExecuteCastActiveAtPoint(Selectable single, Vector3 point, SkillData skill)
-    {
-        if (single == null || !single.TryGetComponent(out UnitAttacker attacker)) return;
-        int playerId = single.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
-        if (!attacker.TryCastActiveAtPoint(skill, point, out string reason))
-            PlayerNotification.ShowFailure(playerId, reason ?? "지금은 사용할 수 없습니다.", 4f);
-    }
-
     public void ExecuteCastActiveOnAlly(Selectable single, UnitIdentity ally, SkillData skill)
     {
         if (single == null || !single.TryGetComponent(out UnitAttacker attacker)) return;
@@ -1860,15 +1825,6 @@ public class GameHud : MonoBehaviour
     {
         SkillData skill = ActiveSkillOf(out Selectable single);
         if (skill == null || single == null) return;
-        if (skill.levels != null && skill.levels.Count > 0 && skill.levels[0].needsPointClick)
-        {
-            if (!GameAuthority.IsServer) { BlockedOnMultiplayerClient(); return; }
-            pendingPointSkill = skill;
-            pendingPointUnit = single;
-            pendingPointStartFrame = Time.frameCount;
-            PlayerNotification.Show(LocalPlayer.LocalPlayerId, $"{skill.skillName.Split('—')[0].Trim()}: 이동할 땅을 클릭하세요. (우클릭 취소)", 4f);
-            return;
-        }
         if (skill.levels != null && skill.levels.Count > 0 && skill.levels[0].needsAllyClick)
         {
             // 아군 지정(초월 신문철 엄마간식) — 칸을 누르면 내 아군 하나를 클릭할 때까지 대기(우클릭 취소). 호스트/싱글만.
