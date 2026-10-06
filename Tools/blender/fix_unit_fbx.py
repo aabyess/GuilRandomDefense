@@ -6108,6 +6108,26 @@ def fix(name, cfg, out_dir=None, save_blend=False):
                 out_c.append((t_, f0_, fr_[:keep]))
             clips = out_c
             report["꼬리 자른 클립(프레임)"] = trimmed
+        if cfg.get("loop_clips"):
+            # 🔸 loop_clips(2026-10-06, 히든_전유라 Move): {클립: k} — 자르지 않고 그 클립의 끝 k프레임을 첫 프레임 쪽으로 서서히 당겨 이음새를 없앤다
+            #   (split_clips의 loop=와 같은 보간. split_clips는 나머지 클립을 다 버리므로 한두 클립만 다듬을 땐 이쪽).
+            def _lblend(A, B, w):
+                la, qa, sa = A.decompose()
+                lb, qb, sb = B.decompose()
+                return (Matrix.Translation(la.lerp(lb, w)) @ qa.slerp(qb, w).to_matrix().to_4x4()
+                        @ Matrix.Diagonal(sa.lerp(sb, w)).to_4x4())
+            out_l = []
+            for t_, f0_, fr_ in clips:
+                k_ = int(cfg["loop_clips"].get(t_, 0))
+                if k_:
+                    assert k_ < len(fr_), f"{name}: loop_clips {t_}={k_}가 클립({len(fr_)}프레임)보다 길다"
+                    fr_ = [dict(w) for w in fr_]
+                    head_ = fr_[0]
+                    for i_ in range(1, k_ + 1):
+                        j_ = len(fr_) - 1 - k_ + i_
+                        fr_[j_] = {n2: _lblend(M, head_[n2], i_ / k_) for n2, M in fr_[j_].items()}
+                out_l.append((t_, f0_, fr_))
+            clips = out_l
         if cfg.get("split_clips"):
             # 🔴 안흔함_강재규(2026-09-23): 원본이 「All Animations」 한 테이크에 서 있기·웅크리기·앞발 치기를 **이어 붙여** 놨다.
             #   ArtBinder.GetOrCreateOwnClipController는 **가장 긴 클립 하나**를 기본 상태로 놓으므로, 게임에서 재규어가
@@ -7663,6 +7683,8 @@ UNITS["히든_전유라"]["variants"] = {"동작": _motion_variant({
     "hit": "Hit", "die": "Die", "dizzy": "Stun", "hitback": "HitBack", "hitdown": "HitDown", "hitfly": "HitFly", "hitkneel": "HitKneel",
     "skill1_1": "Skill1", "skill1_1_loop": "Skill1_Loop", "skill2_1": "Skill2", "skill2_1_loop": "Skill2_Loop", "skill3_1": "Skill3",
     "skill6_1": "Skill6", "skill6_1_loop": "Skill6_Loop", "bankai": "Bankai", "win": "Win"}, clip_floor_feet=True)}
+# 이음새판(2026-10-06): 원본 move는 15프레임뿐이고 끝↔첫 자세 이음새가 0.0658m(키의 3.7%)라 한 바퀴 돌 때 튄다 → 끝 5프레임을 첫 자세로 당긴다(loop_clips).
+UNITS["히든_전유라"]["variants"]["동작_이음새"] = {**UNITS["히든_전유라"]["variants"]["동작"], "loop_clips": {"Move": 5}}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
