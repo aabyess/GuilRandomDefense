@@ -65,3 +65,7 @@
 1. 구현담당1 커밋 확인 → 해석에 따라 ➊ `GoldPlusBonus` · ➋ `StoryDamageMultiplier`(UnitAttacker `DamagePassiveFactor`에 곱 한 자리) · (B 해석이면 ➌)
 2. 데이터: `Assets/Editor/JunseokApply.cs`(다시 불러도 안전): 스킬 4 · unitName 「공짜집착증」 · movementAbility Flying · chatPhrase(CSV 포함) · (질문4에 따라) `unit.trait = null` · 재료는 이미 맞음
 3. 실측(gameshot 신 모드 탐침): ①골드 배율 2.0→2.2·유닛 판매·죽음에서 되돌아옴(중복 합산 없음) ②같은 레인 아군 공속 +20%·맵 끝 아군까지 ③스토리 적 상대 피해 ×1.3 vs 일반 적 불변 ④비행 이동(이재윤과 한 번에).
+
+## 7. 사장님 확정 (10-06 「다 추천대로」, PM 전달)
+
+외교 = **해석 A**(처치 골드 +20%, `GoldPlus` +0.2 — 사장님이 「+20%」로 확정) · 스토리 = **해석 A**(스토리 적 PV≥200 상대 피해 ×1.3) · 지형무시이동 = **Flying** · 결의 = 맵 전체 공속 **+20%** · 특성강화 = **`trait = null`**(단추 없앰). 위 §3~§5 기본안이 그대로 확정이다.
