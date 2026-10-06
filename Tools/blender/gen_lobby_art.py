@@ -5,6 +5,7 @@
 
    blender -b --factory-startup --python Tools/blender/gen_lobby_art.py -- <출력폴더> <가로> <세로> <샘플수>
    기본: ~/GRD_lobby_art  2560 1440 96   → <출력폴더>/bg_raw_<가로>.png (후처리는 gen_lobby_post.py)
+   2차 시안: 환경변수 LOBBY_V2=1 → 앞마당 돌길·자갈·풀·유닛 실루엣(조세민·손오공·전유라 Idle) · 노출 −0.35. 출력은 ~/GRD_lobby_art_v2(승인본 ~/GRD_lobby_art는 안 건드림).
    Blender 창(MCP)에서 장면만 보려면 환경변수 LOBBY_NO_RENDER=1 (render 건너뜀) 후 exec로 불러도 된다.
 """
 import bpy, bmesh, math, os, sys, glob
@@ -350,6 +351,7 @@ def build_scene():
     build_world()
     terr = build_terrain(); terr.data.materials.append(terrain_material())
     build_sea(); ground_fog(); boulders(46, 5)
+    if os.environ.get('LOBBY_V2'): v2_ground_detail()
     # 상점: 대지 위 셋 + 앞마당 넷(카메라는 남서쪽에서 북동을 본다)
     def Z(x, y): return float(terrain_h(np.array([x]), np.array([y]))[0])
     shops = [('도박소', (-6, 4)), ('유닛강화소', (-22, 3)), ('영원강화소', (4, 14)),                # 대지(십자 중심 부근)
@@ -366,6 +368,7 @@ def build_scene():
             torch((x + dx, y + dy, Z(x + dx, y + dy)), power=3800)
     for (x, y) in ((-11, -16), (-5, -24), (-30, -12), (-22, -32), (-30, 14), (-18, -42)):
         torch((x, y, Z(x, y)), power=4400, height=3.2)
+    if os.environ.get('LOBBY_V2'): v2_figures()
     # 달빛(차가운 보조광): 낮은 해를 대신해 윗쪽에서 약하게
     sun = bpy.data.lights.new('moon', 'SUN'); sun.energy = .5; sun.color = (.45, .55, .95); sun.angle = math.radians(2)
     so = bpy.data.objects.new('moon', sun); scene.collection.objects.link(so); so.rotation_euler = (math.radians(58), 0, math.radians(215))
@@ -383,6 +386,109 @@ def build_scene():
     co.rotation_euler = d.to_track_quat('-Z', 'Y').to_euler()
     cam.shift_x = SHIFT_X; cam.shift_y = SHIFT_Y
 
+
+# ------------------------------------------------------------------ 2차(LOBBY_V2=1): 앞마당 질감 · 돌길 · 풀 · 유닛 실루엣 · 더 어둡게
+def v2_ground_detail():
+    r = np.random.RandomState(2026)
+    def Z(x, y): return float(terrain_h(np.array([x]), np.array([y]))[0])
+    # 돌길: 상점 앞마당에서 카메라 쪽으로 구불구불 — 납작한 돌판을 겹쳐 깐다
+    slab_mat = mat_new('돌길'); t = slab_mat.node_tree
+    out = nd(t, 'ShaderNodeOutputMaterial', loc=(500, 0)); bs = nd(t, 'ShaderNodeBsdfPrincipled', loc=(250, 0))
+    bs.inputs['Roughness'].default_value = .92
+    nz = nd(t, 'ShaderNodeTexNoise', loc=(-300, 0)); nz.inputs['Scale'].default_value = 9; nz.inputs['Detail'].default_value = 6
+    tcn = nd(t, 'ShaderNodeTexCoord', loc=(-550, 0)); lk(t, tcn.outputs['Object'], nz.inputs[0])
+    ramp = nd(t, 'ShaderNodeValToRGB', loc=(0, 0)); ramp.color_ramp.elements[0].color = (.16, .14, .12, 1); ramp.color_ramp.elements[1].color = (.42, .36, .30, 1)
+    lk(t, nz.outputs['Fac'], ramp.inputs[0]); lk(t, ramp.outputs[0], bs.inputs['Base Color']); lk(t, bs.outputs[0], out.inputs[0])
+    bm = bmesh.new(); bmesh.ops.create_cube(bm, size=1.0)
+    bmesh.ops.bevel(bm, geom=list(bm.edges), offset=.12, segments=2, affect='EDGES')
+    sl = bpy.data.meshes.new('slab'); bm.to_mesh(sl); bm.free(); sl.materials.append(slab_mat)
+    P0 = np.array([-10.0, -9.0]); P1 = np.array([-52.0, -66.0])
+    for i in range(240):
+        u = r.rand(); c = P0 + (P1 - P0) * u
+        d = (P1 - P0) / np.linalg.norm(P1 - P0); nrm = np.array([-d[1], d[0]])
+        off = (r.rand() - .5) * 4.4 * (1 - .35 * u) + 2.6 * np.sin(u * 6.0)
+        x, y = c + nrm * off
+        if abs(off - 2.6 * np.sin(u * 6.0)) > 2.2 and r.rand() < .7: continue
+        z = Z(x, y)
+        ob = bpy.data.objects.new('slab', sl); scene.collection.objects.link(ob)
+        sx = r.uniform(.7, 1.5); sy = r.uniform(.6, 1.2)
+        ob.scale = (sx, sy, r.uniform(.12, .22)); ob.location = (x, y, z + .02); ob.rotation_euler = (r.uniform(-.04, .04), r.uniform(-.04, .04), r.rand() * 6.28)
+    # 자갈
+    pm = mat_new('자갈'); tt = pm.node_tree
+    o2 = nd(tt, 'ShaderNodeOutputMaterial', loc=(300, 0)); b2 = nd(tt, 'ShaderNodeBsdfPrincipled', loc=(50, 0))
+    b2.inputs['Base Color'].default_value = (.06, .05, .045, 1); b2.inputs['Roughness'].default_value = .9; lk(tt, b2.outputs[0], o2.inputs[0])
+    bm = bmesh.new(); bmesh.ops.create_icosphere(bm, subdivisions=2, radius=1)
+    for v in bm.verts: v.co *= 1 + .25 * math.sin(v.co.x * 5 + v.co.y * 3 + v.co.z * 4)
+    pb = bpy.data.meshes.new('pebble'); bm.to_mesh(pb); bm.free(); pb.materials.append(pm)
+    for i in range(1400):
+        x = r.uniform(-76, 6); y = r.uniform(-76, 14)
+        z = Z(x, y)
+        if z > 3.6 or z < .1: continue                      # 대지(절벽 위)·물가 제외
+        ob = bpy.data.objects.new('pebble', pb); scene.collection.objects.link(ob)
+        s_ = r.uniform(.07, .3); ob.scale = (s_ * r.uniform(.8, 1.4), s_ * r.uniform(.8, 1.4), s_ * r.uniform(.5, .9))
+        ob.location = (x, y, z); ob.rotation_euler = (0, 0, r.rand() * 6.28)
+    # 마른 풀 다발: 가는 원뿔 셋을 한 다발로
+    gm = mat_new('풀'); tg = gm.node_tree
+    o3 = nd(tg, 'ShaderNodeOutputMaterial', loc=(300, 0)); b3 = nd(tg, 'ShaderNodeBsdfPrincipled', loc=(50, 0))
+    b3.inputs['Base Color'].default_value = (.045, .075, .02, 1); b3.inputs['Roughness'].default_value = .85; lk(tg, b3.outputs[0], o3.inputs[0])
+    bm = bmesh.new()
+    for k in range(5):
+        a = k * 1.26; ang = .25 + .1 * k
+        cone = bmesh.ops.create_cone(bm, cap_ends=False, segments=3, radius1=.05, radius2=.0, depth=.9)
+        for v in cone['verts']:
+            v.co.z += .45
+            v.co.x += v.co.z * math.sin(ang) * math.cos(a); v.co.y += v.co.z * math.sin(ang) * math.sin(a)
+        bmesh.ops.translate(bm, vec=(.07 * math.cos(a), .07 * math.sin(a), 0), verts=cone['verts'])
+    gt = bpy.data.meshes.new('tuft'); bm.to_mesh(gt); bm.free(); gt.materials.append(gm)
+    for i in range(900):
+        x = r.uniform(-78, 8); y = r.uniform(-78, 16)
+        z = Z(x, y)
+        if z > 3.4 or z < .2: continue
+        ob = bpy.data.objects.new('tuft', gt); scene.collection.objects.link(ob)
+        s_ = r.uniform(.5, 1.1); ob.scale = (s_, s_, s_ * r.uniform(.5, .9)); ob.location = (x, y, z - .02); ob.rotation_euler = (0, 0, r.rand() * 6.28)
+
+
+def v2_figures():
+    """게임 유닛 실루엣: 돌길 옆에 서서 상점을 바라본다(카메라 쪽에서 보면 역광·달빛이라 몸 윤곽만 남는다)."""
+    glob_ = HOME + '/GRD_motion_trial/'
+    srcs = [glob_ + '특별함_조세민@Move합성/특별함_조세민.fbx', glob_ + '랜덤_손오공@Move합성/랜덤_손오공.fbx', glob_ + '히든_전유라@이음새/히든_전유라.fbx']
+    spots = [(-36.0, -35.0, 0), (-32.0, -41.0, 1), (-41.0, -43.0, 2), (-27.5, -33.5, 1), (-45.0, -37.0, 0)]
+    H = float(os.environ.get('LOBBY_FIG_H', '3.8'))
+    def Z(x, y): return float(terrain_h(np.array([x]), np.array([y]))[0])
+    for i, (x, y, k) in enumerate(spots):
+        f = srcs[k]
+        if not os.path.exists(f): continue
+        before = set(bpy.data.objects); act_before = set(bpy.data.actions)
+        bpy.ops.import_scene.fbx(filepath=f)
+        new = [o for o in bpy.data.objects if o not in before]
+        new_acts = [a for a in bpy.data.actions if a not in act_before]
+        arm = next((o for o in new if o.type == 'ARMATURE'), None)
+        if arm is not None and arm.animation_data is not None:
+            act = next((a for a in new_acts if a.name.split('.')[0] == 'Idle' or a.name.endswith('|Idle') or a.name.split('|')[-1].split('.')[0] == 'Idle'), None)
+            if act is not None:
+                arm.animation_data.action = act
+                if hasattr(arm.animation_data, 'action_slot') and len(act.slots):
+                    arm.animation_data.action_slot = next((sl for sl in act.slots if sl.target_id_type == 'OBJECT'), act.slots[0])
+        scene.frame_set(1)
+        root = bpy.data.objects.new('fig%d' % i, None); scene.collection.objects.link(root)
+        for o in new:
+            if o.parent is None: o.parent = root
+        bpy.context.view_layer.update()
+        dg = bpy.context.evaluated_depsgraph_get()
+        zs = []
+        for o in new:
+            if o.type == 'MESH':
+                ev = o.evaluated_get(dg); me = ev.to_mesh()
+                zs += [(ev.matrix_world @ v.co).z for v in me.vertices]; ev.to_mesh_clear()
+        h0 = max(zs) - min(zs); lo = min(zs)
+        sc = H / h0 * (1.0 + .06 * ((i * 37) % 5 - 2))
+        root.scale = (sc,) * 3
+        root.location = (x, y, Z(x, y) - lo * sc)
+        root.rotation_euler = (0, 0, math.atan2(4 - y, -6 - x) - math.pi / 2 + .25 * (((i * 7) % 5) - 2) / 2)
+
+
+if os.environ.get('LOBBY_V2'):
+    os.environ.setdefault('LOBBY_EXPOSURE', '-0.35')
 
 SUN_AZ = 36
 CAM = (-60, -80, 17.0); TGT = (-4, 4, 8.5); SHIFT_X = 0.20; SHIFT_Y = -0.01
