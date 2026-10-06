@@ -509,6 +509,8 @@ public class GameHud : MonoBehaviour
         {
             if (gameMenu.activeSelf) CloseGameMenu(); else OpenGameMenu();
         }
+        if (Keyboard.current != null && !ChatInputGate.IsOpen && (Keyboard.current.pKey.wasPressedThisFrame || Keyboard.current.pauseKey.wasPressedThisFrame)) TogglePause();
+        RefreshPauseUi();
         PlayButtonClickSound();
         if (gameMenuScreenButtons != null && gameMenuScreenButtons.activeInHierarchy) RefreshScreenButtons();   // 해상도 바뀜은 한 프레임 뒤에 반영된다
         RefreshConsoleLayout();
@@ -793,6 +795,8 @@ public class GameHud : MonoBehaviour
     GameObject gameMenuConfirmButtons;
     TMP_Text gameMenuConfirmLabel;
     TMP_Text gameMenuSoundLabel;
+    TMP_Text gameMenuPauseLabel;
+    GameObject pauseOverlay;
     GameObject gameMenuScreenButtons;
     readonly Image[] gameMenuScreenImages = new Image[ScreenMode.Options.Length];
     readonly Button[] gameMenuScreenButtonComponents = new Button[ScreenMode.Options.Length];
@@ -822,12 +826,14 @@ public class GameHud : MonoBehaviour
         gameMenuMessage.fontSize = 26;
 
         gameMenuMainButtons = CreateRow(card, "MainButtons");
-        CreateMenuButton(gameMenuMainButtons.transform, "ContinueButton", "계속하기", new Color(0.20f, 0.52f, 0.86f, 1f), new Vector2(0.02f, 0f), new Vector2(0.26f, 1f), CloseGameMenu);
+        CreateMenuButton(gameMenuMainButtons.transform, "ContinueButton", "계속하기", new Color(0.20f, 0.52f, 0.86f, 1f), new Vector2(0.02f, 0f), new Vector2(0.20f, 1f), CloseGameMenu);
+        // 일시정지(10-07) — 혼자 하기만. 같이 하기에선 회색 + 눌러도 「같이 하기에선 일시정지 할 수 없습니다」 알림.
+        gameMenuPauseLabel = CreateMenuButton(gameMenuMainButtons.transform, "PauseButton", "일시정지", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.21f, 0f), new Vector2(0.39f, 1f), OnPauseMenuClicked);
         // 소리 켜기/끄기(PM 09-27 — 설정 창이 없어 메뉴 한 줄. GameSound가 PlayerPrefs로 기억한다)
-        gameMenuSoundLabel = CreateMenuButton(gameMenuMainButtons.transform, "SoundButton", "", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.275f, 0f), new Vector2(0.505f, 1f), ToggleSound);
+        gameMenuSoundLabel = CreateMenuButton(gameMenuMainButtons.transform, "SoundButton", "", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.40f, 0f), new Vector2(0.58f, 1f), ToggleSound);
         // 화면 모드·해상도(10-04 친구 피드백) — 누르면 단추 줄이 화면 선택으로 바뀐다.
-        CreateMenuButton(gameMenuMainButtons.transform, "ScreenButton", "화면", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.52f, 0f), new Vector2(0.745f, 1f), ShowGameMenuScreen);
-        CreateMenuButton(gameMenuMainButtons.transform, "HomeButton", "처음 화면으로", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.76f, 0f), new Vector2(0.98f, 1f), ShowGameMenuConfirm);
+        CreateMenuButton(gameMenuMainButtons.transform, "ScreenButton", "화면", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.59f, 0f), new Vector2(0.77f, 1f), ShowGameMenuScreen);
+        CreateMenuButton(gameMenuMainButtons.transform, "HomeButton", "처음 화면으로", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.78f, 0f), new Vector2(0.98f, 1f), ShowGameMenuConfirm);
 
         gameMenuScreenButtons = CreateRow(card, "ScreenButtons");
         float cell = 0.96f / (ScreenMode.Options.Length + 1);
@@ -847,6 +853,39 @@ public class GameHud : MonoBehaviour
         CreateMenuButton(gameMenuConfirmButtons.transform, "CancelButton", "취소", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.52f, 0f), new Vector2(0.95f, 1f), CloseGameMenu);
 
         gameMenu.SetActive(false);
+
+        // 일시정지 안내(화면 가운데) — 멈춘 동안만 보인다.
+        RectTransform pauseRect = CreatePanel(transform, "PauseOverlay", new Color(0f, 0f, 0f, 0.35f));
+        SetAnchors(pauseRect, new Vector2(0.3f, 0.45f), new Vector2(0.7f, 0.55f));
+        TMP_Text pauseText = CreateLabel(pauseRect, "PauseText", "일시정지 — P로 계속");
+        pauseText.fontSize = 34;
+        pauseText.raycastTarget = false;
+        pauseRect.GetComponent<Image>().raycastTarget = false;
+        pauseOverlay = pauseRect.gameObject;
+        pauseOverlay.SetActive(false);
+    }
+
+    // 일시정지 토글(키 P·Pause/Break, 메뉴 단추 공용) — 같이 하기에선 막고 이유를 알린다.
+    void TogglePause()
+    {
+        if (!GamePause.TryToggle(out string reason)) PlayerNotification.Show(LocalPlayer.LocalPlayerId, reason, 3f);
+    }
+
+    void OnPauseMenuClicked()
+    {
+        TogglePause();
+        if (GamePause.Paused || GamePause.Available) CloseGameMenu();
+    }
+
+    void RefreshPauseUi()
+    {
+        if (pauseOverlay != null && pauseOverlay.activeSelf != GamePause.Paused) pauseOverlay.SetActive(GamePause.Paused);
+        if (gameMenuPauseLabel != null)
+        {
+            gameMenuPauseLabel.text = GamePause.Available ? (GamePause.Paused ? "계속(일시정지 해제)" : "일시정지") : "일시정지\n(같이 하기 불가)";
+            Image image = gameMenuPauseLabel.transform.parent.GetComponent<Image>();
+            if (image != null) image.color = GamePause.Available ? new Color(0.26f, 0.32f, 0.44f, 1f) : new Color(0.28f, 0.28f, 0.30f, 0.6f);
+        }
     }
 
     static GameObject CreateRow(RectTransform card, string name)
@@ -3798,6 +3837,7 @@ public class GameHud : MonoBehaviour
 
     void OnUnitCommandSlotClicked(int index)
     {
+        if (GamePause.Blocks()) return;   // 일시정지 중엔 명령 카드 단추(액티브·강화·토토·판매…) 불가
         // 단축키와 같은 함수를 부른다 — 두 곳에 따로 구현하면 한쪽만 고쳐진다.
         if (index >= HoldCommandSlot && index <= GatherCommandSlot && currentShop as Object == null)
         {
@@ -3910,6 +3950,7 @@ public class GameHud : MonoBehaviour
 
     void OnShopSlotClicked(int visualIndex)
     {
+        if (GamePause.Blocks()) return;   // 일시정지 중엔 상점·뽑기 불가
         if (currentShop as Object == null) return;
 
         int logicalIndex = visualIndex >= 0 && visualIndex < shopLogicalSlotIndex.Length

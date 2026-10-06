@@ -231,6 +231,7 @@ public class CombineSystem : MonoBehaviour
     // 그 시전 유닛 자리에 나온다(war3map.j L15134). 없으면(디버그 F2 등) 레인 가운데.
     public bool TryCombine(CombineRecipe recipe, Vector3? casterPosition = null)
     {
+        if (GamePause.Blocks(ResolveOwnerId())) return false;   // 일시정지 중엔 조합 불가(채팅 조합 포함)
         if (!GameAuthority.IsServer) return false;
         if (recipe == null) return false;
 
