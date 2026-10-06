@@ -1822,6 +1822,37 @@ public class UnitAttacker : MonoBehaviour
     UnitData splashMultiplierFor;
     float splashMultiplier = 1f;
 
+    // 빽(SkillDamagePerHighGradeUnit) — 전설 이상 유닛 수 비례 스플래시 피해 배율. 개수는 1초 캐시(공격마다 전 유닛을 세지 않게).
+    UnitData highGradeSplashFor;
+    float highGradeSplashRate, highGradeSplashCap;
+    float highGradeSplashCountedAt = -10f;
+    int highGradeSplashCount;
+
+    float HighGradeSplashFactor(UnitData unitData)
+    {
+        if (highGradeSplashFor != unitData)
+        {
+            highGradeSplashFor = unitData;
+            highGradeSplashRate = 0f; highGradeSplashCap = 0f;
+            int count = BaseSkillCount(unitData);
+            for (int i = 0; i < count; i++)
+            {
+                SkillData skill = ResolveSkillAt(unitData, i);
+                if (skill == null || skill.levels == null || skill.levels.Count == 0 || skill.levels[0].effects == null) continue;
+                foreach (SkillEffect effect in skill.levels[0].effects)
+                    if (effect != null && effect.kind == SkillEffectKind.SkillDamagePerHighGradeUnit)
+                    { highGradeSplashRate += effect.multiplier; highGradeSplashCap = Mathf.Max(highGradeSplashCap, effect.bonus); }
+            }
+        }
+        if (highGradeSplashRate <= 0f) return 1f;
+        if (Time.time - highGradeSplashCountedAt >= 1f) { highGradeSplashCount = CountHighGradeUnits(); highGradeSplashCountedAt = Time.time; }
+        float extra = highGradeSplashRate * highGradeSplashCount;
+        if (highGradeSplashCap > 0f) extra = Mathf.Min(extra, highGradeSplashCap);
+        return 1f + extra;
+    }
+
+    public float HighGradeSplashFactorNow => identity != null && identity.Data != null ? HighGradeSplashFactor(identity.Data) : 1f;   // 탐침용
+
     float SplashDamageFactor(UnitData unitData)
     {
         if (splashMultiplierFor != unitData)
@@ -3247,7 +3278,7 @@ public class UnitAttacker : MonoBehaviour
             inRange.RemoveRange(unitData.attackExtraTargets, inRange.Count - unitData.attackExtraTargets);
         }
         int ownerId = owner != null ? owner.OwnerId : -1;
-        float damage = AttackDamage * SplashDamageFactor(unitData);   // 폭발증폭(SplashDamageMultiplier) — 범위 피해량만
+        float damage = AttackDamage * SplashDamageFactor(unitData) * HighGradeSplashFactor(unitData);   // 폭발증폭(SplashDamageMultiplier) — 범위 피해량만
         foreach (EnemyDummy enemy in inRange)
         {
             float hpBefore = enemy.Hp;

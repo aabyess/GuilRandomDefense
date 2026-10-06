@@ -333,6 +333,11 @@ public enum SkillEffectKind
     GoldPlusBonus,
     // 스토리 적(원작 GetUnitPointValue ≥ 200) 상대 평타·스킬 최종 피해에 multiplier(1.3 = ×1.3)를 곱한다(초월 황준석 「믿음직한도움」). 보잡(BossDamageMultiplier)의 스토리판. 패시브 Self.
     StoryDamageMultiplier,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 김만경 「빽」 — 사장님 확정) — 직렬화 순서를 지킨다.
+    // 상위 유닛 개수 비례 **스플래시 피해** 강화(패시브, Self): 이 유닛 평타 광역(ApplyAttackSplash) 피해가 ×(1 + min(bonus, multiplier × 주인의 전설 이상 유닛 수))(소환수·초월위습 제외 — CountHighGradeUnits, 구일 공격 오라와 같은 기준).
+    // 예: multiplier 0.02 · bonus 1.0 = 1기당 +2%·상한 +100%. 원작 근거 없음 — 제안값(사장님 확정).
+    SkillDamagePerHighGradeUnit,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
