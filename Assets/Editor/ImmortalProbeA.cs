@@ -32,6 +32,22 @@ static class ImmortalProbeA
         return $"[회유 {times}회 시도] 적 {before} → {after} · 회유 유닛 {r.Count}기(기대 {Mathf.Min(times, 5)}, 상한 5) · 첫 유닛 {(r.Count > 0 ? r[0].name + " 공격력 " + r[0].GetComponent<UnitAttacker>().AttackDamage.ToString("F0") + "(시전자 " + atk.AttackDamage.ToString("F0") + "의 10% = " + (atk.AttackDamage * 0.1f).ToString("F0") + ")" : "-")}";
     }
     static string Recruit1() => RecruitNow(1);
+    static string RecruitInfo()
+    {
+        var r = RecruitsNow();
+        if (r.Count == 0) return "❌ 회유 유닛 없음";
+        var go = r[0].gameObject;
+        var sb = new StringBuilder("[회유 유닛 몸] 자식: ");
+        foreach (Transform c in go.transform) sb.Append($"{c.name}({(c.gameObject.activeSelf ? "켬" : "끔")}) ");
+        var anim = go.GetComponentsInChildren<Animator>().FirstOrDefault(a => a.gameObject.activeInHierarchy);
+        var rs = go.GetComponentsInChildren<Renderer>().Where(x => x.gameObject.activeInHierarchy && (x is SkinnedMeshRenderer || x is MeshRenderer)).ToList();
+        Bounds b = default; bool any = false; foreach (var x in rs) { if (!any) { b = x.bounds; any = true; } else b.Encapsulate(x.bounds); }
+        sb.Append($"· 켜진 Animator {(anim != null ? anim.name + "/" + (anim.runtimeAnimatorController != null ? anim.runtimeAnimatorController.name : "컨트롤러없음") : "없음")} · 켜진 렌더러 {rs.Count} · 키 {(any ? b.size.y.ToString("F1") : "-")}");
+        // 사진용: 빈 풀밭으로 옮긴다(NavMeshAgent 끄고 위치만)
+        var ag = go.GetComponent<UnityEngine.AI.NavMeshAgent>(); if (ag != null) ag.enabled = false;
+        go.transform.position = unit.transform.position + new Vector3(-90f, 0f, -90f);
+        return sb.ToString();
+    }
     static string Recruit7() => RecruitNow(7);
     static string SellStats()
     {

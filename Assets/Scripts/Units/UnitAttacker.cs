@@ -1720,14 +1720,57 @@ public class UnitAttacker : MonoBehaviour
         if (spawner == null) return;
         UnitData kind = effect.summonUnits[0];
         Vector3 position = target.transform.position;
-        target.RemoveInstantly();   // 보상 없이 사라진다(원작 RemoveUnit) — 죽인 게 아니라 데려온 것
         GameObject recruit = spawner.Spawn(kind, position, owner.OwnerId, summoned: true);
-        if (recruit == null) return;
+        if (recruit == null) return;   // 못 세웠으면 적도 그대로 둔다
         if (recruit.TryGetComponent(out UnitIdentity recruitIdentity)) recruitIdentity.IsRecruit = true;
         if (recruit.TryGetComponent(out UnitAttacker recruitAttacker)) recruitAttacker.ApplyStats(AttackDamage * effect.multiplier, kind.attackRange, kind.attackSpeed);
+        // 회유된 적의 원래 모습(솔로·호스트만 — MP 클라 거울은 UnitData 프리팹으로 만들어져 임시 모델로 보인다, 사장님 10-06 「범위 밖」).
+        // 몸(모델)만 복제한다: 체력바·이펙트 같은 다른 자식은 안 가져온다.
+        CopyEnemyBody(target, recruit);
+        target.RemoveInstantly();   // 보상 없이 사라진다(원작 RemoveUnit) — 죽인 게 아니라 데려온 것
         recruits.Add(recruit);
         PlayerContext context = PlayerContext.Get(owner.OwnerId);
         if (context != null) PlayerNotification.Show(context.PlayerId, "<color=#C8E6A0>유닛회유 성공 — 적 1기가 우리 편이 되었습니다.</color>", 4f);
+    }
+
+    // 적 프리팹의 「몸」(없으면 Animator를 가진 첫 자식)을 회유 소환수에 붙이고 소환수의 임시 몸은 끈다. 키가 유닛 몸의 1.5배를 넘으면 그 상한으로 줄인다.
+    static void CopyEnemyBody(EnemyDummy enemy, GameObject recruit)
+    {
+        // 적 프리팹의 모델은 루트 바로 아래 자식(ArtBinder가 붙인 모델 인스턴스 — 이름은 모델 이름)이다. 「몸」은 큐브 시절 자리표시자라 쓰지 않는다.
+        Animator enemyAnimator = enemy.GetComponentInChildren<Animator>();
+        Transform body = enemyAnimator != null ? enemyAnimator.transform : null;
+        while (body != null && body.parent != null && body.parent != enemy.transform) body = body.parent;
+        if (body == null || body == enemy.transform) return;
+        // 소환수가 원래 가진 모델 자식(Animator·SkinnedMeshRenderer가 든 것)을 찾아 키를 재고, 복제본을 붙인 뒤 끈다. 선택 고리·사거리 표시는 그대로 둔다.
+        var ownModels = new List<Transform>();
+        float ownHeight = 0f;
+        foreach (Transform child in recruit.transform)
+        {
+            if (child.GetComponentInChildren<Animator>(true) == null && child.GetComponentInChildren<SkinnedMeshRenderer>(true) == null) continue;
+            ownModels.Add(child);
+            ownHeight = Mathf.Max(ownHeight, BodyHeight(child));
+        }
+        GameObject copy = Instantiate(body.gameObject, recruit.transform);
+        copy.name = "회유된몸";
+        copy.transform.localPosition = body.localPosition;
+        copy.transform.localRotation = body.localRotation;
+        copy.transform.localScale = body.localScale;
+        foreach (Transform own in ownModels) own.gameObject.SetActive(false);
+        float height = BodyHeight(copy.transform);
+        if (ownHeight > 0.01f && height > ownHeight * 1.5f) copy.transform.localScale *= ownHeight * 1.5f / height;
+        Animator animator = copy.GetComponentInChildren<Animator>();
+        if (animator != null && recruit.TryGetComponent(out CharacterAnimator characterAnimator)) characterAnimator.RebindBody(animator);
+    }
+
+    static float BodyHeight(Transform root)
+    {
+        bool any = false; Bounds bounds = default;
+        foreach (Renderer r in root.GetComponentsInChildren<Renderer>())
+        {
+            if (!(r is SkinnedMeshRenderer) && !(r is MeshRenderer)) continue;
+            if (!any) { bounds = r.bounds; any = true; } else bounds.Encapsulate(r.bounds);
+        }
+        return any ? bounds.size.y : 0f;
     }
 
     bool lastKillSucceeded;   // 노획물(GrantLoot)이 같은 시전의 몹삭제가 실제로 죽였는지 본다

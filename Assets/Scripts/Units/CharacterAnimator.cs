@@ -115,6 +115,17 @@ public class CharacterAnimator : MonoBehaviour
         return smoothedSpeed;
     }
 
+    /// <summary>
+    /// 몸(모델)을 통째로 바꾼 뒤 부른다(불멸 「유닛회유」: 회유된 적의 원래 몸을 복제해 붙임) — 새 Animator를 잡고 파라미터·키를 다시 잰다.
+    /// </summary>
+    public void RebindBody(Animator newAnimator)
+    {
+        animator = newAnimator;
+        hasSpeed = hasAttack = hasDie = false;
+        bodyHeight = MeasureBodyHeight();
+        CacheParameters();
+    }
+
     /// <summary>공격이 나갈 때 부른다.</summary>
     public void PlayAttack()
     {
