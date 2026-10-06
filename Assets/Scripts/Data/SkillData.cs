@@ -263,6 +263,23 @@ public enum SkillEffectKind
     // EnemyDummy.AddHancockPetrificationStack을 multiplier번 부른다(수신기는 09-05부터 있었고 부르는 곳이 없었다).
     // AId1 방깎(ArmorBreak, 합계 −75 상한)과 다른 표다 — 합치지 않는다.
     A0VJStack,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 최상호 구일 — 사장님 스킬) — 직렬화 순서를 지킨다.
+    // 소환: SkillEffect.summonUnits의 유닛 종류마다 동시 1기(이미 있으면 남은 시간을 summonLifetime으로 되돌린다),
+    // 시전자 앞쪽 부채꼴(summonFanDegrees·summonRadius)에 세운다. 소환수는 유닛 수·판매·조합 재료·전설 이상 개수에서 빠진다(UnitIdentity.IsSummon).
+    SummonUnit,
+    // 이 스킬을 가진 유닛의 아군(오라 범위 안, 등급 서열 ≥ SkillEffect.minAllyTier) 모두에게 SkillEffect.grantSkill을 빌려준다 — 오라처럼 범위를 벗어나면 회수.
+    GrantSkillToAllies,
+    // 보스(EnemyDummy.IsBoss) 상대 최종 피해 배율(패시브, multiplier = 곱, 1.3 = +30%). 평타·스킬 피해 모두. 원작 근거 없음 — 제안값.
+    BossDamageMultiplier,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 노태현 「여동생살해자」 — 사장님 스킬) — 직렬화 순서를 지킨다.
+    // 아군 이동속도 감소(디버프, 이 유닛의 단점): Aura + target Allies. multiplier = 줄어드는 비율(0.2 = −20%).
+    // 범위 안 아군(나 자신 제외)의 NavMeshAgent 속도에서 뺀다 — 같은 buffId는 가장 센 것 하나만(AddAuraBonus 규칙).
+    // 「최윤서 강화」가 켜진 시전자(UnitAttacker.YoonseoEnhanced)의 이 디버프는 100% 없어진다. 원작 근거 없음 — 제안값.
+    AllyMoveSpeedDebuff,
+    // 스플래시(평타 광역) 피해 배율(패시브, multiplier = 곱, 1.5 = +50%). 주 대상 평타는 그대로, 범위 안 다른 적에게만. 원작 근거 없음 — 제안값.
+    SplashDamageMultiplier,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -493,6 +510,26 @@ public class SkillEffect
     public float lineLength;
     public float lineStartRadius;
     public float lineEndRadius;
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 최상호 구일) — 오라 공격력(AttackPowerBuffPercent) 「전설 이상 유닛 수 비례」: 실제 값 =
+    // multiplier + min(perHighGradeUnitBonusCap, perHighGradeUnitBonus × 시전자 주인의 전설 이상 유닛 수(소환수 제외)). 0이면 안 쓴다.
+    public float perHighGradeUnitBonus;
+    public float perHighGradeUnitBonusCap;
+
+    // SummonUnit 전용 — 소환할 유닛 종류(종류마다 동시 1기) · 지속(초) · 부채꼴 간격(도, 가운데 기준 ±) · 반지름(월드 단위).
+    public System.Collections.Generic.List<UnitData> summonUnits = new System.Collections.Generic.List<UnitData>();
+    public float summonLifetime = 20f;
+    public float summonFanDegrees = 35f;
+    public float summonRadius = 70f;
+
+    // GrantSkillToAllies 전용 — 빌려줄 스킬 · 받을 아군의 최소 등급 서열(UnitGradeExtensions.Tier, 5 = 전설 이상).
+    public SkillData grantSkill;
+    public int minAllyTier = 5;
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 노태현 「최윤서 강화」 방무딜) — Damage 효과가 상대 방어를 무시하는 비율(0~1).
+    // armorIgnoreRequiresBuff가 비어 있지 않으면 시전자에게 그 버프가 있을 때만 적용(최윤서 강화 = 영구 버프 YOONSEO_ENHANCED).
+    [Range(0f, 1f)] public float armorIgnoreRatio;
+    public string armorIgnoreRequiresBuff = "";
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에

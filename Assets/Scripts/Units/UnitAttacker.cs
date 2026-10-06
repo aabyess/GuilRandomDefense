@@ -302,6 +302,7 @@ public class UnitAttacker : MonoBehaviour
             AuraBonus b = auraBonuses[i];
             if (b.source == null) { auraBonuses.RemoveAt(i); continue; }
             if (b.kind != kind) continue;
+            if (kind == SkillEffectKind.AllyMoveSpeedDebuff && b.source is UnitAttacker debuffer && debuffer.YoonseoEnhanced) continue;   // 최윤서 강화 = 아군 디버프 100% 제거
             if (!auraBonusScratch.TryGetValue(b.id, out float best) || b.value > best) auraBonusScratch[b.id] = b.value;
         }
         float total = product ? 1f : 0f;
@@ -1178,7 +1179,8 @@ public class UnitAttacker : MonoBehaviour
     // 그때 이 전제를 다시 봐야 한다.
 
     static bool IsAuraStatKind(SkillEffectKind kind) =>
-        kind == SkillEffectKind.AttackSpeedBuffPercent || kind == SkillEffectKind.AttackPowerBuffFlat || kind == SkillEffectKind.AttackPowerBuffPercent;
+        kind == SkillEffectKind.AttackSpeedBuffPercent || kind == SkillEffectKind.AttackPowerBuffFlat || kind == SkillEffectKind.AttackPowerBuffPercent
+        || kind == SkillEffectKind.AllyMoveSpeedDebuff;
 
     void UpdateAuraTick(SkillLevel level, SkillRuntimeState state, bool gatePasses)
     {
@@ -1337,6 +1339,174 @@ public class UnitAttacker : MonoBehaviour
             if (effect.target != SkillTargetKind.Allies) continue;
             if (IsAuraStatKind(effect.kind)) allyAttacker.RemoveAuraBonus(this, effect.kind, effect.buffId);
             else if (effect.kind == SkillEffectKind.ApplyBuff) allyAttacker.RemoveBuff(effect.buffId);
+        }
+    }
+
+    // 보잡(SkillEffectKind.BossDamageMultiplier) — 이 유닛 스킬 중 패시브 배율의 곱. 보스(EnemyDummy.IsBoss) 상대 평타·스킬 최종 피해에 곱한다.
+    // 유닛 종류가 바뀔 때만 다시 센다(Awake 캐시 금지 — identity.Data가 늦게 세워진다).
+    UnitData bossMultiplierFor;
+    float bossMultiplier = 1f;
+
+    float BossDamageFactor(EnemyDummy target)
+    {
+        if (target == null || !target.IsBoss) return 1f;
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null) return 1f;
+        if (bossMultiplierFor != unitData)
+        {
+            bossMultiplierFor = unitData;
+            bossMultiplier = 1f;
+            int count = BaseSkillCount(unitData);
+            for (int i = 0; i < count; i++)
+            {
+                SkillData skill = ResolveSkillAt(unitData, i);
+                if (skill == null || skill.levels == null || skill.levels.Count == 0 || skill.levels[0].effects == null) continue;
+                foreach (SkillEffect effect in skill.levels[0].effects)
+                    if (effect != null && effect.kind == SkillEffectKind.BossDamageMultiplier && effect.multiplier > 0f) bossMultiplier *= effect.multiplier;
+            }
+        }
+        return bossMultiplier;
+    }
+
+    // 폭발증폭(SkillEffectKind.SplashDamageMultiplier) — 이 유닛 스킬 중 패시브 배율의 곱. 평타 광역(ApplyAttackSplash) 피해에만 곱한다.
+    UnitData splashMultiplierFor;
+    float splashMultiplier = 1f;
+
+    float SplashDamageFactor(UnitData unitData)
+    {
+        if (splashMultiplierFor != unitData)
+        {
+            splashMultiplierFor = unitData;
+            splashMultiplier = 1f;
+            int count = BaseSkillCount(unitData);
+            for (int i = 0; i < count; i++)
+            {
+                SkillData skill = ResolveSkillAt(unitData, i);
+                if (skill == null || skill.levels == null || skill.levels.Count == 0 || skill.levels[0].effects == null) continue;
+                foreach (SkillEffect effect in skill.levels[0].effects)
+                    if (effect != null && effect.kind == SkillEffectKind.SplashDamageMultiplier && effect.multiplier > 0f) splashMultiplier *= effect.multiplier;
+            }
+        }
+        return splashMultiplier;
+    }
+
+    // ---- 최윤서 강화(초월 노태현, 사장님 10-06) — 영구 상태. 켜지면 방무딜(armorIgnoreRequiresBuff) + 아군 이속 감소 디버프 100% 제거. ----
+    public const string YoonseoBuffId = "YOONSEO_ENHANCED";
+    public bool YoonseoEnhanced => HasBuff(YoonseoBuffId);
+    public void SetYoonseoEnhanced() { if (!YoonseoEnhanced) AddBuff(YoonseoBuffId, 0f); }
+
+    // ---- 아군 이속 감소(AllyMoveSpeedDebuff) 적용 — 오라가 받는 쪽 레지스트리에 넣은 값을 NavMeshAgent 속도에 반영한다. 0.25초마다. ----
+    float moveDebuffTimer;
+    float baseMoveSpeed = -1f;
+    bool moveDebuffApplied;
+
+    void TickMoveSpeedDebuff()
+    {
+        moveDebuffTimer -= Time.deltaTime;
+        if (moveDebuffTimer > 0f) return;
+        moveDebuffTimer = 0.25f;
+        float reduction = auraBonuses.Count == 0 ? 0f : Mathf.Clamp(AuraBonusTotal(SkillEffectKind.AllyMoveSpeedDebuff, false), 0f, 0.9f);
+        if (reduction <= 0f && !moveDebuffApplied) return;
+        if (!TryGetComponent(out UnityEngine.AI.NavMeshAgent agent)) return;
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null) return;
+        if (baseMoveSpeed < 0f) baseMoveSpeed = unitData.moveSpeed;
+        agent.speed = baseMoveSpeed * (1f - reduction);
+        moveDebuffApplied = reduction > 0f;
+    }
+
+    // 소환(SkillEffectKind.SummonUnit) — 종류마다 동시 1기. 이미 있으면 남은 시간을 되돌린다. 자리는 시전자 앞쪽 부채꼴(가운데 = 시전자가 보는 방향).
+    // 부채꼴 각도는 종류 개수로 −fan·0·+fan 식으로 나눈다(1기=가운데, 2기=±fan/2, 3기=−fan·0·+fan). 자리는 NavMesh.SamplePosition으로 보정하고 지상 유닛을 바다에 안 세운다.
+    readonly Dictionary<UnitData, GameObject> summonedByKind = new Dictionary<UnitData, GameObject>();
+
+    void SummonFor(SkillEffect effect)
+    {
+        if (!GameAuthority.IsServer || effect.summonUnits == null || effect.summonUnits.Count == 0 || owner == null) return;
+        UnitSpawner spawner = FindFirstObjectByType<UnitSpawner>();
+        if (spawner == null) return;
+
+        Vector3 forward = transform.forward; forward.y = 0f;
+        forward = forward.sqrMagnitude > 0.0001f ? forward.normalized : Vector3.forward;
+        int n = effect.summonUnits.Count;
+        for (int i = 0; i < n; i++)
+        {
+            UnitData kind = effect.summonUnits[i];
+            if (kind == null) continue;
+            if (summonedByKind.TryGetValue(kind, out GameObject existing) && existing != null)
+            {
+                if (existing.TryGetComponent(out TimedLife life)) life.Begin(effect.summonLifetime);   // 이미 있으면 새로 안 만들고 남은 시간만 되돌린다
+                continue;
+            }
+            float angle = n == 1 ? 0f : Mathf.Lerp(-effect.summonFanDegrees, effect.summonFanDegrees, i / (float)(n - 1));
+            Vector3 position = FanPosition(forward, angle, effect.summonRadius, kind);
+            GameObject summoned = spawner.Spawn(kind, position, owner.OwnerId, summoned: true);
+            if (summoned == null) continue;
+            summoned.AddComponent<TimedLife>().Begin(effect.summonLifetime);
+            summonedByKind[kind] = summoned;
+        }
+    }
+
+    // 시전자 앞 부채꼴의 한 자리 — 걸을 수 있는 땅이 아니면(섬 밖·벽 안) 각도를 가운데 쪽으로 좁혀 다시 본다.
+    Vector3 FanPosition(Vector3 forward, float angleDegrees, float radius, UnitData kind)
+    {
+        float world = radius;   // summonRadius는 이미 월드 단위(유닛 키 48 기준 약 70) — 원작 단위가 아니라 WorldScale로 안 나눈다
+        int mask = UnitSpawner.ComputeAreaMask(kind.movementAbility);
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            float angle = angleDegrees * (1f - attempt * 0.25f);   // 각도를 25%씩 가운데로
+            Vector3 dir = Quaternion.AngleAxis(angle, Vector3.up) * forward;
+            Vector3 want = transform.position + dir * world;
+            if (UnityEngine.AI.NavMesh.SamplePosition(want, out UnityEngine.AI.NavMeshHit hit, world * 0.5f, mask)) return hit.position;
+        }
+        return transform.position;   // 끝내 못 찾으면 시전자 자리(겹치지만 소환은 된다)
+    }
+
+    // 오라 수치의 실제 값 — 「전설 이상 유닛 수 비례」(SkillEffect.perHighGradeUnitBonus)가 있으면 개수만큼 더한다(상한 있음).
+    float ScaledAuraValue(SkillEffect effect)
+    {
+        if (effect.perHighGradeUnitBonus <= 0f) return effect.multiplier;
+        float extra = effect.perHighGradeUnitBonus * CountHighGradeUnits();
+        if (effect.perHighGradeUnitBonusCap > 0f) extra = Mathf.Min(extra, effect.perHighGradeUnitBonusCap);
+        return effect.multiplier + extra;
+    }
+
+    // 주인의 전설 이상(등급 서열 ≥ 5, 초월위습 제외) 유닛 수 — 소환수 제외. 오라가 1초마다 부른다.
+    int CountHighGradeUnits()
+    {
+        int ownerId = owner != null ? owner.OwnerId : -1;
+        int count = 0;
+        foreach (UnitIdentity unit in UnitIdentity.Active)
+        {
+            if (unit == null || unit.IsSummon || unit.Data == null || unit.OwnerId != ownerId) continue;
+            if (unit.Data.grade == UnitGrade.TranscendentWisp || unit.Data.grade.Tier() < 5) continue;
+            count++;
+        }
+        return count;
+    }
+
+    // 개수 비례 오라 — 개수가 바뀌었을 수 있으니 이미 걸린 값을 지우고 다시 건다(UpdateAuraTick 끝, 1초 주기).
+    void RefreshScaledAuraBonuses(SkillLevel level, SkillRuntimeState state)
+    {
+        foreach (SkillEffect effect in level.effects)
+        {
+            if (!IsAuraStatKind(effect.kind) || effect.perHighGradeUnitBonus <= 0f || string.IsNullOrEmpty(effect.buffId)) continue;
+            float value = ScaledAuraValue(effect);
+            if (effect.target == SkillTargetKind.Self)
+            {
+                if (!state.auraSelfAppliedBuffIds.Contains(effect.buffId)) continue;
+                RemoveAuraBonus(this, effect.kind, effect.buffId);
+                AddAuraBonus(this, effect.kind, effect.buffId, value);
+            }
+            else if (effect.target == SkillTargetKind.Allies)
+            {
+                foreach (UnitIdentity ally in state.auraAffectedAllies)
+                {
+                    UnitAttacker a = ally != null ? ally.GetComponent<UnitAttacker>() : null;
+                    if (a == null) continue;
+                    a.RemoveAuraBonus(this, effect.kind, effect.buffId);
+                    a.AddAuraBonus(this, effect.kind, effect.buffId, value);
+                }
+            }
         }
     }
 
@@ -1582,6 +1752,12 @@ public class UnitAttacker : MonoBehaviour
     void ApplySkillEffect(SkillEffect effect, float range, Vector3 aoeCenter, EnemyDummy primaryTarget, float recentAttackDamage,
         Dictionary<object, HashSet<int>> firedCascadeGroups)
     {
+        // 소환(최상호 구일) — 대상이 없다. 확률·쿨다운은 위(CastSkillLevel·평타 확률 발동)가 이미 판정했다.
+        if (effect.kind == SkillEffectKind.SummonUnit) { SummonFor(effect); return; }
+        // 아군에게 스킬 빌려주기·보스 배율은 오라/패시브로만 쓴다(여기서는 할 일 없음).
+        if (effect.kind == SkillEffectKind.GrantSkillToAllies || effect.kind == SkillEffectKind.BossDamageMultiplier
+            || effect.kind == SkillEffectKind.SplashDamageMultiplier || effect.kind == SkillEffectKind.AllyMoveSpeedDebuff) return;
+
         // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
         if (effect.lineLength > 0f && effect.zoneTickInterval <= 0f)
         {
@@ -2071,13 +2247,21 @@ public class UnitAttacker : MonoBehaviour
         if (hits <= 1)
         {
             float skillHpBefore = target.Hp;
-            target.TakeDamage(amount, effect.damageType, effect.attackType, owner != null ? owner.OwnerId : -1);
+            target.TakeDamage(amount, effect.damageType, effect.attackType, owner != null ? owner.OwnerId : -1, armorIgnoreRatio: SkillArmorIgnore(effect));
             SkillTelemetry.Damage(identity != null ? identity.Data : null, TelemetryChannel(effect), target, skillHpBefore);
             return;
         }
 
         // SupportSkillData.waveCount/duration과 같은 관례 — duration에 걸쳐 나눠 때린다.
         StartCoroutine(SkillMultiHitRoutine(target, amount, effect.damageType, effect.attackType, hits, effect.duration, SkillVfx.CasterAllowsVfx));
+    }
+
+    // 최윤서 강화 방무딜 — 효과의 방어 무시 비율(armorIgnoreRequiresBuff가 있으면 그 버프를 가진 시전자만).
+    float SkillArmorIgnore(SkillEffect effect)
+    {
+        if (effect.armorIgnoreRatio <= 0f) return 0f;
+        if (!string.IsNullOrEmpty(effect.armorIgnoreRequiresBuff) && !HasBuff(effect.armorIgnoreRequiresBuff)) return 0f;
+        return effect.armorIgnoreRatio;
     }
 
     IEnumerator SkillMultiHitRoutine(EnemyDummy target, float amountPerHit, DamageType damageType, AttackType attackType, int hits, float duration, bool vfxAllowed = true)
@@ -2329,6 +2513,7 @@ public class UnitAttacker : MonoBehaviour
     void Update()
     {
         TickGaugeRegen();
+        TickMoveSpeedDebuff();
         UpdateSkillCooldown();
         TickEnterRangeSkills();
 
@@ -2356,7 +2541,7 @@ public class UnitAttacker : MonoBehaviour
             // isAbilityDamage: false — 평타는 원작에 UNIVERSAL이 없다(EnemyDummy.TakeDamage
             // 문서 참고). 로스터 damageType이 AP인 유닛이라도 평타로 방어를 무시하면 안 된다.
             float basicHpBefore = target.Hp;
-            target.TakeDamage(AttackDamage, DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
+            target.TakeDamage(AttackDamage * BossDamageFactor(target), DamageTypeOf, AttackTypeOf, owner != null ? owner.OwnerId : -1,
                               armorIgnoreRatio: 0f, isAbilityDamage: false);
             SkillTelemetry.Damage(identity != null ? identity.Data : null, "평타", target, basicHpBefore);
             ApplyAttackSplash(target);
@@ -2407,7 +2592,7 @@ public class UnitAttacker : MonoBehaviour
         foreach (EnemyDummy enemy in inRange)
         {
             float hpBefore = enemy.Hp;
-            enemy.TakeDamage(damage, DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false);
+            enemy.TakeDamage(damage * BossDamageFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false);
             SkillTelemetry.Damage(unitData, "평타다중", enemy, hpBefore);
         }
         ListPool<EnemyDummy>.Release(inRange);
@@ -2431,15 +2616,15 @@ public class UnitAttacker : MonoBehaviour
             if (Vector3.Distance(enemy.transform.position, center) <= reach) inRange.Add(enemy);
         }
         int ownerId = owner != null ? owner.OwnerId : -1;
-        float damage = AttackDamage;
+        float damage = AttackDamage * SplashDamageFactor(unitData);   // 폭발증폭(SplashDamageMultiplier) — 범위 피해량만
         foreach (EnemyDummy enemy in inRange)
         {
             float distance = Vector3.Distance(enemy.transform.position, center);
             float hpBefore = enemy.Hp;
             if (distance <= splash)
-                enemy.TakeDamage(damage, DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false);
+                enemy.TakeDamage(damage * BossDamageFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false);
             if (distance <= cleave)
-                enemy.TakeDamage(damage * unitData.attackCleaveFactor, DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 1f, isAbilityDamage: false);
+                enemy.TakeDamage(damage * unitData.attackCleaveFactor * BossDamageFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 1f, isAbilityDamage: false);
             SkillTelemetry.Damage(unitData, "평타광역", enemy, hpBefore);
             SkillTelemetry.SplashHit(unitData);
         }

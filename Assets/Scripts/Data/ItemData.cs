@@ -104,6 +104,10 @@ public class ItemData : ScriptableObject
     // ⚠️ 맨 뒤에 추가(2026-10-04, 사장님 「아이템도 원랜디 이미지가 있을 텐데 — 글로만 넣으니 안 예쁘다」) — 원작 아이템 아이콘(iico).
     //    ItemIconLinker(에디터)가 Assets/Art/Items/<코드>_<이름>.png를 코드로 찾아 채운다. 비어 있으면 HUD가 지금처럼 글자만 그린다.
     public Sprite icon;
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 부서진손거울) — 분류 「유물」. 스토리 확률 아이템 중 사장님이 지정한 자리에서 나온다.
+    // 유물의 기본 능력은 그 자리를 대신하는 원작 아이템의 능력을 그대로 물려받는다(tooltipText·linkedAbilityId 복사). 유물 전용 추가 효과는 따로.
+    public bool isRelic;
 }
 
 public enum ItemUseKind

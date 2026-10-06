@@ -182,6 +182,7 @@ public class GameHud : MonoBehaviour
     // 09-29 사장님: 떠 있던 판매 버튼(상단 메뉴 왼쪽 아래)을 없애고 명령 카드 한 칸으로만 둔다(SellCommandSlot).
     UnitData lastSellButtonUnit;
     bool sellSlotShown;
+    bool yoonseoSlotShown;   // 초월 노태현 「최윤서 강화」 칸(YoonseoSlot) — 노태현 한 기를 골랐을 때만
     bool sellSlotEnabled;
     string sellSlotTooltip;
 
@@ -425,6 +426,7 @@ public class GameHud : MonoBehaviour
         RefreshTraitButton();
         RefreshGambleButtons();
         RefreshSellButton();
+        RefreshYoonseoButton();
         RefreshNavigationButton();
         RefreshRerollButton();
     }
@@ -1268,6 +1270,79 @@ public class GameHud : MonoBehaviour
             rewardDesc.Append(part);
         }
         sellSlotTooltip = $"판매\n({rewardDesc})";
+    }
+
+    // 초월 노태현 「최윤서 강화」(사장님 10-06) — 가운데 줄 왼쪽에서 셋째 빈 칸(6번). 한 기를 골랐고 그 유닛이 초월 노태현일 때만 보인다.
+    // 누르면 내 최윤서 한 기를 소모하고 영구 강화(방무딜 + 아군 디버프 100% 제거). 못 할 땐 이유를 띄운다(상점 칸 규칙과 같게).
+    const int YoonseoSlot = 6;
+    const string YoonseoUnitAsset = "초월_노태현_AP";
+
+    UnitAttacker YoonseoCandidate()
+    {
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return null;
+        Selectable single = selection.Selected[0];
+        if (!single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.Data.name != YoonseoUnitAsset) return null;
+        return single.TryGetComponent(out UnitAttacker attacker) ? attacker : null;
+    }
+
+    void RefreshYoonseoButton()
+    {
+        if (unitCommandSlotRoots[YoonseoSlot] == null) return;
+        if (currentShop as Object != null) { yoonseoSlotShown = false; return; }   // 상점을 고른 동안 이 칸은 상점 칸이다
+        UnitAttacker attacker = YoonseoCandidate();
+        if (attacker == null)
+        {
+            if (!yoonseoSlotShown) return;
+            yoonseoSlotShown = false;
+            unitCommandSlotNames[YoonseoSlot].text = "";
+            unitCommandSlotNames[YoonseoSlot].color = Color.white;
+            unitCommandSlotBackgrounds[YoonseoSlot].color = Color.clear;
+            unitCommandSlotButtons[YoonseoSlot].interactable = false;
+            return;
+        }
+        yoonseoSlotShown = true;
+        bool done = attacker.YoonseoEnhanced;
+        unitCommandSlotNames[YoonseoSlot].text = "최윤서\n강화";
+        unitCommandSlotHotkeys[YoonseoSlot].text = "";
+        Color color = UnitCommandDefaultColor;
+        color.a = done ? 0.35f : 1f;
+        unitCommandSlotBackgrounds[YoonseoSlot].color = color;
+        unitCommandSlotNames[YoonseoSlot].color = done ? new Color(1f, 1f, 1f, 0.4f) : Color.white;
+        unitCommandSlotButtons[YoonseoSlot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
+    }
+
+    void OnYoonseoClicked()
+    {
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1) return;
+        Selectable single = selection.Selected[0];
+        if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.Yoonseo, single, 0); return; }
+        ExecuteYoonseoOn(single);
+    }
+
+    // MP: 버튼과 멀티 호스트가 받은 클라 요청(NetCommands)이 같이 쓰는 본체. 소모 대상은 히든 최윤서 먼저, 없으면 전설 최윤서(등급 무관하게 「최윤서」 계열).
+    public void ExecuteYoonseoOn(Selectable single)
+    {
+        if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.Data.name != YoonseoUnitAsset) return;
+        if (!single.TryGetComponent(out UnitAttacker attacker) || !single.TryGetComponent(out OwnedByPlayer owner)) return;
+        int playerId = owner.OwnerId;
+        if (attacker.YoonseoEnhanced) { PlayerNotification.Show(playerId, "이미 강화되었습니다.", 4f); return; }
+
+        PlayerContext context = PlayerContext.Get(playerId);
+        UnitIdentity best = null;
+        if (context != null && context.UnitInventory != null)
+            foreach (UnitIdentity member in context.UnitInventory.Members)
+            {
+                if (member == null || member.IsSummon || member.Data == null || member.Data.unitName != "최윤서") continue;
+                if (best == null || member.Data.grade.Tier() < best.Data.grade.Tier()) best = member;   // 서열이 낮은 쪽(히든) 먼저
+            }
+        if (best == null) { PlayerNotification.Show(playerId, "최윤서가 없습니다.", 4f); return; }
+
+        string name = best.Data.name;
+        best.Consume();
+        attacker.SetYoonseoEnhanced();
+        PlayerNotification.Show(playerId, $"<color=#FFD700>최윤서 강화!</color> {name} 1기가 사라지고 방어 무시 피해가 켜졌으며 아군 이속 감소가 없어집니다.", 6f);
     }
 
     void HideSellButton()
@@ -2464,6 +2539,10 @@ public class GameHud : MonoBehaviour
             if (!sellSlotShown || string.IsNullOrEmpty(sellSlotTooltip)) { HideCombineTooltip(); return; }
             ShowTooltip(sellSlotTooltip, cardRect);
         }
+        else if (index == YoonseoSlot && yoonseoSlotShown)
+        {
+            ShowTooltip("최윤서 강화\n내 최윤서(히든·전설) 한 기가 사라지고, 방어 무시 피해가 켜지며 아군 이속 감소 디버프가 100% 없어진다. 한 번 켜면 영구.", cardRect);
+        }
         else
         {
             CombineRecipe recipe = index < unitCommandRecipes.Length ? unitCommandRecipes[index] : null;
@@ -2770,6 +2849,12 @@ public class GameHud : MonoBehaviour
         if (index == SellCommandSlot && currentShop as Object == null)
         {
             if (sellSlotEnabled) OnSellButtonClicked();
+            return;
+        }
+
+        if (index == YoonseoSlot && yoonseoSlotShown && currentShop as Object == null)
+        {
+            OnYoonseoClicked();
             return;
         }
 
