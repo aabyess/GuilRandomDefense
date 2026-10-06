@@ -66,7 +66,7 @@ public static class MapGenerator
         { "gacha",     new Surface("grass", new Color(1.00f, 0.98f, 0.82f), 0.120f, 0.05f) },
         { "combine",   new Surface("grass", new Color(0.90f, 0.90f, 0.88f), 0.120f, 0.05f) },
         // 레인 사이 십자 대지(2026-10-06 사장님 「그랜드캐니언처럼 흙으로 된 섬」) — 메시 UV가 월드 단위라 타일 수는 안 쓴다(BuildInterLaneHills).
-        { "canyontop",   new Surface("canyon_top",    Color.white,         0f,     0.05f) },
+        { "canyontop",   new Surface("canyon_top",    new Color(0.86f, 0.74f, 0.66f),        0f,     0.05f) },
         { "canyoncliff", new Surface("canyon_strata", Color.white,         0f,     0.08f) },
         { "portal",    new Surface(null,    new Color(0.30f, 0.70f, 0.85f), 0f,     0.60f) },
     };
@@ -833,21 +833,23 @@ public static class MapGenerator
     // - 십자 교차점: 가로 대지를 0.05 낮춰 같은 높이 겹침(z-fight)을 피한다(세로 윗면이 이긴다).
     // - 메시는 Assets/Art/MapMeshes/에 에셋으로 저장한다(씬이 참조). 다시 지어도 같은 파일을 덮는다.
     // - 소품·대지 묶음은 NavMeshModifier.ignoreFromBuild — 콜라이더가 없지만 혹시 모를 구움 포함도 막는다.
-    const float HillRise = 24f;           // 유닛 키 48의 절반
-    const float CanyonStrataTile = 24f;   // 지층 텍스처 세로 한 장 = 대지 높이 하나
+    const float HillRise = 48f;           // 유닛 키 48과 같다(24는 위에서 보면 납작한 길로 보였다 — 10-06 사진)
+    const float CanyonStrataTile = 32f;   // 지층 텍스처 세로 한 장(띠 7개) — 대지 높이 48에 띠 열 개쯤
     const float CanyonTopTile = 96f;
     // 단면(바깥 → 안): (발자국 가장자리에서 들어간 거리, 높이 비율, 윗면 재질인가). 첫 점은 레인 높이.
     static readonly (float inset, float rise, bool flat)[] HillProfile =
     {
         (0f, 0f, false),      // 레인 가장자리
-        (9f, 0.10f, false),   // 흙 비탈(무너진 돌 더미)
-        (13f, 0.52f, false),  // 아래 절벽
-        (24f, 0.55f, true),   // 중턱 턱
-        (28f, 1f, false),     // 위 절벽
+        (7f, 0.08f, false),   // 흙 비탈(무너진 돌 더미)
+        (10f, 0.40f, false),  // 아래 절벽
+        (19f, 0.42f, true),   // 아래 턱
+        (22f, 0.72f, false),  // 가운데 절벽
+        (30f, 0.74f, true),   // 위 턱
+        (33f, 1f, false),     // 위 절벽
     };
     const float HillPropMaxHeight = 14f;
     const float HillPropCell = 48f;
-    const float HillPropKeep = 0.35f;
+    const float HillPropKeep = 0.2f;
     const string HillContainerName = "레인간_언덕";
     const string HillMeshFolder = "Assets/Art/MapMeshes";
 
@@ -980,7 +982,7 @@ public static class MapGenerator
     static readonly string[] HillPropFiles =
     {
         // 협곡 대지(10-06): 풀·나무·이끼는 빼고 마른 바위만.
-        "Rocks/바위_01", "Rocks/바위_02", "Rocks/바위_03", "Rocks/자갈무리_01", "Trees/그루터기_01",
+        "Rocks/바위_01", "Rocks/바위_02", "Rocks/바위_03", "Rocks/자갈무리_01",
     };
 
     static List<NatureAsset> LoadHillProps()
