@@ -332,7 +332,7 @@ public class NetPlayer : NetworkBehaviour
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     public void RPC_RequestSlot(int slot)
     {
-        if (NetGameState.Instance != null && NetGameState.Instance.Started) return;
+        if (NetGameState.Instance != null && NetGameState.Instance.Started) { Debug.Log($"[자리] 호스트: {Object.InputAuthority}의 {slot + 1}번 요청 거절 — 판이 시작됨"); return; }
         if (Runner.TryGetComponent(out NetSession session)) session.TryMoveSlot(Object.InputAuthority, slot);
     }
 

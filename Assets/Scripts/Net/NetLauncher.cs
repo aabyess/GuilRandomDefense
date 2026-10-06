@@ -623,7 +623,7 @@ public class NetLauncher : MonoBehaviour
     {
         if (testSlotRequests.Count == 0 && testStartAtDelay < 0f) return;
         if (NetPlayer.Local == null) return;
-        if (NetGameState.Instance != null && NetGameState.Instance.Started) return;
+        bool started = NetGameState.Instance != null && NetGameState.Instance.Started;   // 시작 뒤에도 요청은 보낸다(시나리오 ④: 호스트가 거절해야 한다)
         if (seatTestBase < 0f) { seatTestBase = Time.unscaledTime; Debug.Log($"[자리] 시험 시작 — 내 슬롯 {NetPlayer.Local.Slot} · 호스트 {NetPlayer.Local.IsHost} · 좌석 {{{string.Join(",", MatchConfig.OccupiedSlots.OrderBy(x => x))}}}"); }
         float elapsed = Time.unscaledTime - seatTestBase;
         for (int i = testSlotRequests.Count - 1; i >= 0; i--)
@@ -633,7 +633,7 @@ public class NetLauncher : MonoBehaviour
             testSlotRequests.RemoveAt(i);
             StartCoroutine(SeatRequestRoutine(request.slot));
         }
-        if (testStartAtDelay >= 0f && elapsed >= testStartAtDelay && IsHost)
+        if (testStartAtDelay >= 0f && elapsed >= testStartAtDelay && IsHost && !started)
         {
             testStartAtDelay = -1f;
             Debug.Log($"[자리] 시작 요청 — 내 슬롯 {NetPlayer.Local.Slot} · 접속 {NetPlayer.All.Count}명 · 좌석 {{{string.Join(",", MatchConfig.OccupiedSlots.OrderBy(x => x))}}}");
