@@ -1013,12 +1013,16 @@ public class GameHud : MonoBehaviour
         int points = upgrades.TraitPoints;
         int repeatCount = trait.isRepeatablePurchase ? upgrades.RepeatablePurchaseCount(trait) : 0;
 
-        traitButtonPanel.SetActive(true);
+        // 🔴 2026-10-06 사장님 「특성강화 글자가 맵 위에 떠 있다」 — 화면 위 가운데 떠 있던 패널은 이제 안 켜고(상태·글자만 만든다), 명령 카드 1번 칸(이동·정지를 뺀 빈 자리)에 그대로 비춘다.
+        if (traitButtonPanel.activeSelf) traitButtonPanel.SetActive(false);
 
         // 다른 Refresh들과 같은 관례 — 값이 안 바뀌었으면 텍스트를 다시 안 만든다.
         if (trait == lastTraitButtonTrait && unlocked == lastTraitButtonUnlocked &&
             points == lastTraitButtonPoints && repeatCount == lastTraitButtonRepeatCount)
+        {
+            SyncTraitSlot(true, trait, points);
             return;
+        }
 
         lastTraitButtonTrait = trait;
         lastTraitButtonUnlocked = unlocked;
@@ -1054,11 +1058,48 @@ public class GameHud : MonoBehaviour
             traitButtonText.text = $"특성강화{suffix}\n({trait.costTraitPoints}pt, 보유 {points}pt)";
             traitButtonComponent.interactable = points >= trait.costTraitPoints;
         }
+        SyncTraitSlot(true, trait, points);
+    }
+
+    // 특성강화 단추의 명령 카드 칸(1번) — 위 TraitButtonPanel의 글자·활성 상태를 그대로 비춘다. 클릭은 OnTraitButtonClicked(같은 함수).
+    const int TraitSlot = 1;
+    bool traitSlotShown;
+    UnitTraitData traitSlotTrait;
+    int traitSlotPoints;
+
+    void SyncTraitSlot(bool show, UnitTraitData trait, int points)
+    {
+        if (unitCommandSlotRoots[TraitSlot] == null) return;
+        if (!show || currentShop as Object != null)
+        {
+            if (traitSlotShown)
+            {
+                traitSlotShown = false;
+                unitCommandSlotNames[TraitSlot].text = "";
+                unitCommandSlotNames[TraitSlot].color = Color.white;
+                unitCommandSlotHotkeys[TraitSlot].text = "";
+                unitCommandSlotBackgrounds[TraitSlot].color = Color.clear;
+                unitCommandSlotButtons[TraitSlot].interactable = false;
+            }
+            return;
+        }
+        traitSlotShown = true;
+        traitSlotTrait = trait;
+        traitSlotPoints = points;
+        bool enabled = traitButtonComponent.interactable;
+        unitCommandSlotNames[TraitSlot].text = traitButtonText.text;
+        unitCommandSlotNames[TraitSlot].color = enabled ? Color.white : new Color(1f, 1f, 1f, 0.5f);
+        unitCommandSlotHotkeys[TraitSlot].text = "";
+        Color color = UnitCommandDefaultColor;
+        color.a = enabled ? 1f : 0.45f;
+        unitCommandSlotBackgrounds[TraitSlot].color = color;
+        unitCommandSlotButtons[TraitSlot].interactable = true;   // 못 살 때도 눌러서 이유를 본다(ExecuteTraitOn이 안내한다)
     }
 
     void HideTraitButton()
     {
         if (traitButtonPanel != null && traitButtonPanel.activeSelf) traitButtonPanel.SetActive(false);
+        SyncTraitSlot(false, null, 0);
         lastTraitButtonTrait = null;
         lastTraitButtonPoints = int.MinValue;
     }
@@ -2854,6 +2895,10 @@ public class GameHud : MonoBehaviour
             if (!sellSlotShown || string.IsNullOrEmpty(sellSlotTooltip)) { HideCombineTooltip(); return; }
             ShowTooltip(sellSlotTooltip, cardRect);
         }
+        else if (index == TraitSlot && traitSlotShown && traitSlotTrait != null)
+        {
+            ShowTooltip($"{traitSlotTrait.traitName}\n특성 포인트 {traitSlotTrait.costTraitPoints}개로 이 유닛을 강화한다. (보유 {traitSlotPoints}pt)", cardRect);
+        }
         else if (index == ActiveSlot && activeSlotShown && activeShownSkill != null)
         {
             float cd = activeShownSkill.levels != null && activeShownSkill.levels.Count > 0 ? activeShownSkill.levels[0].cooldown : 0f;
@@ -3196,6 +3241,12 @@ public class GameHud : MonoBehaviour
         if (index == SellCommandSlot && currentShop as Object == null)
         {
             if (sellSlotEnabled) OnSellButtonClicked();
+            return;
+        }
+
+        if (index == TraitSlot && traitSlotShown && currentShop as Object == null)
+        {
+            OnTraitButtonClicked();
             return;
         }
 
