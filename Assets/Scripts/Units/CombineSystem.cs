@@ -269,10 +269,24 @@ public class CombineSystem : MonoBehaviour
     // 🔴 2026-09-26 사장님 「조합하거나 흔함 제외 뽑기로 나온 유닛들은 레인 가운데에 배치」 — 09-25의 「[조합]을 누른 자리」를 버린다.
     //    결과는 새로 뽑은 유닛과 같은 길(LaneMarker.TakeSpawnPosition): 흔함 아니면 레인 가운데 고리 자리. casterPosition은 이제 안 본다
     //    (호출부 GameHud·멀티 RPC의 서명을 안 바꾸려고 인자는 남겼다).
+    // 🔴 2026-10-04 친구 피드백(노무현) 「조합 버튼 누른 유닛이 변하든가 그 근처에 조합된 유닛이 나오게」 — 09-25 원작화(시전 유닛 자리, war3map.j L15134)를 다시 켠다.
+    //    흔함 등급 결과는 예전처럼 흔함 칸(LaneMarker.TakeSpawnPosition — 「흔함은 칸 안」 규칙)으로 간다. 그 밖의 결과만 누른 유닛 곁에 나온다.
+    //    사장님 09-26 「조합 결과는 레인 가운데」와 반대라 PM·사장님 확인 뒤 켜 둔다 — 되돌리려면 false 한 줄.
+    const bool ResultAtCasterUnit = true;
+    const float ResultAtCasterJitter = 6f;   // 같은 자리에 포개 서면 클릭하기 어렵다 — 시전 유닛 바로 곁 한 몸쯤 옆(NavMesh로 다시 보정)
+
     Vector3 ResolveResultPosition(Vector3? casterPosition, UnitData result, int ownerId)
     {
         LaneMarker lane = LaneMarker.Get(ownerId);
         if (lane == null) return transform.position;
+
+        if (ResultAtCasterUnit && casterPosition.HasValue && result != null && result.grade != UnitGrade.Common)
+        {
+            int casterMask = UnitSpawner.ComputeAreaMask(result.movementAbility);
+            Vector3 near = casterPosition.Value + new Vector3(ResultAtCasterJitter, 0f, 0f);
+            if (NavMesh.SamplePosition(near, out NavMeshHit casterHit, ResultSampleRadius, casterMask)) return casterHit.position;
+            // 시전 유닛 곁이 NavMesh 밖이면(스토리존 건물 위 등) 레인 가운데로 — 아래 옛 규칙
+        }
 
         // 가운데가 NavMesh 밖일 수 있다(그 자리에 건물이 서 있는 등).
         // NavMesh 밖에 스폰된 NavMeshAgent는 경로를 못 잡고 그 자리에 굳는다 —
