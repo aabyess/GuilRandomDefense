@@ -807,6 +807,16 @@ public class UnitAttacker : MonoBehaviour
         return true;
     }
 
+    // 「공격한 횟수 비례」(SkillEffect.hitCountScale, 영원함 이지원 그동안쌓은덕력) — 평타 총수 × 계수(상한 Cap)만큼 +. 0이면 1(꺼짐).
+    public int BasicHitCount { get; private set; }
+    float HitCountScaleFactor(SkillEffect effect)
+    {
+        if (effect == null || effect.hitCountScale <= 0f) return 1f;
+        float bonus = effect.hitCountScale * BasicHitCount;
+        if (effect.hitCountScaleCap > 0f) bonus = Mathf.Min(bonus, effect.hitCountScaleCap);
+        return 1f + bonus;
+    }
+
     // 「공속 비례」(SkillEffect.attackSpeedScale) — 1 + 계수 × (공속 배율(상한 Cap) − 1), 0 아래로는 안 내려간다. 계수 0이면 1(꺼짐).
     float AttackSpeedScaleFactor(SkillEffect effect)
     {
@@ -2587,7 +2597,7 @@ public class UnitAttacker : MonoBehaviour
         if (effect.kind == SkillEffectKind.SummonUnit) { SummonFor(effect); return; }
         if (effect.kind == SkillEffectKind.KillNormalEnemies) { lastKillSucceeded = KillNearestNormalEnemy(range, effect.killMostLostHp); return; }
         if (effect.kind == SkillEffectKind.RecruitEnemy) { RecruitNearestEnemy(range, effect); return; }
-        if (effect.kind == SkillEffectKind.GrantLoot) { if (lastKillSucceeded) GrantLoot(effect); lastKillSucceeded = false; return; }
+        if (effect.kind == SkillEffectKind.GrantLoot) { if (lastKillSucceeded || effect.lootAlways) GrantLoot(effect); lastKillSucceeded = false; return; }
         if (effect.kind == SkillEffectKind.FormChange) { BeginGunForm(effect); return; }
         if (effect.kind == SkillEffectKind.Knockback) { KnockBack(primaryTarget, effect); return; }
         if (effect.kind == SkillEffectKind.AttackSpeedStack) { AddAttackSpeedStack(effect); return; }
@@ -2840,7 +2850,7 @@ public class UnitAttacker : MonoBehaviour
     // **여기 최종 결과 하나에만 곱한다**(RandomDamageMultiplier 참고).
     float ResolveSkillEffectValue(SkillEffect effect, EnemyDummy target, float recentAttackDamage)
     {
-        return ResolveBaseSkillEffectValue(effect, target, recentAttackDamage) * RandomDamageMultiplier(effect) * AttackSpeedScaleFactor(effect);
+        return ResolveBaseSkillEffectValue(effect, target, recentAttackDamage) * RandomDamageMultiplier(effect) * AttackSpeedScaleFactor(effect) * HitCountScaleFactor(effect);
     }
 
     // 원작 RRD의 GetRandomReal(min, max) 부분. 원작이 매 시전마다 새로 굴리므로 여기서도
@@ -2986,7 +2996,7 @@ public class UnitAttacker : MonoBehaviour
             // 시한 효과(스턴·이감·방깎·ArmorBonus/HealOverTime)는 전부 걸린 적이 센다(EnemyDummy.*For, 2026-09-30) —
             // 여기서 코루틴으로 세면 이 유닛이 조합·판매로 사라질 때 영영 안 풀린다.
             case SkillEffectKind.Stun:
-                if (effect.duration > 0f) target.FreezeFor(StunDurationOn(target, effect) * AttackSpeedScaleFactor(effect) + (effect.talentStunScaled ? TalentStunDuration : 0f));
+                if (effect.duration > 0f) target.FreezeFor(StunDurationOn(target, effect) * AttackSpeedScaleFactor(effect) * HitCountScaleFactor(effect) + (effect.talentStunScaled ? TalentStunDuration : 0f));
                 break;
 
             // 평타 DoT(레이쥬 독·킹 화재, 2026-10-06) — 대상에게 duration초 동안 틱마다 고정 피해. 같은 대상에 다시 걸면 끝 시각만 늘린다.
@@ -3420,6 +3430,7 @@ public class UnitAttacker : MonoBehaviour
         {
             attackTimer = Mathf.Max(0f, attackTimer + AttackInterval);
             Anim?.PlayAttack();
+            BasicHitCount++;   // 평타 총수(이지원 그동안쌓은덕력 — SkillEffect.hitCountScale)
             ApplyArmorShred(target);
             // isAbilityDamage: false — 평타는 원작에 UNIVERSAL이 없다(EnemyDummy.TakeDamage
             // 문서 참고). 로스터 damageType이 AP인 유닛이라도 평타로 방어를 무시하면 안 된다.

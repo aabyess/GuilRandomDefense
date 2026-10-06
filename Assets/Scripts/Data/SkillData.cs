@@ -631,6 +631,14 @@ public class SkillEffect
 
     // ⚠️ 맨 뒤(2026-10-06, 초월 김경현 노획물) — GrantLoot 전용: 지급 후보(무작위 1개). multiplier = 한 개 더 줄 확률.
     public List<ItemData> lootItems = new List<ItemData>();
+
+    // ⚠️ 맨 뒤(2026-10-06, 영원함 이지원 「작품매매」) — GrantLoot 전용: true면 같은 시전의 몹삭제 성공 여부와 무관하게 발동할 때마다 노획물을 준다(평타 확률 발동 노획물).
+    public bool lootAlways;
+
+    // ⚠️ 맨 뒤(2026-10-06, 영원함 이지원 「그동안쌓은덕력」) — 「공격한 횟수 비례」: 이 유닛이 지금까지 친 평타 수 N당 이 효과(Damage·Stun)가 hitCountScale(0.001 = +0.1%)씩 세진다.
+    // 값 × (1 + min(hitCountScaleCap, hitCountScale × 평타 수)). Cap 0이면 무제한. 0이면 꺼짐.
+    public float hitCountScale;
+    public float hitCountScaleCap;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
