@@ -1689,13 +1689,36 @@ public class UnitAttacker : MonoBehaviour
         return best;
     }
 
-    void KillNearestNormalEnemy(float worldRange, bool mostLostHp = false)
+    bool lastKillSucceeded;   // 노획물(GrantLoot)이 같은 시전의 몹삭제가 실제로 죽였는지 본다
+
+    bool KillNearestNormalEnemy(float worldRange, bool mostLostHp = false)
     {
         EnemyDummy target = mostLostHp ? MostLostHpNormalEnemy(worldRange) : NearestNormalEnemy(worldRange);
-        if (target == null) return;
+        if (target == null) return false;
         // 막타 피해로 처리 — 일반 처치와 같은 경로(보상·처치 알림)를 탄다. 방어·상성은 무시하고 확실히 죽는 크기.
         target.TakeDamage(1e12f, DamageType.AD, AttackType.Unassigned, owner != null ? owner.OwnerId : -1, armorIgnoreRatio: 1f, isAbilityDamage: false);
         if (target.IsDead) UnitDeleteCount++;   // 초월 김건 「포식」 — 실제로 죽였을 때만 센다(형태변환 때 소모)
+        return target.IsDead;
+    }
+
+    // 초월 김경현 「재료확보」 노획물 — lootItems 중 무작위 1개(+ multiplier 확률로 1개 더)를 주인 인벤토리에 넣는다. 서버만.
+    void GrantLoot(SkillEffect effect)
+    {
+        if (!GameAuthority.IsServer || owner == null || effect.lootItems == null || effect.lootItems.Count == 0) return;
+        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        if (context == null || context.ItemInventory == null) return;
+        int count = 1 + (effect.multiplier > 0f && UnityEngine.Random.value < effect.multiplier ? 1 : 0);
+        for (int i = 0; i < count; i++)
+        {
+            ItemData loot = effect.lootItems[UnityEngine.Random.Range(0, effect.lootItems.Count)];
+            if (loot == null) continue;
+            if (!context.ItemInventory.Add(loot))
+            {
+                PlayerNotification.Show(context.PlayerId, $"<color=#FF8A65>아이템 칸이 가득 차서(최대 {ItemInventory.MaxItems}칸) {loot.itemName}을(를) 받지 못했습니다.</color>", 6f);
+                return;
+            }
+            PlayerNotification.Show(context.PlayerId, $"<color=#C8E6A0>노획물 획득 ! {loot.itemName}</color>", 5f);
+        }
     }
 
     // ---- 초월 김건 「잃어버린웃음보따리」(사장님 10-06): 유닛삭제 카운트 · 형태변환(구건) · 넉백 ----
@@ -2423,7 +2446,8 @@ public class UnitAttacker : MonoBehaviour
     {
         // 소환(최상호 구일) — 대상이 없다. 확률·쿨다운은 위(CastSkillLevel·평타 확률 발동)가 이미 판정했다.
         if (effect.kind == SkillEffectKind.SummonUnit) { SummonFor(effect); return; }
-        if (effect.kind == SkillEffectKind.KillNormalEnemies) { KillNearestNormalEnemy(range, effect.killMostLostHp); return; }
+        if (effect.kind == SkillEffectKind.KillNormalEnemies) { lastKillSucceeded = KillNearestNormalEnemy(range, effect.killMostLostHp); return; }
+        if (effect.kind == SkillEffectKind.GrantLoot) { if (lastKillSucceeded) GrantLoot(effect); lastKillSucceeded = false; return; }
         if (effect.kind == SkillEffectKind.FormChange) { BeginGunForm(effect); return; }
         if (effect.kind == SkillEffectKind.Knockback) { KnockBack(primaryTarget, effect); return; }
         if (effect.kind == SkillEffectKind.AttackSpeedStack) { AddAttackSpeedStack(effect); return; }

@@ -2247,6 +2247,7 @@ public class GameHud : MonoBehaviour
 
         string text = !string.IsNullOrEmpty(item.tooltipText) ? item.tooltipText : item.itemName;
         if (item.useKind == ItemUseKind.WispBundle || item.useKind == ItemUseKind.AncientShip) text += "\n(클릭하면 사용)";
+        else if (item.useKind == ItemUseKind.LootSale) text += "\n(클릭하면 판매 — 37% 랜덤위습, 그중 40% +100엔·목재 1)";
         else if (item.useKind == ItemUseKind.HeroTransform) text += "\n(영웅 변신 — 아직 사용할 수 없음)";
         else if (item.useKind == ItemUseKind.PaperPlane) text += PlayerContext.Local != null && PlayerContext.Local.ItemInventory != null && PlayerContext.Local.ItemInventory.PaperPlaneUsed ? "\n(사용 완료 — 한 번만 쓸 수 있습니다)" : "\n(클릭 → 적 하나를 골라 사용)";
         ShowTooltip(text, (RectTransform)itemInventoryRowRoots[index].transform);
@@ -2344,7 +2345,7 @@ public class GameHud : MonoBehaviour
 
             ItemData item = itemInventoryKeys[i];
             itemInventoryRowItems[i] = item;
-            bool usable = item.useKind == ItemUseKind.WispBundle || item.useKind == ItemUseKind.AncientShip;
+            bool usable = item.useKind == ItemUseKind.WispBundle || item.useKind == ItemUseKind.AncientShip || item.useKind == ItemUseKind.LootSale;
             // 아이콘이 있으면 그림이 칸을 채우고 개수만 오른쪽 아래(이름은 호버 툴팁) — 없으면 예전처럼 「이름 xN」 글자.
             bool hasIcon = item.icon != null;
             itemInventoryRowIcons[i].enabled = hasIcon;

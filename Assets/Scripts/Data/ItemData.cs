@@ -108,6 +108,11 @@ public class ItemData : ScriptableObject
     // ⚠️ 맨 뒤에 추가(2026-10-06, 부서진손거울) — 분류 「유물」. 스토리 확률 아이템 중 사장님이 지정한 자리에서 나온다.
     // 유물의 기본 능력은 그 자리를 대신하는 원작 아이템의 능력을 그대로 물려받는다(tooltipText·linkedAbilityId 복사). 유물 전용 추가 효과는 따로.
     public bool isRelic;
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 노획물) — LootSale 전용 보너스(위습이 나왔을 때 이 확률로 엔·목재). 원작 unique_sell6: 위습 37% · 그중 40% +100엔·목재 1.
+    [Range(0f, 1f)] public float lootBonusChance;
+    public int lootBonusGold;
+    public int lootBonusWood;
 }
 
 public enum ItemUseKind
@@ -118,6 +123,9 @@ public enum ItemUseKind
     HeroTransform,    // I003 명검 — 영웅 변신(캐릭터 연동, 아직 사용 불가)
     // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 이재윤 유물 종이비행기) — 눌러서 적 하나를 고르면 그 적을 영구 정지 + 내 레인 적 전체 현재체력 −25%. 한 번 쓰면 끝, 아이템은 남는다(PaperPlane.TryUse).
     PaperPlane,
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 김경현 노획물 — 원작 레일리 노획물품 h056) — 사용 = 판매: 아이템이 사라지고 useWispRolls를 굴려 위습(원작 37% 랜덤위습 1기),
+    // 위습이 나오면 lootBonusChance(40%)로 +lootBonusGold 엔 + lootBonusWood 목재(RewardDistributor.UseItem).
+    LootSale,
 }
 
 [System.Serializable]

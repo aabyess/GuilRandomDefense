@@ -343,6 +343,11 @@ public enum SkillEffectKind
     // 순간이동: ActiveButton + SkillLevel.needsPointClick — 칸을 누른 뒤 **땅 지점을 클릭**하면 시전자가 그 지점으로 NavMeshAgent.Warp(NavMesh 밖이면 가장 가까운 NavMesh 점).
     // multiplier > 0이면 시전 사거리 제한(원작 단위), 0이면 제한 없음. 쿨은 SkillLevel.cooldown. 돌아오지 않는다(고른 곳이 새 위치). 효과 처리는 UnitAttacker.TryCastActiveAtPoint(CastSkillLevel 안 거침).
     TeleportToPoint,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 김경현 「재료확보」 — 사장님 확정) — 직렬화 순서를 지킨다.
+    // 노획물 지급: effect.lootItems 중 무작위 1개를 주인 인벤토리에 넣는다. 같은 스킬의 KillNormalEnemies가 이번 시전에서 실제로 적을 죽였을 때만(원작 레일리 노획물품).
+    // multiplier = 한 개 더 줄 확률(특성강화 레벨 2, 0이면 없음). 인벤토리가 가득 차면 못 받고 알림. 노획물은 사용 = 판매(ItemUseKind.LootSale).
+    GrantLoot,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -613,6 +618,9 @@ public class SkillEffect
 
     // ⚠️ 맨 뒤(2026-10-06 구현담당3, 초월 이태훈 「약자멸시」) — KillNormalEnemies의 대상 선택: false면 가장 가까운 일반 적, true면 범위 안 일반 적 중 잃은 체력(최대−현재)이 가장 큰 적.
     public bool killMostLostHp;
+
+    // ⚠️ 맨 뒤(2026-10-06, 초월 김경현 노획물) — GrantLoot 전용: 지급 후보(무작위 1개). multiplier = 한 개 더 줄 확률.
+    public List<ItemData> lootItems = new List<ItemData>();
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에

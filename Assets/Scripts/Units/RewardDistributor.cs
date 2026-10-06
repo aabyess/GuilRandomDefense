@@ -513,6 +513,27 @@ public class RewardDistributor : MonoBehaviour
                 PlayerNotification.Show(context.PlayerId, $"<color=#{roll.colorHex}>{got.wispName} 획득 ! </color>", 10f);
             }
         }
+        else if (kind == ItemUseKind.LootSale)
+        {
+            // 노획물 판매(원작 A080 unique_sell6): 위습이 나오면(useWispRolls) 보너스 확률로 +엔·목재.
+            bool gotWisp = false;
+            foreach (ItemUseWispRoll roll in held.useWispRolls)
+            {
+                if (roll == null) continue;
+                WispData got = Random.value < roll.chance ? roll.wisp : roll.elseWisp;
+                if (got == null) continue;
+                gotWisp = true;
+                GrantWisps(context, new List<WispReward> { new WispReward { wisp = got, count = 1 } });
+                PlayerNotification.Show(context.PlayerId, $"<color=#{roll.colorHex}>{held.itemName} 판매 — {got.wispName} 획득 ! </color>", 8f);
+            }
+            if (gotWisp && Random.value < held.lootBonusChance)
+            {
+                if (held.lootBonusGold > 0 && context.GoldWallet != null) context.GoldWallet.Add(held.lootBonusGold);
+                if (held.lootBonusWood > 0 && context.ResourceWallet != null) { context.ResourceWallet.Add(ResourceType.Wood, held.lootBonusWood); WoodSound(context); }
+                PlayerNotification.Show(context.PlayerId, $"<color=#FFD54F>+{held.lootBonusGold}엔 · 목재 {held.lootBonusWood}</color>", 8f);
+            }
+            else if (!gotWisp) PlayerNotification.Show(context.PlayerId, $"{held.itemName}을(를) 팔았지만 아무것도 얻지 못했습니다.", 5f);
+        }
         else if (kind == ItemUseKind.AncientShip)
         {
             GrantAncientShip(context);
