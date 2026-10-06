@@ -4509,15 +4509,33 @@ public class GameHud : MonoBehaviour
         if (!has) { newWorldWait = false; seconds = 0f; }
         bool hasStory = storyLeft >= 0f && !string.IsNullOrEmpty(storyName);   // 원작 와노쿠니 제한 창(j:13754)
 
+        // 다음 스토리 대기(첫 10초 · 8번 뒤 백수생활 60초 · 12번 뒤 275초) — 같은 우상단 타이머 스택에 「다음 스토리 (이름)까지 0:45」(친구 베타 피드백 10-06).
+        //  이름은 StoryManager.StatusLabel(막간이 있으면 그 이름이 아니라 스토리 이름) — 멀티 클라는 호스트가 NetGameState로 보낸 값(StoryManager.Apply Replicated)이 같은 속성으로 읽힌다.
+        StoryManager waitStory = StoryManager.Instance;
+        bool storyWait = waitStory != null && !waitStory.HasRunningStory && waitStory.IsWaiting;
+        int storyWaitSeconds = storyWait ? Mathf.CeilToInt(waitStory.SecondsUntilNext) : 0;
+        string storyWaitLabel = storyWait ? waitStory.StatusLabel : "";
+        string storyWaitInterlude = storyWait ? waitStory.InterludeLabel : "";
+        if (storyWait && storyWaitSeconds <= 0) storyWait = false;
+
         int key = (has ? (newWorldWait ? 100000 : 0) + Mathf.CeilToInt(seconds) : -1) * 10000 + (hasStory ? Mathf.CeilToInt(storyLeft) : -1);
+        if (storyWait) key = key * 31 + storyWaitSeconds * 7 + (storyWaitLabel ?? "").GetHashCode();   // 초가 바뀌거나 이름이 바뀔 때만 글자를 다시 만든다
+        else key = key * 31 - 1;
         if (key == lastExtraTimerKey) return;
         lastExtraTimerKey = key;
-        bool any = has || hasStory;
+        bool any = has || hasStory || storyWait;
         if (extraTimerObject.activeSelf != any) extraTimerObject.SetActive(any);
         if (!any) return;
         string text = "";
         if (has) text = newWorldWait ? $"60라운드-신세계 대기중  {Clock(seconds)}" : $"<color=#FF0000>보스 제한시간-></color>  {Clock(seconds)}";
         if (hasStory) text += (text.Length > 0 ? "     " : "") + $"{storyName} 남은 시간:  {Clock(storyLeft)}";
+        if (storyWait)
+        {
+            string wait = string.IsNullOrEmpty(storyWaitInterlude)
+                ? $"<color=#FFD54F>다음 스토리 ({storyWaitLabel})까지</color>  {Clock(storyWaitSeconds)}"
+                : $"<color=#FFD54F>{storyWaitInterlude} — 다음 스토리까지</color>  {Clock(storyWaitSeconds)}";
+            text += (text.Length > 0 ? "     " : "") + wait;
+        }
         extraTimerText.text = text;
     }
 
