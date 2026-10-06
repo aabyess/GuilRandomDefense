@@ -15,6 +15,40 @@ static class ImmortalProbeA
     static string Run이승우() => Setup("불멸_이승우");
     static string Run신지우() => Setup("불멸_신지우");
     static string Run박은석() => Setup("불멸_박은석");
+    static string Run고도현() => Setup("불멸_고도현");
+    static string Run이이삭() => Setup("불멸_이이삭");
+
+    // 고도현 약처방: 아군 1(김건)에 걸고 → 아군 2(새로 세운 특별함)로 옮기면 옛 대상에서 떼어지는지
+    static UnitAttacker second; static float secondAd0, secondAs0;
+    static string Cure1()
+    {
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        var other = AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/전설적인_노태현.asset");
+        var go = spawner.Spawn(other, lane != null ? lane.TakeSpawnPosition(other) : Vector3.zero, 0);
+        second = go.GetComponent<UnitAttacker>(); secondAd0 = second.AttackDamage; secondAs0 = second.CurrentAttackSpeedMultiplier;
+        var skill = unit.Data.skills.First(x => x.skillName.StartsWith("약처방"));
+        float ad0 = allyAtk.AttackDamage, as1 = allyAtk.CurrentAttackSpeedMultiplier;
+        bool ok = atk.TryCastActiveOnAlly(skill, allyAtk.GetComponent<UnitIdentity>(), out string why);
+        return $"[약처방 1] 시전 {(ok ? "성공" : "실패 " + why)} · 김건 공격력 비 {allyAtk.AttackDamage / ad0:F2}(기대 1.10) 공속 비 {allyAtk.CurrentAttackSpeedMultiplier / as1:F2}(기대 1.10)";
+    }
+    static string Cure2()
+    {
+        var skill = unit.Data.skills.First(x => x.skillName.StartsWith("약처방"));
+        var st = typeof(UnitAttacker).GetMethod("GetRuntimeState", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(atk, new object[] { skill });
+        st.GetType().GetField("activeReadyAt", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).SetValue(st, 0f);
+        bool ok = atk.TryCastActiveOnAlly(skill, second.GetComponent<UnitIdentity>(), out string why);
+        return $"[약처방 2: 노태현으로 옮김] 시전 {(ok ? "성공" : "실패 " + why)} · 노태현 공격력 비 {second.AttackDamage / secondAd0:F2}(기대 1.10) · 김건 공속 {allyAs0:F2} → {allyAtk.CurrentAttackSpeedMultiplier:F2}(기대 원래값, 옛 대상에서 뗌)";
+    }
+
+    static string ShredFactor()
+    {
+        var m = typeof(UnitAttacker).GetMethod("ArmorShredDamageFactor", BindingFlags.NonPublic | BindingFlags.Instance);
+        EnemyDummy t = normals[0];
+        float shred = t.Data.armor - t.EffectiveArmor;
+        float factor = (float)m.Invoke(atk, new object[] { t });
+        return $"[방깍 비례] 적 방깍 {shred:F1} → 피해 배율 {factor:F3}(기대 1 + min(0.5, 0.005×{shred:F1}) = {1f + Mathf.Min(0.5f, 0.005f * shred):F3})";
+    }
 
     static string Setup(string name)
     {

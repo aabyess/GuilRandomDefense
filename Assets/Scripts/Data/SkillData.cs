@@ -348,6 +348,11 @@ public enum SkillEffectKind
     // 노획물 지급: effect.lootItems 중 무작위 1개를 주인 인벤토리에 넣는다. 같은 스킬의 KillNormalEnemies가 이번 시전에서 실제로 적을 죽였을 때만(원작 레일리 노획물품).
     // multiplier = 한 개 더 줄 확률(특성강화 레벨 2, 0이면 없음). 인벤토리가 가득 차면 못 받고 알림. 노획물은 사용 = 판매(ItemUseKind.LootSale).
     GrantLoot,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 불멸 이이삭 「방깍이높을수록데미지증가」 — 사장님 확정) — 직렬화 순서를 지킨다.
+    // 패시브(Self): 맞는 적이 방깍(원본 방어 − 현재 방어)을 N 받고 있으면 이 유닛 피해(평타·스킬)가 ×(1 + min(bonus, multiplier × N)).
+    // 예: multiplier 0.005 · bonus 0.5 = 방깍 1당 +0.5%·최대 +50%.
+    DamagePerTargetArmorShred,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,

@@ -747,6 +747,8 @@ public class UnitAttacker : MonoBehaviour
     }
 
     /// <summary>아군 지정 액티브(SkillLevel.needsAllyClick, 초월 신문철 엄마간식) — 고른 내 아군(자기 가능)에게 효과를 건다. 쿨 중·남의 유닛이면 이유를 돌려주고 false.</summary>
+    UnitAttacker permanentAllyTarget;   // 마지막으로 영구 버프를 건 아군(TryCastActiveOnAlly)
+
     public bool TryCastActiveOnAlly(SkillData skill, UnitIdentity ally, out string failReason)
     {
         failReason = null;
@@ -763,7 +765,21 @@ public class UnitAttacker : MonoBehaviour
         SkillTelemetry.Cast(unitData, skill);
         SkillSfx.Cast(unitData, skill, transform.position);
         PulseSphereArt();
-        foreach (SkillEffect effect in level.effects) if (effect != null) ApplyToAlly(effect, ally, null);
+        // 영구 아군 버프(duration 0 + buffId + 수치 오라 종류 — 고도현 「약처방」 「옮기면 따라감」): 옛 대상·이 대상에서 같은 항목을 떼고 새 대상에 레지스트리로 건다(준 쪽이 사라지면 저절로 사라진다).
+        UnitAttacker allyAttacker = ally.GetComponent<UnitAttacker>();
+        foreach (SkillEffect effect in level.effects)
+        {
+            if (effect == null) continue;
+            if (effect.duration <= 0f && !string.IsNullOrEmpty(effect.buffId) && IsAuraStatKind(effect.kind) && allyAttacker != null)
+            {
+                if (permanentAllyTarget != null) permanentAllyTarget.RemoveAuraBonus(this, effect.kind, effect.buffId);
+                allyAttacker.RemoveAuraBonus(this, effect.kind, effect.buffId);
+                allyAttacker.AddAuraBonus(this, effect.kind, effect.buffId, effect.multiplier);
+                continue;
+            }
+            ApplyToAlly(effect, ally, null);
+        }
+        permanentAllyTarget = allyAttacker;
         return true;
     }
 
@@ -1838,7 +1854,36 @@ public class UnitAttacker : MonoBehaviour
         return debuffIdScratch.Count;
     }
 
-    float DamagePassiveFactor(EnemyDummy target) => BossDamageFactor(target) * StoryDamageFactor(target) * AllyDebuffDamageFactor() * GrowthDamageFactor() * (1f + attackDamageStack);
+    // 방깍량 비례 피해(SkillEffectKind.DamagePerTargetArmorShred, 불멸 이이삭) — 패시브 비율·상한을 스킬에서 읽어 둔다.
+    UnitData shredRateFor;
+    float shredRate, shredCap;
+
+    float ArmorShredDamageFactor(EnemyDummy target)
+    {
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null || target == null || target.Data == null) return 1f;
+        if (shredRateFor != unitData)
+        {
+            shredRateFor = unitData;
+            shredRate = 0f; shredCap = 0f;
+            int count = BaseSkillCount(unitData);
+            for (int i = 0; i < count; i++)
+            {
+                SkillData skill = ResolveSkillAt(unitData, i);
+                if (skill == null || skill.levels == null || skill.levels.Count == 0 || skill.levels[0].effects == null) continue;
+                foreach (SkillEffect effect in skill.levels[0].effects)
+                    if (effect != null && effect.kind == SkillEffectKind.DamagePerTargetArmorShred) { shredRate += effect.multiplier; shredCap = Mathf.Max(shredCap, effect.bonus); }
+            }
+        }
+        if (shredRate <= 0f) return 1f;
+        float shred = target.Data.armor - target.EffectiveArmor;
+        if (shred <= 0f) return 1f;
+        float extra = shredRate * shred;
+        if (shredCap > 0f) extra = Mathf.Min(extra, shredCap);
+        return 1f + extra;
+    }
+
+    float DamagePassiveFactor(EnemyDummy target) => BossDamageFactor(target) * StoryDamageFactor(target) * AllyDebuffDamageFactor() * ArmorShredDamageFactor(target) * GrowthDamageFactor() * (1f + attackDamageStack);
 
     // 만성피로(SelfStunRefillLifeGauge) — 자기 스턴 동안 공격·스킬이 멈추고, 끝나면 체력 게이지가 즉시 가득 찬다.
     public const string SelfStunBuffId = "SELF_STUN";
@@ -2458,7 +2503,8 @@ public class UnitAttacker : MonoBehaviour
             || effect.kind == SkillEffectKind.SplashDamageMultiplier || effect.kind == SkillEffectKind.AllyMoveSpeedDebuff
             || effect.kind == SkillEffectKind.DamagePerAllyDebuff || effect.kind == SkillEffectKind.DamageGrowthOverTime
             || effect.kind == SkillEffectKind.AllySkillDamageBonus || effect.kind == SkillEffectKind.DispelAllyDebuffs
-            || effect.kind == SkillEffectKind.GoldPlusBonus || effect.kind == SkillEffectKind.StoryDamageMultiplier) return;
+            || effect.kind == SkillEffectKind.GoldPlusBonus || effect.kind == SkillEffectKind.StoryDamageMultiplier
+            || effect.kind == SkillEffectKind.DamagePerTargetArmorShred) return;
 
         // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
         if (effect.lineLength > 0f && effect.zoneTickInterval <= 0f)
