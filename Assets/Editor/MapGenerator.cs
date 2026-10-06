@@ -912,12 +912,17 @@ public static class MapGenerator
         float baseY = MapLayout.IslandTop + 0.05f;       // 레인 윗면과 같은 높이에서 이어지되 같은 평면 깜빡임을 피한다
         float seaY = 0f;
         float shrink = Mathf.Min(1f, Mathf.Min(maxX - minX, maxZ - minZ) * 0.3f / (HillProfile[HillProfile.Length - 1].inset + HillEdgeWobble));
-        float seed = (minX * 0.013f + minZ * 0.007f) % 97f;
+        float seed = 300f + Mathf.Abs(minX * 0.013f + minZ * 0.007f) % 97f;   // 양수로 — Mathf.PerlinNoise는 0을 넘나들 때 꺾인다
 
         // 둘레 매개: 남(서→동) · 남동 모서리 · 동(남→북) · 북동 · 북(동→서) · 북서 · 서(북→남) · 남서 — 위에서 보아 반시계.
         // 각 점은 (곧은 변 위 비율 또는 모서리 각, 변 번호)로 정해 고리마다 같은 개수·같은 순서가 되게 한다.
         float spanX = maxX - minX, spanZ = maxZ - minZ;
-        int nx = Mathf.Max(2, Mathf.CeilToInt(spanX / HillEdgeStep)), nz = Mathf.Max(2, Mathf.CeilToInt(spanZ / HillEdgeStep));
+        // 곧은 변의 점 개수는 가장 안쪽 고리의 곧은 길이로 센다 — 바깥 길이로 세면 끝머리 안쪽 단(곧은 길이 4)에 점 18개가
+        // 0.2 간격으로 몰리고, 점마다 다른 잡음이 그 자리를 톱니로 접어 면이 뒤집혔다(10-06 사진의 틈).
+        float innerInset = HillProfile[HillProfile.Length - 1].inset * shrink;
+        float innerRadius = Mathf.Min(HillCornerRadius, Mathf.Min(spanX, spanZ) * 0.5f - innerInset - 1f);
+        int nx = Mathf.Max(1, Mathf.CeilToInt((spanX - 2f * (innerInset + innerRadius)) / HillEdgeStep));
+        int nz = Mathf.Max(1, Mathf.CeilToInt((spanZ - 2f * (innerInset + innerRadius)) / HillEdgeStep));
         var samples = new List<(int side, float f)>();   // side 0~3 곧은 변, 4~7 모서리
         void AddSide(int side, int n) { for (int k = 0; k < n; k++) samples.Add((side, k / (float)n)); }
         void AddCorner(int corner) { for (int k = 0; k < HillCornerSteps; k++) samples.Add((4 + corner, k / (float)HillCornerSteps)); }
@@ -960,9 +965,16 @@ public static class MapGenerator
                 }
                 if (!straight)
                 {
-                    float s = arc[k];
-                    float wobble = Mathf.PerlinNoise(seed + s * 0.018f, 3.1f) * 0.7f + Mathf.PerlinNoise(seed + s * 0.06f, 7.7f) * 0.3f;
-                    float jitter = (Mathf.PerlinNoise(seed + s * 0.11f, 11f + ringIndex * 5.3f) - 0.5f) * 2f * HillEdgeJitter;
+                    // 잡음은 둘레 위 사인 합 — 주기가 둘레의 정수분의 1이라 한 바퀴 끝에서 정확히 이어진다.
+                    // (Mathf.PerlinNoise를 원으로 감아 뽑았더니 한 곳에서 값이 튀어 절벽 면이 꼬이고 틈이 보였다 — 10-06 사진)
+                    float t = arc[k] / arc[count] * Mathf.PI * 2f;
+                    float Wave(float wavelength, int salt)
+                    {
+                        int cycles = Mathf.Max(1, Mathf.RoundToInt(arc[count] / wavelength));
+                        return Mathf.Sin(cycles * t + seed * (1.7f + salt * 0.9f));
+                    }
+                    float wobble = 0.5f + 0.32f * Wave(260f, 0) + 0.12f * Wave(110f, 1) + 0.06f * Wave(47f, 2);
+                    float jitter = Wave(23f, 3 + ringIndex) * HillEdgeJitter;
                     point -= normal * Mathf.Max(0f, wobble * HillEdgeWobble * shrink + jitter);
                 }
                 ring[k] = new Vector3(point.x, y, point.y);
@@ -995,12 +1007,21 @@ public static class MapGenerator
             else { triangles.AddRange(new[] { start, start + 2, start + 1, start, start + 3, start + 2 }); }
         }
 
-        Vector3 Outward(Vector3[] outer, Vector3[] inner, int k)
+        // 바깥 방향 = 둘레 매개의 본래 법선(잡음 전 모양). 점 좌표로 정하면 안 된다 —
+        // ① 접선은 끝머리 안쪽 단처럼 점이 0.2 간격으로 몰린 곳에서 잡음 출렁임에 뒤집히고
+        // ② 고리끼리 차이는 각진 첫 고리와 둥근 둘째 고리가 옆으로 최대 36 어긋나 옆을 가리킨다(둘 다 10-06 사진에서 구멍).
+        Vector3[] baseNormal = new Vector3[count];
+        for (int k = 0; k < count; k++)
         {
-            int n = (k + 1) % count;
-            Vector3 tangent = (inner[n] - inner[k]) + (outer[n] - outer[k]);
-            return new Vector3(tangent.z, 0f, -tangent.x);   // 반시계 둘레의 바깥(오른쪽) 법선
+            (int side, float f) = samples[k];
+            if (side < 4) baseNormal[k] = side switch { 0 => Vector3.back, 1 => Vector3.right, 2 => Vector3.forward, _ => Vector3.left };
+            else
+            {
+                float angle = (-90f + (side - 4) * 90f + f * 90f) * Mathf.Deg2Rad;
+                baseNormal[k] = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+            }
         }
+        Vector3 Outward(int k) => baseNormal[k] + baseNormal[(k + 1) % count];
 
         Vector3[] previous = rim;
         for (int i = 1; i < HillProfile.Length; i++)
@@ -1010,7 +1031,7 @@ public static class MapGenerator
             for (int k = 0; k < count; k++)
             {
                 int n = (k + 1) % count;
-                Vector3 outward = flat ? Vector3.up : Outward(previous, current, k) + Vector3.up * 0.05f;
+                Vector3 outward = flat ? Vector3.up : Outward(k) + Vector3.up * 0.05f;
                 Quad(flat ? tops : cliffs, previous[k], current[k], current[n], previous[n], outward, flat, arc[k], arc[k + 1]);
             }
             previous = current;
@@ -1029,7 +1050,7 @@ public static class MapGenerator
         {
             int n = (k + 1) % count;
             if ((rim[n] - rim[k]).sqrMagnitude < 0.0001f) continue;   // 각진 첫 고리의 모서리 점(같은 자리)
-            Quad(cliffs, sea[k], rim[k], rim[n], sea[n], Outward(rim, rim, k), false, arc[k], arc[k + 1]);
+            Quad(cliffs, sea[k], rim[k], rim[n], sea[n], Outward(k), false, arc[k], arc[k + 1]);
         }
 
         Mesh mesh = new Mesh { name = "InterLaneHill", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 };
