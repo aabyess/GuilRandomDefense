@@ -655,6 +655,41 @@ public class UnitAttacker : MonoBehaviour
         return level != null ? level.cooldown : 0f;
     }
 
+    // ---- 포커싱오더(2026-10-06, 초월 김민준 푸바오) — 토글 액티브. 켜면 이 유닛과 소환수는 사거리 안에서 잃은 체력(최대−현재)이 가장 많은 적을 먼저 친다. ----
+    // 상태는 호스트의 진짜 유닛에만 있다(멀티 클라 칸 표시는 호스트 상태를 모른다 — 시전은 NetHudAction.CastActive로 호스트가 토글).
+    public bool FocusLostHp { get; private set; }
+
+    /// <summary>이 유닛(소환수면 소환자)의 포커싱이 켜져 있나. UnitCombat 표적 고르기가 본다.</summary>
+    public bool FocusActive
+    {
+        get
+        {
+            if (FocusLostHp) return true;
+            SummonedBy by = summonedBy != null ? summonedBy : (summonedBy = GetComponent<SummonedBy>());
+            return by != null && by.Summoner != null && by.Summoner.FocusLostHp;
+        }
+    }
+    SummonedBy summonedBy;
+
+    /// <summary>from에서 range 안 적 중 잃은 체력이 가장 많은 적(같으면 가까운 쪽). 없으면 null.</summary>
+    public static EnemyDummy PickMostMissingHp(Vector3 from, float range)
+    {
+        EnemyDummy best = null;
+        float bestMissing = -1f, bestSqr = float.MaxValue, rangeSqr = range * range;
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+        {
+            if (enemy == null || enemy.IsDead) continue;
+            float sqr = (enemy.transform.position - from).sqrMagnitude;
+            if (sqr > rangeSqr) continue;
+            float missing = enemy.MaxHp - enemy.Hp;
+            if (missing > bestMissing + 0.0001f || (Mathf.Abs(missing - bestMissing) <= 0.0001f && sqr < bestSqr))
+            {
+                best = enemy; bestMissing = missing; bestSqr = sqr;
+            }
+        }
+        return best;
+    }
+
     /// <summary>단추를 눌렀을 때. 쿨 중·효과 없음이면 이유를 돌려주고 false. 마나 소모 없음.</summary>
     public bool TryCastActive(SkillData skill, out string failReason)
     {
@@ -662,6 +697,11 @@ public class UnitAttacker : MonoBehaviour
         UnitData unitData = identity != null ? identity.Data : null;
         if (skill == null || unitData == null || skill.triggerType != SkillTriggerType.ActiveButton) { failReason = "쓸 수 없는 스킬입니다."; return false; }
         SkillLevel level = CurrentSkillLevel(skill);
+        if (level != null && level.toggleMode)
+        {
+            FocusLostHp = !FocusLostHp;   // 토글 — 쿨·마나·효과 없음
+            return true;
+        }
         if (level == null || level.effects == null || level.effects.Count == 0) { failReason = "아직 효과가 없는 스킬입니다."; return false; }
         SkillRuntimeState state = GetRuntimeState(skill);
         float remaining = state.activeReadyAt - Time.time;
@@ -1837,6 +1877,7 @@ public class UnitAttacker : MonoBehaviour
             GameObject summoned = spawner.Spawn(kind, position, owner.OwnerId, summoned: true);
             if (summoned == null) continue;
             summoned.AddComponent<TimedLife>().Begin(effect.summonLifetime);
+            summoned.AddComponent<SummonedBy>().Summoner = this;   // 포커싱오더가 소환수에도 걸리게(FocusActive)
             summonedByKind[kind] = summoned;
         }
     }
@@ -3082,6 +3123,11 @@ public class UnitAttacker : MonoBehaviour
 
     EnemyDummy FindClosestEnemyInRange()
     {
+        if (FocusActive)   // 포커싱오더(초월 김민준 푸바오)
+        {
+            EnemyDummy focused = PickMostMissingHp(transform.position, attackRange);
+            if (focused != null) return focused;
+        }
         EnemyDummy closest = null;
         float closestSqrDistance = attackRange * attackRange;
 

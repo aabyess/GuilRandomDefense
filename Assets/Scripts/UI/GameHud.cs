@@ -343,6 +343,7 @@ public class GameHud : MonoBehaviour
                 CombineRecipe recipe = flexRecipes[flexArg[slot]];
                 unitCommandRecipes[slot] = recipe;
                 unitCommandSlotNames[slot].text = recipe.result.DisplayNameTwoLines;
+                unitCommandSlotButtons[slot].interactable = true;   // 재료가 모자라도 눌러서 이유를 본다(OnUnitCommandSlotClicked)
             }
         }
         if (hoveredCommandSlotIndex >= 0) { hoveredCommandSlotIndex = -1; HideCombineTooltip(); }
@@ -1535,9 +1536,13 @@ public class GameHud : MonoBehaviour
 
         string name = skill.skillName ?? "";
         int paren = name.IndexOf('(');
-        unitCommandSlotNames[slot].text = paren > 0 ? name.Substring(0, paren) + "\n" + name.Substring(paren) : name;
+        // 토글 스킬(포커싱오더)은 이름 아래에 켜짐/꺼짐을 적고, 켜진 동안 칸을 금빛으로 밝힌다.
+        bool toggle = skill.levels != null && skill.levels.Count > 0 && skill.levels[0].toggleMode;
+        bool toggleOn = toggle && single.TryGetComponent(out UnitAttacker toggleAttacker) && toggleAttacker.FocusLostHp;
+        unitCommandSlotNames[slot].text = toggle ? name + "\n" + (toggleOn ? "ON" : "OFF")
+            : paren > 0 ? name.Substring(0, paren) + "\n" + name.Substring(paren) : name;
         unitCommandSlotHotkeys[slot].text = ActiveHotkey.ToString();
-        Color color = UnitCommandDefaultColor;
+        Color color = toggleOn ? new Color(0.85f, 0.65f, 0.15f, 1f) : UnitCommandDefaultColor;
         color.a = remaining > 0f ? 0.6f : 1f;
         unitCommandSlotBackgrounds[slot].color = color;
         unitCommandSlotNames[slot].color = Color.white;
@@ -2942,7 +2947,8 @@ public class GameHud : MonoBehaviour
         else if (FlexKindAt(index) == FlexKind.Active && activeSlotShown && activeShownSkill != null)
         {
             float cd = activeShownSkill.levels != null && activeShownSkill.levels.Count > 0 ? activeShownSkill.levels[0].cooldown : 0f;
-            ShowTooltip($"{activeShownSkill.skillName}  [{ActiveHotkey}]\n{activeShownSkill.description}\n쿨타임 {cd:0.#}초 · 마나 소모 없음", cardRect);
+            bool toggleSkill = activeShownSkill.levels != null && activeShownSkill.levels.Count > 0 && activeShownSkill.levels[0].toggleMode;
+            ShowTooltip($"{activeShownSkill.skillName}  [{ActiveHotkey}]\n{activeShownSkill.description}\n" + (toggleSkill ? "켜고 끄는 스킬 · 쿨타임·마나 소모 없음" : $"쿨타임 {cd:0.#}초 · 마나 소모 없음"), cardRect);
         }
         else if (FlexKindAt(index) == FlexKind.Talent && talentSlotsShown)
         {

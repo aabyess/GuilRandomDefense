@@ -373,6 +373,13 @@ public class UnitCombat : MonoBehaviour
 
     EnemyDummy FindClosestEnemyWithin(float search)
     {
+        // 포커싱오더(초월 김민준 푸바오) — 켜졌으면 사거리 안에서 잃은 체력이 가장 많은 적. 사거리 안에 없으면 아래 가까운 적 규칙 그대로.
+        if (attacker != null && attacker.FocusActive)
+        {
+            EnemyDummy focused = UnitAttacker.PickMostMissingHp(transform.position, Mathf.Min(search, attacker.AttackRange));
+            if (focused != null) return focused;
+        }
+
         EnemyDummy closest = null;
         float closestSqrDistance = search * search;
 

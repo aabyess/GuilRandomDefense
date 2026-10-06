@@ -735,6 +735,10 @@ public class SkillLevel
     // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 강재규 단일도킹) — ActiveButton 스킬 전용: 칸을 누른 뒤 **적 하나를 클릭**해야 발동한다(원작 A0K3 「사람으로서 부끄러움」 — 유닛 타깃 능력).
     // true면 GameHud가 대상 지정 상태로 들어가고, 고른 적이 SingleTarget 효과의 주 대상이 된다. range 안(월드 환산)에 있어야 한다.
     public bool needsTargetClick;
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 김민준 푸바오 「포커싱오더」) — ActiveButton 스킬 전용 **토글**: 누르면 켜짐/꺼짐만 바뀐다(쿨·효과 없음).
+    // 켜진 동안 시전자 + 시전자의 소환수가 사거리 안에서 「잃은 체력이 가장 많은 적」을 먼저 친다(UnitAttacker.FocusLostHp · UnitCombat 표적 고르기).
+    public bool toggleMode;
 }
 
 public enum SkillAoeCenter
