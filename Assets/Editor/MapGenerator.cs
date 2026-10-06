@@ -680,7 +680,11 @@ public static class MapGenerator
     //     자리를 만들어 결국 지웠다 — 사각형을 만드는 길은 하나여야 한다.)
     //    값 자체는 원작 실측 비율이다(MapLayout.TrackInsetRatioX/Z 주석 참고).
 
-    static void DecorateLane(Transform parent, MapLayout.Island lane)
+    // 흙길 모서리 반경 = DirtRoadBuilder.CornerRatios[이 번호] × 띠 폭(시안 0 작게 · 1 중간 · 2 크게 — 사장님 10-06 고르는 중, 임시 1).
+    const int DirtCornerIndex = 1;
+
+    /// <summary>흙길 띠의 바깥·안쪽 직사각형(월드 XZ, Rect.y = z)과 띠 폭. 가운데 선(LaneTrackRect)은 그대로 — 변마다 바깥/안쪽 폭이 다르다(TrackBand).</summary>
+    internal static void DirtRoadRects(MapLayout.Island lane, out Rect outer, out Rect inner, out float width)
     {
         // 흙길은 적이 실제로 도는 자리다 — 상점 줄을 뺀 필드에서만 잡는다.
         // 🔴 순찰 사각형을 여기서 다시 계산하지 않는다 — MapLayout.LaneTrackRect 하나를 본다.
@@ -691,11 +695,9 @@ public static class MapGenerator
         float halfZ = track.height * 0.5f;
         float x = track.center.x;
         float z = track.center.y;
-        float y = MapLayout.IslandTop + 0.04f;   // 잔디 위에 살짝 얹어 z-fighting을 피한다
 
-        // 순찰 경로를 따라 도는 흙길 — 적이 실제로 지나는 자리다. 변마다 바깥/안쪽 폭이 다르다(TrackBand).
         MapLayout.Island field = MapLayout.LaneField(lane);
-        float width = field.size.x * TrackVisualWidthRatio;
+        width = field.size.x * TrackVisualWidthRatio;
         float fieldTop = field.center.y + field.size.y * 0.5f, fieldBottom = field.center.y - field.size.y * 0.5f;
         float fieldLeft = field.center.x - field.size.x * 0.5f, fieldRight = field.center.x + field.size.x * 0.5f;
         TrackBand(width, fieldTop - (z + halfZ), out float nOut, out float nIn);
@@ -703,18 +705,27 @@ public static class MapGenerator
         TrackBand(width, (x - halfX) - fieldLeft, out float wOut, out float wIn);
         TrackBand(width, fieldRight - (x + halfX), out float eOut, out float eIn);
 
-        // 위·아래 변은 모서리까지 덮고, 왼·오른 변은 그 사이만 채운다(겹치면 z-fighting).
         float left = x - halfX - wOut, right = x + halfX + eOut;
-        float topOuter = z + halfZ + nOut, topInner = z + halfZ - nIn;
-        float bottomOuter = z - halfZ - sOut, bottomInner = z - halfZ + sIn;
-        BuildDecor(parent, $"{lane.name}_흙길_위", new Vector3((left + right) * 0.5f, y, (topOuter + topInner) * 0.5f),
-                   new Vector3(right - left, 0.08f, topOuter - topInner), "dirt");
-        BuildDecor(parent, $"{lane.name}_흙길_아래", new Vector3((left + right) * 0.5f, y, (bottomOuter + bottomInner) * 0.5f),
-                   new Vector3(right - left, 0.08f, bottomInner - bottomOuter), "dirt");
-        BuildDecor(parent, $"{lane.name}_흙길_왼", new Vector3(x - halfX + (wIn - wOut) * 0.5f, y, (topInner + bottomInner) * 0.5f),
-                   new Vector3(wOut + wIn, 0.08f, topInner - bottomInner), "dirt");
-        BuildDecor(parent, $"{lane.name}_흙길_오른", new Vector3(x + halfX + (eOut - eIn) * 0.5f, y, (topInner + bottomInner) * 0.5f),
-                   new Vector3(eOut + eIn, 0.08f, topInner - bottomInner), "dirt");
+        float topOuter = z + halfZ + nOut, bottomOuter = z - halfZ - sOut;
+        outer = Rect.MinMaxRect(left, bottomOuter, right, topOuter);
+        inner = Rect.MinMaxRect(x - halfX + wIn, z - halfZ + sIn, x + halfX - eIn, z + halfZ - nIn);
+    }
+
+    internal static float DirtUvPerUnit() => TilesPerUnit(Surfaces["dirt"]);
+
+    static void DecorateLane(Transform parent, MapLayout.Island lane)
+    {
+        // 순찰 경로를 따라 도는 흙길 — 적이 실제로 지나는 자리다. 옛 상자 넷(흙길_위/아래/왼/오른)은 직각이라 딱딱해 보여
+        // (사장님 10-06 「원랜디처럼 진짜 흙길」) 레인마다 둥근 띠 메시 하나로 바꿨다 — DirtRoadBuilder 주석 참고.
+        // 장식이라 콜라이더는 없고 NavMeshModifier.ignoreFromBuild — 적 경로·NavMesh·순찰은 그대로다.
+        DirtRoadRects(lane, out Rect outer, out Rect inner, out float width);
+        Mesh mesh = DirtRoadBuilder.Build(outer, inner, width, DirtRoadBuilder.CornerRatios[DirtCornerIndex], StableSeed(lane.name), DirtUvPerUnit());
+        mesh = DirtRoadBuilder.Save(mesh, lane.name);
+        GameObject road = new GameObject($"{lane.name}_흙길", typeof(MeshFilter), typeof(MeshRenderer));
+        road.transform.SetParent(parent, false);
+        road.GetComponent<MeshFilter>().sharedMesh = mesh;
+        road.GetComponent<MeshRenderer>().sharedMaterials = DirtRoadBuilder.Materials(GetOrCreateMaterial("dirt", Surfaces["dirt"]));
+        road.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
 
         // (레인 안 ㄱ자 벽 넷은 2026-09-26 사장님 지시로 지웠다 — MapLayout.CornerWallOffsetX 주석.)
 
