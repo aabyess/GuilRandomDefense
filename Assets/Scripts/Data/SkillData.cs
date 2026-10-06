@@ -358,6 +358,10 @@ public enum SkillEffectKind
     // 일반 적 1기를 죽이지 않고(보상 없음 RemoveInstantly) 내 유닛으로 바꾼다: 가장 가까운 일반 적(보스·PV≥200·B06B 제외)이 서 있던 자리에 summonUnits[0] 유닛을 소환수(IsSummon)이자 회유 유닛(IsRecruit)으로 세운다.
     // multiplier = 회유 유닛 공격력(시전자 평타 × 값), bonus = 한 시전자당 동시 회유 수 상한(0이면 5). 가득 차면 발동하지 않는다. 회유 유닛은 판매 버튼으로 팔 수 있다(RewardDistributor.SellRecruit).
     RecruitEnemy,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 영원함 김정래 「카리스마」 — 사장님 확정: 유닛회유 「공증 0.1%」 = 회유 1기당) — 직렬화 순서를 지킨다.
+    // 패시브(Self): 지금 살아 있는 이 유닛의 회유 유닛(RecruitEnemy) 1기당 이 유닛 피해(평타·스킬)가 +multiplier(0.001 = +0.1%), 상한 +bonus(0.3 = +30%, 0이면 무제한).
+    DamagePerRecruit,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,

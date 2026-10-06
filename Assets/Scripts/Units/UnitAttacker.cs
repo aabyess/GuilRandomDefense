@@ -1961,6 +1961,34 @@ public class UnitAttacker : MonoBehaviour
         return 1f + extra;
     }
 
+    // 회유 유닛 수 비례 피해(SkillEffectKind.DamagePerRecruit, 영원함 김정래) — 패시브 비율·상한을 스킬에서 읽어 둔다.
+    UnitData recruitRateFor;
+    float recruitRate, recruitCap;
+
+    float RecruitDamageFactor()
+    {
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null) return 1f;
+        if (recruitRateFor != unitData)
+        {
+            recruitRateFor = unitData;
+            recruitRate = 0f; recruitCap = 0f;
+            int count = BaseSkillCount(unitData);
+            for (int i = 0; i < count; i++)
+            {
+                SkillData skill = ResolveSkillAt(unitData, i);
+                if (skill == null || skill.levels == null || skill.levels.Count == 0 || skill.levels[0].effects == null) continue;
+                foreach (SkillEffect effect in skill.levels[0].effects)
+                    if (effect != null && effect.kind == SkillEffectKind.DamagePerRecruit) { recruitRate += effect.multiplier; recruitCap = Mathf.Max(recruitCap, effect.bonus); }
+            }
+        }
+        if (recruitRate <= 0f) return 1f;
+        recruits.RemoveAll(r => r == null);
+        float extra = recruitRate * recruits.Count;
+        if (recruitCap > 0f) extra = Mathf.Min(extra, recruitCap);
+        return 1f + extra;
+    }
+
     // 주위 적 사망 시 체력 게이지 +N(UnitData.lifeGaugeOnEnemyDeath, 불멸 김용태) — 적이 죽을 때마다 반경 안 같은 주인 유닛에게.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetEnemyDeathHook() { EnemyDummy.OnAnyEnemyDied -= OnEnemyDiedGauge; EnemyDummy.OnAnyEnemyDied += OnEnemyDiedGauge; }
@@ -1987,7 +2015,7 @@ public class UnitAttacker : MonoBehaviour
         lifeGaugeCounter = Mathf.Min(lifeGaugeCounter + amount, LifeGaugeCap(d));
     }
 
-    float DamagePassiveFactor(EnemyDummy target) => BossDamageFactor(target) * StoryDamageFactor(target) * AllyDebuffDamageFactor() * ArmorShredDamageFactor(target) * GrowthDamageFactor() * (1f + attackDamageStack);
+    float DamagePassiveFactor(EnemyDummy target) => BossDamageFactor(target) * StoryDamageFactor(target) * AllyDebuffDamageFactor() * ArmorShredDamageFactor(target) * RecruitDamageFactor() * GrowthDamageFactor() * (1f + attackDamageStack);
 
     // 만성피로(SelfStunRefillLifeGauge) — 자기 스턴 동안 공격·스킬이 멈추고, 끝나면 체력 게이지가 즉시 가득 찬다.
     public const string SelfStunBuffId = "SELF_STUN";
@@ -2609,7 +2637,7 @@ public class UnitAttacker : MonoBehaviour
             || effect.kind == SkillEffectKind.DamagePerAllyDebuff || effect.kind == SkillEffectKind.DamageGrowthOverTime
             || effect.kind == SkillEffectKind.AllySkillDamageBonus || effect.kind == SkillEffectKind.DispelAllyDebuffs
             || effect.kind == SkillEffectKind.GoldPlusBonus || effect.kind == SkillEffectKind.StoryDamageMultiplier
-            || effect.kind == SkillEffectKind.DamagePerTargetArmorShred) return;
+            || effect.kind == SkillEffectKind.DamagePerTargetArmorShred || effect.kind == SkillEffectKind.DamagePerRecruit) return;
 
         // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
         if (effect.lineLength > 0f && effect.zoneTickInterval <= 0f)
