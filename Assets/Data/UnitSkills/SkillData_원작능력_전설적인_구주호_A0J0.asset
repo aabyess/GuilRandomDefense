@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: SkillData_원작능력_전설적인_구주호_A0J0
+  m_EditorClassIdentifier:
+  skillName: A0J0 장난감화 — 스턴 3초(쿨 105초·사거리 1150)
+  description: 원작 슈가 h037 uabi A0J0(AHtb, Htb1 1.0 · adur 3.0 · acdn 105 · aran 1150 · atar nonancient,nonsapper,organic = PV<200). 대상 지정 시전 능력 — 쿨다운마다 사거리 1150 안 가장 가까운 PV<200 적 한 기를 스턴 3초(+피해 1). 자동 시전으로 근사. 2026-10-06 구현담당1.
+  triggerType: 1
+  levels:
+  - cooldown: 105.0
+    triggerChance: 1.0
+    range: 1150.0
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
+    effects:
+    - kind: 0
+      basis: 0
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 1.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 0.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 1
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 0.0
+      maxTargets: 0
+      chainDamageStep: 0.0
+      zoneTickInterval: 0.0
+      zoneRadius: 0.0
+      zoneSpacing: 0.0
+      zoneAtCaster: 0
+      lineLength: 0.0
+      lineStartRadius: 0.0
+      lineEndRadius: 0.0
+    - kind: 1
+      basis: 0
+      target: 3
+      damageType: 0
+      attackType: 0
+      multiplier: 0.0
+      bonus: 0.0
+      chance: 1
+      hitCount: 1
+      duration: 3.0
+      casterBuffCountFactor: 0.0
+      buffId:
+      randMin: 1.0
+      randMax: 1.0
+      buffHitCharges: 0
+      requiredTargetBuffId:
+      forbiddenTargetBuffId:
+      targetCondition: 1
+      targetConditionValue: 200.0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0.0
+      heroDuration: 0.0
+      maxTargets: 0
+      chainDamageStep: 0.0
+      zoneTickInterval: 0.0
+      zoneRadius: 0.0
+      zoneSpacing: 0.0
+      zoneAtCaster: 0
+      lineLength: 0.0
+      lineStartRadius: 0.0
+      lineEndRadius: 0.0
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0.0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0.0
+    exclusiveGroup: 0
+    enterRange: 0.0

@@ -305,12 +305,27 @@ public class UnitAttacker : MonoBehaviour
             AuraBonus b = auraBonuses[i];
             if (b.source == null) { auraBonuses.RemoveAt(i); continue; }
             if (b.kind != kind) continue;
-            if (kind == SkillEffectKind.AllyMoveSpeedDebuff && b.source is UnitAttacker debuffer && debuffer.YoonseoEnhanced) continue;   // 최윤서 강화 = 아군 디버프 100% 제거
+            if (IsAuraDebuff(b) && DebuffSuppressed(b)) continue;   // 최윤서 강화 · 아군 디버프 해제(임장혁 고충해소) = 디버프 무시
             if (!auraBonusScratch.TryGetValue(b.id, out float best) || b.value > best) auraBonusScratch[b.id] = b.value;
         }
         float total = product ? 1f : 0f;
         foreach (float v in auraBonusScratch.Values) total = product ? total * (1f + v) : total + v;
         return total;
+    }
+
+    // 아군발 디버프 = 이속 감소 오라, 음수 공격력 % 오라(임장혁 이간질). 이런 항목은 최윤서 강화·디버프 해제로 무시된다.
+    static bool IsAuraDebuff(AuraBonus b) =>
+        b.kind == SkillEffectKind.AllyMoveSpeedDebuff || (b.kind == SkillEffectKind.AttackPowerBuffPercent && b.value < 0f);
+
+    bool DebuffSuppressed(AuraBonus b)
+    {
+        if (b.kind == SkillEffectKind.AllyMoveSpeedDebuff && b.source is UnitAttacker debuffer && debuffer.YoonseoEnhanced) return true;
+        for (int i = 0; i < auraBonuses.Count; i++)
+        {
+            AuraBonus d = auraBonuses[i];
+            if (d.kind == SkillEffectKind.DispelAllyDebuffs && d.source != null && d.source != b.source) return true;
+        }
+        return false;
     }
 
     float AuraAttackSpeedMultiplier => AuraBonusTotal(SkillEffectKind.AttackSpeedBuffPercent, true);
@@ -727,6 +742,35 @@ public class UnitAttacker : MonoBehaviour
     float manaAuraTimer, manaAuraBonus;
     static readonly Dictionary<string, float> manaAuraScratch = new Dictionary<string, float>();
 
+    // 생명 재생 오라(UnitData.lifeAuraRegenPerSecond) — 마나 오라와 같은 규칙으로 0.25초마다 모은다.
+    float lifeAuraTimer, lifeAuraBonus;
+    static readonly Dictionary<string, float> lifeAuraScratch = new Dictionary<string, float>();
+
+    float ScanLifeAuraBonus()
+    {
+        if (identity == null) return 0f;
+        int ownerId = identity.OwnerId;
+        Vector3 here = transform.position;
+        lifeAuraScratch.Clear();
+        foreach (UnitIdentity other in UnitIdentity.Active)
+        {
+            if (other == null) continue;
+            UnitData od = other.Data;
+            if (od == null || od.lifeAuraRegenPerSecond <= 0f || other.OwnerId != ownerId) continue;
+            if (other == identity) { if (!od.lifeAuraIncludesSelf) continue; }
+            else
+            {
+                float worldRange = od.lifeAuraRange / WorldScale.Value;
+                if ((other.transform.position - here).sqrMagnitude > worldRange * worldRange) continue;
+            }
+            string key = od.lifeAuraBuffId ?? "";
+            if (!lifeAuraScratch.TryGetValue(key, out float best) || od.lifeAuraRegenPerSecond > best) lifeAuraScratch[key] = od.lifeAuraRegenPerSecond;
+        }
+        float sum = 0f;
+        foreach (float v in lifeAuraScratch.Values) sum += v;
+        return sum;
+    }
+
     float ScanManaAuraBonus()
     {
         if (identity == null) return 0f;
@@ -768,9 +812,14 @@ public class UnitAttacker : MonoBehaviour
                 manaGaugeCounter = Mathf.Min(manaGaugeCounter + n, ManaGaugeCap(d));
             }
         }
-        if (lifeGaugeInitialized && d.lifeGaugeRegenPerSecond > 0f)
+        if (lifeGaugeInitialized && d.lifeGaugeMax > 0f)
         {
-            lifeRegenCarry += d.lifeGaugeRegenPerSecond * Time.deltaTime;
+            lifeAuraTimer -= Time.deltaTime;
+            if (lifeAuraTimer <= 0f) { lifeAuraTimer = ManaAuraScanInterval; lifeAuraBonus = ScanLifeAuraBonus(); }
+        }
+        if (lifeGaugeInitialized && d.lifeGaugeRegenPerSecond + lifeAuraBonus > 0f)
+        {
+            lifeRegenCarry += (d.lifeGaugeRegenPerSecond + lifeAuraBonus) * Time.deltaTime;
             if (lifeRegenCarry >= 1f)
             {
                 int n = Mathf.FloorToInt(lifeRegenCarry);
@@ -1290,7 +1339,7 @@ public class UnitAttacker : MonoBehaviour
 
     static bool IsAuraStatKind(SkillEffectKind kind) =>
         kind == SkillEffectKind.AttackSpeedBuffPercent || kind == SkillEffectKind.AttackPowerBuffFlat || kind == SkillEffectKind.AttackPowerBuffPercent
-        || kind == SkillEffectKind.AllyMoveSpeedDebuff;
+        || kind == SkillEffectKind.AllyMoveSpeedDebuff || kind == SkillEffectKind.AllySkillDamageBonus || kind == SkillEffectKind.DispelAllyDebuffs;
 
     void UpdateAuraTick(SkillLevel level, SkillRuntimeState state, bool gatePasses)
     {
@@ -1384,6 +1433,7 @@ public class UnitAttacker : MonoBehaviour
         foreach (SkillEffect effect in level.effects)
         {
             if (effect.target != SkillTargetKind.Enemies) continue;
+            if (!PassesPointValueCondition(effect.targetCondition, effect.targetConditionValue, target)) continue;   // PV 조건 오라(드래곤 A0W8·에드워드 A0EI/A0EH) — 대상이 조건을 못 채우면 안 건다
             switch (effect.kind)
             {
                 case SkillEffectKind.ArmorBonus:
@@ -1407,6 +1457,7 @@ public class UnitAttacker : MonoBehaviour
         foreach (SkillEffect effect in level.effects)
         {
             if (effect.target != SkillTargetKind.Enemies) continue;
+            if (!PassesPointValueCondition(effect.targetCondition, effect.targetConditionValue, target)) continue;
             switch (effect.kind)
             {
                 case SkillEffectKind.ArmorBonus:
@@ -1509,6 +1560,29 @@ public class UnitAttacker : MonoBehaviour
         target.TakeDamage(1e12f, DamageType.AD, AttackType.Unassigned, owner != null ? owner.OwnerId : -1, armorIgnoreRatio: 1f, isAbilityDamage: false);
     }
 
+    // ---- 평타 DoT(SkillEffectKind.DamageOverTime) ----
+    readonly Dictionary<EnemyDummy, float> dotUntil = new Dictionary<EnemyDummy, float>();
+
+    void StartDamageOverTime(SkillEffect effect, EnemyDummy target)
+    {
+        if (target == null || effect.duration <= 0f || effect.multiplier <= 0f) return;
+        bool running = dotUntil.TryGetValue(target, out float until) && until > Time.time;
+        dotUntil[target] = Time.time + effect.duration;
+        if (!running) StartCoroutine(DamageOverTimeRoutine(effect, target));
+    }
+
+    IEnumerator DamageOverTimeRoutine(SkillEffect effect, EnemyDummy target)
+    {
+        float interval = effect.zoneTickInterval > 0f ? effect.zoneTickInterval : 1f;
+        while (target != null && !target.IsDead && dotUntil.TryGetValue(target, out float until) && Time.time < until)
+        {
+            yield return new WaitForSeconds(interval);
+            if (target == null || target.IsDead) break;
+            target.TakeDamage(effect.multiplier * DamagePassiveFactor(target), effect.damageType, effect.attackType, owner != null ? owner.OwnerId : -1);
+        }
+        if (target != null) dotUntil.Remove(target);
+    }
+
     // 보잡(SkillEffectKind.BossDamageMultiplier) — 이 유닛 스킬 중 패시브 배율의 곱. 보스(EnemyDummy.IsBoss) 상대 평타·스킬 최종 피해에 곱한다.
     // 유닛 종류가 바뀔 때만 다시 센다(Awake 캐시 금지 — identity.Data가 늦게 세워진다).
     UnitData bossMultiplierFor;
@@ -1573,8 +1647,7 @@ public class UnitAttacker : MonoBehaviour
         for (int i = 0; i < auraBonuses.Count; i++)
         {
             AuraBonus b = auraBonuses[i];
-            if (b.source == null || b.kind != SkillEffectKind.AllyMoveSpeedDebuff) continue;
-            if (b.source is UnitAttacker debuffer && debuffer.YoonseoEnhanced) continue;
+            if (b.source == null || !IsAuraDebuff(b) || DebuffSuppressed(b)) continue;
             debuffIdScratch.Add(b.id);
         }
         return debuffIdScratch.Count;
@@ -2084,7 +2157,8 @@ public class UnitAttacker : MonoBehaviour
         // 아군에게 스킬 빌려주기·보스 배율은 오라/패시브로만 쓴다(여기서는 할 일 없음).
         if (effect.kind == SkillEffectKind.GrantSkillToAllies || effect.kind == SkillEffectKind.BossDamageMultiplier
             || effect.kind == SkillEffectKind.SplashDamageMultiplier || effect.kind == SkillEffectKind.AllyMoveSpeedDebuff
-            || effect.kind == SkillEffectKind.DamagePerAllyDebuff || effect.kind == SkillEffectKind.DamageGrowthOverTime) return;
+            || effect.kind == SkillEffectKind.DamagePerAllyDebuff || effect.kind == SkillEffectKind.DamageGrowthOverTime
+            || effect.kind == SkillEffectKind.AllySkillDamageBonus || effect.kind == SkillEffectKind.DispelAllyDebuffs) return;
 
         // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
         if (effect.lineLength > 0f && effect.zoneTickInterval <= 0f)
@@ -2226,8 +2300,17 @@ public class UnitAttacker : MonoBehaviour
                 // 유닛일 때의 정의다. 캐스터가 보스(EnemyDummy)면 EnemyDummy.AlliesOf를 쓴다
                 // (04번 오라가 그쪽이다) — UnitAttacker는 플레이어 유닛에만 붙으므로 여기선
                 // 이 갈래만 있으면 된다.
-                foreach (UnitIdentity ally in UnitIdentity.AlliesOf(identity, range))
-                    ApplyToAlly(effect, ally, firedCascadeGroups);
+                {
+                    List<UnitIdentity> allies = UnitIdentity.AlliesOf(identity, range);
+                    // 맞는 수 상한(SkillEffect.maxTargets) — 시전자에서 가까운 순(원작 「아군 하나」 시전 능력: 로우 A0GA).
+                    if (effect.maxTargets > 0 && allies.Count > effect.maxTargets)
+                    {
+                        allies.Sort((a, b) => (a.transform.position - transform.position).sqrMagnitude.CompareTo((b.transform.position - transform.position).sqrMagnitude));
+                        allies.RemoveRange(effect.maxTargets, allies.Count - effect.maxTargets);
+                    }
+                    foreach (UnitIdentity ally in allies)
+                        ApplyToAlly(effect, ally, firedCascadeGroups);
+                }
                 break;
         }
     }
@@ -2465,6 +2548,11 @@ public class UnitAttacker : MonoBehaviour
                 if (effect.duration > 0f) target.FreezeFor(StunDurationOn(target, effect) * AttackSpeedScaleFactor(effect) + (effect.talentStunScaled ? TalentStunDuration : 0f));
                 break;
 
+            // 평타 DoT(레이쥬 독·킹 화재, 2026-10-06) — 대상에게 duration초 동안 틱마다 고정 피해. 같은 대상에 다시 걸면 끝 시각만 늘린다.
+            case SkillEffectKind.DamageOverTime:
+                StartDamageOverTime(effect, target);
+                break;
+
             // 이감(2026-09-29) — multiplier = 남는 속도 비율. AddSlow/RemoveSlow는 같은 값으로 짝을 맞춰야 빠진다.
             // multiplier 0 = 「최저 이속까지」(원작 Htc3·Ctc3 ≥ 1) — EnemyDummy가 원작 MinUnitSpeed 하한으로 올린다.
             case SkillEffectKind.Slow:
@@ -2566,7 +2654,7 @@ public class UnitAttacker : MonoBehaviour
         // 근사다. 거프 4행(Garp_AttackDamage #5·#6·#7, 값×(1+0.12×버프개수))이 이 factor로
         // 실제로 걸린다.
         amount *= 1f + effect.casterBuffCountFactor * CountCasterBuffs();
-        amount *= DamagePassiveFactor(target);   // 보잡(BossDamageMultiplier) × 아군발 디버프 개수 비례(DamagePerAllyDebuff)
+        amount *= DamagePassiveFactor(target) * AuraBonusTotal(SkillEffectKind.AllySkillDamageBonus, true);   // 보잡 × 아군발 디버프 비례 × 스킬 피해 증가 오라(임장혁 가스라이팅)
         if (amount <= 0f) return;
 
         // ⚠️ 평타(DamageTypeOf/AttackTypeOf)가 아니라 이 효과 자신의 damageType/attackType을

@@ -25,12 +25,15 @@ MonoBehaviour:
   moveSpeed: 125.3
   skill: {fileID: 0}
   skills:
-  - {fileID: 11400000, guid: 041d6fbdeafbc44d8e12cbdc09e861cb, type: 2}
+  - {fileID: 11400000, guid: de517734fbbc452c9db075dba803ef4d, type: 2}
+  - {fileID: 11400000, guid: 54cadba5b1e447db9aca2bbc160d970b, type: 2}
+  - {fileID: 11400000, guid: 636fa3e640844dbe9a7665ccc237153d, type: 2}
+  - {fileID: 11400000, guid: f8c1d4eb78462bd05564d7c43fb14e03, type: 2}
   trait: {fileID: 0}
   prefab: {fileID: 5314535378658675627, guid: 1665bae221de24898b5eb30a059558df, type: 3}
-  critChance: 0.2
+  critChance: 0
   critDamageMultiplier: 1
-  critBonusDamage: 43221.6
+  critBonusDamage: 0
   critStunDuration: 0
   isSystemUnit: 0
   baseStrength: 0
@@ -55,17 +58,17 @@ MonoBehaviour:
   manaRegenPerSecond: 0
   manaMax: 0
   manaGaugePerMana: 0
-  lifeGaugeRegenPerSecond: 0
-  lifeGaugeMax: 0
+  lifeGaugeRegenPerSecond: 0.5
+  lifeGaugeMax: 35
   manaGaugeStart: 0
-  lifeGaugeStart: 0
+  lifeGaugeStart: 35
   lifeGaugeCustomHitGain: 0
   lifeGaugeHitGain: 0
   manaAuraRegenPerSecond: 0
   manaAuraRange: 0
   manaAuraBuffId: 
   manaAuraIncludesSelf: 0
-  attackSplashRadius: 0
+  attackSplashRadius: 275
   attackCleaveFactor: 0
   attackCleaveRadius: 0
   attackExtraTargets: 0

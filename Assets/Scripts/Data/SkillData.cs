@@ -307,6 +307,17 @@ public enum SkillEffectKind
     // 시간 비례 피해 증가(패시브, Self): 이 유닛이 생긴 뒤 duration초(예: 30)가 지날 때마다 최종 피해 +multiplier(0.02 = +2%), 상한 bonus(1.0 = +100%).
     // 평타·스킬·스플래시 모두. 게임 시계(Time.time) 기준. 원작 근거 없음 — 제안값(사장님 확정).
     DamageGrowthOverTime,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 전설 레이쥬 독 A08M·킹 화재 A10U — 평타 DoT 축) — 직렬화 순서를 지킨다.
+    // 대상 적 한 기에게 duration초 동안 zoneTickInterval(0이면 1초)마다 multiplier(고정값)씩 피해를 준다. 같은 시전자가 같은 적에게 다시 걸면 끝나는 시각만 늘린다(중첩 없음).
+    // 원작 독(Aspo Spo1 초당 200,000)·화재(Aliq liq1 초당 250,000)처럼 평타(확률 1) 스킬에 SingleTarget으로 달고, 이속 감소는 같은 스킬에 Slow 효과를 따로 붙인다.
+    DamageOverTime,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 임장혁 「짱스」 — 사장님 스킬) — 직렬화 순서를 지킨다.
+    // 스킬 피해 증가 오라(Aura, target Allies/Self): 범위 안 아군(과 자기)이 내는 **스킬 피해**(평타 제외)가 ×(1 + multiplier). 같은 buffId는 최댓값 하나만(AddAuraBonus 규칙). 원작 근거 없음 — 제안값.
+    AllySkillDamageBonus,
+    // 디버프 해제 오라(Aura, target Allies): 범위 안 아군이 받는 아군발 디버프(AllyMoveSpeedDebuff · 음수 AttackPowerBuffPercent)를 무시한다 — **이 오라를 준 유닛 자신이 건 디버프는 제외**(임장혁 이간질은 특성으로만 없앤다).
+    DispelAllyDebuffs,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,

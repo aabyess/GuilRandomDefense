@@ -16,7 +16,7 @@ MonoBehaviour:
   grade: 5
   skinAlias: "\uBE0C\uB8E8\uB178 \uBD80\uCC28\uB77C\uD2F0,Bruno Bucciarati,Bucciarati,\uBD80\uCC28\uB77C\uD2F0"
   damageType: 1
-  attackType: 3
+  attackType: 1
   movementAbility: 0
   hp: 1889.6
   attackPower: 30002
@@ -24,12 +24,14 @@ MonoBehaviour:
   attackSpeed: 1.0989
   moveSpeed: 125.3
   skill: {fileID: 0}
-  skills: []
+  skills:
+  - {fileID: 11400000, guid: 1a0699a9dba14988890bbc33f4ee27e3, type: 2}
+  - {fileID: 11400000, guid: 0f41fcc11e1446a7865463b507152b0d, type: 2}
   trait: {fileID: 0}
   prefab: {fileID: 3230547978930642684, guid: 3166a1eeb5c5e4558871b00d873e6326, type: 3}
-  critChance: 0.2
+  critChance: 0
   critDamageMultiplier: 1
-  critBonusDamage: 174000
+  critBonusDamage: 0
   critStunDuration: 0
   isSystemUnit: 0
   baseStrength: 0

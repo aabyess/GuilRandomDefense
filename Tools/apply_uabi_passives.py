@@ -32,12 +32,12 @@ import w3u  # noqa: E402
 SELF, ALLIES, ENEMIES, SINGLE = 0, 1, 2, 3
 DAMAGE, STUN, ARMOR_BONUS, FLAT, SPEED, SLOW, PERCENT = 0, 1, 4, 11, 12, 13, 14
 ATK = 3
-PV_EQ, PV_GE, PV_NE = 2, 3, 4
+PV_LT, PV_EQ, PV_GE, PV_NE = 1, 2, 3, 4
 ON_HIT, AURA = 0, 2
 STOCK_AURA_RADIUS = 900
 STOCK_ACBH_HBH1 = 15.0
 EXCLUDE_UIDS = {'h04Y', 'h0AE', 'h0BH', 'h0BI', 'h0BJ', 'h088'}
-EXCLUDE_ABILITIES = {'A179', 'A0EI', 'A0EH'}
+EXCLUDE_ABILITIES = {'A179'}   # A0EI·A0EH(흰수염 PV 조건 방깎 오라)는 2026-10-06부터 담는다 — 오라가 효과별 PV 조건을 본다
 # 흔함 로스터에 대응된 원작 uid는 「안흔함 한 등급 어긋남」(NEXT_SESSION §3-5) 미해결이라 건너뛴다.
 SKIP_ROSTER_PREFIXES = ('흔함_',)
 BASES = ('AOae', 'AHad', 'ACac', 'Aasl', 'AIsx', 'AIfb', 'ACbh')
@@ -83,8 +83,14 @@ def main(apply, prefixes):
                     effects += [sat.effect(kind=SPEED, target=t, multiplier=round(float(f['Oae2']), 4), buffId=buff) for t in who]
                     label = '%s 공속 +%d%%' % ('아군' if ALLIES in who else '자기', round(float(f['Oae2']) * 100))
             elif base == 'AHad' and float(f.get('Had1') or 0) != 0:
-                effects.append(sat.effect(kind=ARMOR_BONUS, target=ENEMIES, multiplier=float(f['Had1']), buffId=buff))
-                label = '적 방어 %+d 오라' % float(f['Had1'])
+                # 2026-10-06: atar의 PV 제한(sapper = PV≥200 · ancient = PV 200 · nonancient = PV≠200 · nonsapper = PV<200)을 효과 조건으로 옮긴다
+                # (오라 적용 때 UnitAttacker가 효과별 targetCondition을 본다 — ApplyPersistentAuraEffectsToEnemy).
+                tags_had = atar.split(',')
+                # sapper + nonancient(드래곤 A0W8) = PV≥200이면서 PV 200이 아닌 것 = PV>200(스토리·신세계, 보스 제외) → 「≥201」로 옮긴다.
+                c_had = PV_LT if 'nonsapper' in tags_had else PV_EQ if 'ancient' in tags_had else PV_NE if 'nonancient' in tags_had and 'sapper' not in tags_had else PV_GE if 'sapper' in tags_had else 0
+                cond_had = dict(targetCondition=c_had, targetConditionValue=201.0 if ('sapper' in tags_had and 'nonancient' in tags_had) else 200.0) if c_had else {}
+                effects.append(sat.effect(kind=ARMOR_BONUS, target=ENEMIES, multiplier=float(f['Had1']), buffId=buff, **cond_had))
+                label = '적 방어 %+d 오라%s' % (float(f['Had1']), {PV_LT: ' (PV<200 적만)', PV_EQ: ' (PV 200 대상만)', PV_NE: ' (PV 200 아닌 적)', PV_GE: (' (PV>200 대상만: 스토리·신세계)' if cond_had.get('targetConditionValue') == 201.0 else ' (PV≥200 대상만)')}.get(c_had, ''))
             elif base == 'ACac' and float(f.get('Cac1') or 0) != 0:
                 v = float(f['Cac1'])
                 effects += [sat.effect(kind=PERCENT if abs(v) <= 1 else FLAT, target=t, multiplier=round(v, 4), buffId=buff) for t in who]

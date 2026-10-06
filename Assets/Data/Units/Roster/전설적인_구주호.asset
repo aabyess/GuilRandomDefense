@@ -16,7 +16,7 @@ MonoBehaviour:
   grade: 5
   skinAlias: "\uC0AC\uB3C4 \uC57C\uC2A4\uD1A0\uB77C,Yasutora Sado,Chad,\uCC44\uB4DC"
   damageType: 1
-  attackType: 3
+  attackType: 1
   movementAbility: 0
   hp: 1889.6
   attackPower: 21002
@@ -24,12 +24,14 @@ MonoBehaviour:
   attackSpeed: 1.3699
   moveSpeed: 125.3
   skill: {fileID: 0}
-  skills: []
+  skills:
+  - {fileID: 11400000, guid: fe3b5b23d2def11390277929eafb4f86, type: 2}
+  - {fileID: 11400000, guid: 94f927691249a2d17e06c0e324d4170f, type: 2}
   trait: {fileID: 0}
   prefab: {fileID: 8989515731567286246, guid: 39f34a756fa564cc98daa4744ae4900d, type: 3}
-  critChance: 0.2
+  critChance: 0
   critDamageMultiplier: 1
-  critBonusDamage: 36258.7
+  critBonusDamage: 0
   critStunDuration: 1.5
   isSystemUnit: 0
   baseStrength: 0
@@ -60,10 +62,10 @@ MonoBehaviour:
   lifeGaugeStart: 0
   lifeGaugeCustomHitGain: 0
   lifeGaugeHitGain: 0
-  manaAuraRegenPerSecond: 0
-  manaAuraRange: 0
-  manaAuraBuffId: 
-  manaAuraIncludesSelf: 0
+  manaAuraRegenPerSecond: 1.25
+  manaAuraRange: 700
+  manaAuraBuffId: B02H
+  manaAuraIncludesSelf: 1
   attackSplashRadius: 0
   attackCleaveFactor: 0
   attackCleaveRadius: 0

@@ -16,7 +16,7 @@ MonoBehaviour:
   grade: 5
   skinAlias: "\uD0A4\uC790\uB8E8,Kizaru,Borsalino,\uBCF4\uB974\uC0B4\uB9AC\uB178"
   damageType: 1
-  attackType: 3
+  attackType: 1
   movementAbility: 0
   hp: 1889.6
   attackPower: 28502
@@ -24,12 +24,17 @@ MonoBehaviour:
   attackSpeed: 1.087
   moveSpeed: 125.3
   skill: {fileID: 0}
-  skills: []
+  skills:
+  - {fileID: 11400000, guid: 47d3b63647e8411b9589bb7b56d36561, type: 2}
+  - {fileID: 11400000, guid: 4e332c7077ea4978afac08975a08e342, type: 2}
+  - {fileID: 11400000, guid: 1a004aca0ea0463d9f2117dd64685f8f, type: 2}
+  - {fileID: 11400000, guid: 7886f96b930c4006945d2759627a863c, type: 2}
+  - {fileID: 11400000, guid: a7484764d52f41afaa8aca2f909ba134, type: 2}
   trait: {fileID: 0}
   prefab: {fileID: 1606932341252428286, guid: 23995739c9a2148d294b307a99607366, type: 3}
-  critChance: 0.2
+  critChance: 0
   critDamageMultiplier: 1
-  critBonusDamage: 145005.8
+  critBonusDamage: 0
   critStunDuration: 0
   isSystemUnit: 0
   baseStrength: 0
@@ -54,17 +59,17 @@ MonoBehaviour:
   manaRegenPerSecond: 0
   manaMax: 0
   manaGaugePerMana: 0
-  lifeGaugeRegenPerSecond: 0
-  lifeGaugeMax: 0
+  lifeGaugeRegenPerSecond: 0.5
+  lifeGaugeMax: 33
   manaGaugeStart: 0
-  lifeGaugeStart: 0
-  lifeGaugeCustomHitGain: 0
+  lifeGaugeStart: 33
+  lifeGaugeCustomHitGain: 1
   lifeGaugeHitGain: 0
   manaAuraRegenPerSecond: 0
   manaAuraRange: 0
   manaAuraBuffId: 
   manaAuraIncludesSelf: 0
-  attackSplashRadius: 0
+  attackSplashRadius: 325
   attackCleaveFactor: 0
   attackCleaveRadius: 0
   attackExtraTargets: 0
