@@ -96,7 +96,7 @@ public class LoadingScreen : MonoBehaviour
         // 10-06 사장님 시안 D: 제목 「G.R.D」 고딕 흘림체(없으면 옛 글꼴).
         TMP_Text title = NewLabel("제목", transform, Resources.Load<TMP_FontAsset>("Fonts/UnifrakturMaguntia SDF") ?? font, 150f);
         RectTransform titleRect = title.rectTransform;
-        titleRect.anchorMin = titleRect.anchorMax = new Vector2(0.5f, 0.5f);
+        titleRect.anchorMin = titleRect.anchorMax = new Vector2(0.5f, 0.91f);   // 10-06 사장님 사진으로 바뀌며 가운데는 얼굴 자리 — 제목은 하늘(위쪽)로
         titleRect.sizeDelta = new Vector2(1200f, 220f);
         title.text = "G.R.D";
         title.outlineWidth = 0.3f;
