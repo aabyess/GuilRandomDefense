@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1426f971d9174ed9b3e5519d787e74b, type: 3}
   m_Name: "\uCD08\uC6D4_\uAE40\uAC74_AP"
   m_EditorClassIdentifier: 
-  unitName: "\uAE40\uAC74"
+  unitName: "\uC783\uC5B4\uBC84\uB9B0\uC6C3\uC74C\uBCF4\uB530\uB9AC"
   grade: 7
   skinAlias: "\uB9C8\uC0EC D. \uD2F0\uCE58,Marshall D. Teach,Blackbeard,\uAC80\uC740\uC218\uC5FC"
-  damageType: 1
+  damageType: 3
   attackType: 3
   movementAbility: 0
   hp: 6122.2
@@ -24,7 +24,13 @@ MonoBehaviour:
   attackSpeed: 1.5193
   moveSpeed: 125.3
   skill: {fileID: 0}
-  skills: []
+  skills:
+  - {fileID: 11400000, guid: d925b778312ff4209b5d520296fb2b7e, type: 2}
+  - {fileID: 11400000, guid: 95b4f7d1f39824743ac775235576d12d, type: 2}
+  - {fileID: 11400000, guid: fd27af3fb111e405ebc194b3a6914693, type: 2}
+  - {fileID: 11400000, guid: 23d984d1e43e84504b03dcfe4fe36bf9, type: 2}
+  - {fileID: 11400000, guid: 9d84cfcf606cb43aea1c3f4af24fdec5, type: 2}
+  - {fileID: 11400000, guid: 20227aae4437946b6bf32e7fe6113cb7, type: 2}
   trait: {fileID: 0}
   prefab: {fileID: 3456629723369143369, guid: 33227ece316634b4596574a42623f12f, type: 3}
   critChance: 0.18
@@ -55,7 +61,7 @@ MonoBehaviour:
   manaMax: 0
   manaGaugePerMana: 0
   lifeGaugeRegenPerSecond: 0
-  lifeGaugeMax: 0
+  lifeGaugeMax: 50
   manaGaugeStart: 0
   lifeGaugeStart: 0
   lifeGaugeCustomHitGain: 0

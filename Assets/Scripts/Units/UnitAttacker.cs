@@ -1617,6 +1617,31 @@ public class UnitAttacker : MonoBehaviour
         if (target == null) return;
         // 막타 피해로 처리 — 일반 처치와 같은 경로(보상·처치 알림)를 탄다. 방어·상성은 무시하고 확실히 죽는 크기.
         target.TakeDamage(1e12f, DamageType.AD, AttackType.Unassigned, owner != null ? owner.OwnerId : -1, armorIgnoreRatio: 1f, isAbilityDamage: false);
+        if (target.IsDead) UnitDeleteCount++;   // 초월 김건 「포식」 — 실제로 죽였을 때만 센다(형태변환 때 소모)
+    }
+
+    // ---- 초월 김건 「잃어버린웃음보따리」(사장님 10-06): 유닛삭제 카운트 · 형태변환(구건) · 넉백 ----
+    public const string GunFormBuffId = "GUN_FORM";
+    public int UnitDeleteCount { get; private set; }
+    float gunFormUntil;
+    public bool GunFormActive => Time.time < gunFormUntil;
+    public float GunFormRemaining => Mathf.Max(0f, gunFormUntil - Time.time);
+
+    void BeginGunForm(SkillEffect effect)
+    {
+        float extra = Mathf.Min(effect.bonus > 0f ? effect.bonus : float.MaxValue, effect.multiplier * UnitDeleteCount);
+        float duration = effect.duration + extra;
+        UnitDeleteCount = 0;   // 카운트 전부 소모
+        gunFormUntil = Time.time + duration;
+        AddBuff(GunFormBuffId, duration);
+        if (effect.formSelfAttackSpeed != 0f) AddAttackSpeedBuffPercent(GunFormBuffId + "_SLOW", effect.formSelfAttackSpeed, duration, 0);
+    }
+
+    void KnockBack(EnemyDummy target, SkillEffect effect)
+    {
+        if (target == null || target.IsDead || target.IsBoss) return;   // 보스 면역(사장님 확정)
+        WaypointMover mover = target.GetComponent<WaypointMover>();
+        if (mover != null) mover.PushBack(effect.multiplier / WorldScale.Value);
     }
 
     // ---- 평타 DoT(SkillEffectKind.DamageOverTime) ----
@@ -2212,6 +2237,8 @@ public class UnitAttacker : MonoBehaviour
         // 소환(최상호 구일) — 대상이 없다. 확률·쿨다운은 위(CastSkillLevel·평타 확률 발동)가 이미 판정했다.
         if (effect.kind == SkillEffectKind.SummonUnit) { SummonFor(effect); return; }
         if (effect.kind == SkillEffectKind.KillNormalEnemies) { KillNearestNormalEnemy(range); return; }
+        if (effect.kind == SkillEffectKind.FormChange) { BeginGunForm(effect); return; }
+        if (effect.kind == SkillEffectKind.Knockback) { KnockBack(primaryTarget, effect); return; }
         if (effect.kind == SkillEffectKind.AttackSpeedStack) { AddAttackSpeedStack(effect); return; }
         if (effect.kind == SkillEffectKind.SelfStunRefillLifeGauge) { BeginSelfStun(effect.duration, effect.multiplier > 0f); return; }
         // 아군에게 스킬 빌려주기·보스 배율은 오라/패시브로만 쓴다(여기서는 할 일 없음).

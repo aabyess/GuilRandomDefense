@@ -133,7 +133,7 @@ public class CombineSystem : MonoBehaviour
     }
 
     static string NormalizePhrase(string text) =>
-        string.IsNullOrEmpty(text) ? "" : text.Replace(" ", "").Replace("\t", "").Replace("_", "").ToLowerInvariant();   // 밑줄도 뺀다 — 에셋 이름 「나나미_치아키」를 「나나미 치아키 조합」으로 칠 수 있게
+        string.IsNullOrEmpty(text) ? "" : text.Replace(" ", "").Replace("\t", "").Replace("_", "").Replace(",", "").Replace(".", "").Replace("!", "").Replace("?", "").Replace("，", "").Replace("！", "").Replace("？", "").ToLowerInvariant();   // 10-06 초월 김건 입력말 「돌아와줘,건아!」 — 쉼표·마침표·느낌표·물음표도 뺀다   // 밑줄도 뺀다 — 에셋 이름 「나나미_치아키」를 「나나미 치아키 조합」으로 칠 수 있게
 
     // 이 식을 부르는 채팅 문구 전부(정규화됨): commandId의 「/」 양쪽(예 「페로나조합 / perona」·「Juuhyuk tr」) ·
     // 에셋 이름의 친구 이름+「조합」(예 히든_최윤서 → 「최윤서 조합」) · 식의 chatPhrase(초월 수식어).

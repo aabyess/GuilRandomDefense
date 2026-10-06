@@ -42,6 +42,26 @@ public class WaypointMover : MonoBehaviour
         slowMultiplier = Mathf.Clamp(multiplier, MinSlowMultiplier, MaxSpeedMultiplier);
     }
 
+    /// <summary>넉백(초월 김건 「힘의작용과반작용」) — 경로를 따라 distance(세계 거리)만큼 뒤로 되돌린다. 시작점 아래로는 안 내려간다.</summary>
+    public void PushBack(float distance)
+    {
+        if (path == null || path.PointCount == 0 || distance <= 0f) return;
+        Vector3 pos = transform.position;
+        while (distance > 0f)
+        {
+            int prev = currentIndex - 1;
+            if (prev < 0) break;
+            Vector3 p = path.GetPoint(prev);
+            float d = Vector3.Distance(pos, p);
+            if (d > distance) { pos = Vector3.MoveTowards(pos, p, distance); distance = 0f; break; }
+            pos = p;
+            distance -= d;
+            currentIndex = prev;
+            if (currentIndex == 0) { currentIndex = path.PointCount > 1 ? 1 : 0; break; }
+        }
+        transform.position = pos;
+    }
+
     private void Start()
     {
         if (path == null || path.PointCount == 0) return;

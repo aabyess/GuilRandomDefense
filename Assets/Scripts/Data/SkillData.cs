@@ -318,6 +318,13 @@ public enum SkillEffectKind
     AllySkillDamageBonus,
     // 디버프 해제 오라(Aura, target Allies): 범위 안 아군이 받는 아군발 디버프(AllyMoveSpeedDebuff · 음수 AttackPowerBuffPercent)를 무시한다 — **이 오라를 준 유닛 자신이 건 디버프는 제외**(임장혁 이간질은 특성으로만 없앤다).
     DispelAllyDebuffs,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 김건 「잃어버린웃음보따리」 — 사장님 스킬) — 직렬화 순서를 지킨다.
+    // 넉백: 대상 적(SingleTarget) 한 기를 **경로 뒤로** multiplier(원작 단위, 세계 거리는 ÷WorldScale)만큼 되돌린다. 보스는 면역(사장님 확정). WaypointMover.PushBack.
+    Knockback,
+    // 형태변환(구건): 발동하면 버프 GUN_FORM을 건다. 지속 = duration + min(bonus, multiplier × 유닛삭제 카운트)초, 카운트는 전부 소모(0으로).
+    // 형태 동안 자기 공격속도 formSelfAttackSpeed(−0.30 = −30%)가 걸렸다가 형태가 끝나면 풀린다. target은 Self. 형태 중 스킬은 SkillLevel.requiredBuffId = GUN_FORM으로 게이트.
+    FormChange,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -582,6 +589,9 @@ public class SkillEffect
     // Stun은 지속(duration·heroDuration)에 곱한다. 원작 근거 없음 — 제안값(Docs/design/BAJISAJANG_DESIGN_2026-10-06.md).
     public float attackSpeedScale;
     public float attackSpeedScaleCap;
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 김건 형태변환) — FormChange 전용: 형태 동안 자기 공격속도 변화(−0.30 = −30%). 0이면 없음.
+    public float formSelfAttackSpeed;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
