@@ -6950,6 +6950,159 @@ def fix(name, cfg, out_dir=None, save_blend=False):
     for act in list(bpy.data.actions):
         bpy.data.actions.remove(act)
 
+    # ── 걷기 합성(walk_move, 2026-10-06 PM 지시 — 손오공·조세민은 원본에 Move가 없어 움직일 때 Idle만 반복했다)
+    #   기준 테이크(기본 Idle) 첫 프레임의 세계 행렬에서 출발해 **발 목표를 먼저 정하고 다리를 2관절 IK로 푼다**(사인 흔들림은 디딤발이 땅에서 미끄러져 버렸다 — 1회차 실측 폭 4~6 m/s).
+    #   · 출력 공간(G를 곱한 뒤)에서 푼다. 왼쪽 = 왼팔−오른팔 수평 방향, 앞 = 왼쪽 × 위.
+    #   · 발목 목표(골반 기준): 디딤(주기의 duty) 동안 앞 +S/2 → 뒤 −S/2로 **등속**(= 지면 속도 v = S/(duty·T)), 스윙 동안 뒤 → 앞(완화 곡선)에 발목 높이 +lift. 오른발은 반 주기 늦게.
+    #   · 골반 높이: 두 발이 다 닿을 수 있게(최대 길이의 reach 배) 프레임마다 내린다 → 걸음마다 두 번 오르내린다. 발 방향은 쉬는 자세 그대로(평평).
+    #   · 팔은 반대 다리와 엇갈려 ±arm° 휘두르고 팔꿈치 elbow°, 척추 lean° 앞기울임.
+    #   · 측정을 report에: 걸음 주기·보폭·지면 속도 v(= 유닛 이속과 맞출 값)·발이 닿은 프레임에서 실제 골반 기준 발 속도의 최소~최대 폭(미끄러짐 지표).
+    if new_arm is not None and clips and cfg.get("walk_move"):
+        wm = cfg["walk_move"]
+        take_w = wm.get("take", "Move")
+        base_fr = next(fr for t_, _, fr in clips if t_ == wm.get("base", "Idle"))[0]
+        bones_w = [b for b in new_arm.data.bones if b.name in base_fr]
+        parent_w = {b.name: (b.parent.name if b.parent else None) for b in bones_w}
+        order_w, seen_w = [], set()
+
+        def _visit_w(b):
+            if b.name in seen_w or b.name not in base_fr:
+                return
+            if b.parent:
+                _visit_w(b.parent)
+            seen_w.add(b.name)
+            order_w.append(b.name)
+
+        for b in bones_w:
+            _visit_w(b)
+        Gi = G.inverted()
+        P0 = {bn: G @ base_fr[bn] for bn in order_w}
+        pre = wm.get("prefix", "mixamorig:")
+        nm = lambda s_: pre + s_
+        head = lambda bn: P0[bn].translation
+        left = head(nm("LeftArm")) - head(nm("RightArm"))
+        left = Vector((left.x, left.y, 0.0)).normalized()
+        up = Vector((0.0, 0.0, 1.0))
+        fwd = left.cross(up)
+        fps_w = scene.render.fps / scene.render.fps_base
+        duty = wm.get("duty", 0.6)
+        reach = wm.get("reach", 0.97)
+        legs = {}
+        for side in ("Left", "Right"):
+            Hh, Kh, Ah = head(nm(side + "UpLeg")), head(nm(side + "Leg")), head(nm(side + "Foot"))
+            legs[side] = dict(H=Hh, K=Kh, A=Ah, a=(Kh - Hh).length, b=(Ah - Kh).length)
+        Lmax = legs["Left"]["a"] + legs["Left"]["b"]
+        S = wm.get("step", 0.6) * Lmax                              # 디딤 동안 발이 골반에 대해 뒤로 가는 거리(걸음 길이)
+        lift = wm.get("lift", 0.12) * Lmax
+        if wm.get("speed"):                                         # 지정한 지면 속도(m/s)에 맞춰 주기를 정한다
+            T_w = S / (duty * wm["speed"])
+        else:
+            T_w = wm.get("seconds", 0.8)
+        n_w = max(8, int(round(fps_w * T_w)) // 2 * 2)
+        A_arm, E_arm, lean = wm.get("arm", 20.0), wm.get("elbow", 18.0), wm.get("lean", 4.0)
+        z_ref = min(legs["Left"]["A"].z, legs["Right"]["A"].z)
+        Hz0 = 0.5 * (legs["Left"]["H"].z + legs["Right"]["H"].z)
+
+        def _foot_x(u):                                             # u ∈ [0,1): 골반 기준 앞뒤(+앞)·높이 가산
+            if u < duty:
+                return S / 2 - S * (u / duty), 0.0
+            w = (u - duty) / (1.0 - duty)
+            e = w * w * (3 - 2 * w)                                 # 스윙은 부드럽게 출발·도착
+            return -S / 2 + S * e, lift * math.sin(math.pi * w)
+
+        def _rot(a_, b_):                                           # a→b 최소 회전(4×4)
+            return a_.rotation_difference(b_).to_matrix().to_4x4()
+
+        frames_w, tr_foot = [], []
+        for f in range(n_w + 1):
+            u = (f / n_w) % 1.0
+            tgt = {}
+            for side, off in (("Left", 0.0), ("Right", 0.5)):
+                x_, h_ = _foot_x((u + off) % 1.0)
+                tgt[side] = (x_, h_)
+            # 골반 높이: 두 발 모두 닿는 가장 낮은 높이(발이 뜬 만큼은 덜 내려도 된다)
+            zh = Hz0
+            for side in ("Left", "Right"):
+                Lg = legs[side]
+                lat = (Lg["A"] - Lg["H"]) - fwd * (Lg["A"] - Lg["H"]).dot(fwd)
+                lat.z = 0.0
+                dxy2 = tgt[side][0] ** 2 + lat.length_squared
+                dzmax = math.sqrt(max((reach * (Lg["a"] + Lg["b"])) ** 2 - dxy2, 1e-6))
+                zh = min(zh, z_ref + tgt[side][1] + dzmax)
+            Tp = Matrix.Translation(Vector((0.0, 0.0, zh - Hz0)))
+            ang = {nm("Hips"): Tp}
+            A_ankle = {}
+            for side, sgn in (("Left", 1.0), ("Right", -1.0)):
+                Lg = legs[side]
+                H2 = Lg["H"] + Vector((0.0, 0.0, zh - Hz0))
+                lat = Lg["A"] - Lg["H"]
+                lat = lat - fwd * lat.dot(fwd)
+                lat.z = 0.0
+                T_ = Vector((Lg["H"].x, Lg["H"].y, 0.0)) + lat + fwd * tgt[side][0] + Vector((0.0, 0.0, z_ref + tgt[side][1]))
+                # 위 식에서 골반 수평 위치 + 옆 오프셋 + 앞뒤 + 높이. (fwd 성분은 H에서 따로 빼고 더해야 한다)
+                Hh_f = Vector((Lg["H"].x, Lg["H"].y, 0.0))
+                Hh_f = Hh_f - fwd * Hh_f.dot(fwd) + fwd * (Lg["H"].dot(fwd))
+                T_ = Vector((Hh_f.x, Hh_f.y, 0.0)) + lat + fwd * tgt[side][0]
+                T_.z = z_ref + tgt[side][1]
+                d = T_ - H2
+                Dn = min(d.length, reach * (Lg["a"] + Lg["b"]))
+                dh = d.normalized()
+                cosal = (Lg["a"] ** 2 + Dn ** 2 - Lg["b"] ** 2) / (2 * Lg["a"] * Dn)
+                al = math.acos(max(-1.0, min(1.0, cosal)))
+                nrm = fwd - dh * fwd.dot(dh)
+                nrm.normalize()
+                K2 = H2 + Lg["a"] * (math.cos(al) * dh + math.sin(al) * nrm)
+                Ankle2 = H2 + (K2 - H2) + Lg["b"] * (T_ - K2).normalized() if (T_ - K2).length > 1e-6 else T_
+                R1 = _rot(Lg["K"] - Lg["H"], K2 - H2)
+                u1 = R1.to_3x3() @ (Lg["A"] - Lg["K"])
+                R2w = _rot(u1, Ankle2 - K2)
+                ang[nm(side + "UpLeg")] = ("leg", R1)
+                ang[nm(side + "Leg")] = ("knee", R1, R2w)
+                ang[nm(side + "Foot")] = ("foot", R1, R2w)
+                s_ = math.cos(2.0 * math.pi * ((u + (0.0 if sgn > 0 else 0.5)) % 1.0))
+                ang[nm(side + "Arm")] = Matrix.Rotation(math.radians(A_arm * s_), 4, left)      # 왼다리 앞(s_=1)일 때 왼팔 뒤
+                ang[nm(side + "ForeArm")] = Matrix.Rotation(-math.radians(E_arm), 4, left)
+            ang[nm("Spine")] = Matrix.Rotation(math.radians(lean), 4, left)
+            D, Pn = {}, {}
+            for bn in order_w:
+                p = head(bn)
+                spec_ = ang.get(bn)
+                if isinstance(spec_, tuple) and spec_[0] == "leg":
+                    M = spec_[1]
+                elif isinstance(spec_, tuple) and spec_[0] == "knee":
+                    R1_, R2w_ = spec_[1], spec_[2]
+                    M = R1_.inverted() @ R2w_ @ R1_
+                elif isinstance(spec_, tuple) and spec_[0] == "foot":
+                    R1_, R2w_ = spec_[1], spec_[2]
+                    M = (R2w_ @ R1_).inverted()
+                else:
+                    M = spec_ if spec_ is not None else Matrix.Identity(4)
+                L = Matrix.Translation(p) @ M @ Matrix.Translation(-p)
+                D[bn] = (D[parent_w[bn]] if parent_w[bn] in D else Matrix.Identity(4)) @ L
+                Pn[bn] = D[bn] @ P0[bn]
+            hips = Pn[nm("Hips")].translation
+            lf, rf = Pn[nm("LeftFoot")].translation, Pn[nm("RightFoot")].translation
+            tr_foot.append((f, (lf - hips).dot(fwd), lf.z, (rf - hips).dot(fwd), rf.z))
+            if os.environ.get("GRD_WALK_DEBUG") and f % 4 == 0:
+                print("WALKDBG", f, "L fwd %.3f z %.3f" % ((lf - hips).dot(fwd), lf.z), "R fwd %.3f z %.3f" % ((rf - hips).dot(fwd), rf.z), "hipz %.3f" % hips.z)
+            frames_w.append({bn: Gi @ Pn[bn] for bn in order_w})
+        assert max(abs(a - b) for ra, rb in zip(frames_w[0][nm("Hips")], frames_w[-1][nm("Hips")]) for a, b in zip(ra, rb)) < 1e-4
+        # 방향 점검: 왼발이 디딤을 막 시작하는 프레임(u=0)에 왼발이 오른발보다 앞에 있어야 한다
+        dq = (tr_foot[0][1] - tr_foot[0][3])
+        assert dq > 0, f"{name}: walk_move 앞/뒤 방향이 거꾸로다({dq:.3f}) — 왼쪽 축 추정 실패"
+        dt = 1.0 / fps_w
+        sp, nct = [], 0
+        for k_ in (1, 3):
+            for i in range(n_w):
+                a_, b_ = tr_foot[i], tr_foot[i + 1]
+                if a_[k_ + 1] <= z_ref + 0.01 and b_[k_ + 1] <= z_ref + 0.01:
+                    sp.append(-(b_[k_] - a_[k_]) / dt)
+            nct += sum(1 for i in range(n_w) if tr_foot[i][k_ + 1] <= z_ref + 0.01)
+        v_mean = sum(sp) / len(sp)
+        report["걷기 합성"] = (f"{n_w}프레임({n_w / fps_w:.2f}초 @{fps_w:g}fps) · 걸음 길이 {S:.2f} m · 설계 지면 속도 {S / (duty * n_w * dt):.2f} m/s · 발이 닿은 프레임 {nct}/{2 * n_w} · "
+                           f"닿은 발 실제 속도 평균 {v_mean:.2f} (최소 {min(sp):.2f} · 최대 {max(sp):.2f} · 폭 {max(sp) - min(sp):.2f}) m/s · 접지 기준 z {z_ref:.3f}")
+        clips = clips + [(take_w, 1, frames_w)]
+
     # ── 클립 다시 굽기
     if new_arm is not None and clips:
         rest = {b.name: b.matrix_local.copy() for b in new_arm.data.bones}
@@ -7621,6 +7774,8 @@ UNITS["박민수"].update(_motion_variant(_BL(_pl("pl_momonosuke_orig01")), clip
 #   히든_전유라는 gen_biped_skin 판이라 그쪽 파일에서 처리한다. 클립이 적어 Move가 없는 셋은 이호준식(Idle·Attack만).
 UNITS["특별함_조세민"]["variants"] = {"동작": _motion_variant(_BL({
     "pl_mr5five_orig01_idlehome_a": "Idle", "pl_mr5five_orig01_skill_a": "Attack", "pl_mr5five_orig01_victory_lp": "Win_Loop"}), lunge=False)}
+# Move합성판(2026-10-06): 원본에 Move가 없는 조세민·손오공에 사인 걸음을 합성(walk_move). 나머지 클립은 「동작」과 같다.
+UNITS["특별함_조세민"]["variants"]["Move합성"] = {**UNITS["특별함_조세민"]["variants"]["동작"], "walk_move": dict(seconds=0.8)}
 UNITS["서희원"]["variants"] = {"동작": _motion_variant(_BL({
     "pl_bonie_orig02_idle_a": "Idle", "pl_bonie_orig02_run": "Move", "pl_bonie_orig02_skill_b_end": "Attack"}), lunge=False,
     # skill_b_end = 웅크렸다 뛰어오르는 11프레임(0.44초) — 끝이 공중이라 착지 8프레임을 Idle 첫 자세로 보간해 붙인다. skill_b(33프레임)는 서 있는 자세와 거의 같아(이음새 0.0003·움직임 0.047) 안 쓴다.
@@ -7656,6 +7811,7 @@ UNITS["랜덤_손오공"]["variants"] = {"동작": dict(
                  dict(take="Attack", src="Kame", range=(1, 257), step=2, land=dict(to="Idle", k=12))],
     clip_anchor=dict(bone="mixamorig:Hips", take="Idle", ground=True),
     clip_inplace=dict(bone="mixamorig:Hips", anchor="Idle", takes=["Attack"]))}
+UNITS["랜덤_손오공"]["variants"]["Move합성"] = {**UNITS["랜덤_손오공"]["variants"]["동작"], "walk_move": dict(seconds=0.8)}
 
 # 히든_전유라(블리치 우루루 glb, Bip001 · Spine2·Toe0 없음 · 손가락 마디 2개): 커밋본은 gen_biped_skin(22뼈 새로 짓기·정적)이라 **클립이 안 실린다.**
 #   클립 26개가 든 원본 glb를 fix_unit_fbx 길(이름 바꾸기 + 클립 다시 굽기)로 다시 읽는 **동작판 전용 항목**이다. 이 항목의 기본(variants 밖)은 쓰지 않는다 — 커밋본 기준 검사(check_entries) 대상 아님.
