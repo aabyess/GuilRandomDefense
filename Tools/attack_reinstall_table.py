@@ -25,9 +25,11 @@ for uid in U:
     g=grade_of(uid)
     if g and U[uid]['mods'].get('ua1b') is not None: pop[g].append(uid)
 med={}
+rng={}
 for g,l in pop.items():
     a=[stat(u)[0] for u in l]; c=[stat(u)[1] for u in l]
     med[g]=(statistics.median(a),statistics.median(c),len(l))
+    rng[g]=(min(a),max(a),min(1/x for x in c),max(1/x for x in c))
 PRI={'게이트/회수':2,'06번①':3,'전설 대응 2026-10-06':3,'2채널':1,'1채널':0}
 def pick(uids):
     # 규칙: ① 조합 결과로 CreateNUnitsAtLoc에 나오는 uid ② 채널 우선순위(게이트/회수·06번①·전설 대응 > 2채널 > 1채널) ③ 같으면 평균(합친 채 유지)
@@ -42,6 +44,7 @@ def ours(p):
     t=open(p,encoding='utf-8').read()
     g=lambda k:(re.search(r'^  %s: (.*)$'%k,t,re.M) or [None,'0'])[1].strip()
     return float(g('attackPower')),float(g('attackSpeed'))
+KEEP_SPEED={'초월_두유찬_AD'}
 out=[]
 for gname,pref in (('초월','초월_'),('전설','전설적인_'),('불멸','불멸_'),('히든','히든_')):
     for p in sorted(glob.glob(R+'/Assets/Data/Units/Roster/%s*.asset'%pref)):
@@ -51,8 +54,13 @@ for gname,pref in (('초월','초월_'),('전설','전설적인_'),('불멸','�
             a=sum(stat(u)[0] for u in cand)/len(cand); c=sum(stat(u)[1] for u in cand)/len(cand)
             src='+'.join(cand)+('(평균)' if len(cand)>1 else '')+' '+why
         else:
-            a,c,_=med[gname]; src='대응 없음 → %s 원작 중앙값(%d종)'%(gname,med[gname][2])
+            lo,hi,slo,shi=rng[gname]
+            nap=min(max(ap,lo),hi); nsp=min(max(sp,slo),shi)
+            how='유지' if (nap==ap and nsp==sp) else '자름(%s)'%('공격력' if nap!=ap else '')+('공속' if nsp!=sp else '')
+            src='대응 없음 → %s 원작 범위 공격력 %.0f~%.0f·공속 %.2f~%.2f 안에서 %s'%(gname,lo,hi,slo,shi,how)
+            out.append((gname,ro,src,ap,sp,nap,nsp)); continue
         nap=a; nsp=1.0/c
+        if ro in KEEP_SPEED: nsp=sp; src+=' (공속은 구현담당3 값 유지)'
         out.append((gname,ro,src,ap,sp,nap,nsp))
 w=csv.writer(sys.stdout,delimiter='\t')
 w.writerow(['등급','로스터','원작 대응','지금 공격력','지금 공속','새 공격력','새 공속','공격력 배율','DPS 지금','DPS 새'])
