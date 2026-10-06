@@ -643,10 +643,24 @@ public class NetLobbyUi : MonoBehaviour
             plateImage.raycastTarget = false;
             Place(plateImage.rectTransform, new Vector2(0f, 1f), plateCenter, new Vector2(984f, 211f));
         }
-        TMP_Text shadow = CreateText(root, "TitleShadow", "구랜디", 104, titleFont, new Color(0f, 0f, 0f, 0.55f), TextAlignmentOptions.Center);
-        Place(shadow.rectTransform, new Vector2(0f, 1f), plateCenter + new Vector2(3f, -9f), new Vector2(700f, 160f));
-        TMP_Text title = CreateText(root, "Title", "구랜디", 104, titleFont, Color.white, TextAlignmentOptions.Center);
-        Place(title.rectTransform, new Vector2(0f, 1f), plateCenter + new Vector2(0f, -4f), new Vector2(700f, 160f));
+        // 10-06 사장님 시안 D: 「G.R.D」 고딕 흘림체(UnifrakturMaguntia, OFL) + 부제 「Guil Random Defense」(MedievalSharp, OFL). 글꼴이 없으면 옛 글꼴.
+        TMP_FontAsset gothic = Resources.Load<TMP_FontAsset>("Fonts/UnifrakturMaguntia SDF") ?? titleFont;
+        TMP_FontAsset hand = Resources.Load<TMP_FontAsset>("Fonts/MedievalSharp SDF") ?? titleFont;
+        TMP_Text shadow = CreateText(root, "TitleShadow", "G.R.D", 104, gothic, new Color(0f, 0f, 0f, 0.55f), TextAlignmentOptions.Center);
+        Place(shadow.rectTransform, new Vector2(0f, 1f), plateCenter + new Vector2(3f, -7f), new Vector2(700f, 160f));
+        TMP_Text title = CreateText(root, "Title", "G.R.D", 104, gothic, Color.white, TextAlignmentOptions.Center);
+        Place(title.rectTransform, new Vector2(0f, 1f), plateCenter + new Vector2(0f, 2f), new Vector2(700f, 160f));
+        // 부제는 제목판 아래(판 안쪽 띠는 두 줄이 들어가기엔 좁다) — 하늘 위라 진한 그림자를 깐다.
+        TMP_Text subShadow = CreateText(root, "SubtitleShadow", "Guil Random Defense", 32, hand, new Color(0f, 0f, 0f, 0.7f), TextAlignmentOptions.Center);
+        Place(subShadow.rectTransform, new Vector2(0f, 1f), plateCenter + new Vector2(2f, -94f), new Vector2(700f, 50f));
+        TMP_Text subtitle = CreateText(root, "Subtitle", "Guil Random Defense", 32, hand, Color.white, TextAlignmentOptions.Center);
+        Place(subtitle.rectTransform, new Vector2(0f, 1f), plateCenter + new Vector2(0f, -90f), new Vector2(700f, 50f));
+        subtitle.enableVertexGradient = true;
+        subtitle.colorGradient = new VertexGradient(
+            new Color(0.94f, 0.88f, 0.70f, 1f), new Color(0.94f, 0.88f, 0.70f, 1f),
+            new Color(0.78f, 0.67f, 0.43f, 1f), new Color(0.78f, 0.67f, 0.43f, 1f));
+        subtitle.outlineWidth = 0.3f;
+        subtitle.outlineColor = new Color32(48, 26, 6, 255);
         title.enableVertexGradient = true;
         title.colorGradient = new VertexGradient(
             new Color(1f, 0.93f, 0.62f, 1f), new Color(1f, 0.93f, 0.62f, 1f),

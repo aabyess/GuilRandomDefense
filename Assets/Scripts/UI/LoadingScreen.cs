@@ -93,11 +93,12 @@ public class LoadingScreen : MonoBehaviour
         TMP_FontAsset font = Resources.Load<TMP_FontAsset>("Fonts/Pretendard-Bold SDF");
 
         // 가운데 큰 「구랜디」(사장님 「가운데 글씨로 구랜디」). 그림 위라 굵은 외곽선.
-        TMP_Text title = NewLabel("제목", transform, font, 150f);
+        // 10-06 사장님 시안 D: 제목 「G.R.D」 고딕 흘림체(없으면 옛 글꼴).
+        TMP_Text title = NewLabel("제목", transform, Resources.Load<TMP_FontAsset>("Fonts/UnifrakturMaguntia SDF") ?? font, 150f);
         RectTransform titleRect = title.rectTransform;
         titleRect.anchorMin = titleRect.anchorMax = new Vector2(0.5f, 0.5f);
         titleRect.sizeDelta = new Vector2(1200f, 220f);
-        title.text = "구랜디";
+        title.text = "G.R.D";
         title.outlineWidth = 0.3f;
 
         // 진행 막대 — 화면 맨 아래 가운데(사장님 「밑에 진행률」). 캔버스 기준(1920×1080)이라 창 크기가 바뀌어도 같은 비율.
