@@ -52,6 +52,15 @@ public static class WispSpaceProbe
         return "카메라 → 조합판 (-100, -700)";
     }
 
+    public static string FocusGacha()
+    {
+        Camera cam = Camera.main;
+        RtsCameraController rts = cam != null ? cam.GetComponent<RtsCameraController>() : null;
+        if (rts == null) return "❌ 카메라 없음";
+        rts.MoveTo(new Vector3(-1170f, 0f, -440f));
+        return "카메라 → 뽑기섬 전시 (-1170, -440)";
+    }
+
     public static string FocusSouth()
     {
         Camera cam = Camera.main;

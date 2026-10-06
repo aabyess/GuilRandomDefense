@@ -1792,6 +1792,11 @@ public static class MapGenerator
     /// 깊이를 지배한다(511.8 → 559.8, 여유 859 안).
     /// </summary>
     const float DisplaySlotSpacing = 24f;
+    /// <summary>
+    /// 🔴 2026-10-06 사장님 「랜덤유닛 여기 간격도 넓혀줘」(0.3.7 맥판 사진: 울타리 선 하나 사이 두 줄이 앞뒤로 바짝) — 전시 격자 **줄 사이(z)** 간격만 ×1.3.
+    /// 키 48 인형을 24 간격 줄로 세워 앞뒤가 겹쳐 보였다. 가로(칸 폭÷7)·다른세계 조합식 줄·등급 사이 한 줄 비움은 이 배율만 탄다(깊이 여유는 보고문 「깊이 N/M」).
+    /// </summary>
+    const float DisplayRowPitchZ = 1.3f;
 
     const float SlotSpacing = 61.4f;    // 원작 조합 슬롯 간격 256 ÷ Scale
     const float SlotSize = 30.7f;       // 자리표시 큐브(전시 격자 기준) 3.0 × 10.233
@@ -3786,7 +3791,7 @@ public static class MapGenerator
             for (int i = 0; i < units.Count; i++)
             {
                 float x = displayLeft + (i % perRow) * spacingX + spacingX * 0.5f;
-                float z = displayZ - (i / perRow) * displaySpacing;
+                float z = displayZ - (i / perRow) * displaySpacing * DisplayRowPitchZ;
                 // 스킨이 있으면 색 큐브 대신 인형을 세운다(2026-09-23 사장님 「랜덤유닛도 배치해」).
                 // 키는 레인 유닛과 같은 DisplayFigureHeight — 조합표·전시와 같은 규칙이다.
                 // 스킨이 아직 없는 종은 PlaceUnitMarker가 **같은 키의** 자리표시로 세운다.
@@ -3796,7 +3801,7 @@ public static class MapGenerator
             }
 
             // 다음 등급은 한 줄 띄고 이어서 — 등급 경계가 보이게 한다.
-            displayZ -= (Mathf.CeilToInt(units.Count / (float)perRow) + 1) * displaySpacing;
+            displayZ -= (Mathf.CeilToInt(units.Count / (float)perRow) + 1) * displaySpacing * DisplayRowPitchZ;
         }
 
         float displayRight = left + island.size.x - 2f;
