@@ -28,12 +28,18 @@ public class UniqueRerollAbility : MonoBehaviour
     public static UniqueRerollAbility Attach(GameObject unitInstance, UniqueRerollAbilityData data, UnitSpawner spawner)
     {
         if (unitInstance == null || data == null) return null;
+        // 희귀함만(원작: 가챠 결과 희귀함에만 붙는다) — 도박 풀에 특별함·특수함이 섞여 있어도 안 붙는다.
+        if (!unitInstance.TryGetComponent(out UnitIdentity target) || !IsRerollTarget(target.Data)) return null;
+        if (unitInstance.TryGetComponent(out UniqueRerollAbility existing)) return existing;
 
         UniqueRerollAbility ability = unitInstance.AddComponent<UniqueRerollAbility>();
         ability.data = data;
         ability.spawner = spawner;
         return ability;
     }
+
+    /// <summary>리롤 대상 등급 — 희귀함뿐. 버튼 표시·붙이기·실행(싱글·멀티 요청 공통)이 같은 검사를 쓴다.</summary>
+    public static bool IsRerollTarget(UnitData unit) => unit != null && unit.grade == UnitGrade.Rare;
 
     /// <summary>능력 캐스트 1회 시도. 목재 부족·한도 소진이면 아무 것도 안 건드리고 false —
     /// 원작 "stop 명령"과 같은 취급(실패로 안 셈, Rerole_count_int·목재 둘 다 그대로).
@@ -43,6 +49,11 @@ public class UniqueRerollAbility : MonoBehaviour
     {
         message = null;
         if (data == null || !TryGetComponent(out UnitIdentity identity)) return false;
+        if (!IsRerollTarget(identity.Data))
+        {
+            message = "희귀함만 리롤할 수 있습니다.";
+            return false;   // 목재·시도 횟수 안 건드림(관문 앞)
+        }
 
         int ownerId = identity.OwnerId;
         PlayerContext context = PlayerContext.Get(ownerId);
