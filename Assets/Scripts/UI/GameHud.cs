@@ -336,6 +336,7 @@ public class GameHud : MonoBehaviour
             unitCommandSlotNames[slot].color = Color.white;
             unitCommandSlotHotkeys[slot].text = "";
             unitCommandSlotBackgrounds[slot].color = Color.clear;
+            if (unitCommandSlotIcons[slot] != null) unitCommandSlotIcons[slot].enabled = false;
             unitCommandSlotButtons[slot].interactable = false;
             shopLogicalSlotIndex[slot] = -1;
             shopSlotHotkeys[slot] = '\0';
@@ -356,6 +357,7 @@ public class GameHud : MonoBehaviour
 
     readonly GameObject[] unitCommandSlotRoots = new GameObject[CommandSlotCount];
     readonly Image[] unitCommandSlotBackgrounds = new Image[CommandSlotCount];
+    readonly Image[] unitCommandSlotIcons = new Image[CommandSlotCount];   // 10-06 상점 칸 그림(영원함 강화소 유닛 초상) — 상점이 LaneShopSlotView.icon을 줄 때만 켠다
     // 워크3 쿨다운 덮개(사장님 10-04) — 칸 위 검은 반투명이 12시에서 시계방향으로 걷힌다. 상점이 준 남은/전체 초를 「끝나는 시각」으로 바꿔 매 프레임 돌린다.
     readonly Image[] unitCommandSlotCooldown = new Image[CommandSlotCount];
     readonly float[] shopCooldownEnd = new float[CommandSlotCount];
@@ -3435,6 +3437,21 @@ public class GameHud : MonoBehaviour
         nameText.rectTransform.offsetMin = new Vector2(3f, 0f);
         nameText.rectTransform.offsetMax = new Vector2(-3f, -2f);
 
+        // 칸 그림(상점이 icon을 줄 때만) — 배경 위, 글자(Name) 아래.
+        GameObject iconObject = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+        iconObject.transform.SetParent(card.transform, false);
+        RectTransform iconRect = (RectTransform)iconObject.transform;
+        iconRect.anchorMin = Vector2.zero;
+        iconRect.anchorMax = Vector2.one;
+        iconRect.offsetMin = new Vector2(3f, 3f);
+        iconRect.offsetMax = new Vector2(-3f, -3f);
+        iconObject.transform.SetSiblingIndex(nameText.transform.GetSiblingIndex());
+        Image iconImage = iconObject.GetComponent<Image>();
+        iconImage.preserveAspect = true;
+        iconImage.raycastTarget = false;
+        iconImage.enabled = false;
+        unitCommandSlotIcons[index] = iconImage;
+
         // 단축키는 오른쪽 아래 구석. 금색 굵게 — 워크3처럼 「무슨 키」가 한눈에.
         TMP_Text hotkeyText = CreateLabel(card.transform, "Hotkey", "");
         hotkeyText.raycastTarget = false;
@@ -3972,6 +3989,7 @@ public class GameHud : MonoBehaviour
                 unitCommandSlotHotkeys[slot].text = "";
                 shopSlotHotkeys[slot] = '\0';
                 unitCommandSlotBackgrounds[slot].color = Color.clear;
+                if (unitCommandSlotIcons[slot] != null) unitCommandSlotIcons[slot].enabled = false;
                 ClearShopCooldown(slot);
                 continue;
             }
@@ -3995,6 +4013,14 @@ public class GameHud : MonoBehaviour
             Color color = view.color;
             color.a = view.available ? color.a : 0.35f;
             unitCommandSlotBackgrounds[slot].color = color;
+            Image slotIcon = unitCommandSlotIcons[slot];
+            if (slotIcon != null)
+            {
+                if (slotIcon.sprite != view.icon) slotIcon.sprite = view.icon;
+                bool showIcon = view.icon != null;
+                if (slotIcon.enabled != showIcon) slotIcon.enabled = showIcon;
+                if (showIcon) slotIcon.color = view.available ? Color.white : new Color(1f, 1f, 1f, 0.45f);
+            }
         }
     }
 

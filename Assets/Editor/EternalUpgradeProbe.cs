@@ -63,5 +63,21 @@ public static class EternalUpgradeProbe
         return sb.ToString();
     }
 
-    public static string After() => Dump("김영원 강화 3렙 뒤(기대: 김영원 공속 ×1.60 [1+0.15+0.15×2] · 가산 +13,500, 나머지 그대로)");
+    public static string After() => Dump("김영원 강화 3렙 뒤(기대: 김영원 공속 ×1.45 [1+0.15+0.15×2] · 가산 +13,500, 나머지 그대로)");
+
+    /// <summary>내 영원함 강화소를 골라 명령 카드에 8칸(유닛 초상 + 이름)이 뜨게 한다 — 사진 확인용. 칸 Image 켜진 수도 적는다.</summary>
+    public static string SelectShop()
+    {
+        SelectionManager selection = Object.FindFirstObjectByType<SelectionManager>();
+        Selectable s = Selectable.All.FirstOrDefault(x => x.name == "Lane1_영원함강화소");
+        if (selection == null || s == null) return "❌ 선택기·강화소 없음";
+        selection.SelectOnly(s);
+        return $"선택 {s.name}";
+    }
+
+    public static string IconCount()
+    {
+        int on = Object.FindObjectsByType<UnityEngine.UI.Image>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).Count(i => i.name == "Icon" && i.enabled && i.sprite != null && i.transform.parent.name.StartsWith("UnitCommandSlot"));
+        return $"   명령 카드 칸 그림 켜진 수 {on} (기대 8)";
+    }
 }

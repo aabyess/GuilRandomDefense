@@ -74,7 +74,9 @@ public class UnitUpgradeShop : MonoBehaviour, ILaneShop
                 : $"{track.trackName}\nLv.{level}";
         }
 
-        return new LaneShopSlotView(state.cachedLabel, track.slotColor, CanUpgrade(track, level), LaneShopTargetKind.None);
+        // 유닛 전용 트랙(영원함, 사장님 10-06)은 칸에 그 유닛 초상 — 원작은 영원함 각 유닛 그림이 버튼이었다. 굽기 전엔 null(글자만), 다음 갱신에 들어온다.
+        Sprite icon = track.targetUnit != null ? UnitThumbBaker.Get(track.targetUnit) : null;
+        return new LaneShopSlotView(state.cachedLabel, track.slotColor, CanUpgrade(track, level), LaneShopTargetKind.None, icon: icon);
     }
 
     // 호버할 때만 불린다 — 문자열 조립은 여기서만 한다.

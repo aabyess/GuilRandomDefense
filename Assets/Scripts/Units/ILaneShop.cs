@@ -26,10 +26,12 @@ public readonly struct LaneShopSlotView
     // HUD가 받은 순간 「끝나는 시각」으로 바꿔 매 프레임 비율을 돌린다(0.4초 갱신 사이를 부드럽게) — 상점은 평소처럼 캐시 값만 넘기면 된다.
     public readonly float cooldownRemaining;
     public readonly float cooldownTotal;
+    // 칸 그림(10-06 영원함 강화소 — 유닛 초상). null이면 그림 없음(글자·색만). UnitThumbBaker.Get이 굽기 전엔 null이라 상점은 매 갱신마다 다시 넣는다.
+    public readonly Sprite icon;
 
     public LaneShopSlotView(string label, Color color, bool available,
                              LaneShopTargetKind targetKind = LaneShopTargetKind.None, float targetRadius = 0f,
-                             char hotkey = '\0', float cooldownRemaining = 0f, float cooldownTotal = 0f)
+                             char hotkey = '\0', float cooldownRemaining = 0f, float cooldownTotal = 0f, Sprite icon = null)
     {
         this.label = label;
         this.color = color;
@@ -39,6 +41,7 @@ public readonly struct LaneShopSlotView
         this.hotkey = hotkey;
         this.cooldownRemaining = cooldownRemaining;
         this.cooldownTotal = cooldownTotal;
+        this.icon = icon;
     }
 
     // label이 null/빈 문자열이면 HUD는 이 칸을 빈 칸으로 취급한다(투명 처리).
