@@ -38,4 +38,16 @@ static class HiddenRecipeProbe
         int after = UnitIdentity.Active.Count(u => u != null && u.Data == recipe.result && u.OwnerId == 0);
         return $"버튼 목록에 있나 {inList}(기대 False) · 「호치킨 조합」 → {message ?? "(코드 아님)"} · 결과 {recipe.result.unitName} {before}→{after}";
     }
+
+    // 조합판 히든 줄 사진용 — 카메라를 그 식으로 날린다(RecipeLocator, 조합 검색과 같은 길). gameshot: call:HiddenRecipeProbe.Locate여은서 wait:1.5 snap:board_eunseo
+    static string Locate여은서() => LocateRecipe("히든_여은서");
+    static string Locate호치킨() => LocateRecipe("히든_호치킨");
+    static string Locate맥주만땅() => LocateRecipe("히든_맥주만땅");
+
+    static string LocateRecipe(string name)
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        var recipe = AssetDatabase.LoadAssetAtPath<CombineRecipe>($"Assets/Data/Recipes/{name}.asset");
+        return recipe != null && RecipeLocator.Locate(recipe) ? $"✅ {name} 줄로 카메라 이동" : $"❌ {name} 줄 인형을 못 찾음";
+    }
 }
