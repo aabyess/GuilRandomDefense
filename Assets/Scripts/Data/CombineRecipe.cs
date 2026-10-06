@@ -59,4 +59,8 @@ public class CombineRecipe : ScriptableObject
     // 주셔서 그 에셋이 생기는 순간, 두 경로가 동시에 켜지면 +2가 두 번 누적된다 — 그때는
     // 둘 중 하나를 0으로 만들거나 한쪽 경로를 꺼야 한다. APPROXIMATION_LEDGER.md 참고.
     public int damageLevelFixedBonus;
+
+    // 10-06 — 히든·불멸·초월 식은 조합 버튼이 아니라 채팅 코드로만 한다(CombineSystem.TryCombineByChat). commandId와 「친구이름 조합」 외에
+    // 이 문구도 받는다. 초월은 원작처럼 수식어(예 「최강의검사」) — 사장님이 25종 수식어를 주시면 여기 채운다. 비면 무시.
+    public string chatPhrase;
 }

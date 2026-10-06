@@ -112,12 +112,77 @@ public class CombineSystem : MonoBehaviour
         foreach (CombineRecipe recipe in recipes)
         {
             if (recipe == null || recipe.result == null) continue;
+            if (IsChatOnly(recipe)) continue;   // 10-06 히든·불멸·초월은 조합 버튼에 안 뜬다(채팅 코드로만)
             if (FirstUnitIngredient(recipe) != unit) continue;
 
             startsWithBuffer.Add(recipe);
         }
 
         return startsWithBuffer;
+    }
+
+    /// <summary>10-06(친구 피드백): 결과가 히든·불멸·초월인 식은 유닛의 [조합] 버튼으로 못 한다 — 원작처럼 채팅 코드로만(TryCombineByChat).
+    /// 버튼 목록(GetRecipesStartingWith)과 멀티 요청 검증(NetCommands.ExecuteCombine이 같은 목록을 본다)에서 빠진다.
+    /// 재료·비용·결과 처리는 TryCombine 그대로다(밸런스 도구 autoloop은 GetAvailableRecipes→TryCombine이라 이 등급도 계속 조합한다).</summary>
+    public static bool IsChatOnly(CombineRecipe recipe)
+    {
+        if (recipe == null || recipe.result == null) return false;
+        UnitGrade grade = recipe.result.grade;
+        return grade == UnitGrade.Hidden || grade == UnitGrade.Immortal || grade == UnitGrade.Transcendent;
+    }
+
+    static string NormalizePhrase(string text) =>
+        string.IsNullOrEmpty(text) ? "" : text.Replace(" ", "").Replace("\t", "").ToLowerInvariant();
+
+    // 이 식을 부르는 채팅 문구 전부(정규화됨): commandId의 「/」 양쪽(예 「페로나조합 / perona」·「Juuhyuk tr」) ·
+    // 에셋 이름의 친구 이름+「조합」(예 히든_최윤서 → 「최윤서 조합」) · 식의 chatPhrase(초월 수식어).
+    static IEnumerable<string> ChatPhrases(CombineRecipe recipe)
+    {
+        if (!string.IsNullOrEmpty(recipe.commandId))
+            foreach (string part in recipe.commandId.Split('/'))
+            {
+                string phrase = NormalizePhrase(part);
+                if (phrase.Length > 0) yield return phrase;
+            }
+
+        string[] nameParts = recipe.name.Split('_');
+        if (nameParts.Length >= 2 && nameParts[1].Length > 0) yield return NormalizePhrase(nameParts[1] + "조합");
+
+        if (!string.IsNullOrEmpty(recipe.chatPhrase)) yield return NormalizePhrase(recipe.chatPhrase);
+    }
+
+    /// <summary>채팅 한 줄이 히든·불멸·초월 조합 코드면 그 플레이어 기준으로 조합한다. 코드가 아니면 null(다음 판정기로 넘김),
+    /// 맞으면 성공·실패 문구. 호스트(싱글)에서만 부른다(PlayerChat.HandleOnAuthority → GameChatBox.TryExecuteCode).
+    /// 결과는 시전 유닛이 없어 레인 가운데에 나온다.</summary>
+    public string TryCombineByChat(int playerId, string text)
+    {
+        if (recipes == null) return null;
+        string typed = NormalizePhrase(text);
+        if (typed.Length == 0) return null;
+
+        CombineRecipe match = null;
+        foreach (CombineRecipe recipe in recipes)
+        {
+            if (!IsChatOnly(recipe)) continue;
+            foreach (string phrase in ChatPhrases(recipe))
+                if (phrase == typed) { match = recipe; break; }
+            if (match != null) break;
+        }
+        if (match == null) return null;
+
+        string label = match.result.unitName;
+        int previous = ActingPlayerOverride;
+        ActingPlayerOverride = playerId;
+        try
+        {
+            if (!CanCombineNow(match))
+            {
+                List<string> shortage = DescribeShortage(match);
+                return shortage.Count > 0 ? shortage[0] : $"{label}: 지금은 조합할 수 없습니다.";
+            }
+            return TryCombine(match) ? $"{label} 조합 성공!" : $"{label}: 지금은 조합할 수 없습니다.";
+        }
+        finally { ActingPlayerOverride = previous; }
     }
 
     static UnitData FirstUnitIngredient(CombineRecipe recipe)
