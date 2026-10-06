@@ -10,23 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uC774\uC7AC\uC724_AD_\uB0B4\uBA74\uC758\uC545"
+  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uC2E0\uBB38\uCCA0_AP_\uB178\uCD9C\uC911\uB3C5"
   m_EditorClassIdentifier: 
-  skillName: "\uB0B4\uBA74\uC758\uC545 \u2014 \uCE58\uBC00\uD55C\uC218\uC791(\uBC29\uC5B4
-    \uAC10\uC18C) \xB7 \uB0AF\uC120\uACF5\uD3EC(\uC774\uB3D9\uC18D\uB3C4 \uAC10\uC18C)"
-  description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uC720\uB2DB \uC218\uAC00 \uCD5C\uB300\u221210~\uCD5C\uB300\uC77C
-    \uB54C \uCF1C\uC9C0\uB294 \uC624\uB77C\u300D. \uB0B4 \uB808\uC778\uC758 \uC801
-    \uC218(HUD \u300C\uC720\uB2DB \uCE74\uC6B4\uD2B8\u300D, \uD55C\uACC4 70\xB7\uB09C\uC774\uB3C4\uBCC4)\uAC00
-    [\uD55C\uACC4\u221210, \uD55C\uACC4]\uC77C \uB54C\uB9CC \uB0B4 \uB808\uC778\uC758
-    \uC801 \uC804\uCCB4\uC5D0 \uBC29\uC5B4 \u221210(\uCE58\uBC00\uD55C\uC218\uC791)\xB7\uC774\uB3D9\uC18D\uB3C4
-    \u221230%(\uB0AF\uC120\uACF5\uD3EC, \uB0A8\uB294 \uC18D\uB3C4 0.7)\uAC00 \uAC78\uB9B0\uB2E4.
-    \uC218\uCE58\uB294 \uC81C\uC548\uAC12(\uBC15\uBBFC\uC11D \uBC29\uAE4D 5\xB7\uD751\uC778
-    \uC774\uAC10 0.7\uACFC \uAC19\uC740 \uCC99\uB3C4)."
-  triggerType: 2
+  skillName: "\uB178\uCD9C\uC911\uB3C5 \u2014 \uC774\uB3D9\uC18D\uB3C4 \uAC10\uC18C
+    + \uAE61\uB51C(\uBC1C\uB3D9)"
+  description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uBC1C\uB3D9(\uC774\uAC1015%, \uAE61\uB51C)\u300D.
+    \uD3C9\uD0C0 10% \uD655\uB960\uB85C \uB300\uC0C1 \uD55C \uAE30\uC5D0\uAC8C \uAE61\uB51C
+    400,000(\uB9C8\uBC95, \uC6D0\uC791 \uCD08\uC6D4 \uD655\uB960 \uAE61\uB51C \uC911\uC559\uAC12
+    \u2014 \uBC15\uBBFC\uC11D \uC678\uB3D9Lv.Devil\uACFC \uAC19\uB2E4) + \uC774\uB3D9\uC18D\uB3C4
+    \u221215%(\uB0A8\uB294 \uC18D\uB3C4 0.85) 2.5\uCD08(\uBC15\uBBFC\uC11D \uD751\uC778\uACFC
+    \uAC19\uC740 \uC9C0\uC18D)."
+  triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1
-    range: 5000
+    triggerChance: 0.1
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
@@ -34,12 +32,12 @@ MonoBehaviour:
     forbiddenBuffId: 
     selfBuffId: 
     effects:
-    - kind: 4
+    - kind: 0
       basis: 0
-      target: 2
-      damageType: 1
-      attackType: 0
-      multiplier: -10
+      target: 3
+      damageType: 2
+      attackType: 7
+      multiplier: 400000
       bonus: 0
       chance: 1
       hitCount: 1
@@ -86,14 +84,14 @@ MonoBehaviour:
       killMostLostHp: 0
     - kind: 13
       basis: 0
-      target: 2
+      target: 3
       damageType: 1
       attackType: 0
-      multiplier: 0.7
+      multiplier: 0.85
       bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 2.5
       casterBuffCountFactor: 0
       buffId: 
       randMin: 1
@@ -147,6 +145,6 @@ MonoBehaviour:
     requireNormalEnemyInRange: 0
     needsTargetClick: 0
     toggleMode: 0
-    laneCountWindow: 10
+    laneCountWindow: 0
     needsAllyClick: 0
   icon: {fileID: 0}

@@ -41,7 +41,7 @@ static class JaeyunApply
     {
         kind = SkillEffectKind.Damage, basis = basis, target = SkillTargetKind.SingleTarget,
         damageType = DamageType.AD, attackType = AttackType.Unassigned, multiplier = multiplier,
-        targetCondition = condition, targetConditionValue = conditionValue,
+        targetCondition = condition, targetConditionValue = conditionValue, armorIgnoreRatio = 1f,   // 고정·%체력 깡딜은 방어 무시(사장님 10-06)
     };
 
     const float MapWide = 5000f;   // 「맵 전체」 — 같은 주인 아군 전부(UnitIdentity.AlliesOf는 주인이 같은 유닛만 본다)

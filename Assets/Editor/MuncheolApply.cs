@@ -60,7 +60,7 @@ static class MuncheolApply
                 cooldown = 0f, triggerChance = 0.15f, range = 0f, gaugeKind = SkillGaugeKind.Mana,
                 effects = new List<SkillEffect>
                 {
-                    new SkillEffect { kind = SkillEffectKind.Damage, basis = SkillEffectBasis.TargetCurrentHpPercent, target = SkillTargetKind.SingleTarget, damageType = DamageType.AP, attackType = AttackType.Spells, multiplier = 0.02f },
+                    new SkillEffect { kind = SkillEffectKind.Damage, basis = SkillEffectBasis.TargetCurrentHpPercent, target = SkillTargetKind.SingleTarget, damageType = DamageType.AP, attackType = AttackType.Spells, multiplier = 0.02f, armorIgnoreRatio = 1f },
                 },
             });
 
