@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1426f971d9174ed9b3e5519d787e74b, type: 3}
   m_Name: "\uCD08\uC6D4_\uC784\uC7A5\uD601_AD"
   m_EditorClassIdentifier: 
-  unitName: "\uC784\uC7A5\uD601"
+  unitName: "\uC9F1\uC2A4"
   grade: 7
   skinAlias: "\uBC14\uB77C\uAC04 \uB8E8\uC774\uC13C\uBC29,Baraggan Luisenbarn,Baraggan,\uBC14\uB77C\uAC04"
   damageType: 1
@@ -25,11 +25,14 @@ MonoBehaviour:
   moveSpeed: 125.3
   skill: {fileID: 0}
   skills:
-  - {fileID: 11400000, guid: d73a922c7d1141fdb952c14d95192253, type: 2}
-  - {fileID: 11400000, guid: d9a138308d25036229ce09052dcc9064, type: 2}
-  - {fileID: 11400000, guid: 56b10310b5d1fad766b584daf63b6c41, type: 2}
-  - {fileID: 11400000, guid: 0336b018db3263472a7850e1e7bc7d42, type: 2}
-  - {fileID: 11400000, guid: 280e5ae4edea2094927cf6786b0600e8, type: 2}
+  - {fileID: 11400000, guid: a8c6a67765bc644e2ad04b8e6f6dcfe6, type: 2}
+  - {fileID: 11400000, guid: 107a5599b9dc84d0bbdaeae807ff4e59, type: 2}
+  - {fileID: 11400000, guid: 8de972058110e4008b4c1fc5152cd4c1, type: 2}
+  - {fileID: 11400000, guid: 0764d8dc0c3964499bed4c1f241428ff, type: 2}
+  - {fileID: 11400000, guid: 4b0a2ba6e70994c76958ecc340f44479, type: 2}
+  - {fileID: 11400000, guid: e99ab70d92d59487b9c37c303379f5ba, type: 2}
+  - {fileID: 11400000, guid: 3a563d0276b7d4cbd93044ec0b9b8988, type: 2}
+  - {fileID: 11400000, guid: 6b971eda604bd47b481623b083ad0f05, type: 2}
   trait: {fileID: 11400000, guid: 420817ef2edb1f069d3a04d5d8abc812, type: 2}
   prefab: {fileID: 2540246679711810812, guid: e76824910f9144e49b107e0876f8e4d2, type: 3}
   critChance: 0
@@ -57,7 +60,7 @@ MonoBehaviour:
   sellRewardEveryNWoodChance: 1
   primaryStat: 2
   manaRegenPerSecond: 0
-  manaMax: 0
+  manaMax: 120
   manaGaugePerMana: 0
   lifeGaugeRegenPerSecond: 0
   lifeGaugeMax: 0
@@ -65,10 +68,14 @@ MonoBehaviour:
   lifeGaugeStart: 0
   lifeGaugeCustomHitGain: 0
   lifeGaugeHitGain: 0
-  manaAuraRegenPerSecond: 0
-  manaAuraRange: 0
-  manaAuraBuffId: 
-  manaAuraIncludesSelf: 0
+  manaAuraRegenPerSecond: 2
+  manaAuraRange: 850
+  manaAuraBuffId: JANG_MANA_AURA
+  manaAuraIncludesSelf: 1
+  lifeAuraRegenPerSecond: 0
+  lifeAuraRange: 0
+  lifeAuraBuffId: 
+  lifeAuraIncludesSelf: 0
   attackSplashRadius: 0
   attackCleaveFactor: 0
   attackCleaveRadius: 0
