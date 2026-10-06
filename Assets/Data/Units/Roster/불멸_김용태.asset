@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1426f971d9174ed9b3e5519d787e74b, type: 3}
   m_Name: "\uBD88\uBA78_\uAE40\uC6A9\uD0DC"
   m_EditorClassIdentifier: 
-  unitName: "\uAE40\uC6A9\uD0DC"
+  unitName: "\uD53C\uC9C0\uCEEC\uB3FC\uC9C0"
   grade: 8
   skinAlias: "\uC58C\uB9C8 \uB9AC\uC57C\uB974\uACE0,Yammy Llargo,Yammy"
   damageType: 1
   attackType: 1
-  movementAbility: 0
+  movementAbility: 1
   hp: 6122.2
   attackPower: 53251
   attackRange: 152.05
@@ -25,15 +25,14 @@ MonoBehaviour:
   moveSpeed: 125.3
   skill: {fileID: 0}
   skills:
-  - {fileID: 11400000, guid: 174ffb09a6ef28b20c6f6425127fc26c, type: 2}
-  - {fileID: 11400000, guid: 2aa646ed70067def823a34f5fa06a2f7, type: 2}
-  - {fileID: 11400000, guid: c95d60e51e3607ef6691ee5a1ee1f39e, type: 2}
-  - {fileID: 11400000, guid: 9f1fbb1875f34b83adbf6b7ac0ff0efb, type: 2}
-  - {fileID: 11400000, guid: 19f6cefb394b483b84610664078a84aa, type: 2}
-  - {fileID: 11400000, guid: 034336a2508336a662936f6309da714f, type: 2}
-  - {fileID: 11400000, guid: 0cf7d046ccd18f13112416914b408337, type: 2}
-  - {fileID: 11400000, guid: 591511aa7cc2a5efd10363ed3686d445, type: 2}
-  - {fileID: 11400000, guid: facde19af599f5d5b9e916b913ec7dbb, type: 2}
+  - {fileID: 11400000, guid: a272b2378211047a5bb3c0a666465b4b, type: 2}
+  - {fileID: 11400000, guid: 05de5c245ab6f4092b71bb3a2bedc404, type: 2}
+  - {fileID: 11400000, guid: cbc7bd94bfc774e97a27bcff3b4935f6, type: 2}
+  - {fileID: 11400000, guid: d35294875e80349e08030989cdcb2267, type: 2}
+  - {fileID: 11400000, guid: fea95e50795d5483abe723f81c4c76fe, type: 2}
+  - {fileID: 11400000, guid: 025968ec3882b4fce9d4c347ad210ad2, type: 2}
+  - {fileID: 11400000, guid: 2acef3b07dc0d4c7b9fff157d61dd9f2, type: 2}
+  - {fileID: 11400000, guid: 412407a1441cd44d2bf172c113e843a2, type: 2}
   trait: {fileID: 0}
   prefab: {fileID: 973847546539215205, guid: c5a269c87f6a842e396f5c6a7495a211, type: 3}
   critChance: 0.15
@@ -61,10 +60,10 @@ MonoBehaviour:
   sellRewardEveryNWoodChance: 1
   primaryStat: 0
   manaRegenPerSecond: 0
-  manaMax: 150
-  manaGaugePerMana: 1
+  manaMax: 0
+  manaGaugePerMana: 0
   lifeGaugeRegenPerSecond: 0
-  lifeGaugeMax: 0
+  lifeGaugeMax: 100
   manaGaugeStart: 0
   lifeGaugeStart: 0
   lifeGaugeCustomHitGain: 0
@@ -77,7 +76,7 @@ MonoBehaviour:
   lifeAuraRange: 0
   lifeAuraBuffId: 
   lifeAuraIncludesSelf: 0
-  attackSplashRadius: 0
+  attackSplashRadius: 300
   attackCleaveFactor: 0
   attackCleaveRadius: 0
   attackExtraTargets: 0
@@ -85,3 +84,6 @@ MonoBehaviour:
   raiseOnKillUnit: {fileID: 0}
   raiseOnKillChancePercent: 0
   raiseOnKillLifetimeSeconds: 0
+  attackArmorIgnoreRatio: 0
+  lifeGaugeOnEnemyDeath: 5
+  lifeGaugeOnEnemyDeathRange: 850

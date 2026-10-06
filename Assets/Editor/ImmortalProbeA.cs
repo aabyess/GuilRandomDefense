@@ -17,6 +17,25 @@ static class ImmortalProbeA
     static string Run박은석() => Setup("불멸_박은석");
     static string Run고도현() => Setup("불멸_고도현");
     static string Run이이삭() => Setup("불멸_이이삭");
+    static string Run김용태() => Setup("불멸_김용태");
+
+    // 김용태: 체력 게이지를 99 직전으로 두고 근처 적을 죽여 +5 훅이 도는지, 체력스킬 버프가 붙는지
+    static string DeathHook()
+    {
+        var f = typeof(UnitAttacker).GetField("lifeGaugeCounter", BindingFlags.NonPublic | BindingFlags.Instance);
+        int before = (int)f.GetValue(atk);
+        EnemyDummy t = normals[0];
+        t.TakeDamage(1e12f, DamageType.AD, AttackType.Unassigned, 0, armorIgnoreRatio: 1f, isAbilityDamage: false);
+        int after = (int)f.GetValue(atk);
+        return $"[적 사망 훅] 근처 적 1기 사망({(t == null || t.IsDead ? "예" : "아니오")}) → 체력 게이지 {before} → {after}(전투 평타 +1이 섞일 수 있음, 기대 최소 +5)";
+    }
+    static string Gauge99()
+    {
+        typeof(UnitAttacker).GetField("lifeGaugeInitialized", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(atk, true);
+        typeof(UnitAttacker).GetField("lifeGaugeCounter", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(atk, 99);
+        return "체력 게이지 99로 둠";
+    }
+    static string BuffCheck() => $"[체력스킬 후] 자기 공격력 비 {atk.AttackDamage / dmg0:F2} 공속 비 {atk.CurrentAttackSpeedMultiplier / as0:F2}(발동했다면 ≈1.30)";
 
     // 고도현 약처방: 아군 1(김건)에 걸고 → 아군 2(새로 세운 특별함)로 옮기면 옛 대상에서 떼어지는지
     static UnitAttacker second; static float secondAd0, secondAs0;

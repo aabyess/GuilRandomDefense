@@ -592,4 +592,8 @@ public class UnitData : ScriptableObject
     // ⚠️ 맨 뒤(2026-10-06, 초월 배성령 「무방비상태」 방무뎀 50%) — 이 유닛의 **평타·스킬 피해가 적 방어의 이 비율만큼을 무시**한다(적 방어 ×(1−값), 양수 방어만 — 음수 방어는 그대로).
     // SkillEffect.armorIgnoreRatio(피해를 둘로 갈라 한쪽만 방어를 무시)와 다른 축이다: 이쪽은 **방어 수치 자체를 깎아** 계수 1/(1+0.02×방어)에 넣는다(사장님 확정: 「적 방어의 50%를 무시」). 0이면 꺼짐.
     [Range(0f, 1f)] public float attackArmorIgnoreRatio;
+
+    // ⚠️ 맨 뒤(2026-10-06, 불멸 김용태 「주위 적 사망 시 체력 게이지 +5」 — 사장님 확정) — 이 유닛 반경(lifeGaugeOnEnemyDeathRange, 원작 단위) 안에서 적이 죽을 때마다 체력 게이지 +값(상한은 lifeGaugeMax). 0이면 꺼짐.
+    public float lifeGaugeOnEnemyDeath;
+    public float lifeGaugeOnEnemyDeathRange;
 }

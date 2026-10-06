@@ -28,6 +28,8 @@ public class EnemyDummy : MonoBehaviour
     public static event System.Action<int> OnBossKilled;
     /// <summary>레인 보스 처치(라운드, 레인=주인 번호). 원작 Rhse·Rhde는 그 레인 주인만 해금한다(j:13448·13459) — OnBossKilled는 레인이 없어 팀 전체가 열렸다.</summary>
     public static event System.Action<int, int> OnLaneBossKilled;
+    /// <summary>적이 죽음 확정된 순간(호스트·싱글, 위치는 아직 유효). 죽은 적 주변 유닛 반응(김용태 체력 게이지 +5)용.</summary>
+    public static event System.Action<EnemyDummy> OnAnyEnemyDied;
 
     static RoundManager roundManagerCache;
     static RoundManager RoundManagerRef => roundManagerCache != null
@@ -1098,6 +1100,7 @@ public class EnemyDummy : MonoBehaviour
             // 보상이 중복 지급되지 않도록 죽음 확정 시점에 바로 플래그를 세우고 등록도 해제한다.
             isDead = true;
             Active.Remove(this);
+            OnAnyEnemyDied?.Invoke(this);
 
             // 파괴보다 먼저 부른다 — Destroy가 걸린 뒤엔 재생될 틈이 없다.
             // (지금은 즉시 파괴라 사실상 안 보이지만, 사망 연출을 넣을 자리를 여기로 정해둔다.)

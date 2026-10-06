@@ -1883,6 +1883,32 @@ public class UnitAttacker : MonoBehaviour
         return 1f + extra;
     }
 
+    // 주위 적 사망 시 체력 게이지 +N(UnitData.lifeGaugeOnEnemyDeath, 불멸 김용태) — 적이 죽을 때마다 반경 안 같은 주인 유닛에게.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetEnemyDeathHook() { EnemyDummy.OnAnyEnemyDied -= OnEnemyDiedGauge; EnemyDummy.OnAnyEnemyDied += OnEnemyDiedGauge; }
+
+    static void OnEnemyDiedGauge(EnemyDummy dead)
+    {
+        if (dead == null) return;
+        foreach (UnitIdentity unit in UnitIdentity.Active)
+        {
+            if (unit == null || unit.Data == null || unit.Data.lifeGaugeOnEnemyDeath <= 0f) continue;
+            if (dead.LaneIndex >= 0 && dead.LaneIndex != unit.OwnerId) continue;   // 자기 레인 밖 적의 죽음은 안 센다
+            float range = unit.Data.lifeGaugeOnEnemyDeathRange / WorldScale.Value;
+            if ((unit.transform.position - dead.transform.position).sqrMagnitude > range * range) continue;
+            UnitAttacker attacker = unit.GetComponent<UnitAttacker>();
+            if (attacker != null) attacker.AddLifeGauge(Mathf.RoundToInt(unit.Data.lifeGaugeOnEnemyDeath));
+        }
+    }
+
+    void AddLifeGauge(int amount)
+    {
+        UnitData d = identity != null ? identity.Data : null;
+        if (d == null || amount <= 0) return;
+        if (!lifeGaugeInitialized) { lifeGaugeCounter = d.lifeGaugeStart > 0f ? Mathf.RoundToInt(d.lifeGaugeStart) : 0; lifeGaugeInitialized = true; }
+        lifeGaugeCounter = Mathf.Min(lifeGaugeCounter + amount, LifeGaugeCap(d));
+    }
+
     float DamagePassiveFactor(EnemyDummy target) => BossDamageFactor(target) * StoryDamageFactor(target) * AllyDebuffDamageFactor() * ArmorShredDamageFactor(target) * GrowthDamageFactor() * (1f + attackDamageStack);
 
     // 만성피로(SelfStunRefillLifeGauge) — 자기 스턴 동안 공격·스킬이 멈추고, 끝나면 체력 게이지가 즉시 가득 찬다.

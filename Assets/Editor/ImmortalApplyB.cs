@@ -8,7 +8,7 @@ using UnityEngine;
 /// </summary>
 static class ImmortalApplyB
 {
-    static string All() => Dohyeon() + "\n" + Isag();
+    static string All() => Dohyeon() + "\n" + Isag() + "\n" + Yongtae();
 
     static string Finish(string key, UnitData unit, CombineRecipe recipe, string phrase, int oldCount)
     {
@@ -91,5 +91,46 @@ static class ImmortalApplyB
         unit.attackSplashRadius = 300f;
         unit.attackExtraTargets = 3; unit.attackExtraTargetRadius = 700f;
         return Finish(K, unit, recipe, "싸움패왕이이삭", old);
+    }
+    // ───────── 김용태 피지컬돼지 (물딜) — 유닛회유는 새 시스템이라 다음 단계(ImmortalApplyC) ─────────
+    static string Yongtae()
+    {
+        const string K = "김용태";
+        var unit = ImmortalKit.Unit("불멸_김용태"); var recipe = ImmortalKit.Recipe("불멸_김용태");
+        var park = ImmortalKit.Unit("전설적인_박성호");
+        if (unit == null || recipe == null || park == null) return "❌ 김용태 에셋 없음";
+        int old = unit.skills != null ? unit.skills.Count : 0;
+
+        SkillData splash = ImmortalKit.Label(K, "스플래시", "스플래시",
+            "사장님 10-06 「스플래시」. 평타가 맞은 적 주변 반경 300 같은 레인 적에게도 같은 피해(UnitData.attackSplashRadius). 스킬 자체엔 효과가 없다(이름·설명만).");
+        SkillData burst = ImmortalKit.OnHit(K, "깡딜", "깡딜 — 평타 1/10 150만",
+            "사장님 10-06 「깡딜」. 평타 1/10 확률로 맞은 적에게 고정 1,500,000(신 기준 공통 팔레트 — 원작 김용태 천신 8.5%·800k+1M 닻).",
+            0.10f, 0f, ImmortalKit.Flat(1500000f, DamageType.AD));
+        SkillData shred20 = ImmortalKit.AuraSkill(K, "방깍20", "방깍(20) — 오라",
+            "사장님 10-06 「방깍(20)」. 반경 850 안 모든 적 방어 −20(원작 정윤식 A0ES −20 닻).",
+            850f, ImmortalKit.ArmorAura(20f, "YONGTAE_ARMOR"));
+        SkillData shred45 = ImmortalKit.OnHit(K, "방깍단일45", "방깍(단일 45)",
+            "사장님 10-06 「방깍(단일45)」. 평타 1/6 확률로 맞은 적 한 기의 방어 −45(PM 확정 해석: 암브 방식 단일 방깍).",
+            1f / 6f, 0f, ImmortalKit.ArmorBreak(45f));
+        SkillData whole = ImmortalKit.OnHit(K, "전체체력데미지", "전체체력데미지 — 평타 1/10 최대체력 5%",
+            "사장님 10-06 「전체체력데미지」(전체체력 = 대상 최대 체력). 평타 1/10 확률로 맞은 적 한 기에게 최대 체력의 5%를 방어 무시로 입힌다(신 기준 R49 일반 약 390만).",
+            0.10f, 0f, ImmortalKit.Pct(SkillEffectBasis.TargetMaxHpPercent, 0.05f, DamageType.AD, SkillTargetKind.SingleTarget));
+        SkillData bossJob = ImmortalKit.OnHit(K, "보스잡", "보스잡 — 평타 1/10 보스 최대체력 2%",
+            "사장님 10-06 「보스잡(전체체력데미지)」. 평타 1/10 확률로 맞은 적이 보스(PV≥200)면 최대 체력의 2%를 방어 무시로 입힌다.",
+            0.10f, 0f, ImmortalKit.Pct(SkillEffectBasis.TargetMaxHpPercent, 0.02f, DamageType.AD, SkillTargetKind.SingleTarget, SkillEffectTargetCondition.TargetPointValueAtLeast, 200f));
+        SkillData lifeSkill = ImmortalKit.Skill(K, "체력스킬", "체력스킬 — 공격력 +30% · 공격속도 +30%(10초)",
+            "사장님 10-06 「체력스킬(공격력증가, 공격속도증가)」 + 「주위유닛사망시체력회복」(확정: 주위 적 사망 시 체력 게이지 +5). 체력 게이지(평타 +1, 반경 850 안 적이 죽을 때마다 +5)가 100에 차면 자기 공격력 +30%·공격속도 +30%를 10초(제안값) → 게이지 0.",
+            SkillTriggerType.OnHitCount, 0f, 1f, 100, SkillGaugeKind.Life,
+            new SkillEffect { kind = SkillEffectKind.AttackPowerBuffPercent, target = SkillTargetKind.Self, multiplier = 0.30f, duration = 10f, buffId = "YONGTAE_AD" },
+            new SkillEffect { kind = SkillEffectKind.AttackSpeedBuffPercent, target = SkillTargetKind.Self, multiplier = 0.30f, duration = 10f, buffId = "YONGTAE_AS" });
+        SkillData fly = ImmortalKit.Label(K, "전지역이동", "전지역이동 — 비행",
+            "사장님 10-06 「전지역이동」. 이 유닛은 바다 위도 이동한다(UnitData.movementAbility Flying — 구현담당2 FlyingMover). 스킬 자체엔 효과가 없다(이름·설명만, 값은 로스터 필드).");
+
+        ImmortalKit.SetUnit(unit, "피지컬돼지", new List<SkillData> { splash, burst, shred20, shred45, whole, bossJob, lifeSkill, fly }, 0f, 100f);
+        unit.attackSplashRadius = 300f;
+        unit.movementAbility = MovementAbility.Flying;
+        unit.lifeGaugeOnEnemyDeath = 5f; unit.lifeGaugeOnEnemyDeathRange = 850f;
+        ImmortalKit.ReplaceIngredient(recipe, "제한_박성호", park);
+        return Finish(K, unit, recipe, "유명인사김용태", old);
     }
 }
