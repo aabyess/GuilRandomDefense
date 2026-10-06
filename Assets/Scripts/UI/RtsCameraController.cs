@@ -65,11 +65,67 @@ public class RtsCameraController : MonoBehaviour
     void Start()
     {
         targetHeight = transform.position.y;
-        try { if (PlayerPrefs.HasKey(SightPrefKey)) startZoom = ZoomForSight(PlayerPrefs.GetInt(SightPrefKey, DefaultSight)); } catch { }
-        // 사장님 10-06 카메라 시안 B 「원랜디처럼 각을 올려」: 아래로 62°(씬엔 50°가 저장돼 있다 — 코드가 덮는다). 시작 구도(FrameLaneAndPen)가 이 기울기로 높이를 다시 잡는다(≈434).
-        Vector3 euler = transform.eulerAngles;
-        transform.rotation = Quaternion.Euler(StartPitch, euler.y, euler.z);
+        // 사장님 10-06 시점 규칙: 가장 낮은 시점 = 원작(아래로 56°·시야각 70°), 가장 높은 시점 = 시안 B(62°·60°).
+        //   그 사이를 viewBlend(0~1)로 오간다 — 채팅 「-시야1/2/3」 = 0·0.5·1, 마우스 휠 = 세세하게(유닛 쪽으로 다가가는 확대가 아니다).
+        //   두 끝의 높이는 각 시점으로 「섬+우리를 담는 시작 구도」를 한 번씩 잡아 재 둔다(맵·HUD가 바뀌어도 따라온다).
+        try { viewBlend = targetBlend = Mathf.Clamp01(PlayerPrefs.GetFloat(ViewPrefKey, DefaultBlend)); } catch { viewBlend = targetBlend = DefaultBlend; }
+        CalibrateViewHeights();
         FocusOnLocalLane();
+    }
+
+    // ───── 시점(10-06) ─────
+    const float LowPitch = 56f, LowFov = 70f;     // 원작(워크3 기본 카메라)
+    const float HighPitch = 62f, HighFov = 60f;   // 시안 B(사장님 「지금 시점이 최대」)
+    const float DefaultBlend = 0.5f;              // 「지금보다 약간만 낮게」 = 시야2
+    const float WheelStep = 0.1f;                 // 휠 한 칸 = 범위의 10%
+    const string ViewPrefKey = "CameraViewBlend";
+    float viewBlend, targetBlend;
+    float heightLow = -1f, heightHigh = -1f, viewGroundY;
+
+    void SetAngles(float blend)
+    {
+        Vector3 e = transform.eulerAngles;
+        transform.rotation = Quaternion.Euler(Mathf.Lerp(LowPitch, HighPitch, blend), e.y, e.z);
+        Camera cam = GetComponent<Camera>();
+        if (cam != null) cam.fieldOfView = Mathf.Lerp(LowFov, HighFov, blend);
+    }
+
+    void CalibrateViewHeights()
+    {
+        LaneMarker lane = LaneMarker.Get(LocalPlayer.LocalPlayerId);
+        if (lane == null) return;
+        viewGroundY = lane.transform.position.y + lane.transform.lossyScale.y * 0.5f;
+        SetAngles(0f);
+        if (FrameLaneAndPen(lane)) heightLow = transform.position.y;
+        SetAngles(1f);
+        if (FrameLaneAndPen(lane)) heightHigh = transform.position.y;
+        SetAngles(viewBlend);
+    }
+
+    /// <summary>시점을 blend로 — 화면 가운데 땅 점을 그대로 두고 각도·시야각·높이만 바꾼다.</summary>
+    void ApplyViewBlend(float blend)
+    {
+        Camera cam = GetComponent<Camera>();
+        Vector3 focus = Vector3.zero;
+        bool haveFocus = cam != null && RayToGround(cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f)), viewGroundY, out focus);
+        SetAngles(blend);
+        if (!haveFocus || heightLow < 0f || heightHigh < 0f) return;
+        float height = Mathf.Clamp(Mathf.Lerp(heightLow, heightHigh, blend), minHeight, maxHeight);
+        Vector3 forward = transform.forward;
+        float distance = (height - viewGroundY) / Mathf.Max(0.01f, -forward.y);
+        Vector3 position = focus - forward * distance;
+        position.x = Mathf.Clamp(position.x, boundsMin.x, boundsMax.x);
+        position.z = Mathf.Clamp(position.z, boundsMin.y, boundsMax.y);
+        transform.position = position;
+        targetHeight = position.y;
+    }
+
+    /// <summary>채팅 「-시야1/2/3」이 부른다 — 저장하고 바로 그 시점으로(가운데 고정).</summary>
+    public void SetViewPreset(float blend)
+    {
+        targetBlend = viewBlend = Mathf.Clamp01(blend);
+        try { PlayerPrefs.SetFloat(ViewPrefKey, viewBlend); PlayerPrefs.Save(); } catch { }
+        ApplyViewBlend(viewBlend);
     }
 
     // 10-03 카메라 후보 비교(사장님 「너무 위에서 본 것 같다」) — gameshot `call:RtsCameraController.ViewA` 등으로 바꿔 찍는다.
@@ -105,7 +161,11 @@ public class RtsCameraController : MonoBehaviour
         string source;
 
         LaneMarker lane = LaneMarker.Get(laneIndex);
-        if (lane != null && FrameLaneAndPen(lane)) return;
+        if (lane != null)
+        {
+            SetAngles(viewBlend);
+            if (FrameLaneAndPen(lane)) { ApplyViewBlend(viewBlend); return; }   // 구도를 잡고 높이만 시점 규칙(두 끝 사이 직선)에 맞춘다
+        }
         if (lane != null)
         {
             center = lane.transform.position;
@@ -169,12 +229,11 @@ public class RtsCameraController : MonoBehaviour
         string arg = t.Substring(2).Trim();
         // 「시야가 좁네」 같은 보통 말은 명령이 아니다 — 글자가 붙어 있으면 채팅으로 넘긴다. 사용법은 「시야」 단독·「-시야 …」일 때만.
         bool dashed = text.TrimStart().StartsWith("-");
-        if (!int.TryParse(arg, out int sight))
-            return arg.Length == 0 || dashed ? "사용법: 시야 100~300 (기본 200)" : null;
-        sight = Mathf.Clamp(sight, 50, 300);
-        try { PlayerPrefs.SetInt(SightPrefKey, sight); PlayerPrefs.Save(); } catch { }
+        // 10-06 사장님: 「-시야1」 = 원작(가장 낮음) · 「-시야2」 = 중간(기본) · 「-시야3」 = 최대(시안 B). 옛 「시야 100~300」(다가가기 비율)은 없앴다.
+        if (!int.TryParse(arg, out int sight) || sight < 1 || sight > 3)
+            return arg.Length == 0 || dashed ? "사용법: -시야1(원작·가장 낮게) · -시야2(중간) · -시야3(가장 높게) · 마우스 휠로 그 사이를 세세하게" : null;
         RtsCameraController rts = FindFirstObjectByType<RtsCameraController>();
-        if (rts != null) { rts.startZoom = ZoomForSight(sight); rts.FocusOnLocalLane(); }
+        if (rts != null) rts.SetViewPreset((sight - 1) * 0.5f);
         return $"시야 {sight}";
     }
 
@@ -427,7 +486,15 @@ public class RtsCameraController : MonoBehaviour
             ? Vector2.Lerp(smoothedInput, rawInput, 1f - Mathf.Exp(-inputSmoothing * delta))
             : rawInput;
 
-        targetHeight = Mathf.Clamp(targetHeight * (1f - ZoomInput() * zoomRatio), minHeight, maxHeight);
+        // 10-06 휠 = 시점(원작 ↔ 시안 B) 사이를 세세하게. 위로 굴리면 낮게(원작 쪽). 유닛 쪽으로 다가가는 확대가 아니다.
+        float wheel = ZoomInput();
+        if (wheel != 0f) targetBlend = Mathf.Clamp01(targetBlend - wheel * WheelStep);
+        if (Mathf.Abs(targetBlend - viewBlend) > 0.0005f)
+        {
+            viewBlend = Mathf.MoveTowards(viewBlend, targetBlend, Mathf.Max(0.02f, Mathf.Abs(targetBlend - viewBlend) * (1f - Mathf.Exp(-zoomSmoothing * delta))));
+            ApplyViewBlend(viewBlend);
+            if (Mathf.Abs(targetBlend - viewBlend) <= 0.0005f) { try { PlayerPrefs.SetFloat(ViewPrefKey, viewBlend); } catch { } }
+        }
 
         Vector3 position = transform.position;
         position += PlanarDirection(smoothedInput) * (moveSpeed * HeightScale() * delta);
