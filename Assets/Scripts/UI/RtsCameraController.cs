@@ -66,11 +66,16 @@ public class RtsCameraController : MonoBehaviour
     {
         targetHeight = transform.position.y;
         try { if (PlayerPrefs.HasKey(SightPrefKey)) startZoom = ZoomForSight(PlayerPrefs.GetInt(SightPrefKey, DefaultSight)); } catch { }
+        // 사장님 10-06 카메라 시안 B 「원랜디처럼 각을 올려」: 아래로 62°(씬엔 50°가 저장돼 있다 — 코드가 덮는다). 시작 구도(FrameLaneAndPen)가 이 기울기로 높이를 다시 잡는다(≈434).
+        Vector3 euler = transform.eulerAngles;
+        transform.rotation = Quaternion.Euler(StartPitch, euler.y, euler.z);
         FocusOnLocalLane();
     }
 
     // 10-03 카메라 후보 비교(사장님 「너무 위에서 본 것 같다」) — gameshot `call:RtsCameraController.ViewA` 등으로 바꿔 찍는다.
     //   A = 지금(50°·60°) · B = 42°·70° · C = 35°·70°(워크3 기본 FOV 70). 고른 값은 씬 카메라 회전·FOV에 넣는다.
+    const float StartPitch = 62f;
+
     static string ApplyView(float pitch, float fov, float zoom = -1f)
     {
         RtsCameraController rts = FindFirstObjectByType<RtsCameraController>();
