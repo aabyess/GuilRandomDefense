@@ -766,6 +766,9 @@ public class NetLobbyUi : MonoBehaviour
         AspectRatioFitter fitter = raw.gameObject.AddComponent<AspectRatioFitter>();
         fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
         fitter.aspectRatio = (float)photo.width / photo.height;
+        // 10-06 사장님 「움직이는 배경」: blender 섬 루프(같은 구도 8초·192장 → StreamingAssets/title_loop.webm VP8). 첫 장이 나올 때까지는 위 사진이 그대로 보인다.
+        TitleLoopVideo loop = raw.gameObject.AddComponent<TitleLoopVideo>();
+        loop.Begin(raw, canvas);
     }
 
     void BuildTitle(RectTransform root)
@@ -946,6 +949,58 @@ public class LobbyRowHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         bool on = movable && hover;
         if (hint != null && hint.gameObject.activeSelf != on) hint.gameObject.SetActive(on);
         if (on && row != null) row.color = Highlight;
+    }
+}
+
+/// <summary>첫 화면 배경 루프 영상. 첫 장이 준비되면 사진 대신 영상 텍스처로 바꾸고, 게임 중(캔버스 꺼짐)엔 멈춘다. 파일이 없거나 못 읽으면 사진 그대로.</summary>
+public class TitleLoopVideo : MonoBehaviour
+{
+    RawImage target;
+    Canvas canvas;
+    UnityEngine.Video.VideoPlayer player;
+    RenderTexture rt;
+
+    public void Begin(RawImage raw, Canvas owner)
+    {
+        target = raw;
+        canvas = owner;
+        string path = System.IO.Path.Combine(Application.streamingAssetsPath, "title_loop.webm");
+        if (!System.IO.File.Exists(path)) return;
+        rt = new RenderTexture(1920, 1080, 0);
+        player = gameObject.AddComponent<UnityEngine.Video.VideoPlayer>();
+        player.playOnAwake = false;
+        player.source = UnityEngine.Video.VideoSource.Url;
+        player.url = path;
+        player.isLooping = true;
+        player.skipOnDrop = true;
+        player.audioOutputMode = UnityEngine.Video.VideoAudioOutputMode.None;
+        player.renderMode = UnityEngine.Video.VideoRenderMode.RenderTexture;
+        player.targetTexture = rt;
+        player.sendFrameReadyEvents = true;
+        player.frameReady += OnFirstFrame;
+        player.errorReceived += (_, message) => Debug.LogWarning("[TitleLoopVideo] " + message);
+        player.prepareCompleted += p => p.Play();
+        player.Prepare();
+    }
+
+    void OnFirstFrame(UnityEngine.Video.VideoPlayer source, long frame)
+    {
+        source.frameReady -= OnFirstFrame;
+        source.sendFrameReadyEvents = false;
+        if (target != null) target.texture = rt;
+    }
+
+    void Update()
+    {
+        if (player == null || !player.isPrepared || canvas == null) return;
+        bool show = canvas.enabled;
+        if (show && !player.isPlaying) player.Play();
+        else if (!show && player.isPlaying) player.Pause();
+    }
+
+    void OnDestroy()
+    {
+        if (rt != null) { rt.Release(); Destroy(rt); }
     }
 }
 
