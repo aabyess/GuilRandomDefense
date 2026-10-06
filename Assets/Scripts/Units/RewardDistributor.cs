@@ -773,7 +773,6 @@ public class RewardDistributor : MonoBehaviour
 
     const float SpreadGapFactor = 1.25f;     // 위습 지름의 몇 배 간격으로 벌리나
     const float SpreadPortalMargin = 3f;     // 포탈 접촉 거리 바깥 여유(ChoiceWispGap의 WispCellMargin과 같은 값)
-    static readonly Collider[] spreadHits = new Collider[16];
 
     /// <summary>
     /// 칸 안에서 비어 있는 자리를 찾는다 — 기준점(주인마다 좌우로 벌린 자리)에서 가까운 순.
@@ -795,9 +794,13 @@ public class RewardDistributor : MonoBehaviour
         float left = Reach(Vector3.left) - radius, right = Reach(Vector3.right) - radius;
         float down = Reach(Vector3.back) - radius, up = Reach(Vector3.forward) - radius;
 
+        // 칸 중심보다 위(포탈 줄 쪽)는 포탈 사이로 이어진 부스다 — 거기엔 깔지 않는다(10-06 실측: 칸 가운데에서 위로 NavMesh를 쏘면 부스 뒷벽까지 열려 있어 위습이 부스 칸막이 옆에 놓였다).
+        up = Mathf.Min(up, gap * 0.3f);
+
         float ownerIndex = players > 1 ? ownerId - (players - 1) * 0.5f : 0f;
         Vector3 home = c + Vector3.right * (ownerIndex * gap * 4f);
 
+        List<Collider> portals = PortalColliders();
         float step = gap * 0.5f;
         Vector3 best = origin;
         float bestScore = float.MaxValue;
@@ -809,7 +812,7 @@ public class RewardDistributor : MonoBehaviour
                 float score = (p - home).sqrMagnitude;
                 if (score >= bestScore) continue;
                 if (!NavMesh.SamplePosition(p, out NavMeshHit onMesh, 2f, NavMesh.AllAreas)) continue;
-                if (BlockedByPortal(p, radius + SpreadPortalMargin)) continue;
+                if (BlockedByPortal(portals, p, radius + SpreadPortalMargin)) continue;
                 if (OccupiedByWisp(p, gap * 0.9f)) continue;
                 best = p;
                 bestScore = score;
@@ -818,13 +821,33 @@ public class RewardDistributor : MonoBehaviour
         return best;
     }
 
-    static bool BlockedByPortal(Vector3 position, float radius)
+    // OverlapSphere는 버퍼가 맵 콜라이더(절벽·벽)로 차서 포탈이 잘렸다(10-06 실측: 접촉 30.3인 자리가 통과) — 포탈 콜라이더를 직접 훑어 가장 가까운 점까지 잰다.
+    static bool BlockedByPortal(List<Collider> portals, Vector3 position, float radius)
     {
-        int n = Physics.OverlapSphereNonAlloc(position, radius, spreadHits, ~0, QueryTriggerInteraction.Collide);
-        for (int i = 0; i < n; i++)
-            if (spreadHits[i].GetComponentInParent<UnitPortal>() != null || spreadHits[i].GetComponentInParent<ResourcePortal>() != null)
-                return true;
+        foreach (Collider portal in portals)
+        {
+            // 포탈 캡슐은 비균등 배율(지름×0.5×지름)이라 ClosestPoint가 어긋난다(10-06 실측: 접촉 30.3인 자리가 통과) — 가로 거리에서 월드 반지름을 뺀 값으로 직접 잰다.
+            if (portal is CapsuleCollider capsule)
+            {
+                Vector3 s = portal.transform.lossyScale;
+                float worldRadius = capsule.radius * Mathf.Max(Mathf.Abs(s.x), Mathf.Abs(s.z));
+                Vector3 center = portal.transform.TransformPoint(capsule.center);
+                Vector2 d = new Vector2(center.x - position.x, center.z - position.z);
+                if (d.magnitude - worldRadius < radius) return true;
+            }
+            else if ((portal.ClosestPoint(position) - position).sqrMagnitude < radius * radius) return true;
+        }
         return false;
+    }
+
+    static List<Collider> PortalColliders()
+    {
+        List<Collider> list = new List<Collider>();
+        foreach (UnitPortal p in FindObjectsByType<UnitPortal>(FindObjectsSortMode.None))
+            if (p.TryGetComponent(out Collider c) && c.enabled) list.Add(c);
+        foreach (ResourcePortal p in FindObjectsByType<ResourcePortal>(FindObjectsSortMode.None))
+            if (p.TryGetComponent(out Collider c) && c.enabled) list.Add(c);
+        return list;
     }
 
     static bool OccupiedByWisp(Vector3 position, float distance)

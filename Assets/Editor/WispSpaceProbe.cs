@@ -11,8 +11,19 @@ using UnityEngine;
 /// </summary>
 public static class WispSpaceProbe
 {
+    static readonly StringBuilder consumedLog = new StringBuilder();
+
+    static void OnConsumed(Wisp w)
+    {
+        UnitPortal near = Object.FindObjectsByType<UnitPortal>(FindObjectsSortMode.None).OrderBy(p => (p.transform.position - w.transform.position).sqrMagnitude).FirstOrDefault();
+        consumedLog.AppendLine($"   🍽 소모 {(w.Data != null ? w.Data.wispName : "?")} 위치 {w.transform.position:F1} · 가장 가까운 포탈 {(near != null ? near.name + " " + new Vector2(near.transform.position.x - w.transform.position.x, near.transform.position.z - w.transform.position.z).magnitude.ToString("F1") : "-")}");
+    }
+
     public static string Grant()
     {
+        Wisp.OnConsumed -= OnConsumed;
+        Wisp.OnConsumed += OnConsumed;
+        consumedLog.Clear();
         RewardDistributor rd = RewardDistributor.Instance;
         PlayerContext ctx = PlayerContext.Get(0);
         WispData data = AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_흔함선택.asset");
@@ -52,6 +63,7 @@ public static class WispSpaceProbe
             sb.AppendLine($"   아래벽 z {w.transform.position.z:F1} (칸 중심에서 {c.z - w.transform.position.z:F1} 아래)");
         var wisps = Object.FindObjectsByType<Wisp>(FindObjectsSortMode.None).Where(w => w.Data != null && (w.Data.wispName ?? "").Contains("흔함 선택")).ToList();
         sb.AppendLine($"   흔함 선택 위습 {wisps.Count}기");
+        sb.Append(consumedLog);
         foreach (Wisp w in wisps)
             sb.AppendLine($"     {w.name} 위치 {w.transform.position:F1} · 칸 중심에서 ({w.transform.position.x - c.x:F1}, {w.transform.position.z - c.z:F1})");
         float minD = float.MaxValue;
