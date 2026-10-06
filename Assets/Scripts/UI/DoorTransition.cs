@@ -11,7 +11,7 @@ using UnityEngine.UI;
 /// </summary>
 public class DoorTransition : MonoBehaviour
 {
-    const float CloseSeconds = 0.45f, OpenSeconds = 1.4f, HoldAfterReady = 0.2f, NoSceneWait = 0.35f;
+    const float CloseSeconds = 0.45f, OpenSeconds = 0.95f, HoldAfterReady = 0.2f, NoSceneWait = 0.35f;
     const int SortingOrder = 31000;
 
     static DoorTransition active;
@@ -89,22 +89,6 @@ public class DoorTransition : MonoBehaviour
         gap.raycastTarget = false;
         gap.color = new Color(1f, 0.85f, 0.6f, 0f);
 
-        // 10-06 문 v2: blender 3D 렌더 24장(Resources/UI/DoorV2, 00 닫힘 → 23 활짝 100°, 문 뒤 투명)이 있으면 그것을 넘겨 보인다(가로로 줄이는 흉내 대신).
-        frames = Resources.LoadAll<Texture2D>("UI/DoorV2");
-        System.Array.Sort(frames, (a, b) => string.CompareOrdinal(a.name, b.name));
-        if (frames.Length >= 2)
-        {
-            var fgo = new GameObject("Flipbook", typeof(RectTransform), typeof(RawImage));
-            fgo.transform.SetParent(transform, false);
-            var fr = (RectTransform)fgo.transform; fr.anchorMin = Vector2.zero; fr.anchorMax = Vector2.one; fr.offsetMin = fr.offsetMax = Vector2.zero;
-            flipbook = fgo.GetComponent<RawImage>();
-            flipbook.raycastTarget = false;
-            var fit = fgo.AddComponent<AspectRatioFitter>();   // 화면을 덮게(16:9 그림)
-            fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
-            fit.aspectRatio = (float)frames[0].width / frames[0].height;
-            left.gameObject.SetActive(false); right.gameObject.SetActive(false); gap.gameObject.SetActive(false);
-        }
-
         audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.playOnAwake = false;
         audioSource.spatialBlend = 0f;
@@ -176,7 +160,7 @@ public class DoorTransition : MonoBehaviour
             case Phase.Opening:
             {
                 float k = Mathf.Clamp01(t / OpenSeconds);
-                float e = flipbookEase(k);
+                float e = 1f - (1f - k) * (1f - k) * (1f - k);   // 확 열리다 천천히 멈춤
                 SetOpenAmount(e, half);
                 gap.color = new Color(1f, 0.85f, 0.6f, Mathf.Sin(Mathf.Clamp01(k * 2.2f) * Mathf.PI) * 0.9f);   // 틈이 벌어질 때 불빛
                 if (k >= 1f) Destroy(gameObject);
@@ -186,20 +170,8 @@ public class DoorTransition : MonoBehaviour
     }
 
     // 0 = 닫힘(두 짝이 가운데서 만남), 1 = 다 열림(경첩 쪽으로 젖혀져 가로 0). 젖혀질수록 어둡게·살짝 커지게(안쪽으로 다가오는 원근).
-    // 처음 0.25초는 무겁게 조금(문이 꿈쩍) → 그다음 활짝 → 끝에서 천천히 멈춤
-    float flipbookEase(float k) => k < 0.25f ? 0.12f * (k / 0.25f) : 0.12f + 0.88f * (1f - Mathf.Pow(1f - (k - 0.25f) / 0.75f, 3f));
-    Texture2D[] frames;
-    RawImage flipbook;
-
     void SetOpenAmount(float open, float half)
     {
-        if (flipbook != null)
-        {
-            int i = Mathf.Clamp(Mathf.RoundToInt(open * (frames.Length - 1)), 0, frames.Length - 1);
-            if (flipbook.texture != frames[i]) flipbook.texture = frames[i];
-            flipbook.enabled = open < 0.999f;   // 다 열리면 끝 장(빛 안개)도 걷는다
-            return;
-        }
         float width = half * Mathf.Cos(open * Mathf.PI * 0.5f);
         float shade = Mathf.Lerp(1f, 0.35f, open);
         float grow = 1f + 0.08f * Mathf.Sin(open * Mathf.PI);
