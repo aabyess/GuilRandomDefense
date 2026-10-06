@@ -189,7 +189,7 @@ public class NetLobbyUi : MonoBehaviour
         BuildBackdrop(root);
         BuildTitle(root);
         subtitle = CreateText(root, "Subtitle", "", 30, boldFont, Gold, TextAlignmentOptions.Center);
-        Place(subtitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -218f), new Vector2(900f, 44f));
+        Place(subtitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -246f), new Vector2(900f, 44f));
 
         BuildModePanel(root);
         BuildMainPanel(root);
@@ -207,12 +207,12 @@ public class NetLobbyUi : MonoBehaviour
     bool saveOpen;
 
     // 카드 위쪽 기준(피벗 위)으로 쌓는다 — 세이브 코드 영역을 펴고 접어도 단추 자리가 안 움직인다. y는 카드 위에서 내려온 거리.
-    const float ModeCardCollapsed = 360f, ModeCardOpen = 730f;
+    const float ModeCardCollapsed = 360f, ModeCardOpen = 730f, ModeCardTopY = 20f, ModeCardOpenTopY = 262f;
 
     void BuildModePanel(RectTransform root)
     {
         Image card = CreateCard(root, "ModePanel");
-        PlaceTop(card.rectTransform, new Vector2(0f, 20f), new Vector2(640f, ModeCardCollapsed));
+        PlaceTop(card.rectTransform, new Vector2(0f, ModeCardTopY), new Vector2(640f, ModeCardCollapsed));
         modePanel = card.gameObject;
         modeCard = card.rectTransform;
         RectTransform c = card.rectTransform;
@@ -227,7 +227,7 @@ public class NetLobbyUi : MonoBehaviour
 
         // 세이브 코드 불러오기(원작 -load, 사장님 10-03 확정) — 다른 PC에서 만든 코드로 클리어 횟수 등을 이어 받는다. 닉네임이 열쇠.
         // 보조 영역: 평소엔 한 줄 글자 단추로만 보이고, 누르면 펴진다(사장님 10-06 「첫 화면이 너무 구리다」).
-        Button toggle = CreateLinkButton(c, "SaveCodeToggle", "세이브 코드 불러오기 ▸", 24);
+        Button toggle = CreateLinkButton(c, "SaveCodeToggle", "세이브 코드 불러오기 (펼치기)", 24);
         saveToggleLabel = toggle.GetComponentInChildren<TMP_Text>();
         PlaceFromTop((RectTransform)toggle.transform, -296f, new Vector2(500f, 44f));
         toggle.onClick.AddListener(() => SetSaveOpen(!saveOpen));
@@ -265,8 +265,9 @@ public class NetLobbyUi : MonoBehaviour
     {
         saveOpen = open;
         saveGroup.SetActive(open);
-        saveToggleLabel.text = open ? "세이브 코드 불러오기 ▾" : "세이브 코드 불러오기 ▸";
+        saveToggleLabel.text = open ? "세이브 코드 불러오기 (접기)" : "세이브 코드 불러오기 (펼치기)";
         modeCard.sizeDelta = new Vector2(modeCard.sizeDelta.x, open ? ModeCardOpen : ModeCardCollapsed);
+        modeCard.anchoredPosition = new Vector2(0f, open ? ModeCardOpenTopY : ModeCardTopY);   // 펴면 위로 올려 화면 안에 담는다
     }
 
     // 입력칸 안 왼쪽 끝에 붙는 작은 이름표 — 입력칸이 어느 값인지 한눈에(사장님 10-06 「닉네임 이름표」). 글자는 이름표 폭만큼 오른쪽으로 민다.
@@ -276,11 +277,11 @@ public class NetLobbyUi : MonoBehaviour
         TMP_Text t = CreateText(input, "Tag", tag, 20, GameHud.UiFontAsset, Gold, TextAlignmentOptions.Left);
         t.rectTransform.anchorMin = new Vector2(0f, 0f); t.rectTransform.anchorMax = new Vector2(0f, 1f);
         t.rectTransform.pivot = new Vector2(0f, 0.5f);
-        t.rectTransform.anchoredPosition = new Vector2(16f, 0f);
+        t.rectTransform.anchoredPosition = new Vector2(24f, 0f);
         t.rectTransform.sizeDelta = new Vector2(78f, 0f);
         t.enableWordWrapping = false;
         RectTransform area = field.textViewport;
-        area.offsetMin = new Vector2(100f, area.offsetMin.y);
+        area.offsetMin = new Vector2(112f, area.offsetMin.y);
     }
 
     void BuildMainPanel(RectTransform root)
@@ -321,7 +322,7 @@ public class NetLobbyUi : MonoBehaviour
         });
 
         Button back = CreateButton(c, "BackButton", "뒤로", ButtonNormal, 22);
-        Place((RectTransform)back.transform, new Vector2(0f, 1f), new Vector2(70f, -34f), new Vector2(100f, 44f));
+        Place((RectTransform)back.transform, new Vector2(0f, 1f), new Vector2(70f, 38f), new Vector2(100f, 44f));
         back.onClick.AddListener(() => { if (!launcher.IsBusy) multiplayerChosen = false; });
 
         // 판 도중 끊겨 돌아왔을 때만 보인다 — 기억해 둔 방으로 다시 붙는다(방장이 60초 동안 자리를 붙잡고 있다).
@@ -512,17 +513,18 @@ public class NetLobbyUi : MonoBehaviour
         return button;
     }
 
-    static GameObject AddGoldBorder(RectTransform parent)
+    static GameObject AddGoldBorder(RectTransform parent) => AddGoldBorder(parent, Gold, 2f);
+
+    static GameObject AddGoldBorder(RectTransform parent, Color color, float t)
     {
         RectTransform holder = CreateRect(parent, "Border");
         holder.anchorMin = Vector2.zero; holder.anchorMax = Vector2.one; holder.offsetMin = holder.offsetMax = Vector2.zero;
         void Edge(Vector2 min, Vector2 max, Vector2 offMin, Vector2 offMax)
         {
-            Image e = CreateImage(holder, "E", Gold);
+            Image e = CreateImage(holder, "E", color);
             e.raycastTarget = false;
             e.rectTransform.anchorMin = min; e.rectTransform.anchorMax = max; e.rectTransform.offsetMin = offMin; e.rectTransform.offsetMax = offMax;
         }
-        const float t = 2f;
         Edge(new Vector2(0f, 1f), Vector2.one, new Vector2(0f, -t), Vector2.zero);
         Edge(Vector2.zero, new Vector2(1f, 0f), Vector2.zero, new Vector2(0f, t));
         Edge(Vector2.zero, new Vector2(0f, 1f), Vector2.zero, new Vector2(t, 0f));
@@ -534,7 +536,6 @@ public class NetLobbyUi : MonoBehaviour
     TMP_InputField CreateInput(Transform parent, string name, string placeholder, int characterLimit)
     {
         Image background = CreateImage(parent, name, new Color(0.02f, 0.035f, 0.09f, 1f));
-        if (UiSkin.Apply(background, "console_cell_frame_9s", new Color(0.02f, 0.035f, 0.09f, 1f))) background.pixelsPerUnitMultiplier = 2.2f;
         TMP_InputField input = background.gameObject.AddComponent<TMP_InputField>();
 
         RectTransform area = CreateRect(background.rectTransform, "TextArea");
@@ -550,6 +551,9 @@ public class NetLobbyUi : MonoBehaviour
         text.enableWordWrapping = false;
         Stretch(text.rectTransform);
 
+        // 어두운 홈 + 금빛이 죽은 가는 테두리(그림 프레임은 칸이 낮을 때 모서리가 줄무늬로 늘어났다)
+        GameObject groove = AddGoldBorder(background.rectTransform, new Color(0.50f, 0.40f, 0.18f, 1f), 2f);
+        groove.transform.SetAsFirstSibling();
         input.textViewport = area;
         input.textComponent = text;
         input.placeholder = placeholderText;
