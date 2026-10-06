@@ -206,6 +206,7 @@ public static class UnitCommands
         int count = 0;
         foreach (UnitCombat combat in Fighters(selection))
         {
+            if (combat.TryGetComponent(out FlyingMover _)) { combat.AttackMove(FlyingMover.ClampToWorld(point)); count++; continue; }   // 비행: NavMesh 자리 검사 없음
             if (!combat.TryGetComponent(out UnityEngine.AI.NavMeshAgent agent)) continue;
             if (!UnityEngine.AI.NavMesh.SamplePosition(point, out UnityEngine.AI.NavMeshHit hit, 8f * WorldScale.Value, agent.areaMask)) continue;
             combat.AttackMove(hit.position);

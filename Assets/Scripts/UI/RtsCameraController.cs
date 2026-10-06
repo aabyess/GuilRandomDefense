@@ -35,6 +35,17 @@ public class RtsCameraController : MonoBehaviour
     [SerializeField] Vector2 boundsMin = new Vector2(-2263.2f, -1095.9f);
     [SerializeField] Vector2 boundsMax = new Vector2(1391.8f, 1989.7f);
 
+    /// <summary>맵에서 갈 수 있는 땅 범위(이 카메라의 이동 범위 = MapGenerator.SetUpCamera가 섬 배치를 실측해 정한 값). 비행 유닛(FlyingMover)이 목적지를 자를 때 쓴다.</summary>
+    static RtsCameraController boundsOwner;
+    public static bool TryGetWorldBounds(out Vector2 min, out Vector2 max)
+    {
+        if (boundsOwner == null) boundsOwner = FindFirstObjectByType<RtsCameraController>();
+        if (boundsOwner == null) { min = max = Vector2.zero; return false; }
+        min = boundsOwner.boundsMin;
+        max = boundsOwner.boundsMax;
+        return true;
+    }
+
     // 이동 속도의 기준 높이. 이보다 높으면 빠르게, 낮으면 천천히 움직여
     // 화면에서 체감하는 이동량을 비슷하게 유지한다.
     const float SpeedReferenceHeight = 100f;

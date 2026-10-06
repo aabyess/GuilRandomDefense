@@ -83,6 +83,14 @@ public class UnitSpawner : MonoBehaviour
             // 좌표만 주고 놓으면 NavMesh에서 살짝 벗어났을 때 에이전트가 안 붙고,
             // 그 유닛은 선택은 되는데 이동 명령이 조용히 무시된다.
             NavPlacement.Place(agent, position);
+
+            // 비행(movementAbility Flying — 이재윤·황준석·바다이동·전지역이동): 바다와 섬 NavMesh가 이어져 있지 않아 에이전트로는 섬 밖으로 못 나간다.
+            // 에이전트를 끄고(속도 값은 FlyingMover가 그대로 읽는다) 직선 이동으로 바꾼다. 순서: Place(Warp) → 끄기 → 붙이기.
+            if ((data.movementAbility & MovementAbility.Flying) != 0)
+            {
+                agent.enabled = false;
+                if (!instance.TryGetComponent(out FlyingMover _)) instance.AddComponent<FlyingMover>();
+            }
         }
 
         // 인벤토리는 UnitData 목록이 아니라 필드 인스턴스의 등록부다(UnitInventory 참고).

@@ -83,7 +83,8 @@ static class JaeyunProbe
         return sb.ToString();
     }
 
-    // 비행(원숭이의민첩함) 점검 — 바다 NavMesh 위 한 점을 찾아 이재윤(Flying)과 지상 아군(대조)에게 이동 명령을 내리고 경로 상태를 적는다. Report 뒤 wait 후 MoveReport.
+    // 비행(원숭이의민첩함, FlyingMover) 점검 — 바다 NavMesh 위 한 점을 찾아 이재윤(Flying)과 지상 아군(대조)에게 실제 우클릭 이동과 같은 경로(UnitMover.MoveToGroundPoint)로
+    // 명령을 내린다. Report 뒤 wait 후 MoveReport. 이어서 FlyStop(S) · FlyHold(H) · FlyAttackMove(A+땅) · FlyFar(맵 밖 점 → 범위 자름)로 복귀 확인.
     static Vector3 seaPoint;
     static string MoveSea()
     {
@@ -101,23 +102,42 @@ static class JaeyunProbe
         string r = $"바다 점 {seaPoint:F0} (레인 중심에서 {Vector3.Distance(c, seaPoint):F0})";
         foreach (var pair in new[] { ("이재윤(비행)", jaeyun), ("강재규(지상, 대조)", ally) })
         {
+            pair.Item2.GetComponent<UnitMover>().MoveToGroundPoint(seaPoint, "탐침");
             var agent = pair.Item2.GetComponent<UnityEngine.AI.NavMeshAgent>();
-            bool ok = agent != null && agent.isOnNavMesh && agent.SetDestination(seaPoint);
-            r += $"\n   {pair.Item1}: SetDestination {ok} · areaMask {(agent != null ? agent.areaMask : -1)}";
+            r += $"\n   {pair.Item1}: 명령함 · 에이전트 켜짐 {agent.enabled} · FlyingMover {pair.Item2.GetComponent<FlyingMover>() != null}";
         }
         return r;
+    }
+
+    static string Where(UnitIdentity u)
+    {
+        var fm = u.GetComponent<FlyingMover>();
+        var agent = u.GetComponent<UnityEngine.AI.NavMeshAgent>();
+        string v = fm != null ? $"비행 속도 {fm.Velocity.magnitude:F0} 도착 {fm.HasArrived}" : (agent.isActiveAndEnabled && agent.isOnNavMesh ? $"경로 {agent.pathStatus} 속도 {agent.velocity.magnitude:F0}" : "에이전트 꺼짐");
+        return $"위치 {u.transform.position:F0}(y {u.transform.position.y:F1}) · 바다 점까지 {Vector3.Distance(u.transform.position, seaPoint):F0} · {v}";
     }
 
     static string MoveReport()
     {
         if (jaeyun == null) return "❌ Arena 먼저";
-        var sb = new StringBuilder($"   바다 점까지 남은 거리: ");
-        foreach (var pair in new[] { ("이재윤(비행)", jaeyun), ("강재규(지상)", ally) })
-        {
-            var agent = pair.Item2.GetComponent<UnityEngine.AI.NavMeshAgent>();
-            sb.Append($"{pair.Item1} {Vector3.Distance(pair.Item2.transform.position, seaPoint):F0} (경로 {agent.pathStatus}, 위치 {pair.Item2.transform.position:F0}, 속도 {agent.velocity.magnitude:F0}) · ");
-        }
-        return sb.ToString();
+        return $"   이재윤(비행) {Where(jaeyun)}\n   강재규(지상) {Where(ally)}";
+    }
+
+    static string FlyStop() { jaeyun.GetComponent<UnitCombat>().Stop(); return "이재윤 S(정지) 호출 · " + Where(jaeyun); }
+    static string FlyHold() { jaeyun.GetComponent<UnitCombat>().SetHold(true); return "이재윤 H(홀드) 호출 · " + Where(jaeyun); }
+    static string FlyUnhold() { jaeyun.GetComponent<UnitCombat>().SetHold(false); return "이재윤 홀드 해제"; }
+    static string FlyAttackMove()
+    {
+        // 표적 더미(probeTarget)는 레인 안 — 바다 점으로 공격 이동하면 가는 길에 만나는 적을 치고 다시 간다.
+        UnitCommands.AttackMove(new List<Selectable> { jaeyun.GetComponent<Selectable>() }, seaPoint);
+        return $"이재윤 공격 이동 → 바다 점 · 표적 체력 {probeTarget.Hp:N0}";
+    }
+    static string FlyFar()
+    {
+        Vector3 far = lane.LaneCenter + new Vector3(0f, 0f, 99999f);
+        jaeyun.GetComponent<UnitMover>().MoveToGroundPoint(far, "탐침(맵 밖)");
+        bool ok = RtsCameraController.TryGetWorldBounds(out Vector2 min, out Vector2 max);
+        return $"맵 밖 점 {far:F0} 명령 → 범위 {(ok ? $"x {min.x:F0}~{max.x:F0} · z {min.y:F0}~{max.y:F0}" : "못 구함")}";
     }
 
     static string GivePlane()

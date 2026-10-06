@@ -27,6 +27,19 @@ public class UnitCombat : MonoBehaviour
     NavMeshAgent agent;
     UnitAttacker attacker;
 
+    // 비행 유닛(movementAbility Flying)은 UnitSpawner가 Instantiate 뒤에 FlyingMover를 붙이고 에이전트를 끈다 — Awake엔 아직 없어 처음 쓸 때 찾는다.
+    // 비행이면 에이전트 대신 이 컴포넌트가 이동한다(SetDestination·Stop·HasArrived·SnapTo 분기).
+    FlyingMover flying;
+    bool flyingChecked;
+    FlyingMover Flying
+    {
+        get
+        {
+            if (!flyingChecked) { flyingChecked = true; TryGetComponent(out flying); }
+            return flying;
+        }
+    }
+
     CombatState state = CombatState.Idle;
     EnemyDummy currentTarget;
 
@@ -79,7 +92,8 @@ public class UnitCombat : MonoBehaviour
             state = CombatState.Holding;
 
             // 가던 길을 즉시 끊는다. ResetPath만 부르면 남은 속도로 미끄러진다.
-            if (agent.isActiveAndEnabled && agent.isOnNavMesh)
+            if (Flying != null) Flying.Stop();
+            else if (agent.isActiveAndEnabled && agent.isOnNavMesh)
             {
                 agent.ResetPath();
                 agent.velocity = Vector3.zero;
@@ -100,7 +114,8 @@ public class UnitCombat : MonoBehaviour
         // NavMesh 위로 끌어다 놓는다. 좌표를 그대로 믿고 Warp하면, 그 자리에 길이 안 깔려
         // 있을 때 에이전트가 NavMesh에서 떨어져 나가고 그 뒤로는 이동 명령이 조용히 무시된다.
         // 모으기(V)·정렬(C)이 우리 뒷줄처럼 가장자리 자리를 지목할 수 있어 실제로 닿는 위험이다.
-        if (!NavPlacement.Place(agent, position))
+        if (Flying != null) Flying.SnapTo(position);   // 비행: NavMesh 검사 없이 그 자리로(바다 위도 된다)
+        else if (!NavPlacement.Place(agent, position))
         {
             // 못 올렸으면 옮기지 않는다. 억지로 옮기면 움직일 수 없는 유닛이 되는데,
             // 그건 제자리에 남는 것보다 나쁘다 — 선택은 되는데 명령만 안 먹는다.
@@ -125,7 +140,8 @@ public class UnitCombat : MonoBehaviour
         commandedPosition = transform.position;
         state = CombatState.Idle;
 
-        if (agent.isActiveAndEnabled && agent.isOnNavMesh)
+        if (Flying != null) Flying.Stop();
+        else if (agent.isActiveAndEnabled && agent.isOnNavMesh)
         {
             agent.ResetPath();
             agent.velocity = Vector3.zero;
@@ -348,6 +364,7 @@ public class UnitCombat : MonoBehaviour
 
     bool HasArrived()
     {
+        if (Flying != null) return Flying.HasArrived;
         if (agent.pathPending) return false;
         return agent.remainingDistance <= Mathf.Max(agent.stoppingDistance, arrivalThreshold);
     }
@@ -359,7 +376,8 @@ public class UnitCombat : MonoBehaviour
 
         lastSetDestination = destination;
         hasDestination = true;
-        agent.SetDestination(destination);
+        if (Flying != null) Flying.SetDestination(destination);
+        else agent.SetDestination(destination);
     }
 
     /// <summary>

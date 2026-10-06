@@ -22,6 +22,7 @@ public class UnitFacing : MonoBehaviour
         EnemyDummy target = combat.CurrentTarget;
         if (target == null) return;
 
+        if (TryGetComponent(out FlyingMover flyer) && flyer.IsMoving) return;   // 비행 유닛은 FlyingMover가 이동 방향으로 돌린다
         if (TryGetComponent(out NavMeshAgent agent) && agent.enabled && agent.isOnNavMesh && agent.velocity.sqrMagnitude > MovingSpeedSqr) return;
 
         Vector3 toTarget = target.transform.position - transform.position;

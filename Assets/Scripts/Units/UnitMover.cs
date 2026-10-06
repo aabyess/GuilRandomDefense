@@ -125,6 +125,15 @@ public class UnitMover : MonoBehaviour
     //     복사본을 두지 않으려고 TryMoveToCursor에서 떼어 냈다 — 줄 내용은 그대로다.
     public void MoveToGroundPoint(Vector3 point, string clickedName = "요청")
     {
+        // 비행 유닛(FlyingMover): NavMesh 위에 서 있지도 않고 걸을 자리 검사도 필요 없다 — 맵 범위로만 자르고 직선으로 간다.
+        if (TryGetComponent(out FlyingMover flyer))
+        {
+            Vector3 flyPoint = FlyingMover.ClampToWorld(point);
+            if (combat != null) combat.IssueMoveCommand(flyPoint);
+            else flyer.SetDestination(flyPoint);
+            return;
+        }
+
         if (!agent.isActiveAndEnabled || !agent.isOnNavMesh)
         {
             Debug.Log($"[이동] {name}: NavMesh 위에 서 있지 않아 움직일 수 없습니다 " +
