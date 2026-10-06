@@ -48,7 +48,7 @@ static class NurseApply
         SkillData current = MakeSkill("상호파의최강자", "상호파의최강자 — 현재체력(평타 1/8, 대상 현재 체력 20%)",
             "사장님 10-06 「현재체력」. 평타 1/8 확률로 대상 한 기의 현재 체력 ×20% 피해(AD). 원작 Law_Skill_2(로키포트 사건의 주모자) 1/8·20% 그대로. 적 체력이 줄수록 피해도 줄어드는 단점이 있다(사장님 「끝딜피해량감소」 = 이 설명, 구현 없음).",
             SkillTriggerType.OnHitChance, 0f, 0.125f, SkillGaugeKind.Mana, 0,
-            new SkillEffect { kind = SkillEffectKind.Damage, basis = SkillEffectBasis.TargetCurrentHpPercent, target = SkillTargetKind.SingleTarget, damageType = DamageType.AD, attackType = AttackType.Unassigned, multiplier = 0.2f });
+            new SkillEffect { kind = SkillEffectKind.Damage, basis = SkillEffectBasis.TargetCurrentHpPercent, target = SkillTargetKind.SingleTarget, damageType = DamageType.AD, attackType = AttackType.Unassigned, multiplier = 0.2f, armorIgnoreRatio = 1f });   // %체력은 방어 무시(원작 UNIVERSAL) — 10-06 신 기준 감사로 일괄
 
         SkillData stun = MakeSkill("저지불가", "저지불가 — 단일 스턴(평타 20%, 1.5초)",
             "사장님 10-06 「단일스턴」. 평타 20% 확률로 대상 한 기 스턴 1.5초. 원작 초월 단일 스턴 27건(확률 15~40%·0.5~5초) 중앙값 근처(A0X0 40%·1.5초, A0AG 20%·1.0초).",
