@@ -79,4 +79,20 @@ public static class LimitedProbe2
         sb.AppendLine($"   보물위치공개: 상자 {list.Count}개 중 반경 {reveal.levels[0].WorldRange:F0}(월드) 안 {minkyu.LastRevealCount}곳 · 빛기둥 {beams}개 · 미니맵 점 {hunt.RevealMarks.Count}개 (기대 ≥1, 같은 수) · 상자는 안 열림 {list.Count}개 그대로");
         return sb.ToString();
     }
+
+    /// <summary>빛기둥·미니맵 점 사진용: 상자를 숨기고 김민규를 그 곁에 세워 쿨스킬을 시전, 카메라를 상자로 옮긴다(call:LimitedProbe2.Photo wait:2).</summary>
+    public static string Photo()
+    {
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        var hunt = TreasureHunt.Instance;
+        hunt.OnRoundStarted(10);
+        var list = (System.Collections.Generic.List<Vector2>)typeof(TreasureHunt).GetField("chests", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(hunt);
+        Vector2 c = list[0];
+        var m = spawner.Spawn(U("제한_김민규"), LaneMarker.Get(0).TakeSpawnPosition(U("제한_김민규")), 0).GetComponent<UnitAttacker>();
+        if (m.TryGetComponent(out UnityEngine.AI.NavMeshAgent ag)) ag.Warp(new Vector3(c.x + 20f, m.transform.position.y, c.y)); else m.transform.position = new Vector3(c.x + 20f, m.transform.position.y, c.y);
+        SkillData reveal = m.GetComponent<UnitIdentity>().Data.skills.First(s => s.skillName.StartsWith("보물위치공개"));
+        CastLevel.Invoke(m, new object[] { reveal.levels[0], reveal.levels[0].WorldRange, null, 0f });
+        Object.FindFirstObjectByType<RtsCameraController>().MoveTo(new Vector3(c.x, 8f, c.y - 60f));
+        return $"   상자 {list.Count}개 · 시전 결과 {m.LastRevealCount}곳 · 카메라 상자 곁({c.x:F0},{c.y:F0})";
+    }
 }

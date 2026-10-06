@@ -16,7 +16,7 @@ using UnityEngine.Rendering;
 public static class DirtRoadBuilder
 {
     public const float SampleStep = 5f;      // 둘레 표본 간격(가장자리 지글지글 파장 ~23을 풀어낼 만큼)
-    public const float Wobble = 0.12f;        // 폭 W 대비 가장자리 출렁임 최대(사장님 안 ±10~15%)
+    public const float Wobble = 0.04f;        // 폭 W 대비 가장자리 출렁임 최대 — 10-06 사장님 「직선이 반듯하게」로 0.12→0.04(±12%→±4%)
     public const float Jitter = 0.018f;       // 가장자리 지글지글(W 대비)
     public const float SkirtRatio = 0.10f;    // 풀과 섞이는 띠 한쪽 폭(W 대비)
     const int Rows = 8;                       // 폭 방향 줄: 바깥 skirt 3칸 · 본체 · 안쪽 skirt 3칸 → 줄 8개

@@ -680,8 +680,8 @@ public static class MapGenerator
     //     자리를 만들어 결국 지웠다 — 사각형을 만드는 길은 하나여야 한다.)
     //    값 자체는 원작 실측 비율이다(MapLayout.TrackInsetRatioX/Z 주석 참고).
 
-    // 흙길 모서리 반경 = DirtRoadBuilder.CornerRatios[이 번호] × 띠 폭(시안 0 작게 · 1 중간 · 2 크게 — 사장님 10-06 「크게(×1.6)」 선택).
-    const int DirtCornerIndex = 2;
+    // 흙길 모서리 반경 = DirtRoadBuilder.CornerRatios[이 번호] × 띠 폭(시안 0 작게 · 1 중간 · 2 크게 — 사장님 10-06 「크게(×1.6)」 선택 → 같은 날 「너무 둥글다, 모서리만 둥글게」로 0(작게 ×0.5) + 폭 출렁 ±4%).
+    const int DirtCornerIndex = 0;
 
     /// <summary>흙길 띠의 바깥·안쪽 직사각형(월드 XZ, Rect.y = z)과 띠 폭. 가운데 선(LaneTrackRect)은 그대로 — 변마다 바깥/안쪽 폭이 다르다(TrackBand).</summary>
     internal static void DirtRoadRects(MapLayout.Island lane, out Rect outer, out Rect inner, out float width)
