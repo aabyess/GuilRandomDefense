@@ -1,31 +1,26 @@
-# blender 인수인계 (2026-10-03 마무리, 직전 blender 세션 → 새 blender 세션)
+# blender 인수인계 (2026-10-06 마무리, 직전 blender 세션 → 새 blender 세션)
 
 새 세션: 이 파일을 먼저 읽고, 다 읽은 뒤 PM에게 「[blender → PM] 준비 완료」. 일이 끝나면 이 파일을 비우고 커밋.
+규칙: Assets엔 안 쓴다. 산출은 정본 스크립트(Tools/…)와 ~/ 작업 폴더. 시스템 `python3`엔 PIL·yaml이 없다 → 🔴 `/usr/bin/python3`(PIL·numpy·yaml·mpyq). Blender 창(MCP)은 오늘 안 썼다(전부 헤드리스 `blender -b --factory-startup`).
 
-## 끝난 일 (오늘)
-1. **분홍 오라**: 원작 사진의 초월 발밑 분홍·흰 조각 = **HandsAura2**(A07O 「스피어 초월함」 atat, 로스터 23명)였다. 모델은 맞았고 근사 텍스처(Zap1_Red·Purple_Glow)가 틀렸다(mdx_extract.placeholder가 이름 「zap」만 보고 지그재그 번개를 그림). 방사 광선 + 분홍 바탕으로 다시 그림 → 2차(더 밝게)까지 PM이 게임에 반영(크기 1.0 · 세기 Purple 1.0 / Zap 0.7).
-   - 산출: `~/GRD_motion_trial/초월_상시오라/HandsAura2/Textures/` 두 장 · 비교.png(원작 사진 ↔ 렌더) · 설명.md에 정정 기록.
-   - 남은 관찰(미해결): 원작 판이 사진상 우리 모델 치수보다 1.5배쯤 커 보임(맵 쪽 배율 필드 미확인) · 지오셋 0의 Yellow_Glow는 사진에 안 보임(유니티에서 끄거나 약하게) · 정품 Zap1_Red.blp를 구하면 교체.
-2. **고유 동작 5묶음** 여섯 → `~/GRD_motion_trial/고유_5묶음/`(README.md에 클립표·판단·결함검사). **PM이 Assets 반영 완료(06ba66713, Generic 확인)**. README의 「박도진(구부정)」「손오공(Attack 2배속)」도 사장님 10-03 「반영해」로 확정(지금 들어간 그대로).
-
-## 도구 위치·쓰는 법 (전부 Tools/blender/, 커밋됨)
-- `gen_aura_approx_tex.py` — Zap1_Red·Purple_Glow 근사 재생성. `blender -b --factory-startup --python … -- <출력폴더>`. 값 조정은 stops(색 사다리)·core·ray 줄.
-- `render_mdx.py` — MDX 구경 렌더. 환경변수 `GROUND_RGB=r,g,b`(바닥 판 + 배경, 「사진」 시점 추가) · `EMIT_STRENGTH`(가산 세기, 기본 1.6 — 실제와 맞추려면 1.0).
-- `fix_unit_fbx.py` 「이름@동작」 변형 — `split_clips`에 새 키: `src`(자를 클립을 take_names 이름으로 고름) · `step`(k배속) · `land=dict(to="Idle", k=N)`(끝 자세에서 Idle 첫 자세로 N프레임 보간 — 끝이 공중인 한 번짜리용). `clip_floor_feet`에 발뼈 이름 목록을 줄 수 있음(비-mixamorig 리그). `drop_material_faces`는 클립 때문에 원본을 다시 읽은 뒤에도 재적용됨. `skip_shapes=True`는 모양 키 클립 중복(Idle·Attack ×2) 방지.
-- `clip_sheet.py <fbx> <png> [--side] [--only Idle,Move]` — 클립마다 5프레임 렌더 시트(뒷면 컬링 켬).
-- `frames_sheet.py <fbx> <클립이름 일부> <간격> <png> [--front] [--from N --to M] [--cols C] [--H 키] [--zoom Z]` — 한 클립을 간격 프레임으로(구간 자르기용, 카메라가 골반을 따라감). 골반 높이 곡선이 stdout.
-- `verify_clips5.py <fbx…>` — 키·뒤집힌 면 비율·순흑색 텍스처·Emission·뼈 꼬리·구조. clip_table·clip_check·bind_check와 같이 돌린다(수치.md 형식은 5묶음 폴더).
+## 오늘 한 것 (10-06)
+1. **협곡 텍스처**(`Tools/blender/gen_canyon_tex.py`) → `~/GRD_canyon/canyon_strata.png`(지층 띠 7·이음새 없음)·`canyon_top.png`(붉은 흙). 4×4 미리보기도 있음. PM이 레인 사이 십자 대지에 쓴다.
+2. **전설 스킬 대응 제안**(`Docs/research/LEGEND_SKILL_PLAN_2026-10-06.md/.csv` + `LEGEND_PARTIAL_MISSING_2026-10-06.csv`, 5d8b4beda). 핵심: ① 남는 원작 6은 실제 4(h06N·h07H는 슈가의 소환체, 능력 없음) ② 우리 전설 33의 (공격력·주기)는 원작 전설과 정확히 같다(「스탯 쌍둥이」, 스킬 대응과는 별개) ③ 대응 없는 9기 배정 제안(구주호→슈가 · 양재모→킹 · 김용태→드래곤 · 노태현→시저(낮음) · 김건→울티 · 김민규→시노부 · 김민준→네코마무시 · 김정래→아마츠키 · 박병규→에이스) ④ 일부 반영 11 중 3은 CSV 오탐. SkillData 작성은 구현담당 몫.
+3. **스킬·아이템 아이콘 추출**(`Tools/skill_icons/`): `extract_icons.py`(맵 w3a/w3t 아이콘 → `~/GRD_skill_icons/`, 맵 안 201장) → `fill_std_icons.py`(맵 밖 표준 BTN을 웹 모음으로 채움: `~/GRD_skill_icons/std_*.png` 369장) → `map_skill_icons.py`(우리 UnitSkills → 원작 능력 코드 → png: `skill_icon_map.csv`). 7721f5d1e · 015f81b54.
+4. **웹 BTN 수집**: 출처 github.com/Wc3ReforegIcons/Wc3ReforegIcons.github.io(리포지드 HD, 256², 이름 1:1). 능력 363 중 360 · 아이템 31/31 채움. 못 구한 3: PASBTNShadeTrueSight · BTNShoveler · UI\infocard-banshee. 내려받은 건 `~/GRD_skill_icons_dl/reforge/`. 공개 전 교체 줄 `Docs/REPLACE_BEFORE_PUBLIC.md`에 있음.
+5. **로비 워크3풍 아트**(사장님 「이대로 가자」로 확정, 구현담당3이 Assets에 붙인다 — `~/GRD_lobby_art/` 파일 옮기거나 이름 바꾸지 말 것): `Tools/blender/gen_lobby_ui.py`(단추 9-slice 3·메뉴 틀·제목 판, numpy+PIL) · `gen_lobby_art.py`(Cycles 3D 배경: 높이장 섬·십자 대지·상점 7채 FBX·횃불·안개 — 2560×1440 160샘플 3분) · `gen_lobby_post.py`(꽃·비네트·색조·시안). 폰트 `~/GRD_lobby_art/fonts/`(Nanum Myeongjo ExtraBold · Song Myung · Gowun Batang, OFL). 재생성: ui → art → post 순.
 
 ## 함정 (오늘 새로)
-- **Blender 5의 레이어 액션**: `act.fcurves` 없음. FBX에 모양 키가 있으면 같은 이름 액션이 하나 더 있고(슬롯 KESlot) 그걸 고르면 포즈가 안 변한다 → 슬롯 `target_id_type == 'OBJECT'`인 액션만, `animation_data.action_slot`도 지정(clip_sheet·frames_sheet가 이미 처리).
-- **블렌더 상대경로 저장**: 시스템 파이썬이 아니라 Blender 안에서 `image.save()`는 상대경로를 못 쓴다 → 절대경로.
-- 시스템 `python3`에는 PIL·numpy·mpyq가 없다(Blender 안에는 numpy 있음). 원작 j·w3a는 `Tools/w3x/원본/war3map_new.*`(디코드본)을 직접 읽는다.
-- **원본 클립이 한 클립에 연출을 이어 붙인 경우**(강민호 skill_b: 나타남→뜀→도약→사라짐)는 이름·길이로 못 가른다 — 골반·발 높이 곡선 + 간격 렌더로 구간을 잡을 것.
-- 클립을 새로 자르거나 이어 붙이면 clip_table(이음새)·clip_check(바닥)을 **둘 다**.
-- Blender 창(MCP)이 꺼져 있으면 헤드리스로 하고 그렇다고 보고(오늘은 내내 꺼져 있었다).
+- **Blender 월드에 볼륨 산란을 달면 하늘이 통째로 사라진다**(무한 거리 감쇠). 안개는 큰 상자(`ground_fog`)로. 월드 `Generated` 좌표는 0..1 → 방향으로 쓰려면 ×2−1 정규화(이번엔 결국 물리 하늘 `MULTIPLE_SCATTERING` 사용; 블렌더 5엔 `NISHITA` enum이 없다).
+- 안개 상자 경계가 하늘에 줄(이음선)로 보인다 → 상자를 하늘 쪽으로 크게(2400) 잡을 것.
+- 능력 w3a 파서: 새 ID가 NUL 4칸인 항목이 있다(원본 능력을 고친 것) → 코드에 `*`(map_skill_icons가 처리). csv에 NUL이 섞이면 읽기가 터진다.
+- Unity 에셋 YAML은 따옴표 없는 줄에 콜론이 있어 `yaml.safe_load`가 터진다 → skillName·description만 직접 잘라 읽을 것(map_skill_icons.ydec).
+- zsh에서 `$VAR`에 공백 든 여러 경로를 넣으면 한 인자가 된다 · macOS `sed -i ''` · `git commit -- <파일>`로만(멀티세션).
+- 리포지드 아이콘은 클래식과 그림 결이 다르다(테두리 있음). 원작 아이템 아이콘 34/38은 원래 맵 밖이라, `Assets/Art/Items`의 지금 그림은 원작이 아니라 game-icons.net(CC BY 3.0)이다.
 
-## 남은 보류
-- 히든_전유라 Move가 15프레임·이음새 0.066 — 필요하면 split_clips `loop=`로 다듬기(다른 클립도 split에 다 적어야 함).
-- ~~박도진(클립이 구부정) · 손오공 Attack(2배속 가공) — 사장님 결정 대기.~~ → **사장님 10-03 「반영해」 확정** — 06ba66713에 이미 들어간 그대로 유지(구부정 원본 클립 · 카메하메 준비 2배속).
-- 정품 War3 텍스처(War3.mpq/CASC) 위치 — 사장님 답 대기. 근사 텍스처 39개 + HandsAura2 두 장이 근사다.
-- 적 R67·R73·R74(항목 없음) · 애매 18(Idle만) — 가치 작아 보류.
+## 남은 일·보류
+- 못 구한 아이콘 3(위). 정품 War3.mpq가 생기면 클래식 BTN으로 교체 가능(`extract_icons.py`에 경로만 추가하면 됨).
+- 대응표 「낮음」 306행은 코드에 아이콘이 없어 원작 유닛 대표 능력으로 임시 대체한 것 — 구현담당이 쓰기 전에 필요하면 손으로 확정.
+- 바지사장·양재모·강재규 스킬 에셋이 생기면 `map_skill_icons.py` MANUAL 표(설계표 코드)에 이름을 추가하고 다시 돌릴 것(「계획」 행이 있다).
+- 로비 시안 약점(사장님은 통과시킴): 상점 모델 장난감 느낌 · 땅 밋밋 · 가죽 칸 큼 — 필요하면 2차(더 어둡게·땅 질감·유닛 실루엣).
+- 이전 보류(아직 유효): 정품 War3 텍스처 위치(근사 텍스처 39+HandsAura2) · 히든_전유라 Move 이음새 · 적 R67·R73·R74·애매 18 · 분홍 오라 1.5배 관찰.
