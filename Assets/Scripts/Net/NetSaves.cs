@@ -32,12 +32,12 @@ public static class NetSaves
     }
 
     /// <summary>호스트: 원격 슬롯의 판 결과를 그 친구에게.</summary>
-    public static void SendResult(int slot, PlayerSaveData data)
+    public static void SendResult(int slot, PlayerSaveData data, bool cleared)
     {
         foreach (NetPlayer player in NetPlayer.All)
         {
             if (player == null || player.Slot != slot) continue;
-            player.RPC_SaveResult(data.cumulativePlayPoint, data.cumulativeClearCount, data.bestRunPoint, data.playerLevel);
+            player.RPC_SaveResult(data.cumulativePlayPoint, data.cumulativeClearCount, data.bestRunPoint, data.playerLevel, cleared);
             Debug.Log($"[MP] 세이브 결과 보냄: 슬롯 {slot} — 누적 {data.cumulativePlayPoint}점 · 클리어 {data.cumulativeClearCount}회");
             return;
         }
@@ -45,7 +45,7 @@ public static class NetSaves
     }
 
     /// <summary>클라: 결과를 받아 내 player_0.json에 쓰고 눈에 보이게 알린다(PM 요구).</summary>
-    public static void WriteResult(int point, int clear, int best, int level)
+    public static void WriteResult(int point, int clear, int best, int level, bool cleared)
     {
         var data = new PlayerSaveData { cumulativePlayPoint = point, cumulativeClearCount = clear, bestRunPoint = best, playerLevel = level };
         try
@@ -53,7 +53,7 @@ public static class NetSaves
             PersistentSave.WriteOwnSave(data);
             Debug.Log($"[MP] 세이브 저장: {PersistentSave.PathFor(0)} — 누적 {point}점 · 클리어 {clear}회 · 최고 {best}");
             PlayerNotification.Show(LocalPlayer.LocalPlayerId, "이번 판 기록을 저장했습니다.", 6f);
-            SaveCodeService.PresentAfterRun(LocalPlayer.LocalPlayerId, data);   // 원작식 세이브 코드(다른 PC 이어하기)
+            if (cleared) SaveCodeService.PresentAfterRun(LocalPlayer.LocalPlayerId, data);   // 원작식 세이브 코드(다른 PC 이어하기) — 클리어 판만(사장님 10-06)
         }
         catch (System.Exception e)
         {

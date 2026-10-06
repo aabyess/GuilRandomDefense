@@ -395,9 +395,9 @@ public class NetPlayer : NetworkBehaviour
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
-    public void RPC_SaveResult(int point, int clear, int best, int level)
+    public void RPC_SaveResult(int point, int clear, int best, int level, NetworkBool cleared)
     {
-        NetSaves.WriteResult(point, clear, best, level);
+        NetSaves.WriteResult(point, clear, best, level, cleared);
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]

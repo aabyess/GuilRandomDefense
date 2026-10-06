@@ -94,12 +94,12 @@ public class PersistentSave : MonoBehaviour
         }
     }
 
-    void WriteToDisk()
+    void WriteToDisk(bool cleared)
     {
         // MP: 원격 슬롯은 호스트 PC에 쓰지 않고 그 친구에게 돌려보낸다 — 친구가 자기 player_0.json에 쓴다.
         if (remote)
         {
-            if (GameAuthority.IsServer) NetSaves.SendResult(playerId, Data);
+            if (GameAuthority.IsServer) NetSaves.SendResult(playerId, Data, cleared);
             return;
         }
 
@@ -196,10 +196,11 @@ public class PersistentSave : MonoBehaviour
         PlayerNotification.Show(playerId, "진행 게임 결과를 세이브합니다.", 10f);
 
         SessionPoints = 0;
-        WriteToDisk();
+        WriteToDisk(cleared);
 
         // 세이브 코드(원작 VJSE_Save, 사장님 10-03 확정 — 자동 저장과 병행): 이 PC 주인의 슬롯만. 멀티 원격 슬롯은 친구 PC에서(NetSaves.WriteResult).
-        if (!remote && playerId == LocalPlayer.LocalPlayerId) SaveCodeService.PresentAfterRun(playerId, Data);
+        // 🔴 사장님 10-06 「세이브코드는 클리어 시 나오게」 — 패배 판은 자동 저장(파일)만 하고 코드는 안 보인다.
+        if (cleared && !remote && playerId == LocalPlayer.LocalPlayerId) SaveCodeService.PresentAfterRun(playerId, Data);
     }
 
     /// <summary>세이브 코드 불러오기(싱글 판 중 -load)로 값이 바뀌었을 때 메모리의 것도 맞춘다.</summary>
