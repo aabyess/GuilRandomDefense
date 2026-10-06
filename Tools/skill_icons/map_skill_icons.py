@@ -25,7 +25,7 @@ for a in A:
 # 아이콘 표(extract_icons.py 결과): 경로 → (분류, png)
 ICON = {}
 for r in csv.DictReader(open('Tools/skill_icons/ability_icons.csv', encoding='utf-8-sig')):
-    if r['아이콘종류'] == '기본': ICON.setdefault(r['아이콘경로'], (r['맵안/밖'], r['png파일(~/GRD_skill_icons/)']))
+    if r['아이콘종류'] == '기본': ICON.setdefault(r['아이콘경로'], (r['맵안/밖'], r['png파일(~/GRD_skill_icons/)'], r.get('출처', '')))
 UNIT = {u['id']: dict(name=strip(wts.resolve(str(u['mods'].get('unam', '')), S)), uabi=[x for x in str(u['mods'].get('uabi', '')).split(',') if x]) for u in U}
 TRIG2UID = {}
 for uid, t in re.findall(r"SaveTriggerHandle\(udg_HashAttack,'(\w{4})',\d+,gg_trg_(\w+)\)", J):
@@ -34,8 +34,8 @@ for uid, t in re.findall(r"SaveTriggerHandle\(udg_HashAttack,'(\w{4})',\d+,gg_tr
 def icon_of(code):
     p = AB.get(code, {}).get('icon', '')
     if not p: return None
-    cat, png = ICON.get(p, ('?', ''))
-    return dict(path=p, cat=cat, png=png)
+    cat, png, src = ICON.get(p, ('?', '', ''))
+    return dict(path=p, cat=cat, png=png, src=src)
 
 FREQ = collections.Counter(c for u in UNIT.values() for c in set(u['uabi']))
 
@@ -99,7 +99,7 @@ MANUAL.update({
 rows = []
 def add(path, kind, code, how, conf, alt=''):
     ic = icon_of(code) if code else None
-    rows.append([path, kind, code or '', AB.get(code, {}).get('name', '') if code else '', how, (ic or {}).get('path', ''), (ic or {}).get('cat', '아이콘없음'), (ic or {}).get('png', ''), alt, conf])
+    rows.append([path, kind, code or '', AB.get(code, {}).get('name', '') if code else '', how, (ic or {}).get('path', ''), (ic or {}).get('cat', '아이콘없음'), (ic or {}).get('png', ''), (ic or {}).get('src', ''), alt, conf])
 
 for f in sorted(glob.glob('Assets/Data/UnitSkills/*.asset')):
     base = os.path.basename(f)[:-6]
@@ -171,8 +171,8 @@ for nm, code, why, conf in PLAN:
 
 with open('Tools/skill_icons/skill_icon_map.csv', 'w', encoding='utf-8-sig', newline='') as fh:
     w = csv.writer(fh)
-    w.writerow(['에셋 경로', '종류', '원작 능력 코드', '원작 능력 이름', '찾은 방법', '아이콘 경로(원작)', '맵안/밖', 'png(~/GRD_skill_icons/)', '대체 후보', '확신도'])
+    w.writerow(['에셋 경로', '종류', '원작 능력 코드', '원작 능력 이름', '찾은 방법', '아이콘 경로(원작)', '맵안/밖', 'png(~/GRD_skill_icons/)', '그림 출처', '대체 후보', '확신도'])
     w.writerows(rows)
 n = len(rows)
-print('행', n, '| 분류', dict(collections.Counter(r[6] for r in rows)), '| 확신도', dict(collections.Counter(r[9] for r in rows)))
+print('행', n, '| 분류', dict(collections.Counter(r[6] for r in rows)), '| 확신도', dict(collections.Counter(r[10] for r in rows)))
 print('에셋 중 png 있음(맵 안)', sum(1 for r in rows if r[7]), '| 종류별', dict(collections.Counter(r[1] for r in rows if r[7])))
