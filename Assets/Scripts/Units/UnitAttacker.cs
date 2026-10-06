@@ -919,6 +919,8 @@ public class UnitAttacker : MonoBehaviour
     // 한계가 남는다 — 실제로 겹치면 그때 다시 설계할 것.
     SkillData ResolveSkillAt(UnitData unitData, int index)
     {
+        int baseCount = BaseSkillCount(unitData);
+        if (index >= baseCount && grantedSkills.Count > index - baseCount) return grantedSkills[index - baseCount].skill;   // 아군 오라로 빌린 스킬(GrantSkillToAllies)
         if (index == 0)
         {
             UnitUpgrades source = ResolveUpgrades();
@@ -938,12 +940,31 @@ public class UnitAttacker : MonoBehaviour
     // 고정: 기본 SkillCount가 0이어도 이 유닛을 targetUnit으로 하는 언락된 트레잇에
     // replacementSkill이 있으면 최소 1로 올려 slot0 진입을 보장한다 — 나머지 12종은
     // SkillCount가 이미 1 이상이라 이 분기를 안 타므로 회귀 없음.
-    int EffectiveSkillCount(UnitData unitData)
+    int BaseSkillCount(UnitData unitData)
     {
         int count = unitData.SkillCount;
         if (count > 0) return count;
         UnitUpgrades source = ResolveUpgrades();
         return (source != null && source.ReplacementSkillFor(unitData) != null) ? 1 : 0;
+    }
+
+    int EffectiveSkillCount(UnitData unitData) => BaseSkillCount(unitData) + grantedSkills.Count;
+
+    // 아군 오라(SkillEffectKind.GrantSkillToAllies)로 빌린 스킬 — 준 사람(source)마다 하나. 같은 스킬 에셋이 이미 있으면(내 것이든 빌린 것이든) 또 안 받는다.
+    class GrantedSkill { public UnitAttacker source; public SkillData skill; }
+    readonly List<GrantedSkill> grantedSkills = new List<GrantedSkill>();
+
+    public void AddGrantedSkill(UnitAttacker source, SkillData skill)
+    {
+        if (skill == null || source == null) return;
+        foreach (GrantedSkill g in grantedSkills) if (g.source == source && g.skill == skill) return;
+        grantedSkills.Add(new GrantedSkill { source = source, skill = skill });
+    }
+
+    public void RemoveGrantedSkill(UnitAttacker source, SkillData skill)
+    {
+        for (int i = 0; i < grantedSkills.Count; i++)
+            if (grantedSkills[i].source == source && grantedSkills[i].skill == skill) { grantedSkills.RemoveAt(i); return; }
     }
 
     // 06번① 완료: 스킬승급형 트레잇(UnitTraitData.skillLevelUnlockIndex)이 UnitUpgrades에
@@ -1206,7 +1227,7 @@ public class UnitAttacker : MonoBehaviour
             bool alreadyApplied = state.auraSelfAppliedBuffIds.Contains(effect.buffId);
             if (gatePasses && !alreadyApplied)
             {
-                if (IsAuraStatKind(effect.kind)) AddAuraBonus(this, effect.kind, effect.buffId, effect.multiplier);
+                if (IsAuraStatKind(effect.kind)) AddAuraBonus(this, effect.kind, effect.buffId, ScaledAuraValue(effect));
                 AddBuff(effect.buffId, 0f);
                 state.auraSelfAppliedBuffIds.Add(effect.buffId);
             }
@@ -1265,6 +1286,8 @@ public class UnitAttacker : MonoBehaviour
             ApplyPersistentAuraEffectsToAlly(level, ally);
             state.auraAffectedAllies.Add(ally);
         }
+
+        RefreshScaledAuraBonuses(level, state);
     }
 
     void ApplyPersistentAuraEffectsToEnemy(SkillLevel level, EnemyDummy target)
@@ -1323,8 +1346,12 @@ public class UnitAttacker : MonoBehaviour
             // 오라를 낸다"를 표현할 방법이 없어 여전히 미완성) — RemoveBuff를 Enemies
             // 타겟에도 미리 만들어둔 것과 같은 이유로, 대칭을 미리 갖춰둔다.
             // 2026-09-30 — 수치 오라는 받는 쪽 레지스트리에 「누가 줬나」와 함께 적는다(버프 ID별 최댓값, AddAuraBonus 주석).
-            if (IsAuraStatKind(effect.kind))
-                allyAttacker.AddAuraBonus(this, effect.kind, effect.buffId, effect.multiplier);
+            if (effect.kind == SkillEffectKind.GrantSkillToAllies)
+            {
+                if (ally.Data != null && ally.Data.grade.Tier() >= effect.minAllyTier && !ally.IsSummon) allyAttacker.AddGrantedSkill(this, effect.grantSkill);
+            }
+            else if (IsAuraStatKind(effect.kind))
+                allyAttacker.AddAuraBonus(this, effect.kind, effect.buffId, ScaledAuraValue(effect));
             else if (effect.kind == SkillEffectKind.ApplyBuff)
                 allyAttacker.AddBuff(effect.buffId, 0f);
         }
@@ -1337,7 +1364,8 @@ public class UnitAttacker : MonoBehaviour
         foreach (SkillEffect effect in level.effects)
         {
             if (effect.target != SkillTargetKind.Allies) continue;
-            if (IsAuraStatKind(effect.kind)) allyAttacker.RemoveAuraBonus(this, effect.kind, effect.buffId);
+            if (effect.kind == SkillEffectKind.GrantSkillToAllies) allyAttacker.RemoveGrantedSkill(this, effect.grantSkill);
+            else if (IsAuraStatKind(effect.kind)) allyAttacker.RemoveAuraBonus(this, effect.kind, effect.buffId);
             else if (effect.kind == SkillEffectKind.ApplyBuff) allyAttacker.RemoveBuff(effect.buffId);
         }
     }
@@ -2238,6 +2266,7 @@ public class UnitAttacker : MonoBehaviour
         // 근사다. 거프 4행(Garp_AttackDamage #5·#6·#7, 값×(1+0.12×버프개수))이 이 factor로
         // 실제로 걸린다.
         amount *= 1f + effect.casterBuffCountFactor * CountCasterBuffs();
+        amount *= BossDamageFactor(target);   // 보잡(BossDamageMultiplier) — 보스 상대 ×배율
         if (amount <= 0f) return;
 
         // ⚠️ 평타(DamageTypeOf/AttackTypeOf)가 아니라 이 효과 자신의 damageType/attackType을
@@ -2588,7 +2617,7 @@ public class UnitAttacker : MonoBehaviour
             inRange.RemoveRange(unitData.attackExtraTargets, inRange.Count - unitData.attackExtraTargets);
         }
         int ownerId = owner != null ? owner.OwnerId : -1;
-        float damage = AttackDamage;
+        float damage = AttackDamage * SplashDamageFactor(unitData);   // 폭발증폭(SplashDamageMultiplier) — 범위 피해량만
         foreach (EnemyDummy enemy in inRange)
         {
             float hpBefore = enemy.Hp;
@@ -2616,7 +2645,7 @@ public class UnitAttacker : MonoBehaviour
             if (Vector3.Distance(enemy.transform.position, center) <= reach) inRange.Add(enemy);
         }
         int ownerId = owner != null ? owner.OwnerId : -1;
-        float damage = AttackDamage * SplashDamageFactor(unitData);   // 폭발증폭(SplashDamageMultiplier) — 범위 피해량만
+        float damage = AttackDamage;
         foreach (EnemyDummy enemy in inRange)
         {
             float distance = Vector3.Distance(enemy.transform.position, center);

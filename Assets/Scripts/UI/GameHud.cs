@@ -1376,7 +1376,7 @@ public class GameHud : MonoBehaviour
     // MP: 버튼(위)과 멀티 호스트가 받은 클라 요청(NetCommands)이 같이 쓰는 본체 — 줄 내용은 그대로다.
     public void ExecuteSellOn(Selectable single)
     {
-        if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null ||
+        if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.IsSummon ||   // 소환수는 판매 불가(최상호 구일 소환수 20초)
             (identity.Data.sellRewardWisp == null && identity.Data.sellRewardTraitPoints <= 0 &&
              identity.Data.sellRewardWood <= 0 && identity.Data.sellTriggersItemGamblePool == null &&
              identity.Data.sellRewardEveryNSells <= 0)) return;

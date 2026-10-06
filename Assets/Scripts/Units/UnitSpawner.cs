@@ -6,7 +6,7 @@ public class UnitSpawner : MonoBehaviour
     const string SeaAreaName = "Sea";
 
     // TODO(멀티): 이 메서드 내부를 서버 권위 호출로 교체하면 됨 — MULTIPLAYER_MIGRATION.md "전환 순서" 4번 참고.
-    public GameObject Spawn(UnitData data, Vector3 position, int ownerId)
+    public GameObject Spawn(UnitData data, Vector3 position, int ownerId, bool summoned = false)
     {
         // MP: 플레이어 유닛은 호스트만 만든다(클라에서 만들면 호스트가 모르는 유닛이 생긴다). 지금 호출부는 전부
         //     가드돼 있지만 여기가 유일한 생성 지점이라 한 번 더 막는다. 싱글·호스트는 지나친다.
@@ -27,11 +27,12 @@ public class UnitSpawner : MonoBehaviour
         if (!instance.TryGetComponent(out UnitIdentity identity))
             identity = instance.AddComponent<UnitIdentity>();
         identity.SetData(data);
+        identity.IsSummon = summoned;   // 소환수는 인벤토리·획득 보상·자리 예약에 안 들어간다(아래)
         // 원딜(GAP 6) — 패왕의길 플레이어가 제한됨·초월·불멸·영원을 처음 얻으면 그 네 등급 조합을 잠근다. 조합·도박·보상이 전부 여기를 지난다.
-        if (PlayerContext.Get(ownerId)?.NavigationState?.RegisterAcquired(data) == true)
+        if (!summoned && PlayerContext.Get(ownerId)?.NavigationState?.RegisterAcquired(data) == true)
             PlayerNotification.Show(ownerId, $"패왕의길: {data.DisplayName} 획득 — 이제 제한됨·초월·불멸·영원 조합을 더 할 수 없습니다(원딜).", 6f);
         // 레인 가운데 자리 예약(LaneMarker.TakeSpawnPosition)에 이 개체를 붙인다 — 그래야 C 정렬이 같은 자리로 돌려보낸다(2026-09-26).
-        LaneMarker.Get(ownerId)?.ClaimSpawnSlot(identity, position);
+        if (!summoned) LaneMarker.Get(ownerId)?.ClaimSpawnSlot(identity, position);
 
         if (instance.TryGetComponent(out UnitAttacker attacker))
             attacker.ApplyStats(data.attackPower, data.attackRange, data.attackSpeed);
@@ -86,6 +87,7 @@ public class UnitSpawner : MonoBehaviour
 
         // 인벤토리는 UnitData 목록이 아니라 필드 인스턴스의 등록부다(UnitInventory 참고).
         // 플레이어 유닛을 만드는 곳이 여기뿐이라, 여기가 유일한 등록 지점이다.
+        if (summoned) return instance;   // 소환수: 인벤토리·연합세력·패스트유니크·보물찾기 보상 전부 건너뛴다 — 20초짜리라 유닛 수·판매·조합 재료·전설 이상 개수에 안 센다
         UnitInventory inventory = PlayerContext.Get(ownerId)?.UnitInventory;
         if (inventory == null)
         {

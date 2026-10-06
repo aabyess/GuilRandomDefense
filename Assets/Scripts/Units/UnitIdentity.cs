@@ -39,6 +39,9 @@ public class UnitIdentity : MonoBehaviour
 
     public UnitData Data => data;
 
+    /// <summary>소환수(SkillEffectKind.SummonUnit)인가 — 유닛 수·판매·조합 재료·전설 이상 개수에서 빠진다(인벤토리에 안 들어간다, UnitSpawner.Spawn(summoned:true)).</summary>
+    public bool IsSummon { get; set; }
+
     /// <summary>이 유닛의 소유 플레이어 ID. 아직 OwnedByPlayer가 안 붙었으면(생성 직후 극히
     /// 짧은 순간) -1 — UnitSpawner.Spawn이 Instantiate 직후 곧바로 붙이므로 실사용 시점엔
     /// 항상 값이 있다.</summary>
