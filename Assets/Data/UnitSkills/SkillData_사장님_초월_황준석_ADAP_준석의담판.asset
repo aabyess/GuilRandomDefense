@@ -10,21 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uC774\uC7AC\uC724_AD_91\uC0AC\uB2E8\uC758\uC9C0\uD718\uC790"
+  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uD669\uC900\uC11D_ADAP_\uC900\uC11D\uC758\uB2F4\uD310"
   m_EditorClassIdentifier: 
-  skillName: "91\uC0AC\uB2E8\uC758\uC9C0\uD718\uC790 \u2014 \uACF5\uACA9\uB825 \uC624\uB77C(\uB9F5
-    \uC804\uCCB4)"
-  description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uACF5\uACA9\uB825 \uC624\uB77C \uB9F5
-    \uC804\uCCB4\u300D. \uAC19\uC740 \uB808\uC778 \uC544\uAD70 \uC804\uCCB4\uC640
-    \uC790\uAE30 \uACF5\uACA9\uB825 +25%(\uC6D0\uC791 \uACF5\uC99D \uC624\uB77C A0V8
-    ACac 0.25 \u2014 \uC784\uC7A5\uD601 \u300C\uC601\uD63C\uC5C6\uB294\uCE6D\uCC2C\u300D\uACFC
-    \uAC19\uC740 \uAC12, \uBC18\uACBD\uB9CC \uB9F5 \uC804\uCCB4). \uC218\uCE58\uB294
-    \uC81C\uC548\uAC12."
+  skillName: "\uC900\uC11D\uC758\uB2F4\uD310 \u2014 \uCC98\uCE58 \uACE8\uB4DC +0.2(\uC678\uAD50)"
+  description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uC678\uAD50\u300D(\uD574\uC11D A
+    \uD655\uC815). \uC774 \uC720\uB2DB\uC774 \uC0B4\uC544 \uC788\uB294 \uB3D9\uC548
+    \uB0B4 \uCC98\uCE58 \uACE8\uB4DC \uBC30\uC728\uC5D0 +0.2(\uC6D0\uC791 Gold_Plus
+    \uC544\uC774\uD15C I00Z +0.20\uACFC \uAC19\uC740 \uD06C\uAE30). \uC720\uB2DB\uC774
+    \uC0AC\uB77C\uC9C0\uBA74 \uB418\uB3CC\uB9B0\uB2E4."
   triggerType: 2
   levels:
   - cooldown: 0
     triggerChance: 1
-    range: 50000
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
@@ -32,68 +30,18 @@ MonoBehaviour:
     forbiddenBuffId: 
     selfBuffId: 
     effects:
-    - kind: 14
-      basis: 0
-      target: 1
-      damageType: 1
-      attackType: 0
-      multiplier: 0.25
-      bonus: 0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
-      buffId: JAEYUN_ATK_AURA
-      randMin: 1
-      randMax: 1
-      buffHitCharges: 0
-      requiredTargetBuffId: 
-      forbiddenTargetBuffId: 
-      targetCondition: 0
-      targetConditionValue: 0
-      cascadeGroup: 0
-      skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0
-      heroDuration: 0
-      maxTargets: 0
-      chainDamageStep: 0
-      zoneTickInterval: 0
-      zoneRadius: 0
-      zoneSpacing: 0
-      zoneAtCaster: 0
-      lineLength: 0
-      lineStartRadius: 0
-      lineEndRadius: 0
-      perHighGradeUnitBonus: 0
-      perHighGradeUnitBonusCap: 0
-      summonUnits: []
-      summonLifetime: 20
-      summonFanDegrees: 35
-      summonRadius: 70
-      grantSkill: {fileID: 0}
-      minAllyTier: 5
-      armorIgnoreRatio: 0
-      armorIgnoreRequiresBuff: 
-      talentStunScaled: 0
-      stackPerHit: 0.01
-      stackCap: 1
-      stackResetSeconds: 3
-      attackSpeedScale: 0
-      attackSpeedScaleCap: 0
-      formSelfAttackSpeed: 0
-      killMostLostHp: 0
-    - kind: 14
+    - kind: 32
       basis: 0
       target: 0
       damageType: 1
       attackType: 0
-      multiplier: 0.25
+      multiplier: 0.2
       bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
-      buffId: JAEYUN_ATK_AURA
+      buffId: 
       randMin: 1
       randMax: 1
       buffHitCharges: 0

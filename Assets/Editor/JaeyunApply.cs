@@ -44,7 +44,7 @@ static class JaeyunApply
         targetCondition = condition, targetConditionValue = conditionValue, armorIgnoreRatio = 1f,   // 고정·%체력 깡딜은 방어 무시(사장님 10-06)
     };
 
-    const float MapWide = 5000f;   // 「맵 전체」 — 같은 주인 아군 전부(UnitIdentity.AlliesOf는 주인이 같은 유닛만 본다)
+    const float MapWide = 50000f;   // 「맵 전체」 — 같은 주인 아군 전부(UnitIdentity.AlliesOf는 주인이 같은 유닛만 본다). 🔴 오라 반경은 range / WorldScale(4.167)로 비교돼 5000은 세계 1200밖에 안 닿았다(10-06 황준석 실측: 1500 떨어진 아군 미적용)
 
     static string Apply()
     {

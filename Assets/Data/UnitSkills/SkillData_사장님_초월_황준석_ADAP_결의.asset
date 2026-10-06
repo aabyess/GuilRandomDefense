@@ -10,18 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uC774\uC7AC\uC724_AD_\uB0B4\uBA74\uC758\uC545"
+  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uD669\uC900\uC11D_ADAP_\uACB0\uC758"
   m_EditorClassIdentifier: 
-  skillName: "\uB0B4\uBA74\uC758\uC545 \u2014 \uCE58\uBC00\uD55C\uC218\uC791(\uBC29\uC5B4
-    \uAC10\uC18C) \xB7 \uB0AF\uC120\uACF5\uD3EC(\uC774\uB3D9\uC18D\uB3C4 \uAC10\uC18C)"
-  description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uC720\uB2DB \uC218\uAC00 \uCD5C\uB300\u221210~\uCD5C\uB300\uC77C
-    \uB54C \uCF1C\uC9C0\uB294 \uC624\uB77C\u300D. \uB0B4 \uB808\uC778\uC758 \uC801
-    \uC218(HUD \u300C\uC720\uB2DB \uCE74\uC6B4\uD2B8\u300D, \uD55C\uACC4 70\xB7\uB09C\uC774\uB3C4\uBCC4)\uAC00
-    [\uD55C\uACC4\u221210, \uD55C\uACC4]\uC77C \uB54C\uB9CC \uB0B4 \uB808\uC778\uC758
-    \uC801 \uC804\uCCB4\uC5D0 \uBC29\uC5B4 \u221210(\uCE58\uBC00\uD55C\uC218\uC791)\xB7\uC774\uB3D9\uC18D\uB3C4
-    \u221230%(\uB0AF\uC120\uACF5\uD3EC, \uB0A8\uB294 \uC18D\uB3C4 0.7)\uAC00 \uAC78\uB9B0\uB2E4.
-    \uC218\uCE58\uB294 \uC81C\uC548\uAC12(\uBC15\uBBFC\uC11D \uBC29\uAE4D 5\xB7\uD751\uC778
-    \uC774\uAC10 0.7\uACFC \uAC19\uC740 \uCC99\uB3C4)."
+  skillName: "\uACB0\uC758 \u2014 \uACF5\uACA9\uC18D\uB3C4 \uC624\uB77C(\uB9F5 \uC804\uCCB4)"
+  description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uB9F5\uC804\uCCB4(\uACF5\uC18D, \uC624\uB77C)\u300D.
+    \uAC19\uC740 \uB808\uC778 \uC544\uAD70 \uC804\uCCB4\uC640 \uC790\uAE30 \uACF5\uACA9\uC18D\uB3C4
+    +20%(\uC6D0\uC791 \uD669\uC900\uC11D \uC758\uD611 A0WL \uC544\uAD70 \uACF5\uC18D
+    +20% \uC624\uB77C, \uBC18\uACBD\uB9CC \uB9F5 \uC804\uCCB4)."
   triggerType: 2
   levels:
   - cooldown: 0
@@ -34,18 +29,18 @@ MonoBehaviour:
     forbiddenBuffId: 
     selfBuffId: 
     effects:
-    - kind: 4
+    - kind: 12
       basis: 0
-      target: 2
+      target: 1
       damageType: 1
       attackType: 0
-      multiplier: -10
+      multiplier: 0.2
       bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
-      buffId: 
+      buffId: JUNSEOK_AS_AURA
       randMin: 1
       randMax: 1
       buffHitCharges: 0
@@ -84,18 +79,18 @@ MonoBehaviour:
       attackSpeedScaleCap: 0
       formSelfAttackSpeed: 0
       killMostLostHp: 0
-    - kind: 13
+    - kind: 12
       basis: 0
-      target: 2
+      target: 0
       damageType: 1
       attackType: 0
-      multiplier: 0.7
+      multiplier: 0.2
       bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
-      buffId: 
+      buffId: JUNSEOK_AS_AURA
       randMin: 1
       randMax: 1
       buffHitCharges: 0
@@ -147,6 +142,6 @@ MonoBehaviour:
     requireNormalEnemyInRange: 0
     needsTargetClick: 0
     toggleMode: 0
-    laneCountWindow: 10
+    laneCountWindow: 0
     needsAllyClick: 0
   icon: {fileID: 0}
