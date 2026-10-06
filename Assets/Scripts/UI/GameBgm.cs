@@ -27,6 +27,9 @@ public class GameBgm : MonoBehaviour
     // 보스 테마(Zoltraak 앞 2:15)는 평균 −13.1dB로 14.5dB 크다 → 0.1이면 ≈ −33.1dB로 맞춘 것. 어림값이니 사장님이 들어 보고 조절.
     static readonly Cue[] Cues =
     {
+        // 첫 화면 곡(사장님 10-06 「게임 시작 전까지 브금」) — NetBoot(첫 화면·대기실) 동안만 되풀이, 게임 씬으로 넘어가면 끈다.
+        //   Alexander Nakarada 「Adventure」 CC BY 4.0(free-stock-music.com 공식 배포본) — 출처는 CreditsSplash에 적는다. 평균 −15.2dB → 0.12면 ≈ −33.6dB.
+        new Cue("Music/title_adventure", TitleRound, TitleRound, 0.12f),
         new Cue("Music/binks_sake", 0, 1, 0.5f, once: true),             // 첫 화면 ~ 1라운드(2라운드 시작 때 끔)
         new Cue("Music/boss_r10_zoltraak", 10, 10, 0.1f, once: true, hold: true),   // 첫 보스(10라운드 주영호) — 11라운드 시작 때 끔
         new Cue("Music/boss_r20_journey", 20, 20, 0.11f, once: true, hold: true),   // 20라운드 보스(박은석) — 21라운드 시작 때 끔. 평균 −14.2dB → 0.11이면 ≈ −33.4dB
@@ -42,6 +45,7 @@ public class GameBgm : MonoBehaviour
         //   평균 −20.7dB → 0.2이면 ≈ −34.7dB(깔리는 곡이라 보스 곡보다 1dB쯤 작게).
         new Cue("Music/round_fourth_layer", 2, 59, 0.2f, resume: true),
     };
+    const int TitleRound = -1;       // 첫 화면(NetBoot, 빌드 0번 씬)은 라운드 −1로 친다
     const float FadeSeconds = 1.75f;
     const bool BgmOn = true;
 
@@ -142,7 +146,8 @@ public class GameBgm : MonoBehaviour
         if (source == null) return;
 
         int effective = 0;
-        if (TryReadRound(out int round, out bool preparing))
+        if (SceneManager.GetActiveScene().buildIndex == 0) effective = TitleRound;   // 첫 화면·대기실
+        else if (TryReadRound(out int round, out bool preparing))
         {
             // 라운드 번호가 되돌아갔다 = 씬 로드 없이 새 판이 시작됐다 → 처음부터
             if (round < lastRound) ResetForNewGame();
