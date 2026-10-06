@@ -32,6 +32,25 @@ static class ImmortalProbeA
         return $"[회유 {times}회 시도] 적 {before} → {after} · 회유 유닛 {r.Count}기(기대 {Mathf.Min(times, 5)}, 상한 5) · 첫 유닛 {(r.Count > 0 ? r[0].name + " 공격력 " + r[0].GetComponent<UnitAttacker>().AttackDamage.ToString("F0") + "(시전자 " + atk.AttackDamage.ToString("F0") + "의 10% = " + (atk.AttackDamage * 0.1f).ToString("F0") + ")" : "-")}";
     }
     static string Recruit1() => RecruitNow(1);
+    // 다른 종류 적 하나를 시전자 바로 옆에 세운다(이동 끔) — 가장 가까운 일반 적이 되어 회유된다
+    static string SpawnOdd()
+    {
+        var ed = AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/Data/Enemies" })
+            .Select(g => AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(g)))
+            .FirstOrDefault(e => e != null && !e.isBoss && e.prefab != null && e.name.Contains("R41_"));
+        if (ed == null) return "❌ 시험 적 없음";
+        GameObject go = Object.Instantiate(ed.prefab, unit.transform.position + new Vector3(25f, 0f, 0f), Quaternion.identity);
+        if (go.TryGetComponent(out WaypointMover mover)) mover.enabled = false;
+        var e2 = go.GetComponent<EnemyDummy>(); e2.Initialize(ed, 1e4f); e2.SetLane(0);
+        return $"시험 적 {ed.name} 세움 · PV {e2.PointValue}";
+    }
+    static string MoveRecruitAside()
+    {
+        var r = RecruitsNow(); if (r.Count == 0) return "❌ 회유 유닛 없음";
+        var go = r[0].gameObject; var ag = go.GetComponent<UnityEngine.AI.NavMeshAgent>(); if (ag != null) ag.enabled = false;
+        go.transform.position = unit.transform.position + new Vector3(-90f, 0f, -90f);
+        return $"회유 유닛 이름 {go.name} · 몸 {string.Join(",", go.transform.Cast<Transform>().Where(c => c.gameObject.activeSelf).Select(c => c.name))}";
+    }
     static string RecruitInfo()
     {
         var r = RecruitsNow();
@@ -70,6 +89,22 @@ static class ImmortalProbeA
         return $"[판매 버튼 경로] 회유 유닛 {before} → {RecruitsNow().Count}(기대 −1)";
     }
     static string Run정준영() => Setup("불멸_정준영");
+    static string TeleportGround()
+    {
+        var skill = unit.Data.skills.First(x => x.skillName.StartsWith("소환주문"));
+        var before = unit.transform.position;
+        var st = typeof(UnitAttacker).GetMethod("GetRuntimeState", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(atk, new object[] { skill });
+        var ready = st.GetType().GetField("activeReadyAt", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        var sb = new StringBuilder("[신지우 순간이동(지상)] ");
+        foreach (var off in new[] { new Vector3(200f, 0f, 150f), new Vector3(0f, 0f, -700f) })
+        {
+            ready.SetValue(st, 0f);
+            Vector3 to = before + off;
+            bool ok = atk.TryCastActiveAtPoint(skill, to, out string why);
+            sb.Append($"목표 {to:F0} → {(ok ? "성공" : "실패 " + why)} 도착 {unit.transform.position:F0}(y {unit.transform.position.y:F1}) / ");
+        }
+        return sb.ToString();
+    }
     static string Onion()
     {
         var up = PlayerContext.Get(0).UnitUpgrades;

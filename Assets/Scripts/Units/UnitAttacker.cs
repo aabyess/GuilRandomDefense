@@ -756,6 +756,7 @@ public class UnitAttacker : MonoBehaviour
         SkillSfx.Cast(unitData, skill, transform.position);
         PulseSphereArt();
         if (agent.isOnNavMesh) { agent.Warp(hit.position); agent.ResetPath(); }
+        else if (TryGetComponent(out FlyingMover flyer)) { transform.position = new Vector3(hit.position.x, transform.position.y, hit.position.z); flyer.Stop(); }   // 비행 유닛은 높이(섬 윗면)를 그대로 — 바다 NavMesh 점(y 1)으로 가라앉지 않게
         else transform.position = hit.position;
         return true;
     }
