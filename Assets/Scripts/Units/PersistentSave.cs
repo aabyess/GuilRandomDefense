@@ -23,7 +23,9 @@ public class PersistentSave : MonoBehaviour
     // FinishRun 때 Data.cumulativePlayPoint에 합산되고 나면 사라져도 되는 값이다.
     public int SessionPoints { get; private set; }
 
-    string SavePath => PathFor(playerId);
+    // 멀티 호스트 자신의 세이브는 늘 player_0.json(이 PC의 내 세이브) — 대기실에서 호스트가 다른 자리로 옮겨 playerId가 2여도 파일은 같아야 한다(사장님 10-06 자리 이동).
+    // 클라는 이미 player_0.json을 쓴다(NetSaves.WriteOwnSave). 멀티가 아니거나 원격 슬롯이면 예전처럼 자리 번호.
+    string SavePath => PathFor(MatchConfig.Active && GameAuthority.IsServer && playerId == LocalPlayer.LocalPlayerId ? 0 : playerId);
 
     // MP: 멀티 세이브(A안, PM 09-26) — 「내 세이브 = 내 PC의 player_0.json」. 호스트에서 원격 슬롯은 파일 대신
     //     그 친구가 대기실에서 제출한 값(MatchConfig)을 쓰고, 판 끝 결과는 파일에 안 쓰고 그 친구에게 돌려보낸다.

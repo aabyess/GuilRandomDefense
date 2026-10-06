@@ -19,6 +19,14 @@ public static class MatchConfig
     public static PlayerSaveData SubmittedSave(int slot) => submittedSaves.TryGetValue(slot, out PlayerSaveData data) ? data : null;
     public static void SetSubmittedSave(int slot, PlayerSaveData data) => submittedSaves[slot] = data;
 
+    // 대기실 자리 이동(사장님 10-06): 제출한 세이브도 새 자리로 따라간다.
+    public static void MoveSubmittedSave(int from, int to)
+    {
+        if (from == to || !submittedSaves.TryGetValue(from, out PlayerSaveData data)) return;
+        submittedSaves.Remove(from);
+        submittedSaves[to] = data;
+    }
+
     public static bool Active { get; set; }
 
     /// <summary>대기실에서 호스트가 고른 난이도(NetGameState가 옮겨 둔다). DifficultyManager.Awake가 읽는다.</summary>

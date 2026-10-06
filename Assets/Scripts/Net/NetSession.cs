@@ -117,6 +117,24 @@ public class NetSession : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         Debug.Log($"[MP] 퇴장: {player}{(onPurpose ? " ([나가기])" : "")} (접속 {players.Count}명, 유예 {graces.Count}명)");
     }
 
+    /// <summary>대기실 자리 이동(호스트만). 판이 시작됐거나 범위 밖·남이 앉은 자리면 거절. 성공하면 NetPlayer.Slot이 바뀌어 모든 PC에 복제된다. 방장 표시(IsHost)는 사람을 따라간다.</summary>
+    public bool TryMoveSlot(PlayerRef player, int newSlot)
+    {
+        if (Runner == null || !Runner.IsServer || MatchStarted) return false;
+        if (newSlot < 0 || newSlot >= MaxSlots) return false;
+        if (!slots.TryGetValue(player, out int current) || current == newSlot) return false;
+        if (slots.ContainsValue(newSlot) || graces.ContainsKey(newSlot)) return false;
+        if (!players.TryGetValue(player, out NetworkObject obj) || obj == null) return false;
+        NetPlayer netPlayer = obj.GetComponent<NetPlayer>();
+        if (netPlayer == null) return false;
+
+        slots[player] = newSlot;
+        netPlayer.Slot = newSlot;
+        netPlayer.ApplySlotChange(newSlot);   // 호스트 쪽은 바로 반영(복제 콜백을 기다리지 않는다)
+        Debug.Log($"[MP] 자리 이동: {player} 슬롯 {current} → {newSlot}");
+        return true;
+    }
+
     /// <summary>NetPlayer.RPC_LeavingOnPurpose: 이 접속자는 곧 [나가기]로 나간다 — 끊김 유예 없이 바로 Gone.</summary>
     public void MarkLeavingOnPurpose(PlayerRef player)
     {

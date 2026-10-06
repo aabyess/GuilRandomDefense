@@ -15,7 +15,7 @@ public class NetPlayer : NetworkBehaviour
     public const string NicknamePrefsKey = "GuilRandomDefense.Nickname";
 
     /// <summary>레인 번호 = PlayerContext.playerId. 호스트가 스폰 직전에 정한다(NetSession).</summary>
-    [Networked] public int Slot { get; set; }
+    [Networked, OnChangedRender(nameof(OnSlotRender))] public int Slot { get; set; }
 
     /// <summary>방을 연 사람의 것인가. 호스트는 [준비] 없이 늘 준비된 것으로 본다.</summary>
     [Networked] public NetworkBool IsHost { get; set; }
@@ -96,6 +96,22 @@ public class NetPlayer : NetworkBehaviour
 
     // Despawned에서는 [Networked] 값을 못 읽을 수 있다(hasState=false) — 받아 둔 값을 쓴다.
     int cachedSlot = -1;
+
+    // 대기실 자리 이동(사장님 10-06 「자리를 오갈 수 있게」): 호스트가 Slot을 바꾸면 모든 PC가 이 값을 따라간다 — 좌석 집합·내 번호·자리별 캐시.
+    void OnSlotRender() => ApplySlotChange(Slot);
+
+    public void ApplySlotChange(int newSlot)
+    {
+        if (cachedSlot < 0 || newSlot == cachedSlot) return;
+        int old = cachedSlot;
+        MatchConfig.RemoveSlot(old);
+        cachedSlot = newSlot;
+        MatchConfig.AddSlot(newSlot);
+        if (Runner != null && Runner.IsServer) MatchConfig.MoveSubmittedSave(old, newSlot);
+        supportShopCache = null;
+        if (HasInputAuthority) LocalPlayer.LocalPlayerId = newSlot;
+        Debug.Log($"[MP] 자리 이동: 슬롯 {old} → {newSlot} (내 것 {HasInputAuthority}, 호스트 {IsHost}) · 좌석 {{{string.Join(",", MatchConfig.OccupiedSlots)}}}");
+    }
 
     public override void Spawned()
     {
@@ -310,6 +326,14 @@ public class NetPlayer : NetworkBehaviour
     public void RPC_LeavingOnPurpose()
     {
         if (Runner.TryGetComponent(out NetSession session)) session.MarkLeavingOnPurpose(Object.InputAuthority);
+    }
+
+    /// <summary>대기실에서 빈 자리로 옮겨 달라는 요청 — 호스트가 판이 시작 전·빈 자리인지 확인하고 옮긴다(동시에 온 요청은 먼저 처리된 쪽만).</summary>
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_RequestSlot(int slot)
+    {
+        if (NetGameState.Instance != null && NetGameState.Instance.Started) return;
+        if (Runner.TryGetComponent(out NetSession session)) session.TryMoveSlot(Object.InputAuthority, slot);
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]

@@ -614,6 +614,12 @@ public class NetLauncher : MonoBehaviour
         if (NetPlayer.Local != null) NetPlayer.Local.RPC_SetReady(ready);
     }
 
+    /// <summary>대기실에서 빈 자리로 옮기기(사장님 10-06) — 호스트가 판정한다. 시작 뒤엔 호스트가 거절.</summary>
+    public void RequestSlot(int slot)
+    {
+        if (NetPlayer.Local != null) NetPlayer.Local.RPC_RequestSlot(slot);
+    }
+
     public void SetNickname(string nickname)
     {
         NetPlayer.SaveNickname(nickname);

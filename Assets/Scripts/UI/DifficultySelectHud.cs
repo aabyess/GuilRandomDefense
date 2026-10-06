@@ -44,7 +44,8 @@ public class DifficultySelectHud : MonoBehaviour
     float startedAt;
     bool dialogShown;
 
-    bool IsHost => GameAuthority.LocalPlayerId == 0;
+    // 방장 = 호스트(서버) PC. 예전엔 「내 번호 == 0」이었는데 대기실에서 방장이 다른 자리로 옮길 수 있게 되어(사장님 10-06) 번호로 가르면 안 된다. 싱글은 서버=나.
+    bool IsHost => GameAuthority.IsServer;
 
     void Awake()
     {

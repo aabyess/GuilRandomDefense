@@ -64,6 +64,7 @@ public class NetLobbyUi : MonoBehaviour
     readonly TMP_Text[] slotNames = new TMP_Text[NetSession.MaxSlots];
     readonly TMP_Text[] slotTags = new TMP_Text[NetSession.MaxSlots];
     readonly Image[] slotRows = new Image[NetSession.MaxSlots];
+    readonly LobbyRowHover[] slotHover = new LobbyRowHover[NetSession.MaxSlots];
     readonly Button[] difficultyButtons = new Button[6];
     readonly Image[] difficultyImages = new Image[6];
     TMP_Text difficultyHint;
@@ -146,6 +147,8 @@ public class NetLobbyUi : MonoBehaviour
             NetPlayer player = NetPlayer.All.FirstOrDefault(p => p != null && p.Slot == slot);
             slotNumbers[slot].text = (slot + 1).ToString();
 
+            bool started = NetGameState.Instance != null && NetGameState.Instance.Started;
+            if (slotHover[slot] != null) slotHover[slot].movable = player == null && !started && NetPlayer.Local != null;
             if (player == null)
             {
                 slotNames[slot].text = "비어 있음";
@@ -369,6 +372,19 @@ public class NetLobbyUi : MonoBehaviour
             Image row = CreateImage(c, $"Slot{slot}", Row);
             Place(row.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, y), new Vector2(1040f, 66f));
             slotRows[slot] = row;
+
+            // 빈 자리 줄을 누르면 내가 그 자리로 옮긴다(사장님 10-06). 마우스를 올리면 「여기로 옮기기」 강조 — 남이 앉은 줄·내 줄은 안 눌린다.
+            Button rowButton = row.gameObject.AddComponent<Button>();
+            rowButton.transition = UnityEngine.UI.Selectable.Transition.None;
+            rowButton.targetGraphic = row;
+            int capturedSlot = slot;
+            rowButton.onClick.AddListener(() => { if (slotHover[capturedSlot] != null && slotHover[capturedSlot].movable) launcher.RequestSlot(capturedSlot); });
+            TMP_Text hint = CreateText(row.rectTransform, "MoveHint", "여기로 옮기기", 26, boldFont, Selected, TextAlignmentOptions.Right);
+            Place(hint.rectTransform, new Vector2(1f, 0.5f), new Vector2(-150f, 0f), new Vector2(300f, 60f));
+            hint.gameObject.SetActive(false);
+            LobbyRowHover rowHover = row.gameObject.AddComponent<LobbyRowHover>();
+            rowHover.row = row; rowHover.hint = hint;
+            slotHover[slot] = rowHover;
 
             slotNumbers[slot] = CreateText(row.rectTransform, "Number", "", 30, boldFont, TextDim, TextAlignmentOptions.Center);
             Place(slotNumbers[slot].rectTransform, new Vector2(0f, 0.5f), new Vector2(45f, 0f), new Vector2(60f, 60f));
@@ -733,5 +749,26 @@ public class LobbyButtonFx : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             Color c = label.color; c.a = ok ? 1f : 0.5f; label.color = c;
             label.rectTransform.anchoredPosition = down && ok ? new Vector2(0f, -2f) : Vector2.zero;
         }
+    }
+}
+
+/// <summary>대기실 자리 줄: 빈 자리 위에 마우스를 올리면 「여기로 옮기기」 글자와 밝은 줄(LateUpdate라 RefreshRoom이 칠한 색 위에 덮는다).</summary>
+public class LobbyRowHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+{
+    public Image row;
+    public TMP_Text hint;
+    public bool movable;
+    bool hover;
+    static readonly Color Highlight = new Color(0.42f, 0.30f, 0.12f, 0.95f);
+
+    public void OnPointerEnter(PointerEventData e) { hover = true; }
+    public void OnPointerExit(PointerEventData e) { hover = false; }
+    void OnDisable() { hover = false; }
+
+    void LateUpdate()
+    {
+        bool on = movable && hover;
+        if (hint != null && hint.gameObject.activeSelf != on) hint.gameObject.SetActive(on);
+        if (on && row != null) row.color = Highlight;
     }
 }
