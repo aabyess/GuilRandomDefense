@@ -61,3 +61,12 @@ CC-BY가 아닌 19건(Sketchfab Standard 14 · NC 4 · NC-ND 1)도 같은 표에
 | I00Z 수배서 | wanted-reward | Delapouite | CC BY 3.0 | https://game-icons.net/1x1/delapouite/wanted-reward.html |
 | I010 초대형자성물질 | magnet-blast | Lorc | CC BY 3.0 | https://game-icons.net/1x1/lorc/magnet-blast.html |
 | I011 위습꾸러미 | swap-bag | Lorc | CC BY 3.0 | https://game-icons.net/1x1/lorc/swap-bag.html |
+
+## 첫 화면 글꼴 (2026-10-06)
+
+| 글꼴 | 쓰는 곳 | 라이선스 | 출처 |
+|---|---|---|---|
+| Song Myung (송명, The SongMyung Project Authors) | 첫 화면 제목 「구랜디」 | SIL Open Font License 1.1 (`Assets/Fonts/Lobby/OFL-SongMyung.txt`) | https://github.com/google/fonts |
+| Nanum Myeongjo ExtraBold (나눔명조, NAVER Corporation) | 첫 화면 단추·본문 | SIL Open Font License 1.1 (`Assets/Fonts/Lobby/OFL-NanumMyeongjo.txt`) | https://github.com/google/fonts |
+
+첫 화면 배경·제목 판·메뉴 틀·단추 그림은 blender 세션이 이 프로젝트용으로 만든 것이다(`~/GRD_lobby_art/`, 외부 에셋 아님).

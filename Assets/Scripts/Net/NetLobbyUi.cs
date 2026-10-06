@@ -20,22 +20,29 @@ public class NetLobbyUi : MonoBehaviour
     };
 
     // 게임 HUD·조합 검색 서랍(RecipeSearchDrawer)과 같은 워크3 결: 돌/금 9-슬라이스 패널 · 남색 단추 · 금빛 글자/테두리 · 어두운 홈 입력창.
-    static readonly Color Backdrop = new Color(0.02f, 0.03f, 0.07f, 1f);
-    static readonly Color Card = new Color(0.12f, 0.19f, 0.36f, 0.97f);          // 그림이 없을 때 물러나는 색
-    static readonly Color Row = new Color(0.05f, 0.08f, 0.17f, 0.96f);
-    static readonly Color ButtonNormal = Color.white;                              // 남색 그림 그대로
-    static readonly Color ButtonAccent = new Color(0.79f, 0.64f, 0.29f, 1f);       // 으뜸 단추 = 금빛 글자·테두리(색 자체가 표식으로도 쓰인다)
-    static readonly Color ButtonDanger = new Color(1f, 0.62f, 0.60f, 1f);
+    // blender 시안(사장님 10-06 확정): 노을 섬 사진 배경 + 청동·돌 틀(제목 판·메뉴 틀·단추) + 금빛 글자. 그림은 Resources/UI/Lobby(LobbyArtSetup), 폰트 SongMyung(제목)·NanumMyeongjo ExtraBold(단추·본문).
+    static readonly Color Backdrop = Color.black;
+    static readonly Color Card = new Color(0.14f, 0.10f, 0.07f, 0.97f);            // 그림이 없을 때 물러나는 색
+    static readonly Color Row = new Color(0.10f, 0.07f, 0.05f, 0.88f);
+    static readonly Color ButtonNormal = Color.white;
+    static readonly Color ButtonAccent = Color.white;                              // 시안엔 으뜸 단추 표식이 없다(호버 때 금테 그림으로 바뀐다)
+    static readonly Color ButtonDanger = new Color(1f, 0.70f, 0.66f, 1f);
     static readonly Color Selected = new Color(1f, 0.84f, 0.25f, 1f);
     static readonly Color Gold = new Color(0.79f, 0.64f, 0.29f, 1f);
-    static readonly Color TextMain = new Color(0.93f, 0.92f, 0.87f, 1f);
-    static readonly Color TextDim = new Color(0.65f, 0.64f, 0.59f, 1f);
-    static readonly Color ReadyGreen = new Color(0.44f, 0.83f, 0.44f, 1f);
+    static readonly Color ButtonText = new Color(0.96f, 0.86f, 0.58f, 1f);         // 단추 글자 금빛
+    static readonly Color TextMain = new Color(0.96f, 0.93f, 0.84f, 1f);
+    static readonly Color TextDim = new Color(0.80f, 0.72f, 0.54f, 1f);
+    static readonly Color ReadyGreen = new Color(0.52f, 0.88f, 0.50f, 1f);
+    static readonly Vector2 FrameSize = new Vector2(480f, 912f);
+    static readonly Vector2 FramePos = new Vector2(-324f, -24f);                    // 화면 오른쪽 가운데 기준(시안 1600×900의 메뉴 틀 자리)
+    static readonly Vector2 ButtonSize = new Vector2(348f, 84f);
 
     NetLauncher launcher;
     Canvas canvas;
-    TMP_FontAsset font;
+    TMP_FontAsset font;        // 본문·단추(Nanum Myeongjo ExtraBold)
     TMP_FontAsset boldFont;
+    TMP_FontAsset titleFont;   // 제목(Song Myung)
+    TMP_FontAsset inputFont;   // 입력칸(읽기 쉬운 Pretendard)
 
     GameObject modePanel;   // 첫 화면: 혼자 하기 / 같이 하기
     GameObject mainPanel;   // 같이 하기: 닉네임 · 방 만들기 · 코드로 참가
@@ -70,8 +77,10 @@ public class NetLobbyUi : MonoBehaviour
     void Awake()
     {
         launcher = GetComponent<NetLauncher>();
-        font = GameHud.UiFontAsset;
-        boldFont = Resources.Load<TMP_FontAsset>("Fonts/Pretendard-Bold SDF") ?? font;
+        inputFont = GameHud.UiFontAsset;
+        font = Resources.Load<TMP_FontAsset>("Fonts/NanumMyeongjo-ExtraBold SDF") ?? inputFont;
+        boldFont = font;
+        titleFont = Resources.Load<TMP_FontAsset>("Fonts/SongMyung SDF") ?? font;
         Build();
     }
 
@@ -188,8 +197,10 @@ public class NetLobbyUi : MonoBehaviour
         RectTransform root = (RectTransform)transform;
         BuildBackdrop(root);
         BuildTitle(root);
-        subtitle = CreateText(root, "Subtitle", "", 30, boldFont, Gold, TextAlignmentOptions.Center);
-        Place(subtitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -246f), new Vector2(900f, 44f));
+        subtitle = CreateText(root, "Subtitle", "", 34, boldFont, ButtonText, TextAlignmentOptions.Center);
+        Place(subtitle.rectTransform, new Vector2(0f, 1f), new Vector2(636f, -262f), new Vector2(900f, 48f));
+        subtitle.outlineWidth = 0.22f;
+        subtitle.outlineColor = new Color32(40, 22, 6, 255);
 
         BuildModePanel(root);
         BuildMainPanel(root);
@@ -201,54 +212,48 @@ public class NetLobbyUi : MonoBehaviour
     TMP_InputField saveNickInput;
     TMP_InputField saveCodeInput;
     TMP_Text saveLoadResult;
-    RectTransform modeCard;
     GameObject saveGroup;
-    TMP_Text saveToggleLabel;
     bool saveOpen;
+    RectTransform soloRect, togetherRect, toggleRect;
 
-    // 카드 위쪽 기준(피벗 위)으로 쌓는다 — 세이브 코드 영역을 펴고 접어도 단추 자리가 안 움직인다. y는 카드 위에서 내려온 거리.
-    const float ModeCardCollapsed = 360f, ModeCardOpen = 730f, ModeCardTopY = 20f, ModeCardOpenTopY = 262f;
+    // 메뉴 틀 안 단추 자리(틀 위에서 내려온 거리, 시안 1600×900 y 316·428·540 → 틀 안 271·406·541). 세이브 코드를 펴면 위 세 단추가 촘촘해지고 아래에 입력칸이 선다.
+    static readonly float[] ClosedY = { 271f, 406f, 541f };
+    static readonly float[] OpenY = { 235f, 330f, 425f };
 
     void BuildModePanel(RectTransform root)
     {
-        Image card = CreateCard(root, "ModePanel");
-        PlaceTop(card.rectTransform, new Vector2(0f, ModeCardTopY), new Vector2(640f, ModeCardCollapsed));
+        Image card = CreateFrame(root, "ModePanel");
         modePanel = card.gameObject;
-        modeCard = card.rectTransform;
         RectTransform c = card.rectTransform;
 
-        Button solo = CreateButton(c, "SoloButton", "혼자 하기", ButtonAccent, 36);
-        PlaceFromTop((RectTransform)solo.transform, -84f, new Vector2(500f, 100f));
+        Button solo = CreateButton(c, "SoloButton", "혼자 하기", ButtonAccent, 38);
+        soloRect = (RectTransform)solo.transform;
         solo.onClick.AddListener(() => launcher.PlaySolo());
 
-        Button together = CreateButton(c, "TogetherButton", "같이 하기", ButtonNormal, 36);
-        PlaceFromTop((RectTransform)together.transform, -200f, new Vector2(500f, 100f));
+        Button together = CreateButton(c, "TogetherButton", "같이 하기", ButtonNormal, 38);
+        togetherRect = (RectTransform)together.transform;
         together.onClick.AddListener(() => multiplayerChosen = true);
 
-        // 세이브 코드 불러오기(원작 -load, 사장님 10-03 확정) — 다른 PC에서 만든 코드로 클리어 횟수 등을 이어 받는다. 닉네임이 열쇠.
-        // 보조 영역: 평소엔 한 줄 글자 단추로만 보이고, 누르면 펴진다(사장님 10-06 「첫 화면이 너무 구리다」).
-        Button toggle = CreateLinkButton(c, "SaveCodeToggle", "세이브 코드 불러오기 (펼치기)", 24);
-        saveToggleLabel = toggle.GetComponentInChildren<TMP_Text>();
-        PlaceFromTop((RectTransform)toggle.transform, -296f, new Vector2(500f, 44f));
+        // 세이브 코드 불러오기(원작 -load, 사장님 10-03 확정) — 다른 PC에서 만든 코드로 클리어 횟수 등을 이어 받는다. 닉네임이 열쇠. 눌러 펼친다.
+        Button toggle = CreateButton(c, "SaveCodeToggle", "세이브 코드 불러오기", ButtonNormal, 31);
+        toggleRect = (RectTransform)toggle.transform;
         toggle.onClick.AddListener(() => SetSaveOpen(!saveOpen));
 
         RectTransform group = CreateRect(c, "SaveGroup");
         group.anchorMin = Vector2.zero; group.anchorMax = Vector2.one; group.offsetMin = group.offsetMax = Vector2.zero;
         saveGroup = group.gameObject;
 
-        TMP_Text hint = CreateText(group, "SaveHint", "다른 PC에서 만든 코드로 기록을 이어받습니다. 닉네임이 열쇠입니다.", 21, font, TextDim, TextAlignmentOptions.Center);
-        PlaceFromTop(hint.rectTransform, -352f, new Vector2(560f, 30f));
-
         saveNickInput = CreateInput(group, "SaveNickInput", "코드를 만들 때 쓴 닉네임", NetPlayer.MaxNicknameLength);
-        PlaceFromTop((RectTransform)saveNickInput.transform, -410f, new Vector2(540f, 56f));
+        PlaceFromTop((RectTransform)saveNickInput.transform, -515f, new Vector2(340f, 56f));
         saveNickInput.text = NetPlayer.LoadNickname();
         saveNickInput.onEndEdit.AddListener(value => { NetPlayer.SaveNickname(value); if (nicknameInput != null) nicknameInput.text = NetPlayer.LoadNickname(); });
         AddFieldTag((RectTransform)saveNickInput.transform, "닉네임");
         saveCodeInput = CreateInput(group, "SaveCodeInput", "세이브 코드 (GRD1-…)", 80);
-        PlaceFromTop((RectTransform)saveCodeInput.transform, -480f, new Vector2(540f, 56f));
+        PlaceFromTop((RectTransform)saveCodeInput.transform, -585f, new Vector2(340f, 56f));
         AddFieldTag((RectTransform)saveCodeInput.transform, "코드");
         Button load = CreateButton(group, "SaveLoadButton", "불러오기", ButtonNormal, 28);
-        PlaceFromTop((RectTransform)load.transform, -556f, new Vector2(300f, 60f));
+        PlaceFromTop((RectTransform)load.transform, -662f, new Vector2(240f, 64f));
+        SizeButton(load, new Vector2(240f, 64f));
         load.onClick.AddListener(() =>
         {
             NetPlayer.SaveNickname(saveNickInput.text);
@@ -256,8 +261,8 @@ public class NetLobbyUi : MonoBehaviour
             SaveCodeService.Load(NetPlayer.SanitizeNickname(saveNickInput.text), saveCodeInput.text, out string message);
             saveLoadResult.text = message;
         });
-        saveLoadResult = CreateText(group, "SaveLoadResult", "", 22, font, TextMain, TextAlignmentOptions.Center);
-        PlaceFromTop(saveLoadResult.rectTransform, -646f, new Vector2(580f, 70f));
+        saveLoadResult = CreateText(group, "SaveLoadResult", "", 21, inputFont, TextMain, TextAlignmentOptions.Center);
+        PlaceFromTop(saveLoadResult.rectTransform, -742f, new Vector2(400f, 64f));
         SetSaveOpen(false);
     }
 
@@ -265,9 +270,10 @@ public class NetLobbyUi : MonoBehaviour
     {
         saveOpen = open;
         saveGroup.SetActive(open);
-        saveToggleLabel.text = open ? "세이브 코드 불러오기 (접기)" : "세이브 코드 불러오기 (펼치기)";
-        modeCard.sizeDelta = new Vector2(modeCard.sizeDelta.x, open ? ModeCardOpen : ModeCardCollapsed);
-        modeCard.anchoredPosition = new Vector2(0f, open ? ModeCardOpenTopY : ModeCardTopY);   // 펴면 위로 올려 화면 안에 담는다
+        float[] ys = open ? OpenY : ClosedY;
+        PlaceFromTop(soloRect, -ys[0], ButtonSize);
+        PlaceFromTop(togetherRect, -ys[1], ButtonSize);
+        PlaceFromTop(toggleRect, -ys[2], ButtonSize);
     }
 
     // 입력칸 안 왼쪽 끝에 붙는 작은 이름표 — 입력칸이 어느 값인지 한눈에(사장님 10-06 「닉네임 이름표」). 글자는 이름표 폭만큼 오른쪽으로 민다.
@@ -284,55 +290,59 @@ public class NetLobbyUi : MonoBehaviour
         area.offsetMin = new Vector2(112f, area.offsetMin.y);
     }
 
+    // 같이 하기: 같은 메뉴 틀 안에 세로로 — 닉네임 · 방 만들기 · 방 코드로 참가.
     void BuildMainPanel(RectTransform root)
     {
-        Image card = CreateCard(root, "MainPanel");
-        Place(card.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -40f), new Vector2(720f, 560f));
+        Image card = CreateFrame(root, "MainPanel");
         mainPanel = card.gameObject;
         RectTransform c = card.rectTransform;
 
-        Label(c, "닉네임", new Vector2(0f, 215f));
+        TMP_Text nickLabel = CreateText(c, "닉네임", "닉네임", 28, font, TextDim, TextAlignmentOptions.Left);
+        PlaceFromTop(nickLabel.rectTransform, -233f, new Vector2(340f, 38f));
         nicknameInput = CreateInput(c, "NicknameInput", "이름을 입력하세요", NetPlayer.MaxNicknameLength);
-        Place((RectTransform)nicknameInput.transform, new Vector2(0.5f, 0.5f), new Vector2(0f, 160f), new Vector2(600f, 64f));
+        PlaceFromTop((RectTransform)nicknameInput.transform, -292f, new Vector2(340f, 60f));
         nicknameInput.text = launcher != null ? launcher.InitialNickname : NetPlayer.LoadNickname();
         nicknameInput.onEndEdit.AddListener(value => NetPlayer.SaveNickname(value));
 
-        createButton = CreateButton(c, "CreateButton", "방 만들기", ButtonAccent, 32);
-        Place((RectTransform)createButton.transform, new Vector2(0.5f, 0.5f), new Vector2(0f, 60f), new Vector2(600f, 84f));
+        createButton = CreateButton(c, "CreateButton", "방 만들기", ButtonAccent, 36);
+        PlaceFromTop((RectTransform)createButton.transform, -402f, ButtonSize);
         createButton.onClick.AddListener(() =>
         {
             NetPlayer.SaveNickname(nicknameInput.text);
             launcher.CreateRoom();
         });
 
-        TMP_Text or = CreateText(c, "Or", "또는 방 코드로 참가", 24, font, TextDim, TextAlignmentOptions.Center);
-        Place(or.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -30f), new Vector2(600f, 40f));
+        TMP_Text or = CreateText(c, "Or", "또는 방 코드로 참가", 26, font, TextDim, TextAlignmentOptions.Center);
+        PlaceFromTop(or.rectTransform, -492f, new Vector2(400f, 40f));
 
-        codeInput = CreateInput(c, "CodeInput", "방 코드 (예: K7QXM)", 12);
+        codeInput = CreateInput(c, "CodeInput", "방 코드", 12);
         codeInput.characterValidation = TMP_InputField.CharacterValidation.Alphanumeric;
         codeInput.onValidateInput = (text, index, ch) => char.ToUpperInvariant(ch);
-        Place((RectTransform)codeInput.transform, new Vector2(0.5f, 0.5f), new Vector2(-95f, -100f), new Vector2(410f, 72f));
+        PlaceFromTopX((RectTransform)codeInput.transform, -75f, -556f, new Vector2(200f, 58f));
 
-        joinButton = CreateButton(c, "JoinButton", "참가", ButtonNormal, 30);
-        Place((RectTransform)joinButton.transform, new Vector2(0.5f, 0.5f), new Vector2(210f, -100f), new Vector2(180f, 72f));
+        joinButton = CreateButton(c, "JoinButton", "참가", ButtonNormal, 28);
+        PlaceFromTopX((RectTransform)joinButton.transform, 115f, -556f, new Vector2(124f, 58f));
+        SizeButton(joinButton, new Vector2(124f, 58f));
         joinButton.onClick.AddListener(() =>
         {
             NetPlayer.SaveNickname(nicknameInput.text);
             launcher.JoinRoom(codeInput.text);
         });
 
-        Button back = CreateButton(c, "BackButton", "뒤로", ButtonNormal, 22);
-        Place((RectTransform)back.transform, new Vector2(0f, 1f), new Vector2(70f, 38f), new Vector2(100f, 44f));
+        // 틀 위쪽 바깥(화면 위 가장자리와 틀 사이)에 작게 — 메뉴 틀 안은 단추 자리라 비운다.
+        Button back = CreateButton(c, "BackButton", "뒤로", ButtonNormal, 26);
+        PlaceFromTopX((RectTransform)back.transform, -150f, 52f, new Vector2(170f, 60f));
+        SizeButton(back, new Vector2(170f, 60f));
         back.onClick.AddListener(() => { if (!launcher.IsBusy) multiplayerChosen = false; });
 
         // 판 도중 끊겨 돌아왔을 때만 보인다 — 기억해 둔 방으로 다시 붙는다(방장이 60초 동안 자리를 붙잡고 있다).
-        rejoinButton = CreateButton(c, "RejoinButton", "다시 참가", ButtonAccent, 28);
-        Place((RectTransform)rejoinButton.transform, new Vector2(0.5f, 0.5f), new Vector2(0f, -175f), new Vector2(420f, 58f));
+        rejoinButton = CreateButton(c, "RejoinButton", "다시 참가", ButtonAccent, 32);
+        PlaceFromTop((RectTransform)rejoinButton.transform, -735f, new Vector2(348f, 76f));
         rejoinButton.onClick.AddListener(() => launcher.Rejoin());
         rejoinButton.gameObject.SetActive(false);
 
-        mainStatus = CreateText(c, "Status", "", 22, font, TextDim, TextAlignmentOptions.Center);
-        Place(mainStatus.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -238f), new Vector2(660f, 60f));
+        mainStatus = CreateText(c, "Status", "", 22, inputFont, TextMain, TextAlignmentOptions.Center);
+        PlaceFromTop(mainStatus.rectTransform, -640f, new Vector2(400f, 84f));
     }
 
     void BuildRoomPanel(RectTransform root)
@@ -455,65 +465,64 @@ public class NetLobbyUi : MonoBehaviour
         return t;
     }
 
-    // 돌/금 9-슬라이스 패널(조합 검색 서랍과 같은 dialog_panel_9s). 그림이 없으면 색 칸으로 물러난다.
+    static Sprite Lobby(string name) => Resources.Load<Sprite>("UI/Lobby/" + name);
+
+    // 대기실 큰 카드: 시안의 메뉴 틀 그림을 얇은 테두리로(가로로 넓게 늘린다). 그림이 없으면 색 칸.
     static Image CreateCard(Transform parent, string name)
     {
         Image image = CreateImage(parent, name, Card);
-        if (UiSkin.Apply(image, "dialog_panel_9s", Card)) image.pixelsPerUnitMultiplier = 1.7f;
+        Sprite frame = Lobby("menu_frame");
+        if (frame != null) { image.sprite = frame; image.type = Image.Type.Sliced; image.color = Color.white; image.pixelsPerUnitMultiplier = 2.4f; }
         return image;
     }
 
+    // 첫 화면 메뉴 틀(시안: 청동 테두리 + 룬 머리·꼬리 + 갈색 가죽 속) — 화면 오른쪽, 크기 고정.
+    static Image CreateFrame(Transform parent, string name)
+    {
+        Image image = CreateImage(parent, name, Card);
+        Sprite frame = Lobby("menu_frame");
+        if (frame != null) { image.sprite = frame; image.type = Image.Type.Sliced; image.color = Color.white; image.pixelsPerUnitMultiplier = 512f / FrameSize.x; }
+        Place(image.rectTransform, new Vector2(1f, 0.5f), FramePos, FrameSize);
+        return image;
+    }
+
+    // 단추: 시안 그림(btn_normal/hover/pressed, 테두리 40). 호버·눌림 때 그림을 바꾼다(LobbyButtonFx). 글자는 Nanum Myeongjo ExtraBold 금빛.
     Button CreateButton(Transform parent, string name, string label, Color color, float fontSize)
     {
         Image image = CreateImage(parent, name, Color.white);
-        bool skinned = UiSkin.Apply(image, "button_navy_9s", ButtonNormal);
-        if (skinned) image.pixelsPerUnitMultiplier = 1.5f;
+        Sprite normal = Lobby("btn_normal");
+        if (normal != null) { image.sprite = normal; image.type = Image.Type.Sliced; image.pixelsPerUnitMultiplier = 512f / ButtonSize.x; }
+        else image.color = new Color(0.20f, 0.18f, 0.16f, 1f);
         Button button = image.gameObject.AddComponent<Button>();
         button.targetGraphic = image;
+        button.transition = UnityEngine.UI.Selectable.Transition.None;   // 그림 교체는 LobbyButtonFx
 
-        TMP_Text text = CreateText(image.rectTransform, "Label", label, fontSize, boldFont, TextMain, TextAlignmentOptions.Center);
+        TMP_Text text = CreateText(image.rectTransform, "Label", label, fontSize, boldFont, ButtonText, TextAlignmentOptions.Center);
+        text.enableWordWrapping = false;
         Stretch(text.rectTransform);
 
-        // 호버=밝은 남색 그림, 눌림=어둡게, 못 누름=흐리게(LobbyButtonFx). 으뜸 단추는 금빛 글자 + 금 테두리, 위험 단추는 붉게.
         LobbyButtonFx fx = image.gameObject.AddComponent<LobbyButtonFx>();
-        fx.Init(image, text, skinned ? UiSkin.Get("button_navy_9s") : null, skinned ? UiSkin.Get("button_navy_hover_9s") : null);
-        GameObject border = AddGoldBorder(image.rectTransform);
-        border.name = "GoldBorder";
-        fx.border = border;
-        if (color == ButtonAccent) SetAccent(button, true);
-        else
-        {
-            SetAccent(button, false);
-            if (color == ButtonDanger) { fx.baseTint = ButtonDanger; text.color = new Color(1f, 0.82f, 0.78f, 1f); }
-        }
+        fx.Init(image, text, normal, Lobby("btn_hover"), Lobby("btn_pressed"));
+        if (color == ButtonDanger) { fx.baseTint = ButtonDanger; }
         return button;
     }
 
-    // 으뜸(금빛) ↔ 보통. 준비 단추처럼 상태에 따라 바뀌는 것도 이걸로.
+    // 작은 단추는 그림 테두리도 같이 작아져야 한다(테두리 40px가 단추 높이를 먹지 않게).
+    static void SizeButton(Button button, Vector2 size)
+    {
+        Image image = button.GetComponent<Image>();
+        if (image != null && image.type == Image.Type.Sliced) image.pixelsPerUnitMultiplier = 512f / size.x;
+        ((RectTransform)button.transform).sizeDelta = size;
+    }
+
+    // 준비 단추처럼 상태에 따라 글자색만 바꾸는 으뜸 표시(시안은 단추 모양이 하나라 글자색으로 구분).
     static void SetAccent(Button button, bool accent)
     {
         LobbyButtonFx fx = button.GetComponent<LobbyButtonFx>();
-        if (fx == null) return;
-        if (fx.border != null) fx.border.SetActive(accent);
-        fx.label.color = accent ? new Color(1f, 0.88f, 0.45f, 1f) : TextMain;
+        if (fx == null || fx.label == null) return;
         fx.accent = accent;
+        fx.label.color = accent ? new Color(1f, 0.92f, 0.62f, 1f) : TextDim;
     }
-
-    // 글자만 있는 보조 단추(밑줄 없이 금빛, 호버 땐 밝게) — 세이브 코드 영역 접이식 머리 같은 곳.
-    Button CreateLinkButton(Transform parent, string name, string label, float fontSize)
-    {
-        Image hit = CreateImage(parent, name, new Color(0f, 0f, 0f, 0.001f));
-        Button button = hit.gameObject.AddComponent<Button>();
-        button.targetGraphic = hit;
-        button.transition = UnityEngine.UI.Selectable.Transition.None;
-        TMP_Text text = CreateText(hit.rectTransform, "Label", label, fontSize, font, TextDim, TextAlignmentOptions.Center);
-        Stretch(text.rectTransform);
-        LinkHover hover = hit.gameObject.AddComponent<LinkHover>();
-        hover.label = text; hover.normal = TextDim; hover.hot = Selected;
-        return button;
-    }
-
-    static GameObject AddGoldBorder(RectTransform parent) => AddGoldBorder(parent, Gold, 2f);
 
     static GameObject AddGoldBorder(RectTransform parent, Color color, float t)
     {
@@ -535,29 +544,29 @@ public class NetLobbyUi : MonoBehaviour
     // 어두운 홈 입력창(console_cell_frame_9s) + 금빛 캐럿
     TMP_InputField CreateInput(Transform parent, string name, string placeholder, int characterLimit)
     {
-        Image background = CreateImage(parent, name, new Color(0.02f, 0.035f, 0.09f, 1f));
+        Image background = CreateImage(parent, name, new Color(0.05f, 0.035f, 0.025f, 0.96f));
         TMP_InputField input = background.gameObject.AddComponent<TMP_InputField>();
 
         RectTransform area = CreateRect(background.rectTransform, "TextArea");
         Stretch(area, 18f, 8f);
         area.gameObject.AddComponent<RectMask2D>();
 
-        TMP_Text placeholderText = CreateText(area, "Placeholder", placeholder, 26, font, new Color(0.45f, 0.47f, 0.52f, 1f), TextAlignmentOptions.Left);
+        TMP_Text placeholderText = CreateText(area, "Placeholder", placeholder, 26, inputFont, new Color(0.45f, 0.47f, 0.52f, 1f), TextAlignmentOptions.Left);
         placeholderText.fontStyle = FontStyles.Italic;
         placeholderText.enableWordWrapping = false;
         Stretch(placeholderText.rectTransform);
 
-        TMP_Text text = CreateText(area, "Text", "", 28, font, TextMain, TextAlignmentOptions.Left);
+        TMP_Text text = CreateText(area, "Text", "", 28, inputFont, TextMain, TextAlignmentOptions.Left);
         text.enableWordWrapping = false;
         Stretch(text.rectTransform);
 
         // 어두운 홈 + 금빛이 죽은 가는 테두리(그림 프레임은 칸이 낮을 때 모서리가 줄무늬로 늘어났다)
-        GameObject groove = AddGoldBorder(background.rectTransform, new Color(0.50f, 0.40f, 0.18f, 1f), 2f);
+        GameObject groove = AddGoldBorder(background.rectTransform, new Color(0.62f, 0.48f, 0.20f, 1f), 2f);
         groove.transform.SetAsFirstSibling();
         input.textViewport = area;
         input.textComponent = text;
         input.placeholder = placeholderText;
-        input.fontAsset = font;
+        input.fontAsset = inputFont;
         input.pointSize = 28;
         input.characterLimit = characterLimit;
         input.lineType = TMP_InputField.LineType.SingleLine;
@@ -594,67 +603,40 @@ public class NetLobbyUi : MonoBehaviour
     {
         Image solid = CreateImage(root, "Backdrop", Backdrop);
         Stretch(solid.rectTransform);
-
-        // 세로 그라데이션: 위 (0.09,0.14,0.30) → 가운데 (0.04,0.07,0.16) → 아래 (0.01,0.015,0.04)
-        Texture2D grad = MakeTexture(2, 256, (u, v) =>
-        {
-            Color top = new Color(0.10f, 0.15f, 0.32f), mid = new Color(0.04f, 0.07f, 0.16f), bottom = new Color(0.01f, 0.015f, 0.04f);
-            Color c = v > 0.5f ? Color.Lerp(mid, top, (v - 0.5f) * 2f) : Color.Lerp(bottom, mid, v * 2f);
-            c.a = 1f;
-            return c;
-        });
-        Stretch(AddRaw(root, "Gradient", grad).rectTransform);
-
-        Sprite stone = UiSkin.Get("stone_tile");
-        if (stone != null)
-        {
-            Image tile = CreateImage(root, "StoneTexture", new Color(1f, 1f, 1f, 0.07f));
-            tile.sprite = stone;
-            tile.type = Image.Type.Tiled;
-            tile.raycastTarget = false;
-            Stretch(tile.rectTransform);
-        }
-
-        // 제목 뒤 금빛 후광
-        Texture2D glow = MakeTexture(128, 128, (u, v) =>
-        {
-            float d = Mathf.Clamp01(Mathf.Sqrt((u - 0.5f) * (u - 0.5f) + (v - 0.5f) * (v - 0.5f)) * 2f);
-            float a = Mathf.Pow(1f - d, 2.2f) * 0.30f;
-            return new Color(1f, 0.78f, 0.30f, a);
-        });
-        RawImage halo = AddRaw(root, "TitleGlow", glow);
-        Place(halo.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -120f), new Vector2(1300f, 420f));
-
-        // 비네트: 가운데 투명 → 가장자리 검정
-        Texture2D vignette = MakeTexture(128, 128, (u, v) =>
-        {
-            float d = Mathf.Clamp01(Mathf.Sqrt((u - 0.5f) * (u - 0.5f) + (v - 0.5f) * (v - 0.5f)) * 1.45f);
-            return new Color(0f, 0f, 0f, Mathf.SmoothStep(0f, 0.78f, Mathf.Clamp01((d - 0.35f) / 0.65f)));
-        });
-        Stretch(AddRaw(root, "Vignette", vignette).rectTransform);
+        // 시안의 노을 섬 사진 — 화면 높이가 1080을 넘으면 큰 쪽(2560×1440). 화면 비율이 달라도 꽉 채우고 넘치는 쪽은 잘린다.
+        string name = Screen.height > 1100 || Screen.width > 1950 ? "bg_2560x1440" : "bg_1920x1080";
+        Texture2D photo = Resources.Load<Texture2D>("UI/Lobby/" + name);
+        if (photo == null) return;
+        RawImage raw = AddRaw(root, "Photo", photo);
+        Stretch(raw.rectTransform);
+        AspectRatioFitter fitter = raw.gameObject.AddComponent<AspectRatioFitter>();
+        fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+        fitter.aspectRatio = (float)photo.width / photo.height;
     }
 
     void BuildTitle(RectTransform root)
     {
-        // 로고처럼: 금빛 위→아래 그라데이션 글자 + 짙은 갈색 외곽선 + 아래로 깔리는 그림자. 글자 사이를 띄운 「구 랜 디」는 버렸다.
-        TMP_Text shadow = CreateText(root, "TitleShadow", "구랜디", 128, boldFont, new Color(0f, 0f, 0f, 0.65f), TextAlignmentOptions.Center);
-        Place(shadow.rectTransform, new Vector2(0.5f, 1f), new Vector2(4f, -124f), new Vector2(900f, 170f));
-        shadow.characterSpacing = 6f;
-
-        TMP_Text title = CreateText(root, "Title", "구랜디", 128, boldFont, Color.white, TextAlignmentOptions.Center);
-        Place(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -118f), new Vector2(900f, 170f));
-        title.characterSpacing = 6f;
+        // 시안: 왼쪽 위 청동 제목 판(양끝 붉은 보석) + 「구랜디」 Song Myung 금빛 글자.
+        Sprite plate = Lobby("title_plate");
+        Vector2 plateCenter = new Vector2(636f, -136f);
+        if (plate != null)
+        {
+            Image plateImage = CreateImage(root, "TitlePlate", Color.white);
+            plateImage.sprite = plate;
+            plateImage.preserveAspect = true;
+            plateImage.raycastTarget = false;
+            Place(plateImage.rectTransform, new Vector2(0f, 1f), plateCenter, new Vector2(984f, 211f));
+        }
+        TMP_Text shadow = CreateText(root, "TitleShadow", "구랜디", 104, titleFont, new Color(0f, 0f, 0f, 0.55f), TextAlignmentOptions.Center);
+        Place(shadow.rectTransform, new Vector2(0f, 1f), plateCenter + new Vector2(3f, -9f), new Vector2(700f, 160f));
+        TMP_Text title = CreateText(root, "Title", "구랜디", 104, titleFont, Color.white, TextAlignmentOptions.Center);
+        Place(title.rectTransform, new Vector2(0f, 1f), plateCenter + new Vector2(0f, -4f), new Vector2(700f, 160f));
         title.enableVertexGradient = true;
         title.colorGradient = new VertexGradient(
-            new Color(1f, 0.96f, 0.70f, 1f), new Color(1f, 0.96f, 0.70f, 1f),
-            new Color(0.88f, 0.60f, 0.16f, 1f), new Color(0.88f, 0.60f, 0.16f, 1f));
-        title.outlineWidth = 0.22f;
-        title.outlineColor = new Color32(58, 32, 8, 255);
-
-        // 제목 아래 금 줄(양 끝이 옅어진다)
-        Texture2D line = MakeTexture(256, 4, (u, v) => new Color(0.79f, 0.64f, 0.29f, Mathf.Sin(u * Mathf.PI) * 0.9f));
-        RawImage rule = AddRaw(root, "TitleRule", line);
-        Place(rule.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -208f), new Vector2(560f, 3f));
+            new Color(1f, 0.93f, 0.62f, 1f), new Color(1f, 0.93f, 0.62f, 1f),
+            new Color(0.90f, 0.62f, 0.18f, 1f), new Color(0.90f, 0.62f, 0.18f, 1f));
+        title.outlineWidth = 0.16f;
+        title.outlineColor = new Color32(48, 26, 6, 255);
     }
 
     // 첫 화면 카드를 위쪽 기준으로 둔다(펴고 접어도 위가 고정). position.y = 화면 가운데에서 위로 올린 거리.
@@ -663,6 +645,15 @@ public class NetLobbyUi : MonoBehaviour
         rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 1f);
         rect.anchoredPosition = position;
+        rect.sizeDelta = size;
+    }
+
+    // x 오프셋이 있는 PlaceFromTop.
+    static void PlaceFromTopX(RectTransform rect, float x, float y, Vector2 size)
+    {
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = new Vector2(x, y);
         rect.sizeDelta = size;
     }
 
@@ -693,20 +684,19 @@ public class NetLobbyUi : MonoBehaviour
     }
 }
 
-/// <summary>첫 화면 단추 효과 — 호버/눌림 그림 바꾸기, 못 누르면 흐리게. 코드로 만든 단추라 Animator 없이 이것만 쓴다.</summary>
+/// <summary>첫 화면 단추 효과 — 호버/눌림 그림 바꾸기(시안 btn_normal·hover·pressed), 못 누르면 흐리게. 코드로 만든 단추라 Animator 없이 이것만 쓴다.</summary>
 public class LobbyButtonFx : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
 {
     Image image; UnityEngine.UI.Selectable selectable;
-    Sprite normalSprite, hoverSprite;
+    Sprite normalSprite, hoverSprite, pressedSprite;
     public TMP_Text label;
-    public GameObject border;
     public bool accent;
     public Color baseTint = Color.white;
     bool hover, down;
 
-    public void Init(Image img, TMP_Text text, Sprite normal, Sprite hot)
+    public void Init(Image img, TMP_Text text, Sprite normal, Sprite hot, Sprite pressed)
     {
-        image = img; label = text; normalSprite = normal; hoverSprite = hot;
+        image = img; label = text; normalSprite = normal; hoverSprite = hot; pressedSprite = pressed;
         selectable = GetComponent<UnityEngine.UI.Selectable>();
     }
 
@@ -728,28 +718,20 @@ public class LobbyButtonFx : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     {
         bool ok = selectable == null || selectable.interactable;
         if (image == null) return;
-        if (normalSprite != null) image.sprite = ok && (hover || down) ? hoverSprite : normalSprite;
+        if (normalSprite != null)
+        {
+            Sprite pick = normalSprite;
+            if (ok && down && pressedSprite != null) pick = pressedSprite;
+            else if (ok && (hover || down) && hoverSprite != null) pick = hoverSprite;
+            image.sprite = pick;
+        }
         Color tint = baseTint;
-        if (!ok) tint *= new Color(0.55f, 0.55f, 0.55f, 0.75f);
-        else if (down) tint *= new Color(0.78f, 0.78f, 0.82f, 1f);
-        else if (hover && normalSprite == null) tint *= new Color(1.12f, 1.12f, 1.12f, 1f);
+        if (!ok) tint *= new Color(0.55f, 0.55f, 0.55f, 0.8f);
         image.color = tint;
         if (label != null)
         {
             Color c = label.color; c.a = ok ? 1f : 0.5f; label.color = c;
             label.rectTransform.anchoredPosition = down && ok ? new Vector2(0f, -2f) : Vector2.zero;
         }
-        if (border != null)
-        {
-            foreach (Image e in border.GetComponentsInChildren<Image>(true))
-                e.color = ok ? (hover ? new Color(1f, 0.84f, 0.25f, 1f) : new Color(0.79f, 0.64f, 0.29f, 1f)) : new Color(0.79f, 0.64f, 0.29f, 0.35f);
-        }
     }
-}
-
-public class LinkHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
-{
-    public TMP_Text label; public Color normal, hot;
-    public void OnPointerEnter(PointerEventData e) { if (label != null) label.color = hot; }
-    public void OnPointerExit(PointerEventData e) { if (label != null) label.color = normal; }
 }
