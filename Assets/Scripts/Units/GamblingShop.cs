@@ -483,10 +483,12 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
         if (stock != null) return stock;
         if (context.ResourceWallet == null) return null;
         if (context.ResourceWallet.Get(option.costResourceType) < option.cost)
+        {
             string label = ResourceLabel(option.costResourceType);
             char last = label[label.Length - 1];
             bool batchim = last >= '가' && last <= '힣' && (last - '가') % 28 != 0;   // 받침 있으면 「이」(토큰이), 없으면 「가」(목재가)
             return $"{label}{(batchim ? "이" : "가")} 부족합니다!";
+        }
         if (option.goldCost > 0 && (context.GoldWallet == null || context.GoldWallet.Gold < option.goldCost))
             return "골드가 부족합니다.";
 
