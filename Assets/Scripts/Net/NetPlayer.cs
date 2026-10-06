@@ -62,7 +62,7 @@ public class NetPlayer : NetworkBehaviour
     [Networked] public int TraitGrantMask { get; set; }
     [Networked, Capacity(MaxReplicatedTraits)] public NetworkArray<short> UnlockedTraits => default;
     [Networked, Capacity(MaxReplicatedTraits)] public NetworkArray<byte> TraitRepeats => default;
-    [Networked, Capacity(16)] public NetworkArray<byte> GradeLevels => default;
+    [Networked, Capacity(32)] public NetworkArray<byte> GradeLevels => default;   // 10-06 16→32: 등급 트랙 10 + 영원함 유닛 전용 트랙 8 = 18 > 16(트랙 순서 = NetCatalog.gradeTracks)
     [Networked, Capacity(8)] public NetworkArray<byte> AttackTypeLevels => default;
 
     /// <summary>끊김 유예 남은 초(0 = 연결돼 있음). 호스트 NetSession이 쓴다 — 팀판 「연결 끊김 N초」.</summary>
@@ -230,7 +230,7 @@ public class NetPlayer : NetworkBehaviour
                 n++;
             }
             for (; n < MaxReplicatedTraits; n++) { UnlockedTraits.Set(n, 0); TraitRepeats.Set(n, 0); }
-            for (int i = 0; i < catalog.gradeTracks.Count && i < 16; i++) GradeLevels.Set(i, (byte)upgrades.Level(catalog.gradeTracks[i]));
+            for (int i = 0; i < catalog.gradeTracks.Count && i < 32; i++) GradeLevels.Set(i, (byte)upgrades.Level(catalog.gradeTracks[i]));
             for (int i = 0; i < catalog.attackTypeTracks.Count && i < 8; i++) AttackTypeLevels.Set(i, (byte)upgrades.Level(catalog.attackTypeTracks[i]));
         }
     }
@@ -299,7 +299,7 @@ public class NetPlayer : NetworkBehaviour
                 replicatedTraitBuffer.Add(trait);
                 upgrades.ApplyReplicatedTrait(trait, true, TraitRepeats[n]);
             }
-            for (int i = 0; i < catalog.gradeTracks.Count && i < 16; i++) upgrades.ApplyReplicatedLevel(catalog.gradeTracks[i], GradeLevels[i]);
+            for (int i = 0; i < catalog.gradeTracks.Count && i < 32; i++) upgrades.ApplyReplicatedLevel(catalog.gradeTracks[i], GradeLevels[i]);
             for (int i = 0; i < catalog.attackTypeTracks.Count && i < 8; i++) upgrades.ApplyReplicatedLevel(catalog.attackTypeTracks[i], AttackTypeLevels[i]);
         }
     }

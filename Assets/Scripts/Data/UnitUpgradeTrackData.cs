@@ -64,6 +64,10 @@ public class UnitUpgradeTrackData : ScriptableObject
 
     public Color slotColor = Color.white;
 
+    // ⚠️ 맨 뒤 추가(사장님 10-06 영원함) — 비어 있지 않으면 **등급이 아니라 이 유닛 한 종만** 강화하는 전용 트랙(원작 영원한 강화소 h06R의
+    // R007·R00X·R013 … 8종). targetGrades는 비워 둔다. UnitUpgrades.…ForGrade는 이 트랙을 건너뛰고 …ForUnit이 읽는다.
+    public UnitData targetUnit;
+
     // 원작 연구소 8종(특별함·희귀함·히든·제한됨·전설적인·불멸·초월함·랜덤전용) 중 하나에
     // 대응하면 true. 흔함·안흔함(묶음)·다른세계·영원함은 원작에 대응하는 연구소가 없다 —
     // 지우지 않고 이 플래그로 잠근다(사장님 결정 05번, 2026-09-05: "사장님이 나중에 '이

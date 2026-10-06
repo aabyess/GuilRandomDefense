@@ -1422,8 +1422,9 @@ public static class MapGenerator
 
     static void BuildEternalUpgradeShop(Transform parent, MapLayout.Island lane, int laneIndex)
     {
+        // 10-06 사장님: 영원함은 등급 공통이 아니라 유닛 전용 트랙 8종(EternalUpgradeApply가 에셋을 만든다 — 원작 h06R과 같은 8칸).
         BuildUpgradeShop(parent, lane, laneIndex, "영원함강화소", 3, "combine",
-                         new[] { "영원함 강화" });
+                         new[] { "영원_김영원", "영원_조세민", "영원_이지원", "영원_문필환", "영원_서민성", "영원_김정래", "영원_윤현모", "영원_최상호" });
     }
 
     // 공격타입강화소(원작 「강화소 3」) — 유닛강화소(강화소 1)와 트랙 타입 자체가 다르므로

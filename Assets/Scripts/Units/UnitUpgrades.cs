@@ -275,7 +275,7 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
     {
         foreach (KeyValuePair<UnitUpgradeTrackData, int> entry in legacyGradeLevels)
         {
-            if (entry.Key != null && entry.Key.targetGrades != null && entry.Key.targetGrades.Contains(grade))
+            if (entry.Key != null && entry.Key.targetUnit == null && entry.Key.targetGrades != null && entry.Key.targetGrades.Contains(grade))
                 return entry.Key.SpeedMultiplierForLevel(entry.Value);
         }
         return 1f;
@@ -288,9 +288,27 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
     {
         foreach (KeyValuePair<UnitUpgradeTrackData, int> entry in legacyGradeLevels)
         {
-            if (entry.Key != null && entry.Key.targetGrades != null && entry.Key.targetGrades.Contains(grade))
+            if (entry.Key != null && entry.Key.targetUnit == null && entry.Key.targetGrades != null && entry.Key.targetGrades.Contains(grade))
                 return entry.Key.BonusForLevel(entry.Value);
         }
+        return 0f;
+    }
+
+    // 유닛 전용 트랙(사장님 10-06 영원함 — UnitUpgradeTrackData.targetUnit): 그 유닛 한 종에만 붙는다. 같은 등급의 다른 유닛·다른 등급은 무영향.
+    // 등급 트랙 조회(…ForGrade)는 targetUnit이 있는 트랙을 건너뛰므로 여기서만 읽힌다. 대응 트랙이 없거나 레벨 0이면 공속 1·가산 0.
+    public float SpeedMultiplierForUnit(UnitData unit)
+    {
+        if (unit == null) return 1f;
+        foreach (KeyValuePair<UnitUpgradeTrackData, int> entry in legacyGradeLevels)
+            if (entry.Key != null && entry.Key.targetUnit == unit) return entry.Key.SpeedMultiplierForLevel(entry.Value);
+        return 1f;
+    }
+
+    public float BonusForUnit(UnitData unit)
+    {
+        if (unit == null) return 0f;
+        foreach (KeyValuePair<UnitUpgradeTrackData, int> entry in legacyGradeLevels)
+            if (entry.Key != null && entry.Key.targetUnit == unit) return entry.Key.BonusForLevel(entry.Value);
         return 0f;
     }
 
@@ -307,7 +325,7 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
     {
         foreach (KeyValuePair<UnitUpgradeTrackData, int> entry in legacyGradeLevels)
         {
-            if (entry.Key != null && entry.Key.targetGrades != null && entry.Key.targetGrades.Contains(grade))
+            if (entry.Key != null && entry.Key.targetUnit == null && entry.Key.targetGrades != null && entry.Key.targetGrades.Contains(grade))
                 return entry.Value;
         }
         return 0;
