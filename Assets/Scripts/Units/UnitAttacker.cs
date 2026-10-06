@@ -2588,9 +2588,20 @@ public class UnitAttacker : MonoBehaviour
     // 없으면(쿨다운·오라) 사거리 안에서 새로 고른다. recentAttackDamage: 이 발동을 일으킨
     // 평타의 피해량(SkillEffectBasis.ReceivedDamage 전용, 없으면 0 — UpdateSkillCooldown이
     // 그렇게 부른다).
+    readonly Dictionary<SkillLevel, int> castCounts = new Dictionary<SkillLevel, int>();
+    int currentCastIndex;
+
     void CastSkillLevel(SkillLevel level, float range, EnemyDummy primaryTarget, float recentAttackDamage)
     {
         if (level.effects == null) return;
+
+        // 「스킬발동시레벨업」(SkillEffect.castCountBonus, 영원함 조세민) — 이 레벨이 지금까지 발동한 횟수를 이번 시전의 효과들이 읽는다.
+        currentCastIndex = 0;
+        if (level.effects.Exists(e => e != null && e.castCountBonus > 0f))
+        {
+            castCounts.TryGetValue(level, out currentCastIndex);
+            castCounts[level] = currentCastIndex + 1;
+        }
 
         // 캐스케이드 그룹(2026-09-06, "캐스케이드 그룹" — SkillEffect.cascadeGroup 주석
         // 참고) 추적. 대상(EnemyDummy/UnitIdentity, object로 키를 잡는다)별로 "이 시전
@@ -2883,7 +2894,7 @@ public class UnitAttacker : MonoBehaviour
         {
             // 2026-09-07 추가(PM 지시) — ApplyBuff와 같은 자리, multiplier가 원작 raw
             // 퍼센트(0.15=15%)다(buffHitCharges/duration 관례도 ApplyBuff와 동일).
-            allyAttacker.AddAttackSpeedBuffPercent(effect.buffId, effect.multiplier, effect.duration, effect.buffHitCharges);
+            allyAttacker.AddAttackSpeedBuffPercent(effect.buffId, effect.multiplier + (effect.castCountBonus > 0f ? effect.castCountBonus * (effect.castCountCap > 0 ? Mathf.Min(currentCastIndex, effect.castCountCap) : currentCastIndex) : 0f), effect.duration, effect.buffHitCharges);
             return;
         }
 

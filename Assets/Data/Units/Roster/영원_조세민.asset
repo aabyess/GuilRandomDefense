@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1426f971d9174ed9b3e5519d787e74b, type: 3}
   m_Name: "\uC601\uC6D0_\uC870\uC138\uBBFC"
   m_EditorClassIdentifier: 
-  unitName: "\uC870\uC138\uBBFC"
+  unitName: "\uAC10\uC131\uCDA9\uB9CC\uAD6D\uBC25\uC545\uC9C8\uAC00\uC218"
   grade: 9
   skinAlias: "\uBE4C\uB9AC \uD0C0\uC774\uBC84,Willy Tybur,Tybur"
   damageType: 1
@@ -25,12 +25,13 @@ MonoBehaviour:
   moveSpeed: 125.3
   skill: {fileID: 0}
   skills:
-  - {fileID: 11400000, guid: 3e548ce131ab45f48510edb56b6a3ba6, type: 2}
-  - {fileID: 11400000, guid: 7e8a6ae30147aa8e806cb57872932c01, type: 2}
-  - {fileID: 11400000, guid: b3b8a351f55c8b22062a83189971faad, type: 2}
-  - {fileID: 11400000, guid: e6c512b75e7845da91d7e6fd0ffe2913, type: 2}
-  - {fileID: 11400000, guid: 25c2de89735a5ec799b682c7b8e736d6, type: 2}
-  trait: {fileID: 11400000, guid: 2e94e157261549efd847bf46fa9e2f52, type: 2}
+  - {fileID: 11400000, guid: 111663a2109254f5692a3ef1118635e6, type: 2}
+  - {fileID: 11400000, guid: 32ef07dd0202440eba11044905a3f689, type: 2}
+  - {fileID: 11400000, guid: 3f2ceed3c81214f5b9c0250530fd9ccb, type: 2}
+  - {fileID: 11400000, guid: 1d5aac12eca334fcd88a944e3334696a, type: 2}
+  - {fileID: 11400000, guid: a1d4e343a416d44e698bf9a9c0d47130, type: 2}
+  - {fileID: 11400000, guid: baa26b6b72c9245e382e463398e66a80, type: 2}
+  trait: {fileID: 0}
   prefab: {fileID: 67230979083977267, guid: aa7cf2568efdd42969278045b491b8d5, type: 3}
   critChance: 0
   critDamageMultiplier: 1
@@ -57,7 +58,7 @@ MonoBehaviour:
   sellRewardEveryNWoodChance: 1
   primaryStat: 0
   manaRegenPerSecond: 0
-  manaMax: 175
+  manaMax: 100
   manaGaugePerMana: 1
   lifeGaugeRegenPerSecond: 0
   lifeGaugeMax: 0
@@ -65,8 +66,8 @@ MonoBehaviour:
   lifeGaugeStart: 0
   lifeGaugeCustomHitGain: 0
   lifeGaugeHitGain: 0
-  manaAuraRegenPerSecond: 0
-  manaAuraRange: 0
+  manaAuraRegenPerSecond: 3
+  manaAuraRange: 850
   manaAuraBuffId: 
   manaAuraIncludesSelf: 0
   lifeAuraRegenPerSecond: 0
@@ -81,3 +82,6 @@ MonoBehaviour:
   raiseOnKillUnit: {fileID: 0}
   raiseOnKillChancePercent: 0
   raiseOnKillLifetimeSeconds: 0
+  attackArmorIgnoreRatio: 0
+  lifeGaugeOnEnemyDeath: 0
+  lifeGaugeOnEnemyDeathRange: 0

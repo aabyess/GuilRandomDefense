@@ -63,4 +63,8 @@ public class CombineRecipe : ScriptableObject
     // 10-06 — 히든·불멸·초월 식은 조합 버튼이 아니라 채팅 코드로만 한다(CombineSystem.TryCombineByChat). commandId와 「친구이름 조합」 외에
     // 이 문구도 받는다. 초월은 원작처럼 수식어(예 「최강의검사」) — 사장님이 25종 수식어를 주시면 여기 채운다. 비면 무시.
     public string chatPhrase;
+
+    // ⚠️ 맨 뒤(2026-10-06, 영원함 조세민 — 사장님 확정 「180초뒤에 생성」) — 0보다 크면 조합 순간 재료·비용은 바로 소모되지만 **결과 유닛은 이 초 뒤에 나온다**
+    // (조합한 사람에게 알림 「N초 뒤 ○○가 나타납니다」). 판이 끝나거나 CombineSystem이 사라지면 취소된다. 0이면 지금처럼 즉시.
+    public float resultDelaySeconds;
 }

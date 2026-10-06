@@ -294,7 +294,13 @@ public class CombineSystem : MonoBehaviour
         }
 
         // 결과도 필드에 나와야 한다. Spawn이 인벤토리 등록까지 하므로 따로 Add하지 않는다.
-        spawner.Spawn(recipe.result, resultPosition, ownerId);
+        if (recipe.resultDelaySeconds > 0f)
+        {
+            // 영원함 조세민 「180초뒤에 생성」 — 재료는 이미 소모됐고 결과는 지연 뒤에 나온다. 알림은 조합한 사람에게.
+            StartCoroutine(SpawnResultLater(recipe, ownerId));
+            PlayerNotification.Show(ownerId, $"<color=#FFD54F>{recipe.result.unitName}이(가) {Mathf.CeilToInt(recipe.resultDelaySeconds)}초 뒤에 나타납니다.</color>", 8f);
+        }
+        else spawner.Spawn(recipe.result, resultPosition, ownerId);
         GameSound.PlayFor(ownerId, GameSoundId.Combine);   // 조합 성공음(10-06) — 조합한 사람에게만(멀티 친구면 NetGameState가 넘긴다)
         if (IsTransformRecipe(recipe)) OwnerContext?.TryConsumeTransformUse();   // 원작: 변화 성공 때 토큰 1기 제거
 
@@ -311,6 +317,16 @@ public class CombineSystem : MonoBehaviour
         OwnerContext?.DamageLevelFixedState?.Add(recipe.damageLevelFixedBonus);
 
         return true;
+    }
+
+    // 지연 생성 결과(CombineRecipe.resultDelaySeconds) — 시간이 지난 뒤 결과 유닛을 세운다. 서버만(TryCombine이 서버 전용).
+    System.Collections.IEnumerator SpawnResultLater(CombineRecipe recipe, int ownerId)
+    {
+        yield return new WaitForSeconds(recipe.resultDelaySeconds);
+        UnitSpawner spawner = Spawner;
+        if (spawner == null || !GameAuthority.IsServer) yield break;
+        spawner.Spawn(recipe.result, ResolveResultPosition(null, recipe.result, ownerId), ownerId);
+        PlayerNotification.Show(ownerId, $"<color=#FFD54F>{recipe.result.unitName}이(가) 나타났습니다!</color>", 8f);
     }
 
     int ResolveOwnerId()

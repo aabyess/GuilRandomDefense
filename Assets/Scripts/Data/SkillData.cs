@@ -647,6 +647,11 @@ public class SkillEffect
     // 값 × (1 + min(hitCountScaleCap, hitCountScale × 평타 수)). Cap 0이면 무제한. 0이면 꺼짐.
     public float hitCountScale;
     public float hitCountScaleCap;
+
+    // ⚠️ 맨 뒤(2026-10-06, 영원함 조세민 「꺼지지않는열기」) — 「스킬발동시레벨업」: 이 스킬 레벨이 발동할 때마다 AttackSpeedBuffPercent의 값이 castCountBonus(0.05 = +5%p)씩 커진다
+    // (이번 발동 전까지 발동한 횟수, 최대 castCountCap회까지 센다. Cap 0이면 무제한). 첫 발동은 기본값, 둘째는 +castCountBonus … 0이면 꺼짐.
+    public float castCountBonus;
+    public int castCountCap;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
