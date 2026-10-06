@@ -342,7 +342,7 @@ public class GameHud : MonoBehaviour
             unitCommandSlotNames[slot].text = "";
             unitCommandSlotNames[slot].color = Color.white;
             unitCommandSlotHotkeys[slot].text = "";
-            unitCommandSlotBackgrounds[slot].color = Color.clear;
+            SetCommandSlotColor(slot, Color.clear);
             if (unitCommandSlotIcons[slot] != null) unitCommandSlotIcons[slot].enabled = false;
             unitCommandSlotButtons[slot].interactable = false;
             shopLogicalSlotIndex[slot] = -1;
@@ -607,14 +607,16 @@ public class GameHud : MonoBehaviour
         {
             Image barImage = bar.GetComponent<Image>();
             barImage.sprite = stone;
-            barImage.type = Image.Type.Tiled;
+            // 선술집 테마의 하단 바 그림은 9-slice(위 쇠띠·리벳은 늘리지 않고 가로 널판만 늘린다) — 돌 타일만 타일로 깐다.
+            barImage.type = stone.border != Vector4.zero ? Image.Type.Sliced : Image.Type.Tiled;
             barImage.color = Color.white;
         }
 
         // 3D 화면과 갈리는 경계선. 판이 불투명해도 위쪽 경계가 밋밋하면 화면에 얹힌 게 아니라
         // 잘린 것처럼 보인다 — 밝은 선 한 줄이 "여기부터 UI"를 읽히게 한다.
-        CreateBorderStrip(bar, BarEdgeColor, new Vector2(0f, 1f), new Vector2(1f, 1f),
-                          new Vector2(0f, -BarEdgeThickness), Vector2.zero);
+        if (!UiSkin.IsTavern)
+            CreateBorderStrip(bar, BarEdgeColor, new Vector2(0f, 1f), new Vector2(1f, 1f),
+                              new Vector2(0f, -BarEdgeThickness), Vector2.zero);
 
         // 원작 배치: [미니맵] [조합 카드] [선택 유닛 정보] [유닛 명령(공격/정지/모으기/스킬)]
         // 미니맵 폭은 0.14 → 0.23으로 넓혔다(사장님 지시 2026-09-07: "미니맵이 가로로 너무 좁다").
@@ -749,7 +751,7 @@ public class GameHud : MonoBehaviour
         SetFixedRight(itemPanel, itemRight, ItemPanelWidth);
         // 사진의 엠블럼 자리(인벤토리 6칸 뒤 문장) — 직접 그린 근사 그림. 칸은 반투명이라 문장이 비친다.
         Sprite emblem = UiSkin.Get("inventory_emblem");
-        if (emblem != null) { Image itemPanelImage = itemPanel.GetComponent<Image>(); itemPanelImage.sprite = emblem; itemPanelImage.type = Image.Type.Simple; itemPanelImage.color = Color.white; }
+        if (emblem != null && !UiSkin.IsTavern) { Image itemPanelImage = itemPanel.GetComponent<Image>(); itemPanelImage.sprite = emblem; itemPanelImage.type = Image.Type.Simple; itemPanelImage.color = Color.white; }
         AddConsoleFrame(itemPanel);
         itemInventoryParent = itemPanel;
 
@@ -1223,7 +1225,7 @@ public class GameHud : MonoBehaviour
         unitCommandSlotHotkeys[slot].text = "";
         Color color = UnitCommandDefaultColor;
         color.a = enabled ? 1f : 0.45f;
-        unitCommandSlotBackgrounds[slot].color = color;
+        SetCommandSlotColor(slot, color);
         unitCommandSlotButtons[slot].interactable = true;   // 못 살 때도 눌러서 이유를 본다(ExecuteTraitOn이 안내한다)
     }
 
@@ -1418,7 +1420,7 @@ public class GameHud : MonoBehaviour
         unitCommandSlotHotkeys[SellCommandSlot].text = "";
         Color color = UnitCommandDefaultColor;
         color.a = sellable ? 1f : 0.35f;   // 조합 칸과 같은 관례 — 못 누르면 흐리게
-        unitCommandSlotBackgrounds[SellCommandSlot].color = color;
+        SetCommandSlotColor(SellCommandSlot, color);
         // 바탕만 흐리면 흰 글씨가 그대로라 눌리는 칸처럼 보였다(09-29 촬영) — 글씨도 흐리게.
         unitCommandSlotNames[SellCommandSlot].color = sellable ? Color.white : new Color(1f, 1f, 1f, 0.4f);
         unitCommandSlotButtons[SellCommandSlot].interactable = sellable;
@@ -1487,7 +1489,7 @@ public class GameHud : MonoBehaviour
             unitCommandSlotHotkeys[slot].text = $"포인트 {points}";
             Color color = UnitCommandDefaultColor;
             color.a = open ? 1f : 0.35f;
-            unitCommandSlotBackgrounds[slot].color = color;
+            SetCommandSlotColor(slot, color);
             unitCommandSlotNames[slot].color = open ? Color.white : new Color(1f, 1f, 1f, 0.4f);
             unitCommandSlotButtons[slot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
         }
@@ -1536,7 +1538,7 @@ public class GameHud : MonoBehaviour
         unitCommandSlotHotkeys[slot].text = "";
         Color color = UnitCommandDefaultColor;
         color.a = wood >= BombWoodCost ? 1f : 0.35f;
-        unitCommandSlotBackgrounds[slot].color = color;
+        SetCommandSlotColor(slot, color);
         unitCommandSlotNames[slot].color = wood >= BombWoodCost ? Color.white : new Color(1f, 1f, 1f, 0.4f);
         unitCommandSlotButtons[slot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
     }
@@ -1626,7 +1628,7 @@ public class GameHud : MonoBehaviour
         unitCommandSlotHotkeys[slot].text = "";
         Color color = UnitCommandDefaultColor;
         color.a = enough ? 1f : 0.35f;
-        unitCommandSlotBackgrounds[slot].color = color;
+        SetCommandSlotColor(slot, color);
         unitCommandSlotNames[slot].color = enough ? Color.white : new Color(1f, 1f, 1f, 0.4f);
         unitCommandSlotButtons[slot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
     }
@@ -1705,7 +1707,7 @@ public class GameHud : MonoBehaviour
         unitCommandSlotHotkeys[slot].text = "";
         Color color = UnitCommandDefaultColor;
         color.a = done ? 0.35f : 1f;
-        unitCommandSlotBackgrounds[slot].color = color;
+        SetCommandSlotColor(slot, color);
         unitCommandSlotNames[slot].color = done ? new Color(1f, 1f, 1f, 0.4f) : Color.white;
         unitCommandSlotButtons[slot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
     }
@@ -1751,7 +1753,7 @@ public class GameHud : MonoBehaviour
         unitCommandSlotHotkeys[slot].text = "";
         Color color = UnitCommandDefaultColor;
         color.a = done ? 0.35f : 1f;
-        unitCommandSlotBackgrounds[slot].color = color;
+        SetCommandSlotColor(slot, color);
         unitCommandSlotNames[slot].color = done ? new Color(1f, 1f, 1f, 0.4f) : Color.white;
         unitCommandSlotButtons[slot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
     }
@@ -1805,7 +1807,7 @@ public class GameHud : MonoBehaviour
         unitCommandSlotHotkeys[slot].text = "";
         Color color = UnitCommandDefaultColor;
         color.a = done ? 0.35f : 1f;
-        unitCommandSlotBackgrounds[slot].color = color;
+        SetCommandSlotColor(slot, color);
         unitCommandSlotNames[slot].color = done ? new Color(1f, 1f, 1f, 0.4f) : Color.white;
         unitCommandSlotButtons[slot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
     }
@@ -1872,7 +1874,7 @@ public class GameHud : MonoBehaviour
         unitCommandSlotHotkeys[slot].text = ActiveHotkey.ToString();
         Color color = toggleOn ? new Color(0.85f, 0.65f, 0.15f, 1f) : UnitCommandDefaultColor;
         color.a = remaining > 0f ? 0.6f : 1f;
-        unitCommandSlotBackgrounds[slot].color = color;
+        SetCommandSlotColor(slot, color);
         unitCommandSlotNames[slot].color = Color.white;
         unitCommandSlotButtons[slot].interactable = true;
 
@@ -2085,7 +2087,7 @@ public class GameHud : MonoBehaviour
         sellSlotEnabled = false;
         unitCommandSlotNames[SellCommandSlot].text = "";
         unitCommandSlotNames[SellCommandSlot].color = Color.white;
-        unitCommandSlotBackgrounds[SellCommandSlot].color = Color.clear;
+        SetCommandSlotColor(SellCommandSlot, Color.clear);
         unitCommandSlotButtons[SellCommandSlot].interactable = false;
     }
 
@@ -2243,7 +2245,8 @@ public class GameHud : MonoBehaviour
 
         Selectable single = selection.Selected[0];
         if (single == null || !single.TryGetComponent(out UniqueRerollAbility reroll) ||
-            !single.TryGetComponent(out OwnedByPlayer owner))
+            !single.TryGetComponent(out OwnedByPlayer owner) ||
+            !UniqueRerollAbility.IsRerollTarget(single.GetComponent<UnitIdentity>()?.Data))   // 희귀함만
         { HideRerollButton(); return; }
 
         rerollButtonPanel.SetActive(true);
@@ -3582,6 +3585,29 @@ public class GameHud : MonoBehaviour
     // 인상을 줬다(2026-09-23 사장님 지적) — 패널보다 밝게 올려 칸 경계가 보이게 한다.
     static readonly Color UnitCommandDefaultColor = ButtonColor;
 
+    // 명령 칸 배경 색 — 칸 상태(기본·토글 켜짐·못 씀·비어 있음)가 색 하나로 들어온다. 선술집 테마에선 그 색을 나무 단추 그림의 상태로 바꿔 입힌다(btn_normal/btn_hover + 어둡게/불빛).
+    //  · 투명(비어 있음) → 옅은 빈 나무 판 · 기본색과 비슷 → 보통 · 훨씬 밝음(토글 켜짐 등) → hover 그림 + 따뜻한 불빛 · 어두움 → 보통 그림을 어둡게.
+    void SetCommandSlotColor(int slot, Color state)
+    {
+        Image image = unitCommandSlotBackgrounds[slot];
+        if (image == null) return;
+        if (!UiSkin.IsTavern) { image.color = state; return; }
+
+        Sprite normal = UiSkin.Tavern("btn_normal_9slice"), hover = UiSkin.Tavern("btn_hover_9slice");
+        if (normal == null) { image.color = state; return; }
+        float stateLum = state.r * 0.3f + state.g * 0.59f + state.b * 0.11f;
+        float baseLum = ButtonColor.r * 0.3f + ButtonColor.g * 0.59f + ButtonColor.b * 0.11f;
+        float ratio = baseLum > 0f ? stateLum / baseLum : 1f;
+        Sprite sprite = normal;
+        Color tint;
+        if (state.a < 0.01f) tint = new Color(0.55f, 0.5f, 0.45f, 0.45f);
+        else if (ratio > 2.2f) { sprite = hover != null ? hover : normal; tint = new Color(1f, 0.88f, 0.62f, 1f); }
+        else tint = Color.Lerp(new Color(0.42f, 0.38f, 0.34f, 1f), new Color(0.95f, 0.92f, 0.88f, 1f), Mathf.Clamp01((ratio - 0.35f) / 0.65f));
+        image.sprite = sprite;
+        image.type = Image.Type.Sliced;
+        image.color = tint;
+    }
+
     void BuildUnitCommandGrid(RectTransform frame)
     {
         // 격자는 금테 칸 안쪽 자식에 둔다(AddConsoleFrame 주석 — 테두리 띠가 격자 칸을 먹지 않게). 칸 크기는 칸에 맞춰 잰다.
@@ -3600,7 +3626,7 @@ public class GameHud : MonoBehaviour
             else
             {
                 // 판매(3)·유닛별 칸(4~11)이 들어올 칸. 채워지기 전까지는 보이지 않게 둔다.
-                unitCommandSlotBackgrounds[i].color = Color.clear;
+                SetCommandSlotColor(i, Color.clear);
             }
         }
     }
@@ -3615,7 +3641,7 @@ public class GameHud : MonoBehaviour
         {
             unitCommandSlotNames[i].text = visible ? UnitOnlyCommandLabels[i] : "";
             unitCommandSlotHotkeys[i].text = visible ? UnitOnlyCommandHotkeys[i] : "";
-            unitCommandSlotBackgrounds[i].color = visible ? UnitCommandDefaultColor : Color.clear;
+            SetCommandSlotColor(i, visible ? UnitCommandDefaultColor : Color.clear);
             unitCommandSlotButtons[i].interactable = visible;
         }
     }
@@ -3637,7 +3663,7 @@ public class GameHud : MonoBehaviour
         AddTriggerEntry(trigger, EventTriggerType.PointerEnter, _ => OnUnitCommandSlotHoverEnter(capturedIndex));
         AddTriggerEntry(trigger, EventTriggerType.PointerExit, _ => OnCombineCardHoverExit());
 
-        AddPanelBorder((RectTransform)card.transform, BorderColor, BorderThickness);
+        if (!UiSkin.IsTavern) AddPanelBorder((RectTransform)card.transform, BorderColor, BorderThickness);   // 선술집 단추 그림엔 나무 테두리가 있다
 
         TMP_Text nameText = CreateLabel(card.transform, "Name", "");
         nameText.raycastTarget = false;
@@ -3713,6 +3739,7 @@ public class GameHud : MonoBehaviour
 
         unitCommandSlotRoots[index] = card;
         unitCommandSlotBackgrounds[index] = background;
+        SetCommandSlotColor(index, UnitCommandDefaultColor);   // 선술집 테마면 나무 단추 그림을 입힌다
         unitCommandSlotNames[index] = nameText;
         unitCommandSlotButtons[index] = button;
     }
@@ -4158,7 +4185,7 @@ public class GameHud : MonoBehaviour
             unitCommandSlotNames[slot].text = "";
             unitCommandSlotHotkeys[slot].text = "";
             shopSlotHotkeys[slot] = '\0';
-            unitCommandSlotBackgrounds[slot].color = Color.clear;
+            SetCommandSlotColor(slot, Color.clear);
             ClearShopCooldown(slot);
         }
 
@@ -4208,7 +4235,7 @@ public class GameHud : MonoBehaviour
                 unitCommandSlotNames[slot].text = "";
                 unitCommandSlotHotkeys[slot].text = "";
                 shopSlotHotkeys[slot] = '\0';
-                unitCommandSlotBackgrounds[slot].color = Color.clear;
+                SetCommandSlotColor(slot, Color.clear);
                 if (unitCommandSlotIcons[slot] != null) unitCommandSlotIcons[slot].enabled = false;
                 ClearShopCooldown(slot);
                 continue;
@@ -4232,7 +4259,7 @@ public class GameHud : MonoBehaviour
 
             Color color = view.color;
             color.a = view.available ? color.a : 0.35f;
-            unitCommandSlotBackgrounds[slot].color = color;
+            SetCommandSlotColor(slot, color);
             Image slotIcon = unitCommandSlotIcons[slot];
             if (slotIcon != null)
             {
@@ -4305,7 +4332,7 @@ public class GameHud : MonoBehaviour
             bool canCombine = system != null && system.CanCombineNow(recipe);
             Color color = GetGradeColor(recipe.result.grade);
             color.a = canCombine ? color.a : 0.4f;
-            unitCommandSlotBackgrounds[slot].color = color;
+            SetCommandSlotColor(slot, color);
         }
     }
 
@@ -4464,7 +4491,7 @@ public class GameHud : MonoBehaviour
             string tag = enemy.IsBoss ? "보스" : "적";
             unitInfoText.text =
                 $"<color=#FF6B6B>{enemyName}</color>  <size=80%>({tag} · 조작 불가)</size>\n" +
-                $"체력: {Mathf.Max(0f, enemy.Hp):F0} / {enemy.MaxHp:F0}\n" +
+                $"체력: {Mathf.Max(0f, enemy.Hp):N0} / {enemy.MaxHp:N0}\n" +
                 $"방어력: {enemy.EffectiveArmor:F1} ({ArmorTypeName(enemy.ArmorType)})\n" +
                 $"이동속도: {enemy.MoveSpeed:F0}";
             return true;
@@ -4522,6 +4549,9 @@ public class GameHud : MonoBehaviour
     {
         unitInfoText.gameObject.SetActive(false);
         if (skillIconRow != null && skillIconRow.activeSelf) skillIconRow.SetActive(false);
+        // 🔴 친구 베타 10-06: 단일 클릭 → 드래그 다중 때 단일 정보(공격력·방어·상태 줄, 초상 아래 체력·마나 바)가 카드 격자 뒤에 남아 겹쳐 그려졌다 — 단일 분기만 이 줄들을 껐었다.
+        if (unitStatRows != null && unitStatRows.activeSelf) unitStatRows.SetActive(false);
+        SetPortraitBars(null, null, 0);
         // 09-29 워크3 콘솔: 초상화 칸이 카드 격자와 따로 있어 여러 기를 골라도 첫 유닛 초상을 보인다(워크3와 같다).
         Selectable firstSelected = selection.Selected[0];
         UnitData firstData = firstSelected != null && firstSelected.TryGetComponent(out UnitIdentity firstIdentity) ? firstIdentity.Data : null;
@@ -5064,7 +5094,7 @@ public class GameHud : MonoBehaviour
         bool waiting = hasStory && !running && story.IsWaiting;
         string label = hasStory ? story.StatusLabel : null;
         int seconds = waiting ? Mathf.CeilToInt(story.SecondsUntilNext) : 0;
-        bool visible = running || waiting;
+        bool visible = false;   // 좌상단 「하이츠 00:06」 대기 줄은 우상단 타이머 스택(「다음 스토리 (이름)까지」)으로 일원화했다(10-06 PM) — 진행 중엔 원래 글자가 없다
 
         bool changed = visible != lastStoryVisible
             || running != lastStoryRunning
@@ -5201,6 +5231,8 @@ public class GameHud : MonoBehaviour
         return obj.GetComponent<RectTransform>();
     }
 
+    const float TavernCellBorderShrink = 2.4f;   // cell_big_9slice 테두리 40px ÷ 2.4 ≈ 17px(1080p) — 1366×768에서도 리벳이 뭉개지지 않는 선에서 잡는다(사진으로 조정)
+
     static readonly HashSet<string> SquarePanelNames = new HashSet<string> { "BottomBar", "TopBar", "GameMenu", "Fill", "Border" };
 
     // 9-slice 스프라이트가 없어 모서리 4개를 얇은 Image 띠로 겹쳐 테두리처럼 보이게 한다.
@@ -5231,6 +5263,16 @@ public class GameHud : MonoBehaviour
     //    테두리 띠가 격자 자식으로 끼어 칸 하나를 차지한다. 격자는 이 칸 안의 자식에 둔다(BuildUnitCommandGrid).
     static void AddConsoleFrame(RectTransform parent)
     {
+        // 선술집 테마: 칸 자체의 그림을 나무 액자 + 어두운 가죽 안쪽(cell_big_9slice)으로 바꾼다 — 자식(미니맵·초상·정보·격자)은 그 위에 그려진다. 테두리는 그림에 들어 있다.
+        Sprite tavernCell = UiSkin.IsTavern ? UiSkin.Tavern("cell_big_9slice") : null;
+        if (tavernCell != null && parent.TryGetComponent(out Image panelImage))
+        {
+            panelImage.sprite = tavernCell;
+            panelImage.type = Image.Type.Sliced;
+            panelImage.pixelsPerUnitMultiplier = TavernCellBorderShrink;   // 40px 테두리를 줄여 안쪽 내용 자리를 넓힌다
+            panelImage.color = Color.white;
+            return;
+        }
         AddRoundRing(parent, BorderColor, 2f, 10f, 0f);
         AddRoundRing(parent, BorderInnerColor, 1f, 10f, 2f);
     }

@@ -57,8 +57,9 @@ public static class UnitGradeExtensions
         switch (grade)
         {
             // 실측값
-            case UnitGrade.Common:
-            case UnitGrade.Uncommon:        return new Color(0.36f, 0.70f, 0.40f);   // 초록
+            case UnitGrade.Common:          return new Color(0.36f, 0.70f, 0.40f);   // 초록
+            // 안흔함은 흔함과 같은 초록이라 글씨로 구분이 안 됐다(친구 베타 10-06). 원작은 안흔함을 인디고 |cff4b0082(흔함 |cff00ff00 초록, 스토리 보상 문구)로 쓴다 — 그 색을 어두운 나무 바탕에서 읽히게 밝힌 값.
+            case UnitGrade.Uncommon:        return new Color(0.52f, 0.42f, 0.96f);   // 밝은 인디고
             case UnitGrade.Special:         return new Color(0.88f, 0.78f, 0.28f);   // 금
             case UnitGrade.Rare:            return new Color(0.60f, 0.36f, 0.78f);   // 짙은 보라
             case UnitGrade.Hidden:          return new Color(0.30f, 0.52f, 0.86f);   // 하늘

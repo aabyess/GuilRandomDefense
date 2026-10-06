@@ -444,7 +444,7 @@ public class RewardDistributor : MonoBehaviour
         {
             int p = context.PlayerId;
             if (p < 0 || p >= damage.Length) continue;
-            PlayerNotification.Show(p, $"<color=#FFD700>자신이 가한데미지는 ({(int)(100f * damage[p] / maxHp)})%입니다.</color>", 5f);
+            PlayerNotification.Show(p, $"<color=#FFD700>자신이 가한데미지는 ({Mathf.RoundToInt(100f * damage[p] / maxHp)})%입니다.</color>", 5f);
             if (damage[p] >= topDamage) { topDamage = damage[p]; top = p; }
             if (storyNumber >= 10 && damage[p] >= maxHp * 0.30f && !context.IsDead)
             {

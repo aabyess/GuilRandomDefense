@@ -7,12 +7,68 @@ using UnityEngine.UI;
 // 같은 이름 파일로 바꿔 끼우면 코드 수정 없이 교체된다(Docs/UI_ORIGINAL_STYLE.md ④).
 public static class UiSkin
 {
+    // ── 테마(사장님 10-06 「게임 화면 UI 전체를 선술집 나무 톤으로」). 옛 돌 그림(Resources/UI/Skin)은 지우지 않고 그대로 둔다 — Theme를 Stone으로 두면 되돌아간다.
+    //    선술집 그림은 Resources/UI/SkinTavern/(blender 정본 Tools/blender/gen_tavern_ui.py, 복사·테두리 설정은 Editor TavernSkinApply). 코드는 옛 이름으로 부르고 아래 TavernMap이 새 그림으로 바꿔 준다.
+    public enum UiTheme { Stone, Tavern }
+
+    const string ThemeKey = "UiTheme";
+    static UiTheme? theme;
+
+    /// <summary>지금 테마. 기본은 선술집, 저장(PlayerPrefs)된 값이 있으면 그것. 바꾸면 그림 캐시를 비운다(이미 만든 UI는 다시 만들어야 바뀐다).</summary>
+    public static UiTheme Theme
+    {
+        get
+        {
+            if (!theme.HasValue)
+            {
+                int saved = 1;
+                try { saved = PlayerPrefs.GetInt(ThemeKey, 1); } catch { }
+                theme = saved == 0 ? UiTheme.Stone : UiTheme.Tavern;
+            }
+            return theme.Value;
+        }
+        set
+        {
+            theme = value;
+            try { PlayerPrefs.SetInt(ThemeKey, value == UiTheme.Stone ? 0 : 1); } catch { }
+            cache.Clear();
+        }
+    }
+
+    /// <summary>선술집 테마이고 그림이 실제로 들어 있는가(그림 폴더가 없으면 옛 돌 그림으로 물러난다).</summary>
+    public static bool IsTavern => Theme == UiTheme.Tavern && Tavern("bar_bottom_9slice") != null;
+
+    static readonly Dictionary<string, Sprite> tavernCache = new Dictionary<string, Sprite>();
+
+    /// <summary>선술집 그림을 파일 이름(확장자 없이)으로 직접 부른다. 예: "drawer_9slice" · "chip_selected_9slice". 없으면 null.</summary>
+    public static Sprite Tavern(string file)
+    {
+        if (tavernCache.TryGetValue(file, out Sprite cached)) return cached;
+        Sprite sprite = Resources.Load<Sprite>("UI/SkinTavern/" + file);
+        tavernCache[file] = sprite;
+        return sprite;
+    }
+
+    // 옛 이름 → 선술집 파일. 여기 없는 이름(아이콘·바·시계)은 테마와 상관없이 옛 그림 그대로.
+    static readonly Dictionary<string, string> TavernMap = new Dictionary<string, string>
+    {
+        { "stone_tile", "bar_bottom_9slice" },                 // 하단 바 바탕
+        { "topbar_resource_9s", "resource_plate_9slice" },     // 상단 자원 칸
+        { "topbar_button_9s", "btn_normal_9slice" },           // 상단 메뉴 단추
+        { "button_navy_9s", "btn_normal_9slice" },             // 일반 단추
+        { "button_navy_hover_9s", "btn_hover_9slice" },
+        { "timer_frame_9s", "resource_plate_9slice" },         // 우상단 타이머 창
+        { "console_cell_frame_9s", "cell_small_9slice" },      // 작은 칸 액자
+    };
+
     static readonly Dictionary<string, Sprite> cache = new Dictionary<string, Sprite>();
 
     public static Sprite Get(string name)
     {
         if (cache.TryGetValue(name, out Sprite cached)) return cached;
-        Sprite sprite = Resources.Load<Sprite>("UI/Skin/" + name);
+        Sprite sprite = null;
+        if (Theme == UiTheme.Tavern && TavernMap.TryGetValue(name, out string file)) sprite = Tavern(file);
+        if (sprite == null) sprite = Resources.Load<Sprite>("UI/Skin/" + name);
         cache[name] = sprite;   // 없어도 기억한다(매 프레임 Resources 조회 방지)
         return sprite;
     }

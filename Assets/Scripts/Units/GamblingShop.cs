@@ -412,8 +412,8 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
             case UnitGrade.Rare: return new Color(0.6f, 0.3f, 0.85f);
             case UnitGrade.Special: return new Color(0.9f, 0.85f, 0.2f);
             case UnitGrade.Hidden: return new Color(0.25f, 0.45f, 0.9f);
-            case UnitGrade.Common:
-            case UnitGrade.Uncommon: return new Color(0.3f, 0.7f, 0.35f);
+            case UnitGrade.Common: return new Color(0.3f, 0.7f, 0.35f);
+            case UnitGrade.Uncommon: return new Color(0.52f, 0.42f, 0.96f);   // UnitGradeExtensions.Color와 같은 값
             default: return new Color(0.4f, 0.4f, 0.4f);
         }
     }
