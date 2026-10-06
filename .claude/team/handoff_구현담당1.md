@@ -1,34 +1,23 @@
-# 구현담당1 인수인계 (10-06 오후, 직전 세션 작성) — 읽고 남은 일부터 이어간다. 다 끝내면 이 파일을 비우고 커밋.
+# 구현담당1 인수인계 (10-06 저녁, 직전 세션 작성) — 읽고 남은 큐부터 이어간다. 다 끝내면 이 파일을 비우고 커밋.
 
 ## 오늘(10-06) 끝낸 것 — 전부 main에 커밋됨
-- **히든·불멸·초월·다른세계 조합은 채팅 전용**: `CombineSystem.IsChatOnly`(결과 등급 Hidden/Immortal/Transcendent/OtherWorld) → 조합 버튼 목록·멀티 요청 검증(NetCommands가 `GetRecipesStartingWith`를 본다)에서 빠짐. 채팅은 `CombineSystem.TryCombineByChat`(GameChatBox.TryExecuteCode → PlayerChat). 받는 문구: commandId의 「/」 양쪽 · 「친구이름 조합」(에셋 이름에서 접두 뗀 뒤 밑줄·공백 무시) · `CombineRecipe.chatPhrase`(초월 수식어). 초월 수식어 틀: `Tools/transcend_phrases.csv`(출처 「원작 임시」/「사장님」) + `call TranscendPhraseImporter.Apply`.
-- **히든 19식 사장님 재료 반영**(a16437bc0) + 솔·성탄·뻬꼼 레시피 삭제(하급도박 10%로 얻음) + 조합판 가로 `CombineSizeX 1436`(여은서 재료 6칸). 조합판 Repair는 `call MapGenerator.RepairCombineBoardDryRun` → `RepairCombineBoard`(씬 쓰기, 구현담당2와 순서 맞출 것).
-- **초월 3기 사장님 사양 구현**: 최상호 구일(9597323b8: 이감+개수 비례 오라·아머브레이크 부여·소환수 3종 부채꼴·보잡) · 양재모 물리간호사(9304a2fe2: 현재체력·스턴·공속 누적·다한증) · 박민석 외동의악마(0da3e8d7f: 스킬 6 + 유닛삭제 + 공용 디버프). 새 효과: SummonUnit·GrantSkillToAllies·BossDamageMultiplier·AttackSpeedStack·KillNormalEnemies·DamageOverTime(SkillData.cs 열거 맨 뒤, 직렬화 순서 — 구현담당2·3도 이어 붙임). 소환수는 `UnitIdentity.IsSummon` + `UnitSpawner.Spawn(summoned:true)`(인벤토리·판매·조합 재료 제외).
-- **교체형 특성 연결 끊기**(UnitData.trait 비움 — 특성 에셋은 그대로, 선택 시 특성 버튼이 안 보임): 박민석·최상호 구일 완료. 박민수(구현담당3)·이재윤(구현담당2)은 각자 Apply에서 `unit.trait = null` 하기로 요청함(PM 지시) — 됐는지 확인.
-- **원작 초월 스킬 수치 참고표**: `Docs/research/TRANSCEND_SKILL_REFERENCE_2026-10-06.md`(생성 `python3 -I Tools/transcend_skill_reference.py`).
-- **하급도박 bonusPool 실측**(100번 솔2·성탄4·뻬꼼2·상붕카3) · 채팅 문구 「나나미 치아키 조합」「강재규 AP 조합」 · 문구 겹침 0 · 기준선 g1_310~316 표·「support pirate」 원인 분석 보고 완료(PM이 가졌음).
+- **전설 지대·미반영** 실측(LegendProbe, SoloSetup/SoloMark/SoloEnd): 노태현 A0DG 지대 92.9k/초(설계 83k ✓)·백기현 A0PA 168k/초(상한값, 평타 섞임)·최상호 A0EH −15 ✓(A0EI 보스 −45는 근처 보스 없어 미확정)·신지우 A0GA +150%·박민석 A08G +400% ✓. 미반영 3건 구현(4d01a8aa8): 징베 A001(쿨 7초·반경 225·초당 750k DoT 2초 — 해석) + 정윤식 마나 145 블록 스턴 1.0 삭제 · 레이쥬 거품광선 투사체 둘 · 보아 A084(평타 7.9% +50,000 + 0.4초 공속 +47% — 해석). 보류: 시노부 B06B 1/4 · 슈가 h06P(수치 없음). **A0FC 크리·A0RW LIFE 오라는 실측 안 함.**
+- **엄태웅 중사(진)**(46554c6ab·4d01a8aa8): 스킬 4(타고난신체·포박·주특기·강도높은트레이너) + 폭탄제조(명령 카드 칸 FlexKind.Bomb · 목재 1 · 5,000,000 방어 무시 · 반경 500 · 연타 0.5초, 값은 SkillData 「폭탄제조」 한 칸) + 웅교교주(칸 GambleBoost · 엔 10000 · 도박 +4%p · PlayerContext 개인 누적 최대 5회) · unitName 「중사(진)」 · trait 비움 · 입력말 태웅사마. 유물은 아래.
+- **김건 잃어버린웃음보따리**(223c3e6c8, 사장님 확정): 스킬 6 · 새 kind Knockback·FormChange · SkillEffect.formSelfAttackSpeed · WaypointMover.PushBack · UnitAttacker.UnitDeleteCount/GunFormActive · 채팅 구두점 무시 · 변화됨 김건 「New건」. **지배자의싸인**(R003, 스토리 6 우타의 헤드셋 자리 대체, 같은 커밋).
+- 소환체 prefab 재연결 도구 `Tools/relink_summon_prefabs.py`(모델 배선 뒤마다 한 번).
+- **설계표(사장님 확정 포함)**: `Docs/research/TRANSCEND_{TAEWOONG,GUN,MANGYEONG,JUHO,GYEONGHYEON}_DESIGN_2026-10-06.md` · `IMMORTAL_DESIGN_2026-10-06.md`(불멸 8종 + §0 공통 팔레트 + §「사장님 확정」 + §10 유닛회유 + §11 세부).
 
-## 전설 스킬(PM 지시 「전설 스킬을 원랜디 전설 스킬과 똑같게」, Docs/research/LEGEND_SKILL_PLAN_2026-10-06.md·csv) — 1차 커밋 2327a261f + 디버프 커밋
-**도구(다시 돌려도 안전, 이 순서로 만든 것)**: `Tools/apply_legend_clones.py`(중복 5기: donor 에셋 복사 + 유닛 필드 + VFX 항목 복사) → `Tools/apply_uabi_passives.py --apply <접두>`(MASTER_UID_ROSTER_MAP.csv 행으로 상시 오라 자동 — 이제 AHad PV 조건(sapper/nonancient/nonsapper) 지원, A0EI·A0EH 제외 해제) → `Tools/apply_legend_blocks.py`(평타 블록: 드래곤 Legend3·시저 A0DG·킹 Legend33·슈가 유닛 필드) → `Tools/apply_legend_structures.py`(소환체·시전 능력·크리·지대·DoT·LIFE 오라) · `Tools/apply_shared_debuffs.py`(공용 디버프 4종). 점검 프로브 `Assets/Editor/LegendProbe.cs`(gameshot: `call:ShopSlotProbe.Fund call:LegendProbe.Setup wait:32 call:LegendProbe.Report wait:3.4 call:LegendProbe.Later`).
-| 유닛 | 원작 전설 | 넣은 것 | 실측 |
-|---|---|---|---|
-| 전설적인_김건 | 울티 h03S(복제, 임채현 donor) | 15% 블록·A0FB 공포·LIFE 35 울두건·**A0FC 파키케팔로(PV≥200 크리)**·남의 블록 찌꺼기 삭제 | 스킬 연결만(널 0) |
-| 김민규 | 시노부 h042(복제, 이일중) | Legend30 1/7·1/14 스턴·**A0U7 분신 소환체(2초 h085)** | 연결만 |
-| 김민준 | 네코마무시 h09Z(복제, 진연서) | LIFE 33 neko·Legend32 둘·A0Y1·A0YT | 연결만 |
-| 김정래 | 아마츠키 h087(복제, 임장혁) | 1/7 토키·A0UF 오라 | 연결만 |
-| 박병규 | 에이스 h02O(복제, 임장혁) | Legend18·A0DZ 아지랑이 · 찌꺼기(레일리 마나 115) 삭제 | 연결만 |
-| 김용태 | 드래곤 h02W | Legend3 1/10 스톰프(500·180,000·스턴 2.75/영웅 0.41) · A0W8(PV>200 방깎 −45·1000)·A0SX·A0ST·A04K 오라 | 스톰프 피해·오라 확인(스턴은 대상이 죽어 미확인) |
-| 노태현 | 시저 h038(사장님 확정) | A0DG 지대(0.4초마다 33,333·1000)·A0NU 방깎 −30 | 지대 단독 DPS **미실측**(시저 스탯 24,501/0.72 vs 시저 37,500/0.38 — 스탯 쌍둥이 아님) |
-| 양재모 | 킹 h0AH | Legend33 산성탄(85,000 + 초당 42,500×2.7 + 방어 −22·−12)·**A10U 화재 DoT(초당 250,000, 지속 5초는 제안값)**·A132·A133 | 산성탄·독·화재·이감 확인 |
-| 구주호 | 슈가 h037 | A0IX 마나 오라 필드·Legend27 소환체(h06N 4.5초·h07H)·**A0J0 장난감화 시전(쿨 105 스턴 3초)** · h06P는 폭발 수치 원문 없어 미반영 | 소환체 1기(장난감 콜렉션) 확인 |
-| 그 밖에 빠진 항목 | | 시키 소환체 h07F(신문철)·로우 A0GA(신지우)·카르가라 A08G(박민석)·샹크스 A0PA 지대(백기현)·레이쥬 A08M 독(임건웅)·히루루크 A0RW LIFE 오라(이재윤, 유닛 필드)·에드워드 A0EI/A0EH(최상호, PV 조건 오라) | **A0GA·A08G·시키 소환체·시노부 분신·A0PA·A0RW·A0FC·A0EI/A0EH는 연결·컴파일만, 효과 실측 미완**(마지막 판들이 다른 세션의 리로드로 무효) |
-**남은 일**: ① 위 미실측 항목을 gameshot으로 확인(스턴·크리·소환체 공격·지대 DPS — LegendProbe 확장) ② 노태현 시저 지대 실측 DPS를 PM에게 보고(「시저 상시 장판 83k vs 노태현 34k」) ③ 구현담당2에게 「Link 다시」(SkillIconLinker.Link — 새 SkillData·공용 디버프에 icon 연결) ④ 미반영: 보아 A084 피스톨키스 · 징베 해류(스탬피드)·마나 145 출처 없는 스턴 · 시노부 B06B 1/4 추가 굴림 · 히루루크 벚꽃 광역(보류) · 슈가 h06P · 레이쥬 투사체 셋 ⑤ 새 호출 규칙: `unit_fields`가 UnitData 필드를 정규식으로 쓴다(필드 순서가 유니티 재직렬화로 바뀌어도 이름으로 찾음).
-**공용 디버프 4종**(`Assets/Data/UnitSkills/SkillData_공용_디버프_{외동,01,조씨,문}.asset`): 외동 = 주변 600 적 이속 +15%(Slow 배수 1.15, 박민석 외동의악마 skills에 있음, 김민준(구현담당2)도 쓸 예정) · 01 = 이 유닛 공격력 −15%(Self AttackPowerBuffPercent −0.15) · 조씨 = 주변 600 적 방어 +5(ArmorBonus) · 문 = 이 유닛 공속 −15%. 설명은 사장님 원문 그대로. 아직 쓰는 유닛: 외동만(박민석). **강재규 「아군발 디버프 개수」(UnitAttacker.CountAllyDebuffs)가 지금 세는 것**: AuraBonus 중 AllyMoveSpeedDebuff 또는 AttackPowerBuffPercent<0인 것뿐 — 01(공격력 −15%)은 세고, 외동(적에게 건 Slow)·조씨(적 ArmorBonus)·문(공속 −15%, AttackSpeedBuffPercent)은 안 센다. 디버프 해제(DispelAllyDebuffs)는 같은 판정의 것만 지운다. 문도 세려면 IsAuraDebuff에 `AttackSpeedBuffPercent && value<0`을 더하면 되고, 01·문을 「자기 단점이라 안 센다」로 하려면 반대로 뺀다 — 사장님 확인 필요.
+## 남은 큐 (이 순서) — 에디터 순번은 구현담당2·3과 협의
+1. **김만경 윤식파해결사 구현**: 설계표 확정(「다 추천대로」). **준비물이 `Tools/wip_g1/`에 있다**: `mang_patch.py`(SkillData.cs enum 맨 뒤 `SkillDamagePerHighGradeUnit` + UnitAttacker `HighGradeSplashFactor`·ApplyAttackSplash 한 줄 — **적용 전에 현재 UnitAttacker.cs·SkillData.cs에 맞는지 확인**, assert 실패하면 문자열을 현재 파일에 맞춰 고칠 것) · `MangyeongApply.cs`(→ Assets/Editor/) · `MangyeongProbe.cs`(→ Assets/Editor/). 순서: 소스 패치 → `Tools/compile_check.sh | grep -c " error"` 0 → `echo refresh` → dll이 새로워진 뒤 `call MangyeongApply.Apply` → `call TranscendPhraseImporter.Apply`(csv에 김만경 「구일의집행인」·구주호 「힘법사」가 이미 있음 — **미커밋일 수 있으니 git status 확인**) → gameshot `call:ShopSlotProbe.Fund wait:30 call:MangyeongProbe.Run wait:1.2 call:MangyeongProbe.After` → 커밋.
+2. **구주호 주호리얼**: 새 kind 없음. `Tools/wip_g1/JuhoApply.cs`(→ Assets/Editor/). 방깍 오라 −30(특성 −40·공격력 +20% = skills[0] 레벨 2) · 그래플러(스턴 1/6·405·1.0초) + 암브(=아머브레이크 단일 −9, 평타 1/8) · 오라오라!(범퍼 최대체력 1%, 평타 25%, **방어 무시 armorIgnoreRatio 1 — PM 새 규칙, JuhoApply에 이미 넣음**) · 죽지않은노장 = 특성강화 이름 · trait `Trait_초월_구주호_AD`(skillLevelUnlockIndex 1, cost 3) 연결 · 재료에서 희귀 배성령 삭제.
+3. **김경현 상호파주방장**: 설계표 확정(`TRANSCEND_GYEONGHYEON_…`) — 액티브 끝딜 22%(대상 지정·쿨 60·방어 무시)·몹삭제 쿨 180초 + 노획물(**원작 노획물품 h056 한 종류, 이름만 치킨·떡볶이·돈까스·토스트·맥주 5개**, 판매 37% 위습·그중 40% +100엔·목재 1)·특성 2pt = 노획물 50% 1개 더. 새 코드 `SkillEffectKind.GrantLoot` + 노획물 ItemData 5 + 판매 규칙. 재료: 안흔함 엄태웅 교체 + 특별 유재헌 추가. 아직 코드 없음.
+4. **불멸 8종**(정윤식·김용태·정준영·이승우·신지우·박은석·고도현·이이삭): `IMMORTAL_DESIGN_2026-10-06.md`가 정본(사장님 확정이 위쪽에 있다). 새 코드: 유닛회유(RecruitEnemy·IsRecruit·판매 경로) · 이이삭 방깍 비례(DamagePerTargetArmorShred) · 김용태 적 사망 훅 · 고도현은 구현담당2의 `needsAllyClick`. 바다이동·전지역이동·순간이동은 구현담당2 FlyingMover. 재료 교체: 김용태(제한 박성호 → 전설 박성호) · 박은석(NPC = 변화됨 박은석, 이미 그렇다).
+(참고) 구현담당3이 %체력 피해를 방어 무시로 일괄 수정할 때 내 에셋 줄을 건드린다고 먼저 알린다.
 
-## 함정 (오늘 새로 알게 된 것)
-- 🔴 **에디터 순번**: 에디터 하나를 구현담당2·3·PM과 같이 쓴다. refresh·gameshot 전 「씁니다」, 끝나면 「끝났습니다」를 꼭 보낸다. 남의 소스 편집·refresh가 내 gameshot을 「플레이 도중 도메인 리로드」로 무효로 만든다(오늘 7번) — 같은 소스 파일(SkillData·UnitAttacker·GameHud)을 여럿이 고치니 편집 전 알릴 것. gameshot이 「씬 NetBoot」으로 돌면(구현담당3이 촬영 후 안 되돌림) `call G3SceneMenu.OpenSample`로 되돌린 뒤 재시도.
-- 🔴 **새 Editor 파일은 저장 직후 `Tools/ui/csc_check_editor.sh 2>&1 | grep -ci " error"`가 0인지**(tail 금지 — 마지막 줄은 늘 done). 컴파일 오류가 Assets 안에 남으면 모든 팀원 gameshot이 거절된다(오늘 MinseokApply 중복 Make로 한 번 겪음).
-- 공용 파일(SkillData.cs·UnitAttacker.cs)은 같은 작업 폴더에서 여럿이 편집 — 파이썬으로 읽고 바로 쓰는 짧은 수정만, 커밋은 통째로(남의 hunk 포함 동의 받음). `SkillEffectKind` 서수는 열거 순서(SummonUnit 16 · DamageOverTime 26 …) — YAML을 손으로 쓸 땐 서수를 열거에서 직접 센다(DoT를 17로 잘못 써 한 번 되돌림).
-- 에셋을 파이썬으로 쓸 때 유니티가 다시 직렬화한 에셋(description이 여러 줄 \u 이스케이프)은 `sat.set_head_field`가 첫 줄만 바꿔 깨진다 → 정규식으로 이어진 줄까지 통째로 바꿀 것(외동 에셋에서 한 번 겪음).
-- 이름이 같은 복제본 충돌: `apply_legend_clones.py`는 찌꺼기 삭제를 복제보다 먼저 한다(`더미채널_전설적인_박병규_1` 이름이 겹쳐 한 번 지워졌다).
-- 소환 유닛 데이터: `Assets/Data/Units/Summons/Summon_*.asset`(흔함_강재규를 본떠 복사, isSystemUnit, 사거리 = 원작÷5.5). 소환체 사거리·prefab은 임시(아트 없음).
+## 함정
+- 🔴 **에디터 순번**: 「씁니다」·「끝났습니다」를 꼭 보낸다. 새 에디터 파일(Assets/Editor/*.cs)도 만든 뒤 **바로 refresh** — 컴파일 안 된 새 파일이 있으면 남의 gameshot이 「플레이 도중 도메인 리로드」로 무효(오늘 세 번).
+- 🔴 `csc_check`/`compile_check` 마지막 줄 done에 속지 말고 `| grep -c " error"`. 새 Runtime 소스 고친 뒤 Editor csc_check는 옛 Assembly-CSharp를 봐서 거짓 오류가 난다 — refresh 뒤 다시.
+- gameshot 탐침: 적 체력을 1e9로 두면 float 눈금(64)에 작은 피해가 묻힌다 → 1e8/5e6. 적을 유닛 곁으로 데려오려면 `NavMeshAgent.Warp`. 공용 파일(SkillData·UnitAttacker·GameHud)에 남의 미커밋 hunk가 섞이면 `git diff -U3` 후 내 hunk만 `git apply --cached`(키워드 필터)로 스테이징 → 인덱스만 `git commit`(오늘 223c3e6c8).
+- 셸 heredoc에 백틱이 있으면(따옴표 없는 heredoc) 명령으로 실행돼 글자가 지워진다 — python 본문은 `<<'EOF'`로.
+- 구현담당3이 UnitAttacker.UpdateAuraTick(스킬 레벨 바뀌면 오라 재적용)·강재규 마나 끝딜을 고쳤다 — 김만경 패치 전 UnitAttacker 현재 모양 확인.
+- 불멸 식은 재료 3칸(위습 없음) · 입력말은 초월 임포터(초월 전용)가 아니라 Apply가 `chatPhrase`를 직접 쓴다.
