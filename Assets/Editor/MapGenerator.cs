@@ -896,62 +896,143 @@ public static class MapGenerator
         return $"레인 사이 협곡 대지: {hills}개 · 높이 {HillRise} · 바위 {props}개";
     }
 
-    // 메시: 서브메시 0 붉은 흙(턱·윗면) · 1 지층(비탈·절벽·바다까지 내려가는 밑단). 앞면(시계 방향)이 바깥을 보게 면마다 법선으로 확인해 뒤집는다.
+    // 메시: 서브메시 0 흙(턱·윗면) · 1 지층(비탈·절벽·바다까지 내려가는 밑단). 앞면(시계 방향)이 바깥을 보게 면마다 법선으로 확인해 뒤집는다.
+    // 2026-10-06 사장님 「섬 너무 각진 것 같다, 다듬어 줘」 → 고리마다 둘레를 잘게 나눠(HillEdgeStep) 모서리를 둥글리고(HillCornerRadius)
+    //    둘레 위치의 펄린 잡음으로 안쪽으로 들쭉날쭉(HillEdgeWobble) 민다. 같은 잡음을 모든 고리에 줘서 단끼리 안 엇갈린다.
+    //    🔴 첫 고리(레인 가장자리)는 발자국 그대로 곧고 각지게 — 레인 윗면과 틈이 생기면 바다가 보인다. 들쭉날쭉은 흙 비탈이 받는다.
+    //    윗면은 들쭉날쭉한 다각형이라 귀 자르기로 삼각형을 만든다(가늘고 긴 모양이라 부채꼴은 겹친다).
+    const float HillEdgeStep = 8f;
+    const float HillCornerRadius = 36f;
+    const float HillEdgeWobble = 11f;
+    const float HillEdgeJitter = 1.2f;
+    const int HillCornerSteps = 10;
+
     static Mesh BuildHillMesh(float minX, float maxX, float minZ, float maxZ, float lower)
     {
         float baseY = MapLayout.IslandTop + 0.05f;       // 레인 윗면과 같은 높이에서 이어지되 같은 평면 깜빡임을 피한다
         float seaY = 0f;
-        float shrink = Mathf.Min(1f, Mathf.Min(maxX - minX, maxZ - minZ) * 0.4f / HillProfile[HillProfile.Length - 1].inset);
+        float shrink = Mathf.Min(1f, Mathf.Min(maxX - minX, maxZ - minZ) * 0.3f / (HillProfile[HillProfile.Length - 1].inset + HillEdgeWobble));
+        float seed = (minX * 0.013f + minZ * 0.007f) % 97f;
+
+        // 둘레 매개: 남(서→동) · 남동 모서리 · 동(남→북) · 북동 · 북(동→서) · 북서 · 서(북→남) · 남서 — 위에서 보아 반시계.
+        // 각 점은 (곧은 변 위 비율 또는 모서리 각, 변 번호)로 정해 고리마다 같은 개수·같은 순서가 되게 한다.
+        float spanX = maxX - minX, spanZ = maxZ - minZ;
+        int nx = Mathf.Max(2, Mathf.CeilToInt(spanX / HillEdgeStep)), nz = Mathf.Max(2, Mathf.CeilToInt(spanZ / HillEdgeStep));
+        var samples = new List<(int side, float f)>();   // side 0~3 곧은 변, 4~7 모서리
+        void AddSide(int side, int n) { for (int k = 0; k < n; k++) samples.Add((side, k / (float)n)); }
+        void AddCorner(int corner) { for (int k = 0; k < HillCornerSteps; k++) samples.Add((4 + corner, k / (float)HillCornerSteps)); }
+        AddSide(0, nx); AddCorner(0); AddSide(1, nz); AddCorner(1); AddSide(2, nx); AddCorner(2); AddSide(3, nz); AddCorner(3);
+        int count = samples.Count;
+
+        // 둘레 길이(첫 고리 기준 대략) — 잡음과 지층 UV의 u에 쓴다.
+        float[] arc = new float[count + 1];
+        Vector3[] Ring(int ringIndex)
+        {
+            float inset = HillProfile[ringIndex].inset * shrink;
+            bool straight = ringIndex == 0;
+            float radius = straight ? 0f : Mathf.Min(HillCornerRadius, Mathf.Min(spanX, spanZ) * 0.5f - inset - 1f);
+            float y = baseY + (HillRise * HillProfile[ringIndex].rise - (ringIndex == 0 ? 0f : lower));
+            float x0 = minX + inset, x1 = maxX - inset, z0 = minZ + inset, z1 = maxZ - inset;
+            var ring = new Vector3[count];
+            for (int k = 0; k < count; k++)
+            {
+                (int side, float f) = samples[k];
+                Vector2 point, normal;
+                switch (side)
+                {
+                    case 0: point = new Vector2(Mathf.Lerp(x0 + radius, x1 - radius, f), z0); normal = Vector2.down; break;
+                    case 1: point = new Vector2(x1, Mathf.Lerp(z0 + radius, z1 - radius, f)); normal = Vector2.right; break;
+                    case 2: point = new Vector2(Mathf.Lerp(x1 - radius, x0 + radius, f), z1); normal = Vector2.up; break;
+                    case 3: point = new Vector2(x0, Mathf.Lerp(z1 - radius, z0 + radius, f)); normal = Vector2.left; break;
+                    default:
+                    {
+                        int corner = side - 4;   // 0 남동 1 북동 2 북서 3 남서
+                        Vector2 center = corner switch
+                        {
+                            0 => new Vector2(x1 - radius, z0 + radius), 1 => new Vector2(x1 - radius, z1 - radius),
+                            2 => new Vector2(x0 + radius, z1 - radius), _ => new Vector2(x0 + radius, z0 + radius),
+                        };
+                        float angle = (-90f + corner * 90f + f * 90f) * Mathf.Deg2Rad;
+                        normal = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                        point = center + normal * radius;
+                        break;
+                    }
+                }
+                if (!straight)
+                {
+                    float s = arc[k];
+                    float wobble = Mathf.PerlinNoise(seed + s * 0.018f, 3.1f) * 0.7f + Mathf.PerlinNoise(seed + s * 0.06f, 7.7f) * 0.3f;
+                    float jitter = (Mathf.PerlinNoise(seed + s * 0.11f, 11f + ringIndex * 5.3f) - 0.5f) * 2f * HillEdgeJitter;
+                    point -= normal * Mathf.Max(0f, wobble * HillEdgeWobble * shrink + jitter);
+                }
+                ring[k] = new Vector3(point.x, y, point.y);
+            }
+            return ring;
+        }
+
+        Vector3[] rim = Ring(0);
+        arc[0] = 0f;
+        for (int k = 1; k <= count; k++) arc[k] = arc[k - 1] + Vector3.Distance(rim[k - 1], rim[k % count]) + 0.5f;   // 각진 모서리에서도 0 길이가 안 되게
 
         var vertices = new List<Vector3>();
         var uvs = new List<Vector2>();
         var tops = new List<int>();
         var cliffs = new List<int>();
 
-        void Quad(List<int> triangles, Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 outward, bool flat)
+        void Quad(List<int> triangles, Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 outward, bool flat, float ua, float ud)
         {
             int start = vertices.Count;
-            bool alongX = Mathf.Abs(outward.z) >= Mathf.Abs(outward.x);   // 남·북 면은 x를 따라, 동·서 면은 z를 따라 띠가 흐른다
-            foreach (Vector3 v in new[] { a, b, c, d })
+            Vector3[] quad = { a, b, c, d };
+            float[] us = { ua, ua, ud, ud };
+            for (int q = 0; q < 4; q++)
             {
+                Vector3 v = quad[q];
                 vertices.Add(v);
-                uvs.Add(flat ? new Vector2(v.x / CanyonTopTile, v.z / CanyonTopTile)
-                             : new Vector2((alongX ? v.x : v.z) / CanyonStrataTile, v.y / CanyonStrataTile));
+                uvs.Add(flat ? new Vector2(v.x / CanyonTopTile, v.z / CanyonTopTile) : new Vector2(us[q] / CanyonStrataTile, v.y / CanyonStrataTile));
             }
             bool keep = Vector3.Dot(Vector3.Cross(b - a, c - a), outward) > 0f;
             if (keep) { triangles.AddRange(new[] { start, start + 1, start + 2, start, start + 2, start + 3 }); }
             else { triangles.AddRange(new[] { start, start + 2, start + 1, start, start + 3, start + 2 }); }
         }
 
-        Vector3[] Ring(float inset, float y) => new[]
+        Vector3 Outward(Vector3[] outer, Vector3[] inner, int k)
         {
-            new Vector3(minX + inset, y, minZ + inset), new Vector3(maxX - inset, y, minZ + inset),
-            new Vector3(maxX - inset, y, maxZ - inset), new Vector3(minX + inset, y, maxZ - inset),
-        };
-        float RingY(int i) => baseY + (HillRise * HillProfile[i].rise - (i == 0 ? 0f : lower));
-
-        // 네 변: (모서리 a, 모서리 b, 바깥 방향)
-        (int a, int b, Vector3 dir)[] sides = { (0, 1, Vector3.back), (2, 3, Vector3.forward), (3, 0, Vector3.left), (1, 2, Vector3.right) };
-
-        for (int i = 1; i < HillProfile.Length; i++)
-        {
-            Vector3[] outer = Ring(HillProfile[i - 1].inset * shrink, RingY(i - 1));
-            Vector3[] inner = Ring(HillProfile[i].inset * shrink, RingY(i));
-            bool flat = HillProfile[i].flat;
-            float tilt = (RingY(i) - RingY(i - 1)) / Mathf.Max(0.01f, (HillProfile[i].inset - HillProfile[i - 1].inset) * shrink);
-            foreach (var side in sides)
-                Quad(flat ? tops : cliffs, outer[side.a], inner[side.a], inner[side.b], outer[side.b], side.dir + Vector3.up / Mathf.Max(0.01f, tilt), flat);
+            int n = (k + 1) % count;
+            Vector3 tangent = (inner[n] - inner[k]) + (outer[n] - outer[k]);
+            return new Vector3(tangent.z, 0f, -tangent.x);   // 반시계 둘레의 바깥(오른쪽) 법선
         }
 
-        Vector3[] top = Ring(HillProfile[HillProfile.Length - 1].inset * shrink, RingY(HillProfile.Length - 1));
-        Quad(tops, top[0], top[3], top[2], top[1], Vector3.up, true);
+        Vector3[] previous = rim;
+        for (int i = 1; i < HillProfile.Length; i++)
+        {
+            Vector3[] current = Ring(i);
+            bool flat = HillProfile[i].flat;
+            for (int k = 0; k < count; k++)
+            {
+                int n = (k + 1) % count;
+                Vector3 outward = flat ? Vector3.up : Outward(previous, current, k) + Vector3.up * 0.05f;
+                Quad(flat ? tops : cliffs, previous[k], current[k], current[n], previous[n], outward, flat, arc[k], arc[k + 1]);
+            }
+            previous = current;
+        }
 
-        Vector3[] rim = Ring(0f, baseY);
-        Vector3[] sea = Ring(0f, seaY);
-        foreach (var side in sides)
-            Quad(cliffs, sea[side.a], rim[side.a], rim[side.b], sea[side.b], side.dir, false);
+        // 윗면: 들쭉날쭉한 마지막 고리를 귀 자르기로.
+        {
+            int start = vertices.Count;
+            foreach (Vector3 v in previous) { vertices.Add(v); uvs.Add(new Vector2(v.x / CanyonTopTile, v.z / CanyonTopTile)); }
+            foreach (int index in EarClip(previous)) tops.Add(start + index);
+        }
 
-        Mesh mesh = new Mesh { name = "InterLaneHill" };
+        Vector3[] sea = new Vector3[count];
+        for (int k = 0; k < count; k++) sea[k] = new Vector3(rim[k].x, seaY, rim[k].z);
+        for (int k = 0; k < count; k++)
+        {
+            int n = (k + 1) % count;
+            if ((rim[n] - rim[k]).sqrMagnitude < 0.0001f) continue;   // 각진 첫 고리의 모서리 점(같은 자리)
+            Quad(cliffs, sea[k], rim[k], rim[n], sea[n], Outward(rim, rim, k), false, arc[k], arc[k + 1]);
+        }
+
+        Mesh mesh = new Mesh { name = "InterLaneHill", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 };
         mesh.SetVertices(vertices);
         mesh.SetUVs(0, uvs);
         mesh.subMeshCount = 2;
@@ -961,6 +1042,37 @@ public static class MapGenerator
         mesh.RecalculateTangents();
         mesh.RecalculateBounds();
         return mesh;
+    }
+
+    // 위에서 보아 반시계(xz)인 단순 다각형을 삼각형으로 — 앞면이 위(+y)를 보게(유니티 시계 방향) 돌려 낸다.
+    static List<int> EarClip(Vector3[] polygon)
+    {
+        var result = new List<int>();
+        var remaining = new List<int>();
+        for (int i = 0; i < polygon.Length; i++) remaining.Add(i);
+        float Cross(Vector3 a, Vector3 b, Vector3 c) => (b.x - a.x) * (c.z - a.z) - (b.z - a.z) * (c.x - a.x);
+        bool Inside(Vector3 p, Vector3 a, Vector3 b, Vector3 c) => Cross(a, b, p) >= 0f && Cross(b, c, p) >= 0f && Cross(c, a, p) >= 0f;
+        int guard = polygon.Length * polygon.Length;
+        int cursor = 0;
+        while (remaining.Count > 3 && guard-- > 0)
+        {
+            int m = remaining.Count;
+            int ia = remaining[(cursor + m - 1) % m], ib = remaining[cursor % m], ic = remaining[(cursor + 1) % m];
+            Vector3 a = polygon[ia], b = polygon[ib], c = polygon[ic];
+            bool ear = Cross(a, b, c) > 1e-6f;
+            if (ear)
+                foreach (int other in remaining)
+                    if (other != ia && other != ib && other != ic && Inside(polygon[other], a, b, c)) { ear = false; break; }
+            if (ear)
+            {
+                result.AddRange(new[] { ia, ic, ib });   // 반시계(위에서) → 시계로 뒤집어 앞면이 위
+                remaining.RemoveAt(cursor % m);
+            }
+            else cursor++;
+            cursor %= Mathf.Max(1, remaining.Count);
+        }
+        if (remaining.Count == 3) result.AddRange(new[] { remaining[0], remaining[2], remaining[1] });
+        return result;
     }
 
     static Mesh SaveHillMesh(string footprintName, Mesh fresh)
@@ -1011,7 +1123,7 @@ public static class MapGenerator
         if (assets.Count == 0) return 0;
         System.Random rng = new System.Random(StableSeed(seedName + "_언덕"));
         int totalWeight = assets.Sum(a => a.prop.weight);
-        float margin = HillProfile[HillProfile.Length - 1].inset + 6f;
+        float margin = HillProfile[HillProfile.Length - 1].inset + HillEdgeWobble + 8f;
         float groundY = MapLayout.IslandTop + 0.05f + HillRise - lower;
         int count = 0;
         for (float z = minZ + margin; z < maxZ - margin; z += HillPropCell)
