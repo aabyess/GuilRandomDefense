@@ -302,7 +302,8 @@ public class UnitData : ScriptableObject
             if (displayPersonResolved) return displayPerson;
             displayPersonResolved = true;
             string[] parts = name.Split('_');
-            if (parts.Length == 2 && parts[0] != "Unit" && parts[1].Length > 0
+            // 10-06 사장님 「바지사장이 아니라 최상호 바지사장처럼 풀네임」 — 「초월_최상호_AP」·「희귀함_최상호_오타쿠의길」처럼 세 토막인 것도 둘째 토막이 사람 이름이다.
+            if (parts.Length >= 2 && parts[0] != "Unit" && parts[1].Length > 0
                 && !string.IsNullOrEmpty(unitName) && !unitName.Contains(parts[1]))
                 displayPerson = parts[1];
             return displayPerson;
@@ -551,6 +552,13 @@ public class UnitData : ScriptableObject
     public float manaAuraRange;
     public string manaAuraBuffId;
     public bool manaAuraIncludesSelf;
+
+    // ⚠️ 맨 뒤(2026-10-06 구현담당1) — 원작 체력 게이지 재생 오라(AUau 생명 재생 오라, 히루루크 A0RW Uau2 1.6 · 반경 850 — 우리는 체력이 LIFE 게이지라 게이지 재생에 더한다).
+    // 규칙은 마나 재생 오라와 같다(같은 주인·같은 버프 ID는 최댓값만·다른 ID는 합). 받는 쪽에 체력 게이지(lifeGaugeMax > 0)가 없으면 아무 일도 없다. 0이면 오라 없음.
+    public float lifeAuraRegenPerSecond;
+    public float lifeAuraRange;
+    public string lifeAuraBuffId;
+    public bool lifeAuraIncludesSelf;
 
     // ⚠️ 맨 뒤(2026-09-30 구현담당1, PM 결정 — Docs/research/SPLASH_ATTACK_DESIGN.md §7) — 평타 광역. 전부 0이면 지금 동작(한 마리).
     // 반경은 원작 단위(거리 비교는 ÷ WorldScale.Value), 중심은 주 대상. 값은 Tools/sync_attack_splash_from_w3u.py가 대응표·w3u·w3a에서.
