@@ -66,7 +66,7 @@ public static class MapGenerator
         { "gacha",     new Surface("grass", new Color(1.00f, 0.98f, 0.82f), 0.120f, 0.05f) },
         { "combine",   new Surface("grass", new Color(0.90f, 0.90f, 0.88f), 0.120f, 0.05f) },
         // 레인 사이 십자 대지(2026-10-06 사장님 「그랜드캐니언처럼 흙으로 된 섬」) — 메시 UV가 월드 단위라 타일 수는 안 쓴다(BuildInterLaneHills).
-        { "canyontop",   new Surface("canyon_top",    new Color(0.86f, 0.74f, 0.66f),        0f,     0.05f) },
+        { "canyontop",   new Surface("canyon_top",    Color.white,        0f,     0.05f) },
         { "canyoncliff", new Surface("canyon_strata", Color.white,         0f,     0.08f) },
         { "portal",    new Surface(null,    new Color(0.30f, 0.70f, 0.85f), 0f,     0.60f) },
     };
