@@ -189,12 +189,42 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
     }
 
     // TODO(멀티): 포탈 진입 판정·지급은 서버 권위로 이동해야 함 — 지금은 클라이언트가 직접 처리.
-    void OnTriggerEnter(Collider other)
+    void OnTriggerEnter(Collider other) => TryConsume(other);
+
+    // 흔함 선택 포탈은 「이 포탈을 겨눈 위습」만 먹는다 — 도착했을 때 이미 판정 안에 있던 위습을 놓치지 않게 Stay에서도 같은 판정을 한다.
+    // 다른 포탈은 Enter만(예전 그대로).
+    void OnTriggerStay(Collider other)
+    {
+        if (IsChoicePortal) TryConsume(other);
+    }
+
+    bool IsChoicePortal => name.StartsWith("흔함선택_");
+
+    // 🔴 2026-10-06 진짜 클릭 실측: 위습이 겨눈 포탈로 걷는 동안 스쳐 가는 다른 흔함 선택 포탈에 먹혔다(6기 중 4기가 엉뚱한 유닛).
+    //    포탈 줄이 한 줄이라 직선 경로가 이웃 판정을 지난다. 목적지가 이 포탈 판정 안인 위습만 먹는다.
+    //    목적지가 없거나(멈춰 있음·도착) 에이전트가 없으면 먹는다 — 자리에 서 있다가 닿은 위습·옛 동작 보존. 판정은 호스트 에이전트 기준(IsServer만 들어옴).
+    bool AimedAtMe(Wisp wisp)
+    {
+        if (!wisp.TryGetComponent(out UnityEngine.AI.NavMeshAgent agent) || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return true;
+        if (agent.pathPending) return false;   // 경로를 막 받는 프레임 — 목적지가 아직 낡은 값일 수 있다
+        if (!agent.hasPath || agent.isStopped) return true;
+
+        Vector3 aim = agent.destination;
+        Vector3 center = transform.position;
+        float reach = 0.5f * Mathf.Max(Mathf.Abs(transform.lossyScale.x), Mathf.Abs(transform.lossyScale.z));
+        if (TryGetComponent(out CapsuleCollider capsule)) reach = capsule.radius * Mathf.Max(Mathf.Abs(transform.lossyScale.x), Mathf.Abs(transform.lossyScale.z));
+        // 클릭 지점은 NavMesh 표본으로 조금 밀릴 수 있다 — 판정 반지름에 여유를 둔다.
+        Vector2 d = new Vector2(aim.x - center.x, aim.z - center.z);
+        return d.magnitude <= reach + 8f;
+    }
+
+    void TryConsume(Collider other)
     {
         if (!GameAuthority.IsServer) return;
         if (!other.TryGetComponent(out Wisp wisp)) return;
         if (wisp.IsConsumed) return;
         if (wisp.Data == null) return;
+        if (IsChoicePortal && !AimedAtMe(wisp)) return;
 
         UnitGrade grade = wisp.Data.targetGrade;
 
