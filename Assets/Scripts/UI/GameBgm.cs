@@ -172,6 +172,7 @@ public class GameBgm : MonoBehaviour
 
         if (current < 0 && want >= 0)   // 새 구간 — 처음부터
         {
+            Debug.Log($"[소리] 배경음악 시작 {Cues[want].Track} · 씬 {SceneManager.GetActiveScene().buildIndex} · 라운드 {effective}");
             current = want;
             source.clip = clips[want];
             source.volume = Cues[want].Volume;
