@@ -206,4 +206,5 @@ def build_preview():
         bg.alpha_composite(knob, (sx + int(360 * frac) - 32, sy - 15))
     bg.convert('RGB').save(OUT + '/preview.png')
 
-build_panel(); build_nameplate(); build_slider(); build_preview(); print('DONE', OUT)
+if __name__ == '__main__':
+    build_panel(); build_nameplate(); build_slider(); build_preview(); print('DONE', OUT)
