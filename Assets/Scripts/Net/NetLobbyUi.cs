@@ -199,6 +199,7 @@ public class NetLobbyUi : MonoBehaviour
 
         RectTransform root = (RectTransform)transform;
         BuildBackdrop(root);
+        TitleProps.Build(root);   // 10-06 선술집 소품(누르면 달그락) — 배경 위·제목/메뉴 아래
         BuildTitle(root);
         subtitle = CreateText(root, "Subtitle", "", 34, boldFont, ButtonText, TextAlignmentOptions.Center);
         Place(subtitle.rectTransform, new Vector2(0f, 1f), new Vector2(636f, -262f), new Vector2(900f, 48f));
