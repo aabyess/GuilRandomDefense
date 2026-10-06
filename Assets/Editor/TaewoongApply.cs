@@ -48,7 +48,7 @@ static class TaewoongApply
         SkillData burst = MakeSkill("타고난신체", "타고난신체 — 깡딜(발동)",
             "사장님 10-06 「깡딜」. 평타 1/8 확률로 범위 450 안 적에게 고정 500000(물리). 원작 초월 깡딜 400,000~1,850,000 중간 — 제안값.",
             SkillTriggerType.OnHitChance, 450f, 0.125f,
-            new SkillEffect { kind = SkillEffectKind.Damage, basis = SkillEffectBasis.Flat, target = SkillTargetKind.Enemies, damageType = DamageType.AD, attackType = AttackType.Normal, multiplier = 500000f });
+            new SkillEffect { kind = SkillEffectKind.Damage, basis = SkillEffectBasis.Flat, target = SkillTargetKind.Enemies, damageType = DamageType.AD, attackType = AttackType.Normal, multiplier = 500000f, armorIgnoreRatio = 1f });
 
         SkillData bind = MakeSkill("포박", "포박 — 단일 스턴(발동)",
             "사장님 10-06 「단일스턴」. 평타 20% 확률로 맞은 적 하나를 1.5초 스턴(원작 단일 스턴 0.45~3초 · 김경현 AP A0X4 20%) — 제안값.",

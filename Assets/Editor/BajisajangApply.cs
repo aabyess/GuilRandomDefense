@@ -66,7 +66,7 @@ static class BajisajangApply
                     new SkillEffect
                     {
                         kind = SkillEffectKind.Damage, basis = SkillEffectBasis.Flat, target = SkillTargetKind.Enemies,
-                        damageType = DamageType.AD, attackType = AttackType.Magic, multiplier = 2000000f,
+                        damageType = DamageType.AD, attackType = AttackType.Magic, multiplier = 2000000f, armorIgnoreRatio = 1f,
                         attackSpeedScale = 1f, attackSpeedScaleCap = 4f,
                     },
                 },

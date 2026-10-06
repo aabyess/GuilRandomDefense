@@ -62,7 +62,7 @@ static class MinsooApply
             "사장님 10-06 「현재체력(단일)」. 평타 10% 확률로 맞은 적 현재 체력의 25%(원작 도플라밍고 일반 DP_Skill_2, PV<200) — 보스(PV≥200)는 비례 대신 고정 300000(원작 보스 고정 분기).",
             SkillTriggerType.OnHitChance, 0f, 0.10f,
             IgnoreArmor(Hit(SkillEffectBasis.TargetCurrentHpPercent, 0.25f, SkillEffectTargetCondition.TargetPointValueLessThan, 200f)),   // %체력은 방어 무시(원작 UNIVERSAL) — 10-06 신 기준 감사로 일괄
-            Hit(SkillEffectBasis.Flat, 300000f, SkillEffectTargetCondition.TargetPointValueAtLeast, 200f));
+            IgnoreArmor(Hit(SkillEffectBasis.Flat, 300000f, SkillEffectTargetCondition.TargetPointValueAtLeast, 200f)));
 
         SkillData suppress = MakeSkill("체육특기생_억제기", "체육특기생(민수) — 억제기(범위 스턴)",
             "사장님 10-06 「억제기」 = 범위 스턴(원작엔 억제기 없음 — 사장님이 범위 스턴으로 정함). 평타 1/12 확률로 범위 500 안 적 스턴 2.5초(원작 구주호 키자루 1/12·500범위·2.75초, 조로 Zoro_tiger 500범위·2.5초 기준). 재능투자 「스턴」 단계가 같이 키운다.",

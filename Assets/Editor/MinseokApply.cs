@@ -49,7 +49,7 @@ static class MinseokApply
         SkillData devil = Make("외동LvDevil", "외동Lv.Devil — 깡딜 + 방깍 + 마방깍(평타 1/10)",
             "사장님 10-06. 평타 10% 확률로 대상 한 기에게 깡딜 400,000(AD) + 방어 −5 + 마법 방어 −5레벨(Aegr 스택). 값 근거: 초월 평타 발동 Flat 깡딜 76건(확률 중앙 0.10·피해 중앙 400,000), 방깎 7건 중앙 5, 원작 Aegr 스택 +5(영원 김정래·조세민).",
             SkillTriggerType.OnHitChance, 0f, 0.10f, SkillGaugeKind.Mana, 0, false,
-            new SkillEffect { kind = SkillEffectKind.Damage, basis = SkillEffectBasis.Flat, target = SkillTargetKind.SingleTarget, damageType = DamageType.AD, attackType = AttackType.Unassigned, multiplier = 400000f },
+            new SkillEffect { kind = SkillEffectKind.Damage, basis = SkillEffectBasis.Flat, target = SkillTargetKind.SingleTarget, damageType = DamageType.AD, attackType = AttackType.Unassigned, multiplier = 400000f, armorIgnoreRatio = 1f },
             new SkillEffect { kind = SkillEffectKind.ArmorBreak, target = SkillTargetKind.SingleTarget, multiplier = 5f },
             new SkillEffect { kind = SkillEffectKind.AegrStack, target = SkillTargetKind.SingleTarget, multiplier = 5f });
 
