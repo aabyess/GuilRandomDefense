@@ -11,6 +11,7 @@ public class MinimapBlips : MaskableGraphic
     static readonly Color MineColor = new Color(0.2f, 0.9f, 0.3f, 1f);   // 내 유닛·위습
     static readonly Color AllyColor = new Color(0.3f, 0.55f, 0.95f, 1f); // 다른 플레이어 유닛
     static readonly Color EnemyColor = new Color(0.9f, 0.2f, 0.2f, 1f);  // 적
+    static readonly Color TreasureMarkColor = new Color(1f, 0.85f, 0.15f, 1f);  // 보물위치공개 점
 
     MinimapCamera minimapCamera;
     float nextRefreshTime;
@@ -58,12 +59,19 @@ public class MinimapBlips : MaskableGraphic
             if (enemy == null) continue;
             AddBlip(vh, enemy.transform.position, EnemyColor);
         }
+
+        // 보물위치공개(제한됨 김민규) — 내가 찍은 보물상자 자리를 노란 큰 점으로.
+        TreasureHunt hunt = TreasureHunt.Instance;
+        if (hunt != null)
+            foreach ((Vector2 position, float until, int playerId) mark in hunt.RevealMarks)
+                if (Time.time <= mark.until && mark.playerId == LocalPlayer.LocalPlayerId)
+                    AddBlip(vh, new Vector3(mark.position.x, 0f, mark.position.y), TreasureMarkColor, 7f);
     }
 
-    void AddBlip(VertexHelper vh, Vector3 worldPosition, Color color)
+    void AddBlip(VertexHelper vh, Vector3 worldPosition, Color color, float size = BlipSize)
     {
         Vector2 center = minimapCamera.WorldToMinimapLocal(worldPosition);
-        float half = BlipSize * 0.5f;
+        float half = size * 0.5f;
 
         int startIndex = vh.currentVertCount;
 

@@ -67,6 +67,38 @@ public class TreasureHunt : MonoBehaviour
     [SerializeField] GameObject foundEffectPrefab;
     [SerializeField] float foundEffectLifetime = 4f;
 
+    [Header("보물위치공개(제한됨 김민규 쿨스킬)")]
+    [SerializeField] Material revealBeamMaterial;   // 땅 빛기둥 재질(반투명 노랑) — Apply가 이음. 비면 기둥은 안 서고 미니맵 점만.
+    [SerializeField] float revealBeamHeight = 160f;
+
+    // 미니맵 점 목록(MinimapBlips가 읽는다) — 위치(월드 XZ)·끝나는 시각·찍은 플레이어.
+    public readonly List<(Vector2 position, float until, int playerId)> RevealMarks = new List<(Vector2, float, int)>();
+
+    /// <summary>center 둘레 worldRadius 안 숨은 상자마다 빛기둥 + 미니맵 점을 seconds초. 찾은 개수를 돌려준다(상자는 안 열린다 — 위치만 보여 준다).</summary>
+    public int RevealWithin(int playerId, Vector3 center, float worldRadius, float seconds)
+    {
+        int count = 0;
+        Vector2 c = new Vector2(center.x, center.z);
+        foreach (Vector2 chest in chests)
+        {
+            if ((chest - c).sqrMagnitude > worldRadius * worldRadius) continue;
+            count++;
+            RevealMarks.Add((chest, Time.time + seconds, playerId));
+            if (revealBeamMaterial != null)
+            {
+                GameObject beam = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                beam.name = "보물빛기둥";
+                Object.Destroy(beam.GetComponent<Collider>());
+                beam.transform.position = new Vector3(chest.x, chestHeight + revealBeamHeight * 0.5f, chest.y);
+                beam.transform.localScale = new Vector3(6f, revealBeamHeight * 0.5f, 6f);
+                beam.GetComponent<Renderer>().sharedMaterial = revealBeamMaterial;
+                Object.Destroy(beam, seconds);
+            }
+        }
+        RevealMarks.RemoveAll(m => Time.time > m.until);
+        return count;
+    }
+
     readonly List<Vector2> chests = new List<Vector2>();
     readonly Dictionary<int, float> cooldownUntil = new Dictionary<int, float>();
     readonly Dictionary<int, float> legendRangePlayers = new Dictionary<int, float>();

@@ -2411,6 +2411,18 @@ public class UnitAttacker : MonoBehaviour
         moveDebuffApplied = reduction > 0f;
     }
 
+    // 보물위치공개(SkillEffectKind.RevealTreasure, 제한됨 김민규) — 시전자 둘레 안 숨은 상자 자리에 땅 빛기둥 + 미니맵 점. 서버만.
+    public int LastRevealCount { get; private set; }
+
+    void RevealTreasureAround(SkillEffect effect, float worldRange)
+    {
+        if (!GameAuthority.IsServer || owner == null) return;
+        TreasureHunt hunt = TreasureHunt.Instance;
+        if (hunt == null) { LastRevealCount = -1; return; }
+        LastRevealCount = hunt.RevealWithin(owner.OwnerId, transform.position, worldRange, Mathf.Max(1f, effect.duration));
+        PlayerNotification.Show(owner.OwnerId, LastRevealCount > 0 ? $"<color=#FFD700>보물위치공개</color> — 반경 안 보물상자 {LastRevealCount}곳!" : "이 근처에는 보물상자가 없습니다.", 5f);
+    }
+
     // 발명품제작(SkillEffectKind.GrantInvention, 제한됨 이충민) — 금화·목재·위습·소환수·상붕카 중 하나를 균등으로. 서버만.
     public string LastInventionResult { get; private set; }
 
@@ -2824,6 +2836,7 @@ public class UnitAttacker : MonoBehaviour
         // 소환(최상호 구일) — 대상이 없다. 확률·쿨다운은 위(CastSkillLevel·평타 확률 발동)가 이미 판정했다.
         if (effect.kind == SkillEffectKind.SummonUnit) { SummonFor(effect); return; }
         if (effect.kind == SkillEffectKind.GrantInvention) { GrantInvention(effect); return; }
+        if (effect.kind == SkillEffectKind.RevealTreasure) { RevealTreasureAround(effect, range); return; }
         if (effect.kind == SkillEffectKind.KillNormalEnemies) { lastKillSucceeded = KillNearestNormalEnemy(range, effect.killMostLostHp); return; }
         if (effect.kind == SkillEffectKind.RecruitEnemy) { RecruitNearestEnemy(range, effect); return; }
         if (effect.kind == SkillEffectKind.GrantLoot) { if (lastKillSucceeded || effect.lootAlways) GrantLoot(effect); lastKillSucceeded = false; return; }
@@ -2838,7 +2851,7 @@ public class UnitAttacker : MonoBehaviour
             || effect.kind == SkillEffectKind.DamagePerAllyDebuff || effect.kind == SkillEffectKind.DamageGrowthOverTime
             || effect.kind == SkillEffectKind.AllySkillDamageBonus || effect.kind == SkillEffectKind.DispelAllyDebuffs
             || effect.kind == SkillEffectKind.GoldPlusBonus || effect.kind == SkillEffectKind.StoryDamageMultiplier
-            || effect.kind == SkillEffectKind.DamagePerTargetArmorShred || effect.kind == SkillEffectKind.DamagePerRecruit || effect.kind == SkillEffectKind.DamageVsTargetBuff || effect.kind == SkillEffectKind.SkillDamageAfterKill || effect.kind == SkillEffectKind.SlowRewardBonus || effect.kind == SkillEffectKind.SkillTriggerChanceBonus) return;
+            || effect.kind == SkillEffectKind.DamagePerTargetArmorShred || effect.kind == SkillEffectKind.DamagePerRecruit || effect.kind == SkillEffectKind.DamageVsTargetBuff || effect.kind == SkillEffectKind.SkillDamageAfterKill || effect.kind == SkillEffectKind.SlowRewardBonus || effect.kind == SkillEffectKind.SkillTriggerChanceBonus || effect.kind == SkillEffectKind.RevealTreasure) return;
 
         // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
         if (effect.lineLength > 0f && effect.zoneTickInterval <= 0f)

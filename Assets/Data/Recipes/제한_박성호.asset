@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d9e360a1ab0e48608e0b08ef0e946ccf, type: 3}
-  m_Name: 제한_박성호
+  m_Name: "\uC81C\uD55C_\uBC15\uC131\uD638"
   m_EditorClassIdentifier: 
-  commandId: 박성호 limited
+  commandId: "\uBC15\uC131\uD638 limited"
   result: {fileID: 11400000, guid: 2667f4405b0b4741803f244b7f3f027b, type: 2}
   ingredients:
   - kind: 0
@@ -20,16 +20,25 @@ MonoBehaviour:
     item: {fileID: 0}
     wildcardGrade: 0
     count: 1
+    alternativeUnit: {fileID: 0}
   - kind: 0
     unit: {fileID: 11400000, guid: 8f72fab69511471faea0e7af946ee67b, type: 2}
     item: {fileID: 0}
     wildcardGrade: 0
     count: 1
+    alternativeUnit: {fileID: 0}
   - kind: 0
     unit: {fileID: 11400000, guid: 1bc092c18d334fc197cd614d1b9e0925, type: 2}
     item: {fileID: 0}
     wildcardGrade: 0
     count: 1
+    alternativeUnit: {fileID: 0}
+  - kind: 1
+    unit: {fileID: 0}
+    item: {fileID: 11400000, guid: 87ea4db1c98ed47f59eb9c583d300da3, type: 2}
+    wildcardGrade: 0
+    count: 1
+    alternativeUnit: {fileID: 0}
   goldCost: 5000
   resourceCosts:
   - type: 0
@@ -37,3 +46,6 @@ MonoBehaviour:
   minRound: 0
   maxRound: 0
   requiredSaveCount: 0
+  damageLevelFixedBonus: 0
+  chatPhrase: 
+  resultDelaySeconds: 0

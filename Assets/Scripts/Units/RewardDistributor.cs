@@ -11,6 +11,10 @@ public class RewardDistributor : MonoBehaviour
 
     // 게임 시작에 모든 플레이어가 받는 위습. 원작처럼 랜덤 위습 다섯 개로 시작한다 —
     // 이걸 자원 칸 북쪽 포탈에 넣으면 흔함 유닛이 하나씩 나온다(1% 상붕카).
+    // 분실된지갑(제한됨 박성호 재료 — 사장님 10-06): 일반 적 처치 때 낮은 확률로 인벤토리에 떨어진다. Apply가 이은 아이템. 비면 안 떨어진다.
+    [SerializeField] ItemData lostWalletItem;
+    const float LostWalletChance = 0.005f;   // 일반 적 처치 1회당 0.5% — 원작 보스 아이템 드랍(1/22~1/18 ≈ 4.5~6%)의 약 1/10, 적 한 판 수천 마리라 판당 몇 개
+
     [SerializeField] WispData startingWisp;
     [SerializeField] int startingWispCount = 5;
 
@@ -214,6 +218,10 @@ public class RewardDistributor : MonoBehaviour
         float slowBonus = slowPercent > 0f ? UnitAttacker.SlowRewardPerPercent(owner.PlayerId) * slowPercent : 0f;
         GrantKillGold(owner, round, deathPosition, 1f + slowBonus);
         GrantResources(owner, data, 1f + slowBonus);
+        if (lostWalletItem != null && !data.isBoss && owner.ItemInventory != null && Random.value < LostWalletChance)
+        {
+            if (owner.ItemInventory.Add(lostWalletItem)) PlayerNotification.Show(owner.PlayerId, $"<color=#C8E6A0>{lostWalletItem.itemName}을(를) 주웠습니다!</color>", 5f);
+        }
 
         if (data.isBoss) GrantBossReward(owner, round, data);
     }

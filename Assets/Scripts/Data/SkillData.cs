@@ -385,6 +385,10 @@ public enum SkillEffectKind
 
     // ⚠️ 맨 뒤에 추가(2026-10-06, 제한됨 이충민 「확률조작」 — 「스킬발동확률증가」) — 오라(Allies/Self, 같은 buffId는 최댓값): 받는 유닛의 **평타 확률 발동 스킬 확률**이 ×(1 + multiplier)(0.25 = ×1.25)로 커진다. 상한 1.
     SkillTriggerChanceBonus,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 제한됨 김민규 「쿨스킬 반경1000 보물위치공개」 — 사장님 확정: 땅 빛기둥 몇 초 + 미니맵 점) — 직렬화 순서를 지킨다.
+    // 시전자 둘레(SkillLevel.range, 원작 단위 1000 → 세계 거리는 ÷WorldScale) 안에 숨은 보물상자 자리마다 땅 빛기둥을 duration초 세우고 미니맵에 점을 찍는다(시전한 플레이어에게). TreasureHunt.RevealWithin. 서버만.
+    RevealTreasure,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
