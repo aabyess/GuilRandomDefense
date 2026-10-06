@@ -3190,8 +3190,9 @@ public class GameHud : MonoBehaviour
     {
         SkillData skill = index >= 0 && index < MaxSkillIcons ? skillIconSkills[index] : null;
         if (skill == null) return;
-        string text = skill.skillName ?? "";
-        if (!string.IsNullOrEmpty(skill.description)) text += "\n" + skill.description;
+        string text = PlayerFacingText.SkillName(skill);   // 10-06 개발 메모는 화면에 안 낸다
+        string desc = PlayerFacingText.SkillDescription(skill);
+        if (!string.IsNullOrEmpty(desc)) text += "\n" + desc;
         if (skill.triggerType == SkillTriggerType.ActiveButton && skill.levels != null && skill.levels.Count > 0)
             text += $"\n[누르는 스킬] 쿨타임 {skill.levels[0].cooldown:0.#}초";
         ShowTooltip(text, (RectTransform)skillIconBorders[index].transform);
@@ -3264,7 +3265,7 @@ public class GameHud : MonoBehaviour
         {
             float cd = activeShownSkill.levels != null && activeShownSkill.levels.Count > 0 ? activeShownSkill.levels[0].cooldown : 0f;
             bool toggleSkill = activeShownSkill.levels != null && activeShownSkill.levels.Count > 0 && activeShownSkill.levels[0].toggleMode;
-            ShowTooltip($"{activeShownSkill.skillName}  [{ActiveHotkey}]\n{activeShownSkill.description}\n" + (toggleSkill ? "켜고 끄는 스킬 · 쿨타임·마나 소모 없음" : $"쿨타임 {cd:0.#}초 · 마나 소모 없음"), cardRect);
+            ShowTooltip($"{PlayerFacingText.SkillName(activeShownSkill)}  [{ActiveHotkey}]\n{PlayerFacingText.SkillDescription(activeShownSkill)}\n" + (toggleSkill ? "켜고 끄는 스킬 · 쿨타임·마나 소모 없음" : $"쿨타임 {cd:0.#}초 · 마나 소모 없음"), cardRect);
         }
         else if (FlexKindAt(index) == FlexKind.Talent && talentSlotsShown)
         {

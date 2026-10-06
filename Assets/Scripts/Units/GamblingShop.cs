@@ -336,7 +336,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
 
     string BuildMoneyTooltip(GamblingOptionData option)
     {
-        string tooltip = $"{option.optionName}\n{option.description}\n"
+        string tooltip = $"{option.optionName}\n{PlayerFacingText.Clean(option.description)}\n"
             + $"비용: {option.cost}엔\n"
             + $"결과: {option.successGoldMin}~{option.successGoldMax}엔 (0엔이 나올 수도 있습니다)";
 
@@ -381,7 +381,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
             ? $"행운의토큰 {FailureLuckyTokens(option, OwnerContext)} + 목재 {option.failureWood}"
             : "없음";
 
-        return $"{option.optionName}\n{option.description}\n"
+        return $"{option.optionName}\n{PlayerFacingText.Clean(option.description)}\n"
              + $"비용: {ResourceLabel(option.costResourceType)} {option.cost}\n성공 확률: {EffectiveSuccessChance(option, OwnerContext):F0}%{BoostNote(option, OwnerContext)}\n"
              + $"성공 시: {resultDesc}\n실패 시: {failDesc}";
     }

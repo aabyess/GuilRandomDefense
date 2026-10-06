@@ -72,11 +72,11 @@ public class AttackTypeUpgradeShop : MonoBehaviour, ILaneShop
         int level = LevelOf(track);
 
         if (track.maxLevel > 0 && level >= track.maxLevel)
-            return $"{track.trackName}\n{track.description}\n현재 Lv.{level} — 최대 레벨";
+            return $"{track.trackName}\n{PlayerFacingText.Clean(track.description)}\n현재 Lv.{level} — 최대 레벨";
 
         int goldCost = track.CostForLevel(level);
         int woodCost = track.WoodCostForLevel(level);
-        return $"{track.trackName}\n{track.description}\n"
+        return $"{track.trackName}\n{PlayerFacingText.Clean(track.description)}\n"
              + $"현재 Lv.{level}\n"
              + $"다음 레벨 — 비용 {goldCost}엔 + 목재 {woodCost}개";
     }

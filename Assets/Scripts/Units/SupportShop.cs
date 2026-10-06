@@ -170,8 +170,9 @@ public class SupportShop : MonoBehaviour, ILaneShop
         tooltipBuilder.Clear();
         tooltipBuilder.Append(skill.skillName);
 
-        if (!string.IsNullOrEmpty(skill.description))
-            tooltipBuilder.Append('\n').Append(skill.description);
+        string cleanDesc = PlayerFacingText.Clean(skill.description);   // 10-06 개발 메모 빼고
+        if (!string.IsNullOrEmpty(cleanDesc))
+            tooltipBuilder.Append('\n').Append(cleanDesc);
 
         tooltipBuilder.Append("\n비용: ");
         bool hasCost = false;

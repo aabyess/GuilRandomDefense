@@ -95,18 +95,18 @@ public class UnitUpgradeShop : MonoBehaviour, ILaneShop
         float powerBonus = track.BonusForLevel(level);
 
         if (!ResearchLabImplemented)
-            return $"{track.trackName}\n{track.description}\n현재 Lv.{level} — 연구소 준비 중, 아직 강화할 수 없습니다";
+            return $"{track.trackName}\n{PlayerFacingText.Clean(track.description)}\n현재 Lv.{level} — 연구소 준비 중, 아직 강화할 수 없습니다";
 
         if (!track.hasOriginalResearch)
-            return $"{track.trackName}\n{track.description}\n원작에 대응하는 연구소가 없는 등급입니다 — 강화할 수 없습니다";
+            return $"{track.trackName}\n{PlayerFacingText.Clean(track.description)}\n원작에 대응하는 연구소가 없는 등급입니다 — 강화할 수 없습니다";
 
         if (track.maxLevel > 0 && level >= track.maxLevel)
-            return $"{track.trackName}\n{track.description}\n현재 Lv.{level} (공속 x{speedMultiplier:F2}, 공격력 +{powerBonus:F0}) — 최대 레벨";
+            return $"{track.trackName}\n{PlayerFacingText.Clean(track.description)}\n현재 Lv.{level} (공속 x{speedMultiplier:F2}, 공격력 +{powerBonus:F0}) — 최대 레벨";
 
         int cost = track.CostForLevel(level);
         float nextSpeedMultiplier = track.SpeedMultiplierForLevel(level + 1);
         float nextPowerBonus = track.BonusForLevel(level + 1);
-        return $"{track.trackName}\n{track.description}\n"
+        return $"{track.trackName}\n{PlayerFacingText.Clean(track.description)}\n"
              + $"현재 Lv.{level} (공속 x{speedMultiplier:F2}, 공격력 +{powerBonus:F0})\n"
              + $"다음 레벨: 공속 x{nextSpeedMultiplier:F2}, 공격력 +{nextPowerBonus:F0} — 비용 {cost}엔";
     }
