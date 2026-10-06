@@ -158,7 +158,7 @@ public class NetLobbyUi : MonoBehaviour
             bool me = player == NetPlayer.Local;
             slotNames[slot].text = player.DisplayName + (me ? "  (나)" : "");
             slotNames[slot].color = TextMain;
-            slotRows[slot].color = me ? new Color(0.12f, 0.20f, 0.40f, 1f) : Row;
+            slotRows[slot].color = me ? new Color(0.34f, 0.22f, 0.08f, 0.95f) : Row;
 
             if (player.IsHost) { slotTags[slot].text = "방장"; slotTags[slot].color = Selected; }
             else if (player.Ready) { slotTags[slot].text = "준비 완료"; slotTags[slot].color = ReadyGreen; }
@@ -471,8 +471,8 @@ public class NetLobbyUi : MonoBehaviour
     static Image CreateCard(Transform parent, string name)
     {
         Image image = CreateImage(parent, name, Card);
-        Sprite frame = Lobby("menu_frame");
-        if (frame != null) { image.sprite = frame; image.type = Image.Type.Sliced; image.color = Color.white; image.pixelsPerUnitMultiplier = 2.4f; }
+        Sprite frame = Lobby("btn_normal");   // 가로로 넓은 카드엔 룬 머리띠가 늘어나 보여서 단추 판(청동 테두리 + 어두운 철판)을 쓴다
+        if (frame != null) { image.sprite = frame; image.type = Image.Type.Sliced; image.color = Color.white; image.pixelsPerUnitMultiplier = 1.1f; }
         return image;
     }
 
