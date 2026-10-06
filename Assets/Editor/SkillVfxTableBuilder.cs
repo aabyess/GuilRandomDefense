@@ -17,6 +17,7 @@ public static class SkillVfxTableBuilder
     const string CsvPath = "Docs/research/SKILL_VFX_MAPPING.csv";
     const string OutPath = "Assets/Resources/Effects/SkillVfxTable.asset";
     const string PackRoot = "Assets/ThirdParty";
+    const string OwnRoot = "Assets/Art/Effects/Bomb";   // 우리가 만든 프리팹(BombFxBuilder, 10-06)
 
     [MenuItem("Tools/이펙트/스킬 이펙트 표 만들기")]
     static void Menu() => Debug.Log(Build());
@@ -33,7 +34,7 @@ public static class SkillVfxTableBuilder
         int cCaster = System.Array.IndexOf(header, "시전자_프리팹");
         if (cAsset < 0 || cHit < 0 || cArea < 0 || cCaster < 0) return "❌ CSV 열 이름이 다름: " + string.Join(",", header);
 
-        Dictionary<string, string> prefabByName = AssetDatabase.FindAssets("t:Prefab", new[] { PackRoot })
+        Dictionary<string, string> prefabByName = AssetDatabase.FindAssets("t:Prefab", new[] { PackRoot, OwnRoot })
             .Select(AssetDatabase.GUIDToAssetPath)
             .GroupBy(p => Path.GetFileNameWithoutExtension(p))
             .ToDictionary(g => g.Key, g => g.First());

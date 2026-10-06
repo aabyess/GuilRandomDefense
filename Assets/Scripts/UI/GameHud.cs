@@ -1563,6 +1563,10 @@ public class GameHud : MonoBehaviour
             if (e != null && !e.IsDead && Vector3.Distance(center, e.transform.position) <= radius) victims.Add(e);
         foreach (EnemyDummy e in victims)
             e.TakeDamage(damage, DamageType.AP, AttackType.Spells, playerId, 1f);
+        // 폭발 이펙트(blender 시안, 10-06): 스킬 이펙트 표의 범위 칸 — 친구 화면은 PlayedPrefab으로 넘어간다
+        bool vfxGate = SkillVfx.BeginCast(identity.Data, bombSkill);
+        SkillVfx.CastAt(center, origin, radius);
+        SkillVfx.EndCast(vfxGate);
         PlayerNotification.Show(playerId, $"<color=#FFD700>폭탄제조</color> 목재 {BombWoodCost}개 · {victims.Count}기에게 {damage:N0} 방어 무시", 3f);
     }
 
