@@ -10,20 +10,27 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: af9413764dc9047d893ae0a4d3fd02fa, type: 3}
-  m_Name: UnitUpgrade_희귀함 강화
-  m_EditorClassIdentifier:
-  trackName: 희귀함 강화
-  description: '희귀함 강화 — 해당 등급 유닛 전체의 공격속도를 영구히 올립니다(statLevel1Multiplier/statGrowthPerLevel,
-    2026-09-06 정정: 구현담당2 발견/PM 확인 — 이 필드가 실제로는 공격력이 아니라 원작 공속
-    증가율 gba1/gmo1이었다). statLevel1Bonus/statBonusGrowthPerLevel(공격력 고정 가산)은
-    원작에 없어 0(기본값)이 맞다 — 5개 트랙(전설적인·히든·불멸·초월함·제한됨)만 이 값이
-    있다. 필드 이름은 직렬화 키라 안 바꿨다(값 유실 방지, PM 지시).'
-  targetGrades:
-  - 3
+  m_Name: "UnitUpgrade_\uD76C\uADC0\uD568 \uAC15\uD654"
+  m_EditorClassIdentifier: 
+  trackName: "\uD76C\uADC0\uD568 \uAC15\uD654"
+  description: "\uD76C\uADC0\uD568 \uAC15\uD654 \u2014 \uD574\uB2F9 \uB4F1\uAE09
+    \uC720\uB2DB \uC804\uCCB4\uC758 \uACF5\uACA9\uC18D\uB3C4\uB97C \uC601\uAD6C\uD788
+    \uC62C\uB9BD\uB2C8\uB2E4(statLevel1Multiplier/statGrowthPerLevel, 2026-09-06
+    \uC815\uC815: \uAD6C\uD604\uB2F4\uB2F92 \uBC1C\uACAC/PM \uD655\uC778 \u2014 \uC774
+    \uD544\uB4DC\uAC00 \uC2E4\uC81C\uB85C\uB294 \uACF5\uACA9\uB825\uC774 \uC544\uB2C8\uB77C
+    \uC6D0\uC791 \uACF5\uC18D \uC99D\uAC00\uC728 gba1/gmo1\uC774\uC5C8\uB2E4). statLevel1Bonus/statBonusGrowthPerLevel(\uACF5\uACA9\uB825
+    \uACE0\uC815 \uAC00\uC0B0)\uC740 \uC6D0\uC791\uC5D0 \uC5C6\uC5B4 0(\uAE30\uBCF8\uAC12)\uC774
+    \uB9DE\uB2E4 \u2014 5\uAC1C \uD2B8\uB799(\uC804\uC124\uC801\uC778\xB7\uD788\uB4E0\xB7\uBD88\uBA78\xB7\uCD08\uC6D4\uD568\xB7\uC81C\uD55C\uB428)\uB9CC
+    \uC774 \uAC12\uC774 \uC788\uB2E4. \uD544\uB4DC \uC774\uB984\uC740 \uC9C1\uB82C\uD654
+    \uD0A4\uB77C \uC548 \uBC14\uAFE8\uB2E4(\uAC12 \uC720\uC2E4 \uBC29\uC9C0, PM \uC9C0\uC2DC)."
+  targetGrades: 03000000
   maxLevel: 16
   costBase: 10
   costGrowthPerLevel: 20
-  statLevel1Multiplier: 0.70
+  statLevel1Multiplier: 0.7
   statGrowthPerLevel: 0.04
   slotColor: {r: 0.6, g: 0.3, b: 0.85, a: 1}
+  targetUnit: {fileID: 0}
   hasOriginalResearch: 1
+  statLevel1Bonus: 200
+  statBonusGrowthPerLevel: 200

@@ -10,21 +10,29 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: af9413764dc9047d893ae0a4d3fd02fa, type: 3}
-  m_Name: UnitUpgrade_특별함 강화
-  m_EditorClassIdentifier:
-  trackName: 특별함 강화
-  description: '특별함 강화 — 해당 등급 유닛 전체의 공격속도를 영구히 올립니다(2026-09-06
-    정정, 구현담당2 발견/PM 확인: statLevel1Multiplier는 공격력이 아니라 원작 공속 증가율
-    gba1/gmo1이다). statLevel1Multiplier를 1.0→0.0으로 고쳤다 — 옛 값 1.0은 "필드가 비면
-    엔진 스톡 기본값 1.0을 상속한다"는 옛 가설(2026-09-05)에서 나왔는데, 리서치담당이 새로
-    뽑은 공속 표에서 특별함·랜덤전용만 공속 기본이 0(원작 실값, 결측 아님)으로 확인돼
-    가설이 틀렸다. 레벨당 증분(+0.02)은 그대로 확정값이다.'
-  targetGrades:
-  - 2
+  m_Name: "UnitUpgrade_\uD2B9\uBCC4\uD568 \uAC15\uD654"
+  m_EditorClassIdentifier: 
+  trackName: "\uD2B9\uBCC4\uD568 \uAC15\uD654"
+  description: "\uD2B9\uBCC4\uD568 \uAC15\uD654 \u2014 \uD574\uB2F9 \uB4F1\uAE09
+    \uC720\uB2DB \uC804\uCCB4\uC758 \uACF5\uACA9\uC18D\uB3C4\uB97C \uC601\uAD6C\uD788
+    \uC62C\uB9BD\uB2C8\uB2E4(2026-09-06 \uC815\uC815, \uAD6C\uD604\uB2F4\uB2F92 \uBC1C\uACAC/PM
+    \uD655\uC778: statLevel1Multiplier\uB294 \uACF5\uACA9\uB825\uC774 \uC544\uB2C8\uB77C
+    \uC6D0\uC791 \uACF5\uC18D \uC99D\uAC00\uC728 gba1/gmo1\uC774\uB2E4). statLevel1Multiplier\uB97C
+    1.0\u21920.0\uC73C\uB85C \uACE0\uCCE4\uB2E4 \u2014 \uC61B \uAC12 1.0\uC740 \"\uD544\uB4DC\uAC00
+    \uBE44\uBA74 \uC5D4\uC9C4 \uC2A4\uD1A1 \uAE30\uBCF8\uAC12 1.0\uC744 \uC0C1\uC18D\uD55C\uB2E4\"\uB294
+    \uC61B \uAC00\uC124(2026-09-05)\uC5D0\uC11C \uB098\uC654\uB294\uB370, \uB9AC\uC11C\uCE58\uB2F4\uB2F9\uC774
+    \uC0C8\uB85C \uBF51\uC740 \uACF5\uC18D \uD45C\uC5D0\uC11C \uD2B9\uBCC4\uD568\xB7\uB79C\uB364\uC804\uC6A9\uB9CC
+    \uACF5\uC18D \uAE30\uBCF8\uC774 0(\uC6D0\uC791 \uC2E4\uAC12, \uACB0\uCE21 \uC544\uB2D8)\uC73C\uB85C
+    \uD655\uC778\uB3FC \uAC00\uC124\uC774 \uD2C0\uB838\uB2E4. \uB808\uBCA8\uB2F9
+    \uC99D\uBD84(+0.02)\uC740 \uADF8\uB300\uB85C \uD655\uC815\uAC12\uC774\uB2E4."
+  targetGrades: 02000000
   maxLevel: 15
   costBase: 5
   costGrowthPerLevel: 5
-  statLevel1Multiplier: 0.0
+  statLevel1Multiplier: 0
   statGrowthPerLevel: 0.02
   slotColor: {r: 0.9, g: 0.85, b: 0.2, a: 1}
+  targetUnit: {fileID: 0}
   hasOriginalResearch: 1
+  statLevel1Bonus: 20
+  statBonusGrowthPerLevel: 30
