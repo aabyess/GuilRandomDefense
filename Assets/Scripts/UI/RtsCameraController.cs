@@ -151,6 +151,20 @@ public class RtsCameraController : MonoBehaviour
     static string ZoomA75() => ApplyView(50f, 60f, 0.75f);
     static string ZoomA65() => ApplyView(50f, 60f, 0.65f);
 
+    SelectionManager selectionRef;
+    bool FocusOnSelection()
+    {
+        if (selectionRef == null) selectionRef = FindFirstObjectByType<SelectionManager>();
+        if (selectionRef == null || selectionRef.Selected.Count == 0) return false;
+        Vector3 sum = Vector3.zero;
+        int count = 0;
+        foreach (Selectable s in selectionRef.Selected)
+            if (s != null) { sum += s.transform.position; count++; }
+        if (count == 0) return false;
+        MoveTo(sum / count);   // 높이·각도(시점)는 그대로, 화면 가운데만 옮긴다
+        return true;
+    }
+
     /// <summary>내 레인이 화면 중앙에 오도록 맞춘다. 레인 표식이 없으면 씬에 놓인 위치를 그대로 쓴다.</summary>
     public void FocusOnLocalLane()
     {
@@ -475,7 +489,10 @@ public class RtsCameraController : MonoBehaviour
         // 겹쳐서 카메라만 확인하고 싶을 때 Home이 필요하다(빌드에서는 겹치지 않는다).
         if (Keyboard.current != null &&
             (Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.homeKey.wasPressedThisFrame))
-            FocusOnLocalLane();
+        {
+            // 10-06 사장님(워크3 기능): 유닛을 고른 상태면 그 유닛(여럿이면 가운데)으로, 아니면 지금처럼 내 레인 가운데로.
+            if (!FocusOnSelection()) FocusOnLocalLane();
+        }
 
         // 두 입력은 같은 축 값으로 합쳐져 같은 moveSpeed·같은 감쇠를 지난다 —
         // 방향키가 느리게 느껴진다면 속도가 아니라 다른 데(에디터 포커스, 카메라 높이)에 원인이 있다.
