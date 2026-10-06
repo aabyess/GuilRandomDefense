@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Gambling_하급도박
   m_EditorClassIdentifier:
   optionName: 하급도박
-  description: 250엔과 목재 1개를 걸고 흔함이나 안흔함 등급 유닛을 노린다. 성공률 85%(원작: 15% 실패 → 성공 안에서 2% 확률로 해적선, 그 외 랜덤유닛 — 종합 1.70%/83.30%).
+  description: "250\uC5D4\uACFC \uBAA9\uC7AC 1\uAC1C\uB97C \uAC78\uACE0 \uD754\uD568\uC774\uB098 \uC548\uD754\uD568 \uB4F1\uAE09 \uC720\uB2DB\uC744 \uB178\uB9B0\uB2E4. \uC131\uACF5\uB960 85%. 10% \uD655\uB960\uB85C \uC194\u00B7\uC131\uD0C4\u00B7\uBEEC\uAF3C\u00B7\uC0C1\uBD95\uCE74 \uC911 \uD558\uB098\uAC00 \uBB34\uC791\uC704\uB85C \uB098\uC628\uB2E4(\uC0AC\uC7A5\uB2D8 10-06)."
   category: 1
   costResourceType: 0
   cost: 1
@@ -21,8 +21,14 @@ MonoBehaviour:
   primaryResultGrade: 0
   useSecondaryGrade: 1
   secondaryResultGrade: 1
-  bonusUnit: {fileID: 11400000, guid: 860e71e31404af1467d7670305231b9f, type: 2}
-  bonusChancePercent: 2
+  bonusUnit: {fileID: 0}
+  bonusChancePercent: 0
+  bonusPool:
+  - {fileID: 11400000, guid: 8cc2c8dec97d4d23941982cdcb560d2c, type: 2}
+  - {fileID: 11400000, guid: 1b63ce8488f74bf5b947185ab817bd92, type: 2}
+  - {fileID: 11400000, guid: 1a9fa1fc954d451996b2abae78624431, type: 2}
+  - {fileID: 11400000, guid: 5a449aba4e004544aa2a03efd1b105a6, type: 2}
+  bonusPoolChancePercent: 10
   successGoldMin: 0
   successGoldMax: 0
   grantFailureReward: 0

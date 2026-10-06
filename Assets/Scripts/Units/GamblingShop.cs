@@ -562,7 +562,13 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
         failReason = null;
         if (unitSpawner == null || gachaTable == null) return false;   // 배선 오류, reason 없음
 
-        bool success = Random.Range(0f, 100f) < option.successChancePercent;
+        // 묶음 보너스(bonusPool)는 성공 판정보다 먼저, 판 전체 확률로 굴린다(데이터 주석 참고).
+        UnitData poolReward = null;
+        if (option.bonusPool != null && option.bonusPool.Count > 0 && option.bonusPoolChancePercent > 0f
+            && Random.Range(0f, 100f) < option.bonusPoolChancePercent)
+            poolReward = option.bonusPool[Random.Range(0, option.bonusPool.Count)];
+
+        bool success = poolReward != null || Random.Range(0f, 100f) < option.successChancePercent;
 
         // 당첨 시 지급할 등급을 자원 차감 전에 미리 정하고, 그 등급 pool이 비어있으면
         // 통째로 취소한다 — unitSpawner가 없거나 지급할 유닛이 없는데 자원만 나가면
@@ -573,8 +579,9 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
         // 해적선 같은 특정 유닛을 먼저 노린다 — 실패하면 그제서야 등급 풀로 넘어간다
         // (0.85×0.02=1.70%, 0.70×0.035=2.45%). bonusUnit이 비어 있으면(기존 도박 옵션)
         // 이 축을 안 타 예전과 똑같이 동작한다.
-        bool bonusHit = success && option.bonusUnit != null && option.bonusChancePercent > 0f
-                        && Random.Range(0f, 100f) < option.bonusChancePercent;
+        bool bonusHit = poolReward != null
+                        || (success && option.bonusUnit != null && option.bonusChancePercent > 0f
+                            && Random.Range(0f, 100f) < option.bonusChancePercent);
         if (success && !bonusHit)
         {
             resultGrade = PickResultGrade(option);
@@ -614,7 +621,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
 
         if (success)
         {
-            UnitData reward = bonusHit ? option.bonusUnit : gachaTable.RollFromGrade(resultGrade);
+            UnitData reward = poolReward != null ? poolReward : bonusHit ? option.bonusUnit : gachaTable.RollFromGrade(resultGrade);
             GameObject spawned = unitSpawner.Spawn(reward, ResolveSpawnPosition(reward), owner.OwnerId);
 
             // 희귀함 리롤(A0VX) — "지정된 특별 결과(bonusHit)가 아닌 일반 랜덤풀 결과"에만

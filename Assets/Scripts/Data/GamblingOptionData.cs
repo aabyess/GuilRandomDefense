@@ -42,6 +42,11 @@ public class GamblingOptionData : ScriptableObject
     public UnitData bonusUnit;
     [Range(0f, 100f)] public float bonusChancePercent;
 
+    // 사장님 10-06: 하급도박에서 10% 확률로 솔·성탄·뻬꼼·상붕카 중 하나(무작위). 성공·실패 판정 **전에** 따로 굴린다 —
+    // 이 확률은 판 전체 기준(성공 안의 확률이 아니다). 맞으면 성공으로 치고 이 목록에서 고르게 하나를 준다. 비어 있으면 안 쓴다.
+    public System.Collections.Generic.List<UnitData> bonusPool = new System.Collections.Generic.List<UnitData>();
+    [Range(0f, 100f)] public float bonusPoolChancePercent;
+
     [Header("결과 — Money 카테고리 (예: 0~100엔). 0이 나올 수도 있다")]
     public int successGoldMin;
     public int successGoldMax;
