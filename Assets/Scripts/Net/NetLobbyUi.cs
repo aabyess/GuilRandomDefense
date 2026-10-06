@@ -306,21 +306,25 @@ public class NetLobbyUi : MonoBehaviour
         dim.gameObject.AddComponent<Button>().onClick.AddListener(() => SetSettingsOpen(false));   // 바깥을 누르면 닫힘
 
         // 메뉴 틀 그림(menu_frame)은 위아래 룬 띠가 커서 줄이 겹친다(0.3.10 맥 실측) — 설정 창은 어두운 판 + 금테 두 겹으로.
-        Image card = CreateImage(dim.rectTransform, "SettingsCard", new Color(0.09f, 0.07f, 0.05f, 0.97f));
-        Vector2 size = new Vector2(760f, 760f);
+        // 10-06 사장님 「선술집 분위기로」: blender 나무 게시판(원목 널판·쇠 모서리·리벳, Resources/UI/Settings, 9-slice 사방 128) + 위 나무 명패.
+        Image card = CreateImage(dim.rectTransform, "SettingsCard", new Color(0.16f, 0.11f, 0.07f, 0.98f));
+        Vector2 size = new Vector2(860f, 820f);
         Place(card.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, size);
-        var outline = card.gameObject.AddComponent<Outline>(); outline.effectColor = Gold; outline.effectDistance = new Vector2(3f, -3f);
-        Image inner = CreateImage(card.rectTransform, "Inner", new Color(0f, 0f, 0f, 0f));
-        Stretch(inner.rectTransform, 14f, 14f);
-        inner.color = new Color(0.16f, 0.12f, 0.08f, 1f);   // 안쪽 판(Outline을 안쪽에도 걸면 사각 전체가 금색으로 덮인다 — 맥 실측)
-        inner.raycastTarget = false;
+        Sprite board = Resources.Load<Sprite>("UI/Settings/panel_9slice");
+        if (board != null) { card.sprite = board; card.type = Image.Type.Sliced; card.color = Color.white; card.pixelsPerUnitMultiplier = 1.16f; }   // 쇠 모서리가 ≈110 크기로
+        Image plate = CreateImage(card.rectTransform, "Nameplate", new Color(0.3f, 0.2f, 0.1f, 1f));
+        Sprite plateSprite = Resources.Load<Sprite>("UI/Settings/nameplate");
+        if (plateSprite != null) { plate.sprite = plateSprite; plate.color = Color.white; plate.preserveAspect = true; }
+        plate.raycastTarget = false;
+        PlaceFromTop(plate.rectTransform, -34f, new Vector2(400f, 125f));
         card.raycastTarget = true;   // 카드 안을 눌러도 닫히지 않게(dim보다 위에서 받는다)
         RectTransform c = card.rectTransform;
 
         TMP_Text head = CreateText(c, "Title", "설정", 46, titleFont, ButtonText, TextAlignmentOptions.Center);
-        PlaceFromTop(head.rectTransform, -64f, new Vector2(600f, 70f));
+        PlaceFromTop(head.rectTransform, -40f, new Vector2(400f, 70f));
+        head.outlineWidth = 0.25f; head.outlineColor = new Color32(30, 16, 4, 255);
 
-        float y = -150f;
+        float y = -170f;
         AddVolumeRow(c, "전체 소리", y, AudioPrefs.MasterVolume, AudioPrefs.SetMaster);
         y -= 80f;
         AddVolumeRow(c, "배경 음악", y, AudioPrefs.MusicVolume, AudioPrefs.SetMusic);
@@ -339,11 +343,11 @@ public class NetLobbyUi : MonoBehaviour
             int index = order[k];
             Button b = CreateButton(c, $"Screen{index}", ScreenMode.Options[index].label, ButtonNormal, 24);
             SizeButton(b, cell);
-            PlaceFromTopX((RectTransform)b.transform, k % 2 == 0 ? -152f : 152f, y - (k / 2) * 72f, cell);
+            PlaceFromTopX((RectTransform)b.transform, k % 2 == 0 ? -152f : 152f, y - (k / 2) * 66f, cell);
             b.onClick.AddListener(() => { ScreenMode.Choose(index); RefreshScreenButtons(); });
             screenButtons.Add((index, b.GetComponent<LobbyButtonFx>(), b));
         }
-        y -= ((order.Length + 1) / 2) * 72f + 12f;
+        y -= ((order.Length + 1) / 2) * 66f + 14f;
 
         Button close = CreateButton(c, "SettingsClose", "닫기", ButtonNormal, 32);
         SizeButton(close, new Vector2(240f, 70f));
@@ -373,17 +377,23 @@ public class NetLobbyUi : MonoBehaviour
         RectTransform sliderRect = CreateRect(parent, label + "Slider");
         PlaceFromTopX(sliderRect, 40f, y, new Vector2(330f, 30f));
         Image track = CreateImage(sliderRect, "Track", new Color(0.08f, 0.06f, 0.04f, 0.95f));
-        Stretch(track.rectTransform, 0f, 8f);
+        Stretch(track.rectTransform, 0f, 4f);
+        Sprite groove = Resources.Load<Sprite>("UI/Settings/slider_groove");
+        if (groove != null) { track.sprite = groove; track.type = Image.Type.Sliced; track.color = Color.white; }
         RectTransform fillArea = CreateRect(sliderRect, "FillArea");
         Stretch(fillArea, 0f, 8f);
         Image fill = CreateImage(fillArea, "Fill", Gold);
+        Sprite fillSprite = Resources.Load<Sprite>("UI/Settings/slider_fill");
+        if (fillSprite != null) { fill.sprite = fillSprite; fill.type = Image.Type.Sliced; fill.color = Color.white; }
         fill.rectTransform.anchorMin = Vector2.zero; fill.rectTransform.anchorMax = new Vector2(0f, 1f);
         fill.rectTransform.offsetMin = fill.rectTransform.offsetMax = Vector2.zero;
         RectTransform handleArea = CreateRect(sliderRect, "HandleArea");
         Stretch(handleArea, 12f, 0f);
         Image handle = CreateImage(handleArea, "Handle", ButtonText);
-        handle.rectTransform.sizeDelta = new Vector2(24f, 0f);
         handle.rectTransform.anchorMin = Vector2.zero; handle.rectTransform.anchorMax = new Vector2(0f, 1f);
+        Sprite mug = Resources.Load<Sprite>("UI/Settings/slider_knob_mug");   // 손잡이 = 맥주잔
+        if (mug != null) { handle.sprite = mug; handle.color = Color.white; handle.preserveAspect = true; handle.rectTransform.sizeDelta = new Vector2(52f, 26f); }
+        else handle.rectTransform.sizeDelta = new Vector2(24f, 0f);
 
         Slider slider = sliderRect.gameObject.AddComponent<Slider>();
         slider.fillRect = fill.rectTransform;
