@@ -1976,12 +1976,20 @@ public class GameHud : MonoBehaviour
     // MP: 버튼(위)과 멀티 호스트가 받은 클라 요청(NetCommands)이 같이 쓰는 본체 — 줄 내용은 그대로다.
     public void ExecuteSellOn(Selectable single)
     {
-        if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.IsSummon ||   // 소환수는 판매 불가(최상호 구일 소환수 20초)
+        if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || (identity.IsSummon && !identity.IsRecruit) ||   // 소환수는 판매 불가(최상호 구일 소환수 20초) — 회유 유닛(IsRecruit)만 예외
             (identity.Data.sellRewardWisp == null && identity.Data.sellRewardTraitPoints <= 0 &&
              identity.Data.sellRewardWood <= 0 && identity.Data.sellTriggersItemGamblePool == null &&
              identity.Data.sellRewardEveryNSells <= 0)) return;
 
         if (!single.TryGetComponent(out OwnedByPlayer owner)) return;
+
+        // 회유 유닛(불멸 유닛회유)은 노획물 판매와 같은 규칙(RewardDistributor.SellRecruit) — 아래 일반 판매 보상 대신.
+        if (identity.IsRecruit)
+        {
+            RewardDistributor.Instance?.SellRecruit(PlayerContext.Get(owner.OwnerId), identity.Data.sellRewardWisp);
+            identity.Consume();
+            return;
+        }
 
         PlayerContext context = PlayerContext.Get(owner.OwnerId);
         if (context != null)

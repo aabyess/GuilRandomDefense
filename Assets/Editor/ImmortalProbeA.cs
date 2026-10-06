@@ -18,6 +18,41 @@ static class ImmortalProbeA
     static string Run고도현() => Setup("불멸_고도현");
     static string Run이이삭() => Setup("불멸_이이삭");
     static string Run김용태() => Setup("불멸_김용태");
+
+    static System.Collections.Generic.List<UnitIdentity> RecruitsNow() => UnitIdentity.Active.Where(u => u != null && u.IsRecruit).ToList();
+    static string RecruitNow(int times)
+    {
+        var skill = unit.Data.skills.First(x => x.skillName.StartsWith("유닛회유"));
+        var eff = skill.levels[0].effects[0];
+        var m = typeof(UnitAttacker).GetMethod("RecruitNearestEnemy", BindingFlags.NonPublic | BindingFlags.Instance);
+        int before = EnemyDummy.Active.Count(e => e != null && !e.IsDead);
+        for (int i = 0; i < times; i++) m.Invoke(atk, new object[] { 99999f, eff });
+        int after = EnemyDummy.Active.Count(e => e != null && !e.IsDead);
+        var r = RecruitsNow();
+        return $"[회유 {times}회 시도] 적 {before} → {after} · 회유 유닛 {r.Count}기(기대 {Mathf.Min(times, 5)}, 상한 5) · 첫 유닛 {(r.Count > 0 ? r[0].name + " 공격력 " + r[0].GetComponent<UnitAttacker>().AttackDamage.ToString("F0") + "(시전자 " + atk.AttackDamage.ToString("F0") + "의 10% = " + (atk.AttackDamage * 0.1f).ToString("F0") + ")" : "-")}";
+    }
+    static string Recruit1() => RecruitNow(1);
+    static string Recruit7() => RecruitNow(7);
+    static string SellStats()
+    {
+        var ctx = PlayerContext.Get(0);
+        var r = RecruitsNow();
+        var wisp = AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_랜덤유닛.asset");
+        int w0 = Object.FindObjectsByType<Transform>(FindObjectsSortMode.None).Count(t => t.name.StartsWith("WispPrefab")), g0 = ctx.GoldWallet.Gold;
+        const int N = 400;
+        for (int i = 0; i < N; i++) RewardDistributor.Instance.SellRecruit(ctx, wisp);
+        int w1 = Object.FindObjectsByType<Transform>(FindObjectsSortMode.None).Count(t => t.name.StartsWith("WispPrefab")), g1 = ctx.GoldWallet.Gold;
+        return $"[회유 판매 {N}회] 위습 +{w1 - w0}({(w1 - w0) * 100f / N:F1}%, 기대 37) · 엔 +{g1 - g0}(기대 ≈{N * 0.37f * 0.4f * 100f:F0})";
+    }
+    static string SellUnit()
+    {
+        var r = RecruitsNow();
+        if (r.Count == 0) return "❌ 회유 유닛 없음";
+        var hud = Object.FindFirstObjectByType<GameHud>();
+        int before = r.Count;
+        hud.ExecuteSellOn(r[0].GetComponent<Selectable>());
+        return $"[판매 버튼 경로] 회유 유닛 {before} → {RecruitsNow().Count}(기대 −1)";
+    }
     static string Run정준영() => Setup("불멸_정준영");
     static string Onion()
     {

@@ -494,6 +494,29 @@ public class RewardDistributor : MonoBehaviour
     /// 사용형 아이템을 쓴다(원작 Trig_item_up2, j) — 그 플레이어가 kind에 맞는 아이템을 들고 있으면 하나 소모하고 효과를 낸다. 서버만.
     /// WispBundle(I011): 아이템의 useWispRolls를 독립으로 굴려 위습 지급(각 「{위습 이름} 획득 !」 10초, 원작 색). AncientShip(I00S): 고대의 배 1기 + 「{이름} 획득 !」.
     /// </summary>
+    /// <summary>
+    /// 회유 유닛 판매(불멸 「유닛회유」, 원작 노획물품 unique_sell6과 같은 값): 37% 랜덤위습 1기, 그중 40%는 +100엔·목재 1. 유닛은 호출한 쪽이 소모한다. 서버만.
+    /// </summary>
+    public void SellRecruit(PlayerContext context, WispData wisp)
+    {
+        if (!GameAuthority.IsServer || context == null) return;
+        if (wisp != null && Random.value < RecruitSaleWispChance)
+        {
+            GrantWisps(context, new List<WispReward> { new WispReward { wisp = wisp, count = 1 } });
+            PlayerNotification.Show(context.PlayerId, $"<color=#C8E6A0>회유 유닛 판매 — {wisp.wispName} 획득 ! </color>", 8f);
+            if (Random.value < RecruitSaleBonusChance)
+            {
+                if (context.GoldWallet != null) context.GoldWallet.Add(RecruitSaleBonusGold);
+                if (context.ResourceWallet != null) { context.ResourceWallet.Add(ResourceType.Wood, 1); WoodSound(context); }
+                PlayerNotification.Show(context.PlayerId, $"<color=#FFD54F>+{RecruitSaleBonusGold}엔 · 목재 1</color>", 8f);
+            }
+        }
+        else PlayerNotification.Show(context.PlayerId, "회유 유닛을 팔았지만 아무것도 얻지 못했습니다.", 5f);
+    }
+
+    const float RecruitSaleWispChance = 0.37f, RecruitSaleBonusChance = 0.4f;
+    const int RecruitSaleBonusGold = 100;
+
     public bool UseItem(PlayerContext context, ItemUseKind kind)
     {
         if (!GameAuthority.IsServer || context == null || context.ItemInventory == null || kind == ItemUseKind.None || kind == ItemUseKind.HeroTransform) return false;

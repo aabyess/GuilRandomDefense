@@ -353,6 +353,11 @@ public enum SkillEffectKind
     // 패시브(Self): 맞는 적이 방깍(원본 방어 − 현재 방어)을 N 받고 있으면 이 유닛 피해(평타·스킬)가 ×(1 + min(bonus, multiplier × N)).
     // 예: multiplier 0.005 · bonus 0.5 = 방깍 1당 +0.5%·최대 +50%.
     DamagePerTargetArmorShred,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 불멸 김용태·정준영 「유닛회유」 — 원작 0.8%, 사장님 확정) — 직렬화 순서를 지킨다.
+    // 일반 적 1기를 죽이지 않고(보상 없음 RemoveInstantly) 내 유닛으로 바꾼다: 가장 가까운 일반 적(보스·PV≥200·B06B 제외)이 서 있던 자리에 summonUnits[0] 유닛을 소환수(IsSummon)이자 회유 유닛(IsRecruit)으로 세운다.
+    // multiplier = 회유 유닛 공격력(시전자 평타 × 값), bonus = 한 시전자당 동시 회유 수 상한(0이면 5). 가득 차면 발동하지 않는다. 회유 유닛은 판매 버튼으로 팔 수 있다(RewardDistributor.SellRecruit).
+    RecruitEnemy,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,

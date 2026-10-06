@@ -1705,6 +1705,31 @@ public class UnitAttacker : MonoBehaviour
         return best;
     }
 
+    // 유닛회유(SkillEffectKind.RecruitEnemy) — 가장 가까운 일반 적을 내 소환수로 바꾼다. 서버만.
+    readonly List<GameObject> recruits = new List<GameObject>();
+
+    void RecruitNearestEnemy(float worldRange, SkillEffect effect)
+    {
+        if (!GameAuthority.IsServer || owner == null || effect.summonUnits == null || effect.summonUnits.Count == 0 || effect.summonUnits[0] == null) return;
+        recruits.RemoveAll(r => r == null);
+        int cap = effect.bonus > 0f ? Mathf.RoundToInt(effect.bonus) : 5;
+        if (recruits.Count >= cap) return;
+        EnemyDummy target = NearestNormalEnemy(worldRange);
+        if (target == null) return;
+        UnitSpawner spawner = FindFirstObjectByType<UnitSpawner>();
+        if (spawner == null) return;
+        UnitData kind = effect.summonUnits[0];
+        Vector3 position = target.transform.position;
+        target.RemoveInstantly();   // 보상 없이 사라진다(원작 RemoveUnit) — 죽인 게 아니라 데려온 것
+        GameObject recruit = spawner.Spawn(kind, position, owner.OwnerId, summoned: true);
+        if (recruit == null) return;
+        if (recruit.TryGetComponent(out UnitIdentity recruitIdentity)) recruitIdentity.IsRecruit = true;
+        if (recruit.TryGetComponent(out UnitAttacker recruitAttacker)) recruitAttacker.ApplyStats(AttackDamage * effect.multiplier, kind.attackRange, kind.attackSpeed);
+        recruits.Add(recruit);
+        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        if (context != null) PlayerNotification.Show(context.PlayerId, "<color=#C8E6A0>유닛회유 성공 — 적 1기가 우리 편이 되었습니다.</color>", 4f);
+    }
+
     bool lastKillSucceeded;   // 노획물(GrantLoot)이 같은 시전의 몹삭제가 실제로 죽였는지 본다
 
     bool KillNearestNormalEnemy(float worldRange, bool mostLostHp = false)
@@ -2518,6 +2543,7 @@ public class UnitAttacker : MonoBehaviour
         // 소환(최상호 구일) — 대상이 없다. 확률·쿨다운은 위(CastSkillLevel·평타 확률 발동)가 이미 판정했다.
         if (effect.kind == SkillEffectKind.SummonUnit) { SummonFor(effect); return; }
         if (effect.kind == SkillEffectKind.KillNormalEnemies) { lastKillSucceeded = KillNearestNormalEnemy(range, effect.killMostLostHp); return; }
+        if (effect.kind == SkillEffectKind.RecruitEnemy) { RecruitNearestEnemy(range, effect); return; }
         if (effect.kind == SkillEffectKind.GrantLoot) { if (lastKillSucceeded) GrantLoot(effect); lastKillSucceeded = false; return; }
         if (effect.kind == SkillEffectKind.FormChange) { BeginGunForm(effect); return; }
         if (effect.kind == SkillEffectKind.Knockback) { KnockBack(primaryTarget, effect); return; }
