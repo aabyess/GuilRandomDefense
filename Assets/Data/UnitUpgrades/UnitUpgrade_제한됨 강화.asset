@@ -10,22 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: af9413764dc9047d893ae0a4d3fd02fa, type: 3}
-  m_Name: UnitUpgrade_제한됨 강화
-  m_EditorClassIdentifier:
-  trackName: 제한됨 강화
-  description: '제한됨 강화 — 해당 등급 유닛 전체의 공격속도를 영구히 올리고(statLevel1Multiplier/statGrowthPerLevel,
-    2026-09-06 정정: 구현담당2 발견/PM 확인 — 이 필드가 실제로는 공격력이 아니라 원작 공속
-    증가율 gba1/gmo1이었다), 공격력도 별도로 고정 가산합니다(statLevel1Bonus/statBonusGrowthPerLevel,
-    gba2/gmo2 — 이건 처음부터 맞았다). 필드 이름은 직렬화 키라 안 바꿨다(값 유실 방지, PM
-    지시) — UnitUpgradeTrackData.cs 주석 참고.'
-  targetGrades:
-  - 6
+  m_Name: "UnitUpgrade_\uC81C\uD55C\uB428 \uAC15\uD654"
+  m_EditorClassIdentifier: 
+  trackName: "\uC81C\uD55C\uB428\xB7\uD2B9\uC218\uD568 \uAC15\uD654"
+  description: "\uC81C\uD55C\uB428 \uAC15\uD654 \u2014 \uD574\uB2F9 \uB4F1\uAE09
+    \uC720\uB2DB \uC804\uCCB4\uC758 \uACF5\uACA9\uC18D\uB3C4\uB97C \uC601\uAD6C\uD788
+    \uC62C\uB9AC\uACE0(statLevel1Multiplier/statGrowthPerLevel, 2026-09-06 \uC815\uC815:
+    \uAD6C\uD604\uB2F4\uB2F92 \uBC1C\uACAC/PM \uD655\uC778 \u2014 \uC774 \uD544\uB4DC\uAC00
+    \uC2E4\uC81C\uB85C\uB294 \uACF5\uACA9\uB825\uC774 \uC544\uB2C8\uB77C \uC6D0\uC791
+    \uACF5\uC18D \uC99D\uAC00\uC728 gba1/gmo1\uC774\uC5C8\uB2E4), \uACF5\uACA9\uB825\uB3C4
+    \uBCC4\uB3C4\uB85C \uACE0\uC815 \uAC00\uC0B0\uD569\uB2C8\uB2E4(statLevel1Bonus/statBonusGrowthPerLevel,
+    gba2/gmo2 \u2014 \uC774\uAC74 \uCC98\uC74C\uBD80\uD130 \uB9DE\uC558\uB2E4). \uD544\uB4DC
+    \uC774\uB984\uC740 \uC9C1\uB82C\uD654 \uD0A4\uB77C \uC548 \uBC14\uAFE8\uB2E4(\uAC12
+    \uC720\uC2E4 \uBC29\uC9C0, PM \uC9C0\uC2DC) \u2014 UnitUpgradeTrackData.cs \uC8FC\uC11D
+    \uCC38\uACE0."
+  targetGrades: 060000000c000000
   maxLevel: 21
   costBase: 90
   costGrowthPerLevel: 50
   statLevel1Multiplier: 1.85
   statGrowthPerLevel: 0.05
+  slotColor: {r: 0.9, g: 0.5, b: 0.15, a: 1}
+  targetUnit: {fileID: 0}
+  hasOriginalResearch: 1
   statLevel1Bonus: 20000
   statBonusGrowthPerLevel: 2000
-  slotColor: {r: 0.9, g: 0.5, b: 0.15, a: 1}
-  hasOriginalResearch: 1
