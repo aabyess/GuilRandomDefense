@@ -15,7 +15,7 @@ public class CreditsSplash : MonoBehaviour
     static readonly (string role, string name)[] Lines =
     {
         ("제작", "최상호"),
-        ("스폰서", "노무현"),
+        ("스폰서", "노무현제단"),
         ("PD", "임장혁"),
         ("도움을 준 사람들", "알두환 · 짬 모"),   // 사장님 10-06 「PD 임장혁 밑에」
     };
