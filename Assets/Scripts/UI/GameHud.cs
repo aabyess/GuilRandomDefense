@@ -1677,26 +1677,31 @@ public class GameHud : MonoBehaviour
 
     // 영원함 서민성 「강화」(사장님 10-06) — 유닛별 칸(FlexKind.Enhance). UnitData.enhanceMaxLevel > 0인 유닛 한 기를 골랐을 때만 보인다.
     // 누르면 엔 + 위습을 내고 그 유닛 강화 레벨 +1(UnitAttacker.TryEnhance). 멀티 클라는 호스트에 요청(NetHudAction.Enhance) — 레벨 표시는 호스트 유닛 기준이라 클라 거울엔 아직 안 보인다.
-    UnitAttacker EnhanceCandidate()
+    // 강화 칸 후보: 호스트·싱글은 실물 UnitAttacker에서, 멀티 클라는 UnitAttacker가 없는 겉모습이라 NetEntity가 실어 준 레벨에서 읽는다(10-06 MP 점검 — 칸 글자가 늘 0이었다).
+    bool EnhanceCandidateInfo(out UnitData data, out int level)
     {
+        data = null; level = 0;
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return null;
+        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return false;
         Selectable single = selection.Selected[0];
-        if (!single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.Data.enhanceMaxLevel <= 0) return null;
-        return single.TryGetComponent(out UnitAttacker attacker) ? attacker : null;
+        if (!single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.Data.enhanceMaxLevel <= 0) return false;
+        data = identity.Data;
+        if (single.TryGetComponent(out UnitAttacker attacker)) { level = attacker.EnhanceLevel; return true; }
+        NetEntity mirror = single.GetComponentInParent<NetEntity>();   // MP: 클라 겉모습
+        if (mirror == null) return false;
+        level = mirror.EnhanceLevel;
+        return true;
     }
 
     void RefreshEnhanceButton()
     {
         if (currentShop as Object != null) { enhanceSlotShown = false; return; }
-        UnitAttacker attacker = EnhanceCandidate();
-        if (attacker == null) { enhanceSlotShown = false; return; }   // 칸 비우기는 ReflowFlexSlots
+        if (!EnhanceCandidateInfo(out UnitData data, out int level)) { enhanceSlotShown = false; return; }   // 칸 비우기는 ReflowFlexSlots
         enhanceSlotShown = true;
         int slot = FlexSlotOf(FlexKind.Enhance);
         if (slot < 0) return;
-        UnitData data = attacker.GetComponent<UnitIdentity>().Data;
-        bool done = attacker.EnhanceLevel >= data.enhanceMaxLevel;
-        unitCommandSlotNames[slot].text = $"강화\n{attacker.EnhanceLevel}/{data.enhanceMaxLevel}";
+        bool done = level >= data.enhanceMaxLevel;
+        unitCommandSlotNames[slot].text = $"강화\n{level}/{data.enhanceMaxLevel}";
         unitCommandSlotHotkeys[slot].text = "";
         Color color = UnitCommandDefaultColor;
         color.a = done ? 0.35f : 1f;
@@ -3426,9 +3431,9 @@ public class GameHud : MonoBehaviour
         }
         else if (FlexKindAt(index) == FlexKind.Enhance && enhanceSlotShown)
         {
-            UnitAttacker enhancer = EnhanceCandidate();
-            UnitData ed = enhancer != null && enhancer.TryGetComponent(out UnitIdentity enhanceIdentity) ? enhanceIdentity.Data : null;
-            ShowTooltip(ed == null ? "강화" : $"강화 {enhancer.EnhanceLevel}/{ed.enhanceMaxLevel}\n엔 {ed.enhanceGoldCost:N0}과 위습 {ed.enhanceWispCount}개(종류 무관)를 내고 이 유닛 한 기의 강화 레벨을 1 올린다. 6강: 단일 스턴 · 11강: 이감+마방깍 · 16강: 마나 스킬 해금. 레벨당 스킬샷 피해 +5%.", cardRect);
+            UnitData ed = null; int enhanceLevel = 0;
+            EnhanceCandidateInfo(out ed, out enhanceLevel);
+            ShowTooltip(ed == null ? "강화" : $"강화 {enhanceLevel}/{ed.enhanceMaxLevel}\n엔 {ed.enhanceGoldCost:N0}과 위습 {ed.enhanceWispCount}개(종류 무관)를 내고 이 유닛 한 기의 강화 레벨을 1 올린다. 6강: 단일 스턴 · 11강: 이감+마방깍 · 16강: 마나 스킬 해금. 레벨당 스킬샷 피해 +5%.", cardRect);
         }
         else if (FlexKindAt(index) == FlexKind.GambleBoost && gambleBoostSlotShown)
         {

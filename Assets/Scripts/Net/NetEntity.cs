@@ -33,6 +33,8 @@ public class NetEntity : NetworkBehaviour
     [Networked] public float AttackInterval { get; set; }
     /// <summary>호스트 실물의 캐릭터 레벨(1~24) — 친구 화면 정보칸 「Lv.N」.</summary>
     [Networked] public byte HeroLevel { get; set; }
+    // 영원함 서민성 「강화」 레벨(UnitAttacker.EnhanceLevel) — 겉모습은 UnitAttacker가 없어 칸 글자(「강화 N/M」)가 늘 0이었다(10-06 MP 점검).
+    [Networked] public byte EnhanceLevel { get; set; }
     // 적: 방깎·이감·난이도가 반영된 실효 방어력과 이동속도(겉모습은 에셋 기준값밖에 모른다).
     [Networked] public float EnemyArmor { get; set; }
     [Networked] public float EnemyMoveSpeed { get; set; }
@@ -122,6 +124,7 @@ public class NetEntity : NetworkBehaviour
             if (AttackRange != realAttacker.AttackRange) AttackRange = realAttacker.AttackRange;
             if (AttackInterval != realAttacker.AttackInterval) AttackInterval = realAttacker.AttackInterval;
             if (HeroLevel != realAttacker.CharacterLevel) HeroLevel = (byte)realAttacker.CharacterLevel;
+            if (EnhanceLevel != realAttacker.EnhanceLevel) EnhanceLevel = (byte)Mathf.Clamp(realAttacker.EnhanceLevel, 0, 255);
         }
 
         if (RerollAbility == 0 && EntityKind == NetEntityKind.Unit && Real.TryGetComponent(out UniqueRerollAbility reroll) && NetLauncher.Catalog != null)
