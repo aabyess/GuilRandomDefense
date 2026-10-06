@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 // TODO(멀티플레이): 지급 로직은 반드시 서버 권위로 옮겨야 한다.
 // 지금처럼 각 클라이언트가 이 메서드를 각자 실행하면(특히 rewardsAllPlayers=true인 물범류나
@@ -742,11 +743,17 @@ public class RewardDistributor : MonoBehaviour
                 ? Quaternion.Euler(0f, 360f / count * i, 0f) * Vector3.forward * WispSpread
                 : Vector3.zero);
 
-            GameObject instance = Instantiate(wispData.prefab, origin + offset, Quaternion.identity);
+            // 흔함 선택 칸만(사장님 10-06 「선택위습 공간이 좁음」): 위습 지름만큼 벌려 칸 안에 깐다 — 무더기로 겹쳐 하나만 눌리던 것.
+            //    다른 칸(랜덤·자원 등)은 원작처럼 무더기 그대로.
+            Vector3 at = origin + offset;
+            if (cell != null && cell.Grade == UnitGrade.Common)
+                at = FindSpreadSlot(origin, wispData.prefab, context.PlayerId, players);
+
+            GameObject instance = Instantiate(wispData.prefab, at, Quaternion.identity);
 
             // 좌표만 주고 놓으면 NavMesh에서 살짝 벗어났을 때 에이전트가 안 붙고,
             // 그 위습은 선택은 되는데 이동 명령이 조용히 무시된다.
-            NavPlacement.PlaceObject(instance, origin + offset);
+            NavPlacement.PlaceObject(instance, at);
 
             if (!instance.TryGetComponent(out Wisp wisp))
             {
@@ -762,5 +769,73 @@ public class RewardDistributor : MonoBehaviour
             owner.SetOwner(context.PlayerId);
             wisp.ApplyOwnerColor(context.PlayerId);
         }
+    }
+
+    const float SpreadGapFactor = 1.25f;     // 위습 지름의 몇 배 간격으로 벌리나
+    const float SpreadPortalMargin = 3f;     // 포탈 접촉 거리 바깥 여유(ChoiceWispGap의 WispCellMargin과 같은 값)
+    static readonly Collider[] spreadHits = new Collider[16];
+
+    /// <summary>
+    /// 칸 안에서 비어 있는 자리를 찾는다 — 기준점(주인마다 좌우로 벌린 자리)에서 가까운 순.
+    /// 칸 경계는 NavMesh 가장자리(벽)로 잰다. 포탈 트리거에 닿는 자리(위습이 생기자마자 먹힌다)와 이미 있는 위습 자리는 뺀다.
+    /// 자리가 없으면(칸이 가득) 옛 위치(기준점)를 돌려준다.
+    /// </summary>
+    static Vector3 FindSpreadSlot(Vector3 origin, GameObject prefab, int ownerId, int players)
+    {
+        float diameter = 25f;
+        if (prefab != null && prefab.TryGetComponent(out SphereCollider sphere))
+            diameter = sphere.radius * 2f * Mathf.Max(prefab.transform.localScale.x, 0.01f);
+        float radius = diameter * 0.5f;
+        float gap = diameter * SpreadGapFactor;
+
+        if (!NavMesh.SamplePosition(origin, out NavMeshHit start, 20f, NavMesh.AllAreas)) return origin;
+        Vector3 c = start.position;
+
+        float Reach(Vector3 dir) => NavMesh.Raycast(c, c + dir * 2000f, out NavMeshHit edge, NavMesh.AllAreas) ? edge.distance : 2000f;
+        float left = Reach(Vector3.left) - radius, right = Reach(Vector3.right) - radius;
+        float down = Reach(Vector3.back) - radius, up = Reach(Vector3.forward) - radius;
+
+        float ownerIndex = players > 1 ? ownerId - (players - 1) * 0.5f : 0f;
+        Vector3 home = c + Vector3.right * (ownerIndex * gap * 4f);
+
+        float step = gap * 0.5f;
+        Vector3 best = origin;
+        float bestScore = float.MaxValue;
+        for (float dx = -left; dx <= right; dx += step)
+        {
+            for (float dz = -down; dz <= up; dz += step)
+            {
+                Vector3 p = new Vector3(c.x + dx, c.y, c.z + dz);
+                float score = (p - home).sqrMagnitude;
+                if (score >= bestScore) continue;
+                if (!NavMesh.SamplePosition(p, out NavMeshHit onMesh, 2f, NavMesh.AllAreas)) continue;
+                if (BlockedByPortal(p, radius + SpreadPortalMargin)) continue;
+                if (OccupiedByWisp(p, gap * 0.9f)) continue;
+                best = p;
+                bestScore = score;
+            }
+        }
+        return best;
+    }
+
+    static bool BlockedByPortal(Vector3 position, float radius)
+    {
+        int n = Physics.OverlapSphereNonAlloc(position, radius, spreadHits, ~0, QueryTriggerInteraction.Collide);
+        for (int i = 0; i < n; i++)
+            if (spreadHits[i].GetComponentInParent<UnitPortal>() != null || spreadHits[i].GetComponentInParent<ResourcePortal>() != null)
+                return true;
+        return false;
+    }
+
+    static bool OccupiedByWisp(Vector3 position, float distance)
+    {
+        float sqr = distance * distance;
+        foreach (Wisp w in Wisp.Active)
+        {
+            if (w == null || w.IsConsumed) continue;
+            Vector3 d = w.transform.position - position; d.y = 0f;
+            if (d.sqrMagnitude < sqr) return true;
+        }
+        return false;
     }
 }
