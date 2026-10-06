@@ -8,7 +8,8 @@ using UnityEngine;
 /// </summary>
 static class ImmortalApplyB
 {
-    static string All() => Dohyeon() + "\n" + Isag() + "\n" + Yongtae();
+    const float BumperRadius = 300f;
+    static string All() => Dohyeon() + "\n" + Isag() + "\n" + Yongtae() + "\n" + Junyeong();
 
     static string Finish(string key, UnitData unit, CombineRecipe recipe, string phrase, int oldCount)
     {
@@ -132,5 +133,56 @@ static class ImmortalApplyB
         unit.lifeGaugeOnEnemyDeath = 5f; unit.lifeGaugeOnEnemyDeathRange = 850f;
         ImmortalKit.ReplaceIngredient(recipe, "제한_박성호", park);
         return Finish(K, unit, recipe, "유명인사김용태", old);
+    }
+    // ───────── 정준영 상호파와채민파의아버지 (물딜) — 유닛회유는 새 시스템이라 다음 단계 ─────────
+    static string Junyeong()
+    {
+        const string K = "정준영";
+        var unit = ImmortalKit.Unit("불멸_정준영"); var recipe = ImmortalKit.Recipe("불멸_정준영");
+        var trait = AssetDatabase.LoadAssetAtPath<UnitTraitData>("Assets/Data/Traits/Trait_불멸_정준영.asset");
+        if (unit == null || recipe == null || trait == null) return "❌ 정준영 에셋 없음";
+        int old = unit.skills != null ? unit.skills.Count : 0;
+
+        SkillData brawl = ImmortalKit.Label(K, "회식자리난투", "회식자리 난투 — 스플래시",
+            "사장님 10-06 「스플래시」(이름은 설계표가 지음). 평타가 맞은 적 주변 반경 300 같은 레인 적에게도 같은 피해(UnitData.attackSplashRadius). 스킬 자체엔 효과가 없다(이름·설명만).");
+        SkillData smile = ImmortalKit.AuraSkill(K, "방깍웃는얼굴", "방깍-웃는얼굴 — 방깍 오라(−30)",
+            "사장님 10-06 「방깍」(수치 없음 — 제안값: 반경 850 안 모든 적 방어 −30, 박은석 말뚝박기와 같은 값). 이름은 사장님 원문.",
+            850f, ImmortalKit.ArmorAura(30f, "JUNYEONG_ARMOR"));
+        SkillData eyes = ImmortalKit.AuraSkill(K, "이감살벌한눈빛", "이감-살벌한 눈빛 — 이감 오라(−30%)",
+            "사장님 10-06 「이감」(수치 없음 — 정준영 원작 A0DT 0.3 닻: 반경 850 안 적 이동속도 −30%, 남는 속도 0.7).",
+            850f, ImmortalKit.SlowAura(0.7f, "JUNYEONG_SLOW"));
+        SkillData lesson = ImmortalKit.OnHit(K, "단일마지막수업", "단일-마지막 수업 — 평타 1/8 최대체력 4%",
+            "사장님 10-06 「단일(전체체력,보스)」(수치 없음 — 제안값: 평타 1/8 확률로 맞은 적 한 기 최대 체력의 4%, 보스도 같은 비율, 방어 무시).",
+            0.125f, 0f, ImmortalKit.Pct(SkillEffectBasis.TargetMaxHpPercent, 0.04f, DamageType.AD, SkillTargetKind.SingleTarget));
+        SkillData choke = ImmortalKit.OnHit(K, "범퍼숨통조이기", "범퍼-숨통 조이기 — 현재체력 1%",
+            "사장님 10-06 「범퍼(현재체력)」 — 범퍼 = 범위 안 적 전체 체력 비례(사장님 확정). 평타 25% 확률로 맞은 적 중심 반경 300 안 적 전부에게 각자 현재 체력 1%(수치 없음 — 제안값, 방어 무시).",
+            0.25f, BumperRadius, ImmortalKit.Pct(SkillEffectBasis.TargetCurrentHpPercent, 0.01f, DamageType.AD, SkillTargetKind.Enemies));
+        SkillData onion = ImmortalKit.Label(K, "양파의결집", "양파의 결집 — 특성강화 3pt(공격력 +20% · 공속 +20%)",
+            "사장님 10-06 「특성강화3(공증,공속)」. 명령 카드 특성강화 칸(포인트 3, 한 번)을 누르면 이 유닛 공격력 +20%·공격속도 +20%(스킬승급 레벨 2, 효과량은 제안값). 레벨 1엔 효과가 없다.");
+        onion.levels.Add(new SkillLevel
+        {
+            cooldown = 0f, triggerChance = 1f, range = 0f,
+            effects = new List<SkillEffect>
+            {
+                ImmortalKit.AdAura(0.20f, "JUNYEONG_AD", SkillTargetKind.Self),
+                ImmortalKit.AsAura(0.20f, "JUNYEONG_AS", SkillTargetKind.Self),
+            }
+        });
+        EditorUtility.SetDirty(onion);
+
+        ImmortalKit.SetUnit(unit, "상호파와채민파의아버지", new List<SkillData> { brawl, smile, eyes, lesson, choke, onion }, 0f, 0f);
+        unit.attackSplashRadius = 300f;
+        trait.targetUnit = unit;
+        trait.traitName = "양파의 결집";
+        trait.description = "사장님 10-06: 특성 포인트 3개로 강화하면 공격력 +20%·공격속도 +20%(한 번). 스킬승급형(skillLevelUnlockIndex 1) — 양파의 결집의 레벨 2다.";
+        trait.costTraitPoints = 3;
+        trait.skillLevelUnlockIndex = 1;
+        trait.effects = new List<TraitEffect>();
+        EditorUtility.SetDirty(trait);
+        string result = Finish(K, unit, recipe, "최종보스정준영", old);
+        unit.trait = trait;   // Finish가 비웠던 것을 새 승급 특성으로 연결
+        EditorUtility.SetDirty(unit);
+        AssetDatabase.SaveAssets();
+        return result + $" · 특성 {trait.traitName}({trait.costTraitPoints}pt)";
     }
 }

@@ -18,6 +18,16 @@ static class ImmortalProbeA
     static string Run고도현() => Setup("불멸_고도현");
     static string Run이이삭() => Setup("불멸_이이삭");
     static string Run김용태() => Setup("불멸_김용태");
+    static string Run정준영() => Setup("불멸_정준영");
+    static string Onion()
+    {
+        var up = PlayerContext.Get(0).UnitUpgrades;
+        var trait = unit.Data.trait;
+        up.AddTraitPoints(3);
+        bool spent = up.TrySpendTraitPoints(trait.costTraitPoints);
+        if (spent) up.Unlock(trait);
+        return $"[양파의 결집] 특성 {trait.costTraitPoints}pt {(spent ? "성공" : "실패")} 레벨 인덱스 {up.SkillLevelIndexFor(unit.Data)}";
+    }
 
     // 김용태: 체력 게이지를 99 직전으로 두고 근처 적을 죽여 +5 훅이 도는지, 체력스킬 버프가 붙는지
     static string DeathHook()
