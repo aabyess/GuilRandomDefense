@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1426f971d9174ed9b3e5519d787e74b, type: 3}
   m_Name: "\uBD88\uBA78_\uBC15\uC740\uC11D"
   m_EditorClassIdentifier: 
-  unitName: "\uBC15\uC740\uC11D"
+  unitName: "\uAC70\uC778"
   grade: 8
   skinAlias: "\uBABD\uD0A4 D. \uAC00\uD504,Monkey D. Garp,Garp,\uAC00\uD504"
   damageType: 1
   attackType: 1
-  movementAbility: 0
+  movementAbility: 1
   hp: 6122.2
   attackPower: 250002
   attackRange: 154.36
@@ -25,16 +25,18 @@ MonoBehaviour:
   moveSpeed: 125.3
   skill: {fileID: 0}
   skills:
-  - {fileID: 11400000, guid: 633fa86bb60b4698a3930d2eecb5e899, type: 2}
-  - {fileID: 11400000, guid: 9f158b87bec55e8d33cb628b7e7f06ec, type: 2}
-  - {fileID: 11400000, guid: e5229080452a526c9e1a719030caebcb, type: 2}
-  - {fileID: 11400000, guid: bcf499722b71436788d1b92bc3e049b5, type: 2}
-  - {fileID: 11400000, guid: 67b05a0db6b3901778cbdbd0fd7b6b8d, type: 2}
-  - {fileID: 11400000, guid: 55b1b914a716de2b289cf7b81708b739, type: 2}
-  - {fileID: 11400000, guid: e23d44fd33c2a97391f0bc4a357fd1ca, type: 2}
-  - {fileID: 11400000, guid: b4b1bdee54bda851d03cd4212429ee58, type: 2}
-  - {fileID: 11400000, guid: e2ee0422e087126f5d18984a3d084025, type: 2}
-  trait: {fileID: 11400000, guid: 2ae388173de4d75a0e0dc5900223bdf5, type: 2}
+  - {fileID: 11400000, guid: cec6800896f434707ae749d83b034563, type: 2}
+  - {fileID: 11400000, guid: b88f298be09eb4f21a94e5777146ccde, type: 2}
+  - {fileID: 11400000, guid: 51ea1149d732544668239effa5807817, type: 2}
+  - {fileID: 11400000, guid: e94769ee9924249489a499ed1580ad4b, type: 2}
+  - {fileID: 11400000, guid: 307a9196982594d1a87c07726cc6b371, type: 2}
+  - {fileID: 11400000, guid: f31bd0c495f02420ea6d686c96654103, type: 2}
+  - {fileID: 11400000, guid: c9a41919fa3fb4dcf9106a2574dcf19b, type: 2}
+  - {fileID: 11400000, guid: 24712f630cd714c21a875afb9e393c6b, type: 2}
+  - {fileID: 11400000, guid: 7371de0ce08a0427e9acc5028c1923a3, type: 2}
+  - {fileID: 11400000, guid: e13bac9fe3af94bb6b7873576ef4d6cf, type: 2}
+  - {fileID: 11400000, guid: 495a22109aa10472ba6a95b2ea6160b8, type: 2}
+  trait: {fileID: 0}
   prefab: {fileID: 5859513780188793559, guid: 0deae6fd45f1845b7a4d0094c3ecfcac, type: 3}
   critChance: 0.15
   critDamageMultiplier: 1
@@ -61,8 +63,8 @@ MonoBehaviour:
   sellRewardEveryNWoodChance: 1
   primaryStat: 0
   manaRegenPerSecond: 0
-  manaMax: 160
-  manaGaugePerMana: 1
+  manaMax: 0
+  manaGaugePerMana: 0
   lifeGaugeRegenPerSecond: 0
   lifeGaugeMax: 0
   manaGaugeStart: 0
@@ -77,7 +79,7 @@ MonoBehaviour:
   lifeAuraRange: 0
   lifeAuraBuffId: 
   lifeAuraIncludesSelf: 0
-  attackSplashRadius: 0
+  attackSplashRadius: 300
   attackCleaveFactor: 0
   attackCleaveRadius: 0
   attackExtraTargets: 0
@@ -85,3 +87,4 @@ MonoBehaviour:
   raiseOnKillUnit: {fileID: 0}
   raiseOnKillChancePercent: 0
   raiseOnKillLifetimeSeconds: 0
+  attackArmorIgnoreRatio: 0
