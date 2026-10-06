@@ -10,16 +10,27 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 287e5f1f1efa421eab118d0dda3fdd4c, type: 3}
-  m_Name: ItemData_I00Y_불사조의깃털
-  m_EditorClassIdentifier:
-  itemName: I00Y 불사조의깃털
+  m_Name: "ItemData_I00Y_\uBD88\uC0AC\uC870\uC758\uAE43\uD138"
+  m_EditorClassIdentifier: 
+  itemName: "I00Y \uBD88\uC0AC\uC870\uC758\uAE43\uD138"
   hasGrade: 1
   grade: 5
-  tooltipText: "아군 체력회복0.3증가"
-  linkedAbilityId:
+  tooltipText: "\uC544\uAD70 \uCCB4\uB825\uD68C\uBCF50.3\uC99D\uAC00"
+  linkedAbilityId: 
   sellWoodMin: 0
   sellWoodMax: 0
-  designNote: "범용. 풀 있음. 🔴 필드-툴팁 불일치(원작 자체의 문제, 2026-09-09 아이템 40종 값 대조): 툴팁·unam 둘 다 \"0.3\"인데 실제 연결 능력 A17M의 필드는 Uau2=0.25다 — 원작 제작자가 툴팁 수정 없이 다른 값을 넣은 것으로 보인다. tooltipText는 원작 툴팁 원문 그대로 0.3을 유지하고, effects(실제 적용값)는 \"필드가 진실\" 원칙대로 0.25를 쓴다."
+  designNote: "\uBC94\uC6A9. \uD480 \uC788\uC74C. \U0001F534 \uD544\uB4DC-\uD234\uD301
+    \uBD88\uC77C\uCE58(\uC6D0\uC791 \uC790\uCCB4\uC758 \uBB38\uC81C, 2026-09-09 \uC544\uC774\uD15C
+    40\uC885 \uAC12 \uB300\uC870): \uD234\uD301\xB7unam \uB458 \uB2E4 \"0.3\"\uC778\uB370
+    \uC2E4\uC81C \uC5F0\uACB0 \uB2A5\uB825 A17M\uC758 \uD544\uB4DC\uB294 Uau2=0.25\uB2E4
+    \u2014 \uC6D0\uC791 \uC81C\uC791\uC790\uAC00 \uD234\uD301 \uC218\uC815 \uC5C6\uC774
+    \uB2E4\uB978 \uAC12\uC744 \uB123\uC740 \uAC83\uC73C\uB85C \uBCF4\uC778\uB2E4.
+    tooltipText\uB294 \uC6D0\uC791 \uD234\uD301 \uC6D0\uBB38 \uADF8\uB300\uB85C 0.3\uC744
+    \uC720\uC9C0\uD558\uACE0, effects(\uC2E4\uC81C \uC801\uC6A9\uAC12)\uB294 \"\uD544\uB4DC\uAC00
+    \uC9C4\uC2E4\" \uC6D0\uCE59\uB300\uB85C 0.25\uB97C \uC4F4\uB2E4."
   effects:
   - kind: 3
     value: 0.25
+  useKind: 0
+  useWispRolls: []
+  icon: {fileID: 21300000, guid: 3d62f6f76bdb64d7896c53851362b245, type: 3}

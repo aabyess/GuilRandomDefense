@@ -10,16 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 287e5f1f1efa421eab118d0dda3fdd4c, type: 3}
-  m_Name: ItemData_I00M_약주
-  m_EditorClassIdentifier:
-  itemName: I00M 약주
+  m_Name: "ItemData_I00M_\uC57D\uC8FC"
+  m_EditorClassIdentifier: 
+  itemName: "I00M \uC57D\uC8FC"
   hasGrade: 1
   grade: 3
-  tooltipText: "아군 체력회복0.25증가. 흰수염 불멸 보유시 지진강타 강화(시전20%감소+데미지15%증가)"
+  tooltipText: "\uC544\uAD70 \uCCB4\uB825\uD68C\uBCF50.25\uC99D\uAC00. \uD770\uC218\uC5FC
+    \uBD88\uBA78 \uBCF4\uC720\uC2DC \uC9C0\uC9C4\uAC15\uD0C0 \uAC15\uD654(\uC2DC\uC80420%\uAC10\uC18C+\uB370\uBBF8\uC9C015%\uC99D\uAC00)"
   linkedAbilityId: A16N
   sellWoodMin: 0
   sellWoodMax: 0
-  designNote: "흰수염 해금형. 풀 있음. 효과값 확정(2026-09-09, 아이템 40종 값 대조 후속 재확인): 연결 능력 A16N(base AUau)의 Uau2=0.25 필드 직접 확인, 툴팁 앞부분(체력회복0.25)과 일치 — linkedAbilityId=A16N으로 채웠다. 뒷부분(흰수염 불멸 보유시 지진강타 시전20%감소+데미지15%증가)은 이 능력 필드에 없다 — 조건부 트리거 구현으로 보이며 w3a로는 검증 불가, 비워둔다."
+  designNote: "\uD770\uC218\uC5FC \uD574\uAE08\uD615. \uD480 \uC788\uC74C. \uD6A8\uACFC\uAC12
+    \uD655\uC815(2026-09-09, \uC544\uC774\uD15C 40\uC885 \uAC12 \uB300\uC870 \uD6C4\uC18D
+    \uC7AC\uD655\uC778): \uC5F0\uACB0 \uB2A5\uB825 A16N(base AUau)\uC758 Uau2=0.25
+    \uD544\uB4DC \uC9C1\uC811 \uD655\uC778, \uD234\uD301 \uC55E\uBD80\uBD84(\uCCB4\uB825\uD68C\uBCF50.25)\uACFC
+    \uC77C\uCE58 \u2014 linkedAbilityId=A16N\uC73C\uB85C \uCC44\uC6E0\uB2E4. \uB4B7\uBD80\uBD84(\uD770\uC218\uC5FC
+    \uBD88\uBA78 \uBCF4\uC720\uC2DC \uC9C0\uC9C4\uAC15\uD0C0 \uC2DC\uC80420%\uAC10\uC18C+\uB370\uBBF8\uC9C015%\uC99D\uAC00)\uC740
+    \uC774 \uB2A5\uB825 \uD544\uB4DC\uC5D0 \uC5C6\uB2E4 \u2014 \uC870\uAC74\uBD80
+    \uD2B8\uB9AC\uAC70 \uAD6C\uD604\uC73C\uB85C \uBCF4\uC774\uBA70 w3a\uB85C\uB294
+    \uAC80\uC99D \uBD88\uAC00, \uBE44\uC6CC\uB454\uB2E4."
   effects:
   - kind: 3
     value: 0.25
+  useKind: 0
+  useWispRolls: []
+  icon: {fileID: 21300000, guid: b42a2707a24234de9bd7eff8f62ad1b6, type: 3}

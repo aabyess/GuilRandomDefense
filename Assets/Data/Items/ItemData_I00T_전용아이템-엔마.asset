@@ -10,14 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 287e5f1f1efa421eab118d0dda3fdd4c, type: 3}
-  m_Name: ItemData_I00T_전용아이템-엔마
-  m_EditorClassIdentifier:
-  itemName: "I00T 전용아이템-엔마"
+  m_Name: "ItemData_I00T_\uC804\uC6A9\uC544\uC774\uD15C-\uC5D4\uB9C8"
+  m_EditorClassIdentifier: 
+  itemName: "I00T \uC804\uC6A9\uC544\uC774\uD15C-\uC5D4\uB9C8"
   hasGrade: 0
   grade: 0
-  tooltipText: "흑도:플레이어존 적 방어력5감소, 귀기 이동속도5%추가감소, 까마귀사냥→구도류 망자의 희롱 변경, 사자의노래→비룡화염 변경"
+  tooltipText: "\uD751\uB3C4:\uD50C\uB808\uC774\uC5B4\uC874 \uC801 \uBC29\uC5B4\uB8255\uAC10\uC18C,
+    \uADC0\uAE30 \uC774\uB3D9\uC18D\uB3C45%\uCD94\uAC00\uAC10\uC18C, \uAE4C\uB9C8\uADC0\uC0AC\uB0E5\u2192\uAD6C\uB3C4\uB958
+    \uB9DD\uC790\uC758 \uD76C\uB871 \uBCC0\uACBD, \uC0AC\uC790\uC758\uB178\uB798\u2192\uBE44\uB8E1\uD654\uC5FC
+    \uBCC0\uACBD"
   linkedAbilityId: A109
   sellWoodMin: 0
   sellWoodMax: 0
-  designNote: "이름 정정(2026-09-09): \"엔마\" → 원작 unam \"전용아이템-엔마\"(접두 누락). Trig_item_up2_Actions(조합 업그레이드)와 Trig_Hidden8Ryuma_Actions(히든조합8 류마) 양쪽에서 CreateItemLoc로 지급 — 경로 2개. iabi=A109(필드 전부 0인 스텁)라 스킬 교체는 별도 트리거 구현. 풀 밖. 효과 필드 비움(2026-09-09, 아이템 40종 값 대조 후속): 트리거 구현, w3a로 검증 불가."
+  designNote: "\uC774\uB984 \uC815\uC815(2026-09-09): \"\uC5D4\uB9C8\" \u2192 \uC6D0\uC791
+    unam \"\uC804\uC6A9\uC544\uC774\uD15C-\uC5D4\uB9C8\"(\uC811\uB450 \uB204\uB77D).
+    Trig_item_up2_Actions(\uC870\uD569 \uC5C5\uADF8\uB808\uC774\uB4DC)\uC640 Trig_Hidden8Ryuma_Actions(\uD788\uB4E0\uC870\uD5698
+    \uB958\uB9C8) \uC591\uCABD\uC5D0\uC11C CreateItemLoc\uB85C \uC9C0\uAE09 \u2014
+    \uACBD\uB85C 2\uAC1C. iabi=A109(\uD544\uB4DC \uC804\uBD80 0\uC778 \uC2A4\uD141)\uB77C
+    \uC2A4\uD0AC \uAD50\uCCB4\uB294 \uBCC4\uB3C4 \uD2B8\uB9AC\uAC70 \uAD6C\uD604.
+    \uD480 \uBC16. \uD6A8\uACFC \uD544\uB4DC \uBE44\uC6C0(2026-09-09, \uC544\uC774\uD15C
+    40\uC885 \uAC12 \uB300\uC870 \uD6C4\uC18D): \uD2B8\uB9AC\uAC70 \uAD6C\uD604,
+    w3a\uB85C \uAC80\uC99D \uBD88\uAC00."
   effects: []
+  useKind: 0
+  useWispRolls: []
+  icon: {fileID: 21300000, guid: 8e784f3e5bb344d1cbec0ae4303d2e4c, type: 3}

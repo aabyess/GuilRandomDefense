@@ -10,13 +10,35 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 287e5f1f1efa421eab118d0dda3fdd4c, type: 3}
-  m_Name: ItemData_I00E_랜덤특수도박
-  m_EditorClassIdentifier:
-  itemName: I00E 랜덤 특수 도박
+  m_Name: "ItemData_I00E_\uB79C\uB364\uD2B9\uC218\uB3C4\uBC15"
+  m_EditorClassIdentifier: 
+  itemName: "I00E \uB79C\uB364 \uD2B9\uC218 \uB3C4\uBC15"
   hasGrade: 0
   grade: 0
-  tooltipText: "골드 100 소모 — 랜덤 위습 / 고대의 배 / 변화 회수 중 1개 획득(원작 utub 원문 그대로). 실패 문구가 없어 셋 중 하나가 100% 나오는 것으로 보인다."
-  linkedAbilityId:
+  tooltipText: "\uACE8\uB4DC 100 \uC18C\uBAA8 \u2014 \uB79C\uB364 \uC704\uC2B5 /
+    \uACE0\uB300\uC758 \uBC30 / \uBCC0\uD654 \uD68C\uC218 \uC911 1\uAC1C \uD68D\uB4DD(\uC6D0\uC791
+    utub \uC6D0\uBB38 \uADF8\uB300\uB85C). \uC2E4\uD328 \uBB38\uAD6C\uAC00 \uC5C6\uC5B4
+    \uC14B \uC911 \uD558\uB098\uAC00 100% \uB098\uC624\uB294 \uAC83\uC73C\uB85C \uBCF4\uC778\uB2E4."
+  linkedAbilityId: 
   sellWoodMin: 0
   sellWoodMax: 0
-  designNote: "확정(2026-09-07, Docs/reference/I00E_I00F_RESOLVED.md, war3map.w3t 직접 파싱) — '미상'이 아니라 unam·utub이 원작에 처음부터 있었다. utip('돈 도박 중급')이 I00D와 글자 그대로 같아 I00D를 복제해 만든 파생 아이템으로 보인다. 셋 중 어느 비율로 나오는지는 iabi가 비어있고 war3map.j 리터럴 0건이라 원문에 확률 값 자체가 없다 — [미확인]으로 남긴다. 판매 상점(획득 경로)은 여전히 미확인 — 2026-09-08 재조사에서 리터럴 0건을 다시 확인했고(war3map_new.j·w3u·FourCC 십진값 전부), war3mapUnits.doo가 **이 맵에 아예 없다**는 것까지 밝혔다(war3map.doo는 정상 추출되므로 접근 문제가 아니다). ⚠️ 아이템 38종 전체에 걸리는 한계다(Docs/reference/ITEM_GATES_I00A_D_E_F_RESOLVED.md)."
+  designNote: "\uD655\uC815(2026-09-07, Docs/reference/I00E_I00F_RESOLVED.md, war3map.w3t
+    \uC9C1\uC811 \uD30C\uC2F1) \u2014 '\uBBF8\uC0C1'\uC774 \uC544\uB2C8\uB77C unam\xB7utub\uC774
+    \uC6D0\uC791\uC5D0 \uCC98\uC74C\uBD80\uD130 \uC788\uC5C8\uB2E4. utip('\uB3C8
+    \uB3C4\uBC15 \uC911\uAE09')\uC774 I00D\uC640 \uAE00\uC790 \uADF8\uB300\uB85C
+    \uAC19\uC544 I00D\uB97C \uBCF5\uC81C\uD574 \uB9CC\uB4E0 \uD30C\uC0DD \uC544\uC774\uD15C\uC73C\uB85C
+    \uBCF4\uC778\uB2E4. \uC14B \uC911 \uC5B4\uB290 \uBE44\uC728\uB85C \uB098\uC624\uB294\uC9C0\uB294
+    iabi\uAC00 \uBE44\uC5B4\uC788\uACE0 war3map.j \uB9AC\uD130\uB7F4 0\uAC74\uC774\uB77C
+    \uC6D0\uBB38\uC5D0 \uD655\uB960 \uAC12 \uC790\uCCB4\uAC00 \uC5C6\uB2E4 \u2014
+    [\uBBF8\uD655\uC778]\uC73C\uB85C \uB0A8\uAE34\uB2E4. \uD310\uB9E4 \uC0C1\uC810(\uD68D\uB4DD
+    \uACBD\uB85C)\uC740 \uC5EC\uC804\uD788 \uBBF8\uD655\uC778 \u2014 2026-09-08 \uC7AC\uC870\uC0AC\uC5D0\uC11C
+    \uB9AC\uD130\uB7F4 0\uAC74\uC744 \uB2E4\uC2DC \uD655\uC778\uD588\uACE0(war3map_new.j\xB7w3u\xB7FourCC
+    \uC2ED\uC9C4\uAC12 \uC804\uBD80), war3mapUnits.doo\uAC00 **\uC774 \uB9F5\uC5D0
+    \uC544\uC608 \uC5C6\uB2E4**\uB294 \uAC83\uAE4C\uC9C0 \uBC1D\uD614\uB2E4(war3map.doo\uB294
+    \uC815\uC0C1 \uCD94\uCD9C\uB418\uBBC0\uB85C \uC811\uADFC \uBB38\uC81C\uAC00 \uC544\uB2C8\uB2E4).
+    \u26A0\uFE0F \uC544\uC774\uD15C 38\uC885 \uC804\uCCB4\uC5D0 \uAC78\uB9AC\uB294
+    \uD55C\uACC4\uB2E4(Docs/reference/ITEM_GATES_I00A_D_E_F_RESOLVED.md)."
+  effects: []
+  useKind: 0
+  useWispRolls: []
+  icon: {fileID: 21300000, guid: 3afd421a8436449b389db8c39a554ccf, type: 3}
