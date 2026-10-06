@@ -189,11 +189,11 @@ public class GameHud : MonoBehaviour
     // 09-29 사장님: 떠 있던 판매 버튼(상단 메뉴 왼쪽 아래)을 없애고 명령 카드 한 칸으로만 둔다(SellCommandSlot).
     UnitData lastSellButtonUnit;
     bool sellSlotShown;
-    bool activeSlotShown;    // 액티브(누르는) 스킬 칸(ActiveSlot) — 초월 최상호 「바지사장」 등 ActiveButton 스킬을 가진 유닛 한 기를 골랐을 때만
+    bool activeSlotShown;    // 액티브(누르는) 스킬 칸(FlexKind.Active) — 초월 최상호 「바지사장」 등 ActiveButton 스킬을 가진 유닛 한 기를 골랐을 때만
     SkillData activeShownSkill;
     float activeLocalReadyAt;   // 멀티 클라: 호스트의 쿨을 모르니 누른 시각 + 쿨로 어림한 값(진짜 판정은 호스트)
-    bool talentSlotsShown;   // 초월 박민수 「재능투자」 칸 4개(TalentFirstSlot~) — 박민수 한 기를 골랐을 때만
-    bool yoonseoSlotShown;   // 초월 노태현 「최윤서 강화」 칸(YoonseoSlot) — 노태현 한 기를 골랐을 때만
+    bool talentSlotsShown;   // 초월 박민수 「재능투자」 칸 4개(FlexKind.Talent) — 박민수 한 기를 골랐을 때만
+    bool yoonseoSlotShown;   // 초월 노태현 「최윤서 강화」 칸(FlexKind.Yoonseo) — 노태현 한 기를 골랐을 때만
     bool sellSlotEnabled;
     string sellSlotTooltip;
 
@@ -262,15 +262,92 @@ public class GameHud : MonoBehaviour
     int hoveredCommandSlotIndex = -1;
     float nextTooltipRefreshTime;
 
-    // 유닛 명령 그리드(13칸). 0~2번은 공격/정지/모으기, 12번은 정렬(C) 고정 placeholder라 절대 안 건드림.
-    // 나머지 칸(3~11) 중 맨 아랫줄부터 왼쪽→오른쪽, 넘치면 그 윗줄로 이어지는 순서로 "선택한 유닛이
-    // 무엇이 되는가"(조합 결과)를 채운다. 한 유닛이 최대 4개 레시피의 첫 재료라 이 정도면 충분하다.
+    // 유닛 명령 그리드(12칸 = 4×3). 0~2는 홀드·공격·모으기, 3은 판매(고정). 4~11은 유닛별 칸(액티브·재능투자·최윤서·특성강화·조합 결과) — ReflowFlexSlots가 11→4로 채운다.
     // 조합·상점 9칸을 4열 격자의 **아래 줄부터** 채운다. 12칸(4~15) 중 9칸만 쓰므로
     // 남는 셋(4·5·6)은 둘째 줄 왼쪽에 빈칸으로 남는다 — 빈칸이 위쪽 한 곳에 모여야 격자가
     // 덜 어수선하다.
-    // 09-29 4×3: 상점(도박소 9칸)은 유닛 명령이 숨으니 3줄 → 2줄 → 1줄 오른쪽 끝 순. 조합 결과는 3줄 4칸만(UnitRecipeSlotOrder).
+    // 09-29 4×3: 상점(도박소 9칸)은 유닛 명령이 숨으니 3줄 → 2줄 → 1줄 오른쪽 끝 순. 조합 결과·유닛별 칸은 4~11(ReflowFlexSlots).
     static readonly int[] UnitCommandResultSlotOrder = { 8, 9, 10, 11, 4, 5, 6, 7, 3 };
-    static readonly int[] UnitRecipeSlotOrder = { 8, 9, 10, 11 };
+
+    // 10-06 명령 카드 재배치 — 4~11은 유닛마다 달라지는 칸. 고정 번호를 버리고 ReflowFlexSlots가 매번 11→4 순서로 빈틈없이 채운다(오른쪽 아래부터).
+    // 넣는 순서 = 액티브 → 유닛 전용(재능투자·최윤서 강화) → 특성강화 → 조합 결과. 8칸을 넘으면 경고 로그(조용히 버리지 않는다).
+    const int FlexSlotFirst = 4;
+    const int FlexSlotLast = 11;
+    enum FlexKind : byte { None, Trait, Active, Talent, Yoonseo, Recipe }
+    readonly FlexKind[] flexKind = new FlexKind[CommandSlotCount];
+    readonly int[] flexArg = new int[CommandSlotCount];          // Talent는 투자 종류(0~3), Recipe는 flexRecipes 번호
+    readonly FlexKind[] flexWantKind = new FlexKind[CommandSlotCount];
+    readonly int[] flexWantArg = new int[CommandSlotCount];
+    readonly List<CombineRecipe> flexRecipes = new List<CombineRecipe>();   // 고른 유닛이 첫 재료인 조합식(결과 있는 것만)
+    bool flexDirty;      // 조합식 목록이 바뀜 → 배치가 같아도 칸 내용을 다시 쓴다
+    bool flexWasShop;    // 상점을 골랐던 동안 4~11은 상점 칸이었다 → 나오면 한 번 싹 비운다
+
+    FlexKind FlexKindAt(int slot) => slot >= FlexSlotFirst && slot <= FlexSlotLast ? flexKind[slot] : FlexKind.None;
+
+    int FlexSlotOf(FlexKind kind, int arg = 0)
+    {
+        for (int slot = FlexSlotFirst; slot <= FlexSlotLast; slot++)
+            if (flexKind[slot] == kind && flexArg[slot] == arg) return slot;
+        return -1;
+    }
+
+    // 칸 배치를 한 곳에서 정한다. 원하는 칸(위 shown 깃발들 + 조합식 목록)을 11→4로 깔아 보고, 지금 배치와 다르면
+    // 4~11의 글자·색·단축키·쿨 덮개·조합식 대응·클릭 대응을 전부 비운 뒤 새 번호를 적는다(옛 칸에 흔적이 남지 않게).
+    // 칸 내용은 각 Refresh*가 매 프레임 자기 칸(FlexSlotOf)에 다시 그린다 — 배치가 바뀐 프레임은 빈 칸이고 다음 프레임에 찬다.
+    void ReflowFlexSlots()
+    {
+        if (unitCommandSlotRoots[FlexSlotFirst] == null) return;
+        if (currentShop as Object != null) { flexWasShop = true; return; }   // 상점을 고른 동안 4~11은 상점 칸이다
+
+        for (int i = 0; i < CommandSlotCount; i++) { flexWantKind[i] = FlexKind.None; flexWantArg[i] = 0; }
+        int next = FlexSlotLast;
+        int overflow = 0;
+        void Put(FlexKind kind, int arg)
+        {
+            if (next < FlexSlotFirst) { overflow++; return; }
+            flexWantKind[next] = kind;
+            flexWantArg[next] = arg;
+            next--;
+        }
+        if (activeSlotShown) Put(FlexKind.Active, 0);
+        if (talentSlotsShown) for (int k = 0; k < UnitAttacker.TalentKindCount; k++) Put(FlexKind.Talent, k);
+        if (yoonseoSlotShown) Put(FlexKind.Yoonseo, 0);
+        if (traitSlotShown) Put(FlexKind.Trait, 0);
+        for (int i = 0; i < flexRecipes.Count; i++) Put(FlexKind.Recipe, i);
+
+        bool changed = flexDirty || flexWasShop;
+        for (int slot = FlexSlotFirst; slot <= FlexSlotLast && !changed; slot++)
+            changed = flexKind[slot] != flexWantKind[slot] || flexArg[slot] != flexWantArg[slot];
+        if (!changed) return;
+
+        flexDirty = false;
+        flexWasShop = false;
+        if (overflow > 0)
+            Debug.LogWarning($"[HUD] 명령 카드 유닛별 칸 {FlexSlotLast - FlexSlotFirst + 1}개가 모자라 {overflow}개가 안 보입니다(고른 유닛: {(lastCommandUnitData != null ? lastCommandUnitData.name : "?")}).");
+
+        for (int slot = FlexSlotFirst; slot <= FlexSlotLast; slot++)
+        {
+            unitCommandRecipes[slot] = null;
+            unitCommandSlotNames[slot].text = "";
+            unitCommandSlotNames[slot].color = Color.white;
+            unitCommandSlotHotkeys[slot].text = "";
+            unitCommandSlotBackgrounds[slot].color = Color.clear;
+            unitCommandSlotButtons[slot].interactable = false;
+            shopLogicalSlotIndex[slot] = -1;
+            shopSlotHotkeys[slot] = '\0';
+            ClearShopCooldown(slot);
+            flexKind[slot] = flexWantKind[slot];
+            flexArg[slot] = flexWantArg[slot];
+            if (flexKind[slot] == FlexKind.Recipe)
+            {
+                CombineRecipe recipe = flexRecipes[flexArg[slot]];
+                unitCommandRecipes[slot] = recipe;
+                unitCommandSlotNames[slot].text = recipe.result.DisplayNameTwoLines;
+            }
+        }
+        if (hoveredCommandSlotIndex >= 0) { hoveredCommandSlotIndex = -1; HideCombineTooltip(); }
+        RefreshUnitCommandAffordability();
+    }
 
     readonly GameObject[] unitCommandSlotRoots = new GameObject[CommandSlotCount];
     readonly Image[] unitCommandSlotBackgrounds = new Image[CommandSlotCount];
@@ -427,6 +504,7 @@ public class GameHud : MonoBehaviour
         RefreshTeamPanel();
         RefreshStoryPanel();
         RefreshUnitCommandCards();
+        ReflowFlexSlots();
         RefreshInventoryPanel();
         RefreshItemInventoryPanel();
         RefreshShopHotkeys();
@@ -1061,39 +1139,32 @@ public class GameHud : MonoBehaviour
         SyncTraitSlot(true, trait, points);
     }
 
-    // 특성강화 단추의 명령 카드 칸(1번) — 위 TraitButtonPanel의 글자·활성 상태를 그대로 비춘다. 클릭은 OnTraitButtonClicked(같은 함수).
-    const int TraitSlot = 1;
+    // 특성강화 단추의 명령 카드 칸 — 위 TraitButtonPanel의 글자·활성 상태를 그대로 비춘다. 클릭은 OnTraitButtonClicked(같은 함수).
+    // 칸 번호는 ReflowFlexSlots가 정한다(FlexSlotOf). 이 함수는 「보이는가」 깃발과 내용만 맡고, 꺼질 때 칸 비우기는 Reflow가 한다.
     bool traitSlotShown;
     UnitTraitData traitSlotTrait;
     int traitSlotPoints;
 
     void SyncTraitSlot(bool show, UnitTraitData trait, int points)
     {
-        if (unitCommandSlotRoots[TraitSlot] == null) return;
         if (!show || currentShop as Object != null)
         {
-            if (traitSlotShown)
-            {
-                traitSlotShown = false;
-                unitCommandSlotNames[TraitSlot].text = "";
-                unitCommandSlotNames[TraitSlot].color = Color.white;
-                unitCommandSlotHotkeys[TraitSlot].text = "";
-                unitCommandSlotBackgrounds[TraitSlot].color = Color.clear;
-                unitCommandSlotButtons[TraitSlot].interactable = false;
-            }
+            traitSlotShown = false;
             return;
         }
         traitSlotShown = true;
         traitSlotTrait = trait;
         traitSlotPoints = points;
+        int slot = FlexSlotOf(FlexKind.Trait);
+        if (slot < 0) return;   // 아직 자리가 안 정해졌다 — 다음 프레임 Reflow 뒤에 그린다
         bool enabled = traitButtonComponent.interactable;
-        unitCommandSlotNames[TraitSlot].text = traitButtonText.text;
-        unitCommandSlotNames[TraitSlot].color = enabled ? Color.white : new Color(1f, 1f, 1f, 0.5f);
-        unitCommandSlotHotkeys[TraitSlot].text = "";
+        unitCommandSlotNames[slot].text = traitButtonText.text;
+        unitCommandSlotNames[slot].color = enabled ? Color.white : new Color(1f, 1f, 1f, 0.5f);
+        unitCommandSlotHotkeys[slot].text = "";
         Color color = UnitCommandDefaultColor;
         color.a = enabled ? 1f : 0.45f;
-        unitCommandSlotBackgrounds[TraitSlot].color = color;
-        unitCommandSlotButtons[TraitSlot].interactable = true;   // 못 살 때도 눌러서 이유를 본다(ExecuteTraitOn이 안내한다)
+        unitCommandSlotBackgrounds[slot].color = color;
+        unitCommandSlotButtons[slot].interactable = true;   // 못 살 때도 눌러서 이유를 본다(ExecuteTraitOn이 안내한다)
     }
 
     void HideTraitButton()
@@ -1328,10 +1399,8 @@ public class GameHud : MonoBehaviour
         sellSlotTooltip = $"판매\n({rewardDesc})";
     }
 
-    // 초월 박민수 「재능투자」(사장님 10-06) — 조합 결과 칸 8~11(박민수 초월은 조합 결과가 없어 비어 있다)에 공격력·공격속도·방깎·스턴 4칸.
+    // 초월 박민수 「재능투자」(사장님 10-06) — 유닛별 칸(FlexKind.Talent) 4개: 공격력·공격속도·방깎·스턴(액티브 다음, 11→4 순서로 채워진다).
     // 한 칸을 누르면 포인트 1점 투자(되돌릴 수 없음). 칸 이름 아래 글자: 현재 단계/최대 단계, 윗칸 글자: 남은 포인트. 못 할 때 이유를 띄운다(상점 칸 규칙).
-    const int TalentFirstSlot = 8;
-
     UnitAttacker TalentCandidate()
     {
         SelectionManager selection = Selection;
@@ -1343,29 +1412,15 @@ public class GameHud : MonoBehaviour
 
     void RefreshTalentButtons()
     {
-        if (unitCommandSlotRoots[TalentFirstSlot] == null) return;
         if (currentShop as Object != null) { talentSlotsShown = false; return; }   // 상점을 고른 동안 이 칸들은 상점 칸이다
         UnitAttacker attacker = TalentCandidate();
-        if (attacker == null)
-        {
-            if (!talentSlotsShown) return;
-            talentSlotsShown = false;
-            for (int k = 0; k < UnitAttacker.TalentKindCount; k++)
-            {
-                int slot = TalentFirstSlot + k;
-                unitCommandSlotNames[slot].text = "";
-                unitCommandSlotNames[slot].color = Color.white;
-                unitCommandSlotHotkeys[slot].text = "";
-                unitCommandSlotBackgrounds[slot].color = Color.clear;
-                unitCommandSlotButtons[slot].interactable = false;
-            }
-            return;
-        }
+        if (attacker == null) { talentSlotsShown = false; return; }   // 칸 비우기는 ReflowFlexSlots
         talentSlotsShown = true;
         int points = attacker.TalentPointsAvailable;
         for (int k = 0; k < UnitAttacker.TalentKindCount; k++)
         {
-            int slot = TalentFirstSlot + k;
+            int slot = FlexSlotOf(FlexKind.Talent, k);
+            if (slot < 0) continue;
             int have = attacker.GetTalent(k), max = UnitAttacker.TalentMaxOf(k);
             bool open = have < max && points > 0;
             unitCommandSlotNames[slot].text = $"{UnitAttacker.TalentNames[k]}\n{have}/{max}";
@@ -1395,9 +1450,8 @@ public class GameHud : MonoBehaviour
         PlayerNotification.Show(owner.OwnerId, $"<color=#FFD700>재능투자</color> {UnitAttacker.TalentNames[kind]} {attacker.GetTalent(kind)}/{UnitAttacker.TalentMaxOf(kind)} (남은 포인트 {attacker.TalentPointsAvailable})", 4f);
     }
 
-    // 초월 노태현 「최윤서 강화」(사장님 10-06) — 가운데 줄 왼쪽에서 셋째 빈 칸(6번). 한 기를 골랐고 그 유닛이 초월 노태현일 때만 보인다.
+    // 초월 노태현 「최윤서 강화」(사장님 10-06) — 유닛별 칸(FlexKind.Yoonseo). 한 기를 골랐고 그 유닛이 초월 노태현일 때만 보인다.
     // 누르면 내 최윤서 한 기를 소모하고 영구 강화(방무딜 + 아군 디버프 100% 제거). 못 할 땐 이유를 띄운다(상점 칸 규칙과 같게).
-    const int YoonseoSlot = 6;
     const string YoonseoUnitAsset = "초월_노태현_AP";
 
     UnitAttacker YoonseoCandidate()
@@ -1411,34 +1465,25 @@ public class GameHud : MonoBehaviour
 
     void RefreshYoonseoButton()
     {
-        if (unitCommandSlotRoots[YoonseoSlot] == null) return;
         if (currentShop as Object != null) { yoonseoSlotShown = false; return; }   // 상점을 고른 동안 이 칸은 상점 칸이다
         UnitAttacker attacker = YoonseoCandidate();
-        if (attacker == null)
-        {
-            if (!yoonseoSlotShown) return;
-            yoonseoSlotShown = false;
-            unitCommandSlotNames[YoonseoSlot].text = "";
-            unitCommandSlotNames[YoonseoSlot].color = Color.white;
-            unitCommandSlotBackgrounds[YoonseoSlot].color = Color.clear;
-            unitCommandSlotButtons[YoonseoSlot].interactable = false;
-            return;
-        }
+        if (attacker == null) { yoonseoSlotShown = false; return; }   // 칸 비우기는 ReflowFlexSlots
         yoonseoSlotShown = true;
+        int slot = FlexSlotOf(FlexKind.Yoonseo);
+        if (slot < 0) return;
         bool done = attacker.YoonseoEnhanced;
-        unitCommandSlotNames[YoonseoSlot].text = "최윤서\n강화";
-        unitCommandSlotHotkeys[YoonseoSlot].text = "";
+        unitCommandSlotNames[slot].text = "최윤서\n강화";
+        unitCommandSlotHotkeys[slot].text = "";
         Color color = UnitCommandDefaultColor;
         color.a = done ? 0.35f : 1f;
-        unitCommandSlotBackgrounds[YoonseoSlot].color = color;
-        unitCommandSlotNames[YoonseoSlot].color = done ? new Color(1f, 1f, 1f, 0.4f) : Color.white;
-        unitCommandSlotButtons[YoonseoSlot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
+        unitCommandSlotBackgrounds[slot].color = color;
+        unitCommandSlotNames[slot].color = done ? new Color(1f, 1f, 1f, 0.4f) : Color.white;
+        unitCommandSlotButtons[slot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
     }
 
-    // 액티브(누르는) 스킬 칸(2026-10-06, 초월 최상호 「바지사장」) — 명령 카드 둘째 줄 둘째 칸(5번, 단축키 Q). 4번(모으기)·6번(최윤서 강화)·7번(판매) 사이 빈칸이고,
-    // 조합 결과 칸(8~11)과 안 겹친다. 한 기를 골랐고 그 유닛 스킬 목록에 SkillTriggerType.ActiveButton이 있을 때만 보인다.
+    // 액티브(누르는) 스킬 칸(2026-10-06, 초월 최상호 「바지사장」) — 유닛별 칸(FlexKind.Active)의 첫째(맨 오른쪽 아래 11번), 단축키 Q.
+    // 한 기를 골랐고 그 유닛 스킬 목록에 SkillTriggerType.ActiveButton이 있을 때만 보인다.
     // 마나 소모 없음. 쿨 중엔 상점 칸과 같은 시계방향 덮개. 못 쓸 때도 눌러서 이유를 본다.
-    const int ActiveSlot = 5;
     const char ActiveHotkey = 'Q';   // S는 정지가 쓴다(명령 카드 글자 단축키 M·S·H·A·V)
 
     SkillData ActiveSkillOf(out Selectable single)
@@ -1455,24 +1500,25 @@ public class GameHud : MonoBehaviour
 
     void ClearActiveSlot()
     {
-        if (!activeSlotShown) return;
-        activeSlotShown = false;
+        activeSlotShown = false;   // 칸 비우기(덮개 포함)는 ReflowFlexSlots
         activeShownSkill = null;
-        unitCommandSlotNames[ActiveSlot].text = "";
-        unitCommandSlotNames[ActiveSlot].color = Color.white;
-        unitCommandSlotHotkeys[ActiveSlot].text = "";
-        unitCommandSlotBackgrounds[ActiveSlot].color = Color.clear;
-        unitCommandSlotButtons[ActiveSlot].interactable = false;
-        if (unitCommandSlotCooldown[ActiveSlot] != null && unitCommandSlotCooldown[ActiveSlot].gameObject.activeSelf)
-            unitCommandSlotCooldown[ActiveSlot].gameObject.SetActive(false);
     }
 
     void RefreshActiveButton()
     {
-        if (unitCommandSlotRoots[ActiveSlot] == null) return;
         if (currentShop as Object != null) { activeSlotShown = false; return; }   // 상점을 고른 동안 이 칸은 상점 칸이다
         SkillData skill = ActiveSkillOf(out Selectable single);
         if (skill == null) { ClearActiveSlot(); return; }
+
+        activeSlotShown = true;
+        activeShownSkill = skill;
+
+        // 단축키 Q — 채팅 중엔 안 받는다(상점 단축키와 같은 이유). 칸 번호와 무관하다.
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard != null && !ChatInputGate.IsOpen && keyboard.qKey.wasPressedThisFrame) OnActiveClicked();
+
+        int slot = FlexSlotOf(FlexKind.Active);
+        if (slot < 0) return;
 
         // 쿨: 호스트(싱글)는 진짜 유닛의 값, 멀티 클라는 누른 시각 + 쿨로 어림한다.
         float remaining, total;
@@ -1487,19 +1533,17 @@ public class GameHud : MonoBehaviour
             total = skill.levels != null && skill.levels.Count > 0 ? skill.levels[0].cooldown : 0f;
         }
 
-        activeSlotShown = true;
-        activeShownSkill = skill;
         string name = skill.skillName ?? "";
         int paren = name.IndexOf('(');
-        unitCommandSlotNames[ActiveSlot].text = paren > 0 ? name.Substring(0, paren) + "\n" + name.Substring(paren) : name;
-        unitCommandSlotHotkeys[ActiveSlot].text = ActiveHotkey.ToString();
+        unitCommandSlotNames[slot].text = paren > 0 ? name.Substring(0, paren) + "\n" + name.Substring(paren) : name;
+        unitCommandSlotHotkeys[slot].text = ActiveHotkey.ToString();
         Color color = UnitCommandDefaultColor;
         color.a = remaining > 0f ? 0.6f : 1f;
-        unitCommandSlotBackgrounds[ActiveSlot].color = color;
-        unitCommandSlotNames[ActiveSlot].color = Color.white;
-        unitCommandSlotButtons[ActiveSlot].interactable = true;
+        unitCommandSlotBackgrounds[slot].color = color;
+        unitCommandSlotNames[slot].color = Color.white;
+        unitCommandSlotButtons[slot].interactable = true;
 
-        Image overlay = unitCommandSlotCooldown[ActiveSlot];
+        Image overlay = unitCommandSlotCooldown[slot];
         if (overlay != null)
         {
             if (remaining > 0f && total > 0f)
@@ -1509,10 +1553,6 @@ public class GameHud : MonoBehaviour
             }
             else if (overlay.gameObject.activeSelf) overlay.gameObject.SetActive(false);
         }
-
-        // 단축키 S — 채팅 중엔 안 받는다(상점 단축키와 같은 이유).
-        Keyboard keyboard = Keyboard.current;
-        if (keyboard != null && !ChatInputGate.IsOpen && keyboard.qKey.wasPressedThisFrame) OnActiveClicked();
     }
 
     // 대상 지정 액티브(SkillLevel.needsTargetClick, 초월 강재규 「단일도킹」) — 칸을 누르면 대기, 적 하나를 좌클릭하면 발동(우클릭 취소).
@@ -2895,18 +2935,18 @@ public class GameHud : MonoBehaviour
             if (!sellSlotShown || string.IsNullOrEmpty(sellSlotTooltip)) { HideCombineTooltip(); return; }
             ShowTooltip(sellSlotTooltip, cardRect);
         }
-        else if (index == TraitSlot && traitSlotShown && traitSlotTrait != null)
+        else if (FlexKindAt(index) == FlexKind.Trait && traitSlotShown && traitSlotTrait != null)
         {
             ShowTooltip($"{traitSlotTrait.traitName}\n특성 포인트 {traitSlotTrait.costTraitPoints}개로 이 유닛을 강화한다. (보유 {traitSlotPoints}pt)", cardRect);
         }
-        else if (index == ActiveSlot && activeSlotShown && activeShownSkill != null)
+        else if (FlexKindAt(index) == FlexKind.Active && activeSlotShown && activeShownSkill != null)
         {
             float cd = activeShownSkill.levels != null && activeShownSkill.levels.Count > 0 ? activeShownSkill.levels[0].cooldown : 0f;
             ShowTooltip($"{activeShownSkill.skillName}  [{ActiveHotkey}]\n{activeShownSkill.description}\n쿨타임 {cd:0.#}초 · 마나 소모 없음", cardRect);
         }
-        else if (talentSlotsShown && index >= TalentFirstSlot && index < TalentFirstSlot + UnitAttacker.TalentKindCount)
+        else if (FlexKindAt(index) == FlexKind.Talent && talentSlotsShown)
         {
-            int k = index - TalentFirstSlot;
+            int k = flexArg[index];
             ShowTooltip($"재능투자 — {UnitAttacker.TalentNames[k]}\n" + (k switch
             {
                 0 => "한 단계마다 기본 공격력 +10% (최대 5단계)",
@@ -2915,7 +2955,7 @@ public class GameHud : MonoBehaviour
                 _ => "한 단계마다 감금·억제기 스턴 확률 +2.5%p·지속 +0.35초 (최대 3단계)",
             }) + "\n영웅 레벨당 1포인트(최대 18). 되돌릴 수 없음.", cardRect);
         }
-        else if (index == YoonseoSlot && yoonseoSlotShown)
+        else if (FlexKindAt(index) == FlexKind.Yoonseo && yoonseoSlotShown)
         {
             ShowTooltip("최윤서 강화\n내 최윤서(히든·전설) 한 기가 사라지고, 방어 무시 피해가 켜지며 아군 이속 감소 디버프가 100% 없어진다. 한 번 켜면 영구.", cardRect);
         }
@@ -3067,13 +3107,7 @@ public class GameHud : MonoBehaviour
         {
             BuildUnitCommandSlot(i, grid.transform);
 
-            if (IsRemovedCommandSlot(i))
-            {
-                // 사장님 10-06 「이동·정지는 없애도 된다」 — 카드에서 뺀다(우클릭 이동·M/S 단축키는 그대로). 칸 번호는 안 바꾼다(홀드 2·공격 3·모으기 4·…).
-                unitCommandSlotBackgrounds[i].color = Color.clear;
-                unitCommandSlotButtons[i].interactable = false;
-            }
-            else if (i < UnitOnlyCommandLabels.Length)
+            if (i < UnitOnlyCommandLabels.Length)
             {
                 unitCommandSlotNames[i].text = UnitOnlyCommandLabels[i];
                 unitCommandSlotHotkeys[i].text = UnitOnlyCommandHotkeys[i];
@@ -3081,13 +3115,11 @@ public class GameHud : MonoBehaviour
             }
             else
             {
-                // 판매·조합 결과가 들어올 칸. 채워지기 전까지는 보이지 않게 둔다.
+                // 판매(3)·유닛별 칸(4~11)이 들어올 칸. 채워지기 전까지는 보이지 않게 둔다.
                 unitCommandSlotBackgrounds[i].color = Color.clear;
             }
         }
     }
-
-    static bool IsRemovedCommandSlot(int slot) => slot == MoveCommandSlot || slot == StopCommandSlot;   // 이동(0)·정지(1) — 명령 카드에서 뺐다(10-06)
 
     // 이동·정지·홀드·공격·모으기·정렬 여섯 칸. 유닛에게만 의미가 있어서 건물을 고르면 통째로 감춘다.
     bool unitOnlyCommandsShown = true;
@@ -3097,14 +3129,6 @@ public class GameHud : MonoBehaviour
         unitOnlyCommandsShown = visible;
         for (int i = 0; i < UnitOnlyCommandLabels.Length; i++)
         {
-            if (IsRemovedCommandSlot(i))
-            {
-                unitCommandSlotNames[i].text = "";
-                unitCommandSlotHotkeys[i].text = "";
-                unitCommandSlotBackgrounds[i].color = Color.clear;
-                unitCommandSlotButtons[i].interactable = false;
-                continue;
-            }
             unitCommandSlotNames[i].text = visible ? UnitOnlyCommandLabels[i] : "";
             unitCommandSlotHotkeys[i].text = visible ? UnitOnlyCommandHotkeys[i] : "";
             unitCommandSlotBackgrounds[i].color = visible ? UnitCommandDefaultColor : Color.clear;
@@ -3199,18 +3223,17 @@ public class GameHud : MonoBehaviour
     // 이름과 단축키를 나눠 둔다 — 단축키는 버튼 오른쪽 아래 구석에 작게 따로 그린다
     // (한 줄에 "정지 (H)"로 붙여 쓰면 38짜리 정사각 버튼에서 두 줄로 접혀 뭉개진다).
     // 09-29 워크3 4×3: 1줄 이동·정지·홀드·공격(워크3 기본 명령 순서), 2줄 모으기·정렬 + 판매(6).
-    static readonly string[] UnitOnlyCommandLabels = { "이동", "정지", "홀드", "공격", "모으기", "정렬" };
-    static readonly string[] UnitOnlyCommandHotkeys = { "M", "S", "H", "A", "V", "C" };
+    // 10-06 사장님 「홀드·공격·모으기·판매 같은 기본은 상단에, 스킬은 오른쪽 하단부터」 — 1줄(0~3)은 모든 유닛 공통 고정(홀드·공격·모으기·판매).
+    // 이동(M)·정지(S)·정렬(C)은 카드에서 뺐다(단축키는 그대로). 4~11은 유닛마다 달라지는 칸(아래 FlexKind) — 번호를 박지 않고 ReflowFlexSlots가 11→4 순으로 채운다.
+    static readonly string[] UnitOnlyCommandLabels = { "홀드", "공격", "모으기" };
+    static readonly string[] UnitOnlyCommandHotkeys = { "H", "A", "V" };
 
-    const int MoveCommandSlot = 0;
-    const int StopCommandSlot = 1;
-    const int HoldCommandSlot = 2;
-    const int AttackCommandSlot = 3;
-    const int GatherCommandSlot = 4;
-    const int AlignCommandSlot = 5;
+    const int HoldCommandSlot = 0;
+    const int AttackCommandSlot = 1;
+    const int GatherCommandSlot = 2;
     // 판매(09-29 사장님 — 떠 있던 버튼을 옮김). 원작 판매 능력(A09G·A0B8·A0BA·A0B9·A0BB·A080·A0OE, war3map_new.w3a)은
     // 단축키(ahky)가 전부 빈 문자열이라 단축키를 안 붙인다. 원작 버튼 자리는 abpy 1(가운데 줄) · abpx 3(5종)/2(2종).
-    const int SellCommandSlot = 7;   // 09-29 PM: 원작처럼 가운데 줄 오른쪽 끝(abpx 3) — 6번은 빈칸
+    const int SellCommandSlot = 3;   // 10-06: 1줄 오른쪽 끝(홀드·공격·모으기 옆)
 
     // MP: 멀티 클라에서 호스트 판정이 필요한 버튼은 요청 RPC가 생길 때까지 막는다 — 누르면 클라 로컬 상태만
     //     바뀌어 화면이 거짓말을 한다(설계 §6). 싱글·호스트는 IsServer라 항상 false.
@@ -3224,17 +3247,14 @@ public class GameHud : MonoBehaviour
     void OnUnitCommandSlotClicked(int index)
     {
         // 단축키와 같은 함수를 부른다 — 두 곳에 따로 구현하면 한쪽만 고쳐진다.
-        if (index >= MoveCommandSlot && index <= AlignCommandSlot && currentShop as Object == null)
+        if (index >= HoldCommandSlot && index <= GatherCommandSlot && currentShop as Object == null)
         {
             SelectionManager selection = Selection;
             if (selection == null || selection.Selected.Count == 0) return;
 
-            if (index == MoveCommandSlot) selection.BeginMoveTargeting();
-            else if (index == AttackCommandSlot) selection.BeginAttackTargeting();
-            else if (index == StopCommandSlot) UnitCommands.Stop(selection.Selected);
+            if (index == AttackCommandSlot) selection.BeginAttackTargeting();
             else if (index == HoldCommandSlot) UnitCommands.Hold(selection.Selected);
-            else if (index == GatherCommandSlot) UnitCommands.Gather(selection.Selected);
-            else UnitCommands.SendToPen(selection.Selected);
+            else UnitCommands.Gather(selection.Selected);
             return;
         }
 
@@ -3244,28 +3264,16 @@ public class GameHud : MonoBehaviour
             return;
         }
 
-        if (index == TraitSlot && traitSlotShown && currentShop as Object == null)
+        // 4~11 유닛별 칸 — 이 칸에 지금 무엇이 놓였는지는 flexKind가 정한다(ReflowFlexSlots). 번호를 박지 않는다.
+        if (currentShop as Object == null && index >= FlexSlotFirst && index <= FlexSlotLast)
         {
-            OnTraitButtonClicked();
-            return;
-        }
-
-        if (index == ActiveSlot && activeSlotShown && currentShop as Object == null)
-        {
-            OnActiveClicked();
-            return;
-        }
-
-        if (index == YoonseoSlot && yoonseoSlotShown && currentShop as Object == null)
-        {
-            OnYoonseoClicked();
-            return;
-        }
-
-        if (talentSlotsShown && index >= TalentFirstSlot && index < TalentFirstSlot + UnitAttacker.TalentKindCount && currentShop as Object == null)
-        {
-            OnTalentClicked(index - TalentFirstSlot);
-            return;
+            switch (flexKind[index])
+            {
+                case FlexKind.Trait: if (traitSlotShown) OnTraitButtonClicked(); return;
+                case FlexKind.Active: if (activeSlotShown) OnActiveClicked(); return;
+                case FlexKind.Yoonseo: if (yoonseoSlotShown) OnYoonseoClicked(); return;
+                case FlexKind.Talent: if (talentSlotsShown) OnTalentClicked(flexArg[index]); return;
+            }
         }
 
         // MP: 위 유닛 명령은 UnitCommands가, 아래 상점은 UseShop이, 조합은 아래 분기가 클라면 호스트에 요청을 보낸다.
@@ -3654,7 +3662,7 @@ public class GameHud : MonoBehaviour
         // 읽히지 않게 여기서도 -1로 씻어둔다. 안 씻으면 그 칸에 마우스를 올렸을 때
         // 상점의 0번 슬롯 툴팁이 엉뚱하게 뜬다.
         for (int i = 0; i < UnitOnlyCommandLabels.Length; i++) shopLogicalSlotIndex[i] = -1;
-        if (shop != null) sellSlotShown = false;   // 판매 칸(6)은 상점에선 상점 칸이다 — RefreshSellButton이 덮어쓰지 않게
+        if (shop != null) sellSlotShown = false;   // 판매 칸(3)은 상점에선 상점 칸이다 — RefreshSellButton이 덮어쓰지 않게
         unitCommandSlotNames[SellCommandSlot].color = Color.white;   // 판매 칸이 흐린 글씨로 남아 있었으면 상점 글씨로 되돌린다
 
         SetUnitOnlyCommandsVisible(shop == null);
@@ -3751,19 +3759,12 @@ public class GameHud : MonoBehaviour
         }
     }
 
+    // 고른 유닛이 첫 재료인 조합식 목록만 만든다 — 칸 번호는 ReflowFlexSlots가 정한다(조합 결과는 유닛별 칸의 맨 뒤).
     void RebuildUnitCommandSlots(UnitData selectedData)
     {
-        for (int i = 0; i < unitCommandSlotCount; i++)
-        {
-            int slot = UnitRecipeSlotOrder[i];
-            unitCommandRecipes[slot] = null;
-            unitCommandSlotNames[slot].text = "";
-            // 빈 칸은 투명하게 둔다. GridLayoutGroup은 비활성 자식을 건너뛰기 때문에
-            // SetActive(false)로 숨기면 뒤 칸이 앞으로 당겨져 슬롯 번호와 실제 자리가 어긋난다.
-            unitCommandSlotBackgrounds[slot].color = Color.clear;
-        }
-
+        flexRecipes.Clear();
         unitCommandSlotCount = 0;
+        flexDirty = true;
 
         if (selectedData == null) return;
 
@@ -3771,24 +3772,10 @@ public class GameHud : MonoBehaviour
         if (system == null) return;
 
         // 반환 버퍼는 재사용된다 — 즉시 소비만 하고 보관하지 않는다.
-        List<CombineRecipe> startingWith = system.GetRecipesStartingWith(selectedData);
-        // 3줄 4칸. 조합식 207개 중 한 유닛 결과 최대 4(09-29 실측) — 넘치면 알린다(칸을 조용히 버리지 않는다).
-        int shown = Mathf.Min(startingWith.Count, UnitRecipeSlotOrder.Length);
-        if (startingWith.Count > UnitRecipeSlotOrder.Length)
-            Debug.LogWarning($"[HUD] {selectedData.name}: 조합 결과 {startingWith.Count}개 > 명령 카드 {UnitRecipeSlotOrder.Length}칸 — 뒤 {startingWith.Count - UnitRecipeSlotOrder.Length}개가 안 보입니다.");
+        foreach (CombineRecipe recipe in system.GetRecipesStartingWith(selectedData))
+            if (recipe != null && recipe.result != null) flexRecipes.Add(recipe);
 
-        for (int i = 0; i < shown; i++)
-        {
-            CombineRecipe recipe = startingWith[i];
-            if (recipe == null || recipe.result == null) continue;
-
-            int slot = UnitRecipeSlotOrder[i];
-            unitCommandRecipes[slot] = recipe;
-            unitCommandSlotNames[slot].text = recipe.result.DisplayNameTwoLines;
-        }
-
-        unitCommandSlotCount = shown;
-        RefreshUnitCommandAffordability();
+        unitCommandSlotCount = flexRecipes.Count;
     }
 
     // 재료가 부족하면 등급 색은 유지한 채 알파만 낮춘다 — 회색으로 칠하면 무슨 등급이 될지 안 보인다.
@@ -3796,9 +3783,9 @@ public class GameHud : MonoBehaviour
     {
         CombineSystem system = CombineSystemRef;
 
-        for (int i = 0; i < unitCommandSlotCount; i++)
+        for (int slot = FlexSlotFirst; slot <= FlexSlotLast; slot++)
         {
-            int slot = UnitRecipeSlotOrder[i];
+            if (flexKind[slot] != FlexKind.Recipe) continue;
             CombineRecipe recipe = unitCommandRecipes[slot];
             if (recipe == null || recipe.result == null) continue;
 

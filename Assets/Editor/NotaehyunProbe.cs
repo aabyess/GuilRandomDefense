@@ -11,7 +11,7 @@ using UnityEngine.UI;
 /// 초월 노태현 「여동생살해자」 실측(10-06 구현담당3) — gameshot call:로 부른다. 에디터 전용.
 ///   call:NotaehyunProbe.Setup      초월 노태현 + 흔함 박민수(아군)를 우리에 세우고 노태현을 선택
 ///   call:NotaehyunProbe.Report     스킬 목록 · 폭발증폭 배율 · 방어 무시(강화 전) · 아군 이속(디버프 중)
-///   call:NotaehyunProbe.Click      「최윤서 강화」 칸(UnitCommandSlot6)을 진짜 클릭 경로로 누르고 알림을 적는다
+///   call:NotaehyunProbe.Click      「최윤서 강화」 칸(글자로 찾음)을 진짜 클릭 경로로 누르고 알림을 적는다
 ///   call:NotaehyunProbe.SpawnYoonseo  히든 최윤서 한 기를 세운다
 ///   call:NotaehyunProbe.Reselect   노태현 다시 선택(칸 갱신)
 /// </summary>
@@ -90,9 +90,9 @@ public static class NotaehyunProbe
         StringBuilder sb = new StringBuilder();
         try
         {
-            Button b = Object.FindObjectsByType<Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).FirstOrDefault(x => x.name == "UnitCommandSlot6");
+            Button b = Object.FindObjectsByType<Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).FirstOrDefault(x => x.name.StartsWith("UnitCommandSlot") && string.Concat(x.GetComponentsInChildren<TMPro.TMP_Text>().Select(t => t.text)).Contains("최윤서"));   // 10-06 명령 카드 재배치 — 글자로 찾는다
             string label = b == null ? "" : string.Concat(b.GetComponentsInChildren<Text>().Select(t => t.text)) + string.Concat(b.GetComponentsInChildren<TMPro.TMP_Text>().Select(t => t.text));
-            if (b == null) return "   ❌ UnitCommandSlot6 없음";
+            if (b == null) return "   ❌ 「최윤서 강화」 칸 없음";
             Vector2 screen = RectTransformUtility.WorldToScreenPoint(null, ((RectTransform)b.transform).TransformPoint(((RectTransform)b.transform).rect.center));
             ExecuteEvents.Execute(b.gameObject, new PointerEventData(EventSystem.current) { position = screen, button = PointerEventData.InputButton.Left }, ExecuteEvents.pointerClickHandler);
             sb.AppendLine($"   칸 「{label.Replace("\n", " ")}」 interactable {b.interactable} → 알림: {(notes.Count == 0 ? "(없음)" : string.Join(" / ", notes))}");

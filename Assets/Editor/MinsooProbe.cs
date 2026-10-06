@@ -10,7 +10,7 @@ using UnityEngine.UI;
 ///   call:MinsooProbe.Setup    초월 박민수를 우리에 세우고 선택
 ///   call:MinsooProbe.Level    영웅 XP를 더해 레벨을 올린다(기본 +500 → 레벨 ~10)
 ///   call:MinsooProbe.Report   레벨 · 포인트 · 투자 4칸 · 공격력/공속 배율 · 시간 비례 계수
-///   call:MinsooProbe.Click0~3 투자 칸(UnitCommandSlot8~11)을 진짜 클릭 경로로 누르고 알림을 적는다
+///   call:MinsooProbe.Click0~3 투자 칸(글자로 찾음 — 재배치 뒤 번호는 유닛마다 다름)을 진짜 클릭 경로로 누르고 알림을 적는다
 /// </summary>
 public static class MinsooProbe
 {
@@ -50,12 +50,12 @@ public static class MinsooProbe
         PlayerNotification.Shown += hook;
         try
         {
-            Button b = Object.FindObjectsByType<Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).FirstOrDefault(x => x.name == "UnitCommandSlot" + (8 + kind));
+            Button b = Object.FindObjectsByType<Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).FirstOrDefault(x => x.name.StartsWith("UnitCommandSlot") && string.Concat(x.GetComponentsInChildren<TMPro.TMP_Text>().Select(t => t.text)).StartsWith(UnitAttacker.TalentNames[kind]));   // 10-06 명령 카드 재배치 — 칸 번호가 유닛마다 달라서 글자로 찾는다
             if (b == null) return "   ❌ 칸 없음";
             string label = string.Concat(b.GetComponentsInChildren<TMPro.TMP_Text>().Select(t => t.text)).Replace("\n", " ");
             Vector2 screen = RectTransformUtility.WorldToScreenPoint(null, ((RectTransform)b.transform).TransformPoint(((RectTransform)b.transform).rect.center));
             ExecuteEvents.Execute(b.gameObject, new PointerEventData(EventSystem.current) { position = screen, button = PointerEventData.InputButton.Left }, ExecuteEvents.pointerClickHandler);
-            return $"   칸{8 + kind} 「{label}」 → 알림: {(notes.Count == 0 ? "(없음)" : string.Join(" / ", notes))}\n";
+            return $"   칸{b.name.Substring("UnitCommandSlot".Length)} 「{label}」 → 알림: {(notes.Count == 0 ? "(없음)" : string.Join(" / ", notes))}\n";
         }
         finally { PlayerNotification.Shown -= hook; }
     }
