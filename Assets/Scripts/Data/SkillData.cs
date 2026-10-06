@@ -31,6 +31,11 @@ public enum SkillTriggerType
     // 표식은 적 쪽에 있어 같은 표식을 쓰는 다른 유닛과 나눠 쓴다(원작도 에넬과 핸콕이 TurnSpeed 하나를 같이 쓴다).
     // 맞은 적이 주 대상(SingleTarget)이고 범위 효과는 그 적 중심 SkillLevel.range. 평타와 무관하다.
     OnEnemyEnterRange,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 최상호 바지사장) — 「액티브(누르는) 스킬」: 플레이어가 명령 카드 단추를 눌러야 시전한다
+    // (UnitAttacker.TryCastActive · GameHud 명령 카드 3번 칸). 자동 판정(평타·쿨 자동·오라)은 이 타입을 건너뛴다.
+    // 쿨다운은 SkillLevel.cooldown — 특성강화(skillLevelUnlockIndex)로 levels[1].cooldown을 줄이는 게 「쿨 감소」다. 마나 소모 없음.
+    ActiveButton,
 }
 
 // OnHitCount 전용 — 이 카운터가 원작의 어느 공유 스탯(마나/체력)을 대신하는가. 새 enum이라
@@ -292,6 +297,11 @@ public enum SkillEffectKind
     DamagePerAllyDebuff,
     // 만성피로: 발동하면 자기 자신이 duration초 스턴(공격·스킬 정지)에 걸렸다가, 끝나면 체력 게이지(Life)가 즉시 가득 찬다. target은 Self.
     SelfStunRefillLifeGauge,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 박민석 「공복상태」 유닛삭제 — 사장님 스킬) — 직렬화 순서를 지킨다.
+    // 범위(SkillLevel.range) 안에서 가장 가까운 **일반 적 한 기**를 즉사시킨다. 일반 적 = 보스 아님(EnemyDummy.IsBoss) · 스토리/신세계 아님(PointValue < 200) ·
+    // 신세계 광폭화 버프(B06B) 없음 — 원작 LaillySkill3·Kick_1의 「PV<200 + B06B 없을 때만 KillUnit」과 같은 판정. 보상은 일반 처치와 같다(막타 피해로 처리).
+    KillNormalEnemies,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -547,6 +557,12 @@ public class SkillEffect
     public float stackPerHit = 0.01f;
     public float stackCap = 1f;
     public float stackResetSeconds = 3f;
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 최상호 바지사장) — 「공속 비례」: 0이면 끈다(기본). 켜면 이 효과의 **값**이 시전자 현재 공속 배율(AS)에 비례해 커진다:
+    // 값 × (1 + attackSpeedScale × (AS − 1)), AS는 attackSpeedScaleCap(0이면 무제한)까지만 센다. Damage는 multiplier·bonus가 적용된 최종 값에,
+    // Stun은 지속(duration·heroDuration)에 곱한다. 원작 근거 없음 — 제안값(Docs/design/BAJISAJANG_DESIGN_2026-10-06.md).
+    public float attackSpeedScale;
+    public float attackSpeedScaleCap;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에
@@ -692,6 +708,10 @@ public class SkillLevel
 
     // OnEnemyEnterRange 전용 — 감지 반경(원작 단위, TriggerRegisterUnitInRange의 거리). range는 효과 범위로 따로 쓴다.
     public float enterRange;
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06, 초월 박민석 유닛삭제) — 켜져 있으면 OnHitCount 스킬이 「범위 안에 일반 적(보스·스토리 아님)이 있을 때만」 발동한다.
+    // 없으면 게이지를 쓰지도·되돌리지도 않고 그대로 둔다(다음 평타에 다시 본다).
+    public bool requireNormalEnemyInRange;
 }
 
 public enum SkillAoeCenter
@@ -711,4 +731,7 @@ public class SkillData : ScriptableObject
     // [0] = 레벨1, [1] = 레벨2 ... 지금은 어디서도 레벨을 올리는 코드가 없어 전부 레벨1(index 0)만
     // 쓴다 — 특성 배선(06번)이 UnitUpgrades에서 실제 레벨을 읽어오면 그 자리를 바꾼다.
     public List<SkillLevel> levels = new List<SkillLevel>();
+
+    // ⚠️ 맨 뒤에 추가(2026-10-06) — 스킬·디버프 툴팁 아이콘 자리. 지금은 비어 있어도 된다(공용 디버프 「외동」은 이름·설명만, 아이콘은 나중에).
+    public Sprite icon;
 }

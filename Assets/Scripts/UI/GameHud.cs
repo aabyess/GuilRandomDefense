@@ -182,6 +182,9 @@ public class GameHud : MonoBehaviour
     // 09-29 사장님: 떠 있던 판매 버튼(상단 메뉴 왼쪽 아래)을 없애고 명령 카드 한 칸으로만 둔다(SellCommandSlot).
     UnitData lastSellButtonUnit;
     bool sellSlotShown;
+    bool activeSlotShown;    // 액티브(누르는) 스킬 칸(ActiveSlot) — 초월 최상호 「바지사장」 등 ActiveButton 스킬을 가진 유닛 한 기를 골랐을 때만
+    SkillData activeShownSkill;
+    float activeLocalReadyAt;   // 멀티 클라: 호스트의 쿨을 모르니 누른 시각 + 쿨로 어림한 값(진짜 판정은 호스트)
     bool yoonseoSlotShown;   // 초월 노태현 「최윤서 강화」 칸(YoonseoSlot) — 노태현 한 기를 골랐을 때만
     bool sellSlotEnabled;
     string sellSlotTooltip;
@@ -427,6 +430,7 @@ public class GameHud : MonoBehaviour
         RefreshGambleButtons();
         RefreshSellButton();
         RefreshYoonseoButton();
+        RefreshActiveButton();
         RefreshNavigationButton();
         RefreshRerollButton();
     }
@@ -1312,6 +1316,112 @@ public class GameHud : MonoBehaviour
         unitCommandSlotButtons[YoonseoSlot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
     }
 
+    // 액티브(누르는) 스킬 칸(2026-10-06, 초월 최상호 「바지사장」) — 명령 카드 둘째 줄 둘째 칸(5번, 워크3 격자 키 S). 4번(모으기)·6번(최윤서 강화)·7번(판매) 사이 빈칸이고,
+    // 조합 결과 칸(8~11)과 안 겹친다. 한 기를 골랐고 그 유닛 스킬 목록에 SkillTriggerType.ActiveButton이 있을 때만 보인다.
+    // 마나 소모 없음. 쿨 중엔 상점 칸과 같은 시계방향 덮개. 못 쓸 때도 눌러서 이유를 본다.
+    const int ActiveSlot = 5;
+    const char ActiveHotkey = 'S';
+
+    SkillData ActiveSkillOf(out Selectable single)
+    {
+        single = null;
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return null;
+        single = selection.Selected[0];
+        if (!single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.Data.skills == null) return null;
+        foreach (SkillData skill in identity.Data.skills)
+            if (skill != null && skill.triggerType == SkillTriggerType.ActiveButton) return skill;
+        return null;
+    }
+
+    void ClearActiveSlot()
+    {
+        if (!activeSlotShown) return;
+        activeSlotShown = false;
+        activeShownSkill = null;
+        unitCommandSlotNames[ActiveSlot].text = "";
+        unitCommandSlotNames[ActiveSlot].color = Color.white;
+        unitCommandSlotHotkeys[ActiveSlot].text = "";
+        unitCommandSlotBackgrounds[ActiveSlot].color = Color.clear;
+        unitCommandSlotButtons[ActiveSlot].interactable = false;
+        if (unitCommandSlotCooldown[ActiveSlot] != null && unitCommandSlotCooldown[ActiveSlot].gameObject.activeSelf)
+            unitCommandSlotCooldown[ActiveSlot].gameObject.SetActive(false);
+    }
+
+    void RefreshActiveButton()
+    {
+        if (unitCommandSlotRoots[ActiveSlot] == null) return;
+        if (currentShop as Object != null) { activeSlotShown = false; return; }   // 상점을 고른 동안 이 칸은 상점 칸이다
+        SkillData skill = ActiveSkillOf(out Selectable single);
+        if (skill == null) { ClearActiveSlot(); return; }
+
+        // 쿨: 호스트(싱글)는 진짜 유닛의 값, 멀티 클라는 누른 시각 + 쿨로 어림한다.
+        float remaining, total;
+        if (single.TryGetComponent(out UnitAttacker attacker))
+        {
+            remaining = attacker.ActiveCooldownRemaining(skill);
+            total = attacker.ActiveCooldownTotal(skill);
+        }
+        else
+        {
+            remaining = Mathf.Max(0f, activeLocalReadyAt - Time.time);
+            total = skill.levels != null && skill.levels.Count > 0 ? skill.levels[0].cooldown : 0f;
+        }
+
+        activeSlotShown = true;
+        activeShownSkill = skill;
+        string name = skill.skillName ?? "";
+        int paren = name.IndexOf('(');
+        unitCommandSlotNames[ActiveSlot].text = paren > 0 ? name.Substring(0, paren) + "\n" + name.Substring(paren) : name;
+        unitCommandSlotHotkeys[ActiveSlot].text = ActiveHotkey.ToString();
+        Color color = UnitCommandDefaultColor;
+        color.a = remaining > 0f ? 0.6f : 1f;
+        unitCommandSlotBackgrounds[ActiveSlot].color = color;
+        unitCommandSlotNames[ActiveSlot].color = Color.white;
+        unitCommandSlotButtons[ActiveSlot].interactable = true;
+
+        Image overlay = unitCommandSlotCooldown[ActiveSlot];
+        if (overlay != null)
+        {
+            if (remaining > 0f && total > 0f)
+            {
+                if (!overlay.gameObject.activeSelf) overlay.gameObject.SetActive(true);
+                overlay.fillAmount = Mathf.Clamp01(remaining / total);
+            }
+            else if (overlay.gameObject.activeSelf) overlay.gameObject.SetActive(false);
+        }
+
+        // 단축키 S — 채팅 중엔 안 받는다(상점 단축키와 같은 이유).
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard != null && !ChatInputGate.IsOpen && keyboard.sKey.wasPressedThisFrame) OnActiveClicked();
+    }
+
+    void OnActiveClicked()
+    {
+        SkillData skill = ActiveSkillOf(out Selectable single);
+        if (skill == null || single == null) return;
+        if (!GameAuthority.IsServer)
+        {
+            if (Time.time < activeLocalReadyAt) { PlayerNotification.Show(LocalPlayer.LocalPlayerId, $"쿨타임 중입니다. ({Mathf.CeilToInt(activeLocalReadyAt - Time.time)}초)"); return; }
+            float cooldown = skill.levels != null && skill.levels.Count > 0 ? skill.levels[0].cooldown : 0f;
+            activeLocalReadyAt = Time.time + cooldown;
+            NetCommands.RequestHudUnitAction(NetHudAction.CastActive, single, 0);
+            return;
+        }
+        ExecuteCastActiveOn(single);
+    }
+
+    // MP: 버튼과 멀티 호스트가 받은 클라 요청(NetCommands)이 같이 쓰는 본체 — 호스트의 진짜 유닛에서 시전한다.
+    public void ExecuteCastActiveOn(Selectable single)
+    {
+        if (single == null || !single.TryGetComponent(out UnitAttacker attacker)) return;
+        SkillData skill = attacker.ActiveSkill;
+        if (skill == null) return;
+        int playerId = single.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
+        if (!attacker.TryCastActive(skill, out string reason))
+            PlayerNotification.Show(playerId, reason ?? "지금은 사용할 수 없습니다.", 4f);
+    }
+
     void OnYoonseoClicked()
     {
         SelectionManager selection = Selection;
@@ -1339,7 +1449,7 @@ public class GameHud : MonoBehaviour
             }
         if (best == null) { PlayerNotification.Show(playerId, "최윤서가 없습니다.", 4f); return; }
 
-        string name = best.Data.name;
+        string name = best.Data.unitName;
         best.Consume();
         attacker.SetYoonseoEnhanced();
         PlayerNotification.Show(playerId, $"<color=#FFD700>최윤서 강화!</color> {name} 1기가 사라지고 방어 무시 피해가 켜졌으며 아군 이속 감소가 없어집니다.", 6f);
@@ -2539,6 +2649,11 @@ public class GameHud : MonoBehaviour
             if (!sellSlotShown || string.IsNullOrEmpty(sellSlotTooltip)) { HideCombineTooltip(); return; }
             ShowTooltip(sellSlotTooltip, cardRect);
         }
+        else if (index == ActiveSlot && activeSlotShown && activeShownSkill != null)
+        {
+            float cd = activeShownSkill.levels != null && activeShownSkill.levels.Count > 0 ? activeShownSkill.levels[0].cooldown : 0f;
+            ShowTooltip($"{activeShownSkill.skillName}  [{ActiveHotkey}]\n{activeShownSkill.description}\n쿨타임 {cd:0.#}초 · 마나 소모 없음", cardRect);
+        }
         else if (index == YoonseoSlot && yoonseoSlotShown)
         {
             ShowTooltip("최윤서 강화\n내 최윤서(히든·전설) 한 기가 사라지고, 방어 무시 피해가 켜지며 아군 이속 감소 디버프가 100% 없어진다. 한 번 켜면 영구.", cardRect);
@@ -2849,6 +2964,12 @@ public class GameHud : MonoBehaviour
         if (index == SellCommandSlot && currentShop as Object == null)
         {
             if (sellSlotEnabled) OnSellButtonClicked();
+            return;
+        }
+
+        if (index == ActiveSlot && activeSlotShown && currentShop as Object == null)
+        {
+            OnActiveClicked();
             return;
         }
 

@@ -117,6 +117,9 @@ public class UnitAttacker : MonoBehaviour
     // — ResearchSpeedMultiplier가 legacyGradeLevels에서 영원함 트랙을 절대 못 찾아(잠긴
     // 트랙이라 LevelUp이 안 불린다) 자동으로 1(무영향)이라 별도 예외 코드가 필요 없다.
     // 타입 업그레이드(+최대 13%, 3레벨 별도 축)는 이번에 넣지 않는다(PM 지시).
+    /// <summary>현재 공속 배율의 곱(연구소·버프·오라 포함, 기본 1) — 「공속 비례」 효과(SkillEffect.attackSpeedScale)와 UI가 읽는다.</summary>
+    public float CurrentAttackSpeedMultiplier => AttackSpeedMultiplier;
+
     float AttackSpeedMultiplier
     {
         get
@@ -585,6 +588,7 @@ public class UnitAttacker : MonoBehaviour
     {
         public float cooldownTimer;          // CooldownAutoCast·Aura 전용
         public float onHitChanceLockedUntil; // OnHitChance 절대쿨 전용
+        public float activeReadyAt;          // ActiveButton 전용 — 다시 쓸 수 있는 Time.time(0 = 바로)
 
         // ⚠️ 2026-09-06 추가(오라 무한누적 근본수정, PM 지시) — Aura 전용, 지금 이 오라가
         // 걸어둔 대상들(EnemyAuraCaster.affected와 같은 역할). null이면 "아직 한 번도
@@ -605,6 +609,67 @@ public class UnitAttacker : MonoBehaviour
             skillRuntimeStates[skill] = state;
         }
         return state;
+    }
+
+    // ---- 액티브(누르는) 스킬 — SkillTriggerType.ActiveButton(2026-10-06, 초월 최상호 바지사장) ----
+    // 이 유닛의 단추 스킬(첫 번째 ActiveButton). 없으면 null. 시전은 호스트의 진짜 유닛에서만(멀티 클라는 NetCommands.CastActive로 요청).
+    public SkillData ActiveSkill
+    {
+        get
+        {
+            UnitData unitData = identity != null ? identity.Data : null;
+            if (unitData == null) return null;
+            int count = EffectiveSkillCount(unitData);
+            for (int i = 0; i < count; i++)
+            {
+                SkillData skill = ResolveSkillAt(unitData, i);
+                if (skill != null && skill.triggerType == SkillTriggerType.ActiveButton) return skill;
+            }
+            return null;
+        }
+    }
+
+    /// <summary>남은 쿨다운(초). 0이면 쓸 수 있다.</summary>
+    public float ActiveCooldownRemaining(SkillData skill) =>
+        skill == null ? 0f : Mathf.Max(0f, GetRuntimeState(skill).activeReadyAt - Time.time);
+
+    /// <summary>지금 레벨(특성강화 반영)의 전체 쿨다운(초).</summary>
+    public float ActiveCooldownTotal(SkillData skill)
+    {
+        SkillLevel level = skill != null ? CurrentSkillLevel(skill) : null;
+        return level != null ? level.cooldown : 0f;
+    }
+
+    /// <summary>단추를 눌렀을 때. 쿨 중·효과 없음이면 이유를 돌려주고 false. 마나 소모 없음.</summary>
+    public bool TryCastActive(SkillData skill, out string failReason)
+    {
+        failReason = null;
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (skill == null || unitData == null || skill.triggerType != SkillTriggerType.ActiveButton) { failReason = "쓸 수 없는 스킬입니다."; return false; }
+        SkillLevel level = CurrentSkillLevel(skill);
+        if (level == null || level.effects == null || level.effects.Count == 0) { failReason = "아직 효과가 없는 스킬입니다."; return false; }
+        SkillRuntimeState state = GetRuntimeState(skill);
+        float remaining = state.activeReadyAt - Time.time;
+        if (remaining > 0f) { failReason = $"쿨타임 중입니다. ({Mathf.CeilToInt(remaining)}초)"; return false; }
+        if (!PassesBuffGate(level, null)) { failReason = "지금은 쓸 수 없습니다."; return false; }
+
+        state.activeReadyAt = Time.time + Mathf.Max(0.01f, level.cooldown);
+        SkillTelemetry.Cast(unitData, skill);
+        SkillSfx.Cast(unitData, skill, transform.position);
+        PulseSphereArt();
+        bool vfxBefore = SkillVfx.BeginCast(unitData, skill);
+        CastSkillLevel(level, level.WorldRange, null, 0f);
+        SkillVfx.EndCast(vfxBefore);
+        return true;
+    }
+
+    // 「공속 비례」(SkillEffect.attackSpeedScale) — 1 + 계수 × (공속 배율(상한 Cap) − 1), 0 아래로는 안 내려간다. 계수 0이면 1(꺼짐).
+    float AttackSpeedScaleFactor(SkillEffect effect)
+    {
+        if (effect == null || effect.attackSpeedScale <= 0f) return 1f;
+        float speed = AttackSpeedMultiplier;
+        if (effect.attackSpeedScaleCap > 0f) speed = Mathf.Min(speed, effect.attackSpeedScaleCap);
+        return Mathf.Max(0f, 1f + effect.attackSpeedScale * (speed - 1f));
     }
 
     // 유닛 공유 게이지(OnHitCount 전용, SkillGaugeKind 참고) — 스킬별이 아니라 게이지
@@ -1392,6 +1457,34 @@ public class UnitAttacker : MonoBehaviour
         RemoveAuraBonus(this, SkillEffectKind.AttackSpeedBuffPercent, AttackSpeedStackId);
     }
 
+    // 유닛삭제(SkillEffectKind.KillNormalEnemies) — 범위 안에서 가장 가까운 「일반 적」(보스·스토리·신세계 광폭화 제외) 한 기.
+    static bool IsNormalEnemy(EnemyDummy e) => e != null && !e.IsBoss && e.PointValue < 200f && !e.HasBuff("B06B");
+
+    EnemyDummy NearestNormalEnemy(float worldRange)
+    {
+        EnemyDummy best = null;
+        float bestSqr = worldRange > 0f ? worldRange * worldRange : float.MaxValue;
+        foreach (EnemyDummy enemy in EnemyDummy.Active)
+        {
+            if (!IsNormalEnemy(enemy)) continue;
+            float sqr = (enemy.transform.position - transform.position).sqrMagnitude;
+            if (sqr > bestSqr) continue;
+            bestSqr = sqr;
+            best = enemy;
+        }
+        return best;
+    }
+
+    bool HasNormalEnemyInRange(float worldRange) => NearestNormalEnemy(worldRange) != null;
+
+    void KillNearestNormalEnemy(float worldRange)
+    {
+        EnemyDummy target = NearestNormalEnemy(worldRange);
+        if (target == null) return;
+        // 막타 피해로 처리 — 일반 처치와 같은 경로(보상·처치 알림)를 탄다. 방어·상성은 무시하고 확실히 죽는 크기.
+        target.TakeDamage(1e12f, DamageType.AD, AttackType.Unassigned, owner != null ? owner.OwnerId : -1, armorIgnoreRatio: 1f, isAbilityDamage: false);
+    }
+
     // 보잡(SkillEffectKind.BossDamageMultiplier) — 이 유닛 스킬 중 패시브 배율의 곱. 보스(EnemyDummy.IsBoss) 상대 평타·스킬 최종 피해에 곱한다.
     // 유닛 종류가 바뀔 때만 다시 센다(Awake 캐시 금지 — identity.Data가 늦게 세워진다).
     UnitData bossMultiplierFor;
@@ -1764,6 +1857,7 @@ public class UnitAttacker : MonoBehaviour
                     if (!manaIncremented) { manaGaugeCounter = Mathf.Min(manaGaugeCounter + 1, ManaGaugeCap(unitData)); manaIncremented = true; }
                     if (manaGaugeCounter < level.hitCountThreshold) { SkillTelemetry.Gate(unitData, skill, "게이지미달(마나)"); continue; }
                     if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
+                    if (level.requireNormalEnemyInRange && !HasNormalEnemyInRange(level.WorldRange)) { SkillTelemetry.Gate(unitData, skill, "일반적없음"); continue; }
                     manaShouldReset = true;
                     manaResetValue = level.resetTo;
                 }
@@ -1773,6 +1867,7 @@ public class UnitAttacker : MonoBehaviour
                     if (!lifeIncremented) { lifeGaugeCounter = Mathf.Min(lifeGaugeCounter + LifeGaugeHitGain(unitData), LifeGaugeCap(unitData)); lifeIncremented = true; }
                     if (lifeGaugeCounter < level.hitCountThreshold) { SkillTelemetry.Gate(unitData, skill, "게이지미달(생명)"); continue; }
                     if (!PassesArmorBreakGate(level, attackedTarget)) { SkillTelemetry.Gate(unitData, skill, "방깎게이트"); continue; }
+                    if (level.requireNormalEnemyInRange && !HasNormalEnemyInRange(level.WorldRange)) { SkillTelemetry.Gate(unitData, skill, "일반적없음"); continue; }
                     lifeShouldReset = true;
                     lifeResetValue = level.resetTo;
                 }
@@ -1876,6 +1971,7 @@ public class UnitAttacker : MonoBehaviour
     {
         // 소환(최상호 구일) — 대상이 없다. 확률·쿨다운은 위(CastSkillLevel·평타 확률 발동)가 이미 판정했다.
         if (effect.kind == SkillEffectKind.SummonUnit) { SummonFor(effect); return; }
+        if (effect.kind == SkillEffectKind.KillNormalEnemies) { KillNearestNormalEnemy(range); return; }
         if (effect.kind == SkillEffectKind.AttackSpeedStack) { AddAttackSpeedStack(effect); return; }
         if (effect.kind == SkillEffectKind.SelfStunRefillLifeGauge) { BeginSelfStun(effect.duration); return; }
         // 아군에게 스킬 빌려주기·보스 배율은 오라/패시브로만 쓴다(여기서는 할 일 없음).
@@ -2113,7 +2209,7 @@ public class UnitAttacker : MonoBehaviour
     // **여기 최종 결과 하나에만 곱한다**(RandomDamageMultiplier 참고).
     float ResolveSkillEffectValue(SkillEffect effect, EnemyDummy target, float recentAttackDamage)
     {
-        return ResolveBaseSkillEffectValue(effect, target, recentAttackDamage) * RandomDamageMultiplier(effect);
+        return ResolveBaseSkillEffectValue(effect, target, recentAttackDamage) * RandomDamageMultiplier(effect) * AttackSpeedScaleFactor(effect);
     }
 
     // 원작 RRD의 GetRandomReal(min, max) 부분. 원작이 매 시전마다 새로 굴리므로 여기서도
@@ -2259,7 +2355,7 @@ public class UnitAttacker : MonoBehaviour
             // 시한 효과(스턴·이감·방깎·ArmorBonus/HealOverTime)는 전부 걸린 적이 센다(EnemyDummy.*For, 2026-09-30) —
             // 여기서 코루틴으로 세면 이 유닛이 조합·판매로 사라질 때 영영 안 풀린다.
             case SkillEffectKind.Stun:
-                if (effect.duration > 0f) target.FreezeFor(StunDurationOn(target, effect));
+                if (effect.duration > 0f) target.FreezeFor(StunDurationOn(target, effect) * AttackSpeedScaleFactor(effect));
                 break;
 
             // 이감(2026-09-29) — multiplier = 남는 속도 비율. AddSlow/RemoveSlow는 같은 값으로 짝을 맞춰야 빠진다.

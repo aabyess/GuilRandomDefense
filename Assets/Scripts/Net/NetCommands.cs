@@ -10,6 +10,7 @@ public enum NetHudAction : byte
     Trait = 2,
     Reroll = 3,
     Yoonseo = 4,   // 초월 노태현 「최윤서 강화」(10-06)
+    CastActive = 5,   // 액티브(누르는) 스킬 시전 — 초월 최상호 「바지사장」(10-06)
 }
 
 /// <summary>클라 → 호스트로 보내는 유닛 명령 종류(UnitCommands의 함수와 1:1). 직렬화되니 맨 뒤에만 추가.</summary>
@@ -262,6 +263,7 @@ public static class NetCommands
             case NetHudAction.Sell: hud.ExecuteSellOn(selectable); break;
             case NetHudAction.Trait: hud.ExecuteTraitOn(selectable); break;
             case NetHudAction.Yoonseo: hud.ExecuteYoonseoOn(selectable); break;
+            case NetHudAction.CastActive: hud.ExecuteCastActiveOn(selectable); break;
             case NetHudAction.Reroll:
                 if (real.TryGetComponent(out UniqueRerollAbility reroll))
                 {
