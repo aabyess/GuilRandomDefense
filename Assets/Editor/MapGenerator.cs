@@ -1748,7 +1748,7 @@ public static class MapGenerator
     // 🔴 2026-09-26 사장님 「랜덤 유닛들 가로로 넓게 서 있게 해」(사진: 격자가 전시 칸 왼쪽 절반에 몰려 있었다 — 6칸 × 24 = 144, 칸 폭 약 281).
     //    한 줄 7칸(랜덤 14종 = 딱 2줄)으로 하고, **가로 간격만** 전시 칸 폭을 7로 나눈 값으로 벌린다(DisplayRowSpacingX).
     //    세로 간격(DisplaySlotSpacing)은 그대로 둔다 — 세로로 벌리면 아래 자원 칸과 조합식 줄이 밀린다.
-    const int DisplayColumns = 7;
+    const int DisplayColumns = 5;   // 🔴 10-06 사장님 「랜덤유닛끼리 옆 간격을 넓히고 싶다」: 7 → 5칸(칸 폭 ÷ 5 = 옆 간격 ×1.4, 14종 3줄). 섬 폭은 그대로
 
     /// <summary>
     /// 전시 격자 칸 간격. **조합표 SlotSpacing(61.4)과 분리한다**(PM 지시 2026-09-23) —
@@ -1796,12 +1796,14 @@ public static class MapGenerator
     /// 🔴 2026-10-06 사장님 「랜덤유닛 여기 간격도 넓혀줘」(0.3.7 맥판 사진: 울타리 선 하나 사이 두 줄이 앞뒤로 바짝) — 전시 격자 **줄 사이(z)** 간격만 ×1.3.
     /// 키 48 인형을 24 간격 줄로 세워 앞뒤가 겹쳐 보였다. 가로(칸 폭÷7)·다른세계 조합식 줄·등급 사이 한 줄 비움은 이 배율만 탄다(깊이 여유는 보고문 「깊이 N/M」).
     /// </summary>
-    const float DisplayRowPitchZ = 5.0f;
+    const float DisplayRowPitchZ = 1.3f;
     /// <summary>
     /// 전시 줄 간격 배율(DisplayRowPitchZ)이 늘린 깊이만큼 뽑기섬을 아래로 늘리는 양(MapLayout.GachaExtraZ가 더한다).
-    /// 증가분 = (배율 − 1) × 칸 간격 × (랜덤유닛 줄 수 2 + 등급 사이 빈 줄 1). ⚠️ 3은 14종÷7칸 = 2줄에서 나온 리터럴 — 어긋나면 보고문 「깊이 N/M」이 고발한다.
+    /// 증가분 = ((랜덤유닛 줄 수 + 등급 사이 빈 줄 1) × 배율 − 3) × 칸 간격. 3 = 처음 섬 깊이를 잡을 때(7칸·2줄·배율 1)의 줄 수+빈 줄.
     /// </summary>
-    public const float GachaDisplayExtraZ = (DisplayRowPitchZ - 1f) * DisplaySlotSpacing * 3f;
+    public const float GachaDisplayExtraZ = (DisplayRandomRowsPlusGap * DisplayRowPitchZ - 3f) * DisplaySlotSpacing;
+    const int DisplayRandomUnitCount = 14;   // 랜덤유닛 종 수(리터럴 — 어긋나면 보고문 「깊이 N/M」이 고발)
+    const int DisplayRandomRowsPlusGap = (DisplayRandomUnitCount + DisplayColumns - 1) / DisplayColumns + 1;   // 줄 수 + 등급 사이 빈 줄 1
 
     const float SlotSpacing = 61.4f;    // 원작 조합 슬롯 간격 256 ÷ Scale
     const float SlotSize = 30.7f;       // 자리표시 큐브(전시 격자 기준) 3.0 × 10.233
