@@ -96,9 +96,24 @@ MANUAL.update({
     '초월_노태현_AP_반사회적인격': ('A04D', '디버프(아군 이속 감소)는 원작 근거 없음 — 이 유닛 원작 초월 노태현의 대표 능력 A04D 소울 솔리드', '낮음'),
 })
 
+# 에셋은 있는데 원작 대응 능력이 없는 사장님 신규 스킬·공용 디버프: 효과 이름에 맞는 웹 표준 BTN을 직접 고른다(2026-10-06, 확신도 낮음 = 모양만 맞춘 임시 그림)
+STD_MANUAL = {
+    '공용_디버프_01': ('btncripple', '공격력↓'), '공용_디버프_문': ('btnslow', '공속↓'), '공용_디버프_외동': ('btnscrollofhaste', '적 이속↑'), '공용_디버프_조씨': ('btnhardenedskin', '적 방어↑'),
+    '강재규_AP_3대악질': ('btncleavingattack', '평타 확률 추가피해'), '강재규_AP_간잽이': ('btnstormbolt', '스턴'), '강재규_AP_강약약강_끝딜': ('btnvorpalblades', '끝딜'),
+    '강재규_AP_강약약강_디버프비례': ('btnunholystrength', '디버프 비례'), '강재규_AP_만성피로': ('btnsleep', '피로'),
+    '박민석_ADAP_공복상태': ('btnlifedrain', '체력스킬'), '박민석_ADAP_불가항력': ('btngenericspellimmunity', '보잡'), '박민석_ADAP_외동LvDevil': ('btndoom', '대상 한 기'), '박민석_ADAP_흑인': ('btnshadowpact', '이감 발동'),
+    '박민수_AD_무시무시한성장속도': ('btnstatup', '시간비례 피해 증가'), '박민수_AD_인싸Lv4': ('btnfirebolt', '현재체력 단일 피해'), '박민수_AD_체육특기생_억제기': ('btnwarstomp', '범위 스턴'),
+    '양재모_AD_간호학과대표': ('btnregenerationaura', '체력회복 오라'), '양재모_AD_다한증': ('btnslow', '이속감소'), '양재모_AD_상호파의최강자': ('btnstormhammer', '평타 확률 피해'),
+    '임장혁_AD_가스라이팅': ('btncharm', '아군 스킬 피해 오라'), '임장혁_AD_고충해소': ('btndisenchant', '디버프 해제'), '임장혁_AD_신나는연주': ('btnreplenishmana', '마나 오라'),
+    '임장혁_AD_악보완성': ('btndrum', '아군 공속'), '임장혁_AD_이간질': ('btncurse', '아군 공격력 디버프'),
+    '최상호_AP_분노조절장애': ('btnberserkfortrolls', '공속 증가'), '최상호_AP_절대공격': ('btnmanadrain', '마나스킬 깡딜'), '최상호_AP_절대방어': ('btndefend', '체력스킬 스턴'),
+}
+
 rows = []
 def add(path, kind, code, how, conf, alt=''):
     ic = icon_of(code) if code else None
+    if ic and not ic['png'] and code == 'A0GQ' and os.path.exists(os.path.expanduser('~/GRD_skill_icons/std_btnshade.png')):   # PASBTNShadeTrueSight는 못 구함 → 같은 그림 결의 BTNShade(유령)로 임시 대체
+        ic = dict(ic, png='std_btnshade.png', src='웹 모음(대체: BTNShade)')
     rows.append([path, kind, code or '', AB.get(code, {}).get('name', '') if code else '', how, (ic or {}).get('path', ''), (ic or {}).get('cat', '아이콘없음'), (ic or {}).get('png', ''), (ic or {}).get('src', ''), alt, conf])
 
 for f in sorted(glob.glob('Assets/Data/UnitSkills/*.asset')):
@@ -107,6 +122,12 @@ for f in sorted(glob.glob('Assets/Data/UnitSkills/*.asset')):
     name = str(d.get('skillName', '')); desc = str(d.get('description', ''))
     kind = base.split('_')[1] if base.startswith('SkillData_') else ''
     rel = f
+    std = next((v for k, v in STD_MANUAL.items() if base.endswith(k) or k in base), None)
+    if std and not any(k in base for k in MANUAL):
+        png = 'std_%s.png' % std[0]
+        if os.path.exists(os.path.expanduser('~/GRD_skill_icons/' + png)):
+            rows.append([rel, kind, '', '', '사장님 신규 스킬·공용 디버프: 원작 대응 없음 → 효과(%s)에 맞춘 웹 표준 BTN 수동 지정' % std[1], 'BTN\\' + std[0], '맵밖', png, '웹 모음(수동 선택)', '', '낮음'])
+            continue
     man = next((v for k, v in MANUAL.items() if k in base), None)
     if man:
         code, why, conf = man
@@ -150,17 +171,7 @@ for f in sorted(glob.glob('Assets/Data/UnitSkills/*.asset')):
         add(rel, kind, None, '코드·트리거·uid를 못 찾음', '없음')
 
 # 아직 에셋이 없는 계획(바지사장·강재규 설계표) — 에셋 생기면 연결할 제안
-PLAN = [
-    ('(예정) 바지사장·적응불가의덕력', 'A0CS', '바지사장 설계: 구주호 A0CS 15%·3.0초 스턴 → 중앙값', '높음'),
-    ('(예정) 바지사장·절대공격', 'unit:%s' % 'h04T', '바지사장 설계: 노태현 브룩/구주호 초록소 마나스킬 — 브룩(초월) 대표 능력', '낮음'),
-    ('(예정) 바지사장·절대방어', 'unit:%s' % 'h051', '바지사장 설계: 키드/아카이누 LIFE50 체력스킬 — 아카이누(초월) 대표 능력', '낮음'),
-    ('(예정) 바지사장·분노조절장애(Style : 최상호)', 'unit:%s' % TRIG2UID['Yamato_Attack'], '바지사장 설계: 구주호 야마토 +400% 공속 선례 — 야마토/구주호 대표 능력', '낮음'),
-    ('(예정) 강재규·3대악질', 'unit:%s' % dople, '강재규 설계: 도플 일반 1/10·200000', '보통'),
-    ('(예정) 강재규·간잽이', 'unit:%s' % robin, '강재규 설계: 원작 Robine(니코 로빈 초월) LIFE40 스턴', '보통'),
-    ('(예정) 강재규·파괴사상(단일도킹)', 'A0K3', '강재규 설계: 원작 A0K3 사람으로서 부끄러움(도킹5)', '높음'),
-    ('(예정) 강재규·강약약강/만성피로', None, '원작 근거 없음 — 아이콘 제안 없음', '없음'),
-    ('(예정) 강재규·공증 오라 참고', 'A0V8', '강재규 원작 오라: A0V8 공증(아군 공격력 +25% · 850)', '높음'),
-    ('(예정) 양재모·로키포트', 'unit:H096', '원작 초월 양재모 AD 「로키포트 사건의 주모자」 H096 — 설계표를 못 찾아 참고표(1/8·0.6·3.0초)만 근거', '보통'),
+PLAN = [  # 바지사장·강재규·양재모 에셋이 생겨 STD_MANUAL로 옮김
 ]
 for nm, code, why, conf in PLAN:
     if code and code.startswith('unit:'):
