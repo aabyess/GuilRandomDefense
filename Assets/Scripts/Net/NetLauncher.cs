@@ -25,6 +25,9 @@ using UnityEngine.SceneManagement;
 ///   -mpReady                 참가하면 바로 [준비]
 ///   -mpDifficulty 이름        호스트가 대기실에서 고를 난이도(Easy·Normal·Hard·Hell·God·Nightmare)
 ///   -mpAutoStart N           호스트가 N명이 모이고 전원 준비면 스스로 시작
+///   -mpTestSlot N 초         (대기실 자리 이동 확인, 사장님 10-06) 내 NetPlayer가 생긴 뒤 그 초에 「N번 자리(1~4, 줄 번호)로 옮겨 달라」 요청 — 여러 번 가능. 로그 접두 「[자리]」
+///   -mpTestStartAt 초        (호스트) 내 NetPlayer가 생긴 뒤 그 초에 [시작](전원 준비 여부 무시) — 자리 이동 시험용
+///                            예(두 창): 호스트 `-mpHost -mpSaveDir a -mpTestSlot 3 4 -mpTestStartAt 14` · 친구 `-mpJoin <코드> -mpSaveDir b -mpTestSlot 2 4`
 ///   -mpLobbyShot 초 경로      대기실에 들어간 뒤 그 초에 화면 캡처
 ///   -mpShot 초 경로           게임 씬 진입 뒤 그 초에 화면 캡처
 ///   -mpQuit 초               게임 씬 진입 뒤 그 초에 종료
@@ -126,6 +129,10 @@ public class NetLauncher : MonoBehaviour
     bool cliReady;
     int cliDifficulty = NetGameState.NoDifficulty;
     int autoStartCount;
+    // 자리 이동 시험(-mpTestSlot/-mpTestStartAt)
+    readonly System.Collections.Generic.List<(float delay, int slot)> testSlotRequests = new System.Collections.Generic.List<(float, int)>();
+    float testStartAtDelay = -1f;
+    float seatTestBase = -1f;
     float lobbyShotDelay = -1f;
     string lobbyShotPath;
     float shotDelay = -1f;
@@ -254,6 +261,8 @@ public class NetLauncher : MonoBehaviour
                     if (Enum.TryParse(Arg(i + 1), true, out DifficultyMode mode)) cliDifficulty = (int)mode;
                     break;
                 case "-mpAutoStart": int.TryParse(Arg(i + 1), out autoStartCount); break;
+                case "-mpTestSlot": { int.TryParse(Arg(i + 1), out int wanted); float d = Seconds(i + 2); if (wanted >= 1 && wanted <= NetSession.MaxSlots && d >= 0f) testSlotRequests.Add((d, wanted - 1)); break; }
+                case "-mpTestStartAt": testStartAtDelay = Seconds(i + 1); break;
                 case "-mpLobbyShot": lobbyShotDelay = Seconds(i + 1); lobbyShotPath = Arg(i + 2); break;
                 case "-mpShot": shotDelay = Seconds(i + 1); shotPath = Arg(i + 2); break;
                 case "-mpQuit": quitDelay = Seconds(i + 1); break;
@@ -599,12 +608,55 @@ public class NetLauncher : MonoBehaviour
             SetReady(true);
         }
 
+        TickSeatTests();
+
         if (autoStartCount > 0 && CanStartMatch && NetPlayer.All.Count >= autoStartCount)
         {
             // 좌석·닉네임 복제가 클라에 닿을 틈을 준다(좌석이 씬 로드 전에 채워져 있어야 PlayerContext.Awake가 본다).
             autoStartCount = 0;
             StartCoroutine(StartMatchAfter(1f));
         }
+    }
+
+    // 자리 이동 시험(-mpTestSlot/-mpTestStartAt) — 내 NetPlayer가 생긴 뒤 시간으로 잰다. 요청 1.5초 뒤에 결과(내 슬롯·좌석 집합)를 로그로.
+    void TickSeatTests()
+    {
+        if (testSlotRequests.Count == 0 && testStartAtDelay < 0f) return;
+        if (NetPlayer.Local == null) return;
+        if (NetGameState.Instance != null && NetGameState.Instance.Started) return;
+        if (seatTestBase < 0f) { seatTestBase = Time.unscaledTime; Debug.Log($"[자리] 시험 시작 — 내 슬롯 {NetPlayer.Local.Slot} · 호스트 {NetPlayer.Local.IsHost} · 좌석 {{{string.Join(",", MatchConfig.OccupiedSlots.OrderBy(x => x))}}}"); }
+        float elapsed = Time.unscaledTime - seatTestBase;
+        for (int i = testSlotRequests.Count - 1; i >= 0; i--)
+        {
+            if (elapsed < testSlotRequests[i].delay) continue;
+            (float delay, int slot) request = testSlotRequests[i];
+            testSlotRequests.RemoveAt(i);
+            StartCoroutine(SeatRequestRoutine(request.slot));
+        }
+        if (testStartAtDelay >= 0f && elapsed >= testStartAtDelay && IsHost)
+        {
+            testStartAtDelay = -1f;
+            Debug.Log($"[자리] 시작 요청 — 내 슬롯 {NetPlayer.Local.Slot} · 접속 {NetPlayer.All.Count}명 · 좌석 {{{string.Join(",", MatchConfig.OccupiedSlots.OrderBy(x => x))}}}");
+            StartMatch();
+        }
+    }
+
+    IEnumerator SeatRequestRoutine(int slot)
+    {
+        int before = NetPlayer.Local != null ? NetPlayer.Local.Slot : -1;
+        Debug.Log($"[자리] 요청 {slot + 1}번 (지금 {before + 1}번)");
+        RequestSlot(slot);
+        yield return new WaitForSecondsRealtime(1.5f);
+        if (NetPlayer.Local == null) yield break;
+        Debug.Log($"[자리] 요청 {slot + 1} → 결과 슬롯 {NetPlayer.Local.Slot + 1}(번호 {NetPlayer.Local.Slot}) · {(NetPlayer.Local.Slot == slot ? "성공" : "실패/대기")} · LocalPlayerId {LocalPlayer.LocalPlayerId} · 좌석 {{{string.Join(",", MatchConfig.OccupiedSlots.OrderBy(x => x))}}} · 전체 {string.Join(" ", NetPlayer.All.OrderBy(x => x.Slot).Select(x => $"{x.Slot}:{x.DisplayName}{(x.IsHost ? "(방장)" : "")}"))}");
+    }
+
+    // 게임 씬 진입 직후 한 번: 자리 시험 중이면 내 번호와 앉은 번호를 로그로(Player.log에서 「[자리] 게임 씬」 grep).
+    void LogSeatAtGameScene()
+    {
+        if (seatTestBase < 0f) return;
+        string seated = string.Join(",", PlayerContext.Occupied.Select(c => c.PlayerId).OrderBy(x => x));
+        Debug.Log($"[자리] 게임 씬 진입: LocalPlayerId {LocalPlayer.LocalPlayerId} · PlayerContext 앉은 번호 {{{seated}}} · 좌석 {{{string.Join(",", MatchConfig.OccupiedSlots.OrderBy(x => x))}}} · 서버 {GameAuthority.IsServer}");
     }
 
     // ───────────── 대기실 조작 ─────────────
@@ -734,6 +786,7 @@ public class NetLauncher : MonoBehaviour
         if (testCommandsDelay >= 0f) StartCoroutine(TestCommandsAfter(testCommandsDelay));
         if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
         if (testFinishRunDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestFinishRunAfter(testFinishRunDelay));
+        LogSeatAtGameScene();
         if (camWispDelay >= 0f) StartCoroutine(CamWispAfter(camWispDelay));
         if (GameAuthority.IsServer && (testNoticesDelay >= 0f || testGapDelay >= 0f))
             PlayerNotification.Shown += (slot, msg, dur) => { if (noticesLogged++ < 80) Debug.Log($"[알림로그] → 슬롯 {slot}({dur:0}초): {msg}"); };

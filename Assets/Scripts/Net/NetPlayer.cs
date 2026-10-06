@@ -110,7 +110,7 @@ public class NetPlayer : NetworkBehaviour
         if (Runner != null && Runner.IsServer) MatchConfig.MoveSubmittedSave(old, newSlot);
         supportShopCache = null;
         if (HasInputAuthority) LocalPlayer.LocalPlayerId = newSlot;
-        Debug.Log($"[MP] 자리 이동: 슬롯 {old} → {newSlot} (내 것 {HasInputAuthority}, 호스트 {IsHost}) · 좌석 {{{string.Join(",", MatchConfig.OccupiedSlots)}}}");
+        Debug.Log($"[자리] 슬롯 {old} → {newSlot} (내 것 {HasInputAuthority}, 호스트 {IsHost}) · 좌석 {{{string.Join(",", MatchConfig.OccupiedSlots)}}}");
     }
 
     public override void Spawned()

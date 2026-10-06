@@ -120,10 +120,11 @@ public class NetSession : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     /// <summary>대기실 자리 이동(호스트만). 판이 시작됐거나 범위 밖·남이 앉은 자리면 거절. 성공하면 NetPlayer.Slot이 바뀌어 모든 PC에 복제된다. 방장 표시(IsHost)는 사람을 따라간다.</summary>
     public bool TryMoveSlot(PlayerRef player, int newSlot)
     {
-        if (Runner == null || !Runner.IsServer || MatchStarted) return false;
+        if (Runner == null || !Runner.IsServer) return false;
+        if (MatchStarted) { Debug.Log($"[자리] 호스트: {player}의 {newSlot}번 요청 거절 — 판이 시작됨"); return false; }
         if (newSlot < 0 || newSlot >= MaxSlots) return false;
         if (!slots.TryGetValue(player, out int current) || current == newSlot) return false;
-        if (slots.ContainsValue(newSlot) || graces.ContainsKey(newSlot)) return false;
+        if (slots.ContainsValue(newSlot) || graces.ContainsKey(newSlot)) { Debug.Log($"[자리] 호스트: {player}의 {newSlot}번 요청 거절 — 이미 찼음"); return false; }
         if (!players.TryGetValue(player, out NetworkObject obj) || obj == null) return false;
         NetPlayer netPlayer = obj.GetComponent<NetPlayer>();
         if (netPlayer == null) return false;
@@ -131,7 +132,7 @@ public class NetSession : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         slots[player] = newSlot;
         netPlayer.Slot = newSlot;
         netPlayer.ApplySlotChange(newSlot);   // 호스트 쪽은 바로 반영(복제 콜백을 기다리지 않는다)
-        Debug.Log($"[MP] 자리 이동: {player} 슬롯 {current} → {newSlot}");
+        Debug.Log($"[자리] 호스트: {player} 슬롯 {current} → {newSlot} 이동 허락");
         return true;
     }
 
