@@ -353,9 +353,15 @@ public class NetLobbyUi : MonoBehaviour
         }
         y -= ((order.Length + 1) / 2) * 66f + 14f;
 
+        // 10-06 테스터 로그(GameLog) — 파일이 쌓이는 폴더를 연다. 버그 제보 때 이 폴더의 최근 파일을 보내 달라고 하면 된다.
+        Button logs = CreateButton(c, "SettingsLogs", "로그 폴더 열기", ButtonNormal, 24);
+        SizeButton(logs, new Vector2(240f, 70f));
+        PlaceFromTopX((RectTransform)logs.transform, -135f, y - 10f, new Vector2(240f, 70f));
+        logs.onClick.AddListener(GameLog.OpenFolder);
+
         Button close = CreateButton(c, "SettingsClose", "닫기", ButtonNormal, 32);
         SizeButton(close, new Vector2(240f, 70f));
-        PlaceFromTop((RectTransform)close.transform, y - 10f, new Vector2(240f, 70f));
+        PlaceFromTopX((RectTransform)close.transform, 135f, y - 10f, new Vector2(240f, 70f));
         close.onClick.AddListener(() => SetSettingsOpen(false));
         settingsPanel.SetActive(false);
     }
