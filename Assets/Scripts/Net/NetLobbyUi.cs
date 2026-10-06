@@ -300,14 +300,18 @@ public class NetLobbyUi : MonoBehaviour
 
     void BuildSettingsPanel(RectTransform root)
     {
-        Image dim = CreateImage(root, "SettingsDim", new Color(0f, 0f, 0f, 0.6f));
+        // 판(카드)은 어둠막(dim)의 **자식이 아니라 형제**로 — 자식이면 슬라이더를 눌렀을 때 클릭이 부모 dim의 「닫기」 단추까지 올라가
+        //   설정 창이 닫혔다(10-06 사장님 「소리 줄이는 거 클릭하면 설정창 닫힘」). 둘을 담는 빈 그릇이 settingsPanel이다.
+        RectTransform holder = CreateRect(root, "SettingsPanel");
+        Stretch(holder);
+        Image dim = CreateImage(holder, "SettingsDim", new Color(0f, 0f, 0f, 0.6f));
         Stretch(dim.rectTransform);
-        settingsPanel = dim.gameObject;
+        settingsPanel = holder.gameObject;
         dim.gameObject.AddComponent<Button>().onClick.AddListener(() => SetSettingsOpen(false));   // 바깥을 누르면 닫힘
 
         // 메뉴 틀 그림(menu_frame)은 위아래 룬 띠가 커서 줄이 겹친다(0.3.10 맥 실측) — 설정 창은 어두운 판 + 금테 두 겹으로.
         // 10-06 사장님 「선술집 분위기로」: blender 나무 게시판(원목 널판·쇠 모서리·리벳, Resources/UI/Settings, 9-slice 사방 128) + 위 나무 명패.
-        Image card = CreateImage(dim.rectTransform, "SettingsCard", new Color(0.16f, 0.11f, 0.07f, 0.98f));
+        Image card = CreateImage(holder, "SettingsCard", new Color(0.16f, 0.11f, 0.07f, 0.98f));
         Vector2 size = new Vector2(860f, 820f);
         Place(card.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, size);
         Sprite board = Resources.Load<Sprite>("UI/Settings/panel_9slice");
