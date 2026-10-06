@@ -53,14 +53,14 @@ static class MuncheolApply
             });
 
         SkillData trouble = MakeSkill("사고뭉치", "사고뭉치 — 범퍼(현재체력 2%) 발동",
-            "사장님 10-06 「범퍼(현재체력2%)」. 평타 15% 확률로 대상 현재체력의 2% 마법 피해(박민석 「흑인」 범퍼와 같은 확률 15%, 현재체력이라 끝딜 규칙 대상 아님). 보스·스토리 적도 비례 그대로.",
+            "사장님 10-06 「범퍼(현재체력2%)」. 평타 15% 확률로 맞은 적 중심 반경 300(제안값) 안 모든 적 현재체력의 2% 마법 피해(범퍼 = 범위 전체 — 사장님 10-06 정정)(박민석 「흑인」 범퍼와 같은 확률 15%, 현재체력이라 끝딜 규칙 대상 아님). 보스·스토리 적도 비례 그대로.",
             SkillTriggerType.OnHitChance,
             new SkillLevel
             {
-                cooldown = 0f, triggerChance = 0.15f, range = 0f, gaugeKind = SkillGaugeKind.Mana,
+                cooldown = 0f, triggerChance = 0.15f, range = 300f, gaugeKind = SkillGaugeKind.Mana,
                 effects = new List<SkillEffect>
                 {
-                    new SkillEffect { kind = SkillEffectKind.Damage, basis = SkillEffectBasis.TargetCurrentHpPercent, target = SkillTargetKind.SingleTarget, damageType = DamageType.AP, attackType = AttackType.Spells, multiplier = 0.02f, armorIgnoreRatio = 1f },
+                    new SkillEffect { kind = SkillEffectKind.Damage, basis = SkillEffectBasis.TargetCurrentHpPercent, target = SkillTargetKind.Enemies, damageType = DamageType.AP, attackType = AttackType.Spells, multiplier = 0.02f, armorIgnoreRatio = 1f },
                 },
             });
 

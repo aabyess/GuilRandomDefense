@@ -14,8 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   skillName: "\uD751\uC778 \u2014 \uBC94\uD37C(\uCD5C\uB300\uCCB4\uB825) \uBC1C\uB3D9(\uC774\uAC10)"
   description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uBC94\uD37C(\uCD5C\uB300\uCCB4\uB825)
-    \uBC1C\uB3D9(\uC774\uAC10)\u300D. \uD3C9\uD0C0 15% \uD655\uB960\uB85C \uB300\uC0C1
-    \uCD5C\uB300 \uCCB4\uB825 \xD74% \uD53C\uD574(AD) + \uB300\uC0C1 \uC774\uB3D9\uC18D\uB3C4
+    \uBC1C\uB3D9(\uC774\uAC10)\u300D. \uD3C9\uD0C0 15% \uD655\uB960\uB85C \uB9DE\uC740
+    \uC801 \uC911\uC2EC \uBC18\uACBD 300(\uC81C\uC548\uAC12 \u2014 \uC6B0\uB9AC \uD3C9\uD0C0
+    \uC2A4\uD50C\uB798\uC2DC \uCD5C\uBE48\uAC12) \uC548 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C
+    \uCD5C\uB300 \uCCB4\uB825 \xD74% \uD53C\uD574(AD, \uBC94\uD37C = \uBC94\uC704
+    \uC804\uCCB4 \u2014 \uC0AC\uC7A5\uB2D8 10-06 \uC815\uC815) + \uB300\uC0C1 \uC774\uB3D9\uC18D\uB3C4
     \u221230% 2.5\uCD08. \uAC12 \uADFC\uAC70: \uCD5C\uB300\uCCB4\uB825% 9\uAC74 0.01~0.12\xB7\uD655\uB960
     7.25~20%, \uC774\uAC10 \uBC1C\uB3D9\uD615 0.25~0.75\xB72~5\uCD08(\uB450\uC720\uCC2C
     \uC0AC\uBCF4 0.7\xB72.5\uCD08)."
@@ -23,7 +26,7 @@ MonoBehaviour:
   levels:
   - cooldown: 0
     triggerChance: 0.15
-    range: 0
+    range: 300
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
@@ -33,7 +36,7 @@ MonoBehaviour:
     effects:
     - kind: 0
       basis: 1
-      target: 3
+      target: 2
       damageType: 1
       attackType: 0
       multiplier: 0.04

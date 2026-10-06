@@ -144,7 +144,7 @@ public class GameChatBox : MonoBehaviour
             if (hiddenMessage != null) return hiddenMessage;
         }
 
-        // 10-06 히든·불멸·초월 조합은 조합 버튼이 아니라 여기 채팅 코드로만(CombineSystem.IsChatOnly).
+        // 10-06 히든·불멸·초월·영원함 조합은 조합 버튼이 아니라 여기 채팅 코드로만(CombineSystem.IsChatOnly).
         CombineSystem combine = FindFirstObjectByType<CombineSystem>();
         if (combine != null)
         {

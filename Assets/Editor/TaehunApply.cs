@@ -61,9 +61,9 @@ static class TaehunApply
             new SkillEffect { kind = SkillEffectKind.KillNormalEnemies, target = SkillTargetKind.Self, killMostLostHp = true });
 
         SkillData solar = MakeSkill("명치적중", "명치적중 — 범퍼(현재체력 0.8%) + 암브 2 + 스턴(발동)",
-            "사장님 10-06 「범퍼(암브2, 현재체력0.8%, 스턴)」 — 셋을 한꺼번에(질문지 확정). 평타 15%(박민석 흑인 범퍼 선례) 확률로 맞은 적 한 기에게: 현재 체력의 0.8% 피해(방어 무시 — 원작 %체력 스킬은 UNIVERSAL) + 방어 −2(암브 = 아머브레이크 단일, PM 확정) + 스턴 1초(제안값).",
-            SkillTriggerType.OnHitChance, 0f, 0.15f, SkillGaugeKind.Mana, 0, false,
-            new SkillEffect { kind = SkillEffectKind.Damage, basis = SkillEffectBasis.TargetCurrentHpPercent, target = SkillTargetKind.SingleTarget, damageType = DamageType.AP, attackType = AttackType.Spells, multiplier = 0.008f, armorIgnoreRatio = 1f },
+            "사장님 10-06 「범퍼(암브2, 현재체력0.8%, 스턴)」 — 셋을 한꺼번에(질문지 확정). 평타 15%(박민석 흑인 범퍼 선례) 확률로 맞은 적 중심 반경 300(제안값) 안 모든 적에게 현재 체력의 0.8% 피해(범퍼 = 범위 전체 — 사장님 10-06 정정, 암브·스턴은 표적 단일 그대로)(방어 무시 — 원작 %체력 스킬은 UNIVERSAL) + 방어 −2(암브 = 아머브레이크 단일, PM 확정) + 스턴 1초(제안값).",
+            SkillTriggerType.OnHitChance, 300f, 0.15f, SkillGaugeKind.Mana, 0, false,
+            new SkillEffect { kind = SkillEffectKind.Damage, basis = SkillEffectBasis.TargetCurrentHpPercent, target = SkillTargetKind.Enemies, damageType = DamageType.AP, attackType = AttackType.Spells, multiplier = 0.008f, armorIgnoreRatio = 1f },
             new SkillEffect { kind = SkillEffectKind.ArmorBreak, target = SkillTargetKind.SingleTarget, multiplier = 2f },
             new SkillEffect { kind = SkillEffectKind.Stun, target = SkillTargetKind.SingleTarget, duration = 1f });
 

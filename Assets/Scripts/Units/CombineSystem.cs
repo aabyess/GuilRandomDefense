@@ -112,7 +112,7 @@ public class CombineSystem : MonoBehaviour
         foreach (CombineRecipe recipe in recipes)
         {
             if (recipe == null || recipe.result == null) continue;
-            if (IsChatOnly(recipe)) continue;   // 10-06 히든·불멸·초월은 조합 버튼에 안 뜬다(채팅 코드로만)
+            if (IsChatOnly(recipe)) continue;   // 10-06 히든·불멸·초월·영원함은 조합 버튼에 안 뜬다(채팅 코드로만)
             if (FirstUnitIngredient(recipe) != unit) continue;
 
             startsWithBuffer.Add(recipe);
@@ -121,15 +121,15 @@ public class CombineSystem : MonoBehaviour
         return startsWithBuffer;
     }
 
-    /// <summary>10-06(친구 피드백): 결과가 히든·불멸·초월인 식은 유닛의 [조합] 버튼으로 못 한다 — 원작처럼 채팅 코드로만(TryCombineByChat).
+    /// <summary>10-06(친구 피드백): 결과가 히든·불멸·초월·영원함인 식은 유닛의 [조합] 버튼으로 못 한다 — 원작처럼 채팅 코드로만(TryCombineByChat).
     /// 버튼 목록(GetRecipesStartingWith)과 멀티 요청 검증(NetCommands.ExecuteCombine이 같은 목록을 본다)에서 빠진다.
     /// 재료·비용·결과 처리는 TryCombine 그대로다(밸런스 도구 autoloop은 GetAvailableRecipes→TryCombine이라 이 등급도 계속 조합한다).</summary>
     public static bool IsChatOnly(CombineRecipe recipe)
     {
         if (recipe == null || recipe.result == null) return false;
         UnitGrade grade = recipe.result.grade;
-        // 사장님 10-06 「히든·초월·불멸·다른세계는 타이핑 치고 뽑을 수 있게」 — 다른세계도 채팅 전용.
-        return grade == UnitGrade.Hidden || grade == UnitGrade.Immortal || grade == UnitGrade.Transcendent || grade == UnitGrade.OtherWorld;
+        // 사장님 10-06 정정: 히든·초월·불멸·영원 — 다른세계는 타이핑(입력말)이 없어 조합 버튼(원랜디 그대로).
+        return grade == UnitGrade.Hidden || grade == UnitGrade.Immortal || grade == UnitGrade.Transcendent || grade == UnitGrade.Eternal;
     }
 
     static string NormalizePhrase(string text) =>

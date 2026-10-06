@@ -54,9 +54,9 @@ static class MinseokApply
             new SkillEffect { kind = SkillEffectKind.AegrStack, target = SkillTargetKind.SingleTarget, multiplier = 5f });
 
         SkillData bumper = Make("흑인", "흑인 — 범퍼(최대체력) 발동(이감)",
-            "사장님 10-06 「범퍼(최대체력) 발동(이감)」. 평타 15% 확률로 대상 최대 체력 ×4% 피해(AD) + 대상 이동속도 −30% 2.5초. 값 근거: 최대체력% 9건 0.01~0.12·확률 7.25~20%, 이감 발동형 0.25~0.75·2~5초(두유찬 사보 0.7·2.5초).",
-            SkillTriggerType.OnHitChance, 0f, 0.15f, SkillGaugeKind.Mana, 0, false,
-            new SkillEffect { kind = SkillEffectKind.Damage, basis = SkillEffectBasis.TargetMaxHpPercent, target = SkillTargetKind.SingleTarget, damageType = DamageType.AD, attackType = AttackType.Unassigned, multiplier = 0.04f, armorIgnoreRatio = 1f },
+            "사장님 10-06 「범퍼(최대체력) 발동(이감)」. 평타 15% 확률로 맞은 적 중심 반경 300(제안값 — 우리 평타 스플래시 최빈값) 안 모든 적에게 최대 체력 ×4% 피해(AD, 범퍼 = 범위 전체 — 사장님 10-06 정정) + 대상 이동속도 −30% 2.5초. 값 근거: 최대체력% 9건 0.01~0.12·확률 7.25~20%, 이감 발동형 0.25~0.75·2~5초(두유찬 사보 0.7·2.5초).",
+            SkillTriggerType.OnHitChance, 300f, 0.15f, SkillGaugeKind.Mana, 0, false,
+            new SkillEffect { kind = SkillEffectKind.Damage, basis = SkillEffectBasis.TargetMaxHpPercent, target = SkillTargetKind.Enemies, damageType = DamageType.AD, attackType = AttackType.Unassigned, multiplier = 0.04f, armorIgnoreRatio = 1f },
             new SkillEffect { kind = SkillEffectKind.Slow, target = SkillTargetKind.SingleTarget, multiplier = 0.7f, duration = 2.5f });
 
         SkillData dizzy = Make("어지러움", "어지러움 — 스턴(1)",
