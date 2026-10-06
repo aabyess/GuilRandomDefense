@@ -61,6 +61,7 @@ public class SelectionManager : MonoBehaviour
         if (ChatInputGate.IsOpen) { targeting = TargetMode.None; return; }
 
         HandleCommandKeys();
+        HandleControlGroups();
 
         if (Mouse.current == null || cam == null) return;
 
@@ -357,6 +358,40 @@ public class SelectionManager : MonoBehaviour
 
         s.SetSelected(true);
         selected.Add(s);
+    }
+
+    // ── 10-06 친구 피드백(워크3 부대 지정): Shift(또는 Ctrl/Cmd)+숫자 = 지금 고른 유닛·건물을 그 번호에 지정,
+    //    숫자만 = 그 번호를 다시 고른다(카메라는 안 움직인다 — 클릭한 것처럼 선택만). 죽거나 사라진 것은 빠진다.
+    readonly List<Selectable>[] controlGroups = new List<Selectable>[10];
+    static readonly Key[] DigitKeys = { Key.Digit0, Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8, Key.Digit9 };
+
+    void HandleControlGroups()
+    {
+        Keyboard kb = Keyboard.current;
+        if (kb == null) return;
+        bool assign = kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed || kb.leftCtrlKey.isPressed || kb.rightCtrlKey.isPressed
+                      || kb.leftCommandKey.isPressed || kb.rightCommandKey.isPressed;
+        for (int d = 0; d < DigitKeys.Length; d++)
+        {
+            if (!kb[DigitKeys[d]].wasPressedThisFrame) continue;
+            if (assign)
+            {
+                if (selected.Count == 0) return;
+                controlGroups[d] = new List<Selectable>(selected);
+                PlayerNotification.Show(LocalPlayer.LocalPlayerId, $"{d}번에 지정 ({selected.Count})", 2f);
+            }
+            else
+            {
+                List<Selectable> group = controlGroups[d];
+                if (group == null) return;
+                group.RemoveAll(x => x == null || !x.isActiveAndEnabled);
+                if (group.Count == 0) return;
+                ClearSelection();
+                foreach (Selectable x in group)
+                    if (IsSelectableByLocalPlayer(x)) AddToSelection(x);
+            }
+            return;
+        }
     }
 
     public void ClearSelection()
