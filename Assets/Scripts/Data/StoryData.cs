@@ -51,6 +51,10 @@ public class StoryData : ScriptableObject
     [Range(0f, 1f)] public float itemDropChance;
     public List<EnemyItemDrop> itemDrops;
 
+    // ⚠️ 맨 뒤에 추가(10-06 사장님 「스토리 가반 뒤돌고 있음 — 앞을 보게」) — 스토리 건물·보스를 놓을 때 Y축으로 돌리는 각도(도).
+    //   모델마다 정면이 달라서 스토리 데이터 한 칸으로 맞춘다(모델 배선을 다시 돌리지 않아도 된다).
+    public float facingYaw;
+
     /// <summary>변신 후에 쓸 데이터. 보스가 따로 없으면 건물 것을 그대로 쓴다.</summary>
     public EnemyData BossOrBuilding => boss != null ? boss : building;
 

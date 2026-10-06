@@ -208,7 +208,7 @@ public class StoryManager : MonoBehaviour
         }
 
         Vector3 at = spawnPoint != null ? spawnPoint.position : transform.position;
-        GameObject instance = Instantiate(story.building.prefab, at, Quaternion.identity);
+        GameObject instance = Instantiate(story.building.prefab, at, Quaternion.Euler(0f, story.facingYaw, 0f));
 
         if (!instance.TryGetComponent(out EnemyDummy dummy))
         {
