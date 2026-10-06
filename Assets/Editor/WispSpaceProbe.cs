@@ -42,6 +42,25 @@ public static class WispSpaceProbe
         return $"카메라 → 칸 {cell.transform.position:F0}";
     }
 
+    /// <summary>조합판 한 열 위(중간 높이)로 카메라 — 전후 사진용(x·z는 월드 좌표, 줄 간격이 바뀌어도 윗변이 같아 같은 장면이 잡힌다).</summary>
+    public static string FocusBoard()
+    {
+        Camera cam = Camera.main;
+        RtsCameraController rts = cam != null ? cam.GetComponent<RtsCameraController>() : null;
+        if (rts == null) return "❌ 카메라 없음";
+        rts.MoveTo(new Vector3(-100f, 0f, -700f));
+        return "카메라 → 조합판 (-100, -700)";
+    }
+
+    public static string FocusSouth()
+    {
+        Camera cam = Camera.main;
+        RtsCameraController rts = cam != null ? cam.GetComponent<RtsCameraController>() : null;
+        if (rts == null) return "❌ 카메라 없음";
+        rts.MoveTo(new Vector3(423f, 0f, -3350f));
+        return "카메라 → 조합판 남쪽 끝 (423, -3350)";
+    }
+
     public static string Report()
     {
         StringBuilder sb = new StringBuilder();

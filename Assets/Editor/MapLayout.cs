@@ -455,7 +455,10 @@ public static class MapLayout
     // ⚠️ 이 값은 **리터럴일 수밖에 없다** — 섬 크기는 표를 짓기 전에 정해지는데 깊이는 표를
     //    지어야 나온다(순환). 그래서 대신 **넘치면 보고문이 경고하고 필요한 값을 알려 준다.**
     //    사장님이 조합식을 더하시면 그 줄을 보고 이 수를 올린다.
-    const float CombineSizeZ = 1307.5f * CombineBoardScale;
+    // 🔴 10-06 줄 앞뒤 간격 ×CombineRowPitch(MapGenerator): 가장 깊은 열 26행이 줄 높이 증가분만큼 길어진다(등급 벽 간격은 안 늘어난다).
+    //    증가분 = 26행 × 줄 높이(칸×3) × (피치−1). ⚠️ 26은 리터럴 — 어긋나면 BuildCombineColumns 보고문이 「깊이 N/섬 M」으로 고발한다.
+    const int CombineDeepestRows = 26;
+    const float CombineSizeZ = (1307.5f + CombineDeepestRows * MapGenerator.RecipeSlotBase * 3f * (MapGenerator.CombineRowPitch - 1f)) * CombineBoardScale;
 
     // 조합판 윗변 — 예전 주석들이 말하는 「윗변 z=−71」이 이 값이다(초월 전시 아래변과의 경계).
     // 🔴 **세로를 줄일 때 윗변은 그대로 두고 밑변만 올린다.** 윗변을 내리면 표 머리가 같이

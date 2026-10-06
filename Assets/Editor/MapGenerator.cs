@@ -1831,7 +1831,7 @@ public static class MapGenerator
     const float PedestalWidth = DisplayFigureHeight * PedestalDiameterPerFigureHeight;   // 7.8
 
     // 등급이 바뀔 때 두는 벽 자리. 줄 하나보다 조금 더 벌려 "여기서 등급이 바뀐다"가 읽히게 한다.
-    static float GradeWallGap => RecipeRowHeight * 1.3f;   // 60.1 (BoardScale 1일 때)
+    static float GradeWallGap => RecipeSlot * 3f * 1.3f;   // 60.1 (BoardScale 1일 때) — 줄 간격(RowPitch)을 안 탄다
 
     /// <summary>
     /// 등급 무리 사이에 두는 가로 간격(사장님 2026-09-24 「각 등급마다 오른쪽 약간씩 띄워줄래?」).
@@ -1884,7 +1884,11 @@ public static class MapGenerator
     static float RecipeArrowGap => RecipeArrowGapBase * BoardScale;
     // 줄 높이 = 칸의 3배. 위 "원작 근거 없음"이 여기에도 그대로 적용된다 —
     // 예전 값 28.4는 "원작 조합표 줄 간격"이라 적혀 있었지만 원작에 그 표가 없다.
-    static float RecipeRowHeight => RecipeSlot * 3f;   // 46.2 (BoardScale 1일 때)
+    // 🔴 2026-10-06 사장님 「랜덤유닛 앞뒤간격 넓혀」(조합판 인형 줄): 줄 앞뒤 간격만 RowPitch배로 벌린다. 가로(칸·화살표)는 그대로.
+    //    RowPitch는 BoardScale처럼 **조합판을 짓는 동안만** 켠다 — 뽑기섬 다른세계 줄은 1(섬 깊이를 따로 유도하므로).
+    internal const float CombineRowPitch = 1.3f;
+    static float RowPitch = 1f;
+    static float RecipeRowHeight => RecipeSlot * 3f * RowPitch;   // 46.2 (BoardScale·RowPitch 1일 때)
     const float RecipeSlotHeightBase = 10.951f; // 3.2 × 3.422
     static float RecipeSlotHeight => RecipeSlotHeightBase * BoardScale;
 
@@ -1918,8 +1922,9 @@ public static class MapGenerator
     {
         // 조합판을 짓는 동안만 칸 피치 배율을 켠다(BoardScale 주석). 예외가 나도 꺼 둬야 뽑기섬 줄이 안 틀어진다.
         BoardScale = MapLayout.CombineBoardScale;
+        RowPitch = CombineRowPitch;
         try { return BuildCombineColumnsCore(table); }
-        finally { BoardScale = 1f; }
+        finally { BoardScale = 1f; RowPitch = 1f; }
     }
 
     static string BuildCombineColumnsCore(GameObject table)
