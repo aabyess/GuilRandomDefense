@@ -1012,7 +1012,7 @@ public static class ArtBinder
 
     /// <summary>스토리 건물 13채 크기 배율(사장님 10-07 「스토리 건물들 크기가 너무 크다, 줄여」 → 약 0.7배). 표(EnemyModels)의 미터는 그대로 두고 여기서만 곱한다 — 다시 키우려면 이 값만 1로.
     /// 건물 겉모습·클릭 판정·선택 원·이름표 높이가 전부 이 프리팹 높이에서 유도된다. 건물 사이 간격·위치(스토리 등장점)는 그대로.</summary>
-    public const float StoryBuildingScale = 0.7f;
+    public static float StoryBuildingScale = 0.7f;
 
     // 스토리 건물 13채만 다시 붙인다(Bind 전체를 안 돌린다) — 프리팹을 같은 경로에 덮어써 GUID가 그대로다. 부르기: call ArtBinder.RebindStoryBuildings
     public static string RebindStoryBuildings()

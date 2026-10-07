@@ -33,7 +33,7 @@ static class Queue0307Probe
         Transform spawn = GameObject.Find("스토리_등장지점").transform;
         GameObject go = Object.Instantiate(data.prefab, spawn.position, Quaternion.identity);
         if (go.TryGetComponent(out WaypointMover mover)) mover.enabled = false;
-        go.transform.GetChild(0).localScale *= extra;
+        go.GetComponent<EnemyDummy>().Initialize(data, 1f);   // 실제 판처럼 visualScale까지 먹인다
         var cam = Object.FindFirstObjectByType<RtsCameraController>();
         cam.MoveTo(spawn.position);
         return $"스토리6 건물 스폰 · 배율 {extra:0.00} · 위치 {spawn.position:F0}";
@@ -74,4 +74,25 @@ static class Queue0307Probe
         sb.Append($"\n   종이비행기만 비운 뒤 거울 보상: 지금 가진 것 {string.Join(", ", inv.Items.Select(i => i.itemName))}");
         return sb.ToString();
     }
+
+    // 스토리 건물 13채: 실제 인스턴스(Initialize 뒤) Renderer 합친 경계 높이·폭 — 플레이 중 call:Queue0307Probe.StoryBounds
+    static string StoryBounds()
+    {
+        var sb = new StringBuilder();
+        foreach (EnemyData d in UnityEditor.AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/Data/Enemies" }).Select(UnityEditor.AssetDatabase.GUIDToAssetPath).Select(UnityEditor.AssetDatabase.LoadAssetAtPath<EnemyData>).Where(e => e.name.StartsWith("Enemy_Story")).OrderBy(e => e.name, System.StringComparer.Ordinal))
+        {
+            GameObject go = Object.Instantiate(d.prefab, new Vector3(0f, -500f, 0f), Quaternion.identity);
+            if (go.TryGetComponent(out WaypointMover mover)) mover.enabled = false;
+            go.GetComponent<EnemyDummy>().Initialize(d, 1f);
+            Bounds b = default; bool first = true;
+            foreach (Renderer r in go.GetComponentsInChildren<Renderer>()) { if (first) { b = r.bounds; first = false; } else b.Encapsulate(r.bounds); }
+            var col = go.GetComponent<Collider>();
+            sb.Append($"\n   {d.name.Replace("Enemy_", "")}: 높이 {b.size.y:0.0} 폭 {Mathf.Max(b.size.x, b.size.z):0.0} · 콜라이더 {(col != null ? col.bounds.size.ToString("F0") : "-")} · 프리팹 {UnityEditor.AssetDatabase.GetAssetPath(d.prefab).Replace("Assets/Prefabs/Generated/", "")} · visualScale {d.visualScale}");
+            Object.Destroy(go);
+        }
+        return sb.ToString();
+    }
+
+    static string ScaleOne() { ArtBinder.StoryBuildingScale = 1f; return ArtBinder.RebindStoryBuildings(); }
+    static string ScaleBack() { ArtBinder.StoryBuildingScale = 0.7f; return ArtBinder.RebindStoryBuildings(); }
 }
