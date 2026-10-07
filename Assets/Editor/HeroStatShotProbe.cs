@@ -420,4 +420,27 @@ public static class HeroStatShotProbe
         var g = Resources.LoadAll<TextAsset>("Cutin/초월_최상호_AD");
         return $"Resources.layout={(a != null)} AssetDB.layout={(b != null)} Resources.char={(c != null)} NFD={(d != null)} common={(e != null)} LoadAll={(g != null ? g.Length : -1)}";
     }
+
+    // 실제 획득 경로(UnitSpawner.Spawn → RegisterTo → OnAcquired)로 초월 1기를 얻는다 — 컷인이 저절로 떠야 한다.
+    public static string AcquireTranscend()
+    {
+        CutinOverlay.DebugSpeed = 0.2f;
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        var unit = UnityEditor.AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/초월_최상호_AD.asset");
+        spawner.Spawn(unit, LaneMarker.Get(0).LaneCenter, 0);
+        return "✅ 초월 최상호 획득(배속 0.2)";
+    }
+
+    // 미니보스 7종 prefab이 로컬에서 NULL이 아닌지
+    public static string MinibossCheck()
+    {
+        int n = 0, bad = 0; var names = new System.Text.StringBuilder();
+        foreach (string g in UnityEditor.AssetDatabase.FindAssets("t:PirateQuestData"))
+        {
+            var q = UnityEditor.AssetDatabase.LoadAssetAtPath<PirateQuestData>(UnityEditor.AssetDatabase.GUIDToAssetPath(g));
+            if (q == null || q.miniboss == null) continue;
+            n++; if (q.miniboss.prefab == null) { bad++; names.Append(q.miniboss.name + " "); }
+        }
+        return $"✅ 미니보스 {n}종 · prefab NULL {bad} {names}";
+    }
 }

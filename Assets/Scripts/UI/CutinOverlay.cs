@@ -23,6 +23,8 @@ public class CutinOverlay : MonoBehaviour
 {
     /// <summary>켬(사장님 승인 10-08 「획득 순간 2.6초 전체화면」). 산출물 폴더가 없는 유닛은 건너뛴다. 효과음 파일은 사장님이 고를 때까지 없어 무음.</summary>
     public static bool Enabled = true;
+    /// <summary>촬영 전용 배속(1 = 실시간). 프레임 사진을 촘촘히 찍으려고 탐침이 낮춘다.</summary>
+    public static float DebugSpeed = 1f;
 
     public const float TotalSeconds = 2.6f, InSeconds = 1.0f, HoldSeconds = 1.2f, OutSeconds = 0.4f;
     public const float WhooshAt = 0.25f, TingAt = 0.83f, ExitSoundAt = 2.20f;
@@ -114,7 +116,7 @@ public class CutinOverlay : MonoBehaviour
             Begin(queue.Dequeue());
             return;
         }
-        clock += Time.unscaledDeltaTime;
+        clock += Time.unscaledDeltaTime * DebugSpeed;
         if (clock >= TotalSeconds) { End(); return; }
 
         if (!whooshed && clock >= WhooshAt) { whooshed = true; GameSound.Play(GameSoundId.CutinWhoosh); }
