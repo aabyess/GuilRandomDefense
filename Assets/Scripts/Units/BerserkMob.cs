@@ -29,7 +29,7 @@ public class BerserkMob : MonoBehaviour
     bool applied;
 
     public static readonly List<BerserkMob> Active = new List<BerserkMob>();
-    public float DefenseRadius => DefenseRadiusOriginal / WorldScale.Value;
+    public float DefenseRadius => BerserkLook.DefenseRadiusWorld;
     public float RegenRadius => RegenRadiusOriginal / WorldScale.Value;
 
     /// <summary>WaveSpawner가 스폰 직후 부른다 — 회복 비율(초당 최대체력 분율)·방어 오라 값을 받는다.</summary>
@@ -54,7 +54,7 @@ public class BerserkMob : MonoBehaviour
         // 자기 몫: 회복 오라만(A14I는 self 포함). 방어는 라인 몹과 같다 — 원작 A11U(+25)는 안 쓴다(PM: 원랜디갤 「광폭화는 라인몹과 방어력이 같다」·사장님 사양에 없음).
         self.ApplyAllyAuraEffect(regenEffect);
         applied = true;
-        BuildRing();
+        if (!TryGetComponent(out BerserkLook _)) gameObject.AddComponent<BerserkLook>();
     }
 
     void Update()
@@ -99,41 +99,4 @@ public class BerserkMob : MonoBehaviour
         Release(regenTargets, regenEffect);
         applied = false;
     }
-
-    // 발밑 붉은 고리(방어 오라 반경) — 「광폭화」라는 걸 한눈에. LineRenderer는 자식에 둔다.
-    void BuildRing()
-    {
-        GameObject go = new GameObject("BerserkRing");
-        go.transform.SetParent(transform, false);
-        var line = go.AddComponent<LineRenderer>();
-        const int segments = 64;
-        line.useWorldSpace = true;
-        line.loop = true;
-        line.positionCount = segments;
-        Shader shader = Shader.Find("Sprites/Default") ?? Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
-        line.sharedMaterial = new Material(shader) { name = "BerserkRing" };
-        Color c = new Color(1f, 0.15f, 0.1f, 0.7f);
-        line.startColor = c; line.endColor = c;
-        line.widthMultiplier = Mathf.Max(1.5f, DefenseRadius * 0.015f);
-        line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        line.receiveShadows = false;
-        ringLine = line;
-        UpdateRing();
-    }
-
-    LineRenderer ringLine;
-
-    void UpdateRing()
-    {
-        if (ringLine == null) return;
-        Vector3 center = transform.position;
-        float r = DefenseRadius;
-        for (int i = 0; i < ringLine.positionCount; i++)
-        {
-            float a = i * Mathf.PI * 2f / ringLine.positionCount;
-            ringLine.SetPosition(i, new Vector3(center.x + Mathf.Cos(a) * r, center.y + 0.3f, center.z + Mathf.Sin(a) * r));
-        }
-    }
-
-    void LateUpdate() { UpdateRing(); }
 }

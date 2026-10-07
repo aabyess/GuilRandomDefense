@@ -19,6 +19,7 @@ public class NetBerserkTest : MonoBehaviour
     IEnumerator Start()
     {
         yield return new WaitForSecondsRealtime(startAt);
+        if (!GameAuthority.IsServer) { yield return ClientRoutine(); yield break; }
         BerserkMob mob = null;
         for (int w = 0; w < 120 && mob == null; w++)
         {
@@ -81,5 +82,25 @@ public class NetBerserkTest : MonoBehaviour
             Debug.Log($"[BZK] 처치 뒤: 광폭화 {(mob == null ? "사라짐" : "남음")} · 일반 적 방어 {armorWith:F1} → {a2:F1}(−5 기대) · 3초 회복 {other.Hp - h2:F0}(0 기대) · 아직 활성 광폭화 {BerserkMob.Active.Count(m => m != null)}기");
         }
         else Debug.Log("[BZK] 처치 뒤 일반 적이 이미 사라짐 — 해제 점검 불가");
+    }
+
+    // 클라: 거울 중 Berserk 표시가 선 적을 찾아 이름·겉모습 부품을 로그로, 카메라는 그쪽으로.
+    IEnumerator ClientRoutine()
+    {
+        RtsCameraController cam = FindFirstObjectByType<RtsCameraController>();
+        for (int k = 0; k < 160; k++)
+        {
+            NetEntity found = FindObjectsByType<NetEntity>(FindObjectsSortMode.None).FirstOrDefault(e => e != null && e.Object != null && e.Object.IsValid && e.EntityKind == NetEntityKind.Enemy && e.Berserk && e.Visual != null);
+            if (found != null)
+            {
+                if (cam != null) cam.MoveTo(found.Visual.transform.position);
+                if (k % 8 == 0)
+                {
+                    found.Visual.TryGetComponent(out EnemyDummy ed);
+                    Debug.Log($"[BZK] 클라: 광폭화 거울 「{(ed != null ? ed.DisplayName : "?")}」 · 겉모습 부품 BerserkLook {found.Visual.TryGetComponent(out BerserkLook _)} · 크기 {found.Visual.transform.lossyScale.x:F2} · 위치 {found.Visual.transform.position:F0}");
+                }
+            }
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
     }
 }

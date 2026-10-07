@@ -41,6 +41,8 @@ public class NetEntity : NetworkBehaviour
     // 적: 호스트 실물에 스턴·이감 이펙트가 붙어 있나(SkillVfx 등급 게이트까지 반영된 결과) — 클라가 겉모습에 같은 걸 붙였다 뗀다.
     [Networked] public NetworkBool StunVfx { get; set; }
     [Networked] public NetworkBool SlowVfx { get; set; }
+    // 적: 광폭화 유닛(BerserkMob)이다 — 클라 겉모습에 이름 「광폭화 ○○」·붉은 틴트·원판·고리를 붙인다(10-07).
+    [Networked] public NetworkBool Berserk { get; set; }
 
     public NetEntityKind EntityKind => (NetEntityKind)Kind;
 
@@ -116,6 +118,8 @@ public class NetEntity : NetworkBehaviour
             if (EnemyMoveSpeed != realEnemy.MoveSpeed) EnemyMoveSpeed = realEnemy.MoveSpeed;
             if (StunVfx != realEnemy.HasStunVfx) StunVfx = realEnemy.HasStunVfx;
             if (SlowVfx != realEnemy.HasSlowVfx) SlowVfx = realEnemy.HasSlowVfx;
+            bool isBerserk = realEnemy.TryGetComponent(out BerserkMob _);
+            if (Berserk != isBerserk) Berserk = isBerserk;
         }
 
         if (realAttacker != null)
@@ -147,6 +151,11 @@ public class NetEntity : NetworkBehaviour
             // 높이는 EnemyDummy.AddFreeze·AddSlow와 같은 값(머리 위 +4 · 발밑 3)
             clientStunVfx = SyncStateVfx(StunVfx, clientStunVfx, SkillVfx.Kind.Stun, replicaEnemy.VfxTop + 4f);
             clientSlowVfx = SyncStateVfx(SlowVfx, clientSlowVfx, SkillVfx.Kind.Slow, 3f);
+            if (Berserk && !HasStateAuthority && Visual != null && !Visual.TryGetComponent(out BerserkLook _))
+            {
+                Visual.AddComponent<BerserkLook>();
+                replicaEnemy.NameOverride = "광폭화 " + (replicaEnemy.Data != null && !string.IsNullOrEmpty(replicaEnemy.Data.enemyName) ? replicaEnemy.Data.enemyName : "적");
+            }
         }
 
         // 호스트 실물에 리롤 능력이 붙었으면 겉모습에도 붙인다 — GameHud가 그 컴포넌트로 리롤 버튼을 띄운다(실행은 요청).
