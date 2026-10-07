@@ -92,6 +92,7 @@ public class GameHud : MonoBehaviour
     readonly SkillData[] skillIconSkills = new SkillData[MaxSkillIcons];
     GameObject unitStatRows;                     // 정보칸 「공격력/방어/상태」 줄(사진 서식) — 유닛 한 기를 고를 때만
     TMP_Text unitDamageText, unitArmorText, unitStatusText;
+    TMP_Text wc3NameText, wc3LevelText;          // 워크3풍 정보창 위 띠 두 줄(단일 유닛일 때만 켜진다)
     TMP_Text goldText;
     TMP_Text woodText;
     TMP_Text foodText;        // 고기 칸 = 원작 FOOD_USED = 우리 특성 포인트(사장님 확정 10-03)
@@ -745,7 +746,7 @@ public class GameHud : MonoBehaviour
         LayoutElement infoLayout = infoPanel.gameObject.AddComponent<LayoutElement>();
         infoLayout.minWidth = 0f;
         infoLayout.flexibleWidth = 1f;   // 미니맵·초상이 가져가고 남는 폭 전부
-        AddConsoleFrame(infoPanel);
+        AddConsoleFrame(infoPanel, "info_panel_frame");
 
         RectTransform infoTextSlot = CreatePanel(infoPanel, "UnitInfoTextSlot", Color.clear);
         SetAnchors(infoTextSlot, new Vector2(0.03f, 0.05f), new Vector2(0.97f, 0.93f));
@@ -769,6 +770,7 @@ public class GameHud : MonoBehaviour
         unitArmorText = BuildStatRow(statRows, "icon_armor");
         unitStatusText = BuildStatRow(statRows, null);
         unitStatRows = statRows.gameObject;
+        if (Wc3Console) BuildWc3InfoDeco(infoPanel, statRows);
         unitStatRows.SetActive(false);
 
         BuildSkillIconRow(infoPanel);
@@ -3117,6 +3119,79 @@ public class GameHud : MonoBehaviour
         return fillImage;
     }
 
+    // 워크3풍 정보창(0.3.14): 위 띠 두 줄(이름·등급/레벨) + 아이콘 금칸 + 글줄 위치. 전부 한 기를 고를 때만 보이도록 statRows 자식으로 둔다(statRows가 꺼지면 같이 꺼진다).
+    //   틀 테두리 28px 안쪽으로 들어가고(위 여백 6px), 왼쪽 반: 아머 줄(작은 칸+글) → 공격 칸(가운데) → 상태 줄. 오른쪽 반은 스킬 아이콘 격자.
+    void BuildWc3InfoDeco(RectTransform infoPanel, RectTransform statRows)
+    {
+        const float frameInset = 30f;
+        // statRows는 왼쪽 반, 띠 아래로
+        statRows.anchorMin = new Vector2(0f, 0f); statRows.anchorMax = new Vector2(0.5f, 1f);
+        statRows.offsetMin = new Vector2(frameInset + 6f, frameInset - 6f); statRows.offsetMax = new Vector2(-6f, -(frameInset + 6f + 30f + 4f + 18f + 8f));
+        VerticalLayoutGroup column = statRows.GetComponent<VerticalLayoutGroup>();
+        column.spacing = 4f;
+        column.childAlignment = TextAnchor.UpperLeft;
+        // 줄 순서: 아머 → 공격 → 상태
+        unitArmorText.transform.parent.SetSiblingIndex(0);
+        unitDamageText.transform.parent.SetSiblingIndex(1);
+        unitStatusText.transform.parent.SetSiblingIndex(2);
+        FrameStatIcon(unitArmorText.transform.parent, 40f, false);
+        FrameStatIcon(unitDamageText.transform.parent, 56f, true);
+
+        wc3NameText = BuildWc3Strip(statRows, "Wc3TitleStrip", "info_title_strip", frameInset + 6f, 30f, 28f);
+        wc3LevelText = BuildWc3Strip(statRows, "Wc3LevelStrip", "info_level_strip", frameInset + 6f + 30f + 4f, 18f, 18f);
+    }
+
+    // 워크3풍 위 띠 켜기/끄기. 켜면 옛 한 줄 이름(unitInfoText)은 끈다(ShowSingleInfo가 다음에 다시 켠다).
+    void SetWc3Strips(bool on, string name, string level)
+    {
+        if (wc3NameText == null) return;
+        wc3NameText.transform.parent.gameObject.SetActive(on);
+        wc3LevelText.transform.parent.gameObject.SetActive(on);
+        if (!on) return;
+        wc3NameText.text = name;
+        wc3LevelText.text = level;
+        unitInfoText.gameObject.SetActive(false);
+    }
+
+    // 스탯 줄 아이콘 위에 금칸(icon_slot_gold)을 덮고 아이콘 폭을 키운다. center면 줄 전체를 가운데 정렬(왼쪽 반의 중앙).
+    static void FrameStatIcon(Transform row, float size, bool center)
+    {
+        Transform icon = row.Find("Icon");
+        if (icon == null) return;
+        LayoutElement iconLayout = icon.GetComponent<LayoutElement>();
+        iconLayout.preferredWidth = size; iconLayout.preferredHeight = size; iconLayout.minHeight = size;
+        RectTransform slot = CreatePanel((RectTransform)icon, "Slot", Color.white);
+        slot.anchorMin = Vector2.zero; slot.anchorMax = Vector2.one; slot.offsetMin = Vector2.zero; slot.offsetMax = Vector2.zero;
+        Image slotImage = slot.GetComponent<Image>();
+        UiSkin.ApplyWc3(slotImage, "icon_slot_gold", 2f);
+        slotImage.raycastTarget = false;
+        HorizontalLayoutGroup h = row.GetComponent<HorizontalLayoutGroup>();
+        h.childAlignment = center ? TextAnchor.MiddleCenter : TextAnchor.MiddleLeft;
+        h.childForceExpandHeight = false;
+        if (center) { Transform text = row.Find("Text"); if (text != null) text.GetComponent<LayoutElement>().flexibleWidth = 0f; }
+    }
+
+    // 정보창 위 띠 한 줄(그림 + 가운데 글). statRows 자식이지만 레이아웃에서는 빼서 정보창 기준으로 자리를 잡는다.
+    static TMP_Text BuildWc3Strip(RectTransform statRows, string name, string sprite, float top, float height, float sideInset)
+    {
+        RectTransform strip = CreatePanel(statRows, name, Color.white);
+        strip.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+        RectTransform panel = (RectTransform)statRows.parent;
+        strip.SetParent(panel, false);   // 정보창 기준 좌표(띠는 정보창 안쪽 가장자리까지 늘어난다)
+        strip.anchorMin = new Vector2(0f, 1f); strip.anchorMax = new Vector2(1f, 1f); strip.pivot = new Vector2(0.5f, 1f);
+        strip.offsetMin = new Vector2(sideInset + 12f, -(top + height)); strip.offsetMax = new Vector2(-(sideInset + 12f), -top);
+        Image image = strip.GetComponent<Image>();
+        UiSkin.ApplyWc3(image, sprite, 2f);
+        image.raycastTarget = false;
+        TMP_Text text = CreateLabel(strip, "Text", "");
+        text.alignment = TextAlignmentOptions.Center;
+        text.fontSize = height >= 28f ? 22f : 15f;
+        text.textWrappingMode = TextWrappingModes.NoWrap;
+        text.raycastTarget = false;
+        strip.gameObject.SetActive(false);
+        return text;
+    }
+
     // 정보칸 스탯 한 줄: 왼쪽 아이콘(없으면 빈 자리) + 글자. 사진의 「데미지:」「아머:」「상태:」 줄.
     static TMP_Text BuildStatRow(RectTransform parent, string iconName)
     {
@@ -4409,6 +4484,7 @@ public class GameHud : MonoBehaviour
     void ShowSingleInfo(SelectionManager selection, int count)
     {
         SetPortraitBars(null, null, 0);   // 아래 유닛 분기에서만 켠다
+        SetWc3Strips(false, null, null);
         if (unitStatRows != null && unitStatRows.activeSelf) unitStatRows.SetActive(false);
         if (skillIconRow != null && skillIconRow.activeSelf) skillIconRow.SetActive(false);
         unitCardsPanel.SetActive(false);
@@ -4502,6 +4578,8 @@ public class GameHud : MonoBehaviour
             unitArmorText.text = "<color=#FF9A3A>방어:</color> <color=#FF4A4A>무적</color>";
             unitStatusText.text = "<color=#FF9A3A>상태:</color>" + (attacker != null && attacker.GunFormActive ? $" <color=#FF6B6B>구건 {attacker.GunFormRemaining:F1}초</color>" : "") + (attacker != null && (attacker.UnitDeleteCount > 0 || attacker.GunFormActive) ? $" 삭제 {attacker.UnitDeleteCount}" : "");
             if (!unitStatRows.activeSelf) unitStatRows.SetActive(true);
+            if (wc3NameText != null)
+                SetWc3Strips(true, $"{firstPart}{secondPart}", $"<color=#{gradeColorHex}>{grade}{levelLabel}</color>" + (data.OriginalMatchLabel.Length > 0 ? $"  <size=80%><color=#A0A0A0>{data.OriginalMatchLabel.Replace("원작: ", "원작 ")}</color></size>" : ""));
             RefreshSkillIcons(data);
             int? manaNow = null;
             int manaCap = 0;
@@ -4605,6 +4683,7 @@ public class GameHud : MonoBehaviour
     void ShowCardGrid(SelectionManager selection)
     {
         unitInfoText.gameObject.SetActive(false);
+        SetWc3Strips(false, null, null);
         if (skillIconRow != null && skillIconRow.activeSelf) skillIconRow.SetActive(false);
         // 🔴 친구 베타 10-06: 단일 클릭 → 드래그 다중 때 단일 정보(공격력·방어·상태 줄, 초상 아래 체력·마나 바)가 카드 격자 뒤에 남아 겹쳐 그려졌다 — 단일 분기만 이 줄들을 껐었다.
         if (unitStatRows != null && unitStatRows.activeSelf) unitStatRows.SetActive(false);
@@ -5328,17 +5407,17 @@ public class GameHud : MonoBehaviour
         wc3FrameOverlays.Clear();
     }
 
-    static void AddConsoleFrame(RectTransform parent)
+    static void AddConsoleFrame(RectTransform parent, string wc3Frame = "panel_frame_stone")
     {
         // 하단 바 콘솔 칸: 청동 테두리 액자 그림(UiSkin.BarCell, 사장님 10-07 C 선택)을 칸 그림으로 — 자식(미니맵·초상·정보·격자)은 그 위에 그려진다. 그림이 없으면 옛 금테 고리.
-        if (Wc3Console && parent.TryGetComponent(out Image wc3Image) && UiSkin.Wc3("panel_frame_stone") != null)
+        if (Wc3Console && parent.TryGetComponent(out Image wc3Image) && UiSkin.Wc3(wc3Frame) != null)
         {
             // 워크3풍: 칸 바탕은 검정, 돌 틀은 맨 위 덮개(자식들이 다 붙은 뒤 BringWc3FramesToFront가 맨 앞으로 올린다).
             wc3Image.sprite = null; wc3Image.type = Image.Type.Simple; wc3Image.color = new Color(0.02f, 0.02f, 0.03f, 1f);
             RectTransform overlay = CreatePanel(parent, "Wc3Frame", Color.white);
             overlay.anchorMin = Vector2.zero; overlay.anchorMax = Vector2.one; overlay.offsetMin = Vector2.zero; overlay.offsetMax = Vector2.zero;
             Image overlayImage = overlay.GetComponent<Image>();
-            UiSkin.ApplyWc3(overlayImage, "panel_frame_stone", 2f);
+            UiSkin.ApplyWc3(overlayImage, wc3Frame, 2f);
             overlayImage.raycastTarget = false;
             wc3FrameOverlays.Add(overlay);
             return;
