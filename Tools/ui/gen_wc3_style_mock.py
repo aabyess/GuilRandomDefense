@@ -94,15 +94,8 @@ mm = (14, 806, 372, 1070)
 panel(mm, (8, 20, 40))
 src_mm = base.crop((26, 812, 246, 1060)).resize((mm[2] - mm[0] - 16, mm[3] - mm[1] - 16))
 img.paste(src_mm, (mm[0] + 8, mm[1] + 8))
-for i in range(5):
-    cx, cy = 400, 836 + i * 50
-    d.ellipse([cx - 22, cy - 22, cx + 22, cy + 22], fill=(40, 41, 46), outline=(20, 20, 24), width=3)
-    d.ellipse([cx - 19, cy - 19, cx + 19, cy + 19], fill=(58, 60, 66), outline=GOLD_DK, width=2)
-    d.ellipse([cx - 12, cy - 12, cx + 12, cy + 12], fill=(24, 44, 78))
-    d.arc([cx - 9, cy - 9, cx + 9, cy + 9], 200, 340, fill=(120, 180, 240), width=3)
-
 # 초상화 아치
-px0, py0, px1, py1 = 440, 806, 640, 1070
+px0, py0, px1, py1 = 384, 806, 640, 1070
 panel((px0, py0, px1, py1), (6, 6, 10), 8)
 arch = Image.new('RGBA', (px1 - px0 - 22, 196), (0, 0, 0, 0))
 pw, ph = arch.size
