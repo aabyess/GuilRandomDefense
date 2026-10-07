@@ -63,6 +63,15 @@ if len(sys.argv) > 1 and sys.argv[1] == 'compare':                       # -----
     out = Image.new('RGBA', (1920, 2 * 330 + 20), (20, 20, 24, 255))
     out.alpha_composite(ref.crop((0, 750, 1920, 1080)), (0, 0)); out.alpha_composite(ours.crop((0, 750, 1920, 1080)), (0, 350))
     dd = ImageDraw.Draw(out); dd.text((8, 4), 'REF (original, scaled)', fill=(255, 255, 0, 255)); dd.text((8, 354), 'OURS (new render)', fill=(255, 255, 0, 255))
+    if os.path.exists(f'{D}/clock_orb.png'):                                 # 상단 바 비교
+        top = Image.new('RGBA', (1920, 200), (88, 92, 70, 255)); btn = L('topbar_button')
+        for x in (7, 215, 418, 621): top.alpha_composite(btn.resize((200, 30), Image.LANCZOS), (x, 5))
+        for (x, w, ic) in ((1080, 219, 'icon_gold'), (1321, 215, 'icon_wood'), (1559, 180, 'icon_trait'), (1746, 163, None)):
+            top.alpha_composite(L('res_cell').resize((w, 30), Image.LANCZOS), (x, 5))
+            if ic: top.alpha_composite(L(ic).resize((26, 26), Image.LANCZOS), (x + 14, 7))
+        orb = L('clock_orb').resize((160, 160), Image.LANCZOS); layer = Image.new('RGBA', (1920, 200)); layer.alpha_composite(orb, (880, 0)); top.alpha_composite(layer.crop((0, 80, 1920, 200)).resize((1920, 120)), (0, 0)) if False else top.alpha_composite(orb.crop((0, 58, 160, 160)), (880, 0))
+        t2 = Image.new('RGBA', (1920, 2 * 110 + 20), (20, 20, 24, 255)); t2.alpha_composite(ref.crop((0, 0, 1920, 110)), (0, 0)); t2.alpha_composite(top.crop((0, 0, 1920, 110)), (0, 130))
+        t2.convert('RGB').save(f'{D}/compare_topbar.png')
     out.convert('RGB').save(f'{D}/compare_console.png'); ours.convert('RGB').save(f'{D}/preview_console_full.png'); print('compare saved'); sys.exit(0)
 
 import math, random
@@ -358,9 +367,9 @@ def part_inventory():
             blue = newmat('청남판')[0]; t = blue.node_tree; b = next(n for n in t.nodes if n.type == 'BSDF_PRINCIPLED')
             tc = nd(t, 'ShaderNodeTexCoord'); gr = nd(t, 'ShaderNodeTexGradient', gradient_type='SPHERICAL'); mp = nd(t, 'ShaderNodeMapping'); mp.inputs['Scale'].default_value = (1.6, 1.6, 1.6)
             lk(t, tc.outputs['Object'], mp.inputs[0]); lk(t, mp.outputs[0], gr.inputs[0])
-            lk(t, ramp(t, gr.outputs['Fac'], [(0, srgb('#0C1A33') + (1,)), (.7, srgb('#243C70') + (1,))]), b.inputs['Base Color']); b.inputs['Roughness'].default_value = .55
+            lk(t, ramp(t, gr.outputs['Fac'], [(0, srgb('#0A1428') + (1,)), (.7, srgb('#1C3058') + (1,))]), b.inputs['Base Color']); b.inputs['Roughness'].default_value = .55
             plate(sc, 'blue', rrect_path(S - .1, S - .1, .02), blue, y=.01, th=.01)
-            pack = simple('배낭', srgb('#0E1C38'), .5)
+            pack = simple('배낭', srgb('#0A1530'), .5)
             mkbox(sc, 'pack', (.36, .05, .40), (0, -.004, -.03), pack, bevel=.06)                   # 몸통
             mkbox(sc, 'flap', (.38, .05, .16), (0, -.02, .12), pack, bevel=.05)                     # 덮개
             mkbox(sc, 'pocket', (.22, .04, .12), (0, -.03, -.13), pack, bevel=.03)                  # 앞 주머니
@@ -403,5 +412,74 @@ def part_command():
     for j in range(1, 3): mkbox(sc, 'hg', (W - 2 * B, .05, .03), (0, .05, -H / 2 + B + j * ch), groove)
     ortho_cam(sc, 0, 0, W, int(W * PPM), int(H * PPM)); render(sc, f'{OUT}/command_grid_frame.png')
 
+# ================================================================== ④ 상단 바: 알약 단추 · 시계 구슬 · 자원 칸 · 아이콘
+def navy_mat(name, top='#1A2650', bot='#0A1020', glow_=0.0):
+    m, t, b = newmat(name); tc = nd(t, 'ShaderNodeTexCoord'); sp = nd(t, 'ShaderNodeSeparateXYZ'); lk(t, tc.outputs['Generated'], sp.inputs[0])
+    lk(t, ramp(t, sp.outputs[2], [(0, srgb(bot) + (1,)), (1, srgb(top) + (1,))]), b.inputs['Base Color']); b.inputs['Roughness'].default_value = .35
+    try: b.inputs['Coat Weight'].default_value = .6
+    except Exception: pass
+    if glow_: b.inputs['Emission Color'].default_value = (1, .7, .3, 1); b.inputs['Emission Strength'].default_value = glow_
+    return m
+def end_ornaments(sc, w, h, mat):
+    """알약 양 끝 금 장식: 작은 뾰족 촉 + 징."""
+    for sx in (-1, 1):
+        x = sx * (w / 2 - h * .5)
+        mksph(sc, 'stud', h * .14, (x, -.02, 0), mat, sub=2)
+        tip = mkcyl(sc, 'tip', h * .16, h * .22, (sx * (w / 2 - .01), -.01, 0), mat, rot=(0, math.radians(90 * sx), 0), seg=4, r2=0.001)
+def part_topbar():
+    for kind in ('normal', 'hover', 'pressed'):
+        sc = frame_scene(); g, gd = GOLD
+        W, H = 2.0, .30
+        fill = {'normal': navy_mat('남색'), 'hover': navy_mat('남색밝게', top='#2C4590', bot='#122050'), 'pressed': navy_mat('남색눌림', top='#0E1636', bot='#060A16')}[kind]
+        gold_frame(sc, W, H, .06, line=.014, inset=.036, fill=fill, band_mat=metal_mat('청동', col=(.30, .19, .06), rough=.45, wear=.5, dark=(.05, .03, .01)))   # 참고: 모서리만 살짝 둥근 사각
+        ortho_cam(sc, 0, 0, W, int(W * PPM), int(H * PPM)); render(sc, f'{OUT}/topbar_button{"" if kind == "normal" else "_" + kind}.png')
+    # 15. 자원 칸 2.19×0.30: 검은 안쪽 + 금테 + 양 끝 장식
+    sc = frame_scene(); g, gd = GOLD
+    gold_frame(sc, 2.19, .30, .1, line=.013, inset=.032, fill=matte_black('자원안', .004))
+    ortho_cam(sc, 0, 0, 2.19, int(2.19 * PPM), int(.30 * PPM)); render(sc, f'{OUT}/res_cell.png')
+
+def part_orb():
+    """14. 시계 구슬 1.6×1.6: 파란 유리 구슬 + 은빛 고리(징 10) + 톱니 바깥 고리 + 양옆 금속 날개."""
+    sc = frame_scene()
+    silver = metal_mat('은', col=(.62, .66, .72), rough=.28, wear=.45, dark=(.08, .09, .11))
+    darks = metal_mat('검은쇠', col=(.12, .13, .16), rough=.4, wear=.3, dark=(.02, .02, .03))
+    mksph(sc, 'orb', .36, (0, 0, 0), orb_mat(deep=(.01, .04, .22), mid=(.06, .25, .8), core=(.45, .75, 1.0), glow=.55), sub=5, scale=(1, .55, 1))
+    mktorus(sc, 'ring', .43, .07, (0, 0, 0), silver, rot=(math.radians(90), 0, 0), seg=96)
+    for k in range(10):
+        a = TAU * k / 10 + math.pi / 2; mksph(sc, 'stud', .028, (.43 * math.cos(a), -.07, .43 * math.sin(a)), gem_mat('흰보석', (.75, .85, 1.0), .9), sub=2)
+    # 톱니 바깥 고리
+    mktorus(sc, 'outer', .555, .03, (0, .02, 0), darks, rot=(math.radians(90), 0, 0), seg=96)
+    for k in range(24):
+        a = TAU * k / 24; tooth = mkbox(sc, 'tooth', (.06, .05, .07), (.6 * math.cos(a), .02, .6 * math.sin(a)), darks, bevel=.01); tooth.rotation_euler = (0, -a + math.pi / 2, 0)
+    # 날개: 아래쪽으로 휘어 내려가는 금속 판 세 겹(양옆)
+    for sx in (-1, 1):
+        for j, (L, ang, zz) in enumerate(((.42, -8, .05), (.36, -22, -.08), (.28, -36, -.2))):
+            bm = bmesh.new(); vs = [bm.verts.new(v) for v in ((0, 0, .06), (L, 0, .02), (L + .06, 0, -.02), (0, 0, -.06))]; bm.faces.new(vs)
+            me = bpy.data.meshes.new('wing'); bm.to_mesh(me); bm.free(); w_ = link(bpy.data.objects.new('wing', me), sc); me.materials.append(silver)
+            sol = w_.modifiers.new('so', 'SOLIDIFY'); sol.thickness = .03; bv = w_.modifiers.new('bv', 'BEVEL'); bv.width = .008; bv.segments = 2
+            w_.location = (sx * .55, .03 + .01 * j, zz); w_.rotation_euler = (0, math.radians(-ang) if sx > 0 else math.radians(180 + ang), 0)
+    ortho_cam(sc, 0, 0, 1.6, int(1.6 * PPM), int(1.6 * PPM)); render(sc, f'{OUT}/clock_orb.png')
+
+def part_icons():
+    """자원 아이콘 0.32×0.32: 금(동전 무더기) · 목재(소나무) · 특성(금색 십자)."""
+    gold_c = None
+    # 금: 앞을 보는 동전 무더기
+    sc = frame_scene(); g, gd = GOLD
+    coin = metal_mat('동전', col=(.85, .6, .15), rough=.25, wear=.4, dark=(.2, .12, .02))
+    for i, (x, z, r_) in enumerate(((-.06, -.05, .07), (.06, -.05, .07), (0, -.06, .075), (-.03, .03, .07), (.04, .035, .068), (0, .09, .065))):
+        c_ = mkcyl(sc, 'coin', r_, .02, (x, -.03 * i, z), coin, rot=(math.radians(90), 0, 0), seg=40)
+        mktorus(sc, 'rim', r_ * .82, .006, (x, -.03 * i - .011, z), coin, rot=(math.radians(90), 0, 0), seg=40)
+    ortho_cam(sc, 0, 0, .32, 64, 64); render(sc, f'{OUT}/icon_gold.png')
+    # 목재(소나무)
+    sc = frame_scene()
+    leaf = simple('솔잎', (.04, .22, .06), .7); bark = simple('줄기', (.15, .08, .03), .8)
+    mkcyl(sc, 'trunk', .02, .08, (0, 0, -.11), bark, seg=8)
+    for j, (r, z) in enumerate(((.12, -.05), (.095, .02), (.07, .08))): mkcyl(sc, 'cone', r, .12, (0, 0, z), leaf, seg=10, r2=.004)
+    ortho_cam(sc, 0, 0, .32, 64, 64); render(sc, f'{OUT}/icon_wood.png')
+    # 특성(금색 +)
+    sc = frame_scene(); g, gd = GOLD
+    mkbox(sc, 'v', (.07, .05, .24), (0, 0, 0), g, bevel=.018); mkbox(sc, 'h', (.24, .046, .07), (0, .001, 0), g, bevel=.018)
+    ortho_cam(sc, 0, 0, .32, 64, 64); render(sc, f'{OUT}/icon_trait.png')
+
 for p in PARTS:
-    {'infopanel': part_info_panel, 'inv': part_inventory, 'cmd': part_command, 'arch': part_arch, 'info': part_info, 'bar': part_bar, 'bar_tall': lambda: part_bar(True), 'capL': lambda: part_cap('L'), 'capR': lambda: part_cap('R'), 'pillar': part_pillar, 'panel': part_panel}[p]()
+    {'topbar': part_topbar, 'orb': part_orb, 'icons': part_icons, 'infopanel': part_info_panel, 'inv': part_inventory, 'cmd': part_command, 'arch': part_arch, 'info': part_info, 'bar': part_bar, 'bar_tall': lambda: part_bar(True), 'capL': lambda: part_cap('L'), 'capR': lambda: part_cap('R'), 'pillar': part_pillar, 'panel': part_panel}[p]()
