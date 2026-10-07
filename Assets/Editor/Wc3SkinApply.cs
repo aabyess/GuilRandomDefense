@@ -26,6 +26,9 @@ static class Wc3SkinApply
         ("clock_orb", 0, 0, 0, 0, false), ("icon_gold", 0, 0, 0, 0, false), ("icon_wood", 0, 0, 0, 0, false), ("icon_trait", 0, 0, 0, 0, false),
         ("timer_window", 28, 28, 28, 28, false), ("scoreboard_frame", 28, 28, 28, 28, false), ("collapse_btn", 0, 0, 0, 0, false),
         ("hero_frame", 20, 20, 20, 20, false), ("bar_track", 8, 8, 8, 8, false),
+        // 창 4종(blender A-2 메뉴) — 메뉴판은 모서리 돌이 커서 80(2배 기준), 단추는 둥근 돌판 36.
+        ("menu_panel", 80, 80, 80, 80, false), ("menu_btn", 36, 36, 36, 36, false), ("menu_btn_hover", 36, 36, 36, 36, false), ("menu_btn_pressed", 36, 36, 36, 36, false), ("menu_btn_disabled", 36, 36, 36, 36, false),
+        ("menu_divider", 0, 0, 0, 0, false),
     };
 
     static string Apply()

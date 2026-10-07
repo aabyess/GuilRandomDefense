@@ -863,11 +863,15 @@ public class GameHud : MonoBehaviour
 
     void BuildGameMenu()
     {
-        RectTransform dim = CreatePanel(transform, "GameMenu", new Color(0f, 0f, 0f, 0.55f));
+        RectTransform dim = CreatePanel(transform, "GameMenu", new Color(0f, 0f, 0f, UiSkin.Wc3("menu_panel") != null ? 0.62f : 0.55f));
         SetAnchors(dim, Vector2.zero, Vector2.one);
         gameMenu = dim.gameObject;
         openableGameMenu = gameMenu;
 
+        wc3Menu = UiSkin.Wc3("menu_panel") != null && UiSkin.Wc3("menu_btn") != null;
+        if (wc3Menu) BuildGameMenuCardWc3(dim);
+        else
+        {
         RectTransform card = CreatePanel(dim, "Card", new Color(0.13f, 0.16f, 0.23f, 0.97f));
         SetAnchors(card, new Vector2(0.22f, 0.38f), new Vector2(0.78f, 0.64f));   // 가장 긴 문구가 한 줄에 들어가는 폭(화면 단추 여섯이 들어가게 넓힘)
         AddPanelBorder(card, BorderColor, BorderThickness);
@@ -902,6 +906,7 @@ public class GameHud : MonoBehaviour
         gameMenuConfirmButtons = CreateRow(card, "ConfirmButtons");
         gameMenuConfirmLabel = CreateMenuButton(gameMenuConfirmButtons.transform, "ConfirmButton", "나가기", new Color(0.55f, 0.22f, 0.24f, 1f), new Vector2(0.05f, 0f), new Vector2(0.48f, 1f), ConfirmLeaveGame);
         CreateMenuButton(gameMenuConfirmButtons.transform, "CancelButton", "취소", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.52f, 0f), new Vector2(0.95f, 1f), CloseGameMenu);
+        }
 
         gameMenu.SetActive(false);
 
@@ -936,8 +941,135 @@ public class GameHud : MonoBehaviour
         {
             gameMenuPauseLabel.text = GamePause.Available ? (GamePause.Paused ? "계속(일시정지 해제)" : "일시정지") : "일시정지\n(같이 하기 불가)";
             Image image = gameMenuPauseLabel.transform.parent.GetComponent<Image>();
-            if (image != null) image.color = GamePause.Available ? new Color(0.26f, 0.32f, 0.44f, 1f) : new Color(0.28f, 0.28f, 0.30f, 0.6f);
+            if (image != null) image.color = wc3Menu ? MenuButtonTint(GamePause.Available, false) : GamePause.Available ? new Color(0.26f, 0.32f, 0.44f, 1f) : new Color(0.28f, 0.28f, 0.30f, 0.6f);
         }
+    }
+
+    // ── 워크3풍 F10 메뉴(사장님 10-07 「이 UI 개선해 봐」): 돌·금테 창 + 세로 단추 목록(계속하기 → 일시정지 → 소리 → 화면 → 구분선 → 처음 화면으로).
+    //    그림은 blender A-2(menu_panel·menu_btn 4상태·menu_divider, Resources/UI/SkinWc3). 같은 필드(gameMenuMessage·Main/Screen/ConfirmButtons·라벨)를 채워 옛 로직이 그대로 돈다.
+    bool wc3Menu;
+    const float MenuCardWidth = 460f, MenuCardHeight = 570f, MenuButtonWidth = 340f;
+    static readonly Color MenuTitleGold = new Color(1f, 0.80f, 0.22f);
+
+    void BuildGameMenuCardWc3(RectTransform dim)
+    {
+        RectTransform card = CreatePanel(dim, "Card", new Color(0.03f, 0.04f, 0.08f, 0.97f));
+        card.anchorMin = card.anchorMax = card.pivot = new Vector2(0.5f, 0.5f);
+        card.sizeDelta = new Vector2(MenuCardWidth, MenuCardHeight);
+        card.anchoredPosition = Vector2.zero;
+        card.GetComponent<Image>().sprite = null;   // 둥근 칠 말고 네모 바탕(돌 틀 덮개가 모서리를 가린다)
+        card.GetComponent<Image>().type = Image.Type.Simple;
+        RectTransform frame = CreatePanel(card, "Wc3Frame", Color.white);
+        frame.anchorMin = Vector2.zero; frame.anchorMax = Vector2.one; frame.offsetMin = frame.offsetMax = Vector2.zero;
+        UiSkin.ApplyWc3(frame.GetComponent<Image>(), "menu_panel", 2f);
+        frame.GetComponent<Image>().raycastTarget = false;
+
+        // 제목 띠: 금빛 큰 글자(「메뉴」) + 아래 구분선. 확인·화면 상태 문구도 같은 자리에 길면 줄이 바뀌고 글자가 줄어든다.
+        gameMenuMessage = CreateLabel(card, "Message", "메뉴");
+        RectTransform title = gameMenuMessage.rectTransform;
+        title.anchorMin = new Vector2(0f, 1f); title.anchorMax = new Vector2(1f, 1f); title.pivot = new Vector2(0.5f, 1f);
+        title.sizeDelta = new Vector2(-84f, 72f); title.anchoredPosition = new Vector2(0f, -34f);
+        gameMenuMessage.fontSize = 36;
+        gameMenuMessage.enableAutoSizing = true; gameMenuMessage.fontSizeMin = 20f; gameMenuMessage.fontSizeMax = 36f;
+        gameMenuMessage.fontStyle = FontStyles.Bold;
+        gameMenuMessage.color = MenuTitleGold;
+        gameMenuMessage.outlineWidth = 0.22f; gameMenuMessage.outlineColor = new Color32(0, 0, 0, 255);
+        gameMenuMessage.textWrappingMode = TextWrappingModes.Normal;
+        gameMenuMessage.raycastTarget = false;
+        BuildMenuDivider(card, -112f);
+
+        gameMenuMainButtons = CreateMenuContainer(card, "MainButtons");
+        Transform main = gameMenuMainButtons.transform;
+        CreateWc3MenuButton(main, "ContinueButton", "계속하기", 0f, 56f, CloseGameMenu, "F10");
+        gameMenuPauseLabel = CreateWc3MenuButton(main, "PauseButton", "일시정지", 66f, 56f, OnPauseMenuClicked, "P");   // 혼자 하기만 — 같이 하기에선 회색 + 눌러도 알림(10-07)
+        gameMenuSoundLabel = CreateWc3MenuButton(main, "SoundButton", "", 132f, 56f, ToggleSound);
+        CreateWc3MenuButton(main, "ScreenButton", "화면", 198f, 56f, ShowGameMenuScreen);
+        BuildMenuDivider(main.GetComponent<RectTransform>(), -272f);
+        CreateWc3MenuButton(main, "HomeButton", "처음 화면으로", 292f, 56f, ShowGameMenuConfirm);
+
+        gameMenuScreenButtons = CreateMenuContainer(card, "ScreenButtons");
+        for (int i = 0; i < ScreenMode.Options.Length; i++)
+        {
+            int captured = i;
+            TMP_Text label = CreateWc3MenuButton(gameMenuScreenButtons.transform, $"ScreenOption{i}", ScreenMode.Options[i].label, 54f * i, 48f, () => OnScreenOptionClicked(captured));
+            gameMenuScreenImages[i] = label.transform.parent.GetComponent<Image>();
+            gameMenuScreenButtonComponents[i] = label.transform.parent.GetComponent<Button>();
+        }
+        CreateWc3MenuButton(gameMenuScreenButtons.transform, "ScreenBackButton", "뒤로", 54f * ScreenMode.Options.Length + 8f, 48f, OpenGameMenu);
+
+        gameMenuConfirmButtons = CreateMenuContainer(card, "ConfirmButtons");
+        gameMenuConfirmLabel = CreateWc3MenuButton(gameMenuConfirmButtons.transform, "ConfirmButton", "나가기", 20f, 56f, ConfirmLeaveGame);
+        gameMenuConfirmLabel.transform.parent.GetComponent<Image>().color = new Color(1f, 0.72f, 0.66f);   // 위험한 단추는 붉은 기를 살짝
+        CreateWc3MenuButton(gameMenuConfirmButtons.transform, "CancelButton", "취소", 86f, 56f, CloseGameMenu);
+    }
+
+    static GameObject CreateMenuContainer(RectTransform card, string name)
+    {
+        GameObject row = new GameObject(name, typeof(RectTransform));
+        row.transform.SetParent(card, false);
+        RectTransform rect = (RectTransform)row.transform;
+        rect.anchorMin = new Vector2(0f, 1f); rect.anchorMax = new Vector2(1f, 1f); rect.pivot = new Vector2(0.5f, 1f);
+        rect.sizeDelta = new Vector2(0f, 440f);
+        rect.anchoredPosition = new Vector2(0f, -124f);
+        return row;
+    }
+
+    static void BuildMenuDivider(RectTransform parent, float y)
+    {
+        RectTransform divider = CreatePanel(parent, "Divider", Color.white);
+        divider.anchorMin = divider.anchorMax = divider.pivot = new Vector2(0.5f, 1f);
+        divider.sizeDelta = new Vector2(MenuButtonWidth, 8f);
+        divider.anchoredPosition = new Vector2(0f, y);
+        Image image = divider.GetComponent<Image>();
+        UiSkin.ApplyWc3(image, "menu_divider", 2f);
+        image.type = Image.Type.Simple; image.preserveAspect = false;   // 가운데 마름모가 늘어나지 않게 그림 그대로(blender 권고) — 폭은 단추 폭에 맞춘 고정
+        image.raycastTarget = false;
+    }
+
+    // 세로 단추 한 개(돌판 menu_btn, 호버·눌림·비활성은 SpriteSwap, 글자 꾸밈은 Wc3MenuButtonText). keyHint가 있으면 오른쪽에 작은 단축키 표시.
+    static TMP_Text CreateWc3MenuButton(Transform parent, string name, string label, float y, float height, UnityEngine.Events.UnityAction onClick, string keyHint = null)
+    {
+        RectTransform rect = CreatePanel(parent, name, Color.white);
+        rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 1f);
+        rect.sizeDelta = new Vector2(MenuButtonWidth, height);
+        rect.anchoredPosition = new Vector2(0f, -y);
+        Image image = rect.GetComponent<Image>();
+        UiSkin.ApplyWc3(image, "menu_btn", 2f);
+        Button button = rect.gameObject.AddComponent<Button>();
+        button.targetGraphic = image;
+        button.transition = UnityEngine.UI.Selectable.Transition.SpriteSwap;
+        button.spriteState = new SpriteState
+        {
+            highlightedSprite = UiSkin.Wc3("menu_btn_hover"),
+            pressedSprite = UiSkin.Wc3("menu_btn_pressed"),
+            disabledSprite = UiSkin.Wc3("menu_btn_disabled"),
+        };
+        button.navigation = new Navigation { mode = Navigation.Mode.None };
+        button.onClick.AddListener(onClick);
+
+        TMP_Text text = CreateLabel(rect, name + "Label", label);
+        text.fontSize = 24;
+        text.enableAutoSizing = true; text.fontSizeMin = 15f; text.fontSizeMax = 24f;
+        text.raycastTarget = false;
+        rect.gameObject.AddComponent<Wc3MenuButtonText>().Init(button, text);
+
+        if (!string.IsNullOrEmpty(keyHint))
+        {
+            TMP_Text key = CreateLabel(rect, name + "Key", keyHint);
+            key.alignment = TextAlignmentOptions.Right;
+            key.fontSize = 15f;
+            key.color = new Color(0.78f, 0.70f, 0.48f, 0.9f);   // 원작의 밑줄 글자 대신 오른쪽 작은 키(PM 지시 ⑤)
+            key.rectTransform.offsetMin = new Vector2(8f, 4f); key.rectTransform.offsetMax = new Vector2(-18f, -4f);
+            key.raycastTarget = false;
+        }
+        return text;
+    }
+
+    // 단추 색: 워크3 판은 그림이 칠이라 흰색 = 원색, 선택된 것은 따뜻하게, 못 쓰는 것은 어둡게. 옛 판은 옛 남색 칠.
+    Color MenuButtonTint(bool available, bool current)
+    {
+        if (wc3Menu) return !available ? new Color(0.55f, 0.55f, 0.55f, 1f) : current ? new Color(1f, 0.86f, 0.55f, 1f) : Color.white;
+        return !available ? new Color(0.18f, 0.20f, 0.26f, 1f) : current ? new Color(0.20f, 0.52f, 0.86f, 1f) : new Color(0.26f, 0.32f, 0.44f, 1f);
     }
 
     static GameObject CreateRow(RectTransform card, string name)
@@ -993,8 +1125,7 @@ public class GameHud : MonoBehaviour
         {
             bool available = ScreenMode.IsAvailable(i);
             gameMenuScreenButtonComponents[i].interactable = available;
-            gameMenuScreenImages[i].color = !available ? new Color(0.18f, 0.20f, 0.26f, 1f)
-                : i == current ? new Color(0.20f, 0.52f, 0.86f, 1f) : new Color(0.26f, 0.32f, 0.44f, 1f);
+            gameMenuScreenImages[i].color = MenuButtonTint(available, i == current);
         }
         gameMenuMessage.text = current >= 0 ? $"화면: {ScreenMode.Options[current].label}" : $"화면: 창 {Screen.width}×{Screen.height}";
     }
@@ -2404,11 +2535,13 @@ public class GameHud : MonoBehaviour
         //    칸엔 이름 × 개수를 적고, 설명은 전처럼 호버 툴팁으로. 제목 줄은 없앴다(워크3 인벤토리에도 없다).
         GridLayoutGroup grid = AddFitGrid(itemInventoryParent, "ItemInventoryGrid", 2, MaxItemInventorySlots / 2, 6f, 4f, false);
         itemInventoryTitleObject = grid.gameObject;
+        if (Wc3Console) BuildWc3InventoryTitle(grid);
 
         for (int i = 0; i < MaxItemInventorySlots; i++)
         {
             RectTransform row = CreatePanel(grid.transform, $"ItemInventoryRow{i}", new Color(ButtonColor.r, ButtonColor.g, ButtonColor.b, 0.72f));
-            AddPanelBorder(row, BorderInnerColor, 1f);
+            if (Wc3Console) { UiSkin.ApplyWc3(row.GetComponent<Image>(), "inventory_cell", 2f); }
+            else AddPanelBorder(row, BorderInnerColor, 1f);
             itemInventoryRowRoots[i] = row.gameObject;
 
             // 아이콘은 글자보다 먼저 만든다(글자가 위에 그려져야 개수가 보인다). 아이콘이 없는 아이템은 꺼 두고 글자만 쓴다.
@@ -2439,6 +2572,26 @@ public class GameHud : MonoBehaviour
 
             row.gameObject.SetActive(false);
         }
+    }
+
+    // 워크3풍 인벤토리: 칸 위에 제목 띠 「인벤토리」(inventory_title 180×30). 격자는 띠 아래로 내린다. 띠는 격자가 꺼져도(영웅 아님) 남는다 — 원작도 늘 보인다.
+    void BuildWc3InventoryTitle(GridLayoutGroup grid)
+    {
+        RectTransform panel = itemInventoryParent;
+        RectTransform gridRect = (RectTransform)grid.transform;
+        gridRect.offsetMin = new Vector2(12f, 14f);
+        gridRect.offsetMax = new Vector2(-12f, -46f);
+        RectTransform title = CreatePanel(panel, "Wc3InventoryTitle", Color.white);
+        title.anchorMin = new Vector2(0f, 1f); title.anchorMax = new Vector2(1f, 1f); title.pivot = new Vector2(0.5f, 1f);
+        title.offsetMin = new Vector2(12f, -42f); title.offsetMax = new Vector2(-12f, -12f);
+        Image image = title.GetComponent<Image>();
+        UiSkin.ApplyWc3(image, "inventory_title", 2f);
+        image.raycastTarget = false;
+        TMP_Text text = CreateLabel(title, "Text", "인벤토리");
+        text.fontSize = 17f; text.fontStyle = FontStyles.Bold;
+        text.color = new Color(1f, 0.86f, 0.40f);
+        text.outlineWidth = 0.2f; text.outlineColor = new Color32(0, 0, 0, 255);
+        text.raycastTarget = false;
     }
 
     // 종이비행기(초월 이재윤 유물) — 아이템 칸을 누르면 표적 고르기 대기, 적 하나를 좌클릭하면 발동(우클릭 취소). 호스트/싱글만(멀티 클라는 요청 길이 없다).
@@ -2582,7 +2735,7 @@ public class GameHud : MonoBehaviour
             bool used = i < shown;
             // 09-29 콘솔 격자: 빈 칸도 켜 둔다(끄면 격자가 당겨 붙어 칸 수가 안 보인다 — 워크3 인벤토리도 빈 칸이 보인다).
             if (!itemInventoryRowRoots[i].activeSelf) itemInventoryRowRoots[i].SetActive(true);
-            itemInventoryRowRoots[i].GetComponent<Image>().color = used ? new Color(ButtonColor.r, ButtonColor.g, ButtonColor.b, 0.82f) : new Color(SlotColor.r, SlotColor.g, SlotColor.b, 0.55f);   // 반투명 — 엠블럼이 비친다
+            itemInventoryRowRoots[i].GetComponent<Image>().color = Wc3Console ? (used ? Color.white : new Color(0.85f, 0.85f, 0.85f, 1f)) : used ? new Color(ButtonColor.r, ButtonColor.g, ButtonColor.b, 0.82f) : new Color(SlotColor.r, SlotColor.g, SlotColor.b, 0.55f);   // 반투명 — 엠블럼이 비친다
 
             if (!used)
             {
