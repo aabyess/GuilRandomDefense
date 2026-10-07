@@ -3419,8 +3419,12 @@ public static class MapGenerator
     // 표에 없는 흔함이 생기면 뒤에 이름순으로 붙는다.
     static readonly string[] CommonChoiceRowOrder = { "최상호", "노태현", "양재모", "강주혁", "강재규", "박민석", "문필환", "박민수", "임장혁" };
 
+    // 흔함 선택 줄에서 뺄 흔함 — 상붕카는 뽑기·도박 전용이다(사장님 10-08: 등급은 흔함으로 내렸지만 「뽑기 확률 그대로」 = 획득 경로를 바꾸지 말라). 안 빼면 흔함 선택 위습으로 골라 얻는 10번째 칸이 생긴다.
+    static readonly string[] CommonChoiceRowExcluded = { "상붕카" };
+
     static List<UnitData> OrderCommonsForChoiceRow(List<UnitData> commons)
     {
+        commons = commons.Where(u => System.Array.IndexOf(CommonChoiceRowExcluded, u.unitName) < 0).ToList();
         return commons.OrderBy(u => { int i = System.Array.IndexOf(CommonChoiceRowOrder, u.unitName); return i < 0 ? 1000 : i; }).ThenBy(u => u.unitName, System.StringComparer.Ordinal).ToList();
     }
 
