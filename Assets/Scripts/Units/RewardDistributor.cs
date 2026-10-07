@@ -282,7 +282,7 @@ public class RewardDistributor : MonoBehaviour
         if (data.goldReward > 0) killer.GoldWallet?.Add(data.goldReward);
         if (data.bonusRewardUnit != null && Random.value < data.bonusRewardChance)
         {
-            // 원작 크립 2단계 50%: 목재 2 + 해적선(기본 목재 7 대신).
+            // 원작 크립 2단계 50%: 목재 2 + 상붕카(원작 해적선 → 사장님 10-07 상붕카, 기본 목재 7 대신).
             if (data.bonusRewardWood > 0) { killer.ResourceWallet?.Add(ResourceType.Wood, data.bonusRewardWood); WoodSound(killer); }
             SpawnUnitAtWarehouse(killer, data.bonusRewardUnit);
             if (!string.IsNullOrEmpty(data.bonusRewardMessage)) PlayerNotification.Show(killerPlayerId, data.bonusRewardMessage, 10f);
@@ -294,7 +294,7 @@ public class RewardDistributor : MonoBehaviour
         }
         if (data.savePointReward > 0) killer.PersistentSave?.AddSessionPoints(data.savePointReward);
         if (data.isBoss) GrantBossReward(killer, round, data);
-        Debug.Log($"[크립보상] {data.enemyName} 플레이어 {killerPlayerId} — 골드 {data.goldReward} · 세이브포인트 {data.savePointReward} · 해적선 분기 {(data.bonusRewardUnit != null ? "있음" : "없음")}");
+        Debug.Log($"[크립보상] {data.enemyName} 플레이어 {killerPlayerId} — 골드 {data.goldReward} · 세이브포인트 {data.savePointReward} · 상붕카 분기 {(data.bonusRewardUnit != null ? "있음" : "없음")}");
     }
 
     // rewardsAllPlayers 전용(물범류) — 확정 지급, 원작 별개 축이라 그대로 둔다.
