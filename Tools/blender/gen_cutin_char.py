@@ -27,29 +27,43 @@ meshes = [o for o in bpy.data.objects if o.type == "MESH"]
 
 
 def toon_material(src, outline=False, color=(1, 0.85, 0.1)):
-    """원래 재질의 텍스처를 받아 3단 셀 재질로."""
-    mat = bpy.data.materials.new(src.name + "_toon" if src else "outline")
-    mat.use_nodes = True
-    nt = mat.node_tree
-    nt.nodes.clear()
-    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    """원래 재질을 **복사해서 그 안에서** Principled만 3단 셀 셰이딩으로 갈아 끼운다.
+    🔴 새 재질에 텍스처만 옮겨 그리면 일부 립 스킨(이재윤·두유찬·임채민 …)이 검·살색 얼룩이 된다(10-08). 원래 노드(텍스처 좌표·알파
+    마스크 「이름.001」·뒷면 버림·혼합 방식)를 그대로 두고 Base Color·Alpha로 들어오던 소켓을 받아 쓰면 원작 렌더와 같아진다(검증: 이재윤 흰 교복)."""
     if outline:
+        mat = bpy.data.materials.new("outline")
+        mat.use_nodes = True
+        nt = mat.node_tree
+        nt.nodes.clear()
+        out = nt.nodes.new("ShaderNodeOutputMaterial")
         em = nt.nodes.new("ShaderNodeEmission")
         em.inputs["Color"].default_value = color + (1,)
         em.inputs["Strength"].default_value = 1.0
         nt.links.new(em.outputs[0], out.inputs["Surface"])
         mat.use_backface_culling = True
         return mat
-    tex = None
-    base = (0.8, 0.8, 0.8, 1)
-    if src and src.use_nodes:
-        for n in src.node_tree.nodes:
-            if n.type == "TEX_IMAGE" and n.image:
-                tex = n.image
-                break
-        pr = next((n for n in src.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None)
-        if pr:
-            base = tuple(pr.inputs["Base Color"].default_value)
+    if src is None or not src.use_nodes:
+        mat = bpy.data.materials.new("plain_toon")
+        mat.use_nodes = True
+        nt = mat.node_tree
+        nt.nodes.clear()
+        out = nt.nodes.new("ShaderNodeOutputMaterial")
+        base_sock, base_val, alpha_sock, alpha_val = None, (0.8, 0.8, 0.8, 1), None, 1.0
+    else:
+        mat = src.copy()
+        mat.name = src.name + "_toon"
+        nt = mat.node_tree
+        pr = next((n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"), None)
+        out = next((n for n in nt.nodes if n.type == "OUTPUT_MATERIAL" and n.is_active_output), None) or next((n for n in nt.nodes if n.type == "OUTPUT_MATERIAL"), None) or nt.nodes.new("ShaderNodeOutputMaterial")
+        if pr is not None:
+            bi, ai = pr.inputs["Base Color"], pr.inputs["Alpha"]
+            base_sock = bi.links[0].from_socket if bi.is_linked else None
+            base_val = tuple(bi.default_value)
+            alpha_sock = ai.links[0].from_socket if ai.is_linked else None
+            alpha_val = ai.default_value
+            nt.nodes.remove(pr)
+        else:
+            base_sock, base_val, alpha_sock, alpha_val = None, (0.8, 0.8, 0.8, 1), None, 1.0
     diff = nt.nodes.new("ShaderNodeBsdfDiffuse")
     s2r = nt.nodes.new("ShaderNodeShaderToRGB")
     ramp = nt.nodes.new("ShaderNodeValToRGB")
@@ -69,36 +83,31 @@ def toon_material(src, outline=False, color=(1, 0.85, 0.1)):
     mul.blend_type = "MULTIPLY"
     mul.inputs[0].default_value = 1.0
     nt.links.new(ramp.outputs[0], mul.inputs[6])
-    alpha_src = None
-    if tex:
-        tn = nt.nodes.new("ShaderNodeTexImage")
-        tn.image = tex
-        tn.interpolation = "Linear"
-        nt.links.new(tn.outputs["Color"], mul.inputs[7])
-        alpha_src = tn.outputs["Alpha"]
+    if base_sock is not None:
+        nt.links.new(base_sock, mul.inputs[7])
     else:
-        mul.inputs[7].default_value = base
+        mul.inputs[7].default_value = base_val
     em = nt.nodes.new("ShaderNodeEmission")
     nt.links.new(mul.outputs[2], em.inputs["Color"])
-    if alpha_src is not None and src and src.blend_method != "OPAQUE":
-        tr = nt.nodes.new("ShaderNodeBsdfTransparent")
-        mx = nt.nodes.new("ShaderNodeMixShader")
-        nt.links.new(alpha_src, mx.inputs["Fac"])
-        nt.links.new(tr.outputs[0], mx.inputs[1])
-        nt.links.new(em.outputs[0], mx.inputs[2])
-        nt.links.new(mx.outputs[0], out.inputs["Surface"])
-        mat.surface_render_method = "BLENDED"
+    tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+    mx = nt.nodes.new("ShaderNodeMixShader")
+    if alpha_sock is not None:
+        nt.links.new(alpha_sock, mx.inputs["Fac"])
     else:
-        nt.links.new(em.outputs[0], out.inputs["Surface"])
+        mx.inputs["Fac"].default_value = alpha_val
+    nt.links.new(tr.outputs[0], mx.inputs[1])
+    nt.links.new(em.outputs[0], mx.inputs[2])
+    nt.links.new(mx.outputs[0], out.inputs["Surface"])
     return mat
 
 
 def apply_toon(outline_color, outline_w):
     for o in meshes:
         srcs = list(o.data.materials)
-        o.data.materials.clear()
-        for s in srcs:
-            o.data.materials.append(toon_material(s))
+        # 🔴 materials.clear()는 면마다 붙은 재질 번호를 0으로 되돌린다 → 몸 전체가 첫 재질(머리 피부) 텍스처로 칠해져
+        #    검·살색 얼룩이 됐다(이재윤·두유찬·임채민·박기찬, 10-08 원인). 슬롯은 제자리에서 바꾼다.
+        for i, s_ in enumerate(srcs):
+            o.data.materials[i] = toon_material(s_)
         n = len(srcs)
         o.data.materials.append(toon_material(None, outline=True, color=outline_color))
         for m in list(o.modifiers):
@@ -336,11 +345,26 @@ def render_c(path):
     scn, cam = setup(1536, 1536)
     aim(cam, Vector((cx, cy, ptop - span_v / 2 + 0.02)), 3.0, span)
     render(path)
-    return dict(top=round(ptop, 3), span=round(span, 3))
+    # 눈 높이(머리뼈 머리~꼬리 가운데, 없으면 정수리 아래 키 8%)를 렌더 화면 좌표(0~1, 위가 1)로 — 컷인 띠에 가리는지 검사용
+    from bpy_extras.object_utils import world_to_camera_view
+    bpy.context.view_layer.update()
+    hb = arm.pose.bones.get("mixamorig:Head") if arm is not None else None
+    if hb is not None:
+        eye = arm.matrix_world @ ((hb.head + hb.tail) / 2)
+    else:
+        eye = Vector((cx, cy, ptop - H * 0.08))
+    uv = world_to_camera_view(scn, cam, eye)
+    return dict(top=round(ptop, 3), span=round(span, 3), eye=[round(uv.x, 3), round(uv.y, 3)])
 
 
 if "C" in ONLY:
     import json
+    # 외곽선 껍데기(Solidify 법선 반전)는 법선이 뒤집힌 립 스킨(이재윤·두유찬·이승우·박기찬…)에서 몸을 덮어 검은 덩어리가 된다(10-08 41기 1차).
+    # C안은 껍데기를 빼고 실루엣 외곽선을 합성 단계(gen_cutin_comp.layers_C)에서 알파를 부풀려 그린다.
+    for o in meshes:
+        for md in list(o.modifiers):
+            if md.type == "SOLIDIFY":
+                o.modifiers.remove(md)
     info = dict(unit=NAME, candidates=[])
     act, src = (None, "")
     if arm is not None:
@@ -360,19 +384,27 @@ if "C" in ONLY:
             hgt = max(p.z for p in up) - min(p.z for p in up)
             # 웅크리거나 눕거나(정수리가 키의 82% 아래) 뒤로 멀어진(머리 깊이 이동) 프레임은 뒤로 미룬다 — 41기 1차에서 조성진·고도현·박은석이 그랬다
             stand = ptop >= H * 0.82
-            scored.append((wdt * hgt * (1.0 if stand else 0.25), f))
+            # 정면 판정: 오른어깨→왼어깨가 +X(앞 = -Y에서 본 화면 오른쪽)를 향해야 얼굴이 보인다. 공용 클립을 다른 축의 립에 얹으면
+            # 몸이 돌아가 등을 보인다(이재윤, 10-08) → 크게 깎는다.
+            face_ok = True
+            la, ra = arm.pose.bones.get("mixamorig:LeftArm"), arm.pose.bones.get("mixamorig:RightArm")
+            if la and ra:
+                v = (arm.matrix_world @ la.head) - (arm.matrix_world @ ra.head)
+                face_ok = v.length < 1e-6 or v.normalized().x > 0.45
+            scored.append((wdt * hgt * (1.0 if stand else 0.25) * (1.0 if face_ok else 0.05), f, face_ok))
+        scored.sort(reverse=True)
         scored.sort(reverse=True)
         picks = []
-        for sc, f in scored:                                       # 서로 클립 길이 25% 이상 떨어진 시점 3개
-            if all(abs(f - g) >= (f1 - f0) * 0.25 for _, g in picks):
-                picks.append((sc, f))
+        for sc, f, fok in scored:                                  # 서로 클립 길이 25% 이상 떨어진 시점 3개
+            if all(abs(f - g) >= (f1 - f0) * 0.25 for _, g, _ in picks):
+                picks.append((sc, f, fok))
             if len(picks) == 3:
                 break
-        for k, (sc, f) in enumerate(picks, 1):
+        for k, (sc, f, fok) in enumerate(picks, 1):
             set_frame(act, f)
             fn = f"C_{NAME}_thigh_c{k}.png"
             r = render_c(os.path.join(OUT, fn))
-            info["candidates"].append(dict(id=f"c{k}", file=fn, frame=round(f, 1), score=round(sc, 3), **r))
+            info["candidates"].append(dict(id=f"c{k}", file=fn, frame=round(f, 1), score=round(sc, 3), facing=fok, **r))
         if arm.animation_data:
             arm.animation_data.action = None
     # 프리셋 포즈(믹사모만) — 클립이 밋밋할 때 사장님이 고를 수 있게

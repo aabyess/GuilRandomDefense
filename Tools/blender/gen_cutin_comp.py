@@ -462,11 +462,30 @@ def layers_C(thigh_png, name, nick, grade):
     L["streak"] = streak.filter(ImageFilter.GaussianBlur(1.5))
     # 캐릭터(허벅지까지) + 뒤 실루엣 그림자(외곽 부풀림)
     ch = Image.open(thigh_png).convert("RGBA")
+    # 확대(cutin_picks.json zoom): 날개·건물처럼 몸이 작게 잡히는 스킨 — 눈을 가운데·위쪽 30%에 두고 잘라 키운다
+    cj = thigh_png.replace("_thigh.png", "_cands.json")
+    if os.path.exists(cj):
+        import json as _json
+        inf = _json.load(open(cj))
+        z = float(inf.get("zoom", 1.0))
+        if z > 1.01:
+            cd = next((c for c in inf["candidates"] if c["id"] == inf.get("chosen")), inf["candidates"][0])
+            eu, ev = cd.get("eye", [0.5, 0.8])
+            S0 = ch.width
+            side = S0 / z
+            x0 = min(max(eu * S0 - side / 2, 0), S0 - side)
+            y0 = min(max((1 - ev) * S0 - side * 0.3, 0), S0 - side)
+            ch = ch.crop((int(x0), int(y0), int(x0 + side), int(y0 + side))).resize((S0, S0), Image.LANCZOS)
     hh = 1320
     ch = ch.resize((int(ch.width * hh / ch.height), hh), Image.LANCZOS)
     cl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     cl.alpha_composite(ch, (W // 2 - ch.width // 2, H - hh + 150))
-    L["char"] = cl
+    # 실루엣 외곽선(알파를 7px 부풀린 고리, 진한 보라검정) — 캐릭터 렌더에 껍데기 외곽선이 없다
+    al = cl.split()[3].point(lambda v: 255 if v > 60 else 0)
+    ring_a = ImageChops.subtract(al.filter(ImageFilter.MaxFilter(15)), al).filter(ImageFilter.GaussianBlur(0.8))
+    ol = Image.merge("RGBA", (Image.new("L", (W, H), 22), Image.new("L", (W, H), 16), Image.new("L", (W, H), 30), ring_a))
+    ol.alpha_composite(cl)
+    L["char"] = ol
     a = cl.split()[3].filter(ImageFilter.MaxFilter(31)).filter(ImageFilter.GaussianBlur(3))
     L["shadow"] = Image.merge("RGBA", (Image.new("L", (W, H), g["dark"][0]), Image.new("L", (W, H), g["dark"][1]), Image.new("L", (W, H), g["dark"][2]), a.point(lambda v: int(v * 0.75))))
     return L
