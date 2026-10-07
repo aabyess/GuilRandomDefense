@@ -63,15 +63,15 @@ public static class GameSound
         { GameSoundId.HitRanged,  S("hit_ranged",  -4f, 0.05f, 12, 4, GameSoundId.HitMelee) },
         { GameSoundId.HitMagic,   S("hit_magic",   -4f, 0.05f, 12, 4, GameSoundId.HitMelee) },
         { GameSoundId.EnemyDeath, S("enemy_death", -8f, 0.05f,  8, 4, GameSoundId.EnemyDeath) },
-        { GameSoundId.BossDeath,  S("boss_death",  -7f, 0.1f,   0, 2, GameSoundId.BossDeath) },
+        { GameSoundId.BossDeath,  S("boss_death", -13f, 0.1f,   0, 2, GameSoundId.BossDeath) },
         { GameSoundId.UiClick,    S("ui_click",    -6f, 0.1f,   0, 2, GameSoundId.UiClick) },
         { GameSoundId.UiError,    S("ui_error",     0f, 0.1f,   0, 2, GameSoundId.UiError) },
         { GameSoundId.Combine,    S("combine",      0f, 0.1f,   0, 2, GameSoundId.Combine) },
-        { GameSoundId.Gacha,      S("gacha",        0f, 0.1f,   0, 2, GameSoundId.Gacha) },
+        { GameSoundId.Gacha,      S("gacha",       -6f, 0.1f,   0, 2, GameSoundId.Gacha) },
         { GameSoundId.Gold,       S("gold",         0f, 0.1f,   0, 2, GameSoundId.Gold) },
-        { GameSoundId.RoundStart, S("round_start",  0f, 0.1f,   0, 2, GameSoundId.RoundStart) },
-        { GameSoundId.BossAppear, S("boss_appear",  0f, 0.1f,   0, 2, GameSoundId.BossAppear) },
-        { GameSoundId.Wood,       S("wood",         0f, 0.1f,   0, 2, GameSoundId.Wood) },
+        { GameSoundId.RoundStart, S("round_start", -6f, 0.1f,   0, 2, GameSoundId.RoundStart) },
+        { GameSoundId.BossAppear, S("boss_appear", -6f, 0.1f,   0, 2, GameSoundId.BossAppear) },
+        { GameSoundId.Wood,       S("wood",        -6f, 0.1f,   0, 2, GameSoundId.Wood) },
         { GameSoundId.UiRattle,   S("ui_rattle",   -8f, 0.06f,  0, 2, GameSoundId.UiRattle) },
     };
 
@@ -159,6 +159,7 @@ public static class GameSound
         AudioSource source = SourceFor(id);
         if (source == null || source.clip == null) return;
         source.Stop();
+        source.volume = DefaultVolume * 0.5f * AudioPrefs.SfxVolume;   // 돈 소리 −6dB × 효과음 슬라이더
         source.Play();
         PlayCount++;
         if (playsLogged++ < 20) Debug.Log($"[소리] {id} 재생(볼륨 {source.volume:0.0})");
@@ -208,7 +209,7 @@ public static class GameSound
         if (source == null) return;
         source.Stop();
         source.clip = pool.clips[Random.Range(0, pool.clips.Length)];
-        source.volume = pool.volume;
+        source.volume = pool.volume * AudioPrefs.SfxVolume;
         source.Play();
         PlayCount++;
         if (playsLogged++ < 20) Debug.Log($"[소리] {id} 재생 {source.clip.name}(볼륨 {source.volume:0.00})");
@@ -262,7 +263,7 @@ public static class GameSound
         source.clip = clip;
         source.playOnAwake = false;
         source.spatialBlend = 0f;   // 2D — 원작 CreateSound(..., is3D=false)
-        source.volume = DefaultVolume;
+        source.volume = DefaultVolume * 0.5f;   // 10-08 돈 소리(도박·업그레이드 구매) −6dB
         sources[id] = source;
         return source;
     }

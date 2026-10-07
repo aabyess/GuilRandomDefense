@@ -360,7 +360,7 @@ public class NetLobbyUi : MonoBehaviour
         // 메뉴 틀 그림(menu_frame)은 위아래 룬 띠가 커서 줄이 겹친다(0.3.10 맥 실측) — 설정 창은 어두운 판 + 금테 두 겹으로.
         // 10-06 사장님 「선술집 분위기로」: blender 나무 게시판(원목 널판·쇠 모서리·리벳, Resources/UI/Settings, 9-slice 사방 128) + 위 나무 명패.
         Image card = CreateImage(holder, "SettingsCard", new Color(0.16f, 0.11f, 0.07f, 0.98f));
-        Vector2 size = new Vector2(860f, 820f);
+        Vector2 size = new Vector2(860f, 905f);
         Place(card.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, size);
         Sprite board = Resources.Load<Sprite>("UI/Settings/panel_9slice");
         if (board != null) { card.sprite = board; card.type = Image.Type.Sliced; card.color = Color.white; card.pixelsPerUnitMultiplier = 1.16f; }   // 쇠 모서리가 ≈110 크기로
@@ -380,6 +380,8 @@ public class NetLobbyUi : MonoBehaviour
         AddVolumeRow(c, "전체 소리", y, AudioPrefs.MasterVolume, AudioPrefs.SetMaster);
         y -= 80f;
         AddVolumeRow(c, "배경 음악", y, AudioPrefs.MusicVolume, AudioPrefs.SetMusic);
+        y -= 80f;
+        AddVolumeRow(c, "효과음", y, AudioPrefs.SfxVolume, AudioPrefs.SetSfx);   // 10-08 F10 메뉴와 같은 값
         y -= 84f;
 
         TMP_Text screenHead = CreateText(c, "ScreenHead", "화면", 30, boldFont, ButtonText, TextAlignmentOptions.Left);

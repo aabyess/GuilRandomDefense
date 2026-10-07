@@ -947,11 +947,11 @@ public class GameHud : MonoBehaviour
         else
         {
         RectTransform card = CreatePanel(dim, "Card", new Color(0.13f, 0.16f, 0.23f, 0.97f));
-        SetAnchors(card, new Vector2(0.22f, 0.38f), new Vector2(0.78f, 0.64f));   // 가장 긴 문구가 한 줄에 들어가는 폭(화면 단추 여섯이 들어가게 넓힘)
+        SetAnchors(card, new Vector2(0.22f, 0.30f), new Vector2(0.78f, 0.64f));   // 가장 긴 문구가 한 줄에 들어가는 폭(화면 단추 여섯이 들어가게 넓힘)
         AddPanelBorder(card, BorderColor, BorderThickness);
 
         gameMenuMessage = CreateLabel(card, "Message", "메뉴");
-        SetAnchors((RectTransform)gameMenuMessage.transform, new Vector2(0.05f, 0.52f), new Vector2(0.95f, 0.95f));
+        SetAnchors((RectTransform)gameMenuMessage.transform, new Vector2(0.05f, 0.76f), new Vector2(0.95f, 0.97f));
         gameMenuMessage.fontSize = 26;
 
         gameMenuMainButtons = CreateRow(card, "MainButtons");
@@ -960,6 +960,9 @@ public class GameHud : MonoBehaviour
         gameMenuPauseLabel = CreateMenuButton(gameMenuMainButtons.transform, "PauseButton", "일시정지", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.21f, 0f), new Vector2(0.39f, 1f), OnPauseMenuClicked);
         // 소리 켜기/끄기(PM 09-27 — 설정 창이 없어 메뉴 한 줄. GameSound가 PlayerPrefs로 기억한다)
         gameMenuSoundLabel = CreateMenuButton(gameMenuMainButtons.transform, "SoundButton", "", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.40f, 0f), new Vector2(0.58f, 1f), ToggleSound);
+        // 10-08 소리 크기 슬라이더(배경 음악·효과음) — 단추 줄 위에 얹는다(줄의 부모 안 비율로 위쪽 밖).
+        BuildMenuVolumeRow(gameMenuMainButtons.transform, "배경 음악", new Vector2(0.03f, 1.10f), new Vector2(0.97f, 1.53f), Vector2.zero, Vector2.zero, () => AudioPrefs.MusicVolume, AudioPrefs.SetMusic);
+        BuildMenuVolumeRow(gameMenuMainButtons.transform, "효과음", new Vector2(0.03f, 1.60f), new Vector2(0.97f, 2.03f), Vector2.zero, Vector2.zero, () => AudioPrefs.SfxVolume, AudioPrefs.SetSfx);
         // 화면 모드·해상도(10-04 친구 피드백) — 누르면 단추 줄이 화면 선택으로 바뀐다.
         CreateMenuButton(gameMenuMainButtons.transform, "ScreenButton", "화면", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.59f, 0f), new Vector2(0.77f, 1f), ShowGameMenuScreen);
         CreateMenuButton(gameMenuMainButtons.transform, "HomeButton", "처음 화면으로", new Color(0.26f, 0.32f, 0.44f, 1f), new Vector2(0.78f, 0f), new Vector2(0.98f, 1f), ShowGameMenuConfirm);
@@ -1022,7 +1025,7 @@ public class GameHud : MonoBehaviour
     // ── 워크3풍 F10 메뉴(사장님 10-07 「이 UI 개선해 봐」): 돌·금테 창 + 세로 단추 목록(계속하기 → 일시정지 → 소리 → 화면 → 구분선 → 처음 화면으로).
     //    그림은 blender A-2(menu_panel·menu_btn 4상태·menu_divider, Resources/UI/SkinWc3). 같은 필드(gameMenuMessage·Main/Screen/ConfirmButtons·라벨)를 채워 옛 로직이 그대로 돈다.
     bool wc3Menu;
-    const float MenuCardWidth = 460f, MenuCardHeight = 570f, MenuButtonWidth = 340f;
+    const float MenuCardWidth = 460f, MenuCardHeight = 680f, MenuButtonWidth = 340f;
     static readonly Color MenuTitleGold = new Color(1f, 0.80f, 0.22f);
 
     void BuildGameMenuCardWc3(RectTransform dim)
@@ -1057,9 +1060,12 @@ public class GameHud : MonoBehaviour
         CreateWc3MenuButton(main, "ContinueButton", "계속하기", 0f, 56f, CloseGameMenu, "F10");
         gameMenuPauseLabel = CreateWc3MenuButton(main, "PauseButton", "일시정지", 66f, 56f, OnPauseMenuClicked, "P");   // 혼자 하기만 — 같이 하기에선 회색 + 눌러도 알림(10-07)
         gameMenuSoundLabel = CreateWc3MenuButton(main, "SoundButton", "", 132f, 56f, ToggleSound);
-        CreateWc3MenuButton(main, "ScreenButton", "화면", 198f, 56f, ShowGameMenuScreen);
-        BuildMenuDivider(main.GetComponent<RectTransform>(), -272f);
-        CreateWc3MenuButton(main, "HomeButton", "처음 화면으로", 292f, 56f, ShowGameMenuConfirm);
+        // 10-08 사장님: F10에서 소리 크기 조절 — 배경 음악·효과음 슬라이더(첫 화면 설정과 같은 AudioPrefs 값, 움직이면 바로 적용·저장).
+        BuildMenuVolumeRow(main, "배경 음악", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(MenuButtonWidth, 46f), new Vector2(0f, -194f), () => AudioPrefs.MusicVolume, AudioPrefs.SetMusic);
+        BuildMenuVolumeRow(main, "효과음", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(MenuButtonWidth, 46f), new Vector2(0f, -246f), () => AudioPrefs.SfxVolume, AudioPrefs.SetSfx);
+        CreateWc3MenuButton(main, "ScreenButton", "화면", 304f, 56f, ShowGameMenuScreen);
+        BuildMenuDivider(main.GetComponent<RectTransform>(), -378f);
+        CreateWc3MenuButton(main, "HomeButton", "처음 화면으로", 398f, 56f, ShowGameMenuConfirm);
 
         gameMenuScreenButtons = CreateMenuContainer(card, "ScreenButtons");
         for (int i = 0; i < ScreenMode.Options.Length; i++)
@@ -1083,7 +1089,7 @@ public class GameHud : MonoBehaviour
         row.transform.SetParent(card, false);
         RectTransform rect = (RectTransform)row.transform;
         rect.anchorMin = new Vector2(0f, 1f); rect.anchorMax = new Vector2(1f, 1f); rect.pivot = new Vector2(0.5f, 1f);
-        rect.sizeDelta = new Vector2(0f, 440f);
+        rect.sizeDelta = new Vector2(0f, 560f);
         rect.anchoredPosition = new Vector2(0f, -124f);
         return row;
     }
@@ -1165,10 +1171,62 @@ public class GameHud : MonoBehaviour
         return text;
     }
 
+    readonly List<(Slider slider, TMP_Text percent, System.Func<float> get)> menuVolumeRows = new List<(Slider, TMP_Text, System.Func<float>)>();
+
+    // F10 메뉴 한 줄: 이름 · 막대 · 「%」. 막대는 uGUI Slider라 눌러도 창이 안 닫히고(메뉴 어둠막은 단추가 아니다), 드래그는 EventSystem이 받아
+    //   SelectionManager·카메라(IsPointerOverGameObject)로 새지 않는다. 값은 AudioPrefs가 즉시 적용·저장한다.
+    void BuildMenuVolumeRow(Transform parent, string label, Vector2 anchorMin, Vector2 anchorMax, Vector2 size, Vector2 position, System.Func<float> get, System.Action<float> set)
+    {
+        RectTransform row = CreatePanel(parent, "Volume_" + label, Color.clear);
+        row.GetComponent<Image>().raycastTarget = false;
+        row.anchorMin = anchorMin; row.anchorMax = anchorMax;
+        if (size != Vector2.zero) { row.pivot = new Vector2(0.5f, 1f); row.sizeDelta = size; row.anchoredPosition = position; }
+        else { row.offsetMin = Vector2.zero; row.offsetMax = Vector2.zero; }
+
+        TMP_Text name = CreateLabel(row, "Label", label);
+        name.fontSize = 20; name.alignment = TextAlignmentOptions.Left; name.raycastTarget = false;
+        name.enableAutoSizing = true; name.fontSizeMin = 14f; name.fontSizeMax = 20f;
+        SetAnchors((RectTransform)name.transform, new Vector2(0f, 0f), new Vector2(0.28f, 1f));
+        TMP_Text percent = CreateLabel(row, "Percent", "");
+        percent.fontSize = 20; percent.alignment = TextAlignmentOptions.Right; percent.raycastTarget = false;
+        SetAnchors((RectTransform)percent.transform, new Vector2(0.84f, 0f), new Vector2(1f, 1f));
+
+        RectTransform sliderRect = new GameObject("Slider", typeof(RectTransform)).GetComponent<RectTransform>();
+        sliderRect.SetParent(row, false);
+        SetAnchors(sliderRect, new Vector2(0.30f, 0.30f), new Vector2(0.82f, 0.70f));
+        RectTransform track = CreatePanel(sliderRect, "Track", new Color(0.05f, 0.05f, 0.07f, 0.95f));
+        SetAnchors(track, new Vector2(0f, 0.30f), new Vector2(1f, 0.70f));
+        track.GetComponent<Image>().raycastTarget = true;
+        RectTransform fillArea = new GameObject("FillArea", typeof(RectTransform)).GetComponent<RectTransform>();
+        fillArea.SetParent(sliderRect, false);
+        SetAnchors(fillArea, new Vector2(0f, 0.30f), new Vector2(1f, 0.70f));
+        RectTransform fill = CreatePanel(fillArea, "Fill", new Color(0.95f, 0.75f, 0.25f, 1f));
+        fill.GetComponent<Image>().raycastTarget = false;
+        fill.anchorMin = Vector2.zero; fill.anchorMax = new Vector2(0f, 1f); fill.offsetMin = fill.offsetMax = Vector2.zero;
+        RectTransform handleArea = new GameObject("HandleArea", typeof(RectTransform)).GetComponent<RectTransform>();
+        handleArea.SetParent(sliderRect, false);
+        SetAnchors(handleArea, Vector2.zero, Vector2.one);
+        handleArea.offsetMin = new Vector2(8f, 0f); handleArea.offsetMax = new Vector2(-8f, 0f);
+        RectTransform handle = CreatePanel(handleArea, "Handle", new Color(1f, 0.93f, 0.7f, 1f));
+        handle.anchorMin = new Vector2(0f, 0f); handle.anchorMax = new Vector2(0f, 1f);
+        handle.sizeDelta = new Vector2(16f, 0f);
+
+        Slider slider = sliderRect.gameObject.AddComponent<Slider>();
+        slider.fillRect = fill; slider.handleRect = handle; slider.targetGraphic = handle.GetComponent<Image>();
+        slider.direction = Slider.Direction.LeftToRight;
+        slider.minValue = 0f; slider.maxValue = 1f;
+        slider.navigation = new Navigation { mode = Navigation.Mode.None };
+        slider.SetValueWithoutNotify(get());
+        percent.text = $"{Mathf.RoundToInt(get() * 100f)}%";
+        slider.onValueChanged.AddListener(v => { set(v); percent.text = $"{Mathf.RoundToInt(v * 100f)}%"; });
+        menuVolumeRows.Add((slider, percent, get));
+    }
+
     public void OpenGameMenu()
     {
         gameMenuMessage.text = "메뉴";
         RefreshSoundLabel();
+        foreach (var row in menuVolumeRows) if (row.slider != null) { row.slider.SetValueWithoutNotify(row.get()); row.percent.text = $"{Mathf.RoundToInt(row.get() * 100f)}%"; }
         gameMenuMainButtons.SetActive(true);
         gameMenuConfirmButtons.SetActive(false);
         gameMenuScreenButtons.SetActive(false);

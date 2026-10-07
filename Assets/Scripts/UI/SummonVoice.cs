@@ -139,7 +139,7 @@ public static class SummonVoice
             source.playOnAwake = false;
             source.spatialBlend = 0f;   // 2D — 원작 CreateSound(..., is3D=false)
         }
-        source.PlayOneShot(clip, GameSound.DefaultVolume);
+        source.PlayOneShot(clip, GameSound.DefaultVolume * 0.5f * AudioPrefs.SfxVolume);   // 10-08 획득 음성 −6dB(사장님: 배경음보다 큰 소리 정리) × 효과음 슬라이더
         PlayCount++;
         if (playsLogged++ < 20) Debug.Log($"[소리] 획득 음성 {name}({clip.length:0.0}초)");
     }

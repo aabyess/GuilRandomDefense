@@ -187,6 +187,6 @@ public class DoorTransition : MonoBehaviour
     {
         if (!GameSound.Enabled) return;
         AudioClip clip = Resources.Load<AudioClip>(path);
-        if (clip != null) audioSource.PlayOneShot(clip, volume);
+        if (clip != null) audioSource.PlayOneShot(clip, volume * AudioPrefs.SfxVolume);
     }
 }

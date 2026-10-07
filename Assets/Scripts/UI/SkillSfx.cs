@@ -20,7 +20,9 @@ public static class SkillSfx
     const string TablePath = "Sounds/SkillSfxTable";
     const float RosterInterval = 2.5f;     // 캐릭터 단위 소리는 로스터 하나가 이보다 자주 안 낸다
     const float SameClipInterval = 0.3f;   // 같은 소리 연타 막기 하한(원작은 소리 핸들 하나 = 동시에 하나)
-    const int Voices = 8;                  // 동시에 나는 스킬 소리 상한
+    const int Voices = 4;                  // 동시에 나는 스킬 소리 상한(10-08 8→4: 합쳐진 소리가 배경음을 덮지 않게)
+    // 10-08 사장님 「스킬 사운드가 너무 크다, 배경음보다 작게」: 스킬 전용 −14dB(×0.2). 가장 큰 소리도 0.7×1.0×0.2 = 0.14 < 배경음 0.20.
+    public const float SkillVolumeScale = 0.2f;
     const float DefaultMinDistance = 600f; // 원작 단위 — SetSoundDistances가 없는 소리
     const float DefaultCutoff = 3000f;
 
@@ -83,7 +85,7 @@ public static class SkillSfx
         clipNext[index] = Time.unscaledTime + Mathf.Max(SameClipInterval, 0.7f * audio.length / Mathf.Max(0.1f, c.pitch));
         source.clip = audio;
         source.pitch = c.pitch;
-        source.volume = GameSound.DefaultVolume * c.volume * Mathf.Clamp01(volumeScale) * heard;
+        source.volume = GameSound.DefaultVolume * SkillVolumeScale * AudioPrefs.SfxVolume * c.volume * Mathf.Clamp01(volumeScale) * heard;
         source.Play();
         PlayCount++;
         if (playsLogged++ < 20) Debug.Log($"[소리] 스킬 효과음 {c.name}(볼륨 {source.volume:0.00}, 피치 {c.pitch:0.0})");

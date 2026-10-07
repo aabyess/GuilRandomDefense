@@ -8,10 +8,13 @@ public static class AudioPrefs
 {
     const string MasterKey = "GuilRandomDefense.MasterVolume";
     const string MusicKey = "GuilRandomDefense.MusicVolume";
+    const string SfxKey = "GuilRandomDefense.SfxVolume";
 
-    static float master = 1f, music = 1f;
+    static float master = 1f, music = 1f, sfx = 1f;
     public static float MasterVolume => master;
     public static float MusicVolume => music;
+    /// <summary>효과음 크기(10-08 F10 메뉴 슬라이더) — GameSound·SkillSfx·SummonVoice·문 소리가 소리를 낼 때 곱한다.</summary>
+    public static float SfxVolume => sfx;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void Load()
@@ -20,6 +23,7 @@ public static class AudioPrefs
         {
             master = Mathf.Clamp01(PlayerPrefs.GetFloat(MasterKey, 1f));
             music = Mathf.Clamp01(PlayerPrefs.GetFloat(MusicKey, 1f));
+            sfx = Mathf.Clamp01(PlayerPrefs.GetFloat(SfxKey, 1f));
         }
         catch { }
         AudioListener.volume = master;
@@ -36,6 +40,12 @@ public static class AudioPrefs
     {
         music = Mathf.Clamp01(value);
         Save(MusicKey, music);
+    }
+
+    public static void SetSfx(float value)
+    {
+        sfx = Mathf.Clamp01(value);
+        Save(SfxKey, sfx);
     }
 
     static void Save(string key, float value)
