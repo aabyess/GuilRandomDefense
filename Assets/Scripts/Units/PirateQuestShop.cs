@@ -33,6 +33,19 @@ public class PirateQuestShop : MonoBehaviour
 
     PlayerContext OwnerContext => PlayerContext.Get(owner.OwnerId);
 
+    // 원작 ureq(연구) 해금 — 거프: 스토리 8 클리어한 살아있는 사람 · 와포루: R20 보스를 잡은 그 레인 사람(QUEST_AUDIT A2·A12).
+    bool IsUnlocked(PirateQuestData quest, out string reason)
+    {
+        reason = null;
+        PlayerContext context = OwnerContext;
+        if (context == null) return true;
+        if (quest.requiresStoryOrder > 0 && !context.QuestStoriesCleared.Contains(quest.requiresStoryOrder))
+        { reason = $"{quest.questName}: 스토리 {quest.requiresStoryOrder}을 클리어해야 열립니다."; return false; }
+        if (quest.requiresBossKillRound > 0 && !context.QuestBossRoundsKilled.Contains(quest.requiresBossKillRound))
+        { reason = $"{quest.questName}: {quest.requiresBossKillRound}라운드 보스를 처치해야 열립니다."; return false; }
+        return true;
+    }
+
     void Awake()
     {
         owner = GetComponent<OwnedByPlayer>();
@@ -44,7 +57,8 @@ public class PirateQuestShop : MonoBehaviour
             if (quest == null) continue;
 
             slotState[i].stock = Mathf.Clamp(quest.stockStart, 0, Mathf.Max(1, quest.stockMax));
-            slotState[i].restockTimer = quest.restockSeconds;
+            // 첫 재고(원작 usst)는 재고가 0으로 시작할 때만 따로 — 스모커 915초.
+            slotState[i].restockTimer = slotState[i].stock <= 0 && quest.firstStockSeconds > 0f ? quest.firstStockSeconds : quest.restockSeconds;
         }
     }
 
@@ -149,6 +163,12 @@ public class PirateQuestShop : MonoBehaviour
             return false;
         }
 
+        if (!IsUnlocked(quest, out string lockedReason))
+        {
+            failReason = lockedReason;
+            return false;
+        }
+
         if (slotState[index].stock <= 0)
         {
             failReason = $"{quest.questName}: 재고가 없습니다.";
@@ -179,6 +199,7 @@ public class PirateQuestShop : MonoBehaviour
         int round = manager.CurrentRound;
         if ((quest.minRound > 0 && round < quest.minRound) || (quest.maxRound > 0 && round > quest.maxRound))
             return $"{quest.questName}: 지금은 열리지 않습니다 ({quest.minRound}~{quest.maxRound}라운드).";
+        if (!IsUnlocked(quest, out string lockedWhy)) return lockedWhy;
         if (slotState[index].stock <= 0)
             return $"{quest.questName}: 품절 — {Mathf.Max(0f, slotState[index].restockTimer):F0}초 뒤 재입고";
         return "골드가 부족합니다!";
@@ -197,6 +218,7 @@ public class PirateQuestShop : MonoBehaviour
         bool inRange = (quest.minRound <= 0 || round >= quest.minRound)
                      && (quest.maxRound <= 0 || round <= quest.maxRound);
         if (!inRange) return false;
+        if (!IsUnlocked(quest, out _)) return false;
 
         PlayerContext context = OwnerContext;
         return context != null && context.GoldWallet != null && context.GoldWallet.Gold >= quest.goldCost;

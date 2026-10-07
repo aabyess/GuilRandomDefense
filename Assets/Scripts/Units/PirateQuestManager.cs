@@ -36,6 +36,22 @@ public class PirateQuestManager : MonoBehaviour
     readonly Dictionary<(PirateQuestData quest, int playerId), int> attemptCounts =
         new Dictionary<(PirateQuestData, int), int>();
 
+    // 진행 중 의뢰의 남은 시간 — 타이머 창(QuestTimerPanel)·MP 복제(NetPlayer.QuestTimerText)가 읽는다. 구매자에게만 보인다(원작 CreateTimerDialogBJ).
+    readonly Dictionary<(PirateQuestData quest, int playerId), float> remaining = new Dictionary<(PirateQuestData, int), float>();
+
+    /// <summary>그 플레이어의 진행 중 의뢰 타이머 글 — 「{이름} 퇴치 : m:ss」 줄들(없으면 빈 글). 초 단위로만 바뀐다.</summary>
+    public string TimerText(int playerId)
+    {
+        System.Text.StringBuilder sb = null;
+        foreach (var kv in remaining)
+        {
+            if (kv.Key.playerId != playerId) continue;
+            int sec = Mathf.CeilToInt(Mathf.Max(0f, kv.Value));
+            (sb ??= new System.Text.StringBuilder()).Append(sb.Length > 0 ? "\n" : "").Append($"{kv.Key.quest.questName} 퇴치 : {sec / 60}:{sec % 60:00}");
+        }
+        return sb != null ? sb.ToString() : "";
+    }
+
     void OnEnable() => Instance = this;
 
     void OnDisable()
@@ -86,8 +102,10 @@ public class PirateQuestManager : MonoBehaviour
         while (timer > 0f && miniboss != null)
         {
             timer -= Time.deltaTime;
+            remaining[key] = timer;
             yield return null;
         }
+        remaining.Remove(key);
 
         bool killed = miniboss == null;
         if (killed)
@@ -105,8 +123,11 @@ public class PirateQuestManager : MonoBehaviour
 
     GameObject SpawnMiniboss(PirateQuestData quest, int playerId)
     {
+        // 원작: Start_Location[p](레인 시작점)에 Player(5)로 나와 라운드 몹처럼 레인을 돈다(QUEST_AUDIT A7, bangbang 모퉁이 트리거 [해석]).
+        WaveSpawner waveSpawner = FindFirstObjectByType<WaveSpawner>();
+        WaypointPath lanePath = waveSpawner != null ? waveSpawner.GetLanePath(playerId) : null;
         LaneMarker lane = LaneMarker.Get(playerId);
-        Vector3 position = lane != null ? lane.LaneCenter : transform.position;
+        Vector3 position = lanePath != null && lanePath.PointCount > 0 ? lanePath.GetPoint(0) : lane != null ? lane.LaneCenter : transform.position;
 
         GameObject instance = Instantiate(quest.miniboss.prefab, position, Quaternion.identity);
 
@@ -120,12 +141,16 @@ public class PirateQuestManager : MonoBehaviour
         dummy.Initialize(quest.miniboss);
         dummy.SetLane(-1); // 레인 카운트·패배판정에서 제외 (크립과 같은 이유)
 
+        float baseHp = quest.miniboss.hp;
         if (quest.scalesWithAttempts)
         {
             int attempt = NextAttempt(quest, playerId);
-            float hp = quest.miniboss.hp * (1f + (attempt - 1) * quest.hpIncreasePerAttempt);
-            dummy.Initialize(hp); // data는 그대로 두고 hp/MaxHp만 덮어쓴다
+            baseHp = quest.hpByAttempt != null && quest.hpByAttempt.Length > 0
+                ? quest.hpByAttempt[Mathf.Clamp(attempt - 1, 0, quest.hpByAttempt.Length - 1)]   // 원작 표(5회 이후 고정)
+                : quest.miniboss.hp * (1f + (attempt - 1) * quest.hpIncreasePerAttempt);
         }
+        float finalHp = baseHp * Mathf.Max(0.01f, quest.hpMultiplier);
+        if (!Mathf.Approximately(finalHp, quest.miniboss.hp)) dummy.Initialize(finalHp); // data는 그대로 두고 hp/MaxHp만 덮어쓴다
         dummy.MarkStoryHpTarget(); // MP: 원작 R01G 대상(퀘스트 미니보스 = Player(5)) — 체력을 다 정한 뒤에
 
         if (instance.TryGetComponent(out NavMeshAgent agent))
@@ -135,7 +160,12 @@ public class PirateQuestManager : MonoBehaviour
 
         if (instance.TryGetComponent(out WaypointMover mover))
         {
-            mover.enabled = false; // 미니보스는 순찰하지 않는다 — 제자리에서 맞선다
+            if (lanePath != null && quest.miniboss.moveSpeed > 0f)
+            {
+                mover.SetPath(lanePath);
+                mover.SetMoveSpeed(quest.miniboss.moveSpeed);   // 원작 umvs 300 = 우리 72(EnemyDummy.Wc3ToOurMoveSpeed)
+            }
+            else mover.enabled = false;   // 길·속도가 없으면 예전처럼 제자리에서 맞선다
         }
 
         return instance;
@@ -195,6 +225,19 @@ public class PirateQuestManager : MonoBehaviour
         {
             StoryManager.Instance.ApplyQuestDamage(quest.storyDamage, playerId);
         }
+
+        // 와포루 I010 1/25 · 거프 I00J 1/26(미보유 때만, 아이템 도박 풀에서도 빠진다 — GrantItemDrop → RegisterAcquired)
+        if (quest.successItemChance > 0f && RewardDistributor.Instance != null)
+            RewardDistributor.Instance.GrantItemDrop(context, quest.successItemChance, quest.successItemDrops);
+
+        // 모리아: 그 플레이어의 초월·영원 영웅 전원에게 경험치(원작 Exp_Hero_Group AddHeroXP 250)
+        if (quest.successHeroXp > 0)
+            foreach (UnitIdentity unit in UnitIdentity.Active)
+            {
+                if (unit == null || unit.Data == null || unit.TryGetComponent(out OwnedByPlayer o) == false || o.OwnerId != playerId) continue;
+                if (unit.Data.grade != UnitGrade.Transcendent && unit.Data.grade != UnitGrade.Eternal) continue;
+                if (unit.TryGetComponent(out UnitAttacker attacker)) attacker.AddHeroXp(quest.successHeroXp);
+            }
 
         // 원작 성공 문구(j:13776~13930, 그 플레이어에게만) — 틀 「(!) {이름}을 퇴치하여 {보상} 획득!」, 보상은 우리 데이터 그대로(알림 묶음 9/13, GAP 83).
         var parts = new List<string>();

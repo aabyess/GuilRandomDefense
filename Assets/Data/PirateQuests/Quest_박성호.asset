@@ -17,12 +17,20 @@ MonoBehaviour:
   stockMax: 1
   stockStart: 0
   restockSeconds: 510
+  firstStockSeconds: 915
   miniboss: {fileID: 11400000, guid: 7f4ebfcb48ad835aa82524d59ab946ad, type: 2}
   timerSeconds: 60
   scalesWithAttempts: 1
   hpIncreasePerAttempt: 0.5
+  hpByAttempt:
+  - 3250000
+  - 10550000
+  - 18405000
+  - 26850000
+  - 40650000
+  hpMultiplier: 1.5
   minRound: 0
-  maxRound: 59
+  maxRound: 60
   successGold: 3000
   successResources:
   - type: 0

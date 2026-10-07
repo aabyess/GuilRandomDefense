@@ -68,6 +68,9 @@ public class NetPlayer : NetworkBehaviour
     /// <summary>끊김 유예 남은 초(0 = 연결돼 있음). 호스트 NetSession이 쓴다 — 팀판 「연결 끊김 N초」.</summary>
     [Networked] public float GraceLeft { get; set; }
 
+    /// <summary>퇴치 의뢰 타이머 글(구매자 본인 PC의 QuestTimerPanel이 읽는다) — 호스트 PirateQuestManager가 초 단위로 써 준다.</summary>
+    [Networked] public NetworkString<_128> QuestTimerText { get; set; }
+
     public bool IsReadyForStart => IsHost || Ready;
 
     /// <summary>그 슬롯이 끊김 유예 중이면 남은 초(올림), 아니면 0. GameHud 팀판이 읽는다.</summary>
@@ -158,6 +161,8 @@ public class NetPlayer : NetworkBehaviour
             foreach (ResourceType type in System.Enum.GetValues(typeof(ResourceType)))
                 if ((int)type < ResourceSlots) Resources.Set((int)type, context.ResourceWallet.Get(type));
         Dead = context.IsDead;
+        string questTimer = PirateQuestManager.Instance != null ? PirateQuestManager.Instance.TimerText(Slot) : "";
+        if (QuestTimerText.ToString() != questTimer) QuestTimerText = questTimer;
         string reason = context.DefeatMessage ?? "";
         if (DefeatMessage.ToString() != reason) DefeatMessage = reason;
 

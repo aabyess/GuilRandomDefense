@@ -15,18 +15,26 @@ MonoBehaviour:
   questName: 김선우
   goldCost: 10
   stockMax: 1
-  stockStart: 0
+  stockStart: 1
   restockSeconds: 3600
+  requiresStoryOrder: 8
   miniboss: {fileID: 11400000, guid: 2b554eb6000b4bf5b30e6dfd8f1fba23, type: 2}
   timerSeconds: 60
   scalesWithAttempts: 0
   hpIncreasePerAttempt: 0.5
+  hpMultiplier: 1.5
   minRound: 0
-  maxRound: 59
+  maxRound: 60
   successGold: 0
   successResources: []
   successWisp: {fileID: 11400000, guid: 6ad4fde3d2a94d59be7d5d7665a73d2a, type: 2}
   successWispCount: 1
   successTraitPoints: 0
+  successItemChance: 0.03846154
+  successItemDrops:
+  - item: {fileID: 11400000, guid: d15d853b48414d1e97bca3f3ea6313e7, type: 2}
+    weight: 1
+    message: "★아이템:\n<color=#FFD700>황금빛 전보벌레</color> - <color=#FF0000>전설적인</color> 획득!"
+    skipIfOwned: 1
   storyDamage: 0
   failWispBlockRounds: 2

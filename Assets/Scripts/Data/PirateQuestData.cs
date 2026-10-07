@@ -26,6 +26,14 @@ public class PirateQuestData : ScriptableObject
     // 재고 1개가 다시 차기까지 걸리는 시간(초). 7종이 전부 다르다 — 통일하지 말 것
     // (해적단 360 · 스모커 510 · 바제스 1310 · 와포루·거프·피카·모리아 3600).
     public float restockSeconds = 3600f;
+    // 첫 재고가 뜨기까지(원작 usst). 0이면 restockSeconds와 같다. 스모커만 915초(대략 R21) 뒤 첫 재고, 그 뒤 510초마다 — 원작 h07A usst 915 · usrg 510(QUEST_AUDIT A11).
+    public float firstStockSeconds;
+
+    [Header("해금 조건 — 원작 ureq(연구). 0이면 없음")]
+    // 거프 H0AP ureq=R029 = 스토리 8(마린포드=우리 사이버넷) 클리어한 살아있는 플레이어만(Story_reward8이 생존자에게 연구, j 85378).
+    public int requiresStoryOrder;
+    // 와포루 H0AQ ureq=Rhde = R20 보스를 잡은 그 레인 플레이어만(j 84920).
+    public int requiresBossKillRound;
 
     [Header("미니보스 — EnemyDummy를 그대로 재사용한다(SetLane(-1))")]
     public EnemyData miniboss;
@@ -42,6 +50,10 @@ public class PirateQuestData : ScriptableObject
     // 실제로 1보다 큰 값을 돌려줄 수 있다.
     public bool scalesWithAttempts;
     public float hpIncreasePerAttempt = 0.5f;
+    // 원작 도전 횟수별 체력 표(스모커 A0NR·해적단 A0NS의 Ilif 레벨 표를 uhpm에 더한 값, QUEST_AUDIT A3·A4 [해석]) — 비어 있지 않으면 위 근사식 대신 이 표(n번째 도전 = [n-1], 5회 이후 마지막 값 고정).
+    public float[] hpByAttempt;
+    // 퀘스트 몹 체력 배율 — 원작 R01A~E(rhpo gba1 0.5)로 바제스 빼고 6종 ×1.5(QUEST_AUDIT A6 [해석: rhpo=최대체력 %]). 표·근사식 결과에 곱한다.
+    public float hpMultiplier = 1f;
 
     // ⚠️ 원작 판매 가능 라운드는 툴팁이 아니라 "판매 유닛을 들고 있는 상점 건물"의
     // 생성/제거 트리거로 정해진다 — 둘이 어긋난다. 와포루 툴팁은 "21~30라운드까지만"이라
@@ -73,6 +85,13 @@ public class PirateQuestData : ScriptableObject
     // 한정 bool 플래그라 필드의 정확한 수치는 안 읽는다.
     [Header("성공 시 특성포인트 (배선·상점 둘 다 도달함 — 위 주석 참고)")]
     public int successTraitPoints;
+
+    [Header("성공 시 확률 아이템 — 원작 와포루 I010 1/25 · 거프 I00J 1/26, 미보유 때만(QUEST_AUDIT A9)")]
+    public float successItemChance;
+    public List<EnemyItemDrop> successItemDrops;
+
+    [Header("성공 시 영웅 경험치 — 모리아 250(초월·영원 영웅 전원, QUEST_AUDIT A10)")]
+    public int successHeroXp;
 
     // 처치 성공 시 스토리 건물/보스에 추가로 주는 보너스 피해. 방어력을 무시하는 마법(Spells 행)으로
     // 들어간다 — StoryManager가 EnemyDummy.TakeDamage(DamageType.AP, AttackType.Spells)로 적용한다.

@@ -238,7 +238,7 @@ public class RewardDistributor : MonoBehaviour
             if (dropped != null && owner.ItemInventory.Add(dropped)) PlayerNotification.Show(owner.PlayerId, $"<color=#C8E6A0>{dropped.itemName}을(를) 주웠습니다!</color>", 5f);
         }
 
-        if (data.isBoss) GrantBossReward(owner, round, data);
+        if (data.isBoss) { owner.QuestBossRoundsKilled.Add(round); GrantBossReward(owner, round, data); }   // 와포루 ureq Rhde: 그 레인 플레이어가 R20 보스를 잡았다
     }
 
     // 원작 문구의 보상 부분 — 「N골드와 나무 N개」(우리 데이터 그대로).
@@ -408,7 +408,7 @@ public class RewardDistributor : MonoBehaviour
     }
 
     // 확률로 목록에서 아이템 하나(가중치 비례)를 그 플레이어 인벤토리에 넣는다 — 보스 드랍·스토리 드랍 공용.
-    void GrantItemDrop(PlayerContext context, float chance, List<EnemyItemDrop> drops)
+    public void GrantItemDrop(PlayerContext context, float chance, List<EnemyItemDrop> drops)
     {
         if (drops == null || drops.Count == 0 || context == null || context.ItemInventory == null) return;
         if (Random.value >= chance) return;

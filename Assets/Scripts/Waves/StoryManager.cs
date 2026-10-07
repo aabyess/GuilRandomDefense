@@ -171,6 +171,8 @@ public class StoryManager : MonoBehaviour
         running = null;
         activeEnemy = null;
         finished++;
+        foreach (PlayerContext pc in PlayerContext.All)   // 퇴치 의뢰 해금(거프 ureq R029): 원작은 살아있는 플레이어에게만 연구시킨다
+            if (pc != null && pc.IsOccupied && !pc.IsDead) pc.QuestStoriesCleared.Add(story.order);
 
         if (RewardDistributor.Instance != null)
         {

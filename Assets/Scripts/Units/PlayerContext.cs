@@ -102,6 +102,10 @@ public class PlayerContext : MonoBehaviour
     public bool IsOccupied => occupied;
     public bool IsDead => isDead;
 
+    /// <summary>퇴치 의뢰 해금 조건(원작 ureq 연구) — 이 플레이어가 클리어한 스토리 번호(StoryData.order)·처치한 보스 라운드. 서버(호스트)만 채우고 읽는다.</summary>
+    [System.NonSerialized] public readonly System.Collections.Generic.HashSet<int> QuestStoriesCleared = new System.Collections.Generic.HashSet<int>();
+    [System.NonSerialized] public readonly System.Collections.Generic.HashSet<int> QuestBossRoundsKilled = new System.Collections.Generic.HashSet<int>();
+
     public void SetOccupied(bool value)
     {
         occupied = value;
