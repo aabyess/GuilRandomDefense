@@ -270,4 +270,15 @@ public static class HeroStatShotProbe
         }
         return $"✅ {n}기 체력1·마나0";
     }
+
+    // 스토리 건물 적을 살펴보기 대상으로 건다(정보창 이름 「NN. 이름」 촬영용).
+    public static string InspectStory()
+    {
+        var sm = Object.FindFirstObjectByType<StoryManager>();
+        if (sm != null && sm.Running == null)
+            typeof(StoryManager).GetMethod("Spawn", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(sm, new object[] { sm.StoryAt(0) });
+        foreach (EnemyDummy e in Object.FindObjectsByType<EnemyDummy>(FindObjectsSortMode.None))
+            if (e.name.Contains("Story")) { InspectTarget.Set(e.gameObject); return "✅ " + e.DisplayName; }
+        return "❌ 스토리 적 없음";
+    }
 }

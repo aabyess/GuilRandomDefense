@@ -526,7 +526,7 @@ public class EnemyDummy : MonoBehaviour
 
     /// <summary>화면에 쓰는 이름 — 광폭화 유닛은 「광폭화 ○○」(BerserkMob이 정한다). 없으면 EnemyData 이름.</summary>
     public string NameOverride { get; set; }
-    public string DisplayName => !string.IsNullOrEmpty(NameOverride) ? NameOverride : (data != null && !string.IsNullOrEmpty(data.enemyName) ? data.enemyName : name);
+    public string DisplayName => !string.IsNullOrEmpty(NameOverride) ? NameOverride : (StoryManager.DisplayNameForEnemy(data) ?? (data != null && !string.IsNullOrEmpty(data.enemyName) ? data.enemyName : name));   // 스토리 건물·보스는 「NN. 이름」(10-08)
 
     // 자연회복(EnemyData.hpRegenPerSecond + regenBonus). 기본 0이라 대부분의 적은 아무 일도
     // 안 한다. isDead를 먼저 거른다 — TakeDamage의 사망 확정과 같은 프레임에 순서가 겹치면

@@ -83,6 +83,18 @@ public class StoryManager : MonoBehaviour
         return story.order > 0 ? $"{story.order:00}. {story.storyName}" : story.storyName;
     }
 
+    /// <summary>스토리 건물·보스 적(EnemyData)이면 「NN. 이름」, 아니면 null — EnemyDummy.DisplayName(정보창·살펴보기)이 쓴다. 멀티 클라도 같은 스토리 목록을 들고 있다.</summary>
+    public static string DisplayNameForEnemy(EnemyData enemy)
+    {
+        if (enemy == null || Instance == null) return null;
+        for (int i = 0; ; i++)
+        {
+            StoryData story = Instance.StoryAt(i);
+            if (story == null) return null;
+            if (story.building == enemy || story.boss == enemy) return DisplayName(story);
+        }
+    }
+
     /// <summary>대기 중이면 그 구간 이름(백수생활 등), 진행 중이면 스토리 이름.</summary>
     public string StatusLabel
     {
@@ -159,7 +171,7 @@ public class StoryManager : MonoBehaviour
         activeEnemy = null;
         pending = null;
         // 원작 j:13758 「와노쿠니 격파에 실패하여 패배합니다.」 — 제한시간 스토리는 원작에 와노쿠니 하나. 이름 자리에 우리 스토리 이름.
-        FindFirstObjectByType<RoundManager>()?.DefeatAllPlayers($"{story.storyName} 격파에 실패하여 패배합니다.");
+        FindFirstObjectByType<RoundManager>()?.DefeatAllPlayers($"{DisplayName(story)} 격파에 실패하여 패배합니다.");
     }
 
     Vector3 activeEnemyPosition;

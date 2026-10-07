@@ -563,8 +563,8 @@ public class RoundManager : MonoBehaviour
             Debug.Log($"41라운드 게이트 — {mode.KoreanName()} 모드, 대응 스토리 미클리어(FinishedCount<{gateOrder})로 전멸 처리합니다.");
             // 원작 CustomDefeatBJ: 지옥 「드레스로사를…」, 신·악몽 「홀케이크섬을 클리어하지 못하여 41라운드 이후를 진행하지 못했습니다.」
             //    — 원작 이름 자리에 그 순서의 우리 스토리 이름을 넣는다(스토리 번호·이름은 우리 것, 09-05 메모).
-            string storyName = StoryManager.Instance != null ? StoryManager.Instance.StoryAt(gateOrder - 1)?.storyName : null;
-            if (string.IsNullOrEmpty(storyName)) storyName = mode == DifficultyMode.Hell ? "드레스로사" : "홀케이크섬";
+            string storyName = StoryManager.Instance != null ? StoryManager.DisplayName(StoryManager.Instance.StoryAt(gateOrder - 1)) : null;
+            if (string.IsNullOrEmpty(storyName)) storyName = $"{gateOrder:00}. " + (mode == DifficultyMode.Hell ? "드레스로사" : "홀케이크섬");
             string gateReason = $"{storyName}{ObjectParticle(storyName)} 클리어하지 못하여 41라운드 이후를 진행하지 못했습니다.";
             foreach (PlayerContext context in PlayerContext.Occupied)
             {
@@ -723,7 +723,7 @@ public class RoundManager : MonoBehaviour
         int boss = d.bossPercent;
         int move = Mathf.RoundToInt((d.moveSpeedMultiplier - 1f) * 100f);
         int story = DifficultyTable.StoryHpPercent(mode);
-        string storyName(int order, string original) => StoryManager.Instance?.StoryAt(order - 1)?.storyName ?? original;
+        string storyName(int order, string original) => StoryManager.Instance?.StoryAt(order - 1) is StoryData sd ? StoryManager.DisplayName(sd) : $"{order:00}. {original}";
         switch (mode)
         {
             case DifficultyMode.Easy:
@@ -794,12 +794,12 @@ public class RoundManager : MonoBehaviour
         if (tipCount < 3) { tipCount++; return; }
         tipCount = 0;
         StoryManager story = StoryManager.Instance;
-        string hellStory = story?.StoryAt(HellRound41ClearGateOrder - 1)?.storyName ?? "드레스로사";
-        string godStory = story?.StoryAt(GodNightmareRound41ClearGateOrder - 1)?.storyName ?? "홀케이크섬";
+        string hellStory = story?.StoryAt(HellRound41ClearGateOrder - 1) is StoryData hs ? StoryManager.DisplayName(hs) : $"{HellRound41ClearGateOrder:00}. 드레스로사";
+        string godStory = story?.StoryAt(GodNightmareRound41ClearGateOrder - 1) is StoryData gs ? StoryManager.DisplayName(gs) : $"{GodNightmareRound41ClearGateOrder:00}. 홀케이크섬";
         string[] tips =
         {
-            $"|c00ffff00*Tip|r - |cffff8200지옥모드는 41라운드까지 |r|cffff0000{HellRound41ClearGateOrder}. {hellStory}|r|cffff8200{ObjectParticle(hellStory)} 격파하지 못하면|r |cffff0000패배|r|cffff8200합니다.|r",
-            $"|c00ffff00*Tip|r - |cffff8200신 모드는 41라운드까지 |r|cffff0000{GodNightmareRound41ClearGateOrder}. {godStory}|r|cffff8200{ObjectParticle(godStory)} 격파하지 못하면|r |cffff0000패배|r|cffff8200합니다.|r",
+            $"|c00ffff00*Tip|r - |cffff8200지옥모드는 41라운드까지 |r|cffff0000{hellStory}|r|cffff8200{ObjectParticle(hellStory)} 격파하지 못하면|r |cffff0000패배|r|cffff8200합니다.|r",
+            $"|c00ffff00*Tip|r - |cffff8200신 모드는 41라운드까지 |r|cffff0000{godStory}|r|cffff8200{ObjectParticle(godStory)} 격파하지 못하면|r |cffff0000패배|r|cffff8200합니다.|r",
             "|c00ffff00*Tip|r - |cffff8200초반 위습을 도움소 마나에 넣으셔서 불비 스킬을 사용하신다면 20라운드까지 보스를 잡기 수월합니다|r",
         };
         foreach (string line in Wc3Text.ToRichLines(tips[Random.Range(0, tips.Length)])) AnnounceAll(line, 10f);
