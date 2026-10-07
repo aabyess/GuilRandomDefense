@@ -28,6 +28,15 @@ Shader "GuilRandomDefense/SeaWater"
         _RippleSpeed ("잔물결 속도", Float) = 0.5
         _Smoothness ("반짝임", Range(0, 1)) = 0.88
         _FresnelPower ("가장자리 반사", Float) = 4
+        _SpecIntensity ("해 반짝임 세기(원작은 반사가 거의 없다 — 반짝임 「폭」은 _Smoothness, 「세기」는 여기)", Range(0, 1)) = 1
+        // 10-07 원작 톤 물 텍스처(blender water_color/normal_2048) — 둘 다 비어 있으면 예전 그대로(무늬 없음).
+        _ColorMap ("물 색 무늬(원작 톤)", 2D) = "white" {}
+        _WaterBump ("잔물결 노멀", 2D) = "bump" {}
+        _ColorMapAvg ("색 무늬 평균색(나눠서 밝기 편차만 쓴다)", Color) = (0.125, 0.286, 0.365, 1)
+        _ColorMapMix ("색 무늬 섞기", Range(0, 1)) = 0
+        _MapWorldSize ("텍스처 한 장이 덮는 길이(게임 단위)", Float) = 480
+        _FlowA ("흐름 두 겹(xy 첫째, zw 둘째, 게임 단위/초÷한 장 길이)", Vector) = (0.012, 0.006, -0.008, 0.010)
+        _NormalMapStrength ("노멀 무늬 세기", Range(0, 2)) = 0
     }
 
     SubShader
@@ -72,7 +81,15 @@ Shader "GuilRandomDefense/SeaWater"
                 float _RippleSpeed;
                 float _Smoothness;
                 float _FresnelPower;
+                half _SpecIntensity;
+                half4 _ColorMapAvg;
+                half _ColorMapMix;
+                float _MapWorldSize;
+                float4 _FlowA;
+                half _NormalMapStrength;
             CBUFFER_END
+            TEXTURE2D(_ColorMap); SAMPLER(sampler_ColorMap);
+            TEXTURE2D(_WaterBump); SAMPLER(sampler_WaterBump);
 
             struct Attributes
             {
@@ -179,6 +196,17 @@ Shader "GuilRandomDefense/SeaWater"
                 float hz = RippleHeight(xz + float2(0, e));
                 float2 slope = float2(hx - h0, hz - h0) / e * _RippleStrength;
 
+                // 원작 톤 무늬(10-07): 두 겹이 서로 다른 속도로 흘러 반복 티를 줄인다.
+                float2 uvA = xz / max(_MapWorldSize, 1.0) + _FlowA.xy * _Time.y;
+                float2 uvB = xz / max(_MapWorldSize, 1.0) * 1.7 + _FlowA.zw * _Time.y;
+                half3 mapA = SAMPLE_TEXTURE2D(_ColorMap, sampler_ColorMap, uvA).rgb;
+                half3 mapB = SAMPLE_TEXTURE2D(_ColorMap, sampler_ColorMap, uvB).rgb;
+                half3 bumpA = UnpackNormal(SAMPLE_TEXTURE2D(_WaterBump, sampler_WaterBump, uvA));
+                half3 bumpB = UnpackNormal(SAMPLE_TEXTURE2D(_WaterBump, sampler_WaterBump, uvB));
+                // 미니맵(직교 카메라)은 몇십 배 축소돼 텍스처가 반짝이는 회색 잡음이 된다(10-07 실측) — 직교에선 무늬를 끄고 깊이 색만 쓴다.
+                half useMap = unity_OrthoParams.w > 0.5 ? 0.0 : 1.0;
+                slope += (bumpA.xy + bumpB.xy) * 0.5 * _NormalMapStrength * useMap;
+
                 float3 n = normalize(input.normalWS);
                 float3 normalWS = normalize(float3(n.x - slope.x, n.y, n.z - slope.y));
                 float3 viewDirWS = normalize(GetWorldSpaceViewDir(input.positionWS));
@@ -189,18 +217,22 @@ Shader "GuilRandomDefense/SeaWater"
                 float waterDepth = max(0.0, SceneEyeDepth(screenUV) - surfaceDepth);
 
                 half4 water = lerp(_ShallowColor, _DeepColor, saturate(waterDepth / max(_DepthMaxDistance, 0.001)));
+                // 색 무늬는 평균색으로 나눈 편차만 곱한다 — 전체 색조는 위 _ShallowColor/_DeepColor가 정하고 무늬는 일렁임만 더한다.
+                half3 mapTint = clamp(((mapA + mapB) * 0.5) / max(_ColorMapAvg.rgb, 0.02), 0.5, 1.6);
+                water.rgb *= lerp(half3(1, 1, 1), mapTint, _ColorMapMix * useMap);
 
                 // 물가 거품 — 흐르는 노이즈를 문턱으로 써서 끊긴 띠로 만든다.
                 float foamMask = 1.0 - saturate(waterDepth / max(_FoamDistance, 0.001));
                 float foamNoise = GradientNoise(xz * _FoamNoiseScale + _Time.y * 0.25) * 0.5 + 0.5;
                 float foam = smoothstep(foamNoise - 0.06, foamNoise + 0.06, foamMask);
+                foam *= useMap;   // 미니맵(직교)에선 깊이 차가 거의 0이라 거품이 온 바다를 흰 잡음으로 덮는다(10-07 실측: 미니맵 바다 평균 (123,124,126)) — 끈다
 
                 Light mainLight = GetMainLight(TransformWorldToShadowCoord(input.positionWS));
                 half shadow = mainLight.shadowAttenuation;
                 float3 halfDir = normalize(mainLight.direction + viewDirWS);
                 float nDotL = saturate(dot(normalWS, mainLight.direction));
                 float specPower = exp2(_Smoothness * 10.0 + 1.0);
-                float spec = pow(saturate(dot(normalWS, halfDir)), specPower) * _Smoothness;
+                float spec = pow(saturate(dot(normalWS, halfDir)), specPower) * _Smoothness * _SpecIntensity;
                 float fresnel = pow(1.0 - saturate(dot(normalWS, viewDirWS)), _FresnelPower);
                 half3 ambient = SampleSH(normalWS);
 

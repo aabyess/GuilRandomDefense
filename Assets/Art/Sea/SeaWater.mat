@@ -22,23 +22,37 @@ Material:
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
-    m_TexEnvs: []
+    m_TexEnvs:
+    - _ColorMap:
+        m_Texture: {fileID: 2800000, guid: 23fd6ed1fe61a49d584f32ba88a6b5ab, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _WaterBump:
+        m_Texture: {fileID: 2800000, guid: 8fd147f36e1a745a8bb0b34c941e4523, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _ColorMapMix: 0.85
     - _DepthMaxDistance: 14
     - _FoamDistance: 1.6
     - _FoamNoiseScale: 0.45
-    - _FresnelPower: 4
+    - _FresnelPower: 6
+    - _MapWorldSize: 480
+    - _NormalMapStrength: 0.35
     - _RippleScale: 0.14
     - _RippleSpeed: 0.5
     - _RippleStrength: 0.8
     - _Smoothness: 0.88
+    - _SpecIntensity: 0.35
     - _SwellShading: 9
     - _WaveSpeedScale: 0.6
     m_Colors:
-    - _DeepColor: {r: 0.04, g: 0.42, b: 0.58, a: 0.90}
+    - _ColorMapAvg: {r: 0.12499998, g: 0.28599998, b: 0.36499998, a: 1}
+    - _DeepColor: {r: 0.06823529, g: 0.21529412, b: 0.29411766, a: 0.96}
+    - _FlowA: {r: 0.012, g: 0.006, b: -0.008, a: 0.01}
     - _FoamColor: {r: 0.94, g: 0.96999997, b: 1, a: 1}
-    - _ShallowColor: {r: 0.25, g: 0.82, b: 0.80, a: 0.60}
+    - _ShallowColor: {r: 0.13215686, g: 0.28901958, b: 0.3478431, a: 0.8}
     - _WaveA: {r: 1, g: 0.3, b: 0.016, a: 90}
     - _WaveB: {r: -0.4, g: 1, b: 0.018, a: 57}
     - _WaveC: {r: 0.7, g: -0.8, b: 0.02, a: 33}
