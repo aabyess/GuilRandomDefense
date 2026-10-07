@@ -68,6 +68,9 @@ public class RecipeHelperPanel : MonoBehaviour
         public TMP_Text header;
     }
 
+    // 어디서도 안 나오는 유닛(조합식 결과·재료도, 지급처도 없음 — 에셋 참조 0건)은 목록에서 뺀다. 「[히든]해적선」: 지급처를 전부 상붕카로 바꿔(10-07) 고아가 됐다(사장님 「왜 있지?」).
+    static readonly HashSet<string> OrphanNames = new HashSet<string> { "해적선" };
+
     static readonly string[] TabNames = { "기본 등급", "전설 · 히든", "제한됨 이상" };
 
     // ── 상태
@@ -128,7 +131,7 @@ public class RecipeHelperPanel : MonoBehaviour
                         if (ing.alternativeUnit != null) set.Add(ing.alternativeUnit);
                     }
             }
-        foreach (UnitData loaded in Resources.FindObjectsOfTypeAll<UnitData>()) if (loaded != null && !string.IsNullOrEmpty(loaded.unitName) && loaded.prefab != null) set.Add(loaded);   // 조합식에 안 나오는 유닛(특수함 등)도 — 이미 로드된 로스터
+        foreach (UnitData loaded in Resources.FindObjectsOfTypeAll<UnitData>()) if (loaded != null && !string.IsNullOrEmpty(loaded.unitName) && loaded.prefab != null && !OrphanNames.Contains(loaded.name)) set.Add(loaded);   // 조합식에 안 나오는 유닛(특수함 등)도 — 이미 로드된 로스터
         foreach (UnitData u in set) if (!u.isSystemUnit && u.grade != UnitGrade.TranscendentWisp && u.grade != UnitGrade.Transformed) units.Add(u);
         units.Sort((a, b) => { int t = a.grade.Tier().CompareTo(b.grade.Tier()); return t != 0 ? t : string.CompareOrdinal(a.name, b.name); });
         progress = new RecipeProgress(recipes != null ? recipes : new List<CombineRecipe>(), units);
