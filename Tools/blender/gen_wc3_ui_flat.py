@@ -4,10 +4,10 @@ import os, sys
 import numpy as np
 from PIL import Image, ImageDraw
 D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/GRD_wc3_ui'); os.makedirs(D, exist_ok=True)
-# chat_line_band 320×80: 검정, 알파 최대 0.45, 양끝 32px·위아래 10px로 번짐
+# chat_line_band 320×80: 검정, 알파 최대 0.6, 양끝 32px·위아래 10px로 번짐
 w, h = 320, 80; x = np.linspace(0, 1, w); y = np.linspace(0, 1, h)
-fx = np.clip(np.minimum(x, 1 - x) / (32 / w), 0, 1); fy = np.clip(np.minimum(y, 1 - y) / (10 / h), 0, 1)
-img = np.zeros((h, w, 4), np.uint8); img[..., 3] = ((fx[None, :] ** 1.5) * (fy[:, None] ** 1.2) * .45 * 255).astype(np.uint8)
+fx = np.clip(np.minimum(x, 1 - x) / (32 / w), 0, 1); fy = np.clip(np.minimum(y, 1 - y) / (7 / h), 0, 1)
+img = np.zeros((h, w, 4), np.uint8); img[..., 3] = ((fx[None, :] ** 1.2) * (fy[:, None] ** .9) * .6 * 255).astype(np.uint8)
 Image.fromarray(img).save(D + '/chat_line_band.png')
 # score_row_divider 936×4
 im = Image.new('RGBA', (936, 4), (0, 0, 0, 0)); d = ImageDraw.Draw(im); d.line((8, 0, 927, 0), fill=(150, 120, 60, 140)); d.rectangle((8, 1, 927, 3), fill=(4, 4, 8, 220)); im.save(D + '/score_row_divider.png')
