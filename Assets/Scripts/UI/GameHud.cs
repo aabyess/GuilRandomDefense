@@ -3619,6 +3619,21 @@ public class GameHud : MonoBehaviour
         }
     }
 
+    // 10-08 게이지 유닛: 체력 막대 = 체력 게이지(현재/문턱, 없으면 가득), 마나 막대 = 마나 게이지(없으면 숨김).
+    void SetPortraitGauges(int fullHp, int lifeNow, int lifeMax, int manaNow, int manaMax)
+    {
+        if (portraitHpBar == null) return;
+        portraitHpBar.transform.parent.gameObject.SetActive(true);
+        if (lifeMax > 0) { portraitHpBar.fillAmount = Mathf.Clamp01(lifeNow / (float)lifeMax); portraitHpText.text = $"{lifeNow} / {lifeMax}"; }
+        else { portraitHpBar.fillAmount = 1f; portraitHpText.text = $"{fullHp} / {fullHp}"; }
+        bool mpOn = manaMax > 0;
+        if (portraitMpBar.transform.parent.gameObject.activeSelf != mpOn) portraitMpBar.transform.parent.gameObject.SetActive(mpOn);
+        if (!mpOn) return;
+        PlacePortraitMpBar(false);
+        portraitMpBar.fillAmount = Mathf.Clamp01(manaNow / (float)manaMax);
+        portraitMpText.text = $"{manaNow} / {manaMax}";
+    }
+
     // 마나 줄 자리: 유닛은 체력 줄 아래(0.01~0.09), 건물(체력 줄 없음)은 체력 줄 자리(0.10~0.18)로 올려 틀 덮개에 안 가려지게 한다.
     void PlacePortraitMpBar(bool atHpSlot)
     {
@@ -5167,18 +5182,11 @@ public class GameHud : MonoBehaviour
             if (wc3NameText != null)
                 SetWc3Strips(true, $"{firstPart}{secondPart}", $"<color=#{gradeColorHex}>{grade}{levelLabel}</color>" + (data.OriginalMatchLabel.Length > 0 ? $"  <size=80%><color=#A0A0A0>{data.OriginalMatchLabel.Replace("원작: ", "원작 ")}</color></size>" : ""));
             if (skillIconRow != null && skillIconRow.activeSelf) skillIconRow.SetActive(false);   // 10-07 스킬 아이콘은 명령 카드로 옮김(ReflowFlexSlots Passive)
-            int? manaNow = null;
-            int manaCap = 0;
-            if (UnitManaTable.HasMana(data))
-            {
-                PlayerContext localPlayer = PlayerContext.Local;
-                if (localPlayer != null && localPlayer.ResourceWallet != null)
-                {
-                    manaNow = localPlayer.ResourceWallet.Get(ResourceType.Mana);
-                    manaCap = localPlayer.ResourceWallet.GetCap(ResourceType.Mana);
-                }
-            }
-            SetPortraitBars(Mathf.RoundToInt(data.hp), manaNow, manaCap);
+            // 10-08 6·7: 막대는 유닛 게이지(현재/문턱)다 — 지갑 마나(도움소)는 여기서 뺐다. 게이지가 없으면 체력은 가득·마나 막대는 숨김.
+            int lifeNow = 0, lifeMax = 0, manaNow = 0, manaMax = 0;
+            if (attacker != null) { lifeNow = attacker.ShownLifeNow; lifeMax = attacker.ShownLifeMax; manaNow = attacker.ShownManaNow; manaMax = attacker.ShownManaMax; }
+            else if (mirror != null) { lifeNow = mirror.GaugeLifeNow; lifeMax = mirror.GaugeLifeMax; manaNow = mirror.GaugeManaNow; manaMax = mirror.GaugeManaMax; }
+            SetPortraitGauges(Mathf.RoundToInt(data.hp), lifeNow, lifeMax, manaNow, manaMax);
             return;
         }
 

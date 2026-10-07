@@ -234,4 +234,40 @@ public static class HeroStatShotProbe
     {
         if (System.IO.File.Exists("ClaudeBridge/nowc3.flag")) UiSkin.Wc3Active = false;
     }
+
+    // 10-08 게이지 막대 촬영용 — 노태현(체력만)·강재규(둘 다)·손오공(마나만)·흔함 강주혁(게이지 없음)을 세우고 이름 조각으로 고른다.
+    static readonly string[] GaugeUnits = { "초월_노태현_AP", "초월_강재규_AP", "랜덤_손오공", "흔함_강주혁" };
+    public static string SpawnGaugeUnits()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        foreach (string n in GaugeUnits)
+            spawner.Spawn(UnityEditor.AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{n}.asset"), LaneMarker.Get(0).LaneCenter, 0);
+        return "✅ 네 기";
+    }
+    static string SelectByPart(string part)
+    {
+        foreach (Selectable sel in Object.FindObjectsByType<Selectable>(FindObjectsSortMode.None))
+            if (sel.name.Contains(part)) { Object.FindFirstObjectByType<SelectionManager>().SelectOnly(sel); return "✅ " + sel.name; }
+        return "❌ 못 찾음 " + part;
+    }
+    public static string SelectNotae() => SelectByPart("초월_노태현");
+    public static string SelectKang() => SelectByPart("초월_강재규");
+    public static string SelectSonogong() => SelectByPart("랜덤_손오공");
+    public static string SelectPlain() => SelectByPart("흔함_강주혁");
+
+    // 발동 직후 모습: 체력 게이지 1·마나 게이지 0으로 내린다(값은 HUD 표시 확인용 — 발동 로직은 구현담당1 실측).
+    public static string FireGauges()
+    {
+        var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        int n = 0;
+        foreach (UnitAttacker a in Object.FindObjectsByType<UnitAttacker>(FindObjectsSortMode.None))
+        {
+            var t = typeof(UnitAttacker);
+            t.GetField("lifeGaugeInitialized", flags)?.SetValue(a, true); t.GetField("lifeGaugeCounter", flags)?.SetValue(a, 1);
+            t.GetField("manaGaugeInitialized", flags)?.SetValue(a, true); t.GetField("manaGaugeCounter", flags)?.SetValue(a, 0);
+            n++;
+        }
+        return $"✅ {n}기 체력1·마나0";
+    }
 }
