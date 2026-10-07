@@ -301,7 +301,7 @@ public class CombineSystem : MonoBehaviour
             StartCoroutine(SpawnResultLater(recipe, ownerId));
             PlayerNotification.Show(ownerId, $"<color=#FFD54F>{recipe.result.unitName}이(가) {Mathf.CeilToInt(recipe.resultDelaySeconds)}초 뒤에 나타납니다.</color>", 8f);
         }
-        else spawner.Spawn(recipe.result, resultPosition, ownerId);
+        else { spawner.Spawn(recipe.result, resultPosition, ownerId); GrantAcquireGold(recipe, ownerId); }
         GameSound.PlayFor(ownerId, GameSoundId.Combine);   // 조합 성공음(10-06) — 조합한 사람에게만(멀티 친구면 NetGameState가 넘긴다)
         if (IsTransformRecipe(recipe)) OwnerContext?.TryConsumeTransformUse();   // 원작: 변화 성공 때 토큰 1기 제거
 
@@ -328,6 +328,18 @@ public class CombineSystem : MonoBehaviour
         if (spawner == null || !GameAuthority.IsServer) yield break;
         spawner.Spawn(recipe.result, ResolveResultPosition(null, recipe.result, ownerId), ownerId);
         PlayerNotification.Show(ownerId, $"<color=#FFD54F>{recipe.result.unitName}이(가) 나타났습니다!</color>", 8f);
+        GrantAcquireGold(recipe, ownerId);
+    }
+
+    // 결과 유닛 획득 보상 금화(CombineRecipe.acquireGoldReward) — 즉시·지연 생성 모두 여기 한 곳. 서버만.
+    void GrantAcquireGold(CombineRecipe recipe, int ownerId)
+    {
+        if (recipe.acquireGoldReward <= 0) return;
+        PlayerContext owner = PlayerContext.Get(ownerId);
+        GoldWallet wallet = owner != null ? owner.GoldWallet : Wallet;   // 지연 뒤엔 조합 당시 행위자 정보가 없으니 주인 컨텍스트로
+        if (wallet == null) return;
+        wallet.Add(recipe.acquireGoldReward);
+        PlayerNotification.Show(ownerId, $"<color=#FFD54F>{recipe.result.unitName} 획득 보상 +{recipe.acquireGoldReward:N0}엔</color>", 8f);
     }
 
     int ResolveOwnerId()
