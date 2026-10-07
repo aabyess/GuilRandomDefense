@@ -90,6 +90,12 @@ def simple(name, col, rough=.6, metallic=0.0, emit=None, st=0.0):
     if emit: b.inputs['Emission Color'].default_value = (*emit, 1); b.inputs['Emission Strength'].default_value = st
     return m
 
+def glow(name, col, st):
+    m, t, b = newmat(name)
+    for n in list(t.nodes):
+        if n.type != 'OUTPUT_MATERIAL': t.nodes.remove(n)
+    o = next(n for n in t.nodes if n.type == 'OUTPUT_MATERIAL'); e = nd(t, 'ShaderNodeEmission'); e.inputs[0].default_value = (*col, 1); e.inputs[1].default_value = st; lk(t, e.outputs[0], o.inputs[0]); return m
+
 def metal_mat(name='금속', col=(.78, .56, .22), rough=.35, wear=.6, dark=(.12, .08, .03)):
     """낡은 금빛 금속(brass): 패인 곳은 어둡게(때), 모서리는 밝게 닳음."""
     m, t, b = newmat(name)
@@ -151,10 +157,13 @@ def mktorus(sc, name, R, r, loc, mat, rot=(0, 0, 0), seg=64, mseg=16):
     o = bpy.context.object; o.name = name; bpy.ops.object.shade_smooth(); o.data.materials.append(mat); return o
 
 # ---------------------------------------------------------------- 카메라·빛·렌더
-def ortho_cam(sc, cx, cz, width_m, rx, ry):
-    """정면(−Y에서 +Y를 봄) 정사영. width_m = 가로 화면 폭(미터)."""
+def ortho_cam(sc, cx, cz, width_m, rx, ry, tilt=0.0):
+    """정면(−Y에서 +Y를 봄) 정사영. width_m = 가로 화면 폭(미터). tilt(도) = 위에서 살짝 내려다봄(돌 윗면이 보이게).
+    tilt>0이면 cz는 '화면 세로 중심이 지나는 y=0 평면 위 높이'로 해석: 화면 아래 = (y=0, z=0)에 맞추려면 cz = 화면높이/2/cos(tilt)."""
     cam = bpy.data.cameras.new('cam'); cam.type = 'ORTHO'; cam.ortho_scale = width_m if rx >= ry else width_m * ry / rx
-    co = link(bpy.data.objects.new('cam', cam), sc); sc.camera = co; co.location = (cx, -10, cz); co.rotation_euler = (math.radians(90), 0, 0)
+    co = link(bpy.data.objects.new('cam', cam), sc); sc.camera = co
+    t = math.radians(tilt); d = Vector((0, math.cos(t), -math.sin(t)))
+    co.location = Vector((cx, 0, cz)) - d * 10; co.rotation_euler = (math.radians(90) - t, 0, 0)
     sc.render.resolution_x, sc.render.resolution_y = rx, ry; return co
 def ui_lights(sc, key=4.2, fill=.35):
     """워크3 UI 문법: 왼쪽 위 앞에서 오는 해(또렷한 그림자) + 오른쪽 아래 차가운 보조 + 약한 하늘."""

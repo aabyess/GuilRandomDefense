@@ -18,13 +18,18 @@ if len(sys.argv) > 1 and sys.argv[1] == 'compare':                       # -----
                 if dx1 > dx0 and dy1 > dy0: out.alpha_composite(src.crop((sx0, sy0, sx1, sy1)).resize((dx1 - dx0, dy1 - dy0), Image.LANCZOS), (dx0, dy0))
         return out.resize((w, h), Image.LANCZOS)
     ours = Image.new('RGBA', (1920, 1080), (88, 92, 70, 255))               # 월드 자리(참고 사진의 풀밭 톤)
-    bar = L('console_bar_tile').resize((256, 285), Image.LANCZOS)
-    for x in range(0, 1920, 256): ours.alpha_composite(bar, (x, 795))
-    ours.alpha_composite(L('console_cap_left').resize((70, 285), Image.LANCZOS), (0, 795)); ours.alpha_composite(L('console_cap_right').resize((70, 285), Image.LANCZOS), (1850, 795))
+    bar = L('console_bar_tile').resize((256, 285), Image.LANCZOS); tall = L('console_bar_tile_tall').resize((256, 299), Image.LANCZOS)
+    for x in range(0, 1920, 256):
+        layer = Image.new('RGBA', (1920, 1080)); layer.alpha_composite(bar, (x, 795)); ours.alpha_composite(layer)
+    for (xa, xb) in ((0, 440), (1418, 1920)):                                 # 미니맵·명령 카드 구역 = 높은 타일
+        layer = Image.new('RGBA', (1920, 1080))
+        for x in range(0, 1920, 256): layer.alpha_composite(tall, (x, 781))
+        ours.paste(Image.new('RGBA', (xb - xa, 1080 - 760), (88, 92, 70, 255)), (xa, 760)); ours.alpha_composite(layer.crop((xa, 0, xb, 1080)), (xa, 0))
+    
     pf = L('panel_frame_stone')
     d = ImageDraw.Draw(ours)
     for (x0, y0, x1, y1) in ((16, 809, 368, 1066), (750, 809, 1215, 1080), (1468, 815, 1915, 1075)):
-        d.rectangle((x0 + 20, y0 + 20, x1 - 20, y1 - 20), fill=(0, 0, 0, 255)); ours.alpha_composite(s9(pf, x1 - x0, y1 - y0, 56), (x0, y0))
+        d.rectangle((x0 + 12, y0 + 12, x1 - 12, y1 - 12), fill=(0, 0, 0, 255)); ours.alpha_composite(s9(pf, x1 - x0, y1 - y0, 32), (x0, y0))
     d.rectangle((440 + 14, 858, 705 - 14, 1080), fill=(0, 0, 0, 255))      # 초상 자리(아치는 다음 덩어리)
     pl = L('stone_pillar')
     for (x0, x1) in ((368, 440), (705, 750), (1215, 1238), (1418, 1468)):
@@ -43,10 +48,11 @@ exec(open(os.path.join(HERE, 'gen_ui_wc3_common.py'), encoding='utf-8').read())
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
 OUT = os.path.expanduser(argv[0] if argv else '~/GRD_wc3_ui'); os.makedirs(OUT, exist_ok=True)
 SAMPLES = int(argv[1]) if len(argv) > 1 else 128
+TILT = 12.0                                    # 돌 콘솔은 위에서 12° 내려다봄(참고 사진처럼 윗면이 밝게 보이게)
 PPM = 200.0                                    # 납품 px / m (목표 1px = 1cm, 납품 2배)
-PARTS = os.environ.get('WC3_PARTS', 'bar,capL,capR,pillar,panel').split(',')
+PARTS = os.environ.get('WC3_PARTS', 'bar,bar_tall,capL,capR,pillar,panel').split(',')
 
-STONE_TONES = [(.075, .072, .07), (.064, .062, .064), (.086, .08, .075), (.058, .057, .06), (.079, .075, .072), (.069, .065, .063)]
+STONE_TONES = [tuple(c * f for c, f in zip(t_, (1.17, 1.13, 1.08))) for t_ in [(.075, .072, .07), (.064, .062, .064), (.086, .08, .075), (.058, .057, .06), (.079, .075, .072), (.069, .065, .063)]]
 RUST_LOW = .9
 def stone_set(sc, prefix, n=6, moss=.55, rust_every=4, light=1.0, rust_low=None):
     return [stone_mat(f'{prefix}{i}', base=STONE_TONES[i % 6], seed=i + hash(prefix) % 97, moss=moss, rust=(.75 if i % rust_every == 0 else 0.0), light=light, rust_low=(RUST_LOW if rust_low is None else rust_low)) for i in range(n)]
@@ -66,34 +72,67 @@ def courses(x0, x1, z0, z1, seed, row_h=(.24, .31), blen=(.5, .85), offset=True)
         z += h; row += 1
     return out
 
+def rock_courses(x0, x1, z0, z1, seed):
+    """비정형 돌 쌓기: 두 줄씩 묶어, 일부는 두 줄 높이 큰 바위, 나머지는 줄마다 끊는 자리가 다르게. [x0,x1]을 정확히 채움."""
+    r = random.Random(seed); out = []; z = z0
+    while z < z1 - 1e-6:
+        h1 = r.uniform(.22, .32); h2 = r.uniform(.22, .32)
+        if z1 - (z + h1 + h2) < .12: 
+            if z1 - z < .40: h1, h2 = z1 - z, 0.0
+            else: h2 = z1 - z - h1
+        x = x0
+        while x < x1 - 1e-6:
+            if h2 > 0 and r.random() < .3:
+                w = r.uniform(.55, .9)
+                if x1 - (x + w) < .25: w = x1 - x
+                out.append((x, min(x + w, x1), z, z + h1 + h2)); x += w
+            else:
+                S = r.uniform(1.0, 1.7)
+                if x1 - (x + S) < .3: S = x1 - x
+                for (zb, zt) in ((z, z + h1), (z + h1, z + h1 + h2)) if h2 > 0 else ((z, z + h1),):
+                    xx = x
+                    while xx < x + S - 1e-6:
+                        L = r.uniform(.45, .9)
+                        if x + S - (xx + L) < .25: L = x + S - xx
+                        out.append((xx, xx + L, zb, zt)); xx += L
+                x += S
+        z += h1 + h2
+    return out
+
 def place_blocks(sc, blocks, mats, depth=(.14, .22), y_front=0.0, gap=.026, chip=.04, tag='b', seed=0, xshift=0.0):
     r = random.Random(seed)
     for i, (x0, x1, z0, z1) in enumerate(blocks):
         d = r.uniform(*depth); sx = x1 - x0 - gap; sz = z1 - z0 - gap
-        rough_block(sc, f'{tag}{i}', (sx, d, sz), (xshift + (x0 + x1) / 2, y_front + d / 2 - r.uniform(0, .02), (z0 + z1) / 2), mats[r.randrange(len(mats))], seed * 1000 + i, chip=chip)
+        ob = rough_block(sc, f'{tag}{i}', (sx * r.uniform(.97, 1.0), d, sz * r.uniform(.95, 1.0)), (xshift + (x0 + x1) / 2, y_front + d / 2 - r.uniform(0, .03), (z0 + z1) / 2 + r.uniform(-.01, .01)), mats[r.randrange(len(mats))], seed * 1000 + i, chip=chip)
+        ob.rotation_euler = (0, math.radians(r.uniform(-2.2, 2.2)), 0)
 
-def merlons(sc, x0, x1, z0, h, mats, w=.42, gapw=.22, seed=9, y_front=-.04, xshift=0.0, first_offset=None):
-    """총안 톱니: [x0,x1] 안에 주기 (w+gapw)로 merlon. 각 merlon = 몸 돌 + 위 덮개."""
+def merlons(sc, x0, x1, z0, h, mats, capmats, w=.96, gapw=.32, seed=9, y_front=-.04, xshift=0.0, first_offset=None, jitter=.04):
+    """총안: [x0,x1] 안에 주기 (w+gapw). 하나하나 폭·높이를 ±jitter로 다르게(이음은 주기 복제라 맞음). 위는 밝은 평평한 뚜껑돌."""
     per = w + gapw; x = x0 + (gapw / 2 if first_offset is None else first_offset); j = 0; r = random.Random(seed)
     while x + w <= x1 + 1e-6:
-        cx = xshift + x + w / 2
-        rough_block(sc, f'mer{seed}_{j}', (w - .012, .22, h - .055), (cx, y_front + .11, z0 + (h - .055) / 2), mats[j % len(mats)], seed * 100 + j, chip=.03)
-        rough_block(sc, f'mcap{seed}_{j}', (w + .02, .25, .06), (cx, y_front + .1, z0 + h - .03), mats[(j + 2) % len(mats)], seed * 100 + 50 + j, chip=.018)
+        dw = r.uniform(-jitter, jitter); dh = r.uniform(-jitter, jitter * .5); ww = w + dw; hh = h + dh
+        cx = xshift + x + w / 2 + r.uniform(-.01, .01)
+        rough_block(sc, f'mer{seed}_{j}', (ww - .02, .26, hh - .06), (cx, y_front + .13, z0 + (hh - .06) / 2), mats[j % len(mats)], seed * 100 + j, chip=.035)
+        cap = mkbox(sc, f'mcap{seed}_{j}', (ww, .26, .06), (cx, y_front + .13, z0 + hh - .03), capmats[j % len(capmats)], bevel=.02)
         x += per; j += 1
 
 # ------------------------------------------------------------------ 1. console_bar_tile (가로 타일 2.56 × 2.85, 위 0.24 총안)
-def part_bar():
+def part_bar(tall=False):
+    """console_bar_tile(2.56×2.85) / _tall(2.56×2.99). 아랫부분 돌 배치는 두 타일이 같다(같은 씨앗, 같은 줄) — 높은 쪽은 위에 한 줄 더."""
     sc = reset_scene(); ui_lights(sc); render_setup(sc, SAMPLES)
-    W, H, CZ = 2.56, 2.85, .24; body_top = H - CZ
-    mats = stone_set(sc, '벽돌'); capm = stone_set(sc, '띠돌', 3, moss=.3, light=1.1)
-    body = courses(-W / 2, W / 2, 0, body_top - .11, seed=11)
-    ledge = courses(-W / 2, W / 2, body_top - .11, body_top, seed=12, row_h=(.11, .11), blen=(.5, .8))
+    W, CZ = 2.56, .24; H = 2.85 + (.14 if tall else 0); body_top = H - CZ
+    mats = stone_set(sc, '벽돌'); capm = stone_set(sc, '띠돌', 3, moss=.3, light=1.1, rust_low=0.0)
+    lid = [stone_mat(f'뚜껑{i}', base=tuple(c * 1.55 for c in STONE_TONES[i]), seed=80 + i, moss=.1, light=1.2) for i in range(3)]
+    base_top = 2.85 - CZ - .11                                             # 낮은 타일의 몸통 꼭대기(공통 배치)
+    body = rock_courses(-W / 2, W / 2, -.35, base_top, seed=11)          # 화면 아래 밖까지 채움(기울여 봐도 아래가 비지 않게)
+    extra = rock_courses(-W / 2, W / 2, base_top, body_top - .11, seed=14) if tall else []
+    ledge = courses(-W / 2, W / 2, body_top - .11, body_top, seed=12, row_h=(.11, .11), blen=(.6, 1.0))
     for k in (-1, 0, 1):                                      # 주기 복제 → 이음새 없음
-        mkbox(sc, 'mortar', (W, .1, body_top), (k * W, .2, body_top / 2), mortar_mat())
-        place_blocks(sc, body, mats, tag=f'b{k}_', seed=11, xshift=k * W)
-        place_blocks(sc, ledge, capm, depth=(.22, .24), y_front=-.05, tag=f'l{k}_', seed=12, xshift=k * W, chip=.02)
-        merlons(sc, -W / 2, W / 2, body_top, CZ, capm, seed=13, xshift=k * W)
-    ortho_cam(sc, 0, H / 2, W, int(W * PPM), int(H * PPM)); render(sc, f'{OUT}/console_bar_tile.png')
+        mkbox(sc, 'mortar', (W, .1, body_top + .4), (k * W, .22, (body_top - .4) / 2), mortar_mat())
+        place_blocks(sc, body + extra, mats, tag=f'b{k}_', seed=11, xshift=k * W)
+        place_blocks(sc, ledge, capm, depth=(.24, .26), y_front=-.06, tag=f'l{k}_', seed=12, xshift=k * W, chip=.025)
+        merlons(sc, -W / 2, W / 2, body_top, CZ, capm, lid, seed=13, xshift=k * W)
+    ortho_cam(sc, 0, H / 2 / math.cos(math.radians(TILT)), W, int(W * PPM), int(H * PPM), tilt=TILT); render(sc, f'{OUT}/console_bar_tile{"_tall" if tall else ""}.png')
 
 # ------------------------------------------------------------------ 2. console_cap_left/right (0.70 × 2.85, 바깥 모서리 탑)
 def part_cap(side):
@@ -114,8 +153,9 @@ def part_cap(side):
         if rest_w > .05: rough_block(sc, f'qi{i}', (rest_w - .016, .17, h - .016), (-sg * (W / 2 - rest_w / 2), .085, z + h / 2), mats[(i + 3) % 6], 400 + i, chip=.028)
         z += h; i += 1
     rough_block(sc, 'capledge', (W + .02, .3, .11), (sg * .01, -.06 + .15, body_top - .055), capm[0], 450, chip=.02)
-    merlons(sc, x0, x1, body_top, CZ, capm, w=.42, gapw=.22, seed=31 if side == 'L' else 32, y_front=-.08, first_offset=(0.0 if side == 'L' else W - .42))
-    ortho_cam(sc, 0, H / 2, W, int(W * PPM), int(H * PPM)); render(sc, f'{OUT}/console_cap_{"left" if side == "L" else "right"}.png')
+    lid = [stone_mat(f'뚜껑{i}', base=tuple(c * 1.55 for c in STONE_TONES[i]), seed=80 + i, moss=.1, light=1.2) for i in range(2)]
+    merlons(sc, x0, x1, body_top, CZ, capm, lid, w=.56, gapw=.14, seed=31 if side == 'L' else 32, y_front=-.08, first_offset=(0.0 if side == 'L' else W - .56), jitter=.02)
+    ortho_cam(sc, 0, H / 2 / math.cos(math.radians(TILT)), W, int(W * PPM), int(H * PPM), tilt=TILT); render(sc, f'{OUT}/console_cap_{"left" if side == "L" else "right"}.png')
 
 # ------------------------------------------------------------------ 3. stone_pillar (0.80 × 2.85, 앞으로 튀어나온 돌 기둥 + 총안 캡)
 def part_pillar():
@@ -130,25 +170,127 @@ def part_pillar():
     rough_block(sc, 'pcap', (W, .34, .12), (0, -.15 + .17, body_top - .06), capm[0], 590, chip=.02)
     rough_block(sc, 'pmer', (.5, .3, CZ - .06), (0, -.12 + .15, body_top + (CZ - .06) / 2), capm[1], 591, chip=.03)
     rough_block(sc, 'pmc', (.56, .33, .06), (0, -.13 + .16, H - .03), capm[2], 592, chip=.018)
-    ortho_cam(sc, 0, H / 2, W, int(W * PPM), int(H * PPM)); render(sc, f'{OUT}/stone_pillar.png')
+    ortho_cam(sc, 0, H / 2 / math.cos(math.radians(TILT)), W, int(W * PPM), int(H * PPM), tilt=TILT); render(sc, f'{OUT}/stone_pillar.png')
 
 # ------------------------------------------------------------------ 4. panel_frame_stone (1.2 × 1.2, 테두리 0.28, 가운데 투명, 안쪽 어두운 홈)
 def part_panel():
-    """미니맵·정보창·명령 카드 바깥 돌 테. 9-slice로 늘리므로 변은 '깎은 돌 몰딩'(늘려도 티 안 남), 모서리만 깨진 돌덩이."""
+    """판 틀(9-slice 여백 32@2x = 0.16m): 바깥 돌 블록 띠 → 밝은 돌 입술(0.035) → 검은 홈(0.02) → 가운데 투명."""
     sc = reset_scene(); ui_lights(sc); render_setup(sc, SAMPLES)
-    S, B = 1.2, .28
+    S, B = 1.2, .16; LIP = .035; G = .02
     mats = stone_set(sc, '틀돌', moss=.3, rust_low=0.0)
-    mort = mortar_mat()
-    for (sx, sz, x, z) in ((S, B, 0, S / 2 - B / 2), (S, B, 0, -S / 2 + B / 2), (B, S, -S / 2 + B / 2, 0), (B, S, S / 2 - B / 2, 0)): mkbox(sc, 'back', (sx, .05, sz), (x, .25, z), mort)
-    # 변: 바깥쪽이 높고 안쪽으로 비스듬히 깎인 몰딩(안쪽 가장자리 쪽이 어둡게 내려감)
-    for (sx, sz, x, z, rx) in ((S, B, 0, S / 2 - B / 2, 0), (S, B, 0, -S / 2 + B / 2, 0), (B, S, -S / 2 + B / 2, 0, 1), (B, S, S / 2 - B / 2, 0, 1)):
-        ob = mkbox(sc, 'rim', (sx - .02, .16, sz - .02), (x, .08, z), mats[0 if rx == 0 else 1], bevel=.06); ob.modifiers['b'].segments = 4
-    for (x, z) in ((-1, 1), (1, 1), (-1, -1), (1, -1)):                    # 모서리 돌덩이(조금 더 튀어나옴)
-        rough_block(sc, f'corner{x}{z}', (B + .02, .22, B + .02), (x * (S / 2 - B / 2), .06, z * (S / 2 - B / 2)), mats[2 + (x + z) % 3], 900 + x * 3 + z, chip=.04)
-    groove = simple('홈', (.003, .003, .004), .9); g = .03
-    for (sx, sz, x, z) in ((S - 2 * B + 2 * g, g, 0, S / 2 - B + g / 2 - .004), (S - 2 * B + 2 * g, g, 0, -S / 2 + B - g / 2 + .004), (g, S - 2 * B, -S / 2 + B - g / 2 + .004, 0), (g, S - 2 * B, S / 2 - B + g / 2 - .004, 0)):
-        mkbox(sc, 'groove', (sx, .17, sz), (x, .085, z), groove, bevel=.004)
+    lipm = stone_mat('입술돌', base=tuple(c * 1.6 for c in STONE_TONES[0]), seed=90, moss=0, light=1.25)
+    mort = mortar_mat(); r = random.Random(61)
+    ob_w = B - LIP - G                                                     # 바깥 돌 띠 폭
+    def band(x0, x1, z0, z1, horiz, tag):
+        if horiz:
+            x = x0; j = 0
+            while x < x1 - 1e-6:
+                L = r.uniform(.24, .4)
+                if x1 - (x + L) < .12: L = x1 - x
+                rough_block(sc, f'{tag}{j}', (L - .014, .16, z1 - z0 - .012), ((2 * x + L) / 2, .08, (z0 + z1) / 2), mats[r.randrange(6)], 700 + j + 37 * len(tag), chip=.022); x += L; j += 1
+        else:
+            z = z0; j = 0
+            while z < z1 - 1e-6:
+                L = r.uniform(.2, .34)
+                if z1 - (z + L) < .1: L = z1 - z
+                rough_block(sc, f'{tag}{j}', (x1 - x0 - .012, .16, L - .014), ((x0 + x1) / 2, .08, (2 * z + L) / 2), mats[r.randrange(6)], 800 + j + 37 * len(tag), chip=.022); z += L; j += 1
+    h = S / 2
+    band(-h, h, h - ob_w, h, True, 'top'); band(-h, h, -h, -h + ob_w, True, 'bot')
+    band(-h, -h + ob_w, -h + ob_w, h - ob_w, False, 'L'); band(h - ob_w, h, -h + ob_w, h - ob_w, False, 'R')
+    for (sx, sz, x, z) in ((S, ob_w, 0, h - ob_w / 2), (S, ob_w, 0, -h + ob_w / 2), (ob_w, S, -h + ob_w / 2, 0), (ob_w, S, h - ob_w / 2, 0)): mkbox(sc, 'back', (sx, .05, sz), (x, .2, z), mort)
+    a_ = h - ob_w                                                          # 입술 바깥 가장자리
+    for (sx, sz, x, z) in ((2 * a_, LIP, 0, a_ - LIP / 2), (2 * a_, LIP, 0, -a_ + LIP / 2), (LIP, 2 * a_ - 2 * LIP, -a_ + LIP / 2, 0), (LIP, 2 * a_ - 2 * LIP, a_ - LIP / 2, 0)):
+        mkbox(sc, 'lip', (sx, .12, sz), (x, .04, z), lipm, bevel=.012)
+    groove = simple('홈', (.003, .003, .004), .9); g_ = a_ - LIP
+    for (sx, sz, x, z) in ((2 * g_, G, 0, g_ - G / 2), (2 * g_, G, 0, -g_ + G / 2), (G, 2 * g_, -g_ + G / 2, 0), (G, 2 * g_, g_ - G / 2, 0)):
+        mkbox(sc, 'groove', (sx, .1, sz), (x, .06, z), groove)
     ortho_cam(sc, 0, 0, S, int(S * PPM), int(S * PPM)); render(sc, f'{OUT}/panel_frame_stone.png')
 
+# ================================================================== ② 금속 틀 공통: 둥근 사각 경로 + 금 이중선 + 짙은 홈
+GOLD = None
+def gold_mats():
+    return (metal_mat('금', col=(.62, .42, .12), rough=.32, wear=.5, dark=(.09, .055, .015)),
+            metal_mat('어두운금', col=(.20, .13, .04), rough=.5, wear=.3, dark=(.05, .03, .01)))
+def rrect_path(w, h, r, n=10, open_bottom=False):
+    """둥근 사각 경로(가운데 원점, XZ 평면). open_bottom이면 아래 변 없이 왼아래→위→오른아래."""
+    pts = []
+    corners = [((w / 2 - r, h / 2 - r), 0), ((-w / 2 + r, h / 2 - r), 90), ((-w / 2 + r, -h / 2 + r), 180), ((w / 2 - r, -h / 2 + r), 270)]
+    for (cx, cz), a0 in corners:
+        for k in range(n + 1):
+            a = math.radians(a0 + 90 * k / n); pts.append((cx + r * math.cos(a), cz + r * math.sin(a)))
+    return pts
+def tube(sc, name, pts2d, radius, mat, y=0.0, closed=True):
+    cu = bpy.data.curves.new(name, 'CURVE'); cu.dimensions = '3D'; sp = cu.splines.new('POLY'); sp.points.add(len(pts2d) - 1)
+    for i, (x, z) in enumerate(pts2d): sp.points[i].co = (x, y, z, 1)
+    sp.use_cyclic_u = closed; cu.bevel_depth = radius; cu.bevel_resolution = 6; cu.use_fill_caps = True
+    ob = link(bpy.data.objects.new(name, cu), sc); cu.materials.append(mat); return ob
+def plate(sc, name, pts2d, mat, y=.02, th=.02):
+    """2D 다각형을 두께 th 판으로(앞면 y−th/2)."""
+    bm = bmesh.new(); vs = [bm.verts.new((x, 0, z)) for x, z in pts2d]; f = bm.faces.new(vs)
+    bmesh.ops.reverse_faces(bm, faces=[f]) if False else None
+    ex = bmesh.ops.extrude_face_region(bm, geom=[f]); bmesh.ops.translate(bm, vec=(0, th, 0), verts=[v for v in ex['geom'] if isinstance(v, bmesh.types.BMVert)])
+    me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free(); ob = link(bpy.data.objects.new(name, me), sc); ob.location = (0, y - th / 2, 0); me.materials.append(mat); return ob
+def gold_frame(sc, w, h, r, line=.018, inset=.05, fill=None, inner_line=.009, band_mat=None, y=0.0, open_bottom=False):
+    """금 이중선 틀: 바깥 굵은 금 관 + 안쪽 가는 금 관 + 사이 어두운 금 띠 + (선택) 안쪽 채움판."""
+    g, gd = GOLD
+    outer = rrect_path(w - 2 * line, h - 2 * line, max(.001, r - line))
+    inner = rrect_path(w - 2 * inset, h - 2 * inset, max(.001, r - inset))
+    tube(sc, 'gout', outer, line, g, y=y)
+    plate(sc, 'gband', rrect_path(w - 2 * line, h - 2 * line, max(.001, r - line)), band_mat or gd, y=y + .012, th=.01)
+    tube(sc, 'gin', inner, inner_line, g, y=y - .002)
+    if fill is not None: plate(sc, 'fill', rrect_path(w - 2 * inset, h - 2 * inset, max(.001, r - inset)), fill, y=y + .004, th=.01)
+
+def frame_scene(samples=None):
+    global GOLD
+    sc = reset_scene(); ui_lights(sc); render_setup(sc, samples or SAMPLES); GOLD = gold_mats(); return sc
+
+# ------------------------------------------------------------------ 5. portrait_arch_frame (+ mask) 2.65 × 2.22
+def arch_path(w, h, rise, n=48):
+    """아치: 왼아래 → 왼 변 → 완만한 타원 위 → 오른 변 → 오른아래(열린 아래)."""
+    pts = [(-w / 2, -h / 2)]
+    for k in range(n + 1):
+        a = math.pi * (1 - k / n); pts.append((w / 2 * math.cos(a), (h / 2 - rise) + rise * math.sin(a)))
+    pts.append((w / 2, -h / 2)); return pts
+def part_arch():
+    sc = frame_scene(); g, gd = GOLD
+    W, H = 2.65, 2.22; rise = .55; m = .10                               # 틀 띠 폭 0.10
+    out = arch_path(W - .04, H, rise); inn = arch_path(W - .04 - 2 * m, H + .0, rise - m * .9)
+    inn = [(x, z) for x, z in inn]; inn[0] = (inn[0][0], -H / 2); inn[-1] = (inn[-1][0], -H / 2)
+    tube(sc, 'aout', out, .022, g, closed=False); tube(sc, 'ain', inn, .012, g, closed=False, y=-.004)
+    # 띠: 바깥·안쪽 경로 사이 리본(어두운 금)
+    bm = bmesh.new(); vo = [bm.verts.new((x, .012, z)) for x, z in out]; vi = [bm.verts.new((x, .012, z)) for x, z in arch_path(W - .04 - 2 * m, H, rise - m * .9)]
+    for i in range(len(vo) - 1): bm.faces.new((vo[i], vo[i + 1], vi[i + 1], vi[i]))
+    me = bpy.data.meshes.new('aband'); bm.to_mesh(me); bm.free(); ob = link(bpy.data.objects.new('aband', me), sc); me.materials.append(gd)
+    # 리벳 + 맨 위 보석 받침
+    for k in range(1, 12):
+        if k == 6: continue
+        t = k / 12; a = math.pi * (1 - t); x = (W / 2 - .02 - m / 2) * math.cos(a); z = (H / 2 - rise) + (rise - m * .45) * math.sin(a)
+        mksph(sc, 'rivet', .016, (x, -.01, z), g, sub=2)
+    for zz in (-.6, -.2, .2):
+        for sx in (-1, 1): mksph(sc, 'rivet', .016, (sx * (W / 2 - .02 - m / 2), -.01, zz), g, sub=2)
+    top = (0, -.03, H / 2 - .05)
+    mkcyl(sc, 'gemset', .07, .04, top, g, rot=(math.radians(90), 0, 0), seg=8)
+    mksph(sc, 'gem', .05, (0, -.06, H / 2 - .05), gem_mat('붉은보석', (.8, .05, .05), .8), sub=3, scale=(1, .6, 1.2))
+    for sx in (-1, 1): mksph(sc, 'sgem', .028, (sx * .16, -.03, H / 2 - .07 - .01), gem_mat('푸른보석', (.1, .3, .9), .6), sub=2)
+    ortho_cam(sc, 0, 0, W, int(W * PPM), int(H * PPM)); render(sc, f'{OUT}/portrait_arch_frame.png')
+    # 마스크: 안쪽만 흰 발광 판, 나머지 숨김
+    for o in list(sc.objects):
+        if o.type in ('MESH', 'CURVE'): o.hide_render = True
+    mpts = arch_path(W - .04 - 2 * m + .02, H, rise - m * .9 + .01)
+    pl = plate(sc, 'mask', mpts, glow('흰', (1, 1, 1), 1.0), y=0, th=.01)
+    render(sc, f'{OUT}/portrait_arch_mask.png')
+
+# ------------------------------------------------------------------ 6. info_title_strip 4.4×0.30 · info_level_strip 4.4×0.18 · 7. icon_slot_gold 0.48
+def part_info():
+    sc = frame_scene(); blk = simple('검정', (.004, .004, .005), .6)
+    gold_frame(sc, 4.4, .30, .14, line=.016, inset=.045, fill=blk)
+    ortho_cam(sc, 0, 0, 4.4, int(4.4 * PPM), int(.30 * PPM)); render(sc, f'{OUT}/info_title_strip.png')
+    sc = frame_scene(); blk = simple('검정', (.004, .004, .005), .6)
+    gold_frame(sc, 4.4, .18, .08, line=.011, inset=.03, inner_line=.006, fill=blk)
+    ortho_cam(sc, 0, 0, 4.4, int(4.4 * PPM), int(.18 * PPM)); render(sc, f'{OUT}/info_level_strip.png')
+    sc = frame_scene(); blk = simple('검정', (.006, .006, .008), .6)
+    gold_frame(sc, .48, .48, .05, line=.018, inset=.06, fill=blk)
+    ortho_cam(sc, 0, 0, .48, int(.48 * PPM), int(.48 * PPM)); render(sc, f'{OUT}/icon_slot_gold.png')
+
 for p in PARTS:
-    {'bar': part_bar, 'capL': lambda: part_cap('L'), 'capR': lambda: part_cap('R'), 'pillar': part_pillar, 'panel': part_panel}[p]()
+    {'arch': part_arch, 'info': part_info, 'bar': part_bar, 'bar_tall': lambda: part_bar(True), 'capL': lambda: part_cap('L'), 'capR': lambda: part_cap('R'), 'pillar': part_pillar, 'panel': part_panel}[p]()
