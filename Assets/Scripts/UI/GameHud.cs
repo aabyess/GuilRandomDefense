@@ -280,6 +280,7 @@ public class GameHud : MonoBehaviour
     // 넣는 순서 = 액티브 → 유닛 전용(재능투자·최윤서 강화) → 특성강화 → 조합 결과. 8칸을 넘으면 경고 로그(조용히 버리지 않는다).
     const int FlexSlotFirst = 4;
     const int FlexSlotLast = 11;
+    static readonly int[] FlexFillOrder = { 8, 9, 10, 11, 4, 5, 6, 7 };   // 유닛별 칸 채우는 순서(아랫줄 왼쪽부터)
     enum FlexKind : byte { None, Trait, Active, Talent, Yoonseo, Recipe, GambleBoost, Bomb, Enhance, Toto }
     readonly FlexKind[] flexKind = new FlexKind[CommandSlotCount];
     readonly int[] flexArg = new int[CommandSlotCount];          // Talent는 투자 종류(0~3), Recipe는 flexRecipes 번호
@@ -307,14 +308,16 @@ public class GameHud : MonoBehaviour
         if (currentShop as Object != null) { flexWasShop = true; return; }   // 상점을 고른 동안 4~11은 상점 칸이다
 
         for (int i = 0; i < CommandSlotCount; i++) { flexWantKind[i] = FlexKind.None; flexWantArg[i] = 0; }
-        int next = FlexSlotLast;
+        // 사장님 10-07 「스킬 칸은 왼쪽 아래부터 채워라 — 초월은 가운데에 떠 있다」: 맨 아랫줄 왼쪽(8) → 오른쪽(11) → 그 윗줄 왼쪽(4) → 오른쪽(7). 우선순위(액티브→재능→…→조합 결과)는 그대로.
+        int next = 0;
         int overflow = 0;
         void Put(FlexKind kind, int arg)
         {
-            if (next < FlexSlotFirst) { overflow++; return; }
-            flexWantKind[next] = kind;
-            flexWantArg[next] = arg;
-            next--;
+            if (next >= FlexFillOrder.Length) { overflow++; return; }
+            int target = FlexFillOrder[next];
+            flexWantKind[target] = kind;
+            flexWantArg[target] = arg;
+            next++;
         }
         if (activeSlotShown) Put(FlexKind.Active, 0);
         if (talentSlotsShown) for (int k = 0; k < UnitAttacker.TalentKindCount; k++) Put(FlexKind.Talent, k);

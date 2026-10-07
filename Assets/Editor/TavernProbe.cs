@@ -66,5 +66,20 @@ static class TavernProbe
         return "적 3마리 체력 100/50/10%";
     }
 
+    // 명령 카드 칸 채움 순서 촬영 — call:TavernProbe.PickCommon / PickTranscend / PickMany
+    static string Pick(string rosterName)
+    {
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        LaneMarker lane = LaneMarker.Get(0);
+        UnitData d = Roster(rosterName);
+        if (spawner == null || lane == null || d == null) return "❌ 준비 안 됨 " + rosterName;
+        GameObject go = spawner.Spawn(d, lane.LaneCenter, 0);
+        Object.FindFirstObjectByType<SelectionManager>().SelectOnly(go.GetComponent<Selectable>());
+        return $"선택: {d.DisplayName}";
+    }
+    static string PickCommon() => Pick("흔함_강재규");
+    static string PickTranscend() => Pick("초월_신문철_AP");
+    static string PickMany() => Pick("초월_김민준_AP");
+
     static string Clear() { Object.FindFirstObjectByType<SelectionManager>().ClearSelection(); return "선택 해제"; }
 }
