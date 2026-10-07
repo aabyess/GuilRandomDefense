@@ -444,9 +444,12 @@ def part_orb():
     silver = metal_mat('은', col=(.62, .66, .72), rough=.28, wear=.45, dark=(.08, .09, .11))
     darks = metal_mat('검은쇠', col=(.12, .13, .16), rough=.4, wear=.3, dark=(.02, .02, .03))
     mksph(sc, 'orb', .36, (0, 0, 0), orb_mat(deep=(.01, .04, .22), mid=(.06, .25, .8), core=(.45, .75, 1.0), glow=.55), sub=5, scale=(1, .55, 1))
-    mktorus(sc, 'ring', .43, .07, (0, 0, 0), silver, rot=(math.radians(90), 0, 0), seg=96)
-    for k in range(10):
-        a = TAU * k / 10 + math.pi / 2; mksph(sc, 'stud', .028, (.43 * math.cos(a), -.07, .43 * math.sin(a)), gem_mat('흰보석', (.75, .85, 1.0), .9), sub=2)
+    mktorus(sc, 'ring', .45, .1, (0, 0, 0), silver, rot=(math.radians(90), 0, 0), seg=96)                  # 굵은 은 고리
+    mktorus(sc, 'bluering', .45, .055, (0, -.06, 0), gem_mat('파란테', (.05, .2, .7), .5), rot=(math.radians(90), 0, 0), seg=96)   # 고리 앞 파란 테
+    for k in range(12):
+        a = TAU * k / 12 + math.pi / 2; mksph(sc, 'stud', .026, (.45 * math.cos(a), -.115, .45 * math.sin(a)), gem_mat('흰보석', (.85, .92, 1.0), 1.2), sub=2)
+    for k, (dx, h) in enumerate(((0, .3), (-.13, .2), (.13, .2))):                                              # 위쪽 뾰족 장식
+        mkcyl(sc, 'spike', .05, h, (dx, .0, .58 + h / 2), silver, seg=4, r2=.002)
     # 톱니 바깥 고리
     mktorus(sc, 'outer', .555, .03, (0, .02, 0), darks, rot=(math.radians(90), 0, 0), seg=96)
     for k in range(24):
@@ -481,5 +484,35 @@ def part_icons():
     mkbox(sc, 'v', (.07, .05, .24), (0, 0, 0), g, bevel=.018); mkbox(sc, 'h', (.24, .046, .07), (0, .001, 0), g, bevel=.018)
     ortho_cam(sc, 0, 0, .32, 64, 64); render(sc, f'{OUT}/icon_trait.png')
 
+# ================================================================== ⑤ 타이머·점수판·접기 단추·영웅 칸·막대 홈
+def glassy_navy(name, alpha=.78):
+    m, t, b = newmat(name); b.inputs['Base Color'].default_value = srgb('#0A1020') + (1,); b.inputs['Roughness'].default_value = .5; b.inputs['Alpha'].default_value = alpha
+    try: b.inputs['Specular IOR Level'].default_value = .1
+    except Exception: pass
+    return m
+def part_timer():
+    for (nm, W, H) in (('timer_window', 3.88, .37), ('scoreboard_frame', 3.88, 1.20)):
+        sc = frame_scene()
+        gold_frame(sc, W, H, .09, line=.014, inset=.04, fill=glassy_navy('반투명남'))
+        ortho_cam(sc, 0, 0, W, int(W * PPM), int(H * PPM)); render(sc, f'{OUT}/{nm}.png')
+    sc = frame_scene(); g, gd = GOLD                                         # 접기 단추(− 모양)
+    gold_frame(sc, .24, .24, .05, line=.012, inset=.03, fill=navy_mat('남색접기'))
+    mkbox(sc, 'minus', (.12, .03, .028), (0, -.02, 0), g, bevel=.008)
+    ortho_cam(sc, 0, 0, .24, int(.24 * PPM), int(.24 * PPM)); render(sc, f'{OUT}/collapse_btn.png')
+def part_hero():
+    """17. 영웅 초상 칸 돌 틀 1.0×1.0(여백 10@1x = 0.10, 가운데 투명) · 체력·마나 막대 홈 0.95×0.14(여백 4)."""
+    sc = reset_scene(); ui_lights(sc); render_setup(sc, SAMPLES); global GOLD; GOLD = gold_mats(); g, gd = GOLD
+    S, B = 1.0, .10
+    st = stone_mat('영웅틀돌', base=tuple(c * 1.2 for c in STONE_TONES[2]), seed=97, moss=.2, light=1.15, crack_amt=.3)
+    out = rrect_path(S, S, .04); inn = rrect_path(S - 2 * B, S - 2 * B, .02)
+    ring_mesh(sc, 'hf', out, inn, st, th=.1, y=-.05)
+    tube(sc, 'hg', rrect_path(S - 2 * B + .01, S - 2 * B + .01, .02), .007, g, y=-.055)
+    ortho_cam(sc, 0, 0, S, int(S * PPM), int(S * PPM)); render(sc, f'{OUT}/hero_frame.png')
+    sc = frame_scene()
+    W, H = .95, .14
+    plate(sc, 'track', rrect_path(W - .02, H - .02, .03), matte_black('홈', .006), y=.01, th=.01)
+    tube(sc, 'tr', rrect_path(W - .02, H - .02, .03), .01, metal_mat('강철', col=(.35, .36, .38), rough=.4, wear=.4, dark=(.05, .05, .06)))
+    ortho_cam(sc, 0, 0, W, int(W * PPM), int(H * PPM)); render(sc, f'{OUT}/bar_track.png')
+
 for p in PARTS:
-    {'topbar': part_topbar, 'orb': part_orb, 'icons': part_icons, 'infopanel': part_info_panel, 'inv': part_inventory, 'cmd': part_command, 'arch': part_arch, 'info': part_info, 'bar': part_bar, 'bar_tall': lambda: part_bar(True), 'capL': lambda: part_cap('L'), 'capR': lambda: part_cap('R'), 'pillar': part_pillar, 'panel': part_panel}[p]()
+    {'timer': part_timer, 'hero': part_hero, 'topbar': part_topbar, 'orb': part_orb, 'icons': part_icons, 'infopanel': part_info_panel, 'inv': part_inventory, 'cmd': part_command, 'arch': part_arch, 'info': part_info, 'bar': part_bar, 'bar_tall': lambda: part_bar(True), 'capL': lambda: part_cap('L'), 'capR': lambda: part_cap('R'), 'pillar': part_pillar, 'panel': part_panel}[p]()
