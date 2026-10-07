@@ -93,6 +93,19 @@ public static class HeroStatShotProbe
     public static string HelperClickLegend() => HelperClick(1, UnitGrade.Legendary);
     public static string HelperClickHidden() => HelperClick(1, UnitGrade.Hidden);
 
+    // 편집 모드 명령(call): 첫 화면(NetBoot)·게임 씬을 열었다 닫는다. 촬영 뒤 반드시 OpenGame으로 되돌린다.
+    public static string OpenBoot()
+    {
+        UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/Scenes/NetBoot.unity");
+        return "✅ NetBoot";
+    }
+
+    public static string OpenGame()
+    {
+        UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
+        return "✅ SampleScene";
+    }
+
     public static string AddXp()
     {
         if (!Application.isPlaying) return "❌ 플레이 중에만";
