@@ -214,6 +214,9 @@ public class GameHud : MonoBehaviour
     // (트레잇·고대의배 버튼과 같은 관례 — "보상이 없으면 버튼 자체가 없다").
     // 09-29 사장님: 떠 있던 판매 버튼(상단 메뉴 왼쪽 아래)을 없애고 명령 카드 한 칸으로만 둔다(SellCommandSlot).
     UnitData lastSellButtonUnit;
+    int lastSellSelectionCount;
+    Selectable lastSellRequested;   // MP 클라: 방금 호스트에 판매를 요청한 유닛 — 응답(유닛 사라짐)이 오기 전 같은 유닛을 또 고르지 않는다
+    float lastSellRequestedAt;
     bool sellSlotShown;
     bool activeSlotShown;    // 액티브(누르는) 스킬 칸(FlexKind.Active) — 초월 최상호 「바지사장」 등 ActiveButton 스킬을 가진 유닛 한 기를 골랐을 때만
     SkillData activeShownSkill;
@@ -1729,17 +1732,20 @@ public class GameHud : MonoBehaviour
             anyUnit = selection.Selected[i] != null && selection.Selected[i].GetComponent<UnitIdentity>() != null;
         if (!anyUnit) { HideSellButton(); return; }
 
-        UnitData data = count == 1 && selection.Selected[0].TryGetComponent(out UnitIdentity identity) ? identity.Data : null;
+        // 10-08 여럿 고르면 판매는 한 번에 한 기씩(NextSellTarget) — 판매 칸은 「다음에 팔릴 유닛」 기준으로 그린다.
+        Selectable sellNext = NextSellTarget(selection);
+        UnitData data = sellNext != null && sellNext.TryGetComponent(out UnitIdentity identity) ? identity.Data : null;
         // 10-07 판매는 희귀함까지만(사장님) — 고른 유닛이 전부 그 위 등급(회유 유닛 제외)이면 판매 칸 자체를 비운다.
         bool anySellableGrade = false;
         for (int i = 0; i < count && !anySellableGrade; i++)
             if (selection.Selected[i] != null && selection.Selected[i].TryGetComponent(out UnitIdentity gradeCheck) && gradeCheck.Data != null && (gradeCheck.IsRecruit || gradeCheck.Data.SellableGrade)) anySellableGrade = true;
         if (!anySellableGrade) { HideSellButton(); return; }
-        bool sellable = IsSellable(data);
-        if (sellSlotShown && sellable == sellSlotEnabled && data == lastSellButtonUnit) return;
+        bool sellable = sellNext != null;
+        if (sellSlotShown && sellable == sellSlotEnabled && data == lastSellButtonUnit && count == lastSellSelectionCount) return;
         sellSlotShown = true;
         sellSlotEnabled = sellable;
         lastSellButtonUnit = data;
+        lastSellSelectionCount = count;
 
         SetFixedCommandIcon(SellCommandSlot, "cmd_sell", true, sellable ? 1f : 0.35f);
         unitCommandSlotNames[SellCommandSlot].text = unitCommandSlotIcons[SellCommandSlot] != null && unitCommandSlotIcons[SellCommandSlot].enabled ? "" : "판매";
@@ -1753,7 +1759,7 @@ public class GameHud : MonoBehaviour
 
         if (!sellable)
         {
-            sellSlotTooltip = count == 1 ? "판매할 수 없는 유닛입니다(판매 보상이 없습니다)." : "판매는 한 기만 골랐을 때 됩니다.";
+            sellSlotTooltip = count == 1 ? "판매할 수 없는 유닛입니다(판매 보상이 없습니다)." : "고른 유닛 중 판매할 수 있는 유닛이 없습니다.";
             return;
         }
 
@@ -1784,7 +1790,7 @@ public class GameHud : MonoBehaviour
             if (rewardDesc.Length > 0) rewardDesc.Append(" + ");
             rewardDesc.Append(part);
         }
-        sellSlotTooltip = $"판매\n({rewardDesc})";
+        sellSlotTooltip = $"판매\n({rewardDesc})" + (count > 1 ? $"\n고른 {count}기 중 한 번에 한 기씩 판매합니다." : "");
     }
 
     // 초월 박민수 「재능투자」(사장님 10-06) — 유닛별 칸(FlexKind.Talent) 4개: 공격력·공격속도·방깎·스턴(액티브 다음, 11→4 순서로 채워진다).
@@ -2432,12 +2438,39 @@ public class GameHud : MonoBehaviour
     // 원작 GetSoldUnit() 대응 — 보상 지급 후 유닛 소모(RemoveUnit과 같다, UnitIdentity.
     // Consume). 조건 미달 개념이 없다(고대의 배와 달리 비용이 없어 항상 성공) — 버튼이
     // 뜬 시점에 이미 보상이 확정돼 있다.
+    // 판매 가능한 유닛인가 — ExecuteSellOn의 거절 조건과 같은 식(호스트가 어차피 다시 검사한다).
+    static bool SellEligible(Selectable s)
+    {
+        if (s == null || !s.TryGetComponent(out UnitIdentity identity) || identity.Data == null) return false;
+        if (identity.IsSummon && !identity.IsRecruit) return false;
+        if (!IsSellable(identity.Data)) return false;
+        return identity.IsRecruit || identity.Data.SellableGrade;
+    }
+
+    // 여럿 고른 무리에서 이번에 팔 유닛: 하단 초상 칸의 맨 뒤부터(등급 낮은 쪽 = 판매 대상이 몰린 쪽, 같은 등급은 나중에 고른 것).
+    // 높은 등급·맨 왼쪽(초상·정보창이 보이는 유닛)이 마지막까지 남아 화면이 흔들리지 않고, 실수로 아끼는 유닛을 먼저 파는 일이 없다.
+    Selectable NextSellTarget(SelectionManager selection)
+    {
+        if (selection == null) return null;
+        SortSelectionByGrade(selection.Selected);
+        for (int i = sortedSelection.Count - 1; i >= 0; i--)
+        {
+            Selectable s = sortedSelection[i];
+            if (s == null || !SellEligible(s)) continue;
+            if (s == lastSellRequested && Time.unscaledTime - lastSellRequestedAt < 1.5f) continue;
+            return s;
+        }
+        return null;
+    }
+
     void OnSellButtonClicked()
     {
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1) return;
+        if (selection == null) return;
 
-        Selectable single = selection.Selected[0];
+        Selectable single = NextSellTarget(selection);
+        if (single == null) return;
+        if (!GameAuthority.IsServer) { lastSellRequested = single; lastSellRequestedAt = Time.unscaledTime; }
 
         // MP: 멀티 클라는 호스트에 요청만 보낸다. 싱글·호스트는 아래 본체 그대로.
         if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.Sell, single, 0); return; }
@@ -3767,6 +3800,9 @@ public class GameHud : MonoBehaviour
         Selectable target = lastCardTargets[index];
         if (target == null) return;
 
+        // 10-08 친구 피드백: Shift+클릭 = 그 유닛만 선택 무리에서 뺀다(나머지는 그대로). 그냥 클릭은 그 유닛 하나만 고른다.
+        Keyboard kb = Keyboard.current;
+        if (kb != null && (kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed)) { Selection?.RemoveFromSelection(target); return; }
         Selection?.SelectOnly(target);
     }
 
@@ -5116,7 +5152,8 @@ public class GameHud : MonoBehaviour
             string secondPart = person.Length > 0 ? $" <color=#FFD84A>{data.unitName}</color>" : "";
             unitInfoText.text = $"<size=115%>{firstPart}{secondPart} – <color=#{gradeColorHex}>{grade}{levelLabel}</color></size>" + (data.OriginalMatchLabel.Length > 0 ? $"  <size=70%><color=#A0A0A0>{data.OriginalMatchLabel.Replace("원작: ", "원작 ")}</color></size>" : "");
             string bonus = hasStats && data.attackPower > 0f && damage - data.attackPower >= 0.5f ? $" <color=#46E06A>+{damage - data.attackPower:F0}</color>" : "";
-            unitDamageText.text = $"<color=#FF9A3A>공격력:</color> {attackPower}{bonus}";   // 사장님 10-03: 사거리·공속은 정보칸에서 뺀다(F1 DebugHud엔 남음)
+            string baseShown = bonus.Length > 0 ? data.attackPower.ToString("F0") : attackPower;   // 10-08 워크3식: 앞 숫자는 기본값, 뒤 +는 보너스(합계를 앞에 쓰면 보너스가 두 번 붙어 보인다)
+            unitDamageText.text = $"<color=#FF9A3A>공격력:</color> {baseShown}{bonus}";   // 사장님 10-03: 사거리·공속은 정보칸에서 뺀다(F1 DebugHud엔 남음)
             unitArmorText.text = "<color=#FF9A3A>방어:</color> <color=#FF4A4A>무적</color>";
             unitStatusText.text = "<color=#FF9A3A>상태:</color>" + (attacker != null && attacker.GunFormActive ? $" <color=#FF6B6B>구건 {attacker.GunFormRemaining:F1}초</color>" : "") + (attacker != null && (attacker.UnitDeleteCount > 0 || attacker.GunFormActive) ? $" 삭제 {attacker.UnitDeleteCount}" : "");
             RefreshStatusBadges(attacker);

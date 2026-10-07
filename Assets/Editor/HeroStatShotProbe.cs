@@ -173,4 +173,58 @@ public static class HeroStatShotProbe
     }
 
     public static string HelperClickTarget() => HelperClick(1, UnitGrade.Legendary);
+
+    // 10-08 판매·Shift 빼기 촬영용 — 희귀함 셋(구주호·배성령·강재규) + 초월 구주호(판매 불가)를 세워 전부 고른다.
+    public static string SpawnSellGroup()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        foreach (string n in new[] { "희귀함_구주호", "희귀함_배성령", "희귀함_강재규", "초월_구주호_AD" })
+            spawner.Spawn(UnityEditor.AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{n}.asset"), LaneMarker.Get(0).LaneCenter, 0);
+        return "✅ 네 기";
+    }
+
+    public static string SelectAllMine()
+    {
+        var sm = Object.FindFirstObjectByType<SelectionManager>();
+        sm.ClearSelection();
+        var add = typeof(SelectionManager).GetMethod("AddToSelection", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        int n = 0;
+        foreach (Selectable sel in Object.FindObjectsByType<Selectable>(FindObjectsSortMode.None))
+            if (sel.name.StartsWith("Unit_") && sel.TryGetComponent(out OwnedByPlayer o) && o.OwnerId == LocalPlayer.LocalPlayerId) { add.Invoke(sm, new object[] { sel }); n++; }
+        return $"✅ {n}기 선택";
+    }
+
+    public static string ClickSell()
+    {
+        var hud = Object.FindFirstObjectByType<GameHud>();
+        typeof(GameHud).GetMethod("OnUnitCommandSlotClicked", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(hud, new object[] { 7 });
+        var sm = Object.FindFirstObjectByType<SelectionManager>();
+        return $"✅ 판매 클릭 · 선택 {sm.Selected.Count}";
+    }
+
+    // 카드 한 장을 Shift 누른 채 누른 것처럼 뺀다(첫 카드).
+    public static string ShiftRemoveFirst()
+    {
+        var sm = Object.FindFirstObjectByType<SelectionManager>();
+        if (sm.Selected.Count == 0) return "❌ 선택 없음";
+        string name = sm.Selected[0].name;
+        sm.RemoveFromSelection(sm.Selected[0]);
+        return $"✅ {name} 뺌 · 남은 {sm.Selected.Count}";
+    }
+
+    // 재료창의 첫 재료 행을 누른 것처럼(그 재료의 재료로 들어간다).
+    public static string HelperClickFirstRow()
+    {
+        var panel = RecipeHelperPanel.Instance;
+        var system = Object.FindFirstObjectByType<CombineSystem>();
+        foreach (var r in system.Recipes)
+            if (r != null && r.result == helperTarget)
+            {
+                var link = r.ingredients[0].unit;
+                typeof(RecipeHelperPanel).GetMethod("OpenDetail", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(panel, new object[] { link, true });
+                return "✅ " + link.DisplayName;
+            }
+        return "❌";
+    }
 }

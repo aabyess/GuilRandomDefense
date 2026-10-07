@@ -425,6 +425,13 @@ public class SelectionManager : MonoBehaviour
         selected.Clear();
     }
 
+    // 다중 선택 카드 Shift+클릭 — 그 유닛만 선택 무리에서 뺀다. 하나만 남으면 단일 선택처럼 보인다(목록이 1이 되는 것뿐).
+    public void RemoveFromSelection(Selectable target)
+    {
+        if (target == null || !selected.Remove(target)) return;
+        target.SetSelected(false);
+    }
+
     // 다중 선택 카드 그리드에서 카드 하나를 클릭했을 때, 그 유닛만 선택 상태로 바꾼다.
     public void SelectOnly(Selectable target)
     {
