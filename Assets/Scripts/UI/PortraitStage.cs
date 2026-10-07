@@ -146,6 +146,10 @@ public class PortraitStage : MonoBehaviour
         t.localScale = source.transform.lossyScale;   // 실물과 같은 크기(ArtBinder가 맞춘 키) — 구도는 경계로 다시 맞춘다
 
         cloneIsHuman = clone.TryGetComponent(out Animator cloneAnimator) && cloneAnimator.isHuman;
+        tune = new Tune(0f, 1f);
+        UnitIdentity tuneIdentity = target.GetComponentInParent<UnitIdentity>();
+        string tuneKey = tuneIdentity != null && tuneIdentity.Data != null ? tuneIdentity.Data.name : target.name.Replace("(Clone)", "").Replace("Unit_", "");   // Data가 아직 없는 프리팹 인스턴스(촬영 탐침)는 이름으로
+        if (Tunes.TryGetValue(tuneKey.Normalize(System.Text.NormalizationForm.FormC), out Tune found)) tune = found;
         Frame();
         StopAllCoroutines();
         StartCoroutine(RefineByPixels(clone));
@@ -195,6 +199,18 @@ public class PortraitStage : MonoBehaviour
     //     이것만으론 사람형 ~60%, 노가리는 점처럼 작다(09-26 캡처).
     //  2. RefineByPixels: 실제로 찍힌 칸을 읽어 모델 픽셀의 상자를 재고, 큰 쪽이 FillFraction이 되게 거리·중심을 고친다(두 번).
     //     정점·경계로 짐작하지 않고 **보이는 그대로** 맞춘다 — BakeMesh 정점은 부모 스케일이 빠져 너무 가까이 붙었다(09-26 시도).
+    // 10-08 유닛별 보정 — 큰 모자·왕관·지팡이처럼 머리 윗선(「몸통 두께 행」)을 위로 끌어올리는 소품이 있으면 상반신 창이 소품만 잡는다
+    // (좆돼지 = 메구밍 마법사 모자: 모자 챙이 몸통만큼 넓어 「머리 꼭대기」가 모자 끝으로 잡혀 얼굴이 창 밖).
+    //   down  = 상반신 창을 아래로 내리는 양(전신 상자 높이의 비율, 0.1 = 10%)   scale = 창 높이 배율(1보다 크면 더 멀리 — 소품까지 함께 보인다)
+    // 새 유닛이 걸리면 UnitData.name(NFC)으로 한 줄 추가. 값은 에디터 사진으로 맞춘다(PortraitStage Tune 로그에 상자·보정이 찍힌다).
+    struct Tune { public float down, scale, pitch; public bool forceBust; public Tune(float d, float s, bool force = false, float pitch = -12f) { down = d; scale = s; forceBust = force; this.pitch = pitch; } }   // pitch = 카메라 높이각(기본 위로 12° = -12, 양수면 아래에서 올려다봄 — 넓은 챙 밑 얼굴이 보이게)
+    static readonly System.Collections.Generic.Dictionary<string, Tune> Tunes = new System.Collections.Generic.Dictionary<string, Tune>
+    {
+        { "특별함_조도연", new Tune(0.16f, 1.0f, false, 12f) },   // 메구밍 큰 마법사 모자 + 지팡이(왼손)
+        { "초월_배성령_AD", new Tune(-0.12f, 1.3f, true) },   // 총 든 넓은 자세라 「서 있는 모양」 검사에 걸려 전신으로 남음 → 상반신 강제
+        { "초월_임장혁_AD", new Tune(-0.05f, 1.15f, true) },   // 아래로 퍼지는 망토 — 같은 이유
+    };
+    Tune tune = new Tune(0f, 1f);
     Vector3 aim;
     float distance;
     float clipRadius;
@@ -217,8 +233,9 @@ public class PortraitStage : MonoBehaviour
     void ApplyCamera()
     {
         Transform cam = stageCamera.transform;
-        cam.rotation = Quaternion.LookRotation(-ViewDirection, Vector3.up);
-        cam.position = aim + ViewDirection * distance;
+        Vector3 view = Mathf.Approximately(tune.pitch, -12f) ? ViewDirection : Quaternion.Euler(tune.pitch, 25f, 0f) * Vector3.forward;
+        cam.rotation = Quaternion.LookRotation(-view, Vector3.up);
+        cam.position = aim + view * distance;
         stageCamera.nearClipPlane = Mathf.Max(0.01f, distance - clipRadius * 1.5f);
         stageCamera.farClipPlane = distance + clipRadius * 1.5f + 1f;
     }
@@ -277,17 +294,17 @@ public class PortraitStage : MonoBehaviour
             }
         if (cnt > 0) { float mx = sumX / (float)cnt / size2; float half = (bx1 - bx0) * 0.5f; bx0 = mx - half; bx1 = mx + half; }
         float boxW = bx1 - bx0, boxH = by1 - by0;
-        if (!cloneIsHuman && boxH / Mathf.Max(0.01f, boxW) < StandingAspect) yield break;
-        float bustH = boxH * BustFraction;
+        if (!tune.forceBust && !cloneIsHuman && boxH / Mathf.Max(0.01f, boxW) < StandingAspect) yield break;
+        float bustH = boxH * BustFraction * tune.scale;
         float halfViewNow = distance * Mathf.Tan(FieldOfView * 0.5f * Mathf.Deg2Rad);
         Transform cam2 = stageCamera.transform;
         // 가로는 상자 가운데, 세로는 (머리 꼭대기 아래 bustH)의 가운데를 칸 가운데로 — 위 여백은 줌 뒤 HeadMargin만큼 남는다.
-        float bustCenterY = by1 - bustH * 0.5f;
+        float bustCenterY = by1 - bustH * 0.5f - boxH * tune.down;
         aim += cam2.right * ((bx0 + bx1 - 1f) * halfViewNow) + cam2.up * ((bustCenterY * 2f - 1f) * halfViewNow);
         distance = Mathf.Max(0.05f, distance * bustH / (1f - HeadMargin * 2f));
         ApplyCamera();
         if (Debug.isDebugBuild || Application.isEditor)
-            Debug.Log($"[초상] {clone.name} 상반신: 상자 {boxW:P0}×{boxH:P0} 사람형 {cloneIsHuman} → 거리 {distance:0.00}");
+            Debug.Log($"[초상] {clone.name} 상반신: 상자 {boxW:P0}×{boxH:P0} 사람형 {cloneIsHuman} · 보정 아래 {tune.down:P0}·배율 {tune.scale:0.00} → 거리 {distance:0.00}");
     }
 
     // 칸에서 배경색과 다른 픽셀의 상자(0~1, 아래 왼쪽 원점). 모델이 없거나 가장자리에 닿아 잘렸으면 false.
