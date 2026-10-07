@@ -3,13 +3,13 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 
-// 모리아(특별함_임채준) 그림자그림자 열매(A113) 판 안 점검 — gameshot:
+// 모리아(안흔함_이호준) 그림자그림자 열매(A113) 판 안 점검 — gameshot:
 //   call:MoriaProbe.Setup wait:40 call:MoriaProbe.Report snap:...
 // Setup: 부활 확률을 100으로 올려 실제 평타 경로(UnitAttacker.TryRaiseOnKill)가 도는지 본다(에셋 값은 Report가 되돌린다).
 // Report: 좀비 수·주인·모델 확인 → 좀비×3 + 흔함_강재규 → 압살롬 조합(CombineSystem.TryCombine, 실제 경로).
 static class MoriaProbe
 {
-    const string MoriaPath = "Assets/Data/Units/Roster/특별함_임채준.asset";
+    const string MoriaPath = "Assets/Data/Units/Roster/안흔함_이호준.asset";
     static float oldChance = -1f;
 
     static string Setup()
