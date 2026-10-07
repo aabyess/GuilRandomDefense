@@ -236,7 +236,7 @@ def build_geosets(geo, info, t_ms, scale, approx):
             filt = layer["filter"]
             additive = filt in ("additive", "addalpha")
             real = tex["path"] not in approx
-            m = particle_material(f"gm_{gi}_{li}", tex["path"], additive, use_tex_alpha=(real and filt in ("addalpha", "blend", "transparent")))
+            m = particle_material(f"gm_{gi}_{li}", tex["path"], additive, use_tex_alpha=False)
             me.materials.append(m)
             ob = bpy.data.objects.new(me.name, me)
             bpy.context.scene.collection.objects.link(ob)
@@ -384,7 +384,11 @@ def do_orig():
         zero = [k[0] for k in keys if k[1][0] == 0 and k[0] > keys[0][0]]
         end = ((min(zero) - seq["start"]) / 1000.0) if zero else (dur if (pe["rate"] > 0 or keys) else 0.0)
         horizon = max(horizon, end + pe["lifespan"])
-    horizon = min(max(horizon, dur if (info["nodes"] or info["geoa"]) else 0.0, 0.3), 8.0)
+    if info["pre2"] and horizon > 0:                                 # 입자가 주인공인 모델: 입자가 사라질 때까지를 보인다(메시는 같은 시각의 모습)
+        horizon = min(horizon * 1.6, dur if dur > 0 else 8.0)
+    else:
+        horizon = dur if (info["nodes"] or info["geoa"]) else 0.3
+    horizon = min(max(horizon, 0.3), 8.0)
     fr = {1: [0.4], 2: [0.2, 0.7], 3: [0.12, 0.4, 0.85], 4: [0.1, 0.3, 0.55, 0.9]}.get(nsnap) or [(i + 0.5) / nsnap for i in range(nsnap)]
     times = [horizon * f for f in fr]
     for T in times:                                                  # 틀 잡기: 시각마다 변형된 메시 점을 모은다
