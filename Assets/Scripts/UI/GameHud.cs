@@ -62,8 +62,10 @@ public class GameHud : MonoBehaviour
     //    교훈: **화면을 덮는 변경은 만든 사람 말고 보는 사람이 판정한다.**
     // 사장님이 「너무 작다」고 하시면 이 숫자 하나만 올린다. 미니맵 그림은 칸 비율을 따라가므로(MinimapCamera) 다른 곳은 안 고친다.
     // 2026-10-03 사장님 인게임 사진 기준: 콘솔 높이 27%(y 73~100%). 옛 22%에서 키웠다(3D 화면이 그만큼 더 가려진다 — 보고 항목).
-    const float BottomBarHeight = 0.27f;
-    const float MinimapTop = 0.27f;
+    // 워크3풍 콘솔(0.3.14)은 그림 높이 285px(1080p 기준)로 고정, 옛 판은 27%.
+    static bool Wc3Console => UiSkin.Wc3Active && UiSkin.Wc3("console_bar_tile") != null;
+    static float BottomBarHeight => Wc3Console ? 285f / 1080f : 0.27f;
+    static float MinimapTop => BottomBarHeight;
     const int CommandColumns = 4;
     const int TeamSlotCount = 4;
     const int MaxSelectionCards = 12;
@@ -608,7 +610,15 @@ public class GameHud : MonoBehaviour
         SetAnchors(bar, new Vector2(0f, 0f), new Vector2(1f, BottomBarHeight));
         // 사진의 회색 돌벽 콘솔 — 돌 타일(직접 그린 근사, Tools/ui/gen_ui_skin.py)을 깐다. 그림이 없으면 옛 청동회색.
         Sprite stone = UiSkin.BarBackground();
-        if (stone != null)
+        if (Wc3Console)
+        {
+            // 워크3풍: 윗변 톱니 돌 타일(2배 그림 → 1배 크기). 높이는 그림 285px에 고정(해상도 비율이 달라도 그림이 안 늘어난다).
+            bar.anchorMin = new Vector2(0f, 0f); bar.anchorMax = new Vector2(1f, 0f);
+            bar.pivot = new Vector2(0.5f, 0f);
+            bar.offsetMin = Vector2.zero; bar.offsetMax = new Vector2(0f, 285f);
+            UiSkin.ApplyWc3(bar.GetComponent<Image>(), "console_bar_tile", 2f, true);
+        }
+        else if (stone != null)
         {
             Image barImage = bar.GetComponent<Image>();
             barImage.sprite = stone;
@@ -618,8 +628,9 @@ public class GameHud : MonoBehaviour
 
         // 3D 화면과 갈리는 경계선. 판이 불투명해도 위쪽 경계가 밋밋하면 화면에 얹힌 게 아니라
         // 잘린 것처럼 보인다 — 밝은 선 한 줄이 "여기부터 UI"를 읽히게 한다.
-        Sprite barEdgeSprite = UiSkin.BarEdge();
-        if (barEdgeSprite != null)
+        Sprite barEdgeSprite = Wc3Console ? null : UiSkin.BarEdge();
+        if (Wc3Console) { }
+        else if (barEdgeSprite != null)
         {
             // 바 윗선 금속 띠(그림 높이 그대로, 가로 타일)
             RectTransform edgeRect = CreatePanel(bar, "BarEdgeStrip", Color.white);
@@ -791,6 +802,7 @@ public class GameHud : MonoBehaviour
         // 툴팁은 맨 마지막에 만들어야 형제 순서상 가장 나중에 그려져서(항상 위) 다른 패널에 안 가려진다.
         BuildCombineTooltip();
         BuildGameMenu();   // 메뉴 창은 툴팁보다도 위(화면 전체를 덮는다)
+        BringWc3FramesToFront();
     }
 
     // ───────────── 「메뉴」(PM 09-26: 혼자 하기에도 판을 그만둘 길 · 네트 판은 재접속 B안의 [나가기] 확인 창과 합침) ─────────────
@@ -5309,9 +5321,28 @@ public class GameHud : MonoBehaviour
 
     // 워크3 콘솔 칸 테두리 — 바깥 금테 2px + 안쪽 짙은 금 1px(09-29). ⚠️ GridLayoutGroup이 붙은 오브젝트엔 쓰지 않는다 —
     //    테두리 띠가 격자 자식으로 끼어 칸 하나를 차지한다. 격자는 이 칸 안의 자식에 둔다(BuildUnitCommandGrid).
+    static readonly List<RectTransform> wc3FrameOverlays = new List<RectTransform>();
+    static void BringWc3FramesToFront()
+    {
+        foreach (RectTransform overlay in wc3FrameOverlays) if (overlay != null) overlay.SetAsLastSibling();
+        wc3FrameOverlays.Clear();
+    }
+
     static void AddConsoleFrame(RectTransform parent)
     {
         // 하단 바 콘솔 칸: 청동 테두리 액자 그림(UiSkin.BarCell, 사장님 10-07 C 선택)을 칸 그림으로 — 자식(미니맵·초상·정보·격자)은 그 위에 그려진다. 그림이 없으면 옛 금테 고리.
+        if (Wc3Console && parent.TryGetComponent(out Image wc3Image) && UiSkin.Wc3("panel_frame_stone") != null)
+        {
+            // 워크3풍: 칸 바탕은 검정, 돌 틀은 맨 위 덮개(자식들이 다 붙은 뒤 BringWc3FramesToFront가 맨 앞으로 올린다).
+            wc3Image.sprite = null; wc3Image.type = Image.Type.Simple; wc3Image.color = new Color(0.02f, 0.02f, 0.03f, 1f);
+            RectTransform overlay = CreatePanel(parent, "Wc3Frame", Color.white);
+            overlay.anchorMin = Vector2.zero; overlay.anchorMax = Vector2.one; overlay.offsetMin = Vector2.zero; overlay.offsetMax = Vector2.zero;
+            Image overlayImage = overlay.GetComponent<Image>();
+            UiSkin.ApplyWc3(overlayImage, "panel_frame_stone", 2f);
+            overlayImage.raycastTarget = false;
+            wc3FrameOverlays.Add(overlay);
+            return;
+        }
         Sprite barCell = UiSkin.BarCell();
         if (barCell != null && parent.TryGetComponent(out Image panelImage))
         {

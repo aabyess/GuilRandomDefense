@@ -31,6 +31,31 @@ public static class UiSkin
     /// <summary>콘솔 칸(미니맵·초상·정보·아이템·명령 틀) 9-slice 액자. 없으면 null(옛 둥근 금테 고리).</summary>
     public static Sprite BarCell() => SkinBar("c_cell");
 
+    // ── 워크3풍 그림(10-07 0.3.14). Resources/UI/SkinWc3/<이름>.png — Wc3SkinApply가 반입·9-slice 설정. 그림이 없으면 null.
+    //    Wc3Active가 켜져 있으면 GameHud가 이 그림으로 콘솔을 조립한다(꺼지면 옛 C 금속 바).
+    public static bool Wc3Active = true;
+    static readonly Dictionary<string, Sprite> wc3Cache = new Dictionary<string, Sprite>();
+
+    public static Sprite Wc3(string name)
+    {
+        if (wc3Cache.TryGetValue(name, out Sprite cached)) return cached;
+        Sprite sprite = Resources.Load<Sprite>("UI/SkinWc3/" + name);
+        wc3Cache[name] = sprite;
+        return sprite;
+    }
+
+    /// <summary>워크3 그림을 입힌다. 9-slice 테두리가 있으면 Sliced, 아니면 Simple(tiled=true면 Tiled). 2배 해상도 그림이라 pixelsPerUnitMultiplier로 1배 크기에 맞춘다.</summary>
+    public static bool ApplyWc3(Image image, string name, float ppum = 2f, bool tiled = false)
+    {
+        Sprite sprite = Wc3(name);
+        if (sprite == null) return false;
+        image.sprite = sprite;
+        image.type = tiled ? Image.Type.Tiled : (sprite.border != Vector4.zero ? Image.Type.Sliced : Image.Type.Simple);
+        image.pixelsPerUnitMultiplier = ppum;
+        image.color = Color.white;
+        return true;
+    }
+
     static Sprite whiteSprite;
     /// <summary>색만 칠하는 Image.Type.Filled 막대용 흰 스프라이트. 🔴 Filled는 스프라이트가 없으면 채움 비율이 안 먹고 늘 가득 찬 사각형으로 그려진다 —
     /// 적 체력바·사이드보스 게이지·마나 게이지가 그래서 닳아도 줄지 않았다(친구 베타 10-06 「닳는 게 안 보인다」).</summary>
