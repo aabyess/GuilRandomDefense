@@ -765,6 +765,13 @@ public class UnitAttacker : MonoBehaviour
         if (tele.multiplier > 0f && Vector3.Distance(transform.position, point) > tele.multiplier / WorldScale.Value) { failReason = "사거리 밖입니다."; return false; }
         if (!TryGetComponent(out UnityEngine.AI.NavMeshAgent agent) || !UnityEngine.AI.NavMesh.SamplePosition(point, out UnityEngine.AI.NavMeshHit hit, 30f * WorldScale.Value, agent.areaMask))
         { failReason = "그곳으로는 이동할 수 없습니다."; return false; }
+        // 걸어서 닿는 곳(같은 NavMesh 덩어리)만 — 안 그러면 십자 건너 옆 레인 가장자리로 스냅해 레인을 넘는다(10-07 십자 조사).
+        if (agent.isOnNavMesh)
+        {
+            var reach = new UnityEngine.AI.NavMeshPath();
+            if (!UnityEngine.AI.NavMesh.CalculatePath(transform.position, hit.position, agent.areaMask, reach) || reach.status != UnityEngine.AI.NavMeshPathStatus.PathComplete)
+            { failReason = "그곳으로는 이동할 수 없습니다."; return false; }
+        }
 
         state.activeReadyAt = Time.time + Mathf.Max(0.01f, level.cooldown);
         SkillTelemetry.Cast(unitData, skill);

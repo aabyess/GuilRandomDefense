@@ -5026,6 +5026,40 @@ public static class MapGenerator
             new Vector3(xRight - (xLeft + step * (count + 0.5f)), BoothWallHeight, edgeDepth));
     }
 
+    // 레인 사이 십자 벽 윗면(상자 윗면 y = IslandTop + WallHeight)에 NavMesh가 구워져 있었다(10-07 실측 56칸) — 레인에서는 닿지 않는 고립 섬이지만
+    // 순간이동·스냅·끼임 풀기가 그 위로 유닛을 올릴 수 있다. 상자를 「걸을 수 없음」 영역으로 표시하면 막는 일(장애물)은 그대로 하고 윗면에 NavMesh가 안 생긴다.
+    static void MarkWallTopNotWalkable(GameObject wall)
+    {
+        if (wall == null) return;
+        var modifier = wall.GetComponent<NavMeshModifier>();
+        if (modifier == null) modifier = wall.AddComponent<NavMeshModifier>();
+        modifier.overrideArea = true;
+        modifier.area = 1;   // Not Walkable
+    }
+
+    // 이미 지어진 씬의 레인 사이 벽 둘에 위 표시를 달고 NavMesh를 다시 구워 저장한다. 부르기: call MapGenerator.RepairInterLaneWallNav
+    static string RepairInterLaneWallNav()
+    {
+        var sb = new System.Text.StringBuilder();
+        Transform parent = null;
+        foreach (string n in new[] { "레인간_세로벽", "레인간_가로벽" })
+        {
+            GameObject wall = GameObject.Find(n);
+            if (wall == null) { sb.Append($"❌ {n} 없음 "); continue; }
+            MarkWallTopNotWalkable(wall);
+            parent = wall.transform.parent;
+            sb.Append($"{n} 표시 ");
+        }
+        if (parent == null) return sb + "— 벽을 못 찾아 중단";
+        NavMeshSurface surface = null;
+        for (Transform t = parent; t != null && surface == null; t = t.parent) surface = t.GetComponent<NavMeshSurface>();
+        GameObject root = surface != null ? surface.gameObject : parent.gameObject;
+        string nav = BuildNavMesh(root);
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(root.scene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(root.scene);
+        return sb + "· 씬 저장\n" + nav;
+    }
+
     static void BuildWall(Transform parent, string name, Vector3 position, Vector3 scale)
     {
         GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -5040,6 +5074,7 @@ public static class MapGenerator
             // 레인 사이 벽은 돌담 조각 대신 BuildInterLaneHills의 솟은 대지가 겉모습이다 — 상자는 렌더러만 뗀다.
             Object.DestroyImmediate(wall.GetComponent<MeshRenderer>());
             Object.DestroyImmediate(wall.GetComponent<MeshFilter>());
+            MarkWallTopNotWalkable(wall);
             return;
         }
         DressWall(wall, WallPieceFor(name, scale));
