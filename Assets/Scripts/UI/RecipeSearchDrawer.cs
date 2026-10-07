@@ -218,6 +218,18 @@ public class RecipeSearchDrawer : MonoBehaviour
         close.raycastTarget = true;
         close.gameObject.AddComponent<Button>().onClick.AddListener(() => SetOpen(false));
 
+        // 조합 도우미(열 보기) 진입 단추 — 기능 스위치(RecipeHelperPanel.Enabled)가 켜졌을 때만 만든다(반쯤 된 화면이 배포판에 안 들어가게).
+        if (RecipeHelperPanel.Enabled)
+        {
+            RectTransform helperBtn = NewRect("HelperButton", panel);
+            Place(helperBtn, PanelWidth - Inset - 36f - 110f, 20f, 100f, 30f);
+            Image helperImage = helperBtn.gameObject.AddComponent<Image>();
+            Skin(helperImage, "button_navy_9s", ChipOff);
+            helperBtn.gameObject.AddComponent<Button>().onClick.AddListener(RecipeHelperPanel.Toggle);
+            TMP_Text helperLabel = MakeText(helperBtn, "Label", "열 보기", 16f, Color.white, TextAlignmentOptions.Center, FontStyles.Bold);
+            Stretch(helperLabel.rectTransform, 0f, 0f, 0f, 0f);
+        }
+
         BuildInput();
         BuildChips();
 
