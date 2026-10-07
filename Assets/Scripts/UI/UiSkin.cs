@@ -44,6 +44,17 @@ public static class UiSkin
         return sprite;
     }
 
+    /// <summary>워크3풍 켜져 있고 그림이 있나.</summary>
+    public static bool Wc3Has(string name) => Wc3Active && Wc3(name) != null;
+
+    /// <summary>IMGUI(OnGUI)용 — 같은 그림을 Texture2D로(GUIStyle 배경 + border로 9-slice). 없으면 null.</summary>
+    public static Texture2D Wc3Texture(string name)
+    {
+        if (!Wc3Active) return null;
+        Sprite sprite = Wc3(name);
+        return sprite != null ? sprite.texture : null;
+    }
+
     /// <summary>워크3 그림을 입힌다. 9-slice 테두리가 있으면 Sliced, 아니면 Simple(tiled=true면 Tiled). 2배 해상도 그림이라 pixelsPerUnitMultiplier로 1배 크기에 맞춘다.</summary>
     public static bool ApplyWc3(Image image, string name, float ppum = 2f, bool tiled = false)
     {

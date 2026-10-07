@@ -26,7 +26,10 @@ public class PortraitStage : MonoBehaviour
     const float FieldOfView = 28f;
     // 상반신 초상(사장님 10-03: 워크3처럼 머리~허리). 서 있는 모습(사람형이거나 픽셀 상자가 세로로 길쭉)이면 위쪽 이 비율만 칸에 채운다.
     // 건물·노트북 같은 가로로 넓은 모델은 전신 그대로. 허리 = 사람 키의 약 절반.
-    const float BustFraction = 0.5f;
+    const float BustFractionNormal = 0.5f;
+    const float BustFractionCloseUp = 0.36f;   // 워크3풍 아치 초상(사장님 10-07 「얼굴이 더 가깝게」): 머리~가슴. GameHud가 켠다.
+    public static bool CloseUp;
+    static float BustFraction => CloseUp ? BustFractionCloseUp : BustFractionNormal;
     const float StandingAspect = 1.35f;   // 픽셀 상자 높이/폭이 이 이상이면 서 있는 모습
     const float HeadMargin = 0.06f;       // 머리 꼭대기 위 여백(칸 높이 비율)
     bool cloneIsHuman;

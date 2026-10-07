@@ -39,13 +39,14 @@ public class GameHud : MonoBehaviour
 
     // 콘솔 오른쪽 두 칸은 **고정 폭**(캔버스 px)으로 오른쪽 끝에 붙인다. 비율로 박으면 4:3에서 명령칸이 줄어 칸 글씨가 깨진다.
     //   가운데 정보칸이 남는 폭을 받는다. 1920 기준: 미니맵 19~461 | 초상 472~672 | 정보 680~1266 | 아이템 1274~1444 | 명령 1452~1912.
-    const float ConsoleMargin = 8f;
+    static float ConsoleMargin => Wc3Console ? 24f : 8f;   // 워크3풍은 칸 사이에 돌 기둥(stone_pillar)이 선다
     const float CommandPanelWidth = 460f;
     const float ItemPanelWidth = 170f;
     // 09-29 사장님 「미니맵 양옆 검은 여백 없애고 가운데를 넓혀」: 왼쪽 세 칸(미니맵·초상·정보)은 ConsoleLeft의 가로 레이아웃이 줄 세운다.
     //   미니맵 칸 폭 = 칸 높이 × 땅 비율(MinimapCamera.GroundAspect) — 칸이 곧 그림이라 검은 띠가 없다. 초상은 높이 × PortraitAspect.
     //   남는 폭은 정보·카드 칸이 받는다. 폭은 땅을 잰 뒤·칸 높이가 바뀔 때 RefreshConsoleLayout이 다시 잡는다(첫 그림 전 Update에서).
     const float PortraitAspect = 0.94f;   // 200 × 213(1920 기준) — 워크3 초상 비율
+    const float Wc3PortraitAspect = 1.05f;   // 워크3풍 아치 초상은 사장님 지시(10-07)로 더 넓게 — 틀 그림 비율(530×444)에 가깝게
     const float MinimapInset = 5f;        // 금테 안쪽 여백(BuildUI의 MinimapArea)
     const float ConsoleGap = 8f;
 
@@ -695,7 +696,7 @@ public class GameHud : MonoBehaviour
         consoleLeft.SetParent(bar, false);
         SetRightAnchored(consoleLeft, 0.01f, infoRight);
         HorizontalLayoutGroup row = consoleLeft.gameObject.AddComponent<HorizontalLayoutGroup>();
-        row.spacing = ConsoleGap;
+        row.spacing = Wc3Console ? 0f : ConsoleGap;   // 워크3풍: 칸 사이는 기둥 자리표(아래)
         row.childControlWidth = true;
         row.childControlHeight = true;
         row.childForceExpandWidth = false;
@@ -720,6 +721,7 @@ public class GameHud : MonoBehaviour
         //    ⚠️ 하단 바가 아니라 HUD 루트에 붙인다 — 미니맵 칸 높이(MinimapTop)를 바꿔도 따라오게
         //    아래변을 MinimapTop에 맞춘다. 숫자를 박으면 오늘처럼 미니맵을 옮길 때 어긋난다.
         BuildWispSlots();
+        if (Wc3Console) AddWc3PillarSpacer(consoleLeft, "PillarMinimap", 36f);
 
         // 미니맵 오른쪽 둥근 단추 5개(기능 없는 자리표시)는 사장님 10-03 지시로 뺐다.
 
@@ -728,7 +730,8 @@ public class GameHud : MonoBehaviour
         portraitLayout = portraitSlot.gameObject.AddComponent<LayoutElement>();
         portraitLayout.preferredWidth = 200f;
         portraitLayout.flexibleWidth = 0f;
-        AddConsoleFrame(portraitSlot);
+        if (Wc3Console) portraitSlot.GetComponent<Image>().color = new Color(0.02f, 0.02f, 0.03f, 1f);   // 아치 초상엔 돌 틀을 두르지 않는다(원작도 검정 바탕 + 금 아치)
+        else AddConsoleFrame(portraitSlot);
         unitInfoPortraitSlotObject = portraitSlot.gameObject;
         portraitHpBar = BuildPortraitBar(portraitSlot, "PortraitHpBar", "bar_hp", new Vector2(0.04f, 0.10f), new Vector2(0.96f, 0.18f), out portraitHpText);
         portraitMpBar = BuildPortraitBar(portraitSlot, "PortraitMpBar", "bar_mp", new Vector2(0.04f, 0.01f), new Vector2(0.96f, 0.09f), out portraitMpText);
@@ -764,6 +767,11 @@ public class GameHud : MonoBehaviour
         unitInfoPortraitModel = modelObj.GetComponent<RawImage>();
         unitInfoPortraitModel.raycastTarget = false;
         modelObj.SetActive(false);
+        if (Wc3Console)
+        {
+            BuildWc3PortraitArch(portraitSlot, portraitRect);
+            AddWc3PillarSpacer(consoleLeft, "PillarPortrait", 24f);
+        }
 
         RectTransform infoPanel = CreatePanel(consoleLeft, "UnitInfoPanel", SlotColor);
         LayoutElement infoLayout = infoPanel.gameObject.AddComponent<LayoutElement>();
@@ -809,8 +817,13 @@ public class GameHud : MonoBehaviour
 
         RectTransform commandPanel = CreatePanel(bar, "UnitCommandPanel", SlotColor);
         SetFixedRight(commandPanel, commandRight, CommandPanelWidth);
-        AddConsoleFrame(commandPanel);
+        AddConsoleFrame(commandPanel, "command_grid_frame");
         BuildUnitCommandGrid(commandPanel);
+        if (Wc3Console)
+        {
+            AddWc3RightPillar(bar, "PillarCommand", commandLeft, ConsoleMargin);
+            AddWc3RightPillar(bar, "PillarInfo", itemLeft, ConsoleMargin);
+        }
 
         BuildTopBar();
         BuildHeroButtons();
@@ -1198,6 +1211,7 @@ public class GameHud : MonoBehaviour
     {
         RectTransform topBar = CreatePanel(transform, "TopBar", new Color(0f, 0f, 0f, 0.55f));
         SetAnchors(topBar, new Vector2(0f, TopBarBottom), new Vector2(1f, 1f));
+        if (Wc3Console) { Image topBarImage = topBar.GetComponent<Image>(); topBarImage.color = Color.clear; topBarImage.raycastTarget = false; }   // 워크3풍: 바 판 없이 버튼·자원 칸만 화면 위에 뜬다
 
         // 왼쪽 버튼 줄(항법 버튼도 여기 — 우리만의 기능이라 원작 4버튼 뒤에 붙인다)
         RectTransform menuButtonsPanel = CreatePanel(topBar, "TopBarButtons", Color.clear);
@@ -1226,7 +1240,16 @@ public class GameHud : MonoBehaviour
         SetAnchors(clock, new Vector2(0.47f, -0.55f), new Vector2(0.53f, 1f));
         clock.GetComponent<Image>().raycastTarget = false;
         Image clockImage = clock.GetComponent<Image>();
-        if (UiSkin.Apply(clockImage, "clock_orb")) clockImage.preserveAspect = true;
+        if (Wc3Console && UiSkin.Wc3("clock_orb") != null)
+        {
+            // 워크3풍 시계 구슬: 160px 정사각, 화면 위 가운데에서 위가 살짝 잘려 걸린다(중심 y≈22).
+            clock.anchorMin = clock.anchorMax = new Vector2(0.5f, 1f);
+            clock.pivot = new Vector2(0.5f, 1f);
+            clock.sizeDelta = new Vector2(120f, 120f);   // 원작 사진 기준 구슬 지름 ≈ 화면 폭의 7%
+            clock.anchoredPosition = new Vector2(0f, 38f);
+            clockImage.sprite = UiSkin.Wc3("clock_orb"); clockImage.type = Image.Type.Simple; clockImage.preserveAspect = true; clockImage.color = Color.white;
+        }
+        else if (UiSkin.Apply(clockImage, "clock_orb")) clockImage.preserveAspect = true;
 
         // 플레이어 마나(원작 상단 바엔 없음 — 도움소 스킬용) 시계 왼쪽에 작게
         manaText = CreateTopBarResource(topBar, "ManaPanel", null, 0.395f, 0.465f, new Color(0.45f, 0.65f, 1f));
@@ -1265,6 +1288,7 @@ public class GameHud : MonoBehaviour
         // 우상단 스택(RightColumn): 라운드 타이머 창 → 보스·신세계 타이머 창 → (BuildTeamPanel) 점수판. 사진의 「보스 제한시간」/「유닛 카운트」 자리.
         RectTransform roundWindow = CreatePanel(RightColumn(), "RoundTimerWindow", new Color(0.11f, 0.05f, 0.07f, 0.94f));
         UiSkin.Apply(roundWindow.GetComponent<Image>(), "timer_frame_9s", new Color(0.11f, 0.05f, 0.07f, 0.94f));
+        if (Wc3Console) UiSkin.ApplyWc3(roundWindow.GetComponent<Image>(), "timer_window", 2f);
         roundWindow.gameObject.AddComponent<LayoutElement>().preferredHeight = 44f;
         roundTimerTitle = CreateLabel(roundWindow, "RoundTimerTitle", "현재레벨->");
         SetAnchors(roundTimerTitle.rectTransform, new Vector2(0.04f, 0f), new Vector2(0.80f, 1f));   // 적 이름까지 들어가게 넓힘(시간 글자는 오른쪽 끝에 붙는다)
@@ -1284,6 +1308,7 @@ public class GameHud : MonoBehaviour
         // 보스 제한시간·신세계 대기 타이머(원작 타이머 창 제목, 알림 묶음 3)도 같은 스택에 — 켜질 때만 보인다.
         RectTransform extraTimerPanel = CreatePanel(RightColumn(), "ExtraTimerPanel", new Color(0.11f, 0.05f, 0.07f, 0.94f));
         UiSkin.Apply(extraTimerPanel.GetComponent<Image>(), "timer_frame_9s", new Color(0.11f, 0.05f, 0.07f, 0.94f));
+        if (Wc3Console) UiSkin.ApplyWc3(extraTimerPanel.GetComponent<Image>(), "timer_window", 2f);
         extraTimerPanel.gameObject.AddComponent<LayoutElement>().preferredHeight = 44f;
         extraTimerText = CreateLabel(extraTimerPanel, "ExtraTimerText", "");
         SetAnchors(extraTimerText.rectTransform, new Vector2(0.04f, 0f), new Vector2(0.96f, 1f));
@@ -1300,6 +1325,7 @@ public class GameHud : MonoBehaviour
         RectTransform panel = CreatePanel(topBar, name, new Color(0.02f, 0.04f, 0.09f, 0.95f));
         SetAnchors(panel, new Vector2(x0, 0.08f), new Vector2(x1, 0.92f));
         UiSkin.Apply(panel.GetComponent<Image>(), "topbar_resource_9s", new Color(0.02f, 0.04f, 0.09f, 0.95f));
+        if (Wc3Console) UiSkin.ApplyWc3(panel.GetComponent<Image>(), "res_cell", 2f);
         panel.GetComponent<Image>().raycastTarget = false;
         if (iconName != null)
         {
@@ -1307,7 +1333,9 @@ public class GameHud : MonoBehaviour
             SetAnchors(icon, new Vector2(0.03f, 0.1f), new Vector2(0.2f, 0.9f));
             Image iconImage = icon.GetComponent<Image>();
             iconImage.raycastTarget = false;
-            if (UiSkin.Apply(iconImage, iconName)) iconImage.preserveAspect = true;
+            Sprite wc3Icon = Wc3Console ? UiSkin.Wc3(iconName == "icon_lumber" ? "icon_wood" : iconName == "icon_food" ? "icon_trait" : iconName) : null;
+            if (wc3Icon != null) { iconImage.sprite = wc3Icon; iconImage.type = Image.Type.Simple; iconImage.color = Color.white; iconImage.preserveAspect = true; }
+            else if (UiSkin.Apply(iconImage, iconName)) iconImage.preserveAspect = true;
         }
         TMP_Text label = CreateLabel(panel, "Value", "0");
         SetAnchors(label.rectTransform, new Vector2(iconName != null ? 0.2f : 0.05f, 0f), new Vector2(0.95f, 1f));
@@ -1323,12 +1351,20 @@ public class GameHud : MonoBehaviour
         GameObject obj = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
         obj.transform.SetParent(parent, false);
         Image image = obj.GetComponent<Image>();
-        if (!UiSkin.Apply(image, "topbar_button_9s", new Color(1f, 1f, 1f, 0.15f))) image.color = new Color(1f, 1f, 1f, 0.15f);
+        if (Wc3Console && UiSkin.ApplyWc3(image, "topbar_button", 2f))
+        {
+            Button wc3Button = obj.GetComponent<Button>();
+            wc3Button.targetGraphic = image;
+            wc3Button.transition = UnityEngine.UI.Selectable.Transition.SpriteSwap;
+            wc3Button.spriteState = new SpriteState { highlightedSprite = UiSkin.Wc3("topbar_button_hover"), pressedSprite = UiSkin.Wc3("topbar_button_pressed"), disabledSprite = UiSkin.Wc3("topbar_button") };
+            wc3Button.navigation = new Navigation { mode = Navigation.Mode.None };
+        }
+        else if (!UiSkin.Apply(image, "topbar_button_9s", new Color(1f, 1f, 1f, 0.15f))) image.color = new Color(1f, 1f, 1f, 0.15f);
         obj.GetComponent<LayoutElement>().preferredWidth = width;
 
         TMP_Text text = CreateLabel(obj.transform, name + "Label", label);
         text.fontSize = 18;
-        text.color = new Color(0.81f, 0.88f, 1f);
+        text.color = Wc3Console ? new Color(0.98f, 0.92f, 0.70f) : new Color(0.81f, 0.88f, 1f);   // 워크3풍: 따뜻한 상아색 글자
         text.raycastTarget = false;
         return text;
     }
@@ -3162,6 +3198,7 @@ public class GameHud : MonoBehaviour
         //    맞게, 패널의 레이아웃 그룹이 글자의 preferredHeight로 높이를 정한다(RightColumn 참고).
         RectTransform teamPanel = CreatePanel(RightColumn(), "TeamPanel", new Color(0f, 0f, 0f, 0.6f));
         UiSkin.Apply(teamPanel.GetComponent<Image>(), "multiboard_frame_9s", new Color(0f, 0f, 0f, 0.6f));   // 원작 멀티보드: 금테 짙은 판
+        if (Wc3Console) UiSkin.ApplyWc3(teamPanel.GetComponent<Image>(), "scoreboard_frame", 2f);
         VerticalLayoutGroup fit = teamPanel.gameObject.AddComponent<VerticalLayoutGroup>();
         fit.padding = new RectOffset(8, 8, 4, 6);
         fit.childControlWidth = true;
@@ -3187,7 +3224,8 @@ public class GameHud : MonoBehaviour
         collapseRect.anchoredPosition = new Vector2(-4f, -3f);
         collapseRect.sizeDelta = new Vector2(26f, 22f);
         Image collapseImage = collapse.GetComponent<Image>();
-        if (!UiSkin.Apply(collapseImage, "button_navy_9s", new Color(0.12f, 0.2f, 0.45f, 1f))) collapseImage.color = new Color(0.12f, 0.2f, 0.45f, 1f);
+        if (Wc3Console && UiSkin.Wc3("collapse_btn") != null) { collapseImage.sprite = UiSkin.Wc3("collapse_btn"); collapseImage.type = Image.Type.Simple; collapseImage.color = Color.white; }
+        else if (!UiSkin.Apply(collapseImage, "button_navy_9s", new Color(0.12f, 0.2f, 0.45f, 1f))) collapseImage.color = new Color(0.12f, 0.2f, 0.45f, 1f);
         TMP_Text collapseLabel = CreateLabel(collapse.transform, "Label", "-");
         collapseLabel.fontSize = 18;
         collapseLabel.raycastTarget = false;
@@ -3303,6 +3341,49 @@ public class GameHud : MonoBehaviour
         return fillImage;
     }
 
+    // ── 워크3풍 기둥·초상 아치(0.3.14)
+    // 줄 레이아웃 안 기둥(왼쪽: 미니맵|초상|정보). 레이아웃 폭만 차지하는 얇은 돌기둥 그림.
+    static void AddWc3PillarSpacer(RectTransform row, string name, float width)
+    {
+        RectTransform pillar = CreatePanel(row, name, Color.white);
+        pillar.gameObject.AddComponent<LayoutElement>().preferredWidth = width;
+        Image image = pillar.GetComponent<Image>();
+        UiSkin.ApplyWc3(image, "stone_pillar", 2f);
+        image.raycastTarget = false;
+    }
+
+    // 바 오른쪽 끝에서 rightInset 떨어진 자리의 기둥(오른쪽 고정 칸 사이) — 세로는 바 전체.
+    static void AddWc3RightPillar(RectTransform bar, string name, float rightInset, float width)
+    {
+        RectTransform pillar = CreatePanel(bar, name, Color.white);
+        pillar.anchorMin = new Vector2(1f, 0f); pillar.anchorMax = new Vector2(1f, 1f); pillar.pivot = new Vector2(1f, 0.5f);
+        pillar.offsetMin = new Vector2(-rightInset - width, 0f); pillar.offsetMax = new Vector2(-rightInset, 0f);
+        Image image = pillar.GetComponent<Image>();
+        UiSkin.ApplyWc3(image, "stone_pillar", 2f);
+        image.raycastTarget = false;
+    }
+
+    // 초상 아치: 초상 이미지에 아치 마스크 그림(+Mask로 3D 얼굴을 아치 모양으로 자른다)과 맨 위 금 아치 틀. 얼굴은 위쪽 기준으로 비율을 지켜 자른다(칸이 틀 그림보다 가로로 넓다).
+    void BuildWc3PortraitArch(RectTransform slot, RectTransform portraitRect)
+    {
+        portraitRect.anchorMin = new Vector2(0.03f, 0.20f);
+        portraitRect.anchorMax = new Vector2(0.97f, 0.995f);
+        UiSkin.ApplyWc3(unitInfoPortrait, "portrait_arch_mask", 1f);
+        unitInfoPortrait.type = Image.Type.Simple;
+        unitInfoPortrait.color = SlotColor;
+        Mask mask = portraitRect.gameObject.AddComponent<Mask>();
+        mask.showMaskGraphic = true;   // 등급색 바탕이 아치 모양으로 보인다
+        if (unitInfoPortraitModel != null) unitInfoPortraitModel.uvRect = new Rect(0f, 0.12f, 1f, 0.88f);   // 정사각 무대 그림의 위쪽 88% — 아치가 가로로 넓은 만큼 아래를 잘라 얼굴이 안 눌린다
+        RectTransform frame = CreatePanel(slot, "Wc3Frame", Color.white);
+        frame.anchorMin = portraitRect.anchorMin; frame.anchorMax = portraitRect.anchorMax; frame.offsetMin = frame.offsetMax = Vector2.zero;
+        Image frameImage = frame.GetComponent<Image>();
+        UiSkin.ApplyWc3(frameImage, "portrait_arch_frame", 1f);
+        frameImage.type = Image.Type.Simple;
+        frameImage.raycastTarget = false;
+        wc3FrameOverlays.Add(frame);   // 초상·바가 다 붙은 뒤 맨 위로(BringWc3FramesToFront)
+        PortraitStage.CloseUp = true;
+    }
+
     // 워크3풍 정보창(0.3.14): 위 띠 두 줄(이름·등급/레벨) + 아이콘 금칸 + 글줄 위치. 전부 한 기를 고를 때만 보이도록 statRows 자식으로 둔다(statRows가 꺼지면 같이 꺼진다).
     //   틀 테두리 28px 안쪽으로 들어가고(위 여백 6px), 왼쪽 반: 아머 줄(작은 칸+글) → 공격 칸(가운데) → 상태 줄. 오른쪽 반은 스킬 아이콘 격자.
     void BuildWc3InfoDeco(RectTransform infoPanel, RectTransform statRows)
@@ -3320,6 +3401,9 @@ public class GameHud : MonoBehaviour
         unitStatusText.transform.parent.SetSiblingIndex(2);
         FrameStatIcon(unitArmorText.transform.parent, 40f, false);
         FrameStatIcon(unitDamageText.transform.parent, 56f, true);
+        // 칸 속 그림: 공격 = 교차 칼, 방어 = 방패(명령 칸 아이콘 재사용 — 정보창용 전용 그림은 아직 없다)
+        SetStatIcon(unitDamageText.transform.parent, "cmd_attack");
+        SetStatIcon(unitArmorText.transform.parent, "cmd_hold");
 
         wc3NameText = BuildWc3Strip(statRows, "Wc3TitleStrip", "info_title_strip", frameInset + 6f, 30f, 28f);
         wc3LevelText = BuildWc3Strip(statRows, "Wc3LevelStrip", "info_level_strip", frameInset + 6f + 30f + 4f, 18f, 18f);
@@ -3337,6 +3421,15 @@ public class GameHud : MonoBehaviour
         unitInfoText.gameObject.SetActive(false);
     }
 
+    static void SetStatIcon(Transform row, string iconName)
+    {
+        Transform pic = row.Find("Icon/Pic");
+        Sprite sprite = pic != null ? CommandIcon(iconName) : null;
+        if (sprite == null) return;
+        Image image = pic.GetComponent<Image>();
+        image.sprite = sprite; image.type = Image.Type.Simple; image.color = Color.white; image.preserveAspect = true;
+    }
+
     // 스탯 줄 아이콘 위에 금칸(icon_slot_gold)을 덮고 아이콘 폭을 키운다. center면 줄 전체를 가운데 정렬(왼쪽 반의 중앙).
     static void FrameStatIcon(Transform row, float size, bool center)
     {
@@ -3344,11 +3437,13 @@ public class GameHud : MonoBehaviour
         if (icon == null) return;
         LayoutElement iconLayout = icon.GetComponent<LayoutElement>();
         iconLayout.preferredWidth = size; iconLayout.preferredHeight = size; iconLayout.minHeight = size;
-        RectTransform slot = CreatePanel((RectTransform)icon, "Slot", Color.white);
-        slot.anchorMin = Vector2.zero; slot.anchorMax = Vector2.one; slot.offsetMin = Vector2.zero; slot.offsetMax = Vector2.zero;
-        Image slotImage = slot.GetComponent<Image>();
+        // 금칸 그림(가운데가 어두운 불투명)이 아이콘 칸 자체이고, 그 위 자식 「Pic」에 아이콘 그림을 얹는다.
+        Image slotImage = icon.GetComponent<Image>();
         UiSkin.ApplyWc3(slotImage, "icon_slot_gold", 2f);
         slotImage.raycastTarget = false;
+        RectTransform pic = CreatePanel((RectTransform)icon, "Pic", Color.clear);
+        pic.anchorMin = Vector2.zero; pic.anchorMax = Vector2.one; pic.offsetMin = new Vector2(5f, 5f); pic.offsetMax = new Vector2(-5f, -5f);
+        pic.GetComponent<Image>().raycastTarget = false;
         HorizontalLayoutGroup h = row.GetComponent<HorizontalLayoutGroup>();
         h.childAlignment = center ? TextAnchor.MiddleCenter : TextAnchor.MiddleLeft;
         h.childForceExpandHeight = false;
@@ -3511,7 +3606,7 @@ public class GameHud : MonoBehaviour
 
         float minimapWidth = Mathf.Round((height - 2f * MinimapInset) * aspect + 2f * MinimapInset);
         minimapLayout.preferredWidth = minimapWidth;
-        portraitLayout.preferredWidth = Mathf.Round(height * PortraitAspect);
+        portraitLayout.preferredWidth = Mathf.Round(height * (Wc3Console ? Wc3PortraitAspect : PortraitAspect));
         if (minimapCamera.TryGetComponent(out AspectRatioFitter fitter)) fitter.aspectRatio = aspect;
         LayoutRebuilder.MarkLayoutForRebuild(consoleLeft);
         LayoutWispSlots(minimapWidth);
@@ -3958,7 +4053,16 @@ public class GameHud : MonoBehaviour
     void SetCommandSlotColor(int slot, Color state)
     {
         Image image = unitCommandSlotBackgrounds[slot];
-        if (image != null) image.color = state;
+        if (image == null) return;
+        if (Wc3Console)
+        {
+            // 그림이 칠이라 색 대신 곱: 비어 있음(clear)은 흐린 칸, 기본은 원색, 토글·못 씀은 상태 색을 절반만 섞는다.
+            if (state.a < 0.05f) image.color = new Color(0.8f, 0.8f, 0.8f, 1f);
+            else if (Mathf.Approximately(state.r, UnitCommandDefaultColor.r) && Mathf.Approximately(state.g, UnitCommandDefaultColor.g) && Mathf.Approximately(state.b, UnitCommandDefaultColor.b)) image.color = Color.white;
+            else image.color = Color.Lerp(Color.white, new Color(state.r, state.g, state.b, 1f), 0.55f);
+            return;
+        }
+        image.color = state;
     }
 
     void BuildUnitCommandGrid(RectTransform frame)
@@ -3966,7 +4070,7 @@ public class GameHud : MonoBehaviour
         UnitThumbBaker.Baked -= MarkFlexDirty;   // 초상이 구워지면 조합 칸 그림을 다시 그린다
         UnitThumbBaker.Baked += MarkFlexDirty;
         // 격자는 금테 칸 안쪽 자식에 둔다(AddConsoleFrame 주석 — 테두리 띠가 격자 칸을 먹지 않게). 칸 크기는 칸에 맞춰 잰다.
-        GridLayoutGroup grid = AddFitGrid(frame, "UnitCommandGrid", CommandColumns, CommandRows, 6f, 5f, false);
+        GridLayoutGroup grid = AddFitGrid(frame, "UnitCommandGrid", CommandColumns, CommandRows, Wc3Console ? 16f : 6f, Wc3Console ? 3f : 5f, false);
 
         for (int i = 0; i < CommandSlotCount; i++)
         {
@@ -4016,13 +4120,21 @@ public class GameHud : MonoBehaviour
 
         int capturedIndex = index;
         Button button = card.GetComponent<Button>();
+        if (Wc3Console && UiSkin.ApplyWc3(background, "command_cell", 2f))
+        {
+            // 워크3풍 명령 칸: 돌 칸 그림이 늘 보이고(빈 칸도 원작처럼 칸이 있다), 호버·눌림은 그림 바꿈. 상태 색은 SetCommandSlotColor가 곱으로 입힌다.
+            button.targetGraphic = background;
+            button.transition = UnityEngine.UI.Selectable.Transition.SpriteSwap;
+            button.spriteState = new SpriteState { highlightedSprite = UiSkin.Wc3("command_cell_hover"), pressedSprite = UiSkin.Wc3("command_cell_pressed"), disabledSprite = UiSkin.Wc3("command_cell") };
+            button.navigation = new Navigation { mode = Navigation.Mode.None };
+        }
         button.onClick.AddListener(() => OnUnitCommandSlotClicked(capturedIndex));
 
         EventTrigger trigger = card.AddComponent<EventTrigger>();
         AddTriggerEntry(trigger, EventTriggerType.PointerEnter, _ => OnUnitCommandSlotHoverEnter(capturedIndex));
         AddTriggerEntry(trigger, EventTriggerType.PointerExit, _ => OnCombineCardHoverExit());
 
-        AddPanelBorder((RectTransform)card.transform, BorderColor, BorderThickness);
+        if (!Wc3Console) AddPanelBorder((RectTransform)card.transform, BorderColor, BorderThickness);
 
         TMP_Text nameText = CreateLabel(card.transform, "Name", "");
         nameText.raycastTarget = false;

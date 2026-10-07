@@ -29,6 +29,14 @@ static class Wc3SkinApply
         // 창 4종(blender A-2 메뉴) — 메뉴판은 모서리 돌이 커서 80(2배 기준), 단추는 둥근 돌판 36.
         ("menu_panel", 80, 80, 80, 80, false), ("menu_btn", 36, 36, 36, 36, false), ("menu_btn_hover", 36, 36, 36, 36, false), ("menu_btn_pressed", 36, 36, 36, 36, false), ("menu_btn_disabled", 36, 36, 36, 36, false),
         ("menu_divider", 0, 0, 0, 0, false),
+        // 창 부품(blender A-1·A-3): 틀 모서리 돌 66, 단추·입력 30, 칩 24, 행 28, 서랍 탭 30, 툴팁 30. 채팅 입력은 IMGUI GUIStyle.border로 쓴다.
+        ("win_frame", 66, 66, 66, 66, false), ("win_btn", 30, 30, 30, 30, false), ("win_btn_hover", 30, 30, 30, 30, false), ("win_btn_pressed", 30, 30, 30, 30, false), ("win_btn_selected", 30, 30, 30, 30, false), ("win_btn_disabled", 30, 30, 30, 30, false),
+        ("win_search_box", 30, 30, 30, 30, false), ("win_search_box_focus", 30, 30, 30, 30, false),
+        ("win_chip", 24, 24, 24, 24, false), ("win_chip_hover", 24, 24, 24, 24, false), ("win_chip_selected", 24, 24, 24, 24, false),
+        ("drawer_tab", 30, 30, 30, 30, false), ("drawer_tab_hover", 30, 30, 30, 30, false),
+        ("win_row", 28, 28, 28, 28, false), ("win_row_owned", 28, 28, 28, 28, false), ("win_row_dim", 28, 28, 28, 28, false),
+        ("win_tooltip", 30, 30, 30, 30, false),
+        ("chat_input", 40, 20, 20, 20, false), ("chat_input_focus", 40, 20, 20, 20, false), ("chat_line_band", 32, 14, 32, 14, false),
     };
 
     static string Apply()
