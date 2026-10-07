@@ -113,6 +113,7 @@ public class PlayerNotificationHud : MonoBehaviour
         richText = true,   // 유닛 획득 알림이 등급색(<color>)을 쓴다(2026-09-26). 기존 알림엔 태그가 없어 그대로다.
         normal = { textColor = Color.white },
     };
+    static GUIStyle bandStyle;
     static readonly GUIStyle ShadowStyle = new GUIStyle(Style) { normal = { textColor = new Color(0f, 0f, 0f, 0.85f) } };
     static readonly System.Text.RegularExpressions.Regex ColorTag = new System.Text.RegularExpressions.Regex("</?color[^>]*>");
 
@@ -163,8 +164,18 @@ public class PlayerNotificationHud : MonoBehaviour
             float width = Mathf.Min(BoxWidth * scale, textWidth + BandPad * 2f * scale + 6f);
             Rect rect = new Rect(LeftMargin * scale, y, BoxWidth * scale, lineHeight);
             // 줄 뒤 반투명 검정 띠 — 글자 폭만큼(밝은 땅 위에서도 읽히게)
-            GUI.color = new Color(0f, 0f, 0f, BandAlpha * alpha);
-            GUI.DrawTexture(new Rect(rect.x - BandPad * scale, y, width, lineHeight), Texture2D.whiteTexture);
+            Texture2D bandTexture = UiSkin.Wc3Texture("chat_line_band");
+            if (bandTexture != null)
+            {
+                if (bandStyle == null) bandStyle = new GUIStyle { normal = { background = bandTexture }, border = new RectOffset(32, 32, 14, 14) };   // 양끝·위아래가 번지는 띠(blender, 중앙 알파 0.6)
+                GUI.color = new Color(1f, 1f, 1f, alpha);
+                GUI.Box(new Rect(rect.x - (BandPad + 16f) * scale, y, width + 32f * scale, lineHeight), GUIContent.none, bandStyle);
+            }
+            else
+            {
+                GUI.color = new Color(0f, 0f, 0f, BandAlpha * alpha);
+                GUI.DrawTexture(new Rect(rect.x - BandPad * scale, y, width, lineHeight), Texture2D.whiteTexture);
+            }
             GUI.color = new Color(1f, 1f, 1f, alpha);
             // 외곽선: 색 태그를 뗀 검정 글자를 4방향으로 어긋나게
             float o = Mathf.Max(1.5f, 1.8f * scale);

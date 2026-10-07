@@ -176,7 +176,8 @@ public class RecipeSearchDrawer : MonoBehaviour
         foreach (Image image in border.GetComponentsInChildren<Image>(true)) image.color = color;
     }
 
-    const float Inset = 26f;   // 돌 테두리(16px) 안쪽 여백
+    static float TopPad => UiSkin.Wc3Has("win_frame") ? 24f : 0f;   // 워크3풍 틀 윗돌 아래로 내리는 만큼
+    static float Inset => UiSkin.Wc3Has("win_frame") ? 36f : 26f;   // 돌 테두리 안쪽 여백(워크3풍 틀은 모서리 돌이 커서 더 안쪽)
 
     void BuildTab()
     {
@@ -187,6 +188,7 @@ public class RecipeSearchDrawer : MonoBehaviour
         tab.anchoredPosition = new Vector2(0f, TabOffsetY);
         Image bg = tab.gameObject.AddComponent<Image>();
         Skin(bg, "dialog_panel_9s", new Color(0.12f, 0.19f, 0.36f, 0.97f), 1.7f);
+        if (UiSkin.Wc3Has("drawer_tab")) UiSkin.ApplyWc3(bg, "drawer_tab", 2f);   // 워크3풍: 왼쪽만 둥근 서류함 탭
         Button button = tab.gameObject.AddComponent<Button>();
         ColorBlock colors = button.colors;
         colors.highlightedColor = new Color(1.2f, 1.2f, 1.35f, 1f);
@@ -210,20 +212,23 @@ public class RecipeSearchDrawer : MonoBehaviour
         panel.anchoredPosition = new Vector2(ClosedX, 0f);
         Image bg = panel.gameObject.AddComponent<Image>();
         Skin(bg, "dialog_panel_9s", PanelFill);   // 난이도 대화상자와 같은 돌/금 테두리 + 남색 안쪽
+        bool wc3Panel = UiSkin.Wc3Has("win_frame");
+        if (wc3Panel) { bg.sprite = null; bg.type = Image.Type.Simple; bg.color = PanelFill; }   // 워크3풍: 바탕은 어두운 남색 칠, 돌 틀은 맨 위 덮개(BuildPanel 끝)
 
         TMP_Text title = MakeText(panel, "Title", "조합 검색", 25f, new Color(1f, 0.84f, 0.25f, 1f), TextAlignmentOptions.Left, FontStyles.Bold);
-        Place(title.rectTransform, Inset, 18f, 300f, 34f);
+        Place(title.rectTransform, Inset, 18f + TopPad, 300f, 34f);
         TMP_Text close = MakeText(panel, "Close", "✕", 22f, Muted, TextAlignmentOptions.Center, FontStyles.Bold);
-        Place(close.rectTransform, PanelWidth - Inset - 36f, 18f, 36f, 34f);
+        Place(close.rectTransform, PanelWidth - Inset - 36f, 18f + TopPad, 36f, 34f);
         close.raycastTarget = true;
         close.gameObject.AddComponent<Button>().onClick.AddListener(() => SetOpen(false));
 
         // [크게 보기] — 조합 도우미(큰 창)로 펼친다(사장님 10-07: 서랍이 기본, 단추를 누르면 크게). 서랍의 검색어를 넘기고, 도우미의 [작게 보기]·Esc가 검색어를 들고 돌아온다.
         {
             RectTransform helperBtn = NewRect("HelperButton", panel);
-            Place(helperBtn, PanelWidth - Inset - 36f - 124f, 16f, 116f, 34f);
+            Place(helperBtn, PanelWidth - Inset - 36f - 124f, 16f + TopPad, 116f, 34f);
             Image helperImage = helperBtn.gameObject.AddComponent<Image>();
             Skin(helperImage, "button_navy_9s", ChipOff);
+            if (UiSkin.Wc3Has("win_btn")) Wc3Button(helperImage);
             helperBtn.gameObject.AddComponent<Button>().onClick.AddListener(OpenHelper);
             TMP_Text helperLabel = MakeText(helperBtn, "Label", "크게 보기", 16f, Color.white, TextAlignmentOptions.Center, FontStyles.Bold);
             Stretch(helperLabel.rectTransform, 0f, 0f, 0f, 0f);
@@ -233,17 +238,26 @@ public class RecipeSearchDrawer : MonoBehaviour
         BuildChips();
 
         infoText = MakeText(panel, "Info", "", 15f, Muted, TextAlignmentOptions.Left, FontStyles.Normal);
-        Place(infoText.rectTransform, Inset, 150f, PanelWidth - Inset * 2f, 24f);
+        Place(infoText.rectTransform, Inset, 150f + TopPad, PanelWidth - Inset * 2f, 24f);
 
         BuildScroll();
+        if (wc3Panel)
+        {
+            RectTransform frame = NewRect("Wc3Frame", panel);
+            Stretch(frame, 0f, 0f, 0f, 0f);
+            Image frameImage = frame.gameObject.AddComponent<Image>();
+            UiSkin.ApplyWc3(frameImage, "win_frame", 2f);
+            frameImage.raycastTarget = false;
+        }
     }
 
     void BuildInput()
     {
         RectTransform inputRect = NewRect("Input", panel);
-        Place(inputRect, Inset, 58f, PanelWidth - Inset * 2f, 44f);
+        Place(inputRect, Inset, 58f + TopPad, PanelWidth - Inset * 2f, 44f);
         Image bg = inputRect.gameObject.AddComponent<Image>();
         Skin(bg, "console_cell_frame_9s", new Color(0.02f, 0.035f, 0.09f, 1f), 3f);   // 어두운 홈
+        if (UiSkin.Wc3Has("win_search_box")) UiSkin.ApplyWc3(bg, "win_search_box", 2f);
 
         RectTransform viewport = NewRect("Text Area", inputRect);
         Stretch(viewport, 14f, 5f, 14f, 5f);
@@ -270,6 +284,18 @@ public class RecipeSearchDrawer : MonoBehaviour
     }
 
     GameObject[] chipBorders;
+    bool chipWc3;
+
+    // 워크3풍 단추 그림 + 호버·눌림 그림 바꿈
+    static void Wc3Button(Image image)
+    {
+        UiSkin.ApplyWc3(image, "win_btn", 2f);
+        Button button = image.GetComponentInParent<Button>();
+        if (button == null) return;
+        button.targetGraphic = image;
+        button.transition = UnityEngine.UI.Selectable.Transition.SpriteSwap;
+        button.spriteState = new SpriteState { highlightedSprite = UiSkin.Wc3("win_btn_hover"), pressedSprite = UiSkin.Wc3("win_btn_pressed"), disabledSprite = UiSkin.Wc3("win_btn_disabled") };
+    }
 
     void BuildChips()
     {
@@ -281,11 +307,12 @@ public class RecipeSearchDrawer : MonoBehaviour
         {
             bool isNow = i == GradeChipLabels.Length;
             string label = isNow ? "지금 가능" : GradeChipLabels[i];
-            float width = isNow ? 88f : 55f;
+            float width = UiSkin.Wc3Has("win_frame") ? (isNow ? 84f : 51f) : (isNow ? 88f : 55f);
             RectTransform chip = NewRect("Chip" + i, panel);
-            Place(chip, x, 110f, width, 30f);
+            Place(chip, x, 110f + TopPad, width, 30f);
             Image bg = chip.gameObject.AddComponent<Image>();
             Skin(bg, "button_navy_9s", ChipOff);
+            if (UiSkin.Wc3Has("win_chip")) { UiSkin.ApplyWc3(bg, "win_chip", 2f); chipWc3 = true; }
             chipImages[i] = bg;
             Button button = chip.gameObject.AddComponent<Button>();
             ColorBlock colors = button.colors;
@@ -296,7 +323,7 @@ public class RecipeSearchDrawer : MonoBehaviour
             button.onClick.AddListener(() => OnChip(captured));
             TMP_Text text = MakeText(chip, "Label", label, 16f, Color.white, TextAlignmentOptions.Center, FontStyles.Bold);
             Stretch(text.rectTransform, 0f, 0f, 0f, 0f);
-            chipBorders[i] = AddSquareBorder(chip, "GoldBorder", Gold, 2f);   // 누른 칩 = 금빛 테두리
+            chipBorders[i] = chipWc3 ? NewRect("NoBorder", chip).gameObject : AddSquareBorder(chip, "GoldBorder", Gold, 2f);   // 누른 칩 = 금빛 테두리(워크3풍은 win_chip_selected 그림)
             x += width + 4f;
         }
         RefreshChips();
@@ -305,7 +332,7 @@ public class RecipeSearchDrawer : MonoBehaviour
     void BuildScroll()
     {
         RectTransform scrollRect = NewRect("Scroll", panel);
-        Place(scrollRect, Inset - 4f, 180f, PanelWidth - Inset * 2f + 8f, PanelHeight - 180f - Inset);
+        Place(scrollRect, Inset - 4f, 180f + TopPad, PanelWidth - Inset * 2f + 8f, PanelHeight - 180f - TopPad - Inset);
         ScrollRect scroll = scrollRect.gameObject.AddComponent<ScrollRect>();
         Image hit = scrollRect.gameObject.AddComponent<Image>();
         hit.color = new Color(0f, 0f, 0f, 0.001f);
@@ -374,6 +401,8 @@ public class RecipeSearchDrawer : MonoBehaviour
         root.gameObject.AddComponent<LayoutElement>().preferredHeight = RowHeight;
         Image bg = root.gameObject.AddComponent<Image>();
         bg.color = RowFill;   // 각진 어두운 남색 판
+        if (UiSkin.Wc3Has("win_row")) { UiSkin.ApplyWc3(bg, "win_row", 2f); row.stone = NewRect("NoStone", root).gameObject; }   // 워크3풍: 행 그림이 테두리까지 그린다
+        else
         row.stone = AddSquareBorder(root, "StoneBorder", new Color(0.30f, 0.31f, 0.35f, 1f), 2f);
         row.gold = AddSquareBorder(root, "GoldBorder", Gold, 2f);   // 고른 줄 = 금빛 외곽
         row.gold.SetActive(false);
@@ -536,6 +565,7 @@ public class RecipeSearchDrawer : MonoBehaviour
         {
             bool on = i == GradeChipLabels.Length ? nowOnly : i == gradeChip;
             if (chipBorders != null && chipBorders[i] != null) chipBorders[i].SetActive(on);
+            if (chipWc3) chipImages[i].sprite = UiSkin.Wc3(on ? "win_chip_selected" : "win_chip");
             TMP_Text label = chipImages[i].GetComponentInChildren<TMP_Text>();
             if (label != null) label.color = on ? new Color(1f, 0.84f, 0.25f, 1f) : Color.white;
         }

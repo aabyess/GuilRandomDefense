@@ -29,6 +29,7 @@ public class GameChatBox : MonoBehaviour
     readonly System.Collections.Generic.List<string> history = new System.Collections.Generic.List<string>();   // 최근 입력(최신이 뒤) — 위/아래 화살표
     int historyIndex = -1;
     GUIStyle boxStyle, fieldStyle, labelStyle;
+    bool wc3Chat;
     string statusMessage = "";
     float statusHideTime;
 
@@ -195,12 +196,14 @@ public class GameChatBox : MonoBehaviour
     {
         if (boxStyle != null) return;
         boxStyle = new GUIStyle { normal = { background = Solid(new Color(0.02f, 0.02f, 0.03f, 0.88f)) } };
+        Texture2D wc3Input = UiSkin.Wc3Texture("chat_input");
+        if (wc3Input != null) { wc3Chat = true; boxStyle = new GUIStyle { normal = { background = wc3Input }, border = new RectOffset(40, 20, 20, 20) }; }   // 워크3풍: 돌 홈 + 금테(왼쪽 78px에 [전체] 자리)
         fieldStyle = new GUIStyle(GUI.skin.textField)
         {
             alignment = TextAnchor.MiddleLeft,
-            normal = { background = Solid(new Color(0.06f, 0.06f, 0.08f, 0.95f)), textColor = new Color(1f, 0.97f, 0.88f) },
-            focused = { background = Solid(new Color(0.06f, 0.06f, 0.08f, 0.95f)), textColor = Color.white },
-            hover = { background = Solid(new Color(0.06f, 0.06f, 0.08f, 0.95f)), textColor = Color.white },
+            normal = { background = Solid(new Color(0.06f, 0.06f, 0.08f, UiSkin.Wc3Has("chat_input") ? 0f : 0.95f)), textColor = new Color(1f, 0.97f, 0.88f) },   // 워크3풍은 틀 그림이 바탕이라 입력칸은 투명
+            focused = { background = Solid(new Color(0.06f, 0.06f, 0.08f, UiSkin.Wc3Has("chat_input") ? 0f : 0.95f)), textColor = Color.white },
+            hover = { background = Solid(new Color(0.06f, 0.06f, 0.08f, UiSkin.Wc3Has("chat_input") ? 0f : 0.95f)), textColor = Color.white },
             padding = new RectOffset(10, 8, 4, 4),
         };
         labelStyle = new GUIStyle { alignment = TextAnchor.MiddleLeft, richText = true, normal = { textColor = new Color(1f, 0.84f, 0.25f) } };
@@ -224,7 +227,7 @@ public class GameChatBox : MonoBehaviour
             EnsureStyles();
             Rect boxRect = ComputeRect();
             GUI.Box(boxRect, GUIContent.none, boxStyle);
-            DrawBorder(boxRect, new Color(0.79f, 0.64f, 0.29f, 1f), Mathf.Max(1f, 2f * scale));
+            if (!wc3Chat) DrawBorder(boxRect, new Color(0.79f, 0.64f, 0.29f, 1f), Mathf.Max(1f, 2f * scale));
             labelStyle.fontSize = fieldStyle.fontSize = Mathf.RoundToInt(24f * scale);
             float labelW = 78f * scale;
             GUI.Label(new Rect(boxRect.x + 10f * scale, boxRect.y, labelW, boxRect.height), "[전체]", labelStyle);

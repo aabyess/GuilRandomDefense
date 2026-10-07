@@ -37,10 +37,10 @@ public class RecipeHelperPanel : MonoBehaviour
     static readonly Color PanelFill = new Color(0.06f, 0.065f, 0.08f, 0.985f);
     static readonly Color Bronze = new Color(0.79f, 0.62f, 0.30f, 1f);
     static readonly Color BronzeDark = new Color(0.36f, 0.27f, 0.12f, 1f);
-    static readonly Color RowFill = new Color(0.11f, 0.115f, 0.14f, 0.97f);
+    static Color RowFill => UiSkin.Wc3Has("win_row") ? new Color(1f, 1f, 1f, 0.97f) : new Color(0.11f, 0.115f, 0.14f, 0.97f);   // 워크3풍은 그림이 칠이라 흰색 = 원색
     static readonly Color Muted = new Color(0.68f, 0.66f, 0.60f, 1f);
-    static readonly Color BtnOff = new Color(0.16f, 0.16f, 0.19f, 1f);
-    static readonly Color BtnOn = new Color(0.52f, 0.38f, 0.12f, 1f);
+    static Color BtnOff => UiSkin.Wc3Has("win_btn") ? Color.white : new Color(0.16f, 0.16f, 0.19f, 1f);
+    static Color BtnOn => UiSkin.Wc3Has("win_btn") ? new Color(1f, 0.80f, 0.42f, 1f) : new Color(0.52f, 0.38f, 0.12f, 1f);   // 워크3풍: 켜진 단추는 따뜻한 금빛 곱
 
     enum SortMode { Default, High, Low }
 
@@ -225,10 +225,19 @@ public class RecipeHelperPanel : MonoBehaviour
         Place(r, x, y, w, h);
         Image bg = r.gameObject.AddComponent<Image>();
         bg.color = BtnOff;
+        bool wc3Btn = UiSkin.Wc3Has("win_btn");
+        if (wc3Btn) UiSkin.ApplyWc3(bg, "win_btn", 2f);
         var btn = r.gameObject.AddComponent<Button>();
+        if (wc3Btn)
+        {
+            btn.targetGraphic = bg;
+            btn.transition = UnityEngine.UI.Selectable.Transition.SpriteSwap;
+            btn.spriteState = new SpriteState { highlightedSprite = UiSkin.Wc3("win_btn_hover"), pressedSprite = UiSkin.Wc3("win_btn_pressed"), disabledSprite = UiSkin.Wc3("win_btn_disabled") };
+            btn.navigation = new Navigation { mode = Navigation.Mode.None };
+        }
         ColorBlock cb = btn.colors; cb.highlightedColor = new Color(1.2f, 1.2f, 1.25f, 1f); cb.pressedColor = new Color(0.8f, 0.8f, 0.85f, 1f); btn.colors = cb;
         btn.onClick.AddListener(() => onClick());
-        AddFrame(r, BronzeDark, 2f);
+        if (!wc3Btn) AddFrame(r, BronzeDark, 2f);
         text = MakeText(r, label, size, new Color(0.95f, 0.92f, 0.82f, 1f), TextAlignmentOptions.Center, FontStyles.Bold);
         Stretch(text.rectTransform, 2f, 0f, 2f, 0f);
         return bg;
@@ -252,12 +261,17 @@ public class RecipeHelperPanel : MonoBehaviour
         panel.anchoredPosition = Vector2.zero;
         Image bg = panel.gameObject.AddComponent<Image>();
         Sprite cell = UiSkin.BarCell();
-        if (cell != null) { bg.sprite = cell; bg.type = Image.Type.Sliced; bg.color = Color.white; bg.pixelsPerUnitMultiplier = 1f; }
+        bool wc3Panel = UiSkin.Wc3Has("win_frame");
+        if (wc3Panel) { bg.color = PanelFill; }   // 워크3풍: 어두운 칠 + 맨 위 돌 틀 덮개(Build 끝)
+        else if (cell != null) { bg.sprite = cell; bg.type = Image.Type.Sliced; bg.color = Color.white; bg.pixelsPerUnitMultiplier = 1f; }
         else { bg.color = PanelFill; AddFrame(panel, Bronze, 3f); }
         // 안쪽 금속 판(청동 액자 안을 한 겹 더 어둡게 — 글자 대비)
-        RectTransform inner = NewRect("Inner", panel);
-        Stretch(inner, 12f, 12f, 12f, 12f);
-        Image innerImage = inner.gameObject.AddComponent<Image>(); innerImage.color = PanelFill; innerImage.raycastTarget = false;
+        if (!wc3Panel)
+        {
+            RectTransform inner = NewRect("Inner", panel);
+            Stretch(inner, 12f, 12f, 12f, 12f);
+            Image innerImage = inner.gameObject.AddComponent<Image>(); innerImage.color = PanelFill; innerImage.raycastTarget = false;
+        }
 
         // 1줄: 제목 · 검색 · 필터 · 정렬 · 작게 보기 · 닫기
         TMP_Text title = MakeText(panel, "조합 도우미", 30f, new Color(1f, 0.84f, 0.25f, 1f), TextAlignmentOptions.Left, FontStyles.Bold);
@@ -287,6 +301,14 @@ public class RecipeHelperPanel : MonoBehaviour
         totalsText.overflowMode = TextOverflowModes.Ellipsis;
 
         BuildGrid();
+        if (wc3Panel)
+        {
+            RectTransform frame = NewRect("Wc3Frame", panel);
+            Stretch(frame, 0f, 0f, 0f, 0f);
+            Image frameImage = frame.gameObject.AddComponent<Image>();
+            UiSkin.ApplyWc3(frameImage, "win_frame", 2f);
+            frameImage.raycastTarget = false;
+        }
         BuildFilterPopup();
         BuildTooltip();
     }
@@ -297,7 +319,8 @@ public class RecipeHelperPanel : MonoBehaviour
         Place(inputRect, x, y, w, h);
         Image bg = inputRect.gameObject.AddComponent<Image>();
         bg.color = new Color(0.03f, 0.03f, 0.045f, 1f);
-        AddFrame(inputRect, BronzeDark, 2f);
+        if (UiSkin.Wc3Has("win_search_box")) UiSkin.ApplyWc3(bg, "win_search_box", 2f);
+        else AddFrame(inputRect, BronzeDark, 2f);
         RectTransform viewport = NewRect("Text Area", inputRect);
         Stretch(viewport, 12f, 4f, 12f, 4f);
         viewport.gameObject.AddComponent<RectMask2D>();
@@ -434,6 +457,7 @@ public class RecipeHelperPanel : MonoBehaviour
         cell.root = root.gameObject;
         cell.bg = root.gameObject.AddComponent<Image>();
         cell.bg.color = RowFill;
+        if (UiSkin.Wc3Has("win_row")) UiSkin.ApplyWc3(cell.bg, "win_row", 2f);
         Place(root, 0f, HeaderH + order * (RowH + RowGap), 300f, RowH);
         root.gameObject.AddComponent<Button>().onClick.AddListener(() => OnCellClicked(cell));
         var trigger = root.gameObject.AddComponent<EventTrigger>();
@@ -489,7 +513,8 @@ public class RecipeHelperPanel : MonoBehaviour
         t.sizeDelta = new Vector2(480f, 170f);
         Image bg = t.gameObject.AddComponent<Image>();
         bg.color = new Color(0.04f, 0.045f, 0.06f, 0.98f); bg.raycastTarget = false;
-        AddFrame(t, Bronze, 2f);
+        if (UiSkin.Wc3Has("win_tooltip")) UiSkin.ApplyWc3(bg, "win_tooltip", 2f);
+        else AddFrame(t, Bronze, 2f);
         tooltipText = MakeText(t, "", 16f, Color.white, TextAlignmentOptions.TopLeft);
         tooltipText.textWrappingMode = TextWrappingModes.Normal;
         Stretch(tooltipText.rectTransform, 12f, 10f, 12f, 10f);
