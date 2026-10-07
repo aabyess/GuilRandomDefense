@@ -308,6 +308,48 @@ public static class NetCommands
         if (commandsLogged++ < 30) Debug.Log($"[MP] 아군 지정 요청 수행: 슬롯 {sender.Slot} {real.name} → {allyEntity.Real.name}");
     }
 
+    /// <summary>클라 → 호스트: 지점 지정 액티브(needsPointClick — 배성령 순간이동). 시전자 거울 번호와 클릭한 땅 좌표만 보낸다. 사거리·쿨·가능 여부는 호스트가 진짜 유닛에서 검증한다.</summary>
+    public static void RequestCastActiveAtPoint(Selectable caster, Vector3 point)
+    {
+        NetEntity casterEntity = caster != null ? caster.GetComponentInParent<NetEntity>() : null;
+        if (casterEntity == null || casterEntity.Object == null || !casterEntity.Object.IsValid || NetPlayer.Local == null) return;
+        NetPlayer.Local.RPC_CastActiveAtPoint(casterEntity.Object.Id, point);
+    }
+
+    public static void ExecuteCastActiveAtPoint(NetPlayer sender, NetworkId caster, Vector3 point)
+    {
+        if (float.IsNaN(point.x + point.y + point.z) || float.IsInfinity(point.x + point.y + point.z)) return;
+        if (!TryGetOwnedReal(sender, caster, "CastActiveAtPoint", out GameObject real)) return;
+        if (!real.TryGetComponent(out Selectable selectable) || !real.TryGetComponent(out UnitAttacker attacker)) return;
+        SkillData skill = attacker.ActiveSkill;
+        GameHud hud = Object.FindFirstObjectByType<GameHud>();
+        if (skill == null || hud == null) return;
+        hud.ExecuteCastActiveAtPoint(selectable, point, skill);
+        if (commandsLogged++ < 30) Debug.Log($"[MP] 지점 지정 요청 수행: 슬롯 {sender.Slot} {real.name} → {point}");
+    }
+
+    /// <summary>클라 → 호스트: 적 대상 지정 액티브(needsTargetClick — 강재규 단일도킹). 시전자·적 거울 번호만 보낸다.</summary>
+    public static void RequestCastActiveOnEnemy(Selectable caster, EnemyDummy enemy)
+    {
+        NetEntity casterEntity = caster != null ? caster.GetComponentInParent<NetEntity>() : null;
+        NetEntity enemyEntity = enemy != null ? enemy.GetComponentInParent<NetEntity>() : null;
+        if (casterEntity == null || enemyEntity == null || casterEntity.Object == null || enemyEntity.Object == null || !casterEntity.Object.IsValid || !enemyEntity.Object.IsValid || NetPlayer.Local == null) return;
+        NetPlayer.Local.RPC_CastActiveOnEnemy(casterEntity.Object.Id, enemyEntity.Object.Id);
+    }
+
+    public static void ExecuteCastActiveOnEnemy(NetPlayer sender, NetworkId caster, NetworkId enemy)
+    {
+        if (!TryGetOwnedReal(sender, caster, "CastActiveOnEnemy", out GameObject real)) return;
+        if (!real.TryGetComponent(out Selectable selectable)) return;
+        EnemyDummy target = null;
+        if (sender.Runner.TryFindObject(enemy, out NetworkObject enemyObject) && enemyObject.TryGetComponent(out NetEntity enemyEntity) && enemyEntity.Real != null)
+            enemyEntity.Real.TryGetComponent(out target);
+        GameHud hud = Object.FindFirstObjectByType<GameHud>();
+        if (target == null || hud == null) return;   // 요청이 오는 사이 죽었다
+        hud.ExecuteCastActiveOnTarget(selectable, target);
+        if (commandsLogged++ < 30) Debug.Log($"[MP] 적 지정 요청 수행: 슬롯 {sender.Slot} {real.name} → {target.name}");
+    }
+
     public static void RequestTraitTarget(UnitTraitData trait, UnitIdentity target)
     {
         int traitIndex = NetLauncher.Catalog != null ? NetLauncher.Catalog.IndexOf(trait) : -1;

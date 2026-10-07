@@ -92,6 +92,20 @@ public class GameHud : MonoBehaviour
     readonly GameObject[] statusBadgeRoots = new GameObject[MaxStatusBadges];
     readonly Image[] statusBadgeBorders = new Image[MaxStatusBadges];
     readonly TMP_Text[] statusBadgeLabels = new TMP_Text[MaxStatusBadges];
+    readonly Image[] statusBadgeIcons = new Image[MaxStatusBadges];
+    static readonly Dictionary<string, Sprite> buffIconCache = new Dictionary<string, Sprite>();
+    // 칸 글자 → 아이콘 파일(Assets/Resources/UI/BuffIcons/<이름>.png, blender 64px). 없으면 글자 칸 그대로.
+    static readonly Dictionary<string, string> BuffIconFile = new Dictionary<string, string> { { "공속", "buff_atkspeed" }, { "공↑", "buff_atk" }, { "이↓", "debuff_move" }, { "마나", "buff_mana" }, { "체력", "buff_life" }, { "팀↑", "buff_team" }, { "기절", "debuff_stun" } };
+
+    static Sprite BuffIcon(string label)
+    {
+        if (!BuffIconFile.TryGetValue(label, out string file)) return null;
+        if (buffIconCache.TryGetValue(file, out Sprite cached)) return cached;
+        Texture2D texture = Resources.Load<Texture2D>("UI/BuffIcons/" + file);
+        Sprite sprite = texture != null ? Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f) : null;
+        buffIconCache[file] = sprite;
+        return sprite;
+    }
     readonly string[] statusBadgeTips = new string[MaxStatusBadges];
     readonly List<UnitAttacker.StatusBadge> statusBadgeBuffer = new List<UnitAttacker.StatusBadge>();
     readonly Image[] skillIconBorders = new Image[MaxSkillIcons];
@@ -2221,7 +2235,6 @@ public class GameHud : MonoBehaviour
         int playerId = unit.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
         EnemyDummy target = WorldPick.TryPickEnemy(Camera.main, Mouse.current.position.ReadValue(), 40f);
         if (target == null) { PlayerNotification.Show(playerId, "대상 적을 찾을 수 없습니다.", 4f); return; }
-        if (!GameAuthority.IsServer) { BlockedOnMultiplayerClient(); return; }
         ExecuteCastActiveOnTarget(unit, target);
     }
 
@@ -2279,6 +2292,7 @@ public class GameHud : MonoBehaviour
 
     public void ExecuteCastActiveAtPoint(Selectable single, Vector3 point, SkillData skill)
     {
+        if (!GameAuthority.IsServer) { NetCommands.RequestCastActiveAtPoint(single, point); return; }   // 멀티 클라: 호스트의 진짜 유닛에서 시전(사거리·쿨은 호스트 검증)
         if (single == null || !single.TryGetComponent(out UnitAttacker attacker)) return;
         int playerId = single.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
         if (!attacker.TryCastActiveAtPoint(skill, point, out string reason))
@@ -2296,6 +2310,7 @@ public class GameHud : MonoBehaviour
 
     public void ExecuteCastActiveOnTarget(Selectable single, EnemyDummy target)
     {
+        if (!GameAuthority.IsServer) { NetCommands.RequestCastActiveOnEnemy(single, target); return; }
         if (single == null || !single.TryGetComponent(out UnitAttacker attacker)) return;
         SkillData skill = attacker.ActiveSkill;
         if (skill == null) return;
@@ -2310,7 +2325,6 @@ public class GameHud : MonoBehaviour
         if (skill == null || single == null) return;
         if (skill.levels != null && skill.levels.Count > 0 && skill.levels[0].needsPointClick)
         {
-            if (!GameAuthority.IsServer) { BlockedOnMultiplayerClient(); return; }
             pendingPointSkill = skill;
             pendingPointUnit = single;
             pendingPointStartFrame = Time.frameCount;
@@ -2328,7 +2342,6 @@ public class GameHud : MonoBehaviour
         }
         if (skill.levels != null && skill.levels.Count > 0 && skill.levels[0].needsTargetClick)
         {
-            if (!GameAuthority.IsServer) { BlockedOnMultiplayerClient(); return; }
             pendingDockSkill = skill;
             pendingDockUnit = single;
             pendingDockStartFrame = Time.frameCount;
@@ -3835,6 +3848,13 @@ public class GameHud : MonoBehaviour
             Image face = inner.GetComponent<Image>();
             face.color = new Color(0.05f, 0.08f, 0.06f, 0.95f);
             face.raycastTarget = false;
+            GameObject iconObject = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            iconObject.transform.SetParent(badge.transform, false);
+            RectTransform iconRect = (RectTransform)iconObject.transform;
+            iconRect.anchorMin = Vector2.zero; iconRect.anchorMax = Vector2.one; iconRect.offsetMin = Vector2.zero; iconRect.offsetMax = Vector2.zero;
+            Image icon = iconObject.GetComponent<Image>();
+            icon.preserveAspect = true; icon.raycastTarget = false; icon.enabled = false;
+            statusBadgeIcons[i] = icon;
             TMP_Text label = CreateLabel(badge.transform, "Label", "");
             label.alignment = TextAlignmentOptions.Center;
             label.fontSize = 16f;
@@ -3861,7 +3881,10 @@ public class GameHud : MonoBehaviour
             if (!on) { statusBadgeTips[i] = null; continue; }
             UnitAttacker.StatusBadge b = statusBadgeBuffer[i];
             statusBadgeBorders[i].color = b.debuff ? new Color(0.85f, 0.25f, 0.25f, 1f) : new Color(0.35f, 0.8f, 0.4f, 1f);
-            statusBadgeLabels[i].text = b.label;
+            Sprite buffIcon = BuffIcon(b.label);
+            statusBadgeIcons[i].enabled = buffIcon != null;
+            statusBadgeIcons[i].sprite = buffIcon;
+            statusBadgeLabels[i].text = buffIcon != null ? "" : b.label;
             statusBadgeLabels[i].color = b.debuff ? new Color(1f, 0.6f, 0.6f, 1f) : new Color(0.7f, 1f, 0.75f, 1f);
             statusBadgeTips[i] = (b.debuff ? "[디버프] " : "[버프] ") + b.tip;
         }

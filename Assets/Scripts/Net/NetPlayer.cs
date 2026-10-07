@@ -418,6 +418,18 @@ public class NetPlayer : NetworkBehaviour
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_CastActiveAtPoint(NetworkId caster, Vector3 point)
+    {
+        NetCommands.ExecuteCastActiveAtPoint(this, caster, point);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_CastActiveOnEnemy(NetworkId caster, NetworkId enemy)
+    {
+        NetCommands.ExecuteCastActiveOnEnemy(this, caster, enemy);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     public void RPC_TraitTarget(short trait, NetworkId target)
     {
         NetCommands.ExecuteTraitTarget(this, trait, target);
