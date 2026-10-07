@@ -3414,6 +3414,44 @@ public static class MapGenerator
             .ToList();
     }
 
+    // 뽑기섬 흔함 선택 줄의 왼쪽부터 순서(사장님 10-07): 최상호(나루토)·노태현(루치)·양재모(자바라)·강주혁(시저)·강재규(쵸파)·박민석(마젤란)·문필환(코비)·박민수(블루노)·임장혁(프랑키).
+    // 표에 없는 흔함이 생기면 뒤에 이름순으로 붙는다.
+    static readonly string[] CommonChoiceRowOrder = { "최상호", "노태현", "양재모", "강주혁", "강재규", "박민석", "문필환", "박민수", "임장혁" };
+
+    static List<UnitData> OrderCommonsForChoiceRow(List<UnitData> commons)
+    {
+        return commons.OrderBy(u => { int i = System.Array.IndexOf(CommonChoiceRowOrder, u.unitName); return i < 0 ? 1000 : i; }).ThenBy(u => u.unitName, System.StringComparer.Ordinal).ToList();
+    }
+
+    // 이미 지어진 씬의 흔함 선택 줄을 위 순서로 바꾼다(포탈·마법진·표식 세 개를 같은 칸으로). 부르기: call MapGenerator.RepairChoiceRowOrder
+    static string RepairChoiceRowOrder()
+    {
+        var portals = new List<Transform>();
+        foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (t.name.StartsWith("흔함선택_") && !t.name.EndsWith("_마법진") && !t.name.EndsWith("_표식")) portals.Add(t);
+        if (portals.Count == 0) return "❌ 흔함선택_ 포탈 없음";
+        List<float> slots = portals.Select(p => p.position.x).OrderBy(x => x).ToList();
+        var ordered = portals.OrderBy(p => { string n = p.name.Substring("흔함선택_".Length); int i = System.Array.IndexOf(CommonChoiceRowOrder, n); return i < 0 ? 1000 : i; }).ThenBy(p => p.name, System.StringComparer.Ordinal).ToList();
+        var sb = new System.Text.StringBuilder($"흔함 선택 {ordered.Count}칸:");
+        for (int i = 0; i < ordered.Count && i < slots.Count; i++)
+        {
+            string unit = ordered[i].name.Substring("흔함선택_".Length);
+            float x = slots[i];
+            foreach (string suffix in new[] { "", "_마법진", "_표식" })
+            {
+                GameObject go = GameObject.Find("흔함선택_" + unit + suffix);
+                if (go == null) { sb.Append($" ⚠️{unit}{suffix} 없음"); continue; }
+                Vector3 p = go.transform.position;
+                go.transform.position = new Vector3(x, p.y, p.z);
+                EditorUtility.SetDirty(go);
+            }
+            sb.Append($" {i + 1}.{unit}");
+        }
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(portals[0].gameObject.scene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(portals[0].gameObject.scene);
+        return sb + " · 씬 저장";
+    }
+
     static List<UnitData> LoadUnitsOfGrade(UnitGrade grade)
     {
         return AssetDatabase.FindAssets("t:UnitData", new[] { "Assets/Data/Units/Roster" })
@@ -3581,7 +3619,7 @@ public static class MapGenerator
         float bottom = island.center.y - island.size.y * 0.5f;
 
         // --- 위쪽 가로줄: 흔함 유닛을 하나씩 고르는 칸 ---
-        List<UnitData> commons = LoadUnitsOfGrade(UnitGrade.Common);
+        List<UnitData> commons = OrderCommonsForChoiceRow(LoadUnitsOfGrade(UnitGrade.Common));
         // 부스 뒷벽까지 섬 안에 들어와야 한다 — 포탈은 뒷벽에서 부스 깊이만큼 앞에 놓는다.
         float rowZ = top - BoothDepth - 2f;
         float step = island.size.x / (commons.Count + 1);
