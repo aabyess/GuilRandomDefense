@@ -111,7 +111,6 @@ public static class MapGenerator
             BuildSupportShop(root.transform, MapLayout.Lanes[i], i);
             BuildGamblingShop(root.transform, MapLayout.Lanes[i], i);
             BuildUnitUpgradeShop(root.transform, MapLayout.Lanes[i], i);
-            BuildOtherWorldUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildEternalUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildAttackTypeUpgradeShop(root.transform, MapLayout.Lanes[i], i);
             BuildVoyageLogShop(root.transform, MapLayout.Lanes[i], i);
@@ -750,7 +749,8 @@ public static class MapGenerator
     // 자리는 0 도박소 · 1 유닛강화 · 2 다른세계강화 · 3 영원함강화 · 4 도움소 ·
     //          5 해적단상점 · 6 공격타입강화 · 7 항해일지.
     // 2026-10-04: 해적단상점을 도박소 안으로 합쳐(사장님 「건물이 너무 많아 줄이자」) 8→7. 자리는 0 도박소 · 1 유닛강화 · 2 다른세계강화 · 3 영원함강화 · 4 도움소 · 5 공격타입강화 · 6 항해일지.
-    const int LaneShopCount = 7;
+    // 2026-10-08 사장님: 원작에 다른세계 강화가 없다 → 다른세계강화소를 지워 7→6. 자리는 0 도박소 · 1 유닛강화 · 2 영원함강화 · 3 도움소 · 4 공격타입강화 · 5 항해일지(다른세계 9기는 랜덤유닛 강화 한 버튼으로 같이 강화).
+    const int LaneShopCount = 6;
     // 원작 비율 5단계(PM 지시 2026-09-23) — 실제 건물 모델이 있으면 StructureDresser.
     // DressLaneShop이 클릭 상자를 모델 크기로 다시 맞추므로 이 값은 최종 크기를 안 정한다.
     // 그래도 모델이 없을 때(자리표시 큐브)의 크기·판정이라 맵 배율과 같이 키운다.
@@ -1426,17 +1426,12 @@ public static class MapGenerator
         BuildUpgradeShop(parent, lane, laneIndex, "유닛강화소", 1, "display", UnitUpgradeTrackNames);
     }
 
-    // 다른세계·영원함도 같은 상점이다 — 트랙이 하나뿐인 것만 다르다.
-    static void BuildOtherWorldUpgradeShop(Transform parent, MapLayout.Island lane, int laneIndex)
-    {
-        BuildUpgradeShop(parent, lane, laneIndex, "다른세계강화소", 2, "gacha",
-                         new[] { "다른세계 강화" });
-    }
+    // (10-08 다른세계강화소 건물 삭제 — 트랙 에셋 UnitUpgrade_다른세계 강화는 NetCatalog 인덱스 때문에 남겨 둔다. 다른세계는 랜덤유닛 강화 트랙이 같이 맡는다.)
 
     static void BuildEternalUpgradeShop(Transform parent, MapLayout.Island lane, int laneIndex)
     {
         // 10-06 사장님: 영원함은 등급 공통이 아니라 유닛 전용 트랙 8종(EternalUpgradeApply가 에셋을 만든다 — 원작 h06R과 같은 8칸).
-        BuildUpgradeShop(parent, lane, laneIndex, "영원함강화소", 3, "combine",
+        BuildUpgradeShop(parent, lane, laneIndex, "영원함강화소", 2, "combine",
                          new[] { "영원_김영원", "영원_조세민", "영원_이지원", "영원_문필환", "영원_서민성", "영원_김정래", "영원_윤현모", "영원_최상호" });
     }
 
@@ -1446,7 +1441,7 @@ public static class MapGenerator
     static void BuildAttackTypeUpgradeShop(Transform parent, MapLayout.Island lane, int laneIndex)
     {
         GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_공격타입강화소",
-            LaneShopSlot(lane, 5), laneIndex, "display");
+            LaneShopSlot(lane, 4), laneIndex, "display");
 
         AttackTypeUpgradeShop attackShop = shop.AddComponent<AttackTypeUpgradeShop>();
         SerializedObject so = new SerializedObject(attackShop);
@@ -1504,7 +1499,7 @@ public static class MapGenerator
     static void BuildSupportShop(Transform parent, MapLayout.Island lane, int laneIndex)
     {
         GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_도움소",
-            LaneShopSlot(lane, 4), laneIndex, "warehouse");
+            LaneShopSlot(lane, 3), laneIndex, "warehouse");
         SupportShop supportShop = shop.AddComponent<SupportShop>();
         SerializedObject so = new SerializedObject(supportShop);
         SerializedProperty skillsProp = so.FindProperty("skills");
@@ -1555,7 +1550,7 @@ public static class MapGenerator
     static void BuildVoyageLogShop(Transform parent, MapLayout.Island lane, int laneIndex)
     {
         GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_항해일지",
-            LaneShopSlot(lane, 6), laneIndex, "gacha");
+            LaneShopSlot(lane, 5), laneIndex, "gacha");
 
         VoyageLogShop voyageLog = shop.AddComponent<VoyageLogShop>();
         SerializedObject so = new SerializedObject(voyageLog);
@@ -4610,12 +4605,62 @@ public static class MapGenerator
         return "해적단 → 도박소 합치기 Repair\n" + string.Join("\n", lines) + "\n" + nav;
     }
 
+    /// <summary>
+    /// 2026-10-08 다른세계강화소 삭제를 **씬에만** 반영한다(RepairPirateIntoGambling과 같은 방식 — 전체 맵 재생성은 씬에서 고친 것을 되돌려서 안 쓴다).
+    /// 레인마다 다른세계강화소(+_모양)를 지우고 남은 6채를 새 간격(LaneShopCount 7→6)으로 옮긴다(본체와 _모양 같이, x·z만). 이미 없으면 옮기지 않는다(두 번 돌려도 안전).
+    /// 호출: call MapGenerator.RepairRemoveOtherWorldShop
+    /// </summary>
+    static string RepairRemoveOtherWorldShop()
+    {
+        var shops = new (string suffix, int oldSlot, int newSlot)[]
+        {
+            ("도박소", 0, 0), ("유닛강화소", 1, 1), ("영원함강화소", 3, 2), ("도움소", 4, 3), ("공격타입강화소", 5, 4), ("항해일지", 6, 5),
+        };
+        var lines = new List<string>();
+        UnityEngine.SceneManagement.Scene scene = default;
+        GameObject anyShop = null;
+        for (int i = 0; i < MapLayout.Lanes.Length; i++)
+        {
+            MapLayout.Island lane = MapLayout.Lanes[i];
+            GameObject gambling = GameObject.Find($"{lane.name}_도박소");
+            if (gambling == null) { lines.Add($"  {lane.name}: ⚠️ 도박소를 못 찾음 — 건너뜀"); continue; }
+            anyShop = gambling; scene = gambling.scene;
+            GameObject oldShop = GameObject.Find($"{lane.name}_다른세계강화소");
+            GameObject oldModel = GameObject.Find($"{lane.name}_다른세계강화소_모양");
+            int moved = 0;
+            if (oldShop != null)
+            {
+                Object.DestroyImmediate(oldShop);
+                if (oldModel != null) Object.DestroyImmediate(oldModel);
+                foreach ((string suffix, int oldSlot, int newSlot) in shops)
+                {
+                    Vector3 delta = LaneShopSlotAt(lane, newSlot, 6) - LaneShopSlotAt(lane, oldSlot, 7);
+                    delta.y = 0f;
+                    foreach (string objName in new[] { $"{lane.name}_{suffix}", $"{lane.name}_{suffix}_모양" })
+                    {
+                        GameObject go = GameObject.Find(objName);
+                        if (go == null) continue;
+                        go.transform.position += delta;
+                        moved++;
+                    }
+                }
+            }
+            lines.Add($"  {lane.name}: 다른세계강화소 {(oldShop != null ? "지움" : "이미 없음")} · 상점 {moved}개 이동");
+        }
+        if (anyShop == null) return "⚠️ 도박소를 하나도 못 찾았습니다 — 맵이 생성돼 있지 않거나 열린 씬이 다릅니다.";
+        string nav = BuildNavMesh(anyShop.transform.parent.gameObject);
+        AssetDatabase.SaveAssets();
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+        return "다른세계강화소 삭제 Repair\n" + string.Join("\n", lines) + "\n" + nav;
+    }
+
     // 부르기: call MapGenerator.RepairLaneShopModels — 레인 상점 건물 모양만 다시 입힌다(10-04 상점 7채 새 모양).
     // 상자(클릭 판정·상점 컴포넌트)는 그대로 두고 「_모양」만 지운 뒤 StructureDresser.DressLaneShop으로 새 모델을 세운다.
     // ⚠️ 해적단 합치기(RepairPirateIntoGambling)로 자리를 옮긴 **뒤에** 부를 것 — 이 함수는 상자 자리에 세운다.
     static string RepairLaneShopModels()
     {
-        string[] suffixes = { "도박소", "유닛강화소", "다른세계강화소", "영원함강화소", "공격타입강화소", "도움소", "항해일지" };
+        string[] suffixes = { "도박소", "유닛강화소", "영원함강화소", "공격타입강화소", "도움소", "항해일지" };
         var lines = new List<string>();
         GameObject anyShop = null;
         foreach (MapLayout.Island lane in MapLayout.Lanes)

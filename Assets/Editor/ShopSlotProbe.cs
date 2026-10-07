@@ -17,7 +17,7 @@ public static class ShopSlotProbe
     static int next;
     static string current = "";
 
-    static readonly string[] Names = { "도박소", "유닛강화소", "다른세계강화소", "영원함강화소", "공격타입강화소", "도움소", "항해일지" };
+    static readonly string[] Names = { "도박소", "유닛강화소", "영원함강화소", "공격타입강화소", "도움소", "항해일지" };
 
     static bool Mine(Selectable s) =>
         s != null && (!s.TryGetComponent(out OwnedByPlayer owner) || owner.OwnerId == LocalPlayer.LocalPlayerId);

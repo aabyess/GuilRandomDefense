@@ -3090,7 +3090,7 @@ public static class ClaudeCommands
         if (shop.Contains("유닛강화소"))
         {
             string first = label.Split(new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
-            return owned.Any(g => g.KoreanName() == first);
+            return owned.Any(g => first.StartsWith(g.KoreanName()));   // 10-08: 「랜덤유닛·다른세계 강화」도 랜덤유닛을 가졌을 때 산다
         }
         if (shop.Contains("공격타입강화소")) return owned.Any(g => AttackTypeUpgradeGrades.Contains(g));
         return true;
