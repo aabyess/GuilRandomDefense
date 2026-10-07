@@ -1,24 +1,32 @@
-# 구현담당1 인수인계 (10-07 마무리)
+# 구현담당1 인수인계 (10-07 밤, 0.3.14 큐 끝)
 
-## 끝난 일 (전부 커밋, main)
-- 초월 23·불멸 8·회유·강화소 재배치/가격/보너스·FlyingMover 확인·아이콘·일시정지(GamePause, 938200efa)·MP 1차 점검(NetEntity.EnhanceLevel, d36fbddc5).
-- 상위 등급 공격력·공속 원작 재이식 적용(872e1ef70, 표 Docs/research/ATTACK_REINSTALL_TABLE_2026-10-07.tsv, 도구 AttackReinstallApply).
-- 초월 25종 합계 DPS 표(bd1c63e52): Docs/research/TRANSCEND_DPS_AFTER_REINSTALL_2026-10-07.md + Tools/transcend_dps_table.py. 컨셉 유닛 결과: 황준석·김민준·최상호 AD(보스)·최상호 AP(몹)가 하위 25%, 조성진·임채민은 상위.
+새 세션은 기억이 없다. 이 문서 → `.claude/NEXT_SESSION.md` → TEAM_RULES 순으로 읽는다. 전부 main에 커밋됨(푸시는 PM).
 
-## 남은 일
-- MP 2차 미실측 넷: ① 토토 성공 분기(GameHud.TestTotoRoll) ② 재접속(-mpDropAt/-mpRejoinAfter)에서 회유 유닛·강화 레벨·비행 유닛 위치 유지 ③ MP 회유 전투 ④ 비행 유닛 Stop/Hold 클라 RPC.
-  - 🔴 이 테스트용 빌드 사본 변경(NetMainTest2.cs, GameHud TestTotoRoll, NetLauncher -mpTestMain2)은 **사라졌다**: 빌드 사본(../GuilRandomDefense-build)이 다른 세션 때문에 dev/minsu-voice로 바뀌어 있고 내 파일이 없다. 다시 하려면 main의 NetMainTest.cs(d36fbddc5)를 바탕으로 새로 쓴다.
-- 이전 미실측: 마나 스킬(정윤식·이승우·고도현)·범퍼 범위 실피해·라인딜·보잡·유닛삭제·순간이동 발동·방무뎀·폭뎀, 노획물 180초 실주기.
-- 업그레이드 트랙 설명 에셋에 플레이어에게 보이는 낡은 내부 문구가 남아 있다(확인 필요).
-- DPS 표의 한계: 스턴·방깍·오라·버프·DoT·소환 제외(지원형 낮게 나옴), 최상호 AP 절대공격 공속비례 ×1~4 미반영, 엄태웅 폭탄제조(쿨<2초 버튼) 제외.
+## 오늘(10-07) 끝낸 일 (커밋 해시는 git log로)
+- 초월 25종 합계 DPS 표(Docs/research/TRANSCEND_DPS_AFTER_REINSTALL_2026-10-07.md, Tools/transcend_dps_table.py) · 초월 임채민 청렴결백(예배시간·지상낙원·축복의땅[지정+발동]·천벌, 새 kind ManaRegenBuff·LifeRegenBuff·DesignateAlly·타깃 DesignatedAlly) · 두유찬 더 세게(공속 3.0·게이지 12) · 조합 획득 금화(CombineRecipe.acquireGoldReward) · 스토리 이름 「01. 하이츠」(StoryManager.DisplayName)
+- MP 2차 점검(두 창): 토토·두유찬 금화·재접속(회유·강화·비행 위치 유지)·비행 Stop/Hold·일시정지 단추·현재레벨 라벨 ✅, 클라 아군 지정 액티브 RPC 신설(NetCommands.RequestCastActiveOnAlly) · 회유 실전투는 표적이 0.5초 안에 사라져 확정 못 함(△)
+- 레인 십자: 벽 윗면 NavMesh 제거(NavMeshModifier) + 배성령 순간이동 PathComplete 검사. 사장님 「우클릭 걷기」 재현은 못 함
+- 해적선→상붕카 지급처 4곳 · 흔함 선택 줄 순서 · 원작 대응 이름 표시(UnitData.originalMatchName, GameVersion.BetaShowOriginalMatch) · 명령 카드 원작 배치(이동·홀딩·정지·공격 / 반복·스킬·스킬·판매 / 조합 초상) · 반복(패트롤, P) · 판매는 희귀함까지 · 다중 선택 정렬·초상 카드 · 스토리 건물 ×0.7(ArtBinder.StoryBuildingScale) · 유물 중복 금지(PickMissingRelic) · 적 출발점 포탈 · 바다 물 원작 톤
 
-## 위치
-- 내 미커밋 없음. 작업 트리의 Assets 변경(DuyuchanApply·두유찬 에셋·GameHud·NetGameState·RewardDistributor·StoryManager·폰트/이펙트 머티리얼)은 다른 세션 것 — 건드리지 말 것.
-- 빌드 사본 ../GuilRandomDefense-build 는 현재 dev/minsu-voice(남의 브랜치). 내 dev/mp-check2 는 3cd616180에 깨끗하게 남아 있음(미커밋 변경 없음).
+## 남은 일 / 사장님 답 대기
+- **제안값(근거 없음 — 사장님 의견 받으면 수정)**: 임채민 발동 확률 25%·천벌 마나 120·지정 칸 쿨 1초 / 유물 중복 때 대체 금화 3,000엔 / 스토리 건물 배율 0.7(더 줄일지) / 스토리 정렬 등
+- 임채민 특성강화 3pt 고정 3,000,000은 실제로 눌러 확인 안 함(주호 틀과 같음)
+- 회유 유닛 실전투 결정적 시험(체력 큰 표적 필요) · 사장님 「우클릭으로 십자 넘어감」 재현 정보(위치·유닛 이름·사진) 대기
+- 다중 선택 초상 얼굴 배율은 구현담당2 PortraitStage 몫
+- MP 미실측 이전 항목: 마나 스킬(정윤식·이승우·고도현)·범퍼 실피해·라인딜·보잡·유닛삭제·순간이동 발동·방무뎀·폭뎀·노획물 180초 실주기
 
-## 함정
-- 커밋은 `git add -- 경로` + `git commit -- 경로`. 씬 커밋은 `git show HEAD:…` 본문에서 내 hunk만 바꾼 파일을 hash-object -w → update-index --cacheinfo (SampleScene에 남의 직렬화 잔여물, URP 조명 474bcb49… 제외).
-- 상점 논리 칸 0~11 = Q W E R / A S D F / Z X C V (GameHud.ShopSlotOrder).
-- 회유 모델은 임시(슈가 장난감 프리팹) — 사장님이 정하면 Summon_회유_적.prefab만 교체.
-- 새 UnitData/ItemData를 만들면 NetSetup.BuildCatalog 재생성(호스트·클라 빌드 동일).
-- csc 확인은 `| grep -c " error"` (tail -1은 오류를 숨김).
+## 위치·도구
+- 탐침/적용 도구(편집 모드 `call 클래스.메서드`, 플레이는 `gameshot`): ChaeminApply/Probe · DuyuchanApply/Probe · CrossProbe(십자·Reach) · CommandCardProbe · Queue0307Probe(다중선택·스토리 크기·유물) · OriginalMatchApply/Probe · EnemyPortalApply(MakePrefab·Place·PlaceAll) · WaterApply · RelicPoolApply · PirateShipSwapProbe · ChoiceRowProbe · StoryLabelProbe · DuyuGoldProbe
+- 멀티 점검: 빌드 사본 브랜치 dev/g1-mp-check3(NetMainTest2, `-mpTestMain2 [state]`) — 두 창 `-mpHost`/`-mpJoin -mpSession 코드 -mpToken` · 시험 로그 접두 「[M2]」
+- 표/문서: Docs/research/ORIGINAL_MATCH_NAMES_2026-10-07.tsv · ATTACK_REINSTALL_TABLE_2026-10-07.tsv · TRANSCEND_DPS_AFTER_REINSTALL_2026-10-07.md
+
+## 함정 (오늘 겪은 것)
+- **zsh는 변수를 단어로 안 쪼갠다**: `git add $F` 말고 배열 `F=(…); git add -- "${F[@]}"`. 한글 파일명 grep/status는 `core.quotepath=false`(GIT_CONFIG_COUNT 환경변수 방식 쓸 수 있음).
+- **브리지 inbox 파일 이름 재사용 금지**: 같은 이름이면 옛 outbox가 남아 있어 「끝났다」로 오인한다(사진이 남의 것이었다). 항상 새 이름 + 대기 전에 `rm -f outbox/이름.txt`.
+- **디스크에서 씬/에셋을 파이썬으로 직접 고치면** 유니티가 「외부에서 바뀜 Reload/Ignore」 대화상자를 띄워 브리지가 멈춘다(osascript로 Reload 클릭하면 풀림). 가능하면 편집 모드 `call`로 고칠 것.
+- **gameshot 마지막 `wait:` 뒤 3초 뒤에 찍힌다**: 3초짜리 알림은 마지막 wait을 빼야 사진에 남는다.
+- **에디터는 순번제**: 쓰기 전 「씁니다」, 끝나면 「끝났습니다」(구현담당2 포함). 남의 gameshot 중 소스 편집·refresh 금지(컴파일 재로드가 그 판을 무효로 만든다). Editor.log의 옛 `error CS`는 지워지지 않으니 새 줄인지 확인.
+- **GameHud는 구현담당2와 같이 쓴다**: 구역(1=명령 카드·선택 카드·판매 / 2=하단 바 조립·정보창·메뉴). 커밋 전 「커밋합니다」 한 줄. 한 커밋에 남의 hunk가 섞이면 커밋 메시지에 적는다.
+- **SeaWater 셰이더에서 `_Smoothness`를 낮추면 반짝임이 「넓어져」 화면이 하얘진다** — 폭은 0.88, 세기는 `_SpecIntensity`. 미니맵은 직교 카메라라 무늬·거품을 끈다(unity_OrthoParams.w).
+- 새 UnitData/ItemData를 만들면 NetSetup.BuildCatalog 재생성(호스트·클라 같은 빌드). 이번엔 새 에셋 없어 불필요했다.
+- 씬 커밋: 작업 트리 SampleScene에 남의 직렬화 잔여물이 섞일 수 있다 — 이번엔 내 hunk만이라 통째로 커밋했다(`git diff`로 확인할 것).
