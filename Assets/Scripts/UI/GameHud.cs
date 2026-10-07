@@ -890,7 +890,8 @@ public class GameHud : MonoBehaviour
 
     void RefreshPauseUi()
     {
-        if (pauseOverlay != null && pauseOverlay.activeSelf != GamePause.Paused) pauseOverlay.SetActive(GamePause.Paused);
+        bool pauseBannerShown = GamePause.Paused && !IsGameMenuOpen;   // F10 메뉴가 열려 있으면 가운데 문구는 숨긴다(메뉴 뒤로 비쳐 글자가 겹쳐 보였다, 10-07)
+        if (pauseOverlay != null && pauseOverlay.activeSelf != pauseBannerShown) pauseOverlay.SetActive(pauseBannerShown);
         if (gameMenuPauseLabel != null)
         {
             gameMenuPauseLabel.text = GamePause.Available ? (GamePause.Paused ? "계속(일시정지 해제)" : "일시정지") : "일시정지\n(같이 하기 불가)";
