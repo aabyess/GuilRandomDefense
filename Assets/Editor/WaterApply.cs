@@ -37,8 +37,8 @@ static class WaterApply
         sea.SetTexture("_ColorMap", color);
         sea.SetTexture("_WaterBump", normal);
         // 목표 깊은 물 RGB(32,73,93)·얕은 물 띠 물쪽 (62,98,110) — 셰이더가 조명(주변광+태양)을 곱하므로 이득 DeepScale로 나눠 둔다(실화면 평균으로 맞춘다)
-        sea.SetColor("_DeepColor", new Color(17.4f / 255f, 54.9f / 255f, 75f / 255f, 0.96f)   /* 화면 실측 이득 R1.84·G1.33·B1.24로 나눈 값 → 화면 평균 ≈ (32,73,93) */);
-        sea.SetColor("_ShallowColor", new Color(33.7f / 255f, 73.7f / 255f, 88.7f / 255f, 0.80f));
+        sea.SetColor("_DeepColor", new Color(33.35f / 255f, 88.5f / 255f, 112.5f / 255f, 0.96f)   /* 10-07 사장님 「좀 더 연하고 밝게」 A안(한 단계): 화면 실측 평균 (48,106,126)·미니맵 (48,106,129). 옛 값(17.4,54.9,75) = (35,71,90) */);
+        sea.SetColor("_ShallowColor", new Color(59f / 255f, 119.6f / 255f, 137.1f / 255f, 0.80f));
         sea.SetFloat("_Smoothness", 0.88f);   // 이 셰이더에선 낮추면 반짝임이 「넓어져」 미니맵·큰 화면이 하얗게 뜬다(10-07 실측) — 폭은 그대로 두고 세기만 줄인다
         sea.SetFloat("_SpecIntensity", 0.35f);
         sea.SetFloat("_FresnelPower", 6f);
