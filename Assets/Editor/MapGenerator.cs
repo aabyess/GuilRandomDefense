@@ -3540,7 +3540,7 @@ public static class MapGenerator
         GachaBand.Special("특수지급",
             SpecialSlot.Resources("돈+목재"),
             SpecialSlot.Units("박은석 초월위습", "초월위습_박은석"),
-            SpecialSlot.Units("레일리+배", "희귀함_이승우", "안흔함_상붕카")),
+            SpecialSlot.Units("레일리+배", "희귀함_이승우", "흔함_상붕카")),
         // 원작 Tier6_Legend: 전설·히든 위습 = 1/2 전설 · 1/2 히든(21종) — 2026-09-27 GAP 3(전엔 전설만 나왔다).
         GachaBand.RandomWithBonus("전설·히든", UnitGrade.Legendary, UnitGrade.Hidden, 50f),
     };

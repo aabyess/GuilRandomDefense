@@ -96,7 +96,7 @@ static class MinseokApply
             new RecipeIngredient { kind = IngredientKind.SpecificUnit, unit = Roster("히든_감탄떡볶이"), count = 1 },
             new RecipeIngredient { kind = IngredientKind.SpecificUnit, unit = Roster("전설적인_백기현"), count = 1 },
             new RecipeIngredient { kind = IngredientKind.SpecificUnit, unit = Roster("희귀함_이승우"), count = 1 },
-            new RecipeIngredient { kind = IngredientKind.SpecificUnit, unit = Roster("안흔함_상붕카"), count = 1 },
+            new RecipeIngredient { kind = IngredientKind.SpecificUnit, unit = Roster("흔함_상붕카"), count = 1 },
             new RecipeIngredient { kind = IngredientKind.SpecificUnit, unit = Roster("히든_뻬꼼"), count = 1 },
             new RecipeIngredient { kind = IngredientKind.SpecificUnit, unit = Roster("안흔함_김민준"), count = 1 },
             new RecipeIngredient { kind = IngredientKind.SpecificUnit, unit = Roster("초월위습_박은석"), count = 1 },

@@ -3353,7 +3353,7 @@ UNITS = {
     "안흔함_박민수": dict(rev="dd84a0cb", path="Assets/Art/Units/안흔함_박민수/안흔함_박민수.fbx", kind="human", size=("height", 1.8),
                       source=os.path.join(SKINS, "02_안흔함/안흔함_박민수.glb"), gltf_guess_bind=False,
                       recipe=dict(rename=DENJI_RENAME)),
-    "안흔함_상붕카": dict(path="Assets/Art/Characters/안흔함_상붕카.glb", kind="prop", size=("length", 1.8),
+    "흔함_상붕카": dict(path="Assets/Art/Characters/흔함_상붕카.glb", kind="prop", size=("length", 1.8),
                       rebuild="불가 — 생성기 산출물이 아니라 Characters/의 glb 소품을 그대로 쓴다(kind=prop, 그림 0장·단색만, FBX를 안 만든다)"),
     # 사이타마(Ready Player Me·Mixamo 리그 glb, 2026-09-14): 번호 꼬리를 떼고 mixamorig 이름으로. 쉬는 자세 A자(위팔 수평 아래 59°, 아래팔 앞 33°) → T자
     #   (손가락 네 줄이 다 있어 손바닥 굴리기까지). 조명용 Icosphere 뺌. Wolf3D_Body 베이스는 1×1 단색 jpg — 원본 바이트 그대로(유니티가 읽음).
@@ -7879,7 +7879,7 @@ for _n, _solid in {
     "특별함_이병준": ["AvatarEyelashes"],                                       # 원본 검정
     "특별함_박기찬": ["Mihawk_Beard", "Mihawk_Hair", "Mihawk_Plume"],            # 원본에 없는 재질 — 설정(BaseColor)으로 색을 준 것
     "랜덤_야사카_카나코": ["Crystal.003"],                                       # 원본 색 재질(1.0, 0.57, 0.49)
-    "안흔함_상붕카": ["Material.001", "Material.002", "Material.003", "Material.004", "Material.005", "Material.010", "Material.012", "Material.013"],   # glb에 그림 0장 — 전부 색
+    "흔함_상붕카": ["Material.001", "Material.002", "Material.003", "Material.004", "Material.005", "Material.010", "Material.012", "Material.013"],   # glb에 그림 0장 — 전부 색
     "안흔함_강재규": ["dientes", "Ojos"],                                  # 이빨·눈은 색(Ojos는 material_colors) — 혀 Lengua는 남은 그림 aiStandardSurface5를 건다(위 항목 주석)
     "특별함_최상호": ["Pupil", "hair", "Sandals.001", "shock", "tongue", "material", "material_5", "Teeth", "Gum.001"],   # glb가 색만 준 아홉(material_colors로 되살린 것)
     "희귀함_최상호_오타쿠의길": ["5_eyeshine_1.0_0_0.001", "5_eyewhite_1.0_0_0.001", "5_tongue_1.0_0_0.001"],   # 원본 흰색, 그림 없음(가중치 관문에 가려 있던 것)

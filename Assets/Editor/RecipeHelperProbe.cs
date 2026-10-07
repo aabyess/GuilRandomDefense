@@ -14,7 +14,7 @@ static class RecipeHelperProbe
         var spawner = Object.FindFirstObjectByType<UnitSpawner>();
         LaneMarker lane = LaneMarker.Get(0);
         if (spawner == null || lane == null) return "❌ 준비 안 됨";
-        string[] names = { "흔함_강재규", "흔함_박민수", "흔함_임장혁", "안흔함_강재규", "안흔함_황정기", "안흔함_박준희", "안흔함_상붕카" };
+        string[] names = { "흔함_강재규", "흔함_박민수", "흔함_임장혁", "안흔함_강재규", "안흔함_황정기", "안흔함_박준희", "흔함_상붕카" };
         int n = 0;
         foreach (string name in names)
         {
