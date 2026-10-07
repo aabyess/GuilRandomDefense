@@ -290,10 +290,106 @@ def place_tavern():
 animate_portal(); animate_torches(); animate_sea()
 place_tavern()
 # 걷는 사람 — 앞마당(카메라 쪽, 횃불 사이) 6 · 대지 위 4. (A, B, 주기 속 시작 위치)
-walks = [((-18, -22), (-8, -27), .00), ((-30, -9), (-22, -18), .30), ((-10, -14), (2, -20), .55), ((-3, -34), (6, -26), .15), ((-26, -28), (-34, -20), .70),
-         ((-30, -3), (-30, 6), .40), ((-14, 8), (-2, 10), .10), ((-4, 0), (6, 8), .62), ((20, -9), (28, -3), .20), ((8, -5), (13, -9), .85), ((-22, -20), (-14, -17), .45), ((-20, -30), (-12, -34), .90)]
-for i, (A, B, ph) in enumerate(walks):
-    walker(i, (A[0], A[1], 0), (B[0], B[1], 0), ph)
+# --- 마을 사람 = 우리 유닛 스킨(Assets/Art/Units/<이름>/<이름>.fbx, 읽기만). 사장님이 바꾸려면 아래 CROWD 이름만 고쳐 다시 렌더. ---
+# (유닛 폴더 이름, 동작, A점, B점, 시작 위상) — 동작 'walk' = A↔B 천천히 왕복(위아래 튀지 않음) · 'idle' = 서서 대기(A점, B점은 바라볼 곳)
+CROWD = [
+    ('초월_박민수_AD',  'walk', (-18, -22), (-12, -25), .00),
+    ('초월_두유찬_AD',  'walk', (-29, -10), (-25, -16), .30),
+    ('초월_최상호_AD',  'walk', (-9, -14),  (-2, -18), .55),
+    ('초월_최상호_AP',  'idle', (-5, -33),  (6, -26), .15),
+    ('초월_구주호_AD',  'walk', (-26, -28), (-31, -23), .70),
+    ('초월_이재윤_AD',  'idle', (-30, -1),  (-30, 6), .40),
+    ('초월_엄태웅_AD',  'walk', (-12, 8),   (-5, 9), .10),
+    ('초월_배성령_AD',  'walk', (-3, 1),    (3, 6), .62),
+    ('초월_김건_AP',    'walk', (21, -8),   (26, -4), .20),
+    ('초월_양재모_AD',  'idle', (10, -6),   (13, -9), .85),
+    ('불멸_이이삭',     'walk', (-22, -20), (-17, -18), .45),
+    ('불멸_정윤식',     'idle', (-17, -31), (-12, -34), .90),
+]
+UNITS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'Assets', 'Art', 'Units')
+def mxn(n): return 'mixamorig:' + n
+CHILD = {'Hips': ['Spine'], 'Spine': ['Spine1'], 'Spine1': ['Spine2', 'Neck'], 'Spine2': ['Neck'], 'Neck': ['Head'], 'LeftArm': ['LeftForeArm'], 'LeftForeArm': ['LeftHand'], 'RightArm': ['RightForeArm'], 'RightForeArm': ['RightHand'],
+         'LeftUpLeg': ['LeftLeg'], 'LeftLeg': ['LeftFoot'], 'RightUpLeg': ['RightLeg'], 'RightLeg': ['RightFoot']}
+def aim(arm, short, dir_world):
+    """뼈→자식 관절 벡터가 월드 방향을 보게 포즈(뼈 축이 제각각이라 관절 벡터로 잰다)."""
+    pb = arm.pose.bones.get(mxn(short))
+    if pb is None: return
+    ch = next((arm.pose.bones[mxn(c)] for c in CHILD.get(short, []) if mxn(c) in arm.pose.bones), None)
+    if ch is None: return
+    inv = arm.matrix_world.to_3x3().inverted(); d = (inv @ Vector(dir_world)).normalized()
+    cur = (ch.matrix.translation - pb.matrix.translation).normalized(); rot = cur.rotation_difference(d)
+    m = (rot.to_matrix() @ pb.matrix.to_3x3()).to_4x4(); m.translation = pb.matrix.translation; pb.matrix = m; bpy.context.view_layer.update()
+def pitch_bone(arm, short, axis_world, theta):
+    pb = arm.pose.bones.get(mxn(short))
+    if pb is None: return
+    inv = arm.matrix_world.to_3x3().inverted(); ax = (inv @ Vector(axis_world)).normalized()
+    m = (Matrix.Rotation(theta, 3, ax) @ pb.matrix.to_3x3()).to_4x4(); m.translation = pb.matrix.translation; pb.matrix = m; bpy.context.view_layer.update()
+def reset_pose(arm):
+    for pb in arm.pose.bones: pb.location = (0, 0, 0); pb.rotation_mode = 'QUATERNION'; pb.rotation_quaternion = (1, 0, 0, 0)
+    bpy.context.view_layer.update()
+def load_skin(unit):
+    f = os.path.join(UNITS_DIR, unit, unit + '.fbx'); before = set(bpy.data.objects); acts = set(bpy.data.actions)
+    bpy.ops.import_scene.fbx(filepath=f)
+    new = [o for o in bpy.data.objects if o not in before]; arm = next(o for o in new if o.type == 'ARMATURE')
+    for a_ in [a_ for a_ in bpy.data.actions if a_ not in acts]: bpy.data.actions.remove(a_)
+    if arm.animation_data: arm.animation_data_clear()
+    for m_ in (o for o in new if o.type == 'MESH'):
+        for ms in m_.material_slots:
+            if ms.material and ms.material.use_nodes:
+                for n_ in ms.material.node_tree.nodes:
+                    if n_.type == 'BSDF_PRINCIPLED':
+                        n_.inputs['Roughness'].default_value = max(.62, n_.inputs['Roughness'].default_value)
+                        try: n_.inputs['Specular IOR Level'].default_value = .2
+                        except Exception: pass
+    return arm
+WALK_CYCLE = 48        # 프레임 — 192/48 = 4번(정수라 이음새 없음). 천천히: 한 걸음쌍 2초
+class Stroller:
+    def __init__(s, idx, unit, mode, A, B, phase, H=2.8):
+        s.unit, s.mode, s.phase = unit, mode, phase; s.A = Vector((A[0], A[1], 0)); s.B = Vector((B[0], B[1], 0))
+        s.arm = load_skin(unit); s.root = bpy.data.objects.new('stroll%d' % idx, None); scene.collection.objects.link(s.root); s.arm.parent = s.root
+        k = H / 1.8 * (1.0 + .05 * (((idx * 37) % 5) - 2) / 2); s.root.scale = (k, k, k); s.idx = idx
+        d = s.B - s.A; s.yaw0 = math.atan2(d.x, -d.y)                       # 모델 정면 = 로컬 −Y
+    def place(s, f):
+        u = ((f - 1) / N + s.phase) % 1.0
+        if s.mode == 'walk':
+            if u < .42: t = ease(u / .42); face = 0; walking = 1; ph_ = u / .42
+            elif u < .5: t = 1; face = ease((u - .42) / .08); walking = 0; ph_ = 1
+            elif u < .92: t = 1 - ease((u - .5) / .42); face = 1; walking = 1; ph_ = (u - .5) / .42
+            else: t = 0; face = 1 - ease((u - .92) / .08); walking = 0; ph_ = 0
+            p = s.A + (s.B - s.A) * t; spd = max(0.0, min(1.0, math.sin(math.pi * ph_) * 1.5)) if walking else 0.0
+        else:
+            p = s.A; face = 0; spd = 0.0
+        s.root.location = (p.x, p.y, Z(p.x, p.y)); s.yaw = s.yaw0 + math.pi * face; s.root.rotation_euler = (0, 0, s.yaw)
+        bpy.context.view_layer.update(); return spd
+    def D(s, v): return Matrix.Rotation(s.yaw, 3, 'Z') @ Vector(v)
+    def pose(s, f, spd):
+        a = s.arm; reset_pose(a); phi = TAU * (f - 1) / WALK_CYCLE; psi = TAU * (f - 1) / N        # psi = 8초에 한 번(숨쉬기·고개)
+        amp = .36 * spd; kmax = .5 * spd
+        for side, sg in (('Left', 1), ('Right', -1)):
+            th = amp * math.sin(phi + (0 if sg > 0 else math.pi)); k = kmax * max(0.0, math.cos(phi + (0 if sg > 0 else math.pi)))
+            aim(a, side + 'UpLeg', s.D((sg * .04, -math.sin(th), -math.cos(th)))); aim(a, side + 'Leg', s.D((sg * .04, -math.sin(th - k), -math.cos(th - k))))
+            al = -.28 * spd * math.sin(phi + (0 if sg > 0 else math.pi)) + .03 * math.sin(psi * 2 + sg)            # 팔은 반대 다리와 같이
+            aim(a, side + 'Arm', s.D((sg * .16, -math.sin(al), -math.cos(al)))); aim(a, side + 'ForeArm', s.D((sg * .14, -math.sin(al + .28), -math.cos(al + .28))))
+        for b_ in ('Spine', 'Spine1', 'Spine2'): aim(a, b_, s.D((0, -.02 * spd, 1)))
+        if not os.environ.get('TITLE_NOHEAD'): pitch_bone(a, 'Head', (0, 0, 1), .35 * math.sin(psi * 1 + s.idx))                                           # 천천히 둘러보는 고개
+        pitch_bone(a, 'Head', s.D((1, 0, 0)), .05 * math.sin(psi * 2))
+    def key(s, f, pose_too=True):
+        s.root.keyframe_insert('location', frame=f); s.root.keyframe_insert('rotation_euler', frame=f)
+        if pose_too:
+            for pb in s.arm.pose.bones: pb.keyframe_insert('rotation_quaternion', frame=f); pb.keyframe_insert('location', frame=f)
+STROLL = [Stroller(i, *c) for i, c in enumerate(CROWD)]
+_sel = os.environ.get('TITLE_FRAMES', '1')
+_fr = range(int(_sel.split('-')[0]), int(_sel.split('-')[1]) + 1) if '-' in _sel else [int(x) for x in _sel.split(',')]
+if len(_fr) == 1:
+    for st in STROLL: st.pose(_fr[0], st.place(_fr[0]))                              # 정지컷: 그 프레임 포즈만
+else:
+    bpy.context.preferences.edit.keyframe_new_interpolation_type = 'LINEAR'
+    for f in range(1, N + 2, 2):                                                      # 루트 이동은 2프레임마다
+        for st in STROLL: st.place(f); st.key(f, False)
+    bpy.context.preferences.edit.keyframe_new_interpolation_type = 'BEZIER'
+    for f in range(1, N + 2, 4):                                                      # 포즈는 4프레임마다(베지어 보간)
+        for st in STROLL: st.pose(f, st.place(f)); st.key(f, True)
+    for st in STROLL: st.root.animation_data.action.fcurves if False else None
 
 # 렌더
 def setup_loop_render():
