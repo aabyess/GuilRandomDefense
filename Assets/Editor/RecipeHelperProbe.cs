@@ -28,8 +28,7 @@ static class RecipeHelperProbe
 
     static string Open()
     {
-        RecipeHelperPanel.Enabled = true;
-        RecipeHelperPanel.Toggle();
+        RecipeHelperPanel.Show("", null);
         return $"열림 {RecipeHelperPanel.IsOpen}";
     }
 
@@ -47,5 +46,18 @@ static class RecipeHelperProbe
         typeof(RecipeHelperPanel).GetField("filter", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(panel, SkillTag.Stun);
         typeof(RecipeHelperPanel).GetField("dirty", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(panel, true);
         return "필터 = 스턴";
+    }
+}
+
+static class RecipeHelperProbe2
+{
+    static string Tab1() { var p = Object.FindFirstObjectByType<RecipeHelperPanel>(); typeof(RecipeHelperPanel).GetField("tab", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(p, 1); typeof(RecipeHelperPanel).GetMethod("LayoutColumns", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(p, null); return "탭 1"; }
+    static string Tab2() { var p = Object.FindFirstObjectByType<RecipeHelperPanel>(); typeof(RecipeHelperPanel).GetField("tab", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(p, 2); typeof(RecipeHelperPanel).GetMethod("LayoutColumns", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(p, null); return "탭 2"; }
+    static string Popup() { var p = Object.FindFirstObjectByType<RecipeHelperPanel>(); typeof(RecipeHelperPanel).GetMethod("ToggleFilterPopup", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(p, null); return "필터 팝업 토글"; }
+    static string Drawer()
+    {
+        var d = Object.FindFirstObjectByType<RecipeSearchDrawer>();
+        typeof(RecipeSearchDrawer).GetMethod("SetOpen", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(d, new object[] { true });
+        return "서랍 열림";
     }
 }

@@ -218,15 +218,14 @@ public class RecipeSearchDrawer : MonoBehaviour
         close.raycastTarget = true;
         close.gameObject.AddComponent<Button>().onClick.AddListener(() => SetOpen(false));
 
-        // 조합 도우미(열 보기) 진입 단추 — 기능 스위치(RecipeHelperPanel.Enabled)가 켜졌을 때만 만든다(반쯤 된 화면이 배포판에 안 들어가게).
-        if (RecipeHelperPanel.Enabled)
+        // [크게 보기] — 조합 도우미(큰 창)로 펼친다(사장님 10-07: 서랍이 기본, 단추를 누르면 크게). 서랍의 검색어를 넘기고, 도우미의 [작게 보기]·Esc가 검색어를 들고 돌아온다.
         {
             RectTransform helperBtn = NewRect("HelperButton", panel);
-            Place(helperBtn, PanelWidth - Inset - 36f - 110f, 20f, 100f, 30f);
+            Place(helperBtn, PanelWidth - Inset - 36f - 124f, 16f, 116f, 34f);
             Image helperImage = helperBtn.gameObject.AddComponent<Image>();
             Skin(helperImage, "button_navy_9s", ChipOff);
-            helperBtn.gameObject.AddComponent<Button>().onClick.AddListener(RecipeHelperPanel.Toggle);
-            TMP_Text helperLabel = MakeText(helperBtn, "Label", "열 보기", 16f, Color.white, TextAlignmentOptions.Center, FontStyles.Bold);
+            helperBtn.gameObject.AddComponent<Button>().onClick.AddListener(OpenHelper);
+            TMP_Text helperLabel = MakeText(helperBtn, "Label", "크게 보기", 16f, Color.white, TextAlignmentOptions.Center, FontStyles.Bold);
             Stretch(helperLabel.rectTransform, 0f, 0f, 0f, 0f);
         }
 
@@ -507,6 +506,20 @@ public class RecipeSearchDrawer : MonoBehaviour
             ChatInputGate.IsOpen = false;
             searchFocused = false;
         }
+    }
+
+    // 서랍 → 조합 도우미. 서랍은 접고(검색어는 그대로 둠), 도우미가 [작게 보기]로 돌아오면 다시 펼치고 검색어를 이어받는다.
+    void OpenHelper()
+    {
+        string current = query;
+        SetOpen(false);
+        RecipeHelperPanel.Show(current, back =>
+        {
+            query = back ?? "";
+            if (input != null && input.text != query) input.SetTextWithoutNotify(query);
+            dirty = true;
+            SetOpen(true);
+        });
     }
 
     void OnChip(int index)
