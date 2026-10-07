@@ -7,53 +7,8 @@ using UnityEngine.UI;
 // 같은 이름 파일로 바꿔 끼우면 코드 수정 없이 교체된다(Docs/UI_ORIGINAL_STYLE.md ④).
 public static class UiSkin
 {
-    // ── 하단 UI 시안(사장님 10-07 「하단 UI만 바꿔 보라 · 별로다 다시 · 시안 3개」). 하단 바 밖(우상단 타이머·점수판·상단 바·명령 칸 버튼)은 늘 옛 돌 그림(Resources/UI/Skin) —
-    //    여기서 고르는 건 **하단 바 바탕·윗선·콘솔 칸 액자**뿐이다. 기본 Stone = 옛 모양 그대로.
-    //    A WoodTrim = 돌 바 + 얇은 나무 테두리 · B BrightWood = 밝은 원목(리벳 없음) · C Metal = 워크3 돌·금속(청동 테두리) · DarkWood = 10-06 첫 선술집(진한 나무·쇠띠·리벳).
-    //    그림: A/B/C는 Resources/UI/SkinBar/(Tools/ui/gen_bar_variants.py가 그림 · Editor BarSkinApply가 임포트), DarkWood는 Resources/UI/SkinTavern/(blender).
-    public enum BarStyle { Stone, WoodTrim, BrightWood, Metal, DarkWood }
-
-    const string BarStyleKey = "UiBarStyle";
-    static BarStyle? barStyle;
-
-    /// <summary>하단 바 시안. 저장(PlayerPrefs)된 값, 없으면 Stone. 바꾸면 다음 판 HUD부터 적용된다.</summary>
-    public static BarStyle Bar
-    {
-        get
-        {
-            if (!barStyle.HasValue)
-            {
-                int saved = 0;
-                try { saved = PlayerPrefs.GetInt(BarStyleKey, 0); } catch { }
-                barStyle = System.Enum.IsDefined(typeof(BarStyle), saved) ? (BarStyle)saved : BarStyle.Stone;
-            }
-            return barStyle.Value;
-        }
-        set
-        {
-            barStyle = value;
-            try { PlayerPrefs.SetInt(BarStyleKey, (int)value); } catch { }
-        }
-    }
-
-    // 옛 이름(구현담당3 F5 서랍이 읽을 수 있게 남김): 선술집 = DarkWood 시안.
-    public enum UiTheme { Stone, Tavern }
-    public static UiTheme Theme { get => Bar == BarStyle.DarkWood ? UiTheme.Tavern : UiTheme.Stone; set => Bar = value == UiTheme.Tavern ? BarStyle.DarkWood : BarStyle.Stone; }
-
-    /// <summary>🔴 항상 false — 사장님 10-07 「하단 바 밖은 옛 Stone으로」: 상단 바·타이머·점수판·명령 칸 버튼·아이템 칸의 선술집 분기(GameHud의 IsTavern 가지)는 꺼 둔다(죽은 가지, 시안 확정 뒤 정리). 하단 바·콘솔 칸 액자만 Bar 시안을 따른다.</summary>
-    public static bool IsTavern => false;
-
-    static readonly Dictionary<string, Sprite> tavernCache = new Dictionary<string, Sprite>();
-
-    /// <summary>선술집(DarkWood) 그림을 파일 이름(확장자 없이)으로 직접 부른다. 없으면 null.</summary>
-    public static Sprite Tavern(string file)
-    {
-        if (tavernCache.TryGetValue(file, out Sprite cached)) return cached;
-        Sprite sprite = Resources.Load<Sprite>("UI/SkinTavern/" + file);
-        tavernCache[file] = sprite;
-        return sprite;
-    }
-
+    // ── 하단 바(사장님 10-07 선택: C 금속·청동 테두리). 상단 바·타이머·점수판·명령 칸 버튼은 옛 돌 그림(Resources/UI/Skin) 그대로 — 여기는 하단 바 바탕·윗선·콘솔 칸 액자뿐이다.
+    //    그림은 Resources/UI/SkinBar/c_*.png(Tools/ui/gen_bar_variants.py가 그린다 — 시안 A 나무 테두리·B 밝은 원목도 같은 스크립트로 다시 뽑을 수 있다). 그림이 없으면 옛 돌 모양으로 물러난다.
     static readonly Dictionary<string, Sprite> barCache = new Dictionary<string, Sprite>();
     static Sprite SkinBar(string file)
     {
@@ -63,33 +18,18 @@ public static class UiSkin
         return sprite;
     }
 
-    static string BarPrefix => Bar == BarStyle.WoodTrim ? "a_" : Bar == BarStyle.BrightWood ? "b_" : Bar == BarStyle.Metal ? "c_" : null;
-
-    /// <summary>하단 바 바탕 그림과 타일로 깔지(true) 늘려 붙일지(false). 그림이 없으면 옛 돌 타일로 물러난다.</summary>
-    public static Sprite BarBackground(out bool tiled)
+    /// <summary>하단 바 바탕(가로·세로 타일). 그림이 없으면 옛 돌 타일.</summary>
+    public static Sprite BarBackground()
     {
-        tiled = true;
-        if (Bar == BarStyle.DarkWood) { Sprite dark = Tavern("bar_bottom_9slice"); if (dark != null) { tiled = false; return dark; } }
-        string prefix = BarPrefix;
-        Sprite sprite = prefix != null && prefix != "a_" ? SkinBar(prefix + "bar") : null;
-        return sprite != null ? sprite : Get("stone_tile");   // Stone·A는 옛 돌 타일
+        Sprite sprite = SkinBar("c_bar");
+        return sprite != null ? sprite : Get("stone_tile");
     }
 
-    /// <summary>바 윗선 띠(가로 타일). Stone·DarkWood는 null(옛 밝은 선 / 그림에 쇠띠가 있다).</summary>
-    public static Sprite BarEdge()
-    {
-        string prefix = BarPrefix;
-        return prefix != null ? SkinBar(prefix + "edge") : null;
-    }
+    /// <summary>바 윗선 띠(가로 타일). 없으면 null(옛 밝은 선).</summary>
+    public static Sprite BarEdge() => SkinBar("c_edge");
 
-    /// <summary>콘솔 칸(미니맵·초상·정보·아이템·명령 틀) 액자 그림과 테두리 줄임 배율. Stone이면 null(옛 둥근 금테 고리).</summary>
-    public static Sprite BarCell(out float borderShrink)
-    {
-        borderShrink = 1f;
-        if (Bar == BarStyle.DarkWood) { borderShrink = 2.4f; return Tavern("cell_big_9slice"); }
-        string prefix = BarPrefix;
-        return prefix != null ? SkinBar(prefix + "cell") : null;
-    }
+    /// <summary>콘솔 칸(미니맵·초상·정보·아이템·명령 틀) 9-slice 액자. 없으면 null(옛 둥근 금테 고리).</summary>
+    public static Sprite BarCell() => SkinBar("c_cell");
 
     static Sprite whiteSprite;
     /// <summary>색만 칠하는 Image.Type.Filled 막대용 흰 스프라이트. 🔴 Filled는 스프라이트가 없으면 채움 비율이 안 먹고 늘 가득 찬 사각형으로 그려진다 —

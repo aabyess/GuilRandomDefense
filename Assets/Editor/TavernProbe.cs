@@ -43,10 +43,6 @@ static class TavernProbe
         return $"다중 선택: {sel.Selected.Count}기";
     }
 
-    // 편집 모드에서 부른다(PlayerPrefs에 저장 — 다음 판부터 적용). call TavernProbe.SetStone → gameshot → call TavernProbe.SetTavern
-    static string SetStone() { UiSkin.Theme = UiSkin.UiTheme.Stone; return "테마 = 돌(다음 판부터)"; }
-    static string SetTavern() { UiSkin.Theme = UiSkin.UiTheme.Tavern; return "테마 = 선술집(다음 판부터)"; }
-
     // 적 3마리 체력 100% · 50% · 10% (체력바 배경 확인용)
     static string Hp3()
     {

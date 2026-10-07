@@ -604,13 +604,12 @@ public class GameHud : MonoBehaviour
         RectTransform bar = CreatePanel(transform, "BottomBar", PanelColor);
         SetAnchors(bar, new Vector2(0f, 0f), new Vector2(1f, BottomBarHeight));
         // 사진의 회색 돌벽 콘솔 — 돌 타일(직접 그린 근사, Tools/ui/gen_ui_skin.py)을 깐다. 그림이 없으면 옛 청동회색.
-        Sprite stone = UiSkin.BarBackground(out bool barTiled);
+        Sprite stone = UiSkin.BarBackground();
         if (stone != null)
         {
             Image barImage = bar.GetComponent<Image>();
             barImage.sprite = stone;
-            // DarkWood(선술집) 그림만 9-slice(위 쇠띠·리벳은 늘리지 않고 가로 널판만 늘린다) — 나머지는 타일로 깐다.
-            barImage.type = !barTiled && stone.border != Vector4.zero ? Image.Type.Sliced : Image.Type.Tiled;
+            barImage.type = Image.Type.Tiled;
             barImage.color = Color.white;
         }
 
@@ -619,7 +618,7 @@ public class GameHud : MonoBehaviour
         Sprite barEdgeSprite = UiSkin.BarEdge();
         if (barEdgeSprite != null)
         {
-            // 시안 A·B·C: 바 윗선에 나무/금속 띠(그림 높이 그대로, 가로 타일)
+            // 바 윗선 금속 띠(그림 높이 그대로, 가로 타일)
             RectTransform edgeRect = CreatePanel(bar, "BarEdgeStrip", Color.white);
             edgeRect.anchorMin = new Vector2(0f, 1f); edgeRect.anchorMax = new Vector2(1f, 1f);
             edgeRect.pivot = new Vector2(0.5f, 1f);
@@ -628,7 +627,7 @@ public class GameHud : MonoBehaviour
             Image edgeImage = edgeRect.GetComponent<Image>();
             edgeImage.sprite = barEdgeSprite; edgeImage.type = Image.Type.Tiled; edgeImage.color = Color.white; edgeImage.raycastTarget = false;
         }
-        else if (UiSkin.Bar != UiSkin.BarStyle.DarkWood)
+        else
             CreateBorderStrip(bar, BarEdgeColor, new Vector2(0f, 1f), new Vector2(1f, 1f),
                               new Vector2(0f, -BarEdgeThickness), Vector2.zero);
 
@@ -765,7 +764,7 @@ public class GameHud : MonoBehaviour
         SetFixedRight(itemPanel, itemRight, ItemPanelWidth);
         // 사진의 엠블럼 자리(인벤토리 6칸 뒤 문장) — 직접 그린 근사 그림. 칸은 반투명이라 문장이 비친다.
         Sprite emblem = UiSkin.Get("inventory_emblem");
-        if (emblem != null && !UiSkin.IsTavern) { Image itemPanelImage = itemPanel.GetComponent<Image>(); itemPanelImage.sprite = emblem; itemPanelImage.type = Image.Type.Simple; itemPanelImage.color = Color.white; }
+        if (emblem != null) { Image itemPanelImage = itemPanel.GetComponent<Image>(); itemPanelImage.sprite = emblem; itemPanelImage.type = Image.Type.Simple; itemPanelImage.color = Color.white; }
         AddConsoleFrame(itemPanel);
         itemInventoryParent = itemPanel;
 
@@ -2360,9 +2359,8 @@ public class GameHud : MonoBehaviour
         for (int i = 0; i < MaxItemInventorySlots; i++)
         {
             RectTransform row = CreatePanel(grid.transform, $"ItemInventoryRow{i}", new Color(ButtonColor.r, ButtonColor.g, ButtonColor.b, 0.72f));
-            if (!UiSkin.IsTavern) AddPanelBorder(row, BorderInnerColor, 1f);
+            AddPanelBorder(row, BorderInnerColor, 1f);
             itemInventoryRowRoots[i] = row.gameObject;
-            SetItemRowColor(row.GetComponent<Image>(), 0.72f, false);   // 선술집: 작은 칸 그림(cell_small) — 빈 칸은 어둡게
 
             // 아이콘은 글자보다 먼저 만든다(글자가 위에 그려져야 개수가 보인다). 아이콘이 없는 아이템은 꺼 두고 글자만 쓴다.
             RectTransform iconRect = new GameObject($"ItemInventoryRowIcon{i}", typeof(RectTransform), typeof(Image)).GetComponent<RectTransform>();
@@ -2535,7 +2533,7 @@ public class GameHud : MonoBehaviour
             bool used = i < shown;
             // 09-29 콘솔 격자: 빈 칸도 켜 둔다(끄면 격자가 당겨 붙어 칸 수가 안 보인다 — 워크3 인벤토리도 빈 칸이 보인다).
             if (!itemInventoryRowRoots[i].activeSelf) itemInventoryRowRoots[i].SetActive(true);
-            if (UiSkin.IsTavern) SetItemRowColor(itemInventoryRowRoots[i].GetComponent<Image>(), 0.82f, used); else itemInventoryRowRoots[i].GetComponent<Image>().color = used ? new Color(ButtonColor.r, ButtonColor.g, ButtonColor.b, 0.82f) : new Color(SlotColor.r, SlotColor.g, SlotColor.b, 0.55f);   // 반투명 — 엠블럼이 비친다
+            itemInventoryRowRoots[i].GetComponent<Image>().color = used ? new Color(ButtonColor.r, ButtonColor.g, ButtonColor.b, 0.82f) : new Color(SlotColor.r, SlotColor.g, SlotColor.b, 0.55f);   // 반투명 — 엠블럼이 비친다
 
             if (!used)
             {
@@ -2556,7 +2554,7 @@ public class GameHud : MonoBehaviour
             itemInventoryRowTexts[i].text = hasIcon
                 ? $"<b>x{itemInventoryCounts[item]}</b>" + (usable ? "▶" : "")
                 : $"{item.itemName} x{itemInventoryCounts[item]}" + (usable ? " [사용]" : "");
-            if (usable) { if (UiSkin.IsTavern) { Image usableRow = itemInventoryRowRoots[i].GetComponent<Image>(); usableRow.color = new Color(1f, 0.86f, 0.55f, 1f); } else itemInventoryRowRoots[i].GetComponent<Image>().color = Color.Lerp(new Color(ButtonColor.r, ButtonColor.g, ButtonColor.b, 0.82f), new Color(0.9f, 0.75f, 0.3f, 0.82f), 0.35f); }
+            if (usable) itemInventoryRowRoots[i].GetComponent<Image>().color = Color.Lerp(new Color(ButtonColor.r, ButtonColor.g, ButtonColor.b, 0.82f), new Color(0.9f, 0.75f, 0.3f, 0.82f), 0.35f);
         }
 
         int remaining = itemInventoryKeys.Count - shown;
@@ -2962,14 +2960,6 @@ public class GameHud : MonoBehaviour
         //    맞게, 패널의 레이아웃 그룹이 글자의 preferredHeight로 높이를 정한다(RightColumn 참고).
         RectTransform teamPanel = CreatePanel(RightColumn(), "TeamPanel", new Color(0f, 0f, 0f, 0.6f));
         UiSkin.Apply(teamPanel.GetComponent<Image>(), "multiboard_frame_9s", new Color(0f, 0f, 0f, 0.6f));   // 원작 멀티보드: 금테 짙은 판
-        if (UiSkin.IsTavern && UiSkin.Tavern("cell_big_9slice") != null)   // 선술집: 나무 액자 + 어두운 가죽 판(점수판)
-        {
-            Image teamImage = teamPanel.GetComponent<Image>();
-            teamImage.sprite = UiSkin.Tavern("cell_big_9slice");
-            teamImage.type = Image.Type.Sliced;
-            teamImage.pixelsPerUnitMultiplier = 3.2f;
-            teamImage.color = Color.white;
-        }
         VerticalLayoutGroup fit = teamPanel.gameObject.AddComponent<VerticalLayoutGroup>();
         fit.padding = new RectOffset(8, 8, 4, 6);
         fit.childControlWidth = true;
@@ -3650,44 +3640,11 @@ public class GameHud : MonoBehaviour
     // 인상을 줬다(2026-09-23 사장님 지적) — 패널보다 밝게 올려 칸 경계가 보이게 한다.
     static readonly Color UnitCommandDefaultColor = ButtonColor;
 
-    // 인벤토리 줄(선술집): cell_small 그림을 입히고 쓰는 칸은 밝게, 빈 칸은 어둡게 — 그림 위에 곱해지는 색이라 기존 어두운 색을 그대로 못 쓴다.
-    static void SetItemRowColor(Image image, float alpha, bool used)
-    {
-        if (image == null || !UiSkin.IsTavern) return;
-        Sprite cell = UiSkin.Tavern("cell_small_9slice");
-        if (cell == null) return;
-        image.sprite = cell;
-        image.type = Image.Type.Sliced;
-        image.pixelsPerUnitMultiplier = 2.2f;
-        image.color = used ? new Color(1f, 0.96f, 0.9f, 1f) : new Color(0.62f, 0.58f, 0.54f, alpha);
-    }
-
-    // 명령 칸 배경 색 — 칸 상태(기본·토글 켜짐·못 씀·비어 있음)가 색 하나로 들어온다. 선술집 테마에선 그 색을 나무 단추 그림의 상태로 바꿔 입힌다(btn_normal/btn_hover + 어둡게/불빛).
-    //  · 투명(비어 있음) → 옅은 빈 나무 판 · 기본색과 비슷 → 보통 · 훨씬 밝음(토글 켜짐 등) → hover 그림 + 따뜻한 불빛 · 어두움 → 보통 그림을 어둡게.
+    // 명령 칸 배경 색 — 칸 상태(기본·토글 켜짐·못 씀·비어 있음)가 색 하나로 들어온다(옛 Stone 디자인 그대로).
     void SetCommandSlotColor(int slot, Color state)
     {
         Image image = unitCommandSlotBackgrounds[slot];
-        if (image == null) return;
-        if (!UiSkin.IsTavern) { image.color = state; return; }
-
-        Sprite normal = UiSkin.Tavern("btn_normal_9slice"), hover = UiSkin.Tavern("btn_hover_9slice");
-        if (normal == null) { image.color = state; return; }
-        float stateLum = state.r * 0.3f + state.g * 0.59f + state.b * 0.11f;
-        float baseLum = ButtonColor.r * 0.3f + ButtonColor.g * 0.59f + ButtonColor.b * 0.11f;
-        float ratio = baseLum > 0f ? stateLum / baseLum : 1f;
-        Sprite sprite = normal;
-        Color tint;
-        if (state.a < 0.01f) tint = new Color(0.55f, 0.5f, 0.45f, 0.45f);
-        else if (state.a < 0.6f) tint = new Color(0.5f, 0.46f, 0.42f, 0.8f);   // 쓸 수 없는 칸(상점 잠김·재고 없음 — 알파 0.35로 들어온다): 어두운 평범한 판
-        else if (ratio > 2.2f)
-        {
-            sprite = hover != null ? hover : normal;   // 밝은 상태(토글 켜짐·상점 칸): 불빛 그림 + 칸 색(등급·돈 구분)을 약하게 섞는다
-            tint = Color.Lerp(new Color(1f, 0.88f, 0.62f, 1f), new Color(state.r, state.g, state.b, 1f), 0.4f);
-        }
-        else tint = Color.Lerp(new Color(0.42f, 0.38f, 0.34f, 1f), new Color(0.95f, 0.92f, 0.88f, 1f), Mathf.Clamp01((ratio - 0.35f) / 0.65f));
-        image.sprite = sprite;
-        image.type = Image.Type.Sliced;
-        image.color = tint;
+        if (image != null) image.color = state;
     }
 
     void BuildUnitCommandGrid(RectTransform frame)
@@ -3745,7 +3702,7 @@ public class GameHud : MonoBehaviour
         AddTriggerEntry(trigger, EventTriggerType.PointerEnter, _ => OnUnitCommandSlotHoverEnter(capturedIndex));
         AddTriggerEntry(trigger, EventTriggerType.PointerExit, _ => OnCombineCardHoverExit());
 
-        if (!UiSkin.IsTavern) AddPanelBorder((RectTransform)card.transform, BorderColor, BorderThickness);   // 선술집 단추 그림엔 나무 테두리가 있다
+        AddPanelBorder((RectTransform)card.transform, BorderColor, BorderThickness);
 
         TMP_Text nameText = CreateLabel(card.transform, "Name", "");
         nameText.raycastTarget = false;
@@ -5350,13 +5307,12 @@ public class GameHud : MonoBehaviour
     //    테두리 띠가 격자 자식으로 끼어 칸 하나를 차지한다. 격자는 이 칸 안의 자식에 둔다(BuildUnitCommandGrid).
     static void AddConsoleFrame(RectTransform parent)
     {
-        // 하단 UI 시안(UiSkin.Bar): 칸 자체의 그림을 시안 액자(A 나무 테두리·B 밝은 원목·C 청동·DarkWood 선술집)로 바꾼다 — 자식(미니맵·초상·정보·격자)은 그 위에 그려진다. Stone이면 옛 금테 고리.
-        Sprite barCell = UiSkin.BarCell(out float cellShrink);
+        // 하단 바 콘솔 칸: 청동 테두리 액자 그림(UiSkin.BarCell, 사장님 10-07 C 선택)을 칸 그림으로 — 자식(미니맵·초상·정보·격자)은 그 위에 그려진다. 그림이 없으면 옛 금테 고리.
+        Sprite barCell = UiSkin.BarCell();
         if (barCell != null && parent.TryGetComponent(out Image panelImage))
         {
             panelImage.sprite = barCell;
             panelImage.type = Image.Type.Sliced;
-            panelImage.pixelsPerUnitMultiplier = cellShrink;
             panelImage.color = Color.white;
             return;
         }
