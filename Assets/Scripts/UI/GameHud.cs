@@ -95,7 +95,7 @@ public class GameHud : MonoBehaviour
     readonly Image[] statusBadgeIcons = new Image[MaxStatusBadges];
     static readonly Dictionary<string, Sprite> buffIconCache = new Dictionary<string, Sprite>();
     // 칸 글자 → 아이콘 파일(Assets/Resources/UI/BuffIcons/<이름>.png, blender 64px). 없으면 글자 칸 그대로.
-    static readonly Dictionary<string, string> BuffIconFile = new Dictionary<string, string> { { "공속", "buff_atkspeed" }, { "공↑", "buff_atk" }, { "이↓", "debuff_move" }, { "마나", "buff_mana" }, { "체력", "buff_life" }, { "팀↑", "buff_team" }, { "기절", "debuff_stun" } };
+    static readonly Dictionary<string, string> BuffIconFile = new Dictionary<string, string> { { "공속", "buff_atkspeed" }, { "공↑", "buff_atk" }, { "공↓", "debuff_atk" }, { "이↓", "debuff_move" }, { "마나", "buff_mana" }, { "체력", "buff_life" }, { "팀↑", "buff_team" }, { "기절", "debuff_stun" } };
 
     static Sprite BuffIcon(string label)
     {
@@ -397,6 +397,7 @@ public class GameHud : MonoBehaviour
             if (slot == SellCommandSlot && !wasShop && flexKind[slot] == FlexKind.None && flexWantKind[slot] == FlexKind.None) continue;   // 판매 칸 그림을 지우지 않는다
             unitCommandRecipes[slot] = null;
             unitCommandSlotNames[slot].text = "";
+            unitCommandSlotNames[slot].fontSizeMax = 20f;
             unitCommandSlotNames[slot].color = Color.white;
             unitCommandSlotHotkeys[slot].text = "";
             SetCommandSlotColor(slot, Color.clear);
@@ -2194,8 +2195,10 @@ public class GameHud : MonoBehaviour
         // 토글 스킬(포커싱오더)은 이름 아래에 켜짐/꺼짐을 적고, 켜진 동안 칸을 금빛으로 밝힌다.
         bool toggle = skill.levels != null && skill.levels.Count > 0 && skill.levels[0].toggleMode;
         bool toggleOn = toggle && single.TryGetComponent(out UnitAttacker toggleAttacker) && toggleAttacker.FocusLostHp;
+        string shownName = name.Length > 8 && paren > 0 ? name.Substring(0, paren).Replace(" — ", "\n") : name;   // 긴 이름은 괄호 설명을 떼고 보인다(전문은 호버)
         unitCommandSlotNames[slot].text = toggle ? name + "\n" + (toggleOn ? "ON" : "OFF")
-            : paren > 0 ? name.Substring(0, paren) + "\n" + name.Substring(paren) : name;
+            : shownName != name ? shownName : paren > 0 ? name.Substring(0, paren) + "\n" + name.Substring(paren) : name;
+        unitCommandSlotNames[slot].fontSizeMax = name.Length > 6 && !(name.Length > 8 && paren > 0) ? 15f : 20f;   // 긴 이름(암살스킬(순간이동))이 칸을 채우지 않게
         unitCommandSlotHotkeys[slot].text = ActiveHotkey.ToString();
         Color color = toggleOn ? new Color(0.85f, 0.65f, 0.15f, 1f) : UnitCommandDefaultColor;
         color.a = remaining > 0f ? 0.6f : 1f;
@@ -3873,10 +3876,24 @@ public class GameHud : MonoBehaviour
     {
         statusBadgeBuffer.Clear();
         if (attacker != null) attacker.CollectStatusBadges(statusBadgeBuffer);
+        int hidden = statusBadgeBuffer.Count - MaxStatusBadges;   // 칸을 넘는 것은 마지막 칸을 「+N」으로 바꿔 호버 설명에 모은다
         for (int i = 0; i < MaxStatusBadges; i++)
         {
             if (statusBadgeRoots[i] == null) continue;
             bool on = i < statusBadgeBuffer.Count;
+            if (on && hidden > 0 && i == MaxStatusBadges - 1)
+            {
+                var more = new System.Text.StringBuilder();
+                for (int k = MaxStatusBadges - 1; k < statusBadgeBuffer.Count; k++)
+                    more.Append(k > MaxStatusBadges - 1 ? "\n" : "").Append(statusBadgeBuffer[k].debuff ? "[디버프] " : "[버프] ").Append(statusBadgeBuffer[k].tip);
+                if (!statusBadgeRoots[i].activeSelf) statusBadgeRoots[i].SetActive(true);
+                statusBadgeBorders[i].color = new Color(0.75f, 0.75f, 0.75f, 1f);
+                statusBadgeIcons[i].enabled = false;
+                statusBadgeLabels[i].text = "+" + (hidden + 1);
+                statusBadgeLabels[i].color = Color.white;
+                statusBadgeTips[i] = more.ToString();
+                continue;
+            }
             if (statusBadgeRoots[i].activeSelf != on) statusBadgeRoots[i].SetActive(on);
             if (!on) { statusBadgeTips[i] = null; continue; }
             UnitAttacker.StatusBadge b = statusBadgeBuffer[i];

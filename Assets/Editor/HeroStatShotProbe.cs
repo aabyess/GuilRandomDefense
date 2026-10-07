@@ -64,6 +64,7 @@ public static class HeroStatShotProbe
     // 조합 도우미 재료창 촬영용 — 크게 보기를 열고 탭을 고른 뒤 그 등급 첫 칸을 누른다.
     public static string HelperOpen() { RecipeHelperPanel.Show("", null); return "✅ 열림"; }
 
+    static UnitData helperTarget;   // 지정하면 그 결과 유닛 칸만 누른다
     static string HelperClick(int tab, UnitGrade grade, int skip = 0)
     {
         var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
@@ -83,6 +84,7 @@ public static class HeroStatShotProbe
                 if (skip-- > 0) continue;
                 var cellRecipe = cell.GetType().GetField("recipe").GetValue(cell);
                 if (cellRecipe == null) continue;
+                if (helperTarget != null && (UnitData)cell.GetType().GetField("unit").GetValue(cell) != helperTarget) continue;
                 t.GetMethod("OnCellClicked", flags).Invoke(panel, new[] { cell });
                 return "✅ " + ((UnitData)cell.GetType().GetField("unit").GetValue(cell)).DisplayName;
             }
@@ -117,4 +119,58 @@ public static class HeroStatShotProbe
         }
         return $"✅ {n}기에 경험치 1000";
     }
+
+    // 10-08 긴 이름 액티브 칸·버프 +N·공↓ 촬영용
+    public static string SpawnBae()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        var unit = UnityEditor.AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/초월_배성령_AD.asset");
+        spawner.Spawn(unit, LaneMarker.Get(0).LaneCenter, 0);
+        return "✅ " + unit.DisplayName + " 세움";
+    }
+
+    public static string SelectBae()
+    {
+        foreach (Selectable sel in Object.FindObjectsByType<Selectable>(FindObjectsSortMode.None))
+            if (sel.name.Contains("초월_배성령")) { Object.FindFirstObjectByType<SelectionManager>().SelectOnly(sel); return "✅ " + sel.name; }
+        return "❌ 못 찾음";
+    }
+
+    // AddBuffs 위에 공격력 감소·체력 재생·팀↑를 더해 칸을 일곱으로(여섯 칸 넘침 → 「+2」).
+    public static string AddMoreBuffs()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        int n = 0;
+        TeamBuffs.ActivateIntense();
+        foreach (UnitAttacker a in Object.FindObjectsByType<UnitAttacker>(FindObjectsSortMode.None))
+        {
+            a.AddTimedAuraBonus(a, SkillEffectKind.AttackPowerBuffPercent, "probe_apd", -0.2f, 60f);
+            a.AddTimedAuraBonus(a, SkillEffectKind.LifeRegenBuff, "probe_lr", 1f, 60f);
+            n++;
+        }
+        return $"✅ {n}기에 추가 버프";
+    }
+
+    // 첫 전설 조합식의 재료를 내 유닛으로 다 세우고(보유 표시 촬영) 그 칸을 누른다. 재료창 안의 첫 재료 행이 또 조합식이면 HelperClickRow로 간다.
+    public static string SpawnLegendMaterials()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        var system = Object.FindFirstObjectByType<CombineSystem>();
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        foreach (var r in system.Recipes)
+        {
+            if (r == null || r.result == null || r.result.grade != UnitGrade.Legendary || r.ingredients == null) continue;
+            bool ok = true;
+            foreach (var ing in r.ingredients) if (ing.kind != IngredientKind.SpecificUnit || ing.unit == null) ok = false;
+            if (!ok) continue;
+            int n = 0;
+            foreach (var ing in r.ingredients) for (int k = 0; k < Mathf.Max(1, ing.count); k++) { spawner.Spawn(ing.unit, LaneMarker.Get(0).LaneCenter, 0); n++; }
+            helperTarget = r.result;
+            return $"✅ {r.result.DisplayName} 재료 {n}기";
+        }
+        return "❌ 없음";
+    }
+
+    public static string HelperClickTarget() => HelperClick(1, UnitGrade.Legendary);
 }
