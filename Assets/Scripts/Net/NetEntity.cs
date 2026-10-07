@@ -43,6 +43,11 @@ public class NetEntity : NetworkBehaviour
     [Networked] public NetworkBool SlowVfx { get; set; }
     // 적: 광폭화 유닛(BerserkMob)이다 — 클라 겉모습에 이름 「광폭화 ○○」·붉은 틴트·원판·고리를 붙인다(10-07).
     [Networked] public NetworkBool Berserk { get; set; }
+    // 플레이어 유닛: 마나·체력 게이지 스킬의 현재/최대(UnitAttacker.ShownManaNow 등, 10-08) — 클라 초상 아래 막대가 그린다. 최대 0 = 그 막대 없음.
+    [Networked] public short GaugeManaNow { get; set; }
+    [Networked] public short GaugeManaMax { get; set; }
+    [Networked] public short GaugeLifeNow { get; set; }
+    [Networked] public short GaugeLifeMax { get; set; }
 
     public NetEntityKind EntityKind => (NetEntityKind)Kind;
 
@@ -129,6 +134,12 @@ public class NetEntity : NetworkBehaviour
             if (AttackInterval != realAttacker.AttackInterval) AttackInterval = realAttacker.AttackInterval;
             if (HeroLevel != realAttacker.CharacterLevel) HeroLevel = (byte)realAttacker.CharacterLevel;
             if (EnhanceLevel != realAttacker.EnhanceLevel) EnhanceLevel = (byte)Mathf.Clamp(realAttacker.EnhanceLevel, 0, 255);
+            short gmn = (short)Mathf.Clamp(realAttacker.ShownManaNow, 0, short.MaxValue), gmx = (short)Mathf.Clamp(realAttacker.ShownManaMax, 0, short.MaxValue);
+            short gln = (short)Mathf.Clamp(realAttacker.ShownLifeNow, 0, short.MaxValue), glx = (short)Mathf.Clamp(realAttacker.ShownLifeMax, 0, short.MaxValue);
+            if (GaugeManaNow != gmn) GaugeManaNow = gmn;
+            if (GaugeManaMax != gmx) GaugeManaMax = gmx;
+            if (GaugeLifeNow != gln) GaugeLifeNow = gln;
+            if (GaugeLifeMax != glx) GaugeLifeMax = glx;
         }
 
         if (RerollAbility == 0 && EntityKind == NetEntityKind.Unit && Real.TryGetComponent(out UniqueRerollAbility reroll) && NetLauncher.Catalog != null)

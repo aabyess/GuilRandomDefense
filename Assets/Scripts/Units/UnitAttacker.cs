@@ -1023,6 +1023,33 @@ public class UnitAttacker : MonoBehaviour
     int ManaGaugeCap(UnitData d) => d != null && d.manaMax > 0f ? Mathf.RoundToInt(d.manaMax * Mathf.Max(d.manaGaugePerMana, 0.0001f)) : int.MaxValue;
     int LifeGaugeCap(UnitData d) => d != null && d.lifeGaugeMax > 0f ? Mathf.RoundToInt(d.lifeGaugeMax) : int.MaxValue;
 
+    // ── 게이지 HUD용 읽기 값(사장님 2026-10-08 「N 마나/체력 시 발동이면 최대 = N」) ──
+    // 최대 = 이 유닛의 OnHitCount 스킬 문턱(hitCountThreshold, 바닥형은 hitCountFloor) 중 가장 큰 것, 현재 = 공유 카운터(문턱을 넘기지 않게 자른다).
+    // 그 종류 게이지 스킬이 없으면 최대 0 = 그 막대 없음. 카운터는 첫 평타에 늦게 만들어지므로 그 전엔 시작값(resetTo·manaGaugeStart)을 보인다.
+    int shownManaMax = -1, shownLifeMax = -1, shownManaStart, shownLifeStart;
+    void ScanShownGauge()
+    {
+        shownManaMax = shownLifeMax = 0; shownManaStart = shownLifeStart = 0;
+        UnitData d = identity != null ? identity.Data : null;
+        if (d == null) return;
+        int count = EffectiveSkillCount(d);
+        for (int i = 0; i < count; i++)
+        {
+            SkillData skill = ResolveSkillAt(d, i);
+            if (skill == null || skill.triggerType != SkillTriggerType.OnHitCount) continue;
+            SkillLevel level = CurrentSkillLevel(skill);
+            if (level == null) continue;
+            int threshold = level.hitCountThreshold > 0 ? level.hitCountThreshold : level.hitCountFloor;
+            if (threshold <= 0) continue;
+            if (level.gaugeKind == SkillGaugeKind.Mana) { if (threshold > shownManaMax) { shownManaMax = threshold; shownManaStart = ManaGaugeStart(d, level); } }
+            else if (threshold > shownLifeMax) { shownLifeMax = threshold; shownLifeStart = LifeGaugeStart(d, level); }
+        }
+    }
+    public int ShownManaMax { get { if (shownManaMax < 0) ScanShownGauge(); return shownManaMax; } }
+    public int ShownLifeMax { get { if (shownLifeMax < 0) ScanShownGauge(); return shownLifeMax; } }
+    public int ShownManaNow { get { int max = ShownManaMax; return max <= 0 ? 0 : Mathf.Clamp(manaGaugeInitialized ? manaGaugeCounter : shownManaStart, 0, max); } }
+    public int ShownLifeNow { get { int max = ShownLifeMax; return max <= 0 ? 0 : Mathf.Clamp(lifeGaugeInitialized ? lifeGaugeCounter : shownLifeStart, 0, max); } }
+
     // 게이지 시작값(UnitData.manaGaugeStart·lifeGaugeStart 주석 참고) — 0이면 지금처럼 스킬의 resetTo.
     static int ManaGaugeStart(UnitData d, SkillLevel level) => d != null && d.manaGaugeStart > 0f ? Mathf.RoundToInt(d.manaGaugeStart) : level.resetTo;
     static int LifeGaugeStart(UnitData d, SkillLevel level) => d != null && d.lifeGaugeStart > 0f ? Mathf.RoundToInt(d.lifeGaugeStart) : level.resetTo;
