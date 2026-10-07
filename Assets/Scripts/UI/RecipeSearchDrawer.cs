@@ -435,6 +435,11 @@ public class RecipeSearchDrawer : MonoBehaviour
             RectTransform cellRoot = NewRect("Cell" + i, root);
             Place(cellRoot, 6f + i * CellWidth, 72f, CellWidth - 2f, 72f);
             cell.root = cellRoot.gameObject;
+            // 10-08 재료 그림 클릭 = 그 재료 유닛의 조합식으로(옛엔 줄 전체 클릭이라 늘 결과 유닛 식으로 갔다). UnitData 참조로 찾는다.
+            Image cellHit = cellRoot.gameObject.AddComponent<Image>();
+            cellHit.color = Color.clear;
+            int capturedRow = rows.Count, capturedCell = i;
+            cellRoot.gameObject.AddComponent<Button>().onClick.AddListener(() => OnCellClicked(capturedRow, capturedCell));
             RectTransform cf = NewRect("Frame", cellRoot);
             Place(cf, 6f, 0f, 48f, 48f);
             Image cfImage = cf.gameObject.AddComponent<Image>();
@@ -582,6 +587,28 @@ public class RecipeSearchDrawer : MonoBehaviour
             PlayerNotification.Show(LocalPlayer.LocalPlayerId, "조합판에서 그 식의 인형을 찾지 못했습니다.", 4f);
     }
 
+    void OnCellClicked(int rowIndex, int cellIndex)
+    {
+        if (rowIndex < 0 || rowIndex >= rows.Count) return;
+        Row row = rows[rowIndex];
+        if (cellIndex < 0 || cellIndex >= row.ingredients.Count) return;
+        Ingredient ing = row.ingredients[cellIndex];
+        if (ing.kind != IngredientKind.SpecificUnit || ing.unit == null) { OnRowClicked(row); return; }   // 아이템·아무거나 재료는 줄 전체 클릭과 같다
+        CombineRecipe target = null;
+        if (system != null)
+            foreach (CombineRecipe r in system.Recipes)
+                if (r != null && r.result == ing.unit) { target = r; break; }
+        if (target == null)
+        {
+            PlayerNotification.Show(LocalPlayer.LocalPlayerId, $"{ing.unit.DisplayName}: 조합식 없음 — 위습·뽑기·이벤트로 얻습니다.", 4f);
+            return;
+        }
+        selectedRecipe = target;
+        foreach (Row other in rows) if (other.gold != null) other.gold.SetActive(other.root.activeSelf && other.recipe == selectedRecipe);
+        if (!RecipeLocator.Locate(target))
+            PlayerNotification.Show(LocalPlayer.LocalPlayerId, "조합판에서 그 식의 인형을 찾지 못했습니다.", 4f);
+    }
+
     void Update()
     {
         Keyboard keyboard = Keyboard.current;
@@ -592,6 +619,8 @@ public class RecipeSearchDrawer : MonoBehaviour
         }
 
         if (!fontApplied && GameHud.UiFontAsset != null) ApplyFont();
+        if (focusNextFrame && open && panel.gameObject.activeInHierarchy && input != null && !ChatInputGate.IsOpen) { focusNextFrame = false; input.ActivateInputField(); input.Select(); }
+        else if (focusNextFrame && !open) focusNextFrame = false;
 
         float target = open ? 1f : 0f;
         if (!Mathf.Approximately(slide, target))
