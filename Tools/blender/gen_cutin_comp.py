@@ -359,12 +359,202 @@ def make(style, unit, grade, name, nick):
     print("done", out)
 
 
-if __name__ == "__main__":
-    # 유닛, 등급, 이름, 별명
-    JOBS = [("초월_최상호_AD", "초월", "최상호", "구일에서가장자유로운남자"), ("초월_노태현_AP", "초월", "노태현", "여동생살해자")]
+# 유닛, 등급, 이름, 별명
+JOBS = [("초월_최상호_AD", "초월", "최상호", "구일에서가장자유로운남자"), ("초월_노태현_AP", "초월", "노태현", "여동생살해자")]
+if __name__ == "__main__" and not (len(sys.argv) > 1 and sys.argv[1] == "C"):
     only = sys.argv[1:]
     for unit, grade, name, nick in JOBS:
         for style in ("A", "B"):
             if only and f"{style}_{unit}" not in only:
                 continue
             make(style, unit, grade, name, nick)
+
+
+# ═════════ C안: 단간론파1 프롤로그 자기소개(PM 12fps 분해 기준) ═════════
+# 등장 ~1.0초 · 유지 1.2초 · 퇴장 ~0.4초 = 2.6초. 배경은 게임 화면 위 **불투명 등급색**.
+# 효과음 자리: 「슉」= 캐릭터가 왼쪽으로 미끄러지는 순간(0.25초) · 「칭」= 흰 띠가 생기는 순간(0.83초). 퇴장 시작 2.2초.
+C_IN, C_HOLD, C_OUT = 1.0, 1.2, 0.4
+C_TOTAL = C_IN + C_HOLD + C_OUT
+SFX_C = {"슉(캐릭터 미끄러짐)": 0.25, "칭(흰 띠)": 0.83, "퇴장": C_IN + C_HOLD}
+
+
+def layers_C(thigh_png, name, nick, grade):
+    g = GRADE[grade]
+    L = {}
+    L["flat"] = Image.new("RGBA", (W, H), g["main"] + (255,))
+    # 망점(화면 전체, 가운데 살짝 밝음 — 원본의 분홍 위 점 무늬)
+    ht = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    dh = ImageDraw.Draw(ht)
+    step = 18
+    for y in range(0, H, step):
+        for x in range(0, W, step):
+            ox = x + (step // 2 if (y // step) % 2 else 0)
+            dh.ellipse((ox - 4, y - 4, ox + 4, y + 4), fill=tint(g["dark"], 1.0) + (90,))
+    L["halftone"] = ht
+    # 오른쪽 큰 동심원(끊긴 고리) — 투명 바탕, 회전·확대해서 들어온다
+    cx, cy = 1420, 420
+    ring = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    dr = ImageDraw.Draw(ring)
+    col = tint(g["dark"], 1.15) + (230,)
+    for rr, wd, gaps in [(660, 70, [(20, 70), (200, 250), (300, 330)]), (570, 22, [(100, 130), (280, 300)]), (500, 60, [(0, 40), (150, 200), (330, 350)]), (410, 18, [(60, 80), (240, 300)]), (340, 70, [(10, 50), (180, 230)]), (230, 30, [(120, 160)]), (150, 80, [(0, 30), (200, 240)])]:
+        a0 = 0
+        segs = []
+        for s0, s1 in sorted(gaps):
+            segs.append((a0, s0))
+            a0 = s1
+        segs.append((a0, 360))
+        for s0, s1 in segs:
+            if s1 - s0 > 1:
+                dr.arc((cx - rr, cy - rr, cx + rr, cy + rr), s0, s1, fill=col, width=wd)
+    L["ring"] = ring
+    L["ring_c"] = (cx, cy)
+    # 아래 가로 줄무늬(검정, 왼쪽에서 쓸려 들어온다)
+    st = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ds = ImageDraw.Draw(st)
+    for i, (y, w2, ln) in enumerate([(900, 10, 700), (925, 12, 760), (950, 14, 820), (975, 16, 880), (1002, 18, 960), (1032, 22, 1040)]):
+        ds.polygon([(0, y), (ln, y), (ln - 40, y + w2), (0, y + w2)], fill=(10, 8, 14, 235))
+    L["stripes"] = st
+    # 흰 띠(기울기 -7°) + 이름(검정 굵게) + 작은 칭호(띠 위쪽)
+    BW, BH = 2400, 400
+    band = Image.new("RGBA", (BW, BH), (0, 0, 0, 0))
+    db = ImageDraw.Draw(band)
+    y0 = 180
+    db.rectangle((0, y0, BW, y0 + 118), fill=(255, 255, 255, 255))
+    fn = font("NanumGothic-ExtraBold.ttf", 86)
+    tw = db.textlength(name, font=fn)
+    nx = 1700 - tw
+    band_name = band.copy()
+    ImageDraw.Draw(band_name).text((nx, y0 + 8), name, font=fn, fill=(12, 10, 16, 255))
+    band_gray = band.copy()
+    ImageDraw.Draw(band_gray).text((nx, y0 + 8), name, font=fn, fill=(150, 150, 150, 255))
+    ft = font("NanumGothic-ExtraBold.ttf", 40)
+    title = f"{g['label']} {nick}"
+    while db.textlength(title, font=ft) > 900 and ft.size > 22:
+        ft = font("NanumGothic-ExtraBold.ttf", ft.size - 3)
+    ttl = Image.new("RGBA", (BW, BH), (0, 0, 0, 0))
+    ImageDraw.Draw(ttl).text((1700 - db.textlength(title, font=ft), y0 - 58), title, font=ft, fill=(255, 255, 255, 255), stroke_width=2, stroke_fill=tint(g["dark"], 0.9) + (255,))
+    ang = -7
+    for key, im in (("band", band), ("band_name", band_name), ("band_gray", band_gray), ("title", ttl)):
+        im = im.rotate(ang, resample=Image.BICUBIC, center=(1200, y0 + 60), expand=False)
+        full = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        full.alpha_composite(im, (-100, 440))
+        L[key] = full
+    # 흰 빛줄기(띠 자리를 가로지르는 한 줄)
+    streak = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    dsk = ImageDraw.Draw(streak)
+    yb = 440 + y0 + 60
+    dsk.line([(-100, yb + 100 * math.tan(math.radians(7)) * 12), (2000, yb - 12 * 100 * math.tan(math.radians(7)))], fill=(255, 255, 255, 255), width=6)
+    L["streak"] = streak.filter(ImageFilter.GaussianBlur(1.5))
+    # 캐릭터(허벅지까지) + 뒤 실루엣 그림자(외곽 부풀림)
+    ch = Image.open(thigh_png).convert("RGBA")
+    hh = 1320
+    ch = ch.resize((int(ch.width * hh / ch.height), hh), Image.LANCZOS)
+    cl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    cl.alpha_composite(ch, (W // 2 - ch.width // 2, H - hh + 150))
+    L["char"] = cl
+    a = cl.split()[3].filter(ImageFilter.MaxFilter(31)).filter(ImageFilter.GaussianBlur(3))
+    L["shadow"] = Image.merge("RGBA", (Image.new("L", (W, H), g["dark"][0]), Image.new("L", (W, H), g["dark"][1]), Image.new("L", (W, H), g["dark"][2]), a.point(lambda v: int(v * 0.75))))
+    return L
+
+
+def rotate_scale(layer, center, ang, s):
+    im = layer.rotate(ang, resample=Image.BILINEAR, center=center)
+    if abs(s - 1) > 1e-3:
+        im = im.resize((int(W * s), int(H * s)), Image.BILINEAR)
+        out = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        ox, oy = int(center[0] - center[0] * s), int(center[1] - center[1] * s)
+        out.paste(im, (ox, oy), im)
+        return out
+    return im
+
+
+def frame_C(L, game, t):
+    im = game.copy().convert("RGBA")
+    f = t * 12.0                                                      # 원본 12fps 프레임 번호와 맞춘다
+    # f1~2 단색 덮기 · 퇴장 끝에 걷힘(마지막 0.15초, 1프레임쯤 색이 겹친다)
+    t_out = t - (C_IN + C_HOLD)
+    if t_out < 0:
+        cover = min(1.0, max(0.0, (f - 0.6) / 1.4))
+    else:
+        cover = 1.0 - ease_in((t_out - 0.22) / 0.18)
+    flat = L["flat"]
+    if cover < 1:
+        flat = Image.merge("RGBA", flat.split()[:3] + (flat.split()[3].point(lambda v: int(v * cover)),))
+    im.alpha_composite(flat)
+    body = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    # f5~7 실루엣 + 망점
+    sh_p = ease_out((f - 5) / 2.5)
+    out_fade = 1.0 if t_out < 0 else 1.0 - ease_in(t_out / 0.3)
+    if sh_p > 0:
+        body.alpha_composite(place(L["halftone"], a=sh_p * out_fade))
+    # f7~8 동심원: 회전·확대 들어옴 / 퇴장 땐 그대로 색과 함께 걷힘
+    rp = ease_out((f - 6.5) / 2.0)
+    if rp > 0:
+        body.alpha_composite(place(rotate_scale(L["ring"], L["ring_c"], 35 * (1 - rp) + 2.0 * t, 0.55 + 0.45 * rp), a=rp * out_fade))
+    # f7~9 줄무늬 왼쪽에서 쓸려 들어옴 · 퇴장: 띠 다음에 왼쪽으로 빠짐
+    sp = ease_out((f - 7) / 2.0)
+    so = 0.0 if t_out < 0 else ease_in((t_out - 0.08) / 0.2)
+    if sp > 0 and so < 1:
+        body.alpha_composite(place(L["stripes"], dx=-1100 * (1 - sp) - 1100 * so))
+    # f2~4 캐릭터: 아래에서 떠올라 가운데(f2) → 왼쪽 1/3로 휙(f3~4). 퇴장: 마지막에 사라짐
+    rise = ease_out((f - 1.6) / 1.2)
+    slide = ease_out((f - 3.0) / 1.6)
+    cx_off = -560 * slide
+    cy_off = 260 * (1 - rise)
+    ch_a = min(1.0, rise * 1.5) * (1.0 if t_out < 0 else 1.0 - ease_in((t_out - 0.25) / 0.15))
+    if sh_p > 0:
+        sh_s = 1.0 + 0.25 * sh_p
+        body.alpha_composite(place(L["shadow"], dx=cx_off + 10, dy=cy_off + 10, s=sh_s, a=sh_p * ch_a))
+    if ch_a > 0:
+        body.alpha_composite(place(L["char"], dx=cx_off, dy=cy_off, a=ch_a))
+    # f9 흰 빛줄기 한 줄 → f10 흰 띠 → f10 회색 이름 → f11 검정 이름 + 칭호. 퇴장: 이름 회색으로 바래며 띠와 함께 오른쪽으로
+    if 8.6 <= f < 10.2:
+        body.alpha_composite(place(L["streak"], dx=(f - 8.6) * 600 - 500, a=1.0))
+    bp = ease_out((f - 9.6) / 1.0)
+    bo = 0.0 if t_out < 0 else ease_in(t_out / 0.22)
+    if bp > 0 and bo < 1:
+        bx = 500 * (1 - bp) + 1500 * bo
+        if t_out < 0:
+            key = "band_gray" if f < 11.0 else "band_name"
+        else:
+            key = "band_gray" if t_out > 0.05 else "band_name"
+        body.alpha_composite(place(L[key], dx=bx))
+        if f >= 11.0 and t_out < 0.05:
+            body.alpha_composite(place(L["title"], dx=bx))
+    im.alpha_composite(body)
+    return im.convert("RGB")
+
+
+def make_C(unit, grade, name, nick):
+    out = os.path.join(HOME, f"C_{unit}")
+    game = Image.open(GAME).convert("RGB").resize((W, H))
+    L = layers_C(os.path.join(HOME, "render", f"C_{unit}_thigh.png"), name, nick, grade)
+    os.makedirs(os.path.join(HOME, "layers"), exist_ok=True)
+    for k, v in L.items():
+        if isinstance(v, Image.Image):
+            v.save(os.path.join(HOME, "layers", f"C_{unit}_{k}.png"))
+    frame_C(L, game, 1.4).save(out + "_still.png")
+    tmp = os.path.join(HOME, "_frames")
+    os.makedirs(tmp, exist_ok=True)
+    n = int(C_TOTAL * 30)
+    for i in range(n):
+        frame_C(L, game, i / 30.0).save(os.path.join(tmp, f"f{i:03d}.png"))
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", "30", "-i", os.path.join(tmp, "f%03d.png"), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "16", out + ".mp4"], check=True)
+    # 12fps 분해 시트(원본과 같은 간격으로 대조)
+    cols, cells = 6, []
+    for k in range(int(C_TOTAL * 12)):
+        cells.append(frame_C(L, game, k / 12.0).resize((320, 180)))
+    sheet = Image.new("RGB", (320 * cols, 180 * math.ceil(len(cells) / cols)), (0, 0, 0))
+    for k, c in enumerate(cells):
+        sheet.paste(c, ((k % cols) * 320, (k // cols) * 180))
+    sheet.save(out + "_sheet12.png")
+    for i in range(n):
+        os.remove(os.path.join(tmp, f"f{i:03d}.png"))
+    with open(out + "_timing.txt", "w") as fp:
+        fp.write(f"등장 {C_IN}s · 유지 {C_HOLD}s · 퇴장 {C_OUT}s = {C_TOTAL}s @30fps\n효과음 자리: " + " · ".join(f"{k} {v:.2f}s" for k, v in SFX_C.items()) + "\n")
+    print("done", out)
+
+
+if __name__ == "__main__" and (len(sys.argv) > 1 and sys.argv[1] == "C"):
+    for unit, grade, name, nick in JOBS:
+        make_C(unit, grade, name, nick)

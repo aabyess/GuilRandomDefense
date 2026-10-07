@@ -157,22 +157,61 @@ def aim(cam, target, dist, fovscale, roll=0.0, side=0.0, up=0.0):
     cam.data.clip_end = 20
 
 
-def pose_hands_on_hips():
-    """믹사모 T포즈 → 위팔을 아래바깥으로 60° 내리고 아래팔을 몸 쪽으로 100° 접는다(armature 공간에서 월드 Y축 회전). 시안용 근사."""
+def spin(name, deg, axis="Y"):
+    """믹사모 뼈를 armature 공간 월드축(X·Y·Z) 둘레로 deg° 돌린다(관절=뼈 머리 기준). T포즈에서 시작하는 시안용 근사."""
     from mathutils import Matrix
+    pb = arm.pose.bones.get("mixamorig:" + name)
+    if not pb:
+        return
+    m = pb.matrix.copy()
+    hd = m.to_translation()
+    pb.matrix = Matrix.Translation(hd) @ Matrix.Rotation(math.radians(deg), 4, axis) @ Matrix.Translation(-hd) @ m
+    bpy.context.view_layer.update()
 
-    def spin(name, deg):
-        pb = arm.pose.bones.get("mixamorig:" + name)
-        if not pb:
-            return
-        m = pb.matrix.copy()
-        hd = m.to_translation()
-        pb.matrix = Matrix.Translation(hd) @ Matrix.Rotation(math.radians(deg), 4, "Y") @ Matrix.Translation(-hd) @ m
-        bpy.context.view_layer.update()
+
+def reset_pose():
+    from mathutils import Matrix
+    for pb in arm.pose.bones:
+        pb.matrix_basis = Matrix.Identity(4)
+    bpy.context.view_layer.update()
+
+
+# 정면 = -Y, 캐릭터의 왼팔 = +X(sg=+1), 오른팔 = -X(sg=-1). 팔 방향 벡터가 Y축 둘레로 +θ 돌면 +X팔은 아래로, -X팔은 위로 간다.
+def pose_hips():                 # 허리에 손(자신감)
     for side, sg in (("Left", 1), ("Right", -1)):
         spin(f"{side}Arm", sg * 60)
         spin(f"{side}ForeArm", sg * 105)
-    bpy.context.view_layer.update()
+
+
+def pose_crossed():              # 팔짱
+    for side, sg in (("Left", 1), ("Right", -1)):
+        spin(f"{side}Arm", sg * 85)
+        spin(f"{side}ForeArm", -90, "X")
+        spin(f"{side}ForeArm", -sg * 62, "Z")
+        spin(f"{side}Hand", -sg * 20, "Z")
+
+
+def pose_point():                # 손가락질(오른팔 앞으로 쭉, 왼손 허리)
+    spin("RightArm", 90, "Z")
+    spin("RightArm", -18, "X")
+    spin("LeftArm", 60)
+    spin("LeftForeArm", 105)
+
+
+def pose_fist():                 # 주먹 쥐고 들기(오른팔 위로 접음, 왼팔 내림)
+    spin("RightArm", 40)
+    spin("RightForeArm", 110)
+    spin("LeftArm", 78)
+    spin("LeftForeArm", 14)
+
+
+def pose_calm():                 # 차분한 정면(팔 내리고 살짝 굽힘) — C안(프롤로그 자기소개)
+    for side, sg in (("Left", 1), ("Right", -1)):
+        spin(f"{side}Arm", sg * 72)
+        spin(f"{side}ForeArm", sg * 18)
+
+
+POSES = {"calm": pose_calm, "hips": pose_hips, "crossed": pose_crossed, "point": pose_point, "fist": pose_fist}
 
 
 def render(path):
@@ -190,7 +229,7 @@ aim(cam, center, 3.0, 0.5)
 render(os.path.join(OUT, f"A_{NAME}_face.png"))
 print("head", tuple(round(v, 2) for v in h), tuple(round(v, 2) for v in t))
 
-# ───────── B: 상반신, 검정 외곽선, 허리에 손 ─────────
+# ───────── B: 상반신 — 포즈별 ─────────
 for o in meshes:                                                    # 외곽선만 검정으로 바꾼다
     for m in o.data.materials:
         if m and m.name.startswith("outline"):
@@ -199,8 +238,20 @@ for o in meshes:                                                    # 외곽선�
     for md in o.modifiers:
         if md.type == "SOLIDIFY":
             md.thickness = 0.006
-pose_hands_on_hips()
-scn, cam = setup(1024, 1280)
-bust_c = Vector((h.x, h.y, top - 0.52))
-aim(cam, bust_c, 3.0, 1.0)
-render(os.path.join(OUT, f"B_{NAME}_bust.png"))
+want = (os.environ.get("POSES") or "calm,hips,crossed,point,fist").split(",")
+for pn in want:
+    reset_pose()
+    POSES[pn]()
+    scn, cam = setup(1024, 1280)
+    bust_c = Vector((h.x, h.y, top - 0.55))
+    aim(cam, bust_c, 3.0, 1.1)
+    render(os.path.join(OUT, f"B_{NAME}_bust_{pn}.png"))
+    if pn == "hips":
+        render(os.path.join(OUT, f"B_{NAME}_bust.png"))
+
+# ───────── C: 허벅지까지 상반신(차분한 정면) — 프롤로그 자기소개 컷인 ─────────
+reset_pose()
+POSES[os.environ.get("C_POSE", "calm")]()
+scn, cam = setup(1024, 1536)
+aim(cam, Vector((h.x, h.y, top - 0.72)), 3.0, 1.5)
+render(os.path.join(OUT, f"C_{NAME}_thigh.png"))
