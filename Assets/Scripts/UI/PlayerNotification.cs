@@ -104,11 +104,11 @@ public class PlayerNotificationHud : MonoBehaviour
     // 알림 자리(왼쪽 아래, 명령 콘솔 바로 위)로 옮겼다. 전엔 화면 가운데 위 1/4에서 아래로 쌓여 전장을 가렸다.
     // 왼쪽 정렬 · **새 줄이 맨 아래**, 옛 줄은 위로 밀린다(워크래프트와 같다). 바닥선은 하단 바 윗선인데, 미니맵 위
     // 위습 칸(GameHud.BuildWispSlots)이 떠 있으면 그 위로 올린다 — 칸은 위습이 있을 때만 켜지므로 매 프레임 본다.
-    // 사장님 10-07 「채팅도 너무 작다, 크기 키우고 UI도 개선」 — 글자 20→27→22(10-07 사장님 「채팅 너무 크다」), 줄 높이 33, 줄 뒤 옅은 검정 띠(밝은 땅 위에서도 읽힘), 외곽선 4방향, 줄 간격 3,
+    // 사장님 10-07 「채팅도 너무 작다, 크기 키우고 UI도 개선」 — 글자 20→27→22→18(10-07 사장님 「채팅 너무 크다」 두 번), 줄 높이 27, 줄 뒤 옅은 검정 띠(밝은 땅 위에서도 읽힘), 외곽선 4방향, 줄 간격 3,
     // 끝나기 전 마지막 FadeSeconds 동안 흐려짐(원작 워크3처럼 최근 줄만 보이다 사라진다). 줄 수·남는 시간은 그대로.
     static readonly GUIStyle Style = new GUIStyle
     {
-        fontSize = 22,
+        fontSize = 18,
         alignment = TextAnchor.MiddleLeft,
         richText = true,   // 유닛 획득 알림이 등급색(<color>)을 쓴다(2026-09-26). 기존 알림엔 태그가 없어 그대로다.
         normal = { textColor = Color.white },
@@ -118,7 +118,7 @@ public class PlayerNotificationHud : MonoBehaviour
     static readonly System.Text.RegularExpressions.Regex ColorTag = new System.Text.RegularExpressions.Regex("</?color[^>]*>");
 
     const float BoxWidth = 1000f;
-    const float BoxHeight = 33f;
+    const float BoxHeight = 27f;
     const float Spacing = 3f;
     const float FadeSeconds = 1.2f;
     const float BandAlpha = 0.40f;
@@ -148,9 +148,9 @@ public class PlayerNotificationHud : MonoBehaviour
 
         if (list.Count == 0) return;
 
-        // 글자 크기는 1080 기준 22 — IMGUI는 CanvasScaler를 안 타서 작은 창에서 글자가 상대적으로 커진다(1366×768에선 ×0.71 ≈ 19px, 줄 폭 710px).
+        // 글자 크기는 1080 기준 18 — IMGUI는 CanvasScaler를 안 타서 작은 창에서 글자가 상대적으로 커진다(1366×768에선 ×0.71 ≈ 19px, 줄 폭 710px).
         float scale = Mathf.Clamp(Screen.height / 1080f, 0.7f, 2f);
-        Style.fontSize = ShadowStyle.fontSize = Mathf.RoundToInt(22f * scale);
+        Style.fontSize = ShadowStyle.fontSize = Mathf.RoundToInt(18f * scale);
         float lineHeight = BoxHeight * scale;
         float now2 = Time.unscaledTime;
         Color oldColor = GUI.color;
