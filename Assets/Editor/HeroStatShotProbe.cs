@@ -405,4 +405,19 @@ public static class HeroStatShotProbe
         }
         return "❌ 희귀함 줄 없음";
     }
+
+    public static string CutinChoi() { CutinOverlay.Enabled = true; return CutinOverlay.Play("초월_최상호_AD") ? "✅ 컷인 시작" : "❌ 산출물 없음"; }
+    public static string CutinSeo() { CutinOverlay.Enabled = true; return CutinOverlay.Play("영원_서민성") ? "✅ 컷인 시작" : "❌ 산출물 없음"; }
+
+    public static string CutinDebug()
+    {
+        var a = Resources.Load<TextAsset>("Cutin/초월_최상호_AD/layout");
+        var b = UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Resources/Cutin/초월_최상호_AD/layout.json");
+        var c = Resources.Load<Texture2D>("Cutin/초월_최상호_AD/char");
+        string nfd = "Cutin/초월_최상호_AD/layout".Normalize(System.Text.NormalizationForm.FormD);
+        var d = Resources.Load<TextAsset>(nfd);
+        var e = Resources.Load<TextAsset>("Cutin/_common/초월/layout");
+        var g = Resources.LoadAll<TextAsset>("Cutin/초월_최상호_AD");
+        return $"Resources.layout={(a != null)} AssetDB.layout={(b != null)} Resources.char={(c != null)} NFD={(d != null)} common={(e != null)} LoadAll={(g != null ? g.Length : -1)}";
+    }
 }

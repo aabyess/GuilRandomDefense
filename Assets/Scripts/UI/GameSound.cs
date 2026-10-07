@@ -34,6 +34,8 @@ public enum GameSoundId : byte
     BossAppear, // 라운드 보스 등장
     Wood,       // 목재 획득
     UiRattle,   // 10-06 첫 화면 단추에 마우스를 올릴 때 「달그락」(Kenney Impact Sounds impactWood_light, CC0) — 맨 뒤에만 붙인다(MP RPC가 번호를 싣는다)
+    CutinWhoosh, // 10-08 상위 등급 획득 컷인 — 슉(캐릭터 미끄러짐 0.25s·퇴장 2.20s). 파일 Resources/Sfx/cutin_whoosh/ (blender 산출 대기 — 없으면 경고만)
+    CutinTing,   // 10-08 컷인 칭(흰 띠 0.83s). 파일 Resources/Sfx/cutin_ting/
 }
 
 public static class GameSound
@@ -73,6 +75,8 @@ public static class GameSound
         { GameSoundId.BossAppear, S("boss_appear", -6f, 0.1f,   0, 2, GameSoundId.BossAppear) },
         { GameSoundId.Wood,       S("wood",        -6f, 0.1f,   0, 2, GameSoundId.Wood) },
         { GameSoundId.UiRattle,   S("ui_rattle",   -8f, 0.06f,  0, 2, GameSoundId.UiRattle) },
+        { GameSoundId.CutinWhoosh, S("cutin_whoosh", -8f, 0.1f, 0, 2, GameSoundId.CutinWhoosh) },
+        { GameSoundId.CutinTing,   S("cutin_ting",   -8f, 0.1f, 0, 2, GameSoundId.CutinTing) },
     };
 
     class Pool { public AudioClip[] clips; public AudioSource[] sources; public int next; public float volume; }

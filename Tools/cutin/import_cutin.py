@@ -13,7 +13,7 @@
   · 마지막에 예상 빌드 증가량(GPU 압축 텍스처 기준 DXT5 1B/px · ASTC6x6 0.44B/px)과 PNG 디스크 용량을 출력한다.
 blender 산출 폴더 구조는 건드리지 않는다(읽기만).
 """
-import argparse, collections, hashlib, json, os, sys
+import argparse, collections, hashlib, json, os, sys, unicodedata
 from PIL import Image
 
 COMMON = ["flat", "halftone", "ring", "streak", "stripes", "band"]
@@ -21,6 +21,16 @@ PER_UNIT = ["band_gray", "band_name", "shadow", "char", "title"]
 MAX_SIDE = {"char": 832, "shadow": 256, "title": 1024, "band_name": 1024, "band_gray": 1024,
             "halftone": 1920, "ring": 1024, "streak": 1024, "stripes": 1024, "band": 1920}
 LAYERS = COMMON + PER_UNIT
+GRADE_ASCII = {"초월": "transcend", "불멸": "immortal", "영원": "eternal"}
+
+
+def unit_key(unit):
+    """한글 폴더명은 맥(NFD)·윈도(NFC)에서 Resources.Load가 다르게 읽는다 — 폴더는 ASCII 키(c_ + NFC 이름 SHA1 앞 8자리)로. CutinOverlay.UnitKey와 같은 식."""
+    return "c_" + hashlib.sha1(unicodedata.normalize("NFC", unit).encode("utf8")).hexdigest()[:8]
+
+
+def grade_key(grade):
+    return GRADE_ASCII[unicodedata.normalize("NFC", grade)]
 
 
 def split_name(stem):
@@ -41,8 +51,10 @@ def trim_and_scale(path, max_side):
     cropped = im.crop(box)
     w, h = cropped.size
     scale = min(1.0, max_side / max(w, h))
-    if scale < 1.0:
-        cropped = cropped.resize((max(1, round(w * scale)), max(1, round(h * scale))), Image.LANCZOS)
+    nw, nh = max(1, round(w * scale)), max(1, round(h * scale))
+    nw, nh = (nw + 3) // 4 * 4, (nh + 3) // 4 * 4   # 압축 텍스처(DXT/Crunch)는 4의 배수여야 한다 — 최대 3px 늘림(배치는 layout.json 사각형이라 그대로)
+    if (nw, nh) != (w, h):
+        cropped = cropped.resize((nw, nh), Image.LANCZOS)
     return cropped, box  # box = 원본 1920×1080에서의 (x0, y0, x1, y1)
 
 
@@ -108,8 +120,8 @@ def main():
                 common_json["flat"] = flat_color(path)
                 continue
             r = trim_and_scale(path, MAX_SIDE[layer])
-            if r: emit(os.path.join(args.out, "_common", grade), layer, r, common_layout)
-        folder = os.path.join(args.out, "_common", grade)
+            if r: emit(os.path.join(args.out, "_common", grade_key(grade)), layer, r, common_layout)
+        folder = os.path.join(args.out, "_common", grade_key(grade))
         if not args.dry:
             os.makedirs(folder, exist_ok=True)
             json.dump({"flat": common_json["flat"], "layers": common_layout}, open(os.path.join(folder, "layout.json"), "w"), ensure_ascii=False)
@@ -122,9 +134,9 @@ def main():
                 if layer not in layers:
                     continue
                 r = trim_and_scale(layers[layer], MAX_SIDE[layer])
-                if r: unit_px += emit(os.path.join(args.out, unit), layer, r, layout)
+                if r: unit_px += emit(os.path.join(args.out, unit_key(unit)), layer, r, layout)
             if not args.dry and layout:
-                json.dump({"grade": grade, "layers": layout}, open(os.path.join(args.out, unit, "layout.json"), "w"), ensure_ascii=False)
+                json.dump({"grade": grade, "unit": unit, "layers": layout}, open(os.path.join(args.out, unit_key(unit), "layout.json"), "w"), ensure_ascii=False)
             per_unit_px.append(unit_px)
 
     n = len(per_unit_px)
