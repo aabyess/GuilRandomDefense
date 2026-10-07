@@ -9,6 +9,8 @@
 - **도움소 마나 표시**: 정보칸 파란 막대+「마나 N / 상한」(`SetPortraitManaOnly`), 건물 머리 위 막대(`ShopNameplateLayer`, 가득 차면 맥동), `SupportShop.ManaOwner`.
 - 원작 비교 사진: `ClaudeBridge/shots/cmp_console.png`·`cmp_top.png`·`cmp_timer.png`(합성 스크립트 scratchpad `cmp.py` — 원작 `/tmp/.../ref_original_ui.png`는 사라질 수 있다).
 
+- **유닛 이름 바꾸기 19기**(18736b262·b55d220de, 표 `Docs/reference/UNIT_RENAMES_2026-10-07.md`): 에셋명 불변, 인물 이름 `UnitData.personOverride`(맨 뒤 필드)·칭호 `unitName`. 적용 `call UnitRenameApply.Apply`(Editor, 재실행 안전)·실측 `UnitRenameProbe.Chat/Search/Spawn푸은서`. 히든 채팅 입력말은 새 이름만(`CombineSystem.ChatPhrases`가 이름 바뀐 유닛의 옛 에셋명 입력말 제외). 「최윤서 강화」→「노윤서 강화」(소모 대상 키는 에셋명 `히든_최윤서`)·특성강화 traitName 16개 새 이름. ⚠️ `Tools/low_grade_data.py` 등 생성기를 돌리면 옛 이름으로 되돌아간다 → 돌린 뒤 UnitRenameApply 재실행. 안 고친 것: 적 이름(Enemy_R*_이름 — 원작 적, 별개)·스킬 desc 개발 메모(액티브 아닌 건 플레이어에게 안 보임)·F5 검색의 옛 이름 별칭(에셋명 검색).
+
 ## 남은 일 / 확인 안 한 것
 - 정보창 오른쪽 반: 힘·민첩·지능(초월·영원만)은 아직 안 넣음 — 데이터 필드가 있는지부터.
 - 좌우 캡(`console_cap_*`)은 미니맵이 가장자리라 안 씀. 영웅 칸(`hero_frame`·`bar_track`)·`win_tab`·`win_close_btn`·`win_scroll_*`·점수판 `score_*` 부품은 반입만 하고 코드엔 안 썼다.
