@@ -76,15 +76,22 @@ public class StoryManager : MonoBehaviour
         return IsWaiting && pending.interludeName == interludeName;
     }
 
+    /// <summary>화면에 나가는 스토리 이름 — 원작 「09. 어인섬」 꼴(war3map.j 모드 안내 문구): 두 자리 순번 + 점 + 이름. 순번은 StoryData.order. 화면 표시는 전부 여기를 지난다.</summary>
+    public static string DisplayName(StoryData story)
+    {
+        if (story == null) return "";
+        return story.order > 0 ? $"{story.order:00}. {story.storyName}" : story.storyName;
+    }
+
     /// <summary>대기 중이면 그 구간 이름(백수생활 등), 진행 중이면 스토리 이름.</summary>
     public string StatusLabel
     {
         get
         {
             if (replica) return replicaLabel; // MP
-            if (running != null) return running.storyName;
+            if (running != null) return DisplayName(running);
             if (pending == null) return "";
-            return string.IsNullOrEmpty(pending.interludeName) ? pending.storyName : pending.interludeName;
+            return string.IsNullOrEmpty(pending.interludeName) ? DisplayName(pending) : pending.interludeName;
         }
     }
 
@@ -241,7 +248,8 @@ public class StoryManager : MonoBehaviour
         //    남은 시간은 HUD 타이머 칸(「{이름} 남은 시간:」, 원작 j:13754 타이머 창 제목)이 SecondsLeftInLimit로 보여 준다.
         if (story.timeLimitSeconds > 0f)
         {
-            string warn = $"<color=#FF0000>{story.storyName}{RoundManager.ObjectParticle(story.storyName)} 제한시간내에 클리어하지 못하면 전원 패배합니다.</color>";
+            string shown = DisplayName(story);
+            string warn = $"<color=#FF0000>{shown}{RoundManager.ObjectParticle(story.storyName)} 제한시간내에 클리어하지 못하면 전원 패배합니다.</color>";
             foreach (PlayerContext context in PlayerContext.Occupied) PlayerNotification.Show(context.PlayerId, warn, 10f);
         }
     }

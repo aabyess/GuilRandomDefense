@@ -4775,7 +4775,7 @@ public class GameHud : MonoBehaviour
             has = rm != null && rm.TryGetExtraTimer(out newWorldWait, out seconds);
             StoryManager story = StoryManager.Instance;
             storyLeft = story != null ? story.SecondsLeftInLimit : -1f;
-            storyName = story != null && story.Running != null ? story.Running.storyName : "";
+            storyName = story != null && story.Running != null ? StoryManager.DisplayName(story.Running) : "";
         }
         if (!has) { newWorldWait = false; seconds = 0f; }
         bool hasStory = storyLeft >= 0f && !string.IsNullOrEmpty(storyName);   // 원작 와노쿠니 제한 창(j:13754)

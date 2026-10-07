@@ -263,7 +263,7 @@ public class RewardDistributor : MonoBehaviour
             foreach (WispReward w in story.wispRewards)
                 if (w != null && w.wisp != null && w.count > 0) parts.Add($"<color=#FF8200>{w.wisp.wispName} {w.count}기</color>");
         string rewardText = parts.Count > 0 ? string.Join(" ", parts) + " <color=#FF8200>를 지급합니다.</color>" : "";
-        string line = $"<color=#FF0000>{story.storyName}</color><color=#FF8200>까지의 스토리 진행완료 모든플레이어에게</color> {rewardText}";
+        string line = $"<color=#FF0000>{StoryManager.DisplayName(story)}</color><color=#FF8200>까지의 스토리 진행완료 모든플레이어에게</color> {rewardText}";
         foreach (PlayerContext context in PlayerContext.Occupied) PlayerNotification.Show(context.PlayerId, line, 10f);
     }
 
