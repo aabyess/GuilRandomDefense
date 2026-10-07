@@ -92,7 +92,7 @@ public class GameHud : MonoBehaviour
     readonly TMP_Text[] skillIconLabels = new TMP_Text[MaxSkillIcons];
     readonly SkillData[] skillIconSkills = new SkillData[MaxSkillIcons];
     GameObject unitStatRows;                     // 정보칸 「공격력/방어/상태」 줄(사진 서식) — 유닛 한 기를 고를 때만
-    TMP_Text unitDamageText, unitArmorText, unitStatusText;
+    TMP_Text unitDamageText, unitArmorText, unitStatusText, unitHeroStatText;
     TMP_Text wc3NameText, wc3LevelText;          // 워크3풍 정보창 위 띠 두 줄(단일 유닛일 때만 켜진다)
     TMP_Text goldText;
     TMP_Text woodText;
@@ -800,6 +800,16 @@ public class GameHud : MonoBehaviour
         unitDamageText = BuildStatRow(statRows, "icon_attack");
         unitArmorText = BuildStatRow(statRows, "icon_armor");
         unitStatusText = BuildStatRow(statRows, null);
+        unitHeroStatText = BuildStatRow(statRows, null);   // 힘·민첩·지능(초월·영원만 — ShowSingleInfo가 켠다)
+        unitHeroStatText.fontSize = 22;
+        {   // 자리는 정보창 오른쪽 반 아래쪽(왼쪽 반 세 줄에 끼우면 정보창 높이가 모자라 글이 겹친다) — 레이아웃에서 빼고 statRows 기준 앵커로 둔다.
+            RectTransform heroRow = (RectTransform)unitHeroStatText.transform.parent;
+            heroRow.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            heroRow.anchorMin = new Vector2(1.04f, 0.02f); heroRow.anchorMax = new Vector2(1.98f, 0.30f);
+            heroRow.offsetMin = Vector2.zero; heroRow.offsetMax = Vector2.zero;
+            heroRow.Find("Icon").gameObject.SetActive(false);
+            heroRow.gameObject.SetActive(false);
+        }
         unitStatRows = statRows.gameObject;
         if (Wc3Console) BuildWc3InfoDeco(infoPanel, statRows);
         unitStatRows.SetActive(false);
@@ -4951,6 +4961,10 @@ public class GameHud : MonoBehaviour
             unitDamageText.text = $"<color=#FF9A3A>공격력:</color> {attackPower}{bonus}";   // 사장님 10-03: 사거리·공속은 정보칸에서 뺀다(F1 DebugHud엔 남음)
             unitArmorText.text = "<color=#FF9A3A>방어:</color> <color=#FF4A4A>무적</color>";
             unitStatusText.text = "<color=#FF9A3A>상태:</color>" + (attacker != null && attacker.GunFormActive ? $" <color=#FF6B6B>구건 {attacker.GunFormRemaining:F1}초</color>" : "") + (attacker != null && (attacker.UnitDeleteCount > 0 || attacker.GunFormActive) ? $" 삭제 {attacker.UnitDeleteCount}" : "");
+            bool showHeroStats = attacker != null && (data.grade == UnitGrade.Transcendent || data.grade == UnitGrade.Eternal);
+            unitHeroStatText.transform.parent.gameObject.SetActive(showHeroStats);
+            if (showHeroStats)
+                unitHeroStatText.text = $"<color=#FF9A3A>힘</color> {attacker.CurrentStrength:F1}  <color=#FF9A3A>민</color> {attacker.CurrentAgility:F1}  <color=#FF9A3A>지</color> {attacker.CurrentIntelligence:F1}";
             if (!unitStatRows.activeSelf) unitStatRows.SetActive(true);
             if (wc3NameText != null)
                 SetWc3Strips(true, $"{firstPart}{secondPart}", $"<color=#{gradeColorHex}>{grade}{levelLabel}</color>" + (data.OriginalMatchLabel.Length > 0 ? $"  <size=80%><color=#A0A0A0>{data.OriginalMatchLabel.Replace("원작: ", "원작 ")}</color></size>" : ""));
