@@ -29,7 +29,7 @@ static class TaewoongProbe
             sb.AppendLine($"  눌러 {i}: 횟수 {ctx.GambleBoostCount} · +{ctx.GambleBoostPercent}%p · 엔 {gold0}→{ctx.GoldWallet.Gold}");
         }
         MethodInfo eff = typeof(GamblingShop).GetMethod("EffectiveSuccessChance", BindingFlags.NonPublic | BindingFlags.Static);
-        foreach (string n in new[] { "하급도박", "중급도박", "고급도박", "다른세계 도박", "고급 유닛 생성", "목재 구입" })
+        foreach (string n in new[] { "하급도박", "중급도박", "고급도박", "랜덤유닛 도박", "고급 유닛 생성", "목재 구입" })
         {
             var opt = AssetDatabase.LoadAssetAtPath<GamblingOptionData>($"Assets/Data/Gambling/Gambling_{n}.asset");
             if (opt != null) sb.AppendLine($"  도박 {n}: 기본 {opt.successChancePercent}% → {eff.Invoke(null, new object[] { opt, ctx })}%");

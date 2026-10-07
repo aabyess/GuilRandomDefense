@@ -24,7 +24,7 @@ static class StoryRewardProbe
         LaneMarker lane = LaneMarker.Get(0);
         UnitData d = AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/초월_신문철_AP.asset");
         rayleigh = AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/희귀함_박기찬.asset");
-        gamble = AssetDatabase.LoadAssetAtPath<GamblingOptionData>("Assets/Data/Gambling/Gambling_다른세계 도박.asset");
+        gamble = AssetDatabase.LoadAssetAtPath<GamblingOptionData>("Assets/Data/Gambling/Gambling_랜덤유닛 도박.asset");
         if (me == null || spawner == null || lane == null || d == null) return "❌ 준비 안 됨";
         hero = spawner.Spawn(d, lane.LaneCenter, 0).GetComponent<UnitIdentity>();
         bool selected = me.NavigationState != null && me.NavigationState.TrySelect(NavigationChoice.SupportLock);

@@ -10,7 +10,7 @@ using UnityEngine;
 static class StoryRewardApply
 {
     const string StoriesFolder = "Assets/Data/Stories";
-    const string OtherWorldGamble = "Assets/Data/Gambling/Gambling_다른세계 도박.asset";
+    const string OtherWorldGamble = "Assets/Data/Gambling/Gambling_랜덤유닛 도박.asset";
     const string RayleighUnit = "Assets/Data/Units/Roster/희귀함_박기찬.asset";
 
     static StoryData Story(string name) => AssetDatabase.LoadAssetAtPath<StoryData>($"{StoriesFolder}/{name}.asset");
