@@ -4484,7 +4484,7 @@ public class GameHud : MonoBehaviour
             string person = data.DisplayName.Length > data.unitName.Length ? data.DisplayName.Substring(0, data.DisplayName.Length - data.unitName.Length - 1) : "";
             string firstPart = person.Length > 0 ? person : data.unitName;
             string secondPart = person.Length > 0 ? $" <color=#FFD84A>{data.unitName}</color>" : "";
-            unitInfoText.text = $"<size=115%>{firstPart}{secondPart} – <color=#{gradeColorHex}>{grade}{levelLabel}</color></size>";
+            unitInfoText.text = $"<size=115%>{firstPart}{secondPart} – <color=#{gradeColorHex}>{grade}{levelLabel}</color></size>" + (data.OriginalMatchLabel.Length > 0 ? $"  <size=70%><color=#A0A0A0>{data.OriginalMatchLabel.Replace("원작: ", "원작 ")}</color></size>" : "");
             string bonus = hasStats && data.attackPower > 0f && damage - data.attackPower >= 0.5f ? $" <color=#46E06A>+{damage - data.attackPower:F0}</color>" : "";
             unitDamageText.text = $"<color=#FF9A3A>공격력:</color> {attackPower}{bonus}";   // 사장님 10-03: 사거리·공속은 정보칸에서 뺀다(F1 DebugHud엔 남음)
             unitArmorText.text = "<color=#FF9A3A>방어:</color> <color=#FF4A4A>무적</color>";

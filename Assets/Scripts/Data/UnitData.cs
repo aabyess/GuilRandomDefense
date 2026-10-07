@@ -605,4 +605,11 @@ public class UnitData : ScriptableObject
     public int enhanceMaxLevel;
     public int enhanceGoldCost;
     public int enhanceWispCount;
+
+    // ⚠️ 맨 뒤(2026-10-07, 사장님 「베타 테스트니까 누구 매칭인지 보이게」) — 이 유닛이 대응하는 원작 캐릭터 이름(예 「징베」, 여럿이면 「A/B」, 대응 없음이면 비움).
+    // 표: Docs/research/ORIGINAL_MATCH_NAMES_2026-10-07.tsv(Tools/original_match_names.py) → Assets/Editor/OriginalMatchApply.cs가 채운다. 화면 표시는 GameVersion.BetaShowOriginalMatch가 켜져 있을 때만.
+    public string originalMatchName;
+
+    /// <summary>베타 표시용 「원작: 징베」 — 스위치가 꺼졌거나 대응이 없으면 빈 문자열.</summary>
+    public string OriginalMatchLabel => GameVersion.BetaShowOriginalMatch && !string.IsNullOrEmpty(originalMatchName) ? $"원작: {originalMatchName}" : "";
 }
