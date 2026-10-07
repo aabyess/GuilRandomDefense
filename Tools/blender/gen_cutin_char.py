@@ -278,28 +278,120 @@ if "B" in ONLY:
         if pn == "hips":
             render(os.path.join(OUT, f"B_{NAME}_bust.png"))
 
-# ───────── C: 허벅지까지(정사각 틀 — 날개·무기 넓은 모델도 옆이 안 잘린다) ─────────
-if "C" in ONLY:
-    reset_pose()
-    POSES[os.environ.get("C_POSE", "calm")]()
-    bpy.context.view_layer.update()
-    # 포즈 뒤 실제 경계로 다시 잰다: 위 = 머리 꼭대기 + 여백, 아래 = 허벅지(키의 40% 지점). 넓이도 같이 본다.
-    pv = []
+# ───────── C: 허벅지까지 — 공격 클립의 가장 크게 벌어진 프레임을 포즈로(사장님 10-08) ─────────
+SHARED_ATTACK = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "Assets/Art/Characters/attack.fbx"))
+
+
+def eval_points(step=7):
     dg = bpy.context.evaluated_depsgraph_get()
+    pv = []
     for o in meshes:
         ev = o.evaluated_get(dg)
         me = ev.to_mesh()
-        pv += [ev.matrix_world @ v.co for v in me.vertices]
+        mw = ev.matrix_world
+        pv += [mw @ me.vertices[i].co for i in range(0, len(me.vertices), step)]
         ev.to_mesh_clear()
+    return pv
+
+
+def attack_action():
+    """유닛 자체 클립(FBX 안 Attack*) 우선, 없으면 공용 휴머노이드 attack.fbx(믹사모 뼈 이름 그대로 얹는다). (액션, 출처) 또는 (None, 사유)."""
+    own = [a for a in bpy.data.actions if "attack" in a.name.lower() and "lunge" not in a.name.lower() and "_b" not in a.name.lower()]
+    own.sort(key=lambda a: (a.name.split("|")[-1] != "Attack", a.name))
+    if own:
+        return own[0], "자체:" + own[0].name.split("|")[-1]
+    if arm is None or not arm.pose.bones.get("mixamorig:Hips"):
+        return None, "클립 없음(믹사모 아님)"
+    before_o, before_a = set(bpy.data.objects), set(bpy.data.actions)
+    bpy.ops.import_scene.fbx(filepath=SHARED_ATTACK)
+    for o in set(bpy.data.objects) - before_o:
+        bpy.data.objects.remove(o)
+    new = [a for a in bpy.data.actions if a not in before_a]
+    return (new[0], "공용:attack.fbx") if new else (None, "공용 클립 못 읽음")
+
+
+def set_frame(act, f):
+    ad = arm.animation_data or arm.animation_data_create()
+    if ad.action != act:
+        ad.action = act
+        try:
+            if act.slots:
+                ad.action_slot = act.slots[0]
+        except AttributeError:
+            pass
+    bpy.context.scene.frame_set(int(round(f)))
+    bpy.context.view_layer.update()
+
+
+def render_c(path):
+    pv = eval_points(1)
     ptop = max(p.z for p in pv)
     pbot = ptop - H * 0.62
     span_v = (ptop - pbot) * 1.06
     band = [p for p in pv if p.z >= pbot]
     span_h = (max(p.x for p in band) - min(p.x for p in band)) * 1.04
     cx = (max(p.x for p in band) + min(p.x for p in band)) / 2
+    cy = (max(p.y for p in band) + min(p.y for p in band)) / 2
     span = max(span_v, span_h)
     scn, cam = setup(1536, 1536)
-    aim(cam, Vector((cx, h.y, ptop - span_v / 2 + 0.02)), 3.0, span)
-    render(os.path.join(OUT, f"C_{NAME}_thigh.png"))
-    with open(os.path.join(OUT, f"C_{NAME}_thigh.txt"), "w") as fp:
-        fp.write(f"top={ptop:.3f} span_v={span_v:.3f} span_h={span_h:.3f} ortho={span:.3f}\n")
+    aim(cam, Vector((cx, cy, ptop - span_v / 2 + 0.02)), 3.0, span)
+    render(path)
+    return dict(top=round(ptop, 3), span=round(span, 3))
+
+
+if "C" in ONLY:
+    import json
+    info = dict(unit=NAME, candidates=[])
+    act, src = (None, "")
+    if arm is not None:
+        reset_pose()
+        act, src = attack_action()
+    info["source"] = src
+    if act is not None:
+        f0, f1 = act.frame_range
+        samples = [f0 + (f1 - f0) * k / 15 for k in range(16)]
+        scored = []
+        for f in samples:                                          # 벌어짐 = 앞에서 본 넓이 × 높이(허벅지 위만)
+            set_frame(act, f)
+            pv = eval_points(9)
+            ptop = max(p.z for p in pv)
+            up = [p for p in pv if p.z >= ptop - H * 0.62]
+            wdt = max(p.x for p in up) - min(p.x for p in up)
+            hgt = max(p.z for p in up) - min(p.z for p in up)
+            # 웅크리거나 눕거나(정수리가 키의 82% 아래) 뒤로 멀어진(머리 깊이 이동) 프레임은 뒤로 미룬다 — 41기 1차에서 조성진·고도현·박은석이 그랬다
+            stand = ptop >= H * 0.82
+            scored.append((wdt * hgt * (1.0 if stand else 0.25), f))
+        scored.sort(reverse=True)
+        picks = []
+        for sc, f in scored:                                       # 서로 클립 길이 25% 이상 떨어진 시점 3개
+            if all(abs(f - g) >= (f1 - f0) * 0.25 for _, g in picks):
+                picks.append((sc, f))
+            if len(picks) == 3:
+                break
+        for k, (sc, f) in enumerate(picks, 1):
+            set_frame(act, f)
+            fn = f"C_{NAME}_thigh_c{k}.png"
+            r = render_c(os.path.join(OUT, fn))
+            info["candidates"].append(dict(id=f"c{k}", file=fn, frame=round(f, 1), score=round(sc, 3), **r))
+        if arm.animation_data:
+            arm.animation_data.action = None
+    # 프리셋 포즈(믹사모만) — 클립이 밋밋할 때 사장님이 고를 수 있게
+    if arm is not None and arm.pose.bones.get("mixamorig:LeftArm"):
+        for pn in ("hips", "crossed", "point", "fist"):
+            reset_pose()
+            POSES[pn]()
+            fn = f"C_{NAME}_thigh_p_{pn}.png"
+            r = render_c(os.path.join(OUT, fn))
+            info["candidates"].append(dict(id="p_" + pn, file=fn, **r))
+    if not info["candidates"]:                                     # 클립도 프리셋도 없다(믹사모 아닌 스킨 + 클립 없음) → 쉬는 자세
+        reset_pose()
+        fn = f"C_{NAME}_thigh_rest.png"
+        r = render_c(os.path.join(OUT, fn))
+        info["candidates"].append(dict(id="rest", file=fn, **r))
+    pick = os.environ.get("C_PICK") or info["candidates"][0]["id"]  # 기본 = 가장 벌어진 공격 프레임(c1)
+    chosen = next((c for c in info["candidates"] if c["id"] == pick), info["candidates"][0])
+    info["chosen"] = chosen["id"]
+    import shutil
+    shutil.copyfile(os.path.join(OUT, chosen["file"]), os.path.join(OUT, f"C_{NAME}_thigh.png"))
+    json.dump(info, open(os.path.join(OUT, f"C_{NAME}_cands.json"), "w"), ensure_ascii=False, indent=1)
+    print("C", NAME, src, "후보", [c["id"] for c in info["candidates"]], "고름", info["chosen"])
