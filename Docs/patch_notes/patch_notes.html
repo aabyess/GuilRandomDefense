@@ -2,7 +2,7 @@
 <title>G.R.D 패치노트</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gowun+Dodum&family=Nanum+Myeongjo:wght@800&display=swap">
 <style>
-/* 누적 패치노트(0.3.11 이후). 새 버전은 맨 위 <section class="ver">를 복사해 추가 → render_patch_notes.sh */
+/* 누적 패치노트(0.3.11 이후). 새 버전은 맨 위 버전 섹션(.ver)를 복사해 추가 → render_patch_notes.sh */
 :root{
   --stone:#1b1d21; --stone2:#24272c; --edge:#3a3e45; --gold:#e3b54f; --gold2:#a87b22;
   --ink:#ece6d6; --muted:#a39c8b; --new:#5fbf7a; --chg:#5fa8d8; --fix:#e0805a;
@@ -40,11 +40,26 @@ footer{text-align:center;color:var(--muted);font-size:19px;line-height:1.7;paddi
 <header>
   <div class="logo">G.R.D</div>
   <div class="sub">패치노트</div>
-  <div class="range">0.3.11 이후 바뀐 것 · 베타 0.3.12 ~ 0.3.14</div>
+  <div class="range">0.3.11 이후 바뀐 것 · 베타 0.3.12 ~ 0.3.15</div>
   <div class="legend"><span><span class="pill new">추가</span></span><span><span class="pill chg">변경</span></span><span><span class="pill fix">수정</span></span></div>
 </header>
 
-<section class="ver latest"><h2><span class="v">0.3.14</span><span class="d">2026.10.07</span><span class="t">워크3 콘솔 UI</span></h2><ul>
+<section class="ver latest"><h2><span class="v">0.3.15</span><span class="d">2026.10.07</span><span class="t">광폭화 · 좆돼지 통합</span></h2><ul>
+<li><span class="pill new">추가</span><span>게임을 켜면 맨 처음 <b>닉네임 창</b> — 혼자 하기에서도 닉네임 입력</span></li>
+<li><span class="pill new">추가</span><span><b>광폭화</b> — 신세계(61R~) 이후 레인 왼쪽을 왕복하는 강화 몹, 잡으면 주변 적의 방어·회복 오라 해제</span></li>
+<li><span class="pill chg">변경</span><span>압살롬 → <b>조도연 좆돼지</b>, 좀비 → <b>이호준 볼보이</b> 통합 · 볼보이는 박진웅 평타 10%로만 소환(10초) · 볼보이×3 + 최상호 = 좆돼지</span></li>
+<li><span class="pill chg">변경</span><span>「조도연 좆돼지 도박」 500엔+목재1 · 50% · 8라운드부터 · 실패 시 행운의 토큰 1</span></li>
+<li><span class="pill new">추가</span><span><b>행운의 토큰 3개 사용</b> — 특별함 위습 80% / 희귀함 위습 20%(원작대로)</span></li>
+<li><span class="pill chg">변경</span><span>스킬 아이콘이 <b>명령 카드</b>로 · 「상태:」 줄에 버프·디버프 아이콘 · 초월·영원 힘·민첩·지능 표시</span></li>
+<li><span class="pill new">추가</span><span>조합 도우미 큰 화면에서 유닛을 누르면 <b>필요한 재료</b>·보유 수·채팅 조합어 표시</span></li>
+<li><span class="pill fix">수정</span><span>위습을 고르면 아치 초상에 위습 영혼 · 여러 개 고르면 위습 구슬 그림</span></li>
+<li><span class="pill chg">변경</span><span>보스가 스토리 건물만큼 커짐 · 바다 색 한 단계 밝게 · 적 이름 17종 변경 · 채팅 글씨 작게</span></li>
+<li><span class="pill chg">변경</span><span>난이도별 방어력 원작대로 · 보스 라운드 추가 위습 보상 삭제(원작대로)</span></li>
+<li><span class="pill fix">수정</span><span><b>퇴치 의뢰 7종</b> 미니보스가 안 나오던 것 고침 · 거프·와포루 조건·체력·방어 원작 값</span></li>
+<li><span class="pill fix">수정</span><span>같이 하기: 친구도 지점·대상 지정 스킬(배성령 순간이동·강재규 단일도킹) 사용 가능</span></li>
+</ul></section>
+
+<section class="ver"><h2><span class="v">0.3.14</span><span class="d">2026.10.07</span><span class="t">워크3 콘솔 UI</span></h2><ul>
 <li><span class="pill chg">변경</span><span>게임 화면을 <b>원작 원랜디(워크3) 콘솔</b>처럼 — 돌 틀 하단 바·아치 초상화·정보창·인벤토리·명령 카드·시계 구슬·점수판</span></li>
 <li><span class="pill chg">변경</span><span>명령 카드 원작 배치: 이동(M)·홀딩(H)·정지(S)·공격(A) / 반복(P)·스킬·판매 / 조합 가능 유닛 초상화</span></li>
 <li><span class="pill new">추가</span><span><b>반복(P)</b> — 두 지점을 오가며 싸움 · 판매는 희귀함까지만</span></li>
