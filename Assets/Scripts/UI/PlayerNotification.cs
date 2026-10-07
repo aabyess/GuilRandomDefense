@@ -104,9 +104,11 @@ public class PlayerNotificationHud : MonoBehaviour
     // 알림 자리(왼쪽 아래, 명령 콘솔 바로 위)로 옮겼다. 전엔 화면 가운데 위 1/4에서 아래로 쌓여 전장을 가렸다.
     // 왼쪽 정렬 · **새 줄이 맨 아래**, 옛 줄은 위로 밀린다(워크래프트와 같다). 바닥선은 하단 바 윗선인데, 미니맵 위
     // 위습 칸(GameHud.BuildWispSlots)이 떠 있으면 그 위로 올린다 — 칸은 위습이 있을 때만 켜지므로 매 프레임 본다.
+    // 사장님 10-07 「채팅도 너무 작다, 크기 키우고 UI도 개선」 — 글자 20→27(약 1.35배), 줄 높이 40, 줄 뒤 옅은 검정 띠(밝은 땅 위에서도 읽힘), 외곽선 4방향, 줄 간격 3,
+    // 끝나기 전 마지막 FadeSeconds 동안 흐려짐(원작 워크3처럼 최근 줄만 보이다 사라진다). 줄 수·남는 시간은 그대로.
     static readonly GUIStyle Style = new GUIStyle
     {
-        fontSize = 20,
+        fontSize = 27,
         alignment = TextAnchor.MiddleLeft,
         richText = true,   // 유닛 획득 알림이 등급색(<color>)을 쓴다(2026-09-26). 기존 알림엔 태그가 없어 그대로다.
         normal = { textColor = Color.white },
@@ -114,15 +116,18 @@ public class PlayerNotificationHud : MonoBehaviour
     static readonly GUIStyle ShadowStyle = new GUIStyle(Style) { normal = { textColor = new Color(0f, 0f, 0f, 0.85f) } };
     static readonly System.Text.RegularExpressions.Regex ColorTag = new System.Text.RegularExpressions.Regex("</?color[^>]*>");
 
-    const float BoxWidth = 760f;
-    const float BoxHeight = 30f;
-    const float Spacing = 2f;
+    const float BoxWidth = 1000f;
+    const float BoxHeight = 40f;
+    const float Spacing = 3f;
+    const float FadeSeconds = 1.2f;
+    const float BandAlpha = 0.40f;
+    const float BandPad = 12f;
     const float LeftMargin = 76f;   // 영웅 단추 열(x 4~70)과 안 겹치게 오른쪽으로 민다(원작도 영웅 아이콘 오른쪽에서 글이 시작)
     const float BottomGap = 8f;
     // 하단 바를 못 찾을 때의 예비값 — GameHud 하단 바가 화면 아래 22%다(GameChatBox와 같은 값).
     const float FallbackBottomHudFraction = 0.22f;
     // 채팅 상태줄(GameChatBox — 하단 바 바로 위 28px)을 비워 둔다.
-    const float ChatLineReserve = 32f;
+    const float ChatLineReserve = 52f;   // GameChatBox 입력줄(높이 42 + 여백)
 
     RectTransform bottomBar;
     RectTransform[] wispRows;   // 위습 칸 줄마다 첫 칸(WispSlot0·WispSlot9)
@@ -142,20 +147,35 @@ public class PlayerNotificationHud : MonoBehaviour
 
         if (list.Count == 0) return;
 
-        // 글자 크기는 1080 기준 20 — IMGUI는 CanvasScaler를 안 타서 작은 창에서 글자가 상대적으로 커진다.
+        // 글자 크기는 1080 기준 27 — IMGUI는 CanvasScaler를 안 타서 작은 창에서 글자가 상대적으로 커진다(1366×768에선 ×0.71 ≈ 19px, 줄 폭 710px).
         float scale = Mathf.Clamp(Screen.height / 1080f, 0.7f, 2f);
-        Style.fontSize = ShadowStyle.fontSize = Mathf.RoundToInt(20f * scale);
+        Style.fontSize = ShadowStyle.fontSize = Mathf.RoundToInt(27f * scale);
         float lineHeight = BoxHeight * scale;
+        float now2 = Time.unscaledTime;
+        Color oldColor = GUI.color;
 
         float y = BaselineY() - lineHeight;
         for (int i = list.Count - 1; i >= 0 && y > 0f; i--)
         {
+            float alpha = Mathf.Clamp01((list[i].expiresAt - now2) / FadeSeconds);
+            string plain = ColorTag.Replace(list[i].message, "");
+            float textWidth = Style.CalcSize(new GUIContent(plain)).x;
+            float width = Mathf.Min(BoxWidth * scale, textWidth + BandPad * 2f * scale + 6f);
             Rect rect = new Rect(LeftMargin * scale, y, BoxWidth * scale, lineHeight);
-            // 전장 위에 바로 쓰이므로 그림자를 깐다(색 태그를 뗀 검정 글자를 1px 어긋나게).
-            GUI.Label(new Rect(rect.x + 1.5f, rect.y + 1.5f, rect.width, rect.height), ColorTag.Replace(list[i].message, ""), ShadowStyle);
+            // 줄 뒤 반투명 검정 띠 — 글자 폭만큼(밝은 땅 위에서도 읽히게)
+            GUI.color = new Color(0f, 0f, 0f, BandAlpha * alpha);
+            GUI.DrawTexture(new Rect(rect.x - BandPad * scale, y, width, lineHeight), Texture2D.whiteTexture);
+            GUI.color = new Color(1f, 1f, 1f, alpha);
+            // 외곽선: 색 태그를 뗀 검정 글자를 4방향으로 어긋나게
+            float o = Mathf.Max(1.5f, 1.8f * scale);
+            GUI.Label(new Rect(rect.x + o, rect.y, rect.width, rect.height), plain, ShadowStyle);
+            GUI.Label(new Rect(rect.x - o, rect.y, rect.width, rect.height), plain, ShadowStyle);
+            GUI.Label(new Rect(rect.x, rect.y + o, rect.width, rect.height), plain, ShadowStyle);
+            GUI.Label(new Rect(rect.x, rect.y - o, rect.width, rect.height), plain, ShadowStyle);
             GUI.Label(rect, list[i].message, Style);
             y -= lineHeight + Spacing;
         }
+        GUI.color = oldColor;
     }
 
     /// <summary>알림 맨 아래 줄의 바닥(GUI 좌표, 위가 0). 하단 바 윗선 − 채팅줄, 위습 칸이 떠 있으면 그 윗선.</summary>

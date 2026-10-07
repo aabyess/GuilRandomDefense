@@ -15,8 +15,9 @@ public class GameChatBox : MonoBehaviour
     [SerializeField] HiddenCombineManager hiddenCombineManager;
 
     const float BottomHudHeightFraction = 0.27f;
-    const float BoxWidth = 320f;
-    const float BoxHeight = 28f;
+    // 사장님 10-07 「채팅도 너무 작다」 — 입력칸 폭 320→520·높이 28→42·글자 24, 옛 Stone 톤(검정 바탕 + 금테), 「[전체]」 표시, 위/아래 화살표 = 최근 입력.
+    const float BoxWidth = 520f;
+    const float BoxHeight = 42f;
     const float BottomGap = 8f;
     const float LeftMargin = 10f;
 
@@ -25,6 +26,9 @@ public class GameChatBox : MonoBehaviour
 
     bool isOpen;
     string inputText = "";
+    readonly System.Collections.Generic.List<string> history = new System.Collections.Generic.List<string>();   // 최근 입력(최신이 뒤) — 위/아래 화살표
+    int historyIndex = -1;
+    GUIStyle boxStyle, fieldStyle, labelStyle;
     string statusMessage = "";
     float statusHideTime;
 
@@ -43,6 +47,23 @@ public class GameChatBox : MonoBehaviour
             if (SubmitPressed())
             {
                 Submit();
+                return;
+            }
+
+            // 최근 입력 불러오기 — 위 = 더 예전, 아래 = 더 최근(맨 아래를 넘으면 빈 칸)
+            if (history.Count > 0)
+            {
+                if (Keyboard.current.upArrowKey.wasPressedThisFrame)
+                {
+                    historyIndex = historyIndex < 0 ? history.Count - 1 : Mathf.Max(0, historyIndex - 1);
+                    inputText = history[historyIndex];
+                }
+                else if (Keyboard.current.downArrowKey.wasPressedThisFrame && historyIndex >= 0)
+                {
+                    historyIndex++;
+                    if (historyIndex >= history.Count) { historyIndex = -1; inputText = ""; }
+                    else inputText = history[historyIndex];
+                }
             }
             return;
         }
@@ -60,6 +81,7 @@ public class GameChatBox : MonoBehaviour
     {
         isOpen = true;
         inputText = "";
+        historyIndex = -1;
         ChatInputGate.IsOpen = true;
     }
 
@@ -78,6 +100,11 @@ public class GameChatBox : MonoBehaviour
     {
         PlayerContext local = PlayerContext.Local;
         string text = inputText;
+        if (!string.IsNullOrWhiteSpace(text) && (history.Count == 0 || history[history.Count - 1] != text))
+        {
+            history.Add(text);
+            if (history.Count > 20) history.RemoveAt(0);
+        }
         Close();
 
         if (local == null || string.IsNullOrWhiteSpace(text)) return;
@@ -161,29 +188,66 @@ public class GameChatBox : MonoBehaviour
         statusHideTime = Time.unscaledTime + StatusDisplaySeconds;
     }
 
+    // IMGUI 스타일(한 번만 만든다): 어두운 바탕 + 금테 한 줄, 크림색 글자. 크기는 1080 기준이고 화면 높이에 비례한다(1366×768에선 ×0.71).
+    static Texture2D Solid(Color c) { var t = new Texture2D(1, 1, TextureFormat.RGBA32, false); t.SetPixel(0, 0, c); t.Apply(); return t; }
+
+    void EnsureStyles()
+    {
+        if (boxStyle != null) return;
+        boxStyle = new GUIStyle { normal = { background = Solid(new Color(0.02f, 0.02f, 0.03f, 0.88f)) } };
+        fieldStyle = new GUIStyle(GUI.skin.textField)
+        {
+            alignment = TextAnchor.MiddleLeft,
+            normal = { background = Solid(new Color(0.06f, 0.06f, 0.08f, 0.95f)), textColor = new Color(1f, 0.97f, 0.88f) },
+            focused = { background = Solid(new Color(0.06f, 0.06f, 0.08f, 0.95f)), textColor = Color.white },
+            hover = { background = Solid(new Color(0.06f, 0.06f, 0.08f, 0.95f)), textColor = Color.white },
+            padding = new RectOffset(10, 8, 4, 4),
+        };
+        labelStyle = new GUIStyle { alignment = TextAnchor.MiddleLeft, richText = true, normal = { textColor = new Color(1f, 0.84f, 0.25f) } };
+    }
+
+    static void DrawBorder(Rect r, Color c, float t)
+    {
+        Color old = GUI.color; GUI.color = c;
+        GUI.DrawTexture(new Rect(r.x, r.y, r.width, t), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(r.x, r.yMax - t, r.width, t), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(r.x, r.y, t, r.height), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(r.xMax - t, r.y, t, r.height), Texture2D.whiteTexture);
+        GUI.color = old;
+    }
+
     void OnGUI()
     {
+        float scale = Mathf.Clamp(Screen.height / 1080f, 0.7f, 2f);
         if (isOpen)
         {
+            EnsureStyles();
             Rect boxRect = ComputeRect();
-            GUILayout.BeginArea(boxRect);
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("코드:", GUILayout.Width(40));
+            GUI.Box(boxRect, GUIContent.none, boxStyle);
+            DrawBorder(boxRect, new Color(0.79f, 0.64f, 0.29f, 1f), Mathf.Max(1f, 2f * scale));
+            labelStyle.fontSize = fieldStyle.fontSize = Mathf.RoundToInt(24f * scale);
+            float labelW = 78f * scale;
+            GUI.Label(new Rect(boxRect.x + 10f * scale, boxRect.y, labelW, boxRect.height), "[전체]", labelStyle);
             GUI.SetNextControlName(TextFieldControlName);
-            inputText = GUILayout.TextField(inputText, GUILayout.Width(BoxWidth - 50f));
-            GUILayout.EndHorizontal();
-            GUILayout.EndArea();
-
+            inputText = GUI.TextField(new Rect(boxRect.x + labelW + 10f * scale, boxRect.y + 3f * scale, boxRect.width - labelW - 16f * scale, boxRect.height - 6f * scale), inputText, 200, fieldStyle);
             GUI.FocusControl(TextFieldControlName);
             return;
         }
 
         if (!string.IsNullOrEmpty(statusMessage) && Time.unscaledTime < statusHideTime)
         {
+            EnsureStyles();
             Rect boxRect = ComputeRect();
-            GUILayout.BeginArea(boxRect);
-            GUILayout.Label(statusMessage);
-            GUILayout.EndArea();
+            labelStyle.fontSize = Mathf.RoundToInt(24f * scale);
+            float alpha = Mathf.Clamp01((statusHideTime - Time.unscaledTime) / 1.2f);
+            Color old = GUI.color;
+            GUI.color = new Color(0f, 0f, 0f, 0.4f * alpha);
+            GUI.DrawTexture(new Rect(boxRect.x, boxRect.y, boxRect.width * 1.6f, boxRect.height), Texture2D.whiteTexture);
+            GUI.color = new Color(1f, 1f, 1f, alpha);
+            labelStyle.normal.textColor = new Color(1f, 0.97f, 0.88f);
+            GUI.Label(new Rect(boxRect.x + 10f * scale, boxRect.y, boxRect.width * 1.6f, boxRect.height), statusMessage, labelStyle);
+            GUI.color = old;
+            labelStyle.normal.textColor = new Color(1f, 0.84f, 0.25f);
         }
     }
 
@@ -191,8 +255,9 @@ public class GameChatBox : MonoBehaviour
 
     static Rect ComputeRect()
     {
+        float scale = Mathf.Clamp(Screen.height / 1080f, 0.7f, 2f);
         float bottomHudTop = Screen.height * (1f - BottomHudHeightFraction);
-        float y = bottomHudTop - BoxHeight - BottomGap;
-        return new Rect(LeftMargin, y, BoxWidth, BoxHeight);
+        float y = bottomHudTop - BoxHeight * scale - BottomGap;
+        return new Rect(LeftMargin * scale + 66f * scale, y, BoxWidth * scale, BoxHeight * scale);   // 영웅 단추 열(왼쪽 끝)과 안 겹치게 알림 줄과 같은 들여쓰기
     }
 }
