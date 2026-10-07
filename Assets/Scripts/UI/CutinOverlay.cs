@@ -21,8 +21,8 @@ using UnityEngine.UI;
 /// </summary>
 public class CutinOverlay : MonoBehaviour
 {
-    /// <summary>산출물을 반입하고 사진으로 확인한 뒤 켠다(꺼 두면 아무 일도 없다).</summary>
-    public static bool Enabled = false;
+    /// <summary>켬(사장님 승인 10-08 「획득 순간 2.6초 전체화면」). 산출물 폴더가 없는 유닛은 건너뛴다. 효과음 파일은 사장님이 고를 때까지 없어 무음.</summary>
+    public static bool Enabled = true;
 
     public const float TotalSeconds = 2.6f, InSeconds = 1.0f, HoldSeconds = 1.2f, OutSeconds = 0.4f;
     public const float WhooshAt = 0.25f, TingAt = 0.83f, ExitSoundAt = 2.20f;
