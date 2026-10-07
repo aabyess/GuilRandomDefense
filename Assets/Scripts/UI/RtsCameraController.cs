@@ -578,6 +578,10 @@ public class RtsCameraController : MonoBehaviour
     static float ZoomInput()
     {
         if (Mouse.current == null) return 0f;
+        // 10-08 사장님: 조합 검색·도우미 목록을 휠로 내리면 카메라 시점도 같이 움직였다. 서랍·도우미가 열려 있으면 위치와 무관하게 끄고,
+        //   그 밖에도 포인터가 UI(채팅 기록·인벤토리 등 스크롤되는 창 포함) 위면 줌을 먹지 않는다. 맵 위에서 쓰려면 서랍을 닫는다.
+        if (RecipeSearchDrawer.IsOpen || RecipeHelperPanel.IsOpen) return 0f;
+        if (UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) return 0f;
 
         float scroll = Mouse.current.scroll.ReadValue().y;
         if (Mathf.Abs(scroll) < 0.01f) return 0f;

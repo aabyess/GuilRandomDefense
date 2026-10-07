@@ -92,6 +92,8 @@ public class RecipeSearchDrawer : MonoBehaviour
     bool fontApplied;
 
     bool open;
+    /// <summary>F5 조합 검색 서랍이 펼쳐져 있나 — 카메라 휠 줌이 이 동안 꺼진다(10-08).</summary>
+    public static bool IsOpen { get; private set; }
     float slide;
     bool searchFocused;
     string query = "";
@@ -116,6 +118,7 @@ public class RecipeSearchDrawer : MonoBehaviour
 
     void OnDestroy()
     {
+        IsOpen = false;
         UnitThumbBaker.Baked -= OnThumbBaked;
         if (searchFocused) ChatInputGate.IsOpen = false;
     }
@@ -529,18 +532,29 @@ public class RecipeSearchDrawer : MonoBehaviour
     {
         if (open == value) return;
         open = value;
+        IsOpen = value;
         if (open)
         {
             panel.gameObject.SetActive(true);
             dirty = true;
+            focusNextFrame = true;   // 열면 검색칸에 바로 글자를 칠 수 있게(패널이 켜진 다음 프레임에 포커스)
         }
-        else if (searchFocused)
+        else
         {
-            input.DeactivateInputField();
-            ChatInputGate.IsOpen = false;
-            searchFocused = false;
+            if (searchFocused)
+            {
+                input.DeactivateInputField();
+                ChatInputGate.IsOpen = false;
+                searchFocused = false;
+            }
+            // 10-08 사장님: 닫았다 다시 열면 이전 검색어가 남아 있었다 — 닫을 때 입력칸·검색어를 비운다(결과는 열 때 다시 만든다).
+            // (도우미로 넘어갈 때도 닫지만 OpenHelper가 검색어를 먼저 들고 가고, 돌아오면 되돌려 준다.)
+            query = "";
+            if (input != null) input.SetTextWithoutNotify("");
+            dirty = true;
         }
     }
+    bool focusNextFrame;
 
     // 서랍 → 조합 도우미. 서랍은 접고(검색어는 그대로 둠), 도우미가 [작게 보기]로 돌아오면 다시 펼치고 검색어를 이어받는다.
     void OpenHelper()
