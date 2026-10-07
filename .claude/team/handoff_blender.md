@@ -3,7 +3,7 @@
 새 세션: 이 파일을 먼저 읽고 PM(`pm [ref]` — 이름이 둘이면 새 쪽)에게 「[blender → PM] 준비 완료」. 일이 끝나면 이 파일을 비우고 커밋.
 규칙: Assets엔 안 쓴다(반영은 PM·구현담당1/2). 산출은 ~/GRD_*/ + 정본 스크립트(Tools/blender/). 🔴 시스템 파이썬 PIL·numpy는 `/usr/bin/python3`(Blender 안엔 PIL 없음 → 렌더는 Blender, 후처리·합성은 별도 `post`/`compare` 모드). Blender 창(MCP)은 계속 꺼져 있어 전부 헤드리스(`blender -b --factory-startup`), Cycles GPU(Metal) 가능. 블리자드 그림 추출 금지(전부 새로 모델링).
 
-## 오늘(10-07) 납품 — 위치 · 정본
+## 오늘(10-07) 납품(마감: 새 일은 사장님 지시 대기, 진행 중인 일 없음) — 위치 · 정본
 | 무엇 | 위치 | 정본 스크립트 | 상태 |
 |---|---|---|---|
 | 섬 루프 v2(첫 화면 영상: 스킨 사람 22+서 있는 5+탁자 손님 4) | ~/GRD_title_loop_v2/frames/title_0001~0192.png · title_loop_preview.mp4 | gen_title_loop.py(맨 위 CROWD/TAVERN_GUESTS 표로 스킨 바꿈, `post` 모드) | PM이 웹엠으로 첫 화면에 넣음. 깃발·구름 미구현 |
@@ -12,6 +12,7 @@
 | 명령 카드 아이콘 6(이동·홀딩·정지·공격·반복·판매) | ~/GRD_wc3_ui/icons/cmd_*_{128,64}.png · icons_sheet.png | gen_wc3_cmd_icons.py + gen_wc3_cmd_icons_post.py | PM에 납품, 반영은 구현담당2/PM |
 | 적 출발점 포탈(지름 1, 돌판+회전용 문양) | ~/GRD_enemy_portal/ fbx·glb·텍스처 2 | gen_enemy_portal.py(`tex` 모드 → blender) | 구현담당1에게 전달(×56, 레인 4개) |
 | 바다 물(색 2048·노멀 2048·얕은 띠·spec.txt) | ~/GRD_water/ | gen_water_tex.py | 구현담당1 반영 대기. ⚠️ 색만으론 안 밝다 — sea.mat _Smoothness 0.92→0.35·_BaseColor (1,1,1)가 핵심(spec.txt) |
+| 버프·디버프 상태 아이콘 7종(공속·공격력·이속감소·마나·체력·팀공격력·기절, 64px+128px+시트) | ~/GRD_buff_icons/ | gen_buff_icons.py(PIL, `/usr/bin/python3`, Blender 불필요) | 구현담당2에 납품(10-07 늦게), 반입은 구현담당2 · 수정 요청 시 같은 파일명으로 다시 뽑기 |
 | 문 v3·폭탄 이펙트·종이비행기·설정 판·선술집 UI 한 벌·스킬 아이콘 170행 | (이전 판 핸드오프에서 이어짐) ~/GRD_tavern_door_v3 · GRD_bomb_fx · GRD_item_icons · GRD_settings_panel · GRD_tavern_ui · Tools/skill_icons/skill_icon_map.csv | gen_tavern_door_v3 · gen_bomb_fx · gen_icon_paperplane · gen_settings_panel · gen_tavern_ui | 전부 PM이 반영 |
 폐기(스크립트만 보존): gen_tavern_title.py(선술집 실내 첫 화면) · gen_tavern_door_v2.py · gen_title_props.py(클릭 소품).
 
@@ -28,3 +29,5 @@
 - 유닛 FBX 포즈: 뼈 Y축이 제각각이라 「관절→자식 관절 벡터」로 `aim()`(gen_title_loop.py·gen_tavern_title.py). 렌더 전에 후보 스킨을 줄 세워 눈으로 확인할 것(텍스처 빠진 하얀 몸·금빛 조개·거대 개구리 등이 섞여 있다).
 - 백그라운드 렌더는 `nohup … &` + Monitor(`pgrep -f 스크립트이름`) — `run_in_background`의 완료 알림은 런처 셸 종료일 뿐 렌더 끝이 아니다.
 - zsh: `echo "== …"` 터짐 · `git commit -- <파일>` · 새 파일은 `git add -- <파일>` 먼저. PM 이름이 둘이면 `pm [ref]`.
+
+- 🔴 시스템 파이썬 스크립트는 `/usr/bin/python3 스크립트`로(`-I`를 주면 사용자 site-packages의 numpy·PIL이 안 보여 import 실패).
