@@ -849,6 +849,7 @@ public class GameHud : MonoBehaviour
         unitDamageText = BuildStatRow(statRows, "icon_attack");
         unitArmorText = BuildStatRow(statRows, "icon_armor");
         unitStatusText = BuildStatRow(statRows, null);
+        unitStatusText.transform.parent.Find("Icon").gameObject.SetActive(false);   // 10-08 「상태:」 글자·버프 칸이 아이콘과 같은 왼쪽 선에서 시작(빈 아이콘 칸이 들여쓰던 것)
         BuildStatusBadges(unitStatusText);
         unitHeroStatText = BuildStatRow(statRows, null);   // 힘·민첩·지능(초월·영원만 — ShowSingleInfo가 켠다)
         unitHeroStatText.fontSize = 22;
@@ -3496,12 +3497,13 @@ public class GameHud : MonoBehaviour
         VerticalLayoutGroup column = statRows.GetComponent<VerticalLayoutGroup>();
         column.spacing = 4f;
         column.childAlignment = TextAnchor.UpperLeft;
-        // 줄 순서: 아머 → 공격 → 상태
-        unitArmorText.transform.parent.SetSiblingIndex(0);
-        unitDamageText.transform.parent.SetSiblingIndex(1);
+        // 줄 순서: 공격 → 방어 → 상태(워크3 원본 원랜디_인게임_01 「데미지 → 아머 → 상태」, 사장님 10-08)
+        unitDamageText.transform.parent.SetSiblingIndex(0);
+        unitArmorText.transform.parent.SetSiblingIndex(1);
         unitStatusText.transform.parent.SetSiblingIndex(2);
-        FrameStatIcon(unitArmorText.transform.parent, 40f, false);
-        FrameStatIcon(unitDamageText.transform.parent, 56f, true);
+        // 아이콘 크기·왼쪽 선을 같게(사장님 10-08 「방어·공격 간격이랑 아이콘 크기 맞춰」) — 옛엔 공격만 56px로 가운데 정렬이었다.
+        FrameStatIcon(unitDamageText.transform.parent, 44f, false);
+        FrameStatIcon(unitArmorText.transform.parent, 44f, false);
         // 칸 속 그림: 공격 = 교차 칼, 방어 = 방패(명령 칸 아이콘 재사용 — 정보창용 전용 그림은 아직 없다)
         SetStatIcon(unitDamageText.transform.parent, "cmd_attack");
         SetStatIcon(unitArmorText.transform.parent, "cmd_hold");

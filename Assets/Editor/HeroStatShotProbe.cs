@@ -227,4 +227,11 @@ public static class HeroStatShotProbe
             }
         return "❌";
     }
+
+    // 촬영 전용: ClaudeBridge/nowc3.flag 파일이 있으면 판 시작 때 워크3 콘솔 테마를 끈다(옛 C 금속 바 테마 촬영).
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    static void ShotThemeFlag()
+    {
+        if (System.IO.File.Exists("ClaudeBridge/nowc3.flag")) UiSkin.Wc3Active = false;
+    }
 }
