@@ -6,6 +6,13 @@
 
 ---
 
+## ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐ 10-07 낮 PM 3번째 — **이게 최신**
+- 팀: 구현담당1·구현담당2·blender(10-06 19:20 띄운 세션, 21시간+). **구현담당3은 사장님 「이제 안 쓴다」 — 세션 종료**, 그 몫(영원함·제한됨·흙길·순간이동·유재헌·다른세계 or 재료·리롤 규칙)은 1·2가 이어받음. handoff_구현담당3.md는 10-06 15:48판(낡음).
+- **0.3.13 배포(10-07 13:11, 윈도우+맥)**: 빌드 사본 release/0.3.13 = main a015792d5 · ~/Desktop/구랜디_베타/GuRandi_Beta_{Windows,Mac}_0.3.13v.zip(209/214항목·비ASCII 0·testzip OK·title_loop.webm) + 안내문 0.3.13 · GuRandi_최신_맥.app=0.3.13 · 0.3.12 zip 삭제. 맥 실측: 첫 화면 섬 루프 v2·게임 진입·예외 0.
+- 0.3.13 내용: 친구 피드백 1~9(조합식 4건은 사장님 「지금대로」 확정 — RECIPES.md 기록) · 강화 가격 원작식 873aff87e + 공격력 3칸 f078cc9f9 · 리롤 원작 규칙 dec77c50e · 체력바/마나 Filled 버그 98b8deea4 · 적 이름 ce14fc53e · 스토리 「01. 하이츠」 c3c2dbfad · 일시정지 938200efa · **상위 등급 공격력 원작 재이식 872e1ef70**(memory upper-grade-stats-were-rank-assigned) · 두유찬 공속 3.0·게이지 12 a38137b1d + 획득 금화 50,000(CombineRecipe.acquireGoldReward) · 임채민 청렴결백 7f5c0eddd(예배시간·박민수 로이킴=안흔함) · 박민수 획득 음성(Assets/Audio/Custom) · boss_death −7dB · 하단 바 **C 금속**(UiSkin, 하단만 — 상단·타이머·명령 칸 버튼은 옛 Stone, 사장님 「하단만 바꾸라 했다」) · 채팅 크게 82dab768b · 명령 카드 스킬 칸 아랫줄 왼쪽부터 62820a6c2 · 흔함 선택 줄 순서 6466a8bbd · 해적선 지급처 → 안흔함_상붕카 5999e326f · 원작 매칭 이름 베타 표시 a015792d5(GameVersion.BetaShowOriginalMatch, 표 ORIGINAL_MATCH_NAMES — 사장님 훑기 요청) · 조합 도우미 F5 [크게 보기] 4277860f2 · 섬 루프 v2(스킨 22+탁자 손님 4) 050ad2758 · 십자 벽 윗면 NavMesh 제거·순간이동 같은 덩어리만 0100bfaa9 · MP 아군 지정 RPC 1844fd745.
+- 미해결: 「우클릭 걷기로 십자 넘음」 재현 못 함(사장님 「패스」) · MP 회유 유닛 실전투 △ · 김강민 스킬(사장님 나중에) · 초월 컨셉 유닛 하위권(황준석·최상호·김민준 — TRANSCEND_DPS_AFTER_REINSTALL, 사장님 결정 대기) · 원작 매칭 이름 수동 손질분 확인.
+- 함정(오늘): ① 빌드 사본 비우기(git checkout -- . && clean) 전에 **남의 미커밋 확인** — 10-06 밤 PM이 구현담당1 MP 시험 코드를 날렸다 ② 바탕화면 녹화(screencapture)는 사장님 개인 창(카톡)이 찍힌다 — 게임 영상은 빌드 안 탐침(DevFrameTap·DevAudioTap, 스크래치 DevVoiceProbe.cs.bak)으로 ③ 팀원이 파일 단위 커밋으로 남의 hunk를 휩쓸었다(dec77c50e) — 공용 파일은 GIT_INDEX_FILE ④ 작업 중 컴파일 오류가 에디터를 막는다(TavernProbe·RecipeHelperPanel) — 저장 단위로 컴파일 0.
+
 ## ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐ 10-06 밤 PM 3번째(Opus 5.5) 진행 — **이게 최신**
 - 팀원은 19:20 그대로(구현담당1·2·3·blender). 옛 pm 탭과 이름이 겹쳤으니 ListAgents에 pm 둘이면 최신 ref로.
 - 끝·푸시(0.3.12 후보): 다음 스토리 타이머 55a3238a1 · 첫 화면 섬 루프 영상 38928aede(StreamingAssets/title_loop.webm VP8 6.7MB, NetLobbyUi.TitleLoopVideo — 맥 빌드 실측) · 상점 QWER b788e8f8b · 유닛회유 4639ac7fe + 적 몸 복제 fea3e53cb(MP 클라는 임시 모델) · 영원함 8종 전부(d5c763a5f~03e3a3525, 서민성 강화 시스템) · 흙길 「크게 ×1.6」 0d5a36765(사장님 선택, 장식 메시·NavMesh 무관) · FlyingMover 실측+순간이동 높이 수정 4f92cec5c(코드는 원래 1cf565cab에 있었다) · 스킬 아이콘 914행 blender 19cf7f4c0 + Link 502464697 · 유재헌 757bf35d9 · 다른세계 9식+「or」 재료 33c8852cb · 제한됨(막히지 않은 것)+F5 or 표시 f15778a4d.
