@@ -9,7 +9,8 @@ using UnityEngine;
 public class QuestMobLook : MonoBehaviour
 {
     public const float QuestMobScale = 1.5f;   // 일반 라인몹(~39) < 퀘스트 미니보스(~58) < 광폭화(~72) < 보스(목표 96)
-    const float TintAmount = 0.6f;
+    const float TintAmount = 0.85f;   // 10-08 0.6은 어두운 망토 텍스처에서 거의 안 보였다(사진 확인) — 틴트를 키우고 약한 발광을 더한다
+    const float EmissionStrength = 0.3f;
     const float DiscWorldRadius = 12f;
 
     // 의뢰 이름 → 색(순서가 곧 번호: NetEntity.QuestMobTint = 번호+1, 0 = 해당 없음). 7종 모두 붉은 계열(색상 0~0.08, 0.95~1)을 피한다.
@@ -44,6 +45,8 @@ public class QuestMobLook : MonoBehaviour
             foreach (Material m in r.materials)
                 foreach (string prop in new[] { "_BaseColor", "_Color" })
                     if (m.HasProperty(prop)) m.SetColor(prop, Color.Lerp(m.GetColor(prop), tint, TintAmount));
+            foreach (Material m in r.materials)
+                if (m.HasProperty("_EmissionColor")) { m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", tint * EmissionStrength); }
         }
         GameObject quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
         Destroy(quad.GetComponent<Collider>());
