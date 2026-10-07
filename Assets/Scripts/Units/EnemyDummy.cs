@@ -430,6 +430,9 @@ public class EnemyDummy : MonoBehaviour
     // 호출부 전부와 동작이 완전히 같다(회귀 0). R65/70/75 라운드 보스만 SideBossManager가
     // 저장해둔 사이드보스전 결과를 이 값으로 넘긴다(WaveSpawner.BossStartHpMultiplierProvider
     // 참고).
+    /// <summary>난이도 방어력 가산(원작 R00J·R00O, DifficultyTable.MobArmorBonus/BossArmorBonus) — 스폰한 쪽이 넣는다.</summary>
+    public float DifficultyArmorBonus { get; set; }
+
     public void Initialize(EnemyData enemyData, float startHpMultiplier = 1f)
     {
         data = enemyData;
@@ -734,7 +737,7 @@ public class EnemyDummy : MonoBehaviour
 
     /// <summary>방깎을 적용한 실효 방어력. 하한 없음(원작).</summary>
     public float EffectiveArmor => IsReplica ? replicaArmor :   // MP: 클라 겉모습은 호스트 실효값
-        (data != null ? data.armor : 0f) - armorShred - aid1Shred - AuraArmorShred + TableStackedArmorShred();
+        (data != null ? data.armor : 0f) + DifficultyArmorBonus - armorShred - aid1Shred - AuraArmorShred + TableStackedArmorShred();
 
     public ArmorType ArmorType => data != null ? data.armorType : ArmorType.Normal;
 

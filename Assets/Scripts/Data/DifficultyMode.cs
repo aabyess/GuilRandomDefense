@@ -176,4 +176,21 @@ public static class DifficultyTable
     // 일반 라운드 몹 이동속도 배율(R024, 2단계 B) — 라운드와 무관하게 모드 하나로만
     // 정해진다(R39 예외 없음 — HP의 R00A 면제와는 별개 축).
     public static float MoveSpeedMultiplier(DifficultyMode mode) => Get(mode).moveSpeedMultiplier;
+
+    // ── 난이도 방어력(2026-10-07 사장님 「방어력 난이도 보정도 원작대로」) — 전부 rarm(고정 방어력 가산) ──
+    //    R00J 「난이도별 방어력 증가」(일반 라운드 몹 upgr, R39 제외): 지옥 L7·신 L10·악몽 L11, 나머지 연구 안 함.
+    //    R00O 「보스 방어력 증가」(라운드보스·사이드보스·해왕류 upgr): 쉬움 L3·보통 L3·어려움 L2·지옥 L1·신 L1·악몽 없음.
+    //    w3q(Tools/w3x/원본/풀린것/war3map.w3q): 둘 다 gba1(기본)=0.1 · gmo1(레벨당) 필드 없음 = 스톡 Robs 값 상속.
+    //    워크3 업그레이드 값 = 기본 + 레벨당 × (레벨−1)(R00A gba1 0.1·gmo1 0.1·신 L14 = +140%로 검산). 스톡 Robs는
+    //    1레벨짜리라 레벨당을 0으로 본다 → 레벨과 상관없이 +0.1. ⚠️ 스톡 레벨당 값은 맵 밖(엔진 표)이라 [미확인] —
+    //    만약 0.1이면 RarmPerLevel만 0.1로 바꾸면 된다(신 몹 +1.0·악몽 +1.1·쉬움 보스 +0.3).
+    const float RarmBase = 0.1f;
+    const float RarmPerLevel = 0f;
+    static readonly int[] MobArmorLevel = { 0, 0, 0, 7, 10, 11 };   // R00J — Easy, Normal, Hard, Hell, God, Nightmare
+    static readonly int[] BossArmorLevel = { 3, 3, 2, 1, 1, 0 };   // R00O
+    static float Rarm(int level) => level <= 0 ? 0f : RarmBase + RarmPerLevel * (level - 1);
+    /// <summary>일반 라운드 몹 난이도 방어력 가산(R00J). R39는 upgr에 R024뿐이라 0.</summary>
+    public static float MobArmorBonus(DifficultyMode mode, int round) => round == 39 ? 0f : Rarm(MobArmorLevel[(int)mode]);
+    /// <summary>보스·사이드보스·해왕류 난이도 방어력 가산(R00O).</summary>
+    public static float BossArmorBonus(DifficultyMode mode) => Rarm(BossArmorLevel[(int)mode]);
 }

@@ -153,6 +153,10 @@ public class WaveSpawner : MonoBehaviour
         {
             dummy.Initialize(enemyData, startHpMultiplier);
             dummy.SetLane(laneIndex);
+            if (DifficultyManager.Instance != null && DifficultyManager.Instance.IsModeSelected)
+                dummy.DifficultyArmorBonus = enemyData.isBoss
+                    ? DifficultyTable.BossArmorBonus(DifficultyManager.Instance.Current)
+                    : DifficultyTable.MobArmorBonus(DifficultyManager.Instance.Current, dummy.SpawnRound);
 
             // ⚠️ 2026-09-06 추가(항법 "패왕의길"/히든 이벤트, NAVIGATION_ROUTES_FULL.md,
             // 리서치담당 c3b8c42 정정) — 원작 Trig_Round_10ver_Actions: 일반 라운드 몹만
