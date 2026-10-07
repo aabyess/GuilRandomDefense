@@ -144,6 +144,7 @@ public class NetLauncher : MonoBehaviour
     readonly System.Collections.Generic.List<float> dumpDelays = new System.Collections.Generic.List<float>();
     float testWispsDelay = -1f;
     float testMoveUnitsDelay = -1f;
+    float testBerserkDelay = -1f;   // 10-07 광폭화 실측(NetBerserkTest)
     float testMainDelay = -1f;   // 10-06 0.3.12 후보 멀티 점검(NetMainTest)
     string testMainShot;
     float testCommandsDelay = -1f;
@@ -275,6 +276,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpDump": dumpDelays.Add(Seconds(i + 1)); break;
                 case "-mpTestWisps": testWispsDelay = Seconds(i + 1); break;
                 case "-mpTestMoveUnits": testMoveUnitsDelay = Seconds(i + 1); break;
+                case "-mpTestBerserk": testBerserkDelay = Seconds(i + 1); break;
                 case "-mpTestMain": testMainDelay = Seconds(i + 1); testMainShot = Arg(i + 2); break;
                 case "-mpTestCommands": testCommandsDelay = Seconds(i + 1); break;
                 case "-mpTestEconomy": testEconomyDelay = Seconds(i + 1); break;
@@ -788,6 +790,7 @@ public class NetLauncher : MonoBehaviour
         if (testMoveUnitsDelay >= 0f) StartCoroutine(TestMoveAfter(testMoveUnitsDelay, NetEntityKind.Unit));
         if (testCommandsDelay >= 0f) StartCoroutine(TestCommandsAfter(testCommandsDelay));
         if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
+        if (testBerserkDelay >= 0f) { var bt = gameObject.AddComponent<NetBerserkTest>(); bt.startAt = testBerserkDelay; }
         if (testMainDelay >= 0f) { var mt = gameObject.AddComponent<NetMainTest>(); mt.startAt = testMainDelay; mt.shotPrefix = testMainShot; }
         if (testFinishRunDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestFinishRunAfter(testFinishRunDelay));
         LogSeatAtGameScene();
