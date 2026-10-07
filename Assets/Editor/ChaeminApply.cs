@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// 초월 임채민 「청렴결백」(초월_임채민_AP) 적용(사장님 10-07 확정, PM 전달) — 원작 검은수염 이식 스킬을 빼고 사장님 스킬 4개로 교체. 호출: call ChaeminApply.Apply (다시 불러도 안전).
-///  · 예베시간 = 공속 8%: 반경 850 주변 아군(자기 포함) 공격속도 +8% 오라
+///  · 예배시간 = 공속 8%: 반경 850 주변 아군(자기 포함) 공격속도 +8% 오라
 ///  · 지상낙원 = 발동(마젠4, 범위증폭10%) 3초: 평타 25% 확률로 반경 935(=850×1.1) 안 아군(자기 포함) 마나 재생 +4/초 3초
 ///  · 축복의땅 = 발동(지정, 체젠4, 디버프해제99%) 3초: [지정] 칸으로 아군 1기 클릭 지정(다시 고르면 바뀜) + 평타 25% 확률로 그 유닛 체력 재생 +4/초 · 아군발 디버프 해제(99%) 3초
 ///  · 천벌 = 마나스킬(스턴3초, 전체체력1%): 마나 120 → 반경 500 적 전부 스턴 3초 + 최대 체력 1%(방어 무시). 특성강화 3pt → 1% 대신 고정 3,000,000(방어 무시)
@@ -42,8 +42,8 @@ static class ChaeminApply
         var trait = AssetDatabase.LoadAssetAtPath<UnitTraitData>(TraitPath);
         if (unit == null || recipe == null) return "❌ 초월_임채민_AP 유닛·조합식 에셋 없음";
 
-        SkillData worship = MakeSkill("예베시간", "예베시간 — 공속 8%(주변 아군 오라)",
-            "사장님 10-07 「공속8%」(확정: 주변 아군 오라). 반경 850 안 아군과 자기의 공격속도 +8%. 이름은 원문 그대로 「예베시간」(예배시간 오타일 수 있음).",
+        SkillData worship = MakeSkill("예배시간", "예배시간 — 공속 8%(주변 아군 오라)",
+            "사장님 10-07 「공속8%」(확정: 주변 아군 오라). 반경 850 안 아군과 자기의 공격속도 +8%.",
             SkillTriggerType.Aura, 850f, 1f, 0, SkillGaugeKind.Mana,
             One(new SkillEffect { kind = SkillEffectKind.AttackSpeedBuffPercent, target = SkillTargetKind.Allies, multiplier = 0.08f, buffId = "CHAEMIN_AS" },
                 new SkillEffect { kind = SkillEffectKind.AttackSpeedBuffPercent, target = SkillTargetKind.Self, multiplier = 0.08f, buffId = "CHAEMIN_AS" }));
@@ -93,6 +93,7 @@ static class ChaeminApply
             unit.trait = trait;
         }
         EditorUtility.SetDirty(unit);
+        ImmortalKit.ReplaceIngredient(recipe, "전설적인_박민수", AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/안흔함_박민수.asset"));   // 「박민수 로이킴」 = 칭호 로이킴 = 안흔함_박민수(PM 10-07)
         recipe.chatPhrase = "흔들리지않는신앙심";
         EditorUtility.SetDirty(recipe);
         AssetDatabase.SaveAssets();

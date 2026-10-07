@@ -7,7 +7,7 @@ using UnityEngine;
 
 /// <summary>
 /// 임채민 청렴결백 실측(10-07) — gameshot call:ChaeminProbe.Setup wait:40 call:ChaeminProbe.Report.
-/// 임채민 + 아군 둘(고도현=마나 게이지, 양재모) + 신 보스(R60 정윤식 ×8.25). 아군 하나를 축복의땅으로 지정한 뒤 40초: 예베시간 공속 배율 · 지상낙원 마젠 가동률 ·
+/// 임채민 + 아군 둘(고도현=마나 게이지, 양재모) + 신 보스(R60 정윤식 ×8.25). 아군 하나를 축복의땅으로 지정한 뒤 40초: 예배시간 공속 배율 · 지상낙원 마젠 가동률 ·
 /// 축복의땅 체젠 가동률(지정 아군) · 천벌 발동 횟수와 보스 스턴·체력 감소.
 /// </summary>
 static class ChaeminProbe
@@ -57,7 +57,7 @@ static class ChaeminProbe
     {
         EditorApplication.update -= Sample;
         var sb = new StringBuilder($"\n게임 시간 {Time.time - t0:0.0}초 · 표본 {dt:0.0}초");
-        sb.Append($"\n   예베시간: 고도현 공속 배율 {Total(allyA, SkillEffectKind.AttackSpeedBuffPercent, true):0.000} · 양재모 {Total(allyB, SkillEffectKind.AttackSpeedBuffPercent, true):0.000} · 임채민 자신 {Total(chaemin, SkillEffectKind.AttackSpeedBuffPercent, true):0.000}");
+        sb.Append($"\n   예배시간: 고도현 공속 배율 {Total(allyA, SkillEffectKind.AttackSpeedBuffPercent, true):0.000} · 양재모 {Total(allyB, SkillEffectKind.AttackSpeedBuffPercent, true):0.000} · 임채민 자신 {Total(chaemin, SkillEffectKind.AttackSpeedBuffPercent, true):0.000}");
         sb.Append($"\n   지상낙원(마젠4 3초): 고도현 가동률 {manaOn / Mathf.Max(0.1f, dt):P0} · 지금 양재모 마젠 {Total(allyB, SkillEffectKind.ManaRegenBuff, false)} · 임채민 자신 {Total(chaemin, SkillEffectKind.ManaRegenBuff, false)}");
         sb.Append($"\n   축복의땅(지정=고도현): 체젠 가동률 {lifeOn / Mathf.Max(0.1f, dt):P0} · 디버프해제 가동률 {dispelOn / Mathf.Max(0.1f, dt):P0} · 지정 안 한 양재모 체젠 {Total(allyB, SkillEffectKind.LifeRegenBuff, false)}");
         var casts = SkillTelemetry.CastLog.Where(c => c.unit == chaemin.GetComponent<UnitIdentity>().Data).ToList();
