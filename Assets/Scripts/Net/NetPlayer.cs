@@ -48,6 +48,7 @@ public class NetPlayer : NetworkBehaviour
     [Networked, Capacity(16)] public NetworkArray<float> GambleNextSeconds => default;
     [Networked, Capacity(16)] public NetworkArray<int> GamblePayout => default;
     [Networked] public NetworkBool GambleGraduated { get; set; }
+    [Networked] public float GambleSwapLock { get; set; }   // 졸업 직후 목재 구입 잠금 남은 초(호스트 기준) — 클라 칸이 같이 잠긴다
     // 도움소 스킬별 쿨다운·재고 충전 남은 초 + 탐색(보물찾기) 남은 쿨타임 — 클라 상점 칸 덮개·글자용(10-04). 도박소와 같이 호스트가 쓰고 클라가 자기 시계로 되짚는다.
     // 스킬 칸 수(12)에 맞춰 최소. 재고 −1 = 재고 없는 스킬.
     [Networked, Capacity(SupportShop.MaxReplicatedSkills)] public NetworkArray<float> SupportCooldown => default;
@@ -197,6 +198,8 @@ public class NetPlayer : NetworkBehaviour
             }
             GambleUnlockedMask = mask;
             GambleGraduated = context.GamblingProgress.Graduated;
+            float lockNow = context.GamblingProgress.SwapLockRemaining;
+            if (!Mathf.Approximately(GambleSwapLock, lockNow)) GambleSwapLock = lockNow;
         }
 
         // 도움소·탐색 쿨다운(호스트가 씀). 값이 바뀐 칸만 쓴다(네트워크 쓰기 최소) — 카운트다운 중엔 틱마다 바뀐다.
@@ -277,6 +280,7 @@ public class NetPlayer : NetworkBehaviour
         // 졸업은 한 번 — Graduate()를 불러야 도박소가 돈 칸 캐시를 바꾼다(구현담당1 안내).
         if (GambleGraduated && context.GamblingProgress != null && !context.GamblingProgress.Graduated)
             context.GamblingProgress.Graduate();
+        if (!HasStateAuthority && context.GamblingProgress != null) context.GamblingProgress.ApplyReplicatedSwapLock(GambleSwapLock);   // 클라: 졸업을 늦게 봐도 잠금은 호스트 남은 초를 따른다
         // 클라: 호스트가 복제한 보유 아이템을 내 아이템 칸에 옮겨 적는다(예전엔 친구 화면 아이템 칸이 항상 비어 있었다).
         if (!HasStateAuthority && catalog != null && context.ItemInventory != null)
         {

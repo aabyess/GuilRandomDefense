@@ -152,6 +152,9 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
         // 충전식은 재고 0일 때만 칸을 덮는다(PM 권장 — 재고 1 이상이면 칸은 밝게). 남은 시간은 「다음 1개까지」.
         float cdRemaining = 0f, cdTotal = 0f;
         GamblingProgress stockProgress = OwnerContext?.GamblingProgress;
+        if (SwapLocked(opt))   // 500엔 도박 졸업 직후 잠금 — 회색 + 남은 초 + 시계방향 덮개(재고 칸과 같은 표시)
+            return new LaneShopSlotView(cache.label + $"\n잠금 {Mathf.CeilToInt(stockProgress.SwapLockRemaining)}초", new Color(0.4f, 0.4f, 0.4f), false, LaneShopTargetKind.None,
+                                        0f, '\0', stockProgress.SwapLockRemaining, GamblingProgress.GambleSwapLockSeconds);
         if (opt != null && opt.stockMax > 0 && opt.stockRegenSeconds > 0f && stockProgress != null
             && (!opt.requiresUnlock || stockProgress.IsUnlocked(opt)) && stockProgress.Stock(opt) <= 0)
         {
@@ -396,6 +399,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
     string MoneyUnavailableReason(GamblingOptionData option)
     {
         GamblingProgress progress = OwnerContext?.GamblingProgress;
+        if (SwapLocked(option)) return $"500엔 도박을 마친 직후라 {Mathf.CeilToInt(progress.SwapLockRemaining)}초 뒤에 쓸 수 있습니다";
         string stock = StockReason(option, progress);
         if (stock != null) return stock;
 
@@ -463,9 +467,18 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
         }
     }
 
+    // 500엔 도박 졸업 직후 3초 — 그때 생기는 목재 구입(졸업해야 나타나고 목재를 주는 돈 옵션)만 잠근다(GamblingProgress.GambleSwapLockSeconds).
+    bool SwapLocked(GamblingOptionData option)
+    {
+        GamblingProgress progress = OwnerContext?.GamblingProgress;
+        return option != null && progress != null && option.category == GamblingCategory.Money && option.requiresGraduation
+               && option.payoutResourceAmount > 0 && progress.SwapLockRemaining > 0f;
+    }
+
     public bool CanRoll(GamblingOptionData option)
     {
         if (option == null) return false;
+        if (SwapLocked(option)) return false;
         GamblingProgress stockProgress = OwnerContext?.GamblingProgress;
         if (option.stockMax > 0 && (stockProgress == null || stockProgress.Stock(option) <= 0)) return false;
         if (!StoryRequirementMet(option)) return false;

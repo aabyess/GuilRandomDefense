@@ -115,8 +115,17 @@ public class GamblingProgress : MonoBehaviour
     {
         if (Graduated) return;
         Graduated = true;
+        swapLockEndsAt = Time.time + GambleSwapLockSeconds;
         OnGraduated?.Invoke();
     }
+
+    // 사장님 10-08(정정: 500엔 도박): 500엔 도박을 다 하면(누적 35,000 졸업) 그 자리에 목재 구입 칸이 생기는데, 연타하다 목재 구입까지 눌려 버렸다 —
+    // 졸업 순간부터 이 시간 동안 그 칸(졸업해야 나타나는 목재 구입)을 잠근다. 클릭·단축키 모두 GamblingShop.CanRoll/TryRoll이 막는다.
+    public const float GambleSwapLockSeconds = 3f;
+    float swapLockEndsAt = -1f;
+    public float SwapLockRemaining => Mathf.Max(0f, swapLockEndsAt - Time.time);
+    /// <summary>MP: 클라는 호스트가 복제한 「남은 초」로 자기 시계를 맞춘다(호스트와 Time.time이 다르다). 판정은 호스트에서만.</summary>
+    public void ApplyReplicatedSwapLock(float remaining) => swapLockEndsAt = remaining > 0f ? Time.time + remaining : -1f;
 
     /// <summary>MP: 멀티 클라가 호스트의 값을 받아 적는다(NetPlayer) — 도박소 칸의 해금·남은 횟수·재고·충전 시계·
     /// 누적 지급·졸업 표시용 복제. 재고 충전 시계는 호스트와 클라의 Time.time이 달라서 「다음 충전까지 남은 초」로 받아
