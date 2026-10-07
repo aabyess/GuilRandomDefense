@@ -43,7 +43,7 @@ def mixc(t, fac, a, b):
         else: lk(t, v, m.inputs[i])
     return m.outputs[2]
 
-def stone_mat(name='돌', base=(.13, .125, .125), seed=0, moss=.5, rust=.0, light=1.0, rust_low=0.0):
+def stone_mat(name='돌', base=(.13, .125, .125), seed=0, moss=.5, rust=.0, light=1.0, rust_low=0.0, crack_amt=1.0):
     """워크3 콘솔 돌(규격표 #6C6E72~#3A3B3F 회갈색): 큰 얼룩 + 고운 알갱이 + 드문 금 + 모서리 닳아 밝게
     + AO로 오목한 곳 어둡게·이끼(초록) + (선택) 붉은 녹/핏빛 얼룩. base는 선형값."""
     m, t, b = newmat(name)
@@ -56,7 +56,7 @@ def stone_mat(name='돌', base=(.13, .125, .125), seed=0, moss=.5, rust=.0, ligh
     tone = MA(t, 'ADD', MA(t, 'MULTIPLY', n1.outputs['Fac'], .65), MA(t, 'MULTIPLY', n2.outputs['Fac'], .35))
     warm = tuple(c * f for c, f in zip(base, (1.06, 1.0, .93)))
     col = ramp(t, tone, [(.28, tuple(c * .42 for c in base) + (1,)), (.52, base + (1,)), (.74, tuple(min(1, c * 1.55 * light) for c in warm) + (1,))])
-    col = mixc(t, MA(t, 'MULTIPLY', crack, .45), col, (.012, .011, .011, 1))
+    col = mixc(t, MA(t, 'MULTIPLY', crack, .45 * crack_amt), col, (.012, .011, .011, 1))
     bv = nd(t, 'ShaderNodeBevel'); bv.inputs['Radius'].default_value = .012; geo = nd(t, 'ShaderNodeNewGeometry')
     dt = nd(t, 'ShaderNodeVectorMath', operation='DOT_PRODUCT'); lk(t, bv.outputs[0], dt.inputs[0]); lk(t, geo.outputs['Normal'], dt.inputs[1])
     edge = MA(t, 'MULTIPLY', MA(t, 'SUBTRACT', 1, dt.outputs['Value'], clamp=True), 9, clamp=True)
@@ -88,6 +88,12 @@ def stone_mat(name='돌', base=(.13, .125, .125), seed=0, moss=.5, rust=.0, ligh
 def simple(name, col, rough=.6, metallic=0.0, emit=None, st=0.0):
     m, t, b = newmat(name); b.inputs['Base Color'].default_value = (*col, 1); b.inputs['Roughness'].default_value = rough; b.inputs['Metallic'].default_value = metallic
     if emit: b.inputs['Emission Color'].default_value = (*emit, 1); b.inputs['Emission Strength'].default_value = st
+    return m
+
+def matte_black(name='순흑', v=.0):
+    m, t, b = newmat(name); b.inputs['Base Color'].default_value = (v, v, v, 1); b.inputs['Roughness'].default_value = 1.0
+    try: b.inputs['Specular IOR Level'].default_value = 0.0
+    except Exception: pass
     return m
 
 def glow(name, col, st):

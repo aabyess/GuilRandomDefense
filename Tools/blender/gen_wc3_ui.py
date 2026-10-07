@@ -28,8 +28,24 @@ if len(sys.argv) > 1 and sys.argv[1] == 'compare':                       # -----
     
     pf = L('panel_frame_stone')
     d = ImageDraw.Draw(ours)
+    has_ip = os.path.exists(f'{D}/info_panel_frame.png'); has_cmd = os.path.exists(f'{D}/command_grid_frame.png')
     for (x0, y0, x1, y1) in ((16, 809, 368, 1066), (750, 809, 1215, 1080), (1468, 815, 1915, 1075)):
-        d.rectangle((x0 + 12, y0 + 12, x1 - 12, y1 - 12), fill=(0, 0, 0, 255)); ours.alpha_composite(s9(pf, x1 - x0, y1 - y0, 32), (x0, y0))
+        d.rectangle((x0 + 12, y0 + 12, x1 - 12, y1 - 12), fill=(0, 0, 0, 255))
+        if x0 == 750 and has_ip:
+            ip = L('info_panel_frame'); ours.alpha_composite(s9(ip, x1 - x0, y1 - y0, 40) if ip.size[0] != ip.size[1] and False else ip.resize((x1 - x0, y1 - y0), Image.LANCZOS), (x0, y0))
+        elif x0 == 1468 and has_cmd:
+            cw, ch = 111, 86
+            for j in range(3):
+                for i in range(4):
+                    nm = 'command_cell_hover' if (i, j) == (1, 0) else ('command_cell_pressed' if (i, j) == (2, 1) else 'command_cell')
+                    ours.alpha_composite(L(nm).resize((cw, ch), Image.LANCZOS), (x0 + 1 + i * cw, y0 + 1 + j * ch))
+            ours.alpha_composite(L('command_grid_frame').resize((x1 - x0, y1 - y0), Image.LANCZOS), (x0, y0))
+        else: ours.alpha_composite(s9(pf, x1 - x0, y1 - y0, 32), (x0, y0))
+    if os.path.exists(f'{D}/inventory_cell.png'):
+        ours.alpha_composite(L('inventory_title').resize((180, 30), Image.LANCZOS), (1238, 836))
+        for j in range(3):
+            for i in range(2):
+                ours.alpha_composite(L('inventory_cell' if (i + j) % 3 else 'inventory_cell_filled').resize((86, 86), Image.LANCZOS), (1238 + i * 94, 874 + j * 62 if False else 874 + j * 61))
     if os.path.exists(f'{D}/portrait_arch_frame.png'):
         mk = L('portrait_arch_mask').resize((265, 222), Image.LANCZOS); blk = Image.new('RGBA', (265, 222), (0, 0, 0, 255)); blk.putalpha(mk.split()[0])
         ours.alpha_composite(blk, (440, 858)); ours.alpha_composite(L('portrait_arch_frame').resize((265, 222), Image.LANCZOS), (440, 858))
@@ -289,15 +305,103 @@ def part_arch():
 
 # ------------------------------------------------------------------ 6. info_title_strip 4.4×0.30 · info_level_strip 4.4×0.18 · 7. icon_slot_gold 0.48
 def part_info():
-    sc = frame_scene(); blk = simple('검정', (.004, .004, .005), .6)
+    sc = frame_scene(); blk = matte_black('검정')
     gold_frame(sc, 4.4, .30, .14, line=.016, inset=.045, fill=blk)
     ortho_cam(sc, 0, 0, 4.4, int(4.4 * PPM), int(.30 * PPM)); render(sc, f'{OUT}/info_title_strip.png')
-    sc = frame_scene(); blk = simple('검정', (.004, .004, .005), .6)
+    sc = frame_scene(); blk = matte_black('검정')
     gold_frame(sc, 4.4, .18, .08, line=.011, inset=.03, inner_line=.006, fill=blk)
     ortho_cam(sc, 0, 0, 4.4, int(4.4 * PPM), int(.18 * PPM)); render(sc, f'{OUT}/info_level_strip.png')
-    sc = frame_scene(); blk = simple('검정', (.006, .006, .008), .6)
+    sc = frame_scene(); blk = matte_black('검정', .003)
     gold_frame(sc, .48, .48, .05, line=.018, inset=.06, fill=blk)
     ortho_cam(sc, 0, 0, .48, int(.48 * PPM), int(.48 * PPM)); render(sc, f'{OUT}/icon_slot_gold.png')
 
+# ------------------------------------------------------------------ 6b. info_panel_frame 4.65×2.71 — 위 두 모서리 둥근 돌 몰딩 + 안쪽 금선, 가운데 투명
+def top_round_path(w, h, r, n=14):
+    pts = [(w / 2, -h / 2)]
+    for cx, a0 in ((w / 2 - r, 0), (-w / 2 + r, 90)):
+        for k in range(n + 1):
+            a = math.radians(a0 + 90 * k / n); pts.append((cx + r * math.cos(a), h / 2 - r + r * math.sin(a)))
+    pts.append((-w / 2, -h / 2)); return pts
+def ring_mesh(sc, name, outer, inner, mat, th=.12, y=0.0):
+    """같은 점 개수의 바깥·안쪽 닫힌 경로 사이를 띠 면으로 잇고 두께를 준다(가운데 구멍)."""
+    bm = bmesh.new(); vo = [bm.verts.new((x, y, z)) for x, z in outer]; vi = [bm.verts.new((x, y, z)) for x, z in inner]; n = len(vo)
+    for i in range(n): bm.faces.new((vo[i], vo[(i + 1) % n], vi[(i + 1) % n], vi[i]))
+    me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free(); ob = link(bpy.data.objects.new(name, me), sc); me.materials.append(mat)
+    so = ob.modifiers.new('so', 'SOLIDIFY'); so.thickness = th; so.offset = 1.0
+    bv = ob.modifiers.new('bv', 'BEVEL'); bv.width = min(.05, th * .4); bv.segments = 4; bv.limit_method = 'ANGLE'
+    return ob
+def part_info_panel():
+    sc = frame_scene(); g, gd = GOLD
+    W, H, R, B = 4.65, 2.71, .28, .20                                       # B = 돌 테 폭(9-slice 여백 40@2x)
+    st = stone_mat('정보틀돌', base=tuple(c * 1.25 for c in STONE_TONES[0]), seed=95, moss=.2, light=1.2, crack_amt=.25)
+    def closed(w, h, r):
+        p_ = top_round_path(w, h, r); return p_
+    out = closed(W, H, R); inn = closed(W - 2 * B, H - 2 * B, max(.06, R - B * .8))
+    ring_mesh(sc, 'frame', out, inn, st, th=.12, y=-.06)
+    tube(sc, 'gline', closed(W - 2 * B - .04, H - 2 * B - .04, max(.05, R - B * .8 - .02)), .011, g, y=-.065, closed=True)
+    ortho_cam(sc, 0, 0, W, int(W * PPM), int(H * PPM)); render(sc, f'{OUT}/info_panel_frame.png')
+
+# ================================================================== ③ 인벤토리·명령 카드
+def srgb(h):  # '#14284A' → 선형
+    h = h.lstrip('#'); c = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+    return tuple(((v + .055) / 1.055) ** 2.4 if v > .04045 else v / 12.92 for v in c)
+def part_inventory():
+    # 9. 제목 띠(금테 짙은 판) 1.8×0.30
+    sc = frame_scene(); dark = metal_mat('짙은판', col=srgb('#2A1E0E'), rough=.6, wear=.4, dark=(.01, .008, .005))
+    gold_frame(sc, 1.8, .30, .05, line=.016, inset=.045, fill=dark)
+    ortho_cam(sc, 0, 0, 1.8, int(1.8 * PPM), int(.30 * PPM)); render(sc, f'{OUT}/inventory_title.png')
+    # 10. 빈 칸: 청남색 판 + 배낭 실루엣(낮은 돋을새김) + 금테 0.86
+    for filled in (False, True):
+        sc = frame_scene(); g, gd = GOLD
+        S = .86
+        if not filled:
+            blue = newmat('청남판')[0]; t = blue.node_tree; b = next(n for n in t.nodes if n.type == 'BSDF_PRINCIPLED')
+            tc = nd(t, 'ShaderNodeTexCoord'); gr = nd(t, 'ShaderNodeTexGradient', gradient_type='SPHERICAL'); mp = nd(t, 'ShaderNodeMapping'); mp.inputs['Scale'].default_value = (1.6, 1.6, 1.6)
+            lk(t, tc.outputs['Object'], mp.inputs[0]); lk(t, mp.outputs[0], gr.inputs[0])
+            lk(t, ramp(t, gr.outputs['Fac'], [(0, srgb('#0C1A33') + (1,)), (.7, srgb('#243C70') + (1,))]), b.inputs['Base Color']); b.inputs['Roughness'].default_value = .55
+            plate(sc, 'blue', rrect_path(S - .1, S - .1, .02), blue, y=.01, th=.01)
+            pack = simple('배낭', srgb('#0E1C38'), .5)
+            mkbox(sc, 'pack', (.36, .05, .40), (0, -.004, -.03), pack, bevel=.06)                   # 몸통
+            mkbox(sc, 'flap', (.38, .05, .16), (0, -.02, .12), pack, bevel=.05)                     # 덮개
+            mkbox(sc, 'pocket', (.22, .04, .12), (0, -.03, -.13), pack, bevel=.03)                  # 앞 주머니
+            for sx in (-1, 1): mkbox(sc, 'strap', (.04, .04, .32), (sx * .1, -.035, .02), pack, bevel=.01)
+            mktorus(sc, 'handle', .06, .014, (0, -.01, .24), pack, rot=(math.radians(90), 0, 0))
+        gold_frame(sc, S, S, .04, line=.02, inset=.055, fill=None if not filled else matte_black('안쪽', .002))
+        ortho_cam(sc, 0, 0, S, int(S * PPM), int(S * PPM)); render(sc, f'{OUT}/inventory_cell{"_filled" if filled else ""}.png')
+
+def part_command():
+    # 11. 명령 카드 칸 1.11×0.86 — 순흑 홈 + 회색 금속 가는 테(안쪽 하이라이트), 눌림·호버(금빛)
+    for kind in ('normal', 'pressed', 'hover'):
+        sc = frame_scene(); g, gd = GOLD
+        W, H = 1.11, .86
+        steel = metal_mat('강철테', col=(.42, .43, .45), rough=.35, wear=.4, dark=(.06, .06, .07)) if kind != 'hover' else g
+        edge = steel
+        blk = matte_black('홈')
+        plate(sc, 'hole', rrect_path(W - .06, H - .06, .01), blk, y=.01, th=.01)
+        tube(sc, 'rim', rrect_path(W - .03, H - .03, .015), .014 if kind != 'pressed' else .011, edge)
+        tube(sc, 'hl', rrect_path(W - .075, H - .075, .01), .004, simple('하이라이트', (.35, .36, .4) if kind != 'hover' else (.9, .7, .3), .4, metallic=.8), y=-.002)
+        if kind == 'pressed':
+            plate(sc, 'shade', rrect_path(W - .07, H - .07, .01), simple('눌림그늘', (0, 0, 0), 1), y=-.004, th=.002)
+        ortho_cam(sc, 0, 0, W, int(W * PPM), int(H * PPM)); render(sc, f'{OUT}/command_cell{"" if kind == "normal" else "_" + kind}.png')
+    # 12. 4×3 바깥 돌틀 + 칸 사이 어두운 홈 4.47×2.60
+    sc = reset_scene(); ui_lights(sc); render_setup(sc, SAMPLES)
+    W, H = 4.47, 2.60; B = .10
+    mats = stone_set(sc, '카드틀', moss=.25, rust_low=0.0)
+    r = random.Random(77)
+    for (x0, x1, z0, z1, horiz) in ((-W / 2, W / 2, H / 2 - B, H / 2, True), (-W / 2, W / 2, -H / 2, -H / 2 + B, True), (-W / 2, -W / 2 + B, -H / 2 + B, H / 2 - B, False), (W / 2 - B, W / 2, -H / 2 + B, H / 2 - B, False)):
+        if horiz:
+            x = x0
+            while x < x1 - 1e-6:
+                L = min(r.uniform(.4, .7), x1 - x); rough_block(sc, 'cf', (L - .012, .12, z1 - z0 - .01), ((2 * x + L) / 2, .06, (z0 + z1) / 2), mats[r.randrange(6)], r.randrange(9999), chip=.018); x += L
+        else:
+            z = z0
+            while z < z1 - 1e-6:
+                L = min(r.uniform(.35, .6), z1 - z); rough_block(sc, 'cf', (x1 - x0 - .01, .12, L - .012), ((x0 + x1) / 2, .06, (2 * z + L) / 2), mats[r.randrange(6)], r.randrange(9999), chip=.018); z += L
+    groove = simple('홈', (.003, .003, .004), .9)
+    cw, ch = (W - 2 * B) / 4, (H - 2 * B) / 3
+    for i in range(1, 4): mkbox(sc, 'vg', (.03, .05, H - 2 * B), (-W / 2 + B + i * cw, .05, 0), groove)
+    for j in range(1, 3): mkbox(sc, 'hg', (W - 2 * B, .05, .03), (0, .05, -H / 2 + B + j * ch), groove)
+    ortho_cam(sc, 0, 0, W, int(W * PPM), int(H * PPM)); render(sc, f'{OUT}/command_grid_frame.png')
+
 for p in PARTS:
-    {'arch': part_arch, 'info': part_info, 'bar': part_bar, 'bar_tall': lambda: part_bar(True), 'capL': lambda: part_cap('L'), 'capR': lambda: part_cap('R'), 'pillar': part_pillar, 'panel': part_panel}[p]()
+    {'infopanel': part_info_panel, 'inv': part_inventory, 'cmd': part_command, 'arch': part_arch, 'info': part_info, 'bar': part_bar, 'bar_tall': lambda: part_bar(True), 'capL': lambda: part_cap('L'), 'capR': lambda: part_cap('R'), 'pillar': part_pillar, 'panel': part_panel}[p]()
