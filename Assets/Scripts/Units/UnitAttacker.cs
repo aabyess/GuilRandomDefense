@@ -280,6 +280,55 @@ public class UnitAttacker : MonoBehaviour
     // RemoveBuff(id)가 남의 몫을 지웠다. 여기서는 준 쪽(source)별로 기록하고 버프 ID별 최댓값만 읽는다.
     class AuraBonus { public Object source; public SkillEffectKind kind; public string id; public float value; public float expiresAt; /* 0 = 없음(시간제만 채움) */ }
     readonly List<AuraBonus> auraBonuses = new List<AuraBonus>();
+
+    /// <summary>정보창 「상태:」 줄에 띄울 걸린 버프·디버프 한 칸(10-07). label=칸 글자 두 자, tip=마우스를 올리면 뜨는 설명.</summary>
+    public struct StatusBadge { public string label; public string tip; public bool debuff; }
+
+    static string AuraBadgeLabel(SkillEffectKind kind, float value, out string name)
+    {
+        switch (kind)
+        {
+            case SkillEffectKind.AttackSpeedBuffPercent: name = "공격속도 증가"; return "공속";
+            case SkillEffectKind.AttackPowerBuffFlat: name = "공격력 증가(고정)"; return "공↑";
+            case SkillEffectKind.AttackPowerBuffPercent: if (value < 0f) { name = "공격력 감소"; return "공↓"; } name = "공격력 증가"; return "공↑";
+            case SkillEffectKind.ManaRegenBuff: name = "마나 재생 증가"; return "마나";
+            case SkillEffectKind.LifeRegenBuff: name = "체력 재생 증가"; return "체력";
+            case SkillEffectKind.AllyMoveSpeedDebuff: name = "이동속도 감소"; return "이↓";
+            default: name = null; return null;
+        }
+    }
+
+    /// <summary>지금 걸린 버프·디버프를 모은다(같은 칸 글자끼리는 하나로 합친다). 오라·시간제 효과·평타 N번 버프·도움소 버프·기절.</summary>
+    public void CollectStatusBadges(List<StatusBadge> into)
+    {
+        PruneExpiredBuffs();
+        void Add(string label, string tip, bool debuff)
+        {
+            for (int i = 0; i < into.Count; i++) if (into[i].label == label && into[i].debuff == debuff) return;
+            into.Add(new StatusBadge { label = label, tip = tip, debuff = debuff });
+        }
+        for (int i = 0; i < auraBonuses.Count; i++)
+        {
+            AuraBonus b = auraBonuses[i];
+            if (b.source == null || (b.expiresAt > 0f && b.expiresAt < Time.time)) continue;
+            string label = AuraBadgeLabel(b.kind, b.value, out string name);
+            if (label == null) continue;
+            if (IsAuraDebuff(b) && DebuffSuppressed(b)) continue;
+            bool debuff = IsAuraDebuff(b);
+            string remain = b.expiresAt > 0f ? $" · 남은 {Mathf.Max(0f, b.expiresAt - Time.time):0.#}초" : "";
+            Add(label, $"{name}{remain}", debuff);
+        }
+        foreach (ActiveBuff b in activeBuffs)
+        {
+            string remain = b.hitsRemaining > 0 ? $" · 평타 {b.hitsRemaining}번" : b.expiresAt > 0f ? $" · 남은 {Mathf.Max(0f, b.expiresAt - Time.time):0.#}초" : "";
+            if (b.attackSpeedMultiplierAmount != 1f) Add("공속", "공격속도 증가" + remain, b.attackSpeedMultiplierAmount < 1f);
+            else if (b.flatAttackPowerAmount != 0f || b.attackPowerPercentAmount != 0f) Add("공↑", "공격력 증가" + remain, b.flatAttackPowerAmount < 0f || b.attackPowerPercentAmount < 0f);
+        }
+        if (attackSpeedBuffs.Count > 0) Add("공속", "공격속도 증가(도움소)", false);
+        if (attackPowerBuffs.Count > 0) Add("공↑", "공격력 증가(도움소)", false);
+        if (TeamBuffs.AttackPowerPercent > 0f) Add("팀↑", $"팀 공격력 +{TeamBuffs.AttackPowerPercent * 100f:0.#}%", false);
+        if (IsSelfStunned) Add("기절", $"기절 · 남은 {Mathf.Max(0f, selfStunUntil - Time.time):0.#}초", true);
+    }
     static readonly Dictionary<string, float> auraBonusScratch = new Dictionary<string, float>();
 
     public void AddAuraBonus(Object source, SkillEffectKind kind, string id, float value)

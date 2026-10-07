@@ -87,6 +87,13 @@ public class GameHud : MonoBehaviour
     // 정보 창 스킬 아이콘 줄(사장님 10-06 「유닛을 고르면 스킬 아이콘을 줄지어, 올리면 이름·설명」 — 워크3 영웅 능력 칸 느낌).
     const int MaxSkillIcons = 10;
     GameObject skillIconRow;
+    // 10-07 정보창 「상태:」 줄의 버프·디버프 칸(걸린 것만 보임). 초록 테두리=버프, 빨강=디버프, 글자 두 자 + 마우스를 올리면 설명.
+    const int MaxStatusBadges = 6;
+    readonly GameObject[] statusBadgeRoots = new GameObject[MaxStatusBadges];
+    readonly Image[] statusBadgeBorders = new Image[MaxStatusBadges];
+    readonly TMP_Text[] statusBadgeLabels = new TMP_Text[MaxStatusBadges];
+    readonly string[] statusBadgeTips = new string[MaxStatusBadges];
+    readonly List<UnitAttacker.StatusBadge> statusBadgeBuffer = new List<UnitAttacker.StatusBadge>();
     readonly Image[] skillIconBorders = new Image[MaxSkillIcons];
     readonly Image[] skillIconFaces = new Image[MaxSkillIcons];
     readonly TMP_Text[] skillIconLabels = new TMP_Text[MaxSkillIcons];
@@ -285,9 +292,11 @@ public class GameHud : MonoBehaviour
     // 10-07 원작 배치(사장님 「명령 카드 원작대로」): 윗줄 0 이동(M)·1 홀딩(H)·2 정지(S)·3 공격(A) / 둘째 줄 4 반복(P)·5·6 유닛 스킬 칸·7 판매 / 셋째 줄 8~11 조합 가능 유닛 초상.
     // 유닛 스킬이 둘을 넘으면 셋째 줄 조합 초상 뒤로 넘어간다. 모으기는 칸에서 뺐다(V 단축키만).
     const int FlexSlotFirst = 5;
-    static readonly int[] FlexSlots = { 5, 6, 8, 9, 10, 11 };
+    static readonly int[] FlexSlots = { 5, 6, 7, 8, 9, 10, 11 };   // 7(판매 칸)은 판매 안 되는 등급일 때만 유닛 스킬 칸으로 쓴다(SellSlotFree)
     static bool IsFlexSlot(int slot) => System.Array.IndexOf(FlexSlots, slot) >= 0;
-    enum FlexKind : byte { None, Trait, Active, Talent, Yoonseo, Recipe, GambleBoost, Bomb, Enhance, Toto }
+    enum FlexKind : byte { None, Trait, Active, Talent, Yoonseo, Recipe, GambleBoost, Bomb, Enhance, Toto, Passive }
+    readonly List<SkillData> flexPassiveOverflow = new List<SkillData>();   // 칸이 모자라 못 앉은 스킬 — 마지막 스킬 칸의 설명 끝에 이름만 적는다
+    readonly List<SkillData> flexPassives = new List<SkillData>();   // 10-07 정보창 스킬 아이콘 줄 → 명령 카드로: 액티브 버튼·폭탄을 뺀 유닛 스킬(보기 전용 칸, 마우스를 올리면 설명)
     readonly FlexKind[] flexKind = new FlexKind[CommandSlotCount];
     readonly int[] flexArg = new int[CommandSlotCount];          // Talent는 투자 종류(0~3), Recipe는 flexRecipes 번호
     readonly FlexKind[] flexWantKind = new FlexKind[CommandSlotCount];
@@ -316,6 +325,7 @@ public class GameHud : MonoBehaviour
         for (int i = 0; i < CommandSlotCount; i++) { flexWantKind[i] = FlexKind.None; flexWantArg[i] = 0; }
         // 10-07 원작 배치: 유닛 스킬 칸(액티브→재능→…→특성강화)은 둘째 줄 가운데 5·6, 조합 초상은 셋째 줄 8~11, 스킬이 둘을 넘으면 조합 초상 뒤로.
         int overflow = 0;
+        flexPassiveOverflow.Clear();
         var skills = new List<(FlexKind kind, int arg)>();
         if (activeSlotShown) skills.Add((FlexKind.Active, 0));
         if (talentSlotsShown) for (int k = 0; k < UnitAttacker.TalentKindCount; k++) skills.Add((FlexKind.Talent, k));
@@ -325,8 +335,18 @@ public class GameHud : MonoBehaviour
         if (gambleBoostSlotShown) skills.Add((FlexKind.GambleBoost, 0));
         if (bombSlotShown) skills.Add((FlexKind.Bomb, 0));
         if (traitSlotShown) skills.Add((FlexKind.Trait, 0));
+        flexPassives.Clear();
+        if (lastCommandUnitData != null && lastCommandUnitData.skills != null)
+            foreach (SkillData skill in lastCommandUnitData.skills)
+            {
+                if (skill == null || skill == activeShownSkill && activeSlotShown) continue;
+                if (skill.skillName != null && skill.skillName.StartsWith(BombSkillPrefix)) continue;
+                skills.Add((FlexKind.Passive, flexPassives.Count));
+                flexPassives.Add(skill);
+            }
         int si = 0;
-        foreach (int target in new[] { 5, 6 })
+        bool sevenFree = SellSlotFree();
+        foreach (int target in sevenFree ? new[] { 5, 6, 7 } : new[] { 5, 6 })
         {
             if (si >= skills.Count) break;
             flexWantKind[target] = skills[si].kind; flexWantArg[target] = skills[si].arg; si++;
@@ -340,10 +360,11 @@ public class GameHud : MonoBehaviour
         }
         for (; si < skills.Count; si++)
         {
-            if (bi >= bottomRow.Length) { overflow++; continue; }
+            if (bi >= bottomRow.Length) { overflow++; if (skills[si].kind == FlexKind.Passive) flexPassiveOverflow.Add(flexPassives[skills[si].arg]); continue; }
             flexWantKind[bottomRow[bi]] = skills[si].kind; flexWantArg[bottomRow[bi]] = skills[si].arg; bi++;
         }
 
+        bool wasShop = flexWasShop;
         bool changed = flexDirty || flexWasShop;
         foreach (int slot in FlexSlots)
         {
@@ -359,6 +380,7 @@ public class GameHud : MonoBehaviour
 
         foreach (int slot in FlexSlots)
         {
+            if (slot == SellCommandSlot && !wasShop && flexKind[slot] == FlexKind.None && flexWantKind[slot] == FlexKind.None) continue;   // 판매 칸 그림을 지우지 않는다
             unitCommandRecipes[slot] = null;
             unitCommandSlotNames[slot].text = "";
             unitCommandSlotNames[slot].color = Color.white;
@@ -371,6 +393,15 @@ public class GameHud : MonoBehaviour
             ClearShopCooldown(slot);
             flexKind[slot] = flexWantKind[slot];
             flexArg[slot] = flexWantArg[slot];
+            if (flexKind[slot] == FlexKind.Passive)
+            {
+                SkillData passive = flexPassives[flexArg[slot]];
+                bool hasIcon = passive.icon != null && unitCommandSlotIcons[slot] != null;
+                if (hasIcon) { unitCommandSlotIcons[slot].sprite = passive.icon; unitCommandSlotIcons[slot].color = Color.white; unitCommandSlotIcons[slot].enabled = true; }
+                unitCommandSlotNames[slot].text = hasIcon ? "" : PlayerFacingText.SkillName(passive);
+                SetCommandSlotColor(slot, passive.name.Contains("디버프") ? new Color(0.85f, 0.35f, 0.35f, 1f) : UnitCommandDefaultColor);
+                unitCommandSlotButtons[slot].interactable = false;   // 보기 전용 — 호버 설명은 EventTrigger가 받는다
+            }
             if (flexKind[slot] == FlexKind.Recipe)
             {
                 CombineRecipe recipe = flexRecipes[flexArg[slot]];
@@ -800,6 +831,7 @@ public class GameHud : MonoBehaviour
         unitDamageText = BuildStatRow(statRows, "icon_attack");
         unitArmorText = BuildStatRow(statRows, "icon_armor");
         unitStatusText = BuildStatRow(statRows, null);
+        BuildStatusBadges(unitStatusText);
         unitHeroStatText = BuildStatRow(statRows, null);   // 힘·민첩·지능(초월·영원만 — ShowSingleInfo가 켠다)
         unitHeroStatText.fontSize = 22;
         {   // 자리는 정보창 오른쪽 반 아래쪽(왼쪽 반 세 줄에 끼우면 정보창 높이가 모자라 글이 겹친다) — 레이아웃에서 빼고 statRows 기준 앵커로 둔다.
@@ -2358,12 +2390,22 @@ public class GameHud : MonoBehaviour
         PlayerNotification.Show(playerId, $"<color=#FFD700>노윤서 강화!</color> {name} 1기가 사라지고 방어 무시 피해가 켜졌으며 아군 이속 감소가 없어집니다.", 6f);
     }
 
+    // 한 기를 골랐고 판매 대상 등급이 아니면 판매 칸(7)은 비어 있다 → 유닛 스킬 칸이 쓴다. RefreshSellButton의 판정과 같은 식.
+    bool SellSlotFree()
+    {
+        SelectionManager selection = Selection;
+        if (currentShop as Object != null || selection == null || selection.Selected.Count != 1) return false;
+        Selectable single = selection.Selected[0];
+        return single != null && single.TryGetComponent(out UnitIdentity identity) && identity.Data != null && !identity.IsRecruit && !identity.Data.SellableGrade;
+    }
+
     void HideSellButton()
     {
         lastSellButtonUnit = null;
         if (!sellSlotShown) return;
         sellSlotShown = false;
         sellSlotEnabled = false;
+        if (FlexKindAt(SellCommandSlot) != FlexKind.None) return;   // 7번에 유닛 스킬이 앉았으면 그림을 지우지 않는다
         unitCommandSlotNames[SellCommandSlot].text = "";
         unitCommandSlotNames[SellCommandSlot].color = Color.white;
         SetCommandSlotColor(SellCommandSlot, Color.clear);
@@ -3772,6 +3814,59 @@ public class GameHud : MonoBehaviour
         row.gameObject.SetActive(false);
     }
 
+    void BuildStatusBadges(TMP_Text statusText)
+    {
+        Transform row = statusText.transform.parent;
+        statusText.GetComponent<LayoutElement>().flexibleWidth = 0f;   // 「상태:」 글자 바로 뒤에 칸이 붙게
+        for (int i = 0; i < MaxStatusBadges; i++)
+        {
+            int captured = i;
+            GameObject badge = new GameObject($"StatusBadge{i}", typeof(RectTransform), typeof(Image), typeof(LayoutElement), typeof(EventTrigger));
+            badge.transform.SetParent(row, false);
+            Image border = badge.GetComponent<Image>();
+            border.color = new Color(0.35f, 0.8f, 0.4f, 1f);
+            LayoutElement layout = badge.GetComponent<LayoutElement>();
+            layout.preferredWidth = 34f; layout.preferredHeight = 30f; layout.flexibleWidth = 0f; layout.flexibleHeight = 0f;
+            GameObject inner = new GameObject("Face", typeof(RectTransform), typeof(Image));
+            inner.transform.SetParent(badge.transform, false);
+            RectTransform innerRect = (RectTransform)inner.transform;
+            innerRect.anchorMin = Vector2.zero; innerRect.anchorMax = Vector2.one;
+            innerRect.offsetMin = new Vector2(2f, 2f); innerRect.offsetMax = new Vector2(-2f, -2f);
+            Image face = inner.GetComponent<Image>();
+            face.color = new Color(0.05f, 0.08f, 0.06f, 0.95f);
+            face.raycastTarget = false;
+            TMP_Text label = CreateLabel(badge.transform, "Label", "");
+            label.alignment = TextAlignmentOptions.Center;
+            label.fontSize = 16f;
+            label.fontStyle = FontStyles.Bold;
+            label.textWrappingMode = TextWrappingModes.NoWrap;
+            label.raycastTarget = false;
+            EventTrigger trigger = badge.GetComponent<EventTrigger>();
+            AddTriggerEntry(trigger, EventTriggerType.PointerEnter, _ => { if (statusBadgeTips[captured] != null) ShowTooltip(statusBadgeTips[captured], (RectTransform)statusBadgeRoots[captured].transform); });
+            AddTriggerEntry(trigger, EventTriggerType.PointerExit, _ => HideCombineTooltip());
+            statusBadgeRoots[i] = badge; statusBadgeBorders[i] = border; statusBadgeLabels[i] = label;
+            badge.SetActive(false);
+        }
+    }
+
+    void RefreshStatusBadges(UnitAttacker attacker)
+    {
+        statusBadgeBuffer.Clear();
+        if (attacker != null) attacker.CollectStatusBadges(statusBadgeBuffer);
+        for (int i = 0; i < MaxStatusBadges; i++)
+        {
+            if (statusBadgeRoots[i] == null) continue;
+            bool on = i < statusBadgeBuffer.Count;
+            if (statusBadgeRoots[i].activeSelf != on) statusBadgeRoots[i].SetActive(on);
+            if (!on) { statusBadgeTips[i] = null; continue; }
+            UnitAttacker.StatusBadge b = statusBadgeBuffer[i];
+            statusBadgeBorders[i].color = b.debuff ? new Color(0.85f, 0.25f, 0.25f, 1f) : new Color(0.35f, 0.8f, 0.4f, 1f);
+            statusBadgeLabels[i].text = b.label;
+            statusBadgeLabels[i].color = b.debuff ? new Color(1f, 0.6f, 0.6f, 1f) : new Color(0.7f, 1f, 0.75f, 1f);
+            statusBadgeTips[i] = (b.debuff ? "[디버프] " : "[버프] ") + b.tip;
+        }
+    }
+
     void RefreshSkillIcons(UnitData data)
     {
         if (skillIconRow == null) return;
@@ -3803,12 +3898,24 @@ public class GameHud : MonoBehaviour
     {
         SkillData skill = index >= 0 && index < MaxSkillIcons ? skillIconSkills[index] : null;
         if (skill == null) return;
+        ShowTooltip(SkillTooltipText(skill), (RectTransform)skillIconBorders[index].transform);
+    }
+
+    int LastPassiveSlot()
+    {
+        int last = -1;
+        foreach (int slot in FlexSlots) if (flexKind[slot] == FlexKind.Passive) last = slot;
+        return last;
+    }
+
+    static string SkillTooltipText(SkillData skill)
+    {
         string text = PlayerFacingText.SkillName(skill);   // 10-06 개발 메모는 화면에 안 낸다
         string desc = PlayerFacingText.SkillDescription(skill);
         if (!string.IsNullOrEmpty(desc)) text += "\n" + desc;
         if (skill.triggerType == SkillTriggerType.ActiveButton && skill.levels != null && skill.levels.Count > 0)
             text += $"\n[누르는 스킬] 쿨타임 {skill.levels[0].cooldown:0.#}초";
-        ShowTooltip(text, (RectTransform)skillIconBorders[index].transform);
+        return text;
     }
 
     static void AddTriggerEntry(EventTrigger trigger, EventTriggerType type, UnityEngine.Events.UnityAction<BaseEventData> callback)
@@ -3871,10 +3978,21 @@ public class GameHud : MonoBehaviour
             string[] tips = { "유닛을 움직인다. 땅을 클릭 (우클릭 이동과 같다)", "제자리를 지키며 사거리 안의 적만 친다", "하던 일을 멈춘다", "다음에 찍는 적(또는 땅)을 공격한다", "지금 자리와 찍은 땅 사이를 오가며 적을 만나면 친다" };
             ShowTooltip($"{UnitOnlyCommandLabels[index]}  [{UnitOnlyCommandHotkeys[index]}]\n{tips[index]}", cardRect);
         }
-        else if (index == SellCommandSlot)
+        else if (index == SellCommandSlot && FlexKindAt(index) == FlexKind.None)
         {
             if (!sellSlotShown || string.IsNullOrEmpty(sellSlotTooltip)) { HideCombineTooltip(); return; }
             ShowTooltip(sellSlotTooltip, cardRect);
+        }
+        else if (FlexKindAt(index) == FlexKind.Passive && flexArg[index] < flexPassives.Count)
+        {
+            string passiveTip = SkillTooltipText(flexPassives[flexArg[index]]);
+            if (flexPassiveOverflow.Count > 0 && index == LastPassiveSlot())
+            {
+                var names = new List<string>();
+                foreach (SkillData extra in flexPassiveOverflow) names.Add(PlayerFacingText.SkillName(extra));
+                passiveTip += "\n\n(칸이 모자라 못 띄운 스킬: " + string.Join(", ", names) + ")";
+            }
+            ShowTooltip(passiveTip, cardRect);
         }
         else if (FlexKindAt(index) == FlexKind.Trait && traitSlotShown && traitSlotTrait != null)
         {
@@ -4293,7 +4411,7 @@ public class GameHud : MonoBehaviour
             return;
         }
 
-        if (index == SellCommandSlot && currentShop as Object == null)
+        if (index == SellCommandSlot && currentShop as Object == null && FlexKindAt(index) == FlexKind.None)
         {
             if (sellSlotEnabled) OnSellButtonClicked();
             return;
@@ -4961,14 +5079,15 @@ public class GameHud : MonoBehaviour
             unitDamageText.text = $"<color=#FF9A3A>공격력:</color> {attackPower}{bonus}";   // 사장님 10-03: 사거리·공속은 정보칸에서 뺀다(F1 DebugHud엔 남음)
             unitArmorText.text = "<color=#FF9A3A>방어:</color> <color=#FF4A4A>무적</color>";
             unitStatusText.text = "<color=#FF9A3A>상태:</color>" + (attacker != null && attacker.GunFormActive ? $" <color=#FF6B6B>구건 {attacker.GunFormRemaining:F1}초</color>" : "") + (attacker != null && (attacker.UnitDeleteCount > 0 || attacker.GunFormActive) ? $" 삭제 {attacker.UnitDeleteCount}" : "");
+            RefreshStatusBadges(attacker);
             bool showHeroStats = attacker != null && (data.grade == UnitGrade.Transcendent || data.grade == UnitGrade.Eternal);
             unitHeroStatText.transform.parent.gameObject.SetActive(showHeroStats);
             if (showHeroStats)
-                unitHeroStatText.text = $"<color=#FF9A3A>힘</color> {attacker.CurrentStrength:F1}  <color=#FF9A3A>민</color> {attacker.CurrentAgility:F1}  <color=#FF9A3A>지</color> {attacker.CurrentIntelligence:F1}";
+                unitHeroStatText.text = $"<color=#FF9A3A>힘</color> {Mathf.FloorToInt(attacker.CurrentStrength)}  <color=#FF9A3A>민</color> {Mathf.FloorToInt(attacker.CurrentAgility)}  <color=#FF9A3A>지</color> {Mathf.FloorToInt(attacker.CurrentIntelligence)}";
             if (!unitStatRows.activeSelf) unitStatRows.SetActive(true);
             if (wc3NameText != null)
                 SetWc3Strips(true, $"{firstPart}{secondPart}", $"<color=#{gradeColorHex}>{grade}{levelLabel}</color>" + (data.OriginalMatchLabel.Length > 0 ? $"  <size=80%><color=#A0A0A0>{data.OriginalMatchLabel.Replace("원작: ", "원작 ")}</color></size>" : ""));
-            RefreshSkillIcons(data);
+            if (skillIconRow != null && skillIconRow.activeSelf) skillIconRow.SetActive(false);   // 10-07 스킬 아이콘은 명령 카드로 옮김(ReflowFlexSlots Passive)
             int? manaNow = null;
             int manaCap = 0;
             if (UnitManaTable.HasMana(data))
