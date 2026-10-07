@@ -281,4 +281,128 @@ public static class HeroStatShotProbe
             if (e.name.Contains("Story")) { InspectTarget.Set(e.gameObject); return "✅ " + e.DisplayName; }
         return "❌ 스토리 적 없음";
     }
+
+    // 스킨 재임포트(Humanoid 아바타가 서는지) — 안흔함_이호준·특별함_조도연.
+    public static string ReimportSkins()
+    {
+        foreach (string p in new[] { "Assets/Art/Units/안흔함_이호준/안흔함_이호준.fbx", "Assets/Art/Units/특별함_조도연/특별함_조도연.fbx" })
+            UnityEditor.AssetDatabase.ImportAsset(p, UnityEditor.ImportAssetOptions.ForceUpdate);
+        return "✅ 재임포트";
+    }
+
+    public static string SpawnSkinUnits()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        foreach (string n in new[] { "특별함_조도연", "안흔함_이호준" })
+            spawner.Spawn(UnityEditor.AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{n}.asset"), LaneMarker.Get(0).LaneCenter, 0);
+        return "✅ 두 기";
+    }
+    public static string SelectJodoyeon() => SelectByPart("특별함_조도연");
+    public static string SelectYoonho() => SelectByPart("안흔함_이호준");
+    public static string AttackPoseAll()
+    {
+        int n = 0;
+        foreach (CharacterAnimator a in Object.FindObjectsByType<CharacterAnimator>(FindObjectsSortMode.None)) { a.PlayAttack(); n++; }
+        return $"✅ {n}기 공격 동작";
+    }
+
+    public static string SpawnJodoOnly()
+    {
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        spawner.Spawn(UnityEditor.AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/특별함_조도연.asset"), LaneMarker.Get(0).LaneCenter, 0);
+        return "✅";
+    }
+
+    public static string SpawnSkinUnitsApart()
+    {
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        var c = LaneMarker.Get(0).LaneCenter;
+        spawner.Spawn(UnityEditor.AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/특별함_조도연.asset"), c + new Vector3(-120f, 0f, 0f), 0);
+        spawner.Spawn(UnityEditor.AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/안흔함_이호준.asset"), c + new Vector3(120f, 0f, 0f), 0);
+        return "✅ 떨어뜨려 두 기";
+    }
+
+    // F10 메뉴·볼륨 슬라이더 촬영/검증용
+    public static string OpenMenu() { Object.FindFirstObjectByType<GameHud>().OpenGameMenu(); return "✅ 메뉴 열림"; }
+    public static string SfxHalfAndPlay()
+    {
+        AudioPrefs.SetSfx(0.5f);
+        GameSound.Play(GameSoundId.RoundStart);
+        var v = new System.Text.StringBuilder();
+        foreach (AudioSource a in Object.FindObjectsByType<AudioSource>(FindObjectsSortMode.None)) if (a.isPlaying && a.gameObject.name == "[GameSound]") v.Append($"{a.clip.name}={a.volume:0.000} ");
+        return "✅ 효과음 50% · 재생 중 " + v + "(기대 0.7×0.5(−6dB)×0.5(슬라이더)=0.175)";
+    }
+    public static string SfxFullAndPlay()
+    {
+        AudioPrefs.SetSfx(1f);
+        return $"✅ 효과음 {AudioPrefs.SfxVolume:0.00} 음악 {AudioPrefs.MusicVolume:0.00}";
+    }
+    public static string WheelBegin()
+    {
+        var cam = Object.FindFirstObjectByType<RtsCameraController>();
+        wheelBlendStart = (float)typeof(RtsCameraController).GetField("targetBlend", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(cam);
+        wheelFrames = 40;
+        UnityEditor.EditorApplication.update += FeedWheel;
+        return $"✅ 휠 시작 targetBlend={wheelBlendStart:0.000} 서랍열림={RecipeSearchDrawer.IsOpen} 도우미열림={RecipeHelperPanel.IsOpen}";
+    }
+    static float wheelBlendStart; static int wheelFrames; static bool wheelOnMap;
+    public static string WheelOnMapBegin() { wheelOnMap = true; return WheelBegin(); }
+    static void FeedWheel()
+    {
+        if (wheelFrames-- <= 0) { UnityEditor.EditorApplication.update -= FeedWheel; return; }
+        var mouse = UnityEngine.InputSystem.Mouse.current;
+        var ms = new UnityEngine.InputSystem.LowLevel.MouseState { position = wheelOnMap ? new Vector2(960f, 500f) : mouse.position.ReadValue(), scroll = new Vector2(0f, 120f) };
+        UnityEngine.InputSystem.InputSystem.QueueStateEvent(mouse, ms);
+    }
+    public static string WheelEnd()
+    {
+        var cam = Object.FindFirstObjectByType<RtsCameraController>();
+        float now = (float)typeof(RtsCameraController).GetField("targetBlend", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(cam);
+        return $"✅ 휠 끝 targetBlend {wheelBlendStart:0.000} → {now:0.000} (서랍 {RecipeSearchDrawer.IsOpen}) 높이 {cam.transform.position.y:0.0}";
+    }
+    public static string OpenDrawer()
+    {
+        var d = Object.FindFirstObjectByType<RecipeSearchDrawer>();
+        typeof(RecipeSearchDrawer).GetMethod("SetOpen", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(d, new object[] { true });
+        return "✅ 서랍 열림";
+    }
+    public static string CloseDrawer()
+    {
+        var d = Object.FindFirstObjectByType<RecipeSearchDrawer>();
+        typeof(RecipeSearchDrawer).GetMethod("SetOpen", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(d, new object[] { false });
+        return "✅ 서랍 닫힘";
+    }
+    public static string SetQueryJi()
+    {
+        var d = Object.FindFirstObjectByType<RecipeSearchDrawer>();
+        var f = typeof(RecipeSearchDrawer).GetField("input", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        ((TMPro.TMP_InputField)f.GetValue(d)).text = "최상호";
+        return "✅ 검색어 최상호";
+    }
+    public static string QueryNow()
+    {
+        var d = Object.FindFirstObjectByType<RecipeSearchDrawer>();
+        var f = typeof(RecipeSearchDrawer).GetField("input", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        return "✅ 입력칸 「" + ((TMPro.TMP_InputField)f.GetValue(d)).text + "」";
+    }
+
+    // 검색 서랍에서 희귀함 결과 줄의 첫 재료(특별함) 그림을 누른 것처럼 — 그 재료 유닛의 조합식으로 가는지(selectedRecipe) 확인
+    public static string ClickFirstMaterial()
+    {
+        var d = Object.FindFirstObjectByType<RecipeSearchDrawer>();
+        var t = typeof(RecipeSearchDrawer); var fl = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        var rows = (System.Collections.IList)t.GetField("rows", fl).GetValue(d);
+        for (int i = 0; i < rows.Count; i++)
+        {
+            var row = rows[i]; var rt = row.GetType();
+            var root = (GameObject)rt.GetField("root").GetValue(row);
+            var recipe = (CombineRecipe)rt.GetField("recipe").GetValue(row);
+            if (!root.activeSelf || recipe == null || recipe.result.grade != UnitGrade.Rare) continue;
+            t.GetMethod("OnCellClicked", fl).Invoke(d, new object[] { i, 0 });
+            var sel = (CombineRecipe)t.GetField("selectedRecipe", fl).GetValue(d);
+            return $"✅ 줄 「{recipe.result.grade.KoreanName()} {recipe.result.DisplayName}」 첫 재료 「{recipe.ingredients[0].unit.grade.KoreanName()} {recipe.ingredients[0].unit.DisplayName}」 클릭 → 선택된 식 「{(sel != null ? sel.result.grade.KoreanName() + " " + sel.result.DisplayName : "없음")}」";
+        }
+        return "❌ 희귀함 줄 없음";
+    }
 }
