@@ -142,6 +142,7 @@ public static class MapGenerator
         }
 
         List<WaypointPath> lanePaths = BuildLanePaths(root.transform);
+        EnemyPortalApply.PlaceAll(root.transform);   // 적 출발점 바닥 포탈(10-07 사장님) — 장식, 콜라이더·NavMesh 영향 없음
         string tableReport = BuildCombineColumns(combineIsland);
         string displayReport = BuildGradeDisplays(root.transform);
         string gateReport = BuildPunkHazardGate(root.transform);

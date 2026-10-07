@@ -95,4 +95,11 @@ static class Queue0307Probe
 
     static string ScaleOne() { ArtBinder.StoryBuildingScale = 1f; return ArtBinder.RebindStoryBuildings(); }
     static string ScaleBack() { ArtBinder.StoryBuildingScale = 0.7f; return ArtBinder.RebindStoryBuildings(); }
+
+    static string CamPortal()
+    {
+        Vector3 start = MapLayout.LaneLoop(MapLayout.Lanes[0])[0];
+        Object.FindFirstObjectByType<RtsCameraController>().MoveTo(start);
+        return $"카메라를 레인0 출발점 {start:F0}로";
+    }
 }
