@@ -72,6 +72,9 @@ public enum SkillTargetKind
     // (SkillLevel.range) 안의 **아직 안 맞은 가장 가까운 적**으로 튄다. 맞는 수는 SkillEffect.maxTargets(주 대상 포함),
     // 튈 때마다 피해가 (1 + chainDamageStep)배(원작 Ocl3 −0.1 = 튈 때마다 +10%).
     ChainEnemies,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-07, 초월 임채민 「축복의땅」) — 시전자가 DesignateAlly로 지정해 둔 아군 하나(없거나 죽었으면 건너뜀). 범위 제한 없음.
+    DesignatedAlly,
 }
 
 // 피해·효과 값이 무엇에 비례하는가. 원작 715건 전수 조사(UNIT_SKILL_TRIGGERS.md) 기준
@@ -389,6 +392,14 @@ public enum SkillEffectKind
     // ⚠️ 맨 뒤에 추가(2026-10-06, 제한됨 김민규 「쿨스킬 반경1000 보물위치공개」 — 사장님 확정: 땅 빛기둥 몇 초 + 미니맵 점) — 직렬화 순서를 지킨다.
     // 시전자 둘레(SkillLevel.range, 원작 단위 1000 → 세계 거리는 ÷WorldScale) 안에 숨은 보물상자 자리마다 땅 빛기둥을 duration초 세우고 미니맵에 점을 찍는다(시전한 플레이어에게). TreasureHunt.RevealWithin. 서버만.
     RevealTreasure,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-07, 초월 임채민 「청렴결백」 — 사장님 확정) — 직렬화 순서를 지킨다.
+    // 시간제 재생 버프(ApplyToAlly, duration초): 받는 아군 유닛의 마나 게이지(ManaRegenBuff) / 체력 게이지(LifeRegenBuff) 재생이 초당 multiplier만큼 늘어난다(같은 buffId는 최댓값 하나, 같은 준 쪽이 다시 걸면 끝나는 시각만 갱신).
+    // 「마젠N」·「체젠N」 중 평타 발동판. (영구 오라판은 UnitData.manaAura*·lifeAura*.) DispelAllyDebuffs도 duration>0이면 같은 시간제로 걸린다.
+    ManaRegenBuff,
+    LifeRegenBuff,
+    // 아군 지정(ActiveButton + SkillLevel.needsAllyClick): 고른 내 아군 하나를 「지정 아군」으로 기억한다(다시 고르면 바뀜). 임채민 「축복의땅」. SkillTargetKind.DesignatedAlly 효과가 이 유닛에 걸린다.
+    DesignateAlly,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,

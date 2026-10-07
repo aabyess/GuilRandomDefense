@@ -154,6 +154,9 @@ public static class PlayerFacingText
             case SkillEffectKind.KillNormalEnemies: return "일반 적 처치";
             case SkillEffectKind.HealOverTime: return "체력 회복";
             case SkillEffectKind.DispelAllyDebuffs: return "아군 약화 해제";
+            case SkillEffectKind.ManaRegenBuff: return $"마나 재생 +{e.multiplier:0.##}/초";
+            case SkillEffectKind.LifeRegenBuff: return $"체력 재생 +{e.multiplier:0.##}/초";
+            case SkillEffectKind.DesignateAlly: return "아군 지정";
             case SkillEffectKind.Knockback: return "밀쳐내기";
             case SkillEffectKind.TeleportToPoint: return "지정한 곳으로 순간이동";
             case SkillEffectKind.GoldPlusBonus: return $"처치 골드 +{Pct(e.multiplier)}";

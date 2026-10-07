@@ -278,7 +278,7 @@ public class UnitAttacker : MonoBehaviour
     // 원작 오라는 같은 버프 ID끼리 안 겹치고(가장 큰 것 하나) 다른 버프 ID끼리는 겹친다 — 엔진 지식, 맵 미확정(마나 재생 오라와 같은 규칙).
     // 예전 오라 경로는 버프 항목을 그냥 붙여서, 같은 오라 유닛이 둘이면 배율이 곱으로 쌓였고 하나가 범위를 벗어나면
     // RemoveBuff(id)가 남의 몫을 지웠다. 여기서는 준 쪽(source)별로 기록하고 버프 ID별 최댓값만 읽는다.
-    class AuraBonus { public Object source; public SkillEffectKind kind; public string id; public float value; }
+    class AuraBonus { public Object source; public SkillEffectKind kind; public string id; public float value; public float expiresAt; /* 0 = 없음(시간제만 채움) */ }
     readonly List<AuraBonus> auraBonuses = new List<AuraBonus>();
     static readonly Dictionary<string, float> auraBonusScratch = new Dictionary<string, float>();
 
@@ -286,6 +286,19 @@ public class UnitAttacker : MonoBehaviour
     {
         if (value == 0f) return;
         auraBonuses.Add(new AuraBonus { source = source, kind = kind, id = id ?? "", value = value });
+    }
+
+    /// <summary>시간제 수치 효과(임채민 마젠·체젠·디버프 해제 발동): 같은 준 쪽·종류·ID는 끝나는 시각만 갱신한다.</summary>
+    public void AddTimedAuraBonus(Object source, SkillEffectKind kind, string id, float value, float duration)
+    {
+        if (value == 0f || duration <= 0f) return;
+        id ??= "";
+        for (int i = 0; i < auraBonuses.Count; i++)
+        {
+            AuraBonus b = auraBonuses[i];
+            if (b.source == source && b.kind == kind && b.id == id && b.expiresAt > 0f) { b.value = value; b.expiresAt = Time.time + duration; return; }
+        }
+        auraBonuses.Add(new AuraBonus { source = source, kind = kind, id = id, value = value, expiresAt = Time.time + duration });
     }
 
     public void RemoveAuraBonus(Object source, SkillEffectKind kind, string id)
@@ -303,7 +316,7 @@ public class UnitAttacker : MonoBehaviour
         for (int i = auraBonuses.Count - 1; i >= 0; i--)
         {
             AuraBonus b = auraBonuses[i];
-            if (b.source == null) { auraBonuses.RemoveAt(i); continue; }
+            if (b.source == null || (b.expiresAt > 0f && b.expiresAt < Time.time)) { auraBonuses.RemoveAt(i); continue; }
             if (b.kind != kind) continue;
             if (IsAuraDebuff(b) && DebuffSuppressed(b)) continue;   // 최윤서 강화 · 아군 디버프 해제(임장혁 고충해소) = 디버프 무시
             if (!auraBonusScratch.TryGetValue(b.id, out float best) || b.value > best) auraBonusScratch[b.id] = b.value;
@@ -323,7 +336,7 @@ public class UnitAttacker : MonoBehaviour
         for (int i = 0; i < auraBonuses.Count; i++)
         {
             AuraBonus d = auraBonuses[i];
-            if (d.kind == SkillEffectKind.DispelAllyDebuffs && d.source != null && d.source != b.source) return true;
+            if (d.kind == SkillEffectKind.DispelAllyDebuffs && d.source != null && d.source != b.source && !(d.expiresAt > 0f && d.expiresAt < Time.time)) return true;
         }
         return false;
     }
@@ -765,6 +778,7 @@ public class UnitAttacker : MonoBehaviour
 
     /// <summary>아군 지정 액티브(SkillLevel.needsAllyClick, 초월 신문철 엄마간식) — 고른 내 아군(자기 가능)에게 효과를 건다. 쿨 중·남의 유닛이면 이유를 돌려주고 false.</summary>
     UnitAttacker permanentAllyTarget;   // 마지막으로 영구 버프를 건 아군(TryCastActiveOnAlly)
+    UnitAttacker designatedAlly;        // 지정 아군(SkillEffectKind.DesignateAlly · SkillTargetKind.DesignatedAlly — 임채민 축복의땅)
 
     public bool TryCastActiveOnAlly(SkillData skill, UnitIdentity ally, out string failReason)
     {
@@ -788,6 +802,7 @@ public class UnitAttacker : MonoBehaviour
         foreach (SkillEffect effect in level.effects)
         {
             if (effect == null) continue;
+            if (effect.kind == SkillEffectKind.DesignateAlly) { designatedAlly = allyAttacker; continue; }
             if (effect.duration <= 0f && !string.IsNullOrEmpty(effect.buffId) && IsAuraStatKind(effect.kind) && allyAttacker != null)
             {
                 if (permanentAllyTarget != null) permanentAllyTarget.RemoveAuraBonus(this, effect.kind, effect.buffId);
@@ -1026,7 +1041,7 @@ public class UnitAttacker : MonoBehaviour
         {
             manaAuraTimer -= Time.deltaTime;
             if (manaAuraTimer <= 0f) { manaAuraTimer = ManaAuraScanInterval; manaAuraBonus = ScanManaAuraBonus(); }
-            manaRegenCarry += (d.manaRegenPerSecond + IntRegenBonus * CurrentIntelligence + manaAuraBonus) * d.manaGaugePerMana * Time.deltaTime;
+            manaRegenCarry += (d.manaRegenPerSecond + IntRegenBonus * CurrentIntelligence + manaAuraBonus + AuraBonusTotal(SkillEffectKind.ManaRegenBuff, false)) * d.manaGaugePerMana * Time.deltaTime;
             if (manaRegenCarry >= 1f)
             {
                 int n = Mathf.FloorToInt(manaRegenCarry);
@@ -1039,9 +1054,10 @@ public class UnitAttacker : MonoBehaviour
             lifeAuraTimer -= Time.deltaTime;
             if (lifeAuraTimer <= 0f) { lifeAuraTimer = ManaAuraScanInterval; lifeAuraBonus = ScanLifeAuraBonus(); }
         }
-        if (lifeGaugeInitialized && d.lifeGaugeRegenPerSecond + lifeAuraBonus > 0f)
+        float lifeRegenNow = d.lifeGaugeRegenPerSecond + lifeAuraBonus + (lifeGaugeInitialized && d.lifeGaugeMax > 0f ? AuraBonusTotal(SkillEffectKind.LifeRegenBuff, false) : 0f);
+        if (lifeGaugeInitialized && lifeRegenNow > 0f)
         {
-            lifeRegenCarry += (d.lifeGaugeRegenPerSecond + lifeAuraBonus) * Time.deltaTime;
+            lifeRegenCarry += lifeRegenNow * Time.deltaTime;
             if (lifeRegenCarry >= 1f)
             {
                 int n = Mathf.FloorToInt(lifeRegenCarry);
@@ -2853,7 +2869,7 @@ public class UnitAttacker : MonoBehaviour
         if (effect.kind == SkillEffectKind.GrantSkillToAllies || effect.kind == SkillEffectKind.BossDamageMultiplier
             || effect.kind == SkillEffectKind.SplashDamageMultiplier || effect.kind == SkillEffectKind.AllyMoveSpeedDebuff
             || effect.kind == SkillEffectKind.DamagePerAllyDebuff || effect.kind == SkillEffectKind.DamageGrowthOverTime
-            || effect.kind == SkillEffectKind.AllySkillDamageBonus || effect.kind == SkillEffectKind.DispelAllyDebuffs
+            || effect.kind == SkillEffectKind.AllySkillDamageBonus || (effect.kind == SkillEffectKind.DispelAllyDebuffs && effect.duration <= 0f)
             || effect.kind == SkillEffectKind.GoldPlusBonus || effect.kind == SkillEffectKind.StoryDamageMultiplier
             || effect.kind == SkillEffectKind.DamagePerTargetArmorShred || effect.kind == SkillEffectKind.DamagePerRecruit || effect.kind == SkillEffectKind.DamageVsTargetBuff || effect.kind == SkillEffectKind.SkillDamageAfterKill || effect.kind == SkillEffectKind.SlowRewardBonus || effect.kind == SkillEffectKind.SkillTriggerChanceBonus || effect.kind == SkillEffectKind.RevealTreasure) return;
 
@@ -2992,6 +3008,10 @@ public class UnitAttacker : MonoBehaviour
                 if (identity != null) ApplyToAlly(effect, identity, firedCascadeGroups);
                 break;
 
+            case SkillTargetKind.DesignatedAlly:
+                if (designatedAlly != null && designatedAlly.identity != null) ApplyToAlly(effect, designatedAlly.identity, firedCascadeGroups);
+                break;
+
             case SkillTargetKind.Allies:
                 // "같은 편"은 UnitIdentity.AlliesOf(소유자 기준)로 푼다 — 캐스터가 플레이어
                 // 유닛일 때의 정의다. 캐스터가 보스(EnemyDummy)면 EnemyDummy.AlliesOf를 쓴다
@@ -3035,6 +3055,14 @@ public class UnitAttacker : MonoBehaviour
             fired.Add(effect.cascadeGroup);
         }
 
+        bool timedAura = effect.duration > 0f && (effect.kind == SkillEffectKind.ManaRegenBuff || effect.kind == SkillEffectKind.LifeRegenBuff || effect.kind == SkillEffectKind.DispelAllyDebuffs);
+        if (timedAura)
+        {
+            UnitAttacker timedTarget = ally != null ? ally.GetComponent<UnitAttacker>() : null;
+            if (timedTarget != null)   // 효과 확률(effect.chance)은 CastSkillLevel이 시전마다 이미 굴렸다
+                timedTarget.AddTimedAuraBonus(this, effect.kind, effect.buffId, effect.kind == SkillEffectKind.DispelAllyDebuffs ? 1f : effect.multiplier, effect.duration);
+            return;
+        }
         if (effect.kind != SkillEffectKind.ApplyBuff && effect.kind != SkillEffectKind.RemoveBuff
             && effect.kind != SkillEffectKind.AttackPowerBuffFlat
             && effect.kind != SkillEffectKind.AttackSpeedBuffPercent
