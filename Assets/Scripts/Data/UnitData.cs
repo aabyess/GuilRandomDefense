@@ -296,10 +296,18 @@ public class UnitData : ScriptableObject
     [System.NonSerialized] string displayPerson;
     [System.NonSerialized] bool displayPersonResolved;
 
+    // 사장님 10-07 이름 바꾸기 18건: 에셋(파일) 이름은 GUID·대응표·세이브 키라 그대로 두고, 화면에 보일 인물 이름만 여기에 둔다.
+    // 비어 있으면 에셋 이름에서 뽑던 옛 방식. 칭호가 이 이름을 이미 품고 있으면(히든은 이름이 곧 칭호) 한 번만 보이게 따로 안 붙인다.
+    public string personOverride;
+
+    /// <summary>화면용 인물 이름(personOverride가 있을 때만). 채팅 조합 입력말(「푸은서조합」)에 쓴다.</summary>
+    public string PersonName => personOverride;
+
     string DisplayPerson
     {
         get
         {
+            if (!string.IsNullOrEmpty(personOverride)) return !string.IsNullOrEmpty(unitName) && unitName.Contains(personOverride) ? null : personOverride;
             if (displayPersonResolved) return displayPerson;
             displayPersonResolved = true;
             string[] parts = name.Split('_');
