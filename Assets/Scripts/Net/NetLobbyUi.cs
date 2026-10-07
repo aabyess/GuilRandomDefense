@@ -44,6 +44,7 @@ public class NetLobbyUi : MonoBehaviour
     TMP_FontAsset titleFont;   // 제목(Song Myung)
     TMP_FontAsset inputFont;   // 입력칸(읽기 쉬운 Pretendard)
 
+    GameObject nickPanel;   // 맨 처음: 닉네임 입력(사장님 10-07 「혼자 하기는 닉네임을 넣을 수가 없다 — 시작 전에 제일 먼저」)
     GameObject modePanel;   // 첫 화면: 혼자 하기 / 같이 하기
     GameObject mainPanel;   // 같이 하기: 닉네임 · 방 만들기 · 코드로 참가
     GameObject roomPanel;   // 대기실
@@ -52,6 +53,10 @@ public class NetLobbyUi : MonoBehaviour
     string lastSeenStatus = "";
 
     TMP_InputField nicknameInput;
+    TMP_InputField firstNickInput;
+    Button firstNickOk;
+    // 실행마다 한 번(게임에서 첫 화면으로 돌아올 땐 다시 안 묻는다). 자동 시험(-mp* 인자·배치 모드)은 건너뛴다.
+    static bool nickConfirmed;
     TMP_InputField codeInput;
     Button createButton;
     Button joinButton;
@@ -102,6 +107,14 @@ public class NetLobbyUi : MonoBehaviour
             if (!string.IsNullOrEmpty(lastSeenStatus)) multiplayerChosen = true;
         }
         if (inRoom) multiplayerChosen = true;
+        bool askNick = !nickConfirmed && !multiplayerChosen;
+        if (nickPanel.activeSelf != askNick) nickPanel.SetActive(askNick);
+        if (askNick)
+        {
+            if (modePanel.activeSelf) modePanel.SetActive(false);
+            firstNickOk.interactable = NetPlayer.SanitizeNickname(firstNickInput.text).Length > 0;
+            return;
+        }
         bool showMode = !multiplayerChosen;
         bool showMain = multiplayerChosen && !inRoom;
         if (modePanel.activeSelf != showMode) modePanel.SetActive(showMode);
@@ -205,6 +218,7 @@ public class NetLobbyUi : MonoBehaviour
         subtitle.outlineWidth = 0.22f;
         subtitle.outlineColor = new Color32(40, 22, 6, 255);
 
+        BuildNickPanel(root);
         BuildModePanel(root);
         BuildMainPanel(root);
         BuildRoomPanel(root);
@@ -223,6 +237,40 @@ public class NetLobbyUi : MonoBehaviour
     // 10-06 [설정] 단추가 넷째로 들어오며 간격을 좁혔다(세이브 코드를 펴면 설정 단추는 숨는다 — 입력칸 자리).
     static readonly float[] ClosedY = { 236f, 346f, 456f, 566f };
     static readonly float[] OpenY = { 235f, 330f, 425f };
+
+    void BuildNickPanel(RectTransform root)
+    {
+        if (Application.isBatchMode || System.Environment.GetCommandLineArgs().Any(a => a.StartsWith("-mp"))) nickConfirmed = true;
+
+        Image card = CreateFrame(root, "NickPanel");
+        nickPanel = card.gameObject;
+        RectTransform c = card.rectTransform;
+
+        TMP_Text title = CreateText(c, "NickTitle", "닉네임을 정해 주세요", 34, font, ButtonText, TextAlignmentOptions.Center);
+        PlaceFromTop(title.rectTransform, -250f, new Vector2(420f, 50f));
+        TMP_Text hint = CreateText(c, "NickHint", "게임 안 이름 · 세이브 코드의 열쇠가 됩니다", 22, inputFont, TextDim, TextAlignmentOptions.Center);
+        PlaceFromTop(hint.rectTransform, -305f, new Vector2(420f, 36f));
+
+        firstNickInput = CreateInput(c, "FirstNickInput", "이름을 입력하세요", NetPlayer.MaxNicknameLength);
+        PlaceFromTop((RectTransform)firstNickInput.transform, -385f, new Vector2(340f, 60f));
+        firstNickInput.text = launcher != null ? launcher.InitialNickname : NetPlayer.LoadNickname();
+        firstNickInput.onSubmit.AddListener(_ => ConfirmNick());
+
+        firstNickOk = CreateButton(c, "NickOkButton", "확인", ButtonAccent, 36);
+        PlaceFromTop((RectTransform)firstNickOk.transform, -495f, ButtonSize);
+        firstNickOk.onClick.AddListener(ConfirmNick);
+        nickPanel.SetActive(!nickConfirmed);
+    }
+
+    void ConfirmNick()
+    {
+        string nick = NetPlayer.SanitizeNickname(firstNickInput.text);
+        if (nick.Length == 0) { firstNickInput.ActivateInputField(); return; }
+        NetPlayer.SaveNickname(nick);
+        if (nicknameInput != null) nicknameInput.text = nick;
+        if (saveNickInput != null) saveNickInput.text = nick;
+        nickConfirmed = true;
+    }
 
     void BuildModePanel(RectTransform root)
     {
