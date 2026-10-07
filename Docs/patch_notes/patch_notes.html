@@ -1,0 +1,82 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>G.R.D 패치노트</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gowun+Dodum&family=Nanum+Myeongjo:wght@800&display=swap">
+<style>
+/* 누적 패치노트(0.3.11 이후). 새 버전은 맨 위 <section class="ver">를 복사해 추가 → render_patch_notes.sh */
+:root{
+  --stone:#1b1d21; --stone2:#24272c; --edge:#3a3e45; --gold:#e3b54f; --gold2:#a87b22;
+  --ink:#ece6d6; --muted:#a39c8b; --new:#5fbf7a; --chg:#5fa8d8; --fix:#e0805a;
+  --display:"Black Han Sans","Nanum Myeongjo",serif; --body:"Gowun Dodum",sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--stone);color:var(--ink);font-family:var(--body);width:1080px}
+.page{padding:64px 64px 56px;background:
+  radial-gradient(ellipse at 50% -10%,rgba(227,181,79,.18),transparent 60%),
+  repeating-linear-gradient(45deg,rgba(255,255,255,.012) 0 2px,transparent 2px 6px),var(--stone)}
+header{text-align:center;padding-bottom:36px;border-bottom:2px solid var(--gold2);margin-bottom:40px;position:relative}
+.logo{font-family:var(--display);font-size:120px;line-height:1;letter-spacing:.06em;color:var(--gold);
+  text-shadow:0 3px 0 #6b4a10,0 8px 24px rgba(0,0,0,.6)}
+.sub{font-family:var(--display);font-size:40px;margin-top:14px;letter-spacing:.08em}
+.range{margin-top:12px;color:var(--muted);font-size:22px}
+.legend{display:flex;justify-content:center;gap:22px;margin-top:22px;font-size:20px}
+.pill{display:inline-block;padding:2px 12px;border-radius:4px;font-size:18px;font-weight:700;color:#121316;min-width:58px;text-align:center}
+.new{background:var(--new)} .chg{background:var(--chg)} .fix{background:var(--fix)}
+.ver{background:var(--stone2);border:2px solid var(--edge);border-radius:6px;margin-bottom:34px;
+  box-shadow:inset 0 0 0 1px rgba(227,181,79,.15),0 10px 30px rgba(0,0,0,.35)}
+.ver h2{margin:0;display:flex;align-items:baseline;gap:18px;padding:18px 26px;border-bottom:2px solid var(--edge);
+  background:linear-gradient(180deg,rgba(227,181,79,.12),transparent)}
+.ver h2 .v{font-family:var(--display);font-size:44px;color:var(--gold)}
+.ver h2 .d{color:var(--muted);font-size:20px;font-weight:400}
+.ver h2 .t{margin-left:auto;font-size:20px;font-weight:400;color:var(--ink)}
+.latest{border-color:var(--gold2)}
+.latest h2 .t{color:var(--gold)}
+ul{list-style:none;margin:0;padding:14px 26px 20px}
+li{display:grid;grid-template-columns:76px 1fr;gap:16px;align-items:start;padding:9px 0;font-size:23px;line-height:1.45;border-top:1px dashed rgba(255,255,255,.07)}
+li:first-child{border-top:0}
+li .pill{margin-top:3px}
+b{color:var(--gold);font-weight:400}
+footer{text-align:center;color:var(--muted);font-size:19px;line-height:1.7;padding-top:8px}
+</style></head><body><div class="page">
+<header>
+  <div class="logo">G.R.D</div>
+  <div class="sub">패치노트</div>
+  <div class="range">0.3.11 이후 바뀐 것 · 베타 0.3.12 ~ 0.3.14</div>
+  <div class="legend"><span><span class="pill new">추가</span></span><span><span class="pill chg">변경</span></span><span><span class="pill fix">수정</span></span></div>
+</header>
+
+<section class="ver latest"><h2><span class="v">0.3.14</span><span class="d">2026.10.07</span><span class="t">워크3 콘솔 UI</span></h2><ul>
+<li><span class="pill chg">변경</span><span>게임 화면을 <b>원작 원랜디(워크3) 콘솔</b>처럼 — 돌 틀 하단 바·아치 초상화·정보창·인벤토리·명령 카드·시계 구슬·점수판</span></li>
+<li><span class="pill chg">변경</span><span>명령 카드 원작 배치: 이동(M)·홀딩(H)·정지(S)·공격(A) / 반복(P)·스킬·판매 / 조합 가능 유닛 초상화</span></li>
+<li><span class="pill new">추가</span><span><b>반복(P)</b> — 두 지점을 오가며 싸움 · 판매는 희귀함까지만</span></li>
+<li><span class="pill new">추가</span><span>여러 유닛을 고르면 높은 등급이 왼쪽, 작은 초상화 + 체력 막대</span></li>
+<li><span class="pill new">추가</span><span><b>[버그 기록]</b> 단추(왼쪽 위) — 적으면 자동 저장, 게임 폴더의 「버그기록.txt」를 보내 주세요</span></li>
+<li><span class="pill chg">변경</span><span>F10 메뉴·F5 조합 검색·조합 도우미·채팅 새 디자인 · 도움소 마나 표시</span></li>
+<li><span class="pill chg">변경</span><span>적 출발점 마법진 · 바다 색 원작처럼 · 스토리 건물 작게</span></li>
+<li><span class="pill chg">변경</span><span>유물은 이미 가진 것 대신 다른 유물로 · 모리아(좀비)는 이호준</span></li>
+<li><span class="pill chg">변경</span><span>유닛 이름 19기 바뀜(예: 여은서 → 푸은서, 채팅 「푸은서조합」) — 게임 안 F5에서 검색</span></li>
+</ul></section>
+
+<section class="ver"><h2><span class="v">0.3.13</span><span class="d">2026.10.07</span><span class="t">친구들 피드백 반영</span></h2><ul>
+<li><span class="pill chg">변경</span><span>희귀함·특별함 업글이 <b>공격력도</b> 오름(원작대로) · 강화 가격이 레벨마다 점점 비싸짐</span></li>
+<li><span class="pill chg">변경</span><span>상위 등급(히든·전설·초월·불멸) 공격력·공속을 <b>원작 값</b>으로 다시 맞춤</span></li>
+<li><span class="pill chg">변경</span><span>두유찬 공속↑·혼신의일격 자주, 뽑으면 +50,000엔</span></li>
+<li><span class="pill new">추가</span><span>임채민 청렴결백 스킬 완성 · 박민수 초월 획득 음성</span></li>
+<li><span class="pill new">추가</span><span>일시정지(혼자 하기에서 P) · F5 조합 검색 [크게 보기] — 등급별 전체 진행률</span></li>
+<li><span class="pill new">추가</span><span>첫 화면 섬에 우리 유닛들이 거닐어요 · 해적선 대신 상붕카</span></li>
+<li><span class="pill chg">변경</span><span>안흔함 글씨 보라색 · 스토리 이름에 단계 번호(「01. 하이츠」) · 채팅 글씨 크게 · 하단 바 금속 디자인</span></li>
+<li><span class="pill chg">변경</span><span>(베타 표시) 상위 등급을 뽑으면 매칭된 원작 캐릭터 이름 「(원작: 징베)」</span></li>
+<li><span class="pill fix">수정</span><span>특별함에 희귀함 리롤 버튼이 뜨던 것 · 적 체력바·마나 게이지가 안 줄던 것 · 드래그 때 정보창 겹침</span></li>
+<li><span class="pill fix">수정</span><span>보스·스토리 처치 소리 줄임 · 명령 카드 스킬 칸 순서 · 흔함 선택 줄 순서</span></li>
+</ul></section>
+
+<section class="ver"><h2><span class="v">0.3.12</span><span class="d">2026.10.06</span><span class="t">영원함 완성</span></h2><ul>
+<li><span class="pill new">추가</span><span>첫 화면 배경이 움직임 — 섬 마을·포탈·횃불이 살아 있는 영상</span></li>
+<li><span class="pill new">추가</span><span><b>영원함 8종 완성</b>(서민성은 유닛 강화 0~18강) · 제한됨 새로 정리(분실된지갑은 적이 가끔 떨어뜨림)</span></li>
+<li><span class="pill new">추가</span><span><b>유닛회유</b> — 확률로 적을 내 편으로(팔면 위습) · 유재헌 토토 버튼 · 다른세계 「A 또는 B」 재료</span></li>
+<li><span class="pill new">추가</span><span>오른쪽 위 「다음 스토리까지 0:00」 타이머 · 스킬마다 아이콘</span></li>
+<li><span class="pill chg">변경</span><span>적이 지나는 흙길 새로 깔기(직선은 반듯, 모서리만 둥글게) · 상점을 고르면 QWER 줄도 상점 칸</span></li>
+<li><span class="pill fix">수정</span><span>비행 유닛 순간이동 다듬기 · 같이 하기에서 강화 칸 표시</span></li>
+</ul></section>
+
+<footer>같이 하기는 모두 같은 버전이어야 합니다(윈도우·맥 섞여도 됩니다)<br>버그는 [버그 기록] 단추 또는 설정 → [로그 폴더 열기]로 보내 주세요</footer>
+</div></body></html>
