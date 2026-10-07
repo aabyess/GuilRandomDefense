@@ -1849,7 +1849,7 @@ public class GameHud : MonoBehaviour
             if (rewardDesc.Length > 0) rewardDesc.Append(" + ");
             rewardDesc.Append(part);
         }
-        sellSlotTooltip = $"판매\n({rewardDesc})" + (count > 1 ? $"\n고른 {count}기 중 한 번에 한 기씩 판매합니다." : "");
+        sellSlotTooltip = $"판매\n({rewardDesc})" + (count > 1 ? $"\n다음 판매: {data.DisplayName} · 고른 {count}기 중 한 번에 한 기씩 판매합니다." : "");
     }
 
     // 초월 박민수 「재능투자」(사장님 10-06) — 유닛별 칸(FlexKind.Talent) 4개: 공격력·공격속도·방깎·스턴(액티브 다음, 11→4 순서로 채워진다).
