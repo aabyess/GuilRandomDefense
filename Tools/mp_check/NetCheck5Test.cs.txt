@@ -1,0 +1,118 @@
+using System.Collections;
+using System.Linq;
+using System.Reflection;
+using UnityEngine;
+
+/// <summary>
+/// MP 5차 점검 하네스(2026-10-08 구현담당1, 빌드 사본 브랜치 dev/g1-mp-check5 전용 — main에 넣지 않는다, 배포 아님). 훅: NetLauncher `-mpTestCheck5 초`.
+/// 두 창(호스트+클라). 로그 접두 「[C5]」.
+///  ① 상점 번호: 양쪽이 NetShops 목록(0..N)의 이름을 찍는다 → 두 창 목록이 같아야 하고 「다른세계강화소」가 없어야 한다(번호 당김 뒤).
+///  ② 500엔 도박 졸업 잠금: 호스트가 친구 슬롯 지갑에 엔을 넣고 GamblingProgress.Graduate() → 호스트·클라가 0.5초마다 친구 도박소 칸 라벨을 찍는다(「잠금 N초」·흐림) →
+///     잠금 중 호스트가 친구 도박소 목재 구입 칸을 TryUse(거절 기대) → 3초 뒤 TryUse(성공·목재 +1 기대).
+///  ③ 퇴치 미니보스: 호스트가 친구 레인에 의뢰 7종 미니보스를 PirateQuestManager.SpawnMiniboss로 세워 멈춘다 → 클라가 1초마다 NetEntity 중 QuestMobTint≠0을 찍는다(개수·틴트 번호·Visual 이름·크기·QuestMobLook 유무·Animator 컨트롤러).
+/// 사진은 -mpShotAt로 따로 찍는다(호스트·클라 각자 창).
+/// </summary>
+public class NetCheck5Test : MonoBehaviour
+{
+    public float startAt = 20f;
+
+    IEnumerator Start()
+    {
+        yield return new WaitForSecondsRealtime(startAt);
+        LogShops();
+        if (!GameAuthority.IsServer) { yield return ClientRoutine(); yield break; }
+        yield return HostRoutine();
+    }
+
+    static void LogShops()
+    {
+        string side = GameAuthority.IsServer ? "호스트" : "클라";
+        var names = new System.Collections.Generic.List<string>();
+        for (int i = 0; i < 200; i++)
+        {
+            ILaneShop s = NetShops.Get(i);
+            if (s == null) break;
+            names.Add($"{i}:{(s as Component)?.name}");
+        }
+        bool hasOld = names.Any(n => n.Contains("다른세계강화소"));
+        Debug.Log($"[C5] ① {side} 상점 {names.Count}개 · 다른세계강화소 {(hasOld ? "❌ 남아 있음" : "없음 ✓")} · 첫 12: {string.Join(" | ", names.Take(12))}");
+    }
+
+    static GamblingShop GambleShopOf(int lane) => FindObjectsByType<GamblingShop>(FindObjectsSortMode.None).FirstOrDefault(s => s.GetComponent<OwnedByPlayer>().OwnerId == lane);
+
+    static string Labels(GamblingShop shop)
+    {
+        var l = new System.Collections.Generic.List<string>();
+        for (int i = 0; i < 3; i++) { var v = shop.GetSlotView(i); l.Add($"[{i}]{(v.label ?? "").Replace("\n", " / ")}{(v.available ? "" : "(흐림)")}"); }
+        return string.Join(" | ", l);
+    }
+
+    IEnumerator HostRoutine()
+    {
+        PlayerContext friend = PlayerContext.Occupied.FirstOrDefault(c => c.PlayerId != LocalPlayer.LocalPlayerId);
+        if (friend == null) { Debug.Log("[C5] 친구 슬롯 없음"); yield break; }
+        int lane = friend.PlayerId;
+        // ── ② 500엔 도박 졸업 잠금 ──
+        GamblingShop shop = GambleShopOf(lane);
+        friend.GoldWallet.Add(1000000);
+        Debug.Log($"[C5] ② 졸업 전 친구 도박소: {Labels(shop)}");
+        friend.GamblingProgress.Graduate();
+        string wood0 = friend.ResourceWallet.Get(ResourceType.Wood).ToString();
+        for (int k = 0; k < 10; k++)
+        {
+            Debug.Log($"[C5] ② +{k * 0.5f:F1}s 호스트 보는 친구 도박소: {Labels(shop)} · 잠금 남은 {friend.GamblingProgress.SwapLockRemaining:F2}초");
+            if (k == 2) { bool ok = shop.TryUse(1, default, out string why); Debug.Log($"[C5] ② +1.0s 목재 구입 시도 → {(ok ? "❌ 성공(잠금이 안 막음)" : "거절 ✓")} · 이유 「{why}」"); }
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+        { bool ok = shop.TryUse(1, default, out string why); Debug.Log($"[C5] ② +5.0s 목재 구입 시도 → {(ok ? "성공 ✓" : "❌ 거절")} · 이유 「{why}」 · 목재 {wood0} → {friend.ResourceWallet.Get(ResourceType.Wood)}"); }
+        // ── ③ 퇴치 미니보스 7종 ──
+        PirateQuestManager mgr = FindFirstObjectByType<PirateQuestManager>();
+        MethodInfo spawn = typeof(PirateQuestManager).GetMethod("SpawnMiniboss", BindingFlags.Instance | BindingFlags.NonPublic);
+        var quests = UnityEditorLess.Quests();
+        LaneMarker lm = LaneMarker.Get(lane);
+        int n = 0;
+        foreach (PirateQuestData q in quests)
+        {
+            GameObject go = (GameObject)spawn.Invoke(mgr, new object[] { q, lane });
+            if (go == null) continue;
+            if (go.TryGetComponent(out WaypointMover mv)) mv.enabled = false;
+            if (go.TryGetComponent(out UnityEngine.AI.NavMeshAgent ag)) ag.enabled = false;
+            go.transform.position = lm.LaneCenter + Vector3.back * 12f + Vector3.right * (n * 14f - 42f);
+            n++;
+        }
+        Debug.Log($"[C5] ③ 호스트가 친구 레인에 미니보스 {n}기 세움");
+    }
+
+    IEnumerator ClientRoutine()
+    {
+        float t0 = Time.realtimeSinceStartup;
+        string lastLabel = null; int lastCount = -1;
+        for (int i = 0; i < 160; i++)
+        {
+            yield return new WaitForSecondsRealtime(0.5f);
+            GamblingShop shop = NetPlayer.Local != null ? GambleShopOf(LocalPlayer.LocalPlayerId) : null;
+            if (shop != null && NetPlayer.Local.GambleGraduated)
+            {
+                string lab = Labels(shop) + $" · 복제 잠금 {NetPlayer.Local.GambleSwapLock:F2}초";
+                if (lab != lastLabel) { Debug.Log($"[C5] ② 클라 내 도박소 (t+{Time.realtimeSinceStartup - t0:F1}s): {lab}"); lastLabel = lab; }
+            }
+            var ents = FindObjectsByType<NetEntity>(FindObjectsSortMode.None).Where(e => e.QuestMobTint != 0).ToList();
+            if (ents.Count != lastCount)
+            {
+                lastCount = ents.Count;
+                Debug.Log($"[C5] ③ 클라 퀘스트 미니보스 겉모습 {ents.Count}기: " + string.Join(" | ", ents.Select(e =>
+                    $"틴트{e.QuestMobTint} 시각 {(e.Visual != null ? e.Visual.name : "없음")} 크기 {(e.Visual != null ? e.Visual.transform.lossyScale.x : 0):F2} QuestMobLook {(e.Visual != null && e.Visual.TryGetComponent(out QuestMobLook _) ? "있음" : "없음")} Animator {(e.Visual != null && e.Visual.GetComponentInChildren<Animator>() != null ? e.Visual.GetComponentInChildren<Animator>().runtimeAnimatorController?.name : "없음")}")));
+            }
+        }
+    }
+
+    // 에디터 없는 빌드에서 의뢰 목록을 얻는다: 도박소의 PirateQuestShop이 쥔 quests 필드.
+    static class UnityEditorLess
+    {
+        public static System.Collections.Generic.List<PirateQuestData> Quests()
+        {
+            PirateQuestShop s = FindObjectsByType<PirateQuestShop>(FindObjectsSortMode.None).First();
+            return (System.Collections.Generic.List<PirateQuestData>)typeof(PirateQuestShop).GetField("quests", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(s);
+        }
+    }
+}
