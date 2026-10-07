@@ -43,6 +43,8 @@ public class NetEntity : NetworkBehaviour
     [Networked] public NetworkBool SlowVfx { get; set; }
     // 적: 광폭화 유닛(BerserkMob)이다 — 클라 겉모습에 이름 「광폭화 ○○」·붉은 틴트·원판·고리를 붙인다(10-07).
     [Networked] public NetworkBool Berserk { get; set; }
+    // 적: 퇴치 의뢰 미니보스(QuestMobLook)다 — 값 = 의뢰 틴트 번호(1~7), 0 = 아님. 클라 겉모습에 같은 색·원판을 입힌다(10-08). 크기는 transform.localScale 복제로 이미 따라온다.
+    [Networked] public byte QuestMobTint { get; set; }
     // 플레이어 유닛: 마나·체력 게이지 스킬의 현재/최대(UnitAttacker.ShownManaNow 등, 10-08) — 클라 초상 아래 막대가 그린다. 최대 0 = 그 막대 없음.
     [Networked] public short GaugeManaNow { get; set; }
     [Networked] public short GaugeManaMax { get; set; }
@@ -125,6 +127,8 @@ public class NetEntity : NetworkBehaviour
             if (SlowVfx != realEnemy.HasSlowVfx) SlowVfx = realEnemy.HasSlowVfx;
             bool isBerserk = realEnemy.TryGetComponent(out BerserkMob _);
             if (Berserk != isBerserk) Berserk = isBerserk;
+            byte questTint = realEnemy.TryGetComponent(out QuestMobLook questLook) ? questLook.TintIndex : (byte)0;
+            if (QuestMobTint != questTint) QuestMobTint = questTint;
         }
 
         if (realAttacker != null)
@@ -162,6 +166,8 @@ public class NetEntity : NetworkBehaviour
             // 높이는 EnemyDummy.AddFreeze·AddSlow와 같은 값(머리 위 +4 · 발밑 3)
             clientStunVfx = SyncStateVfx(StunVfx, clientStunVfx, SkillVfx.Kind.Stun, replicaEnemy.VfxTop + 4f);
             clientSlowVfx = SyncStateVfx(SlowVfx, clientSlowVfx, SkillVfx.Kind.Slow, 3f);
+            if (QuestMobTint != 0 && !HasStateAuthority && Visual != null && !Visual.TryGetComponent(out QuestMobLook _))
+                Visual.AddComponent<QuestMobLook>().Begin(QuestMobTint);
             if (Berserk && !HasStateAuthority && Visual != null && !Visual.TryGetComponent(out BerserkLook _))
             {
                 Visual.AddComponent<BerserkLook>();

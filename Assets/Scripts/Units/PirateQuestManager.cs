@@ -140,6 +140,9 @@ public class PirateQuestManager : MonoBehaviour
 
         dummy.Initialize(quest.miniboss);
         dummy.SetLane(-1); // 레인 카운트·패배판정에서 제외 (크립과 같은 이유)
+        // 사장님 10-08: 새 모델 없이 자리표시(라인몹) 모델의 크기·색으로 구별 — ×1.5 + 의뢰마다 다른 색 + 발밑 원판(광폭화의 붉은 표시와 안 겹치는 색). MP 클라는 NetEntity.QuestMobTint로 같은 모양을 입는다.
+        instance.transform.localScale *= QuestMobLook.QuestMobScale;
+        instance.AddComponent<QuestMobLook>().Begin(QuestMobLook.TintIndexFor(quest.questName));
 
         float baseHp = quest.miniboss.hp;
         if (quest.scalesWithAttempts)
