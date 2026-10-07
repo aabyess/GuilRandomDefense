@@ -54,4 +54,27 @@ def helper():
     d = ImageDraw.Draw(out); d.text((6, 4), 'NOW', fill=(255, 255, 0, 255)); d.text((966, 4), 'NEW (parts only — text/icons are code)', fill=(255, 255, 0, 255))
     out.convert('RGB').save(f'{D}/compare_helper.png')
 
-drawer(); helper(); print('saved')
+def menu_chat_score():
+    m = Image.open(os.path.join(SHOTS, 'g2_f1_menu.png')).convert('RGBA'); om = m.copy()
+    x0, y0, W, H = 422, 390, 1075, 280
+    om.alpha_composite(navy(W - 40, H - 40, 240), (x0 + 20, y0 + 20)); om.alpha_composite(s9('menu_panel', W, H, 40), (x0, y0))
+    om.alpha_composite(L('menu_divider').resize((700, 6), Image.LANCZOS), (x0 + 187, y0 + 92))
+    for i, k in enumerate(('hover', 'normal', 'normal', 'pressed', 'normal')): om.alpha_composite(s9('menu_btn' + ('' if k == 'normal' else '_' + k), 193, 84, 16), (x0 + 22 + i * 207, y0 + 160))
+    c = Image.open(os.path.join(SHOTS, 'g2_m3_after.png')).convert('RGBA'); oc = c.copy()
+    for j in range(2): oc.alpha_composite(s9('chat_line_band', 470, 40, 16), (1984 - 1920 + 0, 645 + j * 44) if False else (1990 - 1920 + 0 if False else 60, 645 + j * 44))
+    oc.alpha_composite(s9('chat_input_focus', 520, 42, 10), (60, 738))
+    sc_ = Image.open(os.path.join(SHOTS, 'g2_c1_stone.png')).convert('RGBA'); osc = sc_.copy()
+    osc.alpha_composite(s9('timer_window', 496, 37, 14), (1404, 40)); osc.alpha_composite(s9('timer_window', 496, 37, 14), (1404, 88))
+    osc.alpha_composite(s9('scoreboard_frame', 496, 120, 14), (1404, 136)); osc.alpha_composite(s9('score_header', 468, 30, 10), (1418, 146))
+    for j in range(2): osc.alpha_composite(L('score_row_divider').resize((468, 2)), (1418, 200 + j * 26))
+    osc.alpha_composite(L('score_color_chip').resize((14, 14)), (1424, 236)); osc.alpha_composite(L('collapse_btn').resize((24, 24)), (1868, 149))
+    out = Image.new('RGBA', (1920, 3 * 380 + 40), (20, 20, 24, 255)); d = ImageDraw.Draw(out)
+    out.alpha_composite(m.crop((380, 360, 1340, 700)).resize((960, 340)), (0, 0)); out.alpha_composite(om.crop((380, 360, 1340, 700)).resize((960, 340)), (960, 0))
+    out.alpha_composite(c.crop((0, 600, 960, 800)).resize((960, 200)), (0, 380)); out.alpha_composite(oc.crop((0, 600, 960, 800)).resize((960, 200)), (960, 380))
+    out.alpha_composite(sc_.crop((1380, 30, 1920, 270)).resize((810, 360)), (0, 780)); out.alpha_composite(osc.crop((1380, 30, 1920, 270)).resize((810, 360)), (960, 780))
+    for (x, y) in ((6, 4), (6, 384), (6, 784)): d.text((x, y), 'NOW', fill=(255, 255, 0, 255)); d.text((x + 960, y), 'NEW (parts only)', fill=(255, 255, 0, 255))
+    out.convert('RGB').save(f'{D}/compare_menu_chat_score.png')
+
+if len(sys.argv) > 2 and sys.argv[2] == 'mcs': menu_chat_score()
+else: drawer(); helper(); menu_chat_score()
+print('saved')

@@ -128,8 +128,59 @@ def part_win_small():
     path_frame(sc, rr, 4.8, 1.7, .08, line=.012, inset=.03, inner=False, fill=glassy_navy('툴팁판', .94))
     shot(sc, 'win_tooltip', 4.8, 1.7)
 
+# ---------------------------------------------------------------- A-2 메뉴
+def part_menu():
+    # 메뉴 창 틀 10.75×2.80(여백 40@1x): win_frame과 같은 결, 위 가운데에 제목 받침 돌 + 모서리 돌 더 크게
+    sc = frame_scene(); g, gd = GOLD
+    W, H, B = 10.75, 2.80, .26
+    st = stone_mat('메뉴돌', base=tuple(c * 1.25 for c in STONE_TONES[0]), seed=121, moss=.15, light=1.2, crack_amt=.25)
+    ring_mesh(sc, 'ring', rr(W, H, .06), rr(W - 2 * B, H - 2 * B, .03), st, th=.12, y=-.06)
+    tube(sc, 'g1', rr(W - 2 * B - .02, H - 2 * B - .02, .03), .016, g, y=FRONT); tube(sc, 'g2', rr(W - 2 * B - .08, H - 2 * B - .08, .02), .008, g, y=FRONT)
+    tube(sc, 'g0', rr(W - .03, H - .03, .05), .01, bronze(), y=FRONT + .1)
+    for (sx, sz) in ((-1, 1), (1, 1), (-1, -1), (1, -1)):
+        cx, cz = sx * (W / 2 - .19), sz * (H / 2 - .19)
+        rough_block(sc, 'cstone', (.36, .17, .36), (cx, -.15, cz), stone_mat('모서리돌', base=tuple(c * 1.35 for c in STONE_TONES[2]), seed=130 + sx + 3 * sz, moss=.1, light=1.25), 1300 + sx + 3 * sz, chip=.025)
+        bpy.ops.mesh.primitive_cylinder_add(vertices=4, radius=.13, depth=.03, location=(cx, -.26, cz), rotation=(math.radians(90), 0, 0)); d = bpy.context.object; d.data.materials.append(g)
+        mksph(sc, 'cgem', .04, (cx, -.29, cz), gem_mat('창보석', (.1, .3, .9), .6), sub=3)
+    shot(sc, 'menu_panel', W, H)
+    # 메뉴 단추 1.93×0.84(여백 16): 두꺼운 돌판 + 금테 (보통·hover·pressed·disabled)
+    for k in ('normal', 'hover', 'pressed', 'disabled'):
+        sc = frame_scene(); g, gd = GOLD
+        W, H = 1.93, .84
+        tone = {'normal': 1.35, 'hover': 1.6, 'pressed': 1.05, 'disabled': .9}[k]
+        slab = stone_mat('단추돌' + k, base=tuple(c * tone for c in STONE_TONES[2]), seed=140, moss=0.0 if k != 'disabled' else .3, light=1.2, crack_amt=.15)
+        o = mkbox(sc, 'slab', (W - .1, .14, H - .1), (0, .02 if k == 'pressed' else -.02, 0), slab, bevel=.05); o.modifiers['b'].segments = 4
+        lm = dull_gold() if k == 'disabled' else (metal_mat('밝은금', col=(.95, .72, .28), rough=.25, wear=.3, dark=(.3, .2, .05)) if k == 'hover' else None)
+        tube(sc, 'o', rr(W - .03, H - .03, .06), .016, lm or g, y=-.1)
+        tube(sc, 'i', rr(W - .16, H - .16, .04), .008, lm or g, y=-.1 if k != 'pressed' else -.07)
+        if k == 'hover':
+            ld = bpy.data.lights.new('warm', 'POINT'); ld.energy = 25; ld.color = (1, .6, .25); lo = link(bpy.data.objects.new('warm', ld), sc); lo.location = (0, -.5, .2)
+        shot(sc, 'menu_btn' + suffix(k), W, H)
+
+# ---------------------------------------------------------------- A-3 채팅
+def part_chat():
+    for k in ('normal', 'focus'):
+        sc = frame_scene(); g, gd = GOLD
+        W, H = 5.2, .42
+        lm = metal_mat('밝은금', col=(.95, .72, .28), rough=.25, wear=.3, dark=(.3, .2, .05)) if k == 'focus' else None
+        path_frame(sc, rr, W, H, .05, line=.014 if k == 'normal' else .018, inset=.034, fill=glassy_navy('채팅판', .85), line_mat=lm)
+        gx = -W / 2 + .78
+        mkbox(sc, 'tagsep', (.016, .03, H - .1), (gx, -.01, 0), matte_black('홈', .002)); mkbox(sc, 'tagsep_hl', (.006, .03, H - .1), (gx + .014, -.012, 0), lm or g)
+        shot(sc, 'chat_input' + suffix(k), W, H)
+
+# ---------------------------------------------------------------- A-4 점수판
+def part_score():
+    sc = frame_scene(); g, gd = GOLD
+    W, H = 4.68, .30
+    path_frame(sc, rr, W, H, .04, line=.012, inset=.03, fill=navy_mat('머리줄', top='#1A2650', bot='#0A1020'), band=bronze())
+    xs = W / 2 - .36                                                         # 오른쪽 접기 단추 자리 36px
+    mkbox(sc, 'sep', (.014, .03, H - .08), (xs, -.01, 0), matte_black('홈', .002)); mkbox(sc, 'seph', (.005, .03, H - .08), (xs + .012, -.012, 0), g)
+    shot(sc, 'score_header', W, H)
+    sc = frame_scene(); g, gd = GOLD                                          # 색 칩 틀 0.14
+    tube(sc, 'chip', rr(.12, .12, .015), .01, g); shot(sc, 'score_color_chip', .14, .14)
+
 def part_window():
     part_win_frame(); part_win_small()
 
 for p_ in WPARTS:
-    {'window': part_window, 'frame': part_win_frame, 'small': part_win_small}[p_]()
+    {'window': part_window, 'frame': part_win_frame, 'small': part_win_small, 'menu': part_menu, 'chat': part_chat, 'score': part_score}[p_]()
