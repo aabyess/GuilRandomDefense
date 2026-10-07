@@ -11,7 +11,7 @@ using UnityEngine;
 /// </summary>
 public class GameVersion : MonoBehaviour
 {
-    public const string Number = "0.3.13";
+    public const string Number = "0.3.14";
     // 베타 표시(사장님 10-07 「누구 매칭인지 보이게」) — 유닛 획득 알림 끝 「(원작: 징베)」·정보창 이름 줄 끝 「원작 징베」. 정식 출시 땐 false로 끈다(데이터 UnitData.originalMatchName은 그대로 둔다).
     public const bool BetaShowOriginalMatch = true;
     // 사장님 표기 그대로 「1.1.0v」(09-26 두 번 — 「1.1.0v 이런식으로」). 앱·압축 파일 이름에도 이 글자를 쓴다(BuildBeta).
