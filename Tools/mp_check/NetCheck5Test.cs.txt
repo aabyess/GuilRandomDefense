@@ -73,7 +73,9 @@ public class NetCheck5Test : MonoBehaviour
         int n = 0;
         foreach (PirateQuestData q in quests)
         {
-            GameObject go = (GameObject)spawn.Invoke(mgr, new object[] { q, lane });
+            Debug.Log($"[C5] ③ 의뢰 {q.questName}: miniboss {(q.miniboss != null ? q.miniboss.name : "null")} prefab {(q.miniboss != null && q.miniboss.prefab != null ? q.miniboss.prefab.name : "NULL")}");
+            GameObject go = null;
+            try { go = (GameObject)spawn.Invoke(mgr, new object[] { q, lane }); } catch (System.Exception e) { Debug.Log($"[C5] ③ 스폰 예외 {q.questName}: {e.InnerException?.Message ?? e.Message}"); }
             if (go == null) continue;
             if (go.TryGetComponent(out WaypointMover mv)) mv.enabled = false;
             if (go.TryGetComponent(out UnityEngine.AI.NavMeshAgent ag)) ag.enabled = false;
@@ -81,6 +83,21 @@ public class NetCheck5Test : MonoBehaviour
             n++;
         }
         Debug.Log($"[C5] ③ 호스트가 친구 레인에 미니보스 {n}기 세움");
+        // ── ⑤ 게이지 HUD 복제: 친구 레인에 게이지 유닛 둘을 세우고 호스트 값(UnitAttacker.Shown*)을 찍는다 — 클라는 NetEntity.Gauge* 를 찍는다 ──
+        UnitSpawner spawner = FindFirstObjectByType<UnitSpawner>();
+        var gauged = new System.Collections.Generic.List<UnitAttacker>();
+        foreach (string un in new[] { "초월_강재규_AP", "초월_노태현_AP" })
+        {
+            UnitData ud = NetLauncher.Catalog != null ? NetLauncher.Catalog.units.FirstOrDefault(u => u != null && u.name == un) : null;
+            if (ud == null) { Debug.Log($"[C5] ⑤ {un} 카탈로그에 없음"); continue; }
+            GameObject ug = spawner.Spawn(ud, lm.LaneCenter + Vector3.forward * (6f + gauged.Count * 6f), lane);
+            if (ug != null && ug.TryGetComponent(out UnitAttacker ua)) gauged.Add(ua);
+        }
+        for (int k = 0; k < 8; k++)
+        {
+            yield return new WaitForSecondsRealtime(2f);
+            foreach (UnitAttacker ua in gauged) if (ua != null) Debug.Log($"[C5] ⑤ 호스트 {ua.GetComponent<UnitIdentity>().Data.name} 마나 {ua.ShownManaNow}/{ua.ShownManaMax} 체력 {ua.ShownLifeNow}/{ua.ShownLifeMax}");
+        }
     }
 
     IEnumerator ClientRoutine()
@@ -96,7 +113,13 @@ public class NetCheck5Test : MonoBehaviour
                 string lab = Labels(shop) + $" · 복제 잠금 {NetPlayer.Local.GambleSwapLock:F2}초";
                 if (lab != lastLabel) { Debug.Log($"[C5] ② 클라 내 도박소 (t+{Time.realtimeSinceStartup - t0:F1}s): {lab}"); lastLabel = lab; }
             }
-            var ents = FindObjectsByType<NetEntity>(FindObjectsSortMode.None).Where(e => e.QuestMobTint != 0).ToList();
+            foreach (NetEntity ue in FindObjectsByType<NetEntity>(FindObjectsSortMode.None))
+            {
+                if (ue.Object == null || !ue.Object.IsValid || ue.EntityKind != NetEntityKind.Unit) continue;
+                if (ue.GaugeManaMax == 0 && ue.GaugeLifeMax == 0) continue;
+                if (i % 4 == 0) Debug.Log($"[C5] ⑤ 클라 {(ue.Visual != null ? ue.Visual.name : "?")} 마나 {ue.GaugeManaNow}/{ue.GaugeManaMax} 체력 {ue.GaugeLifeNow}/{ue.GaugeLifeMax}");
+            }
+            var ents = FindObjectsByType<NetEntity>(FindObjectsSortMode.None).Where(e => e.Object != null && e.Object.IsValid && e.QuestMobTint != 0).ToList();
             if (ents.Count != lastCount)
             {
                 lastCount = ents.Count;

@@ -1039,6 +1039,13 @@ public static class ArtBinder
         return $"스토리 건물 {made}채 다시 붙임(×{StoryBuildingScale}): {string.Join(", ", report)}";
     }
 
+    // 퇴치 미니보스 → 모델을 빌려 오는 라인몹 에셋(사장님 10-08 「크기·색만」, 의뢰마다 다른 사람 모양 라인몹) — BindEnemies가 배선 때마다 prefab 참조를 복사한다.
+    static readonly (string miniboss, string enemyAsset)[] QuestMinibossModels =
+    {
+        ("신림패거리", "Enemy_R22_이호준"), ("허브수경비원", "Enemy_R25_이정범"), ("조규룡", "Enemy_R29_박민수"), ("박성호", "Enemy_R35_서승혁"),
+        ("김선우", "Enemy_R36_최혜륜"), ("배고픈황정기", "Enemy_R49_이현주"), ("이영용", "Enemy_R54_지성현"),
+    };
+
     static string BindEnemies(List<GameObject> models)
     {
         GameObject template = AssetDatabase.LoadAssetAtPath<GameObject>(MobTemplate);
@@ -1082,10 +1089,24 @@ public static class ArtBinder
             reset++;
         }
 
+        // 퇴치 미니보스 7종(사장님 10-08)은 라인몹 모델을 빌려 쓴다. Miniboss_*.prefab 참조는 생성 프리팹의 루트 fileID에 걸려 있어 배선(Generated 재생성)마다 끊긴다
+        // (10-08 MP check5: 클린 빌드에서 prefab NULL) — 같은 배선에서 빌려 쓰는 Enemy_Rxx의 prefab을 그대로 복사해 항상 맞춘다.
+        int questSynced = 0;
+        foreach ((string miniboss, string enemyAsset) in QuestMinibossModels)
+        {
+            EnemyData mini = AssetDatabase.LoadAssetAtPath<EnemyData>($"Assets/Data/PirateQuests/Miniboss_{miniboss}.asset");
+            EnemyData src = enemies.FirstOrDefault(e => Nfc(e.name) == Nfc(enemyAsset));
+            if (mini == null || src == null || src.prefab == null || mini.prefab == src.prefab) continue;
+            mini.prefab = src.prefab;
+            EditorUtility.SetDirty(mini);
+            questSynced++;
+        }
+
         List<string> unused = models.Where(m => !cache.ContainsKey(m)).Select(m => m.name).ToList();
         return $"\n적: 표에 적힌 모델 {bound.Count}종을 붙였습니다" +
                (bound.Count > 0 ? $" ({string.Join(", ", bound)})." : ".") +
                (reset > 0 ? $"\n  자리표시 프리팹으로 되돌린 적 {reset}종." : "") +
+               (questSynced > 0 ? $"\n  퇴치 미니보스 모델 참조 {questSynced}종 다시 맞춤." : "") +
                (unused.Count > 0 ? $"\n  표(ArtBinder.EnemyModels)에 없어 안 붙인 모델: {string.Join(", ", unused)}" : "");
     }
 
