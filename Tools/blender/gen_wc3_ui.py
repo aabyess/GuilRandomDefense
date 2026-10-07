@@ -30,7 +30,13 @@ if len(sys.argv) > 1 and sys.argv[1] == 'compare':                       # -----
     d = ImageDraw.Draw(ours)
     for (x0, y0, x1, y1) in ((16, 809, 368, 1066), (750, 809, 1215, 1080), (1468, 815, 1915, 1075)):
         d.rectangle((x0 + 12, y0 + 12, x1 - 12, y1 - 12), fill=(0, 0, 0, 255)); ours.alpha_composite(s9(pf, x1 - x0, y1 - y0, 32), (x0, y0))
-    d.rectangle((440 + 14, 858, 705 - 14, 1080), fill=(0, 0, 0, 255))      # 초상 자리(아치는 다음 덩어리)
+    if os.path.exists(f'{D}/portrait_arch_frame.png'):
+        mk = L('portrait_arch_mask').resize((265, 222), Image.LANCZOS); blk = Image.new('RGBA', (265, 222), (0, 0, 0, 255)); blk.putalpha(mk.split()[0])
+        ours.alpha_composite(blk, (440, 858)); ours.alpha_composite(L('portrait_arch_frame').resize((265, 222), Image.LANCZOS), (440, 858))
+    else: d.rectangle((440 + 14, 858, 705 - 14, 1080), fill=(0, 0, 0, 255))
+    if os.path.exists(f'{D}/info_title_strip.png'):
+        ours.alpha_composite(L('info_title_strip').resize((440, 30), Image.LANCZOS), (762, 814)); ours.alpha_composite(L('info_level_strip').resize((440, 18), Image.LANCZOS), (762, 848))
+        for (x, y) in ((752, 863), (976, 906)): ours.alpha_composite(L('icon_slot_gold').resize((48, 48), Image.LANCZOS), (x, y))
     pl = L('stone_pillar')
     for (x0, x1) in ((368, 440), (705, 750), (1215, 1238), (1418, 1468)):
         w = x1 - x0; src = pl; m = 16
@@ -253,24 +259,25 @@ def arch_path(w, h, rise, n=48):
     pts.append((w / 2, -h / 2)); return pts
 def part_arch():
     sc = frame_scene(); g, gd = GOLD
-    W, H = 2.65, 2.22; rise = .55; m = .10                               # 틀 띠 폭 0.10
+    W, H = 2.65, 2.22; rise = .55; m = .17                               # 틀 띠 폭 0.17(참고 사진의 굵은 금테)
     out = arch_path(W - .04, H, rise); inn = arch_path(W - .04 - 2 * m, H + .0, rise - m * .9)
     inn = [(x, z) for x, z in inn]; inn[0] = (inn[0][0], -H / 2); inn[-1] = (inn[-1][0], -H / 2)
-    tube(sc, 'aout', out, .022, g, closed=False); tube(sc, 'ain', inn, .012, g, closed=False, y=-.004)
+    tube(sc, 'aout', out, .034, g, closed=False); tube(sc, 'ain', inn, .02, g, closed=False, y=-.006)
+    tube(sc, 'amid', arch_path(W - .04 - m, H, rise - m * .45), .011, g, closed=False, y=-.004)   # 띠 가운데 가는 금선
     # 띠: 바깥·안쪽 경로 사이 리본(어두운 금)
     bm = bmesh.new(); vo = [bm.verts.new((x, .012, z)) for x, z in out]; vi = [bm.verts.new((x, .012, z)) for x, z in arch_path(W - .04 - 2 * m, H, rise - m * .9)]
     for i in range(len(vo) - 1): bm.faces.new((vo[i], vo[i + 1], vi[i + 1], vi[i]))
-    me = bpy.data.meshes.new('aband'); bm.to_mesh(me); bm.free(); ob = link(bpy.data.objects.new('aband', me), sc); me.materials.append(gd)
+    me = bpy.data.meshes.new('aband'); bm.to_mesh(me); bm.free(); ob = link(bpy.data.objects.new('aband', me), sc); me.materials.append(metal_mat('청동띠', col=(.32, .21, .07), rough=.45, wear=.7, dark=(.06, .035, .01)))
     # 리벳 + 맨 위 보석 받침
     for k in range(1, 12):
         if k == 6: continue
         t = k / 12; a = math.pi * (1 - t); x = (W / 2 - .02 - m / 2) * math.cos(a); z = (H / 2 - rise) + (rise - m * .45) * math.sin(a)
-        mksph(sc, 'rivet', .016, (x, -.01, z), g, sub=2)
+        mksph(sc, 'rivet', .024, (x, -.012, z), g, sub=2)
     for zz in (-.6, -.2, .2):
-        for sx in (-1, 1): mksph(sc, 'rivet', .016, (sx * (W / 2 - .02 - m / 2), -.01, zz), g, sub=2)
+        for sx in (-1, 1): mksph(sc, 'rivet', .024, (sx * (W / 2 - .02 - m / 2), -.012, zz), g, sub=2)
     top = (0, -.03, H / 2 - .05)
-    mkcyl(sc, 'gemset', .07, .04, top, g, rot=(math.radians(90), 0, 0), seg=8)
-    mksph(sc, 'gem', .05, (0, -.06, H / 2 - .05), gem_mat('붉은보석', (.8, .05, .05), .8), sub=3, scale=(1, .6, 1.2))
+    mkcyl(sc, 'gemset', .1, .05, top, g, rot=(math.radians(90), 0, 0), seg=8)
+    mksph(sc, 'gem', .055, (0, -.07, H / 2 - .06), gem_mat('붉은보석', (.45, .02, .03), .35), sub=3, scale=(1, .6, 1.2))
     for sx in (-1, 1): mksph(sc, 'sgem', .028, (sx * .16, -.03, H / 2 - .07 - .01), gem_mat('푸른보석', (.1, .3, .9), .6), sub=2)
     ortho_cam(sc, 0, 0, W, int(W * PPM), int(H * PPM)); render(sc, f'{OUT}/portrait_arch_frame.png')
     # 마스크: 안쪽만 흰 발광 판, 나머지 숨김
