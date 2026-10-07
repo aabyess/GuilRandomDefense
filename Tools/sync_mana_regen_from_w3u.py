@@ -206,9 +206,9 @@ def main(dry, list_path=None):
             cands = [(False, '-', 0.0, 0.0, None)]   # 마나 없는 로스터(카타쿠리) — 마나 필드는 0
 
         def gpm_of(c):
-            return 1.0 / c[4] if c[4] else ((max(mana_thr) / c[2]) if mana_thr else 1.0)
+            return 1.0 / c[4] if c[4] else ((max(mana_thr) / c[2]) if mana_thr and c[2] else 1.0)
         # Mana 게이지: umpm×환산이 문턱과 맞는 유닛 우선, 없으면 마나 검사하는 첫 유닛
-        match = lambda c: mana_thr and any(abs(c[2] * gpm_of(c) - t) < 0.5 for t in mana_thr)
+        match = lambda c: mana_thr and c[2] > 0 and any(abs(c[2] * gpm_of(c) - t) < 0.5 for t in mana_thr)   # umpm 0(마나 필드 없는 대응 유닛 — 10-07 초월 노태현 등)이면 환산(문턱÷umpm)이 0으로 나눠진다
         pick = ([c for c in cands if c[4] and match(c)] or [c for c in cands if match(c)]
                 or [c for c in cands if c[0]] or cands)   # 평타 +x를 읽은 유닛 먼저(환산을 문턱에서 역산하면 아무 유닛이나 맞는다)
         checks, uid, umpm, umpr, per_hit = pick[0]
