@@ -45,6 +45,22 @@ public static class HeroStatShotProbe
         return "❌ 못 찾음";
     }
 
+    // 판매 칸 회귀 확인용 — 판매되는 등급(희귀함 구주호)을 세워 고른다.
+    public static string SpawnSelectRare()
+    {
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        var unit = UnityEditor.AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/희귀함_구주호.asset");
+        spawner.Spawn(unit, LaneMarker.Get(0).LaneCenter, 0);
+        return "✅ 희귀함 세움";
+    }
+
+    public static string SelectRare()
+    {
+        foreach (Selectable sel in Object.FindObjectsByType<Selectable>(FindObjectsSortMode.None))
+            if (sel.name.Contains("희귀함_구주호")) { Object.FindFirstObjectByType<SelectionManager>().SelectOnly(sel); return "✅ " + sel.name; }
+        return "❌ 못 찾음";
+    }
+
     public static string AddXp()
     {
         if (!Application.isPlaying) return "❌ 플레이 중에만";
