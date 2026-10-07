@@ -264,6 +264,7 @@ def build_tavern(loc, yaw):
             drinkers.append((g, bx, by, yw, ti * .37 + k * .5))
     return g, drinkers
 
+TAV_SEATS = []
 def place_tavern():
     loc = (28.0, 1.0, Z(28.0, 1.0)); yaw = math.radians(-32)
     g, dr = build_tavern(loc, yaw)
@@ -271,7 +272,7 @@ def place_tavern():
     for i, (g_, bx, by, yw, ph) in enumerate(dr):
         pw = g.matrix_world @ Vector((bx, by, 2.1))
         # 사람은 월드에 직접 놓는다(부모 없이): 문(−Y) 쪽을 보게
-        drinker(20 + i, (pw.x, pw.y, pw.z), yaw + yw + math.pi, ph)
+        TAV_SEATS.append((Vector((pw.x, pw.y, 0)), yaw + yw + math.pi, ph, loc[2]))   # 스킨 손님은 아래 Sitter가 앉힌다
     # 굴뚝 연기
     chp = g.matrix_world @ Vector((-4.2, 1.5, 12.6))
     sm = M('smoke', (.55, .48, .42), 1.0, alpha=.30, emit=(.75, .42, .25), strength=.9)
@@ -293,19 +294,33 @@ place_tavern()
 # --- 마을 사람 = 우리 유닛 스킨(Assets/Art/Units/<이름>/<이름>.fbx, 읽기만). 사장님이 바꾸려면 아래 CROWD 이름만 고쳐 다시 렌더. ---
 # (유닛 폴더 이름, 동작, A점, B점, 시작 위상) — 동작 'walk' = A↔B 천천히 왕복(위아래 튀지 않음) · 'idle' = 서서 대기(A점, B점은 바라볼 곳)
 CROWD = [
+    # --- 앞마당(낮은 땅, 포탈·성 앞) ---
     ('초월_박민수_AD',  'walk', (-18, -22), (-12, -25), .00),
     ('초월_두유찬_AD',  'walk', (-29, -10), (-25, -16), .30),
     ('초월_최상호_AD',  'walk', (-9, -14),  (-2, -18), .55),
     ('초월_최상호_AP',  'idle', (-5, -33),  (6, -26), .15),
     ('초월_구주호_AD',  'walk', (-26, -28), (-31, -23), .70),
+    ('불멸_이이삭',     'walk', (-22, -20), (-17, -18), .45),
+    ('불멸_정윤식',     'idle', (-17, -31), (-12, -34), .90),
+    ('초월_조성진_AD',  'walk', (-38, -17), (-35, -23), .25),
+    ('초월_이태훈_AP',  'walk', (-11, -37), (-6, -34), .80),
+    ('불멸_김용태',     'walk', (3, -29),   (7, -24), .50),
+    ('초월_신문철_AP',  'idle', (-23, -37), (-18, -33), .05),
+    ('영원_조세민',     'walk', (-34, -33), (-30, -35), .65),
+    # --- 섬 윗면(대지) ---
     ('초월_이재윤_AD',  'idle', (-30, -1),  (-30, 6), .40),
     ('초월_엄태웅_AD',  'walk', (-12, 8),   (-5, 9), .10),
     ('초월_배성령_AD',  'walk', (-3, 1),    (3, 6), .62),
     ('초월_김건_AP',    'walk', (21, -8),   (26, -4), .20),
     ('초월_양재모_AD',  'idle', (10, -6),   (13, -9), .85),
-    ('불멸_이이삭',     'walk', (-22, -20), (-17, -18), .45),
-    ('불멸_정윤식',     'idle', (-17, -31), (-12, -34), .90),
+    ('초월_임장혁_AD',  'walk', (-27, 6),   (-24, 3), .35),
+    ('초월_김만경_AD',  'walk', (-17, -3),  (-13, -6), .75),
+    ('초월_박기찬_AD',  'walk', (11, 5),    (15, 2), .55),
+    ('초월_황준석_ADAP', 'idle', (-8, -7),   (-4, -3), .95),
+    ('초월_김민준_AP',  'walk', (15, -6),   (18, -8), .15),
 ]
+# 선술집 앞 탁자 손님 4명(앉은 자세 + 잔 들기): 자리 순서대로
+TAVERN_GUESTS = ['불멸_정준영', '영원_김정래', '초월_노태현_AP', '초월_김경현_AP']
 UNITS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'Assets', 'Art', 'Units')
 def mxn(n): return 'mixamorig:' + n
 CHILD = {'Hips': ['Spine'], 'Spine': ['Spine1'], 'Spine1': ['Spine2', 'Neck'], 'Spine2': ['Neck'], 'Neck': ['Head'], 'LeftArm': ['LeftForeArm'], 'LeftForeArm': ['LeftHand'], 'RightArm': ['RightForeArm'], 'RightForeArm': ['RightHand'],
@@ -377,7 +392,33 @@ class Stroller:
         s.root.keyframe_insert('location', frame=f); s.root.keyframe_insert('rotation_euler', frame=f)
         if pose_too:
             for pb in s.arm.pose.bones: pb.keyframe_insert('rotation_quaternion', frame=f); pb.keyframe_insert('location', frame=f)
-STROLL = [Stroller(i, *c) for i, c in enumerate(CROWD)]
+class Sitter(Stroller):
+    """선술집 앞 의자에 앉은 스킨 손님 — 무릎 굽혀 앉고 잔을 천천히 두 번 든다."""
+    def __init__(s, idx, unit, seat):
+        pos, yaw, ph, base_z = seat
+        super().__init__(idx, unit, 'idle', (pos.x, pos.y), (pos.x, pos.y + 1), ph)
+        s.pos = pos; s.fixed_yaw = yaw; s.base_z = base_z; s.ph = ph
+        k = s.root.scale[0]; s.hip_target = base_z + 2.0
+        s.mug = mk_cyl('hmug', .075 * k, .16 * k, (0, 0, 0), M('hmug', (.5, .35, .15), .5), None, 14)
+        s.root.location = (pos.x, pos.y, base_z + 2.0 - .98 * k + .0)
+    def place(s, f):
+        s.yaw = s.fixed_yaw; s.root.rotation_euler = (0, 0, s.yaw); bpy.context.view_layer.update(); return 0.0
+    def pose(s, f, spd):
+        a = s.arm; reset_pose(a); psi = TAU * (f - 1) / N; k = s.root.scale[0]
+        hips = a.pose.bones[mxn('Hips')]; cur = (a.matrix_world @ hips.head).z; drop = cur - s.hip_target
+        inv = a.matrix_world.to_3x3().inverted(); m = hips.matrix.to_3x3().to_4x4(); m.translation = hips.matrix.translation + inv @ Vector((0, 0, -max(0, drop))); hips.matrix = m; bpy.context.view_layer.update()
+        for side, sg in (('Left', 1), ('Right', -1)):
+            aim(a, side + 'UpLeg', s.D((sg * .08, -1, -.03))); aim(a, side + 'Leg', s.D((sg * .04, -.12, -1)))
+        for b_ in ('Spine', 'Spine1', 'Spine2'): aim(a, b_, s.D((0, -.04, 1)))
+        c = .5 - .5 * math.cos(psi * 2 + s.ph * TAU)                                   # 한 판에 두 번 잔 들기
+        aim(a, 'RightArm', s.D((-.3, -.45 - .4 * c, -.8 + .55 * c))); aim(a, 'RightForeArm', s.D((-.1, -.5 - .6 * c, .35 + .85 * c)))
+        aim(a, 'LeftArm', s.D((.3, -.4, -.9))); aim(a, 'LeftForeArm', s.D((.15, -.9, -.45)))
+        pitch_bone(a, 'Head', s.D((1, 0, 0)), .06 + .05 * math.sin(psi * 2 + s.ph))
+        hand = a.matrix_world @ a.pose.bones[mxn('RightHand')].head; s.mug.location = hand + Vector((0, 0, .08 * k))
+    def key(s, f, pose_too=True):
+        super().key(f, pose_too)
+        if pose_too: s.mug.keyframe_insert('location', frame=f)
+STROLL = [Stroller(i, *c) for i, c in enumerate(CROWD)] + [Sitter(100 + i, TAVERN_GUESTS[i % len(TAVERN_GUESTS)], seat) for i, seat in enumerate(TAV_SEATS)]
 _sel = os.environ.get('TITLE_FRAMES', '1')
 _fr = range(int(_sel.split('-')[0]), int(_sel.split('-')[1]) + 1) if '-' in _sel else [int(x) for x in _sel.split(',')]
 if len(_fr) == 1:
@@ -391,6 +432,10 @@ else:
         for st in STROLL: st.pose(f, st.place(f)); st.key(f, True)
     for st in STROLL: st.root.animation_data.action.fcurves if False else None
 
+if os.environ.get('TITLE_CLOSE'):                                   # 확인용 근접 카메라(선술집 앞): TITLE_CLOSE=x,y,z
+    tx, ty, tz = [float(v) for v in os.environ['TITLE_CLOSE'].split(',')]; c_ = scene.camera
+    c_.location = Vector((tx - 14, ty - 30, tz + 8)); c_.data.lens = 60; c_.data.shift_x = 0; c_.data.shift_y = 0
+    c_.rotation_euler = (Vector((tx, ty, tz)) - c_.location).to_track_quat('-Z', 'Y').to_euler()
 # 렌더
 def setup_loop_render():
     scene.render.fps = 24
