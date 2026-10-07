@@ -1,4 +1,4 @@
-# 구현담당1 인수인계 (10-07 밤, 0.3.14 큐 끝)
+# 구현담당1 인수인계 (10-07 밤 마감, 0.3.14 큐 끝)
 
 새 세션은 기억이 없다. 이 문서 → `.claude/NEXT_SESSION.md` → TEAM_RULES 순으로 읽는다. 전부 main에 커밋됨(푸시는 PM).
 
@@ -6,7 +6,15 @@
 - 초월 25종 합계 DPS 표(Docs/research/TRANSCEND_DPS_AFTER_REINSTALL_2026-10-07.md, Tools/transcend_dps_table.py) · 초월 임채민 청렴결백(예배시간·지상낙원·축복의땅[지정+발동]·천벌, 새 kind ManaRegenBuff·LifeRegenBuff·DesignateAlly·타깃 DesignatedAlly) · 두유찬 더 세게(공속 3.0·게이지 12) · 조합 획득 금화(CombineRecipe.acquireGoldReward) · 스토리 이름 「01. 하이츠」(StoryManager.DisplayName)
 - MP 2차 점검(두 창): 토토·두유찬 금화·재접속(회유·강화·비행 위치 유지)·비행 Stop/Hold·일시정지 단추·현재레벨 라벨 ✅, 클라 아군 지정 액티브 RPC 신설(NetCommands.RequestCastActiveOnAlly) · 회유 실전투는 표적이 0.5초 안에 사라져 확정 못 함(△)
 - 레인 십자: 벽 윗면 NavMesh 제거(NavMeshModifier) + 배성령 순간이동 PathComplete 검사. 사장님 「우클릭 걷기」 재현은 못 함
+- **늦게 끝낸 일**: 적 출발점 포탈(EnemyPortalApply·EnemyPortalSpin, 블렌더 enemy_portal.fbx) · 바다 물 원작 톤(SeaWater 셰이더+WaterApply) · **버그 기록지**(BugNotepad.cs — 스스로 붙는 자체 캔버스, 버그기록.txt = exe/.app 옆·못 쓰면 GameLog 폴더, `-bugnoteTest 글` 시험 인자) · **모리아 자리 = 안흔함_이호준**(좀비 raiseOnKill 이전, MoriaApply) · 스토리 건물 ×0.7 · 유물 중복 금지 · 다중 선택 정렬·초상 카드
 - 해적선→상붕카 지급처 4곳 · 흔함 선택 줄 순서 · 원작 대응 이름 표시(UnitData.originalMatchName, GameVersion.BetaShowOriginalMatch) · 명령 카드 원작 배치(이동·홀딩·정지·공격 / 반복·스킬·스킬·판매 / 조합 초상) · 반복(패트롤, P) · 판매는 희귀함까지 · 다중 선택 정렬·초상 카드 · 스토리 건물 ×0.7(ArtBinder.StoryBuildingScale) · 유물 중복 금지(PickMissingRelic) · 적 출발점 포탈 · 바다 물 원작 톤
+
+## 사장님 확인 대기 값 (제안값)
+- 임채민 발동 확률 25%·천벌 마나 120 · 유물 중복 시 대체 금화 3,000엔 · 스토리 건물 배율 0.7(더 줄일지) · 좀비/모리아 등급 표기(사장님 「특별함 모리아」인데 로스터 이호준은 안흔함)
+- 버그 기록지 한글 IME 조합은 친구 윈도우 PC에서 확인(배치 모드에선 못 쳐 봄) · 맥 격리 앱이면 로그 폴더로 대체됨
+
+## 빌드 사본 상태 (../GuilRandomDefense-build)
+- 지금 브랜치 dev/g1-bugnote(= main 89d11a0a2 + BugNotepad.cs 미커밋 사본). **PM이 0.3.14 빌드에 쓴다 — 손 대지 말 것.** 내 이전 브랜치: dev/g1-mp-check3(NetMainTest2 — 커밋됨, 버려도 됨)·dev/mp-check2(3cd616180, 깨끗). 빌드 사본의 DevVoiceProbe·폰트·URP 변경은 남의 것.
 
 ## 남은 일 / 사장님 답 대기
 - **제안값(근거 없음 — 사장님 의견 받으면 수정)**: 임채민 발동 확률 25%·천벌 마나 120·지정 칸 쿨 1초 / 유물 중복 때 대체 금화 3,000엔 / 스토리 건물 배율 0.7(더 줄일지) / 스토리 정렬 등
