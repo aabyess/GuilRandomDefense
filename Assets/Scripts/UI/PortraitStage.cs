@@ -118,11 +118,21 @@ public class PortraitStage : MonoBehaviour
         Animator animator = target.GetComponentInChildren<Animator>(true);
         GameObject source = animator != null ? animator.gameObject : target;
 
-        if (!HasRealModel(source)) return false;
+        if (!HasRealModel(source) && target.GetComponentInParent<Wisp>() == null) return false;   // 위습 몸은 구(Sphere)라 자리표시로 오인되지만 초상으로 띄운다(10-07 사장님 「위습도 아치 초상에」)
 
         clone = Instantiate(source, holder, false);
         clone.name = source.name + " (초상)";
         Strip(clone);
+        if (target.GetComponentInParent<Wisp>() != null)   // 위습 영혼빛은 발광이 세서 초상에선 흰 덩어리로 날아간다 — 발광을 줄여 구슬 모양이 보이게
+            foreach (Renderer r in clone.GetComponentsInChildren<Renderer>(true))
+            {
+                var block = new MaterialPropertyBlock();
+                r.GetPropertyBlock(block);
+                int emissionId = Shader.PropertyToID("_EmissionColor");
+                Color emission = block.isEmpty || !block.HasColor(emissionId) ? (r.sharedMaterial != null && r.sharedMaterial.HasProperty(emissionId) ? r.sharedMaterial.GetColor(emissionId) : Color.black) : block.GetColor(emissionId);
+                block.SetColor(emissionId, emission * 0.3f);
+                r.SetPropertyBlock(block);
+            }
         SetLayerRecursively(clone, Layer);
 
         Transform t = clone.transform;

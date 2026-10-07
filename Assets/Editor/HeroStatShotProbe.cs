@@ -61,6 +61,38 @@ public static class HeroStatShotProbe
         return "❌ 못 찾음";
     }
 
+    // 조합 도우미 재료창 촬영용 — 크게 보기를 열고 탭을 고른 뒤 그 등급 첫 칸을 누른다.
+    public static string HelperOpen() { RecipeHelperPanel.Show("", null); return "✅ 열림"; }
+
+    static string HelperClick(int tab, UnitGrade grade, int skip = 0)
+    {
+        var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        var panel = RecipeHelperPanel.Instance;
+        if (panel == null) return "❌ 도우미 없음";
+        var t = typeof(RecipeHelperPanel);
+        t.GetField("tab", flags).SetValue(panel, tab);
+        t.GetMethod("LayoutColumns", flags).Invoke(panel, null);
+        var columns = (System.Collections.IEnumerable)t.GetField("columns", flags).GetValue(panel);
+        foreach (object column in columns)
+        {
+            var cells = (System.Collections.IEnumerable)column.GetType().GetField("cells").GetValue(column);
+            var def = column.GetType().GetField("def").GetValue(column);
+            if ((UnitGrade)def.GetType().GetField("grade").GetValue(def) != grade || (int)def.GetType().GetField("tab").GetValue(def) != tab) continue;
+            foreach (object cell in cells)
+            {
+                if (skip-- > 0) continue;
+                var cellRecipe = cell.GetType().GetField("recipe").GetValue(cell);
+                if (cellRecipe == null) continue;
+                t.GetMethod("OnCellClicked", flags).Invoke(panel, new[] { cell });
+                return "✅ " + ((UnitData)cell.GetType().GetField("unit").GetValue(cell)).DisplayName;
+            }
+        }
+        return "❌ 칸 없음";
+    }
+
+    public static string HelperClickLegend() => HelperClick(1, UnitGrade.Legendary);
+    public static string HelperClickHidden() => HelperClick(1, UnitGrade.Hidden);
+
     public static string AddXp()
     {
         if (!Application.isPlaying) return "❌ 플레이 중에만";

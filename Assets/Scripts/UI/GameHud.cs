@@ -5037,7 +5037,7 @@ public class GameHud : MonoBehaviour
 
         string unitName = data != null ? data.DisplayName
                         : wispData != null ? wispData.wispName
-                        : first.name;
+                        : first.name.Replace("(Clone)", "");
         string grade = data != null ? data.grade.KoreanName()
                      : wispData != null ? $"{wispData.targetGrade.KoreanName()} 뽑기"
                      : "-";
@@ -5229,15 +5229,17 @@ public class GameHud : MonoBehaviour
             target.TryGetComponent(out UnitIdentity identity);
             UnitData data = identity != null ? identity.Data : null;
 
-            cardBackgrounds[i].color = data != null ? GetGradeColor(data.grade) : UnidentifiedCardColor;
+            cardBackgrounds[i].color = data != null ? GetGradeColor(data.grade) : target.TryGetComponent(out Wisp bgWisp) && bgWisp.Data != null ? GetGradeColor(bgWisp.Data.targetGrade) : UnidentifiedCardColor;
             // 10-07 원작처럼 작은 초상 + 아래 체력 막대 줄(초상이 굽히기 전이면 이름). 플레이어 유닛은 피해를 안 받아 막대는 늘 가득.
             Sprite thumb = data != null ? UnitThumbBaker.Get(data) : null;
+            Wisp cardWisp = null;
+            if (data == null && target.TryGetComponent(out cardWisp)) thumb = WispIconBaker.Get(cardWisp);   // 위습 칸: 위습 영혼 그림(왼쪽 아래 위습 개수 칸과 같은 구슬)
             Transform portraitTf = cardRoots[i].transform.Find("Portrait");
             Image portraitImage = portraitTf != null ? portraitTf.GetComponent<Image>() : null;
             if (portraitImage != null) { portraitImage.sprite = thumb; portraitImage.color = thumb != null ? Color.white : new Color(1f, 1f, 1f, 0.3f); }
             Transform hpBar = cardRoots[i].transform.Find("HpBar");
             if (hpBar != null) hpBar.gameObject.SetActive(thumb != null);
-            cardNames[i].text = thumb != null ? "" : data != null ? data.DisplayNameTwoLines : target.name;
+            cardNames[i].text = thumb != null ? "" : data != null ? data.DisplayNameTwoLines : cardWisp != null && cardWisp.Data != null ? cardWisp.Data.wispName : target.name.Replace("(Clone)", "");
 
             bool showOverflow = overflow > 0 && i == MaxSelectionCards - 1;
             cardOverflowTexts[i].text = showOverflow ? $"+{overflow}" : "";

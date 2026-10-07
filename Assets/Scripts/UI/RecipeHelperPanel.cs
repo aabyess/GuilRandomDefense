@@ -110,7 +110,7 @@ public class RecipeHelperPanel : MonoBehaviour
 
     void OnDestroy() { if (Instance == this) Instance = null; UnitThumbBaker.Baked -= OnThumbBaked; if (searchFocused) ChatInputGate.IsOpen = false; }
 
-    void OnThumbBaked() => dirty = true;
+    void OnThumbBaked() { dirty = true; lastDetailKey = null; }
 
     // ───────────────────────── 데이터 ─────────────────────────
 
@@ -310,6 +310,7 @@ public class RecipeHelperPanel : MonoBehaviour
             frameImage.raycastTarget = false;
         }
         BuildFilterPopup();
+        BuildDetail();
         BuildTooltip();
     }
 
@@ -377,6 +378,9 @@ public class RecipeHelperPanel : MonoBehaviour
         Place(scrollRect, Pad - 6f, top, PanelW - Pad * 2f + 12f, PanelH - top - Pad + 8f);
         ScrollRect scroll = scrollRect.gameObject.AddComponent<ScrollRect>();
         scrollRect.gameObject.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.001f);
+        Button emptyClick = scrollRect.gameObject.AddComponent<Button>();   // 칸이 아닌 빈 곳을 누르면 재료창 닫힘
+        emptyClick.transition = UnityEngine.UI.Selectable.Transition.None;
+        emptyClick.onClick.AddListener(CloseDetail);
         RectTransform viewport = NewRect("Viewport", scrollRect);
         Stretch(viewport, 0f, 0f, 14f, 0f);
         viewport.gameObject.AddComponent<RectMask2D>();
@@ -539,6 +543,7 @@ public class RecipeHelperPanel : MonoBehaviour
         if (!value)
         {
             HideTooltip();
+            CloseDetail();
             filterPopup.gameObject.SetActive(false);
             if (searchFocused) { searchInput.DeactivateInputField(); ChatInputGate.IsOpen = false; searchFocused = false; }
         }
@@ -553,10 +558,217 @@ public class RecipeHelperPanel : MonoBehaviour
         onBack?.Invoke(q);
     }
 
+    // 칸을 누르면 그 유닛의 조합 재료창이 열린다(사장님 10-07). 같은 칸을 다시 누르면 닫힘. 조합판 인형 찾기는 창 안의 [조합판에서 찾기].
     void OnCellClicked(Cell cell)
     {
-        if (cell.recipe == null) { PlayerNotification.Show(LocalPlayer.LocalPlayerId, $"{cell.unit.DisplayName}: 조합식이 없는 유닛입니다(위습·뽑기로 얻는다).", 4f); return; }
-        if (!RecipeLocator.Locate(cell.recipe)) PlayerNotification.Show(LocalPlayer.LocalPlayerId, "조합판에서 그 식의 인형을 찾지 못했습니다.", 4f);
+        if (detailPane != null && detailPane.gameObject.activeSelf && detailUnit == cell.unit && detailHistory.Count == 0) { CloseDetail(); return; }
+        detailHistory.Clear();
+        // 칸의 반대쪽에 창을 띄운다(누른 칸이 가려지지 않게).
+        RectTransform cellRect = (RectTransform)cell.root.transform;
+        Vector2 local = ((RectTransform)panel).InverseTransformPoint(cellRect.position);
+        detailOnRight = local.x < 0f;
+        OpenDetail(cell.unit);
+    }
+
+    // ───────────────────────── 재료창 ─────────────────────────
+
+    const float DetailW = 560f, DetailRowH = 66f;
+    RectTransform detailPane, detailRows;
+    TMP_Text detailTitle, detailFooter;
+    GameObject detailBackButton;
+    UnitData detailUnit;
+    bool detailOnRight = true;
+    readonly Stack<UnitData> detailHistory = new Stack<UnitData>();
+    readonly List<GameObject> detailRowObjects = new List<GameObject>();
+
+    void BuildDetail()
+    {
+        detailPane = NewRect("Detail", panel);
+        float top = 138f;
+        Place(detailPane, PanelW - Pad - DetailW, top, DetailW, PanelH - top - Pad);
+        Image bg = detailPane.gameObject.AddComponent<Image>();
+        bg.color = new Color(0.04f, 0.045f, 0.06f, 0.99f);
+        if (UiSkin.Wc3Has("win_tooltip")) UiSkin.ApplyWc3(bg, "win_tooltip", 2f); else AddFrame(detailPane, Bronze, 2f);
+        detailTitle = MakeText(detailPane, "", 24f, Color.white, TextAlignmentOptions.Left, FontStyles.Bold);
+        Place(detailTitle.rectTransform, 96f, 14f, DetailW - 96f - 104f, 40f);
+        detailTitle.overflowMode = TextOverflowModes.Ellipsis;
+        AddButton(detailPane, "뒤로", 14f, 14f, 76f, 40f, DetailBack, out _, 16f);
+        detailBackButton = detailPane.GetChild(detailPane.childCount - 1).gameObject;
+        AddButton(detailPane, "닫기", DetailW - 94f, 14f, 80f, 40f, CloseDetail, out _, 18f);
+        detailRows = NewRect("Rows", detailPane);
+        Place(detailRows, 14f, 64f, DetailW - 28f, PanelH - 138f - Pad - 64f - 56f);
+        detailFooter = MakeText(detailPane, "", 15f, new Color(0.88f, 0.9f, 0.95f, 1f), TextAlignmentOptions.TopLeft);
+        detailFooter.textWrappingMode = TextWrappingModes.Normal;
+        detailPane.gameObject.SetActive(false);
+    }
+
+    void CloseDetail()
+    {
+        if (detailPane != null) detailPane.gameObject.SetActive(false);
+        detailHistory.Clear();
+        detailUnit = null;
+    }
+
+    void DetailBack()
+    {
+        if (detailHistory.Count == 0) { CloseDetail(); return; }
+        OpenDetail(detailHistory.Pop(), false);
+    }
+
+    void OpenDetail(UnitData unit, bool push = false)
+    {
+        if (push && detailUnit != null) detailHistory.Push(detailUnit);
+        detailUnit = unit;
+        HideTooltip();
+        float top = 138f;
+        Place(detailPane, detailOnRight ? PanelW - Pad - DetailW : Pad, top, DetailW, PanelH - top - Pad);
+        detailPane.gameObject.SetActive(true);
+        detailPane.SetAsLastSibling();
+        if (tooltip != null) tooltip.transform.SetAsLastSibling();
+        lastDetailKey = null;
+        RefreshDetail();
+    }
+
+    string lastDetailKey;   // 보유 수·그림이 안 바뀌었으면 줄을 다시 만들지 않는다(누르는 중에 줄이 바뀌면 클릭이 샌다)
+
+    static string IngredientName(RecipeIngredient ing)
+    {
+        if (ing.kind == IngredientKind.SpecificUnit && ing.unit != null) return ing.unit.DisplayName;
+        if (ing.kind == IngredientKind.SpecificItem && ing.item != null) return ing.item.itemName;
+        return $"{ing.wildcardGrade.KoreanName()} 아무거나";
+    }
+
+    void RefreshDetail()
+    {
+        if (detailPane == null || !detailPane.gameObject.activeSelf || detailUnit == null) return;
+        CountOwned();
+        string key = $"{detailUnit.GetInstanceID()}|{detailHistory.Count}|{ownedUnits.Count}|{ownedUnits.Values.Sum()}|{ownedItems.Values.Sum()}|{(UnitThumbBaker.Get(detailUnit) != null ? 1 : 0)}|{detailOnRight}";
+        if (key == lastDetailKey) return;
+        lastDetailKey = key;
+        detailBackButton.SetActive(detailHistory.Count > 0);
+        string gradeHex = ColorUtility.ToHtmlStringRGB(detailUnit.grade.Color());
+        detailTitle.text = $"<color=#{gradeHex}>{detailUnit.DisplayName}</color> <size=70%><color=#9a9aa2>{detailUnit.grade.KoreanName()}</color></size>";
+        foreach (GameObject old in detailRowObjects) if (old != null) Destroy(old);
+        detailRowObjects.Clear();
+
+        var recipes = system != null ? system.Recipes.Where(r => r != null && r.result == detailUnit && r.ingredients != null).ToList() : new List<CombineRecipe>();
+        float y = 0f;
+        var footer = new StringBuilder();
+        if (recipes.Count == 0)
+        {
+            TMP_Text none = MakeText(detailRows, "조합식이 없는 유닛입니다 — 위습·뽑기·이벤트로 얻습니다.", 18f, Muted, TextAlignmentOptions.TopLeft);
+            none.textWrappingMode = TextWrappingModes.Normal;
+            Place(none.rectTransform, 4f, 4f, DetailW - 36f, 60f);
+            detailRowObjects.Add(none.gameObject);
+        }
+        for (int ri = 0; ri < recipes.Count; ri++)
+        {
+            CombineRecipe recipe = recipes[ri];
+            if (recipes.Count > 1)
+            {
+                TMP_Text label = MakeText(detailRows, $"조합식 {ri + 1}", 16f, new Color(1f, 0.84f, 0.25f, 1f), TextAlignmentOptions.Left, FontStyles.Bold);
+                Place(label.rectTransform, 4f, y, DetailW - 36f, 26f);
+                detailRowObjects.Add(label.gameObject);
+                y += 28f;
+            }
+            foreach (RecipeIngredient ing in recipe.ingredients)
+            {
+                if (ing == null) continue;
+                y = AddIngredientRow(ing, y);
+            }
+            // 비용 · 제한 · 채팅 조합어(F5 서랍과 같은 식 데이터)
+            var costs = new List<string>();
+            if (recipe.goldCost > 0) costs.Add($"엔 {recipe.goldCost:N0}");
+            if (recipe.resourceCosts != null) foreach (RecipeResourceCost c in recipe.resourceCosts) if (c != null && c.amount > 0) costs.Add($"{(c.type == ResourceType.Wood ? "목재" : c.type.ToString())} {c.amount}");
+            if (costs.Count > 0) footer.AppendLine("<color=#F2C744>비용: " + string.Join(" · ", costs) + "</color>");
+            if (recipe.minRound > 0 || recipe.maxRound > 0) footer.AppendLine($"<color=#FFB060>라운드 {(recipe.minRound > 0 ? recipe.minRound.ToString() : "")}~{(recipe.maxRound > 0 ? recipe.maxRound.ToString() : "")}</color>");
+            if (recipe.requiredSaveCount > 0) footer.AppendLine($"<color=#FFB060>클리어 {recipe.requiredSaveCount}회 필요</color>");
+            if (CombineSystem.IsChatOnly(recipe))
+            {
+                var phrases = new List<string>();
+                foreach (string phrase in CombineSystem.ChatPhrases(recipe)) if (!phrases.Contains(phrase)) phrases.Add(phrase);
+                if (phrases.Count > 0) footer.AppendLine("<color=#9FD0FF>채팅 조합어: " + string.Join(" / ", phrases) + "</color>");
+            }
+            y += 6f;
+        }
+        detailFooter.text = footer.ToString().TrimEnd();
+        float rowsBottom = 64f + 4f + y;
+        Place(detailFooter.rectTransform, 18f, Mathf.Min(rowsBottom + 6f, PanelH - 138f - Pad - 150f), DetailW - 36f, 130f);
+
+        if (recipes.Count > 0)
+        {
+            CombineRecipe first = recipes[0];
+            var find = AddButton(detailPane, "조합판에서 찾기", DetailW - 14f - 190f, PanelH - 138f - Pad - 50f, 190f, 40f, () => { if (!RecipeLocator.Locate(first)) PlayerNotification.Show(LocalPlayer.LocalPlayerId, "조합판에서 그 식의 인형을 찾지 못했습니다.", 4f); }, out _, 16f);
+            detailRowObjects.Add(find.gameObject);
+        }
+    }
+
+    float AddIngredientRow(RecipeIngredient ing, float y)
+    {
+        int need = Mathf.Max(1, ing.count);
+        int owned;
+        Sprite icon = null;
+        Color tint = Color.white;
+        UnitData link = null;
+        string name = IngredientName(ing);
+        string sub = "";
+        if (ing.kind == IngredientKind.SpecificUnit && ing.unit != null)
+        {
+            ownedUnits.TryGetValue(ing.unit, out owned);
+            icon = UnitThumbBaker.Get(ing.unit);
+            Color g = ing.unit.grade.Color();
+            name = $"<color=#{ColorUtility.ToHtmlStringRGB(g)}>{ing.unit.DisplayName}</color>";
+            if (icon == null) tint = new Color(g.r * 0.45f, g.g * 0.45f, g.b * 0.45f, 1f);
+            link = ing.unit;
+            if (ing.alternativeUnit != null)
+            {
+                ownedUnits.TryGetValue(ing.alternativeUnit, out int altOwned);
+                owned += altOwned;
+                sub = $"<color=#C8A86A>or</color> <color=#{ColorUtility.ToHtmlStringRGB(ing.alternativeUnit.grade.Color())}>{ing.alternativeUnit.DisplayName}</color>";
+            }
+        }
+        else if (ing.kind == IngredientKind.SpecificItem && ing.item != null)
+        {
+            ownedItems.TryGetValue(ing.item, out owned);
+            icon = ing.item.icon;
+            if (icon == null) tint = new Color(0.55f, 0.45f, 0.2f, 1f);
+        }
+        else
+        {
+            owned = ownedUnits.Where(p => p.Key.grade == ing.wildcardGrade).Sum(p => p.Value);
+            icon = WispIconBaker.Cached;
+            if (icon == null) tint = new Color(0.3f, 0.5f, 0.8f, 1f);
+            name = $"<color=#{ColorUtility.ToHtmlStringRGB(ing.wildcardGrade.Color())}>{ing.wildcardGrade.KoreanName()}</color> 아무거나";
+        }
+        bool have = owned >= need;
+        float a = have ? 1f : 0.55f;
+
+        RectTransform row = NewRect("IngRow", detailRows);
+        Place(row, 0f, y, DetailW - 32f, DetailRowH - 4f);
+        Image bgImage = row.gameObject.AddComponent<Image>();
+        bgImage.color = new Color(0.12f, 0.13f, 0.16f, 0.95f);   // 칸 배경은 늘 어두운 판(워크3풍 RowFill은 그림용 흰색 곱이라 글자가 묻힌다)
+        bool canOpen = link != null && system != null && system.Recipes.Any(r => r != null && r.result == link);
+        Button button = row.gameObject.AddComponent<Button>();
+        button.targetGraphic = bgImage;
+        button.interactable = canOpen;
+        button.onClick.AddListener(() => OpenDetail(link, true));
+        ColorBlock cb = button.colors; cb.disabledColor = Color.white; cb.highlightedColor = new Color(1.2f, 1.2f, 1.25f, 1f); button.colors = cb;
+
+        RectTransform pic = NewRect("Pic", row);
+        Place(pic, 6f, 5f, DetailRowH - 14f, DetailRowH - 14f);
+        Image picImage = pic.gameObject.AddComponent<Image>();
+        picImage.sprite = icon; picImage.preserveAspect = true; picImage.raycastTarget = false;
+        picImage.color = icon != null ? new Color(1f, 1f, 1f, a) : new Color(tint.r, tint.g, tint.b, a);
+
+        TMP_Text nameText = MakeText(row, sub.Length > 0 ? name + "\n" + sub : name, sub.Length > 0 ? 17f : 20f, Color.white, TextAlignmentOptions.Left);
+        nameText.textWrappingMode = TextWrappingModes.Normal;
+        Place(nameText.rectTransform, DetailRowH, 2f, DetailW - 32f - DetailRowH - 150f, DetailRowH - 8f);
+        nameText.alpha = a;
+        string countHex = have ? "6FD36F" : "FF7070";
+        TMP_Text countText = MakeText(row, $"<color=#{countHex}>{(have ? "보유" : "부족")} {Mathf.Min(owned, 99)} / {need}</color>" + (canOpen ? "  <color=#C8A86A>▶</color>" : ""), 19f, Color.white, TextAlignmentOptions.Right, FontStyles.Bold);
+        Place(countText.rectTransform, DetailW - 32f - 150f, 2f, 142f, DetailRowH - 8f);
+        detailRowObjects.Add(row.gameObject);
+        return y + DetailRowH;
     }
 
     void Update()
@@ -570,6 +782,7 @@ public class RecipeHelperPanel : MonoBehaviour
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             if (filterPopup.gameObject.activeSelf) filterPopup.gameObject.SetActive(false);
+            else if (detailPane.gameObject.activeSelf) CloseDetail();
             else GoBack();
             return;
         }
@@ -589,6 +802,7 @@ public class RecipeHelperPanel : MonoBehaviour
             nextRefresh = Time.unscaledTime + 0.5f;
             dirty = false;
             Refresh();
+            RefreshDetail();
         }
     }
 

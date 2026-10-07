@@ -137,7 +137,7 @@ public class CombineSystem : MonoBehaviour
 
     // 이 식을 부르는 채팅 문구 전부(정규화됨): commandId의 「/」 양쪽(예 「페로나조합 / perona」·「Juuhyuk tr」) ·
     // 에셋 이름의 친구 이름+「조합」(예 히든_최윤서 → 「최윤서 조합」) · 식의 chatPhrase(초월 수식어).
-    static IEnumerable<string> ChatPhrases(CombineRecipe recipe)
+    public static IEnumerable<string> ChatPhrases(CombineRecipe recipe)
     {
         if (!string.IsNullOrEmpty(recipe.commandId))
             foreach (string part in recipe.commandId.Split('/'))
