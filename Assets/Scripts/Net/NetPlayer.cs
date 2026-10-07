@@ -407,6 +407,12 @@ public class NetPlayer : NetworkBehaviour
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_CastActiveOnAlly(NetworkId caster, NetworkId ally)
+    {
+        NetCommands.ExecuteCastActiveOnAlly(this, caster, ally);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     public void RPC_TraitTarget(short trait, NetworkId target)
     {
         NetCommands.ExecuteTraitTarget(this, trait, target);

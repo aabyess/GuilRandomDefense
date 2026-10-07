@@ -2032,6 +2032,7 @@ public class GameHud : MonoBehaviour
 
     public void ExecuteCastActiveOnAlly(Selectable single, UnitIdentity ally, SkillData skill)
     {
+        if (!GameAuthority.IsServer) { NetCommands.RequestCastActiveOnAlly(single, ally); return; }   // 멀티 클라: 호스트의 진짜 유닛에서 시전
         if (single == null || !single.TryGetComponent(out UnitAttacker attacker)) return;
         int playerId = single.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
         if (!attacker.TryCastActiveOnAlly(skill, ally, out string reason))
@@ -2063,8 +2064,7 @@ public class GameHud : MonoBehaviour
         }
         if (skill.levels != null && skill.levels.Count > 0 && skill.levels[0].needsAllyClick)
         {
-            // 아군 지정(초월 신문철 엄마간식) — 칸을 누르면 내 아군 하나를 클릭할 때까지 대기(우클릭 취소). 호스트/싱글만.
-            if (!GameAuthority.IsServer) { BlockedOnMultiplayerClient(); return; }
+            // 아군 지정(초월 신문철 엄마간식·임채민 축복의땅·고도현 약처방) — 칸을 누르면 내 아군 하나를 클릭할 때까지 대기(우클릭 취소). 멀티 클라는 거울 둘을 호스트에 요청한다(NetCommands.RequestCastActiveOnAlly).
             pendingAllySkill = skill;
             pendingAllyUnit = single;
             pendingAllyStartFrame = Time.frameCount;

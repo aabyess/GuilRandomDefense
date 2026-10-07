@@ -285,6 +285,27 @@ public static class NetCommands
         if (commandsLogged++ < 30) Debug.Log($"[MP] 유닛 버튼 요청 수행: 슬롯 {sender.Slot} {action}({argument}) → {real.name}");
     }
 
+    /// <summary>클라 → 호스트: 아군 지정 액티브(needsAllyClick — 신문철 엄마간식·고도현 약처방·임채민 축복의땅). 시전자·아군 거울 둘의 네트워크 번호만 보낸다.</summary>
+    public static void RequestCastActiveOnAlly(Selectable caster, UnitIdentity ally)
+    {
+        NetEntity casterEntity = caster != null ? caster.GetComponentInParent<NetEntity>() : null;
+        NetEntity allyEntity = ally != null ? ally.GetComponentInParent<NetEntity>() : null;
+        if (casterEntity == null || allyEntity == null || casterEntity.Object == null || allyEntity.Object == null || !casterEntity.Object.IsValid || !allyEntity.Object.IsValid || NetPlayer.Local == null) return;
+        NetPlayer.Local.RPC_CastActiveOnAlly(casterEntity.Object.Id, allyEntity.Object.Id);
+    }
+
+    public static void ExecuteCastActiveOnAlly(NetPlayer sender, NetworkId caster, NetworkId ally)
+    {
+        if (!TryGetOwnedReal(sender, caster, "CastActiveOnAlly", out GameObject real)) return;
+        if (!real.TryGetComponent(out Selectable selectable) || !real.TryGetComponent(out UnitAttacker attacker)) return;
+        if (!sender.Runner.TryFindObject(ally, out NetworkObject allyObject) || !allyObject.TryGetComponent(out NetEntity allyEntity) || allyEntity.Real == null || !allyEntity.Real.TryGetComponent(out UnitIdentity allyIdentity)) return;
+        SkillData skill = attacker.ActiveSkill;
+        GameHud hud = Object.FindFirstObjectByType<GameHud>();
+        if (skill == null || hud == null) return;
+        hud.ExecuteCastActiveOnAlly(selectable, allyIdentity, skill);
+        if (commandsLogged++ < 30) Debug.Log($"[MP] 아군 지정 요청 수행: 슬롯 {sender.Slot} {real.name} → {allyEntity.Real.name}");
+    }
+
     public static void RequestTraitTarget(UnitTraitData trait, UnitIdentity target)
     {
         int traitIndex = NetLauncher.Catalog != null ? NetLauncher.Catalog.IndexOf(trait) : -1;
