@@ -1010,6 +1010,35 @@ public static class ArtBinder
     // 원점이 **수면**인 모델 — 발바닥을 바닥에 맞추지 않는다(맞추면 물속 부분이 수면 위로 솟는다).
     static readonly string[] WaterlineModels = { "거대해왕류" };
 
+    /// <summary>스토리 건물 13채 크기 배율(사장님 10-07 「스토리 건물들 크기가 너무 크다, 줄여」 → 약 0.7배). 표(EnemyModels)의 미터는 그대로 두고 여기서만 곱한다 — 다시 키우려면 이 값만 1로.
+    /// 건물 겉모습·클릭 판정·선택 원·이름표 높이가 전부 이 프리팹 높이에서 유도된다. 건물 사이 간격·위치(스토리 등장점)는 그대로.</summary>
+    public const float StoryBuildingScale = 0.7f;
+
+    // 스토리 건물 13채만 다시 붙인다(Bind 전체를 안 돌린다) — 프리팹을 같은 경로에 덮어써 GUID가 그대로다. 부르기: call ArtBinder.RebindStoryBuildings
+    public static string RebindStoryBuildings()
+    {
+        GameObject template = AssetDatabase.LoadAssetAtPath<GameObject>(MobTemplate);
+        if (template == null) return "❌ 자리표시 프리팹 없음";
+        List<EnemyData> enemies = LoadAll<EnemyData>("Assets/Data/Enemies");
+        float metersToUnits = UnitHeight / 1.75f;
+        int made = 0;
+        var cache = new Dictionary<GameObject, GameObject>();
+        var report = new List<string>();
+        foreach ((string modelName, string enemyAsset, float meters, bool lane) in EnemyModels)
+        {
+            if (!modelName.StartsWith("Story")) continue;
+            GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>($"{BuildingFolder}/{modelName}.fbx");
+            EnemyData enemy = enemies.FirstOrDefault(e => Nfc(e.name) == Nfc(enemyAsset));
+            if (model == null || enemy == null) { report.Add($"⚠️ {modelName} 모델 또는 적 에셋 없음"); continue; }
+            float units = meters * metersToUnits * StoryBuildingScale;
+            enemy.prefab = GetOrCreate(cache, template, model, "Mob", ref made, units);
+            EditorUtility.SetDirty(enemy);
+            report.Add($"{modelName} {units:F1}");
+        }
+        AssetDatabase.SaveAssets();
+        return $"스토리 건물 {made}채 다시 붙임(×{StoryBuildingScale}): {string.Join(", ", report)}";
+    }
+
     static string BindEnemies(List<GameObject> models)
     {
         GameObject template = AssetDatabase.LoadAssetAtPath<GameObject>(MobTemplate);
@@ -1036,7 +1065,7 @@ public static class ArtBinder
             EnemyData enemy = enemies.FirstOrDefault(e => Nfc(e.name) == Nfc(enemyAsset));
             if (model == null || enemy == null) continue;
 
-            float units = meters * metersToUnits * (lane ? laneShrink : 1f);
+            float units = meters * metersToUnits * (lane ? laneShrink : 1f) * (modelName.StartsWith("Story") ? StoryBuildingScale : 1f);
             enemy.prefab = GetOrCreate(cache, template, model, "Mob", ref made, units);
             EditorUtility.SetDirty(enemy);
             bound.Add($"{modelName} → {enemy.enemyName} ({meters:F2}m = {units:F1}{(lane ? ", 레인" : "")})");

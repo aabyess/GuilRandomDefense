@@ -3262,9 +3262,18 @@ public class GameHud : MonoBehaviour
         if (hpOn) { portraitHpBar.fillAmount = 1f; portraitHpText.text = $"{hp.Value} / {hp.Value}"; }   // 플레이어 유닛은 피해를 안 받는다 — 항상 가득
         if (mpOn)
         {
+            PlacePortraitMpBar(false);
             portraitMpBar.fillAmount = manaCap > 0 ? Mathf.Clamp01(mana.Value / (float)manaCap) : 1f;
             portraitMpText.text = $"{mana.Value} / {manaCap}";
         }
+    }
+
+    // 마나 줄 자리: 유닛은 체력 줄 아래(0.01~0.09), 건물(체력 줄 없음)은 체력 줄 자리(0.10~0.18)로 올려 틀 덮개에 안 가려지게 한다.
+    void PlacePortraitMpBar(bool atHpSlot)
+    {
+        RectTransform mp = (RectTransform)portraitMpBar.transform.parent;
+        mp.anchorMin = new Vector2(0.04f, atHpSlot ? 0.10f : 0.01f);
+        mp.anchorMax = new Vector2(0.96f, atHpSlot ? 0.18f : 0.09f);
     }
 
     // 건물용: 체력 줄은 숨기고 마나 줄만 켠다(도움소). 마나 줄은 초상 아래 체력 자리 바로 아래 칸이다.
@@ -3273,6 +3282,7 @@ public class GameHud : MonoBehaviour
         if (portraitHpBar == null) return;
         portraitHpBar.transform.parent.gameObject.SetActive(false);
         portraitMpBar.transform.parent.gameObject.SetActive(true);
+        PlacePortraitMpBar(true);
         portraitMpBar.fillAmount = manaCap > 0 ? Mathf.Clamp01(mana / (float)manaCap) : 0f;
         portraitMpText.text = $"마나 {mana} / {manaCap}";
     }
@@ -3381,8 +3391,8 @@ public class GameHud : MonoBehaviour
         GameObject portraitObj = new GameObject("Portrait", typeof(RectTransform), typeof(Image));
         portraitObj.transform.SetParent(card.transform, false);
         RectTransform portraitRect = portraitObj.GetComponent<RectTransform>();
-        portraitRect.anchorMin = new Vector2(0.1f, 0.35f);
-        portraitRect.anchorMax = new Vector2(0.9f, 0.95f);
+        portraitRect.anchorMin = new Vector2(0.06f, 0.2f);
+        portraitRect.anchorMax = new Vector2(0.94f, 0.96f);
         portraitRect.offsetMin = Vector2.zero;
         portraitRect.offsetMax = Vector2.zero;
 
@@ -3390,6 +3400,19 @@ public class GameHud : MonoBehaviour
         portrait.sprite = null; // 초상화는 나중에 아트가 들어오면 꽂는다.
         portrait.color = new Color(1f, 1f, 1f, 0.3f);
         portrait.raycastTarget = false;
+
+        // 아래 체력 막대 줄(원작 다중 선택) — 초상이 있을 때만 켠다(ShowCardGrid).
+        GameObject hpBarObj = new GameObject("HpBar", typeof(RectTransform), typeof(Image));
+        hpBarObj.transform.SetParent(card.transform, false);
+        RectTransform hpRect = hpBarObj.GetComponent<RectTransform>();
+        hpRect.anchorMin = new Vector2(0.08f, 0.06f);
+        hpRect.anchorMax = new Vector2(0.92f, 0.16f);
+        hpRect.offsetMin = Vector2.zero;
+        hpRect.offsetMax = Vector2.zero;
+        Image hpImage = hpBarObj.GetComponent<Image>();
+        hpImage.color = new Color(0.2f, 0.85f, 0.25f, 1f);
+        hpImage.raycastTarget = false;
+        hpBarObj.SetActive(false);
 
         TMP_Text nameText = CreateLabel(card.transform, "Name", "");
         nameText.raycastTarget = false;
@@ -3827,7 +3850,7 @@ public class GameHud : MonoBehaviour
         }
     }
 
-    void MarkFlexDirty() { flexDirty = true; }
+    void MarkFlexDirty() { flexDirty = true; lastCardShownCount = -1; }
 
     void BuildUnitCommandSlot(int index, Transform parent)
     {
@@ -4775,13 +4798,15 @@ public class GameHud : MonoBehaviour
         if (unitStatRows != null && unitStatRows.activeSelf) unitStatRows.SetActive(false);
         SetPortraitBars(null, null, 0);
         // 09-29 워크3 콘솔: 초상화 칸이 카드 격자와 따로 있어 여러 기를 골라도 첫 유닛 초상을 보인다(워크3와 같다).
-        Selectable firstSelected = selection.Selected[0];
+        // 10-07 원작처럼: 가장 높은 등급 유닛이 맨 왼쪽(같은 등급은 고른 순서 그대로), 초상은 그 맨 왼쪽 유닛 얼굴.
+        SortSelectionByGrade(selection.Selected);
+        Selectable firstSelected = sortedSelection[0];
         UnitData firstData = firstSelected != null && firstSelected.TryGetComponent(out UnitIdentity firstIdentity) ? firstIdentity.Data : null;
         SetUnitInfoPortrait(firstData);
         SetPortraitModel(firstSelected != null ? firstSelected.gameObject : null);
         unitCardsPanel.SetActive(true);
 
-        IReadOnlyList<Selectable> selected = selection.Selected;
+        IReadOnlyList<Selectable> selected = sortedSelection;
         int shownCount = Mathf.Min(selected.Count, MaxSelectionCards);
         int overflow = Mathf.Max(0, selected.Count - MaxSelectionCards);
 
@@ -4807,11 +4832,34 @@ public class GameHud : MonoBehaviour
             UnitData data = identity != null ? identity.Data : null;
 
             cardBackgrounds[i].color = data != null ? GetGradeColor(data.grade) : UnidentifiedCardColor;
-            cardNames[i].text = data != null ? data.DisplayNameTwoLines : target.name;
+            // 10-07 원작처럼 작은 초상 + 아래 체력 막대 줄(초상이 굽히기 전이면 이름). 플레이어 유닛은 피해를 안 받아 막대는 늘 가득.
+            Sprite thumb = data != null ? UnitThumbBaker.Get(data) : null;
+            Transform portraitTf = cardRoots[i].transform.Find("Portrait");
+            Image portraitImage = portraitTf != null ? portraitTf.GetComponent<Image>() : null;
+            if (portraitImage != null) { portraitImage.sprite = thumb; portraitImage.color = thumb != null ? Color.white : new Color(1f, 1f, 1f, 0.3f); }
+            Transform hpBar = cardRoots[i].transform.Find("HpBar");
+            if (hpBar != null) hpBar.gameObject.SetActive(thumb != null);
+            cardNames[i].text = thumb != null ? "" : data != null ? data.DisplayNameTwoLines : target.name;
 
             bool showOverflow = overflow > 0 && i == MaxSelectionCards - 1;
             cardOverflowTexts[i].text = showOverflow ? $"+{overflow}" : "";
             cardOverflowTexts[i].gameObject.SetActive(showOverflow);
+        }
+    }
+
+    readonly List<Selectable> sortedSelection = new List<Selectable>();
+    static int GradeTierOf(Selectable s) => s != null && s.TryGetComponent(out UnitIdentity id) && id.Data != null ? id.Data.grade.Tier() : -1;
+
+    // 등급 높은 순(안정 — 같은 등급은 원래 순서). 다중 선택은 많아야 수십 기라 삽입 정렬이면 충분하다.
+    void SortSelectionByGrade(IReadOnlyList<Selectable> source)
+    {
+        sortedSelection.Clear();
+        for (int i = 0; i < source.Count; i++)
+        {
+            int tier = GradeTierOf(source[i]);
+            int at = sortedSelection.Count;
+            while (at > 0 && GradeTierOf(sortedSelection[at - 1]) < tier) at--;
+            sortedSelection.Insert(at, source[i]);
         }
     }
 

@@ -13,7 +13,20 @@ public class RewardDistributor : MonoBehaviour
     // 이걸 자원 칸 북쪽 포탈에 넣으면 흔함 유닛이 하나씩 나온다(1% 상붕카).
     // 분실된지갑(제한됨 박성호 재료 — 사장님 10-06): 일반 적 처치 때 낮은 확률로 인벤토리에 떨어진다. Apply가 이은 아이템. 비면 안 떨어진다.
     [SerializeField] ItemData lostWalletItem;
-    const float LostWalletChance = 0.005f;   // 일반 적 처치 1회당 0.5% — 원작 보스 아이템 드랍(1/22~1/18 ≈ 4.5~6%)의 약 1/10, 적 한 판 수천 마리라 판당 몇 개
+    // 유물(ItemData.isRelic) 전체 목록(사장님 10-07 「유물은 얻은 것과 똑같은 게 중복되지 않게」) — 에디터 도구 RelicPoolApply가 채운다. 적 드랍·스토리 보상이 「아직 안 가진 유물」을 고를 때 쓴다.
+    [SerializeField] List<ItemData> relicPool = new List<ItemData>();
+    const float LostWalletChance = 0.005f;
+    const int RelicDuplicateGold = 3000;   // 스토리가 주려는 유물을 이미 다 가졌을 때 대신 주는 금화(제안값 — 사장님 확인 필요)
+
+    /// <summary>이 플레이어가 아직 안 가진 유물 중 하나(가중치 같음). 없으면 null.</summary>
+    public ItemData PickMissingRelic(PlayerContext context)
+    {
+        if (context == null || context.ItemInventory == null || relicPool == null) return null;
+        var missing = new List<ItemData>();
+        foreach (ItemData relic in relicPool)
+            if (relic != null && !System.Linq.Enumerable.Contains(context.ItemInventory.Items, relic)) missing.Add(relic);
+        return missing.Count > 0 ? missing[Random.Range(0, missing.Count)] : null;
+    }   // 일반 적 처치 1회당 0.5% — 원작 보스 아이템 드랍(1/22~1/18 ≈ 4.5~6%)의 약 1/10, 적 한 판 수천 마리라 판당 몇 개
 
     [SerializeField] WispData startingWisp;
     [SerializeField] int startingWispCount = 5;
@@ -220,7 +233,9 @@ public class RewardDistributor : MonoBehaviour
         GrantResources(owner, data, 1f + slowBonus);
         if (lostWalletItem != null && !data.isBoss && owner.ItemInventory != null && Random.value < LostWalletChance)
         {
-            if (owner.ItemInventory.Add(lostWalletItem)) PlayerNotification.Show(owner.PlayerId, $"<color=#C8E6A0>{lostWalletItem.itemName}을(를) 주웠습니다!</color>", 5f);
+            // 10-07: 이미 가진 유물은 빼고 안 가진 유물 중 하나(다 가졌으면 안 떨어진다). 풀이 비었으면(씬에 목록이 안 이어짐) 예전처럼 지갑.
+            ItemData dropped = relicPool != null && relicPool.Count > 0 ? PickMissingRelic(owner) : lostWalletItem;
+            if (dropped != null && owner.ItemInventory.Add(dropped)) PlayerNotification.Show(owner.PlayerId, $"<color=#C8E6A0>{dropped.itemName}을(를) 주웠습니다!</color>", 5f);
         }
 
         if (data.isBoss) GrantBossReward(owner, round, data);
@@ -412,6 +427,18 @@ public class RewardDistributor : MonoBehaviour
         }
         if (picked == null) return;
         if (picked.skipIfOwned && System.Linq.Enumerable.Contains(context.ItemInventory.Items, picked.item)) return;
+        // 10-07 유물 중복 금지: 이미 가진 유물이면 안 가진 다른 유물로 바꾼다. 하나도 없으면 금화로 대신(알림은 「○○ 획득」 그대로 — 대신 받은 쪽 이름).
+        if (picked.item.isRelic && System.Linq.Enumerable.Contains(context.ItemInventory.Items, picked.item))
+        {
+            ItemData other = PickMissingRelic(context);
+            if (other == null)
+            {
+                context.GoldWallet?.Add(RelicDuplicateGold);
+                PlayerNotification.Show(context.PlayerId, $"<color=#FFD54F>{picked.item.itemName}은(는) 이미 있어 금화 {RelicDuplicateGold:N0}엔으로 대신 받았습니다.</color>", 8f);
+                return;
+            }
+            picked = new EnemyItemDrop { item = other, weight = picked.weight, message = picked.message != null ? picked.message.Replace(picked.item.itemName, other.itemName) : null, skipIfOwned = false };
+        }
 
         if (!context.ItemInventory.Add(picked.item))
         {
