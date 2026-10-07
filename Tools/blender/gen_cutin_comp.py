@@ -420,6 +420,9 @@ def layers_C(thigh_png, name, nick, grade):
     db = ImageDraw.Draw(band)
     y0 = 180
     db.rectangle((0, y0, BW, y0 + 118), fill=(255, 255, 255, 255))
+    if sum(g["main"]) / 3 > 200:
+        db.line([(0, y0), (BW, y0)], fill=tint(g["dark"], 0.8) + (255,), width=5)
+        db.line([(0, y0 + 118), (BW, y0 + 118)], fill=tint(g["dark"], 0.8) + (255,), width=5)
     fn = font("NanumGothic-ExtraBold.ttf", 86)
     tw = db.textlength(name, font=fn)
     nx = 1700 - tw
@@ -427,12 +430,24 @@ def layers_C(thigh_png, name, nick, grade):
     ImageDraw.Draw(band_name).text((nx, y0 + 8), name, font=fn, fill=(12, 10, 16, 255))
     band_gray = band.copy()
     ImageDraw.Draw(band_gray).text((nx, y0 + 8), name, font=fn, fill=(150, 150, 150, 255))
+    title = g["label"] if (not nick or nick == name) else f"{g['label']} {nick}"   # 별명이 이름과 같으면(강주혁·조성진·김영원) 등급만
+    lines = [title]
     ft = font("NanumGothic-ExtraBold.ttf", 40)
-    title = f"{g['label']} {nick}"
-    while db.textlength(title, font=ft) > 900 and ft.size > 22:
-        ft = font("NanumGothic-ExtraBold.ttf", ft.size - 3)
+    while db.textlength(title, font=ft) > 900 and ft.size > 30:
+        ft = font("NanumGothic-ExtraBold.ttf", ft.size - 2)
+    if db.textlength(title, font=ft) > 900:                           # 30px로도 넘치면 「등급 / 별명」 두 줄
+        lines = [g["label"], nick]
+        ft = font("NanumGothic-ExtraBold.ttf", 40)
+        while max(db.textlength(l, font=ft) for l in lines) > 900 and ft.size > 22:
+            ft = font("NanumGothic-ExtraBold.ttf", ft.size - 2)
     ttl = Image.new("RGBA", (BW, BH), (0, 0, 0, 0))
-    ImageDraw.Draw(ttl).text((1700 - db.textlength(title, font=ft), y0 - 58), title, font=ft, fill=(255, 255, 255, 255), stroke_width=2, stroke_fill=tint(g["dark"], 0.9) + (255,))
+    dt = ImageDraw.Draw(ttl)
+    lh = ft.size + 6
+    for k, l in enumerate(lines):
+        bright = sum(g["main"]) / 3 > 200                              # 밝은 바탕(불멸 상아)은 흰 글씨가 묻힌다 → 진한 글씨 + 흰 테
+        fill, stroke = ((40, 30, 20, 255), (255, 255, 255, 255)) if bright else ((255, 255, 255, 255), tint(g["dark"], 0.9) + (255,))
+        dt.text((1700 - db.textlength(l, font=ft), y0 - 18 - lh * (len(lines) - k)), l, font=ft, fill=fill, stroke_width=2, stroke_fill=stroke)
+
     ang = -7
     for key, im in (("band", band), ("band_name", band_name), ("band_gray", band_gray), ("title", ttl)):
         im = im.rotate(ang, resample=Image.BICUBIC, center=(1200, y0 + 60), expand=False)
@@ -525,8 +540,8 @@ def frame_C(L, game, t):
     return im.convert("RGB")
 
 
-def make_C(unit, grade, name, nick):
-    out = os.path.join(HOME, f"C_{unit}")
+def make_C(unit, grade, name, nick, outdir=HOME, sheet=True):
+    out = os.path.join(outdir, f"C_{unit}")
     game = Image.open(GAME).convert("RGB").resize((W, H))
     L = layers_C(os.path.join(HOME, "render", f"C_{unit}_thigh.png"), name, nick, grade)
     os.makedirs(os.path.join(HOME, "layers"), exist_ok=True)
@@ -540,6 +555,11 @@ def make_C(unit, grade, name, nick):
     for i in range(n):
         frame_C(L, game, i / 30.0).save(os.path.join(tmp, f"f{i:03d}.png"))
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", "30", "-i", os.path.join(tmp, "f%03d.png"), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "16", out + ".mp4"], check=True)
+    if not sheet:
+        for i in range(n):
+            os.remove(os.path.join(tmp, f"f{i:03d}.png"))
+        print("done", out)
+        return
     # 12fps 분해 시트(원본과 같은 간격으로 대조)
     cols, cells = 6, []
     for k in range(int(C_TOTAL * 12)):
@@ -555,6 +575,44 @@ def make_C(unit, grade, name, nick):
     print("done", out)
 
 
+def roster_jobs():
+    """초월·불멸·영원 로스터 전부 → (유닛, 등급, 이름, 별명). 이름 = 파일명 둘째 칸, 별명 = 에셋 unitName."""
+    import glob
+    import re
+    root = os.path.expanduser("~/GitHub/GuilRandomDefense/Assets/Data/Units/Roster")
+    jobs = []
+    for f in sorted(glob.glob(os.path.join(root, "*.asset"))):
+        unit = os.path.basename(f)[:-6]
+        grade = unit.split("_")[0]
+        if grade not in GRADE:
+            continue
+        un = re.search(r"unitName: (.*)", open(f, encoding="utf8").read()).group(1).strip()
+        if un.startswith('"'):
+            un = re.sub(r"\\u([0-9A-Fa-f]{4})", lambda m: chr(int(m.group(1), 16)), un[1:-1])
+        jobs.append((unit, grade, unit.split("_")[1], un))
+    return jobs
+
+
 if __name__ == "__main__" and (len(sys.argv) > 1 and sys.argv[1] == "C"):
-    for unit, grade, name, nick in JOBS:
-        make_C(unit, grade, name, nick)
+    if len(sys.argv) > 2 and sys.argv[2] == "all":                     # 41기 일괄: ~/GRD_cutin/C_all/ + 정지 화면 모음
+        outdir = os.path.join(HOME, "C_all")
+        os.makedirs(outdir, exist_ok=True)
+        jobs = roster_jobs()
+        only = set(sys.argv[3:])
+        for unit, grade, name, nick in jobs:
+            if only and unit not in only:
+                continue
+            if not os.path.exists(os.path.join(HOME, "render", f"C_{unit}_thigh.png")):
+                print("skip(렌더 없음)", unit)
+                continue
+            make_C(unit, grade, name, nick, outdir, sheet=False)
+        stills = [os.path.join(outdir, f"C_{u}_still.png") for u, *_ in jobs if os.path.exists(os.path.join(outdir, f"C_{u}_still.png"))]
+        cols = 6
+        sheet = Image.new("RGB", (384 * cols, 216 * math.ceil(len(stills) / cols)), (0, 0, 0))
+        for k, f in enumerate(stills):
+            sheet.paste(Image.open(f).resize((384, 216)), ((k % cols) * 384, (k // cols) * 216))
+        sheet.save(os.path.join(outdir, "_contact_sheet.png"))
+        print("contact", len(stills))
+    else:
+        for unit, grade, name, nick in JOBS:
+            make_C(unit, grade, name, nick)

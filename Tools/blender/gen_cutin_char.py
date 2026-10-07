@@ -22,7 +22,7 @@ os.makedirs(OUT, exist_ok=True)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.fbx(filepath=FBX)
-arm = next(o for o in bpy.data.objects if o.type == "ARMATURE")
+arm = next((o for o in bpy.data.objects if o.type == "ARMATURE"), None)
 meshes = [o for o in bpy.data.objects if o.type == "MESH"]
 
 
@@ -113,14 +113,23 @@ def apply_toon(outline_color, outline_w):
 
 
 def head_info():
+    """머리뼈(mixamorig:Head) 위치. 믹사모가 아니거나 뼈가 없으면 None(→ 메시 경계로 틀을 잡는다)."""
+    if arm is None:
+        return None
     head = arm.pose.bones.get("mixamorig:Head")
-    h = arm.matrix_world @ head.head
-    t = arm.matrix_world @ head.tail
-    return h, t
+    if head is None:
+        return None
+    return arm.matrix_world @ head.head, arm.matrix_world @ head.tail
+
+
+_SETUP = {}
 
 
 def setup(res_x, res_y):
     scn = bpy.context.scene
+    if _SETUP:
+        scn.render.resolution_x, scn.render.resolution_y = res_x, res_y
+        return scn, _SETUP["cam"]
     try:
         scn.render.engine = "BLENDER_EEVEE_NEXT"
     except TypeError:
@@ -141,6 +150,7 @@ def setup(res_x, res_y):
     cam = bpy.data.objects.new("cam", bpy.data.cameras.new("cam"))
     scn.collection.objects.link(cam)
     scn.camera = cam
+    _SETUP["cam"] = cam
     return scn, cam
 
 
@@ -157,58 +167,67 @@ def aim(cam, target, dist, fovscale, roll=0.0, side=0.0, up=0.0):
     cam.data.clip_end = 20
 
 
-def spin(name, deg, axis="Y"):
-    """믹사모 뼈를 armature 공간 월드축(X·Y·Z) 둘레로 deg° 돌린다(관절=뼈 머리 기준). T포즈에서 시작하는 시안용 근사."""
+def aim_bone(name, direction):
+    """믹사모 뼈를 armature 공간 방향(앞 = -Y, 캐릭터 왼쪽 = +X, 위 = +Z)으로 겨눈다. 관절(뼈 머리) 기준 회전 —
+    쉬는 자세(T·A·차렷)와 상관없이 같은 모양이 된다. 뼈가 없으면 건너뛴다(믹사모 아닌 스킨)."""
     from mathutils import Matrix
+    if arm is None:
+        return
     pb = arm.pose.bones.get("mixamorig:" + name)
     if not pb:
         return
-    m = pb.matrix.copy()
-    hd = m.to_translation()
-    pb.matrix = Matrix.Translation(hd) @ Matrix.Rotation(math.radians(deg), 4, axis) @ Matrix.Translation(-hd) @ m
+    cur = (pb.tail - pb.head)
+    if cur.length < 1e-6:
+        return
+    q = cur.normalized().rotation_difference(Vector(direction).normalized())
+    hd = pb.head.copy()
+    pb.matrix = Matrix.Translation(hd) @ q.to_matrix().to_4x4() @ Matrix.Translation(-hd) @ pb.matrix
     bpy.context.view_layer.update()
 
 
 def reset_pose():
     from mathutils import Matrix
+    if arm is None:
+        return
     for pb in arm.pose.bones:
         pb.matrix_basis = Matrix.Identity(4)
     bpy.context.view_layer.update()
 
 
-# 정면 = -Y, 캐릭터의 왼팔 = +X(sg=+1), 오른팔 = -X(sg=-1). 팔 방향 벡터가 Y축 둘레로 +θ 돌면 +X팔은 아래로, -X팔은 위로 간다.
+def mirror(d, sg):
+    return (d[0] * sg, d[1], d[2])
+
+
+def arm_chain(side, sg, upper, fore, hand=None):
+    aim_bone(f"{side}Arm", mirror(upper, sg))
+    aim_bone(f"{side}ForeArm", mirror(fore, sg))
+    aim_bone(f"{side}Hand", mirror(hand or fore, sg))
+
+
+# 방향은 왼팔(+X) 기준으로 적고 오른팔은 X를 뒤집는다.
+def pose_calm():                 # 차분한 정면(팔 내리고 살짝 굽힘) — C안
+    for side, sg in (("Left", 1), ("Right", -1)):
+        arm_chain(side, sg, (0.28, 0.04, -1), (0.12, -0.22, -1))
+
+
 def pose_hips():                 # 허리에 손(자신감)
     for side, sg in (("Left", 1), ("Right", -1)):
-        spin(f"{side}Arm", sg * 60)
-        spin(f"{side}ForeArm", sg * 105)
+        arm_chain(side, sg, (0.62, 0.12, -0.78), (-0.72, -0.2, -0.62), (-0.5, -0.3, -0.8))
 
 
 def pose_crossed():              # 팔짱
     for side, sg in (("Left", 1), ("Right", -1)):
-        spin(f"{side}Arm", sg * 85)
-        spin(f"{side}ForeArm", -90, "X")
-        spin(f"{side}ForeArm", -sg * 62, "Z")
-        spin(f"{side}Hand", -sg * 20, "Z")
+        arm_chain(side, sg, (0.22, -0.18, -1), (-0.92, -0.38, 0.12), (-1, -0.2, 0.15))
 
 
-def pose_point():                # 손가락질(오른팔 앞으로 쭉, 왼손 허리)
-    spin("RightArm", 90, "Z")
-    spin("RightArm", -18, "X")
-    spin("LeftArm", 60)
-    spin("LeftForeArm", 105)
+def pose_point():                # 손가락질(오른팔 앞으로 쭉 + 왼손 허리)
+    arm_chain("Right", 1, (-0.12, -1, 0.22), (-0.06, -1, 0.26))
+    arm_chain("Left", 1, (0.62, 0.12, -0.78), (-0.72, -0.2, -0.62), (-0.5, -0.3, -0.8))
 
 
-def pose_fist():                 # 주먹 쥐고 들기(오른팔 위로 접음, 왼팔 내림)
-    spin("RightArm", 40)
-    spin("RightForeArm", 110)
-    spin("LeftArm", 78)
-    spin("LeftForeArm", 14)
-
-
-def pose_calm():                 # 차분한 정면(팔 내리고 살짝 굽힘) — C안(프롤로그 자기소개)
-    for side, sg in (("Left", 1), ("Right", -1)):
-        spin(f"{side}Arm", sg * 72)
-        spin(f"{side}ForeArm", sg * 18)
+def pose_fist():                 # 주먹 쥐고 들기(오른팔 위로 접음 + 왼팔 내림)
+    arm_chain("Right", 1, (-0.75, -0.15, 0.4), (0.15, -0.2, 1))
+    arm_chain("Left", 1, (0.28, 0.04, -1), (0.12, -0.22, -1))
 
 
 POSES = {"calm": pose_calm, "hips": pose_hips, "crossed": pose_crossed, "point": pose_point, "fist": pose_fist}
@@ -219,15 +238,25 @@ def render(path):
     bpy.ops.render.render(write_still=True)
 
 
-# ───────── A: 얼굴 클로즈업, 노란 외곽선 ─────────
+ONLY = set((os.environ.get("ONLY") or "A,B,C").split(","))
 apply_toon((1.0, 0.82, 0.05), 0.007)
-h, t = head_info()
-top = max((o.matrix_world @ v.co).z for o in meshes for v in o.data.vertices)
-center = Vector((h.x, h.y, top - 0.14))
-scn, cam = setup(1024, 1280)
-aim(cam, center, 3.0, 0.5)
-render(os.path.join(OUT, f"A_{NAME}_face.png"))
-print("head", tuple(round(v, 2) for v in h), tuple(round(v, 2) for v in t))
+allv = [(o.matrix_world @ v.co) for o in meshes for v in o.data.vertices]
+top = max(p.z for p in allv)
+hi = head_info()
+if hi:
+    h, t = hi
+else:                                                               # 믹사모 아닌 스킨(영원_서민성 Root/Body 등) — 경계 상자 가운데
+    h = Vector(((max(p.x for p in allv) + min(p.x for p in allv)) / 2, (max(p.y for p in allv) + min(p.y for p in allv)) / 2, top - 0.14))
+    t = h
+H = top - min(p.z for p in allv)                                    # 키(로스터 FBX는 1.8로 맞춰져 있지만 서민성처럼 다른 것도 있다)
+
+# ───────── A: 얼굴 클로즈업, 노란 외곽선 ─────────
+if "A" in ONLY:
+    center = Vector((h.x, h.y, top - 0.14 * H / 1.8))
+    scn, cam = setup(1024, 1280)
+    aim(cam, center, 3.0, 0.5 * H / 1.8)
+    render(os.path.join(OUT, f"A_{NAME}_face.png"))
+print("head", tuple(round(v, 2) for v in h), "top", round(top, 2), "H", round(H, 2), "mixamo-head", bool(hi))
 
 # ───────── B: 상반신 — 포즈별 ─────────
 for o in meshes:                                                    # 외곽선만 검정으로 바꾼다
@@ -238,20 +267,39 @@ for o in meshes:                                                    # 외곽선�
     for md in o.modifiers:
         if md.type == "SOLIDIFY":
             md.thickness = 0.006
-want = (os.environ.get("POSES") or "calm,hips,crossed,point,fist").split(",")
-for pn in want:
-    reset_pose()
-    POSES[pn]()
-    scn, cam = setup(1024, 1280)
-    bust_c = Vector((h.x, h.y, top - 0.55))
-    aim(cam, bust_c, 3.0, 1.1)
-    render(os.path.join(OUT, f"B_{NAME}_bust_{pn}.png"))
-    if pn == "hips":
-        render(os.path.join(OUT, f"B_{NAME}_bust.png"))
+if "B" in ONLY:
+    want = (os.environ.get("POSES") or "calm,hips,crossed,point,fist").split(",")
+    for pn in want:
+        reset_pose()
+        POSES[pn]()
+        scn, cam = setup(1024, 1280)
+        aim(cam, Vector((h.x, h.y, top - 0.55 * H / 1.8)), 3.0, 1.1 * H / 1.8)
+        render(os.path.join(OUT, f"B_{NAME}_bust_{pn}.png"))
+        if pn == "hips":
+            render(os.path.join(OUT, f"B_{NAME}_bust.png"))
 
-# ───────── C: 허벅지까지 상반신(차분한 정면) — 프롤로그 자기소개 컷인 ─────────
-reset_pose()
-POSES[os.environ.get("C_POSE", "calm")]()
-scn, cam = setup(1024, 1536)
-aim(cam, Vector((h.x, h.y, top - 0.72)), 3.0, 1.5)
-render(os.path.join(OUT, f"C_{NAME}_thigh.png"))
+# ───────── C: 허벅지까지(정사각 틀 — 날개·무기 넓은 모델도 옆이 안 잘린다) ─────────
+if "C" in ONLY:
+    reset_pose()
+    POSES[os.environ.get("C_POSE", "calm")]()
+    bpy.context.view_layer.update()
+    # 포즈 뒤 실제 경계로 다시 잰다: 위 = 머리 꼭대기 + 여백, 아래 = 허벅지(키의 40% 지점). 넓이도 같이 본다.
+    pv = []
+    dg = bpy.context.evaluated_depsgraph_get()
+    for o in meshes:
+        ev = o.evaluated_get(dg)
+        me = ev.to_mesh()
+        pv += [ev.matrix_world @ v.co for v in me.vertices]
+        ev.to_mesh_clear()
+    ptop = max(p.z for p in pv)
+    pbot = ptop - H * 0.62
+    span_v = (ptop - pbot) * 1.06
+    band = [p for p in pv if p.z >= pbot]
+    span_h = (max(p.x for p in band) - min(p.x for p in band)) * 1.04
+    cx = (max(p.x for p in band) + min(p.x for p in band)) / 2
+    span = max(span_v, span_h)
+    scn, cam = setup(1536, 1536)
+    aim(cam, Vector((cx, h.y, ptop - span_v / 2 + 0.02)), 3.0, span)
+    render(os.path.join(OUT, f"C_{NAME}_thigh.png"))
+    with open(os.path.join(OUT, f"C_{NAME}_thigh.txt"), "w") as fp:
+        fp.write(f"top={ptop:.3f} span_v={span_v:.3f} span_h={span_h:.3f} ortho={span:.3f}\n")
