@@ -463,9 +463,9 @@ def layers_C(thigh_png, name, nick, grade):
     # 캐릭터(허벅지까지) + 뒤 실루엣 그림자(외곽 부풀림)
     ch = Image.open(thigh_png).convert("RGBA")
     # 확대(cutin_picks.json zoom): 날개·건물처럼 몸이 작게 잡히는 스킨 — 눈을 가운데·위쪽 30%에 두고 잘라 키운다
+    import json as _json
     cj = thigh_png.replace("_thigh.png", "_cands.json")
     if os.path.exists(cj):
-        import json as _json
         inf = _json.load(open(cj))
         z = float(inf.get("zoom", 1.0))
         if z > 1.01:
@@ -474,12 +474,16 @@ def layers_C(thigh_png, name, nick, grade):
             S0 = ch.width
             side = S0 / z
             x0 = min(max(eu * S0 - side / 2, 0), S0 - side)
-            y0 = min(max((1 - ev) * S0 - side * 0.3, 0), S0 - side)
+            atop = (ch.split()[3].point(lambda v: 255 if v > 40 else 0).getbbox() or (0, 0, 1, 1))[1]
+            y0 = min(max(atop - side * 0.04, 0), S0 - side)            # 위 끝 = 머리 꼭대기 바로 위(머리 안 잘리게, cutin_pick.py와 같은 식)
             ch = ch.crop((int(x0), int(y0), int(x0 + side), int(y0 + side))).resize((S0, S0), Image.LANCZOS)
     hh = 1320
     ch = ch.resize((int(ch.width * hh / ch.height), hh), Image.LANCZOS)
     cl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    cl.alpha_composite(ch, (W // 2 - ch.width // 2, H - hh + 150))
+    dy_head = 0
+    if os.path.exists(cj):
+        dy_head = int(_json.load(open(cj)).get("dy", 0))                # cutin_pick.py가 정한 「머리 안 잘리게 내림」
+    cl.alpha_composite(ch, (W // 2 - ch.width // 2, H - hh + 150 + dy_head))
     # 실루엣 외곽선(알파를 7px 부풀린 고리, 진한 보라검정) — 캐릭터 렌더에 껍데기 외곽선이 없다
     al = cl.split()[3].point(lambda v: 255 if v > 60 else 0)
     ring_a = ImageChops.subtract(al.filter(ImageFilter.MaxFilter(15)), al).filter(ImageFilter.GaussianBlur(0.8))

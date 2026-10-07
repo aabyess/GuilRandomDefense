@@ -22,6 +22,7 @@ HH = 1320                                  # layers_C의 캐릭터 높이
 X0, Y0 = W // 2 - HH // 2 - 560, H - HH + 150   # 미끄러진 뒤(정점) 캐릭터 그림 왼쪽 위
 PICKS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cutin_picks.json")
 BAND = None
+TOP_MARGIN = 18                            # 머리 꼭대기 ~ 화면 위 끝 최소 여백(px)
 
 
 def band_mask():
@@ -40,12 +41,28 @@ def band_mask():
 
 def check(cand, zoom=1.0):
     eu, ev = cand.get("eye", [0.5, 0.9])
-    if zoom > 1.01:                                       # gen_cutin_comp.layers_C의 확대 자르기와 같은 식
+    if zoom > 1.01:                                       # gen_cutin_comp.layers_C의 확대 자르기와 같은 식(위 끝 = 머리 꼭대기 바로 위)
+        a0 = Image.open(os.path.join(R, cand["file"])).split()[3]
+        atop = (a0.point(lambda v: 255 if v > 40 else 0).getbbox() or (0, 0, 1, 1))[1] / a0.height
         side = 1 / zoom
         x0 = min(max(eu - side / 2, 0), 1 - side)
-        y0 = min(max((1 - ev) - side * 0.3, 0), 1 - side)
+        y0 = min(max(atop - side * 0.04, 0), 1 - side)
         eu, ev = (eu - x0) / side, 1 - ((1 - ev) - y0) / side
-    ex, ey = X0 + eu * HH, Y0 + (1 - ev) * HH
+    # 머리 꼭대기: 캐릭터 그림(확대 자르기 뒤)의 맨 위 불투명 줄이 화면 위 끝 아래 TOP_MARGIN 이상이어야 한다.
+    # 모자라면 그만큼 캐릭터를 내린다(dy, 최대 220px) — 박민수·노태현·최상호(바지사장)·김용태가 머리가 잘렸다(10-08 PM).
+    im = Image.open(os.path.join(R, cand["file"])).split()[3]
+    if zoom > 1.01:
+        S0 = im.width
+        side = S0 / zoom
+        cx0 = min(max(cand.get("eye", [0.5, 0.9])[0] * S0 - side / 2, 0), S0 - side)
+        atop = (im.point(lambda v: 255 if v > 40 else 0).getbbox() or (0, 0, 1, 1))[1]
+        cy0 = min(max(atop - side * 0.04, 0), S0 - side)          # 확대 자르기 위 끝 = 머리 꼭대기 바로 위(gen_cutin_comp와 같은 식)
+        im = im.crop((int(cx0), int(cy0), int(cx0 + side), int(cy0 + side))).resize((S0, S0))
+    bb = im.point(lambda v: 255 if v > 40 else 0).getbbox() or (0, 0, 1, 1)
+    top_scr = Y0 + bb[1] * HH / im.height
+    dy = int(min(max(TOP_MARGIN - top_scr, 0), 220))
+    head_clipped_in_render = bb[1] <= 1                        # 그림 맨 윗줄까지 몸이 찼다 = 렌더 틀 자체에서 잘림(내려도 안 보인다)
+    ex, ey = X0 + eu * HH, Y0 + (1 - ev) * HH + dy
     m = band_mask()
     eye_in = 20 <= ex < W - 20 and 60 <= ey < H - 20
     covered = False
@@ -54,17 +71,17 @@ def check(cand, zoom=1.0):
         col_top = next((y for y in range(H) if m.getpixel((int(min(max(ex, 0), W - 1)), y)) > 60), H)
         if ey > col_top - 30:
             covered = True
-        for dx in (-28, 0, 28):
-            for dy in (-28, 0, 28):
-                x, y = int(ex + dx), int(ey + dy)
+        for ox in (-28, 0, 28):                       # (ox·oy — dy와 이름이 겹치면 내림 값이 덮인다)
+            for oy in (-28, 0, 28):
+                x, y = int(ex + ox), int(ey + oy)
                 if 0 <= x < W and 0 <= y < H and m.getpixel((x, y)) > 60:
                     covered = True
-    im = Image.open(os.path.join(R, cand["file"])).split()[3]
-    bb = im.getbbox() or (0, 0, 1, 1)
-    top = max(0, Y0 + bb[1] * HH / im.height)
-    bot = min(H, Y0 + bb[3] * HH / im.height)
+    top = max(0, Y0 + dy + bb[1] * HH / im.height)
+    bot = min(H, Y0 + dy + bb[3] * HH / im.height)
     cover = (bot - top) / H
-    return dict(eye_ok=bool(eye_in and not covered), eye=[round(ex), round(ey)], height=round(cover, 2), height_ok=cover >= 0.5)
+    head_ok = (top_scr + dy) >= TOP_MARGIN - 1 and not head_clipped_in_render
+    return dict(eye_ok=bool(eye_in and not covered), eye=[round(ex), round(ey)], height=round(cover, 2), height_ok=cover >= 0.5,
+                head_ok=bool(head_ok), dy=dy)
 
 
 def main(only):
@@ -82,7 +99,7 @@ def main(only):
         zoom0 = mp0.get("zoom", 1.0) if isinstance(mp0, dict) else 1.0
         for c in inf["candidates"]:
             c["checks"] = check(c, zoom0)
-        ok = lambda c: c["checks"]["eye_ok"] and c["checks"]["height_ok"]
+        ok = lambda c: c["checks"]["eye_ok"] and c["checks"]["height_ok"] and c["checks"]["head_ok"]
         byid = {c["id"]: c for c in inf["candidates"]}
         why = ""
         chosen = None
@@ -106,16 +123,17 @@ def main(only):
         if chosen is None:
             chosen, why = inf["candidates"][0], "통과 후보 없음 — c1 그대로"
         inf["chosen"], inf["chosen_why"] = chosen["id"], why
+        inf["dy"] = chosen["checks"]["dy"]
         shutil.copyfile(os.path.join(R, chosen["file"]), os.path.join(R, f"C_{u}_thigh.png"))
         json.dump(inf, open(f, "w"), ensure_ascii=False, indent=1)
         ck = chosen["checks"]
-        passed = ck["eye_ok"] and ck["height_ok"]
+        passed = ck["eye_ok"] and ck["height_ok"] and ck["head_ok"]
         n_ok += passed
-        lines.append(f"{'통과' if passed else '실패'}\t{u}\t{chosen['id']}\t눈 {'보임' if ck['eye_ok'] else '안 보임'} {ck['eye']}\t높이 {int(ck['height'] * 100)}%\t{why}")
+        lines.append(f"{'통과' if passed else '실패'}\t{u}\t{chosen['id']}\t눈 {'보임' if ck['eye_ok'] else '안 보임'} {ck['eye']}\t높이 {int(ck['height'] * 100)}%\t머리 {'안 잘림' if ck['head_ok'] else '잘림'}{f'(내림 {ck[chr(100)+chr(121)]}px)' if ck['dy'] else ''}\t{why}")
     os.makedirs(os.path.join(HOME, "C_all"), exist_ok=True)
     rep = os.path.join(HOME, "C_all", "_check.txt")
     with open(rep, "w") as fp:
-        fp.write(f"컷인 C안 자동 검사 — 통과 {n_ok}/{len(lines)} (① 눈이 화면 안 + 흰 띠 위쪽 + 띠·줄무늬에 안 가림 ② 캐릭터 높이 ≥ 화면 50%)\n" + "\n".join(lines) + "\n")
+        fp.write(f"컷인 C안 자동 검사 — 통과 {n_ok}/{len(lines)} (① 눈이 화면 안 + 흰 띠 위쪽 + 띠·줄무늬에 안 가림 ② 캐릭터 높이 ≥ 화면 50% ③ 머리 꼭대기가 화면 위 끝에서 18px 이상 아래 — 모자라면 캐릭터를 내림)\n" + "\n".join(lines) + "\n")
     print(open(rep).read())
 
 
