@@ -146,4 +146,12 @@ public class GamblingOptionData : ScriptableObject
     //    requiresUnlock와 같이 켠다(unlockRound는 「보스 처치」용이라 별개 축).
     [Tooltip("이 라운드에 도달하면 전원 해금(원작 Rhri R15). 0이면 해당 없음")]
     public int unlockAtRound;
+
+    // ⚠️ 맨 뒤(2026-10-07, 사장님 「행운토큰 3개 조합은 원작대로」) — 원작 Trig_Token(A0BC 토큰 사용): 행운의 토큰 3개가 있으면 3개를 쓰고 80% 특별함 위습 · 20% 희귀함 위습(j 82927~83019).
+    // 이 옵션은 도박소 해적단 쪽 마지막 칸(7번)에 뜬다 — 칸 번호는 GamblingShop.TokenSlot. cost·costResourceType은 이 옵션의 3·행운의토큰.
+    [Header("행운의 토큰 사용(원작 A0BC) — 켜면 이 옵션은 위습 교환이다")]
+    public bool tokenExchange;
+    [Range(0f, 100f)] public float tokenSpecialChancePercent = 80f;
+    public WispData tokenWispSpecial;
+    public WispData tokenWispRare;
 }

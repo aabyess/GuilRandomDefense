@@ -494,7 +494,7 @@ public static class MapLayout
     ///    오프셋이 어긋나면 BuildCombineColumns 보고문이 실측값과 나란히 찍어 고발한다.
     /// </summary>
     // (2차 실측 정정: 1580.6은 가로가 2% **줄어 맞춰진** 판 값이었다. 섬 폭을 고쳐 축소가 없어진 판의 실측은 1615.3 → ÷1.6 = 1009.6.)
-    public const float LegendColumnCenterOffset = 1010f * CombineBoardScale;   // 열 폭이 전부 BoardScale을 타므로 같은 배율
+    public const float LegendColumnCenterOffset = 978.75f * CombineBoardScale;   // 열 폭이 전부 BoardScale을 타므로 같은 배율
 
     /// <summary>전시 섬 x 중심 — 전설 열 중심에 맞춘다(사장님 「전설 위에 오게끔」).</summary>
     public const float DisplayCenterX = CombineTableLeftX + LegendColumnCenterOffset;

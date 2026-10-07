@@ -3776,6 +3776,7 @@ public class UnitAttacker : MonoBehaviour
             ApplyAttackMultishot(target);
             ApplyCritIfTriggered(target);
             if (target.IsDead) TryRaiseOnKill(target);
+            TrySummonOnHit();
             TryCastOnHitSkill(target);
             return;
         }
@@ -3910,6 +3911,28 @@ public class UnitAttacker : MonoBehaviour
     }
 
     static UnitSpawner raiseSpawner;
+
+    // 평타가 맞을 때마다 확률로 소환(UnitData.summonOnHit*, 박진웅 → 볼보이). 처치·대상 종류 불문. 서버만. 소환수는 TimedLife로 사라진다.
+    readonly System.Collections.Generic.List<GameObject> summonedOnHit = new System.Collections.Generic.List<GameObject>();
+    void TrySummonOnHit()
+    {
+        UnitData data = identity != null ? identity.Data : null;
+        if (data == null || data.summonOnHitUnit == null || owner == null || !GameAuthority.IsServer) return;
+        if (Random.Range(0f, 100f) >= data.summonOnHitChancePercent) return;
+        if (data.summonOnHitMaxAlive > 0)
+        {
+            summonedOnHit.RemoveAll(g => g == null);
+            if (summonedOnHit.Count >= data.summonOnHitMaxAlive) return;
+        }
+        if (raiseSpawner == null) raiseSpawner = FindFirstObjectByType<UnitSpawner>();
+        if (raiseSpawner == null) return;
+        LaneMarker lane = LaneMarker.Get(owner.OwnerId);
+        Vector3 position = lane != null ? lane.TakeSpawnPosition(data.summonOnHitUnit) : transform.position;
+        GameObject summoned = raiseSpawner.Spawn(data.summonOnHitUnit, position, owner.OwnerId);
+        if (summoned == null) return;
+        if (data.summonOnHitLifetimeSeconds > 0f) summoned.AddComponent<TimedLife>().Begin(data.summonOnHitLifetimeSeconds);
+        summonedOnHit.Add(summoned);
+    }
 
     // 원작 A113 그림자그림자 열매(모리아): 평타로 죽인 적이 좀비로 부활해 이 유닛의 주인 것이 된다. 값은 UnitData.raiseOnKill*(주석에 [추정] 근거).
     // 평타 주 대상만(원작 오브 효과는 맞은 유닛 하나) · 서버만 · 보스·PV 200 이상(원작 ancient·sapper)은 제외.

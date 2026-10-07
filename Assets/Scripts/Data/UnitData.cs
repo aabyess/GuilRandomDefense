@@ -599,6 +599,15 @@ public class UnitData : ScriptableObject
     [Tooltip("0이면 영구. 0보다 크면 이만큼 뒤 사라진다")]
     public float raiseOnKillLifetimeSeconds;
 
+    // ⚠️ 맨 뒤(2026-10-07, 사장님 「볼보이=원작 좀비, 박진웅(축구의달인)이 평타로 소환」) — 이 유닛의 **기본 공격이 맞을 때마다** 확률로 summonOnHitUnit을 한 기 소환한다(처치·대상 종류 불문 —
+    // 보스·스토리여도). 주인은 이 유닛의 주인, 수명 summonOnHitLifetimeSeconds(0이면 영구), 한 번에 살아 있는 수 상한 summonOnHitMaxAlive(0이면 상한 없음). 서버만.
+    // raiseOnKill*(처치 때 부활)과 별개 — 지금 쓰는 유닛은 박진웅뿐이고 raiseOnKill을 쓰는 유닛은 없다.
+    public UnitData summonOnHitUnit;
+    [Range(0f, 100f)] public float summonOnHitChancePercent;
+    public float summonOnHitLifetimeSeconds;
+    [Tooltip("이 유닛이 소환해 지금 살아 있는 summonOnHitUnit 수가 이 값에 닿으면 더 안 소환. 0이면 상한 없음")]
+    public int summonOnHitMaxAlive;
+
     // ⚠️ 맨 뒤(2026-10-06, 초월 배성령 「무방비상태」 방무뎀 50%) — 이 유닛의 **평타·스킬 피해가 적 방어의 이 비율만큼을 무시**한다(적 방어 ×(1−값), 양수 방어만 — 음수 방어는 그대로).
     // SkillEffect.armorIgnoreRatio(피해를 둘로 갈라 한쪽만 방어를 무시)와 다른 축이다: 이쪽은 **방어 수치 자체를 깎아** 계수 1/(1+0.02×방어)에 넣는다(사장님 확정: 「적 방어의 50%를 무시」). 0이면 꺼짐.
     [Range(0f, 1f)] public float attackArmorIgnoreRatio;

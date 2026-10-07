@@ -47,6 +47,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
     const int SlotCountValue = 9;
     const int PageSlot = 8;              // 「해적단 ▶」 / 「◀ 뒤로」 칸(원래 항상 빈 칸)
     const int PirateNetBase = 100;       // TryUse(절대 번호) — 100 + 퀘스트 번호
+    public const int TokenSlot = 7;      // 해적단 쪽 마지막 칸 = 「행운의 토큰 사용」(원작 A0BC) — 퀘스트는 0~6
     const int PirateVisibleSlots = 8;    // 해적단 쪽에서 퀘스트가 쓸 수 있는 칸 0~7(8은 뒤로)
     static readonly Color PageColor = new Color(0.75f, 0.55f, 0.2f);   // 해적단 퀘스트 칸과 같은 청동색
     bool pirateOpen;                     // 이 화면(클라)에서 해적단 쪽을 보는 중 — 서버 상태 아님
@@ -129,7 +130,10 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
             if (index == PageSlot)
                 return new LaneShopSlotView(pirateOpen ? "◀ 뒤로" : "해적단 ▶", PageColor, true, LaneShopTargetKind.None);
             if (pirateOpen)
+            {
+                if (index == TokenSlot && TokenOption != null) return TokenSlotView();
                 return index >= 0 && index < PirateVisibleSlots && index < pirate.SlotCount ? pirate.GetSlotView(index) : LaneShopSlotView.Empty;
+            }
         }
         if (!slotCacheBuilt) BuildSlotCache();
         if (index < 0 || index >= SlotCountValue) return LaneShopSlotView.Empty;
@@ -164,7 +168,11 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
         if (pirate != null)
         {
             if (index == PageSlot) return pirateOpen ? "도박소로 돌아갑니다" : "해적단 퀘스트 — 미니보스 퇴치 의뢰를 삽니다";
-            if (pirateOpen) return index >= 0 && index < PirateVisibleSlots && index < pirate.SlotCount ? pirate.GetSlotTooltip(index) : null;
+            if (pirateOpen)
+            {
+                if (index == TokenSlot && TokenOption != null) return TokenTooltip();
+                return index >= 0 && index < PirateVisibleSlots && index < pirate.SlotCount ? pirate.GetSlotTooltip(index) : null;
+            }
         }
         if (index == TraitPointSlotIndex) return BuildTraitPointTooltip();
 
@@ -180,6 +188,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
         if (index >= PirateNetBase)
         {
             failReason = null;
+            if (index - PirateNetBase == TokenSlot && TokenOption != null) return TryTokenExchange(out failReason);
             return pirate != null && index - PirateNetBase < PirateVisibleSlots && pirate.TryUse(index - PirateNetBase, target, out failReason);
         }
         if (index == PageSlot) { failReason = null; return false; }   // 8번은 쪽 넘김 전용 — 도박 옵션이 없는 빈 칸
@@ -188,6 +197,42 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
         failReason = null;
         GamblingOptionData option = OptionAt(index);
         return option != null && TryRoll(option, out failReason);
+    }
+
+    // ── 행운의 토큰 사용(원작 A0BC, 2026-10-07) ──
+    GamblingOptionData TokenOption => unitOptions.Find(o => o != null && o.tokenExchange);
+
+    LaneShopSlotView TokenSlotView()
+    {
+        GamblingOptionData option = TokenOption;
+        int have = OwnerContext?.ResourceWallet != null ? OwnerContext.ResourceWallet.Get(option.costResourceType) : 0;
+        return new LaneShopSlotView($"행운의 토큰 사용\n토큰 {have}/{option.cost}", new Color(0.55f, 0.85f, 0.5f), have >= option.cost, LaneShopTargetKind.None);
+    }
+
+    string TokenTooltip()
+    {
+        GamblingOptionData o = TokenOption;
+        return $"{o.optionName}\n행운의 토큰 {o.cost}개를 써서 위습을 받습니다.\n{o.tokenSpecialChancePercent:F0}% {(o.tokenWispSpecial != null ? o.tokenWispSpecial.wispName : "특별함 위습")} · {100f - o.tokenSpecialChancePercent:F0}% {(o.tokenWispRare != null ? o.tokenWispRare.wispName : "희귀함 위습")}";
+    }
+
+    // 원작 Trig_Token: 토큰 3개 이상이면 80%/20%로 위습 하나, 토큰 3개 소모(j 82927~83019). 위습은 RewardDistributor.GrantWisps로(원작 StoryReward_Base3/4 자리 = 우리 위습 칸).
+    bool TryTokenExchange(out string failReason)
+    {
+        failReason = null;
+        GamblingOptionData option = TokenOption;
+        PlayerContext context = OwnerContext;
+        if (option == null || context == null || context.ResourceWallet == null || RewardDistributor.Instance == null) return false;
+        if (context.ResourceWallet.Get(option.costResourceType) < option.cost) { failReason = "행운의토큰이 부족합니다!"; return false; }
+        if (!context.ResourceWallet.TrySpend(option.costResourceType, option.cost)) { failReason = "행운의토큰이 부족합니다!"; return false; }
+        bool special = Random.Range(0f, 100f) < option.tokenSpecialChancePercent;
+        WispData wisp = special ? option.tokenWispSpecial : option.tokenWispRare;
+        if (wisp != null)
+            RewardDistributor.Instance.GrantWisps(context, new List<WispReward> { new WispReward { wisp = wisp, count = 1 } });
+        PlayerNotification.Show(owner.OwnerId, "<color=#FF8200>☆★         행운의 토큰사용 !!         ★☆</color>", 10f);
+        PlayerNotification.Show(owner.OwnerId, special
+            ? "<color=#2040F0>☆★         특별함 위습 획득 !!         ★☆</color>"
+            : "<color=#FF00FF>☆★         희귀함 위습 획득 !!         ★☆</color>", 10f);
+        return true;
     }
 
     // 돈 도박 줄(0·1)에 보이는 옵션 — 졸업 전: 졸업 조건이 없는 것(10엔·500엔), 졸업 뒤: 졸업해서 없어지지 않는 것
@@ -228,7 +273,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
         if (index == 6)
             return unitOptions.Count > 3 ? unitOptions[3] : null;
 
-        // 압살롬 도박(원작 h069, R20 보스 해금) — 다른세계 도박 옆 칸.
+        // 조도연 좆돼지 도박(구 압살롬 도박 h069 — 사장님 10-07: 좆돼지로 통합, 8라운드 시작에 열림) — 다른세계 도박 옆 칸. unitOptions[5]는 행운의 토큰 사용(해적단 쪽 7번 칸).
         if (index == 7)
             return unitOptions.Count > 4 ? unitOptions[4] : null;
 
