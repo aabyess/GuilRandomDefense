@@ -51,6 +51,9 @@ public class SupportShop : MonoBehaviour, ILaneShop
 
     PlayerContext OwnerContext => PlayerContext.Get(owner.OwnerId);
 
+    /// <summary>이 도움소 주인의 지갑(마나 표시용 — 하단 정보칸·머리 위 막대). 주인이 없으면 null.</summary>
+    public PlayerContext ManaOwner => owner != null ? PlayerContext.Get(owner.OwnerId) : null;
+
     // ⚠️ 2026-09-06 신설("항법" 5택1 연결, MANSO_LEVEL2_UPLIFT_RESOLVED.md) — 이
     // 플레이어가 "도움소 강화"를 골랐는지. SupportSkillData.boostedX가 0인 스킬(예:
     // 대지진)은 이 값과 무관하게 항상 기존 값이라 회귀 없음.

@@ -21,7 +21,7 @@ public class SelectionManager : MonoBehaviour
     // 2026-09-26 A 공격: A(또는 명령칸 「공격」)를 누르면 다음 좌클릭이 공격 대상이 된다.
     // 적을 찍으면 그 적을 치고, 땅을 찍으면 공격 이동. 우클릭·Esc로 취소.
     // 2026-09-29 M 이동(워크3 콘솔 개편): 같은 틀로 다음 좌클릭 땅이 이동 목적지. 커서만 초록 화살표.
-    enum TargetMode { None, Attack, Move }
+    enum TargetMode { None, Attack, Move, Patrol }
     TargetMode targeting;
     int attackCancelFrame = -1;
     // 우클릭 취소는 같은 프레임의 우클릭 이동(UnitMover)도 막아야 한다 — 스크립트 실행 순서와 상관없이.
@@ -123,6 +123,17 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
+    /// <summary>P 키·명령칸 「반복」. 싸울 수 있는 유닛이 선택돼 있을 때만 들어간다.</summary>
+    public void BeginPatrolTargeting()
+    {
+        foreach (Selectable s in selected)
+            if (s != null && (s.GetComponent<UnitCombat>() != null || (!GameAuthority.IsServer && s.GetComponent<UnitIdentity>() != null)))
+            {
+                targeting = TargetMode.Patrol;
+                return;
+            }
+    }
+
     /// <summary>M 키·명령칸 「이동」. 움직일 수 있는 유닛(UnitMover)이 선택돼 있을 때만 들어간다.</summary>
     public void BeginMoveTargeting()
     {
@@ -172,6 +183,14 @@ public class SelectionManager : MonoBehaviour
                 Debug.Log($"[명령] 이동 — 유닛 {moved}기가 {moveHit.point}로 갑니다.");
             }
         }
+        else if (targeting == TargetMode.Patrol)
+        {
+            if (WorldPick.TryHitGround(cam, screen, out RaycastHit patrolHit))
+            {
+                int n = UnitCommands.Patrol(selected, patrolHit.point);
+                Debug.Log($"[명령] 반복 — 유닛 {n}기가 지금 자리와 {patrolHit.point} 사이를 오갑니다.");
+            }
+        }
         else
         {
             EnemyDummy enemy = WorldPick.TryPickEnemy(cam, screen, AttackPickTolerancePixels);
@@ -209,6 +228,9 @@ public class SelectionManager : MonoBehaviour
 
         if (Keyboard.current.mKey.wasPressedThisFrame)
             BeginMoveTargeting();
+
+        if (Keyboard.current.pKey.wasPressedThisFrame)
+            BeginPatrolTargeting();
 
         if (Keyboard.current.sKey.wasPressedThisFrame)
         {
@@ -432,7 +454,7 @@ public class SelectionManager : MonoBehaviour
             if (attackCursorTexture == null) attackCursorTexture = BuildAttackCursorTexture();
             Cursor.SetCursor(attackCursorTexture, new Vector2(1f, 1f), CursorMode.Auto);   // 칼끝(왼쪽 위)이 클릭 점
         }
-        else if (want == TargetMode.Move)
+        else if (want == TargetMode.Move || want == TargetMode.Patrol)
         {
             if (moveCursorTexture == null) moveCursorTexture = BuildMoveCursorTexture();
             Cursor.SetCursor(moveCursorTexture, new Vector2(1f, 1f), CursorMode.Auto);     // 화살 끝(왼쪽 위)이 클릭 점
@@ -553,10 +575,10 @@ public class SelectionManager : MonoBehaviour
             // 커서 옆에 지금 무엇을 고르는지 알려 준다(워크3의 공격 커서 대신).
             Vector2 m = Mouse.current.position.ReadValue();
             GUIStyle style = new GUIStyle(GUI.skin.label) { fontSize = 16, fontStyle = FontStyle.Bold };
-            bool move = targeting == TargetMode.Move;
+            bool move = targeting == TargetMode.Move || targeting == TargetMode.Patrol;
             style.normal.textColor = move ? new Color(0.45f, 1f, 0.45f) : new Color(1f, 0.35f, 0.3f);
             GUI.Label(new Rect(m.x + 18, Screen.height - m.y - 8, 320, 24),
-                      move ? "이동 — 땅을 클릭 (우클릭 취소)" : "공격 — 적 또는 땅을 클릭 (우클릭 취소)", style);
+                      targeting == TargetMode.Patrol ? "반복 — 오갈 땅을 클릭 (우클릭 취소)" : move ? "이동 — 땅을 클릭 (우클릭 취소)" : "공격 — 적 또는 땅을 클릭 (우클릭 취소)", style);
         }
 
         if (!isDragging) return;

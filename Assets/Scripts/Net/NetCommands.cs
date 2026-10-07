@@ -27,6 +27,7 @@ public enum NetUnitCommand : byte
     AttackMove = 3,
     Gather = 4,
     SendToPen = 5,
+    Patrol = 6,   // 반복(P, 10-07)
 }
 
 /// <summary>
@@ -118,6 +119,7 @@ public static class NetCommands
             case NetUnitCommand.Stop: done = UnitCommands.Stop(one); break;
             case NetUnitCommand.Hold: done = UnitCommands.Hold(one); break;
             case NetUnitCommand.AttackMove: done = UnitCommands.AttackMove(one, point); break;
+            case NetUnitCommand.Patrol: done = UnitCommands.Patrol(one, point); break;
             case NetUnitCommand.Gather: done = UnitCommands.Gather(one); break;
             case NetUnitCommand.SendToPen: done = UnitCommands.SendToPen(one); break;
             case NetUnitCommand.AttackTarget:

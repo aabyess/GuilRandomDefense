@@ -610,6 +610,9 @@ public class UnitData : ScriptableObject
     // 표: Docs/research/ORIGINAL_MATCH_NAMES_2026-10-07.tsv(Tools/original_match_names.py) → Assets/Editor/OriginalMatchApply.cs가 채운다. 화면 표시는 GameVersion.BetaShowOriginalMatch가 켜져 있을 때만.
     public string originalMatchName;
 
+    /// <summary>판매는 희귀함까지만(사장님 10-07, 원작 판매 능력 A0B8·A0BA·A0B9도 안흔함·특별함·희귀함까지) — 전설 이상·히든·랜덤유닛·다른세계 등은 판매 없음. 회유 유닛은 IsRecruit 예외(호출부).</summary>
+    public bool SellableGrade => grade.Tier() <= 3 && grade != UnitGrade.RandomUnit && grade != UnitGrade.OtherWorld;
+
     /// <summary>베타 표시용 「원작: 징베」 — 스위치가 꺼졌거나 대응이 없으면 빈 문자열.</summary>
     public string OriginalMatchLabel => GameVersion.BetaShowOriginalMatch && !string.IsNullOrEmpty(originalMatchName) ? $"원작: {originalMatchName}" : "";
 }

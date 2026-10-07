@@ -215,6 +215,22 @@ public static class UnitCommands
         return count;
     }
 
+    /// <summary>P + 땅 클릭(반복). 각자 지금 자리와 그 근처 걸을 수 있는 자리를 오간다.</summary>
+    public static int Patrol(IReadOnlyList<Selectable> selection, Vector3 point)
+    {
+        if (!GameAuthority.IsServer) return NetCommands.RequestUnitCommand(NetUnitCommand.Patrol, selection, null, point); // MP: 클라=요청
+        int count = 0;
+        foreach (UnitCombat combat in Fighters(selection))
+        {
+            if (combat.TryGetComponent(out FlyingMover _)) { combat.Patrol(FlyingMover.ClampToWorld(point)); count++; continue; }
+            if (!combat.TryGetComponent(out UnityEngine.AI.NavMeshAgent agent)) continue;
+            if (!UnityEngine.AI.NavMesh.SamplePosition(point, out UnityEngine.AI.NavMeshHit hit, 8f * WorldScale.Value, agent.areaMask)) continue;
+            combat.Patrol(hit.position);
+            count++;
+        }
+        return count;
+    }
+
     static UnitIdentity FirstIdentity(IReadOnlyList<Selectable> selection)
     {
         foreach (Selectable selected in selection)

@@ -55,6 +55,10 @@ public class UnitCombat : MonoBehaviour
     // A+땅 클릭(공격 이동) 중인가, 그 목적지.
     bool attackMoving;
     Vector3 attackMoveDestination;
+    // P + 땅 클릭(반복, 워크3 Patrol) — 지금 자리 ↔ 찍은 지점을 오간다. 가는 길에 적을 만나면 치고(공격 이동과 같은 Chasing), 끝나면 가던 쪽으로 다시 간다.
+    bool patrolling;
+    Vector3 patrolA, patrolB;
+    bool patrolToB;
 
     // 사거리 안에 있을 때만 넘겨준다 — UnitAttacker가 "때릴 수 있는 대상"만 받도록.
     public EnemyDummy CurrentTarget
@@ -180,10 +184,29 @@ public class UnitCombat : MonoBehaviour
         nextScanTime = 0f;
     }
 
+    /// <summary>P + 땅 클릭(반복). 지금 자리와 destination 사이를 계속 오간다. 다른 명령(정지·홀드·이동·공격…)이 오면 풀린다(ClearOrders).</summary>
+    public void Patrol(Vector3 destination)
+    {
+        ClearOrders();
+        currentTarget = null;
+        patrolling = true;
+        patrolA = transform.position;
+        patrolB = destination;
+        patrolToB = true;
+        attackMoving = true;   // 적을 만나면 치고 다시 가던 쪽으로(UpdateChasing의 attackMoving 갈래)
+        attackMoveDestination = patrolB;
+        commandedPosition = patrolB;
+        state = CombatState.AttackMoving;
+        hasDestination = false;
+        SetDestination(patrolB);
+        nextScanTime = 0f;
+    }
+
     void ClearOrders()
     {
         forcedTarget = null;
         attackMoving = false;
+        patrolling = false;
     }
 
     // UnitMover가 우클릭 이동 명령을 받으면 이걸 부른다. 도착할 때까지 자동 추적을 멈춘다.
@@ -208,6 +231,14 @@ public class UnitCombat : MonoBehaviour
                 TryScan();         // 적을 찾으면 Chasing으로 바뀐다(공격 이동은 표시로 남는다)
                 if (state == CombatState.AttackMoving && HasArrived())
                 {
+                    if (patrolling)
+                    {
+                        patrolToB = !patrolToB;
+                        attackMoveDestination = patrolToB ? patrolB : patrolA;
+                        hasDestination = false;
+                        SetDestination(attackMoveDestination);
+                        break;
+                    }
                     attackMoving = false;
                     state = CombatState.Idle;
                 }

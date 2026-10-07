@@ -50,6 +50,8 @@ public class ShopNameplateLayer : MonoBehaviour
         public Vector3 roof;                 // 지붕 한가운데 위. 건물은 안 움직인다 — 한 번만 잰다
         public RectTransform root;
         public TMP_Text text;
+        public SupportShop support;          // 도움소만: 머리 위 마나 막대(사장님 10-07 「도움소 마나 얼마나 찼는지」)
+        public Image manaFill, manaBack;
     }
 
     static ShopNameplateLayer instance;
@@ -108,7 +110,7 @@ public class ShopNameplateLayer : MonoBehaviour
 
             string key = LanePrefix.Replace(building.name, "");
             string caption = DisplayNames.TryGetValue(key, out string display) ? display : key;
-            plates.Add(new Plate { building = building, caption = caption, roof = Roof(building), });
+            plates.Add(new Plate { building = building, caption = caption, roof = Roof(building), support = behaviour as SupportShop, });
         }
     }
 
@@ -167,6 +169,54 @@ public class ShopNameplateLayer : MonoBehaviour
 
         plate.root = rootRect;
         plate.text = text;
+        if (plate.support != null) CreateManaBar(plate, rootRect);
+    }
+
+    // 이름표 바로 아래의 얇은 파란 막대(검은 바탕, 체력바와 같은 꼴). 가득 차면 바탕 테두리가 밝게 맥동한다.
+    static readonly Vector2 ManaBarSize = new Vector2(96f, 8f);
+    static void CreateManaBar(Plate plate, RectTransform rootRect)
+    {
+        GameObject back = new GameObject("ManaBack", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        RectTransform backRect = (RectTransform)back.transform;
+        backRect.SetParent(rootRect, false);
+        backRect.anchorMin = backRect.anchorMax = new Vector2(0.5f, 0f);
+        backRect.pivot = new Vector2(0.5f, 1f);
+        backRect.sizeDelta = ManaBarSize + new Vector2(2f, 2f);
+        backRect.anchoredPosition = new Vector2(0f, -2f);
+        plate.manaBack = back.GetComponent<Image>();
+        plate.manaBack.color = Color.black;
+        plate.manaBack.raycastTarget = false;
+
+        GameObject fill = new GameObject("ManaFill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        RectTransform fillRect = (RectTransform)fill.transform;
+        fillRect.SetParent(backRect, false);
+        fillRect.anchorMin = Vector2.zero; fillRect.anchorMax = Vector2.one;
+        fillRect.offsetMin = new Vector2(1f, 1f); fillRect.offsetMax = new Vector2(-1f, -1f);
+        Image fillImage = fill.GetComponent<Image>();
+        fillImage.sprite = UiSkin.WhiteSprite;   // 스프라이트 없는 Filled는 비율이 안 먹는다
+        fillImage.type = Image.Type.Filled;
+        fillImage.fillMethod = Image.FillMethod.Horizontal;
+        fillImage.fillOrigin = (int)Image.OriginHorizontal.Left;
+        fillImage.color = new Color(0.25f, 0.55f, 1f, 1f);
+        fillImage.raycastTarget = false;
+        plate.manaFill = fillImage;
+    }
+
+    static void UpdateManaBar(Plate plate)
+    {
+        if (plate.manaFill == null) return;
+        PlayerContext owner = plate.support != null ? plate.support.ManaOwner : null;
+        ResourceWallet wallet = owner != null ? owner.ResourceWallet : null;
+        int cap = wallet != null ? wallet.GetCap(ResourceType.Mana) : 0;
+        bool show = cap > 0;
+        if (plate.manaBack.gameObject.activeSelf != show) plate.manaBack.gameObject.SetActive(show);
+        if (!show) return;
+        float ratio = Mathf.Clamp01(wallet.Get(ResourceType.Mana) / (float)cap);
+        plate.manaFill.fillAmount = ratio;
+        bool full = ratio >= 0.999f;
+        float pulse = full ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f) : 0f;
+        plate.manaFill.color = Color.Lerp(new Color(0.25f, 0.55f, 1f), new Color(0.65f, 0.9f, 1f), pulse);
+        plate.manaBack.color = Color.Lerp(Color.black, new Color(0.45f, 0.75f, 1f), pulse);
     }
 
     void LateUpdate()
@@ -206,6 +256,7 @@ public class ShopNameplateLayer : MonoBehaviour
             if (plate.root == null) CreateLabel(plate);
             if (!plate.root.gameObject.activeSelf) plate.root.gameObject.SetActive(true);
             plate.root.position = new Vector3(screen.x, screen.y, 0f);
+            UpdateManaBar(plate);
         }
     }
 
