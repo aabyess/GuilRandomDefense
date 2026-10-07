@@ -2072,7 +2072,7 @@ public class GameHud : MonoBehaviour
         int slot = FlexSlotOf(FlexKind.Yoonseo);
         if (slot < 0) return;
         bool done = attacker.YoonseoEnhanced;
-        unitCommandSlotNames[slot].text = "최윤서\n강화";
+        unitCommandSlotNames[slot].text = "노윤서\n강화";
         unitCommandSlotHotkeys[slot].text = "";
         Color color = UnitCommandDefaultColor;
         color.a = done ? 0.35f : 1f;
@@ -2340,12 +2340,12 @@ public class GameHud : MonoBehaviour
                 if (member == null || member.IsSummon || member.Data == null || member.Data.name != "히든_최윤서") continue;   // 10-07 히든 최윤서는 표시 이름이 「노윤서」로 바뀌어 칭호(unitName)로 못 찾는다 — 에셋 이름으로
                 if (best == null || member.Data.grade.Tier() < best.Data.grade.Tier()) best = member;   // 서열이 낮은 쪽(히든) 먼저
             }
-        if (best == null) { PlayerNotification.Show(playerId, "노윤서(옛 최윤서)가 없습니다.", 4f); return; }
+        if (best == null) { PlayerNotification.Show(playerId, "노윤서가 없습니다.", 4f); return; }
 
         string name = best.Data.unitName;
         best.Consume();
         attacker.SetYoonseoEnhanced();
-        PlayerNotification.Show(playerId, $"<color=#FFD700>최윤서 강화!</color> {name} 1기가 사라지고 방어 무시 피해가 켜졌으며 아군 이속 감소가 없어집니다.", 6f);
+        PlayerNotification.Show(playerId, $"<color=#FFD700>노윤서 강화!</color> {name} 1기가 사라지고 방어 무시 피해가 켜졌으며 아군 이속 감소가 없어집니다.", 6f);
     }
 
     void HideSellButton()
@@ -3908,7 +3908,7 @@ public class GameHud : MonoBehaviour
         }
         else if (FlexKindAt(index) == FlexKind.Yoonseo && yoonseoSlotShown)
         {
-            ShowTooltip("최윤서 강화\n내 노윤서(히든, 옛 최윤서) 한 기가 사라지고, 방어 무시 피해가 켜지며 아군 이속 감소 디버프가 100% 없어진다. 한 번 켜면 영구.", cardRect);
+            ShowTooltip("노윤서 강화\n내 노윤서(히든) 한 기가 사라지고, 방어 무시 피해가 켜지며 아군 이속 감소 디버프가 100% 없어진다. 한 번 켜면 영구.", cardRect);
         }
         else
         {
