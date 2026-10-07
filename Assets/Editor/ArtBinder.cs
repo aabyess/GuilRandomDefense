@@ -1067,6 +1067,7 @@ public static class ArtBinder
 
             float units = meters * metersToUnits * (lane ? laneShrink : 1f) * (modelName.StartsWith("Story") ? StoryBuildingScale : 1f);
             enemy.prefab = GetOrCreate(cache, template, model, "Mob", ref made, units);
+            enemy.bossModelHeight = enemy.isBoss ? units : 0f;   // 보스 목표 키(WaveSpawner.BossScaleFor)가 쓰는 프리팹 키 — 렌더러 경계는 무기·머리카락이 섞여 틀린다(R40 98 vs 62)
             EditorUtility.SetDirty(enemy);
             bound.Add($"{modelName} → {enemy.enemyName} ({meters:F2}m = {units:F1}{(lane ? ", 레인" : "")})");
         }

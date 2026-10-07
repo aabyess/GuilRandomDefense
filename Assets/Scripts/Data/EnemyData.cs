@@ -111,6 +111,11 @@ public class EnemyData : ScriptableObject
     public string baseRewardMessage;
 
     public bool isBoss;
+    // 보스 목표 키(게임 단위, 사장님 10-07 「보스 크기를 스토리 정도로」): 0이면 WaveSpawner.BossScale(×1.6)만. 0보다 크면 보스 배율 = max(BossScale, 이 값 ÷ 스폰 때 잰 프리팹 키) —
+    // 스토리 건물 13채 평균 96. 모델 표에 없는 자리표시 보스(R70·R75·사이드보스)는 0으로 둔다.
+    public float bossTargetHeight;
+    // 보스 프리팹의 몸 키(게임 단위) — ArtBinder.BindEnemies가 표(미터 × 단위 × 레인 축소)로 써 준다. 0이면 렌더러 경계로 잰다(덜 정확).
+    public float bossModelHeight;
 
     // ⚠️ 2026-09-05까지는 "AP는 방어력을 무시한다"고 적혀 있었는데, 사장님 확정(02번)으로
     // 뒤집혔다 — 스킬 피해(AttackType.Spells)만 이 방어력을 무시하고, 유닛 평타는 AD든

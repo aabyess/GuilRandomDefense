@@ -134,6 +134,27 @@ public class WaveSpawner : MonoBehaviour
     // 모델 키는 ArtBinder가 실제 키(미터)로 맞춰 두어 와폴(2.07m)이 라인몹과 거의 같은 크기였다 — 여기서 한 배율을 더 건다.
     // MP: 거울 루트(NetEntity)가 호스트의 스케일을 실어 가므로 클라도 같다.
     public const float BossScale = 1.6f;
+    const float BossMaxScale = 4f;   // 목표 키로 키울 때 상한 — 키 측정이 틀려도 화면을 덮지 않게
+
+    /// <summary>보스 배율 — 기본 BossScale, 목표 키(EnemyData.bossTargetHeight)가 있으면 max(BossScale, 목표÷프리팹 키). 키는 막 만든 인스턴스의 렌더러 경계 높이.</summary>
+    public static float BossScaleFor(EnemyData data, GameObject instance)
+    {
+        if (data == null || data.bossTargetHeight <= 0f || instance == null) return BossScale;
+        float height = data.bossModelHeight > 0f ? data.bossModelHeight : MeasureHeight(instance);
+        if (height < 1f) return BossScale;
+        return Mathf.Clamp(data.bossTargetHeight / height, BossScale, BossMaxScale);
+    }
+
+    static float MeasureHeight(GameObject root)
+    {
+        bool any = false; Bounds bounds = default;
+        foreach (Renderer r in root.GetComponentsInChildren<Renderer>())
+        {
+            if (!(r is SkinnedMeshRenderer) && !(r is MeshRenderer)) continue;
+            if (!any) { bounds = r.bounds; any = true; } else bounds.Encapsulate(r.bounds);
+        }
+        return any ? bounds.size.y : 0f;
+    }
 
     // 광폭화 유닛(2026-10-07 사장님 사양, BerserkMob) — R61~ 레인 적이 나올 때 확률로 일반 적 한 기를 광폭화 변형으로 바꾼다(라운드 전체 수는 그대로).
     // 확률·상한·회복%·이속·크기는 테스트 뒤 바꿀 값이라 인스펙터에 둔다. 서버(호스트)만 판정.
@@ -150,7 +171,7 @@ public class WaveSpawner : MonoBehaviour
     [SerializeField] float berserkDefenseAura = 5f;                 // 원작 A125
     [SerializeField] float berserkMoveSpeedMultiplier = 1f;         // 사장님 10-07 「적 유닛이랑 속도 맞춰라」 — 같은 라운드 일반 적과 같은 속도(난이도 R024 배율 포함). 원작도 이속 증가 0(Absk bsk2=0)
     [SerializeField] float berserkLaneOutwardOffset = 45f;          // 왼쪽 길 중심선보다 바다 쪽(−x)으로 비키는 거리(길 폭 반쯤~한 칸) — 일반 적 줄과 안 겹치게
-    [SerializeField] float berserkScale = 1.3f;                     // 일반 < 광폭화 < 보스(1.6)
+    [SerializeField] float berserkLaneMobScale = 2f;                       // 사장님 10-07 「라인몹 ×2.0」: 일반(~39) < 광폭화(~72) < 보스(목표 96)
     /// <summary>시험용 — 0 이상이면 확률을 이 값으로 덮는다(1 = 항상). 인스펙터 값은 그대로.</summary>
     public static float BerserkChanceOverride = -1f;
     public static int BerserkMinRoundOverride = -1;
@@ -181,8 +202,8 @@ public class WaveSpawner : MonoBehaviour
     GameObject SpawnEnemyInternal(EnemyData enemyData, int laneIndex, WaypointPath lanePath, float startHpMultiplier = 1f, bool berserk = false)
     {
         GameObject instance = Instantiate(enemyData.prefab);
-        if (enemyData.isBoss) instance.transform.localScale *= BossScale;
-        if (berserk) instance.transform.localScale *= berserkScale;
+        if (enemyData.isBoss) instance.transform.localScale *= BossScaleFor(enemyData, instance);
+        if (berserk) instance.transform.localScale *= berserkLaneMobScale;
 
         if (instance.TryGetComponent(out WaypointMover mover))
         {
