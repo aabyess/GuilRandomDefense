@@ -400,6 +400,10 @@ public enum SkillEffectKind
     LifeRegenBuff,
     // 아군 지정(ActiveButton + SkillLevel.needsAllyClick): 고른 내 아군 하나를 「지정 아군」으로 기억한다(다시 고르면 바뀜). 임채민 「축복의땅」. SkillTargetKind.DesignatedAlly 효과가 이 유닛에 걸린다.
     DesignateAlly,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-07, 광폭화 유닛 — 사장님 사양) — 직렬화 순서를 지킨다.
+    // 적 오라 전용: 받는 적이 초당 최대체력의 multiplier(0.01 = 1%)씩 회복한다(EnemyDummy.AddRegenPercentBonus). HealOverTime은 고정 hp/초라 최대체력이 큰 적엔 뜻이 없다.
+    HealPercentOverTime,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,

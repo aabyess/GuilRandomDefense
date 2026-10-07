@@ -499,6 +499,35 @@ public class EnemyDummy : MonoBehaviour
     /// <summary>AddRegenBonus로 건 것을 되돌린다 — 같은 값을 넣어야 정확히 상쇄된다.</summary>
     public void RemoveRegenBonus(float amount) => regenBonus -= amount;
 
+    // 광폭화 유닛의 회복 오라(2026-10-07) — 초당 최대체력의 비율(0.01 = 1%). 같은 값으로 Add/Remove를 짝 맞춰 부른다.
+    // 같은 오라(buffId)는 여러 개여도 가장 센 하나만 — 워크3 오라 규칙(다른 레인 광폭화가 겹쳐도 안 쌓인다).
+    readonly Dictionary<string, List<float>> regenPercentById = new Dictionary<string, List<float>>();
+    public void AddRegenPercentBonus(string buffId, float fractionPerSecond)
+    {
+        if (!regenPercentById.TryGetValue(buffId, out List<float> list)) regenPercentById[buffId] = list = new List<float>();
+        list.Add(fractionPerSecond);
+    }
+    public void RemoveRegenPercentBonus(string buffId, float fractionPerSecond)
+    {
+        if (regenPercentById.TryGetValue(buffId, out List<float> list)) list.Remove(fractionPerSecond);
+    }
+    float RegenPercentNow()
+    {
+        float total = 0f;
+        foreach (List<float> list in regenPercentById.Values)
+        {
+            if (list.Count == 0) continue;
+            float best = list[0];
+            foreach (float v in list) best = Mathf.Max(best, v);
+            total += best;
+        }
+        return total;
+    }
+
+    /// <summary>화면에 쓰는 이름 — 광폭화 유닛은 「광폭화 ○○」(BerserkMob이 정한다). 없으면 EnemyData 이름.</summary>
+    public string NameOverride { get; set; }
+    public string DisplayName => !string.IsNullOrEmpty(NameOverride) ? NameOverride : (data != null && !string.IsNullOrEmpty(data.enemyName) ? data.enemyName : name);
+
     // 자연회복(EnemyData.hpRegenPerSecond + regenBonus). 기본 0이라 대부분의 적은 아무 일도
     // 안 한다. isDead를 먼저 거른다 — TakeDamage의 사망 확정과 같은 프레임에 순서가 겹치면
     // "죽었는데 되살아나는" 꼴이 나기 때문이다(사망 프레임엔 이미 Destroy가 걸려 있어
@@ -510,7 +539,7 @@ public class EnemyDummy : MonoBehaviour
         if (IsReplica) return; // MP: 클라 겉모습은 회복을 안 돌린다(체력은 호스트 값).
         if (isDead || invulnerable) return;
 
-        float regen = (data != null ? data.hpRegenPerSecond : 0f) + regenBonus;
+        float regen = (data != null ? data.hpRegenPerSecond : 0f) + regenBonus + RegenPercentNow() * MaxHp;
         if (regen <= 0f) return;
 
         hp = Mathf.Min(MaxHp, hp + regen * Time.deltaTime);
@@ -535,6 +564,9 @@ public class EnemyDummy : MonoBehaviour
             case SkillEffectKind.HealOverTime:
                 AddRegenBonus(effect.multiplier);
                 break;
+            case SkillEffectKind.HealPercentOverTime:
+                AddRegenPercentBonus(string.IsNullOrEmpty(effect.buffId) ? "HealPercent" : effect.buffId, effect.multiplier);
+                break;
         }
     }
 
@@ -550,6 +582,9 @@ public class EnemyDummy : MonoBehaviour
                 break;
             case SkillEffectKind.HealOverTime:
                 RemoveRegenBonus(effect.multiplier);
+                break;
+            case SkillEffectKind.HealPercentOverTime:
+                RemoveRegenPercentBonus(string.IsNullOrEmpty(effect.buffId) ? "HealPercent" : effect.buffId, effect.multiplier);
                 break;
         }
     }

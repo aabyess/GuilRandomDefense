@@ -67,6 +67,7 @@ public class WaveSpawner : MonoBehaviour
             if (PlayerContext.GetOccupied(laneIndex) == null) continue;
 
             activeSpawnCoroutines.Add(StartCoroutine(SpawnRoutine(wave, laneIndex, lanePath)));
+            if (berserkMode == BerserkMode.FixedTime) activeSpawnCoroutines.Add(StartCoroutine(FixedTimeBerserkRoutine(wave, laneIndex, lanePath)));
         }
     }
 
@@ -89,6 +90,7 @@ public class WaveSpawner : MonoBehaviour
         // 레인 하나 안에서 이 라운드에 통틀어 몇 번째 스폰인지(0-based) — entry가 여러 개라도
         // 안 끊긴다. OnEnemySpawned 전용, 그 외 로직엔 안 쓴다.
         int spawnCounter = 0;
+        int berserkCount = 0;   // 이 레인·이 라운드에 이미 나온 광폭화 수
 
         foreach (WaveSpawnEntry entry in wave.spawnList)
         {
@@ -111,7 +113,9 @@ public class WaveSpawner : MonoBehaviour
                         : DifficultyTable.MobHpMultiplier(DifficultyManager.Instance.Current, wave.roundNumber))
                     : 1f;
 
-                GameObject spawned = SpawnEnemyInternal(entry.enemyData, laneIndex, lanePath, sideBossSettlement * difficultyMultiplier);
+                bool berserk = ShouldSpawnBerserk(entry.enemyData, wave.roundNumber, berserkCount);
+                if (berserk) berserkCount++;
+                GameObject spawned = SpawnEnemyInternal(entry.enemyData, laneIndex, lanePath, sideBossSettlement * difficultyMultiplier, berserk);
 
                 // 보스 타임리밋 패배(2단계 A) — 일반 스폰 목록을 타는 라운드보스만 쏜다.
                 if (entry.enemyData.isBoss && spawned != null && spawned.TryGetComponent(out EnemyDummy bossDummy))
@@ -131,10 +135,54 @@ public class WaveSpawner : MonoBehaviour
     // MP: 거울 루트(NetEntity)가 호스트의 스케일을 실어 가므로 클라도 같다.
     public const float BossScale = 1.6f;
 
-    GameObject SpawnEnemyInternal(EnemyData enemyData, int laneIndex, WaypointPath lanePath, float startHpMultiplier = 1f)
+    // 광폭화 유닛(2026-10-07 사장님 사양, BerserkMob) — R61~ 레인 적이 나올 때 확률로 일반 적 한 기를 광폭화 변형으로 바꾼다(라운드 전체 수는 그대로).
+    // 확률·상한·회복%·이속·크기는 테스트 뒤 바꿀 값이라 인스펙터에 둔다. 서버(호스트)만 판정.
+    public enum BerserkMode { Chance, FixedTime }
+    [Header("광폭화 유닛 (R61~)")]
+    [SerializeField] bool berserkEnabled = true;
+    // Chance: 일반 적이 나올 때마다 확률로 그 한 기를 광폭화로 대체(사장님 사양). FixedTime: 라운드 시작 N초 뒤 레인마다 1기를 더 낸다(현행 ORDR식 — 보스 라운드 제외).
+    [SerializeField] BerserkMode berserkMode = BerserkMode.Chance;
+    [SerializeField] float berserkFixedTimeSeconds = 25f;
+    [SerializeField] int berserkMinRound = 61;
+    [SerializeField, Range(0f, 1f)] float berserkChance = 0.10f;
+    [SerializeField] int berserkMaxPerLanePerRound = 1;           // 사장님 10-07 「한 라운드에 한 마리」
+    [SerializeField] float berserkRegenFractionPerSecond = 0.01f;   // 원작 A14I 100만/초 ≈ 신 R61~75 최대체력의 0.7~2.2%/초 → 1%
+    [SerializeField] float berserkDefenseAura = 5f;                 // 원작 A125
+    [SerializeField] float berserkMoveSpeedMultiplier = 1f;         // 사장님 10-07 「적 유닛이랑 속도 맞춰라」 — 같은 라운드 일반 적과 같은 속도(난이도 R024 배율 포함). 원작도 이속 증가 0(Absk bsk2=0)
+    [SerializeField] float berserkLaneOutwardOffset = 45f;          // 왼쪽 길 중심선보다 바다 쪽(−x)으로 비키는 거리(길 폭 반쯤~한 칸) — 일반 적 줄과 안 겹치게
+    [SerializeField] float berserkScale = 1.3f;                     // 일반 < 광폭화 < 보스(1.6)
+    /// <summary>시험용 — 0 이상이면 확률을 이 값으로 덮는다(1 = 항상). 인스펙터 값은 그대로.</summary>
+    public static float BerserkChanceOverride = -1f;
+    public static int BerserkMinRoundOverride = -1;
+
+    // 고정 시각 모드 — 라운드 시작 berserkFixedTimeSeconds 뒤 이 레인에 광폭화 1기를 더 낸다(그 라운드의 첫 일반 적 종류, 난이도 배율 포함). 보스 라운드는 건너뛴다.
+    IEnumerator FixedTimeBerserkRoutine(WaveData wave, int laneIndex, WaypointPath lanePath)
+    {
+        int minRound = BerserkMinRoundOverride >= 0 ? BerserkMinRoundOverride : berserkMinRound;
+        if (!berserkEnabled || wave.roundNumber < minRound) yield break;
+        WaveSpawnEntry pick = null;
+        foreach (WaveSpawnEntry e in wave.spawnList) if (e.enemyData != null && e.enemyData.prefab != null) { if (e.enemyData.isBoss) yield break; pick ??= e; }
+        if (pick == null) yield break;
+        yield return new WaitForSeconds(berserkFixedTimeSeconds);
+        float mult = DifficultyManager.Instance != null && DifficultyManager.Instance.IsModeSelected
+            ? DifficultyTable.MobHpMultiplier(DifficultyManager.Instance.Current, wave.roundNumber) : 1f;
+        SpawnEnemyInternal(pick.enemyData, laneIndex, lanePath, mult, berserk: true);
+    }
+
+    bool ShouldSpawnBerserk(EnemyData enemyData, int roundNumber, int alreadyThisRound)
+    {
+        if (!berserkEnabled || berserkMode != BerserkMode.Chance || !GameAuthority.IsServer || enemyData == null || enemyData.isBoss) return false;
+        int minRound = BerserkMinRoundOverride >= 0 ? BerserkMinRoundOverride : berserkMinRound;
+        if (roundNumber < minRound || alreadyThisRound >= berserkMaxPerLanePerRound) return false;
+        float chance = BerserkChanceOverride >= 0f ? BerserkChanceOverride : berserkChance;
+        return Random.value < chance;
+    }
+
+    GameObject SpawnEnemyInternal(EnemyData enemyData, int laneIndex, WaypointPath lanePath, float startHpMultiplier = 1f, bool berserk = false)
     {
         GameObject instance = Instantiate(enemyData.prefab);
         if (enemyData.isBoss) instance.transform.localScale *= BossScale;
+        if (berserk) instance.transform.localScale *= berserkScale;
 
         if (instance.TryGetComponent(out WaypointMover mover))
         {
@@ -146,7 +194,8 @@ public class WaveSpawner : MonoBehaviour
             float moveSpeedMultiplier = !enemyData.isBoss && DifficultyManager.Instance != null && DifficultyManager.Instance.IsModeSelected
                 ? DifficultyTable.MoveSpeedMultiplier(DifficultyManager.Instance.Current)
                 : 1f;
-            mover.SetMoveSpeed(enemyData.moveSpeed * moveSpeedMultiplier);
+            mover.SetMoveSpeed(enemyData.moveSpeed * moveSpeedMultiplier * (berserk ? berserkMoveSpeedMultiplier : 1f));
+            if (berserk) mover.SetShuttleLeftEdge(berserkLaneOutwardOffset);
         }
 
         if (instance.TryGetComponent(out EnemyDummy dummy))
@@ -157,6 +206,7 @@ public class WaveSpawner : MonoBehaviour
                 dummy.DifficultyArmorBonus = enemyData.isBoss
                     ? DifficultyTable.BossArmorBonus(DifficultyManager.Instance.Current)
                     : DifficultyTable.MobArmorBonus(DifficultyManager.Instance.Current, dummy.SpawnRound);
+            if (berserk) instance.AddComponent<BerserkMob>().Begin(berserkRegenFractionPerSecond, berserkDefenseAura);
 
             // ⚠️ 2026-09-06 추가(항법 "패왕의길"/히든 이벤트, NAVIGATION_ROUTES_FULL.md,
             // 리서치담당 c3b8c42 정정) — 원작 Trig_Round_10ver_Actions: 일반 라운드 몹만

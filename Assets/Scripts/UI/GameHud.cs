@@ -5129,7 +5129,7 @@ public class GameHud : MonoBehaviour
         {
             SetUnitInfoPortrait(null);
             SetPortraitModel(target); // 초상화: 살펴보는 적
-            string enemyName = enemy.Data != null && !string.IsNullOrEmpty(enemy.Data.enemyName) ? enemy.Data.enemyName : enemy.name;
+            string enemyName = enemy.DisplayName;
             string tag = enemy.IsBoss ? "보스" : "적";
             unitInfoText.text =
                 $"<color=#FF6B6B>{enemyName}</color>  <size=80%>({tag} · 조작 불가)</size>\n" +
