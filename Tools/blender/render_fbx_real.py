@@ -23,7 +23,11 @@ for o in list(bpy.data.objects):
         nt.links.new(t.outputs[0],e.inputs[0]); nt.links.new(tr.outputs[0],add.inputs[0]); nt.links.new(e.outputs[0],add.inputs[1]); nt.links.new(add.outputs[0],o_.inputs[0])
         try: m.surface_render_method='BLENDED'
         except: pass
-        ua=jm.get('uvAnim'); keys=((ua or {}).get('tracks') or {}).get('KTAT',{}).get('keys') if ua else None
+        li=J['meshes'].index(jm); uo=(J.get('unity',{}).get('layers') or [{}]*len(J['meshes']))[li].get('uvOffsetClip0')
+        keys=[[int(k[0]*1000),(k[1],k[2])] for k in uo['keys']] if uo else None      # unity.layers[].uvOffsetClip0(첫 클립 기준 초) 우선 — 폴더마다 meshes[].uvAnim이 없는 것이 있었다(10-09 레일건)
+        if keys is None:
+            ua=jm.get('uvAnim'); keys=((ua or {}).get('tracks') or {}).get('KTAT',{}).get('keys') if ua else None
+            if keys: keys=[[k[0]-startms,k[1]] for k in keys]
         MAP[mp.name+str(id(mp))]=(mp,keys)
 arm=[o for o in bpy.data.objects if o.type=='ARMATURE']
 act=None
@@ -40,7 +44,7 @@ for i in range(NF):
     if act: sc.frame_set(int(act.frame_range[0]+sec*30))
     for mp,keys in MAP.values():
         if keys:
-            u,v=sample(keys,startms+sec*1000)[:2]; mp.inputs[1].default_value=(u,-v,0)
+            u,v=sample(keys,sec*1000)[:2]; mp.inputs[1].default_value=(u,-v,0)
     bpy.context.view_layer.update()
     pts=[]
     dg=bpy.context.evaluated_depsgraph_get()
