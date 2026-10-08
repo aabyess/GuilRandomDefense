@@ -2843,6 +2843,7 @@ public class GameHud : MonoBehaviour
         if (index < 0 || index >= MaxItemInventorySlots) return;
         ItemData item = itemInventoryRowItems[index];
         if (item == null || item.useKind == ItemUseKind.None) return;
+        if (inventoryViewOnly) { PlayerNotification.Show(LocalPlayer.LocalPlayerId, AllianceShare.ViewOnlyMessage, 2f); return; }   // 남의 인벤토리는 보기만(10-08)
         if (item.useKind == ItemUseKind.HeroTransform)
         {
             PlayerNotification.Show(LocalPlayer.LocalPlayerId, "영웅 변신 — 아직 사용할 수 없습니다.", 3f);
@@ -2870,12 +2871,41 @@ public class GameHud : MonoBehaviour
 
     // PlayerContext.Local이 없으면 패널 자체를 숨긴다(UnitInventory 패널과 같은 관례).
     // InventoryOf(local)을 써서 맵 생성 전(플레이어별 컴포넌트 미배선) 폴백까지 그대로 탄다.
+    bool inventoryViewOnly;
+    TMP_Text inventoryTitleText;
+
+    // 보기 전용일 때 인벤토리 제목 띠 글자를 「○○ 인벤토리(보기)」로 바꾼다(아니면 「인벤토리」).
+    void RefreshInventoryOwnerLabel(int viewSlot)
+    {
+        if (inventoryTitleText == null && itemInventoryParent != null)
+        {
+            Transform t = itemInventoryParent.Find("Wc3InventoryTitle/Text");
+            if (t != null) inventoryTitleText = t.GetComponent<TMP_Text>();
+            if (inventoryTitleText != null) { inventoryTitleText.enableAutoSizing = true; inventoryTitleText.fontSizeMin = 9f; inventoryTitleText.fontSizeMax = 17f; }
+        }
+        if (inventoryTitleText == null) return;
+        string text = "인벤토리";
+        if (viewSlot >= 0)
+        {
+            string who = null;
+            foreach (NetPlayer np in NetPlayer.All) if (np != null && np.Slot == viewSlot) { who = np.DisplayName; break; }
+            text = (who != null ? who : "다른 플레이어") + " 인벤토리(보기)";
+        }
+        if (inventoryTitleText.text != text) inventoryTitleText.text = text;
+    }
+
     void RefreshItemInventoryPanel()
     {
         if (itemInventoryTitleObject == null) return;
 
-        PlayerContext local = PlayerContext.Local;
+        // 동맹 보기 전용 선택(10-08): 남의 유닛을 골랐으면 그 주인의 인벤토리를 읽기 전용으로 보인다(아이템은 플레이어 단위 — 클라는 호스트가 복제한 HeldItems를 슬롯마다 갖고 있다).
+        int viewSlot = -1;
+        SelectionManager invSel = Selection;
+        if (invSel != null && invSel.IsViewOnlySelection && invSel.Selected[0].TryGetComponent(out OwnedByPlayer invOwner)) viewSlot = invOwner.OwnerId;
+        inventoryViewOnly = viewSlot >= 0;
+        PlayerContext local = viewSlot >= 0 ? PlayerContext.Get(viewSlot) : PlayerContext.Local;
         ItemInventory inventory = local != null ? InventoryOf(local) : null;
+        RefreshInventoryOwnerLabel(viewSlot);
 
         if (inventory != subscribedItemInventory)
         {
@@ -4371,12 +4401,23 @@ public class GameHud : MonoBehaviour
         image.color = state;
     }
 
+    GameObject commandViewOnlyDim;
+
     void BuildUnitCommandGrid(RectTransform frame)
     {
         UnitThumbBaker.Baked -= MarkFlexDirty;   // 초상이 구워지면 조합 칸 그림을 다시 그린다
         UnitThumbBaker.Baked += MarkFlexDirty;
         // 격자는 금테 칸 안쪽 자식에 둔다(AddConsoleFrame 주석 — 테두리 띠가 격자 칸을 먹지 않게). 칸 크기는 칸에 맞춰 잰다.
         GridLayoutGroup grid = AddFitGrid(frame, "UnitCommandGrid", CommandColumns, CommandRows, Wc3Console ? 16f : 6f, Wc3Console ? 3f : 5f, false);
+        // 동맹 보기 전용 선택이면 명령 카드를 흐리게(10-08) — 칸 그림이 CanvasGroup 알파를 안 따르는 재질이라 위에 반투명 어둠막을 얹는다(레이캐스트 안 막음 → 툴팁·클릭 알림은 그대로).
+        GameObject dim = new GameObject("ViewOnlyDim", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+        dim.transform.SetParent(grid.transform, false);
+        dim.GetComponent<LayoutElement>().ignoreLayout = true;
+        RectTransform dimRect = (RectTransform)dim.transform;
+        dimRect.anchorMin = Vector2.zero; dimRect.anchorMax = Vector2.one; dimRect.offsetMin = dimRect.offsetMax = Vector2.zero;
+        Image dimImage = dim.GetComponent<Image>(); dimImage.color = new Color(0.02f, 0.02f, 0.05f, 0.62f); dimImage.raycastTarget = false;
+        dim.SetActive(false);
+        commandViewOnlyDim = dim;
 
         for (int i = 0; i < CommandSlotCount; i++)
         {
@@ -5151,6 +5192,11 @@ public class GameHud : MonoBehaviour
 
         SelectionManager selection = Selection;
         int count = selection != null ? selection.Selected.Count : 0;
+        if (commandViewOnlyDim != null)
+        {
+            bool dimOn = selection != null && selection.IsViewOnlySelection;
+            if (commandViewOnlyDim.activeSelf != dimOn) { commandViewOnlyDim.SetActive(dimOn); if (dimOn) commandViewOnlyDim.transform.SetAsLastSibling(); }
+        }
 
         if (count <= 1)
             ShowSingleInfo(selection, count);
