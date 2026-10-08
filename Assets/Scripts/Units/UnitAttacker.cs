@@ -757,7 +757,7 @@ public class UnitAttacker : MonoBehaviour
     public bool TryCastActive(SkillData skill, out string failReason)
     {
         failReason = null;
-        if (GamePause.Paused) { failReason = "일시정지 중입니다."; return false; }
+        if (GamePause.Frozen) { failReason = GamePause.Paused ? "일시정지 중입니다." : "획득 연출 중입니다."; return false; }
         UnitData unitData = identity != null ? identity.Data : null;
         if (skill == null || unitData == null || skill.triggerType != SkillTriggerType.ActiveButton) { failReason = "쓸 수 없는 스킬입니다."; return false; }
         SkillLevel level = CurrentSkillLevel(skill);
@@ -787,7 +787,7 @@ public class UnitAttacker : MonoBehaviour
     public bool TryCastActiveAtPoint(SkillData skill, Vector3 point, out string failReason)
     {
         failReason = null;
-        if (GamePause.Paused) { failReason = "일시정지 중입니다."; return false; }
+        if (GamePause.Frozen) { failReason = GamePause.Paused ? "일시정지 중입니다." : "획득 연출 중입니다."; return false; }
         UnitData unitData = identity != null ? identity.Data : null;
         if (skill == null || unitData == null || skill.triggerType != SkillTriggerType.ActiveButton) { failReason = "쓸 수 없는 스킬입니다."; return false; }
         SkillLevel level = CurrentSkillLevel(skill);
@@ -839,7 +839,7 @@ public class UnitAttacker : MonoBehaviour
     public bool TryCastActiveOnAlly(SkillData skill, UnitIdentity ally, out string failReason)
     {
         failReason = null;
-        if (GamePause.Paused) { failReason = "일시정지 중입니다."; return false; }
+        if (GamePause.Frozen) { failReason = GamePause.Paused ? "일시정지 중입니다." : "획득 연출 중입니다."; return false; }
         UnitData unitData = identity != null ? identity.Data : null;
         if (skill == null || unitData == null || skill.triggerType != SkillTriggerType.ActiveButton) { failReason = "쓸 수 없는 스킬입니다."; return false; }
         if (ally == null || identity == null || ally.OwnerId != identity.OwnerId) { failReason = "내 아군 유닛을 골라야 합니다."; return false; }
@@ -876,7 +876,7 @@ public class UnitAttacker : MonoBehaviour
     public bool TryCastActiveOn(SkillData skill, EnemyDummy target, out string failReason)
     {
         failReason = null;
-        if (GamePause.Paused) { failReason = "일시정지 중입니다."; return false; }
+        if (GamePause.Frozen) { failReason = GamePause.Paused ? "일시정지 중입니다." : "획득 연출 중입니다."; return false; }
         UnitData unitData = identity != null ? identity.Data : null;
         if (skill == null || unitData == null || skill.triggerType != SkillTriggerType.ActiveButton) { failReason = "쓸 수 없는 스킬입니다."; return false; }
         if (target == null || target.IsDead) { failReason = "대상이 없습니다."; return false; }

@@ -112,7 +112,7 @@ public class CutinOverlay : MonoBehaviour
     {
         if (clock < 0f)
         {
-            if (queue.Count == 0) return;
+            if (queue.Count == 0) { if (GamePause.CutinHold) GamePause.SetCutinHold(false); return; }   // 줄이 비어야 게임 시간을 푼다(큐로 이어지면 정지도 이어진다)
             Begin(queue.Dequeue());
             return;
         }
@@ -216,6 +216,7 @@ public class CutinOverlay : MonoBehaviour
         if (layers.Count == 0) return;
         clock = 0f; whooshed = tinged = exited = false;
         root.SetActive(true);
+        GamePause.SetCutinHold(true);   // 컷인 동안 게임 시간 정지(혼자 하기만) — 시계는 unscaledDeltaTime이라 계속 돈다. 소리는 안 멈춘다
     }
 
     static LayoutFile LoadLayout(string path)
@@ -226,7 +227,7 @@ public class CutinOverlay : MonoBehaviour
 
     void End()
     {
-        clock = -1f;
+        clock = -1f;   // 정지는 여기서 안 푼다 — Update가 줄이 비었을 때 푼다
         root.SetActive(false);
         foreach (GameObject go in spawned) if (go != null) Destroy(go);
         spawned.Clear(); layers.Clear();
