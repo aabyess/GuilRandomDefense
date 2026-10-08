@@ -34,8 +34,9 @@ dur=J['sequences'][0]['seconds']
 def sample(keys,t):
     k=[x for x in keys if x[0]<=t]; return k[-1][1] if k else keys[0][1]
 frames=[]
-for i in range(4):
-    sec=dur*(i+0.5)/4
+NF=int(os.environ.get('NF','4'))
+for i in range(NF):
+    sec=dur*(i+0.5)/NF
     if act: sc.frame_set(int(act.frame_range[0]+sec*30))
     for mp,keys in MAP.values():
         if keys:
