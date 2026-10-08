@@ -51,7 +51,7 @@ public static class OriginalVfxVisibilityCheck
                 OriginalVfxPlayer player = go.GetComponent<OriginalVfxPlayer>();
                 // 시점마다 그때의 경계에 카메라를 맞춰(경계는 그린 뒤에야 갱신된다 — 스킨 메시) 배경과 다른 픽셀 비율을 잰다.
                 float[] fractions = { 0.1f, 0.3f, 0.5f, 0.7f, 0.9f };
-                float best = 0f; Bounds? lastBounds = null;
+                float best = 0f; Bounds? lastBounds = null; Vector3 centerSum = Vector3.zero; int centerN = 0; float maxExtent = 0f;
                 cam.transform.position = origin + new Vector3(0f, 30f, -30f); cam.transform.LookAt(origin);
                 foreach (float f in fractions)
                 {
@@ -62,6 +62,7 @@ public static class OriginalVfxVisibilityCheck
                         if (r.enabled && r.bounds.size.sqrMagnitude > 0f) { if (b == null) b = r.bounds; else { Bounds x = b.Value; x.Encapsulate(r.bounds); b = x; } }
                     if (b == null) continue;
                     lastBounds = b;
+                    centerSum += b.Value.center - origin; centerN++; maxExtent = Mathf.Max(maxExtent, Mathf.Max(b.Value.size.x, b.Value.size.z));
                     float radius = Mathf.Max(0.05f, b.Value.extents.magnitude);
                     float dist = radius / Mathf.Sin(cam.fieldOfView * 0.5f * Mathf.Deg2Rad) * 1.05f;
                     Vector3 dir = new Vector3(0.55f, 0.75f, -0.55f).normalized;
@@ -80,10 +81,19 @@ public static class OriginalVfxVisibilityCheck
                     if (only != null) Debug.Log($"[보임검사] {only} f={f} 경계 {b.Value.size} 중심 {b.Value.center} 픽셀차 {diff}/{px.Length} 카메라 {cam.transform.position} dist {dist}");
                 }
                 Bounds? all = lastBounds;
+                // 중심 보정(10-08 표본 사진: 파도 이펙트가 모델 원점에서 멀리 치우쳐 엉뚱한 곳에 떴다): 재생 중 평균 중심이 원점에서 멀면 모델 자식을 옮겨 중심을 원점에 맞춘다.
+                Vector3 avg = centerN > 0 ? centerSum / centerN : Vector3.zero; avg.y = 0f;
+                string shifted = "";
+                if (centerN > 0 && avg.magnitude > 0.2f * Mathf.Max(0.5f, maxExtent))
+                {
+                    GameObject contents = PrefabUtility.LoadPrefabContents(path);
+                    try { contents.transform.GetChild(0).localPosition -= avg; PrefabUtility.SaveAsPrefabAsset(contents, path); shifted = $"이동 {avg.ToString("F1")}"; }
+                    finally { PrefabUtility.UnloadPrefabContents(contents); }
+                }
                 string name = Path.GetFileNameWithoutExtension(path);
                 bool visible = best >= VisibleFraction;
                 if (!visible) invisible.Add(name);
-                tsv.AppendLine($"{name}\t{best:0.0000}\t{(visible ? "보임" : "안 보임")}\t{player.layers.Length}\t{player.duration:0.00}\t{(all.HasValue ? all.Value.size.ToString("F1") : "없음")}");
+                tsv.AppendLine($"{name}{(shifted.Length > 0 ? " [" + shifted + "]" : "")}\t{best:0.0000}\t{(visible ? "보임" : "안 보임")}\t{player.layers.Length}\t{player.duration:0.00}\t{(all.HasValue ? all.Value.size.ToString("F1") : "없음")}");
                 Object.DestroyImmediate(go);
                 done++;
             }

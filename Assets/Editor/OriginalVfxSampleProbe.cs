@@ -9,6 +9,8 @@ using UnityEngine;
 static class OriginalVfxSampleProbe
 {
     static readonly Dictionary<int, int> played = new Dictionary<int, int>();
+    static readonly List<(int index, Vector3 pos, float diameter, bool ground)> plays = new List<(int, Vector3, float, bool)>();
+    static readonly List<(string name, Vector3 pos)> placed = new List<(string, Vector3)>();
     static readonly UnitGrade[] Grades = { UnitGrade.Transcendent, UnitGrade.Immortal, UnitGrade.Eternal, UnitGrade.Legendary };
 
     static string Arena()
@@ -45,6 +47,7 @@ static class OriginalVfxSampleProbe
                 break;
             }
         }
+        placed.Clear();
         Vector3 c = lane.LaneCenter;
         for (int k = 0; k < units.Count; k++)
         {
@@ -56,13 +59,37 @@ static class OriginalVfxSampleProbe
                 if (go.TryGetComponent(out EnemyDummy d)) { d.Initialize(dummyData, 1e6f); d.SetLane(-1); }
             }
             spawner.Spawn(units[k], home, 0);
+            placed.Add((units[k].name, home));
         }
-        played.Clear(); SkillVfx.PlayedPrefab -= OnPlayed; SkillVfx.PlayedPrefab += OnPlayed;
+        played.Clear(); plays.Clear(); SkillVfx.PlayedPrefab -= OnPlayed; SkillVfx.PlayedPrefab += OnPlayed;
         if (cam != null) cam.MoveTo(c);
         return $"유닛 {units.Count}:\n   " + string.Join("\n   ", lines);
     }
 
-    static void OnPlayed(int index, Vector3 position, float diameter, bool ground) { played[index] = played.TryGetValue(index, out int n) ? n + 1 : 1; }
+    static void OnPlayed(int index, Vector3 position, float diameter, bool ground) { played[index] = played.TryGetValue(index, out int n) ? n + 1 : 1; if (plays.Count < 200) plays.Add((index, position, diameter, ground)); }
+
+    static string Scan()
+    {
+        LaneMarker lane = LaneMarker.Get(0); Vector3 c = lane.LaneCenter;
+        var sb = new StringBuilder("활성 이펙트(레인 중심에서 150 넘게 떨어진 것 + 원작 재생기 전부):\n");
+        foreach (OriginalVfxPlayer pl in Object.FindObjectsByType<OriginalVfxPlayer>(FindObjectsSortMode.None))
+            if (pl.gameObject.activeInHierarchy) sb.AppendLine($"   [원작] {pl.name} 위치 {pl.transform.position:F0} 크기배율 {pl.transform.localScale.x:F1} 재생중 {pl.IsPlaying}");
+        foreach (ParticleSystem ps in Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
+        {
+            if (!ps.isPlaying && !ps.IsAlive()) continue;
+            Vector3 d = ps.transform.position - c; d.y = 0;
+            if (d.magnitude > 150f) sb.AppendLine($"   [파티클] {ps.transform.root.name}/{ps.name} 위치 {ps.transform.position:F0} 중심에서 {d.magnitude:F0}");
+        }
+        sb.AppendLine("활성 렌더러(Particles/Unlit 재질, Map 밖, 중심에서 100 넘게 떨어진 것):");
+        foreach (Renderer r in Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+        {
+            if (!r.enabled || !r.gameObject.activeInHierarchy || r is ParticleSystemRenderer) continue;
+            Material m = r.sharedMaterial; if (m == null || m.shader == null || !m.shader.name.Contains("Particles")) continue;
+            Vector3 d = r.bounds.center - c; d.y = 0;
+            if (d.magnitude > 100f) sb.AppendLine($"   {r.transform.root.name}/{r.name} 경계중심 {r.bounds.center:F0} 크기 {r.bounds.size:F0} 재질 {m.name}");
+        }
+        return sb.ToString();
+    }
 
     static string Report()
     {
@@ -71,6 +98,13 @@ static class OriginalVfxSampleProbe
         var sb = new StringBuilder("재생 횟수:\n");
         foreach (var kv in played.OrderByDescending(k => k.Value)) sb.AppendLine($"   {table.prefabs[kv.Key].name} × {kv.Value}");
         if (played.Count == 0) sb.AppendLine("   ⚠️ 0 — 한 번도 안 떴다");
+        sb.AppendLine("생성 좌표 표(이펙트 · 지름 · 땅 · 좌표 · 가장 가까운 유닛까지 수평거리/높이차):");
+        foreach (var g in plays.GroupBy(p => p.index))
+        {
+            var p = g.First();
+            (string name, Vector3 pos) near = placed.OrderBy(u => (new Vector3(u.pos.x - p.pos.x, 0, u.pos.z - p.pos.z)).magnitude).First();
+            sb.AppendLine($"   {table.prefabs[p.index].name} ×{g.Count()} · 지름 {p.diameter:F1} · 땅={p.ground} · {p.pos:F0} · {near.name} 까지 {new Vector3(near.pos.x - p.pos.x, 0, near.pos.z - p.pos.z).magnitude:F0} / 높이 {p.pos.y - near.pos.y:F1}");
+        }
         return sb.ToString();
     }
 }

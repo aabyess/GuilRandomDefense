@@ -117,6 +117,27 @@ public static class OriginalVfxProbe
         return sb.ToString();
     }
 
+    public static string ShowFile()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        string name = System.IO.File.ReadAllText("ClaudeBridge/g2_vfx_name.txt").Trim();
+        LaneMarker lane = LaneMarker.Get(0);
+        RtsCameraController cam = Object.FindFirstObjectByType<RtsCameraController>();
+        GameObject prefab = Resources.Load<GameObject>("Effects/Original/" + name);
+        if (prefab == null || lane == null) return "❌ 없음 " + name;
+        GameObject go = Object.Instantiate(prefab, lane.LaneCenter + new Vector3(0f, 1f, 0f), Quaternion.identity);
+        OriginalVfxPlayer pl = go.GetComponent<OriginalVfxPlayer>();
+        float size = MaxXZ(go);
+        go.transform.localScale = Vector3.one * (60f / Mathf.Max(0.1f, size));
+        pl.Restart();
+        FieldInfo target = typeof(RtsCameraController).GetField("targetHeight", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (target != null) target.SetValue(cam, 200f);
+        Vector3 p = cam.transform.position; p.y = 200f; cam.transform.position = p;
+        cam.MoveTo(lane.LaneCenter);
+        Time.timeScale = 0.15f;
+        return $"{name} 네이티브 {size:F1} · 크기 60 · 길이 {pl.duration:F1}s";
+    }
+
     public static string Show()
     {
         if (!Application.isPlaying) return "❌ 플레이 중에만";
