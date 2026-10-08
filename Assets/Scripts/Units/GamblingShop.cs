@@ -30,7 +30,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
     // GamblingOptionData로 안 만든 이유: 그 데이터는 "확률로 얼마를 돌려받는가"를 표현하는
     // 모델이라, "100% 확정으로 골드가 아닌 걸 준다, 딱 1회"인 이 구매와 모양이 안 맞는다.
     [SerializeField] int traitPointPurchaseCost = 15000;
-    const int TraitPointSlotIndex = 1;   // 원작 졸업 뒤 도박소(h08C)의 W 칸(특성 포인트 구매 ubpx=1). 졸업 전 W는 원작 「물품 지원」 자리라 우린 특성 포인트가 쓴다
+    const int TraitPointSlotIndex = 1;   // 원작 졸업 뒤 도박소(h08C)의 W 칸(특성 포인트 구매 ubpx=1). 졸업 전 W는 원작대로 「물품 지원」(사장님 10-08 밤)
 
     static readonly Color MoneyColor = new Color(1f, 0.82f, 0.25f); // 금색 — MapGenerator 코인 아이콘과 같은 색
 
@@ -138,7 +138,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
         if (!slotCacheBuilt) BuildSlotCache();
         if (index < 0 || index >= SlotCountValue) return LaneShopSlotView.Empty;
 
-        if (index == TraitPointSlotIndex)
+        if (IsTraitSlot(index))
             return new LaneShopSlotView(slotCache[index].label, slotCache[index].color,
                 CanPurchaseTraitPoint(), LaneShopTargetKind.None);
 
@@ -177,7 +177,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
                 return index >= 0 && index < PirateVisibleSlots && index < pirate.SlotCount ? pirate.GetSlotTooltip(index) : null;
             }
         }
-        if (index == TraitPointSlotIndex) return BuildTraitPointTooltip();
+        if (IsTraitSlot(index)) return BuildTraitPointTooltip();
 
         GamblingOptionData option = OptionAt(index);
         if (option == null) return null;
@@ -195,7 +195,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
             return pirate != null && index - PirateNetBase < PirateVisibleSlots && pirate.TryUse(index - PirateNetBase, target, out failReason);
         }
         if (index == PageSlot) { failReason = null; return false; }   // 8번은 쪽 넘김 전용 — 도박 옵션이 없는 빈 칸
-        if (index == TraitPointSlotIndex) return TryPurchaseTraitPoint(out failReason);
+        if (IsTraitSlot(index)) return TryPurchaseTraitPoint(out failReason);
 
         failReason = null;
         GamblingOptionData option = OptionAt(index);
@@ -243,6 +243,10 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
     readonly List<GamblingOptionData> visibleMoney = new List<GamblingOptionData>();
     bool visibleGraduated = false;
     bool visibleBuilt;
+    GamblingOptionData visibleStarter;   // 물품 지원(졸업 전 W)
+
+    // 특성 포인트 구매는 졸업 뒤 W 칸에만 있다(원작 h08C). 졸업 전 W는 물품 지원.
+    bool IsTraitSlot(int index) { VisibleMoney(); return index == TraitPointSlotIndex && visibleGraduated; }
 
     List<GamblingOptionData> VisibleMoney()
     {
@@ -252,8 +256,13 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
             visibleBuilt = true;
             visibleGraduated = graduated;
             visibleMoney.Clear();
+            visibleStarter = null;
             foreach (GamblingOptionData o in moneyOptions)
-                if (o != null && (graduated ? !o.retiredOnGraduation : !o.requiresGraduation)) visibleMoney.Add(o);
+            {
+                if (o == null || (graduated ? o.retiredOnGraduation : o.requiresGraduation)) continue;
+                if (o.grantsStarterUnit) visibleStarter = o;   // 물품 지원 = 졸업 전 W 칸 전용(OptionAt)
+                else visibleMoney.Add(o);
+            }
             slotCacheBuilt = false;   // 칸 글자·색도 다시
         }
         return visibleMoney;
@@ -269,6 +278,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
         bool graduated = visibleGraduated;
 
         if (index == 0) return money.Count > 0 ? money[0] : null;
+        if (index == TraitPointSlotIndex && !graduated) return visibleStarter;   // 물품 지원 = 원작 W
         if (index == 2 && !graduated) return money.Count > 1 ? money[1] : null;   // 500엔 도박 = 원작 E
         if (index == 3 && graduated) return money.Count > 1 ? money[1] : null;    // 목재 구입 = 원작 R
 
@@ -312,7 +322,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
 
         for (int i = 0; i < SlotCountValue; i++)
         {
-            if (i == TraitPointSlotIndex)
+            if (IsTraitSlot(i))
             {
                 slotCache[i] = new SlotCache { hasOption = true, label = "특성포인트 구매", color = MoneyColor };
                 continue;
@@ -344,7 +354,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
     {
         if (pirate != null && pirateOpen)
             return index >= 0 && index < PirateVisibleSlots && index < pirate.SlotCount ? pirate.GetUnavailableReason(index) : null;
-        if (index == TraitPointSlotIndex)
+        if (IsTraitSlot(index))
         {
             PlayerContext context = OwnerContext;
             if (context?.UnitUpgrades == null) return null;
@@ -607,6 +617,21 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
 
         context.GamblingProgress?.RecordUse(option);
 
+        // 물품 지원(원작 Trig_Money_Gemble_2): 30엔 + 흔함~안흔함 유닛 무작위 1기(종류마다 균등 — dobakGroup1 = 흔함 방 + 안흔함 방).
+        if (option.grantsStarterUnit)
+        {
+            UnitData starter = PickStarterUnit();
+            PlayerNotification.Show(context.PlayerId, $"<color=#52E252>{amount}원 획득 !</color>", 10f);
+            if (starter != null && unitSpawner != null)
+            {
+                unitSpawner.Spawn(starter, ResolveSpawnPosition(starter), owner.OwnerId);
+                PlayerNotification.Show(context.PlayerId, $"<color=#FF0000>{starter.unitName} 획득 !</color>", 10f);
+                GameSound.PlayFor(context.PlayerId, GameSoundId.Gacha);
+            }
+            if (option.coinSoundOnSuccess) GameSound.PlayFor(context.PlayerId, GameSoundId.Coin);
+            return true;
+        }
+
         // 졸업(원작 Trig_Money_Gemble_3): 당첨금·실패 환급을 **둘 다** 누적하고, **당첨 때만** 누적 ≥ 35,000을 본다.
         if (option.graduateAtCumulative > 0 && context.GamblingProgress != null)
         {
@@ -634,6 +659,17 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
             GameSound.PlayFor(context.PlayerId, GameSoundId.Coin);   // 원작 Money_Gemble_1_re(둘 다) · Money_Gemble_3(당첨만)
 
         return true;
+    }
+
+    // 물품 지원 풀 — 가챠 표의 흔함·안흔함 풀 두 개를 합친 균등 추첨(원작 GroupPickRandomUnit).
+    UnitData PickStarterUnit()
+    {
+        if (gachaTable == null || gachaTable.entries == null) return null;
+        var all = new List<UnitData>();
+        foreach (GachaTable.GradeEntry entry in gachaTable.entries)
+            if (entry != null && (entry.grade == UnitGrade.Common || entry.grade == UnitGrade.Uncommon) && entry.pool != null)
+                foreach (UnitData u in entry.pool) if (u != null) all.Add(u);
+        return all.Count > 0 ? all[Random.Range(0, all.Count)] : null;
     }
 
     bool TryRollUnit(GamblingOptionData option, PlayerContext context, out string failReason)

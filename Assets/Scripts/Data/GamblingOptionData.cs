@@ -154,4 +154,8 @@ public class GamblingOptionData : ScriptableObject
     [Range(0f, 100f)] public float tokenSpecialChancePercent = 80f;
     public WispData tokenWispSpecial;
     public WispData tokenWispRare;
+
+    // ⚠️ 맨 뒤(2026-10-08 밤, 사장님 「물품 지원 원작대로」) — 원작 h0AX 물품 지원(Trig_Money_Gemble_2): 100엔을 내면 30엔 + 흔함~안흔함 유닛 무작위 1기(udg_unit_dobakGroup1 = 흔함 Ran0 + 안흔함 Ran_1 방의 유닛, 종류마다 균등)를 조합 구역에 받는다.
+    // 켜면 돈 도박 성공 처리 뒤에 이 유닛 지급이 붙는다(successGold 범위가 30~30). 졸업 전 W 칸.
+    public bool grantsStarterUnit;
 }
