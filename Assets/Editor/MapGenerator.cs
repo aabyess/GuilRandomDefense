@@ -4125,6 +4125,10 @@ public static class MapGenerator
         AddPortalLabel(parent, portal, "스토리 존 입장", true);   // 원작 j:3669-3672 |cffFF8200
         StoryZonePortal component = portal.AddComponent<StoryZonePortal>();
         component.SetDestination(StoryZoneLandingPoint(laneIndex));
+        {   // 유닛마다 자기 사거리 끝에 내리게(사장님 10-08) — 존 중심과 광장 안 최대 반지름(반지름 33×Scale의 85%)
+            MapLayout.Island storyZone = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
+            component.SetStoryZone(new Vector3(storyZone.center.x, MapLayout.IslandTop + StructureDresser.StoryPlazaLift, storyZone.center.y), 33f * MapLayout.Scale * 0.85f);
+        }
         StructureDresser.DressPortal(portal, "포탈_마법진_스토리", StructureDresser.StoryGlow);
     }
 

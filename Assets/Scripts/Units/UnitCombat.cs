@@ -335,6 +335,11 @@ public class UnitCombat : MonoBehaviour
             }
             else
             {
+                // 사거리 안에 들어온 그 프레임에 선다(사장님 10-08 「범위 최대한 끝에서 바로 때리게」) — 예전엔 아래 주기(0.25초)까지 계속 걸어 사거리보다 더 파고들었다.
+                //    움직이는 동안에만 한 번 세운다(멈춘 뒤엔 속도 0이라 안 부른다).
+                if (sqrToTarget <= AttackRangeSqr() && Flying == null && agent != null && agent.enabled && agent.isOnNavMesh && !agent.isStopped && agent.velocity.sqrMagnitude > 0.01f)
+                    SetDestination(transform.position);
+
                 // 표적이 살아 있고 사거리 판정이 필요한 동안에도 경로 갱신은 주기대로만 한다 —
                 // 매 프레임 SetDestination을 부르면 경로를 계속 다시 계산한다.
                 if (Time.time < nextScanTime) return;
