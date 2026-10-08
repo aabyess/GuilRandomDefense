@@ -42,6 +42,9 @@ public static class SkillCinematic
     sealed class RunningCounter : MonoBehaviour { void OnDestroy() { running = Mathf.Max(0, running - 1); } }
 
     public const float MetersToWorld = 100f / WorldScale.Value;
+    /// <summary>원작은 화면 한 칸에 비해 연출이 크다 — 우리 유닛(키 30)·카메라에선 화면을 덮어서 모델·거리·높이를 이 비율로 줄인다(PM 10-09).</summary>
+    public const float SizeScale = 0.5f;
+    const float AlphaScale = 0.6f;   // 가산 연출 층 알파 세기
 
     /// <summary>대본을 재생한다. casterPos·targetPos는 월드 좌표(대상이 없으면 시전자 앞 지점).</summary>
     public static GameObject Play(CinematicScript script, Vector3 casterPos, Vector3 targetPos)
@@ -66,6 +69,7 @@ public static class SkillCinematic
         public float spawnedAt, lifeSec = -1f, deathSec = 0.1f;
         public bool dying; public float dieAt;
         public float yaw;
+        public float moveSpeedWorld;     // 월드/초(비행이 눈에 보이게 최소 0.45초)
         public float substituteScale;   // >0이면 대체 모델 스케일(= 목표 길이/원래 길이)
     }
 
@@ -87,6 +91,11 @@ public static class SkillCinematic
         }
 
         Vector3 AnchorPos(CinematicScript.Anchor a) => a == CinematicScript.Anchor.Target ? targetPos : casterPos;
+        Vector3 AnchorPos(CinematicScript.Ev e)
+        {
+            if (e.anchor == CinematicScript.Anchor.Ship && !string.IsNullOrEmpty(e.anchorShip) && insts.TryGetValue(e.anchorShip, out Inst ship) && ship.go != null) return ship.go.transform.position;
+            return AnchorPos(e.anchor);
+        }
 
         void Update()
         {
@@ -138,14 +147,19 @@ public static class SkillCinematic
             {
                 go = Instantiate(m.prefab, transform),
                 baseScale = e.baseScale, scalePercent = e.scalePercent, flyHeight = e.flyHeight,
-                anchorPos = AnchorPos(e.anchor), polarRadius = e.hasPolar ? e.polarRadius : 0f, polarAngle = e.polarAngleDeg,
+                anchorPos = AnchorPos(e), polarRadius = e.hasPolar ? e.polarRadius : 0f, polarAngle = e.polarAngleDeg,
                 spawnedAt = elapsed, lifeSec = e.lifeSec, deathSec = e.deathSec,
                 yaw = e.facingRandom ? Random.Range(0f, 360f) : 0f,
             };
-            if (e.hasMove) { n.hasMove = true; n.moveTarget = AnchorPos(e.moveAnchor); n.moveSpeed = e.moveSpeed; }
+            if (e.hasMove)
+            {
+                n.hasMove = true; n.moveTarget = AnchorPos(e.moveAnchor); n.moveSpeed = e.moveSpeed;
+                Vector3 flat = n.moveTarget - n.anchorPos; flat.y = 0f;
+                n.moveSpeedWorld = Mathf.Min(e.moveSpeed * SizeScale / WorldScale.Value, Mathf.Max(1f, flat.magnitude) / 0.45f);   // 원작 속도 2200이면 0.2초 만에 도착해 날아가는 게 안 보인다 → 비행 최소 0.45초
+            }
             if (m.substituteLengthWc3 > 0f && m.substituteNativeLength > 0.001f) n.substituteScale = m.substituteLengthWc3 / WorldScale.Value / m.substituteNativeLength;
             n.player = n.go.GetComponent<OriginalVfxPlayer>();
-            if (n.player != null) n.player.AlphaMultiplier = e.vertexAlpha;
+            if (n.player != null) n.player.AlphaMultiplier = e.vertexAlpha * AlphaScale;
             n.drivers = n.go.GetComponentsInChildren<Pre2Driver>(true);
             Tick(n);
             n.go.SetActive(true);
@@ -177,13 +191,17 @@ public static class SkillCinematic
             if (n.hasMove)
             {
                 Vector3 to = n.moveTarget - n.anchorPos; to.y = 0f;
-                float step = n.moveSpeed / WorldScale.Value * dt;
+                float step = n.moveSpeedWorld * dt;
                 if (to.magnitude <= step) { n.anchorPos = new Vector3(n.moveTarget.x, n.anchorPos.y, n.moveTarget.z); n.hasMove = false; }
                 else n.anchorPos += to.normalized * step;
             }
-            Vector3 polar = n.polarRadius > 0f ? Quaternion.Euler(0f, n.polarAngle, 0f) * Vector3.forward * (n.polarRadius / WorldScale.Value) : Vector3.zero;
-            n.go.transform.SetPositionAndRotation(n.anchorPos + polar + Vector3.up * (n.flyHeight / WorldScale.Value), Quaternion.Euler(0f, n.yaw, 0f));
-            n.go.transform.localScale = Vector3.one * (n.substituteScale > 0f ? n.substituteScale * n.scalePercent / 100f : n.baseScale * n.scalePercent / 100f * MetersToWorld);
+            Vector3 polar = n.polarRadius > 0f ? Quaternion.Euler(0f, n.polarAngle, 0f) * Vector3.forward * (n.polarRadius * SizeScale / WorldScale.Value) : Vector3.zero;
+            n.go.transform.SetPositionAndRotation(n.anchorPos + polar + Vector3.up * (n.flyHeight * SizeScale / WorldScale.Value), Quaternion.Euler(0f, n.yaw, 0f));
+            float size = (n.substituteScale > 0f ? n.substituteScale * n.scalePercent / 100f : n.baseScale * n.scalePercent / 100f * MetersToWorld) * SizeScale;
+            float age = elapsed - n.spawnedAt;
+            float pop = Mathf.Clamp01(age / 0.25f);                                   // 등장: 0.25초에 솟아오름
+            if (n.dying) pop = Mathf.Min(pop, Mathf.Clamp01((n.dieAt - elapsed) / 0.35f));   // 퇴장: 마지막 0.35초에 가라앉음
+            n.go.transform.localScale = Vector3.one * (size * Mathf.SmoothStep(0.05f, 1f, pop));
             if (!n.dying && n.lifeSec > 0f && elapsed - n.spawnedAt >= n.lifeSec) Kill(n);
             else if (!n.dying && n.lifeSec < 0f && n.player != null && n.player.Finished) Kill(n);
         }

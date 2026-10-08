@@ -36,6 +36,7 @@ public class CinematicScript : ScriptableObject
         public float shakeDuration, shakeMagnitude;
         public float vertexAlpha = 1f;
         public bool hasScaleSet, hasTimescaleSet;
+        public string anchorShip;        // anchor == Ship일 때 따라갈 더미 id
     }
 
     [Serializable]

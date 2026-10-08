@@ -100,7 +100,7 @@ public static class OriginalVfxBuilder
     [System.Serializable] class Root { public Unity unity; }
     [System.Serializable] class Unity { public float durationSec; public bool loop; public List<Clip> clips; public List<LayerJ> layers; }
     [System.Serializable] class Clip { public string name; public float sec; public bool loop; }
-    [System.Serializable] class LayerJ { public string mesh; public string blend; public string texture; public float staticAlpha = 1f; }
+    [System.Serializable] class LayerJ { public string mesh; public string blend; public string texture; public float staticAlpha = 1f; public bool approxTexture; }
 
     static string BuildOne(string name)
     {
@@ -242,7 +242,8 @@ public static class OriginalVfxBuilder
         if (isNew) m = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
         m.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(texPath));
         bool additive = lj.blend != null && lj.blend.StartsWith("Additive");
-        if (!additive && lj.blend == "AlphaBlend" && TextureOpaque(texPath)) additive = true;   // 알파가 없는 근사 텍스처(검은 배경 흰 그림)는 알파 혼합이면 검은 네모 → 가산으로(10-09)
+        // 근사 텍스처(원작 그림이 맵 밖이라 비슷한 그림으로 대신 깐 것)나 알파 없는 텍스처는 알파 혼합/불투명이면 검은·흰 네모 판이 된다 → 가산으로(10-09 PM: 검은 판·사각 판 금지)
+        if (!additive && (lj.approxTexture || TextureOpaque(texPath))) additive = true;   // 알파가 없는 근사 텍스처(검은 배경 흰 그림)는 알파 혼합이면 검은 네모 → 가산으로(10-09)
         m.SetFloat("_Surface", 1f);
         m.SetFloat("_Blend", additive ? 2f : 0f);
         m.SetFloat("_Cull", 0f);   // 양면(원작 모델은 뒷면 컬링 없이 쓴다)

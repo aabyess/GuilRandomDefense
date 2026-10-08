@@ -70,7 +70,7 @@ public static class CinematicImporter
                     ev.lifeSec = e.TryGetValue("lifeSec", out object ls) && ls != null ? System.Convert.ToSingle(ls) : -1f;
                     ev.deathSec = F(e, "deathSec", 0.1f); ev.anim = S(e, "anim"); ev.timescale = F(e, "timescale", 1f); ev.vertexAlpha = F(e, "vertexAlpha", 1f);
                     var at = D(e, "at");
-                    ev.anchor = ParseAnchor(S(at, "anchor"));
+                    ev.anchor = ParseAnchor(S(at, "anchor")); ev.anchorShip = S(at, "ship");
                     var polar = D(at, "polar");
                     if (polar != null) { ev.hasPolar = true; ev.polarRadius = F(polar, "radius"); ev.polarAngleDeg = F(polar, "angleDeg"); }
                     string facing = e.TryGetValue("facing", out object fo) ? fo as string : null;
@@ -259,7 +259,7 @@ static class Pre2Builder
         float size0 = Mathf.Max(scale[0], 0.01f) * 0.01f;
         if (scale[0] < 0.01f) size0 = Mathf.Max(scale[1], scale[2], 0.01f) * 0.01f;
         main.startSize = size0;
-        main.startColor = Color.white;
+        main.startColor = new Color(1f, 1f, 1f, 0.6f);   // 가산 겹침이 화면을 하얗게 덮지 않게 연출 입자는 6할 세기(PM 10-09)
         main.maxParticles = 2000;
         main.simulationSpace = ParticleSystemSimulationSpace.World;
         main.scalingMode = ParticleSystemScalingMode.Hierarchy;

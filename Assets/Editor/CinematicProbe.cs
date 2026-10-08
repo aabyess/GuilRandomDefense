@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -5,6 +6,20 @@ using UnityEngine;
 ///   ClaudeBridge/g2_scene.txt = 대본 id.  gameshot x.png 1 1920x1080 click?:보통 wait:2 call:CinematicProbe.Play wait:0.5 snap:a.png ...</summary>
 static class CinematicProbe
 {
+    static string Scan()
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (GameObject root in Object.FindObjectsByType<Transform>(FindObjectsSortMode.None).Where(t => t.parent == null && t.name.StartsWith("Cinematic_")).Select(t => t.gameObject))
+            foreach (Transform t in root.transform)
+            {
+                var pl = t.GetComponent<OriginalVfxPlayer>();
+                int alive = 0, systems = 0;
+                foreach (ParticleSystem ps in t.GetComponentsInChildren<ParticleSystem>()) { systems++; alive += ps.particleCount; }
+                sb.AppendLine($"   {t.name} pos {t.position:F0} scale {t.localScale.x:F1} active={t.gameObject.activeSelf} playing={(pl != null ? pl.IsPlaying.ToString() : "-")} 입자계 {systems} 살아있는 입자 {alive}");
+            }
+        return sb.ToString();
+    }
+
     static string Play()
     {
         if (!Application.isPlaying) return "❌ 플레이 중에만";
