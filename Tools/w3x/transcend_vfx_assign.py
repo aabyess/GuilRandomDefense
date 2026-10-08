@@ -10,9 +10,12 @@ import csv, glob, json, os, re, yaml
 H = os.path.expanduser("~")
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 T = H + "/GRD_orig_vfx_trial"
-cand = json.load(open(H + "/GRD_motion_trial/transcend_vfx/candidates.json"))
+GRADE = os.environ.get("GRADE", "초월")                                    # 초월·불멸·영원
+TAG = {"초월": "transcend", "불멸": "immortal", "영원": "eternal"}[GRADE]
+cand = json.load(open(H + f"/GRD_motion_trial/{TAG}_vfx/candidates.json"))
 idx = {r["폴더 이름"]: r for r in csv.DictReader(open(H + "/Desktop/구랜디스킨모음/16_원랜디스킬/index.csv", encoding="utf-8-sig"))}
-rows = [r for r in csv.DictReader(open(ROOT + "/Docs/research/TRANSCEND_VFX_PAIRING2_2026-10-09.csv", encoding="utf-8-sig")) if r["구분"] == "후보(유닛 단위)"]
+P2 = ROOT + ("/Docs/research/TRANSCEND_VFX_PAIRING2_2026-10-09.csv" if GRADE == "초월" else f"/Docs/research/VFX_PAIRING2_{GRADE}_2026-10-09.csv")
+rows = [r for r in csv.DictReader(open(P2, encoding="utf-8-sig")) if r["구분"] == "후보(유닛 단위)"]
 
 
 import difflib
@@ -69,23 +72,29 @@ def model_shape(m):
 KW = [(r"번개|낙뢰|전기|썬더|라이트닝", r"thunder|lightning|zeus|bolt|laser|spark"), (r"불|화염|염|화재|폭발", r"fire|flame|burn|boom|explo"), (r"얼음|빙|냉", r"ice|frost|snow"),
       (r"검|참|베기|도|베", r"slash|sword|blade|cut|moon"), (r"바람|돌풍|폭풍", r"wind|tornado|storm|cyclone"), (r"독|안개|가스", r"poison|gas|smoke|toxic")]
 STRONG = {}
-for r in csv.DictReader(open(ROOT + "/Docs/research/TRANSCEND_VFX_PAIRING_2026-10-08.csv", encoding="utf-8-sig")):
+for r in csv.DictReader(open(H + f"/GRD_motion_trial/{TAG}_vfx/pairing.csv", encoding="utf-8-sig")):
     if "짝 없음" not in r["짝 근거"] and r["변환 상태"] == "변환됨":
         STRONG.setdefault(r["우리 스킬 에셋"], []).append(os.path.splitext(re.split(r"[\\/]", r["원작 이펙트 모델"])[-1])[0])
+def is_body(m):
+    """유닛 몸 모델(걷기·공격 시퀀스가 있는 것)은 이펙트 후보가 아니다."""
+    q = json.load(open(f"{T}/{m}/{m}.json"))
+    return any(re.search(r"walk|attack|spell", x["name"], re.I) for x in q["sequences"])
+
+
 INVISIBLE = set(json.load(open(T + "/invisible_models.json"))) if os.path.exists(T + "/invisible_models.json") else set()
 out = []
-ALLROWS = list(csv.DictReader(open(ROOT + "/Docs/research/TRANSCEND_VFX_PAIRING2_2026-10-09.csv", encoding="utf-8-sig")))
+ALLROWS = list(csv.DictReader(open(P2, encoding="utf-8-sig")))
 for r in ALLROWS:                                                    # 강한 짝(1차): 그 스킬의 원작 모델 중 보이는 것 하나를 모양으로 고름
     if r["구분"] != "강한 짝(1차)": continue
     d = load(r["우리 스킬 에셋"]); sh, why = skill_shape(d, r["우리 스킬 이름"])
-    pool = [m for m in dict.fromkeys(STRONG.get(r["우리 스킬 에셋"], [])) if os.path.exists(f"{T}/{m}/{m}.json") and json.load(open(f"{T}/{m}/{m}.json"))["meshes"] and m not in INVISIBLE]
+    pool = [m for m in dict.fromkeys(STRONG.get(r["우리 스킬 에셋"], [])) if os.path.exists(f"{T}/{m}/{m}.json") and json.load(open(f"{T}/{m}/{m}.json"))["meshes"] and m not in INVISIBLE and not is_body(m)]
     if sh == "없음": sh = "버프" if "오라" in r["우리 스킬 이름"] else "단일"
     if not pool: out.append([r["초월 유닛"], r["우리 스킬 이름"], r["우리 스킬 에셋"], sh, "", "강한 짝이나 보이는 메시 없음(입자 전용)", "하", ""]); continue
     m = max(pool, key=lambda m: AFF[sh].get(model_shape(m)[0], 0))
     out.append([r["초월 유닛"], r["우리 스킬 이름"], r["우리 스킬 에셋"], sh, m, f"강한 짝(1차 근거) 중 모양 최적 — 스킬 {sh}({why}) ↔ 모델 {model_shape(m)[0]}", "강한짝", ""])
 for u in sorted({r["초월 유닛"] for r in rows}):
     sk = [r for r in rows if r["초월 유닛"] == u]
-    ms = [m for m in cand[u] if os.path.exists(f"{T}/{m}/{m}.json") and json.load(open(f"{T}/{m}/{m}.json"))["meshes"] and m not in INVISIBLE]
+    ms = [m for m in cand[u] if os.path.exists(f"{T}/{m}/{m}.json") and json.load(open(f"{T}/{m}/{m}.json"))["meshes"] and m not in INVISIBLE and not is_body(m)]
     S = []
     for r in sk:
         d = load(r["우리 스킬 에셋"]); sh, why = skill_shape(d, r["우리 스킬 이름"])
@@ -119,13 +128,13 @@ for u in sorted({r["초월 유닛"] for r in rows}):
         if dup and conf == "상": conf = "중"
         out.append([u, r["우리 스킬 이름"], r["우리 스킬 에셋"], sh, m, reason, conf, "중복" if dup else ""])
 COL = {"단일": "적중시", "직선": "적중시", "연쇄": "적중시", "범위": "범위", "장판": "범위", "버프": "시전자"}
-with open(ROOT + "/Docs/research/ORIGINAL_VFX_ASSIGN_초월.csv", "w", newline="", encoding="utf-8") as f:
+with open(ROOT + f"/Docs/research/ORIGINAL_VFX_ASSIGN_{GRADE}.csv", "w", newline="", encoding="utf-8") as f:
     w = csv.writer(f); w.writerow(["asset_path", "적중시_프리팹", "범위_지면_프리팹", "시전자_프리팹"])
     for o in out:
         if not o[4]: continue
         a = FIXED.get(o[2], o[2]); c = COL.get(o[3], "적중시")
         w.writerow([f"Assets/Data/UnitSkills/SkillData_{a}.asset"] + [("원작:" + o[4]) if c == k else "" for k in ("적중시", "범위", "시전자")])
-with open(T + "/assignment.csv", "w", newline="", encoding="utf-8-sig") as f:
+with open(T + f"/assignment_{TAG}.csv", "w", newline="", encoding="utf-8-sig") as f:
     w = csv.writer(f); w.writerow(["초월 유닛", "스킬 이름", "스킬 에셋", "스킬 모양", "배정 모델", "모양 근거", "확신", "중복"]); w.writerows(out)
 import collections
 print(len(out), collections.Counter(o[6] for o in out), "중복", sum(1 for o in out if o[7]))

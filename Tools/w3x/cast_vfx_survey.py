@@ -26,6 +26,7 @@ import w3u                                                           # noqa: E40
 from mpqread import Archive                                          # noqa: E402
 
 OUT = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/GRD_cast_vfx_trial")
+GRADE = sys.argv[2] if len(sys.argv) > 2 else "초월"                  # 초월(기본)·불멸·영원 — 10-09 확장: 불멸·영원은 ORIGINAL_MATCH_NAMES 표의 원작 유닛 H코드를 쓴다
 os.makedirs(OUT, exist_ok=True)
 MPQ = os.path.expanduser("~/GRD_motion_trial/_work/ord.mpq")
 J = open(os.path.join(HERE, "원본/풀린것/war3map.j"), encoding="utf8", errors="replace").read()
@@ -301,9 +302,12 @@ def pair_by_gate(gates, skills, taken):
 
 # ───────── 본 조사 ─────────
 roster_rows = [l.rstrip("\n").split("\t") for l in open(os.path.join(ROOT, "Docs/research/ATTACK_REINSTALL_TABLE_2026-10-07.tsv"), encoding="utf8")][1:]
+if GRADE != "초월":
+    _m = [l.rstrip("\n").split("\t") for l in open(os.path.join(ROOT, "Docs/research/ORIGINAL_MATCH_NAMES_2026-10-07.tsv"), encoding="utf8")][1:]
+    roster_rows = [[GRADE, r[0], r[1] + " (" + r[2] + ")"] for r in _m if r[0].startswith(GRADE + "_")]
 result = []
 for grade, roster, corr, *_ in roster_rows:
-    if grade != "초월":
+    if grade != GRADE:
         continue
     rp = os.path.join(ROOT, f"Assets/Data/Units/Roster/{roster}.asset")
     gname = unq(re.search(r"unitName: (.*)", open(rp, encoding="utf8").read()).group(1))

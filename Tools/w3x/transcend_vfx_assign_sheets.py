@@ -2,10 +2,11 @@
 import csv, os, textwrap
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
-H = os.path.expanduser("~"); T = H + "/GRD_orig_vfx_trial"; OUT = T + "/assignment_sheets"; os.makedirs(OUT, exist_ok=True)
+GRADE = os.environ.get("GRADE", "초월"); TAG = {"초월": "transcend", "불멸": "immortal", "영원": "eternal"}[GRADE]
+H = os.path.expanduser("~"); T = H + "/GRD_orig_vfx_trial"; OUT = T + f"/assignment_sheets_{TAG}"; os.makedirs(OUT, exist_ok=True)
 F = lambda s: ImageFont.truetype("/System/Library/Fonts/AppleSDGothicNeo.ttc", s, index=0)
 f14, f12, f18 = F(14), F(12), F(18)
-rows = list(csv.DictReader(open(T + "/assignment.csv", encoding="utf-8-sig")))
+rows = list(csv.DictReader(open(T + f"/assignment_{TAG}.csv", encoding="utf-8-sig")))
 def best(m):
     c = []
     for i in range(6):

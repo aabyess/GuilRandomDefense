@@ -24,8 +24,10 @@ import w3a                                                           # noqa: E40
 import w3u                                                           # noqa: E402
 from mpqread import Archive                                          # noqa: E402
 
-W = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/GRD_motion_trial/transcend_vfx")
-SURVEY = json.load(open(os.path.expanduser("~/GRD_cast_vfx_trial/survey.json")))
+GRADE = os.environ.get("GRADE", "초월")                                    # 초월·불멸·영원
+TAG = {"초월": "transcend", "불멸": "immortal", "영원": "eternal"}[GRADE]
+W = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else f"~/GRD_motion_trial/{TAG}_vfx")      # 불멸·영원은 W/fbx → ~/GRD_orig_vfx_trial 심볼릭 링크(평평한 모델 폴더)
+SURVEY = json.load(open(os.path.expanduser("~/GRD_cast_vfx_trial/survey.json" if GRADE == "초월" else f"~/GRD_cast_vfx_{GRADE}/survey.json")))
 JL = open(os.path.join(HERE, "원본/풀린것/war3map.j"), encoding="utf8", errors="replace").read().split("\n")
 ABIL = {a["id"]: {m["field"]: m["value"] for m in a["mods"] if m["level"] <= 1 or m["field"] not in ()} for a in w3a.parse(os.path.join(HERE, "원본/풀린것/war3map.w3a"))}
 ARC = Archive(os.path.expanduser("~/GRD_motion_trial/_work/ord.mpq"))
