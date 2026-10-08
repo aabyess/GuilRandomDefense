@@ -4617,6 +4617,47 @@ public static class MapGenerator
     }
 
     /// <summary>
+    /// 2026-10-08 스토리존 두 건을 **씬에만** 반영한다(전체 맵 재생성은 씬에서 고친 것을 되돌려서 안 쓴다):
+    ///  ① 레인별 스토리 입장 포탈에 존 중심·광장 안 최대 반지름 기록(StoryZonePortal.SetStoryZone — 유닛마다 자기 사거리 끝에 내리게)
+    ///  ② 복귀 포탈을 존 맨 위 가운데·큰 지름으로 다시 지음(옛 포탈·마법진·라벨을 지우고 BuildStoryReturnPortal)
+    /// 호출: call MapGenerator.RepairStoryZone — 두 번 돌려도 안전.
+    /// </summary>
+    static string RepairStoryZone()
+    {
+        var lines = new List<string>();
+        MapLayout.Island storyZone = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
+        Vector3 center = new Vector3(storyZone.center.x, MapLayout.IslandTop + StructureDresser.StoryPlazaLift, storyZone.center.y);
+        float radius = 33f * MapLayout.Scale * 0.85f;
+        int wired = 0;
+        UnityEngine.SceneManagement.Scene scene = default;
+        foreach (MapLayout.Island lane in MapLayout.Lanes)
+        {
+            GameObject entry = GameObject.Find($"{lane.name}_스토리포탈");
+            if (entry == null || !entry.TryGetComponent(out StoryZonePortal portal)) { lines.Add($"  {lane.name}: ⚠️ 스토리 입장 포탈을 못 찾음"); continue; }
+            scene = entry.scene;
+            portal.SetStoryZone(center, radius);
+            EditorUtility.SetDirty(portal);
+            wired++;
+        }
+        GameObject oldReturn = GameObject.Find("스토리_복귀포탈");
+        if (oldReturn == null) return "⚠️ 스토리_복귀포탈을 못 찾았습니다 — 맵이 생성돼 있지 않거나 열린 씬이 다릅니다.";
+        scene = oldReturn.scene;
+        Transform parent = oldReturn.transform.parent;
+        foreach (string objName in new[] { "스토리_복귀포탈_마법진", "라벨_스토리_복귀포탈" })
+        {
+            Transform t = parent.Find(objName);
+            if (t != null) Object.DestroyImmediate(t.gameObject);
+        }
+        Object.DestroyImmediate(oldReturn);
+        BuildStoryReturnPortal(parent);
+        string nav = BuildNavMesh(parent.gameObject);
+        AssetDatabase.SaveAssets();
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+        return $"스토리존 Repair — 입장 포탈 {wired}/{MapLayout.Lanes.Length}곳에 존 중심·반지름 {radius:F1} 기록 · 복귀 포탈 다시 지음\n" + string.Join("\n", lines) + "\n" + nav;
+    }
+
+    /// <summary>
     /// 2026-10-08 다른세계강화소 삭제를 **씬에만** 반영한다(RepairPirateIntoGambling과 같은 방식 — 전체 맵 재생성은 씬에서 고친 것을 되돌려서 안 쓴다).
     /// 레인마다 다른세계강화소(+_모양)를 지우고 남은 6채를 새 간격(LaneShopCount 7→6)으로 옮긴다(본체와 _모양 같이, x·z만). 이미 없으면 옮기지 않는다(두 번 돌려도 안전).
     /// 호출: call MapGenerator.RepairRemoveOtherWorldShop
