@@ -107,7 +107,7 @@ public class OriginalVfxPlayer : MonoBehaviour
             if (l.renderer == null) continue;
             l.renderer.GetPropertyBlock(block);
             Color c = baseColors[i];
-            c.a = baseColors[i].a * (l.alphaTimes.Length > 0 ? Sample(l.alphaTimes, l.alphaValues, t) : l.staticAlpha);   // 곡선이 있으면 곡선이 알파(MDX 층 알파는 정적 또는 키 — staticAlpha 0은 「키가 있다」는 자리 표시일 수 있다)
+            c.a = baseColors[i].a * (l.alphaTimes.Length > 0 ? Mathf.Clamp01(Sample(l.alphaTimes, l.alphaValues, t)) : l.staticAlpha);   // 곡선이 있으면 곡선이 알파(MDX 층 알파는 정적 또는 키 — staticAlpha 0은 「키가 있다」는 자리 표시일 수 있다)
             block.SetColor(BaseColorId, c);
             if (l.uvTimes.Length > 0)
             {

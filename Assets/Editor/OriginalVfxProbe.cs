@@ -92,6 +92,31 @@ public static class OriginalVfxProbe
         return sb.ToString();
     }
 
+    // 편집 모드 진단: 모델 하나를 세워 재생 시각별 경계·뼈 스케일을 낸다. 부르는 법: call OriginalVfxProbe.EditDiag (모델 이름은 Docs/…가 아니라 아래 고정)
+    public static string EditDiag()
+    {
+        StringBuilder sb = new StringBuilder();
+        foreach (string name in new[] { "E_DTRing100", "dtbluenoringblend", "BY_Wood_GongChengSiPai_33" })
+        {
+            GameObject prefab = Resources.Load<GameObject>("Effects/Original/" + name);
+            if (prefab == null) { sb.AppendLine(name + " 없음"); continue; }
+            GameObject go = Object.Instantiate(prefab); go.hideFlags = HideFlags.HideAndDontSave;
+            OriginalVfxPlayer pl = go.GetComponent<OriginalVfxPlayer>();
+            sb.AppendLine($"{name}: 클립 {(pl.clip != null ? pl.clip.name + " " + pl.clip.length.ToString("F2") + "s legacy=" + pl.clip.legacy : "없음")} duration {pl.duration} animator={(pl.animator != null)} controller={(pl.animator != null && pl.animator.runtimeAnimatorController != null)} avatar={(pl.animator != null && pl.animator.avatar != null)}");
+            foreach (float f in new[] { 0f, 0.3f, 0.6f })
+            {
+                pl.SampleAt(pl.duration * f);
+                Bounds? b = null; string bone = "";
+                foreach (Renderer r in go.GetComponentsInChildren<Renderer>(true)) { if (b == null) b = r.bounds; else { Bounds x = b.Value; x.Encapsulate(r.bounds); b = x; } }
+                SkinnedMeshRenderer smr = go.GetComponentInChildren<SkinnedMeshRenderer>(true);
+                if (smr != null && smr.rootBone != null) bone = $" rootBone={smr.rootBone.name} lossy={smr.rootBone.lossyScale} bones={smr.bones.Length} localBounds={smr.localBounds.size} sharedMesh={smr.sharedMesh?.name}";
+                sb.AppendLine($"   t={f:0.0}: 경계 {(b.HasValue ? b.Value.size.ToString("F2") : "-")}{bone}");
+            }
+            Object.DestroyImmediate(go);
+        }
+        return sb.ToString();
+    }
+
     public static string Show()
     {
         if (!Application.isPlaying) return "❌ 플레이 중에만";
