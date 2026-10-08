@@ -1,0 +1,199 @@
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using UnityEngine;
+using UnityEngine.UI;
+
+/// <summary>
+/// MP 7차 점검 하네스(2026-10-08 구현담당1, 빌드 사본 dev/g1-mp-check7 전용 — main에 넣지 않는다). 훅 `-mpTestCheck7 초`, 사진 `-mpCheck7Shot 경로`. 로그 접두 「[C7]」.
+///  ⑦ 다중 선택 판매(한 기씩·Shift 빼기): 호스트·클라가 각자 자기 유닛 3기를 골라 판매 버튼(OnSellButtonClicked)을 세 번 → 순서·남은 수. 2차: 하나를 선택에서 빼고 둘만 팔아 빠진 하나가 살아남는지.
+///  ⑧ F10 메뉴 소리 슬라이더: 클라가 메뉴를 열고 효과음·배경 슬라이더를 움직인다 → 클라 AudioPrefs 값 · 호스트 AudioPrefs 값이 안 변하는지(원래 값은 끝에서 되돌린다).
+///  ⑨ 강재규 단일도킹 사거리 안 성공: 호스트가 강재규 곁에 단단한 적 복제를 세우고, 클라가 그 거울을 대상으로 요청.
+///  ⑩ 광폭화 오라: 호스트가 광폭화 왕복선 옆에 일반 적 복제 셋을 세우고 방어·회복을 1초마다 재 둔다.
+/// </summary>
+public class NetCheck7Test : MonoBehaviour
+{
+    public float startAt = 20f;
+    static string ShotPrefix { get { var a = System.Environment.GetCommandLineArgs(); int i = System.Array.IndexOf(a, "-mpCheck7Shot"); return i >= 0 && i + 1 < a.Length ? a[i + 1] : null; } }
+    static readonly string[] SellNames = { "희귀함_배성령", "희귀함_노태현", "희귀함_강재규" };
+
+    void Awake() { WaveSpawner.BerserkChanceOverride = 1f; WaveSpawner.BerserkMinRoundOverride = 0; }
+
+    UnitData Load(string n) { var c = NetLauncher.Catalog; var d = c != null ? c.units.Find(u => u != null && u.name == n) : null; if (d == null) Debug.Log($"[C7] ❌ 카탈로그에 {n} 없음"); return d; }
+
+    IEnumerator Start()
+    {
+        yield return new WaitForSecondsRealtime(startAt);
+        PlayerNotification.Shown += (slot, msg, dur) => { if (!msg.Contains("유닛 카운트") && !msg.Contains("데스 카운트") && !msg.Contains("라운드가")) Debug.Log($"[C7] 알림 슬롯 {slot}: {msg}"); };
+        if (!GameAuthority.IsServer) { yield return ClientRoutine(); yield break; }
+        yield return HostRoutine();
+    }
+
+    // ───────── 판매 시험(양쪽 공통) ─────────
+    static readonly MethodInfo Add = typeof(SelectionManager).GetMethod("AddToSelection", BindingFlags.NonPublic | BindingFlags.Instance);
+    static readonly MethodInfo Sell = typeof(GameHud).GetMethod("OnSellButtonClicked", BindingFlags.NonPublic | BindingFlags.Instance);
+
+    IEnumerator SellTest(string side, System.Func<List<Selectable>> mine)
+    {
+        SelectionManager sel = FindFirstObjectByType<SelectionManager>(); GameHud hud = FindFirstObjectByType<GameHud>();
+        if (sel == null || hud == null) { Debug.Log($"[C7] ⑦ {side} ❌ 선택/HUD 없음"); yield break; }
+        for (int scen = 1; scen <= 2; scen++)
+        {
+            List<Selectable> units = mine();
+            Debug.Log($"[C7] ⑦ {side} 시나리오 {scen}: 내 판매 후보 {units.Count}기 {string.Join(",", units.Select(u => u.GetComponent<UnitIdentity>().Data.name))}");
+            if (units.Count < 3) yield break;
+            units = units.Take(3).ToList();
+            sel.ClearSelection();
+            foreach (var u in units) Add.Invoke(sel, new object[] { u });
+            Selectable kept = null;
+            if (scen == 2) { kept = units[0]; sel.RemoveFromSelection(kept); Debug.Log($"[C7] ⑦ {side} Shift 빼기: {kept.GetComponent<UnitIdentity>().Data.name} 를 선택에서 뺌 → 선택 {sel.Selected.Count}기"); }
+            int clicks = scen == 1 ? 3 : 2;
+            for (int c = 1; c <= clicks; c++)
+            {
+                string before = string.Join(",", sel.Selected.Where(s => s != null).Select(s => s.GetComponent<UnitIdentity>().Data.name));
+                Sell.Invoke(hud, null);
+                yield return new WaitForSecondsRealtime(2f);
+                int alive = units.Count(u => u != null);
+                Debug.Log($"[C7] ⑦ {side} 시나리오 {scen} 판매 {c}번째 — 선택 전 [{before}] → 남은 선택 {sel.Selected.Count(s => s != null)}기 · 3기 중 생존 {alive}기{(kept != null ? " · 뺀 유닛 " + (kept != null ? "생존" : "사라짐") : "")}");
+            }
+        }
+    }
+
+    // ───────── 호스트 ─────────
+    IEnumerator HostRoutine()
+    {
+        SkillTelemetry.Reset(); SkillTelemetry.Enabled = true;
+        UnitSpawner sp = FindFirstObjectByType<UnitSpawner>();
+        int me = LocalPlayer.LocalPlayerId;
+        PlayerContext friend = PlayerContext.Occupied.FirstOrDefault(c => c.PlayerId != me);
+        if (friend == null) { Debug.Log("[C7] 친구 슬롯 없음"); yield break; }
+        int cs = friend.PlayerId;
+        foreach (int slot in new[] { me, cs })
+        {
+            LaneMarker lane = LaneMarker.Get(slot);
+            for (int rep = 0; rep < 2; rep++)
+                foreach (string n in SellNames) { UnitData d = Load(n); if (d != null) sp.Spawn(d, lane.TakeSpawnPosition(d), slot); }
+        }
+        UnitData dd = Load("초월_강재규_AP");
+        GameObject dockGo = dd != null ? sp.Spawn(dd, LaneMarker.Get(cs).LaneCenter + new Vector3(-20f, 0f, 20f), cs) : null;
+        UnitAttacker dock = dockGo != null ? dockGo.GetComponent<UnitAttacker>() : null;
+        Debug.Log($"[C7] 호스트: 슬롯 {me}·{cs}에 판매 후보 6기씩 · 강재규 {(dock != null ? "세움 " + dock.transform.position.ToString("F0") : "실패")}");
+        StartCoroutine(Aura());
+        yield return new WaitForSecondsRealtime(4f);
+        StartCoroutine(SellTest("호스트", () => UnitIdentity.Active.Where(u => u != null && u.TryGetComponent(out OwnedByPlayer o) && o.OwnerId == me && SellNames.Contains(u.Data.name)).Select(u => u.GetComponent<Selectable>()).Where(s => s != null).ToList()));
+        // ⑨ 강재규 곁에 단단한 적 복제
+        EnemyDummy sample = null;
+        for (int w = 0; w < 60 && sample == null; w++) { sample = EnemyDummy.Active.FirstOrDefault(e => e != null && !e.IsDead && !e.IsBoss && e.Data != null && e.Data.prefab != null); if (sample == null) yield return new WaitForSecondsRealtime(1f); }
+        if (sample != null && dock != null)
+        {
+            Vector3 at = dock.transform.position + new Vector3(12f, 0f, 0f);
+            GameObject g = Instantiate(sample.Data.prefab, at, Quaternion.identity);
+            if (g.TryGetComponent(out WaypointMover mv)) mv.enabled = false;
+            if (g.TryGetComponent(out UnityEngine.AI.NavMeshAgent ag)) ag.enabled = false;
+            EnemyDummy ed = g.GetComponent<EnemyDummy>(); ed.Initialize(sample.Data, 60f); ed.SetLane(cs);
+            Debug.Log($"[C7] ⑨ 호스트: 강재규 {dock.transform.position:F0} 곁에 단단한 적 복제({sample.Data.name} 체력 ×60) {at:F0} · 거리 {Vector3.Distance(dock.transform.position, at):F0}");
+        }
+        else Debug.Log("[C7] ⑨ ❌ 복제 못 세움");
+        for (int t = 0; t < 40; t++)
+        {
+            yield return new WaitForSecondsRealtime(3f);
+            Debug.Log($"[C7] ⑧ 호스트 AudioPrefs 효과음 {AudioPrefs.SfxVolume:F2} 배경 {AudioPrefs.MusicVolume:F2}");
+            foreach (var ev in SkillTelemetry.CastLog.Where(e => e.skill.Contains("도킹")).TakeLast(2)) Debug.Log($"[C7] ⑨ 시전 기록 {ev.unit.name} {ev.skill} t={ev.time:F1}");
+        }
+    }
+
+    // ⑩ 광폭화 옆 복제 셋 — 방어·회복
+    IEnumerator Aura()
+    {
+        BerserkMob mob = null;
+        for (int w = 0; w < 120 && mob == null; w++) { mob = BerserkMob.Active.FirstOrDefault(m => m != null); if (mob == null) yield return new WaitForSecondsRealtime(1f); }
+        if (mob == null) { Debug.Log("[C7] ⑩ ❌ 광폭화 안 나옴"); yield break; }
+        EnemyDummy me = mob.GetComponent<EnemyDummy>(); WaypointMover mv0 = mob.GetComponent<WaypointMover>();
+        EnemyDummy sample = EnemyDummy.Active.FirstOrDefault(e => e != null && e != me && !e.IsDead && !e.IsBoss && e.Data != null && e.Data.prefab != null);
+        if (sample == null) { Debug.Log("[C7] ⑩ ❌ 복제 원본 없음"); yield break; }
+        float x = mv0.ShuttleA.x + 40f, z = (mv0.ShuttleA.z + mv0.ShuttleB.z) * 0.5f;
+        var clones = new List<EnemyDummy>();
+        for (int i = 0; i < 3; i++)
+        {
+            GameObject g = Instantiate(sample.Data.prefab, new Vector3(x, mv0.ShuttleA.y, z + (i - 1) * 40f), Quaternion.identity);
+            if (g.TryGetComponent(out WaypointMover mv)) mv.enabled = false;
+            if (g.TryGetComponent(out UnityEngine.AI.NavMeshAgent ag)) ag.enabled = false;
+            EnemyDummy ed = g.GetComponent<EnemyDummy>(); ed.Initialize(sample.Data, 40f); ed.SetLane(me.LaneIndex);
+            clones.Add(ed);
+        }
+        Debug.Log($"[C7] ⑩ 광폭화 「{me.DisplayName}」 반경 방어 {mob.DefenseRadius:F0} 회복 {mob.RegenRadius:F0} · 복제 3기({sample.Data.name} 방어 기준 {sample.EffectiveArmor:F1}) x {x:F0} z {z:F0}±40");
+        float baseArmor = clones[0].EffectiveArmor; float[] lastHp = new float[3];
+        for (int i = 0; i < 3; i++) { clones[i].TakeDamage(clones[i].MaxHp * 0.4f, DamageType.AD, AttackType.Unassigned, -1, armorIgnoreRatio: 1f, isAbilityDamage: false); lastHp[i] = clones[i].Hp; }
+        for (int t = 0; t < 90; t++)
+        {
+            yield return new WaitForSecondsRealtime(1f);
+            if (mob == null) { Debug.Log("[C7] ⑩ 광폭화 사라짐"); break; }
+            string row = "";
+            for (int i = 0; i < 3; i++)
+            {
+                float d = Vector3.Distance(clones[i].transform.position, mob.transform.position);
+                float gain = (clones[i].Hp - lastHp[i]) / clones[i].MaxHp * 100f;
+                row += $" | #{i} 거리 {d:F0} 방어 {clones[i].EffectiveArmor:F1}(기준 {baseArmor:F1}) 체력 {clones[i].Hp / clones[i].MaxHp * 100f:F1}% ({gain:+0.00;-0.00}%/초)";
+                lastHp[i] = clones[i].Hp;
+                if (clones[i].Hp > clones[i].MaxHp * 0.7f) { clones[i].TakeDamage(clones[i].MaxHp * 0.3f, DamageType.AD, AttackType.Unassigned, -1, armorIgnoreRatio: 1f, isAbilityDamage: false); lastHp[i] = clones[i].Hp; }
+            }
+            if (t % 3 == 0) Debug.Log($"[C7] ⑩ t+{t}s 광폭화 z {mob.transform.position.z:F0}{row}");
+        }
+    }
+
+    // ───────── 클라 ─────────
+    NetEntity Mirror(string rosterName)
+    {
+        int me = LocalPlayer.LocalPlayerId;
+        foreach (NetEntity e in FindObjectsByType<NetEntity>(FindObjectsSortMode.None))
+        {
+            if (e == null || e.Object == null || !e.Object.IsValid || e.EntityKind != NetEntityKind.Unit || e.Owner != me || e.Visual == null) continue;
+            if (e.Visual.TryGetComponent(out UnitIdentity id) && id.Data != null && id.Data.name == rosterName) return e;
+        }
+        return null;
+    }
+
+    IEnumerator ClientRoutine()
+    {
+        int me = LocalPlayer.LocalPlayerId;
+        GameHud hud = FindFirstObjectByType<GameHud>();
+        yield return new WaitForSecondsRealtime(8f);
+        // ⑦ 판매
+        yield return SellTest("클라", () => FindObjectsByType<NetEntity>(FindObjectsSortMode.None).Where(e => e.Object != null && e.Object.IsValid && e.EntityKind == NetEntityKind.Unit && e.Owner == me && e.Visual != null
+            && e.Visual.TryGetComponent(out UnitIdentity id) && id.Data != null && SellNames.Contains(id.Data.name)).Select(e => e.Visual.GetComponent<Selectable>()).Where(s => s != null).ToList());
+        // ⑨ 강재규 대상 지정
+        NetEntity dock = Mirror("초월_강재규_AP");
+        if (dock != null && hud != null && dock.Visual.TryGetComponent(out Selectable ds))
+        {
+            EnemyDummy enemy = null;
+            for (int w = 0; w < 60 && enemy == null; w++)
+            {
+                enemy = FindObjectsByType<NetEntity>(FindObjectsSortMode.None).Where(e => e.Object != null && e.Object.IsValid && e.EntityKind == NetEntityKind.Enemy && e.Visual != null && e.Visual.GetComponent<EnemyDummy>() != null
+                        && Vector3.Distance(e.Visual.transform.position, dock.Visual.transform.position) < 120f).Select(e => e.Visual.GetComponent<EnemyDummy>()).FirstOrDefault();
+                if (enemy == null) yield return new WaitForSecondsRealtime(1f);
+            }
+            Debug.Log($"[C7] ⑨ 클라 강재규 거울 → 적 거울 {(enemy != null ? enemy.name + " 거리 " + Vector3.Distance(enemy.transform.position, dock.Visual.transform.position).ToString("F0") : "사거리 안 없음")} 요청");
+            if (enemy != null) hud.ExecuteCastActiveOnTarget(ds, enemy);
+            yield return new WaitForSecondsRealtime(2f);
+        }
+        else Debug.Log("[C7] ⑨ ❌ 클라 강재규 거울 없음");
+        // ⑧ F10 메뉴 슬라이더
+        float sfx0 = AudioPrefs.SfxVolume, mus0 = AudioPrefs.MusicVolume, mas0 = AudioPrefs.MasterVolume;
+        Debug.Log($"[C7] ⑧ 클라 시작 값 효과음 {sfx0:F2} 배경 {mus0:F2} 전체 {mas0:F2}");
+        hud.OpenGameMenu();
+        yield return new WaitForSecondsRealtime(1f);
+        Slider sfxS = FindObjectsByType<Slider>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(s => s.transform.parent != null && s.transform.parent.name == "Volume_효과음");
+        Slider musS = FindObjectsByType<Slider>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(s => s.transform.parent != null && s.transform.parent.name == "Volume_배경 음악");
+        Debug.Log($"[C7] ⑧ 클라 F10 슬라이더 효과음 {(sfxS != null ? "있음 " + sfxS.value.ToString("F2") : "없음")} · 배경 {(musS != null ? "있음 " + musS.value.ToString("F2") : "없음")} · 메뉴 열림 {GameHud.IsGameMenuOpen}");
+        if (sfxS != null) sfxS.value = 0.31f;
+        if (musS != null) musS.value = 0.42f;
+        yield return new WaitForSecondsRealtime(1f);
+        Debug.Log($"[C7] ⑧ 클라 슬라이더 조작 뒤 AudioPrefs 효과음 {AudioPrefs.SfxVolume:F2} 배경 {AudioPrefs.MusicVolume:F2} · PlayerPrefs 효과음 {PlayerPrefs.GetFloat("GuilRandomDefense.SfxVolume", -1f):F2}");
+        if (!string.IsNullOrEmpty(ShotPrefix)) ScreenCapture.CaptureScreenshot(ShotPrefix + "_f10.png");
+        yield return new WaitForSecondsRealtime(1f);
+        AudioPrefs.SetSfx(sfx0); AudioPrefs.SetMusic(mus0);   // 이 PC 사용자 값을 되돌려 놓는다
+        Debug.Log($"[C7] ⑧ 클라 복원 효과음 {AudioPrefs.SfxVolume:F2} 배경 {AudioPrefs.MusicVolume:F2}");
+        for (int t = 0; t < 14; t++) yield return new WaitForSecondsRealtime(3f);
+    }
+}

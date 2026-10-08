@@ -1,0 +1,44 @@
+diff --git a/Assets/Scripts/Net/NetBerserkTest.cs b/Assets/Scripts/Net/NetBerserkTest.cs
+index 1fa9d129f..cb937d7d0 100644
+--- a/Assets/Scripts/Net/NetBerserkTest.cs
++++ b/Assets/Scripts/Net/NetBerserkTest.cs
+@@ -55,7 +55,7 @@ public class NetBerserkTest : MonoBehaviour
+         Debug.Log($"[BZK] 왕복 20초: x {xMin:F0}~{xMax:F0} · z {zMin:F0}~{zMax:F0}(변 z {Mathf.Min(mv.ShuttleA.z, mv.ShuttleB.z):F0}~{Mathf.Max(mv.ShuttleA.z, mv.ShuttleB.z):F0}) · 방향 전환 {flips}회");
+ 
+         // 2) 오라 — 범위 안 일반 적의 방어·회복을 본다
+-        EnemyDummy other = EnemyDummy.Active.FirstOrDefault(e => e != null && e != me && !e.IsDead && !e.HasBuff(BerserkMob.BuffId) && Vector3.Distance(e.transform.position, mob.transform.position) < mob.DefenseRadius * 0.8f);
++        EnemyDummy other = EnemyDummy.Active.ToList().FirstOrDefault(e => { try { return e != null && e != me && !e.IsDead && !e.HasBuff(BerserkMob.BuffId) && Vector3.Distance(e.transform.position, mob.transform.position) < mob.DefenseRadius * 0.8f; } catch { return false; } });
+         if (other == null) { Debug.Log("[BZK] 범위 안 일반 적 없음 — 오라 점검 건너뜀"); yield break; }
+         float armorWith = other.EffectiveArmor, maxHp = other.MaxHp;
+         other.TakeDamage(maxHp * 0.5f, DamageType.AD, AttackType.Unassigned, -1, armorIgnoreRatio: 1f, isAbilityDamage: false);
+diff --git a/Assets/Scripts/Net/NetLauncher.cs b/Assets/Scripts/Net/NetLauncher.cs
+index 6fa2d4614..fbbce9959 100644
+--- a/Assets/Scripts/Net/NetLauncher.cs
++++ b/Assets/Scripts/Net/NetLauncher.cs
+@@ -161,6 +161,8 @@ public class NetLauncher : MonoBehaviour
+     float testPhase3Delay = -1f;
+     bool testTraitUnits;
+     float testTraitDelay = -1f;
++    float testCheck7Delay = -1f;
++    float testCheck6Delay = -1f;   // 10-08 MP 6차(NetCheck6Test, 빌드 사본 전용)
+     readonly System.Collections.Generic.List<(float, string)> chatTests = new System.Collections.Generic.List<(float, string)>();
+     readonly System.Collections.Generic.List<(float, string)> lobbyChatTests = new System.Collections.Generic.List<(float, string)>();
+     readonly System.Collections.Generic.List<float> gambleLabelDelays = new System.Collections.Generic.List<float>();
+@@ -276,6 +278,8 @@ public class NetLauncher : MonoBehaviour
+                 case "-mpDump": dumpDelays.Add(Seconds(i + 1)); break;
+                 case "-mpTestWisps": testWispsDelay = Seconds(i + 1); break;
+                 case "-mpTestMoveUnits": testMoveUnitsDelay = Seconds(i + 1); break;
++                case "-mpTestCheck7": testCheck7Delay = Seconds(i + 1); break;
++                case "-mpTestCheck6": testCheck6Delay = Seconds(i + 1); break;
+                 case "-mpTestBerserk": testBerserkDelay = Seconds(i + 1); break;
+                 case "-mpTestMain": testMainDelay = Seconds(i + 1); testMainShot = Arg(i + 2); break;
+                 case "-mpTestCommands": testCommandsDelay = Seconds(i + 1); break;
+@@ -791,6 +795,8 @@ public class NetLauncher : MonoBehaviour
+         if (testCommandsDelay >= 0f) StartCoroutine(TestCommandsAfter(testCommandsDelay));
+         if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
+         if (testBerserkDelay >= 0f) { var bt = gameObject.AddComponent<NetBerserkTest>(); bt.startAt = testBerserkDelay; }
++        if (testCheck7Delay >= 0f) { var c7 = gameObject.AddComponent<NetCheck7Test>(); c7.startAt = testCheck7Delay; }
++        if (testCheck6Delay >= 0f) { var c6 = gameObject.AddComponent<NetCheck6Test>(); c6.startAt = testCheck6Delay; }
+         if (testMainDelay >= 0f) { var mt = gameObject.AddComponent<NetMainTest>(); mt.startAt = testMainDelay; mt.shotPrefix = testMainShot; }
+         if (testFinishRunDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestFinishRunAfter(testFinishRunDelay));
+         LogSeatAtGameScene();
