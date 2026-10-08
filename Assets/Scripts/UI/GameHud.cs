@@ -990,7 +990,7 @@ public class GameHud : MonoBehaviour
         // 일시정지 안내(화면 가운데) — 멈춘 동안만 보인다.
         RectTransform pauseRect = CreatePanel(transform, "PauseOverlay", new Color(0f, 0f, 0f, 0.35f));
         SetAnchors(pauseRect, new Vector2(0.3f, 0.45f), new Vector2(0.7f, 0.55f));
-        TMP_Text pauseText = CreateLabel(pauseRect, "PauseText", "일시정지 — P로 계속");
+        TMP_Text pauseText = pauseBannerText = CreateLabel(pauseRect, "PauseText", "일시정지 — P로 계속");
         pauseText.fontSize = 34;
         pauseText.raycastTarget = false;
         pauseRect.GetComponent<Image>().raycastTarget = false;
@@ -1010,13 +1010,23 @@ public class GameHud : MonoBehaviour
         if (GamePause.Paused || GamePause.Available) CloseGameMenu();
     }
 
+    TMP_Text pauseBannerText;
+
     void RefreshPauseUi()
     {
+        if (pauseBannerText != null && GamePause.Paused)
+        {
+            NetPlayer byPlayer = null;
+            if (GamePause.PausedBy >= 0) foreach (NetPlayer np in NetPlayer.All) if (np != null && np.Slot == GamePause.PausedBy) { byPlayer = np; break; }
+            string name = byPlayer != null ? byPlayer.DisplayName : null;
+            string want = string.IsNullOrEmpty(name) ? "일시정지 — P로 계속" : $"{name}님이 일시정지 — P로 계속";
+            if (pauseBannerText.text != want) pauseBannerText.text = want;
+        }
         bool pauseBannerShown = GamePause.Paused && !IsGameMenuOpen;   // F10 메뉴가 열려 있으면 가운데 문구는 숨긴다(메뉴 뒤로 비쳐 글자가 겹쳐 보였다, 10-07)
         if (pauseOverlay != null && pauseOverlay.activeSelf != pauseBannerShown) pauseOverlay.SetActive(pauseBannerShown);
         if (gameMenuPauseLabel != null)
         {
-            gameMenuPauseLabel.text = GamePause.Available ? (GamePause.Paused ? "계속(일시정지 해제)" : "일시정지") : "일시정지\n(같이 하기 불가)";
+            gameMenuPauseLabel.text = GamePause.Paused ? "계속(일시정지 해제)" : "일시정지";
             Image image = gameMenuPauseLabel.transform.parent.GetComponent<Image>();
             if (image != null) image.color = wc3Menu ? MenuButtonTint(GamePause.Available, false) : GamePause.Available ? new Color(0.26f, 0.32f, 0.44f, 1f) : new Color(0.28f, 0.28f, 0.30f, 0.6f);
         }

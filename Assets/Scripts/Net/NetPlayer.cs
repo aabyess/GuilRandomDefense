@@ -452,6 +452,12 @@ public class NetPlayer : NetworkBehaviour
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_Pause(NetworkBool pause)
+    {
+        NetCommands.ExecutePause(this, pause);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     public void RPC_Chat(string text)
     {
         NetCommands.ExecuteChat(this, text);

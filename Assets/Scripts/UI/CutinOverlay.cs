@@ -247,8 +247,16 @@ public class CutinOverlay : MonoBehaviour
         if (unit == null || unit.Data == null) return;
         UnitGrade grade = unit.Data.grade;
         if (grade != UnitGrade.Transcendent && grade != UnitGrade.Immortal && grade != UnitGrade.Eternal) return;
-        // 내 유닛만(원작 SummonVoice는 전원이지만 컷인은 전체화면이라 남의 획득까지 덮으면 시끄럽다 — 사장님 확인 필요).
+        string name = unit.Data.name.Normalize(System.Text.NormalizationForm.FormC);
+        // 같이 하기(사장님 10-08 확정: 누가 얻어도 모든 플레이어에게 컷인 + 맵 정지): 획득은 호스트만 알아챈다 → 호스트가 Play하고 전원에게 이름을 보낸다.
+        if (GamePause.IsNetworked)
+        {
+            if (!GameAuthority.IsServer) return;
+            if (Play(name)) NetGameState.Instance?.BroadcastCutin(name);
+            return;
+        }
+        // 혼자 하기: 내 유닛만.
         if (unit.TryGetComponent(out OwnedByPlayer owner) && owner.OwnerId != LocalPlayer.LocalPlayerId) return;
-        Play(unit.Data.name.Normalize(System.Text.NormalizationForm.FormC));
+        Play(name);
     }
 }

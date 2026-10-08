@@ -152,6 +152,7 @@ public static class NetCommands
     /// </summary>
     public static void ExecuteCombine(NetPlayer sender, int recipeIndex, NetworkId casterId)
     {
+        if (GamePause.Frozen) return;   // 일시정지·컷인 정지 중엔 호스트가 거절(클라 UI도 막지만 늦게 온 요청 방어)
         CombineSystem system = Object.FindFirstObjectByType<CombineSystem>();
         CombineRecipe recipe = system != null ? system.RecipeAt(recipeIndex) : null;
         if (recipe == null) { PlayerNotification.ShowFailure(sender.Slot, "지금은 조합할 수 없습니다."); return; }
@@ -207,6 +208,7 @@ public static class NetCommands
 
     public static void ExecuteShopUse(NetPlayer sender, int shopId, int slot, byte kind, Vector3 point, NetworkId targetId)
     {
+        if (GamePause.Frozen) return;   // 일시정지·컷인 정지 중엔 호스트가 거절(클라 UI도 막지만 늦게 온 요청 방어)
         ILaneShop shop = NetShops.Get(shopId);
         if (shop == null) return;
 
@@ -243,6 +245,7 @@ public static class NetCommands
 
     public static void ExecuteUseItem(NetPlayer sender, byte useKind)
     {
+        if (GamePause.Frozen) return;   // 일시정지·컷인 정지 중엔 호스트가 거절(클라 UI도 막지만 늦게 온 요청 방어)
         PlayerContext context = PlayerContext.Get(sender.Slot);
         if (context == null || RewardDistributor.Instance == null) return;
         bool used = RewardDistributor.Instance.UseItem(context, (ItemUseKind)useKind);
@@ -258,6 +261,7 @@ public static class NetCommands
 
     public static void ExecuteHudUnitAction(NetPlayer sender, NetworkId unit, NetHudAction action, int argument)
     {
+        if (GamePause.Frozen) return;   // 일시정지·컷인 정지 중엔 호스트가 거절(클라 UI도 막지만 늦게 온 요청 방어)
         if (!TryGetOwnedReal(sender, unit, action.ToString(), out GameObject real)) return;
         if (!real.TryGetComponent(out Selectable selectable)) return;
 
@@ -298,6 +302,7 @@ public static class NetCommands
 
     public static void ExecuteCastActiveOnAlly(NetPlayer sender, NetworkId caster, NetworkId ally)
     {
+        if (GamePause.Frozen) return;   // 일시정지·컷인 정지 중엔 호스트가 거절(클라 UI도 막지만 늦게 온 요청 방어)
         if (!TryGetOwnedReal(sender, caster, "CastActiveOnAlly", out GameObject real)) return;
         if (!real.TryGetComponent(out Selectable selectable) || !real.TryGetComponent(out UnitAttacker attacker)) return;
         if (!sender.Runner.TryFindObject(ally, out NetworkObject allyObject) || !allyObject.TryGetComponent(out NetEntity allyEntity) || allyEntity.Real == null || !allyEntity.Real.TryGetComponent(out UnitIdentity allyIdentity)) return;
@@ -318,6 +323,7 @@ public static class NetCommands
 
     public static void ExecuteCastActiveAtPoint(NetPlayer sender, NetworkId caster, Vector3 point)
     {
+        if (GamePause.Frozen) return;   // 일시정지·컷인 정지 중엔 호스트가 거절(클라 UI도 막지만 늦게 온 요청 방어)
         if (float.IsNaN(point.x + point.y + point.z) || float.IsInfinity(point.x + point.y + point.z)) return;
         if (!TryGetOwnedReal(sender, caster, "CastActiveAtPoint", out GameObject real)) return;
         if (!real.TryGetComponent(out Selectable selectable) || !real.TryGetComponent(out UnitAttacker attacker)) return;
@@ -339,6 +345,7 @@ public static class NetCommands
 
     public static void ExecuteCastActiveOnEnemy(NetPlayer sender, NetworkId caster, NetworkId enemy)
     {
+        if (GamePause.Frozen) return;   // 일시정지·컷인 정지 중엔 호스트가 거절(클라 UI도 막지만 늦게 온 요청 방어)
         if (!TryGetOwnedReal(sender, caster, "CastActiveOnEnemy", out GameObject real)) return;
         if (!real.TryGetComponent(out Selectable selectable)) return;
         EnemyDummy target = null;
@@ -361,6 +368,7 @@ public static class NetCommands
     /// <summary>호스트: 대상 지정 특성(로빈 등). 특성 포인트는 요청자 슬롯 것, 대상은 요청자 소유 유닛만.</summary>
     public static void ExecuteTraitTarget(NetPlayer sender, int traitIndex, NetworkId target)
     {
+        if (GamePause.Frozen) return;   // 일시정지·컷인 정지 중엔 호스트가 거절(클라 UI도 막지만 늦게 온 요청 방어)
         NetCatalog catalog = NetLauncher.Catalog;
         UnitTraitData trait = catalog != null && traitIndex >= 0 && traitIndex < catalog.traits.Count ? catalog.traits[traitIndex] : null;
         if (trait == null || !trait.targetsOtherUnit) return;
@@ -370,6 +378,39 @@ public static class NetCommands
         if (hud == null) return;
         hud.ExecuteTraitTargetOn(trait, PlayerContext.Get(sender.Slot), identity, sender.Slot);
         if (commandsLogged++ < 30) Debug.Log($"[MP] 특성 대상 요청 수행: 슬롯 {sender.Slot} {trait.name} → {real.name}");
+    }
+
+    // ───────────── 일시정지(같이 하기, 10-08) ─────────────
+    readonly static int[] pausesUsed = new int[8];
+
+    /// <summary>클라·호스트 모두: 멈춤/풀기 요청. 호스트는 자기 RPC도 같은 경로(Execute)로 처리한다.</summary>
+    public static void RequestPause(bool pause)
+    {
+        if (NetPlayer.Local == null) return;
+        NetPlayer.Local.RPC_Pause(pause);
+    }
+
+    public static void ExecutePause(NetPlayer sender, bool pause)
+    {
+        NetGameState state = NetGameState.Instance;
+        if (sender == null || sender.Runner == null || !sender.Runner.IsServer || state == null || !state.Started) return;
+        if (pause == state.Paused) return;
+        int slot = sender.Slot;
+        if (pause)
+        {
+            if (GamePause.PausesPerPlayer > 0 && slot >= 0 && slot < pausesUsed.Length && pausesUsed[slot] >= GamePause.PausesPerPlayer)
+            { PlayerNotification.Show(slot, $"일시정지는 한 판에 {GamePause.PausesPerPlayer}번까지입니다.", 3f); return; }
+            if (slot >= 0 && slot < pausesUsed.Length) pausesUsed[slot]++;
+        }
+        else if (!GamePause.AnyoneCanResume && slot != state.PausedBy && slot != LocalPlayer.LocalPlayerId)   // 호스트(내 슬롯)는 늘 풀 수 있다
+        { PlayerNotification.Show(slot, "멈춘 사람만 풀 수 있습니다.", 3f); return; }
+        state.Paused = pause;
+        state.PausedBy = (sbyte)(pause ? slot : -1);
+        GamePause.ApplyNetworked(pause, pause ? slot : -1);   // 호스트 PC는 바로
+        string who = sender.DisplayName;
+        string msg = pause ? $"<color=#FFD700>{who}님이 일시정지했습니다.</color> (P로 계속)" : $"<color=#FFD700>{who}님이 재개했습니다.</color>";
+        foreach (PlayerContext c in PlayerContext.Occupied) PlayerNotification.Show(c.PlayerId, msg, 4f);
+        Debug.Log($"[MP] 일시정지 {(pause ? "멈춤" : "재개")}: 슬롯 {slot} {who}");
     }
 
     /// <summary>클라: 채팅 한 줄을 호스트로(대기실·게임 모두). 연타는 보내는 쪽(PlayerChat.AllowLocalSend)에서 먼저 막는다.</summary>

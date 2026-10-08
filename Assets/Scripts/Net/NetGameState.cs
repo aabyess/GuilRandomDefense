@@ -16,6 +16,11 @@ public class NetGameState : NetworkBehaviour
     [Networked] public int Difficulty { get; set; }
 
     [Networked] public NetworkBool Started { get; set; }
+    /// <summary>같이 하기 일시정지(10-08): 호스트가 정하면 전원이 Render에서 Time.timeScale 0 + 소리 멈춤을 적용한다. 재접속 클라도 이 값으로 바로 멈춘 채 들어온다.</summary>
+    [Networked] public NetworkBool Paused { get; set; }
+    [Networked] public sbyte PausedBy { get; set; } = -1;
+    /// <summary>컷인 정지(10-08 사장님 확정: 누가 상위 등급을 얻어도 전원 컷인 + 맵 정지) — 호스트의 GamePause.CutinHold를 그대로 싣는다. 클라가 Render에서 적용.</summary>
+    [Networked] public NetworkBool CutinHold { get; set; }
     [Networked] public byte ExtraTimerKind { get; set; }
     /// <summary>레인당 유닛 수 패배 한계(원작 udg_ModeEnemyInt) — 클라 팀 현황판 제목 「유닛 카운트 = N <- 패배」용. 0 = 모름.</summary>
     [Networked] public int DeathLimit { get; set; }
@@ -85,11 +90,12 @@ public class NetGameState : NetworkBehaviour
         SkillSfx.Broadcast -= RouteSkillSfx;
         SkillVfx.Played -= RouteVfx;
         SkillVfx.PlayedPrefab -= RoutePrefabVfx;
-        if (Instance == this) Instance = null;
+        if (Instance == this) { Instance = null; GamePause.ApplyNetworked(false, -1); GamePause.ApplyNetworkedCutin(false); }   // 판이 끝나면 멈춤이 남지 않게
     }
 
     public override void FixedUpdateNetwork()
     {
+        if (HasStateAuthority) CutinHold = GamePause.CutinHold;   // 컷인 정지를 클라에 싣는다(호스트 CutinOverlay가 정한 값)
         if (!HasStateAuthority || !Started) return;
 
         if (roundManager == null) roundManager = FindFirstObjectByType<RoundManager>();
@@ -168,6 +174,8 @@ public class NetGameState : NetworkBehaviour
 
     public override void Render()
     {
+        if (Started || Paused) GamePause.ApplyNetworked(Paused, PausedBy);
+        if (!HasStateAuthority) GamePause.ApplyNetworkedCutin(CutinHold);
         if (!HasStateAuthority && Started && StoryManager.Instance != null)
         {
             StoryManager.Instance.ApplyReplicated(StoryRunning, StoryWaiting, StoryLabel.ToString(), StorySeconds, StoryInterlude.ToString());
@@ -205,6 +213,15 @@ public class NetGameState : NetworkBehaviour
     public void RPC_SummonVoice(short clipIndex)
     {
         SummonVoice.Play(clipIndex);
+    }
+
+    // 컷인(10-08): 호스트가 상위 등급 획득을 알아채면(CutinOverlay.HandleAcquired) 이름을 전원에게 — 각 PC가 CutinOverlay.Play. 정지는 Networked CutinHold가 맡는다.
+    public void BroadcastCutin(string unitAssetName) { if (HasStateAuthority && !string.IsNullOrEmpty(unitAssetName)) RPC_Cutin(unitAssetName); }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies)]
+    public void RPC_Cutin(NetworkString<_64> unitAssetName)
+    {
+        CutinOverlay.Play(unitAssetName.ToString());
     }
 
     // 스킬 효과음(09-30) — 표 번호(SkillSfxTable.txt의 C줄 순서)·볼륨 배수·자리. 거리 감쇠는 받는 쪽 화면 기준으로 SkillSfx가 센다.
