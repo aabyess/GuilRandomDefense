@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 /// <summary>
 /// 일시정지(사장님 10-07 「일시정지 기능」) — Time.timeScale 0 + AudioListener.pause. 같이 하기(10-08): 누가 P를 누르든 요청 RPC → 호스트가 NetGameState.Paused를 세움 → 전원 적용
-/// (규칙 상수 PausesPerPlayer·AnyoneCanResume은 사장님 답 대기 — PM 추천 기본값: 누구나 멈춤·누구나 풀기·횟수 무제한). 호스트가 멈춰도 Fusion 틱·RPC·접속은 살아 있다(두 창 실측).
+/// (규칙 상수 PausesPerPlayer·AnyoneCanResume은 사장님 확정 10-08: 누구나 멈춤·누구나 풀기·횟수 무제한). 호스트가 멈춰도 Fusion 틱·RPC·접속은 살아 있다(두 창 실측).
 /// 컷인 정지(CutinHold)는 호스트가 정해 NetGameState.CutinHold로 전원에게(클라는 ApplyNetworkedCutin).
 ///
 /// 멈춘 동안 막는 것: 뽑기·상점(GameHud.UseShop)·조합(CombineSystem.TryCombine — 채팅 조합 포함)·스킬 시전(UnitAttacker.TryCastActive*)·명령 카드 버튼(GameHud.OnUnitCommandSlotClicked). 카메라·채팅 입력·메뉴는 그대로.
