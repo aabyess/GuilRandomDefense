@@ -2313,6 +2313,45 @@ public class UnitAttacker : MonoBehaviour
 
     public float HighGradeSplashFactorNow => identity != null && identity.Data != null ? HighGradeSplashFactor(identity.Data) : 1f;   // 탐침용
 
+    // 라인 범위 피해 증가 오라(SkillEffectKind.LaneAreaDamageBonus, 초월 노태현 시너지폭발) — 라인(= 유닛 주인 번호)마다 그 라인에 있는 유닛들의 값 중 가장 큰 것. 0.5초 캐시.
+    static readonly Dictionary<UnitData, float> laneAreaBonusByData = new Dictionary<UnitData, float>();
+    static readonly Dictionary<int, float> laneAreaBonusByLane = new Dictionary<int, float>();
+    static float laneAreaBonusAt = -10f;
+
+    static float LaneAreaBonusOf(UnitData unitData)
+    {
+        if (unitData == null) return 0f;
+        if (laneAreaBonusByData.TryGetValue(unitData, out float cached)) return cached;
+        float bonus = 0f;
+        if (unitData.skills != null)
+            foreach (SkillData skill in unitData.skills)
+            {
+                if (skill == null || skill.levels == null || skill.levels.Count == 0 || skill.levels[0].effects == null) continue;
+                foreach (SkillEffect effect in skill.levels[0].effects)
+                    if (effect != null && effect.kind == SkillEffectKind.LaneAreaDamageBonus) bonus = Mathf.Max(bonus, effect.multiplier);
+            }
+        laneAreaBonusByData[unitData] = bonus;
+        return bonus;
+    }
+
+    public static float LaneAreaDamageFactor(int lane)
+    {
+        if (Time.time - laneAreaBonusAt >= 0.5f || Time.time < laneAreaBonusAt)
+        {
+            laneAreaBonusAt = Time.time;
+            laneAreaBonusByLane.Clear();
+            foreach (UnitIdentity unit in UnitIdentity.Active)
+            {
+                if (unit == null || unit.Data == null) continue;
+                float bonus = LaneAreaBonusOf(unit.Data);
+                if (bonus <= 0f) continue;
+                laneAreaBonusByLane.TryGetValue(unit.OwnerId, out float best);
+                if (bonus > best) laneAreaBonusByLane[unit.OwnerId] = bonus;
+            }
+        }
+        return laneAreaBonusByLane.TryGetValue(lane, out float found) ? 1f + found : 1f;
+    }
+
     float SplashDamageFactor(UnitData unitData)
     {
         if (splashMultiplierFor != unitData)
@@ -2954,7 +2993,7 @@ public class UnitAttacker : MonoBehaviour
             || effect.kind == SkillEffectKind.DamagePerAllyDebuff || effect.kind == SkillEffectKind.DamageGrowthOverTime
             || effect.kind == SkillEffectKind.AllySkillDamageBonus || (effect.kind == SkillEffectKind.DispelAllyDebuffs && effect.duration <= 0f)
             || effect.kind == SkillEffectKind.GoldPlusBonus || effect.kind == SkillEffectKind.StoryDamageMultiplier
-            || effect.kind == SkillEffectKind.DamagePerTargetArmorShred || effect.kind == SkillEffectKind.DamagePerRecruit || effect.kind == SkillEffectKind.DamageVsTargetBuff || effect.kind == SkillEffectKind.SkillDamageAfterKill || effect.kind == SkillEffectKind.SlowRewardBonus || effect.kind == SkillEffectKind.SkillTriggerChanceBonus || effect.kind == SkillEffectKind.RevealTreasure) return;
+            || effect.kind == SkillEffectKind.DamagePerTargetArmorShred || effect.kind == SkillEffectKind.DamagePerRecruit || effect.kind == SkillEffectKind.DamageVsTargetBuff || effect.kind == SkillEffectKind.SkillDamageAfterKill || effect.kind == SkillEffectKind.SlowRewardBonus || effect.kind == SkillEffectKind.SkillTriggerChanceBonus || effect.kind == SkillEffectKind.RevealTreasure || effect.kind == SkillEffectKind.LaneAreaDamageBonus) return;
 
         // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
         if (effect.lineLength > 0f && effect.zoneTickInterval <= 0f)
@@ -3462,6 +3501,8 @@ public class UnitAttacker : MonoBehaviour
         // 근사다. 거프 4행(Garp_AttackDamage #5·#6·#7, 값×(1+0.12×버프개수))이 이 factor로
         // 실제로 걸린다.
         amount *= 1f + effect.casterBuffCountFactor * CountCasterBuffs();
+        if (effect.bossBerserkDamageScale > 0f && target != null && (target.IsBoss || target.HasBuff(BerserkMob.BuffId))) amount *= effect.bossBerserkDamageScale;   // 노태현 「가리지않는수단과방법」: 보스·광폭화 상대 이 효과만
+        if (effect.areaDamage && target != null) amount *= LaneAreaDamageFactor(target.LaneIndex);   // 노태현 「시너지폭발」 라인 범위 피해 증가
         amount *= DamagePassiveFactor(target) * AuraBonusTotal(SkillEffectKind.AllySkillDamageBonus, true);   // 보잡 × 아군발 디버프 비례 × 스킬 피해 증가 오라(임장혁 가스라이팅)
         if (amount <= 0f) return;
 
@@ -3878,7 +3919,7 @@ public class UnitAttacker : MonoBehaviour
             float distance = Vector3.Distance(enemy.transform.position, center);
             float hpBefore = enemy.Hp;
             if (distance <= splash)
-                enemy.TakeDamage(damage * DamagePassiveFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false, armorScale: AttackArmorScale);
+                enemy.TakeDamage(damage * DamagePassiveFactor(enemy) * LaneAreaDamageFactor(enemy.LaneIndex), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false, armorScale: AttackArmorScale);
             if (distance <= cleave)
                 enemy.TakeDamage(damage * unitData.attackCleaveFactor * DamagePassiveFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 1f, isAbilityDamage: false);
             SkillTelemetry.Damage(unitData, "평타광역", enemy, hpBefore);

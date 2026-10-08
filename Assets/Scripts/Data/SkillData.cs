@@ -404,6 +404,11 @@ public enum SkillEffectKind
     // ⚠️ 맨 뒤에 추가(2026-10-07, 광폭화 유닛 — 사장님 사양) — 직렬화 순서를 지킨다.
     // 적 오라 전용: 받는 적이 초당 최대체력의 multiplier(0.01 = 1%)씩 회복한다(EnemyDummy.AddRegenPercentBonus). HealOverTime은 고정 hp/초라 최대체력이 큰 적엔 뜻이 없다.
     HealPercentOverTime,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-08, 초월 노태현 「시너지폭발」 — 사장님 사양) — 직렬화 순서를 지킨다.
+    // 상시 오라(패시브, Self): 이 유닛 주인의 라인존에 있는 적이 받는 「범위 피해」가 multiplier(0.15 = +15%)만큼 늘어난다. 출처 유닛은 안 따진다.
+    // 범위 피해 = 평타 광역(ApplyAttackSplash) + SkillEffect.areaDamage가 켜진 스킬 피해. 여러 유닛이 있어도 가장 큰 하나만(안 쌓인다). UnitAttacker.LaneAreaDamageFactor.
+    LaneAreaDamageBonus,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -699,6 +704,13 @@ public class SkillEffect
 
     // ⚠️ 맨 뒤(2026-10-06, 제한됨 이충민 발명품제작) — GrantInvention 전용: 위습 보상 종류.
     public WispData rewardWisp;
+
+    // ⚠️ 맨 뒤(2026-10-08, 초월 노태현 「가리지않는수단과방법」) — Damage 전용: 보스·광폭화 유닛에게만 이 효과의 피해가 이 배율만큼 곱해진다(1.3 = +30%). 0이면 꺼짐.
+    // BossDamageMultiplier(패시브, 유닛 스킬 전부)와 달리 이 효과 하나에만 적용된다.
+    public float bossBerserkDamageScale;
+
+    // ⚠️ 맨 뒤(2026-10-08, 초월 노태현 「시너지폭발」) — Damage 전용: 이 피해를 「범위 피해」로 센다 → LaneAreaDamageBonus(라인존 범위 피해 증가 오라)를 받는다.
+    public bool areaDamage;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에

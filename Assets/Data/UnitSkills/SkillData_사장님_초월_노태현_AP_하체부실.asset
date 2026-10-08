@@ -10,18 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uB178\uD0DC\uD604_AP_\uD558\uCCB4\uBD80\uC2E4"
+  m_Name: "SkillData_사장님_초월_노태현_AP_하체부실"
   m_EditorClassIdentifier: 
-  skillName: "\uD558\uCCB4\uBD80\uC2E4 \u2014 \uC774\uB3D9\uC18D\uB3C4\uAC10\uC18C(\uBC1C\uB3D9)"
-  description: "\uC0AC\uC7A5\uB2D8 10-06. \uD3C9\uD0C0 12.5% \uD655\uB960\uB85C \uB9DE\uC740
-    \uC801 \uC774\uB3D9\uC18D\uB3C4 \u221240%(\uB0A8\uB294 \uC18D\uB3C4 0.6) 3\uCD08
-    \u2014 \uC6D0\uC791 \uCD08\uC6D4 \uC591\uC7AC\uBAA8 AD \u300C\uB85C\uD0A4\uD3EC\uD2B8\u300D
-    1/8\xB70.6\xB73.0\uCD08 \uAE30\uC900."
-  triggerType: 0
+  skillName: "하체부실 — 주변 이동속도 감소(상시 오라)"
+  description: "사장님 10-08 · 상시 오라. 주위(반경 600 [임시값, 사장님이 나중에 정함])의 적 이동속도 −50%, 아군(나 제외) 이동속도 −50%. 같은 디버프는 가장 센 하나만. 「최윤서 강화」를 켜면 아군 쪽은 100% 없어진다."
+  triggerType: 2
   levels:
   - cooldown: 0
-    triggerChance: 0.125
-    range: 0
+    triggerChance: 1
+    range: 600
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
@@ -31,14 +28,14 @@ MonoBehaviour:
     effects:
     - kind: 13
       basis: 0
-      target: 3
+      target: 2
       damageType: 1
-      attackType: 0
-      multiplier: 0.6
+      attackType: 6
+      multiplier: 0.5
       bonus: 0
       chance: 1
       hitCount: 1
-      duration: 3
+      duration: 0
       casterBuffCountFactor: 0
       buffId: 
       randMin: 1
@@ -78,6 +75,59 @@ MonoBehaviour:
       attackSpeedScale: 0
       attackSpeedScaleCap: 0
       formSelfAttackSpeed: 0
+      bossBerserkDamageScale: 0
+      areaDamage: 0
+    - kind: 19
+      basis: 0
+      target: 1
+      damageType: 1
+      attackType: 6
+      multiplier: 0.5
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: NOTAE_ALLY_SLOW
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      bossBerserkDamageScale: 0
+      areaDamage: 0
     requiredTargetBuffId: 
     forbiddenTargetBuffId: 
     hitCountFloor: 0
@@ -93,4 +143,5 @@ MonoBehaviour:
     toggleMode: 0
     laneCountWindow: 0
     needsAllyClick: 0
+    ownLaneOnly: 1
   icon: {fileID: 21300000, guid: 47ce268fffcb3471e886a9f837caf60a, type: 3}

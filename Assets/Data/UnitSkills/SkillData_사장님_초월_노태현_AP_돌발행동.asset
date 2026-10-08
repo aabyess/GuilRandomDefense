@@ -10,33 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uB178\uD0DC\uD604_AP_\uB3CC\uBC1C\uD589\uB3D9"
+  m_Name: "SkillData_사장님_초월_노태현_AP_돌발행동"
   m_EditorClassIdentifier: 
-  skillName: "\uB3CC\uBC1C\uD589\uB3D9 \u2014 \uAE61\uB51C(\uBC1C\uB3D9)"
-  description: "\uC0AC\uC7A5\uB2D8 10-06. \uD3C9\uD0C0 10% \uD655\uB960\uB85C \uB9DE\uC740
-    \uC801\uC5D0\uAC8C \uACE0\uC815 400000(\uC0AC\uC7A5\uB2D8 10-06 \uC2E0 \uAE30\uC900
-    \uAC10\uC0AC: \uC6D0\uC791 \uCD08\uC6D4 \uD655\uB960 \uAE61\uB51C \uC911\uC559\uAC12
-    40\uB9CC, \uCC98\uC74C\uC5D4 \uB3C4\uD50C\uB77C\uBC0D\uACE0 \uC77C\uBC18 200000).
-    \uD3C9\uC18C\uC5D4 \uBC29\uC5B4\uB97C \uB530\uB974\uACE0 \u300C\uCD5C\uC724\uC11C
-    \uAC15\uD654\u300D\uAC00 \uCF1C\uC9C0\uBA74 \uBC29\uC5B4 \uBB34\uC2DC."
-  triggerType: 0
+  skillName: "돌발행동 — 체력스킬(게이지 100)"
+  description: "사장님 10-08 · 체력 게이지(최대 100). 재생 +1/초 · 평타 +1 [임시값, 사장님이 나중에 정함]. 가득 차면 공격 대상 주위(300)의 적마다 그 적 현재 체력의 15% 마법 피해. 보스(PV≥200)는 비례 대신 고정 300,000(원작 도플라밍고 규칙). 쓰면 게이지 0."
+  triggerType: 3
   levels:
   - cooldown: 0
-    triggerChance: 0.1
-    range: 0
-    hitCountThreshold: 0
+    triggerChance: 1
+    range: 300
+    hitCountThreshold: 100
     resetTo: 0
-    gaugeKind: 0
+    gaugeKind: 1
     requiredBuffId: 
     forbiddenBuffId: 
     selfBuffId: 
     effects:
     - kind: 0
-      basis: 0
-      target: 3
+      basis: 2
+      target: 2
       damageType: 1
       attackType: 6
-      multiplier: 400000
+      multiplier: 0.15
       bonus: 0
       chance: 1
       hitCount: 1
@@ -48,8 +43,8 @@ MonoBehaviour:
       buffHitCharges: 0
       requiredTargetBuffId: 
       forbiddenTargetBuffId: 
-      targetCondition: 0
-      targetConditionValue: 0
+      targetCondition: 1
+      targetConditionValue: 200
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0
@@ -80,6 +75,59 @@ MonoBehaviour:
       attackSpeedScale: 0
       attackSpeedScaleCap: 0
       formSelfAttackSpeed: 0
+      bossBerserkDamageScale: 0
+      areaDamage: 0
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 1
+      attackType: 6
+      multiplier: 300000
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 3
+      targetConditionValue: 200
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 1
+      armorIgnoreRequiresBuff: YOONSEO_ENHANCED
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      bossBerserkDamageScale: 0
+      areaDamage: 0
     requiredTargetBuffId: 
     forbiddenTargetBuffId: 
     hitCountFloor: 0
@@ -95,4 +143,5 @@ MonoBehaviour:
     toggleMode: 0
     laneCountWindow: 0
     needsAllyClick: 0
+    ownLaneOnly: 0
   icon: {fileID: 21300000, guid: c3446708c2f4f42dfad8ae107b884994, type: 3}

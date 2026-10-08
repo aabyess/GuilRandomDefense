@@ -10,39 +10,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uB178\uD0DC\uD604_AP_\uAC00\uB9AC\uC9C0\uC54A\uB294\uC218\uB2E8\uACFC\uBC29\uBC95_\uCCB4\uB825\uC2A4\uD0AC"
+  m_Name: "SkillData_사장님_초월_노태현_AP_가리지않는수단과방법"
   m_EditorClassIdentifier: 
-  skillName: "\uAC00\uB9AC\uC9C0\uC54A\uB294\uC218\uB2E8\uACFC\uBC29\uBC95 \u2014
-    \uCCB4\uB825\uC2A4\uD0AC(\uD604\uC7AC\uCCB4\uB825 \uBE44\uB840)"
-  description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uCCB4\uB825\uC2A4\uD0AC(\uD604\uC7AC\uCCB4\uB825)\u300D
-    = \uC801 \uD604\uC7AC \uCCB4\uB825\uC758 N%. \uD3C9\uD0C0 50\uD0C0\uC9F8(\uC6D0\uC791
-    \uCD08\uC6D4 \uCCB4\uB825 \uC2A4\uD0AC \uAE40\uB9CC\uACBD\xB7\uD0A4\uB4DC LIFE\uAC8C\uC774\uC9C0
-    50) \uB300\uC0C1 \uD604\uC7AC\uCCB4\uB825 25%(\uC6D0\uC791 \uB3C4\uD50C\uB77C\uBC0D\uACE0
-    \uC77C\uBC18 25%, PV<200) \u2014 \uBCF4\uC2A4(PV\u2265200)\uB294 \uBE44\uB840
-    \uB300\uC2E0 \uACE0\uC815 300000(\uC6D0\uC791 \uBCF4\uC2A4 \uBD84\uAE30 Hidden1
-    300,000)."
-  triggerType: 3
+  skillName: "가리지않는수단과방법 — 25% 스턴 + 피해"
+  description: "사장님 10-08. 평타 25% 확률로 공격 대상 하나를 2초 스턴 + 「300,000」 마법 피해. 보스·광폭화 유닛에게는 이 스킬 피해 ×1.3 [임시값, 사장님이 나중에 정함]. 스턴은 보스에게 엔진 기본 규칙(저항 피부면 지속 감소)을 따른다."
+  triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1
+    triggerChance: 0.25
     range: 0
-    hitCountThreshold: 50
-    resetTo: 1
-    gaugeKind: 1
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
     requiredBuffId: 
     forbiddenBuffId: 
     selfBuffId: 
     effects:
-    - kind: 0
-      basis: 2
+    - kind: 1
+      basis: 0
       target: 3
       damageType: 1
       attackType: 6
-      multiplier: 0.25
+      multiplier: 0
       bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0
+      duration: 2
       casterBuffCountFactor: 0
       buffId: 
       randMin: 1
@@ -50,8 +43,8 @@ MonoBehaviour:
       buffHitCharges: 0
       requiredTargetBuffId: 
       forbiddenTargetBuffId: 
-      targetCondition: 1
-      targetConditionValue: 200
+      targetCondition: 0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0
@@ -73,8 +66,8 @@ MonoBehaviour:
       summonRadius: 70
       grantSkill: {fileID: 0}
       minAllyTier: 5
-      armorIgnoreRatio: 1
-      armorIgnoreRequiresBuff: YOONSEO_ENHANCED
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
       talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1
@@ -82,6 +75,8 @@ MonoBehaviour:
       attackSpeedScale: 0
       attackSpeedScaleCap: 0
       formSelfAttackSpeed: 0
+      bossBerserkDamageScale: 0
+      areaDamage: 0
     - kind: 0
       basis: 0
       target: 3
@@ -99,8 +94,8 @@ MonoBehaviour:
       buffHitCharges: 0
       requiredTargetBuffId: 
       forbiddenTargetBuffId: 
-      targetCondition: 3
-      targetConditionValue: 200
+      targetCondition: 0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0
@@ -131,6 +126,8 @@ MonoBehaviour:
       attackSpeedScale: 0
       attackSpeedScaleCap: 0
       formSelfAttackSpeed: 0
+      bossBerserkDamageScale: 1.3
+      areaDamage: 0
     requiredTargetBuffId: 
     forbiddenTargetBuffId: 
     hitCountFloor: 0
@@ -146,4 +143,5 @@ MonoBehaviour:
     toggleMode: 0
     laneCountWindow: 0
     needsAllyClick: 0
+    ownLaneOnly: 0
   icon: {fileID: 21300000, guid: c3446708c2f4f42dfad8ae107b884994, type: 3}
