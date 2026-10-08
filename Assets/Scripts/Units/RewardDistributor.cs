@@ -844,11 +844,10 @@ public class RewardDistributor : MonoBehaviour
         // 위습 칸은 플레이어 넷이 함께 쓴다. 넷이 같은 점에 쏟아지면 스무 개가 겹쳐서,
         // 어느 것이 내 것인지 알 수 없고 남의 위습을 아무리 눌러도 안 움직인다.
         // 주인마다 칸 안의 다른 자리를 쓰고, 그 안에서 다시 원을 그린다.
+        // 🔴 2026-10-08 사장님 「위습이 플레이어마다 다른 자리에 나오지 말고 다른 플레이어와 겹치게」: 주인별 벌림(OwnerSpread)을 없앴다 — 칸마다 모두 같은 자리.
+        //    (겹친 위습 중 내 것을 고르는 건 SelectionManager.TrySelectAtCursor가 맡는다 — 내 것·공유받은 것 우선.) 한 주인 안의 원 벌림(WispSpread)은 그대로.
         int players = Mathf.Max(1, PlayerContext.OccupiedCount);
-        float ownerAngle = 360f / players * context.PlayerId;
-        Vector3 ownerSpot = players > 1
-            ? Quaternion.Euler(0f, ownerAngle, 0f) * Vector3.forward * OwnerSpread
-            : Vector3.zero;
+        Vector3 ownerSpot = Vector3.zero;
 
         for (int i = 0; i < count; i++)
         {
@@ -860,8 +859,9 @@ public class RewardDistributor : MonoBehaviour
             // 흔함 선택 칸만(사장님 10-06 「선택위습 공간이 좁음」): 위습 지름만큼 벌려 칸 안에 깐다 — 무더기로 겹쳐 하나만 눌리던 것.
             //    다른 칸(랜덤·자원 등)은 원작처럼 무더기 그대로.
             Vector3 at = origin + offset;
+            // 흔함 선택 칸(사장님 10-08): 흩어 깔지 않고 「쵸파(흔함_강재규) 포탈 아래」 한 곳에 모은다 — 포탈 줄·마법진에서 충분히 먼 자리.
             if (cell != null && cell.Grade == UnitGrade.Common)
-                at = FindSpreadSlot(origin, wispData.prefab, context.PlayerId, players);
+                at = CommonGatherPoint(origin, wispData.prefab) + offset;
 
             GameObject instance = Instantiate(wispData.prefab, at, Quaternion.identity);
 
@@ -883,6 +883,29 @@ public class RewardDistributor : MonoBehaviour
             owner.SetOwner(context.PlayerId);
             wisp.ApplyOwnerColor(context.PlayerId);
         }
+    }
+
+    // 흔함 선택 위습이 모이는 자리: x = 쵸파 포탈(흔함_강재규) x, z = 칸 생성 줄(포탈 줄에서 ChoiceWispSpawnGap 아래)을 NavMesh에서 아래로 더 내려 포탈 접촉 거리(위습 지름×1.25+여유) 밖. 못 찾으면 칸 원점.
+    const string GatherPortalUnit = "흔함_강재규";   // 쵸파
+    static Vector3 CommonGatherPoint(Vector3 origin, GameObject prefab)
+    {
+        float diameter = 25f;
+        if (prefab != null && prefab.TryGetComponent(out SphereCollider sphere))
+            diameter = sphere.radius * 2f * Mathf.Max(prefab.transform.localScale.x, 0.01f);
+        float radius = diameter * 0.5f;
+        Vector3 anchor = origin;
+        foreach (UnitPortal portal in FindObjectsByType<UnitPortal>(FindObjectsSortMode.None))
+            if (portal != null && portal.SpecificUnit != null && portal.SpecificUnit.name == GatherPortalUnit) { anchor = new Vector3(portal.transform.position.x, origin.y, origin.z); break; }
+        List<Collider> portals = PortalColliders();
+        float margin = radius + SpreadPortalMargin * 4f;   // 마법진·포탈에서 「좀 멀리」: 보통 접촉 거리의 몇 배
+        for (float down = 0f; down <= 60f; down += 5f)
+        {
+            Vector3 p = anchor + Vector3.back * down;
+            if (!NavMesh.SamplePosition(p, out NavMeshHit hit, 4f, NavMesh.AllAreas)) continue;
+            if (BlockedByPortal(portals, hit.position, margin)) continue;
+            return hit.position;
+        }
+        return NavMesh.SamplePosition(anchor, out NavMeshHit fallback, 20f, NavMesh.AllAreas) ? fallback.position : origin;
     }
 
     const float SpreadGapFactor = 1.25f;     // 위습 지름의 몇 배 간격으로 벌리나

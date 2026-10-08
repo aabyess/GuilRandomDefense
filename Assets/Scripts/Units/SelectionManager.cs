@@ -295,7 +295,15 @@ public class SelectionManager : MonoBehaviour
     {
         Selectable hitSelectable = null;
         if (WorldPick.TryHit(cam, Mouse.current.position.ReadValue(), out RaycastHit hit))
+        {
             hit.collider.TryGetComponent(out hitSelectable);
+            // 위습이 칸마다 같은 자리에 겹쳐 나온다(사장님 10-08) — 맨 위가 남의 것이어도 같은 자리의 「내 것(또는 공유 받은 것)」을 우선 고른다.
+            if (hitSelectable != null && !AllianceShare.CanControlLocal(hitSelectable.gameObject) && WorldPick.TryHitControllable(cam, Mouse.current.position.ReadValue(), hit.distance, out RaycastHit mine))
+            {
+                mine.collider.TryGetComponent(out hitSelectable);
+                hit = mine;
+            }
+        }
 
         ClearSelection();
         InspectTarget.Clear();

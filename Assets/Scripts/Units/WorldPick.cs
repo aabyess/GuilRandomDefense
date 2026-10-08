@@ -53,6 +53,26 @@ public static class WorldPick
         return Physics.Raycast(cam.ScreenPointToRay(screenPosition), out hit, Mathf.Infinity);
     }
 
+    /// <summary>
+    /// 첫 적중 거리에서 <paramref name="slack"/> 안쪽으로 겹쳐 있는, <b>내가 조종할 수 있는</b> Selectable(내 유닛·위습·공유 받은 유닛)이 있으면 가장 가까운 것을 준다.
+    /// 칸마다 위습이 같은 자리에 겹쳐 나오는 판(10-08)에서 맨 위 남의 위습에 가려진 내 위습을 고르려는 것.
+    /// </summary>
+    public static bool TryHitControllable(Camera cam, Vector2 screenPosition, float firstDistance, out RaycastHit best, float slack = 40f)
+    {
+        best = default;
+        if (cam == null) return false;
+        int count = Physics.RaycastNonAlloc(cam.ScreenPointToRay(screenPosition), hits, firstDistance + slack, ~0, QueryTriggerInteraction.Collide);
+        float bestDistance = float.MaxValue;
+        bool found = false;
+        for (int i = 0; i < count; i++)
+        {
+            if (!hits[i].collider.TryGetComponent(out Selectable s) || !AllianceShare.CanControlLocal(s.gameObject)) continue;
+            if (hits[i].distance >= bestDistance) continue;
+            best = hits[i]; bestDistance = hits[i].distance; found = true;
+        }
+        return found;
+    }
+
     // RaycastAll이 담을 자리. 이동 명령마다 새로 할당하지 않으려고 재사용한다.
     static readonly RaycastHit[] hits = new RaycastHit[32];
 
