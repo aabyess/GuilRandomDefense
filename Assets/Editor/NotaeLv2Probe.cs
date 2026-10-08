@@ -31,10 +31,18 @@ static class NotaeLv2Probe
         if (!swarm) { rows.Clear(); SkillTelemetry.Reset(); SkillTelemetry.Enabled = true; }
 
         var scenarios = new List<(string label, string unit, bool buff, bool lv2)>();
+        string extraPath = "/private/tmp/claude-501/-Users-sang-GitHub-GuilRandomDefense/b7572603-8e06-4558-82cd-42b0cfe68a1a/scratchpad/extra_units.txt";
+        if (System.IO.File.Exists(extraPath))
+        {
+            // 한 줄에 로스터 이름 하나 — 있으면 불멸·노태현 대신 이 유닛들만 잰다(초월 문 이식 전후 비교용).
+            foreach (string line in System.IO.File.ReadAllLines(extraPath)) if (line.Trim().Length > 0) scenarios.Add((line.Trim(), line.Trim(), false, false));
+        }
+        else {
         foreach (string n in Immortals) scenarios.Add((n, n, false, false));
         scenarios.Add(("노태현_강화전", "초월_노태현_AP", false, true));
         scenarios.Add(("노태현_강화(방무만)", "초월_노태현_AP", true, false));
         scenarios.Add(("노태현_강화+Lv2", "초월_노태현_AP", true, true));
+        }
 
         int i = 0;
         int firstRow = rows.Count;
