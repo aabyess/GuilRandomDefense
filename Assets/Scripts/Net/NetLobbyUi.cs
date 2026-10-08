@@ -413,6 +413,11 @@ public class NetLobbyUi : MonoBehaviour
         SizeButton(close, new Vector2(240f, 70f));
         PlaceFromTopX((RectTransform)close.transform, 135f, y - 10f, new Vector2(240f, 70f));
         close.onClick.AddListener(() => SetSettingsOpen(false));
+        if (HotkeyAlias.IsMac)   // 10-08 맥 F키 안내
+        {
+            TMP_Text macHint = CreateText(c, "MacKeyHint", HotkeyAlias.MacHint, 18, inputFont, TextMain, TextAlignmentOptions.Center);
+            PlaceFromTopX(macHint.rectTransform, 0f, y - 100f, new Vector2(640f, 64f));
+        }
         settingsPanel.SetActive(false);
     }
 

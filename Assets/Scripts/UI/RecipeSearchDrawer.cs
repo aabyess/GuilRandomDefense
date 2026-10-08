@@ -637,7 +637,7 @@ public class RecipeSearchDrawer : MonoBehaviour
         Keyboard keyboard = Keyboard.current;
         if (keyboard != null)
         {
-            if (keyboard.f5Key.wasPressedThisFrame && (!ChatInputGate.IsOpen || searchFocused)) Toggle();
+            if (HotkeyAlias.Pressed(keyboard, Key.F5, !ChatInputGate.IsOpen) && (!ChatInputGate.IsOpen || searchFocused)) Toggle();   // 맥: Opt+5도(입력칸 쓰는 중엔 F5만)
             else if (open && keyboard.escapeKey.wasPressedThisFrame) SetOpen(false);
         }
 

@@ -585,8 +585,8 @@ public class GameHud : MonoBehaviour
     void Update()
     {
         // 상단 바 「메뉴 (F10)」 — 워크3 기본 단축키
-        if (Keyboard.current != null && Keyboard.current.f11Key.wasPressedThisFrame && !ChatInputGate.IsOpen) AlliancePanel.Toggle();   // 동맹 (F11)
-        if (Keyboard.current != null && Keyboard.current.f10Key.wasPressedThisFrame && gameMenu != null)
+        if (HotkeyAlias.Pressed(Keyboard.current, Key.F11) && !ChatInputGate.IsOpen) AlliancePanel.Toggle();   // 동맹 (F11 / 맥 Opt+-)
+        if (HotkeyAlias.Pressed(Keyboard.current, Key.F10, !ChatInputGate.IsOpen) && gameMenu != null)
         {
             if (gameMenu.activeSelf) CloseGameMenu(); else OpenGameMenu();
         }
@@ -1069,7 +1069,7 @@ public class GameHud : MonoBehaviour
 
         gameMenuMainButtons = CreateMenuContainer(card, "MainButtons");
         Transform main = gameMenuMainButtons.transform;
-        CreateWc3MenuButton(main, "ContinueButton", "계속하기", 0f, 56f, CloseGameMenu, "F10");
+        CreateWc3MenuButton(main, "ContinueButton", "계속하기", 0f, 56f, CloseGameMenu, HotkeyAlias.Label("F10"));
         gameMenuPauseLabel = CreateWc3MenuButton(main, "PauseButton", "일시정지", 66f, 56f, OnPauseMenuClicked, "P");   // 혼자 하기만 — 같이 하기에선 회색 + 눌러도 알림(10-07)
         gameMenuSoundLabel = CreateWc3MenuButton(main, "SoundButton", "", 132f, 56f, ToggleSound);
         // 10-08 사장님: F10에서 소리 크기 조절 — 배경 음악·효과음 슬라이더(첫 화면 설정과 같은 AudioPrefs 값, 움직이면 바로 적용·저장).
@@ -1078,6 +1078,16 @@ public class GameHud : MonoBehaviour
         CreateWc3MenuButton(main, "ScreenButton", "화면", 304f, 56f, ShowGameMenuScreen);
         BuildMenuDivider(main.GetComponent<RectTransform>(), -378f);
         CreateWc3MenuButton(main, "HomeButton", "처음 화면으로", 398f, 56f, ShowGameMenuConfirm);
+        if (HotkeyAlias.IsMac)   // 맥: F키가 밝기·볼륨이라 안 먹을 때의 안내(10-08)
+        {
+            TMP_Text macHint = CreateLabel(card, "MacKeyHint", HotkeyAlias.MacHint);
+            macHint.fontSize = 13; macHint.alignment = TextAlignmentOptions.Center; macHint.raycastTarget = false;
+            macHint.color = new Color(0.78f, 0.80f, 0.86f, 1f);
+            macHint.textWrappingMode = TextWrappingModes.Normal;
+            RectTransform hr = macHint.rectTransform;
+            hr.anchorMin = new Vector2(0.5f, 0f); hr.anchorMax = new Vector2(0.5f, 0f); hr.pivot = new Vector2(0.5f, 0f);
+            hr.sizeDelta = new Vector2(MenuCardWidth - 60f, 62f); hr.anchoredPosition = new Vector2(0f, 14f);
+        }
 
         gameMenuScreenButtons = CreateMenuContainer(card, "ScreenButtons");
         for (int i = 0; i < ScreenMode.Options.Length; i++)
@@ -1362,10 +1372,10 @@ public class GameHud : MonoBehaviour
         TMP_Text questLabel = CreateTopBarButton(menuButtonsPanel, "QuestButton", "퀘스트", 130f);
         questLabel.alpha = 0.45f;
         questLabel.transform.parent.GetComponent<Button>().interactable = false;
-        TMP_Text menuLabel = CreateTopBarButton(menuButtonsPanel, "MenuButton", "메뉴 (F10)", 130f);
+        TMP_Text menuLabel = CreateTopBarButton(menuButtonsPanel, "MenuButton", "메뉴 (" + HotkeyAlias.Label("F10") + ")", HotkeyAlias.IsMac ? 190f : 130f);
         menuLabel.transform.parent.GetComponent<Button>().onClick.AddListener(OpenGameMenu);
         // 동맹은 AlliancePanel(10-08), 대화는 동작 없음 — 원작 배치만 재현한다. 메뉴는 [계속하기]/[처음 화면으로](BuildGameMenu).
-        TMP_Text allianceLabel = CreateTopBarButton(menuButtonsPanel, "AllianceButton", "동맹 (F11)", 130f);
+        TMP_Text allianceLabel = CreateTopBarButton(menuButtonsPanel, "AllianceButton", "동맹 (" + HotkeyAlias.Label("F11") + ")", HotkeyAlias.IsMac ? 190f : 130f);
         allianceLabel.transform.parent.GetComponent<Button>().onClick.AddListener(AlliancePanel.Toggle);
         CreateTopBarButton(menuButtonsPanel, "ChatButton", "대화 (F12)", 130f);
 

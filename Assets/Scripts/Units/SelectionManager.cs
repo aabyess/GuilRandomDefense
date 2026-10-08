@@ -428,6 +428,7 @@ public class SelectionManager : MonoBehaviour
     {
         Keyboard kb = Keyboard.current;
         if (kb == null) return;
+        if (HotkeyAlias.AltHeld(kb)) return;   // Option+숫자는 F키 대체(F5/F10/F11) — 부대 호출로 새지 않게
         bool assign = kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed || kb.leftCtrlKey.isPressed || kb.rightCtrlKey.isPressed
                       || kb.leftCommandKey.isPressed || kb.rightCommandKey.isPressed;
         for (int d = 0; d < DigitKeys.Length; d++)

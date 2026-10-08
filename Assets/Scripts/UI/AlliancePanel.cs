@@ -80,7 +80,7 @@ public class AlliancePanel : MonoBehaviour
         cr.sizeDelta = new Vector2(160f, 40f); cr.anchoredPosition = new Vector2(0f, 10f);
         close.GetComponent<Image>().color = new Color(0.26f, 0.32f, 0.44f, 1f);
         close.GetComponent<Button>().onClick.AddListener(() => window.SetActive(false));
-        TMP_Text cl = Label(close.transform, "닫기 (F11)", 22, TextAlignmentOptions.Center, Color.white);
+        TMP_Text cl = Label(close.transform, "닫기 (" + HotkeyAlias.Label("F11") + ")", 22, TextAlignmentOptions.Center, Color.white);
         Stretch(cl.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
         window.SetActive(false);
