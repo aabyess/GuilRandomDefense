@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: "SkillData_사장님_초월_노태현_AP_시너지폭발"
   m_EditorClassIdentifier: 
-  skillName: "시너지폭발 — 범위 피해 증가 + 폭발"
-  description: "사장님 10-08. ① 상시 오라: 내 라인의 적이 받는 범위 피해 +15%(출처 무관, 평타 광역·범위 스킬 전부). ② 평타 10% 확률로 공격 대상 주위(300)에 「300,000」 마법 + 「700,000」 범위 피해(범위라 둘 다 +15% 받음). (옛 폭발증폭 ×1.5는 없앰)"
+  skillName: "시너지폭발 — 폭증 15% + 폭발"
+  description: "사장님 10-08. ① 상시 오라(폭증): 내 라인의 적 전부가 받는 폭발형 피해 +15%(A11S +3레벨, 1레벨 = 5%) — 이 유닛이 있는 동안. ② 평타 10% 확률로 공격 대상 주위(300)에 「300,000」 마법 + 「700,000」 폭발형 피해(70만만 폭발형 — 폭증·폭뎀증폭을 받고 마깎·마뎀증폭은 안 받음). (옛 폭발증폭 ×1.5·범위 +15%는 없앰)"
   triggerType: 0
   levels:
   - cooldown: 0
@@ -31,7 +31,7 @@ MonoBehaviour:
       target: 0
       damageType: 1
       attackType: 0
-      multiplier: 0.15
+      multiplier: 3
       bonus: 0
       chance: 1
       hitCount: 1
@@ -76,7 +76,6 @@ MonoBehaviour:
       attackSpeedScaleCap: 0
       formSelfAttackSpeed: 0
       bossBerserkDamageScale: 0
-      areaDamage: 0
     - kind: 0
       basis: 0
       target: 2
@@ -127,7 +126,6 @@ MonoBehaviour:
       attackSpeedScaleCap: 0
       formSelfAttackSpeed: 0
       bossBerserkDamageScale: 0
-      areaDamage: 0
     - kind: 0
       basis: 0
       target: 2
@@ -178,7 +176,7 @@ MonoBehaviour:
       attackSpeedScaleCap: 0
       formSelfAttackSpeed: 0
       bossBerserkDamageScale: 0
-      areaDamage: 1
+      explosive: 1
     requiredTargetBuffId: 
     forbiddenTargetBuffId: 
     hitCountFloor: 0

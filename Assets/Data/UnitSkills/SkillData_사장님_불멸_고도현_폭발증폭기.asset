@@ -10,15 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uBD88\uBA78_\uACE0\uB3C4\uD604_\uD3ED\uBC1C\uC99D\uD3ED\uAE30"
+  m_Name: "SkillData_사장님_불멸_고도현_폭발증폭기"
   m_EditorClassIdentifier: 
-  skillName: "\uD3ED\uBC1C\uC99D\uD3ED\uAE30 \u2014 \uD3ED\uB380 30%(\uC2A4\uD50C\uB798\uC2DC
-    \uD53C\uD574 \xD71.3)"
-  description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uD3ED\uB38030%\u300D. \uD3C9\uD0C0
-    \uC2A4\uD50C\uB798\uC2DC(\uBC94\uC704) \uD53C\uD574\uAC00 \xD71.3(SkillEffectKind.SplashDamageMultiplier).
-    \uBC94\uC704\uC99D\uD3ED 15%\uB294 \uBB34\uC911\uC0DD\uC720\uC5D0 \uACF1\uD574
-    \uB450\uC5C8\uB2E4(\u300C\uAC19\uC740 \uAC83\uC758 \uB458\u300D\uC774 \uC544\uB2C8\uB77C
-    \uAC01\uC790 \uC790\uAE30 \uBC94\uC704 \uD53C\uD574\uC5D0)."
+  skillName: "폭발증폭기 — 폭뎀 30%(폭발형 피해 +30%)"
+  description: "사장님 10-08 확정: 「폭뎀 30%」 = 폭뎀증폭. 내 라인의 적 전부가 받는 폭발형 피해 +30%(원작 A11S +6레벨) — 이 유닛이 있는 동안. (옛 「스플래시 피해 ×1.3」 해석은 폐기, 범위증폭 15%는 무중생유에 그대로)"
   triggerType: 2
   levels:
   - cooldown: 0
@@ -31,12 +26,12 @@ MonoBehaviour:
     forbiddenBuffId: 
     selfBuffId: 
     effects:
-    - kind: 20
+    - kind: 51
       basis: 0
       target: 0
       damageType: 1
       attackType: 0
-      multiplier: 1.3
+      multiplier: 6
       bonus: 0
       chance: 1
       hitCount: 1
@@ -80,15 +75,8 @@ MonoBehaviour:
       attackSpeedScale: 0
       attackSpeedScaleCap: 0
       formSelfAttackSpeed: 0
-      killMostLostHp: 0
-      lootItems: []
-      lootAlways: 0
-      hitCountScale: 0
-      hitCountScaleCap: 0
-      castCountBonus: 0
-      castCountCap: 0
-      gambleGate: 0
-      enhanceScale: 0
+      bossBerserkDamageScale: 0
+      areaDamage: 0
     requiredTargetBuffId: 
     forbiddenTargetBuffId: 
     hitCountFloor: 0
@@ -104,7 +92,5 @@ MonoBehaviour:
     toggleMode: 0
     laneCountWindow: 0
     needsAllyClick: 0
-    needsPointClick: 0
-    requiredEnhanceLevel: 0
     ownLaneOnly: 0
   icon: {fileID: 21300000, guid: 0f86169fc5ab4405b8ea8a96888c3f55, type: 3}

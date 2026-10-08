@@ -883,9 +883,17 @@ public class EnemyDummy : MonoBehaviour
     /// 역산했다 되돌리면 float 반올림 오차가 생긴다(실측: 0.9f가 0.9000000357627869f로
     /// 어긋남, 2026-09-06 런타임 검증). 스택 0에서 원래 값과 비트까지 같아야 한다는
     /// 요구(PM)를 만족시키려면 이 지름길이 필요하다.</summary>
-    public float PercentDamageTakenMultiplier => a11sStackLevels == 0
-        ? (data != null ? data.percentDamageTaken : 1f)
-        : A11SLevelConst + A11SLevelStep * (A11SBaseLevel + a11sStackLevels);
+    public float PercentDamageTakenMultiplier
+    {
+        get
+        {
+            // 폭증(LaneExplosiveAmp, 사장님 10-08): 이 적이 속한 라인에 서 있는 유닛들이 주는 추가 A11S 레벨. 보스(라운드·신세계)도 같은 식으로 받는다.
+            int laneLevels = UnitAttacker.LaneExplosiveAmpLevels(LaneIndex);
+            if (a11sStackLevels == 0 && laneLevels == 0) return data != null ? data.percentDamageTaken : 1f;
+            int level = Mathf.Min(A11SCapLevel, A11SBaseLevel + a11sStackLevels + laneLevels);
+            return A11SLevelConst + A11SLevelStep * level;
+        }
+    }
 
     /// <summary>이 적이 %체력 비례 스킬 피해(TargetMaxHpPercent/TargetCurrentHpPercent)를
     /// 받는가 — 원작 GetUnitPointValue(대상)&lt;200 게이트(리서치담당 재조사, 2026-09-05).
@@ -928,6 +936,10 @@ public class EnemyDummy : MonoBehaviour
             + magicArmorShred
             + Mathf.Min(aegrStackLevels, Mathf.Max(0, AegrKinkLevel - AegrBaseLevel)) * AegrLevelStep)
         * EffectiveMagicDamageAmplifier;
+
+    /// <summary>마법저항(난이도 기본값)만 — 마깎(Aegr 스택·마방깍)·마뎀증폭(AIsr)은 뺀 것. 폭발형 피해가 받는 마저항(사장님 10-08).</summary>
+    public float BaseMagicResistMultiplier =>
+        Mathf.Max(0f, (data != null ? data.magicArmorMultiplier : 1f) + DifficultyAegrLevelOffset * AegrLevelStep);
 
     /// <summary>마방깍을 건다. 조합표의 `마방깍오라(9%)`가 0.09로 들어온다.</summary>
     public void AddMagicArmorShred(float amount) => magicArmorShred += amount;
@@ -984,7 +996,7 @@ public class EnemyDummy : MonoBehaviour
     /// 명시적으로 <c>false</c>로 넘긴다.
     /// </summary>
     float MitigatedDamage(float amount, DamageType type, AttackType attackType, float armorIgnoreRatio,
-                          bool isAbilityDamage, float armorScale = 1f)
+                          bool isAbilityDamage, float armorScale = 1f, bool explosive = false)
     {
         // AP = 원작 UNIVERSAL — 물리 방어력과 마법저항을 둘 다 무시한다(엔진 규칙 확정,
         // PM 2026-09-05). attackType은 안 본다 — 어느 상성표 행이든(물리·마법 모두)
@@ -1007,7 +1019,7 @@ public class EnemyDummy : MonoBehaviour
             // 설계할 것. 지금은 AP(=UNIVERSAL)일 때 이 배율도 같이 건너뛴다 — 우리 평타는
             // 전부 AD라 결과적으로 이 배율이 아무 데도 안 걸리는데, 그게 원작과 일치하는
             // 상태다.
-            amount *= EffectiveMagicMultiplier;
+            amount *= explosive ? BaseMagicResistMultiplier : EffectiveMagicMultiplier;   // 폭발형은 마저항만(마깎·마뎀증폭 제외 — 사장님 10-08)
 
             // 방무뎀은 전부/전무가 아니라 비율이다. 피해를 둘로 갈라 한쪽만 감폭시킨다.
             float ignored = Mathf.Clamp01(armorIgnoreRatio);
@@ -1016,6 +1028,11 @@ public class EnemyDummy : MonoBehaviour
             if (armorScale < 1f && armor > 0f) armor *= Mathf.Max(0f, armorScale);
             amount = amount * (1f - ignored) * ArmorMultiplier(armor)
                    + amount * ignored;
+        }
+        else if (isAbilityDamage)
+        {
+            // 🔴 2026-10-08 사장님 정의: AP(방어 무시) 스킬 피해도 **마법저항·마깎·마뎀증폭을 받는다**(일반 마뎀). 폭발형은 마저항만. 옛 코드는 AP 스킬 피해에서 이 배율을 통째로 건너뛰었다.
+            amount *= explosive ? BaseMagicResistMultiplier : EffectiveMagicMultiplier;
         }
 
         // 상성표는 **방어 무시 여부와 무관하게 항상 탄다** — 원작이 그렇다(공격타입과
@@ -1087,7 +1104,7 @@ public class EnemyDummy : MonoBehaviour
     /// 유닛이 평타로 방어를 통째로 무시하면 안 된다(위 <c>MitigatedDamage</c> 요약 참고).
     /// </param>
     public void TakeDamage(float amount, DamageType type, AttackType attackType,
-                           int killerPlayerId, float armorIgnoreRatio = 0f, bool isAbilityDamage = true, float armorScale = 1f)
+                           int killerPlayerId, float armorIgnoreRatio = 0f, bool isAbilityDamage = true, float armorScale = 1f, bool explosive = false)
     {
         if (isDead) return;
 
@@ -1107,7 +1124,7 @@ public class EnemyDummy : MonoBehaviour
         if (trueInvulnerable) return;
 
         float hpBefore = hp;
-        float mitigatedDamage = MitigatedDamage(amount, type, attackType, armorIgnoreRatio, isAbilityDamage, armorScale);
+        float mitigatedDamage = MitigatedDamage(amount, type, attackType, armorIgnoreRatio, isAbilityDamage, armorScale, explosive);
         hp -= mitigatedDamage;
         // 스토리 기여도(원작 Trig_Story_damage): 플레이어별 누적 피해 — 체력을 넘긴 몫(오버킬)은 뺀다(PlayerDamageOver). 마지막으로 때린 플레이어 = 막타.
         if (ContributionDamage != null && killerPlayerId >= 0 && killerPlayerId < ContributionDamage.Length)

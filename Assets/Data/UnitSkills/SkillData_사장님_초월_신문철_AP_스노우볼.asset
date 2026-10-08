@@ -10,18 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uC2E0\uBB38\uCCA0_AP_\uC2A4\uB178\uC6B0\uBCFC"
+  m_Name: "SkillData_사장님_초월_신문철_AP_스노우볼"
   m_EditorClassIdentifier: 
-  skillName: "\uC2A4\uB178\uC6B0\uBCFC \u2014 \uD3C9\uD0C0\uB9C8\uB2E4 \uD53C\uD574
-    +1% \uB204\uC801(\uCD5C\uB300 +15%)"
-  description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uD3ED\uC99D 15%\u300D(\uD655\uC815
-    \uD574\uC11D A: \uB208\uB369\uC774). \uD3C9\uD0C0 \uD55C \uB300\uB9C8\uB2E4 \uC790\uAE30
-    \uD3C9\uD0C0\xB7\uC2A4\uD0AC \uCD5C\uC885 \uD53C\uD574\uAC00 +1%\uC529 \uC313\uC778\uB2E4(\uCD5C\uB300
-    +15%). \uB9C8\uC9C0\uB9C9 \uD3C9\uD0C0 \uB4A4 3\uCD08 \uC548 \uCE58\uBA74 0\uC73C\uB85C
-    \uCD08\uAE30\uD654. \uC591\uC7AC\uBAA8 \u300C\uACF5\uC18D \uB204\uC801\u300D\uACFC
-    \uAC19\uC740 \uD2C0\uC758 \uD53C\uD574\uD310 \u2014 \uC6D0\uC791 \uADFC\uAC70
-    \uC5C6\uC74C, \uC81C\uC548\uAC12."
-  triggerType: 0
+  skillName: "스노우볼 — 폭증 15%(폭발형 피해 +15%)"
+  description: "사장님 10-08 확정: 「폭증」 = 폭뎀증폭. 내 라인의 적 전부가 받는 폭발형 피해 +15%(원작 A11S +3레벨, 1레벨 = 5%) — 이 유닛이 있는 동안. (옛 「평타마다 누적」 해석은 폐기)"
+  triggerType: 2
   levels:
   - cooldown: 0
     triggerChance: 1
@@ -33,12 +26,12 @@ MonoBehaviour:
     forbiddenBuffId: 
     selfBuffId: 
     effects:
-    - kind: 31
+    - kind: 51
       basis: 0
       target: 0
       damageType: 1
       attackType: 0
-      multiplier: 0
+      multiplier: 3
       bonus: 0
       chance: 1
       hitCount: 1
@@ -77,20 +70,13 @@ MonoBehaviour:
       armorIgnoreRequiresBuff: 
       talentStunScaled: 0
       stackPerHit: 0.01
-      stackCap: 0.15
+      stackCap: 1
       stackResetSeconds: 3
       attackSpeedScale: 0
       attackSpeedScaleCap: 0
       formSelfAttackSpeed: 0
-      killMostLostHp: 0
-      lootItems: []
-      lootAlways: 0
-      hitCountScale: 0
-      hitCountScaleCap: 0
-      castCountBonus: 0
-      castCountCap: 0
-      gambleGate: 0
-      enhanceScale: 0
+      bossBerserkDamageScale: 0
+      areaDamage: 0
     requiredTargetBuffId: 
     forbiddenTargetBuffId: 
     hitCountFloor: 0
@@ -106,7 +92,5 @@ MonoBehaviour:
     toggleMode: 0
     laneCountWindow: 0
     needsAllyClick: 0
-    needsPointClick: 0
-    requiredEnhanceLevel: 0
     ownLaneOnly: 0
   icon: {fileID: 21300000, guid: cdf14891814e642c99aa0770d1b96ef5, type: 3}

@@ -2313,47 +2313,48 @@ public class UnitAttacker : MonoBehaviour
 
     public float HighGradeSplashFactorNow => identity != null && identity.Data != null ? HighGradeSplashFactor(identity.Data) : 1f;   // 탐침용
 
-    // 라인 범위 피해 증가 오라(SkillEffectKind.LaneAreaDamageBonus, 초월 노태현 시너지폭발) — 라인(= 유닛 주인 번호)마다 그 라인에 있는 유닛들의 값 중 가장 큰 것. 0.5초 캐시.
-    static readonly Dictionary<UnitData, float> laneAreaBonusByData = new Dictionary<UnitData, float>();
-    static readonly Dictionary<int, float> laneAreaBonusByLane = new Dictionary<int, float>();
-    static float laneAreaBonusAt = -10f;
+    // 폭증(SkillEffectKind.LaneExplosiveAmp) — 라인(= 유닛 주인 번호)마다, 그 라인에 서 있는 **서로 다른 유닛 종류**의 폭뎀증폭 레벨 합. 0.5초 캐시.
+    static readonly Dictionary<UnitData, float> laneExplosiveByData = new Dictionary<UnitData, float>();
+    static readonly Dictionary<int, int> laneExplosiveByLane = new Dictionary<int, int>();
+    static readonly HashSet<UnitData> laneExplosiveSeen = new HashSet<UnitData>();
+    static float laneExplosiveAt = -10f;
 
-    static float LaneAreaBonusOf(UnitData unitData)
+    static float LaneExplosiveOf(UnitData unitData)
     {
         if (unitData == null) return 0f;
-        if (laneAreaBonusByData.TryGetValue(unitData, out float cached)) return cached;
-        float bonus = 0f;
+        if (laneExplosiveByData.TryGetValue(unitData, out float cached)) return cached;
+        float levels = 0f;
         if (unitData.skills != null)
             foreach (SkillData skill in unitData.skills)
             {
                 if (skill == null || skill.levels == null || skill.levels.Count == 0 || skill.levels[0].effects == null) continue;
                 foreach (SkillEffect effect in skill.levels[0].effects)
-                    if (effect != null && effect.kind == SkillEffectKind.LaneAreaDamageBonus) bonus = Mathf.Max(bonus, effect.multiplier);
+                    if (effect != null && effect.kind == SkillEffectKind.LaneExplosiveAmp) levels += effect.multiplier;
             }
-        laneAreaBonusByData[unitData] = bonus;
-        return bonus;
+        laneExplosiveByData[unitData] = levels;
+        return levels;
     }
 
-    // 범위 피해로 세는 효과 꼴(사장님 10-08): 다수 대상 Damage — target Enemies(반경)·ChainEnemies·장풍 직선(lineLength) · SkillEffect.areaDamage(단일인데 범위로 치고 싶은 예외). 단일 대상(SingleTarget·RandomEnemyInRange)·치명·DoT는 아니다.
-    public static bool IsAreaDamageEffect(SkillEffect effect) =>
-        effect.areaDamage || effect.target == SkillTargetKind.Enemies || effect.target == SkillTargetKind.ChainEnemies || effect.lineLength > 0f;
-
-    public static float LaneAreaDamageFactor(int lane)
+    /// <summary>이 라인의 적이 폭발형 피해에서 추가로 받는 A11S 레벨(폭증 오라 합). EnemyDummy.PercentDamageTakenMultiplier가 부른다.</summary>
+    public static int LaneExplosiveAmpLevels(int lane)
     {
-        if (Time.time - laneAreaBonusAt >= 0.5f || Time.time < laneAreaBonusAt)
+        if (Time.time - laneExplosiveAt >= 0.5f || Time.time < laneExplosiveAt)
         {
-            laneAreaBonusAt = Time.time;
-            laneAreaBonusByLane.Clear();
+            laneExplosiveAt = Time.time;
+            laneExplosiveByLane.Clear();
+            var perLane = new Dictionary<int, HashSet<UnitData>>();
             foreach (UnitIdentity unit in UnitIdentity.Active)
             {
                 if (unit == null || unit.Data == null) continue;
-                float bonus = LaneAreaBonusOf(unit.Data);
-                if (bonus <= 0f) continue;
-                laneAreaBonusByLane.TryGetValue(unit.OwnerId, out float best);
-                if (bonus > best) laneAreaBonusByLane[unit.OwnerId] = bonus;
+                float levels = LaneExplosiveOf(unit.Data);
+                if (levels <= 0f) continue;
+                if (!perLane.TryGetValue(unit.OwnerId, out HashSet<UnitData> seen)) perLane[unit.OwnerId] = seen = new HashSet<UnitData>();
+                if (!seen.Add(unit.Data)) continue;   // 같은 종류는 한 번만
+                laneExplosiveByLane.TryGetValue(unit.OwnerId, out int sum);
+                laneExplosiveByLane[unit.OwnerId] = sum + Mathf.RoundToInt(levels);
             }
         }
-        return laneAreaBonusByLane.TryGetValue(lane, out float found) ? 1f + found : 1f;
+        return laneExplosiveByLane.TryGetValue(lane, out int found) ? found : 0;
     }
 
     float SplashDamageFactor(UnitData unitData)
@@ -2997,7 +2998,7 @@ public class UnitAttacker : MonoBehaviour
             || effect.kind == SkillEffectKind.DamagePerAllyDebuff || effect.kind == SkillEffectKind.DamageGrowthOverTime
             || effect.kind == SkillEffectKind.AllySkillDamageBonus || (effect.kind == SkillEffectKind.DispelAllyDebuffs && effect.duration <= 0f)
             || effect.kind == SkillEffectKind.GoldPlusBonus || effect.kind == SkillEffectKind.StoryDamageMultiplier
-            || effect.kind == SkillEffectKind.DamagePerTargetArmorShred || effect.kind == SkillEffectKind.DamagePerRecruit || effect.kind == SkillEffectKind.DamageVsTargetBuff || effect.kind == SkillEffectKind.SkillDamageAfterKill || effect.kind == SkillEffectKind.SlowRewardBonus || effect.kind == SkillEffectKind.SkillTriggerChanceBonus || effect.kind == SkillEffectKind.RevealTreasure || effect.kind == SkillEffectKind.LaneAreaDamageBonus) return;
+            || effect.kind == SkillEffectKind.DamagePerTargetArmorShred || effect.kind == SkillEffectKind.DamagePerRecruit || effect.kind == SkillEffectKind.DamageVsTargetBuff || effect.kind == SkillEffectKind.SkillDamageAfterKill || effect.kind == SkillEffectKind.SlowRewardBonus || effect.kind == SkillEffectKind.SkillTriggerChanceBonus || effect.kind == SkillEffectKind.RevealTreasure || effect.kind == SkillEffectKind.LaneExplosiveAmp) return;
 
         // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
         if (effect.lineLength > 0f && effect.zoneTickInterval <= 0f)
@@ -3495,8 +3496,9 @@ public class UnitAttacker : MonoBehaviour
         // basis를 안 가리고 스킬 피해 전반에 곱한다. %체력 분기 자체를 타는지는 별개 축
         // (2026-09-30부터 효과별 targetCondition — 전역 TakesPercentDamage 게이트는 걷었다)이다.
         // 원작 식에 A11S 인자가 없는 효과는 감수성 계수를 안 곱한다(SkillEffect.skipDamageTakenMultiplier).
+        // 🔴 2026-10-08 사장님 정의: 폭뎀증폭(A11S)은 **폭발형 피해(effect.explosive)에만** 곱한다 — 일반 마뎀·물리 스킬 피해엔 안 곱한다(위 옛 주석은 낡음).
         float amount = ResolveSkillEffectValue(effect, target, recentAttackDamage) * chainDamageScale
-            * (effect.skipDamageTakenMultiplier ? 1f : target.PercentDamageTakenMultiplier);
+            * (effect.explosive ? target.PercentDamageTakenMultiplier : 1f);
         // 원작 realD = 0.03×버프개수(SkillEffect.casterBuffCountFactor 주석 참고). 기존
         // 227개 효과는 이 필드가 직렬화에 없어 C# 기본값 0f로 읽힌다 — (1+0×count)=1이라
         // 배율이 완전히 무효, 회귀 없음. ⚠️ 2026-09-06: CountCasterBuffs()가 이제 버프
@@ -3506,7 +3508,6 @@ public class UnitAttacker : MonoBehaviour
         // 실제로 걸린다.
         amount *= 1f + effect.casterBuffCountFactor * CountCasterBuffs();
         if (effect.bossBerserkDamageScale > 0f && target != null && (target.IsBoss || target.HasBuff(BerserkMob.BuffId))) amount *= effect.bossBerserkDamageScale;   // 노태현 「가리지않는수단과방법」: 보스·광폭화 상대 이 효과만
-        if (target != null && IsAreaDamageEffect(effect)) amount *= LaneAreaDamageFactor(target.LaneIndex);   // 노태현 「시너지폭발」 라인 범위 피해 증가(사장님 10-08: 범위에 들어가는 피해 전부, 출처 무관)
         amount *= DamagePassiveFactor(target) * AuraBonusTotal(SkillEffectKind.AllySkillDamageBonus, true);   // 보잡 × 아군발 디버프 비례 × 스킬 피해 증가 오라(임장혁 가스라이팅)
         if (amount <= 0f) return;
 
@@ -3518,14 +3519,14 @@ public class UnitAttacker : MonoBehaviour
         {
             float skillHpBefore = target.Hp;
             bool wasNormalEnemy = IsNormalEnemy(target);
-            target.TakeDamage(amount, effect.damageType, effect.attackType, owner != null ? owner.OwnerId : -1, armorIgnoreRatio: SkillArmorIgnore(effect), armorScale: AttackArmorScale);
+            target.TakeDamage(amount, effect.damageType, effect.attackType, owner != null ? owner.OwnerId : -1, armorIgnoreRatio: SkillArmorIgnore(effect), armorScale: AttackArmorScale, explosive: effect.explosive);
             if (target.IsDead && wasNormalEnemy) RegisterSkillKill(target);   // 막타충(영원함 서민성)
             SkillTelemetry.Damage(identity != null ? identity.Data : null, TelemetryChannel(effect), target, skillHpBefore);
             return;
         }
 
         // SupportSkillData.waveCount/duration과 같은 관례 — duration에 걸쳐 나눠 때린다.
-        StartCoroutine(SkillMultiHitRoutine(target, amount, effect.damageType, effect.attackType, hits, effect.duration, SkillVfx.CasterAllowsVfx));
+        StartCoroutine(SkillMultiHitRoutine(target, amount, effect.damageType, effect.attackType, hits, effect.duration, SkillVfx.CasterAllowsVfx, effect.explosive));
     }
 
     // 방무뎀(UnitData.attackArmorIgnoreRatio, 초월 배성령 「무방비상태」) — 평타·스킬 피해가 적 방어를 이 비율만큼 덜 받는다(적 방어 ×(1−비율)). 0이면 1(꺼짐).
@@ -3539,7 +3540,7 @@ public class UnitAttacker : MonoBehaviour
         return effect.armorIgnoreRatio;
     }
 
-    IEnumerator SkillMultiHitRoutine(EnemyDummy target, float amountPerHit, DamageType damageType, AttackType attackType, int hits, float duration, bool vfxAllowed = true)
+    IEnumerator SkillMultiHitRoutine(EnemyDummy target, float amountPerHit, DamageType damageType, AttackType attackType, int hits, float duration, bool vfxAllowed = true, bool explosive = false)
     {
         float interval = duration > 0f ? duration / hits : 0f;
         for (int i = 0; i < hits; i++)
@@ -3550,7 +3551,7 @@ public class UnitAttacker : MonoBehaviour
                 // 여러 번 때리기는 시전 문맥 밖(코루틴)이라 시작 때 등급 판정을 싣고 온다. 첫 타는 시전 안에서 동기로 돌므로
                 // 스킬 이펙트 칸을 지우지 않는 SetCasterGate로(09-30).
                 bool vfxBefore = SkillVfx.SetCasterGate(vfxAllowed);
-                target.TakeDamage(amountPerHit, damageType, attackType, owner != null ? owner.OwnerId : -1);
+                target.TakeDamage(amountPerHit, damageType, attackType, owner != null ? owner.OwnerId : -1, explosive: explosive);
                 SkillVfx.SetCasterGate(vfxBefore);
                 SkillTelemetry.Damage(identity != null ? identity.Data : null, "스킬", target, hitHpBefore);   // 다단 히트는 효과 정보가 없어 채널을 안 나눈다
             }
@@ -3893,7 +3894,7 @@ public class UnitAttacker : MonoBehaviour
         foreach (EnemyDummy enemy in inRange)
         {
             float hpBefore = enemy.Hp;
-            enemy.TakeDamage(damage * DamagePassiveFactor(enemy) * LaneAreaDamageFactor(enemy.LaneIndex), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false, armorScale: AttackArmorScale);
+            enemy.TakeDamage(damage * DamagePassiveFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false, armorScale: AttackArmorScale);
             SkillTelemetry.Damage(unitData, "평타다중", enemy, hpBefore);
         }
         ListPool<EnemyDummy>.Release(inRange);
@@ -3923,9 +3924,9 @@ public class UnitAttacker : MonoBehaviour
             float distance = Vector3.Distance(enemy.transform.position, center);
             float hpBefore = enemy.Hp;
             if (distance <= splash)
-                enemy.TakeDamage(damage * DamagePassiveFactor(enemy) * LaneAreaDamageFactor(enemy.LaneIndex), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false, armorScale: AttackArmorScale);
+                enemy.TakeDamage(damage * DamagePassiveFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false, armorScale: AttackArmorScale);
             if (distance <= cleave)
-                enemy.TakeDamage(damage * unitData.attackCleaveFactor * DamagePassiveFactor(enemy) * LaneAreaDamageFactor(enemy.LaneIndex), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 1f, isAbilityDamage: false);
+                enemy.TakeDamage(damage * unitData.attackCleaveFactor * DamagePassiveFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 1f, isAbilityDamage: false);
             SkillTelemetry.Damage(unitData, "평타광역", enemy, hpBefore);
             SkillTelemetry.SplashHit(unitData);
         }
