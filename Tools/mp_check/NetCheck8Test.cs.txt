@@ -1,0 +1,64 @@
+using System.Collections;
+using System.Linq;
+using System.Reflection;
+using UnityEngine;
+
+/// <summary>
+/// 같이 하기 일시정지 실측(2026-10-08 구현담당1, 빌드 사본 전용, 훅 -mpTestCheck8 초). 로그 접두 「[C8]」.
+/// +6초 호스트 멈춤 → +14 호스트 풀기 → +20 클라 멈춤 → +28 클라 풀기 → +34 호스트 멈춤 → +40 클라가 풀기(누구나 풀기).
+/// 양쪽이 1초마다 Paused·timeScale·라운드 남은 시간·적 하나의 위치·(호스트)돈도박 충전 남은 초를 찍는다.
+/// </summary>
+public class NetCheck8Test : MonoBehaviour
+{
+    public float startAt = 20f;
+    static void Act(string what)
+    {
+        if (what.Contains("획득"))
+        {
+            var sp = FindFirstObjectByType<UnitSpawner>();
+            string unit = what.Contains("이이삭") ? "불멸_이이삭" : what.Contains("양재모") ? "초월_양재모_AD" : "영원_김정래";
+            int slot = what.Contains("친구") ? PlayerContext.Occupied.First(c => c.PlayerId != LocalPlayer.LocalPlayerId).PlayerId : LocalPlayer.LocalPlayerId;
+            UnitData d = NetLauncher.Catalog.units.Find(u => u != null && u.name == unit);
+            sp.Spawn(d, LaneMarker.Get(slot).TakeSpawnPosition(d), slot);
+        }
+        else GamePause.TryToggle(out _);
+    }
+
+    IEnumerator Start()
+    {
+        yield return new WaitForSecondsRealtime(startAt);
+        bool host = GameAuthority.IsServer;
+        string side = host ? "호스트" : "클라";
+        PlayerNotification.Shown += (slot, msg, dur) => { if (msg.Contains("일시정지") || msg.Contains("재개") || msg.Contains("멈춘")) Debug.Log($"[C8] {side} 알림 슬롯 {slot}: {msg}"); };
+        float t0 = Time.realtimeSinceStartup;
+        // 호스트 돈도박 충전 관찰 대상
+        GamblingProgress gp = null; GamblingOptionData opt = null;
+        if (host)
+        {
+            int me = LocalPlayer.LocalPlayerId;
+            var shop = FindObjectsByType<GamblingShop>(FindObjectsSortMode.None).FirstOrDefault(s => s.GetComponent<OwnedByPlayer>().OwnerId == me);
+            var list = shop != null ? (System.Collections.Generic.List<GamblingOptionData>)typeof(GamblingShop).GetField("moneyOptions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(shop) : null;
+            opt = list != null && list.Count > 0 ? list[0] : null;
+            gp = PlayerContext.Get(me)?.GamblingProgress;
+            if (gp != null && opt != null) { gp.ConsumeStock(opt); Debug.Log($"[C8] 호스트 돈도박 「{opt.name}」 재고 {gp.Stock(opt)} · 다음 충전까지 {gp.SecondsToNextStock(opt):F1}초"); }
+        }
+        var steps = new (float at, bool hostActs, string what)[] { (6, true, "호스트 멈춤"), (14, true, "호스트 풀기"), (20, false, "클라 멈춤"), (28, false, "클라 풀기"), (34, true, "호스트 멈춤"), (40, false, "클라가 풀기(남이 멈춘 것)"), (48, true, "호스트 슬롯이 불멸_이이삭 획득"), (60, true, "친구(클라) 슬롯이 초월_양재모_AD 획득"), (74, true, "호스트가 영원_김정래 획득(컷인 시작)"), (75.5f, false, "클라가 P(컷인 중 사용자 정지)"), (86, false, "클라가 P(풀기)") };
+        int next = 0;
+        for (int i = 0; i < 100; i++)
+        {
+            float t = Time.realtimeSinceStartup - t0;
+            if (next < steps.Length && t >= steps[next].at)
+            {
+                if (steps[next].hostActs == host) { Act(steps[next].what); Debug.Log($"[C8] {side} 조작: {steps[next].what}"); }
+                next++;
+            }
+            var gs = NetGameState.Instance;
+            string enemy = host
+                ? string.Join(",", EnemyDummy.Active.Where(e => e != null && !e.IsDead).Take(1).Select(e => e.transform.position.ToString("F0")))
+                : string.Join(",", FindObjectsByType<NetEntity>(FindObjectsSortMode.None).Where(e => e.Object != null && e.Object.IsValid && e.EntityKind == NetEntityKind.Enemy && e.Visual != null).OrderBy(e => e.Object.Id.Raw).Take(1).Select(e => e.Visual.transform.position.ToString("F0")));
+            string charge = host && gp != null && opt != null ? $" · 돈도박 충전 {gp.SecondsToNextStock(opt):F1}초(재고 {gp.Stock(opt)})" : "";
+            Debug.Log($"[C8] {side} t+{t:F0}s 멈춤 {GamePause.Paused}·컷인정지 {GamePause.CutinHold}(by {GamePause.PausedBy}) timeScale {Time.timeScale} · 라운드 {(gs != null ? gs.Round : -1)} 남은 {(gs != null ? gs.TimeLeft : -1f):F1} · 적 {enemy}{charge} · 틱 {(gs != null && gs.Runner != null ? (int)gs.Runner.Tick : -1)}");
+            yield return new WaitForSecondsRealtime(1f);
+        }
+    }
+}
