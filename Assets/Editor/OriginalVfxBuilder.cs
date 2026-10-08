@@ -15,6 +15,7 @@ using UnityEngine.Rendering;
 /// </summary>
 public static class OriginalVfxBuilder
 {
+    public static string SourceFolder => SourceRoot;
     static readonly string SourceRoot = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_orig_vfx_trial");
     public const string ArtRoot = "Assets/Art/Effects/Original";
     public const string PrefabRoot = "Assets/Resources/Effects/Original";
@@ -158,6 +159,23 @@ public static class OriginalVfxBuilder
         animator.applyRootMotion = false;
         animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
         player.animator = animator; player.clip = clip;
+        // 연출용: json의 모든 시퀀스를 이름으로 찾아 담는다(첫 시퀀스만 쓰던 기존 재생과 같은 prefab에서 둘 다 된다)
+        var clipEntries = new List<OriginalVfxPlayer.ClipEntry>();
+        if (root.unity.clips != null)
+        {
+            var allClips = AssetDatabase.LoadAllAssetsAtPath(fbxAsset).OfType<AnimationClip>().Where(c => !c.name.StartsWith("__preview__")).ToList();
+            var rawClips = (List<object>)((Dictionary<string, object>)raw["unity"])["clips"];
+            for (int ci = 0; ci < root.unity.clips.Count; ci++)
+            {
+                Clip cj = root.unity.clips[ci];
+                AnimationClip ac = allClips.FirstOrDefault(c => c.name.EndsWith(cj.name));
+                if (ac == null) continue;
+                var rc = (Dictionary<string, object>)rawClips[ci];
+                float startMs = rc.TryGetValue("mdxStartMs", out object sm) ? System.Convert.ToSingle(sm) : 0f;
+                clipEntries.Add(new OriginalVfxPlayer.ClipEntry { name = cj.name, clip = ac, startSec = startMs / 1000f, lengthSec = cj.sec, looping = cj.loop });
+            }
+        }
+        player.clips = clipEntries.ToArray();
         player.duration = root.unity.durationSec > 0f ? root.unity.durationSec : (clip != null ? clip.length : 1f);
         player.loop = root.unity.loop;
 
@@ -175,6 +193,7 @@ public static class OriginalVfxBuilder
             r.shadowCastingMode = ShadowCastingMode.Off; r.receiveShadows = false;
             var layer = new OriginalVfxPlayer.Layer { renderer = r, staticAlpha = lj.staticAlpha };
             if (dict.TryGetValue("alphaCurveClip0Sec", out object ac)) ReadPairs((List<object>)ac, out layer.alphaTimes, out layer.alphaValues);
+            if (dict.TryGetValue("alphaCurveGlobalSec", out object ag) && ag is List<object> agl && agl.Count > 0) ReadPairs(agl, out layer.globalAlphaTimes, out layer.globalAlphaValues);
             if (dict.TryGetValue("uvOffsetClip0", out object uv))
             {
                 var keys = (List<object>)((Dictionary<string, object>)uv)["keys"];
