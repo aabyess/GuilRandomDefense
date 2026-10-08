@@ -271,6 +271,17 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
     // `SpeedMultiplierForLevel(0)`도 항상 1(무영향)이라 결과가 같다. 영원함 트랙은
     // hasOriginalResearch=false라 LevelUp이 절대 안 불려 legacyGradeLevels에 안 들어온다
     // — 별도 제외 코드 없이 자동으로 무영향(1)이다(PM 지시, 영원함은 배선하지 않는다).
+    /// <summary>
+    /// 등급 강화 트랙(…ForGrade)을 고를 때 쓰는 등급. 보통은 유닛 등급 그대로인데, 히든 솔·성탄·뻬꼼은 히든 트랙(전설·히든 강화)이 아니라
+    /// 「흔함·안흔함 강화」 트랙을 받는다(사장님 10-08 밤 — 이 셋은 공격력이 흔함~특별함 띠라 전설 트랙이 과하다).
+    /// </summary>
+    public static UnitGrade TrackGradeOf(UnitData unit)
+    {
+        if (unit == null) return UnitGrade.Common;
+        if (unit.grade == UnitGrade.Hidden && (unit.unitName == "솔" || unit.unitName == "성탄" || unit.unitName == "뻬꼼")) return UnitGrade.Common;
+        return unit.grade;
+    }
+
     public float SpeedMultiplierForGrade(UnitGrade grade)
     {
         foreach (KeyValuePair<UnitUpgradeTrackData, int> entry in legacyGradeLevels)

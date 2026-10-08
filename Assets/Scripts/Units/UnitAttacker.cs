@@ -3650,7 +3650,7 @@ public class UnitAttacker : MonoBehaviour
         // 레벨 0이면 BonusForGrade가 0을 돌려준다.
         // 2026-09-25: 공격타입 강화(「강화소 3」)의 공격력 가산도 같은 연구 절대 가산이라 여기 더한다.
         cachedResearchBonus = source != null && unitData != null
-            ? source.BonusForGrade(unitData.grade) + source.BonusForUnit(unitData) + source.AttackBonusForAttackType(unitData.attackType, unitData.grade)
+            ? source.BonusForGrade(UnitUpgrades.TrackGradeOf(unitData)) + source.BonusForUnit(unitData) + source.AttackBonusForAttackType(unitData.attackType, unitData.grade)
             : 0f;
 
         // 연구소 등급 공속(gba1/gmo1, 2026-09-06 신규 연결) — 유닛 종의 등급이 담당 트랙에
@@ -3660,7 +3660,7 @@ public class UnitAttacker : MonoBehaviour
         // 같은 성격의 연구소 공속이라 여기 같이 곱한다 — 서로 다른 건물(등급트랙 vs
         // 공격타입트랙)이라 독립적으로 곱해져도 안전하다(원작에도 둘 다 존재).
         cachedResearchSpeedMultiplier = source != null && unitData != null
-            ? source.SpeedMultiplierForGrade(unitData.grade) * source.SpeedMultiplierForUnit(unitData) * source.SpeedMultiplierForAttackType(unitData.attackType)
+            ? source.SpeedMultiplierForGrade(UnitUpgrades.TrackGradeOf(unitData)) * source.SpeedMultiplierForUnit(unitData) * source.SpeedMultiplierForAttackType(unitData.attackType)
             : 1f;
 
         upgradeMultiplierDirty = false;
