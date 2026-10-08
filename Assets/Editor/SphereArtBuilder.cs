@@ -257,6 +257,15 @@ static class SphereArtBuilder
         renderer.sharedMaterial = ParticleMaterial(alias, p);
     }
 
+    // 리본 높이 보정(10-08 PM): 원작 모델 좌표의 리본 높이가 몸 키의 1.3배를 넘으면(Ora_siki: y 8.9 → 몸 키 222) 유닛 위 공중에 떠서 따로 논다 → 몸 키의 0.95배로 눌러 몸 둘레에 둔다.
+    public const float RibbonMaxBodyRatio = 1.3f, RibbonClampRatio = 0.95f;
+    static Vector3 RibbonLocalPosition(Part p, float k)
+    {
+        Vector3 v = new Vector3(p.pos[0], p.pos[1], p.pos[2]) * k;
+        if (v.y > RibbonMaxBodyRatio * GameBodyHeight) v.y = RibbonClampRatio * GameBodyHeight;
+        return v;
+    }
+
     // 리본 = TrailRenderer — 붙은 뼈가 움직일 때만 궤적이 그려진다(검 휘두름·이동)
     static void AddRibbon(Transform parent, string alias, Part p, float k)
     {
@@ -269,7 +278,7 @@ static class SphereArtBuilder
         }
         var go = new GameObject(p.name);
         go.transform.SetParent(parent, false);
-        go.transform.localPosition = new Vector3(p.pos[0], p.pos[1], p.pos[2]) * k;
+        go.transform.localPosition = RibbonLocalPosition(p, k);
         var trail = go.AddComponent<TrailRenderer>();
         trail.time = Mathf.Max(0.05f, p.trail);
         trail.startWidth = p.width * k; trail.endWidth = p.widthEnd * k;

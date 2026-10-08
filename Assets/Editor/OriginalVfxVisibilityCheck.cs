@@ -21,6 +21,7 @@ public static class OriginalVfxVisibilityCheck
     static void Menu() => Debug.Log(Run());
 
     public static string Ring() => Run("az_firering1a");
+    public static string One() => Run(System.IO.File.ReadAllText("ClaudeBridge/g2_vfx_name.txt").Trim());
     public static string Run() => Run(null);
 
     static string Run(string only)
