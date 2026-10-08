@@ -2605,6 +2605,7 @@ public class GameHud : MonoBehaviour
                 RewardDistributor.Instance.GrantWisps(context, reward);
                 // 원작 j:13162(본인 4초) — 알림 묶음 13/13, GAP 109
                 if (chancy) PlayerNotification.Show(seller, "<color=#FF8200>안흔함 판매성공!</color>     <color=#FFD700>1기의 랜덤위습 획득!</color>", 4f);
+                else if (identity.Data.sellRewardTraitPoints > 0) PlayerNotification.Show(seller, "<color=#FF8200>1기의 흔함선택위습과 1의 특성포인트 획득!</color>", 4f);   // 원작 Trig_unique_sell7(A0OE, 레일리)
             }
             else if (chancy && identity.Data.sellRewardWisp != null)
                 PlayerNotification.Show(seller, "<color=#FF0000>안흔함 판매실패! ㅠㅠ</color>", 4f);   // j:13164

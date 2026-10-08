@@ -164,3 +164,26 @@ public static class NavAutoProbe
         return $"항법 {before} → {me.NavigationState.Choice}";
     }
 }
+
+/// <summary>씬에 남은 원작 이펙트 시범 잔여물(빌더가 예외로 중단될 때 씬에 남은 wrapper)을 지운다. call SceneVfxCleanup.Run</summary>
+public static class SceneVfxCleanup
+{
+    public static string Run()
+    {
+        if (Application.isPlaying) return "❌ 편집 모드에서만";
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
+        int removed = 0;
+        var names = new StringBuilder();
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
+            foreach (OriginalVfxPlayer p in root.GetComponentsInChildren<OriginalVfxPlayer>(true))
+            {
+                if (p == null) continue;
+                names.Append(p.name + " ");
+                Object.DestroyImmediate(p.gameObject); removed++;
+            }
+        }
+        if (removed > 0) UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+        return $"제거 {removed}: {names}";
+    }
+}
