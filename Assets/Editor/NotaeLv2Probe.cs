@@ -151,6 +151,31 @@ static class NotaeLv2Probe
         return $"다른세계 {i}기\n{sb}";
     }
 
+
+    // 물품 지원 실제 구매: 재고를 2로 채우고(리플렉션) 골드 200 → W 칸(1)을 두 번 눌러 골드 변화·새 유닛을 본다.
+    static string StarterRoll()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        var shop = Object.FindObjectsByType<GamblingShop>(FindObjectsSortMode.None).First(g => g.TryGetComponent(out OwnedByPlayer o) && o.OwnerId == 0);
+        var ctx = PlayerContext.Get(0);
+        var opt = AssetDatabase.LoadAssetAtPath<GamblingOptionData>("Assets/Data/Gambling/Gambling_물품 지원.asset");
+        var stocks = typeof(GamblingProgress).GetField("stocks", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(ctx.GamblingProgress);
+        var st = stocks.GetType().GetProperty("Item");
+        object state = System.Activator.CreateInstance(typeof(GamblingProgress).GetNestedType("StockState"));
+        typeof(GamblingProgress).GetNestedType("StockState").GetField("count").SetValue(state, 2);
+        typeof(GamblingProgress).GetNestedType("StockState").GetField("lastCharge").SetValue(state, Time.time);
+        st.SetValue(stocks, state, new object[] { opt });
+        ctx.GoldWallet.Add(200);
+        int unitsBefore = Object.FindObjectsByType<UnitIdentity>(FindObjectsSortMode.None).Length;
+        int g0 = ctx.GoldWallet.Gold;
+        bool a = shop.TryUse(1, default, out string ra);
+        int g1 = ctx.GoldWallet.Gold;
+        bool b = shop.TryUse(1, default, out string rb);
+        bool c = shop.TryUse(1, default, out string rc);
+        int unitsAfter = Object.FindObjectsByType<UnitIdentity>(FindObjectsSortMode.None).Length;
+        return $"1회 {a} 골드 {g0}→{g1}(기대 −70) · 2회 {b} · 3회 {c} ({rc}) · 유닛 {unitsBefore}→{unitsAfter}(기대 +2) · 재고 {ctx.GamblingProgress.Stock(opt)}";
+    }
+
     static void Tick()
     {
         if (!Application.isPlaying) { EditorApplication.update -= Tick; return; }
