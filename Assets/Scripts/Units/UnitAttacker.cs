@@ -128,7 +128,7 @@ public class UnitAttacker : MonoBehaviour
             // SkillAttackSpeedBuffMultiplier는 ActiveBuff 레지스트리 기반(자동 만료)이라
             // 기존 attackSpeedBuffs(수동 Add/Remove, SupportShop 전용)와 별도 축이다 — 곱은
             // 순서 무관이라 그냥 같이 곱한다.
-            float product = ResearchSpeedMultiplier * HeroAttackSpeedMultiplier * SkillAttackSpeedBuffMultiplier * AuraAttackSpeedMultiplier * TalentAttackSpeedMultiplier
+            float product = ResearchSpeedMultiplier * HeroAttackSpeedMultiplier * SkillAttackSpeedBuffMultiplier * AuraAttackSpeedMultiplier * TalentAttackSpeedMultiplier * OtherWorldSpeedFactor
                             * (1f + TeamBuffs.AttackSpeedPercent);
             foreach (float buff in attackSpeedBuffs) product *= buff;
             return product > 0f ? product : 1f;
@@ -1328,6 +1328,10 @@ public class UnitAttacker : MonoBehaviour
     const float AgiAttackSpeedBonusPerPoint = 0.01f;
 
     float HeroAttackSpeedMultiplier => 1f + CurrentAgility * AgiAttackSpeedBonusPerPoint;
+
+    // 다른세계 유닛 9기 최종 공속 +25%(사장님 승인 10-08 밤 — 원작 「랜덤[제한됨] 최종 공속 +25%」). 다른 공속 요인과 곱으로 겹친다.
+    public const float OtherWorldAttackSpeedFactor = 1.25f;
+    float OtherWorldSpeedFactor => identity != null && identity.Data != null && identity.Data.grade == UnitGrade.OtherWorld ? OtherWorldAttackSpeedFactor : 1f;
 
     // EnemyDummy.TakeDamage의 사망 처리(RewardDistributor.GrantKillReward와 같은 자리)가
     // 부른다 — laneIndex(원작 GetUnitUserData와 같은 라인 소유자 변수)의 초월함·영원한

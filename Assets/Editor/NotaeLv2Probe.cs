@@ -129,6 +129,28 @@ static class NotaeLv2Probe
         return string.Join(" / ", all.Select(e => $"{Refill - e.Hp:N0}"));
     }
 
+
+    // 다른세계 9기 공속 +25% 확인: 기본 간격 ÷ 실제 간격이 1.25여야(다른 공속 요인이 없는 새 유닛).
+    static string OtherWorldCheck()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        var sb = new StringBuilder();
+        Vector3 c = LaneMarker.Get(0).LaneCenter;
+        int i = 0;
+        foreach (string guid in AssetDatabase.FindAssets("t:UnitData", new[] { "Assets/Data/Units/Roster" }))
+        {
+            var d = AssetDatabase.LoadAssetAtPath<UnitData>(AssetDatabase.GUIDToAssetPath(guid));
+            if (d == null || d.grade != UnitGrade.OtherWorld) continue;
+            var u = spawner.Spawn(d, c + new Vector3(i * 15f, 0f, 0f), 0).GetComponent<UnitAttacker>();
+            sb.AppendLine($"{d.name}: 공속 배율 {u.CurrentAttackSpeedMultiplier:F3} · 간격 {u.AttackInterval:F3}");
+            i++;
+        }
+        var other = AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/전설적인_김용태.asset");
+        if (other != null) { var u = spawner.Spawn(other, c + new Vector3(-30f, 0f, 0f), 0).GetComponent<UnitAttacker>(); sb.AppendLine($"(대조) {other.name}: 공속 배율 {u.CurrentAttackSpeedMultiplier:F3} · 간격 {u.AttackInterval:F3}"); }
+        return $"다른세계 {i}기\n{sb}";
+    }
+
     static void Tick()
     {
         if (!Application.isPlaying) { EditorApplication.update -= Tick; return; }
