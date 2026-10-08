@@ -22,8 +22,11 @@ public class CombineSystem : MonoBehaviour
     //     「누가 조합하나」가 바뀐다 — 호스트가 클라 요청을 수행하는 동안은 그 슬롯(ActingPlayerOverride),
     //     그 밖엔 이 PC의 로컬 플레이어(클라의 흐림 계산 포함). 직렬화 배선보다 앞선다. 싱글(MatchConfig 꺼짐)은 무동작.
     public static int ActingPlayerOverride = -1;
+    // 클라 UI 전용(동맹 공유, 10-08): 공유 받은 유닛을 골랐으면 흐림·모자란 것 계산을 그 주인 몫으로 한다. GameHud가 계산 직전에 세우고 바로 -1로 되돌린다.
+    public static int UiActingSlot = -1;
     static PlayerContext MultiplayerActingContext => ActingPlayerOverride >= 0
         ? PlayerContext.Get(ActingPlayerOverride)
+        : UiActingSlot >= 0 ? PlayerContext.Get(UiActingSlot)
         : MatchConfig.Active ? PlayerContext.Local : null;
 
     UnitInventory Inventory => MultiplayerActingContext != null ? MultiplayerActingContext.UnitInventory // MP

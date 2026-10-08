@@ -4678,11 +4678,18 @@ public class GameHud : MonoBehaviour
 
         CombineSystem system = CombineSystemRef;
         if (system == null) return;
-        if (!system.CanCombineNow(recipe))
+        CombineSystem.UiActingSlot = SelectedSharedOwnerSlot();   // 동맹 공유 유닛이면 모자란 것 계산은 주인 몫(10-08)
+        bool canCombineNow;
+        try { canCombineNow = system.CanCombineNow(recipe); }
+        finally { CombineSystem.UiActingSlot = -1; }
+        if (!canCombineNow)
         {
             // 원작 [조합]은 흐려지지 않고 눌러 보면 모자란 것을 말해 준다(j:3444~3449, 그 플레이어에게만 5초) — 알림 묶음 5.
             //    흐린 버튼은 그대로 두되, 누르면 이유를 띄운다. 재료·돈이 다 있는데 안 되면(원딜·라운드 조건 등) 짧게.
-            List<string> shortage = system.DescribeShortage(recipe);
+            CombineSystem.UiActingSlot = SelectedSharedOwnerSlot();
+            List<string> shortage;
+            try { shortage = system.DescribeShortage(recipe); }
+            finally { CombineSystem.UiActingSlot = -1; }
             if (shortage.Count == 0) PlayerNotification.Show(LocalPlayer.LocalPlayerId, "지금은 조합할 수 없습니다.", 5f);
             foreach (string line in shortage) PlayerNotification.Show(LocalPlayer.LocalPlayerId, line, 5f);
             GameSound.Play(GameSoundId.UiError);   // 실패음(10-06) — 모자란 줄이 여럿이어도 한 번
@@ -5178,6 +5185,12 @@ public class GameHud : MonoBehaviour
         unitCommandSlotCount = flexRecipes.Count;
     }
 
+    int SelectedSharedOwnerSlot()
+    {
+        SelectionManager sel = Selection;
+        return sel != null && sel.Selected.Count > 0 && sel.Selected[0] != null ? AllianceShare.SharedOwnerSlot(sel.Selected[0].gameObject) : -1;
+    }
+
     // 재료가 부족하면 등급 색은 유지한 채 알파만 낮춘다 — 회색으로 칠하면 무슨 등급이 될지 안 보인다.
     void RefreshUnitCommandAffordability()
     {
@@ -5189,7 +5202,10 @@ public class GameHud : MonoBehaviour
             CombineRecipe recipe = unitCommandRecipes[slot];
             if (recipe == null || recipe.result == null) continue;
 
-            bool canCombine = system != null && system.CanCombineNow(recipe);
+            CombineSystem.UiActingSlot = SelectedSharedOwnerSlot();   // 동맹 공유 유닛이면 흐림은 주인 몫으로(10-08)
+            bool canCombine;
+            try { canCombine = system != null && system.CanCombineNow(recipe); }
+            finally { CombineSystem.UiActingSlot = -1; }
             Color color = GetGradeColor(recipe.result.grade);
             color.a = canCombine ? color.a : 0.4f;
             SetCommandSlotColor(slot, color);

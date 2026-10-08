@@ -158,14 +158,16 @@ public static class NetCommands
         CombineRecipe recipe = system != null ? system.RecipeAt(recipeIndex) : null;
         if (recipe == null) { PlayerNotification.ShowFailure(sender.Slot, "지금은 조합할 수 없습니다."); return; }
 
-        if (!TryGetOwnedReal(sender, casterId, "조합", out GameObject caster) || !caster.TryGetComponent(out UnitIdentity identity) || identity.Data == null)
+        if (!TryGetOwnedReal(sender, casterId, "조합", out GameObject caster, allowShared: true) || !caster.TryGetComponent(out UnitIdentity identity) || identity.Data == null)
         {
             PlayerNotification.Show(sender.Slot, "조합할 유닛을 찾을 수 없습니다.");
             return;
         }
 
-        // 조합기는 씬에 하나 — 이 요청 동안만 「조합하는 사람 = 요청자」로 세운다(CombineSystem.ActingPlayerOverride).
-        CombineSystem.ActingPlayerOverride = sender.Slot;
+        // 조합기는 씬에 하나 — 이 요청 동안만 「조합하는 사람」으로 세운다(CombineSystem.ActingPlayerOverride).
+        // 동맹 공유(10-08 밤): 공유 받은 유닛을 누르면 재료·돈·결과 모두 그 유닛 주인 몫(남의 재료를 빼가지 않고 결과도 주인에게).
+        int combineOwner = caster.TryGetComponent(out OwnedByPlayer casterOwned) && casterOwned.OwnerId >= 0 ? casterOwned.OwnerId : sender.Slot;
+        CombineSystem.ActingPlayerOverride = combineOwner;
         bool ok;
         string rejected = null;
         try
@@ -263,7 +265,7 @@ public static class NetCommands
     public static void ExecuteHudUnitAction(NetPlayer sender, NetworkId unit, NetHudAction action, int argument)
     {
         if (GamePause.Frozen) return;   // 일시정지·컷인 정지 중엔 호스트가 거절(클라 UI도 막지만 늦게 온 요청 방어)
-        if (!TryGetOwnedReal(sender, unit, action.ToString(), out GameObject real, allowShared: action == NetHudAction.CastActive)) return;
+        if (!TryGetOwnedReal(sender, unit, action.ToString(), out GameObject real, allowShared: true)) return;   // 동맹 공유(10-08 밤 사장님): 판매·강화·도박·토토·특성 버튼도 공유 받은 사람이 누른다 — 전부 유닛 주인의 지갑·포인트로 처리된다(Execute*On이 OwnedByPlayer 기준)
         if (!real.TryGetComponent(out Selectable selectable)) return;
 
         GameHud hud = Object.FindFirstObjectByType<GameHud>();
