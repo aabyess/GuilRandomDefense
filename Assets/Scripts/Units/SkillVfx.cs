@@ -119,6 +119,8 @@ public static class SkillVfx
         free.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
         free.transform.localScale = Vector3.one * (diameter / native * ZoomScale());
         free.SetActive(true);
+        OriginalVfxPlayer original = free.GetComponent<OriginalVfxPlayer>();
+        if (original != null) { original.Restart(); return; }   // 원작 모델 이펙트(10-08): 파티클이 없어 재생기가 직접 다시 시작
         foreach (ParticleSystem ps in free.GetComponentsInChildren<ParticleSystem>(true))
             ps.Clear(false);
         foreach (ParticleSystem ps in free.GetComponentsInChildren<ParticleSystem>(true))
@@ -127,6 +129,8 @@ public static class SkillVfx
 
     static bool AnyAlive(GameObject g)
     {
+        OriginalVfxPlayer original = g.GetComponent<OriginalVfxPlayer>();
+        if (original != null) return original.IsPlaying;
         foreach (ParticleSystem ps in g.GetComponentsInChildren<ParticleSystem>(true))
             if (ps.IsAlive(false)) return true;
         return false;

@@ -34,7 +34,7 @@ public static class SkillVfxTableBuilder
         int cCaster = System.Array.IndexOf(header, "시전자_프리팹");
         if (cAsset < 0 || cHit < 0 || cArea < 0 || cCaster < 0) return "❌ CSV 열 이름이 다름: " + string.Join(",", header);
 
-        Dictionary<string, string> prefabByName = AssetDatabase.FindAssets("t:Prefab", new[] { PackRoot, OwnRoot })
+        Dictionary<string, string> prefabByName = AssetDatabase.FindAssets("t:Prefab", new[] { PackRoot, OwnRoot, OriginalVfxBuilder.PrefabRoot })
             .Select(AssetDatabase.GUIDToAssetPath)
             .GroupBy(p => Path.GetFileNameWithoutExtension(p))
             .ToDictionary(g => g.Key, g => g.First());
@@ -61,6 +61,32 @@ public static class SkillVfxTableBuilder
             if (!e.hit.IsSet && !e.area.IsSet && !e.caster.IsSet) continue;
             table.entries.Add(e);
             withAny++;
+        }
+
+        // 원작 이펙트 배정(10-08): Docs/research/ORIGINAL_VFX_ASSIGN_*.csv(등급별, 같은 열 이름·칸 값 「원작:모델이름」) — 같은 스킬이 이미 있으면 칸이 있는 것만 덮어쓴다.
+        int assigned = 0;
+        foreach (string file in Directory.GetFiles(Path.Combine(Application.dataPath, "..", "Docs/research"), "ORIGINAL_VFX_ASSIGN_*.csv").OrderBy(f => f))
+        {
+            List<string[]> arows = ReadCsv(File.ReadAllLines(file).Where(l => !l.StartsWith("#")));
+            string[] ah = arows[0];
+            int aAsset = System.Array.IndexOf(ah, "asset_path"), aHit = System.Array.IndexOf(ah, "적중시_프리팹"),
+                aArea = System.Array.IndexOf(ah, "범위_지면_프리팹"), aCaster = System.Array.IndexOf(ah, "시전자_프리팹");
+            if (aAsset < 0 || aHit < 0 || aArea < 0 || aCaster < 0) { unknown.Add("열 이름 다름: " + Path.GetFileName(file)); continue; }
+            foreach (string[] r in arows.Skip(1))
+            {
+                if (r.Length <= aCaster) continue;
+                SkillData skill = AssetDatabase.LoadAssetAtPath<SkillData>(r[aAsset].Trim());
+                if (skill == null) { missingSkill++; continue; }
+                SkillVfxTable.Entry e = table.entries.FirstOrDefault(x => x.skill == skill);
+                bool isNewEntry = e == null;
+                if (isNewEntry) e = new SkillVfxTable.Entry { skill = skill };
+                SkillVfxTable.Slot hit = Slot(table, r[aHit], prefabByName, unknown), area = Slot(table, r[aArea], prefabByName, unknown), caster = Slot(table, r[aCaster], prefabByName, unknown);
+                if (hit.IsSet) e.hit = hit;
+                if (area.IsSet) e.area = area;
+                if (caster.IsSet) e.caster = caster;
+                if (isNewEntry && (e.hit.IsSet || e.area.IsSet || e.caster.IsSet)) { table.entries.Add(e); withAny++; }
+                assigned++;
+            }
         }
 
         foreach (GameObject prefab in table.prefabs) table.nativeSizes.Add(MeasureNativeSize(prefab));
