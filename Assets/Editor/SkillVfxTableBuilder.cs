@@ -107,6 +107,16 @@ public static class SkillVfxTableBuilder
         return sb.ToString();
     }
 
+    static HashSet<string> invisibleCache;
+    static HashSet<string> InvisibleOriginal
+    {
+        get
+        {
+            string full = Path.Combine(Application.dataPath, "..", OriginalVfxVisibilityCheck.InvisiblePath);
+            return invisibleCache = File.Exists(full) ? new HashSet<string>(File.ReadAllLines(full).Select(l => l.Trim()).Where(l => l.Length > 0)) : new HashSet<string>();
+        }
+    }
+
     static SkillVfxTable.Slot Slot(SkillVfxTable table, string raw, Dictionary<string, string> prefabByName, HashSet<string> unknown)
     {
         var slot = new SkillVfxTable.Slot();
@@ -135,6 +145,7 @@ public static class SkillVfxTableBuilder
         }
         int colon = v.IndexOf(':');
         string name = colon >= 0 ? v.Substring(colon + 1).Trim() : v;
+        if (v.StartsWith("원작:") && InvisibleOriginal.Contains(name)) return slot;   // 보임 검사에서 안 보인 원작 이펙트 — 「유지」(기존 이펙트)
         if (!prefabByName.TryGetValue(name, out string path)) { unknown.Add(v); return slot; }
         GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
         int index = table.prefabs.IndexOf(prefab);

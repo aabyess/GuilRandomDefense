@@ -58,6 +58,26 @@ public static class OriginalVfxBuilder
         return $"모델 {names.Count}종\n{built}{table}\n📦 Assets/Art/Effects/Original = {DirSizeMb(ArtRoot):0.0}MB · Resources/Effects/Original = {DirSizeMb(PrefabRoot):0.0}MB";
     }
 
+    /// <summary>이미 반입한 텍스처 전부에 최대 512·보통 압축을 적용한다(wrap은 그대로).</summary>
+    public static string FixTextures()
+    {
+        int n = 0;
+        AssetDatabase.StartAssetEditing();
+        try
+        {
+            foreach (string guid in AssetDatabase.FindAssets("t:Texture2D", new[] { ArtRoot }))
+            {
+                var imp = AssetImporter.GetAtPath(AssetDatabase.GUIDToAssetPath(guid)) as TextureImporter;
+                if (imp == null || (imp.maxTextureSize == 512 && imp.textureCompression == TextureImporterCompression.Compressed && !imp.crunchedCompression)) continue;
+                imp.maxTextureSize = 512; imp.textureCompression = TextureImporterCompression.Compressed; imp.crunchedCompression = false;
+                imp.SaveAndReimport(); n++;
+            }
+        }
+        finally { AssetDatabase.StopAssetEditing(); }
+        AssetDatabase.SaveAssets();
+        return $"✅ 텍스처 {n}장 최대 512·보통 압축 적용";
+    }
+
     static double DirSizeMb(string assetDir)
     {
         string full = Path.Combine(Directory.GetCurrentDirectory(), assetDir);
@@ -112,6 +132,7 @@ public static class OriginalVfxBuilder
             if (imp == null) continue;
             bool repeat = uvTextures.Contains(Path.GetFileName(tex));
             imp.alphaIsTransparency = true; imp.mipmapEnabled = false;
+            imp.maxTextureSize = 512; imp.textureCompression = TextureImporterCompression.Compressed; imp.crunchedCompression = false;   // PM 10-08: 최대 512·보통 압축(크런치 안 함)
             imp.wrapMode = repeat ? TextureWrapMode.Repeat : TextureWrapMode.Clamp;
             imp.SaveAndReimport();
         }
