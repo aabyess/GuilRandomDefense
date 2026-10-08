@@ -67,7 +67,7 @@ public class SkillDamageZone : MonoBehaviour
             if (enemy == null || enemy.IsDead) continue;
             if (!UnitAttacker.PassesPointValueCondition(zone.effect.targetCondition, zone.effect.targetConditionValue, enemy)) continue;
             float hpBefore = enemy.Hp;
-            enemy.TakeDamage(amount, zone.effect.damageType, zone.effect.attackType, zone.ownerId);
+            enemy.TakeDamage(amount * UnitAttacker.LaneAreaDamageFactor(enemy.LaneIndex), zone.effect.damageType, zone.effect.attackType, zone.ownerId);
             SkillTelemetry.Damage(zone.caster, "지대", enemy, hpBefore);
         }
         SkillVfx.SetCasterGate(vfxBefore);

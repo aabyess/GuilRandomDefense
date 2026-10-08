@@ -2334,6 +2334,10 @@ public class UnitAttacker : MonoBehaviour
         return bonus;
     }
 
+    // 범위 피해로 세는 효과 꼴(사장님 10-08): 다수 대상 Damage — target Enemies(반경)·ChainEnemies·장풍 직선(lineLength) · SkillEffect.areaDamage(단일인데 범위로 치고 싶은 예외). 단일 대상(SingleTarget·RandomEnemyInRange)·치명·DoT는 아니다.
+    public static bool IsAreaDamageEffect(SkillEffect effect) =>
+        effect.areaDamage || effect.target == SkillTargetKind.Enemies || effect.target == SkillTargetKind.ChainEnemies || effect.lineLength > 0f;
+
     public static float LaneAreaDamageFactor(int lane)
     {
         if (Time.time - laneAreaBonusAt >= 0.5f || Time.time < laneAreaBonusAt)
@@ -3502,7 +3506,7 @@ public class UnitAttacker : MonoBehaviour
         // 실제로 걸린다.
         amount *= 1f + effect.casterBuffCountFactor * CountCasterBuffs();
         if (effect.bossBerserkDamageScale > 0f && target != null && (target.IsBoss || target.HasBuff(BerserkMob.BuffId))) amount *= effect.bossBerserkDamageScale;   // 노태현 「가리지않는수단과방법」: 보스·광폭화 상대 이 효과만
-        if (effect.areaDamage && target != null) amount *= LaneAreaDamageFactor(target.LaneIndex);   // 노태현 「시너지폭발」 라인 범위 피해 증가
+        if (target != null && IsAreaDamageEffect(effect)) amount *= LaneAreaDamageFactor(target.LaneIndex);   // 노태현 「시너지폭발」 라인 범위 피해 증가(사장님 10-08: 범위에 들어가는 피해 전부, 출처 무관)
         amount *= DamagePassiveFactor(target) * AuraBonusTotal(SkillEffectKind.AllySkillDamageBonus, true);   // 보잡 × 아군발 디버프 비례 × 스킬 피해 증가 오라(임장혁 가스라이팅)
         if (amount <= 0f) return;
 
@@ -3889,7 +3893,7 @@ public class UnitAttacker : MonoBehaviour
         foreach (EnemyDummy enemy in inRange)
         {
             float hpBefore = enemy.Hp;
-            enemy.TakeDamage(damage * DamagePassiveFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false, armorScale: AttackArmorScale);
+            enemy.TakeDamage(damage * DamagePassiveFactor(enemy) * LaneAreaDamageFactor(enemy.LaneIndex), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false, armorScale: AttackArmorScale);
             SkillTelemetry.Damage(unitData, "평타다중", enemy, hpBefore);
         }
         ListPool<EnemyDummy>.Release(inRange);
@@ -3921,7 +3925,7 @@ public class UnitAttacker : MonoBehaviour
             if (distance <= splash)
                 enemy.TakeDamage(damage * DamagePassiveFactor(enemy) * LaneAreaDamageFactor(enemy.LaneIndex), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 0f, isAbilityDamage: false, armorScale: AttackArmorScale);
             if (distance <= cleave)
-                enemy.TakeDamage(damage * unitData.attackCleaveFactor * DamagePassiveFactor(enemy), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 1f, isAbilityDamage: false);
+                enemy.TakeDamage(damage * unitData.attackCleaveFactor * DamagePassiveFactor(enemy) * LaneAreaDamageFactor(enemy.LaneIndex), DamageTypeOf, AttackTypeOf, ownerId, armorIgnoreRatio: 1f, isAbilityDamage: false);
             SkillTelemetry.Damage(unitData, "평타광역", enemy, hpBefore);
             SkillTelemetry.SplashHit(unitData);
         }

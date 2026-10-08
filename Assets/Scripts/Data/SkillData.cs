@@ -709,7 +709,7 @@ public class SkillEffect
     // BossDamageMultiplier(패시브, 유닛 스킬 전부)와 달리 이 효과 하나에만 적용된다.
     public float bossBerserkDamageScale;
 
-    // ⚠️ 맨 뒤(2026-10-08, 초월 노태현 「시너지폭발」) — Damage 전용: 이 피해를 「범위 피해」로 센다 → LaneAreaDamageBonus(라인존 범위 피해 증가 오라)를 받는다.
+    // ⚠️ 맨 뒤(2026-10-08, 초월 노태현 「시너지폭발」) — Damage 전용 예외 스위치: target이 Enemies·ChainEnemies·장풍 직선이면 이미 범위 피해로 세므로(UnitAttacker.IsAreaDamageEffect) 켤 필요 없다. 단일 대상인데 범위로 치고 싶을 때만 켠다 → LaneAreaDamageBonus(라인존 범위 피해 증가 오라)를 받는다.
     public bool areaDamage;
 }
 

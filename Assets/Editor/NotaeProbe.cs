@@ -80,6 +80,36 @@ static class NotaeProbe
         Refill_(allEs); CastLevel(0, e1);
         sb.Append($"\n① 반사회적인격 · e1 {Drop(e1):N0} · e2 {Drop(e2):N0}(범위 안) · 멀리 {Drop(eFar):N0}(범위 밖 0이어야) · 기대 e1 ≈ {nt.AttackDamage * 0.3f + 300000f:N0}");
 
+        // ① 라인 범위 계수 켜짐/꺼짐 비교(사장님 10-08: 범위 피해 전부 +15%)
+        SetBonusCache(true); Refill_(allEs); CastLevel(0, e1); double a1off = Drop(e1);
+        SetBonusCache(false); Refill_(allEs); CastLevel(0, e1); double a1on = Drop(e1);
+        sb.Append($"\n① 계수 끔 {a1off:N0} · 켬 {a1on:N0} · 비율 {a1on / System.Math.Max(1, a1off):F4}(1.15 기대 — ①도 범위)");
+        // 다른 유닛 범위 스킬: 로스터에서 target Enemies Damage 효과가 든 스킬 하나를 찾아 그 유닛을 세워 같은 식으로
+        UnitData other = null; int otherIdx = -1;
+        foreach (string guid in AssetDatabase.FindAssets("t:UnitData", new[] { "Assets/Data/Units/Roster" }))
+        {
+            var ud = AssetDatabase.LoadAssetAtPath<UnitData>(AssetDatabase.GUIDToAssetPath(guid));
+            if (ud == null || ud == data || ud.skills == null) continue;
+            for (int k = 0; k < ud.skills.Count && other == null; k++)
+            {
+                var sk = ud.skills[k];
+                if (sk == null || sk.levels == null || sk.levels.Count == 0 || sk.triggerType == SkillTriggerType.Aura) continue;
+                if (sk.levels[0].range > 0f && sk.levels[0].effects.Any(e => e != null && e.kind == SkillEffectKind.Damage && e.target == SkillTargetKind.Enemies && e.basis == SkillEffectBasis.Flat && e.multiplier > 0f && e.zoneTickInterval <= 0f && e.lineLength <= 0f && e.hitCount <= 1)) { other = ud; otherIdx = k; }
+            }
+            if (other != null) break;
+        }
+        if (other != null)
+        {
+            var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+            var ou = spawner.Spawn(other, LaneMarker.Get(0).LaneCenter + new Vector3(0f, 0f, -20f), 0).GetComponent<UnitAttacker>();
+            SkillData osk = other.skills[otherIdx];
+            MethodInfo cast = typeof(UnitAttacker).GetMethod("CastSkillLevel", NP);
+            SetBonusCache(true); Refill_(allEs); cast.Invoke(ou, new object[] { osk.levels[0], osk.levels[0].WorldRange, e1, ou.AttackDamage }); double oOff = Drop(e1);
+            SetBonusCache(false); Refill_(allEs); cast.Invoke(ou, new object[] { osk.levels[0], osk.levels[0].WorldRange, e1, ou.AttackDamage }); double oOn = Drop(e1);
+            sb.Append($"\n다른 유닛 범위 스킬 {other.name}/{osk.skillName.Split(' ')[0]} · 끔 {oOff:N0} · 켬 {oOn:N0} · 비율 {oOn / System.Math.Max(1, oOff):F4}(1.15 기대)");
+        }
+        else sb.Append("\n다른 유닛 범위 스킬 못 찾음");
+
         // ③ 가리지않는수단과방법: 단일 300,000 마법 + 2초 스턴, 보스·광폭화 ×1.3
         Refill_(allEs); CastLevel(2, e1);
         double n3 = Drop(e1); bool stunE1 = e1.IsStunned;
