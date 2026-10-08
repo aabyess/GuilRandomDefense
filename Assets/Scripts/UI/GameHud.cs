@@ -1323,6 +1323,7 @@ public class GameHud : MonoBehaviour
     void BuildStoryPanel()
     {
         RectTransform storyPanel = CreatePanel(transform, "StoryPanel", Color.clear);
+        storyPanel.GetComponent<Image>().raycastTarget = false;   // 투명 컨테이너가 클릭·드래그를 삼키지 않게(사장님 10-08: 헤더 아래 맵 영역 선택 안 됨)
         SetAnchors(storyPanel, new Vector2(0.01f, 0.90f), new Vector2(0.5f, 0.95f));
 
         storyText = CreateLabel(storyPanel, "StoryText", "");
@@ -1344,6 +1345,7 @@ public class GameHud : MonoBehaviour
 
         // 왼쪽 버튼 줄(항법 버튼도 여기 — 우리만의 기능이라 원작 4버튼 뒤에 붙인다)
         RectTransform menuButtonsPanel = CreatePanel(topBar, "TopBarButtons", Color.clear);
+        menuButtonsPanel.GetComponent<Image>().raycastTarget = false;   // 투명 컨테이너가 클릭·드래그를 삼키지 않게(사장님 10-08: 헤더 아래 맵 영역 선택 안 됨)
         topBarButtons = menuButtonsPanel;
         SetAnchors(menuButtonsPanel, new Vector2(0f, 0.04f), new Vector2(0.455f, 0.96f));
         HorizontalLayoutGroup layout = menuButtonsPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
@@ -1409,6 +1411,7 @@ public class GameHud : MonoBehaviour
 
         // 맵 이름(사진 「원랜디 시즌 3」 자리 — 사장님 확정: 「구랜디」)
         RectTransform mapName = CreatePanel(topBar, "MapNamePanel", Color.clear);
+        mapName.GetComponent<Image>().raycastTarget = false;   // 투명 컨테이너가 클릭·드래그를 삼키지 않게(사장님 10-08: 헤더 아래 맵 영역 선택 안 됨)
         SetAnchors(mapName, new Vector2(0.905f, 0.08f), new Vector2(0.995f, 0.92f));
         TMP_Text mapLabel = CreateLabel(mapName, "MapNameText", "구랜디");
         mapLabel.fontSize = 18;

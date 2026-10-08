@@ -172,7 +172,37 @@ public class BugNotepad : MonoBehaviour
             if (!inGame && windowRoot.activeSelf) CloseWindow();
         }
 
+        FollowScoreboard();
+
         if (dirty && Time.unscaledTime >= saveAt) { SaveNow(); RefreshStatus(); }
+    }
+
+    // 「버그 기록」 단추는 우상단 점수판(TeamPanel, 멀티보드) 바로 밑 오른쪽 끝에 붙는다(사장님 10-08) — 점수판이 접히거나 펴지면(높이가 바뀌면) 같이 따라간다.
+    // 두 캔버스(HUD·여기)가 따로라 화면 좌표를 거쳐 옮긴다. 점수판을 못 찾으면(첫 화면 등) 옛 자리(왼쪽 위 헤더 밑)에 둔다.
+    RectTransform scoreboardRect;
+    float nextScoreboardLookup;
+    readonly Vector3[] scoreboardCorners = new Vector3[4];
+    const float ButtonW = 124f, ButtonH = 32f, ScoreboardGap = 6f;
+
+    void FollowScoreboard()
+    {
+        if (buttonRoot == null || !buttonRoot.activeSelf) return;
+        if (scoreboardRect == null)
+        {
+            if (Time.unscaledTime < nextScoreboardLookup) return;
+            nextScoreboardLookup = Time.unscaledTime + 1f;
+            GameObject found = GameObject.Find("TeamPanel");
+            if (found == null) return;
+            scoreboardRect = found.transform as RectTransform;
+            if (scoreboardRect == null) return;
+        }
+        if (!scoreboardRect.gameObject.activeInHierarchy) return;
+        scoreboardRect.GetWorldCorners(scoreboardCorners);   // 오버레이 캔버스라 월드 = 화면 픽셀. [0]=왼아래 [3]=오른아래
+        RectTransform root = (RectTransform)transform;
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(root, new Vector2(scoreboardCorners[3].x, scoreboardCorners[3].y), null, out Vector2 local)) return;
+        Rect rect = root.rect;
+        var button = (RectTransform)buttonRoot.transform;
+        button.anchoredPosition = new Vector2(local.x - rect.xMin - ButtonW, local.y - rect.yMax - ScoreboardGap);
     }
 
     // ───────── 창 ─────────
@@ -337,7 +367,7 @@ public class BugNotepad : MonoBehaviour
 
         // 단추 — 왼쪽 위 헤더(퀘스트·메뉴·동맹·대화 줄) 바로 밑
         RectTransform root = (RectTransform)transform;
-        Button open = MakeButton(root, "버그 기록", 6f, 40f, 124f, 32f, ToggleWindow, 18f);
+        Button open = MakeButton(root, "버그 기록", 6f, 40f, ButtonW, ButtonH, ToggleWindow, 18f);   // 자리는 FollowScoreboard가 점수판 밑으로 옮긴다
         buttonRoot = open.gameObject;
 
         // 창
