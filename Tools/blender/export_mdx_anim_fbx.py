@@ -70,7 +70,7 @@ def convert(name):
     data = open(os.path.join(WORK, name), "rb").read()
     geo = mdx_geo.parse(data)
     info = mdx_anim.describe(data)
-    tag = os.path.splitext(name)[0]
+    tag = os.path.splitext(name)[0].replace("\\", "__").replace("/", "__")        # war3mapImported\\x.mdx 같은 경로 이름은 폴더 이름에 못 쓴다
     odir = os.path.join(OUT, tag)
     os.makedirs(os.path.join(odir, "Textures"), exist_ok=True)
     bpy.ops.wm.read_factory_settings(use_empty=True)
