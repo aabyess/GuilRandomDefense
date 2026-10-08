@@ -91,9 +91,27 @@ if MODE == "assign":
     for l in list(csv.reader(open(ROOT + "/Docs/research/ORIGINAL_MATCH_NAMES_2026-10-07.tsv", encoding="utf-8-sig"), delimiter="\t"))[1:]:
         for cdv in re.findall(r"[Hh]0[0-9A-Za-z]{2}", l[1]):
             if l[0].startswith(("불멸", "영원")): TOPCODE[cdv.lower()] = l[0].split("_")[0]
+    # 쓰이는 에셋만: 로스터·씬·프리팹 등 스킬 에셋이 아닌 곳이 guid로 참조하는 것에서 출발해 스킬끼리 참조를 따라 닿는 것(10-09 PM: 참조 0 = 죽은 에셋, 행 삭제)
+    guidre = re.compile(r"guid: (\w{32})"); refs = {}
+    for ext in ("*.asset", "*.unity", "*.prefab"):
+        for fp in glob.glob(ROOT + f"/Assets/**/{ext}", recursive=True):
+            refs[os.path.relpath(fp, ROOT)] = set(guidre.findall(open(fp, encoding="utf8", errors="ignore").read()))
+    alive = set(); todo = []
+    for f, gs in refs.items():
+        if "/UnitSkills/" in f and f.endswith(".asset"): continue
+        for g in gs:
+            q = g2p.get(g)
+            if q and os.path.relpath(q, ROOT) not in alive: alive.add(os.path.relpath(q, ROOT)); todo.append(os.path.relpath(q, ROOT))
+    while todo:
+        f = todo.pop()
+        for g in refs.get(f, ()):
+            q = g2p.get(g)
+            if q and os.path.relpath(q, ROOT) not in alive: alive.add(os.path.relpath(q, ROOT)); todo.append(os.path.relpath(q, ROOT))
+    dead = []
     byg = {}; stats = {}
     for r in rows:
         a = r["asset_path"]; c = cand[a]; n = os.path.basename(a)
+        if a not in alive: dead.append(a); continue
         g = next((x for x in TOKG if x in n), None) or next((x for x in c["grades"] if x not in TOP and x != "흔함"), None)
         if not g:                                                    # 상위 등급 유닛의 원작 능력 에셋(원작능력_불멸_·게이트_초월_·원작015_H09B …)은 따로(이미 넘긴 등급 CSV와 안 섞는다)
             t = next((x for x in TOP if x in n), None)
@@ -118,3 +136,4 @@ if MODE == "assign":
         cells = [x for r in rs for x in r[1:] if x]
         stats[g] = (len(rs), sum(1 for x in cells if x.startswith("원작:")), sum(1 for x in cells if x == "유지"))
     for g, (n, o, k) in sorted(stats.items()): print(g, "행", n, "원작 칸", o, "유지 칸", k)
+    print("죽은 에셋(참조 0 또는 파일 없음)으로 뺀 행", len(dead))
