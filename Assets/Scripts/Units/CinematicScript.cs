@@ -45,6 +45,8 @@ public class CinematicScript : ScriptableObject
         public string name;
         public GameObject prefab;        // null이면 대체 처리(substitute)
         public string substitute;        // 「ship」「lightning」 같은 기존 소품 이름(대체)
+        public Color tint = Color.white;     // 모델 색 보정(번개 푸른빛 등)
+        public float thickness = 1f;         // 가로(x·z) 굵기 배율
         public float substituteLengthWc3;    // >0이면 대체 모델: 이 길이(워3 단위)에 맞춰 키운다
         public float substituteNativeLength; // 대체 프리팹의 원래 길이(월드/미터 — 프리팹 단위 그대로)
     }

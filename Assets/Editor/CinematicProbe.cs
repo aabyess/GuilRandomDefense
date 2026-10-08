@@ -20,7 +20,7 @@ static class CinematicProbe
         return sb.ToString();
     }
 
-    static string Play()
+    static string Setup()
     {
         if (!Application.isPlaying) return "❌ 플레이 중에만";
         string id = System.IO.File.ReadAllText("ClaudeBridge/g2_scene.txt").Trim();
@@ -42,8 +42,20 @@ static class CinematicProbe
         if (th != null) th.SetValue(cam, h);
         Vector3 p = cam.transform.position; p.y = h; cam.transform.position = p;
         cam.MoveTo((caster + target) * 0.5f);
+        pending = (script, caster, target);
+        return $"{id} 준비";
+    }
+
+    static (CinematicScript, Vector3, Vector3)? pending;
+
+    static string Fire()
+    {
+        if (pending == null) return "❌ Setup 먼저";
+        var (script, caster, target) = pending.Value; string id = script.scriptId;
         SkillCinematic.Play(script, caster, target);
         Time.timeScale = float.TryParse(System.IO.File.Exists("ClaudeBridge/g2_scene_ts.txt") ? System.IO.File.ReadAllText("ClaudeBridge/g2_scene_ts.txt").Trim() : "", out float ts) ? ts : 0.5f;
         return $"{id} 재생 · 이벤트 {script.events.Count} · {script.duration:F1}s";
     }
+
+    static string Play() { string a = Setup(); return a.StartsWith("❌") ? a : Fire(); }
 }

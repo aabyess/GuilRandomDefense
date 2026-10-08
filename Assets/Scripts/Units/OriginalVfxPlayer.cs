@@ -70,6 +70,8 @@ public class OriginalVfxPlayer : MonoBehaviour
     public bool Finished { get; private set; }
     /// <summary>모든 층 알파에 곱한다(연출 vertexAlpha — 구름 0.4 등).</summary>
     public float AlphaMultiplier = 1f;
+    /// <summary>색 곱(연출 번개 푸른빛 등).</summary>
+    public Color Tint = Color.white;
 
     void Awake() => Init();
 
@@ -125,10 +127,17 @@ public class OriginalVfxPlayer : MonoBehaviour
     public void Play(string kind, float speedMultiplier = 1f, bool? forceLoop = null)
     {
         Init();
-        int index = 0;
+        int index = 0; bool found = false;
         if (clips.Length > 0 && !string.IsNullOrEmpty(kind))
             for (int i = 0; i < clips.Length; i++)
-                if (clips[i].name != null && clips[i].name.IndexOf(kind, StringComparison.OrdinalIgnoreCase) >= 0) { index = i; break; }
+                if (clips[i].name != null && clips[i].name.IndexOf(kind, StringComparison.OrdinalIgnoreCase) >= 0) { index = i; found = true; break; }
+        // 원작: 같은 이름의 시퀀스(Birth-1…6)가 여럿이면 그중 하나를 무작위로 고른다(roarthunder 낙뢰 6종). stand가 없고 전부 Birth 계열이면 무작위.
+        if (!found && clips.Length > 1)
+        {
+            bool allBirth = true;
+            foreach (ClipEntry c in clips) if (c.name == null || c.name.IndexOf("birth", StringComparison.OrdinalIgnoreCase) < 0) { allBirth = false; break; }
+            if (allBirth) index = UnityEngine.Random.Range(0, clips.Length);
+        }
         if (clips.Length > 0) SelectClip(index);
         time = 0f; speed = speedMultiplier;
         runDuration = clips.Length > 0 ? clips[index].lengthSec : duration;
@@ -178,12 +187,12 @@ public class OriginalVfxPlayer : MonoBehaviour
             Layer l = layers[i];
             if (l.renderer == null) continue;
             l.renderer.GetPropertyBlock(block);
-            Color c = baseColors[i];
+            Color c = baseColors[i] * Tint;
             float a;
             if (l.globalAlphaTimes.Length > 0) a = Mathf.Clamp01(SampleStatic(l.globalAlphaTimes, l.globalAlphaValues, seqStart + t, l.staticAlpha));
             else if (l.alphaTimes.Length > 0 && clipIndex <= 0) a = Mathf.Clamp01(Sample(l.alphaTimes, l.alphaValues, t));   // 곡선이 있으면 곡선이 알파(MDX 층 알파는 정적 또는 키 — staticAlpha 0은 「키가 있다」는 자리 표시일 수 있다)
             else a = l.staticAlpha;
-            c.a = baseColors[i].a * a * AlphaMultiplier;
+            c.a = baseColors[i].a * a * AlphaMultiplier;   // Tint는 rgb에만(알파는 위에서 따로)
             block.SetColor(BaseColorId, c);
             if (l.uvTimes.Length > 0 && clipIndex <= 0)
             {

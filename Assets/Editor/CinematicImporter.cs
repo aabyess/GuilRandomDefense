@@ -53,6 +53,7 @@ public static class CinematicImporter
             var mr = new CinematicScript.ModelRef { name = kv.Key };
             if (!string.IsNullOrEmpty(folder)) mr.prefab = BuildModelPrefab(kv.Key, folder, L(m, "pre2"), notes);
             else SubstituteModel(mr, root, notes);
+            if (kv.Key == "roarthunder") { mr.tint = new Color(0.55f, 0.75f, 1f, 1f); mr.thickness = 1.7f; }   // 번개: 푸른빛·굵게(PM 10-09)
             script.models.Add(mr);
         }
 
@@ -66,7 +67,9 @@ public static class CinematicImporter
             {
                 case "spawn":
                     ev.op = CinematicScript.Op.Spawn; ev.model = S(e, "model");
-                    ev.baseScale = F(e, "baseScale", 1f); ev.scalePercent = F(e, "scalePercent", 100f); ev.flyHeight = F(e, "flyHeight");
+                    ev.baseScale = F(e, "baseScale", 1f);
+                    // 샹크스 Lightningbolt(워3 기본 번개, ×15)를 roarthunder로 대체했을 때 원래 크기 단위가 달라 15배는 화면을 덮는다 → 드래곤이 쓰는 6으로(자동 검사 실패 → 보정 10-09)
+                    if (ev.model == "roarthunder" && ev.baseScale > 8f) ev.baseScale = 6f; ev.scalePercent = F(e, "scalePercent", 100f); ev.flyHeight = F(e, "flyHeight");
                     ev.lifeSec = e.TryGetValue("lifeSec", out object ls) && ls != null ? System.Convert.ToSingle(ls) : -1f;
                     ev.deathSec = F(e, "deathSec", 0.1f); ev.anim = S(e, "anim"); ev.timescale = F(e, "timescale", 1f); ev.vertexAlpha = F(e, "vertexAlpha", 1f);
                     var at = D(e, "at");
@@ -100,7 +103,7 @@ public static class CinematicImporter
     }
 
     // 스킬 → 대본(blender ourSkill 확정 10-09; 샹크스는 초월_황준석 패기 계열 더미채널 79행)
-    static readonly (string skill, string script)[] SkillLinks =
+    static readonly (string, string)[] SkillLinks =
     {
         ("SkillData_사장님_제한_전법규_마나스킬", "enel_eltor"),
         ("SkillData_사장님_불멸_정준영_범퍼숨통조이기", "dragon_storm"),
@@ -108,14 +111,36 @@ public static class CinematicImporter
         ("SkillData_더미채널_초월_황준석_ADAP_79행_10000", "shanks_haki"),
     };
 
-    public static string LinkSkills()
+    /// <summary>자동 검사 통과 대본(Docs/research/CINEMATIC_PASSED.txt)만 json의 ourSkill(SkillData_… 이름)로 스킬 표에 연결한다(기본 4개 포함).</summary>
+    public static string LinkPassed()
+    {
+        var pairs = new List<(string, string)>(SkillLinks);
+        string passedFile = "Docs/research/CINEMATIC_PASSED.txt";
+        var sbNote = new StringBuilder();
+        if (File.Exists(passedFile))
+            foreach (string id in File.ReadAllText(passedFile).Split(new[] { '\n', '\r', ' ' }, System.StringSplitOptions.RemoveEmptyEntries))
+            {
+                string jf = Path.Combine(ScriptRoot, id + ".json");
+                if (!File.Exists(jf)) continue;
+                var root = (Dictionary<string, object>)MiniJson.Parse(File.ReadAllText(jf));
+                string ours = S(root, "ourSkill");
+                var names = System.Text.RegularExpressions.Regex.Matches(ours, @"SkillData_[^\s,;)(]+").Cast<System.Text.RegularExpressions.Match>().Select(m => m.Value).ToList();
+                if (names.Count == 0) { sbNote.AppendLine($"   ⚠️ {id}: ourSkill에 SkillData 이름 없음({ours})"); continue; }
+                foreach (string n in names) if (!pairs.Any(p => p.Item1 == n)) pairs.Add((n.EndsWith(".asset") ? n.Substring(0, n.Length - 6) : n, id));
+            }
+        return LinkPairs(pairs) + sbNote;
+    }
+
+    public static string LinkSkills() => LinkPairs(new List<(string, string)>(SkillLinks));
+
+    static string LinkPairs(List<(string skill, string script)> links)
     {
         var table = AssetDatabase.LoadAssetAtPath<SkillCinematicTable>($"{OutRoot}/SkillCinematicTable.asset");
         bool isNew = table == null;
         if (isNew) table = ScriptableObject.CreateInstance<SkillCinematicTable>();
         table.scripts.Clear(); table.entries.Clear();
         var sb = new StringBuilder();
-        foreach (var (skillName, scriptId) in SkillLinks)
+        foreach (var (skillName, scriptId) in links)
         {
             var script = AssetDatabase.LoadAssetAtPath<CinematicScript>($"{OutRoot}/{scriptId}.asset");
             string[] guids = AssetDatabase.FindAssets(skillName + " t:SkillData", new[] { "Assets/Data/UnitSkills" });

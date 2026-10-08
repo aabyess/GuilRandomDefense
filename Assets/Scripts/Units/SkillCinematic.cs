@@ -70,6 +70,8 @@ public static class SkillCinematic
         public bool dying; public float dieAt;
         public float yaw;
         public float moveSpeedWorld;     // 월드/초(비행이 눈에 보이게 최소 0.45초)
+        public float thickness = 1f;
+        public GameObject tracer; public float arcHeight, moveTotal;
         public float substituteScale;   // >0이면 대체 모델 스케일(= 목표 길이/원래 길이)
     }
 
@@ -155,11 +157,13 @@ public static class SkillCinematic
             {
                 n.hasMove = true; n.moveTarget = AnchorPos(e.moveAnchor); n.moveSpeed = e.moveSpeed;
                 Vector3 flat = n.moveTarget - n.anchorPos; flat.y = 0f;
+                n.moveTotal = Mathf.Max(1f, flat.magnitude); n.arcHeight = n.moveTotal * 0.25f; n.tracer = MakeTracer();
                 n.moveSpeedWorld = Mathf.Min(e.moveSpeed * SizeScale / WorldScale.Value, Mathf.Max(1f, flat.magnitude) / 0.45f);   // 원작 속도 2200이면 0.2초 만에 도착해 날아가는 게 안 보인다 → 비행 최소 0.45초
             }
             if (m.substituteLengthWc3 > 0f && m.substituteNativeLength > 0.001f) n.substituteScale = m.substituteLengthWc3 / WorldScale.Value / m.substituteNativeLength;
             n.player = n.go.GetComponent<OriginalVfxPlayer>();
-            if (n.player != null) n.player.AlphaMultiplier = e.vertexAlpha * AlphaScale;
+            n.thickness = m.thickness;
+            if (n.player != null) { n.player.AlphaMultiplier = e.vertexAlpha * AlphaScale; n.player.Tint = m.tint; }
             n.drivers = n.go.GetComponentsInChildren<Pre2Driver>(true);
             Tick(n);
             n.go.SetActive(true);
@@ -173,6 +177,27 @@ public static class SkillCinematic
             foreach (Pre2Driver d in n.drivers) d.Begin(seqStartMs);
             if (!string.IsNullOrEmpty(e.id)) insts[e.id] = n;
             all.Add(n);
+        }
+
+        // 비행 투사체의 보이는 궤적: 작은 빛 구슬 꼬리(월드 공간 입자) — 원작 투사체 모델이 약해서 덧붙인다(PM 10-09)
+        GameObject MakeTracer()
+        {
+            var go = new GameObject("Tracer"); go.transform.SetParent(transform, false);
+            var ps = go.AddComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            var main = ps.main; main.duration = 5f; main.loop = true; main.startLifetime = 0.35f; main.startSpeed = 0f; main.startSize = 7f;
+            main.startColor = new Color(1f, 0.75f, 0.35f, 0.95f); main.simulationSpace = ParticleSystemSimulationSpace.World; main.maxParticles = 200;
+            var em = ps.emission; em.rateOverTime = 90f;
+            var shape = ps.shape; shape.enabled = false;
+            var col = ps.colorOverLifetime; col.enabled = true;
+            var g = new Gradient(); g.SetKeys(new[] { new GradientColorKey(new Color(1f, 0.9f, 0.6f), 0f), new GradientColorKey(new Color(1f, 0.4f, 0.1f), 1f) }, new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
+            col.color = g;
+            var sz = ps.sizeOverLifetime; sz.enabled = true; sz.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 1f, 1f, 0.15f));
+            var r = go.GetComponent<ParticleSystemRenderer>();
+            r.sharedMaterial = Resources.Load<Material>("Effects/Skill_star_09");
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            ps.Play();
+            return go;
         }
 
         void Kill(Inst n)
@@ -195,13 +220,22 @@ public static class SkillCinematic
                 if (to.magnitude <= step) { n.anchorPos = new Vector3(n.moveTarget.x, n.anchorPos.y, n.moveTarget.z); n.hasMove = false; }
                 else n.anchorPos += to.normalized * step;
             }
+            float arc = 0f;
+            if (n.moveTotal > 0f)
+            {
+                Vector3 rest = n.moveTarget - n.anchorPos; rest.y = 0f;
+                float progress = n.hasMove ? Mathf.Clamp01(1f - rest.magnitude / n.moveTotal) : 1f;
+                arc = Mathf.Sin(Mathf.PI * progress) * n.arcHeight;   // 곡선 포물선 궤적
+            }
             Vector3 polar = n.polarRadius > 0f ? Quaternion.Euler(0f, n.polarAngle, 0f) * Vector3.forward * (n.polarRadius * SizeScale / WorldScale.Value) : Vector3.zero;
-            n.go.transform.SetPositionAndRotation(n.anchorPos + polar + Vector3.up * (n.flyHeight * SizeScale / WorldScale.Value), Quaternion.Euler(0f, n.yaw, 0f));
+            n.go.transform.SetPositionAndRotation(n.anchorPos + polar + Vector3.up * (n.flyHeight * SizeScale / WorldScale.Value + arc), Quaternion.Euler(0f, n.yaw, 0f));
             float size = (n.substituteScale > 0f ? n.substituteScale * n.scalePercent / 100f : n.baseScale * n.scalePercent / 100f * MetersToWorld) * SizeScale;
             float age = elapsed - n.spawnedAt;
             float pop = Mathf.Clamp01(age / 0.25f);                                   // 등장: 0.25초에 솟아오름
             if (n.dying) pop = Mathf.Min(pop, Mathf.Clamp01((n.dieAt - elapsed) / 0.35f));   // 퇴장: 마지막 0.35초에 가라앉음
-            n.go.transform.localScale = Vector3.one * (size * Mathf.SmoothStep(0.05f, 1f, pop));
+            float grow = size * Mathf.SmoothStep(0.05f, 1f, pop);
+            n.go.transform.localScale = new Vector3(grow * n.thickness, grow, grow * n.thickness);
+            if (n.tracer != null) { n.tracer.transform.position = n.go.transform.position; if (!n.hasMove && n.moveTotal > 0f) { Destroy(n.tracer, 0.5f); var tps = n.tracer.GetComponent<ParticleSystem>(); if (tps != null) { var em = tps.emission; em.enabled = false; } n.tracer = null; } }
             if (!n.dying && n.lifeSec > 0f && elapsed - n.spawnedAt >= n.lifeSec) Kill(n);
             else if (!n.dying && n.lifeSec < 0f && n.player != null && n.player.Finished) Kill(n);
         }
