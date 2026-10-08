@@ -443,4 +443,15 @@ public static class HeroStatShotProbe
         }
         return $"✅ 미니보스 {n}종 · prefab NULL {bad} {names}";
     }
+
+    // 10-08 스킬 아이콘 연결 촬영용 — 제한_김강민
+    public static string SpawnKimKm()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        var unit = UnityEditor.AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/제한_김강민.asset");
+        spawner.Spawn(unit, LaneMarker.Get(0).LaneCenter, 0);
+        return "✅ " + unit.DisplayName + " 세움";
+    }
+    public static string SelectKimKm() => SelectByPart("제한_김강민");
 }
