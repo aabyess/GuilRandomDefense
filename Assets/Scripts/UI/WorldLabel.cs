@@ -17,6 +17,13 @@ public class WorldLabel : MonoBehaviour
     TextMeshPro label;
     Camera cam;
 
+    /// <summary>글자가 보이는 카메라 거리(기본 260~520). 큰 포탈 라벨(스토리 복귀 — 사장님 10-08 「글자가 안 보인다」)은 카메라가 높아도 보이게 넓힌다.</summary>
+    public void SetFade(float start, float end)
+    {
+        fadeStart = start;
+        fadeEnd = Mathf.Max(start + 1f, end);
+    }
+
     public void Configure(string labelText, Color labelColor, float size)
     {
         text = labelText;

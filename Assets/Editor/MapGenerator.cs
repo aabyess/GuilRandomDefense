@@ -3985,13 +3985,15 @@ public static class MapGenerator
         { "희귀함·특수함", "'희귀함,특수함(3%확률)'등급유닛 전체랜덤" },
         { "전설·히든", "'전설&히든'등급유닛 전체랜덤" },
     };
-    static void AddPortalLabel(Transform parent, GameObject portal, string text, bool orange)
+    static WorldLabel AddPortalLabel(Transform parent, GameObject portal, string text, bool orange, float sizeScale = 1f)
     {
         GameObject holder = new GameObject($"라벨_{portal.name}");
         holder.transform.SetParent(parent, false);
         float diameter = portal.transform.localScale.x;
         holder.transform.position = portal.transform.position + Vector3.up * (diameter * PortalLabelHeightPerDiameter);
-        holder.AddComponent<WorldLabel>().Configure(text, orange ? new Color(1f, 0.51f, 0f, 1f) : Color.white, diameter * PortalLabelSizePerDiameter);
+        WorldLabel worldLabel = holder.AddComponent<WorldLabel>();
+        worldLabel.Configure(text, orange ? new Color(1f, 0.51f, 0f, 1f) : Color.white, diameter * PortalLabelSizePerDiameter * sizeScale);
+        return worldLabel;
     }
 
     static GameObject BuildResourcePortal(Transform parent, string name, Vector3 ground,
@@ -4127,7 +4129,7 @@ public static class MapGenerator
         component.SetDestination(StoryZoneLandingPoint(laneIndex));
         {   // 유닛마다 자기 사거리 끝에 내리게(사장님 10-08) — 존 중심과 광장 안 최대 반지름(반지름 33×Scale의 85%)
             MapLayout.Island storyZone = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
-            component.SetStoryZone(new Vector3(storyZone.center.x, MapLayout.IslandTop + StructureDresser.StoryPlazaLift, storyZone.center.y), 33f * MapLayout.Scale * 0.85f);
+            component.SetStoryZone(new Vector3(storyZone.center.x, MapLayout.IslandTop + StructureDresser.StoryPlazaLift, storyZone.center.y), StoryZoneMaxLandingRadius(storyZone));
         }
         StructureDresser.DressPortal(portal, "포탈_마법진_스토리", StructureDresser.StoryGlow);
     }
@@ -4158,6 +4160,9 @@ public static class MapGenerator
         // 로스터를 못 찾는 극단적인 경우에만 쓰는 안전망 — 정상 실행에선 절대 안 걸린다.
         return min < float.MaxValue ? min : 30f;
     }
+
+    // 착지 최대 반지름(사장님 10-08 — 사거리가 광장보다 긴 유닛도 최대한 사거리 끝에서): 레인 귀퉁이(45도) 방향이라 존의 짧은 반변 × √2, 가장자리 여유 15%. 광장(반지름 33×Scale) 밖은 섬 윗면이라 NavMesh가 있다.
+    static float StoryZoneMaxLandingRadius(MapLayout.Island zone) => Mathf.Min(zone.size.x, zone.size.y) * 0.5f * Mathf.Sqrt(2f) * 0.85f;
 
     static float StoryZoneLandingDistance => MinRosterAttackRange() * StoryZoneLandingDistanceRatio;
 
@@ -4208,7 +4213,7 @@ public static class MapGenerator
         NavMeshModifier modifier = portal.AddComponent<NavMeshModifier>();
         modifier.ignoreFromBuild = true;
 
-        AddPortalLabel(parent, portal, "라인 존으로 돌아가기", true);   // 원작 j:3659 |cffFF8200
+        AddPortalLabel(parent, portal, "라인 존으로 돌아가기", true, 4.2f).SetFade(1600f, 3200f);   // 원작 j:3659 |cffFF8200 — 큰 포탈이라 카메라가 높아도 보이게(사장님 10-08)
         StoryReturnPortal component = portal.AddComponent<StoryReturnPortal>();
         Vector3[] destinations = new Vector3[MapLayout.Lanes.Length];
         for (int i = 0; i < MapLayout.Lanes.Length; i++)
@@ -4627,7 +4632,7 @@ public static class MapGenerator
         var lines = new List<string>();
         MapLayout.Island storyZone = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
         Vector3 center = new Vector3(storyZone.center.x, MapLayout.IslandTop + StructureDresser.StoryPlazaLift, storyZone.center.y);
-        float radius = 33f * MapLayout.Scale * 0.85f;
+        float radius = StoryZoneMaxLandingRadius(storyZone);
         int wired = 0;
         UnityEngine.SceneManagement.Scene scene = default;
         foreach (MapLayout.Island lane in MapLayout.Lanes)
