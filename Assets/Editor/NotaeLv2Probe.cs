@@ -176,6 +176,46 @@ static class NotaeLv2Probe
         return $"1회 {a} 골드 {g0}→{g1}(기대 −70) · 2회 {b} · 3회 {c} ({rc}) · 유닛 {unitsBefore}→{unitsAfter}(기대 +2) · 재고 {ctx.GamblingProgress.Stock(opt)}";
     }
 
+
+    // 평타 안 치는 원인 추적: 김용태·박은석(+대조 정윤식)을 보스 바로 앞에 세우고 상태를 찍는다. Mark 후 Report 대신 AtkReport로 읽는다.
+    static readonly List<(UnitAttacker u, EnemyDummy t, UnitCombat c)> atk = new List<(UnitAttacker, EnemyDummy, UnitCombat)>();
+    static string AtkSetup()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        EnemyData boss = AssetDatabase.LoadAssetAtPath<EnemyData>("Assets/Data/Enemies/Enemy_R60_정윤식.asset");
+        atk.Clear();
+        int i = 0;
+        foreach (string n in new[] { "불멸_김용태", "불멸_박은석", "불멸_정윤식", "초월_김만경_AD" })
+        {
+            Vector3 p = LaneMarker.Get(0).LaneCenter + new Vector3(-600f + i * 220f, 0f, 200f);
+            var go = spawner.Spawn(Load(n), p, 0);
+            var u = go.GetComponent<UnitAttacker>();
+            var ag = go.GetComponent<UnityEngine.AI.NavMeshAgent>();
+            GameObject bg = Object.Instantiate(boss.prefab, go.transform.position + new Vector3(0f, 0f, 22f), Quaternion.identity);
+            if (bg.TryGetComponent(out WaypointMover m)) m.enabled = false;
+            var e = bg.GetComponent<EnemyDummy>(); e.Initialize(boss, 1f); e.SetLane(0); HpField.SetValue(e, Refill);
+            atk.Add((u, e, go.GetComponent<UnitCombat>()));
+            i++;
+        }
+        EditorApplication.update -= AtkTick; EditorApplication.update += AtkTick;
+        return "세움";
+    }
+    static void AtkTick() { if (!Application.isPlaying) { EditorApplication.update -= AtkTick; return; } foreach (var a in atk) if (a.t != null) HpField.SetValue(a.t, Refill); }
+    static string AtkReport()
+    {
+        var sb = new StringBuilder();
+        foreach (var a in atk)
+        {
+            var ag = a.u.GetComponent<UnityEngine.AI.NavMeshAgent>();
+            float dist = a.t != null ? Vector3.Distance(a.u.transform.position, a.t.transform.position) : -1f;
+            string agInfo = ag == null ? "없음" : "on=" + ag.isOnNavMesh + " enabled=" + ag.enabled + (ag.isOnNavMesh ? " stopped=" + ag.isStopped : "");
+            sb.AppendLine($"{a.u.name}: 평타 {a.u.BasicHitCount}타 · 간격 {a.u.AttackInterval:F3} · 사거리 {a.u.AttackRange:F1} · 표적 거리 {dist:F1} · 에이전트 {agInfo} · 공격력 {a.u.AttackDamage:F0}");
+        }
+        EditorApplication.update -= AtkTick;
+        return sb.ToString();
+    }
+
     static void Tick()
     {
         if (!Application.isPlaying) { EditorApplication.update -= Tick; return; }
