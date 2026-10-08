@@ -308,6 +308,9 @@ public class UnitCombat : MonoBehaviour
         currentTarget = FindClosestEnemyWithin(attacker != null ? attacker.AttackRange : 0f);
     }
 
+    /// <summary>추격 중 사거리 안에 든 프레임에 바로 서나(10-08 스토리존 요청). false면 예전처럼 0.25초 주기까지 걷는다 — 레인 영향 A/B 측정용 스위치.</summary>
+    public static bool StopAtRangeEveryFrame = true;
+
     void UpdateChasing()
     {
         // 🔴 2026-09-24 — **표적을 잃었는지는 매 프레임 본다. 스캔 주기를 기다리지 않는다.**
@@ -337,7 +340,7 @@ public class UnitCombat : MonoBehaviour
             {
                 // 사거리 안에 들어온 그 프레임에 선다(사장님 10-08 「범위 최대한 끝에서 바로 때리게」) — 예전엔 아래 주기(0.25초)까지 계속 걸어 사거리보다 더 파고들었다.
                 //    움직이는 동안에만 한 번 세운다(멈춘 뒤엔 속도 0이라 안 부른다).
-                if (sqrToTarget <= AttackRangeSqr() && Flying == null && agent != null && agent.enabled && agent.isOnNavMesh && !agent.isStopped && agent.velocity.sqrMagnitude > 0.01f)
+                if (StopAtRangeEveryFrame && sqrToTarget <= AttackRangeSqr() && Flying == null && agent != null && agent.enabled && agent.isOnNavMesh && !agent.isStopped && agent.velocity.sqrMagnitude > 0.01f)
                     SetDestination(transform.position);
 
                 // 표적이 살아 있고 사거리 판정이 필요한 동안에도 경로 갱신은 주기대로만 한다 —

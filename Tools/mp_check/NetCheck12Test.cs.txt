@@ -1,0 +1,42 @@
+using System.Collections;
+using System.Linq;
+using UnityEngine;
+
+/// <summary>위습 배치 확인(빌드 사본 전용, 훅 -mpTestCheck12 초, 사진 -mpCheck12Shot 접두): 양쪽이 칸별·주인별 위습 위치를 찍고 흔함 선택 위습 모이는 자리로 카메라를 옮겨 한 장. 로그 「[C12]」.</summary>
+public class NetCheck12Test : MonoBehaviour
+{
+    public float startAt = 20f;
+    static string Shot { get { var a = System.Environment.GetCommandLineArgs(); int i = System.Array.IndexOf(a, "-mpCheck12Shot"); return i >= 0 && i + 1 < a.Length ? a[i + 1] : null; } }
+    IEnumerator Start()
+    {
+        yield return new WaitForSecondsRealtime(startAt);
+        string side = GameAuthority.IsServer ? "호스트" : "클라";
+        var groups = Wisp.Active == null ? null : Wisp.Active.Where(w => w != null).GroupBy(w => w.Data != null ? w.Data.targetGrade.ToString() : "?");
+        if (groups == null) { Debug.Log("[C12] Wisp.Active 없음"); yield break; }
+        foreach (var g in groups)
+            Debug.Log($"[C12] {side} 칸 {g.Key}: " + string.Join(" | ", g.Select(w => $"주인 {(w.TryGetComponent(out OwnedByPlayer o) ? o.OwnerId : -1)} {w.transform.position:F0}")));
+        if (GameAuthority.IsServer)
+        {
+            var rd = RewardDistributor.Instance;
+            var wd = (WispData)typeof(RewardDistributor).GetField("saveRewardCommonChoiceWisp", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(rd);
+            Debug.Log($"[C12] 호스트: 흔함 선택 위습 데이터 {(wd != null ? wd.wispName : "없음")} 등급 {(wd != null ? wd.targetGrade.ToString() : "-")}");
+            foreach (PlayerContext pc in PlayerContext.Occupied) rd.GrantWisps(pc, new System.Collections.Generic.List<WispReward> { new WispReward { wisp = wd, count = 3 } });
+        }
+        yield return new WaitForSecondsRealtime(3f);
+        var gc = Wisp.Active.Where(w => w != null && w.Data != null && w.Data.targetGrade == UnitGrade.Common).ToList();
+        Debug.Log($"[C12] {side} 흔함 칸 위습 {gc.Count}기: " + string.Join(" | ", gc.Select(w => $"주인 {(w.TryGetComponent(out OwnedByPlayer o2) ? o2.OwnerId : -1)} {w.transform.position:F0}")));
+        var ports = FindObjectsByType<UnitPortal>(FindObjectsSortMode.None).Where(p => p.SpecificUnit != null).ToList();
+        var chop = ports.FirstOrDefault(p => p.SpecificUnit.name == "흔함_강재규");
+        Debug.Log($"[C12] {side} 쵸파 포탈 {(chop != null ? chop.transform.position.ToString("F0") : "없음")} · 흔함 포탈 줄 z {string.Join(",", ports.Where(p => p.SpecificUnit.grade == UnitGrade.Common).Select(p => p.transform.position.z.ToString("F0")).Distinct())} · 가장 가까운 포탈까지 거리 {(gc.Count > 0 ? ports.Min(p => Vector2.Distance(new Vector2(p.transform.position.x, p.transform.position.z), new Vector2(gc[0].transform.position.x, gc[0].transform.position.z))) : -1f):F1}");
+        var common = Wisp.Active.Where(w => w != null && w.Data != null && w.Data.targetGrade == UnitGrade.Common).ToList();
+        if (common.Count > 0)
+        {
+            var cam = FindFirstObjectByType<RtsCameraController>();
+            Vector3 c = common.Aggregate(Vector3.zero, (a, w) => a + w.transform.position) / common.Count;
+            if (cam != null) cam.MoveTo(c + Vector3.forward * 40f);
+            yield return new WaitForSecondsRealtime(2f);
+            if (Shot != null) ScreenCapture.CaptureScreenshot(Shot + "_" + (GameAuthority.IsServer ? "host" : "client") + ".png");
+            yield return new WaitForSecondsRealtime(1f);
+        }
+    }
+}

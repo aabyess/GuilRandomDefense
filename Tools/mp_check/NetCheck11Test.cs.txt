@@ -1,0 +1,60 @@
+using System.Collections;
+using System.Reflection;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+/// <summary>조합 검색 닫으면 초기화 확인(빌드 사본 전용, 훅 -mpTestCheck11 초). 서랍: 검색어·칩·지금가능·스크롤 → 닫기 → 다시 열기. 도우미: 검색어·필터·정렬·스크롤 → ✕ → 다시 열기. 로그 「[C11]」.</summary>
+public class NetCheck11Test : MonoBehaviour
+{
+    public float startAt = 20f;
+    static string Shot { get { var a = System.Environment.GetCommandLineArgs(); int i = System.Array.IndexOf(a, "-mpCheck11Shot"); return i >= 0 && i + 1 < a.Length ? a[i + 1] : null; } }
+    const BindingFlags BF = BindingFlags.NonPublic | BindingFlags.Instance;
+    static T Get<T>(object o, string n) => (T)o.GetType().GetField(n, BF).GetValue(o);
+
+    IEnumerator Start()
+    {
+        yield return new WaitForSecondsRealtime(startAt);
+        if (!GameAuthority.IsServer) yield break;
+        var d = FindFirstObjectByType<RecipeSearchDrawer>();
+        if (d == null) { Debug.Log("[C11] ❌ 서랍 없음"); yield break; }
+        var t = typeof(RecipeSearchDrawer);
+        t.GetMethod("SetOpen", BF).Invoke(d, new object[] { true });
+        yield return new WaitForSecondsRealtime(1f);
+        var input = Get<TMP_InputField>(d, "input");
+        input.text = "이";
+        t.GetMethod("OnChip", BF).Invoke(d, new object[] { 3 });
+        t.GetMethod("OnChip", BF).Invoke(d, new object[] { 7 });   // 「지금 가능」
+        yield return new WaitForSecondsRealtime(1f);
+        var sc = Get<ScrollRect>(d, "scroll"); sc.verticalNormalizedPosition = 0.3f;
+        yield return new WaitForSecondsRealtime(0.5f);
+        Debug.Log($"[C11] 서랍 닫기 전: 검색어 「{Get<string>(d, "query")}」 칩 {Get<int>(d, "gradeChip")} 지금가능 {Get<bool>(d, "nowOnly")} 스크롤 {sc.verticalNormalizedPosition:F2}");
+        if (Shot != null) ScreenCapture.CaptureScreenshot(Shot + "_drawer_before.png");
+        yield return new WaitForSecondsRealtime(0.5f);
+        t.GetMethod("SetOpen", BF).Invoke(d, new object[] { false });
+        yield return new WaitForSecondsRealtime(0.5f);
+        t.GetMethod("SetOpen", BF).Invoke(d, new object[] { true });
+        yield return new WaitForSecondsRealtime(1f);
+        Debug.Log($"[C11] 서랍 다시 열기: 검색어 「{Get<string>(d, "query")}」 입력칸 「{input.text}」 칩 {Get<int>(d, "gradeChip")} 지금가능 {Get<bool>(d, "nowOnly")} 스크롤 {sc.verticalNormalizedPosition:F2}");
+        if (Shot != null) ScreenCapture.CaptureScreenshot(Shot + "_drawer_after.png");
+        yield return new WaitForSecondsRealtime(0.5f);
+        t.GetMethod("SetOpen", BF).Invoke(d, new object[] { false });
+        // 도우미
+        RecipeHelperPanel.Show("이", null);
+        yield return new WaitForSecondsRealtime(1.5f);
+        var h = FindFirstObjectByType<RecipeHelperPanel>(); var ht = typeof(RecipeHelperPanel);
+        ht.GetField("filter", BF).SetValue(h, SkillTag.None + 1);
+        ht.GetField("sort", BF).SetValue(h, System.Enum.ToObject(ht.GetField("sort", BF).FieldType, 1));
+        ht.GetField("hideNonMatching", BF).SetValue(h, true);
+        var gs = Get<ScrollRect>(h, "gridScroll"); gs.verticalNormalizedPosition = 0.2f;
+        yield return new WaitForSecondsRealtime(0.5f);
+        Debug.Log($"[C11] 도우미 닫기 전: 검색어 「{Get<string>(h, "query")}」 필터 {Get<object>(h, "filter")} 정렬 {Get<object>(h, "sort")} 숨김 {Get<bool>(h, "hideNonMatching")} 스크롤 {gs.verticalNormalizedPosition:F2}");
+        if (Shot != null) ScreenCapture.CaptureScreenshot(Shot + "_helper_before.png");
+        yield return new WaitForSecondsRealtime(0.5f);
+        ht.GetMethod("SetOpen", BF).Invoke(h, new object[] { false });
+        RecipeHelperPanel.Show("", null);
+        yield return new WaitForSecondsRealtime(1.5f);
+        Debug.Log($"[C11] 도우미 다시 열기: 검색어 「{Get<string>(h, "query")}」 필터 {Get<object>(h, "filter")} 정렬 {Get<object>(h, "sort")} 숨김 {Get<bool>(h, "hideNonMatching")} 스크롤 {gs.verticalNormalizedPosition:F2}");
+        if (Shot != null) ScreenCapture.CaptureScreenshot(Shot + "_helper_after.png");
+    }
+}
