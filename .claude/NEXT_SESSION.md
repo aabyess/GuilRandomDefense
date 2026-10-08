@@ -1,10 +1,26 @@
 # 다음 세션 이어받기 — 2026-10-07 밤 마감 (PM 4번째, Opus 5.5)
 
 `CLAUDE.md` → `.claude/PROJECT_BRIEF.md` → `.claude/TEAM_RULES.md`를 먼저 읽고 이 문서로 온다.
-🔴 **새 PM(10-08 새벽 교체): 팀원은 그대로(10-07 밤 띄운 구현담당1·2·blender, 일하는 중) — `--fresh` 돌리지 말 것.** 옛 PM이 마감 때 팀원 셋(구현담당1·2·blender)과 PM을 같이 갈아 끼웠다(사장님 「이거 다 되면 세션 다 바꿔보자」). ListAgents로 셋이 떠 있는지만 확인 → 「준비 완료」 받고 첫 지시(배경·에디터 순번 규칙 같이). 각자 `.claude/team/handoff_<역할>.md`(10-07 밤 최신).
+🔴 **10-08 오후 PM 6번째 마감판(아래 맨 위)을 따를 것 — 팀원은 이미 새 세션, `--fresh` 금지.** (옛 줄: 새 PM(10-08 새벽 교체): 팀원은 그대로 — `--fresh` 돌리지 말 것.) 옛 PM이 마감 때 팀원 셋(구현담당1·2·blender)과 PM을 같이 갈아 끼웠다(사장님 「이거 다 되면 세션 다 바꿔보자」). ListAgents로 셋이 떠 있는지만 확인 → 「준비 완료」 받고 첫 지시(배경·에디터 순번 규칙 같이). 각자 `.claude/team/handoff_<역할>.md`(10-07 밤 최신).
 **작업이 진행되면 PM이 이 문서를 갱신한다(큰 단계마다).**
 
 ---
+
+## ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐ 10-08 오후 PM 6번째 마감 — **이게 최신** (사장님 「다 새로운 세션으로 교체해」 15:30경)
+### 0) 새 PM이 맨 먼저
+- 🔴 **팀원 셋(구현담당1·2·blender)은 PM 6번째가 마감 때 `spawn_team.sh --fresh`로 새로 띄웠다 → `--fresh` 금지.** ListAgents로 떠 있는지 확인 → 「준비 완료」 받고 첫 지시(배경·에디터 순번 규칙 같이). 각자 handoff_<역할>.md(10-08 오후 최신).
+- 🔴 **Unity 에디터는 꺼져 있다**(맥 메모리 부족 — 13시간 켜 둔 에디터 14.6GB·스왑 4.7/6GB, 사장님이 강제 종료). 필요하면 `"/Applications/Unity/Hub/Editor/6000.0.82f1/Unity.app/Contents/MacOS/Unity" -projectPath <repo> &`(LaunchServices 막힘 우회). **앞으로 에디터를 오래 쓴 날은 중간에 껐다 켤 것.** 첫 실행 때 재임포트(컷인 220장 등) 시간 걸림.
+- 작업트리: PM이 재직렬화 잔여(Prefabs/Generated 403·적 fbx.meta 60·Roster 등)를 HEAD로 되돌리고 고아 머티리얼 440 제거(커밋 참조 0, 백업 scratchpad). 🔴 **모델 배선 메뉴를 돌리면 Prefabs/Generated 루트 fileID가 바뀐다** → 커밋하려면 배선+BindEnemies 미니보스 동기화(74f72330a)까지 같이 커밋. 배포 관문은 빌드 사본 기준.
+- 지금 할 일 없음 = 사장님 답 대기(아래 6).
+### 1) 오늘 오후 추가로 끝난 것(전부 main·push, 위 아침판에 더해)
+- 초상 보정 PortraitStage.Tunes(46017a941: 조도연·배성령·임장혁, 전수 240기 탐침) · 못 고친 3기(영원_윤현모·희귀함_조현규·히든_최윤서 = 모델 문제)
+- 컷인 반입·켜짐: CutinOverlay(f2739e129)·41기 반입(882073d55, Resources/Cutin ASCII 폴더 c_<SHA1> — 한글 Resources 경로는 맥 NFD에서 Load 실패)·Enabled=true(1dad03ed8)·실획득 실측 OK(bf4d5b27a, DebugSpeed 기본 1). 효과음은 무음(사장님 고르면 Resources/Sfx/cutin_whoosh·cutin_ting).
+- 미니보스 빌드 NULL 버그(4627d3104가 작업트리 fileID 참조) → cf633a21f·9a4bfa295 정정 + 배선 동기화 74f72330a
+- MP check5 두 창 관문 통과(Docs/research/MP_CHECK5_2026-10-08.md: 상점 번호·목재 잠금·미니보스·게이지 복제) → **0.3.16 배포 가능**. 빌드 사본은 dev/g1-mp-check5(0.3.16mp5) 상태 — 배포 땐 `git checkout -B release/0.3.16 main`으로 새로.
+- 강재규 재생 실측 22.7초(이론 21.0+스턴).
+### 2) 사장님 답 대기(6)
+1 컷인 효과음 ~/GRD_cutin_sfx/audition_all.wav(슉A 칼/슉B 카드 · 칭A 묵직한 종/칭B 유리, Kenney CC0) 2 솔·성탄·빼꼼 히든 강화 트랙 제외? 3 10엔→고급 생성 전환도 3초 잠금? 4 랜덤[제한됨] 공속+25%? 5 0.3.16 배포?(0.3.15와 MP 비호환, 배포 뒤 rclone grd:·패치노트 버전별 한 장) 6 초월 김만경·황준석·김경현에 원작 평타 피해 문 추가?(TRANSCEND_GATE_PORT_PLAN §3-bis 한 줄 요약, 유재헌은 원작도 없음)
+- 그 밖 이전부터: 행운의 토큰 칸 위치·제안값(임채민 25%·천벌 120·유물 3,000·스토리 0.7)·김강민 스킬·게이지 임시값 표·미니보스 틴트 세기(TintAmount 한 줄)
 
 ## ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐ 10-08 아침 PM 6번째 진행판 — **이게 최신** (팀원 셋 그대로, 5번째판 아래 내용 위에 쌓임)
 ### 끝난 것(전부 main·push)
