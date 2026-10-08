@@ -77,6 +77,9 @@ public class OriginalVfxPlayer : MonoBehaviour
         Apply(0f);
     }
 
+    /// <summary>에디터 크기 재기용: 그 시각의 모습으로 한 번 그린다(재생 상태는 안 바꾼다).</summary>
+    public void SampleAt(float t) { Init(); Apply(Mathf.Clamp(t, 0f, duration)); }
+
     public void Stop() { playing = false; foreach (Layer l in layers) if (l.renderer != null) l.renderer.SetPropertyBlock(null); }
 
     void Update()

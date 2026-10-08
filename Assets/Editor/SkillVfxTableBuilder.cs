@@ -154,6 +154,21 @@ public static class SkillVfxTableBuilder
             foreach (ParticleSystem ps in go.GetComponentsInChildren<ParticleSystem>(true))
                 if (ps.transform.parent == null || ps.transform.parent.GetComponentInParent<ParticleSystem>() == null)
                     ps.Simulate(0.4f, true, true, true);
+            OriginalVfxPlayer original = go.GetComponent<OriginalVfxPlayer>();
+            if (original != null)
+            {
+                // 원작 모델(10-08): 뼈 애니로 커지니 재생 중 가장 큰 모습(0.25·0.5·0.75·1.0 지점)의 가로 지름을 기준으로 한다.
+                float best = 0f;
+                foreach (float f in new[] { 0.25f, 0.5f, 0.75f, 1f })
+                {
+                    original.SampleAt(original.duration * f);
+                    Bounds? ob = null;
+                    foreach (Renderer r in go.GetComponentsInChildren<Renderer>(true))
+                        if (r.enabled && r.bounds.size.sqrMagnitude > 0f) { if (ob == null) ob = r.bounds; else { Bounds x = ob.Value; x.Encapsulate(r.bounds); ob = x; } }
+                    if (ob != null) best = Mathf.Max(best, Mathf.Max(ob.Value.size.x, ob.Value.size.z));
+                }
+                return best > 0.05f ? best : 1f;
+            }
             Bounds? b = null;
             foreach (Renderer r in go.GetComponentsInChildren<Renderer>(true))
             {

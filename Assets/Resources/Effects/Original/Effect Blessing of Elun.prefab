@@ -1,0 +1,214 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3862221035001530875
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5579208139465707636}
+  - component: {fileID: 5753619187338374971}
+  m_Layer: 0
+  m_Name: Effect Blessing of Elun
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5579208139465707636
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3862221035001530875}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1637681696979816403}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5753619187338374971
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3862221035001530875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b365b82e2ffe94868b6c4d533982708a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animator: {fileID: 5421458035002354310}
+  clip: {fileID: -2732784274700471826, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+  duration: 1
+  loop: 0
+  layers:
+  - renderer: {fileID: 3240543682939040903}
+    staticAlpha: 1
+    alphaTimes:
+    - 0
+    - 0
+    - 0.266
+    - 0.4
+    - 0.578
+    - 1
+    alphaValues:
+    - 0
+    - 1
+    - 1
+    - 1
+    - 0
+    - 0
+    uvTimes: []
+    uvOffsets: []
+  - renderer: {fileID: 1899717110807180350}
+    staticAlpha: 1
+    alphaTimes:
+    - 0
+    - 0
+    - 0.2
+    - 0.8
+    - 1
+    - 1
+    alphaValues:
+    - 0
+    - 1
+    - 1
+    - 1
+    - 0
+    - 0
+    uvTimes: []
+    uvOffsets: []
+--- !u!1001 &1238647878857615416
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 5579208139465707636}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -4771503462625125185, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -4771503462625125185, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: m_ReceiveShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -4771503462625125185, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 1f39670e89f594acea8df3ce5d47589f, type: 2}
+    - target: {fileID: 823500172905274374, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 823500172905274374, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: m_ReceiveShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 823500172905274374, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 9a0576a41222446c4a45d6ef21785d9c, type: 2}
+    - target: {fileID: 919132149155446097, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      propertyPath: m_Name
+      value: Effect Blessing of Elun
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5421458035002354310}
+  m_SourcePrefab: {fileID: 100100000, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+--- !u!4 &1637681696979816403 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+  m_PrefabInstance: {fileID: 1238647878857615416}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &1899717110807180350 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 823500172905274374, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+  m_PrefabInstance: {fileID: 1238647878857615416}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &2157759129640523113 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+  m_PrefabInstance: {fileID: 1238647878857615416}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &5421458035002354310
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2157759129640523113}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!137 &3240543682939040903 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -4771503462625125185, guid: 705d18e242e5443cc859b3a3c0aaacbd, type: 3}
+  m_PrefabInstance: {fileID: 1238647878857615416}
+  m_PrefabAsset: {fileID: 0}

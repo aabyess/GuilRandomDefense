@@ -25,14 +25,24 @@ public static class OriginalVfxBuilder
 
     public static string BuildTrial() => Build(Trial);
 
-    /// <summary>Docs/research/ORIGINAL_VFX_ASSIGN_*.csv가 가리키는 모델(칸 「원작:이름」)을 전부 반입하고 스킬 표를 다시 만든다.</summary>
-    [MenuItem("Tools/이펙트/원작 이펙트 배정 반입")]
+    /// <summary>등급별 반입(PM 지시 10-08: 초월 → 불멸 → 영원 → 하위, 등급마다 커밋·MB 보고): 그 등급 CSV들이 가리키는 모델만 반입하고 스킬 표를 다시 만든다.
+    /// 호출: call OriginalVfxBuilder.BuildChowol / BuildBulmyeol / BuildYeongwon / BuildLower / BuildAssignments(전부)</summary>
+    public static string BuildChowol() => BuildAssignments(f => f.StartsWith("초월"));
+    public static string BuildBulmyeol() => BuildAssignments(f => f.StartsWith("불멸"));
+    public static string BuildYeongwon() => BuildAssignments(f => f.StartsWith("영원"));
+    public static string BuildLower() => BuildAssignments(f => !f.StartsWith("초월") && !f.StartsWith("불멸") && !f.StartsWith("영원"));
+    public static string BuildAssignments() => BuildAssignments(f => true);
+
+    [MenuItem("Tools/이펙트/원작 이펙트 배정 반입(전부)")]
     static void MenuAssign() => Debug.Log(BuildAssignments());
 
-    public static string BuildAssignments()
+    static string BuildAssignments(System.Func<string, bool> gradeFilter)
     {
         var names = new SortedSet<string>();
         foreach (string file in Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), "Docs/research"), "ORIGINAL_VFX_ASSIGN_*.csv"))
+        {
+            string grade = Path.GetFileNameWithoutExtension(file).Substring("ORIGINAL_VFX_ASSIGN_".Length);
+            if (!gradeFilter(grade)) continue;
             foreach (string line in File.ReadAllLines(file))
             {
                 if (line.StartsWith("#")) continue;
@@ -42,8 +52,19 @@ public static class OriginalVfxBuilder
                     if (v.StartsWith("원작:")) names.Add(v.Substring("원작:".Length).Trim());
                 }
             }
+        }
         string built = Build(names.ToArray());
-        return built + SkillVfxTableBuilder.Build();
+        string table = SkillVfxTableBuilder.Build();
+        return $"모델 {names.Count}종\n{built}{table}\n📦 Assets/Art/Effects/Original = {DirSizeMb(ArtRoot):0.0}MB · Resources/Effects/Original = {DirSizeMb(PrefabRoot):0.0}MB";
+    }
+
+    static double DirSizeMb(string assetDir)
+    {
+        string full = Path.Combine(Directory.GetCurrentDirectory(), assetDir);
+        if (!Directory.Exists(full)) return 0;
+        long total = 0;
+        foreach (string f in Directory.GetFiles(full, "*", SearchOption.AllDirectories)) if (!f.EndsWith(".meta")) total += new FileInfo(f).Length;
+        return total / 1048576.0;
     }
 
     public static string Build(params string[] names)
