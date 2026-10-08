@@ -34,3 +34,9 @@
 ## 근사·한계
 - 사진은 입자 값 추정 시뮬레이션(원작 난수·정렬과 다름), 가산 합성은 근사. 크기·타이밍은 대본 값 그대로.
 - 워크3 기본 모델(번개 줄기 Lightningbolt·전함 HumanBattleship·Tranquility·돌 덩어리)은 맵에 없어 변환 불가 → 사진엔 자리표시자.
+
+## 추가(10-09 구현담당2 요청 반영)
+- `models.<모델>.playSequence{name,startMs,endMs}` = 기본 재생 시퀀스(stand, 없으면 첫 시퀀스). `pre2[].sequenceStartMs`가 같은 기준값(keysMsAbs에서 빼면 시퀀스 상대 ms). spawn에 `anim`이 있으면 그 이름이 든 시퀀스 기준(sequencesMs에서 start 확인).
+- `pre2[].textureFile` = ~/GRD_orig_vfx_trial/<모델>/Textures/<파일>.png (+ `textureSourcePath` 원작 경로). **입자 텍스처 PNG가 폴더에 빠져 있던 것 1018개를 전부 복사해 채움**(Tools/w3x/fix_pre2_textures.py) — 이전에 반입한 모델은 Textures/를 다시 복사할 것.
+- folder=null 모델은 `substituteNote`(대체 모양·크기 한 줄). spawn의 `substitute`(해적선 프리팹 경로·길이 380)·`originalModel`(샹크스 번개 = roarthunder로 대체) 참고.
+- 대본 개수: 4(샹크스·시키·에넬·드래곤). 더 필요하면 표(Docs/research/REPRESENTATIVE_SCENES_2026-10-09.md)에서 PM이 정함.

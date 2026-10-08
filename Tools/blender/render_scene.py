@@ -104,8 +104,25 @@ def placeholder(kind, pos, scale):
     if kind == "Lightningbolt":
         bpy.ops.mesh.primitive_cylinder_add(radius=18 * scale / 15, depth=1500, location=(pos[0], pos[1], 750))
         col = (0.6, 0.7, 1.0, 1)
-    elif kind == "HumanBattleship":
-        bpy.ops.mesh.primitive_cube_add(size=1, location=(pos[0], pos[1], pos[2] + 40)); ob = bpy.context.active_object; ob.scale = (170 * scale, 55 * scale, 50 * scale); col = (0.5, 0.35, 0.2, 1); ob.data.materials.append(emit("ph", col)); return ob
+    elif kind == "HumanBattleship":                                   # 우리 해적선 FBX(길이 380 워크3 단위로 맞춤)
+        ship = os.path.join(os.path.dirname(os.path.dirname(HERE)), ".check_entries_out", "해적선.fbx")
+        before = set(bpy.data.objects)
+        bpy.ops.import_scene.fbx(filepath=ship)
+        new = [o for o in bpy.data.objects if o not in before]
+        meshes = [o for o in new if o.type == "MESH"]
+        pts = [o.matrix_world @ Vector(c) for o in meshes for c in o.bound_box]
+        lo = Vector((min(q.x for q in pts), min(q.y for q in pts), min(q.z for q in pts))); hi = Vector((max(q.x for q in pts), max(q.y for q in pts), max(q.z for q in pts)))
+        k = 380.0 / max((hi - lo).x, (hi - lo).y, 1e-6)
+        root = bpy.data.objects.new("shiproot", None); scn.collection.objects.link(root)
+        for o in new:
+            if o.parent is None: o.parent = root
+        root.scale = (k, k, k); root.location = (pos[0] - (lo.x + hi.x) / 2 * k, pos[1] - (lo.y + hi.y) / 2 * k, pos[2] - lo.z * k)
+        for o in meshes:
+            for mt in o.data.materials:
+                if mt and mt.use_nodes:
+                    bs = next((n for n in mt.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None)
+                    if bs: bs.inputs["Emission Strength"].default_value = 0.25 if "Emission Strength" in bs.inputs else 0
+        return root
     else:
         bpy.ops.mesh.primitive_torus_add(major_radius=60 * scale, minor_radius=6, location=(pos[0], pos[1], 10)); col = (0.3, 1.0, 0.5, 1)
     ob = bpy.context.active_object; ob.data.materials.append(emit("ph", col)); return ob
@@ -154,5 +171,8 @@ for ti, Tn in enumerate(TIMES):
     for o in objs:
         if o.name not in scn.collection.objects: scn.collection.objects.link(o)
     frame_and_render(scn, cam, HALF, Vector(((350 if sc["id"] == "shiki_fleet" else 0), 0, CZ)), f"{OUTD}/{sc['id']}_{ti}.png")
-    for o in objs: bpy.data.objects.remove(o)
+    for o in objs:
+        for ch in list(getattr(o, "children_recursive", [])):
+            bpy.data.objects.remove(ch)
+        bpy.data.objects.remove(o)
 print("done", sc["id"], len(TIMES))
