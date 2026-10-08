@@ -3014,6 +3014,16 @@ public class GameHud : MonoBehaviour
         navigationButtonText.text = hasChosen ? $"항법: {NavigationDisplayName(choice)}" : "항법 선택";
     }
 
+    public static string NavigationDisplayNameOf(NavigationChoice choice) => NavigationDisplayName(choice);
+
+    // 항해일지 「항법」 칸 툴팁용 — 다섯 항법의 이름과 효과.
+    public static string NavigationHelpText()
+    {
+        var sb = new System.Text.StringBuilder();
+        for (int i = 0; i < NavigationOptionNames.Length; i++) sb.Append(i > 0 ? "\n" : "").Append(NavigationOptionNames[i]).Append(" — ").Append(NavigationOptionDescriptions[i].Replace("\n", " / "));
+        return sb.ToString();
+    }
+
     static string NavigationDisplayName(NavigationChoice choice)
     {
         int index = System.Array.IndexOf(NavigationOptionOrder, choice);
@@ -4684,6 +4694,8 @@ public class GameHud : MonoBehaviour
 
         LaneShopSlotView view = currentShop.GetSlotView(logicalIndex);
         if (string.IsNullOrEmpty(view.label)) return;
+        bool navigationSlot = currentShop is VoyageLogShop && logicalIndex == VoyageLogShop.NavigationSlot;
+        if (navigationSlot && view.available) { OnNavigationButtonClicked(); return; }   // 항해일지 「항법」 칸 = 상단 「항법 선택」과 같은 5택1 창(고르기는 기존 NetCommands 항법 RPC, 상점 RPC 아님)
         if (!view.available)
         {
             // 2026-10-06 사장님: 못 쓰는 칸을 눌렀을 때 아무 반응이 없으면 먹통으로 보인다 → 왜 못 쓰는지 띄운다.

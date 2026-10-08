@@ -38,6 +38,7 @@ public class VoyageLogShop : MonoBehaviour, ILaneShop
 {
     const int GambleSlot = 0;
     const int SearchSlot = 1;
+    public const int NavigationSlot = 2;   // 항법 선택(사장님 10-08) — 원작 5택1이 항해일지 H0C4의 「영웅 스킬 배우기」(NAVIGATION_ROUTES_FULL.md)
 
     [SerializeField] UnitData gambleUnit;
     [SerializeField] int goldCost = 5000;
@@ -95,11 +96,12 @@ public class VoyageLogShop : MonoBehaviour, ILaneShop
 
     // ---- ILaneShop ----
 
-    public int SlotCount => 2;
+    public int SlotCount => 3;
 
     public LaneShopSlotView GetSlotView(int index)
     {
         if (index == SearchSlot) return GetSearchSlotView();
+        if (index == NavigationSlot) return GetNavigationSlotView();
         if (index != GambleSlot || gambleUnit == null) return LaneShopSlotView.Empty;
 
         int stock = AvailableStock(OwnerContext);
@@ -117,6 +119,8 @@ public class VoyageLogShop : MonoBehaviour, ILaneShop
 
     public string GetUnavailableReason(int index)
     {
+        if (index == NavigationSlot)
+            return !IsLocalOwner ? "남의 항해일지입니다 — 보기만 할 수 있습니다." : "이미 항법을 골랐습니다 — 평생 1회, 되돌릴 수 없습니다.";
         if (index == SearchSlot)
         {
             TreasureHunt hunt = TreasureHunt.Instance;
@@ -132,6 +136,7 @@ public class VoyageLogShop : MonoBehaviour, ILaneShop
 
     public string GetSlotTooltip(int index)
     {
+        if (index == NavigationSlot) return GetNavigationTooltip();
         if (index == SearchSlot) return GetSearchTooltip();
         if (index != GambleSlot || gambleUnit == null) return null;
 
@@ -157,6 +162,7 @@ public class VoyageLogShop : MonoBehaviour, ILaneShop
     {
         failReason = null;
 
+        if (index == NavigationSlot) return false;   // 항법 선택은 HUD가 창을 여는 일 — 고르기는 GameHud 5택1 창(NetCommands 항법 RPC)이 한다. 상점 실행 경로(RPC)로 오지 않는다
         if (index == SearchSlot)
         {
             TreasureHunt hunt = TreasureHunt.Instance;
@@ -213,6 +219,27 @@ public class VoyageLogShop : MonoBehaviour, ILaneShop
 
         return context.GoldWallet.Gold >= goldCost
             && context.ResourceWallet.Get(ResourceType.Wood) >= woodCost;
+    }
+
+    // ---- 항법 선택 ----
+
+    bool IsLocalOwner => owner != null && owner.OwnerId == LocalPlayer.LocalPlayerId;
+
+    NavigationState NavigationOf => IsLocalOwner ? PlayerContext.Local?.NavigationState : PlayerContext.Get(owner.OwnerId)?.NavigationState;
+
+    LaneShopSlotView GetNavigationSlotView()
+    {
+        NavigationState state = NavigationOf;
+        bool chosen = state != null && state.HasChosen;
+        string label = chosen ? $"항법\n{GameHud.NavigationDisplayNameOf(state.Choice)}" : IsLocalOwner ? "항법\n선택" : "항법\n(보기 전용)";
+        return new LaneShopSlotView(label, LogColor, IsLocalOwner && !chosen, LaneShopTargetKind.None);
+    }
+
+    string GetNavigationTooltip()
+    {
+        NavigationState state = NavigationOf;
+        string head = state != null && state.HasChosen ? $"항법: {GameHud.NavigationDisplayNameOf(state.Choice)} — 평생 1회, 되돌릴 수 없습니다.\n\n" : "항법 선택 — 플레이어당 평생 1회, 되돌릴 수 없습니다.\n\n";
+        return head + GameHud.NavigationHelpText();
     }
 
     // ---- 탐색(보물찾기) ----
