@@ -23,4 +23,31 @@ public class DamageLevelFixedState : MonoBehaviour
     public int Value => value;
 
     public void Add(int amount) => value += amount;
+
+    // 아오키지 히든(원작 Hidden_Aokiji +2, 「한 플레이어 1번만」) — 우리는 히든_성탄이 조합식 없이 도박으로만 나와서(PM 10-08), 그 플레이어가
+    // 히든_성탄을 **처음 얻을 때** +2를 한 번 준다. 호스트(싱글 포함)만 OnAcquired를 쏜다.
+    public const string AokijiUnitAsset = "히든_성탄";
+    public const int AokijiBonus = 2;
+    [SerializeField] bool aokijiGranted;
+
+    public bool TryGrantAokijiOnce()
+    {
+        if (aokijiGranted) return false;
+        aokijiGranted = true;
+        value += AokijiBonus;
+        return true;
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void Install()
+    {
+        UnitIdentity.OnAcquired -= HandleAcquired;
+        UnitIdentity.OnAcquired += HandleAcquired;
+    }
+
+    static void HandleAcquired(UnitIdentity unit, UnitInventory inventory)
+    {
+        if (unit == null || unit.Data == null || unit.Data.name != AokijiUnitAsset) return;
+        PlayerContext.Get(unit.OwnerId)?.DamageLevelFixedState?.TryGrantAokijiOnce();
+    }
 }

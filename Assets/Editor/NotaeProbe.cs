@@ -214,4 +214,18 @@ static class NotaeProbe
         }
         return sb.ToString();
     }
+
+    // 아오키지 히든(히든_성탄) 첫 획득 +2 한 번만 — gameshot: ... call:NotaeProbe.AokijiTest
+    static string AokijiTest()
+    {
+        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
+        var d = AssetDatabase.LoadAssetAtPath<UnitData>("Assets/Data/Units/Roster/히든_성탄.asset");
+        var st = PlayerContext.Get(0).DamageLevelFixedState;
+        int v0 = st.Value;
+        spawner.Spawn(d, LaneMarker.Get(0).LaneCenter, 0);
+        int v1 = st.Value;
+        spawner.Spawn(d, LaneMarker.Get(0).LaneCenter, 0);
+        int v2 = st.Value;
+        return $"폭뎀증폭 카운터 {v0} → 첫 획득 {v1} → 두 번째 획득 {v2}(+2 한 번만이면 {v0}→{v0 + 2}→{v0 + 2})";
+    }
 }
