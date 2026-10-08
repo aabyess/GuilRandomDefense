@@ -46,3 +46,8 @@
 
 ## 이전 판 납품(10-07까지, 반영됨 또는 반영 대기)
 섬 루프 v2(~/GRD_title_loop_v2) · 워크3풍 UI 17종+창 4종+명령 아이콘 6(~/GRD_wc3_ui) · 적 출발 포탈 · 바다 물(~/GRD_water) · 버프 아이콘 7종(~/GRD_buff_icons) · 문 v3·폭탄·종이비행기·설정 판·선술집 UI·스킬 아이콘 170행 · 컷인 C안 41기(~/GRD_cutin, 구현담당2가 Unity 반영) · 초월 시전 이펙트 조사(`Docs/research/TRANSCEND_CAST_VFX_2026-10-08.md`).
+
+## 함정 추가(10-09 시범 납품)
+- 🔴 **verify_mdx_fbx는 「보이는지」를 못 본다.** 부품 수·삼각형·뼈·텍스처 파일만 대조하므로 33/33 통과인데도 레일건(Mdx_Effect_Railgun)은 빈 화면이었다. 원인: 번개가 **TXAN KTAT(UV 오프셋 계단 스크롤)** 로만 보이는 모델인데, `export_mdx_anim_fbx.py`가 `info["txan"]`을 `x.get("id")`로 찾아 항상 None이 돼 uvAnim이 버려졌다(TXAN엔 id 필드 없음, 번호=순서). 고침: 레이어 texanim 번호로 직접 인덱싱. FBX 정지 UV는 텍스처 아래 20% 빈 곳. 시범 json의 `unity.layers[].uvOffsetClip0`(STEP,[초,u,v], Unity offsetV=-v)에 담았다. 변환 산출은 **텍스처 입힌 실제 렌더 사진**(FBX 다시 읽어 emission+가산)으로 반드시 볼 것. 이전 산출 창고(15·16)도 UV 애니 모델은 같은 결함 — 재변환 필요.
+- `render_cast_vfx.py` 미리보기는 TXAN UV 애니를 안 읽는다 → 같은 모델이 빈 막대로 보임.
+- 아이콘 대응 판정: w3a의 aart/arar/auar가 정본. 새 표(index 기준)가 맞고 기존 skill_icon_map의 「코드 파일명에서」 png 64건은 틀림.

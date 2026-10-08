@@ -180,7 +180,7 @@ def convert(name):
             meshes.append(ob)
             ga = next((x for x in info["geoa"] if x["geoset"] == gi), None)
             la = next((x for x in info["layer_anims"] if x["material"] == g["material"] and x["layer"] == li), None)
-            ta = next((x for x in info["txan"] if x.get("id") == layer.get("texanim")), None) if layer.get("texanim", 0xFFFFFFFF) not in (0xFFFFFFFF, -1) else None
+            ta = (info["txan"][layer["texanim"]] if 0 <= layer.get("texanim", -1) < len(info["txan"]) else None) if layer.get("texanim", 0xFFFFFFFF) not in (0xFFFFFFFF, -1) else None   # TXAN은 번호 순서(id 필드 없음) — 옛 판은 항상 None이라 UV 이동 이펙트(레일건 번개 등)가 정지 UV로 빈 그림이 됐다
             side_meshes.append(dict(
                 mesh=mname, geoset=gi, layer=li, filter=layer["filter"], suffix=suf, texture=tex["path"], textureFile=texfile,
                 approxTexture=tex["path"] in APPROX, staticAlpha=layer["alpha"],
