@@ -9,6 +9,38 @@ using UnityEngine;
 public static class SkillCinematic
 {
     public static bool Enabled = true;
+    /// <summary>MP: 호스트가 연출을 시작할 때(표 번호·시전자·대상) — NetGameState가 친구 화면으로 넘긴다. 연출은 각 클라가 로컬 재생한다.</summary>
+    public static event System.Action<int, Vector3, Vector3> Played;
+    static int running;
+
+    /// <summary>스킬을 쏠 때 부른다(SkillVfx.CastAt). 표에 있는 스킬이면 연출을 시작한다. 연출은 게임 판정과 무관 — 예외는 삼킨다.</summary>
+    public static void OnCast(SkillData skill, Vector3 casterPos, Vector3 targetPos)
+    {
+        if (!Enabled || skill == null) return;
+        try
+        {
+            SkillCinematicTable table = SkillCinematicTable.Instance;
+            if (table == null) return;
+            int index = table.Find(skill);
+            if (index >= 0) PlayByIndex(index, casterPos, targetPos, notify: true);
+        }
+        catch (System.Exception e) { Debug.LogWarning("[연출] 시작 실패: " + e.Message); }
+    }
+
+    public static void PlayByIndex(int index, Vector3 casterPos, Vector3 targetPos, bool notify)
+    {
+        SkillCinematicTable table = SkillCinematicTable.Instance;
+        if (!Enabled || table == null || index < 0 || index >= table.scripts.Count || table.scripts[index] == null) return;
+        if (running >= 6) return;   // 한꺼번에 너무 많이 겹치지 않게
+        GameObject go = Play(table.scripts[index], casterPos, targetPos);
+        if (go == null) return;
+        running++;
+        go.AddComponent<RunningCounter>();
+        if (notify) Played?.Invoke(index, casterPos, targetPos);
+    }
+
+    sealed class RunningCounter : MonoBehaviour { void OnDestroy() { running = Mathf.Max(0, running - 1); } }
+
     public const float MetersToWorld = 100f / WorldScale.Value;
 
     /// <summary>대본을 재생한다. casterPos·targetPos는 월드 좌표(대상이 없으면 시전자 앞 지점).</summary>
@@ -34,6 +66,7 @@ public static class SkillCinematic
         public float spawnedAt, lifeSec = -1f, deathSec = 0.1f;
         public bool dying; public float dieAt;
         public float yaw;
+        public float substituteScale;   // >0이면 대체 모델 스케일(= 목표 길이/원래 길이)
     }
 
     sealed class CinematicRunner : MonoBehaviour
@@ -110,7 +143,9 @@ public static class SkillCinematic
                 yaw = e.facingRandom ? Random.Range(0f, 360f) : 0f,
             };
             if (e.hasMove) { n.hasMove = true; n.moveTarget = AnchorPos(e.moveAnchor); n.moveSpeed = e.moveSpeed; }
+            if (m.substituteLengthWc3 > 0f && m.substituteNativeLength > 0.001f) n.substituteScale = m.substituteLengthWc3 / WorldScale.Value / m.substituteNativeLength;
             n.player = n.go.GetComponent<OriginalVfxPlayer>();
+            if (n.player != null) n.player.AlphaMultiplier = e.vertexAlpha;
             n.drivers = n.go.GetComponentsInChildren<Pre2Driver>(true);
             Tick(n);
             n.go.SetActive(true);
@@ -148,7 +183,7 @@ public static class SkillCinematic
             }
             Vector3 polar = n.polarRadius > 0f ? Quaternion.Euler(0f, n.polarAngle, 0f) * Vector3.forward * (n.polarRadius / WorldScale.Value) : Vector3.zero;
             n.go.transform.SetPositionAndRotation(n.anchorPos + polar + Vector3.up * (n.flyHeight / WorldScale.Value), Quaternion.Euler(0f, n.yaw, 0f));
-            n.go.transform.localScale = Vector3.one * (n.baseScale * n.scalePercent / 100f * MetersToWorld);
+            n.go.transform.localScale = Vector3.one * (n.substituteScale > 0f ? n.substituteScale * n.scalePercent / 100f : n.baseScale * n.scalePercent / 100f * MetersToWorld);
             if (!n.dying && n.lifeSec > 0f && elapsed - n.spawnedAt >= n.lifeSec) Kill(n);
             else if (!n.dying && n.lifeSec < 0f && n.player != null && n.player.Finished) Kill(n);
         }

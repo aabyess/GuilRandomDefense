@@ -72,7 +72,7 @@ public class NetGameState : NetworkBehaviour
         if (HasStateAuthority) GameSound.Broadcast += RouteGameSound;
         if (HasStateAuthority) SummonVoice.Broadcast += RouteSummonVoice;
         if (HasStateAuthority) SkillSfx.Broadcast += RouteSkillSfx;
-        if (HasStateAuthority) { SkillVfx.Played += RouteVfx; SkillVfx.PlayedPrefab += RoutePrefabVfx; }
+        if (HasStateAuthority) { SkillVfx.Played += RouteVfx; SkillVfx.PlayedPrefab += RoutePrefabVfx; SkillCinematic.Played += RouteCinematic; }
 
         if (!HasStateAuthority)
         {
@@ -92,6 +92,7 @@ public class NetGameState : NetworkBehaviour
         SkillSfx.Broadcast -= RouteSkillSfx;
         SkillVfx.Played -= RouteVfx;
         SkillVfx.PlayedPrefab -= RoutePrefabVfx;
+        SkillCinematic.Played -= RouteCinematic;
         if (Instance == this) { Instance = null; GamePause.ApplyNetworked(false, -1); GamePause.ApplyNetworkedCutin(false); }   // 판이 끝나면 멈춤이 남지 않게
     }
 
@@ -264,6 +265,15 @@ public class NetGameState : NetworkBehaviour
     {
         ReceivedVfx++;
         SkillVfx.PlayPrefab(index, position, diameter, ground, notify: false);
+    }
+
+    // 원작 스킬 연출(10-09) — 대본 표 번호·시전자·대상 위치만 보낸다. 각 클라가 같은 대본을 로컬 재생(난수는 대본 고정값).
+    void RouteCinematic(int index, Vector3 caster, Vector3 target) => RPC_SkillCinematic((short)index, caster, target);
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies, Channel = RpcChannel.Unreliable)]
+    public void RPC_SkillCinematic(short index, Vector3 caster, Vector3 target)
+    {
+        SkillCinematic.PlayByIndex(index, caster, target, notify: false);
     }
 
     /// <summary>클라가 받은 한 번짜리 이펙트 수(두 창 확인용 로그).</summary>

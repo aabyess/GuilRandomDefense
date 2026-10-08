@@ -68,6 +68,8 @@ public class OriginalVfxPlayer : MonoBehaviour
     public float Speed { get => speed; set => speed = value; }
     /// <summary>재생이 끝나 스스로 꺼졌는가(연출이 반환 여부를 본다).</summary>
     public bool Finished { get; private set; }
+    /// <summary>모든 층 알파에 곱한다(연출 vertexAlpha — 구름 0.4 등).</summary>
+    public float AlphaMultiplier = 1f;
 
     void Awake() => Init();
 
@@ -181,7 +183,7 @@ public class OriginalVfxPlayer : MonoBehaviour
             if (l.globalAlphaTimes.Length > 0) a = Mathf.Clamp01(SampleStatic(l.globalAlphaTimes, l.globalAlphaValues, seqStart + t, l.staticAlpha));
             else if (l.alphaTimes.Length > 0 && clipIndex <= 0) a = Mathf.Clamp01(Sample(l.alphaTimes, l.alphaValues, t));   // 곡선이 있으면 곡선이 알파(MDX 층 알파는 정적 또는 키 — staticAlpha 0은 「키가 있다」는 자리 표시일 수 있다)
             else a = l.staticAlpha;
-            c.a = baseColors[i].a * a;
+            c.a = baseColors[i].a * a * AlphaMultiplier;
             block.SetColor(BaseColorId, c);
             if (l.uvTimes.Length > 0 && clipIndex <= 0)
             {

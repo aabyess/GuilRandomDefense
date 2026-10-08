@@ -39,10 +39,11 @@ public static class SkillVfx
     {
         bool previous = BeginCast(caster);
         currentEntry = CasterAllowsVfx ? Table?.Find(skill) : null;
+        currentSkill = skill;
         return previous;
     }
 
-    public static void EndCast(bool previous) { CasterAllowsVfx = previous; currentEntry = null; }
+    public static void EndCast(bool previous) { CasterAllowsVfx = previous; currentEntry = null; currentSkill = null; }
 
     /// <summary>등급 게이트만 잠깐 바꾼다(스킬 표 칸은 그대로) — 시전 안에서 동기로 도는 여러 번 때리기 첫 타가 EndCast로 칸을 지우지 않게.</summary>
     public static bool SetCasterGate(bool allowed) { bool previous = CasterAllowsVfx; CasterAllowsVfx = allowed; return previous; }
@@ -51,6 +52,7 @@ public static class SkillVfx
     static SkillVfxTable table;
     static bool tableLoaded;
     static SkillVfxTable.Entry currentEntry;
+    static SkillData currentSkill;   // 연출(SkillCinematic) 표 조회용
 
     static SkillVfxTable Table
     {
@@ -75,6 +77,7 @@ public static class SkillVfx
     /// <summary>시전 한 번에 한 번: 범위 중심 땅 위(반경에 맞춰)와 시전자 발밑. UnitAttacker.CastSkillLevel이 부른다.</summary>
     public static void CastAt(Vector3 aoeCenter, Vector3 casterPosition, float worldRange)
     {
+        if (Enabled && CasterAllowsVfx && currentSkill != null) SkillCinematic.OnCast(currentSkill, casterPosition, aoeCenter);   // 원작 스킬 연출(10-09)
         if (!Enabled || !CasterAllowsVfx || currentEntry == null) return;
         if (currentEntry.area.IsSet)
             PlaySlot(currentEntry.area, aoeCenter, Mathf.Max(MinAreaDiameter, worldRange * 2f), ground: true);

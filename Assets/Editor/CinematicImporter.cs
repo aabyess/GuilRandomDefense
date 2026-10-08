@@ -52,7 +52,7 @@ public static class CinematicImporter
             string folder = S(m, "folder");
             var mr = new CinematicScript.ModelRef { name = kv.Key };
             if (!string.IsNullOrEmpty(folder)) mr.prefab = BuildModelPrefab(kv.Key, folder, L(m, "pre2"), notes);
-            else notes.Append($" ⚠️{kv.Key}: 폴더 없음(대체 모델 필요)");
+            else SubstituteModel(mr, root, notes);
             script.models.Add(mr);
         }
 
@@ -99,6 +99,76 @@ public static class CinematicImporter
         return $"✅ {id}: 이벤트 {script.events.Count} · 모델 {models.Count}{notes}";
     }
 
+    // 스킬 → 대본(blender ourSkill 확정 10-09; 샹크스는 초월_황준석 패기 계열 더미채널 79행)
+    static readonly (string skill, string script)[] SkillLinks =
+    {
+        ("SkillData_사장님_제한_전법규_마나스킬", "enel_eltor"),
+        ("SkillData_사장님_불멸_정준영_범퍼숨통조이기", "dragon_storm"),
+        ("SkillData_사장님_불멸_고도현_무중생유", "shiki_fleet"),
+        ("SkillData_더미채널_초월_황준석_ADAP_79행_10000", "shanks_haki"),
+    };
+
+    public static string LinkSkills()
+    {
+        var table = AssetDatabase.LoadAssetAtPath<SkillCinematicTable>($"{OutRoot}/SkillCinematicTable.asset");
+        bool isNew = table == null;
+        if (isNew) table = ScriptableObject.CreateInstance<SkillCinematicTable>();
+        table.scripts.Clear(); table.entries.Clear();
+        var sb = new StringBuilder();
+        foreach (var (skillName, scriptId) in SkillLinks)
+        {
+            var script = AssetDatabase.LoadAssetAtPath<CinematicScript>($"{OutRoot}/{scriptId}.asset");
+            string[] guids = AssetDatabase.FindAssets(skillName + " t:SkillData", new[] { "Assets/Data/UnitSkills" });
+            SkillData skill = guids.Select(g => AssetDatabase.LoadAssetAtPath<SkillData>(AssetDatabase.GUIDToAssetPath(g))).FirstOrDefault(s => s != null && s.name == skillName);
+            if (script == null || skill == null) { sb.AppendLine($"   ❌ {skillName} → {scriptId}: {(script == null ? "대본 없음" : "스킬 없음")}"); continue; }
+            int index = table.scripts.IndexOf(script); if (index < 0) { table.scripts.Add(script); index = table.scripts.Count - 1; }
+            table.entries.Add(new SkillCinematicTable.Entry { skill = skill, script = index });
+            sb.AppendLine($"   ✅ {skillName} → {scriptId}");
+        }
+        if (isNew) AssetDatabase.CreateAsset(table, $"{OutRoot}/SkillCinematicTable.asset"); else EditorUtility.SetDirty(table);
+        AssetDatabase.SaveAssets();
+        return "연출 표 연결:\n" + sb;
+    }
+
+    // 워3 기본 모델(맵에 없음)의 대체 — 대본 spawn.substitute{path,lengthWc3}가 있으면 그것(시키 전함 = 우리 해적선), 없으면 대본 note의 대체 설명(Tranquility = 고리 이펙트)
+    static void SubstituteModel(CinematicScript.ModelRef mr, Dictionary<string, object> root, StringBuilder notes)
+    {
+        string path = null; float length = 0f;
+        foreach (object o in L(root, "timeline"))
+        {
+            var e = (Dictionary<string, object>)o;
+            if (S(e, "model") != mr.name) continue;
+            var sub = D(e, "substitute");
+            if (sub != null) { path = S(sub, "path"); length = F(sub, "lengthWc3"); break; }
+        }
+        if (path == null && mr.name == "Tranquility") { path = $"{OriginalVfxBuilder.PrefabRoot}/az_firering1a.prefab"; length = 300f; }
+        GameObject prefab = path != null ? AssetDatabase.LoadAssetAtPath<GameObject>(path) : null;
+        if (prefab == null) { notes.Append($" ⚠️{mr.name}: 대체 프리팹 없음({path})"); return; }
+        mr.prefab = prefab; mr.substituteLengthWc3 = length;
+        mr.substituteNativeLength = prefab.name == "az_firering1a" ? 6.4f : NativeLength(prefab);   // 고리: 뼈 애니로 커져 편집 모드 경계가 낡는다 — 게임 실측 최대(6.4m)
+        notes.Append($" · {mr.name}→{System.IO.Path.GetFileName(path)} 길이 {length} (원래 {mr.substituteNativeLength:F2})");
+    }
+
+    // 대체 프리팹의 가로 길이(프리팹 단위): 렌더러 경계 합집합의 x·z 큰 쪽. 뼈 애니 이펙트(고리)는 재생 중 최대 크기에 가깝게 반 지점으로 샘플한다.
+    static float NativeLength(GameObject prefab)
+    {
+        var inst = (GameObject)Object.Instantiate(prefab); inst.hideFlags = HideFlags.HideAndDontSave;
+        try
+        {
+            var player = inst.GetComponent<OriginalVfxPlayer>();
+            float best = 0f;
+            foreach (float f in new[] { 0.3f, 0.6f, 0.9f })
+            {
+                if (player != null) player.SampleAt(player.duration * f);
+                Bounds? b = null;
+                foreach (Renderer r in inst.GetComponentsInChildren<Renderer>()) { if (b == null) b = r.bounds; else { Bounds x = b.Value; x.Encapsulate(r.bounds); b = x; } }
+                if (b != null) best = Mathf.Max(best, b.Value.size.x, b.Value.size.z);
+            }
+            return best > 0.01f ? best : 1f;
+        }
+        finally { Object.DestroyImmediate(inst); }
+    }
+
     static CinematicScript.Anchor ParseAnchor(string a) => a == "target" ? CinematicScript.Anchor.Target : a == "ship" ? CinematicScript.Anchor.Ship : CinematicScript.Anchor.Caster;
 
     // ── 모델 프리팹: 반입한 이펙트 프리팹 복사 + 입자 자식 ─────────────────────────────────────
@@ -108,7 +178,7 @@ public static class CinematicImporter
         string srcPrefab = $"{OriginalVfxBuilder.PrefabRoot}/{folder}.prefab";
         if (File.Exists(Path.Combine(baseDir, folder + ".fbx")) || File.Exists(Path.Combine(baseDir, folder + ".json")))
         {
-            if (AssetDatabase.LoadAssetAtPath<GameObject>(srcPrefab) == null || NeedsRebuild(srcPrefab)) OriginalVfxBuilder.Build(folder);
+            OriginalVfxBuilder.Build(folder);   // 매번 다시 지어 최신 규칙(알파 없는 텍스처 가산 등)을 반영
         }
         string outPath = $"{ModelOut}/{SafeName(modelName)}.prefab";
         GameObject contents;
@@ -259,6 +329,7 @@ static class Pre2Builder
 
     static Material Material(Texture2D tex, string texPath, string filter, string dir)
     {
+        if ((filter == "blend" || filter == "alphakey") && OriginalVfxBuilder.TextureOpaque(texPath)) filter = "additive";   // 알파 없는 근사 텍스처 → 검은 네모 방지
         string name = $"{Path.GetFileNameWithoutExtension(texPath)}_{filter}".Replace(' ', '_');
         string path = $"{dir}/{name}.mat";
         Material m = AssetDatabase.LoadAssetAtPath<Material>(path);

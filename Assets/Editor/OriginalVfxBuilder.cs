@@ -242,6 +242,7 @@ public static class OriginalVfxBuilder
         if (isNew) m = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
         m.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(texPath));
         bool additive = lj.blend != null && lj.blend.StartsWith("Additive");
+        if (!additive && lj.blend == "AlphaBlend" && TextureOpaque(texPath)) additive = true;   // 알파가 없는 근사 텍스처(검은 배경 흰 그림)는 알파 혼합이면 검은 네모 → 가산으로(10-09)
         m.SetFloat("_Surface", 1f);
         m.SetFloat("_Blend", additive ? 2f : 0f);
         m.SetFloat("_Cull", 0f);   // 양면(원작 모델은 뒷면 컬링 없이 쓴다)
@@ -255,6 +256,28 @@ public static class OriginalVfxBuilder
         m.SetInt("_Cull", (int)CullMode.Off);
         if (isNew) AssetDatabase.CreateAsset(m, matPath); else EditorUtility.SetDirty(m);
         return m;
+    }
+
+    static readonly Dictionary<string, bool> opaqueCache = new Dictionary<string, bool>();
+    /// <summary>PNG의 알파 채널이 전부 불투명(≥250)인가 — 원작이 알파를 쓰는 「blend」 필터인데 변환 텍스처에 알파가 없으면 검은 네모로 그려진다.</summary>
+    public static bool TextureOpaque(string assetPath)
+    {
+        if (opaqueCache.TryGetValue(assetPath, out bool cached)) return cached;
+        bool opaque = false;
+        string full = Path.Combine(Directory.GetCurrentDirectory(), assetPath);
+        if (File.Exists(full))
+        {
+            var t = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            try
+            {
+                t.LoadImage(File.ReadAllBytes(full));
+                opaque = true;
+                foreach (Color32 c in t.GetPixels32()) if (c.a < 250) { opaque = false; break; }
+            }
+            finally { Object.DestroyImmediate(t); }
+        }
+        opaqueCache[assetPath] = opaque;
+        return opaque;
     }
 
     static void CopyIfChanged(string from, string assetPath)
