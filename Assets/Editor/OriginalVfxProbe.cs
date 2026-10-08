@@ -147,3 +147,20 @@ public static class OriginalVfxProbe
         return sb.ToString();
     }
 }
+
+/// <summary>항법 10라운드 자동 선택 확인(10-08): 라운드 10을 시작시켜 미선택자가 연합세력이 되는지.</summary>
+public static class NavAutoProbe
+{
+    public static string Run()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        RoundManager rm = Object.FindFirstObjectByType<RoundManager>();
+        PlayerContext me = PlayerContext.Local;
+        if (rm == null || me == null || me.NavigationState == null) return "❌ RoundManager·내 NavigationState 없음";
+        string before = me.NavigationState.HasChosen ? me.NavigationState.Choice.ToString() : "미선택";
+        MethodInfo m = typeof(RoundManager).GetMethod("ForceDefaultNavigation", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (m == null) return "❌ ForceDefaultNavigation 없음";
+        m.Invoke(rm, null);
+        return $"항법 {before} → {me.NavigationState.Choice}";
+    }
+}

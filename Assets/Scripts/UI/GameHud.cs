@@ -1081,12 +1081,12 @@ public class GameHud : MonoBehaviour
         if (HotkeyAlias.IsMac)   // 맥: F키가 밝기·볼륨이라 안 먹을 때의 안내(10-08)
         {
             TMP_Text macHint = CreateLabel(card, "MacKeyHint", HotkeyAlias.MacHint);
-            macHint.fontSize = 13; macHint.alignment = TextAlignmentOptions.Center; macHint.raycastTarget = false;
+            macHint.fontSize = 12; macHint.alignment = TextAlignmentOptions.Center; macHint.raycastTarget = false;
             macHint.color = new Color(0.78f, 0.80f, 0.86f, 1f);
             macHint.textWrappingMode = TextWrappingModes.Normal;
             RectTransform hr = macHint.rectTransform;
             hr.anchorMin = new Vector2(0.5f, 0f); hr.anchorMax = new Vector2(0.5f, 0f); hr.pivot = new Vector2(0.5f, 0f);
-            hr.sizeDelta = new Vector2(MenuCardWidth - 60f, 62f); hr.anchoredPosition = new Vector2(0f, 14f);
+            hr.sizeDelta = new Vector2(MenuCardWidth - 90f, 52f); hr.anchoredPosition = new Vector2(0f, 34f);   // 돌 틀 안쪽(아래 띠 위)에 3줄이 들어가게
         }
 
         gameMenuScreenButtons = CreateMenuContainer(card, "ScreenButtons");

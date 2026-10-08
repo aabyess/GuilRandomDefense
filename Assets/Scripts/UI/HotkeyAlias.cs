@@ -53,5 +53,5 @@ public static class HotkeyAlias
         }
     }
 
-    public const string MacHint = "F키가 안 먹으면 fn 키를 같이 누르거나, 시스템 설정 > 키보드 > 「F1, F2 등을 표준 기능 키로 사용」을 켜세요. 또는 Option+숫자(Opt+5 조합 검색 · Opt+0 메뉴 · Opt+- 동맹).";
+    public const string MacHint = "F키가 안 먹으면 fn 키를 같이 누르거나 시스템 설정 > 키보드 > 「F1, F2 등을 표준 기능 키로 사용」을 켜세요. 또는 Option+숫자: Opt+5 조합 검색 · Opt+0 메뉴 · Opt+- 동맹";
 }
