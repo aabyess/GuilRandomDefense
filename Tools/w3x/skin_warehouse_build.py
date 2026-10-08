@@ -100,3 +100,40 @@ with open(os.path.join(DST, "index.csv"), "w", newline="", encoding="utf-8-sig")
     wr.writerow(HEAD)
     wr.writerows(sorted(rows))
 print("units", len(rows), "models", len(units_of), "converted", sum(1 for r in rows if r[5] == "변환됨"), "verify ok", sum(1 for r in rows if r[6] == "통과"))
+
+# 모아보기 시트: 앞비스듬히 미리보기 격자(4열 × 5행)
+from PIL import Image, ImageDraw, ImageFont                          # noqa: E402
+try:
+    fnt = ImageFont.truetype("/System/Library/Fonts/AppleSDGothicNeo.ttc", 13)
+except Exception:                                                    # noqa: BLE001
+    fnt = None
+items = []
+for k in sorted(units_of):
+    pvp = os.path.join(DST, folder_name(k), "preview.png")
+    if os.path.exists(pvp):
+        items.append((folder_name(k), Image.open(pvp).convert("RGB")))
+for old in glob.glob(os.path.join(DST, "모아보기_*.png")):
+    os.remove(old)
+cols, per = 4, 20
+for si in range(0, len(items), per):
+    chunk = items[si:si + per]
+    tw = 300
+    th = int(tw * chunk[0][1].height / chunk[0][1].width)
+    rws = (len(chunk) + cols - 1) // cols
+    sheet = Image.new("RGB", (cols * tw, rws * (th + 18)), (14, 14, 14))
+    dr = ImageDraw.Draw(sheet)
+    for i, (nm, im) in enumerate(chunk):
+        x, y = (i % cols) * tw, (i // cols) * (th + 18)
+        dr.text((x + 4, y + 1), nm, fill=(255, 255, 255), font=fnt)
+        sheet.paste(im.resize((tw, th)), (x, y + 18))
+    sheet.save(os.path.join(DST, f"모아보기_{si // per + 1:02d}.png"))
+open(os.path.join(DST, "README.md"), "w", encoding="utf8").write(f"""# 15_원랜디스킨 — 원작(ORD11.089) 맵 안 커스텀 유닛 모델 {len(units_of)}개(유닛 {len(rows)}명)
+
+**게임에 안 넣었다.** 나중에 가져다 쓸 창고. 원작(블리자드·중국 모델러) 저작물이라 반입은 사장님 판단 대기.
+생성: `Tools/w3x/skin_warehouse_run.sh` → `skin_warehouse_build.py` · `Tools/blender/export_mdx_anim_fbx.py` · `verify_mdx_fbx.py` · `render_mdx.py`.
+- 폴더 = 모델 하나(`<대표 uid>_<원작 이름>`): `<모델>.fbx`(뼈+스킨 가중치 균등, 시퀀스마다 액션 30fps) · `Textures/*.png` · `<모델>.json`(층 알파·UV 이동·파티클·리본) · `preview.png`(정적 앞비스듬히).
+- `index.csv`: 유닛마다 한 줄(같은 모델을 쓰는 유닛은 같은 폴더) — 원작 ID·이름·우리 이름(MASTER_UID_ROSTER_MAP)·애니 클립·부품 수 검사.
+- 부품 수 검사(objrip 함정 대조): FBX를 다시 읽어 메시 수·삼각형 수·정점 수를 원본과 맞췄다. 팀색(TeamColor/TeamGlow) 층만 있는 지오셋은 일부러 뺐다(바닥 광채 판 등). 넓이 0·겹친 면은 Blender가 합친다(퇴화 삼각형 칸).
+- 한계: 헤르미트/베지어 보간은 선형 · 뼈 가중치 균등(원작 행렬 그룹) · 팀색 텍스처(ReplaceableTextures\\TeamColor)는 변환 안 함 · 파티클/리본은 JSON만.
+""")
+print("sheets", (len(items) + per - 1) // per)

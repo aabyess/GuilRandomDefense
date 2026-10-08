@@ -220,6 +220,10 @@ for name in NAMES:
         continue
     bpy.ops.wm.read_factory_settings(use_empty=True)
     objs = build(model, tag)
+    if not objs:                                                    # 지오셋 없는 모델(더미·입자 전용) — 그릴 게 없다(한 모델이 죽어 배치 전체가 멈추지 않게)
+        print("MDX", name, "지오셋 없음 — 건너뜀")
+        report.append((name, "지오셋 없음"))
+        continue
     lo, hi = render_views(objs, tag)
     ext = tuple(round(v, 1) for v in (hi - lo))
     layers = sorted({(l["filter"], model["textures"][l["tex"]]["path"] or "team") for m in model["materials"] for l in m["layers"]})
