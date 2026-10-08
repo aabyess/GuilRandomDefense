@@ -111,7 +111,8 @@ public static class OriginalVfxBuilder
         var player = wrapper.AddComponent<OriginalVfxPlayer>();
         GameObject model3d = (GameObject)PrefabUtility.InstantiatePrefab(fbx);
         model3d.transform.SetParent(wrapper.transform, false);
-        var animator = model3d.GetComponent<Animator>() ?? model3d.AddComponent<Animator>();
+        Animator animator = model3d.GetComponent<Animator>();
+        if (animator == null) animator = model3d.AddComponent<Animator>();
         animator.applyRootMotion = false;
         animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
         player.animator = animator; player.clip = clip;
@@ -125,8 +126,7 @@ public static class OriginalVfxBuilder
         {
             LayerJ lj = root.unity.layers[i];
             var dict = (Dictionary<string, object>)rawLayers[i];
-            Renderer r = renderers.FirstOrDefault(x => x.gameObject.name == lj.mesh || (x is SkinnedMeshRenderer s && s.sharedMesh != null && s.sharedMesh.name == lj.mesh)
-                                                      || (x.GetComponent<MeshFilter>() is MeshFilter f && f.sharedMesh != null && f.sharedMesh.name == lj.mesh));
+            Renderer r = renderers.FirstOrDefault(x => RendererMatches(x, lj.mesh));
             if (r == null) { sb.Append($" ⚠️층 {lj.mesh}: 렌더러 못 찾음"); continue; }
             Material mat = MakeMaterial(name, i, lj, $"{art}/Textures/{lj.texture}");
             r.sharedMaterial = mat;
@@ -152,6 +152,15 @@ public static class OriginalVfxBuilder
         PrefabUtility.SaveAsPrefabAsset(wrapper, prefabPath);
         Object.DestroyImmediate(wrapper);
         return $"✅ {name}: 층 {layers.Count}/{root.unity.layers.Count} · 클립 {(clip != null ? clip.name + $" {clip.length:0.00}s" : "없음")} · {root.unity.durationSec:0.00}s{sb} → {prefabPath}";
+    }
+
+    static bool RendererMatches(Renderer x, string mesh)
+    {
+        if (x.gameObject.name == mesh) return true;
+        SkinnedMeshRenderer smr = x as SkinnedMeshRenderer;
+        if (smr != null && smr.sharedMesh != null && smr.sharedMesh.name == mesh) return true;
+        MeshFilter mf = x.GetComponent<MeshFilter>();
+        return mf != null && mf.sharedMesh != null && mf.sharedMesh.name == mesh;
     }
 
     static void ReadPairs(List<object> list, out float[] times, out float[] values)

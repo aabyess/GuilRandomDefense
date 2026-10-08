@@ -1372,10 +1372,12 @@ public class GameHud : MonoBehaviour
         TMP_Text questLabel = CreateTopBarButton(menuButtonsPanel, "QuestButton", "퀘스트", 130f);
         questLabel.alpha = 0.45f;
         questLabel.transform.parent.GetComponent<Button>().interactable = false;
-        TMP_Text menuLabel = CreateTopBarButton(menuButtonsPanel, "MenuButton", "메뉴 (" + HotkeyAlias.Label("F10") + ")", HotkeyAlias.IsMac ? 190f : 130f);
+        TMP_Text menuLabel = CreateTopBarButton(menuButtonsPanel, "MenuButton", "메뉴 (" + HotkeyAlias.Label("F10") + ")", 130f);
+        menuLabel.enableAutoSizing = true; menuLabel.fontSizeMin = 10f; menuLabel.fontSizeMax = 18f;   // 맥 병기 라벨이 길어도 단추 폭 그대로(옆 항법 단추를 안 민다)
         menuLabel.transform.parent.GetComponent<Button>().onClick.AddListener(OpenGameMenu);
         // 동맹은 AlliancePanel(10-08), 대화는 동작 없음 — 원작 배치만 재현한다. 메뉴는 [계속하기]/[처음 화면으로](BuildGameMenu).
-        TMP_Text allianceLabel = CreateTopBarButton(menuButtonsPanel, "AllianceButton", "동맹 (" + HotkeyAlias.Label("F11") + ")", HotkeyAlias.IsMac ? 190f : 130f);
+        TMP_Text allianceLabel = CreateTopBarButton(menuButtonsPanel, "AllianceButton", "동맹 (" + HotkeyAlias.Label("F11") + ")", 130f);
+        allianceLabel.enableAutoSizing = true; allianceLabel.fontSizeMin = 10f; allianceLabel.fontSizeMax = 18f;
         allianceLabel.transform.parent.GetComponent<Button>().onClick.AddListener(AlliancePanel.Toggle);
         CreateTopBarButton(menuButtonsPanel, "ChatButton", "대화 (F12)", 130f);
 
@@ -3040,19 +3042,20 @@ public class GameHud : MonoBehaviour
         navigationButtonPanel = panel;
 
         // 10-08 사장님: 시작하면 「항법을 선택하세요(항해일지)」가 눈에 띄게 — 단추 아래에 반짝이는 안내를 달고 고르면 지운다.
-        navigationHint = CreateLabel(panel.transform, "NavigationHint", NavigationHintText);
-        navigationHint.fontSize = 22; navigationHint.fontStyle = FontStyles.Bold; navigationHint.alignment = TextAlignmentOptions.TopLeft;
+        navigationHint = CreateLabel(topBarButtons, "NavigationHint", NavigationHintText);
+        navigationHint.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;   // 버튼 줄 레이아웃 밖 — 줄 왼쪽 아래에 선다
+        navigationHint.fontSize = 20; navigationHint.fontStyle = FontStyles.Bold; navigationHint.alignment = TextAlignmentOptions.TopLeft;
         navigationHint.color = new Color(1f, 0.82f, 0.2f); navigationHint.raycastTarget = false;
         navigationHint.outlineWidth = 0.25f; navigationHint.outlineColor = new Color32(0, 0, 0, 255);
         navigationHint.textWrappingMode = TextWrappingModes.NoWrap;
         RectTransform hintRect = navigationHint.rectTransform;
         hintRect.anchorMin = new Vector2(0f, 0f); hintRect.anchorMax = new Vector2(0f, 0f); hintRect.pivot = new Vector2(0f, 1f);
-        hintRect.sizeDelta = new Vector2(760f, 34f); hintRect.anchoredPosition = new Vector2(0f, -6f);
+        hintRect.sizeDelta = new Vector2(780f, 30f); hintRect.anchoredPosition = new Vector2(4f, -2f);
 
         BuildNavigationModal();
     }
 
-    const string NavigationHintText = "▲ 항법을 선택하세요 (항해일지) — 10라운드까지 안 고르면 「연합세력」이 자동 선택됩니다";
+    const string NavigationHintText = "▲ 항법을 선택하세요 (항해일지) · 10라운드까지 안 고르면 「연합세력」 자동 선택";
     TMP_Text navigationHint;
 
     // 안 골랐으면 안내를 반짝이고, 골랐으면 끈다.

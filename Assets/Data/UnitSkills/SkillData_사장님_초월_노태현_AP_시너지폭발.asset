@@ -10,10 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_사장님_초월_노태현_AP_시너지폭발"
+  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uB178\uD0DC\uD604_AP_\uC2DC\uB108\uC9C0\uD3ED\uBC1C"
   m_EditorClassIdentifier: 
-  skillName: "시너지폭발 — 폭증 15% + 폭발"
-  description: "사장님 10-08. ① 상시 오라(폭증): 내 라인의 적 전부가 받는 폭발형 피해 +15%(A11S +3레벨, 1레벨 = 5%) — 이 유닛이 있는 동안. ② 평타 10% 확률로 공격 대상 주위(300)에 「300,000」 마법 + 「700,000」 폭발형 피해(70만만 폭발형 — 폭증·폭뎀증폭을 받고 마깎·마뎀증폭은 안 받음). (옛 폭발증폭 ×1.5·범위 +15%는 없앰)"
+  skillName: "\uC2DC\uB108\uC9C0\uD3ED\uBC1C \u2014 \uD3ED\uC99D 15% + \uD3ED\uBC1C"
+  description: "\uC0AC\uC7A5\uB2D8 10-08. \u2460 \uC0C1\uC2DC \uC624\uB77C(\uD3ED\uC99D):
+    \uB0B4 \uB77C\uC778\uC758 \uC801 \uC804\uBD80\uAC00 \uBC1B\uB294 \uD3ED\uBC1C\uD615
+    \uD53C\uD574 +15%(A11S +3\uB808\uBCA8, 1\uB808\uBCA8 = 5%) \u2014 \uC774 \uC720\uB2DB\uC774
+    \uC788\uB294 \uB3D9\uC548. \u2461 \uD3C9\uD0C0 10% \uD655\uB960\uB85C \uACF5\uACA9
+    \uB300\uC0C1 \uC8FC\uC704(300)\uC5D0 \u300C300,000\u300D \uB9C8\uBC95 + \u300C700,000\u300D
+    \uD3ED\uBC1C\uD615 \uD53C\uD574(70\uB9CC\uB9CC \uD3ED\uBC1C\uD615 \u2014 \uD3ED\uC99D\xB7\uD3ED\uB380\uC99D\uD3ED\uC744
+    \uBC1B\uACE0 \uB9C8\uAE4E\xB7\uB9C8\uB380\uC99D\uD3ED\uC740 \uC548 \uBC1B\uC74C).
+    (\uC61B \uD3ED\uBC1C\uC99D\uD3ED \xD71.5\xB7\uBC94\uC704 +15%\uB294 \uC5C6\uC570)"
   triggerType: 0
   levels:
   - cooldown: 0
@@ -75,7 +82,19 @@ MonoBehaviour:
       attackSpeedScale: 0
       attackSpeedScaleCap: 0
       formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+      rewardWisp: {fileID: 0}
       bossBerserkDamageScale: 0
+      explosive: 0
+      fixedDamage: 0
     - kind: 0
       basis: 0
       target: 2
@@ -125,7 +144,19 @@ MonoBehaviour:
       attackSpeedScale: 0
       attackSpeedScaleCap: 0
       formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+      rewardWisp: {fileID: 0}
       bossBerserkDamageScale: 0
+      explosive: 0
+      fixedDamage: 0
     - kind: 0
       basis: 0
       target: 2
@@ -175,8 +206,19 @@ MonoBehaviour:
       attackSpeedScale: 0
       attackSpeedScaleCap: 0
       formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+      rewardWisp: {fileID: 0}
       bossBerserkDamageScale: 0
       explosive: 1
+      fixedDamage: 0
     requiredTargetBuffId: 
     forbiddenTargetBuffId: 
     hitCountFloor: 0
@@ -192,5 +234,7 @@ MonoBehaviour:
     toggleMode: 0
     laneCountWindow: 0
     needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
     ownLaneOnly: 0
-  icon: {fileID: 21300000, guid: ee3a0f96d87d1491988a3657ff1965d8, type: 3}
+  icon: {fileID: 21300000, guid: 3f4d19cf849ee4dcdbc4b232f65a942b, type: 3}
