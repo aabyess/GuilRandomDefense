@@ -107,9 +107,22 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
+    // ── 동맹 보기 전용 선택(10-08): 남의 유닛을 누르면 그 하나만 「보기 전용」으로 고른다 — 초상·정보창·툴팁은 뜨고 명령은 안 나간다.
+    Selectable viewOnlyPick;
+    public bool IsViewOnlySelection => selected.Count == 1 && selected[0] != null && selected[0] == viewOnlyPick && !AllianceShare.CanControlLocal(selected[0].gameObject);
+
+    /// <summary>보기 전용이면 이유를 알리고 true — 명령 진입점(단축키·명령 카드)이 부른다.</summary>
+    public bool BlockedByViewOnly()
+    {
+        if (!IsViewOnlySelection) return false;
+        PlayerNotification.Show(LocalPlayer.LocalPlayerId, AllianceShare.ViewOnlyMessage, 2f);
+        return true;
+    }
+
     /// <summary>A 키·명령칸 「공격」. 싸울 수 있는 유닛이 선택돼 있을 때만 들어간다.</summary>
     public void BeginAttackTargeting()
     {
+        if (BlockedByViewOnly()) return;
         foreach (Selectable s in selected)
         {
             // MP: 클라의 유닛 겉모습은 UnitCombat을 떼고 UnitIdentity만 남긴다(NetReplicaBuilder.KeepTypes) — 그것도 싸우는 유닛이다.
@@ -126,6 +139,7 @@ public class SelectionManager : MonoBehaviour
     /// <summary>P 키·명령칸 「반복」. 싸울 수 있는 유닛이 선택돼 있을 때만 들어간다.</summary>
     public void BeginPatrolTargeting()
     {
+        if (BlockedByViewOnly()) return;
         foreach (Selectable s in selected)
             if (s != null && (s.GetComponent<UnitCombat>() != null || (!GameAuthority.IsServer && s.GetComponent<UnitIdentity>() != null)))
             {
@@ -137,6 +151,7 @@ public class SelectionManager : MonoBehaviour
     /// <summary>M 키·명령칸 「이동」. 움직일 수 있는 유닛(UnitMover)이 선택돼 있을 때만 들어간다.</summary>
     public void BeginMoveTargeting()
     {
+        if (BlockedByViewOnly()) return;
         foreach (Selectable s in selected)
         {
             if (s != null && s.GetComponent<UnitMover>() != null)
@@ -222,6 +237,7 @@ public class SelectionManager : MonoBehaviour
         if (Keyboard.current == null || selected.Count == 0) return;
         // 상점 건물을 고른 동안은 같은 글자가 상점 칸 단축키다(GameHud.RefreshShopHotkeys) — 유닛 명령으로 안 받는다.
         if (GameHud.ShopSelected) return;
+        if (IsViewOnlySelection) return;   // 보기 전용: 단축키 명령 없음(명령 카드에서 누르면 알림)
 
         if (Keyboard.current.aKey.wasPressedThisFrame)
             BeginAttackTargeting();
@@ -266,6 +282,13 @@ public class SelectionManager : MonoBehaviour
         for (int i = selected.Count - 1; i >= 0; i--)
             if (selected[i] == null)
                 selected.RemoveAt(i);
+        // 동맹 공유가 꺼지면(10-08) 그 순간 조종하던 남의 유닛은 선택에서 빠진다 — 보기 전용으로 고른 것만 남는다.
+        for (int i = selected.Count - 1; i >= 0; i--)
+            if (selected[i] != viewOnlyPick && !AllianceShare.CanControlLocal(selected[i].gameObject))
+            {
+                selected[i].SetSelected(false);
+                selected.RemoveAt(i);
+            }
     }
 
     void TrySelectAtCursor()
@@ -298,6 +321,13 @@ public class SelectionManager : MonoBehaviour
         // 남의 유닛을 눌렀을 때 아무 반응이 없으면 클릭이 안 먹은 것처럼 보인다. 이유를 남긴다.
         if (!IsSelectableByLocalPlayer(hitSelectable))
         {
+            // 남의 유닛은 보기 전용으로 하나만 고른다(건물·위습은 그대로 못 고른다).
+            if (AllianceShare.IsViewOnly(hitSelectable.gameObject))
+            {
+                viewOnlyPick = hitSelectable;
+                AddToSelection(hitSelectable);
+                return;
+            }
             int ownerId = hitSelectable.TryGetComponent(out OwnedByPlayer other) ? other.OwnerId : -1;
             Debug.Log($"[선택] {hitSelectable.name} 은(는) 플레이어 {ownerId}의 것이라 고를 수 없습니다 " +
                       $"(나는 플레이어 {LocalPlayer.LocalPlayerId}).");
@@ -370,8 +400,7 @@ public class SelectionManager : MonoBehaviour
     // OwnedByPlayer가 없는 오브젝트는 소유권 미지정(중립/디버그용)으로 간주해 선택 가능하게 둔다.
     static bool IsSelectableByLocalPlayer(Selectable candidate)
     {
-        if (!candidate.TryGetComponent(out OwnedByPlayer owner)) return true;
-        return owner.OwnerId == LocalPlayer.LocalPlayerId;
+        return AllianceShare.CanControlLocal(candidate.gameObject);   // 내 것 + 동맹 공유로 받은 유닛(남의 유닛 보기 전용 선택은 TrySelectAtCursor가 따로)
     }
 
     void AddToSelection(Selectable s)
@@ -418,6 +447,7 @@ public class SelectionManager : MonoBehaviour
 
     public void ClearSelection()
     {
+        viewOnlyPick = null;
         targeting = TargetMode.None;   // 고를 유닛이 없어졌다 — 공격 대기도 끝
         foreach (Selectable s in selected)
             if (s != null)

@@ -452,6 +452,12 @@ public class NetPlayer : NetworkBehaviour
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_SetShare(byte targetSlot, NetworkBool on)
+    {
+        NetCommands.ExecuteSetShare(this, targetSlot, on);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     public void RPC_Pause(NetworkBool pause)
     {
         NetCommands.ExecutePause(this, pause);

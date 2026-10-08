@@ -59,7 +59,7 @@ public static class NetCommands
     /// <summary>호스트: NetPlayer.RPC_Move가 부른다. sender는 요청을 보낸 접속자의 NetPlayer다.</summary>
     public static void ExecuteMove(NetPlayer sender, NetworkId target, Vector3 groundPoint)
     {
-        if (!TryGetOwnedReal(sender, target, "이동", out GameObject real)) return;
+        if (!TryGetOwnedReal(sender, target, "이동", out GameObject real, allowShared: true)) return;
 
         if (!real.TryGetComponent(out UnitMover mover))
         {
@@ -97,7 +97,8 @@ public static class NetCommands
             if (selected == null) continue;
             NetEntity entity = selected.GetComponentInParent<NetEntity>();
             if (entity == null || entity.Object == null || !entity.Object.IsValid) continue;
-            if (entity.Owner != LocalPlayer.LocalPlayerId) continue;
+            bool ownerOnly = command == NetUnitCommand.Gather || command == NetUnitCommand.SendToPen;
+            if (ownerOnly ? entity.Owner != LocalPlayer.LocalPlayerId : !AllianceShare.CanControl(entity.Owner, LocalPlayer.LocalPlayerId)) continue;   // 공유 받은 유닛은 이동·공격·정지 등만(호스트가 다시 검사)
 
             NetPlayer.Local.RPC_UnitCommand(entity.Object.Id, (byte)command, enemyId, point);
             sent++;
@@ -109,7 +110,7 @@ public static class NetCommands
     /// <summary>호스트: NetPlayer.RPC_UnitCommand가 부른다. 소유자 검사 뒤 싱글과 같은 UnitCommands 함수를 그 유닛 하나로 부른다.</summary>
     public static void ExecuteUnitCommand(NetPlayer sender, NetworkId unit, NetUnitCommand command, NetworkId enemy, Vector3 point)
     {
-        if (!TryGetOwnedReal(sender, unit, command.ToString(), out GameObject real)) return;
+        if (!TryGetOwnedReal(sender, unit, command.ToString(), out GameObject real, allowShared: command != NetUnitCommand.Gather && command != NetUnitCommand.SendToPen)) return;
         if (!real.TryGetComponent(out Selectable selectable)) return;
 
         Selectable[] one = { selectable };
@@ -262,7 +263,7 @@ public static class NetCommands
     public static void ExecuteHudUnitAction(NetPlayer sender, NetworkId unit, NetHudAction action, int argument)
     {
         if (GamePause.Frozen) return;   // 일시정지·컷인 정지 중엔 호스트가 거절(클라 UI도 막지만 늦게 온 요청 방어)
-        if (!TryGetOwnedReal(sender, unit, action.ToString(), out GameObject real)) return;
+        if (!TryGetOwnedReal(sender, unit, action.ToString(), out GameObject real, allowShared: action == NetHudAction.CastActive)) return;
         if (!real.TryGetComponent(out Selectable selectable)) return;
 
         GameHud hud = Object.FindFirstObjectByType<GameHud>();
@@ -303,7 +304,7 @@ public static class NetCommands
     public static void ExecuteCastActiveOnAlly(NetPlayer sender, NetworkId caster, NetworkId ally)
     {
         if (GamePause.Frozen) return;   // 일시정지·컷인 정지 중엔 호스트가 거절(클라 UI도 막지만 늦게 온 요청 방어)
-        if (!TryGetOwnedReal(sender, caster, "CastActiveOnAlly", out GameObject real)) return;
+        if (!TryGetOwnedReal(sender, caster, "CastActiveOnAlly", out GameObject real, allowShared: true)) return;
         if (!real.TryGetComponent(out Selectable selectable) || !real.TryGetComponent(out UnitAttacker attacker)) return;
         if (!sender.Runner.TryFindObject(ally, out NetworkObject allyObject) || !allyObject.TryGetComponent(out NetEntity allyEntity) || allyEntity.Real == null || !allyEntity.Real.TryGetComponent(out UnitIdentity allyIdentity)) return;
         SkillData skill = attacker.ActiveSkill;
@@ -325,7 +326,7 @@ public static class NetCommands
     {
         if (GamePause.Frozen) return;   // 일시정지·컷인 정지 중엔 호스트가 거절(클라 UI도 막지만 늦게 온 요청 방어)
         if (float.IsNaN(point.x + point.y + point.z) || float.IsInfinity(point.x + point.y + point.z)) return;
-        if (!TryGetOwnedReal(sender, caster, "CastActiveAtPoint", out GameObject real)) return;
+        if (!TryGetOwnedReal(sender, caster, "CastActiveAtPoint", out GameObject real, allowShared: true)) return;
         if (!real.TryGetComponent(out Selectable selectable) || !real.TryGetComponent(out UnitAttacker attacker)) return;
         SkillData skill = attacker.ActiveSkill;
         GameHud hud = Object.FindFirstObjectByType<GameHud>();
@@ -346,7 +347,7 @@ public static class NetCommands
     public static void ExecuteCastActiveOnEnemy(NetPlayer sender, NetworkId caster, NetworkId enemy)
     {
         if (GamePause.Frozen) return;   // 일시정지·컷인 정지 중엔 호스트가 거절(클라 UI도 막지만 늦게 온 요청 방어)
-        if (!TryGetOwnedReal(sender, caster, "CastActiveOnEnemy", out GameObject real)) return;
+        if (!TryGetOwnedReal(sender, caster, "CastActiveOnEnemy", out GameObject real, allowShared: true)) return;
         if (!real.TryGetComponent(out Selectable selectable)) return;
         EnemyDummy target = null;
         if (sender.Runner.TryFindObject(enemy, out NetworkObject enemyObject) && enemyObject.TryGetComponent(out NetEntity enemyEntity) && enemyEntity.Real != null)
@@ -378,6 +379,30 @@ public static class NetCommands
         if (hud == null) return;
         hud.ExecuteTraitTargetOn(trait, PlayerContext.Get(sender.Slot), identity, sender.Slot);
         if (commandsLogged++ < 30) Debug.Log($"[MP] 특성 대상 요청 수행: 슬롯 {sender.Slot} {trait.name} → {real.name}");
+    }
+
+    // ───────────── 동맹 유닛 공유(10-08) ─────────────
+    /// <summary>클라·호스트: 「내 유닛 조종을 target 슬롯에게 열기/닫기」 요청.</summary>
+    public static void RequestSetShare(int targetSlot, bool on)
+    {
+        if (NetPlayer.Local == null || targetSlot < 0 || targetSlot >= AllianceShare.MaxSlots) return;
+        NetPlayer.Local.RPC_SetShare((byte)targetSlot, on);
+    }
+
+    public static void ExecuteSetShare(NetPlayer sender, byte targetSlot, bool on)
+    {
+        NetGameState state = NetGameState.Instance;
+        if (sender == null || sender.Runner == null || !sender.Runner.IsServer || state == null) return;
+        int me = sender.Slot;
+        if (me < 0 || me >= AllianceShare.MaxSlots || targetSlot >= AllianceShare.MaxSlots || targetSlot == me) return;
+        if (PlayerContext.Get(targetSlot) == null) return;   // 앉은 사람에게만
+        int mask = state.ShareMasks.Get(me);
+        int next = on ? (mask | (1 << targetSlot)) : (mask & ~(1 << targetSlot));
+        if (next == mask) return;
+        state.ShareMasks.Set(me, next);
+        string who = sender.DisplayName;
+        PlayerNotification.Show(targetSlot, on ? $"<color=#FFD700>{who}님이 유닛 공유를 켰습니다.</color> 이제 그 유닛을 조종할 수 있습니다." : $"<color=#FFD700>{who}님이 유닛 공유를 껐습니다.</color>", 4f);
+        Debug.Log($"[MP] 동맹 유닛 공유 {(on ? "켬" : "끔")}: 슬롯 {me}({who}) → 슬롯 {targetSlot}");
     }
 
     // ───────────── 일시정지(같이 하기, 10-08) ─────────────
@@ -478,7 +503,7 @@ public static class NetCommands
         if (commandsLogged++ < 30) Debug.Log($"[MP] 항법 요청 수행: 슬롯 {sender.Slot} {choice} → {(ok ? "성공" : "실패(이미 고름)")}");
     }
 
-    static bool TryGetOwnedReal(NetPlayer sender, NetworkId target, string what, out GameObject real)
+    static bool TryGetOwnedReal(NetPlayer sender, NetworkId target, string what, out GameObject real, bool allowShared = false)
     {
         real = null;
         if (sender == null || sender.Runner == null || !sender.Runner.IsServer) return false;
@@ -490,11 +515,14 @@ public static class NetCommands
         }
 
         int owner = entity.Real.TryGetComponent(out OwnedByPlayer ownedBy) ? ownedBy.OwnerId : -1;
-        if (owner != sender.Slot)
+        bool shared = allowShared && owner >= 0 && entity.Real.TryGetComponent(out UnitIdentity _) && AllianceShare.IsShared(owner, sender.Slot);   // 동맹 유닛 공유: 이동·공격·정지·스킬만(allowShared) — 소유가 바뀌는 동작은 주인만
+        if (owner != sender.Slot && !shared)
         {
             Debug.LogWarning($"[MP] {what} 거절: 슬롯 {sender.Slot}이 슬롯 {owner}의 {entity.Real.name}을(를) 움직이려 했습니다.");
+            PlayerNotification.Show(sender.Slot, AllianceShare.ViewOnlyMessage, 3f);
             return false;
         }
+        if (shared && owner != sender.Slot) Debug.Log($"[MP] {what}: 슬롯 {sender.Slot}이 공유받은 슬롯 {owner}의 {entity.Real.name}을(를) 조종");
 
         real = entity.Real;
         return true;

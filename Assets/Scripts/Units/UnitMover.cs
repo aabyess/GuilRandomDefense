@@ -69,7 +69,7 @@ public class UnitMover : MonoBehaviour
     void Update()
     {
         if (Mouse.current == null || cam == null) return;
-        if (owner != null && owner.OwnerId != LocalPlayer.LocalPlayerId) return;
+        if (owner != null && !AllianceShare.CanControlLocal(gameObject)) return;   // 내 것 + 동맹 공유로 받은 유닛(10-08)
         // 선택된 유닛만 움직인다. 이 검사가 없으면 우클릭 한 번에 내 유닛 전부가 같이 이동해서
         // 선택 자체가 의미를 잃는다.
         if (selectable != null && !selectable.IsSelected) return;

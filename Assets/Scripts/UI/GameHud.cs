@@ -579,11 +579,13 @@ public class GameHud : MonoBehaviour
     {
         EnsureEventSystem();
         BuildUI();
+        AlliancePanel.Install(transform);   // 동맹 창(F11, 10-08)
     }
 
     void Update()
     {
         // 상단 바 「메뉴 (F10)」 — 워크3 기본 단축키
+        if (Keyboard.current != null && Keyboard.current.f11Key.wasPressedThisFrame && !ChatInputGate.IsOpen) AlliancePanel.Toggle();   // 동맹 (F11)
         if (Keyboard.current != null && Keyboard.current.f10Key.wasPressedThisFrame && gameMenu != null)
         {
             if (gameMenu.activeSelf) CloseGameMenu(); else OpenGameMenu();
@@ -1362,8 +1364,9 @@ public class GameHud : MonoBehaviour
         questLabel.transform.parent.GetComponent<Button>().interactable = false;
         TMP_Text menuLabel = CreateTopBarButton(menuButtonsPanel, "MenuButton", "메뉴 (F10)", 130f);
         menuLabel.transform.parent.GetComponent<Button>().onClick.AddListener(OpenGameMenu);
-        // 동맹/대화는 동작 없음 — 원작 배치만 재현한다. 메뉴는 [계속하기]/[처음 화면으로](BuildGameMenu).
-        CreateTopBarButton(menuButtonsPanel, "AllianceButton", "동맹 (F11)", 130f);
+        // 동맹은 AlliancePanel(10-08), 대화는 동작 없음 — 원작 배치만 재현한다. 메뉴는 [계속하기]/[처음 화면으로](BuildGameMenu).
+        TMP_Text allianceLabel = CreateTopBarButton(menuButtonsPanel, "AllianceButton", "동맹 (F11)", 130f);
+        allianceLabel.transform.parent.GetComponent<Button>().onClick.AddListener(AlliancePanel.Toggle);
         CreateTopBarButton(menuButtonsPanel, "ChatButton", "대화 (F12)", 130f);
 
         // 가운데 낮밤 시계(장식)
@@ -2516,6 +2519,7 @@ public class GameHud : MonoBehaviour
         if (s == null || !s.TryGetComponent(out UnitIdentity identity) || identity.Data == null) return false;
         if (identity.IsSummon && !identity.IsRecruit) return false;
         if (!IsSellable(identity.Data)) return false;
+        if (!s.TryGetComponent(out OwnedByPlayer sellOwner) || sellOwner.OwnerId != LocalPlayer.LocalPlayerId) return false;   // 판매는 원래 주인만(동맹 공유는 조종만, 10-08)
         return identity.IsRecruit || identity.Data.SellableGrade;
     }
 
@@ -4570,6 +4574,7 @@ public class GameHud : MonoBehaviour
 
     void OnUnitCommandSlotClicked(int index)
     {
+        if (Selection != null && Selection.BlockedByViewOnly()) return;   // 동맹 보기 전용 선택(10-08): 초상·정보는 뜨지만 명령 칸은 알림만
         if (GamePause.Blocks()) return;   // 일시정지 중엔 명령 카드 단추(액티브·강화·토토·판매…) 불가
         // 단축키와 같은 함수를 부른다 — 두 곳에 따로 구현하면 한쪽만 고쳐진다.
         if (index >= MoveCommandSlot && index <= PatrolCommandSlot && currentShop as Object == null)

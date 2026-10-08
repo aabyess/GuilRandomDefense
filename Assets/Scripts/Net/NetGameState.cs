@@ -18,6 +18,8 @@ public class NetGameState : NetworkBehaviour
     [Networked] public NetworkBool Started { get; set; }
     /// <summary>같이 하기 일시정지(10-08): 호스트가 정하면 전원이 Render에서 Time.timeScale 0 + 소리 멈춤을 적용한다. 재접속 클라도 이 값으로 바로 멈춘 채 들어온다.</summary>
     [Networked] public NetworkBool Paused { get; set; }
+    /// <summary>동맹 유닛 공유(10-08): [주인 슬롯] = 그 주인이 조종을 열어 준 슬롯들의 비트. 호스트 상태라 재접속해도 유지된다(슬롯 기준). 쓰기는 NetCommands.ExecuteSetShare만.</summary>
+    [Networked, Capacity(4)] public NetworkArray<int> ShareMasks => default;
     [Networked] public sbyte PausedBy { get; set; } = -1;
     /// <summary>컷인 정지(10-08 사장님 확정: 누가 상위 등급을 얻어도 전원 컷인 + 맵 정지) — 호스트의 GamePause.CutinHold를 그대로 싣는다. 클라가 Render에서 적용.</summary>
     [Networked] public NetworkBool CutinHold { get; set; }
