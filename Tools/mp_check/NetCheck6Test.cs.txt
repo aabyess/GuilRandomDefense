@@ -1,0 +1,158 @@
+using System.Collections;
+using System.Linq;
+using System.Reflection;
+using UnityEngine;
+
+/// <summary>
+/// MP 6차 점검 하네스(2026-10-08 구현담당1, 빌드 사본 dev/g1-mp-check6 전용 — main에 넣지 않는다). 훅: NetLauncher `-mpTestCheck6 초`, 사진 접두 `-mpCheck6Shot 경로`.
+/// 호스트가 친구 슬롯에 배성령(지점 지정)·강재규(대상 지정)·노태현 AP(마나 게이지)·김용태(회유)를 세운다. 클라는 거울로 같은 일을 요청한다. 로그 접두 「[C6]」.
+/// </summary>
+public class NetCheck6Test : MonoBehaviour
+{
+    public float startAt = 20f;
+    static string ShotPrefix { get { var a = System.Environment.GetCommandLineArgs(); int i = System.Array.IndexOf(a, "-mpCheck6Shot"); return i >= 0 && i + 1 < a.Length ? a[i + 1] : null; } }
+
+    UnitData Load(string n) { var c = NetLauncher.Catalog; var d = c != null ? c.units.Find(u => u != null && u.name == n) : null; if (d == null) Debug.Log($"[C6] ❌ 카탈로그에 {n} 없음"); return d; }
+
+    IEnumerator Start()
+    {
+        yield return new WaitForSecondsRealtime(startAt);
+        if (!GameAuthority.IsServer) { yield return ClientRoutine(); yield break; }
+        yield return HostRoutine();
+    }
+
+    UnitAttacker hostMana, hostTele, hostDock, hostGauge, hostYong;
+
+    UnitAttacker Spawn(UnitSpawner sp, string n, int cs, LaneMarker lane, float dx)
+    {
+        UnitData d = Load(n); if (d == null) return null;
+        GameObject go = sp.Spawn(d, lane.LaneCenter + new Vector3(dx, 0f, 20f), cs);
+        Debug.Log($"[C6] 호스트: {n} {(go != null ? "세움" : "실패")} 위치 {(go != null ? go.transform.position.ToString("F0") : "-")}");
+        return go != null ? go.GetComponent<UnitAttacker>() : null;
+    }
+
+    IEnumerator HostRoutine()
+    {
+        SkillTelemetry.Reset(); SkillTelemetry.Enabled = true;
+        PlayerNotification.Shown += (slot, msg, dur) => Debug.Log($"[C6] 알림 슬롯 {slot}: {msg}");
+        UnitSpawner sp = FindFirstObjectByType<UnitSpawner>();
+        PlayerContext friend = PlayerContext.Occupied.FirstOrDefault(c => c.PlayerId != LocalPlayer.LocalPlayerId);
+        if (friend == null) { Debug.Log("[C6] 친구 슬롯 없음"); yield break; }
+        int cs = friend.PlayerId; LaneMarker lane = LaneMarker.Get(cs);
+        hostTele = Spawn(sp, "초월_배성령_AD", cs, lane, -60f);
+        hostDock = Spawn(sp, "초월_강재규_AP", cs, lane, -20f);
+        hostGauge = Spawn(sp, "초월_노태현_AP", cs, lane, 20f);
+        hostMana = Spawn(sp, "초월_박민석_ADAP", cs, lane, 100f);
+        hostYong = Spawn(sp, "불멸_김용태", cs, lane, 60f);
+        yield return new WaitForSecondsRealtime(6f);
+        // 회유: 일반 적을 김용태 옆으로 → 회유 → 반복 관찰(실전투: 회유 유닛이 적과 싸우며 사는지)
+        if (hostYong != null)
+        {
+            for (int tries = 0; tries < 3; tries++)
+            {
+                EnemyDummy enemy = EnemyDummy.Active.FirstOrDefault(e => e != null && !e.IsDead && !e.IsBoss && e.PointValue < 200f);
+                if (enemy == null) { yield return new WaitForSecondsRealtime(2f); continue; }
+                var agent = enemy.GetComponent<UnityEngine.AI.NavMeshAgent>();
+                Vector3 to = hostYong.transform.position + new Vector3(30f, 0f, 0f);
+                if (agent != null && agent.enabled) agent.Warp(to); else enemy.transform.position = to;
+                break;
+            }
+            SkillData skill = hostYong.GetComponent<UnitIdentity>().Data.skills.FirstOrDefault(s => s != null && s.skillName.StartsWith("유닛회유"));
+            var m = typeof(UnitAttacker).GetMethod("RecruitNearestEnemy", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (skill != null && m != null) { m.Invoke(hostYong, new object[] { 99999f, skill.levels[0].effects[0] }); Debug.Log($"[C6] ① 호스트 회유 발동 — 회유 유닛 {UnitIdentity.Active.Count(u => u != null && u.IsRecruit)}기"); }
+            else Debug.Log("[C6] ① ❌ 회유 스킬/함수 없음");
+        }
+        for (int t = 0; t < 40; t++)
+        {
+            yield return new WaitForSecondsRealtime(2f);
+            // 강재규·박민석 곁에 일반 적을 계속 붙여 둔다(대상 지정 사거리·마나 게이지가 차려면 평타가 나가야 한다) — 적이 죽으면 다시 붙인다
+            foreach (UnitAttacker anchor in new[] { hostDock, hostMana })
+            {
+                if (anchor == null) continue;
+                if (EnemyDummy.Active.Count(e => e != null && !e.IsDead && Vector3.Distance(e.transform.position, anchor.transform.position) < 100f) >= 1) continue;
+                EnemyDummy ne = EnemyDummy.Active.FirstOrDefault(e => e != null && !e.IsDead && !e.IsBoss && e.PointValue < 200f && Vector3.Distance(e.transform.position, anchor.transform.position) > 60f && !e.HasBuff(BerserkMob.BuffId));
+                if (ne == null) continue;
+                var ag = ne.GetComponent<UnityEngine.AI.NavMeshAgent>();
+                Vector3 to2 = anchor.transform.position + new Vector3(10f, 0f, 0f);
+                if (ag != null && ag.enabled) ag.Warp(to2); else ne.transform.position = to2;
+            }
+            var rec = UnitIdentity.Active.Where(u => u != null && u.IsRecruit).ToList();
+            string desc = string.Join(" ", rec.Select(r => { return $"{r.Data.name}@{r.transform.position:F0}"; }));
+            if (hostDock != null) Debug.Log($"[C6] ② 호스트 강재규 곁 100 안 적 {EnemyDummy.Active.Count(e => e != null && !e.IsDead && Vector3.Distance(e.transform.position, hostDock.transform.position) < 100f)}기");
+            Debug.Log($"[C6] ① +{t * 2}s 호스트 회유 유닛 {rec.Count}기 {desc} · 평타 {string.Join(",", rec.Select(r => r.GetComponent<UnitAttacker>() != null ? r.GetComponent<UnitAttacker>().BasicHitCount : -1))}");
+            if (hostTele != null) Debug.Log($"[C6] ② 호스트 배성령 실물 {hostTele.transform.position:F0}");
+            if (hostMana != null) Debug.Log($"[C6] ③ 호스트 박민석 마나 {hostMana.ShownManaNow}/{hostMana.ShownManaMax} 체력 {hostMana.ShownLifeNow}/{hostMana.ShownLifeMax}");
+            if (hostGauge != null) Debug.Log($"[C6] ③ 호스트 노태현AP 마나 {hostGauge.ShownManaNow}/{hostGauge.ShownManaMax} 체력 {hostGauge.ShownLifeNow}/{hostGauge.ShownLifeMax}");
+            foreach (var ev in SkillTelemetry.CastLog.Where(e => e.skill.Contains("암살") || e.skill.Contains("도킹")).TakeLast(3)) Debug.Log($"[C6] ② 시전 기록 {ev.unit.name} {ev.skill} t={ev.time:F1}");
+        }
+    }
+
+    NetEntity Mirror(string rosterName)
+    {
+        int me = LocalPlayer.LocalPlayerId;
+        foreach (NetEntity e in FindObjectsByType<NetEntity>(FindObjectsSortMode.None))
+        {
+            if (e == null || e.Object == null || !e.Object.IsValid || e.EntityKind != NetEntityKind.Unit || e.Owner != me || e.Visual == null) continue;
+            if (e.Visual.TryGetComponent(out UnitIdentity id) && id.Data != null && id.Data.name == rosterName) return e;
+        }
+        return null;
+    }
+
+    IEnumerator ClientRoutine()
+    {
+        int me = LocalPlayer.LocalPlayerId;
+        PlayerNotification.Shown += (slot, msg, dur) => Debug.Log($"[C6] 알림 슬롯 {slot}: {msg}");
+        GameHud hud = FindFirstObjectByType<GameHud>();
+        SelectionManager sel = FindFirstObjectByType<SelectionManager>();
+        yield return new WaitForSecondsRealtime(14f);
+        // ② 지점 지정: 배성령 거울 → 앞쪽 150 떨어진 지점
+        NetEntity tele = Mirror("초월_배성령_AD");
+        if (tele != null && hud != null && tele.Visual.TryGetComponent(out Selectable ts) && tele.Visual.TryGetComponent(out UnitIdentity tid))
+        {
+            SkillData sk = tid.Data.skills.FirstOrDefault(s => s != null && s.levels != null && s.levels.Count > 0 && s.levels[0].needsPointClick);
+            Vector3 p0 = tele.Visual.transform.position;
+            Vector3 to = p0 + new Vector3(0f, 0f, 120f);
+            Debug.Log($"[C6] ② 클라 배성령 거울 {p0:F0} → 지점 {to:F0} 요청 (스킬 {(sk != null ? sk.skillName : "없음")})");
+            hud.ExecuteCastActiveAtPoint(ts, to, sk);
+            yield return new WaitForSecondsRealtime(2.5f);
+            Debug.Log($"[C6] ② 클라 배성령 거울 요청 뒤 위치 {tele.Visual.transform.position:F0} (이동 {Vector3.Distance(p0, tele.Visual.transform.position):F0})");
+        }
+        else Debug.Log("[C6] ② ❌ 클라 배성령 거울/HUD 없음");
+        // ② 대상 지정: 강재규 거울 → 가까운 적 거울
+        NetEntity dock = Mirror("초월_강재규_AP");
+        if (dock != null && hud != null && dock.Visual.TryGetComponent(out Selectable ds))
+        {
+            for (int w = 0; w < 40; w++)
+            {
+                bool near = FindObjectsByType<NetEntity>(FindObjectsSortMode.None).Any(e => e.Object != null && e.Object.IsValid && e.EntityKind == NetEntityKind.Enemy && e.Visual != null && Vector3.Distance(e.Visual.transform.position, dock.Visual.transform.position) < 120f);
+                if (near) break;
+                yield return new WaitForSecondsRealtime(1f);
+            }
+            EnemyDummy enemy = FindObjectsByType<NetEntity>(FindObjectsSortMode.None).Where(e => e.Object != null && e.Object.IsValid && e.EntityKind == NetEntityKind.Enemy && e.Visual != null && e.Visual.GetComponent<EnemyDummy>() != null)
+                .OrderBy(e => Vector3.Distance(e.Visual.transform.position, dock.Visual.transform.position)).Select(e => e.Visual.GetComponent<EnemyDummy>()).FirstOrDefault();
+            Debug.Log($"[C6] ② 클라 강재규 거울 → 적 거울 {(enemy != null ? enemy.name + " 거리 " + Vector3.Distance(enemy.transform.position, dock.Visual.transform.position).ToString("F0") : "없음")} 요청");
+            if (enemy != null) hud.ExecuteCastActiveOnTarget(ds, enemy);
+            yield return new WaitForSecondsRealtime(2f);
+        }
+        else Debug.Log("[C6] ② ❌ 클라 강재규 거울/HUD 없음");
+        // ③ 마나 게이지 HUD 복제: 노태현AP 거울을 고르고 거울 값·사진
+        NetEntity g = Mirror("초월_박민석_ADAP");
+        if (g != null && sel != null && g.Visual.TryGetComponent(out Selectable gs))
+        {
+            sel.SelectOnly(gs);
+            yield return new WaitForSecondsRealtime(1.5f);
+            Debug.Log($"[C6] ③ 클라 박민석 거울 마나 {g.GaugeManaNow}/{g.GaugeManaMax} 체력 {g.GaugeLifeNow}/{g.GaugeLifeMax}");
+            if (!string.IsNullOrEmpty(ShotPrefix)) ScreenCapture.CaptureScreenshot(ShotPrefix + "_gauge.png");
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+        for (int t = 0; t < 14; t++)
+        {
+            yield return new WaitForSecondsRealtime(3f);
+            if (tele != null && tele.Visual != null) Debug.Log($"[C6] ② 클라 배성령 거울 {tele.Visual.transform.position:F0}");
+            if (g != null) Debug.Log($"[C6] ③ 클라 박민석 거울 마나 {g.GaugeManaNow}/{g.GaugeManaMax} 체력 {g.GaugeLifeNow}/{g.GaugeLifeMax}");
+            var rec = FindObjectsByType<NetEntity>(FindObjectsSortMode.None).Where(e => e.Object != null && e.Object.IsValid && e.EntityKind == NetEntityKind.Unit && e.Owner == me && e.Visual != null && e.Visual.TryGetComponent(out UnitIdentity id) && id.Data != null && id.Data.name == "Summon_회유_적").ToList();
+            Debug.Log($"[C6] ① 클라 회유 유닛 거울 {rec.Count}기 {string.Join(" ", rec.Select(r => r.Visual.transform.position.ToString("F0")))}");
+        }
+        if (!string.IsNullOrEmpty(ShotPrefix)) ScreenCapture.CaptureScreenshot(ShotPrefix + "_end.png");
+    }
+}
