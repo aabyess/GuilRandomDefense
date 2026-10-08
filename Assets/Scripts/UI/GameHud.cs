@@ -3039,7 +3039,30 @@ public class GameHud : MonoBehaviour
 
         navigationButtonPanel = panel;
 
+        // 10-08 사장님: 시작하면 「항법을 선택하세요(항해일지)」가 눈에 띄게 — 단추 아래에 반짝이는 안내를 달고 고르면 지운다.
+        navigationHint = CreateLabel(panel.transform, "NavigationHint", NavigationHintText);
+        navigationHint.fontSize = 22; navigationHint.fontStyle = FontStyles.Bold; navigationHint.alignment = TextAlignmentOptions.TopLeft;
+        navigationHint.color = new Color(1f, 0.82f, 0.2f); navigationHint.raycastTarget = false;
+        navigationHint.outlineWidth = 0.25f; navigationHint.outlineColor = new Color32(0, 0, 0, 255);
+        navigationHint.textWrappingMode = TextWrappingModes.NoWrap;
+        RectTransform hintRect = navigationHint.rectTransform;
+        hintRect.anchorMin = new Vector2(0f, 0f); hintRect.anchorMax = new Vector2(0f, 0f); hintRect.pivot = new Vector2(0f, 1f);
+        hintRect.sizeDelta = new Vector2(760f, 34f); hintRect.anchoredPosition = new Vector2(0f, -6f);
+
         BuildNavigationModal();
+    }
+
+    const string NavigationHintText = "▲ 항법을 선택하세요 (항해일지) — 10라운드까지 안 고르면 「연합세력」이 자동 선택됩니다";
+    TMP_Text navigationHint;
+
+    // 안 골랐으면 안내를 반짝이고, 골랐으면 끈다.
+    void PulseNavigationHint(bool hasChosen)
+    {
+        if (navigationHint == null) return;
+        if (navigationHint.gameObject.activeSelf == hasChosen) navigationHint.gameObject.SetActive(!hasChosen);
+        if (hasChosen) return;
+        float pulse = 0.65f + 0.35f * Mathf.Sin(Time.unscaledTime * 4f);
+        navigationHint.color = new Color(1f, 0.82f, 0.2f, pulse);
     }
 
     void RefreshNavigationButton()
@@ -3050,6 +3073,7 @@ public class GameHud : MonoBehaviour
         bool hasChosen = state != null && state.HasChosen;
         NavigationChoice choice = state != null ? state.Choice : NavigationChoice.None;
 
+        PulseNavigationHint(hasChosen);
         if (navigationButtonTextInitialized && hasChosen == lastNavigationHasChosen && choice == lastNavigationChoice) return;
         navigationButtonTextInitialized = true;
         lastNavigationHasChosen = hasChosen;

@@ -680,6 +680,9 @@ public class RoundManager : MonoBehaviour
             // HandlePlayerDefeated → ConfiscateGoldOnPlayerDefeated가 이미 한다.
         }
 
+        // 10-08 사장님: 10라운드 시작까지 항법을 안 고른 플레이어는 「연합세력」을 강제 선택(호스트·싱글 — 고른 결과는 NavigationState에서 MP로 복제된다)
+        if (roundNumber == 10) ForceDefaultNavigation();
+
         // 원작 Trig_Round_10ver: 10·20·…·60라운드가 시작되면 보스 생성 직전에 보물상자를 숨긴다
         // (보스 처치와 무관). 몇 라운드인지 판정은 TreasureHunt가 한다.
         TreasureHunt.Instance?.OnRoundStarted(roundNumber);
@@ -687,6 +690,17 @@ public class RoundManager : MonoBehaviour
         if (waveSpawner != null && waveData != null)
         {
             waveSpawner.SpawnRound(waveData);
+        }
+    }
+
+    void ForceDefaultNavigation()
+    {
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            NavigationState nav = context.NavigationState;
+            if (nav == null || nav.HasChosen) continue;
+            if (nav.TrySelect(NavigationChoice.Union))
+                PlayerNotification.Show(context.PlayerId, "<color=#FFD700>항법을 고르지 않아 「연합세력」이 자동으로 선택되었습니다.</color>", 8f);
         }
     }
 
