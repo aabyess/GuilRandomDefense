@@ -1,0 +1,56 @@
+using System.Collections;
+using System.Linq;
+using UnityEngine;
+
+/// <summary>대표 스킬 연출(SkillCinematic) 두 창 확인(빌드 사본 전용, 훅 -mpTestCheck13 초, 사진 -mpCheck13Shot 접두).
+/// 호스트가 표 번호 0..3(엘토르·시키·드래곤·샹크스)을 레인 0 위 같은 자리에서 차례로 PlayByIndex(notify:true)로 쏜다. 양쪽이 「Cinematic_」 오브젝트가 뜬 시점·개수·렌더러 중심 위치를 「[C13]」로 로그, 카메라를 그 자리로 옮겨 한 장씩 찍는다.</summary>
+public class NetCheck13Test : MonoBehaviour
+{
+    public float startAt = 25f;
+    static string Shot { get { var a = System.Environment.GetCommandLineArgs(); int i = System.Array.IndexOf(a, "-mpCheck13Shot"); return i >= 0 && i + 1 < a.Length ? a[i + 1] : null; } }
+
+    IEnumerator Start()
+    {
+        yield return new WaitForSecondsRealtime(startAt);
+        string side = GameAuthority.IsServer ? "호스트" : "클라";
+        var table = SkillCinematicTable.Instance;
+        Debug.Log($"[C13] {side} 시작 — 표 {(table != null ? table.scripts.Count + "개 대본 · 항목 " + table.entries.Count : "없음")} · 레인0 중심 {LaneMarker.Get(0).LaneCenter:F0}");
+        Vector3 caster = LaneMarker.Get(0).LaneCenter;
+        Vector3 target = caster + new Vector3(0f, 0f, 70f);
+        var cam = FindFirstObjectByType<RtsCameraController>();
+        for (int i = 0; i < 4; i++)
+        {
+            if (cam != null) cam.MoveTo(caster + Vector3.forward * 30f);
+            yield return new WaitForSecondsRealtime(1f);
+            int before = Count();
+            if (GameAuthority.IsServer)
+            {
+                SkillCinematic.PlayByIndex(i, caster, target, notify: true);
+                Debug.Log($"[C13] 호스트 재생 요청 번호 {i} ({(table != null && i < table.scripts.Count && table.scripts[i] != null ? table.scripts[i].name : "?")}) 시전자 {caster:F0} 대상 {target:F0}");
+            }
+            float t0 = Time.realtimeSinceStartup; float seenAt = -1f;
+            while (Time.realtimeSinceStartup - t0 < 5.5f)
+            {
+                if (seenAt < 0f && Count() > before) { seenAt = Time.realtimeSinceStartup - t0; Debug.Log($"[C13] {side} 번호 {i} 연출 오브젝트 확인 +{seenAt:F2}s · {Describe()}"); }
+                if (seenAt >= 0f && Time.realtimeSinceStartup - t0 > seenAt + 1.5f && Shot != null && !shotDone) { ScreenCapture.CaptureScreenshot($"{Shot}_{i}_{(GameAuthority.IsServer ? "host" : "client")}.png"); shotDone = true; }
+                yield return null;
+            }
+            if (seenAt < 0f) Debug.Log($"[C13] {side} 번호 {i} 연출 오브젝트 없음(5.5초 안에 안 뜸)");
+            shotDone = false;
+            yield return new WaitForSecondsRealtime(3f);
+        }
+        Debug.Log($"[C13] {side} 끝");
+    }
+    bool shotDone;
+    static int Count() => FindObjectsByType<Transform>(FindObjectsSortMode.None).Count(t => t.parent == null && t.name.StartsWith("Cinematic_"));
+    static string Describe()
+    {
+        var roots = FindObjectsByType<Transform>(FindObjectsSortMode.None).Where(t => t.parent == null && t.name.StartsWith("Cinematic_")).ToList();
+        return string.Join(" ; ", roots.Select(r =>
+        {
+            var rs = r.GetComponentsInChildren<Renderer>(true);
+            Vector3 c = rs.Length > 0 ? rs.Aggregate(Vector3.zero, (a, x) => a + x.bounds.center) / rs.Length : r.position;
+            return $"{r.name} 렌더러 {rs.Length}개 중심 {c:F0}";
+        }));
+    }
+}
