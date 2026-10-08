@@ -88,6 +88,7 @@ public class RecipeHelperPanel : MonoBehaviour
     bool dirty = true;
     float nextRefresh;
     RectTransform panel, gridContent, filterPopup;
+    ScrollRect gridScroll;
     TMP_InputField searchInput;
     TMP_Text totalsText, tooltipText, filterButtonLabel;
     GameObject tooltip;
@@ -376,7 +377,7 @@ public class RecipeHelperPanel : MonoBehaviour
         float top = 138f;
         RectTransform scrollRect = NewRect("Scroll", panel);
         Place(scrollRect, Pad - 6f, top, PanelW - Pad * 2f + 12f, PanelH - top - Pad + 8f);
-        ScrollRect scroll = scrollRect.gameObject.AddComponent<ScrollRect>();
+        ScrollRect scroll = gridScroll = scrollRect.gameObject.AddComponent<ScrollRect>();
         scrollRect.gameObject.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.001f);
         Button emptyClick = scrollRect.gameObject.AddComponent<Button>();   // 칸이 아닌 빈 곳을 누르면 재료창 닫힘
         emptyClick.transition = UnityEngine.UI.Selectable.Transition.None;
@@ -545,6 +546,15 @@ public class RecipeHelperPanel : MonoBehaviour
             HideTooltip();
             CloseDetail();
             filterPopup.gameObject.SetActive(false);
+            // 10-08 사장님 「닫으면 다 초기화」: ✕·[작게 보기]·Esc 어느 쪽이든 검색어·필터·정렬·스크롤을 처음 상태로 비운다. [작게 보기]는 GoBack이 닫기 전에 검색어를 따로 챙겨 서랍으로 넘기므로 영향 없다.
+            query = ""; normalizedQuery = "";
+            if (searchInput != null) searchInput.SetTextWithoutNotify("");
+            filter = SkillTag.None;
+            sort = SortMode.Default;
+            hideNonMatching = false;
+            if (tab != 0) { tab = 0; LayoutColumns(); }
+            if (gridScroll != null) { gridScroll.StopMovement(); gridScroll.verticalNormalizedPosition = 1f; }
+            dirty = true;
             if (searchFocused) { searchInput.DeactivateInputField(); ChatInputGate.IsOpen = false; searchFocused = false; }
         }
         else dirty = true;

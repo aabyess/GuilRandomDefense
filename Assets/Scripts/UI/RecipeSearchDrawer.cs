@@ -97,6 +97,7 @@ public class RecipeSearchDrawer : MonoBehaviour
     float slide;
     bool searchFocused;
     string query = "";
+    ScrollRect scroll;
     int gradeChip;
     bool nowOnly;
     bool dirty = true;
@@ -336,7 +337,7 @@ public class RecipeSearchDrawer : MonoBehaviour
     {
         RectTransform scrollRect = NewRect("Scroll", panel);
         Place(scrollRect, Inset - 4f, 180f + TopPad, PanelWidth - Inset * 2f + 8f, PanelHeight - 180f - TopPad - Inset);
-        ScrollRect scroll = scrollRect.gameObject.AddComponent<ScrollRect>();
+        scroll = scrollRect.gameObject.AddComponent<ScrollRect>();
         Image hit = scrollRect.gameObject.AddComponent<Image>();
         hit.color = new Color(0f, 0f, 0f, 0.001f);
 
@@ -551,6 +552,14 @@ public class RecipeSearchDrawer : MonoBehaviour
             // (도우미로 넘어갈 때도 닫지만 OpenHelper가 검색어를 먼저 들고 가고, 돌아오면 되돌려 준다.)
             query = "";
             if (input != null) input.SetTextWithoutNotify("");
+            // 10-08 사장님 「닫으면 다 초기화, 버그 사전 방지」: 등급 칩·「지금 가능」·스크롤·고른 줄도 처음 상태로(도우미로 넘어갈 때도 닫지만 검색어만 OpenHelper가 따로 들고 간다).
+            gradeChip = 0;
+            nowOnly = false;
+            RefreshChips();
+            selectedRecipe = null;
+            foreach (Row row in rows) if (row.gold != null) row.gold.SetActive(false);
+            if (scroll != null) { scroll.StopMovement(); scroll.verticalNormalizedPosition = 1f; }
+            if (content != null) content.anchoredPosition = Vector2.zero;
             dirty = true;
         }
     }
