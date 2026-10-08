@@ -90,7 +90,7 @@ def enel():
         for k in range(1, 6):
             tl.append(SPAWN(t, f"M{i}_{k}", dummy("e07M"), dict(anchor="target", polar=dict(radius=130 * i, angleDeg=90 + 70 * k)), facing="random", owner="caster", note="misaka light 파편 고리(반지름 130×i)"))
     tl.sort(key=lambda e: e["t"])
-    return dict(schemaVersion=1, id="enel_eltor", title="제한됨 에넬 「엘토르」(뇌영)", ourUnit="제한_전법규", origUnit="h05E 에넬", ourSkill="Assets/Data/UnitSkills/SkillData_사장님_제한_전법규_마나스킬.asset",
+    return dict(schemaVersion=1, id="enel_eltor", title="제한됨 에넬 「엘토르」(뇌영)", ourUnit="제한_전법규", origUnit="h05E 에넬", ourSkill="SkillData_사장님_제한_전법규_마나스킬",
                 source=dict(trigger="Enel_Mana", jFunction="Trig_Enel_Mana_Actions", jLine=92407, mechanism="TV.SleepForStage — 스테이지 0→1(0.45s)→2(0.02s×36 + 0.03)→3(0.15 뒤 낙하)→4(0.07 뒤 0.10 간격 ×5)→5 종료"),
                 trigger=dict(cause="마나 145(게이지 가득) — 평타 적중한 대상 위치", anchors=dict(target="평타 대상(기본 공격을 맞은 적) 위치")), durationSec=round(t4 + 0.5 + 1.0, 2), timeline=tl)
 
@@ -100,11 +100,11 @@ def shanks():
     tl = [dict(t=0, op="note", text="트리거 시작: 2.5초 대기(시전 준비) — 이 동안 별도 연출 없음(영웅 시전 동작)"),
           SPAWN(2.5, "GD", dummy("e0GD"), dict(anchor="caster"), owner="neutral", note="lb_hg2 번개 기둥 (수명 2초)"),
           SPAWN(2.5, "GC", dummy("e0GC"), dict(anchor="caster"), timescale=0.7, owner="neutral", note="orgia mode red 붉은 패기(입자 전용 모델)"),
-          SPAWN(2.5, "T", dummy("e01T", model="roarthunder", modelPath="roarthunder.mdl", baseScale=8.0, originalModel="Lightningbolt.mdl ×15"), dict(anchor="caster"), vertexAlpha=0.85, owner="neutral", anim="birth", note="거대 번개 기둥 — 원작 Lightningbolt(워크3 기본)를 맵 안 roarthunder(번개 6종 중 무작위 Birth-N)로 대체"),
+          SPAWN(2.5, "T", dummy("e01T", model="roarthunder", modelPath="roarthunder.mdl", baseScale=6.0, originalModel="Lightningbolt.mdl ×15"), dict(anchor="caster"), vertexAlpha=0.85, owner="neutral", anim="birth", note="거대 번개 기둥 — 원작 Lightningbolt(워크3 기본)를 맵 안 roarthunder(번개 6종 중 무작위 Birth-N)로 대체"),
           SPAWN(2.5, "U", dummy("e01U"), dict(anchor="caster"), scalePercent=400, owner="caster", note="WarStompCaster_nocrack 충격 고리, 스톰프 A0S1(스턴)"),
           dict(t=2.5, op="damage", shape="circle", radius=None, around="caster", stun=True, note="A0S1 2범위 샹크스초월 특성스턴 / A08D 패기 스턴 — 범위는 w3a에서 읽을 것"),
           dict(t=16.75, op="note", text="2.5 + 14.25초 뒤 트리거 재진입(쿨다운 성격)")]
-    return dict(schemaVersion=1, id="shanks_haki", title="초월 샹크스 「패기 폭발」(하늘패기)", ourUnit="초월_황준석_ADAP", origUnit="h04U 샹크스 = H08Z 마린포드 정상해전 종결자", ourSkill="초월_황준석_ADAP (표 그대로: 더미채널_초월_황준석_ADAP_79행_10000 등 패기 계열, 구현담당1 d28c48c9b)",
+    return dict(schemaVersion=1, id="shanks_haki", title="초월 샹크스 「패기 폭발」(하늘패기)", ourUnit="초월_황준석_ADAP", origUnit="h04U 샹크스 = H08Z 마린포드 정상해전 종결자", ourSkill="SkillData_더미채널_초월_황준석_ADAP_79행_10000",
                 source=dict(trigger="Shanks_skill_5", jFunction="Trig_Shanks_skill_5_Actions", jLine=95509, mechanism="스테이지 0(2.50s 대기)→1(더미 4개 생성, 14.25s 뒤 재진입)"),
                 trigger=dict(cause="영웅 스킬(udg_Hero[0] = 샹크스) — 시전자 위치", anchors=dict(caster="샹크스 위치")), durationSec=5.0, timeline=tl)
 
@@ -123,7 +123,7 @@ def shiki():
     tl.append(dict(t=0, op="note", text="분기: 평타 때 GetRandomInt(1,33)==3 이고 시키가 A0T4(!함대) 레벨1 보유일 때만. 전함 2척이 시전자 뒤쪽 호(275 거리)에 나타나 2.25초 동안 대상을 포격. HumanBattleship 모델은 워크3 기본(맵에 없음)이라 우리 쪽 배 메시로 대체"))
     tl.append(dict(t=0, op="note", text="같은 트리거 변형: 평타 1/16 → h0BH/BI/BJ 부유물(!effect2, 돌 투척 CatapultMissile_shiki, 비행 높이 945~1000, 수명 3s) 3개가 대상에게 돌을 던짐. Shiki_SKill_item(아이템 보유) = h07P 배떨구기(HumanBattleship ×2.15, 비행 1225에서 낙하, 1s) + e027 배 폭발(@fire6)"))
     tl.sort(key=lambda e: e["t"])
-    return dict(schemaVersion=1, id="shiki_fleet", title="불멸 시키 「함대 소환」(A0T4 !함대)", ourUnit="불멸_고도현", origUnit="h04B 금사자 시키", ourSkill="Assets/Data/UnitSkills/SkillData_사장님_불멸_고도현_무중생유.asset (PM 10-09 결정: 마나 범위 스킬, 약처방은 아군 버프라 부적합)",
+    return dict(schemaVersion=1, id="shiki_fleet", title="불멸 시키 「함대 소환」(A0T4 !함대)", ourUnit="불멸_고도현", origUnit="h04B 금사자 시키", ourSkill="SkillData_사장님_불멸_고도현_무중생유",
                 source=dict(trigger="Shiki_Attack (A0T4 분기) / Shiki_Lion · Shiki_champa2 · Shiki_SKill_item", jFunction="Trig_Shiki_Attack_Actions", jLine=107519, mechanism="이벤트성(스테이지 머신 아님): 평타 때 즉시 CreateNUnitsAtLoc 2기 + TimedLife 2.25s"),
                 trigger=dict(cause="평타 1/33 (A0T4 레벨 1)", anchors=dict(caster="시키 위치", target="평타 대상")), durationSec=3.0, timeline=tl)
 
@@ -142,7 +142,7 @@ def dragon():
         t += 0.25 if n == 11 else rnd.uniform(0.10, 0.40)
     tl.append(dict(t=round(t, 3), op="kill", id="C")); tl.append(dict(t=round(t, 3), op="kill", id="D"))
     tl.sort(key=lambda e: e["t"])
-    return dict(schemaVersion=1, id="dragon_storm", title="불멸 드래곤 「폭풍」(마나스킬 번개구름)", ourUnit="불멸_정준영", origUnit="h04D 몽키.D.드래곤", ourSkill="Assets/Data/UnitSkills/SkillData_사장님_불멸_정준영_범퍼숨통조이기.asset (PM 10-09 결정: 범위 전체, 연출은 Dragon_Skill_Mana 번개구름)",
+    return dict(schemaVersion=1, id="dragon_storm", title="불멸 드래곤 「폭풍」(마나스킬 번개구름)", ourUnit="불멸_정준영", origUnit="h04D 몽키.D.드래곤", ourSkill="SkillData_사장님_불멸_정준영_범퍼숨통조이기",
                 source=dict(trigger="Dragon_Skill_Mana", jFunction="Trig_Dragon_Skill_Mana_Actions", jLine=108056, mechanism="스테이지 0(구름 소환, 0.14s 뒤)→1(11회 반복, 간격 rand 0.10~0.40)→2(0.25s 뒤 구름 제거)"),
                 trigger=dict(cause="마나 스킬 — 평타 대상 위치", anchors=dict(target="평타 대상 위치")), durationSec=round(t + 0.5, 2), timeline=tl,
                 alternate="Dragon_Skill_1_T(태풍): TornadoElementalSmall·T-dustwave·XuanFeng 토네이도 연출 — 원하면 추가")
@@ -151,13 +151,16 @@ SUB = {"Tranquility": "지면 위 직경 약 300(원작 ×2.0, 모델 반지름 
        "HumanBattleship": "우리 해적선 프리팹(Assets/Prefabs/Generated/Unit_해적선.prefab) 길이 ≈380 워크3 단위로 맞춤, 비행 높이 200, 수명 2.25초",
        "Lightningbolt": "맵 안 roarthunder(번개 기둥 6종)로 이미 대체 — 이 항목은 안 쓰임",
        "LoardaeronRockChunks5": "지름 약 60~100 회색 돌덩이 메시(또는 큐브), 높이 945~1000에서 대상으로 포물선 투척 — 시키 부유물 연출용(1차 대본엔 안 씀)"}
-for s_ in (enel(), shanks(), shiki(), dragon()):
-    write(s_)
-    for m, bl in json.load(open(f"{OUT}/{s_['id']}.json"))["models"].items():
-        pass
-for sid in ("enel_eltor", "shanks_haki", "shiki_fleet", "dragon_storm"):
-    d = json.load(open(f"{OUT}/{sid}.json"))
-    for m, bl in d["models"].items():
-        if not bl.get("folder") and m in SUB: bl["substituteNote"] = SUB[m]
-    json.dump(d, open(f"{OUT}/{sid}.json", "w"), ensure_ascii=False, indent=1)
-print("입자 텍스처 복사", len(COPIED), "여전히 없음", MISSING[:10])
+def main():
+    pass
+    for s_ in (enel(), shanks(), shiki(), dragon()): write(s_)
+    for sid in ("enel_eltor", "shanks_haki", "shiki_fleet", "dragon_storm"):
+        d = json.load(open(f"{OUT}/{sid}.json"))
+        for m, bl in d["models"].items():
+            if not bl.get("folder") and m in SUB: bl["substituteNote"] = SUB[m]
+        json.dump(d, open(f"{OUT}/{sid}.json", "w"), ensure_ascii=False, indent=1)
+    print("입자 텍스처 복사", len(COPIED), "여전히 없음", MISSING[:10])
+
+
+if __name__ == "__main__":
+    main()

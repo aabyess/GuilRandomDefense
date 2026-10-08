@@ -90,7 +90,9 @@ def actor_state(e, ev, Tn):
     return dict(dead=dead, lt=lt, dl=dl, fly=fly, pct=pct, ts=ts)
 
 def anchor_pos(e, ev, byid):
-    a = e["at"]; base = {"caster": (0, 0), "target": (0, 0)}.get(a.get("anchor"), (0, 0))
+    a = e["at"]
+    if "world" in a: return tuple(a["world"])
+    base = {"caster": (0, 0), "target": (0, 0)}.get(a.get("anchor"), (0, 0))
     if sc["id"] == "shiki_fleet" and a.get("anchor") == "target": base = (700, 0)
     x, y = base
     if "polar" in a:
@@ -140,12 +142,15 @@ for ti, Tn in enumerate(TIMES):
         st = actor_state(e, ev, Tn)
         if not st: continue
         x, y = anchor_pos(e, ev, byid)[:2]
+        tp = [q for q in ev if q["op"] == "teleport" and q.get("id") == e["id"] and q["t"] <= Tn]
+        if tp: x, y = tp[-1]["to"]["world"]
         if e.get("moveTo"):                                            # 투사체: 선형 이동
             tx, ty = (700, 0) if sc["id"] == "shiki_fleet" else (0, 0); d = max(math.hypot(tx - x, ty - y), 1); f = min(st["lt"] * e["moveTo"]["speedPerSec"] / d, 1.0)
             if f >= 1.0 and st["lt"] > 0.05: continue
             x, y = x + (tx - x) * f, y + (ty - y) * f
         pos = Vector((x, y, st["fly"]))
         mdl = sc["models"][e["model"]]; lm = load_model(e["model"]) if mdl.get("folder") else None
+        if lm is None and (e.get("substitute", {}).get("ship") or e["model"] == "HumanBattleship"): e = dict(e, model="HumanBattleship")
         scale = e["baseScale"] * st["pct"] / 100.0
         if lm is None:
             objs.append(placeholder(e["model"], pos, scale)); continue
@@ -170,7 +175,9 @@ for ti, Tn in enumerate(TIMES):
             ob = quad_mesh(f"p_{ti}_{e['id']}", parts, p, right, up); ob.data.materials.append(particle_material(f"pm_{len(objs)}", tex, additive)); scn.collection.objects.link(ob); objs.append(ob)
     for o in objs:
         if o.name not in scn.collection.objects: scn.collection.objects.link(o)
-    frame_and_render(scn, cam, HALF, Vector(((350 if sc["id"] == "shiki_fleet" else 0), 0, CZ)), f"{OUTD}/{sc['id']}_{ti}.png")
+    xs = [anchor_pos(e, ev, byid)[0] for e in spawns] or [0]
+    cx = 350 if sc["id"] == "shiki_fleet" else (sum(xs) / len(xs) if "world" in (spawns[0]["at"] if spawns else {}) else 0)
+    frame_and_render(scn, cam, HALF, Vector((cx, 0, CZ)), f"{OUTD}/{sc['id']}_{ti}.png")
     for o in objs:
         for ch in list(getattr(o, "children_recursive", [])):
             bpy.data.objects.remove(ch)
