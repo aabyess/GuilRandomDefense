@@ -4183,6 +4183,8 @@ public static class MapGenerator
     // 기존 최대(StoryPortalDiameter=15)보다 크게 — "크게 만들라"는 사장님 지시.
     // 원작 비율 5단계(PM 지시 2026-09-23) — 다른 포탈 지름과 같은 이유로 Scale을 태운다.
     const float StoryReturnPortalDiameter = 24f * MapLayout.Scale;
+    // 사장님 10-08 「복귀 포탈을 원작처럼 존 맨 위 가운데로, 엄청 크게」: 지름은 옛 값의 1.5~2배 중 광장(반지름 33×Scale)·위 가장자리와 안 겹치는 최대(BuildStoryReturnPortal이 존 크기에서 계산).
+    const float StoryReturnPortalMaxDiameter = 2f * StoryReturnPortalDiameter;
 
     // 스토리존 → 레인 복귀. 레인마다가 아니라 존에 큰 포탈 하나(사장님 지시, 2026-09-05) —
     // StoryReturnPortal이 소유자별 목적지 4개를 들고 있다가 밟은 사람의 레인 한가운데로
@@ -4192,10 +4194,15 @@ public static class MapGenerator
     {
         MapLayout.Island zone = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
 
-        Vector3 ground = new Vector3(zone.center.x + zone.size.x * 0.4f,
-                                     MapLayout.IslandTop + 0.25f, zone.center.y + zone.size.y * 0.4f);
+        // 🔴 2026-10-08 사장님: 존 「맨 위 가운데」(x = 존 중심, z = 위쪽 끝 가까이) + 엄청 크게. 지름 = 옛 값의 1.5~2배 중 광장(반지름 33×Scale, 착지 지점은 그 85% 안)과 위 가장자리 사이에 들어가는 최대.
+        float margin = 3f * MapLayout.Scale;
+        float plazaRadius = 33f * MapLayout.Scale;
+        float halfDepth = zone.size.y * 0.5f;
+        float diameter = Mathf.Clamp(halfDepth - plazaRadius - margin * 2f, StoryReturnPortalDiameter * 1.5f, StoryReturnPortalMaxDiameter);
+        Vector3 ground = new Vector3(zone.center.x, MapLayout.IslandTop + 0.25f, zone.center.y + halfDepth - margin - diameter * 0.5f);
+        Debug.Log($"[스토리복귀포탈] 존 {zone.size} · 광장 반지름 {plazaRadius:F1} · 지름 {diameter:F1}(옛 {StoryReturnPortalDiameter:F1}의 {diameter / StoryReturnPortalDiameter:F2}배) · 자리 {ground} · 광장 윗끝 z {zone.center.y + plazaRadius:F1} ↔ 포탈 아랫끝 z {ground.z - diameter * 0.5f:F1}");
 
-        GameObject portal = CreatePortalObject(parent, "스토리_복귀포탈", ground, StoryReturnPortalDiameter);
+        GameObject portal = CreatePortalObject(parent, "스토리_복귀포탈", ground, diameter);
 
         // BuildStoryZonePortal과 같은 이유 — 트리거도 NavMesh 굽기엔 장애물로 잡힌다.
         NavMeshModifier modifier = portal.AddComponent<NavMeshModifier>();
@@ -5472,7 +5479,7 @@ public static class MapGenerator
     /// </summary>
     static readonly float LargestPortalDiameter = Mathf.Max(
         Mathf.Max(PortalDiameter, ChoicePortalDiameter),
-        Mathf.Max(StoryPortalDiameter, StoryReturnPortalDiameter));
+        Mathf.Max(StoryPortalDiameter, StoryReturnPortalMaxDiameter));
 
     static readonly float PortalTriggerHeight = Mathf.Max(
         WispColliderTop * 2f, LargestPortalDiameter * 1.5f);
