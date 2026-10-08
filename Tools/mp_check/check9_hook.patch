@@ -1,0 +1,28 @@
+diff --git a/Assets/Scripts/Net/NetLauncher.cs b/Assets/Scripts/Net/NetLauncher.cs
+index 6fa2d4614..c0dad2255 100644
+--- a/Assets/Scripts/Net/NetLauncher.cs
++++ b/Assets/Scripts/Net/NetLauncher.cs
+@@ -161,6 +161,7 @@ public class NetLauncher : MonoBehaviour
+     float testPhase3Delay = -1f;
+     bool testTraitUnits;
+     float testTraitDelay = -1f;
++    float testCheck9Delay = -1f;
+     readonly System.Collections.Generic.List<(float, string)> chatTests = new System.Collections.Generic.List<(float, string)>();
+     readonly System.Collections.Generic.List<(float, string)> lobbyChatTests = new System.Collections.Generic.List<(float, string)>();
+     readonly System.Collections.Generic.List<float> gambleLabelDelays = new System.Collections.Generic.List<float>();
+@@ -276,6 +277,7 @@ public class NetLauncher : MonoBehaviour
+                 case "-mpDump": dumpDelays.Add(Seconds(i + 1)); break;
+                 case "-mpTestWisps": testWispsDelay = Seconds(i + 1); break;
+                 case "-mpTestMoveUnits": testMoveUnitsDelay = Seconds(i + 1); break;
++                case "-mpTestCheck9": testCheck9Delay = Seconds(i + 1); break;
+                 case "-mpTestBerserk": testBerserkDelay = Seconds(i + 1); break;
+                 case "-mpTestMain": testMainDelay = Seconds(i + 1); testMainShot = Arg(i + 2); break;
+                 case "-mpTestCommands": testCommandsDelay = Seconds(i + 1); break;
+@@ -791,6 +793,7 @@ public class NetLauncher : MonoBehaviour
+         if (testCommandsDelay >= 0f) StartCoroutine(TestCommandsAfter(testCommandsDelay));
+         if (testEconomyDelay >= 0f) StartCoroutine(TestEconomyAfter(testEconomyDelay));
+         if (testBerserkDelay >= 0f) { var bt = gameObject.AddComponent<NetBerserkTest>(); bt.startAt = testBerserkDelay; }
++        if (testCheck9Delay >= 0f) { var c9 = gameObject.AddComponent<NetCheck9Test>(); c9.startAt = testCheck9Delay; }
+         if (testMainDelay >= 0f) { var mt = gameObject.AddComponent<NetMainTest>(); mt.startAt = testMainDelay; mt.shotPrefix = testMainShot; }
+         if (testFinishRunDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestFinishRunAfter(testFinishRunDelay));
+         LogSeatAtGameScene();

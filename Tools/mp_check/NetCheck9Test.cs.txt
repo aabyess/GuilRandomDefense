@@ -1,0 +1,56 @@
+using System.Collections;
+using System.Linq;
+using System.Reflection;
+using UnityEngine;
+
+/// <summary>
+/// MP 일시정지 미실측 셋(2026-10-08 구현담당1, 빌드 사본 전용, 훅 -mpTestCheck9 초, 클라는 -mpRejoinAfter 6): 로그 접두 「[C9]」.
+///  A 연속 획득: +5초 호스트 슬롯이 컷인 3기를 한꺼번에 → 컷인정지가 큐 내내 이어지고 한 번만 풀리나.
+///  B 사용자 정지 중 연속 컷인: +20초 3기 → +21.5 클라가 P(컷인 큐 도중) → +36 클라가 P(풀기).
+///  C 재접속: +50초 클라가 러너를 끊고(리플렉션) → +54 호스트가 정지 → 클라가 -mpRejoinAfter 뒤 다시 들어와 멈춘 채인지 → +80 호스트가 풂.
+/// </summary>
+public class NetCheck9Test : MonoBehaviour
+{
+    public float startAt = 20f;
+    static int runs;
+
+    static void Spawn3(int slot)
+    {
+        var sp = FindFirstObjectByType<UnitSpawner>();
+        foreach (string unit in new[] { "불멸_이이삭", "초월_양재모_AD", "영원_김정래" })
+        {
+            UnitData d = NetLauncher.Catalog.units.Find(u => u != null && u.name == unit);
+            sp.Spawn(d, LaneMarker.Get(slot).TakeSpawnPosition(d), slot);
+        }
+    }
+
+    IEnumerator Start()
+    {
+        int myRun = ++runs;
+        yield return new WaitForSecondsRealtime(myRun == 1 ? startAt : 3f);
+        bool host = GameAuthority.IsServer;
+        string side = host ? "호스트" : "클라";
+        float t0 = Time.realtimeSinceStartup;
+        var steps = new (float at, bool hostActs, string what)[] { (5, true, "A 호스트 슬롯 컷인 3기"), (20, true, "B 컷인 3기"), (21.5f, false, "B 클라 P(큐 도중)"), (36, false, "B 클라 P(풀기)"), (50, false, "C 클라 끊김"), (54, true, "C 호스트 멈춤"), (80, true, "C 호스트 풀기") };
+        int next = 0; bool logOnly = myRun > 1;
+        Debug.Log($"[C9] {side} 하네스 {myRun}번째 시작{(logOnly ? "(재접속 뒤 — 조작 없이 기록만)" : "")}");
+        for (int i = 0; i < 110; i++)
+        {
+            float t = Time.realtimeSinceStartup - t0;
+            if (!logOnly && next < steps.Length && t >= steps[next].at)
+            {
+                var st = steps[next++];
+                if (st.hostActs == host)
+                {
+                    Debug.Log($"[C9] {side} 조작: {st.what}");
+                    if (st.what.Contains("컷인 3기")) Spawn3(LocalPlayer.LocalPlayerId);
+                    else if (st.what.Contains("끊김")) typeof(NetLauncher).GetField("dropAt", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(NetLauncher.Instance, 0f);
+                    else GamePause.TryToggle(out _);
+                }
+            }
+            var gs = NetGameState.Instance;
+            Debug.Log($"[C9] {side} t+{t:F0}s 멈춤 {GamePause.Paused}·컷인정지 {GamePause.CutinHold} timeScale {Time.timeScale} · 라운드 남은 {(gs != null ? gs.TimeLeft : -1f):F1} · 상태 {(gs != null ? gs.Paused.ToString() : "-")}/{(gs != null ? gs.CutinHold.ToString() : "-")}");
+            yield return new WaitForSecondsRealtime(1f);
+        }
+    }
+}
